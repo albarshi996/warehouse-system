@@ -228,6 +228,18 @@ const currentPath = Astro.url.pathname;
               </button>
             </li>
           )}
+
+          <!-- زر فتح تقرير ERP -->
+          <li>
+            <a
+              href={`${base}/تقرير(ERP).html`}
+              target="_blank"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-right"
+            >
+              <Icon name="fileText" class="text-brand-red" />
+              <span class="font-medium">تقرير ERP</span>
+            </a>
+          </li>
         </ul>
       </nav>
 
