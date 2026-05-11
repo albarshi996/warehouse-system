@@ -38,7 +38,6 @@
             margin: 0; line-height: 1; font-family: Arial, sans-serif; letter-spacing: -0.5px;
         }
         .logo-text p { color: var(--text-gray); font-size: 15px; margin: 4px 0 0 0; font-family: Arial, sans-serif; }
-        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Cairo', 'Arial', sans-serif;
@@ -835,7 +834,10 @@ function exportToExcel() {
         ws['!cols'] = Array(15).fill({ wch: 22 });
         XLSX.utils.book_append_sheet(wb, ws, 'Export');
         var safeTitle = title.replace(/[\/:*?"<>|]/g, '').replace(/\s+/g, '_').slice(0, 40);
-        const fileName = 'Brandzo_' + safeTitle + '_' + date + '.xlsx';\        const userFileName = prompt("أدخل اسم الملف قبل الحفظ:", fileName);\        if (userFileName === null) return;\        if (userFileName.trim() !== '') fileName = userFileName.trim().endsWith('.xlsx') ? userFileName.trim() : userFileName.trim() + '.xlsx';
+        const fileName = 'Brandzo_' + safeTitle + '_' + date + '.xlsx';
+        const userFileName = prompt("أدخل اسم الملف قبل الحفظ:", fileName);
+        if (userFileName === null) return;
+        if (userFileName.trim() !== '') fileName = userFileName.trim().endsWith('.xlsx') ? userFileName.trim() : userFileName.trim() + '.xlsx';
         XLSX.writeFile(wb, fileName);
     };
     script.onerror = function () { alert('Failed to load Excel library. Check your internet connection.'); };
