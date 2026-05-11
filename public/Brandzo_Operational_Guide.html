@@ -1,0 +1,2673 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>⚙️ SYSTEM STATUS: ACTIVE | النموذج التشغيلي المتكامل لمستودعات Brandzo Franchise Partners | COMMAND CENTER OUTPUT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&family=Oswald:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --bg-deep: #08080d;
+            --bg-panel: #0f0f18;
+            --bg-surface: #14141f;
+            --bg-elevated: #1a1a2a;
+            --orange-aggressive: #FF4500;
+            --orange-glow: #ff5e1a;
+            --yellow-hazard: #FFD700;
+            --yellow-bright: #ffe44d;
+            --red-industrial: #8B0000;
+            --red-alert: #b80000;
+            --text-primary: #e8e8f0;
+            --text-secondary: #c0c0cc;
+            --text-muted: #8a8a9a;
+            --border-thick: #FF4500;
+            --border-panel: #2a2a3a;
+            --border-subtle: #1e1e30;
+            --mesh-color: rgba(255, 69, 0, 0.025);
+            --gauge-green: #00e676;
+            --gauge-yellow: #FFD700;
+            --gauge-orange: #FF4500;
+            --gauge-red: #8B0000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            line-height: 1.9;
+            padding: 12px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            background-image:
+                repeating-linear-gradient(0deg,
+                    var(--mesh-color) 0px,
+                    var(--mesh-color) 1px,
+                    transparent 1px,
+                    transparent 3px),
+                repeating-linear-gradient(90deg,
+                    var(--mesh-color) 0px,
+                    var(--mesh-color) 1px,
+                    transparent 1px,
+                    transparent 3px),
+                radial-gradient(ellipse at 25% 15%, rgba(255, 69, 0, 0.04) 0%, transparent 60%),
+                radial-gradient(ellipse at 75% 70%, rgba(255, 215, 0, 0.03) 0%, transparent 55%);
+            background-size: 4px 4px, 4px 4px, 100% 100%, 100% 100%;
+            background-attachment: fixed;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            background: var(--bg-panel);
+            border: 3px solid var(--border-thick);
+            box-shadow:
+                0 0 40px rgba(255, 69, 0, 0.18),
+                0 0 80px rgba(255, 69, 0, 0.06),
+                0 8px 60px rgba(0, 0, 0, 0.7),
+                inset 0 1px 0 rgba(255, 255, 255, 0.02);
+            position: relative;
+        }
+
+        .main-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                repeating-linear-gradient(0deg,
+                    rgba(255, 69, 0, 0.015) 0px,
+                    rgba(255, 69, 0, 0.015) 1px,
+                    transparent 1px,
+                    transparent 6px),
+                repeating-linear-gradient(90deg,
+                    rgba(255, 215, 0, 0.01) 0px,
+                    rgba(255, 215, 0, 0.01) 1px,
+                    transparent 1px,
+                    transparent 6px);
+            background-size: 6px 6px, 6px 6px;
+            opacity: 0.7;
+        }
+
+        .main-container>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ---- SYSTEM STATUS HEADER ---- */
+        .header {
+            background: linear-gradient(180deg, #0c0c1a 0%, #0a0a16 40%, #0d0d1c 100%);
+            color: var(--text-primary);
+            padding: 2rem 2.5rem;
+            border-bottom: 4px solid var(--orange-aggressive);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: repeating-linear-gradient(90deg,
+                    var(--orange-aggressive) 0px,
+                    var(--orange-aggressive) 8px,
+                    transparent 8px,
+                    transparent 16px,
+                    var(--yellow-hazard) 16px,
+                    var(--yellow-hazard) 24px,
+                    transparent 24px,
+                    transparent 32px);
+            z-index: 2;
+            animation: scanline 3s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 64px 0;
+            }
+        }
+
+        .header .system-badge {
+            display: inline-block;
+            background: #0a0a0f;
+            border: 2px solid var(--orange-aggressive);
+            color: var(--orange-aggressive);
+            font-family: 'Oswald', 'Roboto Mono', monospace;
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            padding: 6px 18px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            animation: pulse-badge 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-badge {
+            0%,
+            100% {
+                box-shadow: 0 0 8px rgba(255, 69, 0, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 22px rgba(255, 69, 0, 0.7), 0 0 40px rgba(255, 69, 0, 0.3);
+            }
+        }
+
+        .header .system-badge .blink-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: var(--orange-aggressive);
+            border-radius: 50%;
+            margin-left: 8px;
+            animation: blink-dot 1s step-end infinite;
+            vertical-align: middle;
+            box-shadow: 0 0 10px var(--orange-aggressive);
+        }
+
+        @keyframes blink-dot {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.15;
+            }
+        }
+
+        .header h1 {
+            font-family: 'Oswald', 'Cairo', sans-serif;
+            font-size: 2.4rem;
+            font-weight: 700;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: #ffffff;
+            text-shadow: 0 0 30px rgba(255, 69, 0, 0.4);
+        }
+
+        .header h1 i {
+            color: var(--orange-aggressive);
+            font-size: 2.6rem;
+            filter: drop-shadow(0 0 12px rgba(255, 69, 0, 0.7));
+        }
+
+        .meta {
+            margin-top: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 2px solid rgba(255, 69, 0, 0.3);
+            padding-top: 18px;
+            gap: 14px;
+            font-size: 0.9rem;
+            font-family: 'Roboto Mono', 'Cairo', monospace;
+            color: var(--text-secondary);
+        }
+
+        .badge {
+            background: rgba(255, 69, 0, 0.12);
+            padding: 5px 20px;
+            font-weight: 600;
+            border: 2px solid var(--orange-aggressive);
+            color: var(--orange-glow);
+            font-family: 'Oswald', 'Roboto Mono', monospace;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .header .sub-meta {
+            margin-top: 14px;
+            background: rgba(255, 215, 0, 0.04);
+            padding: 10px 20px;
+            font-weight: 500;
+            display: inline-block;
+            color: var(--yellow-hazard);
+            border: 1px solid rgba(255, 215, 0, 0.25);
+            font-family: 'Roboto Mono', 'Cairo', monospace;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* ---- Sticky Navigation ---- */
+        .sticky-nav {
+            background: var(--bg-elevated);
+            padding: 0.75rem 1.8rem;
+            border-bottom: 2px solid var(--border-panel);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px 22px;
+            backdrop-filter: blur(12px);
+            background: rgba(20, 20, 35, 0.95);
+            border-bottom: 2px solid rgba(255, 69, 0, 0.35);
+        }
+
+        .sticky-nav .nav-title {
+            font-weight: 800;
+            color: var(--orange-aggressive);
+            font-size: 1rem;
+            letter-spacing: 2px;
+            font-family: 'Oswald', 'Roboto Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+        }
+
+        .nav-links a {
+            background: var(--bg-surface);
+            padding: 6px 16px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            border: 1px solid var(--border-subtle);
+            font-family: 'Roboto Mono', 'Cairo', monospace;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .nav-links a:hover {
+            background: var(--orange-aggressive);
+            color: #000;
+            border-color: var(--orange-aggressive);
+            box-shadow: 0 0 18px rgba(255, 69, 0, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* ---- Main Content ---- */
+        .content {
+            padding: 2.5rem 2.5rem;
+            background: transparent;
+        }
+
+        .chapter {
+            margin-bottom: 4rem;
+            scroll-margin-top: 120px;
+            page-break-before: always;
+            page-break-inside: avoid;
+            border: 2px solid var(--border-panel);
+            background: var(--bg-surface);
+            padding: 2rem 2.2rem;
+            position: relative;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .chapter::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--orange-aggressive) 0%, var(--red-industrial) 100%);
+        }
+
+        .chapter-head {
+            display: flex;
+            align-items: center;
+            border-bottom: 3px solid var(--orange-aggressive);
+            margin-bottom: 2rem;
+            padding-bottom: 0.7rem;
+            gap: 16px;
+        }
+
+        .chapter-head h2 {
+            font-family: 'Oswald', 'Cairo', sans-serif;
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.4;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 20px rgba(255, 69, 0, 0.3);
+        }
+
+        .chapter-num {
+            background: var(--orange-aggressive);
+            color: #000;
+            padding: 4px 20px;
+            font-weight: 800;
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+            font-family: 'Oswald', 'Roboto Mono', monospace;
+            box-shadow: 0 0 20px rgba(255, 69, 0, 0.5);
+        }
+
+        h3 {
+            font-family: 'Oswald', 'Cairo', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--yellow-hazard);
+            margin: 2rem 0 1rem 0;
+            border-right: 5px solid var(--orange-aggressive);
+            padding-right: 20px;
+            line-height: 1.5;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.25);
+        }
+
+        h4 {
+            font-family: 'Oswald', 'Cairo', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--orange-glow);
+            margin: 1.8rem 0 0.8rem 0;
+            padding-right: 8px;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+        }
+
+        p {
+            margin-bottom: 1.2rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+        }
+
+        strong {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .box {
+            background: var(--bg-elevated);
+            border-right: 5px solid var(--orange-aggressive);
+            border: 2px solid var(--border-panel);
+            border-right: 5px solid var(--orange-aggressive);
+            padding: 1.6rem 2rem;
+            margin: 2rem 0;
+            color: var(--text-primary);
+            line-height: 1.9;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+
+        .box::after {
+            content: '';
+            position: absolute;
+            top: -1px;
+            right: -5px;
+            bottom: -1px;
+            width: 5px;
+            background: var(--orange-aggressive);
+            box-shadow: 0 0 15px rgba(255, 69, 0, 0.5);
+        }
+        
+        .box.integration-sync {
+            border-right: 5px solid var(--yellow-hazard);
+        }
+        
+        .box.integration-sync::after {
+            background: var(--yellow-hazard);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .box strong {
+            color: var(--yellow-hazard);
+            font-family: 'Oswald', 'Roboto Mono', monospace;
+            letter-spacing: 1px;
+        }
+
+        ul,
+        ol {
+            padding-right: 2rem;
+            margin: 1.2rem 0;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 0.8rem;
+            line-height: 1.8;
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+        }
+
+        /* ---- GAUGE DASHBOARD ---- */
+        .gauge-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin: 2rem 0;
+            page-break-inside: avoid;
+        }
+
+        .gauge-card {
+            background: var(--bg-elevated);
+            border: 2px solid var(--border-panel);
+            padding: 1.2rem 1rem;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            page-break-inside: avoid;
+        }
+
+        .gauge-card .gauge-ring {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 10px;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 6px solid var(--border-subtle);
+        }
+
+        .gauge-card .gauge-ring .gauge-value {
+            font-family: 'Oswald', 'Roboto Mono', monospace;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 1px;
+        }
+
+        .gauge-card .gauge-label {
+            font-family: 'Roboto Mono', 'Cairo', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 4px;
+        }
+
+        .gauge-card.critical .gauge-ring {
+            border-color: var(--red-industrial);
+            box-shadow: 0 0 20px rgba(139, 0, 0, 0.6), inset 0 0 15px rgba(139, 0, 0, 0.2);
+        }
+        .gauge-card.critical .gauge-value {
+            color: #ff3333;
+        }
+
+        .gauge-card.warning .gauge-ring {
+            border-color: var(--orange-aggressive);
+            box-shadow: 0 0 20px rgba(255, 69, 0, 0.5), inset 0 0 15px rgba(255, 69, 0, 0.15);
+        }
+        .gauge-card.warning .gauge-value {
+            color: var(--orange-aggressive);
+        }
+
+        .gauge-card.nominal .gauge-ring {
+            border-color: var(--yellow-hazard);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4), inset 0 0 15px rgba(255, 215, 0, 0.1);
+        }
+        .gauge-card.nominal .gauge-value {
+            color: var(--yellow-hazard);
+        }
+
+        .gauge-card.optimal .gauge-ring {
+            border-color: #00e676;
+            box-shadow: 0 0 20px rgba(0, 230, 118, 0.4), inset 0 0 15px rgba(0, 230, 118, 0.1);
+        }
+        .gauge-card.optimal .gauge-value {
+            color: #00e676;
+        }
+
+        /* ---- TIMELINE FLOW ---- */
+        .timeline-flow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            margin: 2rem 0;
+            page-break-inside: avoid;
+            border: 2px solid var(--border-panel);
+            background: var(--bg-elevated);
+            padding: 0;
+            overflow-x: auto;
+        }
+
+        .timeline-step {
+            flex: 1;
+            min-width: 130px;
+            padding: 1rem 0.8rem;
+            text-align: center;
+            position: relative;
+            border-left: 1px solid var(--border-subtle);
+            background: var(--bg-surface);
+            page-break-inside: avoid;
+        }
+
+        .timeline-step:last-child {
+            border-left: none;
+        }
+
+        .timeline-step .step-icon {
+            font-size: 1.8rem;
+            color: var(--orange-aggressive);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .timeline-step .step-num {
+            font-family: 'Oswald', 'Roboto Mono', monospace;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--yellow-hazard);
+            letter-spacing: 1px;
+        }
+
+        .timeline-step .step-label {
+            font-family: 'Roboto Mono', 'Cairo', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-top: 2px;
+        }
+
+        .timeline-step.active {
+            background: rgba(255, 69, 0, 0.1);
+            border-bottom: 3px solid var(--orange-aggressive);
+        }
+
+        /* ---- HEATMAP TABLE ---- */
+        table.heatmap {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            font-size: 0.85rem;
+            border: 2px solid var(--border-panel);
+            page-break-inside: avoid;
+        }
+
+        table.heatmap th {
+            background: #0a0a12;
+            color: var(--yellow-hazard);
+            font-weight: 700;
+            padding: 12px 14px;
+            text-align: right;
+            font-family: 'Oswald', 'Roboto Mono', monospace;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-bottom: 3px solid var(--orange-aggressive);
+            font-size: 0.8rem;
+        }
+
+        table.heatmap td {
+            padding: 10px 14px;
+            border: 1px solid var(--border-subtle);
+            vertical-align: middle;
+            background-color: var(--bg-surface);
+            color: var(--text-secondary);
+            font-family: 'Roboto Mono', 'Cairo', monospace;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        table.heatmap td.heat-critical {
+            background: rgba(139, 0, 0, 0.55);
+            color: #ff6666;
+            font-weight: 700;
+            border: 1px solid rgba(255, 0, 0, 0.4);
+        }
+        table.heatmap td.heat-high {
+            background: rgba(255, 69, 0, 0.4);
+            color: #ffaa77;
+            font-weight: 600;
+        }
+        table.heatmap td.heat-medium {
+            background: rgba(255, 165, 0, 0.25);
+            color: #ffcc88;
+        }
+        table.heatmap td.heat-low {
+            background: rgba(255, 215, 0, 0.12);
+            color: #ffe8a0;
+        }
+        table.heatmap td.heat-none {
+            background: rgba(0, 180, 80, 0.15);
+            color: #88ddaa;
+        }
+
+        /* ---- STANDARD TABLES ---- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            font-size: 0.85rem;
+            border: 2px solid var(--border-panel);
+            page-break-inside: avoid;
+        }
+
+        th {
+            background: #0a0a12;
+            color: var(--yellow-hazard);
+            font-weight: 700;
+            padding: 12px 14px;
+            text-align: right;
+            font-family: 'Oswald', 'Roboto Mono', monospace;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-bottom: 3px solid var(--orange-aggressive);
+            font-size: 0.8rem;
+        }
+
+        td {
+            padding: 10px 14px;
+            border: 1px solid var(--border-subtle);
+            vertical-align: middle;
+            background-color: var(--bg-surface);
+            color: var(--text-secondary);
+        }
+
+        tr:nth-child(even) td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        tr:hover td {
+            background: rgba(255, 69, 0, 0.06);
+        }
+
+        pre {
+            font-family: 'Roboto Mono', 'Courier New', monospace;
+            background: #06060f;
+            color: #c8d6e5;
+            padding: 1.4rem;
+            direction: ltr;
+            text-align: left;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            margin: 1.8rem 0;
+            font-size: 0.8rem;
+            border: 2px solid var(--border-panel);
+            border-left: 4px solid var(--orange-aggressive);
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
+            letter-spacing: 0.3px;
+        }
+
+        .footer-end {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: var(--bg-elevated);
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: 2px solid var(--border-panel);
+            color: var(--text-primary);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            page-break-inside: avoid;
+        }
+
+        .footer-end a {
+            display: inline-block;
+            margin-top: 1rem;
+            color: var(--orange-aggressive);
+            font-weight: bold;
+            text-decoration: none;
+            border-bottom: 2px solid var(--orange-aggressive);
+            padding-bottom: 2px;
+            transition: 0.2s;
+            font-family: 'Oswald', 'Roboto Mono', monospace;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .footer-end a:hover {
+            color: var(--yellow-hazard);
+            border-bottom-color: var(--yellow-hazard);
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        /* ---- ALERT BANNER ---- */
+        .alert-strip {
+            background: repeating-linear-gradient(45deg,
+                    rgba(139, 0, 0, 0.5) 0px,
+                    rgba(139, 0, 0, 0.5) 10px,
+                    rgba(0, 0, 0, 0.6) 10px,
+                    rgba(0, 0, 0, 0.6) 20px);
+            color: #ffffff;
+            padding: 10px 20px;
+            margin: 1.5rem 0;
+            font-family: 'Oswald', 'Roboto Mono', monospace;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            text-align: center;
+            border: 2px solid var(--red-industrial);
+            page-break-inside: avoid;
+        }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 800px) {
+            .header {
+                padding: 1.5rem 1.2rem;
+            }
+            .content {
+                padding: 1.5rem 1rem;
+            }
+            .sticky-nav {
+                padding: 0.6rem 0.8rem;
+                gap: 8px;
+            }
+            .chapter-head h2 {
+                font-size: 1.4rem;
+            }
+            .header h1 {
+                font-size: 1.6rem;
+            }
+            .chapter {
+                padding: 1.2rem 1rem;
+            }
+            .gauge-dashboard {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            .timeline-flow {
+                flex-direction: column;
+            }
+            .timeline-step {
+                border-left: none;
+                border-bottom: 1px solid var(--border-subtle);
+            }
+            table, table.heatmap {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                white-space: nowrap;
+            }
+            pre {
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                font-size: 0.72rem;
+                padding: 1rem;
+            }
+            .nav-links a {
+                display: inline-flex;
+                align-items: center;
+                min-height: 44px;
+                padding: 10px 18px;
+                font-size: 0.82rem;
+                margin-bottom: 2px;
+            }
+            .meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                font-size: 0.82rem;
+            }
+            .header h1 i {
+                font-size: 1.8rem;
+            }
+            .header .system-badge {
+                font-size: 0.72rem;
+                letter-spacing: 1.5px;
+                padding: 5px 12px;
+            }
+            .header .sub-meta {
+                display: block;
+                font-size: 0.75rem;
+                padding: 8px 14px;
+            }
+            .chapter-head {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .chapter-num {
+                font-size: 1rem;
+                padding: 4px 14px;
+            }
+            h3 {
+                font-size: 1.2rem;
+                padding-right: 14px;
+                border-right-width: 4px;
+            }
+            h4 {
+                font-size: 1rem;
+            }
+            .box {
+                padding: 1.2rem 1.2rem;
+                border-right-width: 4px;
+            }
+            .gauge-card {
+                padding: 1rem 0.6rem;
+            }
+            .gauge-card .gauge-ring {
+                width: 70px;
+                height: 70px;
+                border-width: 5px;
+            }
+            .gauge-card .gauge-ring .gauge-value {
+                font-size: 1.2rem;
+            }
+            .gauge-card .gauge-label {
+                font-size: 0.68rem;
+                letter-spacing: 1px;
+            }
+            .timeline-step {
+                padding: 0.8rem 0.6rem;
+                min-width: auto;
+            }
+            .timeline-step .step-icon {
+                font-size: 1.4rem;
+            }
+            .timeline-step .step-num {
+                font-size: 1rem;
+            }
+            .timeline-step .step-label {
+                font-size: 0.65rem;
+            }
+            .footer-end {
+                padding: 1.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            .footer-end a {
+                min-height: 44px;
+                display: inline-flex;
+                align-items: center;
+                padding: 8px 16px;
+            }
+            .badge {
+                font-size: 0.7rem;
+                padding: 4px 14px;
+                letter-spacing: 1px;
+            }
+            .alert-strip {
+                font-size: 0.7rem;
+                padding: 8px 14px;
+                letter-spacing: 1px;
+            }
+            ul, ol {
+                padding-right: 1.5rem;
+            }
+            p {
+                font-size: 0.9rem;
+                line-height: 1.7;
+            }
+            li {
+                font-size: 0.88rem;
+                line-height: 1.7;
+                margin-bottom: 0.5rem;
+            }
+            th, td {
+                padding: 8px 10px;
+                font-size: 0.72rem;
+            }
+            table.heatmap th, table.heatmap td {
+                padding: 8px 10px;
+                font-size: 0.7rem;
+            }
+            body {
+                background-attachment: scroll;
+                padding: 8px 8px;
+            }
+            .main-container {
+                border-width: 2px;
+            }
+            .chapter {
+                margin-bottom: 2.5rem;
+                scroll-margin-top: 100px;
+            }
+            .sticky-nav .nav-title {
+                font-size: 0.85rem;
+            }
+            .nav-links {
+                gap: 4px 8px;
+            }
+        }
+
+        /* ---- Mobile-First Small Screen Optimization (≤480px) ---- */
+        @media (max-width: 480px) {
+            .gauge-dashboard {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .header {
+                padding: 1rem 0.8rem;
+            }
+            .header h1 {
+                font-size: 1.2rem;
+                gap: 8px;
+                letter-spacing: 0.2px;
+            }
+            .header h1 i {
+                font-size: 1.3rem;
+            }
+            .header .system-badge {
+                font-size: 0.62rem;
+                letter-spacing: 1px;
+                padding: 4px 10px;
+                margin-bottom: 10px;
+            }
+            .header .system-badge .blink-dot {
+                width: 7px;
+                height: 7px;
+                margin-left: 5px;
+            }
+            .meta {
+                font-size: 0.7rem;
+                gap: 6px;
+                padding-top: 10px;
+                margin-top: 10px;
+            }
+            .header .sub-meta {
+                font-size: 0.68rem;
+                padding: 6px 10px;
+                margin-top: 8px;
+            }
+            .content {
+                padding: 1rem 0.5rem;
+            }
+            .chapter {
+                padding: 0.8rem 0.6rem;
+                margin-bottom: 1.8rem;
+                scroll-margin-top: 90px;
+            }
+            .chapter-head {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+                margin-bottom: 1.2rem;
+            }
+            .chapter-head h2 {
+                font-size: 1.1rem;
+                letter-spacing: 0.3px;
+            }
+            .chapter-num {
+                font-size: 0.85rem;
+                padding: 3px 12px;
+                letter-spacing: 1px;
+            }
+            h3 {
+                font-size: 1rem;
+                padding-right: 10px;
+                border-right-width: 3px;
+                margin: 1.2rem 0 0.7rem 0;
+                letter-spacing: 0.4px;
+            }
+            h4 {
+                font-size: 0.88rem;
+                margin: 1.2rem 0 0.5rem 0;
+                letter-spacing: 0.3px;
+            }
+            .sticky-nav {
+                padding: 0.5rem 0.5rem;
+                gap: 4px;
+            }
+            .sticky-nav .nav-title {
+                font-size: 0.72rem;
+                letter-spacing: 1px;
+            }
+            .nav-links a {
+                min-height: 40px;
+                padding: 8px 14px;
+                font-size: 0.68rem;
+                letter-spacing: 0.3px;
+            }
+            .box {
+                padding: 0.9rem 0.9rem;
+                border-right-width: 3px;
+                margin: 1.2rem 0;
+                line-height: 1.7;
+            }
+            .gauge-card {
+                padding: 0.8rem 0.5rem;
+            }
+            .gauge-card .gauge-ring {
+                width: 60px;
+                height: 60px;
+                border-width: 4px;
+                margin-bottom: 6px;
+            }
+            .gauge-card .gauge-ring .gauge-value {
+                font-size: 1rem;
+            }
+            .gauge-card .gauge-label {
+                font-size: 0.62rem;
+            }
+            .gauge-card small {
+                font-size: 0.6rem;
+            }
+            .timeline-step {
+                padding: 0.6rem 0.5rem;
+            }
+            .timeline-step .step-icon {
+                font-size: 1.2rem;
+                margin-bottom: 4px;
+            }
+            .timeline-step .step-num {
+                font-size: 0.85rem;
+            }
+            .timeline-step .step-label {
+                font-size: 0.6rem;
+            }
+            th, td {
+                padding: 6px 7px;
+                font-size: 0.65rem;
+            }
+            table.heatmap th, table.heatmap td {
+                padding: 6px 7px;
+                font-size: 0.62rem;
+            }
+            pre {
+                font-size: 0.62rem;
+                padding: 0.7rem;
+                margin: 1rem 0;
+            }
+            .footer-end {
+                padding: 1.2rem 0.6rem;
+                font-size: 0.78rem;
+                margin-top: 1.5rem;
+            }
+            .footer-end a {
+                min-height: 40px;
+                padding: 6px 14px;
+                font-size: 0.7rem;
+            }
+            .alert-strip {
+                font-size: 0.62rem;
+                padding: 6px 10px;
+                letter-spacing: 0.8px;
+                margin: 1rem 0;
+            }
+            .badge {
+                font-size: 0.62rem;
+                padding: 3px 10px;
+                letter-spacing: 0.5px;
+            }
+            p {
+                font-size: 0.8rem;
+                line-height: 1.6;
+                margin-bottom: 0.6rem;
+            }
+            li {
+                font-size: 0.78rem;
+                line-height: 1.6;
+                margin-bottom: 0.4rem;
+            }
+            ul, ol {
+                padding-right: 1.2rem;
+                margin: 0.8rem 0;
+            }
+            body {
+                padding: 4px 4px;
+                line-height: 1.7;
+            }
+            .main-container {
+                border-width: 1.5px;
+            }
+            .gauge-card small {
+                font-size: 0.58rem;
+            }
+            .chapter::before {
+                width: 3px;
+            }
+            .box::after {
+                width: 3px;
+                right: -3px;
+            }
+            .timeline-flow, table, table.heatmap, pre {
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        /* ---- SEARCH BAR ---- */
+        .search-bar-wrap {
+            background: rgba(10, 10, 22, 0.98);
+            border-bottom: 2px solid rgba(255, 69, 0, 0.5);
+            padding: 10px 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .search-bar-wrap label {
+            color: var(--orange-aggressive);
+            font-family: 'Oswald', 'Roboto Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .search-bar-wrap input#searchInput {
+            flex: 1;
+            background: #06060f;
+            border: 2px solid rgba(255, 69, 0, 0.5);
+            color: #e8e8f0;
+            padding: 8px 14px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            direction: rtl;
+            transition: border-color 0.2s;
+        }
+        .search-bar-wrap input#searchInput:focus {
+            border-color: var(--orange-aggressive);
+            box-shadow: 0 0 12px rgba(255, 69, 0, 0.3);
+        }
+        .search-bar-wrap input#searchInput::placeholder {
+            color: #555;
+            font-size: 0.85rem;
+        }
+        #searchCount {
+            color: var(--yellow-hazard);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            min-width: 80px;
+            letter-spacing: 0.5px;
+        }
+        #clearSearch {
+            background: rgba(255, 69, 0, 0.15);
+            border: 1px solid rgba(255, 69, 0, 0.4);
+            color: var(--orange-aggressive);
+            padding: 6px 14px;
+            cursor: pointer;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        #clearSearch:hover {
+            background: var(--orange-aggressive);
+            color: #000;
+        }
+        mark.search-highlight {
+            background: rgba(255, 215, 0, 0.6);
+            color: #000;
+            border-radius: 2px;
+            padding: 0 2px;
+            font-weight: 700;
+        }
+        mark.search-highlight.current {
+            background: var(--orange-aggressive);
+            color: #fff;
+        }
+
+        /* ---- FORMS DOWNLOAD SECTION ---- */
+        .forms-download-section {
+            background: rgba(10, 10, 22, 0.9);
+            border: 2px solid var(--yellow-hazard);
+            padding: 1.6rem 2rem;
+            margin: 2rem 0;
+        }
+        .forms-download-section h3 {
+            color: var(--yellow-hazard) !important;
+            border-right: 5px solid var(--yellow-hazard) !important;
+            margin-top: 0 !important;
+        }
+        .forms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 1rem;
+        }
+        .form-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-panel);
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .form-card:hover {
+            border-color: var(--orange-aggressive);
+            box-shadow: 0 0 16px rgba(255, 69, 0, 0.3);
+        }
+        .form-card .fc-icon { font-size: 1.4rem; }
+        .form-card .fc-name {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #fff;
+            font-family: 'Cairo', sans-serif;
+        }
+        .form-card .fc-code {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+        .form-card a {
+            display: inline-block;
+            background: var(--orange-aggressive);
+            color: #000;
+            padding: 5px 14px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.75rem;
+            font-family: 'Roboto Mono', monospace;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 4px;
+            transition: background 0.2s;
+            text-align: center;
+        }
+        .form-card a:hover { background: var(--yellow-hazard); }
+
+        /* ============================================================
+           Top nav bar (links back to /dashboard and the landing page).
+           Sits above .main-container, sticky, brand-aligned styling.
+           ============================================================ */
+        .guide-topnav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #0c0c14 0%, #1a1a2a 60%, #2a0a05 100%);
+            border-bottom: 2px solid var(--orange-aggressive);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), inset 0 -1px 0 rgba(255, 215, 0, 0.18);
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto 12px;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+        }
+        .guide-topnav__btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+            letter-spacing: 0.3px;
+        }
+        .guide-topnav__btn i { font-size: 0.95rem; }
+        .guide-topnav__btn--primary {
+            background: linear-gradient(135deg, var(--orange-aggressive), var(--red-alert));
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(255, 69, 0, 0.4);
+        }
+        .guide-topnav__btn--primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(255, 69, 0, 0.55);
+        }
+        .guide-topnav__btn--secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1.5px solid var(--border-panel);
+        }
+        .guide-topnav__btn--secondary:hover {
+            border-color: var(--orange-aggressive);
+            color: var(--yellow-bright);
+        }
+        .guide-topnav__title {
+            margin-inline-start: auto;
+            color: var(--yellow-bright);
+            font-weight: 700;
+            font-size: 0.92rem;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.25);
+        }
+        @media (max-width: 680px) {
+            .guide-topnav { padding: 8px 10px; gap: 8px; }
+            .guide-topnav__btn { padding: 8px 12px; font-size: 0.82rem; }
+            .guide-topnav__title {
+                width: 100%;
+                margin-inline-start: 0;
+                margin-top: 4px;
+                font-size: 0.78rem;
+                text-align: center;
+            }
+        }
+
+        /* ============================================================
+           BRAND-ALIGNED OVERRIDE LAYER
+           ============================================================ */
+        :root {
+            var(--bg-deep): #0f1424;
+            --bg-panel: #161b30;
+            --bg-surface: #1c2240;
+            --bg-elevated: #232a4d;
+            --orange-aggressive: #c0392b;
+            --orange-glow: #e74c3c;
+            --red-industrial: #8b1a1a;
+            --red-alert: #a82424;
+            --yellow-hazard: #f1c40f;
+            --yellow-bright: #f5d76e;
+            --text-primary: #f4f4f8;
+            --text-secondary: #c8cad8;
+            --text-muted: #8e94aa;
+            --border-thick: #c0392b;
+            --border-panel: #2a325a;
+            --border-subtle: #1f2546;
+            --mesh-color: rgba(192, 57, 43, 0.012);
+            --gauge-green: #27ae60;
+            --gauge-yellow: #f1c40f;
+            --gauge-orange: #c0392b;
+            --gauge-red: #8b1a1a;
+        }
+
+        body {
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+            background:
+                radial-gradient(ellipse at 25% 0%, rgba(192, 57, 43, 0.05) 0%, transparent 55%),
+                radial-gradient(ellipse at 80% 100%, rgba(26, 26, 46, 0.45) 0%, transparent 60%),
+                linear-gradient(180deg, #0c1020 0%, #0f1424 60%, #0a0e1c 100%);
+            background-attachment: fixed;
+        }
+
+        .main-container {
+            border: 1px solid var(--border-panel);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(192, 57, 43, 0.18);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .main-container::before { display: none; }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #232a4d 60%, #2a1a35 100%);
+            border-bottom: 4px solid var(--orange-aggressive);
+            padding: 1.75rem 2rem;
+        }
+        .header::before {
+            background: linear-gradient(90deg, var(--orange-aggressive) 0%, var(--yellow-hazard) 50%, var(--orange-aggressive) 100%);
+            animation: none;
+            height: 2px;
+        }
+        .header h1 {
+            font-family: 'Cairo', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            text-shadow: none;
+            letter-spacing: 0;
+            text-transform: none;
+        }
+        .header h1 i {
+            filter: none;
+            color: var(--orange-glow);
+            font-size: 2.2rem;
+        }
+        .header .system-badge {
+            font-family: 'Cairo', sans-serif;
+            background: rgba(192, 57, 43, 0.12);
+            border: 1.5px solid var(--orange-aggressive);
+            color: var(--orange-glow);
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            font-size: 0.78rem;
+            animation: none;
+        }
+        .header .system-badge .blink-dot { animation: brand-blink 1.6s ease-in-out infinite; box-shadow: none; }
+        @keyframes brand-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+        .meta { font-family: 'Cairo', sans-serif; border-top: 1px solid rgba(192, 57, 43, 0.25); }
+        .badge {
+            font-family: 'Cairo', sans-serif;
+            background: rgba(192, 57, 43, 0.15);
+            border: 1.5px solid var(--orange-aggressive);
+            color: var(--orange-glow);
+        }
+        .header .sub-meta {
+            font-family: 'Cairo', sans-serif;
+            background: rgba(241, 196, 15, 0.06);
+            color: var(--yellow-bright);
+            border-color: rgba(241, 196, 15, 0.25);
+        }
+
+        .guide-topnav {
+            background: linear-gradient(135deg, #1a1a2e 0%, #232a4d 100%);
+            border: 1px solid rgba(192, 57, 43, 0.5) !important;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            padding: 6px 14px !important;
+            gap: 6px !important;
+            min-height: 40px;
+            width: 100% !important;
+            max-width: 1200px !important;
+            margin: 0 auto !important;
+            box-sizing: border-box !important;
+            flex-wrap: nowrap !important;
+        }
+        .guide-topnav__btn {
+            border-radius: 6px !important;
+            font-family: 'Cairo', sans-serif !important;
+            padding: 5px 10px !important;
+            font-size: 0.78rem !important;
+            font-weight: 600 !important;
+            gap: 6px !important;
+            letter-spacing: 0 !important;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+        .guide-topnav__btn i { font-size: 0.85rem !important; }
+        .guide-topnav__btn--primary {
+            background: var(--orange-aggressive) !important;
+            box-shadow: 0 1px 3px rgba(192, 57, 43, 0.3) !important;
+            border: 1px solid transparent;
+        }
+        .guide-topnav__btn--primary:hover {
+            background: var(--red-alert) !important;
+            box-shadow: 0 2px 6px rgba(192, 57, 43, 0.45) !important;
+            transform: none !important;
+        }
+        .guide-topnav__btn--secondary {
+            border: 1px solid rgba(244, 244, 248, 0.25) !important;
+            color: var(--text-primary) !important;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .guide-topnav__btn--secondary:hover {
+            border-color: var(--orange-aggressive) !important;
+            color: #fff !important;
+            background: rgba(192, 57, 43, 0.12) !important;
+        }
+        .guide-topnav__title {
+            color: var(--yellow-bright) !important;
+            text-shadow: none !important;
+            font-family: 'Cairo', sans-serif !important;
+            font-size: 0.78rem !important;
+            font-weight: 600 !important;
+            letter-spacing: 0 !important;
+            margin-inline-start: auto !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+        @media (max-width: 680px) {
+            .guide-topnav { padding: 5px 8px !important; gap: 5px !important; min-height: 36px; }
+            .guide-topnav__btn { padding: 4px 8px !important; font-size: 0.72rem !important; }
+            .guide-topnav__btn i { font-size: 0.78rem !important; }
+            .guide-topnav__title {
+                width: auto !important;
+                margin-top: 0 !important;
+                font-size: 0.68rem !important;
+                text-align: end !important;
+                max-width: 50%;
+            }
+        }
+        @media (max-width: 420px) {
+            .guide-topnav__btn span { display: none; }
+            .guide-topnav__btn { padding: 6px 8px !important; }
+            .guide-topnav__title { font-size: 0.66rem !important; max-width: 60%; }
+        }
+
+        .sticky-nav { background: linear-gradient(180deg, #161b30 0%, #1c2240 100%); border-bottom: 1px solid var(--border-panel); }
+        .sticky-nav .toc-pill, .sticky-nav .index-chip, .sticky-nav .nav-link, .sticky-nav a {
+            font-family: 'Cairo', sans-serif !important;
+        }
+
+        .chapter table, table.heatmap, table {
+            border: 1px solid var(--border-panel);
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .chapter table th, table th {
+            background: linear-gradient(135deg, var(--orange-aggressive), var(--red-alert)) !important;
+            color: #fff !important;
+            font-family: 'Cairo', sans-serif !important;
+            font-weight: 700 !important;
+            text-shadow: none !important;
+            border-color: var(--red-industrial) !important;
+        }
+        .chapter table td, table td {
+            border-color: var(--border-subtle) !important;
+            color: var(--text-primary);
+            font-family: 'Cairo', sans-serif !important;
+        }
+        .chapter table tbody tr:nth-child(even),
+        table tbody tr:nth-child(even) {
+            background: rgba(192, 57, 43, 0.04);
+        }
+
+        .chapter h2, .chapter h3, .chapter h4, h2, h3, h4 {
+            font-family: 'Cairo', 'Tajawal', sans-serif !important;
+            text-shadow: none !important;
+            letter-spacing: 0 !important;
+            text-transform: none !important;
+        }
+        .chapter h2 { color: var(--orange-glow) !important; }
+        .chapter h3 { color: var(--yellow-bright) !important; }
+        .chapter h4 { color: var(--text-primary) !important; }
+        .chapter p, .chapter li, p, li { font-family: 'Cairo', 'Tajawal', sans-serif !important; }
+        .chapter strong, strong { color: var(--orange-glow); font-weight: 700; }
+
+        .box, .integration-sync {
+            background: rgba(192, 57, 43, 0.06) !important;
+            border: 1px solid rgba(192, 57, 43, 0.35) !important;
+            border-radius: 8px !important;
+        }
+
+        .form-card {
+            background: var(--bg-elevated);
+            border-radius: 8px;
+            border: 1px solid var(--border-panel);
+        }
+        .form-card:hover { border-color: var(--orange-aggressive); box-shadow: 0 4px 14px rgba(192, 57, 43, 0.25); }
+        .form-card a {
+            background: var(--orange-aggressive);
+            color: #fff;
+            border-radius: 5px;
+            font-family: 'Cairo', sans-serif;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        .form-card a:hover { background: var(--red-alert); color: #fff; }
+        .form-card .fc-name { font-family: 'Cairo', sans-serif; }
+        .form-card .fc-code { font-family: 'Cairo', sans-serif; color: var(--text-muted); letter-spacing: 0.3px; }
+
+        code, pre {
+            font-family: 'Cairo', monospace !important;
+            background: rgba(0, 0, 0, 0.35) !important;
+            color: var(--yellow-bright) !important;
+            border: 1px solid var(--border-subtle) !important;
+            border-radius: 4px;
+            padding: 1px 6px;
+        }
+        pre { padding: 12px 14px; line-height: 1.6; }
+
+        .scanline, .ticker { animation: none !important; }
+
+        .search-bar-wrap input {
+            background: rgba(255, 255, 255, 0.04) !important;
+            border: 1px solid var(--border-panel) !important;
+            color: var(--text-primary) !important;
+            font-family: 'Cairo', sans-serif !important;
+            border-radius: 6px !important;
+        }
+        .search-bar-wrap input:focus {
+            border-color: var(--orange-aggressive) !important;
+            outline: none !important;
+            box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.18) !important;
+        }
+        .search-bar-wrap button {
+            background: var(--orange-aggressive) !important;
+            color: #fff !important;
+            border: none !important;
+            font-family: 'Cairo', sans-serif !important;
+            border-radius: 6px !important;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 8px 8px; }
+            .main-container { border-radius: 6px; }
+            .header { padding: 1.25rem 1rem; }
+            .header h1 { font-size: 1.4rem; gap: 8px; }
+            .header h1 i { font-size: 1.6rem; }
+            .header .system-badge { font-size: 0.68rem; padding: 5px 12px; letter-spacing: 1px; }
+            .meta { flex-direction: column; align-items: flex-start; font-size: 0.78rem; }
+            .badge { padding: 4px 12px; font-size: 0.7rem; }
+            .chapter { padding: 1rem 0.75rem !important; }
+            .chapter h2 { font-size: 1.2rem !important; }
+            .chapter h3 { font-size: 1.05rem !important; }
+            .chapter h4 { font-size: 0.95rem !important; }
+            .chapter p, .chapter li { font-size: 0.88rem !important; line-height: 1.7 !important; }
+
+            .chapter table, table.heatmap, table {
+                display: block !important;
+                overflow-x: auto !important;
+                white-space: nowrap !important;
+                -webkit-overflow-scrolling: touch !important;
+                max-width: 100% !important;
+            }
+            .chapter table th, .chapter table td, table th, table td {
+                white-space: normal !important;
+                font-size: 0.82rem !important;
+                padding: 8px 10px !important;
+            }
+
+            .forms-download-section, .forms-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1.15rem; }
+            .guide-topnav__btn { padding: 7px 10px; font-size: 0.78rem; }
+            .guide-topnav__btn span { font-size: 0.78rem; }
+            code, pre { font-size: 0.78rem !important; }
+        }
+
+        /* ---- UNIFIED STRICT PRINT STYLES (A4, White BG, Black Text) ---- */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 15mm;
+            }
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-size: 11pt !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                background-image: none !important;
+            }
+            .main-container {
+                box-shadow: none !important;
+                border: none !important;
+                background: #ffffff !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+            }
+            .main-container::before, .chapter::before, .box::after {
+                display: none !important;
+            }
+            .header {
+                background: #ffffff !important;
+                color: #000000 !important;
+                border-bottom: 2px solid #000 !important;
+                padding: 0 0 15px 0 !important;
+            }
+            .header h1, .header h1 i {
+                color: #000000 !important;
+                text-shadow: none !important;
+                filter: none !important;
+            }
+            .header .system-badge {
+                border: 1px solid #000 !important;
+                color: #000 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+            }
+            .header .system-badge .blink-dot { display: none !important; }
+            .meta, .badge, .header .sub-meta {
+                color: #000 !important;
+                border-color: #000 !important;
+                background: transparent !important;
+            }
+            .guide-topnav, .sticky-nav, .search-bar-wrap, .forms-download-section, .footer-end a {
+                display: none !important;
+            }
+            .chapter {
+                page-break-inside: avoid !important;
+                background: #ffffff !important;
+                border: 1px solid #ccc !important;
+                box-shadow: none !important;
+                color: #000000 !important;
+                padding: 15px !important;
+                margin-bottom: 20px !important;
+            }
+            h2, h3, h4, p, li, strong, span, div, i {
+                color: #000000 !important;
+                text-shadow: none !important;
+            }
+            .chapter-head { border-bottom: 2px solid #000 !important; margin-bottom: 15px !important; }
+            .chapter-num {
+                background: #fff !important;
+                color: #000 !important;
+                border: 1px solid #000 !important;
+                box-shadow: none !important;
+            }
+            h3 { border-right: 4px solid #000 !important; margin-top: 15px !important; }
+            .box, .integration-sync {
+                background: #fdfdfd !important;
+                border: 1px solid #000 !important;
+                color: #000 !important;
+                box-shadow: none !important;
+                page-break-inside: avoid !important;
+            }
+            table, table.heatmap, th, td {
+                border: 1px solid #000 !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+                page-break-inside: avoid !important;
+            }
+            th { border-bottom: 2px solid #000 !important; font-weight: bold !important; }
+            table.heatmap td { background: #ffffff !important; color: #000 !important; }
+            .timeline-flow { border: 1px solid #000 !important; background: #fff !important; page-break-inside: avoid !important; }
+            .timeline-step { background: #fff !important; border-left: 1px solid #000 !important; }
+            .timeline-step.active { border-bottom: 3px solid #000 !important; }
+            .gauge-dashboard { page-break-inside: avoid !important; }
+            .gauge-card { border: 1px solid #000 !important; background: #fff !important; box-shadow: none !important; }
+            .gauge-ring { border-color: #000 !important; box-shadow: none !important; }
+            .alert-strip {
+                background: #ffffff !important;
+                color: #000 !important;
+                border: 2px solid #000 !important;
+                page-break-inside: avoid !important;
+            }
+            pre, code {
+                background: #ffffff !important;
+                color: #000 !important;
+                border: 1px solid #000 !important;
+                box-shadow: none !important;
+                page-break-inside: avoid !important;
+                white-space: pre-wrap !important;
+            }
+            .footer-end {
+                background: #ffffff !important;
+                color: #000 !important;
+                border: none !important;
+                border-top: 2px solid #000 !important;
+                box-shadow: none !important;
+                page-break-inside: avoid !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="guide-topnav no-print" role="navigation" aria-label="Site navigation">
+        <a class="guide-topnav__btn guide-topnav__btn--primary" href="dashboard/">
+            <i class="fas fa-th-large"></i><span>لوحة التحكم</span>
+        </a>
+        <a class="guide-topnav__btn guide-topnav__btn--secondary" href="./">
+            <i class="fas fa-home"></i><span>الصفحة الرئيسية</span>
+        </a>
+        <span class="guide-topnav__title">الدليل التشغيلي — Brandzo ERP 2026</span>
+    </div>
+
+    <div class="main-container">
+
+        <header class="header">
+            <span class="system-badge">
+                <span class="blink-dot"></span> BRANDZO FRANCHISE PARTNERS — COMMAND CENTER OUTPUT
+            </span>
+            <h1>
+                <i class="fas fa-industry"></i>
+                الدليل التشغيلي المتكامل — Brandzo Franchise Partners
+            </h1>
+            <div class="meta">
+                <span><i class="fas fa-user-edit"></i> إعداد: محمد إبراهيم البرشي</span>
+                <span><i class="fas fa-user-tie"></i> إلى: المدراء المباشرين أ.خالد بالروين . أ.محمد الزوي</span>
+                <span class="badge"><i class="fas fa-bullseye"></i> الغرض: حجر أساس للعمليات المخزنية</span>
+            </div>
+            <div class="sub-meta">
+                <i class="fas fa-clipboard-list"></i> أدوات البحث: الخبرة العملية – الأخطاء السابقة – نماذج العمل العالمية – معلومات واقعية معاصرة
+            </div>
+        </header>
+
+        <div class="sticky-nav">
+            <span class="nav-title"><i class="fas fa-list"></i> الفهرس:</span>
+            <div class="nav-links">
+                <a href="#bab1">١- الإطار العام</a>
+                <a href="#bab2">٢- الهيكل التنظيمي</a>
+                <a href="#bab3">٣- الدورة المستندية</a>
+                <a href="#bab4">٤- ERP</a>
+                <a href="#bab5">٥- النماذج</a>
+                <a href="#bab6">٦- Excel</a>
+                <a href="#bab7">٧- مؤشرات</a>
+                <a href="#bab8">٨- طوارئ</a>
+                <a href="#bab9">٩- HACCP</a>
+                <a href="#bab10">١٠- تدريب</a>
+                <a href="#bab11">١١- ملاحق</a>
+            </div>
+        </div>
+
+        <div class="search-bar-wrap">
+            <label><i class="fas fa-search"></i> بحث في الدليل:</label>
+            <input type="text" id="searchInput" placeholder="اكتب كلمة للبحث... (Enter للتنقل بين النتائج، Esc للمسح)" autocomplete="off">
+            <span id="searchCount"></span>
+            <button id="clearSearch">✕ مسح</button>
+        </div>
+
+        <main class="content">
+
+            <section id="bab1" class="chapter">
+                <details open>
+<summary style="list-style: none; cursor: pointer;"><div class="chapter-head">
+                    <h2>الباب الأول: الإطار العام والتأسيس المنهجي</h2>
+                    <span class="chapter-num">١</span>
+                </div></summary>
+
+                <h3>المقدمة التنفيذية</h3>
+                <p>انطلاقاً من متطلبات بناء نظام مستودعات مركزي يليق باسم ومكانة Brandzo Franchise Partners كواحدة من أكبر سلاسل التجزئة في العالم، تم إعداد هذا البحث الشامل والموسع ليكون بمثابة المرجعية التشغيلية الكاملة لأي مستودع رئيسي يعمل وفق نموذج Brandzo Franchise Partners. إن الهدف من هذا البحث ليس مجرد الوصف النظري، بل بناء إطار عملي قابل للتطبيق الفعلي في بيئة العمل الحقيقية، مع الأخذ بعين الاعتبار كافة التعقيدات والتحديات التي تواجه إدارة سلسلة إمداد بهذا الحجم والتنوع.</p>
+                <p>إن الفرضية الأساسية التي بني عليها هذا البحث هي أن المستودع الرئيسي لBrandzo Franchise Partners ليس مجرد مساحة تخزين، بل هو القلب النابض لعمليات السلسلة بأكملها، حيث تلتقي فيه آلاف الأصناف من مئات الموردين ليتم توزيعها بدقة وسرعة على شبكة واسعة من المتاجر والفروع التي تخدم ملايين العملاء يومياً.</p>
+
+                <h3>تحديد الغرض من البحث الشامل</h3>
+                <p>الغرض الأساسي من هذا البحث الشامل عن Brandzo Franchise Partners يتلخص في النقاط الجوهرية التالية:</p>
+                <p><strong>أولاً:</strong> فهم التركيبة الفريدة لمنظومة Brandzo Franchise Partners التشغيلية، والتي تتميز بتنوع هائل في المنتجات يشمل:</p>
+                <ul>
+                    <li>المنتجات الغذائية الطازجة التي تتطلب سلسلة تبريد متكاملة</li>
+                    <li>المنتجات المجمدة التي تحتاج إلى بيئة تخزين خاصة</li>
+                    <li>المنتجات الجافة ذات العمر الافتراضي الطويل</li>
+                    <li>المنتجات غير الغذائية التي تتنوع بين الأدوات المنزلية والإلكترونيات</li>
+                    <li>العلامات التجارية الخاصة بBrandzo Franchise Partners والتي تتطلب إدارة خاصة للمخزون</li>
+                </ul>
+                <p><strong>ثانياً:</strong> تحديد الآليات التشغيلية التي تمكن Brandzo Franchise Partners من الحفاظ على:</p>
+                <ul>
+                    <li>مستويات مخزون مثالية تمنع النفاد وتقلل التالف</li>
+                    <li>سرعة تدفق البضائع من المورد إلى رف المتجر</li>
+                    <li>جودة المنتجات خاصة الغذائية منها</li>
+                    <li>تكاليف تشغيلية منخفضة رغم ضخامة العمليات</li>
+                </ul>
+                <p><strong>ثالثاً:</strong> استخلاص نموذج عام يمكن تطبيقه في أي مستودع رئيسي يتبع نموذج Brandzo Franchise Partners، بحيث يكون هذا النموذج:</p>
+                <ul>
+                    <li>قابلاً للتطبيق الفعلي وليس نظرياً فقط</li>
+                    <li>مرناً بما يكفي لاستيعاب التنوع الهائل في المنتجات</li>
+                    <li>محكماً بما يضمن الرقابة المالية والإدارية</li>
+                    <li>قابلاً للتوسع مع نمو حجم الأعمال</li>
+                </ul>
+
+                <h3>السيناريو الافتراضي للتطبيق العملي</h3>
+                <p>لتحقيق أقصى درجات الواقعية والفائدة العملية من هذا البحث، تم افتراض السيناريو التالي:</p>
+                <p>نحن الآن نمثل المستودع الرئيسي المركزي لBrandzo Franchise Partners في منطقة جغرافية واسعة، وهذا المستودع مسؤول عن تغذية شبكة متكاملة من الفروع تشمل:</p>
+                <ul>
+                    <li>الهايبر ماركت: الفروع الضخمة التي تقدم تشكيلة كاملة من المنتجات</li>
+                    <li>السوبر ماركت: الفروع المتوسطة التي تركز على المواد الغذائية الأساسية</li>
+                    <li>متاجر التجزئة الصغيرة: الفروع السريعة التي تخدم الأحياء السكنية</li>
+                </ul>
+                <p>وهذا يعني أن المستودع الذي نصممه يجب أن يكون قادراً على:</p>
+                <ul>
+                    <li>التعامل مع أكثر من 50,000 صنف مختلف في نفس الوقت</li>
+                    <li>استقبال وتجهيز آلاف الطلبات يومياً</li>
+                    <li>إدارة مخزون بملايين القطع</li>
+                    <li>خدمة فروع تبعد مسافات متفاوتة عن المستودع</li>
+                    <li>التعامل مع دورات حياة مختلفة للمنتجات من حيث الصلاحية والطلب</li>
+                </ul>
+
+                <h3>المنهجية المتبعة في هذا البحث</h3>
+                <p>تم بناء هذا البحث وفق منهجية علمية تتكون من عدة طبقات مترابطة:</p>
+                <p><strong>الطبقة الأولى: الطبقة النظرية المرجعية</strong></p>
+                <ul>
+                    <li>دراسة معمقة لنموذج Brandzo Franchise Partners العالمي في إدارة المستودعات</li>
+                    <li>تحليل أفضل الممارسات العالمية في قطاع التجزئة</li>
+                    <li>استعراض معايير سلامة الغذاء العالمية المطبقة في Brandzo Franchise Partners</li>
+                </ul>
+                <p><strong>الطبقة الثانية: الطبقة الإجرائية التطبيقية</strong></p>
+                <ul>
+                    <li>تحديد كافة الإجراءات التشغيلية خطوة بخطوة</li>
+                    <li>وضع السياسات المنظمة لكل عملية</li>
+                    <li>تحديد المسؤوليات والصلاحيات</li>
+                </ul>
+                <p><strong>الطبقة الثالثة: الطبقة النظامية التقنية</strong></p>
+                <ul>
+                    <li>تحديد متطلبات نظام إدارة المستودعات الإلكتروني</li>
+                    <li>وضع آليات الربط بين العمليات والتقنية</li>
+                    <li>تحديد مؤشرات الأداء الرئيسية</li>
+                </ul>
+                <p><strong>الطبقة الرابعة: الطبقة الرقابية المالية</strong></p>
+                <ul>
+                    <li>وضع نظام المطابقات المالية</li>
+                    <li>تحديد إجراءات الرقابة الداخلية</li>
+                    <li>وضع آليات منع الاحتيال والأخطاء</li>
+                </ul>
+            </details>
+            </section>
+
+            <section id="bab2" class="chapter">
+                <details open>
+<summary style="list-style: none; cursor: pointer;"><div class="chapter-head">
+                    <h2>الباب الثاني: الهيكل التنظيمي والتقسيمات الأساسية للمستودع الرئيسي</h2>
+                    <span class="chapter-num">٢</span>
+                </div></summary>
+
+                <div class="alert-strip">
+                    <i class="fas fa-map-marked-alt"></i> WAREHOUSE ZONE ACTIVITY HEATMAP — تحليل كثافة النشاط حسب المنطقة
+                </div>
+                <table class="heatmap">
+                    <tr><th>المنطقة</th><th>المساحة (م²)</th><th>معدل الدوران اليومي</th><th>كثافة العمالة</th><th>مستوى الخطورة</th><th>حالة المنطقة</th></tr>
+                    <tr><td>منطقة الاستلام</td><td>2,500</td><td class="heat-high">85%</td><td class="heat-high">مرتفع</td><td class="heat-medium">متوسط</td><td class="heat-none">نشطة</td></tr>
+                    <tr><td>التخزين الجاف</td><td>30,000</td><td class="heat-medium">62%</td><td class="heat-medium">متوسط</td><td class="heat-low">منخفض</td><td class="heat-none">مستقرة</td></tr>
+                    <tr><td>التخزين المبرد</td><td>4,500</td><td class="heat-high">78%</td><td class="heat-high">مرتفع</td><td class="heat-critical">حرج</td><td class="heat-high">مراقَبة</td></tr>
+                    <tr><td>التخزين المجمد</td><td>3,200</td><td class="heat-medium">55%</td><td class="heat-medium">متوسط</td><td class="heat-critical">حرج</td><td class="heat-high">مراقَبة</td></tr>
+                    <tr><td>منطقة الانتقاء</td><td>6,000</td><td class="heat-critical">92%</td><td class="heat-critical">عالي جداً</td><td class="heat-high">مرتفع</td><td class="heat-high">ذروة</td></tr>
+                    <tr><td>منطقة الشحن</td><td>3,800</td><td class="heat-high">80%</td><td class="heat-high">مرتفع</td><td class="heat-medium">متوسط</td><td class="heat-none">نشطة</td></tr>
+                    <tr><td>المنتجات عالية القيمة</td><td>800</td><td class="heat-low">25%</td><td class="heat-low">منخفض</td><td class="heat-critical">حرج</td><td class="heat-none">مؤمَّنة</td></tr>
+                </table>
+
+                <p>الهيكل التنظيمي الكامل للمستودع الرئيسي</p>
+                <p>إن نجاح أي مستودع بحجم Brandzo Franchise Partners يبدأ من هيكل تنظيمي واضح ومحكم يحدد المسؤوليات والصلاحيات بشكل لا يقبل الالتباس. فيما يلي الهيكل التنظيمي المقترح:</p>
+
+                <h3>أولاً: الإدارة العليا للمستودع</h3>
+                <p><strong>1. مدير عمليات المستودع الرئيسي</strong></p>
+                <p>يقع على عاتقه:</p>
+                <ul>
+                    <li>الإشراف العام على كافة أنشطة المستودع</li>
+                    <li>وضع الاستراتيجيات التشغيلية قصيرة وطويلة المدى</li>
+                    <li>إدارة الميزانية التشغيلية التي قد تتجاوز مئات الملايين</li>
+                    <li>التنسيق مع الإدارة المركزية لBrandzo Franchise Partners</li>
+                    <li>اعتماد السياسات والإجراءات الرئيسية</li>
+                    <li>إدارة علاقات الموردين الكبار</li>
+                    <li>مراجعة وتقييم مؤشرات الأداء الشاملة</li>
+                    <li>اتخاذ القرارات الاستراتيجية المتعلقة بالتوسعات</li>
+                </ul>
+                <p><strong>2. مدير المستودع التنفيذي</strong></p>
+                <ul>
+                    <li>الإشراف اليومي المباشر على جميع الأقسام</li>
+                    <li>حل المشكلات الطارئة والمعقدة</li>
+                    <li>ضمان التزام جميع الإدارات بالإجراءات المعتمدة</li>
+                    <li>التنسيق بين الإدارات المختلفة</li>
+                    <li>إعداد التقارير الدورية للإدارة العليا</li>
+                    <li>إدارة الموارد البشرية بالمستودع</li>
+                    <li>متابعة خطط التدريب والتطوير</li>
+                    <li>ضمان تطبيق معايير السلامة المهنية</li>
+                </ul>
+                <p><strong>3. مدير أنظمة المعلومات والتحول الرقمي</strong></p>
+                <ul>
+                    <li>الإشراف على نظام إدارة المستودعات الإلكتروني</li>
+                    <li>ضمان تكامل أنظمة المستودع مع أنظمة Brandzo Franchise Partners المركزية</li>
+                    <li>قيادة مبادرات الأتمتة والتحول الرقمي</li>
+                    <li>إدارة فريق الدعم الفني</li>
+                    <li>ضمان استمرارية عمل الأنظمة على مدار الساعة</li>
+                    <li>تحليل البيانات الضخمة لتحسين الأداء</li>
+                </ul>
+                <p><strong>4. مدير الجودة والسلامة الغذائية</strong></p>
+                <ul>
+                    <li>ضمان تطبيق معايير سلامة الغذاء العالمية</li>
+                    <li>إدارة فريق فحص الجودة</li>
+                    <li>اعتماد الموردين الجدد من الناحية الفنية</li>
+                    <li>متابعة شهادات الجودة والصلاحية</li>
+                    <li>إدارة حالات سحب المنتجات</li>
+                    <li>الإشراف على معامل فحص الجودة بالمستودع</li>
+                    <li>تطبيق معايير التخزين الصحية</li>
+                </ul>
+                <p><strong>5. مدير المحاسبة والرقابة المالية</strong></p>
+                <ul>
+                    <li>الإشراف على جميع العمليات المالية</li>
+                    <li>ضمان دقة المطابقات المالية مع الموردين</li>
+                    <li>إدارة دورة الإيرادات والمصروفات</li>
+                    <li>إعداد التقارير المالية للإدارة العليا</li>
+                    <li>الإشراف على أنشطة الجرد المالي</li>
+                    <li>مراقبة تكاليف التشغيل وترشيدها</li>
+                </ul>
+
+                <h3>ثانياً: هيكل الإدارات التشغيلية</h3>
+                <h4>أ. إدارة الاستلام والرقابة</h4>
+                <p>تتكون من:</p>
+                <p><strong>1. مدير قسم الاستلام</strong> – يشرف على تخطيط جداول الاستلام اليومية وإدارة الأرصفة، التنسيق مع الموردين، حل مشكلات الشحنات، وتوزيع موارد العمل.</p>
+                <p><strong>2. مشرف الاستلام - الفترة الصباحية</strong> – مسؤول عن استقبال شحنات الصباح وهي الأكبر حجماً.</p>
+                <p><strong>3. مشرف الاستلام - الفترة المسائية</strong> – مسؤول عن الشحنات التي تصل بعد الظهر من الموردين المحليين.</p>
+                <p><strong>4. فريق إدخال بيانات الاستلام</strong> – يتكون من 4-6 موظفين يعملون بنظام الورديات.</p>
+                <p><strong>5. فريق عمال الرصيف والمناولة</strong> – يتكون من 20-30 عاملاً موزعين على الورديات.</p>
+
+                <h4>ب. إدارة فحص ومراقبة الجودة</h4>
+                <p>تعتبر هذه الإدارة حجر الزاوية في ضمان سلامة منتجات Brandzo Franchise Partners، وتتكون من مدير إدارة الجودة، فريق فحص المنتجات الغذائية الطازجة، فريق فحص المجمدات، فريق فحص المنتجات الجافة والمعلبة، وفريق فحص المنتجات غير الغذائية.</p>
+
+                <h4>ج. إدارة التخزين وتحديد المواقع</h4>
+                <p>تعتبر من أكبر وأهم الإدارات في المستودع الرئيسي، وتشمل مدير عمليات التخزين، مهندس تخطيط المستودع، مشرفي مناطق التخزين المتخصصة (الجاف، المبرد، المجمد، عالية القيمة، المواد الخطرة)، فريق مشغلي الرافعات الشوكية (40-60 مشغلاً)، وفريق مراقبي المخزون (10-12 مراقباً).</p>
+
+                <h4>د. إدارة تحضير الطلبات والتوزيع</h4>
+                <p>قلب العمليات الصادرة من المستودع، وتشمل مدير عمليات التوزيع، مخطط الأحمال، مشرفي مناطق الانتقاء، فريق العمال المتنقلين (80-120 عاملاً)، فريق المراجعين والمدققين، وفريق التعبئة والتجهيز النهائي.</p>
+
+                <h4>هـ. إدارة أسطول النقل والتوزيع</h4>
+                <p>تشمل مدير النقل والتوزيع، منسق أول لعمليات التوزيع اليومية، فريق السائقين (50-70 سائقاً)، فريق مساعدي السائقين، ومهندس صيانة الأسطول.</p>
+
+                <h4>و. إدارة المرتجعات وتصحيح المخزون</h4>
+                <p>إدارة حساسة تتعامل مع المنتجات المعادة من الفروع، وتشمل مدير إدارة المرتجعات، مشرف استلام المرتجعات، فريق فحص المرتجعات، فريق معالجة المرتجعات، ومنسق المرتجعات مع الموردين.</p>
+            </details>
+            </section>
+
+            <section id="bab3" class="chapter">
+                <details open>
+<summary style="list-style: none; cursor: pointer;"><div class="chapter-head">
+                    <h2>الباب الثالث: الدورة المستندية الشاملة لنظام مستودعات Brandzo Franchise Partners الرئيسية</h2>
+                    <span class="chapter-num">٣</span>
+                </div></summary>
+
+                <div class="alert-strip">
+                    <i class="fas fa-stream"></i> DOCUMENT CYCLE TIMELINE — تدفق الدورة المستندية الكاملة
+                </div>
+                <div class="timeline-flow">
+                    <div class="timeline-step active">
+                        <span class="step-icon"><i class="fas fa-cart-plus"></i></span>
+                        <span class="step-num">01</span>
+                        <span class="step-label">طلب الشراء PR</span>
+                    </div>
+                    <div class="timeline-step">
+                        <span class="step-icon"><i class="fas fa-file-contract"></i></span>
+                        <span class="step-num">02</span>
+                        <span class="step-label">أمر الشراء PO</span>
+                    </div>
+                    <div class="timeline-step">
+                        <span class="step-icon"><i class="fas fa-truck-loading"></i></span>
+                        <span class="step-num">03</span>
+                        <span class="step-label">إشعار الشحن ASN</span>
+                    </div>
+                    <div class="timeline-step active">
+                        <span class="step-icon"><i class="fas fa-clipboard-check"></i></span>
+                        <span class="step-num">04</span>
+                        <span class="step-label">الاستلام وفحص الجودة</span>
+                    </div>
+                    <div class="timeline-step">
+                        <span class="step-icon"><i class="fas fa-warehouse"></i></span>
+                        <span class="step-num">05</span>
+                        <span class="step-label">التخزين الموجه</span>
+                    </div>
+                    <div class="timeline-step active">
+                        <span class="step-icon"><i class="fas fa-boxes"></i></span>
+                        <span class="step-num">06</span>
+                        <span class="step-label">تحضير الطلبات</span>
+                    </div>
+                    <div class="timeline-step">
+                        <span class="step-icon"><i class="fas fa-shipping-fast"></i></span>
+                        <span class="step-num">07</span>
+                        <span class="step-label">الشحن والتوزيع</span>
+                    </div>
+                    <div class="timeline-step">
+                        <span class="step-icon"><i class="fas fa-undo-alt"></i></span>
+                        <span class="step-num">08</span>
+                        <span class="step-label">المرتجعات</span>
+                    </div>
+                </div>
+
+                <p><strong>المقدمة: أهمية الدورة المستندية في نظام Brandzo Franchise Partners</strong></p>
+                <p>تمثل الدورة المستندية العمود الفقري للنظام الرقابي في مستودعات Brandzo Franchise Partners الرئيسية. إنها ليست مجرد أوراق يتم تداولها، بل هي نظام متكامل يضمن:</p>
+                <ol>
+                    <li>الرقابة المالية: تمنع التلاعب والسرقة من خلال توثيق كل حركة للمخزون</li>
+                    <li>الشفافية التشغيلية: تجعل كل عملية قابلة للتتبع والمراجعة في أي وقت</li>
+                    <li>المساءلة القانونية: تحدد المسؤول عن كل مرحلة من مراحل حركة البضائع</li>
+                    <li>تدقيق الحسابات: توفر سجلاً كاملاً يمكن للمدققين الخارجيين الاعتماد عليه</li>
+                    <li>تحسين الأداء: تمكن من قياس كفاءة العمليات وتحليل أسباب المشكلات</li>
+                </ol>
+
+                <div class="box">
+                    <strong>المبدأ الأساسي: لا حركة بدون مستند</strong><br>
+                    القاعدة الذهبية في مستودعات Brandzo Franchise Partners هي: لا يتم تحريك أي صنف، أياً كانت قيمته أو حجمه، بدون مستند رسمي معتمد يبرر هذه الحركة ويوضح تفاصيلها.<br>
+                    هذا المبدأ يطبق على جميع أنواع الحركات: استلام بضائع من الموردين، نقل بضائع بين مناطق التخزين المختلفة، صرف بضائع لتجهيز طلبات الفروع، إرجاع بضائع من الفروع، التخلص من بضائع تالفة أو منتهية الصلاحية.
+                </div>
+
+                <h3>المرحلة الأولى: دورة التعاقد والطلب (Procurement & Ordering Cycle)</h3>
+                <h4>المستند الأول: طلب الشراء (Purchase Requisition - PR)</h4>
+                <p><strong>التعريف والغرض:</strong> طلب الشراء هو مستند داخلي يصدر من نظام إدارة المخزون (WMS) أو نظام تخطيط موارد المؤسسة (ERP) في Brandzo Franchise Partners بشكل آلي عندما يصل رصيد صنف معين إلى "نقطة إعادة الطلب" (Reorder Point).</p>
+                <p><strong>مكونات طلب الشراء:</strong> رقم طلب الشراء، تاريخ ووقت الإصدار، بيانات الصنف المطلوب (SKU)، الكمية المطلوبة، الموردون المعتمدون، آخر سعر شراء، مستوى المخزون الحالي، المخزون المرتبط.</p>
+
+                <h4>المستند الثاني: أمر الشراء (Purchase Order - PO)</h4>
+                <p><strong>التعريف والغرض:</strong> أمر الشراء هو المستند الرسمي القانوني الذي يصدر من Brandzo Franchise Partners إلى المورد، ويمثل التزاماً تعاقدياً بشراء كمية محددة من منتجات محددة بسعر محدد ووفق شروط تسليم محددة.</p>
+                <p><strong>مكونات أمر الشراء التفصيلية:</strong> البيانات التعريفية (رقم PO، تاريخ الإصدار، تاريخ التسليم، شروط Incoterms)، بيانات الطرفين، بنود أمر الشراء، القيمة الإجمالية، الشروط والأحكام (العمر الافتراضي المتبقي 75%، شروط التغليف، نافذة التسليم، شروط الدفع 60 يوم من GRN).</p>
+
+                <h4>المستند الثالث: إشعار الشحن المسبق (Advanced Shipping Notice - ASN)</h4>
+                <p><strong>التعريف والغرض:</strong> إشعار الشحن المسبق هو مستند إلكتروني يرسله المورد إلى المستودع الرئيسي لBrandzo Franchise Partners بمجرد شحن البضاعة من مخازنه أو مصنعه. الغرض منه هو إبلاغ المستودع بتفاصيل الشحنة القادمة وموعد وصولها المتوقع.</p>
+
+                <h3>المرحلة الثانية: دورة الاستلام والرقابة (Receiving & Quality Control)</h3>
+                <h4>المستند الأول: مذكرة التسليم (Delivery Note / Waybill)</h4>
+                <p><strong>التعريف والغرض:</strong> مذكرة التسليم هي المستند الذي يحمله سائق الشاحنة مع البضائع عند وصولها إلى المستودع. تختلف عن أمر الشراء في أنها تمثل البضائع المشحونة فعلاً وليس المطلوبة.</p>
+
+                <h4>المستند الثاني: تقرير فحص الجودة (Quality Inspection Report)</h4>
+                <p><strong>التعريف والغرض:</strong> هذا المستند يصدر عن فريق فحص الجودة في Brandzo Franchise Partners بعد فحص الشحنة فحصاً مادياً دقيقاً. وهو الذي يحدد مصير الشحنة: قبول كامل، قبول جزئي، أو رفض كامل.</p>
+
+                <h4>المستند الثالث: مذكرة استلام البضائع (Goods Received Note - GRN)</h4>
+                <p><strong>التعريف والغرض:</strong> مذكرة استلام البضائع هي أهم مستند في دورة المستودعات على الإطلاق. إنها تمثل الإقرار الرسمي من Brandzo Franchise Partners باستلام البضائع ودخولها في عهدتها ومسؤوليتها.</p>
+
+                <h3>المرحلة الثالثة: دورة التخزين والتحويل الداخلي</h3>
+                <h4>المستند الأول: قائمة التخزين الموجه (Directed Put-away List)</h4>
+                <p><strong>التعريف والغرض:</strong> قائمة التخزين الموجه هي مستند يصدر من نظام إدارة المستودعات (WMS) فور الانتهاء من GRN. يعطي هذا المستند تعليمات دقيقة لمشغلي الرافعات الشوكية والعمال حول أين يجب وضع كل طبلية.</p>
+
+                <h4>المستند الثاني: إذن التحويل الداخلي (Internal Transfer Note)</h4>
+                <p>يستخدم لنقل البضائع من منطقة تخزين إلى أخرى داخل المستودع. أنواع التحويلات: Bulk to Pick، Consolidation، Re-slotting، Zone Clearing.</p>
+
+                <h4>المستند الثالث: محضر الجرد الدوري (Cycle Count Sheet)</h4>
+                <p><strong>استراتيجية الجرد الدوري (تحليل ABC):</strong> الفئة A (قيمة عالية ودوران سريع) أسبوعي، الفئة B شهري، الفئة C ربع سنوي.</p>
+
+                <h3>المرحلة الرابعة: دورة تحضير الطلبات والتوزيع</h3>
+                <h4>المستند الأول: طلب توريد المتجر (Store Requisition Order)</h4>
+                <p>يصدره مدير فرع Brandzo Franchise Partners لطلب تجديد مخزونه من المستودع الرئيسي. أنواع الطلبات: طلب التجديد الآلي (80%)، طلب المناسبات، الطلب الطارئ.</p>
+
+                <h4>المستند الثاني: قائمة تحضير الطلبات (Picking List)</h4>
+                <p>تطبق قاعدة FEFO: "ما ينتهي أولاً يخرج أولاً" (First Expired First Out) مع المنتجات الغذائية.</p>
+
+                <h4>المستند الثالث: قائمة التعبئة (Packing Slip)</h4>
+                <p>تفصيل محتويات كل صندوق أو طبلية يتم شحنها إلى الفرع.</p>
+
+                <h4>المستند الرابع: إذن خروج البضاعة (Delivery Note / Outbound Advice)</h4>
+                <p>المستند الرسمي الذي يثبت خروج البضائع من عهدة المستودع الرئيسي ودخولها مرحلة النقل إلى الفرع.</p>
+
+                <h3>المرحلة الخامسة: دورة المرتجعات (Reverse Logistics)</h3>
+                <h4>المستند الأول: إذن مرتجع مخزني (Goods Return Note)</h4>
+                <p>يصدره الفرع لإعادة بضائع غير قابلة للبيع إلى المستودع الرئيسي.</p>
+                <h4>المستند الثاني: مذكرة خصم (Credit Note)</h4>
+                <p>المستند المحاسبي الذي يتم إصداره لتسوية قيمة المرتجعات.</p>
+            </details>
+            </section>
+
+            <section id="bab4" class="chapter">
+                <details open>
+<summary style="list-style: none; cursor: pointer;"><div class="chapter-head">
+                    <h2>الباب الرابع: الربط مع نظام ERP وإجراءات التشغيل القياسية الموحدة (SOP)</h2>
+                    <span class="chapter-num">٤</span>
+                </div></summary>
+                <p><strong>الربط التكاملي مع أنظمة المعلومات</strong></p>
+                <p>إن نجاح الدورة المستندية المعقدة الموصوفة أعلاه لا يمكن أن يتحقق بدون نظام معلوماتي قوي يربط جميع العمليات معاً ويضمن دقة البيانات وسرعة تدفقها. في Brandzo Franchise Partners، النظام المستخدم هو نظام تخطيط موارد المؤسسة (ERP) المتكامل مع نظام إدارة المستودعات (WMS) المتخصص.</p>
+
+                <h3>وحدة إدارة المستودعات (WMS) داخل ERP</h3>
+                <p>يجب أن يغطي نظام WMS الوظائف الأساسية التالية:</p>
+                <ol>
+                    <li><strong>إدارة عمليات الاستلام (Inbound Management)</strong> – جدولة المواعيد، استلام ASN، توجيه البضائع لمنطقة الفحص، تسجيل نتائج فحص الجودة، إصدار GRN وتحديث الأرصدة.</li>
+                    <li><strong>إدارة التخزين ومواقع التخزين (Slotting & Inventory Management)</strong> – خوارزميات ذكية لتحديد الموقع الأمثل، دعم قاعدة FEFO، التحكم في المخزون المحجوز.</li>
+                    <li><strong>إدارة تحضير الطلبات (Order Fulfillment / Picking)</strong> – استلام طلبات التوريد آلياً، تجميع الطلبات في موجات، توليد قوائم التحضير الإلكترونية.</li>
+                    <li><strong>إدارة الشحن والتوزيع (Outbound & Distribution)</strong> – توليد قوائم التعبئة، تدقيق الطلبات المجهزة، إصدار أذونات الخروج.</li>
+                    <li><strong>إدارة المرتجعات (Reverse Logistics)</strong> – تسجيل المرتجعات وربطها بعملية البيع الأصلية.</li>
+                    <li><strong>إدارة التقارير ومؤشرات الأداء (Reporting & KPIs)</strong> – لوحات معلومات تفاعلية للإدارة.</li>
+                </ol>
+
+                <h3>هيكل البيانات المرجعية (Master Data)</h3>
+                <p>لكي يعمل نظام WMS/ERP بفعالية في بيئة Brandzo Franchise Partners، يجب بناء وتحديث هيكل البيانات المرجعية بدقة متناهية:</p>
+                <ol>
+                    <li><strong>الملف الرئيسي للأصناف (Item Master):</strong> الرقم التعريفي العالمي (GTIN)، رمز SKU الداخلي، الوصف بعدة لغات، الأبعاد والوزن، وحدة القياس الأساسية وعوامل التحويل.</li>
+                    <li><strong>البيانات اللوجستية للأصناف:</strong> متطلبات درجة حرارة التخزين والنقل، المدة القصوى خارج بيئة التخزين، إمكانية التخزين الرأسي، تصنيف المناولة، صلاحية المنتج (75% متبقي عند الاستلام).</li>
+                </ol>
+
+                <div class="box integration-sync">
+                    <strong><i class="fas fa-sync-alt" style="color: var(--yellow-hazard);"></i> التزامن الهندسي-التشغيلي (Operations-Infrastructure Sync)</strong><br>
+                    يجب مراجعة هذه السياسات والإجراءات التشغيلية والبرمجية بشكل دوري لضمان توافقها التام مع الحالة الهندسية والبنية التحتية للموقع. يُشترط إحالة أي مقترح للتطوير (سواء كان تشغيلياً أو هندسياً) إلى <strong>اللجنة التوجيهية المشتركة</strong> لضمان التناغم وتفادي أي فجوات تعيق الأداء.
+                </div>
+            </details>
+            </section>
+
+            <section id="bab5" class="chapter">
+                <details open>
+<summary style="list-style: none; cursor: pointer;"><div class="chapter-head">
+                    <h2>الباب الخامس: النماذج والمستندات التشغيلية التفصيلية</h2>
+                    <span class="chapter-num">٥</span>
+                </div></summary>
+                
+                               <div class="forms-download-section">
+    <h3><i class="fas fa-file-download"></i> 📁 النماذج التشغيلية للتحميل — Downloadable Forms</h3>
+    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">جميع النماذج جاهزة للطباعة أو الحفظ كـ PDF مباشرةً من المتصفح. افتح النموذج واضغط "طباعة" أو (Ctrl+P).</p>
+    
+    <div class="forms-grid">
+        <div class="form-card">
+            <span class="fc-icon">🛒</span>
+            <span class="fc-name">أمر الشراء الرسمي</span>
+            <span class="fc-code">BFP-PO-001 | Purchase Order</span>
+            <a href="/brandzo-warehouse-system/forms/form_PO.html" target="_blank">📂 فتح النموذج</a>
+        </div>
+        <div class="form-card">
+            <span class="fc-icon">📥</span>
+            <span class="fc-name">مذكرة الاستلام وفحص الجودة</span>
+            <span class="fc-code">BFP-GRN-002 | GRN & QC Report</span>
+            <a href="/brandzo-warehouse-system/forms/form_GRN.html" target="_blank">📂 فتح النموذج</a>
+        </div>
+        <div class="form-card">
+            <span class="fc-icon">🗂️</span>
+            <span class="fc-name">بطاقة مراقبة المخزون</span>
+            <span class="fc-code">BFP-BC-003 | Bin / Pallet Card</span>
+            <a href="/brandzo-warehouse-system/forms/form_BinCard.html" target="_blank">📂 فتح النموذج</a>
+        </div>
+        <div class="form-card">
+            <span class="fc-icon">📦</span>
+            <span class="fc-name">قائمة التجميع والتعبئة</span>
+            <span class="fc-code">BFP-PK-004 | Picking & Packing Slip</span>
+            <a href="/brandzo-warehouse-system/forms/form_Picking.html" target="_blank">📂 فتح النموذج</a>
+        </div>
+        <div class="form-card">
+            <span class="fc-icon">✅</span>
+            <span class="fc-name">قائمة تدقيق الجولة الميدانية</span>
+            <span class="fc-code">BFP-GW-005 | Weekly Gemba Walk</span>
+            <a href="/brandzo-warehouse-system/forms/form_WeeklyCheck.html" target="_blank">📂 فتح النموذج</a>
+        </div>
+        <div class="form-card">
+            <span class="fc-icon">☀️</span>
+            <span class="fc-name">محضر اجتماع الصباح اليومي</span>
+            <span class="fc-code">BFP-DH-006 | Daily Huddle</span>
+            <a href="/brandzo-warehouse-system/forms/form_DailyHuddle.html" target="_blank">📂 فتح النموذج</a>
+        </div>
+        <div class="form-card">
+            <span class="fc-icon">🔢</span>
+            <span class="fc-name">محضر الجرد الدوري</span>
+            <span class="fc-code">BFP-CC-007 | Cycle Count Sheet</span>
+            <a href="/brandzo-warehouse-system/forms/form_CycleCount.html" target="_blank">📂 فتح النموذج</a>
+        </div>
+        <div class="form-card">
+            <span class="fc-icon">🔄</span>
+            <span class="fc-name">نموذج مرتجع مخزني</span>
+            <span class="fc-code">BFP-RT-008 | Goods Return Note</span>
+            <a href="/brandzo-warehouse-system/forms/form_ReturnNote.html" target="_blank">📂 فتح النموذج</a>
+        </div>
+        <div class="form-card">
+            <span class="fc-icon">🔄</span>
+            <span class="fc-name">إذن التحويل الداخلي</span>
+            <span class="fc-code">BFP-ST-009 | Stock Transfer Slip</span>
+            <a href="/brandzo-warehouse-system/forms/form_Stock%20Transfer%20Slip.html" target="_blank">📂 فتح النموذج</a>
+        </div>
+        <div class="form-card">
+            <span class="fc-icon">⚠️</span>
+            <span class="fc-name">سند التالف</span>
+            <span class="fc-code">BFP-DG-010 | Damaged Goods Report</span>
+            <a href="/brandzo-warehouse-system/forms/form_Damaged%20Goods%20Report.html" target="_blank">📂 فتح النموذج</a>
+        </div>
+        <div class="form-card">
+            <span class="fc-icon">⚖️</span>
+            <span class="fc-name">سند تسوية الجرد</span>
+            <span class="fc-code">BFP-SA-011 | Stock Adjustment Voucher</span>
+            <a href="/brandzo-warehouse-system/forms/form_Stock%20Adjustment%20Voucher.html" target="_blank">📂 فتح النموذج</a>
+        </div>
+        <div class="form-card">
+            <span class="fc-icon">📥</span>
+            <span class="fc-name">أمر الصرف الداخلي</span>
+            <span class="fc-code">BFP-SR-012 | Store Requisition</span>
+            <a href="/brandzo-warehouse-system/forms/form_Store%20Requisition.html" target="_blank">📂 فتح النموذج</a>
+        </div>
+        <div class="form-card">
+            <span class="fc-icon">💳</span>
+            <span class="fc-name">مذكرة الخصم</span>
+            <span class="fc-code">BFP-CN-013 | Credit Note</span>
+            <a href="/brandzo-warehouse-system/forms/form_Credit%20Note.html" target="_blank">📂 فتح النموذج</a>
+        </div>
+    </div> </div> <p>في هذا الباب، نقدم النماذج الفعلية التي سيتم استخدامها يوميًا في المستودع الرئيسي. تم تصميم كل نموذج ليكون شاملاً ويغطي جميع المتطلبات القانونية والتشغيلية والرقابية.</p>
+
+                <h3>النموذج رقم (1): أمر الشراء الرسمي - نموذج Brandzo Franchise Partners (Purchase Order Form)</h3>
+                <p><strong>وصف النموذج:</strong> وثيقة رسمية تصدر من قسم المشتريات المركزية، وتعتبر عقداً ملزماً بين Brandzo Franchise Partners والمورد.</p>
+                <table>
+                    <tr><th>#</th><th>رمز SKU</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>
+                    <tr><td>1</td><td>5449000000996</td><td>حليب Brandzo Franchise Partners كامل الدسم 1 لتر</td><td>500</td><td>42.00 ر.س</td><td>21,000</td></tr>
+                    <tr><td>2</td><td>5449000001234</td><td>أرز بسمتي Brandzo Franchise Partners 5 كجم</td><td>1,000</td><td>35.50 ر.س</td><td>35,500</td></tr>
+                </table>
+                <p>الإجماليات النهائية: المجموع قبل الضريبة 56,500 ر.س، إجمالي الضريبة 8,475 ر.س، القيمة الإجمالية 64,975 ر.س.</p>
+
+                <h3>النموذج رقم (2): مذكرة الاستلام وفحص الجودة (GRN & QC Report Combined)</h3>
+                <p><strong>وصف النموذج:</strong> يجمع هذا النموذج بين وظيفتي تسجيل الكميات المستلمة ونتائج فحص الجودة في مستند واحد.</p>
+
+                <h3>النموذج رقم (3): بطاقة تخزين الطبلية/الموقع (Pallet / Bin Card System)</h3>
+                <pre>
+        ============================================================================
+        |                 Brandzo Franchise Partners - المستودع الرئيسي    بطاقة مراقبة المخزون (Bin Card)      |
+        |============================================================================|
+        | رمز الموقع: Z03-A14-R07-L03   |  رمز الصنف: 5449000000996  حليب Brandzo Franchise Partners 1لتر       |
+        | التاريخ  | رقم المستند | وارد | صادر | الرصيد | توقيع |
+        | 2025/04/01| GRN-1223  | 500 | 0   | 500  | ع.م  |
+        ============================================================================
+        | الحد الأدنى للتنبيه: 100 كرتونة   | الحد الأقصى للطلب: 600 كرتونة
+        ============================================================================</pre>
+
+                <h3>النموذج رقم (4): قائمة التحضير والتعبئة (Picking & Packing Slip Combined)</h3>
+                <p><strong>وصف النموذج:</strong> يستخدم من قبل العمال في المستودع لتجميع طلب فرع معين. يحتوي على تفاصيل الموقع لتسريع العملية، وتعليمات خاصة (منتجات مبردة، قابلة للكسر، FEFO).</p>
+                
+                <div class="box integration-sync">
+                    <strong><i class="fas fa-sync-alt" style="color: var(--yellow-hazard);"></i> التزامن الهندسي-التشغيلي (Operations-Infrastructure Sync)</strong><br>
+                    يجب مراجعة هذه السياسات والنماذج التشغيلية بشكل دوري لضمان توافقها التام مع التوزيع الهندسي والبنية التحتية للمستودع. يُشترط إحالة أي مقترح للتطوير الميداني إلى <strong>اللجنة التوجيهية المشتركة</strong> لضمان التناغم التام وتفادي فجوات الأداء.
+                </div>
+            </details>
+            </section>
+
+            <section id="bab6" class="chapter">
+                <details open>
+<summary style="list-style: none; cursor: pointer;"><div class="chapter-head">
+                    <h2>الباب السادس: نموذج محاكاة عملي في جداول البيانات (Excel Operational Model)</h2>
+                    <span class="chapter-num">٦</span>
+                </div></summary>
+                <p><strong>مقدمة</strong></p>
+                <p>لتمكين الإدارة من البدء بتطبيق هذا النظام قبل اكتمال مشروع ERP الكبير، أو كأداة تدريبية للموظفين الجدد، نقدم في هذا الباب تصميماً لنظام إدارة مستودعات مبسط باستخدام Microsoft Excel.</p>
+
+                <h3>هيكل ملف Excel المقترح (ملف واحد متعدد الأوراق)</h3>
+                <p><strong>الورقة رقم 1: لوحة التحكم المركزية (Central Dashboard)</strong> – بطاقات معلومات كبيرة، رسوم بيانية (Pareto Chart)، زر تحديث التنبيهات.</p>
+                <p><strong>الورقة رقم 2: الملف الرئيسي للأصناف (Item Master & Inventory Balance)</strong> – قاعدة البيانات المرجعية لجميع الأصناف مع أرصدتها الحية.</p>
+                <p><strong>الورقة رقم 3: سجل أوامر الشراء (Purchase Orders Log)</strong> – رقم PO، تاريخ الإصدار، اسم المورد، الحالة، القيمة الإجمالية.</p>
+                <p><strong>الورقة رقم 4: سجل الاستلام (GRN Log)</strong> – رقم GRN، تاريخ الاستلام، SKU، الكمية المستلمة، المرفوضة.</p>
+                <p><strong>الورقة رقم 5: سجل تحضير الطلبات والصرف (Picking & Dispatch Log)</strong> – رقم طلب الفرع، تاريخ الصرف، الكمية المصروفة.</p>
+                <p><strong>الورقة رقم 6: نماذج الطباعة الجاهزة (Printable Forms)</strong> – تسهيل طباعة المستندات الورقية الضرورية.</p>
+
+                <div class="box integration-sync">
+                    <strong><i class="fas fa-sync-alt" style="color: var(--yellow-hazard);"></i> التزامن الهندسي-التشغيلي (Operations-Infrastructure Sync)</strong><br>
+                    أي تعديل في التدفقات التشغيلية داخل النماذج يجب مراجعته دورياً للتأكد من مواءمته مع المخطط الهندسي للموقع. يُشترط إحالة أي مقترح لتطوير النظام أو مسارات الحركة إلى <strong>اللجنة التوجيهية المشتركة</strong> للتصديق.
+                </div>
+            </details>
+            </section>
+
+            <section id="bab7" class="chapter">
+                <details open>
+<summary style="list-style: none; cursor: pointer;"><div class="chapter-head">
+                    <h2>الباب السابع: مؤشرات الأداء الرئيسية ولوحات التحكم (KPIs & Dashboards)</h2>
+                    <span class="chapter-num">٧</span>
+                </div></summary>
+
+                <div class="alert-strip">
+                    <i class="fas fa-tachometer-alt"></i> LIVE EFFICIENCY GAUGES — قراءات مؤشرات الأداء الحيوية
+                </div>
+                <div class="gauge-dashboard">
+                    <div class="gauge-card nominal">
+                        <div class="gauge-ring"><span class="gauge-value">98.7%</span></div>
+                        <div class="gauge-label">دقة المخزون</div>
+                        <small style="color:#FFD700;">الهدف: ≥ 98.5% ✓</small>
+                    </div>
+                    <div class="gauge-card warning">
+                        <div class="gauge-ring"><span class="gauge-value">0.72%</span></div>
+                        <div class="gauge-label">نسبة التالف</div>
+                        <small style="color:#FF4500;">الهدف: < 0.8% ⚠</small>
+                    </div>
+                    <div class="gauge-card optimal">
+                        <div class="gauge-ring"><span class="gauge-value">3.2h</span></div>
+                        <div class="gauge-label">زمن دورة الطلب</div>
+                        <small style="color:#00e676;">الهدف: < 4 ساعات ✓</small>
+                    </div>
+                    <div class="gauge-card nominal">
+                        <div class="gauge-ring"><span class="gauge-value">97.5%</span></div>
+                        <div class="gauge-label">مستوى خدمة الفروع</div>
+                        <small style="color:#FFD700;">الهدف: ≥ 97% ✓</small>
+                    </div>
+                    <div class="gauge-card warning">
+                        <div class="gauge-ring"><span class="gauge-value">82</span></div>
+                        <div class="gauge-label">إنتاجية العامل CPH</div>
+                        <small style="color:#FF4500;">الهدف: 80-100 ⚠</small>
+                    </div>
+                </div>
+
+                <p>لا يكفي تطبيق النظام، بل يجب قياس أدائه باستمرار لتحديد فرص التحسين. في Brandzo Franchise Partners، تتم مراقبة هذه المؤشرات بشكل يومي وأسبوعي وشهري.</p>
+
+                <p><strong>المؤشر (1): دقة المخزون (Inventory Accuracy)</strong> – النسبة المئوية للأصناف التي يتطابق رصيدها الدفتري مع الرصيد الفعلي. الهدف العالمي: ≥ 98.5%.</p>
+                <p><strong>المؤشر (2): نسبة التلف والفاقد (Shrinkage Rate)</strong> – قيمة البضائع المفقودة لأسباب مجهولة + قيمة التالف المسجل. الهدف: أقل من 0.8%.</p>
+                <p><strong>المؤشر (3): مدة دورة الطلب الداخلية (Internal Order Cycle Time)</strong> – إجمالي الوقت من استلام طلب الفرع حتى خروج الشاحنة. الهدف: أقل من 4 ساعات.</p>
+                <p><strong>المؤشر (4): إنتاجية العامل (Labor Productivity)</strong> – المعدل الذي يحضر به العامل الأصناف (CPH للكراتين، PPH للطبالي).</p>
+                <p><strong>المؤشر (5): مستوى الخدمة للفروع (Store Service Level - Fill Rate)</strong> – النسبة المئوية لكميات الأصناف المشحونة مقارنة بالكميات المطلوبة. الهدف: ≥ 97%.</p>
+
+                <h3>تصميم لوحة تحكم تفاعلية (Interactive Dashboard)</h3>
+                <p>مكونات لوحة التحكم المقترحة: شريط اختيار الفترة الزمنية (Slicer)، بطاقات ملخصة، رسم بياني للإنتاجية اليومية، خريطة حرارية للمخاطر، جدول الأصناف الأكثر طلباً، جدول أكثر 5 موردين تأخيراً.</p>
+
+                <div class="box integration-sync">
+                    <strong><i class="fas fa-sync-alt" style="color: var(--yellow-hazard);"></i> التزامن الهندسي-التشغيلي (Operations-Infrastructure Sync)</strong><br>
+                    أي تراجع في مؤشرات الأداء المذكورة (KPIs) يستوجب تلقائياً تقييماً لكفاءة البنية التحتية والممرات الهندسية. يُشترط إحالة أي مقترح للتطوير المستند إلى هذه المؤشرات إلى <strong>اللجنة التوجيهية المشتركة</strong>.
+                </div>
+            </details>
+            </section>
+
+            <section id="bab8" class="chapter">
+                <details open>
+<summary style="list-style: none; cursor: pointer;"><div class="chapter-head">
+                    <h2>الباب الثامن: إجراءات الطوارئ والتعامل مع الأزمات (Emergency & Crisis SOPs)</h2>
+                    <span class="chapter-num">٨</span>
+                </div></summary>
+                <p>حتى أفضل الأنظمة عرضة للاضطرابات. هذا الباب يضع إجراءات واضحة للتعامل مع الحالات غير الطبيعية.</p>
+
+                <div class="alert-strip">
+                    <i class="fas fa-exclamation-triangle"></i> CRITICAL ALERT PROTOCOLS — بروتوكولات الطوارئ الحرجة
+                </div>
+
+                <h3>1. انقطاع التيار الكهربائي (Power Outage)</h3>
+                <p><strong>التأثير:</strong> توقف أنظمة التبريد، توقف نظام WMS الإلكتروني، توقف الإضاءة.</p>
+                <p><strong>الإجراء التشغيلي الموحد (SOP):</strong></p>
+                <ul>
+                    <li><strong>الدقيقة 0-5:</strong> إعلان حالة الطوارئ "الرمز الأحمر"، بدء تشغيل المولد الاحتياطي، فتح أبواب غرف التبريد فقط للضرورة القصوى.</li>
+                    <li><strong>أول 15 دقيقة:</strong> الانتقال إلى الوضع اليدوي (نماذج GRN ورقية، قوائم تحضير ورقية)، وضع "سجل العمليات أثناء انقطاع التيار".</li>
+                    <li><strong>بعد عودة التيار:</strong> إدخال كافة الحركات المسجلة إلى WMS، فحص درجات حرارة جميع الغرف، تحويل المنتجات المتأثرة لمنطقة الحجر الصحي.</li>
+                </ul>
+
+                <h3>2. فشل كبير في نظام WMS / ERP (System Outage)</h3>
+                <p><strong>التأثير:</strong> توقف تام لعمليات المسح الإلكتروني وتحديث البيانات.</p>
+                <p><strong>الإجراء:</strong> منع أي عملية مناولة بدون توثيق ورقي صريح، سحب "حقيبة الطوارئ الإجرائية" (حقيبة حمراء)، أي طبلية يتم التعامل معها بدون نظام يتم لصق "ملصق تتبع أحمر" عليها.</p>
+
+                <div class="box integration-sync">
+                    <strong><i class="fas fa-sync-alt" style="color: var(--yellow-hazard);"></i> التزامن الهندسي-التشغيلي (Operations-Infrastructure Sync)</strong><br>
+                    يجب إجراء اختبارات دورية لخطط الطوارئ للتحقق من الجاهزية الهندسية (كالمولدات ونقاط الإخلاء). يُشترط إحالة أي مقترح لتطوير أنظمة السلامة والبنية التحتية للطوارئ إلى <strong>اللجنة التوجيهية المشتركة</strong> لإقراره.
+                </div>
+            </details>
+            </section>
+
+            <section id="bab9" class="chapter">
+                <details open>
+<summary style="list-style: none; cursor: pointer;"><div class="chapter-head">
+                    <h2>الباب التاسع: التوافق مع المعايير الدولية لسلامة الغذاء (ISO 22000 & HACCP)</h2>
+                    <span class="chapter-num">٩</span>
+                </div></summary>
+
+                <h3>تطبيق نظام HACCP في المستودع</h3>
+                <p><strong>نقطة تحكم حرجة رقم 1: استلام المنتجات المبردة والمجمدة (CCP 1 - Receiving)</strong></p>
+                <ul>
+                    <li>الخطر: تكاثر البكتيريا بسبب كسر سلسلة التبريد.</li>
+                    <li>الحد الحرج: درجة حرارة المنتج ≤ 4°م للمبردات، ≤ -18°م للمجمدات.</li>
+                    <li>الإجراء التصحيحي: إذا تجاوزت الحرارة الحد الحرج، ترفض الشحنة بالكامل.</li>
+                </ul>
+
+                <p><strong>نقطة تحكم حرجة رقم 2: التخزين في غرف التبريد والتجميد (CCP 2 - Cold Storage)</strong></p>
+                <ul>
+                    <li>الخطر: تعطل معدات التبريد وارتفاع درجة الحرارة دون اكتشاف.</li>
+                    <li>إجراء المراقبة: نظام مراقبة آلي على مدار 24 ساعة (مجسات رقمية، إنذار صوتي وضوئي، تنبيهات SMS).</li>
+                    <li>إجراءات التحقق: معايرة المجسات نصف سنوية، اختبار محاكاة عطل كل 3 أشهر.</li>
+                </ul>
+
+                <p><strong>نقطة تحكم حرجة رقم 3: إدارة المواد المسببة للحساسية (CCP 3 - Allergen Management)</strong></p>
+                <ul>
+                    <li>الخطر: تلوث منتج خالٍ من مادة مسببة للحساسية ببقايا منتج آخر.</li>
+                    <li>إجراءات المراقبة: سياسة الفصل الصارمة (أرفف مخصصة بالألوان)، تنظيف أنزيمي متبوعاً باختبار مسحة بروتينية.</li>
+                </ul>
+
+                <h3>البرامج التمهيدية (PRPs) المطبقة</h3>
+                <p><strong>1. برنامج مكافحة الآفات المتكامل (IPM):</strong> تعاقد سنوي مع شركة عالمية معتمدة، خريطة محدثة لمحطات الطعوم، أي حشرة أو قارض يستدعي إيقاف جميع العمليات في المنطقة المعزولة فوراً.</p>
+                <p><strong>2. برنامج إدارة النظافة والتعقيم:</strong> جدول التنظيف الرئيسي (MCS)، سياسة الانسكابات: عزل المنطقة فوراً، تنظيف كيميائي مناسب.</p>
+
+                <h3>التكامل مع ISO 22000</h3>
+                <p><strong>إجراء تتبع المنتج وسحبه (Traceability & Recall):</strong></p>
+                <ul>
+                    <li><strong>التتبع الأمامي:</strong> بإدخال رقم تشغيلة Batch/Lot Number في WMS، يعرض النظام فوراً تاريخ الاستلام، الموقع الحالي، والفروع التي استلمتها.</li>
+                    <li><strong>إجراء الحجر والسحب:</strong> وضع المنتج في حالة "حجر نظامي"، سحب الكميات إلى منطقة الحجر الصحي الفعلية، إرسال إشعار عاجل لجميع الفروع.</li>
+                </ul>
+
+                <div class="box integration-sync">
+                    <strong><i class="fas fa-sync-alt" style="color: var(--yellow-hazard);"></i> التزامن الهندسي-التشغيلي (Operations-Infrastructure Sync)</strong><br>
+                    تطبيق معايير HACCP يستلزم توافقاً حتمياً مع أنظمة العزل الحراري وتدفق الهواء داخل الموقع الهندسي. يُشترط إحالة أي مقترح لتطوير غرف التبريد أو مناطق الفصل إلى <strong>اللجنة التوجيهية المشتركة</strong> للاعتماد.
+                </div>
+            </details>
+            </section>
+
+            <section id="bab10" class="chapter">
+                <details open>
+<summary style="list-style: none; cursor: pointer;"><div class="chapter-head">
+                    <h2>الباب العاشر: البرنامج التدريبي للعاملين في المستودعات المركزية</h2>
+                    <span class="chapter-num">١٠</span>
+                </div></summary>
+                <p>إن أفضل نظام في العالم مع أفضل إجراءات مكتوبة لن ينجح إذا لم يتم تدريب الموظفين الذين ينفذونه. في Brandzo Franchise Partners، يعتبر الاستثمار في تدريب العمالة الأساس لتحقيق التميز التشغيلي.</p>
+
+                <table class="heatmap">
+                    <tr><th>المستوى</th><th>الفئة المستهدفة</th><th>المسار التدريبي</th><th>المدة الأولية</th><th>تجديد الشهادة</th></tr>
+                    <tr><td>المستوى التأسيسي</td><td>جميع العمال الجدد</td><td>التوجيه العام، الصحة والسلامة الأساسية</td><td class="heat-low">3 أيام</td><td class="heat-low">سنوياً</td></tr>
+                    <tr><td>المستوى التشغيلي</td><td>العمال المباشرين</td><td>تشغيل معدات المناولة، SOP، استخدام WMS</td><td class="heat-medium">5 أيام</td><td class="heat-medium">كل سنتين</td></tr>
+                    <tr><td>المستوى التخصصي</td><td>المشرفون وقادة الفرق</td><td>القيادة، HACCP مستوى 3، WMS متقدم</td><td class="heat-high">10 أيام</td><td class="heat-high">كل 3 سنوات</td></tr>
+                    <tr><td>المستوى الإداري</td><td>مديرو الإدارات</td><td>Lean Warehousing، Six Sigma، إدارة الأزمات</td><td class="heat-critical">ورش ربع سنوية</td><td class="heat-critical">مستمر</td></tr>
+                </table>
+
+                <p><strong>مصفوفة المهارات / التراخيص الإلزامية (Skills Matrix)</strong></p>
+                <p>لا يسمح لأي شخص بالعمل على أي مهمة إلا بعد توقيع المشرف المباشر على "تفويض العمل (Work Authorization)".</p>
+                <table>
+                    <tr><th>المهمة</th><th>شهادة / ترخيص مطلوب</th><th>تاريخ الحصول</th><th>تاريخ الانتهاء</th></tr>
+                    <tr><td>تشغيل رافعة شوكية مقابلة</td><td>رخصة هيئة السلامة الوطنية</td><td>01/01/2024</td><td>01/01/2027</td></tr>
+                    <tr><td>تشغيل رافعة وصولية</td><td>دورة داخلية متقدمة</td><td>01/03/2024</td><td>01/03/2026</td></tr>
+                    <tr><td>العمل داخل غرفة التجميد (-22°)</td><td>تصريح طبي + تدريب خاص</td><td>15/12/2023</td><td>15/12/2024</td></tr>
+                </table>
+
+                <div class="box integration-sync">
+                    <strong><i class="fas fa-sync-alt" style="color: var(--yellow-hazard);"></i> التزامن الهندسي-التشغيلي (Operations-Infrastructure Sync)</strong><br>
+                    يجب أن تتضمن البرامج التدريبية محاكاة فعلية لبيئة المستودع ومسارات الحركة الآمنة. يُشترط إحالة أي تحديث على أدوات المناولة وتدريباتها التقنية أو أي تعديل في المسارات إلى <strong>اللجنة التوجيهية المشتركة</strong> لمراجعته وتطبيقه.
+                </div>
+            </details>
+            </section>
+
+            <section id="bab11" class="chapter">
+                <details open>
+<summary style="list-style: none; cursor: pointer;"><div class="chapter-head">
+                    <h2>الباب الحادي عشر: ملاحق تطبيقية جاهزة للاستخدام (Operational Appendices)</h2>
+                    <span class="chapter-num">١١</span>
+                </div></summary>
+                <p>هذا الباب الأخير يحتوي على أدوات عملية جاهزة تطبيقها فوراً إلى جانب النموذج المثالي الموصوف في هذا البحث.</p>
+
+                <h3>الملحق (أ): قائمة تدقيق أسبوعية للمشرفين (Weekly Supervisor Gemba Walk Checklist)</h3>
+                <p><strong>الغرض:</strong> قائمة موحدة يستخدمها المشرفون عند القيام بجولاتهم الميدانية اليومية "Gemba Walk".</p>
+                <p>نموذج مبسط (نقطة واحدة = 1، لا = 0):</p>
+                <ul>
+                    <li>السلامة والصحة المهنية: ممرات الطوارئ خالية، طفايات الحريق في أماكنها، العمال يرتدون مهمات الوقاية الشخصية.</li>
+                    <li>سلامة الغذاء والنظافة (5S): منطقة الاستلام نظيفة، أبواب غرف التبريد مغلقة بإحكام، لا منتجات مخزنة على الأرض.</li>
+                    <li>الجودة والإجراءات: تم فحص درجة حرارة شاحنات التبريد الواردة، الشحنات المرفوضة نُقلت لمنطقة الرفض.</li>
+                </ul>
+                <p>إجمالي النقاط (من 10). نقاط أقل من 7 تتطلب خطة عمل تصحيحية فورية من المشرف قبل نهاية اليوم.</p>
+
+                <h3>الملحق (ب): نموذج محضر اجتماع الصباح اليومي (Daily Huddle Meeting Template)</h3>
+                <p><strong>مدة الاجتماع:</strong> 10-15 دقيقة كحد أقصى في بداية كل وردية.</p>
+                <p><strong>جدول الأعمال الثابت:</strong></p>
+                <ol>
+                    <li><strong>السلامة أولاً (دقيقتان):</strong> مشاركة سريعة لموقف أو ملاحظة سلامة من اليوم السابق.</li>
+                    <li><strong>أداء الأمس (3 دقائق):</strong> عرض سريع للوحة النتائج.</li>
+                    <li><strong>تحديات اليوم (5 دقائق):</strong> جدول الاستلامات المتوقعة، عدد الشاحنات، الطلبات العاجلة.</li>
+                    <li><strong>التقدير والتحفيز (دقيقتان):</strong> الإعلان عن اسم "موظف الوردية".</li>
+                    <li><strong>السؤال الختامي:</strong> "هل من أحد لديه ما يمنعه من بدء العمل بأمان وكفاءة؟"</li>
+                </ol>
+                
+                <div class="box integration-sync">
+                    <strong><i class="fas fa-sync-alt" style="color: var(--yellow-hazard);"></i> التزامن الهندسي-التشغيلي (Operations-Infrastructure Sync)</strong><br>
+                    يتطلب تفعيل هذه الملاحق تحديثاً مستمراً لخرائط المنشأة ونقاط الإخلاء. يُشترط إحالة أي مقترح لتغيير مسارات الجولات الميدانية (Gemba Walk) المرتبطة بمرافق جديدة إلى <strong>اللجنة التوجيهية المشتركة</strong> للتأكد من المواءمة الهندسية.
+                </div>
+                
+                <div class="footer-end">
+                    <i class="fas fa-check-circle" style="color:#00e676; font-size:2.2rem;"></i>
+                    <p>الدليل التشغيلي المتكامل — Brandzo Franchise Partners – المرجعية الكاملة</p>
+                    <p style="color:var(--orange-aggressive);">إعداد: محمد إبراهيم البرشي | للمدراء المباشرين وكل من يهمه الأمر في هذه العمليات المخزنية</p>
+                    <a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'}); return false;"><i class="fas fa-arrow-up"></i> العودة إلى الأعلى</a>
+                </div>
+            </details>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+    // ── SEARCH, FILTER & HIGHLIGHT ENGINE ────────────────────────────────────
+    // Lightweight client-side search:
+    //   • Highlights every match across the guide.
+    //   • Hides chapters/sections that contain zero matches so the user
+    //     sees a filtered view of just the relevant content.
+    //   • Enter / Shift+Enter to navigate, Esc to clear.
+    (function () {
+      var input = document.getElementById('searchInput');
+      var countEl = document.getElementById('searchCount');
+      var clearBtn = document.getElementById('clearSearch');
+      if (!input || !countEl || !clearBtn) return;
+
+      var highlights = [];
+      var currentIdx = -1;
+      var hiddenChapters = [];
+
+      function getTextNodes(root) {
+        var walker = document.createTreeWalker(
+          root,
+          NodeFilter.SHOW_TEXT,
+          {
+            acceptNode: function (n) {
+              if (!n.data || !n.data.trim()) return NodeFilter.FILTER_REJECT;
+              var p = n.parentNode;
+              if (!p) return NodeFilter.FILTER_REJECT;
+              var name = p.nodeName;
+              if (name === 'SCRIPT' || name === 'STYLE' || name === 'NOSCRIPT') return NodeFilter.FILTER_REJECT;
+              return NodeFilter.FILTER_ACCEPT;
+            }
+          }
+        );
+        var nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        return nodes;
+      }
+
+      function clearHighlights() {
+        document.querySelectorAll('mark.search-highlight').forEach(function (m) {
+          var parent = m.parentNode;
+          if (!parent) return;
+          parent.replaceChild(document.createTextNode(m.textContent), m);
+          parent.normalize();
+        });
+        highlights = [];
+        currentIdx = -1;
+        countEl.textContent = '';
+      }
+
+      function showAllChapters() {
+        hiddenChapters.forEach(function (el) {
+          el.style.display = '';
+          el.removeAttribute('data-search-hidden');
+        });
+        hiddenChapters = [];
+      }
+
+      function escapeRegex(str) {
+        return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+
+      function doSearch(term) {
+        clearHighlights();
+        showAllChapters();
+        if (!term || term.length < 2) return;
+
+        var safe = escapeRegex(term);
+        var regex = new RegExp('(' + safe + ')', 'gi');
+        var content = document.querySelector('.content') || document.body;
+        var textNodes = getTextNodes(content);
+
+        textNodes.forEach(function (node) {
+          if (!regex.test(node.data)) return;
+          regex.lastIndex = 0;
+          var frag = document.createDocumentFragment();
+          var last = 0, m;
+          while ((m = regex.exec(node.data)) !== null) {
+            if (m.index > last) frag.appendChild(document.createTextNode(node.data.slice(last, m.index)));
+            var mark = document.createElement('mark');
+            mark.className = 'search-highlight';
+            mark.textContent = m[0];
+            highlights.push(mark);
+            frag.appendChild(mark);
+            last = regex.lastIndex;
+          }
+          if (last < node.data.length) frag.appendChild(document.createTextNode(node.data.slice(last)));
+          if (node.parentNode) node.parentNode.replaceChild(frag, node);
+        });
+
+        var chapters = content.querySelectorAll('.chapter, section.chapter, [id^="bab"]');
+        chapters.forEach(function (ch) {
+          if (!ch.querySelector('mark.search-highlight')) {
+            ch.style.display = 'none';
+            ch.setAttribute('data-search-hidden', '1');
+            hiddenChapters.push(ch);
+          }
+        });
+
+        if (highlights.length > 0) {
+          currentIdx = 0;
+          highlights[0].classList.add('current');
+          highlights[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+          var visibleChapters = chapters.length - hiddenChapters.length;
+          countEl.textContent = '1 / ' + highlights.length + ' نتيجة (' + visibleChapters + ' باب)';
+        } else {
+          countEl.textContent = 'لا توجد نتائج';
+        }
+      }
+
+      function navigate(dir) {
+        if (!highlights.length) return;
+        highlights[currentIdx].classList.remove('current');
+        currentIdx = (currentIdx + dir + highlights.length) % highlights.length;
+        highlights[currentIdx].classList.add('current');
+        highlights[currentIdx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        countEl.textContent = (currentIdx + 1) + ' / ' + highlights.length + ' نتيجة';
+      }
+
+      var debounce;
+      input.addEventListener('input', function () {
+        clearTimeout(debounce);
+        var v = this.value.trim();
+        debounce = setTimeout(function () { doSearch(v); }, 200);
+      });
+
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); e.shiftKey ? navigate(-1) : navigate(1); }
+        if (e.key === 'Escape') { e.preventDefault(); clearBtn.click(); }
+      });
+
+      clearBtn.addEventListener('click', function () {
+        input.value = '';
+        clearHighlights();
+        showAllChapters();
+        input.focus();
+      });
+    })();
+    </script>
+
+</body>
+</html>

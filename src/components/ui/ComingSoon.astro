@@ -1,0 +1,45 @@
+---
+import Icon from './Icon.astro';
+
+/**
+ * "Coming soon" empty-state card used as a placeholder for unimplemented
+ * dashboard pages. See `pages/dashboard/products.astro` for an example.
+ *
+ * Props:
+ *   title          — Arabic page title (h2)
+ *   subtitle       — small grey line under the title (default: "قيد التطوير حالياً")
+ *   headline       — large headline inside the card
+ *   description    — long-form body copy under the headline
+ *   icon           — name of an icon registered in icon-data.js (default: "package")
+ *   iconBadgeClass — Tailwind classes for the round icon badge
+ *                    (default: "bg-red-50 text-brand-red")
+ */
+const {
+  title,
+  subtitle = 'هذه الصفحة قيد التطوير حالياً',
+  headline,
+  description,
+  icon = 'package',
+  iconBadgeClass = 'bg-red-50 text-brand-red',
+} = Astro.props;
+---
+
+<div class="text-right" dir="rtl">
+  <header class="mb-8">
+    <h2 class="text-3xl font-bold text-brand-navy">{title}</h2>
+    <p class="text-gray-500 mt-1">{subtitle}</p>
+  </header>
+
+  <div class="bg-white p-12 rounded-2xl shadow-sm border border-gray-200 text-center">
+    <div
+      class:list={[
+        'w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6',
+        iconBadgeClass,
+      ]}
+    >
+      <Icon name={icon} size={40} />
+    </div>
+    <h3 class="text-2xl font-bold text-gray-800 mb-2">{headline}</h3>
+    <p class="text-gray-500 max-w-md mx-auto leading-relaxed">{description}</p>
+  </div>
+</div>

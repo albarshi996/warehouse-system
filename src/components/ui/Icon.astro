@@ -1,0 +1,33 @@
+---
+import { ICONS } from './icon-data.js';
+
+/**
+ * Inline SVG icon. `name` must be a key of `ICONS`.
+ *
+ * Props:
+ *   name        — required, one of the keys in icon-data.js
+ *   size        — width & height in px (default 20)
+ *   class       — extra Tailwind / CSS classes (e.g. "text-brand-red")
+ *   strokeWidth — defaults to 2 to match Lucide's house style
+ */
+const { name, size = 20, class: className = '', strokeWidth = 2 } = Astro.props;
+
+const content = ICONS[name];
+if (!content) {
+  throw new Error(`<Icon> got unknown name: "${name}"`);
+}
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width={strokeWidth}
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  class={className}
+  set:html={content}
+/>

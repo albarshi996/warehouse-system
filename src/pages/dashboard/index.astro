@@ -1,0 +1,8 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import BrandzoDashboard from '../../components/brandzo-erp/BrandzoDashboard.jsx';
+---
+
+<DashboardLayout title="لوحة التحكم" showGuide={false}>
+  <BrandzoDashboard client:load />
+</DashboardLayout>

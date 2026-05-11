@@ -1,0 +1,33 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import OrgChart from '../../components/brandzo-erp/workflows/OrgChart.jsx';
+import DocumentFlow from '../../components/brandzo-erp/workflows/DocumentFlow.jsx';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+---
+
+<DashboardLayout title="الهيكل والمسارات">
+  <div class="text-right" dir="rtl">
+    <header class="mb-6 sm:mb-8">
+      <h1 class="text-2xl sm:text-3xl font-bold text-brand-yellow">
+        الهيكل والمسارات (Workflows & Org)
+      </h1>
+      <p class="text-gray-300 mt-2 text-sm sm:text-base leading-relaxed">
+        الخريطة البصرية لنظام المستودعات: الهيكل التنظيمي للموظفين، والدورة المستندية الكاملة من طلب
+        الشراء حتى المرتجعات. مأخوذة مباشرة من الباب الثاني والثالث في الدليل التشغيلي.
+      </p>
+    </header>
+
+    <div class="space-y-8 lg:space-y-10">
+      <!-- CRITICAL: client:load is MANDATORY — do NOT remove it -->
+      <OrgChart client:load />
+      <DocumentFlow base={base} client:load />
+    </div>
+
+    <footer class="mt-10 text-center text-xs text-gray-400">
+      مصدر البيانات: الدليل التشغيلي — الباب الثاني والثالث.
+    </footer>
+  </div>
+</DashboardLayout>

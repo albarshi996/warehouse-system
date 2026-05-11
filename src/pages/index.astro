@@ -1,0 +1,226 @@
+---
+import '../styles/global.css';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+---
+
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Brandzo Hub 2026 - نظام إدارة الموارد المتكامل</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: 'Cairo', sans-serif;
+      }
+      .hero-gradient {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      }
+      @media print {
+        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body { background: #ffffff !important; color: #000000 !important; }
+        header, footer, button, a[class*="bg-brand-red"], .absolute { display: none !important; }
+        .hero-gradient { background: #ffffff !important; min-height: auto !important; }
+        .hero-gradient h1, .hero-gradient h2, .hero-gradient p,
+        .hero-gradient span, .text-white, .text-gray-400 { color: #000000 !important; }
+        section { background: #ffffff !important; }
+        .rounded-3xl { border: 1px solid #cccccc !important; box-shadow: none !important; }
+        .text-gray-600 { color: #222222 !important; }
+        @page { size: A4; margin: 20mm; }
+      }
+    </style>
+  </head>
+  <body class="bg-[#0f0f1f]">
+    <header class="absolute top-0 w-full p-4 sm:p-6 z-10">
+      <div class="container mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 sm:w-12 sm:h-12 bg-brand-red rounded-xl flex items-center justify-center font-black text-xl sm:text-2xl text-white shadow-lg"
+          >
+            B
+          </div>
+          <span class="text-xl sm:text-2xl font-bold text-white tracking-tight">Brandzo Hub</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section
+        class="hero-gradient min-h-screen flex items-center pt-24 pb-12 sm:pt-20 relative overflow-hidden"
+      >
+        <div
+         class="absolute top-0 right-0 w-1/2 h-full bg-brand-red opacity-5 skew-x-12 translate-x-1/2"
+        >
+        </div>
+        <div class="container mx-auto px-4 sm:px-6 relative z-10">
+          <div class="max-w-4xl">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-brand-yellow leading-tight mb-6">
+              المقترح الشامل لتقديمه للإدارة واعتماده للتنسيق مع إدارة تقنية المعلومات لتنفيذه
+            </h1>
+            
+            <h2 class="text-xl sm:text-2xl font-bold text-white mb-4">
+              نضبط قبل ما ندخل
+            </h2>
+  
+            <div class="text-sm sm:text-base text-gray-400 mb-8 sm:mb-10 leading-relaxed max-w-3xl bg-white/5 p-5 sm:p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
+              كل العمليات (إضافة مخزون، صرف، تحويل، ارتجاع، جرد) بتمر على نماذج ذكية إجبارية.<br>
+              النظام يتحقق من المنطق التشغيلي (الصلاحيات، الحدود، الكميات، تواريخ الصلاحية، التوصيات التلقائية).<br>
+              لو فيه خطأ → تنبيه فوري وإيقاف التحويل لـ ERP.<br><br>
+         
+              <span class="text-white font-semibold">الميزة الحاسمة: تكاملي وليس بديلاً (بنكمل الـ ERP)</span><br>
+              · تصحيح أخطاء بيانات قبل تصل للـ ERP.<br>
+              · توفير 60% من وقت المراجعة (أرقام تقديرية).<br>
+              · تقارير ذكية (Trends, Accuracy Rate, Cycle Counts) تطلع من Hub مباشرة.<br>
+              · تدريب وامتثال موظفين جدد خلال يوم واحد بواجهة سهلة.
+            </div>
+
+            <div class="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
+              <a
+                href={`${base}/dashboard/`}
+                class="px-6 sm:px-10 py-4 sm:py-5 bg-brand-red text-white rounded-2xl font-bold text-base sm:text-xl shadow-2xl hover:bg-brand-red-dark transition-all transform hover:-translate-y-1 active:scale-95 text-center"
+              >
+                الدخول إلى لوحة التحكم
+              </a>
+              <button
+                type="button"
+                onclick={`(function(){
+                  var p = prompt('أدخل كلمة المرور للوصول إلى الدليل التشغيلي:');
+                  if (p === '7777777') {
+                    window.open('${base}/Brandzo_Operational_Guide.html', '_blank');
+                  } else if (p !== null) {
+                    alert('كلمة المرور غير صحيحة.');
+                  }
+                })()`}
+                class="px-6 sm:px-10 py-4 sm:py-5 bg-transparent border-2 border-white text-white rounded-2xl font-bold text-base sm:text-xl hover:bg-white hover:text-brand-navy transition-all text-center cursor-pointer"
+              >
+                الدليل التشغيلي
+             </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="hidden lg:block absolute left-0 bottom-20 w-1/3">
+          <div class="grid grid-cols-2 gap-4 opacity-20">
+            <div class="h-32 bg-white rounded-3xl"></div>
+            <div class="h-32 bg-brand-red rounded-3xl mt-12"></div>
+            <div class="h-32 bg-brand-red rounded-3xl"></div>
+            <div class="h-32 bg-white rounded-3xl mt-12"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="py-12 sm:py-20 bg-[#111827]">
+        <div class="container mx-auto px-4 sm:px-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-12">
+            <div
+              class="p-6 sm:p-8 rounded-3xl border border-white/10 hover:shadow-xl transition-shadow"
+            >
+              <div
+                class="w-14 h-14 bg-red-50 text-brand-red rounded-2xl flex items-center justify-center mb-6"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  ><path d="M3 21h18"></path><path
+                    d="M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7H3l2-4h14l2 4"
+                  ></path><path d="M5 21V10.85"></path><path d="M19 21V10.85"></path><path
+                    d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"></path></svg
+                >
+              </div>
+              <h3 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">بوابة التحقق الذكي
+                <span class="block text-sm font-normal text-gray-400 mt-1">Smart Validation Gate</span>
+              </h3>
+              <p class="text-gray-400 leading-relaxed">
+                كل عملية تمر عبر نموذج إجباري يتحقق من الكميات والصلاحيات قبل الإرسال.
+              </p>
+            </div>
+            <div
+              class="p-6 sm:p-8 rounded-3xl border border-white/10 hover:shadow-xl transition-shadow"
+            >
+              <div
+                class="w-14 h-14 bg-yellow-50 text-brand-yellow rounded-2xl flex items-center justify-center mb-6"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ><path d="m7.5 4.27 9 5.15"></path><path
+                    d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"
+                  ></path><path d="m3.27 6.96 8.73 5.05 8.73-5.05"></path><path d="M12 22.08V12"
+                  ></path></svg
+                >
+              </div>
+              <h3 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">تصحيح قبل الـ ERP
+                <span class="block text-sm font-normal text-gray-400 mt-1">Pre-ERP Error Correction</span>
+              </h3>
+              <p class="text-gray-400 leading-relaxed">
+                نضمن دقة البيانات قبل وصولها لأي نظام ERP — نقلل من أخطاء الإدخال اليدوي.
+              </p>
+            </div>
+            <div
+              class="p-6 sm:p-8 rounded-3xl border border-white/10 hover:shadow-xl transition-shadow"
+            >
+              <div
+                class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mb-6"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  ></path><polyline points="14 2 14 8 20 8"></polyline><line
+                    x1="12"
+                    y1="18"
+                    x2="12"
+                    y2="12"></line><polyline points="9 15 12 12 15 15"></polyline></svg
+                >
+              </div>
+              <h3 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">الدورة المستندية والحركة المخزنية
+                <span class="block text-sm font-normal text-gray-400 mt-1">Document Cycle & Inventory Flow</span>
+              </h3>
+              <p class="text-gray-400 leading-relaxed">
+                تفسير كامل وشامل للدورة المستندية والحركة المخزنية — من استلام البضاعة حتى الصرف والإقفال — جاهز للتنفيذ على أي نظام ERP. يشمل: أوامر الشراء (PO)، إشعار الاستلام (GRN)، فحص الجودة (QC)، أذونات الصرف والتحويل، سندات التسوية، الجرد الدوري، ومعيار الصرف (FEFO). كل مرحلة موثقة بمستند إلزامي: لا حركة بدون توثيق.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="py-8 sm:py-12 bg-[#0a0a14] border-t border-white/10">
+      <div class="container mx-auto px-4 sm:px-6 text-center">
+        <p class="text-sm sm:text-base text-gray-400 font-bold">
+          Brandzo Hub © 2026 — اعداد محمد البرشي — جميع الحقوق محفوظة
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
