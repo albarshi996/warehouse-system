@@ -4,6 +4,9 @@
   "description": "Warehouse Management System for Brandzo (Astro + React + Tailwind + Firebase).",
   "type": "module",
   "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
@@ -34,12 +37,12 @@
   },
   "homepage": "https://github.com/albarshi996/brandzo-warehouse-system#readme",
   "dependencies": {
-    "@astrojs/react": "^5.0.4",
+    "@astrojs/react": "^4.15.12",
     "@tailwindcss/postcss": "^4.2.4",
-    "astro": "^6.2.2",
+    "astro": "^4.15.9",
     "firebase": "^12.12.1",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "tailwindcss": "^4.2.4",
     "xlsx": "^0.18.5"
   },

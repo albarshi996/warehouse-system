@@ -1,0 +1,8 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import OdooInstallationGuide from '../../components/brandzo-erp/OdooInstallationGuide.jsx';
+---
+
+<DashboardLayout title="دليل تثبيت أودو" showGuide={false}>
+  <OdooInstallationGuide client:load />
+</DashboardLayout>

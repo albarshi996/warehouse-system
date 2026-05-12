@@ -208,7 +208,7 @@ function StageCard({ stage, index, active, hovered, dimmed, onSelect, onHover })
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" title="متوفر في أودو" />
         </span>
         <div className="flex flex-col items-start text-left">
-          <span className={['text-[9px] font-bold tracking-widest uppercase', c.text].join(' ')}>
+          <span className={`text-[9px] font-bold tracking-widest uppercase ${c.text}`}>
             STAGE
           </span>
           <span className="text-2xl font-black tracking-tight">{stage.num}</span>
@@ -245,7 +245,7 @@ function StageCard({ stage, index, active, hovered, dimmed, onSelect, onHover })
       {/* Mobile-only down arrow between stages */}
       {index < DOCUMENT_STAGES.length - 1 && (
         <div className="md:hidden flex justify-center items-center mt-3 -mb-1" aria-hidden>
-          <div className="w-1 h-5 bg-gradient-to-b from-brand-red to-brand-yellow rounded-full" />
+          <div className="w-1 h-5 bg-gradient-to-b via-brand-red/70 to-brand-yellow rounded-full" />
           <span className="text-brand-red text-base ms-1">▼</span>
         </div>
       )}
@@ -260,7 +260,7 @@ function DetailPanel({ stage, base }) {
   
   return (
     <div
-      className={['mt-6 rounded-2xl border-2 bg-white/5 p-5 sm:p-6 shadow-lg', c.border].join(' ')}
+      className={`mt-6 rounded-2xl border-2 bg-white/5 p-5 sm:p-6 shadow-lg ${c.border}`}
       dir="rtl"
     >
       <div className="flex items-start gap-3 mb-4">
@@ -284,7 +284,7 @@ function DetailPanel({ stage, base }) {
       <p className="text-sm text-gray-200 leading-relaxed mb-4">{stage.descAr}</p>
 
       {/* Odoo Integration Section */}
-      <div className="bg-gradient-to-r from-green-900/20 to-blue-900/20 rounded-xl p-4 mb-4 border border-green-500/30">
+      <div className="bg-gradient-to-r from-green-900/20 to-blue-900/20 to-green-900/20 rounded-xl p-4 mb-4 border border-green-500/30">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-green-400 text-xl">✦</span>
           <h3 className="font-bold text-green-400 text-lg">في أودو</h3>
@@ -335,12 +335,7 @@ function DetailPanel({ stage, base }) {
       {/* Original Forms Section */}
       {stage.forms.length > 0 && (
         <div className="mt-4">
-          <div
-            className={[
-              'text-sm font-bold mb-2',
-              c.text === 'text-slate-200' ? 'text-brand-navy' : c.text,
-            ].join(' ')}
-          >
+          <div className={`text-sm font-bold mb-2 ${c.text === 'text-slate-200' ? 'text-brand-navy' : c.text}`}>
             النماذج المرتبطة بهذه المرحلة
           </div>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -350,11 +345,7 @@ function DetailPanel({ stage, base }) {
                   href={`${base}/forms/${encodeURI(f.file)}`}
                   target="_blank"
                   rel="noreferrer"
-                  className={[
-                    'flex items-center justify-between gap-2 px-3 py-2 rounded-lg border transition-colors',
-                    'border-white/10 hover:border-brand-red hover:bg-brand-red/5',
-                    'text-sm text-gray-200 hover:text-brand-red font-medium',
-                  ].join(' ')}
+                  className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border transition-colors border-white/10 hover:border-brand-red hover:bg-brand-red/5 text-sm text-gray-200 hover:text-brand-red font-medium`}
                 >
                   <span>{f.titleAr}</span>
                   <span className="text-[11px] text-gray-400 group-hover:text-brand-red">↗</span>
@@ -363,7 +354,9 @@ function DetailPanel({ stage, base }) {
             ))}
           </ul>
         </div>
-      ) : (
+      )}
+      
+      {stage.forms.length === 0 && (
         <p className="text-sm text-gray-400 italic">
           هذه المرحلة لا يوجد لها نموذج مطبوع داخل المنظومة (يتم تبادلها إلكترونياً مع المورد).
         </p>
