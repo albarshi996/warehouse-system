@@ -5,7 +5,7 @@
   "type": "module",
   "private": true,
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=18.0.0"
   },
   "scripts": {
     "dev": "astro dev",
@@ -37,12 +37,12 @@
   },
   "homepage": "https://github.com/albarshi996/brandzo-warehouse-system#readme",
   "dependencies": {
-    "@astrojs/react": "^4.15.12",
+    "@astrojs/react": "^4.2.0",
     "@tailwindcss/postcss": "^4.2.4",
-    "astro": "^4.15.9",
+    "astro": "^6.3.1",
     "firebase": "^12.12.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "tailwindcss": "^4.2.4",
     "xlsx": "^0.18.5"
   },
