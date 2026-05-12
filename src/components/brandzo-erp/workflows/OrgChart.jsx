@@ -102,11 +102,67 @@ function Card({ node, active, onClick, size = 'md' }) {
   );
 }
 
+// Odoo role mapping data
+const ODOO_ROLES = {
+  'main-mgr': {
+    role: 'Inventory Manager',
+    access: 'كل وحدات المخزون',
+    description: 'إدارة شاملة لجميع عمليات المخزون والجودة'
+  },
+  'exec-mgr': {
+    role: 'System Administrator',
+    access: 'Settings كاملة',
+    description: 'إدارة النظام بأكمله وصلاحيات المدير العام'
+  },
+  'it-mgr': {
+    role: 'System Administrator',
+    access: 'Settings كاملة',
+    description: 'إدارة البنية التحتية للنظام والتكاملات'
+  },
+  'qa-mgr': {
+    role: 'Quality Administrator',
+    access: 'Quality + Inventory (read)',
+    description: 'إدارة الجودة مع صلاحيات القراءة للمخزون'
+  },
+  'fin-mgr': {
+    role: 'Accounting Manager',
+    access: 'Purchase + Accounting',
+    description: 'إدارة المشتريات والمحاسبة والتقارير المالية'
+  },
+  'receiving': {
+    role: 'Inventory User',
+    access: 'Inventory + Quality',
+    description: 'صلاحيات كاملة على المخزون والجودة'
+  },
+  'storage': {
+    role: 'Inventory User',
+    access: 'Inventory + Barcode',
+    description: 'صلاحيات على المخزون مع استخدام الباركود'
+  },
+  'picking': {
+    role: 'Barcode User',
+    access: 'Barcode فقط',
+    description: 'صلاحيات محدودة على استخدام الباركود فقط'
+  },
+  'transport': {
+    role: 'Fleet User',
+    access: 'Fleet',
+    description: 'إدارة أسطول النقل والسائقين'
+  },
+  'qc': {
+    role: 'Quality User',
+    access: 'Quality + Inventory (read)',
+    description: 'صلاحيات فحص الجودة مع قراءة المخزون'
+  }
+};
+
 function DetailPanel({ node }) {
   if (!node) return null;
   const colors = ACCENT_CLASSES[node.accent] || ACCENT_CLASSES.navy;
   const items = node.teams || node.responsibilities || [];
   const heading = node.teams ? 'الفرق والوحدات داخل الإدارة' : 'المسؤوليات الرئيسية';
+  const odooRole = ODOO_ROLES[node.id];
+  
   return (
     <div
       className={['mt-6 rounded-2xl border-2 bg-white/5 p-5 sm:p-6 shadow-lg', colors.border].join(
@@ -114,22 +170,25 @@ function DetailPanel({ node }) {
       )}
       dir="rtl"
     >
-      <div className="flex items-start gap-3 mb-3">
+      <div className="flex items-start gap-3 mb-4">
         <span
           className={[
-            'shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl',
+            'shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl relative',
             colors.pillBg,
           ].join(' ')}
         >
           {node.emoji}
+          {/* Odoo indicator dot */}
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" title="دور أودو معرف" />
         </span>
         <div>
           <div className="font-bold text-gray-200 text-lg sm:text-xl">{node.titleAr}</div>
           <div className="text-xs sm:text-sm text-gray-400">{node.titleEn}</div>
         </div>
       </div>
+      
       <div className={['text-sm font-bold mb-2', colors.text].join(' ')}>{heading}</div>
-      <ul className="space-y-1.5 text-sm text-gray-200 leading-relaxed">
+      <ul className="space-y-1.5 text-sm text-gray-200 leading-relaxed mb-4">
         {items.map((line, i) => (
           <li key={i} className="flex items-start gap-2">
             <span
@@ -141,6 +200,32 @@ function DetailPanel({ node }) {
           </li>
         ))}
       </ul>
+
+      {/* Odoo Role Section */}
+      {odooRole && (
+        <div className="bg-gradient-to-r from-green-900/20 to-blue-900/20 rounded-xl p-4 border border-green-500/30">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-green-400 text-xl">👤</span>
+            <h3 className="font-bold text-green-400 text-lg">دور أودو</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div className="text-xs text-gray-400 mb-1">الوظيفة في أودو</div>
+              <div className="font-bold text-white">{odooRole.role}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400 mb-1">الوحدات المسموح بها</div>
+              <div className="font-bold text-blue-300">{odooRole.access}</div>
+            </div>
+          </div>
+          
+          <div className="mt-3">
+            <div className="text-xs text-gray-400 mb-1">الوصف</div>
+            <p className="text-sm text-gray-300 leading-relaxed">{odooRole.description}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

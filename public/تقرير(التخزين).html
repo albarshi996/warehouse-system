@@ -370,6 +370,11 @@
 </head>
 <body>
 <div class="container">
+    <!-- Interactive Site Notification Bar -->
+    <div class="no-print" style="background: #e8f4fd; border-right: 4px solid var(--primary); padding: 10px 15px; margin-bottom: 20px; font-size: 11pt;">
+        <strong>🔗 هذا التقرير جزء من منظومة Brandzo التفاعلية — للعودة إلى الموقع:</strong> 
+        <a href="/" style="color: var(--primary); text-decoration: none; font-weight: bold;">Brandzo Warehouse System</a>
+    </div>
 
     <!-- غلاف -->
     <div class="cover">
@@ -393,7 +398,10 @@
         <li><a href="#zones">تقسيم المناطق التخزينية</a></li>
         <li><a href="#flow">مسار تدفق البضائع</a></li>
         <li><a href="#table">جدول تفصيلي لمواقع التخزين (نموذج تجريبي)</a></li>
+        <li><a href="#odoo-mapping">ربط استراتيجيات التخزين مع Odoo</a></li>
+        <li><a href="#forms-mapping">جدول الربط (النماذج ↔ أودو)</a></li>
         <li><a href="#rules">القواعد التشغيلية لإدارة التخزين</a></li>
+        <li><a href="#installation">دليل التنصيب الفوري لوحدة Inventory في أودو 17</a></li>
         <li><a href="#conclusion">الخلاصة والتوصيات</a></li>
     </ol>
 
@@ -814,8 +822,224 @@
         <li><strong>قاعدة التوثيق الشامل (Full Documentation):</strong> توثيق كل حركة مخزونية في الوقت الفعلي مع ربطها بالدفعة والتاريخ.</li>
     </ul>
 
+    <!-- ربط استراتيجيات التخزين مع Odoo -->
+    <div class="page-break"></div>
+    <h2 id="odoo-mapping">6. ربط استراتيجيات التخزين مع Odoo</h2>
+    <p>
+        كل استراتيجية تخزين ذكية في نظام Brandzo لها مسار واضح للتفعيل في Odoo 17 Enterprise. الجدول التالي يوضح كيفية تنفيذ كل استراتيجية في Odoo:
+    </p>
+    
+    <table>
+        <caption>استراتيجيات التخزين ومسارها في Odoo</caption>
+        <thead>
+            <tr>
+                <th>الاستراتيجية</th>
+                <th>الوصف</th>
+                <th>المسار في Odoo</th>
+                <th>الإعدادات المطلوبة</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>FEFO</strong></td>
+                <td>First Expired, First Out - صرف الأقدم صلاحية أولاً</td>
+                <td>Inventory > Configuration > Removal Strategies</td>
+                <td>تفعيل FEFO Strategy + إعدادات تواريخ الصلاحية</td>
+            </tr>
+            <tr>
+                <td><strong>ABC Analysis</strong></td>
+                <td>تصنيف الأصناف حسب الأهمية (A: عالية، B: متوسطة، C: منخفضة)</td>
+                <td>Putaway Rules + Product Replenishment</td>
+                <td>تصنيف المنتجات + قواعد التخزين التلقائية</td>
+            </tr>
+            <tr>
+                <td><strong>Multi-zone</strong></td>
+                <td>تقسيم المستودع إلى مناطق متخصصة (مبرد/مجمد/جاف/غير غذائي)</td>
+                <td>Locations Hierarchy</td>
+                <td>Company/Warehouse/Zone/Rack/Bin</td>
+            </tr>
+            <tr>
+                <td><strong>Random Slotting</strong></td>
+                <td>تخصيص مواقع التخزين ديناميكياً بناءً على الحجم والدوران</td>
+                <td>Inventory > Configuration > Putaway Rules</td>
+                <td>قواعد Putaway قائمة على الحجم والوزن</td>
+            </tr>
+            <tr>
+                <td><strong>Demand-Based Storage</strong></td>
+                <td>تخزين الأصناف عالية الطلب في مواقع سهلة الوصول</td>
+                <td>Reordering Rules + Forecast</td>
+                <td>قواعد إعادة الطلب + تنبؤ الطلب</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>6.1 المناطق التخزينية في Odoo</h3>
+    <table>
+        <caption>تفاصيل المناطق التخزينية ونظيرها في Odoo</caption>
+        <thead>
+            <tr>
+                <th>المنطقة</th>
+                <th>الوصف</th>
+                <th>اسم الـ Location في Odoo</th>
+                <th>قواعد Putaway التلقائية</th>
+                <th>الباركود المقترح</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>المنطقة المبردة</strong></td>
+                <td>منتجات تحتاج تبريد 4°م</td>
+                <td>WH/Stock/Refrigerated</td>
+                <td>قواعد درجة الحرارة + FEFO</td>
+                <td>REF-XXXX</td>
+            </tr>
+            <tr>
+                <td><strong>المنطقة المجمدة</strong></td>
+                <td>منتجات تحتاج تجميد -18°م</td>
+                <td>WH/Stock/Frozen</td>
+                <td>قواعد التجميد + Batch Control</td>
+                <td>FRZ-XXXX</td>
+            </tr>
+            <tr>
+                <td><strong>المنطقة الجافة</strong></td>
+                <td>منتجات لا تحتاج تبريد</td>
+                <td>WH/Stock/Dry</td>
+                <td>قواعد ABC Analysis</td>
+                <td>DRY-XXXX</td>
+            </tr>
+            <tr>
+                <td><strong>منطقة غير الغذائية</strong></td>
+                <td>منتجات تنظيف ومواد شخصية</td>
+                <td>WH/Stock/Non-Food</td>
+                <td>قواعد الفصل Safety</td>
+                <td>NFD-XXXX</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- جدول الربط -->
+    <div class="page-break"></div>
+    <h2 id="forms-mapping">7. جدول الربط (النماذج ↔ أودو)</h2>
+    <p>
+        كل نموذج HTML في موقع Brandzo هو الشكل الورقي لما يُدخَل فعلياً في Odoo. الجدول التالي يوضح الربط المباشر:
+    </p>
+    
+    <table>
+        <caption>ربط نماذج Brandzo مع وحدات Odoo</caption>
+        <thead>
+            <tr>
+                <th>نموذج HTML في الموقع</th>
+                <th>نظيره في Odoo</th>
+                <th>المسار للوصول إليه في Odoo</th>
+                <th>الغرض</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>form_PutawayList.html</td>
+                <td>Odoo: Inventory > Operations > Transfers</td>
+                <td>Inventory > Operations > Putaway</td>
+                <td>أمر التخزين الموجه</td>
+            </tr>
+            <tr>
+                <td>form_GRN.html</td>
+                <td>Odoo: Inventory > Receipts</td>
+                <td>Inventory > Operations > Receipts</td>
+                <td>استلام البضاعة</td>
+            </tr>
+            <tr>
+                <td>form_PO.html</td>
+                <td>Odoo: Purchase > Orders</td>
+                <td>Purchase > Orders</td>
+                <td>أمر الشراء</td>
+            </tr>
+            <tr>
+                <td>form_Picking.html</td>
+                <td>Odoo: Inventory > Operations > Transfers</td>
+                <td>Inventory > Operations > Picking</td>
+                <td>قائمة السحب</td>
+            </tr>
+            <tr>
+                <td>form_DeliveryNote.html</td>
+                <td>Odoo: Inventory > Delivery Orders</td>
+                <td>Inventory > Operations > Delivery</td>
+                <td>إذن التسليم</td>
+            </tr>
+            <tr>
+                <td>form_QCReport.html</td>
+                <td>Odoo: Quality > Quality Checks</td>
+                <td>Quality > Control Points</td>
+                <td>تقرير فحص الجودة</td>
+            </tr>
+            <tr>
+                <td>form_ReturnNote.html</td>
+                <td>Odoo: Inventory > Returns</td>
+                <td>Inventory > Operations > Returns</td>
+                <td>إشعار الإرجاع</td>
+            </tr>
+            <tr>
+                <td>form_Stock Adjustment Voucher.html</td>
+                <td>Odoo: Inventory > Adjustments</td>
+                <td>Inventory > Operations > Adjustments</td>
+                <td>سند تسوية المخزون</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- دليل التنصيب -->
+    <div class="page-break"></div>
+    <h2 id="installation">8. دليل التنصيب الفوري لوحدة Inventory في أودو 17</h2>
+    <p>
+        للبدء الفوري في استخدام وحدة Inventory في Odoo 17، اتبع الخطوات التالية:
+    </p>
+    
+    <ol>
+        <li><strong>تفعيل وحدة Inventory:</strong>
+            <ul>
+                <li>اذهب إلى Settings > Apps</li>
+                <li>ابحث عن "Inventory" وقم بتثبيتها</li>
+                <li>أعد تشغيل Odoo بعد التثبيت</li>
+            </ul>
+        </li>
+        <li><strong>إعدادات المستودع الأساسية:</strong>
+            <ul>
+                <li>Inventory > Configuration > Warehouses</li>
+                <li>أنشئ مستودع جديد باسم "Brandzo Warehouse"</li>
+                <li>فعل 3-step receiving: Receive > Quality Check > Store</li>
+                <li>فعل 3-step shipping: Pick > Pack > Ship</li>
+            </ul>
+        </li>
+        <li><strong>إنشاء هيكل المواقع:</strong>
+            <ul>
+                <li>Inventory > Configuration > Storage Locations</li>
+                <li>أنشئ التسلسل الهرمي: Company > Warehouse > Zone > Rack > Bin</li>
+                <li>حدد نوع كل موقع (مبرد/مجمد/جاف/غير غذائي)</li>
+            </ul>
+        </li>
+        <li><strong>إعدادات المنتجات:</strong>
+            <ul>
+                <li>Inventory > Configuration > Products</li>
+                <li>فعل إدارة تواريخ الصلاحية (Expiration Dates)</li>
+                <li>فعل إدارة الدفعات (Lots)</li>
+                <li>حدد استراتيجية الإزالة (Removal Strategy): FEFO</li>
+            </ul>
+        </li>
+        <li><strong>قواعد التخزين التلقائية:</strong>
+            <ul>
+                <li>Inventory > Configuration > Putaway Rules</li>
+                <li>أنشئ قواعد لكل منطقة تخزين</li>
+                <li>ربط القواعد بفئات المنتجات</li>
+                <li>اختبر القواعد باستخدام عملية استلام تجريبية</li>
+            </ul>
+        </li>
+    </ol>
+
+    <div class="highlight-box">
+        <strong>ملاحظة هامة:</strong> هذه الخطوات الأساسية تكفي للبدء. للتخصيصات المتقدمة (مثل تكامل الباركود، تقارير مخصصة، أو تكامل مع أنظمة أخرى)، يُنصح بالتعاون مع شريك Odoo معتمد.
+    </div>
+
     <!-- الخلاصة -->
-    <h2 id="conclusion">7. الخلاصة والتوصيات</h2>
+    <h2 id="conclusion">9. الخلاصة والتوصيات</h2>
     <p>
         يمثل النظام المقترح لإدارة التخزين نقلة نوعية في طريقة إدارة المستودعات، حيث يجمع بين الكفاءة التشغيلية والدقة العالية في إدارة المخزون. يستند النظام إلى أفضل الممارسات العالمية مع التكيف مع الاحتياجات المحلية.
     </p>

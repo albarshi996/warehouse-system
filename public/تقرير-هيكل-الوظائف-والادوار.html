@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تقرير هيكل الوظائف والأدوار - نظام Brandzo مع تكامل Odoo</title>
+    <style>
+        :root {
+            --primary: #1b3a5c;
+            --secondary: #c89d3b;
+            --accent: #c0392b;
+            --gray-light: #f0f2f5;
+            --border: #d0d4da;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 12pt;
+            line-height: 1.8;
+            color: #222;
+            background: white;
+            direction: rtl;
+            text-align: right;
+        }
+
+        @page {
+            size: A4;
+            margin: 2cm 2.2cm 2.2cm 2cm;
+        }
+
+        @media print {
+            body {
+                background: none;
+            }
+            .no-print {
+                display: none;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+            h1, h2, h3, h4 {
+                page-break-after: avoid;
+            }
+            table {
+                page-break-inside: avoid;
+            }
+        }
+
+        .container {
+            max-width: 21cm;
+            margin: auto;
+            padding: 0;
+        }
+
+        .cover {
+            text-align: center;
+            padding: 4cm 2cm 2cm;
+            background: white;
+            border-bottom: 4px solid var(--primary);
+        }
+        .cover .logo-placeholder {
+            font-size: 18pt;
+            font-weight: bold;
+            color: var(--primary);
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+        .cover h1 {
+            font-size: 24pt;
+            color: var(--primary);
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+        .cover .subtitle {
+            font-size: 14pt;
+            color: var(--secondary);
+            margin-bottom: 50px;
+        }
+        .cover .meta {
+            font-size: 12pt;
+            color: #555;
+            margin-top: 50px;
+        }
+        .cover .meta span {
+            display: block;
+            margin-bottom: 6px;
+        }
+        .confidential {
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            padding: 8px 20px;
+            display: inline-block;
+            font-weight: bold;
+            margin-top: 30px;
+            text-transform: uppercase;
+        }
+
+        h2 {
+            font-size: 18pt;
+            color: var(--primary);
+            border-bottom: 3px solid var(--secondary);
+            padding-bottom: 8px;
+            margin-top: 1.5cm;
+            margin-bottom: 0.6cm;
+        }
+        h3 {
+            font-size: 14pt;
+            color: var(--primary);
+            margin-top: 0.8cm;
+            margin-bottom: 0.4cm;
+        }
+        h4 {
+            font-size: 13pt;
+            color: #2d4b6c;
+            margin-top: 0.5cm;
+            margin-bottom: 0.3cm;
+        }
+
+        p {
+            margin-bottom: 0.6cm;
+            text-align: justify;
+            text-justify: inter-word;
+        }
+
+        ul, ol {
+            margin-bottom: 0.6cm;
+            padding-right: 1.5cm;
+        }
+        li {
+            margin-bottom: 0.2cm;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.5cm 0 0.8cm;
+            font-size: 9pt;
+        }
+        table caption {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--primary);
+            font-size: 12pt;
+        }
+        th {
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 6px;
+            font-size: 9pt;
+            text-align: center;
+            font-weight: bold;
+        }
+        td {
+            padding: 6px 4px;
+            border: 1px solid var(--border);
+            font-size: 9pt;
+            vertical-align: middle;
+            text-align: center;
+        }
+        tr:nth-child(even) td {
+            background-color: var(--gray-light);
+        }
+        tr:hover td {
+            background-color: #e8f4f8;
+        }
+
+        .highlight-box {
+            background: #eef3f9;
+            border-right: 6px solid var(--primary);
+            padding: 12px 18px;
+            margin: 0.6cm 0;
+            text-align: justify;
+        }
+
+        .golden-rule {
+            background: #fef8e7;
+            border: 1px solid var(--secondary);
+            border-radius: 5px;
+            padding: 12px 18px;
+            margin: 0.6cm 0;
+            list-style: none;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        .toc {
+            list-style: none;
+            padding: 0;
+        }
+        .toc li {
+            margin-bottom: 6px;
+            border-bottom: 1px dotted #aaa;
+            padding-bottom: 4px;
+        }
+        .toc li a {
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 500;
+        }
+        .toc li a::before {
+            content: "⬥ ";
+            color: var(--secondary);
+        }
+
+        .signature-line {
+            margin-top: 1cm;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-line div {
+            width: 45%;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            text-align: center;
+            font-size: 11pt;
+        }
+
+        /* Org Chart Styles */
+        .org-tree {
+            background: #f8f9fa;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .org-level {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .org-node {
+            display: inline-block;
+            width: 180px;
+            margin: 10px 5px;
+            padding: 15px 10px;
+            background: linear-gradient(135deg, var(--primary), #0f0f1f);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .org-connector {
+            display: inline-block;
+            width: 40px;
+            text-align: center;
+            color: var(--secondary);
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .odoo-role-badge {
+            background: #00a650;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 8pt;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .role-card {
+            background: #e8f5e8;
+            border-right: 4px solid #00a650;
+            padding: 12px;
+            margin: 10px 0;
+        }
+
+        .role-title {
+            font-weight: bold;
+            color: #00a650;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Interactive Site Notification Bar -->
+    <div class="no-print" style="background: #e8f4fd; border-right: 4px solid var(--primary); padding: 10px 15px; margin-bottom: 20px; font-size: 11pt;">
+        <strong>🔗 هذا التقرير مُولَّد تلقائياً من بيانات المشروع — للطباعة:</strong> 
+        <button onclick="window.print()" style="color: var(--primary); text-decoration: none; font-weight: bold; background: none; border: 1px solid var(--primary); padding: 5px 10px; border-radius: 4px; cursor: pointer;">اطبع الآن</button>
+    </div>
+
+    <div class="cover">
+        <div class="logo-placeholder">BRANDZO SYSTEMS</div>
+        <h1>تقرير هيكل الوظائف والأدوار<br>مع تكامل Odoo 17 Enterprise</h1>
+        <div class="subtitle">شجرة SVG للهيكل التنظيمي الكامل + بطاقات وصف وظيفي للمناصب الـ11</div>
+        <div class="meta">
+            <span><strong>التاريخ:</strong> 12 مايو 2026</span>
+            <span><strong>الإصدار:</strong> 1.0 (Odoo-Ready)</span>
+            <span><strong>الإعداد:</strong> نظام Brandzo التفاعلي</span>
+        </div>
+        <div class="confidential">سري – للاستخدام الداخلي للإدارة العليا فقط</div>
+    </div>
+
+    <div class="page-break"></div>
+    <h2>قائمة المحتويات</h2>
+    <ol class="toc">
+        <li><a href="#org-overview">نظرة عامة على الهيكل التنظيمي</a></li>
+        <li><a href="#org-tree">شجرة الهيكل التنظيمي الكامل</a></li>
+        <li><a href="#position-cards">بطاقات وصف وظيفي للمناصب الـ11</a></li>
+        <li><a href="#departments">الإدارات الستة التشغيلية</a></li>
+        <li><a href="#raci-matrix">مصفوفة RACI: الأدوار × المراحل</a></li>
+        <li><a href="#role-mapping">جدول تعيين الأدوار في أودو</a></li>
+    </ol>
+
+    <div class="page-break"></div>
+    <h2 id="org-overview">1. نظرة عامة على الهيكل التنظيمي</h2>
+    <p>
+        يمثل الهيكل التنظيمي لمستودعات Brandzo نموذجاً هرمياً من ثلاث طبقات يضمن توزيع واضح للمسؤوليات وسلاسة خطوط الإبلاغ. يضم الهيكل حوالي 320 موظفاً موزعين على 6 إدارات تشغيلية تحت إشراف مدير المستودع التنفيذي.
+    </p>
+    <p>
+        مع تكامل Odoo 17 Enterprise، كل منصب في الهيكل له دور محدد في النظام مع صلاحيات واضحة على الوحدات المسموح بها، مما يضمن الانتقال المنظم من الهيكل الحالي إلى النظام الرقمي المتكامل.
+    </p>
+
+    <div class="highlight-box">
+        <strong>الهدف الرئيسي:</strong> تحويل الهيكل التنظيمي الورقي إلى هيكل رقمي متكامل في Odoo مع تعيين الأدوار والصلاحيات المناسبة لكل مستخدم.
+    </div>
+
+    <div class="page-break"></div>
+    <h2 id="org-tree">2. شجرة الهيكل التنظيمي الكامل</h2>
+    <div class="org-tree">
+        <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap;">
+            <div class="org-node">
+                <div>مدير المستودع<br>التنفيذي</div>
+            </div>
+            <div class="org-connector">↓</div>
+        </div>
+        <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 20px;">
+            <div class="org-node">
+                <div>مدير المستودع<br>التنفيذي</div>
+            </div>
+            <div class="org-connector">→</div>
+            <div class="org-node">
+                <div>مدير تقنية<br>المعلومات</div>
+            </div>
+            <div class="org-connector">→</div>
+            <div class="org-node">
+                <div>مدير الجودة<br>والسلامة</div>
+            </div>
+            <div class="org-connector">→</div>
+            <div class="org-node">
+                <div>مدير<br>المالية</div>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 20px;">
+            <div class="org-node">
+                <div>إدارة<br>الاستلام</div>
+            </div>
+            <div class="org-connector">→</div>
+            <div class="org-node">
+                <div>إدارة<br>الجودة</div>
+            </div>
+            <div class="org-connector">→</div>
+            <div class="org-node">
+                <div>إدارة<br>التخزين</div>
+            </div>
+            <div class="org-connector">→</div>
+            <div class="org-node">
+                <div>إدارة<br>السحب</div>
+            </div>
+            <div class="org-connector">→</div>
+            <div class="org-node">
+                <div>إدارة<br>النقل</div>
+            </div>
+            <div class="org-connector">→</div>
+            <div class="org-node">
+                <div>إدارة<br>المرتجعات</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+    <h2 id="position-cards">3. بطاقات وصف وظيفي للمناصب الـ11</h2>
+    
+    <!-- Tier 1 & 2 Positions -->
+    <h3>الطبقتان الأولى والثانية (11 منصب)</h3>
+    
+    <!-- Executive Manager -->
+    <div class="role-card">
+        <div class="role-title">🧭 مدير المستودع التنفيذي</div>
+        <div class="odoo-role-badge">ODOO</div>
+        <h4>الوصف الوظيفي</h4>
+        <ul>
+            <li>الإشراف العام على كافة أنشطة المستودع</li>
+            <li>وضع الاستراتيجيات التشغيلية قصيرة وطويلة المدى</li>
+            <li>إدارة الميزانية التشغيلية</li>
+            <li>التنسيق مع الإدارة المركزية</li>
+            <li>اعتماد السياسات والإجراءات الرئيسية</li>
+            <li>إدارة علاقات الموردين الكبار</li>
+        </ul>
+        <h4>دور أودو</h4>
+        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+            <strong>👤 Inventory Manager</strong><br>
+            <strong>الوحدات المسموح بها:</strong> كل وحدات المخزون<br>
+            <strong>المستوى:</strong> Admin
+        </div>
+    </div>
+
+    <!-- IT Manager -->
+    <div class="role-card">
+        <div class="role-title">💻 مدير أنظمة المعلومات والتحول الرقمي</div>
+        <div class="odoo-role-badge">ODOO</div>
+        <h4>الوصف الوظيفي</h4>
+        <ul>
+            <li>الإشراف على نظام إدارة المستودعات الإلكتروني</li>
+            <li>ضمان تكامل الأنظمة مع المنظومة المركزية</li>
+            <li>قيادة مبادرات الأتمتة والتحول الرقمي</li>
+            <li>إدارة فريق الدعم الفني</li>
+            <li>تحليل البيانات الضخمة لتحسين الأداء</li>
+        </ul>
+        <h4>دور أودو</h4>
+        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+            <strong>👤 System Administrator</strong><br>
+            <strong>الوحدات المسموح بها:</strong> Settings كاملة<br>
+            <strong>المستوى:</strong> Admin
+        </div>
+    </div>
+
+    <!-- Quality Manager -->
+    <div class="role-card">
+        <div class="role-title">🛡️ مدير الجودة والسلامة الغذائية</div>
+        <div class="odoo-role-badge">ODOO</div>
+        <h4>الوصف الوظيفي</h4>
+        <ul>
+            <li>تطبيق معايير سلامة الغذاء العالمية</li>
+            <li>إدارة فريق فحص الجودة</li>
+            <li>اعتماد الموردين الجدد فنياً</li>
+            <li>متابعة شهادات الجودة والصلاحية</li>
+            <li>إدارة حالات سحب المنتجات</li>
+        </ul>
+        <h4>دور أودو</h4>
+        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+            <strong>👤 Quality Administrator</strong><br>
+            <strong>الوحدات المسموح بها:</strong> Quality + Inventory (read)<br>
+            <strong>المستوى:</strong> Admin
+        </div>
+    </div>
+
+    <!-- Finance Manager -->
+    <div class="role-card">
+        <div class="role-title">📊 مدير المحاسبة والرقابة المالية</div>
+        <div class="odoo-role-badge">ODOO</div>
+        <h4>الوصف الوظيفي</h4>
+        <ul>
+            <li>الإشراف على جميع العمليات المالية</li>
+            <li>دقة المطابقات المالية مع الموردين</li>
+            <li>إعداد التقارير المالية</li>
+            <li>الإشراف على أنشطة الجرد المالي</li>
+            <li>مراقبة تكاليف التشغيل وترشيدها</li>
+        </ul>
+        <h4>دور أودو</h4>
+        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+            <strong>👤 Accounting Manager</strong><br>
+            <strong>الوحدات المسموح بها:</strong> Purchase + Accounting<br>
+            <strong>المستوى:</strong> Manager
+        </div>
+    </div>
+
+    <!-- Operational Departments -->
+    <h3>الطبقة الثالثة - الإدارات التشغيلية الستة</h3>
+    
+    <!-- Receiving Department -->
+    <div class="role-card">
+        <div class="role-title">📦 إدارة الاستلام والرقابة</div>
+        <div class="odoo-role-badge">ODOO</div>
+        <h4>الوصف الوظيفي</h4>
+        <ul>
+            <li>مدير قسم الاستلام</li>
+            <li>مشرف الاستلام (الفترة الصباحية)</li>
+            <li>مشرف الاستلام (الفترة المسائية)</li>
+            <li>فريق إدخال بيانات الاستلام (4-6)</li>
+            <li>فريق عمال الرصيف والمناولة (20-30)</li>
+        </ul>
+        <h4>دور أودو</h4>
+        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+            <strong>👤 Inventory User</strong><br>
+            <strong>الوحدات المسموح بها:</strong> Inventory + Quality<br>
+            <strong>المستوى:</strong> User
+        </div>
+    </div>
+
+    <!-- Quality Department -->
+    <div class="role-card">
+        <div class="role-title">🔬 إدارة فحص ومراقبة الجودة</div>
+        <div class="odoo-role-badge">ODOO</div>
+        <h4>الوصف الوظيفي</h4>
+        <ul>
+            <li>مدير إدارة الجودة</li>
+            <li>فريق فحص المنتجات الطازجة</li>
+            <li>فريق فحص المجمدات</li>
+            <li>فريق فحص المنتجات الجافة والمعلبة</li>
+            <li>فريق فحص المنتجات غير الغذائية</li>
+        </ul>
+        <h4>دور أودو</h4>
+        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+            <strong>👤 Quality User</strong><br>
+            <strong>الوحدات المسموح بها:</strong> Quality + Inventory (read)<br>
+            <strong>المستوى:</strong> User
+        </div>
+    </div>
+
+    <!-- Storage Department -->
+    <div class="role-card">
+        <div class="role-title">🏬 إدارة التخزين وتحديد المواقع</div>
+        <div class="odoo-role-badge">ODOO</div>
+        <h4>الوصف الوظيفي</h4>
+        <ul>
+            <li>مدير عمليات التخزين</li>
+            <li>مهندس تخطيط المستودع</li>
+            <li>مشرفي مناطق التخزين المتخصصة</li>
+            <li>مشغلي الرافعات الشوكية (40-60)</li>
+            <li>مراقبي المخزون (10-12)</li>
+        </ul>
+        <h4>دور أودو</h4>
+        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+            <strong>👤 Inventory User</strong><br>
+            <strong>الوحدات المسموح بها:</strong> Inventory + Barcode<br>
+            <strong>المستوى:</strong> User
+        </div>
+    </div>
+
+    <!-- Picking Department -->
+    <div class="role-card">
+        <div class="role-title">📋 إدارة تحضير الطلبات والتوزيع</div>
+        <div class="odoo-role-badge">ODOO</div>
+        <h4>الوصف الوظيفي</h4>
+        <ul>
+            <li>مدير عمليات التوزيع</li>
+            <li>مخطط الأحمال</li>
+            <li>مشرفي مناطق الانتقاء</li>
+            <li>العمال المتنقلين (80-120)</li>
+            <li>فريق المراجعين والمدققين</li>
+        </ul>
+        <h4>دور أودو</h4>
+        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+            <strong>👤 Barcode User</strong><br>
+            <strong>الوحدات المسموح بها:</strong> Barcode فقط<br>
+            <strong>المستوى:</strong> User
+        </div>
+    </div>
+
+    <!-- Transport Department -->
+    <div class="role-card">
+        <div class="role-title">🚚 إدارة أسطول النقل والتوزيع</div>
+        <div class="odoo-role-badge">ODOO</div>
+        <h4>الوصف الوظيفي</h4>
+        <ul>
+            <li>مدير النقل والتوزيع</li>
+            <li>منسق عمليات التوزيع اليومية</li>
+            <li>فريق السائقين (50-70)</li>
+            <li>فريق مساعدي السائقين</li>
+            <li>مهندس صيانة الأسطول</li>
+        </ul>
+        <h4>دور أودو</h4>
+        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+            <strong>👤 Fleet User</strong><br>
+            <strong>الوحدات المسموح بها:</strong> Fleet<br>
+            <strong>المستوى:</strong> User
+        </div>
+    </div>
+
+    <!-- Returns Department -->
+    <div class="role-card">
+        <div class="role-title">↩️ إدارة المرتجعات وتصحيح المخزون</div>
+        <div class="odoo-role-badge">ODOO</div>
+        <h4>الوصف الوظيفي</h4>
+        <ul>
+            <li>مدير إدارة المرتجعات</li>
+            <li>مشرف استلام المرتجعات</li>
+            <li>فريق فحص المرتجعات</li>
+            <li>فريق معالجة المرتجعات</li>
+            <li>منسق المرتجعات مع الموردين</li>
+        </ul>
+        <h4>دور أودو</h4>
+        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+            <strong>👤 Quality User</strong><br>
+            <strong>الوحدات المسموح بها:</strong> Quality + Inventory (read)<br>
+            <strong>المستوى:</strong> User
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+    <h2 id="departments">4. الإدارات الستة التشغيلية</h2>
+    <table>
+        <caption>الإدارات التشغيلية والتسلسل الهرمي الداخلي</caption>
+        <thead>
+            <tr>
+                <th>الإدارة</th>
+                <th>المدير المباشر</th>
+                <th>عدد الموظفين</th>
+                <th>التسلسل الهرمي الداخلي</th>
+                <th>الوثائق التي تنتجها</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>إدارة الاستلام والرقابة</strong></td>
+                <td>مدير قسم الاستلام</td>
+                <td>~30 موظف</td>
+                <td>مدير ← مشرف ← فريق</td>
+                <td>نماذج GRN، تقارير الرقابة</td>
+            </tr>
+            <tr>
+                <td><strong>إدارة فحص ومراقبة الجودة</strong></td>
+                <td>مدير إدارة الجودة</td>
+                <td>~15 مفتش</td>
+                <td>مدير ← فرق الفحص</td>
+                <td>تقارير الجودة، شهادات المطابقة</td>
+            </tr>
+            <tr>
+                <td><strong>إدارة التخزين وتحديد المواقع</strong></td>
+                <td>مدير عمليات التخزين</td>
+                <td>~70 موظف</td>
+                <td>مدير ← مهندس ← مشرفي ← فرق</td>
+                <td>خرائط المواقع، تقارير الجرد</td>
+            </tr>
+            <tr>
+                <td><strong>إدارة تحضير الطلبات والتوزيع</strong></td>
+                <td>مدير عمليات التوزيع</td>
+                <td>~120 عامل</td>
+                <td>مدير ← مشرفي ← مناطق ← عمال</td>
+                <td>قوائم السحب، إذنات التسليم</td>
+            </tr>
+            <tr>
+                <td><strong>إدارة أسطول النقل والتوزيع</strong></td>
+                <td>مدير النقل والتوزيع</td>
+                <td>~70 سائق</td>
+                <td>مدير ← منسق ← فرق</td>
+                <td>جداول النقل، تقارير الأسطول</td>
+            </tr>
+            <tr>
+                <td><strong>إدارة المرتجعات وتصحيح المخزون</strong></td>
+                <td>مدير إدارة المرتجعات</td>
+                <td>~12 موظف</td>
+                <td>مدير ← مشرف ← فرق</td>
+                <td>نماذج الإرجاع، سندات التسوية</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="page-break"></div>
+    <h2 id="raci-matrix">5. مصفوفة RACI: الأدوار × المراحل</h2>
+    <table>
+        <caption>مصفوفة المسؤوليات لمراحل الدورة المستندية الـ8</caption>
+        <thead>
+            <tr>
+                <th>المرحلة</th>
+                <th>مدير المستودع</th>
+                <th>مدير تقنية المعلومات</th>
+                <th>مدير الجودة</th>
+                <th>مدير المالية</th>
+                <th>إدارة الاستلام</th>
+                <th>إدارة الجودة</th>
+                <th>إدارة التخزين</th>
+                <th>إدارة السحب</th>
+                <th>إدارة النقل</th>
+                <th>إدارة المرتجعات</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>PR</strong><br><small>طلب الشراء</small></td>
+                <td>A</td>
+                <td>C</td>
+                <td>I</td>
+                <td>R</td>
+                <td>C</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+            </tr>
+            <tr>
+                <td><strong>PO</strong><br><small>أمر الشراء</small></td>
+                <td>A</td>
+                <td>C</td>
+                <td>I</td>
+                <td>R</td>
+                <td>C</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+            </tr>
+            <tr>
+                <td><strong>ASN</strong><br><small>إشعار الشحن</small></td>
+                <td>I</td>
+                <td>C</td>
+                <td>I</td>
+                <td>I</td>
+                <td>C</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+            </tr>
+            <tr>
+                <td><strong>GRN</strong><br><small>الاستلام والجودة</small></td>
+                <td>A</td>
+                <td>C</td>
+                <td>A</td>
+                <td>R</td>
+                <td>R</td>
+                <td>A</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+            </tr>
+            <tr>
+                <td><strong>Putaway</strong><br><small>التخزين الموجه</small></td>
+                <td>A</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>A</td>
+                <td>R</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+            </tr>
+            <tr>
+                <td><strong>Picking</strong><br><small>تحضير الطلبات</small></td>
+                <td>A</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>A</td>
+                <td>R</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+            </tr>
+            <tr>
+                <td><strong>Dispatch</strong><br><small>الشحن والتوزيع</small></td>
+                <td>A</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>A</td>
+                <td>R</td>
+                <td>I</td>
+                <td>I</td>
+            </tr>
+            <tr>
+                <td><strong>Returns</strong><br><small>المرتجعات والتسويات</small></td>
+                <td>A</td>
+                <td>C</td>
+                <td>A</td>
+                <td>R</td>
+                <td>C</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>I</td>
+                <td>A</td>
+                <td>R</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="highlight-box">
+        <strong>شرح المصفوفة:</strong> 
+        <ul>
+            <li><strong>R</strong> = Responsible (مسؤول رئيسي)</li>
+            <li><strong>A</strong> = Accountable (مسؤول عن التنفيذ)</li>
+            <li><strong>C</strong> = Consulted (يستشار)</li>
+            <li><strong>I</strong> = Informed (يُعلم)</li>
+        </ul>
+    </div>
+
+    <div class="page-break"></div>
+    <h2 id="role-mapping">6. جدول تعيين الأدوار في أودو</h2>
+    <table>
+        <caption>جدول تعيين كامل: المنصب → Role في أودو → الوحدات → مستوى الصلاحية</caption>
+        <thead>
+            <tr>
+                <th>المنصب</th>
+                <th>Role في أودو</th>
+                <th>الوحدات المسموح بها</th>
+                <th>مستوى الصلاحية</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>مدير المستودع التنفيذي</strong></td>
+                <td>Inventory Manager</td>
+                <td>كل وحدات المخزون</td>
+                <td>Admin</td>
+            </tr>
+            <tr>
+                <td><strong>مدير المستودع التنفيذي</strong></td>
+                <td>System Administrator</td>
+                <td>Settings كاملة</td>
+                <td>Admin</td>
+            </tr>
+            <tr>
+                <td><strong>مدير تقنية المعلومات</strong></td>
+                <td>System Administrator</td>
+                <td>Settings كاملة</td>
+                <td>Admin</td>
+            </tr>
+            <tr>
+                <td><strong>مدير الجودة والسلامة الغذائية</strong></td>
+                <td>Quality Administrator</td>
+                <td>Quality + Inventory (read)</td>
+                <td>Admin</td>
+            </tr>
+            <tr>
+                <td><strong>مدير المحاسبة والرقابة المالية</strong></td>
+                <td>Accounting Manager</td>
+                <td>Purchase + Accounting</td>
+                <td>Manager</td>
+            </tr>
+            <tr>
+                <td><strong>مشرف الاستلام</strong></td>
+                <td>Inventory User</td>
+                <td>Inventory + Quality</td>
+                <td>User</td>
+            </tr>
+            <tr>
+                <td><strong>مشرف التخزين</strong></td>
+                <td>Inventory User</td>
+                <td>Inventory + Barcode</td>
+                <td>User</td>
+            </tr>
+            <tr>
+                <td><strong>مشرف الجودة</strong></td>
+                <td>Quality User</td>
+                <td>Quality + Inventory (read)</td>
+                <td>User</td>
+            </tr>
+            <tr>
+                <td><strong>عامل السحب</strong></td>
+                <td>Barcode User</td>
+                <td>Barcode فقط</td>
+                <td>User</td>
+            </tr>
+            <tr>
+                <td><strong>السائق</strong></td>
+                <td>Fleet User</td>
+                <td>Fleet</td>
+                <td>User</td>
+            </tr>
+            <tr>
+                <td><strong>مفتش الجودة</strong></td>
+                <td>Quality User</td>
+                <td>Quality + Inventory (read)</td>
+                <td>User</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="highlight-box">
+        <strong>ملاحظة هامة:</strong> هذا الجدول يضمن تعيين الأدوار المناسبة لكل مستخدم في Odoo مع الصلاحيات المناسبة، مما يضمن الأمان والامتثال في النظام.
+    </div>
+
+    <!-- Signature Section -->
+    <div class="page-break"></div>
+    <div class="signature-line">
+        <div>
+            <strong>إعداد والمراجعة:</strong><br>
+            فريق تحويل Brandzo إلى Odoo
+        </div>
+        <div>
+            <strong>الموافقة:</strong><br>
+            مدير نظام المعلومات
+        </div>
+    </div>
+</div>
+</body>
+</html>

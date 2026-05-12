@@ -11,8 +11,8 @@
 
 export const orgRoot = {
   id: 'main-mgr',
-  titleAr: 'مدير عمليات المستودع الرئيسي',
-  titleEn: 'Main Warehouse Operations Manager',
+  titleAr: 'مدير المستودع التنفيذي',
+  titleEn: 'Warehouse Executive Manager',
   emoji: '👑',
   accent: 'red',
   responsibilities: [
@@ -23,6 +23,8 @@ export const orgRoot = {
     'اعتماد السياسات والإجراءات الرئيسية',
     'إدارة علاقات الموردين الكبار',
   ],
+  odooRole: 'Inventory Manager',
+  odooAccess: 'كل وحدات المخزون',
 };
 
 /**
@@ -45,6 +47,8 @@ export const orgTier2 = [
       'التنسيق بين الإدارات المختلفة',
       'إدارة الموارد البشرية بالمستودع',
     ],
+    odooRole: 'System Administrator',
+    odooAccess: 'Settings كاملة',
   },
   {
     id: 'it-mgr',
@@ -59,6 +63,8 @@ export const orgTier2 = [
       'إدارة فريق الدعم الفني',
       'تحليل البيانات الضخمة لتحسين الأداء',
     ],
+    odooRole: 'System Administrator',
+    odooAccess: 'Settings كاملة',
   },
   {
     id: 'qa-mgr',
@@ -73,6 +79,8 @@ export const orgTier2 = [
       'متابعة شهادات الجودة والصلاحية',
       'إدارة حالات سحب المنتجات',
     ],
+    odooRole: 'Quality Administrator',
+    odooAccess: 'Quality + Inventory (read)',
   },
   {
     id: 'fin-mgr',
@@ -87,6 +95,8 @@ export const orgTier2 = [
       'الإشراف على أنشطة الجرد المالي',
       'مراقبة تكاليف التشغيل وترشيدها',
     ],
+    odooRole: 'Accounting Manager',
+    odooAccess: 'Purchase + Accounting',
   },
 ];
 
@@ -109,6 +119,8 @@ export const orgTier3 = [
       'فريق إدخال بيانات الاستلام (4-6)',
       'فريق عمال الرصيف والمناولة (20-30)',
     ],
+    odooRole: 'Inventory User',
+    odooAccess: 'Inventory + Quality',
   },
   {
     id: 'qc',
@@ -124,6 +136,8 @@ export const orgTier3 = [
       'فريق فحص المنتجات الجافة والمعلبة',
       'فريق فحص المنتجات غير الغذائية',
     ],
+    odooRole: 'Quality User',
+    odooAccess: 'Quality + Inventory (read)',
   },
   {
     id: 'storage',
@@ -139,6 +153,8 @@ export const orgTier3 = [
       'مشغلي الرافعات الشوكية (40-60)',
       'مراقبي المخزون (10-12)',
     ],
+    odooRole: 'Inventory User',
+    odooAccess: 'Inventory + Barcode',
   },
   {
     id: 'picking',
@@ -154,6 +170,8 @@ export const orgTier3 = [
       'العمال المتنقلين (80-120)',
       'فريق المراجعين والمدققين',
     ],
+    odooRole: 'Barcode User',
+    odooAccess: 'Barcode فقط',
   },
   {
     id: 'transport',
@@ -169,6 +187,8 @@ export const orgTier3 = [
       'فريق مساعدي السائقين',
       'مهندس صيانة الأسطول',
     ],
+    odooRole: 'Fleet User',
+    odooAccess: 'Fleet',
   },
   {
     id: 'returns',
@@ -184,5 +204,7 @@ export const orgTier3 = [
       'فريق معالجة المرتجعات',
       'منسق المرتجعات مع الموردين',
     ],
+    odooRole: 'Quality User',
+    odooAccess: 'Quality + Inventory (read)',
   },
 ];

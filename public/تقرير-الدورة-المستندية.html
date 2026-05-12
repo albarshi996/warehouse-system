@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تقرير الدورة المستندية الكاملة - نظام Brandzo مع تكامل Odoo</title>
+    <style>
+        :root {
+            --primary: #1b3a5c;
+            --secondary: #c89d3b;
+            --accent: #c0392b;
+            --gray-light: #f0f2f5;
+            --border: #d0d4da;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 12pt;
+            line-height: 1.8;
+            color: #222;
+            background: white;
+            direction: rtl;
+            text-align: right;
+        }
+
+        @page {
+            size: A4;
+            margin: 2cm 2.2cm 2.2cm 2cm;
+        }
+
+        @media print {
+            body {
+                background: none;
+            }
+            .no-print {
+                display: none;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+            h1, h2, h3, h4 {
+                page-break-after: avoid;
+            }
+            table {
+                page-break-inside: avoid;
+            }
+        }
+
+        .container {
+            max-width: 21cm;
+            margin: auto;
+            padding: 0;
+        }
+
+        .cover {
+            text-align: center;
+            padding: 4cm 2cm 2cm;
+            background: white;
+            border-bottom: 4px solid var(--primary);
+        }
+        .cover .logo-placeholder {
+            font-size: 18pt;
+            font-weight: bold;
+            color: var(--primary);
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+        .cover h1 {
+            font-size: 24pt;
+            color: var(--primary);
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+        .cover .subtitle {
+            font-size: 14pt;
+            color: var(--secondary);
+            margin-bottom: 50px;
+        }
+        .cover .meta {
+            font-size: 12pt;
+            color: #555;
+            margin-top: 50px;
+        }
+        .cover .meta span {
+            display: block;
+            margin-bottom: 6px;
+        }
+        .confidential {
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            padding: 8px 20px;
+            display: inline-block;
+            font-weight: bold;
+            margin-top: 30px;
+            text-transform: uppercase;
+        }
+
+        h2 {
+            font-size: 18pt;
+            color: var(--primary);
+            border-bottom: 3px solid var(--secondary);
+            padding-bottom: 8px;
+            margin-top: 1.5cm;
+            margin-bottom: 0.6cm;
+        }
+        h3 {
+            font-size: 14pt;
+            color: var(--primary);
+            margin-top: 0.8cm;
+            margin-bottom: 0.4cm;
+        }
+        h4 {
+            font-size: 13pt;
+            color: #2d4b6c;
+            margin-top: 0.5cm;
+            margin-bottom: 0.3cm;
+        }
+
+        p {
+            margin-bottom: 0.6cm;
+            text-align: justify;
+            text-justify: inter-word;
+        }
+
+        ul, ol {
+            margin-bottom: 0.6cm;
+            padding-right: 1.5cm;
+        }
+        li {
+            margin-bottom: 0.2cm;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.5cm 0 0.8cm;
+            font-size: 9pt;
+        }
+        table caption {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--primary);
+            font-size: 12pt;
+        }
+        th {
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 6px;
+            font-size: 9pt;
+            text-align: center;
+            font-weight: bold;
+        }
+        td {
+            padding: 6px 4px;
+            border: 1px solid var(--border);
+            font-size: 9pt;
+            vertical-align: middle;
+            text-align: center;
+        }
+        tr:nth-child(even) td {
+            background-color: var(--gray-light);
+        }
+        tr:hover td {
+            background-color: #e8f4f8;
+        }
+
+        .highlight-box {
+            background: #eef3f9;
+            border-right: 6px solid var(--primary);
+            padding: 12px 18px;
+            margin: 0.6cm 0;
+            text-align: justify;
+        }
+
+        .golden-rule {
+            background: #fef8e7;
+            border: 1px solid var(--secondary);
+            border-radius: 5px;
+            padding: 12px 18px;
+            margin: 0.6cm 0;
+            list-style: none;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        .toc {
+            list-style: none;
+            padding: 0;
+        }
+        .toc li {
+            margin-bottom: 6px;
+            border-bottom: 1px dotted #aaa;
+            padding-bottom: 4px;
+        }
+        .toc li a {
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 500;
+        }
+        .toc li a::before {
+            content: "⬥ ";
+            color: var(--secondary);
+        }
+
+        .signature-line {
+            margin-top: 1cm;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-line div {
+            width: 45%;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            text-align: center;
+            font-size: 11pt;
+        }
+
+        /* Document Flow Styles */
+        .flow-diagram {
+            background: #f8f9fa;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .flow-stage {
+            display: inline-block;
+            width: 120px;
+            margin: 10px 5px;
+            padding: 15px 10px;
+            background: linear-gradient(135deg, var(--primary), #0f0f1f);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .flow-arrow {
+            display: inline-block;
+            width: 40px;
+            text-align: center;
+            color: var(--secondary);
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .odoo-badge {
+            background: #00a650;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 8pt;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Interactive Site Notification Bar -->
+    <div class="no-print" style="background: #e8f4fd; border-right: 4px solid var(--primary); padding: 10px 15px; margin-bottom: 20px; font-size: 11pt;">
+        <strong>🔗 هذا التقرير مُولَّد تلقائياً من بيانات المشروع — للطباعة:</strong> 
+        <button onclick="window.print()" style="color: var(--primary); text-decoration: none; font-weight: bold; background: none; border: 1px solid var(--primary); padding: 5px 10px; border-radius: 4px; cursor: pointer;">اطبع الآن</button>
+    </div>
+
+    <div class="cover">
+        <div class="logo-placeholder">BRANDZO SYSTEMS</div>
+        <h1>تقرير الدورة المستندية الكاملة<br>مع تكامل Odoo 17 Enterprise</h1>
+        <div class="subtitle">خريطة تدفق SVG للـ8 مراحل + نظير أودو لكل مرحلة</div>
+        <div class="meta">
+            <span><strong>التاريخ:</strong> 12 مايو 2026</span>
+            <span><strong>الإصدار:</strong> 1.0 (Odoo-Ready)</span>
+            <span><strong>الإعداد:</strong> نظام Brandzo التفاعلي</span>
+        </div>
+        <div class="confidential">سري – للاستخدام الداخلي للإدارة العليا فقط</div>
+    </div>
+
+    <div class="page-break"></div>
+    <h2>قائمة المحتويات</h2>
+    <ol class="toc">
+        <li><a href="#overview">نظرة عامة على الدورة المستندية</a></li>
+        <li><a href="#flow-diagram">خريطة تدفق الدورة المستندية</a></li>
+        <li><a href="#stages">المراحل الثمانية التفصيلية</a></li>
+        <li><a href="#forms-matrix">مصفوفة المستندات (19 نموذج)</a></li>
+        <li><a href="#execution-rules">قواعد التنفيذ الإلزامية وKPIs</a></li>
+        <li><a href="#odoo-integration">تكامل أودو - المسارات التنفيذية</a></li>
+    </ol>
+
+    <div class="page-break"></div>
+    <h2 id="overview">1. نظرة عامة على الدورة المستندية</h2>
+    <p>
+        تمثل الدورة المستندية لنظام Brandzo العمود الفقري للعمليات اللوجستية، حيث تمر كل حركة مخزونية بـ 8 مراحل موثقة تبدأ من طلب الشراء الداخلي وتنتهي بتسوية المرتجعات. تم تصميم هذه الدورة لضمان الكفاءة التشغيلية، الامتثال التنظيمي، والتتبع الكامل للبضائع عبر سلسلة التوريد.
+    </p>
+    <p>
+        مع تكامل Odoo 17 Enterprise، كل مرحلة من الدورة المستندية لها نظير مباشر في النظام، مما يضمن الانتقال السلس من العمليات الورقية إلى العمليات الرقمية بالكامل.
+    </p>
+
+    <div class="highlight-box">
+        <strong>الهدف الرئيسي:</strong> تحويل الدورة المستندية الورقية إلى دورة رقمية متكاملة في Odoo مع الحفاظ على جميع ضوابط الرقابة والامتثال.
+    </div>
+
+    <div class="page-break"></div>
+    <h2 id="flow-diagram">2. خريطة تدفق الدورة المستندية</h2>
+    <div class="flow-diagram">
+        <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap;">
+            <div class="flow-stage">
+                <div>01</div>
+                <div style="font-size: 9pt; margin-top: 5px;">طلب الشراء</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-stage">
+                <div>02</div>
+                <div style="font-size: 9pt; margin-top: 5px;">أمر الشراء</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-stage">
+                <div>03</div>
+                <div style="font-size: 9pt; margin-top: 5px;">إشعار الشحن</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-stage">
+                <div>04</div>
+                <div style="font-size: 9pt; margin-top: 5px;">الاستلام والجودة</div>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 20px;">
+            <div class="flow-stage">
+                <div>05</div>
+                <div style="font-size: 9pt; margin-top: 5px;">التخزين</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-stage">
+                <div>06</div>
+                <div style="font-size: 9pt; margin-top: 5px;">السحب والتعبئة</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-stage">
+                <div>07</div>
+                <div style="font-size: 9pt; margin-top: 5px;">الشحن والتوزيع</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-stage">
+                <div>08</div>
+                <div style="font-size: 9pt; margin-top: 5px;">المرتجعات والتسوية</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+    <h2 id="stages">3. المراحل الثمانية التفصيلية</h2>
+    
+    <!-- Stage 1 -->
+    <h3>المرحلة 01: طلب الشراء (Purchase Requisition)</h3>
+    <p>
+        مستند داخلي يصدر تلقائياً عند وصول رصيد الصنف إلى نقطة إعادة الطلب. يبدأ به دورة الشراء ويشكل الأساس لجميع العمليات اللاحقة.
+    </p>
+    <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+        <strong>✦ في أودو:</strong> Purchase > Requisitions | <span class="odoo-badge">Settings > Purchase > Purchase Requisitions ✓</span>
+    </div>
+    <h4>المدخلات:</h4>
+    <ul>
+        <li>نقطة إعادة الطلب للصنف</li>
+        <li>طلب من القسم أو الفرع</li>
+        <li>توقعات الطلب</li>
+    </ul>
+    <h4>المخرجات:</h4>
+    <ul>
+        <li>طلب شراء معتمد (PR)</li>
+        <li>إشعار للمشتريات والمخازن</li>
+        <li>تسجيل في نظام التتبع</li>
+    </ul>
+    <h4>نقاط التحقق:</h4>
+    <ul>
+        <li>موافقة المدير المختص</li>
+        <li>توفر الميزانية</li>
+        <li>التزام بسياسة المشتريات</li>
+    </ul>
+
+    <!-- Stage 2 -->
+    <h3>المرحلة 02: أمر الشراء (Purchase Order)</h3>
+    <p>
+        المستند الرسمي القانوني المرسل للمورد. يمثل التزاماً تعاقدياً بشراء كميات وأسعار محددة مع شروط التسليم والدفع.
+    </p>
+    <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+        <strong>✦ في أودو:</strong> Purchase > Orders | <span class="odoo-badge">تلقائي مع تفعيل Purchase</span>
+    </div>
+    <h4>المدخلات:</h4>
+    <ul>
+        <li>طلب الشراء المعتمد</li>
+        <li>عروض الأسعار من الموردين</li>
+        <li>شروط الدفع والتسليم</li>
+    </ul>
+    <h4>المخرجات:</h4>
+    <ul>
+        <li>أمر شراء رسمي (PO)</li>
+        <li>عقد مع المورد</li>
+        <li>جدول التسليم</li>
+    </ul>
+
+    <!-- Stage 3 -->
+    <h3>المرحلة 03: إشعار الشحن المسبق (ASN)</h3>
+    <p>
+        إشعار إلكتروني من المورد عند شحن البضاعة من مخازنه؛ يُمكّن المستودع من جدولة الاستلام وتخصيص الموارد.
+    </p>
+    <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+        <strong>✦ في أودو:</strong> Inventory > Receipts > Scheduled Date | <span class="odoo-badge">يدوي</span>
+    </div>
+
+    <!-- Stage 4 -->
+    <h3>المرحلة 04: الاستلام وفحص الجودة (GRN)</h3>
+    <p>
+        الإقرار الرسمي باستلام البضاعة بعد فحص الجودة. أهم مستند في دورة المستودعات؛ يمثل دخول البضاعة في عهدة Brandzo.
+    </p>
+    <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+        <strong>✦ في أودو:</strong> Inventory > Receipts | <span class="odoo-badge">Inventory > Configuration > Warehouses > 3-step</span>
+    </div>
+    <h4>النماذج المقابلة:</h4>
+    <ul>
+        <li>نموذج استلام البضاعة (GRN)</li>
+        <li>تقرير فحص الجودة</li>
+        <li>مذكرة التسليم من المورد</li>
+    </ul>
+
+    <!-- Stage 5 -->
+    <h3>المرحلة 05: التخزين الموجه (Putaway)</h3>
+    <p>
+        توجيه الأصناف من منطقة الاستلام إلى مواقع التخزين المثلى (FEFO، الوزن، طبيعة المنتج).
+    </p>
+    <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+        <strong>✦ في أودو:</strong> Inventory > Configuration > Putaway Rules | <span class="odoo-badge">Settings > Inventory > Storage Locations ✓</span>
+    </div>
+
+    <!-- Stage 6 -->
+    <h3>المرحلة 06: تحضير الطلبات (Picking)</h3>
+    <p>
+        سحب الأصناف من مواقعها وفق قائمة سحب موجهة، ثم تعبئتها للشحن مع مراجعة الكميات.
+    </p>
+    <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+        <strong>✦ في أودو:</strong> Inventory > Operations > Transfers | <span class="odoo-badge">type: Pick</span>
+    </div>
+
+    <!-- Stage 7 -->
+    <h3>المرحلة 07: الشحن والتوزيع (Dispatch)</h3>
+    <p>
+        إصدار إذن التسليم وتصريح الخروج من البوابة، وتحميل البضاعة على شاحنات الأسطول.
+    </p>
+    <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+        <strong>✦ في أودو:</strong> Inventory > Operations > Delivery Orders | <span class="odoo-badge">ربط Fleet إن وُجد</span>
+    </div>
+
+    <!-- Stage 8 -->
+    <h3>المرحلة 08: المرتجعات والتسويات (Returns)</h3>
+    <p>
+        استلام المرتجعات من الفروع، تصنيفها (سليم/تالف/منتهي)، ومعالجة سندات التسوية والإشعارات الدائنة.
+    </p>
+    <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
+        <strong>✦ في أودو:</strong> Inventory > Operations > Returns | <span class="odoo-badge">إنشاء Return من Delivery</span>
+    </div>
+
+    <div class="page-break"></div>
+    <h2 id="forms-matrix">4. مصفوفة المستندات (19 نموذج)</h2>
+    <table>
+        <caption>ربط نماذج Brandzo مع وحدات Odoo المقابلة</caption>
+        <thead>
+            <tr>
+                <th>المرحلة</th>
+                <th>نموذج HTML في الموقع</th>
+                <th>نظيره في Odoo</th>
+                <th>المسار في Odoo</th>
+                <th>الغرض</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>01</td>
+                <td>form_PurchaseRequisition.html</td>
+                <td>Purchase</td>
+                <td>Purchase > Requisitions</td>
+                <td>طلب الشراء الداخلي</td>
+            </tr>
+            <tr>
+                <td>02</td>
+                <td>form_PO.html</td>
+                <td>Purchase</td>
+                <td>Purchase > Orders</td>
+                <td>أمر الشراء الرسمي</td>
+            </tr>
+            <tr>
+                <td>04</td>
+                <td>form_GRN.html</td>
+                <td>Inventory</td>
+                <td>Inventory > Receipts</td>
+                <td>استلام البضاعة</td>
+            </tr>
+            <tr>
+                <td>04</td>
+                <td>form_QCReport.html</td>
+                <td>Quality</td>
+                <td>Quality > Control Points</td>
+                <td>تقرير فحص الجودة</td>
+            </tr>
+            <tr>
+                <td>05</td>
+                <td>form_PutawayList.html</td>
+                <td>Inventory</td>
+                <td>Inventory > Operations > Putaway</td>
+                <td>أمر التخزين الموجه</td>
+            </tr>
+            <tr>
+                <td>06</td>
+                <td>form_Picking.html</td>
+                <td>Inventory</td>
+                <td>Inventory > Operations > Picking</td>
+                <td>قائمة السحب</td>
+            </tr>
+            <tr>
+                <td>07</td>
+                <td>form_DeliveryNote.html</td>
+                <td>Inventory</td>
+                <td>Inventory > Operations > Delivery</td>
+                <td>إذن التسليم</td>
+            </tr>
+            <tr>
+                <td>08</td>
+                <td>form_ReturnNote.html</td>
+                <td>Inventory</td>
+                <td>Inventory > Operations > Returns</td>
+                <td>إشعار الإرجاع</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="page-break"></div>
+    <h2 id="execution-rules">5. قواعد التنفيذ الإلزامية وKPIs</h2>
+    
+    <h3>قواعد التنفيذ الإلزامية</h3>
+    <ul class="golden-rule">
+        <li>❌ لا حركة مخزونية بدون مستند موثق</li>
+        <li>❌ لا استلام بدون أمر شراء (PO) مسبق</li>
+        <li>❌ لا صرف بدون طلب صرف معتمد (SR)</li>
+        <li>✅ الرفض التلقائي لأي شحنة عمرها الافتراضي أقل من 75%</li>
+        <li>✅ التطبيق الإلزامي لـ FEFO في جميع عمليات الصرف</li>
+        <li>✅ الالتزام بدرجات الحرارة: 4°م للمبرد، -18°م للمجمد</li>
+        <li>🎯 دقة المخزون المستهدفة: ≥98.5% | زمن الدورة التشغيلية: &lt;4 ساعات</li>
+    </ul>
+
+    <h3>مؤشرات الأداء الرئيسية (KPIs)</h3>
+    <table>
+        <caption>KPIs لدورة المستندية</caption>
+        <thead>
+            <tr>
+                <th>المؤشر</th>
+                <th>الهدف</th>
+                <th>طريقة القياس</th>
+                <th>التكرار</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>دقة المخزون</td>
+                <td>≥98.5%</td>
+                <td>(الكمية الفعلية ÷ الكمية المسجلة) × 100</td>
+                <td>شهري</td>
+            </tr>
+            <tr>
+                <td>زمن دورة الأمر</td>
+                <td>&lt;4 ساعات</td>
+                <td>من الإنشاء إلى التنفيذ الكامل</td>
+                <td>لكل أمر</td>
+            </tr>
+            <tr>
+                <td>نسبة التلف</td>
+                <td>&lt;2%</td>
+                <td>(قيمة التلف ÷ إجمالي الاستلام) × 100</td>
+                <td>شهري</td>
+            </tr>
+            <tr>
+                <td>الامتثال للجودة</td>
+                <td>100%</td>
+                <td>عدد المراحل المكتملة ÷ الإجمالي</td>
+                <td>يومي</td>
+            </tr>
+            <tr>
+                <td>سرعة المعالجة</td>
+                <td>&lt;30 دقيقة</td>
+                <td>متوسط وقت معالجة المستند</td>
+                <td>يومي</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="page-break"></div>
+    <h2 id="odoo-integration">6. تكامل أودو - المسارات التنفيذية</h2>
+    <p>
+        يوضح الجدول التالي المسارات التنفيذية المفصلة لتفعيل كل مرحلة من مراحل الدورة المستندية في Odoo 17 Enterprise:
+    </p>
+    
+    <table>
+        <caption>مسارات التنفيذ في Odoo 17 Enterprise</caption>
+        <thead>
+            <tr>
+                <th>المرحلة</th>
+                <th>الوحدة في Odoo</th>
+                <th>المسار للوصول</th>
+                <th>التفعيل</th>
+                <th>المتطلبات</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>PR</strong></td>
+                <td>Purchase</td>
+                <td>Purchase > Requisitions</td>
+                <td>Settings > Purchase > Purchase Requisitions ✓</td>
+                <td>تفعيل وحدة المشتريات</td>
+            </tr>
+            <tr>
+                <td><strong>PO</strong></td>
+                <td>Purchase</td>
+                <td>Purchase > Orders</td>
+                <td>تلقائي مع تفعيل Purchase</td>
+                <td>إعداد الموردين والشروط</td>
+            </tr>
+            <tr>
+                <td><strong>ASN</strong></td>
+                <td>Inventory</td>
+                <td>Inventory > Receipts > Scheduled Date</td>
+                <td>يدوي - إعداد من المورد</td>
+                <td>تكامل EDI مع الموردين</td>
+            </tr>
+            <tr>
+                <td><strong>GRN</strong></td>
+                <td>Inventory + Quality</td>
+                <td>Inventory > Receipts</td>
+                <td>Inventory > Configuration > Warehouses > 3-step</td>
+                <td>تفعيل 3-step receiving</td>
+            </tr>
+            <tr>
+                <td><strong>Putaway</strong></td>
+                <td>Inventory</td>
+                <td>Inventory > Configuration > Putaway Rules</td>
+                <td>Settings > Inventory > Storage Locations ✓</td>
+                <td>إنشاء هيكل المواقع</td>
+            </tr>
+            <tr>
+                <td><strong>Picking</strong></td>
+                <td>Inventory</td>
+                <td>Inventory > Operations > Transfers</td>
+                <td>3-step outgoing</td>
+                <td>تفعيل 3-step shipping</td>
+            </tr>
+            <tr>
+                <td><strong>Dispatch</strong></td>
+                <td>Inventory + Fleet</td>
+                <td>Inventory > Operations > Delivery Orders</td>
+                <td>ربط Fleet إن وُجد</td>
+                <td>إدارة الأسطول والسائقين</td>
+            </tr>
+            <tr>
+                <td><strong>Returns</strong></td>
+                <td>Inventory</td>
+                <td>Inventory > Operations > Returns</td>
+                <td>إنشاء Return من Delivery</td>
+                <td>تفعيل إدارة المرتجعات</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="highlight-box">
+        <strong>ملاحظة هامة:</strong> هذه المسارات التنفيذية تضمن الانتقال المنظم والفعال من العمليات الورقية الحالية إلى النظام الرقمي المتكامل في Odoo، مع الحفاظ على جميع ضوابط الرقابة والامتثال التنظيمي.
+    </div>
+
+    <!-- Signature Section -->
+    <div class="page-break"></div>
+    <div class="signature-line">
+        <div>
+            <strong>إعداد والمراجعة:</strong><br>
+            فريق تحويل Brandzo إلى Odoo
+        </div>
+        <div>
+            <strong>الموافقة:</strong><br>
+            مدير نظام المعلومات
+        </div>
+    </div>
+</div>
+</body>
+</html>

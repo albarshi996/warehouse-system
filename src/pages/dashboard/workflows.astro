@@ -2,6 +2,7 @@
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import OrgChart from '../../components/brandzo-erp/workflows/OrgChart.jsx';
 import DocumentFlow from '../../components/brandzo-erp/workflows/DocumentFlow.jsx';
+import DocumentCycleOdoo from '../../components/brandzo-erp/workflows/DocumentCycleOdoo.jsx';
 
 const base = import.meta.env.BASE_URL.endsWith('/')
   ? import.meta.env.BASE_URL.slice(0, -1)
@@ -20,14 +21,109 @@ const base = import.meta.env.BASE_URL.endsWith('/')
       </p>
     </header>
 
+    <!-- Tab Navigation -->
+    <div class="mb-8 border-b border-gray-700">
+      <nav class="flex space-x-1" aria-label="تبويب المحتوى">
+        <button
+          id="tab-org"
+          type="button"
+          class="tab-button px-4 py-3 text-sm font-medium text-gray-300 border-b-2 border-transparent hover:text-brand-yellow hover:border-brand-yellow transition-colors"
+          onclick="showTab('org')"
+        >
+          الهيكل التنظيمي
+        </button>
+        <button
+          id="tab-docflow"
+          type="button"
+          class="tab-button px-4 py-3 text-sm font-medium text-gray-300 border-b-2 border-transparent hover:text-brand-yellow hover:border-brand-yellow transition-colors"
+          onclick="showTab('docflow')"
+        >
+          الدورة المستندية
+        </button>
+        <button
+          id="tab-doccycle-odoo"
+          type="button"
+          class="tab-button px-4 py-3 text-sm font-medium text-brand-yellow border-b-2 border-brand-yellow transition-colors"
+          onclick="showTab('doccycle-odoo')"
+        >
+          الدورة المستندية + أودو
+        </button>
+      </nav>
+    </div>
+
+    <!-- Tab Content -->
     <div class="space-y-8 lg:space-y-10">
       <!-- CRITICAL: client:load is MANDATORY — do NOT remove it -->
-      <OrgChart client:load />
-      <DocumentFlow base={base} client:load />
+      <div id="content-org" class="tab-content hidden">
+        <OrgChart client:load />
+      </div>
+      <div id="content-docflow" class="tab-content hidden">
+        <DocumentFlow base={base} client:load />
+      </div>
+      <div id="content-doccycle-odoo" class="tab-content">
+        <DocumentCycleOdoo base={base} client:load />
+      </div>
     </div>
 
     <footer class="mt-10 text-center text-xs text-gray-400">
       مصدر البيانات: الدليل التشغيلي — الباب الثاني والثالث.
     </footer>
   </div>
+
+  <style>
+    .tab-button {
+      border-bottom-width: 2px;
+      margin-bottom: -2px;
+    }
+    
+    .tab-button:hover {
+      color: #fbbf24;
+      border-color: #fbbf24;
+    }
+    
+    .tab-button.active {
+      color: #fbbf24;
+      border-color: #fbbf24;
+      background: rgba(251, 191, 36, 0.1);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content:not(.hidden) {
+      display: block;
+    }
+  </style>
+
+  <script>
+    function showTab(tabName) {
+      // Hide all content
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+      });
+      
+      // Remove active class from all tabs
+      document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('active');
+      });
+      
+      // Show selected content
+      const selectedContent = document.getElementById(`content-${tabName}`);
+      if (selectedContent) {
+        selectedContent.classList.remove('hidden');
+      }
+      
+      // Add active class to selected tab
+      const selectedTab = document.getElementById(`tab-${tabName}`);
+      if (selectedTab) {
+        selectedTab.classList.add('active');
+      }
+    }
+    
+    // Show default tab on load
+    document.addEventListener('DOMContentLoaded', () => {
+      showTab('doccycle-odoo');
+    });
+  </script>
 </DashboardLayout>
