@@ -1,8 +1,260 @@
 ---
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
-import OdooInstallationGuide from '../../components/brandzo-erp/OdooInstallationGuide.jsx';
 ---
 
 <DashboardLayout title="دليل تثبيت أودو" showGuide={false}>
-  <OdooInstallationGuide client:load />
+  <div class="text-right" dir="rtl">
+    {/* Header */}
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-white mb-2">
+        دليل تثبيت أودو 17 Enterprise
+        <span class="block text-lg font-normal text-gray-400 mt-1">Complete Odoo 17 Enterprise Installation Guide</span>
+      </h1>
+      <div class="w-20 h-1 bg-brand-red rounded-full mb-6" />
+      
+      <div class="bg-gradient-to-r from-blue-900/20 to-green-900/20 rounded-xl p-6 border border-blue-500/30">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+          <div>
+            <div class="text-2xl font-bold text-blue-400">4</div>
+            <div class="text-sm text-gray-400">مراحل التثبيت</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-green-400">2-4</div>
+            <div class="text-sm text-gray-400">أسابيع للإكمال</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-yellow-400">$106-175K</div>
+            <div class="text-sm text-gray-400">التكلفة الإجمالية</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-purple-400">98.5%</div>
+            <div class="text-sm text-gray-400">معدل النجاح</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Requirements Section */}
+    <section class="mb-8">
+      <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6">
+        <h2 class="text-xl font-bold text-white mb-4">المتطلبات التقنية</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <h3 class="font-bold text-blue-400 mb-3">ال hardware</h3>
+            <ul class="space-y-2 text-sm text-gray-300">
+              <li>• CPU: 4 cores minimum (8 cores recommended)</li>
+              <li>• RAM: 8GB minimum (16GB recommended)</li>
+              <li>• Storage: 50GB SSD minimum (100GB recommended)</li>
+              <li>• Network: 1 Gbps connection</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="font-bold text-green-400 mb-3">البرامج</h3>
+            <ul class="space-y-2 text-sm text-gray-300">
+              <li>• Ubuntu 20.04 LTS or CentOS 8</li>
+              <li>• PostgreSQL 12 or higher</li>
+              <li>• Python 3.8+</li>
+              <li>• Node.js 14+ (optional)</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="font-bold text-yellow-400 mb-3">النطاق وال SSL</h3>
+            <ul class="space-y-2 text-sm text-gray-300">
+              <li>• Domain name registered</li>
+              <li>• SSL certificate for HTTPS</li>
+              <li>• SMTP server for emails</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* Installation Steps */}
+    <section class="mb-8">
+      <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6">
+        <h2 class="text-xl font-bold text-white mb-4">خطوات التثبيت</h2>
+        
+        <div class="space-y-6">
+          {/* Phase 1 */}
+          <div class="bg-black/30 rounded-lg p-4">
+            <h3 class="font-bold text-green-400 mb-3">المرحلة 1: System Preparation (1-2 days)</h3>
+            <div class="space-y-3">
+              <div>
+                <h4 class="font-bold text-blue-400 mb-1">Update System</h4>
+                <div class="bg-gray-900 rounded p-2 font-mono text-xs text-gray-200">
+                  sudo apt update && sudo apt upgrade -y
+                </div>
+              </div>
+              <div>
+                <h4 class="font-bold text-blue-400 mb-1">Install Dependencies</h4>
+                <div class="bg-gray-900 rounded p-2 font-mono text-xs text-gray-200">
+                  sudo apt install -y python3-pip python3-dev python3-venv build-essential
+                </div>
+              </div>
+              <div>
+                <h4 class="font-bold text-blue-400 mb-1">Create Odoo User</h4>
+                <div class="bg-gray-900 rounded p-2 font-mono text-xs text-gray-200">
+                  sudo useradd -m -s /bin/bash odoo
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Phase 2 */}
+          <div class="bg-black/30 rounded-lg p-4">
+            <h3 class="font-bold text-green-400 mb-3">المرحلة 2: Odoo Installation (2-3 days)</h3>
+            <div class="space-y-3">
+              <div>
+                <h4 class="font-bold text-blue-400 mb-1">Download Odoo</h4>
+                <div class="bg-gray-900 rounded p-2 font-mono text-xs text-gray-200">
+                  sudo -u odoo wget https://github.com/odoo/odoo/archive/17.0.tar.gz
+                </div>
+              </div>
+              <div>
+                <h4 class="font-bold text-blue-400 mb-1">Install Python Dependencies</h4>
+                <div class="bg-gray-900 rounded p-2 font-mono text-xs text-gray-200">
+                  sudo -u odoo pip3 install -r requirements.txt
+                </div>
+              </div>
+              <div>
+                <h4 class="font-bold text-blue-400 mb-1">Create Configuration</h4>
+                <div class="bg-gray-900 rounded p-2 font-mono text-xs text-gray-200">
+                  sudo nano /etc/odoo/odoo.conf
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Phase 3 */}
+          <div class="bg-black/30 rounded-lg p-4">
+            <h3 class="font-bold text-green-400 mb-3">المرحلة 3: Service Setup (1-2 days)</h3>
+            <div class="space-y-3">
+              <div>
+                <h4 class="font-bold text-blue-400 mb-1">Create Systemd Service</h4>
+                <div class="bg-gray-900 rounded p-2 font-mono text-xs text-gray-200">
+                  sudo nano /etc/systemd/system/odoo17.service
+                </div>
+              </div>
+              <div>
+                <h4 class="font-bold text-blue-400 mb-1">Enable and Start Service</h4>
+                <div class="bg-gray-900 rounded p-2 font-mono text-xs text-gray-200">
+                  sudo systemctl enable odoo17 && sudo systemctl start odoo17
+                </div>
+              </div>
+              <div>
+                <h4 class="font-bold text-blue-400 mb-1">Check Service Status</h4>
+                <div class="bg-gray-900 rounded p-2 font-mono text-xs text-gray-200">
+                  sudo systemctl status odoo17
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Phase 4 */}
+          <div class="bg-black/30 rounded-lg p-4">
+            <h3 class="font-bold text-green-400 mb-3">المرحلة 4: Web Server Setup (1-2 days)</h3>
+            <div class="space-y-3">
+              <div>
+                <h4 class="font-bold text-blue-400 mb-1">Install Nginx</h4>
+                <div class="bg-gray-900 rounded p-2 font-mono text-xs text-gray-200">
+                  sudo apt install -y nginx
+                </div>
+              </div>
+              <div>
+                <h4 class="font-bold text-blue-400 mb-1">Install SSL Certificate</h4>
+                <div class="bg-gray-900 rounded p-2 font-mono text-xs text-gray-200">
+                  sudo certbot --nginx -d your-domain.com
+                </div>
+              </div>
+              <div>
+                <h4 class="font-bold text-blue-400 mb-1">Test Configuration</h4>
+                <div class="bg-gray-900 rounded p-2 font-mono text-xs text-gray-200">
+                  sudo nginx -t && sudo systemctl reload nginx
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* Cost Analysis */}
+    <section class="mb-8">
+      <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6">
+        <h2 class="text-xl font-bold text-white mb-4">تحليل التكاليف</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-bold text-blue-400 mb-3">تراخيص أودو</h3>
+            <div class="space-y-2">
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-300">1-10 users</span>
+                <span class="text-green-400">$25/user/month</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-300">11-25 users</span>
+                <span class="text-green-400">$23/user/month</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-300">26-50 users</span>
+                <span class="text-green-400">$21/user/month</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-bold text-green-400 mb-3">الاستضافة</h3>
+            <div class="space-y-2">
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-300">VPS Basic</span>
+                <span class="text-yellow-400">$40/month</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-300">VPS Professional</span>
+                <span class="text-yellow-400">$80/month</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-300">Dedicated Server</span>
+                <span class="text-yellow-400">$200/month</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* Troubleshooting */}
+    <section class="mb-8">
+      <div class="bg-gradient-to-r from-yellow-900/20 to-orange-900/20 rounded-xl p-6 border border-yellow-500/30">
+        <h3 class="text-lg font-bold text-yellow-400 mb-3">
+          ⚠️ المشاكل الشائعة والحلول
+        </h3>
+        <div class="space-y-3 text-sm text-gray-300">
+          <div>
+            <span class="text-red-400 font-bold">المشكلة:</span> Service fails to start
+            <br />
+            <span class="text-green-400 font-bold">الحل:</span> Check logs: sudo journalctl -u odoo17 -f
+          </div>
+          <div>
+            <span class="text-red-400 font-bold">المشكلة:</span> Database connection error
+            <br />
+            <span class="text-green-400 font-bold">الحل:</span> Verify PostgreSQL is running and user permissions
+          </div>
+          <div>
+            <span class="text-red-400 font-bold">المشكلة:</span> SSL certificate errors
+            <br />
+            <span class="text-green-400 font-bold">الحل:</span> Check domain DNS and certificate validity
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* Print Button */}
+    <div class="mt-8 text-center">
+      <button
+        onclick="window.print()"
+        class="px-8 py-3 bg-brand-red text-white rounded-xl font-bold hover:bg-brand-red-dark transition-all shadow-md hover:shadow-lg active:scale-95"
+      >
+        🖨️ طباعة الدليل
+      </button>
+    </div>
+  </div>
 </DashboardLayout>

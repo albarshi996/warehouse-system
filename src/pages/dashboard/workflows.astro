@@ -1,8 +1,5 @@
 ---
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
-import OrgChart from '../../components/brandzo-erp/workflows/OrgChart.jsx';
-import DocumentFlow from '../../components/brandzo-erp/workflows/DocumentFlow.jsx';
-import DocumentCycleOdoo from '../../components/brandzo-erp/workflows/DocumentCycleOdoo.jsx';
 
 const base = import.meta.env.BASE_URL.endsWith('/')
   ? import.meta.env.BASE_URL.slice(0, -1)
@@ -21,109 +18,161 @@ const base = import.meta.env.BASE_URL.endsWith('/')
       </p>
     </header>
 
-    <!-- Tab Navigation -->
-    <div class="mb-8 border-b border-gray-700">
-      <nav class="flex space-x-1" aria-label="تبويب المحتوى">
-        <button
-          id="tab-org"
-          type="button"
-          class="tab-button px-4 py-3 text-sm font-medium text-gray-300 border-b-2 border-transparent hover:text-brand-yellow hover:border-brand-yellow transition-colors"
-          onclick="showTab('org')"
-        >
-          الهيكل التنظيمي
-        </button>
-        <button
-          id="tab-docflow"
-          type="button"
-          class="tab-button px-4 py-3 text-sm font-medium text-gray-300 border-b-2 border-transparent hover:text-brand-yellow hover:border-brand-yellow transition-colors"
-          onclick="showTab('docflow')"
-        >
-          الدورة المستندية
-        </button>
-        <button
-          id="tab-doccycle-odoo"
-          type="button"
-          class="tab-button px-4 py-3 text-sm font-medium text-brand-yellow border-b-2 border-brand-yellow transition-colors"
-          onclick="showTab('doccycle-odoo')"
-        >
-          الدورة المستندية + أودو
-        </button>
-      </nav>
-    </div>
+    <!-- Simple Static Content -->
+    <div class="space-y-8">
+      <!-- الهيكل التنظيمي Section -->
+      <section class="rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] shadow-2xl border border-brand-red/20 p-6 sm:p-10">
+        <h2 class="text-xl font-bold text-white text-center mb-6">
+          الهيكل التنظيمي للمستودعات
+          <span class="block text-sm font-normal text-gray-400 mt-1">Warehouse Organizational Structure</span>
+        </h2>
+        <div class="w-16 h-1 bg-brand-red mx-auto mb-8 rounded-full"></div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Tier 1: Management -->
+          <div class="bg-white/5 backdrop-blur border border-brand-red/30 rounded-xl p-6">
+            <div class="text-center mb-4">
+              <div class="w-16 h-16 bg-brand-red/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span class="text-2xl font-bold text-brand-red">م</span>
+              </div>
+              <h3 class="font-bold text-brand-red mb-2">مدير المستودعات</h3>
+              <p class="text-sm text-gray-300">الإشراف العام على جميع العمليات</p>
+            </div>
+          </div>
+          
+          <!-- Tier 2: Supervisors -->
+          <div class="bg-white/5 backdrop-blur border border-brand-yellow/30 rounded-xl p-6">
+            <div class="text-center mb-4">
+              <div class="w-16 h-16 bg-brand-yellow/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span class="text-2xl font-bold text-brand-yellow">مش</span>
+              </div>
+              <h3 class="font-bold text-brand-yellow mb-2">مشرفو العمليات</h3>
+              <p class="text-sm text-gray-300">إدارة الفرق اليومية</p>
+            </div>
+          </div>
+          
+          <!-- Tier 3: Staff -->
+          <div class="bg-white/5 backdrop-blur border border-green-400/30 rounded-xl p-6">
+            <div class="text-center mb-4">
+              <div class="w-16 h-16 bg-green-400/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span class="text-2xl font-bold text-green-400">ف</span>
+              </div>
+              <h3 class="font-bold text-green-400 mb-2">فرق التشغيل</h3>
+              <p class="text-sm text-gray-300">تنفيذ المهام اليومية</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-8 text-center">
+          <a href={`${base}/تقرير-هيكل-الوظائف-والادوار.html`} 
+             target="_blank" 
+             class="inline-block px-6 py-3 bg-brand-red text-white rounded-xl font-bold hover:bg-brand-red-dark transition-all">
+            📄 عرض التقرير الكامل
+          </a>
+        </div>
+      </section>
 
-    <!-- Tab Content -->
-    <div class="space-y-8 lg:space-y-10">
-      <!-- CRITICAL: client:load is MANDATORY — do NOT remove it -->
-      <div id="content-org" class="tab-content hidden">
-        <OrgChart client:load />
-      </div>
-      <div id="content-docflow" class="tab-content hidden">
-        <DocumentFlow base={base} client:load />
-      </div>
-      <div id="content-doccycle-odoo" class="tab-content">
-        <DocumentCycleOdoo base={base} client:load />
-      </div>
+      <!-- الدورة المستندية Section -->
+      <section class="rounded-2xl bg-gradient-to-br from-[#0d0d2b] to-brand-navy shadow-2xl border border-white/10 p-6 sm:p-10">
+        <h2 class="text-xl font-bold text-white text-center mb-6">
+          الدورة المستندية الكاملة
+          <span class="block text-sm font-normal text-gray-400 mt-1">Complete Document Cycle</span>
+        </h2>
+        <div class="w-16 h-1 bg-brand-yellow mx-auto mb-8 rounded-full"></div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { num: '1', title: 'طلب الشراء', desc: 'PR - Purchase Requisition', color: 'border-brand-red' },
+            { num: '2', title: 'أمر الشراء', desc: 'PO - Purchase Order', color: 'border-brand-yellow' },
+            { num: '3', title: 'إشعار الاستلام', desc: 'ASN - Advanced Shipping Notice', color: 'border-blue-400' },
+            { num: '4', title: 'إذن التسليم', desc: 'GRN - Goods Receipt Note', color: 'border-green-400' },
+            { num: '5', title: 'إذن التخزين', desc: 'Putaway Authorization', color: 'border-purple-400' },
+            { num: '6', title: 'إذن الصرف', desc: 'Picking Order', color: 'border-orange-400' },
+            { num: '7', title: 'إذن الشحن', desc: 'Dispatch Order', color: 'border-pink-400' },
+            { num: '8', title: 'إذن المرتجعات', desc: 'Return Authorization', color: 'border-indigo-400' }
+          ].map((stage, i) => (
+            <div key={i} class={`bg-white/5 backdrop-blur border ${stage.color} rounded-xl p-4 hover:bg-white/10 transition-all`}>
+              <div class="text-2xl font-bold text-white mb-2">{stage.num}</div>
+              <h3 class="font-bold text-brand-yellow mb-1">{stage.title}</h3>
+              <p class="text-xs text-gray-400">{stage.desc}</p>
+            </div>
+          ))}
+        </div>
+        
+        <div class="mt-8 text-center">
+          <a href={`${base}/تقرير-الدورة-المستندية.html`} 
+             target="_blank" 
+             class="inline-block px-6 py-3 bg-brand-yellow text-black rounded-xl font-bold hover:bg-brand-yellow-dark transition-all">
+            📄 عرض تقرير الدورة المستندية
+          </a>
+        </div>
+      </section>
+
+      <!-- Odoo Integration Section -->
+      <section class="rounded-2xl bg-gradient-to-br from-green-900/20 via-blue-900/20 to-green-900/20 shadow-2xl border border-green-500/30 p-6 sm:p-10">
+        <h2 class="text-xl font-bold text-white text-center mb-6">
+          التكامل مع أودو
+          <span class="block text-sm font-normal text-gray-400 mt-1">Odoo Integration Mapping</span>
+        </h2>
+        <div class="w-16 h-1 bg-green-400 mx-auto mb-8 rounded-full"></div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white/5 backdrop-blur border border-green-500/30 rounded-xl p-6">
+            <h3 class="font-bold text-green-400 mb-4">الوحدات المقابلة في أودو</h3>
+            <ul class="space-y-2 text-sm text-gray-300">
+              <li class="flex items-center gap-2">
+                <span class="text-green-400">•</span>
+                <span>المخزون → Inventory Module</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-green-400">•</span>
+                <span>المشتريات → Purchase Module</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-green-400">•</span>
+                <span>المبيعات → Sales Module</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-green-400">•</span>
+                <span>المحاسبة → Accounting Module</span>
+              </li>
+            </ul>
+          </div>
+          
+          <div class="bg-white/5 backdrop-blur border border-blue-500/30 rounded-xl p-6">
+            <h3 class="font-bold text-blue-400 mb-4">مزايا التكامل</h3>
+            <ul class="space-y-2 text-sm text-gray-300">
+              <li class="flex items-center gap-2">
+                <span class="text-blue-400">•</span>
+                <span>بيانات دقيقة 98.5%</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-blue-400">•</span>
+                <span>مزامنة فورية</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-blue-400">•</span>
+                <span>تقارير موحدة</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-blue-400">•</span>
+                <span>امتثال كامل</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="mt-8 text-center">
+          <a href={`${base}/dashboard/odoo-installation`} 
+             class="inline-block px-6 py-3 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 transition-all">
+            ⚙️ دليل التثبيت الكامل
+          </a>
+        </div>
+      </section>
     </div>
 
     <footer class="mt-10 text-center text-xs text-gray-400">
       مصدر البيانات: الدليل التشغيلي — الباب الثاني والثالث.
     </footer>
   </div>
-
-  <style>
-    .tab-button {
-      border-bottom-width: 2px;
-      margin-bottom: -2px;
-    }
-    
-    .tab-button:hover {
-      color: #fbbf24;
-      border-color: #fbbf24;
-    }
-    
-    .tab-button.active {
-      color: #fbbf24;
-      border-color: #fbbf24;
-      background: rgba(251, 191, 36, 0.1);
-    }
-    
-    .tab-content {
-      display: none;
-    }
-    
-    .tab-content:not(.hidden) {
-      display: block;
-    }
-  </style>
-
-  <script>
-    function showTab(tabName) {
-      // Hide all content
-      document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.add('hidden');
-      });
-      
-      // Remove active class from all tabs
-      document.querySelectorAll('.tab-button').forEach(button => {
-        button.classList.remove('active');
-      });
-      
-      // Show selected content
-      const selectedContent = document.getElementById(`content-${tabName}`);
-      if (selectedContent) {
-        selectedContent.classList.remove('hidden');
-      }
-      
-      // Add active class to selected tab
-      const selectedTab = document.getElementById(`tab-${tabName}`);
-      if (selectedTab) {
-        selectedTab.classList.add('active');
-      }
-    }
-    
-    // Show default tab on load
-    document.addEventListener('DOMContentLoaded', () => {
-      showTab('doccycle-odoo');
-    });
-  </script>
 </DashboardLayout>

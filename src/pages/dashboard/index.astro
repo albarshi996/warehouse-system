@@ -1,8 +1,190 @@
 ---
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
-import BrandzoDashboard from '../../components/brandzo-erp/BrandzoDashboard.jsx';
 ---
 
 <DashboardLayout title="لوحة التحكم" showGuide={false}>
-  <BrandzoDashboard client:load />
+  <div class="text-right" dir="rtl">
+    {/* Header */}
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-white mb-2">
+        لوحة تحكم أودو
+        <span class="block text-lg font-normal text-gray-400 mt-1">Odoo Enterprise Dashboard</span>
+      </h1>
+      <div class="w-20 h-1 bg-brand-red rounded-full mb-6" />
+      
+      <div class="bg-gradient-to-r from-blue-900/20 to-green-900/20 rounded-xl p-6 border border-blue-500/30">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+          <div>
+            <div class="text-2xl font-bold text-blue-400">4</div>
+            <div class="text-sm text-gray-400">مراحل التثبيت</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-green-400">2-4</div>
+            <div class="text-sm text-gray-400">أسابيع للإكمال</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-yellow-400">$106-175K</div>
+            <div class="text-sm text-gray-400">التكلفة الإجمالية</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-purple-400">98.5%</div>
+            <div class="text-sm text-gray-400">معدل النجاح</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Quick Actions */}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <a href="/dashboard/workflows" class="block group">
+        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
+          <div class="text-3xl mb-3">🏢</div>
+          <h3 class="font-bold text-brand-yellow mb-2">الهيكل والمسارات</h3>
+          <p class="text-sm text-gray-300">عرض الهيكل التنظيمي والدورة المستندية</p>
+        </div>
+      </a>
+      
+      <a href="/dashboard/odoo-installation" class="block group">
+        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
+          <div class="text-3xl mb-3">⚙️</div>
+          <h3 class="font-bold text-green-400 mb-2">تثبيت أودو</h3>
+          <p class="text-sm text-gray-300">دليل التثبيت الكامل خطوة بخطوة</p>
+        </div>
+      </a>
+      
+      <a href="/dashboard/forms" class="block group">
+        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
+          <div class="text-3xl mb-3">📋</div>
+          <h3 class="font-bold text-blue-400 mb-2">اختر وظيفتك</h3>
+          <p class="text-sm text-gray-300">استكشف الوظائف والمسارات المهنية</p>
+        </div>
+      </a>
+      
+      <a href="/dashboard/tasks" class="block group">
+        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
+          <div class="text-3xl mb-3">✓</div>
+          <h3 class="font-bold text-purple-400 mb-2">المهام</h3>
+          <p class="text-sm text-gray-300">إدارة وتتبع المهام اليومية</p>
+        </div>
+      </a>
+    </div>
+
+    {/* Odoo Implementation Overview */}
+    <section class="mt-10 mb-8">
+      <div class="rounded-2xl bg-gradient-to-br from-green-900/20 via-blue-900/20 to-green-900/20 shadow-2xl border border-green-500/30 p-6 sm:p-10 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-64 h-64 bg-green-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div class="absolute bottom-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div class="relative z-10">
+          <h2 class="text-xl sm:text-2xl font-bold text-white text-center mb-2">
+            نظرة عامة على تنفيذ أودو
+            <span class="block text-sm font-normal text-gray-400 mt-1">Odoo Implementation Overview</span>
+          </h2>
+          <div class="w-16 h-1 bg-green-400 mx-auto mb-8 rounded-full" />
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-blue-500/10 backdrop-blur border border-blue-500/30 rounded-xl p-5">
+              <div class="font-bold text-blue-400 mb-2">المرحلة 1</div>
+              <h3 class="font-bold text-white mb-2">التقييم والتخطيط</h3>
+              <div class="text-xs text-gray-400 mb-3">2-3 أسابيع</div>
+              <ul class="space-y-1">
+                <li class="text-xs text-gray-300">• تحليل المتطلبات</li>
+                <li class="text-xs text-gray-300">• تخطيط الموارد</li>
+                <li class="text-xs text-gray-300">• اختيار الشريك</li>
+              </ul>
+            </div>
+            
+            <div class="bg-green-500/10 backdrop-blur border border-green-500/30 rounded-xl p-5">
+              <div class="font-bold text-green-400 mb-2">المرحلة 2</div>
+              <h3 class="font-bold text-white mb-2">الإعداد الأساسي</h3>
+              <div class="text-xs text-gray-400 mb-3">3-4 أسابيع</div>
+              <ul class="space-y-1">
+                <li class="text-xs text-gray-300">• تثبيت النظام</li>
+                <li class="text-xs text-gray-300">• إعدادات الأمان</li>
+                <li class="text-xs text-gray-300">• هيكل الشركة</li>
+              </ul>
+            </div>
+            
+            <div class="bg-yellow-500/10 backdrop-blur border border-yellow-500/30 rounded-xl p-5">
+              <div class="font-bold text-yellow-400 mb-2">المرحلة 3</div>
+              <h3 class="font-bold text-white mb-2">نقل البيانات</h3>
+              <div class="text-xs text-gray-400 mb-3">4-6 أسابيع</div>
+              <ul class="space-y-1">
+                <li class="text-xs text-gray-300">• تنظيف البيانات</li>
+                <li class="text-xs text-gray-300">• تخطيط النقل</li>
+                <li class="text-xs text-gray-300">• التحقق من الصحة</li>
+              </ul>
+            </div>
+            
+            <div class="bg-purple-500/10 backdrop-blur border border-purple-500/30 rounded-xl p-5">
+              <div class="font-bold text-purple-400 mb-2">المرحلة 4</div>
+              <h3 class="font-bold text-white mb-2">التدريب والإطلاق</h3>
+              <div class="text-xs text-gray-400 mb-3">2-3 أسابيع</div>
+              <ul class="space-y-1">
+                <li class="text-xs text-gray-300">• تدريب المستخدمين</li>
+                <li class="text-xs text-gray-300">• اختبار شامل</li>
+                <li class="text-xs text-gray-300">• الدعم الفني</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="bg-white/5 backdrop-blur border border-green-500/30 rounded-xl p-5">
+            <h3 class="font-bold text-green-400 mb-3 flex items-center gap-2">
+              <span>💰</span> التكلفة الإجمالية المتوقعة: $106-175K (السنة الأولى)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div class="text-center">
+                <div class="text-2xl font-bold text-blue-400">45%</div>
+                <div class="text-gray-400">تراخيص أودو</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-green-400">35%</div>
+                <div class="text-gray-400">تنفيذ وتخصيص</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-yellow-400">20%</div>
+                <div class="text-gray-400">تدريب ودعم</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* Key Benefits */}
+    <section class="mt-10 mb-8">
+      <div class="rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] shadow-2xl border border-brand-red/20 p-6 sm:p-10">
+        <h2 class="text-xl sm:text-2xl font-bold text-white text-center mb-6">
+          مزايا التكامل مع أودو
+          <span class="block text-sm font-normal text-gray-400 mt-1">Key Benefits of Odoo Integration</span>
+        </h2>
+        <div class="w-16 h-1 bg-brand-red mx-auto mb-8 rounded-full" />
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6">
+            <div class="text-3xl mb-3">🎯</div>
+            <h3 class="font-bold text-brand-red mb-2">دقة البيانات</h3>
+            <p class="text-sm text-gray-300">98.5%+ مطابقة للبيانات قبل الإدخال في أودو</p>
+          </div>
+          
+          <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6">
+            <div class="text-3xl mb-3">⚡</div>
+            <h3 class="font-bold text-brand-yellow mb-2">مزامنة فورية</h3>
+            <p class="text-sm text-gray-300">تحديث فوري للبيانات بين الأنظمة</p>
+          </div>
+          
+          <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6">
+            <div class="text-3xl mb-3">📊</div>
+            <h3 class="font-bold text-green-400 mb-2">تقارير موحدة</h3>
+            <p class="text-sm text-gray-300">تقارير شاملة من مصدر واحد موثوق</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* Footer */}
+    <div class="text-center text-sm text-gray-500 mt-8">
+      Brandzo Hub © 2026 — منصة تحويل أنظمة إدارة المخازن إلى أودو — جميع الحقوق محفوظة
+    </div>
+  </div>
 </DashboardLayout>
