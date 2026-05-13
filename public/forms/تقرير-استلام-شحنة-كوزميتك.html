@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير تنفيذ مهمة استلام شحنة كوزميتك — Brandzo</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Cairo', Arial, sans-serif;
+            background: #ffffff;
+            color: #1a1a2a;
+            direction: rtl;
+            padding: 20px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        @page {
+            size: A4 portrait;
+            margin: 15mm;
+        }
+        
+        .page {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: #fff;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #E84820;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            text-align: center;
+        }
+        
+        .logo-circle {
+            width: 60px;
+            height: 60px;
+            background: #E84820;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 auto 8px;
+        }
+        
+        .logo-text {
+            font-size: 20px;
+            font-weight: 800;
+            color: #E84820;
+        }
+        
+        .logo-subtext {
+            font-size: 10px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        .page-number {
+            font-size: 11px;
+            color: #666;
+            font-weight: 600;
+        }
+        
+        .report-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2a;
+            margin-bottom: 20px;
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            background: #E84820;
+            color: #fff;
+            padding: 8px 15px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            border-radius: 3px;
+        }
+        
+        .fields-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .field-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .field-group label {
+            font-weight: 700;
+            font-size: 11px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .field-line {
+            border: 1px solid #999;
+            min-height: 28px;
+            padding: 4px 8px;
+            width: 100%;
+            background: #fff;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 11px;
+        }
+        
+        table th {
+            background: #1a1a2a;
+            color: #FFD700;
+            padding: 8px 6px;
+            text-align: center;
+            font-weight: 700;
+            border: 1px solid #333;
+        }
+        
+        table td {
+            padding: 6px;
+            border: 1px solid #999;
+            text-align: center;
+            vertical-align: middle;
+            min-height: 30px;
+        }
+        
+        table td.center {
+            text-align: center;
+        }
+        
+        table td.left {
+            text-align: left;
+        }
+        
+        .signature-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #E84820;
+        }
+        
+        .signature-box {
+            text-align: center;
+        }
+        
+        .signature-line {
+            border-top: 1.5px solid #333;
+            margin: 35px 0 5px;
+            min-height: 30px;
+        }
+        
+        .signature-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .decision-section {
+            background: #fffdf5;
+            border: 2px solid #E84820;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .decision-options {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 12px;
+        }
+        
+        .decision-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #333;
+            display: inline-block;
+        }
+        
+        .notes-area {
+            width: 100%;
+            border: 1px solid #999;
+            min-height: 50px;
+            padding: 8px;
+            margin-top: 10px;
+            background: #fff;
+        }
+        
+        .checkbox-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+        }
+        
+        .brand-row {
+            background: #f9f9f9;
+        }
+        
+        .brand-row:nth-child(even) {
+            background: #fff;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+                background: #fff;
+            }
+            
+            .page {
+                max-width: none;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-circle">B</div>
+                <div class="logo-text">Brandzo</div>
+                <div class="logo-subtext">Warehouse Management System</div>
+            </div>
+            <div class="page-number">
+                الصفحة: 1 / 1
+            </div>
+        </div>
+        
+        <!-- Report Title -->
+        <div class="report-title">
+            تقرير تنفيذ مهمة استلام شحنة منتجات تجميل (Cosmetics)
+        </div>
+        
+        <!-- Section 1: Header Info -->
+        <div class="section">
+            <div class="section-title">القسم 1 - بيانات الاستلام</div>
+            <div class="fields-grid">
+                <div class="field-group">
+                    <label>رقم مهمة الاستلام:</label>
+                    <div class="field-line"></div>
+                </div>
+                <div class="field-group">
+                    <label>التاريخ والوقت:</label>
+                    <div class="field-line"></div>
+                </div>
+                <div class="field-group">
+                    <label>اسم المورد:</label>
+                    <div class="field-line"></div>
+                </div>
+                <div class="field-group">
+                    <label>رقم أمر الشراء المرجعي:</label>
+                    <div class="field-line"></div>
+                </div>
+                <div class="field-group" style="grid-column: span 2;">
+                    <label>اسم مشرف الاستلام وتوقيعه:</label>
+                    <div class="field-line"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section 2: Products Table -->
+        <div class="section">
+            <div class="section-title">القسم 2 - جدول منتجات الكوزميتك المستلمة</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>الرقم</th>
+                        <th>اسم البراند</th>
+                        <th>اسم المنتج</th>
+                        <th>الباركود</th>
+                        <th>وحدة القياس</th>
+                        <th>الكمية المطلوبة</th>
+                        <th>الكمية المستلمة</th>
+                        <th>الفرق</th>
+                        <th>حالة العبوة</th>
+                        <th>ملاحظة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr class="brand-row">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr class="brand-row">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr class="brand-row">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr class="brand-row">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Section 3: Brand Verification -->
+        <div class="section">
+            <div class="section-title">القسم 3 - فحص البرندات</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>اسم البراند</th>
+                        <th>شهادة الأصالة؟</th>
+                        <th>تاريخ انتهاء الصلاحية (أقدم صنف)</th>
+                        <th>حالة العبوة الخارجية</th>
+                        <th>الباركود مطابق؟</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="brand-row">
+                        <td></td>
+                        <td>نعم / لا</td>
+                        <td></td>
+                        <td>سليمة / مكسورة / مبللة</td>
+                        <td>نعم / لا</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>نعم / لا</td>
+                        <td></td>
+                        <td>سليمة / مكسورة / مبللة</td>
+                        <td>نعم / لا</td>
+                    </tr>
+                    <tr class="brand-row">
+                        <td></td>
+                        <td>نعم / لا</td>
+                        <td></td>
+                        <td>سليمة / مكسورة / مبللة</td>
+                        <td>نعم / لا</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>نعم / لا</td>
+                        <td></td>
+                        <td>سليمة / مكسورة / مبللة</td>
+                        <td>نعم / لا</td>
+                    </tr>
+                    <tr class="brand-row">
+                        <td></td>
+                        <td>نعم / لا</td>
+                        <td></td>
+                        <td>سليمة / مكسورة / مبللة</td>
+                        <td>نعم / لا</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Section 4: Customs and Transport -->
+        <div class="section">
+            <div class="section-title">القسم 4 - التحقق الجمركي والنقل</div>
+            <div class="fields-grid">
+                <div class="field-group">
+                    <label>رقم بوليصة الشحن:</label>
+                    <div class="field-line"></div>
+                </div>
+                <div class="field-group">
+                    <label>عدد الكراتين المستلمة:</label>
+                    <div class="field-line"></div>
+                </div>
+                <div class="field-group">
+                    <label>وزن الشحنة الفعلي:</label>
+                    <div class="field-line"></div>
+                </div>
+                <div class="field-group">
+                    <label>عدد الكراتين التالفة:</label>
+                    <div class="field-line"></div>
+                </div>
+                <div class="field-group" style="grid-column: span 2;">
+                    <label>تقييم السائق / ناقل الشحن:</label>
+                    <div class="field-line"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section 5: Receipt Decision -->
+        <div class="section">
+            <div class="section-title">القسم 5 - قرار الاستلام</div>
+            <div class="decision-section">
+                <div class="decision-options">
+                    <div class="decision-option">
+                        <span class="checkbox"></span>
+                        <span>استلام كامل ✓</span>
+                    </div>
+                    <div class="decision-option">
+                        <span class="checkbox"></span>
+                        <span>استلام جزئي مع تحفظ</span>
+                    </div>
+                    <div class="decision-option">
+                        <span class="checkbox"></span>
+                        <span>رفض الاستلام ✗</span>
+                    </div>
+                </div>
+                <label style="font-weight: 700; font-size: 11px; color: #333; margin-bottom: 5px; display: block;">ملاحظات إضافية:</label>
+                <div class="notes-area"></div>
+            </div>
+            
+            <div class="signature-row">
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <div class="signature-label">مستلم البضاعة</div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <div class="signature-label">مشرف المستودع</div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <div class="signature-label">ممثل المورد</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section 6: Post-receipt Procedures -->
+        <div class="section">
+            <div class="section-title">القسم 6 - إجراءات ما بعد الاستلام</div>
+            <div class="checkbox-list">
+                <div class="checkbox-item">
+                    <span class="checkbox"></span>
+                    <span>تم إدخال GRN في النظام</span>
+                </div>
+                <div class="checkbox-item">
+                    <span class="checkbox"></span>
+                    <span>تم الإشعار بالفاتورة للمالية</span>
+                </div>
+                <div class="checkbox-item">
+                    <span class="checkbox"></span>
+                    <span>تم التخزين الموجه (Putaway)</span>
+                </div>
+                <div class="checkbox-item">
+                    <span class="checkbox"></span>
+                    <span>تم تحديث بطاقة الموقع (Bin Card)</span>
+                </div>
+                <div class="checkbox-item">
+                    <span class="checkbox"></span>
+                    <span>تم إرسال نسخة للمورد</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div style="text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 10px; color: #666;">
+            نظام إدارة المستودعات - Brandzo Warehouse Management System
+        </div>
+    </div>
+</body>
+</html>
