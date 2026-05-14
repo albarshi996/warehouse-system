@@ -1,5 +1,6 @@
 ---
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import FAQ from '../../components/brandzo-erp/FAQ.jsx';
 
 const base = import.meta.env.BASE_URL.endsWith('/')
   ? import.meta.env.BASE_URL.slice(0, -1)
@@ -170,6 +171,8 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         </div>
       </section>
     </div>
+
+    <FAQ client:load />
 
     <footer class="mt-10 text-center text-xs text-gray-400">
       مصدر البيانات: الدليل التشغيلي — الباب الثاني والثالث.

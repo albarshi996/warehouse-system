@@ -1,0 +1,541 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Icon from '../../components/ui/Icon.astro';
+
+---
+
+<DashboardLayout title="دورات العمل ERP">
+  <div class="text-right" dir="rtl">
+    <header class="mb-6 sm:mb-8">
+      <h1 class="text-2xl sm:text-3xl font-bold text-brand-yellow">
+        دورات العمل ERP المتكاملة
+        <span class="block text-sm font-normal text-gray-400 mt-1">Integrated ERP Document Cycles (Odoo Enterprise)</span>
+      </h1>
+      <p class="text-gray-300 mt-2 text-sm sm:text-base leading-relaxed">
+        تصميم الدورات المستندية لبيئة Odoo Enterprise، تغطي الإدارة المالية، الموارد البشرية، والإدارة التجارية.
+      </p>
+    </header>
+
+    <!-- Tabs Navigation -->
+    <div class="flex flex-wrap gap-2 mb-8 border-b border-gray-700 pb-4">
+      <button
+        class="tab-btn px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-brand-red text-white"
+        data-tab="finance"
+      >
+        <Icon name="dollarSign" />
+        <span>الإدارة المالية</span>
+      </button>
+      <button
+        class="tab-btn px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-gray-800 text-gray-400 hover:bg-gray-700"
+        data-tab="hr"
+      >
+        <Icon name="users" />
+        <span>الموارد البشرية</span>
+      </button>
+      <button
+        class="tab-btn px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-gray-800 text-gray-400 hover:bg-gray-700"
+        data-tab="procurement"
+      >
+        <Icon name="shoppingCart" />
+        <span>التجارية والمشتريات</span>
+      </button>
+    </div>
+
+    <!-- Tab Contents -->
+    <div id="tab-contents">
+       <!-- Finance Tab -->
+       <div id="finance-content" class="tab-pane">
+         <div class="animate-fadeIn">
+            <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <Icon name="dollarSign" class="text-brand-red" />
+              <span>الإدارة المالية (Finance Department)</span>
+            </h2>
+            <div id="finance-inner" class="space-y-10">
+              <!-- Workflow Steps -->
+              <section>
+                <h3 class="text-lg font-bold text-brand-yellow mb-4">1. جدول سير العمل (Workflow Steps)</h3>
+                <div class="overflow-x-auto rounded-xl border border-gray-700">
+                  <table class="w-full text-sm text-right text-gray-300">
+                    <thead class="bg-gray-800 text-white">
+                      <tr>
+                        <th class="px-4 py-3">رقم</th>
+                        <th class="px-4 py-3">اسم المستند</th>
+                        <th class="px-4 py-3">المسؤول</th>
+                        <th class="px-4 py-3">الوحدة (Module)</th>
+                        <th class="px-4 py-3">الحالة (Before ➔ After)</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                      <tr>
+                        <td class="px-4 py-3">1</td>
+                        <td class="px-4 py-3 font-bold text-white">فاتورة المورد (Vendor Bill)</td>
+                        <td class="px-4 py-3">محاسب الموردين</td>
+                        <td class="px-4 py-3">Accounting</td>
+                        <td class="px-4 py-3">Draft ➔ Posted</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">2</td>
+                        <td class="px-4 py-3 font-bold text-white">ربط أمر الشراء (PO Linking)</td>
+                        <td class="px-4 py-3">محاسب الموردين</td>
+                        <td class="px-4 py-3">Accounting</td>
+                        <td class="px-4 py-3">Unlinked ➔ Linked</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">3</td>
+                        <td class="px-4 py-3 font-bold text-white">الدفع والمطابقة (Payment)</td>
+                        <td class="px-4 py-3">المدير المالي</td>
+                        <td class="px-4 py-3">Accounting</td>
+                        <td class="px-4 py-3">Posted ➔ In Payment</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">4</td>
+                        <td class="px-4 py-3 font-bold text-white">التسوية البنكية (Bank Recon)</td>
+                        <td class="px-4 py-3">محاسب البنوك</td>
+                        <td class="px-4 py-3">Accounting</td>
+                        <td class="px-4 py-3">In Payment ➔ Paid</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <!-- Flowchart -->
+              <section>
+                <h3 class="text-lg font-bold text-brand-yellow mb-4">2. مخطط التدفق (Mermaid Flowchart)</h3>
+                <div class="bg-white/5 p-6 rounded-xl border border-gray-700 flex justify-center overflow-hidden">
+                  <div class="mermaid">
+                    graph TD
+                    A([بدء: استلام فاتورة المورد Vendor Bill]) --&gt; B[إدخال الفاتورة وربطها بـ Purchase Order Ref]
+                    B --&gt; C{"{التحقق والاعتماد المالي}"}
+                    C --&gt;|مرفوض| D[إعادة للمراجعة Draft]
+                    C --&gt;|معتمد| E[ترحيل الفاتورة Posted]
+                    E --&gt; F[تسجيل الدفع Register Payment]
+                    F --&gt; G[التسوية البنكية Bank Reconciliation]
+                    G --&gt; H[توليد قيود اليومية آلياً Journal Entries]
+                    H --&gt; I([النهاية: إغلاق الحساب وإصدار P&L])
+                  </div>
+                </div>
+              </section>
+
+              <!-- Control Points & Alerts -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <section class="bg-brand-navy/50 p-6 rounded-xl border border-brand-red/30">
+                  <h3 class="font-bold text-brand-red mb-4 flex items-center gap-2">
+                    <Icon name="alertTriangle" size={18} />
+                    <span>3. نقاط التحكم (Control Points)</span>
+                  </h3>
+                  <ul class="space-y-3 text-sm text-gray-300">
+                    <li class="flex items-start gap-2">
+                      <span class="text-brand-red">•</span>
+                      <span><strong>اعتماد الفاتورة (Bill Validation):</strong> مراجعة تطابق الكميات والأسعار (3-Way Matching).</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-brand-red">•</span>
+                      <span><strong>اعتماد الدفع (Payment Authorization):</strong> موافقة المدير المالي على خروج النقدية.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-brand-red">•</span>
+                      <span><strong>مراجعة التسوية (Reconciliation Check):</strong> تطابق كشف الحساب البنكي الفعلي.</span>
+                    </li>
+                  </ul>
+                </section>
+
+                <section class="bg-blue-900/20 p-6 rounded-xl border border-blue-500/30">
+                  <h3 class="font-bold text-blue-400 mb-4 flex items-center gap-2">
+                    <Icon name="alertTriangle" size={18} />
+                    <span>5. التنبيهات التلقائية (Automated Alerts)</span>
+                  </h3>
+                  <div class="space-y-3">
+                    <div class="bg-black/20 p-3 rounded-lg border border-blue-500/20">
+                      <p class="text-xs text-blue-300 font-bold mb-1">فاتورة مستحقة</p>
+                      <p class="text-sm text-gray-300">تنبيه قبل 3 أيام من تاريخ الاستحقاق للمدير المالي.</p>
+                    </div>
+                    <div class="bg-black/20 p-3 rounded-lg border border-red-500/20">
+                      <p class="text-xs text-red-400 font-bold mb-1">اختلاف التسوية</p>
+                      <p class="text-sm text-gray-300">تنبيه فوري للمدير المالي عند تجاوز حد الاختلاف المسموح.</p>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <!-- Mapping Table -->
+              <section>
+                <h3 class="text-lg font-bold text-brand-yellow mb-4">4. جدول الربط مع مستندات Brandzo (Mapping)</h3>
+                <div class="overflow-x-auto rounded-xl border border-gray-700">
+                  <table class="w-full text-sm text-right text-gray-300">
+                    <thead class="bg-gray-800 text-white">
+                      <tr>
+                        <th class="px-4 py-3">مستند Brandzo الورقي</th>
+                        <th class="px-4 py-3">الموديول في أودو</th>
+                        <th class="px-4 py-3">النموذج (Model)</th>
+                        <th class="px-4 py-3">ملاحظة الربط</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                      <tr>
+                        <td class="px-4 py-3 font-bold text-white">فاتورة مورد أصلية</td>
+                        <td class="px-4 py-3">Accounting</td>
+                        <td class="px-4 py-3 font-mono text-xs text-brand-yellow">account.move</td>
+                        <td class="px-4 py-3">إجبار إدخال رقم الـ PO في حقل invoice_origin</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3 font-bold text-white">سند صرف / تحويل</td>
+                        <td class="px-4 py-3">Accounting</td>
+                        <td class="px-4 py-3 font-mono text-xs text-brand-yellow">account.payment</td>
+                        <td class="px-4 py-3">يولد قيد الدفع ويرتبط بالفاتورة مباشرة</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+         </div>
+       </div>
+
+       <!-- HR Tab -->
+       <div id="hr-content" class="tab-pane hidden">
+         <div class="animate-fadeIn">
+            <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <Icon name="users" class="text-brand-red" />
+              <span>الموارد البشرية (HR Department)</span>
+            </h2>
+            <div id="hr-inner" class="space-y-10">
+              <!-- Workflow Steps -->
+              <section>
+                <h3 class="text-lg font-bold text-brand-yellow mb-4">1. جدول سير العمل (Workflow Steps)</h3>
+                <div class="overflow-x-auto rounded-xl border border-gray-700">
+                  <table class="w-full text-sm text-right text-gray-300">
+                    <thead class="bg-gray-800 text-white">
+                      <tr>
+                        <th class="px-4 py-3">رقم</th>
+                        <th class="px-4 py-3">اسم المستند</th>
+                        <th class="px-4 py-3">المسؤول</th>
+                        <th class="px-4 py-3">الوحدة (Module)</th>
+                        <th class="px-4 py-3">الحالة (Before ➔ After)</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                      <tr>
+                        <td class="px-4 py-3">1</td>
+                        <td class="px-4 py-3 font-bold text-white">طلب إجازة (Leave Request)</td>
+                        <td class="px-4 py-3">الموظف</td>
+                        <td class="px-4 py-3">Time Off</td>
+                        <td class="px-4 py-3">To Submit ➔ To Approve</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">2</td>
+                        <td class="px-4 py-3 font-bold text-white">اعتماد الإجازة (Leave Approval)</td>
+                        <td class="px-4 py-3">المدير المباشر + HR</td>
+                        <td class="px-4 py-3">Time Off</td>
+                        <td class="px-4 py-3">To Approve ➔ Approved</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">3</td>
+                        <td class="px-4 py-3 font-bold text-white">تسجيل الحضور (Attendances)</td>
+                        <td class="px-4 py-3">النظام / الموظف</td>
+                        <td class="px-4 py-3">Attendances</td>
+                        <td class="px-4 py-3">Checked In ➔ Checked Out</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">4</td>
+                        <td class="px-4 py-3 font-bold text-white">مسير الرواتب (Payslip Batch)</td>
+                        <td class="px-4 py-3">مسؤول الرواتب</td>
+                        <td class="px-4 py-3">Payroll</td>
+                        <td class="px-4 py-3">Draft ➔ Waiting</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <!-- Flowchart -->
+              <section>
+                <h3 class="text-lg font-bold text-brand-yellow mb-4">2. مخطط التدفق (Mermaid Flowchart)</h3>
+                <div class="bg-white/5 p-6 rounded-xl border border-gray-700 flex justify-center overflow-hidden">
+                  <div class="mermaid">
+                    graph TD
+                    A([بدء: تقديم طلب إجازة]) --&gt; B{"{موافقة المدير المباشر}"}
+                    B --&gt;|مرفوض| C[إشعار بالرفض]
+                    B --&gt;|موافق| D{"{موافقة الـ HR}"}
+                    D --&gt;|موافق| E[تحديث رصيد الإجازات Leave Balance]
+                    F([حركات الحضور والانصراف Attendances]) --&gt; G
+                    E --&gt; G[تجميع بيانات الشهر Payroll]
+                    G --&gt; H[إنشاء قسيمة الراتب Payslip]
+                    H --&gt; I{"{اعتماد مسير الرواتب}"}
+                    I --&gt;|معتمد| J[توليد القيد المحاسبي للراتب]
+                    J --&gt; K([النهاية: صرف الراتب])
+                  </div>
+                </div>
+              </section>
+
+              <!-- Control Points & Alerts -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <section class="bg-brand-navy/50 p-6 rounded-xl border border-brand-red/30">
+                  <h3 class="font-bold text-brand-red mb-4 flex items-center gap-2">
+                    <Icon name="alertTriangle" size={18} />
+                    <span>3. نقاط التحكم (Control Points)</span>
+                  </h3>
+                  <ul class="space-y-3 text-sm text-gray-300">
+                    <li class="flex items-start gap-2">
+                      <span class="text-brand-red">•</span>
+                      <span><strong>الموافقة متعددة المستويات:</strong> إجازات موظفي المخازن تتطلب موافقة مسؤول المخزن أولاً.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-brand-red">•</span>
+                      <span><strong>مراجعة مسير الرواتب:</strong> سحب بيانات الغياب من موديول Attendances قبل الاعتماد.</span>
+                    </li>
+                  </ul>
+                </section>
+
+                <section class="bg-blue-900/20 p-6 rounded-xl border border-blue-500/30">
+                  <h3 class="font-bold text-blue-400 mb-4 flex items-center gap-2">
+                    <Icon name="alertTriangle" size={18} />
+                    <span>5. التنبيهات التلقائية (Automated Alerts)</span>
+                  </h3>
+                  <div class="space-y-3">
+                    <div class="bg-black/20 p-3 rounded-lg border border-blue-500/20">
+                      <p class="text-xs text-blue-300 font-bold mb-1">طلب إجازة جديد</p>
+                      <p class="text-sm text-gray-300">تنبيه فوري للمدير المباشر (أو مسؤول المخزن).</p>
+                    </div>
+                    <div class="bg-black/20 p-3 rounded-lg border border-green-500/20">
+                      <p class="text-xs text-green-400 font-bold mb-1">اعتماد الرواتب</p>
+                      <p class="text-sm text-gray-300">إشعار للإدارة المالية للبدء بعملية صرف الرواتب.</p>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <!-- Mapping Table -->
+              <section>
+                <h3 class="text-lg font-bold text-brand-yellow mb-4">4. جدول الربط مع مستندات Brandzo (Mapping)</h3>
+                <div class="overflow-x-auto rounded-xl border border-gray-700">
+                  <table class="w-full text-sm text-right text-gray-300">
+                    <thead class="bg-gray-800 text-white">
+                      <tr>
+                        <th class="px-4 py-3">مستند Brandzo الورقي</th>
+                        <th class="px-4 py-3">الموديول في أودو</th>
+                        <th class="px-4 py-3">النموذج (Model)</th>
+                        <th class="px-4 py-3">ملاحظة الربط</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                      <tr>
+                        <td class="px-4 py-3 font-bold text-white">نموذج طلب إجازة</td>
+                        <td class="px-4 py-3">Time Off</td>
+                        <td class="px-4 py-3 font-mono text-xs text-brand-yellow">hr.leave</td>
+                        <td class="px-4 py-3">يخصم من الرصيد hr.leave.allocation</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3 font-bold text-white">ملف موظف مخزن</td>
+                        <td class="px-4 py-3">Employees</td>
+                        <td class="px-4 py-3 font-mono text-xs text-brand-yellow">hr.employee</td>
+                        <td class="px-4 py-3">إضافة حقل مخصص: x_warehouse_manager_id</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+         </div>
+       </div>
+
+       <!-- Procurement Tab -->
+       <div id="procurement-content" class="tab-pane hidden">
+         <div class="animate-fadeIn">
+            <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <Icon name="shoppingCart" class="text-brand-red" />
+              <span>الإدارة التجارية والمشتريات (Commercial & Procurement)</span>
+            </h2>
+            <div id="procurement-inner" class="space-y-10">
+              <!-- Workflow Steps -->
+              <section>
+                <h3 class="text-lg font-bold text-brand-yellow mb-4">1. جدول سير العمل (Workflow Steps)</h3>
+                <div class="overflow-x-auto rounded-xl border border-gray-700">
+                  <table class="w-full text-sm text-right text-gray-300">
+                    <thead class="bg-gray-800 text-white">
+                      <tr>
+                        <th class="px-4 py-3">رقم</th>
+                        <th class="px-4 py-3">اسم المستند</th>
+                        <th class="px-4 py-3">المسؤول</th>
+                        <th class="px-4 py-3">الوحدة (Module)</th>
+                        <th class="px-4 py-3">الحالة (Before ➔ After)</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                      <tr>
+                        <td class="px-4 py-3">1</td>
+                        <td class="px-4 py-3 font-bold text-white">طلب عرض سعر (RFQ)</td>
+                        <td class="px-4 py-3">موظف المشتريات</td>
+                        <td class="px-4 py-3">Purchase</td>
+                        <td class="px-4 py-3">Draft ➔ RFQ Sent</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">2</td>
+                        <td class="px-4 py-3 font-bold text-white">أمر الشراء (PO)</td>
+                        <td class="px-4 py-3">مدير المشتريات</td>
+                        <td class="px-4 py-3">Purchase</td>
+                        <td class="px-4 py-3">RFQ ➔ Purchase Order</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">3</td>
+                        <td class="px-4 py-3 font-bold text-white">سند الاستلام (GRN)</td>
+                        <td class="px-4 py-3">مدير المخزن</td>
+                        <td class="px-4 py-3">Inventory</td>
+                        <td class="px-4 py-3">Ready ➔ Done</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">4</td>
+                        <td class="px-4 py-3 font-bold text-white">سند دفع مبدئي (Bill Draft)</td>
+                        <td class="px-4 py-3">المشتريات/المالية</td>
+                        <td class="px-4 py-3">Purchase</td>
+                        <td class="px-4 py-3">N/A ➔ Draft Bill</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <!-- Flowchart -->
+              <section>
+                <h3 class="text-lg font-bold text-brand-yellow mb-4">2. مخطط التدفق (Mermaid Flowchart)</h3>
+                <div class="bg-white/5 p-6 rounded-xl border border-gray-700 flex justify-center overflow-hidden">
+                  <div class="mermaid">
+                    graph TD
+                    A([بدء: وصول المخزون لنقطة إعادة الطلب]) --&gt; B[توليد طلب شراء داخلي آلياً PR]
+                    B --&gt; C[إنشاء وإرسال طلبات عروض أسعار RFQs]
+                    C --&gt; D{"{تقييم الموردين Vendor Evaluation}"}
+                    D --&gt; E[اعتماد أمر الشراء PO]
+                    E --&gt; F[استقبال إشعار الشحن المسبق ASN]
+                    F --&gt; G[استلام البضاعة في المخزن GRN]
+                    G --&gt; H[تحديث الكميات في المستودع]
+                    H --&gt; I[إنشاء مسودة فاتورة وسند دفع مبدئي]
+                    I --&gt; J([النهاية: إغلاق أمر الشراء])
+                  </div>
+                </div>
+              </section>
+
+              <!-- Control Points & Alerts -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <section class="bg-brand-navy/50 p-6 rounded-xl border border-brand-red/30">
+                  <h3 class="font-bold text-brand-red mb-4 flex items-center gap-2">
+                    <Icon name="alertTriangle" size={18} />
+                    <span>3. نقاط التحكم (Control Points)</span>
+                  </h3>
+                  <ul class="space-y-3 text-sm text-gray-300">
+                    <li class="flex items-start gap-2">
+                      <span class="text-brand-red">•</span>
+                      <span><strong>تقييم المورد واعتماد الـ PO:</strong> مقارنة عروض الأسعار واختيار الأفضل.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-brand-red">•</span>
+                      <span><strong>فحص الجودة والاستلام (GRN):</strong> عدم التحويل إلى Done إلا بعد الفحص الفعلي.</span>
+                    </li>
+                  </ul>
+                </section>
+
+                <section class="bg-blue-900/20 p-6 rounded-xl border border-blue-500/30">
+                  <h3 class="font-bold text-blue-400 mb-4 flex items-center gap-2">
+                    <Icon name="alertTriangle" size={18} />
+                    <span>5. التنبيهات التلقائية (Automated Alerts)</span>
+                  </h3>
+                  <div class="space-y-3">
+                    <div class="bg-black/20 p-3 rounded-lg border border-blue-500/20">
+                      <p class="text-xs text-blue-300 font-bold mb-1">تجاوز الحد المسموح</p>
+                      <p class="text-sm text-gray-300">تنبيه لمدير المشتريات إذا تجاوز مبلغ الـ PO السقف المحدد.</p>
+                    </div>
+                    <div class="bg-black/20 p-3 rounded-lg border border-yellow-500/20">
+                      <p class="text-xs text-yellow-400 font-bold mb-1">تأخر التوريد</p>
+                      <p class="text-sm text-gray-300">إشعار عند تأخر استلام البضاعة عن الموعد المتوقع.</p>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <!-- Mapping Table -->
+              <section>
+                <h3 class="text-lg font-bold text-brand-yellow mb-4">4. جدول الربط (Brandzo Form ↔ Odoo Mapping)</h3>
+                <div class="overflow-x-auto rounded-xl border border-gray-700">
+                  <table class="w-full text-sm text-right text-gray-300">
+                    <thead class="bg-gray-800 text-white">
+                      <tr>
+                        <th class="px-4 py-3">نموذج Brandzo</th>
+                        <th class="px-4 py-3">حقل HTML</th>
+                        <th class="px-4 py-3">النموذج (Model)</th>
+                        <th class="px-4 py-3">الحقل المقابل في أودو</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                      <tr>
+                        <td class="px-4 py-3 font-bold text-white">اسم المورد</td>
+                        <td class="px-4 py-3 font-mono text-xs text-brand-red">supplier_name</td>
+                        <td class="px-4 py-3 font-mono text-xs text-brand-yellow">purchase.order</td>
+                        <td class="px-4 py-3 font-mono text-xs text-green-400">partner_id</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3 font-bold text-white">تفاصيل الصنف</td>
+                        <td class="px-4 py-3 font-mono text-xs text-brand-red">product_details</td>
+                        <td class="px-4 py-3 font-mono text-xs text-brand-yellow">purchase.order.line</td>
+                        <td class="px-4 py-3 font-mono text-xs text-green-400">product_id</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3 font-bold text-white">الكمية المطلوبة</td>
+                        <td class="px-4 py-3 font-mono text-xs text-brand-red">ordered_qty</td>
+                        <td class="px-4 py-3 font-mono text-xs text-brand-yellow">purchase.order.line</td>
+                        <td class="px-4 py-3 font-mono text-xs text-green-400">product_qty</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+         </div>
+       </div>
+    </div>
+  </div>
+
+  <style>
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+
+  <script>
+    import mermaid from 'mermaid';
+
+    // Initialize Mermaid
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      securityLevel: 'strict',
+      fontFamily: 'Cairo'
+    });
+
+    // Tab Switching Logic
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = (btn instanceof HTMLElement) ? btn.dataset.tab : null;
+
+        // Update buttons
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('bg-brand-red', 'text-white');
+          b.classList.add('bg-gray-800', 'text-gray-400');
+        });
+        btn.classList.add('bg-brand-red', 'text-white');
+        btn.classList.remove('bg-gray-800', 'text-gray-400');
+
+        // Update content
+        document.querySelectorAll('.tab-pane').forEach(p => {
+          p.classList.add('hidden');
+        });
+        document.getElementById(`${tab}-content`).classList.remove('hidden');
+
+        // Re-render mermaid if needed
+        mermaid.run();
+      });
+    });
+  </script>
+</DashboardLayout>
