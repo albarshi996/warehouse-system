@@ -185,6 +185,23 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     .btn-act:hover              { border-color:var(--accent-blue); color:var(--accent-blue); background:var(--accent-blue-dim); }
     .btn-act.edit:hover         { border-color:var(--accent-orange); color:var(--accent-orange); background:var(--accent-orange-dim); }
 
+    /* ── Fullscreen map mode ─────────────────────────────────────────────── */
+    #rh-map-panel.rh-fullscreen {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 5000 !important;
+      border-radius: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      margin: 0 !important;
+    }
+    #rh-map-panel.rh-fullscreen #rh-map {
+      height: calc(100vh - 44px) !important;
+    }
+    body.map-fullscreen-active {
+      overflow: hidden;
+    }
+
     #rh-sel-info {
       padding:9px 14px; border-top:1px solid var(--border);
       background:var(--bg-surface); display:flex;
@@ -311,6 +328,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
             الخريطة التفاعلية — بنغازي
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn-hdr" id="btn-fullscreen" title="تكبير الخريطة">
+              ⛶ تكبير
+            </button>
             <!-- Toggle hex view -->
             <button class="btn-hdr" id="btn-hex-toggle" title="تبديل عرض الخرائط السداسية">
               ⬡ خرائط سداسية
@@ -443,10 +463,6 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script is:inline src="https://unpkg.com/h3-js@4/dist/h3-js.umd.js"></script>
 
-  <!-- Firebase compat CDN (avoids ESM import issues in inline Astro scripts) -->
-  <script is:inline src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script is:inline src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
   <script is:inline>
   (function () {
     'use strict';
@@ -475,31 +491,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       {"id":20,"neighborhood":"الطلحية","lat":32.082,"lng":20.188,"class":"B","population":14000,"market1":"جيان المطار","market2":"-","flow":"منخفض","accessibility":"متوسط","gap":"جزئياً ⚠"}
     ];
 
-    // Live working copy (may be overridden by Firestore on load)
+    // Live working copy (may be overridden by localStorage on load)
     let DATA = DEFAULT_DATA.map(d => ({ ...d }));
-
-    // ── 2. Firebase init (reuse existing Brandzo config) ─────────────────────
-    // Firebase compat SDK is already loaded via CDN scripts above.
-    // We re-use the same project as the rest of Brandzo Hub.
-    let db = null;
-    const COLLECTION = 'retailHubData';
-
-    try {
-      // If Firebase is already initialized by another page script, reuse it.
-      const fbApp = firebase.apps.length
-        ? firebase.app()
-        : firebase.initializeApp({
-            apiKey:            'AIzaSyAWhqQVdhODZT0bdXnbyYzcmpnv11s9qoU',
-            authDomain:        'brandzo-erp-2026.firebaseapp.com',
-            projectId:         'brandzo-erp-2026',
-            storageBucket:     'brandzo-erp-2026.firebasestorage.app',
-            messagingSenderId: '991460523040',
-            appId:             '1:991460523040:web:d3c6f76b1ff13a1ab8d045',
-          });
-      db = firebase.firestore(fbApp);
-    } catch (e) {
-      console.warn('[RetailHub] Firebase init failed — running in offline mode.', e);
-    }
 
     // ── Helper: toast notification ────────────────────────────────────────────
     function showToast(msg, type = '') {
@@ -509,50 +502,51 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       setTimeout(() => { t.className = ''; }, 3000);
     }
 
-    // ── 3. Load saved data from Firestore (merge over defaults) ──────────────
-    async function loadFromFirestore() {
-      if (!db) return;
+    // ── 3. Load/Save data with localStorage ──────────────────────────────────
+
+    // Load saved edits from localStorage (non-blocking, merges over defaults)
+    function loadFromStorage() {
       try {
-        const snap = await db.collection(COLLECTION).get();
-        if (snap.empty) return; // no saved overrides → use defaults
-        snap.forEach(doc => {
-          const saved = doc.data();
-          const idx = DATA.findIndex(d => d.id === saved.id);
-          if (idx !== -1) DATA[idx] = { ...DATA[idx], ...saved };
+        const saved = localStorage.getItem('brandzo_retail_hub');
+        if (!saved) return;
+        const overrides = JSON.parse(saved); // array of edited records
+        overrides.forEach(override => {
+          const idx = DATA.findIndex(d => d.id === override.id);
+          if (idx !== -1) DATA[idx] = { ...DATA[idx], ...override };
         });
         updateStats();
         renderTable();
         rebuildMarkers();
-        if (hexActive) renderHexLayer();
       } catch (e) {
-        console.warn('[RetailHub] Firestore load failed:', e);
+        console.warn('[RetailHub] localStorage load failed:', e);
       }
     }
 
-    // ── Save one record to Firestore ──────────────────────────────────────────
-    async function saveToFirestore(record) {
-      if (!db) { showToast('⚠ Firebase غير متصل — التغيير محفوظ مؤقتاً', 'error'); return; }
+    // Save all current DATA overrides to localStorage
+    function saveToStorage(updatedRecord) {
       try {
-        await db.collection(COLLECTION).doc(String(record.id)).set(record);
+        // Read existing overrides
+        let overrides = [];
+        const existing = localStorage.getItem('brandzo_retail_hub');
+        if (existing) overrides = JSON.parse(existing);
+
+        // Upsert this record
+        const idx = overrides.findIndex(o => o.id === updatedRecord.id);
+        if (idx !== -1) overrides[idx] = updatedRecord;
+        else overrides.push(updatedRecord);
+
+        localStorage.setItem('brandzo_retail_hub', JSON.stringify(overrides));
       } catch (e) {
-        console.warn('[RetailHub] Firestore save failed:', e);
-        showToast('❌ فشل الحفظ في Firebase', 'error');
+        console.warn('[RetailHub] localStorage save failed:', e);
+        showToast('❌ فشل الحفظ المحلي', 'error');
       }
     }
 
-    // ── Reset: delete all Firestore docs and reload defaults ─────────────────
     async function resetToDefaults() {
       DATA = DEFAULT_DATA.map(d => ({ ...d }));
-      if (db) {
-        try {
-          const snap = await db.collection(COLLECTION).get();
-          const batch = db.batch();
-          snap.forEach(doc => batch.delete(doc.ref));
-          await batch.commit();
-        } catch (e) {
-          console.warn('[RetailHub] Firestore reset failed:', e);
-        }
-      }
+      try {
+        localStorage.removeItem('brandzo_retail_hub');
+      } catch (e) { /* ignore */ }
       updateStats();
       renderTable();
       rebuildMarkers();
@@ -573,6 +567,35 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     // ── 5. Map setup ──────────────────────────────────────────────────────────
     const rhMap = L.map('rh-map', { zoomControl: false }).setView([32.085, 20.12], 11);
     L.control.zoom({ position: 'topleft' }).addTo(rhMap);
+
+    // ── Fullscreen map toggle ─────────────────────────────────────────────
+    let mapFullscreen = false;
+    document.getElementById('btn-fullscreen').addEventListener('click', () => {
+      const panel = document.getElementById('rh-map-panel');
+      mapFullscreen = !mapFullscreen;
+      const btn = document.getElementById('btn-fullscreen');
+      if (mapFullscreen) {
+        panel.classList.add('rh-fullscreen');
+        document.body.classList.add('map-fullscreen-active');
+        btn.textContent = '✕ تصغير';
+        btn.classList.add('active-hex'); // reuse existing highlight style
+        // Leaflet needs invalidateSize after container resize
+        setTimeout(() => rhMap.invalidateSize(), 50);
+      } else {
+        panel.classList.remove('rh-fullscreen');
+        document.body.classList.remove('map-fullscreen-active');
+        btn.textContent = '⛶ تكبير';
+        btn.classList.remove('active-hex');
+        setTimeout(() => rhMap.invalidateSize(), 50);
+      }
+    });
+
+    // Close fullscreen on Escape key
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && mapFullscreen) {
+        document.getElementById('btn-fullscreen').click();
+      }
+    });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap', maxZoom: 18
     }).addTo(rhMap);
@@ -799,7 +822,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         document.getElementById('rh-modal-overlay').classList.remove('open');
     });
 
-    document.getElementById('btn-modal-save').addEventListener('click', async () => {
+    document.getElementById('btn-modal-save').addEventListener('click', () => {
       const id  = parseInt(document.getElementById('edit-id').value);
       const idx = DATA.findIndex(d => d.id === id);
       if (idx === -1) return;
@@ -820,8 +843,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       // Update in-memory array
       DATA[idx] = updated;
 
-      // Persist to Firestore
-      await saveToFirestore(updated);
+      // Persist to localStorage
+      saveToStorage(updated);
 
       // Refresh all UI
       updateStats();
@@ -859,8 +882,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     rebuildMarkers();
     renderTable();
 
-    // Load Firestore overrides after initial render (non-blocking)
-    loadFromFirestore();
+    // Load localStorage overrides after initial render (non-blocking)
+    loadFromStorage();
 
   })();
   </script>
