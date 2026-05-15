@@ -545,6 +545,79 @@ import Icon from '../../components/ui/Icon.astro';
              </div>
            </section>
 
+           <!-- Flow Chart -->
+           <section class="mb-8">
+             <h3 class="text-lg font-bold text-brand-yellow mb-4">2. مخطط تدفق عمليات المستودع</h3>
+             <div class="bg-white/5 rounded-xl p-6 border border-white/10 overflow-x-auto">
+               <div class="mermaid">
+                 graph TD
+                 A([بدء: وصول شحنة]) --&gt; B[استلام إشعار الشحن المسبق ASN]
+                 B --&gt; C[فحص الكميات والأوزان GRN]
+                 C --&gt; D{"{فحص الجودة QC}"}
+                 D --&gt;|مقبول| E[تحديد موقع التخزين Putaway]
+                 D --&gt;|مرفوض| F[إنشاء تقرير البضاعة التالفة]
+                 F --&gt; G[إشعار المورد للإحلال]
+                 E --&gt; H[تسجيل في بطاقة مراقبة المخزون Bin Card]
+                 H --&gt; I{"{طلب صرف وارد؟}"}
+                 I --&gt;|نعم| J[إنشاء قائمة السحب Picking]
+                 J --&gt; K[قائمة التعبئة Packing]
+                 K --&gt; L[إصدار إذن التسليم Delivery Note]
+                 L --&gt; M[تحديث المخزون في Odoo]
+                 I --&gt;|لا| N[انتظار طلب الصرف]
+                 M --&gt; O([النهاية: إغلاق الحركة])
+               </div>
+             </div>
+           </section>
+
+           <!-- Control Points & Alerts -->
+           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+             <section class="bg-brand-navy/50 p-6 rounded-xl border border-brand-red/30">
+               <h3 class="font-bold text-brand-red mb-4 flex items-center gap-2">
+                 <Icon name="alertTriangle" size={18} />
+                 <span>3. نقاط التحكم (Control Points)</span>
+               </h3>
+               <ul class="space-y-3 text-sm text-gray-300">
+                 <li class="flex items-start gap-2">
+                   <span class="text-brand-red">•</span>
+                   <span><strong>فحص الجودة إلزامي:</strong> لا تحويل لـ Done قبل اعتماد QC.</span>
+                 </li>
+                 <li class="flex items-start gap-2">
+                   <span class="text-brand-red">•</span>
+                   <span><strong>الباركود إلزامي:</strong> كل صرف أو استلام يمر عبر قارئ الباركود.</span>
+                 </li>
+                 <li class="flex items-start gap-2">
+                   <span class="text-brand-red">•</span>
+                   <span><strong>FEFO إلزامي:</strong> يُصرف أقرب تاريخ انتهاء أولاً في كل العمليات.</span>
+                 </li>
+                 <li class="flex items-start gap-2">
+                   <span class="text-brand-red">•</span>
+                   <span><strong>التسوية:</strong> أي فرق بين الجرد الفعلي والنظام يُرفع فوراً لمدير المستودع.</span>
+                 </li>
+               </ul>
+             </section>
+
+             <section class="bg-blue-900/20 p-6 rounded-xl border border-blue-500/30">
+               <h3 class="font-bold text-blue-400 mb-4 flex items-center gap-2">
+                 <Icon name="alertTriangle" size={18} />
+                 <span>5. التنبيهات التلقائية (Automated Alerts)</span>
+               </h3>
+               <div class="space-y-3">
+                 <div class="bg-black/20 p-3 rounded-lg border border-blue-500/20">
+                   <p class="text-xs text-blue-300 font-bold mb-1">مخزون دون الحد الأدنى</p>
+                   <p class="text-sm text-gray-300">تنبيه تلقائي لمدير المستودع عند وصول صنف لنقطة إعادة الطلب.</p>
+                 </div>
+                 <div class="bg-black/20 p-3 rounded-lg border border-yellow-500/20">
+                   <p class="text-xs text-yellow-400 font-bold mb-1">انتهاء صلاحية وشيك</p>
+                   <p class="text-sm text-gray-300">إشعار قبل 30 يوماً من انتهاء صلاحية أي مجموعة (Lot).</p>
+                 </div>
+                 <div class="bg-black/20 p-3 rounded-lg border border-red-500/20">
+                   <p class="text-xs text-red-400 font-bold mb-1">فارق الجرد</p>
+                   <p class="text-sm text-gray-300">تنبيه فوري لمدير المستودع عند وجود فرق بين العد الفعلي والنظام.</p>
+                 </div>
+               </div>
+             </section>
+           </div>
+
            <!-- Operational Principles -->
            <section class="mb-8">
              <h3 class="text-lg font-bold text-brand-yellow mb-4">المبادئ التشغيلية</h3>
@@ -598,6 +671,82 @@ import Icon from '../../components/ui/Icon.astro';
                </table>
              </div>
            </section>
+
+           <!-- Flow Chart -->
+           <section class="mb-8">
+             <h3 class="text-lg font-bold text-brand-yellow mb-4">2. مخطط تدفق سلسلة الإمداد الكاملة</h3>
+             <div class="bg-white/5 rounded-xl p-6 border border-white/10 overflow-x-auto">
+               <div class="mermaid">
+                 graph TD
+                 A([بدء: تخطيط الطلب]) --&gt; B[توليد تقرير التنبؤ بالطلب Forecast]
+                 B --&gt; C[إنشاء طلب الشراء الداخلي PR]
+                 C --&gt; D[اعتماد PR من مدير القسم]
+                 D --&gt; E[إرسال طلبات عروض أسعار RFQs للموردين]
+                 E --&gt; F{"{تقييم واختيار المورد}"}
+                 F --&gt; G[إصدار أمر الشراء الرسمي PO]
+                 G --&gt; H[متابعة الشحن BL/AWB]
+                 H --&gt; I[استلام البضاعة GRN + QC]
+                 I --&gt; J[التخزين والتوزيع Putaway + Bin Card]
+                 J --&gt; K[تنفيذ طلبات الصرف Picking + Packing]
+                 K --&gt; L[التسليم النهائي Delivery Note + POD]
+                 L --&gt; M{"{مرتجعات؟}"}
+                 M --&gt;|نعم| N[Return Note + Credit Note]
+                 N --&gt; O[تحديث المخزون]
+                 M --&gt;|لا| P[قياس مؤشرات الأداء KPIs]
+                 O --&gt; P
+                 P --&gt; Q([النهاية: تقرير الأداء الشهري])
+               </div>
+             </div>
+           </section>
+
+           <!-- Control Points & Alerts -->
+           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+             <section class="bg-brand-navy/50 p-6 rounded-xl border border-brand-red/30">
+               <h3 class="font-bold text-brand-red mb-4 flex items-center gap-2">
+                 <Icon name="alertTriangle" size={18} />
+                 <span>3. نقاط التحكم (Control Points)</span>
+               </h3>
+               <ul class="space-y-3 text-sm text-gray-300">
+                 <li class="flex items-start gap-2">
+                   <span class="text-brand-red">•</span>
+                   <span><strong>اعتماد PR:</strong> لا PO بدون موافقة مدير القسم أولاً.</span>
+                 </li>
+                 <li class="flex items-start gap-2">
+                   <span class="text-brand-red">•</span>
+                   <span><strong>تقييم الموردين:</strong> مقارنة لا تقل عن 3 عروض أسعار قبل إصدار أي PO.</span>
+                 </li>
+                 <li class="flex items-start gap-2">
+                   <span class="text-brand-red">•</span>
+                   <span><strong>GRN + QC مزدوج:</strong> لا تحويل للمخزون بدون إتمام الاستلام والفحص.</span>
+                 </li>
+                 <li class="flex items-start gap-2">
+                   <span class="text-brand-red">•</span>
+                   <span><strong>توثيق التسليم:</strong> POD موقّع شرط لإغلاق أي طلب توصيل.</span>
+                 </li>
+               </ul>
+             </section>
+
+             <section class="bg-blue-900/20 p-6 rounded-xl border border-blue-500/30">
+               <h3 class="font-bold text-blue-400 mb-4 flex items-center gap-2">
+                 <Icon name="alertTriangle" size={18} />
+                 <span>5. التنبيهات التلقائية (Automated Alerts)</span>
+               </h3>
+               <div class="space-y-3">
+                 <div class="bg-black/20 p-3 rounded-lg border border-blue-500/20">
+                   <p class="text-xs text-blue-300 font-bold mb-1">تأخر توريد المورد</p>
+                   <p class="text-sm text-gray-300">إشعار لمسؤول اللوجستيك عند تأخر الشحنة عن الموعد المتفق عليه.</p>
+                 </div>
+                 <div class="bg-black/20 p-3 rounded-lg border border-yellow-500/20">
+                   <p class="text-xs text-yellow-400 font-bold mb-1">OTIF دون الهدف</p>
+                   <p class="text-sm text-gray-300">تنبيه أسبوعي لمدير سلاسل الإمداد إذا انخفض معدل التسليم في الموعد عن 95%.</p>
+                 </div>
+                 <div class="bg-black/20 p-3 rounded-lg border border-red-500/20">
+                   <p class="text-xs text-red-400 font-bold mb-1">ارتفاع معدل المرتجعات</p>
+                   <p class="text-sm text-gray-300">تنبيه لمدير الجودة عند تجاوز نسبة المرتجعات من مورد معين عن 2%.</p>
+                 </div>
+               </div>
+             </section>
+           </div>
 
            <!-- KPIs Section -->
            <section class="mb-8">
