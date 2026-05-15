@@ -5,7 +5,6 @@ import Icon from '../../components/ui/Icon.astro';
 ---
 
 <DashboardLayout title="دورات العمل ERP">
-  <script is:inline src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
   <div class="text-right" dir="rtl">
     <header class="mb-6 sm:mb-8">
       <h1 class="text-2xl sm:text-3xl font-bold text-brand-yellow">
@@ -819,23 +818,21 @@ import Icon from '../../components/ui/Icon.astro';
     }
   </style>
 
-  <script is:inline>
+  <script>
+    import mermaid from 'mermaid';
+
     // Initialize Mermaid
     mermaid.initialize({
-      startOnLoad: false,
+      startOnLoad: true,
       theme: 'dark',
       securityLevel: 'strict',
       fontFamily: 'Cairo'
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
-      mermaid.run({ nodes: document.querySelectorAll('.mermaid') });
-    });
-
     // Tab Switching Logic
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const tab = btn.dataset.tab;
+        const tab = (btn instanceof HTMLElement) ? btn.dataset.tab : null;
 
         // Update buttons
         document.querySelectorAll('.tab-btn').forEach(b => {
@@ -852,7 +849,7 @@ import Icon from '../../components/ui/Icon.astro';
         document.getElementById(`${tab}-content`).classList.remove('hidden');
 
         // Re-render mermaid if needed
-        mermaid.run({ nodes: document.querySelectorAll('.mermaid') });
+        mermaid.run();
       });
     });
   </script>
