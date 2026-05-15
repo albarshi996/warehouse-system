@@ -81,22 +81,22 @@ const OdooInstallationGuide = () => {
 
   const costs = {
     licenses: [
-      { users: '1-10', cost: '$25/user/month', annual: '$300' },
-      { users: '11-25', cost: '$23/user/month', annual: '$690' },
-      { users: '26-50', cost: '$21/user/month', annual: '$1,260' },
-      { users: '51-100', cost: '$19/user/month', annual: '$2,280' }
+      { users: '1-10', cost: 'يُحدد بعد التنسيق', annual: 'يُحدد بعد التنسيق' },
+      { users: '11-25', cost: 'يُحدد بعد التنسيق', annual: 'يُحدد بعد التنسيق' },
+      { users: '26-50', cost: 'يُحدد بعد التنسيق', annual: 'يُحدد بعد التنسيق' },
+      { users: '51-100', cost: 'يُحدد بعد التنسيق', annual: 'يُحدد بعد التنسيق' }
     ],
     hosting: [
-      { type: 'VPS Basic', specs: '4GB RAM, 2 CPU, 80GB SSD', cost: '$40/month' },
-      { type: 'VPS Professional', specs: '8GB RAM, 4 CPU, 160GB SSD', cost: '$80/month' },
-      { type: 'Dedicated Server', specs: '16GB RAM, 8 CPU, 500GB SSD', cost: '$200/month' },
-      { type: 'Cloud Enterprise', specs: '32GB RAM, 16 CPU, 1TB SSD', cost: '$500/month' }
+      { type: 'VPS Basic', specs: '4GB RAM, 2 CPU, 80GB SSD', cost: 'التكلفة تُحدد بعد التنسيق مع إدارة تقنية المعلومات' },
+      { type: 'VPS Professional', specs: '8GB RAM, 4 CPU, 160GB SSD', cost: 'التكلفة تُحدد بعد التنسيق مع إدارة تقنية المعلومات' },
+      { type: 'Dedicated Server', specs: '16GB RAM, 8 CPU, 500GB SSD', cost: 'التكلفة تُحدد بعد التنسيق مع إدارة تقنية المعلومات' },
+      { type: 'Cloud Enterprise', specs: '32GB RAM, 16 CPU, 1TB SSD', cost: 'التكلفة تُحدد بعد التنسيق مع إدارة تقنية المعلومات' }
     ],
     implementation: [
-      { item: 'Basic Setup', duration: '1-2 weeks', cost: '$2,000-5,000' },
-      { item: 'Custom Modules', duration: '2-4 weeks', cost: '$5,000-15,000' },
-      { item: 'Data Migration', duration: '1-3 weeks', cost: '$3,000-10,000' },
-      { item: 'Training', duration: '1-2 weeks', cost: '$1,000-3,000' }
+      { item: 'Basic Setup', duration: '1-2 weeks', cost: 'التكلفة تُحدد بعد التنسيق مع إدارة تقنية المعلومات' },
+      { item: 'Custom Modules', duration: '2-4 weeks', cost: 'التكلفة تُحدد بعد التنسيق مع إدارة تقنية المعلومات' },
+      { item: 'Data Migration', duration: '1-3 weeks', cost: 'التكلفة تُحدد بعد التنسيق مع إدارة تقنية المعلومات' },
+      { item: 'Training', duration: '1-2 weeks', cost: 'التكلفة تُحدد بعد التنسيق مع إدارة تقنية المعلومات' }
     ]
   };
 
@@ -121,7 +121,7 @@ const OdooInstallationGuide = () => {
               <div className="text-sm text-gray-400">أسابيع للإكمال</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-yellow-400">$106-175K</div>
+              <div className="text-sm font-bold text-yellow-400 leading-tight">تُحدد بعد<br/>التنسيق مع IT</div>
               <div className="text-sm text-gray-400">التكلفة الإجمالية</div>
             </div>
             <div>
