@@ -145,20 +145,20 @@ const BrandzoDashboard = () => {
 
             <div className="bg-white/5 backdrop-blur border border-green-500/30 rounded-xl p-5">
               <h3 className="font-bold text-green-400 mb-3 flex items-center gap-2">
-                <span>💰</span> التكلفة الإجمالية المتوقعة: $106-175K (السنة الأولى)
+                <span>📋</span> التكلفة تُحدد بعد التنسيق مع إدارة تقنية المعلومات
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-400">45%</div>
-                  <div className="text-gray-400">تراخيص أودو</div>
+                  <div className="text-lg font-bold text-blue-400">التراخيص</div>
+                  <div className="text-gray-400 text-sm">التكلفة تُحدد بعد التنسيق مع IT</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-400">35%</div>
-                  <div className="text-gray-400">تنفيذ وتخصيص</div>
+                  <div className="text-lg font-bold text-green-400">التنفيذ</div>
+                  <div className="text-gray-400 text-sm">التكلفة تُحدد بعد التنسيق مع IT</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-400">20%</div>
-                  <div className="text-gray-400">تدريب ودعم</div>
+                  <div className="text-lg font-bold text-yellow-400">التدريب والدعم</div>
+                  <div className="text-gray-400 text-sm">التكلفة تُحدد بعد التنسيق مع IT</div>
                 </div>
               </div>
             </div>
@@ -249,14 +249,14 @@ const BrandzoDashboard = () => {
                 </thead>
                 <tbody>
                   {[
-                    { module: 'المخزون', function: 'إدارة المخزون، التخزين، الجرد', importance: 'أساسي', cost: '$25/user', status: 'مطلوب' },
-                    { module: 'المشتريات', function: 'طلبات الشراء، الموردين، العقود', importance: 'أساسي', cost: '$20/user', status: 'مطلوب' },
-                    { module: 'المبيعات', function: 'العملاء، عروض الأسعار، الفواتير', importance: 'أساسي', cost: '$25/user', status: 'مطلوب' },
-                    { module: 'المحاسبة', function: 'الحسابات، التقارير المالية', importance: 'أساسي', cost: '$35/user', status: 'مطلوب' },
-                    { module: 'الموارد البشرية', function: 'الموظفين، الرواتب، الإجازات', importance: 'مهم', cost: '$20/user', status: 'موصى به' },
-                    { module: 'الصيانة', function: 'صيانة المعدات، الجدولة', importance: 'مهم', cost: '$20/user', status: 'موصى به' },
-                    { module: 'المشاريع', function: 'إدارة المشاريع، المهام', importance: 'اختياري', cost: '$20/user', status: 'لاحق' },
-                    { module: 'الموقع الإلكتروني', function: 'متجر إلكتروني، صفحات الشركة', importance: 'اختياري', cost: '$30/user', status: 'لاحق' }
+                    { module: 'المخزون', function: 'إدارة المخزون، التخزين، الجرد', importance: 'أساسي', cost: 'يُحدد بعد التنسيق', status: 'مطلوب' },
+                    { module: 'المشتريات', function: 'طلبات الشراء، الموردين، العقود', importance: 'أساسي', cost: 'يُحدد بعد التنسيق', status: 'مطلوب' },
+                    { module: 'المبيعات', function: 'العملاء، عروض الأسعار، الفواتير', importance: 'أساسي', cost: 'يُحدد بعد التنسيق', status: 'مطلوب' },
+                    { module: 'المحاسبة', function: 'الحسابات، التقارير المالية', importance: 'أساسي', cost: 'يُحدد بعد التنسيق', status: 'مطلوب' },
+                    { module: 'الموارد البشرية', function: 'الموظفين، الرواتب، الإجازات', importance: 'مهم', cost: 'يُحدد بعد التنسيق', status: 'موصى به' },
+                    { module: 'الصيانة', function: 'صيانة المعدات، الجدولة', importance: 'مهم', cost: 'يُحدد بعد التنسيق', status: 'موصى به' },
+                    { module: 'المشاريع', function: 'إدارة المشاريع، المهام', importance: 'اختياري', cost: 'يُحدد بعد التنسيق', status: 'لاحق' },
+                    { module: 'الموقع الإلكتروني', function: 'متجر إلكتروني، صفحات الشركة', importance: 'اختياري', cost: 'يُحدد بعد التنسيق', status: 'لاحق' }
                   ].map((item, i) => (
                     <tr key={i} className="border-b border-purple-500/20 hover:bg-white/5 transition-colors">
                       <td className="px-4 py-3 font-bold text-white">{item.module}</td>
@@ -292,7 +292,7 @@ const BrandzoDashboard = () => {
                 <div className="text-xs text-gray-400">وحدات أساسية</div>
               </div>
               <div className="bg-white/5 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-yellow-400 mb-1">$195</div>
+                <div className="text-sm font-bold text-yellow-400 mb-1 leading-tight">يُحدد بعد<br/>التنسيق مع IT</div>
                 <div className="text-xs text-gray-400">متوسط التكلفة/المستخدم/السنة</div>
               </div>
               <div className="bg-white/5 rounded-lg p-4 text-center">
