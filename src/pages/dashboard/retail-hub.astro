@@ -559,7 +559,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         });
         updateStats();
         renderTable();
-        addMarkersToMap();
+        rebuildMarkers();
       } catch (e) {
         console.warn('[RetailHub] localStorage load failed:', e);
       }
@@ -592,7 +592,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       } catch (e) { /* ignore */ }
       updateStats();
       renderTable();
-      addMarkersToMap();
+      rebuildMarkers();
       if (hexActive) renderHexLayer();
       showToast('✓ تمت إعادة ضبط البيانات للافتراضي', 'success');
     }
@@ -654,12 +654,6 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     const markers = {};
     let selectedId = null;
 
-    // FIX 1: Initial markers and stats call after map ready
-    rhMap.whenReady(() => {
-      addMarkersToMap();
-      updateStats();
-    });
-
     function buildPopup(d) {
       const m2 = d.market2 && d.market2 !== '-' ? d.market2 : '—';
       const segBadges = (d.segments_present || []).map(s => {
@@ -679,7 +673,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       </div>`;
     }
 
-    function addMarkersToMap() {
+    function rebuildMarkers() {
       markerLayer.clearLayers();
       DATA.forEach(d => {
         const color = gapColor(d.market_match);
@@ -919,7 +913,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       // Refresh all UI
       updateStats();
       renderTable();
-      addMarkersToMap();
+      rebuildMarkers();
       if (hexActive) renderHexLayer();
 
       document.getElementById('rh-modal-overlay').classList.remove('open');
@@ -948,10 +942,12 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     });
 
     // ── 11. Initial render ────────────────────────────────────────────────────
-    loadFromStorage();
     updateStats();
-    addMarkersToMap();
+    rebuildMarkers();
     renderTable();
+
+    // Load localStorage overrides after initial render (non-blocking)
+    loadFromStorage();
 
   })();
   </script>
