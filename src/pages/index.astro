@@ -11,7 +11,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Brandzo Hub 2026 - نظام إدارة الموارد المتكامل</title>
+    <title>توثيق عمليات سلاسل الإمداد — بنغازي ٢٠٢٦</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -64,23 +64,13 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         <div class="container mx-auto px-4 sm:px-6 relative z-10">
           <div class="max-w-4xl">
             <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-brand-yellow leading-tight mb-6">
-              المقترح الشامل لتقديمه للإدارة واعتماده للتنسيق مع إدارة تقنية المعلومات لتنفيذه
+              توثيق عمليات سلاسل الإمداد — بنغازي
             </h1>
-            
-            <h2 class="text-xl sm:text-2xl font-bold text-white mb-4">
-              نضبط قبل ما ندخل
-            </h2>
-  
+
             <div class="text-sm sm:text-base text-gray-400 mb-8 sm:mb-10 leading-relaxed max-w-3xl bg-white/5 p-5 sm:p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
-              كل العمليات (إضافة مخزون، صرف، تحويل، ارتجاع، جرد) بتمر على نماذج ذكية إجبارية.<br>
-              النظام يتحقق من المنطق التشغيلي (الصلاحيات، الحدود، الكميات، تواريخ الصلاحية، التوصيات التلقائية).<br>
-              لو فيه خطأ → تنبيه فوري وإيقاف التحويل لـ ERP.<br><br>
-         
-              <span class="text-white font-semibold">الميزة الحاسمة: تكاملي وليس بديلاً (بنكمل الـ ERP)</span><br>
-              · تصحيح أخطاء بيانات قبل تصل للـ ERP.<br>
-              · توفير 60% من وقت المراجعة (أرقام تقديرية).<br>
-              · تقارير ذكية (Trends, Accuracy Rate, Cycle Counts) تطلع من Hub مباشرة.<br>
-              · تدريب وامتثال موظفين جدد خلال يوم واحد بواجهة سهلة.
+              هذا المقترح يعرض فهماً كاملاً للدورة المستندية،
+              تصنيف أسواق بنغازي، والرؤية التشغيلية لتنفيذ Odoo —
+              من منظور متخصص في سلاسل الإمداد.
             </div>
 
             <div class="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
@@ -124,101 +114,94 @@ const base = import.meta.env.BASE_URL.endsWith('/')
             <div
               class="p-6 sm:p-8 rounded-3xl border border-white/10 hover:shadow-xl transition-shadow"
             >
-              <div
-                class="w-14 h-14 bg-red-50 text-brand-red rounded-2xl flex items-center justify-center mb-6"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="28"
-                  height="28"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  ><path d="M3 21h18"></path><path
-                    d="M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7H3l2-4h14l2 4"
-                  ></path><path d="M5 21V10.85"></path><path d="M19 21V10.85"></path><path
-                    d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"></path></svg
-                >
-              </div>
-              <h3 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">بوابة التحقق الذكي
-                <span class="block text-sm font-normal text-gray-400 mt-1">Smart Validation Gate</span>
-              </h3>
+              <div class="w-14 h-14 bg-red-50 text-brand-red rounded-2xl flex items-center justify-center mb-6 text-3xl">📋</div>
+              <h3 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">١٩ نموذجاً تشغيلياً</h3>
               <p class="text-gray-400 leading-relaxed">
-                كل عملية تمر عبر نموذج إجباري يتحقق من الكميات والصلاحيات قبل الإرسال.
+                كل عملية في المستودع موثقة بنموذج إلزامي —
+                من استلام البضاعة حتى الصرف والجرد.
+                هذه النماذج هي خلاصة الفهم العملي للمهنة.
               </p>
+              <a href="/dashboard/forms" class="mt-4 inline-block text-brand-yellow text-sm font-bold hover:underline">استعرض النماذج ←</a>
             </div>
             <div
               class="p-6 sm:p-8 rounded-3xl border border-white/10 hover:shadow-xl transition-shadow"
             >
-              <div
-                class="w-14 h-14 bg-yellow-50 text-brand-yellow rounded-2xl flex items-center justify-center mb-6"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="28"
-                  height="28"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                ><path d="m7.5 4.27 9 5.15"></path><path
-                    d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"
-                  ></path><path d="m3.27 6.96 8.73 5.05 8.73-5.05"></path><path d="M12 22.08V12"
-                  ></path></svg
-                >
-              </div>
-              <h3 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">تصحيح قبل الـ ERP
-                <span class="block text-sm font-normal text-gray-400 mt-1">Pre-ERP Error Correction</span>
-              </h3>
+              <div class="w-14 h-14 bg-yellow-50 text-brand-yellow rounded-2xl flex items-center justify-center mb-6 text-3xl">🗺️</div>
+              <h3 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">خريطة أسواق بنغازي</h3>
               <p class="text-gray-400 leading-relaxed">
-                نضمن دقة البيانات قبل وصولها لأي نظام ERP — نقلل من أخطاء الإدخال اليدوي.
+                تحليل تقاطع فئات المستهلكين (A/B/C) مع أنواع
+                الأسواق في ٢٠ حياً — أداة لفهم سلوك التوزيع
+                وقرارات سلاسل الإمداد.
               </p>
+              <a href="/dashboard/retail-hub" class="mt-4 inline-block text-brand-yellow text-sm font-bold hover:underline">استعرض الخريطة ←</a>
             </div>
             <div
               class="p-6 sm:p-8 rounded-3xl border border-white/10 hover:shadow-xl transition-shadow"
             >
-              <div
-                class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mb-6"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="28"
-                  height="28"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                ><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                  ></path><polyline points="14 2 14 8 20 8"></polyline><line
-                    x1="12"
-                    y1="18"
-                    x2="12"
-                    y2="12"></line><polyline points="9 15 12 12 15 15"></polyline></svg
-                >
-              </div>
-              <h3 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">الدورة المستندية والحركة المخزنية
-                <span class="block text-sm font-normal text-gray-400 mt-1">Document Cycle & Inventory Flow</span>
-              </h3>
+              <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mb-6 text-3xl">⚙️</div>
+              <h3 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">مقترح تنفيذ Odoo</h3>
               <p class="text-gray-400 leading-relaxed">
-                تفسير كامل وشامل للدورة المستندية والحركة المخزنية — من استلام البضاعة حتى الصرف والإقفال — جاهز للتنفيذ على أي نظام ERP. يشمل: أوامر الشراء (PO)، إشعار الاستلام (GRN)، فحص الجودة (QC)، أذونات الصرف والتحويل، سندات التسوية، الجرد الدوري، ومعيار الصرف (FEFO). كل مرحلة موثقة بمستند إلزامي: لا حركة بدون توثيق.
+                الدورة المستندية كاملة على Odoo Enterprise —
+                المالية، الموارد البشرية، المشتريات،
+                المستودعات، وسلاسل الإمداد.
               </p>
+              <a href="/dashboard/erp-workflows" class="mt-4 inline-block text-brand-yellow text-sm font-bold hover:underline">استعرض الرؤية ←</a>
             </div>
           </div>
         </div>
       </section>
     </main>
 
+    <!-- Tech Stack Section -->
+    <section class="py-12 sm:py-16 bg-[#0f0f1f]">
+      <div class="container mx-auto px-4 sm:px-6">
+        <h2 class="text-2xl sm:text-3xl font-bold text-white text-center mb-2">
+          التقنيات والخدمات المستخدمة في هذا المقترح
+        </h2>
+        <div class="w-16 h-1 bg-brand-red mx-auto mb-10 rounded-full"></div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">⚡</div><div class="font-bold text-white text-sm">Astro + React</div><div class="text-xs text-gray-400 mt-1">واجهة حديثة وسريعة</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">☁️</div><div class="font-bold text-white text-sm">Firebase</div><div class="text-xs text-gray-400 mt-1">قاعدة بيانات سحابية</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">📋</div><div class="font-bold text-white text-sm">١٩ نموذجاً</div><div class="text-xs text-gray-400 mt-1">نماذج تشغيلية بمنطق تحقق</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">🔷</div><div class="font-bold text-white text-sm">Odoo Enterprise</div><div class="text-xs text-gray-400 mt-1">توثيق الدورات المستندية</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">📷</div><div class="font-bold text-white text-sm">Barcode Scanner</div><div class="text-xs text-gray-400 mt-1">تكامل قارئ الباركود</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">🌐</div><div class="font-bold text-white text-sm">GitHub Pages</div><div class="text-xs text-gray-400 mt-1">استضافة مجانية وموثوقة</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">🔤</div><div class="font-bold text-white text-sm">Cairo Font + RTL</div><div class="text-xs text-gray-400 mt-1">واجهة عربية كاملة</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Next Steps Section -->
+    <section class="py-12 sm:py-16 bg-[#111827]">
+      <div class="container mx-auto px-4 sm:px-6 max-w-3xl">
+        <h2 class="text-2xl sm:text-3xl font-bold text-white text-center mb-2">الخطوات التالية</h2>
+        <div class="w-16 h-1 bg-brand-red mx-auto mb-10 rounded-full"></div>
+        <div class="space-y-4 mb-8">
+          <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+            <h3 class="font-bold text-brand-yellow mb-2">١. الموافقة المبدئية</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">اعتماد المقترح للانتقال إلى مرحلة التنسيق مع إدارة تقنية المعلومات</p>
+          </div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+            <h3 class="font-bold text-brand-yellow mb-2">٢. تعيين مسؤول تقني</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">تحديد مسؤول من IT لدراسة متطلبات التكامل مع الأنظمة القائمة</p>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <button onclick="window.print()" class="px-8 py-4 bg-brand-red text-white rounded-xl font-bold hover:bg-brand-red-dark transition-all shadow-md active:scale-95">
+            🖨️ طباعة التقرير الكامل
+          </button>
+          <a href="mailto:?subject=طلب اجتماع — مقترح سلاسل الإمداد&body=السلام عليكم،%0Aأود مناقشة المقترح المرفق:%0Ahttps://albarshi996.github.io/warehouse-system/" class="px-8 py-4 bg-transparent border-2 border-white text-white rounded-xl font-bold hover:bg-white hover:text-brand-navy transition-all text-center">
+            ✉️ طلب اجتماع بالبريد
+          </a>
+        </div>
+      </div>
+    </section>
+
     <footer class="py-8 sm:py-12 bg-[#0a0a14] border-t border-white/10">
       <div class="container mx-auto px-4 sm:px-6 text-center">
         <p class="text-sm sm:text-base text-gray-400 font-bold">
-          Brandzo Hub © 2026 — اعداد محمد البرشي — جميع الحقوق محفوظة
+          إعداد: محمد البرشي — متخصص سلاسل الإمداد<br/>
+          بنغازي ٢٠٢٦ · هذا المقترح إعداد بحثي وتشغيلي — غير تجاري
         </p>
       </div>
     </footer>

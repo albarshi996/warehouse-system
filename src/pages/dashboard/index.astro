@@ -7,28 +7,31 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     {/* Header */}
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-white mb-2">
-        لوحة تحكم أودو
-        <span class="block text-lg font-normal text-gray-400 mt-1">Odoo Enterprise Dashboard</span>
+        محمد البرشي — متخصص سلاسل الإمداد
+        <span class="block text-lg font-normal text-gray-400 mt-1">Supply Chain Specialist — Benghazi 2026</span>
       </h1>
+      <p class="text-gray-400 text-sm mb-4 leading-relaxed">
+        هذا الموقع يعرض رؤيتي التشغيلية لتحديث إدارة المستودعات والتوزيع في بنغازي
+      </p>
       <div class="w-20 h-1 bg-brand-red rounded-full mb-6" />
       
       <div class="bg-gradient-to-r from-blue-900/20 to-green-900/20 rounded-xl p-6 border border-blue-500/30">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
           <div>
-            <div class="text-2xl font-bold text-blue-400">4</div>
-            <div class="text-sm text-gray-400">مراحل التثبيت</div>
+            <div class="text-2xl font-bold text-blue-400">١٩ نموذجاً</div>
+            <div class="text-sm text-gray-400">النماذج التشغيلية الموثقة</div>
           </div>
           <div>
-            <div class="text-2xl font-bold text-green-400">2-4</div>
-            <div class="text-sm text-gray-400">أسابيع للإكمال</div>
+            <div class="text-2xl font-bold text-green-400">٢٠ حياً</div>
+            <div class="text-sm text-gray-400">مرصودة في خريطة التجزئة</div>
           </div>
           <div>
-            <div class="text-2xl font-bold text-yellow-400">$106-175K</div>
-            <div class="text-sm text-gray-400">التكلفة الإجمالية</div>
+            <div class="text-2xl font-bold text-yellow-400">٥ دورات</div>
+            <div class="text-sm text-gray-400">مالية · HR · مشتريات · مستودعات · سلاسل الإمداد</div>
           </div>
           <div>
-            <div class="text-2xl font-bold text-purple-400">98.5%</div>
-            <div class="text-sm text-gray-400">معدل النجاح</div>
+            <div class="text-2xl font-bold text-purple-400">٤ مراحل</div>
+            <div class="text-sm text-gray-400">خطة تنفيذ Odoo</div>
           </div>
         </div>
       </div>
@@ -36,35 +39,32 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
     {/* Quick Actions */}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <a href="/dashboard/workflows" class="block group">
-        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
-          <div class="text-3xl mb-3">🏢</div>
-          <h3 class="font-bold text-brand-yellow mb-2">الهيكل والمسارات</h3>
-          <p class="text-sm text-gray-300">عرض الهيكل التنظيمي والدورة المستندية</p>
-        </div>
-      </a>
-      
-      <a href="/dashboard/odoo-installation" class="block group">
-        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
-          <div class="text-3xl mb-3">⚙️</div>
-          <h3 class="font-bold text-green-400 mb-2">تثبيت أودو</h3>
-          <p class="text-sm text-gray-300">دليل التثبيت الكامل خطوة بخطوة</p>
-        </div>
-      </a>
-      
       <a href="/dashboard/forms" class="block group">
         <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
           <div class="text-3xl mb-3">📋</div>
-          <h3 class="font-bold text-blue-400 mb-2">اختر وظيفتك</h3>
-          <p class="text-sm text-gray-300">استكشف الوظائف والمسارات المهنية</p>
+          <h3 class="font-bold text-blue-400 mb-2">النماذج التشغيلية</h3>
+          <p class="text-sm text-gray-300">استعرض النماذج الـ١٩ — قلب التوثيق العملي</p>
         </div>
       </a>
-      
-      <a href="/dashboard/tasks" class="block group">
+      <a href="/dashboard/retail-hub" class="block group">
         <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
-          <div class="text-3xl mb-3">✓</div>
-          <h3 class="font-bold text-purple-400 mb-2">المهام</h3>
-          <p class="text-sm text-gray-300">إدارة وتتبع المهام اليومية</p>
+          <div class="text-3xl mb-3">🗺️</div>
+          <h3 class="font-bold text-brand-yellow mb-2">خريطة الأسواق</h3>
+          <p class="text-sm text-gray-300">تحليل فئات المستهلكين والأسواق في بنغازي</p>
+        </div>
+      </a>
+      <a href="/dashboard/workflows" class="block group">
+        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
+          <div class="text-3xl mb-3">🏢</div>
+          <h3 class="font-bold text-brand-yellow mb-2">الدورة المستندية</h3>
+          <p class="text-sm text-gray-300">الهيكل التنظيمي ومسارات المستندات</p>
+        </div>
+      </a>
+      <a href="/dashboard/erp-workflows" class="block group">
+        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
+          <div class="text-3xl mb-3">⚙️</div>
+          <h3 class="font-bold text-green-400 mb-2">رؤية Odoo</h3>
+          <p class="text-sm text-gray-300">الدورات المستندية على Odoo Enterprise</p>
         </div>
       </a>
     </div>
@@ -182,9 +182,52 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       </div>
     </section>
 
+    {/* Tech Stack Section */}
+    <section class="mt-10 mb-8">
+      <div class="rounded-2xl bg-white/5 border border-white/10 p-6 sm:p-10">
+        <h2 class="text-xl sm:text-2xl font-bold text-white text-center mb-2">التقنيات والخدمات المستخدمة في هذا المقترح</h2>
+        <div class="w-16 h-1 bg-brand-red mx-auto mb-8 rounded-full" />
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">⚡</div><div class="font-bold text-white text-sm">Astro + React</div><div class="text-xs text-gray-400 mt-1">واجهة حديثة وسريعة</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">☁️</div><div class="font-bold text-white text-sm">Firebase</div><div class="text-xs text-gray-400 mt-1">قاعدة بيانات سحابية</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">📋</div><div class="font-bold text-white text-sm">١٩ نموذجاً</div><div class="text-xs text-gray-400 mt-1">نماذج تشغيلية بمنطق تحقق</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">🔷</div><div class="font-bold text-white text-sm">Odoo Enterprise</div><div class="text-xs text-gray-400 mt-1">توثيق الدورات المستندية</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">📷</div><div class="font-bold text-white text-sm">Barcode Scanner</div><div class="text-xs text-gray-400 mt-1">تكامل قارئ الباركود</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">🌐</div><div class="font-bold text-white text-sm">GitHub Pages</div><div class="text-xs text-gray-400 mt-1">استضافة مجانية وموثوقة</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">🔤</div><div class="font-bold text-white text-sm">Cairo Font + RTL</div><div class="text-xs text-gray-400 mt-1">واجهة عربية كاملة</div></div>
+        </div>
+      </div>
+    </section>
+
+    {/* Next Steps Section */}
+    <section class="mt-8 mb-8">
+      <div class="rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-brand-red/20 p-6 sm:p-10">
+        <h2 class="text-xl sm:text-2xl font-bold text-white text-center mb-6">الخطوات التالية</h2>
+        <div class="w-16 h-1 bg-brand-red mx-auto mb-8 rounded-full" />
+        <div class="space-y-4 mb-8 max-w-2xl mx-auto">
+          <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+            <h3 class="font-bold text-brand-yellow mb-2">١. الموافقة المبدئية</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">اعتماد المقترح للانتقال إلى مرحلة التنسيق مع إدارة تقنية المعلومات</p>
+          </div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+            <h3 class="font-bold text-brand-yellow mb-2">٢. تعيين مسؤول تقني</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">تحديد مسؤول من IT لدراسة متطلبات التكامل مع الأنظمة القائمة</p>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <button onclick="window.print()" class="px-8 py-4 bg-brand-red text-white rounded-xl font-bold hover:bg-brand-red-dark transition-all shadow-md active:scale-95">
+            🖨️ طباعة التقرير الكامل
+          </button>
+          <a href="mailto:?subject=طلب اجتماع — مقترح سلاسل الإمداد&body=السلام عليكم،%0Aأود مناقشة المقترح المرفق:%0Ahttps://albarshi996.github.io/warehouse-system/" class="px-8 py-4 bg-transparent border-2 border-white text-white rounded-xl font-bold hover:bg-white hover:text-brand-navy transition-all text-center">
+            ✉️ طلب اجتماع بالبريد
+          </a>
+        </div>
+      </div>
+    </section>
+
     {/* Footer */}
     <div class="text-center text-sm text-gray-500 mt-8">
-      Brandzo Hub © 2026 — منصة تحويل أنظمة إدارة المخازن إلى أودو — جميع الحقوق محفوظة
+      إعداد: محمد البرشي — متخصص سلاسل الإمداد · بنغازي ٢٠٢٦ · غير تجاري
     </div>
   </div>
 </DashboardLayout>
