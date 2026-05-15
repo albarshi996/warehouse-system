@@ -39,6 +39,20 @@ import Icon from '../../components/ui/Icon.astro';
         <Icon name="shoppingCart" />
         <span>التجارية والمشتريات</span>
       </button>
+      <button
+        class="tab-btn px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-gray-800 text-gray-400 hover:bg-gray-700"
+        data-tab="warehouse"
+      >
+        <span>🏭</span>
+        <span>المستودعات</span>
+      </button>
+      <button
+        class="tab-btn px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-gray-800 text-gray-400 hover:bg-gray-700"
+        data-tab="supplychain"
+      >
+        <span>🔗</span>
+        <span>سلاسل الإمداد</span>
+      </button>
     </div>
 
     <!-- Tab Contents -->
@@ -488,6 +502,158 @@ import Icon from '../../components/ui/Icon.astro';
                 </div>
               </section>
             </div>
+         </div>
+       </div>
+
+       <!-- TAB 4: المستودعات -->
+       <div id="warehouse-content" class="tab-pane hidden">
+         <div class="animate-fadeIn">
+           <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+             <span class="text-2xl">🏭</span>
+             <span>المستودعات (Warehouse Operations)</span>
+           </h2>
+
+           <!-- Workflow Table -->
+           <section class="mb-8">
+             <h3 class="text-lg font-bold text-brand-yellow mb-4">دورة العمل المستندية — المستودعات</h3>
+             <div class="overflow-x-auto rounded-xl border border-gray-700">
+               <table class="w-full text-sm text-right text-gray-300">
+                 <thead class="bg-gray-800 text-white">
+                   <tr>
+                     <th class="px-4 py-3">رقم</th>
+                     <th class="px-4 py-3">اسم المستند</th>
+                     <th class="px-4 py-3">المسؤول</th>
+                     <th class="px-4 py-3">الوحدة</th>
+                     <th class="px-4 py-3">الحالة</th>
+                   </tr>
+                 </thead>
+                 <tbody class="divide-y divide-gray-700">
+                   <tr><td class="px-4 py-3">1</td><td class="px-4 py-3 font-bold text-white">أمر الشراء (PO)</td><td class="px-4 py-3">مدير المشتريات</td><td class="px-4 py-3">Purchase</td><td class="px-4 py-3">Draft → Confirmed</td></tr>
+                   <tr><td class="px-4 py-3">2</td><td class="px-4 py-3 font-bold text-white">إشعار استلام البضاعة (GRN)</td><td class="px-4 py-3">أمين المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Ready → Done</td></tr>
+                   <tr><td class="px-4 py-3">3</td><td class="px-4 py-3 font-bold text-white">فحص الجودة (QC)</td><td class="px-4 py-3">مفتش الجودة</td><td class="px-4 py-3">Quality</td><td class="px-4 py-3">Draft → Approved</td></tr>
+                   <tr><td class="px-4 py-3">4</td><td class="px-4 py-3 font-bold text-white">قائمة التخزين (Putaway)</td><td class="px-4 py-3">أمين المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Ready → Done</td></tr>
+                   <tr><td class="px-4 py-3">5</td><td class="px-4 py-3 font-bold text-white">بطاقة مراقبة المخزون (Bin Card)</td><td class="px-4 py-3">أمين المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">مستمر</td></tr>
+                   <tr><td class="px-4 py-3">6</td><td class="px-4 py-3 font-bold text-white">قائمة السحب (Picking)</td><td class="px-4 py-3">موظف المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Ready → Done</td></tr>
+                   <tr><td class="px-4 py-3">7</td><td class="px-4 py-3 font-bold text-white">قائمة التعبئة (Packing)</td><td class="px-4 py-3">موظف المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Ready → Done</td></tr>
+                   <tr><td class="px-4 py-3">8</td><td class="px-4 py-3 font-bold text-white">إذن التسليم (Delivery Note)</td><td class="px-4 py-3">سائق / موزع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Ready → Done</td></tr>
+                   <tr><td class="px-4 py-3">9</td><td class="px-4 py-3 font-bold text-white">إذن نقل مخزني</td><td class="px-4 py-3">أمين المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Draft → Done</td></tr>
+                   <tr><td class="px-4 py-3">10</td><td class="px-4 py-3 font-bold text-white">سند تسوية مخزون</td><td class="px-4 py-3">مدير المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Draft → Posted</td></tr>
+                   <tr><td class="px-4 py-3">11</td><td class="px-4 py-3 font-bold text-white">محضر الجرد الدوري</td><td class="px-4 py-3">لجنة الجرد</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Draft → Validated</td></tr>
+                   <tr><td class="px-4 py-3">12</td><td class="px-4 py-3 font-bold text-white">تقرير البضاعة التالفة</td><td class="px-4 py-3">مدير المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Draft → Approved</td></tr>
+                 </tbody>
+               </table>
+             </div>
+           </section>
+
+           <!-- Operational Principles -->
+           <section class="mb-8">
+             <h3 class="text-lg font-bold text-brand-yellow mb-4">المبادئ التشغيلية</h3>
+             <div class="bg-white/5 border border-green-500/30 rounded-xl p-6">
+               <ul class="space-y-3 text-gray-300">
+                 <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">✓</span><span>معيار الصرف FEFO (First Expired First Out) — إلزامي في جميع عمليات الصرف</span></li>
+                 <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">✓</span><span>لا حركة بدون مستند إلزامي موقّع — كل عملية لها نموذج خاص بها</span></li>
+                 <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">✓</span><span>كل عملية تمر بطبقة تحقق قبل الإرسال للـ ERP — لا بيانات خاطئة تصل للنظام</span></li>
+                 <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">✓</span><span>الباركود إلزامي في الاستلام والصرف — لا إدخال يدوي في المراحل الحرجة</span></li>
+               </ul>
+             </div>
+           </section>
+         </div>
+       </div>
+
+       <!-- TAB 5: سلاسل الإمداد -->
+       <div id="supplychain-content" class="tab-pane hidden">
+         <div class="animate-fadeIn">
+           <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+             <span class="text-2xl">🔗</span>
+             <span>سلاسل الإمداد (Supply Chain)</span>
+           </h2>
+
+           <!-- Workflow Table -->
+           <section class="mb-8">
+             <h3 class="text-lg font-bold text-brand-yellow mb-4">دورة العمل — سلاسل الإمداد</h3>
+             <div class="overflow-x-auto rounded-xl border border-gray-700">
+               <table class="w-full text-sm text-right text-gray-300">
+                 <thead class="bg-gray-800 text-white">
+                   <tr>
+                     <th class="px-4 py-3">رقم</th>
+                     <th class="px-4 py-3">المرحلة</th>
+                     <th class="px-4 py-3">المستند</th>
+                     <th class="px-4 py-3">المسؤول</th>
+                     <th class="px-4 py-3">الربط مع Odoo</th>
+                   </tr>
+                 </thead>
+                 <tbody class="divide-y divide-gray-700">
+                   <tr><td class="px-4 py-3">1</td><td class="px-4 py-3 font-bold text-white">تخطيط الطلب</td><td class="px-4 py-3">تقرير التنبؤ بالطلب</td><td class="px-4 py-3">مدير سلاسل الإمداد</td><td class="px-4 py-3 text-blue-400">Odoo Forecast</td></tr>
+                   <tr><td class="px-4 py-3">2</td><td class="px-4 py-3 font-bold text-white">طلب الشراء (PR)</td><td class="px-4 py-3">طلب الشراء الداخلي</td><td class="px-4 py-3">مدير القسم</td><td class="px-4 py-3 text-blue-400">Purchase Request</td></tr>
+                   <tr><td class="px-4 py-3">3</td><td class="px-4 py-3 font-bold text-white">تأهيل الموردين</td><td class="px-4 py-3">ملف تقييم المورد</td><td class="px-4 py-3">مدير المشتريات</td><td class="px-4 py-3 text-blue-400">Vendor Pricelist</td></tr>
+                   <tr><td class="px-4 py-3">4</td><td class="px-4 py-3 font-bold text-white">إصدار أمر الشراء (PO)</td><td class="px-4 py-3">أمر الشراء الرسمي</td><td class="px-4 py-3">مدير المشتريات</td><td class="px-4 py-3 text-blue-400">Purchase Order</td></tr>
+                   <tr><td class="px-4 py-3">5</td><td class="px-4 py-3 font-bold text-white">متابعة الشحن</td><td class="px-4 py-3">وثيقة الشحن (BL/AWB)</td><td class="px-4 py-3">مسؤول اللوجستيك</td><td class="px-4 py-3 text-blue-400">Odoo Inventory</td></tr>
+                   <tr><td class="px-4 py-3">6</td><td class="px-4 py-3 font-bold text-white">استلام وفحص</td><td class="px-4 py-3">GRN + QC Report</td><td class="px-4 py-3">أمين المستودع</td><td class="px-4 py-3 text-blue-400">Receipts</td></tr>
+                   <tr><td class="px-4 py-3">7</td><td class="px-4 py-3 font-bold text-white">التخزين والتوزيع</td><td class="px-4 py-3">Putaway + Bin Card</td><td class="px-4 py-3">أمين المستودع</td><td class="px-4 py-3 text-blue-400">Storage Locations</td></tr>
+                   <tr><td class="px-4 py-3">8</td><td class="px-4 py-3 font-bold text-white">تنفيذ الطلبات</td><td class="px-4 py-3">Picking + Packing</td><td class="px-4 py-3">موظف المستودع</td><td class="px-4 py-3 text-blue-400">Delivery Orders</td></tr>
+                   <tr><td class="px-4 py-3">9</td><td class="px-4 py-3 font-bold text-white">التسليم النهائي</td><td class="px-4 py-3">Delivery Note + POD</td><td class="px-4 py-3">سائق / موزع</td><td class="px-4 py-3 text-blue-400">Transfers</td></tr>
+                   <tr><td class="px-4 py-3">10</td><td class="px-4 py-3 font-bold text-white">المرتجعات</td><td class="px-4 py-3">Return Note + Credit</td><td class="px-4 py-3">أمين المستودع</td><td class="px-4 py-3 text-blue-400">Return Transfers</td></tr>
+                   <tr><td class="px-4 py-3">11</td><td class="px-4 py-3 font-bold text-white">قياس الأداء (KPIs)</td><td class="px-4 py-3">تقرير الأداء الشهري</td><td class="px-4 py-3">مدير سلاسل الإمداد</td><td class="px-4 py-3 text-blue-400">Odoo Reporting</td></tr>
+                 </tbody>
+               </table>
+             </div>
+           </section>
+
+           <!-- KPIs Section -->
+           <section class="mb-8">
+             <h3 class="text-lg font-bold text-brand-yellow mb-4">مؤشرات الأداء الرئيسية (KPIs)</h3>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div class="bg-white/5 border border-white/10 rounded-xl p-5">
+                 <div class="flex items-center gap-3 mb-2">
+                   <span class="text-xl">📦</span>
+                   <h4 class="font-bold text-white">دقة المخزون (Inventory Accuracy)</h4>
+                 </div>
+                 <div class="text-brand-yellow font-bold">الهدف: ≥ 98%</div>
+               </div>
+               <div class="bg-white/5 border border-white/10 rounded-xl p-5">
+                 <div class="flex items-center gap-3 mb-2">
+                   <span class="text-xl">🚚</span>
+                   <h4 class="font-bold text-white">معدل التسليم في الوقت (OTIF)</h4>
+                 </div>
+                 <div class="text-brand-yellow font-bold">الهدف: ≥ 95%</div>
+               </div>
+               <div class="bg-white/5 border border-white/10 rounded-xl p-5">
+                 <div class="flex items-center gap-3 mb-2">
+                   <span class="text-xl">⏱️</span>
+                   <h4 class="font-bold text-white">دورة أمر الشراء (PO Cycle Time)</h4>
+                 </div>
+                 <div class="text-brand-yellow font-bold">الهدف: ≤ 3 أيام</div>
+               </div>
+               <div class="bg-white/5 border border-white/10 rounded-xl p-5">
+                 <div class="flex items-center gap-3 mb-2">
+                   <span class="text-xl">📋</span>
+                   <h4 class="font-bold text-white">معدل اكتمال الجرد (Cycle Count Rate)</h4>
+                 </div>
+                 <div class="text-brand-yellow font-bold">الهدف: 100% شهرياً</div>
+               </div>
+               <div class="bg-white/5 border border-white/10 rounded-xl p-5 md:col-span-2">
+                 <div class="flex items-center gap-3 mb-2">
+                   <span class="text-xl">🔄</span>
+                   <h4 class="font-bold text-white">معدل دوران المخزون (Inventory Turnover)</h4>
+                 </div>
+                 <div class="text-brand-yellow font-bold">يُحدد حسب القطاع</div>
+               </div>
+             </div>
+           </section>
+
+           <!-- Closing Statement -->
+           <div class="bg-gradient-to-r from-brand-red/20 to-brand-red/5 border border-brand-red/30 rounded-xl p-6">
+             <p class="text-gray-300 leading-relaxed text-center">
+               هذه الدورات موثقة بالكامل في النماذج التشغيلية الـ١٩ المرفقة في هذا المقترح —
+               كل مرحلة لها نموذج إلزامي جاهز.
+             </p>
+             <div class="text-center mt-4">
+               <a href="/dashboard/forms" class="inline-block px-6 py-3 bg-brand-red text-white rounded-xl font-bold hover:bg-brand-red-dark transition-all">
+                 استعرض النماذج الـ١٩ ←
+               </a>
+             </div>
+           </div>
+
          </div>
        </div>
     </div>
