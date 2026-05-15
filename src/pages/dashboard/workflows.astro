@@ -81,23 +81,61 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         </h2>
         <div class="w-16 h-1 bg-brand-yellow mx-auto mb-8 rounded-full"></div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { num: '1', title: 'طلب الشراء', desc: 'PR - Purchase Requisition', color: 'border-brand-red' },
-            { num: '2', title: 'أمر الشراء', desc: 'PO - Purchase Order', color: 'border-brand-yellow' },
-            { num: '3', title: 'إشعار الاستلام', desc: 'ASN - Advanced Shipping Notice', color: 'border-blue-400' },
-            { num: '4', title: 'إذن التسليم', desc: 'GRN - Goods Receipt Note', color: 'border-green-400' },
-            { num: '5', title: 'إذن التخزين', desc: 'Putaway Authorization', color: 'border-purple-400' },
-            { num: '6', title: 'إذن الصرف', desc: 'Picking Order', color: 'border-orange-400' },
-            { num: '7', title: 'إذن الشحن', desc: 'Dispatch Order', color: 'border-pink-400' },
-            { num: '8', title: 'إذن المرتجعات', desc: 'Return Authorization', color: 'border-indigo-400' }
-          ].map((stage, i) => (
-            <div key={i} class={`bg-white/5 backdrop-blur border ${stage.color} rounded-xl p-4 hover:bg-white/10 transition-all`}>
-              <div class="text-2xl font-bold text-white mb-2">{stage.num}</div>
-              <h3 class="font-bold text-brand-yellow mb-1">{stage.title}</h3>
-              <p class="text-xs text-gray-400">{stage.desc}</p>
-            </div>
-          ))}
+        <div class="overflow-x-auto pb-4" dir="ltr">
+          <svg viewBox="0 0 900 120" width="100%" class="min-w-[800px] mx-auto">
+            <defs>
+              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#4b5563" />
+              </marker>
+            </defs>
+
+            {/* 1. PR */}
+            <rect x="5" y="20" width="100" height="80" rx="12" fill="rgba(225, 29, 72, 0.05)" stroke="#e11d48" stroke-width="2" />
+            <text x="55" y="55" text-anchor="middle" fill="white" font-weight="bold" font-size="12">طلب الشراء</text>
+            <text x="55" y="75" text-anchor="middle" fill="#94a3b8" font-size="10">PR</text>
+            <line x1="105" y1="60" x2="115" y2="60" stroke="#4b5563" stroke-width="2" marker-end="url(#arrowhead)" />
+
+            {/* 2. PO */}
+            <rect x="117" y="20" width="100" height="80" rx="12" fill="rgba(225, 29, 72, 0.05)" stroke="#e11d48" stroke-width="2" />
+            <text x="167" y="55" text-anchor="middle" fill="white" font-weight="bold" font-size="12">أمر الشراء</text>
+            <text x="167" y="75" text-anchor="middle" fill="#94a3b8" font-size="10">PO</text>
+            <line x1="217" y1="60" x2="227" y2="60" stroke="#4b5563" stroke-width="2" marker-end="url(#arrowhead)" />
+
+            {/* 3. ASN */}
+            <rect x="229" y="20" width="100" height="80" rx="12" fill="rgba(225, 29, 72, 0.05)" stroke="#e11d48" stroke-width="2" />
+            <text x="279" y="55" text-anchor="middle" fill="white" font-weight="bold" font-size="12">إشعار الاستلام</text>
+            <text x="279" y="75" text-anchor="middle" fill="#94a3b8" font-size="10">ASN</text>
+            <line x1="329" y1="60" x2="339" y2="60" stroke="#4b5563" stroke-width="2" marker-end="url(#arrowhead)" />
+
+            {/* 4. GRN */}
+            <rect x="341" y="20" width="100" height="80" rx="12" fill="rgba(251, 191, 36, 0.05)" stroke="#fbbf24" stroke-width="2" />
+            <text x="391" y="55" text-anchor="middle" fill="white" font-weight="bold" font-size="12">إذن التسليم</text>
+            <text x="391" y="75" text-anchor="middle" fill="#94a3b8" font-size="10">GRN</text>
+            <line x1="441" y1="60" x2="451" y2="60" stroke="#4b5563" stroke-width="2" marker-end="url(#arrowhead)" />
+
+            {/* 5. Putaway */}
+            <rect x="453" y="20" width="100" height="80" rx="12" fill="rgba(251, 191, 36, 0.05)" stroke="#fbbf24" stroke-width="2" />
+            <text x="503" y="55" text-anchor="middle" fill="white" font-weight="bold" font-size="12">إذن التخزين</text>
+            <text x="503" y="75" text-anchor="middle" fill="#94a3b8" font-size="10">Putaway</text>
+            <line x1="553" y1="60" x2="563" y2="60" stroke="#4b5563" stroke-width="2" marker-end="url(#arrowhead)" />
+
+            {/* 6. Picking */}
+            <rect x="565" y="20" width="100" height="80" rx="12" fill="rgba(251, 191, 36, 0.05)" stroke="#fbbf24" stroke-width="2" />
+            <text x="615" y="55" text-anchor="middle" fill="white" font-weight="bold" font-size="12">إذن الصرف</text>
+            <text x="615" y="75" text-anchor="middle" fill="#94a3b8" font-size="10">Picking</text>
+            <line x1="665" y1="60" x2="675" y2="60" stroke="#4b5563" stroke-width="2" marker-end="url(#arrowhead)" />
+
+            {/* 7. Dispatch */}
+            <rect x="677" y="20" width="100" height="80" rx="12" fill="rgba(34, 197, 94, 0.05)" stroke="#22c55e" stroke-width="2" />
+            <text x="727" y="55" text-anchor="middle" fill="white" font-weight="bold" font-size="12">إذن الشحن</text>
+            <text x="727" y="75" text-anchor="middle" fill="#94a3b8" font-size="10">Dispatch</text>
+            <line x1="777" y1="60" x2="787" y2="60" stroke="#4b5563" stroke-width="2" marker-end="url(#arrowhead)" />
+
+            {/* 8. Return */}
+            <rect x="789" y="20" width="100" height="80" rx="12" fill="rgba(34, 197, 94, 0.05)" stroke="#22c55e" stroke-width="2" />
+            <text x="839" y="55" text-anchor="middle" fill="white" font-weight="bold" font-size="12">إذن المرتجعات</text>
+            <text x="839" y="75" text-anchor="middle" fill="#94a3b8" font-size="10">Return</text>
+          </svg>
         </div>
         
         <div class="mt-8 text-center">
