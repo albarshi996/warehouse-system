@@ -128,7 +128,13 @@ const currentPath = Astro.url.pathname;
         >
           B
         </div>
-        <span class="font-bold tracking-tight">Brandzo Hub</span>
+        <div class="flex flex-col">
+          <span class="font-bold tracking-tight leading-none">Brandzo Hub</span>
+          <div id="db-status-mobile" class="flex items-center gap-1 mt-1 opacity-80">
+            <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+            <span class="text-[9px] font-bold">جاري الاتصال...</span>
+          </div>
+        </div>
       </div>
       <button
         id="brandzo-menu-toggle"
@@ -165,7 +171,13 @@ const currentPath = Astro.url.pathname;
           >
             B
           </div>
-          <h1 class="text-xl font-bold tracking-tight">Brandzo Hub</h1>
+          <div class="flex flex-col">
+            <h1 class="text-xl font-bold tracking-tight leading-none">Brandzo Hub</h1>
+            <div id="db-status-desktop" class="flex items-center gap-1.5 mt-1 opacity-70">
+              <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+              <span class="text-[10px] font-bold">جاري الاتصال بقاعدة البيانات...</span>
+            </div>
+          </div>
         </div>
         <!-- زر الإغلاق: يظهر فقط في الموبايل -->
         <button
@@ -449,6 +461,32 @@ const currentPath = Astro.url.pathname;
 
         window.addEventListener('orientationchange', function () {
           setTimeout(syncState, 400);
+        });
+
+        /* ─── Database Status Listener ─── */
+        window.addEventListener('brandzo:db-status', function (e) {
+          var online = e.detail.online;
+          var mobileStatus = document.getElementById('db-status-mobile');
+          var desktopStatus = document.getElementById('db-status-desktop');
+
+          var update = function(el) {
+            if (!el) return;
+            var dot = el.querySelector('span:first-child');
+            var text = el.querySelector('span:last-child');
+
+            if (online) {
+              dot.className = 'w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse';
+              text.textContent = 'Firebase متصل';
+              text.className = 'text-[9px] md:text-[10px] font-bold text-green-400';
+            } else {
+              dot.className = 'w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.6)]';
+              text.textContent = 'وضع محلي';
+              text.className = 'text-[9px] md:text-[10px] font-bold text-yellow-400';
+            }
+          };
+
+          update(mobileStatus);
+          update(desktopStatus);
         });
 
       })();
