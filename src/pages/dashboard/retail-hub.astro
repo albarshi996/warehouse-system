@@ -338,15 +338,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
             <button class="btn-hdr" id="btn-hex-toggle" title="تبديل عرض الخرائط السداسية">
               ⬡ خرائط سداسية
             </button>
-            <button class="btn-hdr" id="btn-export-json" title="تصدير البيانات">
-              📤 تصدير JSON
-            </button>
-            <button class="btn-hdr" id="btn-import-json" title="استيراد البيانات">
-              📥 استيراد JSON
-            </button>
             <!-- Reset data -->
-            <button class="btn-hdr danger" id="btn-reset-data" title="إعادة تهيئة البيانات">
-              ↺ إعادة التهيئة
+            <button class="btn-hdr danger" id="btn-reset-data" title="إعادة تعيين البيانات للافتراضي">
+              ↺ إعادة ضبط
             </button>
           </div>
         </div>
@@ -381,9 +375,6 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
           <button class="fp" data-filter="C">فئة C</button>
           <button class="fp" data-filter="none">غير مطابق</button>
           <button class="fp" data-filter="partial">جزئي</button>
-          <button class="fp" id="btn-add-district" style="margin-inline-start:auto; border-color:var(--accent-green); color:var(--accent-green);">
-            ➕ إضافة حي جديد
-          </button>
         </div>
         <div id="rh-tscroll">
           <table class="rh-table">
@@ -504,16 +495,12 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       <div class="rh-modal-actions">
         <button class="btn-save" id="btn-modal-save">💾 حفظ</button>
         <button class="btn-cancel" id="btn-modal-cancel">إلغاء</button>
-        <button class="btn-cancel" id="btn-modal-delete" style="margin-inline-start:auto; border-color:var(--accent-red); color:var(--accent-red);">🗑️ حذف</button>
       </div>
     </div>
   </div>
 
   <!-- ══ Toast notification ══ -->
   <div id="rh-toast"></div>
-
-  <!-- Hidden elements -->
-  <input type="file" id="rh-import-input" accept=".json" style="display:none" />
 
   <!-- ══ Scripts (CDN + inline logic) ══ -->
   <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -524,7 +511,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     'use strict';
 
     // ── 1. Default DATA (20 Benghazi neighborhoods) ──────────────────────────
-    const DEFAULT_DATA = Object.freeze([
+    const DEFAULT_DATA = [
       {"id":1,"neighborhood":"الفويهات","lat":32.118,"lng":20.082,"class":"A","population":35000,"market1":"جيان فنيتشيا","market2":"سوبر ماركت الفويهات","flow":"عالٍ","accessibility":"ممتاز","gap":"لا","segments_present":["A","B"],"market_match":"مطابق","market_type":"مختلط"},
       {"id":2,"neighborhood":"السلماني","lat":32.115,"lng":20.088,"class":"A","population":42000,"market1":"مجمع السلماني","market2":"القاصد الكريم","flow":"عالٍ","accessibility":"ممتاز","gap":"لا","segments_present":["A","B"],"market_match":"مطابق","market_type":"مختلط"},
       {"id":3,"neighborhood":"الكويفية","lat":32.130,"lng":20.062,"class":"A-B","population":20000,"market1":"جيان فنيتشيا","market2":"داون تاون","flow":"متوسط","accessibility":"جيد","gap":"لا","segments_present":["A","B"],"market_match":"جزئي","market_type":"تجزئة"},
@@ -560,54 +547,53 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
     // ── 3. Load/Save data with localStorage ──────────────────────────────────
 
-    // Load saved DATA from localStorage
+    // Load saved edits from localStorage (non-blocking, merges over defaults)
     function loadFromStorage() {
       try {
-        const saved = localStorage.getItem('brandzo_retail_hub_v3');
-        if (saved) {
-          DATA = JSON.parse(saved);
-        } else {
-          // Backward compatibility: try v2 overrides
-          const oldSaved = localStorage.getItem('brandzo_retail_hub_v2');
-          if (oldSaved) {
-            const overrides = JSON.parse(oldSaved);
-            overrides.forEach(override => {
-              const idx = DATA.findIndex(d => d.id === override.id);
-              if (idx !== -1) DATA[idx] = { ...DATA[idx], ...override };
-            });
-            saveData(); // Upgrade to v3
-          }
-        }
-        refreshUI();
+        const saved = localStorage.getItem('brandzo_retail_hub_v2');
+        if (!saved) return;
+        const overrides = JSON.parse(saved); // array of edited records
+        overrides.forEach(override => {
+          const idx = DATA.findIndex(d => d.id === override.id);
+          if (idx !== -1) DATA[idx] = { ...DATA[idx], ...override };
+        });
+        updateStats();
+        renderTable();
+        rebuildMarkers();
       } catch (e) {
         console.warn('[RetailHub] localStorage load failed:', e);
       }
     }
 
-    // Save full DATA to localStorage
-    function saveData() {
+    // Save all current DATA overrides to localStorage
+    function saveToStorage(updatedRecord) {
       try {
-        localStorage.setItem('brandzo_retail_hub_v3', JSON.stringify(DATA));
+        // Read existing overrides
+        let overrides = [];
+        const existing = localStorage.getItem('brandzo_retail_hub_v2');
+        if (existing) overrides = JSON.parse(existing);
+
+        // Upsert this record
+        const idx = overrides.findIndex(o => o.id === updatedRecord.id);
+        if (idx !== -1) overrides[idx] = updatedRecord;
+        else overrides.push(updatedRecord);
+
+        localStorage.setItem('brandzo_retail_hub_v2', JSON.stringify(overrides));
       } catch (e) {
         console.warn('[RetailHub] localStorage save failed:', e);
         showToast('❌ فشل الحفظ المحلي', 'error');
       }
     }
 
-    function refreshUI() {
+    async function resetToDefaults() {
+      DATA = DEFAULT_DATA.map(d => ({ ...d }));
+      try {
+        localStorage.removeItem('brandzo_retail_hub_v2');
+      } catch (e) { /* ignore */ }
       updateStats();
       renderTable();
       rebuildMarkers();
       if (hexActive) renderHexLayer();
-    }
-
-    async function resetToDefaults() {
-      DATA = DEFAULT_DATA.map(d => ({ ...d }));
-      try {
-        localStorage.removeItem('brandzo_retail_hub_v3');
-        localStorage.removeItem('brandzo_retail_hub_v2');
-      } catch (e) { /* ignore */ }
-      refreshUI();
       showToast('✓ تمت إعادة ضبط البيانات للافتراضي', 'success');
     }
 
@@ -863,34 +849,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
     // ── 8. Edit Modal ─────────────────────────────────────────────────────────
     function openEditModal(id) {
-      let d = DATA.find(x => x.id === id);
-      const isNew = !d;
-
-      if (isNew) {
-        const maxId = DATA.length > 0 ? Math.max(...DATA.map(x => x.id)) : 0;
-        d = {
-          id: maxId + 1,
-          neighborhood: '',
-          class: 'B',
-          population: 0,
-          market1: '',
-          market2: '-',
-          flow: 'متوسط',
-          accessibility: 'متوسط',
-          gap: 'لا',
-          segments_present: ['B'],
-          market_match: 'مطابق',
-          market_type: 'تجزئة',
-          lat: 32.085,
-          lng: 20.12
-        };
-        document.getElementById('rh-modal-title').textContent = '➕ إضافة حي جديد';
-        document.getElementById('btn-modal-delete').style.display = 'none';
-      } else {
-        document.getElementById('rh-modal-title').textContent = `✏️ تعديل: ${d.neighborhood}`;
-        document.getElementById('btn-modal-delete').style.display = 'block';
-      }
-
+      const d = DATA.find(x => x.id === id);
+      if (!d) return;
       document.getElementById('edit-id').value            = d.id;
       document.getElementById('edit-neighborhood').value  = d.neighborhood;
       document.getElementById('edit-class').value         = d.class;
@@ -901,6 +861,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       document.getElementById('edit-accessibility').value = d.accessibility;
       document.getElementById('edit-gap').value           = d.gap;
 
+      // New fields
       const segs = d.segments_present || [];
       document.querySelectorAll('input[name="edit-segments"]').forEach(cb => {
         cb.checked = segs.includes(cb.value);
@@ -908,6 +869,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       document.getElementById('edit-market-type').value = d.market_type || 'تجزئة';
       document.getElementById('edit-market-match').value = d.market_match || 'مطابق';
 
+      document.getElementById('rh-modal-title').textContent = `✏️ تعديل: ${d.neighborhood}`;
       document.getElementById('rh-modal-overlay').classList.add('open');
     }
 
@@ -921,12 +883,14 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
     document.getElementById('btn-modal-save').addEventListener('click', () => {
       const id  = parseInt(document.getElementById('edit-id').value);
-      let idx = DATA.findIndex(d => d.id === id);
+      const idx = DATA.findIndex(d => d.id === id);
+      if (idx === -1) return;
 
+      // Build updated record (preserve lat/lng)
       const selectedSegments = Array.from(document.querySelectorAll('input[name="edit-segments"]:checked')).map(cb => cb.value);
 
       const updated = {
-        id,
+        ...DATA[idx],
         neighborhood:     document.getElementById('edit-neighborhood').value.trim(),
         class:            document.getElementById('edit-class').value,
         population:       parseInt(document.getElementById('edit-population').value) || 0,
@@ -938,83 +902,27 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         segments_present: selectedSegments,
         market_type:      document.getElementById('edit-market-type').value,
         market_match:     document.getElementById('edit-market-match').value,
-        lat:              idx !== -1 ? DATA[idx].lat : 32.085,
-        lng:              idx !== -1 ? DATA[idx].lng : 20.12,
       };
 
-      if (idx !== -1) {
-        DATA[idx] = updated;
-      } else {
-        DATA.push(updated);
-      }
+      // Update in-memory array
+      DATA[idx] = updated;
 
-      saveData();
-      refreshUI();
+      // Persist to localStorage
+      saveToStorage(updated);
+
+      // Refresh all UI
+      updateStats();
+      renderTable();
+      rebuildMarkers();
+      if (hexActive) renderHexLayer();
 
       document.getElementById('rh-modal-overlay').classList.remove('open');
       showToast(`✓ تم حفظ بيانات "${updated.neighborhood}"`, 'success');
     });
 
-    document.getElementById('btn-modal-delete').addEventListener('click', () => {
-      const id = parseInt(document.getElementById('edit-id').value);
-      const d = DATA.find(x => x.id === id);
-      if (!d) return;
-
-      if (confirm(`هل أنت متأكد من حذف الحي "${d.neighborhood}"؟`)) {
-        DATA = DATA.filter(x => x.id !== id);
-        saveData();
-        refreshUI();
-        document.getElementById('rh-modal-overlay').classList.remove('open');
-        showToast(`🗑️ تم حذف الحي`, 'success');
-      }
-    });
-
-    // ── 9. Toolbar Actions ───────────────────────────────────────────────────
-    document.getElementById('btn-add-district').addEventListener('click', () => {
-      openEditModal(null);
-    });
-
-    document.getElementById('btn-export-json').addEventListener('click', () => {
-      const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'brandzo-retail-hub-data.json';
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('📤 تم تصدير البيانات بنجاح', 'success');
-    });
-
-    document.getElementById('btn-import-json').addEventListener('click', () => {
-      document.getElementById('rh-import-input').click();
-    });
-
-    document.getElementById('rh-import-input').addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = evt => {
-        try {
-          const imported = JSON.parse(evt.target.result);
-          if (!Array.isArray(imported)) throw new Error('البيانات ليست مصفوفة');
-          // Basic validation
-          const valid = imported.every(d => d.neighborhood && d.lat && d.lng);
-          if (!valid) throw new Error('بيانات غير مكتملة (نقص في الإحداثيات أو اسم الحي)');
-
-          DATA = imported;
-          saveData();
-          refreshUI();
-          showToast(`✓ تم استيراد ${DATA.length} حياً`, 'success');
-        } catch (err) {
-          showToast('❌ خطأ في استيراد الملف: ' + err.message, 'error');
-        }
-      };
-      reader.readAsText(file);
-      e.target.value = ''; // Reset input
-    });
-
+    // ── 9. Reset button ───────────────────────────────────────────────────────
     document.getElementById('btn-reset-data').addEventListener('click', () => {
-      if (confirm('هل تريد إعادة تهيئة جميع البيانات للقيم الافتراضية؟ سيتم حذف جميع التعديلات المحفوظة.')) {
+      if (confirm('هل تريد إعادة ضبط جميع البيانات للقيم الافتراضية؟ سيتم حذف جميع التعديلات المحفوظة.')) {
         resetToDefaults();
       }
     });
