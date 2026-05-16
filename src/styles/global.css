@@ -7,6 +7,7 @@
   --color-brand-red-dark: #8b1a1a;
   --color-brand-navy: #1a1a2e;
   --color-brand-yellow: #e8b830;
+  --color-brand-gold: #e8b830;
 }
 
 /* Tell Tailwind v4 explicitly where to look for class names. */
