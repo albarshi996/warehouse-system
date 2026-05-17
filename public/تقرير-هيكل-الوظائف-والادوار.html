@@ -2,603 +2,1001 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>تقرير هيكل الوظائف والأدوار - نظام Brandzo مع تكامل Odoo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير هيكل الوظائف والأدوار – Brandzo × Odoo 17</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1b3a5c;
-            --secondary: #c89d3b;
-            --accent: #c0392b;
-            --gray-light: #f0f2f5;
-            --border: #d0d4da;
+            --navy:    #0d1e35;
+            --navy2:   #132b4a;
+            --gold:    #c89d3b;
+            --gold2:   #e8bc5a;
+            --green:   #00a650;
+            --green2:  #e6f7ef;
+            --red:     #c0392b;
+            --blue-l:  #eef4fb;
+            --border:  #d0d8e8;
+            --text:    #1a2233;
+            --muted:   #5a6a82;
+            --white:   #ffffff;
+            --bg:      #f5f7fb;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 12pt;
-            line-height: 1.8;
-            color: #222;
-            background: white;
+            font-family: 'Cairo', sans-serif;
+            font-size: 11pt;
+            line-height: 1.85;
+            color: var(--text);
+            background: var(--bg);
             direction: rtl;
             text-align: right;
         }
 
-        @page {
-            size: A4;
-            margin: 2cm 2.2cm 2.2cm 2cm;
-        }
-
+        /* ── PRINT ── */
+        @page { size: A4; margin: 1.8cm 2cm; }
         @media print {
-            body {
-                background: none;
-            }
-            .no-print {
-                display: none;
-            }
-            .page-break {
-                page-break-before: always;
-            }
-            h1, h2, h3, h4 {
-                page-break-after: avoid;
-            }
-            table {
-                page-break-inside: avoid;
-            }
+            body { background: white; font-size: 10pt; }
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always; }
+            h2, h3, h4 { page-break-after: avoid; }
+            table, .role-card { page-break-inside: avoid; }
+            .container { max-width: 100%; padding: 0; box-shadow: none; }
+            .cover { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
 
+        /* ── CONTAINER ── */
         .container {
             max-width: 21cm;
-            margin: auto;
-            padding: 0;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 60px rgba(0,0,0,.12);
         }
 
+        /* ══════════════════════════════
+           COVER PAGE
+        ══════════════════════════════ */
         .cover {
-            text-align: center;
-            padding: 4cm 2cm 2cm;
-            background: white;
-            border-bottom: 4px solid var(--primary);
+            background: var(--navy);
+            color: white;
+            padding: 5cm 3cm 3cm;
+            position: relative;
+            overflow: hidden;
+            min-height: 22cm;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-        .cover .logo-placeholder {
-            font-size: 18pt;
-            font-weight: bold;
-            color: var(--primary);
-            letter-spacing: 2px;
-            margin-bottom: 15px;
+        .cover::before {
+            content: '';
+            position: absolute;
+            top: -100px; left: -80px;
+            width: 420px; height: 420px;
+            border: 80px solid rgba(200,157,59,.12);
+            border-radius: 50%;
+        }
+        .cover::after {
+            content: '';
+            position: absolute;
+            bottom: -60px; right: -60px;
+            width: 280px; height: 280px;
+            border: 50px solid rgba(200,157,59,.08);
+            border-radius: 50%;
+        }
+        .cover-brand {
+            font-size: 11pt;
+            letter-spacing: 5px;
+            color: var(--gold);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 2.5cm;
+        }
+        .cover-line {
+            width: 60px;
+            height: 4px;
+            background: var(--gold);
+            margin-bottom: 30px;
         }
         .cover h1 {
-            font-size: 24pt;
-            color: var(--primary);
-            margin-bottom: 30px;
-            line-height: 1.4;
+            font-size: 30pt;
+            font-weight: 900;
+            line-height: 1.3;
+            margin-bottom: 20px;
+            color: white;
         }
+        .cover h1 span { color: var(--gold2); }
         .cover .subtitle {
-            font-size: 14pt;
-            color: var(--secondary);
-            margin-bottom: 50px;
+            font-size: 13pt;
+            color: rgba(255,255,255,.7);
+            margin-bottom: 3cm;
+            max-width: 14cm;
+            line-height: 1.7;
         }
-        .cover .meta {
-            font-size: 12pt;
-            color: #555;
-            margin-top: 50px;
+        .cover-meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            border-top: 1px solid rgba(255,255,255,.15);
+            padding-top: 25px;
+            margin-top: auto;
         }
-        .cover .meta span {
+        .cover-meta-item label {
             display: block;
-            margin-bottom: 6px;
-        }
-        .confidential {
-            border: 2px solid var(--accent);
-            color: var(--accent);
-            padding: 8px 20px;
-            display: inline-block;
-            font-weight: bold;
-            margin-top: 30px;
+            font-size: 8pt;
+            letter-spacing: 2px;
+            color: var(--gold);
             text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .cover-meta-item span {
+            font-size: 11pt;
+            font-weight: 600;
+            color: white;
+        }
+        .confidential-badge {
+            position: absolute;
+            top: 50px; left: 50px;
+            border: 2px solid var(--red);
+            color: var(--red);
+            font-size: 8pt;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            padding: 6px 14px;
+            font-weight: 700;
+        }
+
+        /* ══════════════════════════════
+           INNER PAGES
+        ══════════════════════════════ */
+        .inner {
+            padding: 1.5cm 2.5cm;
         }
 
         h2 {
-            font-size: 18pt;
-            color: var(--primary);
-            border-bottom: 3px solid var(--secondary);
-            padding-bottom: 8px;
-            margin-top: 1.5cm;
-            margin-bottom: 0.6cm;
+            font-size: 17pt;
+            font-weight: 900;
+            color: var(--navy);
+            margin: 1.4cm 0 0.6cm;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
+        h2::after {
+            content: '';
+            flex: 1;
+            height: 3px;
+            background: linear-gradient(to left, transparent, var(--gold));
+        }
+        h2 .sec-num {
+            background: var(--navy);
+            color: var(--gold);
+            font-size: 10pt;
+            width: 34px; height: 34px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
         h3 {
-            font-size: 14pt;
-            color: var(--primary);
-            margin-top: 0.8cm;
-            margin-bottom: 0.4cm;
+            font-size: 13pt;
+            font-weight: 700;
+            color: var(--navy2);
+            margin: 1cm 0 0.4cm;
+            border-right: 4px solid var(--gold);
+            padding-right: 12px;
         }
         h4 {
-            font-size: 13pt;
-            color: #2d4b6c;
-            margin-top: 0.5cm;
-            margin-bottom: 0.3cm;
+            font-size: 11pt;
+            font-weight: 700;
+            color: var(--navy);
+            margin: 0.5cm 0 0.25cm;
         }
-
         p {
-            margin-bottom: 0.6cm;
+            margin-bottom: 0.55cm;
             text-align: justify;
             text-justify: inter-word;
+            color: var(--text);
         }
-
         ul, ol {
-            margin-bottom: 0.6cm;
-            padding-right: 1.5cm;
+            padding-right: 1.4cm;
+            margin-bottom: 0.55cm;
         }
-        li {
-            margin-bottom: 0.2cm;
+        li { margin-bottom: 0.2cm; }
+
+        /* ── HIGHLIGHT BOX ── */
+        .highlight-box {
+            background: var(--blue-l);
+            border-right: 5px solid var(--navy);
+            padding: 14px 18px;
+            margin: 0.7cm 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .highlight-box strong { color: var(--navy); }
+
+        /* ── TOC ── */
+        .toc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 0.5cm 0;
+        }
+        .toc-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            color: var(--navy);
+            font-weight: 600;
+            font-size: 11pt;
+            transition: background .2s;
+        }
+        .toc-item:hover { background: var(--blue-l); }
+        .toc-item .toc-num {
+            background: var(--navy);
+            color: var(--gold);
+            font-size: 9pt;
+            font-weight: 700;
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
         }
 
+        /* ══════════════════════════════
+           ORG CHART
+        ══════════════════════════════ */
+        .org-wrapper {
+            overflow-x: auto;
+            padding: 30px 10px;
+        }
+        .org-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            min-width: 700px;
+        }
+        .org-row {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 12px;
+            width: 100%;
+        }
+        .org-node {
+            background: linear-gradient(135deg, var(--navy), var(--navy2));
+            color: white;
+            border-radius: 10px;
+            padding: 14px 16px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 9.5pt;
+            min-width: 140px;
+            max-width: 160px;
+            box-shadow: 0 4px 14px rgba(13,30,53,.25);
+            border: 2px solid rgba(200,157,59,.3);
+            position: relative;
+        }
+        .org-node.top {
+            background: linear-gradient(135deg, var(--gold), #a07c28);
+            color: var(--navy);
+            min-width: 180px;
+            font-size: 11pt;
+            border-color: var(--gold2);
+        }
+        .org-node.mid {
+            background: linear-gradient(135deg, #1b3a5c, #0f2644);
+            min-width: 145px;
+        }
+        .org-node.op {
+            background: var(--navy2);
+            font-size: 9pt;
+            min-width: 130px;
+        }
+        .org-node .node-icon {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .org-node .node-count {
+            display: inline-block;
+            margin-top: 5px;
+            font-size: 8pt;
+            font-weight: 400;
+            background: rgba(255,255,255,.15);
+            border-radius: 10px;
+            padding: 1px 8px;
+        }
+        .org-node.top .node-count {
+            background: rgba(13,30,53,.15);
+        }
+        /* connectors */
+        .org-v-line {
+            width: 2px;
+            height: 28px;
+            background: var(--gold);
+            margin: 0 auto;
+        }
+        .org-h-bar {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .org-h-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 10%;
+            left: 10%;
+            height: 2px;
+            background: var(--gold);
+        }
+        .org-node-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .org-node-wrap .org-v-line.top { margin-bottom: 0; }
+
+        /* ══════════════════════════════
+           ROLE CARDS
+        ══════════════════════════════ */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 0.5cm 0;
+        }
+        .role-card {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,.06);
+        }
+        .card-header {
+            background: linear-gradient(135deg, var(--navy), var(--navy2));
+            color: white;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-header .card-icon {
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        .card-header h4 {
+            margin: 0;
+            color: white;
+            font-size: 11pt;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+        .odoo-badge {
+            background: var(--green);
+            color: white;
+            font-size: 7.5pt;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-right: auto;
+            flex-shrink: 0;
+        }
+        .card-body {
+            padding: 14px 16px;
+        }
+        .card-body ul {
+            padding-right: 1.2cm;
+            margin: 0 0 10px;
+        }
+        .card-body ul li {
+            font-size: 9.5pt;
+            color: var(--muted);
+            margin-bottom: 3px;
+        }
+        .odoo-info {
+            background: var(--green2);
+            border-right: 4px solid var(--green);
+            border-radius: 0 6px 6px 0;
+            padding: 10px 12px;
+            font-size: 9pt;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 16px;
+        }
+        .odoo-info .oi-label {
+            color: var(--muted);
+            font-size: 8pt;
+        }
+        .odoo-info .oi-val {
+            font-weight: 700;
+            color: var(--navy);
+        }
+        .odoo-info .oi-role {
+            grid-column: 1 / -1;
+            font-size: 10pt;
+            font-weight: 700;
+            color: var(--green);
+            margin-bottom: 4px;
+        }
+
+        /* one-column override for wide cards */
+        .cards-grid.single { grid-template-columns: 1fr; }
+        .cards-grid.single .role-card { max-width: 100%; }
+
+        /* ══════════════════════════════
+           DEPARTMENTS TABLE
+        ══════════════════════════════ */
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 0.5cm 0 0.8cm;
-            font-size: 9pt;
+            font-size: 9.5pt;
         }
         table caption {
-            font-weight: bold;
+            font-weight: 700;
             margin-bottom: 10px;
-            color: var(--primary);
-            font-size: 12pt;
+            color: var(--navy);
+            font-size: 11pt;
+            text-align: right;
         }
-        th {
-            background-color: var(--primary);
+        thead th {
+            background: var(--navy);
             color: white;
-            padding: 8px 6px;
-            font-size: 9pt;
+            padding: 10px 8px;
             text-align: center;
-            font-weight: bold;
-        }
-        td {
-            padding: 6px 4px;
-            border: 1px solid var(--border);
+            font-weight: 700;
             font-size: 9pt;
+        }
+        thead th:first-child { text-align: right; }
+        td {
+            padding: 8px 6px;
+            border-bottom: 1px solid var(--border);
             vertical-align: middle;
             text-align: center;
         }
-        tr:nth-child(even) td {
-            background-color: var(--gray-light);
-        }
-        tr:hover td {
-            background-color: #e8f4f8;
-        }
+        td:first-child { text-align: right; }
+        tr:nth-child(even) td { background: var(--bg); }
+        tr:hover td { background: var(--blue-l); }
 
-        .highlight-box {
-            background: #eef3f9;
-            border-right: 6px solid var(--primary);
-            padding: 12px 18px;
-            margin: 0.6cm 0;
-            text-align: justify;
-        }
+        /* ══════════════════════════════
+           RACI MATRIX
+        ══════════════════════════════ */
+        .raci-table th { font-size: 8pt; padding: 8px 4px; }
+        .raci-table td { font-size: 9pt; font-weight: 700; padding: 8px 4px; text-align: center; }
+        .raci-table td:first-child { text-align: right; font-size: 8.5pt; font-weight: 600; }
+        .raci-table .r-cell { color: var(--green); }
+        .raci-table .a-cell { color: var(--navy); }
+        .raci-table .c-cell { color: var(--gold); }
+        .raci-table .i-cell { color: #aab; }
 
-        .golden-rule {
-            background: #fef8e7;
-            border: 1px solid var(--secondary);
-            border-radius: 5px;
-            padding: 12px 18px;
-            margin: 0.6cm 0;
-            list-style: none;
-        }
-
-        .page-break {
-            page-break-before: always;
-        }
-
-        .toc {
-            list-style: none;
-            padding: 0;
-        }
-        .toc li {
-            margin-bottom: 6px;
-            border-bottom: 1px dotted #aaa;
-            padding-bottom: 4px;
-        }
-        .toc li a {
-            text-decoration: none;
-            color: var(--primary);
-            font-weight: 500;
-        }
-        .toc li a::before {
-            content: "⬥ ";
-            color: var(--secondary);
-        }
-
-        .signature-line {
-            margin-top: 1cm;
+        .raci-legend {
             display: flex;
-            justify-content: space-between;
+            gap: 20px;
+            margin: 0.4cm 0;
+            flex-wrap: wrap;
         }
-        .signature-line div {
-            width: 45%;
-            border-top: 1px solid #333;
-            padding-top: 10px;
-            text-align: center;
+        .raci-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10pt;
+        }
+        .raci-legend-item .badge {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
             font-size: 11pt;
         }
+        .badge-r { background: var(--green2); color: var(--green); }
+        .badge-a { background: var(--blue-l); color: var(--navy); }
+        .badge-c { background: #fef8e7; color: #a07c28; }
+        .badge-i { background: #f0f0f0; color: #888; }
 
-        /* Org Chart Styles */
-        .org-tree {
-            background: #f8f9fa;
-            border: 2px solid var(--primary);
-            border-radius: 8px;
-            padding: 30px;
-            margin: 20px 0;
-            text-align: center;
+        /* ══════════════════════════════
+           ODOO ROLE MAP TABLE
+        ══════════════════════════════ */
+        .level-admin { background: #fff3e0; color: #b85c00; font-weight: 700; border-radius: 4px; padding: 2px 8px; }
+        .level-manager { background: #e8f0ff; color: #1a3c8f; font-weight: 700; border-radius: 4px; padding: 2px 8px; }
+        .level-user { background: var(--green2); color: var(--green); font-weight: 700; border-radius: 4px; padding: 2px 8px; }
+
+        /* ══════════════════════════════
+           STATS ROW
+        ══════════════════════════════ */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin: 0.6cm 0;
         }
-
-        .org-level {
-            margin: 20px 0;
-            text-align: center;
-        }
-
-        .org-node {
-            display: inline-block;
-            width: 180px;
-            margin: 10px 5px;
-            padding: 15px 10px;
-            background: linear-gradient(135deg, var(--primary), #0f0f1f);
+        .stat-box {
+            background: var(--navy);
             color: white;
-            border-radius: 8px;
+            border-radius: 10px;
+            padding: 18px 16px;
             text-align: center;
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .stat-box .stat-num {
+            font-size: 22pt;
+            font-weight: 900;
+            color: var(--gold2);
+            display: block;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+        .stat-box .stat-label {
+            font-size: 9pt;
+            color: rgba(255,255,255,.7);
         }
 
-        .org-connector {
-            display: inline-block;
-            width: 40px;
-            text-align: center;
-            color: var(--secondary);
-            font-size: 20px;
-            font-weight: bold;
+        /* ══════════════════════════════
+           SIGNATURE & FOOTER
+        ══════════════════════════════ */
+        .signature-line {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5cm;
+            gap: 30px;
         }
+        .sig-box {
+            flex: 1;
+            border-top: 2px solid var(--navy);
+            padding-top: 12px;
+            text-align: center;
+            font-size: 10pt;
+        }
+        .sig-box label {
+            display: block;
+            color: var(--muted);
+            font-size: 8.5pt;
+            margin-bottom: 4px;
+        }
+        .sig-box strong { color: var(--navy); }
 
-        .odoo-role-badge {
-            background: #00a650;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
+        .page-footer {
+            text-align: center;
+            color: var(--muted);
             font-size: 8pt;
-            font-weight: bold;
-            margin-left: 5px;
+            border-top: 1px solid var(--border);
+            padding: 14px;
+            margin-top: 1cm;
         }
 
-        .role-card {
-            background: #e8f5e8;
-            border-right: 4px solid #00a650;
+        /* ══════════════════════════════
+           PRINT BUTTON
+        ══════════════════════════════ */
+        .print-bar {
+            background: var(--navy);
+            color: white;
+            text-align: center;
             padding: 12px;
-            margin: 10px 0;
+            font-size: 10.5pt;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
         }
+        .print-bar span { color: rgba(255,255,255,.7); }
+        .btn-print {
+            background: var(--gold);
+            color: var(--navy);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            font-size: 10pt;
+            cursor: pointer;
+        }
+        .btn-print:hover { background: var(--gold2); }
 
-        .role-title {
-            font-weight: bold;
-            color: #00a650;
-            margin-bottom: 5px;
-        }
+        .page-break { page-break-before: always; }
     </style>
 </head>
 <body>
+<div class="no-print print-bar">
+    <span>📄 تقرير هيكل الوظائف والأدوار – Brandzo × Odoo 17</span>
+    <button class="btn-print" onclick="window.print()">🖨️ طباعة / PDF</button>
+</div>
+
 <div class="container">
-    <!-- Interactive Site Notification Bar -->
-    <div class="no-print" style="background: #e8f4fd; border-right: 4px solid var(--primary); padding: 10px 15px; margin-bottom: 20px; font-size: 11pt;">
-        <strong>🔗 هذا التقرير مُولَّد تلقائياً من بيانات المشروع — للطباعة:</strong> 
-        <button onclick="window.print()" style="color: var(--primary); text-decoration: none; font-weight: bold; background: none; border: 1px solid var(--primary); padding: 5px 10px; border-radius: 4px; cursor: pointer;">اطبع الآن</button>
-    </div>
 
+    <!-- ══ COVER ══ -->
     <div class="cover">
-        <div class="logo-placeholder">BRANDZO SYSTEMS</div>
-        <h1>تقرير هيكل الوظائف والأدوار<br>مع تكامل Odoo 17 Enterprise</h1>
-        <div class="subtitle">شجرة SVG للهيكل التنظيمي الكامل + بطاقات وصف وظيفي للمناصب الـ11</div>
-        <div class="meta">
-            <span><strong>التاريخ:</strong> 12 مايو 2026</span>
-            <span><strong>الإصدار:</strong> 1.0 (Odoo-Ready)</span>
-            <span><strong>الإعداد:</strong> نظام Brandzo التفاعلي</span>
+        <div class="confidential-badge">سري – داخلي فقط</div>
+        <div class="cover-brand">▸ Brandzo Systems</div>
+        <div class="cover-line"></div>
+        <h1>تقرير هيكل الوظائف<br>والأدوار <span>التشغيلية</span></h1>
+        <p class="subtitle">الهيكل التنظيمي الكامل للمستودعات مع تكامل أودو 17 Enterprise — بطاقات وصف وظيفي، مصفوفة RACI، وتعيين الأدوار والصلاحيات</p>
+        <div class="cover-meta-grid">
+            <div class="cover-meta-item">
+                <label>التاريخ</label>
+                <span>12 مايو 2026</span>
+            </div>
+            <div class="cover-meta-item">
+                <label>الإصدار</label>
+                <span>1.0 – Odoo Ready</span>
+            </div>
+            <div class="cover-meta-item">
+                <label>الإعداد</label>
+                <span>فريق Brandzo</span>
+            </div>
         </div>
-        <div class="confidential">سري – للاستخدام الداخلي للإدارة العليا فقط</div>
     </div>
 
-    <div class="page-break"></div>
-    <h2>قائمة المحتويات</h2>
-    <ol class="toc">
-        <li><a href="#org-overview">نظرة عامة على الهيكل التنظيمي</a></li>
-        <li><a href="#org-tree">شجرة الهيكل التنظيمي الكامل</a></li>
-        <li><a href="#position-cards">بطاقات وصف وظيفي للمناصب الـ11</a></li>
-        <li><a href="#departments">الإدارات الستة التشغيلية</a></li>
-        <li><a href="#raci-matrix">مصفوفة RACI: الأدوار × المراحل</a></li>
-        <li><a href="#role-mapping">جدول تعيين الأدوار في أودو</a></li>
-    </ol>
+    <div class="inner">
 
+    <!-- ══ TOC ══ -->
+    <h2><span class="sec-num">☰</span> قائمة المحتويات</h2>
+    <div class="toc-grid">
+        <a class="toc-item" href="#org-overview"><span class="toc-num">1</span> نظرة عامة على الهيكل</a>
+        <a class="toc-item" href="#org-tree"><span class="toc-num">2</span> شجرة الهيكل التنظيمي</a>
+        <a class="toc-item" href="#position-cards"><span class="toc-num">3</span> بطاقات الوصف الوظيفي</a>
+        <a class="toc-item" href="#departments"><span class="toc-num">4</span> الإدارات الستة التشغيلية</a>
+        <a class="toc-item" href="#raci-matrix"><span class="toc-num">5</span> مصفوفة RACI</a>
+        <a class="toc-item" href="#role-mapping"><span class="toc-num">6</span> تعيين الأدوار في أودو</a>
+    </div>
+
+    <!-- ══ SECTION 1 ══ -->
     <div class="page-break"></div>
-    <h2 id="org-overview">1. نظرة عامة على الهيكل التنظيمي</h2>
+    <h2 id="org-overview"><span class="sec-num">1</span> نظرة عامة على الهيكل التنظيمي</h2>
+
+    <div class="stats-row">
+        <div class="stat-box"><span class="stat-num">~320</span><span class="stat-label">إجمالي الموظفين</span></div>
+        <div class="stat-box"><span class="stat-num">6</span><span class="stat-label">إدارات تشغيلية</span></div>
+        <div class="stat-box"><span class="stat-num">11</span><span class="stat-label">منصب محوري</span></div>
+        <div class="stat-box"><span class="stat-num">3</span><span class="stat-label">طبقات هرمية</span></div>
+    </div>
+
     <p>
-        يمثل الهيكل التنظيمي لمستودعات Brandzo نموذجاً هرمياً من ثلاث طبقات يضمن توزيع واضح للمسؤوليات وسلاسة خطوط الإبلاغ. يضم الهيكل حوالي 320 موظفاً موزعين على 6 إدارات تشغيلية تحت إشراف مدير المستودع التنفيذي.
+        يمثل الهيكل التنظيمي لمستودعات Brandzo نموذجاً هرمياً من ثلاث طبقات يضمن توزيعاً واضحاً للمسؤوليات وسلاسة خطوط الإبلاغ. يضم الهيكل حوالي 320 موظفاً موزعين على 6 إدارات تشغيلية تحت إشراف مدير المستودع التنفيذي.
     </p>
     <p>
-        مع تكامل Odoo 17 Enterprise، كل منصب في الهيكل له دور محدد في النظام مع صلاحيات واضحة على الوحدات المسموح بها، مما يضمن الانتقال المنظم من الهيكل الحالي إلى النظام الرقمي المتكامل.
+        مع تكامل Odoo 17 Enterprise، يحمل كل منصب دوراً محدداً في النظام مع صلاحيات واضحة على الوحدات المسموح بها، مما يضمن انتقالاً منظماً من الهيكل الورقي الحالي إلى النظام الرقمي المتكامل.
     </p>
 
     <div class="highlight-box">
-        <strong>الهدف الرئيسي:</strong> تحويل الهيكل التنظيمي الورقي إلى هيكل رقمي متكامل في Odoo مع تعيين الأدوار والصلاحيات المناسبة لكل مستخدم.
+        <strong>🎯 الهدف الرئيسي:</strong> تحويل الهيكل التنظيمي الورقي إلى هيكل رقمي متكامل في Odoo مع تعيين الأدوار والصلاحيات المناسبة لكل مستخدم.
     </div>
 
+    <!-- ══ SECTION 2 ══ -->
     <div class="page-break"></div>
-    <h2 id="org-tree">2. شجرة الهيكل التنظيمي الكامل</h2>
-    <div class="org-tree">
-        <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap;">
-            <div class="org-node">
-                <div>مدير المستودع<br>التنفيذي</div>
+    <h2 id="org-tree"><span class="sec-num">2</span> شجرة الهيكل التنظيمي الكامل</h2>
+
+    <div class="org-wrapper">
+        <div class="org-chart">
+            <!-- TOP -->
+            <div class="org-row">
+                <div class="org-node top">
+                    <span class="node-icon">🧭</span>
+                    مدير المستودع التنفيذي
+                    <span class="node-count">الطبقة 1</span>
+                </div>
             </div>
-            <div class="org-connector">↓</div>
-        </div>
-        <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 20px;">
-            <div class="org-node">
-                <div>مدير المستودع<br>التنفيذي</div>
+            <div class="org-v-line"></div>
+
+            <!-- MID ROW -->
+            <div style="position:relative; width:100%; display:flex; justify-content:center;">
+                <div style="position:absolute; top:0; right:15%; left:15%; height:2px; background:var(--gold);"></div>
+                <div class="org-row" style="gap:8px; margin-top:0;">
+                    <div class="org-node-wrap">
+                        <div class="org-v-line" style="height:20px;"></div>
+                        <div class="org-node mid">
+                            <span class="node-icon">💻</span>
+                            مدير سلاسل الإمداد
+                            <span class="node-count">طبقة 2</span>
+                        </div>
+                    </div>
+                    <div class="org-node-wrap">
+                        <div class="org-v-line" style="height:20px;"></div>
+                        <div class="org-node mid">
+                            <span class="node-icon">🛡️</span>
+                            مدير حوكمة الدورة
+                            <span class="node-count">طبقة 2</span>
+                        </div>
+                    </div>
+                    <div class="org-node-wrap">
+                        <div class="org-v-line" style="height:20px;"></div>
+                        <div class="org-node mid">
+                            <span class="node-icon">📊</span>
+                            مدير المحاسبة والمالية
+                            <span class="node-count">طبقة 2</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="org-connector">→</div>
-            <div class="org-node">
-                <div>مدير تقنية<br>المعلومات</div>
-            </div>
-            <div class="org-connector">→</div>
-            <div class="org-node">
-                <div>مدير الجودة<br>والسلامة</div>
-            </div>
-            <div class="org-connector">→</div>
-            <div class="org-node">
-                <div>مدير<br>المالية</div>
-            </div>
-        </div>
-        <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 20px;">
-            <div class="org-node">
-                <div>إدارة<br>الاستلام</div>
-            </div>
-            <div class="org-connector">→</div>
-            <div class="org-node">
-                <div>إدارة<br>الجودة</div>
-            </div>
-            <div class="org-connector">→</div>
-            <div class="org-node">
-                <div>إدارة<br>التخزين</div>
-            </div>
-            <div class="org-connector">→</div>
-            <div class="org-node">
-                <div>إدارة<br>السحب</div>
-            </div>
-            <div class="org-connector">→</div>
-            <div class="org-node">
-                <div>إدارة<br>النقل</div>
-            </div>
-            <div class="org-connector">→</div>
-            <div class="org-node">
-                <div>إدارة<br>المرتجعات</div>
+            <div class="org-v-line"></div>
+
+            <!-- OPS ROW -->
+            <div style="position:relative; width:100%; display:flex; justify-content:center;">
+                <div style="position:absolute; top:0; right:5%; left:5%; height:2px; background:rgba(200,157,59,.5);"></div>
+                <div class="org-row" style="gap:6px; flex-wrap:wrap; margin-top:0;">
+                    <div class="org-node-wrap">
+                        <div class="org-v-line" style="height:20px;"></div>
+                        <div class="org-node op"><span class="node-icon">📦</span>الاستلام<span class="node-count">~30</span></div>
+                    </div>
+                    <div class="org-node-wrap">
+                        <div class="org-v-line" style="height:20px;"></div>
+                        <div class="org-node op"><span class="node-icon">🔬</span>الجودة<span class="node-count">~15</span></div>
+                    </div>
+                    <div class="org-node-wrap">
+                        <div class="org-v-line" style="height:20px;"></div>
+                        <div class="org-node op"><span class="node-icon">🏬</span>التخزين<span class="node-count">~70</span></div>
+                    </div>
+                    <div class="org-node-wrap">
+                        <div class="org-v-line" style="height:20px;"></div>
+                        <div class="org-node op"><span class="node-icon">📋</span>السحب<span class="node-count">~120</span></div>
+                    </div>
+                    <div class="org-node-wrap">
+                        <div class="org-v-line" style="height:20px;"></div>
+                        <div class="org-node op"><span class="node-icon">🚚</span>النقل<span class="node-count">~70</span></div>
+                    </div>
+                    <div class="org-node-wrap">
+                        <div class="org-v-line" style="height:20px;"></div>
+                        <div class="org-node op"><span class="node-icon">↩️</span>المرتجعات<span class="node-count">~12</span></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- ══ SECTION 3 ══ -->
     <div class="page-break"></div>
-    <h2 id="position-cards">3. بطاقات وصف وظيفي للمناصب الـ11</h2>
-    
-    <!-- Tier 1 & 2 Positions -->
-    <h3>الطبقتان الأولى والثانية (11 منصب)</h3>
-    
-    <!-- Executive Manager -->
-    <div class="role-card">
-        <div class="role-title">🧭 مدير المستودعات</div>
-        <div class="odoo-role-badge">ODOO</div>
-        <h4>الوصف الوظيفي</h4>
-        <ul>
-            <li>الإشراف العام على كافة أنشطة المستودعات</li>
-            <li>وضع الاستراتيجيات التشغيلية قصيرة وطويلة المدى</li>
-            <li>إدارة الميزانية التشغيلية للمستودعات</li>
-            <li>التنسيق مع إدارة سلاسل الإمداد واللوجستيات</li>
-            <li>اعتماد السياسات والإجراءات الرئيسية للمستودعات</li>
-            <li>إدارة علاقات الموردين الكبار</li>
-            <li>ضمان كفاءة العمليات التشغيلية اليومية</li>
-            <li>الإشراف على تطبيق نظام Odoo ERP في المستودعات</li>
-        </ul>
-        <h4>دور أودو</h4>
-        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
-            <strong>👤 Inventory Manager</strong><br>
-            <strong>الوحدات المسموح بها:</strong> كل وحدات المخزون<br>
-            <strong>المستوى:</strong> Admin
-        </div>
-    </div>
+    <h2 id="position-cards"><span class="sec-num">3</span> بطاقات الوصف الوظيفي</h2>
 
-    <!-- IT Manager -->
-    <div class="role-card">
-        <div class="role-title">💻 مدير سلاسل الإمداد واللوجستيات</div>
-        <div class="odoo-role-badge">ODOO</div>
-        <h4>الوصف الوظيفي</h4>
-        <ul>
-            <li>إدارة وتخطيط سلاسل الإمداد بالكامل</li>
-            <li>الإشراف على العمليات اللوجستية والتوزيع</li>
-            <li>تنسيق عمليات النقل والشحن</li>
-            <li>تحسين كفاءة سلسلة التوريد</li>
-            <li>إدارة علاقات شركات النقل والخدمات اللوجستية</li>
-            <li>ضمان توافق العمليات مع معايير الجودة</li>
-            <li>الإشراف على نظام تتبع الشحنات</li>
-        </ul>
-        <h4>دور أودو</h4>
-        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
-            <strong>👤 System Administrator</strong><br>
-            <strong>الوحدات المسموح بها:</strong> Settings كاملة<br>
-            <strong>المستوى:</strong> Admin
-        </div>
-    </div>
+    <h3>الطبقتان الأولى والثانية – المناصب القيادية</h3>
+    <div class="cards-grid">
 
-    <!-- Quality Manager -->
-    <div class="role-card">
-        <div class="role-title">🛡️ مدير حكومة الدورة المستندية ومراقبة الإدخالات اليومية على النظام</div>
-        <div class="odoo-role-badge">ODOO</div>
-        <h4>الوصف الوظيفي</h4>
-        <ul>
-            <li>حوكمة وإدارة الدورة المستندية بالكامل</li>
-            <li>مراقبة الإدخالات اليومية على نظام Odoo</li>
-            <li>ضمان تطبيق معايير الجودة والسلامة</li>
-            <li>إدارة فريق فحص الجودة والتدقيق</li>
-            <li>اعتماد الموردين الجدد فنياً</li>
-            <li>متابعة شهادات الجودة والصلاحية</li>
-            <li>مراجعة وتدقيق جميع المستندات اليومية</li>
-            <li>ضمان تكامل البيانات في نظام Odoo</li>
-        </ul>
-        <h4>دور أودو</h4>
-        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
-            <strong>👤 Quality Administrator</strong><br>
-            <strong>الوحدات المسموح بها:</strong> Quality + Inventory (read)<br>
-            <strong>المستوى:</strong> Admin
+        <!-- Card 1 -->
+        <div class="role-card">
+            <div class="card-header">
+                <span class="card-icon">🧭</span>
+                <h4>مدير المستودعات التنفيذي</h4>
+                <span class="odoo-badge">ODOO</span>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>الإشراف العام على كافة أنشطة المستودعات</li>
+                    <li>وضع الاستراتيجيات التشغيلية قصيرة وطويلة المدى</li>
+                    <li>إدارة الميزانية التشغيلية للمستودعات</li>
+                    <li>التنسيق مع إدارة سلاسل الإمداد واللوجستيات</li>
+                    <li>اعتماد السياسات والإجراءات الرئيسية</li>
+                    <li>إدارة علاقات الموردين الكبار</li>
+                    <li>الإشراف على تطبيق نظام Odoo ERP</li>
+                </ul>
+                <div class="odoo-info">
+                    <span class="oi-role">👤 Inventory Manager</span>
+                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">كل وحدات المخزون</span></div>
+                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">Admin</span></div>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <!-- Finance Manager -->
-    <div class="role-card">
-        <div class="role-title">📊 مدير المحاسبة والرقابة المالية</div>
-        <div class="odoo-role-badge">ODOO</div>
-        <h4>الوصف الوظيفي</h4>
-        <ul>
-            <li>الإشراف على جميع العمليات المالية</li>
-            <li>دقة المطابقات المالية مع الموردين</li>
-            <li>إعداد التقارير المالية</li>
-            <li>الإشراف على أنشطة الجرد المالي</li>
-            <li>مراقبة تكاليف التشغيل وترشيدها</li>
-        </ul>
-        <h4>دور أودو</h4>
-        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
-            <strong>👤 Accounting Manager</strong><br>
-            <strong>الوحدات المسموح بها:</strong> Purchase + Accounting<br>
-            <strong>المستوى:</strong> Manager
+        <!-- Card 2 -->
+        <div class="role-card">
+            <div class="card-header">
+                <span class="card-icon">💻</span>
+                <h4>مدير سلاسل الإمداد واللوجستيات</h4>
+                <span class="odoo-badge">ODOO</span>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>إدارة وتخطيط سلاسل الإمداد بالكامل</li>
+                    <li>الإشراف على العمليات اللوجستية والتوزيع</li>
+                    <li>تنسيق عمليات النقل والشحن</li>
+                    <li>تحسين كفاءة سلسلة التوريد</li>
+                    <li>إدارة علاقات شركات النقل والخدمات اللوجستية</li>
+                    <li>الإشراف على نظام تتبع الشحنات</li>
+                </ul>
+                <div class="odoo-info">
+                    <span class="oi-role">👤 System Administrator</span>
+                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Settings كاملة</span></div>
+                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">Admin</span></div>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <!-- Operational Departments -->
-    <h3>الطبقة الثالثة - الإدارات التشغيلية الستة</h3>
-    
-    <!-- Receiving Department -->
-    <div class="role-card">
-        <div class="role-title">📦 إدارة الاستلام والرقابة</div>
-        <div class="odoo-role-badge">ODOO</div>
-        <h4>الوصف الوظيفي</h4>
-        <ul>
-            <li>مدير قسم الاستلام</li>
-            <li>مشرف الاستلام (الفترة الصباحية)</li>
-            <li>مشرف الاستلام (الفترة المسائية)</li>
-            <li>فريق إدخال بيانات الاستلام (4-6)</li>
-            <li>فريق عمال الرصيف والمناولة (20-30)</li>
-        </ul>
-        <h4>دور أودو</h4>
-        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
-            <strong>👤 Inventory User</strong><br>
-            <strong>الوحدات المسموح بها:</strong> Inventory + Quality<br>
-            <strong>المستوى:</strong> User
+        <!-- Card 3 -->
+        <div class="role-card">
+            <div class="card-header">
+                <span class="card-icon">🛡️</span>
+                <h4>مدير حوكمة الدورة المستندية</h4>
+                <span class="odoo-badge">ODOO</span>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>حوكمة وإدارة الدورة المستندية بالكامل</li>
+                    <li>مراقبة الإدخالات اليومية على نظام Odoo</li>
+                    <li>ضمان تطبيق معايير الجودة والسلامة</li>
+                    <li>إدارة فريق فحص الجودة والتدقيق</li>
+                    <li>مراجعة وتدقيق جميع المستندات اليومية</li>
+                    <li>ضمان تكامل البيانات في نظام Odoo</li>
+                </ul>
+                <div class="odoo-info">
+                    <span class="oi-role">👤 Quality Administrator</span>
+                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Quality + Inventory (read)</span></div>
+                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">Admin</span></div>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <!-- Quality Department -->
-    <div class="role-card">
-        <div class="role-title">🔬 إدارة فحص ومراقبة الجودة</div>
-        <div class="odoo-role-badge">ODOO</div>
-        <h4>الوصف الوظيفي</h4>
-        <ul>
-            <li>مدير إدارة الجودة</li>
-            <li>فريق فحص المنتجات الطازجة</li>
-            <li>فريق فحص المجمدات</li>
-            <li>فريق فحص المنتجات الجافة والمعلبة</li>
-            <li>فريق فحص المنتجات غير الغذائية</li>
-        </ul>
-        <h4>دور أودو</h4>
-        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
-            <strong>👤 Quality User</strong><br>
-            <strong>الوحدات المسموح بها:</strong> Quality + Inventory (read)<br>
-            <strong>المستوى:</strong> User
+        <!-- Card 4 -->
+        <div class="role-card">
+            <div class="card-header">
+                <span class="card-icon">📊</span>
+                <h4>مدير المحاسبة والرقابة المالية</h4>
+                <span class="odoo-badge">ODOO</span>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>الإشراف على جميع العمليات المالية</li>
+                    <li>دقة المطابقات المالية مع الموردين</li>
+                    <li>إعداد التقارير المالية</li>
+                    <li>الإشراف على أنشطة الجرد المالي</li>
+                    <li>مراقبة تكاليف التشغيل وترشيدها</li>
+                </ul>
+                <div class="odoo-info">
+                    <span class="oi-role">👤 Accounting Manager</span>
+                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Purchase + Accounting</span></div>
+                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">Manager</span></div>
+                </div>
+            </div>
         </div>
-    </div>
+    </div><!-- /cards-grid -->
 
-    <!-- Storage Department -->
-    <div class="role-card">
-        <div class="role-title">🏬 إدارة التخزين وتحديد المواقع</div>
-        <div class="odoo-role-badge">ODOO</div>
-        <h4>الوصف الوظيفي</h4>
-        <ul>
-            <li>مدير عمليات التخزين</li>
-            <li>مهندس تخطيط المستودع</li>
-            <li>مشرفي مناطق التخزين المتخصصة</li>
-            <li>مشغلي الرافعات الشوكية (40-60)</li>
-            <li>مراقبي المخزون (10-12)</li>
-        </ul>
-        <h4>دور أودو</h4>
-        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
-            <strong>👤 Inventory User</strong><br>
-            <strong>الوحدات المسموح بها:</strong> Inventory + Barcode<br>
-            <strong>المستوى:</strong> User
+    <h3>الطبقة الثالثة – الإدارات التشغيلية الستة</h3>
+    <div class="cards-grid">
+
+        <!-- Card 5 -->
+        <div class="role-card">
+            <div class="card-header">
+                <span class="card-icon">📦</span>
+                <h4>إدارة الاستلام والرقابة</h4>
+                <span class="odoo-badge">ODOO</span>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>مدير قسم الاستلام</li>
+                    <li>مشرف الاستلام (فترة صباحية ومسائية)</li>
+                    <li>فريق إدخال بيانات الاستلام (4–6 أفراد)</li>
+                    <li>فريق عمال الرصيف والمناولة (20–30)</li>
+                </ul>
+                <div class="odoo-info">
+                    <span class="oi-role">👤 Inventory User</span>
+                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Inventory + Quality</span></div>
+                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">User</span></div>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <!-- Picking Department -->
-    <div class="role-card">
-        <div class="role-title">📋 إدارة تحضير الطلبات والتوزيع</div>
-        <div class="odoo-role-badge">ODOO</div>
-        <h4>الوصف الوظيفي</h4>
-        <ul>
-            <li>مدير عمليات التوزيع</li>
-            <li>مخطط الأحمال</li>
-            <li>مشرفي مناطق الانتقاء</li>
-            <li>العمال المتنقلين (80-120)</li>
-            <li>فريق المراجعين والمدققين</li>
-        </ul>
-        <h4>دور أودو</h4>
-        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
-            <strong>👤 Barcode User</strong><br>
-            <strong>الوحدات المسموح بها:</strong> Barcode فقط<br>
-            <strong>المستوى:</strong> User
+        <!-- Card 6 -->
+        <div class="role-card">
+            <div class="card-header">
+                <span class="card-icon">🔬</span>
+                <h4>إدارة فحص ومراقبة الجودة</h4>
+                <span class="odoo-badge">ODOO</span>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>مدير إدارة الجودة</li>
+                    <li>فريق فحص المنتجات الطازجة والمجمدة</li>
+                    <li>فريق فحص المنتجات الجافة والمعلبة</li>
+                    <li>فريق فحص المنتجات غير الغذائية</li>
+                </ul>
+                <div class="odoo-info">
+                    <span class="oi-role">👤 Quality User</span>
+                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Quality + Inventory (read)</span></div>
+                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">User</span></div>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <!-- Transport Department -->
-    <div class="role-card">
-        <div class="role-title">🚚 إدارة أسطول النقل والتوزيع</div>
-        <div class="odoo-role-badge">ODOO</div>
-        <h4>الوصف الوظيفي</h4>
-        <ul>
-            <li>مدير النقل والتوزيع</li>
-            <li>منسق عمليات التوزيع اليومية</li>
-            <li>فريق السائقين (50-70)</li>
-            <li>فريق مساعدي السائقين</li>
-            <li>مهندس صيانة الأسطول</li>
-        </ul>
-        <h4>دور أودو</h4>
-        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
-            <strong>👤 Fleet User</strong><br>
-            <strong>الوحدات المسموح بها:</strong> Fleet<br>
-            <strong>المستوى:</strong> User
+        <!-- Card 7 -->
+        <div class="role-card">
+            <div class="card-header">
+                <span class="card-icon">🏬</span>
+                <h4>إدارة التخزين وتحديد المواقع</h4>
+                <span class="odoo-badge">ODOO</span>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>مدير عمليات التخزين</li>
+                    <li>مهندس تخطيط المستودع</li>
+                    <li>مشرفي مناطق التخزين المتخصصة</li>
+                    <li>مشغلي الرافعات الشوكية (40–60)</li>
+                    <li>مراقبي المخزون (10–12)</li>
+                </ul>
+                <div class="odoo-info">
+                    <span class="oi-role">👤 Inventory User</span>
+                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Inventory + Barcode</span></div>
+                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">User</span></div>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <!-- Returns Department -->
-    <div class="role-card">
-        <div class="role-title">↩️ إدارة المرتجعات وتصحيح المخزون</div>
-        <div class="odoo-role-badge">ODOO</div>
-        <h4>الوصف الوظيفي</h4>
-        <ul>
-            <li>مدير إدارة المرتجعات</li>
-            <li>مشرف استلام المرتجعات</li>
-            <li>فريق فحص المرتجعات</li>
-            <li>فريق معالجة المرتجعات</li>
-            <li>منسق المرتجعات مع الموردين</li>
-        </ul>
-        <h4>دور أودو</h4>
-        <div style="background: #e8f5e8; border-right: 4px solid #00a650; padding: 12px; margin: 10px 0;">
-            <strong>👤 Quality User</strong><br>
-            <strong>الوحدات المسموح بها:</strong> Quality + Inventory (read)<br>
-            <strong>المستوى:</strong> User
+        <!-- Card 8 -->
+        <div class="role-card">
+            <div class="card-header">
+                <span class="card-icon">📋</span>
+                <h4>إدارة تحضير الطلبات والتوزيع</h4>
+                <span class="odoo-badge">ODOO</span>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>مدير عمليات التوزيع</li>
+                    <li>مخطط الأحمال</li>
+                    <li>مشرفي مناطق الانتقاء</li>
+                    <li>العمال المتنقلين (80–120)</li>
+                    <li>فريق المراجعين والمدققين</li>
+                </ul>
+                <div class="odoo-info">
+                    <span class="oi-role">👤 Barcode User</span>
+                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Barcode فقط</span></div>
+                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">User</span></div>
+                </div>
+            </div>
         </div>
-    </div>
 
+        <!-- Card 9 -->
+        <div class="role-card">
+            <div class="card-header">
+                <span class="card-icon">🚚</span>
+                <h4>إدارة أسطول النقل والتوزيع</h4>
+                <span class="odoo-badge">ODOO</span>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>مدير النقل والتوزيع</li>
+                    <li>منسق عمليات التوزيع اليومية</li>
+                    <li>فريق السائقين (50–70)</li>
+                    <li>فريق مساعدي السائقين</li>
+                    <li>مهندس صيانة الأسطول</li>
+                </ul>
+                <div class="odoo-info">
+                    <span class="oi-role">👤 Fleet User</span>
+                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Fleet</span></div>
+                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">User</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 10 -->
+        <div class="role-card">
+            <div class="card-header">
+                <span class="card-icon">↩️</span>
+                <h4>إدارة المرتجعات وتصحيح المخزون</h4>
+                <span class="odoo-badge">ODOO</span>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>مدير إدارة المرتجعات</li>
+                    <li>مشرف استلام المرتجعات</li>
+                    <li>فريق فحص ومعالجة المرتجعات</li>
+                    <li>منسق المرتجعات مع الموردين</li>
+                </ul>
+                <div class="odoo-info">
+                    <span class="oi-role">👤 Quality User</span>
+                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Quality + Inventory (read)</span></div>
+                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">User</span></div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /cards-grid -->
+
+    <!-- ══ SECTION 4 ══ -->
     <div class="page-break"></div>
-    <h2 id="departments">4. الإدارات الستة التشغيلية</h2>
+    <h2 id="departments"><span class="sec-num">4</span> الإدارات الستة التشغيلية</h2>
     <table>
         <caption>الإدارات التشغيلية والتسلسل الهرمي الداخلي</caption>
         <thead>
@@ -606,48 +1004,48 @@
                 <th>الإدارة</th>
                 <th>المدير المباشر</th>
                 <th>عدد الموظفين</th>
-                <th>التسلسل الهرمي الداخلي</th>
-                <th>الوثائق التي تنتجها</th>
+                <th>التسلسل الهرمي</th>
+                <th>الوثائق المنتجة</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td><strong>إدارة الاستلام والرقابة</strong></td>
+                <td>📦 <strong>الاستلام والرقابة</strong></td>
                 <td>مدير قسم الاستلام</td>
                 <td>~30 موظف</td>
                 <td>مدير ← مشرف ← فريق</td>
                 <td>نماذج GRN، تقارير الرقابة</td>
             </tr>
             <tr>
-                <td><strong>إدارة فحص ومراقبة الجودة</strong></td>
+                <td>🔬 <strong>فحص ومراقبة الجودة</strong></td>
                 <td>مدير إدارة الجودة</td>
                 <td>~15 مفتش</td>
                 <td>مدير ← فرق الفحص</td>
                 <td>تقارير الجودة، شهادات المطابقة</td>
             </tr>
             <tr>
-                <td><strong>إدارة التخزين وتحديد المواقع</strong></td>
+                <td>🏬 <strong>التخزين وتحديد المواقع</strong></td>
                 <td>مدير عمليات التخزين</td>
                 <td>~70 موظف</td>
                 <td>مدير ← مهندس ← مشرفي ← فرق</td>
                 <td>خرائط المواقع، تقارير الجرد</td>
             </tr>
             <tr>
-                <td><strong>إدارة تحضير الطلبات والتوزيع</strong></td>
+                <td>📋 <strong>تحضير الطلبات والتوزيع</strong></td>
                 <td>مدير عمليات التوزيع</td>
                 <td>~120 عامل</td>
                 <td>مدير ← مشرفي ← مناطق ← عمال</td>
                 <td>قوائم السحب، إذنات التسليم</td>
             </tr>
             <tr>
-                <td><strong>إدارة أسطول النقل والتوزيع</strong></td>
+                <td>🚚 <strong>أسطول النقل والتوزيع</strong></td>
                 <td>مدير النقل والتوزيع</td>
                 <td>~70 سائق</td>
                 <td>مدير ← منسق ← فرق</td>
                 <td>جداول النقل، تقارير الأسطول</td>
             </tr>
             <tr>
-                <td><strong>إدارة المرتجعات وتصحيح المخزون</strong></td>
+                <td>↩️ <strong>المرتجعات وتصحيح المخزون</strong></td>
                 <td>مدير إدارة المرتجعات</td>
                 <td>~12 موظف</td>
                 <td>مدير ← مشرف ← فرق</td>
@@ -656,15 +1054,24 @@
         </tbody>
     </table>
 
+    <!-- ══ SECTION 5 – RACI ══ -->
     <div class="page-break"></div>
-    <h2 id="raci-matrix">5. مصفوفة RACI: الأدوار × المراحل</h2>
-    <table>
-        <caption>مصفوفة المسؤوليات لمراحل الدورة المستندية الـ8</caption>
+    <h2 id="raci-matrix"><span class="sec-num">5</span> مصفوفة RACI: الأدوار × المراحل</h2>
+
+    <div class="raci-legend">
+        <div class="raci-legend-item"><div class="badge badge-r">R</div><span>Responsible – المسؤول الرئيسي</span></div>
+        <div class="raci-legend-item"><div class="badge badge-a">A</div><span>Accountable – المسؤول عن التنفيذ</span></div>
+        <div class="raci-legend-item"><div class="badge badge-c">C</div><span>Consulted – يُستشار</span></div>
+        <div class="raci-legend-item"><div class="badge badge-i">I</div><span>Informed – يُعلَم</span></div>
+    </div>
+
+    <table class="raci-table">
+        <caption>مصفوفة مسؤوليات مراحل الدورة المستندية الـ8</caption>
         <thead>
             <tr>
                 <th>المرحلة</th>
                 <th>مدير المستودع</th>
-                <th>مدير تقنية المعلومات</th>
+                <th>مدير ت.م</th>
                 <th>مدير الجودة</th>
                 <th>مدير المالية</th>
                 <th>إدارة الاستلام</th>
@@ -678,133 +1085,52 @@
         <tbody>
             <tr>
                 <td><strong>PR</strong><br><small>طلب الشراء</small></td>
-                <td>A</td>
-                <td>C</td>
-                <td>I</td>
-                <td>R</td>
-                <td>C</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
+                <td class="a-cell">A</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="r-cell">R</td>
+                <td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
             </tr>
             <tr>
                 <td><strong>PO</strong><br><small>أمر الشراء</small></td>
-                <td>A</td>
-                <td>C</td>
-                <td>I</td>
-                <td>R</td>
-                <td>C</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
+                <td class="a-cell">A</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="r-cell">R</td>
+                <td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
             </tr>
             <tr>
                 <td><strong>ASN</strong><br><small>إشعار الشحن</small></td>
-                <td>I</td>
-                <td>C</td>
-                <td>I</td>
-                <td>I</td>
-                <td>C</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
+                <td class="i-cell">I</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td>
+                <td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
             </tr>
             <tr>
                 <td><strong>GRN</strong><br><small>الاستلام والجودة</small></td>
-                <td>A</td>
-                <td>C</td>
-                <td>A</td>
-                <td>R</td>
-                <td>R</td>
-                <td>A</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
+                <td class="a-cell">A</td><td class="c-cell">C</td><td class="a-cell">A</td><td class="r-cell">R</td>
+                <td class="r-cell">R</td><td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
             </tr>
             <tr>
                 <td><strong>Putaway</strong><br><small>التخزين الموجه</small></td>
-                <td>A</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>A</td>
-                <td>R</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
+                <td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
+                <td class="i-cell">I</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
             </tr>
             <tr>
                 <td><strong>Picking</strong><br><small>تحضير الطلبات</small></td>
-                <td>A</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>A</td>
-                <td>R</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
+                <td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
+                <td class="i-cell">I</td><td class="i-cell">I</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="i-cell">I</td><td class="i-cell">I</td>
             </tr>
             <tr>
                 <td><strong>Dispatch</strong><br><small>الشحن والتوزيع</small></td>
-                <td>A</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>A</td>
-                <td>R</td>
-                <td>I</td>
-                <td>I</td>
+                <td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
+                <td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="i-cell">I</td>
             </tr>
             <tr>
                 <td><strong>Returns</strong><br><small>المرتجعات والتسويات</small></td>
-                <td>A</td>
-                <td>C</td>
-                <td>A</td>
-                <td>R</td>
-                <td>C</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>I</td>
-                <td>A</td>
-                <td>R</td>
+                <td class="a-cell">A</td><td class="c-cell">C</td><td class="a-cell">A</td><td class="r-cell">R</td>
+                <td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="r-cell">R</td>
             </tr>
         </tbody>
     </table>
 
-    <div class="highlight-box">
-        <strong>شرح المصفوفة:</strong> 
-        <ul>
-            <li><strong>R</strong> = Responsible (مسؤول رئيسي)</li>
-            <li><strong>A</strong> = Accountable (مسؤول عن التنفيذ)</li>
-            <li><strong>C</strong> = Consulted (يستشار)</li>
-            <li><strong>I</strong> = Informed (يُعلم)</li>
-        </ul>
-    </div>
-
+    <!-- ══ SECTION 6 – ROLE MAPPING ══ -->
     <div class="page-break"></div>
-    <h2 id="role-mapping">6. جدول تعيين الأدوار في أودو</h2>
+    <h2 id="role-mapping"><span class="sec-num">6</span> جدول تعيين الأدوار في أودو</h2>
     <table>
-        <caption>جدول تعيين كامل: المنصب → Role في أودو → الوحدات → مستوى الصلاحية</caption>
+        <caption>تعيين كامل: المنصب → Role في أودو → الوحدات → مستوى الصلاحية</caption>
         <thead>
             <tr>
                 <th>المنصب</th>
@@ -818,87 +1144,97 @@
                 <td><strong>مدير المستودع التنفيذي</strong></td>
                 <td>Inventory Manager</td>
                 <td>كل وحدات المخزون</td>
-                <td>Admin</td>
+                <td><span class="level-admin">Admin</span></td>
             </tr>
             <tr>
                 <td><strong>مدير المستودع التنفيذي</strong></td>
                 <td>System Administrator</td>
                 <td>Settings كاملة</td>
-                <td>Admin</td>
+                <td><span class="level-admin">Admin</span></td>
             </tr>
             <tr>
-                <td><strong>مدير تقنية المعلومات</strong></td>
+                <td><strong>مدير سلاسل الإمداد</strong></td>
                 <td>System Administrator</td>
                 <td>Settings كاملة</td>
-                <td>Admin</td>
+                <td><span class="level-admin">Admin</span></td>
             </tr>
             <tr>
                 <td><strong>مدير الجودة والسلامة الغذائية</strong></td>
                 <td>Quality Administrator</td>
                 <td>Quality + Inventory (read)</td>
-                <td>Admin</td>
+                <td><span class="level-admin">Admin</span></td>
             </tr>
             <tr>
                 <td><strong>مدير المحاسبة والرقابة المالية</strong></td>
                 <td>Accounting Manager</td>
                 <td>Purchase + Accounting</td>
-                <td>Manager</td>
+                <td><span class="level-manager">Manager</span></td>
             </tr>
             <tr>
                 <td><strong>مشرف الاستلام</strong></td>
                 <td>Inventory User</td>
                 <td>Inventory + Quality</td>
-                <td>User</td>
+                <td><span class="level-user">User</span></td>
             </tr>
             <tr>
                 <td><strong>مشرف التخزين</strong></td>
                 <td>Inventory User</td>
                 <td>Inventory + Barcode</td>
-                <td>User</td>
+                <td><span class="level-user">User</span></td>
             </tr>
             <tr>
                 <td><strong>مشرف الجودة</strong></td>
                 <td>Quality User</td>
                 <td>Quality + Inventory (read)</td>
-                <td>User</td>
+                <td><span class="level-user">User</span></td>
             </tr>
             <tr>
                 <td><strong>عامل السحب</strong></td>
                 <td>Barcode User</td>
                 <td>Barcode فقط</td>
-                <td>User</td>
+                <td><span class="level-user">User</span></td>
             </tr>
             <tr>
                 <td><strong>السائق</strong></td>
                 <td>Fleet User</td>
                 <td>Fleet</td>
-                <td>User</td>
+                <td><span class="level-user">User</span></td>
             </tr>
             <tr>
                 <td><strong>مفتش الجودة</strong></td>
                 <td>Quality User</td>
                 <td>Quality + Inventory (read)</td>
-                <td>User</td>
+                <td><span class="level-user">User</span></td>
             </tr>
         </tbody>
     </table>
 
     <div class="highlight-box">
-        <strong>ملاحظة هامة:</strong> هذا الجدول يضمن تعيين الأدوار المناسبة لكل مستخدم في Odoo مع الصلاحيات المناسبة، مما يضمن الأمان والامتثال في النظام.
+        <strong>⚠️ ملاحظة هامة:</strong> هذا الجدول يضمن تعيين الأدوار المناسبة لكل مستخدم في Odoo مع الصلاحيات المناسبة، مما يضمن الأمان والامتثال في النظام ومنع التعارض في الصلاحيات.
     </div>
 
-    <!-- Signature Section -->
+    <!-- ══ SIGNATURES ══ -->
     <div class="page-break"></div>
     <div class="signature-line">
-        <div>
-            <strong>إعداد والمراجعة:</strong><br>
-            فريق تحويل Brandzo إلى Odoo
+        <div class="sig-box">
+            <label>إعداد ومراجعة</label>
+            <strong>فريق تحويل Brandzo إلى Odoo</strong>
         </div>
-        <div>
-            <strong>الموافقة:</strong><br>
-            مدير نظام المعلومات
+        <div class="sig-box">
+            <label>اعتماد</label>
+            <strong>مدير نظام المعلومات</strong>
+        </div>
+        <div class="sig-box">
+            <label>التاريخ</label>
+            <strong>12 مايو 2026</strong>
         </div>
     </div>
-</div>
+
+    <div class="page-footer">
+        تقرير هيكل الوظائف والأدوار – نظام Brandzo مع تكامل Odoo 17 Enterprise &nbsp;|&nbsp; الإصدار 1.0 &nbsp;|&nbsp; سري – للاستخدام الداخلي فقط
+    </div>
+
+    </div><!-- /inner -->
+</div><!-- /container -->
 </body>
 </html>
