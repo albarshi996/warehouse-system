@@ -689,11 +689,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <!-- 
-  FIX: h3-js v4 UMD bundle — exposes window.h3 global
-  v4 uses the new API: latLngToCell / cellToBoundary (matching our code)
-  Using specific version pin for reliability
 -->
-<script src="https://cdn.jsdelivr.net/npm/h3-js@4.1.0/dist/h3-js.umd.js"></script>
 
 <script>
 (function () {
@@ -1191,32 +1187,37 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     if (markers[d.id]) markers[d.id].openPopup();
   }
 
-  // ── Hex Layer ──────────────────────────────────────────────────────────
+  // ── Hex Layer (Pure Math — no external library) ────────────────────────
+  // حساب السداسيات بالرياضيات المباشرة — بدون مكتبة h3-js
   let hexActive = false;
   let hexLayer = null;
-  const h3Res = 8;
+
+  /**
+   * ينتج مضلعاً سداسياً مركزه (lat, lng) بنصف قطر size بالدرجات.
+   * يُعدّل لفارق خطوط الطول عند خط العرض 32° (بنغازي).
+   */
+  function hexPolygon(lat, lng, size) {
+    const pts = [];
+    const lngScale = Math.cos(lat * Math.PI / 180);
+    for (let i = 0; i < 6; i++) {
+      const angleRad = (Math.PI / 180) * (60 * i);
+      pts.push([
+        lng + (size / lngScale) * Math.cos(angleRad),
+        lat + size * Math.sin(angleRad)
+      ]);
+    }
+    pts.push(pts[0]); // إغلاق الحلقة
+    return pts;
+  }
 
   function renderHexLayer() {
     if (hexLayer) { rhMap.removeLayer(hexLayer); hexLayer = null; }
-    if (typeof h3 === 'undefined') {
-      showToast('تعذّر تحميل مكتبة H3', 'error');
-      hexActive = false;
-      document.getElementById('btn-hex-toggle').classList.remove('active-hex');
-      document.getElementById('btn-hex-toggle').textContent = '⬡ خرائط سداسية';
-      markerLayer.addTo(rhMap);
-      return;
-    }
-    const features = DATA.map(d => {
-      const hexIndex = h3.latLngToCell(d.lat, d.lng, h3Res);
-      const boundary = h3.cellToBoundary(hexIndex);
-      const coords   = boundary.map(([la, lo]) => [lo, la]);
-      coords.push(coords[0]);
-      return {
-        type: 'Feature',
-        properties: { id: d.id, match: d.market_match, data: d },
-        geometry: { type: 'Polygon', coordinates: [coords] }
-      };
-    });
+    const hexSize = 0.004; // ~450م نصف قطر عند خط عرض بنغازي
+    const features = DATA.map(d => ({
+      type: 'Feature',
+      properties: { id: d.id, match: d.market_match, data: d },
+      geometry: { type: 'Polygon', coordinates: [hexPolygon(d.lat, d.lng, hexSize)] }
+    }));
     hexLayer = L.geoJSON({ type: 'FeatureCollection', features }, {
       style: feat => ({
         fillColor:   matchColor(feat.properties.match),
