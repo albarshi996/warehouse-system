@@ -98,7 +98,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     grid-template-columns: 1fr 360px;
     gap: 12px;
     flex: 1;
-    min-height: 520px;
+    min-height: 0;
+    height: calc(100vh - 180px);
   }
 
   /* ── Panel Header ──────────────────────────────────────────────── */
@@ -201,6 +202,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-height: 0;
   }
   #rh-search-wrap {
     display: flex;
@@ -249,7 +251,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   }
 
   /* ── Table ──────────────────────────────────────────────────────── */
-  #rh-tscroll { flex: 1; overflow-y: auto; }
+  #rh-tscroll { flex: 1; overflow-y: auto; height: 0; min-height: 0; }
   .rh-table { width: 100%; border-collapse: collapse; font-size: 11px; }
   .rh-table th {
     background: var(--rh-bg-surface);
@@ -417,6 +419,12 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   .rh-popup-row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 5px; }
   .rh-popup-key { color: #8b949e; font-size: 11px; }
   .rh-popup-val { color: #e6edf3; font-size: 11px; font-weight: 500; }
+  .popup-title { font-size: 13px; font-weight: 700; color: #e6edf3; margin-bottom: 8px; }
+  .popup-row { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; font-size: 11px; }
+  .popup-row.section { border-top: 1px solid #30363d; margin-top: 6px; padding-top: 4px; }
+  .pk { color: #8b949e; }
+  .pv { color: #e6edf3; font-weight: 500; }
+  .pv-desc { color: #8b949e; font-size: 10px; line-height: 1.5; }
   .rh-popup-notes {
     margin-top: 8px; padding-top: 8px;
     border-top: 1px solid #30363d;
@@ -445,7 +453,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     <div>
       <div class="pt-text">لوحة التجزئة الجغرافية — بنغازي 2026</div>
       <div class="pt-sub">تحليل ديموغرافي وتجاري شامل · جميع أحياء المدينة</div>
-  <div style="font-size:10px;color:#484f58;margin-top:3px;direction:rtl;">
+  <div style="font-size:10px;color:#6e7681;margin-top:2px;direction:rtl;font-style:italic;">
     تم إعداد البحث من قبل: رمزي باش · محمد البرشي
   </div>
     </div>
@@ -1655,6 +1663,11 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         const cLng = lng + shift;
         const d = nearestNeighbor(cLat, cLng);
         if (!d) continue;
+        // clip to Benghazi footprint: skip cells too far from any data point
+        const dlat = cLat - d.lat;
+        const dlng = (cLng - d.lng) * LAT_CORR;
+        const distDeg = Math.sqrt(dlat * dlat + dlng * dlng);
+        if (distDeg > 0.055) continue;
         features.push({
           type: 'Feature',
           properties: { id: d.id, match: d.market_match, data: d },
