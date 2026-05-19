@@ -445,9 +445,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     <div>
       <div class="pt-text">لوحة التجزئة الجغرافية — بنغازي 2026</div>
       <div class="pt-sub">تحليل ديموغرافي وتجاري شامل · جميع أحياء المدينة</div>
-      <div class="pt-credit" style="font-size:10px;color:#484f58;margin-top:2px;direction:rtl;">
-        تم إعداد البحث من قبل: رمزي باش · محمد البرشي
-      </div>
+  <div style="font-size:10px;color:#484f58;margin-top:3px;direction:rtl;">
+    تم إعداد البحث من قبل: رمزي باش · محمد البرشي
+  </div>
     </div>
   </div>
 
@@ -522,13 +522,12 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         <div id="rh-search-wrap" style="position:relative;">
           <span class="srch-icon">🔍</span>
           <input id="rh-search" type="text" placeholder="ابحث باسم الحي أو المنطقة..." />
-          <div id="rh-autocomplete" style="
-            display:none; position:absolute; top:100%; right:0; left:0;
-            background:#1c2128; border:1px solid #30363d; border-top:none;
-            border-radius:0 0 8px 8px; z-index:1000; max-height:240px;
-            overflow-y:auto; direction:rtl;
-          "></div>
         </div>
+  <div id="rh-ac" style="display:none;position:absolute;top:100%;right:0;left:0;
+    background:#1c2128;border:1px solid #30363d;border-top:none;
+    border-radius:0 0 8px 8px;z-index:2000;max-height:220px;
+    overflow-y:auto;direction:rtl;box-shadow:0 8px 24px rgba(0,0,0,.5);">
+  </div>
       </div>
 
       <!-- Class filters -->
@@ -1606,73 +1605,78 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   let hexActive = false;
   let hexLayer = null;
 
-  const BNGH_BOUNDS = {
-    latMin: 31.90, latMax: 32.28,
-    lngMin: 19.95, lngMax: 20.65
-  };
-  const HEX_R = 0.012;
+  // ── Hex Grid: Voronoi Coverage across full Benghazi ──────────────
+  const HEX_R   = 0.013;           // نصف قطر ~1.4كم
+  const LAT_CORR = Math.cos(32.1 * Math.PI / 180); // 0.848
 
-  /**
-   * ينتج مضلعاً سداسياً مركزه (lat, lng) بنصف قطر ثابت.
-   * flat-top hex: زوايا الرؤوس 0, 60, 120, 180, 240, 300.
-   */
-  function hexPolygon(lat, lng) {
+  function hexPolygon(cLat, cLng) {
+    // pointy-top hexagon
     const pts = [];
-    const lngScale = Math.cos(lat * Math.PI / 180);
     for (let i = 0; i < 6; i++) {
-      const angleRad = (Math.PI / 180) * (60 * i);
+      const a = (Math.PI / 180) * (60 * i - 30);
       pts.push([
-        lng + (HEX_R / lngScale) * Math.cos(angleRad),
-        lat + HEX_R * Math.sin(angleRad)
+        cLng + (HEX_R / LAT_CORR) * Math.cos(a),
+        cLat + HEX_R               * Math.sin(a)
       ]);
     }
     pts.push(pts[0]);
     return pts;
   }
 
+  function nearestNeighbor(cLat, cLng) {
+    let best = null, bestD = Infinity;
+    for (const d of DATA) {
+      const dLat = cLat - d.lat;
+      const dLng = (cLng - d.lng) * LAT_CORR;
+      const dist = dLat * dLat + dLng * dLng;
+      if (dist < bestD) { bestD = dist; best = d; }
+    }
+    return best;
+  }
+
   function renderHexLayer() {
     if (hexLayer) { rhMap.removeLayer(hexLayer); hexLayer = null; }
 
+    // حدود بنغازي الفعلية
+    const LAT_MIN = 31.88, LAT_MAX = 32.30;
+    const LNG_MIN = 19.92, LNG_MAX = 20.68;
+
+    // pointy-top hex grid spacing
+    const rowH = HEX_R * 2;              // ارتفاع الصف
+    const colW = HEX_R * Math.sqrt(3);   // عرض العمود
+    const offsetLng = colW / LAT_CORR;   // تصحيح خط العرض
+
     const features = [];
-    const lngScale = Math.cos(32.1 * Math.PI / 180);
-    const stepX = (3 * HEX_R) / lngScale;
-    const stepY = (Math.sqrt(3) * HEX_R) / 2;
-
-    let rowIndex = 0;
-    for (let lat = BNGH_BOUNDS.latMin - HEX_R; lat <= BNGH_BOUNDS.latMax + HEX_R; lat += stepY) {
-      let startLng = BNGH_BOUNDS.lngMin - (2 * HEX_R / lngScale);
-      if (rowIndex % 2 !== 0) startLng += (1.5 * HEX_R) / lngScale;
-
-      for (let lng = startLng; lng <= BNGH_BOUNDS.lngMax + (2 * HEX_R / lngScale); lng += stepX) {
-        let nearest = null;
-        let minDist = Infinity;
-        for (const d of DATA) {
-          const d2 = ((lat - d.lat) ** 2) + ((lng - d.lng) * lngScale) ** 2;
-          if (d2 < minDist) { minDist = d2; nearest = d; }
-        }
-
-        if (nearest) {
-          features.push({
-            type: 'Feature',
-            properties: { id: nearest.id, match: nearest.market_match, data: nearest },
-            geometry: { type: 'Polygon', coordinates: [hexPolygon(lat, lng)] }
-          });
-        }
+    let row = 0;
+    for (let lat = LAT_MIN; lat <= LAT_MAX; lat += rowH * 0.75) {
+      const shift = (row % 2 === 0) ? 0 : (colW / 2 / LAT_CORR);
+      for (let lng = LNG_MIN - offsetLng; lng <= LNG_MAX + offsetLng; lng += offsetLng) {
+        const cLat = lat;
+        const cLng = lng + shift;
+        const d = nearestNeighbor(cLat, cLng);
+        if (!d) continue;
+        features.push({
+          type: 'Feature',
+          properties: { id: d.id, match: d.market_match, data: d },
+          geometry: { type: 'Polygon', coordinates: [hexPolygon(cLat, cLng)] }
+        });
       }
-      rowIndex++;
+      row++;
     }
 
     hexLayer = L.geoJSON({ type: 'FeatureCollection', features }, {
       style: feat => ({
         fillColor:   matchColor(feat.properties.match),
-        fillOpacity: 0.55,
-        color:       '#ffffff22',
+        fillOpacity: 0.50,
+        color:       'rgba(255,255,255,0.08)',
         weight:      1
       }),
       onEachFeature: (feat, layer) => {
         layer.bindPopup(buildPopup(feat.properties.data), { maxWidth: 280 });
-        layer.on('mouseover', function () { this.setStyle({ fillOpacity: 0.82, weight: 2, color: '#ffffff55' }); });
-        layer.on('mouseout',  function () { hexLayer.resetStyle(this); });
+        layer.on('mouseover', function () {
+          this.setStyle({ fillOpacity: 0.80, weight: 2, color: 'rgba(255,255,255,0.3)' });
+        });
+        layer.on('mouseout', function () { hexLayer.resetStyle(this); });
         layer.on('click', () => showNeighborhood(feat.properties.data, true));
       }
     }).addTo(rhMap);
@@ -1781,45 +1785,44 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
   // ── Filters & Autocomplete ─────────────────────────────────────────────
   document.getElementById('rh-search').addEventListener('input', e => {
-    searchVal = e.target.value; renderTable();
-
-    const ac = document.getElementById('rh-autocomplete');
-    const q = e.target.value.trim();
+    searchVal = e.target.value;
+    renderTable();
+    const q = searchVal.trim();
+    const ac = document.getElementById('rh-ac');
     if (!q) { ac.style.display = 'none'; return; }
-
     const hits = DATA.filter(d => d.neighborhood.includes(q)).slice(0, 8);
     if (!hits.length) { ac.style.display = 'none'; return; }
-
-    ac.innerHTML = hits.map(d => `
-      <div data-ac="${d.id}" style="
-        padding:7px 12px; cursor:pointer; font-size:12px;
-        color:#e6edf3; border-bottom:1px solid #21262d;
-        display:flex; justify-content:space-between; align-items:center;
-      " onmouseover="this.style.background='#21262d'"
-         onmouseout="this.style.background=''">
+    const sectorNames = ['','وسط البلد','مناطق راقية','كثافة FMCG','لوجستي','ضواحي توسع'];
+    ac.innerHTML = hits.map(d =>
+      `<div data-ac="${d.id}" style="padding:8px 12px;cursor:pointer;font-size:12px;
+        color:#e6edf3;border-bottom:1px solid #21262d;display:flex;
+        justify-content:space-between;align-items:center;gap:8px;"
+        onmouseover="this.style.background='#21262d'"
+        onmouseout="this.style.background=''">
         <span>${d.neighborhood}</span>
-        <span style="font-size:10px;color:#8b949e;">${['وسط','راقي','FMCG','لوجستي','ضاحية'][d.sector-1]}</span>
-      </div>
-    `).join('');
+        <span style="font-size:10px;color:#8b949e;white-space:nowrap;">${sectorNames[d.sector]||''}</span>
+      </div>`
+    ).join('');
     ac.style.display = 'block';
-
     ac.querySelectorAll('[data-ac]').forEach(el => {
-      el.addEventListener('click', () => {
+      el.addEventListener('mousedown', ev => {
+        ev.preventDefault();
         const d = DATA.find(x => x.id == el.dataset.ac);
         if (d) {
           document.getElementById('rh-search').value = d.neighborhood;
-          ac.style.display = 'none';
           searchVal = d.neighborhood;
+          ac.style.display = 'none';
           renderTable();
           showNeighborhood(d, false);
         }
       });
     });
   });
-
-  document.addEventListener('click', e => {
-    const ac = document.getElementById('rh-autocomplete');
-    if (!e.target.closest('#rh-search-wrap')) ac.style.display = 'none';
+  document.getElementById('rh-search').addEventListener('blur', () => {
+    setTimeout(() => {
+      const ac = document.getElementById('rh-ac');
+      if (ac) ac.style.display = 'none';
+    }, 150);
   });
 
   document.querySelectorAll('#rh-filters .fp').forEach(pill => {
