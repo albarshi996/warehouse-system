@@ -445,6 +445,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     <div>
       <div class="pt-text">لوحة التجزئة الجغرافية — بنغازي 2026</div>
       <div class="pt-sub">تحليل ديموغرافي وتجاري شامل · جميع أحياء المدينة</div>
+      <div class="pt-credit" style="font-size:10px;color:#484f58;margin-top:2px;direction:rtl;">
+        تم إعداد البحث من قبل: رمزي باش · محمد البرشي
+      </div>
     </div>
   </div>
 
@@ -516,9 +519,15 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
           <div class="ph-title">قائمة الأحياء</div>
           <span id="rh-row-count"></span>
         </div>
-        <div id="rh-search-wrap">
+        <div id="rh-search-wrap" style="position:relative;">
           <span class="srch-icon">🔍</span>
           <input id="rh-search" type="text" placeholder="ابحث باسم الحي أو المنطقة..." />
+          <div id="rh-autocomplete" style="
+            display:none; position:absolute; top:100%; right:0; left:0;
+            background:#1c2128; border:1px solid #30363d; border-top:none;
+            border-radius:0 0 8px 8px; z-index:1000; max-height:240px;
+            overflow-y:auto; direction:rtl;
+          "></div>
         </div>
       </div>
 
@@ -1593,39 +1602,66 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     if (markers[d.id]) markers[d.id].openPopup();
   }
 
-  // ── Hex Layer (Pure Math — no external library) ────────────────────────
-  // حساب السداسيات بالرياضيات المباشرة — بدون مكتبة h3-js
+  // ── Hex Layer (Grid Based - Voronoi Nearest Neighbor) ──────────────────
   let hexActive = false;
   let hexLayer = null;
 
+  const BNGH_BOUNDS = {
+    latMin: 31.90, latMax: 32.28,
+    lngMin: 19.95, lngMax: 20.65
+  };
+  const HEX_R = 0.012;
+
   /**
-   * ينتج مضلعاً سداسياً مركزه (lat, lng) بنصف قطر size بالدرجات.
-   * يُعدّل لفارق خطوط الطول عند خط العرض 32° (بنغازي).
+   * ينتج مضلعاً سداسياً مركزه (lat, lng) بنصف قطر ثابت.
+   * flat-top hex: زوايا الرؤوس 0, 60, 120, 180, 240, 300.
    */
-  function hexPolygon(lat, lng, size) {
+  function hexPolygon(lat, lng) {
     const pts = [];
-    // تصحيح: زاوية البداية 30° لسداسي مسطح الأعلى (flat-top)
-    // GeoJSON يتوقع [lng, lat] — lat يُحسب بـ sin، lng بـ cos مع تصحيح خط العرض
     const lngScale = Math.cos(lat * Math.PI / 180);
     for (let i = 0; i < 6; i++) {
-      const angleRad = (Math.PI / 180) * (60 * i + 30);
+      const angleRad = (Math.PI / 180) * (60 * i);
       pts.push([
-        lng + (size / lngScale) * Math.cos(angleRad),
-        lat + size * Math.sin(angleRad)
+        lng + (HEX_R / lngScale) * Math.cos(angleRad),
+        lat + HEX_R * Math.sin(angleRad)
       ]);
     }
-    pts.push(pts[0]); // إغلاق الحلقة
+    pts.push(pts[0]);
     return pts;
   }
 
   function renderHexLayer() {
     if (hexLayer) { rhMap.removeLayer(hexLayer); hexLayer = null; }
-    const hexSize = 0.004; // ~450م نصف قطر عند خط عرض بنغازي
-    const features = DATA.map(d => ({
-      type: 'Feature',
-      properties: { id: d.id, match: d.market_match, data: d },
-      geometry: { type: 'Polygon', coordinates: [hexPolygon(d.lat, d.lng, hexSize)] }
-    }));
+
+    const features = [];
+    const lngScale = Math.cos(32.1 * Math.PI / 180);
+    const stepX = (3 * HEX_R) / lngScale;
+    const stepY = (Math.sqrt(3) * HEX_R) / 2;
+
+    let rowIndex = 0;
+    for (let lat = BNGH_BOUNDS.latMin - HEX_R; lat <= BNGH_BOUNDS.latMax + HEX_R; lat += stepY) {
+      let startLng = BNGH_BOUNDS.lngMin - (2 * HEX_R / lngScale);
+      if (rowIndex % 2 !== 0) startLng += (1.5 * HEX_R) / lngScale;
+
+      for (let lng = startLng; lng <= BNGH_BOUNDS.lngMax + (2 * HEX_R / lngScale); lng += stepX) {
+        let nearest = null;
+        let minDist = Infinity;
+        for (const d of DATA) {
+          const d2 = ((lat - d.lat) ** 2) + ((lng - d.lng) * lngScale) ** 2;
+          if (d2 < minDist) { minDist = d2; nearest = d; }
+        }
+
+        if (nearest) {
+          features.push({
+            type: 'Feature',
+            properties: { id: nearest.id, match: nearest.market_match, data: nearest },
+            geometry: { type: 'Polygon', coordinates: [hexPolygon(lat, lng)] }
+          });
+        }
+      }
+      rowIndex++;
+    }
+
     hexLayer = L.geoJSON({ type: 'FeatureCollection', features }, {
       style: feat => ({
         fillColor:   matchColor(feat.properties.match),
@@ -1743,10 +1779,49 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     });
   }
 
-  // ── Filters ────────────────────────────────────────────────────────────
+  // ── Filters & Autocomplete ─────────────────────────────────────────────
   document.getElementById('rh-search').addEventListener('input', e => {
     searchVal = e.target.value; renderTable();
+
+    const ac = document.getElementById('rh-autocomplete');
+    const q = e.target.value.trim();
+    if (!q) { ac.style.display = 'none'; return; }
+
+    const hits = DATA.filter(d => d.neighborhood.includes(q)).slice(0, 8);
+    if (!hits.length) { ac.style.display = 'none'; return; }
+
+    ac.innerHTML = hits.map(d => `
+      <div data-ac="${d.id}" style="
+        padding:7px 12px; cursor:pointer; font-size:12px;
+        color:#e6edf3; border-bottom:1px solid #21262d;
+        display:flex; justify-content:space-between; align-items:center;
+      " onmouseover="this.style.background='#21262d'"
+         onmouseout="this.style.background=''">
+        <span>${d.neighborhood}</span>
+        <span style="font-size:10px;color:#8b949e;">${['وسط','راقي','FMCG','لوجستي','ضاحية'][d.sector-1]}</span>
+      </div>
+    `).join('');
+    ac.style.display = 'block';
+
+    ac.querySelectorAll('[data-ac]').forEach(el => {
+      el.addEventListener('click', () => {
+        const d = DATA.find(x => x.id == el.dataset.ac);
+        if (d) {
+          document.getElementById('rh-search').value = d.neighborhood;
+          ac.style.display = 'none';
+          searchVal = d.neighborhood;
+          renderTable();
+          showNeighborhood(d, false);
+        }
+      });
+    });
   });
+
+  document.addEventListener('click', e => {
+    const ac = document.getElementById('rh-autocomplete');
+    if (!e.target.closest('#rh-search-wrap')) ac.style.display = 'none';
+  });
+
   document.querySelectorAll('#rh-filters .fp').forEach(pill => {
     pill.addEventListener('click', () => {
       document.querySelectorAll('#rh-filters .fp').forEach(p => p.classList.remove('active'));
