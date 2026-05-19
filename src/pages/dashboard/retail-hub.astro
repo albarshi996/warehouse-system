@@ -703,7 +703,10 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   // القطاع 5: ضواحي التوسع
 
   const DEFAULT_DATA = [
-    // ── القطاع 1: وسط البلد والقلب التجاري القديم ──────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // القطاع 1: وسط البلد والقلب التجاري القديم
+    // المرجع الجغرافي: ميناء بنغازي 32.1175, 20.0622 — وسط البلد 32.1151, 20.0682
+    // ══════════════════════════════════════════════════════════════════
     {
       id: 1, neighborhood: 'وسط البلد', lat: 32.1151, lng: 20.0682, class: 'C',
       sector: 1, population: 65000, income: 'متوسط-جيد', flow: 'شلل تام',
@@ -719,7 +722,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       notes: 'جزء من النسيج التجاري القديم. تحديات حادة في توصيل الميل الأخير.'
     },
     {
-      id: 3, neighborhood: 'الصابري', lat: 32.1142, lng: 20.0745, class: 'C',
+      id: 3, neighborhood: 'الصابري', lat: 32.1142, lng: 20.0748, class: 'C',
       sector: 1, population: 40000, income: 'متوسط', flow: 'عالٍ جداً',
       infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
       segments_present: ['B','C'], gap: 'لا',
@@ -732,898 +735,703 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       segments_present: ['C'], gap: 'جزئياً ⚠',
       notes: 'تفتقر لمواقف تحميل وتنزيل. اعتماد حصري على مركبات النقل الخفيف.'
     },
-    // ── القطاع 2: مناطق راقية ───────────────────────────────────────────
     {
-      id: 5, neighborhood: 'فينيسيا', lat: 32.1205, lng: 20.0812, class: 'A',
-      sector: 2, population: 28000, income: 'مرتفع', flow: 'عالٍ',
-      infra: 'ممتاز', market_type: 'مول', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'أعلى دخل فردي في المدينة. Basket Size كبير. شارع فينيسيا يشهد ازدحاماً تجارياً.'
-    },
-    {
-      id: 6, neighborhood: 'طابلينو', lat: 32.1230, lng: 20.0770, class: 'A',
-      sector: 2, population: 22000, income: 'مرتفع', flow: 'عالٍ',
-      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'تمدد أفقي. فيلات سكنية. طريق طابلينو يشهد ازدحاماً بسبب المدارس الخاصة.'
-    },
-    {
-      id: 7, neighborhood: 'حي دبي', lat: 32.1180, lng: 20.0842, class: 'A',
-      sector: 2, population: 18000, income: 'مرتفع', flow: 'متوسط',
-      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
-      segments_present: ['A'], gap: 'لا',
-      notes: 'مجمعات سكنية راقية. طلب عالٍ على العلامات التجارية العالمية.'
-    },
-    {
-      id: 8, neighborhood: 'الفويهات', lat: 32.1182, lng: 20.0820, class: 'A',
-      sector: 2, population: 35000, income: 'مرتفع', flow: 'عالٍ',
-      infra: 'ممتاز', market_type: 'مختلط', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'شوارع واسعة تستوعب سلاسل الإمداد. مناسب لتوزيع المنتجات الفاخرة.'
-    },
-    {
-      id: 9, neighborhood: 'الحدائق', lat: 32.1215, lng: 20.0868, class: 'A',
-      sector: 2, population: 20000, income: 'مرتفع', flow: 'متوسط',
-      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'حي سكني هادئ. يستقطب فئات ذات دخل مرتفع. انسيابية ممتازة في الشوارع الداخلية.'
-    },
-    {
-      id: 10, neighborhood: 'بلعون', lat: 32.1255, lng: 20.0890, class: 'A',
-      sector: 2, population: 15000, income: 'مرتفع', flow: 'منخفض',
-      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'جزئي',
-      segments_present: ['A','B'], gap: 'جزئياً ⚠',
-      notes: 'كثافة منخفضة. مستوى معيشي مرتفع. يحتاج لتغطية تجزئة أكبر.'
-    },
-    {
-      id: 11, neighborhood: 'الهواري السكني', lat: 32.1010, lng: 20.1180, class: 'A',
-      sector: 2, population: 30000, income: 'مرتفع', flow: 'متوسط',
-      infra: 'جيد', market_type: 'مختلط', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'انسيابية في الشوارع الداخلية. مركبات توزيع متوسطة تعمل بكفاءة.'
-    },
-    {
-      id: 12, neighborhood: 'الرحبة', lat: 32.1240, lng: 20.0910, class: 'A',
-      sector: 2, population: 14000, income: 'مرتفع', flow: 'منخفض',
-      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'جزئي',
-      segments_present: ['A'], gap: 'جزئياً ⚠',
-      notes: 'حي نخبوي. طلب على المنتجات الفاخرة والمستوردة.'
-    },
-    {
-      id: 13, neighborhood: 'حي المهندسين', lat: 32.1192, lng: 20.0889, class: 'A',
-      sector: 2, population: 12000, income: 'مرتفع', flow: 'منخفض',
-      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'جزئي',
-      segments_present: ['A','B'], gap: 'جزئياً ⚠',
-      notes: 'يسكنه كوادر مهنية. دخل مرتفع. يتطلب تغطية تجزئة مباشرة.'
-    },
-    // ── القطاع 3: كثافة استهلاكية FMCG ─────────────────────────────────
-    {
-      id: 14, neighborhood: 'السلماني الشرقي', lat: 32.1158, lng: 20.0882, class: 'C',
-      sector: 3, population: 55000, income: 'متوسط', flow: 'عالٍ جداً',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'أعلى كتلة سكانية. محرك الاستهلاك اليومي. حجم مبيعات ضخم (Volume). حساسية سعرية عالية.'
-    },
-    {
-      id: 15, neighborhood: 'السلماني الغربي', lat: 32.1142, lng: 20.0862, class: 'C',
-      sector: 3, population: 48000, income: 'متوسط', flow: 'عالٍ جداً',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'FMCG بامتياز. ارتدادات تجارية شبه معدومة. توزيع في ساعات الصباح الباكر فقط.'
-    },
-    {
-      id: 16, neighborhood: 'الماجوري', lat: 32.1102, lng: 20.0928, class: 'C',
-      sector: 3, population: 60000, income: 'متوسط', flow: 'عالٍ جداً',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'طريق الماجوري محور رئيسي مزدحم. الازدحام مستمر طوال اليوم ويشتد مساءً.'
-    },
-    {
-      id: 17, neighborhood: 'البركة', lat: 32.1082, lng: 20.0955, class: 'C',
-      sector: 3, population: 52000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'كثافة سكانية عالية. يعتمد على السلع الأساسية والتموينية. Last-Mile يتطلب فانات صغيرة.'
-    },
-    {
-      id: 18, neighborhood: 'الكيش', lat: 32.1078, lng: 20.0978, class: 'C',
-      sector: 3, population: 58000, income: 'متوسط', flow: 'عالٍ جداً',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'من أكثر المناطق استهلاكاً للسلع سريعة الدوران. يغذي قلب المدينة.'
-    },
-    {
-      id: 19, neighborhood: 'بوهديمة', lat: 32.1062, lng: 20.1085, class: 'C',
-      sector: 3, population: 45000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'طرق داخلية ضيقة. عمليات إنزال البضائع معقدة وتستلزم جدولة دقيقة.'
-    },
-    {
-      id: 20, neighborhood: 'الليثي', lat: 32.1048, lng: 20.1068, class: 'C',
-      sector: 3, population: 55000, income: 'متوسط', flow: 'عالٍ جداً',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'كتلة سكانية حرجة. سلع أساسية ويومية. الارتدادات أمام المحلات معدومة تقريباً.'
-    },
-    {
-      id: 21, neighborhood: 'سيدي حسين', lat: 32.1032, lng: 20.1052, class: 'C',
-      sector: 3, population: 42000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'على الطريق الدائري (الرينق). ازدحام متواصل. فرصة لنقاط توزيع مصغرة.'
-    },
-    {
-      id: 22, neighborhood: 'الزريريعية', lat: 32.1122, lng: 20.0898, class: 'C',
-      sector: 3, population: 35000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'جزء من منطقة الكثافة الاستهلاكية المركزية. نمط استهلاك يومي مكثف.'
-    },
-    {
-      id: 23, neighborhood: 'اللثامة', lat: 32.1138, lng: 20.0912, class: 'C',
-      sector: 3, population: 30000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['C'], gap: 'لا',
-      notes: 'قريبة من سوق الجريد. حركة تجارية يومية مكثفة. يغلب عليها الطابع الشعبي.'
-    },
-    {
-      id: 24, neighborhood: 'راس عبيدة', lat: 32.1022, lng: 20.1038, class: 'C',
-      sector: 3, population: 40000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'كثافة سكانية مرتفعة. يحتاج تغطية أوسع للسلع الأساسية.'
-    },
-    {
-      id: 25, neighborhood: 'الوحيشي', lat: 32.1008, lng: 20.1022, class: 'C',
-      sector: 3, population: 36000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'توسع سكاني غير مخطط. بنية تحتية تحت ضغط. أرصفة مستغلة بالكامل.'
-    },
-    {
-      id: 26, neighborhood: 'السرتي', lat: 32.1052, lng: 20.0902, class: 'C',
-      sector: 3, population: 32000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['C'], gap: 'لا',
-      notes: 'تركز تجاري شعبي. استهلاك يومي للمواد الغذائية الأساسية.'
-    },
-    {
-      id: 27, neighborhood: 'بن يونس', lat: 32.1068, lng: 20.0942, class: 'C',
-      sector: 3, population: 28000, income: 'متوسط', flow: 'متوسط',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['C'], gap: 'لا',
-      notes: 'منطقة سكنية شعبية متوسطة الكثافة. يتطلب توزيع بالفانات الصغيرة.'
-    },
-    // ── القطاع 4: لوجستي وصناعي مختلط ─────────────────────────────────
-    {
-      id: 28, neighborhood: 'بوعطني', lat: 32.0982, lng: 20.1582, class: 'B',
-      sector: 4, population: 42000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
-      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
-      segments_present: ['A','B','C'], gap: 'لا',
-      notes: 'شريان التوزيع الرئيسي. طرق واسعة للشاحنات الثقيلة. أفضل موقع للمستودعات المركزية (Hubs).'
-    },
-    {
-      id: 29, neighborhood: 'حي السلام', lat: 32.0955, lng: 20.1450, class: 'B',
-      sector: 4, population: 38000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
-      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'مخازن رئيسية ومحطات وقود مركزية. طابع عمالي. ملاءم لإدارة دورة المخازن.'
-    },
-    {
-      id: 30, neighborhood: 'شبنة', lat: 32.0752, lng: 20.1008, class: 'B',
-      sector: 4, population: 28000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'جيد', market_type: 'مختلط', market_match: 'جزئي',
-      segments_present: ['B','C'], gap: 'جزئياً ⚠',
-      notes: 'طابع صناعي/سكني مختلط. طرق رئيسية جيدة لتحمل أوزان النقل الثقيل.'
-    },
-    {
-      id: 31, neighborhood: 'قاريونس', lat: 32.0802, lng: 20.0802, class: 'B',
-      sector: 4, population: 65000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
-      infra: 'ممتاز', market_type: 'مختلط', market_match: 'مطابق',
-      segments_present: ['A','B','C'], gap: 'لا',
-      notes: 'كثافة جامعية موسمية (طلاب). استهلاك مزدوج منزلي ومؤسسي. بنية تحتية ممتازة.'
-    },
-    {
-      id: 32, neighborhood: 'المساكن', lat: 32.0882, lng: 20.1342, class: 'B',
-      sector: 4, population: 32000, income: 'متوسط', flow: 'متوسط',
-      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
-      segments_present: ['B','C'], gap: 'جزئياً ⚠',
-      notes: 'سكن عمال. نمو عمراني نشط. قريب من المحاور اللوجستية الرئيسية.'
-    },
-    {
-      id: 33, neighborhood: 'أرض قريش', lat: 32.0842, lng: 20.1242, class: 'B',
-      sector: 4, population: 22000, income: 'متوسط', flow: 'متوسط',
-      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
-      segments_present: ['B'], gap: 'جزئياً ⚠',
-      notes: 'منطقة سكنية ذات طابع مختلط. صالحة كنقطة ارتكاز ثانوية للتوزيع.'
-    },
-    {
-      id: 34, neighborhood: 'سيدي فرج', lat: 32.1052, lng: 20.0482, class: 'B',
-      sector: 4, population: 45000, income: 'متوسط', flow: 'منخفض جداً',
-      infra: 'متوسط', market_type: 'لا يوجد', market_match: 'غير مطابق',
-      segments_present: ['C'], gap: 'نعم ⚠⚠',
-      notes: 'بعيد عن مراكز التوزيع. سهولة وصول ضعيفة. فجوة استثمارية حرجة.'
-    },
-    // ── القطاع 5: ضواحي التوسع ─────────────────────────────────────────
-    // المحور الشرقي
-    {
-      id: 35, neighborhood: 'الكويفية', lat: 32.1302, lng: 20.0622, class: 'D',
-      sector: 5, population: 25000, income: 'متباين', flow: 'انسيابي',
-      infra: 'قيد التطور', market_type: 'تجزئة', market_match: 'جزئي',
-      segments_present: ['A','B'], gap: 'جزئياً ⚠',
-      notes: 'أسرع مناطق التمدد الحضري. انسيابية عالية. نقص في الأسواق المتكاملة.'
-    },
-    {
-      id: 36, neighborhood: 'سيدي خليفة', lat: 32.1345, lng: 20.0682, class: 'D',
-      sector: 5, population: 20000, income: 'متباين', flow: 'انسيابي',
-      infra: 'قيد التطور', market_type: 'تجزئة', market_match: 'غير مطابق',
-      segments_present: ['B'], gap: 'نعم ⚠',
-      notes: 'تمدد سكاني شرقي. بنية خدمات قيد الاستكمال. فرصة تجارية مستقبلية واضحة.'
-    },
-    {
-      id: 37, neighborhood: 'بودزيرة', lat: 32.1022, lng: 20.1802, class: 'D',
-      sector: 5, population: 18000, income: 'متباين', flow: 'انسيابي',
-      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
-      segments_present: ['B','C'], gap: 'نعم ⚠',
-      notes: 'محور شرقي. خلو من الأسواق المتكاملة. تكاليف لوجستية منخفضة للدخول.'
-    },
-    // المحور الغربي
-    {
-      id: 38, neighborhood: 'قنفوذة', lat: 32.0282, lng: 20.0222, class: 'D',
-      sector: 5, population: 30000, income: 'متباين', flow: 'انسيابي',
-      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
-      segments_present: ['C'], gap: 'نعم ⚠',
-      notes: 'محور غربي جنوبي. معدلات نمو سكاني مرتفعة. تعتمد على الطرق السريعة.'
-    },
-    {
-      id: 39, neighborhood: 'الفعكات', lat: 32.0382, lng: 20.0422, class: 'D',
-      sector: 5, population: 22000, income: 'متباين', flow: 'انسيابي',
-      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
-      segments_present: ['C'], gap: 'نعم ⚠',
-      notes: 'غوط الرمان. تمدد عشوائي. فرصة توغل تجاري بتكاليف تشغيل منخفضة.'
-    },
-    {
-      id: 40, neighborhood: 'بوصنيب', lat: 32.0482, lng: 20.0552, class: 'D',
-      sector: 5, population: 18000, income: 'متباين', flow: 'انسيابي',
-      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
-      segments_present: ['C'], gap: 'نعم ⚠⚠',
-      notes: 'ضاحية غربية. بنية خدمات غير مكتملة. سوق تجزئة ناشئ.'
-    },
-    // المحور الجنوبي / المطار
-    {
-      id: 41, neighborhood: 'بنينا', lat: 32.0962, lng: 20.2692, class: 'D',
-      sector: 5, population: 28000, income: 'متباين', flow: 'متوسط',
-      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
-      segments_present: ['B','C'], gap: 'جزئياً ⚠',
-      notes: 'قرب المطار. مدخل رئيسي لبنغازي. ازدحام في ساعات الذروة عند المدخل فقط.'
-    },
-    {
-      id: 42, neighborhood: 'الرجمة', lat: 32.0852, lng: 20.2352, class: 'D',
-      sector: 5, population: 20000, income: 'متوسط-جيد', flow: 'انسيابي',
-      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
-      segments_present: ['B','C'], gap: 'جزئياً ⚠',
-      notes: 'منطقة هادئة. تضم شرائح من ذوي الدخل الجيد. فرصة للتوسع التجاري.'
-    },
-    {
-      id: 43, neighborhood: 'النواقية', lat: 32.0752, lng: 20.1752, class: 'D',
-      sector: 5, population: 16000, income: 'متباين', flow: 'انسيابي',
-      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
-      segments_present: ['C'], gap: 'نعم ⚠',
-      notes: 'تمدد جنوبي. طرق سريعة ممتدة. نقص واضح في الخدمات التجارية.'
-    },
-    {
-      id: 44, neighborhood: 'الأبيار', lat: 32.0982, lng: 20.5122, class: 'D',
-      sector: 5, population: 25000, income: 'متباين', flow: 'انسيابي',
-      infra: 'جيد', market_type: 'تجزئة', market_match: 'غير مطابق',
-      segments_present: ['B','C'], gap: 'نعم ⚠',
-      notes: 'مدينة مرتبطة ببنغازي. تمثل فرصة توسع على الطريق الساحلي.'
-    },
-    {
-      id: 45, neighborhood: 'المقزحة السكني', lat: 32.0692, lng: 20.1502, class: 'D',
-      sector: 5, population: 12000, income: 'متباين', flow: 'انسيابي',
-      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
-      segments_present: ['B'], gap: 'نعم ⚠⚠',
-      notes: 'مشروع سكني ناشئ. يحتاج بنية تجارية متكاملة. فرصة استثمارية واضحة.'
-    },
-    // ── مناطق إضافية — دفعة ثانية ───────────────────────────────────
-    // الهواري وما حوله
-    {
-      id: 46, neighborhood: 'الهواري', lat: 32.1012, lng: 20.1195, class: 'A',
-      sector: 2, population: 32000, income: 'مرتفع', flow: 'متوسط',
-      infra: 'جيد', market_type: 'مختلط', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'حي راقٍ ممتد. شوارع داخلية واسعة. ازدحام عند المدارس فقط.'
-    },
-    {
-      id: 47, neighborhood: 'شارع القيروان', lat: 32.1138, lng: 20.0835, class: 'A',
-      sector: 2, population: 18000, income: 'مرتفع', flow: 'عالٍ',
-      infra: 'جيد', market_type: 'تجزئة', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'شارع تجاري رئيسي يربط أحياء الشمال. كثافة محلات متوسطة إلى عالية.'
-    },
-    {
-      id: 48, neighborhood: 'طريق الهواري', lat: 32.1022, lng: 20.1215, class: 'B',
-      sector: 4, population: 10000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
-      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'محور مروري رئيسي بين القلب التجاري والمناطق الراقية. طرق واسعة.'
-    },
-    {
-      id: 49, neighborhood: 'الرحبة', lat: 32.1242, lng: 20.0892, class: 'A',
-      sector: 2, population: 14000, income: 'مرتفع', flow: 'منخفض',
-      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'جزئي',
-      segments_present: ['A'], gap: 'جزئياً ⚠',
-      notes: 'حي نخبوي هادئ. طلب على المنتجات الفاخرة والمستوردة. تغطية تجزئة غير كافية.'
-    },
-    {
-      id: 50, neighborhood: 'طريق العروبة', lat: 32.1058, lng: 20.1135, class: 'B',
-      sector: 4, population: 8000, income: 'متوسط-جيد', flow: 'عالٍ',
-      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
-      segments_present: ['B'], gap: 'لا',
-      notes: 'طريق رئيسي يربط وسط المدينة بالأحياء الجنوبية الغربية.'
-    },
-    {
-      id: 51, neighborhood: 'طابلينو', lat: 32.1232, lng: 20.0768, class: 'A',
-      sector: 2, population: 22000, income: 'مرتفع', flow: 'عالٍ',
-      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'تمدد أفقي. فيلات سكنية وشوارع واسعة. مدارس خاصة تسبب ضغطاً مرورياً.'
-    },
-    {
-      id: 52, neighborhood: 'قمينس', lat: 32.2402, lng: 20.5952, class: 'D',
-      sector: 5, population: 18000, income: 'متباين', flow: 'انسيابي',
-      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
-      segments_present: ['C'], gap: 'نعم ⚠',
-      notes: 'بلدة شرق بنغازي على الطريق الساحلي. نمو سكاني. تفتقر لبنية تجارية متكاملة.'
-    },
-    {
-      id: 53, neighborhood: 'حي لبنان', lat: 32.1095, lng: 20.1062, class: 'C',
-      sector: 3, population: 28000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['B','C'], gap: 'جزئياً ⚠',
-      notes: 'حي سكني شعبي مكتظ. طرق داخلية ضيقة. يعتمد على السلع الأساسية اليومية.'
-    },
-    // قاريونس وما حوله
-    {
-      id: 54, neighborhood: 'قاريونس', lat: 32.0802, lng: 20.0802, class: 'B',
-      sector: 4, population: 65000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
-      infra: 'ممتاز', market_type: 'مختلط', market_match: 'مطابق',
-      segments_present: ['A','B','C'], gap: 'لا',
-      notes: 'كثافة جامعية موسمية (طلاب). استهلاك مزدوق منزلي ومؤسسي. بنية تحتية ممتازة.'
-    },
-    {
-      id: 55, neighborhood: 'قنفوذة', lat: 32.0282, lng: 20.0222, class: 'D',
-      sector: 5, population: 30000, income: 'متباين', flow: 'انسيابي',
-      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
-      segments_present: ['C'], gap: 'نعم ⚠',
-      notes: 'محور غربي جنوبي. معدلات نمو سكاني مرتفعة. تعتمد على الطرق السريعة.'
-    },
-    {
-      id: 56, neighborhood: 'تيكا', lat: 32.0748, lng: 20.0712, class: 'C',
-      sector: 3, population: 22000, income: 'متوسط', flow: 'متوسط',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'منطقة سكنية متوسطة قرب قاريونس. تغطية تجارية محدودة.'
-    },
-    {
-      id: 57, neighborhood: 'الحليس', lat: 32.0862, lng: 20.0682, class: 'C',
-      sector: 3, population: 20000, income: 'متوسط', flow: 'متوسط',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'حي سكني شعبي. كثافة استهلاكية يومية. بنية تحتية تحتاج تطوير.'
-    },
-    {
-      id: 58, neighborhood: 'أم مبروكة', lat: 32.0922, lng: 20.0752, class: 'C',
-      sector: 3, population: 25000, income: 'متوسط', flow: 'متوسط',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'منطقة سكنية. طلب على السلع الأساسية. قرب المحاور اللوجستية.'
-    },
-    {
-      id: 59, neighborhood: 'الفعكات', lat: 32.0382, lng: 20.0422, class: 'D',
-      sector: 5, population: 22000, income: 'متباين', flow: 'انسيابي',
-      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
-      segments_present: ['C'], gap: 'نعم ⚠',
-      notes: 'غوط الرمان. تمدد عشوائي. فرصة توغل تجاري بتكاليف تشغيل منخفضة.'
-    },
-    {
-      id: 60, neighborhood: 'سواني القوارشة', lat: 32.0652, lng: 20.0882, class: 'D',
-      sector: 5, population: 18000, income: 'متباين', flow: 'انسيابي',
-      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
-      segments_present: ['C'], gap: 'نعم ⚠',
-      notes: 'ضاحية جنوبية غربية. بنية خدمات أولية. فرصة دخول تجاري منخفض التكلفة.'
-    },
-    {
-      id: 61, neighborhood: 'جامعة بنغازي', lat: 32.0812, lng: 20.0872, class: 'B',
-      sector: 4, population: 12000, income: 'متوسط-جيد', flow: 'عالٍ',
-      infra: 'جيد', market_type: 'مختلط', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'حرم جامعي ومحيطه. كثافة طلابية موسمية عالية. طلب على المنتجات المحمولة الصغيرة.'
-    },
-    {
-      id: 62, neighborhood: 'الكيش', lat: 32.1078, lng: 20.0978, class: 'C',
-      sector: 3, population: 58000, income: 'متوسط', flow: 'عالٍ جداً',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'من أكثر المناطق استهلاكاً للسلع سريعة الدوران. يغذي قلب المدينة.'
-    },
-    {
-      id: 63, neighborhood: 'جليانة', lat: 32.1165, lng: 20.0721, class: 'C',
-      sector: 1, population: 45000, income: 'متوسط', flow: 'شلل تام',
-      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'جزء من النسيج التجاري القديم. تحديات حادة في توصيل الميل الأخير.'
-    },
-    {
-      id: 64, neighborhood: 'شارع الخليج', lat: 32.1185, lng: 20.0755, class: 'A',
-      sector: 2, population: 15000, income: 'مرتفع', flow: 'عالٍ',
-      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'شارع تجاري راقٍ. بنوك ومحلات فاخرة. ازدحام في ساعات الذروة التجارية.'
-    },
-    {
-      id: 65, neighborhood: 'سيد حسين', lat: 32.1032, lng: 20.1052, class: 'C',
-      sector: 3, population: 42000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'على الطريق الدائري. ازدحام متواصل. فرصة لنقاط توزيع مصغرة.'
-    },
-    {
-      id: 66, neighborhood: 'الحميضة', lat: 32.1112, lng: 20.0852, class: 'C',
-      sector: 3, population: 30000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'منطقة سكنية شعبية. حركة تجارية يومية. يغلب عليها الطابع الاستهلاكي.'
-    },
-    {
-      id: 67, neighborhood: 'البركة', lat: 32.1082, lng: 20.0955, class: 'C',
-      sector: 3, population: 52000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'كثافة سكانية عالية. يعتمد على السلع الأساسية والتموينية. Last-Mile يتطلب فانات صغيرة.'
-    },
-    {
-      id: 68, neighborhood: 'شارع الحجاز', lat: 32.1122, lng: 20.0808, class: 'A',
-      sector: 2, population: 12000, income: 'مرتفع', flow: 'عالٍ',
-      infra: 'جيد', market_type: 'تجزئة', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'شارع تجاري راقٍ. محلات متخصصة وعلامات تجارية. حركة مرورية مكثفة.'
-    },
-    {
-      id: 69, neighborhood: 'شارع عشرين', lat: 32.1092, lng: 20.0828, class: 'C',
-      sector: 1, population: 20000, income: 'متوسط', flow: 'عالٍ جداً',
-      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'شارع قديم في وسط المدينة. تجارة يومية مكثفة. ضيق الشوارع يعيق التوزيع.'
-    },
-    {
-      id: 70, neighborhood: 'طريق المطار', lat: 32.0982, lng: 20.1952, class: 'B',
-      sector: 4, population: 8000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
-      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
-      segments_present: ['B'], gap: 'لا',
-      notes: 'الطريق الرئيسي للمطار. حركة مركبات ثقيلة مستمرة. مناسب لنقاط توزيع الجملة.'
-    },
-    {
-      id: 71, neighborhood: 'سوق الحوت', lat: 32.1148, lng: 20.0702, class: 'C',
-      sector: 1, population: 5000, income: 'متوسط', flow: 'شلل تام',
-      infra: 'قديمة', market_type: 'جملة', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'سوق الجملة التقليدي للأسماك والمأكولات البحرية. ازدحام شديد في الصباح الباكر.'
-    },
-    {
-      id: 72, neighborhood: 'منارة بنغازي', lat: 32.1162, lng: 20.0718, class: 'C',
+      id: 5, neighborhood: 'منارة بنغازي', lat: 32.1160, lng: 20.0710, class: 'C',
       sector: 1, population: 10000, income: 'متوسط', flow: 'عالٍ جداً',
       infra: 'قديمة', market_type: 'مختلط', market_match: 'مطابق',
       segments_present: ['B','C'], gap: 'لا',
       notes: 'منطقة تجارية تاريخية مركزية. مرجعية للأسواق الشعبية القديمة.'
     },
     {
-      id: 73, neighborhood: 'شارع الجزائر', lat: 32.1135, lng: 20.0775, class: 'C',
-      sector: 1, population: 18000, income: 'متوسط', flow: 'عالٍ جداً',
-      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      id: 6, neighborhood: 'سوق الحوت', lat: 32.1148, lng: 20.0695, class: 'C',
+      sector: 1, population: 5000, income: 'متوسط', flow: 'شلل تام',
+      infra: 'قديمة', market_type: 'جملة', market_match: 'مطابق',
       segments_present: ['B','C'], gap: 'لا',
-      notes: 'شارع تجاري شعبي قديم. ازدحام مستمر. معدل دوران بضائع مرتفع.'
+      notes: 'سوق الجملة التقليدي للأسماك والمأكولات البحرية. ازدحام شديد في الصباح الباكر.'
     },
     {
-      id: 74, neighborhood: 'شارع عبد الله باله', lat: 32.1128, lng: 20.0792, class: 'C',
-      sector: 1, population: 14000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['C'], gap: 'لا',
-      notes: 'شارع داخلي يتفرع من شوارع وسط البلد الرئيسية. تجارة يومية.'
-    },
-    {
-      id: 75, neighborhood: 'شارع الخطوط', lat: 32.1118, lng: 20.0762, class: 'B',
-      sector: 1, population: 12000, income: 'متوسط-جيد', flow: 'عالٍ',
-      infra: 'قديمة', market_type: 'مختلط', market_match: 'جزئي',
-      segments_present: ['B','C'], gap: 'جزئياً ⚠',
-      notes: 'يضم مكاتب ومتاجر. يغلب عليه الطابع التجاري. مواقف مزدحمة.'
-    },
-    {
-      id: 76, neighborhood: 'الصابري', lat: 32.1142, lng: 20.0745, class: 'C',
-      sector: 1, population: 40000, income: 'متوسط', flow: 'عالٍ جداً',
-      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'نسيج عمراني مكثف. تجارة تجزئة يومية. بنية تحتية تحت ضغط تشغيلي هائل.'
-    },
-    {
-      id: 77, neighborhood: 'أرض زواوة', lat: 32.1032, lng: 20.1352, class: 'B',
-      sector: 4, population: 35000, income: 'متوسط', flow: 'متوسط',
-      infra: 'جيد', market_type: 'مختلط', market_match: 'جزئي',
-      segments_present: ['B','C'], gap: 'جزئياً ⚠',
-      notes: 'منطقة ذات مساحات واسعة. مناسبة لإقامة مستودعات ومراكز توزيع ثانوية.'
-    },
-    {
-      id: 78, neighborhood: 'عمارات 602', lat: 32.1042, lng: 20.1422, class: 'C',
-      sector: 4, population: 28000, income: 'متوسط', flow: 'متوسط',
-      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'مجمع سكني حكومي. كثافة متوسطة. استهلاك منتظم للسلع الأساسية.'
-    },
-    {
-      id: 79, neighborhood: 'شارع فلسطين', lat: 32.1145, lng: 20.0822, class: 'C',
-      sector: 1, population: 16000, income: 'متوسط', flow: 'عالٍ جداً',
-      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'شارع شعبي مكتظ. تجارة متنوعة. تحديات Last-Mile حادة.'
-    },
-    {
-      id: 80, neighborhood: 'سيدي عبيد', lat: 32.1005, lng: 20.0892, class: 'C',
-      sector: 3, population: 22000, income: 'متوسط', flow: 'متوسط',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'منطقة سكنية شعبية. يحتاج تغطية أوسع للسلع الأساسية.'
-    },
-    {
-      id: 81, neighborhood: 'سيدي يونس', lat: 32.0988, lng: 20.0918, class: 'C',
-      sector: 3, population: 20000, income: 'متوسط', flow: 'متوسط',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'حي سكني شعبى. طلب على السلع اليومية. بنية تحتية تحت ضغط.'
-    },
-    {
-      id: 82, neighborhood: 'نادي الشمال', lat: 32.1268, lng: 20.0888, class: 'A',
-      sector: 2, population: 8000, income: 'مرتفع', flow: 'منخفض',
-      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'جزئي',
-      segments_present: ['A'], gap: 'جزئياً ⚠',
-      notes: 'محيط النادي الراقي. فئة دخل مرتفع. كثافة منخفضة. يتطلب تجزئة مباشرة.'
-    },
-    {
-      id: 83, neighborhood: 'شارع لبنان', lat: 32.1095, lng: 20.1045, class: 'C',
-      sector: 3, population: 18000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['B','C'], gap: 'جزئياً ⚠',
-      notes: 'شارع سكني شعبي. مكتظ. يعتمد على السلع الأساسية.'
-    },
-    {
-      id: 84, neighborhood: 'شارع سوريا', lat: 32.1088, lng: 20.1028, class: 'C',
-      sector: 3, population: 16000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'شارع سكني شعبي. طلب يومي على السلع الأساسية والغذائية.'
-    },
-    {
-      id: 85, neighborhood: 'الثامة', lat: 32.1138, lng: 20.0912, class: 'C',
-      sector: 3, population: 30000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['C'], gap: 'لا',
-      notes: 'قريبة من سوق الجريد. حركة تجارية يومية مكثفة. طابع شعبي.'
-    },
-    {
-      id: 86, neighborhood: 'حي السلام', lat: 32.0955, lng: 20.1450, class: 'B',
-      sector: 4, population: 38000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
-      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'مخازن رئيسية ومحطات وقود مركزية. طابع عمالي. ملاءم لإدارة دورة المخازن.'
-    },
-    {
-      id: 87, neighborhood: 'شبنة', lat: 32.0752, lng: 20.1008, class: 'B',
-      sector: 4, population: 28000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'جيد', market_type: 'مختلط', market_match: 'جزئي',
-      segments_present: ['B','C'], gap: 'جزئياً ⚠',
-      notes: 'طابع صناعي/سكني مختلط. طرق رئيسية جيدة لتحمل أوزان النقل الثقيل.'
-    },
-    {
-      id: 88, neighborhood: 'شارع الكويت', lat: 32.1102, lng: 20.0862, class: 'C',
-      sector: 3, population: 20000, income: 'متوسط', flow: 'عالٍ جداً',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'شارع تجاري شعبي رئيسي. ازدحام مزمن. حركة تجارة متنوعة.'
-    },
-    {
-      id: 89, neighborhood: 'سوق الحوم', lat: 32.1132, lng: 20.0692, class: 'C',
+      id: 7, neighborhood: 'سوق الحوم', lat: 32.1138, lng: 20.0685, class: 'C',
       sector: 1, population: 6000, income: 'متوسط', flow: 'شلل تام',
       infra: 'قديمة', market_type: 'جملة', market_match: 'مطابق',
       segments_present: ['C'], gap: 'لا',
       notes: 'سوق اللحوم التقليدي. ازدحام صباحي شديد. محور تجاري لمنتجات البروتين.'
     },
     {
-      id: 90, neighborhood: 'المساكن', lat: 32.0882, lng: 20.1342, class: 'B',
-      sector: 4, population: 32000, income: 'متوسط', flow: 'متوسط',
-      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
-      segments_present: ['B','C'], gap: 'جزئياً ⚠',
-      notes: 'سكن عمال. نمو عمراني نشط. قريب من المحاور اللوجستية الرئيسية.'
-    },
-    {
-      id: 91, neighborhood: 'أبو عطني', lat: 32.0982, lng: 20.1582, class: 'B',
-      sector: 4, population: 42000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
-      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
-      segments_present: ['A','B','C'], gap: 'لا',
-      notes: 'شريان التوزيع الرئيسي. طرق واسعة للشاحنات الثقيلة. أفضل موقع للمستودعات المركزية.'
-    },
-    {
-      id: 92, neighborhood: 'طريق النهر', lat: 32.0912, lng: 20.1482, class: 'B',
-      sector: 4, population: 10000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'جيد', market_type: 'لوجستي', market_match: 'مطابق',
-      segments_present: ['B'], gap: 'لا',
-      notes: 'محور لوجستي يربط مناطق الجنوب بوسط المدينة. حركة شاحنات مستمرة.'
-    },
-    {
-      id: 93, neighborhood: 'شارع النفق', lat: 32.1108, lng: 20.0732, class: 'C',
-      sector: 1, population: 15000, income: 'متوسط', flow: 'شلل تام',
-      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['C'], gap: 'لا',
-      notes: 'نقطة اختناق مزمنة في وسط البلد. أسواق شعبية عند مدخل النفق.'
-    },
-    {
-      id: 94, neighborhood: 'الحدائق', lat: 32.1215, lng: 20.0868, class: 'A',
-      sector: 2, population: 20000, income: 'مرتفع', flow: 'متوسط',
-      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'حي سكني هادئ راقٍ. يستقطب فئات ذات دخل مرتفع. انسيابية ممتازة.'
-    },
-    {
-      id: 95, neighborhood: 'شارع الخليج العربي', lat: 32.1188, lng: 20.0762, class: 'A',
-      sector: 2, population: 14000, income: 'مرتفع', flow: 'عالٍ',
-      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'شارع الواجهة البحرية التجارية. محلات فاخرة ومطاعم. وجهة تجارية مرموقة.'
-    },
-    {
-      id: 96, neighborhood: 'شارع الببسي', lat: 32.0782, lng: 20.1752, class: 'B',
-      sector: 4, population: 8000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'جيد', market_type: 'لوجستي', market_match: 'مطابق',
-      segments_present: ['B'], gap: 'لا',
-      notes: 'محور صناعي-لوجستي. مصانع ومستودعات. مناسب للتوزيع الصناعي الكبير.'
-    },
-    {
-      id: 97, neighborhood: 'شارع السودان', lat: 32.1068, lng: 20.0998, class: 'C',
-      sector: 3, population: 22000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'شارع شعبي مزدحم. يغلب عليه الطابع الاستهلاكي اليومي.'
-    },
-    {
-      id: 98, neighborhood: 'بوهديمة', lat: 32.1062, lng: 20.1085, class: 'C',
-      sector: 3, population: 45000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'طرق داخلية ضيقة. عمليات إنزال البضائع معقدة وتستلزم جدولة دقيقة.'
-    },
-    {
-      id: 99, neighborhood: 'مصنع الإسمنت', lat: 32.0722, lng: 20.1842, class: 'B',
-      sector: 4, population: 5000, income: 'متوسط', flow: 'متوسط',
-      infra: 'جيد', market_type: 'لوجستي', market_match: 'مطابق',
-      segments_present: ['B'], gap: 'لا',
-      notes: 'منطقة صناعية. حركة شاحنات ثقيلة. بنية لوجستية قائمة.'
-    },
-    {
-      id: 100, neighborhood: 'الحي الصناعي القوارشة', lat: 32.0652, lng: 20.1182, class: 'B',
-      sector: 4, population: 6000, income: 'متوسط', flow: 'متوسط',
-      infra: 'جيد', market_type: 'لوجستي', market_match: 'مطابق',
-      segments_present: ['B'], gap: 'لا',
-      notes: 'منطقة صناعية. مستودعات ومصانع. قاعدة توزيع مثالية للمنطقة الجنوبية.'
-    },
-    {
-      id: 101, neighborhood: 'سيدي فرج', lat: 32.1052, lng: 20.0482, class: 'B',
-      sector: 4, population: 45000, income: 'متوسط', flow: 'منخفض جداً',
-      infra: 'متوسط', market_type: 'لا يوجد', market_match: 'غير مطابق',
-      segments_present: ['C'], gap: 'نعم ⚠⚠',
-      notes: 'بعيد عن مراكز التوزيع. سهولة وصول ضعيفة. فجوة استثمارية حرجة.'
-    },
-    {
-      id: 102, neighborhood: 'اليثي', lat: 32.1048, lng: 20.1068, class: 'C',
-      sector: 3, population: 55000, income: 'متوسط', flow: 'عالٍ جداً',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'كتلة سكانية حرجة. سلع أساسية ويومية. ارتدادات أمام المحلات معدومة.'
-    },
-    {
-      id: 103, neighborhood: 'الهواري (الشارع الرئيسي)', lat: 32.1015, lng: 20.1205, class: 'A',
-      sector: 2, population: 10000, income: 'مرتفع', flow: 'عالٍ',
-      infra: 'جيد', market_type: 'مختلط', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'المحور التجاري الرئيسي للهواري. متاجر متنوعة وخدمات. ازدحام خفيف.'
-    },
-    {
-      id: 104, neighborhood: 'طريق مصنع الببسي', lat: 32.0792, lng: 20.1782, class: 'B',
-      sector: 4, population: 7000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'جيد', market_type: 'لوجستي', market_match: 'مطابق',
-      segments_present: ['B'], gap: 'لا',
-      notes: 'محور صناعي. مصنع الببسي ومرافقه. حركة شاحنات التوزيع مستمرة.'
-    },
-    {
-      id: 105, neighborhood: 'بنينا', lat: 32.0962, lng: 20.2692, class: 'D',
-      sector: 5, population: 28000, income: 'متباين', flow: 'متوسط',
-      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
-      segments_present: ['B','C'], gap: 'جزئياً ⚠',
-      notes: 'قرب المطار. مدخل رئيسي لبنغازي. ازدحام في ساعات الذروة عند المدخل فقط.'
-    },
-    {
-      id: 106, neighborhood: 'اليثي القديم', lat: 32.1038, lng: 20.1058, class: 'C',
-      sector: 3, population: 32000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['C'], gap: 'لا',
-      notes: 'النواة التاريخية لحي اليثي. بنية قديمة. أسواق شعبية أصيلة.'
-    },
-    {
-      id: 107, neighborhood: 'سيدي منصور', lat: 32.0988, lng: 20.1148, class: 'C',
-      sector: 3, population: 24000, income: 'متوسط', flow: 'متوسط',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'حي سكني شعبي. يحتاج تغطية تجزئة أفضل للسلع الأساسية.'
-    },
-    {
-      id: 108, neighborhood: 'حي الشقاعبي', lat: 32.0968, lng: 20.1128, class: 'C',
-      sector: 3, population: 22000, income: 'متوسط', flow: 'متوسط',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'منطقة سكنية شعبية. كثافة استهلاكية معتدلة. يحتاج تغطية أوسع.'
-    },
-    {
-      id: 109, neighborhood: 'الكويفية', lat: 32.1302, lng: 20.0622, class: 'D',
-      sector: 5, population: 25000, income: 'متباين', flow: 'انسيابي',
-      infra: 'قيد التطور', market_type: 'تجزئة', market_match: 'جزئي',
-      segments_present: ['A','B'], gap: 'جزئياً ⚠',
-      notes: 'أسرع مناطق التمدد الحضري. انسيابية عالية. نقص في الأسواق المتكاملة.'
-    },
-    {
-      id: 110, neighborhood: 'سيدي خليفة', lat: 32.1345, lng: 20.0682, class: 'D',
-      sector: 5, population: 20000, income: 'متباين', flow: 'انسيابي',
-      infra: 'قيد التطور', market_type: 'تجزئة', market_match: 'غير مطابق',
-      segments_present: ['B'], gap: 'نعم ⚠',
-      notes: 'تمدد سكاني شرقي. بنية خدمات قيد الاستكمال. فرصة تجارية مستقبلية.'
-    },
-    {
-      id: 111, neighborhood: 'سيدي علي', lat: 32.1322, lng: 20.0652, class: 'D',
-      sector: 5, population: 15000, income: 'متباين', flow: 'انسيابي',
-      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
-      segments_present: ['B','C'], gap: 'نعم ⚠',
-      notes: 'ضاحية شمالية شرقية. تمدد حضري. تفتقر لبنية تجارية متكاملة.'
-    },
-    {
-      id: 112, neighborhood: 'شارع جمال عبد الناصر', lat: 32.1125, lng: 20.0832, class: 'C',
-      sector: 1, population: 20000, income: 'متوسط', flow: 'عالٍ جداً',
-      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['B','C'], gap: 'لا',
-      notes: 'شارع رئيسي تاريخي. محلات تجارية متنوعة. ازدحام مستمر.'
-    },
-    {
-      id: 113, neighborhood: 'شارع 23 يوليو', lat: 32.1115, lng: 20.0818, class: 'C',
+      id: 8, neighborhood: 'شارع الجزائر', lat: 32.1135, lng: 20.0768, class: 'C',
       sector: 1, population: 18000, income: 'متوسط', flow: 'عالٍ جداً',
       infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
       segments_present: ['B','C'], gap: 'لا',
-      notes: 'شارع تجاري رئيسي في وسط البلد. ازدحام حاد. تجارة يومية مكثفة.'
+      notes: 'شارع تجاري شعبي قديم. ازدحام مستمر. معدل دوران بضائع مرتفع.'
     },
     {
-      id: 114, neighborhood: 'أرض زواوة البحرية', lat: 32.1055, lng: 20.1375, class: 'B',
-      sector: 4, population: 12000, income: 'متوسط', flow: 'متوسط',
-      infra: 'جيد', market_type: 'مختلط', market_match: 'جزئي',
-      segments_present: ['B'], gap: 'جزئياً ⚠',
-      notes: 'منطقة مختلطة قرب الساحل. مساحات مفتوحة. صالحة لنقاط توزيع مرنة.'
-    },
-    {
-      id: 115, neighborhood: 'الوحيشي', lat: 32.1008, lng: 20.1022, class: 'C',
-      sector: 3, population: 36000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
-      segments_present: ['C'], gap: 'جزئياً ⚠',
-      notes: 'توسع سكاني غير مخطط. بنية تحتية تحت ضغط. أرصفة مستغلة بالكامل.'
-    },
-    {
-      id: 116, neighborhood: 'الجلاء', lat: 32.1202, lng: 20.0722, class: 'C',
-      sector: 1, population: 12000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'قديمة', market_type: 'مختلط', market_match: 'جزئي',
-      segments_present: ['B','C'], gap: 'جزئياً ⚠',
-      notes: 'منطقة مركزية قرب الشاطئ. حديقة عامة تجلب حركة يومية.'
-    },
-    {
-      id: 117, neighborhood: 'حديقة الجلاء', lat: 32.1212, lng: 20.0715, class: 'C',
-      sector: 1, population: 5000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'جيد', market_type: 'مختلط', market_match: 'جزئي',
-      segments_present: ['B','C'], gap: 'جزئياً ⚠',
-      notes: 'المحيط التجاري لحديقة الجلاء. أكشاك ومطاعم. حركة عائلية عالية في العطل.'
-    },
-    {
-      id: 118, neighborhood: 'كتيبة فضيل بوعمر', lat: 32.1132, lng: 20.0852, class: 'C',
-      sector: 1, population: 4000, income: 'متوسط', flow: 'متوسط',
-      infra: 'متوسط', market_type: 'لا يوجد', market_match: 'غير مطابق',
-      segments_present: ['C'], gap: 'نعم ⚠',
-      notes: 'موقع مؤسسي. محيطه يحتاج تغطية تجارية للمنطقة السكنية القريبة.'
-    },
-    {
-      id: 119, neighborhood: 'شارع سالم سويكر', lat: 32.1098, lng: 20.0812, class: 'C',
-      sector: 1, population: 14000, income: 'متوسط', flow: 'عالٍ',
+      id: 9, neighborhood: 'شارع فلسطين', lat: 32.1142, lng: 20.0815, class: 'C',
+      sector: 1, population: 16000, income: 'متوسط', flow: 'عالٍ جداً',
       infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['C'], gap: 'لا',
-      notes: 'شارع داخلي شعبي. تجارة يومية. ازدحام خفيف مقارنة بالشوارع الرئيسية.'
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'شارع شعبي مكتظ. تجارة متنوعة. تحديات Last-Mile حادة.'
     },
     {
-      id: 120, neighborhood: 'الزيتون', lat: 32.1082, lng: 20.0968, class: 'C',
-      sector: 3, population: 26000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['C'], gap: 'لا',
-      notes: 'حي سكني شعبي. استهلاك يومي مرتفع. قرب المحاور التجارية الشعبية.'
-    },
-    {
-      id: 121, neighborhood: 'شارع عبد الجليل', lat: 32.1112, lng: 20.0778, class: 'C',
-      sector: 1, population: 16000, income: 'متوسط', flow: 'عالٍ',
-      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
-      segments_present: ['C'], gap: 'لا',
-      notes: 'شارع داخلي يربط وسط البلد بالأحياء الشعبية. تجارة يومية.'
-    },
-    {
-      id: 122, neighborhood: 'شارع 1 سبتمبر', lat: 32.1105, lng: 20.0842, class: 'C',
+      id: 10, neighborhood: 'شارع 1 سبتمبر', lat: 32.1105, lng: 20.0842, class: 'C',
       sector: 1, population: 25000, income: 'متوسط', flow: 'عالٍ جداً',
       infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
       segments_present: ['B','C'], gap: 'لا',
       notes: 'شارع رئيسي تاريخي في قلب المدينة. ازدحام مزمن. تجارة متنوعة.'
     },
     {
-      id: 123, neighborhood: 'شارع دبي', lat: 32.1178, lng: 20.0848, class: 'A',
-      sector: 2, population: 12000, income: 'مرتفع', flow: 'متوسط',
-      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
+      id: 11, neighborhood: 'شارع جمال عبد الناصر', lat: 32.1125, lng: 20.0828, class: 'C',
+      sector: 1, population: 20000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'شارع رئيسي تاريخي. محلات تجارية متنوعة. ازدحام مستمر.'
+    },
+    {
+      id: 12, neighborhood: 'شارع 23 يوليو', lat: 32.1115, lng: 20.0818, class: 'C',
+      sector: 1, population: 18000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'شارع تجاري رئيسي في وسط البلد. ازدحام حاد. تجارة يومية مكثفة.'
+    },
+    {
+      id: 13, neighborhood: 'شارع عبد الجليل', lat: 32.1112, lng: 20.0778, class: 'C',
+      sector: 1, population: 16000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'شارع داخلي يربط وسط البلد بالأحياء الشعبية. تجارة يومية.'
+    },
+    {
+      id: 14, neighborhood: 'شارع عبد الله باله', lat: 32.1128, lng: 20.0792, class: 'C',
+      sector: 1, population: 14000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'شارع داخلي يتفرع من شوارع وسط البلد الرئيسية. تجارة يومية.'
+    },
+    {
+      id: 15, neighborhood: 'شارع الخطوط', lat: 32.1118, lng: 20.0762, class: 'B',
+      sector: 1, population: 12000, income: 'متوسط-جيد', flow: 'عالٍ',
+      infra: 'قديمة', market_type: 'مختلط', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'يضم مكاتب ومتاجر. يغلب عليه الطابع التجاري. مواقف مزدحمة.'
+    },
+    {
+      id: 16, neighborhood: 'شارع النفق', lat: 32.1108, lng: 20.0732, class: 'C',
+      sector: 1, population: 15000, income: 'متوسط', flow: 'شلل تام',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'نقطة اختناق مزمنة في وسط البلد. أسواق شعبية عند مدخل النفق.'
+    },
+    {
+      id: 17, neighborhood: 'شارع سالم سويكر', lat: 32.1098, lng: 20.0808, class: 'C',
+      sector: 1, population: 14000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'شارع داخلي شعبي. تجارة يومية. ازدحام خفيف مقارنة بالشوارع الرئيسية.'
+    },
+    {
+      id: 18, neighborhood: 'شارع عشرين', lat: 32.1092, lng: 20.0828, class: 'C',
+      sector: 1, population: 20000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'شارع قديم في وسط المدينة. تجارة يومية مكثفة. ضيق الشوارع يعيق التوزيع.'
+    },
+    {
+      id: 19, neighborhood: 'الجلاء', lat: 32.1202, lng: 20.0722, class: 'C',
+      sector: 1, population: 12000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'قديمة', market_type: 'مختلط', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'منطقة مركزية قرب الشاطئ. حديقة عامة تجلب حركة يومية.'
+    },
+    {
+      id: 20, neighborhood: 'حديقة الجلاء', lat: 32.1212, lng: 20.0715, class: 'C',
+      sector: 1, population: 5000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'مختلط', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'المحيط التجاري لحديقة الجلاء. أكشاك ومطاعم. حركة عائلية عالية في العطل.'
+    },
+    {
+      id: 21, neighborhood: 'كتيبة فضيل بوعمر', lat: 32.1132, lng: 20.0852, class: 'C',
+      sector: 1, population: 4000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠',
+      notes: 'موقع مؤسسي. محيطه يحتاج تغطية تجارية للمنطقة السكنية القريبة.'
+    },
+    {
+      id: 22, neighborhood: 'شارع القيروان', lat: 32.1138, lng: 20.0835, class: 'A',
+      sector: 2, population: 18000, income: 'مرتفع', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'مطابق',
       segments_present: ['A','B'], gap: 'لا',
-      notes: 'شارع راقٍ. محلات متخصصة وععلامات تجارية مرموقة. دخل مرتفع.'
+      notes: 'شارع تجاري رئيسي يربط أحياء الشمال. كثافة محلات متوسطة إلى عالية.'
     },
+
+    // ══════════════════════════════════════════════════════════════════
+    // القطاع 2: مناطق راقية (شمال وشمال شرق وسط البلد)
+    // ══════════════════════════════════════════════════════════════════
     {
-      id: 124, neighborhood: 'البوسكو', lat: 32.1225, lng: 20.0858, class: 'A',
-      sector: 2, population: 8000, income: 'مرتفع', flow: 'منخفض',
-      infra: 'ممتاز', market_type: 'مول', market_match: 'مطابق',
-      segments_present: ['A'], gap: 'لا',
-      notes: 'مجمع تجاري راقٍ. يخدم الشريحة المرتفعة الدخل. Basket Size كبير جداً.'
-    },
-    {
-      id: 125, neighborhood: 'جهاز الاستثمار العسكري', lat: 32.0962, lng: 20.1622, class: 'B',
-      sector: 4, population: 5000, income: 'متوسط-جيد', flow: 'متوسط',
-      infra: 'جيد', market_type: 'لا يوجد', market_match: 'غير مطابق',
-      segments_present: ['B'], gap: 'نعم ⚠',
-      notes: 'موقع مؤسسي عسكري. المحيط السكني يحتاج تغطية تجارية.'
-    },
-    {
-      id: 126, neighborhood: 'الفويهات', lat: 32.1182, lng: 20.0820, class: 'A',
-      sector: 2, population: 35000, income: 'مرتفع', flow: 'عالٍ',
-      infra: 'ممتاز', market_type: 'مختلط', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'شوارع واسعة تستوعب سلاسل الإمداد. مناسب لتوزيع المنتجات الفاخرة.'
-    },
-    {
-      id: 127, neighborhood: 'الحدائق (الضاحية)', lat: 32.1218, lng: 20.0878, class: 'A',
-      sector: 2, population: 18000, income: 'مرتفع', flow: 'متوسط',
-      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
-      segments_present: ['A','B'], gap: 'لا',
-      notes: 'امتداد ضاحية الحدائق. هادئ. يستقطب فئات ذات دخل مرتفع.'
-    },
-    {
-      id: 128, neighborhood: 'فينيسيا', lat: 32.1205, lng: 20.0812, class: 'A',
+      id: 23, neighborhood: 'فينيسيا', lat: 32.1205, lng: 20.0812, class: 'A',
       sector: 2, population: 28000, income: 'مرتفع', flow: 'عالٍ',
       infra: 'ممتاز', market_type: 'مول', market_match: 'مطابق',
       segments_present: ['A','B'], gap: 'لا',
       notes: 'أعلى دخل فردي في المدينة. Basket Size كبير. شارع فينيسيا يشهد ازدحاماً تجارياً.'
     },
     {
-      id: 129, neighborhood: 'بودزيرة', lat: 32.1022, lng: 20.1802, class: 'D',
+      id: 24, neighborhood: 'طابلينو', lat: 32.1230, lng: 20.0770, class: 'A',
+      sector: 2, population: 22000, income: 'مرتفع', flow: 'عالٍ',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'تمدد أفقي. فيلات سكنية. طريق طابلينو يشهد ازدحاماً بسبب المدارس الخاصة.'
+    },
+    {
+      id: 25, neighborhood: 'حي دبي', lat: 32.1180, lng: 20.0842, class: 'A',
+      sector: 2, population: 18000, income: 'مرتفع', flow: 'متوسط',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
+      segments_present: ['A'], gap: 'لا',
+      notes: 'مجمعات سكنية راقية. طلب عالٍ على العلامات التجارية العالمية.'
+    },
+    {
+      id: 26, neighborhood: 'شارع دبي', lat: 32.1178, lng: 20.0848, class: 'A',
+      sector: 2, population: 12000, income: 'مرتفع', flow: 'متوسط',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'شارع راقٍ. محلات متخصصة وعلامات تجارية مرموقة. دخل مرتفع.'
+    },
+    {
+      id: 27, neighborhood: 'الفويهات', lat: 32.1182, lng: 20.0820, class: 'A',
+      sector: 2, population: 35000, income: 'مرتفع', flow: 'عالٍ',
+      infra: 'ممتاز', market_type: 'مختلط', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'شوارع واسعة تستوعب سلاسل الإمداد. مناسب لتوزيع المنتجات الفاخرة.'
+    },
+    {
+      id: 28, neighborhood: 'الحدائق', lat: 32.1215, lng: 20.0868, class: 'A',
+      sector: 2, population: 20000, income: 'مرتفع', flow: 'متوسط',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'حي سكني هادئ راقٍ. يستقطب فئات ذات دخل مرتفع. انسيابية ممتازة.'
+    },
+    {
+      id: 29, neighborhood: 'بلعون', lat: 32.1255, lng: 20.0890, class: 'A',
+      sector: 2, population: 15000, income: 'مرتفع', flow: 'منخفض',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['A','B'], gap: 'جزئياً ⚠',
+      notes: 'كثافة منخفضة. مستوى معيشي مرتفع. يحتاج لتغطية تجزئة أكبر.'
+    },
+    {
+      id: 30, neighborhood: 'الرحبة', lat: 32.1240, lng: 20.0910, class: 'A',
+      sector: 2, population: 14000, income: 'مرتفع', flow: 'منخفض',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['A'], gap: 'جزئياً ⚠',
+      notes: 'حي نخبوي. طلب على المنتجات الفاخرة والمستوردة.'
+    },
+    {
+      id: 31, neighborhood: 'حي المهندسين', lat: 32.1192, lng: 20.0889, class: 'A',
+      sector: 2, population: 12000, income: 'مرتفع', flow: 'منخفض',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['A','B'], gap: 'جزئياً ⚠',
+      notes: 'يسكنه كوادر مهنية. دخل مرتفع. يتطلب تغطية تجزئة مباشرة.'
+    },
+    {
+      id: 32, neighborhood: 'نادي الشمال', lat: 32.1268, lng: 20.0888, class: 'A',
+      sector: 2, population: 8000, income: 'مرتفع', flow: 'منخفض',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['A'], gap: 'جزئياً ⚠',
+      notes: 'محيط النادي الراقي. فئة دخل مرتفع. كثافة منخفضة. يتطلب تجزئة مباشرة.'
+    },
+    {
+      id: 33, neighborhood: 'البوسكو', lat: 32.1225, lng: 20.0858, class: 'A',
+      sector: 2, population: 8000, income: 'مرتفع', flow: 'منخفض',
+      infra: 'ممتاز', market_type: 'مول', market_match: 'مطابق',
+      segments_present: ['A'], gap: 'لا',
+      notes: 'مجمع تجاري راقٍ. يخدم الشريحة المرتفعة الدخل. Basket Size كبير جداً.'
+    },
+    {
+      id: 34, neighborhood: 'شارع الخليج العربي', lat: 32.1188, lng: 20.0762, class: 'A',
+      sector: 2, population: 14000, income: 'مرتفع', flow: 'عالٍ',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'شارع الواجهة البحرية التجارية. محلات فاخرة ومطاعم. وجهة تجارية مرموقة.'
+    },
+    {
+      id: 35, neighborhood: 'شارع الخليج', lat: 32.1185, lng: 20.0755, class: 'A',
+      sector: 2, population: 15000, income: 'مرتفع', flow: 'عالٍ',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'شارع تجاري راقٍ. بنوك ومحلات فاخرة. ازدحام في ساعات الذروة التجارية.'
+    },
+    {
+      id: 36, neighborhood: 'شارع الحجاز', lat: 32.1122, lng: 20.0808, class: 'A',
+      sector: 2, population: 12000, income: 'مرتفع', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'شارع تجاري راقٍ. محلات متخصصة وعلامات تجارية. حركة مرورية مكثفة.'
+    },
+    {
+      id: 37, neighborhood: 'الكويفية', lat: 32.1302, lng: 20.0622, class: 'D',
+      sector: 5, population: 25000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['A','B'], gap: 'جزئياً ⚠',
+      notes: 'أسرع مناطق التمدد الحضري شمالاً. انسيابية عالية. نقص في الأسواق المتكاملة.'
+    },
+    {
+      id: 38, neighborhood: 'سيدي خليفة', lat: 32.1345, lng: 20.0682, class: 'D',
+      sector: 5, population: 20000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'تجزئة', market_match: 'غير مطابق',
+      segments_present: ['B'], gap: 'نعم ⚠',
+      notes: 'تمدد سكاني شرقي شمالي. بنية خدمات قيد الاستكمال. فرصة تجارية مستقبلية.'
+    },
+    {
+      id: 39, neighborhood: 'سيدي علي', lat: 32.1322, lng: 20.0652, class: 'D',
+      sector: 5, population: 15000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['B','C'], gap: 'نعم ⚠',
+      notes: 'ضاحية شمالية شرقية. تمدد حضري. تفتقر لبنية تجارية متكاملة.'
+    },
+
+    // ══════════════════════════════════════════════════════════════════
+    // القطاع 3: كثافة استهلاكية FMCG (شرق وجنوب شرق وسط البلد)
+    // ══════════════════════════════════════════════════════════════════
+    {
+      id: 40, neighborhood: 'السلماني الشرقي', lat: 32.1158, lng: 20.0882, class: 'C',
+      sector: 3, population: 55000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'أعلى كتلة سكانية. محرك الاستهلاك اليومي. حجم مبيعات ضخم (Volume). حساسية سعرية عالية.'
+    },
+    {
+      id: 41, neighborhood: 'السلماني الغربي', lat: 32.1142, lng: 20.0862, class: 'C',
+      sector: 3, population: 48000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'FMCG بامتياز. ارتدادات تجارية شبه معدومة. توزيع في ساعات الصباح الباكر فقط.'
+    },
+    {
+      id: 42, neighborhood: 'الماجوري', lat: 32.1102, lng: 20.0928, class: 'C',
+      sector: 3, population: 60000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'طريق الماجوري محور رئيسي مزدحم. الازدحام مستمر طوال اليوم ويشتد مساءً.'
+    },
+    {
+      id: 43, neighborhood: 'البركة', lat: 32.1082, lng: 20.0958, class: 'C',
+      sector: 3, population: 52000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'كثافة سكانية عالية. يعتمد على السلع الأساسية والتموينية. Last-Mile يتطلب فانات صغيرة.'
+    },
+    {
+      id: 44, neighborhood: 'الكيش', lat: 32.1078, lng: 20.0978, class: 'C',
+      sector: 3, population: 58000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'من أكثر المناطق استهلاكاً للسلع سريعة الدوران. يغذي قلب المدينة.'
+    },
+    {
+      id: 45, neighborhood: 'بوهديمة', lat: 32.1062, lng: 20.1085, class: 'C',
+      sector: 3, population: 45000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'طرق داخلية ضيقة. عمليات إنزال البضائع معقدة وتستلزم جدولة دقيقة.'
+    },
+    {
+      id: 46, neighborhood: 'الليثي', lat: 32.1048, lng: 20.1068, class: 'C',
+      sector: 3, population: 55000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'كتلة سكانية حرجة. سلع أساسية ويومية. الارتدادات أمام المحلات معدومة تقريباً.'
+    },
+    {
+      id: 47, neighborhood: 'اليثي القديم', lat: 32.1038, lng: 20.1052, class: 'C',
+      sector: 3, population: 32000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'النواة التاريخية لحي اليثي. بنية قديمة. أسواق شعبية أصيلة.'
+    },
+    {
+      id: 48, neighborhood: 'سيد حسين', lat: 32.1032, lng: 20.1055, class: 'C',
+      sector: 3, population: 42000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'على الطريق الدائري (الرينق). ازدحام متواصل. فرصة لنقاط توزيع مصغرة.'
+    },
+    {
+      id: 49, neighborhood: 'الزريريعية', lat: 32.1122, lng: 20.0898, class: 'C',
+      sector: 3, population: 35000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'جزء من منطقة الكثافة الاستهلاكية المركزية. نمط استهلاك يومي مكثف.'
+    },
+    {
+      id: 50, neighborhood: 'الثامة', lat: 32.1138, lng: 20.0912, class: 'C',
+      sector: 3, population: 30000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'قريبة من سوق الجريد. حركة تجارية يومية مكثفة. يغلب عليها الطابع الشعبي.'
+    },
+    {
+      id: 51, neighborhood: 'راس عبيدة', lat: 32.1022, lng: 20.1038, class: 'C',
+      sector: 3, population: 40000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'كثافة سكانية مرتفعة. يحتاج تغطية أوسع للسلع الأساسية.'
+    },
+    {
+      id: 52, neighborhood: 'الوحيشي', lat: 32.1008, lng: 20.1022, class: 'C',
+      sector: 3, population: 36000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'توسع سكاني غير مخطط. بنية تحتية تحت ضغط. أرصفة مستغلة بالكامل.'
+    },
+    {
+      id: 53, neighborhood: 'السرتي', lat: 32.1052, lng: 20.0902, class: 'C',
+      sector: 3, population: 32000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'تركز تجاري شعبي. استهلاك يومي للمواد الغذائية الأساسية.'
+    },
+    {
+      id: 54, neighborhood: 'بن يونس', lat: 32.1068, lng: 20.0942, class: 'C',
+      sector: 3, population: 28000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'منطقة سكنية شعبية متوسطة الكثافة. يتطلب توزيع بالفانات الصغيرة.'
+    },
+    {
+      id: 55, neighborhood: 'الحميضة', lat: 32.1112, lng: 20.0852, class: 'C',
+      sector: 3, population: 30000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'منطقة سكنية شعبية. حركة تجارية يومية. يغلب عليها الطابع الاستهلاكي.'
+    },
+    {
+      id: 56, neighborhood: 'الزيتون', lat: 32.1082, lng: 20.0968, class: 'C',
+      sector: 3, population: 26000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'حي سكني شعبي. استهلاك يومي مرتفع. قرب المحاور التجارية الشعبية.'
+    },
+    {
+      id: 57, neighborhood: 'سيدي عبيد', lat: 32.1005, lng: 20.0892, class: 'C',
+      sector: 3, population: 22000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'منطقة سكنية شعبية. يحتاج تغطية أوسع للسلع الأساسية.'
+    },
+    {
+      id: 58, neighborhood: 'سيدي يونس', lat: 32.0988, lng: 20.0918, class: 'C',
+      sector: 3, population: 20000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'حي سكني شعبي. طلب على السلع اليومية. بنية تحتية تحت ضغط.'
+    },
+    {
+      id: 59, neighborhood: 'الهواري', lat: 32.1010, lng: 20.1185, class: 'A',
+      sector: 2, population: 32000, income: 'مرتفع', flow: 'متوسط',
+      infra: 'جيد', market_type: 'مختلط', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'حي راقٍ ممتد جنوب شرق. شوارع داخلية واسعة. ازدحام عند المدارس فقط.'
+    },
+    {
+      id: 60, neighborhood: 'طريق الهواري', lat: 32.1022, lng: 20.1215, class: 'B',
+      sector: 4, population: 10000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
+      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'محور مروري رئيسي بين القلب التجاري والمناطق الراقية. طرق واسعة.'
+    },
+    {
+      id: 61, neighborhood: 'طريق العروبة', lat: 32.1058, lng: 20.1135, class: 'B',
+      sector: 4, population: 8000, income: 'متوسط-جيد', flow: 'عالٍ',
+      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B'], gap: 'لا',
+      notes: 'طريق رئيسي يربط وسط المدينة بالأحياء الجنوبية الغربية.'
+    },
+    {
+      id: 62, neighborhood: 'حي لبنان', lat: 32.1095, lng: 20.1062, class: 'C',
+      sector: 3, population: 28000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'حي سكني شعبي مكتظ. طرق داخلية ضيقة. يعتمد على السلع الأساسية اليومية.'
+    },
+    {
+      id: 63, neighborhood: 'شارع لبنان', lat: 32.1095, lng: 20.1045, class: 'C',
+      sector: 3, population: 18000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'شارع سكني شعبي. مكتظ. يعتمد على السلع الأساسية.'
+    },
+    {
+      id: 64, neighborhood: 'شارع سوريا', lat: 32.1088, lng: 20.1028, class: 'C',
+      sector: 3, population: 16000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'شارع سكني شعبي. طلب يومي على السلع الأساسية والغذائية.'
+    },
+    {
+      id: 65, neighborhood: 'شارع الكويت', lat: 32.1102, lng: 20.0862, class: 'C',
+      sector: 3, population: 20000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'شارع تجاري شعبي رئيسي. ازدحام مزمن. حركة تجارة متنوعة.'
+    },
+    {
+      id: 66, neighborhood: 'شارع السودان', lat: 32.1068, lng: 20.0998, class: 'C',
+      sector: 3, population: 22000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'شارع شعبي مزدحم. يغلب عليه الطابع الاستهلاكي اليومي.'
+    },
+    {
+      id: 67, neighborhood: 'سيدي منصور', lat: 32.0988, lng: 20.1148, class: 'C',
+      sector: 3, population: 24000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'حي سكني شعبي. يحتاج تغطية تجزئة أفضل للسلع الأساسية.'
+    },
+    {
+      id: 68, neighborhood: 'حي الشقاعبي', lat: 32.0968, lng: 20.1128, class: 'C',
+      sector: 3, population: 22000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'منطقة سكنية شعبية. كثافة استهلاكية معتدلة. يحتاج تغطية أوسع.'
+    },
+
+    // ══════════════════════════════════════════════════════════════════
+    // القطاع 4: لوجستي وصناعي مختلط
+    // ══════════════════════════════════════════════════════════════════
+    {
+      id: 69, neighborhood: 'بوعطني', lat: 32.0982, lng: 20.1582, class: 'B',
+      sector: 4, population: 42000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
+      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['A','B','C'], gap: 'لا',
+      notes: 'شريان التوزيع الرئيسي. طرق واسعة للشاحنات الثقيلة. أفضل موقع للمستودعات المركزية (Hubs).'
+    },
+    {
+      id: 70, neighborhood: 'حي السلام', lat: 32.0955, lng: 20.1450, class: 'B',
+      sector: 4, population: 38000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
+      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'مخازن رئيسية ومحطات وقود مركزية. طابع عمالي. ملاءم لإدارة دورة المخازن.'
+    },
+    {
+      id: 71, neighborhood: 'شبنة', lat: 32.0752, lng: 20.1008, class: 'B',
+      sector: 4, population: 28000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'مختلط', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'طابع صناعي/سكني مختلط. طرق رئيسية جيدة لتحمل أوزان النقل الثقيل.'
+    },
+    {
+      id: 72, neighborhood: 'قاريونس', lat: 32.0802, lng: 20.0802, class: 'B',
+      sector: 4, population: 65000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
+      infra: 'ممتاز', market_type: 'مختلط', market_match: 'مطابق',
+      segments_present: ['A','B','C'], gap: 'لا',
+      notes: 'كثافة جامعية موسمية (طلاب). استهلاك مزدوج منزلي ومؤسسي. بنية تحتية ممتازة.'
+    },
+    {
+      id: 73, neighborhood: 'جامعة بنغازي', lat: 32.0812, lng: 20.0752, class: 'B',
+      sector: 4, population: 12000, income: 'متوسط-جيد', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'مختلط', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'حرم جامعي ومحيطه. كثافة طلابية موسمية عالية. طلب على المنتجات المحمولة الصغيرة.'
+    },
+    {
+      id: 74, neighborhood: 'تيكا', lat: 32.0748, lng: 20.0712, class: 'C',
+      sector: 3, population: 22000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'منطقة سكنية متوسطة قرب قاريونس. تغطية تجارية محدودة.'
+    },
+    {
+      id: 75, neighborhood: 'الحليس', lat: 32.0862, lng: 20.0682, class: 'C',
+      sector: 3, population: 20000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'حي سكني شعبي. كثافة استهلاكية يومية. بنية تحتية تحتاج تطوير.'
+    },
+    {
+      id: 76, neighborhood: 'أم مبروكة', lat: 32.0922, lng: 20.0752, class: 'C',
+      sector: 3, population: 25000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'منطقة سكنية غرب قاريونس. طلب على السلع الأساسية. قرب المحاور اللوجستية.'
+    },
+    {
+      id: 77, neighborhood: 'المساكن', lat: 32.0882, lng: 20.1342, class: 'B',
+      sector: 4, population: 32000, income: 'متوسط', flow: 'متوسط',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'سكن عمال. نمو عمراني نشط. قريب من المحاور اللوجستية الرئيسية.'
+    },
+    {
+      id: 78, neighborhood: 'أرض قريش', lat: 32.0842, lng: 20.1242, class: 'B',
+      sector: 4, population: 22000, income: 'متوسط', flow: 'متوسط',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['B'], gap: 'جزئياً ⚠',
+      notes: 'منطقة سكنية ذات طابع مختلط. صالحة كنقطة ارتكاز ثانوية للتوزيع.'
+    },
+    {
+      id: 79, neighborhood: 'سيدي فرج', lat: 32.1052, lng: 20.0482, class: 'B',
+      sector: 4, population: 45000, income: 'متوسط', flow: 'منخفض جداً',
+      infra: 'متوسط', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠⚠',
+      notes: 'غرب المدينة بعيداً عن مراكز التوزيع. سهولة وصول ضعيفة. فجوة استثمارية حرجة.'
+    },
+    {
+      id: 80, neighborhood: 'أرض زواوة', lat: 32.1032, lng: 20.1352, class: 'B',
+      sector: 4, population: 35000, income: 'متوسط', flow: 'متوسط',
+      infra: 'جيد', market_type: 'مختلط', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'منطقة ذات مساحات واسعة. مناسبة لإقامة مستودعات ومراكز توزيع ثانوية.'
+    },
+    {
+      id: 81, neighborhood: 'أرض زواوة البحرية', lat: 32.1055, lng: 20.1375, class: 'B',
+      sector: 4, population: 12000, income: 'متوسط', flow: 'متوسط',
+      infra: 'جيد', market_type: 'مختلط', market_match: 'جزئي',
+      segments_present: ['B'], gap: 'جزئياً ⚠',
+      notes: 'منطقة مختلطة قرب الساحل. مساحات مفتوحة. صالحة لنقاط توزيع مرنة.'
+    },
+    {
+      id: 82, neighborhood: 'عمارات 602', lat: 32.1042, lng: 20.1422, class: 'C',
+      sector: 4, population: 28000, income: 'متوسط', flow: 'متوسط',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'مجمع سكني حكومي. كثافة متوسطة. استهلاك منتظم للسلع الأساسية.'
+    },
+    {
+      id: 83, neighborhood: 'طريق النهر', lat: 32.0912, lng: 20.1482, class: 'B',
+      sector: 4, population: 10000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B'], gap: 'لا',
+      notes: 'محور لوجستي يربط مناطق الجنوب بوسط المدينة. حركة شاحنات مستمرة.'
+    },
+    {
+      id: 84, neighborhood: 'طريق المطار', lat: 32.0982, lng: 20.1952, class: 'B',
+      sector: 4, population: 8000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
+      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B'], gap: 'لا',
+      notes: 'الطريق الرئيسي للمطار. حركة مركبات ثقيلة مستمرة. مناسب لنقاط توزيع الجملة.'
+    },
+    {
+      id: 85, neighborhood: 'مصنع الإسمنت', lat: 32.0722, lng: 20.1842, class: 'B',
+      sector: 4, population: 5000, income: 'متوسط', flow: 'متوسط',
+      infra: 'جيد', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B'], gap: 'لا',
+      notes: 'منطقة صناعية جنوب شرق. حركة شاحنات ثقيلة. بنية لوجستية قائمة.'
+    },
+    {
+      id: 86, neighborhood: 'الحي الصناعي القوارشة', lat: 32.0652, lng: 20.1182, class: 'B',
+      sector: 4, population: 6000, income: 'متوسط', flow: 'متوسط',
+      infra: 'جيد', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B'], gap: 'لا',
+      notes: 'منطقة صناعية جنوب. مستودعات ومصانع. قاعدة توزيع مثالية للمنطقة الجنوبية.'
+    },
+    {
+      id: 87, neighborhood: 'سواني القوارشة', lat: 32.0652, lng: 20.0882, class: 'D',
+      sector: 5, population: 18000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠',
+      notes: 'ضاحية جنوبية. بنية خدمات أولية. فرصة دخول تجاري منخفض التكلفة.'
+    },
+    {
+      id: 88, neighborhood: 'طريق مصنع الببسي', lat: 32.0792, lng: 20.1782, class: 'B',
+      sector: 4, population: 7000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B'], gap: 'لا',
+      notes: 'محور صناعي. مصنع الببسي ومرافقه. حركة شاحنات التوزيع مستمرة.'
+    },
+    {
+      id: 89, neighborhood: 'شارع الببسي', lat: 32.0782, lng: 20.1752, class: 'B',
+      sector: 4, population: 8000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B'], gap: 'لا',
+      notes: 'محور صناعي-لوجستي شرقي. مصانع ومستودعات. مناسب للتوزيع الصناعي الكبير.'
+    },
+    {
+      id: 90, neighborhood: 'جهاز الاستثمار العسكري', lat: 32.0962, lng: 20.1622, class: 'B',
+      sector: 4, population: 5000, income: 'متوسط-جيد', flow: 'متوسط',
+      infra: 'جيد', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['B'], gap: 'نعم ⚠',
+      notes: 'موقع مؤسسي. المحيط السكني يحتاج تغطية تجارية.'
+    },
+
+    // ══════════════════════════════════════════════════════════════════
+    // القطاع 5: ضواحي التوسع
+    // ══════════════════════════════════════════════════════════════════
+    // المحور الشرقي
+    {
+      id: 91, neighborhood: 'بودزيرة', lat: 32.1022, lng: 20.1802, class: 'D',
       sector: 5, population: 18000, income: 'متباين', flow: 'انسيابي',
       infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
       segments_present: ['B','C'], gap: 'نعم ⚠',
       notes: 'محور شرقي. خلو من الأسواق المتكاملة. تكاليف لوجستية منخفضة للدخول.'
     },
     {
-      id: 130, neighborhood: 'أبو هادي', lat: 32.0582, lng: 20.2182, class: 'D',
+      id: 92, neighborhood: 'بنينا', lat: 32.0968, lng: 20.2695, class: 'D',
+      sector: 5, population: 28000, income: 'متباين', flow: 'متوسط',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'قرب مطار بنينا الدولي. مدخل رئيسي لبنغازي. ازدحام في ساعات الذروة عند المدخل.'
+    },
+    {
+      id: 93, neighborhood: 'الرجمة', lat: 32.0852, lng: 20.2352, class: 'D',
+      sector: 5, population: 20000, income: 'متوسط-جيد', flow: 'انسيابي',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'منطقة شرقية هادئة. تضم شرائح من ذوي الدخل الجيد. فرصة للتوسع التجاري.'
+    },
+    {
+      id: 94, neighborhood: 'النواقية', lat: 32.0752, lng: 20.1752, class: 'D',
+      sector: 5, population: 16000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠',
+      notes: 'تمدد جنوبي شرقي. طرق سريعة ممتدة. نقص واضح في الخدمات التجارية.'
+    },
+    {
+      id: 95, neighborhood: 'الأبيار', lat: 32.1752, lng: 20.5752, class: 'D',
+      sector: 5, population: 25000, income: 'متباين', flow: 'انسيابي',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'غير مطابق',
+      segments_present: ['B','C'], gap: 'نعم ⚠',
+      notes: 'مدينة على الطريق الساحلي شرق بنغازي. فرصة توسع على الخط الساحلي الشرقي.'
+    },
+    {
+      id: 96, neighborhood: 'قمينس', lat: 32.2402, lng: 20.5952, class: 'D',
+      sector: 5, population: 18000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠',
+      notes: 'بلدة شرق بنغازي على الطريق الساحلي. نمو سكاني. تفتقر لبنية تجارية متكاملة.'
+    },
+    // المحور الغربي
+    {
+      id: 97, neighborhood: 'قنفوذة', lat: 32.0282, lng: 20.0222, class: 'D',
+      sector: 5, population: 30000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠',
+      notes: 'ضاحية غربية جنوبية. معدلات نمو سكاني مرتفعة. تعتمد على الطرق السريعة.'
+    },
+    {
+      id: 98, neighborhood: 'الفعكات', lat: 32.0382, lng: 20.0422, class: 'D',
+      sector: 5, population: 22000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠',
+      notes: 'تمدد عشوائي غرب جنوب. فرصة توغل تجاري بتكاليف تشغيل منخفضة.'
+    },
+    {
+      id: 99, neighborhood: 'بوصنيب', lat: 32.0482, lng: 20.0552, class: 'D',
+      sector: 5, population: 18000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠⚠',
+      notes: 'ضاحية غربية. بنية خدمات غير مكتملة. سوق تجزئة ناشئ.'
+    },
+    {
+      id: 100, neighborhood: 'المقزحة السكني', lat: 32.0692, lng: 20.1502, class: 'D',
+      sector: 5, population: 12000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['B'], gap: 'نعم ⚠⚠',
+      notes: 'مشروع سكني ناشئ جنوبي. يحتاج بنية تجارية متكاملة. فرصة استثمارية واضحة.'
+    },
+    {
+      id: 101, neighborhood: 'أبو هادي', lat: 31.9582, lng: 20.2182, class: 'D',
       sector: 5, population: 20000, income: 'متباين', flow: 'انسيابي',
       infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
       segments_present: ['C'], gap: 'نعم ⚠',
-      notes: 'ضاحية جنوبية شرقية. تمدد سكاني. تفتقر تماماً لبنية تجارية متكاملة. فرصة دخول.'
-    }
+      notes: 'ضاحية جنوبية بعيدة. تمدد سكاني. تفتقر تماماً لبنية تجارية متكاملة.'
+    },
   ];
 
   let DATA = DEFAULT_DATA.map(d => ({...d}));
@@ -1796,9 +1604,11 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
    */
   function hexPolygon(lat, lng, size) {
     const pts = [];
+    // تصحيح: زاوية البداية 30° لسداسي مسطح الأعلى (flat-top)
+    // GeoJSON يتوقع [lng, lat] — lat يُحسب بـ sin، lng بـ cos مع تصحيح خط العرض
     const lngScale = Math.cos(lat * Math.PI / 180);
     for (let i = 0; i < 6; i++) {
-      const angleRad = (Math.PI / 180) * (60 * i);
+      const angleRad = (Math.PI / 180) * (60 * i + 30);
       pts.push([
         lng + (size / lngScale) * Math.cos(angleRad),
         lat + size * Math.sin(angleRad)
