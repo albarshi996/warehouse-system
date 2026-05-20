@@ -252,6 +252,49 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
   /* ── Table ──────────────────────────────────────────────────────── */
   #rh-tscroll { flex: 1; overflow-y: auto; height: 0; min-height: 0; }
+  /* Grid view للأحياء */
+  #rh-tscroll.grid-view { overflow-y: auto; }
+  #rh-grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 7px;
+    padding: 10px;
+  }
+  .district-card {
+    background: var(--rh-bg-surface);
+    border: 1px solid var(--rh-border);
+    border-radius: var(--rh-radius-sm);
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    direction: rtl;
+  }
+  .district-card:hover {
+    background: var(--rh-bg-hover);
+    border-color: var(--rh-accent-blue);
+    transform: translateY(-1px);
+  }
+  .district-card.selected {
+    border-color: var(--rh-accent-blue);
+    background: var(--rh-accent-blue-dim);
+  }
+  .dc-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dc-name {
+    font-size: 10px;
+    color: var(--rh-text-primary);
+    line-height: 1.3;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
   .rh-table { width: 100%; border-collapse: collapse; font-size: 11px; }
   .rh-table th {
     background: var(--rh-bg-surface);
@@ -453,8 +496,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     <div>
       <div class="pt-text">لوحة التجزئة الجغرافية — بنغازي 2026</div>
       <div class="pt-sub">تحليل ديموغرافي وتجاري شامل · جميع أحياء المدينة</div>
-  <div style="font-size:10px;color:#6e7681;margin-top:2px;direction:rtl;font-style:italic;">
-    تم إعداد البحث من قبل: رمزي باش · محمد البرشي
+  <div style="font-size:11px;color:#8b949e;margin-top:5px;display:flex;align-items:center;gap:6px;direction:rtl;">
+    <span style="color:#d29922;font-size:14px;">✍️</span>
+    <span>تم إعداد البحث من قبل: <strong style="color:#e6edf3;font-style:normal;">محمد البرشي</strong> · <strong style="color:#e6edf3;font-style:normal;">رمزي باش</strong></span>
   </div>
     </div>
   </div>
@@ -501,6 +545,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         <div style="display:flex;gap:7px;align-items:center;">
           <button class="btn-hdr" id="btn-fullscreen">⛶ تكبير</button>
           <button class="btn-hdr" id="btn-hex-toggle">⬡ خرائط سداسية</button>
+          <button class="btn-hdr" id="btn-grid-toggle">⊞ شبكة الأحياء</button>
           <button class="btn-hdr danger" id="btn-reset-data">↺ إعادة ضبط</button>
         </div>
       </div>
@@ -1609,85 +1654,63 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     if (markers[d.id]) markers[d.id].openPopup();
   }
 
-  // ── Hex Layer (Grid Based - Voronoi Nearest Neighbor) ──────────────────
+  // ── Hex Layer (District-Centered — سداسي واحد لكل حي على إحداثياته الفعلية) ──
   let hexActive = false;
   let hexLayer = null;
 
-  // ── Hex Grid: Voronoi Coverage across full Benghazi ──────────────
-  const HEX_R   = 0.013;           // نصف قطر ~1.4كم
   const LAT_CORR = Math.cos(32.1 * Math.PI / 180); // 0.848
 
-  function hexPolygon(cLat, cLng) {
-    // pointy-top hexagon
+  // رسم سداسي flat-top مرتكز على إحداثيات الحي الفعلية
+  function hexPolygon(cLat, cLng, r) {
     const pts = [];
     for (let i = 0; i < 6; i++) {
-      const a = (Math.PI / 180) * (60 * i - 30);
+      const a = (Math.PI / 180) * (60 * i);
       pts.push([
-        cLng + (HEX_R / LAT_CORR) * Math.cos(a),
-        cLat + HEX_R               * Math.sin(a)
+        cLng + (r / LAT_CORR) * Math.cos(a),
+        cLat + r               * Math.sin(a)
       ]);
     }
     pts.push(pts[0]);
     return pts;
   }
 
-  function nearestNeighbor(cLat, cLng) {
-    let best = null, bestD = Infinity;
-    for (const d of DATA) {
-      const dLat = cLat - d.lat;
-      const dLng = (cLng - d.lng) * LAT_CORR;
-      const dist = dLat * dLat + dLng * dLng;
-      if (dist < bestD) { bestD = dist; best = d; }
+  // حجم السداسي = 45% من المسافة لأقرب جار (حد أدنى 0.006، أقصى 0.011 درجة)
+  function adaptiveRadius(d) {
+    let minDist = Infinity;
+    for (const other of DATA) {
+      if (other.id === d.id) continue;
+      const dlat = d.lat - other.lat;
+      const dlng = (d.lng - other.lng) * LAT_CORR;
+      const dist = Math.sqrt(dlat * dlat + dlng * dlng);
+      if (dist < minDist) minDist = dist;
     }
-    return best;
+    return Math.max(0.006, Math.min(0.011, minDist * 0.45));
   }
 
   function renderHexLayer() {
     if (hexLayer) { rhMap.removeLayer(hexLayer); hexLayer = null; }
 
-    // حدود بنغازي الفعلية
-    const LAT_MIN = 31.88, LAT_MAX = 32.30;
-    const LNG_MIN = 19.92, LNG_MAX = 20.68;
-
-    // pointy-top hex grid spacing
-    const rowH = HEX_R * 2;              // ارتفاع الصف
-    const colW = HEX_R * Math.sqrt(3);   // عرض العمود
-    const offsetLng = colW / LAT_CORR;   // تصحيح خط العرض
-
-    const features = [];
-    let row = 0;
-    for (let lat = LAT_MIN; lat <= LAT_MAX; lat += rowH * 0.75) {
-      const shift = (row % 2 === 0) ? 0 : (colW / 2 / LAT_CORR);
-      for (let lng = LNG_MIN - offsetLng; lng <= LNG_MAX + offsetLng; lng += offsetLng) {
-        const cLat = lat;
-        const cLng = lng + shift;
-        const d = nearestNeighbor(cLat, cLng);
-        if (!d) continue;
-        // clip to Benghazi footprint: skip cells too far from any data point
-        const dlat = cLat - d.lat;
-        const dlng = (cLng - d.lng) * LAT_CORR;
-        const distDeg = Math.sqrt(dlat * dlat + dlng * dlng);
-        if (distDeg > 0.055) continue;
-        features.push({
-          type: 'Feature',
-          properties: { id: d.id, match: d.market_match, data: d },
-          geometry: { type: 'Polygon', coordinates: [hexPolygon(cLat, cLng)] }
-        });
+    // سداسي واحد فقط لكل حي — لا شبكة، لا بحر، لا فراغات مُلصقة
+    const features = DATA.map(d => ({
+      type: 'Feature',
+      properties: { id: d.id, match: d.market_match, data: d },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [ hexPolygon(d.lat, d.lng, adaptiveRadius(d)) ]
       }
-      row++;
-    }
+    }));
 
     hexLayer = L.geoJSON({ type: 'FeatureCollection', features }, {
       style: feat => ({
         fillColor:   matchColor(feat.properties.match),
-        fillOpacity: 0.50,
-        color:       'rgba(255,255,255,0.08)',
-        weight:      1
+        fillOpacity: 0.65,
+        color:       'rgba(255,255,255,0.20)',
+        weight:      1.5
       }),
       onEachFeature: (feat, layer) => {
         layer.bindPopup(buildPopup(feat.properties.data), { maxWidth: 280 });
         layer.on('mouseover', function () {
-          this.setStyle({ fillOpacity: 0.80, weight: 2, color: 'rgba(255,255,255,0.3)' });
+          this.setStyle({ fillOpacity: 0.90, weight: 2.5, color: 'rgba(255,255,255,0.55)' });
         });
         layer.on('mouseout', function () { hexLayer.resetStyle(this); });
         layer.on('click', () => showNeighborhood(feat.properties.data, true));
@@ -1713,6 +1736,80 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
   document.getElementById('btn-reset-data').addEventListener('click', () => {
     if (confirm('هل تريد إعادة ضبط جميع البيانات للقيم الافتراضية؟')) resetToDefaults();
+  });
+
+  // ── Grid View للأحياء ──────────────────────────────────────────────────
+  let gridActive = false;
+
+  function renderGridCards() {
+    const scroll = document.getElementById('rh-tscroll');
+    scroll.classList.add('grid-view');
+    // أخفِ الجدول
+    const tbl = scroll.querySelector('table');
+    const noRes = document.getElementById('rh-no-results');
+    if (tbl) tbl.style.display = 'none';
+    if (noRes) noRes.style.display = 'none';
+
+    // أزل الـ grid القديم إن وُجد
+    let grid = document.getElementById('rh-grid-cards');
+    if (grid) grid.remove();
+
+    grid = document.createElement('div');
+    grid.id = 'rh-grid-cards';
+
+    const filtered = DATA.filter(d => {
+      if (currentFilter === 'none') return d.market_match === 'غير مطابق';
+      if (currentFilter === 'partial') return d.market_match === 'جزئي';
+      if (currentFilter !== 'all') return d.class === currentFilter;
+      return true;
+    }).filter(d => {
+      if (currentSector !== 'all') return String(d.sector) === currentSector;
+      return true;
+    }).filter(d => {
+      if (!searchVal) return true;
+      return d.neighborhood.includes(searchVal);
+    });
+
+    filtered.forEach(d => {
+      const card = document.createElement('div');
+      card.className = 'district-card' + (d.id === selectedId ? ' selected' : '');
+      card.dataset.id = d.id;
+      card.innerHTML = `<div class="dc-dot" style="background:${matchColor(d.market_match)}"></div>
+        <span class="dc-name">${d.neighborhood}</span>`;
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.district-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        showNeighborhood(d, false);
+      });
+      grid.appendChild(card);
+    });
+
+    scroll.appendChild(grid);
+    document.getElementById('rh-row-count').textContent = filtered.length + ' حي';
+  }
+
+  function destroyGridCards() {
+    const scroll = document.getElementById('rh-tscroll');
+    scroll.classList.remove('grid-view');
+    const tbl = scroll.querySelector('table');
+    if (tbl) tbl.style.display = '';
+    const grid = document.getElementById('rh-grid-cards');
+    if (grid) grid.remove();
+  }
+
+  document.getElementById('btn-grid-toggle').addEventListener('click', () => {
+    gridActive = !gridActive;
+    const btn = document.getElementById('btn-grid-toggle');
+    if (gridActive) {
+      btn.classList.add('active-hex');
+      btn.textContent = '☰ جدول';
+      renderGridCards();
+    } else {
+      btn.classList.remove('active-hex');
+      btn.textContent = '⊞ شبكة الأحياء';
+      destroyGridCards();
+      renderTable();
+    }
   });
 
   // ── Table ──────────────────────────────────────────────────────────────
