@@ -1691,13 +1691,24 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     document.getElementById('rh-sel-name').innerHTML =
       `<span style="color:var(--rh-text-primary);font-weight:600">${d.neighborhood}</span> · فئة ${d.class} · ${d.population.toLocaleString('ar-EG')} ساكن`;
     document.getElementById('rh-sel-detail').textContent = sectorLabel(d.sector);
-    if (!fromMap) rhMap.setView([d.lat, d.lng], 14, { animate: true, duration: 0.8 });
-    if (!hexActive && markers[d.id]) markers[d.id].openPopup();
+    if (hexActive) {
+      rhMap.setView([d.lat, d.lng], 13, { animate: true, duration: 0.6 });
+      const hexLyr = hexLayerById[d.id];
+      if (hexLyr) {
+        if (hexLayer) hexLayer.resetStyle();
+        hexLyr.setStyle({ fillOpacity: 0.95, weight: 3, color: '#58a6ff' });
+        setTimeout(() => hexLyr.openPopup(), 400);
+      }
+    } else {
+      if (!fromMap) rhMap.setView([d.lat, d.lng], 14, { animate: true, duration: 0.8 });
+      if (markers[d.id]) markers[d.id].openPopup();
+    }
   }
 
   // ── Hex Layer (District-Centered — سداسي واحد لكل حي على إحداثياته الفعلية) ──
   let hexActive = false;
   let hexLayer = null;
+  const hexLayerById = {};
 
   const LAT_CORR = Math.cos(32.1 * Math.PI / 180); // ~0.848
 
@@ -1724,11 +1735,12 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       const dist = Math.sqrt(dlat * dlat + dlng * dlng);
       if (dist < minDist) minDist = dist;
     }
-    return Math.max(0.003, Math.min(0.007, minDist * 0.40));
+    return Math.max(0.006, Math.min(0.012, minDist * 0.50));
   }
 
   function renderHexLayer() {
     if (hexLayer) { rhMap.removeLayer(hexLayer); hexLayer = null; }
+    Object.keys(hexLayerById).forEach(k => delete hexLayerById[k]);
 
     const features = DATA.map(d => ({
       type: 'Feature',
@@ -1754,6 +1766,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       },
       onEachFeature: (feat, layer) => {
         const d = feat.properties.data;
+        hexLayerById[d.id] = layer;
         layer.bindPopup(buildPopup(d), { maxWidth: 280 });
         layer.bindTooltip(d.neighborhood, {
           permanent: true,
