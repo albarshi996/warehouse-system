@@ -12,7 +12,7 @@ const OdooInstallationGuide = () => {
       { name: 'Network', spec: '1 Gbps connection', status: 'required' }
     ]},
     { category: 'Software', items: [
-      { name: 'Operating System', spec: 'Ubuntu 20.04 LTS or CentOS 8', status: 'required' },
+      { name: 'Software Environment', spec: 'Ubuntu 20.04 LTS or CentOS 8', status: 'required' },
       { name: 'PostgreSQL', spec: 'Version 12 or higher', status: 'required' },
       { name: 'Python', spec: 'Version 3.8+', status: 'required' },
       { name: 'Node.js', spec: 'Version 14+', status: 'optional' }
@@ -27,10 +27,10 @@ const OdooInstallationGuide = () => {
   const installationSteps = [
     {
       phase: 1,
-      title: 'System Preparation',
+      title: 'Setup Preparation',
       duration: '1-2 days',
       steps: [
-        { title: 'Update System', command: 'sudo apt update && sudo apt upgrade -y', description: 'Update system packages to latest versions' },
+        { title: 'Update Setup', command: 'sudo apt update && sudo apt upgrade -y', description: 'Update setup packages to latest versions' },
         { title: 'Install Dependencies', command: 'sudo apt install -y python3-pip python3-dev python3-venv build-essential libxml2-dev libxslt1-dev libevent-dev libsasl2-dev libldap2-dev libpq-dev libjpeg-dev libpng-dev', description: 'Install required system dependencies' },
         { title: 'Create Odoo User', command: 'sudo useradd -m -s /bin/bash odoo', description: 'Create dedicated user for Odoo service' },
         { title: 'Install PostgreSQL', command: 'sudo apt install -y postgresql postgresql-contrib\nsudo -u postgres createuser -s odoo', description: 'Install and configure PostgreSQL database' }
@@ -52,7 +52,7 @@ const OdooInstallationGuide = () => {
       title: 'Service Configuration',
       duration: '1-2 days',
       steps: [
-        { title: 'Create Systemd Service', command: 'sudo nano /etc/systemd/system/odoo17.service', description: 'Create systemd service file for Odoo' },
+        { title: 'Create Background Service', command: 'sudo nano /etc/systemd/system/odoo17.service', description: 'Create background service file for Odoo' },
         { title: 'Service Configuration', command: '[Unit]\nDescription=Odoo17\nRequires=postgresql.service\nAfter=network.target postgresql.service\n\n[Service]\nType=simple\nSyslogIdentifier=odoo17\nPermissionsStartOnly=true\nUser=odoo\nGroup=odoo\nExecStart=/usr/bin/python3 /home/odoo/odoo-17.0/odoo-bin -c /etc/odoo/odoo.conf\nStandardOutput=journal+console\nStandardError=journal+console\n\n[Install]\nWantedBy=multi-user.target', description: 'Configure service parameters' },
         { title: 'Enable and Start Service', command: 'sudo systemctl daemon-reload\nsudo systemctl enable odoo17\nsudo systemctl start odoo17', description: 'Enable and start Odoo service' },
         { title: 'Check Service Status', command: 'sudo systemctl status odoo17', description: 'Verify Odoo service is running properly' }
@@ -315,8 +315,8 @@ const OdooInstallationGuide = () => {
             <ul className="space-y-2 text-sm text-gray-300">
               <li>• قم دائماً بأخذ نسخ احتياطية قبل إجراء أي تغييرات</li>
               <li>• استخدم بيئة اختبار قبل التطبيق على الإنتاج</li>
-              <li>• راقب سجلات النظام بانتظام للكشف المبكر عن المشاكل</li>
-              <li>• حافظ على تحديث النظام والأمان بانتظام</li>
+              <li>• راقب سجلات التوثيق بانتظام للكشف المبكر عن المشاكل</li>
+              <li>• حافظ على تحديث التوثيق والأمان بانتظام</li>
               <li>• استعن بشريك أودو معتمد للدعم الفني</li>
             </ul>
           </div>

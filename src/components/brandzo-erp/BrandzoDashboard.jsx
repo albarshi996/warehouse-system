@@ -106,7 +106,7 @@ const BrandzoDashboard = () => {
                   color: 'text-green-400',
                   bgColor: 'bg-green-500/10',
                   borderColor: 'border-green-500/30',
-                  items: ['تثبيت النظام', 'إعدادات الأمان', 'هيكل الشركة', 'الوحدات الأساسية']
+                  items: ['تثبيت التوثيق', 'إعدادات الأمان', 'هيكل الشركة', 'الوحدات الأساسية']
                 },
                 { 
                   phase: 'المرحلة 3', 
@@ -189,13 +189,13 @@ const BrandzoDashboard = () => {
               <div className="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-5 hover:border-brand-yellow/40 transition-all">
                 <div className="text-2xl mb-3">⚡</div>
                 <h3 className="font-bold text-brand-yellow mb-2">تحقق منطقي آلي</h3>
-                <p className="text-sm text-gray-300">النظام يتحقق من المنطق التشغيلي (الصلاحيات، الحدود، الكميات، تواريخ الانتهاء 75%، التوصيات التلقائية).</p>
+                <p className="text-sm text-gray-300">التوثيق يتحقق من المنطق التشغيلي (الصلاحيات، الحدود، الكميات، تواريخ الانتهاء 75%، التوصيات التلقائية).</p>
                 <div className="mt-3 text-xs text-green-400">✓ جاهز للربط مع أودو</div>
               </div>
               <div className="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-5 hover:border-green-400/40 transition-all">
                 <div className="text-2xl mb-3">✅</div>
                 <h3 className="font-bold text-green-400 mb-2">وثيقة نظيفة موثقة</h3>
-                <p className="text-sm text-gray-300">في حال المطابقة → يُصدر النظام وثيقة نظيفة وموثقة جاهزة وخالية من أي خطأ لتكون المرجع الوحيد للإدخال في الـ ERP.</p>
+                <p className="text-sm text-gray-300">في حال المطابقة → يُصدر التوثيق وثيقة نظيفة وموثقة جاهزة وخالية من أي خطأ لتكون المرجع الوحيد للإدخال في الـ ERP.</p>
                 <div className="mt-3 text-xs text-green-400">✓ تكامل سلس مع أودو</div>
               </div>
             </div>
@@ -205,8 +205,8 @@ const BrandzoDashboard = () => {
                 <span>🔗</span> التكامل مع أودو: بوابة ذكية للبيانات النظيفة
               </h3>
               <p className="text-sm text-gray-300 leading-relaxed">
-                Brandzo Hub يعمل كطبقة وسيطة ذكية بين العمليات اليومية وأودو، يضمن أن البيانات الدقيقة فقط هي التي تصل إلى النظام المحاسبي.
-                النظام يحول النماذج الورقية إلى بيانات رقمية منظمة، يتحقق من صحتها، ثم يجهزها للإدخال المباشر في وحدات أودو المقابلة (المخزون، المشتريات، المبيعات، إلخ).
+                Brandzo Hub يعمل كطبقة وسيطة ذكية بين العمليات اليومية وأودو، يضمن أن البيانات الدقيقة فقط هي التي تصل إلى التوثيق المحاسبي.
+                التوثيق يحول النماذج الورقية إلى بيانات رقمية منظمة، يتحقق من صحتها، ثم يجهزها للإدخال المباشر في وحدات أودو المقابلة (المخزون، المشتريات، المبيعات، إلخ).
               </p>
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white/5 rounded-lg p-3">
@@ -319,9 +319,9 @@ const BrandzoDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
                 { icon: '📌', color: 'text-brand-red', border: 'border-brand-red/30', title: 'إجبارية التوثيق', text: 'منع حركة المخزون نهائياً دون استيفاء كافة الحقول الإجبارية في نماذج الإدخال الذكية. لا حركة بدون توثيق رقمي كامل.', odoo: 'متوافق مع وحدة المخزون' },
-                { icon: '⏱️', color: 'text-orange-400', border: 'border-orange-400/30', title: 'عتبة الصلاحية', text: 'الرفض التلقائي عبر النظام لأي شحنة يقل عمرها الافتراضي المتبقي عن 75% عند الاستلام. امتثال صارم لا يقبل التفاوض.', odoo: 'متكامل مع إدارة تاريخ الصلاحية' },
+                { icon: '⏱️', color: 'text-orange-400', border: 'border-orange-400/30', title: 'عتبة الصلاحية', text: 'الرفض التلقائي عبر التوثيق لأي شحنة يقل عمرها الافتراضي المتبقي عن 75% عند الاستلام. امتثال صارم لا يقبل التفاوض.', odoo: 'متكامل مع إدارة تاريخ الصلاحية' },
                 { icon: '🌡️', color: 'text-blue-400', border: 'border-blue-400/30', title: 'نقاط التحكم الحرجة (CCPs)', text: 'التحقق الآلي من درجات الحرارة المدخلة: 4°م للمبرد، -18°م للمجمد. منطق معتمد بمعايير HACCP.', odoo: 'مرتبط بجودة المخزون' },
-                { icon: '🔄', color: 'text-green-400', border: 'border-green-400/30', title: 'أولوية الصرف — FEFO', text: 'توجيه عمليات الصرف آلياً بناءً على تواريخ الانتهاء الأقرب. تطبيق إلزامي لنظام FEFO — لا يمكن تجاوزه.', odoo: 'معيار في وحدة المخزون' },
+                { icon: '🔄', color: 'text-green-400', border: 'border-green-400/30', title: 'أولوية الصرف — FEFO', text: 'توجيه عمليات الصرف آلياً بناءً على تواريخ الانتهاء الأقرب. تطبيق إلزامي لتوثيق FEFO — لا يمكن تجاوزه.', odoo: 'معيار في وحدة المخزون' },
                 { icon: '📊', color: 'text-purple-400', border: 'border-purple-400/30', title: 'دقة البيانات — ABC', text: 'توجيه مهام الجرد الدوري الذكي عبر تصنيف ABC لضمان تطابق الأرصدة. الهدف: دقة مخزون 98.5% فأكثر.', odoo: 'متوافق مع تقارير أودو' },
                 { icon: '⚡', color: 'text-brand-yellow', border: 'border-brand-yellow/30', title: 'زمن الاستجابة', text: 'تسريع الدورة المستندية عبر أتمتة النماذج وتقليل وقت التدقيق اليدوي. وقت دورة تشغيلية يقل عن 4 ساعات.', odoo: 'مزامنة فورية مع أودو' }
               ].map((rule, i) => (
@@ -345,7 +345,7 @@ const BrandzoDashboard = () => {
 
       {/* Footer */}
       <div className="text-center text-sm text-gray-500 mt-8">
-        Brandzo Hub © 2026 — الوثيقة التشغيلية والتقنية الشاملة لنظام إدارة المخازن — جميع الحقوق محفوظة
+        Brandzo Hub © 2026 — الوثيقة التشغيلية والتقنية الشاملة لتوثيق إدارة المخازن — جميع الحقوق محفوظة
       </div>
     </div>
   );

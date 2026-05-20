@@ -71,7 +71,7 @@ export const DOCUMENT_STAGES = [
     titleEn: 'Directed Put-away',
     phaseAr: 'التخزين والتحويل الداخلي',
     descAr: 'توجيه الأصناف من منطقة الاستلام إلى مواقع التخزين المثلى (FEFO، الوزن، طبيعة المنتج).',
-    descEn: 'System-directed slotting based on FEFO, weight, and item profile.',
+    descEn: 'Hub-directed slotting based on FEFO, weight, and item profile.',
     accent: 'navy',
     forms: [
       { file: 'form_PutawayList.html', titleAr: 'أمر التخزين الموجه' },

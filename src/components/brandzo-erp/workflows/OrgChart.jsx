@@ -110,14 +110,14 @@ const ODOO_ROLES = {
     description: 'إدارة شاملة لجميع عمليات المخزون والجودة'
   },
   'exec-mgr': {
-    role: 'System Administrator',
+    role: 'Hub Administrator',
     access: 'Settings كاملة',
-    description: 'إدارة النظام بأكمله وصلاحيات المدير العام'
+    description: 'إدارة التوثيق بأكمله وصلاحيات المدير العام'
   },
   'it-mgr': {
-    role: 'System Administrator',
+    role: 'Hub Administrator',
     access: 'Settings كاملة',
-    description: 'إدارة البنية التحتية للنظام والتكاملات'
+    description: 'إدارة البنية التحتية للتوثيق والتكاملات'
   },
   'qa-mgr': {
     role: 'Quality Administrator',

@@ -8,7 +8,7 @@ import os
 import re
 from pathlib import Path
 
-FORMS_DIR = Path('/workspaces/brandzo-warehouse-system/public/forms')
+FORMS_DIR = Path('/workspaces/brandzo-hub-documentation/public/forms')
 
 # The correct exportToExcel function that should be in the script tag
 CORRECT_FUNCTION = r'''function exportToExcel() {

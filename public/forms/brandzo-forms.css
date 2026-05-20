@@ -1,5 +1,5 @@
 /* ============================================================
-   BRANDZO FORMS — UNIFIED DESIGN SYSTEM v2.0
+   BRANDZO FORMS — UNIFIED DESIGN DOCUMENTATION v2.0
    public/forms/brandzo-forms.css
    Author: Mohammed Ibrahim Al-Barshi | Brandzo Hub 2026
    ============================================================ */
@@ -62,7 +62,7 @@ p, span, td, th, li, label, input, textarea, select, h1, h2, h3, h4, h5, h6 {
   opacity: 1 !important;              /* override any accidental opacity */
 }
 
-/* ─── 3. FORM TABLE SYSTEM ─────────────────────────────────── */
+/* ─── 3. FORM TABLE DOCUMENTATION ─────────────────────────────────── */
 /* Shared table styles for ALL forms */
 .bz-table {
   width: 100%;
@@ -135,7 +135,7 @@ p, span, td, th, li, label, input, textarea, select, h1, h2, h3, h4, h5, h6 {
   min-width: 100%;
 }
 
-/* ─── 4. BUTTON SYSTEM ─────────────────────────────────────── */
+/* ─── 4. BUTTON DOCUMENTATION ─────────────────────────────────────── */
 .bz-btn {
   display: inline-flex;
   align-items: center;
@@ -170,7 +170,7 @@ p, span, td, th, li, label, input, textarea, select, h1, h2, h3, h4, h5, h6 {
   flex-wrap: wrap;
 }
 
-/* ─── 5. FORM FIELD SYSTEM ─────────────────────────────────── */
+/* ─── 5. FORM FIELD DOCUMENTATION ─────────────────────────────────── */
 .bz-field-group { margin-bottom: 14px; }
 .bz-label {
   display: block;
@@ -212,7 +212,7 @@ p, span, td, th, li, label, input, textarea, select, h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.01em;
 }
 
-/* ─── 7. UNIVERSAL PRINT SYSTEM ────────────────────────────── */
+/* ─── 7. UNIVERSAL PRINT DOCUMENTATION ────────────────────────────── */
 /* This replaces fragmented @media print blocks in each form */
 @media print {
   /* Page setup */

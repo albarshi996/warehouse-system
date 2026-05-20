@@ -4,7 +4,7 @@ import { db } from '../config/firebase.js';
 /**
  * INVENTORY LOGIC OVERVIEW (Excel Methodology):
  *
- * In this system, the 'Balance' of an item is maintained as:
+ * In this documentation, the 'Balance' of an item is maintained as:
  * Balance = (Total Inbound) - (Total Outbound)
  *
  * When an Inbound record is added, the Balance in 'Items_Master' increases.

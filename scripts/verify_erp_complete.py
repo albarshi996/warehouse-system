@@ -7,7 +7,7 @@ async def main():
         browser = await p.chromium.launch()
         page = await browser.new_page()
 
-        base_url = "http://localhost:4323/brandzo-warehouse-system"
+        base_url = "http://localhost:4323/brandzo-hub-documentation"
 
         # 1. Verify ERP Workflows Page
         print("Checking ERP Workflows page...")

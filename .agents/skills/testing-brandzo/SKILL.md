@@ -1,26 +1,26 @@
 ---
 name: testing-brandzo
-description: End-to-end testing playbook for the Brandzo Warehouse Management System. Use when verifying any change to the landing page, dashboard, forms in public/forms/, or the operational guide.
+description: End-to-end testing playbook for the Brandzo Warehouse Management Documentation. Use when verifying any change to the landing page, dashboard, forms in public/forms/, or the operational guide.
 ---
 
-# Testing the Brandzo Warehouse Management System
+# Testing the Brandzo Warehouse Management Documentation
 
 ## What this app is
 
 - Astro 6 + React 19 + Tailwind 4 + Firebase Firestore.
-- Deployed to GitHub Pages with base path `/brandzo-warehouse-system/`.
+- Deployed to GitHub Pages with base path `/brandzo-hub-documentation/`.
 - RTL/Arabic-first UI with Cairo font (`dir="rtl"`).
 - Dashboard is open access (no auth wall, by design).
 
 ## Where things live
 
-- **Live deploy:** `https://albarshi996.github.io/brandzo-warehouse-system/`
+- **Live deploy:** `https://albarshi996.github.io/brandzo-hub-documentation/`
   - Landing page: same URL (root).
   - Dashboard: `/dashboard/`.
   - Forms launcher: `/dashboard/forms/`.
   - Individual forms (13 total): `/forms/form_*.html` (e.g. `form_GRN.html`, `form_PO.html`, `form_BinCard.html`).
   - Operational guide: `/Brandzo_Operational_Guide.html`.
-- **Local dev URL:** `http://localhost:4321/brandzo-warehouse-system/` (run `npm run dev`).
+- **Local dev URL:** `http://localhost:4321/brandzo-hub-documentation/` (run `npm run dev`).
 
 ## CI behaviour to be aware of
 

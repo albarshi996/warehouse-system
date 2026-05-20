@@ -1,7 +1,7 @@
 {
-  "name": "brandzo-warehouse-system",
+  "name": "brandzo-hub-documentation",
   "version": "1.0.0",
-  "description": "Warehouse Management System for Brandzo (Astro + React + Tailwind + Firebase).",
+  "description": "Warehouse Management Documentation for Brandzo (Astro + React + Tailwind + Firebase).",
   "type": "module",
   "private": true,
   "engines": {
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/albarshi996/brandzo-warehouse-system.git"
+    "url": "git+https://github.com/albarshi996/brandzo-hub-documentation.git"
   },
   "keywords": [
     "astro",
@@ -33,9 +33,9 @@
   "author": "Mohammed AlBarshi",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/albarshi996/brandzo-warehouse-system/issues"
+    "url": "https://github.com/albarshi996/brandzo-hub-documentation/issues"
   },
-  "homepage": "https://github.com/albarshi996/brandzo-warehouse-system#readme",
+  "homepage": "https://github.com/albarshi996/brandzo-hub-documentation#readme",
   "dependencies": {
     "@astrojs/react": "^4.2.0",
     "@tailwindcss/postcss": "^4.2.4",

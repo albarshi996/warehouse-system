@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 
 // Base URL for the dev server
-const BASE_URL = 'http://localhost:4321/brandzo-warehouse-system';
+const BASE_URL = 'http://localhost:4321/brandzo-hub-documentation';
 
 async function testForms() {
     let browser;

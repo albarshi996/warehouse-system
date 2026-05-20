@@ -6,7 +6,7 @@ export default defineConfig({
   // الرابط الأساسي لموقعك على جيتهاب
   site: 'https://albarshi996.github.io',
   // اسم المستودع لكي تعمل الروابط الداخلية بشكل صحيح
-  base: '/warehouse-system',
+  base: '/hub-documentation',
 
   integrations: [react()],
 });

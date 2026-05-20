@@ -47,7 +47,7 @@ export const orgTier2 = [
       'التنسيق بين الإدارات المختلفة',
       'إدارة الموارد البشرية بالمستودع',
     ],
-    odooRole: 'System Administrator',
+    odooRole: 'Hub Administrator',
     odooAccess: 'Settings كاملة',
   },
   {
@@ -57,13 +57,13 @@ export const orgTier2 = [
     emoji: '💻',
     accent: 'navy',
     responsibilities: [
-      'الإشراف على نظام إدارة المستودعات الإلكتروني',
-      'ضمان تكامل الأنظمة مع المنظومة المركزية',
+      'الإشراف على توثيق إدارة المستودعات الإلكتروني',
+      'ضمان تكامل الأنظمة مع التوثيق المركزية',
       'قيادة مبادرات الأتمتة والتحول الرقمي',
       'إدارة فريق الدعم الفني',
       'تحليل البيانات الضخمة لتحسين الأداء',
     ],
-    odooRole: 'System Administrator',
+    odooRole: 'Hub Administrator',
     odooAccess: 'Settings كاملة',
   },
   {
