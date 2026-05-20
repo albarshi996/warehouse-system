@@ -94,11 +94,12 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   /* ── Split Layout ───────────────────────────────────────────────── */
   #rh-split {
     display: grid;
-    grid-template-columns: 1fr 360px;
+    grid-template-columns: minmax(0, 1fr) 380px;
     gap: 12px;
     flex: 1;
     min-height: 0;
-    height: calc(100vh - 180px);
+    height: calc(100vh - 220px);
+    max-height: calc(100vh - 140px);
   }
 
   /* ── Panel Header ───────────────────────────────────────────────── */
@@ -155,8 +156,10 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     display: flex;
     flex-direction: column;
     position: relative;
+    min-height: 0;
+    height: 100%;
   }
-  #rh-map { flex: 1; min-height: 460px; }
+  #rh-map { flex: 1; min-height: 460px; height: 100%; }
   .leaflet-tile { filter: brightness(0.65) saturate(0.35); }
   .leaflet-popup-content-wrapper {
     background: var(--rh-bg-card) !important; color: var(--rh-text-primary) !important;
@@ -202,6 +205,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     flex-direction: column;
     overflow: hidden;
     min-height: 0;
+    height: 100%;
   }
   #rh-search-wrap {
     display: flex;
@@ -1650,7 +1654,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       `<span style="color:var(--rh-text-primary);font-weight:600">${d.neighborhood}</span> · فئة ${d.class} · ${d.population.toLocaleString('ar-EG')} ساكن`;
     document.getElementById('rh-sel-detail').textContent = sectorLabel(d.sector);
     if (!fromMap) rhMap.setView([d.lat, d.lng], 14, { animate: true, duration: 0.8 });
-    if (markers[d.id]) markers[d.id].openPopup();
+    if (!hexActive && markers[d.id]) markers[d.id].openPopup();
   }
 
   // ── Hex Layer (District-Centered — سداسي واحد لكل حي على إحداثياته الفعلية) ──
@@ -1683,7 +1687,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       const dist = Math.sqrt(dlat * dlat + dlng * dlng);
       if (dist < minDist) minDist = dist;
     }
-    return Math.max(0.006, Math.min(0.011, minDist * 0.45));
+    return Math.max(0.0045, Math.min(0.009, minDist * 0.35));
   }
 
   function renderHexLayer() {
@@ -1712,7 +1716,10 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
           this.setStyle({ fillOpacity: 0.90, weight: 2.5, color: 'rgba(255,255,255,0.55)' });
         });
         layer.on('mouseout', function () { hexLayer.resetStyle(this); });
-        layer.on('click', () => showNeighborhood(feat.properties.data, true));
+        layer.on('click', function () {
+          showNeighborhood(feat.properties.data, true);
+          this.openPopup();
+        });
       }
     }).addTo(rhMap);
   }
