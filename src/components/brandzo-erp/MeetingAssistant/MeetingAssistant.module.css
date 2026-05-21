@@ -1,0 +1,83 @@
+.dotBlink {
+  animation: dotBlink 1.2s ease-in-out infinite;
+}
+
+@keyframes dotBlink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.ringLive {
+  animation: ringPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes ringPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+.ringOuter {
+  animation: ringOuter 1.5s ease-in-out infinite;
+}
+
+@keyframes ringOuter {
+  0%, 100% {
+    transform: scale(1);
+    border-color: rgba(239, 68, 68, 0.55);
+  }
+  50% {
+    transform: scale(1.06);
+    border-color: rgba(239, 68, 68, 0.55);
+  }
+}
+
+.ringMiddle {
+  animation: ringMiddle 1.5s ease-in-out infinite 0.2s;
+}
+
+@keyframes ringMiddle {
+  0%, 100% {
+    transform: scale(1);
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    transform: scale(1.06);
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+}
+
+.ringInner {
+  animation: ringInner 1.5s ease-in-out infinite 0.4s;
+}
+
+@keyframes ringInner {
+  0%, 100% {
+    transform: scale(1);
+    border-color: rgba(239, 68, 68, 0.12);
+  }
+  50% {
+    transform: scale(1.06);
+    border-color: rgba(239, 68, 68, 0.12);
+  }
+}
+
+.recordPulse {
+  animation: recordPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes recordPulse {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(255, 59, 92, 0.25);
+  }
+  50% {
+    box-shadow: 0 4px 30px rgba(255, 59, 92, 0.55);
+  }
+}
