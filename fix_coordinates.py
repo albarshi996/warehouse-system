@@ -1,8 +1,8 @@
 import re, time, json, sys, urllib.request, urllib.parse
 
 # ── إعدادات ──────────────────────────────────────────────────────────────────
-INPUT_FILE  = "retail-hub.astro"
-OUTPUT_FILE = "retail-hub.astro"
+INPUT_FILE  = "src/pages/dashboard/retail-hub.astro"
+OUTPUT_FILE = "src/pages/dashboard/retail-hub.astro"
 USER_AGENT  = "BenghaziRetailMap/1.0 (warehouse-system; benghazi-coords-fix)"
 SLEEP_SEC   = 1.1
 # ─────────────────────────────────────────────────────────────────────────────
