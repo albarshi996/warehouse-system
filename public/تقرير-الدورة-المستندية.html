@@ -7,14 +7,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --color-brand-navy: #1a1a2e;
-  --color-brand-gold: #e8b830;
-  --color-brand-red: #c0392b;
+  --navy: #0d1b2a;
+  --blue: #1b3a5c;
+  --gold: #c89d3b;
+  --gold-light: #f0d98a;
+  --green: #00a650;
+  --red: #c0392b;
   --white: #f8f9fb;
   --gray: #8a93a2;
-  --line: rgba(232,184,48,0.12);
+  --line: rgba(200,157,59,0.25);
   --card-bg: rgba(255,255,255,0.04);
-  --card-border: rgba(232,184,48,0.18);
+  --card-border: rgba(200,157,59,0.18);
 }
 
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -23,15 +26,12 @@ html{scroll-behavior:smooth;}
 
 body{
   font-family:'Cairo',sans-serif;
-  background:#f8f9fa;
-  color:#111;
+  background:var(--navy);
+  color:var(--white);
   direction:rtl;
   text-align:right;
   overflow-x:hidden;
 }
-
-</style>
-<div class="brandzo-topbar" style="width:100%;"><div style="padding:12px 18px;background:var(--color-brand-navy);color:var(--color-brand-gold);display:flex;align-items:center;gap:12px;"><div style="font-weight:700;font-size:20px">Brandzo</div><div style="font-size:16px">تقرير الدورة المستندية</div><div style="margin-left:auto;color:#fff">12 مايو 2026</div></div></div>
 
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar{width:4px;}
@@ -404,32 +404,6 @@ tr:hover td{background:rgba(200,157,59,0.04);}
   th{background:#1b3a5c;}
 }
 </style>
-
-<style id="brandzo-override">
-    :root{
-        --color-brand-navy:#1a1a2e;
-        --color-brand-red:#c0392b;
-        --color-brand-red-dark:#8b1a1a;
-        --color-brand-gold:#e8b830;
-        --color-brand-yellow:#e8b830;
-        --color-primary:#c0392b;
-        --color-surface:#f8f9fa;
-        --color-on-surface:#111;
-        --navy: var(--color-brand-navy);
-        --gold: var(--color-brand-gold);
-        --gold2: #c69030;
-    }
-    body{font-family:'Cairo',sans-serif !important;}
-    .brandzo-topbar{background:var(--color-brand-navy);color:var(--color-brand-gold);padding:14px 18px;display:flex;align-items:center;gap:12px;font-family:'Cairo',sans-serif;}
-    .brandzo-topbar .wordmark{font-weight:700;font-size:20px;}
-    .brandzo-topbar .title{font-size:16px;}
-    .brandzo-topbar .meta{margin-left:auto;font-size:14px;color:#fff;}
-    .no-print{background:#f8f9fa;border-right:4px solid var(--color-brand-navy);padding:10px 15px;}
-    .no-print a{color:var(--color-primary);text-decoration:none;font-weight:700;}
-    a{color:var(--color-brand-red);}
-    @media print{.brandzo-topbar{display:block;}}
-</style>
-
 </head>
 <body>
 
