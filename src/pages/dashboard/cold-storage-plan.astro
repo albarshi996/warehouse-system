@@ -1,0 +1,12 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import ColdStoragePlan from '../../components/brandzo-erp/warehouse/ColdStoragePlan.jsx';
+
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL.slice(0, -1) : import.meta.env.BASE_URL;
+---
+
+<DashboardLayout title="مخطط الرحبة - كوزميتك" showGuide={false}>
+  <div dir="rtl">
+    <ColdStoragePlan client:load />
+  </div>
+</DashboardLayout>
