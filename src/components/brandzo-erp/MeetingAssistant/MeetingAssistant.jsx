@@ -89,6 +89,44 @@ const MeetingAssistant = () => {
   const [waveHeights, setWaveHeights] = useState(Array(10).fill(0).map((_, i) => 6 + (i % 3) * 5));
   const [selectedLang, setSelectedLang] = useState('ar-SA');
   const [statusDot, setStatusDot] = useState('ready');
+  // Slide mode for presentation
+  const [slideMode, setSlideMode] = useState(false);
+  const [slideIndex, setSlideIndex] = useState(0);
+  const [slideTitle, setSlideTitle] = useState('تقرير تخزين الكوزمتيك — استراتيجية استغلال مجمع التبريد الرحبة');
+  const [agendaItems, setAgendaItems] = useState([
+    {
+      title: 'مقدمة: لماذا نستغل الرحبة الآن؟',
+      content: 'عرض موجز للفرصة الاستراتيجية لاستغلال الرحبة ضمن نموذج Brandzo للكوزميتيك، خاصة مع قربها من مسارات التوزيع وشبكات البيع.'
+    },
+    {
+      title: 'تفاصيل الطاقة الاستيعابية: 19 ثلاجة × 63 متر = 1,197 متر مربع',
+      content: 'تأكيد مساحة التخزين المتاحة وقدرة الرحبة على استيعاب الدفعات الكبيرة مع ضمان التحكم الحراري المناسب.'
+    },
+    {
+      title: 'مخطط التوزيع التفصيلي للثلاجة الواحدة (24 حامل لكل ثلاجة)',
+      content: 'توزيع حاملات الرفوف داخل الوحدة لضمان سهولة الوصول وتقليل وقت الالتقاط والتخزين.'
+    },
+    {
+      title: 'خطة توزيع الفئات (وجه، جسم، شعر، ميكاب، عطور)',
+      content: 'فصل الفئات وفقاً لاحتياجات التخزين، وسهولة تحديد مكان المنتج، وسرعة تجهيز الطلبات.'
+    },
+    {
+      title: 'الجدول الزمني للتنفيذ',
+      content: 'خطة زمنية واضحة تبدأ بالإعداد، ثم تركيب الأنظمة، وعملية الاختبار، وصولاً إلى التشغيل التجريبي.'
+    },
+    {
+      title: 'الموارد البشرية المطلوبة',
+      content: 'تحديد الكوادر التشغيلية، فرق الجودة، المشرفين على التخزين، وفريق التوزيع المحلي.'
+    },
+    {
+      title: 'التكاليف والعائد المتوقع',
+      content: 'عرض تكلفة التجهيز والصيانة مقابل العائد المتوقع من خفض الهدر وتسريع دورة المنتجات الحساسة.'
+    },
+    {
+      title: 'Q&A وقرارات التقرير',
+      content: 'نقاط المناقشة النهائية، القرارات المقترحة، وخطة المتابعة التنفيذية.'
+    },
+  ]);
 
   // Refs
   const recognitionRef = useRef(null);
@@ -567,6 +605,18 @@ const MeetingAssistant = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isRecording, isPaused, transcriptSegments]);
 
+  // Slide mode keyboard navigation
+  useEffect(() => {
+    if (!slideMode) return;
+    const onKey = (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') setSlideIndex((s) => Math.min(s + 1, agendaItems.length - 1));
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') setSlideIndex((s) => Math.max(s - 1, 0));
+      if (e.key === 'Escape') setSlideMode(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [slideMode, agendaItems.length]);
+
   const recordBtnText = isRecording && !isPaused ? '⏸️' : isRecording && isPaused ? '▶️' : '🎙️';
   const statusDotClasses = {
     ready: 'bg-gray-500',
@@ -582,6 +632,34 @@ const MeetingAssistant = () => {
         <div className="absolute inset-0 bg-gradient-radial from-blue-500/10 via-transparent to-transparent blur-3xl" />
         <div className="absolute inset-0 bg-gradient-radial from-teal-500/5 via-transparent to-transparent blur-3xl" />
       </div>
+
+      {/* Slide Mode Overlay */}
+      {slideMode && (
+        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-6" dir="rtl">
+          <div className="max-w-4xl w-full bg-white rounded-xl p-8 text-right" style={{direction:'rtl'}}>
+            <div className="flex flex-col gap-2">
+              <div className="text-xs uppercase tracking-[0.22em] text-brand-red">القالب المسبق</div>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-brand-navy">{slideTitle}</h2>
+                  <p className="mt-2 text-sm text-gray-500">عرض شرائح لتقديم خطة استغلال الرحبة لتخزين الكوزميتيك.</p>
+                </div>
+                <button onClick={()=> setSlideMode(false)} className="px-3 py-1 rounded bg-gray-200">إغلاق</button>
+              </div>
+            </div>
+            <div className="mt-6 text-gray-700" style={{minHeight:180}}>
+              {agendaItems[slideIndex]?.content || <p className="text-gray-500">لا توجد تفاصيل محددة لهذه الشريحة حالياً.</p>}
+            </div>
+            <div className="mt-6 flex items-center justify-between">
+              <div className="text-sm text-gray-500">الشريحة {slideIndex + 1} من {agendaItems.length}</div>
+              <div className="flex gap-2">
+                <button onClick={()=> setSlideIndex(s => Math.max(0, s-1))} className="px-3 py-1 rounded bg-white border">السابق</button>
+                <button onClick={()=> setSlideIndex(s => Math.min(agendaItems.length-1, s+1))} className="px-3 py-1 rounded bg-brand-red text-white">التالي</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 h-16 bg-black/80 border-b border-white/10 backdrop-blur-xl z-40 flex items-center justify-between px-4">
@@ -610,6 +688,23 @@ const MeetingAssistant = () => {
             title={t('btn_clear')}
           >
             🗑️
+          </button>
+          <button
+            onClick={() => setSlideMode(true)}
+            className="ml-2 px-3 py-1 rounded-lg bg-brand-gold text-brand-navy text-sm font-semibold hover:opacity-90 transition"
+            title="تحميل القالب المسبق"
+          >
+            📥 تحميل القالب
+          </button>
+          <button
+            onClick={() => {
+              if (!slideMode) setSlideIndex(0);
+              setSlideMode((prev) => !prev);
+            }}
+            className={`ml-2 px-3 py-1 rounded-lg text-sm font-semibold transition ${slideMode ? 'bg-brand-red text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+            title={slideMode ? 'إيقاف وضع العرض' : 'تشغيل وضع العرض'}
+          >
+            📽️ {slideMode ? 'إيقاف العرض' : 'عرض'}
           </button>
         </div>
       </nav>

@@ -18,6 +18,17 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         هذا الموقع يعرض رؤيتي التشغيلية لتحديث إدارة المستودعات والتوزيع في بنغازي
       </p>
       <div class="w-20 h-1 bg-brand-red rounded-full mb-6" />
+
+      <!-- Prominent Report Banner -->
+      <a href={`${base}/dashboard/meeting-assistant`} class="block mb-6">
+        <div class="rounded-2xl p-6 shadow-2xl border border-brand-red/30 bg-gradient-to-r from-brand-red via-[#c0392b] to-[#8b1a1a]">
+          <h2 class="text-3xl font-extrabold text-white">تقرير تخزين الكوزمتيك</h2>
+          <p class="text-white/90 mt-3 max-w-2xl">افتح مساعد الاجتماعات لتوليد تقرير العرض التقديمي لقالب تخزين الرحبة والبيانات التشغيلية.</p>
+          <div class="mt-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white/90">
+            📽️ افتح مساعد الاجتماعات
+          </div>
+        </div>
+      </a>
       
       <div class="bg-gradient-to-r from-blue-900/20 to-green-900/20 rounded-xl p-6 border border-blue-500/30">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
@@ -42,7 +53,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
     </div>
 
     {/* Quick Actions */}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
       <a href={`${base}/dashboard/forms`} class="block group">
         <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
           <div class="text-3xl mb-3">📋</div>
@@ -62,6 +73,13 @@ const base = import.meta.env.BASE_URL.endsWith('/')
           <div class="text-3xl mb-3">🏢</div>
           <h3 class="font-bold text-brand-yellow mb-2">الدورة المستندية</h3>
           <p class="text-sm text-gray-300">الهيكل التنظيمي ومسارات المستندات</p>
+        </div>
+      </a>
+      <a href={`${base}/dashboard/cold-storage-plan`} class="block group">
+        <div class="bg-brand-navy border border-brand-gold/20 rounded-xl p-6 hover:bg-brand-navy/90 transition-all hover:-translate-y-1">
+          <div class="text-4xl mb-3">🏭</div>
+          <h3 class="font-bold text-brand-gold mb-2">مخطط مجمع التبريد الرحبة</h3>
+          <p class="text-sm text-gray-200">خريطة الوحدات والتوزيع داخل الرحبة لتخزين الكوزميتيك.</p>
         </div>
       </a>
       <a href={`${base}/dashboard/erp-workflows`} class="block group">
