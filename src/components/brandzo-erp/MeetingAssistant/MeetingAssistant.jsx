@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import html2pdf from 'html2pdf.js';
 import styles from './MeetingAssistant.module.css';
 
 const i18n = {
@@ -433,7 +432,11 @@ const MeetingAssistant = () => {
     setStatusDot(isRecording && !isPaused ? 'recording' : isRecording && isPaused ? 'paused' : 'ready');
   };
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const txt = getText();
     if (!txt || txt.trim().length < 3) {
       showToast(t('toast_no_content'));
@@ -481,21 +484,29 @@ const MeetingAssistant = () => {
     const element = document.createElement('div');
     element.innerHTML = htmlContent;
 
-    const opt = {
-      margin: 10,
-      filename: 'meeting-minutes-' + now.toISOString().slice(0, 10) + '.pdf',
-      image: { type: 'jpeg', quality: 0.95 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-    };
+    try {
+      const module = await import('html2pdf.js');
+      const html2pdf = module.default || module;
 
-    html2pdf()
-      .set(opt)
-      .from(element)
-      .save()
-      .then(() => showToast(t('toast_pdf_exported'), 3000))
-      .catch(() => showToast('⚠️ PDF export failed'));
+      const opt = {
+        margin: 10,
+        filename: 'meeting-minutes-' + now.toISOString().slice(0, 10) + '.pdf',
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+      };
+
+      await html2pdf()
+        .set(opt)
+        .from(element)
+        .save();
+
+      showToast(t('toast_pdf_exported'), 3000);
+    } catch (error) {
+      console.error('PDF export failed', error);
+      showToast('⚠️ PDF export failed');
+    }
   };
 
   const clearAll = () => {
