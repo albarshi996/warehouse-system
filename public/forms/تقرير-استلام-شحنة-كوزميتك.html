@@ -4,577 +4,361 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تقرير تنفيذ مهمة استلام شحنة كوزميتك — Brandzo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../forms/brandzo-forms.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        :root {
+            --brandzo-light-red: #f15a5b;
+            --brandzo-dark-red: #7e2b2a;
+            --text-gray: #4a4a4a;
         }
-        
         body {
-            font-family: 'Cairo', Arial, sans-serif;
-            background: #ffffff;
-            color: #1a1a2a;
-            direction: rtl;
+            background-color: #f8f9fa;
             padding: 20px;
-            font-size: 12px;
-            line-height: 1.4;
+            font-family: 'Cairo', sans-serif;
         }
-        
-        @page {
-            size: A4 portrait;
-            margin: 15mm;
-        }
-        
-        .page {
-            max-width: 210mm;
+        .page-wrapper {
+            max-width: 1100px;
             margin: 0 auto;
             background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid #E84820;
-            padding-bottom: 12px;
-            margin-bottom: 20px;
+
+        /* Standardized Header Styles */
+        .brandzo-header {
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; margin-bottom: 30px; background: #ffffff;
+            padding: 10px 0; border-bottom: 2px solid var(--bz-orange);
         }
-        
-        .logo {
-            text-align: center;
-        }
-        
+        .decor-side { display: flex; align-items: center; flex-grow: 1; }
+        .dark-bar { height: 28px; background-color: var(--brandzo-dark-red); flex-grow: 1; }
+        .light-blocks { display: flex; gap: 6px; margin: 0 15px; }
+        .light-blocks span { display: inline-block; width: 14px; height: 38px; background-color: var(--brandzo-light-red); }
+        .logo-wrapper { display: flex; align-items: center; gap: 12px; margin: 0 25px; direction: ltr; }
         .logo-circle {
-            width: 60px;
-            height: 60px;
-            background: #E84820;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 24px;
-            font-weight: bold;
-            margin: 0 auto 8px;
+            width: 75px; height: 75px; background-color: var(--brandzo-light-red);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            color: #ffffff; font-size: 24px; font-weight: bold; font-family: Arial, sans-serif;
         }
+        .logo-text { display: flex; flex-direction: column; justify-content: center; }
+        .logo-text h1 {
+            color: var(--brandzo-light-red); font-size: 32px; font-weight: 800;
+            margin: 0; line-height: 1; font-family: Arial, sans-serif;
+        }
+        .logo-text p { color: var(--text-gray); font-size: 13px; margin: 2px 0 0 0; font-family: Arial, sans-serif; }
+
+        .scan-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; border-radius: 4px;
+            background: var(--bz-orange); color: #fff; border: none; cursor: pointer;
+        }
+        .scan-cell-wrap { display: flex; align-items: center; gap: 5px; }
         
-        .logo-text {
-            font-size: 20px;
-            font-weight: 800;
-            color: #E84820;
-        }
-        
-        .logo-subtext {
-            font-size: 10px;
-            color: #666;
-            margin-top: 2px;
-        }
-        
-        .page-number {
-            font-size: 11px;
-            color: #666;
-            font-weight: 600;
-        }
-        
-        .report-title {
-            text-align: center;
-            font-size: 16px;
-            font-weight: 700;
-            color: #1a1a2a;
-            margin-bottom: 20px;
-            background: #f5f5f5;
-            padding: 12px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
-        
-        .section {
-            margin-bottom: 20px;
-        }
-        
-        .section-title {
-            background: #E84820;
-            color: #fff;
-            padding: 8px 15px;
-            font-size: 13px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            border-radius: 3px;
-        }
-        
-        .fields-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .field-group {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .field-group label {
-            font-weight: 700;
-            font-size: 11px;
-            color: #333;
-            margin-bottom: 4px;
-        }
-        
-        .field-line {
-            border: 1px solid #999;
-            min-height: 28px;
-            padding: 4px 8px;
-            width: 100%;
-            background: #fff;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0;
-            font-size: 11px;
-        }
-        
-        table th {
-            background: #1a1a2a;
-            color: #FFD700;
-            padding: 8px 6px;
-            text-align: center;
-            font-weight: 700;
-            border: 1px solid #333;
-        }
-        
-        table td {
-            padding: 6px;
-            border: 1px solid #999;
-            text-align: center;
-            vertical-align: middle;
-            min-height: 30px;
-        }
-        
-        table td.center {
-            text-align: center;
-        }
-        
-        table td.left {
-            text-align: left;
-        }
-        
-        .signature-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 2px solid #E84820;
-        }
-        
-        .signature-box {
-            text-align: center;
-        }
-        
-        .signature-line {
-            border-top: 1.5px solid #333;
-            margin: 35px 0 5px;
-            min-height: 30px;
-        }
-        
-        .signature-label {
-            font-size: 11px;
-            font-weight: 700;
-            color: #333;
-        }
-        
-        .decision-section {
-            background: #fffdf5;
-            border: 2px solid #E84820;
-            border-radius: 4px;
-            padding: 15px;
-            margin: 15px 0;
-        }
-        
-        .decision-options {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 12px;
-        }
-        
-        .decision-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .checkbox {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #333;
-            display: inline-block;
-        }
-        
-        .notes-area {
-            width: 100%;
-            border: 1px solid #999;
-            min-height: 50px;
-            padding: 8px;
-            margin-top: 10px;
-            background: #fff;
-        }
-        
-        .checkbox-list {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-        
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 11px;
-        }
-        
-        .brand-row {
-            background: #f9f9f9;
-        }
-        
-        .brand-row:nth-child(even) {
-            background: #fff;
-        }
+        .form-top-nav { margin-bottom: 20px; display: flex; justify-content: center; gap: 10px; }
         
         @media print {
-            body {
-                padding: 0;
-                background: #fff;
-            }
-            
-            .page {
-                max-width: none;
-                margin: 0;
-            }
+            body { background: #fff; padding: 0; }
+            .page-wrapper { box-shadow: none; max-width: 100%; padding: 0; }
+            .no-print { display: none !important; }
+            .bz-input, .bz-select { border: 1px solid #999 !important; }
         }
     </style>
 </head>
 <body>
-    <div class="page">
-        <!-- Header -->
-        <div class="header">
-            <div class="logo">
-                <div class="logo-circle">B</div>
-                <div class="logo-text">Brandzo</div>
-                <div class="logo-subtext">Warehouse Management System</div>
+    <div class="no-print form-top-nav">
+        <a href="../dashboard/forms/" class="bz-btn" style="background: #333; color: #fff;">🏠 لوحة التحكم</a>
+        <button class="bz-btn bz-btn-print" onclick="validateAndPrint()">🖨️ طباعة / حفظ PDF</button>
+    </div>
+
+    <div class="page-wrapper">
+        <!-- Standard Header -->
+        <header class="brandzo-header">
+            <div class="decor-side">
+                <div class="dark-bar"></div>
+                <div class="light-blocks"><span></span><span></span><span></span></div>
             </div>
-            <div class="page-number">
-                الصفحة: 1 / 1
-            </div>
-        </div>
-        
-        <!-- Report Title -->
-        <div class="report-title">
-            تقرير تنفيذ مهمة استلام شحنة منتجات تجميل (Cosmetics)
-        </div>
-        
-        <!-- Section 1: Header Info -->
-        <div class="section">
-            <div class="section-title">القسم 1 - بيانات الاستلام</div>
-            <div class="fields-grid">
-                <div class="field-group">
-                    <label>رقم مهمة الاستلام:</label>
-                    <div class="field-line"></div>
-                </div>
-                <div class="field-group">
-                    <label>التاريخ والوقت:</label>
-                    <div class="field-line"></div>
-                </div>
-                <div class="field-group">
-                    <label>اسم المورد:</label>
-                    <div class="field-line"></div>
-                </div>
-                <div class="field-group">
-                    <label>رقم أمر الشراء المرجعي:</label>
-                    <div class="field-line"></div>
-                </div>
-                <div class="field-group" style="grid-column: span 2;">
-                    <label>اسم مشرف الاستلام وتوقيعه:</label>
-                    <div class="field-line"></div>
+            <div class="logo-wrapper">
+                <div class="logo-circle">BFP</div>
+                <div class="logo-text">
+                    <h1>Brandzo</h1>
+                    <p>Franchise Partners</p>
                 </div>
             </div>
+            <div class="decor-side">
+                <div class="light-blocks"><span></span><span></span><span></span></div>
+                <div class="dark-bar"></div>
+            </div>
+        </header>
+
+        <div class="report-title" style="text-align: center; font-size: 18px; font-weight: 800; padding: 12px; background: #f1f1f1; border-radius: 4px; margin-bottom: 25px;">
+            تقرير استلام شحنة منتجات تجميل (Cosmetics Receipt Report)
         </div>
-        
-        <!-- Section 2: Products Table -->
-        <div class="section">
-            <div class="section-title">القسم 2 - جدول منتجات الكوزميتك المستلمة</div>
-            <table>
+
+        <!-- Section 1 -->
+        <div class="bz-section-title">القسم 1 - بيانات المهمة</div>
+        <div class="fields-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px;">
+            <div class="bz-field-group">
+                <label class="bz-label">رقم مهمة الاستلام *</label>
+                <input type="text" class="bz-input required-field" id="receipt-task-no" placeholder="REC-XXXX">
+            </div>
+            <div class="bz-field-group">
+                <label class="bz-label">التاريخ والوقت</label>
+                <input type="datetime-local" class="bz-input" id="receipt-date" data-autodate="today">
+            </div>
+            <div class="bz-field-group">
+                <label class="bz-label">اسم المورد *</label>
+                <input type="text" class="bz-input required-field" id="supplier-name">
+            </div>
+            <div class="bz-field-group">
+                <label class="bz-label">رقم PO المرجعي</label>
+                <input type="text" class="bz-input" id="po-ref">
+            </div>
+            <div class="bz-field-group" style="grid-column: span 2;">
+                <label class="bz-label">اسم مشرف الاستلام</label>
+                <input type="text" class="bz-input" id="supervisor-name">
+            </div>
+        </div>
+
+        <!-- Section 2 -->
+        <div class="bz-section-title">القسم 2 - جدول الأصناف</div>
+        <div class="bz-table-wrapper">
+            <table class="bz-table" id="products-table">
                 <thead>
                     <tr>
-                        <th>الرقم</th>
-                        <th>اسم البراند</th>
-                        <th>اسم المنتج</th>
-                        <th>الباركود</th>
-                        <th>وحدة القياس</th>
-                        <th>الكمية المطلوبة</th>
-                        <th>الكمية المستلمة</th>
-                        <th>الفرق</th>
-                        <th>حالة العبوة</th>
+                        <th style="width: 30px;">#</th>
+                        <th>البراند</th>
+                        <th>المنتج</th>
+                        <th style="width: 170px;">الباركود</th>
+                        <th style="width: 60px;">الوحدة</th>
+                        <th style="width: 80px;">المطلوب</th>
+                        <th style="width: 80px;">المستلم</th>
+                        <th style="width: 70px;">الفرق</th>
+                        <th>الحالة</th>
                         <th>ملاحظة</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr class="brand-row">
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr class="brand-row">
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr class="brand-row">
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr class="brand-row">
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td data-col="row-num">1</td>
+                        <td><input type="text" class="bz-input"></td>
+                        <td><input type="text" class="bz-input"></td>
+                        <td>
+                            <div class="scan-cell-wrap">
+                                <input type="text" class="bz-input item-barcode" placeholder="Barcode">
+                                <button type="button" class="scan-btn no-print">📷</button>
+                            </div>
+                        </td>
+                        <td><input type="text" class="bz-input"></td>
+                        <td><input type="number" class="bz-input item-qty-req" value="0"></td>
+                        <td><input type="number" class="bz-input item-qty-rec" value="0"></td>
+                        <td><input type="number" class="bz-input item-qty-diff" readonly style="background:#f9f9f9;"></td>
+                        <td><input type="text" class="bz-input" value="سليمة"></td>
+                        <td><input type="text" class="bz-input"></td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        
-        <!-- Section 3: Brand Verification -->
-        <div class="section">
-            <div class="section-title">القسم 3 - فحص البرندات</div>
-            <table>
+
+        <!-- Section 3 -->
+        <div class="bz-section-title">القسم 3 - فحص الجودة والأصالة</div>
+        <div class="bz-table-wrapper">
+            <table class="bz-table">
                 <thead>
                     <tr>
                         <th>اسم البراند</th>
                         <th>شهادة الأصالة؟</th>
-                        <th>تاريخ انتهاء الصلاحية (أقدم صنف)</th>
+                        <th>تاريخ الصلاحية (الأقدم)</th>
                         <th>حالة العبوة الخارجية</th>
                         <th>الباركود مطابق؟</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="brand-row">
-                        <td></td>
-                        <td>نعم / لا</td>
-                        <td></td>
-                        <td>سليمة / مكسورة / مبللة</td>
-                        <td>نعم / لا</td>
-                    </tr>
                     <tr>
-                        <td></td>
-                        <td>نعم / لا</td>
-                        <td></td>
-                        <td>سليمة / مكسورة / مبللة</td>
-                        <td>نعم / لا</td>
-                    </tr>
-                    <tr class="brand-row">
-                        <td></td>
-                        <td>نعم / لا</td>
-                        <td></td>
-                        <td>سليمة / مكسورة / مبللة</td>
-                        <td>نعم / لا</td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td>نعم / لا</td>
-                        <td></td>
-                        <td>سليمة / مكسورة / مبللة</td>
-                        <td>نعم / لا</td>
-                    </tr>
-                    <tr class="brand-row">
-                        <td></td>
-                        <td>نعم / لا</td>
-                        <td></td>
-                        <td>سليمة / مكسورة / مبللة</td>
-                        <td>نعم / لا</td>
+                        <td><input type="text" class="bz-input"></td>
+                        <td>
+                            <select class="bz-select">
+                                <option>نعم</option>
+                                <option>لا</option>
+                            </select>
+                        </td>
+                        <td><input type="date" class="bz-input"></td>
+                        <td><input type="text" class="bz-input" placeholder="سليمة / تالفة"></td>
+                        <td>
+                            <select class="bz-select">
+                                <option>نعم</option>
+                                <option>لا</option>
+                            </select>
+                        </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        
-        <!-- Section 4: Customs and Transport -->
-        <div class="section">
-            <div class="section-title">القسم 4 - التحقق الجمركي والنقل</div>
-            <div class="fields-grid">
-                <div class="field-group">
-                    <label>رقم بوليصة الشحن:</label>
-                    <div class="field-line"></div>
-                </div>
-                <div class="field-group">
-                    <label>عدد الكراتين المستلمة:</label>
-                    <div class="field-line"></div>
-                </div>
-                <div class="field-group">
-                    <label>وزن الشحنة الفعلي:</label>
-                    <div class="field-line"></div>
-                </div>
-                <div class="field-group">
-                    <label>عدد الكراتين التالفة:</label>
-                    <div class="field-line"></div>
-                </div>
-                <div class="field-group" style="grid-column: span 2;">
-                    <label>تقييم السائق / ناقل الشحن:</label>
-                    <div class="field-line"></div>
-                </div>
+
+        <!-- Section 4 -->
+        <div class="bz-section-title">القسم 4 - بيانات الشحن والكراتين</div>
+        <div class="fields-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
+            <div class="bz-field-group">
+                <label class="bz-label">رقم بوليصة الشحن</label>
+                <input type="text" class="bz-input" id="waybill-no">
+            </div>
+            <div class="bz-field-group">
+                <label class="bz-label">الكراتين المستلمة (الإجمالي)</label>
+                <input type="number" class="bz-input" id="cartons-received" value="0">
+            </div>
+            <div class="bz-field-group">
+                <label class="bz-label">الكراتين التالفة</label>
+                <input type="number" class="bz-input" id="cartons-damaged" value="0">
+            </div>
+            <div class="bz-field-group">
+                <label class="bz-label">الوزن الفعلي (كجم)</label>
+                <input type="number" class="bz-input" step="0.01">
+            </div>
+            <div class="bz-field-group">
+                <label class="bz-label">صافي المستلم (السليم)</label>
+                <input type="number" class="bz-input" id="cartons-net" readonly style="background:#e8f5e9; font-weight:700;">
+            </div>
+            <div class="bz-field-group">
+                <label class="bz-label">اسم السائق / الناقل</label>
+                <input type="text" class="bz-input">
             </div>
         </div>
-        
-        <!-- Section 5: Receipt Decision -->
-        <div class="section">
-            <div class="section-title">القسم 5 - قرار الاستلام</div>
-            <div class="decision-section">
-                <div class="decision-options">
-                    <div class="decision-option">
-                        <span class="checkbox"></span>
-                        <span>استلام كامل ✓</span>
-                    </div>
-                    <div class="decision-option">
-                        <span class="checkbox"></span>
-                        <span>استلام جزئي مع تحفظ</span>
-                    </div>
-                    <div class="decision-option">
-                        <span class="checkbox"></span>
-                        <span>رفض الاستلام ✗</span>
-                    </div>
-                </div>
-                <label style="font-weight: 700; font-size: 11px; color: #333; margin-bottom: 5px; display: block;">ملاحظات إضافية:</label>
-                <div class="notes-area"></div>
+
+        <!-- Section 5 -->
+        <div class="bz-section-title">القسم 5 - القرار النهائي</div>
+        <div style="background: #fffdf5; border: 1px solid #ddd; padding: 20px; border-radius: 4px;">
+            <div style="display: flex; gap: 30px; margin-bottom: 15px;">
+                <label style="cursor:pointer; display:flex; align-items:center; gap:5px;">
+                    <input type="radio" name="decision" value="ok"> استلام كامل ✓
+                </label>
+                <label style="cursor:pointer; display:flex; align-items:center; gap:5px;">
+                    <input type="radio" name="decision" value="partial"> استلام جزئي
+                </label>
+                <label style="cursor:pointer; display:flex; align-items:center; gap:5px;">
+                    <input type="radio" name="decision" value="no"> رفض الاستلام ✗
+                </label>
             </div>
+            <textarea class="bz-input" placeholder="ملاحظات إضافية..." style="height:60px;"></textarea>
             
-            <div class="signature-row">
-                <div class="signature-box">
-                    <div class="signature-line"></div>
-                    <div class="signature-label">مستلم البضاعة</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 30px;">
+                <div style="text-align:center;">
+                    <div style="border-bottom:1px solid #444; height:35px;"></div>
+                    <span style="font-size:11px; font-weight:700;">المستلم</span>
                 </div>
-                <div class="signature-box">
-                    <div class="signature-line"></div>
-                    <div class="signature-label">مشرف المستودع</div>
+                <div style="text-align:center;">
+                    <div style="border-bottom:1px solid #444; height:35px;"></div>
+                    <span style="font-size:11px; font-weight:700;">مشرف المستودع</span>
                 </div>
-                <div class="signature-box">
-                    <div class="signature-line"></div>
-                    <div class="signature-label">ممثل المورد</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Section 6: Post-receipt Procedures -->
-        <div class="section">
-            <div class="section-title">القسم 6 - إجراءات ما بعد الاستلام</div>
-            <div class="checkbox-list">
-                <div class="checkbox-item">
-                    <span class="checkbox"></span>
-                    <span>تم إدخال GRN في النظام</span>
-                </div>
-                <div class="checkbox-item">
-                    <span class="checkbox"></span>
-                    <span>تم الإشعار بالفاتورة للمالية</span>
-                </div>
-                <div class="checkbox-item">
-                    <span class="checkbox"></span>
-                    <span>تم التخزين الموجه (Putaway)</span>
-                </div>
-                <div class="checkbox-item">
-                    <span class="checkbox"></span>
-                    <span>تم تحديث بطاقة الموقع (Bin Card)</span>
-                </div>
-                <div class="checkbox-item">
-                    <span class="checkbox"></span>
-                    <span>تم إرسال نسخة للمورد</span>
+                <div style="text-align:center;">
+                    <div style="border-bottom:1px solid #444; height:35px;"></div>
+                    <span style="font-size:11px; font-weight:700;">المورد</span>
                 </div>
             </div>
         </div>
-        
-        <!-- Footer -->
-        <div style="text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 10px; color: #666;">
-            نظام إدارة المستودعات - Brandzo Warehouse Management System
+
+        <!-- Section 6 -->
+        <div class="bz-section-title">القسم 6 - الإجراءات المتخذة</div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px;">
+            <label style="cursor:pointer; display:flex; align-items:center; gap:8px; font-size:12px;">
+                <input type="checkbox"> تم إدخال GRN
+            </label>
+            <label style="cursor:pointer; display:flex; align-items:center; gap:8px; font-size:12px;">
+                <input type="checkbox"> تم الإشعار للمالية
+            </label>
+            <label style="cursor:pointer; display:flex; align-items:center; gap:8px; font-size:12px;">
+                <input type="checkbox"> تم التخزين (Putaway)
+            </label>
+            <label style="cursor:pointer; display:flex; align-items:center; gap:8px; font-size:12px;">
+                <input type="checkbox"> تم تحديث Bin Card
+            </label>
+        </div>
+
+        <footer style="text-align: center; border-top: 1px solid #eee; padding-top: 15px; font-size: 10px; color: #888;">
+            توثيق Brandzo Hub — تقرير استلام الكوزميتك الذكي 2026
+        </footer>
+    </div>
+
+    <!-- Barcode Scanner -->
+    <div class="scan-modal no-print" id="brandzoScanModal" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; display:none; align-items:center; justify-content:center;">
+        <div style="background:#fff; width:90%; max-width:400px; padding:20px; border-radius:8px;">
+            <div id="brandzoScanViewport" style="width:100%; height:250px; background:#000; border-radius:5px;"></div>
+            <button class="bz-btn" id="brandzoScanCancel" style="width:100%; margin-top:10px; background:#eee;">إغلاق</button>
         </div>
     </div>
+
+    <script src="../formUtils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        // SMART CALCULATIONS
+        document.addEventListener('input', function(e) {
+            // Row Difference
+            if (e.target.classList.contains('item-qty-req') || e.target.classList.contains('item-qty-rec')) {
+                const tr = e.target.closest('tr');
+                const req = parseFloat(tr.querySelector('.item-qty-req').value) || 0;
+                const rec = parseFloat(tr.querySelector('.item-qty-rec').value) || 0;
+                const diffInput = tr.querySelector('.item-qty-diff');
+                if (diffInput) {
+                    diffInput.value = (req - rec).toFixed(0);
+                    // Trigger input event so formUtils can save it
+                    diffInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+            // Carton Net
+            if (e.target.id === 'cartons-received' || e.target.id === 'cartons-damaged') {
+                const total = parseFloat(document.getElementById('cartons-received').value) || 0;
+                const damaged = parseFloat(document.getElementById('cartons-damaged').value) || 0;
+                const netInput = document.getElementById('cartons-net');
+                if (netInput) {
+                    netInput.value = total - damaged;
+                    netInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+        });
+
+        // VALIDATION
+        function validateAndPrint() {
+            let valid = true;
+            document.querySelectorAll('.required-field').forEach(field => {
+                if (!field.value.trim()) {
+                    field.style.borderColor = 'red';
+                    valid = false;
+                } else {
+                    field.style.borderColor = '';
+                }
+            });
+            if (!valid) {
+                alert('يرجى ملء الحقول المطلوبة (باللون الأحمر)');
+                return;
+            }
+            window.print();
+        }
+
+        // BARCODE SCANNER
+        (function() {
+            let scanner = null;
+            let target = null;
+            const modal = document.getElementById('brandzoScanModal');
+
+            document.body.addEventListener('click', function(e) {
+                const btn = e.target.closest('.scan-btn');
+                if (!btn) return;
+                target = btn.closest('.scan-cell-wrap').querySelector('input');
+                modal.style.display = 'flex';
+                if (!scanner) scanner = new Html5Qrcode("brandzoScanViewport");
+                scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
+                    target.value = txt;
+                    target.dispatchEvent(new Event('input', { bubbles: true }));
+                    stop();
+                }).catch(err => { alert('خطأ في الكاميرا'); stop(); });
+            });
+
+            function stop() {
+                if (scanner) scanner.stop().finally(() => modal.style.display = 'none');
+                else modal.style.display = 'none';
+            }
+            document.getElementById('brandzoScanCancel').onclick = stop;
+        })();
+    </script>
 </body>
 </html>
