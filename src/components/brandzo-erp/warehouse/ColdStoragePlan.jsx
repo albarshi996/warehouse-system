@@ -59,7 +59,8 @@ const ColdStoragePlan = () => {
       return;
     }
     localStorage.setItem('csp_units_v2', JSON.stringify(state.units));
-    setState(prev => ({ ...prev, showToast: true }));
+    if (state.view === 'address' && state.searchTerm) return; // Don't toast on search
+    setState(prev => ({ ...prev, showToast: "💾 تم الحفظ" }));
     const timer = setTimeout(() => {
       setState(prev => ({ ...prev, showToast: false }));
     }, 2000);
@@ -104,7 +105,8 @@ const ColdStoragePlan = () => {
       }
     }
     navigator.clipboard.writeText(tsv).then(() => {
-      alert("📋 تم نسخ جدول العناوين بصيغة TSV");
+      setState(prev => ({ ...prev, showToast: "📋 تم نسخ جدول العناوين" }));
+      setTimeout(() => setState(prev => ({ ...prev, showToast: false })), 2000);
     });
   };
 
@@ -355,6 +357,11 @@ const ColdStoragePlan = () => {
     return (
       <div className="rack-container" style={{ overflowX: 'auto', paddingBottom: '10px' }}>
         <svg viewBox={`0 0 ${svgW} ${svgH + 40}`} width={Math.max(svgW, 600)} height={svgH + 40} style={{ background: '#fafbff', borderRadius: '12px', display: 'block' }}>
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill={gold} />
+            </marker>
+          </defs>
           <rect x="0" y={padY + levelsPerBay * lH} width={svgW} height="10" fill="#bdc3c7" />
           <text x={padX} y={padY + levelsPerBay * lH + 30} fontSize="12" fill="#7f8c8d" fontWeight="bold" fontFamily="Cairo,sans-serif">
             م=مستوى · ص=صندوق | يوضح Aisle-L فقط — Aisle-R مطابق
@@ -455,7 +462,7 @@ const ColdStoragePlan = () => {
     <div className="container" style={{ maxWidth: '1500px', margin: 'auto', padding: '20px', fontFamily: 'Cairo, sans-serif', position: 'relative' }}>
       {state.showToast && (
         <div style={{ position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)', background: '#27ae60', color: 'white', padding: '10px 20px', borderRadius: '8px', zIndex: 1000, fontWeight: 'bold', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
-          💾 تم الحفظ
+          {state.showToast}
         </div>
       )}
       <style>{`

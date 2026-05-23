@@ -641,13 +641,13 @@ const MeetingAssistant = () => {
               <div className="text-xs uppercase tracking-[0.22em] text-brand-red">القالب المسبق</div>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-brand-navy">{slideTitle}</h2>
-                  <p className="mt-2 text-sm text-gray-500">عرض شرائح لتقديم خطة استغلال الرحبة لتخزين الكوزميتيك.</p>
+                  <h2 className="text-2xl font-bold text-black">{slideTitle}</h2>
+                  <p className="mt-2 text-sm text-gray-600">عرض شرائح لتقديم خطة استغلال الرحبة لتخزين الكوزمتيك.</p>
                 </div>
-                <button onClick={()=> setSlideMode(false)} className="px-3 py-1 rounded bg-gray-200">إغلاق</button>
+                <button onClick={()=> setSlideMode(false)} className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 transition-colors">إغلاق</button>
               </div>
             </div>
-            <div className="mt-6 text-gray-700" style={{minHeight:180}}>
+            <div className="mt-6 text-black" style={{minHeight:180}}>
               {agendaItems[slideIndex]?.content || <p className="text-gray-500">لا توجد تفاصيل محددة لهذه الشريحة حالياً.</p>}
             </div>
             <div className="mt-6 flex items-center justify-between">
