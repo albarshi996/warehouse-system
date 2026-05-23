@@ -1,0 +1,66 @@
+name: Gemini PR Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Gemini SDK
+        run: npm install @google/generative-ai
+
+      - name: Review PR with Gemini
+        uses: actions/github-script@v7
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        with:
+          script: |
+            const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+            const diff_url = context.payload.pull_request.diff_url;
+            const diff_response = await fetch(diff_url);
+            const diff_text = await diff_response.text();
+
+            if (!diff_text || diff_text.length === 0) {
+              console.log("لم يتم العثور على تغييرات برمجية.");
+              return;
+            }
+
+            const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+
+            const prompt = `أنت مطور برمجيات خبير في بناء أنظمة إدارة المستودعات والعمليات اللوجستية. 
+            قم بمراجعة التغييرات التالية (Git Diff) بعناية.
+            - ابحث عن الأخطاء المنطقية، ومشاكل الأداء، أو تسرب الذاكرة.
+            - ركز على أفضل الممارسات الخاصة بـ React.js وإدارة الحالة.
+            - تأكد من نظافة هيكلة المكونات في إطار Astro وتوافقها مع Tailwind CSS.
+            - قدم مراجعتك باللغة العربية، بأسلوب مباشر، احترافي، وواضح.
+            - إذا لم تجد أخطاء، اكتفِ بعبارة تشجيعية بسيطة تفيد بأن الكود نظيف.
+
+            التغييرات البرمجية:
+            \n\n${diff_text}`;
+
+            const result = await model.generateContent(prompt);
+            const review_comment = result.response.text();
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: "🤖 **مراجعة الوكيل الذكي (Gemini):**\n\n" + review_comment
+            });
