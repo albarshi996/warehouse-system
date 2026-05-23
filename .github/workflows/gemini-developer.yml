@@ -35,7 +35,7 @@ jobs:
             const path = require('path');
 
             const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
 
             const userPrompt = context.payload.issue.body;
             const issueTitle = context.payload.issue.title;
@@ -64,7 +64,7 @@ jobs:
                 const fullPath = path.resolve(process.cwd(), file.filepath);
                 fs.mkdirSync(path.dirname(fullPath), { recursive: true });
                 fs.writeFileSync(fullPath, file.content, 'utf8');
-                console.log(`تم إنشاء/تعديل الملف: ${file.filepath}`);
+                console.log("تم إنشاء/تعديل الملف: " + file.filepath);
               }
             } catch (error) {
               console.error("فشل في تحليل JSON من Gemini:", error);
