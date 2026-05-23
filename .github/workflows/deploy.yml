@@ -14,8 +14,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout your repository using git
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       # ✅ FIX: Force Node 22 before withastro/action runs
       - name: Setup Node.js 22
