@@ -466,6 +466,13 @@ const ColdStoragePlan = () => {
         </div>
       )}
       <style>{`
+        @media print {
+          body { color: #000 !important; background: white !important; }
+          .card { box-shadow: none !important; border: 1px solid #eee !important; }
+          .no-print { display: none !important; }
+          * { color: #000 !important; }
+          .fill-bar { background: #000 !important; }
+        }
         .cat-tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .cat-face { background: #fde8f5; color: #9b59b6; }
         .cat-body { background: #e8f5fd; color: #2980b9; }
@@ -477,8 +484,8 @@ const ColdStoragePlan = () => {
         .cat-mixed { background: #eee; color: #555; }
         .tab-btn { padding: 6px 14px; border: 1px solid #dde3ec; border-radius: 8px; cursor: pointer; background: white; font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 600; transition: all .2s; }
         .tab-btn.active { background: #1a2b4c; color: white; border-color: #1a2b4c; }
-        .unit-btn { position: relative; padding: 10px 6px; border: 1px solid #dde3ec; border-radius: 10px; text-align: center; cursor: pointer; background: white; transition: all .2s; font-family: 'Cairo', sans-serif; font-size: 12px; overflow: hidden; }
-        .unit-btn.active { background: #f0f4f8; color: #1a2b4c; border-color: #1a2b4c; border-width: 2px; }
+        .unit-btn { position: relative; padding: 10px 6px; border: 1px solid #dde3ec; border-radius: 10px; text-align: center; cursor: pointer; background: white; transition: all .2s; font-family: 'Cairo', sans-serif; font-size: 12px; overflow: hidden; color: #000; }
+        .unit-btn.active { background: #f0f4f8; color: #000; border-color: #1a2b4c; border-width: 2px; }
         .unit-btn:hover .tooltip { visibility: visible; opacity: 1; }
         .tooltip { visibility: hidden; width: 140px; background-color: #1a2b4c; color: #fff; text-align: center; border-radius: 6px; padding: 5px; position: absolute; z-index: 10; bottom: 125%; left: 50%; margin-left: -70px; opacity: 0; transition: opacity 0.3s; font-size: 10px; pointer-events: none; }
         .tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #1a2b4c transparent transparent transparent; }
@@ -486,8 +493,8 @@ const ColdStoragePlan = () => {
       `}</style>
       <div className="header" style={{ background: 'linear-gradient(135deg, #1a2b4c 0%, #243b6e 100%)', color: 'white', borderRadius: '14px', padding: '24px 30px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 900 }}>🏭 مجمع التبريد — الرحبة</h1>
-          <p style={{ fontSize: '13px', opacity: 0.75, marginTop: '4px' }}>Cosmetics Cold Storage · نظام العنونة العالمي UU-A-BB-LL</p>
+          <h1 style={{ fontSize: '22px', fontWeight: 900 }}>🏭 تقرير تخزين الكوزمتيك — مجمع الرحبة</h1>
+          <p style={{ fontSize: '13px', opacity: 0.9, marginTop: '4px' }}>خطة استغلال المساحات والطاقة الاستيعابية · نظام العنونة العالمي UU-A-BB-LL</p>
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
           <span className="badge" style={{ background: '#e8b830', color: '#1a2b4c', fontWeight: 700, padding: '4px 14px', borderRadius: '20px', fontSize: '12px' }}>19 وحدة تبريد</span>
@@ -512,7 +519,7 @@ const ColdStoragePlan = () => {
 
       <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
         <div className="card" style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 10px rgba(0,0,0,.07)', marginBottom: '20px' }}>
-          <div className="card-title" style={{ fontSize: '15px', fontWeight: 700, color: '#1a2b4c', marginBottom: '14px', paddingBottom: '10px', borderBottom: '2px solid #e8b830', display: 'flex', alignItems: 'center', gap: '8px' }}>🗺️ شبكة الوحدات ({CFG.totalUnits} ثلاجة)</div>
+          <div className="card-title" style={{ fontSize: '15px', fontWeight: 700, color: '#000', marginBottom: '14px', paddingBottom: '10px', borderBottom: '2px solid #e8b830', display: 'flex', alignItems: 'center', gap: '8px' }}>🗺️ شبكة الوحدات ({CFG.totalUnits} ثلاجة)</div>
           <div className="unit-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
             {state.units.map((u2) => {
               const uCat = catObj(u2.category);
