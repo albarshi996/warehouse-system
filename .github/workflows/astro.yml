@@ -1,4 +1,4 @@
-# Sample workflow for building and deploying an Astro site to GitHub Pages
+# Deploy Astro site to GitHub Pages
 name: Deploy Astro site to Pages
 
 on:
@@ -34,24 +34,24 @@ jobs:
             echo "command=install" >> $GITHUB_OUTPUT
             echo "runner=yarn" >> $GITHUB_OUTPUT
             echo "lockfile=yarn.lock" >> $GITHUB_OUTPUT
-            exit 0
           elif [ -f "${{ github.workspace }}/package.json" ]; then
             echo "manager=npm" >> $GITHUB_OUTPUT
             echo "command=ci" >> $GITHUB_OUTPUT
             echo "runner=npx --no-install" >> $GITHUB_OUTPUT
             echo "lockfile=package-lock.json" >> $GITHUB_OUTPUT
-            exit 0
           else
             echo "Unable to determine package manager"
             exit 1
           fi
 
+      # ✅ FIX: Use Node.js 22 (required by astro@6.x and @astrojs/prism@4.x)
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: ${{ steps.detect-package-manager.outputs.manager }}
           cache-dependency-path: ${{ env.BUILD_PATH }}/${{ steps.detect-package-manager.outputs.lockfile }}
+
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
@@ -62,9 +62,6 @@ jobs:
 
       - name: Build with Astro
         env:
-          # Firebase web config. Optional: leave any of these unset and the
-          # fallback values in src/config/firebase.js will be used. Web keys
-          # are NOT secrets — security is enforced by Firestore rules + Auth.
           PUBLIC_FIREBASE_API_KEY: ${{ secrets.PUBLIC_FIREBASE_API_KEY }}
           PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.PUBLIC_FIREBASE_AUTH_DOMAIN }}
           PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.PUBLIC_FIREBASE_PROJECT_ID }}
