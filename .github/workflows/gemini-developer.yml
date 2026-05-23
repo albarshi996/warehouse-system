@@ -1,0 +1,94 @@
+name: Gemini AI Developer
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  develop:
+    if: github.event.label.name == 'ai-develop'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install @google/generative-ai
+
+      - name: Generate Code with Gemini
+        uses: actions/github-script@v7
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        with:
+          script: |
+            const { GoogleGenerativeAI } = require('@google/generative-ai');
+            const fs = require('fs');
+            const path = require('path');
+
+            const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+
+            const userPrompt = context.payload.issue.body;
+            const issueTitle = context.payload.issue.title;
+
+            const systemPrompt = `أنت مطور واجهات أمامية خبير تعمل على مشروع مبني بإطار Astro، وتستخدم مكونات React.js، وتنسيقات Tailwind CSS.
+            طلب المستخدم هو: "${userPrompt}".
+            
+            يجب أن تقوم بكتابة الأكواد المطلوبة وإرجاع ردك بصيغة مصفوفة JSON صالحة (Valid JSON Array) فقط لا غير، بدون أي نصوص توضيحية أو تنسيق Markdown، بالهيكل التالي:
+            [
+              {
+                "filepath": "src/components/NewComponent.jsx",
+                "content": "الكود هنا"
+              }
+            ]`;
+
+            const result = await model.generateContent(systemPrompt);
+            let responseText = result.response.text();
+            
+            // تنظيف النص لضمان كونه JSON صالح
+            responseText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+            try {
+              const filesToCreate = JSON.parse(responseText);
+              
+              for (const file of filesToCreate) {
+                const fullPath = path.resolve(process.cwd(), file.filepath);
+                fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+                fs.writeFileSync(fullPath, file.content, 'utf8');
+                console.log(`تم إنشاء/تعديل الملف: ${file.filepath}`);
+              }
+            } catch (error) {
+              console.error("فشل في تحليل JSON من Gemini:", error);
+              console.log("رد النموذج كان:", responseText);
+              process.exit(1);
+            }
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "feat: إضافة الأكواد المطورة بواسطة Gemini"
+          title: "🤖 إضافة ميزة: ${{ github.event.issue.title }}"
+          body: "تم توليد هذا الكود تلقائياً بواسطة Gemini بناءً على المشكلة رقم #${{ github.event.issue.number }}."
+          branch: "gemini-feature-${{ github.event.issue.number }}"
+          delete-branch: true
+
+      - name: Notify on Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: "✅ قمت بكتابة الكود وفتحت Pull Request جديد يحمل التعديلات لتراجعه!"
+            });
