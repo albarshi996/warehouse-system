@@ -53,7 +53,7 @@ const FAQ = () => {
     <section className="mt-12 p-6 sm:p-10 rounded-2xl bg-gradient-to-br from-[#1a1a3e] to-brand-navy border border-white/10 shadow-2xl">
       <h2 className="text-xl font-bold text-white text-center mb-6">
         الأسئلة الشائعة (FAQ)
-        <span className="block text-sm font-normal text-gray-400 mt-1">Frequently Asked Questions</span>
+        <span className="block text-sm font-normal text-gray-200 mt-1">Frequently Asked Questions</span>
       </h2>
       <div className="w-16 h-1 bg-brand-red mx-auto mb-8 rounded-full"></div>
 
@@ -89,14 +89,14 @@ const FAQ = () => {
                   activeIndex === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                 }`}
               >
-                <div className="p-4 bg-white/5 text-gray-300 leading-relaxed border-t border-white/5">
+                <div className="p-4 bg-white/5 text-gray-100 leading-relaxed border-t border-white/5">
                   {item.a}
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <p className="text-center text-gray-500 py-10">لم يتم العثور على نتائج للبحث...</p>
+          <p className="text-center text-gray-200 py-10">لم يتم العثور على نتائج للبحث...</p>
         )}
       </div>
     </section>

@@ -207,7 +207,7 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
 }
 
 const inputClass =
-  'w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-brand-red disabled:bg-gray-100 disabled:text-gray-500';
+  'w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-brand-red disabled:bg-gray-100 disabled:text-gray-700';
 
 function Field({ label, required = false, hint, children }) {
   return (
@@ -217,7 +217,7 @@ function Field({ label, required = false, hint, children }) {
         {required && <span className="text-brand-red"> *</span>}
       </span>
       {children}
-      {hint && <span className="text-xs text-gray-500">{hint}</span>}
+      {hint && <span className="text-xs text-gray-700">{hint}</span>}
     </label>
   );
 }

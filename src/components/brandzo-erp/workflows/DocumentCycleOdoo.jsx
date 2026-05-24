@@ -277,7 +277,7 @@ function DetailPanel({ stage, base }) {
           <div className="font-bold text-gray-200 text-lg sm:text-xl">
             {stage.num} · {stage.titleAr}
           </div>
-          <div className="text-xs sm:text-sm text-gray-400">{stage.titleEn}</div>
+          <div className="text-xs sm:text-sm text-gray-200">{stage.titleEn}</div>
         </div>
       </div>
       
@@ -292,25 +292,25 @@ function DetailPanel({ stage, base }) {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <div className="text-xs text-gray-400 mb-1">الوحدة المقابلة</div>
+            <div className="text-xs text-gray-200 mb-1">الوحدة المقابلة</div>
             <div className="font-bold text-white">{odooData.module}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-400 mb-1">المسار للوصول</div>
+            <div className="text-xs text-gray-200 mb-1">المسار للوصول</div>
             <div className="font-bold text-blue-300">{odooData.path}</div>
           </div>
         </div>
         
         <div className="mt-3">
-          <div className="text-xs text-gray-400 mb-1">مسار التفعيل</div>
+          <div className="text-xs text-gray-200 mb-1">مسار التفعيل</div>
           <div className="font-mono text-sm text-yellow-300 bg-black/30 rounded px-2 py-1">
             {odooData.activation}
           </div>
         </div>
         
         <div className="mt-3">
-          <div className="text-xs text-gray-400 mb-2">الوصف</div>
-          <p className="text-sm text-gray-300 leading-relaxed">{odooData.description}</p>
+          <div className="text-xs text-gray-200 mb-2">الوصف</div>
+          <p className="text-sm text-gray-100 leading-relaxed">{odooData.description}</p>
         </div>
       </div>
 
@@ -322,7 +322,7 @@ function DetailPanel({ stage, base }) {
         </div>
         <ol className="space-y-2">
           {odooData.setupSteps.map((step, index) => (
-            <li key={index} className="flex items-start gap-2 text-sm text-gray-300">
+            <li key={index} className="flex items-start gap-2 text-sm text-gray-100">
               <span className="shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mt-0.5">
                 {index + 1}
               </span>
@@ -348,7 +348,7 @@ function DetailPanel({ stage, base }) {
                   className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border transition-colors border-white/10 hover:border-brand-red hover:bg-brand-red/5 text-sm text-gray-200 hover:text-brand-red font-medium`}
                 >
                   <span>{f.titleAr}</span>
-                  <span className="text-[11px] text-gray-400 group-hover:text-brand-red">↗</span>
+                  <span className="text-[11px] text-gray-200 group-hover:text-brand-red">↗</span>
                 </a>
               </li>
             ))}
@@ -357,7 +357,7 @@ function DetailPanel({ stage, base }) {
       )}
       
       {stage.forms.length === 0 && (
-        <p className="text-sm text-gray-400 italic">
+        <p className="text-sm text-gray-200 italic">
           هذه المرحلة لا يوجد لها نموذج مطبوع داخل المنظومة (يتم تبادلها إلكترونياً مع المورد).
         </p>
       )}
@@ -423,7 +423,7 @@ export default function DocumentCycleOdoo({ base = '' }) {
                 'flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200',
                 selectedRole === role.id
                   ? 'bg-brand-red border-brand-red text-white shadow-lg scale-105'
-                  : 'border-white/20 text-gray-300 hover:border-brand-red hover:text-brand-red',
+                  : 'border-white/20 text-gray-100 hover:border-brand-red hover:text-brand-red',
               ].join(' ')}
             >
               <span className="text-lg">{role.icon}</span>

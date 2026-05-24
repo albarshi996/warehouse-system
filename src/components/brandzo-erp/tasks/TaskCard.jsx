@@ -79,38 +79,38 @@ export default function TaskCard({
       </div>
 
       {/* Card Info Grid */}
-      <div className="grid grid-cols-2 gap-2 text-xs text-gray-300 mb-3 pb-3 border-b border-white/10">
+      <div className="grid grid-cols-2 gap-2 text-xs text-gray-100 mb-3 pb-3 border-b border-white/10">
         {task.dept && (
           <div>
-            <span className="text-gray-400">القسم:</span> {task.dept}
+            <span className="text-gray-200">القسم:</span> {task.dept}
           </div>
         )}
         {task.owner && (
           <div>
-            <span className="text-gray-400">المسؤول:</span> {task.owner}
+            <span className="text-gray-200">المسؤول:</span> {task.owner}
           </div>
         )}
         {task.dueDate && (
           <div>
-            <span className="text-gray-400">الاستحقاق:</span> {formatDate(task.dueDate)}
+            <span className="text-gray-200">الاستحقاق:</span> {formatDate(task.dueDate)}
           </div>
         )}
         {task.dueTime && (
           <div>
-            <span className="text-gray-400">الوقت:</span> {task.dueTime}
+            <span className="text-gray-200">الوقت:</span> {task.dueTime}
           </div>
         )}
       </div>
 
       {/* Description Preview */}
       {task.description && (
-        <p className="text-sm text-gray-300 mb-3 line-clamp-2">{task.description}</p>
+        <p className="text-sm text-gray-100 mb-3 line-clamp-2">{task.description}</p>
       )}
 
       {/* Checklist Progress Bar */}
       {totalSteps > 0 && (
         <div className="mb-3">
-          <div className="flex justify-between text-xs text-gray-400 mb-1">
+          <div className="flex justify-between text-xs text-gray-200 mb-1">
             <span>قائمة التحقق</span>
             <span>
               {completedSteps}/{totalSteps}

@@ -206,7 +206,7 @@ const currentPath = Astro.url.pathname;
         </a>
         <a
           href={`${base}/`}
-          class="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg border border-gray-600 hover:border-brand-red hover:text-brand-red text-gray-300 font-medium text-sm transition-colors"
+          class="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg border border-gray-600 hover:border-brand-red hover:text-brand-red text-gray-100 font-medium text-sm transition-colors"
         >
           <Icon name="home" size={16} />
           <span>الصفحة الرئيسية</span>
@@ -224,7 +224,7 @@ const currentPath = Astro.url.pathname;
                   class={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     currentPath === item.href || currentPath.startsWith(item.href + '/')
                       ? 'bg-brand-red text-white font-bold shadow-md'
-                      : 'hover:bg-gray-800 text-gray-300'
+                      : 'hover:bg-gray-800 text-gray-100'
                   }`}
                   style={currentPath === item.href ? 'border-right: 3px solid #e8b830;' : ''}
                 >
@@ -289,10 +289,10 @@ const currentPath = Astro.url.pathname;
 
       <!-- تذييل السايدبار: مثبت في الأسفل -->
       <div class="mt-auto border-t border-gray-700 px-4 py-3 text-center">
-        <p class="text-[11px] leading-snug text-gray-300 font-medium" dir="rtl">
+        <p class="text-[11px] leading-snug text-gray-100 font-medium" dir="rtl">
           برمجة وتطوير: محمد إبراهيم البرشي
         </p>
-        <p class="text-[10px] text-gray-500 mt-1">Brandzo Hub 2026 &copy;</p>
+        <p class="text-[10px] text-gray-200 mt-1">Brandzo Hub 2026 &copy;</p>
       </div>
     </aside>
 
@@ -354,7 +354,7 @@ const currentPath = Astro.url.pathname;
         </div>
 
         <!-- تذييل الـ drawer -->
-        <div class="p-4 border-t border-brand-gold/30 bg-brand-navy/50 text-center text-xs text-gray-400 flex-shrink-0">
+        <div class="p-4 border-t border-brand-gold/30 bg-brand-navy/50 text-center text-xs text-gray-200 flex-shrink-0">
           Brandzo Hub 2026 - Operational Excellence
         </div>
       </dialog>

@@ -31,7 +31,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         header, footer, button, a[class*="bg-brand-red"], .absolute { display: none !important; }
         .hero-gradient { background: #ffffff !important; min-height: auto !important; }
         .hero-gradient h1, .hero-gradient h2, .hero-gradient p,
-        .hero-gradient span, .text-white, .text-gray-400 { color: #000000 !important; }
+        .hero-gradient span, .text-white, .text-gray-200 { color: #000000 !important; }
         section { background: #ffffff !important; }
         .rounded-3xl { border: 1px solid #cccccc !important; box-shadow: none !important; }
         .text-gray-600 { color: #222222 !important; }
@@ -54,8 +54,91 @@ const base = import.meta.env.BASE_URL.endsWith('/')
     </header>
 
     <main>
+      <!-- Meeting Agenda Section -->
+      <section class="pt-32 pb-8 bg-[#0f0f1f] relative z-20">
+        <div class="container mx-auto px-4 sm:px-6">
+          <div class="glass-card p-6 sm:p-8 border-brand-gold/30 relative overflow-hidden animate-fade-in-up">
+            <!-- Decorative accent -->
+            <div class="absolute top-0 right-0 w-32 h-1 bg-brand-gold"></div>
+
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+              <div>
+                <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">🗓️ أجندة الاجتماع التحضيري</h2>
+                <p class="text-brand-gold font-bold">مراجعة وتدقيق مقترح تطوير سلاسل الإمداد — بنغازي ٢٠٢٦</p>
+              </div>
+              <div class="flex flex-wrap gap-3">
+                <div class="bg-white/5 px-4 py-2 rounded-xl border border-white/10 text-sm">
+                  <span class="text-gray-200 ml-2 font-semibold">التاريخ:</span>
+                  <span class="text-white font-bold">١٥ مارس ٢٠٢٦</span>
+                </div>
+                <div class="bg-white/5 px-4 py-2 rounded-xl border border-white/10 text-sm">
+                  <span class="text-gray-200 ml-2 font-semibold">الوقت:</span>
+                  <span class="text-white font-bold">١٠:٠٠ صباحاً</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div class="md:col-span-1">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <span class="w-8 h-8 bg-brand-red rounded-lg flex items-center justify-center text-sm shadow-lg">👥</span>
+                  الحاضرون
+                </h3>
+                <ul class="space-y-3 text-gray-100 text-sm">
+                  <li class="flex items-center gap-3">
+                    <span class="w-2 h-2 rounded-full bg-brand-gold shadow-[0_0_8px_rgba(232,184,48,0.6)]"></span>
+                    إدارة تقنية المعلومات (IT)
+                  </li>
+                  <li class="flex items-center gap-3">
+                    <span class="w-2 h-2 rounded-full bg-brand-gold shadow-[0_0_8px_rgba(232,184,48,0.6)]"></span>
+                    فريق عمليات المستودعات
+                  </li>
+                  <li class="flex items-center gap-3">
+                    <span class="w-2 h-2 rounded-full bg-brand-gold shadow-[0_0_8px_rgba(232,184,48,0.6)]"></span>
+                    استشاري سلاسل الإمداد
+                  </li>
+                </ul>
+              </div>
+
+              <div class="md:col-span-2">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <span class="w-8 h-8 bg-brand-red rounded-lg flex items-center justify-center text-sm shadow-lg">📝</span>
+                  بنود الاجتماع
+                </h3>
+                <ol class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                  <li class="flex gap-3 text-gray-100 text-sm group">
+                    <span class="text-brand-gold font-black transition-transform group-hover:scale-110">٠١</span>
+                    <span class="group-hover:text-white transition-colors">استعراض المخطط العام لمستودعات الرحبة</span>
+                  </li>
+                  <li class="flex gap-3 text-gray-100 text-sm group">
+                    <span class="text-brand-gold font-black transition-transform group-hover:scale-110">٠٢</span>
+                    <span class="group-hover:text-white transition-colors">مناقشة تكامل الدورة المستندية مع نظام Odoo</span>
+                  </li>
+                  <li class="flex gap-3 text-gray-100 text-sm group">
+                    <span class="text-brand-gold font-black transition-transform group-hover:scale-110">٠٣</span>
+                    <span class="group-hover:text-white transition-colors">مراجعة النماذج التشغيلية الـ ١٩ المعتمدة</span>
+                  </li>
+                  <li class="flex gap-3 text-gray-100 text-sm group">
+                    <span class="text-brand-gold font-black transition-transform group-hover:scale-110">٠٤</span>
+                    <span class="group-hover:text-white transition-colors">تحديد الصلاحيات والأدوار لمسؤولي المخازن</span>
+                  </li>
+                  <li class="flex gap-3 text-gray-100 text-sm group">
+                    <span class="text-brand-gold font-black transition-transform group-hover:scale-110">٠٥</span>
+                    <span class="group-hover:text-white transition-colors">خطة التوسع في توزيع الكوزمتيك ببنغازي</span>
+                  </li>
+                  <li class="flex gap-3 text-gray-100 text-sm group">
+                    <span class="text-brand-gold font-black transition-transform group-hover:scale-110">٠٦</span>
+                    <span class="group-hover:text-white transition-colors">الجدول الزمني للتنفيذ والتدريب التقني</span>
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section
-        class="hero-gradient min-h-screen flex items-center pt-24 pb-12 sm:pt-20 relative overflow-hidden"
+        class="hero-gradient min-h-[80vh] flex items-center pt-12 pb-12 sm:pt-20 relative overflow-hidden"
       >
         <div
          class="absolute top-0 right-0 w-1/2 h-full bg-brand-red opacity-5 skew-x-12 translate-x-1/2"
@@ -67,7 +150,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
               توثيق عمليات سلاسل الإمداد — بنغازي
             </h1>
 
-            <div class="text-sm sm:text-base text-gray-400 mb-8 sm:mb-10 leading-relaxed max-w-3xl bg-white/5 p-5 sm:p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
+            <div class="text-sm sm:text-base text-gray-200 mb-8 sm:mb-10 leading-relaxed max-w-3xl bg-white/5 p-5 sm:p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
               هذا المقترح يعرض فهماً كاملاً للدورة المستندية،
               تصنيف أسواق بنغازي، والرؤية التشغيلية لتنفيذ Odoo —
               من منظور متخصص في سلاسل الإمداد.
@@ -116,7 +199,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
             >
               <div class="w-14 h-14 bg-red-50 text-brand-red rounded-2xl flex items-center justify-center mb-6 text-3xl">📋</div>
               <h3 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">١٩ نموذجاً تشغيلياً</h3>
-              <p class="text-gray-400 leading-relaxed">
+              <p class="text-gray-200 leading-relaxed">
                 كل عملية في المستودع موثقة بنموذج إلزامي —
                 من استلام البضاعة حتى الصرف والجرد.
                 هذه النماذج هي خلاصة الفهم العملي للمهنة.
@@ -128,7 +211,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
             >
               <div class="w-14 h-14 bg-yellow-50 text-brand-yellow rounded-2xl flex items-center justify-center mb-6 text-3xl">🗺️</div>
               <h3 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">خريطة أسواق بنغازي</h3>
-              <p class="text-gray-400 leading-relaxed">
+              <p class="text-gray-200 leading-relaxed">
                 تحليل تقاطع فئات المستهلكين (A/B/C) مع أنواع
                 الأسواق في ٢٠ حياً — أداة لفهم سلوك التوزيع
                 وقرارات سلاسل الإمداد.
@@ -140,7 +223,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
             >
               <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mb-6 text-3xl">⚙️</div>
               <h3 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">مقترح تنفيذ Odoo</h3>
-              <p class="text-gray-400 leading-relaxed">
+              <p class="text-gray-200 leading-relaxed">
                 الدورة المستندية كاملة على Odoo Enterprise —
                 المالية، الموارد البشرية، المشتريات،
                 المستودعات، وسلاسل الإمداد.
@@ -159,10 +242,10 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                 🗓️ أجندة الاجتماع — فريق المستودعات مع المدير العام
               </h2>
               <div class="flex flex-wrap justify-center gap-4 text-sm sm:text-base">
-                <div class="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-gray-300">
+                <div class="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-gray-100">
                   <span class="text-brand-yellow font-bold ml-1">الفريق:</span> محمد البرشي · رمزي باش
                 </div>
-                <div class="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-gray-300">
+                <div class="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-gray-100">
                   <span class="text-brand-yellow font-bold ml-1">الجهة:</span> اجتماع مع المدير العام — Brandzo Hub
                 </div>
               </div>
@@ -220,13 +303,13 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         </h2>
         <div class="w-16 h-1 bg-brand-red mx-auto mb-10 rounded-full"></div>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">⚡</div><div class="font-bold text-white text-sm">Astro + React</div><div class="text-xs text-gray-400 mt-1">واجهة حديثة وسريعة</div></div>
-          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">☁️</div><div class="font-bold text-white text-sm">Firebase</div><div class="text-xs text-gray-400 mt-1">قاعدة بيانات سحابية</div></div>
-          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">📋</div><div class="font-bold text-white text-sm">١٩ نموذجاً</div><div class="text-xs text-gray-400 mt-1">نماذج تشغيلية بمنطق تحقق</div></div>
-          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">🔷</div><div class="font-bold text-white text-sm">Odoo Enterprise</div><div class="text-xs text-gray-400 mt-1">توثيق الدورات المستندية</div></div>
-          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">📷</div><div class="font-bold text-white text-sm">Barcode Scanner</div><div class="text-xs text-gray-400 mt-1">تكامل قارئ الباركود</div></div>
-          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">🌐</div><div class="font-bold text-white text-sm">GitHub Pages</div><div class="text-xs text-gray-400 mt-1">استضافة مجانية وموثوقة</div></div>
-          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">🔤</div><div class="font-bold text-white text-sm">Cairo Font + RTL</div><div class="text-xs text-gray-400 mt-1">واجهة عربية كاملة</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">⚡</div><div class="font-bold text-white text-sm">Astro + React</div><div class="text-xs text-gray-200 mt-1">واجهة حديثة وسريعة</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">☁️</div><div class="font-bold text-white text-sm">Firebase</div><div class="text-xs text-gray-200 mt-1">قاعدة بيانات سحابية</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">📋</div><div class="font-bold text-white text-sm">١٩ نموذجاً</div><div class="text-xs text-gray-200 mt-1">نماذج تشغيلية بمنطق تحقق</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">🔷</div><div class="font-bold text-white text-sm">Odoo Enterprise</div><div class="text-xs text-gray-200 mt-1">توثيق الدورات المستندية</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">📷</div><div class="font-bold text-white text-sm">Barcode Scanner</div><div class="text-xs text-gray-200 mt-1">تكامل قارئ الباركود</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">🌐</div><div class="font-bold text-white text-sm">GitHub Pages</div><div class="text-xs text-gray-200 mt-1">استضافة مجانية وموثوقة</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">🔤</div><div class="font-bold text-white text-sm">Cairo Font + RTL</div><div class="text-xs text-gray-200 mt-1">واجهة عربية كاملة</div></div>
         </div>
       </div>
     </section>
@@ -239,11 +322,11 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         <div class="space-y-4 mb-8">
           <div class="bg-white/5 border border-white/10 rounded-xl p-6">
             <h3 class="font-bold text-brand-yellow mb-2">١. الموافقة المبدئية</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">اعتماد المقترح للانتقال إلى مرحلة التنسيق مع إدارة تقنية المعلومات</p>
+            <p class="text-gray-200 text-sm leading-relaxed">اعتماد المقترح للانتقال إلى مرحلة التنسيق مع إدارة تقنية المعلومات</p>
           </div>
           <div class="bg-white/5 border border-white/10 rounded-xl p-6">
             <h3 class="font-bold text-brand-yellow mb-2">٢. تعيين مسؤول تقني</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">تحديد مسؤول من IT لدراسة متطلبات التكامل مع الأنظمة القائمة</p>
+            <p class="text-gray-200 text-sm leading-relaxed">تحديد مسؤول من IT لدراسة متطلبات التكامل مع الأنظمة القائمة</p>
           </div>
         </div>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
@@ -259,7 +342,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
     <footer class="py-8 sm:py-12 bg-[#0a0a14] border-t border-white/10">
       <div class="container mx-auto px-4 sm:px-6 text-center">
-        <p class="text-sm sm:text-base text-gray-400 font-bold">
+        <p class="text-sm sm:text-base text-gray-200 font-bold">
           إعداد: محمد البرشي — متخصص سلاسل الإمداد<br/>
           بنغازي ٢٠٢٦ · هذا المقترح إعداد بحثي وتشغيلي — غير تجاري
         </p>

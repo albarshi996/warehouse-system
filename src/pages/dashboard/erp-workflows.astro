@@ -12,9 +12,9 @@ const base = import.meta.env.BASE_URL.endsWith('/')
     <header class="mb-6 sm:mb-8">
       <h1 class="text-2xl sm:text-3xl font-bold text-brand-yellow">
         دورات العمل ERP المتكاملة
-        <span class="block text-sm font-normal text-gray-400 mt-1">Integrated ERP Document Cycles (Odoo Enterprise)</span>
+        <span class="block text-sm font-normal text-gray-200 mt-1">Integrated ERP Document Cycles (Odoo Enterprise)</span>
       </h1>
-      <p class="text-gray-300 mt-2 text-sm sm:text-base leading-relaxed">
+      <p class="text-gray-100 mt-2 text-sm sm:text-base leading-relaxed">
         تصميم الدورات المستندية لبيئة Odoo Enterprise، تغطي الإدارة المالية، الموارد البشرية، والإدارة التجارية.
       </p>
     </header>
@@ -29,28 +29,28 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         <span>الإدارة المالية</span>
       </button>
       <button
-        class="tab-btn px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-gray-800 text-gray-400 hover:bg-gray-700"
+        class="tab-btn px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-gray-800 text-gray-200 hover:bg-gray-700"
         data-tab="hr"
       >
         <Icon name="users" />
         <span>الموارد البشرية</span>
       </button>
       <button
-        class="tab-btn px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-gray-800 text-gray-400 hover:bg-gray-700"
+        class="tab-btn px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-gray-800 text-gray-200 hover:bg-gray-700"
         data-tab="procurement"
       >
         <Icon name="shoppingCart" />
         <span>التجارية والمشتريات</span>
       </button>
       <button
-        class="tab-btn px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-gray-800 text-gray-400 hover:bg-gray-700"
+        class="tab-btn px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-gray-800 text-gray-200 hover:bg-gray-700"
         data-tab="warehouse"
       >
         <span>🏭</span>
         <span>المستودعات</span>
       </button>
       <button
-        class="tab-btn px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-gray-800 text-gray-400 hover:bg-gray-700"
+        class="tab-btn px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-gray-800 text-gray-200 hover:bg-gray-700"
         data-tab="supplychain"
       >
         <span>🔗</span>
@@ -72,7 +72,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
               <section>
                 <h3 class="text-lg font-bold text-brand-yellow mb-4">1. جدول سير العمل (Workflow Steps)</h3>
                 <div class="overflow-x-auto rounded-xl border border-gray-700">
-                  <table class="w-full text-sm text-right text-gray-300">
+                  <table class="w-full text-sm text-right text-gray-100">
                     <thead class="bg-gray-800 text-white">
                       <tr>
                         <th class="px-4 py-3">رقم</th>
@@ -141,7 +141,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                     <Icon name="alertTriangle" size={18} />
                     <span>3. نقاط التحكم (Control Points)</span>
                   </h3>
-                  <ul class="space-y-3 text-sm text-gray-300">
+                  <ul class="space-y-3 text-sm text-gray-100">
                     <li class="flex items-start gap-2">
                       <span class="text-brand-red">•</span>
                       <span><strong>اعتماد الفاتورة (Bill Validation):</strong> مراجعة تطابق الكميات والأسعار (3-Way Matching).</span>
@@ -165,11 +165,11 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                   <div class="space-y-3">
                     <div class="bg-black/20 p-3 rounded-lg border border-blue-500/20">
                       <p class="text-xs text-blue-300 font-bold mb-1">فاتورة مستحقة</p>
-                      <p class="text-sm text-gray-300">تنبيه قبل 3 أيام من تاريخ الاستحقاق للمدير المالي.</p>
+                      <p class="text-sm text-gray-100">تنبيه قبل 3 أيام من تاريخ الاستحقاق للمدير المالي.</p>
                     </div>
                     <div class="bg-black/20 p-3 rounded-lg border border-red-500/20">
                       <p class="text-xs text-red-400 font-bold mb-1">اختلاف التسوية</p>
-                      <p class="text-sm text-gray-300">تنبيه فوري للمدير المالي عند تجاوز حد الاختلاف المسموح.</p>
+                      <p class="text-sm text-gray-100">تنبيه فوري للمدير المالي عند تجاوز حد الاختلاف المسموح.</p>
                     </div>
                   </div>
                 </section>
@@ -179,7 +179,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
               <section>
                 <h3 class="text-lg font-bold text-brand-yellow mb-4">4. جدول الربط مع مستندات Brandzo (Mapping)</h3>
                 <div class="overflow-x-auto rounded-xl border border-gray-700">
-                  <table class="w-full text-sm text-right text-gray-300">
+                  <table class="w-full text-sm text-right text-gray-100">
                     <thead class="bg-gray-800 text-white">
                       <tr>
                         <th class="px-4 py-3">مستند Brandzo الورقي</th>
@@ -221,7 +221,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
               <section>
                 <h3 class="text-lg font-bold text-brand-yellow mb-4">1. جدول سير العمل (Workflow Steps)</h3>
                 <div class="overflow-x-auto rounded-xl border border-gray-700">
-                  <table class="w-full text-sm text-right text-gray-300">
+                  <table class="w-full text-sm text-right text-gray-100">
                     <thead class="bg-gray-800 text-white">
                       <tr>
                         <th class="px-4 py-3">رقم</th>
@@ -292,7 +292,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                     <Icon name="alertTriangle" size={18} />
                     <span>3. نقاط التحكم (Control Points)</span>
                   </h3>
-                  <ul class="space-y-3 text-sm text-gray-300">
+                  <ul class="space-y-3 text-sm text-gray-100">
                     <li class="flex items-start gap-2">
                       <span class="text-brand-red">•</span>
                       <span><strong>الموافقة متعددة المستويات:</strong> إجازات موظفي المخازن تتطلب موافقة مسؤول المخزن أولاً.</span>
@@ -312,11 +312,11 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                   <div class="space-y-3">
                     <div class="bg-black/20 p-3 rounded-lg border border-blue-500/20">
                       <p class="text-xs text-blue-300 font-bold mb-1">طلب إجازة جديد</p>
-                      <p class="text-sm text-gray-300">تنبيه فوري للمدير المباشر (أو مسؤول المخزن).</p>
+                      <p class="text-sm text-gray-100">تنبيه فوري للمدير المباشر (أو مسؤول المخزن).</p>
                     </div>
                     <div class="bg-black/20 p-3 rounded-lg border border-green-500/20">
                       <p class="text-xs text-green-400 font-bold mb-1">اعتماد الرواتب</p>
-                      <p class="text-sm text-gray-300">إشعار للإدارة المالية للبدء بعملية صرف الرواتب.</p>
+                      <p class="text-sm text-gray-100">إشعار للإدارة المالية للبدء بعملية صرف الرواتب.</p>
                     </div>
                   </div>
                 </section>
@@ -326,7 +326,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
               <section>
                 <h3 class="text-lg font-bold text-brand-yellow mb-4">4. جدول الربط مع مستندات Brandzo (Mapping)</h3>
                 <div class="overflow-x-auto rounded-xl border border-gray-700">
-                  <table class="w-full text-sm text-right text-gray-300">
+                  <table class="w-full text-sm text-right text-gray-100">
                     <thead class="bg-gray-800 text-white">
                       <tr>
                         <th class="px-4 py-3">مستند Brandzo الورقي</th>
@@ -368,7 +368,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
               <section>
                 <h3 class="text-lg font-bold text-brand-yellow mb-4">1. جدول سير العمل (Workflow Steps)</h3>
                 <div class="overflow-x-auto rounded-xl border border-gray-700">
-                  <table class="w-full text-sm text-right text-gray-300">
+                  <table class="w-full text-sm text-right text-gray-100">
                     <thead class="bg-gray-800 text-white">
                       <tr>
                         <th class="px-4 py-3">رقم</th>
@@ -438,7 +438,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                     <Icon name="alertTriangle" size={18} />
                     <span>3. نقاط التحكم (Control Points)</span>
                   </h3>
-                  <ul class="space-y-3 text-sm text-gray-300">
+                  <ul class="space-y-3 text-sm text-gray-100">
                     <li class="flex items-start gap-2">
                       <span class="text-brand-red">•</span>
                       <span><strong>تقييم المورد واعتماد الـ PO:</strong> مقارنة عروض الأسعار واختيار الأفضل.</span>
@@ -458,11 +458,11 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                   <div class="space-y-3">
                     <div class="bg-black/20 p-3 rounded-lg border border-blue-500/20">
                       <p class="text-xs text-blue-300 font-bold mb-1">تجاوز الحد المسموح</p>
-                      <p class="text-sm text-gray-300">تنبيه لمدير المشتريات إذا تجاوز مبلغ الـ PO السقف المحدد.</p>
+                      <p class="text-sm text-gray-100">تنبيه لمدير المشتريات إذا تجاوز مبلغ الـ PO السقف المحدد.</p>
                     </div>
                     <div class="bg-black/20 p-3 rounded-lg border border-yellow-500/20">
                       <p class="text-xs text-yellow-400 font-bold mb-1">تأخر التوريد</p>
-                      <p class="text-sm text-gray-300">إشعار عند تأخر استلام البضاعة عن الموعد المتوقع.</p>
+                      <p class="text-sm text-gray-100">إشعار عند تأخر استلام البضاعة عن الموعد المتوقع.</p>
                     </div>
                   </div>
                 </section>
@@ -472,7 +472,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
               <section>
                 <h3 class="text-lg font-bold text-brand-yellow mb-4">4. جدول الربط (Brandzo Form ↔ Odoo Mapping)</h3>
                 <div class="overflow-x-auto rounded-xl border border-gray-700">
-                  <table class="w-full text-sm text-right text-gray-300">
+                  <table class="w-full text-sm text-right text-gray-100">
                     <thead class="bg-gray-800 text-white">
                       <tr>
                         <th class="px-4 py-3">نموذج Brandzo</th>
@@ -520,7 +520,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
            <section class="mb-8">
              <h3 class="text-lg font-bold text-brand-yellow mb-4">دورة العمل المستندية — المستودعات</h3>
              <div class="overflow-x-auto rounded-xl border border-gray-700">
-               <table class="w-full text-sm text-right text-gray-300">
+               <table class="w-full text-sm text-right text-gray-100">
                  <thead class="bg-gray-800 text-white">
                    <tr>
                      <th class="px-4 py-3">رقم</th>
@@ -579,7 +579,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                  <Icon name="alertTriangle" size={18} />
                  <span>3. نقاط التحكم (Control Points)</span>
                </h3>
-               <ul class="space-y-3 text-sm text-gray-300">
+               <ul class="space-y-3 text-sm text-gray-100">
                  <li class="flex items-start gap-2">
                    <span class="text-brand-red">•</span>
                    <span><strong>فحص الجودة إلزامي:</strong> لا تحويل لـ Done قبل اعتماد QC.</span>
@@ -607,15 +607,15 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                <div class="space-y-3">
                  <div class="bg-black/20 p-3 rounded-lg border border-blue-500/20">
                    <p class="text-xs text-blue-300 font-bold mb-1">مخزون دون الحد الأدنى</p>
-                   <p class="text-sm text-gray-300">تنبيه تلقائي لمدير المستودع عند وصول صنف لنقطة إعادة الطلب.</p>
+                   <p class="text-sm text-gray-100">تنبيه تلقائي لمدير المستودع عند وصول صنف لنقطة إعادة الطلب.</p>
                  </div>
                  <div class="bg-black/20 p-3 rounded-lg border border-yellow-500/20">
                    <p class="text-xs text-yellow-400 font-bold mb-1">انتهاء صلاحية وشيك</p>
-                   <p class="text-sm text-gray-300">إشعار قبل 30 يوماً من انتهاء صلاحية أي مجموعة (Lot).</p>
+                   <p class="text-sm text-gray-100">إشعار قبل 30 يوماً من انتهاء صلاحية أي مجموعة (Lot).</p>
                  </div>
                  <div class="bg-black/20 p-3 rounded-lg border border-red-500/20">
                    <p class="text-xs text-red-400 font-bold mb-1">فارق الجرد</p>
-                   <p class="text-sm text-gray-300">تنبيه فوري لمدير المستودع عند وجود فرق بين العد الفعلي والنظام.</p>
+                   <p class="text-sm text-gray-100">تنبيه فوري لمدير المستودع عند وجود فرق بين العد الفعلي والنظام.</p>
                  </div>
                </div>
              </section>
@@ -625,7 +625,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
            <section class="mb-8">
              <h3 class="text-lg font-bold text-brand-yellow mb-4">المبادئ التشغيلية</h3>
              <div class="bg-white/5 border border-green-500/30 rounded-xl p-6">
-               <ul class="space-y-3 text-gray-300">
+               <ul class="space-y-3 text-gray-100">
                  <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">✓</span><span>معيار الصرف FEFO (First Expired First Out) — إلزامي في جميع عمليات الصرف</span></li>
                  <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">✓</span><span>لا حركة بدون مستند إلزامي موقّع — كل عملية لها نموذج خاص بها</span></li>
                  <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">✓</span><span>كل عملية تمر بطبقة تحقق قبل الإرسال للـ ERP — لا بيانات خاطئة تصل للنظام</span></li>
@@ -648,7 +648,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
            <section class="mb-8">
              <h3 class="text-lg font-bold text-brand-yellow mb-4">دورة العمل — سلاسل الإمداد</h3>
              <div class="overflow-x-auto rounded-xl border border-gray-700">
-               <table class="w-full text-sm text-right text-gray-300">
+               <table class="w-full text-sm text-right text-gray-100">
                  <thead class="bg-gray-800 text-white">
                    <tr>
                      <th class="px-4 py-3">رقم</th>
@@ -709,7 +709,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                  <Icon name="alertTriangle" size={18} />
                  <span>3. نقاط التحكم (Control Points)</span>
                </h3>
-               <ul class="space-y-3 text-sm text-gray-300">
+               <ul class="space-y-3 text-sm text-gray-100">
                  <li class="flex items-start gap-2">
                    <span class="text-brand-red">•</span>
                    <span><strong>اعتماد PR:</strong> لا PO بدون موافقة مدير القسم أولاً.</span>
@@ -737,15 +737,15 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                <div class="space-y-3">
                  <div class="bg-black/20 p-3 rounded-lg border border-blue-500/20">
                    <p class="text-xs text-blue-300 font-bold mb-1">تأخر توريد المورد</p>
-                   <p class="text-sm text-gray-300">إشعار لمسؤول اللوجستيك عند تأخر الشحنة عن الموعد المتفق عليه.</p>
+                   <p class="text-sm text-gray-100">إشعار لمسؤول اللوجستيك عند تأخر الشحنة عن الموعد المتفق عليه.</p>
                  </div>
                  <div class="bg-black/20 p-3 rounded-lg border border-yellow-500/20">
                    <p class="text-xs text-yellow-400 font-bold mb-1">OTIF دون الهدف</p>
-                   <p class="text-sm text-gray-300">تنبيه أسبوعي لمدير سلاسل الإمداد إذا انخفض معدل التسليم في الموعد عن 95%.</p>
+                   <p class="text-sm text-gray-100">تنبيه أسبوعي لمدير سلاسل الإمداد إذا انخفض معدل التسليم في الموعد عن 95%.</p>
                  </div>
                  <div class="bg-black/20 p-3 rounded-lg border border-red-500/20">
                    <p class="text-xs text-red-400 font-bold mb-1">ارتفاع معدل المرتجعات</p>
-                   <p class="text-sm text-gray-300">تنبيه لمدير الجودة عند تجاوز نسبة المرتجعات من مورد معين عن 2%.</p>
+                   <p class="text-sm text-gray-100">تنبيه لمدير الجودة عند تجاوز نسبة المرتجعات من مورد معين عن 2%.</p>
                  </div>
                </div>
              </section>
@@ -795,7 +795,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
            <!-- Closing Statement -->
            <div class="bg-gradient-to-r from-brand-red/20 to-brand-red/5 border border-brand-red/30 rounded-xl p-6">
-             <p class="text-gray-300 leading-relaxed text-center">
+             <p class="text-gray-100 leading-relaxed text-center">
                هذه الدورات موثقة بالكامل في النماذج التشغيلية الـ١٩ المرفقة في هذا المقترح —
                كل مرحلة لها نموذج إلزامي جاهز.
              </p>
@@ -840,10 +840,10 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         // Update buttons
         document.querySelectorAll('.tab-btn').forEach(b => {
           b.classList.remove('bg-brand-red', 'text-white');
-          b.classList.add('bg-gray-800', 'text-gray-400');
+          b.classList.add('bg-gray-800', 'text-gray-200');
         });
         btn.classList.add('bg-brand-red', 'text-white');
-        btn.classList.remove('bg-gray-800', 'text-gray-400');
+        btn.classList.remove('bg-gray-800', 'text-gray-200');
 
         // Update content
         document.querySelectorAll('.tab-pane').forEach(p => {
