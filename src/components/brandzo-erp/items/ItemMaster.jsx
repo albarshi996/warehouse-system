@@ -76,7 +76,7 @@ export default function ItemMaster() {
       <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-brand-navy">إدارة الأصناف (Items)</h2>
-          <p className="text-gray-500 mt-1 text-sm sm:text-base">
+          <p className="text-gray-200 mt-1 text-sm sm:text-base">
             إنشاء وتعديل بيانات أصناف Brandzo. كود SKU هو المعرف الفريد لكل صنف.
           </p>
         </div>
@@ -164,13 +164,13 @@ export default function ItemMaster() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-gray-500 italic">
+                  <td colSpan={8} className="p-8 text-center text-gray-200 italic">
                     جاري جلب البيانات من السحابة...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-gray-500 italic">
+                  <td colSpan={8} className="p-8 text-center text-gray-200 italic">
                     {items.length === 0
                       ? 'لا توجد أصناف بعد. ابدأ بإضافة صنف جديد.'
                       : 'لا توجد نتائج مطابقة للبحث.'}
@@ -185,7 +185,7 @@ export default function ItemMaster() {
                         {it.sku}
                       </td>
                       <td className="px-4 py-3 font-medium">{it.nameAr || '—'}</td>
-                      <td className="px-4 py-3 hidden md:table-cell text-gray-500">
+                      <td className="px-4 py-3 hidden md:table-cell text-gray-200">
                         {it.nameEn || '—'}
                       </td>
                       <td className="px-4 py-3 hidden sm:table-cell">{it.category || '—'}</td>
@@ -219,7 +219,7 @@ export default function ItemMaster() {
                             <button
                               type="button"
                               onClick={() => handleArchive(it)}
-                              className="text-xs font-bold text-gray-500 border border-gray-300 rounded-md px-3 py-1 hover:bg-gray-500 hover:text-white transition-colors"
+                              className="text-xs font-bold text-gray-200 border border-gray-300 rounded-md px-3 py-1 hover:bg-gray-500 hover:text-white transition-colors"
                             >
                               أرشفة
                             </button>

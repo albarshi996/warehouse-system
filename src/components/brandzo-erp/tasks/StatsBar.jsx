@@ -24,9 +24,9 @@ function KpiCard({ icon, badgeClass, valueClass, labelEn, labelAr, value, neonCo
         <div className={`p-2 rounded-lg ${badgeClass}`}>
           <Icon name={icon} />
         </div>
-        <span className="text-xs font-bold text-gray-300">{labelEn}</span>
+        <span className="text-xs font-bold text-gray-100">{labelEn}</span>
       </div>
-      <div className="text-sm font-medium text-gray-400">{labelAr}</div>
+      <div className="text-sm font-medium text-gray-200">{labelAr}</div>
       <div className={`mt-2 text-3xl font-bold ${valueClass}`}>{value}</div>
     </div>
   );

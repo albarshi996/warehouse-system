@@ -642,16 +642,16 @@ const MeetingAssistant = () => {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-2xl font-bold text-brand-navy">{slideTitle}</h2>
-                  <p className="mt-2 text-sm text-gray-500">عرض شرائح لتقديم خطة استغلال الرحبة لتخزين الكوزميتيك.</p>
+                  <p className="mt-2 text-sm text-gray-200">عرض شرائح لتقديم خطة استغلال الرحبة لتخزين الكوزميتيك.</p>
                 </div>
                 <button onClick={()=> setSlideMode(false)} className="px-3 py-1 rounded bg-gray-200">إغلاق</button>
               </div>
             </div>
             <div className="mt-6 text-gray-700" style={{minHeight:180}}>
-              {agendaItems[slideIndex]?.content || <p className="text-gray-500">لا توجد تفاصيل محددة لهذه الشريحة حالياً.</p>}
+              {agendaItems[slideIndex]?.content || <p className="text-gray-200">لا توجد تفاصيل محددة لهذه الشريحة حالياً.</p>}
             </div>
             <div className="mt-6 flex items-center justify-between">
-              <div className="text-sm text-gray-500">الشريحة {slideIndex + 1} من {agendaItems.length}</div>
+              <div className="text-sm text-gray-200">الشريحة {slideIndex + 1} من {agendaItems.length}</div>
               <div className="flex gap-2">
                 <button onClick={()=> setSlideIndex(s => Math.max(0, s-1))} className="px-3 py-1 rounded bg-white border">السابق</button>
                 <button onClick={()=> setSlideIndex(s => Math.min(agendaItems.length-1, s+1))} className="px-3 py-1 rounded bg-brand-red text-white">التالي</button>
@@ -669,11 +669,11 @@ const MeetingAssistant = () => {
           </div>
           <div className="flex flex-col">
             <div className="text-sm font-bold leading-tight">{t('app_title')}</div>
-            <div className="text-xs text-gray-500 font-mono">AI Meeting Assistant</div>
+            <div className="text-xs text-gray-200 font-mono">AI Meeting Assistant</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-2 text-xs text-gray-300">
+          <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-2 text-xs text-gray-100">
             <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDotClasses[statusDot]}`} />
             <span>
               {statusDot === 'ready' && t('status_ready')}
@@ -773,7 +773,7 @@ const MeetingAssistant = () => {
           <div className="w-full flex gap-2">
             <button
               onClick={toggleLang}
-              className="py-2 px-3 rounded-lg border border-white/10 bg-white/5 text-gray-300 font-semibold text-sm hover:bg-white/10 transition whitespace-nowrap"
+              className="py-2 px-3 rounded-lg border border-white/10 bg-white/5 text-gray-100 font-semibold text-sm hover:bg-white/10 transition whitespace-nowrap"
             >
               🌐 {lang === 'ar' ? 'AR' : 'EN'}
             </button>
@@ -785,7 +785,7 @@ const MeetingAssistant = () => {
             </button>
             <button
               onClick={copyAll}
-              className="py-2 px-3 rounded-lg border border-white/10 bg-white/5 text-gray-300 font-semibold text-sm hover:bg-white/10 transition"
+              className="py-2 px-3 rounded-lg border border-white/10 bg-white/5 text-gray-100 font-semibold text-sm hover:bg-white/10 transition"
             >
               📋
             </button>
@@ -814,8 +814,8 @@ const MeetingAssistant = () => {
                 </div>
               ))}
             </div>
-            <div className="mt-2 text-xs text-gray-500 font-mono">
-              {t('word_count')} <strong className="text-gray-300">{wordCount}</strong>
+            <div className="mt-2 text-xs text-gray-200 font-mono">
+              {t('word_count')} <strong className="text-gray-100">{wordCount}</strong>
             </div>
           </div>
         </div>
@@ -830,26 +830,26 @@ const MeetingAssistant = () => {
           <div className="px-4 py-3 space-y-2">
             <div className="bg-black/20 border border-white/10 rounded-lg p-3">
               <div className="text-xs font-bold text-teal-400 mb-2">🔑 {t('key_points')}</div>
-              <div className="text-sm text-gray-300 space-y-1">
+              <div className="text-sm text-gray-100 space-y-1">
                 {summaryData?.keyPoints?.length > 0
                   ? summaryData.keyPoints.map((p, i) => <div key={i}>• {p}</div>)
-                  : <div className="text-gray-500 italic">{t('no_summary')}</div>}
+                  : <div className="text-gray-200 italic">{t('no_summary')}</div>}
               </div>
             </div>
             <div className="bg-black/20 border border-white/10 rounded-lg p-3">
               <div className="text-xs font-bold text-blue-400 mb-2">✅ {t('decisions')}</div>
-              <div className="text-sm text-gray-300 space-y-1">
+              <div className="text-sm text-gray-100 space-y-1">
                 {summaryData?.decisions?.length > 0
                   ? summaryData.decisions.map((d, i) => <div key={i}>✅ {d}</div>)
-                  : <div className="text-gray-500">—</div>}
+                  : <div className="text-gray-200">—</div>}
               </div>
             </div>
             <div className="bg-black/20 border border-white/10 rounded-lg p-3">
               <div className="text-xs font-bold text-amber-400 mb-2">📋 {t('action_items')}</div>
-              <div className="text-sm text-gray-300 space-y-1">
+              <div className="text-sm text-gray-100 space-y-1">
                 {summaryData?.actions?.length > 0
                   ? summaryData.actions.map((a, i) => <div key={i}>📌 {a}</div>)
-                  : <div className="text-gray-500">—</div>}
+                  : <div className="text-gray-200">—</div>}
               </div>
             </div>
           </div>
@@ -879,13 +879,13 @@ const MeetingAssistant = () => {
             </div>
             <div
               ref={translationAreaRef}
-              className="w-full min-h-24 max-h-40 overflow-y-auto bg-black/25 border border-white/10 rounded-lg p-3 text-sm leading-relaxed text-gray-300 font-sans"
+              className="w-full min-h-24 max-h-40 overflow-y-auto bg-black/25 border border-white/10 rounded-lg p-3 text-sm leading-relaxed text-gray-100 font-sans"
               dir="ltr"
               style={{ textAlign: 'left' }}
             >
-              {englishTranslation || <span className="text-gray-500 italic">{t('translation_placeholder')}</span>}
+              {englishTranslation || <span className="text-gray-200 italic">{t('translation_placeholder')}</span>}
             </div>
-            <p className="text-xs text-gray-500 font-mono">{t('translation_note')}</p>
+            <p className="text-xs text-gray-200 font-mono">{t('translation_note')}</p>
           </div>
         </div>
 
@@ -898,7 +898,7 @@ const MeetingAssistant = () => {
           <div className="flex-1">
             <div className="font-bold text-sm">AI Meeting Assistant</div>
             <div className="text-xs text-amber-500 font-mono">Official Recorder</div>
-            <div className="text-xs text-gray-500 font-mono" dir="ltr">
+            <div className="text-xs text-gray-200 font-mono" dir="ltr">
               {new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', {
                 year: 'numeric',
                 month: 'short',

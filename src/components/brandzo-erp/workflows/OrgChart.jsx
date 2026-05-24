@@ -82,7 +82,7 @@ function Card({ node, active, onClick, size = 'md' }) {
           >
             {node.titleAr}
           </div>
-          <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-tight">
+          <div className="text-[11px] sm:text-xs text-slate-200 mt-0.5 leading-tight">
             {node.titleEn}
           </div>
           {node.headcount && (
@@ -183,7 +183,7 @@ function DetailPanel({ node }) {
         </span>
         <div>
           <div className="font-bold text-gray-200 text-lg sm:text-xl">{node.titleAr}</div>
-          <div className="text-xs sm:text-sm text-gray-400">{node.titleEn}</div>
+          <div className="text-xs sm:text-sm text-gray-200">{node.titleEn}</div>
         </div>
       </div>
       
@@ -211,18 +211,18 @@ function DetailPanel({ node }) {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <div className="text-xs text-gray-400 mb-1">الوظيفة في أودو</div>
+              <div className="text-xs text-gray-200 mb-1">الوظيفة في أودو</div>
               <div className="font-bold text-white">{odooRole.role}</div>
             </div>
             <div>
-              <div className="text-xs text-gray-400 mb-1">الوحدات المسموح بها</div>
+              <div className="text-xs text-gray-200 mb-1">الوحدات المسموح بها</div>
               <div className="font-bold text-blue-300">{odooRole.access}</div>
             </div>
           </div>
           
           <div className="mt-3">
-            <div className="text-xs text-gray-400 mb-1">الوصف</div>
-            <p className="text-sm text-gray-300 leading-relaxed">{odooRole.description}</p>
+            <div className="text-xs text-gray-200 mb-1">الوصف</div>
+            <p className="text-sm text-gray-100 leading-relaxed">{odooRole.description}</p>
           </div>
         </div>
       )}
@@ -295,7 +295,7 @@ export default function OrgChart() {
             الهيكل التنظيمي للمستودع الرئيسي
           </h2>
         </div>
-        <p className="text-sm text-gray-400 leading-relaxed">
+        <p className="text-sm text-gray-200 leading-relaxed">
           الخريطة الكاملة للأدوار والمسؤوليات في مستودع Brandzo Franchise Partners الرئيسي. اضغط أي
           بطاقة لعرض المسؤوليات أو الفرق التابعة للإدارة.
         </p>

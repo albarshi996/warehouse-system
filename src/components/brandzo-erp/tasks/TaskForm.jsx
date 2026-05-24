@@ -300,7 +300,7 @@ export default function TaskForm({ onTaskAdded, onShowToast }) {
             className={`flex-1 py-2 px-4 rounded-lg font-bold transition-all ${
               priority === 'low'
                 ? 'bg-blue-600/40 border-2 border-blue-400 text-blue-300 shadow-lg shadow-blue-500/30'
-                : 'bg-white/5 border border-white/10 text-gray-300 hover:border-blue-400/50'
+                : 'bg-white/5 border border-white/10 text-gray-100 hover:border-blue-400/50'
             }`}
           >
             عادي
@@ -310,7 +310,7 @@ export default function TaskForm({ onTaskAdded, onShowToast }) {
             className={`flex-1 py-2 px-4 rounded-lg font-bold transition-all ${
               priority === 'med'
                 ? 'bg-amber-600/40 border-2 border-amber-400 text-amber-300 shadow-lg shadow-amber-500/30'
-                : 'bg-white/5 border border-white/10 text-gray-300 hover:border-amber-400/50'
+                : 'bg-white/5 border border-white/10 text-gray-100 hover:border-amber-400/50'
             }`}
           >
             متوسط
@@ -320,7 +320,7 @@ export default function TaskForm({ onTaskAdded, onShowToast }) {
             className={`flex-1 py-2 px-4 rounded-lg font-bold transition-all ${
               priority === 'high'
                 ? 'bg-brand-red/40 border-2 border-brand-red text-red-300 shadow-lg shadow-brand-red/30'
-                : 'bg-white/5 border border-white/10 text-gray-300 hover:border-brand-red/50'
+                : 'bg-white/5 border border-white/10 text-gray-100 hover:border-brand-red/50'
             }`}
             style={{
               '--color-brand-red': 'var(--color-brand-red)',
@@ -342,7 +342,7 @@ export default function TaskForm({ onTaskAdded, onShowToast }) {
               className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
                 tags.has(tag)
                   ? 'bg-brand-yellow text-brand-navy'
-                  : 'bg-white/5 border border-white/10 text-gray-300 hover:border-brand-yellow/50'
+                  : 'bg-white/5 border border-white/10 text-gray-100 hover:border-brand-yellow/50'
               }`}
               style={{
                 '--color-brand-yellow': 'var(--color-brand-yellow)',
@@ -357,7 +357,7 @@ export default function TaskForm({ onTaskAdded, onShowToast }) {
             className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
               tags.has('أخرى')
                 ? 'bg-brand-yellow text-brand-navy'
-                : 'bg-white/5 border border-white/10 text-gray-300 hover:border-brand-yellow/50'
+                : 'bg-white/5 border border-white/10 text-gray-100 hover:border-brand-yellow/50'
             }`}
           >
             أخرى
@@ -420,7 +420,7 @@ export default function TaskForm({ onTaskAdded, onShowToast }) {
                 onChange={() => toggleStep(idx)}
                 className="w-5 h-5 cursor-pointer"
               />
-              <span className={step.done ? 'line-through text-gray-400' : 'text-white flex-1'}>
+              <span className={step.done ? 'line-through text-gray-200' : 'text-white flex-1'}>
                 {step.text}
               </span>
               <button

@@ -106,7 +106,7 @@ const OdooInstallationGuide = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">
           دليل تثبيت أودو 17 Enterprise
-          <span className="block text-lg font-normal text-gray-400 mt-1">Complete Odoo 17 Enterprise Installation Guide</span>
+          <span className="block text-lg font-normal text-gray-200 mt-1">Complete Odoo 17 Enterprise Installation Guide</span>
         </h1>
         <div className="w-20 h-1 bg-brand-red rounded-full mb-6" />
         
@@ -114,19 +114,19 @@ const OdooInstallationGuide = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-blue-400">4</div>
-              <div className="text-sm text-gray-400">مراحل التثبيت</div>
+              <div className="text-sm text-gray-200">مراحل التثبيت</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-green-400">2-4</div>
-              <div className="text-sm text-gray-400">أسابيع للإكمال</div>
+              <div className="text-sm text-gray-200">أسابيع للإكمال</div>
             </div>
             <div>
               <div className="text-sm font-bold text-yellow-400 leading-tight">تُحدد بعد<br/>التنسيق مع IT</div>
-              <div className="text-sm text-gray-400">التكلفة الإجمالية</div>
+              <div className="text-sm text-gray-200">التكلفة الإجمالية</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-purple-400">98.5%</div>
-              <div className="text-sm text-gray-400">معدل النجاح</div>
+              <div className="text-sm text-gray-200">معدل النجاح</div>
             </div>
           </div>
         </div>
@@ -146,7 +146,7 @@ const OdooInstallationGuide = () => {
             className={`px-6 py-3 rounded-xl font-bold transition-all ${
               activeTab === tab.id
                 ? 'bg-brand-red text-white shadow-lg'
-                : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                : 'bg-white/10 text-gray-100 hover:bg-white/20'
             }`}
           >
             <span className="ml-2">{tab.icon}</span>
@@ -172,12 +172,12 @@ const OdooInstallationGuide = () => {
                       <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                         item.status === 'required' ? 'bg-red-500/20 text-red-400' :
                         item.status === 'recommended' ? 'bg-yellow-500/20 text-yellow-400' :
-                        'bg-gray-500/20 text-gray-400'
+                        'bg-gray-500/20 text-gray-200'
                       }`}>
                         {item.status === 'required' ? 'مطلوب' : item.status === 'recommended' ? 'موصى به' : 'اختياري'}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-300">{item.spec}</p>
+                    <p className="text-sm text-gray-100">{item.spec}</p>
                   </div>
                 ))}
               </div>
@@ -198,7 +198,7 @@ const OdooInstallationGuide = () => {
                 className={`px-4 py-2 rounded-lg font-bold transition-all ${
                   activePhase === phase.phase
                     ? 'bg-green-500 text-white'
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                    : 'bg-white/10 text-gray-100 hover:bg-white/20'
                 }`}
               >
                 المرحلة {phase.phase}: {phase.title}
@@ -213,7 +213,7 @@ const OdooInstallationGuide = () => {
                 <h3 className="text-xl font-bold text-white">
                   المرحلة {phase.phase}: {phase.title}
                 </h3>
-                <span className="text-sm text-gray-400 bg-white/10 px-3 py-1 rounded-full">
+                <span className="text-sm text-gray-200 bg-white/10 px-3 py-1 rounded-full">
                   {phase.duration}
                 </span>
               </div>
@@ -224,7 +224,7 @@ const OdooInstallationGuide = () => {
                     <h4 className="font-bold text-green-400 mb-2">
                       {i + 1}. {step.title}
                     </h4>
-                    <p className="text-sm text-gray-300 mb-3">{step.description}</p>
+                    <p className="text-sm text-gray-100 mb-3">{step.description}</p>
                     <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs text-gray-200 overflow-x-auto">
                       <pre>{step.command}</pre>
                     </div>
@@ -255,7 +255,7 @@ const OdooInstallationGuide = () => {
                   {costs.licenses.map((license, i) => (
                     <tr key={i} className="border-b border-white/10">
                       <td className="px-4 py-3 text-white">{license.users}</td>
-                      <td className="px-4 py-3 text-gray-300">{license.cost}</td>
+                      <td className="px-4 py-3 text-gray-100">{license.cost}</td>
                       <td className="px-4 py-3 text-green-400 font-bold">{license.annual}</td>
                     </tr>
                   ))}
@@ -271,7 +271,7 @@ const OdooInstallationGuide = () => {
               {costs.hosting.map((hosting, i) => (
                 <div key={i} className="bg-black/30 rounded-lg p-4">
                   <h4 className="font-bold text-blue-400 mb-2">{hosting.type}</h4>
-                  <p className="text-sm text-gray-300 mb-2">{hosting.specs}</p>
+                  <p className="text-sm text-gray-100 mb-2">{hosting.specs}</p>
                   <div className="text-lg font-bold text-yellow-400">{hosting.cost}</div>
                 </div>
               ))}
@@ -285,7 +285,7 @@ const OdooInstallationGuide = () => {
               {costs.implementation.map((impl, i) => (
                 <div key={i} className="bg-black/30 rounded-lg p-4">
                   <h4 className="font-bold text-green-400 mb-2">{impl.item}</h4>
-                  <p className="text-sm text-gray-300 mb-2">{impl.duration}</p>
+                  <p className="text-sm text-gray-100 mb-2">{impl.duration}</p>
                   <div className="text-lg font-bold text-purple-400">{impl.cost}</div>
                 </div>
               ))}
@@ -302,7 +302,7 @@ const OdooInstallationGuide = () => {
               <h3 className="text-lg font-bold text-red-400 mb-3">
                 🔴 {item.issue}
               </h3>
-              <p className="text-gray-300">
+              <p className="text-gray-100">
                 <span className="text-green-400 font-bold">الحل:</span> {item.solution}
               </p>
             </div>
@@ -312,7 +312,7 @@ const OdooInstallationGuide = () => {
             <h3 className="text-lg font-bold text-yellow-400 mb-3">
               ⚠️ نصائح هامة
             </h3>
-            <ul className="space-y-2 text-sm text-gray-300">
+            <ul className="space-y-2 text-sm text-gray-100">
               <li>• قم دائماً بأخذ نسخ احتياطية قبل إجراء أي تغييرات</li>
               <li>• استخدم بيئة اختبار قبل التطبيق على الإنتاج</li>
               <li>• راقب سجلات النظام بانتظام للكشف المبكر عن المشاكل</li>

@@ -13,7 +13,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
       <h1 class="text-2xl sm:text-3xl font-bold text-brand-yellow">
         الهيكل والمسارات (Workflows & Org)
       </h1>
-      <p class="text-gray-300 mt-2 text-sm sm:text-base leading-relaxed">
+      <p class="text-gray-100 mt-2 text-sm sm:text-base leading-relaxed">
         الخريطة البصرية لنظام المستودعات: الهيكل التنظيمي للموظفين، والدورة المستندية الكاملة من طلب
         الشراء حتى المرتجعات. مأخوذة مباشرة من الباب الثاني والثالث في الدليل التشغيلي.
       </p>
@@ -25,7 +25,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
       <section class="rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] shadow-2xl border border-brand-red/20 p-6 sm:p-10">
         <h2 class="text-xl font-bold text-white text-center mb-6">
           الهيكل التنظيمي للمستودعات
-          <span class="block text-sm font-normal text-gray-400 mt-1">Warehouse Organizational Structure</span>
+          <span class="block text-sm font-normal text-gray-200 mt-1">Warehouse Organizational Structure</span>
         </h2>
         <div class="w-16 h-1 bg-brand-red mx-auto mb-8 rounded-full"></div>
         
@@ -37,7 +37,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                 <span class="text-2xl font-bold text-brand-red">م</span>
               </div>
               <h3 class="font-bold text-brand-red mb-2">مدير المستودعات</h3>
-              <p class="text-sm text-gray-300">الإشراف العام على جميع العمليات</p>
+              <p class="text-sm text-gray-100">الإشراف العام على جميع العمليات</p>
             </div>
           </div>
           
@@ -48,7 +48,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                 <span class="text-2xl font-bold text-brand-yellow">مش</span>
               </div>
               <h3 class="font-bold text-brand-yellow mb-2">مشرفو العمليات</h3>
-              <p class="text-sm text-gray-300">إدارة الفرق اليومية</p>
+              <p class="text-sm text-gray-100">إدارة الفرق اليومية</p>
             </div>
           </div>
           
@@ -59,7 +59,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                 <span class="text-2xl font-bold text-green-400">ف</span>
               </div>
               <h3 class="font-bold text-green-400 mb-2">فرق التشغيل</h3>
-              <p class="text-sm text-gray-300">تنفيذ المهام اليومية</p>
+              <p class="text-sm text-gray-100">تنفيذ المهام اليومية</p>
             </div>
           </div>
         </div>
@@ -77,7 +77,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
       <section class="rounded-2xl bg-gradient-to-br from-[#0d0d2b] to-brand-navy shadow-2xl border border-white/10 p-6 sm:p-10">
         <h2 class="text-xl font-bold text-white text-center mb-6">
           الدورة المستندية الكاملة
-          <span class="block text-sm font-normal text-gray-400 mt-1">Complete Document Cycle</span>
+          <span class="block text-sm font-normal text-gray-200 mt-1">Complete Document Cycle</span>
         </h2>
         <div class="w-16 h-1 bg-brand-yellow mx-auto mb-8 rounded-full"></div>
         
@@ -95,7 +95,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
             <div key={i} class={`bg-white/5 backdrop-blur border ${stage.color} rounded-xl p-4 hover:bg-white/10 transition-all`}>
               <div class="text-2xl font-bold text-white mb-2">{stage.num}</div>
               <h3 class="font-bold text-brand-yellow mb-1">{stage.title}</h3>
-              <p class="text-xs text-gray-400">{stage.desc}</p>
+              <p class="text-xs text-gray-200">{stage.desc}</p>
             </div>
           ))}
         </div>
@@ -113,14 +113,14 @@ const base = import.meta.env.BASE_URL.endsWith('/')
       <section class="rounded-2xl bg-gradient-to-br from-green-900/20 via-blue-900/20 to-green-900/20 shadow-2xl border border-green-500/30 p-6 sm:p-10">
         <h2 class="text-xl font-bold text-white text-center mb-6">
           التكامل مع أودو
-          <span class="block text-sm font-normal text-gray-400 mt-1">Odoo Integration Mapping</span>
+          <span class="block text-sm font-normal text-gray-200 mt-1">Odoo Integration Mapping</span>
         </h2>
         <div class="w-16 h-1 bg-green-400 mx-auto mb-8 rounded-full"></div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="bg-white/5 backdrop-blur border border-green-500/30 rounded-xl p-6">
             <h3 class="font-bold text-green-400 mb-4">الوحدات المقابلة في أودو</h3>
-            <ul class="space-y-2 text-sm text-gray-300">
+            <ul class="space-y-2 text-sm text-gray-100">
               <li class="flex items-center gap-2">
                 <span class="text-green-400">•</span>
                 <span>المخزون → Inventory Module</span>
@@ -142,7 +142,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
           
           <div class="bg-white/5 backdrop-blur border border-blue-500/30 rounded-xl p-6">
             <h3 class="font-bold text-blue-400 mb-4">مزايا التكامل</h3>
-            <ul class="space-y-2 text-sm text-gray-300">
+            <ul class="space-y-2 text-sm text-gray-100">
               <li class="flex items-center gap-2">
                 <span class="text-blue-400">•</span>
                 <span>بيانات دقيقة 98.5%</span>
@@ -174,7 +174,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
     <FAQ client:load />
 
-    <footer class="mt-10 text-center text-xs text-gray-400">
+    <footer class="mt-10 text-center text-xs text-gray-200">
       مصدر البيانات: الدليل التشغيلي — الباب الثاني والثالث.
     </footer>
   </div>

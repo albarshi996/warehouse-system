@@ -46,10 +46,10 @@ function KpiCard({
         <div className={`p-2 rounded-lg ${badgeClass}`}>
           <span className="text-2xl">{icon}</span>
         </div>
-        <span className="text-xs font-bold text-gray-500">{labelEn}</span>
+        <span className="text-xs font-bold text-gray-200">{labelEn}</span>
       </div>
   
-      <div className="text-sm font-medium text-gray-400">{labelAr}</div>
+      <div className="text-sm font-medium text-gray-200">{labelAr}</div>
       <div className={`mt-1 text-3xl font-bold ${valueClass}`}>
         {loading ? (
           <span className="inline-block h-7 w-12 bg-gray-200 rounded animate-pulse" />
@@ -84,7 +84,7 @@ const BrandzoDashboard = () => {
           <div className="relative z-10">
             <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-2">
               خارطة طريق أودو
-              <span className="block text-sm font-normal text-gray-400 mt-1">Odoo 17 Enterprise Implementation Roadmap</span>
+              <span className="block text-sm font-normal text-gray-200 mt-1">Odoo 17 Enterprise Implementation Roadmap</span>
             </h2>
             <div className="w-16 h-1 bg-green-400 mx-auto mb-8 rounded-full" />
 
@@ -130,10 +130,10 @@ const BrandzoDashboard = () => {
                 <div key={i} className={`${phase.bgColor} backdrop-blur border ${phase.borderColor} rounded-xl p-5 hover:bg-white/10 transition-all`}>
                   <div className={`font-bold ${phase.color} mb-2`}>{phase.phase}</div>
                   <h3 className="font-bold text-white mb-2">{phase.title}</h3>
-                  <div className="text-xs text-gray-400 mb-3">{phase.duration}</div>
+                  <div className="text-xs text-gray-200 mb-3">{phase.duration}</div>
                   <ul className="space-y-1">
                     {phase.items.map((item, j) => (
-                      <li key={j} className="text-xs text-gray-300 flex items-start gap-1">
+                      <li key={j} className="text-xs text-gray-100 flex items-start gap-1">
                         <span className="text-green-400 mt-1">•</span>
                         {item}
                       </li>
@@ -150,15 +150,15 @@ const BrandzoDashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div className="text-center">
                   <div className="text-lg font-bold text-blue-400">التراخيص</div>
-                  <div className="text-gray-400 text-sm">التكلفة تُحدد بعد التنسيق مع IT</div>
+                  <div className="text-gray-200 text-sm">التكلفة تُحدد بعد التنسيق مع IT</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold text-green-400">التنفيذ</div>
-                  <div className="text-gray-400 text-sm">التكلفة تُحدد بعد التنسيق مع IT</div>
+                  <div className="text-gray-200 text-sm">التكلفة تُحدد بعد التنسيق مع IT</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold text-yellow-400">التدريب والدعم</div>
-                  <div className="text-gray-400 text-sm">التكلفة تُحدد بعد التنسيق مع IT</div>
+                  <div className="text-gray-200 text-sm">التكلفة تُحدد بعد التنسيق مع IT</div>
                 </div>
               </div>
             </div>
@@ -175,7 +175,7 @@ const BrandzoDashboard = () => {
           <div className="relative z-10">
             <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-2">
               ضبط الجودة والتكامل مع أودو
-              <span className="block text-sm font-normal text-gray-400 mt-1">Brandzo Hub — Quality Gate & Odoo Integration</span>
+              <span className="block text-sm font-normal text-gray-200 mt-1">Brandzo Hub — Quality Gate & Odoo Integration</span>
             </h2>
             <div className="w-16 h-1 bg-brand-red mx-auto mb-8 rounded-full" />
 
@@ -183,19 +183,19 @@ const BrandzoDashboard = () => {
               <div className="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-5 hover:border-brand-red/40 transition-all">
                 <div className="text-2xl mb-3">📋</div>
                 <h3 className="font-bold text-brand-red mb-2">نماذج ذكية إجبارية</h3>
-                <p className="text-sm text-gray-300">كل العمليات (إضافة مخزون، صرف، تحويل، ارتجاع، جرد) تمر أولاً عبر نماذجنا الذكية الإجبارية.</p>
+                <p className="text-sm text-gray-100">كل العمليات (إضافة مخزون، صرف، تحويل، ارتجاع، جرد) تمر أولاً عبر نماذجنا الذكية الإجبارية.</p>
                 <div className="mt-3 text-xs text-green-400">✓ متوافق مع وحدات أودو</div>
               </div>
               <div className="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-5 hover:border-brand-yellow/40 transition-all">
                 <div className="text-2xl mb-3">⚡</div>
                 <h3 className="font-bold text-brand-yellow mb-2">تحقق منطقي آلي</h3>
-                <p className="text-sm text-gray-300">النظام يتحقق من المنطق التشغيلي (الصلاحيات، الحدود، الكميات، تواريخ الانتهاء 75%، التوصيات التلقائية).</p>
+                <p className="text-sm text-gray-100">النظام يتحقق من المنطق التشغيلي (الصلاحيات، الحدود، الكميات، تواريخ الانتهاء 75%، التوصيات التلقائية).</p>
                 <div className="mt-3 text-xs text-green-400">✓ جاهز للربط مع أودو</div>
               </div>
               <div className="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-5 hover:border-green-400/40 transition-all">
                 <div className="text-2xl mb-3">✅</div>
                 <h3 className="font-bold text-green-400 mb-2">وثيقة نظيفة موثقة</h3>
-                <p className="text-sm text-gray-300">في حال المطابقة → يُصدر النظام وثيقة نظيفة وموثقة جاهزة وخالية من أي خطأ لتكون المرجع الوحيد للإدخال في الـ ERP.</p>
+                <p className="text-sm text-gray-100">في حال المطابقة → يُصدر النظام وثيقة نظيفة وموثقة جاهزة وخالية من أي خطأ لتكون المرجع الوحيد للإدخال في الـ ERP.</p>
                 <div className="mt-3 text-xs text-green-400">✓ تكامل سلس مع أودو</div>
               </div>
             </div>
@@ -204,18 +204,18 @@ const BrandzoDashboard = () => {
               <h3 className="font-bold text-brand-yellow mb-3 flex items-center gap-2">
                 <span>🔗</span> التكامل مع أودو: بوابة ذكية للبيانات النظيفة
               </h3>
-              <p className="text-sm text-gray-300 leading-relaxed">
+              <p className="text-sm text-gray-100 leading-relaxed">
                 Brandzo Hub يعمل كطبقة وسيطة ذكية بين العمليات اليومية وأودو، يضمن أن البيانات الدقيقة فقط هي التي تصل إلى النظام المحاسبي.
                 النظام يحول النماذج الورقية إلى بيانات رقمية منظمة، يتحقق من صحتها، ثم يجهزها للإدخال المباشر في وحدات أودو المقابلة (المخزون، المشتريات، المبيعات، إلخ).
               </p>
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white/5 rounded-lg p-3">
                   <div className="font-bold text-blue-400 mb-1">الوحدات المتكاملة</div>
-                  <div className="text-xs text-gray-300">المخزون، المشتريات، المبيعات، الموارد البشرية، الصيانة</div>
+                  <div className="text-xs text-gray-100">المخزون، المشتريات، المبيعات، الموارد البشرية، الصيانة</div>
                 </div>
                 <div className="bg-white/5 rounded-lg p-3">
                   <div className="font-bold text-green-400 mb-1">معدل الدقة</div>
-                  <div className="text-xs text-gray-300">98.5%+ مطابقة للبيانات قبل الإدخال في أودو</div>
+                  <div className="text-xs text-gray-100">98.5%+ مطابقة للبيانات قبل الإدخال في أودو</div>
                 </div>
               </div>
             </div>
@@ -232,7 +232,7 @@ const BrandzoDashboard = () => {
           <div className="relative z-10">
             <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-2">
               مقارنة وحدات أودو
-              <span className="block text-sm font-normal text-gray-400 mt-1">Odoo Modules Comparison & Recommendations</span>
+              <span className="block text-sm font-normal text-gray-200 mt-1">Odoo Modules Comparison & Recommendations</span>
             </h2>
             <div className="w-16 h-1 bg-purple-400 mx-auto mb-8 rounded-full" />
 
@@ -260,22 +260,22 @@ const BrandzoDashboard = () => {
                   ].map((item, i) => (
                     <tr key={i} className="border-b border-purple-500/20 hover:bg-white/5 transition-colors">
                       <td className="px-4 py-3 font-bold text-white">{item.module}</td>
-                      <td className="px-4 py-3 text-gray-300">{item.function}</td>
+                      <td className="px-4 py-3 text-gray-100">{item.function}</td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                           item.importance === 'أساسي' ? 'bg-red-500/20 text-red-400' :
                           item.importance === 'مهم' ? 'bg-yellow-500/20 text-yellow-400' :
-                          'bg-gray-500/20 text-gray-400'
+                          'bg-gray-500/20 text-gray-200'
                         }`}>
                           {item.importance}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-300">{item.cost}</td>
+                      <td className="px-4 py-3 text-gray-100">{item.cost}</td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                           item.status === 'مطلوب' ? 'bg-green-500/20 text-green-400' :
                           item.status === 'موصى به' ? 'bg-blue-500/20 text-blue-400' :
-                          'bg-gray-500/20 text-gray-400'
+                          'bg-gray-500/20 text-gray-200'
                         }`}>
                           {item.status}
                         </span>
@@ -289,15 +289,15 @@ const BrandzoDashboard = () => {
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white/5 rounded-lg p-4 text-center">
                 <div className="text-2xl font-bold text-red-400 mb-1">8</div>
-                <div className="text-xs text-gray-400">وحدات أساسية</div>
+                <div className="text-xs text-gray-200">وحدات أساسية</div>
               </div>
               <div className="bg-white/5 rounded-lg p-4 text-center">
                 <div className="text-sm font-bold text-yellow-400 mb-1 leading-tight">يُحدد بعد<br/>التنسيق مع IT</div>
-                <div className="text-xs text-gray-400">متوسط التكلفة/المستخدم/السنة</div>
+                <div className="text-xs text-gray-200">متوسط التكلفة/المستخدم/السنة</div>
               </div>
               <div className="bg-white/5 rounded-lg p-4 text-center">
                 <div className="text-2xl font-bold text-green-400 mb-1">12-16</div>
-                <div className="text-xs text-gray-400">أسبوع للتنفيذ الكامل</div>
+                <div className="text-xs text-gray-200">أسبوع للتنفيذ الكامل</div>
               </div>
             </div>
           </div>
@@ -312,7 +312,7 @@ const BrandzoDashboard = () => {
           <div className="relative z-10">
             <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-2">
               القوانين التشغيلية والتكامل مع أودو
-              <span className="block text-sm font-normal text-gray-400 mt-1">Operational Compliance Rules & Odoo Integration</span>
+              <span className="block text-sm font-normal text-gray-200 mt-1">Operational Compliance Rules & Odoo Integration</span>
             </h2>
             <div className="w-16 h-1 bg-brand-yellow mx-auto mb-8 rounded-full" />
 
@@ -330,7 +330,7 @@ const BrandzoDashboard = () => {
                     <span className="text-2xl flex-shrink-0">{rule.icon}</span>
                     <div className="flex-1">
                       <h3 className={`font-bold ${rule.color} mb-1`}>{rule.title}</h3>
-                      <p className="text-sm text-gray-300 leading-relaxed mb-2">{rule.text}</p>
+                      <p className="text-sm text-gray-100 leading-relaxed mb-2">{rule.text}</p>
                       <div className="text-xs text-green-400 bg-green-500/10 rounded px-2 py-1 inline-block">
                         ✓ {rule.odoo}
                       </div>
@@ -344,7 +344,7 @@ const BrandzoDashboard = () => {
       </section>
 
       {/* Footer */}
-      <div className="text-center text-sm text-gray-500 mt-8">
+      <div className="text-center text-sm text-gray-200 mt-8">
         Brandzo Hub © 2026 — الوثيقة التشغيلية والتقنية الشاملة لنظام إدارة المخازن — جميع الحقوق محفوظة
       </div>
     </div>

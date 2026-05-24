@@ -96,10 +96,10 @@ export default function TaskList({
       {filteredTasks.length === 0 ? (
         <div className="glass-card p-12 text-center">
           <div className="text-5xl mb-4">📭</div>
-          <p className="text-gray-300 text-lg font-medium mb-2">
+          <p className="text-gray-100 text-lg font-medium mb-2">
             لا توجد مهام في هذا التصنيف
           </p>
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-200 text-sm">
             {filter === 'all'
               ? 'ابدأ بإنشاء مهمة جديدة'
               : `لا توجد مهام ${filterTabs.find((t) => t.id === filter)?.label}`}
