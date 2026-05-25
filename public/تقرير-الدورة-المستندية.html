@@ -12,18 +12,18 @@
   --gold: #c89d3b;
   --gold-light: #f0d98a;
   --green: #00a650;
+  --green-dim: rgba(0,166,80,0.12);
   --red: #c0392b;
   --white: #f8f9fb;
   --gray: #8a93a2;
   --line: rgba(200,157,59,0.25);
   --card-bg: rgba(255,255,255,0.04);
   --card-border: rgba(200,157,59,0.18);
+  --text-body: rgba(248,249,251,0.88);
 }
 
 *{margin:0;padding:0;box-sizing:border-box;}
-
 html{scroll-behavior:smooth;}
-
 body{
   font-family:'Cairo',sans-serif;
   background:var(--navy);
@@ -33,21 +33,18 @@ body{
   overflow-x:hidden;
 }
 
-/* ─── SCROLLBAR ─── */
+/* SCROLLBAR */
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:var(--navy);}
 ::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px;}
 
-/* ─── PRINT BAR ─── */
+/* PRINT BAR */
 .print-bar{
   background:rgba(200,157,59,0.12);
   border-bottom:1px solid var(--line);
   padding:10px 30px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  font-size:12px;
-  color:var(--gold);
+  display:flex;align-items:center;gap:12px;
+  font-size:12px;color:var(--gold);
   position:sticky;top:0;z-index:100;
   backdrop-filter:blur(10px);
 }
@@ -59,7 +56,7 @@ body{
 }
 .print-bar button:hover{opacity:.85;}
 
-/* ─── HERO COVER ─── */
+/* HERO COVER */
 .cover{
   min-height:100vh;
   display:flex;flex-direction:column;
@@ -87,44 +84,28 @@ body{
   text-transform:uppercase;
 }
 .brand-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite;}
-
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 
-.cover h1{
-  font-size:clamp(28px,5vw,52px);
-  font-weight:900;
-  line-height:1.25;
-  margin-bottom:20px;
-  color:#fff;
-}
+.cover h1{font-size:clamp(28px,5vw,52px);font-weight:900;line-height:1.25;margin-bottom:20px;color:#fff;}
 .cover h1 span{color:var(--gold);}
+.cover .subtitle{font-size:16px;color:var(--gray);margin-bottom:50px;line-height:1.8;}
 
-.cover .subtitle{
-  font-size:16px;color:var(--gray);
-  margin-bottom:50px;
-  line-height:1.8;
-}
-
-.cover-meta{
-  display:flex;gap:30px;justify-content:center;flex-wrap:wrap;
-  margin-bottom:40px;
-}
+.cover-meta{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:40px;}
 .cover-meta .item{
   background:var(--card-bg);
   border:1px solid var(--card-border);
-  padding:12px 20px;border-radius:8px;
-  font-size:13px;
+  padding:12px 20px;border-radius:8px;font-size:13px;
 }
 .cover-meta .item strong{display:block;color:var(--gold);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+.cover-meta .item span{color:var(--white);font-weight:600;}
 
 .confidential-tag{
-  border:1.5px solid var(--red);
-  color:var(--red);padding:7px 20px;
-  font-weight:700;font-size:12px;letter-spacing:2px;
-  display:inline-block;
+  border:1.5px solid var(--red);color:var(--red);
+  padding:7px 20px;font-weight:700;font-size:12px;
+  letter-spacing:2px;display:inline-block;
 }
 
-/* ─── NAV ─── */
+/* SIDENAV */
 .sidenav{
   position:fixed;right:0;top:50%;transform:translateY(-50%);
   display:flex;flex-direction:column;gap:6px;
@@ -132,10 +113,8 @@ body{
 }
 .sidenav a{
   width:10px;height:10px;border-radius:50%;
-  background:rgba(200,157,59,0.3);
-  border:1.5px solid var(--gold);
-  transition:all .3s;display:block;
-  position:relative;
+  background:rgba(200,157,59,0.3);border:1.5px solid var(--gold);
+  transition:all .3s;display:block;position:relative;
 }
 .sidenav a:hover,.sidenav a.active{background:var(--gold);transform:scale(1.3);}
 .sidenav a .tip{
@@ -147,9 +126,9 @@ body{
 }
 .sidenav a:hover .tip{opacity:1;}
 
-/* ─── SECTIONS ─── */
+/* SECTIONS */
 section{padding:80px 30px;max-width:1000px;margin:auto;}
-section + section{border-top:1px solid var(--line);}
+section+section{border-top:1px solid var(--line);}
 
 .section-label{
   font-size:11px;letter-spacing:3px;color:var(--gold);
@@ -159,242 +138,165 @@ section + section{border-top:1px solid var(--line);}
 .section-title{
   font-size:clamp(22px,3vw,34px);font-weight:800;
   margin-bottom:30px;color:#fff;
-  border-right:4px solid var(--gold);
-  padding-right:16px;
+  border-right:4px solid var(--gold);padding-right:16px;
 }
 .section-body{
-  font-size:15px;line-height:2;color:rgba(248,249,251,0.8);
-  margin-bottom:20px;
-  text-align:justify;
+  font-size:15px;line-height:2;
+  color:var(--text-body);
+  margin-bottom:20px;text-align:justify;
 }
 
-/* ─── HIGHLIGHT BOX ─── */
+/* HIGHLIGHT */
 .highlight{
   background:rgba(27,58,92,0.5);
   border-right:5px solid var(--gold);
   padding:18px 22px;border-radius:0 8px 8px 0;
   margin:25px 0;font-size:14px;line-height:1.9;
+  color:var(--text-body);
 }
 .highlight strong{color:var(--gold);}
 
-/* ─── TOC ─── */
-.toc-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
-  gap:14px;margin-top:20px;
-}
+/* TOC */
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:20px;}
 .toc-item{
-  background:var(--card-bg);
-  border:1px solid var(--card-border);
+  background:var(--card-bg);border:1px solid var(--card-border);
   padding:16px 20px;border-radius:10px;
   display:flex;align-items:center;gap:14px;
-  text-decoration:none;color:var(--white);
-  transition:all .25s;
+  text-decoration:none;color:var(--white);transition:all .25s;
 }
-.toc-item:hover{
-  border-color:var(--gold);
-  background:rgba(200,157,59,0.08);
-  transform:translateY(-2px);
-}
-.toc-item .num{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:20px;font-weight:600;color:var(--gold);
-  min-width:36px;
-}
-.toc-item .label{font-size:14px;font-weight:600;}
+.toc-item:hover{border-color:var(--gold);background:rgba(200,157,59,0.08);transform:translateY(-2px);}
+.toc-item .num{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;color:var(--gold);min-width:36px;}
+.toc-item .label{font-size:14px;font-weight:600;color:var(--white);}
 
-/* ─── FLOW DIAGRAM ─── */
-.flow-wrap{
-  display:flex;align-items:center;justify-content:center;
-  flex-wrap:wrap;gap:0;margin:40px 0;
-}
-.flow-node{
-  display:flex;flex-direction:column;align-items:center;
-  text-align:center;
-  animation:fadeUp .5s both;
-}
+/* FLOW DIAGRAM */
+.flow-wrap{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0;margin:40px 0;}
+.flow-node{display:flex;flex-direction:column;align-items:center;text-align:center;animation:fadeUp .5s both;}
 .flow-circle{
   width:90px;height:90px;border-radius:50%;
   border:2px solid var(--gold);
   background:rgba(27,58,92,0.6);
   display:flex;flex-direction:column;justify-content:center;align-items:center;
-  position:relative;
-  transition:all .3s;cursor:default;
+  position:relative;transition:all .3s;cursor:default;
 }
-.flow-circle:hover{
-  background:var(--gold);color:var(--navy);
-  box-shadow:0 0 30px rgba(200,157,59,0.4);
-}
+.flow-circle:hover{background:var(--gold);color:var(--navy);box-shadow:0 0 30px rgba(200,157,59,0.4);}
 .flow-circle:hover .stage-num,.flow-circle:hover .stage-lbl{color:var(--navy);}
-.stage-num{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:22px;font-weight:700;color:var(--gold);
-}
-.stage-lbl{font-size:9px;color:rgba(248,249,251,0.6);margin-top:3px;max-width:75px;line-height:1.3;}
-.flow-arrow{
-  font-size:22px;color:var(--gold);
-  margin:0 6px;align-self:center;
-  opacity:0.7;
-}
-@media(max-width:650px){
-  .flow-arrow{display:none;}
-  .flow-wrap{gap:14px;}
-}
-
+.stage-num{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--gold);}
+.stage-lbl{font-size:9px;color:rgba(248,249,251,0.7);margin-top:3px;max-width:75px;line-height:1.3;}
+.flow-arrow{font-size:22px;color:var(--gold);margin:0 6px;align-self:center;opacity:0.7;}
+@media(max-width:650px){.flow-arrow{display:none;}.flow-wrap{gap:14px;}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:none;}}
 
-/* ─── STAGE CARDS ─── */
+/* STAGE CARDS */
 .stage-card{
   background:var(--card-bg);
   border:1px solid var(--card-border);
-  border-radius:14px;
-  padding:28px 30px;
+  border-radius:14px;padding:28px 30px;
   margin-bottom:24px;
   transition:border-color .3s;
   position:relative;overflow:hidden;
 }
-.stage-card::before{
-  content:'';position:absolute;top:0;right:0;
-  width:4px;height:100%;background:var(--gold);
-}
+.stage-card::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;background:var(--gold);}
 .stage-card:hover{border-color:rgba(200,157,59,0.5);}
 
-.stage-header{
-  display:flex;align-items:center;gap:16px;
-  margin-bottom:16px;flex-wrap:wrap;
-}
+.stage-header{display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap;}
 .stage-num-badge{
   font-family:'IBM Plex Mono',monospace;
   background:var(--gold);color:var(--navy);
-  padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700;
-  white-space:nowrap;
+  padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap;
 }
 .stage-card h3{font-size:17px;font-weight:700;color:#fff;}
 
+.stage-desc{font-size:14px;color:var(--text-body);margin-bottom:14px;line-height:1.9;}
+
 .odoo-path{
-  background:rgba(0,166,80,0.12);
+  background:var(--green-dim);
   border:1px solid rgba(0,166,80,0.4);
   border-radius:8px;padding:10px 16px;
   font-size:13px;margin-bottom:16px;
   display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  color:var(--text-body);
 }
-.odoo-label{
-  background:var(--green);color:#fff;
-  padding:2px 8px;border-radius:4px;
-  font-size:11px;font-weight:700;white-space:nowrap;
-}
+.odoo-label{background:var(--green);color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;white-space:nowrap;}
 
-.io-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
-  gap:12px;margin-top:12px;
-}
-.io-box{
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:8px;padding:12px 14px;
-}
-.io-box h4{
-  font-size:11px;letter-spacing:2px;text-transform:uppercase;
-  color:var(--gold);margin-bottom:8px;
-  font-family:'IBM Plex Mono',monospace;
-}
+.io-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:12px;}
+.io-box{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px 14px;}
+.io-box h4{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;}
 .io-box ul{padding-right:14px;}
-.io-box li{font-size:13px;color:rgba(248,249,251,0.75);margin-bottom:4px;line-height:1.5;}
+.io-box li{font-size:13px;color:var(--text-body);margin-bottom:4px;line-height:1.5;}
 
-/* ─── TABLE ─── */
+/* TABLE */
 .table-wrap{overflow-x:auto;margin:20px 0;}
-table{
-  width:100%;border-collapse:collapse;
-  font-size:13px;min-width:600px;
-}
-table caption{
-  color:var(--gold);font-size:14px;font-weight:700;
-  text-align:right;padding-bottom:10px;
-}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px;}
+table caption{color:var(--gold);font-size:14px;font-weight:700;text-align:right;padding-bottom:10px;}
 th{
   background:var(--blue);color:var(--gold);
-  padding:12px 14px;font-size:12px;
-  font-weight:700;letter-spacing:.5px;
-  border-bottom:2px solid var(--gold);
-  white-space:nowrap;
+  padding:12px 14px;font-size:12px;font-weight:700;
+  letter-spacing:.5px;border-bottom:2px solid var(--gold);white-space:nowrap;
 }
 td{
   padding:10px 14px;
   border-bottom:1px solid rgba(255,255,255,0.05);
-  color:rgba(248,249,251,0.8);
+  color:var(--text-body);
   vertical-align:middle;
 }
 tr:hover td{background:rgba(200,157,59,0.04);}
 .mono{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gold-light);}
-.module-tag{
-  display:inline-block;
-  padding:2px 8px;border-radius:4px;
-  font-size:11px;font-weight:700;
-  background:rgba(27,58,92,0.8);
-  border:1px solid var(--blue);
-  white-space:nowrap;
-}
+
+.module-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:rgba(27,58,92,0.8);border:1px solid var(--blue);white-space:nowrap;}
 .module-purchase{border-color:#3498db;color:#3498db;}
 .module-inventory{border-color:#00a650;color:#00a650;}
 .module-quality{border-color:#e67e22;color:#e67e22;}
 .module-accounting{border-color:#9b59b6;color:#9b59b6;}
 .module-manufacturing{border-color:#e74c3c;color:#e74c3c;}
 
-/* ─── KPI CARDS ─── */
-.kpi-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
-  gap:16px;margin:30px 0;
-}
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin:30px 0;}
 .kpi-card{
-  background:var(--card-bg);
-  border:1px solid var(--card-border);
-  border-radius:12px;padding:22px 18px;
-  text-align:center;
-  transition:all .3s;
+  background:var(--card-bg);border:1px solid var(--card-border);
+  border-radius:12px;padding:22px 18px;text-align:center;transition:all .3s;
 }
 .kpi-card:hover{border-color:var(--gold);transform:translateY(-3px);}
-.kpi-value{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:26px;font-weight:700;color:var(--gold);
-  margin-bottom:6px;
-}
-.kpi-name{font-size:13px;color:rgba(248,249,251,0.7);margin-bottom:4px;}
+.kpi-value{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;color:var(--gold);margin-bottom:6px;}
+.kpi-name{font-size:13px;color:var(--text-body);margin-bottom:4px;}
 .kpi-freq{font-size:11px;color:var(--gray);letter-spacing:1px;}
 
-/* ─── RULES ─── */
+/* RULES */
 .rules-list{margin:20px 0;}
 .rule-item{
   display:flex;align-items:flex-start;gap:14px;
-  padding:14px 18px;
-  border-radius:8px;margin-bottom:8px;
+  padding:14px 18px;border-radius:8px;margin-bottom:8px;
   font-size:14px;line-height:1.7;
+  color:var(--text-body);
 }
 .rule-item.no{background:rgba(192,57,43,0.1);border-right:3px solid var(--red);}
 .rule-item.yes{background:rgba(0,166,80,0.08);border-right:3px solid var(--green);}
 .rule-item.target{background:rgba(200,157,59,0.08);border-right:3px solid var(--gold);}
 .rule-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
 
-/* ─── ODOO TABLE ─── */
-.odoo-table th{background:rgba(0,70,30,0.6);}
+/* KPI TABLE */
+.kpi-th{background:rgba(0,70,30,0.6);}
+.kpi-th th{color:var(--gold);}
 
-/* ─── SIGNATURE ─── */
+/* ODOO TABLE */
+.odoo-table th{background:rgba(0,50,20,0.7);}
+
+/* SIGNATURE */
 .sig-section{
-  border:1px solid var(--card-border);
-  border-radius:14px;padding:40px 30px;
-  display:grid;grid-template-columns:1fr 1fr;gap:40px;
-  margin-top:60px;
+  border:1px solid var(--card-border);border-radius:14px;padding:40px 30px;
+  display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:60px;
 }
 @media(max-width:500px){.sig-section{grid-template-columns:1fr;}}
 .sig-box{text-align:center;}
-.sig-line{
-  border-bottom:1px dashed rgba(200,157,59,0.5);
-  margin-bottom:12px;padding-bottom:12px;
-  font-size:13px;color:var(--gray);
-}
+.sig-line{border-bottom:1px dashed rgba(200,157,59,0.5);margin-bottom:12px;padding-bottom:12px;font-size:13px;color:var(--gray);}
 .sig-role{font-weight:700;font-size:15px;color:var(--gold);}
+.sig-name{font-size:13px;color:var(--gray);margin-top:6px;}
 
-/* ─── PRINT ─── */
+/* SECTION DIVIDER */
+.divider{height:1px;background:var(--line);margin:10px 0;}
+
+/* PRINT */
 @media print{
-  body{background:#fff;color:#222;}
+  body{background:#fff;color:#1a2233;}
   .print-bar,.sidenav{display:none;}
   .cover{min-height:auto;padding:3cm 2cm;}
   .cover::before{display:none;}
@@ -402,6 +304,10 @@ tr:hover td{background:rgba(200,157,59,0.04);}
   .stage-card,.toc-item,.kpi-card{background:#f5f5f5;border-color:#ccc;}
   .flow-circle{background:#1b3a5c;}
   th{background:#1b3a5c;}
+  .section-body,.stage-desc,.rule-item,.io-box li,.toc-item .label{color:#1a2233 !important;}
+  td{color:#1a2233;}
+  .highlight{background:#f0f4ff;color:#1a2233;}
+  .highlight strong{color:#0d3060;}
 }
 </style>
 </head>
@@ -425,23 +331,23 @@ tr:hover td{background:rgba(200,157,59,0.04);}
   <a href="#odoo"><span class="tip">أودو</span></a>
 </nav>
 
-<!-- ═══ COVER ═══ -->
+<!-- COVER -->
 <div class="cover" id="cover">
   <div class="cover-inner">
     <div class="brand-badge"><span class="dot"></span>BRANDZO SYSTEMS<span class="dot"></span></div>
     <h1>تقرير الدورة المستندية <span>الكاملة</span></h1>
     <p class="subtitle">خريطة تدفق الـ 8 مراحل كاملة<br>مع تكامل <strong style="color:var(--green)">Odoo 17 Enterprise</strong> لكل مرحلة</p>
     <div class="cover-meta">
-      <div class="item"><strong>التاريخ</strong>12 مايو 2026</div>
-      <div class="item"><strong>الإصدار</strong>1.0 — Odoo-Ready</div>
-      <div class="item"><strong>الإعداد</strong>نظام Brandzo التفاعلي</div>
-      <div class="item"><strong>النماذج</strong>21 نموذج / 8 مراحل</div>
+      <div class="item"><strong>التاريخ</strong><span>12 مايو 2026</span></div>
+      <div class="item"><strong>الإصدار</strong><span>1.0 — Odoo-Ready</span></div>
+      <div class="item"><strong>الإعداد</strong><span>نظام Brandzo التفاعلي</span></div>
+      <div class="item"><strong>النماذج</strong><span>21 نموذج / 8 مراحل</span></div>
     </div>
     <div class="confidential-tag">سري — للاستخدام الداخلي للإدارة العليا فقط</div>
   </div>
 </div>
 
-<!-- ═══ TOC ═══ -->
+<!-- TOC -->
 <section id="toc">
   <div class="section-label">// فهرس المحتويات</div>
   <div class="section-title">قائمة المحتويات</div>
@@ -455,7 +361,7 @@ tr:hover td{background:rgba(200,157,59,0.04);}
   </div>
 </section>
 
-<!-- ═══ OVERVIEW ═══ -->
+<!-- OVERVIEW -->
 <section id="overview">
   <div class="section-label">// القسم الأول</div>
   <div class="section-title">نظرة عامة على الدورة المستندية</div>
@@ -470,63 +376,39 @@ tr:hover td{background:rgba(200,157,59,0.04);}
   </div>
 </section>
 
-<!-- ═══ FLOW ═══ -->
+<!-- FLOW -->
 <section id="flow">
   <div class="section-label">// القسم الثاني</div>
   <div class="section-title">خريطة تدفق الدورة المستندية</div>
   <div class="flow-wrap">
-    <div class="flow-node" style="animation-delay:.05s">
-      <div class="flow-circle"><span class="stage-num">01</span><span class="stage-lbl">طلب الشراء</span></div>
-    </div>
+    <div class="flow-node" style="animation-delay:.05s"><div class="flow-circle"><span class="stage-num">01</span><span class="stage-lbl">طلب الشراء</span></div></div>
     <div class="flow-arrow">←</div>
-    <div class="flow-node" style="animation-delay:.1s">
-      <div class="flow-circle"><span class="stage-num">02</span><span class="stage-lbl">أمر الشراء</span></div>
-    </div>
+    <div class="flow-node" style="animation-delay:.1s"><div class="flow-circle"><span class="stage-num">02</span><span class="stage-lbl">أمر الشراء</span></div></div>
     <div class="flow-arrow">←</div>
-    <div class="flow-node" style="animation-delay:.15s">
-      <div class="flow-circle"><span class="stage-num">03</span><span class="stage-lbl">إشعار الشحن</span></div>
-    </div>
+    <div class="flow-node" style="animation-delay:.15s"><div class="flow-circle"><span class="stage-num">03</span><span class="stage-lbl">إشعار الشحن</span></div></div>
     <div class="flow-arrow">←</div>
-    <div class="flow-node" style="animation-delay:.2s">
-      <div class="flow-circle"><span class="stage-num">04</span><span class="stage-lbl">الاستلام والجودة</span></div>
-    </div>
+    <div class="flow-node" style="animation-delay:.2s"><div class="flow-circle"><span class="stage-num">04</span><span class="stage-lbl">الاستلام والجودة</span></div></div>
     <div class="flow-arrow">←</div>
-    <div class="flow-node" style="animation-delay:.25s">
-      <div class="flow-circle"><span class="stage-num">05</span><span class="stage-lbl">التخزين الموجه</span></div>
-    </div>
+    <div class="flow-node" style="animation-delay:.25s"><div class="flow-circle"><span class="stage-num">05</span><span class="stage-lbl">التخزين الموجه</span></div></div>
     <div class="flow-arrow">←</div>
-    <div class="flow-node" style="animation-delay:.3s">
-      <div class="flow-circle"><span class="stage-num">06</span><span class="stage-lbl">السحب والتعبئة</span></div>
-    </div>
+    <div class="flow-node" style="animation-delay:.3s"><div class="flow-circle"><span class="stage-num">06</span><span class="stage-lbl">السحب والتعبئة</span></div></div>
     <div class="flow-arrow">←</div>
-    <div class="flow-node" style="animation-delay:.35s">
-      <div class="flow-circle"><span class="stage-num">07</span><span class="stage-lbl">الشحن والتوزيع</span></div>
-    </div>
+    <div class="flow-node" style="animation-delay:.35s"><div class="flow-circle"><span class="stage-num">07</span><span class="stage-lbl">الشحن والتوزيع</span></div></div>
     <div class="flow-arrow">←</div>
-    <div class="flow-node" style="animation-delay:.4s">
-      <div class="flow-circle"><span class="stage-num">08</span><span class="stage-lbl">المرتجعات والتسوية</span></div>
-    </div>
+    <div class="flow-node" style="animation-delay:.4s"><div class="flow-circle"><span class="stage-num">08</span><span class="stage-lbl">المرتجعات والتسوية</span></div></div>
   </div>
 </section>
 
-<!-- ═══ STAGES ═══ -->
+<!-- STAGES -->
 <section id="stages">
   <div class="section-label">// القسم الثالث</div>
   <div class="section-title">المراحل الثمانية التفصيلية</div>
 
   <!-- Stage 1 -->
   <div class="stage-card">
-    <div class="stage-header">
-      <span class="stage-num-badge">المرحلة 01</span>
-      <h3>طلب الشراء — Purchase Requisition (PR)</h3>
-    </div>
-    <p style="font-size:14px;color:rgba(248,249,251,0.75);margin-bottom:14px;line-height:1.9">
-      مستند داخلي يصدر تلقائياً عند وصول رصيد الصنف إلى نقطة إعادة الطلب. يبدأ به دورة الشراء ويشكل الأساس لجميع العمليات اللاحقة.
-    </p>
-    <div class="odoo-path">
-      <span class="odoo-label">Odoo</span>
-      Purchase › Requisitions &nbsp;|&nbsp; <em>Settings › Purchase › Purchase Requisitions ✓</em>
-    </div>
+    <div class="stage-header"><span class="stage-num-badge">المرحلة 01</span><h3>طلب الشراء — Purchase Requisition (PR)</h3></div>
+    <p class="stage-desc">مستند داخلي يصدر تلقائياً عند وصول رصيد الصنف إلى نقطة إعادة الطلب. يبدأ به دورة الشراء ويشكل الأساس لجميع العمليات اللاحقة.</p>
+    <div class="odoo-path"><span class="odoo-label">Odoo</span>Purchase › Requisitions &nbsp;|&nbsp; <em>Settings › Purchase › Purchase Requisitions ✓</em></div>
     <div class="io-grid">
       <div class="io-box"><h4>المدخلات</h4><ul><li>نقطة إعادة الطلب</li><li>طلب من القسم أو الفرع</li><li>توقعات الطلب</li></ul></div>
       <div class="io-box"><h4>المخرجات</h4><ul><li>طلب شراء معتمد (PR)</li><li>إشعار للمشتريات والمخازن</li><li>تسجيل في نظام التتبع</li></ul></div>
@@ -536,17 +418,9 @@ tr:hover td{background:rgba(200,157,59,0.04);}
 
   <!-- Stage 2 -->
   <div class="stage-card">
-    <div class="stage-header">
-      <span class="stage-num-badge">المرحلة 02</span>
-      <h3>أمر الشراء — Purchase Order (PO)</h3>
-    </div>
-    <p style="font-size:14px;color:rgba(248,249,251,0.75);margin-bottom:14px;line-height:1.9">
-      المستند الرسمي القانوني المرسل للمورد. يمثل التزاماً تعاقدياً بشراء كميات وأسعار محددة مع شروط التسليم والدفع.
-    </p>
-    <div class="odoo-path">
-      <span class="odoo-label">Odoo</span>
-      Purchase › Orders &nbsp;|&nbsp; <em>تلقائي مع تفعيل وحدة Purchase</em>
-    </div>
+    <div class="stage-header"><span class="stage-num-badge">المرحلة 02</span><h3>أمر الشراء — Purchase Order (PO)</h3></div>
+    <p class="stage-desc">المستند الرسمي القانوني المرسل للمورد. يمثل التزاماً تعاقدياً بشراء كميات وأسعار محددة مع شروط التسليم والدفع.</p>
+    <div class="odoo-path"><span class="odoo-label">Odoo</span>Purchase › Orders &nbsp;|&nbsp; <em>تلقائي مع تفعيل وحدة Purchase</em></div>
     <div class="io-grid">
       <div class="io-box"><h4>المدخلات</h4><ul><li>طلب الشراء المعتمد</li><li>عروض الأسعار من الموردين</li><li>شروط الدفع والتسليم</li></ul></div>
       <div class="io-box"><h4>المخرجات</h4><ul><li>أمر شراء رسمي (PO)</li><li>عقد مع المورد</li><li>جدول التسليم</li></ul></div>
@@ -555,99 +429,72 @@ tr:hover td{background:rgba(200,157,59,0.04);}
 
   <!-- Stage 3 -->
   <div class="stage-card">
-    <div class="stage-header">
-      <span class="stage-num-badge">المرحلة 03</span>
-      <h3>إشعار الشحن المسبق — ASN</h3>
-    </div>
-    <p style="font-size:14px;color:rgba(248,249,251,0.75);margin-bottom:14px;line-height:1.9">
-      إشعار إلكتروني من المورد عند شحن البضاعة من مخازنه؛ يُمكّن المستودع من جدولة الاستلام وتخصيص الموارد مسبقاً.
-    </p>
-    <div class="odoo-path">
-      <span class="odoo-label">Odoo</span>
-      Inventory › Receipts › Scheduled Date &nbsp;|&nbsp; <em>يدوي — إعداد من المورد</em>
+    <div class="stage-header"><span class="stage-num-badge">المرحلة 03</span><h3>إشعار الشحن المسبق — ASN</h3></div>
+    <p class="stage-desc">إشعار إلكتروني من المورد عند شحن البضاعة من مخازنه؛ يُمكّن المستودع من جدولة الاستلام وتخصيص الموارد مسبقاً.</p>
+    <div class="odoo-path"><span class="odoo-label">Odoo</span>Inventory › Receipts › Scheduled Date &nbsp;|&nbsp; <em>يدوي — إعداد من المورد</em></div>
+    <div class="io-grid">
+      <div class="io-box"><h4>المدخلات</h4><ul><li>إشعار المورد بالشحن</li><li>بيانات الشحنة والكميات</li><li>تاريخ الوصول المتوقع</li></ul></div>
+      <div class="io-box"><h4>المخرجات</h4><ul><li>جدول استلام محدد</li><li>تخصيص بوابة الاستلام</li><li>إشعار فريق الاستلام</li></ul></div>
     </div>
   </div>
 
   <!-- Stage 4 -->
   <div class="stage-card">
-    <div class="stage-header">
-      <span class="stage-num-badge">المرحلة 04</span>
-      <h3>الاستلام وفحص الجودة — GRN</h3>
-    </div>
-    <p style="font-size:14px;color:rgba(248,249,251,0.75);margin-bottom:14px;line-height:1.9">
-      الإقرار الرسمي باستلام البضاعة بعد فحص الجودة. أهم مستند في دورة المستودعات؛ يمثل دخول البضاعة في عهدة Brandzo.
-    </p>
-    <div class="odoo-path">
-      <span class="odoo-label">Odoo</span>
-      Inventory › Receipts &nbsp;|&nbsp; <em>Inventory › Configuration › Warehouses › 3-step</em>
-    </div>
+    <div class="stage-header"><span class="stage-num-badge">المرحلة 04</span><h3>الاستلام وفحص الجودة — GRN</h3></div>
+    <p class="stage-desc">الإقرار الرسمي باستلام البضاعة بعد فحص الجودة. أهم مستند في دورة المستودعات؛ يمثل دخول البضاعة في عهدة Brandzo.</p>
+    <div class="odoo-path"><span class="odoo-label">Odoo</span>Inventory › Receipts &nbsp;|&nbsp; <em>Inventory › Configuration › Warehouses › 3-step</em></div>
     <div class="io-grid">
       <div class="io-box"><h4>النماذج المقابلة</h4><ul><li>نموذج استلام البضاعة (GRN)</li><li>تقرير فحص الجودة</li><li>مذكرة التسليم من المورد</li></ul></div>
+      <div class="io-box"><h4>نقاط التحقق</h4><ul><li>مطابقة الكميات مع PO</li><li>اجتياز معايير الجودة</li><li>صلاحية التاريخ وسلامة التغليف</li></ul></div>
     </div>
   </div>
 
   <!-- Stage 5 -->
   <div class="stage-card">
-    <div class="stage-header">
-      <span class="stage-num-badge">المرحلة 05</span>
-      <h3>التخزين الموجه — Putaway</h3>
-    </div>
-    <p style="font-size:14px;color:rgba(248,249,251,0.75);margin-bottom:14px;line-height:1.9">
-      توجيه الأصناف من منطقة الاستلام إلى مواقع التخزين المثلى بحسب FEFO والوزن وطبيعة المنتج.
-    </p>
-    <div class="odoo-path">
-      <span class="odoo-label">Odoo</span>
-      Inventory › Configuration › Putaway Rules &nbsp;|&nbsp; <em>Settings › Inventory › Storage Locations ✓</em>
+    <div class="stage-header"><span class="stage-num-badge">المرحلة 05</span><h3>التخزين الموجه — Putaway</h3></div>
+    <p class="stage-desc">توجيه الأصناف من منطقة الاستلام إلى مواقع التخزين المثلى بحسب FEFO والوزن وطبيعة المنتج.</p>
+    <div class="odoo-path"><span class="odoo-label">Odoo</span>Inventory › Configuration › Putaway Rules &nbsp;|&nbsp; <em>Settings › Inventory › Storage Locations ✓</em></div>
+    <div class="io-grid">
+      <div class="io-box"><h4>المدخلات</h4><ul><li>بضاعة مستلمة ومعتمدة</li><li>قواعد Putaway المحددة</li><li>خريطة المستودع</li></ul></div>
+      <div class="io-box"><h4>المخرجات</h4><ul><li>بطاقة موقع لكل صنف</li><li>تحديث خريطة المخزون</li><li>سجل الجرد المحدث</li></ul></div>
     </div>
   </div>
 
   <!-- Stage 6 -->
   <div class="stage-card">
-    <div class="stage-header">
-      <span class="stage-num-badge">المرحلة 06</span>
-      <h3>تحضير الطلبات — Picking</h3>
-    </div>
-    <p style="font-size:14px;color:rgba(248,249,251,0.75);margin-bottom:14px;line-height:1.9">
-      سحب الأصناف من مواقعها وفق قائمة سحب موجهة، ثم تعبئتها للشحن مع مراجعة الكميات.
-    </p>
-    <div class="odoo-path">
-      <span class="odoo-label">Odoo</span>
-      Inventory › Operations › Transfers &nbsp;|&nbsp; <em>type: Pick — 3-step outgoing</em>
+    <div class="stage-header"><span class="stage-num-badge">المرحلة 06</span><h3>تحضير الطلبات — Picking</h3></div>
+    <p class="stage-desc">سحب الأصناف من مواقعها وفق قائمة سحب موجهة، ثم تعبئتها للشحن مع مراجعة الكميات.</p>
+    <div class="odoo-path"><span class="odoo-label">Odoo</span>Inventory › Operations › Transfers &nbsp;|&nbsp; <em>type: Pick — 3-step outgoing</em></div>
+    <div class="io-grid">
+      <div class="io-box"><h4>المدخلات</h4><ul><li>أمر التوزيع أو المبيعات</li><li>قائمة السحب الموجهة</li><li>مواقع التخزين</li></ul></div>
+      <div class="io-box"><h4>المخرجات</h4><ul><li>بضاعة محضّرة ومعبأة</li><li>قائمة التعبئة (Packing List)</li><li>تحديث المخزون آنياً</li></ul></div>
     </div>
   </div>
 
   <!-- Stage 7 -->
   <div class="stage-card">
-    <div class="stage-header">
-      <span class="stage-num-badge">المرحلة 07</span>
-      <h3>الشحن والتوزيع — Dispatch</h3>
-    </div>
-    <p style="font-size:14px;color:rgba(248,249,251,0.75);margin-bottom:14px;line-height:1.9">
-      إصدار إذن التسليم وتصريح الخروج من البوابة، وتحميل البضاعة على شاحنات الأسطول.
-    </p>
-    <div class="odoo-path">
-      <span class="odoo-label">Odoo</span>
-      Inventory › Operations › Delivery Orders &nbsp;|&nbsp; <em>ربط Fleet إن وُجد</em>
+    <div class="stage-header"><span class="stage-num-badge">المرحلة 07</span><h3>الشحن والتوزيع — Dispatch</h3></div>
+    <p class="stage-desc">إصدار إذن التسليم وتصريح الخروج من البوابة، وتحميل البضاعة على شاحنات الأسطول.</p>
+    <div class="odoo-path"><span class="odoo-label">Odoo</span>Inventory › Operations › Delivery Orders &nbsp;|&nbsp; <em>ربط Fleet إن وُجد</em></div>
+    <div class="io-grid">
+      <div class="io-box"><h4>المدخلات</h4><ul><li>بضاعة محضّرة ومعبأة</li><li>جدول رحلات الأسطول</li><li>عناوين التسليم</li></ul></div>
+      <div class="io-box"><h4>المخرجات</h4><ul><li>إذن تسليم رسمي (DO)</li><li>تصريح بوابة الخروج</li><li>إشعار للعميل/الفرع</li></ul></div>
     </div>
   </div>
 
   <!-- Stage 8 -->
   <div class="stage-card">
-    <div class="stage-header">
-      <span class="stage-num-badge">المرحلة 08</span>
-      <h3>المرتجعات والتسويات — Returns</h3>
-    </div>
-    <p style="font-size:14px;color:rgba(248,249,251,0.75);margin-bottom:14px;line-height:1.9">
-      استلام المرتجعات من الفروع، تصنيفها (سليم / تالف / منتهي)، ومعالجة سندات التسوية والإشعارات الدائنة.
-    </p>
-    <div class="odoo-path">
-      <span class="odoo-label">Odoo</span>
-      Inventory › Operations › Returns &nbsp;|&nbsp; <em>إنشاء Return من Delivery</em>
+    <div class="stage-header"><span class="stage-num-badge">المرحلة 08</span><h3>المرتجعات والتسويات — Returns</h3></div>
+    <p class="stage-desc">استلام المرتجعات من الفروع، تصنيفها (سليم / تالف / منتهي)، ومعالجة سندات التسوية والإشعارات الدائنة.</p>
+    <div class="odoo-path"><span class="odoo-label">Odoo</span>Inventory › Operations › Returns &nbsp;|&nbsp; <em>إنشاء Return من Delivery</em></div>
+    <div class="io-grid">
+      <div class="io-box"><h4>المدخلات</h4><ul><li>بضاعة مرتجعة من الفروع</li><li>سبب الإرجاع الموثق</li><li>إذن الإرجاع المعتمد</li></ul></div>
+      <div class="io-box"><h4>المخرجات</h4><ul><li>سند تسوية مخزونية</li><li>إشعار دائن للمورد</li><li>تحديث سجل المخزون</li></ul></div>
     </div>
   </div>
 </section>
 
-<!-- ═══ FORMS MATRIX ═══ -->
+<!-- FORMS MATRIX -->
 <section id="forms">
   <div class="section-label">// القسم الرابع</div>
   <div class="section-title">مصفوفة المستندات — 21 نموذج</div>
@@ -655,13 +502,7 @@ tr:hover td{background:rgba(200,157,59,0.04);}
     <table>
       <caption>ربط جميع نماذج Brandzo (21 نموذج) مع وحدات Odoo المقابلة</caption>
       <thead>
-        <tr>
-          <th>المرحلة</th>
-          <th>نموذج HTML</th>
-          <th>وحدة Odoo</th>
-          <th>المسار في Odoo</th>
-          <th>الغرض</th>
-        </tr>
+        <tr><th>المرحلة</th><th>نموذج HTML</th><th>وحدة Odoo</th><th>المسار في Odoo</th><th>الغرض</th></tr>
       </thead>
       <tbody>
         <tr><td>01</td><td class="mono">form_PurchaseRequisition.html</td><td><span class="module-tag module-purchase">Purchase</span></td><td>Purchase › Requisitions</td><td>طلب الشراء الداخلي</td></tr>
@@ -690,7 +531,7 @@ tr:hover td{background:rgba(200,157,59,0.04);}
   </div>
 </section>
 
-<!-- ═══ KPIs ═══ -->
+<!-- KPIs -->
 <section id="kpis">
   <div class="section-label">// القسم الخامس</div>
   <div class="section-title">قواعد التنفيذ الإلزامية وKPIs</div>
@@ -715,11 +556,9 @@ tr:hover td{background:rgba(200,157,59,0.04);}
   </div>
 
   <div class="table-wrap">
-    <table>
+    <table class="kpi-th">
       <caption>جدول مؤشرات الأداء التفصيلي</caption>
-      <thead>
-        <tr><th>المؤشر</th><th>الهدف</th><th>طريقة القياس</th><th>التكرار</th></tr>
-      </thead>
+      <thead><tr><th>المؤشر</th><th>الهدف</th><th>طريقة القياس</th><th>التكرار</th></tr></thead>
       <tbody>
         <tr><td>دقة المخزون</td><td>≥98.5%</td><td>(الكمية الفعلية ÷ الكمية المسجلة) × 100</td><td>شهري</td></tr>
         <tr><td>زمن دورة الأمر</td><td>&lt;4 ساعات</td><td>من الإنشاء إلى التنفيذ الكامل</td><td>لكل أمر</td></tr>
@@ -731,19 +570,15 @@ tr:hover td{background:rgba(200,157,59,0.04);}
   </div>
 </section>
 
-<!-- ═══ ODOO ═══ -->
+<!-- ODOO -->
 <section id="odoo">
   <div class="section-label">// القسم السادس</div>
   <div class="section-title">تكامل أودو — المسارات التنفيذية</div>
-  <p class="section-body">
-    يوضح الجدول التالي المسارات التنفيذية المفصلة لتفعيل كل مرحلة من مراحل الدورة المستندية في Odoo 17 Enterprise:
-  </p>
+  <p class="section-body">يوضح الجدول التالي المسارات التنفيذية المفصلة لتفعيل كل مرحلة من مراحل الدورة المستندية في Odoo 17 Enterprise:</p>
   <div class="table-wrap">
     <table class="odoo-table">
       <caption>مسارات التنفيذ في Odoo 17 Enterprise</caption>
-      <thead>
-        <tr><th>المرحلة</th><th>الوحدة في Odoo</th><th>المسار للوصول</th><th>التفعيل</th><th>المتطلبات</th></tr>
-      </thead>
+      <thead><tr><th>المرحلة</th><th>الوحدة في Odoo</th><th>المسار للوصول</th><th>التفعيل</th><th>المتطلبات</th></tr></thead>
       <tbody>
         <tr><td><strong>PR</strong></td><td><span class="module-tag module-purchase">Purchase</span></td><td>Purchase › Requisitions</td><td class="mono">Settings › Purchase › Purchase Requisitions ✓</td><td>تفعيل وحدة المشتريات</td></tr>
         <tr><td><strong>PO</strong></td><td><span class="module-tag module-purchase">Purchase</span></td><td>Purchase › Orders</td><td>تلقائي مع تفعيل Purchase</td><td>إعداد الموردين والشروط</td></tr>
@@ -766,18 +601,17 @@ tr:hover td{background:rgba(200,157,59,0.04);}
     <div class="sig-box">
       <div class="sig-line">التوقيع</div>
       <div class="sig-role">إعداد والمراجعة</div>
-      <div style="font-size:13px;color:var(--gray);margin-top:6px;">فريق تحويل Brandzo إلى Odoo</div>
+      <div class="sig-name">فريق تحويل Brandzo إلى Odoo</div>
     </div>
     <div class="sig-box">
       <div class="sig-line">التوقيع</div>
       <div class="sig-role">الموافقة</div>
-      <div style="font-size:13px;color:var(--gray);margin-top:6px;">مدير نظام المعلومات</div>
+      <div class="sig-name">مدير نظام المعلومات</div>
     </div>
   </div>
 </section>
 
 <script>
-// Active nav dot on scroll
 const sections = document.querySelectorAll('section[id], div[id]');
 const navLinks = document.querySelectorAll('.sidenav a');
 const observer = new IntersectionObserver(entries => {
@@ -792,12 +626,8 @@ const observer = new IntersectionObserver(entries => {
 }, {threshold:0.4});
 sections.forEach(s => observer.observe(s));
 document.querySelectorAll('.flow-circle').forEach(el => {
-  el.addEventListener('mouseenter', () => {
-    el.style.transform = 'scale(1.1)';
-  });
-  el.addEventListener('mouseleave', () => {
-    el.style.transform = '';
-  });
+  el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.1)'; });
+  el.addEventListener('mouseleave', () => { el.style.transform = ''; });
 });
 </script>
 </body>
