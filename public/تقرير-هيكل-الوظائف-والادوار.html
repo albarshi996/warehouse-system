@@ -7,17 +7,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --color-brand-navy: #1a1a2e;
-            --color-brand-gold: #e8b830;
-            --color-brand-red: #c0392b;
-            --white:   #ffffff;
-            --bg:      #f8f9fa;
+            --navy:    #0d1e35;
+            --navy2:   #132b4a;
+            --gold:    #c89d3b;
+            --gold2:   #e8bc5a;
+            --green:   #00a650;
+            --green2:  #e6f7ef;
+            --red:     #c0392b;
+            --blue-l:  #eef4fb;
             --border:  #d0d8e8;
             --text:    #1a2233;
+            --muted:   #5a6a82;
+            --white:   #ffffff;
+            --bg:      #f5f7fb;
+            --phase1:  #1a4a2e;
+            --phase1l: #e8f7ef;
+            --phase2:  #0d3060;
+            --phase2l: #e8f0ff;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: 'Cairo', sans-serif;
             font-size: 11pt;
@@ -27,8 +35,6 @@
             direction: rtl;
             text-align: right;
         }
-
-        /* ── PRINT ── */
         @page { size: A4; margin: 1.8cm 2cm; }
         @media print {
             body { background: white; font-size: 10pt; }
@@ -39,18 +45,9 @@
             .container { max-width: 100%; padding: 0; box-shadow: none; }
             .cover { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
+        .container { max-width: 21cm; margin: 0 auto; background: white; box-shadow: 0 0 60px rgba(0,0,0,.12); }
 
-        /* ── CONTAINER ── */
-        .container {
-            max-width: 21cm;
-            margin: 0 auto;
-            background: white;
-            box-shadow: 0 0 60px rgba(0,0,0,.12);
-        }
-
-        /* ══════════════════════════════
-           COVER PAGE
-        ══════════════════════════════ */
+        /* COVER */
         .cover {
             background: var(--navy);
             color: white;
@@ -78,551 +75,266 @@
             border: 50px solid rgba(200,157,59,.08);
             border-radius: 50%;
         }
-        .cover-brand {
-            font-size: 11pt;
-            letter-spacing: 5px;
-            color: var(--gold);
-            font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 2.5cm;
-        }
-        .cover-line {
-            width: 60px;
-            height: 4px;
-            background: var(--gold);
-            margin-bottom: 30px;
-        }
-        .cover h1 {
-            font-size: 30pt;
-            font-weight: 900;
-            line-height: 1.3;
-            margin-bottom: 20px;
-            color: white;
-        }
+        .cover-brand { font-size: 11pt; letter-spacing: 5px; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 2.5cm; }
+        .cover-line { width: 60px; height: 4px; background: var(--gold); margin-bottom: 30px; }
+        .cover h1 { font-size: 30pt; font-weight: 900; line-height: 1.3; margin-bottom: 20px; color: white; }
         .cover h1 span { color: var(--gold2); }
-        .cover .subtitle {
-            font-size: 13pt;
-            color: rgba(255,255,255,.7);
-            margin-bottom: 3cm;
-            max-width: 14cm;
-            line-height: 1.7;
-        }
-        .cover-meta-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-            border-top: 1px solid rgba(255,255,255,.15);
-            padding-top: 25px;
-            margin-top: auto;
-        }
-        .cover-meta-item label {
-            display: block;
-            font-size: 8pt;
-            letter-spacing: 2px;
-            color: var(--gold);
-            text-transform: uppercase;
-            margin-bottom: 4px;
-        }
-        .cover-meta-item span {
-            font-size: 11pt;
-            font-weight: 600;
-            color: white;
-        }
-        .confidential-badge {
-            position: absolute;
-            top: 50px; left: 50px;
-            border: 2px solid var(--red);
-            color: var(--red);
-            font-size: 8pt;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            padding: 6px 14px;
-            font-weight: 700;
-        }
+        .cover .subtitle { font-size: 13pt; color: rgba(255,255,255,.7); margin-bottom: 3cm; max-width: 14cm; line-height: 1.7; }
+        .cover-meta-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; border-top: 1px solid rgba(255,255,255,.15); padding-top: 25px; margin-top: auto; }
+        .cover-meta-item label { display: block; font-size: 8pt; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 4px; }
+        .cover-meta-item span { font-size: 11pt; font-weight: 600; color: white; }
+        .confidential-badge { position: absolute; top: 50px; left: 50px; border: 2px solid var(--red); color: var(--red); font-size: 8pt; letter-spacing: 3px; text-transform: uppercase; padding: 6px 14px; font-weight: 700; }
 
-        /* ══════════════════════════════
-           INNER PAGES
-        ══════════════════════════════ */
-        .inner {
-            padding: 1.5cm 2.5cm;
-        }
-
-        h2 {
-            font-size: 17pt;
-            font-weight: 900;
-            color: var(--navy);
-            margin: 1.4cm 0 0.6cm;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        h2::after {
-            content: '';
-            flex: 1;
-            height: 3px;
-            background: linear-gradient(to left, transparent, var(--gold));
-        }
-        h2 .sec-num {
-            background: var(--navy);
-            color: var(--gold);
-            font-size: 10pt;
-            width: 34px; height: 34px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        h3 {
-            font-size: 13pt;
-            font-weight: 700;
-            color: var(--navy2);
-            margin: 1cm 0 0.4cm;
-            border-right: 4px solid var(--gold);
-            padding-right: 12px;
-        }
-        h4 {
-            font-size: 11pt;
-            font-weight: 700;
-            color: var(--navy);
-            margin: 0.5cm 0 0.25cm;
-        }
-        p {
-            margin-bottom: 0.55cm;
-            text-align: justify;
-            text-justify: inter-word;
-            color: var(--text);
-        }
-        ul, ol {
-            padding-right: 1.4cm;
-            margin-bottom: 0.55cm;
-        }
+        /* INNER */
+        .inner { padding: 1.5cm 2.5cm; }
+        h2 { font-size: 17pt; font-weight: 900; color: var(--navy); margin: 1.4cm 0 0.6cm; display: flex; align-items: center; gap: 12px; }
+        h2::after { content: ''; flex: 1; height: 3px; background: linear-gradient(to left, transparent, var(--gold)); }
+        h2 .sec-num { background: var(--navy); color: var(--gold); font-size: 10pt; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
+        h3 { font-size: 13pt; font-weight: 700; color: var(--navy2); margin: 1cm 0 0.4cm; border-right: 4px solid var(--gold); padding-right: 12px; }
+        h4 { font-size: 11pt; font-weight: 700; color: var(--navy); margin: 0.5cm 0 0.25cm; }
+        p { margin-bottom: 0.55cm; text-align: justify; text-justify: inter-word; color: var(--text); }
+        ul, ol { padding-right: 1.4cm; margin-bottom: 0.55cm; }
         li { margin-bottom: 0.2cm; }
 
-        /* ── HIGHLIGHT BOX ── */
-        .highlight-box {
-            background: var(--blue-l);
-            border-right: 5px solid var(--navy);
-            padding: 14px 18px;
-            margin: 0.7cm 0;
-            border-radius: 0 6px 6px 0;
-        }
+        .highlight-box { background: var(--blue-l); border-right: 5px solid var(--navy); padding: 14px 18px; margin: 0.7cm 0; border-radius: 0 6px 6px 0; }
         .highlight-box strong { color: var(--navy); }
 
-        /* ── TOC ── */
-        .toc-grid {
+        /* TOC */
+        .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0.5cm 0; }
+        .toc-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); text-decoration: none; color: var(--navy); font-weight: 600; font-size: 11pt; transition: background .2s; }
+        .toc-item:hover { background: var(--blue-l); }
+        .toc-item .toc-num { background: var(--navy); color: var(--gold); font-size: 9pt; font-weight: 700; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+        /* STATS ROW */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 0.6cm 0; }
+        .stat-box { background: var(--navy); color: white; border-radius: 10px; padding: 18px 16px; text-align: center; }
+        .stat-box .stat-num { font-size: 22pt; font-weight: 900; color: var(--gold2); display: block; line-height: 1; margin-bottom: 4px; }
+        .stat-box .stat-label { font-size: 9pt; color: rgba(255,255,255,.7); }
+
+        /* ════════════════════════════════
+           PHASE COMPARISON BOXES
+        ════════════════════════════════ */
+        .phase-compare {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin: 0.5cm 0;
+            gap: 20px;
+            margin: 0.8cm 0;
         }
-        .toc-item {
+        .phase-box {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid;
+            box-shadow: 0 4px 16px rgba(0,0,0,.08);
+        }
+        .phase-box.phase1 { border-color: var(--phase1); }
+        .phase-box.phase2 { border-color: var(--phase2); }
+        .phase-header {
+            padding: 16px 20px;
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px 16px;
-            background: var(--bg);
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            text-decoration: none;
-            color: var(--navy);
-            font-weight: 600;
-            font-size: 11pt;
-            transition: background .2s;
-        }
-        .toc-item:hover { background: var(--blue-l); }
-        .toc-item .toc-num {
-            background: var(--navy);
-            color: var(--gold);
-            font-size: 9pt;
-            font-weight: 700;
-            width: 26px; height: 26px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-        }
-
-        /* ══════════════════════════════
-           ORG CHART
-        ══════════════════════════════ */
-        .org-wrapper {
-            overflow-x: auto;
-            padding: 30px 10px;
-        }
-        .org-chart {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0;
-            min-width: 700px;
-        }
-        .org-row {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            gap: 12px;
-            width: 100%;
-        }
-        .org-node {
-            background: linear-gradient(135deg, var(--navy), var(--navy2));
             color: white;
+        }
+        .phase-box.phase1 .phase-header { background: var(--phase1); }
+        .phase-box.phase2 .phase-header { background: var(--phase2); }
+        .phase-icon { font-size: 22px; }
+        .phase-title { font-size: 12pt; font-weight: 800; line-height: 1.3; }
+        .phase-sub { font-size: 8.5pt; opacity: .8; margin-top: 2px; }
+        .phase-body { padding: 16px 18px; background: white; }
+        .phase-body ul { padding-right: 1.2cm; margin: 0; }
+        .phase-body li { font-size: 9.5pt; color: var(--text); margin-bottom: 5px; }
+        .phase-stats {
+            display: flex;
+            gap: 8px;
+            padding: 12px 18px;
+            flex-wrap: wrap;
+        }
+        .phase-box.phase1 .phase-stats { background: var(--phase1l); }
+        .phase-box.phase2 .phase-stats { background: var(--phase2l); }
+        .phase-stat {
+            flex: 1;
+            min-width: 80px;
+            text-align: center;
+        }
+        .phase-stat .ps-num {
+            font-size: 16pt;
+            font-weight: 900;
+            display: block;
+            line-height: 1;
+        }
+        .phase-box.phase1 .ps-num { color: var(--phase1); }
+        .phase-box.phase2 .ps-num { color: var(--phase2); }
+        .phase-stat .ps-lbl { font-size: 8pt; color: var(--muted); }
+
+        /* ════════════════════════════════
+           ORG TREE — REDESIGNED
+        ════════════════════════════════ */
+        .org-wrapper { overflow-x: auto; padding: 20px 0 30px; background: var(--navy); border-radius: 14px; margin: 0.5cm 0; }
+        .org-chart { display: flex; flex-direction: column; align-items: center; gap: 0; min-width: 720px; padding: 30px 20px; }
+
+        /* nodes */
+        .org-node {
             border-radius: 10px;
-            padding: 14px 16px;
+            padding: 12px 16px;
             text-align: center;
             font-weight: 700;
             font-size: 9.5pt;
-            min-width: 140px;
-            max-width: 160px;
-            box-shadow: 0 4px 14px rgba(13,30,53,.25);
-            border: 2px solid rgba(200,157,59,.3);
+            color: white;
             position: relative;
+            box-shadow: 0 4px 14px rgba(0,0,0,.35);
         }
-        .org-node.top {
-            background: linear-gradient(135deg, var(--gold), #a07c28);
-            color: var(--navy);
-            min-width: 180px;
-            font-size: 11pt;
-            border-color: var(--gold2);
-        }
-        .org-node.mid {
-            background: linear-gradient(135deg, #1b3a5c, #0f2644);
-            min-width: 145px;
-        }
-        .org-node.op {
-            background: var(--navy2);
-            font-size: 9pt;
-            min-width: 130px;
-        }
-        .org-node .node-icon {
-            font-size: 18px;
-            display: block;
-            margin-bottom: 5px;
-        }
+        .org-node .node-icon { font-size: 18px; display: block; margin-bottom: 4px; }
+        .org-node .node-title { display: block; line-height: 1.3; }
         .org-node .node-count {
             display: inline-block;
             margin-top: 5px;
             font-size: 8pt;
-            font-weight: 400;
-            background: rgba(255,255,255,.15);
+            font-weight: 600;
             border-radius: 10px;
             padding: 1px 8px;
         }
-        .org-node.top .node-count {
-            background: rgba(13,30,53,.15);
+
+        /* TOP — gold */
+        .org-node.top {
+            background: linear-gradient(135deg, #c89d3b, #a07c28);
+            color: var(--navy);
+            min-width: 200px;
+            font-size: 11pt;
+            border: 2px solid var(--gold2);
         }
+        .org-node.top .node-count { background: rgba(13,30,53,.18); color: var(--navy); }
+
+        /* MID — deep blue */
+        .org-node.mid {
+            background: linear-gradient(135deg, #1b3a5c, #0d2240);
+            min-width: 150px;
+            border: 1.5px solid rgba(200,157,59,.4);
+            font-size: 9.5pt;
+        }
+        .org-node.mid .node-count { background: rgba(200,157,59,.2); color: var(--gold2); }
+
+        /* OP — operational */
+        .org-node.op {
+            background: linear-gradient(135deg, #163352, #0d2040);
+            min-width: 130px;
+            font-size: 9pt;
+            border: 1px solid rgba(200,157,59,.25);
+        }
+        .org-node.op .node-count { background: rgba(255,255,255,.1); color: rgba(255,255,255,.8); }
+
         /* connectors */
-        .org-v-line {
-            width: 2px;
-            height: 28px;
-            background: var(--gold);
-            margin: 0 auto;
-        }
-        .org-h-bar {
+        .v-line { width: 2px; background: var(--gold); margin: 0 auto; }
+        .h-connector {
             position: relative;
+            width: 100%;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            gap: 12px;
         }
-        .org-h-bar::before {
-            content: '';
+        .h-line {
             position: absolute;
             top: 0;
-            right: 10%;
-            left: 10%;
             height: 2px;
             background: var(--gold);
         }
-        .org-node-wrap {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .org-node-wrap .org-v-line.top { margin-bottom: 0; }
+        .node-wrap { display: flex; flex-direction: column; align-items: center; }
 
-        /* ══════════════════════════════
-           ROLE CARDS
-        ══════════════════════════════ */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin: 0.5cm 0;
-        }
-        .role-card {
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            overflow: hidden;
-            background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,.06);
-        }
-        .card-header {
-            background: linear-gradient(135deg, var(--navy), var(--navy2));
-            color: white;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .card-header .card-icon {
-            font-size: 22px;
-            flex-shrink: 0;
-        }
-        .card-header h4 {
-            margin: 0;
-            color: white;
-            font-size: 11pt;
-            font-weight: 700;
-            line-height: 1.3;
-        }
-        .odoo-badge {
-            background: var(--green);
-            color: white;
-            font-size: 7.5pt;
-            font-weight: 700;
-            letter-spacing: 1px;
-            padding: 2px 8px;
-            border-radius: 20px;
-            margin-right: auto;
-            flex-shrink: 0;
-        }
-        .card-body {
-            padding: 14px 16px;
-        }
-        .card-body ul {
-            padding-right: 1.2cm;
-            margin: 0 0 10px;
-        }
-        .card-body ul li {
-            font-size: 9.5pt;
-            color: var(--muted);
-            margin-bottom: 3px;
-        }
-        .odoo-info {
-            background: var(--green2);
-            border-right: 4px solid var(--green);
-            border-radius: 0 6px 6px 0;
-            padding: 10px 12px;
-            font-size: 9pt;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4px 16px;
-        }
-        .odoo-info .oi-label {
-            color: var(--muted);
+        /* row spacing */
+        .org-row { display: flex; justify-content: center; align-items: flex-start; gap: 14px; width: 100%; }
+
+        /* ORG CHART SECTIONS */
+        .org-section-label {
+            color: var(--gold);
             font-size: 8pt;
-        }
-        .odoo-info .oi-val {
-            font-weight: 700;
-            color: var(--navy);
-        }
-        .odoo-info .oi-role {
-            grid-column: 1 / -1;
-            font-size: 10pt;
-            font-weight: 700;
-            color: var(--green);
-            margin-bottom: 4px;
-        }
-
-        /* one-column override for wide cards */
-        .cards-grid.single { grid-template-columns: 1fr; }
-        .cards-grid.single .role-card { max-width: 100%; }
-
-        /* ══════════════════════════════
-           DEPARTMENTS TABLE
-        ══════════════════════════════ */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 0.5cm 0 0.8cm;
-            font-size: 9.5pt;
-        }
-        table caption {
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: var(--navy);
-            font-size: 11pt;
-            text-align: right;
-        }
-        thead th {
-            background: var(--navy);
-            color: white;
-            padding: 10px 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
             text-align: center;
-            font-weight: 700;
-            font-size: 9pt;
+            opacity: .8;
         }
+
+        /* ROLE CARDS */
+        .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 0.5cm 0; }
+        .role-card { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: white; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+        .card-header { background: linear-gradient(135deg, var(--navy), var(--navy2)); color: white; padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+        .card-header .card-icon { font-size: 22px; flex-shrink: 0; }
+        .card-header h4 { margin: 0; color: white; font-size: 11pt; font-weight: 700; line-height: 1.3; }
+        .odoo-badge { background: var(--green); color: white; font-size: 7.5pt; font-weight: 700; letter-spacing: 1px; padding: 2px 8px; border-radius: 20px; margin-right: auto; flex-shrink: 0; }
+        .card-body { padding: 14px 16px; }
+        .card-body ul { padding-right: 1.2cm; margin: 0 0 10px; }
+        .card-body ul li { font-size: 9.5pt; color: var(--muted); margin-bottom: 3px; }
+        .odoo-info { background: var(--green2); border-right: 4px solid var(--green); border-radius: 0 6px 6px 0; padding: 10px 12px; font-size: 9pt; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+        .odoo-info .oi-label { color: var(--muted); font-size: 8pt; }
+        .odoo-info .oi-val { font-weight: 700; color: var(--navy); }
+        .odoo-info .oi-role { grid-column: 1 / -1; font-size: 10pt; font-weight: 700; color: var(--green); margin-bottom: 4px; }
+
+        /* TABLE */
+        table { width: 100%; border-collapse: collapse; margin: 0.5cm 0 0.8cm; font-size: 9.5pt; }
+        table caption { font-weight: 700; margin-bottom: 10px; color: var(--navy); font-size: 11pt; text-align: right; }
+        thead th { background: var(--navy); color: white; padding: 10px 8px; text-align: center; font-weight: 700; font-size: 9pt; }
         thead th:first-child { text-align: right; }
-        td {
-            padding: 8px 6px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-            text-align: center;
-        }
+        td { padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; text-align: center; color: var(--text); }
         td:first-child { text-align: right; }
         tr:nth-child(even) td { background: var(--bg); }
         tr:hover td { background: var(--blue-l); }
 
-        /* ══════════════════════════════
-           RACI MATRIX
-        ══════════════════════════════ */
+        /* RACI */
         .raci-table th { font-size: 8pt; padding: 8px 4px; }
         .raci-table td { font-size: 9pt; font-weight: 700; padding: 8px 4px; text-align: center; }
-        .raci-table td:first-child { text-align: right; font-size: 8.5pt; font-weight: 600; }
+        .raci-table td:first-child { text-align: right; font-size: 8.5pt; font-weight: 600; color: var(--text); }
         .raci-table .r-cell { color: var(--green); }
         .raci-table .a-cell { color: var(--navy); }
-        .raci-table .c-cell { color: var(--gold); }
+        .raci-table .c-cell { color: #a07c28; }
         .raci-table .i-cell { color: #aab; }
-
-        .raci-legend {
-            display: flex;
-            gap: 20px;
-            margin: 0.4cm 0;
-            flex-wrap: wrap;
-        }
-        .raci-legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 10pt;
-        }
-        .raci-legend-item .badge {
-            width: 28px; height: 28px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700;
-            font-size: 11pt;
-        }
+        .raci-legend { display: flex; gap: 20px; margin: 0.4cm 0; flex-wrap: wrap; }
+        .raci-legend-item { display: flex; align-items: center; gap: 8px; font-size: 10pt; color: var(--text); }
+        .raci-legend-item .badge { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11pt; }
         .badge-r { background: var(--green2); color: var(--green); }
         .badge-a { background: var(--blue-l); color: var(--navy); }
         .badge-c { background: #fef8e7; color: #a07c28; }
         .badge-i { background: #f0f0f0; color: #888; }
 
-        /* ══════════════════════════════
-           ODOO ROLE MAP TABLE
-        ══════════════════════════════ */
+        /* ROLE LEVELS */
         .level-admin { background: #fff3e0; color: #b85c00; font-weight: 700; border-radius: 4px; padding: 2px 8px; }
         .level-manager { background: #e8f0ff; color: #1a3c8f; font-weight: 700; border-radius: 4px; padding: 2px 8px; }
         .level-user { background: var(--green2); color: var(--green); font-weight: 700; border-radius: 4px; padding: 2px 8px; }
 
-        /* ══════════════════════════════
-           STATS ROW
-        ══════════════════════════════ */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
-            margin: 0.6cm 0;
-        }
-        .stat-box {
-            background: var(--navy);
-            color: white;
-            border-radius: 10px;
-            padding: 18px 16px;
-            text-align: center;
-        }
-        .stat-box .stat-num {
-            font-size: 22pt;
-            font-weight: 900;
-            color: var(--gold2);
-            display: block;
-            line-height: 1;
-            margin-bottom: 4px;
-        }
-        .stat-box .stat-label {
-            font-size: 9pt;
-            color: rgba(255,255,255,.7);
-        }
-
-        /* ══════════════════════════════
-           SIGNATURE & FOOTER
-        ══════════════════════════════ */
-        .signature-line {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 1.5cm;
-            gap: 30px;
-        }
-        .sig-box {
-            flex: 1;
-            border-top: 2px solid var(--navy);
-            padding-top: 12px;
-            text-align: center;
-            font-size: 10pt;
-        }
-        .sig-box label {
-            display: block;
-            color: var(--muted);
-            font-size: 8.5pt;
-            margin-bottom: 4px;
-        }
+        /* SIGNATURE */
+        .signature-line { display: flex; justify-content: space-between; margin-top: 1.5cm; gap: 30px; }
+        .sig-box { flex: 1; border-top: 2px solid var(--navy); padding-top: 12px; text-align: center; font-size: 10pt; }
+        .sig-box label { display: block; color: var(--muted); font-size: 8.5pt; margin-bottom: 4px; }
         .sig-box strong { color: var(--navy); }
 
-        .page-footer {
-            text-align: center;
-            color: var(--muted);
-            font-size: 8pt;
-            border-top: 1px solid var(--border);
-            padding: 14px;
-            margin-top: 1cm;
-        }
+        .page-footer { text-align: center; color: var(--muted); font-size: 8pt; border-top: 1px solid var(--border); padding: 14px; margin-top: 1cm; }
 
-        /* ══════════════════════════════
-           PRINT BUTTON
-        ══════════════════════════════ */
-        .print-bar {
-            background: var(--navy);
-            color: white;
-            text-align: center;
-            padding: 12px;
-            font-size: 10.5pt;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-        }
+        .print-bar { background: var(--navy); color: white; text-align: center; padding: 12px; font-size: 10.5pt; display: flex; align-items: center; justify-content: center; gap: 16px; }
         .print-bar span { color: rgba(255,255,255,.7); }
-        .btn-print {
-            background: var(--gold);
-            color: var(--navy);
-            border: none;
-            padding: 8px 20px;
-            border-radius: 6px;
-            font-family: 'Cairo', sans-serif;
-            font-weight: 700;
-            font-size: 10pt;
-            cursor: pointer;
-        }
+        .btn-print { background: var(--gold); color: var(--navy); border: none; padding: 8px 20px; border-radius: 6px; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 10pt; cursor: pointer; }
         .btn-print:hover { background: var(--gold2); }
 
         .page-break { page-break-before: always; }
+        .cards-grid.single { grid-template-columns: 1fr; }
+
+        /* Phase tag badges */
+        .tag-phase1 { background: #e8f7ef; color: #1a4a2e; font-size: 8pt; font-weight: 700; padding: 2px 8px; border-radius: 10px; border: 1px solid #1a4a2e; }
+        .tag-phase2 { background: #e8f0ff; color: #0d3060; font-size: 8pt; font-weight: 700; padding: 2px 8px; border-radius: 10px; border: 1px solid #0d3060; }
+
+        /* info callout */
+        .callout {
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin: 0.6cm 0;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+        .callout.info { background: #eef4fb; border-right: 5px solid var(--navy); }
+        .callout.phase1 { background: var(--phase1l); border-right: 5px solid var(--phase1); }
+        .callout.phase2 { background: var(--phase2l); border-right: 5px solid var(--phase2); }
+        .callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+        .callout-text { font-size: 10pt; line-height: 1.8; color: var(--text); }
+        .callout-text strong { color: var(--navy); }
     </style>
-    <div class="brandzo-topbar" style="width:100%;"><div style="padding:12px 18px;background:var(--color-brand-navy);color:var(--color-brand-gold);display:flex;align-items:center;gap:12px;"><div style="font-weight:700;font-size:20px">Brandzo</div><div style="font-size:16px">تقرير هيكل الوظائف والأدوار</div><div style="margin-left:auto;color:#fff">12 مايو 2026</div></div></div>
-
-<style id="brandzo-override">
-    :root{
-        --color-brand-navy:#1a1a2e;
-        --color-brand-red:#c0392b;
-        --color-brand-red-dark:#8b1a1a;
-        --color-brand-gold:#e8b830;
-        --color-brand-yellow:#e8b830;
-        --color-primary:#c0392b;
-        --color-surface:#f8f9fa;
-        --color-on-surface:#111;
-        --navy: var(--color-brand-navy);
-        --gold: var(--color-brand-gold);
-        --gold2: #c69030;
-    }
-    body{font-family:'Cairo',sans-serif !important;}
-    .brandzo-topbar{background:var(--color-brand-navy);color:var(--color-brand-gold);padding:14px 18px;display:flex;align-items:center;gap:12px;font-family:'Cairo',sans-serif;}
-    .brandzo-topbar .wordmark{font-weight:700;font-size:20px;}
-    .brandzo-topbar .title{font-size:16px;}
-    .brandzo-topbar .meta{margin-left:auto;font-size:14px;color:#fff;}
-    .no-print{background:#f8f9fa;border-right:4px solid var(--color-brand-navy);padding:10px 15px;}
-    .no-print a{color:var(--color-primary);text-decoration:none;font-weight:700;}
-    a{color:var(--color-brand-red);}
-    @media print{.brandzo-topbar{display:block;}}
-</style>
-
 </head>
 <body>
 <div class="no-print print-bar">
@@ -632,7 +344,7 @@
 
 <div class="container">
 
-    <!-- ══ COVER ══ -->
+    <!-- COVER -->
     <div class="cover">
         <div class="confidential-badge">سري – داخلي فقط</div>
         <div class="cover-brand">▸ Brandzo Systems</div>
@@ -640,24 +352,15 @@
         <h1>تقرير هيكل الوظائف<br>والأدوار <span>التشغيلية</span></h1>
         <p class="subtitle">الهيكل التنظيمي الكامل للمستودعات مع تكامل أودو 17 Enterprise — بطاقات وصف وظيفي، مصفوفة RACI، وتعيين الأدوار والصلاحيات</p>
         <div class="cover-meta-grid">
-            <div class="cover-meta-item">
-                <label>التاريخ</label>
-                <span>12 مايو 2026</span>
-            </div>
-            <div class="cover-meta-item">
-                <label>الإصدار</label>
-                <span>1.0 – Odoo Ready</span>
-            </div>
-            <div class="cover-meta-item">
-                <label>الإعداد</label>
-                <span>فريق Brandzo</span>
-            </div>
+            <div class="cover-meta-item"><label>التاريخ</label><span>12 مايو 2026</span></div>
+            <div class="cover-meta-item"><label>الإصدار</label><span>1.0 – Odoo Ready</span></div>
+            <div class="cover-meta-item"><label>الإعداد</label><span>فريق Brandzo</span></div>
         </div>
     </div>
 
     <div class="inner">
 
-    <!-- ══ TOC ══ -->
+    <!-- TOC -->
     <h2><span class="sec-num">☰</span> قائمة المحتويات</h2>
     <div class="toc-grid">
         <a class="toc-item" href="#org-overview"><span class="toc-num">1</span> نظرة عامة على الهيكل</a>
@@ -672,23 +375,164 @@
     <div class="page-break"></div>
     <h2 id="org-overview"><span class="sec-num">1</span> نظرة عامة على الهيكل التنظيمي</h2>
 
+    <p>
+        يمثل الهيكل التنظيمي لمستودعات Brandzo نموذجاً هرمياً من ثلاث طبقات يضمن توزيعاً واضحاً للمسؤوليات وسلاسة خطوط الإبلاغ. مع تكامل Odoo 17 Enterprise، يحمل كل منصب دوراً محدداً في النظام مع صلاحيات واضحة على الوحدات المسموح بها.
+    </p>
+    <p>
+        تم تصميم الهيكل على <strong>مرحلتين متكاملتين</strong>: مرحلة تشغيلية أولية مُحكمة تركز على الوظائف الجوهرية دون عمالة عارضة، ومرحلة تخطيط كامل تستوعب توسع الفروع وتشغيل كافة المستودعات المستقبلية.
+    </p>
+
+    <!-- PHASE COMPARISON -->
+    <div class="phase-compare">
+        <!-- Phase 1 -->
+        <div class="phase-box phase1">
+            <div class="phase-header">
+                <span class="phase-icon">🚀</span>
+                <div>
+                    <div class="phase-title">المرحلة الأولى — التشغيلي الأولي</div>
+                    <div class="phase-sub">الهيكل المحصور – الوظائف الجوهرية فقط</div>
+                </div>
+            </div>
+            <div class="phase-body">
+                <ul>
+                    <li>مدير مستودع تنفيذي واحد</li>
+                    <li>مدير سلاسل إمداد مشترك (مع المالية)</li>
+                    <li>مشرف استلام + مشرف تخزين</li>
+                    <li>مشرف جودة مشترك (استلام + مرتجعات)</li>
+                    <li>فريق سحب وتوزيع مصغر (20–30 عامل)</li>
+                    <li>منسق نقل واحد (بدون أسطول ضخم)</li>
+                    <li>لا عمالة عارضة – عقود دائمة فقط</li>
+                </ul>
+            </div>
+            <div class="phase-stats">
+                <div class="phase-stat"><span class="ps-num">~50</span><span class="ps-lbl">موظف كافٍ</span></div>
+                <div class="phase-stat"><span class="ps-num">4</span><span class="ps-lbl">إدارات نشطة</span></div>
+                <div class="phase-stat"><span class="ps-num">1</span><span class="ps-lbl">مستودع تشغيلي</span></div>
+            </div>
+        </div>
+        <!-- Phase 2 -->
+        <div class="phase-box phase2">
+            <div class="phase-header">
+                <span class="phase-icon">🏗️</span>
+                <div>
+                    <div class="phase-title">المرحلة الثانية — التخطيط الكامل</div>
+                    <div class="phase-sub">جميع الفروع والمستودعات المستقبلية</div>
+                </div>
+            </div>
+            <div class="phase-body">
+                <ul>
+                    <li>مدير مستودع تنفيذي لكل فرع رئيسي</li>
+                    <li>مدير سلاسل إمداد متخصص مستقل</li>
+                    <li>مدير مالية ومحاسبة منفصل لكل منطقة</li>
+                    <li>إدارة جودة متكاملة بفرق متخصصة</li>
+                    <li>أسطول نقل وتوزيع كامل (50–70 سائق)</li>
+                    <li>فرق استلام وتخزين وسحب بكامل طاقتها</li>
+                    <li>مهندس تخطيط + مراقبي مخزون متعددون</li>
+                </ul>
+            </div>
+            <div class="phase-stats">
+                <div class="phase-stat"><span class="ps-num">~320</span><span class="ps-lbl">موظف كامل</span></div>
+                <div class="phase-stat"><span class="ps-num">6</span><span class="ps-lbl">إدارات كاملة</span></div>
+                <div class="phase-stat"><span class="ps-num">+5</span><span class="ps-lbl">فروع مستقبلية</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="callout info">
+        <span class="callout-icon">🎯</span>
+        <div class="callout-text">
+            <strong>الهدف الرئيسي:</strong> الانطلاق بهيكل مرن ومحكم (المرحلة الأولى) يضمن الكفاءة التشغيلية من اليوم الأول، مع وضع خارطة طريق واضحة للتوسع التدريجي نحو الهيكل الكامل (المرحلة الثانية) عند فتح كل فرع جديد.
+        </div>
+    </div>
+
     <div class="stats-row">
-        <div class="stat-box"><span class="stat-num">~320</span><span class="stat-label">إجمالي الموظفين</span></div>
+        <div class="stat-box"><span class="stat-num">~320</span><span class="stat-label">إجمالي الموظفين (المرحلة 2)</span></div>
         <div class="stat-box"><span class="stat-num">6</span><span class="stat-label">إدارات تشغيلية</span></div>
         <div class="stat-box"><span class="stat-num">11</span><span class="stat-label">منصب محوري</span></div>
         <div class="stat-box"><span class="stat-num">3</span><span class="stat-label">طبقات هرمية</span></div>
     </div>
 
-    <p>
-        يمثل الهيكل التنظيمي لمستودعات Brandzo نموذجاً هرمياً من ثلاث طبقات يضمن توزيعاً واضحاً للمسؤوليات وسلاسة خطوط الإبلاغ. يضم الهيكل حوالي 320 موظفاً موزعين على 6 إدارات تشغيلية تحت إشراف مدير المستودع التنفيذي.
-    </p>
-    <p>
-        مع تكامل Odoo 17 Enterprise، يحمل كل منصب دوراً محدداً في النظام مع صلاحيات واضحة على الوحدات المسموح بها، مما يضمن انتقالاً منظماً من الهيكل الورقي الحالي إلى النظام الرقمي المتكامل.
-    </p>
-
-    <div class="highlight-box">
-        <strong>🎯 الهدف الرئيسي:</strong> تحويل الهيكل التنظيمي الورقي إلى هيكل رقمي متكامل في Odoo مع تعيين الأدوار والصلاحيات المناسبة لكل مستخدم.
-    </div>
+    <!-- STAFFING TABLE -->
+    <h3>جدول توزيع الموظفين بالمرحلتين</h3>
+    <table>
+        <caption>مقارنة الكادر الوظيفي – التشغيلي الأولي مقابل التخطيط الكامل</caption>
+        <thead>
+            <tr>
+                <th>الإدارة / القسم</th>
+                <th>🚀 المرحلة الأولى</th>
+                <th>🏗️ المرحلة الكاملة</th>
+                <th>الدور الأساسي</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>🧭 <strong>القيادة التنفيذية</strong></td>
+                <td><span class="tag-phase1">1 مدير</span></td>
+                <td><span class="tag-phase2">1 + مدراء فروع</span></td>
+                <td>الإشراف الكامل والاستراتيجية</td>
+            </tr>
+            <tr>
+                <td>💻 <strong>سلاسل الإمداد</strong></td>
+                <td><span class="tag-phase1">مشارك مع المالية</span></td>
+                <td><span class="tag-phase2">مدير مستقل + فريق</span></td>
+                <td>تخطيط وإدارة التوريد</td>
+            </tr>
+            <tr>
+                <td>🛡️ <strong>حوكمة الدورة / الجودة</strong></td>
+                <td><span class="tag-phase1">1 مشرف مشترك</span></td>
+                <td><span class="tag-phase2">مدير + ~15 مفتش</span></td>
+                <td>ضمان الجودة والامتثال</td>
+            </tr>
+            <tr>
+                <td>📊 <strong>المحاسبة والمالية</strong></td>
+                <td><span class="tag-phase1">محاسب واحد</span></td>
+                <td><span class="tag-phase2">مدير + فريق 3–5</span></td>
+                <td>الرقابة المالية والتقارير</td>
+            </tr>
+            <tr>
+                <td>📦 <strong>الاستلام والرقابة</strong></td>
+                <td><span class="tag-phase1">مشرف + 8–10 عمال</span></td>
+                <td><span class="tag-phase2">مدير + مشرفان + ~30</span></td>
+                <td>استلام البضاعة وتوثيقها</td>
+            </tr>
+            <tr>
+                <td>🔬 <strong>فحص الجودة</strong></td>
+                <td><span class="tag-phase1">2–3 مفتشين</span></td>
+                <td><span class="tag-phase2">فرق متخصصة ~15</span></td>
+                <td>فحص المنتجات الواردة</td>
+            </tr>
+            <tr>
+                <td>🏬 <strong>التخزين وتحديد المواقع</strong></td>
+                <td><span class="tag-phase1">مشرف + 15–20 عامل</span></td>
+                <td><span class="tag-phase2">مدير + مهندس + ~70</span></td>
+                <td>تنظيم المخزون وتخزينه</td>
+            </tr>
+            <tr>
+                <td>📋 <strong>تحضير الطلبات والسحب</strong></td>
+                <td><span class="tag-phase1">مشرف + 20–30 عامل</span></td>
+                <td><span class="tag-phase2">مدير + مشرفون + ~120</span></td>
+                <td>تنفيذ أوامر الصرف</td>
+            </tr>
+            <tr>
+                <td>🚚 <strong>أسطول النقل والتوزيع</strong></td>
+                <td><span class="tag-phase1">منسق + 10–15 سائق</span></td>
+                <td><span class="tag-phase2">مدير + ~70 سائق</span></td>
+                <td>التوزيع للفروع والعملاء</td>
+            </tr>
+            <tr>
+                <td>↩️ <strong>المرتجعات وتصحيح المخزون</strong></td>
+                <td><span class="tag-phase1">مشارك مع الجودة (2–3)</span></td>
+                <td><span class="tag-phase2">مدير + مشرف + ~12</span></td>
+                <td>معالجة المرتجعات والتسويات</td>
+            </tr>
+            <tr style="background:#f5f7fb; font-weight:700;">
+                <td>📊 <strong>الإجمالي التقريبي</strong></td>
+                <td><span class="tag-phase1">~50–60 موظف</span></td>
+                <td><span class="tag-phase2">~320 موظف</span></td>
+                <td>—</td>
+            </tr>
+        </tbody>
+    </table>
 
     <!-- ══ SECTION 2 ══ -->
     <div class="page-break"></div>
@@ -696,79 +540,114 @@
 
     <div class="org-wrapper">
         <div class="org-chart">
-            <!-- TOP -->
+
+            <!-- LAYER 1 TOP -->
+            <div class="org-section-label">◆ الطبقة الأولى — القيادة العليا</div>
             <div class="org-row">
                 <div class="org-node top">
                     <span class="node-icon">🧭</span>
-                    مدير المستودع التنفيذي
-                    <span class="node-count">الطبقة 1</span>
+                    <span class="node-title">مدير المستودع التنفيذي</span>
+                    <span class="node-count">الطبقة 1 | الإشراف العام</span>
                 </div>
             </div>
-            <div class="org-v-line"></div>
 
-            <!-- MID ROW -->
-            <div style="position:relative; width:100%; display:flex; justify-content:center;">
-                <div style="position:absolute; top:0; right:15%; left:15%; height:2px; background:var(--gold);"></div>
-                <div class="org-row" style="gap:8px; margin-top:0;">
-                    <div class="org-node-wrap">
-                        <div class="org-v-line" style="height:20px;"></div>
-                        <div class="org-node mid">
-                            <span class="node-icon">💻</span>
-                            مدير سلاسل الإمداد
-                            <span class="node-count">طبقة 2</span>
-                        </div>
-                    </div>
-                    <div class="org-node-wrap">
-                        <div class="org-v-line" style="height:20px;"></div>
-                        <div class="org-node mid">
-                            <span class="node-icon">🛡️</span>
-                            مدير حوكمة الدورة
-                            <span class="node-count">طبقة 2</span>
-                        </div>
-                    </div>
-                    <div class="org-node-wrap">
-                        <div class="org-v-line" style="height:20px;"></div>
-                        <div class="org-node mid">
-                            <span class="node-icon">📊</span>
-                            مدير المحاسبة والمالية
-                            <span class="node-count">طبقة 2</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="org-v-line"></div>
+            <!-- V connector -->
+            <div class="v-line" style="height:32px;"></div>
 
-            <!-- OPS ROW -->
-            <div style="position:relative; width:100%; display:flex; justify-content:center;">
-                <div style="position:absolute; top:0; right:5%; left:5%; height:2px; background:rgba(200,157,59,.5);"></div>
-                <div class="org-row" style="gap:6px; flex-wrap:wrap; margin-top:0;">
-                    <div class="org-node-wrap">
-                        <div class="org-v-line" style="height:20px;"></div>
-                        <div class="org-node op"><span class="node-icon">📦</span>الاستلام<span class="node-count">~30</span></div>
+            <!-- Horizontal bar for L2 -->
+            <div style="position:relative;width:85%;height:2px;background:var(--gold);margin:0 auto 0;"></div>
+
+            <!-- LAYER 2 MID -->
+            <div class="org-section-label" style="margin-top:8px;">◆ الطبقة الثانية — الإدارة الوسطى</div>
+            <div class="org-row" style="gap:10px; align-items:flex-start;">
+                <div class="node-wrap">
+                    <div class="v-line" style="height:20px;"></div>
+                    <div class="org-node mid">
+                        <span class="node-icon">💻</span>
+                        <span class="node-title">مدير سلاسل الإمداد</span>
+                        <span class="node-count">طبقة 2</span>
                     </div>
-                    <div class="org-node-wrap">
-                        <div class="org-v-line" style="height:20px;"></div>
-                        <div class="org-node op"><span class="node-icon">🔬</span>الجودة<span class="node-count">~15</span></div>
+                </div>
+                <div class="node-wrap">
+                    <div class="v-line" style="height:20px;"></div>
+                    <div class="org-node mid">
+                        <span class="node-icon">🛡️</span>
+                        <span class="node-title">مدير حوكمة الدورة</span>
+                        <span class="node-count">طبقة 2</span>
                     </div>
-                    <div class="org-node-wrap">
-                        <div class="org-v-line" style="height:20px;"></div>
-                        <div class="org-node op"><span class="node-icon">🏬</span>التخزين<span class="node-count">~70</span></div>
-                    </div>
-                    <div class="org-node-wrap">
-                        <div class="org-v-line" style="height:20px;"></div>
-                        <div class="org-node op"><span class="node-icon">📋</span>السحب<span class="node-count">~120</span></div>
-                    </div>
-                    <div class="org-node-wrap">
-                        <div class="org-v-line" style="height:20px;"></div>
-                        <div class="org-node op"><span class="node-icon">🚚</span>النقل<span class="node-count">~70</span></div>
-                    </div>
-                    <div class="org-node-wrap">
-                        <div class="org-v-line" style="height:20px;"></div>
-                        <div class="org-node op"><span class="node-icon">↩️</span>المرتجعات<span class="node-count">~12</span></div>
+                </div>
+                <div class="node-wrap">
+                    <div class="v-line" style="height:20px;"></div>
+                    <div class="org-node mid">
+                        <span class="node-icon">📊</span>
+                        <span class="node-title">مدير المحاسبة والمالية</span>
+                        <span class="node-count">طبقة 2</span>
                     </div>
                 </div>
             </div>
+
+            <!-- V connector to ops -->
+            <div class="v-line" style="height:28px;"></div>
+            <div style="position:relative;width:94%;height:2px;background:rgba(200,157,59,.55);margin:0 auto;"></div>
+
+            <!-- LAYER 3 OPERATIONAL -->
+            <div class="org-section-label" style="margin-top:8px;">◆ الطبقة الثالثة — الإدارات التشغيلية</div>
+            <div class="org-row" style="gap:8px; flex-wrap:wrap;">
+                <div class="node-wrap">
+                    <div class="v-line" style="height:20px;"></div>
+                    <div class="org-node op">
+                        <span class="node-icon">📦</span>
+                        <span class="node-title">الاستلام</span>
+                        <span class="node-count">~30 موظف</span>
+                    </div>
+                </div>
+                <div class="node-wrap">
+                    <div class="v-line" style="height:20px;"></div>
+                    <div class="org-node op">
+                        <span class="node-icon">🔬</span>
+                        <span class="node-title">الجودة</span>
+                        <span class="node-count">~15 مفتش</span>
+                    </div>
+                </div>
+                <div class="node-wrap">
+                    <div class="v-line" style="height:20px;"></div>
+                    <div class="org-node op">
+                        <span class="node-icon">🏬</span>
+                        <span class="node-title">التخزين</span>
+                        <span class="node-count">~70 موظف</span>
+                    </div>
+                </div>
+                <div class="node-wrap">
+                    <div class="v-line" style="height:20px;"></div>
+                    <div class="org-node op">
+                        <span class="node-icon">📋</span>
+                        <span class="node-title">السحب</span>
+                        <span class="node-count">~120 عامل</span>
+                    </div>
+                </div>
+                <div class="node-wrap">
+                    <div class="v-line" style="height:20px;"></div>
+                    <div class="org-node op">
+                        <span class="node-icon">🚚</span>
+                        <span class="node-title">النقل</span>
+                        <span class="node-count">~70 سائق</span>
+                    </div>
+                </div>
+                <div class="node-wrap">
+                    <div class="v-line" style="height:20px;"></div>
+                    <div class="org-node op">
+                        <span class="node-icon">↩️</span>
+                        <span class="node-title">المرتجعات</span>
+                        <span class="node-count">~12 موظف</span>
+                    </div>
+                </div>
+            </div>
+
         </div>
+    </div>
+
+    <div class="highlight-box">
+        <strong>📌 ملاحظة:</strong> الأعداد الموضحة في الشجرة تمثل التخطيط الكامل (المرحلة الثانية). في التشغيل الأولي يُكتفى بـ 50–60 موظف جوهري موزعين على 4 إدارات نشطة.
     </div>
 
     <!-- ══ SECTION 3 ══ -->
@@ -778,13 +657,8 @@
     <h3>الطبقتان الأولى والثانية – المناصب القيادية</h3>
     <div class="cards-grid">
 
-        <!-- Card 1 -->
         <div class="role-card">
-            <div class="card-header">
-                <span class="card-icon">🧭</span>
-                <h4>مدير المستودعات التنفيذي</h4>
-                <span class="odoo-badge">ODOO</span>
-            </div>
+            <div class="card-header"><span class="card-icon">🧭</span><h4>مدير المستودعات التنفيذي</h4><span class="odoo-badge">ODOO</span></div>
             <div class="card-body">
                 <ul>
                     <li>الإشراف العام على كافة أنشطة المستودعات</li>
@@ -803,13 +677,8 @@
             </div>
         </div>
 
-        <!-- Card 2 -->
         <div class="role-card">
-            <div class="card-header">
-                <span class="card-icon">💻</span>
-                <h4>مدير سلاسل الإمداد واللوجستيات</h4>
-                <span class="odoo-badge">ODOO</span>
-            </div>
+            <div class="card-header"><span class="card-icon">💻</span><h4>مدير سلاسل الإمداد واللوجستيات</h4><span class="odoo-badge">ODOO</span></div>
             <div class="card-body">
                 <ul>
                     <li>إدارة وتخطيط سلاسل الإمداد بالكامل</li>
@@ -827,13 +696,8 @@
             </div>
         </div>
 
-        <!-- Card 3 -->
         <div class="role-card">
-            <div class="card-header">
-                <span class="card-icon">🛡️</span>
-                <h4>مدير حوكمة الدورة المستندية</h4>
-                <span class="odoo-badge">ODOO</span>
-            </div>
+            <div class="card-header"><span class="card-icon">🛡️</span><h4>مدير حوكمة الدورة المستندية</h4><span class="odoo-badge">ODOO</span></div>
             <div class="card-body">
                 <ul>
                     <li>حوكمة وإدارة الدورة المستندية بالكامل</li>
@@ -851,13 +715,8 @@
             </div>
         </div>
 
-        <!-- Card 4 -->
         <div class="role-card">
-            <div class="card-header">
-                <span class="card-icon">📊</span>
-                <h4>مدير المحاسبة والرقابة المالية</h4>
-                <span class="odoo-badge">ODOO</span>
-            </div>
+            <div class="card-header"><span class="card-icon">📊</span><h4>مدير المحاسبة والرقابة المالية</h4><span class="odoo-badge">ODOO</span></div>
             <div class="card-body">
                 <ul>
                     <li>الإشراف على جميع العمليات المالية</li>
@@ -873,18 +732,13 @@
                 </div>
             </div>
         </div>
-    </div><!-- /cards-grid -->
+    </div>
 
     <h3>الطبقة الثالثة – الإدارات التشغيلية الستة</h3>
     <div class="cards-grid">
 
-        <!-- Card 5 -->
         <div class="role-card">
-            <div class="card-header">
-                <span class="card-icon">📦</span>
-                <h4>إدارة الاستلام والرقابة</h4>
-                <span class="odoo-badge">ODOO</span>
-            </div>
+            <div class="card-header"><span class="card-icon">📦</span><h4>إدارة الاستلام والرقابة</h4><span class="odoo-badge">ODOO</span></div>
             <div class="card-body">
                 <ul>
                     <li>مدير قسم الاستلام</li>
@@ -900,13 +754,8 @@
             </div>
         </div>
 
-        <!-- Card 6 -->
         <div class="role-card">
-            <div class="card-header">
-                <span class="card-icon">🔬</span>
-                <h4>إدارة فحص ومراقبة الجودة</h4>
-                <span class="odoo-badge">ODOO</span>
-            </div>
+            <div class="card-header"><span class="card-icon">🔬</span><h4>إدارة فحص ومراقبة الجودة</h4><span class="odoo-badge">ODOO</span></div>
             <div class="card-body">
                 <ul>
                     <li>مدير إدارة الجودة</li>
@@ -922,13 +771,8 @@
             </div>
         </div>
 
-        <!-- Card 7 -->
         <div class="role-card">
-            <div class="card-header">
-                <span class="card-icon">🏬</span>
-                <h4>إدارة التخزين وتحديد المواقع</h4>
-                <span class="odoo-badge">ODOO</span>
-            </div>
+            <div class="card-header"><span class="card-icon">🏬</span><h4>إدارة التخزين وتحديد المواقع</h4><span class="odoo-badge">ODOO</span></div>
             <div class="card-body">
                 <ul>
                     <li>مدير عمليات التخزين</li>
@@ -945,13 +789,8 @@
             </div>
         </div>
 
-        <!-- Card 8 -->
         <div class="role-card">
-            <div class="card-header">
-                <span class="card-icon">📋</span>
-                <h4>إدارة تحضير الطلبات والتوزيع</h4>
-                <span class="odoo-badge">ODOO</span>
-            </div>
+            <div class="card-header"><span class="card-icon">📋</span><h4>إدارة تحضير الطلبات والتوزيع</h4><span class="odoo-badge">ODOO</span></div>
             <div class="card-body">
                 <ul>
                     <li>مدير عمليات التوزيع</li>
@@ -968,13 +807,8 @@
             </div>
         </div>
 
-        <!-- Card 9 -->
         <div class="role-card">
-            <div class="card-header">
-                <span class="card-icon">🚚</span>
-                <h4>إدارة أسطول النقل والتوزيع</h4>
-                <span class="odoo-badge">ODOO</span>
-            </div>
+            <div class="card-header"><span class="card-icon">🚚</span><h4>إدارة أسطول النقل والتوزيع</h4><span class="odoo-badge">ODOO</span></div>
             <div class="card-body">
                 <ul>
                     <li>مدير النقل والتوزيع</li>
@@ -991,13 +825,8 @@
             </div>
         </div>
 
-        <!-- Card 10 -->
         <div class="role-card">
-            <div class="card-header">
-                <span class="card-icon">↩️</span>
-                <h4>إدارة المرتجعات وتصحيح المخزون</h4>
-                <span class="odoo-badge">ODOO</span>
-            </div>
+            <div class="card-header"><span class="card-icon">↩️</span><h4>إدارة المرتجعات وتصحيح المخزون</h4><span class="odoo-badge">ODOO</span></div>
             <div class="card-body">
                 <ul>
                     <li>مدير إدارة المرتجعات</li>
@@ -1013,7 +842,7 @@
             </div>
         </div>
 
-    </div><!-- /cards-grid -->
+    </div>
 
     <!-- ══ SECTION 4 ══ -->
     <div class="page-break"></div>
@@ -1024,8 +853,8 @@
             <tr>
                 <th>الإدارة</th>
                 <th>المدير المباشر</th>
-                <th>عدد الموظفين</th>
-                <th>التسلسل الهرمي</th>
+                <th>المرحلة الأولى</th>
+                <th>المرحلة الكاملة</th>
                 <th>الوثائق المنتجة</th>
             </tr>
         </thead>
@@ -1033,43 +862,43 @@
             <tr>
                 <td>📦 <strong>الاستلام والرقابة</strong></td>
                 <td>مدير قسم الاستلام</td>
-                <td>~30 موظف</td>
-                <td>مدير ← مشرف ← فريق</td>
+                <td><span class="tag-phase1">~10</span></td>
+                <td><span class="tag-phase2">~30</span></td>
                 <td>نماذج GRN، تقارير الرقابة</td>
             </tr>
             <tr>
                 <td>🔬 <strong>فحص ومراقبة الجودة</strong></td>
                 <td>مدير إدارة الجودة</td>
-                <td>~15 مفتش</td>
-                <td>مدير ← فرق الفحص</td>
+                <td><span class="tag-phase1">~3</span></td>
+                <td><span class="tag-phase2">~15</span></td>
                 <td>تقارير الجودة، شهادات المطابقة</td>
             </tr>
             <tr>
                 <td>🏬 <strong>التخزين وتحديد المواقع</strong></td>
                 <td>مدير عمليات التخزين</td>
-                <td>~70 موظف</td>
-                <td>مدير ← مهندس ← مشرفي ← فرق</td>
+                <td><span class="tag-phase1">~20</span></td>
+                <td><span class="tag-phase2">~70</span></td>
                 <td>خرائط المواقع، تقارير الجرد</td>
             </tr>
             <tr>
                 <td>📋 <strong>تحضير الطلبات والتوزيع</strong></td>
                 <td>مدير عمليات التوزيع</td>
-                <td>~120 عامل</td>
-                <td>مدير ← مشرفي ← مناطق ← عمال</td>
+                <td><span class="tag-phase1">~25</span></td>
+                <td><span class="tag-phase2">~120</span></td>
                 <td>قوائم السحب، إذنات التسليم</td>
             </tr>
             <tr>
                 <td>🚚 <strong>أسطول النقل والتوزيع</strong></td>
                 <td>مدير النقل والتوزيع</td>
-                <td>~70 سائق</td>
-                <td>مدير ← منسق ← فرق</td>
+                <td><span class="tag-phase1">~15</span></td>
+                <td><span class="tag-phase2">~70</span></td>
                 <td>جداول النقل، تقارير الأسطول</td>
             </tr>
             <tr>
                 <td>↩️ <strong>المرتجعات وتصحيح المخزون</strong></td>
                 <td>مدير إدارة المرتجعات</td>
-                <td>~12 موظف</td>
-                <td>مدير ← مشرف ← فرق</td>
+                <td><span class="tag-phase1">مشارك ~3</span></td>
+                <td><span class="tag-phase2">~12</span></td>
                 <td>نماذج الإرجاع، سندات التسوية</td>
             </tr>
         </tbody>
@@ -1104,46 +933,14 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td><strong>PR</strong><br><small>طلب الشراء</small></td>
-                <td class="a-cell">A</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="r-cell">R</td>
-                <td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
-            </tr>
-            <tr>
-                <td><strong>PO</strong><br><small>أمر الشراء</small></td>
-                <td class="a-cell">A</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="r-cell">R</td>
-                <td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
-            </tr>
-            <tr>
-                <td><strong>ASN</strong><br><small>إشعار الشحن</small></td>
-                <td class="i-cell">I</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td>
-                <td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
-            </tr>
-            <tr>
-                <td><strong>GRN</strong><br><small>الاستلام والجودة</small></td>
-                <td class="a-cell">A</td><td class="c-cell">C</td><td class="a-cell">A</td><td class="r-cell">R</td>
-                <td class="r-cell">R</td><td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
-            </tr>
-            <tr>
-                <td><strong>Putaway</strong><br><small>التخزين الموجه</small></td>
-                <td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
-                <td class="i-cell">I</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
-            </tr>
-            <tr>
-                <td><strong>Picking</strong><br><small>تحضير الطلبات</small></td>
-                <td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
-                <td class="i-cell">I</td><td class="i-cell">I</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="i-cell">I</td><td class="i-cell">I</td>
-            </tr>
-            <tr>
-                <td><strong>Dispatch</strong><br><small>الشحن والتوزيع</small></td>
-                <td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td>
-                <td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="i-cell">I</td>
-            </tr>
-            <tr>
-                <td><strong>Returns</strong><br><small>المرتجعات والتسويات</small></td>
-                <td class="a-cell">A</td><td class="c-cell">C</td><td class="a-cell">A</td><td class="r-cell">R</td>
-                <td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="r-cell">R</td>
-            </tr>
+            <tr><td><strong>PR</strong><br><small>طلب الشراء</small></td><td class="a-cell">A</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="r-cell">R</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td></tr>
+            <tr><td><strong>PO</strong><br><small>أمر الشراء</small></td><td class="a-cell">A</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="r-cell">R</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td></tr>
+            <tr><td><strong>ASN</strong><br><small>إشعار الشحن</small></td><td class="i-cell">I</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td></tr>
+            <tr><td><strong>GRN</strong><br><small>الاستلام والجودة</small></td><td class="a-cell">A</td><td class="c-cell">C</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="r-cell">R</td><td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td></tr>
+            <tr><td><strong>Putaway</strong><br><small>التخزين الموجه</small></td><td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td></tr>
+            <tr><td><strong>Picking</strong><br><small>تحضير الطلبات</small></td><td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="i-cell">I</td><td class="i-cell">I</td></tr>
+            <tr><td><strong>Dispatch</strong><br><small>الشحن والتوزيع</small></td><td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="i-cell">I</td></tr>
+            <tr><td><strong>Returns</strong><br><small>المرتجعات والتسويات</small></td><td class="a-cell">A</td><td class="c-cell">C</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="r-cell">R</td></tr>
         </tbody>
     </table>
 
@@ -1161,72 +958,17 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td><strong>مدير المستودع التنفيذي</strong></td>
-                <td>Inventory Manager</td>
-                <td>كل وحدات المخزون</td>
-                <td><span class="level-admin">Admin</span></td>
-            </tr>
-            <tr>
-                <td><strong>مدير المستودع التنفيذي</strong></td>
-                <td>System Administrator</td>
-                <td>Settings كاملة</td>
-                <td><span class="level-admin">Admin</span></td>
-            </tr>
-            <tr>
-                <td><strong>مدير سلاسل الإمداد</strong></td>
-                <td>System Administrator</td>
-                <td>Settings كاملة</td>
-                <td><span class="level-admin">Admin</span></td>
-            </tr>
-            <tr>
-                <td><strong>مدير الجودة والسلامة الغذائية</strong></td>
-                <td>Quality Administrator</td>
-                <td>Quality + Inventory (read)</td>
-                <td><span class="level-admin">Admin</span></td>
-            </tr>
-            <tr>
-                <td><strong>مدير المحاسبة والرقابة المالية</strong></td>
-                <td>Accounting Manager</td>
-                <td>Purchase + Accounting</td>
-                <td><span class="level-manager">Manager</span></td>
-            </tr>
-            <tr>
-                <td><strong>مشرف الاستلام</strong></td>
-                <td>Inventory User</td>
-                <td>Inventory + Quality</td>
-                <td><span class="level-user">User</span></td>
-            </tr>
-            <tr>
-                <td><strong>مشرف التخزين</strong></td>
-                <td>Inventory User</td>
-                <td>Inventory + Barcode</td>
-                <td><span class="level-user">User</span></td>
-            </tr>
-            <tr>
-                <td><strong>مشرف الجودة</strong></td>
-                <td>Quality User</td>
-                <td>Quality + Inventory (read)</td>
-                <td><span class="level-user">User</span></td>
-            </tr>
-            <tr>
-                <td><strong>عامل السحب</strong></td>
-                <td>Barcode User</td>
-                <td>Barcode فقط</td>
-                <td><span class="level-user">User</span></td>
-            </tr>
-            <tr>
-                <td><strong>السائق</strong></td>
-                <td>Fleet User</td>
-                <td>Fleet</td>
-                <td><span class="level-user">User</span></td>
-            </tr>
-            <tr>
-                <td><strong>مفتش الجودة</strong></td>
-                <td>Quality User</td>
-                <td>Quality + Inventory (read)</td>
-                <td><span class="level-user">User</span></td>
-            </tr>
+            <tr><td><strong>مدير المستودع التنفيذي</strong></td><td>Inventory Manager</td><td>كل وحدات المخزون</td><td><span class="level-admin">Admin</span></td></tr>
+            <tr><td><strong>مدير المستودع التنفيذي</strong></td><td>System Administrator</td><td>Settings كاملة</td><td><span class="level-admin">Admin</span></td></tr>
+            <tr><td><strong>مدير سلاسل الإمداد</strong></td><td>System Administrator</td><td>Settings كاملة</td><td><span class="level-admin">Admin</span></td></tr>
+            <tr><td><strong>مدير الجودة والسلامة الغذائية</strong></td><td>Quality Administrator</td><td>Quality + Inventory (read)</td><td><span class="level-admin">Admin</span></td></tr>
+            <tr><td><strong>مدير المحاسبة والرقابة المالية</strong></td><td>Accounting Manager</td><td>Purchase + Accounting</td><td><span class="level-manager">Manager</span></td></tr>
+            <tr><td><strong>مشرف الاستلام</strong></td><td>Inventory User</td><td>Inventory + Quality</td><td><span class="level-user">User</span></td></tr>
+            <tr><td><strong>مشرف التخزين</strong></td><td>Inventory User</td><td>Inventory + Barcode</td><td><span class="level-user">User</span></td></tr>
+            <tr><td><strong>مشرف الجودة</strong></td><td>Quality User</td><td>Quality + Inventory (read)</td><td><span class="level-user">User</span></td></tr>
+            <tr><td><strong>عامل السحب</strong></td><td>Barcode User</td><td>Barcode فقط</td><td><span class="level-user">User</span></td></tr>
+            <tr><td><strong>السائق</strong></td><td>Fleet User</td><td>Fleet</td><td><span class="level-user">User</span></td></tr>
+            <tr><td><strong>مفتش الجودة</strong></td><td>Quality User</td><td>Quality + Inventory (read)</td><td><span class="level-user">User</span></td></tr>
         </tbody>
     </table>
 
@@ -1234,28 +976,19 @@
         <strong>⚠️ ملاحظة هامة:</strong> هذا الجدول يضمن تعيين الأدوار المناسبة لكل مستخدم في Odoo مع الصلاحيات المناسبة، مما يضمن الأمان والامتثال في النظام ومنع التعارض في الصلاحيات.
     </div>
 
-    <!-- ══ SIGNATURES ══ -->
+    <!-- SIGNATURES -->
     <div class="page-break"></div>
     <div class="signature-line">
-        <div class="sig-box">
-            <label>إعداد ومراجعة</label>
-            <strong>فريق تحويل Brandzo إلى Odoo</strong>
-        </div>
-        <div class="sig-box">
-            <label>اعتماد</label>
-            <strong>مدير نظام المعلومات</strong>
-        </div>
-        <div class="sig-box">
-            <label>التاريخ</label>
-            <strong>12 مايو 2026</strong>
-        </div>
+        <div class="sig-box"><label>إعداد ومراجعة</label><strong>فريق تحويل Brandzo إلى Odoo</strong></div>
+        <div class="sig-box"><label>اعتماد</label><strong>مدير نظام المعلومات</strong></div>
+        <div class="sig-box"><label>التاريخ</label><strong>12 مايو 2026</strong></div>
     </div>
 
     <div class="page-footer">
         تقرير هيكل الوظائف والأدوار – نظام Brandzo مع تكامل Odoo 17 Enterprise &nbsp;|&nbsp; الإصدار 1.0 &nbsp;|&nbsp; سري – للاستخدام الداخلي فقط
     </div>
 
-    </div><!-- /inner -->
-</div><!-- /container -->
+    </div>
+</div>
 </body>
 </html>
