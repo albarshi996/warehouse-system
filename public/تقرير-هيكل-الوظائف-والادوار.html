@@ -755,7 +755,7 @@ function renderForms() {
     </tr></thead>
     <tbody>${forms.map(f=>`<tr>
       <td><span class="stage-dot">${f.stage}</span></td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gold-light);">${f.name}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;"><a href="forms/${f.name}" target="_blank" style="color:var(--gold-light);text-decoration:none;border-bottom:1px dashed var(--gold-light);padding-bottom:1px;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--gold-light)'">${f.name}</a></td>
       <td><span class="mtag ${moduleClass[f.module]||'m-i'}">${f.module}</span></td>
       <td style="font-size:12px;">${f.path}</td>
       <td>${f.purpose}</td>
