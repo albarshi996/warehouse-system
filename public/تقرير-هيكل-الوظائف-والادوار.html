@@ -1,994 +1,897 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقرير هيكل الوظائف والأدوار – Brandzo × Odoo 17</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --navy:    #0d1e35;
-            --navy2:   #132b4a;
-            --gold:    #c89d3b;
-            --gold2:   #e8bc5a;
-            --green:   #00a650;
-            --green2:  #e6f7ef;
-            --red:     #c0392b;
-            --blue-l:  #eef4fb;
-            --border:  #d0d8e8;
-            --text:    #1a2233;
-            --muted:   #5a6a82;
-            --white:   #ffffff;
-            --bg:      #f5f7fb;
-            --phase1:  #1a4a2e;
-            --phase1l: #e8f7ef;
-            --phase2:  #0d3060;
-            --phase2l: #e8f0ff;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Cairo', sans-serif;
-            font-size: 11pt;
-            line-height: 1.85;
-            color: var(--text);
-            background: var(--bg);
-            direction: rtl;
-            text-align: right;
-        }
-        @page { size: A4; margin: 1.8cm 2cm; }
-        @media print {
-            body { background: white; font-size: 10pt; }
-            .no-print { display: none !important; }
-            .page-break { page-break-before: always; }
-            h2, h3, h4 { page-break-after: avoid; }
-            table, .role-card { page-break-inside: avoid; }
-            .container { max-width: 100%; padding: 0; box-shadow: none; }
-            .cover { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        }
-        .container { max-width: 21cm; margin: 0 auto; background: white; box-shadow: 0 0 60px rgba(0,0,0,.12); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brandzo — الدليل التفاعلي الكامل</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0d1b2a;
+  --blue: #1b3a5c;
+  --gold: #c89d3b;
+  --gold-light: #f0d98a;
+  --green: #00a650;
+  --green-dim: rgba(0,166,80,0.12);
+  --red: #c0392b;
+  --white: #f8f9fb;
+  --gray: #8a93a2;
+  --line: rgba(200,157,59,0.22);
+  --card-bg: rgba(255,255,255,0.04);
+  --card-border: rgba(200,157,59,0.18);
+  --text-body: rgba(248,249,251,0.88);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Cairo',sans-serif;background:var(--navy);color:var(--white);direction:rtl;text-align:right;overflow-x:hidden;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--navy);}
+::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px;}
 
-        /* COVER */
-        .cover {
-            background: var(--navy);
-            color: white;
-            padding: 5cm 3cm 3cm;
-            position: relative;
-            overflow: hidden;
-            min-height: 22cm;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .cover::before {
-            content: '';
-            position: absolute;
-            top: -100px; left: -80px;
-            width: 420px; height: 420px;
-            border: 80px solid rgba(200,157,59,.12);
-            border-radius: 50%;
-        }
-        .cover::after {
-            content: '';
-            position: absolute;
-            bottom: -60px; right: -60px;
-            width: 280px; height: 280px;
-            border: 50px solid rgba(200,157,59,.08);
-            border-radius: 50%;
-        }
-        .cover-brand { font-size: 11pt; letter-spacing: 5px; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 2.5cm; }
-        .cover-line { width: 60px; height: 4px; background: var(--gold); margin-bottom: 30px; }
-        .cover h1 { font-size: 30pt; font-weight: 900; line-height: 1.3; margin-bottom: 20px; color: white; }
-        .cover h1 span { color: var(--gold2); }
-        .cover .subtitle { font-size: 13pt; color: rgba(255,255,255,.7); margin-bottom: 3cm; max-width: 14cm; line-height: 1.7; }
-        .cover-meta-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; border-top: 1px solid rgba(255,255,255,.15); padding-top: 25px; margin-top: auto; }
-        .cover-meta-item label { display: block; font-size: 8pt; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 4px; }
-        .cover-meta-item span { font-size: 11pt; font-weight: 600; color: white; }
-        .confidential-badge { position: absolute; top: 50px; left: 50px; border: 2px solid var(--red); color: var(--red); font-size: 8pt; letter-spacing: 3px; text-transform: uppercase; padding: 6px 14px; font-weight: 700; }
+/* ===== TOP BAR ===== */
+.topbar{position:sticky;top:0;z-index:200;background:rgba(13,27,42,0.96);border-bottom:1px solid var(--line);backdrop-filter:blur(12px);padding:0 24px;display:flex;align-items:center;gap:0;}
+.brand{font-size:13px;font-weight:700;color:var(--gold);letter-spacing:2px;padding:14px 0;border-left:1px solid var(--line);padding-left:20px;margin-left:20px;}
+.nav-tabs{display:flex;gap:2px;flex:1;}
+.nav-tab{padding:14px 20px;font-size:13px;font-weight:600;color:var(--gray);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;font-family:'Cairo',sans-serif;background:none;border-top:none;border-right:none;border-left:none;white-space:nowrap;}
+.nav-tab:hover{color:var(--white);}
+.nav-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.topbar-badge{font-size:10px;color:var(--red);border:1px solid var(--red);padding:3px 8px;letter-spacing:1px;margin-right:auto;}
 
-        /* INNER */
-        .inner { padding: 1.5cm 2.5cm; }
-        h2 { font-size: 17pt; font-weight: 900; color: var(--navy); margin: 1.4cm 0 0.6cm; display: flex; align-items: center; gap: 12px; }
-        h2::after { content: ''; flex: 1; height: 3px; background: linear-gradient(to left, transparent, var(--gold)); }
-        h2 .sec-num { background: var(--navy); color: var(--gold); font-size: 10pt; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
-        h3 { font-size: 13pt; font-weight: 700; color: var(--navy2); margin: 1cm 0 0.4cm; border-right: 4px solid var(--gold); padding-right: 12px; }
-        h4 { font-size: 11pt; font-weight: 700; color: var(--navy); margin: 0.5cm 0 0.25cm; }
-        p { margin-bottom: 0.55cm; text-align: justify; text-justify: inter-word; color: var(--text); }
-        ul, ol { padding-right: 1.4cm; margin-bottom: 0.55cm; }
-        li { margin-bottom: 0.2cm; }
+/* ===== PANELS ===== */
+.panel{display:none;min-height:100vh;padding:30px 24px 60px;}
+.panel.active{display:block;}
 
-        .highlight-box { background: var(--blue-l); border-right: 5px solid var(--navy); padding: 14px 18px; margin: 0.7cm 0; border-radius: 0 6px 6px 0; }
-        .highlight-box strong { color: var(--navy); }
+/* ===== COVER / HERO ===== */
+.hero{text-align:center;padding:50px 20px 40px;border-bottom:1px solid var(--line);margin-bottom:32px;}
+.hero h1{font-size:clamp(22px,4vw,40px);font-weight:900;color:#fff;margin-bottom:10px;}
+.hero h1 span{color:var(--gold);}
+.hero p{font-size:15px;color:var(--gray);line-height:1.8;}
+.hero-stats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+.hstat{background:var(--card-bg);border:1px solid var(--card-border);padding:10px 18px;border-radius:8px;text-align:center;}
+.hstat strong{display:block;color:var(--gold);font-size:18px;font-weight:700;}
+.hstat span{font-size:11px;color:var(--gray);}
 
-        /* TOC */
-        .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0.5cm 0; }
-        .toc-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); text-decoration: none; color: var(--navy); font-weight: 600; font-size: 11pt; transition: background .2s; }
-        .toc-item:hover { background: var(--blue-l); }
-        .toc-item .toc-num { background: var(--navy); color: var(--gold); font-size: 9pt; font-weight: 700; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+/* ===== SECTION LABEL ===== */
+.sec-label{font-size:10px;letter-spacing:3px;color:var(--gold);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;margin-bottom:6px;}
+.sec-title{font-size:22px;font-weight:800;color:#fff;border-right:4px solid var(--gold);padding-right:14px;margin-bottom:24px;}
 
-        /* STATS ROW */
-        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 0.6cm 0; }
-        .stat-box { background: var(--navy); color: white; border-radius: 10px; padding: 18px 16px; text-align: center; }
-        .stat-box .stat-num { font-size: 22pt; font-weight: 900; color: var(--gold2); display: block; line-height: 1; margin-bottom: 4px; }
-        .stat-box .stat-label { font-size: 9pt; color: rgba(255,255,255,.7); }
+/* ===== STAGE SELECTOR ===== */
+.stage-flow{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:24px;padding:14px;background:rgba(27,58,92,0.3);border-radius:10px;border:1px solid var(--line);}
+.sf-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 10px;border-radius:8px;cursor:pointer;border:1.5px solid transparent;transition:all .2s;background:none;min-width:72px;}
+.sf-btn .sn{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;color:var(--gold);}
+.sf-btn .sl{font-size:9px;color:var(--gray);line-height:1.3;text-align:center;}
+.sf-btn:hover{background:rgba(200,157,59,0.08);border-color:rgba(200,157,59,0.3);}
+.sf-btn.active{background:rgba(200,157,59,0.15);border-color:var(--gold);}
+.sf-arrow{color:rgba(200,157,59,0.4);font-size:14px;flex-shrink:0;}
 
-        /* ════════════════════════════════
-           PHASE COMPARISON BOXES
-        ════════════════════════════════ */
-        .phase-compare {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin: 0.8cm 0;
-        }
-        .phase-box {
-            border-radius: 12px;
-            overflow: hidden;
-            border: 2px solid;
-            box-shadow: 0 4px 16px rgba(0,0,0,.08);
-        }
-        .phase-box.phase1 { border-color: var(--phase1); }
-        .phase-box.phase2 { border-color: var(--phase2); }
-        .phase-header {
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: white;
-        }
-        .phase-box.phase1 .phase-header { background: var(--phase1); }
-        .phase-box.phase2 .phase-header { background: var(--phase2); }
-        .phase-icon { font-size: 22px; }
-        .phase-title { font-size: 12pt; font-weight: 800; line-height: 1.3; }
-        .phase-sub { font-size: 8.5pt; opacity: .8; margin-top: 2px; }
-        .phase-body { padding: 16px 18px; background: white; }
-        .phase-body ul { padding-right: 1.2cm; margin: 0; }
-        .phase-body li { font-size: 9.5pt; color: var(--text); margin-bottom: 5px; }
-        .phase-stats {
-            display: flex;
-            gap: 8px;
-            padding: 12px 18px;
-            flex-wrap: wrap;
-        }
-        .phase-box.phase1 .phase-stats { background: var(--phase1l); }
-        .phase-box.phase2 .phase-stats { background: var(--phase2l); }
-        .phase-stat {
-            flex: 1;
-            min-width: 80px;
-            text-align: center;
-        }
-        .phase-stat .ps-num {
-            font-size: 16pt;
-            font-weight: 900;
-            display: block;
-            line-height: 1;
-        }
-        .phase-box.phase1 .ps-num { color: var(--phase1); }
-        .phase-box.phase2 .ps-num { color: var(--phase2); }
-        .phase-stat .ps-lbl { font-size: 8pt; color: var(--muted); }
+/* ===== STAGE DETAIL ===== */
+.stage-detail{background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;padding:26px;position:relative;overflow:hidden;}
+.stage-detail::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;background:var(--gold);}
+.sd-header{display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;}
+.sd-badge{background:var(--gold);color:var(--navy);padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+.sd-title{font-size:19px;font-weight:700;color:#fff;}
+.sd-en{font-size:12px;color:var(--gray);margin-top:2px;}
+.sd-desc{font-size:14px;line-height:1.9;color:var(--text-body);margin-bottom:18px;padding:14px 18px;background:rgba(27,58,92,0.4);border-radius:8px;border-right:3px solid var(--gold);}
+.sd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+@media(max-width:600px){.sd-grid{grid-template-columns:1fr;}}
+.sd-box{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;}
+.sd-box h4{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:10px;font-family:'IBM Plex Mono',monospace;}
+.sd-box li{font-size:13px;color:var(--text-body);margin-bottom:5px;list-style:none;padding-right:14px;position:relative;line-height:1.5;}
+.sd-box li::before{content:'›';color:var(--gold);position:absolute;right:0;}
+.odoo-bar{background:var(--green-dim);border:1px solid rgba(0,166,80,0.35);border-radius:8px;padding:10px 16px;display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-body);margin-bottom:14px;flex-wrap:wrap;}
+.odoo-tag{background:var(--green);color:#fff;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:2px;}
+.sd-nav{display:flex;justify-content:space-between;margin-top:14px;}
+.sd-nav button{background:var(--card-bg);border:1px solid var(--card-border);color:var(--gray);padding:8px 20px;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:13px;transition:all .2s;}
+.sd-nav button:hover:not(:disabled){border-color:var(--gold);color:var(--gold);}
+.sd-nav button:disabled{opacity:.3;cursor:default;}
 
-        /* ════════════════════════════════
-           ORG TREE — REDESIGNED
-        ════════════════════════════════ */
-        .org-wrapper { overflow-x: auto; padding: 20px 0 30px; background: var(--navy); border-radius: 14px; margin: 0.5cm 0; }
-        .org-chart { display: flex; flex-direction: column; align-items: center; gap: 0; min-width: 720px; padding: 30px 20px; }
+/* ===== FORMS TABLE ===== */
+.tbl-wrap{overflow-x:auto;margin-top:16px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{background:var(--blue);color:var(--gold);padding:11px 14px;font-size:11px;font-weight:700;border-bottom:2px solid var(--gold);white-space:nowrap;text-align:right;}
+td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--text-body);vertical-align:middle;}
+tr:hover td{background:rgba(200,157,59,0.04);}
+.mtag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap;border:1px solid;}
+.m-p{border-color:#3498db;color:#3498db;}
+.m-i{border-color:#00a650;color:#00a650;}
+.m-q{border-color:#e67e22;color:#e67e22;}
+.m-a{border-color:#9b59b6;color:#9b59b6;}
+.m-f{border-color:#e74c3c;color:#e74c3c;}
+.stage-dot{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--gold);color:var(--navy);font-size:10px;font-weight:700;text-align:center;line-height:22px;flex-shrink:0;}
 
-        /* nodes */
-        .org-node {
-            border-radius: 10px;
-            padding: 12px 16px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 9.5pt;
-            color: white;
-            position: relative;
-            box-shadow: 0 4px 14px rgba(0,0,0,.35);
-        }
-        .org-node .node-icon { font-size: 18px; display: block; margin-bottom: 4px; }
-        .org-node .node-title { display: block; line-height: 1.3; }
-        .org-node .node-count {
-            display: inline-block;
-            margin-top: 5px;
-            font-size: 8pt;
-            font-weight: 600;
-            border-radius: 10px;
-            padding: 1px 8px;
-        }
+/* ===== KPIs ===== */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin:20px 0;}
+.kpi-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:20px 16px;text-align:center;transition:all .3s;}
+.kpi-card:hover{border-color:var(--gold);transform:translateY(-2px);}
+.kpi-val{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;color:var(--gold);margin-bottom:6px;}
+.kpi-name{font-size:13px;color:var(--text-body);margin-bottom:4px;}
+.kpi-freq{font-size:10px;color:var(--gray);letter-spacing:1px;}
+.rules-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.rule{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-radius:8px;font-size:14px;color:var(--text-body);line-height:1.7;}
+.rule.no{background:rgba(192,57,43,0.1);border-right:3px solid var(--red);}
+.rule.yes{background:var(--green-dim);border-right:3px solid var(--green);}
+.rule.target{background:rgba(200,157,59,0.08);border-right:3px solid var(--gold);}
+.r-icon{font-size:16px;flex-shrink:0;margin-top:2px;}
 
-        /* TOP — gold */
-        .org-node.top {
-            background: linear-gradient(135deg, #c89d3b, #a07c28);
-            color: var(--navy);
-            min-width: 200px;
-            font-size: 11pt;
-            border: 2px solid var(--gold2);
-        }
-        .org-node.top .node-count { background: rgba(13,30,53,.18); color: var(--navy); }
+/* ===== ORG CHART ===== */
+.org-wrap{text-align:center;margin:24px 0;}
+.org-layer-label{font-size:10px;letter-spacing:2px;color:var(--gray);text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-bottom:10px;}
+.org-row{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+.org-connector{width:1px;background:var(--line);height:24px;margin:0 auto;}
+.org-hline{height:1px;background:var(--line);margin:0 auto 6px;max-width:80%;}
+.org-node{background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;padding:12px 16px;min-width:140px;max-width:180px;text-align:center;transition:all .25s;cursor:pointer;}
+.org-node:hover{border-color:var(--gold);background:rgba(200,157,59,0.08);}
+.org-node.layer1{border-color:var(--gold);background:rgba(200,157,59,0.1);}
+.org-node.layer2{border-color:rgba(52,152,219,0.5);}
+.org-node.layer3{border-color:rgba(0,166,80,0.4);}
+.on-icon{font-size:22px;margin-bottom:6px;display:block;}
+.on-title{font-size:13px;font-weight:700;color:#fff;}
+.on-sub{font-size:10px;color:var(--gray);margin-top:3px;}
 
-        /* MID — deep blue */
-        .org-node.mid {
-            background: linear-gradient(135deg, #1b3a5c, #0d2240);
-            min-width: 150px;
-            border: 1.5px solid rgba(200,157,59,.4);
-            font-size: 9.5pt;
-        }
-        .org-node.mid .node-count { background: rgba(200,157,59,.2); color: var(--gold2); }
+/* ===== JOB CARDS ===== */
+.jobs-layout{display:grid;grid-template-columns:220px 1fr;gap:16px;}
+@media(max-width:680px){.jobs-layout{grid-template-columns:1fr;}}
+.job-list{display:flex;flex-direction:column;gap:6px;}
+.job-item{padding:12px 16px;border-radius:8px;border:1px solid var(--card-border);cursor:pointer;transition:all .2s;background:var(--card-bg);}
+.job-item:hover{border-color:rgba(200,157,59,0.4);}
+.job-item.active{border-color:var(--gold);background:rgba(200,157,59,0.1);}
+.ji-title{font-size:13px;font-weight:700;color:#fff;}
+.ji-layer{font-size:10px;color:var(--gray);margin-top:2px;}
+.job-detail-panel{background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;padding:24px;}
+.jdp-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--line);}
+.jdp-icon{width:50px;height:50px;background:rgba(200,157,59,0.15);border:1px solid var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.jdp-title{font-size:17px;font-weight:700;color:#fff;}
+.jdp-layer{font-size:12px;color:var(--gray);margin-top:3px;}
+.duties{list-style:none;margin-bottom:16px;}
+.duties li{padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:14px;color:var(--text-body);display:flex;gap:10px;line-height:1.6;}
+.duties li::before{content:'✓';color:var(--green);flex-shrink:0;font-size:12px;margin-top:3px;}
+.odoo-info{background:var(--green-dim);border:1px solid rgba(0,166,80,0.35);border-radius:8px;padding:12px 16px;}
+.oi-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;}
+.oi-label{font-size:10px;color:var(--gray);margin-bottom:4px;letter-spacing:1px;}
+.oi-tag{padding:3px 10px;border-radius:4px;font-size:12px;font-weight:600;background:rgba(0,166,80,0.2);border:1px solid rgba(0,166,80,0.4);color:#4be89a;}
+.oi-level{padding:3px 10px;border-radius:4px;font-size:12px;font-weight:700;background:rgba(200,157,59,0.15);border:1px solid rgba(200,157,59,0.4);color:var(--gold);}
+.dept-members{font-size:12px;color:var(--gray);margin-top:6px;}
+.dept-members span{color:var(--gold);}
 
-        /* OP — operational */
-        .org-node.op {
-            background: linear-gradient(135deg, #163352, #0d2040);
-            min-width: 130px;
-            font-size: 9pt;
-            border: 1px solid rgba(200,157,59,.25);
-        }
-        .org-node.op .node-count { background: rgba(255,255,255,.1); color: rgba(255,255,255,.8); }
+/* ===== RACI ===== */
+.raci-legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
+.rl-item{display:flex;align-items:center;gap:6px;font-size:13px;}
+.rl-R{color:#e74c3c;font-weight:700;}
+.rl-A{color:#e67e22;font-weight:700;}
+.rl-C{color:#3498db;font-weight:700;}
+.rl-I{color:var(--gray);font-weight:700;}
+.raci-table th{background:rgba(27,58,92,0.8);}
+.raci-table td{text-align:center;}
+.raci-table td:first-child{text-align:right;font-weight:600;font-size:12px;white-space:nowrap;}
+.rc-R{color:#e74c3c;font-weight:700;font-size:14px;}
+.rc-A{color:#e67e22;font-weight:700;font-size:14px;}
+.rc-C{color:#3498db;font-size:14px;}
+.rc-I{color:var(--gray);font-size:14px;}
 
-        /* connectors */
-        .v-line { width: 2px; background: var(--gold); margin: 0 auto; }
-        .h-connector {
-            position: relative;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-        }
-        .h-line {
-            position: absolute;
-            top: 0;
-            height: 2px;
-            background: var(--gold);
-        }
-        .node-wrap { display: flex; flex-direction: column; align-items: center; }
+/* ===== ODOO TABLE ===== */
+.odoo-sec table th{background:rgba(0,70,30,0.6);}
 
-        /* row spacing */
-        .org-row { display: flex; justify-content: center; align-items: flex-start; gap: 14px; width: 100%; }
+/* ===== PHASE COMPARE ===== */
+.phase-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+@media(max-width:550px){.phase-grid{grid-template-columns:1fr;}}
+.phase-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:20px;}
+.phase-card.p1{border-top:3px solid #3498db;}
+.phase-card.p2{border-top:3px solid var(--gold);}
+.phase-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:12px;}
+.phase-item{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text-body);padding:5px 0;line-height:1.5;}
+.phase-dot{width:6px;height:6px;border-radius:50%;margin-top:6px;flex-shrink:0;}
+.pd-blue{background:#3498db;}
+.pd-gold{background:var(--gold);}
+.phase-footer{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);display:flex;gap:12px;flex-wrap:wrap;}
+.pf-stat{text-align:center;}
+.pf-val{display:block;font-size:18px;font-weight:700;color:var(--gold);font-family:'IBM Plex Mono',monospace;}
+.pf-lbl{font-size:10px;color:var(--gray);}
 
-        /* ORG CHART SECTIONS */
-        .org-section-label {
-            color: var(--gold);
-            font-size: 8pt;
-            font-family: 'IBM Plex Mono', monospace;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            text-align: center;
-            opacity: .8;
-        }
+/* ===== HIGHLIGHT BOX ===== */
+.highlight{background:rgba(27,58,92,0.5);border-right:5px solid var(--gold);padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;font-size:14px;line-height:1.9;color:var(--text-body);}
+.highlight strong{color:var(--gold);}
 
-        /* ROLE CARDS */
-        .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 0.5cm 0; }
-        .role-card { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: white; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
-        .card-header { background: linear-gradient(135deg, var(--navy), var(--navy2)); color: white; padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
-        .card-header .card-icon { font-size: 22px; flex-shrink: 0; }
-        .card-header h4 { margin: 0; color: white; font-size: 11pt; font-weight: 700; line-height: 1.3; }
-        .odoo-badge { background: var(--green); color: white; font-size: 7.5pt; font-weight: 700; letter-spacing: 1px; padding: 2px 8px; border-radius: 20px; margin-right: auto; flex-shrink: 0; }
-        .card-body { padding: 14px 16px; }
-        .card-body ul { padding-right: 1.2cm; margin: 0 0 10px; }
-        .card-body ul li { font-size: 9.5pt; color: var(--muted); margin-bottom: 3px; }
-        .odoo-info { background: var(--green2); border-right: 4px solid var(--green); border-radius: 0 6px 6px 0; padding: 10px 12px; font-size: 9pt; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
-        .odoo-info .oi-label { color: var(--muted); font-size: 8pt; }
-        .odoo-info .oi-val { font-weight: 700; color: var(--navy); }
-        .odoo-info .oi-role { grid-column: 1 / -1; font-size: 10pt; font-weight: 700; color: var(--green); margin-bottom: 4px; }
-
-        /* TABLE */
-        table { width: 100%; border-collapse: collapse; margin: 0.5cm 0 0.8cm; font-size: 9.5pt; }
-        table caption { font-weight: 700; margin-bottom: 10px; color: var(--navy); font-size: 11pt; text-align: right; }
-        thead th { background: var(--navy); color: white; padding: 10px 8px; text-align: center; font-weight: 700; font-size: 9pt; }
-        thead th:first-child { text-align: right; }
-        td { padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; text-align: center; color: var(--text); }
-        td:first-child { text-align: right; }
-        tr:nth-child(even) td { background: var(--bg); }
-        tr:hover td { background: var(--blue-l); }
-
-        /* RACI */
-        .raci-table th { font-size: 8pt; padding: 8px 4px; }
-        .raci-table td { font-size: 9pt; font-weight: 700; padding: 8px 4px; text-align: center; }
-        .raci-table td:first-child { text-align: right; font-size: 8.5pt; font-weight: 600; color: var(--text); }
-        .raci-table .r-cell { color: var(--green); }
-        .raci-table .a-cell { color: var(--navy); }
-        .raci-table .c-cell { color: #a07c28; }
-        .raci-table .i-cell { color: #aab; }
-        .raci-legend { display: flex; gap: 20px; margin: 0.4cm 0; flex-wrap: wrap; }
-        .raci-legend-item { display: flex; align-items: center; gap: 8px; font-size: 10pt; color: var(--text); }
-        .raci-legend-item .badge { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11pt; }
-        .badge-r { background: var(--green2); color: var(--green); }
-        .badge-a { background: var(--blue-l); color: var(--navy); }
-        .badge-c { background: #fef8e7; color: #a07c28; }
-        .badge-i { background: #f0f0f0; color: #888; }
-
-        /* ROLE LEVELS */
-        .level-admin { background: #fff3e0; color: #b85c00; font-weight: 700; border-radius: 4px; padding: 2px 8px; }
-        .level-manager { background: #e8f0ff; color: #1a3c8f; font-weight: 700; border-radius: 4px; padding: 2px 8px; }
-        .level-user { background: var(--green2); color: var(--green); font-weight: 700; border-radius: 4px; padding: 2px 8px; }
-
-        /* SIGNATURE */
-        .signature-line { display: flex; justify-content: space-between; margin-top: 1.5cm; gap: 30px; }
-        .sig-box { flex: 1; border-top: 2px solid var(--navy); padding-top: 12px; text-align: center; font-size: 10pt; }
-        .sig-box label { display: block; color: var(--muted); font-size: 8.5pt; margin-bottom: 4px; }
-        .sig-box strong { color: var(--navy); }
-
-        .page-footer { text-align: center; color: var(--muted); font-size: 8pt; border-top: 1px solid var(--border); padding: 14px; margin-top: 1cm; }
-
-        .print-bar { background: var(--navy); color: white; text-align: center; padding: 12px; font-size: 10.5pt; display: flex; align-items: center; justify-content: center; gap: 16px; }
-        .print-bar span { color: rgba(255,255,255,.7); }
-        .btn-print { background: var(--gold); color: var(--navy); border: none; padding: 8px 20px; border-radius: 6px; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 10pt; cursor: pointer; }
-        .btn-print:hover { background: var(--gold2); }
-
-        .page-break { page-break-before: always; }
-        .cards-grid.single { grid-template-columns: 1fr; }
-
-        /* Phase tag badges */
-        .tag-phase1 { background: #e8f7ef; color: #1a4a2e; font-size: 8pt; font-weight: 700; padding: 2px 8px; border-radius: 10px; border: 1px solid #1a4a2e; }
-        .tag-phase2 { background: #e8f0ff; color: #0d3060; font-size: 8pt; font-weight: 700; padding: 2px 8px; border-radius: 10px; border: 1px solid #0d3060; }
-
-        /* info callout */
-        .callout {
-            border-radius: 10px;
-            padding: 16px 20px;
-            margin: 0.6cm 0;
-            display: flex;
-            gap: 14px;
-            align-items: flex-start;
-        }
-        .callout.info { background: #eef4fb; border-right: 5px solid var(--navy); }
-        .callout.phase1 { background: var(--phase1l); border-right: 5px solid var(--phase1); }
-        .callout.phase2 { background: var(--phase2l); border-right: 5px solid var(--phase2); }
-        .callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
-        .callout-text { font-size: 10pt; line-height: 1.8; color: var(--text); }
-        .callout-text strong { color: var(--navy); }
-    </style>
+@media print{.topbar{display:none;}.panel{display:block!important;padding:20px;}}
+</style>
 </head>
 <body>
-<div class="no-print print-bar">
-    <span>📄 تقرير هيكل الوظائف والأدوار – Brandzo × Odoo 17</span>
-    <button class="btn-print" onclick="window.print()">🖨️ طباعة / PDF</button>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <span class="brand">BRANDZO</span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPanel('overview')">نظرة عامة</button>
+    <button class="nav-tab" onclick="showPanel('stages')">الدورة المستندية</button>
+    <button class="nav-tab" onclick="showPanel('forms')">المستندات (21)</button>
+    <button class="nav-tab" onclick="showPanel('kpis')">القواعد والـ KPIs</button>
+    <button class="nav-tab" onclick="showPanel('org')">الهيكل الوظيفي</button>
+    <button class="nav-tab" onclick="showPanel('jobs')">بطاقات الوظائف</button>
+    <button class="nav-tab" onclick="showPanel('raci')">مصفوفة RACI</button>
+    <button class="nav-tab" onclick="showPanel('odoo')">أودو — الصلاحيات</button>
+  </div>
+  <span class="topbar-badge">سري</span>
 </div>
 
-<div class="container">
-
-    <!-- COVER -->
-    <div class="cover">
-        <div class="confidential-badge">سري – داخلي فقط</div>
-        <div class="cover-brand">▸ Brandzo Systems</div>
-        <div class="cover-line"></div>
-        <h1>تقرير هيكل الوظائف<br>والأدوار <span>التشغيلية</span></h1>
-        <p class="subtitle">الهيكل التنظيمي الكامل للمستودعات مع تكامل أودو 17 Enterprise — بطاقات وصف وظيفي، مصفوفة RACI، وتعيين الأدوار والصلاحيات</p>
-        <div class="cover-meta-grid">
-            <div class="cover-meta-item"><label>التاريخ</label><span>12 مايو 2026</span></div>
-            <div class="cover-meta-item"><label>الإصدار</label><span>1.0 – Odoo Ready</span></div>
-            <div class="cover-meta-item"><label>الإعداد</label><span>فريق Brandzo</span></div>
-        </div>
+<!-- ===================== PANEL: OVERVIEW ===================== -->
+<div id="panel-overview" class="panel active">
+  <div class="hero">
+    <h1>دليل Brandzo <span>التشغيلي الكامل</span></h1>
+    <p>الدورة المستندية × الهيكل الوظيفي × تكامل Odoo 17 Enterprise<br>إصدار 1.0 — 12 مايو 2026</p>
+    <div class="hero-stats">
+      <div class="hstat"><strong>8</strong><span>مراحل مستندية</span></div>
+      <div class="hstat"><strong>21</strong><span>نموذج رسمي</span></div>
+      <div class="hstat"><strong>11</strong><span>منصب محوري</span></div>
+      <div class="hstat"><strong>3</strong><span>طبقات هرمية</span></div>
+      <div class="hstat"><strong>6</strong><span>إدارات تشغيلية</span></div>
+      <div class="hstat"><strong>≥98.5%</strong><span>دقة مخزون مستهدفة</span></div>
     </div>
+  </div>
 
-    <div class="inner">
+  <div class="sec-label">// نظرة عامة</div>
+  <div class="sec-title">ما هذا الدليل؟</div>
+  <p style="font-size:15px;line-height:2;color:var(--text-body);margin-bottom:20px;">
+    تمثل الدورة المستندية لنظام Brandzo العمود الفقري للعمليات اللوجستية، حيث تمر كل حركة مخزونية بـ <strong style="color:var(--gold)">8 مراحل موثقة</strong> تبدأ من طلب الشراء الداخلي وتنتهي بتسوية المرتجعات. مع تكامل Odoo 17 Enterprise، كل مرحلة لها نظير مباشر في النظام، مما يضمن الانتقال السلس من العمليات الورقية إلى الرقمية بالكامل.
+  </p>
+  <div class="highlight">
+    <strong>🎯 الهدف الرئيسي:</strong> تحويل الدورة المستندية الورقية إلى دورة رقمية متكاملة في Odoo مع الحفاظ على جميع ضوابط الرقابة والامتثال التنظيمي.
+  </div>
 
-    <!-- TOC -->
-    <h2><span class="sec-num">☰</span> قائمة المحتويات</h2>
-    <div class="toc-grid">
-        <a class="toc-item" href="#org-overview"><span class="toc-num">1</span> نظرة عامة على الهيكل</a>
-        <a class="toc-item" href="#org-tree"><span class="toc-num">2</span> شجرة الهيكل التنظيمي</a>
-        <a class="toc-item" href="#position-cards"><span class="toc-num">3</span> بطاقات الوصف الوظيفي</a>
-        <a class="toc-item" href="#departments"><span class="toc-num">4</span> الإدارات الستة التشغيلية</a>
-        <a class="toc-item" href="#raci-matrix"><span class="toc-num">5</span> مصفوفة RACI</a>
-        <a class="toc-item" href="#role-mapping"><span class="toc-num">6</span> تعيين الأدوار في أودو</a>
+  <div class="phase-grid" style="margin-top:30px;">
+    <div class="phase-card p1">
+      <div class="phase-title">🚀 المرحلة الأولى — التشغيل الأولي</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>مدير مستودع تنفيذي واحد</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>مدير سلاسل إمداد مشترك مع المالية</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>مشرف استلام + مشرف تخزين</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>مشرف جودة مشترك (استلام + مرتجعات)</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>فريق سحب وتوزيع مصغر (20–30 عامل)</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>منسق نقل واحد — بدون أسطول ضخم</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>لا عمالة عارضة — عقود دائمة فقط</div>
+      <div class="phase-footer">
+        <div class="pf-stat"><span class="pf-val">~50</span><span class="pf-lbl">موظف</span></div>
+        <div class="pf-stat"><span class="pf-val">4</span><span class="pf-lbl">إدارات نشطة</span></div>
+        <div class="pf-stat"><span class="pf-val">1</span><span class="pf-lbl">مستودع</span></div>
+      </div>
     </div>
-
-    <!-- ══ SECTION 1 ══ -->
-    <div class="page-break"></div>
-    <h2 id="org-overview"><span class="sec-num">1</span> نظرة عامة على الهيكل التنظيمي</h2>
-
-    <p>
-        يمثل الهيكل التنظيمي لمستودعات Brandzo نموذجاً هرمياً من ثلاث طبقات يضمن توزيعاً واضحاً للمسؤوليات وسلاسة خطوط الإبلاغ. مع تكامل Odoo 17 Enterprise، يحمل كل منصب دوراً محدداً في النظام مع صلاحيات واضحة على الوحدات المسموح بها.
-    </p>
-    <p>
-        تم تصميم الهيكل على <strong>مرحلتين متكاملتين</strong>: مرحلة تشغيلية أولية مُحكمة تركز على الوظائف الجوهرية دون عمالة عارضة، ومرحلة تخطيط كامل تستوعب توسع الفروع وتشغيل كافة المستودعات المستقبلية.
-    </p>
-
-    <!-- PHASE COMPARISON -->
-    <div class="phase-compare">
-        <!-- Phase 1 -->
-        <div class="phase-box phase1">
-            <div class="phase-header">
-                <span class="phase-icon">🚀</span>
-                <div>
-                    <div class="phase-title">المرحلة الأولى — التشغيلي الأولي</div>
-                    <div class="phase-sub">الهيكل المحصور – الوظائف الجوهرية فقط</div>
-                </div>
-            </div>
-            <div class="phase-body">
-                <ul>
-                    <li>مدير مستودع تنفيذي واحد</li>
-                    <li>مدير سلاسل إمداد مشترك (مع المالية)</li>
-                    <li>مشرف استلام + مشرف تخزين</li>
-                    <li>مشرف جودة مشترك (استلام + مرتجعات)</li>
-                    <li>فريق سحب وتوزيع مصغر (20–30 عامل)</li>
-                    <li>منسق نقل واحد (بدون أسطول ضخم)</li>
-                    <li>لا عمالة عارضة – عقود دائمة فقط</li>
-                </ul>
-            </div>
-            <div class="phase-stats">
-                <div class="phase-stat"><span class="ps-num">~50</span><span class="ps-lbl">موظف كافٍ</span></div>
-                <div class="phase-stat"><span class="ps-num">4</span><span class="ps-lbl">إدارات نشطة</span></div>
-                <div class="phase-stat"><span class="ps-num">1</span><span class="ps-lbl">مستودع تشغيلي</span></div>
-            </div>
-        </div>
-        <!-- Phase 2 -->
-        <div class="phase-box phase2">
-            <div class="phase-header">
-                <span class="phase-icon">🏗️</span>
-                <div>
-                    <div class="phase-title">المرحلة الثانية — التخطيط الكامل</div>
-                    <div class="phase-sub">جميع الفروع والمستودعات المستقبلية</div>
-                </div>
-            </div>
-            <div class="phase-body">
-                <ul>
-                    <li>مدير مستودع تنفيذي لكل فرع رئيسي</li>
-                    <li>مدير سلاسل إمداد متخصص مستقل</li>
-                    <li>مدير مالية ومحاسبة منفصل لكل منطقة</li>
-                    <li>إدارة جودة متكاملة بفرق متخصصة</li>
-                    <li>أسطول نقل وتوزيع كامل (50–70 سائق)</li>
-                    <li>فرق استلام وتخزين وسحب بكامل طاقتها</li>
-                    <li>مهندس تخطيط + مراقبي مخزون متعددون</li>
-                </ul>
-            </div>
-            <div class="phase-stats">
-                <div class="phase-stat"><span class="ps-num">~320</span><span class="ps-lbl">موظف كامل</span></div>
-                <div class="phase-stat"><span class="ps-num">6</span><span class="ps-lbl">إدارات كاملة</span></div>
-                <div class="phase-stat"><span class="ps-num">+5</span><span class="ps-lbl">فروع مستقبلية</span></div>
-            </div>
-        </div>
+    <div class="phase-card p2">
+      <div class="phase-title">🏗️ المرحلة الثانية — التخطيط الكامل</div>
+      <div class="phase-item"><span class="phase-dot pd-gold"></span>مدير مستودع تنفيذي لكل فرع رئيسي</div>
+      <div class="phase-item"><span class="phase-dot pd-gold"></span>مدير سلاسل إمداد متخصص مستقل</div>
+      <div class="phase-item"><span class="phase-dot pd-gold"></span>مدير مالية ومحاسبة منفصل لكل منطقة</div>
+      <div class="phase-item"><span class="phase-dot pd-gold"></span>إدارة جودة متكاملة بفرق متخصصة</div>
+      <div class="phase-item"><span class="phase-dot pd-gold"></span>أسطول نقل وتوزيع كامل (50–70 سائق)</div>
+      <div class="phase-item"><span class="phase-dot pd-gold"></span>فرق استلام وتخزين وسحب بكامل طاقتها</div>
+      <div class="phase-item"><span class="phase-dot pd-gold"></span>مهندس تخطيط + مراقبو مخزون متعددون</div>
+      <div class="phase-footer">
+        <div class="pf-stat"><span class="pf-val">~320</span><span class="pf-lbl">موظف</span></div>
+        <div class="pf-stat"><span class="pf-val">6</span><span class="pf-lbl">إدارات كاملة</span></div>
+        <div class="pf-stat"><span class="pf-val">+5</span><span class="pf-lbl">فروع مستقبلية</span></div>
+      </div>
     </div>
-
-    <div class="callout info">
-        <span class="callout-icon">🎯</span>
-        <div class="callout-text">
-            <strong>الهدف الرئيسي:</strong> الانطلاق بهيكل مرن ومحكم (المرحلة الأولى) يضمن الكفاءة التشغيلية من اليوم الأول، مع وضع خارطة طريق واضحة للتوسع التدريجي نحو الهيكل الكامل (المرحلة الثانية) عند فتح كل فرع جديد.
-        </div>
-    </div>
-
-    <div class="stats-row">
-        <div class="stat-box"><span class="stat-num">~320</span><span class="stat-label">إجمالي الموظفين (المرحلة 2)</span></div>
-        <div class="stat-box"><span class="stat-num">6</span><span class="stat-label">إدارات تشغيلية</span></div>
-        <div class="stat-box"><span class="stat-num">11</span><span class="stat-label">منصب محوري</span></div>
-        <div class="stat-box"><span class="stat-num">3</span><span class="stat-label">طبقات هرمية</span></div>
-    </div>
-
-    <!-- STAFFING TABLE -->
-    <h3>جدول توزيع الموظفين بالمرحلتين</h3>
-    <table>
-        <caption>مقارنة الكادر الوظيفي – التشغيلي الأولي مقابل التخطيط الكامل</caption>
-        <thead>
-            <tr>
-                <th>الإدارة / القسم</th>
-                <th>🚀 المرحلة الأولى</th>
-                <th>🏗️ المرحلة الكاملة</th>
-                <th>الدور الأساسي</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>🧭 <strong>القيادة التنفيذية</strong></td>
-                <td><span class="tag-phase1">1 مدير</span></td>
-                <td><span class="tag-phase2">1 + مدراء فروع</span></td>
-                <td>الإشراف الكامل والاستراتيجية</td>
-            </tr>
-            <tr>
-                <td>💻 <strong>سلاسل الإمداد</strong></td>
-                <td><span class="tag-phase1">مشارك مع المالية</span></td>
-                <td><span class="tag-phase2">مدير مستقل + فريق</span></td>
-                <td>تخطيط وإدارة التوريد</td>
-            </tr>
-            <tr>
-                <td>🛡️ <strong>حوكمة الدورة / الجودة</strong></td>
-                <td><span class="tag-phase1">1 مشرف مشترك</span></td>
-                <td><span class="tag-phase2">مدير + ~15 مفتش</span></td>
-                <td>ضمان الجودة والامتثال</td>
-            </tr>
-            <tr>
-                <td>📊 <strong>المحاسبة والمالية</strong></td>
-                <td><span class="tag-phase1">محاسب واحد</span></td>
-                <td><span class="tag-phase2">مدير + فريق 3–5</span></td>
-                <td>الرقابة المالية والتقارير</td>
-            </tr>
-            <tr>
-                <td>📦 <strong>الاستلام والرقابة</strong></td>
-                <td><span class="tag-phase1">مشرف + 8–10 عمال</span></td>
-                <td><span class="tag-phase2">مدير + مشرفان + ~30</span></td>
-                <td>استلام البضاعة وتوثيقها</td>
-            </tr>
-            <tr>
-                <td>🔬 <strong>فحص الجودة</strong></td>
-                <td><span class="tag-phase1">2–3 مفتشين</span></td>
-                <td><span class="tag-phase2">فرق متخصصة ~15</span></td>
-                <td>فحص المنتجات الواردة</td>
-            </tr>
-            <tr>
-                <td>🏬 <strong>التخزين وتحديد المواقع</strong></td>
-                <td><span class="tag-phase1">مشرف + 15–20 عامل</span></td>
-                <td><span class="tag-phase2">مدير + مهندس + ~70</span></td>
-                <td>تنظيم المخزون وتخزينه</td>
-            </tr>
-            <tr>
-                <td>📋 <strong>تحضير الطلبات والسحب</strong></td>
-                <td><span class="tag-phase1">مشرف + 20–30 عامل</span></td>
-                <td><span class="tag-phase2">مدير + مشرفون + ~120</span></td>
-                <td>تنفيذ أوامر الصرف</td>
-            </tr>
-            <tr>
-                <td>🚚 <strong>أسطول النقل والتوزيع</strong></td>
-                <td><span class="tag-phase1">منسق + 10–15 سائق</span></td>
-                <td><span class="tag-phase2">مدير + ~70 سائق</span></td>
-                <td>التوزيع للفروع والعملاء</td>
-            </tr>
-            <tr>
-                <td>↩️ <strong>المرتجعات وتصحيح المخزون</strong></td>
-                <td><span class="tag-phase1">مشارك مع الجودة (2–3)</span></td>
-                <td><span class="tag-phase2">مدير + مشرف + ~12</span></td>
-                <td>معالجة المرتجعات والتسويات</td>
-            </tr>
-            <tr style="background:#f5f7fb; font-weight:700;">
-                <td>📊 <strong>الإجمالي التقريبي</strong></td>
-                <td><span class="tag-phase1">~50–60 موظف</span></td>
-                <td><span class="tag-phase2">~320 موظف</span></td>
-                <td>—</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <!-- ══ SECTION 2 ══ -->
-    <div class="page-break"></div>
-    <h2 id="org-tree"><span class="sec-num">2</span> شجرة الهيكل التنظيمي الكامل</h2>
-
-    <div class="org-wrapper">
-        <div class="org-chart">
-
-            <!-- LAYER 1 TOP -->
-            <div class="org-section-label">◆ الطبقة الأولى — القيادة العليا</div>
-            <div class="org-row">
-                <div class="org-node top">
-                    <span class="node-icon">🧭</span>
-                    <span class="node-title">مدير المستودع التنفيذي</span>
-                    <span class="node-count">الطبقة 1 | الإشراف العام</span>
-                </div>
-            </div>
-
-            <!-- V connector -->
-            <div class="v-line" style="height:32px;"></div>
-
-            <!-- Horizontal bar for L2 -->
-            <div style="position:relative;width:85%;height:2px;background:var(--gold);margin:0 auto 0;"></div>
-
-            <!-- LAYER 2 MID -->
-            <div class="org-section-label" style="margin-top:8px;">◆ الطبقة الثانية — الإدارة الوسطى</div>
-            <div class="org-row" style="gap:10px; align-items:flex-start;">
-                <div class="node-wrap">
-                    <div class="v-line" style="height:20px;"></div>
-                    <div class="org-node mid">
-                        <span class="node-icon">💻</span>
-                        <span class="node-title">مدير سلاسل الإمداد</span>
-                        <span class="node-count">طبقة 2</span>
-                    </div>
-                </div>
-                <div class="node-wrap">
-                    <div class="v-line" style="height:20px;"></div>
-                    <div class="org-node mid">
-                        <span class="node-icon">🛡️</span>
-                        <span class="node-title">مدير حوكمة الدورة</span>
-                        <span class="node-count">طبقة 2</span>
-                    </div>
-                </div>
-                <div class="node-wrap">
-                    <div class="v-line" style="height:20px;"></div>
-                    <div class="org-node mid">
-                        <span class="node-icon">📊</span>
-                        <span class="node-title">مدير المحاسبة والمالية</span>
-                        <span class="node-count">طبقة 2</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- V connector to ops -->
-            <div class="v-line" style="height:28px;"></div>
-            <div style="position:relative;width:94%;height:2px;background:rgba(200,157,59,.55);margin:0 auto;"></div>
-
-            <!-- LAYER 3 OPERATIONAL -->
-            <div class="org-section-label" style="margin-top:8px;">◆ الطبقة الثالثة — الإدارات التشغيلية</div>
-            <div class="org-row" style="gap:8px; flex-wrap:wrap;">
-                <div class="node-wrap">
-                    <div class="v-line" style="height:20px;"></div>
-                    <div class="org-node op">
-                        <span class="node-icon">📦</span>
-                        <span class="node-title">الاستلام</span>
-                        <span class="node-count">~30 موظف</span>
-                    </div>
-                </div>
-                <div class="node-wrap">
-                    <div class="v-line" style="height:20px;"></div>
-                    <div class="org-node op">
-                        <span class="node-icon">🔬</span>
-                        <span class="node-title">الجودة</span>
-                        <span class="node-count">~15 مفتش</span>
-                    </div>
-                </div>
-                <div class="node-wrap">
-                    <div class="v-line" style="height:20px;"></div>
-                    <div class="org-node op">
-                        <span class="node-icon">🏬</span>
-                        <span class="node-title">التخزين</span>
-                        <span class="node-count">~70 موظف</span>
-                    </div>
-                </div>
-                <div class="node-wrap">
-                    <div class="v-line" style="height:20px;"></div>
-                    <div class="org-node op">
-                        <span class="node-icon">📋</span>
-                        <span class="node-title">السحب</span>
-                        <span class="node-count">~120 عامل</span>
-                    </div>
-                </div>
-                <div class="node-wrap">
-                    <div class="v-line" style="height:20px;"></div>
-                    <div class="org-node op">
-                        <span class="node-icon">🚚</span>
-                        <span class="node-title">النقل</span>
-                        <span class="node-count">~70 سائق</span>
-                    </div>
-                </div>
-                <div class="node-wrap">
-                    <div class="v-line" style="height:20px;"></div>
-                    <div class="org-node op">
-                        <span class="node-icon">↩️</span>
-                        <span class="node-title">المرتجعات</span>
-                        <span class="node-count">~12 موظف</span>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <div class="highlight-box">
-        <strong>📌 ملاحظة:</strong> الأعداد الموضحة في الشجرة تمثل التخطيط الكامل (المرحلة الثانية). في التشغيل الأولي يُكتفى بـ 50–60 موظف جوهري موزعين على 4 إدارات نشطة.
-    </div>
-
-    <!-- ══ SECTION 3 ══ -->
-    <div class="page-break"></div>
-    <h2 id="position-cards"><span class="sec-num">3</span> بطاقات الوصف الوظيفي</h2>
-
-    <h3>الطبقتان الأولى والثانية – المناصب القيادية</h3>
-    <div class="cards-grid">
-
-        <div class="role-card">
-            <div class="card-header"><span class="card-icon">🧭</span><h4>مدير المستودعات التنفيذي</h4><span class="odoo-badge">ODOO</span></div>
-            <div class="card-body">
-                <ul>
-                    <li>الإشراف العام على كافة أنشطة المستودعات</li>
-                    <li>وضع الاستراتيجيات التشغيلية قصيرة وطويلة المدى</li>
-                    <li>إدارة الميزانية التشغيلية للمستودعات</li>
-                    <li>التنسيق مع إدارة سلاسل الإمداد واللوجستيات</li>
-                    <li>اعتماد السياسات والإجراءات الرئيسية</li>
-                    <li>إدارة علاقات الموردين الكبار</li>
-                    <li>الإشراف على تطبيق نظام Odoo ERP</li>
-                </ul>
-                <div class="odoo-info">
-                    <span class="oi-role">👤 Inventory Manager</span>
-                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">كل وحدات المخزون</span></div>
-                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">Admin</span></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="role-card">
-            <div class="card-header"><span class="card-icon">💻</span><h4>مدير سلاسل الإمداد واللوجستيات</h4><span class="odoo-badge">ODOO</span></div>
-            <div class="card-body">
-                <ul>
-                    <li>إدارة وتخطيط سلاسل الإمداد بالكامل</li>
-                    <li>الإشراف على العمليات اللوجستية والتوزيع</li>
-                    <li>تنسيق عمليات النقل والشحن</li>
-                    <li>تحسين كفاءة سلسلة التوريد</li>
-                    <li>إدارة علاقات شركات النقل والخدمات اللوجستية</li>
-                    <li>الإشراف على نظام تتبع الشحنات</li>
-                </ul>
-                <div class="odoo-info">
-                    <span class="oi-role">👤 System Administrator</span>
-                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Settings كاملة</span></div>
-                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">Admin</span></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="role-card">
-            <div class="card-header"><span class="card-icon">🛡️</span><h4>مدير حوكمة الدورة المستندية</h4><span class="odoo-badge">ODOO</span></div>
-            <div class="card-body">
-                <ul>
-                    <li>حوكمة وإدارة الدورة المستندية بالكامل</li>
-                    <li>مراقبة الإدخالات اليومية على نظام Odoo</li>
-                    <li>ضمان تطبيق معايير الجودة والسلامة</li>
-                    <li>إدارة فريق فحص الجودة والتدقيق</li>
-                    <li>مراجعة وتدقيق جميع المستندات اليومية</li>
-                    <li>ضمان تكامل البيانات في نظام Odoo</li>
-                </ul>
-                <div class="odoo-info">
-                    <span class="oi-role">👤 Quality Administrator</span>
-                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Quality + Inventory (read)</span></div>
-                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">Admin</span></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="role-card">
-            <div class="card-header"><span class="card-icon">📊</span><h4>مدير المحاسبة والرقابة المالية</h4><span class="odoo-badge">ODOO</span></div>
-            <div class="card-body">
-                <ul>
-                    <li>الإشراف على جميع العمليات المالية</li>
-                    <li>دقة المطابقات المالية مع الموردين</li>
-                    <li>إعداد التقارير المالية</li>
-                    <li>الإشراف على أنشطة الجرد المالي</li>
-                    <li>مراقبة تكاليف التشغيل وترشيدها</li>
-                </ul>
-                <div class="odoo-info">
-                    <span class="oi-role">👤 Accounting Manager</span>
-                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Purchase + Accounting</span></div>
-                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">Manager</span></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <h3>الطبقة الثالثة – الإدارات التشغيلية الستة</h3>
-    <div class="cards-grid">
-
-        <div class="role-card">
-            <div class="card-header"><span class="card-icon">📦</span><h4>إدارة الاستلام والرقابة</h4><span class="odoo-badge">ODOO</span></div>
-            <div class="card-body">
-                <ul>
-                    <li>مدير قسم الاستلام</li>
-                    <li>مشرف الاستلام (فترة صباحية ومسائية)</li>
-                    <li>فريق إدخال بيانات الاستلام (4–6 أفراد)</li>
-                    <li>فريق عمال الرصيف والمناولة (20–30)</li>
-                </ul>
-                <div class="odoo-info">
-                    <span class="oi-role">👤 Inventory User</span>
-                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Inventory + Quality</span></div>
-                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">User</span></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="role-card">
-            <div class="card-header"><span class="card-icon">🔬</span><h4>إدارة فحص ومراقبة الجودة</h4><span class="odoo-badge">ODOO</span></div>
-            <div class="card-body">
-                <ul>
-                    <li>مدير إدارة الجودة</li>
-                    <li>فريق فحص المنتجات الطازجة والمجمدة</li>
-                    <li>فريق فحص المنتجات الجافة والمعلبة</li>
-                    <li>فريق فحص المنتجات غير الغذائية</li>
-                </ul>
-                <div class="odoo-info">
-                    <span class="oi-role">👤 Quality User</span>
-                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Quality + Inventory (read)</span></div>
-                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">User</span></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="role-card">
-            <div class="card-header"><span class="card-icon">🏬</span><h4>إدارة التخزين وتحديد المواقع</h4><span class="odoo-badge">ODOO</span></div>
-            <div class="card-body">
-                <ul>
-                    <li>مدير عمليات التخزين</li>
-                    <li>مهندس تخطيط المستودع</li>
-                    <li>مشرفي مناطق التخزين المتخصصة</li>
-                    <li>مشغلي الرافعات الشوكية (40–60)</li>
-                    <li>مراقبي المخزون (10–12)</li>
-                </ul>
-                <div class="odoo-info">
-                    <span class="oi-role">👤 Inventory User</span>
-                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Inventory + Barcode</span></div>
-                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">User</span></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="role-card">
-            <div class="card-header"><span class="card-icon">📋</span><h4>إدارة تحضير الطلبات والتوزيع</h4><span class="odoo-badge">ODOO</span></div>
-            <div class="card-body">
-                <ul>
-                    <li>مدير عمليات التوزيع</li>
-                    <li>مخطط الأحمال</li>
-                    <li>مشرفي مناطق الانتقاء</li>
-                    <li>العمال المتنقلين (80–120)</li>
-                    <li>فريق المراجعين والمدققين</li>
-                </ul>
-                <div class="odoo-info">
-                    <span class="oi-role">👤 Barcode User</span>
-                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Barcode فقط</span></div>
-                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">User</span></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="role-card">
-            <div class="card-header"><span class="card-icon">🚚</span><h4>إدارة أسطول النقل والتوزيع</h4><span class="odoo-badge">ODOO</span></div>
-            <div class="card-body">
-                <ul>
-                    <li>مدير النقل والتوزيع</li>
-                    <li>منسق عمليات التوزيع اليومية</li>
-                    <li>فريق السائقين (50–70)</li>
-                    <li>فريق مساعدي السائقين</li>
-                    <li>مهندس صيانة الأسطول</li>
-                </ul>
-                <div class="odoo-info">
-                    <span class="oi-role">👤 Fleet User</span>
-                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Fleet</span></div>
-                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">User</span></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="role-card">
-            <div class="card-header"><span class="card-icon">↩️</span><h4>إدارة المرتجعات وتصحيح المخزون</h4><span class="odoo-badge">ODOO</span></div>
-            <div class="card-body">
-                <ul>
-                    <li>مدير إدارة المرتجعات</li>
-                    <li>مشرف استلام المرتجعات</li>
-                    <li>فريق فحص ومعالجة المرتجعات</li>
-                    <li>منسق المرتجعات مع الموردين</li>
-                </ul>
-                <div class="odoo-info">
-                    <span class="oi-role">👤 Quality User</span>
-                    <div><span class="oi-label">الوحدات</span><br><span class="oi-val">Quality + Inventory (read)</span></div>
-                    <div><span class="oi-label">المستوى</span><br><span class="oi-val">User</span></div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- ══ SECTION 4 ══ -->
-    <div class="page-break"></div>
-    <h2 id="departments"><span class="sec-num">4</span> الإدارات الستة التشغيلية</h2>
-    <table>
-        <caption>الإدارات التشغيلية والتسلسل الهرمي الداخلي</caption>
-        <thead>
-            <tr>
-                <th>الإدارة</th>
-                <th>المدير المباشر</th>
-                <th>المرحلة الأولى</th>
-                <th>المرحلة الكاملة</th>
-                <th>الوثائق المنتجة</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>📦 <strong>الاستلام والرقابة</strong></td>
-                <td>مدير قسم الاستلام</td>
-                <td><span class="tag-phase1">~10</span></td>
-                <td><span class="tag-phase2">~30</span></td>
-                <td>نماذج GRN، تقارير الرقابة</td>
-            </tr>
-            <tr>
-                <td>🔬 <strong>فحص ومراقبة الجودة</strong></td>
-                <td>مدير إدارة الجودة</td>
-                <td><span class="tag-phase1">~3</span></td>
-                <td><span class="tag-phase2">~15</span></td>
-                <td>تقارير الجودة، شهادات المطابقة</td>
-            </tr>
-            <tr>
-                <td>🏬 <strong>التخزين وتحديد المواقع</strong></td>
-                <td>مدير عمليات التخزين</td>
-                <td><span class="tag-phase1">~20</span></td>
-                <td><span class="tag-phase2">~70</span></td>
-                <td>خرائط المواقع، تقارير الجرد</td>
-            </tr>
-            <tr>
-                <td>📋 <strong>تحضير الطلبات والتوزيع</strong></td>
-                <td>مدير عمليات التوزيع</td>
-                <td><span class="tag-phase1">~25</span></td>
-                <td><span class="tag-phase2">~120</span></td>
-                <td>قوائم السحب، إذنات التسليم</td>
-            </tr>
-            <tr>
-                <td>🚚 <strong>أسطول النقل والتوزيع</strong></td>
-                <td>مدير النقل والتوزيع</td>
-                <td><span class="tag-phase1">~15</span></td>
-                <td><span class="tag-phase2">~70</span></td>
-                <td>جداول النقل، تقارير الأسطول</td>
-            </tr>
-            <tr>
-                <td>↩️ <strong>المرتجعات وتصحيح المخزون</strong></td>
-                <td>مدير إدارة المرتجعات</td>
-                <td><span class="tag-phase1">مشارك ~3</span></td>
-                <td><span class="tag-phase2">~12</span></td>
-                <td>نماذج الإرجاع، سندات التسوية</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <!-- ══ SECTION 5 – RACI ══ -->
-    <div class="page-break"></div>
-    <h2 id="raci-matrix"><span class="sec-num">5</span> مصفوفة RACI: الأدوار × المراحل</h2>
-
-    <div class="raci-legend">
-        <div class="raci-legend-item"><div class="badge badge-r">R</div><span>Responsible – المسؤول الرئيسي</span></div>
-        <div class="raci-legend-item"><div class="badge badge-a">A</div><span>Accountable – المسؤول عن التنفيذ</span></div>
-        <div class="raci-legend-item"><div class="badge badge-c">C</div><span>Consulted – يُستشار</span></div>
-        <div class="raci-legend-item"><div class="badge badge-i">I</div><span>Informed – يُعلَم</span></div>
-    </div>
-
-    <table class="raci-table">
-        <caption>مصفوفة مسؤوليات مراحل الدورة المستندية الـ8</caption>
-        <thead>
-            <tr>
-                <th>المرحلة</th>
-                <th>مدير المستودع</th>
-                <th>مدير ت.م</th>
-                <th>مدير الجودة</th>
-                <th>مدير المالية</th>
-                <th>إدارة الاستلام</th>
-                <th>إدارة الجودة</th>
-                <th>إدارة التخزين</th>
-                <th>إدارة السحب</th>
-                <th>إدارة النقل</th>
-                <th>إدارة المرتجعات</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr><td><strong>PR</strong><br><small>طلب الشراء</small></td><td class="a-cell">A</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="r-cell">R</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td></tr>
-            <tr><td><strong>PO</strong><br><small>أمر الشراء</small></td><td class="a-cell">A</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="r-cell">R</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td></tr>
-            <tr><td><strong>ASN</strong><br><small>إشعار الشحن</small></td><td class="i-cell">I</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td></tr>
-            <tr><td><strong>GRN</strong><br><small>الاستلام والجودة</small></td><td class="a-cell">A</td><td class="c-cell">C</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="r-cell">R</td><td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td></tr>
-            <tr><td><strong>Putaway</strong><br><small>التخزين الموجه</small></td><td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td></tr>
-            <tr><td><strong>Picking</strong><br><small>تحضير الطلبات</small></td><td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="i-cell">I</td><td class="i-cell">I</td></tr>
-            <tr><td><strong>Dispatch</strong><br><small>الشحن والتوزيع</small></td><td class="a-cell">A</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="i-cell">I</td></tr>
-            <tr><td><strong>Returns</strong><br><small>المرتجعات والتسويات</small></td><td class="a-cell">A</td><td class="c-cell">C</td><td class="a-cell">A</td><td class="r-cell">R</td><td class="c-cell">C</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="i-cell">I</td><td class="r-cell">R</td></tr>
-        </tbody>
-    </table>
-
-    <!-- ══ SECTION 6 – ROLE MAPPING ══ -->
-    <div class="page-break"></div>
-    <h2 id="role-mapping"><span class="sec-num">6</span> جدول تعيين الأدوار في أودو</h2>
-    <table>
-        <caption>تعيين كامل: المنصب → Role في أودو → الوحدات → مستوى الصلاحية</caption>
-        <thead>
-            <tr>
-                <th>المنصب</th>
-                <th>Role في أودو</th>
-                <th>الوحدات المسموح بها</th>
-                <th>مستوى الصلاحية</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr><td><strong>مدير المستودع التنفيذي</strong></td><td>Inventory Manager</td><td>كل وحدات المخزون</td><td><span class="level-admin">Admin</span></td></tr>
-            <tr><td><strong>مدير المستودع التنفيذي</strong></td><td>System Administrator</td><td>Settings كاملة</td><td><span class="level-admin">Admin</span></td></tr>
-            <tr><td><strong>مدير سلاسل الإمداد</strong></td><td>System Administrator</td><td>Settings كاملة</td><td><span class="level-admin">Admin</span></td></tr>
-            <tr><td><strong>مدير الجودة والسلامة الغذائية</strong></td><td>Quality Administrator</td><td>Quality + Inventory (read)</td><td><span class="level-admin">Admin</span></td></tr>
-            <tr><td><strong>مدير المحاسبة والرقابة المالية</strong></td><td>Accounting Manager</td><td>Purchase + Accounting</td><td><span class="level-manager">Manager</span></td></tr>
-            <tr><td><strong>مشرف الاستلام</strong></td><td>Inventory User</td><td>Inventory + Quality</td><td><span class="level-user">User</span></td></tr>
-            <tr><td><strong>مشرف التخزين</strong></td><td>Inventory User</td><td>Inventory + Barcode</td><td><span class="level-user">User</span></td></tr>
-            <tr><td><strong>مشرف الجودة</strong></td><td>Quality User</td><td>Quality + Inventory (read)</td><td><span class="level-user">User</span></td></tr>
-            <tr><td><strong>عامل السحب</strong></td><td>Barcode User</td><td>Barcode فقط</td><td><span class="level-user">User</span></td></tr>
-            <tr><td><strong>السائق</strong></td><td>Fleet User</td><td>Fleet</td><td><span class="level-user">User</span></td></tr>
-            <tr><td><strong>مفتش الجودة</strong></td><td>Quality User</td><td>Quality + Inventory (read)</td><td><span class="level-user">User</span></td></tr>
-        </tbody>
-    </table>
-
-    <div class="highlight-box">
-        <strong>⚠️ ملاحظة هامة:</strong> هذا الجدول يضمن تعيين الأدوار المناسبة لكل مستخدم في Odoo مع الصلاحيات المناسبة، مما يضمن الأمان والامتثال في النظام ومنع التعارض في الصلاحيات.
-    </div>
-
-    <!-- SIGNATURES -->
-    <div class="page-break"></div>
-    <div class="signature-line">
-        <div class="sig-box"><label>إعداد ومراجعة</label><strong>فريق تحويل Brandzo إلى Odoo</strong></div>
-        <div class="sig-box"><label>اعتماد</label><strong>مدير نظام المعلومات</strong></div>
-        <div class="sig-box"><label>التاريخ</label><strong>12 مايو 2026</strong></div>
-    </div>
-
-    <div class="page-footer">
-        تقرير هيكل الوظائف والأدوار – نظام Brandzo مع تكامل Odoo 17 Enterprise &nbsp;|&nbsp; الإصدار 1.0 &nbsp;|&nbsp; سري – للاستخدام الداخلي فقط
-    </div>
-
-    </div>
+  </div>
 </div>
+
+<!-- ===================== PANEL: STAGES ===================== -->
+<div id="panel-stages" class="panel">
+  <div class="sec-label">// القسم الثالث</div>
+  <div class="sec-title">المراحل الثمانية التفصيلية</div>
+
+  <div class="stage-flow" id="stageFlow"></div>
+  <div id="stageDetail"></div>
+</div>
+
+<!-- ===================== PANEL: FORMS ===================== -->
+<div id="panel-forms" class="panel">
+  <div class="sec-label">// القسم الرابع</div>
+  <div class="sec-title">مصفوفة المستندات — 21 نموذج</div>
+  <p style="font-size:14px;color:var(--text-body);margin-bottom:16px;">ربط جميع نماذج Brandzo (21 نموذج) مع وحدات Odoo 17 المقابلة ومساراتها التنفيذية.</p>
+  <div class="tbl-wrap">
+    <table id="formsTable"></table>
+  </div>
+</div>
+
+<!-- ===================== PANEL: KPIs ===================== -->
+<div id="panel-kpis" class="panel">
+  <div class="sec-label">// القسم الخامس</div>
+  <div class="sec-title">قواعد التنفيذ الإلزامية</div>
+  <div class="rules-list" id="rulesList"></div>
+
+  <div class="sec-label" style="margin-top:30px;">// مؤشرات الأداء</div>
+  <div class="sec-title">KPIs الرئيسية</div>
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <div class="sec-label" style="margin-top:30px;">// جدول تفصيلي</div>
+  <div class="sec-title">مؤشرات الأداء التفصيلية</div>
+  <div class="tbl-wrap">
+    <table id="kpiTable"></table>
+  </div>
+</div>
+
+<!-- ===================== PANEL: ORG ===================== -->
+<div id="panel-org" class="panel">
+  <div class="sec-label">// القسم الثاني</div>
+  <div class="sec-title">شجرة الهيكل التنظيمي الكامل</div>
+
+  <div class="org-wrap">
+    <div class="org-layer-label">الطبقة الأولى — القيادة العليا</div>
+    <div class="org-row">
+      <div class="org-node layer1"><span class="on-icon">🧭</span><div class="on-title">مدير المستودع التنفيذي</div><div class="on-sub">الطبقة 1 | الإشراف العام</div></div>
+    </div>
+    <div class="org-connector"></div>
+    <div class="org-hline"></div>
+
+    <div class="org-layer-label">الطبقة الثانية — الإدارة الوسطى</div>
+    <div class="org-row">
+      <div class="org-node layer2"><span class="on-icon">💻</span><div class="on-title">مدير سلاسل الإمداد</div><div class="on-sub">طبقة 2</div></div>
+      <div class="org-node layer2"><span class="on-icon">🛡️</span><div class="on-title">مدير حوكمة الدورة</div><div class="on-sub">طبقة 2</div></div>
+      <div class="org-node layer2"><span class="on-icon">📊</span><div class="on-title">مدير المحاسبة والمالية</div><div class="on-sub">طبقة 2</div></div>
+    </div>
+    <div class="org-connector"></div>
+    <div class="org-hline"></div>
+
+    <div class="org-layer-label">الطبقة الثالثة — الإدارات التشغيلية</div>
+    <div class="org-row">
+      <div class="org-node layer3"><span class="on-icon">📦</span><div class="on-title">الاستلام</div><div class="on-sub">~30 موظف</div></div>
+      <div class="org-node layer3"><span class="on-icon">🔬</span><div class="on-title">الجودة</div><div class="on-sub">~15 مفتش</div></div>
+      <div class="org-node layer3"><span class="on-icon">🏬</span><div class="on-title">التخزين</div><div class="on-sub">~70 موظف</div></div>
+      <div class="org-node layer3"><span class="on-icon">📋</span><div class="on-title">السحب</div><div class="on-sub">~120 عامل</div></div>
+      <div class="org-node layer3"><span class="on-icon">🚚</span><div class="on-title">النقل</div><div class="on-sub">~70 سائق</div></div>
+      <div class="org-node layer3"><span class="on-icon">↩️</span><div class="on-title">المرتجعات</div><div class="on-sub">~12 موظف</div></div>
+    </div>
+  </div>
+
+  <p style="font-size:12px;color:var(--gray);margin-top:12px;padding:12px 16px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid var(--line);">
+    📌 الأعداد الموضحة تمثل التخطيط الكامل (المرحلة الثانية). في التشغيل الأولي يُكتفى بـ 50–60 موظف جوهري موزعين على 4 إدارات نشطة.
+  </p>
+
+  <div class="sec-title" style="margin-top:30px;">مقارنة الكادر الوظيفي</div>
+  <div class="tbl-wrap">
+    <table id="orgTable"></table>
+  </div>
+</div>
+
+<!-- ===================== PANEL: JOBS ===================== -->
+<div id="panel-jobs" class="panel">
+  <div class="sec-label">// القسم الثالث</div>
+  <div class="sec-title">بطاقات الوصف الوظيفي</div>
+  <div class="jobs-layout">
+    <div class="job-list" id="jobList"></div>
+    <div class="job-detail-panel" id="jobDetail"></div>
+  </div>
+</div>
+
+<!-- ===================== PANEL: RACI ===================== -->
+<div id="panel-raci" class="panel">
+  <div class="sec-label">// القسم الخامس</div>
+  <div class="sec-title">مصفوفة RACI — الأدوار × المراحل</div>
+  <div class="raci-legend">
+    <div class="rl-item"><span class="rl-R">R</span> Responsible — المسؤول المباشر عن التنفيذ</div>
+    <div class="rl-item"><span class="rl-A">A</span> Accountable — المساءل والمعتمد النهائي</div>
+    <div class="rl-item"><span class="rl-C">C</span> Consulted — يُستشار رأيه</div>
+    <div class="rl-item"><span class="rl-I">I</span> Informed — يُعلَم بالنتيجة فقط</div>
+  </div>
+  <div class="tbl-wrap">
+    <table class="raci-table" id="raciTable"></table>
+  </div>
+</div>
+
+<!-- ===================== PANEL: ODOO ===================== -->
+<div id="panel-odoo" class="panel">
+  <div class="sec-label">// القسم السادس</div>
+  <div class="sec-title">تكامل أودو — المسارات التنفيذية</div>
+  <p style="font-size:14px;color:var(--text-body);margin-bottom:20px;">يوضح الجدول المسارات التنفيذية المفصلة لتفعيل كل مرحلة من مراحل الدورة المستندية في Odoo 17 Enterprise.</p>
+  <div class="odoo-sec tbl-wrap" id="odooPathsTable"></div>
+
+  <div class="sec-title" style="margin-top:30px;">جدول تعيين الأدوار في أودو</div>
+  <p style="font-size:14px;color:var(--text-body);margin-bottom:16px;">تعيين كامل: المنصب → Role في أودو → الوحدات → مستوى الصلاحية</p>
+  <div class="odoo-sec tbl-wrap" id="odooRolesTable"></div>
+
+  <div class="highlight" style="margin-top:20px;">
+    <strong>⚠️ ملاحظة هامة:</strong> هذا الجدول يضمن تعيين الأدوار المناسبة لكل مستخدم في Odoo مع الصلاحيات المناسبة، مما يضمن الأمان والامتثال في النظام ومنع التعارض في الصلاحيات.
+  </div>
+</div>
+
+<script>
+// =================== DATA ===================
+const stages = [
+  {
+    num:"01", ar:"طلب الشراء", en:"Purchase Requisition (PR)",
+    desc:"مستند داخلي يصدر تلقائياً عند وصول رصيد الصنف إلى نقطة إعادة الطلب. يبدأ به دورة الشراء ويشكل الأساس لجميع العمليات اللاحقة. لا يمكن إصدار أي أمر شراء بدون هذا المستند المعتمد.",
+    odoo:"Purchase › Requisitions | تفعيل: Settings › Purchase › Purchase Requisitions ✓",
+    inputs:["نقطة إعادة الطلب (Reorder Point)","طلب رسمي من القسم أو الفرع","توقعات الطلب والموسمية"],
+    outputs:["طلب شراء معتمد (PR)","إشعار إلكتروني للمشتريات والمخازن","تسجيل في نظام التتبع"],
+    checks:["موافقة المدير المختص","التحقق من توفر الميزانية","الالتزام بسياسة المشتريات"]
+  },
+  {
+    num:"02", ar:"أمر الشراء", en:"Purchase Order (PO)",
+    desc:"المستند الرسمي القانوني الملزم المرسل للمورد. يمثل التزاماً تعاقدياً بشراء كميات وأسعار محددة مع شروط التسليم والدفع. لا يمكن للمورد البدء بالتوريد إلا بعد استلام أمر الشراء الرسمي.",
+    odoo:"Purchase › Orders | تلقائي مع تفعيل وحدة Purchase",
+    inputs:["طلب الشراء المعتمد (PR)","عروض أسعار من موردين متعددين","شروط الدفع والتسليم المتفق عليها"],
+    outputs:["أمر شراء رسمي (PO) موقع","عقد رسمي مع المورد","جدول تسليم محدد"],
+    checks:["مقارنة عروض أسعار الموردين","اعتماد المدير المالي","التحقق من بيانات المورد في النظام"]
+  },
+  {
+    num:"03", ar:"إشعار الشحن المسبق", en:"Advance Shipping Notice (ASN)",
+    desc:"إشعار إلكتروني من المورد عند شحن البضاعة من مخازنه؛ يُمكّن المستودع من جدولة الاستلام وتخصيص الموارد البشرية والمعدات مسبقاً. يلغي الفوضى في رصيف الاستلام ويرفع كفاءة الاستقبال.",
+    odoo:"Inventory › Receipts › Scheduled Date | يدوي — إعداد من بيانات المورد",
+    inputs:["إشعار المورد الرسمي بالشحن","بيانات الشحنة والكميات التفصيلية","تاريخ الوصول المتوقع (ETA)"],
+    outputs:["جدول استلام مفصل بالمواعيد","تخصيص بوابة الاستلام المناسبة","إشعار مسبق لفريق الاستلام والمعدات"],
+    checks:["التحقق من مطابقة الكميات مع PO","تأكيد موعد الوصول وتعديله","تخصيص المعدات والعمالة اللازمة"]
+  },
+  {
+    num:"04", ar:"الاستلام وفحص الجودة", en:"Goods Receipt Note (GRN)",
+    desc:"أهم مستند في دورة المستودعات — الإقرار الرسمي باستلام البضاعة ودخولها في عهدة Brandzo بعد اجتياز فحص الجودة. يُنشئ القيد المحاسبي تلقائياً ويحدّث المخزون في Odoo فور التأكيد.",
+    odoo:"Inventory › Receipts | Quality › Control Points | إعداد: Warehouses › 3-step Receiving",
+    inputs:["شحنة المورد الواردة وبيانات الشحن","مستندات المورد (Packing List, Invoice)","معايير الجودة المحددة لكل فئة منتج"],
+    outputs:["نموذج استلام بضاعة (GRN) موقع","تقرير فحص الجودة التفصيلي","تحديث المخزون في Odoo آنياً"],
+    checks:["مطابقة الكميات مع أمر الشراء (PO)","اجتياز معايير الجودة والسلامة الغذائية","صلاحية التاريخ وسلامة التغليف والتبريد"]
+  },
+  {
+    num:"05", ar:"التخزين الموجه", en:"Directed Putaway",
+    desc:"نظام ذكي يوجه كل صنف من منطقة الاستلام إلى موقع تخزين مثالي محدد مسبقاً بحسب قواعد FEFO (أول منتهٍ أول خروج)، الوزن، درجة الحرارة وطبيعة المنتج. يلغي الاجتهاد العشوائي تماماً.",
+    odoo:"Inventory › Configuration › Putaway Rules | تفعيل: Settings › Inventory › Storage Locations ✓",
+    inputs:["بضاعة مستلمة ومعتمدة (GRN مكتمل)","قواعد Putaway المعرّفة مسبقاً في Odoo","خريطة المستودع الرقمية بالمواقع"],
+    outputs:["بطاقة موقع دقيقة لكل وحدة تخزينية","تحديث خريطة المخزون الرقمية فوراً","سجل الجرد المحدث بالمواقع الجديدة"],
+    checks:["مطابقة الموقع مع طبيعة ومتطلبات المنتج","تطبيق قاعدة FEFO بشكل صارم","تأكيد إدخال الباركود في الموقع الصحيح"]
+  },
+  {
+    num:"06", ar:"تحضير الطلبات والسحب", en:"Picking & Packing",
+    desc:"سحب الأصناف المطلوبة من مواقعها في المستودع بحسب قائمة سحب إلكترونية موجهة عبر ماسح الباركود، ثم تعبئتها وتغليفها للشحن. Odoo يوجه العمال خطوة بخطوة لتفادي أي أخطاء.",
+    odoo:"Inventory › Operations › Transfers (Type: Pick) | 3-Step Outgoing Shipment",
+    inputs:["أمر توزيع أو بيع مؤكد في النظام","قائمة السحب الإلكترونية الموجهة","مواقع التخزين المحددة من نظام Odoo"],
+    outputs:["بضاعة محضّرة ومعبأة وجاهزة للشحن","قائمة التعبئة الكاملة (Packing List)","تحديث المخزون المتاح في Odoo آنياً"],
+    checks:["مطابقة الكميات المسحوبة مع الطلب","فحص صلاحية المنتجات المختارة","مراجعة دقة التعبئة قبل الإغلاق"]
+  },
+  {
+    num:"07", ar:"الشحن والتوزيع", en:"Dispatch & Delivery Order",
+    desc:"المرحلة التنفيذية النهائية للإخراج — إصدار إذن التسليم الرسمي (DO)، تصريح الخروج من بوابة المستودع، وتحميل البضاعة على شاحنات الأسطول مع توثيق كل حمولة وتتبع رحلة التسليم.",
+    odoo:"Inventory › Operations › Delivery Orders | ربط وحدة Fleet للتتبع الجغرافي",
+    inputs:["بضاعة محضّرة ومعبأة وجاهزة تماماً","جدول رحلات أسطول النقل اليومي","عناوين التسليم المؤكدة للفروع أو العملاء"],
+    outputs:["إذن تسليم رسمي (DO) موقع ومعتمد","تصريح بوابة الخروج بالباركود","إشعار وصول آلي للعميل أو الفرع"],
+    checks:["التحقق من اكتمال إذن التسليم والتوقيعات","فحص حالة السيارة وصلاحية السائق","تأكيد استلام العميل والحصول على توقيعه"]
+  },
+  {
+    num:"08", ar:"المرتجعات والتسويات", en:"Returns & Stock Adjustments",
+    desc:"دورة متكاملة لاستلام البضاعة المرتجعة من الفروع أو العملاء، تصنيفها حسب الحالة (سليمة / تالفة / منتهية الصلاحية)، معالجة سندات التسوية المخزونية، وإصدار الإشعارات الدائنة للمورد عند الحاجة.",
+    odoo:"Inventory › Operations › Returns | إنشاء Return مباشر من Delivery Order المرتبط",
+    inputs:["بضاعة مرتجعة مع إذن إرجاع معتمد مسبقاً","سبب الإرجاع الموثق والمصنف بدقة","رقم DO الأصلي للتتبع والمطابقة"],
+    outputs:["سند تسوية مخزونية معتمد في Odoo","إشعار دائن (Credit Note) للمورد","تحديث سجل المخزون النهائي فوراً"],
+    checks:["التحقق من صحة إذن الإرجاع وموافقة المدير","تصنيف حالة كل وحدة مرتجعة بدقة","اعتماد سند التسوية من مدير الجودة"]
+  }
+];
+
+const forms = [
+  {stage:"01",name:"form_PurchaseRequisition.html",module:"Purchase",path:"Purchase › Requisitions",purpose:"طلب الشراء الداخلي"},
+  {stage:"02",name:"form_PO.html",module:"Purchase",path:"Purchase › Orders",purpose:"أمر الشراء الرسمي"},
+  {stage:"04",name:"form_GRN.html",module:"Inventory",path:"Inventory › Receipts",purpose:"استلام البضاعة"},
+  {stage:"04",name:"form_QCReport.html",module:"Quality",path:"Quality › Control Points",purpose:"تقرير فحص الجودة"},
+  {stage:"05",name:"form_PutawayList.html",module:"Inventory",path:"Inventory › Operations › Putaway",purpose:"أمر التخزين الموجه"},
+  {stage:"06",name:"form_SR.html",module:"Purchase",path:"Purchase › Requisitions",purpose:"طلب صرف المخزون"},
+  {stage:"06",name:"form_Picking.html",module:"Inventory",path:"Inventory › Operations › Picking",purpose:"قائمة السحب"},
+  {stage:"07",name:"form_DeliveryNote.html",module:"Inventory",path:"Inventory › Operations › Delivery",purpose:"إذن التسليم"},
+  {stage:"08",name:"form_ReturnNote.html",module:"Inventory",path:"Inventory › Operations › Returns",purpose:"إشعار الإرجاع"},
+  {stage:"04",name:"form_Damaged Goods Report.html",module:"Inventory",path:"Inventory › Adjustments › Scrap",purpose:"تقرير البضاعة التالفة"},
+  {stage:"07",name:"form_PackingList.html",module:"Inventory",path:"Inventory › Operations › Packing",purpose:"قائمة التعبئة"},
+  {stage:"04",name:"form_Credit Note.html",module:"Accounting",path:"Accounting › Customers › Credit Notes",purpose:"إشعار دائن"},
+  {stage:"06",name:"form_Stock Transfer Slip.html",module:"Inventory",path:"Inventory › Operations › Transfers",purpose:"إذن تحويل المخزون"},
+  {stage:"04",name:"form_Stock Adjustment Voucher.html",module:"Inventory",path:"Inventory › Adjustments",purpose:"سند تعديل المخزون"},
+  {stage:"06",name:"form_Store Requisition.html",module:"Purchase",path:"Purchase › Requisitions",purpose:"طلب صرف المخزون"},
+  {stage:"04",name:"form_ItemCreation.html",module:"Inventory",path:"Inventory › Products › Create",purpose:"إنشاء صنف جديد"},
+  {stage:"04",name:"form_BinCard.html",module:"Inventory",path:"Inventory › Reports › Bin Card",purpose:"بطاقة الصنف"},
+  {stage:"04",name:"form_CycleCount.html",module:"Inventory",path:"Inventory › Operations › Cycle Count",purpose:"جرد دوري"},
+  {stage:"07",name:"form_GatePass.html",module:"Inventory",path:"Inventory › Operations › Gate Pass",purpose:"تصريح خروج"},
+  {stage:"04",name:"form_Report21.html",module:"Inventory",path:"Inventory › Reports › Stock Report",purpose:"تقرير المخزون اليومي"},
+  {stage:"04",name:"form_DailyHuddle.html",module:"Manufacturing",path:"Manufacturing › Reports › Daily Huddle",purpose:"الاجتماع اليومي"}
+];
+
+const moduleClass = {Purchase:'m-p',Inventory:'m-i',Quality:'m-q',Accounting:'m-a',Manufacturing:'m-f'};
+
+const rules = [
+  {type:"no",text:"لا حركة مخزونية بدون مستند موثق ومعتمد في النظام"},
+  {type:"no",text:"لا استلام بدون أمر شراء (PO) مسبق ومرتبط بالشحنة"},
+  {type:"no",text:"لا صرف بدون طلب صرف معتمد (SR) من الجهة المختصة"},
+  {type:"yes",text:"الرفض التلقائي لأي شحنة عمرها الافتراضي المتبقي أقل من 75%"},
+  {type:"yes",text:"التطبيق الإلزامي لـ FEFO في جميع عمليات الصرف والسحب دون استثناء"},
+  {type:"yes",text:"الالتزام بدرجات الحرارة: 4°م للمبرد، -18°م للمجمد في كل مراحل السلسلة"},
+  {type:"target",text:"دقة المخزون المستهدفة: ≥98.5% | زمن الدورة التشغيلية: أقل من 4 ساعات"}
+];
+
+const kpis = [
+  {val:"≥98.5%",name:"دقة المخزون",freq:"شهري"},
+  {val:"<4h",name:"زمن دورة الأمر",freq:"لكل أمر"},
+  {val:"<2%",name:"نسبة التلف",freq:"شهري"},
+  {val:"100%",name:"الامتثال للجودة",freq:"يومي"},
+  {val:"<30m",name:"سرعة المعالجة",freq:"يومي"}
+];
+
+const kpiDetail = [
+  {name:"دقة المخزون",target:"≥98.5%",formula:"(الكمية الفعلية ÷ الكمية المسجلة) × 100",freq:"شهري"},
+  {name:"زمن دورة الأمر",target:"<4 ساعات",formula:"من الإنشاء إلى التنفيذ الكامل",freq:"لكل أمر"},
+  {name:"نسبة التلف",target:"<2%",formula:"(قيمة التلف ÷ إجمالي الاستلام) × 100",freq:"شهري"},
+  {name:"الامتثال للجودة",target:"100%",formula:"عدد المراحل المكتملة ÷ الإجمالي",freq:"يومي"},
+  {name:"سرعة المعالجة",target:"<30 دقيقة",formula:"متوسط وقت معالجة المستند الواحد",freq:"يومي"}
+];
+
+const jobs = [
+  {
+    icon:"🧭", title:"مدير المستودعات التنفيذي", layer:"الطبقة 1 — القيادة العليا",
+    odooRole:"Inventory Manager", odooLevel:"Admin", modules:"كل وحدات المخزون",
+    p1:"مدير واحد",p2:"1 + مدراء فروع",
+    duties:[
+      "الإشراف العام على كافة أنشطة المستودعات وعملياتها اليومية والاستراتيجية",
+      "وضع الاستراتيجيات التشغيلية قصيرة وطويلة المدى وتحديثها دورياً",
+      "إدارة الميزانية التشغيلية للمستودعات ومراقبة الإنفاق وترشيد التكاليف",
+      "التنسيق مع إدارة سلاسل الإمداد واللوجستيات والأقسام الأخرى",
+      "اعتماد السياسات والإجراءات الرئيسية وضمان تطبيقها",
+      "إدارة علاقات الموردين الكبار والتفاوض على الشروط",
+      "الإشراف المباشر على تطبيق وتطوير نظام Odoo ERP"
+    ]
+  },
+  {
+    icon:"💻", title:"مدير سلاسل الإمداد واللوجستيات", layer:"الطبقة 2 — الإدارة الوسطى",
+    odooRole:"System Administrator", odooLevel:"Admin", modules:"Settings كاملة",
+    p1:"مشارك مع المالية",p2:"مدير مستقل + فريق",
+    duties:[
+      "إدارة وتخطيط سلاسل الإمداد بالكامل من المورد وحتى العميل النهائي",
+      "الإشراف على العمليات اللوجستية والتوزيع اليومي بين المستودعات والفروع",
+      "تنسيق عمليات النقل والشحن مع إدارة الأسطول وشركات النقل الخارجية",
+      "تحسين كفاءة سلسلة التوريد وتقليل التكاليف وأوقات الدورة",
+      "إدارة علاقات شركات النقل والخدمات اللوجستية الخارجية وتجديد العقود",
+      "الإشراف على نظام تتبع الشحنات والتسليمات في وقت حقيقي"
+    ]
+  },
+  {
+    icon:"🛡️", title:"مدير حوكمة الدورة المستندية", layer:"الطبقة 2 — الإدارة الوسطى",
+    odooRole:"Quality Administrator", odooLevel:"Admin", modules:"Quality + Inventory (read)",
+    p1:"1 مشرف مشترك",p2:"مدير + ~15 مفتش",
+    duties:[
+      "حوكمة وإدارة الدورة المستندية الكاملة بمراحلها الثماني وضمان تكاملها",
+      "مراقبة الإدخالات اليومية والتحقق من دقتها ومطابقتها في Odoo",
+      "ضمان تطبيق معايير الجودة والسلامة الغذائية على جميع المنتجات",
+      "إدارة فريق فحص الجودة والتدقيق الداخلي وتطوير مهاراتهم",
+      "مراجعة وتدقيق جميع المستندات اليومية الواردة والصادرة قبل الاعتماد",
+      "ضمان تكامل البيانات وعدم الفجوات أو التعارضات في نظام Odoo"
+    ]
+  },
+  {
+    icon:"📊", title:"مدير المحاسبة والرقابة المالية", layer:"الطبقة 2 — الإدارة الوسطى",
+    odooRole:"Accounting Manager", odooLevel:"Manager", modules:"Purchase + Accounting",
+    p1:"محاسب واحد",p2:"مدير + فريق 3–5",
+    duties:[
+      "الإشراف على جميع العمليات المالية المرتبطة بالمستودعات والمشتريات",
+      "ضمان دقة المطابقات المالية مع فواتير الموردين وتسوية الفروق",
+      "إعداد التقارير المالية الدورية والسنوية وتحليل الانحرافات",
+      "الإشراف على أنشطة الجرد المالي السنوي والدوري ومراجعة نتائجه",
+      "مراقبة تكاليف التشغيل وتقديم توصيات الترشيد للإدارة العليا",
+      "اعتماد سندات الصرف والإيداع المالي والإشعارات الدائنة والمدينة"
+    ]
+  },
+  {
+    icon:"📦", title:"إدارة الاستلام والرقابة", layer:"الطبقة 3 — تشغيلية",
+    odooRole:"Inventory User", odooLevel:"User", modules:"Inventory + Quality",
+    p1:"مشرف + 8–10 عمال",p2:"مدير + مشرفان + ~30",
+    duties:[
+      "مدير قسم الاستلام: إدارة فريق الاستلام بفترتيه الصباحية والمسائية",
+      "مشرف الاستلام: استلام جميع الشحنات الواردة من الموردين وتوثيقها",
+      "فريق إدخال البيانات (4–6 أفراد): تسجيل بيانات الاستلام في Odoo بدقة",
+      "فريق عمال الرصيف (20–30): مناولة البضاعة الواردة وفرزها وتوجيهها",
+      "التنسيق مع فريق الجودة لفحص كل شحنة واردة قبل قبولها رسمياً",
+      "إخطار قسم المشتريات فوراً بأي انحراف عن أمر الشراء المرتبط"
+    ]
+  },
+  {
+    icon:"🔬", title:"إدارة فحص ومراقبة الجودة", layer:"الطبقة 3 — تشغيلية",
+    odooRole:"Quality User", odooLevel:"User", modules:"Quality + Inventory (read)",
+    p1:"2–3 مفتشين",p2:"فرق متخصصة ~15",
+    duties:[
+      "مدير إدارة الجودة: الإشراف على جميع فرق الفحص المتخصصة",
+      "فريق فحص المنتجات الطازجة والمجمدة: التحقق من درجات الحرارة والصلاحية",
+      "فريق فحص المنتجات الجافة والمعلبة: فحص التغليف والتواريخ والنظافة",
+      "فريق فحص المنتجات غير الغذائية: الفحص المادي ومطابقة المواصفات",
+      "إصدار تقارير الجودة وشهادات المطابقة ورفع البلاغات عند الرفض",
+      "فحص المنتجات المرتجعة وتصنيف حالتها وتحديد مصيرها"
+    ]
+  },
+  {
+    icon:"🏬", title:"إدارة التخزين وتحديد المواقع", layer:"الطبقة 3 — تشغيلية",
+    odooRole:"Inventory User", odooLevel:"User", modules:"Inventory + Barcode",
+    p1:"مشرف + 15–20 عامل",p2:"مدير + مهندس + ~70",
+    duties:[
+      "مدير عمليات التخزين: الإشراف على تنظيم المستودع وكفاءة المساحة",
+      "مهندس تخطيط المستودع: تصميم وتحديث خرائط المواقع والممرات",
+      "مشرفو مناطق التخزين: الإشراف على مناطق المبرد والمجمد والجاف",
+      "مشغلو الرافعات الشوكية (40–60): تنفيذ حركات التخزين والاسترجاع",
+      "مراقبو المخزون (10–12): الجرد الدوري والتحقق من المواقع والكميات",
+      "ضمان تطبيق قاعدة FEFO وتحديث بيانات الموقع بالباركود في Odoo"
+    ]
+  },
+  {
+    icon:"📋", title:"إدارة تحضير الطلبات والتوزيع", layer:"الطبقة 3 — تشغيلية",
+    odooRole:"Barcode User", odooLevel:"User", modules:"Barcode فقط",
+    p1:"مشرف + 20–30 عامل",p2:"مدير + مشرفون + ~120",
+    duties:[
+      "مدير عمليات التوزيع: تخطيط وجدولة عمليات السحب اليومية",
+      "مخطط الأحمال: تحسين توزيع الأحمال بين السيارات وتقليل الرحلات",
+      "مشرفو مناطق الانتقاء: الإشراف على العمال في مناطق السحب المختلفة",
+      "العمال المتنقلون (80–120): تنفيذ السحب باستخدام ماسحات الباركود",
+      "فريق المراجعين والمدققين: التحقق النهائي من الكميات قبل التعبئة",
+      "الإبلاغ الفوري عن أي نقص أو اختلاف في الكميات للمشرف المسؤول"
+    ]
+  },
+  {
+    icon:"🚚", title:"إدارة أسطول النقل والتوزيع", layer:"الطبقة 3 — تشغيلية",
+    odooRole:"Fleet User", odooLevel:"User", modules:"Fleet",
+    p1:"منسق + 10–15 سائق",p2:"مدير + ~70 سائق",
+    duties:[
+      "مدير النقل والتوزيع: تخطيط مسارات التوزيع وجداول الرحلات",
+      "منسق عمليات التوزيع: متابعة الرحلات في الوقت الحقيقي وحل المشكلات",
+      "فريق السائقين (50–70): تنفيذ رحلات التوزيع والتسليم للفروع والعملاء",
+      "فريق مساعدي السائقين: مساعدة في التحميل والتفريغ والتوثيق",
+      "مهندس صيانة الأسطول: ضمان جاهزية السيارات ومتابعة الصيانة الدورية",
+      "تسجيل كل تسليم في نظام Fleet بـ Odoo والحصول على توقيع الاستلام"
+    ]
+  },
+  {
+    icon:"↩️", title:"إدارة المرتجعات وتصحيح المخزون", layer:"الطبقة 3 — تشغيلية",
+    odooRole:"Quality User", odooLevel:"User", modules:"Quality + Inventory (read)",
+    p1:"مشارك ~3",p2:"مدير + مشرف + ~12",
+    duties:[
+      "مدير إدارة المرتجعات: الإشراف على دورة المرتجعات الكاملة",
+      "مشرف استلام المرتجعات: التحقق من إذن الإرجاع قبل الاستلام",
+      "فريق فحص ومعالجة المرتجعات: تصنيف كل وحدة مرتجعة حسب حالتها",
+      "منسق المرتجعات مع الموردين: إصدار إشعارات الإرجاع وطلبات الاستبدال",
+      "إنشاء سند التسوية المخزونية في Odoo وربطه بـ DO الأصلي",
+      "تحديث سجل المخزون النهائي وإغلاق دورة المرتجع بشكل كامل"
+    ]
+  }
+];
+
+const raciMatrix = {
+  stages:["PR — طلب الشراء","PO — أمر الشراء","ASN — إشعار الشحن","GRN — الاستلام والجودة","Putaway — التخزين","Picking — تحضير الطلبات","Dispatch — الشحن","Returns — المرتجعات"],
+  roles:["مدير المستودع","مدير ت.إمداد","مدير الجودة","مدير المالية","إدارة الاستلام","إدارة الجودة","إدارة التخزين","إدارة السحب","إدارة النقل","إدارة المرتجعات"],
+  matrix:[
+    ["A","C","I","R","C","I","I","I","I","I"],
+    ["A","C","I","R","C","I","I","I","I","I"],
+    ["I","C","I","I","C","I","I","I","I","I"],
+    ["A","C","A","R","R","A","I","I","I","I"],
+    ["A","I","I","I","I","A","R","I","I","I"],
+    ["A","I","I","I","I","I","A","R","I","I"],
+    ["A","I","I","I","I","I","I","A","R","I"],
+    ["A","C","A","R","C","I","I","I","I","R"]
+  ]
+};
+
+const odooPaths = [
+  {stage:"PR",module:"Purchase",path:"Purchase › Requisitions",activation:"Settings › Purchase › Purchase Requisitions ✓",req:"تفعيل وحدة المشتريات"},
+  {stage:"PO",module:"Purchase",path:"Purchase › Orders",activation:"تلقائي مع تفعيل Purchase",req:"إعداد الموردين والشروط"},
+  {stage:"ASN",module:"Inventory",path:"Inventory › Receipts › Scheduled Date",activation:"يدوي — إعداد من المورد",req:"تكامل EDI مع الموردين"},
+  {stage:"GRN",module:"Inventory + Quality",path:"Inventory › Receipts",activation:"Inventory › Configuration › Warehouses › 3-step",req:"تفعيل 3-step receiving"},
+  {stage:"Putaway",module:"Inventory",path:"Inventory › Configuration › Putaway Rules",activation:"Settings › Inventory › Storage Locations ✓",req:"إنشاء هيكل المواقع"},
+  {stage:"Picking",module:"Inventory",path:"Inventory › Operations › Transfers",activation:"3-step outgoing",req:"تفعيل 3-step shipping"},
+  {stage:"Dispatch",module:"Inventory",path:"Inventory › Operations › Delivery Orders",activation:"ربط Fleet إن وُجد",req:"إدارة الأسطول والسائقين"},
+  {stage:"Returns",module:"Inventory",path:"Inventory › Operations › Returns",activation:"إنشاء Return من Delivery",req:"تفعيل إدارة المرتجعات"}
+];
+
+const odooRoles = [
+  {pos:"مدير المستودع التنفيذي",role:"Inventory Manager",modules:"كل وحدات المخزون",level:"Admin"},
+  {pos:"مدير المستودع التنفيذي",role:"System Administrator",modules:"Settings كاملة",level:"Admin"},
+  {pos:"مدير سلاسل الإمداد",role:"System Administrator",modules:"Settings كاملة",level:"Admin"},
+  {pos:"مدير الجودة والسلامة الغذائية",role:"Quality Administrator",modules:"Quality + Inventory (read)",level:"Admin"},
+  {pos:"مدير المحاسبة والرقابة المالية",role:"Accounting Manager",modules:"Purchase + Accounting",level:"Manager"},
+  {pos:"مشرف الاستلام",role:"Inventory User",modules:"Inventory + Quality",level:"User"},
+  {pos:"مشرف التخزين",role:"Inventory User",modules:"Inventory + Barcode",level:"User"},
+  {pos:"مشرف الجودة",role:"Quality User",modules:"Quality + Inventory (read)",level:"User"},
+  {pos:"عامل السحب",role:"Barcode User",modules:"Barcode فقط",level:"User"},
+  {pos:"السائق",role:"Fleet User",modules:"Fleet",level:"User"},
+  {pos:"مفتش الجودة",role:"Quality User",modules:"Quality + Inventory (read)",level:"User"}
+];
+
+const orgTable = [
+  {dept:"🧭 القيادة التنفيذية",p1:"1 مدير",p2:"1 + مدراء فروع",role:"الإشراف الكامل والاستراتيجية"},
+  {dept:"💻 سلاسل الإمداد",p1:"مشارك مع المالية",p2:"مدير مستقل + فريق",role:"تخطيط وإدارة التوريد"},
+  {dept:"🛡️ حوكمة الدورة / الجودة",p1:"1 مشرف مشترك",p2:"مدير + ~15 مفتش",role:"ضمان الجودة والامتثال"},
+  {dept:"📊 المحاسبة والمالية",p1:"محاسب واحد",p2:"مدير + فريق 3–5",role:"الرقابة المالية والتقارير"},
+  {dept:"📦 الاستلام والرقابة",p1:"مشرف + 8–10 عمال",p2:"مدير + مشرفان + ~30",role:"استلام البضاعة وتوثيقها"},
+  {dept:"🔬 فحص الجودة",p1:"2–3 مفتشين",p2:"فرق متخصصة ~15",role:"فحص المنتجات الواردة"},
+  {dept:"🏬 التخزين وتحديد المواقع",p1:"مشرف + 15–20 عامل",p2:"مدير + مهندس + ~70",role:"تنظيم المخزون وتخزينه"},
+  {dept:"📋 تحضير الطلبات والسحب",p1:"مشرف + 20–30 عامل",p2:"مدير + مشرفون + ~120",role:"تنفيذ أوامر الصرف"},
+  {dept:"🚚 أسطول النقل والتوزيع",p1:"منسق + 10–15 سائق",p2:"مدير + ~70 سائق",role:"التوزيع للفروع والعملاء"},
+  {dept:"↩️ المرتجعات وتصحيح المخزون",p1:"مشارك ~3",p2:"مدير + مشرف + ~12",role:"معالجة المرتجعات والتسويات"},
+  {dept:"📊 الإجمالي التقريبي",p1:"~50–60 موظف",p2:"~320 موظف",role:"—"}
+];
+
+// =================== STATE ===================
+let curStage = 0, curJob = 0;
+
+// =================== RENDER FUNCTIONS ===================
+function renderStageFlow() {
+  const el = document.getElementById('stageFlow');
+  let html = '';
+  stages.forEach((s,i) => {
+    html += `<button class="sf-btn ${i===curStage?'active':''}" onclick="selectStage(${i})">
+      <span class="sn">${s.num}</span>
+      <span class="sl">${s.ar}</span>
+    </button>`;
+    if(i<7) html += '<span class="sf-arrow">←</span>';
+  });
+  el.innerHTML = html;
+}
+
+function renderStageDetail() {
+  const s = stages[curStage];
+  document.getElementById('stageDetail').innerHTML = `
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">المرحلة ${s.num}</span>
+        <div><div class="sd-title">${s.ar}</div><div class="sd-en">${s.en}</div></div>
+      </div>
+      <div class="sd-desc">${s.desc}</div>
+      <div class="odoo-bar">
+        <span class="odoo-tag">Odoo 17</span>
+        <span>${s.odoo}</span>
+      </div>
+      <div class="sd-grid">
+        <div class="sd-box"><h4>المدخلات</h4><ul>${s.inputs.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+        <div class="sd-box"><h4>المخرجات</h4><ul>${s.outputs.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+        <div class="sd-box"><h4>نقاط التحقق</h4><ul>${s.checks.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      </div>
+      <div class="sd-nav">
+        <button onclick="selectStage(${curStage-1})" ${curStage===0?'disabled':''}>← المرحلة السابقة</button>
+        <button onclick="selectStage(${curStage+1})" ${curStage===7?'disabled':''}>المرحلة التالية →</button>
+      </div>
+    </div>`;
+}
+
+function selectStage(i) {
+  if(i<0||i>7) return;
+  curStage = i;
+  renderStageFlow();
+  renderStageDetail();
+}
+
+function renderForms() {
+  document.getElementById('formsTable').innerHTML = `
+    <thead><tr>
+      <th>المرحلة</th><th>اسم النموذج</th><th>الوحدة</th><th>المسار في Odoo</th><th>الغرض</th>
+    </tr></thead>
+    <tbody>${forms.map(f=>`<tr>
+      <td><span class="stage-dot">${f.stage}</span></td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gold-light);">${f.name}</td>
+      <td><span class="mtag ${moduleClass[f.module]||'m-i'}">${f.module}</span></td>
+      <td style="font-size:12px;">${f.path}</td>
+      <td>${f.purpose}</td>
+    </tr>`).join('')}</tbody>`;
+}
+
+function renderKPIs() {
+  const icons = ['❌','❌','❌','✅','✅','✅','🎯'];
+  document.getElementById('rulesList').innerHTML = rules.map((r,i)=>`
+    <div class="rule ${r.type}">
+      <span class="r-icon">${icons[i]}</span>
+      <span>${r.text}</span>
+    </div>`).join('');
+
+  document.getElementById('kpiGrid').innerHTML = kpis.map(k=>`
+    <div class="kpi-card">
+      <div class="kpi-val">${k.val}</div>
+      <div class="kpi-name">${k.name}</div>
+      <div class="kpi-freq">${k.freq}</div>
+    </div>`).join('');
+
+  document.getElementById('kpiTable').innerHTML = `
+    <thead><tr><th>المؤشر</th><th>الهدف</th><th>طريقة القياس</th><th>التكرار</th></tr></thead>
+    <tbody>${kpiDetail.map(k=>`<tr>
+      <td style="font-weight:600">${k.name}</td>
+      <td style="color:var(--gold);font-weight:700;font-family:'IBM Plex Mono',monospace;">${k.target}</td>
+      <td style="font-size:12px;">${k.formula}</td>
+      <td>${k.freq}</td>
+    </tr>`).join('')}</tbody>`;
+}
+
+function renderOrgTable() {
+  document.getElementById('orgTable').innerHTML = `
+    <thead><tr>
+      <th>الإدارة / القسم</th>
+      <th>🚀 المرحلة الأولى</th>
+      <th>🏗️ المرحلة الكاملة</th>
+      <th>الدور الأساسي</th>
+    </tr></thead>
+    <tbody>${orgTable.map(r=>`<tr>
+      <td style="font-weight:600">${r.dept}</td>
+      <td style="color:#3498db;font-weight:600">${r.p1}</td>
+      <td style="color:var(--gold);font-weight:600">${r.p2}</td>
+      <td>${r.role}</td>
+    </tr>`).join('')}</tbody>`;
+}
+
+function renderJobList() {
+  document.getElementById('jobList').innerHTML = jobs.map((j,i)=>`
+    <div class="job-item ${i===curJob?'active':''}" onclick="selectJob(${i})">
+      <div class="ji-title">${j.icon} ${j.title}</div>
+      <div class="ji-layer">${j.layer}</div>
+    </div>`).join('');
+}
+
+function renderJobDetail() {
+  const j = jobs[curJob];
+  document.getElementById('jobDetail').innerHTML = `
+    <div class="jdp-header">
+      <div class="jdp-icon">${j.icon}</div>
+      <div>
+        <div class="jdp-title">${j.title}</div>
+        <div class="jdp-layer">${j.layer}</div>
+      </div>
+    </div>
+    <ul class="duties">${j.duties.map(d=>`<li>${d}</li>`).join('')}</ul>
+    <div class="odoo-info">
+      <div class="oi-label">صلاحيات Odoo 17</div>
+      <div class="oi-row">
+        <span class="oi-tag">👤 ${j.odooRole}</span>
+        <span class="oi-level">${j.odooLevel}</span>
+        <span style="font-size:12px;color:var(--gray);">الوحدات:</span>
+        <span style="font-size:13px;color:var(--text-body);">${j.modules}</span>
+      </div>
+    </div>`;
+}
+
+function selectJob(i) {
+  curJob = i;
+  renderJobList();
+  renderJobDetail();
+}
+
+function renderRaci() {
+  const {stages:rs, roles, matrix} = raciMatrix;
+  let html = `<thead><tr><th style="text-align:right">المرحلة</th>${roles.map(r=>`<th style="font-size:10px">${r}</th>`).join('')}</tr></thead><tbody>`;
+  matrix.forEach((row,i) => {
+    html += `<tr><td>${rs[i]}</td>${row.map(c=>`<td class="rc-${c}">${c}</td>`).join('')}</tr>`;
+  });
+  html += `</tbody>`;
+  document.getElementById('raciTable').innerHTML = html;
+}
+
+function renderOdoo() {
+  document.getElementById('odooPathsTable').innerHTML = `<table>
+    <thead><tr><th>المرحلة</th><th>الوحدة</th><th>المسار</th><th>التفعيل</th><th>المتطلبات</th></tr></thead>
+    <tbody>${odooPaths.map(p=>`<tr>
+      <td style="font-weight:700;color:var(--gold);font-family:'IBM Plex Mono',monospace">${p.stage}</td>
+      <td><span class="mtag ${moduleClass[p.module.split(' ')[0]]||'m-i'}">${p.module}</span></td>
+      <td style="font-size:12px">${p.path}</td>
+      <td style="font-size:12px">${p.activation}</td>
+      <td style="font-size:12px">${p.req}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+
+  const levelColor = {Admin:'color:var(--gold)',Manager:'color:#3498db',User:'color:var(--green)'};
+  document.getElementById('odooRolesTable').innerHTML = `<table>
+    <thead><tr><th>المنصب</th><th>Role في أودو</th><th>الوحدات المسموح بها</th><th>مستوى الصلاحية</th></tr></thead>
+    <tbody>${odooRoles.map(r=>`<tr>
+      <td style="font-weight:600">${r.pos}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gold-light)">${r.role}</td>
+      <td style="font-size:13px">${r.modules}</td>
+      <td style="font-weight:700;${levelColor[r.level]||''}">${r.level}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// =================== TAB SWITCH ===================
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  const tabs = ['overview','stages','forms','kpis','org','jobs','raci','odoo'];
+  document.querySelectorAll('.nav-tab')[tabs.indexOf(id)].classList.add('active');
+}
+
+// =================== INIT ===================
+renderStageFlow();
+renderStageDetail();
+renderForms();
+renderKPIs();
+renderOrgTable();
+renderJobList();
+renderJobDetail();
+renderRaci();
+renderOdoo();
+</script>
 </body>
 </html>
