@@ -222,7 +222,7 @@ tr:hover td{background:rgba(200,157,59,0.04);}
       <div class="hstat"><strong>21</strong><span>نموذج رسمي</span></div>
       <div class="hstat"><strong>11</strong><span>منصب محوري</span></div>
       <div class="hstat"><strong>3</strong><span>طبقات هرمية</span></div>
-      <div class="hstat"><strong>6</strong><span>إدارات تشغيلية</span></div>
+      <div class="hstat"><strong>6</strong><span>أقسام تشغيلية</span></div>
       <div class="hstat"><strong>≥98.5%</strong><span>دقة مخزون مستهدفة</span></div>
     </div>
   </div>
@@ -248,7 +248,7 @@ tr:hover td{background:rgba(200,157,59,0.04);}
       <div class="phase-item"><span class="phase-dot pd-blue"></span>لا عمالة عارضة — عقود دائمة فقط</div>
       <div class="phase-footer">
         <div class="pf-stat"><span class="pf-val">~50</span><span class="pf-lbl">موظف</span></div>
-        <div class="pf-stat"><span class="pf-val">4</span><span class="pf-lbl">إدارات نشطة</span></div>
+        <div class="pf-stat"><span class="pf-val">4</span><span class="pf-lbl">أقسام نشطة</span></div>
         <div class="pf-stat"><span class="pf-val">1</span><span class="pf-lbl">مستودع</span></div>
       </div>
     </div>
@@ -263,7 +263,7 @@ tr:hover td{background:rgba(200,157,59,0.04);}
       <div class="phase-item"><span class="phase-dot pd-gold"></span>مهندس تخطيط + مراقبو مخزون متعددون</div>
       <div class="phase-footer">
         <div class="pf-stat"><span class="pf-val">~320</span><span class="pf-lbl">موظف</span></div>
-        <div class="pf-stat"><span class="pf-val">6</span><span class="pf-lbl">إدارات كاملة</span></div>
+        <div class="pf-stat"><span class="pf-val">6</span><span class="pf-lbl">أقسام كاملة</span></div>
         <div class="pf-stat"><span class="pf-val">+5</span><span class="pf-lbl">فروع مستقبلية</span></div>
       </div>
     </div>
@@ -328,7 +328,7 @@ tr:hover td{background:rgba(200,157,59,0.04);}
     <div class="org-connector"></div>
     <div class="org-hline"></div>
 
-    <div class="org-layer-label">الطبقة الثالثة — الإدارات التشغيلية</div>
+    <div class="org-layer-label">الطبقة الثالثة — الأقسام التشغيلية</div>
     <div class="org-row">
       <div class="org-node layer3"><span class="on-icon">📦</span><div class="on-title">الاستلام</div><div class="on-sub">~30 موظف</div></div>
       <div class="org-node layer3"><span class="on-icon">🔬</span><div class="on-title">الجودة</div><div class="on-sub">~15 مفتش</div></div>
@@ -340,7 +340,7 @@ tr:hover td{background:rgba(200,157,59,0.04);}
   </div>
 
   <p style="font-size:12px;color:var(--gray);margin-top:12px;padding:12px 16px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid var(--line);">
-    📌 الأعداد الموضحة تمثل التخطيط الكامل (المرحلة الثانية). في التشغيل الأولي يُكتفى بـ 50–60 موظف جوهري موزعين على 4 إدارات نشطة.
+    📌 الأعداد الموضحة تمثل التخطيط الكامل (المرحلة الثانية). في التشغيل الأولي يُكتفى بـ 50–60 موظف جوهري موزعين على 4 أقسام نشطة.
   </p>
 
   <div class="sec-title" style="margin-top:30px;">مقارنة الكادر الوظيفي</div>
@@ -522,7 +522,7 @@ const jobs = [
       "إدارة الميزانية التشغيلية للمستودعات ومراقبة الإنفاق وترشيد التكاليف",
       "التنسيق مع إدارة سلاسل الإمداد واللوجستيات والأقسام الأخرى",
       "اعتماد السياسات والإجراءات الرئيسية وضمان تطبيقها",
-      "إدارة علاقات الموردين الكبار والتفاوض على الشروط",
+      "التنسيق مع الإدارة التجارية بوصفها حلقة الوصل مع الموردين الكبار",
       "الإشراف المباشر على تطبيق وتطوير نظام Odoo ERP"
     ]
   },
@@ -566,7 +566,7 @@ const jobs = [
     ]
   },
   {
-    icon:"📦", title:"إدارة الاستلام والرقابة", layer:"الطبقة 3 — تشغيلية",
+    icon:"📦", title:"قسم الاستلام والرقابة", layer:"الطبقة 3 — قسم تشغيلي",
     odooRole:"Inventory User", odooLevel:"User", modules:"Inventory + Quality",
     p1:"مشرف + 8–10 عمال",p2:"مدير + مشرفان + ~30",
     duties:[
@@ -579,11 +579,11 @@ const jobs = [
     ]
   },
   {
-    icon:"🔬", title:"إدارة فحص ومراقبة الجودة", layer:"الطبقة 3 — تشغيلية",
+    icon:"🔬", title:"قسم فحص ومراقبة الجودة", layer:"الطبقة 3 — قسم تشغيلي",
     odooRole:"Quality User", odooLevel:"User", modules:"Quality + Inventory (read)",
     p1:"2–3 مفتشين",p2:"فرق متخصصة ~15",
     duties:[
-      "مدير إدارة الجودة: الإشراف على جميع فرق الفحص المتخصصة",
+      "رئيس قسم الجودة: الإشراف على جميع فرق الفحص المتخصصة",
       "فريق فحص المنتجات الطازجة والمجمدة: التحقق من درجات الحرارة والصلاحية",
       "فريق فحص المنتجات الجافة والمعلبة: فحص التغليف والتواريخ والنظافة",
       "فريق فحص المنتجات غير الغذائية: الفحص المادي ومطابقة المواصفات",
@@ -592,7 +592,7 @@ const jobs = [
     ]
   },
   {
-    icon:"🏬", title:"إدارة التخزين وتحديد المواقع", layer:"الطبقة 3 — تشغيلية",
+    icon:"🏬", title:"قسم التخزين وتحديد المواقع", layer:"الطبقة 3 — قسم تشغيلي",
     odooRole:"Inventory User", odooLevel:"User", modules:"Inventory + Barcode",
     p1:"مشرف + 15–20 عامل",p2:"مدير + مهندس + ~70",
     duties:[
@@ -605,11 +605,11 @@ const jobs = [
     ]
   },
   {
-    icon:"📋", title:"إدارة تحضير الطلبات والتوزيع", layer:"الطبقة 3 — تشغيلية",
+    icon:"📋", title:"قسم تحضير الطلبات والتوزيع", layer:"الطبقة 3 — قسم تشغيلي",
     odooRole:"Barcode User", odooLevel:"User", modules:"Barcode فقط",
     p1:"مشرف + 20–30 عامل",p2:"مدير + مشرفون + ~120",
     duties:[
-      "مدير عمليات التوزيع: تخطيط وجدولة عمليات السحب اليومية",
+      "رئيس قسم التوزيع: تخطيط وجدولة عمليات السحب اليومية",
       "مخطط الأحمال: تحسين توزيع الأحمال بين السيارات وتقليل الرحلات",
       "مشرفو مناطق الانتقاء: الإشراف على العمال في مناطق السحب المختلفة",
       "العمال المتنقلون (80–120): تنفيذ السحب باستخدام ماسحات الباركود",
@@ -618,7 +618,7 @@ const jobs = [
     ]
   },
   {
-    icon:"🚚", title:"إدارة أسطول النقل والتوزيع", layer:"الطبقة 3 — تشغيلية",
+    icon:"🚚", title:"قسم أسطول النقل والتوزيع", layer:"الطبقة 3 — قسم تشغيلي",
     odooRole:"Fleet User", odooLevel:"User", modules:"Fleet",
     p1:"منسق + 10–15 سائق",p2:"مدير + ~70 سائق",
     duties:[
@@ -631,14 +631,14 @@ const jobs = [
     ]
   },
   {
-    icon:"↩️", title:"إدارة المرتجعات وتصحيح المخزون", layer:"الطبقة 3 — تشغيلية",
+    icon:"↩️", title:"قسم المرتجعات وتصحيح المخزون", layer:"الطبقة 3 — قسم تشغيلي",
     odooRole:"Quality User", odooLevel:"User", modules:"Quality + Inventory (read)",
     p1:"مشارك ~3",p2:"مدير + مشرف + ~12",
     duties:[
-      "مدير إدارة المرتجعات: الإشراف على دورة المرتجعات الكاملة",
+      "رئيس قسم المرتجعات: الإشراف على دورة المرتجعات الكاملة",
       "مشرف استلام المرتجعات: التحقق من إذن الإرجاع قبل الاستلام",
       "فريق فحص ومعالجة المرتجعات: تصنيف كل وحدة مرتجعة حسب حالتها",
-      "منسق المرتجعات مع الموردين: إصدار إشعارات الإرجاع وطلبات الاستبدال",
+      "منسق المرتجعات: إحالة إشعارات الإرجاع وطلبات الاستبدال إلى الإدارة التجارية للتواصل مع الموردين",
       "إنشاء سند التسوية المخزونية في Odoo وربطه بـ DO الأصلي",
       "تحديث سجل المخزون النهائي وإغلاق دورة المرتجع بشكل كامل"
     ]
@@ -647,7 +647,7 @@ const jobs = [
 
 const raciMatrix = {
   stages:["PR — طلب الشراء","PO — أمر الشراء","ASN — إشعار الشحن","GRN — الاستلام والجودة","Putaway — التخزين","Picking — تحضير الطلبات","Dispatch — الشحن","Returns — المرتجعات"],
-  roles:["مدير المستودع","مدير ت.إمداد","مدير الجودة","مدير المالية","إدارة الاستلام","إدارة الجودة","إدارة التخزين","إدارة السحب","إدارة النقل","إدارة المرتجعات"],
+  roles:["مدير المستودع","مدير ت.إمداد","مدير الجودة","مدير المالية","قسم الاستلام","قسم الجودة","قسم التخزين","قسم السحب","قسم النقل","قسم المرتجعات"],
   matrix:[
     ["A","C","I","R","C","I","I","I","I","I"],
     ["A","C","I","R","C","I","I","I","I","I"],
@@ -668,7 +668,7 @@ const odooPaths = [
   {stage:"Putaway",module:"Inventory",path:"Inventory › Configuration › Putaway Rules",activation:"Settings › Inventory › Storage Locations ✓",req:"إنشاء هيكل المواقع"},
   {stage:"Picking",module:"Inventory",path:"Inventory › Operations › Transfers",activation:"3-step outgoing",req:"تفعيل 3-step shipping"},
   {stage:"Dispatch",module:"Inventory",path:"Inventory › Operations › Delivery Orders",activation:"ربط Fleet إن وُجد",req:"إدارة الأسطول والسائقين"},
-  {stage:"Returns",module:"Inventory",path:"Inventory › Operations › Returns",activation:"إنشاء Return من Delivery",req:"تفعيل إدارة المرتجعات"}
+  {stage:"Returns",module:"Inventory",path:"Inventory › Operations › Returns",activation:"إنشاء Return من Delivery",req:"تفعيل قسم المرتجعات"}
 ];
 
 const odooRoles = [
@@ -690,12 +690,12 @@ const orgTable = [
   {dept:"💻 سلاسل الإمداد",p1:"مشارك مع المالية",p2:"مدير مستقل + فريق",role:"تخطيط وإدارة التوريد"},
   {dept:"🛡️ حوكمة الدورة / الجودة",p1:"1 مشرف مشترك",p2:"مدير + ~15 مفتش",role:"ضمان الجودة والامتثال"},
   {dept:"📊 المحاسبة والمالية",p1:"محاسب واحد",p2:"مدير + فريق 3–5",role:"الرقابة المالية والتقارير"},
-  {dept:"📦 الاستلام والرقابة",p1:"مشرف + 8–10 عمال",p2:"مدير + مشرفان + ~30",role:"استلام البضاعة وتوثيقها"},
-  {dept:"🔬 فحص الجودة",p1:"2–3 مفتشين",p2:"فرق متخصصة ~15",role:"فحص المنتجات الواردة"},
-  {dept:"🏬 التخزين وتحديد المواقع",p1:"مشرف + 15–20 عامل",p2:"مدير + مهندس + ~70",role:"تنظيم المخزون وتخزينه"},
-  {dept:"📋 تحضير الطلبات والسحب",p1:"مشرف + 20–30 عامل",p2:"مدير + مشرفون + ~120",role:"تنفيذ أوامر الصرف"},
-  {dept:"🚚 أسطول النقل والتوزيع",p1:"منسق + 10–15 سائق",p2:"مدير + ~70 سائق",role:"التوزيع للفروع والعملاء"},
-  {dept:"↩️ المرتجعات وتصحيح المخزون",p1:"مشارك ~3",p2:"مدير + مشرف + ~12",role:"معالجة المرتجعات والتسويات"},
+  {dept:"📦 قسم الاستلام والرقابة",p1:"مشرف + 8–10 عمال",p2:"مدير + مشرفان + ~30",role:"استلام البضاعة وتوثيقها"},
+  {dept:"🔬 قسم فحص الجودة",p1:"2–3 مفتشين",p2:"فرق متخصصة ~15",role:"فحص المنتجات الواردة"},
+  {dept:"🏬 قسم التخزين وتحديد المواقع",p1:"مشرف + 15–20 عامل",p2:"مدير + مهندس + ~70",role:"تنظيم المخزون وتخزينه"},
+  {dept:"📋 قسم تحضير الطلبات والسحب",p1:"مشرف + 20–30 عامل",p2:"مدير + مشرفون + ~120",role:"تنفيذ أوامر الصرف"},
+  {dept:"🚚 قسم أسطول النقل والتوزيع",p1:"منسق + 10–15 سائق",p2:"مدير + ~70 سائق",role:"التوزيع للفروع والعملاء"},
+  {dept:"↩️ قسم المرتجعات وتصحيح المخزون",p1:"مشارك ~3",p2:"مدير + مشرف + ~12",role:"معالجة المرتجعات والتسويات"},
   {dept:"📊 الإجمالي التقريبي",p1:"~50–60 موظف",p2:"~320 موظف",role:"—"}
 ];
 
