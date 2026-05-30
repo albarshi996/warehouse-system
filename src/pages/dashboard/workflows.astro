@@ -9,15 +9,14 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
 <DashboardLayout title="الهيكل والمسارات">
   <div class="text-right" dir="rtl">
-    <header class="mb-6 sm:mb-8">
-      <h1 class="text-2xl sm:text-3xl font-bold text-brand-yellow">
-        الهيكل والمسارات (Workflows & Org)
-      </h1>
-      <p class="text-gray-100 mt-2 text-sm sm:text-base leading-relaxed">
-        الخريطة البصرية لنظام المستودعات: الهيكل التنظيمي للموظفين، والدورة المستندية الكاملة من طلب
-        الشراء حتى المرتجعات. مأخوذة مباشرة من الباب الثاني والثالث في الدليل التشغيلي.
-      </p>
-    </header>
+    <div class="mb-6 sm:mb-8 w-full rounded-2xl overflow-hidden border border-brand-red/20 shadow-2xl" style="height: 85vh; min-height: 600px;">
+      <iframe
+        src={`${base}/تقرير-هيكل-الوظائف-والادوار.html`}
+        title="تقرير الهيكل التنظيمي للمستودعات"
+        class="w-full h-full border-0"
+        loading="lazy"
+      ></iframe>
+    </div>
 
     <!-- Simple Static Content -->
     <div class="space-y-8">
