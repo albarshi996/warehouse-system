@@ -56,6 +56,13 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         <span>🔗</span>
         <span>سلاسل الإمداد</span>
       </button>
+      <button
+        class="tab-btn px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-gray-800 text-gray-200 hover:bg-gray-700"
+        data-tab="brd"
+      >
+        <span>📋</span>
+        <span>أهمية توثيق المتطلبات</span>
+      </button>
     </div>
 
     <!-- Tab Contents -->
@@ -122,14 +129,14 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                 <div class="bg-white/5 p-6 rounded-xl border border-gray-700 flex justify-center overflow-hidden">
                   <div class="mermaid">
                     graph TD
-                    A([بدء: استلام فاتورة المورد Vendor Bill]) --&gt; B[إدخال الفاتورة وربطها بـ Purchase Order Ref]
-                    B --&gt; C{"{التحقق والاعتماد المالي}"}
-                    C --&gt;|مرفوض| D[إعادة للمراجعة Draft]
-                    C --&gt;|معتمد| E[ترحيل الفاتورة Posted]
-                    E --&gt; F[تسجيل الدفع Register Payment]
-                    F --&gt; G[التسوية البنكية Bank Reconciliation]
-                    G --&gt; H[توليد قيود اليومية آلياً Journal Entries]
-                    H --&gt; I([النهاية: إغلاق الحساب وإصدار P&L])
+                    A([بدء: استلام فاتورة المورد Vendor Bill]) --> B[إدخال الفاتورة وربطها بـ Purchase Order Ref]
+                    B --> C{"{التحقق والاعتماد المالي}"}
+                    C -->|مرفوض| D[إعادة للمراجعة Draft]
+                    C -->|معتمد| E[ترحيل الفاتورة Posted]
+                    E --> F[تسجيل الدفع Register Payment]
+                    F --> G[التسوية البنكية Bank Reconciliation]
+                    G --> H[توليد قيود اليومية آلياً Journal Entries]
+                    H --> I([النهاية: إغلاق الحساب وإصدار P&L])
                   </div>
                 </div>
               </section>
@@ -271,16 +278,16 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                 <div class="bg-white/5 p-6 rounded-xl border border-gray-700 flex justify-center overflow-hidden">
                   <div class="mermaid">
                     graph TD
-                    A([بدء: تقديم طلب إجازة]) --&gt; B{"{موافقة المدير المباشر}"}
-                    B --&gt;|مرفوض| C[إشعار بالرفض]
-                    B --&gt;|موافق| D{"{موافقة الـ HR}"}
-                    D --&gt;|موافق| E[تحديث رصيد الإجازات Leave Balance]
-                    F([حركات الحضور والانصراف Attendances]) --&gt; G
-                    E --&gt; G[تجميع بيانات الشهر Payroll]
-                    G --&gt; H[إنشاء قسيمة الراتب Payslip]
-                    H --&gt; I{"{اعتماد مسير الرواتب}"}
-                    I --&gt;|معتمد| J[توليد القيد المحاسبي للراتب]
-                    J --&gt; K([النهاية: صرف الراتب])
+                    A([بدء: تقديم طلب إجازة]) --> B{"{موافقة المدير المباشر}"}
+                    B -->|مرفوض| C[إشعار بالرفض]
+                    B -->|موافق| D{"{موافقة الـ HR}"}
+                    D -->|موافق| E[تحديث رصيد الإجازات Leave Balance]
+                    F([حركات الحضور والانصراف Attendances]) --> G
+                    E --> G[تجميع بيانات الشهر Payroll]
+                    G --> H[إنشاء قسيمة الراتب Payslip]
+                    H --> I{"{اعتماد مسير الرواتب}"}
+                    I -->|معتمد| J[توليد القيد المحاسبي للراتب]
+                    J --> K([النهاية: صرف الراتب])
                   </div>
                 </div>
               </section>
@@ -418,15 +425,15 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                 <div class="bg-white/5 p-6 rounded-xl border border-gray-700 flex justify-center overflow-hidden">
                   <div class="mermaid">
                     graph TD
-                    A([بدء: وصول المخزون لنقطة إعادة الطلب]) --&gt; B[توليد طلب شراء داخلي آلياً PR]
-                    B --&gt; C[إنشاء وإرسال طلبات عروض أسعار RFQs]
-                    C --&gt; D{"{تقييم الموردين Vendor Evaluation}"}
-                    D --&gt; E[اعتماد أمر الشراء PO]
-                    E --&gt; F[استقبال إشعار الشحن المسبق ASN]
-                    F --&gt; G[استلام البضاعة في المخزن GRN]
-                    G --&gt; H[تحديث الكميات في المستودع]
-                    H --&gt; I[إنشاء مسودة فاتورة وسند دفع مبدئي]
-                    I --&gt; J([النهاية: إغلاق أمر الشراء])
+                    A([بدء: وصول المخزون لنقطة إعادة الطلب]) --> B[توليد طلب شراء داخلي آلياً PR]
+                    B --> C[إنشاء وإرسال طلبات عروض أسعار RFQs]
+                    C --> D{"{تقييم الموردين Vendor Evaluation}"}
+                    D --> E[اعتماد أمر الشراء PO]
+                    E --> F[استقبال إشعار الشحن المسبق ASN]
+                    F --> G[استلام البضاعة في المخزن GRN]
+                    G --> H[تحديث الكميات في المستودع]
+                    H --> I[إنشاء مسودة فاتورة وسند دفع مبدئي]
+                    I --> J([النهاية: إغلاق أمر الشراء])
                   </div>
                 </div>
               </section>
@@ -554,20 +561,20 @@ const base = import.meta.env.BASE_URL.endsWith('/')
              <div class="bg-white/5 rounded-xl p-6 border border-white/10 overflow-x-auto">
                <div class="mermaid">
                  graph TD
-                 A([بدء: وصول شحنة]) --&gt; B[استلام إشعار الشحن المسبق ASN]
-                 B --&gt; C[فحص الكميات والأوزان GRN]
-                 C --&gt; D{"{فحص الجودة QC}"}
-                 D --&gt;|مقبول| E[تحديد موقع التخزين Putaway]
-                 D --&gt;|مرفوض| F[إنشاء تقرير البضاعة التالفة]
-                 F --&gt; G[إشعار المورد للإحلال]
-                 E --&gt; H[تسجيل في بطاقة مراقبة المخزون Bin Card]
-                 H --&gt; I{"{طلب صرف وارد؟}"}
-                 I --&gt;|نعم| J[إنشاء قائمة السحب Picking]
-                 J --&gt; K[قائمة التعبئة Packing]
-                 K --&gt; L[إصدار إذن التسليم Delivery Note]
-                 L --&gt; M[تحديث المخزون في Odoo]
-                 I --&gt;|لا| N[انتظار طلب الصرف]
-                 M --&gt; O([النهاية: إغلاق الحركة])
+                 A([بدء: وصول شحنة]) --> B[استلام إشعار الشحن المسبق ASN]
+                 B --> C[فحص الكميات والأوزان GRN]
+                 C --> D{"{فحص الجودة QC}"}
+                 D -->|مقبول| E[تحديد موقع التخزين Putaway]
+                 D -->|مرفوض| F[إنشاء تقرير البضاعة التالفة]
+                 F --> G[إشعار المورد للإحلال]
+                 E --> H[تسجيل في بطاقة مراقبة المخزون Bin Card]
+                 H --> I{"{طلب صرف وارد؟}"}
+                 I -->|نعم| J[إنشاء قائمة السحب Picking]
+                 J --> K[قائمة التعبئة Packing]
+                 K --> L[إصدار إذن التسليم Delivery Note]
+                 L --> M[تحديث المخزون في Odoo]
+                 I -->|لا| N[انتظار طلب الصرف]
+                 M --> O([النهاية: إغلاق الحركة])
                </div>
              </div>
            </section>
@@ -681,23 +688,23 @@ const base = import.meta.env.BASE_URL.endsWith('/')
              <div class="bg-white/5 rounded-xl p-6 border border-white/10 overflow-x-auto">
                <div class="mermaid">
                  graph TD
-                 A([بدء: تخطيط الطلب]) --&gt; B[توليد تقرير التنبؤ بالطلب Forecast]
-                 B --&gt; C[إنشاء طلب الشراء الداخلي PR]
-                 C --&gt; D[اعتماد PR من مدير القسم]
-                 D --&gt; E[إرسال طلبات عروض أسعار RFQs للموردين]
-                 E --&gt; F{"{تقييم واختيار المورد}"}
-                 F --&gt; G[إصدار أمر الشراء الرسمي PO]
-                 G --&gt; H[متابعة الشحن BL/AWB]
-                 H --&gt; I[استلام البضاعة GRN + QC]
-                 I --&gt; J[التخزين والتوزيع Putaway + Bin Card]
-                 J --&gt; K[تنفيذ طلبات الصرف Picking + Packing]
-                 K --&gt; L[التسليم النهائي Delivery Note + POD]
-                 L --&gt; M{"{مرتجعات؟}"}
-                 M --&gt;|نعم| N[Return Note + Credit Note]
-                 N --&gt; O[تحديث المخزون]
-                 M --&gt;|لا| P[قياس مؤشرات الأداء KPIs]
-                 O --&gt; P
-                 P --&gt; Q([النهاية: تقرير الأداء الشهري])
+                 A([بدء: تخطيط الطلب]) --> B[توليد تقرير التنبؤ بالطلب Forecast]
+                 B --> C[إنشاء طلب الشراء الداخلي PR]
+                 C --> D[اعتماد PR من مدير القسم]
+                 D --> E[إرسال طلبات عروض أسعار RFQs للموردين]
+                 E --> F{"{تقييم واختيار المورد}"}
+                 F --> G[إصدار أمر الشراء الرسمي PO]
+                 G --> H[متابعة الشحن BL/AWB]
+                 H --> I[استلام البضاعة GRN + QC]
+                 I --> J[التخزين والتوزيع Putaway + Bin Card]
+                 J --> K[تنفيذ طلبات الصرف Picking + Packing]
+                 K --> L[التسليم النهائي Delivery Note + POD]
+                 L --> M{"{مرتجعات؟}"}
+                 M -->|نعم| N[Return Note + Credit Note]
+                 N --> O[تحديث المخزون]
+                 M -->|لا| P[قياس مؤشرات الأداء KPIs]
+                 O --> P
+                 P --> Q([النهاية: تقرير الأداء الشهري])
                </div>
              </div>
            </section>
@@ -808,6 +815,152 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
          </div>
        </div>
+
+       <!-- TAB 6: أهمية توثيق المتطلبات BRD -->
+       <div id="brd-content" class="tab-pane hidden">
+         <div class="animate-fadeIn">
+           <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+             <span class="text-2xl">📋</span>
+             <span>لماذا وثيقة متطلبات الأعمال (BRD) ليست رفاهية — بل ضمانة</span>
+           </h2>
+           <p class="text-gray-300 text-sm mb-8 leading-relaxed">
+             تقرير تحليلي يكشف المخاطر الحقيقية لبدء تنفيذ أي نظام ERP بدون وثيقة متطلبات واضحة وموقّعة من جميع الأطراف.
+           </p>
+
+           <!-- الخطر الأول -->
+           <div class="mb-8 bg-red-900/20 border border-red-500/30 rounded-2xl p-6">
+             <div class="flex items-center gap-3 mb-4">
+               <span class="text-3xl">🌀</span>
+               <div>
+                 <h3 class="text-lg font-bold text-red-400">الخطر الأول — فوضى "أنا أظن، أنت تخمن"</h3>
+                 <p class="text-xs text-gray-400">غياب وثيقة المتطلبات (Lack of Documentation)</p>
+               </div>
+             </div>
+             <p class="text-gray-100 text-sm leading-loose mb-4">
+               في غياب وثيقة متطلبات الأعمال (BRD)، تتحول الشركة إلى الاعتماد الكامل على التواصل الشفهي. مدير المبيعات يشرح للمبرمج ما يريده في اجتماع سريع، والمحاسب يرسل ملاحظة صوتية بمتطلباته — وكل هذا يبدو عادياً، لكنه يُشكّل أخطر مداخل الفشل في التنفيذ.
+             </p>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div class="bg-black/30 rounded-xl p-4 border border-red-500/20">
+                 <p class="text-xs font-bold text-red-400 mb-2 uppercase tracking-wider">⚠ المشكلة</p>
+                 <p class="text-sm text-gray-100 leading-relaxed">المبرمج أو الشركة المنفذة لا تفهم طبيعة عملك — هي تفهم لغة الكود. عندما تُنقل المتطلبات شفهياً، يبني المبرمج التنفيذ استناداً إلى "فهمه وتخمينه" لما تحتاجه، وليس ما تحتاجه فعلاً.</p>
+               </div>
+               <div class="bg-black/30 rounded-xl p-4 border border-orange-500/20">
+                 <p class="text-xs font-bold text-orange-400 mb-2 uppercase tracking-wider">💥 النتيجة</p>
+                 <p class="text-sm text-gray-100 leading-relaxed">بعد أشهر من العمل، يُسلَّم نظام متطور تقنياً لكنه أعمى تجارياً. تكتشف الإدارة أن الشاشات والأزرار لا تعكس الـ Workflow الحقيقي الذي تسير به العمليات يومياً.</p>
+               </div>
+             </div>
+           </div>
+
+           <!-- الخطر الثاني -->
+           <div class="mb-8 bg-yellow-900/20 border border-yellow-500/30 rounded-2xl p-6">
+             <div class="flex items-center gap-3 mb-4">
+               <span class="text-3xl">⚔️</span>
+               <div>
+                 <h3 class="text-lg font-bold text-yellow-400">الخطر الثاني — حرب الديوك بين الأقسام</h3>
+                 <p class="text-xs text-gray-400">غياب رؤية موحّدة (Lack of a Unified Vision)</p>
+               </div>
+             </div>
+             <p class="text-gray-100 text-sm leading-loose mb-4">
+               يوجد نظام ERP في جوهره لربط الأقسام ببعضها — المبيعات تنعكس في المستودعات، والمستودعات تنعكس في المحاسبة. هذا التكامل هو قيمة الـ ERP الحقيقية، لكنه يصبح ساحة معركة بدون وثيقة تُعرّف حدود كل طرف.
+             </p>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div class="bg-black/30 rounded-xl p-4 border border-yellow-500/20">
+                 <p class="text-xs font-bold text-yellow-400 mb-2 uppercase tracking-wider">⚠ المشكلة</p>
+                 <p class="text-sm text-gray-100 leading-relaxed">بدون وثيقة BRD تُحدد صلاحيات وحدود وتداخلات كل قسم، يتحول التنفيذ إلى ساحة حرب: المبيعات تريد تسهيل خروج البضاعة لرفع أرقامها، المحاسبة تريد ضوابط صارمة لضمان التحصيل، والمستودعات تريد دورة مستندية محددة لتجنب ضياع المخزون.</p>
+               </div>
+               <div class="bg-black/30 rounded-xl p-4 border border-orange-500/20">
+                 <p class="text-xs font-bold text-orange-400 mb-2 uppercase tracking-wider">💥 النتيجة</p>
+                 <p class="text-sm text-gray-100 leading-relaxed">بغياب "الدستور" (وثيقة BRD) التي تحكم هذا التداخل، يبدأ كل قسم بطلب تعديلات تخدم مصلحته وتضر بالقسم الآخر، مما يقود إلى الانهيار الكامل للمنطق الكامن في تصميم النظام.</p>
+               </div>
+             </div>
+           </div>
+
+           <!-- الخطر الثالث -->
+           <div class="mb-8 bg-blue-900/20 border border-blue-500/30 rounded-2xl p-6">
+             <div class="flex items-center gap-3 mb-4">
+               <span class="text-3xl">🩸</span>
+               <div>
+                 <h3 class="text-lg font-bold text-blue-400">الخطر الثالث — النزيف المالي المفتوح</h3>
+                 <p class="text-xs text-gray-400">تضخم النطاق (Scope Creep)</p>
+               </div>
+             </div>
+             <p class="text-gray-100 text-sm leading-loose mb-4">
+               تظن الشركات أن تخطي مرحلة كتابة وثيقة المتطلبات سيوفر الوقت والمال بالبدء الفوري في البرمجة. والحقيقة المُرّة أن العكس تماماً هو ما يحدث — فالتوفير الوهمي يتحول إلى نزيف مالي حقيقي لا يتوقف.
+             </p>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div class="bg-black/30 rounded-xl p-4 border border-blue-500/20">
+                 <p class="text-xs font-bold text-blue-400 mb-2 uppercase tracking-wider">⚠ المشكلة</p>
+                 <p class="text-sm text-gray-100 leading-relaxed">حين يبدأ العمل بدون خطة واضحة، سيكتشف الموظفون أثناء الاستخدام التجريبي غياب ميزات جوهرية: "أين زر احتساب ضريبة القيمة المضافة؟" أو "كيف نخصم البضاعة التالفة من المخزون؟"</p>
+               </div>
+               <div class="bg-black/30 rounded-xl p-4 border border-orange-500/20">
+                 <p class="text-xs font-bold text-orange-400 mb-2 uppercase tracking-wider">💥 النتيجة</p>
+                 <p class="text-sm text-gray-100 leading-relaxed">تبدأ سلسلة لا نهاية لها من "طلبات التعديل" (Change Requests). كل تعديل يستلزم ميزانية إضافية ووقتاً من الشركة المنفذة. مشروع خُصص له 6 أشهر وميزانية محددة يمتد إلى سنتين وتتضاعف تكلفته حتى تعجز الشركة عن السداد وتُعلن فشل المشروع.</p>
+               </div>
+             </div>
+           </div>
+
+           <!-- الخطر الرابع -->
+           <div class="mb-8 bg-purple-900/20 border border-purple-500/30 rounded-2xl p-6">
+             <div class="flex items-center gap-3 mb-4">
+               <span class="text-3xl">😤</span>
+               <div>
+                 <h3 class="text-lg font-bold text-purple-400">الخطر الرابع — إحباط الموظفين ومقاومة التغيير</h3>
+                 <p class="text-xs text-gray-400">العنصر البشري (The Human Element)</p>
+               </div>
+             </div>
+             <p class="text-gray-100 text-sm leading-loose mb-4">
+               أهم عنصر لنجاح أي تنفيذ تقني هو "المستخدم النهائي" — الموظف الذي سيتعامل مع النظام يومياً. وثيقة المتطلبات هي الضمانة الوحيدة لأن النظام سيُبنى وفق احتياجاته، لا وفق تخمينات المنفذ.
+             </p>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div class="bg-black/30 rounded-xl p-4 border border-purple-500/20">
+                 <p class="text-xs font-bold text-purple-400 mb-2 uppercase tracking-wider">⚠ المشكلة</p>
+                 <p class="text-sm text-gray-100 leading-relaxed">مقترح مبني عشوائياً وبدون دراسة احتياجات المستخدمين النهائيين يكون في الغالب معقداً وغير منطقي في سياق العمل اليومي الفعلي.</p>
+               </div>
+               <div class="bg-black/30 rounded-xl p-4 border border-orange-500/20">
+                 <p class="text-xs font-bold text-orange-400 mb-2 uppercase tracking-wider">💥 النتيجة</p>
+                 <p class="text-sm text-gray-100 leading-relaxed">موظف اعتاد إنهاء عمله في 5 دقائق على الورق يجد نفسه أمام 20 دقيقة و10 شاشات مختلفة لإتمام نفس المهمة. تنشأ حالة "مقاومة التغيير": الموظفون يرفضون النظام، الإدارة تفقد السيطرة، والجميع يعود سراً لاستخدام Excel.</p>
+               </div>
+             </div>
+           </div>
+
+           <!-- الخلاصة -->
+           <div class="bg-gradient-to-br from-brand-red/30 to-orange-900/20 border border-brand-red/50 rounded-2xl p-8">
+             <div class="flex items-center gap-3 mb-6">
+               <span class="text-4xl">💡</span>
+               <h3 class="text-xl font-bold text-white">الخلاصة — مبدأ "الرمال المتحركة"</h3>
+             </div>
+             <div class="space-y-4 text-gray-100 text-sm leading-loose">
+               <p>
+                 التسرع في رؤية "الشاشات والأكواد" دون بناء أساس نظري متين هو تماماً كبناء ناطحة سحاب على الرمال المتحركة. لا يهم مدى حداثة التقنية المستخدمة — سواء كانت SAP أو Oracle أو Odoo أو غيرها — فستنهار لا محالة إن لم تُسند بوثيقة BRD واضحة موقّعة من جميع رؤساء الأقسام.
+               </p>
+               <div class="bg-white/10 rounded-xl p-5 border border-white/20 mt-4">
+                 <p class="font-bold text-brand-yellow mb-3 text-base">وثيقة المتطلبات ليست "روتيناً معيقاً"</p>
+                 <p>
+                   هي وثيقة BRD الموقّعة من جميع الأطراف المعنية — وهي الوثيقة الوحيدة التي تضمن أن الاستثمار المالي الضخم في توثيق وتنفيذ الـ ERP سيحقق أهدافه ويحل مشكلات الشركة الحقيقية، بدلاً من أن يكون هو نفسه أكبر مشكلة تواجهها.
+                 </p>
+               </div>
+               <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                 <div class="bg-black/30 rounded-xl p-4 text-center border border-white/10">
+                   <div class="text-2xl font-bold text-brand-yellow font-mono">4</div>
+                   <div class="text-xs text-gray-400 mt-1">مخاطر رئيسية موثّقة</div>
+                 </div>
+                 <div class="bg-black/30 rounded-xl p-4 text-center border border-white/10">
+                   <div class="text-2xl font-bold text-red-400 font-mono">2x</div>
+                   <div class="text-xs text-gray-400 mt-1">متوسط تضاعف التكلفة</div>
+                 </div>
+                 <div class="bg-black/30 rounded-xl p-4 text-center border border-white/10">
+                   <div class="text-2xl font-bold text-orange-400 font-mono">3x</div>
+                   <div class="text-xs text-gray-400 mt-1">متوسط تمديد الجدول الزمني</div>
+                 </div>
+                 <div class="bg-black/30 rounded-xl p-4 text-center border border-white/10">
+                   <div class="text-2xl font-bold text-green-400 font-mono">100%</div>
+                   <div class="text-xs text-gray-400 mt-1">نسبة الحلول: وثيقة BRD</div>
+                 </div>
+               </div>
+             </div>
+           </div>
+         </div>
+       </div>
     </div>
   </div>
 
@@ -824,20 +977,39 @@ const base = import.meta.env.BASE_URL.endsWith('/')
   <script>
     import mermaid from 'mermaid';
 
-    // Initialize Mermaid
     mermaid.initialize({
-      startOnLoad: true,
+      startOnLoad: false,
       theme: 'dark',
-      securityLevel: 'strict',
-      fontFamily: 'Cairo'
+      securityLevel: 'loose',
+      fontFamily: 'Cairo, sans-serif',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      }
     });
 
-    // Tab Switching Logic
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tab = (btn instanceof HTMLElement) ? btn.dataset.tab : null;
+    async function renderMermaidIn(tabId) {
+      const container = document.getElementById(`${tabId}-content`);
+      if (!container) return;
+      const diagrams = container.querySelectorAll('.mermaid');
+      diagrams.forEach((el) => {
+        if (el.getAttribute('data-processed')) {
+          el.removeAttribute('data-processed');
+        }
+      });
+      try {
+        await mermaid.run({ nodes: diagrams });
+      } catch (e) {
+        console.warn('Mermaid render error:', e);
+      }
+    }
 
-        // Update buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const tab = (btn instanceof HTMLElement) ? btn.dataset.tab : null;
+        if (!tab) return;
+
         document.querySelectorAll('.tab-btn').forEach(b => {
           b.classList.remove('bg-brand-red', 'text-white');
           b.classList.add('bg-gray-800', 'text-gray-200');
@@ -845,15 +1017,19 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         btn.classList.add('bg-brand-red', 'text-white');
         btn.classList.remove('bg-gray-800', 'text-gray-200');
 
-        // Update content
-        document.querySelectorAll('.tab-pane').forEach(p => {
-          p.classList.add('hidden');
-        });
-        document.getElementById(`${tab}-content`).classList.remove('hidden');
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+        const activePane = document.getElementById(`${tab}-content`);
+        if (activePane) activePane.classList.remove('hidden');
 
-        // Re-render mermaid if needed
-        mermaid.run();
+        const tabsWithCharts = ['finance', 'hr', 'procurement', 'warehouse', 'supplychain'];
+        if (tabsWithCharts.includes(tab)) {
+          await renderMermaidIn(tab);
+        }
       });
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await renderMermaidIn('finance');
     });
   </script>
 </DashboardLayout>
