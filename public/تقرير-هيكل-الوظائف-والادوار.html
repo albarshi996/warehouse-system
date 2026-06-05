@@ -220,9 +220,9 @@ tr:hover td{background:rgba(200,157,59,0.04);}
     <div class="hero-stats">
       <div class="hstat"><strong>8</strong><span>مراحل مستندية</span></div>
       <div class="hstat"><strong>21</strong><span>نموذج رسمي</span></div>
-      <div class="hstat"><strong>11</strong><span>منصب محوري</span></div>
+      <div class="hstat"><strong>15</strong><span>منصب محوري</span></div>
       <div class="hstat"><strong>3</strong><span>طبقات هرمية</span></div>
-      <div class="hstat"><strong>6</strong><span>أقسام تشغيلية</span></div>
+      <div class="hstat"><strong>8</strong><span>أقسام تشغيلية</span></div>
       <div class="hstat"><strong>≥98.5%</strong><span>دقة مخزون مستهدفة</span></div>
     </div>
   </div>
@@ -322,8 +322,18 @@ tr:hover td{background:rgba(200,157,59,0.04);}
     <div class="org-layer-label">الطبقة الثانية — الإدارة الوسطى</div>
     <div class="org-row">
       <div class="org-node layer2"><span class="on-icon">💻</span><div class="on-title">مدير سلاسل الإمداد</div><div class="on-sub">طبقة 2</div></div>
-      <div class="org-node layer2"><span class="on-icon">🛡️</span><div class="on-title">مدير حوكمة الدورة</div><div class="on-sub">طبقة 2</div></div>
-      <div class="org-node layer2"><span class="on-icon">📊</span><div class="on-title">مدير المحاسبة والمالية</div><div class="on-sub">طبقة 2</div></div>
+      <div class="org-node layer2"><span class="on-icon">🛡️</span><div class="on-title">مدير حوكمة الدورة</div><div class="on-sub">يرفع لـ: إدارة الجودة</div></div>
+      <div class="org-node layer2"><span class="on-icon">📊</span><div class="on-title">مدير المحاسبة والمالية</div><div class="on-sub">يرفع لـ: الإدارة المالية</div></div>
+      <div class="org-node layer2">
+        <span class="on-icon">🛒</span>
+        <div class="on-title">موظف المشتريات</div>
+        <div class="on-sub">يرفع لـ: الإدارة التجارية</div>
+      </div>
+      <div class="org-node layer2">
+        <span class="on-icon">💾</span>
+        <div class="on-title">موظف تقنية المعلومات</div>
+        <div class="on-sub">يرفع لـ: إدارة تقنية المعلومات</div>
+      </div>
     </div>
     <div class="org-connector"></div>
     <div class="org-hline"></div>
@@ -336,6 +346,16 @@ tr:hover td{background:rgba(200,157,59,0.04);}
       <div class="org-node layer3"><span class="on-icon">📋</span><div class="on-title">السحب</div><div class="on-sub">~120 عامل</div></div>
       <div class="org-node layer3"><span class="on-icon">🚚</span><div class="on-title">النقل</div><div class="on-sub">~70 سائق</div></div>
       <div class="org-node layer3"><span class="on-icon">↩️</span><div class="on-title">المرتجعات</div><div class="on-sub">~12 موظف</div></div>
+      <div class="org-node layer3">
+        <span class="on-icon">🔧</span>
+        <div class="on-title">إدارة الصيانة</div>
+        <div class="on-sub">Maintenance Dept.</div>
+      </div>
+      <div class="org-node layer3">
+        <span class="on-icon">🔒</span>
+        <div class="on-title">إدارة الأمن الصناعي</div>
+        <div class="on-sub">Industrial Security Dept.</div>
+      </div>
     </div>
   </div>
 
@@ -549,7 +569,8 @@ const jobs = [
       "ضمان تطبيق معايير الجودة والسلامة الغذائية على جميع المنتجات",
       "إدارة فريق فحص الجودة والتدقيق الداخلي وتطوير مهاراتهم",
       "مراجعة وتدقيق جميع المستندات اليومية الواردة والصادرة قبل الاعتماد",
-      "ضمان تكامل البيانات وعدم الفجوات أو التعارضات في نظام Odoo"
+      "ضمان تكامل البيانات وعدم الفجوات أو التعارضات في نظام Odoo",
+      "يرفع تقاريره مباشرةً لإدارة الجودة العليا"
     ]
   },
   {
@@ -562,7 +583,8 @@ const jobs = [
       "إعداد التقارير المالية الدورية والسنوية وتحليل الانحرافات",
       "الإشراف على أنشطة الجرد المالي السنوي والدوري ومراجعة نتائجه",
       "مراقبة تكاليف التشغيل وتقديم توصيات الترشيد للإدارة العليا",
-      "اعتماد سندات الصرف والإيداع المالي والإشعارات الدائنة والمدينة"
+      "اعتماد سندات الصرف والإيداع المالي والإشعارات الدائنة والمدينة",
+      "يرفع تقاريره المالية مباشرةً للإدارة المالية المركزية"
     ]
   },
   {
@@ -641,6 +663,58 @@ const jobs = [
       "منسق المرتجعات: إحالة إشعارات الإرجاع وطلبات الاستبدال إلى الإدارة التجارية للتواصل مع الموردين",
       "إنشاء سند التسوية المخزونية في Odoo وربطه بـ DO الأصلي",
       "تحديث سجل المخزون النهائي وإغلاق دورة المرتجع بشكل كامل"
+    ]
+  },
+  {
+    icon:"🛒", title:"موظف المشتريات", layer:"الطبقة 2 — يرفع لـ: الإدارة التجارية",
+    odooRole:"Purchase User", odooLevel:"User", modules:"Purchase",
+    p1:"موظف مشتريات واحد", p2:"فريق مشتريات متكامل",
+    duties:[
+      "إعداد وإرسال طلبات عروض الأسعار (RFQ) إلى الموردين المعتمدين",
+      "متابعة وتنسيق تنفيذ أوامر الشراء (PO) وتتبع حالتها",
+      "التنسيق مع المستودعات للتحقق من استلام البضاعة وفق أوامر الشراء",
+      "تحديث قاعدة بيانات الموردين والأسعار بشكل دوري في النظام",
+      "إعداد تقارير أداء الموردين ورفعها للإدارة التجارية",
+      "المشاركة في مفاوضات عقود الشراء وتجديد الاتفاقيات التجارية"
+    ]
+  },
+  {
+    icon:"💾", title:"موظف تقنية المعلومات", layer:"الطبقة 2 — يرفع لـ: إدارة تقنية المعلومات",
+    odooRole:"System User", odooLevel:"User", modules:"Technical Support",
+    p1:"موظف IT واحد", p2:"فريق دعم تقني متكامل",
+    duties:[
+      "تقديم الدعم التقني اليومي لجميع مستخدمي النظام في المستودع",
+      "إدارة حسابات المستخدمين وصلاحياتهم في نظام Odoo",
+      "متابعة أداء الأجهزة والشبكات وضمان استمرارية العمل",
+      "تنسيق طلبات الصيانة والتطوير مع مدير تقنية المعلومات",
+      "توثيق الأعطال التقنية والحلول المتخذة في سجل الدعم الفني",
+      "تدريب المستخدمين الجدد على استخدام النظام وفق تعليمات الإدارة"
+    ]
+  },
+  {
+    icon:"🔧", title:"إدارة الصيانة", layer:"الطبقة 3 — قسم تشغيلي",
+    odooRole:"Maintenance User", odooLevel:"User", modules:"Maintenance + Fleet",
+    p1:"فني صيانة واحد", p2:"مدير + فريق صيانة متكامل",
+    duties:[
+      "الإشراف على صيانة جميع معدات المستودع: رافعات شوكية، معدات مناولة، أجهزة باركود",
+      "صيانة وحدات التبريد والتجميد وضمان استمرار عملها بالمعايير المطلوبة",
+      "متابعة الصيانة الدورية الوقائية لأسطول المركبات بالتنسيق مع قسم النقل",
+      "صيانة المرافق الفيزيائية للمستودع: أرضيات، رصيف التحميل، الأبواب والبوابات",
+      "إعداد خطط الصيانة الدورية وسجلات تاريخ صيانة كل معدة أو مركبة",
+      "رفع تقارير الأعطال والحوادث والتكاليف لإدارة المستودع التنفيذية"
+    ]
+  },
+  {
+    icon:"🔒", title:"إدارة الأمن الصناعي", layer:"الطبقة 3 — قسم تشغيلي",
+    odooRole:"Inventory User (read-only)", odooLevel:"User", modules:"Inventory (read) + Fleet (read)",
+    p1:"حارس أمن رئيسي واحد", p2:"مدير أمن + فريق حراسة متكامل",
+    duties:[
+      "حماية الموقع وضمان أمن المستودع وجميع محتوياته على مدار الساعة",
+      "مراقبة حركة المركبات الداخلة والخارجة والتحقق من الوثائق والتصاريح",
+      "إدارة نظام كاميرات المراقبة وتسجيل الحوادث الأمنية وتوثيقها",
+      "التعاون مع إدارة الجودة لإعداد التقارير الأمنية الدورية المشتركة",
+      "تطبيق إجراءات السيطرة على الدخول والخروج وفق سياسة الشركة",
+      "التنسيق مع الجهات الأمنية الخارجية والتحقيق في أي حوادث أمنية"
     ]
   }
 ];
