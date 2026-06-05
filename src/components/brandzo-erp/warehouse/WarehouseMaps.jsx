@@ -3,546 +3,732 @@ import Icon from '../../ui/Icon.jsx';
 
 const WarehouseMaps = () => {
   const [activeTab, setActiveTab] = useState('floorplan');
+  const [selectedZone, setSelectedZone] = useState(null);
   const [dimensions, setDimensions] = useState({
-    length: 50,
-    width: 30,
-    clearHeight: 10,
-    sprinklerClearance: 0.5,
-    floorType: "إيبوكسي",
-    floorLoad: 5000,
-    dockDoors: 4,
-    dockHeight: 1.2,
-    receivingWidth: 10,
-    receivingDepth: 10,
-    shippingWidth: 10,
-    shippingDepth: 10
+    length: 300, // Total block length estimate
+    width: 200,  // Total block width estimate
+    clearHeight: 12,
+    flooring: "إيبوكسي FF50",
+    rackingSystem: "Selective Pallet Racking",
+    sprinklerClearance: 0.5
   });
 
-  const [compliance, setCompliance] = useState({
-    height: 'waiting',
-    epoxy: 'yes',
-    led: 'no',
-    esfr: 'waiting',
-    fireDoors: 'yes',
-    wms: 'no',
-    wifi: 'yes',
-    cctv: 'yes',
-    generator: 'no',
-    loadingDocks: 'waiting'
-  });
+  const siteInfo = {
+    id: "موقع رقم 155",
+    location: "بوهادي – بنغازي",
+    totalSiteArea: "65,000 م²",
+    contractor: "شركة عبر العالم للمقاولات والاستثمار العقاري",
+    coveredArea: "18,500 م²",
+    currentHeight: "6.80 م"
+  };
 
-  useEffect(() => {
-    const saved = localStorage.getItem('brandzo_warehouse_map_v1');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setDimensions(parsed.dimensions || dimensions);
-        setCompliance(parsed.compliance || compliance);
-      } catch (e) {
-        console.error("Failed to load warehouse maps data", e);
-      }
-    }
-  }, []);
+  const warehouses = [
+    { id: 'E-1', name: 'استلام + بفر', area: 2200, dims: '20 × 110 م', function: 'Receiving + Inbound Buffer', height: 7.5, color: '#27ae60', standard: 'GS1 Distribution / ISO 9001' },
+    { id: 'E-2', name: 'تخزين جاف', area: 1000, dims: '20 × 50 م', function: 'Dry Storage', height: 9.5, color: '#2980b9', standard: 'EN 15620' },
+    { id: 'E-3', name: 'تخزين جاف', area: 1000, dims: '20 × 50 م', function: 'Dry Storage', height: 9.5, color: '#2980b9', standard: 'EN 15620' },
+    { id: 'E-4', name: 'تخزين + QC', area: 1000, dims: '20 × 50 م', function: 'Storage + Quality Control', height: 7.5, color: '#8e44ad', standard: 'ISO 9001:2015' },
+    { id: 'E-5', name: 'High-Bay الرئيسي', area: 3500, dims: '35 × 100 م', function: 'Selective Pallet Racking (High-Bay)', height: 12.0, color: '#2980b9', standard: 'NFPA 13 / EN 15620', highPriority: true },
+    { id: 'E-6', name: 'تخزين + خروج', area: 2200, dims: '20 × 110 م', function: 'Storage + Outbound Staging', height: 9.5, color: '#2980b9', standard: 'EN 15620' },
+    { id: 'E-7', name: 'تخزين جاف', area: 2200, dims: '20 × 110 م', function: 'Dry Storage', height: 9.5, color: '#2980b9', standard: 'EN 15620' },
+    { id: 'E-8', name: 'تخزين جاف', area: 2200, dims: '20 × 110 م', function: 'Dry Storage', height: 9.5, color: '#2980b9', standard: 'EN 15620' },
+    { id: 'E-9', name: 'تخزين + بفر', area: 2200, dims: '20 × 110 م', function: 'Storage + Outbound Buffer', height: 9.5, color: '#2980b9', standard: 'GS1 Distribution' },
+    { id: 'E-10', name: 'شحن', area: 1000, dims: '20 × 50 م', function: 'Outbound Shipping + Cross-Dock', height: 7.5, color: '#e67e22', standard: 'ANSI MH30.1' },
+  ];
 
-  useEffect(() => {
-    localStorage.setItem('brandzo_warehouse_map_v1', JSON.stringify({ dimensions, compliance }));
-  }, [dimensions, compliance]);
+  const standards = [
+    { name: "ارتفاع منصة التحميل (الدوك)", ref: "OSHA 29 CFR", req: "1.20 م ± 50 ملم", priority: "Critical", status: "Compliant" },
+    { name: "مستوي الرصيف (لكل باب)", ref: "ANSI MH30.1", req: "مطلوب عند كل باب تحميل", priority: "Critical", status: "Upgrade Required" },
+    { name: "حمولة الأرضية", ref: "EN 15620 / ACI", req: "≥ 5.0 طن/م² (High-Bay: ≥ 7.5 طن/م²)", priority: "High", status: "Compliant" },
+    { name: "استواء الأرضية", ref: "TR 34 (Concrete)", req: "تشطيب إيبوكسي صناعي FF50 / FL30", priority: "High", status: "Upgrade Required" },
+    { name: "نظام المرشات (الارتفاع العالي)", ref: "NFPA 13", req: "نوع ESFR، بحد أدنى K-25", priority: "Critical", status: "Upgrade Required" },
+    { name: "الإضاءة - مناطق التخزين", ref: "EN 12464-1", req: "≥ 200 لوكس؛ الاستلام/الجودة ≥ 400 لوكس", priority: "Medium", status: "Compliant" },
+    { name: "منطقة المخزن المؤقت للاستلام", ref: "GS1 Distribution", req: "≥ 15% من مساحة الاستلام", priority: "High", status: "Compliant" },
+    { name: "رصيف مراقبة الجودة", ref: "ISO 9001:2015", req: "منطقة مخصصة ≥ 5% بالقرب من الاستلام", priority: "High", status: "Compliant" },
+    { name: "ممر الرافعة الشوكية (Counterbalance)", ref: "FEM 9.831", req: "≥ 3.0 م", priority: "Medium", status: "Compliant" },
+    { name: "ممر الرافعة الشوكية (Reach Truck)", ref: "FEM 9.831", req: "≥ 1.8 م (ممرات ضيقة)", priority: "Medium", status: "Compliant" },
+    { name: "أبواب رصيف التحميل (رول)", ref: "EN 12604", req: "≥ 2.75 م عرض × ≥ 3.5 م ارتفاع", priority: "High", status: "Compliant" },
+  ];
+
+  const proposalCards = [
+    { title: "ترقية ارتفاع السقف", subtitle: "Ceiling Height Upgrade", icon: "arrowUpTray", priority: "High", details: ["رفع سقف E-5 إلى 12 متر", "رفع سقف مستودعات التخزين إلى 9.5 متر", "دعم إنشائي للأسقف المرفوعة"] },
+    { title: "إنشاء منصات الدوك", subtitle: "Dock Platform Construction", icon: "truck", priority: "Critical", details: ["بناء منصات بارتفاع 1.20 متر", "تركيب Dock Levelers هيدروليكية", "تركيب أبواب رول سريعة"] },
+    { title: "تركيب نظام الرفوف الانتقائي", subtitle: "Selective Pallet Racking", icon: "grid", priority: "High", details: ["أعمدة فولاذية زرقاء وقوائم برتقالية", "حواجز حماية القواعد (Column Guards)", "سعة حمولة تصل إلى 5 طن لكل مستوى"] },
+    { title: "تصميم التدفق والمساحات", subtitle: "Buffer Zone & Flow Design", icon: "workflows", priority: "Medium", details: ["تخصيص مناطق بفر للاستلام والشحن", "مسارات حركة مخصصة للرافعات", "تحسين سعة الاستيعاب اللوجستي"] },
+    { title: "أنظمة السلامة والأمان", subtitle: "Safety Systems", icon: "clipboardList", priority: "Critical", details: ["تركيب رشاشات ESFR متطورة", "نظام إنذار حريق ذكي", "إضاءة طوارئ ولوحات إرشادية"] },
+    { title: "التحول الرقمي WMS", subtitle: "WMS Integration (Odoo)", icon: "package", priority: "Medium", details: ["ربط كامل مع نظام Odoo ERP", "تتبع الباركود لكل موقع تخزين", "إدارة حركة المخزون لحظياً"] },
+  ];
 
   const stats = useMemo(() => {
-    const totalArea = dimensions.length * dimensions.width;
-    const netStorageArea = totalArea * 0.7; // Estimate 70% storage
-    const utilization = 65; // Static estimate for now
-    const maxRackHeight = dimensions.clearHeight - dimensions.sprinklerClearance;
-    const volume = totalArea * dimensions.clearHeight;
+    const totalArea = 18500;
+    const rackLevels = Math.floor((dimensions.clearHeight - 1.5) / 1.8);
+    const estPallets = Math.floor(totalArea * 0.7 * rackLevels / 1.2);
+    const forkliftType = dimensions.clearHeight > 10 ? "VNA / رافعة عالية" : "رافعة Reach قياسية";
 
-    return { totalArea, netStorageArea, utilization, maxRackHeight, volume };
+    return { totalArea, rackLevels, estPallets, forkliftType };
   }, [dimensions]);
 
-  const renderDocksTab = () => {
-    const dockStandards = [
-      { name: "ارتفاع قاعدة الدوك عن الأرض", recommended: 1.2, current: dimensions.dockHeight, unit: "متر" },
-      { name: "عرض الباب (للشاحنة الكبيرة)", recommended: 4.0, current: 4.0, unit: "متر" },
-      { name: "ارتفاع الباب", recommended: 4.5, current: 4.5, unit: "متر" },
-      { name: "عدد أبواب الاستلام", recommended: "2-4", current: dimensions.dockDoors, unit: "باب" }
-    ];
-
-    const vehicles = [
-      { name: "شاحنة كبيرة (Semi-Truck)", dims: "16-18م | عرض 2.5م", icon: "🚛", req: "Dock Leveler + 1.20m Height" },
-      { name: "شاحنة متوسطة (Box Truck)", dims: "7-9م | عرض 2.1م", icon: "🚐", req: "Dock Leveler / Ramp" },
-      { name: "سيارة نقل خفيفة (Van)", dims: "4-6م | عرض 1.9م", icon: "🏎️", req: "Ground Level / Yard Ramp" }
-    ];
-
-    return (
-      <div className="space-y-8 animate-fade-in">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Dock Standards Table */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h4 className="font-bold text-brand-yellow mb-6">معايير ضبط الدوك (Dock Standards)</h4>
-            <div className="overflow-x-auto">
-              <table className="w-full text-right text-sm">
-                <thead className="text-gray-400 border-b border-white/10">
-                  <tr>
-                    <th className="pb-3 px-2">المعيار</th>
-                    <th className="pb-3 px-2">الموصى به</th>
-                    <th className="pb-3 px-2">الحالي</th>
-                    <th className="pb-3 px-2 text-center">التقييم</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5 text-gray-100">
-                  {dockStandards.map((std, i) => {
-                    const isOk = typeof std.recommended === 'number' ? std.current >= std.recommended : true;
-                    return (
-                      <tr key={i}>
-                        <td className="py-4 px-2">{std.name}</td>
-                        <td className="py-4 px-2">{std.recommended} {std.unit}</td>
-                        <td className="py-4 px-2">
-                          {i === 0 ? (
-                            <input type="number" step="0.1" className="w-20 bg-brand-navy border border-white/20 rounded p-1"
-                              value={std.current} onChange={e => setDimensions({...dimensions, dockHeight: +e.target.value})} />
-                          ) : (std.current + " " + std.unit)}
-                        </td>
-                        <td className="py-4 px-2 text-center text-lg">{isOk ? "✅" : "⚠️"}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Vehicle Cards */}
-          <div className="space-y-4">
-            <h4 className="font-bold text-brand-yellow">توافق المركبات (Vehicle Compatibility)</h4>
-            <div className="grid grid-cols-1 gap-4">
-              {vehicles.map((v, i) => (
-                <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center gap-6 hover:bg-white/10 transition-all">
-                  <div className="text-5xl">{v.icon}</div>
-                  <div>
-                    <h5 className="font-bold text-white mb-1">{v.name}</h5>
-                    <p className="text-xs text-gray-400 mb-1">{v.dims}</p>
-                    <p className="text-xs text-brand-gold font-bold">المتطلبات: {v.req}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Dock Equipment & Process */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h4 className="font-bold text-brand-yellow mb-4">معدات منطقة الدوك الموصى بها</h4>
-            <div className="grid grid-cols-2 gap-4">
-              {["Dock Leveler", "Dock Bumpers", "Dock Seal", "Dock Light", "Wheel Chocks", "Vehicle Restraint"].map(item => (
-                <label key={item} className="flex items-center gap-3 text-sm text-gray-200 cursor-pointer p-2 rounded hover:bg-white/5">
-                  <input type="checkbox" defaultChecked className="accent-brand-red w-4 h-4" />
-                  {item}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h4 className="font-bold text-brand-yellow mb-6">تسلسل عملية الاستلام</h4>
-            <div className="flex flex-col gap-2 relative">
-               {["وصول المركبة", "التحقق من PO", "ضبط الدوك", "تفريغ البضاعة", "فحص الجودة QC", "إدخال GRN", "تخزين"].map((step, i) => (
-                 <div key={i} className="flex items-center gap-4 relative">
-                   <div className="w-8 h-8 rounded-full bg-brand-red flex items-center justify-center font-bold text-white z-10">{i+1}</div>
-                   <div className="flex-1 bg-white/5 p-2 rounded border border-white/5 text-sm text-white">{step}</div>
-                   {i < 6 && <div className="absolute top-8 right-4 w-0.5 h-2 bg-brand-red/30"></div>}
-                 </div>
-               ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderDevelopmentTab = () => {
-    const classAStandards = [
-      { id: 'height', label: 'ارتفاع السقف ≥ 10م (Clear Height)', val: compliance.height },
-      { id: 'epoxy', label: 'أرضية إيبوكسي FF ≥ 50', val: compliance.epoxy },
-      { id: 'led', label: 'إضاءة LED ≥ 200 Lux', val: compliance.led },
-      { id: 'esfr', label: 'نظام رشاشات ESFR', val: compliance.esfr },
-      { id: 'fireDoors', label: 'بوابات حماية ضد الحرائق', val: compliance.fireDoors },
-      { id: 'wms', label: 'نظام إدارة مستودعات WMS', val: compliance.wms },
-      { id: 'wifi', label: 'شبكة WiFi صناعية 100%', val: compliance.wifi },
-      { id: 'cctv', label: 'نظام CCTV متكامل', val: compliance.cctv },
-      { id: 'generator', label: 'طاقة كهربائية احتياطية', val: compliance.generator },
-      { id: 'loadingDocks', label: 'منافذ شحن كافية (1/2000م²)', val: compliance.loadingDocks },
-    ];
-
-    const getStatusIcon = (val) => {
-      if (val === 'yes') return "✅";
-      if (val === 'no') return "❌";
-      return "⚠️";
-    };
-
-    const getStatusText = (val) => {
-      if (val === 'yes') return "مطابق";
-      if (val === 'no') return "غير مطابق";
-      return "قيد التطوير";
-    };
-
-    const score = (classAStandards.filter(s => s.val === 'yes').length / classAStandards.length) * 100;
-
-    return (
-      <div className="space-y-8 animate-fade-in">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Class A Checklist */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h4 className="font-bold text-brand-yellow">معايير المستودعات العالمية Class A</h4>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-green-400">{score}%</div>
-                <div className="text-[10px] text-gray-400">مستوى الامتثال</div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              {classAStandards.map(std => (
-                <div key={std.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:border-white/20 transition-all">
-                  <span className="text-sm text-gray-200">{std.label}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-400">{getStatusText(std.val)}</span>
-                    <select
-                      value={std.val}
-                      onChange={e => setCompliance({...compliance, [std.id]: e.target.value})}
-                      className="bg-brand-navy border border-white/20 rounded p-1 text-xs"
-                    >
-                      <option value="yes">مطابق</option>
-                      <option value="no">غير مطابق</option>
-                      <option value="waiting">قيد التطوير</option>
-                    </select>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Development Plan Form */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 h-fit">
-            <h4 className="font-bold text-brand-yellow mb-6">خطة التطوير المقترحة</h4>
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs text-gray-200">المعيار المطلوب تحسينه</label>
-                <select className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm">
-                  {classAStandards.filter(s => s.val !== 'yes').map(s => <option key={s.id}>{s.label}</option>)}
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-gray-200">الهدف المنشود</label>
-                <textarea className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm h-20" placeholder="وصف الحالة النهائية..."></textarea>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs text-gray-200">التكلفة التقديرية ($)</label>
-                  <input type="text" className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm" placeholder="اختياري" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-gray-200">الأولوية</label>
-                  <select className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm">
-                    <option>عالية</option>
-                    <option>متوسطة</option>
-                    <option>منخفضة</option>
-                  </select>
-                </div>
-              </div>
-              <button className="w-full py-3 bg-brand-yellow text-brand-navy font-bold rounded-xl hover:bg-yellow-500 transition-all active:scale-95 mt-4">
-                إضافة للمقترح التطويري
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Global vs Local Comparison */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
-           <h4 className="font-bold text-white mb-8 text-center">مقارنة: مستودعنا الحالي vs المعيار العالمي</h4>
-           <div className="space-y-6 max-w-3xl mx-auto">
-             {[
-               { label: "ارتفاع السقف", current: dimensions.clearHeight, target: 12, unit: "م" },
-               { label: "كفاءة الانتقاء", current: 45, target: 95, unit: "%" },
-               { label: "الأتمتة والرقمنة", current: 30, target: 100, unit: "%" }
-             ].map((item, i) => {
-               const pct = (item.current / item.target) * 100;
-               return (
-                 <div key={i} className="space-y-2">
-                   <div className="flex justify-between text-sm">
-                     <span className="text-gray-200">{item.label}</span>
-                     <span className="text-gray-400">{item.current} {item.unit} / {item.target} {item.unit}</span>
-                   </div>
-                   <div className="h-3 bg-white/10 rounded-full overflow-hidden">
-                     <div className="h-full bg-brand-red rounded-full transition-all duration-1000" style={{ width: `${pct}%` }}></div>
-                   </div>
-                 </div>
-               );
-             })}
-           </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderRacksTab = () => {
-    const rackLevels = [
-      { id: "L1", h: "0 - 1.0م", weight: "2,000 كغ", desc: "بضاعة ثقيلة وسريعة", color: "#c0392b" },
-      { id: "L2", h: "1.0 - 2.5م", weight: "1,500 كغ", desc: "متوسط الحركة", color: "#e8b830" },
-      { id: "L3", h: "2.5 - 4.5م", weight: "1,200 كغ", desc: "بطيء الحركة", color: "#27ae60" },
-      { id: "L4", h: "4.5م+", weight: "800 كغ", desc: "مخزون احتياطي", color: "#2980b9" }
-    ];
-
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-        <div className="lg:col-span-2 space-y-8">
-          {/* Elevation View SVG */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h4 className="font-bold text-white mb-6">المقطع العلوي (Elevation View)</h4>
-            <svg viewBox="0 0 600 400" width="100%" className="rounded-xl bg-brand-navy/30">
-              <defs>
-                 <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
-                   <path d="M0,0 L10,5 L0,10 Z" fill="white" />
-                 </marker>
-              </defs>
-              {/* Floor */}
-              <rect x="0" y="380" width="600" height="20" fill="#334155" />
-              {/* Rack Structure */}
-              <rect x="150" y="50" width="15" height="330" fill="#1e293b" />
-              <rect x="450" y="50" width="15" height="330" fill="#1e293b" />
-
-              {/* Rack Beams */}
-              {[380, 300, 220, 140, 60].map((y, i) => (
-                <g key={i}>
-                  <rect x="165" y={y-10} width="285" height="10" fill="#e8b830" />
-                  {i > 0 && <text x="310" y={y+40} textAnchor="middle" fill="white" fontSize="10" opacity="0.5">LEVEL {5-i}</text>}
-                  {/* Pallet Simulation */}
-                  {i > 0 && <rect x="200" y={y-35} width="60" height="25" fill="#8b5cf6" fillOpacity="0.6" rx="2" />}
-                  {i > 0 && <rect x="340" y={y-35} width="60" height="25" fill="#10b981" fillOpacity="0.6" rx="2" />}
-                </g>
-              ))}
-
-              {/* Clear Height Line */}
-              <line x1="50" y1="40" x2="550" y2="40" stroke="#ef4444" strokeWidth="2" strokeDasharray="5,5" />
-              <text x="50" y="30" fill="#ef4444" fontSize="10" fontWeight="bold">Sprinkler Line (Max Height)</text>
-
-              {/* Dimension Arrows */}
-              <line x1="500" y1="380" x2="500" y2="40" stroke="white" strokeWidth="1" markerStart="url(#arrow)" markerEnd="url(#arrow)" />
-              <text x="510" y="210" fill="white" fontSize="10" transform="rotate(90, 510, 210)">Clear Height: {dimensions.clearHeight}m</text>
-            </svg>
-          </div>
-
-          {/* Rack Standards Table */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h4 className="font-bold text-brand-yellow mb-6">جدول معايير الرفوف الدولية</h4>
-            <div className="overflow-x-auto">
-              <table className="w-full text-right text-sm">
-                <thead>
-                  <tr className="text-gray-400 border-b border-white/10">
-                    <th className="pb-3 px-2">المستوى</th>
-                    <th className="pb-3 px-2">الارتفاع</th>
-                    <th className="pb-3 px-2">الحمولة القصوى</th>
-                    <th className="pb-3 px-2">الاستخدام الموصى به</th>
-                  </tr>
-                </thead>
-                <tbody className="text-gray-100 divide-y divide-white/5">
-                  {rackLevels.map(lvl => (
-                    <tr key={lvl.id}>
-                      <td className="py-4 px-2 font-bold" style={{ color: lvl.color }}>{lvl.id}</td>
-                      <td className="py-4 px-2">{lvl.h}</td>
-                      <td className="py-4 px-2">{lvl.weight}</td>
-                      <td className="py-4 px-2 text-xs">{lvl.desc}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* Capacity Calculator */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 h-fit space-y-6">
-          <h4 className="font-bold text-brand-yellow flex items-center gap-2">
-            <Icon name="grid" size={18} /> حاسبة الطاقة التخزينية
-          </h4>
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-xs text-gray-200">عدد صفوف الرفوف</label>
-              <input type="number" defaultValue="10" className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-gray-200">عدد بايات في الصف</label>
-              <input type="number" defaultValue="8" className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-gray-200">عدد المستويات</label>
-              <input type="number" defaultValue="4" className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white" />
-            </div>
-          </div>
-          <div className="pt-6 border-t border-white/10 bg-brand-navy/50 p-4 rounded-xl text-center">
-            <div className="text-3xl font-bold text-brand-yellow mb-1">320</div>
-            <div className="text-xs text-gray-400">إجمالي مواضع المنصات (Pallet Positions)</div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const renderFloorPlan = () => {
-    const scale = 10;
-    const padding = 40;
-    const svgW = dimensions.length * scale + padding * 2;
-    const svgH = dimensions.width * scale + padding * 2;
+    // Proportional layout for Site 155
+    // Total block area approx 300x200 for SVG coordinate space
+    const layout = [
+      { id: 'E-1', x: 200, y: 10, w: 110, h: 20 },
+      { id: 'E-2', x: 200, y: 35, w: 50, h: 20 },
+      { id: 'E-3', x: 260, y: 35, w: 50, h: 20 },
+      { id: 'E-4', x: 200, y: 60, w: 50, h: 20 },
+      { id: 'E-10', x: 260, y: 60, w: 50, h: 20 },
+      { id: 'E-5', x: 10, y: 10, w: 100, h: 35 },
+      { id: 'E-6', x: 10, y: 55, w: 110, h: 20 },
+      { id: 'E-7', x: 10, y: 80, w: 110, h: 20 },
+      { id: 'E-8', x: 10, y: 105, w: 110, h: 20 },
+      { id: 'E-9', x: 10, y: 130, w: 110, h: 20 },
+    ];
 
-    const recW = dimensions.receivingWidth * scale;
-    const recD = dimensions.receivingDepth * scale;
-    const shipW = dimensions.shippingWidth * scale;
-    const shipD = dimensions.shippingDepth * scale;
+    const getWarehouseColor = (id) => {
+      const wh = warehouses.find(w => w.id === id);
+      return wh ? wh.color : '#444';
+    };
 
     return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Controls Sidebar */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4 h-fit">
-            <h4 className="font-bold text-brand-yellow border-b border-white/10 pb-2 mb-4">لوحة التحكم بالأبعاد</h4>
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-xs text-gray-200">الطول الكلي (م)</label>
-                <input type="number" className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm"
-                  value={dimensions.length} onChange={e => setDimensions({...dimensions, length: +e.target.value})} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-gray-200">العرض الكلي (م)</label>
-                <input type="number" className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm"
-                  value={dimensions.width} onChange={e => setDimensions({...dimensions, width: +e.target.value})} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-gray-200">ارتفاع الأرضية النظيفة (م)</label>
-                <input type="number" className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm"
-                  value={dimensions.clearHeight} onChange={e => setDimensions({...dimensions, clearHeight: +e.target.value})} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-gray-200">نوع الأرضية</label>
-                <select className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm"
-                  value={dimensions.floorType} onChange={e => setDimensions({...dimensions, floorType: e.target.value})}>
-                  <option>خرسانة مسلحة</option>
-                  <option>إيبوكسي</option>
-                  <option>بلاط صناعي</option>
-                </select>
-              </div>
-            </div>
+      <div className="space-y-6 animate-fade-in">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+            <div className="text-gray-300 text-[10px] mb-1">إجمالي المساحة المغطاة</div>
+            <div className="text-xl font-bold text-white">18,500 م²</div>
+          </div>
+          <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+            <div className="text-gray-300 text-[10px] mb-1">عدد المستودعات</div>
+            <div className="text-xl font-bold text-brand-yellow">10 وحدات</div>
+          </div>
+          <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+            <div className="text-gray-300 text-[10px] mb-1">الارتفاع الحالي</div>
+            <div className="text-xl font-bold text-brand-red">6.80 م</div>
+          </div>
+          <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+            <div className="text-gray-300 text-[10px] mb-1">الارتفاع المقترح الأقصى</div>
+            <div className="text-xl font-bold text-green-400">12.0 م</div>
+          </div>
+        </div>
 
-            <div className="pt-4 border-t border-white/10 mt-6 space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-200">المساحة الإجمالية:</span>
-                <span className="text-brand-yellow font-bold">{stats.totalArea} م²</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-200">ارتفاع الرف الأقصى:</span>
-                <span className="text-green-400 font-bold">{stats.maxRackHeight} م</span>
-              </div>
+        <div className="bg-[#0f1923] border border-white/10 rounded-2xl p-6 relative overflow-hidden">
+          <div className="flex justify-between items-center mb-6">
+            <h4 className="font-bold text-white">المخطط الكابوري الشامل - موقع 155</h4>
+            <div className="flex flex-wrap gap-3 text-[10px] justify-end">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#27ae60]"></span> استلام</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#2980b9]"></span> تخزين</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#e67e22]"></span> شحن</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#8e44ad]"></span> فحص QC</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#f1c40f]"></span> أرصفة</span>
             </div>
           </div>
 
-          {/* SVG Canvas */}
-          <div className="lg:col-span-3 bg-white/5 border border-white/10 rounded-2xl p-6 overflow-x-auto relative">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="font-bold text-white">المخطط الكابوري التفاعلي (Floor Plan)</h4>
-              <div className="flex gap-4 text-[10px]">
-                <span className="flex items-center gap-1 text-blue-400"><span className="w-2 h-2 bg-blue-500 rounded-sm"></span> الاستلام</span>
-                <span className="flex items-center gap-1 text-green-400"><span className="w-2 h-2 bg-green-500 rounded-sm"></span> التخزين</span>
-                <span className="flex items-center gap-1 text-orange-400"><span className="w-2 h-2 bg-orange-500 rounded-sm"></span> الشحن</span>
+          <div className="relative aspect-[16/9] w-full bg-brand-navy/20 rounded-xl overflow-hidden border border-white/5">
+            <svg viewBox="0 0 380 180" className="w-full h-full p-4">
+              {/* Dock Platforms (Yellow area) */}
+              <rect x="315" y="10" width="10" height="70" fill="#f1c40f" fillOpacity="0.3" />
+              <rect x="315" y="10" width="2" height="70" fill="#f1c40f" />
+
+              {layout.map(rect => {
+                const wh = warehouses.find(w => w.id === rect.id);
+                const isSelected = selectedZone?.id === rect.id;
+
+                return (
+                  <g key={rect.id}
+                     className="cursor-pointer transition-all duration-300"
+                     onClick={() => setSelectedZone(wh)}
+                     onMouseEnter={() => setSelectedZone(wh)}>
+                    <rect
+                      x={rect.x} y={rect.y} width={rect.w} height={rect.h}
+                      fill={getWarehouseColor(rect.id)}
+                      fillOpacity={isSelected ? 0.4 : 0.2}
+                      stroke={getWarehouseColor(rect.id)}
+                      strokeWidth={isSelected ? 2 : 1}
+                      className="transition-all"
+                    />
+                    {/* Racking rows visualization for storage */}
+                    {(rect.id !== 'E-1' && rect.id !== 'E-10' && rect.id !== 'E-4') && (
+                      <g opacity="0.3">
+                        {[...Array(Math.floor(rect.h / 5))].map((_, i) => (
+                          <line key={i} x1={rect.x + 5} y1={rect.y + 5 + i*5} x2={rect.x + rect.w - 5} y2={rect.y + 5 + i*5} stroke="orange" strokeWidth="0.5" />
+                        ))}
+                      </g>
+                    )}
+                    <text x={rect.x + rect.w/2} y={rect.y + rect.h/2 + 2} textAnchor="middle" fill="white" fontSize="5" fontWeight="bold" className="pointer-events-none">
+                      {rect.id}
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* Legend & Labels */}
+              <text x="10" y="170" fill="gray" fontSize="4">موقع رقم 155 - مخطط توزيع الوحدات الفني</text>
+            </svg>
+          </div>
+
+          {selectedZone && (
+            <div className="mt-6 p-5 bg-[#141f2e] border border-brand-yellow/30 rounded-xl animate-fade-in shadow-lg">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h5 className="font-bold text-brand-yellow text-lg mb-1">{selectedZone.id}: {selectedZone.name}</h5>
+                  <p className="text-sm text-white font-medium mb-2">{selectedZone.function}</p>
+                </div>
+                <div className="text-left">
+                  <span className="bg-brand-red text-white text-[10px] font-bold px-2 py-1 rounded">الارتفاع المطلوب: {selectedZone.height}م</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3 pt-3 border-t border-white/5">
+                <div>
+                  <div className="text-[10px] text-gray-300">الأبعاد</div>
+                  <div className="text-xs text-white">{selectedZone.dims}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-gray-300">المساحة</div>
+                  <div className="text-xs text-white">{selectedZone.area.toLocaleString()} م²</div>
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <div className="text-[10px] text-gray-300">المعيار الدولي</div>
+                  <div className="text-xs text-brand-gold">{selectedZone.standard}</div>
+                </div>
               </div>
             </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
-            <svg viewBox={`0 0 ${svgW} ${svgH}`} width="100%" className="min-w-[600px] drop-shadow-2xl">
-              {/* Outer Walls */}
-              <rect x={padding} y={padding} width={dimensions.length * scale} height={dimensions.width * scale}
-                fill="none" stroke="white" strokeWidth="2" strokeOpacity="0.3" />
+  const renderStandards = () => {
+    const criticalCount = standards.filter(s => s.priority === 'Critical').length;
+    const upgradeCount = standards.filter(s => s.status === 'Upgrade Required').length;
+    const complianceRate = Math.round(((standards.length - upgradeCount) / standards.length) * 100);
 
-              {/* Receiving Dock (Right side) */}
-              <rect x={padding + dimensions.length * scale - recW} y={padding} width={recW} height={recD}
-                fill="#2563eb" fillOpacity="0.2" stroke="#2563eb" strokeWidth="2" className="cursor-pointer hover:fill-opacity-40 transition-all" />
-              <text x={padding + dimensions.length * scale - recW/2} y={padding + recD/2} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">منطقة الاستلام</text>
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-[#141f2e] border border-white/10 p-6 rounded-2xl flex items-center justify-between shadow-lg">
+            <div>
+              <div className="text-gray-300 text-xs uppercase font-bold mb-1">عناصر حرجة</div>
+              <div className="text-3xl font-bold text-brand-red">{criticalCount}</div>
+            </div>
+            <div className="w-12 h-12 bg-brand-red/10 rounded-full flex items-center justify-center text-brand-red">
+              <Icon name="clipboardList" size={24} />
+            </div>
+          </div>
+          <div className="bg-[#141f2e] border border-white/10 p-6 rounded-2xl flex items-center justify-between shadow-lg">
+            <div>
+              <div className="text-gray-300 text-xs uppercase font-bold mb-1">تطويرات مطلوبة</div>
+              <div className="text-3xl font-bold text-brand-yellow">{upgradeCount}</div>
+            </div>
+            <div className="w-12 h-12 bg-brand-yellow/10 rounded-full flex items-center justify-center text-brand-yellow">
+              <Icon name="arrowUpTray" size={24} />
+            </div>
+          </div>
+          <div className="bg-[#141f2e] border border-white/10 p-6 rounded-2xl flex items-center justify-between shadow-lg">
+            <div>
+              <div className="text-gray-300 text-xs uppercase font-bold mb-1">نسبة الامتثال</div>
+              <div className="text-3xl font-bold text-green-400">{complianceRate}%</div>
+            </div>
+            <div className="relative w-16 h-16">
+               <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
+                 <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#222" strokeWidth="3" />
+                 <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#27ae60" strokeWidth="3" strokeDasharray={`${complianceRate}, 100`} />
+               </svg>
+            </div>
+          </div>
+        </div>
 
-              {/* QC Area */}
-              <rect x={padding + dimensions.length * scale - recW - 40} y={padding + 5} width="35" height={recD - 10}
-                fill="#8b5cf6" fillOpacity="0.2" stroke="#8b5cf6" strokeWidth="1" />
-              <text x={padding + dimensions.length * scale - recW - 22} y={padding + recD/2} textAnchor="middle" fill="white" fontSize="8" transform={`rotate(-90, ${padding + dimensions.length * scale - recW - 22}, ${padding + recD/2})`}>QC منطقة الفحص</text>
-
-              {/* Storage Zones (Main area) */}
-              <rect x={padding + shipW + 10} y={padding + 5} width={dimensions.length * scale - recW - shipW - 60} height={dimensions.width * scale - 10}
-                fill="#10b981" fillOpacity="0.1" stroke="#10b981" strokeWidth="1" strokeDasharray="4" />
-
-              {/* Aisles simulation */}
-              {[...Array(5)].map((_, i) => (
-                <line key={i} x1={padding + shipW + 30 + i*60} y1={padding + 10} x2={padding + shipW + 30 + i*60} y2={padding + dimensions.width * scale - 10}
-                  stroke="white" strokeOpacity="0.1" strokeWidth="10" />
-              ))}
-
-              {/* Shipping Dock (Left side) */}
-              <rect x={padding} y={padding + (dimensions.width * scale - shipD)} width={shipW} height={shipD}
-                fill="#f97316" fillOpacity="0.2" stroke="#f97316" strokeWidth="2" className="cursor-pointer hover:fill-opacity-40 transition-all" />
-              <text x={padding + shipW/2} y={padding + (dimensions.width * scale - shipD/2)} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">منطقة الشحن</text>
-
-              {/* Office/Security */}
-              <rect x={padding} y={padding} width="80" height="40" fill="#4b5563" fillOpacity="0.5" />
-              <text x={padding + 40} y={padding + 25} textAnchor="middle" fill="white" fontSize="10">مكتب المستودع</text>
-
-              {/* Scale Bar */}
-              <line x1={padding} y1={svgH - 20} x2={padding + 10 * scale} y2={svgH - 20} stroke="white" strokeWidth="2" />
-              <text x={padding + 5 * scale} y={svgH - 5} textAnchor="middle" fill="white" fontSize="10">10 متر</text>
-            </svg>
+        <div className="bg-[#141f2e] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-right text-sm">
+              <thead className="bg-white/5 border-b border-white/10">
+                <tr>
+                  <th className="py-4 px-6 text-gray-300 font-bold">المعيار (Standard)</th>
+                  <th className="py-4 px-6 text-gray-300 font-bold">المرجع</th>
+                  <th className="py-4 px-6 text-gray-300 font-bold">القيمة المطلوبة</th>
+                  <th className="py-4 px-6 text-gray-300 font-bold">الأولوية</th>
+                  <th className="py-4 px-6 text-gray-300 font-bold">الحالة</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {standards.map((s, i) => (
+                  <tr key={i} className="hover:bg-white/5 transition-colors group">
+                    <td className="py-4 px-6 text-white font-medium group-hover:text-brand-yellow transition-colors">{s.name}</td>
+                    <td className="py-4 px-6 text-gray-300 text-xs">{s.ref}</td>
+                    <td className="py-4 px-6 text-gray-200">{s.req}</td>
+                    <td className="py-4 px-6">
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${
+                        s.priority === 'Critical' ? 'bg-brand-red/20 text-brand-red border border-brand-red/30' :
+                        s.priority === 'High' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
+                        'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                      }`}>
+                        {s.priority}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-2">
+                        {s.status === 'Compliant' ? (
+                          <><span className="w-2 h-2 rounded-full bg-green-500"></span> <span className="text-green-400 text-[11px]">مطابق</span></>
+                        ) : (
+                          <><span className="w-2 h-2 rounded-full bg-brand-yellow animate-pulse"></span> <span className="text-brand-yellow text-[11px]">تطوير مطلوب</span></>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     );
   };
 
-  return (
-    <div className="space-y-6" dir="rtl">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-brand-navy to-blue-900 rounded-2xl p-8 border border-white/10 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div>
-            <h2 className="text-3xl font-bold text-white mb-2">خرائط المستودعات الفنية</h2>
-            <p className="text-blue-200">تحليل المخططات، معايير الرفوف، وتطوير المستودعات Class A</p>
+  const renderProposal = () => (
+    <div className="space-y-8 animate-fade-in">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {proposalCards.map((card, i) => (
+          <div key={i} className="bg-[#141f2e] border border-white/10 rounded-2xl p-6 hover:border-brand-yellow/30 transition-all group shadow-xl">
+            <div className="flex justify-between items-start mb-4">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                card.priority === 'Critical' ? 'bg-brand-red/10 text-brand-red' :
+                card.priority === 'High' ? 'bg-brand-yellow/10 text-brand-yellow' :
+                'bg-blue-500/10 text-blue-400'
+              }`}>
+                <Icon name={card.icon} size={24} />
+              </div>
+              <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${
+                card.priority === 'Critical' ? 'bg-brand-red/20 text-brand-red' :
+                card.priority === 'High' ? 'bg-brand-yellow/20 text-brand-yellow' :
+                'bg-blue-500/20 text-blue-400'
+              }`}>
+                {card.priority === 'Critical' ? 'أولوية قصوى' : card.priority === 'High' ? 'أولوية عالية' : 'أولوية متوسطة'}
+              </span>
+            </div>
+            <h4 className="font-bold text-white group-hover:text-brand-yellow transition-colors">{card.title}</h4>
+            <p className="text-[10px] text-gray-300 mb-4">{card.subtitle}</p>
+            <ul className="space-y-2">
+              {card.details.map((detail, idx) => (
+                <li key={idx} className="flex items-center gap-2 text-xs text-gray-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-yellow/50"></span>
+                  {detail}
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="flex gap-3">
-             <button onClick={() => window.print()} className="px-6 py-2 bg-brand-red text-white rounded-xl font-bold hover:bg-red-700 transition-all flex items-center gap-2">
-               <Icon name="printer" size={18} /> طباعة التقرير
-             </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs Navigation */}
-      <div className="flex flex-wrap gap-2 border-b border-white/10 pb-1">
-        {[
-          { id: 'floorplan', label: 'المخطط الكابوري التفاعلي', icon: 'grid' },
-          { id: 'docks', label: 'آلية الاستلام والتسليم', icon: 'package' },
-          { id: 'racks', label: 'معايير الرفوف والأرتفاعات', icon: 'arrowUpTray' },
-          { id: 'development', label: 'تطوير المستودع', icon: 'workflows' }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-6 py-3 rounded-t-xl font-bold transition-all flex items-center gap-2 ${
-              activeTab === tab.id ? 'bg-brand-yellow text-brand-navy shadow-lg shadow-brand-yellow/20' : 'text-gray-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Icon name={tab.icon} size={18} />
-            {tab.label}
-          </button>
         ))}
       </div>
 
-      {/* Tab Content */}
-      <div className="mt-6">
-        {activeTab === 'floorplan' && renderFloorPlan()}
-        {activeTab === 'docks' && renderDocksTab()}
-        {activeTab === 'racks' && renderRacksTab()}
-        {activeTab === 'development' && renderDevelopmentTab()}
+      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-8 shadow-2xl">
+        <h4 className="font-bold text-white mb-8 border-b border-white/10 pb-4">الجدول الزمني للتنفيذ (Implementation Timeline)</h4>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
+          {[
+            { phase: "المرحلة الأولى", title: "الهدم والإنشاءات", time: "شهر 1", items: ["رفع الأسقف", "تدعيم القواعد"] },
+            { phase: "المرحلة الثانية", title: "البنية التحتية", time: "شهر 2", items: ["تركيب الأرصفة", "صب الأرضيات"] },
+            { phase: "المرحلة الثالثة", title: "الأنظمة الفنية", time: "شهر 3", items: ["أنظمة الحرائق", "نظام الرفوف"] },
+            { phase: "المرحلة الرابعة", title: "التشغيل والرقمنة", time: "شهر 4", items: ["تكامل Odoo", "التدريب الميداني"] },
+          ].map((step, i) => (
+            <div key={i} className="relative z-10 bg-brand-navy/30 border border-white/5 p-5 rounded-xl">
+              <div className="text-brand-yellow font-bold text-xs mb-1">{step.phase}</div>
+              <div className="text-white font-bold text-sm mb-2">{step.title}</div>
+              <div className="text-[10px] text-brand-red font-bold mb-4">{step.time}</div>
+              <ul className="space-y-1">
+                {step.items.map((item, idx) => (
+                  <li key={idx} className="text-[10px] text-gray-300 flex items-center gap-1">
+                    <span className="text-brand-yellow">✓</span> {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-brand-yellow/10 -z-10"></div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="bg-gradient-to-br from-[#1a2840] to-brand-navy border border-white/10 p-8 rounded-2xl">
+          <h4 className="font-bold text-white mb-6">نتائج الأداء المتوقعة (Expected KPIs)</h4>
+          <div className="space-y-6">
+            {[
+              { label: "زيادة السعة التخزينية", val: "+140%", icon: "grid" },
+              { label: "سرعة عمليات الاستلام", val: "250% تحسن", icon: "arrowDownTray" },
+              { label: "دقة المخزون الرقمي", val: "99.9%", icon: "clipboardList" },
+              { label: "فترة استرداد الاستثمار (ROI)", val: "18 - 24 شهر", icon: "dollarSign" },
+            ].map((kpi, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-brand-yellow/10 rounded-lg flex items-center justify-center text-brand-yellow">
+                  <Icon name={kpi.icon} size={20} />
+                </div>
+                <div>
+                  <div className="text-xs text-gray-300">{kpi.label}</div>
+                  <div className="text-lg font-bold text-white">{kpi.val}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-brand-red/5 border border-brand-red/20 p-8 rounded-2xl flex flex-col justify-center text-center">
+          <div className="w-20 h-20 bg-brand-red/10 rounded-full flex items-center justify-center text-brand-red mx-auto mb-6 shadow-2xl">
+            <Icon name="package" size={40} />
+          </div>
+          <h4 className="text-xl font-bold text-white mb-4">اعتماد المقترح الفني</h4>
+          <p className="text-sm text-gray-300 mb-8">هذا المستند يعتبر مرجعاً هندسياً وفنياً لعملية التحول، مصمم ليتوافق مع متطلبات مستودعات الفئة أ (Class A).</p>
+          <button className="w-full py-4 bg-brand-red text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg shadow-brand-red/20 active:scale-95">
+            إرسال للمراجعة والاعتماد
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderElevation = () => (
+    <div className="space-y-8 animate-fade-in">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Current State */}
+        <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
+          <h4 className="font-bold text-white mb-4 border-b border-white/10 pb-2">الوضع الحالي (Current State)</h4>
+          <div className="relative h-80 bg-brand-navy/30 rounded-xl overflow-hidden">
+             <svg viewBox="0 0 200 150" className="w-full h-full p-4">
+                {/* Floor */}
+                <rect x="10" y="130" width="180" height="5" fill="#333" />
+                {/* Roof line */}
+                <line x1="10" y1="50" x2="190" y2="50" stroke="#c0392b" strokeWidth="2" strokeDasharray="4" />
+                <text x="190" y="45" textAnchor="end" fill="#c0392b" fontSize="6">6.80m (Current Limit)</text>
+
+                {/* Racks - Limited to 3 levels */}
+                {[30, 80, 130].map(x => (
+                  <g key={x}>
+                    <rect x={x} y="55" width="2" height="75" fill="#555" />
+                    <rect x={x+30} y="55" width="2" height="75" fill="#555" />
+                    {[120, 95, 70].map(y => (
+                      <rect key={y} x={x} y={y} width="32" height="2" fill="#777" />
+                    ))}
+                    {/* Wasted space */}
+                    <rect x={x} y="30" width="32" height="20" fill="#c0392b" fillOpacity="0.1" />
+                    <text x={x+16} y="42" textAnchor="middle" fill="#c0392b" fontSize="4" opacity="0.5">مساحة ضائعة</text>
+                  </g>
+                ))}
+
+                {/* Forklift Silhouette (Simplified) */}
+                <g transform="translate(140, 110) scale(0.4)">
+                   <rect x="0" y="20" width="40" height="30" fill="gray" />
+                   <rect x="35" y="0" width="5" height="50" fill="black" />
+                   <rect x="40" y="20" width="15" height="5" fill="black" />
+                </g>
+
+                <text x="100" y="145" textAnchor="middle" fill="gray" fontSize="5">محدودية الارتفاع وسعة تخزين منخفضة</text>
+             </svg>
+          </div>
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center gap-2 text-sm text-gray-300">
+              <span className="w-2 h-2 rounded-full bg-brand-red"></span>
+              أقصى عدد مستويات: 3 رفوف
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-300">
+              <span className="w-2 h-2 rounded-full bg-brand-red"></span>
+              فقدان 45% من السعة العمودية
+            </div>
+          </div>
+        </div>
+
+        {/* Proposed State */}
+        <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6 border-brand-gold/30">
+          <h4 className="font-bold text-brand-yellow mb-4 border-b border-white/10 pb-2">الوضع المقترح (Proposed Class A)</h4>
+          <div className="relative h-80 bg-brand-navy/30 rounded-xl overflow-hidden">
+             <svg viewBox="0 0 200 150" className="w-full h-full p-4">
+                {/* Floor */}
+                <rect x="10" y="130" width="180" height="5" fill="#333" />
+                {/* Roof line */}
+                <line x1="10" y1="10" x2="190" y2="10" stroke="#27ae60" strokeWidth="2" strokeDasharray="4" />
+                <text x="190" y="8" textAnchor="end" fill="#27ae60" fontSize="6">12.0m (Class A Standard)</text>
+
+                {/* Racks - 6 levels */}
+                {[30, 80, 130].map(x => (
+                  <g key={x}>
+                    {/* Blue Uprights */}
+                    <rect x={x} y="10" width="2" height="120" fill="#2980b9" />
+                    <rect x={x+30} y="10" width="2" height="120" fill="#2980b9" />
+
+                    {/* Orange Beams */}
+                    {[120, 100, 80, 60, 40, 20].map(y => (
+                      <g key={y}>
+                        <rect x={x} y={y} width="32" height="2" fill="#e67e22" />
+                        {/* Pallet boxes */}
+                        <rect x={x+4} y={y-8} width="10" height="8" fill="#f39c12" fillOpacity="0.6" rx="1" />
+                        <rect x={x+18} y={y-8} width="10" height="8" fill="#f39c12" fillOpacity="0.6" rx="1" />
+                      </g>
+                    ))}
+
+                    {/* Column Guards (Orange rectangles at base) */}
+                    <rect x={x-2} y="125" width="6" height="5" fill="#e67e22" />
+                    <rect x={x+28} y="125" width="6" height="5" fill="#e67e22" />
+                  </g>
+                ))}
+
+                {/* High Reach Forklift */}
+                <g transform="translate(140, 110) scale(0.4)">
+                   <rect x="0" y="20" width="40" height="30" fill="#f1c40f" />
+                   <rect x="35" y="-120" width="5" height="170" fill="black" />
+                   <rect x="40" y="-30" width="15" height="5" fill="black" />
+                </g>
+             </svg>
+          </div>
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center gap-2 text-sm text-white">
+              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              أقصى عدد مستويات: 6 رفوف (E-5)
+            </div>
+            <div className="flex items-center gap-2 text-sm text-white">
+              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              زيادة 100% في سعة التخزين العمودي
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Dock Detail SVG */}
+      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-8">
+        <h4 className="font-bold text-white mb-6">تفصيل منصة الشحن (Dock Platform Detail)</h4>
+        <div className="relative aspect-[21/9] w-full bg-brand-navy/20 rounded-xl border border-white/5 overflow-hidden">
+          <svg viewBox="0 0 400 150" className="w-full h-full">
+            {/* Ground */}
+            <rect x="0" y="130" width="400" height="20" fill="#222" />
+
+            {/* Warehouse Platform (1.20m height) */}
+            <rect x="250" y="90" width="150" height="40" fill="#333" />
+            <line x1="250" y1="90" x2="400" y2="90" stroke="white" strokeWidth="1" />
+            <text x="325" y="115" textAnchor="middle" fill="white" fontSize="8">أرضية المستودع (+1.20 م)</text>
+
+            {/* Dock Leveler */}
+            <rect x="240" y="90" width="20" height="2" fill="#e67e22" transform="rotate(-5, 250, 90)" />
+
+            {/* Truck */}
+            <g transform="translate(20, 60)">
+              <rect x="0" y="0" width="220" height="70" fill="#2980b9" fillOpacity="0.8" rx="2" />
+              <rect x="200" y="0" width="20" height="70" fill="#1a1a2e" />
+              <text x="110" y="40" textAnchor="middle" fill="white" fontSize="10">مقطورة شحن ثقيلة</text>
+              {/* Wheels */}
+              <circle cx="40" cy="70" r="8" fill="black" />
+              <circle cx="180" cy="70" r="8" fill="black" />
+            </g>
+
+            {/* Dimension Line */}
+            <line x1="230" y1="130" x2="230" y2="90" stroke="#f1c40f" strokeWidth="1" markerStart="url(#arrow)" markerEnd="url(#arrow)" />
+            <text x="225" y="115" textAnchor="end" fill="#f1c40f" fontSize="6">1.20 m</text>
+
+            <defs>
+              <marker id="arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#f1c40f" />
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+            <div className="text-brand-yellow font-bold text-sm mb-2">Dock Leveler</div>
+            <p className="text-[10px] text-gray-300">جسر هيدروليكي يربط بين أرضية المستودع وسرير الشاحنة لتعويض فرق الارتفاع.</p>
+          </div>
+          <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+            <div className="text-brand-yellow font-bold text-sm mb-2">Dock Shelters</div>
+            <p className="text-[10px] text-gray-300">نظام عزل حراري يحيط بفتحة الشاحنة للحفاظ على حرارة المستودع ومنع دخول الغبار.</p>
+          </div>
+          <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+            <div className="text-brand-yellow font-bold text-sm mb-2">Safety Lights</div>
+            <p className="text-[10px] text-gray-300">نظام إضاءة إشاري (أحمر/أخضر) لتنظيم حركة دخول وخروج الشاحنات بأمان.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6 text-right" dir="rtl">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          .no-print { display: none !important; }
+          .print-content {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            background: white !important;
+            color: black !important;
+            padding: 40px !important;
+          }
+          .print-content * {
+            color: black !important;
+            border-color: #ddd !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+          }
+          .print-content .text-brand-yellow,
+          .print-content .text-brand-red,
+          .print-content .text-green-400,
+          .print-content .text-green-500 {
+            color: #c0392b !important; /* Force a dark color for readability */
+            font-weight: bold !important;
+          }
+          .print-content svg rect { stroke: #000 !important; }
+          .print-content svg text { fill: #000 !important; }
+          .dashboard-sidebar, .nav-header, .no-print { display: none !important; }
+          .tab-buttons { display: none !important; }
+          .card, section, div { break-inside: avoid; }
+          h2, h4, h5 { color: #1a1a2e !important; }
+        }
+      `}} />
+      {/* Header */}
+      <div className="bg-gradient-to-r from-brand-navy to-[#1a2840] rounded-2xl p-8 border border-white/10 shadow-2xl print-content">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <span className="px-3 py-1 bg-brand-red/20 text-brand-red text-xs font-bold rounded-full border border-brand-red/30">مقترح فني هندسي</span>
+              <h2 className="text-3xl font-bold text-white">الخرائط الفنية ومقترح التطوير</h2>
+            </div>
+            <p className="text-gray-300 max-w-2xl">تصميم وتطوير مستودعات شركة Brandzo - موقع 155 (بوهادي). تحويل المساحات الحالية إلى مستودعات Class A بمعايير دولية.</p>
+          </div>
+          <button onClick={() => window.print()} className="px-6 py-3 bg-brand-red text-white rounded-xl font-bold hover:bg-red-700 transition-all flex items-center gap-2 shadow-lg shadow-brand-red/20">
+            <Icon name="printer" size={20} /> طباعة التقرير الفني
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 print-content">
+        {/* Main Content Areas */}
+        <div className="lg:col-span-3 space-y-6">
+          {/* Tabs Navigation */}
+          <div className="flex flex-wrap gap-2 border-b border-white/10 pb-1 no-print">
+            {[
+              { id: 'floorplan', label: 'المخطط الكابوري', icon: 'grid' },
+              { id: 'elevation', label: 'القطاع الرأسي', icon: 'arrowUpTray' },
+              { id: 'standards', label: 'المعايير الدولية', icon: 'clipboardList' },
+              { id: 'proposal', label: 'مقترح التحويل', icon: 'workflows' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-6 py-3 rounded-t-xl font-bold transition-all flex items-center gap-2 ${
+                  activeTab === tab.id ? 'bg-[#1a2840] text-brand-yellow border-t border-x border-white/10' : 'text-gray-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Icon name={tab.icon} size={18} />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="min-h-[600px]">
+            {activeTab === 'floorplan' && renderFloorPlan()}
+            {activeTab === 'elevation' && renderElevation()}
+            {activeTab === 'standards' && renderStandards()}
+            {activeTab === 'proposal' && renderProposal()}
+          </div>
+        </div>
+
+        {/* Sidebar Controls */}
+        <aside className="space-y-6 no-print">
+          {/* Compliance Checklist */}
+          <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6 shadow-xl">
+            <h4 className="font-bold text-white mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
+              <Icon name="clipboardList" size={18} className="text-brand-yellow" /> مراجعة الامتثال اللحظية
+            </h4>
+            <div className="space-y-3">
+              {[
+                { label: "ارتفاع السقف (Class A)", ok: dimensions.clearHeight >= 12, val: `${dimensions.clearHeight}م` },
+                { label: "نظام الرشاشات ESFR", ok: dimensions.clearHeight >= 10, val: dimensions.clearHeight >= 10 ? "مطلوب" : "اختياري" },
+                { label: "أرضية إيبوكسي صناعي", ok: dimensions.flooring.includes("إيبوكسي"), val: "مطابق" },
+                { label: "سعة التخزين المستهدفة", ok: stats.estPallets > 15000, val: `${stats.estPallets.toLocaleString()}` },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center justify-between text-[11px]">
+                  <span className="text-gray-300">{item.label}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-bold">{item.val}</span>
+                    {item.ok ? (
+                      <span className="text-green-500">✓</span>
+                    ) : (
+                      <span className="text-brand-red">✗</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {dimensions.clearHeight < 12 && (
+              <div className="mt-4 p-2 bg-brand-red/10 border border-brand-red/20 rounded text-[10px] text-brand-red">
+                ⚠️ الارتفاع الحالي أقل من معيار Class A (12م) لـ E-5.
+              </div>
+            )}
+          </div>
+
+          <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6 shadow-xl">
+            <h4 className="font-bold text-white mb-6 flex items-center gap-2 border-b border-white/10 pb-3">
+              <Icon name="grid" size={18} className="text-brand-yellow" /> لوحة التحكم الفنية
+            </h4>
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs text-gray-300">طول المستودع (م)</label>
+                <input type="number" value={dimensions.length} onChange={e => setDimensions({...dimensions, length: +e.target.value})} className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm focus:border-brand-yellow outline-none transition-all" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-gray-300">عرض المستودع (م)</label>
+                <input type="number" value={dimensions.width} onChange={e => setDimensions({...dimensions, width: +e.target.value})} className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm focus:border-brand-yellow outline-none transition-all" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-gray-300">الارتفاع الصافي المقترح (م)</label>
+                <input type="number" value={dimensions.clearHeight} onChange={e => setDimensions({...dimensions, clearHeight: +e.target.value})} className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm focus:border-brand-yellow outline-none transition-all" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-gray-300">نوع الأرضية</label>
+                <select value={dimensions.flooring} onChange={e => setDimensions({...dimensions, flooring: e.target.value})} className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm focus:border-brand-yellow outline-none">
+                  <option>إيبوكسي FF50</option>
+                  <option>خرسانة صناعية</option>
+                  <option>بلاط مقاوم للأحمال</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-gray-300">نظام التخزين</label>
+                <select value={dimensions.rackingSystem} onChange={e => setDimensions({...dimensions, rackingSystem: e.target.value})} className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm focus:border-brand-yellow outline-none">
+                  <option>Selective Pallet Racking</option>
+                  <option>Drive-In Racking</option>
+                  <option>VNA System</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-white/10 space-y-4">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-300">مستويات الرفوف:</span>
+                <span className="text-brand-yellow font-bold">{stats.rackLevels} مستويات</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-300">السعة التقديرية:</span>
+                <span className="text-brand-yellow font-bold">{stats.estPallets.toLocaleString()} طبلية</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-300">نوع الرافعة المطلوبة:</span>
+                <span className="text-green-400 font-bold text-[10px]">{stats.forkliftType}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6 shadow-xl">
+            <h4 className="font-bold text-white mb-4 flex items-center gap-2">
+              <Icon name="package" size={18} className="text-brand-red" /> معلومات الموقع
+            </h4>
+            <div className="space-y-3">
+              {[
+                { label: "كود الموقع", val: siteInfo.id },
+                { label: "الموقع", val: siteInfo.location },
+                { label: "المساحة الكلية", val: siteInfo.totalSiteArea },
+                { label: "المقاول المنفذ", val: siteInfo.contractor, small: true },
+                { label: "الارتفاع الحالي", val: siteInfo.currentHeight },
+              ].map((item, i) => (
+                <div key={i} className="flex flex-col border-b border-white/5 pb-2">
+                  <span className="text-[10px] text-gray-300 uppercase">{item.label}</span>
+                  <span className={`text-white font-medium ${item.small ? 'text-xs' : 'text-sm'}`}>{item.val}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   );
