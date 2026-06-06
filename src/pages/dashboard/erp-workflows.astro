@@ -125,7 +125,13 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
               <!-- Flowchart -->
               <section>
-                <h3 class="text-lg font-bold text-brand-yellow mb-4">2. مخطط التدفق (Mermaid Flowchart)</h3>
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-lg font-bold text-brand-yellow">2. مخطط التدفق (Mermaid Flowchart)</h3>
+                  <button class="print-flowchart-btn bg-brand-gold text-brand-navy font-bold px-4 py-2 rounded-lg text-sm hover:bg-brand-yellow transition-colors flex items-center gap-2" data-title="دورة الإدارة المالية">
+                    <span>🖨️</span>
+                    <span>طباعة A4</span>
+                  </button>
+                </div>
                 <div class="bg-white/5 p-6 rounded-xl border border-gray-700 flex justify-center overflow-hidden">
                   <div class="mermaid">
                     graph TD
@@ -274,7 +280,13 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
               <!-- Flowchart -->
               <section>
-                <h3 class="text-lg font-bold text-brand-yellow mb-4">2. مخطط التدفق (Mermaid Flowchart)</h3>
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-lg font-bold text-brand-yellow">2. مخطط التدفق (Mermaid Flowchart)</h3>
+                  <button class="print-flowchart-btn bg-brand-gold text-brand-navy font-bold px-4 py-2 rounded-lg text-sm hover:bg-brand-yellow transition-colors flex items-center gap-2" data-title="دورة الموارد البشرية">
+                    <span>🖨️</span>
+                    <span>طباعة A4</span>
+                  </button>
+                </div>
                 <div class="bg-white/5 p-6 rounded-xl border border-gray-700 flex justify-center overflow-hidden">
                   <div class="mermaid">
                     graph TD
@@ -421,7 +433,13 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
               <!-- Flowchart -->
               <section>
-                <h3 class="text-lg font-bold text-brand-yellow mb-4">2. مخطط التدفق (Mermaid Flowchart)</h3>
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-lg font-bold text-brand-yellow">2. مخطط التدفق (Mermaid Flowchart)</h3>
+                  <button class="print-flowchart-btn bg-brand-gold text-brand-navy font-bold px-4 py-2 rounded-lg text-sm hover:bg-brand-yellow transition-colors flex items-center gap-2" data-title="دورة الإدارة التجارية والمشتريات">
+                    <span>🖨️</span>
+                    <span>طباعة A4</span>
+                  </button>
+                </div>
                 <div class="bg-white/5 p-6 rounded-xl border border-gray-700 flex justify-center overflow-hidden">
                   <div class="mermaid">
                     graph TD
@@ -557,7 +575,13 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
            <!-- Flow Chart -->
            <section class="mb-8">
-             <h3 class="text-lg font-bold text-brand-yellow mb-4">2. مخطط تدفق عمليات المستودع</h3>
+             <div class="flex justify-between items-center mb-4">
+               <h3 class="text-lg font-bold text-brand-yellow">2. مخطط تدفق عمليات المستودع</h3>
+               <button class="print-flowchart-btn bg-brand-gold text-brand-navy font-bold px-4 py-2 rounded-lg text-sm hover:bg-brand-yellow transition-colors flex items-center gap-2" data-title="دورة عمليات المستودعات">
+                 <span>🖨️</span>
+                 <span>طباعة A4</span>
+               </button>
+             </div>
              <div class="bg-white/5 rounded-xl p-6 border border-white/10 overflow-x-auto">
                <div class="mermaid">
                  graph TD
@@ -684,7 +708,13 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
            <!-- Flow Chart -->
            <section class="mb-8">
-             <h3 class="text-lg font-bold text-brand-yellow mb-4">2. مخطط تدفق سلسلة الإمداد الكاملة</h3>
+             <div class="flex justify-between items-center mb-4">
+               <h3 class="text-lg font-bold text-brand-yellow">2. مخطط تدفق سلسلة الإمداد الكاملة</h3>
+               <button class="print-flowchart-btn bg-brand-gold text-brand-navy font-bold px-4 py-2 rounded-lg text-sm hover:bg-brand-yellow transition-colors flex items-center gap-2" data-title="دورة سلاسل الإمداد الكاملة">
+                 <span>🖨️</span>
+                 <span>طباعة A4</span>
+               </button>
+             </div>
              <div class="bg-white/5 rounded-xl p-6 border border-white/10 overflow-x-auto">
                <div class="mermaid">
                  graph TD
@@ -994,6 +1024,10 @@ const base = import.meta.env.BASE_URL.endsWith('/')
       if (!container) return;
       const diagrams = container.querySelectorAll('.mermaid');
       diagrams.forEach((el) => {
+        // Store original content if not already stored
+        if (!el.getAttribute('data-original-text')) {
+           el.setAttribute('data-original-text', el.textContent.trim());
+        }
         if (el.getAttribute('data-processed')) {
           el.removeAttribute('data-processed');
         }
@@ -1030,6 +1064,69 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
     document.addEventListener('DOMContentLoaded', async () => {
       await renderMermaidIn('finance');
+
+      // Print Flowchart Logic
+      document.addEventListener('click', (e) => {
+        if (!(e.target instanceof HTMLElement)) return;
+        const btn = e.target.closest('.print-flowchart-btn');
+        if (!btn || !(btn instanceof HTMLElement)) return;
+
+        const section = btn.closest('section');
+        if (!section) return;
+        const mermaidDiv = section.querySelector('.mermaid');
+        if (!mermaidDiv || !(mermaidDiv instanceof HTMLElement)) return;
+
+        // Get original Mermaid text
+        let graphDefinition = mermaidDiv.getAttribute('data-original-text') || mermaidDiv.textContent.trim();
+
+        const title = btn.getAttribute('data-title') || 'مخطط التدفق';
+
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html lang="ar" dir="rtl">
+          <head>
+            <meta charset="UTF-8">
+            <title>طباعة - ${title}</title>
+            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+            <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"><\/script>
+            <style>
+              body { font-family: 'Cairo', sans-serif; background: white; color: black; padding: 20px; margin: 0; text-align: center; }
+              h1 { color: #c0392b; margin-bottom: 30px; border-bottom: 2px solid #e8b830; padding-bottom: 10px; }
+              .mermaid { display: flex; justify-content: center; }
+              @media print {
+                body { margin: 0; }
+                .no-print { display: none; }
+                @page { size: A4; margin: 15mm; }
+              }
+              .no-print {
+                background: #e8b830;
+                color: #1a1a2e;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-weight: bold;
+                cursor: pointer;
+                margin-bottom: 20px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="no-print">
+              <button onclick="window.print(); window.close();" class="no-print">Close & Print (إغلاق وطباعة)</button>
+            </div>
+            <h1>${title}</h1>
+            <div class="mermaid">
+              ${graphDefinition}
+            </div>
+            <script>
+              mermaid.initialize({ startOnLoad: true, theme: 'default' });
+            <\/script>
+          </body>
+          </html>
+        `);
+        printWindow.document.close();
+      });
     });
   </script>
 </DashboardLayout>

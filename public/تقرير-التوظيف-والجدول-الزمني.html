@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>التوظيف — جدول زمن إدارة المستودعات</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #0a0a1a;
+      color: #f8f9fb;
+    }
+    .brand-red { color: #c0392b; }
+    .bg-brand-red { background-color: #c0392b; }
+    .brand-gold { color: #e8b830; }
+    .bg-brand-gold { background-color: #e8b830; }
+    .brand-navy { color: #1a1a3e; }
+    .bg-brand-navy { background-color: #1a1a3e; }
+
+    .org-tree ul {
+      padding-top: 20px; position: relative;
+      transition: all 0.5s;
+    }
+    .org-tree li {
+      float: right; text-align: center;
+      list-style-type: none;
+      position: relative;
+      padding: 20px 5px 0 5px;
+      transition: all 0.5s;
+    }
+    .org-tree li::before, .org-tree li::after {
+      content: '';
+      position: absolute; top: 0; right: 50%;
+      border-top: 1px solid #e8b830;
+      width: 50%; height: 20px;
+    }
+    .org-tree li::after {
+      right: auto; left: 50%;
+      border-left: 1px solid #e8b830;
+    }
+    .org-tree li:only-child::after, .org-tree li:only-child::before {
+      display: none;
+    }
+    .org-tree li:only-child { padding-top: 0; }
+    .org-tree li:first-child::before, .org-tree li:last-child::after {
+      border: 0 none;
+    }
+    .org-tree li:last-child::before {
+      border-left: 1px solid #e8b830;
+      border-radius: 0 5px 0 0;
+    }
+    .org-tree li:first-child::after {
+      border-radius: 5px 0 0 0;
+    }
+    .org-tree ul ul::before {
+      content: '';
+      position: absolute; top: 0; left: 50%;
+      border-left: 1px solid #e8b830;
+      width: 0; height: 20px;
+    }
+    .org-node {
+      border: 1px solid #e8b830;
+      padding: 10px;
+      text-decoration: none;
+      color: #fff;
+      display: inline-block;
+      border-radius: 8px;
+      transition: all 0.5s;
+      min-width: 150px;
+    }
+    .org-node:hover {
+      background: #e8b830;
+      color: #1a1a3e;
+      transform: translateY(-5px);
+    }
+
+    @media print {
+      body { background-color: white; color: black; }
+      .no-print { display: none; }
+      @page { size: A4 landscape; margin: 10mm; }
+      .bg-brand-red { background-color: #c0392b !important; -webkit-print-color-adjust: exact; }
+      .bg-blue-900 { background-color: #1a3a5c !important; -webkit-print-color-adjust: exact; }
+      .bg-amber-900 { background-color: #78350f !important; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-10" dir="rtl">
+
+  <header class="text-center mb-12">
+    <h1 class="text-3xl sm:text-5xl font-black brand-gold mb-2">التوظيف — جدول زمن إدارة المستودعات</h1>
+    <p class="text-lg text-gray-400">Warehouse Management Staffing Schedule — Brandzo Hub 2026</p>
+    <div class="w-32 h-1 bg-brand-red mx-auto mt-6 rounded-full"></div>
+  </header>
+
+  <!-- Section A: Organizational Chart -->
+  <section class="mb-16">
+    <h2 class="text-2xl font-bold text-white mb-8 border-r-4 border-brand-red pr-4">أ. الهيكل التنظيمي للمستودعات (Organizational Chart)</h2>
+
+    <div class="overflow-x-auto pb-8">
+      <div class="org-tree flex justify-center min-w-[1200px]">
+        <ul>
+          <li>
+            <div class="org-node bg-red-800 border-red-600 shadow-xl">
+              <div class="font-bold">مدير المستودعات</div>
+              <div class="text-[10px] opacity-80">Warehouse Manager</div>
+            </div>
+            <ul>
+              <li>
+                <div class="org-node bg-blue-900 border-blue-700">
+                  <div class="font-bold">مدير القسم</div>
+                  <div class="text-[10px] opacity-80">الحركة والنقل والعمالة</div>
+                </div>
+                <ul>
+                  <li>
+                    <div class="org-node bg-gray-800 border-gray-600">
+                      <div class="text-xs">موظفو: النقل، العمالة الميدانية</div>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <div class="org-node bg-blue-900 border-blue-700">
+                  <div class="font-bold">مدير القسم</div>
+                  <div class="text-[10px] opacity-80">الجودة (Quality)</div>
+                  <div class="mt-1 px-2 py-0.5 bg-brand-gold text-brand-navy rounded text-[8px] font-bold">🤝 تنسيق</div>
+                </div>
+                <ul>
+                  <li>
+                    <div class="org-node bg-gray-800 border-gray-600">
+                      <div class="text-xs">موظفو: مفتشو الجودة</div>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <div class="org-node bg-blue-900 border-blue-700">
+                  <div class="font-bold">مدير القسم</div>
+                  <div class="text-[10px] opacity-80">الأمن الصناعي</div>
+                </div>
+                <ul>
+                  <li>
+                    <div class="org-node bg-gray-800 border-gray-600">
+                      <div class="text-xs">موظفو: عناصر الأمن</div>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <div class="org-node bg-blue-900 border-blue-700">
+                  <div class="font-bold">مدير القسم</div>
+                  <div class="text-[10px] opacity-80">إدخال على النظام</div>
+                </div>
+                <ul>
+                  <li>
+                    <div class="org-node bg-gray-800 border-gray-600">
+                      <div class="text-xs">موظفو: مدخلو البيانات</div>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <div class="org-node bg-blue-900 border-blue-700">
+                  <div class="font-bold">مدير القسم</div>
+                  <div class="text-[10px] opacity-80">الاستلامات (Receiving)</div>
+                </div>
+                <ul>
+                  <li>
+                    <div class="org-node bg-gray-800 border-gray-600">
+                      <div class="text-xs">موظفو: فريق الاستلام</div>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <div class="org-node bg-blue-900 border-blue-700">
+                  <div class="font-bold">مدير القسم</div>
+                  <div class="text-[9px] opacity-80 leading-tight">التخزين والصرف والمرتجعات والسحب</div>
+                </div>
+                <ul>
+                  <li>
+                    <div class="org-node bg-gray-800 border-gray-600">
+                      <div class="text-xs">موظفو: فريق المستودع الكامل</div>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <div class="org-node bg-amber-900 border-amber-700">
+                  <div class="font-bold">موظف المالية</div>
+                  <div class="text-[10px] opacity-80">Finance Officer</div>
+                  <div class="mt-1 px-2 py-0.5 bg-brand-gold text-brand-navy rounded text-[8px] font-bold">🤝 تنسيق</div>
+                </div>
+              </li>
+              <li>
+                <div class="org-node bg-amber-900 border-amber-700">
+                  <div class="font-bold">موظف المشتريات</div>
+                  <div class="text-[10px] opacity-80">Procurement Officer</div>
+                  <div class="mt-1 px-2 py-0.5 bg-brand-gold text-brand-navy rounded text-[8px] font-bold">🤝 تنسيق</div>
+                </div>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section B: Staffing Timeline -->
+  <section class="mb-16">
+    <h2 class="text-2xl font-bold text-white mb-8 border-r-4 border-brand-red pr-4">ب. جدول زمن التوظيف (Staffing Timeline)</h2>
+
+    <div class="overflow-x-auto rounded-2xl border border-white/10 shadow-2xl">
+      <table class="w-full text-right border-collapse">
+        <thead class="bg-brand-navy text-brand-gold">
+          <tr>
+            <th class="p-4 border-b border-white/10">#</th>
+            <th class="p-4 border-b border-white/10">المنصب (Position)</th>
+            <th class="p-4 border-b border-white/10">المرحلة الأولى (Phase 1)</th>
+            <th class="p-4 border-b border-white/10">المرحلة الثانية (Phase 2)</th>
+            <th class="p-4 border-b border-white/10">الأولوية</th>
+            <th class="p-4 border-b border-white/10">ملاحظات</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-200">
+          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+            <td class="p-4 border-b border-white/5">1</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white">مدير المستودعات</td>
+            <td class="p-4 border-b border-white/5">1</td>
+            <td class="p-4 border-b border-white/5">1 لكل فرع</td>
+            <td class="p-4 border-b border-white/5"><span class="bg-red-900/40 text-red-400 px-2 py-1 rounded text-xs">🔴 حرجة</span></td>
+            <td class="p-4 border-b border-white/5">أول توظيف</td>
+          </tr>
+          <tr class="hover:bg-white/10 transition-colors">
+            <td class="p-4 border-b border-white/5">2</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white">مدير قسم الحركة والنقل والعمالة</td>
+            <td class="p-4 border-b border-white/5">1</td>
+            <td class="p-4 border-b border-white/5">1+</td>
+            <td class="p-4 border-b border-white/5"><span class="bg-red-900/40 text-red-400 px-2 py-1 rounded text-xs">🔴 حرجة</span></td>
+            <td class="p-4 border-b border-white/5">مع مدير المستودعات</td>
+          </tr>
+          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+            <td class="p-4 border-b border-white/5">3</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white">موظفو الحركة والنقل</td>
+            <td class="p-4 border-b border-white/5">5–10</td>
+            <td class="p-4 border-b border-white/5">30–50</td>
+            <td class="p-4 border-b border-white/5"><span class="bg-yellow-900/40 text-yellow-400 px-2 py-1 rounded text-xs">🟡 عالية</span></td>
+            <td class="p-4 border-b border-white/5"></td>
+          </tr>
+          <tr class="hover:bg-white/10 transition-colors">
+            <td class="p-4 border-b border-white/5">4</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white">مدير قسم الجودة</td>
+            <td class="p-4 border-b border-white/5">مشترك</td>
+            <td class="p-4 border-b border-white/5">1</td>
+            <td class="p-4 border-b border-white/5"><span class="bg-yellow-900/40 text-yellow-400 px-2 py-1 rounded text-xs">🟡 عالية</span></td>
+            <td class="p-4 border-b border-white/5">بالتنسيق مع إدارة الجودة</td>
+          </tr>
+          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+            <td class="p-4 border-b border-white/5">5</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white">موظفو الجودة</td>
+            <td class="p-4 border-b border-white/5">2–3</td>
+            <td class="p-4 border-b border-white/5">10–15</td>
+            <td class="p-4 border-b border-white/5"><span class="bg-yellow-900/40 text-yellow-400 px-2 py-1 rounded text-xs">🟡 عالية</span></td>
+            <td class="p-4 border-b border-white/5"></td>
+          </tr>
+          <tr class="hover:bg-white/10 transition-colors">
+            <td class="p-4 border-b border-white/5">6</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white">مدير قسم الأمن الصناعي</td>
+            <td class="p-4 border-b border-white/5">1</td>
+            <td class="p-4 border-b border-white/5">1</td>
+            <td class="p-4 border-b border-white/5"><span class="bg-yellow-900/40 text-yellow-400 px-2 py-1 rounded text-xs">🟡 عالية</span></td>
+            <td class="p-4 border-b border-white/5"></td>
+          </tr>
+          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+            <td class="p-4 border-b border-white/5">7</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white">موظفو الأمن الصناعي</td>
+            <td class="p-4 border-b border-white/5">3–5</td>
+            <td class="p-4 border-b border-white/5">10–20</td>
+            <td class="p-4 border-b border-white/5"><span class="bg-yellow-900/40 text-yellow-400 px-2 py-1 rounded text-xs">🟡 عالية</span></td>
+            <td class="p-4 border-b border-white/5"></td>
+          </tr>
+          <tr class="hover:bg-white/10 transition-colors">
+            <td class="p-4 border-b border-white/5">8</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white">مدير قسم إدخال النظام</td>
+            <td class="p-4 border-b border-white/5">1</td>
+            <td class="p-4 border-b border-white/5">1</td>
+            <td class="p-4 border-b border-white/5"><span class="bg-green-900/40 text-green-400 px-2 py-1 rounded text-xs">🟢 عادية</span></td>
+            <td class="p-4 border-b border-white/5"></td>
+          </tr>
+          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+            <td class="p-4 border-b border-white/5">9</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white">موظفو إدخال النظام</td>
+            <td class="p-4 border-b border-white/5">2–3</td>
+            <td class="p-4 border-b border-white/5">5–8</td>
+            <td class="p-4 border-b border-white/5"><span class="bg-green-900/40 text-green-400 px-2 py-1 rounded text-xs">🟢 عادية</span></td>
+            <td class="p-4 border-b border-white/5"></td>
+          </tr>
+          <tr class="hover:bg-white/10 transition-colors">
+            <td class="p-4 border-b border-white/5">10</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white">مدير قسم الاستلامات</td>
+            <td class="p-4 border-b border-white/5">1</td>
+            <td class="p-4 border-b border-white/5">1</td>
+            <td class="p-4 border-b border-white/5"><span class="bg-red-900/40 text-red-400 px-2 py-1 rounded text-xs">🔴 حرجة</span></td>
+            <td class="p-4 border-b border-white/5"></td>
+          </tr>
+          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+            <td class="p-4 border-b border-white/5">11</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white">موظفو الاستلامات</td>
+            <td class="p-4 border-b border-white/5">5–8</td>
+            <td class="p-4 border-b border-white/5">20–30</td>
+            <td class="p-4 border-b border-white/5"><span class="bg-red-900/40 text-red-400 px-2 py-1 rounded text-xs">🔴 حرجة</span></td>
+            <td class="p-4 border-b border-white/5"></td>
+          </tr>
+          <tr class="hover:bg-white/10 transition-colors">
+            <td class="p-4 border-b border-white/5">12</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white">مدير قسم التخزين والصرف والمرتجعات</td>
+            <td class="p-4 border-b border-white/5">1</td>
+            <td class="p-4 border-b border-white/5">1</td>
+            <td class="p-4 border-b border-white/5"><span class="bg-red-900/40 text-red-400 px-2 py-1 rounded text-xs">🔴 حرجة</span></td>
+            <td class="p-4 border-b border-white/5"></td>
+          </tr>
+          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+            <td class="p-4 border-b border-white/5">13</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white">موظفو التخزين والصرف والمرتجعات والسحب</td>
+            <td class="p-4 border-b border-white/5">10–15</td>
+            <td class="p-4 border-b border-white/5">50–80</td>
+            <td class="p-4 border-b border-white/5"><span class="bg-red-900/40 text-red-400 px-2 py-1 rounded text-xs">🔴 حرجة</span></td>
+            <td class="p-4 border-b border-white/5"></td>
+          </tr>
+          <tr class="hover:bg-white/10 transition-colors">
+            <td class="p-4 border-b border-white/5">14</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white">موظف المالية</td>
+            <td class="p-4 border-b border-white/5">1</td>
+            <td class="p-4 border-b border-white/5">1–2</td>
+            <td class="p-4 border-b border-white/5"><span class="bg-yellow-900/40 text-yellow-400 px-2 py-1 rounded text-xs">🟡 عالية</span></td>
+            <td class="p-4 border-b border-white/5">بالتنسيق مع الإدارة المالية</td>
+          </tr>
+          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+            <td class="p-4 border-b border-white/5">15</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white">موظف المشتريات</td>
+            <td class="p-4 border-b border-white/5">1</td>
+            <td class="p-4 border-b border-white/5">1–2</td>
+            <td class="p-4 border-b border-white/5"><span class="bg-yellow-900/40 text-yellow-400 px-2 py-1 rounded text-xs">🟡 عالية</span></td>
+            <td class="p-4 border-b border-white/5">بالتنسيق مع الإدارة التجارية</td>
+          </tr>
+        </tbody>
+        <tfoot class="bg-brand-red/20 text-white font-black">
+          <tr>
+            <td colspan="2" class="p-6 text-center text-xl">الإجمالي التقريبي</td>
+            <td class="p-6 text-center text-xl brand-gold">35–55 موظف</td>
+            <td class="p-6 text-center text-xl brand-gold">130–215 موظف</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  <footer class="text-center py-10 border-t border-white/10 mt-12">
+    <button onclick="window.print()" class="no-print px-8 py-3 bg-brand-gold text-brand-navy font-bold rounded-xl hover:bg-yellow-500 transition-all shadow-lg mb-6">
+      🖨️ طباعة التقرير (A4 Landscape)
+    </button>
+    <p class="text-sm text-gray-500">
+      Brandzo Hub 2026 — جميع الحقوق محفوظة لمتخصص سلاسل الإمداد محمد البرشي
+    </p>
+  </footer>
+
+</body>
+</html>
