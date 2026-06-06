@@ -55,7 +55,6 @@ p, .t-body { font-size: 0.9375rem; font-weight: 400; line-height: 1.7; }
     text-shadow: none !important;
     background-image: none !important;
     background: white !important;
-    border: 1px solid #000 !important;
   }
 
   /* Force all text to pure black */
