@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>التوظيف — جدول زمن إدارة المستودعات</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
   <style>
     body {
@@ -78,11 +80,66 @@
 
     @media print {
       body { background-color: white; color: black; }
-      .no-print { display: none; }
+      .no-print { display: none !important; }
       @page { size: A4 landscape; margin: 10mm; }
       .bg-brand-red { background-color: #c0392b !important; -webkit-print-color-adjust: exact; }
       .bg-blue-900 { background-color: #1a3a5c !important; -webkit-print-color-adjust: exact; }
       .bg-amber-900 { background-color: #78350f !important; -webkit-print-color-adjust: exact; }
+    }
+
+    /* Modal & Toast Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .edit-input {
+      background: transparent;
+      border-bottom: 1px solid #e8b830;
+      color: white;
+      width: 100%;
+      font-family: 'Cairo', sans-serif;
+      padding: 2px 4px;
+    }
+    .edit-input:focus {
+      outline: none;
+      border-color: #c0392b;
+    }
+    .toast-container {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 1100;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .toast {
+      padding: 1rem 1.5rem;
+      border-radius: 0.75rem;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      animation: slideIn 0.3s forwards, fadeOut 0.3s 2.7s forwards;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
     }
   </style>
 </head>
@@ -211,8 +268,22 @@
   <section class="mb-16">
     <h2 class="text-2xl font-bold text-white mb-8 border-r-4 border-brand-red pr-4">ب. جدول زمن التوظيف (Staffing Timeline)</h2>
 
+    <!-- Toolbar -->
+    <div class="no-print flex flex-wrap gap-4 mb-6">
+      <button onclick="addRow()" class="px-6 py-2 bg-brand-gold text-brand-navy font-bold rounded-xl hover:bg-yellow-500 transition-all shadow-md">
+        + إضافة منصب جديد
+      </button>
+      <button onclick="document.getElementById('excelInput').click()" class="px-6 py-2 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-all shadow-md">
+        📥 استيراد Excel
+      </button>
+      <button onclick="exportToExcel()" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md">
+        📤 تصدير Excel
+      </button>
+      <input type="file" id="excelInput" class="hidden" accept=".xlsx,.xls" onchange="importFromExcel(event)">
+    </div>
+
     <div class="overflow-x-auto rounded-2xl border border-white/10 shadow-2xl">
-      <table class="w-full text-right border-collapse">
+      <table id="staffingTable" class="w-full text-right border-collapse">
         <thead class="bg-brand-navy text-brand-gold">
           <tr>
             <th class="p-4 border-b border-white/10">#</th>
@@ -221,150 +292,351 @@
             <th class="p-4 border-b border-white/10">المرحلة الثانية (Phase 2)</th>
             <th class="p-4 border-b border-white/10">الأولوية</th>
             <th class="p-4 border-b border-white/10">ملاحظات</th>
+            <th class="p-4 border-b border-white/10">الإجراءات</th>
           </tr>
         </thead>
-        <tbody class="text-gray-200">
-          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-            <td class="p-4 border-b border-white/5">1</td>
-            <td class="p-4 border-b border-white/5 font-bold text-white">مدير المستودعات</td>
-            <td class="p-4 border-b border-white/5">1</td>
-            <td class="p-4 border-b border-white/5">1 لكل فرع</td>
-            <td class="p-4 border-b border-white/5"><span class="bg-red-900/40 text-red-400 px-2 py-1 rounded text-xs">🔴 حرجة</span></td>
-            <td class="p-4 border-b border-white/5">أول توظيف</td>
-          </tr>
-          <tr class="hover:bg-white/10 transition-colors">
-            <td class="p-4 border-b border-white/5">2</td>
-            <td class="p-4 border-b border-white/5 font-bold text-white">مدير قسم الحركة والنقل والعمالة</td>
-            <td class="p-4 border-b border-white/5">1</td>
-            <td class="p-4 border-b border-white/5">1+</td>
-            <td class="p-4 border-b border-white/5"><span class="bg-red-900/40 text-red-400 px-2 py-1 rounded text-xs">🔴 حرجة</span></td>
-            <td class="p-4 border-b border-white/5">مع مدير المستودعات</td>
-          </tr>
-          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-            <td class="p-4 border-b border-white/5">3</td>
-            <td class="p-4 border-b border-white/5 font-bold text-white">موظفو الحركة والنقل</td>
-            <td class="p-4 border-b border-white/5">5–10</td>
-            <td class="p-4 border-b border-white/5">30–50</td>
-            <td class="p-4 border-b border-white/5"><span class="bg-yellow-900/40 text-yellow-400 px-2 py-1 rounded text-xs">🟡 عالية</span></td>
-            <td class="p-4 border-b border-white/5"></td>
-          </tr>
-          <tr class="hover:bg-white/10 transition-colors">
-            <td class="p-4 border-b border-white/5">4</td>
-            <td class="p-4 border-b border-white/5 font-bold text-white">مدير قسم الجودة</td>
-            <td class="p-4 border-b border-white/5">مشترك</td>
-            <td class="p-4 border-b border-white/5">1</td>
-            <td class="p-4 border-b border-white/5"><span class="bg-yellow-900/40 text-yellow-400 px-2 py-1 rounded text-xs">🟡 عالية</span></td>
-            <td class="p-4 border-b border-white/5">بالتنسيق مع إدارة الجودة</td>
-          </tr>
-          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-            <td class="p-4 border-b border-white/5">5</td>
-            <td class="p-4 border-b border-white/5 font-bold text-white">موظفو الجودة</td>
-            <td class="p-4 border-b border-white/5">2–3</td>
-            <td class="p-4 border-b border-white/5">10–15</td>
-            <td class="p-4 border-b border-white/5"><span class="bg-yellow-900/40 text-yellow-400 px-2 py-1 rounded text-xs">🟡 عالية</span></td>
-            <td class="p-4 border-b border-white/5"></td>
-          </tr>
-          <tr class="hover:bg-white/10 transition-colors">
-            <td class="p-4 border-b border-white/5">6</td>
-            <td class="p-4 border-b border-white/5 font-bold text-white">مدير قسم الأمن الصناعي</td>
-            <td class="p-4 border-b border-white/5">1</td>
-            <td class="p-4 border-b border-white/5">1</td>
-            <td class="p-4 border-b border-white/5"><span class="bg-yellow-900/40 text-yellow-400 px-2 py-1 rounded text-xs">🟡 عالية</span></td>
-            <td class="p-4 border-b border-white/5"></td>
-          </tr>
-          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-            <td class="p-4 border-b border-white/5">7</td>
-            <td class="p-4 border-b border-white/5 font-bold text-white">موظفو الأمن الصناعي</td>
-            <td class="p-4 border-b border-white/5">3–5</td>
-            <td class="p-4 border-b border-white/5">10–20</td>
-            <td class="p-4 border-b border-white/5"><span class="bg-yellow-900/40 text-yellow-400 px-2 py-1 rounded text-xs">🟡 عالية</span></td>
-            <td class="p-4 border-b border-white/5"></td>
-          </tr>
-          <tr class="hover:bg-white/10 transition-colors">
-            <td class="p-4 border-b border-white/5">8</td>
-            <td class="p-4 border-b border-white/5 font-bold text-white">مدير قسم إدخال النظام</td>
-            <td class="p-4 border-b border-white/5">1</td>
-            <td class="p-4 border-b border-white/5">1</td>
-            <td class="p-4 border-b border-white/5"><span class="bg-green-900/40 text-green-400 px-2 py-1 rounded text-xs">🟢 عادية</span></td>
-            <td class="p-4 border-b border-white/5"></td>
-          </tr>
-          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-            <td class="p-4 border-b border-white/5">9</td>
-            <td class="p-4 border-b border-white/5 font-bold text-white">موظفو إدخال النظام</td>
-            <td class="p-4 border-b border-white/5">2–3</td>
-            <td class="p-4 border-b border-white/5">5–8</td>
-            <td class="p-4 border-b border-white/5"><span class="bg-green-900/40 text-green-400 px-2 py-1 rounded text-xs">🟢 عادية</span></td>
-            <td class="p-4 border-b border-white/5"></td>
-          </tr>
-          <tr class="hover:bg-white/10 transition-colors">
-            <td class="p-4 border-b border-white/5">10</td>
-            <td class="p-4 border-b border-white/5 font-bold text-white">مدير قسم الاستلامات</td>
-            <td class="p-4 border-b border-white/5">1</td>
-            <td class="p-4 border-b border-white/5">1</td>
-            <td class="p-4 border-b border-white/5"><span class="bg-red-900/40 text-red-400 px-2 py-1 rounded text-xs">🔴 حرجة</span></td>
-            <td class="p-4 border-b border-white/5"></td>
-          </tr>
-          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-            <td class="p-4 border-b border-white/5">11</td>
-            <td class="p-4 border-b border-white/5 font-bold text-white">موظفو الاستلامات</td>
-            <td class="p-4 border-b border-white/5">5–8</td>
-            <td class="p-4 border-b border-white/5">20–30</td>
-            <td class="p-4 border-b border-white/5"><span class="bg-red-900/40 text-red-400 px-2 py-1 rounded text-xs">🔴 حرجة</span></td>
-            <td class="p-4 border-b border-white/5"></td>
-          </tr>
-          <tr class="hover:bg-white/10 transition-colors">
-            <td class="p-4 border-b border-white/5">12</td>
-            <td class="p-4 border-b border-white/5 font-bold text-white">مدير قسم التخزين والصرف والمرتجعات</td>
-            <td class="p-4 border-b border-white/5">1</td>
-            <td class="p-4 border-b border-white/5">1</td>
-            <td class="p-4 border-b border-white/5"><span class="bg-red-900/40 text-red-400 px-2 py-1 rounded text-xs">🔴 حرجة</span></td>
-            <td class="p-4 border-b border-white/5"></td>
-          </tr>
-          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-            <td class="p-4 border-b border-white/5">13</td>
-            <td class="p-4 border-b border-white/5 font-bold text-white">موظفو التخزين والصرف والمرتجعات والسحب</td>
-            <td class="p-4 border-b border-white/5">10–15</td>
-            <td class="p-4 border-b border-white/5">50–80</td>
-            <td class="p-4 border-b border-white/5"><span class="bg-red-900/40 text-red-400 px-2 py-1 rounded text-xs">🔴 حرجة</span></td>
-            <td class="p-4 border-b border-white/5"></td>
-          </tr>
-          <tr class="hover:bg-white/10 transition-colors">
-            <td class="p-4 border-b border-white/5">14</td>
-            <td class="p-4 border-b border-white/5 font-bold text-white">موظف المالية</td>
-            <td class="p-4 border-b border-white/5">1</td>
-            <td class="p-4 border-b border-white/5">1–2</td>
-            <td class="p-4 border-b border-white/5"><span class="bg-yellow-900/40 text-yellow-400 px-2 py-1 rounded text-xs">🟡 عالية</span></td>
-            <td class="p-4 border-b border-white/5">بالتنسيق مع الإدارة المالية</td>
-          </tr>
-          <tr class="bg-white/5 hover:bg-white/10 transition-colors">
-            <td class="p-4 border-b border-white/5">15</td>
-            <td class="p-4 border-b border-white/5 font-bold text-white">موظف المشتريات</td>
-            <td class="p-4 border-b border-white/5">1</td>
-            <td class="p-4 border-b border-white/5">1–2</td>
-            <td class="p-4 border-b border-white/5"><span class="bg-yellow-900/40 text-yellow-400 px-2 py-1 rounded text-xs">🟡 عالية</span></td>
-            <td class="p-4 border-b border-white/5">بالتنسيق مع الإدارة التجارية</td>
-          </tr>
+        <tbody id="staffingTableBody" class="text-gray-200">
         </tbody>
-        <tfoot class="bg-brand-red/20 text-white font-black">
-          <tr>
-            <td colspan="2" class="p-6 text-center text-xl">الإجمالي التقريبي</td>
-            <td class="p-6 text-center text-xl brand-gold">35–55 موظف</td>
-            <td class="p-6 text-center text-xl brand-gold">130–215 موظف</td>
-            <td colspan="2"></td>
-          </tr>
+        <tfoot id="staffingTableFooter" class="bg-brand-red/20 text-white font-black">
         </tfoot>
       </table>
     </div>
   </section>
 
   <footer class="text-center py-10 border-t border-white/10 mt-12">
-    <button onclick="window.print()" class="no-print px-8 py-3 bg-brand-gold text-brand-navy font-bold rounded-xl hover:bg-yellow-500 transition-all shadow-lg mb-6">
-      🖨️ طباعة التقرير (A4 Landscape)
-    </button>
+    <div class="no-print flex justify-center gap-4 mb-6">
+      <button onclick="window.print()" class="px-8 py-3 bg-brand-gold text-brand-navy font-bold rounded-xl hover:bg-yellow-500 transition-all shadow-lg">
+        🖨️ طباعة
+      </button>
+      <button id="pdfBtn" onclick="exportToPDF()" class="px-8 py-3 bg-brand-red text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg">
+        📄 تصدير PDF
+      </button>
+    </div>
     <p class="text-sm text-gray-500">
       Brandzo Hub 2026 — جميع الحقوق محفوظة لمتخصص سلاسل الإمداد محمد البرشي
     </p>
   </footer>
+
+  <!-- Modal Overlay -->
+  <div id="deleteModal" class="modal-overlay no-print">
+    <div class="bg-brand-navy border-2 border-brand-gold p-8 rounded-2xl max-w-md w-full text-center shadow-2xl mx-4">
+      <h3 class="text-xl font-bold text-white mb-4">تأكيد الحذف</h3>
+      <p class="text-gray-300 mb-8">هل أنت متأكد من حذف هذا المنصب؟</p>
+      <div class="flex justify-center gap-4">
+        <button id="confirmDeleteBtn" class="px-6 py-2 bg-brand-red text-white font-bold rounded-xl hover:bg-red-700 transition-all">
+          تأكيد الحذف
+        </button>
+        <button onclick="closeDeleteModal()" class="px-6 py-2 bg-gray-600 text-white font-bold rounded-xl hover:bg-gray-700 transition-all">
+          إلغاء
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container no-print"></div>
+
+  <script>
+    const STORAGE_KEY = 'brandzo_staffing_rows';
+    const DEFAULT_DATA = [
+      { id: 1, position: 'مدير المستودعات', phase1: '1', phase2: '1 لكل فرع', priority: '🔴 حرجة', notes: 'أول توظيف' },
+      { id: 2, position: 'مدير قسم الحركة والنقل والعمالة', phase1: '1', phase2: '1+', priority: '🔴 حرجة', notes: 'مع مدير المستودعات' },
+      { id: 3, position: 'موظفو الحركة والنقل', phase1: '5–10', phase2: '30–50', priority: '🟡 عالية', notes: '' },
+      { id: 4, position: 'مدير قسم الجودة', phase1: 'مشترك', phase2: '1', priority: '🟡 عالية', notes: 'بالتنسيق مع إدارة الجودة' },
+      { id: 5, position: 'موظفو الجودة', phase1: '2–3', phase2: '10–15', priority: '🟡 عالية', notes: '' },
+      { id: 6, position: 'مدير قسم الأمن الصناعي', phase1: '1', phase2: '1', priority: '🟡 عالية', notes: '' },
+      { id: 7, position: 'موظفو الأمن الصناعي', phase1: '3–5', phase2: '10–20', priority: '🟡 عالية', notes: '' },
+      { id: 8, position: 'مدير قسم إدخال النظام', phase1: '1', phase2: '1', priority: '🟢 عادية', notes: '' },
+      { id: 9, position: 'موظفو إدخال النظام', phase1: '2–3', phase2: '5–8', priority: '🟢 عادية', notes: '' },
+      { id: 10, position: 'مدير قسم الاستلامات', phase1: '1', phase2: '1', priority: '🔴 حرجة', notes: '' },
+      { id: 11, position: 'موظفو الاستلامات', phase1: '5–8', phase2: '20–30', priority: '🔴 حرجة', notes: '' },
+      { id: 12, position: 'مدير قسم التخزين والصرف والمرتجعات', phase1: '1', phase2: '1', priority: '🔴 حرجة', notes: '' },
+      { id: 13, position: 'موظفو التخزين والصرف والمرتجعات والسحب', phase1: '10–15', phase2: '50–80', priority: '🔴 حرجة', notes: '' },
+      { id: 14, position: 'موظف المالية', phase1: '1', phase2: '1–2', priority: '🟡 عالية', notes: 'بالتنسيق مع الإدارة المالية' },
+      { id: 15, position: 'موظف المشتريات', phase1: '1', phase2: '1–2', priority: '🟡 عالية', notes: 'بالتنسيق مع الإدارة التجارية' }
+    ];
+
+    let staffingRows = [];
+    let editIndex = -1;
+
+    function init() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        staffingRows = JSON.parse(saved);
+      } else {
+        staffingRows = [...DEFAULT_DATA];
+        saveData();
+      }
+      renderTable();
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(staffingRows));
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('staffingTableBody');
+      tbody.innerHTML = '';
+
+      staffingRows.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        tr.className = index % 2 === 0 ? 'bg-white/5 hover:bg-white/10 transition-colors' : 'hover:bg-white/10 transition-colors';
+
+        if (editIndex === index) {
+          tr.innerHTML = `
+            <td class="p-4 border-b border-white/5">${index + 1}</td>
+            <td class="p-4 border-b border-white/5"><input type="text" class="edit-input font-bold" id="edit-pos"></td>
+            <td class="p-4 border-b border-white/5"><input type="text" class="edit-input" id="edit-p1"></td>
+            <td class="p-4 border-b border-white/5"><input type="text" class="edit-input" id="edit-p2"></td>
+            <td class="p-4 border-b border-white/5">
+              <select id="edit-priority" class="bg-brand-navy border border-brand-gold text-white rounded p-1 text-xs w-full">
+                <option value="🔴 حرجة">🔴 حرجة</option>
+                <option value="🟡 عالية">🟡 عالية</option>
+                <option value="🟢 عادية">🟢 عادية</option>
+              </select>
+            </td>
+            <td class="p-4 border-b border-white/5"><input type="text" class="edit-input" id="edit-notes"></td>
+            <td class="p-4 border-b border-white/5 no-print">
+              <div class="flex gap-2">
+                <button onclick="saveRow(${index})" class="text-green-500 hover:scale-110 transition-transform" title="حفظ">✅</button>
+                <button onclick="cancelEdit()" class="text-gray-400 hover:scale-110 transition-transform" title="إلغاء">❌</button>
+              </div>
+            </td>
+          `;
+          tr.querySelector('#edit-pos').value = row.position;
+          tr.querySelector('#edit-p1').value = row.phase1;
+          tr.querySelector('#edit-p2').value = row.phase2;
+          tr.querySelector('#edit-priority').value = row.priority;
+          tr.querySelector('#edit-notes').value = row.notes;
+        } else {
+          const priorityClass = row.priority.includes('حرجة') ? 'bg-red-900/40 text-red-400' :
+                                row.priority.includes('عالية') ? 'bg-yellow-900/40 text-yellow-400' : 'bg-green-900/40 text-green-400';
+
+          tr.innerHTML = `
+            <td class="p-4 border-b border-white/5">${index + 1}</td>
+            <td class="p-4 border-b border-white/5 font-bold text-white"></td>
+            <td class="p-4 border-b border-white/5"></td>
+            <td class="p-4 border-b border-white/5"></td>
+            <td class="p-4 border-b border-white/5"><span class="${priorityClass} px-2 py-1 rounded text-xs"></span></td>
+            <td class="p-4 border-b border-white/5"></td>
+            <td class="p-4 border-b border-white/5 no-print">
+              <div class="flex gap-2">
+                <button onclick="toggleEdit(${index})" class="text-brand-gold hover:scale-110 transition-transform" title="تعديل">✏️</button>
+                <button onclick="confirmDelete(${index})" class="text-brand-red hover:scale-110 transition-transform" title="حذف">🗑️</button>
+              </div>
+            </td>
+          `;
+          const cells = tr.querySelectorAll('td');
+          cells[1].textContent = row.position;
+          cells[2].textContent = row.phase1;
+          cells[3].textContent = row.phase2;
+          cells[4].querySelector('span').textContent = row.priority;
+          cells[5].textContent = row.notes;
+        }
+        tbody.appendChild(tr);
+      });
+
+      calculateTotals();
+    }
+
+    function calculateTotals() {
+      let p1TotalMin = 0, p1TotalMax = 0;
+      let p2TotalMin = 0, p2TotalMax = 0;
+
+      staffingRows.forEach(row => {
+        const parseRange = (val) => {
+          if (!val) return [0, 0];
+          const matches = val.match(/(\d+)\D+(\d+)/);
+          if (matches) return [parseInt(matches[1]), parseInt(matches[2])];
+          const single = val.match(/(\d+)/);
+          if (single) return [parseInt(single[1]), parseInt(single[1])];
+          return [0, 0];
+        };
+
+        const [p1Min, p1Max] = parseRange(row.phase1);
+        const [p2Min, p2Max] = parseRange(row.phase2);
+        p1TotalMin += p1Min; p1TotalMax += p1Max;
+        p2TotalMin += p2Min; p2TotalMax += p2Max;
+      });
+
+      const tfoot = document.getElementById('staffingTableFooter');
+      tfoot.innerHTML = `
+        <tr class="bg-brand-red/20 text-white font-black">
+          <td colspan="2" class="p-6 text-center text-xl">الإجمالي التقريبي</td>
+          <td class="p-6 text-center text-xl text-brand-gold"></td>
+          <td class="p-6 text-center text-xl text-brand-gold"></td>
+          <td colspan="3"></td>
+        </tr>
+      `;
+      const cells = tfoot.querySelectorAll('td');
+      cells[1].textContent = `${p1TotalMin}–${p1TotalMax} موظف`;
+      cells[2].textContent = `${p2TotalMin}–${p2TotalMax} موظف`;
+    }
+
+    function toggleEdit(index) {
+      editIndex = index;
+      renderTable();
+    }
+
+    function cancelEdit() {
+      editIndex = -1;
+      renderTable();
+    }
+
+    function saveRow(index) {
+      const position = document.getElementById('edit-pos').value;
+      const phase1 = document.getElementById('edit-p1').value;
+      const phase2 = document.getElementById('edit-p2').value;
+      const priority = document.getElementById('edit-priority').value;
+      const notes = document.getElementById('edit-notes').value;
+
+      staffingRows[index] = { ...staffingRows[index], position, phase1, phase2, priority, notes };
+      saveData();
+      editIndex = -1;
+      renderTable();
+      showToast('✅ تم حفظ التغييرات بنجاح');
+    }
+
+    function addRow() {
+      const newRow = {
+        id: Date.now(),
+        position: '',
+        phase1: '',
+        phase2: '',
+        priority: '🟢 عادية',
+        notes: ''
+      };
+      staffingRows.push(newRow);
+      editIndex = staffingRows.length - 1;
+      renderTable();
+      document.getElementById('edit-pos').focus();
+    }
+
+    let deletePendingIndex = -1;
+    function confirmDelete(index) {
+      deletePendingIndex = index;
+      document.getElementById('deleteModal').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      deletePendingIndex = -1;
+      document.getElementById('deleteModal').classList.remove('active');
+    }
+
+    document.getElementById('confirmDeleteBtn').onclick = () => {
+      if (deletePendingIndex !== -1) {
+        staffingRows.splice(deletePendingIndex, 1);
+        saveData();
+        renderTable();
+        showToast('🗑️ تم حذف المنصب بنجاح', 'error');
+        closeDeleteModal();
+      }
+    };
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type === 'success' ? 'bg-green-600' : 'bg-brand-red'}`;
+      toast.innerText = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function exportToExcel() {
+      const headers = ['#', 'Position (Arabic)', 'Phase 1', 'Phase 2', 'Priority', 'Notes'];
+      const data = staffingRows.map((row, i) => [
+        i + 1,
+        row.position,
+        row.phase1,
+        row.phase2,
+        row.priority,
+        row.notes
+      ]);
+
+      // Add summary row
+      const tfoot = document.getElementById('staffingTableFooter');
+      const p1Total = tfoot.rows[0].cells[1].textContent;
+      const p2Total = tfoot.rows[0].cells[2].textContent;
+      data.push(['', 'الإجمالي التقريبي', p1Total, p2Total, '', '']);
+
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+      ws['!cols'] = [{ wch: 5 }, { wch: 40 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 30 }];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Staffing Timeline");
+      XLSX.writeFile(wb, "staffing-timeline-brandzo-2026.xlsx");
+      showToast('📤 تم تصدير ملف Excel بنجاح');
+    }
+
+    function importFromExcel(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+          // Expect headers at index 0, data starts at index 1
+          const importedRows = [];
+          for (let i = 1; i < rows.length; i++) {
+            const r = rows[i];
+            if (r.length < 2 || r[1] === 'الإجمالي التقريبي') continue;
+            importedRows.push({
+              id: Date.now() + i,
+              position: r[1] || '',
+              phase1: r[2] || '',
+              phase2: r[3] || '',
+              priority: r[4] || '🟢 عادية',
+              notes: r[5] || ''
+            });
+          }
+
+          if (importedRows.length === 0) throw new Error();
+
+          staffingRows = importedRows;
+          saveData();
+          renderTable();
+          showToast(`✅ تم استيراد البيانات بنجاح — ${importedRows.length} منصب`);
+        } catch (err) {
+          showToast('❌ خطأ في تنسيق الملف — تأكد من استخدام النموذج الصحيح', 'error');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      event.target.value = ''; // Reset input
+    }
+
+    async function exportToPDF() {
+      const btn = document.getElementById('pdfBtn');
+      const originalText = btn.innerText;
+      btn.innerText = '⏳ جارٍ التصدير...';
+      btn.disabled = true;
+
+      const element = document.body;
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: 'تقرير-التوظيف-والجدول-الزمني-Brandzo-2026.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0a0a1a' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+      };
+
+      try {
+        await html2pdf().set(opt).from(element).save();
+        showToast('📄 تم تصدير ملف PDF بنجاح');
+      } catch (err) {
+        showToast('❌ فشل تصدير PDF', 'error');
+      } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    window.onload = init;
+  </script>
 
 </body>
 </html>
