@@ -218,10 +218,21 @@ const currentPath = Astro.url.pathname;
 
       <!-- قائمة التنقل الرئيسية -->
       <nav class="mt-4 px-4 flex-1 overflow-y-auto">
-        <ul class="space-y-1">
+        <!-- Search Bar -->
+        <div class="mb-4 sticky top-0 bg-brand-navy z-10 pb-2">
+          <input
+            type="text"
+            id="sidebar-search"
+            placeholder="🔍 ابحث في لوحة التحكم..."
+            class="bg-white/10 border border-white/20 rounded-xl text-white text-sm px-4 py-2 w-full focus:outline-none focus:border-brand-gold/50"
+          />
+        </div>
+
+        <ul id="nav-list" class="space-y-1">
+          <li id="no-results" class="hidden text-gray-400 text-xs text-center py-4">لا توجد نتائج</li>
           {
             navItems.map((item) => (
-              <li>
+              <li data-label={item.label}>
                 <a
                   href={item.href}
                   class={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
@@ -240,7 +251,7 @@ const currentPath = Astro.url.pathname;
 
           <!-- زر فتح الدليل التشغيلي -->
           {showGuide && (
-            <li>
+            <li data-label="الدليل التشغيلي">
               <button
                 id="open-guide"
                 class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-right"
@@ -253,7 +264,7 @@ const currentPath = Astro.url.pathname;
           )}
 
           <!-- زر فتح تقرير ERP -->
-          <li>
+          <li data-label="تقرير ERP">
             <a
               href={`${base}/تقرير(ERP).html`}
               target="_blank"
@@ -265,7 +276,7 @@ const currentPath = Astro.url.pathname;
           </li>
 
           <!-- زر فتح تقرير التخزين -->
-          <li>
+          <li data-label="تقرير التخزين">
             <a
               href={`${base}/تقرير(التخزين).html`}
               target="_blank"
@@ -277,7 +288,7 @@ const currentPath = Astro.url.pathname;
           </li>
 
           <!-- زر فتح تقرير هندسة المقترح (متعدد العلامات) -->
-          <li>
+          <li data-label="تقرير هندسة المقترح (متعدد العلامات)">
             <a
               href={`${base}/Brandzo_Multi_Brand_Architecture_Odoo_Guide.html`}
               target="_blank"
@@ -482,6 +493,36 @@ const currentPath = Astro.url.pathname;
         window.addEventListener('orientationchange', function () {
           setTimeout(syncState, 400);
         });
+
+        /* ─── Sidebar Search Logic ─── */
+        var searchInput = document.getElementById('sidebar-search');
+        var navList = document.getElementById('nav-list');
+        var noResults = document.getElementById('no-results');
+
+        if (searchInput && navList && noResults) {
+          var navItems = navList.querySelectorAll('li[data-label]');
+
+          searchInput.addEventListener('input', function() {
+            var query = this.value.trim().toLowerCase();
+            var visibleCount = 0;
+
+            navItems.forEach(function(item) {
+              var label = item.getAttribute('data-label').toLowerCase();
+              if (label.includes(query)) {
+                item.style.display = '';
+                visibleCount++;
+              } else {
+                item.style.display = 'none';
+              }
+            });
+
+            if (visibleCount === 0 && query !== '') {
+              noResults.classList.remove('hidden');
+            } else {
+              noResults.classList.add('hidden');
+            }
+          });
+        }
 
         /* ─── Database Status Listener ─── */
         window.addEventListener('brandzo:db-status', function (e) {

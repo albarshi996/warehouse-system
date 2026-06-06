@@ -67,6 +67,14 @@ const WarehouseMaps = () => {
     return { totalArea, rackLevels, estPallets, forkliftType };
   }, [dimensions]);
 
+  const assessmentCriteria = [
+    { name: "الموقع الجغرافي (Location)", score: 9, weight: "20%" },
+    { name: "طرق الوصول (Access Roads)", score: 8, weight: "15%" },
+    { name: "الارتفاع الصافي (Height Clearance)", score: 7, weight: "25%" },
+    { name: "حمولة الأرضية (Floor Load)", score: 8, weight: "20%" },
+    { name: "أنظمة السلامة (Fire Safety)", score: 6, weight: "20%" },
+  ];
+
   const renderFloorPlan = () => {
     // Proportional layout for Site 155
     // Total block area approx 300x200 for SVG coordinate space
@@ -91,21 +99,41 @@ const WarehouseMaps = () => {
     return (
       <div className="space-y-6 animate-fade-in">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
-            <div className="text-gray-300 text-[10px] mb-1">إجمالي المساحة المغطاة</div>
-            <div className="text-xl font-bold text-white">18,500 م²</div>
+          <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center gap-3">
+            <div className="w-10 h-10 bg-brand-navy rounded-lg flex items-center justify-center text-brand-yellow shrink-0">
+              <Icon name="grid" size={20} />
+            </div>
+            <div>
+              <div className="text-gray-300 text-[10px] mb-1">إجمالي المساحة</div>
+              <div className="text-lg font-bold text-white">{stats.totalArea.toLocaleString()} م²</div>
+            </div>
           </div>
-          <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
-            <div className="text-gray-300 text-[10px] mb-1">عدد المستودعات</div>
-            <div className="text-xl font-bold text-brand-yellow">10 وحدات</div>
+          <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center gap-3">
+            <div className="w-10 h-10 bg-brand-navy rounded-lg flex items-center justify-center text-brand-red shrink-0">
+              <Icon name="package" size={20} />
+            </div>
+            <div>
+              <div className="text-gray-300 text-[10px] mb-1">عدد الوحدات</div>
+              <div className="text-lg font-bold text-brand-yellow">10 وحدات</div>
+            </div>
           </div>
-          <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
-            <div className="text-gray-300 text-[10px] mb-1">الارتفاع الحالي</div>
-            <div className="text-xl font-bold text-brand-red">6.80 م</div>
+          <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center gap-3">
+            <div className="w-10 h-10 bg-brand-navy rounded-lg flex items-center justify-center text-green-400 shrink-0">
+              <Icon name="clipboardList" size={20} />
+            </div>
+            <div>
+              <div className="text-gray-300 text-[10px] mb-1">سعة الطبليات</div>
+              <div className="text-lg font-bold text-white">{stats.estPallets.toLocaleString()}</div>
+            </div>
           </div>
-          <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
-            <div className="text-gray-300 text-[10px] mb-1">الارتفاع المقترح الأقصى</div>
-            <div className="text-xl font-bold text-green-400">12.0 م</div>
+          <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center gap-3">
+            <div className="w-10 h-10 bg-brand-navy rounded-lg flex items-center justify-center text-blue-400 shrink-0">
+              <Icon name="truck" size={20} />
+            </div>
+            <div>
+              <div className="text-gray-300 text-[10px] mb-1">نوع الرافعة</div>
+              <div className="text-[10px] font-bold text-white leading-tight">{stats.forkliftType}</div>
+            </div>
           </div>
         </div>
 
@@ -192,6 +220,29 @@ const WarehouseMaps = () => {
             </div>
           )}
         </div>
+
+        {/* Legend Panel */}
+        <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
+          <h4 className="font-bold text-white mb-4 flex items-center gap-2">
+            <Icon name="grid" size={18} className="text-brand-yellow" /> مفتاح خريطة المستودعات (Zones Legend)
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {warehouses.map(wh => (
+              <div key={wh.id} className="flex items-center gap-3 p-3 bg-white/5 border border-white/5 rounded-xl hover:border-white/20 transition-colors">
+                <div className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center font-bold text-[10px] text-white" style={{ backgroundColor: wh.color }}>
+                  {wh.id}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="text-xs font-bold text-white truncate">{wh.name}</span>
+                    <span className="text-[10px] text-brand-yellow whitespace-nowrap">{wh.area} م²</span>
+                  </div>
+                  <div className="text-[9px] text-gray-400 truncate">{wh.function}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   };
@@ -236,47 +287,34 @@ const WarehouseMaps = () => {
           </div>
         </div>
 
-        <div className="bg-[#141f2e] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-sm">
-              <thead className="bg-white/5 border-b border-white/10">
-                <tr>
-                  <th className="py-4 px-6 text-gray-300 font-bold">المعيار (Standard)</th>
-                  <th className="py-4 px-6 text-gray-300 font-bold">المرجع</th>
-                  <th className="py-4 px-6 text-gray-300 font-bold">القيمة المطلوبة</th>
-                  <th className="py-4 px-6 text-gray-300 font-bold">الأولوية</th>
-                  <th className="py-4 px-6 text-gray-300 font-bold">الحالة</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {standards.map((s, i) => (
-                  <tr key={i} className="hover:bg-white/5 transition-colors group">
-                    <td className="py-4 px-6 text-white font-medium group-hover:text-brand-yellow transition-colors">{s.name}</td>
-                    <td className="py-4 px-6 text-gray-300 text-xs">{s.ref}</td>
-                    <td className="py-4 px-6 text-gray-200">{s.req}</td>
-                    <td className="py-4 px-6">
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${
-                        s.priority === 'Critical' ? 'bg-brand-red/20 text-brand-red border border-brand-red/30' :
-                        s.priority === 'High' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
-                        'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                      }`}>
-                        {s.priority}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-2">
-                        {s.status === 'Compliant' ? (
-                          <><span className="w-2 h-2 rounded-full bg-green-500"></span> <span className="text-green-400 text-[11px]">مطابق</span></>
-                        ) : (
-                          <><span className="w-2 h-2 rounded-full bg-brand-yellow animate-pulse"></span> <span className="text-brand-yellow text-[11px]">تطوير مطلوب</span></>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {standards.map((s, i) => (
+            <div key={i} className="bg-[#141f2e] border border-white/10 rounded-2xl p-5 hover:border-white/30 transition-all group shadow-lg flex flex-col justify-between h-full">
+              <div>
+                <div className="flex justify-between items-start mb-3">
+                  <span className={`px-2 py-1 rounded-md text-[10px] font-bold ${
+                    s.priority === 'Critical' ? 'bg-brand-red/20 text-brand-red border border-brand-red/30' :
+                    s.priority === 'High' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
+                    'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                  }`}>
+                    {s.priority}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`w-2 h-2 rounded-full ${s.status === 'Compliant' ? 'bg-green-500' : 'bg-brand-yellow animate-pulse'}`}></span>
+                    <span className={`text-[10px] font-bold ${s.status === 'Compliant' ? 'text-green-400' : 'text-brand-yellow'}`}>
+                      {s.status === 'Compliant' ? 'مطابق' : 'تطوير مطلوب'}
+                    </span>
+                  </div>
+                </div>
+                <h4 className="font-bold text-white text-sm mb-1 group-hover:text-brand-yellow transition-colors">{s.name}</h4>
+                <div className="text-[10px] text-gray-400 mb-4 font-mono">{s.ref}</div>
+              </div>
+              <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                <div className="text-[10px] text-gray-400 mb-1">المطلب الفني</div>
+                <div className="text-xs text-gray-200 leading-relaxed">{s.req}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -336,7 +374,18 @@ const WarehouseMaps = () => {
     <div className="space-y-8 animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {proposalCards.map((card, i) => (
-          <div key={i} className="bg-[#141f2e] border border-white/10 rounded-2xl p-6 hover:border-brand-yellow/30 transition-all group shadow-xl">
+          <div key={i} className="bg-[#141f2e] border border-white/10 rounded-2xl p-6 hover:border-brand-yellow/30 hover:scale-[1.02] transition-all group shadow-xl relative overflow-hidden">
+            {/* Priority Ribbon */}
+            <div className={`absolute -top-1 -left-8 w-24 h-8 rotate-[315deg] flex items-center justify-center shadow-lg z-10 ${
+              card.priority === 'Critical' ? 'bg-brand-red' :
+              card.priority === 'High' ? 'bg-brand-yellow' :
+              'bg-gray-500'
+            }`}>
+              <span className="text-[8px] font-black text-white uppercase tracking-tighter">
+                {card.priority === 'Critical' ? 'Critical' : card.priority === 'High' ? 'High' : 'Medium'}
+              </span>
+            </div>
+
             <div className="flex justify-between items-start mb-4">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                 card.priority === 'Critical' ? 'bg-brand-red/10 text-brand-red' :
@@ -345,20 +394,15 @@ const WarehouseMaps = () => {
               }`}>
                 <Icon name={card.icon} size={24} />
               </div>
-              <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${
-                card.priority === 'Critical' ? 'bg-brand-red/20 text-brand-red' :
-                card.priority === 'High' ? 'bg-brand-yellow/20 text-brand-yellow' :
-                'bg-blue-500/20 text-blue-400'
-              }`}>
-                {card.priority === 'Critical' ? 'أولوية قصوى' : card.priority === 'High' ? 'أولوية عالية' : 'أولوية متوسطة'}
-              </span>
             </div>
             <h4 className="font-bold text-white group-hover:text-brand-yellow transition-colors">{card.title}</h4>
             <p className="text-[10px] text-gray-300 mb-4">{card.subtitle}</p>
             <ul className="space-y-2">
               {card.details.map((detail, idx) => (
-                <li key={idx} className="flex items-center gap-2 text-xs text-gray-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-yellow/50"></span>
+                <li key={idx} className="flex items-start gap-2 text-xs text-gray-300">
+                  <div className="w-4 h-4 rounded border border-white/20 flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="text-brand-yellow text-[10px]">✓</span>
+                  </div>
                   {detail}
                 </li>
               ))}
@@ -425,6 +469,58 @@ const WarehouseMaps = () => {
           <button className="w-full py-4 bg-brand-red text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg shadow-brand-red/20 active:scale-95">
             إرسال للمراجعة والاعتماد
           </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSiteAssessment = () => (
+    <div className="space-y-6 animate-fade-in">
+      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-8 shadow-2xl">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-12 h-12 bg-brand-navy rounded-xl flex items-center justify-center text-brand-yellow text-2xl shadow-lg border border-white/5">📍</div>
+          <div>
+            <h4 className="font-black text-white text-xl">تقييم الموقع - Site 155 Assessment</h4>
+            <p className="text-gray-400 text-xs">مراجعة المعايير التشغيلية لموقع بوهادي - بنغازي</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6">
+          {assessmentCriteria.map((item, i) => (
+            <div key={i} className="bg-white/5 border border-white/10 p-5 rounded-2xl hover:border-brand-yellow/30 transition-all">
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-brand-gold font-black text-lg">0{i+1}</span>
+                  <span className="text-white font-bold">{item.name}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-[10px] text-gray-400">الوزن: {item.weight}</span>
+                  <span className="text-brand-yellow font-black text-xl">{item.score}/10</span>
+                </div>
+              </div>
+              <div className="w-full h-3 bg-brand-navy rounded-full overflow-hidden border border-white/5">
+                <div
+                  className={`h-full rounded-full transition-all duration-1000 ${
+                    item.score >= 8 ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]' :
+                    item.score >= 6 ? 'bg-brand-yellow shadow-[0_0_10px_rgba(232,184,48,0.4)]' :
+                    'bg-brand-red shadow-[0_0_10px_rgba(192,57,43,0.4)]'
+                  }`}
+                  style={{ width: `${item.score * 10}%` }}
+                ></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 p-6 bg-brand-navy/50 rounded-2xl border border-brand-yellow/20 flex flex-col md:flex-row items-center justify-between gap-6">
+           <div className="flex items-center gap-4">
+              <div className="text-4xl">🏅</div>
+              <div>
+                <div className="text-white font-bold text-lg">التقييم الإجمالي للموقع</div>
+                <div className="text-gray-400 text-xs">بناءً على المعايير التشغيلية واللوجستية</div>
+              </div>
+           </div>
+           <div className="text-4xl font-black text-brand-yellow">7.8 <span className="text-sm text-gray-400">/ 10</span></div>
         </div>
       </div>
     </div>
@@ -759,12 +855,14 @@ const WarehouseMaps = () => {
         {/* Main Content Areas */}
         <div className="lg:col-span-3 space-y-6">
           {/* Tabs Navigation */}
+          {/* Tabs Navigation */}
           <div className="flex flex-wrap gap-2 border-b border-white/10 pb-1 no-print">
             {[
               { id: 'floorplan', label: 'المخطط الكابوري', icon: 'grid' },
               { id: 'elevation', label: 'القطاع الرأسي', icon: 'arrowUpTray' },
               { id: 'standards', label: 'المعايير الدولية', icon: 'clipboardList' },
-              { id: 'proposal', label: 'مقترح التحويل', icon: 'workflows' }
+              { id: 'proposal', label: 'مقترح التحويل', icon: 'workflows' },
+              { id: 'assessment', label: 'تقييم الموقع', icon: 'mapPin' }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -796,6 +894,10 @@ const WarehouseMaps = () => {
 
             <div className={(activeTab === 'proposal' ? 'block' : 'hidden print:block') + " print:print-section-break"}>
               {renderProposal()}
+            </div>
+
+            <div className={(activeTab === 'assessment' ? 'block' : 'hidden print:block') + " print:print-section-break"}>
+              {renderSiteAssessment()}
             </div>
           </div>
         </div>
