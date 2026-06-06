@@ -282,6 +282,56 @@ const WarehouseMaps = () => {
     );
   };
 
+  const renderPrintSummary = () => (
+    <div className="hidden print:block space-y-6 mb-8">
+      <div className="grid grid-cols-2 gap-6">
+        <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
+           <h4 className="font-bold text-white mb-4 flex items-center gap-2">
+             <Icon name="package" size={18} className="text-brand-red" /> معلومات الموقع
+           </h4>
+           <div className="grid grid-cols-2 gap-4">
+             {[
+               { label: "كود الموقع", val: siteInfo.id },
+               { label: "الموقع", val: siteInfo.location },
+               { label: "المساحة الكلية", val: siteInfo.totalSiteArea },
+               { label: "المساحة المغطاة", val: siteInfo.coveredArea },
+               { label: "المقاول المنفذ", val: siteInfo.contractor },
+               { label: "الارتفاع الحالي", val: siteInfo.currentHeight },
+             ].map((item, i) => (
+               <div key={i} className="flex flex-col border-b border-white/5 pb-2">
+                 <span className="text-[10px] text-gray-400 uppercase">{item.label}</span>
+                 <span className="text-white font-medium text-sm">{item.val}</span>
+               </div>
+             ))}
+           </div>
+        </div>
+        <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
+          <h4 className="font-bold text-white mb-4 flex items-center gap-2">
+            <Icon name="clipboardList" size={18} className="text-brand-yellow" /> مراجعة الامتثال
+          </h4>
+          <div className="space-y-3">
+             {[
+               { label: "ارتفاع السقف (Class A)", ok: dimensions.clearHeight >= 12, val: `${dimensions.clearHeight}م` },
+               { label: "نظام الرشاشات ESFR", ok: dimensions.clearHeight >= 10, val: dimensions.clearHeight >= 10 ? "مطلوب" : "اختياري" },
+               { label: "أرضية إيبوكسي صناعي", ok: dimensions.flooring.includes("إيبوكسي"), val: "مطابق" },
+               { label: "سعة التخزين المستهدفة", ok: stats.estPallets > 15000, val: `${stats.estPallets.toLocaleString()}` },
+               { label: "نظام التخزين", ok: true, val: dimensions.rackingSystem },
+               { label: "مستويات الرفوف", ok: true, val: `${stats.rackLevels}` },
+             ].map((item, i) => (
+               <div key={i} className="flex items-center justify-between text-sm">
+                 <span className="text-gray-300">{item.label}</span>
+                 <div className="flex items-center gap-2">
+                   <span className="text-white font-bold">{item.val}</span>
+                   {item.ok ? <span className="text-green-500">✓</span> : <span className="text-brand-red">✗</span>}
+                 </div>
+               </div>
+             ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderProposal = () => (
     <div className="space-y-8 animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -611,13 +661,21 @@ const WarehouseMaps = () => {
           #report-container .text-brand-gold { color: #e8b830 !important; }
           #report-container .text-brand-red { color: #c0392b !important; }
           #report-container .text-gray-300 { color: #d1d5db !important; }
+          #report-container .text-gray-400 { color: #9ca3af !important; }
           #report-container .text-green-400 { color: #4ade80 !important; }
 
           /* SVG specific preservation */
           #report-container svg rect { fill-opacity: 1 !important; stroke-opacity: 1 !important; }
           #report-container svg text { fill: white !important; fill-opacity: 1 !important; }
+          #report-container svg line { stroke-opacity: 1 !important; }
 
-          .card, section, div { break-inside: avoid; }
+          .card, section, .animate-fade-in { break-inside: avoid; }
+
+          /* Page breaks for sections */
+          .print-section-break {
+            break-before: page !important;
+            padding-top: 20px !important;
+          }
 
           /* Ensure main content is visible and fills page */
           main {
@@ -669,10 +727,23 @@ const WarehouseMaps = () => {
           </div>
 
           <div className="min-h-[600px]">
-            {activeTab === 'floorplan' && renderFloorPlan()}
-            {activeTab === 'elevation' && renderElevation()}
-            {activeTab === 'standards' && renderStandards()}
-            {activeTab === 'proposal' && renderProposal()}
+            {renderPrintSummary()}
+
+            <div className={activeTab === 'floorplan' ? 'block' : 'hidden print:block'}>
+              {renderFloorPlan()}
+            </div>
+
+            <div className={(activeTab === 'elevation' ? 'block' : 'hidden print:block') + " print:print-section-break"}>
+              {renderElevation()}
+            </div>
+
+            <div className={(activeTab === 'standards' ? 'block' : 'hidden print:block') + " print:print-section-break"}>
+              {renderStandards()}
+            </div>
+
+            <div className={(activeTab === 'proposal' ? 'block' : 'hidden print:block') + " print:print-section-break"}>
+              {renderProposal()}
+            </div>
           </div>
         </div>
 
