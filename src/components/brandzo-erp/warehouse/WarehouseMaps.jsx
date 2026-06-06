@@ -541,38 +541,91 @@ const WarehouseMaps = () => {
   );
 
   return (
-    <div className="space-y-6 text-right" dir="rtl">
+    <div className="space-y-6 text-right" dir="rtl" id="report-container">
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
-          .no-print { display: none !important; }
-          .print-content {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
+          @page {
+            size: A4;
+            margin: 10mm;
+          }
+
+          html, body {
+            background-color: #0f1923 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          .no-print, .dashboard-sidebar, .nav-header, .tab-buttons, aside {
+            display: none !important;
+          }
+
+          #report-container {
+            background-color: #0f1923 !important;
+            color: #e5e7eb !important;
+            padding: 20px !important;
             width: 100% !important;
-            background: white !important;
-            color: black !important;
-            padding: 40px !important;
+            min-height: 100vh !important;
+            display: block !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
-          .print-content * {
-            color: black !important;
-            border-color: #ddd !important;
+
+          /* Force background preservation for elements, overriding global aggressive resets */
+          #report-container * {
             background-color: transparent !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            color: inherit !important;
             box-shadow: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
-          .print-content .text-brand-yellow,
-          .print-content .text-brand-red,
-          .print-content .text-green-400,
-          .print-content .text-green-500 {
-            color: #c0392b !important; /* Force a dark color for readability */
-            font-weight: bold !important;
+
+          /* Restore major background colors with high specificity */
+          #report-container div.bg-brand-navy,
+          #report-container div.bg-gradient-to-r,
+          #report-container div.bg-gradient-to-br {
+            background-color: #1a1a2e !important;
           }
-          .print-content svg rect { stroke: #000 !important; }
-          .print-content svg text { fill: #000 !important; }
-          .dashboard-sidebar, .nav-header, .no-print { display: none !important; }
-          .tab-buttons { display: none !important; }
+
+          #report-container div.bg-\[\#141f2e\],
+          #report-container section.bg-\[\#141f2e\] {
+            background-color: #141f2e !important;
+          }
+
+          #report-container div.bg-\[\#0f1923\] {
+            background-color: #0f1923 !important;
+          }
+
+          #report-container div.bg-white\/5 {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+          }
+
+          #report-container .bg-brand-red { background-color: #c0392b !important; }
+          #report-container .bg-brand-yellow { background-color: #e8b830 !important; }
+
+          /* Text colors with high specificity */
+          #report-container .text-white { color: #ffffff !important; }
+          #report-container .text-brand-yellow,
+          #report-container .text-brand-gold { color: #e8b830 !important; }
+          #report-container .text-brand-red { color: #c0392b !important; }
+          #report-container .text-gray-300 { color: #d1d5db !important; }
+          #report-container .text-green-400 { color: #4ade80 !important; }
+
+          /* SVG specific preservation */
+          #report-container svg rect { fill-opacity: 1 !important; stroke-opacity: 1 !important; }
+          #report-container svg text { fill: white !important; fill-opacity: 1 !important; }
+
           .card, section, div { break-inside: avoid; }
-          h2, h4, h5 { color: #1a1a2e !important; }
+
+          /* Ensure main content is visible and fills page */
+          main {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+          }
         }
       `}} />
       {/* Header */}
