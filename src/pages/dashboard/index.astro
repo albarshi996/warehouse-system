@@ -105,6 +105,26 @@ const base = import.meta.env.BASE_URL.endsWith('/')
       </a>
     </div>
 
+    {/* Quality Management Report Section */}
+    <section class="mb-8">
+      <div class="rounded-2xl overflow-hidden border border-brand-red/20 shadow-2xl bg-brand-navy/50" style="height: 80vh; min-height: 600px;">
+        <div class="bg-brand-red/10 px-6 py-3 border-b border-brand-red/20 flex items-center justify-between">
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span>🏆</span> تقرير إدارة الجودة الشاملة
+          </h2>
+          <a href={`${base}/تقرير-إدارة-الجودة.html`} target="_blank" class="text-xs text-brand-yellow hover:underline flex items-center gap-1">
+             فتح في نافذة جديدة ↗
+          </a>
+        </div>
+        <iframe
+          src={`${base}/تقرير-إدارة-الجودة.html`}
+          title="تقرير إدارة الجودة الشاملة"
+          class="w-full h-full border-0"
+          loading="lazy"
+        ></iframe>
+      </div>
+    </section>
+
     {/* Odoo Implementation Overview */}
     <section class="mt-10 mb-8">
       <div class="rounded-2xl bg-gradient-to-br from-green-900/20 via-blue-900/20 to-green-900/20 shadow-2xl border border-green-500/30 p-6 sm:p-10 relative overflow-hidden">
@@ -135,7 +155,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
               <h3 class="font-bold text-white mb-2">الإعداد الأساسي</h3>
               <div class="text-xs text-gray-200 mb-3">3-4 أسابيع</div>
               <ul class="space-y-1">
-                <li class="text-xs text-gray-100">• تثبيت النظام</li>
+                <li class="text-xs text-gray-100">• تثبيت المقترح</li>
                 <li class="text-xs text-gray-100">• إعدادات الأمان</li>
                 <li class="text-xs text-gray-100">• هيكل الشركة</li>
               </ul>
