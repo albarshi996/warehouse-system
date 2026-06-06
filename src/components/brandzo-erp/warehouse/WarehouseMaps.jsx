@@ -40,7 +40,7 @@ const WarehouseMaps = () => {
     { name: "مستوي الرصيف (لكل باب)", ref: "ANSI MH30.1", req: "مطلوب عند كل باب تحميل", priority: "Critical", status: "Upgrade Required" },
     { name: "حمولة الأرضية", ref: "EN 15620 / ACI", req: "≥ 5.0 طن/م² (High-Bay: ≥ 7.5 طن/م²)", priority: "High", status: "Compliant" },
     { name: "استواء الأرضية", ref: "TR 34 (Concrete)", req: "تشطيب إيبوكسي صناعي FF50 / FL30", priority: "High", status: "Upgrade Required" },
-    { name: "نظام المرشات (الارتفاع العالي)", ref: "NFPA 13", req: "نوع ESFR، بحد أدنى K-25", priority: "Critical", status: "Upgrade Required" },
+    { name: "آلية المرشات (الارتفاع العالي)", ref: "NFPA 13", req: "نوع ESFR، بحد أدنى K-25", priority: "Critical", status: "Upgrade Required" },
     { name: "الإضاءة - مناطق التخزين", ref: "EN 12464-1", req: "≥ 200 لوكس؛ الاستلام/الجودة ≥ 400 لوكس", priority: "Medium", status: "Compliant" },
     { name: "منطقة المخزن المؤقت للاستلام", ref: "GS1 Distribution", req: "≥ 15% من مساحة الاستلام", priority: "High", status: "Compliant" },
     { name: "رصيف مراقبة الجودة", ref: "ISO 9001:2015", req: "منطقة مخصصة ≥ 5% بالقرب من الاستلام", priority: "High", status: "Compliant" },
@@ -52,10 +52,10 @@ const WarehouseMaps = () => {
   const proposalCards = [
     { title: "ترقية ارتفاع السقف", subtitle: "Ceiling Height Upgrade", icon: "arrowUpTray", priority: "High", details: ["رفع سقف E-5 إلى 12 متر", "رفع سقف مستودعات التخزين إلى 9.5 متر", "دعم إنشائي للأسقف المرفوعة"] },
     { title: "إنشاء منصات الدوك", subtitle: "Dock Platform Construction", icon: "truck", priority: "Critical", details: ["بناء منصات بارتفاع 1.20 متر", "تركيب Dock Levelers هيدروليكية", "تركيب أبواب رول سريعة"] },
-    { title: "تركيب نظام الرفوف الانتقائي", subtitle: "Selective Pallet Racking", icon: "grid", priority: "High", details: ["أعمدة فولاذية زرقاء وقوائم برتقالية", "حواجز حماية القواعد (Column Guards)", "سعة حمولة تصل إلى 5 طن لكل مستوى"] },
+    { title: "تركيب هيكل الرفوف الانتقائي", subtitle: "Selective Pallet Racking", icon: "grid", priority: "High", details: ["أعمدة فولاذية زرقاء وقوائم برتقالية", "حواجز حماية القواعد (Column Guards)", "سعة حمولة تصل إلى 5 طن لكل مستوى"] },
     { title: "تصميم التدفق والمساحات", subtitle: "Buffer Zone & Flow Design", icon: "workflows", priority: "Medium", details: ["تخصيص مناطق بفر للاستلام والشحن", "مسارات حركة مخصصة للرافعات", "تحسين سعة الاستيعاب اللوجستي"] },
-    { title: "أنظمة السلامة والأمان", subtitle: "Safety Systems", icon: "clipboardList", priority: "Critical", details: ["تركيب رشاشات ESFR متطورة", "نظام إنذار حريق ذكي", "إضاءة طوارئ ولوحات إرشادية"] },
-    { title: "التحول الرقمي WMS", subtitle: "WMS Integration (Odoo)", icon: "package", priority: "Medium", details: ["ربط كامل مع نظام Odoo ERP", "تتبع الباركود لكل موقع تخزين", "إدارة حركة المخزون لحظياً"] },
+    { title: "تجهيزات السلامة والأمان", subtitle: "Safety Systems", icon: "clipboardList", priority: "Critical", details: ["تركيب رشاشات ESFR متطورة", "آلية إنذار حريق ذكي", "إضاءة طوارئ ولوحات إرشادية"] },
+    { title: "التحول الرقمي WMS", subtitle: "WMS Integration (Odoo)", icon: "package", priority: "Medium", details: ["ربط كامل مع بيئة Odoo ERP", "تتبع الباركود لكل موقع تخزين", "إدارة حركة المخزون لحظياً"] },
   ];
 
   const stats = useMemo(() => {
@@ -312,10 +312,10 @@ const WarehouseMaps = () => {
           <div className="space-y-3">
              {[
                { label: "ارتفاع السقف (Class A)", ok: dimensions.clearHeight >= 12, val: `${dimensions.clearHeight}م` },
-               { label: "نظام الرشاشات ESFR", ok: dimensions.clearHeight >= 10, val: dimensions.clearHeight >= 10 ? "مطلوب" : "اختياري" },
+               { label: "آلية الرشاشات ESFR", ok: dimensions.clearHeight >= 10, val: dimensions.clearHeight >= 10 ? "مطلوب" : "اختياري" },
                { label: "أرضية إيبوكسي صناعي", ok: dimensions.flooring.includes("إيبوكسي"), val: "مطابق" },
                { label: "سعة التخزين المستهدفة", ok: stats.estPallets > 15000, val: `${stats.estPallets.toLocaleString()}` },
-               { label: "نظام التخزين", ok: true, val: dimensions.rackingSystem },
+               { label: "آلية التخزين", ok: true, val: dimensions.rackingSystem },
                { label: "مستويات الرفوف", ok: true, val: `${stats.rackLevels}` },
              ].map((item, i) => (
                <div key={i} className="flex items-center justify-between text-sm">
@@ -373,7 +373,7 @@ const WarehouseMaps = () => {
           {[
             { phase: "المرحلة الأولى", title: "الهدم والإنشاءات", time: "شهر 1", items: ["رفع الأسقف", "تدعيم القواعد"] },
             { phase: "المرحلة الثانية", title: "البنية التحتية", time: "شهر 2", items: ["تركيب الأرصفة", "صب الأرضيات"] },
-            { phase: "المرحلة الثالثة", title: "الأنظمة الفنية", time: "شهر 3", items: ["أنظمة الحرائق", "نظام الرفوف"] },
+            { phase: "المرحلة الثالثة", title: "التجهيزات الفنية", time: "شهر 3", items: ["آليات الحرائق", "هيكل الرفوف"] },
             { phase: "المرحلة الرابعة", title: "التشغيل والرقمنة", time: "شهر 4", items: ["تكامل Odoo", "التدريب الميداني"] },
           ].map((step, i) => (
             <div key={i} className="relative z-10 bg-brand-navy/30 border border-white/5 p-5 rounded-xl">
@@ -579,11 +579,11 @@ const WarehouseMaps = () => {
           </div>
           <div className="bg-white/5 p-4 rounded-xl border border-white/5">
             <div className="text-brand-yellow font-bold text-sm mb-2">Dock Shelters</div>
-            <p className="text-[10px] text-gray-300">نظام عزل حراري يحيط بفتحة الشاحنة للحفاظ على حرارة المستودع ومنع دخول الغبار.</p>
+            <p className="text-[10px] text-gray-300">آلية عزل حراري تحيط بفتحة الشاحنة للحفاظ على حرارة المستودع ومنع دخول الغبار.</p>
           </div>
           <div className="bg-white/5 p-4 rounded-xl border border-white/5">
             <div className="text-brand-yellow font-bold text-sm mb-2">Safety Lights</div>
-            <p className="text-[10px] text-gray-300">نظام إضاءة إشاري (أحمر/أخضر) لتنظيم حركة دخول وخروج الشاحنات بأمان.</p>
+            <p className="text-[10px] text-gray-300">آلية إضاءة إشارية (أحمر/أخضر) لتنظيم حركة دخول وخروج الشاحنات بأمان.</p>
           </div>
         </div>
       </div>
@@ -596,15 +596,14 @@ const WarehouseMaps = () => {
         @media print {
           @page {
             size: A4;
-            margin: 10mm;
+            margin: 15mm;
           }
 
           html, body {
-            background-color: #0f1923 !important;
+            background-color: white !important;
+            color: black !important;
             margin: 0 !important;
             padding: 0 !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
           }
 
           .no-print, .dashboard-sidebar, .nav-header, .tab-buttons, aside {
@@ -612,78 +611,132 @@ const WarehouseMaps = () => {
           }
 
           #report-container {
-            background-color: #0f1923 !important;
-            color: #e5e7eb !important;
-            padding: 20px !important;
-            width: 100% !important;
-            min-height: 100vh !important;
-            display: block !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-
-          /* Force background preservation for elements, overriding global aggressive resets */
-          #report-container * {
-            background-color: transparent !important;
-            border-color: rgba(255, 255, 255, 0.1) !important;
-            color: inherit !important;
-            box-shadow: none !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-
-          /* Restore major background colors with high specificity */
-          #report-container div.bg-brand-navy,
-          #report-container div.bg-gradient-to-r,
-          #report-container div.bg-gradient-to-br {
-            background-color: #1a1a2e !important;
-          }
-
-          #report-container div.bg-\[\#141f2e\],
-          #report-container section.bg-\[\#141f2e\] {
-            background-color: #141f2e !important;
-          }
-
-          #report-container div.bg-\[\#0f1923\] {
-            background-color: #0f1923 !important;
-          }
-
-          #report-container div.bg-white\/5 {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-          }
-
-          #report-container .bg-brand-red { background-color: #c0392b !important; }
-          #report-container .bg-brand-yellow { background-color: #e8b830 !important; }
-
-          /* Text colors with high specificity */
-          #report-container .text-white { color: #ffffff !important; }
-          #report-container .text-brand-yellow,
-          #report-container .text-brand-gold { color: #e8b830 !important; }
-          #report-container .text-brand-red { color: #c0392b !important; }
-          #report-container .text-gray-300 { color: #d1d5db !important; }
-          #report-container .text-gray-400 { color: #9ca3af !important; }
-          #report-container .text-green-400 { color: #4ade80 !important; }
-
-          /* SVG specific preservation */
-          #report-container svg rect { fill-opacity: 1 !important; stroke-opacity: 1 !important; }
-          #report-container svg text { fill: white !important; fill-opacity: 1 !important; }
-          #report-container svg line { stroke-opacity: 1 !important; }
-
-          .card, section, .animate-fade-in { break-inside: avoid; }
-
-          /* Page breaks for sections */
-          .print-section-break {
-            break-before: page !important;
-            padding-top: 20px !important;
-          }
-
-          /* Ensure main content is visible and fills page */
-          main {
-            margin: 0 !important;
+            background-color: white !important;
+            color: black !important;
             padding: 0 !important;
             width: 100% !important;
-            max-width: 100% !important;
+            display: block !important;
+            direction: rtl !important;
           }
+
+          /* Reset all backgrounds for ink-friendly printing */
+          #report-container * {
+            background-color: transparent !important;
+            color: black !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            border-color: #eee !important;
+          }
+
+          /* Section headers and decorative elements */
+          .bg-gradient-to-r {
+            background: white !important;
+            border-bottom: 3px solid #c0392b !important;
+            border-radius: 0 !important;
+            padding: 0 0 20px 0 !important;
+            margin-bottom: 30px !important;
+          }
+
+          .bg-gradient-to-r h2 {
+            color: black !important;
+            font-size: 24pt !important;
+          }
+
+          .bg-gradient-to-r p {
+            color: #333 !important;
+            font-size: 12pt !important;
+          }
+
+          .text-brand-red { color: #c0392b !important; }
+          .text-brand-yellow, .text-brand-gold { color: #b08d20 !important; }
+          .text-green-400, .text-green-500 { color: #1e7e34 !important; }
+          .text-gray-300, .text-gray-400 { color: #555 !important; }
+
+          /* Cards in report mode */
+          #report-container .bg-\[\#141f2e\],
+          #report-container .bg-white\/5,
+          #report-container .bg-brand-navy\/20,
+          #report-container .bz-card-dark {
+            background-color: #fafafa !important;
+            border: 1px solid #ccc !important;
+            border-radius: 12px !important;
+            padding: 20px !important;
+            break-inside: avoid;
+          }
+
+          /* Table optimization */
+          table {
+            border: 1px solid #444 !important;
+            width: 100% !important;
+            margin: 15px 0 !important;
+          }
+          th {
+            background-color: #f0f0f0 !important;
+            border: 1px solid #444 !important;
+            color: black !important;
+            font-weight: bold !important;
+            padding: 10px !important;
+          }
+          td {
+            border: 1px solid #eee !important;
+            padding: 8px !important;
+          }
+
+          /* SVG adjustments for white background */
+          #report-container svg {
+            background-color: #fff !important;
+            border: 1px solid #eee !important;
+            margin: 10px auto !important;
+            display: block !important;
+          }
+          #report-container svg rect {
+            stroke-width: 1.5px !important;
+          }
+          #report-container svg text {
+            fill: black !important;
+            font-weight: 700 !important;
+            font-size: 12px !important;
+          }
+          #report-container svg line {
+            stroke: #666 !important;
+            stroke-width: 1px !important;
+          }
+
+          /* Site maps specifics */
+          svg rect[fill="#1a2840"], svg rect[fill="#141f2e"] {
+             fill: #f9f9f9 !important;
+             stroke: #999 !important;
+          }
+
+          /* Ensure enough contrast for the warehouse colors in SVG */
+          #report-container svg rect[fill] {
+            fill-opacity: 0.15 !important;
+            stroke: #444 !important;
+          }
+
+          .print-section-break {
+            break-before: page !important;
+            padding-top: 30px !important;
+            border-top: 1px solid #eee !important;
+            margin-top: 30px !important;
+          }
+
+          h2, h3, h4 {
+            color: #000 !important;
+            border-right: 4px solid #c0392b !important;
+            padding-right: 15px !important;
+            margin-bottom: 20px !important;
+            page-break-after: avoid;
+          }
+
+          /* KPI highlights */
+          .bg-brand-red\/20 { background-color: #fee2e2 !important; border: 1px solid #f87171 !important; }
+          .bg-brand-yellow\/20 { background-color: #fef3c7 !important; border: 1px solid #fbbf24 !important; }
+
+          /* Fix for Icon component in print */
+          #report-container svg.text-brand-red { stroke: #c0392b !important; fill: none !important; }
+          #report-container svg.text-brand-yellow { stroke: #b08d20 !important; fill: none !important; }
+          #report-container svg.text-green-400 { stroke: #1e7e34 !important; fill: none !important; }
         }
       `}} />
       {/* Header */}
@@ -757,7 +810,7 @@ const WarehouseMaps = () => {
             <div className="space-y-3">
               {[
                 { label: "ارتفاع السقف (Class A)", ok: dimensions.clearHeight >= 12, val: `${dimensions.clearHeight}م` },
-                { label: "نظام الرشاشات ESFR", ok: dimensions.clearHeight >= 10, val: dimensions.clearHeight >= 10 ? "مطلوب" : "اختياري" },
+                { label: "آلية الرشاشات ESFR", ok: dimensions.clearHeight >= 10, val: dimensions.clearHeight >= 10 ? "مطلوب" : "اختياري" },
                 { label: "أرضية إيبوكسي صناعي", ok: dimensions.flooring.includes("إيبوكسي"), val: "مطابق" },
                 { label: "سعة التخزين المستهدفة", ok: stats.estPallets > 15000, val: `${stats.estPallets.toLocaleString()}` },
               ].map((item, i) => (
@@ -808,7 +861,7 @@ const WarehouseMaps = () => {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-gray-300">نظام التخزين</label>
+                <label className="text-xs text-gray-300">آلية التخزين</label>
                 <select value={dimensions.rackingSystem} onChange={e => setDimensions({...dimensions, rackingSystem: e.target.value})} className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm focus:border-brand-yellow outline-none">
                   <option>Selective Pallet Racking</option>
                   <option>Drive-In Racking</option>
