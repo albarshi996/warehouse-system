@@ -290,6 +290,8 @@
             <th class="p-4 border-b border-white/10">المنصب (Position)</th>
             <th class="p-4 border-b border-white/10">المرحلة الأولى (Phase 1)</th>
             <th class="p-4 border-b border-white/10">المرحلة الثانية (Phase 2)</th>
+            <th class="p-4 border-b border-white/10 no-print">تاريخ التوظيف المقترح<br><span class="text-[10px] opacity-70">(Proposed Hiring Date)</span></th>
+            <th class="p-4 border-b border-white/10">الراتب الشهري (SAR)<br><span class="text-[10px] opacity-70">Monthly Salary</span></th>
             <th class="p-4 border-b border-white/10">الأولوية</th>
             <th class="p-4 border-b border-white/10">ملاحظات</th>
             <th class="p-4 border-b border-white/10">الإجراءات</th>
@@ -317,6 +319,22 @@
     </p>
   </footer>
 
+  <!-- Job Description Modal -->
+  <div id="jobModal" class="modal-overlay no-print">
+    <div class="bg-[#1a1a3e] border-2 border-[#e8b830] p-0 rounded-2xl max-w-2xl w-full shadow-2xl mx-4 overflow-hidden">
+      <div class="bg-[#e8b830] p-4 flex justify-between items-center">
+        <h3 id="jobModalTitle" class="text-xl font-black text-[#1a1a3e]"></h3>
+        <button onclick="closeJobModal()" class="text-[#1a1a3e] hover:scale-110 transition-transform text-2xl font-bold">&times;</button>
+      </div>
+      <div id="jobModalContent" class="p-6 max-h-[70vh] overflow-y-auto text-right">
+        <!-- Content injected by JS -->
+      </div>
+      <div class="p-4 border-t border-white/10 flex justify-end">
+        <button onclick="closeJobModal()" class="px-6 py-2 bg-[#c0392b] text-white font-bold rounded-xl hover:bg-red-700 transition-all">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Overlay -->
   <div id="deleteModal" class="modal-overlay no-print">
     <div class="bg-brand-navy border-2 border-brand-gold p-8 rounded-2xl max-w-md w-full text-center shadow-2xl mx-4">
@@ -338,22 +356,252 @@
 
   <script>
     const STORAGE_KEY = 'brandzo_staffing_rows';
+
+    const JOB_DATA = {
+      "مدير المستودعات": {
+        titleEn: "Warehouse Manager",
+        dept: "إدارة المستودعات",
+        duties: [
+          "الإشراف العام على كافة أنشطة المستودعات وعملياتها اليومية والاستراتيجية",
+          "وضع الاستراتيجيات التشغيلية قصيرة وطويلة المدى وتحديثها دورياً",
+          "إدارة الميزانية التشغيلية للمستودعات ومراقبة الإنفاق وترشيد التكاليف",
+          "التنسيق مع إدارة سلاسل الإمداد واللوجستيات والأقسام الأخرى",
+          "اعتماد السياسات والإجراءات الرئيسية وضمان تطبيقها",
+          "التنسيق مع الإدارة التجارية بوصفها حلقة الوصل مع الموردين الكبار",
+          "الإشراف المباشر على تطبيق وتطوير نظام Odoo ERP"
+        ],
+        qualifications: "بكالوريوس إدارة سلاسل إمداد / هندسة صناعية + خبرة 10 سنوات",
+        odooRole: "Inventory Manager (Admin)"
+      },
+      "مدير سلاسل الإمداد واللوجستيات": {
+        titleEn: "Supply Chain Manager",
+        dept: "إدارة المستودعات",
+        duties: [
+          "إدارة وتخطيط سلاسل الإمداد بالكامل من المورد وحتى العميل النهائي",
+          "الإشراف على العمليات اللوجستية والتوزيع اليومي بين المستودعات والفروع",
+          "تنسيق عمليات النقل والشحن مع إدارة الأسطول وشركات النقل الخارجية",
+          "الإشراف المباشر على فريق الخدمات والصيانة وفريق الحركة والأمن والعمالة",
+          "إدارة علاقات شركات النقل والخدمات اللوجستية الخارجية وتجديد العقود",
+          "الإشراف على نظام تتبع الشحنات والتسليمات في وقت حقيقي"
+        ],
+        qualifications: "بكالوريوس لوجستيات / إدارة أعمال + خبرة 8 سنوات",
+        odooRole: "System Administrator"
+      },
+      "مدير قسم الحركة والنقل والعمالة": {
+        titleEn: "Fleet & Labor Manager",
+        dept: "قسم الحركة والنقل",
+        duties: [
+          "تخطيط مسارات التوزيع وجداول الرحلات اليومية",
+          "متابعة الرحلات في الوقت الحقيقي وحل المشكلات الميدانية",
+          "إدارة فريق السائقين ومساعديهم وضمان كفاءة الأداء",
+          "الإشراف على صيانة الأسطول وجاهزية المركبات",
+          "توثيق عمليات التسليم والحصول على التوقيعات اللازمة",
+          "إدارة العمالة الميدانية وتوزيع المهام اليومية"
+        ],
+        qualifications: "دبلوم/بكالوريوس إدارة + خبرة في إدارة الأساطيل",
+        odooRole: "Fleet User"
+      },
+      "موظفو الحركة والنقل": {
+        titleEn: "Fleet Staff",
+        dept: "قسم الحركة والنقل",
+        duties: [
+          "تنفيذ رحلات التوزيع والتسليم للفروع والعملاء",
+          "المساعدة في عمليات التحميل والتفريغ والتوثيق",
+          "الحفاظ على سلامة الشحنة والمركبة أثناء النقل",
+          "الالتزام بجدول المواعيد والمسارات المحددة",
+          "الإبلاغ الفوري عن أي أعطال أو تأخيرات"
+        ],
+        qualifications: "رخصة قيادة نقل ثقيل/متوسط + القدرة على القراءة والكتابة",
+        odooRole: "Fleet User"
+      },
+      "مدير قسم الجودة": {
+        titleEn: "Quality Manager",
+        dept: "قسم الجودة",
+        duties: [
+          "الإشراف على جميع فرق فحص الجودة المتخصصة",
+          "وضع وتطوير معايير الفحص والقبول للمنتجات",
+          "إدارة دورة المرتجعات وفحص حالتها الفنية",
+          "إصدار شهادات المطابقة ورفع تقارير عدم المطابقة",
+          "ضمان الامتثال لمعايير السلامة الغذائية والصحية"
+        ],
+        qualifications: "بكالوريوس جودة / علوم أغذية + خبرة 7 سنوات",
+        odooRole: "Quality Administrator"
+      },
+      "موظفو الجودة": {
+        titleEn: "Quality Inspectors",
+        dept: "قسم الجودة",
+        duties: [
+          "فحص الشحنات الواردة ومطابقتها للمواصفات",
+          "التحقق من درجات الحرارة وصلاحية المنتجات",
+          "توثيق نتائج الفحص في نظام Odoo",
+          "فحص المرتجعات وتصنيف حالتها (سليم/تالف)",
+          "مراقبة نظافة المستودع وسلامة التخزين"
+        ],
+        qualifications: "دبلوم فني / رقابة جودة",
+        odooRole: "Quality User"
+      },
+      "مدير قسم الأمن الصناعي": {
+        titleEn: "Industrial Security Manager",
+        dept: "الأمن الصناعي",
+        duties: [
+          "وضع الخطط الأمنية وحماية المنشأة والممتلكات",
+          "الإشراف على فرق الحراسة وأنظمة المراقبة",
+          "تطبيق إجراءات السلامة والصحة المهنية",
+          "التحقيق في الحوادث الأمنية وإعداد التقارير",
+          "التنسيق مع الجهات الأمنية الخارجية"
+        ],
+        qualifications: "خبرة في الأمن الصناعي / دورات متخصصة في السلامة",
+        odooRole: "Inventory User (Read-only)"
+      },
+      "موظفو الأمن الصناعي": {
+        titleEn: "Security Staff",
+        dept: "الأمن الصناعي",
+        duties: [
+          "مراقبة المداخل والمخارج والتحقق من التصاريح",
+          "تفتيش المركبات والأفراد وفق السياسة المتبعة",
+          "مراقبة كاميرات النظام والتبليغ عن المخالفات",
+          "القيام بجولات تفتيشية داخل وخارج المستودع",
+          "التدخل السريع في حالات الطوارئ"
+        ],
+        qualifications: "لياقة بدنية + حسن سيرة وسلوك",
+        odooRole: "Inventory User (Read-only)"
+      },
+      "مدير قسم إدخال النظام": {
+        titleEn: "Data Entry Manager",
+        dept: "إدخال البيانات",
+        duties: [
+          "الإشراف على دقة وتوقيت إدخال البيانات في Odoo",
+          "مراجعة المطابقات بين المستندات الورقية والقيود الرقمية",
+          "استخراج التقارير الدورية وتحليل فجوات البيانات",
+          "تدريب الموظفين على استخدام واجهات النظام",
+          "ضمان تكامل البيانات بين الأقسام المختلفة"
+        ],
+        qualifications: "بكالوريوس تقنية معلومات / إدارة أعمال",
+        odooRole: "Inventory Manager (User)"
+      },
+      "موظفو إدخال النظام": {
+        titleEn: "Data Entry Clerks",
+        dept: "إدخال البيانات",
+        duties: [
+          "تسجيل عمليات الاستلام والصرف في النظام",
+          "تحديث رصيد المخزون ومواقع التخزين",
+          "إصدار أذونات التسليم وقوائم التعبئة",
+          "أرشفة المستندات الورقية إلكترونياً",
+          "تصحيح الأخطاء المدخلة بالتنسيق مع المشرف"
+        ],
+        qualifications: "إجادة استخدام الحاسب الآلي + سرعة الكتابة",
+        odooRole: "Inventory User"
+      },
+      "مدير قسم الاستلامات": {
+        titleEn: "Receiving Manager",
+        dept: "قسم الاستلام",
+        duties: [
+          "إدارة عمليات استلام الشحنات وجدولة الموردين",
+          "التنسيق مع المشتريات والجودة لضمان مطابقة الشحنات",
+          "تحسين كفاءة منطقة الرصيف وتقليل وقت التفريغ",
+          "الإشراف على فريق العمل وتوزيع المهام",
+          "اعتماد مستندات الاستلام النهائية (GRN)"
+        ],
+        qualifications: "خبرة في إدارة العمليات المستودعية (الاستلام)",
+        odooRole: "Inventory User (Manager)"
+      },
+      "موظفو الاستلامات": {
+        titleEn: "Receiving Staff",
+        dept: "قسم الاستلام",
+        duties: [
+          "تفريغ الشحنات وفرزها حسب الأصناف",
+          "مطابقة الكميات الفعلية مع Packing List",
+          "وضع ملصقات الباركود وتجهيز البضاعة للتخزين",
+          "الإبلاغ عن أي نقص أو تلف ظاهري فوراً",
+          "استخدام الماسحات اليدوية لتوثيق الاستلام"
+        ],
+        qualifications: "قدرة على العمل البدني + إلمام بالباركود",
+        odooRole: "Inventory User"
+      },
+      "مدير قسم التخزين والصرف والمرتجعات": {
+        titleEn: "Warehouse Ops Manager",
+        dept: "التخزين والصرف",
+        duties: [
+          "تحسين سعة التخزين وتخطيط المواقع (Space Optimization)",
+          "الإشراف على عمليات السحب (Picking) والتعبئة",
+          "إدارة عمليات الجرد الدوري والمفاجئ",
+          "تطبيق سياسة FEFO بصرامة",
+          "إدارة معالجة المرتجعات وإعادة دمجها أو إتلافها"
+        ],
+        qualifications: "خبرة 8 سنوات في إدارة المستودعات",
+        odooRole: "Inventory User (Manager)"
+      },
+      "موظفو التخزين والصرف والمرتجعات والسحب": {
+        titleEn: "Warehouse Staff",
+        dept: "التخزين والصرف",
+        duties: [
+          "نقل البضاعة لمواقع التخزين المحددة",
+          "سحب الطلبيات حسب قوائم السحب (Picking Lists)",
+          "تعبئة وتغليف الطلبات للشحن",
+          "المشاركة في عمليات الجرد وتصحيح المواقع",
+          "التعامل مع المرتجعات وفرزها"
+        ],
+        qualifications: "معرفة بأنظمة المستودعات + رخصة رافعة شوكية (للبعض)",
+        odooRole: "Barcode/Inventory User"
+      },
+      "موظف المالية": {
+        titleEn: "Finance Officer",
+        dept: "المالية",
+        duties: [
+          "مطابقة فواتير الموردين مع أوامر الشراء والاستلامات",
+          "مراقبة التكاليف التشغيلية للمستودع",
+          "المشاركة في جرد المخزون والتدقيق المالي",
+          "إصدار الإشعارات الدائنة والمدينة",
+          "رفع التقارير المالية لإدارة المالية المركزية"
+        ],
+        qualifications: "بكالوريوس محاسبة + خبرة 3-5 سنوات",
+        odooRole: "Accounting Manager (User)"
+      },
+      "موظف المشتريات": {
+        titleEn: "Procurement Officer",
+        dept: "المشتريات",
+        duties: [
+          "إصدار أوامر الشراء بناءً على طلبات المستودع",
+          "متابعة الموردين وضمان التزامهم بمواعيد التوريد",
+          "تحديث أسعار الأصناف وبيانات الموردين",
+          "التنسيق لحل مشاكل الشحنات المرفوضة",
+          "إعداد تقارير أداء الموردين"
+        ],
+        qualifications: "بكالوريوس إدارة / مبيعات + خبرة في المشتريات",
+        odooRole: "Purchase User"
+      },
+      "موظف تقنية المعلومات": {
+        titleEn: "IT Specialist",
+        dept: "إدارة التقنية (IT Department)",
+        duties: [
+          "تقديم الدعم التقني اليومي لجميع مستخدمي النظام (Odoo، أجهزة الباركود، الأجهزة)",
+          "إدارة حسابات المستخدمين وصلاحياتهم في Odoo",
+          "متابعة أداء الشبكة والأجهزة وضمان استمرارية العمل",
+          "تنسيق طلبات الصيانة والتطوير مع مدير تقنية المعلومات",
+          "توثيق المشكلات التقنية والحلول في سجل الدعم",
+          "تدريب المستخدمين الجدد على استخدام النظام وفقاً لتعليمات الإدارة"
+        ],
+        qualifications: "بكالوريوس تقنية معلومات / علوم حاسب + خبرة في دعم ERP",
+        odooRole: "System User / Technical Support"
+      }
+    };
     const DEFAULT_DATA = [
-      { id: 1, position: 'مدير المستودعات', phase1: '1', phase2: '1 لكل فرع', priority: '🔴 حرجة', notes: 'أول توظيف' },
-      { id: 2, position: 'مدير قسم الحركة والنقل والعمالة', phase1: '1', phase2: '1+', priority: '🔴 حرجة', notes: 'مع مدير المستودعات' },
-      { id: 3, position: 'موظفو الحركة والنقل', phase1: '5–10', phase2: '30–50', priority: '🟡 عالية', notes: '' },
-      { id: 4, position: 'مدير قسم الجودة', phase1: 'مشترك', phase2: '1', priority: '🟡 عالية', notes: 'بالتنسيق مع إدارة الجودة' },
-      { id: 5, position: 'موظفو الجودة', phase1: '2–3', phase2: '10–15', priority: '🟡 عالية', notes: '' },
-      { id: 6, position: 'مدير قسم الأمن الصناعي', phase1: '1', phase2: '1', priority: '🟡 عالية', notes: '' },
-      { id: 7, position: 'موظفو الأمن الصناعي', phase1: '3–5', phase2: '10–20', priority: '🟡 عالية', notes: '' },
-      { id: 8, position: 'مدير قسم إدخال النظام', phase1: '1', phase2: '1', priority: '🟢 عادية', notes: '' },
-      { id: 9, position: 'موظفو إدخال النظام', phase1: '2–3', phase2: '5–8', priority: '🟢 عادية', notes: '' },
-      { id: 10, position: 'مدير قسم الاستلامات', phase1: '1', phase2: '1', priority: '🔴 حرجة', notes: '' },
-      { id: 11, position: 'موظفو الاستلامات', phase1: '5–8', phase2: '20–30', priority: '🔴 حرجة', notes: '' },
-      { id: 12, position: 'مدير قسم التخزين والصرف والمرتجعات', phase1: '1', phase2: '1', priority: '🔴 حرجة', notes: '' },
-      { id: 13, position: 'موظفو التخزين والصرف والمرتجعات والسحب', phase1: '10–15', phase2: '50–80', priority: '🔴 حرجة', notes: '' },
-      { id: 14, position: 'موظف المالية', phase1: '1', phase2: '1–2', priority: '🟡 عالية', notes: 'بالتنسيق مع الإدارة المالية' },
-      { id: 15, position: 'موظف المشتريات', phase1: '1', phase2: '1–2', priority: '🟡 عالية', notes: 'بالتنسيق مع الإدارة التجارية' }
+      { id: 1, position: 'مدير المستودعات', phase1: '1', phase2: '1 لكل فرع', hiringDate: '2026-07-01', salary: 18000, priority: '🔴 حرجة', notes: 'أول توظيف' },
+      { id: 2, position: 'مدير قسم الحركة والنقل والعمالة', phase1: '1', phase2: '1+', hiringDate: '2026-07-15', salary: 12000, priority: '🔴 حرجة', notes: 'مع مدير المستودعات' },
+      { id: 3, position: 'موظفو الحركة والنقل', phase1: '5–10', phase2: '30–50', hiringDate: '2026-08-01', salary: 6000, priority: '🟡 عالية', notes: '' },
+      { id: 4, position: 'مدير قسم الجودة', phase1: 'مشترك', phase2: '1', hiringDate: '2026-07-01', salary: 12000, priority: '🟡 عالية', notes: 'بالتنسيق مع إدارة الجودة' },
+      { id: 5, position: 'موظفو الجودة', phase1: '2–3', phase2: '10–15', hiringDate: '2026-08-15', salary: 7000, priority: '🟡 عالية', notes: '' },
+      { id: 6, position: 'مدير قسم الأمن الصناعي', phase1: '1', phase2: '1', hiringDate: '2026-07-01', salary: 10000, priority: '🟡 عالية', notes: '' },
+      { id: 7, position: 'موظفو الأمن الصناعي', phase1: '3–5', phase2: '10–20', hiringDate: '2026-09-01', salary: 5000, priority: '🟡 عالية', notes: '' },
+      { id: 8, position: 'مدير قسم إدخال النظام', phase1: '1', phase2: '1', hiringDate: '2026-07-01', salary: 10000, priority: '🟢 عادية', notes: '' },
+      { id: 9, position: 'موظفو إدخال النظام', phase1: '2–3', phase2: '5–8', hiringDate: '2026-08-01', salary: 8000, priority: '🟢 عادية', notes: '' },
+      { id: 10, position: 'مدير قسم الاستلامات', phase1: '1', phase2: '1', hiringDate: '2026-07-01', salary: 11000, priority: '🔴 حرجة', notes: '' },
+      { id: 11, position: 'موظفو الاستلامات', phase1: '5–8', phase2: '20–30', hiringDate: '2026-08-01', salary: 5500, priority: '🔴 حرجة', notes: '' },
+      { id: 12, position: 'مدير قسم التخزين والصرف والمرتجعات', phase1: '1', phase2: '1', hiringDate: '2026-07-01', salary: 11000, priority: '🔴 حرجة', notes: '' },
+      { id: 13, position: 'موظفو التخزين والصرف والمرتجعات والسحب', phase1: '10–15', phase2: '50–80', hiringDate: '2026-08-01', salary: 5000, priority: '🔴 حرجة', notes: '' },
+      { id: 14, position: 'موظف المالية', phase1: '1', phase2: '1–2', hiringDate: '2026-07-01', salary: 9000, priority: '🟡 عالية', notes: 'بالتنسيق مع الإدارة المالية' },
+      { id: 15, position: 'موظف المشتريات', phase1: '1', phase2: '1–2', hiringDate: '2026-07-01', salary: 9000, priority: '🟡 عالية', notes: 'بالتنسيق مع الإدارة التجارية' },
+      { id: 16, position: 'موظف تقنية المعلومات', phase1: '1 موظف', phase2: 'فريق دعم تقني (2–3)', hiringDate: '2027-01-01', salary: 9000, priority: '🟡 عالية', notes: 'يتبع إدارة التقنية — يقدم دعماً تقنياً لجميع أقسام المستودع' }
     ];
 
     let staffingRows = [];
@@ -388,6 +636,8 @@
             <td class="p-4 border-b border-white/5"><input type="text" class="edit-input font-bold" id="edit-pos"></td>
             <td class="p-4 border-b border-white/5"><input type="text" class="edit-input" id="edit-p1"></td>
             <td class="p-4 border-b border-white/5"><input type="text" class="edit-input" id="edit-p2"></td>
+            <td class="p-4 border-b border-white/5 no-print"><input type="date" class="edit-input" id="edit-date"></td>
+            <td class="p-4 border-b border-white/5"><input type="number" class="edit-input" id="edit-salary"></td>
             <td class="p-4 border-b border-white/5">
               <select id="edit-priority" class="bg-brand-navy border border-brand-gold text-white rounded p-1 text-xs w-full">
                 <option value="🔴 حرجة">🔴 حرجة</option>
@@ -406,6 +656,8 @@
           tr.querySelector('#edit-pos').value = row.position;
           tr.querySelector('#edit-p1').value = row.phase1;
           tr.querySelector('#edit-p2').value = row.phase2;
+          tr.querySelector('#edit-date').value = row.hiringDate || '';
+          tr.querySelector('#edit-salary').value = row.salary || 0;
           tr.querySelector('#edit-priority').value = row.priority;
           tr.querySelector('#edit-notes').value = row.notes;
         } else {
@@ -417,10 +669,13 @@
             <td class="p-4 border-b border-white/5 font-bold text-white"></td>
             <td class="p-4 border-b border-white/5"></td>
             <td class="p-4 border-b border-white/5"></td>
+            <td class="p-4 border-b border-white/5 no-print"></td>
+            <td class="p-4 border-b border-white/5"></td>
             <td class="p-4 border-b border-white/5"><span class="${priorityClass} px-2 py-1 rounded text-xs"></span></td>
             <td class="p-4 border-b border-white/5"></td>
             <td class="p-4 border-b border-white/5 no-print">
               <div class="flex gap-2">
+                <button onclick="showJobCard('${row.position}')" class="text-blue-400 hover:scale-110 transition-transform" title="بطاقة الوصف الوظيفي">ℹ️</button>
                 <button onclick="toggleEdit(${index})" class="text-brand-gold hover:scale-110 transition-transform" title="تعديل">✏️</button>
                 <button onclick="confirmDelete(${index})" class="text-brand-red hover:scale-110 transition-transform" title="حذف">🗑️</button>
               </div>
@@ -430,8 +685,10 @@
           cells[1].textContent = row.position;
           cells[2].textContent = row.phase1;
           cells[3].textContent = row.phase2;
-          cells[4].querySelector('span').textContent = row.priority;
-          cells[5].textContent = row.notes;
+          cells[4].textContent = row.hiringDate || '';
+          cells[5].textContent = (row.salary || 0).toLocaleString() + ' SAR';
+          cells[6].querySelector('span').textContent = row.priority;
+          cells[7].textContent = row.notes;
         }
         tbody.appendChild(tr);
       });
@@ -442,6 +699,8 @@
     function calculateTotals() {
       let p1TotalMin = 0, p1TotalMax = 0;
       let p2TotalMin = 0, p2TotalMax = 0;
+      let p1SalaryTotal = 0;
+      let p2SalaryTotal = 0;
 
       staffingRows.forEach(row => {
         const parseRange = (val) => {
@@ -457,20 +716,37 @@
         const [p2Min, p2Max] = parseRange(row.phase2);
         p1TotalMin += p1Min; p1TotalMax += p1Max;
         p2TotalMin += p2Min; p2TotalMax += p2Max;
+
+        // Salary estimation
+        const salary = parseFloat(row.salary) || 0;
+        if (p1Min > 0 || p1Max > 0) {
+            p1SalaryTotal += salary * (p1Max || p1Min);
+        }
+        if (p2Min > 0 || p2Max > 0) {
+            p2SalaryTotal += salary * (p2Max || p2Min);
+        }
       });
 
       const tfoot = document.getElementById('staffingTableFooter');
       tfoot.innerHTML = `
-        <tr class="bg-brand-red/20 text-white font-black">
-          <td colspan="2" class="p-6 text-center text-xl">الإجمالي التقريبي</td>
-          <td class="p-6 text-center text-xl text-brand-gold"></td>
-          <td class="p-6 text-center text-xl text-brand-gold"></td>
-          <td colspan="3"></td>
+        <tr class="bg-brand-red/20 text-white font-black border-t-2 border-brand-gold">
+          <td colspan="2" class="p-4 text-center text-lg">الإجمالي التقريبي (عدد الموظفين)</td>
+          <td class="p-4 text-center text-lg text-brand-gold"></td>
+          <td class="p-4 text-center text-lg text-brand-gold"></td>
+          <td colspan="5"></td>
+        </tr>
+        <tr class="bg-brand-navy text-white font-black">
+          <td colspan="2" class="p-4 text-center text-lg">إجمالي الرواتب التقديري (SAR)</td>
+          <td colspan="2" class="p-4 text-center text-lg text-brand-gold" id="salaryTotalsCell"></td>
+          <td colspan="5"></td>
         </tr>
       `;
-      const cells = tfoot.querySelectorAll('td');
+      const cells = tfoot.rows[0].querySelectorAll('td');
       cells[1].textContent = `${p1TotalMin}–${p1TotalMax} موظف`;
       cells[2].textContent = `${p2TotalMin}–${p2TotalMax} موظف`;
+
+      document.getElementById('salaryTotalsCell').textContent =
+        `المرحلة الأولى: ${p1SalaryTotal.toLocaleString()} | المرحلة الثانية: ${p2SalaryTotal.toLocaleString()}`;
     }
 
     function toggleEdit(index) {
@@ -487,10 +763,12 @@
       const position = document.getElementById('edit-pos').value;
       const phase1 = document.getElementById('edit-p1').value;
       const phase2 = document.getElementById('edit-p2').value;
+      const hiringDate = document.getElementById('edit-date').value;
+      const salary = parseFloat(document.getElementById('edit-salary').value) || 0;
       const priority = document.getElementById('edit-priority').value;
       const notes = document.getElementById('edit-notes').value;
 
-      staffingRows[index] = { ...staffingRows[index], position, phase1, phase2, priority, notes };
+      staffingRows[index] = { ...staffingRows[index], position, phase1, phase2, hiringDate, salary, priority, notes };
       saveData();
       editIndex = -1;
       renderTable();
@@ -503,6 +781,8 @@
         position: '',
         phase1: '',
         phase2: '',
+        hiringDate: '',
+        salary: 0,
         priority: '🟢 عادية',
         notes: ''
       };
@@ -522,6 +802,75 @@
       deletePendingIndex = -1;
       document.getElementById('deleteModal').classList.remove('active');
     }
+
+    function showJobCard(title) {
+      const data = JOB_DATA[title];
+      if (!data) {
+        showToast('❌ لا توجد بيانات لهذا المنصب', 'error');
+        return;
+      }
+
+      const modal = document.getElementById('jobModal');
+      const modalTitle = document.getElementById('jobModalTitle');
+      const modalContent = document.getElementById('jobModalContent');
+
+      modalTitle.textContent = `بطاقة الوصف الوظيفي: ${title}`;
+
+      modalContent.innerHTML = `
+        <div class="mb-6">
+          <div class="flex justify-between items-start border-b border-white/10 pb-2 mb-4">
+            <div>
+              <div class="text-[#e8b830] font-bold text-lg">${title}</div>
+              <div class="text-gray-400 text-sm italic">${data.titleEn}</div>
+            </div>
+            <div class="text-left">
+              <div class="text-gray-400 text-xs">الإدارة / التبعية</div>
+              <div class="text-white text-sm font-bold">${data.dept}</div>
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <h4 class="text-[#e8b830] font-bold mb-2 border-r-2 border-[#e8b830] pr-2">المسؤوليات الرئيسية:</h4>
+            <ul class="list-disc list-inside text-gray-200 space-y-1 pr-4">
+              ${data.duties.map(d => `<li>${d}</li>`).join('')}
+            </ul>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-white/5 p-3 rounded-lg border border-white/10">
+              <h4 class="text-[#e8b830] text-xs font-bold mb-1">المؤهلات المطلوبة:</h4>
+              <p class="text-white text-sm">${data.qualifications}</p>
+            </div>
+            <div class="bg-[#00a650]/10 p-3 rounded-lg border border-[#00a650]/30">
+              <h4 class="text-[#00a650] text-xs font-bold mb-1">دور Odoo وصلاحيات الوصول:</h4>
+              <p class="text-white text-sm font-bold">${data.odooRole}</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      modal.classList.add('active');
+    }
+
+    function closeJobModal() {
+      document.getElementById('jobModal').classList.remove('active');
+    }
+
+    // Close modals on escape key
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeJobModal();
+        closeDeleteModal();
+      }
+    });
+
+    // Close modals on clicking outside
+    window.addEventListener('click', (e) => {
+      const jobModal = document.getElementById('jobModal');
+      const deleteModal = document.getElementById('deleteModal');
+      if (e.target === jobModal) closeJobModal();
+      if (e.target === deleteModal) closeDeleteModal();
+    });
 
     document.getElementById('confirmDeleteBtn').onclick = () => {
       if (deletePendingIndex !== -1) {
@@ -543,24 +892,29 @@
     }
 
     function exportToExcel() {
-      const headers = ['#', 'Position (Arabic)', 'Phase 1', 'Phase 2', 'Priority', 'Notes'];
+      const headers = ['#', 'Position (Arabic)', 'Phase 1', 'Phase 2', 'Hiring Date', 'Monthly Salary (SAR)', 'Priority', 'Notes'];
       const data = staffingRows.map((row, i) => [
         i + 1,
         row.position,
         row.phase1,
         row.phase2,
+        row.hiringDate,
+        row.salary,
         row.priority,
         row.notes
       ]);
 
-      // Add summary row
+      // Add summary rows
       const tfoot = document.getElementById('staffingTableFooter');
-      const p1Total = tfoot.rows[0].cells[1].textContent;
-      const p2Total = tfoot.rows[0].cells[2].textContent;
-      data.push(['', 'الإجمالي التقريبي', p1Total, p2Total, '', '']);
+      const p1TotalCount = tfoot.rows[0].cells[1].textContent;
+      const p2TotalCount = tfoot.rows[0].cells[2].textContent;
+      const salaryTotals = document.getElementById('salaryTotalsCell').textContent;
+
+      data.push(['', 'الإجمالي (عدد الموظفين)', p1TotalCount, p2TotalCount, '', '', '', '']);
+      data.push(['', 'إجمالي الرواتب (SAR)', salaryTotals, '', '', '', '', '']);
 
       const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
-      ws['!cols'] = [{ wch: 5 }, { wch: 40 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 30 }];
+      ws['!cols'] = [{ wch: 5 }, { wch: 40 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 12 }, { wch: 30 }];
 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Staffing Timeline");
@@ -584,14 +938,16 @@
           const importedRows = [];
           for (let i = 1; i < rows.length; i++) {
             const r = rows[i];
-            if (r.length < 2 || r[1] === 'الإجمالي التقريبي') continue;
+            if (r.length < 2 || r[1].includes('الإجمالي')) continue;
             importedRows.push({
               id: Date.now() + i,
               position: r[1] || '',
               phase1: r[2] || '',
               phase2: r[3] || '',
-              priority: r[4] || '🟢 عادية',
-              notes: r[5] || ''
+              hiringDate: r[4] || '',
+              salary: parseFloat(r[5]) || 0,
+              priority: r[6] || '🟢 عادية',
+              notes: r[7] || ''
             });
           }
 
