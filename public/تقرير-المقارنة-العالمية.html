@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المقارنة العالمية للمستودعات — Brandzo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #0a1628;
+            --navy-mid: #112240;
+            --navy-light: #1a3a5c;
+            --gold: #c9a84c;
+            --gold-light: #e8c97a;
+            --teal: #0d9488;
+            --teal-light: #14b8a6;
+            --red: #dc2626;
+            --orange: #ea580c;
+            --purple: #7c3aed;
+            --white: #ffffff;
+            --gray-light: #f3f4f6;
+            --gray: #9ca3af;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+            background: var(--navy);
+            color: var(--white);
+            direction: rtl;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            padding: 80px 20px;
+            text-align: center;
+            background: radial-gradient(circle at center, var(--navy-mid) 0%, var(--navy) 100%);
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(201, 168, 76, 0.1) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            animation: pulse 8s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(201, 168, 76, 0.15);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 900;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: var(--gray-light);
+            max-width: 700px;
+            margin: 0 auto 40px;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: -40px auto 40px;
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .stat-card {
+            background: rgba(17, 34, 64, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold);
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--gold);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+
+        /* Tabs Navigation */
+        .tabs-nav {
+            position: sticky;
+            top: 0;
+            background: rgba(10, 22, 40, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 0;
+            margin-bottom: 40px;
+        }
+
+        .tabs-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 0 20px;
+            scrollbar-width: none;
+        }
+
+        .tabs-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-tab {
+            white-space: nowrap;
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--gray);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tab:hover {
+            color: var(--white);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-tab.active {
+            background: var(--gold);
+            color: var(--navy);
+            border-color: var(--gold);
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto 80px;
+            padding: 0 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-header {
+            margin-bottom: 40px;
+            border-right: 4px solid var(--gold);
+            padding-right: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--white);
+        }
+
+        .section-header p {
+            color: var(--gray);
+            margin-top: 5px;
+        }
+
+        /* Tables */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            background: var(--navy-mid);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 40px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px 20px;
+            font-weight: 700;
+            color: var(--gold);
+            border-bottom: 2px solid var(--gold);
+            font-size: 14px;
+        }
+
+        td {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .highlight-cell {
+            background: rgba(201, 168, 76, 0.05);
+            font-weight: 600;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: var(--navy-mid);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--gold);
+            opacity: 0.8;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--gold-light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-meta {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .meta-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 8px 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .meta-label { color: var(--gray); }
+        .meta-value { font-weight: 600; color: var(--white); }
+
+        /* KPI Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .kpi-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--teal);
+        }
+
+        .kpi-icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--teal-light);
+            display: block;
+        }
+
+        .kpi-label {
+            font-size: 14px;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+
+        /* SVG Containers */
+        .svg-container {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .svg-container svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Info Boxes */
+        .info-box {
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+        }
+
+        .info-box.teal { background: rgba(13, 148, 136, 0.1); border: 1px solid var(--teal); color: var(--teal-light); }
+        .info-box.gold { background: rgba(201, 168, 76, 0.1); border: 1px solid var(--gold); color: var(--gold-light); }
+        .info-box.red { background: rgba(220, 38, 38, 0.1); border: 1px solid var(--red); color: #fca5a5; }
+
+        /* Org Charts */
+        .org-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .org-tier {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            position: relative;
+        }
+
+        .org-tier::after {
+            content: '↓';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--gold);
+            font-size: 12px;
+            opacity: 0.5;
+        }
+
+        .org-tier:last-child::after {
+            display: none;
+        }
+
+        .org-tier .role { font-weight: 700; color: var(--gold-light); }
+        .org-tier .desc { font-size: 11px; color: var(--gray); display: block; }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray);
+            font-size: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Process Flow */
+        .process-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .process-step {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .step-num {
+            width: 40px;
+            height: 40px;
+            background: var(--gold);
+            color: var(--navy);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px 20px;
+            border-radius: 12px;
+            flex-grow: 1;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Utils */
+        .text-gold { color: var(--gold); }
+        .text-teal { color: var(--teal-light); }
+        .mt-40 { margin-top: 40px; }
+
+        @media (max-width: 768px) {
+            .hero { padding: 60px 20px; }
+            .stats-bar { grid-template-columns: 1fr 1fr; margin-top: -20px; }
+            .section-header h2 { font-size: 22px; }
+            .card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="hero-content">
+            <span class="badge">تقرير استراتيجي 2026</span>
+            <h1>المقارنة العالمية للمستودعات</h1>
+            <p>تحليل شامل لمقارنة نظام Brandzo المقترح مع معايير عمالقة اللوجستيات وسلسلة التوريد في العالم</p>
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-card">
+            <span class="stat-value">6</span>
+            <span class="stat-label">شركات عالمية</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">99.9%</span>
+            <span class="stat-label">دقة المخزون المستهدفة</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">750K+</span>
+            <span class="stat-label">روبوتات (Amazon)</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">24h</span>
+            <span class="stat-label">أقصى وقت تسليم</span>
+        </div>
+    </div>
+
+    <!-- Sticky Navigation -->
+    <div class="tabs-nav" id="navTabs">
+        <div class="tabs-container">
+            <button class="nav-tab active" onclick="showSection('comparison', this)">المقارنة الشاملة</button>
+            <button class="nav-tab" onclick="showSection('operations', this)">العمليات المستودعية</button>
+            <button class="nav-tab" onclick="showSection('engineering', this)">التصاميم الهندسية</button>
+            <button class="nav-tab" onclick="showSection('documents', this)">الدورة المستندية</button>
+            <button class="nav-tab" onclick="showSection('kpis', this)">الإنتاجية والمعايير</button>
+            <button class="nav-tab" onclick="showSection('org', this)">الهيكل الوظيفي</button>
+        </div>
+    </div>
+
+    <!-- Tab 1: Global Comparison -->
+    <div id="comparison" class="section active">
+        <div class="section-header">
+            <h2>مقارنة نظام Brandzo مع العمالقة</h2>
+            <p>تحليل القدرات التشغيلية والتقنية بين المقترح والمعايير العالمية</p>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>المعيار</th>
+                        <th class="highlight-cell">Brandzo (المقترح)</th>
+                        <th>Amazon</th>
+                        <th>Walmart</th>
+                        <th>Alibaba/Cainiao</th>
+                        <th>Noon</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="font-bold">نوع نظام WMS</td>
+                        <td class="highlight-cell">هجين (Odoo + Custom)</td>
+                        <td>Custom (Proprietary)</td>
+                        <td>SAP/Custom</td>
+                        <td>Cloud-Native AI</td>
+                        <td>Custom Enterprise</td>
+                    </tr>
+                    <tr>
+                        <td>مستوى الأتمتة</td>
+                        <td class="highlight-cell">نصف آلي (Semi-Auto)</td>
+                        <td>آلي بالكامل (Robotic)</td>
+                        <td>آلي بالكامل</td>
+                        <td>آلي بالكامل (AI-Driven)</td>
+                        <td>نصف آلي متطور</td>
+                    </tr>
+                    <tr>
+                        <td>نضج الدورة المستندية</td>
+                        <td class="highlight-cell">رقمية بالكامل (Paperless)</td>
+                        <td>رقمية بالكامل</td>
+                        <td>رقمية بالكامل</td>
+                        <td>رقمية بالكامل</td>
+                        <td>رقمية بالكامل</td>
+                    </tr>
+                    <tr>
+                        <td>دقة المخزون المستهدفة</td>
+                        <td class="highlight-cell">98.5%</td>
+                        <td>99.9%</td>
+                        <td>99.5%</td>
+                        <td>99.9%</td>
+                        <td>99.0%</td>
+                    </tr>
+                    <tr>
+                        <td>سرعة المعالجة</td>
+                        <td class="highlight-cell">120 طلب/ساعة</td>
+                        <td>1000+ طلب/ساعة</td>
+                        <td>800+ طلب/ساعة</td>
+                        <td>1200+ طلب/ساعة</td>
+                        <td>300+ طلب/ساعة</td>
+                    </tr>
+                    <tr>
+                        <td>التقنيات المستخدمة</td>
+                        <td class="highlight-cell">Barcode, Cloud, Odoo</td>
+                        <td>Robots, AI, Computer Vision</td>
+                        <td>Symbotic Robotics, AI</td>
+                        <td>IoT, Big Data, Robotics</td>
+                        <td>Last-Mile AI, Barcoding</td>
+                    </tr>
+                    <tr>
+                        <td>القوة التشغيلية</td>
+                        <td class="highlight-cell">المرونة والتكلفة</td>
+                        <td>السرعة الهائلة</td>
+                        <td>سلسلة التوريد الضخمة</td>
+                        <td>الذكاء الاصطناعي</td>
+                        <td>التوسع الإقليمي (MENA)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="info-box gold">
+            <div>💡</div>
+            <div><strong>ملاحظة استراتيجية:</strong> يركز نظام Brandzo على "الفعالية من حيث التكلفة" مع الحفاظ على دورة مستندية رقمية 100% تضاهي العمالقة، مع التدرج في الأتمتة الروبوتية مستقبلاً.</div>
+        </div>
+    </div>
+
+    <!-- Tab 2: Warehouse Operations -->
+    <div id="operations" class="section">
+        <div class="section-header">
+            <h2>نماذج العمليات العالمية</h2>
+            <p>نظرة متعمقة على آلية عمل كبرى الشركات في إدارة مستودعاتها</p>
+        </div>
+
+        <div class="cards-grid">
+            <div class="card">
+                <h3>📦 Amazon</h3>
+                <p class="text-sm text-gray">الرائدة عالمياً في التجارة الإلكترونية واللوجستيات.</p>
+                <div class="card-meta">
+                    <div class="meta-item"><span class="meta-label">الطلبات اليومية:</span> <span class="meta-value">12.3 مليون</span></div>
+                    <div class="meta-item"><span class="meta-label">مراكز التنفيذ:</span> <span class="meta-value">185+ مركز</span></div>
+                    <div class="meta-item"><span class="meta-label">الروبوتات:</span> <span class="meta-value">750,000+</span></div>
+                    <div class="meta-item"><span class="meta-label">التقنية الرئيسية:</span> <span class="meta-value">AI-driven routing</span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🛒 Carrefour</h3>
+                <p class="text-sm text-gray">نموذج التجزئة والمواد الغذائية العالمي.</p>
+                <div class="card-meta">
+                    <div class="meta-item"><span class="meta-label">نموذج العمل:</span> <span class="meta-value">Regional DC & Cross-Docking</span></div>
+                    <div class="meta-item"><span class="meta-label">نظام WMS:</span> <span class="meta-value">Generix WMS</span></div>
+                    <div class="meta-item"><span class="meta-label">تتبع الأغذية:</span> <span class="meta-value">Blockchain Technology</span></div>
+                    <div class="meta-item"><span class="meta-label">المساحة القياسية:</span> <span class="meta-value">61,000 م² للـ DC</span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🟦 Walmart</h3>
+                <p class="text-sm text-gray">أكبر شركة تجزئة في العالم من حيث الإيرادات.</p>
+                <div class="card-meta">
+                    <div class="meta-item"><span class="meta-label">الأتمتة:</span> <span class="meta-value">Symbotic Robotics</span></div>
+                    <div class="meta-item"><span class="meta-label">المعدات:</span> <span class="meta-value">19 Autonomous Forklifts</span></div>
+                    <div class="meta-item"><span class="meta-label">التكامل:</span> <span class="meta-value">Full AI Integration</span></div>
+                    <div class="meta-item"><span class="meta-label">السرعة:</span> <span class="meta-value">Cross-dock efficiency</span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🟠 Alibaba/Cainiao</h3>
+                <p class="text-sm text-gray">الذراع اللوجستي لعملاق التجارة الصيني.</p>
+                <div class="card-meta">
+                    <div class="meta-item"><span class="meta-label">الذكاء الاصطناعي:</span> <span class="meta-value">Demand Forecasting</span></div>
+                    <div class="meta-item"><span class="meta-label">الشبكة:</span> <span class="meta-value">Smart Logistics Network</span></div>
+                    <div class="meta-item"><span class="meta-label">الروبوتات:</span> <span class="meta-value">AI-powered AGVs</span></div>
+                    <div class="meta-item"><span class="meta-label">الشحن:</span> <span class="meta-value">Global 72h delivery goal</span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🟡 Noon</h3>
+                <p class="text-sm text-gray">النموذج الإقليمي الأنجح في الشرق الأوسط.</p>
+                <div class="card-meta">
+                    <div class="meta-item"><span class="meta-label">التوزيع:</span> <span class="meta-value">Centralized Regional Hubs</span></div>
+                    <div class="meta-item"><span class="meta-label">التركيز:</span> <span class="meta-value">Last-Mile Optimization</span></div>
+                    <div class="meta-item"><span class="meta-label">التوصيل:</span> <span class="meta-value">24h delivery focus</span></div>
+                    <div class="meta-item"><span class="meta-label">العمليات:</span> <span class="meta-value">Manual-to-Semi Auto</span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🟦 IKEA</h3>
+                <p class="text-sm text-gray">فلسفة خاصة في التخزين والتجزئة المتداخلة.</p>
+                <div class="card-meta">
+                    <div class="meta-item"><span class="meta-label">الفلسفة:</span> <span class="meta-value">Flat-pack design logic</span></div>
+                    <div class="meta-item"><span class="meta-label">التكامل:</span> <span class="meta-value">Warehouse-Store Integration</span></div>
+                    <div class="meta-item"><span class="meta-label">نظام ERP:</span> <span class="meta-value">SAP ERP Custom</span></div>
+                    <div class="meta-item"><span class="meta-label">المساحة:</span> <span class="meta-value">High-Bay Storage</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 3: Engineering Layouts -->
+    <div id="engineering" class="section">
+        <div class="section-header">
+            <h2>التصاميم الهندسية للمستودعات</h2>
+            <p>المخططات الفنية وتوزيع المناطق التشغيلية (Zoning)</p>
+        </div>
+
+        <div class="cards-grid">
+            <div class="card">
+                <h3>📐 مخطط U-Shape</h3>
+                <div class="svg-container">
+                    <svg viewBox="0 0 200 120" width="200">
+                        <rect x="10" y="10" width="180" height="100" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+                        <path d="M40 10 L40 80 L160 80 L160 10" fill="none" stroke="#c0392b" stroke-width="8" stroke-linejoin="round"/>
+                        <text x="25" y="5" font-size="10" fill="#c0392b" text-anchor="middle">الاستلام</text>
+                        <text x="175" y="5" font-size="10" fill="#c0392b" text-anchor="middle">الشحن</text>
+                        <text x="100" y="60" font-size="12" fill="#1e293b" text-anchor="middle">منطقة التخزين</text>
+                    </svg>
+                </div>
+                <p class="text-xs text-gray">المسار المنحني: الاستلام والشحن في نفس الجهة. ممتاز للمساحات الصغيرة والمتوسطة.</p>
+            </div>
+            <div class="card">
+                <h3>📐 مخطط I-Shape</h3>
+                <div class="svg-container">
+                    <svg viewBox="0 0 200 120" width="200">
+                        <rect x="10" y="10" width="180" height="100" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+                        <path d="M10 60 L190 60" fill="none" stroke="#0d9488" stroke-width="8"/>
+                        <text x="10" y="50" font-size="10" fill="#0d9488" text-anchor="start">الاستلام</text>
+                        <text x="190" y="50" font-size="10" fill="#0d9488" text-anchor="end">الشحن</text>
+                        <text x="100" y="85" font-size="12" fill="#1e293b" text-anchor="middle">منطقة التخزين</text>
+                    </svg>
+                </div>
+                <p class="text-xs text-gray">المسار المستقيم: الاستلام في جهة والشحن في الجهة المقابلة. مثالي للمستودعات الكبيرة (Cross-docking).</p>
+            </div>
+            <div class="card">
+                <h3>📐 مخطط L-Shape</h3>
+                <div class="svg-container">
+                    <svg viewBox="0 0 200 120" width="200">
+                        <rect x="10" y="10" width="180" height="100" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+                        <path d="M10 30 L60 30 L60 110" fill="none" stroke="#ea580c" stroke-width="8" stroke-linejoin="round"/>
+                        <text x="10" y="25" font-size="10" fill="#ea580c" text-anchor="start">الاستلام</text>
+                        <text x="60" y="118" font-size="10" fill="#ea580c" text-anchor="middle">الشحن</text>
+                        <text x="120" y="60" font-size="12" fill="#1e293b" text-anchor="middle">منطقة التخزين</text>
+                    </svg>
+                </div>
+                <p class="text-xs text-gray">المسار المتعامد: يتم توزيع التدفق بزاوية 90 درجة. فعال في المباني ذات الزوايا المحدودة.</p>
+            </div>
+            <div class="card">
+                <h3>📐 مخطط Grid Layout</h3>
+                <div class="svg-container">
+                    <svg viewBox="0 0 200 120" width="200">
+                        <rect x="10" y="10" width="180" height="100" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+                        <line x1="30" y1="20" x2="170" y2="20" stroke="#7c3aed" stroke-width="2" stroke-dasharray="4"/>
+                        <line x1="30" y1="40" x2="170" y2="40" stroke="#7c3aed" stroke-width="2" stroke-dasharray="4"/>
+                        <line x1="30" y1="60" x2="170" y2="60" stroke="#7c3aed" stroke-width="2" stroke-dasharray="4"/>
+                        <line x1="30" y1="80" x2="170" y2="80" stroke="#7c3aed" stroke-width="2" stroke-dasharray="4"/>
+                        <text x="100" y="110" font-size="12" fill="#7c3aed" text-anchor="middle">خلايا التخزين العنقودية</text>
+                    </svg>
+                </div>
+                <p class="text-xs text-gray">تخطيط الشبكة الذكي: يسمح بالوصول المتعدد للأصناف من اتجاهات مختلفة. يستخدم في مراكز الفرز الآلي.</p>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>المواصفات الفنية</th>
+                        <th>مستودع صغير (Small)</th>
+                        <th>مستودع كبير (Large)</th>
+                        <th>ميجا (Mega DC)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ارتفاع السقف</td>
+                        <td>6 - 8 متر</td>
+                        <td>10 - 14 متر</td>
+                        <td>16+ متر</td>
+                    </tr>
+                    <tr>
+                        <td>حمولة الأرضية</td>
+                        <td>3 طن/م²</td>
+                        <td>5 - 7 طن/م²</td>
+                        <td>8+ طن/م²</td>
+                    </tr>
+                    <tr>
+                        <td>عرض الممرات (Aisles)</td>
+                        <td>3.5 متر (Wide)</td>
+                        <td>2.5 متر (Narrow)</td>
+                        <td>1.8 متر (VNA)</td>
+                    </tr>
+                    <tr>
+                        <td>بوابات التحميل</td>
+                        <td>2 - 4 بوابات</td>
+                        <td>10 - 20 بوابة</td>
+                        <td>50+ بوابة</td>
+                    </tr>
+                    <tr>
+                        <td>أنظمة الحريق</td>
+                        <td>Sprinklers / Manual</td>
+                        <td>ESFR Systems</td>
+                        <td>Automated Suppression</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab 4: Document Cycle -->
+    <div id="documents" class="section">
+        <div class="section-header">
+            <h2>الدورة المستندية والربط الرقمي</h2>
+            <p>هيكلية المستندات وتكامل الأنظمة (WMS → ERP → TMS)</p>
+        </div>
+
+        <div class="cards-grid">
+            <div class="card">
+                <h3 class="text-gold">📥 Inbound (الوارد)</h3>
+                <div class="process-flow">
+                    <div class="process-step">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <div class="font-bold">Purchase Order (PO)</div>
+                            <div class="text-xs text-gray">أمر الشراء الرسمي للمورد</div>
+                        </div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <div class="font-bold">Packing List / ASN</div>
+                            <div class="text-xs text-gray">قائمة التعبئة وإشعار الشحن</div>
+                        </div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <div class="font-bold">Goods Receipt Note (GRN)</div>
+                            <div class="text-xs text-gray">إشعار استلام البضاعة المعتمد</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="text-teal">🔄 Internal (الداخلي)</h3>
+                <div class="process-flow">
+                    <div class="process-step">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <div class="font-bold">Storage Receipt</div>
+                            <div class="text-xs text-gray">إذن التخزين في المواقع</div>
+                        </div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <div class="font-bold">Internal Transfer</div>
+                            <div class="text-xs text-gray">أمر التحويل الداخلي بين الأقسام</div>
+                        </div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <div class="font-bold">Inventory Count Sheet</div>
+                            <div class="text-xs text-gray">كشوفات الجرد الدوري والمفاجئ</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="text-red">📤 Outbound (الصادر)</h3>
+                <div class="process-flow">
+                    <div class="process-step">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <div class="font-bold">Pick List</div>
+                            <div class="text-xs text-gray">قائمة سحب الأصناف الموجهة</div>
+                        </div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <div class="font-bold">Dispatch Note</div>
+                            <div class="text-xs text-gray">إشعار الشحن والخروج النهائي</div>
+                        </div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <div class="font-bold">Sales Invoice / RMA</div>
+                            <div class="text-xs text-gray">فاتورة البيع أو إذن المرتجعات</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-header mt-40">
+            <h2>مقارنة معايير الإنتاجية</h2>
+            <p>مقارنة الأداء بين المستودعات التقليدية والآلية والمعايير العالمية</p>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>المؤشر (KPI)</th>
+                        <th>مستودع تقليدي (Manual)</th>
+                        <th>المعيار الدولي (Standard)</th>
+                        <th>Amazon (Automated)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>معدل السحب (Picks/Hour)</td>
+                        <td>20 - 40 خط/ساعة</td>
+                        <td>60 - 80 خط/ساعة</td>
+                        <td>300 - 500 خط/ساعة</td>
+                    </tr>
+                    <tr>
+                        <td>دقة التنفيذ (Order Accuracy)</td>
+                        <td>95% - 97%</td>
+                        <td>99.0%</td>
+                        <td>99.9%</td>
+                    </tr>
+                    <tr>
+                        <td>وقت التحميل (Dock-to-Stock)</td>
+                        <td>24 - 48 ساعة</td>
+                        <td>8 - 12 ساعة</td>
+                        <td>&lt; 2 ساعة</td>
+                    </tr>
+                    <tr>
+                        <td>تكلفة السطر الواحد</td>
+                        <td>مرتفعة ($$$)</td>
+                        <td>متوسطة ($$)</td>
+                        <td>منخفضة ($)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-container mt-40">
+            <table>
+                <thead>
+                    <tr>
+                        <th>النظام (Module)</th>
+                        <th>الوظيفة الرئيسية</th>
+                        <th>الربط الرقمي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>WMS (Warehouse Management)</td>
+                        <td>إدارة المخزون والمواقع</td>
+                        <td>الأساس التشغيلي (Odoo Inventory)</td>
+                    </tr>
+                    <tr>
+                        <td>ERP (Resource Planning)</td>
+                        <td>إدارة المالية والمشتريات</td>
+                        <td>الربط المالي المحاسبي</td>
+                    </tr>
+                    <tr>
+                        <td>TMS (Transport Management)</td>
+                        <td>إدارة الأسطول والتوزيع</td>
+                        <td>تتبع الشاحنات وخطوط السير</td>
+                    </tr>
+                    <tr>
+                        <td>OMS (Order Management)</td>
+                        <td>إدارة طلبات العملاء</td>
+                        <td>تلقي الطلبات وتحويلها لأوامر سحب</td>
+                    </tr>
+                    <tr>
+                        <td>DMS (Document Management)</td>
+                        <td>الأرشفة الرقمية والتوثيق</td>
+                        <td>حفظ النسخ الإلكترونية من التقارير</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab 5: KPIs & Productivity -->
+    <div id="kpis" class="section">
+        <div class="section-header">
+            <h2>مؤشرات الأداء والمعايير القياسية</h2>
+            <p>قياس الكفاءة والإنتاجية مقارنة بالمعايير الدولية</p>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <span class="kpi-icon">🎯</span>
+                <span class="kpi-value">99.9%</span>
+                <span class="kpi-label">دقة المخزون (Inventory Accuracy)</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-icon">⚡</span>
+                <span class="kpi-value">64/hr</span>
+                <span class="kpi-label">معدل السحب (Pick Rate)</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-icon">⏱️</span>
+                <span class="kpi-value">&lt;24h</span>
+                <span class="kpi-label">زمن دورة الطلب (Cycle Time)</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-icon">🚚</span>
+                <span class="kpi-value">98%+</span>
+                <span class="kpi-label">التسليم في الوقت (OTIF)</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-icon">📐</span>
+                <span class="kpi-value">85%+</span>
+                <span class="kpi-label">استغلال المساحة (Utilization)</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-icon">💰</span>
+                <span class="kpi-value">25%</span>
+                <span class="kpi-label">توفير التكاليف التشغيلية</span>
+            </div>
+        </div>
+
+        <div class="table-container mt-40">
+            <table>
+                <thead>
+                    <tr>
+                        <th>تصنيف ABC للمخزون</th>
+                        <th>النسبة من الأصناف</th>
+                        <th>النسبة من القيمة/الحركة</th>
+                        <th>استراتيجية التخزين</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-red font-bold">Category A (Fast Moving)</td>
+                        <td>20%</td>
+                        <td>70% - 80%</td>
+                        <td>أقرب نقطة لمناطق الشحن (Hot Zone)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-orange font-bold">Category B (Medium)</td>
+                        <td>30%</td>
+                        <td>15% - 20%</td>
+                        <td>المناطق الوسطى للمستودع</td>
+                    </tr>
+                    <tr>
+                        <td class="text-teal font-bold">Category C (Slow Moving)</td>
+                        <td>50%</td>
+                        <td>5% - 10%</td>
+                        <td>المناطق البعيدة أو المرتفعة</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="info-box teal mt-40">
+            <div>✅</div>
+            <div><strong>شروط نجاح الدورة المستندية:</strong> التكامل الرقمي الكامل، استخدام أدوات المسح (Scanning)، تسلسل الاعتمادات الإدارية، والامتثال الصارم لمعايير الجودة.</div>
+        </div>
+    </div>
+
+    <!-- Tab 6: Global Org Structures -->
+    <div id="org" class="section">
+        <div class="section-header">
+            <h2>الهياكل الوظيفية للشركات العالمية</h2>
+            <p>تحليل الهرم الإداري وتوزيع الأدوار في مستودعات العمالقة</p>
+        </div>
+
+        <div class="cards-grid">
+            <!-- Amazon Org -->
+            <div class="card">
+                <h3>📦 Amazon Hierarchy</h3>
+                <div class="org-chart">
+                    <div class="org-tier"><span class="role">VP of Operations</span><span class="desc">القيادة الاستراتيجية العليا للعمليات</span></div>
+                    <div class="org-tier"><span class="role">Regional Operations Manager</span><span class="desc">إدارة مجموعة مراكز تنفيذ إقليمية</span></div>
+                    <div class="org-tier"><span class="role">Fulfillment Center Manager</span><span class="desc">المسؤول الأول عن مستودع (FC) واحد</span></div>
+                    <div class="org-tier"><span class="role">Area Manager</span><span class="desc">إدارة قسم محدد (Receiving / Pick)</span></div>
+                    <div class="org-tier"><span class="role">Process Assistant</span><span class="desc">مساعد تقني لإدارة تدفق العمل</span></div>
+                    <div class="org-tier"><span class="role">Associates</span><span class="desc">فرق التنفيذ (Stow / Pack / Ship)</span></div>
+                </div>
+                <div class="card-meta mt-20">
+                    <div class="meta-item"><span class="meta-label">التحكم:</span> <span class="meta-value">مركزي رقمي</span></div>
+                    <div class="meta-item"><span class="meta-label">نسبة الإشراف:</span> <span class="meta-value">1 : 25</span></div>
+                </div>
+            </div>
+
+            <!-- Carrefour Org -->
+            <div class="card">
+                <h3>🛒 Carrefour Hierarchy</h3>
+                <div class="org-chart">
+                    <div class="org-tier"><span class="role">Supply Chain Director</span><span class="desc">إدارة سلسلة التوريد الكاملة</span></div>
+                    <div class="org-tier"><span class="role">Regional DC Manager</span><span class="desc">إدارة مراكز التوزيع الإقليمية</span></div>
+                    <div class="org-tier"><span class="role">Warehouse Manager</span><span class="desc">مدير عمليات المستودع</span></div>
+                    <div class="org-tier"><span class="role">Shift Supervisors</span><span class="desc">مشرفو الورديات (أ ، ب ، ج)</span></div>
+                    <div class="org-tier"><span class="role">Team Leaders</span><span class="desc">قادة فرق المناطق التشغيلية</span></div>
+                    <div class="org-tier"><span class="role">Operators</span><span class="desc">منفذو العمليات (Inbound / Storage)</span></div>
+                </div>
+                <div class="card-meta mt-20">
+                    <div class="meta-item"><span class="meta-label">التحكم:</span> <span class="meta-value">هرمي تقليدي مطور</span></div>
+                    <div class="meta-item"><span class="meta-label">نسبة الإشراف:</span> <span class="meta-value">1 : 15</span></div>
+                </div>
+            </div>
+
+            <!-- Alibaba Org -->
+            <div class="card">
+                <h3>🟠 Alibaba/Cainiao</h3>
+                <div class="org-chart">
+                    <div class="org-tier"><span class="role">Chief Logistics Officer</span><span class="desc">رئيس القطاع اللوجستي</span></div>
+                    <div class="org-tier"><span class="role">Smart Logistics Director</span><span class="desc">مدير اللوجستيات الذكية</span></div>
+                    <div class="org-tier"><span class="role">Warehouse Operations Manager</span><span class="desc">مدير العمليات الميداني</span></div>
+                    <div class="org-tier"><span class="role">AI Systems Coordinator</span><span class="desc">منسق الأنظمة الذكية والروبوتات</span></div>
+                    <div class="org-tier"><span class="role">Floor Supervisors</span><span class="desc">مشرفو الساحة التشغيلية</span></div>
+                    <div class="org-tier"><span class="role">Robotics Operators</span><span class="desc">مشغلو وفنيو الأنظمة الآلية</span></div>
+                </div>
+                <div class="card-meta mt-20">
+                    <div class="meta-item"><span class="meta-label">التحكم:</span> <span class="meta-value">نظم ذاتية (Autonomous)</span></div>
+                    <div class="meta-item"><span class="meta-label">نسبة الإشراف:</span> <span class="meta-value">1 : 40 (نظراً للأتمتة)</span></div>
+                </div>
+            </div>
+
+            <!-- Noon Org -->
+            <div class="card">
+                <h3>🟡 Noon Hierarchy</h3>
+                <div class="org-chart">
+                    <div class="org-tier"><span class="role">Head of Operations</span><span class="desc">رئيس العمليات الإقليمي</span></div>
+                    <div class="org-tier"><span class="role">Country Fulfillment Manager</span><span class="desc">مدير مراكز التنفيذ في الدولة</span></div>
+                    <div class="org-tier"><span class="role">Warehouse Manager</span><span class="desc">مدير المستودع المركزي</span></div>
+                    <div class="org-tier"><span class="role">Shift Lead</span><span class="desc">قائد الوردية التشغيلية</span></div>
+                    <div class="org-tier"><span class="role">Process Specialist</span><span class="desc">أخصائي العمليات والجودة</span></div>
+                    <div class="org-tier"><span class="role">Pickers / Packers</span><span class="desc">فرق السحب والتعبئة</span></div>
+                </div>
+                <div class="card-meta mt-20">
+                    <div class="meta-item"><span class="meta-label">التحكم:</span> <span class="meta-value">مركزي مع مرونة ميدانية</span></div>
+                    <div class="meta-item"><span class="meta-label">نسبة الإشراف:</span> <span class="meta-value">1 : 20</span></div>
+                </div>
+            </div>
+
+            <!-- Walmart Org -->
+            <div class="card">
+                <h3>🟦 Walmart Hierarchy</h3>
+                <div class="org-chart">
+                    <div class="org-tier"><span class="role">Chief Supply Chain Officer</span><span class="desc">المسؤول التنفيذي الأول لسلاسل الإمداد</span></div>
+                    <div class="org-tier"><span class="role">DC Vice President</span><span class="desc">نائب الرئيس لمراكز التوزيع</span></div>
+                    <div class="org-tier"><span class="role">General Manager (DC)</span><span class="desc">مدير عام مركز التوزيع</span></div>
+                    <div class="org-tier"><span class="role">Operations Manager</span><span class="desc">مدير العمليات الميداني</span></div>
+                    <div class="org-tier"><span class="role">Department Supervisors</span><span class="desc">مشرفو الأقسام (توزيع/استلام)</span></div>
+                    <div class="org-tier"><span class="role">Hourly Associates</span><span class="desc">فرق العمل بنظام الساعة</span></div>
+                </div>
+                <div class="card-meta mt-20">
+                    <div class="meta-item"><span class="meta-label">التحكم:</span> <span class="meta-value">مركزي صارم</span></div>
+                    <div class="meta-item"><span class="meta-label">نسبة الإشراف:</span> <span class="meta-value">1 : 30</span></div>
+                </div>
+            </div>
+
+            <!-- IKEA Org -->
+            <div class="card">
+                <h3>🟦 IKEA Hierarchy</h3>
+                <div class="org-chart">
+                    <div class="org-tier"><span class="role">Supply Chain Manager</span><span class="desc">مدير سلاسل الإمداد الإقليمي</span></div>
+                    <div class="org-tier"><span class="role">DC Manager</span><span class="desc">مدير مركز التوزيع</span></div>
+                    <div class="org-tier"><span class="role">Team Manager</span><span class="desc">مدير فرق العمل</span></div>
+                    <div class="org-tier"><span class="role">Goods Flow Manager</span><span class="desc">مدير تدفق البضائع</span></div>
+                    <div class="org-tier"><span class="role">Warehouse Colleagues</span><span class="desc">زملاء العمل في المستودع</span></div>
+                </div>
+                <div class="card-meta mt-20">
+                    <div class="meta-item"><span class="meta-label">التحكم:</span> <span class="meta-value">لا مركزي وتعاوني</span></div>
+                    <div class="meta-item"><span class="meta-label">نسبة الإشراف:</span> <span class="meta-value">1 : 12</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container mt-40">
+            <table>
+                <thead>
+                    <tr>
+                        <th>الشركة</th>
+                        <th>عدد المستويات الإدارية</th>
+                        <th>نظام الفرق</th>
+                        <th>العنصر البشري</th>
+                        <th>مدى التحكم</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Amazon</td>
+                        <td>6 مستويات</td>
+                        <td>فرق متخصصة جداً</td>
+                        <td>كثيف مع دعم روبوتي</td>
+                        <td>مركزي تقني</td>
+                    </tr>
+                    <tr>
+                        <td>Carrefour</td>
+                        <td>6 مستويات</td>
+                        <td>فرق وظيفية</td>
+                        <td>كثيف (عمالة مدربة)</td>
+                        <td>هرمي إداري</td>
+                    </tr>
+                    <tr>
+                        <td>Alibaba</td>
+                        <td>5 مستويات</td>
+                        <td>فرق تقنية/آلية</td>
+                        <td>منخفض (تركيز تقني)</td>
+                        <td>ذاتي AI-Driven</td>
+                    </tr>
+                    <tr>
+                        <td>Walmart</td>
+                        <td>6 مستويات</td>
+                        <td>فرق عمليات ضخمة</td>
+                        <td>كثيف جداً</td>
+                        <td>مركزي صارم</td>
+                    </tr>
+                    <tr>
+                        <td>Noon</td>
+                        <td>5 مستويات</td>
+                        <td>فرق سريعة (Agile)</td>
+                        <td>متوسط إلى كثيف</td>
+                        <td>هجين</td>
+                    </tr>
+                    <tr>
+                        <td>IKEA</td>
+                        <td>4 مستويات</td>
+                        <td>فرق متعددة المهام</td>
+                        <td>متوسط</td>
+                        <td>لا مركزي</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        <p>Brandzo Warehouse Management Proposal — Global Comparison Report v1.0</p>
+        <p>© 2026 جميع الحقوق محفوظة لشركة Brandzo والمهندس محمد إبراهيم البرشي</p>
+    </footer>
+
+    <script>
+        function showSection(id, tab) {
+            // Remove active class from all sections and tabs
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+
+            // Add active class to current section and tab
+            document.getElementById(id).classList.add('active');
+            tab.classList.add('active');
+
+            // Scroll to navigation bar for better UX on mobile
+            document.getElementById('navTabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    </script>
+</body>
+</html>
