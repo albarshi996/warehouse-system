@@ -163,57 +163,43 @@
               <div class="font-bold">الإدارة العامة</div>
               <div class="text-[10px] opacity-80">General Management</div>
             </div>
-            <ul class="flex justify-center gap-2">
+            <ul class="flex justify-center gap-4">
+              <!-- Primary Operational Pillars -->
               <li>
-                <div class="org-node bg-amber-600 border-amber-400">
+                <div class="org-node bg-amber-600 border-amber-400 ring-2 ring-amber-400 ring-offset-2 ring-offset-[#0a0a1a]">
                   <div class="font-bold text-xs">إدارة الحوكمة</div>
-                  <div class="text-[8px] opacity-80">Governance</div>
+                  <div class="text-[8px] opacity-80">Governance Pillar</div>
                 </div>
+                <ul><li><div class="org-node bg-gray-800 text-[9px] py-1 px-2 border-gray-600">السياسات والامتثال</div></li></ul>
               </li>
               <li>
-                <div class="org-node bg-amber-600 border-amber-400">
-                  <div class="font-bold text-xs">إدارة الجودة</div>
-                  <div class="text-[8px] opacity-80">Quality</div>
-                </div>
-              </li>
-              <li>
-                <div class="org-node bg-blue-900 border-blue-700">
+                <div class="org-node bg-blue-900 border-blue-700 ring-2 ring-blue-700 ring-offset-2 ring-offset-[#0a0a1a]">
                   <div class="font-bold text-xs">سلاسل الإمداد</div>
-                  <div class="text-[8px] opacity-80">Supply Chain</div>
+                  <div class="text-[8px] opacity-80">Supply Chain Pillar</div>
                 </div>
                 <ul><li><div class="org-node bg-gray-800 text-[9px] py-1 px-2 border-gray-600">العمليات اللوجستية</div></li></ul>
               </li>
               <li>
-                <div class="org-node bg-blue-900 border-blue-700">
+                <div class="org-node bg-blue-900 border-blue-700 ring-2 ring-blue-700 ring-offset-2 ring-offset-[#0a0a1a]">
                   <div class="font-bold text-xs">إدارة المستودعات</div>
-                  <div class="text-[8px] opacity-80">Warehouse</div>
+                  <div class="text-[8px] opacity-80">Warehouse Pillar</div>
                 </div>
                 <ul><li><div class="org-node bg-gray-800 text-[9px] py-1 px-2 border-gray-600">عمليات المستودع</div></li></ul>
               </li>
-              <li>
-                <div class="org-node bg-emerald-700 border-emerald-500">
-                  <div class="font-bold text-xs">الإدارة التجارية</div>
-                  <div class="text-[8px] opacity-80">Commercial</div>
+
+              <!-- Support Functions (Visually distinct) -->
+              <li class="opacity-70 scale-90">
+                <div class="org-node bg-emerald-800 border-emerald-600 border-dashed">
+                  <div class="font-bold text-xs">الوظائف المساندة</div>
+                  <div class="text-[8px] opacity-80">Support Functions</div>
                 </div>
-                <ul><li><div class="org-node bg-gray-800 text-[9px] py-1 px-2 border-gray-600">المشتريات</div></li></ul>
-              </li>
-              <li>
-                <div class="org-node bg-emerald-700 border-emerald-500">
-                  <div class="font-bold text-xs">إدارة المالية</div>
-                  <div class="text-[8px] opacity-80">Finance</div>
-                </div>
-              </li>
-              <li>
-                <div class="org-node bg-gray-700 border-gray-500">
-                  <div class="font-bold text-xs">الإدارة التقنية</div>
-                  <div class="text-[8px] opacity-80">Technical</div>
-                </div>
-              </li>
-              <li>
-                <div class="org-node bg-gray-700 border-gray-500">
-                  <div class="font-bold text-xs">الموارد البشرية</div>
-                  <div class="text-[8px] opacity-80">HR</div>
-                </div>
+                <ul class="flex justify-center gap-1">
+                  <li><div class="org-node bg-gray-800 text-[8px] py-1 px-1 border-gray-600">الجودة</div></li>
+                  <li><div class="org-node bg-gray-800 text-[8px] py-1 px-1 border-gray-600">التجارية</div></li>
+                  <li><div class="org-node bg-gray-800 text-[8px] py-1 px-1 border-gray-600">المالية</div></li>
+                  <li><div class="org-node bg-gray-800 text-[8px] py-1 px-1 border-gray-600">التقنية</div></li>
+                  <li><div class="org-node bg-gray-800 text-[8px] py-1 px-1 border-gray-600">HR</div></li>
+                </ul>
               </li>
             </ul>
           </li>
@@ -318,151 +304,166 @@
     const JOB_DATA = {
   "مدير إدارة الحوكمة": {
     "titleEn": "Governance Manager",
-    "dept": "إدارة الحوكمة",
+    "dept": "إدارة الحوكمة (العمود التشغيلي 1)",
     "duties": [
       "الاستقلالية التامة في تصميم ومراقبة تطبيق الدورة المستندية والسياسات",
       "إصدار وتحديث أدلة السياسات والإجراءات (SOPs) واللوائح التنظيمية",
-      "تصميم مصفوفة الصلاحيات وضوابط الرقابة الداخلية (Internal Controls)",
-      "إدارة المخاطر التنظيمية وضمان الامتثال للأطر القانونية والمؤسسية",
+      "تصميم مصفوفة الصلاحيات وضوابط الرقابة الداخلية",
+      "إدارة المخاطر التنظيمية وضمان الامتثال للأطر القانونية",
       "تقديم تقارير رقابية مباشرة للإدارة العامة حول كفاءة الحوكمة"
     ],
-    "qualifications": "بكالوريوس قانون / إدارة مخاطر / محاسبة + خبرة 8 سنوات",
-    "odooRole": "Governance Auditor (Admin)"
-  },
-  "مدير إدارة الجودة": {
-    "titleEn": "Quality Manager",
-    "dept": "إدارة الجودة",
-    "duties": [
-      "المسؤول عن التحقق التشغيلي من تطبيق قواعد الجودة والسلامة",
-      "إجراء عمليات التدقيق والفحص الميداني (Audits & Inspections)",
-      "إدارة برامج الإجراءات التصحيحية والوقائية (CAPA Programs)",
-      "الإشراف على جودة المنتجات في المستودعات والمطاعم والأسواق",
-      "رفع تقارير عدم المطابقة ومتابعة فعاليتها التحسينية"
-    ],
-    "qualifications": "بكالوريوس جودة / علوم / هندسة + خبرة 8 سنوات",
-    "odooRole": "Quality Manager (Admin)"
+    "qualifications": "بكالوريوس قانون / إدارة مخاطر + خبرة 8 سنوات",
+    "odooRole": "Governance Auditor (Admin)",
+    "operationalReporting": "الإدارة العامة (تبعية مباشرة)"
   },
   "مدير إدارة سلاسل الإمداد": {
     "titleEn": "Supply Chain Manager",
-    "dept": "إدارة سلاسل الإمداد",
+    "dept": "إدارة سلاسل الإمداد (العمود التشغيلي 2)",
     "duties": [
       "التنسيق الاستراتيجي للتدفقات اللوجستية وتخطيط الموارد",
       "الإشراف على قسم العمليات اللوجستية (النقل، الحركة، العمالة)",
-      "تخطيط التوريد وضمان استمرارية السلسلة دون تملك المخزون",
-      "تحليل كفاءة العمليات الميدانية وتقديم الدعم اللوجستي للمستودعات",
+      "تخطيط التوريد وضمان استمرارية السلسلة",
+      "تحليل كفاءة العمليات الميدانية وتقديم الدعم اللوجستي",
       "المسؤول عن جاهزية الأسطول والمعدات والقوى العاملة"
     ],
     "qualifications": "بكالوريوس لوجستيات / إدارة أعمال + خبرة 10 سنوات",
-    "odooRole": "Supply Chain Manager (Admin)"
+    "odooRole": "Supply Chain Manager (Admin)",
+    "operationalReporting": "الإدارة العامة"
   },
   "مدير إدارة المستودعات": {
     "titleEn": "Warehouse Manager",
-    "dept": "إدارة المستودعات",
+    "dept": "إدارة المستودعات (العمود التشغيلي 3)",
     "duties": [
       "المالك الرسمي للمخزون والمسؤول عن دقة وسلامة الأرصدة",
       "الإشراف على قسم عمليات المستودع (استلام، تخزين، صرف، مرتجعات)",
-      "ضمان الالتزام الصارم بقواعد FEFO والباركود في كافة التحركات",
+      "ضمان الالتزام الصارم بقواعد FEFO والباركود",
       "إدارة المساحات التخزينية وتحسين كفاءة التنفيذ الميداني",
-      "المسؤول عن مطابقة الجرد الفعلي مع النظام (Stock Accountability)"
+      "المسؤول عن مطابقة الجرد الفعلي مع النظام"
     ],
-    "qualifications": "بكالوريوس إدارة سلاسل إمداد / هندسة صناعية + خبرة 10 سنوات",
-    "odooRole": "Inventory Manager (Admin)"
+    "qualifications": "بكالوريوس إدارة سلاسل إمداد + خبرة 10 سنوات",
+    "odooRole": "Inventory Manager (Admin)",
+    "operationalReporting": "الإدارة العامة"
+  },
+  "مدير إدارة الجودة": {
+    "titleEn": "Quality Manager",
+    "dept": "إدارة الجودة (وظيفة مساندة)",
+    "duties": [
+      "التحقق التشغيلي من تطبيق قواعد الجودة والسلامة",
+      "إجراء عمليات التدقيق والفحص الميداني",
+      "إدارة برامج الإجراءات التصحيحية والوقائية (CAPA)",
+      "الإشراف على جودة المنتجات في كافة المراكز",
+      "رفع تقارير عدم المطابقة ومتابعة فعاليتها"
+    ],
+    "qualifications": "بكالوريوس جودة / علوم / هندسة + خبرة 8 سنوات",
+    "odooRole": "Quality Manager (Admin)",
+    "functionalReporting": "الإدارة العامة",
+    "operationalReporting": "إدارة الحوكمة (تكامل رقابي)"
   },
   "مدير الإدارة التجارية": {
     "titleEn": "Commercial Manager",
-    "dept": "الإدارة التجارية",
+    "dept": "الإدارة التجارية (وظيفة مساندة)",
     "duties": [
-      "إدارة الأنشطة التجارية وعلاقات الموردين واتفاقيات الشراء",
-      "الإشراف المباشر على قسم المشتريات وضمان أفضل شروط توريد",
-      "تحليل السوق واختيار الموردين المعتمدين وتطوير الشراكات",
-      "المسؤول عن دورة الشراء من الطلب وحتى وصول البضاعة للمستودع",
-      "التنسيق مع المالية لضمان سداد مستحقات الموردين"
+      "إدارة الأنشطة التجارية وعلاقات الموردين",
+      "الإشراف على قسم المشتريات وضمان أفضل شروط توريد",
+      "تحليل السوق واختيار الموردين المعتمدين",
+      "المسؤول عن دورة الشراء حتى وصول البضاعة",
+      "التنسيق مع المالية لسداد مستحقات الموردين"
     ],
     "qualifications": "بكالوريوس تجارة / إدارة أعمال + خبرة 10 سنوات",
-    "odooRole": "Commercial Manager (Admin)"
+    "odooRole": "Commercial Manager (Admin)",
+    "functionalReporting": "الإدارة العامة",
+    "operationalReporting": "إدارة سلاسل الإمداد (دعم التوريد)"
   },
   "مدير إدارة المالية": {
     "titleEn": "Finance Manager",
-    "dept": "إدارة المالية",
+    "dept": "إدارة المالية (وظيفة مساندة)",
     "duties": [
-      "الرقابة المالية الشاملة على التدفقات النقدية والأصول والمخزون",
+      "الرقابة المالية الشاملة على التدفقات والأصول والمخزون",
       "إدارة الميزانيات والتحليل المالي لنتائج التشغيل",
-      "التحقق المالي من فواتير الموردين ومطابقتها مع الاستلام",
-      "الإشراف على عمليات الجرد المالي السنوي والمطابقة الدفترية",
+      "التحقق المالي من فواتير الموردين ومطابقتها (3-Way Match)",
+      "الإشراف على عمليات الجرد المالي السنوي",
       "إصدار التقارير المالية الدورية للإدارة العامة"
     ],
     "qualifications": "بكالوريوس محاسبة / مالية + خبرة 10 سنوات",
-    "odooRole": "Finance Manager (Admin)"
-  },
-  "موظف الجودة": {
-    "titleEn": "Quality Officer",
-    "dept": "إدارة الجودة",
-    "duties": [
-      "التنفيذ الميداني لعمليات الفحص والتدقيق في كافة المواقع",
-      "توثيق حالات عدم المطابقة ورفع تقارير الجودة اليومية",
-      "مراقبة درجات الحرارة وصلاحية المنتجات ونظافة المرافق",
-      "التحقق من التزام العمالة بالمعايير الصحية والمهنية"
-    ],
-    "qualifications": "دبلوم / بكالوريوس جودة أو علوم",
-    "odooRole": "Quality User"
+    "odooRole": "Finance Manager (Admin)",
+    "functionalReporting": "الإدارة العامة",
+    "operationalReporting": "إدارة المستودعات (رقابة الأصول)"
   },
   "موظف تقنية المعلومات": {
     "titleEn": "IT Specialist",
-    "dept": "الإدارة التقنية (IT Department)",
+    "dept": "الإدارة التقنية (وظيفة مساندة)",
     "duties": [
-      "تقديم الدعم التقني اليومي لجميع مستخدمي نظام Odoo وأجهزة الباركود",
-      "إدارة حسابات المستخدمين وصلاحياتهم في Odoo",
+      "تقديم الدعم التقني اليومي لمستخدمي Odoo وأجهزة الباركود",
+      "إدارة حسابات المستخدمين وصلاحياتهم",
       "متابعة أداء الشبكة والأجهزة وضمان استمرارية العمل",
-      "تدريب المستخدمين الجدد على استخدام النظام وفقاً لتعليمات الإدارة",
-      "صيانة الطابعات والشبكات اللاسلكية داخل المستودع"
+      "تدريب المستخدمين وصيانة الطابعات والشبكات"
     ],
-    "qualifications": "بكالوريوس تقنية معلومات / علوم حاسب + خبرة في دعم ERP",
-    "odooRole": "System User / Technical Support"
+    "qualifications": "بكالوريوس IT + خبرة في دعم ERP",
+    "odooRole": "System User",
+    "functionalReporting": "الإدارة التقنية",
+    "operationalReporting": "إدارة سلاسل الإمداد (دعم تقني)"
+  },
+  "موظف الجودة": {
+    "titleEn": "Quality Officer",
+    "dept": "إدارة الجودة (وظيفة مساندة)",
+    "duties": [
+      "التنفيذ الميداني لعمليات الفحص والتدقيق",
+      "توثيق حالات عدم المطابقة ورفع التقارير اليومية",
+      "مراقبة درجات الحرارة وصلاحية المنتجات"
+    ],
+    "qualifications": "دبلوم / بكالوريوس جودة أو علوم",
+    "odooRole": "Quality User",
+    "functionalReporting": "إدارة الجودة",
+    "operationalReporting": "إدارة الحوكمة"
   },
   "موظف المشتريات": {
     "titleEn": "Purchasing Officer",
-    "dept": "الإدارة التجارية",
+    "dept": "الإدارة التجارية (قسم المشتريات)",
     "duties": [
-      "تنفيذ طلبات الشراء والتفاوض مع الموردين على الأسعار",
-      "متابعة أوامر الشراء المتأخرة وضمان وصولها في الموعد",
-      "تحديث بيانات الأصناف والموردين في نظام أودو",
-      "التنسيق مع المستودع لجدولة الاستلامات الواردة"
+      "تنفيذ طلبات الشراء والتفاوض مع الموردين",
+      "متابعة أوامر الشراء المتأخرة وضمان وصولها",
+      "تحديث بيانات الأصناف والموردين في Odoo"
     ],
     "qualifications": "دبلوم / بكالوريوس إدارة أعمال",
-    "odooRole": "Purchase User"
+    "odooRole": "Purchase User",
+    "functionalReporting": "الإدارة التجارية",
+    "operationalReporting": "إدارة سلاسل الإمداد"
   },
   "موظفو الاستلام": {
     "titleEn": "Receiving Staff",
     "dept": "إدارة المستودعات (قسم عمليات المستودع)",
     "duties": [
-      "تفريغ الشحنات ومطابقة الكميات الفعلية مع مستندات الشحن",
-      "توثيق الاستلام في نظام Odoo وإصدار سندات الاستلام (GRN)",
-      "فرز البضائع وتوجيهها لمنطقة التخزين أو الفحص"
+      "تفريغ الشحنات ومطابقة الكميات مع المستندات",
+      "توثيق الاستلام في Odoo وإصدار GRN",
+      "فرز البضائع وتوجيهها للتخزين"
     ],
-    "qualifications": "دبلوم / ثانوية + معرفة بالحاسب الآلي",
-    "odooRole": "Inventory User"
+    "qualifications": "دبلوم / ثانوية + معرفة بالحاسب",
+    "odooRole": "Inventory User",
+    "operationalReporting": "إدارة المستودعات (قسم العمليات)"
   },
   "موظفو التخزين والسحب": {
     "titleEn": "Storage & Picking Staff",
     "dept": "إدارة المستودعات (قسم عمليات المستودع)",
     "duties": [
-      "نقل البضائع لمواقع التخزين المحددة وتطبيق قواعد Putaway",
-      "سحب الأصناف بناءً على قوائم السحب الإلكترونية",
-      "تطبيق قواعد FEFO بدقة والالتزام بالباركود"
+      "نقل البضائع للمواقع وتطبيق قواعد Putaway",
+      "سحب الأصناف بناءً على القوائم الإلكترونية",
+      "تطبيق قواعد FEFO والالتزام بالباركود"
     ],
-    "qualifications": "القدرة على العمل البدني + رخصة رافعة شوكية (للبعض)",
-    "odooRole": "Barcode/Inventory User"
+    "qualifications": "العمل البدني + رخصة رافعة (للبعض)",
+    "odooRole": "Barcode User",
+    "operationalReporting": "إدارة المستودعات (قسم العمليات)"
   },
   "موظفو النقل": {
     "titleEn": "Transport Staff",
     "dept": "إدارة سلاسل الإمداد (قسم العمليات اللوجستية)",
     "duties": [
-      "تنفيذ رحلات التوزيع والتسليم للفروع والعملاء",
-      "الحفاظ على سلامة الشحنة والمركبة أثناء النقل",
-      "توثيق التسليم في النظام والحصول على التوقيعات"
+      "تنفيذ رحلات التوزيع والتسليم للفروع",
+      "الحفاظ على سلامة الشحنة والمركبة",
+      "توثيق التسليم في النظام"
     ],
     "qualifications": "رخصة قيادة نقل ثقيل/متوسط",
-    "odooRole": "Fleet User"
+    "odooRole": "Fleet User",
+    "operationalReporting": "إدارة سلاسل الإمداد (قسم اللوجستيات)"
   }
 };
     const DEFAULT_DATA = [
@@ -801,6 +802,19 @@
               <div class="text-gray-400 text-xs">الإدارة / التبعية</div>
               <div class="text-white text-sm font-bold">${data.dept}</div>
             </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            ${data.operationalReporting ? `
+            <div class="bg-blue-900/20 p-2 rounded border border-blue-500/30">
+              <div class="text-blue-400 text-[10px] mb-1">التبعية التشغيلية</div>
+              <div class="text-white text-xs font-bold">${data.operationalReporting}</div>
+            </div>` : ''}
+            ${data.functionalReporting ? `
+            <div class="bg-emerald-900/20 p-2 rounded border border-emerald-500/30">
+              <div class="text-emerald-400 text-[10px] mb-1">التبعية الوظيفية</div>
+              <div class="text-white text-xs font-bold">${data.functionalReporting}</div>
+            </div>` : ''}
           </div>
 
           <div class="mb-6">

@@ -319,29 +319,31 @@ tr:hover td{background:rgba(200,157,59,0.04);}
     <div class="org-connector"></div>
     <div class="org-hline"></div>
 
-    <div class="org-layer-label">الأعمدة الإدارية الثمانية (8 Pillars)</div>
+    <div class="org-layer-label">الأعمدة التشغيلية الثلاثة (3 Operational Pillars)</div>
     <div class="org-row">
-      <div class="org-node layer2"><span class="on-icon">🛡️</span><div class="on-title">إدارة الحوكمة</div><div class="on-sub">Governance Management</div></div>
-      <div class="org-node layer2"><span class="on-icon">🔬</span><div class="on-title">إدارة الجودة</div><div class="on-sub">Quality Management</div></div>
-      <div class="org-node layer2"><span class="on-icon">💻</span><div class="on-title">إدارة سلاسل الإمداد</div><div class="on-sub">Supply Chain Management</div></div>
-      <div class="org-node layer2"><span class="on-icon">🧭</span><div class="on-title">إدارة المستودعات</div><div class="on-sub">Warehouse Management</div></div>
-      <div class="org-node layer2"><span class="on-icon">💼</span><div class="on-title">إدارة التجارية</div><div class="on-sub">Commercial Management</div></div>
-      <div class="org-node layer2"><span class="on-icon">💰</span><div class="on-title">إدارة المالية</div><div class="on-sub">Finance Management</div></div>
-      <div class="org-node layer2"><span class="on-icon">💾</span><div class="on-title">الإدارة التقنية</div><div class="on-sub">Technical Management</div></div>
-      <div class="org-node layer2"><span class="on-icon">👥</span><div class="on-title">الموارد البشرية</div><div class="on-sub">Human Resources</div></div>
+      <div class="org-node layer2" style="border-width: 2px; border-color: var(--gold); box-shadow: 0 0 15px rgba(200,157,59,0.3);"><span class="on-icon">🛡️</span><div class="on-title">إدارة الحوكمة</div><div class="on-sub">Governance Management</div></div>
+      <div class="org-node layer2" style="border-width: 2px; border-color: var(--gold); box-shadow: 0 0 15px rgba(200,157,59,0.3);"><span class="on-icon">💻</span><div class="on-title">إدارة سلاسل الإمداد</div><div class="on-sub">Supply Chain Management</div></div>
+      <div class="org-node layer2" style="border-width: 2px; border-color: var(--gold); box-shadow: 0 0 15px rgba(200,157,59,0.3);"><span class="on-icon">🧭</span><div class="on-title">إدارة المستودعات</div><div class="on-sub">Warehouse Management</div></div>
     </div>
+
     <div class="org-connector"></div>
     <div class="org-hline"></div>
 
-    <div class="org-layer-label">الأقسام والوحدات التشغيلية</div>
+    <div class="org-layer-label">الوظائف والوحدات التشغيلية والمساندة</div>
     <div class="org-row">
       <div class="org-node layer3" style="border-style: dashed; border-color: var(--gold);"><span class="on-icon">⚖️</span><div class="on-title">السياسات والامتثال</div><div class="on-sub">وحدة تتبع الحوكمة</div></div>
-      <div class="org-node layer3"><span class="on-icon">📋</span><div class="on-title">التدقيق والرقابة</div><div class="on-sub">وحدة تتبع الجودة</div></div>
       <div class="org-node layer3"><span class="on-icon">⚙️</span><div class="on-title">العمليات اللوجستية</div><div class="on-sub">نقل، صيانة، أمن، عمالة</div></div>
       <div class="org-node layer3"><span class="on-icon">📦</span><div class="on-title">عمليات المستودع</div><div class="on-sub">استلام، تخزين، صرف</div></div>
-      <div class="org-node layer3"><span class="on-icon">🛒</span><div class="on-title">قسم المشتريات</div><div class="on-sub">Commercial Sub-dept.</div></div>
-      <div class="org-node layer3"><span class="on-icon">📊</span><div class="on-title">الرقابة المالية</div><div class="on-sub">Finance Sub-dept.</div></div>
-      <div class="org-node layer3"><span class="on-icon">💻</span><div class="on-title">الدعم التقني</div><div class="on-sub">IT Support Unit</div></div>
+    </div>
+
+    <div class="org-connector"></div>
+    <div class="org-layer-label">الإدارات والوظائف المساندة (Support Functions)</div>
+    <div class="org-row">
+      <div class="org-node layer2" style="opacity: 0.85; transform: scale(0.95);"><span class="on-icon">🔬</span><div class="on-title">إدارة الجودة</div><div class="on-sub">Quality Management</div></div>
+      <div class="org-node layer2" style="opacity: 0.85; transform: scale(0.95);"><span class="on-icon">💼</span><div class="on-title">إدارة التجارية</div><div class="on-sub">Commercial Management</div></div>
+      <div class="org-node layer2" style="opacity: 0.85; transform: scale(0.95);"><span class="on-icon">💰</span><div class="on-title">إدارة المالية</div><div class="on-sub">Finance Management</div></div>
+      <div class="org-node layer2" style="opacity: 0.85; transform: scale(0.95);"><span class="on-icon">💾</span><div class="on-title">الإدارة التقنية</div><div class="on-sub">Technical Management</div></div>
+      <div class="org-node layer2" style="opacity: 0.85; transform: scale(0.95);"><span class="on-icon">👥</span><div class="on-title">الموارد البشرية</div><div class="on-sub">Human Resources</div></div>
     </div>
   </div>
 
@@ -521,7 +523,7 @@ const jobs = [
   {
     "icon": "🛡️",
     "title": "مدير إدارة الحوكمة",
-    "layer": "الرقابة المستقلة — Pillar 1",
+    "layer": "العمود التشغيلي الأول — Operational Pillar",
     "odooRole": "Governance Auditor",
     "odooLevel": "Admin",
     "modules": "Quality, Inventory (Read), Audit Logs",
@@ -539,29 +541,9 @@ const jobs = [
     "kpis": "نسبة الامتثال للسياسات، كفاءة تصميم العمليات، تقليل المخاطر"
   },
   {
-    "icon": "🔬",
-    "title": "مدير إدارة الجودة",
-    "layer": "التحقق والامتثال — Pillar 2",
-    "odooRole": "Quality Manager",
-    "odooLevel": "Admin",
-    "modules": "Quality, Inventory (Read)",
-    "p1": "مدير واحد",
-    "p2": "مدير + فريق جودة متخصص",
-    "duties": [
-      "المسؤول عن التحقق التشغيلي من تطبيق قواعد الجودة السلامة",
-      "إجراء عمليات التدقيق والفحص الميداني (Audits & Inspections)",
-      "إدارة برامج الإجراءات التصحيحية والوقائية (CAPA Programs)",
-      "الإشراف على جودة المنتجات في المستودعات والمطاعم والأسواق",
-      "التحقق من سلامة سلسلة التبريد ومعايير التخزين والتحضير",
-      "رفع تقارير عدم المطابقة ومتابعة فعاليتها التحسينية"
-    ],
-    "reportingTo": "الإدارة العامة (تبعية مباشرة)",
-    "kpis": "دقة عمليات الفحص، معدل إغلاق CAPA، مستوى الامتثال الصحي"
-  },
-  {
     "icon": "💻",
     "title": "مدير إدارة سلاسل الإمداد",
-    "layer": "التخطيط والتنسيق اللوجستي — Pillar 3",
+    "layer": "العمود التشغيلي الثاني — Operational Pillar",
     "odooRole": "Supply Chain Manager",
     "odooLevel": "Admin",
     "modules": "Purchase, Inventory, Planning",
@@ -581,7 +563,7 @@ const jobs = [
   {
     "icon": "🧭",
     "title": "مدير إدارة المستودعات",
-    "layer": "مالك المخزون والتنفيذ — Pillar 4",
+    "layer": "العمود التشغيلي الثالث — Operational Pillar",
     "odooRole": "Warehouse Manager",
     "odooLevel": "Admin",
     "modules": "Inventory, Barcode, Quality",
@@ -599,9 +581,29 @@ const jobs = [
     "kpis": "دقة المخزون (98.5%+)، إنتاجية السحب، سرعة الاستلام"
   },
   {
+    "icon": "🔬",
+    "title": "مدير إدارة الجودة",
+    "layer": "وظيفة مساندة — Support Function",
+    "odooRole": "Quality Manager",
+    "odooLevel": "Admin",
+    "modules": "Quality, Inventory (Read)",
+    "p1": "مدير واحد",
+    "p2": "مدير + فريق جودة متخصص",
+    "duties": [
+      "المسؤول عن التحقق التشغيلي من تطبيق قواعد الجودة السلامة",
+      "إجراء عمليات التدقيق والفحص الميداني (Audits & Inspections)",
+      "إدارة برامج الإجراءات التصحيحية والوقائية (CAPA Programs)",
+      "الإشراف على جودة المنتجات في المستودعات والمطاعم والأسواق",
+      "التحقق من سلامة سلسلة التبريد ومعايير التخزين والتحضير",
+      "رفع تقارير عدم المطابقة ومتابعة فعاليتها التحسينية"
+    ],
+    "functionalReporting": "الإدارة العامة",
+    "operationalReporting": "إدارة الحوكمة (علاقة تكاملية)"
+  },
+  {
     "icon": "💼",
     "title": "مدير الإدارة التجارية",
-    "layer": "النشاط التجاري والمشتريات — Pillar 5",
+    "layer": "وظيفة مساندة — Support Function",
     "odooRole": "Commercial Manager",
     "odooLevel": "Admin",
     "modules": "Purchase, Sales",
@@ -614,13 +616,13 @@ const jobs = [
       "المسؤول عن دورة الشراء من الطلب وحتى وصول البضاعة للمستودع",
       "التنسيق مع المالية لضمان سداد مستحقات الموردين وتطبيق العقود"
     ],
-    "reportingTo": "الإدارة العامة",
-    "kpis": "توفير تكاليف الشراء، جودة الموردين، زمن دورة الشراء"
+    "functionalReporting": "الإدارة العامة",
+    "operationalReporting": "إدارة سلاسل الإمداد (دعم التوريد)"
   },
   {
     "icon": "💰",
     "title": "مدير إدارة المالية",
-    "layer": "الرقابة والسيطرة المالية — Pillar 6",
+    "layer": "وظيفة مساندة — Support Function",
     "odooRole": "Finance Manager",
     "odooLevel": "Admin",
     "modules": "Accounting, Invoicing",
@@ -633,13 +635,13 @@ const jobs = [
       "الإشراف على عمليات الجرد المالي السنوي والمطابقة الدفترية",
       "إصدار التقارير المالية الدورية للإدارة العامة"
     ],
-    "reportingTo": "الإدارة العامة",
-    "kpis": "دقة التقارير المالية، التدفق النقدي، الامتثال الضريبي"
+    "functionalReporting": "الإدارة العامة",
+    "operationalReporting": "إدارة المستودعات (رقابة الأصول)"
   },
   {
     "icon": "💾",
     "title": "مدير الإدارة التقنية",
-    "layer": "البنية التحتية والأنظمة — Pillar 7",
+    "layer": "وظيفة مساندة — Support Function",
     "odooRole": "IT Manager",
     "odooLevel": "Admin",
     "modules": "Settings, Technical Support",
@@ -652,13 +654,13 @@ const jobs = [
       "إدارة صلاحيات الوصول بناءً على مصفوفة الحوكمة المعتمدة",
       "مواكبة التطورات التقنية لتحسين كفاءة العمليات الرقمية"
     ],
-    "reportingTo": "الإدارة العامة",
-    "kpis": "زمن تشغيل النظام (Uptime)، سرعة حل التذاكر التقنية"
+    "functionalReporting": "الإدارة العامة",
+    "operationalReporting": "إدارة سلاسل الإمداد (دعم الأنظمة)"
   },
   {
     "icon": "👥",
     "title": "مدير الموارد البشرية",
-    "layer": "رأس المال البشري — Pillar 8",
+    "layer": "وظيفة مساندة — Support Function",
     "odooRole": "HR Manager",
     "odooLevel": "Admin",
     "modules": "Employees, Payroll, Recruitment",
@@ -671,13 +673,12 @@ const jobs = [
       "ضمان توفر الكوادر المؤهلة لكل الأقسام التشغيلية",
       "إدارة علاقات الموظفين والبيئة العملية المحفزة"
     ],
-    "reportingTo": "الإدارة العامة",
-    "kpis": "معدل دوران الموظفين، سرعة التوظيف، رضاء الموظفين"
+    "functionalReporting": "الإدارة العامة"
   },
   {
     "icon": "⚙️",
     "title": "قسم العمليات اللوجستية",
-    "layer": "دعم تشغيلي (سلاسل الإمداد)",
+    "layer": "وحدة تشغيلية (سلاسل الإمداد)",
     "odooRole": "Operations User",
     "odooLevel": "User",
     "modules": "Fleet, Maintenance, Labor",
@@ -694,7 +695,7 @@ const jobs = [
   {
     "icon": "📦",
     "title": "قسم عمليات المستودع",
-    "layer": "تنفيذ مخزوني (المستودعات)",
+    "layer": "وحدة تشغيلية (المستودعات)",
     "odooRole": "Inventory User",
     "odooLevel": "User",
     "modules": "Inventory, Barcode",
@@ -711,7 +712,7 @@ const jobs = [
   {
     "icon": "🔬",
     "title": "موظف الجودة",
-    "layer": "رقابة ميدانية",
+    "layer": "وظيفة رقابية مساندة",
     "odooRole": "Quality User",
     "odooLevel": "User",
     "modules": "Quality, Inventory (Read)",
@@ -723,12 +724,13 @@ const jobs = [
       "مراقبة درجات الحرارة وصلاحية المنتجات ونظافة المرافق",
       "التحقق من التزام العمالة بالمعايير الصحية والمهنية"
     ],
-    "reportingTo": "إدارة الجودة"
+    "functionalReporting": "إدارة الجودة",
+    "operationalReporting": "إدارة الحوكمة"
   },
   {
     "icon": "🛒",
     "title": "موظف التجارية / المشتريات",
-    "layer": "دعم تجاري",
+    "layer": "وظيفة دعم تجاري",
     "odooRole": "Purchase User",
     "odooLevel": "User",
     "modules": "Purchase",
@@ -740,12 +742,13 @@ const jobs = [
       "تحديث بيانات الأصناف والموردين في نظام أودو",
       "التنسيق مع المستودع لجدولة الاستلامات الواردة"
     ],
-    "reportingTo": "الإدارة التجارية"
+    "functionalReporting": "الإدارة التجارية",
+    "operationalReporting": "إدارة سلاسل الإمداد"
   },
   {
     "icon": "📊",
     "title": "موظف المالية / المحاسبة",
-    "layer": "دعم مالي",
+    "layer": "وظيفة دعم مالي",
     "odooRole": "Accountant",
     "odooLevel": "User",
     "modules": "Accounting",
@@ -757,12 +760,13 @@ const jobs = [
       "المشاركة في عمليات الجرد الفعلي ومطابقته دفترياً",
       "إعداد مسودات التقارير المالية الشهرية"
     ],
-    "reportingTo": "إدارة المالية"
+    "functionalReporting": "إدارة المالية",
+    "operationalReporting": "إدارة المستودعات"
   },
   {
     "icon": "💾",
     "title": "موظف تقنية المعلومات",
-    "layer": "دعم تقني",
+    "layer": "وظيفة دعم تقني",
     "odooRole": "System User",
     "odooLevel": "User",
     "modules": "Technical Support",
@@ -774,9 +778,11 @@ const jobs = [
       "إدارة صلاحيات الوصول للمستخدمين بناءً على مصفوفة الأدوار",
       "توفير التدريب المستمر للموظفين على الأدوات التقنية الجديدة"
     ],
-    "reportingTo": "الإدارة التقنية"
+    "functionalReporting": "الإدارة التقنية",
+    "operationalReporting": "إدارة سلاسل الإمداد"
   }
-];
+]
+;
 
 const raciMatrix = {
   "stages": [
@@ -892,49 +898,49 @@ const orgTable = [
     "dept": "🛡️ إدارة الحوكمة",
     "p1": "1 مدير",
     "p2": "مدير + فريق تدقيق",
-    "role": "السياسات، الامتثال، الحوكمة المؤسسية"
-  },
-  {
-    "dept": "🔬 إدارة الجودة",
-    "p1": "1 مدير",
-    "p2": "مدير + فريق جودة",
-    "role": "التدقيق الميداني، فحص الجودة، CAPA"
+    "role": "العمود التشغيلي 1: السياسات، الامتثال، الحوكمة"
   },
   {
     "dept": "💻 إدارة سلاسل الإمداد",
     "p1": "1 مدير",
     "p2": "مدير + رؤساء أقسام",
-    "role": "التخطيط، التنسيق، العمليات اللوجستية"
+    "role": "العمود التشغيلي 2: التخطيط، اللوجستيات، التوريد"
   },
   {
     "dept": "🧭 إدارة المستودعات",
     "p1": "1 مدير",
     "p2": "1 + مدراء فروع",
-    "role": "ملكية المخزون، عمليات المستودع الميدانية"
+    "role": "العمود التشغيلي 3: ملكية المخزون، العمليات الميدانية"
+  },
+  {
+    "dept": "🔬 إدارة الجودة",
+    "p1": "1 مدير",
+    "p2": "مدير + فريق جودة",
+    "role": "وظيفة مساندة: التدقيق الفني، فحص الجودة، CAPA"
   },
   {
     "dept": "💼 الإدارة التجارية",
     "p1": "1 مدير",
     "p2": "مدير + مشتريات",
-    "role": "المشتريات، علاقات الموردين، العقود"
+    "role": "وظيفة مساندة: المشتريات، العقود، علاقات الموردين"
   },
   {
     "dept": "💰 إدارة المالية",
     "p1": "1 مدير",
     "p2": "مدير + محاسبة",
-    "role": "الرقابة المالية، الميزانيات، التدقيق المالي"
+    "role": "وظيفة مساندة: الرقابة المالية، الميزانيات، التدقيق"
   },
   {
     "dept": "💾 الإدارة التقنية",
     "p1": "1 موظف",
     "p2": "مدير + فريق IT",
-    "role": "الأنظمة (Odoo)، البنية التحتية، الدعم"
+    "role": "وظيفة مساندة: الأنظمة (Odoo)، البنية التحتية"
   },
   {
     "dept": "👥 الموارد البشرية",
     "p1": "1 موظف",
     "p2": "مدير + فريق HR",
-    "role": "التوظيف، التدريب، شؤون الموظفين"
+    "role": "وظيفة مساندة: التوظيف، التدريب، شؤون الموظفين"
   },
   {
     "dept": "📊 الإجمالي التقريبي",
@@ -1059,18 +1065,28 @@ function renderJobList() {
 function renderJobDetail() {
   const j = jobs[curJob];
   let relationsHtml = '';
+
   if (j.reportingTo) {
     relationsHtml += `
       <div class="oi-row" style="margin-bottom: 8px;">
-        <span class="oi-label" style="margin: 0 0 0 8px; min-width: 100px;">التبعية المباشرة:</span>
+        <span class="oi-label" style="margin: 0 0 0 8px; min-width: 110px;">التبعية المباشرة:</span>
         <span class="oi-tag" style="background: rgba(200, 157, 59, 0.1); border-color: rgba(200, 157, 59, 0.3); color: var(--gold);">${j.reportingTo}</span>
       </div>`;
   }
-  if (j.cooperativeWith) {
+
+  if (j.operationalReporting) {
+    relationsHtml += `
+      <div class="oi-row" style="margin-bottom: 8px;">
+        <span class="oi-label" style="margin: 0 0 0 8px; min-width: 110px;">التبعية التشغيلية:</span>
+        <span class="oi-tag" style="background: rgba(52, 152, 219, 0.1); border-color: rgba(52, 152, 219, 0.3); color: #3498db;">${j.operationalReporting}</span>
+      </div>`;
+  }
+
+  if (j.functionalReporting) {
     relationsHtml += `
       <div class="oi-row">
-        <span class="oi-label" style="margin: 0 0 0 8px; min-width: 100px;">العلاقة التعاونية:</span>
-        <span class="oi-tag" style="background: rgba(52, 152, 219, 0.1); border-color: rgba(52, 152, 219, 0.3); color: #3498db;">${j.cooperativeWith}</span>
+        <span class="oi-label" style="margin: 0 0 0 8px; min-width: 110px;">التبعية الوظيفية:</span>
+        <span class="oi-tag" style="background: rgba(0, 166, 80, 0.1); border-color: rgba(0, 166, 80, 0.3); color: #4be89a;">${j.functionalReporting}</span>
       </div>`;
   }
 
