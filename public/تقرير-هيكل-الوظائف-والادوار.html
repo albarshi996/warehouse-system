@@ -240,7 +240,7 @@ tr:hover td{background:rgba(200,157,59,0.04);}
     <div class="phase-card p1">
       <div class="phase-title">🚀 المرحلة الأولى — التشغيل الأولي</div>
       <div class="phase-item"><span class="phase-dot pd-blue"></span>مدير مستودع تنفيذي واحد</div>
-      <div class="phase-item"><span class="phase-dot pd-blue"></span>مدير سلاسل إمداد مشترك مع المالية</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>مدير سلاسل إمداد فرد مستقل يتبع إدارة المستودعات</div>
       <div class="phase-item"><span class="phase-dot pd-blue"></span>مشرف استلام + مشرف تخزين</div>
       <div class="phase-item"><span class="phase-dot pd-blue"></span>مشرف جودة مشترك (استلام + مرتجعات)</div>
       <div class="phase-item"><span class="phase-dot pd-blue"></span>فريق سحب وتوزيع مصغر (20–30 عامل)</div>
@@ -321,8 +321,8 @@ tr:hover td{background:rgba(200,157,59,0.04);}
 
     <div class="org-layer-label">الطبقة الثانية — الإدارة الوسطى</div>
     <div class="org-row">
-      <div class="org-node layer2"><span class="on-icon">💻</span><div class="on-title">مدير سلاسل الإمداد</div><div class="on-sub">طبقة 2</div></div>
-      <div class="org-node layer2"><span class="on-icon">🛡️</span><div class="on-title">مدير حوكمة الدورة</div><div class="on-sub">يرفع لـ: إدارة المستودعات</div></div>
+      <div class="org-node layer2"><span class="on-icon">💻</span><div class="on-title">مدير سلاسل الإمداد</div><div class="on-sub">يتبع: إدارة المستودعات — علاقة تعاونية مع مدير المستودعات</div></div>
+      <div class="org-node layer2"><span class="on-icon">🛡️</span><div class="on-title">مدير حوكمة الدورة</div><div class="on-sub">تبعية مباشرة: الإدارة العامة</div></div>
       <div class="org-node layer2"><span class="on-icon">📊</span><div class="on-title">مدير المحاسبة والمالية</div><div class="on-sub">يرفع لـ: الإدارة المالية</div></div>
       <div class="org-node layer2">
         <span class="on-icon">🛒</span>
@@ -547,32 +547,36 @@ const jobs = [
     ]
   },
   {
-    icon:"💻", title:"مدير سلاسل الإمداد واللوجستيات", layer:"الطبقة 2 — الإدارة الوسطى",
+    icon:"💻", title:"مدير سلاسل الإمداد واللوجستيات", layer:"الطبقة 2 — تبعية مباشرة للإدارة العامة",
+    reportingTo: "الإدارة العامة (تبعية مباشرة)",
+    cooperativeWith: "مدير المستودعات (علاقة تعاونية)",
     odooRole:"System Administrator", odooLevel:"Admin", modules:"Settings كاملة",
-    p1:"مشارك مع المالية",p2:"مدير مستقل + فريق",
+    p1:"فرد مستقل يتبع إدارة المستودعات",p2:"مدير مستقل + فريق",
     duties:[
       "إدارة وتخطيط سلاسل الإمداد بالكامل من المورد وحتى العميل النهائي",
       "الإشراف على العمليات اللوجستية والتوزيع اليومي بين المستودعات والفروع",
       "تنسيق عمليات النقل والشحن مع إدارة الأسطول وشركات النقل الخارجية",
-      "تحسين كفاءة سلسلة التوريد وتقليل التكاليف وأوقات الدورة",
+      "الإشراف المباشر على فريق الخدمات والصيانة وفريق الحركة والأمن والعمالة",
       "إدارة علاقات شركات النقل والخدمات اللوجستية الخارجية وتجديد العقود",
-      "الإشراف على نظام تتبع الشحنات والتسليمات في وقت حقيقي"
+      "الإشراف على نظام تتبع الشحنات والتسليمات في وقت حقيقي",
+      "علاقته بمدير المستودعات علاقة تعاونية — التبعية المباشرة للإدارة العامة"
     ]
   },
   {
-    icon:"🛡️", title:"مدير حوكمة الدورة المستندية", layer:"قسم مستقل — يتبع إدارة المستودعات",
-    reportingTo: "مدير المستودعات",
+    icon:"🛡️", title:"مدير حوكمة الدورة المستندية", layer:"قسم مستقل — تبعية مباشرة للإدارة العامة",
+    reportingTo: "الإدارة العامة (تبعية مباشرة)",
+    cooperativeWith: "مدير المستودعات (علاقة تعاونية — هو الجهة المراقبة على أداء مدير المستودعات)",
     odooRole:"Quality Administrator", odooLevel:"Admin", modules:"Quality + Inventory (read)",
     p1:"1 مشرف مشترك",p2:"مدير + ~15 مفتش",
     duties:[
-      "إدارة قسم مستقل للحوكمة تابع لإدارة المستودعات — لا يتبع إدارة الجودة",
+      "مدير مستقل لتتبع الدورة المستندية والتأكد من تطبيقها في جميع أقسام المستودع",
+      "المراقب العام على العمليات المخازنية وما ينتج عنها من وثائق وإجراءات",
       "حوكمة وإدارة الدورة المستندية الكاملة بمراحلها الثماني وضمان تكاملها",
       "مراقبة الإدخالات اليومية والتحقق من دقتها ومطابقتها في Odoo",
-      "ضمان تطبيق معايير الجودة والسلامة الغذائية على جميع المنتجات",
-      "إدارة فريق فحص الجودة والتدقيق الداخلي وتطوير مهاراتهم",
       "مراجعة وتدقيق جميع المستندات اليومية الواردة والصادرة قبل الاعتماد",
       "ضمان تكامل البيانات وعدم الفجوات أو التعارضات في نظام Odoo",
-      "يرفع تقاريره مباشرةً لإدارة الجودة العليا"
+      "يُعدّ الجهةَ الرقابية على أداء مدير المستودعات — علاقته به علاقة تعاونية",
+      "التبعية المباشرة للإدارة العامة — لا يرفع تقارير لإدارة الجودة"
     ]
   },
   {
@@ -763,7 +767,7 @@ const odooRoles = [
 
 const orgTable = [
   {dept:"🧭 القيادة التنفيذية",p1:"1 مدير",p2:"1 + مدراء فروع",role:"الإشراف الكامل والاستراتيجية"},
-  {dept:"💻 سلاسل الإمداد",p1:"مشارك مع المالية",p2:"مدير مستقل + فريق",role:"تخطيط وإدارة التوريد"},
+  {dept:"💻 سلاسل الإمداد",p1:"فرد مستقل",p2:"مدير مستقل + فريق",role:"تخطيط وإدارة التوريد — يتبع إدارة المستودعات"},
   {dept:"🛡️ حوكمة الدورة المستندية", p1:"1 مشرف", p2:"مدير متخصص", role:"حوكمة الدورة المستندية — قسم مستقل تابع لإدارة المستودعات"},
   {dept:"🔬 إدارة الجودة", p1:"مشترك مع الاستلام", p2:"مدير + ~15 مفتش", role:"ضمان جودة المنتجات والامتثال"},
   {dept:"📊 المحاسبة والمالية",p1:"محاسب واحد",p2:"مدير + فريق 3–5",role:"الرقابة المالية والتقارير"},
@@ -890,6 +894,22 @@ function renderJobList() {
 
 function renderJobDetail() {
   const j = jobs[curJob];
+  let relationsHtml = '';
+  if (j.reportingTo) {
+    relationsHtml += `
+      <div class="oi-row" style="margin-bottom: 8px;">
+        <span class="oi-label" style="margin: 0 0 0 8px; min-width: 100px;">التبعية المباشرة:</span>
+        <span class="oi-tag" style="background: rgba(200, 157, 59, 0.1); border-color: rgba(200, 157, 59, 0.3); color: var(--gold);">${j.reportingTo}</span>
+      </div>`;
+  }
+  if (j.cooperativeWith) {
+    relationsHtml += `
+      <div class="oi-row">
+        <span class="oi-label" style="margin: 0 0 0 8px; min-width: 100px;">العلاقة التعاونية:</span>
+        <span class="oi-tag" style="background: rgba(52, 152, 219, 0.1); border-color: rgba(52, 152, 219, 0.3); color: #3498db;">${j.cooperativeWith}</span>
+      </div>`;
+  }
+
   document.getElementById('jobDetail').innerHTML = `
     <div class="jdp-header">
       <div class="jdp-icon">${j.icon}</div>
@@ -899,6 +919,7 @@ function renderJobDetail() {
       </div>
     </div>
     <ul class="duties">${j.duties.map(d=>`<li>${d}</li>`).join('')}</ul>
+    ${relationsHtml ? `<div class="odoo-info" style="margin-bottom: 16px;">${relationsHtml}</div>` : ''}
     <div class="odoo-info">
       <div class="oi-label">صلاحيات Odoo 17</div>
       <div class="oi-row">
