@@ -28,39 +28,23 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         </h2>
         <div class="w-16 h-1 bg-brand-red mx-auto mb-8 rounded-full"></div>
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <!-- Tier 1: Management -->
-          <div class="bg-white/5 backdrop-blur border border-brand-red/30 rounded-xl p-6">
-            <div class="text-center mb-4">
-              <div class="w-16 h-16 bg-brand-red/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span class="text-2xl font-bold text-brand-red">م</span>
-              </div>
-              <h3 class="font-bold text-brand-red mb-2">مدير المستودعات</h3>
-              <p class="text-sm text-gray-100">الإشراف العام على جميع العمليات</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { title: 'إدارة الحوكمة', icon: '🛡️', desc: 'السياسات والامتثال' },
+            { title: 'إدارة الجودة', icon: '🔬', desc: 'التدقيق والتحقق' },
+            { title: 'سلاسل الإمداد', icon: '💻', desc: 'التخطيط واللوجستيات' },
+            { title: 'إدارة المستودعات', icon: '🧭', desc: 'ملكية المخزون' },
+            { title: 'الإدارة التجارية', icon: '💼', desc: 'المشتريات والعقود' },
+            { title: 'إدارة المالية', icon: '💰', desc: 'الرقابة المالية' },
+            { title: 'الإدارة التقنية', icon: '💾', desc: 'الأنظمة والدعم' },
+            { title: 'الموارد البشرية', icon: '👥', desc: 'رأس المال البشري' }
+          ].map((pillar) => (
+            <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 transition-all">
+              <div class="text-2xl mb-2">{pillar.icon}</div>
+              <h3 class="font-bold text-brand-yellow text-sm mb-1">{pillar.title}</h3>
+              <p class="text-[10px] text-gray-300">{pillar.desc}</p>
             </div>
-          </div>
-          
-          <!-- Tier 2: Supervisors -->
-          <div class="bg-white/5 backdrop-blur border border-brand-yellow/30 rounded-xl p-6">
-            <div class="text-center mb-4">
-              <div class="w-16 h-16 bg-brand-yellow/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span class="text-2xl font-bold text-brand-yellow">مش</span>
-              </div>
-              <h3 class="font-bold text-brand-yellow mb-2">مشرفو العمليات</h3>
-              <p class="text-sm text-gray-100">إدارة الفرق اليومية</p>
-            </div>
-          </div>
-          
-          <!-- Tier 3: Staff -->
-          <div class="bg-white/5 backdrop-blur border border-green-400/30 rounded-xl p-6">
-            <div class="text-center mb-4">
-              <div class="w-16 h-16 bg-green-400/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span class="text-2xl font-bold text-green-400">ف</span>
-              </div>
-              <h3 class="font-bold text-green-400 mb-2">فرق التشغيل</h3>
-              <p class="text-sm text-gray-100">تنفيذ المهام اليومية</p>
-            </div>
-          </div>
+          ))}
         </div>
         
         <div class="mt-8 text-center">
