@@ -232,10 +232,13 @@
           <tr>
             <th class="p-4 border-b border-white/10">#</th>
             <th class="p-4 border-b border-white/10">المنصب (Position)</th>
+            <th class="p-4 border-b border-white/10">اسم المرشح (Candidate)</th>
             <th class="p-4 border-b border-white/10">المرحلة الأولى (Phase 1)</th>
             <th class="p-4 border-b border-white/10">المرحلة الثانية (Phase 2)</th>
             <th class="p-4 border-b border-white/10 no-print">تاريخ التوظيف المقترح<br><span class="text-[10px] opacity-70">(Proposed Hiring Date)</span></th>
             <th class="p-4 border-b border-white/10">الراتب الشهري (SAR)<br><span class="text-[10px] opacity-70">Monthly Salary</span></th>
+            <th class="p-4 border-b border-white/10">الهاتف (Phone)</th>
+            <th class="p-4 border-b border-white/10">عنوان السكن (Address)</th>
             <th class="p-4 border-b border-white/10">الأولوية</th>
             <th class="p-4 border-b border-white/10">ملاحظات</th>
             <th class="p-4 border-b border-white/10">الإجراءات</th>
@@ -453,7 +456,7 @@
     "odooRole": "Barcode User",
     "operationalReporting": "إدارة المستودعات (قسم العمليات)"
   },
-  "موظفو النقل": {
+  "موظفو النقل والحركة": {
     "titleEn": "Transport Staff",
     "dept": "إدارة سلاسل الإمداد (قسم العمليات اللوجستية)",
     "duties": [
@@ -464,42 +467,91 @@
     "qualifications": "رخصة قيادة نقل ثقيل/متوسط",
     "odooRole": "Fleet User",
     "operationalReporting": "إدارة سلاسل الإمداد (قسم اللوجستيات)"
+  },
+  "مدير العمليات": {
+    "titleEn": "Operations Manager",
+    "dept": "إدارة سلاسل الإمداد (قسم العمليات اللوجستية)",
+    "duties": [
+      "إدارة حركة أسطول النقل بالكامل (Transport Management)",
+      "توفير وتوزيع العمالة اليدوية لكافة أقسام المستودع",
+      "الإشراف على صيانة المعدات وجاهزيتها",
+      "المسؤول عن الأمن والحراسة ونظافة المرافق اللوجستية"
+    ],
+    "qualifications": "خبرة 10 سنوات في العمليات اللوجستية",
+    "odooRole": "Operations Admin",
+    "operationalReporting": "إدارة سلاسل الإمداد"
+  },
+  "رئيس قسم عمليات المستودع": {
+    "titleEn": "Warehouse Operations Section Head",
+    "dept": "إدارة المستودعات (قسم عمليات المستودع)",
+    "duties": [
+      "الإشراف الميداني المباشر على (استلام، تخزين، صرف، مرتجعات)",
+      "تحسين تدفق العمل الميداني وتقليل زمن الدورة التشغيلية",
+      "حل المعوقات الميدانية فوراً لضمان استمرارية العمل"
+    ],
+    "qualifications": "خبرة 8 سنوات في إدارة المستودعات",
+    "odooRole": "Inventory Admin",
+    "operationalReporting": "إدارة المستودعات"
+  },
+  "مدير الإدارة التقنية": {
+    "titleEn": "IT Manager",
+    "dept": "الإدارة التقنية (وظيفة مساندة)",
+    "duties": [
+      "إدارة وتطوير البنية التحتية التقنية ونظام Odoo ERP",
+      "ضمان أمن البيانات واستمرارية عمل الأنظمة والشبكات",
+      "إدارة صلاحيات الوصول بناءً على مصفوفة الحوكمة"
+    ],
+    "qualifications": "بكالوريوس IT + خبرة 10 سنوات",
+    "odooRole": "System Administrator",
+    "functionalReporting": "الإدارة العامة",
+    "operationalReporting": "إدارة سلاسل الإمداد (دعم الأنظمة)"
+  },
+  "مدير الموارد البشرية": {
+    "titleEn": "HR Manager",
+    "dept": "الموارد البشرية (وظيفة مساندة)",
+    "duties": [
+      "تخطيط القوى العاملة وإدارة عمليات التوظيف والتدريب",
+      "إدارة شؤون الموظفين والرواتب والامتثال العمالي",
+      "تطوير الأداء المؤسسي والثقافة التنظيمية"
+    ],
+    "qualifications": "خبرة 10 سنوات في إدارة الموارد البشرية",
+    "odooRole": "HR Manager (Admin)",
+    "functionalReporting": "الإدارة العامة"
   }
 };
     const DEFAULT_DATA = [
   {
     "id": 1,
     "position": "مدير إدارة الحوكمة",
+    "candidateName": "محمد البرشي",
+    "phone": "091-XXXXXXX",
+    "address": "بنغازي",
     "phase1": "1",
     "phase2": "1",
     "hiringDate": "2026-07-01",
     "salary": 16000,
     "priority": "🔴 حرجة",
-    "notes": "استقلال تام ورقابة مباشرة"
-  },
-  {
-    "id": 1.5,
-    "position": "مدير إدارة الجودة",
-    "phase1": "1",
-    "phase2": "1",
-    "hiringDate": "2026-07-01",
-    "salary": 16000,
-    "priority": "🔴 حرجة",
-    "notes": "استقلال تام وتحقق ميداني"
+    "notes": "مشغول حالياً"
   },
   {
     "id": 2,
     "position": "مدير إدارة سلاسل الإمداد",
+    "candidateName": "محمد البرشي (مؤقت)",
+    "phone": "091-XXXXXXX",
+    "address": "بنغازي",
     "phase1": "1",
     "phase2": "1",
     "hiringDate": "2026-07-01",
     "salary": 18000,
     "priority": "🔴 حرجة",
-    "notes": "تنسيق لوجستي وعمليات ميدانية"
+    "notes": "مشغول حالياً"
   },
   {
     "id": 3,
     "position": "مدير إدارة المستودعات",
+    "candidateName": "",
+    "phone": "",
+    "address": "",
     "phase1": "1",
     "phase2": "1 لكل فرع",
     "hiringDate": "2026-07-01",
@@ -508,8 +560,50 @@
     "notes": "مالك المخزون والعهدة"
   },
   {
-    "id": 3.5,
+    "id": 4,
+    "position": "مدير العمليات",
+    "candidateName": "",
+    "phone": "",
+    "address": "",
+    "phase1": "1",
+    "phase2": "1",
+    "hiringDate": "2026-07-01",
+    "salary": 14000,
+    "priority": "🔴 حرجة",
+    "notes": "يشمل النقل والصيانة والعمالة"
+  },
+  {
+    "id": 4.5,
+    "position": "رئيس قسم عمليات المستودع",
+    "candidateName": "",
+    "phone": "",
+    "address": "",
+    "phase1": "1",
+    "phase2": "1",
+    "hiringDate": "2026-07-15",
+    "salary": 12000,
+    "priority": "🔴 حرجة",
+    "notes": "إشراف ميداني مباشر"
+  },
+  {
+    "id": 5,
+    "position": "مدير إدارة الجودة",
+    "candidateName": "",
+    "phone": "",
+    "address": "",
+    "phase1": "1",
+    "phase2": "1",
+    "hiringDate": "2026-07-01",
+    "salary": 16000,
+    "priority": "🔴 حرجة",
+    "notes": "استقلال تام وتحقق ميداني"
+  },
+  {
+    "id": 6,
     "position": "مدير الإدارة التجارية",
+    "candidateName": "",
+    "phone": "",
+    "address": "",
     "phase1": "1",
     "phase2": "1",
     "hiringDate": "2026-07-15",
@@ -518,8 +612,11 @@
     "notes": "يشمل قسم المشتريات"
   },
   {
-    "id": 4,
+    "id": 7,
     "position": "مدير إدارة المالية",
+    "candidateName": "",
+    "phone": "",
+    "address": "",
     "phase1": "1",
     "phase2": "1",
     "hiringDate": "2026-07-15",
@@ -528,8 +625,37 @@
     "notes": "رقابة مالية كاملة"
   },
   {
-    "id": 5,
+    "id": 8,
+    "position": "مدير الإدارة التقنية",
+    "candidateName": "",
+    "phone": "",
+    "address": "",
+    "phase1": "1",
+    "phase2": "1",
+    "hiringDate": "2026-08-01",
+    "salary": 15000,
+    "priority": "🟡 عالية",
+    "notes": "إدارة Odoo والشبكات"
+  },
+  {
+    "id": 9,
+    "position": "مدير الموارد البشرية",
+    "candidateName": "",
+    "phone": "",
+    "address": "",
+    "phase1": "1",
+    "phase2": "1",
+    "hiringDate": "2026-08-01",
+    "salary": 15000,
+    "priority": "🟡 عالية",
+    "notes": ""
+  },
+  {
+    "id": 10,
     "position": "موظف تقنية المعلومات",
+    "candidateName": "",
+    "phone": "",
+    "address": "",
     "phase1": "1",
     "phase2": "2-3",
     "hiringDate": "2026-08-01",
@@ -538,8 +664,11 @@
     "notes": "يتبع الإدارة التقنية"
   },
   {
-    "id": 5.5,
+    "id": 11,
     "position": "موظف الجودة",
+    "candidateName": "",
+    "phone": "",
+    "address": "",
     "phase1": "1-2",
     "phase2": "5-8",
     "hiringDate": "2026-08-01",
@@ -548,8 +677,11 @@
     "notes": "مفتش جودة ميداني"
   },
   {
-    "id": 6,
+    "id": 12,
     "position": "موظفو الاستلام",
+    "candidateName": "",
+    "phone": "",
+    "address": "",
     "phase1": "5-8",
     "phase2": "20-30",
     "hiringDate": "2026-08-01",
@@ -558,8 +690,11 @@
     "notes": ""
   },
   {
-    "id": 7,
+    "id": 13,
     "position": "موظفو التخزين والسحب",
+    "candidateName": "",
+    "phone": "",
+    "address": "",
     "phase1": "10-15",
     "phase2": "50-80",
     "hiringDate": "2026-08-01",
@@ -568,8 +703,11 @@
     "notes": ""
   },
   {
-    "id": 8,
-    "position": "موظفو النقل",
+    "id": 14,
+    "position": "موظفو النقل والحركة",
+    "candidateName": "",
+    "phone": "",
+    "address": "",
     "phase1": "5-10",
     "phase2": "30-50",
     "hiringDate": "2026-08-01",
@@ -609,10 +747,13 @@
           tr.innerHTML = `
             <td class="p-4 border-b border-white/5">${index + 1}</td>
             <td class="p-4 border-b border-white/5"><input type="text" class="edit-input font-bold" id="edit-pos"></td>
+            <td class="p-4 border-b border-white/5"><input type="text" class="edit-input" id="edit-candidate"></td>
             <td class="p-4 border-b border-white/5"><input type="text" class="edit-input" id="edit-p1"></td>
             <td class="p-4 border-b border-white/5"><input type="text" class="edit-input" id="edit-p2"></td>
             <td class="p-4 border-b border-white/5 no-print"><input type="date" class="edit-input" id="edit-date"></td>
             <td class="p-4 border-b border-white/5"><input type="number" class="edit-input" id="edit-salary"></td>
+            <td class="p-4 border-b border-white/5"><input type="text" class="edit-input" id="edit-phone"></td>
+            <td class="p-4 border-b border-white/5"><input type="text" class="edit-input" id="edit-address"></td>
             <td class="p-4 border-b border-white/5">
               <select id="edit-priority" class="bg-brand-navy border border-brand-gold text-white rounded p-1 text-xs w-full">
                 <option value="🔴 حرجة">🔴 حرجة</option>
@@ -629,10 +770,13 @@
             </td>
           `;
           tr.querySelector('#edit-pos').value = row.position;
+          tr.querySelector('#edit-candidate').value = row.candidateName || '';
           tr.querySelector('#edit-p1').value = row.phase1;
           tr.querySelector('#edit-p2').value = row.phase2;
           tr.querySelector('#edit-date').value = row.hiringDate || '';
           tr.querySelector('#edit-salary').value = row.salary || 0;
+          tr.querySelector('#edit-phone').value = row.phone || '';
+          tr.querySelector('#edit-address').value = row.address || '';
           tr.querySelector('#edit-priority').value = row.priority;
           tr.querySelector('#edit-notes').value = row.notes;
         } else {
@@ -644,7 +788,10 @@
             <td class="p-4 border-b border-white/5 font-bold text-white"></td>
             <td class="p-4 border-b border-white/5"></td>
             <td class="p-4 border-b border-white/5"></td>
+            <td class="p-4 border-b border-white/5"></td>
             <td class="p-4 border-b border-white/5 no-print"></td>
+            <td class="p-4 border-b border-white/5"></td>
+            <td class="p-4 border-b border-white/5"></td>
             <td class="p-4 border-b border-white/5"></td>
             <td class="p-4 border-b border-white/5"><span class="${priorityClass} px-2 py-1 rounded text-xs"></span></td>
             <td class="p-4 border-b border-white/5"></td>
@@ -658,12 +805,15 @@
           `;
           const cells = tr.querySelectorAll('td');
           cells[1].textContent = row.position;
-          cells[2].textContent = row.phase1;
-          cells[3].textContent = row.phase2;
-          cells[4].textContent = row.hiringDate || '';
-          cells[5].textContent = (row.salary || 0).toLocaleString() + ' SAR';
-          cells[6].querySelector('span').textContent = row.priority;
-          cells[7].textContent = row.notes;
+          cells[2].textContent = row.candidateName || '';
+          cells[3].textContent = row.phase1;
+          cells[4].textContent = row.phase2;
+          cells[5].textContent = row.hiringDate || '';
+          cells[6].textContent = (row.salary || 0).toLocaleString() + ' SAR';
+          cells[7].textContent = row.phone || '';
+          cells[8].textContent = row.address || '';
+          cells[9].querySelector('span').textContent = row.priority;
+          cells[10].textContent = row.notes;
         }
         tbody.appendChild(tr);
       });
@@ -705,15 +855,15 @@
       const tfoot = document.getElementById('staffingTableFooter');
       tfoot.innerHTML = `
         <tr class="bg-brand-red/20 text-white font-black border-t-2 border-brand-gold">
-          <td colspan="2" class="p-4 text-center text-lg">الإجمالي التقريبي (عدد الموظفين)</td>
+          <td colspan="3" class="p-4 text-center text-lg">الإجمالي التقريبي (عدد الموظفين)</td>
           <td class="p-4 text-center text-lg text-brand-gold"></td>
           <td class="p-4 text-center text-lg text-brand-gold"></td>
-          <td colspan="5"></td>
+          <td colspan="7"></td>
         </tr>
         <tr class="bg-brand-navy text-white font-black">
-          <td colspan="2" class="p-4 text-center text-lg">إجمالي الرواتب التقديري (SAR)</td>
+          <td colspan="3" class="p-4 text-center text-lg">إجمالي الرواتب التقديري (SAR)</td>
           <td colspan="2" class="p-4 text-center text-lg text-brand-gold" id="salaryTotalsCell"></td>
-          <td colspan="5"></td>
+          <td colspan="7"></td>
         </tr>
       `;
       const cells = tfoot.rows[0].querySelectorAll('td');
@@ -736,14 +886,17 @@
 
     function saveRow(index) {
       const position = document.getElementById('edit-pos').value;
+      const candidateName = document.getElementById('edit-candidate').value;
       const phase1 = document.getElementById('edit-p1').value;
       const phase2 = document.getElementById('edit-p2').value;
       const hiringDate = document.getElementById('edit-date').value;
       const salary = parseFloat(document.getElementById('edit-salary').value) || 0;
+      const phone = document.getElementById('edit-phone').value;
+      const address = document.getElementById('edit-address').value;
       const priority = document.getElementById('edit-priority').value;
       const notes = document.getElementById('edit-notes').value;
 
-      staffingRows[index] = { ...staffingRows[index], position, phase1, phase2, hiringDate, salary, priority, notes };
+      staffingRows[index] = { ...staffingRows[index], position, candidateName, phase1, phase2, hiringDate, salary, phone, address, priority, notes };
       saveData();
       editIndex = -1;
       renderTable();
@@ -754,10 +907,13 @@
       const newRow = {
         id: Date.now(),
         position: '',
+        candidateName: '',
         phase1: '',
         phase2: '',
         hiringDate: '',
         salary: 0,
+        phone: '',
+        address: '',
         priority: '🟢 عادية',
         notes: ''
       };
@@ -880,14 +1036,17 @@
     }
 
     function exportToExcel() {
-      const headers = ['#', 'Position (Arabic)', 'Phase 1', 'Phase 2', 'Hiring Date', 'Monthly Salary (SAR)', 'Priority', 'Notes'];
+      const headers = ['#', 'Position (Arabic)', 'Candidate Name', 'Phase 1', 'Phase 2', 'Hiring Date', 'Monthly Salary (SAR)', 'Phone', 'Address', 'Priority', 'Notes'];
       const data = staffingRows.map((row, i) => [
         i + 1,
         row.position,
+        row.candidateName,
         row.phase1,
         row.phase2,
         row.hiringDate,
         row.salary,
+        row.phone,
+        row.address,
         row.priority,
         row.notes
       ]);
@@ -930,12 +1089,15 @@
             importedRows.push({
               id: Date.now() + i,
               position: r[1] || '',
-              phase1: r[2] || '',
-              phase2: r[3] || '',
-              hiringDate: r[4] || '',
-              salary: parseFloat(r[5]) || 0,
-              priority: r[6] || '🟢 عادية',
-              notes: r[7] || ''
+              candidateName: r[2] || '',
+              phase1: r[3] || '',
+              phase2: r[4] || '',
+              hiringDate: r[5] || '',
+              salary: parseFloat(r[6]) || 0,
+              phone: r[7] || '',
+              address: r[8] || '',
+              priority: r[9] || '🟢 عادية',
+              notes: r[10] || ''
             });
           }
 

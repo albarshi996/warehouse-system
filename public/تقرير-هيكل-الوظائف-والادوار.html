@@ -244,7 +244,7 @@ tr:hover td{background:rgba(200,157,59,0.04);}
       <div class="phase-item"><span class="phase-dot pd-blue"></span>مشرفو عمليات (استلام، تخزين، صرف)</div>
       <div class="phase-item"><span class="phase-dot pd-blue"></span>مفتش جودة ميداني مستقل</div>
       <div class="phase-item"><span class="phase-dot pd-blue"></span>فريق تشغيل ميداني مصغر (25–35 عامل)</div>
-      <div class="phase-item"><span class="phase-dot pd-blue"></span>منسق لوجستي (حركة ونقل وعمالة)</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>مدير العمليات (نقل، حركة، عمالة)</div>
       <div class="phase-item"><span class="phase-dot pd-blue"></span>تفعيل وحدات المالية والمشتريات والـ IT</div>
       <div class="phase-footer">
         <div class="pf-stat"><span class="pf-val">~60</span><span class="pf-lbl">موظف</span></div>
@@ -321,8 +321,8 @@ tr:hover td{background:rgba(200,157,59,0.04);}
 
     <div class="org-layer-label">الأعمدة التشغيلية الثلاثة (3 Operational Pillars)</div>
     <div class="org-row">
-      <div class="org-node layer2" style="border-width: 2px; border-color: var(--gold); box-shadow: 0 0 15px rgba(200,157,59,0.3);"><span class="on-icon">🛡️</span><div class="on-title">إدارة الحوكمة</div><div class="on-sub">Governance Management</div></div>
-      <div class="org-node layer2" style="border-width: 2px; border-color: var(--gold); box-shadow: 0 0 15px rgba(200,157,59,0.3);"><span class="on-icon">💻</span><div class="on-title">إدارة سلاسل الإمداد</div><div class="on-sub">Supply Chain Management</div></div>
+      <div class="org-node layer2" style="border-width: 2px; border-color: #27ae60; box-shadow: 0 0 15px rgba(39,174,96,0.3); position: relative;"><span class="on-icon">🛡️</span><div class="on-title">إدارة الحوكمة</div><div class="on-sub">Governance Management</div><span style="position: absolute; top: -10px; right: -10px; background: #27ae60; color: white; font-size: 8px; padding: 2px 5px; border-radius: 4px; font-weight: bold;">يشغلها موظف</span></div>
+      <div class="org-node layer2" style="border-width: 2px; border-color: #27ae60; box-shadow: 0 0 15px rgba(39,174,96,0.3); position: relative;"><span class="on-icon">💻</span><div class="on-title">إدارة سلاسل الإمداد</div><div class="on-sub">Supply Chain Management</div><span style="position: absolute; top: -10px; right: -10px; background: #27ae60; color: white; font-size: 8px; padding: 2px 5px; border-radius: 4px; font-weight: bold;">يشغلها موظف</span></div>
       <div class="org-node layer2" style="border-width: 2px; border-color: var(--gold); box-shadow: 0 0 15px rgba(200,157,59,0.3);"><span class="on-icon">🧭</span><div class="on-title">إدارة المستودعات</div><div class="on-sub">Warehouse Management</div></div>
     </div>
 
@@ -535,7 +535,8 @@ const jobs = [
       "تصميم مصفوفة الصلاحيات وضوابط الرقابة الداخلية (Internal Controls)",
       "إدارة المخاطر التنظيمية وضمان الامتثال للأطر القانونية والمؤسسية",
       "التحقق المستقل من نزاهة العمليات دون التدخل في التنفيذ التشغيلي",
-      "تقديم تقارير رقابية مباشرة للإدارة العامة حول كفاءة الحوكمة"
+      "تقديم تقارير رقابية مباشرة للإدارة العامة حول كفاءة الحوكمة",
+      "📌 الحالة: هذا المنصب مشغول حالياً"
     ],
     "reportingTo": "الإدارة العامة (تبعية مباشرة)",
     "kpis": "نسبة الامتثال للسياسات، كفاءة تصميم العمليات، تقليل المخاطر"
@@ -555,7 +556,8 @@ const jobs = [
       "إدارة توزيع الموارد والعمالة بين الأقسام التشغيلية",
       "تخطيط التوريد وضمان استمرارية السلسلة دون تملك المخزون",
       "تحليل كفاءة العمليات الميدانية وتقديم الدعم اللوجستي للمستودعات",
-      "المسؤول عن جاهزية الأسطول والمعدات والقوى العاملة"
+      "المسؤول عن جاهزية الأسطول والمعدات والقوى العاملة",
+      "📌 الحالة: هذا المنصب مشغول حالياً"
     ],
     "reportingTo": "الإدارة العامة",
     "kpis": "جاهزية الأسطول، كفاءة توزيع العمالة، تكلفة النقل"
@@ -780,6 +782,73 @@ const jobs = [
     ],
     "functionalReporting": "الإدارة التقنية",
     "operationalReporting": "إدارة سلاسل الإمداد"
+  },
+  {
+    "icon": "⚖️",
+    "title": "موظف السياسات والامتثال",
+    "layer": "وحدة الحوكمة",
+    "odooRole": "Governance User",
+    "odooLevel": "User",
+    "modules": "Audit Logs, Quality",
+    "p1": "موظف واحد",
+    "p2": "فريق تدقيق",
+    "duties": [
+      "مراجعة السجلات اليومية (Audit Logs) لضمان صحة العمليات",
+      "التأكد من توقيع كافة المستندات والاعتمادات حسب الأصول",
+      "رصد التجاوزات الإدارية ورفع التقارير لمدير الحوكمة",
+      "تحديث مسودات SOPs بناءً على المتطلبات التشغيلية"
+    ],
+    "reportingTo": "إدارة الحوكمة"
+  },
+  {
+    "icon": "⚙️",
+    "title": "مدير العمليات (Operations Manager)",
+    "layer": "قسم العمليات اللوجستية",
+    "odooRole": "Operations Admin",
+    "odooLevel": "Manager",
+    "modules": "Fleet, Labor, Maintenance",
+    "p1": "مدير واحد",
+    "p2": "مدير + مساعدين",
+    "duties": [
+      "إدارة حركة أسطول النقل بالكامل (Transport Management)",
+      "توفير وتوزيع العمالة اليدوية لكافة أقسام المستودع",
+      "الإشراف على صيانة المعدات (رافعة شوكية، ترولي) وجاهزيتها",
+      "المسؤول عن الأمن والحراسة ونظافة المرافق اللوجستية"
+    ],
+    "reportingTo": "إدارة سلاسل الإمداد"
+  },
+  {
+    "icon": "📦",
+    "title": "رئيس قسم عمليات المستودع",
+    "layer": "قسم عمليات المستودع",
+    "odooRole": "Inventory Admin",
+    "odooLevel": "Manager",
+    "modules": "Inventory, Barcode",
+    "p1": "رئيس واحد",
+    "p2": "رئيس قسم + مشرفين",
+    "duties": [
+      "الإشراف الميداني المباشر على (استلام، تخزين، صرف، مرتجعات)",
+      "تحسين تدفق العمل الميداني وتقليل زمن الدورة التشغيلية",
+      "حل المعوقات الميدانية فوراً لضمان استمرارية العمل",
+      "التنسيق مع منسق العمليات لتوفير العمالة اللازمة لكل وردية"
+    ],
+    "reportingTo": "إدارة المستودعات"
+  },
+  {
+    "icon": "🚚",
+    "title": "موظف النقل والحركة",
+    "layer": "العمليات اللوجستية",
+    "odooRole": "Fleet User",
+    "odooLevel": "User",
+    "modules": "Fleet, Dashboard",
+    "p1": "سائقون + منسق",
+    "p2": "أسطول متكامل",
+    "duties": [
+      "تنفيذ رحلات التوزيع اليومية للفروع والمطاعم",
+      "الالتزام بجدول المواعيد ومعايير سلامة الشحنة",
+      "تحديث حالة الشحنة في النظام فور الوصول والتسليم"
+    ],
+    "reportingTo": "قسم العمليات اللوجستية"
   }
 ]
 ;
@@ -890,19 +959,31 @@ const odooRoles = [
     "role": "Barcode User",
     "modules": "Barcode, Inventory",
     "level": "User"
+  },
+  {
+    "pos": "مدير العمليات",
+    "role": "Operations Admin",
+    "modules": "Fleet, Labor, Maintenance",
+    "level": "Manager"
+  },
+  {
+    "pos": "رئيس قسم عمليات المستودع",
+    "role": "Inventory Admin",
+    "modules": "Inventory, Barcode",
+    "level": "Manager"
   }
 ];
 
 const orgTable = [
   {
     "dept": "🛡️ إدارة الحوكمة",
-    "p1": "1 مدير",
+    "p1": "1 مدير (مشغول)",
     "p2": "مدير + فريق تدقيق",
     "role": "العمود التشغيلي 1: السياسات، الامتثال، الحوكمة"
   },
   {
     "dept": "💻 إدارة سلاسل الإمداد",
-    "p1": "1 مدير",
+    "p1": "1 مدير (مشغول)",
     "p2": "مدير + رؤساء أقسام",
     "role": "العمود التشغيلي 2: التخطيط، اللوجستيات، التوريد"
   },
