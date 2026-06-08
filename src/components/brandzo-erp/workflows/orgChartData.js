@@ -1,12 +1,6 @@
 /**
- * Source of truth for the warehouse org chart, mirrored from chapter 2
- * of public/Brandzo_Operational_Guide.html ("الهيكل التنظيمي").
- *
- * The structure is a 3-tier hierarchy:
- *   Tier 1: Main Operations Manager (root)
- *   Tier 2: Senior Management functions (Executive, IT, QA, Finance)
- *   Tier 3: Operational departments under the Executive Manager
- *           (Receiving, QC, Storage, Picking, Transport, Returns)
+ * Source of truth for the warehouse org chart, restructured for Brandzo Hub 2026.
+ * Refined into 3 Operational Pillars and a separate Support Functions band.
  */
 
 export const orgRoot = {
@@ -28,183 +22,188 @@ export const orgRoot = {
 };
 
 /**
- * Tier 2 — senior management. The Executive Manager is the only node
- * that fans out into operational departments below it; the other three
- * are sibling C-level functions reporting to the root.
+ * Tier 2 — The Three Operational Pillars.
+ * Supply Chain and Governance are marked as occupied.
  */
-export const orgTier2 = [
+export const orgPillars = [
   {
-    id: 'exec-mgr',
-    titleAr: 'مدير المستودع التنفيذي',
-    titleEn: 'Executive Warehouse Manager',
-    emoji: '🧭',
-    accent: 'red',
-    fansOut: true,
+    id: 'governance',
+    titleAr: 'إدارة الحوكمة',
+    titleEn: 'Governance Management',
+    emoji: '🛡️',
+    accent: 'yellow',
+    isOccupied: true,
     responsibilities: [
-      'الإشراف اليومي المباشر على جميع الأقسام',
-      'حل المشكلات الطارئة والمعقدة',
-      'ضمان التزام الإدارات بالإجراءات المعتمدة',
-      'التنسيق بين الإدارات المختلفة',
-      'إدارة الموارد البشرية بالمستودع',
+      'الاستقلالية التامة في تصميم ومراقبة تطبيق الدورة المستندية والسياسات',
+      'إصدار وتحديث أدلة السياسات والإجراءات (SOPs)',
+      'تصميم مصفوفة الصلاحيات وضوابط الرقابة الداخلية',
+      'إدارة المخاطر التنظيمية وضمان الامتثال',
+      'التحقق المستقل من نزاهة العمليات',
     ],
-    odooRole: 'System Administrator',
-    odooAccess: 'Settings كاملة',
+    odooRole: 'Governance Auditor',
+    odooAccess: 'Quality + Audit Logs',
   },
   {
-    id: 'it-mgr',
-    titleAr: 'مدير أنظمة المعلومات والتحول الرقمي',
-    titleEn: 'IT & Digital Transformation Manager',
+    id: 'supply-chain',
+    titleAr: 'إدارة سلاسل الإمداد',
+    titleEn: 'Supply Chain Management',
     emoji: '💻',
     accent: 'navy',
+    isOccupied: true,
     responsibilities: [
-      'الإشراف على نظام إدارة المستودعات الإلكتروني',
-      'ضمان تكامل الأنظمة مع المنظومة المركزية',
-      'قيادة مبادرات الأتمتة والتحول الرقمي',
-      'إدارة فريق الدعم الفني',
-      'تحليل البيانات الضخمة لتحسين الأداء',
+      'التنسيق الاستراتيجي للتدفقات اللوجستية وتخطيط الموارد',
+      'الإشراف على قسم العمليات اللوجستية',
+      'تخطيط التوريد وضمان استمرارية السلسلة',
+      'تحليل كفاءة العمليات الميدانية',
+      'المسؤول عن جاهزية الأسطول والمعدات والقوى العاملة',
     ],
-    odooRole: 'System Administrator',
-    odooAccess: 'Settings كاملة',
+    odooRole: 'Supply Chain Manager',
+    odooAccess: 'Purchase + Inventory + Fleet',
   },
   {
+    id: 'warehouse-mgmt',
+    titleAr: 'إدارة المستودعات',
+    titleEn: 'Warehouse Management',
+    emoji: '🧭',
+    accent: 'red',
+    responsibilities: [
+      'المالك الرسمي للمخزون والمسؤول عن دقة وسلامة الأرصدة',
+      'الإشراف على قسم عمليات المستودع',
+      'ضمان الالتزام الصارم بقواعد FEFO والباركود',
+      'إدارة المساحات التخزينية وتحسين كفاءة التنفيذ الميداني',
+      'مطابقة الجرد الفعلي مع النظام (Stock Accountability)',
+    ],
+    odooRole: 'Inventory Manager',
+    odooAccess: 'Inventory + Barcode',
+  },
+];
+
+/**
+ * Tier 3 — Operational Departments under each Pillar.
+ */
+export const orgSubDepts = [
+  {
+    id: 'gov-unit',
+    parentId: 'governance',
+    titleAr: 'السياسات والامتثال',
+    titleEn: 'Policies & Compliance',
+    emoji: '⚖️',
+    accent: 'yellow',
+    teams: [
+      'وحدة تتبع الحوكمة (Governance Tracking Unit)',
+      'فريق صياغة SOPs',
+      'مدققو الامتثال الداخلي',
+    ],
+    odooRole: 'Quality Administrator',
+    odooAccess: 'Quality + Settings (read)',
+  },
+  {
+    id: 'logistics-ops',
+    parentId: 'supply-chain',
+    titleAr: 'قسم العمليات اللوجستية',
+    titleEn: 'Logistics Operations Dept',
+    emoji: '⚙️',
+    accent: 'navy',
+    teams: [
+      'مدير العمليات (Operations Manager)',
+      'وحدة النقل والحركة (Transport)',
+      'وحدة صيانة الأسطول والمعدات (Maintenance)',
+      'فريق الأمن الصناعي والسلامة (Security)',
+      'وحدة إدارة العمالة الخارجية (Labor Management)',
+    ],
+    odooRole: 'Operations User',
+    odooAccess: 'Fleet + Maintenance',
+  },
+  {
+    id: 'warehouse-ops',
+    parentId: 'warehouse-mgmt',
+    titleAr: 'قسم عمليات المستودع',
+    titleEn: 'Warehouse Operations Dept',
+    emoji: '📦',
+    accent: 'red',
+    teams: [
+      'وحدة الاستلام والرقابة (Receiving)',
+      'وحدة التخزين وتحديد المواقع (Storage)',
+      'وحدة تحضير الطلبات والصرف (Dispatch)',
+      'وحدة إدارة المرتجعات (Returns)',
+    ],
+    odooRole: 'Inventory User',
+    odooAccess: 'Inventory + Barcode',
+  },
+];
+
+/**
+ * Support Functions — Horizontal band below the pillars.
+ */
+export const supportFunctions = [
+  {
     id: 'qa-mgr',
-    titleAr: 'مدير الجودة والسلامة الغذائية',
-    titleEn: 'Quality & Food Safety Manager',
-    emoji: '🛡️',
+    titleAr: 'إدارة الجودة',
+    titleEn: 'Quality Management',
+    emoji: '🔬',
     accent: 'yellow',
     responsibilities: [
       'تطبيق معايير سلامة الغذاء العالمية',
-      'إدارة فريق فحص الجودة',
-      'اعتماد الموردين الجدد فنياً',
-      'متابعة شهادات الجودة والصلاحية',
-      'إدارة حالات سحب المنتجات',
+      'إدارة فريق فحص الجودة الميداني',
+      'اعتماد الموردين فنياً والرقابة الصحية',
     ],
     odooRole: 'Quality Administrator',
     odooAccess: 'Quality + Inventory (read)',
   },
   {
-    id: 'fin-mgr',
-    titleAr: 'مدير المحاسبة والرقابة المالية',
-    titleEn: 'Accounting & Financial Control Manager',
-    emoji: '📊',
+    id: 'comm-mgr',
+    titleAr: 'الإدارة التجارية',
+    titleEn: 'Commercial Management',
+    emoji: '💼',
     accent: 'navy',
     responsibilities: [
-      'الإشراف على جميع العمليات المالية',
-      'دقة المطابقات المالية مع الموردين',
-      'إعداد التقارير المالية',
-      'الإشراف على أنشطة الجرد المالي',
-      'مراقبة تكاليف التشغيل وترشيدها',
+      'إدارة علاقات الموردين واتفاقيات الشراء',
+      'الإشراف على المشتريات وضمان شروط التوريد',
+      'تحليل السوق وتطوير الشراكات التجارية',
+    ],
+    odooRole: 'Commercial Manager',
+    odooAccess: 'Purchase + Sales',
+  },
+  {
+    id: 'fin-mgr',
+    titleAr: 'إدارة المالية',
+    titleEn: 'Finance Management',
+    emoji: '💰',
+    accent: 'navy',
+    responsibilities: [
+      'الرقابة المالية على الأصول والمخزون',
+      'إدارة الميزانيات والتحليل المالي للتشغيل',
+      'المطابقات المالية مع الموردين (3-Way Match)',
     ],
     odooRole: 'Accounting Manager',
-    odooAccess: 'Purchase + Accounting',
-  },
-];
-
-/**
- * Tier 3 — operational departments under the Executive Manager.
- * Headcount ranges are taken directly from chapter 2 of the guide.
- */
-export const orgTier3 = [
-  {
-    id: 'receiving',
-    titleAr: 'إدارة الاستلام والرقابة',
-    titleEn: 'Receiving & Inbound Control',
-    emoji: '📦',
-    accent: 'red',
-    headcount: '~30 موظف',
-    teams: [
-      'مدير قسم الاستلام',
-      'مشرف الاستلام (الفترة الصباحية)',
-      'مشرف الاستلام (الفترة المسائية)',
-      'فريق إدخال بيانات الاستلام (4-6)',
-      'فريق عمال الرصيف والمناولة (20-30)',
-    ],
-    odooRole: 'Inventory User',
-    odooAccess: 'Inventory + Quality',
+    odooAccess: 'Accounting + Invoicing',
   },
   {
-    id: 'qc',
-    titleAr: 'إدارة فحص ومراقبة الجودة',
-    titleEn: 'Quality Control & Inspection',
-    emoji: '🔬',
-    accent: 'yellow',
-    headcount: '~15 مفتش',
-    teams: [
-      'مدير إدارة الجودة',
-      'فريق فحص المنتجات الطازجة',
-      'فريق فحص المجمدات',
-      'فريق فحص المنتجات الجافة والمعلبة',
-      'فريق فحص المنتجات غير الغذائية',
-    ],
-    odooRole: 'Quality User',
-    odooAccess: 'Quality + Inventory (read)',
-  },
-  {
-    id: 'storage',
-    titleAr: 'إدارة التخزين وتحديد المواقع',
-    titleEn: 'Storage & Slotting',
-    emoji: '🏬',
+    id: 'it-mgr',
+    titleAr: 'الإدارة التقنية',
+    titleEn: 'IT Management',
+    emoji: '💾',
     accent: 'navy',
-    headcount: '~70 موظف',
-    teams: [
-      'مدير عمليات التخزين',
-      'مهندس تخطيط المستودع',
-      'مشرفي مناطق التخزين المتخصصة',
-      'مشغلي الرافعات الشوكية (40-60)',
-      'مراقبي المخزون (10-12)',
+    responsibilities: [
+      'إدارة نظام Odoo ERP والبنية التحتية',
+      'ضمان أمن البيانات واستمرارية الأنظمة',
+      'الدعم الفني لأجهزة الباركود والشبكات',
     ],
-    odooRole: 'Inventory User',
-    odooAccess: 'Inventory + Barcode',
+    odooRole: 'System Administrator',
+    odooAccess: 'Settings + Technical',
   },
   {
-    id: 'picking',
-    titleAr: 'إدارة تحضير الطلبات والتوزيع',
-    titleEn: 'Order Fulfillment & Picking',
-    emoji: '📋',
-    accent: 'red',
-    headcount: '~120 عامل',
-    teams: [
-      'مدير عمليات التوزيع',
-      'مخطط الأحمال',
-      'مشرفي مناطق الانتقاء',
-      'العمال المتنقلين (80-120)',
-      'فريق المراجعين والمدققين',
-    ],
-    odooRole: 'Barcode User',
-    odooAccess: 'Barcode فقط',
-  },
-  {
-    id: 'transport',
-    titleAr: 'إدارة أسطول النقل والتوزيع',
-    titleEn: 'Fleet & Distribution',
-    emoji: '🚚',
+    id: 'hr-mgr',
+    titleAr: 'الموارد البشرية',
+    titleEn: 'Human Resources',
+    emoji: '👥',
     accent: 'navy',
-    headcount: '~70 سائق',
-    teams: [
-      'مدير النقل والتوزيع',
-      'منسق عمليات التوزيع اليومية',
-      'فريق السائقين (50-70)',
-      'فريق مساعدي السائقين',
-      'مهندس صيانة الأسطول',
+    responsibilities: [
+      'تخطيط القوى العاملة والتوظيف والتدريب',
+      'إدارة شؤون الموظفين والرواتب والامتثال',
+      'تطوير الأداء والثقافة التنظيمية',
     ],
-    odooRole: 'Fleet User',
-    odooAccess: 'Fleet',
-  },
-  {
-    id: 'returns',
-    titleAr: 'إدارة المرتجعات وتصحيح المخزون',
-    titleEn: 'Returns & Inventory Reconciliation',
-    emoji: '↩️',
-    accent: 'yellow',
-    headcount: '~12 موظف',
-    teams: [
-      'مدير إدارة المرتجعات',
-      'مشرف استلام المرتجعات',
-      'فريق فحص المرتجعات',
-      'فريق معالجة المرتجعات',
-      'منسق المرتجعات مع الموردين',
-    ],
-    odooRole: 'Quality User',
-    odooAccess: 'Quality + Inventory (read)',
+    odooRole: 'HR Manager',
+    odooAccess: 'Employees + Payroll',
   },
 ];
