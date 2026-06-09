@@ -212,7 +212,26 @@
             text-align: center;
             font-size: 11pt;
         }
-    </style>
+
+/* ===== UNIFIED PRINT SYSTEM ===== */
+@page { size: A4 portrait; margin: 1.5cm 2cm 2cm 2cm; }
+
+@media print {
+  .print-bar, .tabs-nav, .no-print, button, .nav-tab, [onclick], .sticky { display: none !important; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { background: white !important; color: #111 !important; }
+  .section { display: block !important; }
+  h2 { page-break-before: always; page-break-after: avoid; }
+  h3 { page-break-after: avoid; }
+  table, .stage-card, .org-node { page-break-inside: avoid; }
+
+  /* Readability for dark themes */
+  .hero, .cover, .stage-card, .table-container { background: #f8f9fb !important; color: #111 !important; border-color: #1b3a5c !important; }
+  th { background: #1b3a5c !important; color: #fff !important; }
+  td { color: #111 !important; }
+}
+
+</style>
         <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
         
 <style id="brandzo-override">
@@ -242,6 +261,8 @@
 
 </head>
 <body>
+<div class="print-bar no-print" style="position: fixed; top: 10px; left: 10px; z-index: 1000;"><button onclick="window.print()" style="padding: 10px 20px; background: #c89d3b; color: #0d1b2a; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">طباعة / PDF</button></div>
+
     <div class="brandzo-topbar" style="width:100%;"><div style="padding:12px 18px;background:var(--color-brand-navy);color:var(--color-brand-gold);display:flex;align-items:center;gap:12px;"><div style="font-weight:700;font-size:20px">Brandzo</div><div style="font-size:16px">تقرير ERP</div><div style="margin-left:auto;color:#fff">12 مايو 2026</div></div></div>
 <div class="container">
     <!-- Interactive Site Notification Bar -->
@@ -534,6 +555,81 @@
     </div>
 
     <div class="page-break"></div>
+    <h2 id="requirements">5.4 أهمية توثيق المتطلبات</h2>
+    <div class="highlight-box">
+        <h4>أ. لماذا التوثيق؟ (Why Document?)</h4>
+        <ul>
+            <li>يمنع الانحراف بين ما طُلب وما نُفِّذ (Prevents scope creep between requirements and delivery)</li>
+            <li>يُلزم الفريق التقني بمعايير قابلة للقياس (Establishes measurable acceptance criteria)</li>
+            <li>يحمي الشركة قانونياً في حالة النزاع مع مزود النظام (Legal protection in vendor disputes)</li>
+            <li>يُسرِّع الاختبار والتسليم بتوفير مرجع واضح (Accelerates UAT by providing a clear reference)</li>
+        </ul>
+    </div>
+
+    <h4>ب. أنواع المتطلبات الواجب توثيقها (Types of Requirements to Document)</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>نوع المتطلب</th>
+                <th>مثال تشغيلي (Brandzo)</th>
+                <th>المقابل التقني (Odoo)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>متطلبات وظيفية</td>
+                <td>تطبيق قاعدة FEFO آلياً عند الصرف</td>
+                <td>Odoo Lot/SN Expiry Rules</td>
+            </tr>
+            <tr>
+                <td>متطلبات غير وظيفية</td>
+                <td>الاستجابة ≤ 2 ثانية، التوفر 99.5%</td>
+                <td>Load Testing, Uptime SLA</td>
+            </tr>
+            <tr>
+                <td>متطلبات تكاملية</td>
+                <td>ربط نظام الباركود بوحدة المخزون</td>
+                <td>Odoo Barcode + GS1 Scanner</td>
+            </tr>
+            <tr>
+                <td>متطلبات الامتثال</td>
+                <td>HACCP، FEFO، شروط الهيئة</td>
+                <td>Odoo Quality Module + SOPs</td>
+            </tr>
+            <tr>
+                <td>متطلبات الأمان</td>
+                <td>صلاحيات متعددة المستويات حسب الدور</td>
+                <td>Odoo Access Rights Matrix</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>ج. خطوات توثيق المتطلبات (Requirements Documentation Steps)</h4>
+    <ol>
+        <li>ورشة عمل لاستخلاص المتطلبات مع أصحاب المصلحة</li>
+        <li>توثيق وثيقة BRD</li>
+        <li>تحليل الفجوة بين الوضع الحالي والمطلوب (Gap Analysis)</li>
+        <li>تحويل المتطلبات إلى قصص مستخدمين (User Stories) في Odoo Project Module</li>
+        <li>اعتماد الوثيقة وتوقيعها من الإدارة والمزود</li>
+        <li>إدارة التغييرات عبر Change Request Form</li>
+    </ol>
+
+    <h4>د. قالب وثيقة BRD المقترحة (Proposed BRD Template)</h4>
+    <div class="golden-rule">
+        <p><strong>يجب أن تشمل وثيقة BRD الأقسام التالية:</strong></p>
+        <ul style="list-style: disc; padding-right: 1.5cm;">
+            <li>Executive Summary (الملخص التنفيذي)</li>
+            <li>Scope & Objectives (النطاق والأهداف)</li>
+            <li>Stakeholders (أصحاب المصلحة)</li>
+            <li>Functional Requirements (per Odoo module) (المتطلبات الوظيفية لكل وحدة)</li>
+            <li>Non-Functional Requirements (المتطلبات غير الوظيفية)</li>
+            <li>Integration Requirements (متطلبات التكامل)</li>
+            <li>Acceptance Criteria (معايير القبول)</li>
+            <li>Change Management Process (عملية إدارة التغيير)</li>
+            <li>Sign-off Block (مساحة التوقيع والاعتماد)</li>
+        </ul>
+    </div>
+
     <h2 id="implementation">6. خطة التنفيذ المقترحة</h2>
     <p>بالتوافق مع التوصية، تم وضع خريطة طريق تدريجية لضمان انتقال سلس واستمرارية الأعمال:</p>
     <table>
