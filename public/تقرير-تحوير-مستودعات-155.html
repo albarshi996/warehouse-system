@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>تقرير تحوير مستودعات 155 لرفع الكفاءة التشغيلية والسعة التخزينية | Brandzo Hub 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --primary:#C8102E;--secondary:#E63946;--dark-red:#9D0216;
+  --white:#FFFFFF;--light-gray:#F5F5F5;--gray-100:#F8F9FA;
+  --gray-200:#E9ECEF;--gray-300:#DEE2E6;--gray-500:#6C757D;
+  --gray-700:#343A40;--gray-900:#1A1A1A;
+  --shadow-sm:0 2px 8px rgba(200,16,46,.10);
+  --shadow-md:0 4px 20px rgba(200,16,46,.15);
+  --shadow-lg:0 8px 40px rgba(200,16,46,.20);
+  --radius:10px;--transition:all 0.2s ease;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Cairo','Arial',sans-serif;background:var(--light-gray);color:var(--gray-900);font-size:15px;line-height:1.7;direction:rtl;}
+
+/* HEADER */
+.bfp-header{background:linear-gradient(135deg,var(--dark-red) 0%,var(--primary) 50%,var(--secondary) 100%);color:var(--white);position:relative;overflow:hidden;box-shadow:var(--shadow-lg);}
+.bfp-header::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 30px,rgba(255,255,255,.03) 30px,rgba(255,255,255,.03) 60px);}
+.header-top-bar{background:var(--dark-red);padding:.5rem 2rem;display:flex;align-items:center;justify-content:space-between;font-size:.78rem;opacity:.9;position:relative;}
+.header-main{padding:1.5rem 2rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:2rem;flex-wrap:wrap;position:relative;}
+.header-logo-area{display:flex;align-items:center;gap:1.2rem;flex-shrink:0;}
+.logo-text-badge{background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);border-radius:10px;padding:.6rem 1.2rem;font-size:1.1rem;font-weight:900;letter-spacing:1px;color:#fff;}
+.logo-text-sub{font-size:.65rem;font-weight:600;opacity:.8;display:block;margin-top:.1rem;}
+.header-logo-divider{width:2px;height:50px;background:rgba(255,255,255,.3);}
+.header-title-area{text-align:center;flex:1;}
+.header-report-title{font-size:1.9rem;font-weight:900;text-shadow:0 2px 10px rgba(0,0,0,.3);margin-bottom:.3rem;}
+.header-report-subtitle{font-size:.95rem;opacity:.85;margin-bottom:.8rem;}
+.header-meta-badges{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;}
+.meta-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:50px;padding:.3rem .9rem;font-size:.78rem;backdrop-filter:blur(4px);white-space:nowrap;}
+
+/* CONTAINER */
+.container{max-width:1200px;margin:0 auto;padding:2rem 1.5rem;}
+
+/* TOOLBAR */
+.toolbar{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:1rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;box-shadow:var(--shadow-sm);}
+.toolbar-label{font-weight:700;color:var(--primary);font-size:.9rem;flex-shrink:0;margin-left:.5rem;}
+.btn{display:inline-flex;align-items:center;gap:.4rem;border:none;border-radius:7px;padding:.5rem 1.1rem;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;transition:var(--transition);white-space:nowrap;}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(200,16,46,.35);}
+.btn-primary:hover{background:var(--dark-red);transform:translateY(-1px);}
+.btn-success{background:#16a34a;color:#fff;box-shadow:0 2px 8px rgba(22,163,74,.3);}
+.btn-success:hover{background:#15803d;transform:translateY(-1px);}
+.btn-info{background:#0284c7;color:#fff;box-shadow:0 2px 8px rgba(2,132,199,.3);}
+.btn-info:hover{background:#0369a1;transform:translateY(-1px);}
+.btn-secondary{background:var(--gray-200);color:var(--gray-700);}
+.btn-secondary:hover{background:var(--gray-300);}
+.btn-danger{background:#dc2626;color:#fff;}
+.btn-danger:hover{background:#b91c1c;}
+
+/* SEARCH BAR */
+.search-bar{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:1rem 1.5rem;margin-bottom:1.5rem;box-shadow:var(--shadow-sm);}
+.search-bar-title{font-weight:700;color:var(--primary);margin-bottom:.8rem;font-size:.95rem;}
+.search-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;align-items:end;}
+.search-group{display:flex;flex-direction:column;gap:.25rem;}
+.search-group label{font-size:.75rem;color:var(--gray-500);font-weight:600;}
+.search-input,.search-select{border:1.5px solid var(--gray-300);border-radius:7px;padding:.45rem .75rem;font-size:.85rem;font-family:inherit;direction:rtl;outline:none;background:var(--gray-100);transition:var(--transition);color:var(--gray-900);}
+.search-input:focus,.search-select:focus{border-color:var(--primary);background:var(--white);box-shadow:0 0 0 3px rgba(200,16,46,.1);}
+
+/* KPI */
+.kpi-section-title{font-size:1.3rem;font-weight:800;color:var(--primary);border-right:5px solid var(--primary);padding-right:1rem;margin:2rem 0 1rem;}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;}
+.kpi-card{background:var(--white);border-radius:12px;padding:1.3rem 1.5rem;border:1px solid var(--gray-200);box-shadow:var(--shadow-sm);text-align:center;position:relative;overflow:hidden;transition:var(--transition);}
+.kpi-card.featured{background:linear-gradient(135deg,var(--dark-red) 0%,var(--primary) 100%);color:var(--white);border:none;}
+.kpi-card.featured::before{background:rgba(255,255,255,.3);}
+.kpi-icon{font-size:1.8rem;margin-bottom:.4rem;}
+.kpi-label{font-size:.78rem;color:var(--gray-500);font-weight:600;margin-bottom:.3rem;}
+.kpi-card.featured .kpi-label{color:rgba(255,255,255,.8);}
+.kpi-value{font-size:1.6rem;font-weight:900;color:var(--primary);line-height:1.1;}
+.kpi-card.featured .kpi-value{color:var(--white);}
+.kpi-unit{font-size:.75rem;color:var(--gray-500);margin-top:.2rem;}
+.kpi-card.featured .kpi-unit{color:rgba(255,255,255,.7);}
+
+/* CITY HEADER */
+.city-header{background:linear-gradient(135deg,var(--dark-red) 0%,var(--primary) 100%);color:var(--white);padding:1rem 1.5rem;border-radius:var(--radius);margin:2.5rem 0 1.5rem;display:flex;align-items:center;gap:.8rem;font-size:1.4rem;font-weight:800;box-shadow:var(--shadow-md);}
+
+/* TABLE */
+.table-wrapper{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:2rem;}
+.table-header{background:linear-gradient(135deg,var(--dark-red) 0%,var(--primary) 100%);color:var(--white);padding:.9rem 1.2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;}
+.table-header-title{font-weight:700;font-size:.95rem;}
+.table-actions{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;}
+table{width:100%;border-collapse:collapse;font-size:.85rem;}
+thead th{background:var(--light-gray);color:var(--gray-700);padding:.7rem .9rem;font-weight:700;border-bottom:2px solid var(--gray-200);white-space:nowrap;cursor:pointer;user-select:none;transition:background .15s;}
+thead th:hover{background:var(--gray-200);}
+thead th.sort-asc::after{content:' ▲';font-size:.65rem;color:var(--primary);}
+thead th.sort-desc::after{content:' ▼';font-size:.65rem;color:var(--primary);}
+tbody tr{border-bottom:1px solid #f3f3f3;transition:background .12s;}
+tbody tr:hover{background:#fff5f5;}
+tbody td{padding:.75rem .9rem;vertical-align:middle;}
+.price-cell{font-weight:800;color:var(--dark-red);font-size:.95rem;}
+.area-cell{color:#0369a1;font-weight:700;}
+.pricem2-cell{color:#7c3aed;font-weight:700;}
+.loc-cell{font-weight:600;}
+.street-cell{color:var(--gray-500);font-size:.78rem;}
+.src-badge{display:inline-block;background:#fff5f5;color:var(--primary);border:1px solid #fecaca;border-radius:4px;padding:.12rem .5rem;font-size:.72rem;font-weight:600;}
+.tier-badge{display:inline-block;border-radius:4px;padding:.15rem .55rem;font-size:.72rem;font-weight:700;}
+.tier-premium{background:#fef3c7;color:#92400e;border:1px solid #fcd34d;}
+.tier-mid{background:#f0fdf4;color:#166534;border:1px solid #86efac;}
+.tier-eco{background:#fff7ed;color:#9a3412;border:1px solid #fdba74;}
+.btn-edit-row{background:none;border:none;color:#0284c7;cursor:pointer;font-size:.85rem;padding:.2rem .4rem;border-radius:4px;opacity:.55;transition:var(--transition);}
+.btn-edit-row:hover{opacity:1;background:#e0f2fe;}
+.btn-del-row{background:none;border:none;color:#dc2626;cursor:pointer;font-size:.85rem;padding:.2rem .4rem;border-radius:4px;opacity:.45;transition:var(--transition);}
+.btn-del-row:hover{opacity:1;background:#fee2e2;}
+.pagination{display:flex;justify-content:center;gap:.4rem;padding:.8rem;flex-wrap:wrap;}
+.page-btn{background:var(--white);border:1px solid var(--gray-300);border-radius:6px;padding:.3rem .7rem;font-size:.82rem;cursor:pointer;font-family:inherit;transition:var(--transition);}
+.page-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.page-btn:hover:not(.active){background:var(--light-gray);border-color:var(--primary);}
+.table-info{padding:.5rem 1rem;font-size:.78rem;color:var(--gray-500);}
+
+/* DISTRICT CARDS */
+.district-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.9rem;margin:1.2rem 0;}
+.district-card{background:var(--white);border-radius:var(--radius);padding:1rem 1.2rem;border:1px solid var(--gray-200);border-right:4px solid var(--primary);transition:var(--transition);}
+.district-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm);}
+.district-card.high{border-right-color:var(--primary);}
+.district-card.medium{border-right-color:#f59e0b;}
+.district-card.low{border-right-color:#16a34a;}
+.district-name{font-weight:700;font-size:.92rem;margin-bottom:.25rem;}
+.district-range{color:var(--primary);font-size:1rem;font-weight:800;}
+.district-desc{font-size:.75rem;color:var(--gray-500);margin-top:.25rem;}
+
+/* ANALYSIS */
+.analysis-box{background:#fff5f5;border:1px solid #fecaca;border-radius:var(--radius);padding:1.2rem 1.5rem;margin:1.2rem 0;}
+.analysis-box h4{color:var(--primary);font-size:.95rem;margin-bottom:.7rem;}
+.analysis-box ul{padding-right:1.5rem;}
+.analysis-box li{margin-bottom:.5rem;font-size:.88rem;color:#7c1d1d;}
+.note{background:#f8fafc;border-right:3px solid var(--primary);padding:.8rem 1rem;border-radius:0 6px 6px 0;font-size:.85rem;color:var(--gray-700);margin:1rem 0;}
+.divider{border:none;border-top:2px solid var(--gray-200);margin:2.5rem 0;}
+
+/* CHARTS */
+.charts-section{margin:2rem 0;}
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:1.2rem;}
+.chart-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);padding:1.2rem;box-shadow:var(--shadow-sm);}
+.chart-card h3{font-size:.9rem;font-weight:700;color:var(--primary);margin-bottom:.8rem;border-bottom:2px solid var(--light-gray);padding-bottom:.5rem;}
+.chart-container{position:relative;height:220px;}
+
+/* COMPARISON & FACTORS */
+.comp-section{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);padding:1.5rem;margin:2rem 0;box-shadow:var(--shadow-sm);}
+.comp-section h3{color:var(--primary);font-weight:800;margin-bottom:1rem;font-size:1.1rem;}
+.comp-table{width:100%;border-collapse:collapse;font-size:.88rem;}
+.comp-table th{background:linear-gradient(135deg,var(--dark-red),var(--primary));color:#fff;padding:.7rem 1rem;font-weight:700;text-align:right;}
+.comp-table td{padding:.7rem 1rem;border-bottom:1px solid var(--gray-200);}
+.comp-table tr:last-child td{border:none;}
+.comp-table tr:hover td{background:#fff5f5;}
+.live-badge{display:inline-block;background:#dcfce7;color:#16a34a;border:1px solid #86efac;border-radius:4px;font-size:.68rem;font-weight:700;padding:.1rem .45rem;margin-right:.3rem;}
+
+/* FACTORS */
+.factors-section{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);padding:1.5rem;margin:2rem 0;box-shadow:var(--shadow-sm);}
+.factors-section h3{color:var(--primary);font-weight:800;margin-bottom:1rem;font-size:1.1rem;}
+.factors-live-summary{background:linear-gradient(135deg,#fff5f5,#fef2f2);border:1px solid #fecaca;border-radius:8px;padding:1rem 1.2rem;margin-top:1rem;}
+.factors-live-summary h4{color:var(--primary);font-size:.88rem;margin-bottom:.6rem;}
+.factors-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.6rem;}
+.factor-stat-item{background:#fff;border:1px solid #fecaca;border-radius:6px;padding:.6rem .9rem;font-size:.82rem;}
+.factor-stat-label{color:var(--gray-500);font-size:.72rem;}
+.factor-stat-value{font-weight:800;color:var(--dark-red);font-size:.95rem;}
+
+/* SOURCES */
+.sources-list{display:flex;flex-wrap:wrap;gap:.5rem;margin:.8rem 0;}
+.source-chip{background:var(--white);border:1px solid var(--gray-200);border-radius:50px;padding:.3rem .9rem;font-size:.8rem;color:var(--gray-700);font-weight:600;}
+
+/* TOAST */
+#toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark-red);color:#fff;padding:.7rem 1.8rem;border-radius:50px;font-size:.88rem;font-weight:700;z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* MODAL */
+#row-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:5000;align-items:center;justify-content:center;}
+#row-modal-overlay.active{display:flex;}
+#row-modal{background:#fff;border-radius:14px;width:min(520px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.modal-header{background:linear-gradient(135deg,var(--dark-red),var(--primary));color:#fff;padding:1rem 1.5rem;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;}
+.modal-header h3{font-size:1rem;font-weight:800;}
+.modal-close{background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:var(--transition);}
+.modal-close:hover{background:rgba(255,255,255,.35);}
+.modal-body{padding:1.5rem;}
+.mf-group{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.9rem;}
+.mf-group label{font-size:.8rem;font-weight:700;color:var(--gray-700);}
+.mf-group input,.mf-group select{border:1.5px solid var(--gray-300);border-radius:7px;padding:.5rem .8rem;font-size:.9rem;font-family:inherit;direction:rtl;outline:none;background:var(--gray-100);}
+.mf-group input:focus,.mf-group select:focus{border-color:var(--primary);background:#fff;}
+.mf-row2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--gray-200);display:flex;gap:.6rem;justify-content:flex-end;}
+
+/* FOOTER */
+.bfp-footer{background:linear-gradient(135deg,var(--dark-red) 0%,var(--primary) 100%);color:var(--white);text-align:center;padding:2rem;margin-top:3rem;}
+.footer-logo-text{font-size:1.5rem;font-weight:900;color:#fff;margin-bottom:.6rem;}
+.bfp-footer .footer-text{font-size:.82rem;opacity:.85;line-height:1.8;}
+.footer-sources{margin-top:.8rem;display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+.footer-source-link{color:rgba(255,255,255,.8);text-decoration:none;font-size:.8rem;}
+.footer-source-link:hover{color:#fff;}
+
+/* PRINT */
+@media print{
+  body{background:#fff;font-size:11px;}
+  .bfp-header,.city-header,.table-header,thead th,.kpi-card.featured,.tier-badge,.src-badge{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  .no-print{display:none!important;}
+  .toolbar,.search-bar{display:none!important;}
+  .table-wrapper{box-shadow:none!important;}
+  table{page-break-inside:auto;}
+  tr{page-break-inside:avoid;}
+  .charts-section{page-break-before:always;}
+  .bfp-footer{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  @page{margin:1.5cm;}
+}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .header-main{flex-direction:column;text-align:center;padding:1.5rem;}
+  .header-title-area{order:-1;}
+  .header-logo-area{justify-content:center;}
+  .header-report-title{font-size:1.4rem;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .charts-grid{grid-template-columns:1fr;}
+  .search-grid{grid-template-columns:repeat(2,1fr);}
+  table{font-size:.78rem;}
+  tbody td{padding:.5rem .6rem;}
+  .mf-row2{grid-template-columns:1fr;}
+}
+@media(max-width:480px){
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+  .header-report-title{font-size:1.2rem;}
+  .container{padding:1rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- MODAL -->
+<div id="row-modal-overlay">
+  <div id="row-modal">
+    <div class="modal-header">
+      <h3 id="modal-title">➕ إضافة سجل جديد</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mf-group">
+        <label>🏙 المدينة</label>
+        <select id="mf-city">
+          <option value="بنغازي">بنغازي</option>
+          <option value="طرابلس">طرابلس</option>
+        </select>
+      </div>
+      <div class="mf-group">
+        <label>📍 الموقع / المنطقة</label>
+        <input id="mf-location" type="text" placeholder="مثال: بنغازي — فينيسيا"/>
+      </div>
+      <div class="mf-group">
+        <label>🗺 الشارع أو التفاصيل</label>
+        <input id="mf-street" type="text" placeholder="مثال: الشارع الرئيسي"/>
+      </div>
+      <div class="mf-row2">
+        <div class="mf-group">
+          <label>📐 المساحة (م²)</label>
+          <input id="mf-area" type="number" placeholder="0"/>
+        </div>
+        <div class="mf-group">
+          <label>💰 الإيجار الشهري (د.ل)</label>
+          <input id="mf-price" type="number" placeholder="0"/>
+        </div>
+      </div>
+      <div class="mf-row2">
+        <div class="mf-group">
+          <label>📊 سعر المتر (د.ل/م²)</label>
+          <input id="mf-pricem2" type="number" placeholder="0"/>
+        </div>
+        <div class="mf-group">
+          <label>🏷 الفئة</label>
+          <select id="mf-tier">
+            <option value="tier-eco">اقتصادي</option>
+            <option value="tier-mid" selected>متوسط</option>
+            <option value="tier-premium">فاخر</option>
+          </select>
+        </div>
+      </div>
+      <div class="mf-group">
+        <label>🔗 المصدر</label>
+        <input id="mf-source" type="text" placeholder="مثال: OpenSooq"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="saveModal()">💾 حفظ</button>
+      <button class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- HEADER -->
+<header class="bfp-header">
+  <div class="header-top-bar">
+    <span>📅 يونيو 2026</span>
+    <span>تقرير تحوير مستودعات 155 لرفع الكفاءة التشغيلية والسعة التخزينية</span>
+    <span>Brandzo Hub 2026 © 2026</span>
+  </div>
+  <div class="header-main">
+    <div class="header-logo-area">
+      <div class="logo-text-badge">BFP<span class="logo-text-sub">Brandzo Hub 2026</span></div>
+      <div class="header-logo-divider"></div>
+    </div>
+    <div class="header-title-area">
+      <div class="header-report-title">تقرير تحوير مستودعات 155 لرفع الكفاءة التشغيلية والسعة التخزينية</div>
+      <div class="header-report-subtitle">بنغازي • موقع 155 • 2025 – 2026</div>
+      <div class="header-meta-badges">
+        <span class="meta-badge">📍 موقع 155</span>
+        <span class="meta-badge">🏪 تحوير فني</span>
+        <span class="meta-badge">📊 رفع الكفاءة</span>
+        <span class="meta-badge">🗓 يونيو 2026</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <!-- TOOLBAR -->
+  <div class="toolbar no-print">
+    <span class="toolbar-label">⚙ أدوات:</span>
+    <label class="btn btn-success" style="cursor:pointer;">
+      📥 استيراد Excel
+      <input type="file" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)"/>
+    </label>
+    <button class="btn btn-primary" onclick="exportExcel()">📤 تصدير Excel</button>
+    <button class="btn btn-info" onclick="window.print()">🖨 طباعة التقرير</button>
+    <button class="btn btn-secondary" onclick="exportPDF()">📄 تحويل PDF</button>
+    <button class="btn btn-danger" onclick="clearStorage()">🗑 مسح البيانات المحفوظة</button>
+  </div>
+
+  <!-- SEARCH BAR -->
+  <div class="search-bar no-print">
+    <div class="search-bar-title">🔍 بحث متقدم وفلترة</div>
+    <div class="search-grid">
+      <div class="search-group">
+        <label>المدينة</label>
+        <select id="f-city" class="search-select">
+          <option value="">الكل</option>
+          <option value="بنغازي">بنغازي</option>
+          <option value="طرابلس">طرابلس</option>
+        </select>
+      </div>
+      <div class="search-group">
+        <label>المنطقة / الموقع</label>
+        <input id="f-loc" type="text" class="search-input" placeholder="ابحث..."/>
+      </div>
+      <div class="search-group">
+        <label>الفئة</label>
+        <select id="f-tier" class="search-select">
+          <option value="">الكل</option>
+          <option value="tier-premium">فاخر</option>
+          <option value="tier-mid">متوسط</option>
+          <option value="tier-eco">اقتصادي</option>
+        </select>
+      </div>
+      <div class="search-group">
+        <label>المصدر</label>
+        <input id="f-src" type="text" class="search-input" placeholder="ابحث..."/>
+      </div>
+      <div class="search-group">
+        <label>الحد الأدنى للسعر (د.ل)</label>
+        <input id="f-pmin" type="number" class="search-input" placeholder="0"/>
+      </div>
+      <div class="search-group">
+        <label>الحد الأقصى للسعر (د.ل)</label>
+        <input id="f-pmax" type="number" class="search-input" placeholder="∞"/>
+      </div>
+      <div class="search-group" style="justify-content:flex-end;flex-direction:row;align-items:flex-end;gap:.4rem;">
+        <button class="btn btn-primary" onclick="applyFilters()">🔍 بحث</button>
+        <button class="btn btn-secondary" onclick="resetFilters()">↺ إعادة</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOURCES NOTE -->
+  <div class="note">
+    <strong>منصات البحث المُستخدمة:</strong>
+    <div class="sources-list">
+      <span class="source-chip">🔵 السوق المفتوح (OpenSooq) — ly.opensooq.com</span>
+      <span class="source-chip">🟢 ليبوزل — libozzle.com</span>
+      <span class="source-chip">🟡 عقار ليبيا — aqarlibya.com</span>
+      <span class="source-chip">🟠 بهو ليبيا — bahu.ly</span>
+      <span class="source-chip">⚫ الكيخيا للعقارات بنغازي</span>
+    </div>
+    ⚠ جميع الأسعار بالدينار الليبي (د.ل) وتمثل إيجاراً شهرياً. بعض الإعلانات تشترط دفع 3–6 أشهر مقدماً.
+  </div>
+
+  <!-- ═══ BENGHAZI ═══ -->
+  <div class="city-header">🏙 بنغازي — المحلات التجارية للإيجار</div>
+  <div class="kpi-grid">
+    <div class="kpi-card featured">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">أدنى سعر مُرصود</div>
+      <div class="kpi-value" id="kpi-b-min">—</div>
+      <div class="kpi-unit">د.ل / شهر</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">📊</div>
+      <div class="kpi-label">متوسط السوق</div>
+      <div class="kpi-value" id="kpi-b-avg">—</div>
+      <div class="kpi-unit">د.ل / شهر</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">⭐</div>
+      <div class="kpi-label">أعلى سعر مُرصود</div>
+      <div class="kpi-value" id="kpi-b-max">—</div>
+      <div class="kpi-unit">د.ل / شهر</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">📐</div>
+      <div class="kpi-label">أكبر مبنى مُدرج</div>
+      <div class="kpi-value" id="kpi-b-area">—</div>
+      <div class="kpi-unit">م²</div>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <div class="table-header">
+      <span class="table-header-title">📋 جدول مفصل — محلات بنغازي (بيانات موثقة)</span>
+      <div class="table-actions no-print">
+        <button class="btn btn-primary" style="padding:.35rem .8rem;font-size:.8rem;" onclick="openModal('benghazi')">➕ إضافة</button>
+        <button class="btn btn-info" style="padding:.35rem .8rem;font-size:.8rem;" onclick="printTable('benghazi')">🖨 طباعة</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table id="table-benghazi">
+        <thead>
+          <tr>
+            <th onclick="sortTable('table-benghazi',0)">#</th>
+            <th onclick="sortTable('table-benghazi',1)">الموقع / المنطقة</th>
+            <th onclick="sortTable('table-benghazi',2)">الشارع / التفاصيل</th>
+            <th onclick="sortTable('table-benghazi',3)">المساحة (م²)</th>
+            <th onclick="sortTable('table-benghazi',4)">الإيجار الشهري</th>
+            <th onclick="sortTable('table-benghazi',5)">سعر المتر</th>
+            <th>الفئة</th>
+            <th>المصدر</th>
+            <th class="no-print">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-benghazi"></tbody>
+      </table>
+    </div>
+    <div class="table-info" id="info-benghazi"></div>
+    <div class="pagination" id="pag-benghazi"></div>
+  </div>
+
+  <!-- Benghazi District Map -->
+  <div class="kpi-section-title">خريطة الأسعار — مناطق بنغازي</div>
+  <div class="district-grid">
+    <div class="district-card high"><div class="district-name">🔴 فينيسيا 1 و2</div><div class="district-range">3,000 – 8,000 د.ل</div><div class="district-desc">منطقة فاخرة حيوية — شارع رئيسي مزدوج — مطلوب 3 أشهر مقدم</div></div>
+    <div class="district-card high"><div class="district-name">🔴 شارع الوكالات</div><div class="district-range">3,000 – 6,000 د.ل</div><div class="district-desc">أرقى الشوارع التجارية في بنغازي — ملابس وإلكترونيات</div></div>
+    <div class="district-card medium"><div class="district-name">🟡 الفويهات</div><div class="district-range">1,500 – 4,000 د.ل</div><div class="district-desc">حي راقٍ — مطاعم وكافيهات ومحلات أزياء</div></div>
+    <div class="district-card medium"><div class="district-name">🟡 الهواري</div><div class="district-range">1,200 – 3,000 د.ل</div><div class="district-desc">منطقة تجارية نشطة — مركز المدينة الموسع</div></div>
+    <div class="district-card medium"><div class="district-name">🟡 الليثي</div><div class="district-range">800 – 2,000 د.ل</div><div class="district-desc">منطقة شعبية نشطة — مقسمات هواتف وإلكترونيات</div></div>
+    <div class="district-card low"><div class="district-name">🟢 بنغازي سنتر</div><div class="district-range">600 – 1,500 د.ل</div><div class="district-desc">قلب المدينة — أسعار اقتصادية — متنوع الأنشطة</div></div>
+  </div>
+  <div class="analysis-box">
+    <h4>📊 تحليل سوق بنغازي:</h4>
+    <ul>
+      <li>بنغازي تُسجل أسعاراً أقل من طرابلس بنسبة 40%–60% للمساحة المماثلة في المناطق المتوسطة.</li>
+      <li>منطقة فينيسيا وشارع الوكالات تُمثلان ذروة الطلب والأسعار في السوق البنغازي.</li>
+      <li>المساحات الكبيرة (+300 م²) تحقق سعر متر أقل نسبياً مع إيجار إجمالي مرتفع.</li>
+      <li>معظم الملاك يشترطون 3 أشهر مقدماً للمحلات الممتازة.</li>
+      <li>أسعار شارع الوكالات ترتفع 300%+ مقارنة بالأسعار اقتصادية في وسط المدينة.</li>
+    </ul>
+  </div>
+  <hr class="divider"/>
+
+  <!-- ═══ TRIPOLI ═══ -->
+  <div class="city-header">🏛 طرابلس — المحلات التجارية للإيجار</div>
+  <div class="kpi-grid">
+    <div class="kpi-card featured">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">أدنى سعر مُرصود</div>
+      <div class="kpi-value" id="kpi-t-min">—</div>
+      <div class="kpi-unit">د.ل / شهر</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">📊</div>
+      <div class="kpi-label">متوسط السوق</div>
+      <div class="kpi-value" id="kpi-t-avg">—</div>
+      <div class="kpi-unit">د.ل / شهر</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">⭐</div>
+      <div class="kpi-label">أعلى سعر مُرصود</div>
+      <div class="kpi-value" id="kpi-t-max">—</div>
+      <div class="kpi-unit">د.ل / شهر</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">📐</div>
+      <div class="kpi-label">أكبر مبنى مُدرج</div>
+      <div class="kpi-value" id="kpi-t-area">—</div>
+      <div class="kpi-unit">م²</div>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <div class="table-header">
+      <span class="table-header-title">📋 جدول مفصل — محلات طرابلس (بيانات موثقة)</span>
+      <div class="table-actions no-print">
+        <button class="btn btn-primary" style="padding:.35rem .8rem;font-size:.8rem;" onclick="openModal('tripoli')">➕ إضافة</button>
+        <button class="btn btn-info" style="padding:.35rem .8rem;font-size:.8rem;" onclick="printTable('tripoli')">🖨 طباعة</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table id="table-tripoli">
+        <thead>
+          <tr>
+            <th onclick="sortTable('table-tripoli',0)">#</th>
+            <th onclick="sortTable('table-tripoli',1)">الموقع / المنطقة</th>
+            <th onclick="sortTable('table-tripoli',2)">الشارع / التفاصيل</th>
+            <th onclick="sortTable('table-tripoli',3)">المساحة (م²)</th>
+            <th onclick="sortTable('table-tripoli',4)">الإيجار الشهري</th>
+            <th onclick="sortTable('table-tripoli',5)">سعر المتر</th>
+            <th>الفئة</th>
+            <th>المصدر</th>
+            <th class="no-print">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-tripoli"></tbody>
+      </table>
+    </div>
+    <div class="table-info" id="info-tripoli"></div>
+    <div class="pagination" id="pag-tripoli"></div>
+  </div>
+
+  <!-- Tripoli District Map -->
+  <div class="kpi-section-title">خريطة الأسعار — مناطق طرابلس</div>
+  <div class="district-grid">
+    <div class="district-card high"><div class="district-name">🔴 شارع جرابة</div><div class="district-range">4,000 – 20,000 د.ل</div><div class="district-desc">أسمى شوارع طرابلس التجارية — مطاعم ومحلات راقية</div></div>
+    <div class="district-card high"><div class="district-name">🔴 المدينة السياحية</div><div class="district-range">5,000 – 15,000 د.ل</div><div class="district-desc">ترتفع على الحرف — مركزية ومطاعم ومحلات متنوعة</div></div>
+    <div class="district-card high"><div class="district-name">🔴 طريق المطار</div><div class="district-range">2,500 – 10,000 د.ل</div><div class="district-desc">حركة مرور كثيفة — مناسب للمحلات والخدمات</div></div>
+    <div class="district-card medium"><div class="district-name">🟡 عين زارة</div><div class="district-range">2,000 – 7,000 د.ل</div><div class="district-desc">حي راقٍ — سيارات وإدارات ومحلات</div></div>
+    <div class="district-card medium"><div class="district-name">🟡 حي الأندلس</div><div class="district-range">2,000 – 6,000 د.ل</div><div class="district-desc">نشاط تجاري متوسط — سكني تجاري مختلط</div></div>
+    <div class="district-card medium"><div class="district-name">🟡 الغلة</div><div class="district-range">2,000 – 6,000 د.ل</div><div class="district-desc">محلات ومعارض تجارية نشطة</div></div>
+    <div class="district-card medium"><div class="district-name">🟡 الخضراء</div><div class="district-range">1,500 – 6,000 د.ل</div><div class="district-desc">شوارع تجارية طويلة متعددة الأنشطة</div></div>
+    <div class="district-card low"><div class="district-name">🟢 سوق الجمعة</div><div class="district-range">1,500 – 4,000 د.ل</div><div class="district-desc">نشاط تجاري حيوي جداً — وسط شعبي</div></div>
+    <div class="district-card low"><div class="district-name">🟢 المدينة القديمة</div><div class="district-range">800 – 2,500 د.ل</div><div class="district-desc">السوق القديم والبازارات التراثية</div></div>
+    <div class="district-card low"><div class="district-name">🟢 الدريبي</div><div class="district-range">800 – 2,000 د.ل</div><div class="district-desc">أسعار اقتصادية — متاجر في محيط الجمعة</div></div>
+  </div>
+  <div class="analysis-box">
+    <h4>📊 تحليل سوق طرابلس:</h4>
+    <ul>
+      <li>طرابلس تُسجل أسعاراً أعلى عموماً من بنغازي بحكم كونها العاصمة ومركز الاقتصاد.</li>
+      <li>شارع جرابة يُعد الأول والأكثر طلباً من الناحية التجارية.</li>
+      <li>الأسعار واسعة جداً: من 800 د.ل للمحل الصغير إلى 20,000 د.ل للمحل الكبير جداً.</li>
+      <li>المطار (جرابة، الساحة، رارس) في ارتفاع مستمر مع عودة الاستثمارات.</li>
+      <li>الطلب على المساحات الكبيرة (300+ م²) في ارتفاع مستمر مع عودة المراكز التجارية.</li>
+    </ul>
+  </div>
+  <hr class="divider"/>
+
+  <!-- COMPARISON — DYNAMIC -->
+  <div class="comp-section">
+    <h3>⚖ مقارنة شاملة: بنغازي مقابل طرابلس <span class="live-badge">⟳ حي</span></h3>
+    <h4 style="color:var(--primary);margin-bottom:.8rem;font-size:.9rem;">📊 متوسط أسعار الإيجار الشهري حسب الدرجة — محسوب من البيانات الفعلية</h4>
+    <table class="comp-table" id="comp-table-main">
+      <thead>
+        <tr>
+          <th>الدرجة</th>
+          <th>بنغازي (د.ل)</th>
+          <th>طرابلس (د.ل)</th>
+          <th>الفارق التقريبي</th>
+        </tr>
+      </thead>
+      <tbody id="comp-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- FACTORS — DYNAMIC SUMMARY -->
+  <div class="factors-section">
+    <h3>⚖ العوامل المؤثرة في السعر <span class="live-badge">⟳ حي</span></h3>
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>العامل</th>
+          <th>الأثر في بنغازي</th>
+          <th>الأثر في طرابلس</th>
+          <th>الدرجة</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>الموقع على الشارع الرئيسي</td><td>+100% – +300%</td><td>+150% – +400%</td><td>⭐⭐⭐⭐⭐ مرتفع جداً</td></tr>
+        <tr><td>المساحة (لكل إضافة 50م²)</td><td>+20% – +50%</td><td>+30% – +80%</td><td>⭐⭐⭐⭐ مرتفع</td></tr>
+        <tr><td>التشطيب والتجهيز</td><td>+20% – +60%</td><td>+30% – +80%</td><td>⭐⭐⭐⭐ مرتفع</td></tr>
+        <tr><td>التكييف والخدمات</td><td>+10% – +20%</td><td>+15% – +30%</td><td>⭐⭐⭐ متوسط</td></tr>
+        <tr><td>مواقف السيارات</td><td>+15% – +30%</td><td>+20% – +50%</td><td>⭐⭐⭐ متوسط</td></tr>
+        <tr><td>قرب المراكز التجارية</td><td>+20% – +60%</td><td>+30% – +80%</td><td>⭐⭐⭐⭐ مرتفع</td></tr>
+        <tr><td>وجود مصعد / مركز تجاري</td><td>+10% – +25%</td><td>+20% – +40%</td><td>⭐⭐ متوسط</td></tr>
+      </tbody>
+    </table>
+    <div class="factors-live-summary">
+      <h4>📈 ملخص التأثير الفعلي من البيانات الحية:</h4>
+      <div class="factors-stats-grid" id="factors-live-grid"></div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="kpi-section-title">📊 لوحة المؤشرات البيانية</div>
+  <div class="charts-section">
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>🏙 متوسط سعر الإيجار حسب المدينة</h3>
+        <div class="chart-container"><canvas id="chart-city"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>🏷 توزيع المحلات حسب الفئة</h3>
+        <div class="chart-container"><canvas id="chart-tier"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>📍 توزيع الأسعار في بنغازي</h3>
+        <div class="chart-container"><canvas id="chart-benghazi-dist"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>📍 توزيع الأسعار في طرابلس</h3>
+        <div class="chart-container"><canvas id="chart-tripoli-dist"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>📐 متوسط سعر المتر المربع</h3>
+        <div class="chart-container"><canvas id="chart-sqm"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>📢 عدد السجلات لكل مدينة</h3>
+        <div class="chart-container"><canvas id="chart-count"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONCLUSION -->
+  <div class="kpi-section-title">✅ الخلاصة والتوصيات 2025/2026</div>
+  <div class="comp-section">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1rem;">
+      <div>
+        <h4 style="color:var(--primary);margin-bottom:.7rem;">🏙 بنغازي</h4>
+        <ul style="padding-right:1.2rem;font-size:.88rem;color:var(--gray-700);line-height:2;">
+          <li>الحد الأدنى: 600 د.ل (محل 30م² وسط المدينة)</li>
+          <li>المتوسط: 1,500 – 3,500 د.ل</li>
+          <li>الفئة الممتازة: 5,000 – 8,000 د.ل</li>
+          <li>أفضل استثمار: فينيسيا، شارع الوكالات</li>
+        </ul>
+      </div>
+      <div>
+        <h4 style="color:#0369a1;margin-bottom:.7rem;">🏛 طرابلس</h4>
+        <ul style="padding-right:1.2rem;font-size:.88rem;color:var(--gray-700);line-height:2;">
+          <li>الحد الأدنى: 800 د.ل (محل صغير الدريبي)</li>
+          <li>المتوسط: 2,500 – 6,000 د.ل</li>
+          <li>الفئة الممتازة: 8,000 – 20,000 د.ل</li>
+          <li>أفضل استثمار: شارع جرابة، المدينة السياحية</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note">📈 <strong>الاتجاه العام:</strong> يشهد السوق العقاري التجاري في كلتا المدينتين ارتفاعاً تدريجياً مع استمرار تحسن الوضع الأمني وعودة الاستثمارات. يُنصح بالتواصل المباشر مع وسطاء عقاريين موثوقين للحصول على أدق الأسعار الآنية.</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="bfp-footer">
+  <div class="footer-logo-text">BFP — Brandzo Hub 2026</div>
+  <div class="footer-text">
+    تقرير تحوير مستودعات 155 لرفع الكفاءة التشغيلية والسعة التخزينية<br/>
+    إعداد: Brandzo Hub 2026 (BFP) • تاريخ التقرير: يونيو 2026<br/>
+    هذا التقرير للأغراض البحثية والاستشارية فقط
+  </div>
+  <div class="footer-sources">
+    <a href="https://ly.opensooq.com" target="_blank" class="footer-source-link">OpenSooq Libya</a>
+    <span>|</span>
+    <a href="https://libozzle.com" target="_blank" class="footer-source-link">Libozzle</a>
+    <span>|</span>
+    <a href="https://aqarlibya.com" target="_blank" class="footer-source-link">Aqar Libya</a>
+    <span>|</span>
+    <a href="https://bahu.ly" target="_blank" class="footer-source-link">Bahu.ly</a>
+  </div>
+</footer>
+
+<script>
+/* ══════════════════════════════════
+   INITIAL DATA
+══════════════════════════════════ */
+const INIT_DATA = {
+  benghazi: [
+    {loc:"بنغازي — سنتر",street:"مقابل براندز سنتر",area:30,price:600,pm2:20,tier:"tier-eco",src:"ليبوزل"},
+    {loc:"بنغازي — سنتر",street:"مقابل براندز سنتر (مكتبي مفروش)",area:0,price:600,pm2:0,tier:"tier-eco",src:"ليبوزل"},
+    {loc:"بنغازي — طريق المطار",street:"بجوار قاعة الأميرة",area:220,price:0,pm2:0,tier:"tier-mid",src:"ليبوزل"},
+    {loc:"بنغازي — فينيسيا 2",street:"قبل دار الشفاء — مقابل هنجر بنغازي",area:390,price:6000,pm2:15.4,tier:"tier-premium",src:"ليبوزل"},
+    {loc:"بنغازي — شارع الوكالات",street:"الشارع التجاري الرئيسي",area:375,price:5000,pm2:13.3,tier:"tier-premium",src:"OpenSooq"},
+    {loc:"بنغازي — الليثي",street:"شارع مقسمات الهواتف",area:80,price:1000,pm2:12,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — الفويهات",street:"على الشارع الرئيسي",area:100,price:2500,pm2:25,tier:"tier-mid",src:"OpenSooq"},
+    {loc:"بنغازي — الهواري",street:"المنطقة التجارية",area:90,price:2000,pm2:22,tier:"tier-mid",src:"OpenSooq"},
+    {loc:"بنغازي — الهواري",street:"على الرئيسي",area:80,price:1500,pm2:18,tier:"tier-mid",src:"OpenSooq"},
+    {loc:"بنغازي — طلب إيجار",street:"منطقة حيوية (مطلوب، مقدم 6 أشهر)",area:300,price:8000,pm2:26.7,tier:"tier-premium",src:"عقار ليبيا"},
+    {loc:"بنغازي — سنتر",street:"روما — محل حيوي",area:120,price:7000,pm2:58.3,tier:"tier-premium",src:"عقار ليبيا"},
+    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — سيا ماي هوم",area:85,price:5000,pm2:58.8,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — الحمال",street:"شارع الرئيسي — مولتي",area:80,price:4000,pm2:50,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — الهاجر",street:"شارع الرئيسي — طرمول الماس",area:75,price:3500,pm2:46.7,tier:"tier-mid",src:"مصادر متاحة"},
+    {loc:"بنغازي — سنتر",street:"شارع الصقر — ساو داون",area:62,price:4750,pm2:76.6,tier:"tier-premium",src:"عقار ليبيا"},
+    {loc:"بنغازي — سنتر",street:"شارع الصقر — دوحال مول",area:62,price:2600,pm2:41.9,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — سنتر",street:"شارع الهاجر — الامرة",area:55,price:3050,pm2:55.5,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — ديار سيوطر",area:40,price:2000,pm2:50,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — الحل للساعات",area:73,price:4000,pm2:54.8,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — فارح للعطور",area:26,price:1000,pm2:38.5,tier:"tier-eco",src:"عقار ليبيا"},
+    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — الحل للساعات",area:25,price:2000,pm2:80,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — مجوهرات اور",area:43,price:6000,pm2:139.5,tier:"tier-premium",src:"عقار ليبيا"},
+    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — مجوهرات الاسا",area:28,price:5000,pm2:178.6,tier:"tier-premium",src:"عقار ليبيا"},
+    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — الاتحاد للمجوهرات",area:24,price:5000,pm2:208.3,tier:"tier-premium",src:"عقار ليبيا"},
+    {loc:"بنغازي — سنتر",street:"مقابل مول — الحجاجات",area:75,price:7500,pm2:100,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — سنتر",street:"مقابل مول — الاتحاد",area:75,price:7500,pm2:100,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — سنتر",street:"مقابل مول — مساحة",area:75,price:7500,pm2:100,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — سنتر",street:"مقابل مول — اويا",area:75,price:7500,pm2:100,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — سنتر",street:"مقابل مول — سعود",area:120,price:20000,pm2:166.7,tier:"tier-premium",src:"عقار ليبيا"},
+    {loc:"بنغازي — سلمان",street:"موقع محدد — للاستثمار",area:375,price:30000,pm2:80,tier:"tier-premium",src:"عقار ليبيا"},
+    {loc:"بنغازي — مركز المدينة",street:"شارع عروبة",area:72,price:4000,pm2:55.6,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — مركز المدينة",street:"شارع عروبة — صاصا",area:49,price:3000,pm2:61.2,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — سدرا الرحمة",street:"موقع محدد",area:100,price:6000,pm2:60,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — الحمال",street:"شارع مولتي",area:80,price:4000,pm2:50,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — السلمانية",street:"للوقوف",area:32,price:1800,pm2:56.3,tier:"tier-eco",src:"عقار ليبيا"},
+    {loc:"بنغازي — مركز المدينة",street:"شارع عبدالحليل",area:35,price:5000,pm2:142.9,tier:"tier-premium",src:"عقار ليبيا"},
+    {loc:"بنغازي — الواحة",street:"شارع 204 — مقابل الجامعة",area:450,price:30000,pm2:66.7,tier:"tier-premium",src:"عقار ليبيا"},
+    {loc:"بنغازي — السد البغدادي",street:"مقابل اول",area:35,price:3000,pm2:85.7,tier:"tier-mid",src:"عقار ليبيا"},
+    {loc:"بنغازي — سنتر",street:"مقابل مول — B&G",area:75,price:7500,pm2:100,tier:"tier-premium",src:"عقار ليبيا"},
+    {loc:"بنغازي — سنتر",street:"مقابل مول — مطعم محاجر",area:600,price:30000,pm2:50,tier:"tier-premium",src:"عقار ليبيا"}
+  ],
+  tripoli: [
+    {loc:"طرابلس — سوق الجمعة",street:"الطابق الأرضي — شهري",area:115,price:3000,pm2:26.1,tier:"tier-mid",src:"OpenSooq"},
+    {loc:"طرابلس — شارع جرابة",street:"شارع جرابة التجاري الرئيسي",area:25,price:1000,pm2:40,tier:"tier-eco",src:"OpenSooq"},
+    {loc:"طرابلس — شارع جرابة",street:"تكييف مركزي — مصعد — سنوي",area:550,price:4000,pm2:7.3,tier:"tier-mid",src:"OpenSooq"},
+    {loc:"طرابلس — شارع جرابة",street:"موقف سيارات — مطعم سارة — سنوي",area:150,price:20000,pm2:133.3,tier:"tier-premium",src:"OpenSooq"},
+    {loc:"طرابلس — عين زارة",street:"مكتبي راسمي حاري",area:60,price:2250,pm2:37.5,tier:"tier-mid",src:"OpenSooq"},
+    {loc:"طرابلس — الغلة",street:"مركز تجاري حيوي",area:250,price:4500,pm2:18,tier:"tier-mid",src:"OpenSooq"},
+    {loc:"طرابلس — الخضراء",street:"شارع الرئيسي طويل",area:100,price:5000,pm2:50,tier:"tier-premium",src:"عقار ليبيا"},
+    {loc:"طرابلس — طريق المطار",street:"شارع رئيسي وحركة عالية",area:120,price:6250,pm2:52,tier:"tier-premium",src:"OpenSooq"},
+    {loc:"طرابلس — المدينة السياحية",street:"شارع الواحدة — الساحة الحرة",area:200,price:10000,pm2:50,tier:"tier-premium",src:"bahu.ly"},
+    {loc:"طرابلس — عين زارة–جاري",street:"سكني تجاري مختلط",area:80,price:3250,pm2:40.6,tier:"tier-mid",src:"OpenSooq"},
+    {loc:"طرابلس — الدريبي",street:"شارع رئيسي حاري",area:50,price:1500,pm2:30,tier:"tier-eco",src:"عقار ليبيا"},
+    {loc:"طرابلس — المدينة القديمة",street:"السوق القديم والبازارات",area:60,price:1650,pm2:27.5,tier:"tier-eco",src:"عقار ليبيا"},
+    {loc:"طرابلس — حي الأندلس",street:"على الطريق الفرعي",area:120,price:4500,pm2:37.5,tier:"tier-mid",src:"bahu.ly"},
+    {loc:"طرابلس — دهماني–جاري",street:"سكني تجاري",area:64,price:1850,pm2:28.9,tier:"tier-eco",src:"OpenSooq"},
+    {loc:"طرابلس — معرض للإيجار",street:"الغلة / عين زارة",area:640,price:15000,pm2:23.4,tier:"tier-premium",src:"OpenSooq"},
+    {loc:"طرابلس — شارع جرابة",street:"طابق علوي — مطعم كبير",area:200,price:12000,pm2:60,tier:"tier-premium",src:"OpenSooq"},
+    {loc:"طرابلس — المدينة السياحية",street:"رارس — الساحة السياحية",area:180,price:14000,pm2:77.8,tier:"tier-premium",src:"bahu.ly"},
+    {loc:"طرابلس — طريق المطار",street:"محطة وقود — محلات جانبية",area:90,price:5500,pm2:61.1,tier:"tier-premium",src:"OpenSooq"},
+    {loc:"طرابلس — سوق الجمعة",street:"شارع علي جنبي — دكان",area:40,price:1800,pm2:45,tier:"tier-eco",src:"OpenSooq"},
+    {loc:"طرابلس — عين زارة",street:"شارع الرئيسي — طابق ارضي",area:70,price:3500,pm2:50,tier:"tier-mid",src:"OpenSooq"},
+    {loc:"طرابلس — الخضراء",street:"شارع المشير — أمام كورنيش",area:50,price:4000,pm2:80,tier:"tier-premium",src:"عقار ليبيا"},
+    {loc:"طرابلس — الغلة",street:"مركز تجاري حيوي — طابق ثاني",area:160,price:3500,pm2:21.9,tier:"tier-mid",src:"OpenSooq"},
+    {loc:"طرابلس — حي الأندلس",street:"شارع الرئيسي حاري",area:85,price:3800,pm2:44.7,tier:"tier-mid",src:"bahu.ly"},
+    {loc:"طرابلس — دهماني",street:"قريب سوق الجمعة",area:55,price:2200,pm2:40,tier:"tier-mid",src:"OpenSooq"},
+    {loc:"طرابلس — الدريبي",street:"بالقرب من السوق",area:35,price:900,pm2:25.7,tier:"tier-eco",src:"عقار ليبيا"},
+    {loc:"طرابلس — شارع جرابة",street:"طابق ارضي — للتجزئة",area:80,price:8000,pm2:100,tier:"tier-premium",src:"OpenSooq"},
+    {loc:"طرابلس — المدينة القديمة",street:"بازار السوق القديم",area:25,price:1200,pm2:48,tier:"tier-eco",src:"عقار ليبيا"},
+    {loc:"طرابلس — طريق المطار",street:"واجهة على الطريق",area:100,price:7000,pm2:70,tier:"tier-premium",src:"OpenSooq"},
+    {loc:"طرابلس — سوق الجمعة",street:"طابق ارضي مباشر",area:85,price:2500,pm2:29.4,tier:"tier-mid",src:"OpenSooq"},
+    {loc:"طرابلس — عين زارة",street:"مجمع تجاري داخلي",area:40,price:2000,pm2:50,tier:"tier-mid",src:"عقار ليبيا"}
+  ]
+};
+
+/* ══════════════════════════════════
+   STATE
+══════════════════════════════════ */
+let appData = {benghazi:[],tripoli:[]};
+let filteredData = {benghazi:[],tripoli:[]};
+let currentPage = {benghazi:1,tripoli:1};
+const PAGE_SIZE = 15;
+let _modalTable = null;
+let _editingRow = null;
+let _sortState = {};
+let charts = {};
+
+/* ══ STORAGE ══ */
+function saveStorage(){
+  try{localStorage.setItem('bfp_data_v8',JSON.stringify(appData));}catch(e){}
+}
+function loadStorage(){
+  try{
+    const s=localStorage.getItem('bfp_data_v8');
+    if(s){appData=JSON.parse(s);return true;}
+  }catch(e){}
+  return false;
+}
+function clearStorage(){
+  if(!confirm('هل تريد مسح جميع البيانات من الصفحة بالكامل؟ لا يمكن التراجع عن هذا الإجراء.'))return;
+  localStorage.removeItem('bfp_data_v8');
+  appData={benghazi:[],tripoli:[]};
+  filteredData={benghazi:[],tripoli:[]};
+  renderAll();
+  toast('تم مسح جميع البيانات بالكامل 🗑️');
+}
+
+/* ══ RENDER ALL ══ */
+function renderAll(){
+  renderTable('benghazi');
+  renderTable('tripoli');
+  updateKPIs();
+  updateComparison();
+  updateFactorsLive();
+  updateCharts();
+  saveStorage();
+}
+
+function tierLabel(t){
+  if(t==='tier-premium')return'فاخر';
+  if(t==='tier-mid')return'متوسط';
+  return'اقتصادي';
+}
+
+/* ══ RENDER TABLE ══ */
+function renderTable(city){
+  const rows=filteredData[city];
+  const page=currentPage[city];
+  const start=(page-1)*PAGE_SIZE;
+  const end=start+PAGE_SIZE;
+  const pageRows=rows.slice(start,end);
+  const tbody=document.getElementById('tbody-'+city);
+  tbody.innerHTML='';
+  pageRows.forEach((r,i)=>{
+    const rIdx=start+i;
+    const tierC=r.tier||'tier-mid';
+    const priceDisp=r.price>0?r.price.toLocaleString('ar-LY')+' د.ل':'يُتفق عليه';
+    const areaDisp=r.area>0?r.area+' م²':'غير محدد';
+    const pm2Disp=r.pm2>0?r.pm2.toFixed(1)+' د.ل/م²':'—';
+    const tr=document.createElement('tr');
+    tr.innerHTML=
+      '<td>'+(rIdx+1)+'</td>'+
+      '<td class="loc-cell">'+(r.loc||'—')+'</td>'+
+      '<td class="street-cell">'+(r.street||'—')+'</td>'+
+      '<td class="area-cell">'+areaDisp+'</td>'+
+      '<td class="price-cell">'+priceDisp+'</td>'+
+      '<td class="pricem2-cell">'+pm2Disp+'</td>'+
+      '<td><span class="tier-badge '+tierC+'">'+tierLabel(tierC)+'</span></td>'+
+      '<td><span class="src-badge">'+(r.src||'—')+'</span></td>'+
+      '<td class="no-print">'+
+        '<button class="btn-edit-row" onclick="editRow(\''+city+'\','+rIdx+')">✏️</button>'+
+        '<button class="btn-del-row" onclick="delRow(\''+city+'\','+rIdx+')">🗑</button>'+
+      '</td>';
+    tbody.appendChild(tr);
+  });
+
+  const total=rows.length;
+  const pages=Math.ceil(total/PAGE_SIZE);
+  const pag=document.getElementById('pag-'+city);
+  pag.innerHTML='';
+  if(pages>1){
+    for(let p=1;p<=pages;p++){
+      const btn=document.createElement('button');
+      btn.className='page-btn'+(p===page?' active':'');
+      btn.textContent=p;
+      btn.onclick=(()=>{const pp=p;return()=>{currentPage[city]=pp;renderTable(city);}})();
+      pag.appendChild(btn);
+    }
+  }
+  document.getElementById('info-'+city).textContent=
+    'عرض '+(total===0?0:start+1)+' – '+Math.min(end,total)+' من '+total+' سجل';
+}
+
+/* ══ KPIs ══ */
+function updateKPIs(){
+  ['benghazi','tripoli'].forEach(city=>{
+    const pre=city==='benghazi'?'b':'t';
+    const prices=appData[city].filter(r=>r.price>0).map(r=>r.price);
+    const areas=appData[city].filter(r=>r.area>0).map(r=>r.area);
+    if(prices.length>0){
+      document.getElementById('kpi-'+pre+'-min').textContent=Math.min(...prices).toLocaleString('ar-LY');
+      document.getElementById('kpi-'+pre+'-avg').textContent=Math.round(prices.reduce((a,b)=>a+b,0)/prices.length).toLocaleString('ar-LY');
+      document.getElementById('kpi-'+pre+'-max').textContent=Math.max(...prices).toLocaleString('ar-LY');
+    }else{
+      ['min','avg','max'].forEach(k=>document.getElementById('kpi-'+pre+'-'+k).textContent='—');
+    }
+    const areaEl=document.getElementById('kpi-'+pre+'-area');
+    if(areaEl){
+      if(areas.length>0)areaEl.textContent=Math.max(...areas).toLocaleString('ar-LY');
+      else areaEl.textContent='—';
+    }
+  });
+}
+
+/* ══ COMPARISON — DYNAMIC ══ */
+function computeTierStats(city,tier){
+  const rows=appData[city].filter(r=>r.tier===tier&&r.price>0).map(r=>r.price);
+  if(!rows.length)return{min:0,max:0,avg:0,count:0};
+  return{min:Math.min(...rows),max:Math.max(...rows),avg:Math.round(rows.reduce((a,b)=>a+b,0)/rows.length),count:rows.length};
+}
+
+function updateComparison(){
+  const tiers=[
+    {key:'tier-premium',label:'🔴 فاخر'},
+    {key:'tier-mid',label:'🟡 متوسط'},
+    {key:'tier-eco',label:'🟢 اقتصادي'}
+  ];
+  const tbody=document.getElementById('comp-tbody');
+  if(!tbody)return;
+  tbody.innerHTML='';
+  tiers.forEach(t=>{
+    const b=computeTierStats('benghazi',t.key);
+    const tr2=computeTierStats('tripoli',t.key);
+    let bStr='—',trStr='—',diffStr='—';
+    if(b.count>0)bStr=b.min.toLocaleString('ar-LY')+' – '+b.max.toLocaleString('ar-LY')+' د.ل<br><small style="color:#6b7280">متوسط: '+b.avg.toLocaleString('ar-LY')+'</small>';
+    if(tr2.count>0)trStr=tr2.min.toLocaleString('ar-LY')+' – '+tr2.max.toLocaleString('ar-LY')+' د.ل<br><small style="color:#6b7280">متوسط: '+tr2.avg.toLocaleString('ar-LY')+'</small>';
+    if(b.avg>0&&tr2.avg>0){
+      const pct=Math.round((tr2.avg-b.avg)/b.avg*100);
+      diffStr=(pct>0?'+':'')+pct+'%';
+    }
+    const row=document.createElement('tr');
+    row.innerHTML='<td><strong>'+t.label+'</strong></td><td>'+bStr+'</td><td>'+trStr+'</td><td style="font-weight:800;color:var(--dark-red)">'+diffStr+'</td>';
+    tbody.appendChild(row);
+  });
+  // Best investment row
+  const bestRow=document.createElement('tr');
+  bestRow.innerHTML='<td>🏆 أفضل استثمار</td><td>فينيسيا، شارع الوكالات</td><td>شارع جرابة، المدينة السياحية</td><td>—</td>';
+  tbody.appendChild(bestRow);
+}
+
+/* ══ FACTORS LIVE SUMMARY ══ */
+function updateFactorsLive(){
+  const grid=document.getElementById('factors-live-grid');
+  if(!grid)return;
+  const allPrices=[...appData.benghazi,...appData.tripoli].filter(r=>r.price>0).map(r=>r.price);
+  const bPrices=appData.benghazi.filter(r=>r.price>0).map(r=>r.price);
+  const tPrices=appData.tripoli.filter(r=>r.price>0).map(r=>r.price);
+  const bPm2=appData.benghazi.filter(r=>r.pm2>0).map(r=>r.pm2);
+  const tPm2=appData.tripoli.filter(r=>r.pm2>0).map(r=>r.pm2);
+  const avgArr=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):0;
+  const bAvg=avgArr(bPrices),tAvg=avgArr(tPrices);
+  const capitalPremium=bAvg>0&&tAvg>0?Math.round((tAvg-bAvg)/bAvg*100):0;
+  const bPrem=appData.benghazi.filter(r=>r.tier==='tier-premium'&&r.price>0).map(r=>r.price);
+  const bEco=appData.benghazi.filter(r=>r.tier==='tier-eco'&&r.price>0).map(r=>r.price);
+  const tPrem=appData.tripoli.filter(r=>r.tier==='tier-premium'&&r.price>0).map(r=>r.price);
+  const tEco=appData.tripoli.filter(r=>r.tier==='tier-eco'&&r.price>0).map(r=>r.price);
+  const tierRatioB=bEco.length>0&&bPrem.length>0?Math.round(avgArr(bPrem)/avgArr(bEco)*100):0;
+  const tierRatioT=tEco.length>0&&tPrem.length>0?Math.round(avgArr(tPrem)/avgArr(tEco)*100):0;
+  const items=[
+    {label:'متوسط الإيجار — بنغازي',value:bAvg>0?bAvg.toLocaleString('ar-LY')+' د.ل':'—'},
+    {label:'متوسط الإيجار — طرابلس',value:tAvg>0?tAvg.toLocaleString('ar-LY')+' د.ل':'—'},
+    {label:'علاوة العاصمة',value:capitalPremium>0?'+'+capitalPremium+'%':'—'},
+    {label:'متوسط م² — بنغازي',value:bPm2.length?avgArr(bPm2).toFixed(0)+' د.ل/م²':'—'},
+    {label:'متوسط م² — طرابلس',value:tPm2.length?avgArr(tPm2).toFixed(0)+' د.ل/م²':'—'},
+    {label:'نسبة فاخر/اقتصادي بنغازي',value:tierRatioB>0?tierRatioB+'%':'—'},
+    {label:'نسبة فاخر/اقتصادي طرابلس',value:tierRatioT>0?tierRatioT+'%':'—'},
+    {label:'إجمالي السجلات',value:(appData.benghazi.length+appData.tripoli.length)+' سجل'}
+  ];
+  grid.innerHTML=items.map(it=>'<div class="factor-stat-item"><div class="factor-stat-label">'+it.label+'</div><div class="factor-stat-value">'+it.value+'</div></div>').join('');
+}
+
+/* ══ FILTERS ══ */
+function applyFilters(){
+  const fCity=document.getElementById('f-city').value;
+  const fLoc=document.getElementById('f-loc').value.trim().toLowerCase();
+  const fTier=document.getElementById('f-tier').value;
+  const fSrc=document.getElementById('f-src').value.trim().toLowerCase();
+  const fPmin=parseFloat(document.getElementById('f-pmin').value)||0;
+  const fPmax=parseFloat(document.getElementById('f-pmax').value)||Infinity;
+  ['benghazi','tripoli'].forEach(city=>{
+    if(fCity&&(city==='benghazi'?'بنغازي':'طرابلس')!==fCity){
+      filteredData[city]=[];
+    }else{
+      filteredData[city]=appData[city].filter(r=>{
+        const loc=(r.loc||'').toLowerCase();
+        const src=(r.src||'').toLowerCase();
+        const price=r.price||0;
+        if(fLoc&&!loc.includes(fLoc))return false;
+        if(fTier&&r.tier!==fTier)return false;
+        if(fSrc&&!src.includes(fSrc))return false;
+        if(price>0&&(price<fPmin||price>fPmax))return false;
+        return true;
+      });
+    }
+    currentPage[city]=1;
+    renderTable(city);
+  });
+}
+function resetFilters(){
+  ['f-city','f-tier'].forEach(id=>document.getElementById(id).value='');
+  ['f-loc','f-src','f-pmin','f-pmax'].forEach(id=>document.getElementById(id).value='');
+  filteredData={benghazi:[...appData.benghazi],tripoli:[...appData.tripoli]};
+  currentPage={benghazi:1,tripoli:1};
+  renderTable('benghazi');
+  renderTable('tripoli');
+}
+
+/* ══ SORT ══ */
+function sortTable(tableId,colIdx){
+  const city=tableId.includes('benghazi')?'benghazi':'tripoli';
+  const key=tableId+'_'+colIdx;
+  _sortState[key]=_sortState[key]==='asc'?'desc':'asc';
+  const asc=_sortState[key]==='asc';
+  const cols=['#','loc','street','area','price','pm2'];
+  const field=cols[colIdx]||'loc';
+  filteredData[city].sort((a,b)=>{
+    let va=a[field]||0,vb=b[field]||0;
+    if(typeof va==='string')va=va.toLowerCase();
+    if(typeof vb==='string')vb=vb.toLowerCase();
+    return asc?(va>vb?1:-1):(va<vb?1:-1);
+  });
+  const ths=document.getElementById(tableId).querySelectorAll('thead th');
+  ths.forEach((th,i)=>{
+    th.classList.remove('sort-asc','sort-desc');
+    if(i===colIdx)th.classList.add(asc?'sort-asc':'sort-desc');
+  });
+  renderTable(city);
+}
+
+/* ══ MODAL ══ */
+function openModal(city){
+  _modalTable=city;_editingRow=null;
+  document.getElementById('modal-title').textContent='➕ إضافة سجل جديد';
+  document.getElementById('mf-city').value=city==='benghazi'?'بنغازي':'طرابلس';
+  ['mf-location','mf-street','mf-area','mf-price','mf-pricem2','mf-source'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mf-tier').value='tier-mid';
+  document.getElementById('row-modal-overlay').classList.add('active');
+  setTimeout(()=>document.getElementById('mf-location').focus(),100);
+}
+function editRow(city,idx){
+  const r=appData[city][idx];
+  if(!r)return;
+  _modalTable=city;_editingRow=idx;
+  document.getElementById('modal-title').textContent='✏️ تعديل سجل';
+  document.getElementById('mf-city').value=city==='benghazi'?'بنغازي':'طرابلس';
+  document.getElementById('mf-location').value=r.loc||'';
+  document.getElementById('mf-street').value=r.street||'';
+  document.getElementById('mf-area').value=r.area||'';
+  document.getElementById('mf-price').value=r.price||'';
+  document.getElementById('mf-pricem2').value=r.pm2||'';
+  document.getElementById('mf-tier').value=r.tier||'tier-mid';
+  document.getElementById('mf-source').value=r.src||'';
+  document.getElementById('row-modal-overlay').classList.add('active');
+}
+function closeModal(){
+  document.getElementById('row-modal-overlay').classList.remove('active');
+  _editingRow=null;
+}
+function saveModal(){
+  const city=_modalTable;
+  const locVal=document.getElementById('mf-location').value.trim();
+  if(!locVal){alert('الرجاء إدخال الموقع/المنطقة');return;}
+  const newRow={
+    loc:locVal,
+    street:document.getElementById('mf-street').value.trim(),
+    area:parseFloat(document.getElementById('mf-area').value)||0,
+    price:parseFloat(document.getElementById('mf-price').value)||0,
+    pm2:parseFloat(document.getElementById('mf-pricem2').value)||0,
+    tier:document.getElementById('mf-tier').value,
+    src:document.getElementById('mf-source').value.trim()
+  };
+  if(_editingRow!==null){appData[city][_editingRow]=newRow;toast('تم تعديل السجل بنجاح');}
+  else{appData[city].push(newRow);toast('تم إضافة السجل بنجاح');}
+  filteredData[city]=[...appData[city]];
+  closeModal();
+  renderAll();
+}
+function delRow(city,idx){
+  if(!confirm('هل تريد حذف هذا الصف؟'))return;
+  appData[city].splice(idx,1);
+  filteredData[city]=[...appData[city]];
+  renderAll();
+  toast('تم حذف السجل');
+}
+document.getElementById('row-modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+/* ══ EXCEL IMPORT ══ */
+function importExcel(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      /* مسح البيانات الحالية واستبدالها بالمستوردة */
+      const newData={benghazi:[],tripoli:[]};
+      let imported=0;
+
+      /* دالة مساعدة: تجد قيمة عمود بالبحث الجزئي في مفاتيح الصف */
+      function getCol(row,keywords){
+        const keys=Object.keys(row);
+        for(const kw of keywords){
+          const found=keys.find(k=>k.includes(kw));
+          if(found&&row[found]!==''&&row[found]!==undefined)return row[found].toString().trim();
+        }
+        return '';
+      }
+
+      /* تحويل اسم الفئة العربي إلى المعرّف الداخلي */
+      function parseTier(raw){
+        const v=(raw||'').toString().trim();
+        if(v==='فاخر'||v==='tier-premium')return'tier-premium';
+        if(v==='اقتصادي'||v==='tier-economy')return'tier-economy';
+        return'tier-mid';
+      }
+
+      wb.SheetNames.forEach(name=>{
+        /* تجاهل ورقة الملخص */
+        if(name==='ملخص'||name.toLowerCase()==='summary')return;
+        const ws=wb.Sheets[name];
+        const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+        rows.forEach(row=>{
+          /* تحديد المدينة من عمود المدينة أو من اسم الورقة */
+          const cityField=getCol(row,['المدينة','City','city']).toLowerCase();
+          let city='benghazi';
+          if(cityField.includes('طرابلس')||cityField.includes('tripoli')||name.includes('طرابلس')||name.toLowerCase().includes('tripoli'))city='tripoli';
+          else if(cityField.includes('بنغازي')||cityField.includes('benghazi')||name.includes('بنغازي')||name.toLowerCase().includes('benghazi'))city='benghazi';
+
+          /* قراءة الحقول بالبحث الجزئي لتتحمل أي صيغة تصدير */
+          const loc=getCol(row,['الموقع','المنطقة','location']);
+          if(!loc)return; /* تجاهل الصفوف الفارغة */
+
+          const street=getCol(row,['الشارع','التفاصيل','street']);
+          const price=parseFloat(getCol(row,['الإيجار الشهري','السعر','price'])||0)||0;
+          const area=parseFloat(getCol(row,['المساحة','area'])||0)||0;
+          const pm2=parseFloat(getCol(row,['سعر المتر','pm2'])||0)||0;
+          const tier=parseTier(getCol(row,['الفئة','tier']));
+          const src=getCol(row,['المصدر','source'])||'Excel';
+
+          newData[city].push({loc,street,area,price,pm2,tier,src});
+          imported++;
+        });
+      });
+      if(imported===0){toast('لم يتم العثور على بيانات صالحة في الملف ⚠️');input.value='';return;}
+      appData=newData;
+      filteredData={benghazi:[...appData.benghazi],tripoli:[...appData.tripoli]};
+      renderAll();
+      toast('تم استيراد '+imported+' سجل — يمكنك الآن التعديل أو الإضافة ✅');
+    }catch(err){alert('خطأ في قراءة الملف: '+err.message);}
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ══ EXCEL EXPORT ══ */
+function exportExcel(){
+  const wb=XLSX.utils.book_new();
+  ['benghazi','tripoli'].forEach(city=>{
+    const cityName=city==='benghazi'?'بنغازي':'طرابلس';
+    const wsData=[['#','المدينة','الموقع/المنطقة','الشارع/التفاصيل','المساحة (م²)','الإيجار الشهري (د.ل)','سعر المتر (د.ل/م²)','الفئة','المصدر']];
+    appData[city].forEach((r,i)=>wsData.push([i+1,cityName,r.loc||'',r.street||'',r.area||0,r.price||0,r.pm2||0,tierLabel(r.tier||'tier-mid'),r.src||'']));
+    const ws=XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols']=[{wch:5},{wch:10},{wch:30},{wch:35},{wch:12},{wch:18},{wch:18},{wch:10},{wch:15}];
+    XLSX.utils.book_append_sheet(wb,ws,cityName);
+  });
+  const bP=appData.benghazi.filter(r=>r.price>0).map(r=>r.price);
+  const tP=appData.tripoli.filter(r=>r.price>0).map(r=>r.price);
+  const sumData=[
+    ['المؤشر','بنغازي','طرابلس'],
+    ['عدد السجلات',appData.benghazi.length,appData.tripoli.length],
+    ['أدنى سعر (د.ل)',bP.length?Math.min(...bP):0,tP.length?Math.min(...tP):0],
+    ['أعلى سعر (د.ل)',bP.length?Math.max(...bP):0,tP.length?Math.max(...tP):0],
+    ['متوسط السعر (د.ل)',bP.length?Math.round(bP.reduce((a,b)=>a+b,0)/bP.length):0,tP.length?Math.round(tP.reduce((a,b)=>a+b,0)/tP.length):0]
+  ];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sumData),'ملخص');
+  XLSX.writeFile(wb,'تقرير_ايجار_ليبيا_2026.xlsx');
+  toast('تم تصدير ملف Excel بنجاح ✅');
+}
+
+/* ══ PRINT TABLE ══ */
+function printTable(city){
+  const cityName=city==='benghazi'?'بنغازي':'طرابلس';
+  const title='محلات '+cityName+' — تقرير ليبيا 2025/2026';
+  let tbl='<table><thead><tr><th>#</th><th>الموقع / المنطقة</th><th>الشارع / التفاصيل</th><th>المساحة</th><th>الإيجار الشهري</th><th>سعر المتر</th><th>الفئة</th><th>المصدر</th></tr></thead><tbody>';
+  appData[city].forEach((r,i)=>{
+    const priceD=r.price>0?r.price.toLocaleString('ar-LY')+' د.ل':'يُتفق عليه';
+    const areaD=r.area>0?r.area+' م²':'غير محدد';
+    const pm2D=r.pm2>0?r.pm2.toFixed(1)+' د.ل/م²':'—';
+    const tc=r.tier||'tier-mid';
+    tbl+='<tr><td>'+(i+1)+'</td><td class="loc-cell">'+(r.loc||'—')+'</td><td class="street-cell">'+(r.street||'—')+'</td><td class="area-cell">'+areaD+'</td><td class="price-cell">'+priceD+'</td><td class="pricem2-cell">'+pm2D+'</td><td><span class="tier-badge '+tc+'">'+tierLabel(tc)+'</span></td><td><span class="src-badge">'+(r.src||'—')+'</span></td></tr>';
+  });
+  tbl+='</tbody></table>';
+  const w=window.open('','_blank','width=1100,height=800');
+  if(!w){alert('الرجاء السماح بالنوافذ المنبثقة');return;}
+  w.document.write('<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"/><title>'+title+'</title>'+
+    '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800;900&display=swap" rel="stylesheet"/>'+
+    '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Cairo,Arial,sans-serif;padding:24px;font-size:13px;direction:rtl}'+
+    '.ph{background:linear-gradient(135deg,#9D0216,#C8102E)!important;color:#fff;padding:14px 18px;border-radius:8px;margin-bottom:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.ph h2{color:#fff;font-size:1.1rem}'+
+    'table{width:100%;border-collapse:collapse}thead th{background:#C8102E!important;color:#fff!important;padding:8px 10px;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact;text-align:right}'+
+    'tbody tr{border-bottom:1px solid #e5e7eb}tbody tr:nth-child(even){background:#fef2f2;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+    'tbody td{padding:7px 10px;vertical-align:middle}.price-cell{font-weight:800;color:#9D0216}.area-cell{color:#0369a1;font-weight:700}.pricem2-cell{color:#7c3aed;font-weight:700}.loc-cell{font-weight:600}.street-cell{color:#6b7280;font-size:.8em}'+
+    '.src-badge{display:inline-block;background:#fff5f5;color:#C8102E;border:1px solid #fecaca;border-radius:4px;padding:1px 6px;font-size:.72em;font-weight:600;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+    '.tier-badge{display:inline-block;border-radius:4px;padding:2px 6px;font-size:.72em;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+    '.tier-premium{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}.tier-mid{background:#f0fdf4;color:#166534;border:1px solid #86efac}.tier-eco{background:#fff7ed;color:#9a3412;border:1px solid #fdba74}'+
+    '.foot{margin-top:14px;font-size:.75em;color:#6b7280;text-align:center}'+
+    '@media print{.ph,.tier-badge,.src-badge,thead th{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}'+
+    '</style></head><body>'+
+    '<div class="ph"><h2>📋 '+title+'</h2></div>'+
+    tbl+
+    '<div class="foot">Brandzo Hub 2026 — يونيو 2026</div>'+
+    '<script>window.onload=function(){window.print();setTimeout(function(){window.close();},700);};<\/script>'+
+    '</body></html>');
+  w.document.close();
+}
+
+/* ══ EXPORT PDF ══ */
+function exportPDF(){
+  const tip=document.createElement('div');
+  tip.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#9D0216,#C8102E);color:#fff;padding:1.8rem 2.2rem;border-radius:16px;z-index:10000;text-align:center;font-family:Cairo,Arial,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.5);max-width:380px;line-height:1.7;direction:rtl;min-width:300px;';
+  tip.innerHTML=
+    '<div style="font-size:2.5rem;margin-bottom:.5rem">📄</div>'+
+    '<h3 style="margin-bottom:.5rem">تحويل إلى PDF</h3>'+
+    '<p>في نافذة الطباعة اختر<br/><strong>"Save as PDF"</strong> أو <strong>"حفظ بصيغة PDF"</strong></p>'+
+    '<br/>'+
+    '<button onclick="this.parentNode.remove();window.print();" style="background:#fff;color:#C8102E;border:none;padding:.6rem 1.5rem;border-radius:8px;font-weight:700;font-family:inherit;cursor:pointer;margin-left:.5rem">متابعة ← طباعة</button>'+
+    '<button onclick="this.parentNode.remove();" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);padding:.6rem 1.2rem;border-radius:8px;font-weight:700;font-family:inherit;cursor:pointer">إلغاء</button>';
+  document.body.appendChild(tip);
+}
+
+/* ══ TOAST ══ */
+function toast(msg,dur=2800){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+/* ══ CHARTS ══ */
+const CC={red:'rgba(200,16,46,.85)',blue:'rgba(37,99,168,.85)',green:'rgba(22,163,74,.85)',orange:'rgba(245,158,11,.85)',purple:'rgba(124,58,237,.85)'};
+function avg(arr){return arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0;}
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+function chartOpts(ylabel){
+  return{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{font:{size:11},color:'#374151'}}},
+    scales:{
+      y:{beginAtZero:true,ticks:{font:{size:10},color:'#6b7280'},grid:{color:'rgba(0,0,0,.05)'}},
+      x:{ticks:{font:{size:10},color:'#6b7280'}}
+    }
+  };
+}
+function priceRanges(prices){
+  if(!prices.length)return{labels:['لا بيانات'],counts:[0]};
+  const maxP=Math.max(...prices,1);
+  const step=maxP<=3000?500:maxP<=10000?2000:5000;
+  const buckets={};
+  prices.forEach(p=>{
+    const b=Math.floor(p/step)*step;
+    const lbl=b.toLocaleString('ar-LY')+' – '+(b+step).toLocaleString('ar-LY');
+    buckets[lbl]=(buckets[lbl]||0)+1;
+  });
+  return{labels:Object.keys(buckets),counts:Object.values(buckets)};
+}
+function updateCharts(){
+  const bP=appData.benghazi.filter(r=>r.price>0).map(r=>r.price);
+  const tP=appData.tripoli.filter(r=>r.price>0).map(r=>r.price);
+  const bPm2=appData.benghazi.filter(r=>r.pm2>0).map(r=>r.pm2);
+  const tPm2=appData.tripoli.filter(r=>r.pm2>0).map(r=>r.pm2);
+
+  destroyChart('chart-city');
+  charts['chart-city']=new Chart(document.getElementById('chart-city'),{
+    type:'bar',
+    data:{labels:['أدنى سعر','المتوسط','أعلى سعر'],datasets:[
+      {label:'بنغازي',data:[bP.length?Math.min(...bP):0,avg(bP),bP.length?Math.max(...bP):0],backgroundColor:CC.red},
+      {label:'طرابلس',data:[tP.length?Math.min(...tP):0,avg(tP),tP.length?Math.max(...tP):0],backgroundColor:CC.blue}
+    ]},
+    options:chartOpts('د.ل')
+  });
+
+  const tierC=city=>[
+    appData[city].filter(r=>r.tier==='tier-premium').length,
+    appData[city].filter(r=>r.tier==='tier-mid').length,
+    appData[city].filter(r=>r.tier==='tier-eco').length
+  ];
+  destroyChart('chart-tier');
+  charts['chart-tier']=new Chart(document.getElementById('chart-tier'),{
+    type:'doughnut',
+    data:{labels:['فاخر','متوسط','اقتصادي'],datasets:[{
+      label:'التوزيع',
+      data:[...tierC('benghazi').map((v,i)=>v+tierC('tripoli')[i])],
+      backgroundColor:[CC.red,CC.orange,CC.green]
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},color:'#374151'}}}}
+  });
+
+  const bR=priceRanges(bP);
+  destroyChart('chart-benghazi-dist');
+  charts['chart-benghazi-dist']=new Chart(document.getElementById('chart-benghazi-dist'),{
+    type:'bar',data:{labels:bR.labels,datasets:[{label:'عدد المحلات',data:bR.counts,backgroundColor:CC.red}]},options:chartOpts('عدد')
+  });
+
+  const tR=priceRanges(tP);
+  destroyChart('chart-tripoli-dist');
+  charts['chart-tripoli-dist']=new Chart(document.getElementById('chart-tripoli-dist'),{
+    type:'bar',data:{labels:tR.labels,datasets:[{label:'عدد المحلات',data:tR.counts,backgroundColor:CC.blue}]},options:chartOpts('عدد')
+  });
+
+  destroyChart('chart-sqm');
+  charts['chart-sqm']=new Chart(document.getElementById('chart-sqm'),{
+    type:'bar',
+    data:{labels:['بنغازي','طرابلس'],datasets:[{label:'متوسط سعر المتر (د.ل/م²)',data:[avg(bPm2),avg(tPm2)],backgroundColor:[CC.red,CC.blue]}]},
+    options:chartOpts('د.ل/م²')
+  });
+
+  destroyChart('chart-count');
+  charts['chart-count']=new Chart(document.getElementById('chart-count'),{
+    type:'doughnut',
+    data:{labels:['بنغازي','طرابلس'],datasets:[{data:[appData.benghazi.length,appData.tripoli.length],backgroundColor:[CC.red,CC.blue]}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},color:'#374151'}}}}
+  });
+}
+
+/* ══ INIT ══ */
+document.addEventListener('DOMContentLoaded',function(){
+  if(!loadStorage()){
+    appData={benghazi:INIT_DATA.benghazi.map(r=>({...r})),tripoli:INIT_DATA.tripoli.map(r=>({...r}))};
+  }
+  filteredData={benghazi:[...appData.benghazi],tripoli:[...appData.tripoli]};
+  renderAll();
+});
+</script>
+</body>
+</html>
