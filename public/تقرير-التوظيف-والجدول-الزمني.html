@@ -141,7 +141,26 @@
       from { opacity: 1; }
       to { opacity: 0; }
     }
-  </style>
+
+/* ===== UNIFIED PRINT SYSTEM ===== */
+@page { size: A4 portrait; margin: 1.5cm 2cm 2cm 2cm; }
+
+@media print {
+  .print-bar, .tabs-nav, .no-print, button, .nav-tab, [onclick], .sticky { display: none !important; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { background: white !important; color: #111 !important; }
+  .section { display: block !important; }
+  h2 { page-break-before: always; page-break-after: avoid; }
+  h3 { page-break-after: avoid; }
+  table, .stage-card, .org-node { page-break-inside: avoid; }
+
+  /* Readability for dark themes */
+  .hero, .cover, .stage-card, .table-container { background: #f8f9fb !important; color: #111 !important; border-color: #1b3a5c !important; }
+  th { background: #1b3a5c !important; color: #fff !important; }
+  td { color: #111 !important; }
+}
+
+</style>
 </head>
 <body class="p-4 sm:p-10" dir="rtl">
 
