@@ -1274,3 +1274,11 @@ const WarehouseMaps = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+};
+
+export default WarehouseMaps;
