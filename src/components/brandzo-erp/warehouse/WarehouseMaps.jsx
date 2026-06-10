@@ -85,7 +85,6 @@ const WarehouseMaps = () => {
 
   // ── معايير تقييم الموقع ───────────────────────────────────────
   const assessmentCriteria = [
-    { name:'الموقع الجغرافي (Location Accessibility)', score:9, weight:20, notes:'قريب من ميناء بنغازي (7 كم) وطريق رئيسي — ميزة لوجستية عالية' },
     { name:'طرق الوصول والمناورة (Access & Maneuvering)', score:8, weight:15, notes:'ساحة خارجية تسمح بمناورة المقطورات الطويلة 22م' },
     { name:'الارتفاع الصافي (Clear Height)', score:7, weight:25, notes:'الارتفاع الحالي 6.80م — يتطلب ترقية لـ Class A' },
     { name:'حمولة الأرضية (Floor Load Capacity)', score:8, weight:20, notes:'الخرسانة الحالية تتحمل 5 طن/م² — كافية مع التشطيب' },
