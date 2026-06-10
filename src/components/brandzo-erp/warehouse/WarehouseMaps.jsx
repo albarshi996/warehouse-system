@@ -27,7 +27,7 @@ const WarehouseMaps = () => {
     currentHeight: '6.80 م',
     classification: 'Class A (مستهدف)',
     zoneCount: 10,
-    nearestPort: 'ميناء بنغازي (7 كم)',
+    nearestPort: 'ابوهادي ',
     preparedBy: 'محمد البرشي — رمزي باش',
     department: 'إدارة المستودعات',
   };
@@ -1546,16 +1546,6 @@ const WarehouseMaps = () => {
             <p className="text-gray-400 text-xs">مراجعة المعايير التشغيلية لموقع بوهادي، بنغازي وفق معايير Class A اللوجستية</p>
           </div>
         </div>
-
-        {/* تصحيح الموقع الجغرافي */}
-        <div className="mb-6 p-4 bg-green-500/8 border border-green-500/20 rounded-xl flex items-start gap-3">
-          <span className="text-green-400 text-lg shrink-0">⚓</span>
-          <div>
-            <div className="text-green-400 font-bold text-sm mb-0.5">الموقع الجغرافي — ميناء بنغازي</div>
-            <p className="text-[11px] text-gray-300">الموقع قريب من <span className="text-white font-bold">ميناء بنغازي التجاري (7 كم)</span> وليس من المطار — وهذا يُعدّ ميزة لوجستية استراتيجية بالغة الأهمية لعمليات الاستيراد والتصدير البحري.</p>
-          </div>
-        </div>
-
         <div className="space-y-5">
           {assessmentCriteria.map((item, i) => (
             <div key={i} className="bg-white/5 border border-white/10 p-5 rounded-2xl hover:border-brand-yellow/20 transition-all">
@@ -1643,7 +1633,6 @@ const WarehouseMaps = () => {
               'المساحة المغطاة': siteInfo.coveredArea,
               'المقاول': siteInfo.contractor,
               'الارتفاع الحالي': siteInfo.currentHeight,
-              'أقرب ميناء': siteInfo.nearestPort,
               'إعداد': siteInfo.preparedBy,
             }).map(([label, val], i) => (
               <div key={i} className="border-b border-white/5 pb-2">
