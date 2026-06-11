@@ -1543,7 +1543,7 @@ const WarehouseMaps = () => {
 
               {/* مكتب الجودة */}
               <rect x="95" y="10" width="60" height="55" fill="#8e44ad" fillOpacity="0.2" stroke="#8e44ad" strokeWidth="0.8" rx="2"/>
-              <text x="125" y="35" textAnchor="middle" fill="#8e44ad" fontSize="4.5" fontWeight="bold">جودة</text>
+              <text x="125" y="35" textAnchor="middle" fill="#8e44ad" fontSize="4.5" fontWeight="bold">مخازن و جودة</text>
               <text x="125" y="45" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="3.5">والسلامة</text>
               <text x="125" y="55" textAnchor="middle" fill="rgba(255,255,255,0.35)" fontSize="3">ADM-05</text>
 
@@ -1606,7 +1606,7 @@ const WarehouseMaps = () => {
 
               {/* مكتب المدير العام */}
               <rect x="10" y="10" width="100" height="75" fill="#c0392b" fillOpacity="0.2" stroke="#c0392b" strokeWidth="1" rx="3"/>
-              <text x="60" y="42" textAnchor="middle" fill="#c0392b" fontSize="6" fontWeight="bold">👔 المدير العام</text>
+              <text x="60" y="42" textAnchor="middle" fill="#c0392b" fontSize="6" fontWeight="bold">👔 مدير المستودعات</text>
               <text x="60" y="55" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="4">General Manager</text>
               <text x="60" y="68" textAnchor="middle" fill="rgba(255,255,255,0.35)" fontSize="3.5">ADM-01 — 40 م²</text>
               {/* نافذة إشراف */}
@@ -1615,7 +1615,7 @@ const WarehouseMaps = () => {
 
               {/* مكتب مدير المستودعات */}
               <rect x="115" y="10" width="90" height="75" fill="#e74c3c" fillOpacity="0.2" stroke="#e74c3c" strokeWidth="1" rx="3"/>
-              <text x="160" y="38" textAnchor="middle" fill="#e74c3c" fontSize="5" fontWeight="bold">مدير المستودعات</text>
+              <text x="160" y="38" textAnchor="middle" fill="#e74c3c" fontSize="5" fontWeight="bold">قسم الحوكمة</text>
               <text x="160" y="50" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="3.5">محمد البرشي</text>
               <text x="160" y="63" textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="3.5">ADM-02</text>
               <text x="160" y="75" textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="3">30 م² — لوحة KPI + WMS</text>
@@ -1626,6 +1626,8 @@ const WarehouseMaps = () => {
               <text x="241" y="50" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="4">اجتماعات</text>
               <text x="241" y="63" textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="3.2">20 شخصاً</text>
               <text x="241" y="74" textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="3">ADM-03</text>
+              <text x="75" y="175" textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="3">رفوف عرض + شاشة تقديم</text>
+
 
               {/* ممر */}
               <rect x="10" y="90" width="263" height="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" rx="1"/>
@@ -1633,10 +1635,9 @@ const WarehouseMaps = () => {
 
               {/* مكتب التطوير */}
               <rect x="10" y="108" width="130" height="75" fill="#e67e22" fillOpacity="0.2" stroke="#e67e22" strokeWidth="1" rx="3"/>
-              <text x="75" y="138" textAnchor="middle" fill="#e67e22" fontSize="5" fontWeight="bold">مكتب التطوير والمشاريع</text>
-              <text x="75" y="151" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="3.5">رمزي باش — رئيس قسم التطوير</text>
+              <text x="75" y="138" textAnchor="middle" fill="#e67e22" fontSize="5" fontWeight="bold">مكتب سلاسل الامداد </text>
+              <text x="75" y="151" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="3.5">رمزي باش — رئيس قسم سلاسل الامداد</text>
               <text x="75" y="164" textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="3.2">خرائط فنية + مقترحات تطوير</text>
-              <text x="75" y="175" textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="3">رفوف عرض + شاشة تقديم</text>
 
               {/* غرفة الانتظار */}
               <rect x="145" y="108" width="128" height="75" fill="#1abc9c" fillOpacity="0.1" stroke="#1abc9c" strokeWidth="0.8" rx="3"/>
@@ -1873,7 +1874,7 @@ const WarehouseMaps = () => {
         <h4 className="font-bold text-white mb-6">خطة التوظيف التدريجية — Phased Hiring Plan</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { phase:'المرحلة الأولى', time:'الأشهر 1 – 3', color:'#27ae60', hires:['مدير المستودعات (محمد البرشي)','رئيس قسم التطوير (رمزي باش)','4 مشرفون ميدانيون','8 مشغلو رافعات شوكية'], total:14 },
+            { phase:'المرحلة الأولى', time:'الأشهر 1 – 3', color:'#27ae60', hires:['مدير المستودعات ,','4 مشرفون ميدانيون','8 مشغلو رافعات شوكية'], total:14 },
             { phase:'المرحلة الثانية', time:'الأشهر 4 – 6', color:'#e67e22', hires:['رؤساء أقسام (جودة + IT + HR)','10 عمال استلام وتخزين','3 مراقبو جودة','2 فنيو IT + WMS'], total:29 },
             { phase:'المرحلة الثالثة', time:'الأشهر 7 – 12', color:'#2980b9', hires:['موظفو تجميع وشحن (7 موظفين)','فريق الأمن (4 حراس)','موظفو الدعم والخدمات (9)','استكمال الهيكل الكامل'], total:73 },
           ].map((ph, i) => (
