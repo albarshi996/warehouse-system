@@ -209,24 +209,77 @@ tr:hover td{background:rgba(200,157,59,0.04);}
 .highlight{background:rgba(27,58,92,0.5);border-right:5px solid var(--gold);padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;font-size:14px;line-height:1.9;color:var(--text-body);}
 .highlight strong{color:var(--gold);}
 
-@media print{.topbar{display:none;}.panel{display:block!important;padding:20px;}}
-
 /* ===== UNIFIED PRINT SYSTEM ===== */
-@page { size: A4 portrait; margin: 1.5cm 2cm 2cm 2cm; }
+@page { size: A4 portrait; margin: 1cm; }
 
 @media print {
-  .print-bar, .tabs-nav, .no-print, button, .nav-tab, [onclick], .sticky { display: none !important; }
-  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  body { background: white !important; color: #111 !important; }
-  .section { display: block !important; }
-  h2 { page-break-before: always; page-break-after: avoid; }
-  h3 { page-break-after: avoid; }
-  table, .stage-card, .org-node { page-break-inside: avoid; }
+  /* Hide UI elements */
+  .topbar, .print-bar, .no-print, .sd-nav, .nav-tabs, button, .sf-arrow, .topbar-badge { display: none !important; }
 
-  /* Readability for dark themes */
-  .hero, .cover, .stage-card, .table-container { background: #f8f9fb !important; color: #111 !important; border-color: #1b3a5c !important; }
-  th { background: #1b3a5c !important; color: #fff !important; }
-  td { color: #111 !important; }
+  /* Reset background and colors */
+  body { background: white !important; color: #000 !important; font-size: 10pt; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-shadow: none !important; text-shadow: none !important; }
+
+  /* Show all panels */
+  .panel { display: block !important; opacity: 1 !important; visibility: visible !important; padding: 0 !important; margin-bottom: 40px; page-break-before: always; min-height: auto !important; }
+  .panel:first-of-type { page-break-before: auto; }
+
+  /* Hero section adjustments */
+  .hero { padding: 20px 0; border-bottom: 2px solid #eee; background: none !important; }
+  .hero h1, .hero h1 span { color: #000 !important; }
+  .hero p { color: #444 !important; }
+  .hstat { background: #f9f9f9 !important; border: 1px solid #ddd !important; }
+  .hstat strong { color: #c0392b !important; }
+
+  /* Section headers */
+  .sec-title { color: #000 !important; border-right-color: #c0392b !important; page-break-after: avoid; }
+  .sec-label { color: #666 !important; }
+
+  /* Tables */
+  table { width: 100%; border: 1px solid #ddd !important; page-break-inside: auto; }
+  tr { page-break-inside: avoid; page-break-after: auto; }
+  th { background: #f2f2f2 !important; color: #000 !important; border-bottom: 2px solid #333 !important; }
+  td { border-bottom: 1px solid #eee !important; color: #222 !important; }
+  .mtag { border-width: 1px !important; }
+
+  /* Org Tree - Critical fix for printing */
+  .org-tree { transform: scale(0.75); transform-origin: top center; width: 130%; margin-right: -15%; }
+  .org-node { background: white !important; color: #000 !important; border: 1px solid #000 !important; }
+  .org-node.root { background: #f0f0f0 !important; font-weight: bold; }
+
+  /* Stage Detail */
+  .stage-detail { background: white !important; border: 1px solid #ccc !important; page-break-inside: avoid; }
+  .stage-detail::before { background: #c0392b !important; }
+  .sd-title { color: #000 !important; }
+  .sd-desc { background: #f9f9f9 !important; color: #333 !important; border-right: 3px solid #c0392b !important; }
+  .sd-box { background: white !important; border: 1px solid #eee !important; }
+  .sd-box h4 { color: #c0392b !important; }
+  .sd-box li { color: #333 !important; }
+  .odoo-bar { background: #e8f5e9 !important; border: 1px solid #c8e6c9 !important; color: #2e7d32 !important; }
+  .odoo-tag { background: #2e7d32 !important; }
+
+  /* KPIs and Rules */
+  .kpi-card { background: #f9f9f9 !important; border: 1px solid #ddd !important; page-break-inside: avoid; }
+  .kpi-val { color: #c0392b !important; }
+  .rule { page-break-inside: avoid; border: 1px solid #eee !important; }
+  .rule.no { background: #fff5f5 !important; border-right: 4px solid #c0392b !important; color: #a00 !important; }
+  .rule.yes { background: #f5fff5 !important; border-right: 4px solid #27ae60 !important; color: #060 !important; }
+  .rule.target { background: #fffdf5 !important; border-right: 4px solid #f1c40f !important; color: #850 !important; }
+
+  /* Jobs Layout */
+  .jobs-layout { display: block !important; }
+  .job-list { display: none !important; } /* Hide the sidebar list in print */
+  .job-detail-panel { width: 100% !important; background: white !important; border: 1px solid #eee !important; page-break-inside: avoid; display: block !important; margin-bottom: 20px; }
+  /* Since we can't easily show all job cards without changing JS, we focus on the active one or force visibility if possible.
+     Wait, the current JS only renders the ACTIVE job. For full print, we might need to modify the JS to render all or accept that only the selected one prints.
+     Actually, a better "Full Report" should have all of them. */
+
+  /* RACI */
+  .raci-table td { font-size: 9pt !important; }
+
+  /* Support Band */
+  .support-band { border-top: 1px dashed #000 !important; margin-top: 20px !important; }
+  .support-band div { border: 1px solid #000 !important; background: #fff !important; }
 }
 
 </style>
@@ -1331,6 +1384,83 @@ function showPanel(id) {
   const tabs = ['overview','stages','forms','kpis','org','jobs','raci','odoo'];
   document.querySelectorAll('.nav-tab')[tabs.indexOf(id)].classList.add('active');
 }
+
+// =================== PRINT HANDLERS ===================
+window.onbeforeprint = function() {
+  // 1. Render all stages for print
+  const stagesContainer = document.getElementById('stageDetail');
+  const originalStageHtml = stagesContainer.innerHTML;
+  stagesContainer.setAttribute('data-original', originalStageHtml);
+
+  let allStagesHtml = '<div class="no-print" style="color:var(--gold); margin-bottom:10px; font-weight:bold;">[نمط الطباعة: عرض كافة المراحل]</div>';
+  stages.forEach((s, i) => {
+    allStagesHtml += `
+      <div class="stage-detail" style="margin-bottom: 20px; page-break-inside: avoid;">
+        <div class="sd-header">
+          <span class="sd-badge">المرحلة ${s.num}</span>
+          <div><div class="sd-title">${s.ar}</div><div class="sd-en">${s.en}</div></div>
+        </div>
+        <div class="sd-desc">${s.desc}</div>
+        <div class="odoo-bar">
+          <span class="odoo-tag">Odoo 17</span>
+          <span>${s.odoo}</span>
+        </div>
+        <div class="sd-grid">
+          <div class="sd-box"><h4>المدخلات</h4><ul>${s.inputs.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+          <div class="sd-box"><h4>المخرجات</h4><ul>${s.outputs.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+          <div class="sd-box"><h4>نقاط التحقق</h4><ul>${s.checks.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+        </div>
+      </div>`;
+  });
+  stagesContainer.innerHTML = allStagesHtml;
+
+  // 2. Render all jobs for print
+  const jobsContainer = document.getElementById('jobDetail');
+  const originalJobHtml = jobsContainer.innerHTML;
+  jobsContainer.setAttribute('data-original', originalJobHtml);
+
+  let allJobsHtml = '<div class="no-print" style="color:var(--gold); margin-bottom:10px; font-weight:bold;">[نمط الطباعة: عرض كافة الوظائف]</div>';
+  jobs.forEach(j => {
+    let relationsHtml = '';
+    if (j.reportingTo) relationsHtml += `<div class="oi-row" style="margin-bottom: 8px;"><span class="oi-label" style="margin: 0 0 0 8px; min-width: 110px;">التبعية المباشرة:</span><span class="oi-tag" style="background: rgba(200, 157, 59, 0.1); border-color: rgba(200, 157, 59, 0.3); color: var(--gold);">${j.reportingTo}</span></div>`;
+    if (j.operationalReporting) relationsHtml += `<div class="oi-row" style="margin-bottom: 8px;"><span class="oi-label" style="margin: 0 0 0 8px; min-width: 110px;">التبعية التشغيلية:</span><span class="oi-tag" style="background: rgba(52, 152, 219, 0.1); border-color: rgba(52, 152, 219, 0.3); color: #3498db;">${j.operationalReporting}</span></div>`;
+    if (j.functionalReporting) relationsHtml += `<div class="oi-row"><span class="oi-label" style="margin: 0 0 0 8px; min-width: 110px;">التبعية الوظيفية:</span><span class="oi-tag" style="background: rgba(0, 166, 80, 0.1); border-color: rgba(0, 166, 80, 0.3); color: #4be89a;">${j.functionalReporting}</span></div>`;
+
+    allJobsHtml += `
+      <div class="job-detail-panel" style="margin-bottom: 30px; page-break-inside: avoid;">
+        <div class="jdp-header">
+          <div class="jdp-icon">${j.icon}</div>
+          <div>
+            <div class="jdp-title">${j.title}</div>
+            <div class="jdp-layer">${j.layer}</div>
+          </div>
+        </div>
+        <ul class="duties">${j.duties.map(d=>`<li>${d}</li>`).join('')}</ul>
+        ${relationsHtml ? `<div class="odoo-info" style="margin-bottom: 16px;">${relationsHtml}</div>` : ''}
+        <div class="odoo-info">
+          <div class="oi-label">صلاحيات Odoo 17</div>
+          <div class="oi-row">
+            <span class="oi-tag">👤 ${j.odooRole}</span>
+            <span class="oi-level">${j.odooLevel}</span>
+            <span style="font-size:12px;color:var(--gray);">الوحدات:</span>
+            <span style="font-size:13px;color:var(--text-body);">${j.modules}</span>
+          </div>
+        </div>
+      </div>`;
+  });
+  jobsContainer.innerHTML = allJobsHtml;
+};
+
+window.onafterprint = function() {
+  const stagesContainer = document.getElementById('stageDetail');
+  if (stagesContainer.hasAttribute('data-original')) {
+    stagesContainer.innerHTML = stagesContainer.getAttribute('data-original');
+  }
+  const jobsContainer = document.getElementById('jobDetail');
+  if (jobsContainer.hasAttribute('data-original')) {
+    jobsContainer.innerHTML = jobsContainer.getAttribute('data-original');
+  }
+};
 
 // =================== INIT ===================
 renderStageFlow();
