@@ -2,507 +2,510 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-<title>⚙️ BRANDZO ERP PROPOSAL | مقترح اعتماد Odoo 17 Enterprise | STRATEGIC COMMAND</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
+<title>مقترح اعتماد Odoo 17 Enterprise | Brandzo Holding | بنغازي ٢٠٢٦</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&family=Oswald:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
+/* ========================================================
+   ROOT VARIABLES
+   ======================================================== */
 :root {
-  --bg-deep:       #08080d;
-  --bg-panel:      #0f0f18;
-  --bg-surface:    #14141f;
-  --bg-elevated:   #1a1a2a;
-  --bg-card:       #1e1e30;
+  --bg-deep:       #07070c;
+  --bg-panel:      #0e0e18;
+  --bg-surface:    #13131e;
+  --bg-elevated:   #191928;
+  --bg-card:       #1c1c2e;
   --orange:        #FF4500;
   --orange-glow:   #ff5e1a;
   --orange-dim:    rgba(255,69,0,0.12);
   --yellow:        #FFD700;
   --yellow-soft:   #ffe44d;
-  --yellow-dim:    rgba(255,215,0,0.06);
+  --yellow-dim:    rgba(255,215,0,0.07);
   --red-deep:      #8B0000;
-  --red-alert:     #b80000;
   --green-ok:      #00e676;
   --green-dim:     rgba(0,230,118,0.1);
   --blue-info:     #4da6ff;
   --blue-dim:      rgba(77,166,255,0.1);
+  --purple:        #a064ff;
   --purple-dim:    rgba(160,100,255,0.12);
+  --teal:          #00bcd4;
+  --teal-dim:      rgba(0,188,212,0.1);
   --text-pri:      #e8e8f0;
-  --text-sec:      #c0c0cc;
-  --text-muted:    #8a8a9a;
+  --text-sec:      #bdbdcf;
+  --text-muted:    #87879a;
   --border-hot:    #FF4500;
-  --border-panel:  #2a2a3a;
-  --border-subtle: #1e1e30;
-  --mesh:          rgba(255,69,0,0.022);
+  --border-panel:  #2a2a3e;
+  --border-subtle: #1c1c2e;
+  --mesh:          rgba(255,69,0,0.018);
+  --print-bg:      #ffffff;
+  --print-text:    #111111;
+  --print-accent:  #1b3a5c;
 }
-
 *{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
 
 body {
-  font-family: 'Cairo','Tajawal',sans-serif;
-  background: var(--bg-deep);
-  color: var(--text-pri);
-  line-height: 1.9;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-  -webkit-print-color-adjust: exact;
-  print-color-adjust: exact;
+  font-family:'Cairo','Tajawal',sans-serif;
+  background:var(--bg-deep);
+  color:var(--text-pri);
+  line-height:1.9;
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
   background-image:
     repeating-linear-gradient(0deg,var(--mesh) 0,var(--mesh) 1px,transparent 1px,transparent 4px),
     repeating-linear-gradient(90deg,var(--mesh) 0,var(--mesh) 1px,transparent 1px,transparent 4px),
-    radial-gradient(ellipse at 20% 10%,rgba(255,69,0,0.05) 0%,transparent 55%),
-    radial-gradient(ellipse at 80% 80%,rgba(255,215,0,0.03) 0%,transparent 50%);
-  background-size: 4px 4px,4px 4px,100% 100%,100% 100%;
-  background-attachment: fixed;
+    radial-gradient(ellipse at 15% 8%,rgba(255,69,0,0.04) 0%,transparent 50%),
+    radial-gradient(ellipse at 85% 90%,rgba(255,215,0,0.025) 0%,transparent 50%);
+  background-size:4px 4px,4px 4px,100% 100%,100% 100%;
+  background-attachment:fixed;
 }
 
-/* ========================== MAIN CONTAINER ========================== */
+/* ========================================================
+   MAIN CONTAINER
+   ======================================================== */
 .main-container {
-  max-width: 1100px;
-  width: 100%;
-  margin: 0 auto;
-  background: var(--bg-panel);
-  border: 3px solid var(--orange);
-  box-shadow:
-    0 0 50px rgba(255,69,0,0.2),
-    0 0 100px rgba(255,69,0,0.07),
-    0 12px 80px rgba(0,0,0,0.8),
-    inset 0 1px 0 rgba(255,255,255,0.02);
-  position: relative;
+  max-width:1140px;
+  width:100%;
+  margin:0 auto;
+  background:var(--bg-panel);
+  border:3px solid var(--orange);
+  box-shadow:0 0 60px rgba(255,69,0,0.18),0 0 120px rgba(255,69,0,0.06),0 16px 90px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.025);
+  position:relative;
 }
 .main-container::before {
-  content:'';
-  position:absolute;inset:0;pointer-events:none;z-index:0;
-  background:
-    repeating-linear-gradient(0deg,rgba(255,69,0,0.012) 0,rgba(255,69,0,0.012) 1px,transparent 1px,transparent 7px),
-    repeating-linear-gradient(90deg,rgba(255,215,0,0.008) 0,rgba(255,215,0,0.008) 1px,transparent 1px,transparent 7px);
-  background-size:7px 7px,7px 7px;
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(0deg,rgba(255,69,0,0.01) 0,rgba(255,69,0,0.01) 1px,transparent 1px,transparent 8px),
+             repeating-linear-gradient(90deg,rgba(255,215,0,0.006) 0,rgba(255,215,0,0.006) 1px,transparent 1px,transparent 8px);
+  background-size:8px 8px,8px 8px;
 }
 .main-container>*{position:relative;z-index:1;}
 
-/* ========================== HEADER / COVER ========================== */
+/* ========================================================
+   HEADER
+   ======================================================== */
 .header {
-  background: linear-gradient(180deg,#080810 0%,#0a0a16 60%,#0d0d1e 100%);
-  color: var(--text-pri);
-  padding: 2.2rem 2.5rem 2rem;
-  border-bottom: 4px solid var(--orange);
-  position: relative;
-  overflow: hidden;
+  background:linear-gradient(180deg,#060610 0%,#090916 55%,#0c0c1c 100%);
+  padding:2.5rem 2.8rem 2.2rem;
+  border-bottom:4px solid var(--orange);
+  position:relative;overflow:hidden;
 }
 .header::before {
-  content:'';
-  position:absolute;top:0;left:0;right:0;height:4px;
-  background: repeating-linear-gradient(90deg,
-    var(--orange) 0,var(--orange) 8px,transparent 8px,transparent 16px,
-    var(--yellow) 16px,var(--yellow) 24px,transparent 24px,transparent 32px);
-  animation: scanline 2.5s linear infinite;
-  z-index:2;
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:repeating-linear-gradient(90deg,var(--orange) 0,var(--orange) 8px,transparent 8px,transparent 16px,var(--yellow) 16px,var(--yellow) 24px,transparent 24px,transparent 32px);
+  animation:scanline 2.5s linear infinite;z-index:2;
 }
 @keyframes scanline{0%{background-position:0 0}100%{background-position:64px 0}}
 
 .system-badge {
-  display:inline-block;
-  background:#08080f;
-  border:2px solid var(--orange);
-  color:var(--orange);
-  font-family:'Oswald','Roboto Mono',monospace;
-  font-size:.82rem;letter-spacing:3px;padding:5px 18px;
-  margin-bottom:14px;text-transform:uppercase;
-  animation: pulse-badge 2s ease-in-out infinite;
+  display:inline-block;background:#060610;border:2px solid var(--orange);color:var(--orange);
+  font-family:'Oswald','Roboto Mono',monospace;font-size:.8rem;letter-spacing:3px;padding:5px 20px;
+  margin-bottom:16px;text-transform:uppercase;animation:pulse-badge 2.2s ease-in-out infinite;
 }
-@keyframes pulse-badge{0%,100%{box-shadow:0 0 8px rgba(255,69,0,.3)}50%{box-shadow:0 0 24px rgba(255,69,0,.7),0 0 48px rgba(255,69,0,.3)}}
-.system-badge .blink{
-  display:inline-block;width:10px;height:10px;background:var(--orange);
-  border-radius:50%;margin-left:8px;vertical-align:middle;
-  animation: blink-dot 1s step-end infinite;
-  box-shadow:0 0 10px var(--orange);
-}
+@keyframes pulse-badge{0%,100%{box-shadow:0 0 8px rgba(255,69,0,.3)}50%{box-shadow:0 0 28px rgba(255,69,0,.75),0 0 55px rgba(255,69,0,.3)}}
+.system-badge .blink{display:inline-block;width:10px;height:10px;background:var(--orange);border-radius:50%;margin-left:8px;vertical-align:middle;animation:blink-dot 1s step-end infinite;box-shadow:0 0 10px var(--orange);}
 @keyframes blink-dot{0%,100%{opacity:1}50%{opacity:.1}}
 
-.header h1 {
-  font-family:'Oswald','Cairo',sans-serif;
-  font-size:2.2rem;font-weight:700;line-height:1.4;
-  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
-  letter-spacing:.5px;text-transform:uppercase;
-  text-shadow:0 0 30px rgba(255,69,0,.45);
-}
-.header h1 i{color:var(--orange);font-size:2.4rem;filter:drop-shadow(0 0 12px rgba(255,69,0,.7));}
-
-.header-sub {
-  margin-top:6px;font-size:1rem;color:var(--yellow);
-  font-family:'Roboto Mono',monospace;letter-spacing:.5px;
-}
-
-.header-meta {
-  margin-top:16px;display:flex;flex-wrap:wrap;justify-content:space-between;
-  align-items:center;border-top:2px solid rgba(255,69,0,.3);
-  padding-top:16px;gap:12px;font-size:.88rem;
-  font-family:'Roboto Mono','Cairo',monospace;color:var(--text-sec);
-}
-.h-badge {
-  background:rgba(255,69,0,.12);padding:5px 18px;font-weight:600;
-  border:2px solid var(--orange);color:var(--orange-glow);
-  font-family:'Oswald','Roboto Mono',monospace;letter-spacing:1.5px;
-  text-transform:uppercase;font-size:.78rem;
-}
+.header h1 {font-family:'Oswald','Cairo',sans-serif;font-size:2.3rem;font-weight:700;line-height:1.4;display:flex;align-items:center;gap:18px;flex-wrap:wrap;letter-spacing:.5px;text-transform:uppercase;text-shadow:0 0 35px rgba(255,69,0,.45);}
+.header h1 i{color:var(--orange);font-size:2.5rem;filter:drop-shadow(0 0 14px rgba(255,69,0,.75));}
+.header-sub{margin-top:8px;font-size:1rem;color:var(--yellow);font-family:'Roboto Mono',monospace;letter-spacing:.5px;}
+.header-meta{margin-top:18px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;border-top:2px solid rgba(255,69,0,.28);padding-top:16px;gap:12px;font-size:.87rem;font-family:'Roboto Mono','Cairo',monospace;color:var(--text-sec);}
+.h-badge{background:rgba(255,69,0,.1);padding:5px 18px;font-weight:600;border:2px solid var(--orange);color:var(--orange-glow);font-family:'Oswald','Roboto Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;font-size:.76rem;}
 .h-badge.gold{border-color:var(--yellow);color:var(--yellow);background:rgba(255,215,0,.08);}
 .h-badge.green{border-color:var(--green-ok);color:var(--green-ok);background:rgba(0,230,118,.08);}
+.h-badge.blue{border-color:var(--blue-info);color:var(--blue-info);background:rgba(77,166,255,.08);}
+.confidential-bar{margin-top:14px;background:rgba(139,0,0,.2);border:1px solid #8B0000;color:#ff6b6b;padding:7px 18px;font-weight:700;font-family:'Oswald',monospace;letter-spacing:2px;text-transform:uppercase;font-size:.8rem;display:inline-block;}
 
-.confidential-bar {
-  margin-top:14px;
-  background:rgba(139,0,0,.2);border:1px solid #8B0000;
-  color:#ff6b6b;padding:7px 18px;font-weight:700;
-  font-family:'Oswald',monospace;letter-spacing:2px;text-transform:uppercase;
-  font-size:.82rem;display:inline-block;
-}
-
-/* ========================== STICKY NAV ========================== */
+/* ========================================================
+   STICKY NAV
+   ======================================================== */
 .sticky-nav {
-  background: rgba(14,14,25,0.97);
-  padding: .7rem 2rem;
-  border-bottom: 2px solid rgba(255,69,0,.35);
-  position: sticky;top:0;z-index:50;
-  display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;
-  backdrop-filter:blur(14px);
+  background:rgba(12,12,22,0.97);padding:.7rem 2rem;border-bottom:2px solid rgba(255,69,0,.3);
+  position:sticky;top:0;z-index:200;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;
+  backdrop-filter:blur(16px);
 }
-.nav-title {
-  font-weight:800;color:var(--orange);font-size:.95rem;
-  letter-spacing:2px;font-family:'Oswald',monospace;text-transform:uppercase;
-}
-.nav-links{display:flex;flex-wrap:wrap;gap:4px 8px;}
-.nav-links a {
-  background:var(--bg-surface);padding:5px 14px;
-  text-decoration:none;color:var(--text-sec);font-weight:600;font-size:.75rem;
-  border:1px solid var(--border-subtle);
-  font-family:'Roboto Mono','Cairo',monospace;letter-spacing:.4px;
-  transition:all .2s;text-transform:uppercase;
-}
-.nav-links a:hover{
-  background:var(--orange);color:#000;border-color:var(--orange);
-  box-shadow:0 0 16px rgba(255,69,0,.5);transform:translateY(-2px);
-}
-.print-btn {
-  margin-right:auto;
-  background:var(--yellow);color:#000;border:2px solid var(--yellow);
-  padding:5px 18px;font-family:'Oswald',monospace;font-weight:700;
-  font-size:.78rem;letter-spacing:1px;cursor:pointer;
-  text-transform:uppercase;transition:all .2s;
-}
-.print-btn:hover{background:var(--yellow-soft);box-shadow:0 0 20px rgba(255,215,0,.5);}
+.nav-title{font-weight:800;color:var(--orange);font-size:.93rem;letter-spacing:2px;font-family:'Oswald',monospace;text-transform:uppercase;white-space:nowrap;}
+.nav-links{display:flex;flex-wrap:wrap;gap:3px 6px;}
+.nav-links a{background:var(--bg-surface);padding:4px 12px;text-decoration:none;color:var(--text-sec);font-weight:600;font-size:.72rem;border:1px solid var(--border-subtle);font-family:'Roboto Mono','Cairo',monospace;letter-spacing:.4px;transition:all .18s;text-transform:uppercase;white-space:nowrap;}
+.nav-links a:hover{background:var(--orange);color:#000;border-color:var(--orange);box-shadow:0 0 18px rgba(255,69,0,.5);transform:translateY(-2px);}
+.print-btn{margin-right:auto;background:var(--yellow);color:#000;border:2px solid var(--yellow);padding:5px 18px;font-family:'Oswald',monospace;font-weight:700;font-size:.76rem;letter-spacing:1px;cursor:pointer;text-transform:uppercase;transition:all .2s;}
+.print-btn:hover{background:var(--yellow-soft);box-shadow:0 0 22px rgba(255,215,0,.55);}
 
-/* ========================== CHAPTER ========================== */
-.content{padding:2rem 2.5rem;}
+/* ========================================================
+   CONTENT & CHAPTERS
+   ======================================================== */
+.content{padding:2.2rem 2.8rem;}
 
-.chapter {
-  margin-bottom:3.5rem;scroll-margin-top:110px;
-  border:2px solid var(--border-panel);background:var(--bg-surface);
-  padding:2rem 2.2rem;position:relative;
-  box-shadow:0 4px 28px rgba(0,0,0,.55);
-}
-.chapter::before {
-  content:'';position:absolute;top:0;right:0;width:5px;height:100%;
-  background:linear-gradient(180deg,var(--orange) 0%,var(--red-deep) 100%);
-}
-.chapter.gold-accent::before{background:linear-gradient(180deg,var(--yellow) 0%,#c69000 100%);}
-.chapter.green-accent::before{background:linear-gradient(180deg,var(--green-ok) 0%,#00894a 100%);}
-.chapter.blue-accent::before{background:linear-gradient(180deg,var(--blue-info) 0%,#0066cc 100%);}
-.chapter.purple-accent::before{background:linear-gradient(180deg,#a064ff 0%,#6030cc 100%);}
+.chapter{margin-bottom:3.8rem;scroll-margin-top:115px;border:2px solid var(--border-panel);background:var(--bg-surface);padding:2.2rem 2.4rem;position:relative;box-shadow:0 5px 30px rgba(0,0,0,.6);}
+.chapter::before{content:'';position:absolute;top:0;right:0;width:5px;height:100%;background:linear-gradient(180deg,var(--orange) 0%,var(--red-deep) 100%);}
+.chapter.gold-accent::before{background:linear-gradient(180deg,var(--yellow) 0%,#b08000 100%);}
+.chapter.green-accent::before{background:linear-gradient(180deg,var(--green-ok) 0%,#007840 100%);}
+.chapter.blue-accent::before{background:linear-gradient(180deg,var(--blue-info) 0%,#0055cc 100%);}
+.chapter.purple-accent::before{background:linear-gradient(180deg,var(--purple) 0%,#5022aa 100%);}
+.chapter.teal-accent::before{background:linear-gradient(180deg,var(--teal) 0%,#006070 100%);}
 .chapter.red-accent::before{background:linear-gradient(180deg,#ff2222 0%,#8B0000 100%);}
 
-.chapter-head {
-  display:flex;align-items:center;
-  border-bottom:3px solid var(--orange);
-  margin-bottom:1.8rem;padding-bottom:.7rem;gap:16px;
-}
+.chapter-head{display:flex;align-items:center;border-bottom:3px solid var(--orange);margin-bottom:1.9rem;padding-bottom:.75rem;gap:18px;}
 .chapter-head.gold{border-bottom-color:var(--yellow);}
 .chapter-head.green{border-bottom-color:var(--green-ok);}
 .chapter-head.blue{border-bottom-color:var(--blue-info);}
-.chapter-head.purple{border-bottom-color:#a064ff;}
+.chapter-head.purple{border-bottom-color:var(--purple);}
+.chapter-head.teal{border-bottom-color:var(--teal);}
 .chapter-head.red-c{border-bottom-color:#ff4444;}
 
-.chapter-num {
-  background:var(--orange);color:#000;padding:4px 18px;font-weight:800;
-  font-size:1.25rem;letter-spacing:2px;font-family:'Oswald',monospace;
-  box-shadow:0 0 20px rgba(255,69,0,.5);flex-shrink:0;
-}
-.chapter-num.gold{background:var(--yellow);box-shadow:0 0 20px rgba(255,215,0,.5);}
-.chapter-num.green{background:var(--green-ok);box-shadow:0 0 20px rgba(0,230,118,.5);}
-.chapter-num.blue{background:var(--blue-info);box-shadow:0 0 20px rgba(77,166,255,.5);}
-.chapter-num.purple{background:#a064ff;box-shadow:0 0 20px rgba(160,100,255,.5);}
-.chapter-num.red-c{background:#ff4444;box-shadow:0 0 20px rgba(255,68,68,.5);}
+.chapter-num{background:var(--orange);color:#000;padding:5px 20px;font-weight:900;font-size:1.3rem;letter-spacing:2px;font-family:'Oswald',monospace;box-shadow:0 0 22px rgba(255,69,0,.5);flex-shrink:0;}
+.chapter-num.gold{background:var(--yellow);box-shadow:0 0 22px rgba(255,215,0,.5);}
+.chapter-num.green{background:var(--green-ok);color:#000;box-shadow:0 0 22px rgba(0,230,118,.5);}
+.chapter-num.blue{background:var(--blue-info);color:#000;box-shadow:0 0 22px rgba(77,166,255,.5);}
+.chapter-num.purple{background:var(--purple);box-shadow:0 0 22px rgba(160,100,255,.5);}
+.chapter-num.teal{background:var(--teal);color:#000;box-shadow:0 0 22px rgba(0,188,212,.5);}
+.chapter-num.red-c{background:#ff4444;box-shadow:0 0 22px rgba(255,68,68,.5);}
 
-.chapter-head h2 {
-  font-family:'Oswald','Cairo',sans-serif;
-  font-size:1.75rem;font-weight:700;color:#fff;
-  line-height:1.4;text-transform:uppercase;letter-spacing:.8px;
-  text-shadow:0 0 20px rgba(255,69,0,.3);
-}
+.chapter-head h2{font-family:'Oswald','Cairo',sans-serif;font-size:1.8rem;font-weight:700;color:#fff;line-height:1.4;text-transform:uppercase;letter-spacing:.8px;text-shadow:0 0 22px rgba(255,69,0,.3);}
 
-h3 {
-  font-family:'Oswald','Cairo',sans-serif;
-  font-size:1.35rem;font-weight:700;color:var(--yellow);
-  margin:2rem 0 .9rem;border-right:5px solid var(--orange);
-  padding-right:18px;line-height:1.5;text-transform:uppercase;
-  letter-spacing:.6px;text-shadow:0 0 14px rgba(255,215,0,.2);
-}
-h4 {
-  font-family:'Oswald','Cairo',sans-serif;
-  font-size:1.1rem;font-weight:700;color:var(--orange-glow);
-  margin:1.5rem 0 .7rem;letter-spacing:.5px;text-transform:uppercase;
-}
+h3{font-family:'Oswald','Cairo',sans-serif;font-size:1.35rem;font-weight:700;color:var(--yellow);margin:2.2rem 0 1rem;border-right:5px solid var(--orange);padding-right:18px;line-height:1.5;text-transform:uppercase;letter-spacing:.6px;text-shadow:0 0 14px rgba(255,215,0,.18);}
+h4{font-family:'Oswald','Cairo',sans-serif;font-size:1.1rem;font-weight:700;color:var(--orange-glow);margin:1.6rem 0 .75rem;letter-spacing:.5px;text-transform:uppercase;}
 
-p{margin-bottom:1.1rem;color:var(--text-sec);line-height:1.85;font-family:'Cairo','Tajawal',sans-serif;}
+p{margin-bottom:1.1rem;color:var(--text-sec);line-height:1.9;font-family:'Cairo','Tajawal',sans-serif;}
 strong{color:#fff;font-weight:700;}
-ul,ol{padding-right:1.8rem;margin:1rem 0;color:var(--text-sec);}
-li{margin-bottom:.7rem;line-height:1.8;font-family:'Cairo','Tajawal',sans-serif;}
+em{color:var(--yellow);font-style:normal;}
+ul,ol{padding-right:2rem;margin:1rem 0;color:var(--text-sec);}
+li{margin-bottom:.75rem;line-height:1.8;font-family:'Cairo','Tajawal',sans-serif;}
 
-/* ========================== BOX ========================== */
-.box {
-  background:var(--bg-elevated);
-  border:2px solid var(--border-panel);border-right:5px solid var(--orange);
-  padding:1.4rem 1.8rem;margin:1.5rem 0;color:var(--text-pri);
-  line-height:1.9;box-shadow:0 0 20px rgba(0,0,0,.4);position:relative;
-}
-.box::after {
-  content:'';position:absolute;top:-1px;right:-5px;bottom:-1px;width:5px;
-  background:var(--orange);box-shadow:0 0 14px rgba(255,69,0,.5);
-}
+/* ========================================================
+   BOX
+   ======================================================== */
+.box{background:var(--bg-elevated);border:2px solid var(--border-panel);border-right:5px solid var(--orange);padding:1.5rem 1.9rem;margin:1.6rem 0;color:var(--text-pri);line-height:1.95;box-shadow:0 0 22px rgba(0,0,0,.45);position:relative;}
+.box::after{content:'';position:absolute;top:-2px;right:-5px;bottom:-2px;width:5px;background:var(--orange);box-shadow:0 0 14px rgba(255,69,0,.5);}
 .box.gold-box{border-right-color:var(--yellow);}
 .box.gold-box::after{background:var(--yellow);box-shadow:0 0 14px rgba(255,215,0,.5);}
 .box.green-box{border-right-color:var(--green-ok);}
-.box.green-box::after{background:var(--green-ok);box-shadow:0 0 14px rgba(0,230,118,.5);}
+.box.green-box::after{background:var(--green-ok);}
 .box.blue-box{border-right-color:var(--blue-info);}
-.box.blue-box::after{background:var(--blue-info);box-shadow:0 0 14px rgba(77,166,255,.5);}
-.box strong{color:var(--yellow);font-family:'Oswald','Roboto Mono',monospace;letter-spacing:.8px;}
+.box.blue-box::after{background:var(--blue-info);}
+.box.purple-box{border-right-color:var(--purple);}
+.box.purple-box::after{background:var(--purple);}
+.box.teal-box{border-right-color:var(--teal);}
+.box.teal-box::after{background:var(--teal);}
+.box strong{color:var(--yellow);font-family:'Oswald','Roboto Mono',monospace;letter-spacing:.7px;}
 
-/* ========================== TABLES ========================== */
-.table-wrap{overflow-x:auto;border-radius:4px;border:1px solid var(--border-panel);margin:1.2rem 0;}
+/* ========================================================
+   TABLES
+   ======================================================== */
+.table-wrap{overflow-x:auto;border:1px solid var(--border-panel);margin:1.3rem 0;}
 table{width:100%;border-collapse:collapse;font-size:.9rem;}
 thead{background:var(--bg-elevated);}
-th{
-  padding:10px 12px;color:var(--yellow);font-family:'Oswald',monospace;
-  font-size:.88rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;
-  border-bottom:2px solid var(--orange);text-align:right;
-}
-td{
-  padding:10px 12px;border-bottom:1px solid var(--border-subtle);
-  color:var(--text-sec);vertical-align:top;line-height:1.7;
-}
-tr:nth-child(even) td{background:rgba(255,255,255,.02);}
+th{padding:11px 13px;color:var(--yellow);font-family:'Oswald',monospace;font-size:.86rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-bottom:2px solid var(--orange);text-align:right;}
+td{padding:10px 13px;border-bottom:1px solid var(--border-subtle);color:var(--text-sec);vertical-align:top;line-height:1.7;}
+tr:nth-child(even) td{background:rgba(255,255,255,.018);}
 tr:hover td{background:rgba(255,69,0,.04);}
 .td-hot{color:var(--yellow);font-weight:700;}
 .td-ok{color:var(--green-ok);font-weight:700;}
 .td-warn{color:var(--orange);font-weight:700;}
+.td-blue{color:var(--blue-info);font-weight:700;}
 .td-center{text-align:center;}
 .td-mono{font-family:'Roboto Mono',monospace;font-size:.82rem;color:var(--yellow);}
 
-/* ========================== GAUGE DASHBOARD ========================== */
-.gauge-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
-  gap:14px;margin:1.5rem 0;
-}
-.gauge-card{
-  background:var(--bg-elevated);border:2px solid var(--border-panel);
-  padding:1.2rem 1rem;text-align:center;position:relative;
-  box-shadow:0 4px 20px rgba(0,0,0,.5);
-}
-.gauge-ring{
-  width:88px;height:88px;margin:0 auto 10px;border-radius:50%;
-  position:relative;display:flex;align-items:center;justify-content:center;
-  border:6px solid var(--border-subtle);
-}
-.gauge-value{
-  font-family:'Oswald',monospace;font-size:1.5rem;font-weight:700;
-  color:#fff;letter-spacing:1px;
-}
-.gauge-label{font-size:.78rem;color:var(--text-muted);font-family:'Roboto Mono',monospace;margin-top:4px;letter-spacing:.5px;}
+/* ========================================================
+   GAUGE DASHBOARD
+   ======================================================== */
+.gauge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px;margin:1.6rem 0;}
+.gauge-card{background:var(--bg-elevated);border:2px solid var(--border-panel);padding:1.3rem 1rem;text-align:center;position:relative;box-shadow:0 4px 22px rgba(0,0,0,.5);}
+.gauge-ring{width:88px;height:88px;margin:0 auto 10px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;border:6px solid var(--border-subtle);}
+.gauge-value{font-family:'Oswald',monospace;font-size:1.55rem;font-weight:700;color:#fff;letter-spacing:1px;}
+.gauge-label{font-size:.76rem;color:var(--text-muted);font-family:'Roboto Mono',monospace;margin-top:4px;letter-spacing:.5px;line-height:1.4;}
 
-/* ========================== FLOW / PIPELINE ========================== */
-.pipeline{
-  display:flex;flex-wrap:wrap;align-items:stretch;gap:0;
-  margin:1.5rem 0;overflow-x:auto;
-}
-.pipe-step{
-  flex:1;min-width:120px;
-  background:var(--bg-elevated);border:2px solid var(--border-panel);
-  padding:14px 12px;text-align:center;position:relative;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  transition:border-color .2s;
-}
+/* ========================================================
+   PIPELINE / FLOW
+   ======================================================== */
+.pipeline{display:flex;flex-wrap:wrap;align-items:stretch;margin:1.6rem 0;overflow-x:auto;gap:0;}
+.pipe-step{flex:1;min-width:110px;background:var(--bg-elevated);border:2px solid var(--border-panel);padding:14px 10px;text-align:center;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:border-color .2s;}
 .pipe-step:hover{border-color:var(--orange);}
-.pipe-step:not(:last-child)::after {
-  content:'←';
-  position:absolute;left:-14px;top:50%;transform:translateY(-50%);
-  color:var(--orange);font-size:1.3rem;font-weight:900;z-index:2;
-}
-.pipe-icon{font-size:1.8rem;margin-bottom:6px;display:block;}
-.pipe-label{font-size:.82rem;font-weight:700;color:#fff;font-family:'Oswald',monospace;text-transform:uppercase;letter-spacing:.4px;line-height:1.3;}
-.pipe-sub{font-size:.73rem;color:var(--text-muted);margin-top:3px;font-family:'Roboto Mono',monospace;}
-.ps-blue  {border-color:#3a6aaa;background:rgba(58,106,170,.12);}
-.ps-gold  {border-color:#c69000;background:rgba(255,215,0,.08);}
-.ps-green {border-color:#00894a;background:rgba(0,230,118,.08);}
+.pipe-step:not(:last-child)::after{content:'←';position:absolute;left:-16px;top:50%;transform:translateY(-50%);color:var(--orange);font-size:1.4rem;font-weight:900;z-index:2;}
+.pipe-icon{font-size:1.75rem;margin-bottom:6px;}
+.pipe-label{font-size:.8rem;font-weight:700;color:#fff;font-family:'Oswald',monospace;text-transform:uppercase;letter-spacing:.4px;line-height:1.3;}
+.pipe-sub{font-size:.7rem;color:var(--text-muted);margin-top:3px;font-family:'Roboto Mono',monospace;}
+.ps-blue  {border-color:#3a6aaa;background:rgba(58,106,170,.1);}
+.ps-gold  {border-color:#b08000;background:rgba(255,215,0,.07);}
+.ps-green {border-color:#007840;background:rgba(0,230,118,.07);}
 .ps-orange{border-color:var(--orange);background:var(--orange-dim);}
-.ps-red   {border-color:#aa2222;background:rgba(170,34,34,.12);}
-.ps-navy  {border-color:#2a4a7a;background:rgba(42,74,122,.12);}
-.ps-purple{border-color:#6030aa;background:rgba(160,100,255,.1);}
-.ps-teal  {border-color:#009999;background:rgba(0,200,200,.08);}
+.ps-red   {border-color:#aa2222;background:rgba(170,34,34,.1);}
+.ps-navy  {border-color:#2a4a7a;background:rgba(42,74,122,.1);}
+.ps-purple{border-color:#5022aa;background:rgba(160,100,255,.09);}
+.ps-teal  {border-color:#006070;background:rgba(0,188,212,.07);}
+.ps-gray  {border-color:#555;background:rgba(100,100,120,.08);}
 
-/* ========================== DEPT RELATION CARDS ========================== */
-.rel-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;}
+/* ========================================================
+   DEPT RELATION CARDS
+   ======================================================== */
+.rel-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
+@media(max-width:640px){.rel-grid{grid-template-columns:1fr;}}
 .rel-card{border:2px solid var(--border-panel);overflow:hidden;}
-.rel-card-hdr{
-  padding:10px 14px;font-weight:700;font-size:.88rem;
-  display:flex;align-items:center;gap:8px;font-family:'Oswald',monospace;
-  text-transform:uppercase;letter-spacing:.5px;
-}
-.rel-card-body{padding:12px 14px;background:var(--bg-surface);}
-.rel-card-body ul{padding-right:14px;margin:0;}
-.rel-card-body li{font-size:.85rem;margin-bottom:5px;color:var(--text-sec);}
+.rel-card-hdr{padding:10px 16px;font-weight:700;font-size:.87rem;display:flex;align-items:center;gap:8px;font-family:'Oswald',monospace;text-transform:uppercase;letter-spacing:.5px;}
+.rel-card-body{padding:14px 16px;background:var(--bg-surface);}
+.rel-card-body ul{padding-right:16px;margin:0;}
+.rel-card-body li{font-size:.85rem;margin-bottom:6px;color:var(--text-sec);}
 
-/* ========================== ORG CHART ========================== */
-.org-wrap{overflow-x:auto;padding:10px 0;}
+/* ========================================================
+   ORG CHART
+   ======================================================== */
+.org-wrap{overflow-x:auto;padding:14px 0;}
 .org-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:0;}
-.org-vline{width:2px;height:22px;background:var(--orange);margin:0 auto;}
-.org-hline-wrap{display:flex;align-items:flex-start;justify-content:center;gap:0;position:relative;}
-.org-hline-wrap::before{
-  content:'';position:absolute;top:0;left:20%;right:20%;height:2px;
-  background:var(--orange);
-}
-.org-box{
-  border:2px solid var(--border-panel);padding:10px 16px;text-align:center;
-  min-width:100px;max-width:150px;position:relative;
-  font-family:'Cairo',sans-serif;
-}
-.org-box .ob-title{font-weight:700;font-size:.85rem;color:#fff;line-height:1.4;}
-.org-box .ob-sub{font-size:.72rem;color:var(--text-muted);margin-top:3px;font-family:'Roboto Mono',monospace;}
-.ob-top   {background:#0c0c1e;border-color:var(--orange);box-shadow:0 0 18px rgba(255,69,0,.3);}
-.ob-exec  {background:#0e0e22;border-color:#663300;}
-.ob-dir   {background:#101020;border-color:var(--border-panel);}
+.org-vline{width:2px;height:24px;background:var(--orange);margin:0 auto;}
+.org-box{border:2px solid var(--border-panel);padding:10px 16px;text-align:center;min-width:120px;max-width:165px;position:relative;font-family:'Cairo',sans-serif;}
+.org-box .ob-title{font-weight:700;font-size:.84rem;color:#fff;line-height:1.4;}
+.org-box .ob-sub{font-size:.7rem;color:var(--text-muted);margin-top:3px;font-family:'Roboto Mono',monospace;}
+.ob-top   {background:#080812;border-color:var(--orange);box-shadow:0 0 20px rgba(255,69,0,.28);}
+.ob-exec  {background:#0d0d20;border-color:#553300;}
+.ob-dir   {background:#0f0f1e;border-color:var(--border-panel);}
 .ob-dept  {background:var(--bg-elevated);border-color:var(--border-subtle);}
-.ob-wh    {background:rgba(255,215,0,.05);border-color:var(--yellow);box-shadow:0 0 12px rgba(255,215,0,.2);}
+.ob-wh    {background:rgba(255,215,0,.04);border-color:var(--yellow);box-shadow:0 0 14px rgba(255,215,0,.18);}
+.ob-comm  {background:rgba(77,166,255,.04);border-color:var(--blue-info);}
+.ob-fin   {background:rgba(0,230,118,.04);border-color:var(--green-ok);}
+.ob-it    {background:rgba(160,100,255,.04);border-color:var(--purple);}
+.ob-qual  {background:rgba(0,188,212,.04);border-color:var(--teal);}
+.ob-branch{background:rgba(255,69,0,.04);border-color:rgba(255,69,0,.5);}
 
-/* ========================== COMPARISON TABLE ========================== */
-.compare-wrap{overflow-x:auto;}
-.compare-table th.winner{background:rgba(255,215,0,.15);color:var(--yellow);border-color:var(--yellow);}
-.compare-table td.winner{background:rgba(255,215,0,.06);color:var(--yellow);font-weight:700;}
+/* ========================================================
+   COMPARISON TABLE
+   ======================================================== */
+.compare-table th.winner{background:rgba(255,215,0,.14);color:var(--yellow);border-color:var(--yellow);}
+.compare-table td.winner{background:rgba(255,215,0,.05);color:var(--yellow);font-weight:700;}
 
-/* ========================== PHASE CARDS ========================== */
-.phase-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:1.5rem 0;}
+/* ========================================================
+   PHASE CARDS
+   ======================================================== */
+.phase-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:1.6rem 0;}
+@media(max-width:800px){.phase-grid{grid-template-columns:1fr;}}
 .phase-card{border:2px solid var(--border-panel);overflow:hidden;}
-.phase-hdr{padding:16px;text-align:center;}
-.phase-num{font-size:2rem;font-weight:900;opacity:.3;font-family:'Oswald',monospace;}
+.phase-hdr{padding:18px;text-align:center;}
+.phase-num{font-size:2rem;font-weight:900;opacity:.35;font-family:'Oswald',monospace;}
 .phase-title{font-size:1.1rem;font-weight:700;font-family:'Oswald',monospace;text-transform:uppercase;}
-.phase-dur{font-size:.78rem;opacity:.8;margin-top:4px;font-family:'Roboto Mono',monospace;}
-.phase-body{padding:14px;background:var(--bg-surface);}
-.phase-body ul{padding-right:14px;margin:0;}
+.phase-dur{font-size:.77rem;opacity:.8;margin-top:4px;font-family:'Roboto Mono',monospace;}
+.phase-body{padding:16px;background:var(--bg-surface);}
+.phase-body ul{padding-right:16px;margin:0;}
 .phase-body li{font-size:.83rem;margin-bottom:5px;color:var(--text-sec);}
 
-/* ========================== GOLDEN RULES ========================== */
+/* ========================================================
+   RULES LIST
+   ======================================================== */
 .rules-list{list-style:none;padding:0;}
-.rules-list li{
-  padding:10px 16px;margin-bottom:6px;border-radius:0;
-  display:flex;align-items:flex-start;gap:12px;font-weight:600;
-  border-right:4px solid transparent;
-  font-family:'Cairo',sans-serif;
-}
-.rule-no  {background:rgba(170,34,34,.15);border-right-color:#cc2222;color:#ff9999;}
-.rule-yes {background:var(--green-dim);border-right-color:var(--green-ok);color:#b0ffcc;}
+.rules-list li{padding:11px 18px;margin-bottom:6px;display:flex;align-items:flex-start;gap:13px;font-weight:600;border-right:4px solid transparent;font-family:'Cairo',sans-serif;}
+.rule-no  {background:rgba(170,34,34,.14);border-right-color:#cc2222;color:#ff9999;}
+.rule-yes {background:var(--green-dim);border-right-color:var(--green-ok);color:#a0ffcc;}
 .rule-kpi {background:var(--blue-dim);border-right-color:var(--blue-info);color:#99d4ff;}
+.rule-gold{background:var(--yellow-dim);border-right-color:var(--yellow);color:var(--yellow);}
 
-/* ========================== SIGNATURE ========================== */
-.sig-area{display:flex;justify-content:space-around;flex-wrap:wrap;gap:24px;margin-top:40px;}
-.sig-box{text-align:center;min-width:150px;}
-.sig-line{border-top:2px solid var(--orange);padding-top:10px;margin-top:52px;}
+/* ========================================================
+   SIGNATURE
+   ======================================================== */
+.sig-area{display:flex;justify-content:space-around;flex-wrap:wrap;gap:26px;margin-top:44px;}
+.sig-box{text-align:center;min-width:160px;}
+.sig-line{border-top:2px solid var(--orange);padding-top:12px;margin-top:55px;}
 .sig-name{font-weight:700;color:var(--yellow);font-size:.95rem;font-family:'Oswald',monospace;letter-spacing:1px;}
-.sig-role{font-size:.78rem;color:var(--text-muted);margin-top:3px;font-family:'Roboto Mono',monospace;}
+.sig-role{font-size:.76rem;color:var(--text-muted);margin-top:3px;font-family:'Roboto Mono',monospace;}
 
-/* ========================== FOOTER ========================== */
-.page-footer{
-  background:var(--bg-deep);border-top:2px solid rgba(255,69,0,.3);
-  padding:18px 2.5rem;text-align:center;
-  font-size:.78rem;color:var(--text-muted);
-  font-family:'Roboto Mono',monospace;letter-spacing:.5px;
-}
+/* ========================================================
+   FOOTER
+   ======================================================== */
+.page-footer{background:var(--bg-deep);border-top:2px solid rgba(255,69,0,.28);padding:18px 2.8rem;text-align:center;font-size:.77rem;color:var(--text-muted);font-family:'Roboto Mono',monospace;letter-spacing:.5px;}
 .page-footer strong{color:var(--orange);}
 
-/* ========================== PRINT ========================== */
-@page{size:A4 portrait;margin:1.5cm 1.8cm 1.8cm 1.8cm;}
+/* ========================================================
+   RELATION FLOW (for dept <-> warehouse)
+   ======================================================== */
+.rel-flow{display:flex;align-items:center;justify-content:center;gap:0;margin:1.8rem 0;flex-wrap:wrap;}
+.rf-block{background:var(--bg-elevated);border:2px solid var(--border-panel);padding:14px 20px;text-align:center;min-width:140px;}
+.rf-block.highlight{border-color:var(--yellow);background:rgba(255,215,0,.06);box-shadow:0 0 18px rgba(255,215,0,.15);}
+.rf-block.wh{border-color:var(--orange);background:var(--orange-dim);box-shadow:0 0 18px rgba(255,69,0,.2);}
+.rf-arrow{font-size:2rem;color:var(--orange);padding:0 10px;line-height:1;}
+.rf-title{font-weight:700;color:#fff;font-size:.9rem;font-family:'Oswald',monospace;text-transform:uppercase;}
+.rf-sub{font-size:.72rem;color:var(--text-muted);margin-top:3px;}
+
+/* ========================================================
+   BADGE TAGS
+   ======================================================== */
+.tag{display:inline-block;padding:2px 10px;font-size:.75rem;font-weight:700;letter-spacing:.5px;border:1px solid;font-family:'Oswald',monospace;text-transform:uppercase;}
+.tag-orange{border-color:var(--orange);color:var(--orange);background:var(--orange-dim);}
+.tag-gold{border-color:var(--yellow);color:var(--yellow);background:var(--yellow-dim);}
+.tag-green{border-color:var(--green-ok);color:var(--green-ok);background:var(--green-dim);}
+.tag-blue{border-color:var(--blue-info);color:var(--blue-info);background:var(--blue-dim);}
+.tag-purple{border-color:var(--purple);color:var(--purple);background:var(--purple-dim);}
+.tag-teal{border-color:var(--teal);color:var(--teal);background:var(--teal-dim);}
+
+/* ========================================================
+   HIGHLIGHT NOTE
+   ======================================================== */
+.note{background:rgba(27,58,92,.45);border-right:5px solid var(--blue-info);padding:14px 20px;margin:1.4rem 0;font-size:.88rem;line-height:1.9;color:var(--text-sec);}
+.note strong{color:var(--blue-info);}
+.note.warn{border-right-color:var(--orange);}
+.note.warn strong{color:var(--orange);}
+.note.success{border-right-color:var(--green-ok);}
+.note.success strong{color:var(--green-ok);}
+
+/* ========================================================
+   PRINT STYLES  — clean white A4
+   ======================================================== */
+@page{size:A4 portrait;margin:1.6cm 1.9cm 1.9cm 1.9cm;}
 @media print{
-  body{background:white!important;color:#111!important;padding:0;}
-  .main-container{
-    border:none!important;box-shadow:none!important;
-    background:white!important;max-width:100%;
-  }
+  body{background:white!important;color:#111!important;font-size:11pt;}
+  .main-container{border:none!important;box-shadow:none!important;background:white!important;max-width:100%;}
   .main-container::before{display:none!important;}
-  .sticky-nav{display:none!important;}
-  .header{
-    background:#0d1b2e!important;color:white!important;
-    -webkit-print-color-adjust:exact!important;
-    print-color-adjust:exact!important;
-  }
-  .chapter{
-    background:#f8f9fb!important;
-    border:1px solid #ccc!important;
-    box-shadow:none!important;
-  }
-  .chapter::before{background:#1b3a5c!important;}
-  h2,h3,h4{color:#0d1b2e!important;}
+  .sticky-nav,.no-print{display:none!important;}
+  .header{background:#0d1b2e!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;padding:1.2rem 1.5rem 1rem;}
+  .header h1{font-size:1.5rem!important;}
+  .header-sub{font-size:.85rem!important;}
+  .header-meta{padding-top:10px;}
+  .chapter{background:#f8f9fc!important;border:1px solid #c8cdd6!important;box-shadow:none!important;padding:1.4rem 1.6rem;margin-bottom:2.5rem;}
+  .chapter::before{background:#1b3a5c!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  .chapter.gold-accent::before{background:#b08000!important;-webkit-print-color-adjust:exact!important;}
+  .chapter.green-accent::before{background:#007840!important;-webkit-print-color-adjust:exact!important;}
+  .chapter.blue-accent::before{background:#0055cc!important;-webkit-print-color-adjust:exact!important;}
+  .chapter.purple-accent::before{background:#5022aa!important;-webkit-print-color-adjust:exact!important;}
+  .chapter.teal-accent::before{background:#006070!important;-webkit-print-color-adjust:exact!important;}
+  .chapter-head h2{color:#0d1b2e!important;text-shadow:none!important;font-size:1.35rem!important;}
+  h3{color:#1b3a5c!important;text-shadow:none!important;border-right-color:#1b3a5c!important;font-size:1.1rem!important;}
+  h4{color:#2a4a6e!important;font-size:.95rem!important;}
   p,li{color:#222!important;}
+  strong{color:#0d1b2e!important;}
+  em{color:#1b3a5c!important;}
   td,th{color:#111!important;}
-  thead{background:#e8ecf0!important;}
-  th{color:#0d1b2e!important;}
-  .box{background:#f0f3f8!important;border-right-color:#1b3a5c!important;}
-  .box::after{background:#1b3a5c!important;}
-  .box strong{color:#0d1b2e!important;}
-  .chapter-num{background:#1b3a5c!important;color:white!important;box-shadow:none!important;}
-  .pipe-step{background:#f0f3f8!important;border-color:#ccc!important;color:#111!important;}
+  td{color:#222!important;}
+  thead{background:#e2e8f0!important;-webkit-print-color-adjust:exact!important;}
+  th{color:#0d1b2e!important;background:#dce4ef!important;-webkit-print-color-adjust:exact!important;}
+  tr:nth-child(even) td{background:#f5f7fb!important;-webkit-print-color-adjust:exact!important;}
+  .td-hot{color:#7a4200!important;}
+  .td-ok{color:#006030!important;}
+  .td-warn{color:#994400!important;}
+  .td-blue{color:#004488!important;}
+  .td-mono{color:#004080!important;}
+  .box{background:#f0f4fb!important;border-right-color:#1b3a5c!important;-webkit-print-color-adjust:exact!important;}
+  .box::after{background:#1b3a5c!important;box-shadow:none!important;-webkit-print-color-adjust:exact!important;}
+  .box.gold-box{border-right-color:#7a5500!important;}
+  .box.gold-box::after{background:#7a5500!important;}
+  .box.green-box{border-right-color:#006030!important;}
+  .box.green-box::after{background:#006030!important;}
+  .box.blue-box::after{background:#004488!important;}
+  .box strong{color:#1b3a5c!important;}
+  .chapter-num{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  .chapter-num.gold{background:#b08000!important;color:#fff!important;box-shadow:none!important;}
+  .chapter-num.green{background:#007840!important;color:#fff!important;box-shadow:none!important;}
+  .chapter-num.blue{background:#1b5cc5!important;color:#fff!important;box-shadow:none!important;}
+  .chapter-num.purple{background:#5022aa!important;color:#fff!important;box-shadow:none!important;}
+  .chapter-num.teal{background:#006070!important;color:#fff!important;box-shadow:none!important;}
+  .chapter-head{border-bottom-color:#1b3a5c!important;}
+  .chapter-head.gold{border-bottom-color:#b08000!important;}
+  .chapter-head.green{border-bottom-color:#007840!important;}
+  .chapter-head.blue{border-bottom-color:#1b5cc5!important;}
+  .chapter-head.purple{border-bottom-color:#5022aa!important;}
+  .chapter-head.teal{border-bottom-color:#006070!important;}
+  .pipe-step{background:#eef2fa!important;border-color:#b0b8cc!important;-webkit-print-color-adjust:exact!important;}
   .pipe-label{color:#0d1b2e!important;}
-  .pipe-sub{color:#666!important;}
+  .pipe-sub{color:#555!important;}
   .pipe-step::after{color:#1b3a5c!important;}
-  .gauge-card{background:#f0f3f8!important;border-color:#ccc!important;}
+  .gauge-card{background:#eef2fa!important;border-color:#b0b8cc!important;-webkit-print-color-adjust:exact!important;}
   .gauge-value{color:#0d1b2e!important;}
-  h2{page-break-before:always;page-break-after:avoid;}
+  .gauge-label{color:#555!important;}
+  .org-box{background:#eef2fa!important;border-color:#b0b8cc!important;-webkit-print-color-adjust:exact!important;}
+  .ob-title{color:#0d1b2e!important;}
+  .ob-sub{color:#555!important;}
+  .ob-top{background:#dce4ef!important;border-color:#1b3a5c!important;}
+  .ob-wh{background:#fff8e0!important;border-color:#b08000!important;}
+  .ob-comm{background:#e8f0ff!important;border-color:#1b5cc5!important;}
+  .ob-fin{background:#e8fff4!important;border-color:#006030!important;}
+  .ob-it{background:#f5eeff!important;border-color:#5022aa!important;}
+  .ob-qual{background:#e8feff!important;border-color:#006070!important;}
+  .rel-card{border-color:#b0b8cc!important;}
+  .rel-card-body{background:#f5f7fb!important;}
+  .rel-card-body li{color:#222!important;}
+  .rf-block{background:#eef2fa!important;border-color:#b0b8cc!important;}
+  .rf-block.highlight{background:#fff8e0!important;border-color:#b08000!important;}
+  .rf-block.wh{background:#fdf0e8!important;border-color:#994400!important;}
+  .rf-title{color:#0d1b2e!important;}
+  .rf-sub{color:#555!important;}
+  .rf-arrow{color:#1b3a5c!important;}
+  .note{background:#eef2fa!important;border-right-color:#1b3a5c!important;}
+  .note strong{color:#1b3a5c!important;}
+  .sig-line{border-top-color:#1b3a5c!important;}
+  .sig-name{color:#1b3a5c!important;}
+  .page-footer{background:#e8ecf2!important;border-top-color:#b0b8cc!important;color:#444!important;-webkit-print-color-adjust:exact!important;}
+  .page-footer strong{color:#994400!important;}
+  .rules-list li.rule-no{background:#fce8e8!important;border-right-color:#cc2222!important;color:#880000!important;-webkit-print-color-adjust:exact!important;}
+  .rules-list li.rule-yes{background:#e8fcea!important;border-right-color:#007840!important;color:#005020!important;-webkit-print-color-adjust:exact!important;}
+  .rules-list li.rule-kpi{background:#e8f0ff!important;border-right-color:#1b5cc5!important;color:#003070!important;-webkit-print-color-adjust:exact!important;}
+  .rules-list li.rule-gold{background:#fff8e0!important;border-right-color:#b08000!important;color:#6a4400!important;-webkit-print-color-adjust:exact!important;}
+  .tag-orange{background:#fde8dc!important;border-color:#994400!important;color:#994400!important;-webkit-print-color-adjust:exact!important;}
+  .tag-gold{background:#fff4cc!important;border-color:#7a5500!important;color:#7a5500!important;-webkit-print-color-adjust:exact!important;}
+  .tag-green{background:#e0fff0!important;border-color:#005520!important;color:#005520!important;-webkit-print-color-adjust:exact!important;}
+  .tag-blue{background:#e0eeff!important;border-color:#003488!important;color:#003488!important;-webkit-print-color-adjust:exact!important;}
+  .tag-purple{background:#f0e4ff!important;border-color:#400088!important;color:#400088!important;-webkit-print-color-adjust:exact!important;}
+  .tag-teal{background:#e0faff!important;border-color:#005060!important;color:#005060!important;-webkit-print-color-adjust:exact!important;}
+  .h-badge{color:#1b3a5c!important;border-color:#1b3a5c!important;background:#dce4ef!important;-webkit-print-color-adjust:exact!important;}
+  .h-badge.gold{color:#7a5500!important;border-color:#b08000!important;background:#fff8cc!important;}
+  .h-badge.green{color:#005020!important;border-color:#007840!important;background:#e0fff0!important;}
+  .confidential-bar{background:#fce8e8!important;border-color:#cc0000!important;color:#880000!important;-webkit-print-color-adjust:exact!important;}
+  .system-badge{background:#0d1b2e!important;border-color:#994400!important;color:#994400!important;-webkit-print-color-adjust:exact!important;animation:none!important;}
+  .system-badge .blink{animation:none!important;background:#994400!important;}
+  h2.c-head-txt{page-break-before:always;page-break-after:avoid;}
   h3,h4{page-break-after:avoid;}
-  table,.pipe-step,.phase-card,.org-box{page-break-inside:avoid;}
+  table,.pipe-step,.phase-card,.org-box,.rel-card,.gauge-card{page-break-inside:avoid;}
+  .chapter{page-break-before:always;}
+  .chapter:first-child{page-break-before:auto;}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-  .no-print{display:none!important;}
+}
+
+/* ========================================================
+   RESPONSIVE
+   ======================================================== */
+@media(max-width:768px){
+  .content{padding:1.2rem 1.2rem;}
+  .header{padding:1.5rem 1.2rem 1.2rem;}
+  .chapter{padding:1.3rem 1.2rem;}
+  .phase-grid{grid-template-columns:1fr;}
+  .rel-grid{grid-template-columns:1fr;}
+  .gauge-grid{grid-template-columns:repeat(2,1fr);}
+  .chapter-head h2{font-size:1.3rem;}
+  .header h1{font-size:1.5rem;}
+  .rel-flow{flex-direction:column;align-items:center;}
+  .rf-arrow{transform:rotate(90deg);}
 }
 </style>
 </head>
 <body>
-
 <div class="main-container">
 
-<!-- ========================== HEADER ========================== -->
+<!-- ================================================================
+     HEADER
+     ================================================================ -->
 <div class="header">
-  <div class="system-badge"><span class="blink"></span> STRATEGIC PROPOSAL — ACTIVE</div>
+  <div class="system-badge"><span class="blink"></span> STRATEGIC PROPOSAL — ERP ADOPTION 2026</div>
   <h1>
     <i class="fas fa-cubes"></i>
     مقترح اعتماد Odoo 17 Enterprise
   </h1>
-  <div class="header-sub">تعزيز البنية التحتية — الدورة المستندية الكاملة — الهيكل التنظيمي | Brandzo Holding · بنغازي ٢٠٢٦</div>
+  <div class="header-sub">الدورة المستندية الكاملة · العلاقات التكاملية بين الإدارات · الهيكل التنظيمي الشامل | Brandzo Holding · بنغازي ٢٠٢٦</div>
   <div class="header-meta">
     <div style="display:flex;flex-wrap:wrap;gap:8px;">
       <span class="h-badge">إعداد: محمد البرشي</span>
       <span class="h-badge">مراجعة: رمزي باش</span>
       <span class="h-badge gold">إدارة المستودعات</span>
-      <span class="h-badge green">الإصدار 3.0 · مايو ٢٠٢٦</span>
+      <span class="h-badge green">الإصدار 4.0 · ٢٠٢٦</span>
+      <span class="h-badge blue">مقترح لعرضه على المدير العام</span>
     </div>
-    <div class="confidential-bar">⛔ سري — للإدارة العليا فقط</div>
+    <div class="confidential-bar"><i class="fas fa-lock"></i> سري — للإدارة العليا فقط</div>
   </div>
 </div>
 
-<!-- ========================== STICKY NAV ========================== -->
-<div class="sticky-nav no-print">
+<!-- ================================================================
+     STICKY NAV
+     ================================================================ -->
+<nav class="sticky-nav no-print">
   <span class="nav-title">⚙ BRANDZO ERP</span>
   <div class="nav-links">
     <a href="#summary">الملخص</a>
     <a href="#golden">القواعد</a>
-    <a href="#compare">المقارنة</a>
     <a href="#odoo">أودو 17</a>
     <a href="#purchasing">المشتريات</a>
     <a href="#sales">المبيعات</a>
@@ -514,590 +517,704 @@ tr:hover td{background:rgba(255,69,0,.04);}
     <a href="#plan">خطة التنفيذ</a>
     <a href="#conclusion">الخلاصة</a>
   </div>
-  <button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> طباعة A4</button>
-</div>
+  <button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> طباعة A4 / PDF</button>
+</nav>
 
 <div class="content">
 
-<!-- ========================== 1. EXECUTIVE SUMMARY ========================== -->
+<!-- ================================================================
+     01 — EXECUTIVE SUMMARY
+     ================================================================ -->
 <div class="chapter gold-accent" id="summary">
   <div class="chapter-head gold">
     <span class="chapter-num gold">01</span>
-    <h2>الملخص التنفيذي</h2>
+    <h2 class="c-head-txt">الملخص التنفيذي</h2>
   </div>
 
   <div class="gauge-grid">
     <div class="gauge-card">
-      <div class="gauge-ring" style="border-color:var(--orange);box-shadow:0 0 18px rgba(255,69,0,.25);">
+      <div class="gauge-ring" style="border-color:var(--orange);box-shadow:0 0 20px rgba(255,69,0,.22);">
         <span class="gauge-value" style="color:var(--orange);">6</span>
       </div>
-      <div class="gauge-label">إدارات مترابطة</div>
+      <div class="gauge-label">إدارات مترابطة<br>مع المستودعات</div>
     </div>
     <div class="gauge-card">
-      <div class="gauge-ring" style="border-color:var(--yellow);box-shadow:0 0 18px rgba(255,215,0,.25);">
+      <div class="gauge-ring" style="border-color:var(--yellow);box-shadow:0 0 20px rgba(255,215,0,.22);">
         <span class="gauge-value" style="color:var(--yellow);">3</span>
       </div>
-      <div class="gauge-label">مراحل تنفيذ</div>
+      <div class="gauge-label">مراحل تنفيذ<br>تدريجية</div>
     </div>
     <div class="gauge-card">
-      <div class="gauge-ring" style="border-color:var(--green-ok);box-shadow:0 0 18px rgba(0,230,118,.25);">
-        <span class="gauge-value" style="color:var(--green-ok);">98.5</span>
+      <div class="gauge-ring" style="border-color:var(--green-ok);box-shadow:0 0 20px rgba(0,230,118,.22);">
+        <span class="gauge-value" style="color:var(--green-ok);">8</span>
       </div>
-      <div class="gauge-label">% دقة مخزون مستهدفة</div>
+      <div class="gauge-label">مراحل الدورة<br>المستندية</div>
     </div>
     <div class="gauge-card">
-      <div class="gauge-ring" style="border-color:var(--blue-info);box-shadow:0 0 18px rgba(77,166,255,.25);">
-        <span class="gauge-value" style="color:var(--blue-info);">&lt;4h</span>
+      <div class="gauge-ring" style="border-color:var(--blue-info);box-shadow:0 0 20px rgba(77,166,255,.22);">
+        <span class="gauge-value" style="color:var(--blue-info);">21</span>
       </div>
-      <div class="gauge-label">زمن الدورة التشغيلية</div>
+      <div class="gauge-label">نموذج رسمي<br>محدد</div>
     </div>
     <div class="gauge-card">
-      <div class="gauge-ring" style="border-color:#a064ff;box-shadow:0 0 18px rgba(160,100,255,.25);">
-        <span class="gauge-value" style="color:#a064ff;">9+</span>
+      <div class="gauge-ring" style="border-color:var(--purple);box-shadow:0 0 20px rgba(160,100,255,.22);">
+        <span class="gauge-value" style="color:var(--purple);">17</span>
       </div>
-      <div class="gauge-label">وحدات Odoo مدمجة</div>
+      <div class="gauge-label">وحدة Odoo<br>مُفعَّلة</div>
+    </div>
+    <div class="gauge-card">
+      <div class="gauge-ring" style="border-color:var(--teal);box-shadow:0 0 20px rgba(0,188,212,.22);">
+        <span class="gauge-value" style="color:var(--teal);">98.5%</span>
+      </div>
+      <div class="gauge-label">دقة مخزون<br>مستهدفة</div>
     </div>
   </div>
-
-  <p>يُمثّل نظام تخطيط موارد المؤسسات (ERP) العمود الفقري الرقمي لمجموعة Brandzo — شركة قابضة تمتلك سلاسل تجزئة ومنافذ ترفيهية وبراندات عالمية في مدينة بنغازي. بعد دراسة معمّقة للحلول العالمية ومقارنتها بمتطلبات البيئة التشغيلية الحالية، يخلص هذا المقترح إلى <strong>التوصية باعتماد نظام Odoo 17 Enterprise</strong> منصةً موحدة لجميع العمليات.</p>
 
   <div class="box gold-box">
-    <strong>⭐ التوصية الجوهرية:</strong><br>
-    اعتماد Odoo 17 Enterprise مع التنفيذ التدريجي عبر ثلاث مراحل — بدءاً بوحدات المخزون والمشتريات والمالية، وصولاً للتحليلات التنبؤية وتطبيقات الجوال — بما يضمن عائداً استراتيجياً محققاً في السنة الثانية من التشغيل.
+    <strong>🎯 عن هذا المقترح:</strong><br>
+    يُقدِّم هذا المستند مقترحاً شاملاً معداً من قِبل <em>إدارة المستودعات — محمد البرشي ورمزي باش</em> لاعتماد نظام <em>Odoo 17 Enterprise</em> منصةً موحدة لمجموعة Brandzo القابضة في بنغازي، ليبيا. يتناول المقترح الدورة المستندية الكاملة، والعلاقات التكاملية التشغيلية بين إدارة المستودعات وجميع الإدارات المعنية، فضلاً عن الهيكل التنظيمي المقترح المستوحى من نماذج شركات التجزئة العالمية الكبرى ومُكيَّف مع واقع Brandzo.
   </div>
 
-  <p>يُغطي هذا المقترح ثلاثة محاور جوهرية: <strong>الدراسة المقارنة لأنظمة ERP</strong>، <strong>دورة الحياة المستندية الكاملة</strong> لجميع الإدارات المعنية، و<strong>الهيكل التنظيمي المقترح</strong> المُكيَّف مع واقع Brandzo ومستوحى من نماذج شركات التجزئة العالمية.</p>
-</div>
-
-<!-- ========================== 2. GOLDEN RULES ========================== -->
-<div class="chapter" id="golden">
-  <div class="chapter-head">
-    <span class="chapter-num">02</span>
-    <h2>المرجع التشغيلي — القواعد الذهبية</h2>
-  </div>
-
-  <p>القواعد التالية هي الحد الأدنى غير القابل للتفاوض في بيئة Brandzo. يجب أن يستوعبها نظام ERP المُعتمَد تلقائياً دون أي تدخل بشري:</p>
-
-  <ul class="rules-list">
-    <li class="rule-no"><span>❌</span> لا حركة مخزنية بدون مستند موثق ومعتمد رقمياً في النظام.</li>
-    <li class="rule-no"><span>❌</span> لا استلام بدون أمر شراء (PO) مسبق موافق عليه من المدير المختص.</li>
-    <li class="rule-no"><span>❌</span> لا صرف بدون طلب صرف معتمد (SR) موثق بتوقيع إلكتروني.</li>
-    <li class="rule-yes"><span>✅</span> الرفض التلقائي لأي شحنة عمرها الافتراضي المتبقي أقل من 75%.</li>
-    <li class="rule-yes"><span>✅</span> التطبيق الإلزامي لـ FEFO (الأول انتهاءً، الأول صرفاً) في جميع عمليات الصرف.</li>
-    <li class="rule-yes"><span>✅</span> الالتزام بدرجات الحفظ: 4°م للمبرد | -18°م للمجمد | فحص تلقائي عند الاستلام.</li>
-    <li class="rule-kpi"><span>🎯</span> دقة المخزون المستهدفة ≥ 98.5% | زمن الدورة التشغيلية &lt;4 ساعات | كل حركة تُولّد قيداً محاسبياً فورياً.</li>
-  </ul>
-
-  <div class="box green-box">
-    <strong>✅ Odoo 17 Enterprise يستوعب هذه القواعد أصلاً:</strong> وحدة إدارة المخزون المتقدمة تدعم FEFO وفحص الجودة وإدارة الصلاحيات تلقائياً من خلال القواعد المبرمجة — بدون أي تطوير إضافي.
-  </div>
-</div>
-
-<!-- ========================== 3. ERP COMPARISON ========================== -->
-<div class="chapter blue-accent" id="compare">
-  <div class="chapter-head blue">
-    <span class="chapter-num blue">03</span>
-    <h2>الدراسة المقارنة لأنظمة ERP</h2>
-  </div>
-
-  <p>شملت الدراسة خمسة أنظمة رائدة بمعايير: القدرة الوظيفية، دعم FEFO وإدارة الصلاحية، الدعم العربي، شبكة الشركاء في ليبيا وشمال أفريقيا، ومرونة التخصيص.</p>
-
-  <div class="compare-wrap">
+  <h3>ملخص الإدارات المعنية وأدوارها التكاملية</h3>
   <div class="table-wrap">
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th>المعيار</th>
-        <th>NetSuite</th>
-        <th>Dynamics 365</th>
-        <th>Odoo Community</th>
-        <th>ERPNext</th>
-        <th class="winner">Odoo 17 Enterprise ⭐</th>
-      </tr>
-    </thead>
+  <table>
+    <thead><tr><th>الإدارة</th><th>القسم المعني</th><th>طبيعة العلاقة مع المستودع</th><th>وحدة Odoo</th></tr></thead>
     <tbody>
-      <tr><td>نموذج النشر</td><td>سحابي فقط</td><td>سحابي/مختلط</td><td>ذاتي/سحابي</td><td>ذاتي فقط</td><td class="winner">سحابي/مختلط/ذاتي</td></tr>
-      <tr><td>دعم FEFO / الصلاحية</td><td class="td-warn">بتخصيص</td><td class="td-warn">بتخصيص</td><td class="td-warn">جزئياً</td><td class="td-warn">جزئياً</td><td class="winner td-ok">أصلي كامل ✅</td></tr>
-      <tr><td>وحدة الجودة (QM)</td><td>بتطوير</td><td>بتطوير</td><td>محدودة</td><td>غير متوفرة</td><td class="winner td-ok">متكاملة أصلاً ✅</td></tr>
-      <tr><td>دعم اللغة العربية</td><td class="td-warn">محدود</td><td>جيد</td><td>نسبي</td><td class="td-warn">يحتاج تطوير</td><td class="winner td-ok">RTL كامل ✅</td></tr>
-      <tr><td>تكامل محاسبي فوري</td><td>جيد</td><td>ممتاز</td><td>جيد</td><td>أساسي</td><td class="winner td-ok">فوري وتلقائي ✅</td></tr>
-      <tr><td>شبكة شركاء MENA/ليبيا</td><td class="td-warn">محدودة</td><td>جيدة</td><td>متوسطة</td><td class="td-warn">ضعيفة</td><td class="winner td-ok">متنامية ✅</td></tr>
-      <tr><td>القابلية للتوسع</td><td>جيدة</td><td>جيدة جداً</td><td class="td-warn">محدودة</td><td class="td-warn">محدودة</td><td class="winner td-ok">ممتازة ✅</td></tr>
+      <tr>
+        <td class="td-hot">🛒 الإدارة التجارية</td>
+        <td>قسم المشتريات</td>
+        <td>يبدأ طلب الشراء وأمر الشراء — المستودع ينفذ ويستلم</td>
+        <td class="td-mono">Purchase</td>
+      </tr>
+      <tr>
+        <td class="td-hot">🛒 الإدارة التجارية</td>
+        <td>قسم المبيعات</td>
+        <td>يُنشئ أوامر البيع — المستودع يُنفذ التسليم والصرف</td>
+        <td class="td-mono">Sales / Inventory</td>
+      </tr>
+      <tr>
+        <td class="td-hot">🛒 الإدارة التجارية</td>
+        <td>قسم الأسواق والفروع</td>
+        <td>يطلب نقل البضائع بين المستودعات والفروع</td>
+        <td class="td-mono">Inventory Transfer</td>
+      </tr>
+      <tr>
+        <td class="td-hot">💰 الإدارة المالية</td>
+        <td>المحاسبة والخزينة</td>
+        <td>تُغلق الفواتير وتُراجع مستندات المخزون مالياً</td>
+        <td class="td-mono">Accounting / Invoicing</td>
+      </tr>
+      <tr>
+        <td class="td-hot">🔧 إدارة تقنية المعلومات</td>
+        <td>الأنظمة والبنية التحتية</td>
+        <td>تُشغِّل Odoo وتُدير الصلاحيات وتُكامل الأجهزة</td>
+        <td class="td-mono">Odoo Admin / API</td>
+      </tr>
+      <tr>
+        <td class="td-hot">✅ إدارة الجودة</td>
+        <td>فريق الفحص والامتثال</td>
+        <td>تُفرج عن الشحنات للمخزون بعد الفحص وتُراقب HACCP</td>
+        <td class="td-mono">Quality / Lot Tracking</td>
+      </tr>
     </tbody>
   </table>
   </div>
-  </div>
 </div>
 
-<!-- ========================== 4. ODOO 17 DETAILS ========================== -->
-<div class="chapter gold-accent" id="odoo">
-  <div class="chapter-head gold">
-    <span class="chapter-num gold">04</span>
-    <h2>Odoo 17 Enterprise — المزايا الاستراتيجية</h2>
-  </div>
-
-  <h3>الوحدات المُوصى بتفعيلها</h3>
-  <div class="gauge-grid">
-    <div class="gauge-card"><div class="gauge-ring" style="border-color:var(--orange);"><span class="gauge-value" style="font-size:1.6rem;">📦</span></div><div class="gauge-label">إدارة المخزون المتقدمة</div></div>
-    <div class="gauge-card"><div class="gauge-ring" style="border-color:var(--blue-info);"><span class="gauge-value" style="font-size:1.6rem;">🛒</span></div><div class="gauge-label">المشتريات</div></div>
-    <div class="gauge-card"><div class="gauge-ring" style="border-color:var(--yellow);"><span class="gauge-value" style="font-size:1.6rem;">💼</span></div><div class="gauge-label">المبيعات</div></div>
-    <div class="gauge-card"><div class="gauge-ring" style="border-color:var(--green-ok);"><span class="gauge-value" style="font-size:1.6rem;">💰</span></div><div class="gauge-label">المحاسبة والمالية</div></div>
-    <div class="gauge-card"><div class="gauge-ring" style="border-color:#ff4444;"><span class="gauge-value" style="font-size:1.6rem;">✅</span></div><div class="gauge-label">إدارة الجودة (QM)</div></div>
-    <div class="gauge-card"><div class="gauge-ring" style="border-color:#a064ff;"><span class="gauge-value" style="font-size:1.6rem;">👥</span></div><div class="gauge-label">الموارد البشرية</div></div>
-    <div class="gauge-card"><div class="gauge-ring" style="border-color:var(--orange);"><span class="gauge-value" style="font-size:1.6rem;">📱</span></div><div class="gauge-label">تطبيق الجوال (WMS)</div></div>
-    <div class="gauge-card"><div class="gauge-ring" style="border-color:var(--blue-info);"><span class="gauge-value" style="font-size:1.6rem;">📊</span></div><div class="gauge-label">التقارير والتحليلات</div></div>
-  </div>
-
-  <h3>المزايا الجوهرية لـ Brandzo</h3>
-  <ul>
-    <li><strong>التكامل الفوري بين المخزون والمالية:</strong> كل حركة مخزنية تُولّد قيداً محاسبياً تلقائياً — لا فجوات بين الدفاتر والمخزون الفعلي.</li>
-    <li><strong>الامتثال التلقائي للقواعد الذهبية:</strong> وحدة الجودة تُفعّل خطط فحص تلقائية عند الاستلام بناءً على العمر الافتراضي (75%) ودرجة الحرارة.</li>
-    <li><strong>لوحات KPI تفاعلية:</strong> مؤشرات الأداء (دقة المخزون، تقادم البضاعة، أداء الموردين) تُعرض لحظياً لكل إدارة.</li>
-    <li><strong>الجاهزية للتوسع الجغرافي:</strong> فتح فروع ومستودعات جديدة دون استثمار إضافي في خوادم أو بنية تحتية.</li>
-    <li><strong>دعم عربي كامل:</strong> واجهة RTL احترافية وإمكانية تخصيص المتطلبات الضريبية الليبية.</li>
-  </ul>
-</div>
-
-<!-- ========================== 5. PURCHASING ========================== -->
-<div class="chapter blue-accent" id="purchasing">
+<!-- ================================================================
+     02 — GOLDEN RULES
+     ================================================================ -->
+<div class="chapter blue-accent" id="golden">
   <div class="chapter-head blue">
-    <span class="chapter-num blue">05</span>
-    <h2>الإدارة التجارية — قسم المشتريات</h2>
+    <span class="chapter-num blue">02</span>
+    <h2 class="c-head-txt">القواعد الذهبية التشغيلية</h2>
   </div>
 
-  <p>قسم المشتريات هو نقطة الانطلاق في دورة الحياة المستندية لجانب التوريد. يتولى إدارة علاقات الموردين، إنشاء طلبات الشراء، ربطها بعمليات استلام المستودع، والمطابقة الثلاثية مع الفواتير.</p>
+  <p>هذه القواعد إلزامية لجميع الإدارات وهي الأساس الذي يرتكز عليه نجاح تنصيب Odoo في Brandzo. لا يجوز الاستثناء منها.</p>
 
-  <h3>الوحدات المستخدمة في Odoo</h3>
-  <div class="box blue-box">
-    <strong>Purchase Order (PO) · Vendor Management · Product Catalog · Pricelists · Receipt (WH) · Vendor Bills · Quality Check</strong>
+  <ul class="rules-list">
+    <li class="rule-no"><span>🚫</span><span><strong>ممنوع:</strong> تنفيذ أي حركة مخزونية (صرف، استلام، نقل) خارج نظام Odoo — كل عملية يجب أن تُسجَّل آنياً في النظام.</span></li>
+    <li class="rule-no"><span>🚫</span><span><strong>ممنوع:</strong> إصدار أمر شراء أو بيع يدوياً دون مسار موافقة Odoo — التجاوز يُبطل مسار التدقيق.</span></li>
+    <li class="rule-no"><span>🚫</span><span><strong>ممنوع:</strong> تسليم بضاعة لأي فرع دون طلب نقل مُعتمد (Internal Transfer) في Odoo.</span></li>
+    <li class="rule-yes"><span>✅</span><span><strong>واجب:</strong> مبدأ FEFO (First Expired, First Out) مُطبَّق تلقائياً في Odoo لجميع منتجات الغذاء والصلاحية.</span></li>
+    <li class="rule-yes"><span>✅</span><span><strong>واجب:</strong> كل صنف يدخل المستودع يحمل Lot/Serial + تاريخ انتهاء — لا استلام بدون هذه البيانات.</span></li>
+    <li class="rule-yes"><span>✅</span><span><strong>واجب:</strong> الفاتورة الختامية للمبيعات يُغلقها المحاسب فقط بعد تأكيد وصول البضاعة (Delivery Validated).</span></li>
+    <li class="rule-gold"><span>🎯</span><span><strong>هدف:</strong> الوصول إلى دقة جرد ≥98.5% خلال 12 شهراً من التشغيل الكامل — يُقاس شهرياً عبر لوحة KPI في Odoo.</span></li>
+    <li class="rule-kpi"><span>📊</span><span><strong>مؤشر:</strong> مراجعة مسار الموافقات (Approval Workflow) لجميع الإدارات كل ربع سنوي وتحديثها حسب احتياج العمل.</span></li>
+  </ul>
+
+  <h3>مؤشرات الأداء الرئيسية — KPIs المستهدفة</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>المؤشر</th><th>الهدف</th><th>طريقة القياس في Odoo</th><th>التكرار</th></tr></thead>
+    <tbody>
+      <tr><td>دقة الجرد المخزوني</td><td class="td-ok">≥ 98.5%</td><td>Inventory Adjustments Report</td><td>شهري</td></tr>
+      <tr><td>معدل دقة استلام الطلبات</td><td class="td-ok">≥ 99%</td><td>PO vs GRN Matching Report</td><td>أسبوعي</td></tr>
+      <tr><td>وقت دورة الاستلام والفحص</td><td class="td-ok">≤ 4 ساعات</td><td>Quality Check Duration</td><td>يومي</td></tr>
+      <tr><td>نسبة الفاقد والتالف</td><td class="td-ok">≤ 0.5%</td><td>Scrap & Expiry Report</td><td>شهري</td></tr>
+      <tr><td>معدل الوفاء بأوامر البيع في الوقت</td><td class="td-ok">≥ 97%</td><td>Delivery On-Time Rate</td><td>أسبوعي</td></tr>
+      <tr><td>زمن معالجة طلب الشراء حتى الاستلام</td><td class="td-ok">≤ 7 أيام</td><td>PO Lead Time Report</td><td>شهري</td></tr>
+      <tr><td>نسبة الاستلامات مع اختلاف (Discrepancy Rate)</td><td class="td-warn">≤ 1%</td><td>GRN Discrepancy Report</td><td>أسبوعي</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ================================================================
+     03 — ODOO 17 MODULES
+     ================================================================ -->
+<div class="chapter green-accent" id="odoo">
+  <div class="chapter-head green">
+    <span class="chapter-num green">03</span>
+    <h2 class="c-head-txt">Odoo 17 Enterprise — الوحدات المقترحة</h2>
   </div>
 
-  <h3>دورة المستند — المشتريات</h3>
+  <div class="box green-box">
+    <strong>لماذا Odoo 17 Enterprise؟</strong><br>
+    Odoo هو الأنسب لبيئة MENA بسبب دعمه الكامل للغة العربية، محاسبته المتوافقة مع المعايير المحلية، ومرونته العالية في التخصيص لتناسب عمليات Brandzo المتعددة في مجالات التجزئة والترفيه والبراندات العالمية. كما أن شركاءه المعتمدين في المنطقة يضمنون دعماً تقنياً محلياً متاحاً.
+  </div>
+
+  <h3>خارطة الوحدات المطلوبة</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>الوحدة</th><th>الاسم الإنجليزي</th><th>الإدارات المستخدمة</th><th>الأولوية</th></tr></thead>
+    <tbody>
+      <tr><td class="td-hot">إدارة المخزون</td><td class="td-mono">Inventory</td><td>المستودعات، المشتريات، المبيعات</td><td class="td-ok">مرحلة 1 — حرجة</td></tr>
+      <tr><td class="td-hot">المشتريات</td><td class="td-mono">Purchase</td><td>المشتريات، المستودعات، المالية</td><td class="td-ok">مرحلة 1 — حرجة</td></tr>
+      <tr><td class="td-hot">المبيعات</td><td class="td-mono">Sales</td><td>المبيعات، المستودعات، المالية</td><td class="td-ok">مرحلة 1 — حرجة</td></tr>
+      <tr><td class="td-hot">المحاسبة والفوترة</td><td class="td-mono">Accounting / Invoicing</td><td>المالية، المشتريات، المبيعات</td><td class="td-ok">مرحلة 1 — حرجة</td></tr>
+      <tr><td class="td-hot">الجودة</td><td class="td-mono">Quality</td><td>الجودة، المستودعات</td><td class="td-warn">مرحلة 2</td></tr>
+      <tr><td class="td-hot">الباركود</td><td class="td-mono">Barcode</td><td>المستودعات</td><td class="td-warn">مرحلة 2</td></tr>
+      <tr><td class="td-hot">نقل الأسطول والشحن</td><td class="td-mono">Inventory Routes / Putaway</td><td>المستودعات، الأسواق</td><td class="td-warn">مرحلة 2</td></tr>
+      <tr><td class="td-hot">الموارد البشرية</td><td class="td-mono">HR / Payroll</td><td>الموارد البشرية</td><td class="td-blue">مرحلة 3</td></tr>
+      <tr><td class="td-hot">إدارة علاقات العملاء</td><td class="td-mono">CRM</td><td>المبيعات، التسويق</td><td class="td-blue">مرحلة 3</td></tr>
+      <tr><td class="td-hot">الصيانة</td><td class="td-mono">Maintenance</td><td>العمليات</td><td class="td-blue">مرحلة 3</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>مسار الدورة المستندية الرئيسية في Odoo</h3>
   <div class="pipeline">
-    <div class="pipe-step ps-blue"><span class="pipe-icon">📋</span><div class="pipe-label">طلب عرض السعر</div><div class="pipe-sub">RFQ</div></div>
-    <div class="pipe-step ps-gold"><span class="pipe-icon">✅</span><div class="pipe-label">أمر الشراء</div><div class="pipe-sub">Purchase Order (PO)</div></div>
-    <div class="pipe-step ps-navy"><span class="pipe-icon">🚚</span><div class="pipe-label">استلام المستودع</div><div class="pipe-sub">Warehouse Receipt</div></div>
-    <div class="pipe-step ps-orange"><span class="pipe-icon">🔍</span><div class="pipe-label">فحص الجودة</div><div class="pipe-sub">QC Check</div></div>
-    <div class="pipe-step ps-green"><span class="pipe-icon">💰</span><div class="pipe-label">فاتورة المورد</div><div class="pipe-sub">Vendor Bill</div></div>
+    <div class="pipe-step ps-blue"><span class="pipe-icon">📋</span><div class="pipe-label">طلب الشراء</div><div class="pipe-sub">Purchase Request</div></div>
+    <div class="pipe-step ps-gold"><span class="pipe-icon">📄</span><div class="pipe-label">أمر الشراء</div><div class="pipe-sub">Purchase Order (PO)</div></div>
+    <div class="pipe-step ps-orange"><span class="pipe-icon">🚚</span><div class="pipe-label">استقبال الشحنة</div><div class="pipe-sub">Incoming Shipment</div></div>
+    <div class="pipe-step ps-teal"><span class="pipe-icon">🔬</span><div class="pipe-label">فحص الجودة</div><div class="pipe-sub">Quality Check (QC)</div></div>
+    <div class="pipe-step ps-green"><span class="pipe-icon">✅</span><div class="pipe-label">إدخال المخزون</div><div class="pipe-sub">GRN Validated</div></div>
+    <div class="pipe-step ps-purple"><span class="pipe-icon">📦</span><div class="pipe-label">أمر الصرف</div><div class="pipe-sub">Delivery Order</div></div>
+    <div class="pipe-step ps-gold"><span class="pipe-icon">🧾</span><div class="pipe-label">الفاتورة النهائية</div><div class="pipe-sub">Vendor / Customer Bill</div></div>
+    <div class="pipe-step ps-navy"><span class="pipe-icon">💳</span><div class="pipe-label">الإغلاق المالي</div><div class="pipe-sub">Payment & Close</div></div>
+  </div>
+</div>
+
+<!-- ================================================================
+     04 — PURCHASING DEPT
+     ================================================================ -->
+<div class="chapter" id="purchasing">
+  <div class="chapter-head">
+    <span class="chapter-num">04</span>
+    <h2 class="c-head-txt">الإدارة التجارية — قسم المشتريات</h2>
+  </div>
+
+  <div class="box">
+    <strong>📌 التعريف:</strong> قسم المشتريات هو الإدارة المعنية بتوفير كافة الأصناف والمستلزمات من موردين خارجيين بأفضل مواصفات وفق احتياجات العمليات. يبدأ دور هذا القسم من لحظة تقديم طلب الشراء وينتهي باستلام الفاتورة وإغلاقها.
+  </div>
+
+  <h3>مسار عمل قسم المشتريات في Odoo</h3>
+  <div class="pipeline">
+    <div class="pipe-step ps-blue"><span class="pipe-icon">📋</span><div class="pipe-label">طلب الشراء</div><div class="pipe-sub">Purchase Request</div></div>
+    <div class="pipe-step ps-gold"><span class="pipe-icon">🔍</span><div class="pipe-label">تحديد الموردين</div><div class="pipe-sub">Vendor Selection</div></div>
+    <div class="pipe-step ps-orange"><span class="pipe-icon">📄</span><div class="pipe-label">أمر الشراء</div><div class="pipe-sub">Purchase Order</div></div>
+    <div class="pipe-step ps-teal"><span class="pipe-icon">📩</span><div class="pipe-label">إرسال للمورد</div><div class="pipe-sub">Send to Vendor</div></div>
+    <div class="pipe-step ps-green"><span class="pipe-icon">🚚</span><div class="pipe-label">تأكيد الشحنة</div><div class="pipe-sub">Shipment Confirmed</div></div>
+    <div class="pipe-step ps-navy"><span class="pipe-icon">🧾</span><div class="pipe-label">فاتورة المورد</div><div class="pipe-sub">Vendor Bill</div></div>
   </div>
 
   <h3>آلية إضافة المورد في Odoo</h3>
+  <p>تتم إضافة الموردين عبر وحدة المشتريات في Odoo من خلال المسار: <span class="tag tag-orange">المشتريات</span> ← <span class="tag tag-orange">الموردين</span> ← <span class="tag tag-orange">جديد</span>، وتشمل بيانات المورد:</p>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>#</th><th>الإجراء في Odoo</th><th>البيانات المطلوبة</th><th>ملاحظة</th></tr></thead>
+    <thead><tr><th>البيان</th><th>الحقل في Odoo</th><th>إلزامي؟</th><th>ملاحظة</th></tr></thead>
     <tbody>
-      <tr><td class="td-hot">1</td><td>Contacts → New → تحديد نوع: Vendor</td><td>الاسم، العنوان، الدولة، رقم التواصل</td><td>ربط بفئة المورد المناسبة</td></tr>
-      <tr><td class="td-hot">2</td><td>تبويب Purchase → Payment Terms</td><td>شروط الدفع، العملة، حد الائتمان</td><td>يؤثر على التسوية البنكية</td></tr>
-      <tr><td class="td-hot">3</td><td>ربط الأصناف المورَّدة وقوائم أسعارها</td><td>Lead time، الحد الأدنى للطلب، الأسعار</td><td>Vendor Pricelist مرتبط بـ PO</td></tr>
-      <tr><td class="td-hot">4</td><td>اعتماد المورد من المدير المختص</td><td>تفعيل حالة "Approved Vendor"</td><td>لا يمكن إصدار PO بدون اعتماد</td></tr>
+      <tr><td class="td-hot">اسم المورد الكامل</td><td class="td-mono">Name</td><td class="td-ok">نعم</td><td>الاسم التجاري الرسمي</td></tr>
+      <tr><td class="td-hot">التصنيف (محلي / دولي)</td><td class="td-mono">Company Type</td><td class="td-ok">نعم</td><td>يؤثر على فئة الضريبة</td></tr>
+      <tr><td class="td-hot">بيانات الاتصال</td><td class="td-mono">Phone / Email</td><td class="td-ok">نعم</td><td>للتواصل والإشعارات التلقائية</td></tr>
+      <tr><td class="td-hot">شروط الدفع</td><td class="td-mono">Payment Terms</td><td class="td-ok">نعم</td><td>يحدد تواريخ استحقاق الفواتير</td></tr>
+      <tr><td class="td-hot">العملة الافتراضية</td><td class="td-mono">Currency</td><td class="td-ok">نعم</td><td>دينار ليبي / دولار حسب المورد</td></tr>
+      <tr><td class="td-hot">شهادات المورد</td><td class="td-mono">Documents (Attachment)</td><td class="td-warn">مستحسن</td><td>السجل التجاري، شهادات الجودة</td></tr>
     </tbody>
   </table>
   </div>
 
   <h3>آلية إضافة الصنف في Odoo</h3>
+  <p>المسار: <span class="tag tag-orange">المخزون</span> ← <span class="tag tag-orange">المنتجات</span> ← <span class="tag tag-orange">جديد</span>. كل صنف مرتبط بالمورد عبر حقل <em>Vendor Pricelist</em> بحيث يظهر تلقائياً في PO.</p>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>#</th><th>الإجراء في Odoo</th><th>التفاصيل</th><th>وحدة Odoo</th></tr></thead>
+    <thead><tr><th>بيانات الصنف</th><th>الحقل في Odoo</th><th>القسم المسؤول</th></tr></thead>
     <tbody>
-      <tr><td class="td-hot">1</td><td>Inventory → Products → New</td><td>الاسم، الباركود (GS1)، الفئة، وحدة القياس، الصورة</td><td>Product</td></tr>
-      <tr><td class="td-hot">2</td><td>تبويب Purchase</td><td>الموردون المفضلون، أسعار الشراء، Lead Time</td><td>Purchase</td></tr>
-      <tr><td class="td-hot">3</td><td>تبويب Inventory</td><td>استراتيجية FEFO، نقاط إعادة الطلب، درجة الحرارة</td><td>Inventory</td></tr>
-      <tr><td class="td-hot">4</td><td>تبويب Accounting</td><td>حسابات التكلفة (AVCO/FIFO)، حساب المخزون</td><td>Accounting</td></tr>
-      <tr><td class="td-hot">5</td><td>إضافة سعر البيع وهامش الربح</td><td>Sales Price + Cost — يحسب Odoo الهامش تلقائياً</td><td>Sales</td></tr>
+      <tr><td class="td-hot">اسم الصنف وكوده</td><td class="td-mono">Product Name / Internal Reference</td><td>المشتريات</td></tr>
+      <tr><td class="td-hot">الفئة والتصنيف</td><td class="td-mono">Product Category</td><td>المستودعات</td></tr>
+      <tr><td class="td-hot">وحدة القياس (كيلو/علبة/حبة)</td><td class="td-mono">Unit of Measure</td><td>المستودعات</td></tr>
+      <tr><td class="td-hot">الحد الأدنى للمخزون</td><td class="td-mono">Reordering Rules (Min Qty)</td><td>المستودعات / المشتريات</td></tr>
+      <tr><td class="td-hot">تتبع الدُفعات والصلاحية</td><td class="td-mono">Tracking = By Lots</td><td>الجودة / المستودعات</td></tr>
+      <tr><td class="td-hot">الموردون المرتبطون</td><td class="td-mono">Vendor Pricelist Tab</td><td>المشتريات</td></tr>
     </tbody>
   </table>
   </div>
 
-  <h3>العلاقة التكاملية مع إدارة المستودعات</h3>
+  <h3>العلاقة التكاملية الجوهرية — المشتريات ↔ المستودعات</h3>
+  <div class="rel-flow">
+    <div class="rf-block highlight">
+      <div class="rf-title">🛒 قسم المشتريات</div>
+      <div class="rf-sub">ينشئ PO ويحدد المورد والأسعار والكميات</div>
+    </div>
+    <div class="rf-arrow">⟷</div>
+    <div class="rf-block wh">
+      <div class="rf-title">📦 إدارة المستودعات</div>
+      <div class="rf-sub">تستلم الشحنة وتُطابقها مع PO وتُسجّل GRN</div>
+    </div>
+    <div class="rf-arrow">⟷</div>
+    <div class="rf-block highlight">
+      <div class="rf-title">💰 الإدارة المالية</div>
+      <div class="rf-sub">تُغلق فاتورة المورد بعد تأكيد GRN</div>
+    </div>
+  </div>
+
   <div class="rel-grid">
     <div class="rel-card">
-      <div class="rel-card-hdr" style="background:rgba(58,106,170,.2);color:var(--blue-info);">⬇ ما تُرسله المشتريات للمستودع</div>
+      <div class="rel-card-hdr" style="background:rgba(77,166,255,.12);color:var(--blue-info);"><i class="fas fa-arrow-down"></i> ما يُرسله قسم المشتريات للمستودع</div>
       <div class="rel-card-body"><ul>
-        <li>أمر الشراء (PO) يُنشئ مستند استلام تلقائياً في المستودع</li>
-        <li>الكميات والأصناف المتوقع استلامها بالتفصيل</li>
-        <li>تحديد المستودع والموقع المستهدف للتخزين</li>
-        <li>تفعيل خطة فحص الجودة عند الاستلام تلقائياً</li>
+        <li>أمر الشراء المعتمد (PO) مع الكميات والمواصفات</li>
+        <li>تاريخ الوصول المتوقع للشحنة</li>
+        <li>شهادات المورد وبيانات الصنف الجديد</li>
+        <li>إشعار تعديل PO عند تغيير الكميات</li>
+        <li>قائمة الموردين المعتمدين للتحقق عند الاستلام</li>
       </ul></div>
     </div>
     <div class="rel-card">
-      <div class="rel-card-hdr" style="background:rgba(0,230,118,.08);color:var(--green-ok);">⬆ ما تستقبله المشتريات من المستودع</div>
+      <div class="rel-card-hdr" style="background:rgba(255,69,0,.12);color:var(--orange);"><i class="fas fa-arrow-up"></i> ما يستقبله قسم المشتريات من المستودع</div>
       <div class="rel-card-body"><ul>
-        <li>تأكيد الاستلام الفعلي وتحديث PO بالكميات المستلمة</li>
-        <li>Discrepancy Alert عند اختلاف الكميات عن PO</li>
-        <li>بلاغات الجودة (NCR) عند رفض المستودع لبضاعة</li>
-        <li>مستوى المخزون الفعلي لتحديد نقاط إعادة الطلب</li>
+        <li>وصل الاستلام (GRN) الذي يُلزم المورد بالفاتورة</li>
+        <li>تقرير الفروقات (Discrepancy) عند عدم المطابقة</li>
+        <li>طلبات إعادة الطلب التلقائية عند وصول المخزون للحد الأدنى</li>
+        <li>تقارير حركة الأصناف لتقييم أداء الموردين</li>
+        <li>إشعارات قرب انتهاء صلاحية منتجات المورد</li>
       </ul></div>
     </div>
+  </div>
+
+  <div class="note">
+    <strong>📌 نقطة تكامل حيوية:</strong> في Odoo، عندما يُؤكِّد المستودع استلام الشحنة (Validate Delivery)، يتولد تلقائياً سند استلام (GRN) مرتبط بأمر الشراء — لا يتمكن المحاسب من الدفع للمورد إلا بعد وجود هذا السند، مما يُحكِم الرقابة على الإنفاق.
   </div>
 </div>
 
-<!-- ========================== 6. SALES ========================== -->
-<div class="chapter gold-accent" id="sales">
-  <div class="chapter-head gold">
-    <span class="chapter-num gold">06</span>
-    <h2>الإدارة التجارية — قسم المبيعات</h2>
+<!-- ================================================================
+     05 — SALES DEPT
+     ================================================================ -->
+<div class="chapter blue-accent" id="sales">
+  <div class="chapter-head blue">
+    <span class="chapter-num blue">05</span>
+    <h2 class="c-head-txt">الإدارة التجارية — قسم المبيعات</h2>
   </div>
 
-  <p>قسم المبيعات مسؤول عن إنشاء طلبات البيع، إضافة العملاء، تحديد هوامش الربح، وإصدار الفواتير النهائية. تعتمد عملياته اعتماداً مباشراً على عمليات الصرف والتسليم من المستودع.</p>
-
-  <h3>الوحدات المستخدمة في Odoo</h3>
-  <div class="box gold-box">
-    <strong>Sales Order (SO) · Customer Management · Pricelists & Margins · Delivery Order (DO) · Customer Invoice · Payment · Signature</strong>
+  <div class="box blue-box">
+    <strong>📌 التعريف:</strong> قسم المبيعات هو الإدارة المعنية بإنشاء أوامر البيع للعملاء، وتحديد هامش الربح وسياسة التسعير، وإنشاء الفاتورة النهائية، والتنسيق مع المستودع لتسليم البضاعة في الوقت المناسب وبالمواصفات الصحيحة.
   </div>
 
-  <h3>دورة المستند — المبيعات</h3>
+  <h3>مسار دورة البيع الكاملة في Odoo</h3>
   <div class="pipeline">
-    <div class="pipe-step ps-blue"><span class="pipe-icon">📝</span><div class="pipe-label">عرض السعر</div><div class="pipe-sub">Quotation</div></div>
-    <div class="pipe-step ps-gold"><span class="pipe-icon">✅</span><div class="pipe-label">أمر البيع</div><div class="pipe-sub">Sales Order (SO)</div></div>
-    <div class="pipe-step ps-navy"><span class="pipe-icon">📦</span><div class="pipe-label">أمر التسليم</div><div class="pipe-sub">Delivery Order (DO)</div></div>
-    <div class="pipe-step ps-green"><span class="pipe-icon">🚛</span><div class="pipe-label">الشحن للعميل</div><div class="pipe-sub">Validate + Sign</div></div>
-    <div class="pipe-step ps-orange"><span class="pipe-icon">🧾</span><div class="pipe-label">الفاتورة النهائية</div><div class="pipe-sub">Invoice → Posted</div></div>
+    <div class="pipe-step ps-blue"><span class="pipe-icon">🤝</span><div class="pipe-label">طلب العميل</div><div class="pipe-sub">Customer Inquiry</div></div>
+    <div class="pipe-step ps-gold"><span class="pipe-icon">📋</span><div class="pipe-label">عرض السعر</div><div class="pipe-sub">Quotation</div></div>
+    <div class="pipe-step ps-orange"><span class="pipe-icon">📄</span><div class="pipe-label">أمر البيع</div><div class="pipe-sub">Sales Order (SO)</div></div>
+    <div class="pipe-step ps-teal"><span class="pipe-icon">📦</span><div class="pipe-label">أمر التسليم</div><div class="pipe-sub">Delivery Order</div></div>
+    <div class="pipe-step ps-green"><span class="pipe-icon">✅</span><div class="pipe-label">التسليم المؤكد</div><div class="pipe-sub">Delivery Validated</div></div>
+    <div class="pipe-step ps-gold"><span class="pipe-icon">🧾</span><div class="pipe-label">الفاتورة النهائية</div><div class="pipe-sub">Customer Invoice</div></div>
+    <div class="pipe-step ps-navy"><span class="pipe-icon">💳</span><div class="pipe-label">سداد العميل</div><div class="pipe-sub">Payment Registered</div></div>
   </div>
 
-  <h3>هامش الربح وآلية التسعير في Odoo</h3>
-  <div class="box gold-box">
-    <strong>في تبويب "Other Info" داخل أمر البيع:</strong> تفعيل خيار عرض الهامش (Margin) لكل سطر منتج.<br>
-    <strong>المعادلة:</strong> الهامش = سعر البيع − تكلفة المنتج (Cost) − التكاليف الإضافية<br>
-    يمكن تحديد Pricelist ديناميكية بحسب فئة العميل، الكمية المشتراة، أو المنطقة الجغرافية.
-  </div>
-
-  <h3>بنية الفاتورة النهائية في Odoo</h3>
+  <h3>آلية إضافة العميل وتحديد هامش الربح</h3>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>عنصر الفاتورة</th><th>الوصف</th><th>المصدر في Odoo</th><th>ملاحظة</th></tr></thead>
+    <thead><tr><th>الإجراء</th><th>المسار في Odoo</th><th>التأثير على المستودع</th></tr></thead>
     <tbody>
-      <tr><td class="td-hot">رأس الفاتورة</td><td>بيانات العميل، التاريخ، شروط الدفع، العملة</td><td>ربط تلقائي من Sales Order</td><td>لا يمكن تعديله بعد الترحيل</td></tr>
-      <tr><td class="td-hot">تفاصيل الأصناف</td><td>الكميات، الأسعار، الخصومات، الضريبة</td><td>مرتبط بـ Delivery Order المؤكد</td><td>مطابقة SO → DO → Invoice</td></tr>
-      <tr><td class="td-hot">مرجع التسليم</td><td>رقم أمر التسليم، التوقيع، تاريخ التسليم</td><td>Delivery Order Reference</td><td>ضروري للمطابقة الثلاثية</td></tr>
-      <tr><td class="td-hot">الإجمالي والضريبة</td><td>حساب تلقائي وفق إعدادات الضريبة الليبية</td><td>Tax Configuration</td><td>قابل للتخصيص</td></tr>
-      <tr><td class="td-hot">القيد المحاسبي</td><td>يُنشأ تلقائياً عند ترحيل الفاتورة (Post)</td><td>Journal Entry — Auto-post</td><td>لا يمكن حذفه — رقابة محاسبية</td></tr>
+      <tr><td class="td-hot">إضافة عميل جديد</td><td>المبيعات ← العملاء ← جديد</td><td>تحديد موقع التسليم وعنوان الشحن</td></tr>
+      <tr><td class="td-hot">تحديد سياسة التسعير</td><td>قوائم الأسعار (Pricelists)</td><td>يؤثر على قيمة مستند الصرف (Delivery Slip)</td></tr>
+      <tr><td class="td-hot">هامش الربح التلقائي</td><td>Sales → Margin (يُحسب تلقائياً)</td><td>يقارن تكلفة الصنف من المخزون بسعر البيع</td></tr>
+      <tr><td class="td-hot">شروط الدفع والائتمان</td><td>Payment Terms على بطاقة العميل</td><td>لا يؤثر مباشرة على المستودع</td></tr>
     </tbody>
   </table>
   </div>
 
-  <h3>العلاقة التكاملية مع إدارة المستودعات</h3>
+  <h3>آلية إنشاء مستند الفاتورة النهائية في Odoo</h3>
+  <p>لا يمكن إنشاء الفاتورة النهائية (Customer Invoice) في Odoo إلا <strong>بعد</strong> تأكيد التسليم (Validate Delivery) من المستودع. هذا يضمن أن الفاتورة تعكس البضاعة المُسلَّمة فعلياً وليس البضاعة المطلوبة فقط.</p>
+
+  <div class="box blue-box">
+    <strong>⚙️ ترابط الفاتورة مع المستودع في Odoo:</strong><br>
+    السياسة الافتراضية: <em>Invoicing Policy = Delivered Quantities</em> — يعني الفاتورة تصدر تلقائياً بناءً على الكميات التي سلَّمها المستودع فعلاً، لا الكميات المطلوبة في أمر البيع. أي فرق بين المطلوب والمُسلَّم يظهر كـ Remaining Quantity ولا يُفوتَر.
+  </div>
+
+  <h3>العلاقة التكاملية الجوهرية — المبيعات ↔ المستودعات</h3>
   <div class="rel-grid">
     <div class="rel-card">
-      <div class="rel-card-hdr" style="background:rgba(255,215,0,.08);color:var(--yellow);">⬇ ما يُرسله قسم المبيعات للمستودع</div>
+      <div class="rel-card-hdr" style="background:rgba(77,166,255,.12);color:var(--blue-info);"><i class="fas fa-arrow-down"></i> ما يُرسله قسم المبيعات للمستودع</div>
       <div class="rel-card-body"><ul>
-        <li>أمر التسليم (DO) المرتبط تلقائياً بأمر البيع</li>
-        <li>قائمة الأصناف المطلوبة والكميات بالتفصيل</li>
-        <li>بيانات العميل وعنوان التسليم المحدد</li>
-        <li>الموعد المتفق عليه للتسليم (Scheduled Date)</li>
+        <li>أمر البيع المؤكد (SO) مع تفاصيل الأصناف والكميات</li>
+        <li>تاريخ التسليم المطلوب (Scheduled Date)</li>
+        <li>عنوان التسليم وأي تعليمات خاصة للشحن</li>
+        <li>تعديلات على SO قبل بدء التسليم</li>
+        <li>إشعارات بالطلبات العاجلة التي تحتاج تسليماً مُعجَّلاً</li>
       </ul></div>
     </div>
     <div class="rel-card">
-      <div class="rel-card-hdr" style="background:rgba(0,230,118,.08);color:var(--green-ok);">⬆ ما يستقبله قسم المبيعات من المستودع</div>
+      <div class="rel-card-hdr" style="background:rgba(255,69,0,.12);color:var(--orange);"><i class="fas fa-arrow-up"></i> ما يستقبله قسم المبيعات من المستودع</div>
       <div class="rel-card-body"><ul>
-        <li>تأكيد اكتمال التسليم (Validate Delivery)</li>
-        <li>أي فوارق في الكميات المسلَّمة فعلياً</li>
-        <li>تحديث حالة أمر البيع لـ "Fully Delivered"</li>
-        <li>بيانات المنتجات المسلَّمة لإصدار الفاتورة تلقائياً</li>
+        <li>تأكيد التسليم (Delivery Validated) لبدء الفوترة</li>
+        <li>إشعار بعدم توفر الكميات المطلوبة (Unavailability)</li>
+        <li>رقم التتبع وتاريخ خروج البضاعة من المستودع</li>
+        <li>تقارير تسليمات متأخرة لمتابعة رضا العملاء</li>
+        <li>بيانات المرتجعات (Return) لتعديل الفواتير</li>
       </ul></div>
     </div>
+  </div>
+
+  <div class="note">
+    <strong>⚠️ تحذير تشغيلي:</strong> في حالة وجود مرتجع من العميل، يجب أن يُنشئ المستودع Return Transfer في Odoo أولاً ليُعاد الصنف للمخزون، ثم يُصدر قسم المبيعات Credit Note لتعديل الفاتورة. أي تعديل مباشر على الفاتورة بدون Return Transfer يُحدث خللاً في أرصدة المخزون.
   </div>
 </div>
 
-<!-- ========================== 7. MARKETS ========================== -->
-<div class="chapter" id="markets">
-  <div class="chapter-head">
-    <span class="chapter-num">07</span>
-    <h2>الإدارة التجارية — قسم الأسواق والفروع</h2>
+<!-- ================================================================
+     06 — MARKETS DEPT
+     ================================================================ -->
+<div class="chapter purple-accent" id="markets">
+  <div class="chapter-head purple">
+    <span class="chapter-num purple">06</span>
+    <h2 class="c-head-txt">الإدارة التجارية — قسم الأسواق والفروع</h2>
   </div>
 
-  <p>قسم الأسواق والفروع مسؤول عن إدارة احتياجات منافذ البيع التابعة لمجموعة Brandzo. يُنشئ طلبات النقل الداخلي من المستودع الرئيسي إلى الفروع، ويتابع مستويات مخزون كل فرع.</p>
-
-  <h3>الوحدات المستخدمة في Odoo</h3>
-  <div class="box">
-    <strong>Internal Transfer (IT) · Multi-Warehouse · Branch Locations · Reordering Rules · Inter-Company · Stock Replenishment</strong>
+  <div class="box purple-box">
+    <strong>📌 التعريف:</strong> قسم الأسواق هو الإدارة المعنية بإدارة الفروع والمتاجر التابعة لمجموعة Brandzo في بنغازي وما حولها. مهمته الرئيسية إنشاء طلبات نقل البضائع من المستودع الرئيسي إلى الفروع وضمان توفر الأصناف في نقاط البيع بشكل دائم.
   </div>
 
-  <h3>دورة المستند — النقل من المستودع الرئيسي للفرع</h3>
+  <h3>مسار عملية نقل البضائع من المستودع الرئيسي إلى الفرع</h3>
   <div class="pipeline">
-    <div class="pipe-step ps-blue"><span class="pipe-icon">📋</span><div class="pipe-label">طلب نقل داخلي</div><div class="pipe-sub">الفرع يُنشئ الطلب</div></div>
-    <div class="pipe-step ps-gold"><span class="pipe-icon">✅</span><div class="pipe-label">اعتماد الطلب</div><div class="pipe-sub">موافقة مدير الأسواق</div></div>
-    <div class="pipe-step ps-navy"><span class="pipe-icon">📦</span><div class="pipe-label">تجهيز المستودع</div><div class="pipe-sub">Picking → Packing</div></div>
-    <div class="pipe-step ps-orange"><span class="pipe-icon">🚐</span><div class="pipe-label">الشحن للفرع</div><div class="pipe-sub">Transfer + Driver</div></div>
-    <div class="pipe-step ps-green"><span class="pipe-icon">✔</span><div class="pipe-label">استلام الفرع</div><div class="pipe-sub">Validate Receipt</div></div>
+    <div class="pipe-step ps-purple"><span class="pipe-icon">🏪</span><div class="pipe-label">الفرع يحدد النقص</div><div class="pipe-sub">Branch Replenishment Need</div></div>
+    <div class="pipe-step ps-blue"><span class="pipe-icon">📋</span><div class="pipe-label">طلب نقل داخلي</div><div class="pipe-sub">Internal Transfer Request</div></div>
+    <div class="pipe-step ps-gold"><span class="pipe-icon">✔️</span><div class="pipe-label">اعتماد الطلب</div><div class="pipe-sub">Manager Approval</div></div>
+    <div class="pipe-step ps-orange"><span class="pipe-icon">📦</span><div class="pipe-label">تجهيز المستودع</div><div class="pipe-sub">Picking in Progress</div></div>
+    <div class="pipe-step ps-teal"><span class="pipe-icon">🚚</span><div class="pipe-label">الشحن للفرع</div><div class="pipe-sub">Outgoing Shipment</div></div>
+    <div class="pipe-step ps-green"><span class="pipe-icon">✅</span><div class="pipe-label">استلام الفرع</div><div class="pipe-sub">Branch Validates Receipt</div></div>
   </div>
 
-  <h3>آلية المستودعات المتعددة في Odoo</h3>
-  <div class="box gold-box">
-    <strong>في Odoo يُعرَّف كل فرع كمستودع مستقل (Sub-Warehouse) أو موقع تابع (Child Location):</strong><br><br>
-    كل طلب نقل داخلي (Internal Transfer) يُخصم الكمية من الموقع الرئيسي ويُضيفها لمخزون الفرع — بدون إنشاء فاتورة بيع. يمكن تعريف <strong>Reordering Rules</strong> تُرسل تلقائياً طلب تجديد للمستودع الرئيسي حين يصل مخزون الفرع لمستوى الإعادة.
-  </div>
-
-  <h3>هيكل المستودعات في Brandzo</h3>
+  <h3>كيف يعمل النقل الداخلي في Odoo</h3>
+  <p>المسار في Odoo: <span class="tag tag-purple">المخزون</span> ← <span class="tag tag-purple">العمليات</span> ← <span class="tag tag-purple">نقل داخلي</span> ← <span class="tag tag-purple">جديد</span></p>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>الموقع في Odoo</th><th>النوع</th><th>الوصف</th><th>العلاقة</th></tr></thead>
+    <thead><tr><th>الإجراء</th><th>المسؤول</th><th>الحالة في Odoo</th></tr></thead>
     <tbody>
-      <tr><td class="td-hot">WH/Main</td><td>مستودع رئيسي</td><td>المستودع المركزي في بنغازي</td><td>مصدر التوريد الرئيسي</td></tr>
-      <tr><td class="td-hot">WH/Branch-01</td><td>مستودع فرع</td><td>الفرع الأول (مثال: بنغازي — الهواري)</td><td>يتلقى من WH/Main</td></tr>
-      <tr><td class="td-hot">WH/Branch-02</td><td>مستودع فرع</td><td>الفرع الثاني (مثال: البركة)</td><td>يتلقى من WH/Main</td></tr>
-      <tr><td class="td-hot">Virtual/QC</td><td>حجر صحي</td><td>موقع الأصناف المحتجزة للفحص</td><td>مؤقت — قبل الإفراج</td></tr>
+      <tr><td class="td-hot">إنشاء طلب النقل</td><td>مدير الفرع أو قسم الأسواق</td><td class="td-mono">Draft</td></tr>
+      <tr><td class="td-hot">اعتماد الطلب</td><td>مدير العمليات / المستودع</td><td class="td-mono">Ready / Confirmed</td></tr>
+      <tr><td class="td-hot">تجهيز البضاعة بالمستودع</td><td>أمين المستودع (Barcode App)</td><td class="td-mono">In Progress</td></tr>
+      <tr><td class="td-hot">تسليم السائق وتأكيد الخروج</td><td>مشرف الشحن</td><td class="td-mono">Done (Outbound)</td></tr>
+      <tr><td class="td-hot">استلام الفرع وتأكيد الوصول</td><td>مدير الفرع</td><td class="td-mono">Done (Branch Receipt)</td></tr>
     </tbody>
   </table>
   </div>
 
-  <h3>العلاقة التكاملية مع إدارة المستودعات</h3>
+  <h3>إدارة مخزون الفروع في Odoo — Multi-Warehouse</h3>
+  <div class="box purple-box">
+    <strong>⚙️ إعداد Multi-Warehouse:</strong> يُنشأ لكل فرع مستودع مستقل في Odoo (WH/Branch-01, WH/Branch-02 ...) مع مسارات توصيل محددة من المستودع الرئيسي. يتيح هذا الإعداد رؤية مخزون كل فرع بشكل مستقل مع تقرير موحد على مستوى المجموعة للإدارة العليا.
+  </div>
+
+  <h3>العلاقة التكاملية الجوهرية — الأسواق ↔ المستودعات</h3>
   <div class="rel-grid">
     <div class="rel-card">
-      <div class="rel-card-hdr" style="background:var(--orange-dim);color:var(--orange);">⬇ ما يُرسله قسم الأسواق للمستودع</div>
+      <div class="rel-card-hdr" style="background:rgba(160,100,255,.12);color:var(--purple);"><i class="fas fa-arrow-down"></i> ما يُرسله قسم الأسواق للمستودع</div>
       <div class="rel-card-body"><ul>
-        <li>طلبات النقل الداخلي المعتمدة بتوقيع مدير الأسواق</li>
-        <li>توقيت التسليم المطلوب لكل فرع</li>
-        <li>قوائم الأصناف مُرتَّبة حسب أولوية الفرع</li>
-        <li>جدول توزيع أسبوعي للبضاعة بين الفروع</li>
+        <li>طلبات النقل الداخلي (Internal Transfer) المعتمدة</li>
+        <li>خطط التزويد الأسبوعية والشهرية لكل فرع</li>
+        <li>إشعارات الطوارئ (Fast Replenishment) عند نقص حاد</li>
+        <li>بيانات المرتجعات من الفروع للمستودع الرئيسي</li>
+        <li>جداول النقل والتوزيع الزمني</li>
       </ul></div>
     </div>
     <div class="rel-card">
-      <div class="rel-card-hdr" style="background:rgba(0,230,118,.08);color:var(--green-ok);">⬆ ما يستقبله قسم الأسواق من الم>�تودع</div>
+      <div class="rel-card-hdr" style="background:rgba(255,69,0,.12);color:var(--orange);"><i class="fas fa-arrow-up"></i> ما يستقبله قسم الأسواق من المستودع</div>
       <div class="rel-card-body"><ul>
-        <li>حالة تجهيز الطلب (Ready / In Progress / Done)</li>
-        <li>تأكيد الشحن وبيانات المركبة والسائق</li>
-        <li>تقارير مخزون الفروع الحالي (Real-time)</li>
-        <li>تنبيهات نقص مخزون الفروع ومتطلبات التجديد</li>
+        <li>تأكيد توفر الأصناف المطلوبة (Availability Check)</li>
+        <li>تواريخ الشحن الفعلية وأرقام تتبع النقل</li>
+        <li>تقارير مخزون الفروع اليومية عبر لوحة Odoo</li>
+        <li>إشعارات الأصناف التي وصلت للحد الأدنى في الفروع</li>
+        <li>تقارير الفاقد والتالف في الفروع</li>
       </ul></div>
     </div>
   </div>
 </div>
 
-<!-- ========================== 8. FINANCE ========================== -->
+<!-- ================================================================
+     07 — FINANCE DEPT
+     ================================================================ -->
 <div class="chapter green-accent" id="finance">
   <div class="chapter-head green">
-    <span class="chapter-num green">08</span>
-    <h2>الإدارة المالية</h2>
+    <span class="chapter-num green">07</span>
+    <h2 class="c-head-txt">الإدارة المالية</h2>
   </div>
 
-  <p>الإدارة المالية هي الجهة المسؤولة عن الإغلاق المحاسبي النهائي لجميع المستندات المرتبطة بعمليات المستودع والمبيعات. تضمن التوافق بين الحركات المخزنية والقيود المحاسبية وتُصدر التقارير المالية الدورية.</p>
-
-  <h3>الوحدات المستخدمة في Odoo</h3>
   <div class="box green-box">
-    <strong>Accounting (Invoicing) · Journal Entries · Bank Reconciliation · Inventory Valuation (AVCO/FIFO) · Period Closing · P&amp;L Reports</strong>
+    <strong>📌 التعريف:</strong> الإدارة المالية هي المعنية بالإغلاق المحاسبي النهائي لجميع الفواتير (الشراء والبيع)، ومراجعة مستندات المخازن من حيث القيمة المحاسبية، وإعداد التقارير المالية، وضمان أن أرصدة المخزون في Odoo مطابقة للدفاتر المحاسبية في كل لحظة.
   </div>
 
-  <h3>دورة الإغلاق المالي المرتبطة بالمستودع</h3>
+  <h3>دور الإدارة المالية في الدورة المستندية</h3>
   <div class="pipeline">
-    <div class="pipe-step ps-navy"><span class="pipe-icon">📦</span><div class="pipe-label">حركة مخزنية</div><div class="pipe-sub">Inventory Move</div></div>
-    <div class="pipe-step ps-blue"><span class="pipe-icon">📔</span><div class="pipe-label">قيد محاسبي تلقائي</div><div class="pipe-sub">Journal Entry</div></div>
-    <div class="pipe-step ps-gold"><span class="pipe-icon">🧾</span><div class="pipe-label">فاتورة البيع/الشراء</div><div class="pipe-sub">Invoice / Bill</div></div>
-    <div class="pipe-step ps-teal"><span class="pipe-icon">🏦</span><div class="pipe-label">تسوية بنكية</div><div class="pipe-sub">Bank Reconciliation</div></div>
-    <div class="pipe-step ps-green"><span class="pipe-icon">🔒</span><div class="pipe-label">إغلاق الفترة</div><div class="pipe-sub">Period Lock</div></div>
+    <div class="pipe-step ps-green"><span class="pipe-icon">📦</span><div class="pipe-label">GRN مؤكد</div><div class="pipe-sub">من المستودع</div></div>
+    <div class="pipe-step ps-blue"><span class="pipe-icon">🧾</span><div class="pipe-label">فاتورة المورد</div><div class="pipe-sub">Vendor Bill Created</div></div>
+    <div class="pipe-step ps-gold"><span class="pipe-icon">🔍</span><div class="pipe-label">مراجعة المالية</div><div class="pipe-sub">3-Way Matching</div></div>
+    <div class="pipe-step ps-orange"><span class="pipe-icon">✅</span><div class="pipe-label">اعتماد الدفع</div><div class="pipe-sub">Payment Approved</div></div>
+    <div class="pipe-step ps-navy"><span class="pipe-icon">💳</span><div class="pipe-label">السداد للمورد</div><div class="pipe-sub">Payment Registered</div></div>
+    <div class="pipe-step ps-purple"><span class="pipe-icon">📊</span><div class="pipe-label">إغلاق الفترة</div><div class="pipe-sub">Period Closing</div></div>
   </div>
 
-  <h3>مهام الإدارة المالية في Odoo</h3>
+  <h3>مبدأ المطابقة الثلاثية في Odoo (3-Way Matching)</h3>
+  <p>الإدارة المالية لا تُدفع أي فاتورة مورد دون التحقق من تطابق ثلاثة مستندات في Odoo:</p>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>المهمة</th><th>وصف العملية</th><th>وحدة Odoo</th><th>نموذج Odoo (Model)</th></tr></thead>
+    <thead><tr><th>المستند</th><th>الجهة المُصدِرة</th><th>ما يتحقق منه</th></tr></thead>
     <tbody>
-      <tr><td class="td-hot">مراجعة فواتير المبيعات</td><td>التحقق من SO+DO+Invoice قبل الإغلاق</td><td>Accounting</td><td class="td-mono">account.move (out_invoice)</td></tr>
-      <tr><td class="td-hot">مراجعة فواتير الموردين</td><td>مطابقة ثلاثية: PO + Receipt + Bill</td><td>Accounting</td><td class="td-mono">account.move (in_invoice)</td></tr>
-      <tr><td class="td-hot">تقييم المخزون</td><td>مراجعة قيمة المخزون (AVCO/FIFO) دورياً</td><td>Inventory</td><td class="td-mono">stock.valuation.layer</td></tr>
-      <tr><td class="td-hot">إغلاق فترة محاسبية</td><td>قفل الفترة — لا تعديل بعد الإغلاق</td><td>Accounting</td><td class="td-mono">Lock Dates</td></tr>
-      <tr><td class="td-hot">إعداد التقارير المالية</td><td>ميزان المراجعة، قائمة الدخل، الميزانية</td><td>Accounting</td><td class="td-mono">Reporting Module</td></tr>
+      <tr><td class="td-hot">أمر الشراء (PO)</td><td>قسم المشتريات</td><td>الأصناف، الكميات المطلوبة، الشروط</td></tr>
+      <tr><td class="td-hot">وصل الاستلام (GRN)</td><td>إدارة المستودعات</td><td>الكميات المستلمة فعلياً، الحالة، التاريخ</td></tr>
+      <tr><td class="td-hot">فاتورة المورد (Bill)</td><td>المورد الخارجي</td><td>المبلغ المطلوب، البنود، شروط الدفع</td></tr>
     </tbody>
   </table>
   </div>
 
-  <h3>العلاقة التكاملية مع إدارة المستودعات</h3>
+  <h3>الإغلاق المالي لمستندات المخازن</h3>
+  <p>في نهاية كل شهر تقوم الإدارة المالية بـ:</p>
+  <ul>
+    <li><strong>مراجعة تقييم المخزون (Inventory Valuation):</strong> Odoo يحسب تلقائياً قيمة المخزون بأسلوب FIFO أو Average Cost حسب الإعداد.</li>
+    <li><strong>مراجعة تسويات الجرد (Inventory Adjustments):</strong> أي فرق في الجرد يُنشئ قيد محاسبي تلقائي في Odoo.</li>
+    <li><strong>إغلاق فواتير المبيعات:</strong> لا يجوز ترك فواتير مفتوحة بعد انتهاء الشهر إلا بموافقة كتابية.</li>
+    <li><strong>مراجعة حسابات موردي البضائع:</strong> مقارنة أرصدة الموردين في Odoo مع كشوفاتهم الرسمية.</li>
+  </ul>
+
+  <h3>العلاقة التكاملية الجوهرية — المالية ↔ المستودعات</h3>
   <div class="rel-grid">
     <div class="rel-card">
-      <div class="rel-card-hdr" style="background:rgba(0,230,118,.08);color:var(--green-ok);">⬆ ما تستقبله المالية من المستودع</div>
+      <div class="rel-card-hdr" style="background:rgba(0,230,118,.1);color:var(--green-ok);"><i class="fas fa-arrow-down"></i> ما تُرسله المالية للمستودع</div>
       <div class="rel-card-body"><ul>
-        <li>قيود محاسبية تلقائية لكل حركة مخزنية</li>
-        <li>تقرير تقييم المخزون الختامي الدوري</li>
-        <li>مستندات الاستلام (GRN) المؤكدة من المستودع</li>
-        <li>تقارير الفاقد والهالك (Scrap) للشطب المحاسبي</li>
+        <li>إشعارات تجميد مؤقت لعمليات صرف أو استلام خلال إغلاق الفترة المحاسبية</li>
+        <li>طلبات الجرد الفجائي للتحقق من الأرصدة قبل إغلاق السنة</li>
+        <li>تقارير أصناف بدون تكلفة (Zero-Cost Items) تحتاج مراجعة</li>
+        <li>طلبات توضيح أي تسوية جرد (Inventory Adjustment) غير مبررة</li>
       </ul></div>
     </div>
     <div class="rel-card">
-      <div class="rel-card-hdr" style="background:rgba(0,230,118,.08);color:var(--green-ok);">⬇ ما تُرسله المالية للمستودع</div>
+      <div class="rel-card-hdr" style="background:rgba(255,69,0,.12);color:var(--orange);"><i class="fas fa-arrow-up"></i> ما تستقبله المالية من المستودع</div>
       <div class="rel-card-body"><ul>
-        <li>تأكيد إغلاق الفواتير للسماح بحركات جديدة</li>
-        <li>تنبيهات عدم تطابق مالي تستوجب مراجعة المستودع</li>
-        <li>جداول الجرد الإلزامي (Annual / Cycle Count)</li>
-        <li>سياسة تقييم المخزون المعتمدة (AVCO أو FIFO)</li>
+        <li>تقارير حركة المخزون اليومية (Stock Move Report)</li>
+        <li>تقرير تقييم المخزون في نهاية كل شهر (Inventory Valuation)</li>
+        <li>تقارير الفاقد والتالف والمرتجعات لتسجيل الخسائر</li>
+        <li>محاضر الجرد الدوري والسنوي المختوم من مدير المستودع</li>
+        <li>تفاصيل أي تسويات استثنائية مع مسوغاتها</li>
       </ul></div>
     </div>
   </div>
 </div>
 
-<!-- ========================== 9. IT ========================== -->
+<!-- ================================================================
+     08 — IT DEPT
+     ================================================================ -->
 <div class="chapter purple-accent" id="it">
   <div class="chapter-head purple">
-    <span class="chapter-num purple">09</span>
-    <h2>إدارة تقنية المعلومات</h2>
+    <span class="chapter-num purple">08</span>
+    <h2 class="c-head-txt">إدارة تقنية المعلومات</h2>
   </div>
 
-  <p>إدارة تقنية المعلومات هي الجهة الحاضنة والمشغِّلة لنظام Odoo داخل Brandzo. تتولى إدارة المستخدمين والصلاحيات، ضمان استمرارية النظام، التكامل مع الأجهزة الطرفية (الباركود، الطابعات، الميزان الآلي)، والنسخ الاحتياطي.</p>
-
-  <h3>الوحدات والمهام الرئيسية</h3>
-  <div class="box" style="border-right-color:#a064ff;">
-    <strong style="color:#c09aff;">User & Access Management · API Integration · GS1 Barcode Scanner · Label Printers · Backup & Recovery · Audit Log · Security Matrix</strong>
+  <div class="box purple-box">
+    <strong>📌 التعريف:</strong> إدارة تقنية المعلومات هي الركيزة التشغيلية لنظام Odoo بالكامل. تتولى تنصيب النظام وتهيئته وإدارة المستخدمين والصلاحيات والتكامل مع الأجهزة (ماسحات الباركود، الطابعات، الشبكة)، وضمان أمن البيانات والنسخ الاحتياطي.
   </div>
 
-  <h3>مصفوفة الصلاحيات المقترحة في Odoo</h3>
+  <h3>مهام إدارة IT في Odoo</h3>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>الدور</th><th>المستودع</th><th>المشتريات</th><th>المبيعات</th><th>المالية</th><th>الجودة</th></tr></thead>
+    <thead><tr><th>المهمة</th><th>الوصف</th><th>الأولوية</th></tr></thead>
     <tbody>
-      <tr><td class="td-hot">المدير العام</td><td class="td-center td-ok">عرض كامل</td><td class="td-center td-ok">عرض كامل</td><td class="td-center td-ok">عرض كامل</td><td class="td-center td-ok">عرض كامل</td><td class="td-center td-ok">عرض كامل</td></tr>
-      <tr><td class="td-hot">مدير المستودع</td><td class="td-center td-ok">كامل ✅</td><td class="td-center">قراءة</td><td class="td-center">قراءة</td><td class="td-center td-warn">—</td><td class="td-center">اعتماد</td></tr>
-      <tr><td class="td-hot">مدير المشتريات</td><td class="td-center">قراءة</td><td class="td-center td-ok">كامل ✅</td><td class="td-center td-warn">—</td><td class="td-center">عرض فواتير</td><td class="td-center td-warn">—</td></tr>
-      <tr><td class="td-hot">مدير المبيعات</td><td class="td-center">قراءة</td><td class="td-center td-warn">—</td><td class="td-center td-ok">كامل ✅</td><td class="td-center">عرض فواتير</td><td class="td-center td-warn">—</td></tr>
-      <tr><td class="td-hot">مدير الأسواق</td><td class="td-center">قراءة + نقل</td><td class="td-center td-warn">—</td><td class="td-center">قراءة</td><td class="td-center td-warn">—</td><td class="td-center td-warn">—</td></tr>
-      <tr><td class="td-hot">المحاسب</td><td class="td-center td-warn">—</td><td class="td-center">عرض</td><td class="td-center">عرض</td><td class="td-center td-ok">كامل ✅</td><td class="td-center td-warn">—</td></tr>
-      <tr><td class="td-hot">مراقب الجودة</td><td class="td-center">استلام فقط</td><td class="td-center td-warn">—</td><td class="td-center td-warn">—</td><td class="td-center td-warn">—</td><td class="td-center td-ok">كامل ✅</td></tr>
-      <tr><td class="td-hot">موظف مستودع</td><td class="td-center">تشغيل</td><td class="td-center td-warn">—</td><td class="td-center td-warn">—</td><td class="td-center td-warn">—</td><td class="td-center td-warn">—</td></tr>
+      <tr><td class="td-hot">تنصيب Odoo Enterprise</td><td>إعداد الخادم (Cloud أو On-Premise)، تنصيب قاعدة البيانات، الضبط الأولي</td><td class="td-ok">مرحلة 1</td></tr>
+      <tr><td class="td-hot">إدارة المستخدمين والصلاحيات</td><td>إنشاء حسابات المستخدمين وتحديد صلاحيات كل إدارة وقسم</td><td class="td-ok">مرحلة 1</td></tr>
+      <tr><td class="td-hot">تكامل ماسحات الباركود</td><td>ضبط تطبيق Odoo Barcode على الأجهزة المحمولة لعمال المستودع</td><td class="td-warn">مرحلة 2</td></tr>
+      <tr><td class="td-hot">النسخ الاحتياطي التلقائي</td><td>جدولة نسخ احتياطية يومية تلقائية وتشفيرها وتخزينها آمناً</td><td class="td-ok">مرحلة 1</td></tr>
+      <tr><td class="td-hot">الأمن المعلوماتي</td><td>تأمين الوصول عبر HTTPS، إدارة كلمات المرور، سجل الأنشطة (Audit Log)</td><td class="td-ok">مرحلة 1</td></tr>
+      <tr><td class="td-hot">إعداد التقارير والطباعة</td><td>تخصيص قوالب الطباعة (PO, GRN, Invoice) بشعار Brandzo</td><td class="td-warn">مرحلة 2</td></tr>
+      <tr><td class="td-hot">تدريب المستخدمين</td><td>تنظيم دورات تدريبية لكل إدارة على وحداتها في Odoo</td><td class="td-warn">مرحلة 1-2</td></tr>
     </tbody>
   </table>
   </div>
 
-  <h3>العلاقة التكاملية مع إدارة المستودعات</h3>
+  <h3>هيكل الصلاحيات المقترح في Odoo</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>المنصب / الدور</th><th>مستوى الصلاحية</th><th>الوحدات المتاحة</th></tr></thead>
+    <tbody>
+      <tr><td class="td-hot">المدير العام</td><td class="td-ok">Admin (Read Only Reports)</td><td>جميع الوحدات — قراءة فقط + لوحة KPI</td></tr>
+      <tr><td class="td-hot">مدير المستودع</td><td class="td-ok">Inventory Manager</td><td>Inventory, Quality, Barcode, Reports</td></tr>
+      <tr><td class="td-hot">مدير المشتريات</td><td class="td-ok">Purchase Manager</td><td>Purchase, Inventory (Read), Vendor Bills</td></tr>
+      <tr><td class="td-hot">مدير المبيعات</td><td class="td-ok">Sales Manager</td><td>Sales, Inventory (Read), Invoicing</td></tr>
+      <tr><td class="td-hot">مدير المالية</td><td class="td-ok">Accounting Manager</td><td>Accounting, Invoicing, Reports</td></tr>
+      <tr><td class="td-hot">مدير الجودة</td><td class="td-ok">Quality Manager</td><td>Quality, Inventory (Read)</td></tr>
+      <tr><td class="td-hot">مدير IT</td><td class="td-ok">System Admin</td><td>جميع الوحدات + الإعدادات</td></tr>
+      <tr><td class="td-hot">أمين مستودع</td><td class="td-warn">Inventory User</td><td>Inventory, Barcode</td></tr>
+      <tr><td class="td-hot">موظف مشتريات</td><td class="td-warn">Purchase User</td><td>Purchase فقط</td></tr>
+      <tr><td class="td-hot">موظف محاسبة</td><td class="td-warn">Accounting User</td><td>Accounting, Invoicing</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>العلاقة التكاملية الجوهرية — تقنية المعلومات ↔ المستودعات</h3>
   <div class="rel-grid">
     <div class="rel-card">
-      <div class="rel-card-hdr" style="background:var(--purple-dim);color:#c09aff;">⬇ خدمات IT للمستودع</div>
+      <div class="rel-card-hdr" style="background:rgba(160,100,255,.12);color:var(--purple);"><i class="fas fa-arrow-down"></i> ما تُقدمه IT للمستودع</div>
       <div class="rel-card-body"><ul>
-        <li>إعداد أجهزة الباركود (GS1 Scanner) وربطها بـ Odoo</li>
-        <li>تكامل طابعات الملصقات وأوامر العمل (Work Orders)</li>
-        <li>ضمان استمرارية الشبكة وسرعة الاستجابة (&lt;2 ثانية)</li>
-        <li>إعداد النسخ الاحتياطي اليومي وخطة التعافي (DR Plan)</li>
-        <li>الدعم الفني الدرجة الأولى لموظفي المستودع</li>
+        <li>تشغيل تطبيق Odoo Barcode على أجهزة المستودع</li>
+        <li>صيانة الشبكة وضمان استمرارية الاتصال بالنظام</li>
+        <li>تحديثات Odoo وتثبيت وحدات جديدة حسب الحاجة</li>
+        <li>حل مشكلات المستخدمين وطباعة التقارير والوثائق</li>
+        <li>ضبط وبرمجة ماسحات الباركود وأجهزة الجرد المحمول</li>
       </ul></div>
     </div>
     <div class="rel-card">
-      <div class="rel-card-hdr" style="background:var(--purple-dim);color:#c09aff;">⬆ احتياجات المستودع من IT</div>
+      <div class="rel-card-hdr" style="background:rgba(255,69,0,.12);color:var(--orange);"><i class="fas fa-arrow-up"></i> ما يحتاجه المستودع من IT</div>
       <div class="rel-card-body"><ul>
-        <li>إنشاء حسابات المستخدمين وضبط الصلاحيات والأدوار</li>
-        <li>تكوين مواقع التخزين والمستودعات في Odoo</li>
-        <li>تكامل نظام الوزن الآلي والباركود مع وحدة المخزون</li>
-        <li>تقارير Audit Log عند الحاجة للمراجعة والتدقيق</li>
+        <li>تسجيل أعطال النظام وأي توقف غير مخطط له</li>
+        <li>طلبات إضافة مستخدمين جدد أو تعديل صلاحيات</li>
+        <li>طلبات تطوير تقارير مخصصة (Custom Reports)</li>
+        <li>إشعارات عند وصول أجهزة جديدة تحتاج تسجيلاً في النظام</li>
+        <li>متطلبات تكامل مع أجهزة أو أنظمة نقاط البيع (POS) في الفروع</li>
       </ul></div>
     </div>
+  </div>
+
+  <div class="note">
+    <strong>🔐 أمن البيانات:</strong> كل عملية تعديل أو حذف في Odoo تُسجَّل تلقائياً في سجل الأنشطة (Chatter + Audit Log) بتاريخ ووقت واسم المستخدم. لا يمكن حذف أي مستند محاسبي أو مخزوني بعد تأكيده — يُلغى فقط برصيد عكسي (Reversal Entry) مما يضمن تتبعاً كاملاً لكل العمليات.
   </div>
 </div>
 
-<!-- ========================== 10. QUALITY ========================== -->
-<div class="chapter red-accent" id="quality">
-  <div class="chapter-head red-c">
-    <span class="chapter-num red-c">10</span>
-    <h2>إدارة الجودة</h2>
+<!-- ================================================================
+     09 — QUALITY DEPT
+     ================================================================ -->
+<div class="chapter teal-accent" id="quality">
+  <div class="chapter-head teal">
+    <span class="chapter-num teal">09</span>
+    <h2 class="c-head-txt">إدارة الجودة</h2>
   </div>
 
-  <p>إدارة الجودة هي حارس البوابة بين المورد والمستودع. تُفعَّل خطط الفحص تلقائياً عند كل استلام وتحدد قبول أو رفض البضاعة بناءً على معايير موضوعية مبرمجة مسبقاً وفق القواعد الذهبية.</p>
-
-  <h3>الوحدات المستخدمة في Odoo</h3>
-  <div class="box" style="border-right-color:#ff4444;">
-    <strong style="color:#ff9999;">Quality Module · Quality Control Points (QCP) · Quality Alerts · Lot/Serial Tracking · Expiry Date Management · Non-Conformance Report (NCR)</strong>
+  <div class="box teal-box">
+    <strong>📌 التعريف:</strong> إدارة الجودة هي الضمان التقني لسلامة المنتجات وجودتها خلال رحلتها الكاملة من المورد إلى العميل. تُطبِّق معايير HACCP لمنتجات الغذاء، وتمنح أو تحجب موافقة الإفراج عن الشحنات بالمستودع، وتُشرف على التخزين ومدد الصلاحية.
   </div>
 
-  <h3>دورة الفحص عند الاستلام</h3>
+  <h3>مسار فحص الجودة عند الاستلام في Odoo</h3>
   <div class="pipeline">
-    <div class="pipe-step ps-navy"><span class="pipe-icon">🚚</span><div class="pipe-label">وصول الشحنة</div><div class="pipe-sub">Gate Receiving</div></div>
-    <div class="pipe-step ps-red"><span class="pipe-icon">🔍</span><div class="pipe-label">فحص الجودة</div><div class="pipe-sub">QCP Trigger</div></div>
-    <div class="pipe-step ps-gold"><span class="pipe-icon">📋</span><div class="pipe-label">تسجيل نتائج الفحص</div><div class="pipe-sub">Pass / Fail / Rework</div></div>
-    <div class="pipe-step ps-green"><span class="pipe-icon">✅</span><div class="pipe-label">قبول وتخزين</div><div class="pipe-sub">Release to Stock</div></div>
-    <div class="pipe-step ps-red"><span class="pipe-icon">❌</span><div class="pipe-label">رفض / حجر صحي</div><div class="pipe-sub">NCR → Vendor Return</div></div>
+    <div class="pipe-step ps-orange"><span class="pipe-icon">🚚</span><div class="pipe-label">وصول الشحنة</div><div class="pipe-sub">Shipment Arrived</div></div>
+    <div class="pipe-step ps-teal"><span class="pipe-icon">🔬</span><div class="pipe-label">نقطة فحص الجودة</div><div class="pipe-sub">Quality Check Point</div></div>
+    <div class="pipe-step ps-gold"><span class="pipe-icon">📋</span><div class="pipe-label">تسجيل نتائج الفحص</div><div class="pipe-sub">QC Results Entry</div></div>
+    <div class="pipe-step ps-green"><span class="pipe-icon">✅</span><div class="pipe-label">نجح الفحص</div><div class="pipe-sub">Release to Stock</div></div>
+    <div class="pipe-step ps-red"><span class="pipe-icon">❌</span><div class="pipe-label">رفض / حجر صحي</div><div class="pipe-sub">NCR → Quarantine</div></div>
   </div>
 
   <h3>معايير الفحص المبرمجة في Odoo لـ Brandzo</h3>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>معيار الفحص</th><th>القاعدة الذهبية</th><th>الإجراء في Odoo</th><th>النتيجة عند الفشل</th></tr></thead>
+    <thead><tr><th>معيار الفحص</th><th>القاعدة المعتمدة</th><th>الإجراء في Odoo</th><th>النتيجة عند الفشل</th></tr></thead>
     <tbody>
-      <tr><td class="td-hot">العمر الافتراضي المتبقي</td><td>≥ 75% من إجمالي العمر</td><td>Odoo يحسب تلقائياً من تاريخ الإنتاج/الانتهاء</td><td class="td-warn">رفض تلقائي — Quarantine</td></tr>
-      <tr><td class="td-hot">درجة حرارة الاستلام</td><td>4°م للمبرد | -18°م للمجمد</td><td>تسجيل يدوي + تنبيه عند تجاوز الحد</td><td class="td-warn">Quality Alert للمدير</td></tr>
-      <tr><td class="td-hot">سلامة التغليف والكميات</td><td>لا تلف | تطابق PO</td><td>صور مرفقة + Discrepancy Report</td><td class="td-warn">NCR + إشعار المشتريات</td></tr>
-      <tr><td class="td-hot">شهادات الصحة والسلامة</td><td>وثيقة سارية مرفقة</td><td>مرفق الوثيقة + تاريخ انتهاء مُراقَب</td><td class="td-warn">إيقاف الاستلام حتى التوثيق</td></tr>
-      <tr><td class="td-hot">الباركود والمطابقة</td><td>تطابق كامل مع الصنف في النظام</td><td>GS1 Scanner validation عند الاستلام</td><td class="td-warn">رفض الاستلام تلقائياً</td></tr>
+      <tr><td class="td-hot">العمر الافتراضي المتبقي</td><td>≥ 75% من إجمالي العمر</td><td>Odoo يحسب من تاريخ الإنتاج/الانتهاء</td><td class="td-warn">رفض تلقائي — Quarantine</td></tr>
+      <tr><td class="td-hot">درجة الحرارة عند الاستلام</td><td>4°م للمبرد | −18°م للمجمد</td><td>تسجيل يدوي + تنبيه عند تجاوز الحد</td><td class="td-warn">Quality Alert للمدير</td></tr>
+      <tr><td class="td-hot">سلامة التغليف والكميات</td><td>لا تلف | تطابق كامل مع PO</td><td>صور مرفقة + Discrepancy Report</td><td class="td-warn">NCR + إشعار المشتريات</td></tr>
+      <tr><td class="td-hot">شهادات الصحة والسلامة</td><td>وثيقة سارية مرفقة بالشحنة</td><td>مرفق الوثيقة + تاريخ انتهاء مُراقَب</td><td class="td-warn">إيقاف الاستلام حتى التوثيق</td></tr>
+      <tr><td class="td-hot">مطابقة الباركود والصنف</td><td>تطابق كامل مع الصنف في Odoo</td><td>GS1 Scanner Validation</td><td class="td-warn">رفض الاستلام تلقائياً</td></tr>
     </tbody>
   </table>
   </div>
 
   <div class="box green-box">
-    <strong>✅ الامتثال التلقائي لـ HACCP في Odoo:</strong> تُعرَّف نقاط التحكم الحرجة (CCPs) كـ Quality Control Points في Odoo — لا يمكن إنجاز أي عملية استلام دون اجتياز جميع نقاط الفحص، مما يضمن الامتثال الكامل لمعايير سلامة الغذاء.
+    <strong>✅ الامتثال التلقائي لـ HACCP في Odoo:</strong> تُعرَّف نقاط التحكم الحرجة (CCPs) كـ Quality Control Points في Odoo — لا يمكن إنجاز أي عملية استلام دون اجتياز جميع نقاط الفحص، مما يضمن الامتثال الكامل لمعايير سلامة الغذاء الدولية والمحلية.
   </div>
 
-  <h3>العلاقة التكاملية مع إدارة المستودعات</h3>
+  <h3>العلاقة التكاملية الجوهرية — الجودة ↔ المستودعات</h3>
   <div class="rel-grid">
     <div class="rel-card">
-      <div class="rel-card-hdr" style="background:rgba(170,34,34,.15);color:#ff9999;">⬇ ما تُرسله الجودة للمستودع</div>
+      <div class="rel-card-hdr" style="background:rgba(0,188,212,.1);color:var(--teal);"><i class="fas fa-arrow-down"></i> ما تُرسله الجودة للمستودع</div>
       <div class="rel-card-body"><ul>
         <li>قرار الإفراج النهائي (Release to Stock) بعد اجتياز الفحص</li>
         <li>تخصيص مواقع الحجر الصحي (Quarantine Location)</li>
-        <li>تعليمات التعامل مع المنتجات المرفوضة والمُرجَعة</li>
+        <li>تعليمات التعامل مع المنتجات المرفوضة والمُرجَعة للمورد</li>
         <li>شهادات الجودة ومستندات الدُفعة (Lot Certificates)</li>
+        <li>تقارير CAPA (الإجراءات التصحيحية والوقائية)</li>
       </ul></div>
     </div>
     <div class="rel-card">
-      <div class="rel-card-hdr" style="background:rgba(170,34,34,.15);color:#ff9999;">⬆ ما يستقبله قسم الجودة من المستودع</div>
+      <div class="rel-card-hdr" style="background:rgba(255,69,0,.12);color:var(--orange);"><i class="fas fa-arrow-up"></i> ما يستقبله قسم الجودة من المستودع</div>
       <div class="rel-card-body"><ul>
-        <li>إشعارات تلقائية بوصول شحنة جديدة لبدء الفحص</li>
-        <li>بلاغات أصناف مشكوك في صلاحيتها خلال التخزين</li>
-        <li>تقارير دقة الجرد الدوري للمقارنة مع معيار 98.5%</li>
+        <li>إشعارات تلقائية بوصول شحنة جديدة لبدء إجراء الفحص</li>
+        <li>بلاغات أصناف مشكوك في صلاحيتها خلال فترة التخزين</li>
+        <li>تقارير دقة الجرد الدوري للمقارنة مع المعيار 98.5%</li>
         <li>بيانات الدُفعات (Lots) للتتبع الكامل (Full Traceability)</li>
+        <li>طلبات فحص صنف محدد عند وجود شكاوى من الفروع</li>
       </ul></div>
     </div>
   </div>
 </div>
 
-<!-- ========================== 11. ORGANIZATIONAL STRUCTURE ========================== -->
+<!-- ================================================================
+     10 — ORGANIZATIONAL STRUCTURE
+     ================================================================ -->
 <div class="chapter gold-accent" id="org">
   <div class="chapter-head gold">
-    <span class="chapter-num gold">11</span>
-    <h2>الهيكل الوظيفي والتنظيمي — Brandzo Holding</h2>
+    <span class="chapter-num gold">10</span>
+    <h2 class="c-head-txt">الهيكل الوظيفي والتنظيمي — Brandzo Holding</h2>
   </div>
 
   <div class="box gold-box">
-    <strong>النموذج التنظيمي:</strong> Hierarchical Functional Structure with Geographic Divisions — هيكل هرمي وظيفي مدعوم بتقسيم جغرافي، مستوحى من نماذج شركات التجزئة العالمية (كارفور) ومُكيَّف مع واقع Brandzo كمجموعة قابضة في بنغازي.
+    <strong>النموذج التنظيمي المعتمد:</strong> Hierarchical Functional Structure with Geographic Divisions — هيكل هرمي وظيفي مع تقسيم جغرافي. مستوحى من نماذج كبرى شركات التجزئة العالمية (كارفور ومجموعات القابضة) ومُكيَّف مع واقع Brandzo كمجموعة قابضة في بنغازي ذات سلاسل تجزئة وترفيه وبراندات عالمية.
   </div>
 
-  <h3>الهرم التنظيمي — الطبقات الأحد عشر</h3>
-
-  <!-- Level 1 -->
+  <h3>الهرم التنظيمي الأعلى — مجلس الإدارة والإدارة التنفيذية</h3>
   <div class="org-wrap">
-  <div style="display:flex;flex-direction:column;align-items:center;gap:0;min-width:700px;">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:0;min-width:680px;">
 
     <div style="display:flex;justify-content:center;">
-      <div class="org-box ob-top" style="min-width:220px;">
-        <div class="ob-title">🏢 مجلس الإدارة</div>
-        <div class="ob-sub">Board of Directors</div>
+      <div class="org-box ob-top" style="min-width:240px;">
+        <div class="ob-title">🏢 مجلس الإدارة — Board of Directors</div>
+        <div class="ob-sub">الطبقة العليا / العقل الاستراتيجي</div>
       </div>
     </div>
     <div class="org-vline"></div>
 
     <div style="display:flex;justify-content:center;">
-      <div class="org-box ob-top" style="min-width:220px;">
-        <div class="ob-title">👔 المدير العام</div>
-        <div class="ob-sub">Chief Executive Officer (CEO)</div>
+      <div class="org-box ob-top" style="min-width:240px;">
+        <div class="ob-title">👔 المدير العام — CEO</div>
+        <div class="ob-sub">Chief Executive Officer</div>
       </div>
     </div>
     <div class="org-vline"></div>
 
-    <!-- Level 3: Executive Team -->
-    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;width:100%;position:relative;">
-      <div class="org-box ob-exec" style="flex:1;min-width:110px;max-width:145px;">
-        <div class="ob-title">💼 المدير التجاري</div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;width:100%;">
+      <div class="org-box ob-comm" style="flex:1;min-width:110px;max-width:150px;">
+        <div class="ob-title">🛒 المدير التجاري</div>
         <div class="ob-sub">Commercial Director</div>
       </div>
-      <div class="org-box ob-exec" style="flex:1;min-width:110px;max-width:145px;">
+      <div class="org-box ob-fin" style="flex:1;min-width:110px;max-width:150px;">
         <div class="ob-title">💰 المدير المالي</div>
         <div class="ob-sub">CFO</div>
       </div>
-      <div class="org-box ob-wh" style="flex:1;min-width:110px;max-width:145px;">
+      <div class="org-box ob-wh" style="flex:1;min-width:110px;max-width:150px;">
         <div class="ob-title">📦 مدير العمليات</div>
         <div class="ob-sub">COO / Operations</div>
       </div>
-      <div class="org-box ob-exec" style="flex:1;min-width:110px;max-width:145px;">
+      <div class="org-box ob-it" style="flex:1;min-width:110px;max-width:150px;">
         <div class="ob-title">🔧 مدير IT</div>
         <div class="ob-sub">CDO / CIO</div>
       </div>
-      <div class="org-box ob-exec" style="flex:1;min-width:110px;max-width:145px;">
+      <div class="org-box ob-exec" style="flex:1;min-width:110px;max-width:150px;">
         <div class="ob-title">🎯 مدير التسويق</div>
         <div class="ob-sub">CMO</div>
       </div>
-      <div class="org-box ob-exec" style="flex:1;min-width:110px;max-width:145px;">
+      <div class="org-box ob-exec" style="flex:1;min-width:110px;max-width:150px;">
         <div class="ob-title">👥 مدير الموارد البشرية</div>
         <div class="ob-sub">CHRO</div>
       </div>
@@ -1106,119 +1223,157 @@ tr:hover td{background:rgba(255,69,0,.04);}
   </div>
   </div>
 
-  <h3>الطبقة الثالثة — الإدارات التشغيلية التفصيلية</h3>
+  <h3>الإدارات التشغيلية التفصيلية — الطبقة الثالثة</h3>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>الإدارة</th><th>الأقسام الفرعية</th><th>المهام الرئيسية</th><th>وحدة Odoo المرتبطة</th></tr></thead>
+    <thead><tr><th>الإدارة</th><th>الأقسام الفرعية</th><th>المهام الرئيسية</th><th>وحدة Odoo</th></tr></thead>
     <tbody>
       <tr>
-        <td class="td-hot">🛒 الإدارة التجارية<br><small style="color:var(--text-muted);">Commercial Dept.</small></td>
+        <td class="td-hot">🛒 الإدارة التجارية</td>
         <td>• قسم المشتريات<br>• قسم المبيعات<br>• قسم الأسواق والفروع</td>
-        <td>إدارة الموردين، طلبات الشراء، أوامر البيع، التسعير، إدارة الفروع</td>
+        <td>إدارة الموردين، طلبات الشراء، أوامر البيع، التسعير، إدارة الفروع، علاقات موردي البراندات الدولية</td>
         <td class="td-mono">Purchase / Sales / Inventory</td>
       </tr>
       <tr>
-        <td class="td-hot">💰 الإدارة المالية<br><small style="color:var(--text-muted);">Finance Dept.</small></td>
+        <td class="td-hot">💰 الإدارة المالية</td>
         <td>• المحاسبة<br>• الخزينة<br>• التدقيق المالي<br>• التخطيط المالي</td>
-        <td>إغلاق الفواتير، إدارة التدفقات النقدية، تقييم المخزون المحاسبي، إعداد التقارير</td>
+        <td>إغلاق الفواتير، إدارة التدفقات النقدية، تقييم المخزون المحاسبي، التقارير المالية</td>
         <td class="td-mono">Accounting / Invoicing</td>
       </tr>
       <tr>
-        <td class="td-hot">📦 إدارة المستودعات والعمليات<br><small style="color:var(--text-muted);">Warehouse & Ops</small></td>
-        <td>• قسم الاستلام<br>• قسم التخزين<br>• قسم التوزيع والشحن<br>• قسم الجرد</td>
-        <td>استلام ومراقبة الجودة، تخزين وفق FEFO، تنفيذ أوامر الصرف، الجرد الدوري والسنوي</td>
+        <td class="td-hot">📦 إدارة المستودعات والعمليات</td>
+        <td>• قسم الاستلام<br>• قسم التخزين<br>• قسم الشحن والتوزيع<br>• قسم الجرد</td>
+        <td>استلام ومراقبة الجودة، تخزين وفق FEFO، تنفيذ أوامر الصرف، نقل البضائع للفروع، الجرد الدوري</td>
         <td class="td-mono">Inventory / WMS / Quality</td>
       </tr>
       <tr>
-        <td class="td-hot">🔧 إدارة تقنية المعلومات<br><small style="color:var(--text-muted);">IT Dept.</small></td>
-        <td>• الشبكات والبنية التحتية<br>• تطوير الأنظمة<br>• الأمن المعلوماتي<br>• الدعم الفني</td>
-        <td>تشغيل وصيانة Odoo، إدارة المستخدمين، التكامل مع الأجهزة، النسخ الاحتياطي</td>
-        <td class="td-mono">Odoo Admin / API / Security</td>
-      </tr>
-      <tr>
-        <td class="td-hot">✅ إدارة الجودة<br><small style="color:var(--text-muted);">Quality Dept.</small></td>
+        <td class="td-hot">✅ إدارة الجودة</td>
         <td>• فريق فحص الاستلام<br>• فريق رقابة التخزين<br>• فريق الامتثال والمعايير</td>
         <td>فحص الشحنات الواردة، مراقبة الصلاحية ودرجات الحرارة، HACCP، إصدار شهادات المطابقة</td>
         <td class="td-mono">Quality / Lot Tracking</td>
       </tr>
       <tr>
-        <td class="td-hot">🎯 إدارة التسويق والبراندات<br><small style="color:var(--text-muted);">Marketing Dept.</small></td>
-        <td>• التسويق الرقمي<br>• إدارة العلامات التجارية<br>• أبحاث السوق<br>• العلاقات العامة</td>
-        <td>إدارة براندات Brandzo العالمية، الحملات الترويجية، تجربة العملاء، تحديد سياسة التسعير</td>
+        <td class="td-hot">🔧 إدارة تقنية المعلومات</td>
+        <td>• الشبكات والبنية التحتية<br>• تطوير الأنظمة<br>• الأمن المعلوماتي<br>• الدعم الفني</td>
+        <td>تشغيل وصيانة Odoo، إدارة المستخدمين والصلاحيات، التكامل مع الأجهزة، النسخ الاحتياطي</td>
+        <td class="td-mono">Odoo Admin / API / Security</td>
+      </tr>
+      <tr>
+        <td class="td-hot">🛡️ إدارة الحوكمة والامتثال</td>
+        <td>• السياسات والإجراءات<br>• التدقيق الداخلي<br>• مراقبة الامتثال</td>
+        <td>صياغة SOPs، مراجعة مسارات الموافقة، ضمان الامتثال للأنظمة، مكافحة الفساد</td>
+        <td class="td-mono">Quality (Audit) / Logs</td>
+      </tr>
+      <tr>
+        <td class="td-hot">🎯 إدارة التسويق والبراندات</td>
+        <td>• التسويق الرقمي<br>• إدارة العلامات التجارية الدولية<br>• أبحاث السوق</td>
+        <td>إدارة البراندات العالمية لـ Brandzo، الحملات الترويجية، تجربة العملاء، تحديد سياسة التسعير</td>
         <td class="td-mono">CRM / eCommerce</td>
       </tr>
       <tr>
-        <td class="td-hot">👥 إدارة الموارد البشرية<br><small style="color:var(--text-muted);">HR Dept.</small></td>
+        <td class="td-hot">👥 إدارة الموارد البشرية</td>
         <td>• التوظيف والاستقطاب<br>• التدريب والتطوير<br>• الرواتب والمزايا</td>
-        <td>إدارة الكفاءات التشغيلية، تطوير موظفي المستودع، الحضور والانصراف، الرواتب</td>
+        <td>إدارة كفاءات العاملين، تطوير موظفي المستودع، الحضور والانصراف، الرواتب</td>
         <td class="td-mono">HR / Payroll / Attendances</td>
       </tr>
     </tbody>
   </table>
   </div>
 
-  <h3>الطبقة الرابعة — مديرو المناطق والفروع (بنغازي)</h3>
+  <h3>إدارة المناطق والفروع — الطبقة الرابعة (مستوحاة من نموذج كارفور)</h3>
+  <p>بما أن Brandzo شركة قابضة ذات سلاسل تجزئة وفروع متعددة في بنغازي وما حولها، يُعتمد نموذج إدارة مناطق وفروع مستوحى من تجربة كارفور ومُكيَّف محلياً:</p>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>المستوى</th><th>الدور</th><th>المهام الرئيسية</th><th>المؤشرات الرئيسية (KPIs)</th></tr></thead>
+    <thead><tr><th>المستوى</th><th>الدور</th><th>المهام الرئيسية</th><th>مؤشرات الأداء KPIs</th></tr></thead>
     <tbody>
-      <tr><td class="td-hot">مدير المنطقة</td><td>Area Manager</td><td>إشراف على مجموعة فروع داخل بنغازي، متابعة الأداء وتطبيق السياسات</td><td>المبيعات، الربحية، نسبة الفاقد</td></tr>
-      <tr><td class="td-hot">مدير الفرع / المتجر</td><td>Store Manager</td><td>إدارة المتجر بالكامل، تحقيق أهداف المبيعات، إدارة الموظفين والمخزون</td><td>المبيعات، رضا العملاء، الإنتاجية</td></tr>
-      <tr><td class="td-hot">رئيس القسم</td><td>Department Head</td><td>إدارة قسم محدد (أغذية، ملابس، براندات، إلكترونيات)</td><td>مبيعات القسم، نسبة الفاقد في القسم</td></tr>
-      <tr><td class="td-hot">المشرف التشغيلي</td><td>Supervisor</td><td>توزيع المهام، متابعة الأداء اليومي، حل المشكلات التشغيلية</td><td>الإنتاجية، الحضور، الدقة التشغيلية</td></tr>
+      <tr><td class="td-hot">مدير المنطقة</td><td>Area Manager</td><td>الإشراف على مجموعة فروع في المنطقة، متابعة الأداء، تطبيق السياسات، تطوير المبيعات</td><td>المبيعات الإجمالية، نسبة الفاقد، رضا العملاء</td></tr>
+      <tr><td class="td-hot">مدير الفرع / المتجر</td><td>Store Manager</td><td>إدارة الفرع بالكامل، تحقيق أهداف المبيعات، إدارة الموظفين والمخزون، خدمة العملاء</td><td>المبيعات، الربحية، نسبة الفاقد، الإنتاجية</td></tr>
+      <tr><td class="td-hot">رئيس قسم الأغذية</td><td>Food Department Head</td><td>إدارة المواد الغذائية، المشروبات، المجمدات في الفرع</td><td>مبيعات القسم، نسبة التلف، الفاقد الغذائي</td></tr>
+      <tr><td class="td-hot">رئيس قسم البراندات</td><td>Brands Department Head</td><td>إدارة البراندات العالمية والمنتجات ذات العلامات التجارية</td><td>معدل البيع، توفر الأصناف، رضا العملاء</td></tr>
+      <tr><td class="td-hot">رئيس قسم الترفيه</td><td>Entertainment Head</td><td>إدارة قسم الترفيه والخدمات الترفيهية في الفرع</td><td>عدد الزوار، الإيرادات، رضا التجربة</td></tr>
+      <tr><td class="td-hot">رئيس قسم المخزون في الفرع</td><td>Branch Inventory Head</td><td>الاستلام، التخزين، الجرد، طلبات التزويد من المستودع الرئيسي</td><td>دقة الجرد، الأصناف الناقصة، سرعة الجرد</td></tr>
+      <tr><td class="td-hot">المشرف التشغيلي</td><td>Supervisor</td><td>توزيع المهام، متابعة الأداء اليومي، حل المشكلات التشغيلية، مراقبة الانضباط</td><td>الإنتاجية، الحضور، الدقة التشغيلية</td></tr>
+      <tr><td class="td-hot">الموظفون التنفيذيون</td><td>Operational Staff</td><td>أمناء الصناديق، موظفو المبيعات، موظفو الاستلام والمخازن، عمال التعبئة</td><td>الإنتاجية الفردية، دقة العمليات</td></tr>
     </tbody>
   </table>
   </div>
 
-  <h3>الهيكل اللوجستي المتخصص</h3>
-  <div style="display:flex;flex-direction:column;align-items:center;gap:0;padding:10px 0;overflow-x:auto;">
-    <div class="org-box ob-exec" style="min-width:200px;"><div class="ob-title">🔗 مدير سلسلة الإمداد</div><div class="ob-sub">Supply Chain Manager (COO)</div></div>
+  <h3>الهيكل اللوجستي المتخصص — سلسلة الإمداد</h3>
+  <div class="org-wrap">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:0;overflow-x:auto;min-width:500px;">
+    <div class="org-box ob-exec" style="min-width:220px;"><div class="ob-title">🔗 مدير سلسلة الإمداد</div><div class="ob-sub">Supply Chain Manager (COO)</div></div>
     <div class="org-vline"></div>
-    <div class="org-box ob-wh" style="min-width:200px;"><div class="ob-title">📦 مدير المستودع الرئيسي</div><div class="ob-sub">Main Warehouse Manager</div></div>
+    <div class="org-box ob-wh" style="min-width:220px;"><div class="ob-title">📦 مدير المستودع الرئيسي</div><div class="ob-sub">Main Warehouse Manager</div></div>
     <div class="org-vline"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
-      <div class="org-box ob-dept"><div class="ob-title">🚚 رئيس الاستلام</div></div>
-      <div class="org-box ob-dept"><div class="ob-title">📐 رئيس التخزين</div></div>
-      <div class="org-box ob-dept"><div class="ob-title">🚛 رئيس الشحن والتوزيع</div></div>
-      <div class="org-box ob-dept"><div class="ob-title">📊 رئيس الجرد</div></div>
+      <div class="org-box ob-dept"><div class="ob-title">🚚 رئيس قسم الاستلام</div><div class="ob-sub">Receiving Head</div></div>
+      <div class="org-box ob-dept"><div class="ob-title">📐 رئيس قسم التخزين</div><div class="ob-sub">Storage Head</div></div>
+      <div class="org-box ob-dept"><div class="ob-title">🚛 رئيس الشحن والتوزيع</div><div class="ob-sub">Dispatch Head</div></div>
+      <div class="org-box ob-dept"><div class="ob-title">📊 رئيس قسم الجرد</div><div class="ob-sub">Inventory Control Head</div></div>
     </div>
     <div class="org-vline"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
-      <div class="org-box ob-dept" style="border-color:var(--yellow);"><div class="ob-title">🏪 مستودع الفرع 1</div><div class="ob-sub">WH/Branch-01</div></div>
-      <div class="org-box ob-dept" style="border-color:var(--yellow);"><div class="ob-title">🏪 مستودع الفرع 2</div><div class="ob-sub">WH/Branch-02</div></div>
-      <div class="org-box ob-dept" style="border-color:var(--yellow);"><div class="ob-title">🏪 فروع أخرى</div><div class="ob-sub">WH/Branch-N</div></div>
+      <div class="org-box ob-qual"><div class="ob-title">✅ مفتش الجودة الميداني</div><div class="ob-sub">QC Inspector</div></div>
+      <div class="org-box ob-it"><div class="ob-title">🔧 مسؤول Odoo الميداني</div><div class="ob-sub">System Operator</div></div>
+    </div>
+    <div class="org-vline"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+      <div class="org-box ob-branch" style="min-width:130px;"><div class="ob-title">🏪 مستودع الفرع 1</div><div class="ob-sub">WH/Branch-01</div></div>
+      <div class="org-box ob-branch" style="min-width:130px;"><div class="ob-title">🏪 مستودع الفرع 2</div><div class="ob-sub">WH/Branch-02</div></div>
+      <div class="org-box ob-branch" style="min-width:130px;"><div class="ob-title">🏪 مستودع الفرع 3</div><div class="ob-sub">WH/Branch-03</div></div>
+      <div class="org-box ob-branch" style="min-width:130px;"><div class="ob-title">🏪 فروع مستقبلية</div><div class="ob-sub">WH/Branch-N</div></div>
     </div>
   </div>
+  </div>
 
+  <h3>ملخص التوظيف التدريجي حسب المرحلة</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>الإدارة</th><th>🚀 المرحلة الأولى</th><th>🏗️ المرحلة الكاملة</th><th>الدور الرئيسي</th></tr></thead>
+    <tbody>
+      <tr><td class="td-hot">🛡️ إدارة الحوكمة</td><td class="td-blue">1 مدير</td><td class="td-ok">مدير + فريق تدقيق</td><td>السياسات، الامتثال، الحوكمة</td></tr>
+      <tr><td class="td-hot">🔗 سلاسل الإمداد</td><td class="td-blue">1 مدير</td><td class="td-ok">مدير + رؤساء أقسام</td><td>التخطيط، اللوجستيات، التوريد</td></tr>
+      <tr><td class="td-hot">📦 المستودعات</td><td class="td-blue">1 مدير + 4 رؤساء</td><td class="td-ok">مدير رئيسي + مدراء فروع</td><td>ملكية المخزون، العمليات الميدانية</td></tr>
+      <tr><td class="td-hot">✅ الجودة</td><td class="td-blue">1 مفتش</td><td class="td-ok">مدير + فريق جودة</td><td>التدقيق الفني، فحص الجودة، CAPA</td></tr>
+      <tr><td class="td-hot">🛒 التجارية</td><td class="td-blue">1 مدير + موظفان</td><td class="td-ok">مدير + مشتريات + مبيعات + أسواق</td><td>المشتريات، العقود، علاقات الموردين، البيع</td></tr>
+      <tr><td class="td-hot">💰 المالية</td><td class="td-blue">1 مدير + محاسب</td><td class="td-ok">مدير + فريق محاسبة</td><td>الرقابة المالية، الميزانيات، التدقيق</td></tr>
+      <tr><td class="td-hot">🔧 تقنية المعلومات</td><td class="td-blue">1 موظف IT</td><td class="td-ok">مدير + فريق IT</td><td>الأنظمة (Odoo)، البنية التحتية</td></tr>
+      <tr><td class="td-hot">👥 الموارد البشرية</td><td class="td-blue">1 موظف HR</td><td class="td-ok">مدير + فريق HR</td><td>التوظيف، التدريب، شؤون الموظفين</td></tr>
+      <tr style="border-top:2px solid var(--yellow);"><td class="td-hot">📊 الإجمالي التقريبي</td><td class="td-blue" style="font-weight:700;">55–65 موظف</td><td class="td-ok" style="font-weight:700;">300–350 موظف</td><td>—</td></tr>
+    </tbody>
+  </table>
+  </div>
 </div>
 
-<!-- ========================== 12. IMPLEMENTATION PLAN ========================== -->
+<!-- ================================================================
+     11 — IMPLEMENTATION PLAN
+     ================================================================ -->
 <div class="chapter" id="plan">
   <div class="chapter-head">
-    <span class="chapter-num">12</span>
-    <h2>خطة التنفيذ التدريجية</h2>
+    <span class="chapter-num">11</span>
+    <h2 class="c-head-txt">خطة التنفيذ التدريجية</h2>
   </div>
 
   <div class="phase-grid">
     <div class="phase-card">
-      <div class="phase-hdr" style="background:linear-gradient(135deg,#0d0d20,#1a1a35);border-bottom:3px solid var(--orange);">
+      <div class="phase-hdr" style="background:linear-gradient(135deg,#0a0a18,#181830);border-bottom:3px solid var(--orange);">
         <div class="phase-num" style="color:var(--orange);">I</div>
         <div class="phase-title" style="color:#fff;">مرحلة التأسيس</div>
-        <div class="phase-dur" style="color:var(--orange);">⏱ 4 – 8 أسابيع</div>
+        <div class="phase-dur" style="color:var(--orange);">⏱ 4–8 أسابيع</div>
       </div>
       <div class="phase-body">
-        <strong style="color:var(--yellow);font-family:'Oswald',monospace;font-size:.85rem;">النطاق:</strong>
+        <strong style="color:var(--yellow);font-family:'Oswald',monospace;font-size:.84rem;">النطاق:</strong>
         <ul>
-          <li>تنصيب وتهيئة Odoo Enterprise</li>
+          <li>تنصيب وتهيئة Odoo 17 Enterprise</li>
           <li>وحدة المالية والمحاسبة الأساسية</li>
           <li>وحدة إدارة المخزون</li>
-          <li>وحدة المشتريات</li>
+          <li>وحدة المشتريات والموردين</li>
           <li>إعداد المستخدمين والصلاحيات</li>
-          <li>ترحيل البيانات الرئيسية (Seed Data)</li>
+          <li>استيراد البيانات الرئيسية (أصناف، موردين)</li>
         </ul>
-        <strong style="color:var(--green-ok);font-family:'Oswald',monospace;font-size:.85rem;">المخرجات:</strong>
+        <strong style="color:var(--green-ok);font-family:'Oswald',monospace;font-size:.84rem;">المخرجات:</strong>
         <ul>
-          <li>تشغيل دورة PO → GRN → Bill</li>
+          <li>تشغيل دورة PO ← GRN ← Bill</li>
           <li>استيراد الأرصدة الافتتاحية</li>
           <li>اعتماد نماذج GRN في Odoo</li>
         </ul>
@@ -1226,23 +1381,23 @@ tr:hover td{background:rgba(255,69,0,.04);}
     </div>
 
     <div class="phase-card">
-      <div class="phase-hdr" style="background:linear-gradient(135deg,#0d0d20,#1a1a35);border-bottom:3px solid var(--yellow);">
+      <div class="phase-hdr" style="background:linear-gradient(135deg,#0a0a18,#181830);border-bottom:3px solid var(--yellow);">
         <div class="phase-num" style="color:var(--yellow);">II</div>
         <div class="phase-title" style="color:#fff;">مرحلة التعميق</div>
-        <div class="phase-dur" style="color:var(--yellow);">⏱ 3 – 6 أشهر</div>
+        <div class="phase-dur" style="color:var(--yellow);">⏱ 3–6 أشهر</div>
       </div>
       <div class="phase-body">
-        <strong style="color:var(--yellow);font-family:'Oswald',monospace;font-size:.85rem;">النطاق:</strong>
+        <strong style="color:var(--yellow);font-family:'Oswald',monospace;font-size:.84rem;">النطاق:</strong>
         <ul>
           <li>إدارة المستودعات المتقدمة (WMS)</li>
           <li>وحدة الجودة (QM) + FEFO تلقائي</li>
-          <li>وحدة المبيعات والفوترة</li>
-          <li>إدارة الفروع والنقل الداخلي</li>
-          <li>تكامل الباركود والأجهزة</li>
+          <li>وحدة المبيعات والفوترة الكاملة</li>
+          <li>إدارة الفروع (Multi-Warehouse)</li>
+          <li>تكامل ماسحات الباركود والأجهزة</li>
         </ul>
-        <strong style="color:var(--green-ok);font-family:'Oswald',monospace;font-size:.85rem;">المخرجات:</strong>
+        <strong style="color:var(--green-ok);font-family:'Oswald',monospace;font-size:.84rem;">المخرجات:</strong>
         <ul>
-          <li>QC تلقائي عند كل استلام</li>
+          <li>QC تلقائي عند كل استلام شحنة</li>
           <li>دورة مستندية كاملة مترابطة</li>
           <li>لوحة KPI تشغيلية حية</li>
         </ul>
@@ -1250,24 +1405,24 @@ tr:hover td{background:rgba(255,69,0,.04);}
     </div>
 
     <div class="phase-card">
-      <div class="phase-hdr" style="background:linear-gradient(135deg,#0d0d20,#1a1a35);border-bottom:3px solid var(--green-ok);">
+      <div class="phase-hdr" style="background:linear-gradient(135deg,#0a0a18,#181830);border-bottom:3px solid var(--green-ok);">
         <div class="phase-num" style="color:var(--green-ok);">III</div>
         <div class="phase-title" style="color:#fff;">مرحلة التميز</div>
-        <div class="phase-dur" style="color:var(--green-ok);">⏱ 6 – 12 شهراً</div>
+        <div class="phase-dur" style="color:var(--green-ok);">⏱ 6–12 شهراً</div>
       </div>
       <div class="phase-body">
-        <strong style="color:var(--yellow);font-family:'Oswald',monospace;font-size:.85rem;">النطاق:</strong>
+        <strong style="color:var(--yellow);font-family:'Oswald',monospace;font-size:.84rem;">النطاق:</strong>
         <ul>
           <li>التحليلات التنبؤية وتخطيط الطلب</li>
           <li>تطبيقات الجوال للمستودعات (WMS App)</li>
           <li>وحدة الموارد البشرية والرواتب</li>
           <li>التوسع الجغرافي لفروع جديدة</li>
-          <li>تكامل التجارة الإلكترونية</li>
+          <li>تكامل التجارة الإلكترونية والـ CRM</li>
         </ul>
-        <strong style="color:var(--green-ok);font-family:'Oswald',monospace;font-size:.85rem;">المخرجات:</strong>
+        <strong style="color:var(--green-ok);font-family:'Oswald',monospace;font-size:.84rem;">المخرجات:</strong>
         <ul>
           <li>لوحات تنفيذية للإدارة العليا</li>
-          <li>دقة مخزون ≥ 98.5% محققة</li>
+          <li>دقة مخزون ≥98.5% محققة</li>
           <li>جرد بالجوال بدون ورق</li>
         </ul>
       </div>
@@ -1280,53 +1435,81 @@ tr:hover td{background:rgba(255,69,0,.04);}
     <thead><tr><th>المرحلة</th><th>المدة</th><th>المسؤول الرئيسي</th><th>الإدارات المشاركة</th><th>معيار القبول</th></tr></thead>
     <tbody>
       <tr><td class="td-hot">التأسيس</td><td>4–8 أسابيع</td><td>مدير IT + شريك Odoo</td><td>المستودع، المشتريات، المالية</td><td>PO→GRN→Bill تعمل في Odoo</td></tr>
-      <tr><td class="td-hot">التعميق</td><td>3–6 أشهر</td><td>مدير المستودع + مدير الجودة</td><td>جميع الإدارات</td><td>دقة مخزون ≥95%، QC تلقائي</td></tr>
+      <tr><td class="td-hot">التعميق</td><td>3–6 أشهر</td><td>مدير المستودع + مدير الجودة</td><td>جميع الإدارات الست</td><td>دقة مخزون ≥95%، QC تلقائي</td></tr>
       <tr><td class="td-hot">التميز</td><td>6–12 شهراً</td><td>المدير العام + فريق التحول الرقمي</td><td>جميع الإدارات + الفروع</td><td>KPI تشغيلية حية، دقة ≥98.5%</td></tr>
     </tbody>
   </table>
   </div>
 </div>
 
-<!-- ========================== 13. CONCLUSION ========================== -->
+<!-- ================================================================
+     12 — CONCLUSION
+     ================================================================ -->
 <div class="chapter gold-accent" id="conclusion">
   <div class="chapter-head gold">
-    <span class="chapter-num gold">13</span>
-    <h2>الخلاصة والتوصية النهائية</h2>
+    <span class="chapter-num gold">12</span>
+    <h2 class="c-head-txt">الخلاصة والتوصية النهائية</h2>
   </div>
 
+  <h3>مقارنة الأنظمة المتاحة</h3>
   <div class="table-wrap">
-  <table>
-    <thead><tr><th>النظام</th><th>الملاءمة لـ Brandzo</th><th>الملاحظة الجوهرية</th></tr></thead>
+  <table class="compare-table">
+    <thead><tr><th>النظام</th><th>دعم اللغة العربية</th><th>الملاءمة لـ Brandzo</th><th>الملاحظة الجوهرية</th></tr></thead>
     <tbody>
-      <tr><td>Oracle NetSuite</td><td class="td-center td-warn">متوسطة</td><td>تكلفة مرتفعة، دعم محلي محدود في ليبيا</td></tr>
-      <tr><td>Microsoft Dynamics 365</td><td class="td-center">جيدة</td><td>تعقيد التراخيص، يحتاج شريك تقني متخصص</td></tr>
-      <tr><td>Odoo Community</td><td class="td-center td-warn">محدودة</td><td>لا دعم مؤسسي — مناسب للبداية فقط</td></tr>
-      <tr><td>ERPNext</td><td class="td-center td-warn">محدودة</td><td>ضعيف في دعم MENA وسلامة الغذاء</td></tr>
-      <tr><td style="color:var(--yellow);font-weight:700;">Odoo 17 Enterprise ⭐</td><td class="td-center td-ok" style="font-weight:700;">ممتازة</td><td style="font-weight:600;color:#fff;">الخيار الأمثل للبيئة الليبية والإقليمية</td></tr>
+      <tr>
+        <td>Oracle NetSuite</td>
+        <td class="td-warn td-center">محدود</td>
+        <td class="td-center td-warn">متوسطة</td>
+        <td>دعم محلي محدود في ليبيا، تعقيد في التهيئة</td>
+      </tr>
+      <tr>
+        <td>Microsoft Dynamics 365</td>
+        <td class="td-ok td-center">جيد</td>
+        <td class="td-center">جيدة</td>
+        <td>تعقيد التراخيص، يحتاج شريك تقني متخصص محلياً</td>
+      </tr>
+      <tr>
+        <td>Odoo Community</td>
+        <td class="td-ok td-center">كامل</td>
+        <td class="td-center td-warn">محدودة</td>
+        <td>لا دعم مؤسسي رسمي — مناسب للمرحلة التجريبية فقط</td>
+      </tr>
+      <tr>
+        <td>ERPNext</td>
+        <td class="td-warn td-center">جزئي</td>
+        <td class="td-center td-warn">محدودة</td>
+        <td>ضعيف في دعم MENA وسلامة الغذاء</td>
+      </tr>
+      <tr style="background:rgba(255,215,0,.04);">
+        <td class="td-hot" style="color:var(--yellow);font-weight:700;">✅ Odoo 17 Enterprise</td>
+        <td class="td-ok td-center font-bold">كامل RTL</td>
+        <td class="td-center td-ok" style="font-weight:700;">ممتازة</td>
+        <td style="font-weight:600;color:#fff;">الخيار الأمثل للبيئة الليبية والإقليمية</td>
+      </tr>
     </tbody>
   </table>
   </div>
 
   <div class="box gold-box">
     <strong>⭐ التوصية النهائية:</strong><br>
-    اعتماد <strong>Odoo 17 Enterprise</strong> منصةً موحدة لجميع عمليات مجموعة Brandzo، مع البدء فوراً في إعداد وثيقة متطلبات الأعمال (BRD) ومخاطبة شركاء Odoo المعتمدين في منطقة MENA للحصول على عروض تفصيلية للتنفيذ.
+    اعتماد <em>Odoo 17 Enterprise</em> منصةً موحدة لجميع عمليات مجموعة Brandzo القابضة في بنغازي، مع البدء فوراً في إعداد وثيقة متطلبات الأعمال (BRD) ومخاطبة شركاء Odoo المعتمدين في منطقة MENA للحصول على عروض تفصيلية للتنفيذ. هذا النظام هو الأقدر على استيعاب تعقيد عمليات Brandzo المتعددة من تجزئة وترفيه وبراندات دولية في منظومة واحدة متكاملة.
   </div>
 
-  <h3>الخطوات التالية</h3>
+  <h3>الخطوات التالية المقترحة</h3>
   <ol>
-    <li><strong>اعتماد هذا المقترح</strong> من قِبل المدير العام.</li>
-    <li><strong>تشكيل فريق المشروع</strong> من ممثلي جميع الإدارات المعنية الست.</li>
-    <li><strong>إعداد وثيقة BRD</strong> بالتعاون مع فريق المشروع وشريك Odoo المختار.</li>
-    <li><strong>إطلاق طلب عروض (RFP)</strong> لـ 2-3 شركاء Odoo معتمدين في المنطقة.</li>
+    <li><strong>اعتماد هذا المقترح</strong> من قِبل المدير العام وتوجيهه رسمياً للإدارات المعنية.</li>
+    <li><strong>تشكيل فريق مشروع ERP</strong> من ممثلي جميع الإدارات الست المعنية.</li>
+    <li><strong>إعداد وثيقة BRD</strong> (Business Requirements Document) بالتعاون مع فريق المشروع.</li>
+    <li><strong>إطلاق طلب عروض (RFP)</strong> لـ 2–3 شركاء Odoo معتمدين في منطقة MENA.</li>
     <li><strong>اختيار الشريك التنفيذي</strong> وتوقيع عقد التنفيذ.</li>
-    <li><strong>انطلاق المرحلة الأولى</strong> وفق الجدول الزمني المقترح أعلاه.</li>
+    <li><strong>انطلاق مرحلة التأسيس</strong> وفق الجدول الزمني المقترح أعلاه.</li>
   </ol>
 
   <div class="sig-area">
     <div class="sig-box">
       <div class="sig-line">
         <div class="sig-name">محمد البرشي</div>
-        <div class="sig-role">إدارة المستودعات — مُعِد المقترح</div>
+        <div class="sig-role">إدارة المستودعات — إعداد المقترح</div>
       </div>
     </div>
     <div class="sig-box">
@@ -1337,7 +1520,7 @@ tr:hover td{background:rgba(255,69,0,.04);}
     </div>
     <div class="sig-box">
       <div class="sig-line">
-        <div class="sig-name">..................................</div>
+        <div class="sig-name">.....................................</div>
         <div class="sig-role">المدير العام — الاعتماد والتوقيع</div>
       </div>
     </div>
@@ -1346,12 +1529,37 @@ tr:hover td{background:rgba(255,69,0,.04);}
 
 </div><!-- end content -->
 
-<!-- ========================== FOOTER ========================== -->
+<!-- ================================================================
+     FOOTER
+     ================================================================ -->
 <div class="page-footer">
-  <strong>BRANDZO HOLDING</strong> — مقترح اعتماد Odoo 17 Enterprise · الإصدار 3.0 · مايو ٢٠٢٦<br>
+  <strong>BRANDZO HOLDING</strong> — مقترح اعتماد Odoo 17 Enterprise · الإصدار 4.0 · ٢٠٢٦<br>
   إعداد: إدارة المستودعات | محمد البرشي — رمزي باش | سري — للاستخدام الداخلي للإدارة العليا فقط
 </div>
 
 </div><!-- end main-container -->
+
+<script>
+// Smooth scroll with offset for sticky nav
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const t = document.querySelector(a.getAttribute('href'));
+    if(t) { const y = t.getBoundingClientRect().top + window.scrollY - 120; window.scrollTo({top:y,behavior:'smooth'}); }
+  });
+});
+// Highlight active section
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if(en.isIntersecting){
+      document.querySelectorAll('.nav-links a').forEach(a => a.style.background = '');
+      const id = en.target.id;
+      const active = document.querySelector('.nav-links a[href="#'+id+'"]');
+      if(active) active.style.background = 'rgba(255,69,0,.25)';
+    }
+  });
+},{threshold:0.2,rootMargin:'-120px 0px 0px 0px'});
+document.querySelectorAll('.chapter[id]').forEach(c => observer.observe(c));
+</script>
 </body>
 </html>
