@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>توثيق الدورة المستندية الشاملة ٢٠٢٦ | Brandzo Hub</title>
+<title>توثيق الدورة المستندية الشاملة ٢٠٢٦ | Brandzo Holding</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Oswald:wght@500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -28,20 +28,22 @@ body {
   font-family: 'Cairo', sans-serif;
   background-color: var(--bg-deep);
   color: var(--text-pri);
-  line-height: 1.6;
+  line-height: 1.8;
 }
 
 /* Presentation Mode */
 body.presentation-mode { font-size: 1.4rem; }
-body.presentation-mode .main-container { max-width: 95%; }
+body.presentation-mode .main-container { max-width: 98%; padding: 1rem; }
 body.presentation-mode .chapter {
-  min-height: 100vh;
+  min-height: 95vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   border: none;
-  margin: 0;
-  padding: 6rem;
+  margin: 0 0 2rem 0;
+  padding: 4rem;
+  box-shadow: none;
+  border-bottom: 2px solid var(--border-panel);
 }
 body.presentation-mode .no-presentation { display: none !important; }
 
@@ -82,6 +84,7 @@ body.presentation-mode .no-presentation { display: none !important; }
   position: relative;
   scroll-margin-top: 2rem;
   box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  border-right: 5px solid var(--orange);
 }
 
 .chapter-head {
@@ -99,6 +102,7 @@ body.presentation-mode .no-presentation { display: none !important; }
 }
 
 h3 { color: var(--gold); margin: 2.5rem 0 1.2rem; font-size: 1.5rem; border-right: 4px solid var(--gold); padding-right: 15px; }
+p { color: var(--text-sec); margin-bottom: 1rem; }
 
 /* Pipeline Style */
 .pipeline {
@@ -121,7 +125,7 @@ h3 { color: var(--gold); margin: 2.5rem 0 1.2rem; font-size: 1.5rem; border-righ
 .pipe-step.operational { border-top: 4px solid var(--orange); }
 .pipe-step.financial { border-top: 4px solid var(--green); }
 .pipe-icon { font-size: 2.5rem; margin-bottom: 1rem; }
-.pipe-num { font-family: 'Roboto Mono', monospace; color: var(--orange); font-weight: bold; font-size: 1.2rem; }
+.pipe-num { font-family: 'Roboto Mono', monospace; color: var(--orange); font-weight: bold; font-size: 1.2rem; margin-bottom: 0.5rem; }
 
 /* Tables */
 .table-wrap { overflow-x: auto; margin: 1.5rem 0; border: 1px solid var(--border-panel); }
@@ -129,6 +133,7 @@ table { width: 100%; border-collapse: collapse; background: var(--bg-surface); }
 th, td { padding: 15px; border: 1px solid var(--border-panel); text-align: right; font-size: 0.95rem; }
 th { background: rgba(255, 69, 0, 0.15); color: var(--gold); font-family: 'Oswald', sans-serif; font-weight: 600; }
 tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+tr:hover { background: rgba(255,69,0,0.05); }
 
 /* KPI Cards */
 .kpi-grid {
@@ -155,7 +160,7 @@ tr:nth-child(even) { background: rgba(255,255,255,0.02); }
 
 /* Cover Page */
 .cover-hero {
-  height: 95vh;
+  min-height: 90vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -166,65 +171,23 @@ tr:nth-child(even) { background: rgba(255,255,255,0.02); }
   margin-bottom: 4rem;
   padding: 4rem;
 }
-.cover-hero h1 { font-size: 4.5rem; font-weight: 900; margin-bottom: 1.5rem; color: #fff; text-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+.cover-hero h1 { font-size: 4rem; font-weight: 900; margin-bottom: 1.5rem; color: #fff; text-shadow: 0 10px 30px rgba(0,0,0,0.8); line-height: 1.2; }
 .cover-metadata { font-family: 'Roboto Mono', monospace; color: var(--gold); letter-spacing: 2px; font-size: 1.2rem; }
-
-/* TOC Grid */
-.toc-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.2rem;
-  margin-top: 4rem;
-  width: 90%;
-}
-.toc-item {
-  background: rgba(255,255,255,0.05);
-  padding: 1.2rem;
-  text-decoration: none;
-  color: var(--text-pri);
-  border-right: 4px solid var(--orange);
-  text-align: right;
-  transition: all 0.2s;
-  font-weight: 600;
-}
-.toc-item:hover { background: rgba(255,255,255,0.12); transform: scale(1.02); }
 
 /* Rules List */
 .rules-list { list-style: none; padding-right: 0; }
 .rule-item { border-right: 5px solid var(--orange); background: rgba(255,69,0,0.06); padding: 1.5rem; margin-bottom: 1rem; border-radius: 4px; }
+.rule-item strong { color: var(--gold); }
 
+/* Print Styles */
 @media print {
-  @page {
-    size: A4 portrait;
-    margin: 15mm;
-  }
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    color-adjust: exact !important;
-  }
-  body {
-    background-color: var(--bg-deep) !important;
-    color: var(--text-pri) !important;
-  }
-  .no-print, .fab {
-    display: none !important;
-  }
-  .chapter, .pipe-step, table, .kpi-card {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-    border: 1px solid var(--border-panel) !important;
-  }
-  h2, h3 {
-    page-break-after: avoid !important;
-    color: var(--orange) !important;
-  }
-  .tab-content, .accordion-content {
-    display: block !important;
-    opacity: 1 !important;
-    max-height: none !important;
-  }
-  table { border: 1px solid var(--border-panel) !important; }
+  @page { size: A4 portrait; margin: 15mm; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  body { background-color: var(--bg-deep) !important; color: var(--text-pri) !important; font-size: 12pt; }
+  .no-print, .fab { display: none !important; }
+  .chapter { page-break-inside: avoid !important; border: 1px solid var(--border-panel) !important; margin-bottom: 2rem !important; padding: 2rem !important; }
+  h2, h3 { page-break-after: avoid !important; color: var(--orange) !important; }
+  table, tr, td, th { page-break-inside: avoid !important; border: 1px solid var(--border-panel) !important; }
   th { background: rgba(255, 69, 0, 0.2) !important; color: var(--gold) !important; }
 }
 </style>
@@ -239,27 +202,11 @@ tr:nth-child(even) { background: rgba(255,255,255,0.02); }
 
   <!-- 01. COVER PAGE -->
   <div class="cover-hero chapter" id="section1">
-    <div class="no-presentation" style="border: 2px solid var(--orange); color: var(--orange); padding: 8px 20px; margin-bottom: 25px; font-weight: 800; letter-spacing: 3px; font-family: 'Oswald';"> OPERATIONAL DOCUMENTATION 2026 </div>
-    <h1>الدورة المستندية الشاملة</h1>
-    <h2 style="color: var(--gold); font-size: 2.8rem; margin-bottom: 1rem;">الهيكل التنظيمي × أدوار وصلاحيات المستودع</h2>
-    <div class="cover-metadata">
+    <div class="no-presentation" style="border: 2px solid var(--orange); color: var(--orange); padding: 8px 20px; margin-bottom: 25px; font-weight: 800; letter-spacing: 3px; font-family: 'Oswald';"> توثيق تشغيلي | مقترح تنفيذي </div>
+    <h1>الدورة المستندية الشاملة<br><span style="color: var(--gold); font-size: 3rem;">الهيكل التنظيمي × أدوار المستودع</span></h1>
+    <div class="cover-metadata" style="margin-top: 2rem;">
       <p>الإصدار 2.0 | يونيو 2026 | بنغازي — ليبيا</p>
-      <p>BRANDZO HOLDING • LOGISTICS & SUPPLY CHAIN</p>
-    </div>
-
-    <div class="toc-grid no-presentation">
-      <a href="#section2" class="toc-item">02. الدورة المستندية الكاملة (12 مرحلة)</a>
-      <a href="#section3" class="toc-item">03. التقاطع التنظيمي ومصفوفة RACI</a>
-      <a href="#section4" class="toc-item">04. المستودعات: المهام والصلاحيات والقواعد</a>
-      <a href="#section5" class="toc-item">05. هندسة المقترح في Odoo</a>
-      <a href="#section6" class="toc-item">06. لوحة مؤشرات الأداء (KPIs)</a>
-      <a href="#section7" class="toc-item">07. دليل العمليات عبر الجوال</a>
-      <a href="#section8" class="toc-item">08. دور الإدارة التقنية (IT)</a>
-      <a href="#section9" class="toc-item">09. مسار استيراد وتصدير البيانات</a>
-      <a href="#section10" class="toc-item">10. إنشاء البيانات الرئيسية (Master Data)</a>
-      <a href="#section11" class="toc-item">11. الفروع والمستودعات الافتراضية</a>
-      <a href="#section12" class="toc-item">12. قائمة التحقق من الجاهزية</a>
-      <a href="#section13" class="toc-item">13. الاعتماد النهائي</a>
+      <p>BRANDZO HOLDING • SUPPLY CHAIN PROPOSAL</p>
     </div>
   </div>
 
@@ -269,49 +216,49 @@ tr:nth-child(even) { background: rgba(255,255,255,0.02); }
       <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">OPERATIONAL & FINANCIAL PIPELINE</div>
       <h2>الدورة المستندية الكاملة (١٢ مرحلة)</h2>
     </div>
-    <p>يمثل هذا التدفق المسار الإلزامي لكل قطعة تدخل أو تخرج من عهدة Brandzo، بدءاً من الاحتياج التجاري وحتى الإغلاق المالي في الدفاتر، مما يضمن الشفافية والرقابة التامة.</p>
+    <p>يمثل هذا التدفق المسار الإلزامي لكل قطعة تدخل أو تخرج من عهدة Brandzo، بدءاً من الاحتياج التجاري وحتى الإغلاق المالي في الدفاتر المحاسبية في بيئة Odoo، مما يضمن الشفافية والرقابة التامة.</p>
 
     <h3>المراحل التشغيلية (Operational Logistics)</h3>
     <div class="pipeline">
       <div class="pipe-step operational">
         <div class="pipe-num">01</div><div class="pipe-icon">🛒</div>
-        <strong>طلب شراء (PR)</strong>
-        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">تحديد الاحتياج بناءً على مستويات المخزون الدنيا أو طلبات الفروع العاجلة.</div>
+        <strong style="color:white; font-size:1.2rem;">طلب شراء (PR)</strong>
+        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 8px;">تحديد الاحتياج داخلياً عبر Odoo بناءً على قواعد إعادة الطلب التلقائية (Reorder Rules). الجهة: التجارية/الفروع.</div>
       </div>
       <div class="pipe-step operational">
         <div class="pipe-num">02</div><div class="pipe-icon">📄</div>
-        <strong>أمر شراء (PO)</strong>
-        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">الالتزام القانوني مع المورد بالكميات والأسعار المعتمدة من الإدارة التجارية.</div>
+        <strong style="color:white; font-size:1.2rem;">أمر شراء (PO)</strong>
+        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 8px;">الالتزام القانوني مع المورد. يتحول الـ PR إلى PO معتمد بعد موافقة الإدارة التجارية. الجهة: التجارية.</div>
       </div>
       <div class="pipe-step operational">
         <div class="pipe-num">03</div><div class="pipe-icon">🚛</div>
-        <strong>إشعار شحن (ASN)</strong>
-        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">إخطار المورد للمستودع بموعد وصول الشحنة وجدولة أرصفة الاستلام.</div>
+        <strong style="color:white; font-size:1.2rem;">إشعار شحن (ASN)</strong>
+        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 8px;">إخطار بوصول البضاعة لجدولة الرصيف والعمالة بالمستودع. الجهة: المستودع / المورد.</div>
       </div>
       <div class="pipe-step operational">
         <div class="pipe-num">04</div><div class="pipe-icon">✅</div>
-        <strong>استلام وفحص (GRN)</strong>
-        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">المطابقة المادية وفحص الجودة (QC) لضمان سلامة البضاعة من أي تلف أو نقص.</div>
+        <strong style="color:white; font-size:1.2rem;">استلام وفحص (GRN)</strong>
+        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 8px;">المطابقة المادية وفحص الجودة (QC) وتسجيل الاستلام في Odoo. الجهة: المستودع + الجودة.</div>
       </div>
       <div class="pipe-step operational">
         <div class="pipe-num">05</div><div class="pipe-icon">🏬</div>
-        <strong>تخزين موجه</strong>
-        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">تسكين البضاعة في مواقعها المحددة آلياً (Putaway) وفق قواعد الصرف FEFO.</div>
+        <strong style="color:white; font-size:1.2rem;">تخزين موجه (Putaway)</strong>
+        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 8px;">توجيه البضاعة لمواقعها بالرفوف عبر ماسح الباركود لتحديث بطاقة الصنف (Bin Card). الجهة: المستودع.</div>
       </div>
       <div class="pipe-step operational">
         <div class="pipe-num">06</div><div class="pipe-icon">📦</div>
-        <strong>تحضير (Pick/Pack)</strong>
-        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">سحب الطلبات وتغليفها بناءً على أوامر الصرف المعتمدة للفروع أو العملاء.</div>
+        <strong style="color:white; font-size:1.2rem;">تحضير (Pick & Pack)</strong>
+        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 8px;">سحب البضاعة بناءً على أوامر التسليم وقواعد الصلاحية FEFO وتعبئتها. الجهة: المستودع.</div>
       </div>
       <div class="pipe-step operational">
         <div class="pipe-num">07</div><div class="pipe-icon">🚚</div>
-        <strong>شحن وتوزيع</strong>
-        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">تحميل الشاحنات وإصدار أذونات الخروج (Gate Pass) الموثقة بالباركود.</div>
+        <strong style="color:white; font-size:1.2rem;">شحن وتوزيع (Dispatch)</strong>
+        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 8px;">إصدار إذن التسليم وتصريح خروج البوابة (Gate Pass) للسيارات. الجهة: المستودع.</div>
       </div>
       <div class="pipe-step operational">
         <div class="pipe-num">08</div><div class="pipe-icon">↩️</div>
-        <strong>مرتجعات</strong>
-        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">معالجة المرتجع من الفروع وتصنيفه (سليم/تالف) وإعادته للموقع التخزيني المناسب.</div>
+        <strong style="color:white; font-size:1.2rem;">المرتجعات (Returns)</strong>
+        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 8px;">معالجة البضاعة المرتجعة، تصنيفها (تالف/سليم)، وإعادتها للمخزون أو إعدامها. الجهة: المستودع.</div>
       </div>
     </div>
 
@@ -319,23 +266,23 @@ tr:nth-child(even) { background: rgba(255,255,255,0.02); }
     <div class="pipeline">
       <div class="pipe-step financial">
         <div class="pipe-num">09</div><div class="pipe-icon">⚖️</div>
-        <strong>مطابقة ثلاثية</strong>
-        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">مراجعة (PO + GRN + Bill) لضمان صحة الصرف المالي ومطابقة الكميات والقيم.</div>
+        <strong style="color:white; font-size:1.2rem;">مطابقة (3-Way Match)</strong>
+        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 8px;">مطابقة (أمر الشراء + إذن الاستلام + فاتورة المورد) قبل أي صرف. الجهة: المالية.</div>
       </div>
       <div class="pipe-step financial">
         <div class="pipe-num">10</div><div class="pipe-icon">🧾</div>
-        <strong>فاتورة المورد</strong>
-        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">تسجيل الالتزام المالي النهائي في واجهة المحاسبة داخل مقترح Odoo.</div>
+        <strong style="color:white; font-size:1.2rem;">فاتورة المورد (Bill)</strong>
+        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 8px;">تسجيل الالتزام المالي للمورد في Odoo بعد نجاح المطابقة. الجهة: المالية.</div>
       </div>
       <div class="pipe-step financial">
         <div class="pipe-num">11</div><div class="pipe-icon">📖</div>
-        <strong>قيود يومية</strong>
-        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">الترحيل الآلي للقيود بناءً على تحركات المخزون والفوترة المعتمدة.</div>
+        <strong style="color:white; font-size:1.2rem;">قيد يومية (Journal Entry)</strong>
+        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 8px;">الترحيل الآلي للقيود بناءً على تقييم المخزون (Inventory Valuation). الجهة: المالية.</div>
       </div>
       <div class="pipe-step financial">
         <div class="pipe-num">12</div><div class="pipe-icon">🔒</div>
-        <strong>إغلاق الفترة</strong>
-        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">مراجعة تقييم المخزون الختامي وإصدار تقارير الربح والخسارة للمجموعة.</div>
+        <strong style="color:white; font-size:1.2rem;">الإغلاق (Financial Close)</strong>
+        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 8px;">إغلاق الفترة المحاسبية وضمان تطابق المخزون الدفتري مع الفعلي. الجهة: المالية.</div>
       </div>
     </div>
   </div>
@@ -346,208 +293,234 @@ tr:nth-child(even) { background: rgba(255,255,255,0.02); }
       <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">INTEGRATION & ACCOUNTABILITY</div>
       <h2>التقاطع التنظيمي ومصفوفة RACI</h2>
     </div>
-
+    <p>توضح هذه المصفوفة من ينفذ، من يعتمد، ومن يراقب كل مرحلة من مراحل الدورة المستندية.</p>
     <div class="table-wrap">
-      <h3>مصفوفة توزيع المسؤوليات (RACI Matrix)</h3>
       <table>
         <thead>
           <tr>
-            <th>العملية / المرحلة</th>
+            <th>المرحلة التشغيلية</th>
             <th>الإدارة التجارية</th>
-            <th>المستودع الرئيسي</th>
+            <th>إدارة المستودع الرئيسي</th>
             <th>العمليات اللوجستية</th>
             <th>إدارة الجودة</th>
             <th>الإدارة المالية</th>
-            <th>الإدارة التقنية</th>
+            <th>تقنية المعلومات (IT)</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td>تحديد احتياج المخزون</td><td class="r-a">A/R</td><td class="r-c">C</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-c">C</td><td class="r-i">I</td></tr>
-          <tr><td>اعتماد أوامر الشراء</td><td class="r-r">R</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-a">A</td><td class="r-i">I</td></tr>
-          <tr><td>الاستلام الفعلي (GRN)</td><td class="r-i">I</td><td class="r-a">A/R</td><td class="r-c">C</td><td class="r-r">R</td><td class="r-i">I</td><td class="r-r">R</td></tr>
-          <tr><td>فحص الجودة والمطابقة</td><td class="r-i">I</td><td class="r-c">C</td><td class="r-i">I</td><td class="r-a">A/R</td><td class="r-i">I</td><td class="r-i">I</td></tr>
-          <tr><td>إدارة مواقع التخزين</td><td class="r-i">I</td><td class="r-a">A/R</td><td class="r-i">I</td><td class="r-c">C</td><td class="r-i">I</td><td class="r-c">C</td></tr>
-          <tr><td>تحضير وصرف الطلبيات</td><td class="r-c">C</td><td class="r-a">A/R</td><td class="r-r">R</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-i">I</td></tr>
-          <tr><td>التوزيع والشحن للفروع</td><td class="r-i">I</td><td class="r-c">C</td><td class="r-a">A/R</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-i">I</td></tr>
-          <tr><td>تسويات الجرد السنوي</td><td class="r-c">C</td><td class="r-r">R</td><td class="r-i">I</td><td class="r-c">C</td><td class="r-a">A/R</td><td class="r-i">I</td></tr>
-          <tr><td>إدارة البيانات (أصناف/موردين)</td><td class="r-a">A/R</td><td class="r-c">C</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-c">C</td><td class="r-r">R</td></tr>
+          <tr><td>01. إنشاء طلب الشراء (PR)</td><td class="r-a">A/R (مُعتمِد/منفذ)</td><td class="r-c">C (مستشار)</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-c">C</td><td class="r-i">I</td></tr>
+          <tr><td>02. إصدار أمر الشراء (PO)</td><td class="r-r">R (منفذ)</td><td class="r-i">I (مُبلَّغ)</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-a">A (مُعتمِد الميزانية)</td><td class="r-i">I</td></tr>
+          <tr><td>03. إشعار الشحن (ASN)</td><td class="r-c">C</td><td class="r-r">R (مُجدول الاستلام)</td><td class="r-c">C</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-i">I</td></tr>
+          <tr><td>04. الاستلام (GRN)</td><td class="r-i">I</td><td class="r-a">A/R (مسؤول الاستلام)</td><td class="r-c">C</td><td class="r-r">R (الفحص)</td><td class="r-i">I</td><td class="r-c">C</td></tr>
+          <tr><td>05. التخزين الموجه (Putaway)</td><td class="r-i">I</td><td class="r-r">R (تنفيذ التسكين)</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-a">A (برمجة القواعد)</td></tr>
+          <tr><td>06. التحضير (Pick/Pack)</td><td class="r-c">C</td><td class="r-r">R (مشغل الصرف)</td><td class="r-c">C</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-i">I</td></tr>
+          <tr><td>07. التوزيع والشحن (Dispatch)</td><td class="r-i">I</td><td class="r-a">A (مُصدر الإذن)</td><td class="r-r">R (السائق)</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-i">I</td></tr>
+          <tr><td>08. المرتجعات (Returns)</td><td class="r-c">C</td><td class="r-r">R (استلام وتسوية)</td><td class="r-i">I</td><td class="r-a">A (تصنيف التلف)</td><td class="r-a">A (الإشعار الدائن)</td><td class="r-i">I</td></tr>
+          <tr><td>09. الجرد الدوري (Cycle Count)</td><td class="r-i">I</td><td class="r-r">R (تنفيذ الجرد)</td><td class="r-i">I</td><td class="r-c">C</td><td class="r-a">A (مراجعة الفروق)</td><td class="r-i">I</td></tr>
+          <tr><td>10. إدارة بيانات الأصناف</td><td class="r-r">R (إنشاء الصنف)</td><td class="r-a">A (تحديد المواقع)</td><td class="r-i">I</td><td class="r-c">C (الصلاحية)</td><td class="r-a">A (تسعير/حسابات)</td><td class="r-r">R (دعم)</td></tr>
         </tbody>
       </table>
-      <p style="font-size: 0.85rem; margin-top: 15px; color: var(--text-sec);">
-        <span class="r-r">R: Responsible (المنفذ)</span> | <span class="r-a">A: Accountable (المسؤول النهائي)</span> | <span class="r-c">C: Consulted (يُستشار)</span> | <span class="r-i">I: Informed (يُبلّغ)</span>
-      </p>
     </div>
   </div>
 
-  <!-- 04. WAREHOUSE CORE -->
+  <!-- 04. WAREHOUSE CORE (EXHAUSTIVE) -->
   <div class="chapter" id="section4">
     <div class="chapter-head">
-      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">CORE DOMAIN OPERATIONS</div>
-      <h2>المستودعات: المهام، الصلاحيات، والقواعد</h2>
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">WAREHOUSE DOMAIN EXHAUSTIVE OVERVIEW</div>
+      <h2>المستودعات: المهام، الصلاحيات، والقواعد (Core Domain)</h2>
     </div>
-
-    <h3>مصفوفة الصلاحيات التفصيلية (Role-Based Permissions)</h3>
+    
+    <h3>٤.أ - مصفوفة الصلاحيات التفصيلية (Role-Based Permissions in Odoo)</h3>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
             <th>الدور الوظيفي</th>
+            <th>الصلاحية في Odoo</th>
             <th>المهام الإنشائية (Create)</th>
             <th>المهام الاعتمادية (Validate)</th>
-            <th>صلاحيات العرض (View)</th>
+            <th>صلاحيات القراءة (View Only)</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td>مدير المستودع</td><td>تسويات الجرد، سندات التلف، التحويلات العاجلة</td><td>كافة حركات المخازن، الاعتماد المالي للجرد</td><td>كافة التقارير، سجلات المراجعة (Logs)</td></tr>
-          <tr><td>مشرف الاستلام</td><td>وصل الاستلام (GRN)، طلب فحص جودة</td><td>أوامر الاستلام (Receipts)، قائمة النواقص</td><td>أوامر الشراء (PO)، بيانات الموردين</td></tr>
-          <tr><td>مفتش الجودة</td><td>تقرير الفحص (QC)، إشعار عدم المطابقة (NCR)</td><td>الإفراج عن الدفعة (Quality Release)</td><td>بطاقات الأصناف، معايير التخزين</td></tr>
-          <tr><td>مشرف الصرف</td><td>قوائم السحب (Picking)، قائمة التعبئة</td><td>أمر التسليم (Delivery Order)</td><td>أوامر البيع، طلبات الفروع</td></tr>
-          <tr><td>مدقق الجرد</td><td>سجلات الجرد الدوري، بطاقات المواقع</td><td>مطابقة الأرصدة الفعلية بالدفتيرية</td><td>تقييم المخزون المالي</td></tr>
-          <tr><td>أمين المستودع (منفذ)</td><td>بيانات الباركود، حركات النقل الداخلي</td><td>تأكيد الانتقال بين المواقع</td><td>مواقع التخزين فقط</td></tr>
+          <tr>
+            <td><strong>مدير المستودع التنفيذي</strong></td>
+            <td>Inventory Manager</td>
+            <td>تسويات الجرد الكبرى، تعديلات المخزون اليدوية، أوامر التخريد (Scrap).</td>
+            <td>الاعتماد النهائي لـ GRN والفروقات، التحويلات العاجلة، Gate Pass.</td>
+            <td>كافة التقارير، Valuation، Audit Logs.</td>
+          </tr>
+          <tr>
+            <td><strong>مشرف الاستلام</strong></td>
+            <td>Inventory User</td>
+            <td>مسودة استلام (Draft GRN)، طلب فحص جودة، تحديث تواريخ الصلاحية.</td>
+            <td>تأكيد الاستلام فقط بعد توقيع الجودة. لا يملك صلاحية تعديل رصيد.</td>
+            <td>أوامر الشراء (PO)، بيانات الموردين.</td>
+          </tr>
+          <tr>
+            <td><strong>فاحص الجودة (QC)</strong></td>
+            <td>Quality User</td>
+            <td>تقرير الفحص (QC Report)، إشعار عدم المطابقة، تقرير بضاعة تالفة.</td>
+            <td>قبول/رفض الدفعة (Quality Release).</td>
+            <td>بطاقات الأصناف، معايير التخزين.</td>
+          </tr>
+          <tr>
+            <td><strong>مشغل الصرف (Picker)</strong></td>
+            <td>Inventory User (Barcode)</td>
+            <td>قوائم السحب (Picking)، قائمة التعبئة (Packing List).</td>
+            <td>تأكيد سحب الكميات الفعلية عبر الماسح فقط.</td>
+            <td>أوامر التسليم المجدولة.</td>
+          </tr>
+          <tr>
+            <td><strong>مشرف الشحن</strong></td>
+            <td>Inventory User</td>
+            <td>إذن النقل الداخلي، تصريح خروج بوابة (Gate Pass).</td>
+            <td>أمر التسليم النهائي (Delivery Order).</td>
+            <td>أوامر البيع، مسارات النقل.</td>
+          </tr>
+          <tr>
+            <td><strong>مدقق الجرد</strong></td>
+            <td>Inventory User</td>
+            <td>سجلات الجرد الدوري (Cycle Count)، الفحص الأسبوعي.</td>
+            <td>رفع مسودة الفروقات للإدارة للتمحيص.</td>
+            <td>أرصدة النظام الدفترية مقابل الفعلية.</td>
+          </tr>
         </tbody>
       </table>
     </div>
 
-    <h3>جدول مرجعية المستندات (٢١ نموذج تشغيلي)</h3>
+    <h3>٤.ب - جدول مرجعية المستندات والوثائق (٢١ نموذج تشغيلي)</h3>
+    <p>قائمة حصرية بجميع النماذج اللوجستية ومسارها داخل بيئة Odoo.</p>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
             <th>النموذج</th>
-            <th>الوصف المختصر</th>
-            <th>جهة الإصدار (Creator)</th>
-            <th>جهة الاعتماد (Validator)</th>
-            <th>المسار في Odoo</th>
+            <th>الاسم بالإنجليزية</th>
+            <th>من يُنشئ (Creator)</th>
+            <th>من يعتمد (Validator)</th>
+            <th>المسار التشغيلي في Odoo</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td>Purchase Requisition</td><td>تحديد نقص المخزون وطلب التزويد</td><td>أمين المستودع</td><td>مدير المستودع</td><td>Purchase/Requisitions</td></tr>
-          <tr><td>Purchase Order</td><td>أمر الشراء الموجه للمورد الخارجي</td><td>المشتريات</td><td>المدير التجاري</td><td>Purchase/Orders</td></tr>
-          <tr><td>GRN (Goods Receipt)</td><td>إثبات دخول البضاعة للمستودع</td><td>مشرف الاستلام</td><td>مدير المستودع</td><td>Inventory/Receipts</td></tr>
-          <tr><td>QC Inspection Report</td><td>نتائج فحص العينات والمطابقة الصحية</td><td>فريق الجودة</td><td>مدير الجودة</td><td>Quality/Checks</td></tr>
-          <tr><td>Putaway Directive</td><td>توجيهات تسكين البضاعة في الرفوف</td><td>آلية Odoo</td><td>مشرف الاستلام</td><td>Inventory/Operations</td></tr>
-          <tr><td>Internal Transfer</td><td>نقل البضاعة بين مناطق المستودع</td><td>أمين المستودع</td><td>مشرف الوردية</td><td>Inventory/Transfers</td></tr>
-          <tr><td>Store Requisition</td><td>طلب سحب مواد للاستخدام الداخلي</td><td>الأقسام الطالبة</td><td>مدير المستودع</td><td>Inventory/Transfer</td></tr>
-          <tr><td>Picking List</td><td>قائمة المهام لعمال سحب الطلبيات</td><td>آلية Odoo</td><td>مشرف الصرف</td><td>Inventory/Picking</td></tr>
-          <tr><td>Packing List</td><td>تفاصيل محتوى الطرود للشحن</td><td>موظف التعبئة</td><td>مشرف الصرف</td><td>Inventory/Operations</td></tr>
-          <tr><td>Delivery Note</td><td>إثبات تسليم البضاعة للعميل/الفرع</td><td>مشرف الصرف</td><td>المستلم</td><td>Inventory/Delivery</td></tr>
-          <tr><td>Gate Pass</td><td>تصريح خروج المركبة من الموقع</td><td>أمن البوابة</td><td>مشرف الوردية</td><td>Custom/Logs</td></tr>
-          <tr><td>Return Note</td><td>إثبات استلام مرتجع من الفرع</td><td>موظف المرتجعات</td><td>مشرف المرتجعات</td><td>Inventory/Returns</td></tr>
-          <tr><td>Credit Note</td><td>تسوية مالية لصالح العميل/المورد</td><td>الإدارة المالية</td><td>المدير المالي</td><td>Accounting/CreditNotes</td></tr>
-          <tr><td>Damaged Goods Report</td><td>حصر التوالف وتحديد المسؤولية</td><td>فريق الجودة</td><td>مدير المستودع</td><td>Inventory/Scrap</td></tr>
-          <tr><td>Scrap Order</td><td>إذن إعدام أو استبعاد مخزوني</td><td>مدير المستودع</td><td>المدير المالي</td><td>Inventory/Scrap</td></tr>
-          <tr><td>Bin Card</td><td>سجل الحركة التاريخي لكل موقع تخزين</td><td>آلية Odoo</td><td>أمين الموقع</td><td>Inventory/Reporting</td></tr>
-          <tr><td>Cycle Count Sheet</td><td>نموذج الجرد الدوري اليومي</td><td>مدقق الجرد</td><td>مدير المستودع</td><td>Inventory/Operations</td></tr>
-          <tr><td>Adjustment Voucher</td><td>سند تعديل الرصيد في Odoo</td><td>مدقق الجرد</td><td>المدير المالي</td><td>Inventory/Adjustments</td></tr>
-          <tr><td>Item Master Card</td><td>بيانات تعريف الصنف الجديد</td><td>التجارية</td><td>IT / المالية</td><td>Inventory/Products</td></tr>
-          <tr><td>Daily Huddle Log</td><td>توثيق اجتماعات الوردية وتوزيع المهام</td><td>مشرف الوردية</td><td>مدير العمليات</td><td>Logs/Documents</td></tr>
-          <tr><td>Weekly QC Audit</td><td>تقرير التفتيش الأسبوعي الشامل</td><td>مشرف الجودة</td><td>مدير الجودة</td><td>Quality/Inspection</td></tr>
+          <tr><td>١. طلب شراء داخلي</td><td>Purchase Requisition</td><td>الأقسام / الفروع</td><td>المدير التجاري</td><td>Purchase / Requisitions</td></tr>
+          <tr><td>٢. أمر الشراء</td><td>Purchase Order (PO)</td><td>المشتريات</td><td>التجارية + المالية</td><td>Purchase / Orders</td></tr>
+          <tr><td>٣. إشعار الشحن المسبق</td><td>ASN</td><td>المورد / المشتريات</td><td>مشرف الاستلام</td><td>Inventory / Receipts</td></tr>
+          <tr><td>٤. مذكرة استلام بضاعة</td><td>GRN</td><td>مشرف الاستلام</td><td>مدير المستودع</td><td>Inventory / Receipts</td></tr>
+          <tr><td>٥. تقرير فحص جودة</td><td>QC Inspection Report</td><td>فاحص الجودة</td><td>مدير الجودة</td><td>Quality / Control Points</td></tr>
+          <tr><td>٦. أمر تخزين موجه</td><td>Putaway List</td><td>آلية Odoo</td><td>مشرف التخزين</td><td>Inventory / Operations</td></tr>
+          <tr><td>٧. بطاقة الموقع المخزني</td><td>Bin Card</td><td>آلية Odoo</td><td>مشرف التخزين</td><td>Inventory / Reporting / Locations</td></tr>
+          <tr><td>٨. طلب صرف داخلي</td><td>Store Requisition</td><td>القسم الطالب</td><td>مدير المستودع</td><td>Inventory / Transfers</td></tr>
+          <tr><td>٩. قائمة السحب</td><td>Picking List</td><td>آلية Odoo</td><td>مشغل الصرف</td><td>Inventory / Pick</td></tr>
+          <tr><td>١٠. قائمة التعبئة</td><td>Packing List</td><td>مشغل الصرف</td><td>مشرف الشحن</td><td>Inventory / Pack</td></tr>
+          <tr><td>١١. إذن تسليم</td><td>Delivery Note</td><td>مشرف الشحن</td><td>السائق/العميل</td><td>Inventory / Delivery Orders</td></tr>
+          <tr><td>١٢. تصريح خروج بوابة</td><td>Gate Pass</td><td>مشرف الشحن</td><td>أمن المستودع</td><td>Custom Module / Gate Pass</td></tr>
+          <tr><td>١٣. إذن نقل داخلي</td><td>Stock Transfer Slip</td><td>إدارة الأسواق</td><td>مدير المستودع</td><td>Inventory / Internal Transfers</td></tr>
+          <tr><td>١٤. إشعار مرتجع</td><td>Return Note</td><td>مسؤول المرتجعات</td><td>مدير المستودع</td><td>Inventory / Returns</td></tr>
+          <tr><td>١٥. تقرير بضاعة تالفة</td><td>Damaged Goods Report</td><td>فاحص الجودة</td><td>مدير المستودع + مالية</td><td>Inventory / Scrap</td></tr>
+          <tr><td>١٦. سند تسوية مخزون</td><td>Stock Adjustment</td><td>مدقق الجرد</td><td>المدير المالي + التنفيذي</td><td>Inventory / Physical Inventory</td></tr>
+          <tr><td>١٧. إشعار دائن</td><td>Credit Note</td><td>المحاسب</td><td>المدير المالي</td><td>Accounting / Credit Notes</td></tr>
+          <tr><td>١٨. ورقة جرد دوري</td><td>Cycle Count Sheet</td><td>مدقق الجرد</td><td>مدير المستودع</td><td>Inventory / Physical Inventory</td></tr>
+          <tr><td>١٩. بطاقة تعريف الصنف</td><td>Item Master Data</td><td>التجارية (حصرياً)</td><td>المستودع (إثراء المواقع)</td><td>Inventory / Products</td></tr>
+          <tr><td>٢٠. سجل الاجتماع اليومي</td><td>Daily Huddle Log</td><td>مشرف الوردية</td><td>مدير العمليات</td><td>Documents / Internal</td></tr>
+          <tr><td>٢١. فحص أسبوعي</td><td>Weekly Check</td><td>فريق الحوكمة</td><td>مدير المستودع</td><td>Quality / Audits</td></tr>
         </tbody>
       </table>
     </div>
 
-    <h3>قواعد الرقابة والامتثال (Internal Control Rules)</h3>
+    <h3>٤.ج - قواعد الرقابة الداخلية وإجراءات التشغيل (Internal Control SOPs)</h3>
     <ul class="rules-list">
-      <li class="rule-item">
-        <strong>سياسة الفصل بين المهام:</strong> يمنع منعاً باتاً أن يكون الشخص الذي يقوم بالاستلام (GRN) هو نفس الشخص الذي يعتمد جودة الشحنة (QC).
-      </li>
-      <li class="rule-item">
-        <strong>قاعدة الاستلام الصارم:</strong> لا يتم استلام أي قطعة لا يوجد لها أمر شراء (PO) في المقترح التقني — يتم إرجاعها فوراً على حساب المورد.
-      </li>
-      <li class="rule-item">
-        <strong>التدقيق اللحظي:</strong> يجب مسح باركود (Location) قبل مسح باركود (Product) عند التسكين لضمان دقة الموقع في واجهة Odoo.
-      </li>
-      <li class="rule-item">
-        <strong>قاعدة الصرف الموجه:</strong> يمنع السحب العشوائي؛ السحب يتم فقط بناءً على "قائمة سحب" إلكترونية تحترم تاريخ انتهاء الصلاحية (FEFO).
-      </li>
+      <li class="rule-item"><strong>قاعدة الاستلام (Receiving):</strong> يمنع منعاً باتاً استلام أي منتج لا يوجد له أمر شراء (PO) معتمد مسبقاً في Odoo. يجب استكمال توقيع الجودة قبل تحويل مسودة الـ GRN إلى حالة "Done".</li>
+      <li class="rule-item"><strong>قاعدة التخزين (Putaway):</strong> يجب مسح باركود الرف (Location Barcode) ثم باركود الصنف لضمان التحديث اللحظي لبطاقة الصنف. يمنع التخزين العشوائي على أرضية المستودع.</li>
+      <li class="rule-item"><strong>قاعدة الصرف (Dispatch):</strong> لا تخرج أي سيارة توزيع من بوابة المستودع بدون (Gate Pass) مربوط برقم إذن التسليم (Delivery Note). السحب الداخلي يعتمد حصرياً على توجيهات FEFO الآلية من Odoo.</li>
+      <li class="rule-item"><strong>قاعدة الجرد (Cycle Count):</strong> إلغاء الجرد السنوي المعطل للعمل، واستبداله بمهام جرد دوري موجه (يومياً/أسبوعياً) للأصناف عالية الدوران. لا يتم تعديل أي رصيد يدوياً بدون سند تسوية (Stock Adjustment) معتمد من المدير المالي.</li>
     </ul>
 
-    <h3>مصفوفة التصعيد الإداري (Escalation Matrix)</h3>
+    <h3>٤.د - مصفوفة التصعيد التشغيلي (Escalation Matrix)</h3>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>الحالة / المشكلة</th>
-            <th>مستوى ١ (تشغيلي)</th>
-            <th>مستوى ٢ (إداري)</th>
-            <th>مستوى ٣ (إستراتيجي)</th>
+            <th>الموقف / الاستثناء التشغيلي</th>
+            <th>مستوى التصعيد الأول</th>
+            <th>مستوى التصعيد الثاني</th>
+            <th>الإجراء النظامي المعتمد</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td>فروقات GRN كبيرة (> ٥٪)</td><td>مشرف الاستلام</td><td>مدير المستودع</td><td>المدير التجاري</td></tr>
-          <tr><td>تعطل آلية المسح بالباركود</td><td>IT Support</td><td>مدير التقنية</td><td>المدير العام</td></tr>
-          <tr><td>رفض شحنة من قبل الجودة</td><td>مفتش الجودة</td><td>مدير الجودة</td><td>مدير المستودع</td></tr>
-          <tr><td>طلب صرف عاجل بدون رصيد</td><td>مشرف الصرف</td><td>مدير المستودع</td><td>المدير التجاري</td></tr>
+          <tr><td>رفض دفعة بالكامل من قبل الجودة (QC Reject)</td><td>مشرف الاستلام</td><td>مدير المستودع التنفيذي</td><td>إصدار Return Note للمورد، وحجر البضاعة مؤقتاً بالبرنامج.</td></tr>
+          <tr><td>فروقات جرد تتجاوز ٢٪ أو تلفيات قيمة عالية</td><td>مدير المستودع التنفيذي</td><td>المدير المالي + التجاري</td><td>تجميد حركة الصنف، فتح تحقيق، ورفع Stock Adjustment Voucher.</td></tr>
+          <tr><td>أمر تحميل عاجل خارج أوقات العمل الرسمية</td><td>مشرف الشحن</td><td>مدير العمليات اللوجستية</td><td>إصدار Gate Pass استثنائي، وإرفاقه بتقرير الحادثة للمراجعة.</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- 05. ODOO ARCHITECTURE -->
+  <!-- 05. ODOO ARCHITECTURE DIAGRAM -->
   <div class="chapter" id="section5">
     <div class="chapter-head">
-      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">MAPPING PHYSICAL TO DIGITAL</div>
-      <h2>هندسة المقترح في Odoo</h2>
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">SYSTEM MAPPING</div>
+      <h2>هندسة المقترح والتكامل في Odoo</h2>
     </div>
-    <div style="font-family: 'Roboto Mono', monospace; background: #000; padding: 2.5rem; border-radius: 12px; border: 1px solid var(--gold); overflow-x: auto; white-space: pre; font-size: 0.85rem; color: var(--green); line-height: 1.4;">
-[ PHYSICAL OPERATION ]      [ ODOO MODULE / PATH ]        [ FINANCIAL RESULT ]
-          |                           |                          |
-   Truck Arrival --------> [ Inventory > Receipts ] ------> [ Pending Valuation ]
-          |                           |                          |
-   Quality Check -------> [ Quality > Control Point ] ----> [ QC Log Entry ]
-          |                           |                          |
-   Unloading / Scan ----> [ Inventory > Putaway ] --------> [ Asset Assignment ]
-          |                           |                          |
-   On-Shelf Storage ----> [ Inventory > Locations ] ------> [ Stock Value Report ]
-          |                           |                          |
-   Order Picking -------> [ Inventory > Transfers ] ------> [ Reserved Stock ]
-          |                           |                          |
-   Packing/Boxing ------> [ Inventory > Operations ] -----> [ COGS Calculation ]
-          |                           |                          |
-   Dispatch/Loading ----> [ Sales > Delivery Orders ] ----> [ Revenue Trigger ]
-          |                           |                          |
-   Gate Exit -----------> [ Log: Gate Pass Mechanism ] ---> [ Final Close ]
+    <div style="font-family: 'Roboto Mono', monospace; background: #000; padding: 2.5rem; border-radius: 12px; border: 1px solid var(--gold); overflow-x: auto; white-space: pre; font-size: 1rem; color: var(--green); line-height: 1.6; direction: ltr;">
+[ PHYSICAL WAREHOUSE FLOW ]        [ ODOO MODULE / PATH ]
+
+ 1. Vendor Truck Arrival   ====>   [ Inventory > Receipts ]
+             |
+ 2. Quality Inspection     ====>   [ Quality > Control Points ]
+             |
+ 3. Unloading & Scanning   ====>   [ Inventory > Putaway Rules ]
+             |
+ 4. On-Shelf Storage       ====>   [ Inventory > Locations > Bin ]
+             |
+ 5. Wave/Batch Picking     ====>   [ Inventory > Pick Operations ]
+             |
+ 6. Packing / Labeling     ====>   [ Inventory > Pack ]
+             |
+ 7. Dispatch & Loading     ====>   [ Sales > Delivery Orders ]
+             |
+ 8. Financial Execution    ====>   [ Accounting > Vendor Bills / Close ]
     </div>
   </div>
 
-  <!-- 06. KPIs -->
+  <!-- 06. KPIs DASHBOARD -->
   <div class="chapter" id="section6">
     <div class="chapter-head">
-      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">STRATEGIC PERFORMANCE INDICATORS</div>
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">PERFORMANCE METRICS</div>
       <h2>لوحة مؤشرات الأداء (KPIs)</h2>
     </div>
     <div class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-val">≥98.5%</div>
-        <div class="kpi-label">دقة الجرد (Inventory Accuracy)</div>
+        <div class="kpi-val">≥ 98.5%</div>
+        <div class="kpi-label">دقة الاستلام (GRN vs PO)</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-val">≤240m</div>
-        <div class="kpi-label">زمن الاستلام (Dock-to-Stock)</div>
+        <div class="kpi-val">≥ 99.5%</div>
+        <div class="kpi-label">دقة التخزين (Putaway Match)</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-val">≥99.9%</div>
-        <div class="kpi-label">دقة الشحن (Shipping Accuracy)</div>
+        <div class="kpi-val">≥ 99.7%</div>
+        <div class="kpi-label">دقة التحضير (Pick Accuracy)</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-val">≤0.3%</div>
-        <div class="kpi-label">نسبة التوالف (Scrap Rate)</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-val">≥96%</div>
-        <div class="kpi-label">جاهزية الأسطول (Fleet Uptime)</div>
+        <div class="kpi-val">≤ 4h</div>
+        <div class="kpi-label">زمن دورة الاستلام (Dock-to-Stock)</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-val">100%</div>
-        <div class="kpi-label">الامتثال لـ FEFO (Expiry Compliance)</div>
+        <div class="kpi-label">تطبيق الـ 3-Way Match</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-val">≤45m</div>
-        <div class="kpi-label">متوسط زمن التحضير (Pick Time)</div>
+        <div class="kpi-val">0%</div>
+        <div class="kpi-label">تجاوزات صلاحية FEFO</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-val">≥97%</div>
-        <div class="kpi-label">رضا الفروع (Branch Fill Rate)</div>
+        <div class="kpi-val">≥ 95%</div>
+        <div class="kpi-label">معالجة المرتجعات خلال 48h</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val">≥ 99.0%</div>
+        <div class="kpi-label">دقة المخزون المادي (Cycle Count)</div>
       </div>
     </div>
   </div>
@@ -556,68 +529,106 @@ tr:nth-child(even) { background: rgba(255,255,255,0.02); }
   <div class="chapter" id="section7">
     <div class="chapter-head">
       <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">REAL-TIME FLOOR EXECUTION</div>
-      <h2>دليل العمليات عبر الجوال (Barcode App)</h2>
+      <h2>دليل العمليات عبر الجوال (Odoo Barcode App)</h2>
     </div>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 3rem;">
-      <div>
-        <h3 style="border-right-color: var(--orange);">آلية الاستلام (Receiving)</h3>
-        <ol style="padding-right: 1.5rem; margin-top: 1rem;">
-          <li style="margin-bottom: 10px;">فتح واجهة <em>Odoo Barcode</em> واختيار (Receipts).</li>
-          <li style="margin-bottom: 10px;">مسح باركود أمر الشراء (PO) من مستندات الشحنة.</li>
-          <li style="margin-bottom: 10px;">مسح باركود الصنف والتحقق من الكمية وتاريخ الصلاحية.</li>
-          <li style="margin-bottom: 10px;">إدخال رقم الدفعة (Lot Number) المطبوع على المنتج.</li>
-          <li style="margin-bottom: 10px;">تأكيد الاستلام (Validate) لتحديث الأرصدة فوراً.</li>
+    <p>كل العمليات המيدانية للعمال ومشرفي المستودع تتم حصرياً عبر الهواتف الذكية أو أجهزة المسح المتنقلة لتحديث قاعدة البيانات بشكل لحظي.</p>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+      <div style="background: var(--bg-surface); padding: 2rem; border: 1px solid var(--border-panel); border-radius: 8px; border-top: 4px solid var(--orange);">
+        <h3 style="margin-top: 0; color: var(--orange); border: none;">١. مسار الاستلام (Receiving)</h3>
+        <ol style="padding-right: 1.2rem; color: var(--text-sec); line-height: 2;">
+          <li>يفتح المشرف التطبيق ويختار <strong>Receipts</strong>.</li>
+          <li>يمسح باركود الإرسالية أو أمر الشراء.</li>
+          <li>يمسح باركود كل صنف، ويُدخل الكمية المستلمة ورقم الدفعة (Lot Number).</li>
+          <li>يصور أي أضرار عبر الكاميرا لترفق بتقرير الجودة.</li>
+          <li>يضغط <strong>Validate</strong> ليُنشأ الـ GRN وتُحدث الأرصدة تلقائياً.</li>
         </ol>
       </div>
-      <div>
-        <h3 style="border-right-color: var(--green);">آلية السحب (Picking)</h3>
-        <ol style="padding-right: 1.5rem; margin-top: 1rem;">
-          <li style="margin-bottom: 10px;">تلقي إشعار بمهمة سحب جديدة موجهة لمواقع محددة.</li>
-          <li style="margin-bottom: 10px;">مسح باركود الموقع (Bin Scan) للتأكد من دقة العملية.</li>
-          <li style="margin-bottom: 10px;">مسح باركود المنتج؛ سيوجهك Odoo لسحب التاريخ الأقرب للانتهاء.</li>
-          <li style="margin-bottom: 10px;">إتمام السحب وتوجيه البضاعة لمنطقة التعبئة النهائية.</li>
+      <div style="background: var(--bg-surface); padding: 2rem; border: 1px solid var(--border-panel); border-radius: 8px; border-top: 4px solid var(--gold);">
+        <h3 style="margin-top: 0; color: var(--gold); border: none;">٢. مسار التخزين (Putaway)</h3>
+        <ol style="padding-right: 1.2rem; color: var(--text-sec); line-height: 2;">
+          <li>بعد الاستلام، يتلقى العامل مهمة توجيه آلي على هاتفه.</li>
+          <li>يمسح الصنف، فيرشده التطبيق إلى الرف الأمثل (الموقع).</li>
+          <li>يصل العامل للموقع ويمسح باركود الرف (Bin Barcode) للتأكيد.</li>
+          <li>يضغط تأكيد، فتُحدث بطاقة الصنف (Bin Card) في قواعد البيانات.</li>
+        </ol>
+      </div>
+      <div style="background: var(--bg-surface); padding: 2rem; border: 1px solid var(--border-panel); border-radius: 8px; border-top: 4px solid var(--green);">
+        <h3 style="margin-top: 0; color: var(--green); border: none;">٣. مسار التحضير (Picking)</h3>
+        <ol style="padding-right: 1.2rem; color: var(--text-sec); line-height: 2;">
+          <li>يستلم العامل مهمة السحب (Picking Task) مرتبة حسب أقصر مسار للمشي.</li>
+          <li>يمسح باركود الرف، ثم يمسح باركود المنتج (التطبيق يوجه لسحب التاريخ الأقدم FEFO).</li>
+          <li>عند سحب منتج خاطئ، يصدر الجهاز تنبيهاً بالرفض.</li>
+          <li>بمجرد اكتمال القائمة، يتم تحويل الشحنة إلى منطقة التعبئة (Packing).</li>
         </ol>
       </div>
     </div>
   </div>
 
-  <!-- 08. IT ROLE -->
+  <!-- 08. IT MANAGEMENT ROLE -->
   <div class="chapter" id="section8">
     <div class="chapter-head">
-      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">OPERATIONAL STABILITY & SUPPORT</div>
-      <h2>دور الإدارة التقنية (IT Management)</h2>
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">SYSTEM INFRASTRUCTURE</div>
+      <h2>دور إدارة تقنية المعلومات (IT System Admin)</h2>
     </div>
-    <p>تعتبر الإدارة التقنية هي المحرك الخلفي لضمان عمل كافة الآليات الرقمية للمقترح دون انقطاع.</p>
-    <ul class="rules-list" style="margin-top: 1rem;">
-      <li class="rule-item">إدارة الخوادم وضمان وصول ٩٩.٩٪ لقاعدة بيانات Odoo والنسخ الاحتياطي اللحظي.</li>
-      <li class="rule-item">تغطية كافة نقاط المستودع بشبكة Wi-Fi صناعية مستقرة للماسحات المحمولة.</li>
-      <li class="rule-item">برمجة وصيانة ماسحات الباركود وتحديث وحداتها البرمجية بشكل دوري.</li>
-      <li class="rule-item">إدارة أدوار المستخدمين ومنع الوصول غير المصرح به للبيانات الحساسة.</li>
-    </ul>
+    <p>تلعب إدارة التقنية دور المحرك الخفي لضمان استقرار البنية التحتية اللوجستية.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>المهام التقنية الحصرية (Admin Level)</th>
+            <th>الوصف والإجراء</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color: var(--gold); font-weight: bold;">إدارة الصلاحيات (Users & Roles)</td>
+            <td>تعيين صلاحيات دقيقة لكل مستخدم (مثال: موظف الاستلام لا يرى التكاليف المالية).</td>
+          </tr>
+          <tr>
+            <td style="color: var(--gold); font-weight: bold;">تكوين المستودعات (Warehouses Setup)</td>
+            <td>إنشاء مستودعات جديدة للفروع، والمستودعات الافتراضية للسيارات (Virtual VANs).</td>
+          </tr>
+          <tr>
+            <td style="color: var(--gold); font-weight: bold;">إعداد قواعد Odoo التشغيلية</td>
+            <td>تفعيل خيارات متقدمة مثل: 3-step receiving، وتكوين قواعد Putaway الآلية.</td>
+          </tr>
+          <tr>
+            <td style="color: var(--gold); font-weight: bold;">البنية التحتية والشبكة</td>
+            <td>توفير تغطية Wi-Fi صناعية قوية، وصيانة ماسحات الباركود (Zebra/Honeywell) وطابعات الملصقات.</td>
+          </tr>
+          <tr>
+            <td style="color: var(--gold); font-weight: bold;">الأمن والنسخ الاحتياطي</td>
+            <td>إدارة قاعدة بيانات PostgreSQL، إجراء نسخ احتياطي يومي مجدول، ومراقبة Audit Logs لكل الحركات الحساسة.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- 09. EXCEL WORKFLOW -->
   <div class="chapter" id="section9">
     <div class="chapter-head">
       <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">BULK DATA INTEROPERABILITY</div>
-      <h2>مسار استيراد وتصدير البيانات</h2>
+      <h2>مسار استيراد وتصدير بيانات الشراء (Excel Workflow)</h2>
     </div>
-    <p style="margin-bottom: 1.5rem;">يتم اعتماد آلية الإكسيل كجسر تواصل سريع بين المستودع والإدارة التجارية لتسريع عمليات الشراء الضخمة.</p>
+    <p>دورة العمل المتكاملة بين الإدارة التجارية وإدارة المستودعات لمعالجة أوامر الشراء الضخمة باستخدام قوالب الإكسيل لضمان السرعة والدقة.</p>
+    
     <div class="pipeline">
       <div class="pipe-step">
-        <div class="pipe-num">١</div>
-        <strong>Export (WH)</strong>
-        <div style="font-size: 0.8rem; margin-top: 10px;">تصدير ملف النواقص من Odoo (الأصناف التي وصلت لنقطة الطلب).</div>
+        <div class="pipe-num">1. تصدير النواقص (Export)</div>
+        <strong style="color:white;">إدارة المستودعات</strong>
+        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 8px;">تصدير قائمة الأصناف من Odoo محتوية على: (الباركود، اسم الصنف، الرصيد الحالي، نقطة إعادة الطلب).</div>
       </div>
       <div class="pipe-step">
-        <div class="pipe-num">٢</div>
-        <strong>Enrich (Comm.)</strong>
-        <div style="font-size: 0.8rem; margin-top: 10px;">الإدارة التجارية تضيف الأسعار، عروض الموردين، والكميات المقترح شراؤها.</div>
+        <div class="pipe-num">2. التسعير والمورد (Enrich)</div>
+        <strong style="color:white;">الإدارة التجارية</strong>
+        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 8px;">استلام الملف وإضافة: (اسم المورد، كود المورد، الكمية المطلوبة للشراء، سعر الوحدة، مهلة التوريد).</div>
       </div>
       <div class="pipe-step">
-        <div class="pipe-num">٣</div>
-        <strong>Import (Odoo)</strong>
-        <div style="font-size: 0.8rem; margin-top: 10px;">رفع الملف المحدث إلى Odoo ليتحول تلقائياً إلى مسودة أمر شراء (Draft PO).</div>
+        <div class="pipe-num">3. الاستيراد (Import)</div>
+        <strong style="color:white;">الإدارة التجارية / IT</strong>
+        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 8px;">استيراد الملف المكتمل إلى Odoo عبر مسار (Purchase > Orders > Import) ليتحول إلى مسودة أمر شراء (Draft PO) جاهز للاعتماد.</div>
       </div>
     </div>
   </div>
@@ -625,93 +636,137 @@ tr:nth-child(even) { background: rgba(255,255,255,0.02); }
   <!-- 10. MASTER DATA -->
   <div class="chapter" id="section10">
     <div class="chapter-head">
-      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">GOVERNANCE OF TRUTH</div>
-      <h2>إنشاء البيانات الرئيسية (Master Data)</h2>
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">DATA GOVERNANCE & CREATION</div>
+      <h2>إنشاء البيانات الرئيسية (Master Data Governance)</h2>
     </div>
+    
     <div class="rule-item" style="border-right-color: var(--gold); background: rgba(255, 215, 0, 0.08);">
-      <strong style="color: var(--gold); font-size: 1.2rem;">⚠️ قاعدة السيادة التجارية:</strong> تعتبر <strong>الإدارة التجارية (Commercial Department)</strong> هي الجهة الوحيدة والمخولة حصرياً بإنشاء وتعريف الأصناف والموردين والعملاء في Odoo لضمان توحيد البيانات ومنع الازدواجية.
+      <strong style="color: var(--gold); font-size: 1.2rem;">⚠️ الصلاحية الحصرية للإنشاء:</strong> تعتبر <strong>الإدارة التجارية (Commercial Department)</strong> هي الجهة الوحيدة والمخولة حصرياً بإنشاء وتعريف بطاقات الأصناف (Products)، الموردين (Vendors)، والعملاء (Customers) في قاعدة البيانات. لا يتدخل المستودع أو المالية إلا في مراحل الإثراء اللاحقة.
     </div>
 
-    <h3>دورة حياة تعريف الصنف (Workflow)</h3>
+    <h3>مسار التعاون المؤسسي في بطاقة الصنف (Product Card Collaboration)</h3>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>المرحلة</th>
+            <th>التسلسل</th>
             <th>الجهة المسؤولة</th>
-            <th>البيانات المطلوبة في Odoo</th>
+            <th>البيانات المدخلة في بطاقة الصنف</th>
+            <th>المسار في Odoo</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td>١. التأسيس التجاري (Creator)</td><td>الإدارة التجارية</td><td>إنشاء بطاقة المنتج، تحديد الاسم، الفئة، وحدة القياس، سعر البيع/التكلفة، والمورد الافتراضي، ومهلة التوريد.</td></tr>
-          <tr><td>٢. الإثراء اللوجستي (Enricher)</td><td>إدارة المستودع / IT</td><td>تحديد قواعد التخزين (Putaway)، مسارات النقل، تعيين الباركود، وتحديد المواقع الافتراضية للتخزين.</td></tr>
-          <tr><td>٣. الرقابة المالية (Reviewer)</td><td>إدارة المالية</td><td>مراجعة وتثبيت حسابات الدخل والمصروفات، وربط مركز التكلفة، وقفل بيانات الصنف مالياً.</td></tr>
+          <tr>
+            <td><strong>الخطوة ١ (الإنشاء)</strong></td>
+            <td>الإدارة التجارية</td>
+            <td>الاسم التجاري، الفئة الأساسية، سعر البيع المتوقع، المورد الافتراضي (Vendor)، مهلة التوريد.</td>
+            <td>Inventory > Products > New</td>
+          </tr>
+          <tr>
+            <td><strong>الخطوة ٢ (الإثراء اللوجستي)</strong></td>
+            <td>إدارة المستودع</td>
+            <td>تحديد الوحدة (UoM)، تصنيف التخزين (Storable)، توليد/ربط الباركود، وقواعد الـ Putaway.</td>
+            <td>Product > Inventory Tab</td>
+          </tr>
+          <tr>
+            <td><strong>الخطوة ٣ (الإقفال المالي)</strong></td>
+            <td>الإدارة المالية</td>
+            <td>مراجعة حسابات الدخل/المصروفات للصنف، وتحديد التكلفة الدفترية (Cost Price).</td>
+            <td>Product > Accounting Tab</td>
+          </tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- 11. MULTI-WH & VANs -->
+  <!-- 11. BRANCHES & VIRTUAL VANS -->
   <div class="chapter" id="section11">
     <div class="chapter-head">
-      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">DISTRIBUTED INVENTORY STRATEGY</div>
-      <h2>الفروع والمستودعات الافتراضية (Virtual VANs)</h2>
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">MULTI-LOCATION LOGISTICS</div>
+      <h2>إدارة الفروع والمستودعات الافتراضية (Virtual VANs)</h2>
     </div>
-    <p>تعتمد Brandzo نموذج "المواقع المتعددة" لإدارة المخزون في الفروع وشاحنات التوزيع ككيانات مستقلة.</p>
+    <p>يتيح المقترح الفني إدارة شاملة لشبكة التوزيع المكونة من مستودع رئيسي، فروع، وأسطول نقل.</p>
 
-    <h3>١. آلية نقل الفروع (Replenishment)</h3>
-    <ul style="padding-right: 1.5rem; margin-top: 1rem;">
-      <li style="margin-bottom: 10px;">يقوم مدير الفرع بإنشاء <em>Internal Transfer Request</em> عبر واجهته المخصصة في Odoo.</li>
-      <li style="margin-bottom: 10px;">يتم السحب من المستودع الرئيسي وتأكيد الاستلام في موقع الفرع بالباركود.</li>
+    <h3>١. التحويلات للفروع (Branch Transfers)</h3>
+    <ul class="rules-list">
+      <li class="rule-item">يعتبر كل فرع (مثلاً فرع الرحبة) بمثابة "مستودع فرعي" (Sub-Warehouse) له موقع مستقل في Odoo.</li>
+      <li class="rule-item">التحويل يتم عبر إنشاء <strong>Internal Transfer Request</strong> من المستودع الرئيسي للفرع.</li>
+      <li class="rule-item">تخصم البضاعة من المستودع الرئيسي وتظل في حالة (In Transit) حتى يضغط مدير الفرع (Validate Receipt) عبر واجهته لإثبات الدخول في عهدته.</li>
     </ul>
 
-    <h3>٢. المستودعات المتنقلة (Virtual VAN Locations)</h3>
-    <ul style="padding-right: 1.5rem; margin-top: 1rem;">
-      <li style="margin-bottom: 10px;">كل شاحنة توزيع تعتبر "موقعاً تخزينياً افتراضياً" (Virtual Location) في المقترح.</li>
-      <li style="margin-bottom: 10px;">عند البيع المباشر من الشاحنة، يتم الخصم من رصيد موقع الـ VAN المخصص لحظياً.</li>
+    <h3>٢. سيارات التوزيع (Virtual VAN Locations)</h3>
+    <ul class="rules-list" style="margin-top: 1rem;">
+      <li class="rule-item">تُعرَّف كل شاحنة توزيع في Odoo كـ <strong>"موقع تخزين افتراضي" (Virtual Location)</strong>.</li>
+      <li class="rule-item">عند تحميل الشاحنة، يُنشأ إذن نقل داخلي لتحريك البضاعة من (Main WH) إلى (VAN-001 Location).</li>
+      <li class="rule-item">يُصدر مشرف الشحن إذن الخروج وتصبح البضاعة في عهدة السائق المحاسبية.</li>
+      <li class="rule-item">عند تسليم السائق للعميل النهائي، تُنقل البضاعة من الـ VAN إلى حساب العميل، وفي نهاية اليوم يجب أن يُطابق رصيد الـ VAN البضاعة المتبقية في الشاحنة لعمل التسوية.</li>
     </ul>
   </div>
 
   <!-- 12. COMPLETENESS CHECKLIST -->
   <div class="chapter" id="section12">
     <div class="chapter-head">
-      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">FINAL READINESS AUDIT</div>
-      <h2>قائمة التحقق من الجاهزية</h2>
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">SUPPLEMENTARY PROCEDURES</div>
+      <h2>قائمة التوثيق الإضافية للشمولية (Completeness)</h2>
     </div>
+    
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>المتطلب التشغيلي</th>
-            <th>التفاصيل الفنية</th>
-            <th>الحالة</th>
+            <th>الإجراء / الخاصية</th>
+            <th>التفاصيل الفنية وتطبيقها في بيئة Odoo</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td>آلية تتبع الدفعات (Lots)</td><td>تم تفعيل تتبع تاريخ الإنتاج والانتهاء لكل قطعة.</td><td>✅ مكتمل</td></tr>
-          <tr><td>قواعد إعادة الطلب (Min/Max)</td><td>تعريف نقاط إعادة الطلب لـ ٥٠٠ صنف أساسي.</td><td>⚠️ قيد التدقيق</td></tr>
-          <tr><td>عناوين المواقع (Addressing)</td><td>ترقيم الأرفف بآلية (UU-A-BB-LL) وتفعيل الباركود.</td><td>✅ مكتمل</td></tr>
-          <tr><td>الجرد السنوي الشامل</td><td>خطة الجرد الشامل الموقعة وآلية تجميد الحركات.</td><td>📅 مجدول</td></tr>
+          <tr>
+            <td style="color: var(--gold); font-weight: bold;">تتبع الدفعات وتواريخ الصلاحية (Lot & Serial Tracking)</td>
+            <td>إلزامي للمواد الغذائية والمستحضرات. يتم تفعيل خاصية (Tracking By Lots) في بطاقة الصنف، لضمان قدرة النظام على تطبيق سياسة FEFO وحصر تواريخ الانتهاء، ويسهل عمليات سحب المنتج (Product Recall) من السوق عند الحاجة.</td>
+          </tr>
+          <tr>
+            <td style="color: var(--gold); font-weight: bold;">قواعد إعادة الطلب الآلية (Auto-Reorder Rules)</td>
+            <td>تحديد كمية صغرى (Min) وكمية قصوى (Max) لكل صنف حيوي. عندما يصل الرصيد الفعلي للحد الأدنى، يُصدر Odoo طلب شراء (PR) تلقائياً وينبه الإدارة التجارية.</td>
+          </tr>
+          <tr>
+            <td style="color: var(--gold); font-weight: bold;">تقارير المستودع الأساسية (Essential Reports)</td>
+            <td>الاعتماد الدائم على: تقرير تقييم المخزون المالي (Inventory Valuation)، تقرير تتبع حركات المنتجات (Product Moves)، وتقرير الأعمار الافتراضية (Lot Expiry Report).</td>
+          </tr>
+          <tr>
+            <td style="color: var(--gold); font-weight: bold;">الجرد السنوي الشامل (Annual Physical Count)</td>
+            <td>يتطلب تجميداً تاماً للعمليات (Lock Moves) من قبل الـ IT، إنشاء ورقة جرد شاملة في Odoo، مسح كافة الأصناف، وتوليد تقرير الفروقات (Discrepancy Report) للاعتماد المالي قبل فتح النظام للعام الجديد.</td>
+          </tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- 13. SIGN-OFF -->
+  <!-- 13. EXECUTIVE SIGN-OFF -->
   <div class="chapter" id="section13">
     <div class="chapter-head">
-      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">EXECUTIVE APPROVAL & SIGN-OFF</div>
-      <h2>الاعتماد النهائي</h2>
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">EXECUTIVE APPROVAL</div>
+      <h2>خاتمة وتوقيعات الاعتماد التنفيذي</h2>
     </div>
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 3rem; text-align: center; margin-top: 4rem;">
-      <div style="border-top: 2px solid var(--orange); padding-top: 1.5rem;"><strong>الإدارة التجارية</strong></div>
-      <div style="border-top: 2px solid var(--orange); padding-top: 1.5rem;"><strong>مدير المستودع التنفيذي</strong></div>
-      <div style="border-top: 2px solid var(--orange); padding-top: 1.5rem;"><strong>الإدارة المالية</strong></div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 3rem; text-align: center; margin-top: 5rem;">
+      <div>
+        <div style="border-top: 2px solid var(--orange); padding-top: 1rem; margin-bottom: 0.5rem; font-family: 'Oswald'; font-size: 1.2rem; color: var(--gold);">مدير إدارة المستودعات</div>
+        <div style="color: var(--text-sec); font-size: 0.9rem;">الجهة المُعِدَّة والمُنفِّذة للمقترح التشغيلي</div>
+      </div>
+      <div>
+        <div style="border-top: 2px solid var(--orange); padding-top: 1rem; margin-bottom: 0.5rem; font-family: 'Oswald'; font-size: 1.2rem; color: var(--gold);">المدير التجاري</div>
+        <div style="color: var(--text-sec); font-size: 0.9rem;">اعتماد سياسات الأصناف والموردين</div>
+      </div>
+      <div>
+        <div style="border-top: 2px solid var(--orange); padding-top: 1rem; margin-bottom: 0.5rem; font-family: 'Oswald'; font-size: 1.2rem; color: var(--gold);">المدير المالي</div>
+        <div style="color: var(--text-sec); font-size: 0.9rem;">اعتماد قواعد المطابقة والإغلاق المحاسبي</div>
+      </div>
     </div>
-    <div style="margin-top: 7rem; text-align: center;">
+    
+    <div style="margin-top: 6rem; text-align: center;">
       <div style="display: inline-block; width: 350px; border-top: 4px double var(--gold); padding-top: 1.5rem;">
         <h3 style="border: none; color: #fff; margin-bottom: 0.5rem;">المدير العام (CEO)</h3>
-        <p style="color: var(--gold); font-weight: bold;">BRANDZO HOLDING GROUP</p>
+        <p style="color: var(--gold); font-weight: bold; letter-spacing: 2px;">BRANDZO HOLDING GROUP</p>
+        <p style="font-size: 0.85rem; margin-top: 10px;">يعتبر توقيع المدير العام بمثابة إيعاز ببدء المرحلة التنفيذية للتحول الرقمي</p>
       </div>
     </div>
   </div>
@@ -721,13 +776,17 @@ tr:nth-child(even) { background: rgba(255,255,255,0.02); }
 <script>
 function togglePresentation() {
   document.body.classList.toggle('presentation-mode');
+  if(document.body.classList.contains('presentation-mode')) {
+    alert("تم تفعيل وضع العرض التقديمي (Presentation Mode). استخدم أسهم الكيبورد (فوق/تحت) للتنقل بين الأقسام كأنها شرائح عرض.");
+  }
 }
-// Keyboard navigation
+// Keyboard navigation for Presentation Mode
 document.addEventListener('keydown', (e) => {
   if (!document.body.classList.contains('presentation-mode')) return;
   const sections = Array.from(document.querySelectorAll('.chapter'));
   const currentScroll = window.scrollY;
   let currentIndex = sections.findIndex(s => s.offsetTop >= currentScroll - 100);
+  
   if (e.key === 'ArrowDown' || e.key === ' ') {
     e.preventDefault();
     if (currentIndex < sections.length - 1) sections[currentIndex + 1].scrollIntoView({ behavior: 'smooth' });
