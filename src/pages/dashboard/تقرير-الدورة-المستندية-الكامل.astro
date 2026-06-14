@@ -1,0 +1,15 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+---
+<DashboardLayout title="الدورة المستندية الكاملة">
+  <div class="w-full h-screen -m-6 overflow-hidden">
+    <iframe
+      src={`${base}/تقرير-الدورة-المستندية-الكامل-2026.html`}
+      class="w-full h-full border-0"
+      title="الدورة المستندية الكاملة"
+    />
+  </div>
+</DashboardLayout>
