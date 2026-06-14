@@ -2,1093 +2,739 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
-<title>مقترح الدورة المستندية الشاملة ٢٠٢٦ | Brandzo | بنغازي</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>توثيق الدورة المستندية الشاملة ٢٠٢٦ | Brandzo Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&family=Oswald:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Oswald:wght@500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-/* ========================================================
-   ROOT VARIABLES & THEME DNA
-   ======================================================== */
 :root {
   --bg-deep:       #07070c;
   --bg-panel:      #0e0e18;
   --bg-surface:    #13131e;
-  --bg-elevated:   #191928;
-  --bg-card:       #1c1c2e;
   --orange:        #FF4500;
   --orange-glow:   #ff5e1a;
-  --orange-dim:    rgba(255,69,0,0.12);
-  --yellow:        #FFD700;
-  --yellow-soft:   #ffe44d;
-  --yellow-dim:    rgba(255,215,0,0.07);
-  --red-deep:      #8B0000;
-  --green-ok:      #00e676;
-  --green-dim:     rgba(0,230,118,0.1);
-  --blue-info:     #4da6ff;
-  --blue-dim:      rgba(77,166,255,0.1);
-  --purple:        #a064ff;
-  --purple-dim:    rgba(160,100,255,0.12);
-  --teal:          #00bcd4;
-  --teal-dim:      rgba(0,188,212,0.1);
   --text-pri:      #e8e8f0;
   --text-sec:      #bdbdcf;
-  --text-muted:    #87879a;
-  --border-hot:    #FF4500;
   --border-panel:  #2a2a3e;
-  --border-subtle: #1c1c2e;
-  --mesh:          rgba(255,69,0,0.018);
+  --gold:          #f0d98a;
+  --green:         #00e676;
+  --red:           #c0392b;
 }
-*{margin:0;padding:0;box-sizing:border-box;}
-html{scroll-behavior:smooth;}
 
+* { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  font-family:'Cairo','Tajawal',sans-serif;
-  background:var(--bg-deep);
-  color:var(--text-pri);
-  line-height:1.9;
-  -webkit-print-color-adjust:exact;
-  print-color-adjust:exact;
-  background-image:
-    repeating-linear-gradient(0deg,var(--mesh) 0,var(--mesh) 1px,transparent 1px,transparent 4px),
-    repeating-linear-gradient(90deg,var(--mesh) 0,var(--mesh) 1px,transparent 1px,transparent 4px),
-    radial-gradient(ellipse at 15% 8%,rgba(255,69,0,0.04) 0%,transparent 50%),
-    radial-gradient(ellipse at 85% 90%,rgba(255,215,0,0.025) 0%,transparent 50%);
-  background-size:4px 4px,4px 4px,100% 100%,100% 100%;
-  background-attachment:fixed;
+  font-family: 'Cairo', sans-serif;
+  background-color: var(--bg-deep);
+  color: var(--text-pri);
+  line-height: 1.6;
 }
 
-/* ========================================================
-   MAIN CONTAINER
-   ======================================================== */
+/* Presentation Mode */
+body.presentation-mode { font-size: 1.4rem; }
+body.presentation-mode .main-container { max-width: 95%; }
+body.presentation-mode .chapter {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: none;
+  margin: 0;
+  padding: 6rem;
+}
+body.presentation-mode .no-presentation { display: none !important; }
+
+/* Floating Action Button (FAB) */
+.fab {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  z-index: 1000;
+  background: var(--orange);
+  color: white;
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255, 69, 0, 0.5);
+  border: none;
+  transition: transform 0.2s;
+  font-size: 1.6rem;
+}
+.fab:hover { transform: scale(1.1); }
+
+/* Layout */
 .main-container {
-  max-width:1140px;
-  width:100%;
-  margin:0 auto;
-  background:var(--bg-panel);
-  border:3px solid var(--orange);
-  box-shadow:0 0 60px rgba(255,69,0,0.18),0 0 120px rgba(255,69,0,0.06),0 16px 90px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.025);
-  position:relative;
-}
-.main-container::before {
-  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
-  background:repeating-linear-gradient(0deg,rgba(255,69,0,0.01) 0,rgba(255,69,0,0.01) 1px,transparent 1px,transparent 8px),
-             repeating-linear-gradient(90deg,rgba(255,215,0,0.006) 0,rgba(255,215,0,0.006) 1px,transparent 1px,transparent 8px);
-  background-size:8px 8px,8px 8px;
-}
-.main-container>*{position:relative;z-index:1;}
-
-/* ========================================================
-   HEADER
-   ======================================================== */
-.header {
-  background:linear-gradient(180deg,#060610 0%,#090916 55%,#0c0c1c 100%);
-  padding:2.5rem 2.8rem 2.2rem;
-  border-bottom:4px solid var(--orange);
-  position:relative;overflow:hidden;
-}
-.header::before {
-  content:'';position:absolute;top:0;left:0;right:0;height:4px;
-  background:repeating-linear-gradient(90deg,var(--orange) 0,var(--orange) 8px,transparent 8px,transparent 16px,var(--yellow) 16px,var(--yellow) 24px,transparent 24px,transparent 32px);
-  animation:scanline 2.5s linear infinite;z-index:2;
-}
-@keyframes scanline{0%{background-position:0 0}100%{background-position:64px 0}}
-
-.badge-pulse {
-  display:inline-block;background:#060610;border:2px solid var(--orange);color:var(--orange);
-  font-family:'Oswald','Roboto Mono',monospace;font-size:.8rem;letter-spacing:3px;padding:5px 20px;
-  margin-bottom:16px;text-transform:uppercase;animation:pulse-badge 2.2s ease-in-out infinite;
-}
-@keyframes pulse-badge{0%,100%{box-shadow:0 0 8px rgba(255,69,0,.3)}50%{box-shadow:0 0 28px rgba(255,69,0,.75),0 0 55px rgba(255,69,0,.3)}}
-.badge-pulse .blink{display:inline-block;width:10px;height:10px;background:var(--orange);border-radius:50%;margin-left:8px;vertical-align:middle;animation:blink-dot 1s step-end infinite;box-shadow:0 0 10px var(--orange);}
-@keyframes blink-dot{0%,100%{opacity:1}50%{opacity:.1}}
-
-.header h1 {font-family:'Oswald','Cairo',sans-serif;font-size:2.3rem;font-weight:700;line-height:1.4;display:flex;align-items:center;gap:18px;flex-wrap:wrap;letter-spacing:.5px;text-transform:uppercase;text-shadow:0 0 35px rgba(255,69,0,.45);}
-.header h1 i{color:var(--orange);font-size:2.5rem;filter:drop-shadow(0 0 14px rgba(255,69,0,.75));}
-.header-sub{margin-top:8px;font-size:1rem;color:var(--yellow);font-family:'Roboto Mono',monospace;letter-spacing:.5px;}
-.header-meta{margin-top:18px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;border-top:2px solid rgba(255,69,0,.28);padding-top:16px;gap:12px;font-size:.87rem;font-family:'Roboto Mono','Cairo',monospace;color:var(--text-sec);}
-.h-badge{background:rgba(255,69,0,.1);padding:5px 18px;font-weight:600;border:2px solid var(--orange);color:var(--orange-glow);font-family:'Oswald','Roboto Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;font-size:.76rem;}
-.h-badge.gold{border-color:var(--yellow);color:var(--yellow);background:rgba(255,215,0,.08);}
-.h-badge.green{border-color:var(--green-ok);color:var(--green-ok);background:rgba(0,230,118,.08);}
-.h-badge.blue{border-color:var(--blue-info);color:var(--blue-info);background:rgba(77,166,255,.08);}
-.confidential-bar{margin-top:14px;background:rgba(139,0,0,.2);border:1px solid #8B0000;color:#ff6b6b;padding:7px 18px;font-weight:700;font-family:'Oswald',monospace;letter-spacing:2px;text-transform:uppercase;font-size:.8rem;display:inline-block;}
-
-/* ========================================================
-   STICKY NAV
-   ======================================================== */
-.sticky-nav {
-  background:rgba(12,12,22,0.97);padding:.7rem 2rem;border-bottom:2px solid rgba(255,69,0,.3);
-  position:sticky;top:0;z-index:200;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;
-  backdrop-filter:blur(16px);
-}
-.nav-title{font-weight:800;color:var(--orange);font-size:.93rem;letter-spacing:2px;font-family:'Oswald',monospace;text-transform:uppercase;white-space:nowrap;}
-.nav-links{display:flex;flex-wrap:wrap;gap:3px 6px;}
-.nav-links a{background:var(--bg-surface);padding:4px 12px;text-decoration:none;color:var(--text-sec);font-weight:600;font-size:.72rem;border:1px solid var(--border-subtle);font-family:'Roboto Mono','Cairo',monospace;letter-spacing:.4px;transition:all .18s;text-transform:uppercase;white-space:nowrap;}
-.nav-links a:hover{background:var(--orange);color:#000;border-color:var(--orange);box-shadow:0 0 18px rgba(255,69,0,.5);transform:translateY(-2px);}
-.print-btn{margin-right:auto;background:var(--yellow);color:#000;border:2px solid var(--yellow);padding:5px 18px;font-family:'Oswald',monospace;font-weight:700;font-size:.76rem;letter-spacing:1px;cursor:pointer;text-transform:uppercase;transition:all .2s;}
-.print-btn:hover{background:var(--yellow-soft);box-shadow:0 0 22px rgba(255,215,0,.55);}
-
-/* ========================================================
-   CONTENT & CHAPTERS
-   ======================================================== */
-.content{padding:2.2rem 2.8rem;}
-
-.chapter{margin-bottom:3.8rem;scroll-margin-top:115px;border:2px solid var(--border-panel);background:var(--bg-surface);padding:2.2rem 2.4rem;position:relative;box-shadow:0 5px 30px rgba(0,0,0,.6);}
-.chapter::before{content:'';position:absolute;top:0;right:0;width:5px;height:100%;background:linear-gradient(180deg,var(--orange) 0%,var(--red-deep) 100%);}
-.chapter.gold-accent::before{background:linear-gradient(180deg,var(--yellow) 0%,#b08000 100%);}
-.chapter.green-accent::before{background:linear-gradient(180deg,var(--green-ok) 0%,#007840 100%);}
-.chapter.blue-accent::before{background:linear-gradient(180deg,var(--blue-info) 0%,#0055cc 100%);}
-.chapter.purple-accent::before{background:linear-gradient(180deg,var(--purple) 0%,#5022aa 100%);}
-.chapter.teal-accent::before{background:linear-gradient(180deg,var(--teal) 0%,#006070 100%);}
-.chapter.red-accent::before{background:linear-gradient(180deg,#ff2222 0%,#8B0000 100%);}
-
-.chapter-head{display:flex;align-items:center;border-bottom:3px solid var(--orange);margin-bottom:1.9rem;padding-bottom:.75rem;gap:18px;}
-.chapter-num{background:var(--orange);color:#000;padding:5px 20px;font-weight:900;font-size:1.3rem;letter-spacing:2px;font-family:'Oswald',monospace;box-shadow:0 0 22px rgba(255,69,0,.5);flex-shrink:0;}
-.chapter-num.gold{background:var(--yellow);box-shadow:0 0 22px rgba(255,215,0,.5);}
-.chapter-num.green{background:var(--green-ok);box-shadow:0 0 22px rgba(0,230,118,.5);}
-.chapter-num.blue{background:var(--blue-info);box-shadow:0 0 22px rgba(77,166,255,.5);}
-
-.chapter-head h2{font-family:'Oswald','Cairo',sans-serif;font-size:1.8rem;font-weight:700;color:#fff;line-height:1.4;text-transform:uppercase;letter-spacing:.8px;text-shadow:0 0 22px rgba(255,69,0,.3);}
-
-h3{font-family:'Oswald','Cairo',sans-serif;font-size:1.35rem;font-weight:700;color:var(--yellow);margin:2.2rem 0 1rem;border-right:5px solid var(--orange);padding-right:18px;line-height:1.5;text-transform:uppercase;letter-spacing:.6px;text-shadow:0 0 14px rgba(255,215,0,.18);}
-h4{font-family:'Oswald','Cairo',sans-serif;font-size:1.1rem;font-weight:700;color:var(--orange-glow);margin:1.6rem 0 .75rem;letter-spacing:.5px;text-transform:uppercase;}
-
-p{margin-bottom:1.1rem;color:var(--text-sec);line-height:1.9;font-family:'Cairo','Tajawal',sans-serif;}
-strong{color:#fff;font-weight:700;}
-em{color:var(--yellow);font-style:normal;}
-ul,ol{padding-right:2rem;margin:1rem 0;color:var(--text-sec);}
-li{margin-bottom:.75rem;line-height:1.8;font-family:'Cairo','Tajawal',sans-serif;}
-
-/* ========================================================
-   BOX
-   ======================================================== */
-.box{background:var(--bg-elevated);border:2px solid var(--border-panel);border-right:5px solid var(--orange);padding:1.5rem 1.9rem;margin:1.6rem 0;color:var(--text-pri);line-height:1.95;box-shadow:0 0 22px rgba(0,0,0,.45);position:relative;}
-.box::after{content:'';position:absolute;top:-2px;right:-5px;bottom:-2px;width:5px;background:var(--orange);box-shadow:0 0 14px rgba(255,69,0,.5);}
-.box strong{color:var(--yellow);font-family:'Oswald','Roboto Mono',monospace;letter-spacing:.7px;}
-
-/* ========================================================
-   TABLES
-   ======================================================== */
-.table-wrap{overflow-x:auto;border:1px solid var(--border-panel);margin:1.3rem 0; background: var(--bg-surface);}
-table{width:100%;border-collapse:collapse;font-size:.9rem;}
-thead{background:var(--bg-elevated);}
-th{padding:11px 13px;color:var(--yellow);font-family:'Oswald',monospace;font-size:.86rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-bottom:2px solid var(--orange);text-align:right;}
-td{padding:10px 13px;border-bottom:1px solid var(--border-subtle);color:var(--text-sec);vertical-align:top;line-height:1.7;}
-tr:nth-child(even) td{background:rgba(255,255,255,.018);}
-tr:hover td{background:rgba(255,69,0,.04);}
-
-/* ========================================================
-   PIPELINE / FLOW
-   ======================================================== */
-.pipeline{display:flex;flex-wrap:nowrap;align-items:stretch;margin:1.6rem 0;overflow-x:auto;gap:0; padding-bottom: 10px;}
-.pipe-step{flex:0 0 160px;background:var(--bg-elevated);border:2px solid var(--border-panel);padding:14px 10px;text-align:center;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all .2s; cursor: pointer;}
-.pipe-step:hover{border-color:var(--orange); transform: translateY(-3px); z-index: 5;}
-.pipe-step.active{border-color:var(--yellow); background: var(--orange-dim); box-shadow: 0 0 15px var(--orange-dim);}
-.pipe-step:not(:last-child)::after{content:'←';position:absolute;left:-16px;top:50%;transform:translateY(-50%);color:var(--orange);font-size:1.2rem;font-weight:900;z-index:2;}
-.pipe-icon{font-size:1.75rem;margin-bottom:6px;}
-.pipe-label{font-size:.8rem;font-weight:700;color:#fff;font-family:'Oswald',monospace;text-transform:uppercase;letter-spacing:.4px;line-height:1.3;}
-.pipe-sub{font-size:.7rem;color:var(--text-muted);margin-top:3px;font-family:'Roboto Mono',monospace;}
-
-.detail-panel {
-    background: var(--bg-card);
-    border: 2px solid var(--orange);
-    border-radius: 12px;
-    padding: 1.8rem;
-    margin-top: 1rem;
-    display: none;
-    animation: fadeIn 0.3s ease;
-}
-.detail-panel.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-/* ========================================================
-   ORG TREE
-   ======================================================== */
-.org-wrap{overflow-x:auto;padding:2rem 0; background: var(--bg-surface); border: 1px solid var(--border-panel);}
-.org-tree { display: flex; flex-direction: column; align-items: center; min-width: 800px; }
-.org-tree ul { padding-top: 20px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; list-style: none;}
-.org-tree ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid var(--orange); height: 20px; }
-.org-tree li { text-align: center; list-style-type: none; position: relative; padding: 20px 10px 0 10px; }
-.org-tree li::before, .org-tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid var(--orange); width: 50%; height: 20px; }
-.org-tree li::after { right: auto; left: 50%; border-left: 2px solid var(--orange); }
-.org-node { border: 2px solid var(--orange); border-radius: 8px; background: var(--bg-elevated); padding: 12px 18px; display: inline-block; min-width: 160px; transition: all 0.3s; cursor: default;}
-.org-node:hover { box-shadow: 0 0 15px var(--orange-dim); border-color: var(--yellow);}
-.org-node .nt { display: block; font-weight: 800; font-size: 0.9rem; color: #fff;}
-.org-node .ns { display: block; font-size: 0.7rem; color: var(--yellow); font-family: 'Roboto Mono', monospace; margin-top: 4px;}
-.org-node.root { background: #080812; border-color: var(--yellow); box-shadow: 0 0 25px rgba(255,215,0,0.15);}
-
-/* ========================================================
-   RACI MATRIX
-   ======================================================== */
-.raci-table td { text-align: center; font-weight: 700; font-size: 0.9rem;}
-.rc-R { color: #ff5252; background: rgba(255,82,82,0.05); }
-.rc-A { color: #ffd740; background: rgba(255,215,64,0.05); }
-.rc-C { color: #40c4ff; background: rgba(64,196,255,0.05); }
-.rc-I { color: #bdbdbd; }
-
-/* ========================================================
-   ROLE CARDS
-   ======================================================== */
-.role-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 1.5rem 0;}
-.role-card { background: var(--bg-card); border: 1px solid var(--border-panel); border-right: 4px solid var(--orange); padding: 1.5rem; transition: all 0.3s; cursor: pointer; }
-.role-card:hover { border-color: var(--yellow); transform: translateY(-5px); }
-.role-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; border-bottom: 1px solid var(--border-panel); padding-bottom: 0.8rem;}
-.role-icon { font-size: 1.8rem; }
-.role-title { font-weight: 800; color: #fff; font-size: 1.1rem; }
-.role-odoo { font-family: 'Roboto Mono', monospace; font-size: 0.75rem; color: var(--blue-info); background: var(--blue-dim); padding: 2px 8px; border-radius: 4px; }
-.role-body { font-size: 0.85rem; color: var(--text-sec); }
-.role-body ul { padding-right: 1.2rem; margin-top: 0.5rem; }
-
-/* ========================================================
-   RULES & KPI CARDS
-   ======================================================== */
-.rules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin: 1.5rem 0; }
-.rule-card { background: var(--bg-surface); border: 1px solid var(--border-panel); padding: 1.2rem; border-radius: 8px; position: relative; overflow: hidden; }
-.rule-card.yes { border-right: 4px solid var(--green-ok); }
-.rule-card.no { border-right: 4px solid var(--red-deep); }
-.rule-card.kpi { border-right: 4px solid var(--blue-info); }
-.rule-tag { position: absolute; top: 0; left: 0; padding: 2px 10px; font-size: 0.6rem; font-weight: 900; text-transform: uppercase; font-family: 'Oswald', sans-serif; }
-.yes .rule-tag { background: var(--green-ok); color: #000; }
-.no .rule-tag { background: var(--red-deep); color: #fff; }
-.kpi .rule-tag { background: var(--blue-info); color: #000; }
-
-.kpi-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin: 2rem 0; }
-.kpi-item { background: var(--bg-elevated); border: 2px solid var(--border-panel); padding: 1.5rem 1rem; text-align: center; border-radius: 12px; transition: all 0.3s; }
-.kpi-item:hover { border-color: var(--orange); transform: scale(1.03); }
-.kpi-val { display: block; font-family: 'Oswald', sans-serif; font-size: 2rem; font-weight: 700; color: var(--yellow); margin-bottom: 5px; }
-.kpi-lbl { font-size: 0.8rem; color: var(--text-sec); font-weight: 600; line-height: 1.3; }
-.kpi-freq { font-size: 0.65rem; color: var(--text-muted); margin-top: 8px; font-family: 'Roboto Mono', monospace; border-top: 1px solid var(--border-panel); padding-top: 5px; }
-
-/* ========================================================
-   TABS & ACCORDIONS
-   ======================================================== */
-.tab-container { margin: 1.5rem 0; }
-.tab-headers { display: flex; gap: 5px; border-bottom: 2px solid var(--border-panel); margin-bottom: 1rem; flex-wrap: wrap; }
-.tab-btn { background: var(--bg-elevated); border: none; color: var(--text-sec); padding: 10px 20px; cursor: pointer; font-family: 'Cairo', sans-serif; font-weight: 700; transition: all 0.2s; font-size: 0.9rem; }
-.tab-btn:hover { color: #fff; background: var(--bg-surface); }
-.tab-btn.active { background: var(--orange); color: #fff; box-shadow: 0 -3px 0 var(--yellow) inset; }
-.tab-content { display: none; padding: 1rem 0; }
-.tab-content.active { display: block; }
-
-.accordion-item { border: 1px solid var(--border-panel); margin-bottom: 8px; border-radius: 6px; overflow: hidden; }
-.acc-header { background: var(--bg-surface); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s; }
-.acc-header:hover { background: var(--bg-elevated); }
-.acc-header h4 { margin: 0; color: #fff; }
-.acc-content { display: none; padding: 1.5rem; background: var(--bg-deep); border-top: 1px solid var(--border-panel); }
-.acc-item.active .acc-content { display: block; }
-.acc-item.active .acc-header { background: var(--orange-dim); border-bottom: 1px solid var(--orange); }
-
-/* ========================================================
-   PRINT STYLES
-   ======================================================== */
-@page{size:A4 portrait; margin:1.2cm;}
-@media print{
-  body{background:white!important;color:#111!important;font-size:10pt;line-height:1.5;}
-  .main-container{border:none!important;box-shadow:none!important;background:white!important;max-width:100% !important;width:100% !important;margin:0 !important;}
-  .sticky-nav,.no-print,.tab-headers,.print-btn{display:none!important;}
-  .header{background:#1a2b3c!important;padding:1.5rem 2rem;border-bottom:3px solid var(--orange) !important;}
-  .header h1{font-size:1.6rem!important;color:#fff !important;}
-  .chapter{background:#ffffff!important;border:1px solid #ddd!important;padding:1rem;margin-bottom:1.5rem;page-break-inside:avoid;box-shadow:none!important;}
-  .detail-panel, .tab-content, .acc-content { display: block !important; opacity: 1 !important; }
-  table{width:100% !important;border-collapse:collapse !important;}
-  th,td{border:1px solid #666 !important;padding:6px !important;font-size:9pt !important; color: #000 !important;}
-  th{background:#eee !important;}
-  .org-tree { transform: scale(0.65); transform-origin: top center; }
-  .org-node { background: #fff !important; color: #000 !important; border: 1.5px solid #000 !important; }
-  .org-node .nt { color: #000 !important; }
-  .org-node .ns { color: #444 !important; }
-  .kpi-item { border: 1.5px solid #000 !important; background: #fff !important; }
-  .kpi-val { color: #000 !important; }
-  .pipeline { flex-direction: column !important; }
-  .pipe-step { border: 1px solid #000 !important; width: 100% !important; flex: none !important; margin-bottom: 5px !important;}
-  .pipe-step::after { display: none !important; }
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
-/* ========================================================
-   MOBILE RESPONSIVE
-   ======================================================== */
-@media(max-width:768px){
-  .content{padding:1.2rem 1.2rem;}
-  .header{padding:1.5rem 1.2rem 1.2rem;}
-  .chapter{padding:1.3rem 1.2rem;}
-  .header h1{font-size:1.5rem;}
-  .pipeline { flex-direction: column; gap: 15px; }
-  .pipe-step { flex: 1 0 auto; width: 100%; }
-  .pipe-step:not(:last-child)::after { content: '↓'; left: 50%; top: auto; bottom: -20px; transform: translateX(-50%); }
-  .role-grid { grid-template-columns: 1fr; }
-  .org-wrap { overflow-x: auto; }
+.chapter {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  margin-bottom: 4rem;
+  padding: 3rem;
+  position: relative;
+  scroll-margin-top: 2rem;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+.chapter-head {
+  border-bottom: 2px solid var(--orange);
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.2rem;
+}
+
+.chapter-head h2 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 2.4rem;
+  text-transform: uppercase;
+  color: var(--orange);
+  letter-spacing: 1px;
+}
+
+h3 { color: var(--gold); margin: 2.5rem 0 1.2rem; font-size: 1.5rem; border-right: 4px solid var(--gold); padding-right: 15px; }
+
+/* Pipeline Style */
+.pipeline {
+  display: flex;
+  overflow-x: auto;
+  gap: 1rem;
+  padding: 1.5rem 0;
+  margin: 2rem 0;
+}
+.pipe-step {
+  flex: 0 0 240px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-panel);
+  padding: 1.5rem;
+  text-align: center;
+  position: relative;
+  transition: transform 0.3s;
+}
+.pipe-step:hover { transform: translateY(-5px); border-color: var(--gold); }
+.pipe-step.operational { border-top: 4px solid var(--orange); }
+.pipe-step.financial { border-top: 4px solid var(--green); }
+.pipe-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+.pipe-num { font-family: 'Roboto Mono', monospace; color: var(--orange); font-weight: bold; font-size: 1.2rem; }
+
+/* Tables */
+.table-wrap { overflow-x: auto; margin: 1.5rem 0; border: 1px solid var(--border-panel); }
+table { width: 100%; border-collapse: collapse; background: var(--bg-surface); }
+th, td { padding: 15px; border: 1px solid var(--border-panel); text-align: right; font-size: 0.95rem; }
+th { background: rgba(255, 69, 0, 0.15); color: var(--gold); font-family: 'Oswald', sans-serif; font-weight: 600; }
+tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+
+/* KPI Cards */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+.kpi-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-panel);
+  padding: 2.5rem;
+  text-align: center;
+  border-radius: 8px;
+}
+.kpi-val { font-size: 3.5rem; font-weight: 800; color: var(--orange); font-family: 'Oswald', sans-serif; text-shadow: 0 0 10px rgba(255,69,0,0.3); }
+.kpi-label { color: var(--text-sec); font-size: 1.1rem; margin-top: 1rem; font-weight: 600; }
+
+/* RACI Classes */
+.r-r { color: #ff6b6b; font-weight: bold; }
+.r-a { color: #f1c40f; font-weight: bold; }
+.r-c { color: #4da6ff; font-weight: bold; }
+.r-i { color: #a4b0be; font-weight: bold; }
+
+/* Cover Page */
+.cover-hero {
+  height: 95vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(135deg, #07070c 0%, #1a1a2e 100%);
+  border: 5px solid var(--orange);
+  margin-bottom: 4rem;
+  padding: 4rem;
+}
+.cover-hero h1 { font-size: 4.5rem; font-weight: 900; margin-bottom: 1.5rem; color: #fff; text-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+.cover-metadata { font-family: 'Roboto Mono', monospace; color: var(--gold); letter-spacing: 2px; font-size: 1.2rem; }
+
+/* TOC Grid */
+.toc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.2rem;
+  margin-top: 4rem;
+  width: 90%;
+}
+.toc-item {
+  background: rgba(255,255,255,0.05);
+  padding: 1.2rem;
+  text-decoration: none;
+  color: var(--text-pri);
+  border-right: 4px solid var(--orange);
+  text-align: right;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+.toc-item:hover { background: rgba(255,255,255,0.12); transform: scale(1.02); }
+
+/* Rules List */
+.rules-list { list-style: none; padding-right: 0; }
+.rule-item { border-right: 5px solid var(--orange); background: rgba(255,69,0,0.06); padding: 1.5rem; margin-bottom: 1rem; border-radius: 4px; }
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  body {
+    background-color: var(--bg-deep) !important;
+    color: var(--text-pri) !important;
+  }
+  .no-print, .fab {
+    display: none !important;
+  }
+  .chapter, .pipe-step, table, .kpi-card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    border: 1px solid var(--border-panel) !important;
+  }
+  h2, h3 {
+    page-break-after: avoid !important;
+    color: var(--orange) !important;
+  }
+  .tab-content, .accordion-content {
+    display: block !important;
+    opacity: 1 !important;
+    max-height: none !important;
+  }
+  table { border: 1px solid var(--border-panel) !important; }
+  th { background: rgba(255, 69, 0, 0.2) !important; color: var(--gold) !important; }
 }
 </style>
 </head>
 <body>
+
+<button class="fab no-print" onclick="togglePresentation()" title="وضع العرض المتقدم">
+  <i class="fas fa-play"></i>
+</button>
+
 <div class="main-container">
 
-<div class="header" id="cover">
-  <div class="badge-pulse"><span class="blink"></span> BRANDZO × ODOO 17 ENTERPRISE</div>
-  <h1>
-    <i class="fas fa-file-invoice"></i>
-    مقترح الدورة المستندية والارتباط التنظيمي
-  </h1>
-  <div class="header-sub">الدليل الشامل للعمليات × مصفوفة الصلاحيات × توثيق إدارة المستودعات | بنغازي ٢٠٢٦</div>
-  <div class="header-meta">
-    <div style="display:flex;flex-wrap:wrap;gap:8px;">
-      <span class="h-badge">الإصدار 2.0</span>
-      <span class="h-badge gold">يونيو 2026</span>
-      <span class="h-badge green">بنغازي — ليبيا</span>
-      <span class="h-badge blue">١٣ قسماً | ٢١ نموذجاً | ١٢ دوراً</span>
+  <!-- 01. COVER PAGE -->
+  <div class="cover-hero chapter" id="section1">
+    <div class="no-presentation" style="border: 2px solid var(--orange); color: var(--orange); padding: 8px 20px; margin-bottom: 25px; font-weight: 800; letter-spacing: 3px; font-family: 'Oswald';"> OPERATIONAL DOCUMENTATION 2026 </div>
+    <h1>الدورة المستندية الشاملة</h1>
+    <h2 style="color: var(--gold); font-size: 2.8rem; margin-bottom: 1rem;">الهيكل التنظيمي × أدوار وصلاحيات المستودع</h2>
+    <div class="cover-metadata">
+      <p>الإصدار 2.0 | يونيو 2026 | بنغازي — ليبيا</p>
+      <p>BRANDZO HOLDING • LOGISTICS & SUPPLY CHAIN</p>
     </div>
-    <div class="confidential-bar"><i class="fas fa-lock"></i> سري — للاستخدام الداخلي</div>
+
+    <div class="toc-grid no-presentation">
+      <a href="#section2" class="toc-item">02. الدورة المستندية الكاملة (12 مرحلة)</a>
+      <a href="#section3" class="toc-item">03. التقاطع التنظيمي ومصفوفة RACI</a>
+      <a href="#section4" class="toc-item">04. المستودعات: المهام والصلاحيات والقواعد</a>
+      <a href="#section5" class="toc-item">05. هندسة المقترح في Odoo</a>
+      <a href="#section6" class="toc-item">06. لوحة مؤشرات الأداء (KPIs)</a>
+      <a href="#section7" class="toc-item">07. دليل العمليات عبر الجوال</a>
+      <a href="#section8" class="toc-item">08. دور الإدارة التقنية (IT)</a>
+      <a href="#section9" class="toc-item">09. مسار استيراد وتصدير البيانات</a>
+      <a href="#section10" class="toc-item">10. إنشاء البيانات الرئيسية (Master Data)</a>
+      <a href="#section11" class="toc-item">11. الفروع والمستودعات الافتراضية</a>
+      <a href="#section12" class="toc-item">12. قائمة التحقق من الجاهزية</a>
+      <a href="#section13" class="toc-item">13. الاعتماد النهائي</a>
+    </div>
   </div>
-</div>
 
-<nav class="sticky-nav no-print">
-  <span class="nav-title">📌 التوجيه</span>
-  <div class="nav-links">
-    <a href="#cover">الغلاف</a>
-    <a href="#doc-cycle">الدورة المستندية</a>
-    <a href="#org-chart">الهيكل</a>
-    <a href="#permissions">الصلاحيات</a>
-    <a href="#odoo-integration">التكامل</a>
-    <a href="#kpis">المؤشرات</a>
-    <a href="#mobile">الهاتف</a>
-    <a href="#it-role">IT</a>
-    <a href="#excel">Excel</a>
-    <a href="#master-data">البيانات</a>
-    <a href="#branches">الفروع</a>
-    <a href="#completeness">إضافي</a>
+  <!-- 02. FULL LIFECYCLE -->
+  <div class="chapter" id="section2">
+    <div class="chapter-head">
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">OPERATIONAL & FINANCIAL PIPELINE</div>
+      <h2>الدورة المستندية الكاملة (١٢ مرحلة)</h2>
+    </div>
+    <p>يمثل هذا التدفق المسار الإلزامي لكل قطعة تدخل أو تخرج من عهدة Brandzo، بدءاً من الاحتياج التجاري وحتى الإغلاق المالي في الدفاتر، مما يضمن الشفافية والرقابة التامة.</p>
+
+    <h3>المراحل التشغيلية (Operational Logistics)</h3>
+    <div class="pipeline">
+      <div class="pipe-step operational">
+        <div class="pipe-num">01</div><div class="pipe-icon">🛒</div>
+        <strong>طلب شراء (PR)</strong>
+        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">تحديد الاحتياج بناءً على مستويات المخزون الدنيا أو طلبات الفروع العاجلة.</div>
+      </div>
+      <div class="pipe-step operational">
+        <div class="pipe-num">02</div><div class="pipe-icon">📄</div>
+        <strong>أمر شراء (PO)</strong>
+        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">الالتزام القانوني مع المورد بالكميات والأسعار المعتمدة من الإدارة التجارية.</div>
+      </div>
+      <div class="pipe-step operational">
+        <div class="pipe-num">03</div><div class="pipe-icon">🚛</div>
+        <strong>إشعار شحن (ASN)</strong>
+        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">إخطار المورد للمستودع بموعد وصول الشحنة وجدولة أرصفة الاستلام.</div>
+      </div>
+      <div class="pipe-step operational">
+        <div class="pipe-num">04</div><div class="pipe-icon">✅</div>
+        <strong>استلام وفحص (GRN)</strong>
+        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">المطابقة المادية وفحص الجودة (QC) لضمان سلامة البضاعة من أي تلف أو نقص.</div>
+      </div>
+      <div class="pipe-step operational">
+        <div class="pipe-num">05</div><div class="pipe-icon">🏬</div>
+        <strong>تخزين موجه</strong>
+        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">تسكين البضاعة في مواقعها المحددة آلياً (Putaway) وفق قواعد الصرف FEFO.</div>
+      </div>
+      <div class="pipe-step operational">
+        <div class="pipe-num">06</div><div class="pipe-icon">📦</div>
+        <strong>تحضير (Pick/Pack)</strong>
+        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">سحب الطلبات وتغليفها بناءً على أوامر الصرف المعتمدة للفروع أو العملاء.</div>
+      </div>
+      <div class="pipe-step operational">
+        <div class="pipe-num">07</div><div class="pipe-icon">🚚</div>
+        <strong>شحن وتوزيع</strong>
+        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">تحميل الشاحنات وإصدار أذونات الخروج (Gate Pass) الموثقة بالباركود.</div>
+      </div>
+      <div class="pipe-step operational">
+        <div class="pipe-num">08</div><div class="pipe-icon">↩️</div>
+        <strong>مرتجعات</strong>
+        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">معالجة المرتجع من الفروع وتصنيفه (سليم/تالف) وإعادته للموقع التخزيني المناسب.</div>
+      </div>
+    </div>
+
+    <h3>المراحل المالية المحاسبية (Financial Closing)</h3>
+    <div class="pipeline">
+      <div class="pipe-step financial">
+        <div class="pipe-num">09</div><div class="pipe-icon">⚖️</div>
+        <strong>مطابقة ثلاثية</strong>
+        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">مراجعة (PO + GRN + Bill) لضمان صحة الصرف المالي ومطابقة الكميات والقيم.</div>
+      </div>
+      <div class="pipe-step financial">
+        <div class="pipe-num">10</div><div class="pipe-icon">🧾</div>
+        <strong>فاتورة المورد</strong>
+        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">تسجيل الالتزام المالي النهائي في واجهة المحاسبة داخل مقترح Odoo.</div>
+      </div>
+      <div class="pipe-step financial">
+        <div class="pipe-num">11</div><div class="pipe-icon">📖</div>
+        <strong>قيود يومية</strong>
+        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">الترحيل الآلي للقيود بناءً على تحركات المخزون والفوترة المعتمدة.</div>
+      </div>
+      <div class="pipe-step financial">
+        <div class="pipe-num">12</div><div class="pipe-icon">🔒</div>
+        <strong>إغلاق الفترة</strong>
+        <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 8px;">مراجعة تقييم المخزون الختامي وإصدار تقارير الربح والخسارة للمجموعة.</div>
+      </div>
+    </div>
   </div>
-  <button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> طباعة / PDF</button>
-</nav>
 
-<div class="content">
-
-<!-- SECTION 1: Introduction & TOC -->
-<div class="chapter gold-accent" id="summary">
-    <div class="chapter-head gold">
-        <span class="chapter-num gold">٠١</span>
-        <h2>جدول المحتويات والمقدمة</h2>
-    </div>
-    <div class="box gold-box">
-        <strong>🎯 ملخص المقترح:</strong><br>
-        يعد هذا المستند التوثيق التشغيلي النهائي لربط العمليات الميدانية في مستودعات Brandzo مع مقترح توظيف أداة Odoo 17 Enterprise. يغطي المقترح ١٢ مرحلة من الدورة المستندية (٨ عمليات + ٤ مالية)، ويحدد مصفوفة الصلاحيات لـ ١٢ دوراً وظيفياً، ويقدم دليلاً شاملاً للعمل من خلال الهاتف والباركود.
-    </div>
-    <div class="table-wrap">
-        <table>
-            <thead><tr><th>#</th><th>القسم</th><th>الوصف</th></tr></thead>
-            <tbody id="toc-body"></tbody>
-        </table>
-    </div>
-</div>
-
-<!-- SECTION 2: Document Cycle -->
-<div class="chapter red-accent" id="doc-cycle">
-    <div class="chapter-head red-c">
-        <span class="chapter-num red-c">٠٢</span>
-        <h2>الدورة المستندية الكاملة</h2>
-    </div>
-    <p>انقر على أي مرحلة لعرض تفاصيلها التقنية في Odoo والرسوم/النماذج المرتبطة بها.</p>
-    <div class="pipeline" id="pipeline"></div>
-    <div id="cycle-details"></div>
-</div>
-
-<!-- SECTION 3: Org Chart & RACI -->
-<div class="chapter yellow-accent" id="org-chart">
-    <div class="chapter-head gold">
-        <span class="chapter-num gold">٠٣</span>
-        <h2>الهيكل التنظيمي × تقاطع الأقسام</h2>
-    </div>
-    <h3>شجرة القيادة والمسؤولية</h3>
-    <div class="org-wrap">
-        <div class="org-tree" id="org-tree-root"></div>
-    </div>
-
-    <h3 style="margin-top:2rem">مصفوفة توزيع المسؤوليات (RACI Matrix)</h3>
-    <div class="table-wrap">
-        <table id="raci-table"></table>
-    </div>
-</div>
-
-<!-- SECTION 4: Permissions -->
-<div class="chapter" id="permissions">
+  <!-- 03. ORG INTERSECTION -->
+  <div class="chapter" id="section3">
     <div class="chapter-head">
-        <span class="chapter-num">٠٤</span>
-        <h2>أدوار وصلاحيات المستودع</h2>
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">INTEGRATION & ACCOUNTABILITY</div>
+      <h2>التقاطع التنظيمي ومصفوفة RACI</h2>
     </div>
 
-    <h3>٤أ: مصفوفة الصلاحيات الكاملة</h3>
     <div class="table-wrap">
-        <table id="permissions-matrix"></table>
+      <h3>مصفوفة توزيع المسؤوليات (RACI Matrix)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>العملية / المرحلة</th>
+            <th>الإدارة التجارية</th>
+            <th>المستودع الرئيسي</th>
+            <th>العمليات اللوجستية</th>
+            <th>إدارة الجودة</th>
+            <th>الإدارة المالية</th>
+            <th>الإدارة التقنية</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>تحديد احتياج المخزون</td><td class="r-a">A/R</td><td class="r-c">C</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-c">C</td><td class="r-i">I</td></tr>
+          <tr><td>اعتماد أوامر الشراء</td><td class="r-r">R</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-a">A</td><td class="r-i">I</td></tr>
+          <tr><td>الاستلام الفعلي (GRN)</td><td class="r-i">I</td><td class="r-a">A/R</td><td class="r-c">C</td><td class="r-r">R</td><td class="r-i">I</td><td class="r-r">R</td></tr>
+          <tr><td>فحص الجودة والمطابقة</td><td class="r-i">I</td><td class="r-c">C</td><td class="r-i">I</td><td class="r-a">A/R</td><td class="r-i">I</td><td class="r-i">I</td></tr>
+          <tr><td>إدارة مواقع التخزين</td><td class="r-i">I</td><td class="r-a">A/R</td><td class="r-i">I</td><td class="r-c">C</td><td class="r-i">I</td><td class="r-c">C</td></tr>
+          <tr><td>تحضير وصرف الطلبيات</td><td class="r-c">C</td><td class="r-a">A/R</td><td class="r-r">R</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-i">I</td></tr>
+          <tr><td>التوزيع والشحن للفروع</td><td class="r-i">I</td><td class="r-c">C</td><td class="r-a">A/R</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-i">I</td></tr>
+          <tr><td>تسويات الجرد السنوي</td><td class="r-c">C</td><td class="r-r">R</td><td class="r-i">I</td><td class="r-c">C</td><td class="r-a">A/R</td><td class="r-i">I</td></tr>
+          <tr><td>إدارة البيانات (أصناف/موردين)</td><td class="r-a">A/R</td><td class="r-c">C</td><td class="r-i">I</td><td class="r-i">I</td><td class="r-c">C</td><td class="r-r">R</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size: 0.85rem; margin-top: 15px; color: var(--text-sec);">
+        <span class="r-r">R: Responsible (المنفذ)</span> | <span class="r-a">A: Accountable (المسؤول النهائي)</span> | <span class="r-c">C: Consulted (يُستشار)</span> | <span class="r-i">I: Informed (يُبلّغ)</span>
+      </p>
     </div>
+  </div>
 
-    <h3>٤ب: جدول الوثائق × صلاحية الإجراء</h3>
-    <div class="table-wrap">
-        <table id="action-authority"></table>
-    </div>
-
-    <h3>٤ج: قواعد الرقابة الداخلية</h3>
-    <div class="rules-grid" id="internal-rules"></div>
-
-    <h3>٤د: مصفوفة التصعيد</h3>
-    <div class="table-wrap">
-        <table id="escalation-matrix"></table>
-    </div>
-</div>
-
-<!-- SECTION 5: Odoo Integration -->
-<div class="chapter blue-accent" id="odoo-integration">
-    <div class="chapter-head blue">
-        <span class="chapter-num blue">٠٥</span>
-        <h2>تكامل Odoo — بنية العمليات</h2>
-    </div>
-    <div class="box blue-box">
-        <strong>⚙️ خارطة الربط البرمجي:</strong><br>
-        توضح الرؤية أدناه كيف تتدفق البيانات بين العمليات الميدانية والوحدات البرمجية في Odoo.
-    </div>
-    <div class="table-wrap">
-        <table id="odoo-map-table"></table>
-    </div>
-</div>
-
-<!-- SECTION 6: KPIs -->
-<div class="chapter green-accent" id="kpis">
-    <div class="chapter-head green">
-        <span class="chapter-num green">٠٦</span>
-        <h2>KPIs ومؤشرات الأداء</h2>
-    </div>
-    <div class="kpi-dashboard" id="kpi-dashboard"></div>
-</div>
-
-<!-- SECTION 7: Mobile -->
-<div class="chapter" id="mobile">
+  <!-- 04. WAREHOUSE CORE -->
+  <div class="chapter" id="section4">
     <div class="chapter-head">
-        <span class="chapter-num">٠٧</span>
-        <h2>العمل من الهاتف — دليل العمليات الميدانية</h2>
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">CORE DOMAIN OPERATIONS</div>
+      <h2>المستودعات: المهام، الصلاحيات، والقواعد</h2>
     </div>
-    <h3>٧أ: تفعيل واجهة الهاتف</h3>
-    <div class="role-grid" id="mobile-setup"></div>
 
-    <h3>٧ب: العمليات المتاحة من الهاتف</h3>
+    <h3>مصفوفة الصلاحيات التفصيلية (Role-Based Permissions)</h3>
     <div class="table-wrap">
-        <table id="mobile-ops-table"></table>
+      <table>
+        <thead>
+          <tr>
+            <th>الدور الوظيفي</th>
+            <th>المهام الإنشائية (Create)</th>
+            <th>المهام الاعتمادية (Validate)</th>
+            <th>صلاحيات العرض (View)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>مدير المستودع</td><td>تسويات الجرد، سندات التلف، التحويلات العاجلة</td><td>كافة حركات المخازن، الاعتماد المالي للجرد</td><td>كافة التقارير، سجلات المراجعة (Logs)</td></tr>
+          <tr><td>مشرف الاستلام</td><td>وصل الاستلام (GRN)، طلب فحص جودة</td><td>أوامر الاستلام (Receipts)، قائمة النواقص</td><td>أوامر الشراء (PO)، بيانات الموردين</td></tr>
+          <tr><td>مفتش الجودة</td><td>تقرير الفحص (QC)، إشعار عدم المطابقة (NCR)</td><td>الإفراج عن الدفعة (Quality Release)</td><td>بطاقات الأصناف، معايير التخزين</td></tr>
+          <tr><td>مشرف الصرف</td><td>قوائم السحب (Picking)، قائمة التعبئة</td><td>أمر التسليم (Delivery Order)</td><td>أوامر البيع، طلبات الفروع</td></tr>
+          <tr><td>مدقق الجرد</td><td>سجلات الجرد الدوري، بطاقات المواقع</td><td>مطابقة الأرصدة الفعلية بالدفتيرية</td><td>تقييم المخزون المالي</td></tr>
+          <tr><td>أمين المستودع (منفذ)</td><td>بيانات الباركود، حركات النقل الداخلي</td><td>تأكيد الانتقال بين المواقع</td><td>مواقع التخزين فقط</td></tr>
+        </tbody>
+      </table>
     </div>
 
-    <h3>٧ج: سير عمل الباركود الكامل</h3>
-    <div class="tab-container">
-        <div class="tab-headers" id="barcode-tabs"></div>
-        <div id="barcode-tab-contents"></div>
-    </div>
-
-    <h3>٧د: متطلبات الأجهزة الموصى بها</h3>
+    <h3>جدول مرجعية المستندات (٢١ نموذج تشغيلي)</h3>
     <div class="table-wrap">
-        <table id="hardware-table"></table>
+      <table>
+        <thead>
+          <tr>
+            <th>النموذج</th>
+            <th>الوصف المختصر</th>
+            <th>جهة الإصدار (Creator)</th>
+            <th>جهة الاعتماد (Validator)</th>
+            <th>المسار في Odoo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Purchase Requisition</td><td>تحديد نقص المخزون وطلب التزويد</td><td>أمين المستودع</td><td>مدير المستودع</td><td>Purchase/Requisitions</td></tr>
+          <tr><td>Purchase Order</td><td>أمر الشراء الموجه للمورد الخارجي</td><td>المشتريات</td><td>المدير التجاري</td><td>Purchase/Orders</td></tr>
+          <tr><td>GRN (Goods Receipt)</td><td>إثبات دخول البضاعة للمستودع</td><td>مشرف الاستلام</td><td>مدير المستودع</td><td>Inventory/Receipts</td></tr>
+          <tr><td>QC Inspection Report</td><td>نتائج فحص العينات والمطابقة الصحية</td><td>فريق الجودة</td><td>مدير الجودة</td><td>Quality/Checks</td></tr>
+          <tr><td>Putaway Directive</td><td>توجيهات تسكين البضاعة في الرفوف</td><td>آلية Odoo</td><td>مشرف الاستلام</td><td>Inventory/Operations</td></tr>
+          <tr><td>Internal Transfer</td><td>نقل البضاعة بين مناطق المستودع</td><td>أمين المستودع</td><td>مشرف الوردية</td><td>Inventory/Transfers</td></tr>
+          <tr><td>Store Requisition</td><td>طلب سحب مواد للاستخدام الداخلي</td><td>الأقسام الطالبة</td><td>مدير المستودع</td><td>Inventory/Transfer</td></tr>
+          <tr><td>Picking List</td><td>قائمة المهام لعمال سحب الطلبيات</td><td>آلية Odoo</td><td>مشرف الصرف</td><td>Inventory/Picking</td></tr>
+          <tr><td>Packing List</td><td>تفاصيل محتوى الطرود للشحن</td><td>موظف التعبئة</td><td>مشرف الصرف</td><td>Inventory/Operations</td></tr>
+          <tr><td>Delivery Note</td><td>إثبات تسليم البضاعة للعميل/الفرع</td><td>مشرف الصرف</td><td>المستلم</td><td>Inventory/Delivery</td></tr>
+          <tr><td>Gate Pass</td><td>تصريح خروج المركبة من الموقع</td><td>أمن البوابة</td><td>مشرف الوردية</td><td>Custom/Logs</td></tr>
+          <tr><td>Return Note</td><td>إثبات استلام مرتجع من الفرع</td><td>موظف المرتجعات</td><td>مشرف المرتجعات</td><td>Inventory/Returns</td></tr>
+          <tr><td>Credit Note</td><td>تسوية مالية لصالح العميل/المورد</td><td>الإدارة المالية</td><td>المدير المالي</td><td>Accounting/CreditNotes</td></tr>
+          <tr><td>Damaged Goods Report</td><td>حصر التوالف وتحديد المسؤولية</td><td>فريق الجودة</td><td>مدير المستودع</td><td>Inventory/Scrap</td></tr>
+          <tr><td>Scrap Order</td><td>إذن إعدام أو استبعاد مخزوني</td><td>مدير المستودع</td><td>المدير المالي</td><td>Inventory/Scrap</td></tr>
+          <tr><td>Bin Card</td><td>سجل الحركة التاريخي لكل موقع تخزين</td><td>آلية Odoo</td><td>أمين الموقع</td><td>Inventory/Reporting</td></tr>
+          <tr><td>Cycle Count Sheet</td><td>نموذج الجرد الدوري اليومي</td><td>مدقق الجرد</td><td>مدير المستودع</td><td>Inventory/Operations</td></tr>
+          <tr><td>Adjustment Voucher</td><td>سند تعديل الرصيد في Odoo</td><td>مدقق الجرد</td><td>المدير المالي</td><td>Inventory/Adjustments</td></tr>
+          <tr><td>Item Master Card</td><td>بيانات تعريف الصنف الجديد</td><td>التجارية</td><td>IT / المالية</td><td>Inventory/Products</td></tr>
+          <tr><td>Daily Huddle Log</td><td>توثيق اجتماعات الوردية وتوزيع المهام</td><td>مشرف الوردية</td><td>مدير العمليات</td><td>Logs/Documents</td></tr>
+          <tr><td>Weekly QC Audit</td><td>تقرير التفتيش الأسبوعي الشامل</td><td>مشرف الجودة</td><td>مدير الجودة</td><td>Quality/Inspection</td></tr>
+        </tbody>
+      </table>
     </div>
-</div>
 
-<!-- SECTION 8: IT Role -->
-<div class="chapter purple-accent" id="it-role">
-    <div class="chapter-head purple">
-        <span class="chapter-num purple">٠٨</span>
-        <h2>دور إدارة تقنية المعلومات (IT)</h2>
-    </div>
-    <div id="it-role-card"></div>
-    <h3>مهام الإعداد التقني الحصرية</h3>
+    <h3>قواعد الرقابة والامتثال (Internal Control Rules)</h3>
+    <ul class="rules-list">
+      <li class="rule-item">
+        <strong>سياسة الفصل بين المهام:</strong> يمنع منعاً باتاً أن يكون الشخص الذي يقوم بالاستلام (GRN) هو نفس الشخص الذي يعتمد جودة الشحنة (QC).
+      </li>
+      <li class="rule-item">
+        <strong>قاعدة الاستلام الصارم:</strong> لا يتم استلام أي قطعة لا يوجد لها أمر شراء (PO) في المقترح التقني — يتم إرجاعها فوراً على حساب المورد.
+      </li>
+      <li class="rule-item">
+        <strong>التدقيق اللحظي:</strong> يجب مسح باركود (Location) قبل مسح باركود (Product) عند التسكين لضمان دقة الموقع في واجهة Odoo.
+      </li>
+      <li class="rule-item">
+        <strong>قاعدة الصرف الموجه:</strong> يمنع السحب العشوائي؛ السحب يتم فقط بناءً على "قائمة سحب" إلكترونية تحترم تاريخ انتهاء الصلاحية (FEFO).
+      </li>
+    </ul>
+
+    <h3>مصفوفة التصعيد الإداري (Escalation Matrix)</h3>
     <div class="table-wrap">
-        <table id="it-tasks-table"></table>
+      <table>
+        <thead>
+          <tr>
+            <th>الحالة / المشكلة</th>
+            <th>مستوى ١ (تشغيلي)</th>
+            <th>مستوى ٢ (إداري)</th>
+            <th>مستوى ٣ (إستراتيجي)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>فروقات GRN كبيرة (> ٥٪)</td><td>مشرف الاستلام</td><td>مدير المستودع</td><td>المدير التجاري</td></tr>
+          <tr><td>تعطل آلية المسح بالباركود</td><td>IT Support</td><td>مدير التقنية</td><td>المدير العام</td></tr>
+          <tr><td>رفض شحنة من قبل الجودة</td><td>مفتش الجودة</td><td>مدير الجودة</td><td>مدير المستودع</td></tr>
+          <tr><td>طلب صرف عاجل بدون رصيد</td><td>مشرف الصرف</td><td>مدير المستودع</td><td>المدير التجاري</td></tr>
+        </tbody>
+      </table>
     </div>
+  </div>
+
+  <!-- 05. ODOO ARCHITECTURE -->
+  <div class="chapter" id="section5">
+    <div class="chapter-head">
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">MAPPING PHYSICAL TO DIGITAL</div>
+      <h2>هندسة المقترح في Odoo</h2>
+    </div>
+    <div style="font-family: 'Roboto Mono', monospace; background: #000; padding: 2.5rem; border-radius: 12px; border: 1px solid var(--gold); overflow-x: auto; white-space: pre; font-size: 0.85rem; color: var(--green); line-height: 1.4;">
+[ PHYSICAL OPERATION ]      [ ODOO MODULE / PATH ]        [ FINANCIAL RESULT ]
+          |                           |                          |
+   Truck Arrival --------> [ Inventory > Receipts ] ------> [ Pending Valuation ]
+          |                           |                          |
+   Quality Check -------> [ Quality > Control Point ] ----> [ QC Log Entry ]
+          |                           |                          |
+   Unloading / Scan ----> [ Inventory > Putaway ] --------> [ Asset Assignment ]
+          |                           |                          |
+   On-Shelf Storage ----> [ Inventory > Locations ] ------> [ Stock Value Report ]
+          |                           |                          |
+   Order Picking -------> [ Inventory > Transfers ] ------> [ Reserved Stock ]
+          |                           |                          |
+   Packing/Boxing ------> [ Inventory > Operations ] -----> [ COGS Calculation ]
+          |                           |                          |
+   Dispatch/Loading ----> [ Sales > Delivery Orders ] ----> [ Revenue Trigger ]
+          |                           |                          |
+   Gate Exit -----------> [ Log: Gate Pass Mechanism ] ---> [ Final Close ]
+    </div>
+  </div>
+
+  <!-- 06. KPIs -->
+  <div class="chapter" id="section6">
+    <div class="chapter-head">
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">STRATEGIC PERFORMANCE INDICATORS</div>
+      <h2>لوحة مؤشرات الأداء (KPIs)</h2>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-val">≥98.5%</div>
+        <div class="kpi-label">دقة الجرد (Inventory Accuracy)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val">≤240m</div>
+        <div class="kpi-label">زمن الاستلام (Dock-to-Stock)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val">≥99.9%</div>
+        <div class="kpi-label">دقة الشحن (Shipping Accuracy)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val">≤0.3%</div>
+        <div class="kpi-label">نسبة التوالف (Scrap Rate)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val">≥96%</div>
+        <div class="kpi-label">جاهزية الأسطول (Fleet Uptime)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val">100%</div>
+        <div class="kpi-label">الامتثال لـ FEFO (Expiry Compliance)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val">≤45m</div>
+        <div class="kpi-label">متوسط زمن التحضير (Pick Time)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val">≥97%</div>
+        <div class="kpi-label">رضا الفروع (Branch Fill Rate)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 07. MOBILE OPERATIONS -->
+  <div class="chapter" id="section7">
+    <div class="chapter-head">
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">REAL-TIME FLOOR EXECUTION</div>
+      <h2>دليل العمليات عبر الجوال (Barcode App)</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 3rem;">
+      <div>
+        <h3 style="border-right-color: var(--orange);">آلية الاستلام (Receiving)</h3>
+        <ol style="padding-right: 1.5rem; margin-top: 1rem;">
+          <li style="margin-bottom: 10px;">فتح واجهة <em>Odoo Barcode</em> واختيار (Receipts).</li>
+          <li style="margin-bottom: 10px;">مسح باركود أمر الشراء (PO) من مستندات الشحنة.</li>
+          <li style="margin-bottom: 10px;">مسح باركود الصنف والتحقق من الكمية وتاريخ الصلاحية.</li>
+          <li style="margin-bottom: 10px;">إدخال رقم الدفعة (Lot Number) المطبوع على المنتج.</li>
+          <li style="margin-bottom: 10px;">تأكيد الاستلام (Validate) لتحديث الأرصدة فوراً.</li>
+        </ol>
+      </div>
+      <div>
+        <h3 style="border-right-color: var(--green);">آلية السحب (Picking)</h3>
+        <ol style="padding-right: 1.5rem; margin-top: 1rem;">
+          <li style="margin-bottom: 10px;">تلقي إشعار بمهمة سحب جديدة موجهة لمواقع محددة.</li>
+          <li style="margin-bottom: 10px;">مسح باركود الموقع (Bin Scan) للتأكد من دقة العملية.</li>
+          <li style="margin-bottom: 10px;">مسح باركود المنتج؛ سيوجهك Odoo لسحب التاريخ الأقرب للانتهاء.</li>
+          <li style="margin-bottom: 10px;">إتمام السحب وتوجيه البضاعة لمنطقة التعبئة النهائية.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- 08. IT ROLE -->
+  <div class="chapter" id="section8">
+    <div class="chapter-head">
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">OPERATIONAL STABILITY & SUPPORT</div>
+      <h2>دور الإدارة التقنية (IT Management)</h2>
+    </div>
+    <p>تعتبر الإدارة التقنية هي المحرك الخلفي لضمان عمل كافة الآليات الرقمية للمقترح دون انقطاع.</p>
+    <ul class="rules-list" style="margin-top: 1rem;">
+      <li class="rule-item">إدارة الخوادم وضمان وصول ٩٩.٩٪ لقاعدة بيانات Odoo والنسخ الاحتياطي اللحظي.</li>
+      <li class="rule-item">تغطية كافة نقاط المستودع بشبكة Wi-Fi صناعية مستقرة للماسحات المحمولة.</li>
+      <li class="rule-item">برمجة وصيانة ماسحات الباركود وتحديث وحداتها البرمجية بشكل دوري.</li>
+      <li class="rule-item">إدارة أدوار المستخدمين ومنع الوصول غير المصرح به للبيانات الحساسة.</li>
+    </ul>
+  </div>
+
+  <!-- 09. EXCEL WORKFLOW -->
+  <div class="chapter" id="section9">
+    <div class="chapter-head">
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">BULK DATA INTEROPERABILITY</div>
+      <h2>مسار استيراد وتصدير البيانات</h2>
+    </div>
+    <p style="margin-bottom: 1.5rem;">يتم اعتماد آلية الإكسيل كجسر تواصل سريع بين المستودع والإدارة التجارية لتسريع عمليات الشراء الضخمة.</p>
+    <div class="pipeline">
+      <div class="pipe-step">
+        <div class="pipe-num">١</div>
+        <strong>Export (WH)</strong>
+        <div style="font-size: 0.8rem; margin-top: 10px;">تصدير ملف النواقص من Odoo (الأصناف التي وصلت لنقطة الطلب).</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-num">٢</div>
+        <strong>Enrich (Comm.)</strong>
+        <div style="font-size: 0.8rem; margin-top: 10px;">الإدارة التجارية تضيف الأسعار، عروض الموردين، والكميات المقترح شراؤها.</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-num">٣</div>
+        <strong>Import (Odoo)</strong>
+        <div style="font-size: 0.8rem; margin-top: 10px;">رفع الملف المحدث إلى Odoo ليتحول تلقائياً إلى مسودة أمر شراء (Draft PO).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. MASTER DATA -->
+  <div class="chapter" id="section10">
+    <div class="chapter-head">
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">GOVERNANCE OF TRUTH</div>
+      <h2>إنشاء البيانات الرئيسية (Master Data)</h2>
+    </div>
+    <div class="rule-item" style="border-right-color: var(--gold); background: rgba(255, 215, 0, 0.08);">
+      <strong style="color: var(--gold); font-size: 1.2rem;">⚠️ قاعدة السيادة التجارية:</strong> تعتبر <strong>الإدارة التجارية (Commercial Department)</strong> هي الجهة الوحيدة والمخولة حصرياً بإنشاء وتعريف الأصناف والموردين والعملاء في Odoo لضمان توحيد البيانات ومنع الازدواجية.
+    </div>
+
+    <h3>دورة حياة تعريف الصنف (Workflow)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>المرحلة</th>
+            <th>الجهة المسؤولة</th>
+            <th>البيانات المطلوبة في Odoo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>١. التأسيس التجاري (Creator)</td><td>الإدارة التجارية</td><td>إنشاء بطاقة المنتج، تحديد الاسم، الفئة، وحدة القياس، سعر البيع/التكلفة، والمورد الافتراضي، ومهلة التوريد.</td></tr>
+          <tr><td>٢. الإثراء اللوجستي (Enricher)</td><td>إدارة المستودع / IT</td><td>تحديد قواعد التخزين (Putaway)، مسارات النقل، تعيين الباركود، وتحديد المواقع الافتراضية للتخزين.</td></tr>
+          <tr><td>٣. الرقابة المالية (Reviewer)</td><td>إدارة المالية</td><td>مراجعة وتثبيت حسابات الدخل والمصروفات، وربط مركز التكلفة، وقفل بيانات الصنف مالياً.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 11. MULTI-WH & VANs -->
+  <div class="chapter" id="section11">
+    <div class="chapter-head">
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">DISTRIBUTED INVENTORY STRATEGY</div>
+      <h2>الفروع والمستودعات الافتراضية (Virtual VANs)</h2>
+    </div>
+    <p>تعتمد Brandzo نموذج "المواقع المتعددة" لإدارة المخزون في الفروع وشاحنات التوزيع ككيانات مستقلة.</p>
+
+    <h3>١. آلية نقل الفروع (Replenishment)</h3>
+    <ul style="padding-right: 1.5rem; margin-top: 1rem;">
+      <li style="margin-bottom: 10px;">يقوم مدير الفرع بإنشاء <em>Internal Transfer Request</em> عبر واجهته المخصصة في Odoo.</li>
+      <li style="margin-bottom: 10px;">يتم السحب من المستودع الرئيسي وتأكيد الاستلام في موقع الفرع بالباركود.</li>
+    </ul>
+
+    <h3>٢. المستودعات المتنقلة (Virtual VAN Locations)</h3>
+    <ul style="padding-right: 1.5rem; margin-top: 1rem;">
+      <li style="margin-bottom: 10px;">كل شاحنة توزيع تعتبر "موقعاً تخزينياً افتراضياً" (Virtual Location) في المقترح.</li>
+      <li style="margin-bottom: 10px;">عند البيع المباشر من الشاحنة، يتم الخصم من رصيد موقع الـ VAN المخصص لحظياً.</li>
+    </ul>
+  </div>
+
+  <!-- 12. COMPLETENESS CHECKLIST -->
+  <div class="chapter" id="section12">
+    <div class="chapter-head">
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">FINAL READINESS AUDIT</div>
+      <h2>قائمة التحقق من الجاهزية</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>المتطلب التشغيلي</th>
+            <th>التفاصيل الفنية</th>
+            <th>الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>آلية تتبع الدفعات (Lots)</td><td>تم تفعيل تتبع تاريخ الإنتاج والانتهاء لكل قطعة.</td><td>✅ مكتمل</td></tr>
+          <tr><td>قواعد إعادة الطلب (Min/Max)</td><td>تعريف نقاط إعادة الطلب لـ ٥٠٠ صنف أساسي.</td><td>⚠️ قيد التدقيق</td></tr>
+          <tr><td>عناوين المواقع (Addressing)</td><td>ترقيم الأرفف بآلية (UU-A-BB-LL) وتفعيل الباركود.</td><td>✅ مكتمل</td></tr>
+          <tr><td>الجرد السنوي الشامل</td><td>خطة الجرد الشامل الموقعة وآلية تجميد الحركات.</td><td>📅 مجدول</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 13. SIGN-OFF -->
+  <div class="chapter" id="section13">
+    <div class="chapter-head">
+      <div style="font-size: 0.9rem; color: var(--text-sec); letter-spacing: 1px;">EXECUTIVE APPROVAL & SIGN-OFF</div>
+      <h2>الاعتماد النهائي</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 3rem; text-align: center; margin-top: 4rem;">
+      <div style="border-top: 2px solid var(--orange); padding-top: 1.5rem;"><strong>الإدارة التجارية</strong></div>
+      <div style="border-top: 2px solid var(--orange); padding-top: 1.5rem;"><strong>مدير المستودع التنفيذي</strong></div>
+      <div style="border-top: 2px solid var(--orange); padding-top: 1.5rem;"><strong>الإدارة المالية</strong></div>
+    </div>
+    <div style="margin-top: 7rem; text-align: center;">
+      <div style="display: inline-block; width: 350px; border-top: 4px double var(--gold); padding-top: 1.5rem;">
+        <h3 style="border: none; color: #fff; margin-bottom: 0.5rem;">المدير العام (CEO)</h3>
+        <p style="color: var(--gold); font-weight: bold;">BRANDZO HOLDING GROUP</p>
+      </div>
+    </div>
+  </div>
+
 </div>
-
-<!-- SECTION 9: Excel -->
-<div class="chapter teal-accent" id="excel">
-    <div class="chapter-head teal">
-        <span class="chapter-num teal">٠٩</span>
-        <h2>استيراد وتصدير Excel</h2>
-    </div>
-    <div class="tab-container">
-        <div class="tab-headers" id="excel-tabs"></div>
-        <div id="excel-tab-contents"></div>
-    </div>
-</div>
-
-<!-- SECTION 10: Master Data -->
-<div class="chapter" id="master-data">
-    <div class="chapter-head gold">
-        <span class="chapter-num gold">١٠</span>
-        <h2>إضافة الأصناف والموردين والعملاء</h2>
-    </div>
-    <div id="master-data-accordion"></div>
-</div>
-
-<!-- SECTION 11: Branches -->
-<div class="chapter purple-accent" id="branches">
-    <div class="chapter-head purple">
-        <span class="chapter-num purple">١١</span>
-        <h2>إدارة الفروع والمخزن الافتراضي VAN</h2>
-    </div>
-    <div id="branch-management-content"></div>
-</div>
-
-<!-- SECTION 12: Completeness -->
-<div class="chapter blue-accent" id="completeness">
-    <div class="chapter-head blue">
-        <span class="chapter-num blue">١٢</span>
-        <h2>ما قد يُنسى — مواضيع تكميلية</h2>
-    </div>
-    <div id="completeness-accordion"></div>
-</div>
-
-<!-- SECTION 13: Sign-off -->
-<div class="chapter gold-accent" id="signatures">
-    <div class="chapter-head gold">
-        <span class="chapter-num gold">١٣</span>
-        <h2>خاتمة وتوقيعات الاعتماد</h2>
-    </div>
-    <div style="display:flex; justify-content:space-around; flex-wrap:wrap; margin-top:3rem;">
-        <div style="text-align:center; min-width:200px;">
-            <div style="border-top:2px solid var(--orange); padding-top:10px; margin-top:50px;">محمد البرشي</div>
-            <div style="font-size:0.8rem; color:var(--text-muted);">إدارة المستودعات (إعداد)</div>
-        </div>
-        <div style="text-align:center; min-width:200px;">
-            <div style="border-top:2px solid var(--orange); padding-top:10px; margin-top:50px;">رمزي باش</div>
-            <div style="font-size:0.8rem; color:var(--text-muted);">إدارة المستودعات (مراجعة)</div>
-        </div>
-        <div style="text-align:center; min-width:200px;">
-            <div style="border-top:2px solid var(--orange); padding-top:10px; margin-top:50px;">..................................</div>
-            <div style="font-size:0.8rem; color:var(--text-muted);">المدير العام (اعتماد)</div>
-        </div>
-    </div>
-</div>
-
-</div><!-- end content -->
-
-<div class="page-footer">
-  <strong>BRANDZO HUB 2026</strong> — مقترح الدورة المستندية الكاملة · الإصدار 2.0<br>
-  توثيق تشغيلي | بنغازي، ليبيا | سري — يحظر التداول خارج نطاق الإدارة
-</div>
-
-</div><!-- end main-container -->
 
 <script>
-/* ========================================================
-   DATA STRUCTURES
-   ======================================================== */
-const SECTIONS = [
-    { id: 'cover', title: 'صفحة الغلاف' },
-    { id: 'doc-cycle', title: 'الدورة المستندية الكاملة' },
-    { id: 'org-chart', title: 'الهيكل التنظيمي' },
-    { id: 'permissions', title: 'أدوار وصلاحيات المستودع' },
-    { id: 'odoo-integration', title: 'تكامل Odoo' },
-    { id: 'kpis', title: 'مؤشرات الأداء' },
-    { id: 'mobile', title: 'العمل من الهاتف' },
-    { id: 'it-role', title: 'دور تقنية المعلومات' },
-    { id: 'excel', title: 'استيراد وتصدير Excel' },
-    { id: 'master-data', title: 'إضافة الأصناف والموردين والعملاء' },
-    { id: 'branches', title: 'إدارة الفروع والـ VAN' },
-    { id: 'completeness', title: 'مواضيع إضافية' },
-    { id: 'signatures', title: 'خاتمة وتوقيعات' }
-];
-
-const STAGES = [
-    { id: 'pr', num: '01', icon: '🛒', titleAr: 'طلب الشراء (PR)', dept: 'التجارية', odoo: 'Purchase > Requisitions', desc: 'مستند داخلي يصدر تلقائياً عند وصول الرصيد إلى نقطة إعادة الطلب.', forms: ['form_PurchaseRequisition.html'], status: 'Draft → Confirmed', accent: 'ps-blue' },
-    { id: 'po', num: '02', icon: '📝', titleAr: 'أمر الشراء (PO)', dept: 'التجارية → مالية', odoo: 'Purchase > Orders', desc: 'المستند الرسمي القانوني المرسل للمورد. يمثل التزاماً تعاقدياً.', forms: ['form_PO.html'], status: 'Draft → Sent → PO', accent: 'ps-red' },
-    { id: 'asn', num: '03', icon: '🚛', titleAr: 'إشعار الشحن (ASN)', dept: 'المستودع', odoo: 'Inventory > Receipts', desc: 'إشعار إلكتروني من المورد عند شحن البضاعة من مخازنه.', forms: [], status: 'Scheduled', accent: 'ps-gold' },
-    { id: 'grn', num: '04', icon: '✅', titleAr: 'الاستلام وفحص الجودة', dept: 'المستودع + الجودة', odoo: 'Inventory > Receipts > 3-step', desc: 'الإقرار الرسمي باستلام البضاعة بعد فحص الجودة.', forms: ['form_GRN.html', 'form_QCReport.html', 'form_DeliveryNote.html'], status: 'Input → QC → Ready', accent: 'ps-green' },
-    { id: 'putaway', num: '05', icon: '🏬', titleAr: 'التخزين الموجه', dept: 'المستودع', odoo: 'Inventory > Putaway Rules', desc: 'توجيه الأصناف إلى مواقع التخزين المثلى تلقائياً.', forms: ['form_PutawayList.html', 'form_BinCard.html'], status: 'Done', accent: 'ps-navy' },
-    { id: 'picking', num: '06', icon: '📦', titleAr: 'تحضير الطلبات', dept: 'المستودع', odoo: 'Inventory > Pick', desc: 'سحب الأصناف من مواقعها وتعبئتها للشحن.', forms: ['form_Picking.html', 'form_PackingList.html', 'form_Store Requisition.html'], status: 'Waiting → Ready → Done', accent: 'ps-orange' },
-    { id: 'dispatch', num: '07', icon: '🚚', titleAr: 'الشحن والتوزيع', dept: 'المستودع + اللوجستيات', odoo: 'Inventory > Delivery', desc: 'إصدار إذن التسليم وتصريح خروج البوابة.', forms: ['form_DeliveryNote.html', 'form_GatePass.html', 'form_Stock Transfer Slip.html'], status: 'Validated → Sent', accent: 'ps-blue' },
-    { id: 'returns', num: '08', icon: '↩️', titleAr: 'المرتجعات والتسويات', dept: 'المستودع → مالية', odoo: 'Returns + Accounting', desc: 'استلام المرتجعات وتصنيفها ومعالجة التسويات.', forms: ['form_ReturnNote.html', 'form_Damaged Goods Report.html', 'form_Stock Adjustment Voucher.html', 'form_Credit Note.html'], status: 'Draft → Validated', accent: 'ps-red' },
-    { id: 'match', num: '09', icon: '⚖️', titleAr: 'مطابقة 3-Way Match', dept: 'المالية', odoo: 'Purchase / Accounting', desc: 'مطابقة PO + GRN + Invoice قبل الصرف.', forms: [], status: 'Verified', accent: 'ps-green' },
-    { id: 'bill', num: '10', icon: '🧾', titleAr: 'فاتورة المورد', dept: 'المالية', odoo: 'Accounting > Vendor Bills', desc: 'تسجيل الالتزام المالي النهائي للمورد.', forms: [], status: 'Draft → Posted', accent: 'ps-gold' },
-    { id: 'entry', num: '11', icon: '📊', titleAr: 'القيد المحاسبي', dept: 'المالية', odoo: 'Journal Entry', desc: 'تسوية الحسابات المالية آلياً.', forms: [], status: 'Posted', accent: 'ps-navy' },
-    { id: 'close', num: '12', icon: '🔒', titleAr: 'الإغلاق المالي', dept: 'المالية', odoo: 'Financial Closing', desc: 'إغلاق الفترة المحاسبية الشهرية.', forms: [], status: 'Closed ✓', accent: 'ps-green' }
-];
-
-const ROLES = [
-    { title: 'مدير المستودع التنفيذي', role: 'Inventory Manager', create: 'جميع المستندات', approve: 'تسويات، جرد، Gate Pass، مرتجعات عالية', view: 'كل شيء', access: 'Full Configuration + Reporting' },
-    { title: 'مدير إدارة المستودعات', role: 'Inventory Manager', create: 'PutawayList, BinCard, CycleCount, StockAdjustment', approve: 'GRN (نهائي)، Stock Transfer، DamagedGoods', view: 'مخازن، حركات', access: 'Inventory + Barcode (Full)' },
-    { title: 'مشرف الاستلام', role: 'Inventory User', create: 'GRN (Draft), DeliveryNote (استلام), ASN', approve: 'GRN بعد فحص الجودة', view: 'أوامر الشراء، الاستلامات', access: 'Inventory > Receipts' },
-    { title: 'فاحص الجودة', role: 'Quality Administrator', create: 'QCReport, DamagedGoodsReport', approve: 'قرار القبول/الرفض', view: 'مواصفات الأصناف', access: 'Quality > Control Points' },
-    { title: 'مشرف التخزين', role: 'Inventory User', create: 'PutawayList, BinCard', approve: 'أوامر التخزين الموجه', view: 'مواقع، أرصدة', access: 'Inventory > Internal Transfers' },
-    { title: 'مشغل الصرف', role: 'Inventory User', create: 'Picking List, PackingList, StoreRequisition', approve: 'أوامر الصرف (بعد الموافقة)', view: 'قوائم السحب', access: 'Inventory > Pick Operations' },
-    { title: 'مشرف الشحن', role: 'Inventory User', create: 'DeliveryNote (صرف), GatePass, StockTransferSlip', approve: 'GatePass, DeliveryNote (نهائي)', view: 'طلبات الشحن', access: 'Inventory > Delivery Orders' },
-    { title: 'مسؤول المرتجعات', role: 'Inventory User', create: 'ReturnNote, DamagedGoodsReport', approve: 'ReturnNote', view: 'المرتجعات', access: 'Inventory > Returns' },
-    { title: 'مدقق الجرد', role: 'Quality Administrator', create: 'CycleCount, WeeklyCheck, DailyHuddle', approve: 'نتائج الجرد', view: 'المخزون الفعلي والمسجل', access: 'Inventory > Physical Inventory' },
-    { title: 'مسؤول الحوكمة', role: 'Governance Auditor', create: 'تقارير الامتثال', approve: '-', view: 'Audit Logs, سجلات الموافقات', access: 'Quality + Audit Logs (Read Only)' },
-    { title: 'محاسب المخزون', role: 'Accounting Manager', create: 'Vendor Bill, Credit Note, Journal Entry', approve: 'Stock Adjustment Voucher (نهائي)', view: 'القيم المالية للمخزون', access: 'Accounting > Vendor Bills' },
-    { title: 'مدير التجارية', role: 'Purchase Manager', create: 'PR → PO', approve: 'PO (اعتماد تجاري)', view: 'الموردين، الأسعار', access: 'Purchase > Orders' }
-];
-
-const FORMS_DATA = [
-    { name: 'Purchase Requisition (PR)', creator: 'تجارية / فروع', approver: 'مدير القسم', canceller: 'تجارية', unit: 'Purchase', flow: 'New → Approved' },
-    { name: 'أمر الشراء (PO)', creator: 'مدير التجارية', approver: 'مالية', canceller: 'مدير التجارية', unit: 'Purchase', flow: 'Draft → PO' },
-    { name: 'إشعار الشحن (ASN)', creator: 'المورد', approver: 'تلقائي', canceller: 'المورد', unit: 'Inventory', flow: 'Scheduled' },
-    { name: 'مذكرة الاستلام (GRN)', creator: 'مشرف استلام', approver: 'مدير مستودع', canceller: 'مدير مستودع', unit: 'Inventory', flow: 'Draft → Validated' },
-    { name: 'تقرير فحص الجودة (QC)', creator: 'فاحص جودة', approver: 'مشرف جودة', canceller: 'فاحص جودة', unit: 'Quality', flow: 'Pending → Pass/Fail' },
-    { name: 'أمر التخزين (PutawayList)', creator: 'آلي / مشرف', approver: 'مشرف تخزين', canceller: 'مشرف تخزين', unit: 'Inventory', flow: 'Assigned → Done' },
-    { name: 'بطاقة الموقع (BinCard)', creator: 'مشرف تخزين', approver: 'تلقائي', canceller: '-', unit: 'Inventory', flow: 'Current' },
-    { name: 'قائمة السحب (PickingList)', creator: 'مشغل صرف', approver: 'مشرف شحن', canceller: 'مشرف شحن', unit: 'Inventory', flow: 'Ready → Done' },
-    { name: 'قائمة التعبئة (PackingList)', creator: 'مشغل صرف', approver: 'مشرف شحن', canceller: 'مشرف شحن', unit: 'Inventory', flow: 'Draft → Packed' },
-    { name: 'طلب صرف داخلي (StoreRequisition)', creator: 'مشغل صرف', approver: 'مشرف', canceller: 'مشرف', unit: 'Purchase', flow: 'Draft → Approved' },
-    { name: 'إذن التسليم (DeliveryNote)', creator: 'مشرف شحن', approver: 'مدير مستودع', canceller: 'مدير مستودع', unit: 'Inventory', flow: 'Ready → Sent' },
-    { name: 'تصريح البوابة (GatePass)', creator: 'مشرف شحن', approver: 'مدير مستودع', canceller: 'أمن المستودع', unit: 'Custom', flow: 'Open → Closed' },
-    { name: 'إذن نقل (StockTransfer)', creator: 'مدير فرع / SCM', approver: 'مدير مستودع', canceller: 'مدير مستودع', unit: 'Inventory', flow: 'Draft → Ready → Done' },
-    { name: 'إشعار الإرجاع (ReturnNote)', creator: 'مسؤول مرتجعات', approver: 'مشرف جودة', canceller: 'مدير مستودع', unit: 'Inventory', flow: 'Draft → Received' },
-    { name: 'تقرير التالف (DamagedGoods)', creator: 'فاحص جودة', approver: 'مدير مستودع + مالية', canceller: 'مدير مستودع', unit: 'Inventory', flow: 'Reported → Scrapped' },
-    { name: 'سند تسوية (StockAdjustment)', creator: 'مدير مستودع', approver: 'تنفيذي + مالية', canceller: 'تنفيذي', unit: 'Inventory', flow: 'Draft → Validated' },
-    { name: 'الإشعار الدائن (CreditNote)', creator: 'محاسب', approver: 'مدير مالي', canceller: 'مدير مالي', unit: 'Accounting', flow: 'Draft → Posted' },
-    { name: 'جرد دوري (CycleCount)', creator: 'مدقق جرد', approver: 'مدير مستودع', canceller: 'مدير مستودع', unit: 'Inventory', flow: 'In Progress → Done' },
-    { name: 'اجتماع يومي (DailyHuddle)', creator: 'مشرفين', approver: '-', canceller: '-', unit: 'Log', flow: 'Record' },
-    { name: 'فحص أسبوعي (WeeklyCheck)', creator: 'مدقق جرد', approver: 'مدير مستودع', canceller: '-', unit: 'Audit', flow: 'Record' },
-    { name: 'نموذج ٢١ (Report21)', creator: 'مدير مستودع', approver: 'تنفيذي', canceller: '-', unit: 'Report', flow: 'Final' }
-];
-
-const KPIS_DATA = [
-    { lbl: 'دقة الاستلام (GRN Accuracy)', val: '≥ 98%', freq: 'يومي', ref: 'GRN vs PO match' },
-    { lbl: 'دقة التخزين (Putaway Accuracy)', val: '≥ 99.5%', freq: 'أسبوعي', ref: 'Bin vs Odoo' },
-    { lbl: 'دقة الصرف (Pick Accuracy)', val: '≥ 99.7%', freq: 'يومي', ref: 'Picked vs Order' },
-    { lbl: 'معدل معالجة المرتجعات', val: '≥ 95% / 48h', freq: 'أسبوعي', ref: 'ReturnNote timestamp' },
-    { lbl: 'دقة المخزون الدوري', val: '≥ 99%', freq: 'شهري', ref: 'CycleCount vs Odoo' },
-    { lbl: 'وقت دورة الاستلام (GRN Cycle Time)', val: '≤ 4 ساعات', freq: 'يومي', ref: 'ASN to GRN validate' },
-    { lbl: 'نسبة مطابقة 3-Way', val: '100%', freq: 'شهري', ref: 'PO+GRN+Invoice' },
-    { lbl: 'معدل الانحراف عن FEFO', val: '0%', freq: 'يومي', ref: 'Expiry monitoring' }
-];
-
-/* ========================================================
-   RENDER LOGIC
-   ======================================================== */
-function initTOC() {
-    const body = document.getElementById('toc-body');
-    SECTIONS.forEach((s, idx) => {
-        body.innerHTML += `<tr><td>${idx+1}</td><td><a href="#${s.id}" style="color:var(--yellow); text-decoration:none">${s.title}</a></td><td>قسم رقم ${idx+1} في المقترح</td></tr>`;
-    });
+function togglePresentation() {
+  document.body.classList.toggle('presentation-mode');
 }
-
-function initPipeline() {
-    const pipe = document.getElementById('pipeline');
-    STAGES.forEach(s => {
-        const step = document.createElement('div');
-        step.className = `pipe-step ${s.accent}`;
-        step.innerHTML = `<span class="pipe-icon">${s.icon}</span><div class="pipe-label">${s.titleAr}</div><div class="pipe-sub">${s.id.toUpperCase()}</div>`;
-        step.onclick = () => selectStage(s.id);
-        pipe.appendChild(step);
-    });
-    selectStage('pr');
-}
-
-function selectStage(id) {
-    const s = STAGES.find(x => x.id === id);
-    const detail = document.getElementById('cycle-details');
-    detail.innerHTML = `
-        <div class="detail-panel active">
-            <h3 style="margin-top:0"><span style="color:var(--yellow)">${s.num} |</span> ${s.titleAr}</h3>
-            <p>${s.desc}</p>
-            <div class="table-wrap">
-                <table>
-                    <tr><th>القسم المسؤول</th><td>${s.dept}</td></tr>
-                    <tr><th>المسار في Odoo</th><td style="font-family:'Roboto Mono',monospace">${s.odoo}</td></tr>
-                    <tr><th>الحالة (Status)</th><td style="color:var(--orange)">${s.status}</td></tr>
-                    <tr><th>النماذج المرتبطة</th><td>${s.forms.length > 0 ? s.forms.map(f => `<a href="forms/${f}" target="_blank" style="color:var(--blue-info)">${f}</a>`).join(' | ') : 'لا يوجد'}</td></tr>
-                </table>
-            </div>
-        </div>
-    `;
-    document.querySelectorAll('.pipe-step').forEach(p => {
-        p.classList.toggle('active', p.querySelector('.pipe-sub').textContent === id.toUpperCase());
-    });
-}
-
-function initOrgChart() {
-    const root = document.getElementById('org-tree-root');
-    root.innerHTML = `
-        <ul>
-            <li>
-                <div class="org-node root"><span class="nt">مدير المستودع التنفيذي</span><span class="ns">Odoo: Inventory Manager</span></div>
-                <ul>
-                    <li>
-                        <div class="org-node"><span class="nt">إدارة الحوكمة</span><span class="ns">السياسات والامتثال</span></div>
-                        <ul>
-                             <li><div class="org-node unit"><span class="nt">السياسات والامتثال</span></div></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <div class="org-node"><span class="nt">إدارة سلاسل الإمداد</span><span class="ns">العمليات اللوجستية</span></div>
-                        <ul>
-                             <li><div class="org-node unit"><span class="nt">قسم العمليات اللوجستية</span></div></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <div class="org-node"><span class="nt">إدارة المستودعات</span><span class="ns">عمليات المستودع</span></div>
-                        <ul>
-                             <li><div class="org-node unit"><span class="nt">قسم عمليات المستودع</span></div></li>
-                        </ul>
-                    </li>
-                </ul>
-            </li>
-        </ul>
-        <div style="margin-top:2rem; border-top:1px dashed var(--orange); padding-top:1rem; text-align:center">
-            <span class="h-badge">الدعم:</span>
-            <span class="h-badge gold">الجودة</span>
-            <span class="h-badge green">التجارية</span>
-            <span class="h-badge blue">المالية</span>
-            <span class="h-badge">IT</span>
-            <span class="h-badge">HR</span>
-        </div>
-    `;
-}
-
-function initRACI() {
-    const table = document.getElementById('raci-table');
-    const roles = ['تجارية', 'مبيعات', 'مستودع', 'جودة', 'مالية'];
-    let html = `<thead><tr><th>المرحلة</th>${roles.map(r => `<th>${r}</th>`).join('')}</tr></thead><tbody>`;
-
-    const matrix = [
-        ['R/A', 'C', 'I', 'I', 'C'], // PR
-        ['R/A', 'I', 'I', 'I', 'C'], // PO
-        ['I', 'I', 'R', 'I', 'I'], // ASN
-        ['I', 'I', 'R', 'R/A', 'I'], // GRN
-        ['I', 'I', 'R', 'C', 'I'], // Putaway
-        ['I', 'R', 'R/A', 'I', 'I'], // Pick
-        ['I', 'R', 'R', 'I', 'I'], // Dispatch
-        ['I', 'C', 'R', 'R', 'A'], // Returns
-        ['I', 'I', 'C', 'I', 'R/A'], // Match
-        ['I', 'I', 'I', 'I', 'R/A'], // Bill
-        ['I', 'I', 'I', 'I', 'R/A'], // Entry
-        ['I', 'I', 'I', 'I', 'R/A']  // Close
-    ];
-
-    STAGES.forEach((s, idx) => {
-        html += `<tr><td>${s.titleAr}</td>${matrix[idx].map(m => `<td class="rc-${m[0]}">${m}</td>`).join('')}</tr>`;
-    });
-    table.innerHTML = html + `</tbody>`;
-}
-
-function initPermissions() {
-    const table = document.getElementById('permissions-matrix');
-    table.innerHTML = `
-        <thead><tr><th>الدور</th><th>Odoo Role</th><th>يُنشئ</th><th>يُعتمد</th><th>يراه فقط</th></tr></thead>
-        <tbody>${ROLES.map(r => `<tr><td>${r.title}</td><td>${r.role}</td><td>${r.create}</td><td>${r.approve}</td><td>${r.view}</td></tr>`).join('')}</tbody>
-    `;
-
-    const authority = document.getElementById('action-authority');
-    authority.innerHTML = `
-        <thead><tr><th>المستند</th><th>يُنشئ</th><th>يُعتمد</th><th>يُلغي</th><th>Odoo Unit</th><th>الحالة</th></tr></thead>
-        <tbody>${FORMS_DATA.map(f => `<tr><td>${f.name}</td><td>${f.creator}</td><td>${f.approver}</td><td>${f.canceller}</td><td>${f.unit}</td><td>${f.flow}</td></tr>`).join('')}</tbody>
-    `;
-
-    const rules = [
-        { type: 'yes', text: 'يجب مطابقة كل GRN بأمر شراء معتمد (لا استلام بدون PO)' },
-        { type: 'yes', text: 'توقيع فاحص الجودة شرط لإتمام GRN' },
-        { type: 'no', text: 'ممنوع إدخال بضاعة للمخزون قبل اعتماد GRN من المشرف' },
-        { type: 'kpi', text: 'KPI: نسبة مطابقة GRN/PO ≥ 98%' },
-        { type: 'yes', text: 'FEFO إلزامي لجميع المنتجات الغذائية والمستحضرات' },
-        { type: 'yes', text: 'الباركود شرط لأي حركة من/إلى موقع تخزيني' },
-        { type: 'no', text: 'ممنوع تخزين أصناف غير مُصنَّفة (بدون QC clearance)' },
-        { type: 'kpi', text: 'KPI: دقة مواقع التخزين ≥ 99.5%' }
-    ];
-    document.getElementById('internal-rules').innerHTML = rules.map(r => `<div class="rule-card ${r.type}"><span class="rule-tag">${r.type}</span>${r.text}</div>`).join('');
-
-    const esc = [
-        ['رفض دفعة كاملة (GRN Reject)', 'مشرف الاستلام', 'مدير المستودعات', 'إعادة للمورد + ReturnNote'],
-        ['فرق جرد > 2%', 'مدير المستودعات', 'مدير التنفيذي + مالية', 'تجميد حركة + تحقيق'],
-        ['تلف بضاعة > 5000 دينار', 'مدير المستودعات', 'مالية + تجارية', 'DamagedGoods + CreditNote'],
-        ['طلب تسوية مخزون > 10,000', 'مدير التنفيذي', 'مجلس الإدارة', 'لجنة تحقيق مشتركة'],
-        ['Gate Pass طارئ (خارج الدوام)', 'مشرف الشحن', 'مدير العمليات', 'تسجيل استثناء + مراجعة']
-    ];
-    document.getElementById('escalation-matrix').innerHTML = `
-        <thead><tr><th>الموقف</th><th>مستوى التصعيد الأول</th><th>مستوى التصعيد الثاني</th><th>الإجراء الطارئ</th></tr></thead>
-        <tbody>${esc.map(e => `<tr><td>${e[0]}</td><td>${e[1]}</td><td>${e[2]}</td><td>${e[3]}</td></tr>`).join('')}</tbody>
-    `;
-}
-
-function initOdooIntegration() {
-    const table = document.getElementById('odoo-map-table');
-    const data = [
-        { mod: 'Purchase Module', path: 'Purchase > Requisitions', who: 'تجارية', level: 'User' },
-        { mod: 'Inventory/Receipts', path: 'Inventory > Receipts', who: 'مشرف استلام', level: 'User' },
-        { mod: 'Quality Module', path: 'Quality > Control Points', who: 'فاحص جودة', level: 'Admin' },
-        { mod: 'Inventory/Rules', path: 'Inventory > Putaway Rules', who: 'IT/مشرف تخزين', level: 'Admin' },
-        { mod: 'Inventory/Locations', path: 'Inventory > Locations', who: 'مشرف تخزين', level: 'User' },
-        { mod: 'Inventory/Pick', path: 'Inventory > Pick', who: 'مشغل صرف', level: 'User' },
-        { mod: 'Inventory/Pack', path: 'Inventory > Pack', who: 'مشغل صرف', level: 'User' },
-        { mod: 'Inventory/Deliver', path: 'Inventory > Delivery Orders', who: 'مشرف شحن', level: 'User' },
-        { mod: 'Accounting Module', path: 'Accounting > Vendor Bills', who: 'محاسب', level: 'Admin' }
-    ];
-    table.innerHTML = `
-        <thead><tr><th>Module</th><th>Odoo Path</th><th>Who Activates</th><th>Access Level Required</th></tr></thead>
-        <tbody>${data.map(d => `<tr><td>${d.mod}</td><td>${d.path}</td><td>${d.who}</td><td>${d.level}</td></tr>`).join('')}</tbody>
-    `;
-}
-
-function initKPIs() {
-    document.getElementById('kpi-dashboard').innerHTML = KPIS_DATA.map(k => `
-        <div class="kpi-item">
-            <span class="kpi-val">${k.val}</span>
-            <span class="kpi-lbl">${k.lbl}</span>
-            <div class="kpi-freq">التكرار: ${k.freq} | المرجع: ${k.ref}</div>
-        </div>
-    `).join('');
-}
-
-function initMobile() {
-    const setup = [
-        { step: 1, text: 'Settings > General Settings > Mobile > تفعيل Odoo Mobile App' },
-        { step: 2, text: 'تثبيت واجهة Odoo على Android/iOS' },
-        { step: 3, text: 'إدخال رابط الخادم: https://brandzo.odoo.com' },
-        { step: 4, text: 'تسجيل الدخول بنفس بيانات سطح المكتب' },
-        { step: 5, text: 'Inventory > Barcode > Mobile ✓' }
-    ];
-    document.getElementById('mobile-setup').innerHTML = setup.map(s => `
-        <div class="role-card">
-            <div class="role-header"><span class="role-icon">📱</span><div class="role-title">الخطوة ${s.step}</div></div>
-            <div class="role-body">${s.text}</div>
-        </div>
-    `).join('');
-
-    const ops = [
-        ['مسح باركود الاستلام (GRN Scan)', 'مشرف الاستلام', 'Inventory > Barcode', '✅ كامل'],
-        ['فحص الجودة الميداني (QC Mobile)', 'فاحص الجودة', 'Quality > Mobile', '✅ كامل'],
-        ['التخزين الموجه بالمسح (Putaway Scan)', 'مشرف التخزين', 'Inventory > Barcode', '✅ كامل'],
-        ['مسح قائمة السحب (Picking Scan)', 'مشغل الصرف', 'Inventory > Barcode', '✅ كامل'],
-        ['الجرد الدوري (Cycle Count Mobile)', 'مدقق الجرد', 'Inventory > Physical', '✅ كامل'],
-        ['تسجيل التلف (Damaged Goods)', 'فاحص الجودة', 'Quality > Mobile', '✅ جزئي'],
-        ['اعتماد Gate Pass', 'مشرف الشحن', 'Custom', '✅ جزئي'],
-        ['تقارير المخزون (Reporting)', 'مدير المستودعات', 'Inventory > Reporting', '✅ قراءة فقط'],
-        ['إنشاء PR/PO', 'مدير التجارية', 'Purchase', '⚠️ محدود'],
-        ['الإغلاق المالي', 'المحاسبة', 'Accounting', '❌ سطح مكتب فقط']
-    ];
-    document.getElementById('mobile-ops-table').innerHTML = `
-        <thead><tr><th>العملية</th><th>الدور المسموح</th><th>الوحدة</th><th>متاح على الهاتف؟</th></tr></thead>
-        <tbody>${ops.map(o => `<tr><td>${o[0]}</td><td>${o[1]}</td><td>${o[2]}</td><td>${o[3]}</td></tr>`).join('')}</tbody>
-    `;
-
-    const barcodeTabs = ['الاستلام', 'التخزين', 'الصرف'];
-    const barcodeSteps = [
-        ['يفتح Odoo Mobile → Barcode', 'يختار Receipts (استلام)', 'يمسح باركود GRN من الطابعة', 'يمسح باركود كل صنف → يتحقق من الكمية', 'يصور الأضرار (إن وجدت) → يرفعها لـ QCReport', 'يضغط Validate → يُنشأ GRN تلقائياً'],
-        ['بعد GRN → يظهر Putaway Task تلقائياً', 'يمسح باركود الصنف → يُظهر الموقع المقترح', 'ينتقل للموقع → يمسح باركود الرف/الخانة', 'يضغط Validate → تُحدَّث BinCard تلقائياً'],
-        ['يستلم Picking Task على الهاتف', 'يمسح باركود الموقع → يمسح باركود الصنف', 'يتحقق الكمية → ينتقل للصنف التالي', 'بعد اكتمال السحب → يمسح لتأكيد PackingList', 'مشرف الشحن يعتمد Gate Pass من الهاتف']
-    ];
-
-    let tabsHtml = '', contentHtml = '';
-    barcodeTabs.forEach((t, i) => {
-        tabsHtml += `<button class="tab-btn ${i===0?'active':''}" onclick="showTab('barcode', ${i}, event)">${t}</button>`;
-        contentHtml += `<div class="tab-content barcode-tab ${i===0?'active':''}" id="barcode-tab-${i}">
-            <ol style="list-style-position: inside; padding: 1rem; background: var(--bg-elevated); border-radius: 8px;">
-                ${barcodeSteps[i].map(s => `<li style="margin-bottom: 0.5rem;">${s}</li>`).join('')}
-            </ol>
-        </div>`;
-    });
-    document.getElementById('barcode-tabs').innerHTML = tabsHtml;
-    document.getElementById('barcode-tab-contents').innerHTML = contentHtml;
-
-    const hw = [
-        ['هاتف ذكي (Android)', 'جميع عمال المستودع', 'Android 10+، كاميرا 12MP'],
-        ['ماسح باركود Bluetooth', 'مشرف الاستلام', 'Zebra CS4070 أو ما يعادله'],
-        ['طابعة باركود محمولة', 'مشرف التخزين', 'Zebra ZQ520'],
-        ['تابلت (Tablet)', 'مدير المستودعات (لوحة المراقبة)', '10"، Android 11+']
-    ];
-    document.getElementById('hardware-table').innerHTML = `
-        <thead><tr><th>الجهاز</th><th>الاستخدام</th><th>المواصفات الدنيا</th></tr></thead>
-        <tbody>${hw.map(h => `<tr><td>${h[0]}</td><td>${h[1]}</td><td>${h[2]}</td></tr>`).join('')}</tbody>
-    `;
-}
-
-function initIT() {
-    document.getElementById('it-role-card').innerHTML = `
-        <div class="role-card" style="border-right-color:var(--purple); width:100%">
-            <div class="role-header"><span class="role-icon">💾</span><div class="role-title">إدارة تقنية المعلومات (Odoo Administrator)</div></div>
-            <div class="role-body">
-                <strong>الدور في Odoo:</strong> Administrator + Technical<br>
-                <strong>مستوى الوصول:</strong> Full Settings + Technical + All Modules<br><br>
-                <strong>المسؤوليات الكاملة:</strong>
-                <ul>
-                    <li>تثبيت وتحديث وحدات Odoo (Install/Update Modules)</li>
-                    <li>إدارة المستخدمين والأدوار والصلاحيات (Users & Groups)</li>
-                    <li>ضبط وحدات المخزون: تفعيل Barcode، Putaway Rules، 3-step receiving/shipping</li>
-                    <li>إعداد التكاملات: ربط طابعات الباركود، أجهزة المسح، الميزان الإلكتروني</li>
-                    <li>إدارة قواعد البيانات (PostgreSQL backup/restore)</li>
-                    <li>مراقبة الأداء والخوادم (Server Monitoring)</li>
-                    <li>صيانة أجهزة الباركود وطابعات الملصقات</li>
-                    <li>إدارة شبكة WiFi المستودع (تغطية كاملة)</li>
-                    <li>نسخ احتياطي يومي تلقائي وتسجيل Audit Logs</li>
-                </ul>
-            </div>
-        </div>
-    `;
-
-    const tasks = [
-        ['إنشاء مستودع جديد (Warehouse Creation)', 'Inventory > Configuration > Warehouses > New', 'عند افتتاح فرع'],
-        ['إنشاء مخزن افتراضي VAN', 'Inventory > Configuration > Warehouses > Virtual', 'عند إضافة سيارة توزيع'],
-        ['تفعيل Barcode Module', 'Settings > Inventory > Barcode ✓', 'مرة واحدة'],
-        ['إعداد Putaway Strategies', 'Inventory > Config > Putaway Rules', 'عند تغيير تخطيط المستودع'],
-        ['إنشاء مواقع تخزين (Locations)', 'Inventory > Config > Locations', 'عند إضافة أرفف/خانات'],
-        ['ضبط FEFO Strategy', 'Inventory > Config > Strategies', 'مرة واحدة'],
-        ['إنشاء عمليات نقل مخصصة (Operation Types)', 'Inventory > Config > Operations Types', 'عند إضافة حركة جديدة'],
-        ['ربط الطابعات والماسحات', 'Settings > Technical > Devices', 'عند إضافة جهاز'],
-        ['إعداد Email/SMS Notifications', 'Settings > Technical > Email', 'مرة واحدة'],
-        ['تفعيل Inventory Valuation', 'Accounting > Config > Costing Method', 'مرة واحدة (مع مالية)']
-    ];
-    document.getElementById('it-tasks-table').innerHTML = `
-        <thead><tr><th>المهمة</th><th>مسار Odoo</th><th>متى تُنفَّذ</th></tr></thead>
-        <tbody>${tasks.map(t => `<tr><td>${t[0]}</td><td>${t[1]}</td><td>${t[2]}</td></tr>`).join('')}</tbody>
-    `;
-}
-
-function initExcel() {
-    const tabs = ['السيناريو', 'التصدير (Export)', 'ملف Excel', 'الاستيراد (Import)', 'سحب الباركود'];
-    const content = [
-        '<div class="box">المستودع يُصدِّر قائمة أصناف [Excel مع باركودات] ← تُرسل للتجارية ← التجارية تُكمل بيانات الشراء [المورد + الكمية + السعر] ← يُستورد مرة أخرى لـ Odoo كـ Purchase Order</div>',
-        '<div class="box"><strong>الخطوة 1: التصدير من Odoo</strong><br>Odoo Path: Inventory > Products > [Select] > Action > Export<br>الحقول: Internal Ref, Name (AR+EN), Barcode, UoM, Stock, Reorder Point, Category, Location, Expiry.</div>',
-        '<div class="table-wrap"><table><thead><tr><th>الباركود</th><th>كود الصنف</th><th>الاسم (عربي)</th><th>الرصيد</th><th>نقطة الطلب</th></tr></thead><tbody><tr><td>6281234...</td><td>PRD-001</td><td>زيت زيتون</td><td>45</td><td>20</td></tr></tbody></table></div><div class="box"><strong>الأعمدة المضافة من التجارية:</strong> Vendor Name, Vendor Code, Qty to Order, Unit Price, Lead Time, Payment Terms.</div>',
-        '<div class="box"><strong>الخطوة 4: استيراد كـ Purchase Order</strong><br>Odoo Path: Purchase > Orders > Import<br>Mapping: Barcode → product_id (by barcode), Qty → product_qty, Price → price_unit.<br>تظهر PO في حالة Draft للمراجعة والاعتماد.</div>',
-        '<div class="box"><strong>سحب باركودات الأصناف:</strong><br>1. Inventory > Products<br>2. Filter by Category/Vendor<br>3. Action > Export > اختر حقل Barcode<br>4. يُرسل للتجارية بصيغة .xlsx</div>'
-    ];
-
-    let tabsHtml = '', contentHtml = '';
-    tabs.forEach((t, i) => {
-        tabsHtml += `<button class="tab-btn ${i===0?'active':''}" onclick="showTab('excel', ${i}, event)">${t}</button>`;
-        contentHtml += `<div class="tab-content excel-tab ${i===0?'active':''}" id="excel-tab-${i}">${content[i]}</div>`;
-    });
-    document.getElementById('excel-tabs').innerHTML = tabsHtml;
-    document.getElementById('excel-tab-contents').innerHTML = contentHtml;
-}
-
-function initMasterData() {
-    const data = [
-        { title: 'إضافة صنف جديد (New Product / Item Creation)', content: `
-            <p><strong>من له صلاحية الإنشاء؟</strong> مدير IT + مدير المستودعات</p>
-            <p><strong>المسار:</strong> Inventory > Products > New</p>
-            <div class="table-wrap"><table><thead><tr><th>الحقل</th><th>القيمة</th><th>ملاحظة</th></tr></thead>
-            <tbody>
-                <tr><td>Product Name</td><td>الاسم بالعربية</td><td>يظهر في المستندات</td></tr>
-                <tr><td>Product Type</td><td>Storable Product</td><td>أهم حقل للمخزون</td></tr>
-                <tr><td>Unit of Measure</td><td>كرتون/قطعة</td><td>يحدده المستودع</td></tr>
-                <tr><td>Barcode</td><td>EAN-13 / GS1</td><td>يدوي أو تلقائي</td></tr>
-                <tr><td>Internal Reference</td><td>PRD-XXX</td><td>كود داخلي موحد</td></tr>
-                <tr><td>Tracking</td><td>By Lot / By Serial</td><td>حسب طبيعة الصنف</td></tr>
-                <tr><td>Reorder Rules</td><td>Min/Max Qty</td><td>للطلب التلقائي</td></tr>
-            </tbody></table></div>
-        ` },
-        { title: 'إضافة مورد جديد (New Vendor / Supplier)', content: `
-            <p><strong>من له صلاحية الإنشاء؟</strong> مدير التجارية + مدير IT</p>
-            <p><strong>المسار:</strong> Purchase > Orders > Vendors > New</p>
-            <div class="table-wrap"><table><thead><tr><th>الحقل</th><th>القيمة</th><th>الأهمية</th></tr></thead>
-            <tbody>
-                <tr><td>Company Name</td><td>الاسم التجاري</td><td>يظهر في PO</td></tr>
-                <tr><td>Vendor Reference</td><td>كود المورد</td><td>لسهولة البحث</td></tr>
-                <tr><td>Email</td><td>البريد الرسمي</td><td>لإرسال PO آلياً</td></tr>
-                <tr><td>Payment Terms</td><td>صافي 30 يوم</td><td>يحدده المالية</td></tr>
-                <tr><td>Lead Time</td><td>أيام التوريد</td><td>لحساب تواريخ الوصول</td></tr>
-            </tbody></table></div>
-        ` },
-        { title: 'إضافة عميل جديد (New Customer)', content: `
-            <p><strong>المسار:</strong> Sales > Orders > Customers > New</p>
-            <div class="box"><strong>إدارة الفروع كعملاء:</strong> كل فرع (مثلاً: فرع الرحبة) يسجل كـ Customer بنوع Company، ويضبط بـ Payment Terms: Internal Transfer، مما يسمح بإنشاء Sales Order داخلي.</div>
-        ` }
-    ];
-    document.getElementById('master-data-accordion').innerHTML = data.map((d, i) => `
-        <div class="accordion-item acc-item" id="master-acc-${i}">
-            <div class="acc-header" onclick="toggleAcc('master', ${i})"><h4>${d.title}</h4><i class="fas fa-chevron-down"></i></div>
-            <div class="acc-content">${d.content}</div>
-        </div>
-    `).join('');
-}
-
-function initBranches() {
-    document.getElementById('branch-management-content').innerHTML = `
-        <div class="box purple-box">
-            <strong>هيكلية المستودعات في Odoo:</strong><br>
-            المستودع الرئيسي (WH) ← مستودعات الفروع (RHB, BRX) ← مخازن VAN الافتراضية (سيارات التوزيع)
-        </div>
-        <div class="note">
-            <strong>مخزن VAN:</strong> هو موقع تخزين (Internal Location) يمثل السيارة.
-            عند النقل للسيارة: WH/Stock → VAN-001/Stock.
-            عند التسليم: VAN-001/Stock → Customer Location.
-        </div>
-        <h3>سير نقل البضاعة من المستودع الرئيسي للفرع</h3>
-        <ol style="list-style-position: inside; padding: 1rem; background: var(--bg-elevated); border-radius: 8px;">
-            <li>المرحلة 1: الفرع يطلب (طلب نقل داخلي / Sales Order داخلي)</li>
-            <li>المرحلة 2: المستودع الرئيسي يراجع الرصيد وFEFO ويعتمد (Validate)</li>
-            <li>المرحلة 3: تحضير الشحنة (Picking Task + PackingList)</li>
-            <li>المرحلة 4: الشحن والتوثيق (Internal Transfer Slip + Gate Pass)</li>
-            <li>المرحلة 5: الاستلام في الفرع (مسح الباركود + Validate Receipts)</li>
-            <li>المرحلة 6: التوثيق المالي (قيد محاسبي داخلي آلي)</li>
-        </ol>
-        <h3 style="margin-top:2rem">صلاحيات إدارة الفروع</h3>
-        <div class="table-wrap"><table><thead><tr><th>الدور</th><th>الفرع المسموح</th><th>ما يراه</th><th>ما يُعتمده</th></tr></thead>
-        <tbody>
-            <tr><td>مدير الفرع</td><td>فرعه فقط</td><td>مخزون فرعه</td><td>استلام الشحنات</td></tr>
-            <tr><td>مدير المستودع الرئيسي</td><td>الكل + VAN</td><td>كل المخزون</td><td>جميع النقليات</td></tr>
-            <tr><td>المالية</td><td>الكل</td><td>Valuation Reports</td><td>القيود والتسويات</td></tr>
-        </tbody></table></div>
-    `;
-}
-
-function initCompleteness() {
-    const data = [
-        { title: 'تتبع الدُفعات والأرقام التسلسلية (Serial & Lot Tracking)', content: 'تستخدم Lot Number للمواد الغذائية (FEFO) وSerial Number للإلكترونيات. تضمن التتبع الكامل في حالة سحب منتج (Product Recall).' },
-        { title: 'نقطة إعادة الطلب التلقائية (Reorder Rules)', content: 'Odoo Path: Inventory > Products > Reordering Rules. تضبط كمية دنيا (Min) تطلق PR آلياً، وكمية قصوى (Max) تستهدف الرصيد بعد التوريد.' },
-        { title: 'تقارير المستودع الأساسية', content: '1. Inventory Valuation (القيمة بالتكلفة) | 2. Forecasted Inventory (المخزون المتوقع) | 3. Product Moves (سجل التتبع) | 4. Lot Expiry (تقرير الصلاحية) | 5. Stock by Location.' },
-        { title: 'تنبيهات ورسائل تلقائية', content: 'رصيد < نقطة الطلب ← التجارية | GRN معلق > 4 ساعات ← مدير المستودع | دفعة تنتهي < 30 يوم ← الجودة | تسوية معلقة > 24 ساعة ← التنفيذي.' },
-        { title: 'عملية الجرد السنوي الشامل (Annual Physical Count)', content: `
-            <ol><li>تحديد الموعد</li><li>تجميد حركات المخزون (Lock)</li><li>تشكيل فرق الجرد</li><li>إنشاء Cycle Count في Odoo</li><li>الجرد اليدوي/بالباركود</li><li>إدخال النتائج</li><li>توليد تقرير الفروقات</li><li>اعتماد التسويات</li><li>رفع التجميد</li><li>الإغلاق المالي</li></ol>
-        ` }
-    ];
-    document.getElementById('completeness-accordion').innerHTML = data.map((d, i) => `
-        <div class="accordion-item acc-item" id="comp-acc-${i}">
-            <div class="acc-header" onclick="toggleAcc('comp', ${i})"><h4>${d.title}</h4><i class="fas fa-chevron-down"></i></div>
-            <div class="acc-content">${d.content}</div>
-        </div>
-    `).join('');
-}
-
-/* ========================================================
-   UTILITIES
-   ======================================================== */
-function showTab(group, index, event) {
-    document.querySelectorAll(`.${group}-tab`).forEach(t => t.classList.remove('active'));
-    document.querySelectorAll(`.tab-btn`).forEach(b => {
-        if(b.getAttribute('onclick').includes(`'${group}'`)) b.classList.remove('active');
-    });
-    document.getElementById(`${group}-tab-${index}`).classList.add('active');
-    event.currentTarget.classList.add('active');
-}
-
-function toggleAcc(group, index) {
-    const item = document.getElementById(`${group}-acc-${index}`);
-    item.classList.toggle('active');
-}
-
-// Initialize everything on load
-window.onload = () => {
-    initTOC();
-    initPipeline();
-    initOrgChart();
-    initRACI();
-    initPermissions();
-    initOdooIntegration();
-    initKPIs();
-    initMobile();
-    initIT();
-    initExcel();
-    initMasterData();
-    initBranches();
-    initCompleteness();
-};
-
-// Smooth scroll for nav
-document.querySelectorAll('.nav-links a').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const targetId = this.getAttribute('href').substring(1);
-        const targetElement = document.getElementById(targetId);
-        if (targetElement) {
-            window.scrollTo({
-                top: targetElement.offsetTop - 80,
-                behavior: 'smooth'
-            });
-        }
-    });
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (!document.body.classList.contains('presentation-mode')) return;
+  const sections = Array.from(document.querySelectorAll('.chapter'));
+  const currentScroll = window.scrollY;
+  let currentIndex = sections.findIndex(s => s.offsetTop >= currentScroll - 100);
+  if (e.key === 'ArrowDown' || e.key === ' ') {
+    e.preventDefault();
+    if (currentIndex < sections.length - 1) sections[currentIndex + 1].scrollIntoView({ behavior: 'smooth' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (currentIndex > 0) sections[currentIndex - 1].scrollIntoView({ behavior: 'smooth' });
+  }
 });
 </script>
 </body>
