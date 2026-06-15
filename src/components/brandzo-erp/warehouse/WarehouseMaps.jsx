@@ -78,7 +78,7 @@ const WarehouseMaps = () => {
 
   // ── بطاقات مقترح التحويل ──────────────────────────────────────
   const proposalCards = [
-    { title:'ترقية ارتفاع السقف',      subtitle:'Ceiling Height Upgrade',      icon:'arrowUpTray',  priority:'High',     duration:'6 أسابيع',  details:['رفع سقف E-5 إلى 12 متر بدعم إنشائي','رفع مستودعات E-2 إلى E-9 لـ 9.5 متر','تقوية الأعمدة الرئيسية بأقواس فولاذية','إعادة تشطيب الجدران والسقف بطلاء صناعي'], dependency:'شرط مسبق لـ: هيكل الرفوف الانتقائي + أنظمة السلامة', operationalImpact:'يُمكّن من رفع السعة +140% عبر 6 مستويات رفوف في E-5 (KPI: 4,200+ طبلية)' },
+    { title:'ترقية ارتفاع السقف',      subtitle:'Ceiling Height Upgrade',      icon:'arrowUpTray',  priority:'High',     duration:'6 أسابيع',  details:['رفع سقف E-5 إلى 12 متر بدعم إنشائي','رفع مستودعات E-2 إلى E-9 لـ 9.5 متر','تقوية الأعمدة الرئيسية بأقواس فولاذية','إعادة تشطيب الجدران والسقف بطلاء صناعي'], dependency:'شرط مسبق لـ: هيكل الرفوف الانتقائي + أنظمة السلامة', operationalImpact:'يُمكّن من رفع السعة +140% عبر 6 مستويات رفوف في E-5 (KPI: 4,200+ طب �ية)' },
     { title:'إنشاء منصات الدوك',       subtitle:'Dock Platform Construction',  icon:'truck',        priority:'Critical', duration:'8 أسابيع',  details:['بناء 12 منصة بارتفاع 1.20 متر','تركيب Dock Levelers هيدروليكية (6 طن)','Dock Shelters عازلة حرارياً وصوتياً','Safety Light Systems (أحمر/أخضر) لكل رصيف'], dependency:'يتزامن مع: تصميم التدفق والبفر — مستقل', operationalImpact:'يرفع معدل التفريغ من 30 إلى 80+ طبلية/ساعة (+167%)' },
     { title:'هيكل الرفوف الانتقائي',   subtitle:'Selective Pallet Racking',   icon:'grid',         priority:'High',     duration:'10 أسابيع', details:['أعمدة فولاذية زرقاء مجلفنة 6 مستويات','عوارض برتقالية 3.6م × حمولة 5 طن/مستوى','Column Guards عند كل قاعدة عمود','Rack Protectors في ممرات الرافعات'], dependency:'يعتمد على: ترقية ارتفاع السقف (E-5)', operationalImpact:'يرفع سعة E-5 من 1,400 إلى 4,200+ طبلية (+200%) — KPI الطبليات الأساسي' },
     { title:'تصميم التدفق والبفر',     subtitle:'Buffer Zone & Flow Design',   icon:'workflows',    priority:'Medium',   duration:'4 أسابيع',  details:['بفر استلام 330 م² بخطوط تنظيم الحركة','بفر شحن 280 م² في E-9','مسارات رافعات مرسومة على الأرضية','علامات اتجاهية وإرشادية معتمدة OSHA'], dependency:'يتزامن مع: إنشاء منصات الدوك — مستقل', operationalImpact:'يُقلص زمن النقل الداخلي -65% ويلغي الاختناقات في نقاط الاستلام/الشحن' },
@@ -202,7 +202,7 @@ const WarehouseMaps = () => {
         kpiOld:'3,840 طبلية — غير منظم وظيفياً', kpiNew:'4,800+ طبلية — نظام FIFO/FEFO موحد', gain:'+25% سعة + 60% انتظام التدفق',
         standard:'EN 15620 / GS1 Distribution', effort:'متوسط', duration:'10 أسابيع',
         riskLevel:'منخفض', riskNote:'فتح ممرات جانبية — لا يؤثر على الهيكل الرئيسي للمبنى',
-        nextVerification:'قياس سماكة الجدران الفاصلة + تأكيد عدم وجود تمديدات كهربائية أو صرف مخفية',
+        nextVerification:'قياس سماكة الجدران الفاصلة + تأكيد عدم ��جود تمديدات كهربائية أو صرف مخفية',
       },
       {
         id:'M-D', name:'بوابة الشحن الموحدة', mergedFrom:['E-9','E-10'],
@@ -2102,7 +2102,7 @@ const WarehouseMaps = () => {
         <div className="mt-6">
           <h5 className="text-sm font-bold text-white mb-4">تفاصيل مكاتب وأقسام المبنى الإداري</h5>
           <div
-            className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-1"
+            className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-1 print-expand"
             style={{ scrollbarWidth:'thin', scrollbarColor:'rgba(255,255,255,0.1) transparent' }}
           >
             {adminBuilding.rooms.map((room, i) => (
@@ -2530,7 +2530,38 @@ const WarehouseMaps = () => {
             padding: 3px 5px !important;
             word-break: break-word;
           }
-          .overflow-x-auto { overflow: visible !important; }
+          /* ── إصلاح شامل لـ overflow — يمنع اقتصاص المحتوى ── */
+          .overflow-x-auto,
+          .overflow-y-auto,
+          .overflow-hidden,
+          .overflow-scroll,
+          .overflow-auto {
+            overflow: visible !important;
+          }
+
+          /* إزالة قيود الارتفاع الصارمة التي تقطع الصفحات */
+          .print-expand,
+          [class*="max-h-"] {
+            max-height: none !important;
+            overflow: visible !important;
+          }
+
+          /* حاوية التبويبات */
+          [class*="min-h-"] {
+            min-height: 0 !important;
+          }
+
+          /* ارتفاعات ثابتة تمنع ظهور المحتوى الكامل */
+          .h-72, .h-64, .h-80, .h-96, .h-48, .h-56, .h-40, .h-32 {
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+          }
+
+          /* حاوية التبويبات الرئيسية تمتد بالكامل */
+          .min-h-\\[600px\\] {
+            min-height: 0 !important;
+          }
 
           /* تحديد أقصى عدد أعمدة للشبكات العريضة في A4 */
           .lg\\:grid-cols-6,
@@ -2544,13 +2575,20 @@ const WarehouseMaps = () => {
             padding-top: 16px;
           }
 
-          /* منع اقتصاص البطاقات/الجداول/SVG عند حافة الصفحة */
-          .rounded-2xl,
-          figure { break-inside: avoid !important; page-break-inside: avoid !important; }
+          /* السماح للبطاقات الكبيرة بالامتداد عبر الصفحات — break-inside: avoid فقط للعناصر الصغيرة */
+          figure {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          /* الجداول تمتد عبر الصفحات بشكل طبيعي */
+          table { break-inside: auto !important; }
+          tr { break-inside: avoid !important; page-break-inside: avoid !important; }
 
           svg {
             break-inside: avoid !important;
             max-width: 100% !important;
+            height: auto !important;
           }
 
           /* عناوين */
