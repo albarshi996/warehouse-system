@@ -78,7 +78,7 @@ const WarehouseMaps = () => {
 
   // ── بطاقات مقترح التحويل ──────────────────────────────────────
   const proposalCards = [
-    { title:'ترقية ارتفاع السقف',      subtitle:'Ceiling Height Upgrade',      icon:'arrowUpTray',  priority:'High',     duration:'6 أسابيع',  details:['رفع سقف E-5 إلى 12 متر بدعم إنشائي','رفع مستودعات E-2 إلى E-9 لـ 9.5 متر','تقوية الأعمدة الرئيسية بأقواس فولاذية','إعادة تشطيب الجدران والسقف بطلاء صناعي'], dependency:'شرط مسبق لـ: هيكل الرفوف الانتقائي + أنظمة السلامة', operationalImpact:'يُمكّن من رفع السعة +140% عبر 6 مستويات رفوف في E-5 (KPI: 4,200+ طبلية)' },
+    { title:'ترقية ارتفاع السقف',      subtitle:'Ceiling Height Upgrade',      icon:'arrowUpTray',  priority:'High',     duration:'6 أسابيع',  details:['رفع سقف E-5 إلى 12 متر بدعم إنشائي','رفع مستودعات E-2 إلى E-9 لـ 9.5 متر','تقوية الأعمدة الرئيسية بأقواس فولاذية','إعادة تشطيب الجدران والسقف بطلاء صناعي'], dependency:'شرط مسبق لـ: هيكل الرفوف الانتقائي + أنظمة السلامة', operationalImpact:'يُمكّن من رفع السعة +140% عبر 6 مستويات رفوف في E-5 (KPI: 4,200+ طب �ية)' },
     { title:'إنشاء منصات الدوك',       subtitle:'Dock Platform Construction',  icon:'truck',        priority:'Critical', duration:'8 أسابيع',  details:['بناء 12 منصة بارتفاع 1.20 متر','تركيب Dock Levelers هيدروليكية (6 طن)','Dock Shelters عازلة حرارياً وصوتياً','Safety Light Systems (أحمر/أخضر) لكل رصيف'], dependency:'يتزامن مع: تصميم التدفق والبفر — مستقل', operationalImpact:'يرفع معدل التفريغ من 30 إلى 80+ طبلية/ساعة (+167%)' },
     { title:'هيكل الرفوف الانتقائي',   subtitle:'Selective Pallet Racking',   icon:'grid',         priority:'High',     duration:'10 أسابيع', details:['أعمدة فولاذية زرقاء مجلفنة 6 مستويات','عوارض برتقالية 3.6م × حمولة 5 طن/مستوى','Column Guards عند كل قاعدة عمود','Rack Protectors في ممرات الرافعات'], dependency:'يعتمد على: ترقية ارتفاع السقف (E-5)', operationalImpact:'يرفع سعة E-5 من 1,400 إلى 4,200+ طبلية (+200%) — KPI الطبليات الأساسي' },
     { title:'تصميم التدفق والبفر',     subtitle:'Buffer Zone & Flow Design',   icon:'workflows',    priority:'Medium',   duration:'4 أسابيع',  details:['بفر استلام 330 م² بخطوط تنظيم الحركة','بفر شحن 280 م² في E-9','مسارات رافعات مرسومة على الأرضية','علامات اتجاهية وإرشادية معتمدة OSHA'], dependency:'يتزامن مع: إنشاء منصات الدوك — مستقل', operationalImpact:'يُقلص زمن النقل الداخلي -65% ويلغي الاختناقات في نقاط الاستلام/الشحن' },
@@ -202,7 +202,7 @@ const WarehouseMaps = () => {
         kpiOld:'3,840 طبلية — غير منظم وظيفياً', kpiNew:'4,800+ طبلية — نظام FIFO/FEFO موحد', gain:'+25% سعة + 60% انتظام التدفق',
         standard:'EN 15620 / GS1 Distribution', effort:'متوسط', duration:'10 أسابيع',
         riskLevel:'منخفض', riskNote:'فتح ممرات جانبية — لا يؤثر على الهيكل الرئيسي للمبنى',
-        nextVerification:'قياس سماكة الجدران الفاصلة + تأكيد عدم وجود تمديدات كهربائية أو صرف مخفية',
+        nextVerification:'قياس سماكة الجدران الفاصلة + تأكيد عدم ��جود تمديدات كهربائية أو صرف مخفية',
       },
       {
         id:'M-D', name:'بوابة الشحن الموحدة', mergedFrom:['E-9','E-10'],
@@ -2377,7 +2377,7 @@ const WarehouseMaps = () => {
   // ── ملخص الطباعة ────────────────────────────────────────────────
   // ────────────────────────────────────────────────────────────────
   const renderPrintSummary = () => (
-    <div className="hidden print:block space-y-6 mb-8">
+    <div className="print-summary-block space-y-6 mb-8">
       <div className="grid grid-cols-2 gap-6">
         <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
           <h4 className="font-bold text-white mb-4">معلومات الموقع</h4>
@@ -2460,6 +2460,11 @@ const WarehouseMaps = () => {
 
           /* إخفاء عناصر لا تطبع */
           .no-print, aside { display: none !important; }
+
+          /* ── إظهار كل التبويبات عند الطباعة — الإصلاح الرئيسي ── */
+          .tab-panel           { display: block !important; }
+          .tab-panel-active    { display: block !important; }
+          .print-summary-block { display: block !important; }
 
           /* حاوية التقرير — لون نص افتراضي داكن لضمان الظهور */
           #report-container {
@@ -2613,6 +2618,11 @@ const WarehouseMaps = () => {
           input, select { border: 1px solid #ccc !important; background: white !important; color: #111 !important; }
         }
 
+        /* ── إخفاء/إظهار التبويبات (شاشة) — لا يعتمد على Tailwind print: ── */
+        .tab-panel           { display: none; }
+        .tab-panel-active    { display: block; }
+        .print-summary-block { display: none; }
+
         /* ── الحركات للشاشة فقط ── */
         .animate-fade-in { animation: fadeInUp 0.35s ease forwards; }
         @keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
@@ -2693,15 +2703,15 @@ const WarehouseMaps = () => {
 
           <div className="min-h-[600px]">
             {renderPrintSummary()}
-            <div className={activeTab === 'floorplan'    ? 'block' : 'hidden print:block'}>{renderFloorPlan()}</div>
-            <div className={activeTab === 'flow'         ? 'block' : 'hidden print:block print-section-break'}>{renderLogisticsFlow()}</div>
-            <div className={activeTab === 'elevation'    ? 'block' : 'hidden print:block print-section-break'}>{renderElevation()}</div>
-            <div className={activeTab === 'standards'    ? 'block' : 'hidden print:block print-section-break'}>{renderStandards()}</div>
-            <div className={activeTab === 'proposal'     ? 'block' : 'hidden print:block print-section-break'}>{renderProposal()}</div>
-            <div className={activeTab === 'modification' ? 'block' : 'hidden print:block print-section-break'}>{renderModificationPlan()}</div>
-            <div className={activeTab === 'merge'        ? 'block' : 'hidden print:block print-section-break'}>{renderMergePlan()}</div>
-            <div className={activeTab === 'admin'        ? 'block' : 'hidden print:block print-section-break'}>{renderAdminBuilding()}</div>
-            <div className={activeTab === 'assessment'   ? 'block' : 'hidden print:block print-section-break'}>{renderSiteAssessment()}</div>
+            <div className={`tab-panel${activeTab === 'floorplan'    ? ' tab-panel-active' : ''}`}>{renderFloorPlan()}</div>
+            <div className={`tab-panel print-section-break${activeTab === 'flow'         ? ' tab-panel-active' : ''}`}>{renderLogisticsFlow()}</div>
+            <div className={`tab-panel print-section-break${activeTab === 'elevation'    ? ' tab-panel-active' : ''}`}>{renderElevation()}</div>
+            <div className={`tab-panel print-section-break${activeTab === 'standards'    ? ' tab-panel-active' : ''}`}>{renderStandards()}</div>
+            <div className={`tab-panel print-section-break${activeTab === 'proposal'     ? ' tab-panel-active' : ''}`}>{renderProposal()}</div>
+            <div className={`tab-panel print-section-break${activeTab === 'modification' ? ' tab-panel-active' : ''}`}>{renderModificationPlan()}</div>
+            <div className={`tab-panel print-section-break${activeTab === 'merge'        ? ' tab-panel-active' : ''}`}>{renderMergePlan()}</div>
+            <div className={`tab-panel print-section-break${activeTab === 'admin'        ? ' tab-panel-active' : ''}`}>{renderAdminBuilding()}</div>
+            <div className={`tab-panel print-section-break${activeTab === 'assessment'   ? ' tab-panel-active' : ''}`}>{renderSiteAssessment()}</div>
           </div>
         </div>
 
