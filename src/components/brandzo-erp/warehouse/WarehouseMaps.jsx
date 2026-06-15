@@ -543,6 +543,47 @@ const WarehouseMaps = () => {
         )}
       </div>
 
+      {/* جدول مسارات الحركة الرئيسية — إضافة تكميلية */}
+      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
+        <h4 className="font-bold text-white mb-4 text-sm flex items-center gap-2">
+          <span className="w-3 h-3 rounded-sm bg-brand-yellow inline-block"></span>
+          مسارات حركة الرافعات الرئيسية — Flow Paths
+        </h4>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-white/10">
+                {['المسار','من','إلى','نوع المعدة','الغرض'].map((h,i) => (
+                  <th key={i} className="text-right text-gray-400 font-bold pb-3 pr-3 whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { path:'استلام ← تخزين رئيسي', from:'E-1 (استلام)', to:'E-5 (High-Bay)', equip:'رافعة Counterbalance 3م', purpose:'نقل الطبليات بعد الاستلام والفحص',  color:'#27ae60' },
+                { path:'QC ← High-Bay',          from:'E-4 (QC)',     to:'E-5 (High-Bay)', equip:'رافعة Reach Truck',       purpose:'نقل البضاعة المعتمدة من QC للتخزين', color:'#8e44ad' },
+                { path:'تخزين ← تجميع',         from:'E-5/E-2-E-3',  to:'E-6 (Picking)',  equip:'Reach Truck / VNA',       purpose:'سحب الطبليات لتجميع الطلبات',        color:'#1abc9c' },
+                { path:'تجميع ← بفر خروج',      from:'E-6 (Picking)', to:'E-9 (Buffer)',  equip:'عربات تجميع + رافعة',     purpose:'تجميع الطلبات المكتملة للتدريج',     color:'#3498db' },
+                { path:'بفر ← شحن',             from:'E-9 (Buffer)',  to:'E-10 (Dock)',   equip:'رافعة Counterbalance',    purpose:'تحميل الشاحنات عبر Dock Leveler',    color:'#e67e22' },
+              ].map((row, i) => (
+                <tr key={i} className="border-b border-white/5 hover:bg-white/5">
+                  <td className="py-2.5 pr-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: row.color }}></span>
+                      <span className="font-bold text-white text-[10px]">{row.path}</span>
+                    </div>
+                  </td>
+                  <td className="py-2.5 pr-3 text-gray-300">{row.from}</td>
+                  <td className="py-2.5 pr-3 text-gray-300">{row.to}</td>
+                  <td className="py-2.5 pr-3 text-brand-yellow text-[10px] font-mono">{row.equip}</td>
+                  <td className="py-2.5 pr-3 text-gray-400 text-[10px]">{row.purpose}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* جدول الوحدات */}
       <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
         <h4 className="font-bold text-white mb-4 text-sm">جدول الوحدات التشغيلية — 10 مستودعات</h4>
@@ -680,6 +721,49 @@ const WarehouseMaps = () => {
             ↑ اضغط على أي خطوة لعرض تفاصيلها الكاملة
           </div>
         )}
+
+        {/* Cycle Time الإجمالي */}
+        <div className="mt-4 p-4 bg-brand-yellow/5 border border-brand-yellow/20 rounded-xl">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-[10px] text-gray-400 mb-0.5 uppercase font-bold">زمن الدورة الكلي التقديري</div>
+              <div className="text-brand-yellow font-black text-lg">≈ 4.5 – 6 ساعات / شحنة كاملة</div>
+              <div className="text-[10px] text-gray-500 mt-0.5">من وصول الشاحنة حتى الشحن النهائي للعميل</div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+              {[
+                { label:'الاستلام + QC', time:'≤ 2.5 ساعة', color:'#27ae60' },
+                { label:'التخزين + الالتقاط', time:'≤ 2 ساعة', color:'#1abc9c' },
+                { label:'التدريج + الشحن', time:'≤ 1 ساعة', color:'#e67e22' },
+              ].map((s, i) => (
+                <div key={i} className="bg-white/5 p-2 rounded-lg">
+                  <div className="font-bold mb-0.5" style={{ color: s.color }}>{s.time}</div>
+                  <div className="text-gray-500">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* جدول الاختناقات المحتملة */}
+        <div className="mt-4 bg-[#141f2e] border border-white/10 rounded-2xl p-5">
+          <h5 className="font-bold text-white text-sm mb-3 flex items-center gap-2">
+            <span className="text-brand-red">⚠</span> نقاط الاختناق المحتملة — Bottleneck Analysis
+          </h5>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {[
+              { step:'E-1 الاستلام', risk:'ازدحام الأرصفة عند ذروة الشحن', solution:'Dock Levelers + جدولة WMS التلقائية', priority:'Critical', color:'#c0392b' },
+              { step:'E-4 مراقبة الجودة', risk:'تأخر الفحص عند الشحنات الكبيرة', solution:'خط فحص متوازٍ + ماسح GS1 متعدد', priority:'High', color:'#e67e22' },
+              { step:'E-5 High-Bay', risk:'تعارض الرافعات في الممرات الضيقة', solution:'نظام VNA + جدولة WMS لحركة الرافعات', priority:'High', color:'#e67e22' },
+            ].map((item, i) => (
+              <div key={i} className="p-3 rounded-xl border" style={{ borderColor: `${item.color}40`, backgroundColor: `${item.color}08` }}>
+                <div className="font-bold text-white text-[11px] mb-1">{item.step}</div>
+                <div className="text-[10px] text-gray-400 mb-1.5">⚠ {item.risk}</div>
+                <div className="text-[10px] text-green-400">✓ {item.solution}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
@@ -805,6 +889,60 @@ const WarehouseMaps = () => {
         </div>
       </div>
 
+      {/* جدول مقارنة الارتفاع الحالي مقابل المستهدف */}
+      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
+        <h4 className="font-bold text-white mb-4 text-sm">مقارنة الارتفاع الحالي مقابل المستهدف — لكل وحدة</h4>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-white/10">
+                {['الوحدة','الوظيفة','الارتفاع الحالي','الارتفاع المستهدف','مستويات الرفوف','نوع الرافعة المطلوبة','الخلوص للمرشات (م)'].map((h,i) => (
+                  <th key={i} className="text-right text-gray-400 font-bold pb-3 pr-3 whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { id:'E-1',  name:'استلام + بفر',    current:'6.80م', target:'7.5م',  levels:3, forklift:'Counterbalance',  clearance:0.5,  color:'#27ae60' },
+                { id:'E-2',  name:'تخزين جاف',       current:'6.80م', target:'9.5م',  levels:5, forklift:'Reach Truck',     clearance:0.5,  color:'#2980b9' },
+                { id:'E-3',  name:'تخزين جاف',       current:'6.80م', target:'9.5م',  levels:5, forklift:'Reach Truck',     clearance:0.5,  color:'#2980b9' },
+                { id:'E-4',  name:'تخزين + QC',      current:'6.80م', target:'7.5م',  levels:3, forklift:'Counterbalance',  clearance:0.5,  color:'#8e44ad' },
+                { id:'E-5',  name:'High-Bay الرئيسي',current:'6.80م', target:'12.0م', levels:6, forklift:'VNA / Reach',     clearance:0.5,  color:'#1abc9c', highlight:true },
+                { id:'E-6',  name:'تخزين + خروج',   current:'6.80م', target:'9.5م',  levels:5, forklift:'Reach Truck',     clearance:0.5,  color:'#2980b9' },
+                { id:'E-7',  name:'تخزين جاف',       current:'6.80م', target:'9.5م',  levels:5, forklift:'Reach Truck',     clearance:0.5,  color:'#2980b9' },
+                { id:'E-8',  name:'تخزين جاف',       current:'6.80م', target:'9.5م',  levels:5, forklift:'Reach Truck',     clearance:0.5,  color:'#2980b9' },
+                { id:'E-9',  name:'تخزين + بفر',    current:'6.80م', target:'9.5م',  levels:5, forklift:'Reach Truck',     clearance:0.5,  color:'#2980b9' },
+                { id:'E-10', name:'شحن / Cross-Dock',current:'6.80م', target:'7.5م',  levels:3, forklift:'Counterbalance',  clearance:0.5,  color:'#e67e22' },
+              ].map((row, i) => (
+                <tr key={i} className={`border-b border-white/5 transition-colors ${row.highlight ? 'bg-brand-yellow/5' : 'hover:bg-white/5'}`}>
+                  <td className="py-2.5 pr-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: row.color }}></span>
+                      <span className="font-bold text-white">{row.id}</span>
+                    </div>
+                  </td>
+                  <td className="py-2.5 pr-3 text-gray-300">{row.name}</td>
+                  <td className="py-2.5 pr-3 text-brand-red font-bold">{row.current}</td>
+                  <td className="py-2.5 pr-3 text-green-400 font-bold">{row.target}</td>
+                  <td className="py-2.5 pr-3">
+                    <span className="font-black text-brand-yellow">{row.levels}</span>
+                    <span className="text-gray-500 text-[10px]"> مستويات</span>
+                  </td>
+                  <td className="py-2.5 pr-3 text-gray-400 text-[10px] font-mono">{row.forklift}</td>
+                  <td className="py-2.5 pr-3">
+                    <span className="px-2 py-0.5 rounded bg-blue-500/15 text-blue-400 text-[10px] font-bold">{row.clearance} م ≥ NFPA13</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-4 p-3 bg-brand-red/8 border border-brand-red/20 rounded-xl text-[11px] text-gray-300 flex items-start gap-2">
+          <span className="text-brand-red shrink-0 font-bold">⚠</span>
+          الخلوص القياسي للمرشات ESFR وفق NFPA 13: ≥ 0.457م (18 بوصة) بين أعلى الطبلية ورأس المرشة. E-5 تستلزم مرشات ESFR K-25 تحت كل مستوى رفوف.
+        </div>
+      </div>
+
       {/* Dock Platform Detail */}
       <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-8">
         <h4 className="font-bold text-white mb-6">تفصيل منصة الشحن والاستلام — Dock Platform Detail</h4>
@@ -872,8 +1010,20 @@ const WarehouseMaps = () => {
           ))}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {standards.map((s, i) => (
-            <div key={i} className="bg-[#141f2e] border border-white/10 rounded-2xl p-5 hover:border-white/30 transition-all group">
+          {standards.map((s, i) => {
+            const actionMap = {
+              'مستوى الرصيف (لكل باب تحميل)':     { action:'شراء وتركيب Dock Levelers هيدروليكية (6 طن/وحدة)', party:'مورد معدات مناولة' },
+              'آلية المرشات (High-Bay)':            { action:'تركيب رشاشات ESFR K-25 مع خزان 500م³ وضغط ≥50psi', party:'مقاول أنظمة إطفاء' },
+              'استواء الأرضية (Flatness)':          { action:'تجريد الأرضية وصب إيبوكسي FF50 ذاتي التسوية', party:'مقاول أرضيات صناعية' },
+              'تأريض كهربائي للرفوف (Grounding)':  { action:'تركيب بار تأريض مركزي وتأريض كل عمود هيكلي', party:'مقاول كهرباء معتمد' },
+            };
+            const extraInfo = actionMap[s.name] || null;
+            return (
+            <div key={i} className={`bg-[#141f2e] border rounded-2xl p-5 hover:border-white/30 transition-all group ${
+              s.status === 'Upgrade Required'
+                ? (s.priority === 'Critical' ? 'border-brand-red/30' : 'border-brand-yellow/30')
+                : 'border-white/10'
+            }`}>
               <div className="flex justify-between items-start mb-3">
                 <PriorityBadge priority={s.priority} />
                 <div className="flex items-center gap-1.5">
@@ -890,8 +1040,21 @@ const WarehouseMaps = () => {
                 <div className="text-[11px] text-gray-200 leading-relaxed">{s.req}</div>
               </div>
               <div className="text-[10px] text-gray-500">المنطقة: <span className="text-brand-yellow">{s.zone}</span></div>
+              {extraInfo && s.status === 'Upgrade Required' && (
+                <div className="mt-2 space-y-1.5">
+                  <div className="p-2 rounded-lg bg-brand-yellow/5 border border-brand-yellow/20">
+                    <div className="text-[9px] text-brand-yellow font-bold mb-0.5 uppercase">الإجراء المطلوب</div>
+                    <div className="text-[10px] text-gray-300">{extraInfo.action}</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                    <div className="text-[9px] text-blue-400 font-bold mb-0.5 uppercase">الجهة المسؤولة</div>
+                    <div className="text-[10px] text-gray-300">{extraInfo.party}</div>
+                  </div>
+                </div>
+              )}
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
@@ -903,7 +1066,24 @@ const WarehouseMaps = () => {
   const renderProposal = () => (
     <div className="space-y-8 animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {proposalCards.map((card, i) => (
+        {proposalCards.map((card, i) => {
+          const deps = [
+            null,
+            ['ترقية ارتفاع السقف'],
+            ['إنشاء منصات الدوك','ترقية ارتفاع السقف'],
+            ['هيكل الرفوف الانتقائي'],
+            ['إنشاء منصات الدوك','هيكل الرفوف الانتقائي'],
+            ['ترقية ارتفاع السقف','أنظمة السلامة والحماية'],
+          ][i];
+          const kpiLinks = [
+            'تحسين KPI E-5 من 3 مستويات → 6 مستويات (+200% طبليات)',
+            'رفع معدل الاستلام من 30 → 80+ طبلية/ساعة (KPI M-1)',
+            'تحقيق دقة مواقع WMS ≥ 99.5% (KPI خطوة 4)',
+            'تقليص زمن النقل الداخلي بـ 65% (KPI Flow)',
+            'الامتثال لـ NFPA 13 — شرط تشغيل E-5 قانونياً',
+            'دقة مخزون 99.9% + إلغاء ورق يدوي (KPI خطوة 5)',
+          ][i];
+          return (
           <div key={i} className="bg-[#141f2e] border border-white/10 rounded-2xl p-6 hover:border-brand-yellow/30 hover:scale-[1.01] transition-all group shadow-xl relative overflow-hidden">
             <div className={`absolute top-0 left-0 right-0 h-0.5 ${card.priority === 'Critical' ? 'bg-brand-red' : card.priority === 'High' ? 'bg-brand-yellow' : 'bg-blue-500'}`}></div>
             <div className="flex justify-between items-start mb-4">
@@ -914,7 +1094,7 @@ const WarehouseMaps = () => {
             </div>
             <h4 className="font-bold text-white group-hover:text-brand-yellow transition-colors mb-0.5">{card.title}</h4>
             <p className="text-[10px] text-gray-400 mb-4">{card.subtitle}</p>
-            <ul className="space-y-2 mb-5">
+            <ul className="space-y-2 mb-4">
               {card.details.map((d, idx) => (
                 <li key={idx} className="flex items-start gap-2 text-[11px] text-gray-300">
                   <span className="text-brand-yellow mt-0.5 shrink-0">✓</span>
@@ -922,7 +1102,23 @@ const WarehouseMaps = () => {
                 </li>
               ))}
             </ul>
-            <div className="pt-4 border-t border-white/5 flex items-center justify-between text-[10px]">
+            {deps && deps.length > 0 && (
+              <div className="mb-3 p-2 bg-blue-500/5 border border-blue-500/15 rounded-lg">
+                <div className="text-[9px] text-blue-400 font-bold mb-1 uppercase">يعتمد على</div>
+                {deps.map((dep, di) => (
+                  <div key={di} className="text-[10px] text-gray-400 flex items-center gap-1">
+                    <span className="text-blue-400">→</span> {dep}
+                  </div>
+                ))}
+              </div>
+            )}
+            {kpiLinks && (
+              <div className="mb-3 p-2 bg-green-500/5 border border-green-500/15 rounded-lg">
+                <div className="text-[9px] text-green-400 font-bold mb-0.5 uppercase">الأثر التشغيلي المتوقع</div>
+                <div className="text-[10px] text-gray-300">{kpiLinks}</div>
+              </div>
+            )}
+            <div className="pt-3 border-t border-white/5 flex items-center justify-between text-[10px]">
               <div>
                 <div className="text-gray-500">المدة الزمنية</div>
                 <div className="text-white font-bold">{card.duration}</div>
@@ -930,7 +1126,8 @@ const WarehouseMaps = () => {
               <PriorityBadge priority={card.priority} />
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* الجدول الزمني */}
@@ -999,7 +1196,65 @@ const WarehouseMaps = () => {
   // ────────────────────────────────────────────────────────────────
   const renderModificationPlan = () => (
     <div className="space-y-8 animate-fade-in">
-      <div className="bg-gradient-to-l from-[#1a2840] to-[#0f1923] border border-brand-yellow/20 rounded-2xl p-8">
+      {/* إجمالي السعة قبل/بعد */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-brand-red/8 border border-brand-red/20 rounded-2xl p-5 text-center">
+          <div className="text-[10px] text-brand-red font-bold mb-1 uppercase">إجمالي السعة — قبل التحوير</div>
+          <div className="text-3xl font-black text-white">10,930</div>
+          <div className="text-xs text-gray-400">طبلية (10 وحدات)</div>
+        </div>
+        <div className="flex items-center justify-center text-brand-yellow text-4xl font-black">⟹</div>
+        <div className="bg-green-500/8 border border-green-500/20 rounded-2xl p-5 text-center">
+          <div className="text-[10px] text-green-400 font-bold mb-1 uppercase">إجمالي السعة — بعد التحوير</div>
+          <div className="text-3xl font-black text-green-400">19,650+</div>
+          <div className="text-xs text-gray-400">طبلية (+80% تحسين كلي)</div>
+        </div>
+      </div>
+
+      {/* مخطط جانت مبسط */}
+      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
+        <h4 className="font-bold text-white mb-4 text-sm">مخطط جانت — تسلسل مراحل التحوير</h4>
+        <div className="overflow-x-auto">
+          <div className="min-w-[600px]">
+            <div className="flex gap-1 mb-2 pr-24">
+              {Array.from({length:14}, (_,i) => (
+                <div key={i} className="flex-1 text-center text-[8px] text-gray-500">أ{i+1}</div>
+              ))}
+            </div>
+            {[
+              { id:'M-1',     name:'E-1 استلام',          start:0, dur:5,  color:'#27ae60', effort:'متوسط' },
+              { id:'M-2/3',   name:'E-2+E-3 تخزين',       start:2, dur:7,  color:'#2980b9', effort:'متوسط' },
+              { id:'M-4',     name:'E-4 مركز QC',          start:0, dur:3,  color:'#8e44ad', effort:'منخفض' },
+              { id:'M-5',     name:'E-5 High-Bay',         start:4, dur:10, color:'#1abc9c', effort:'مرتفع' },
+              { id:'M-6/7/8', name:'E-6+E-7+E-8 خروج',    start:6, dur:8,  color:'#3498db', effort:'متوسط' },
+              { id:'M-9/10',  name:'E-9+E-10 شحن',        start:8, dur:6,  color:'#e67e22', effort:'متوسط' },
+            ].map((phase, i) => (
+              <div key={i} className="flex items-center gap-1 mb-1.5">
+                <div className="w-24 shrink-0">
+                  <div className="text-[10px] font-bold" style={{ color: phase.color }}>{phase.id}</div>
+                  <div className="text-[9px] text-gray-500 truncate">{phase.name}</div>
+                </div>
+                <div className="flex-1 flex gap-1">
+                  {Array.from({length:14}, (_,w) => {
+                    const active = w >= phase.start && w < phase.start + phase.dur;
+                    return (
+                      <div key={w} className="flex-1 h-5 rounded-sm" style={{
+                        backgroundColor: active ? phase.color : 'rgba(255,255,255,0.04)',
+                        opacity: active ? 0.8 : 1,
+                      }}></div>
+                    );
+                  })}
+                </div>
+                <div className="w-16 shrink-0 text-[9px] text-gray-500 pr-1">{phase.start+1}-{phase.start+phase.dur} أسبوع</div>
+              </div>
+            ))}
+            <div className="mt-2 text-[10px] text-gray-500 flex items-center gap-4">
+              <span>المدة الكلية: <span className="text-brand-yellow font-bold">14 أسبوعاً</span></span>
+              <span>التنفيذ: <span className="text-green-400">متوازٍ جزئياً</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
         <div className="flex flex-wrap items-start gap-5">
           <div className="w-14 h-14 rounded-2xl bg-brand-yellow/10 border border-brand-yellow/30 flex items-center justify-center text-brand-yellow shrink-0">
             <Icon name="arrowUpTray" size={26} />
@@ -1028,7 +1283,18 @@ const WarehouseMaps = () => {
       </div>
 
       <div className="space-y-5">
-        {modificationPlan.phases.map((phase, i) => (
+        {modificationPlan.phases.map((phase, i) => {
+          const operationalImpact = [
+            'إغلاق جزئي — 3-4 أرصفة فقط أثناء التركيب',
+            'إغلاق E-2 أو E-3 على التوالي — وحدة واحدة في كل مرة',
+            'لا يتطلب إغلاقاً — التحوير داخلي ضمن E-4',
+            'إغلاق كامل لـ E-5 لمدة 10-14 أسبوع (ضرورة قصوى)',
+            'إغلاق تسلسلي للوحدات الثلاث — لا إغلاق متزامن',
+            'إغلاق جزئي — الأرصفة تعمل جزئياً أثناء التركيب',
+          ][i] || 'يحدد حسب جدول التنفيذ';
+          const impactLevel = ['جزئي','جزئي','لا يوجد','كامل','جزئي','جزئي'][i];
+          const impactColor = impactLevel === 'كامل' ? '#c0392b' : impactLevel === 'جزئي' ? '#e67e22' : '#27ae60';
+          return (
           <div key={i} className="bg-[#141f2e] border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all">
             <div className="flex flex-wrap items-center gap-4 p-5 border-b border-white/5" style={{ borderRightWidth:4, borderRightColor: phase.color }}>
               <span className="text-2xl">{phase.icon}</span>
@@ -1042,6 +1308,9 @@ const WarehouseMaps = () => {
               <div className="flex flex-wrap gap-2 items-center">
                 <EffortBadge level={phase.effort} />
                 <span className="text-[10px] text-gray-400 bg-white/5 px-2 py-1 rounded-lg">⏱ {phase.duration}</span>
+                <span className="text-[10px] font-bold px-2 py-1 rounded-lg border" style={{ color: impactColor, borderColor: `${impactColor}40`, backgroundColor: `${impactColor}15` }}>
+                  تعطيل: {impactLevel}
+                </span>
               </div>
             </div>
             <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1056,6 +1325,10 @@ const WarehouseMaps = () => {
                   ))}
                 </div>
                 <div className="mt-3 text-[10px] text-gray-500 font-mono">المعيار: <span className="text-brand-yellow">{phase.standard}</span></div>
+                <div className="mt-2 p-2 rounded-lg border text-[10px]" style={{ borderColor:`${impactColor}30`, backgroundColor:`${impactColor}08`, color: impactColor }}>
+                  <span className="font-bold">أثر التشغيل أثناء التنفيذ: </span>
+                  <span className="text-gray-300">{operationalImpact}</span>
+                </div>
               </div>
               <div className="space-y-3">
                 <div className="bg-brand-red/8 border border-brand-red/15 rounded-xl p-3">
@@ -1073,7 +1346,8 @@ const WarehouseMaps = () => {
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-8">
@@ -1282,7 +1556,7 @@ const WarehouseMaps = () => {
               </div>
             </div>
             {unit.riskNote && (
-              <div className="px-5 pb-4">
+              <div className="px-5 pb-4 space-y-2">
                 <div className={`p-3 rounded-xl text-[11px] flex items-start gap-2 ${
                   unit.riskLevel === 'مرتفع' ? 'bg-brand-red/8 border border-brand-red/20 text-brand-red' :
                   unit.riskLevel === 'متوسط' ? 'bg-brand-yellow/8 border border-brand-yellow/20 text-brand-yellow' :
@@ -1290,6 +1564,20 @@ const WarehouseMaps = () => {
                 }`}>
                   <span className="shrink-0 mt-0.5">{unit.riskLevel === 'مرتفع' ? '⚠️' : unit.riskLevel === 'متوسط' ? '⚡' : '✅'}</span>
                   <span><span className="font-bold">ملاحظة المخاطر: </span>{unit.riskNote}</span>
+                </div>
+                <div className="p-3 rounded-xl text-[11px] bg-blue-500/5 border border-blue-500/20 flex items-start gap-2 text-blue-400">
+                  <span className="shrink-0 mt-0.5">📋</span>
+                  <span>
+                    <span className="font-bold">خطوة التحقق التالية: </span>
+                    <span className="text-gray-300">
+                      {{
+                        'M-A': 'دراسة معمارية بسيطة للجدار الفاصل + تأكيد حمولة الأعمدة من المقاول الإنشائي',
+                        'M-B': 'دراسة إنشائية مفصلة من مكتب هندسي معتمد + فحص أحمال السقف + موافقة جهة الترخيص',
+                        'M-C': 'فحص الجدران الفاصلة + تأكيد قدرة تحمل أرضية الممرات + الحصول على إذن البناء',
+                        'M-D': 'دراسة معمارية مبسطة للفتحة الرابطة + تصميم نظام إدارة الأرصفة Dock Management System',
+                      }[unit.id] || 'مراجعة إنشائية أولية'}
+                    </span>
+                  </span>
                 </div>
               </div>
             )}
@@ -1404,16 +1692,134 @@ const WarehouseMaps = () => {
   // ────────────────────────────────────────────────────────────────
   // ── العرض: تقييم الموقع ─────────────────────────────────────────
   // ────────────────────────────────────────────────────────────────
-  const renderSiteAssessment = () => (
+  const renderSiteAssessment = () => {
+    // بيانات الرادار
+    const radarCriteria = assessmentCriteria;
+    const cx = 150, cy = 150, r = 110;
+    const n = radarCriteria.length;
+    const getPoint = (score, index) => {
+      const angle = (Math.PI * 2 * index) / n - Math.PI / 2;
+      const ratio = score / 10;
+      return {
+        x: cx + r * ratio * Math.cos(angle),
+        y: cy + r * ratio * Math.sin(angle),
+      };
+    };
+    const getLabelPoint = (index, offset = 1.22) => {
+      const angle = (Math.PI * 2 * index) / n - Math.PI / 2;
+      return { x: cx + r * offset * Math.cos(angle), y: cy + r * offset * Math.sin(angle) };
+    };
+    const radarPath = radarCriteria.map((c, i) => {
+      const p = getPoint(c.score, i);
+      return `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`;
+    }).join(' ') + ' Z';
+
+    return (
     <div className="space-y-6 animate-fade-in">
+      {/* مخطط الرادار + التقييم الكلي */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* الرادار SVG */}
+        <div className="bg-[#0f1923] border border-white/10 rounded-2xl p-6">
+          <h4 className="font-bold text-white mb-4 text-sm">مخطط الأداء الشامل — Radar Chart</h4>
+          <svg viewBox="0 0 300 300" className="w-full" style={{ maxHeight: 300 }}>
+            {/* شبكة الرادار */}
+            {[2,4,6,8,10].map(level => {
+              const points = Array.from({length:n}, (_,i) => {
+                const p = getPoint(level, i);
+                return `${p.x},${p.y}`;
+              }).join(' ');
+              return <polygon key={level} points={points} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="0.8" />;
+            })}
+            {/* خطوط المحاور */}
+            {radarCriteria.map((_, i) => {
+              const end = getPoint(10, i);
+              return <line key={i} x1={cx} y1={cy} x2={end.x} y2={end.y} stroke="rgba(255,255,255,0.1)" strokeWidth="0.8" />;
+            })}
+            {/* منطقة البيانات */}
+            <path d={radarPath} fill="#e8b83040" stroke="#e8b830" strokeWidth="2" />
+            {/* نقاط البيانات */}
+            {radarCriteria.map((c, i) => {
+              const p = getPoint(c.score, i);
+              return (
+                <g key={i}>
+                  <circle cx={p.x} cy={p.y} r="4" fill={c.score >= 8 ? '#27ae60' : c.score >= 6 ? '#e8b830' : '#c0392b'} />
+                  <circle cx={p.x} cy={p.y} r="7" fill={c.score >= 8 ? '#27ae6030' : c.score >= 6 ? '#e8b83030' : '#c0392b30'} />
+                </g>
+              );
+            })}
+            {/* تسميات المحاور */}
+            {radarCriteria.map((c, i) => {
+              const lp = getLabelPoint(i, 1.28);
+              const shortNames = ['وصول','ارتفاع','أرضية','سلامة','IT','موقع'];
+              return (
+                <text key={i} x={lp.x} y={lp.y} textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="8" fontWeight="bold">
+                  {shortNames[i]}
+                </text>
+              );
+            })}
+            {radarCriteria.map((c, i) => {
+              const lp = getLabelPoint(i, 1.28);
+              const scoreColor = c.score >= 8 ? '#27ae60' : c.score >= 6 ? '#e8b830' : '#c0392b';
+              return (
+                <text key={i} x={lp.x} y={lp.y + 10} textAnchor="middle" fill={scoreColor} fontSize="9" fontWeight="bold">
+                  {c.score}/10
+                </text>
+              );
+            })}
+            {/* التقييم الكلي في المركز */}
+            <text x={cx} y={cy - 5} textAnchor="middle" fill="#e8b830" fontSize="18" fontWeight="bold">{totalWeightedScore.toFixed(1)}</text>
+            <text x={cx} y={cy + 12} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="7">/ 10 كلي</text>
+          </svg>
+        </div>
+
+        {/* التقييم السردي الكلي */}
+        <div className="space-y-4">
+          <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
+            <h5 className="font-bold text-white mb-3 text-sm">التقييم الكلي الموزون</h5>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="text-5xl font-black text-brand-yellow">{totalWeightedScore.toFixed(1)}</div>
+              <div>
+                <div className="text-white font-bold">من 10</div>
+                <div className="text-green-400 text-sm font-bold">✓ مؤهل للتحويل لـ Class A</div>
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-300 leading-relaxed">
+              الموقع مؤهل بدرجة عالية للترقية إلى <span className="text-brand-yellow font-bold">Class A</span> بشرط تنفيذ 3 محاور أساسية:
+              (1) <span className="text-brand-red">رفع الارتفاع الصافي لـ E-5 إلى 12م</span>،
+              (2) <span className="text-brand-red">ترقية منظومة الإطفاء إلى ESFR K-25</span>،
+              (3) <span className="text-orange-400">تثبيت شبكة WiFi صناعية ونظام WMS</span>.
+              الموقع الجغرافي (9/10) يمنح ميزة استراتيجية استثنائية بقربه من ميناء أبوهادي.
+            </p>
+          </div>
+          <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-4">
+            <h5 className="font-bold text-white mb-3 text-sm">مؤشرات تحتاج رفع أولوية</h5>
+            {assessmentCriteria.filter(c => c.score <= 6).map((c, i) => (
+              <div key={i} className="mb-3 p-3 bg-brand-red/5 border border-brand-red/15 rounded-xl">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-white font-bold text-[11px]">{c.name}</span>
+                  <span className="text-brand-red font-black">{c.score}/10</span>
+                </div>
+                <div className="text-[10px] text-gray-400">{c.notes}</div>
+                <div className="text-[10px] text-brand-yellow mt-1 font-bold">
+                  → التوصية: {c.score <= 5
+                    ? 'تركيب شبكة WiFi صناعية IEEE 802.11ac + نظام Odoo WMS كاملاً (ربط ببطاقة: التحول الرقمي)'
+                    : 'تطوير رشاشات ESFR K-25 + خزانات المياه الاحتياطية (ربط ببطاقة: أنظمة السلامة)'}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-8">
+        <h4 className="font-bold text-white mb-6">تقييم الموقع التفصيلي — Site 155 Assessment</h4>
         <div className="flex items-center gap-4 mb-8">
           <div className="w-12 h-12 bg-brand-navy rounded-xl flex items-center justify-center text-brand-yellow text-2xl border border-white/5">
             <Icon name="mapPin" size={22} className="text-brand-yellow" />
           </div>
           <div>
-            <h4 className="font-black text-white text-lg">تقييم الموقع — Site 155 Assessment</h4>
-            <p className="text-gray-400 text-xs">مراجعة المعايير التشغيلية لموقع بوهادي، بنغازي وفق معايير Class A اللوجستية</p>
+            <h4 className="font-black text-white text-lg">موقع 155 — بوهادي، بنغازي</h4>
+            <p className="text-gray-400 text-xs">مراجعة المعايير التشغيلية وفق معايير Class A اللوجستية</p>
           </div>
         </div>
         <div className="space-y-5">
@@ -1478,7 +1884,8 @@ const WarehouseMaps = () => {
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   // ────────────────────────────────────────────────────────────────
   // ── العرض: المبنى الإداري والهيكل الوظيفي (جديد) ───────────────
@@ -1825,6 +2232,72 @@ const WarehouseMaps = () => {
         </div>
       </div>
 
+      {/* بطاقة نظام الورديات */}
+      <div className="bg-[#0f1923] border border-white/10 rounded-2xl p-6">
+        <h4 className="font-bold text-white mb-5 text-sm flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full bg-brand-yellow inline-block"></span>
+          نظام الورديات — توزيع الكوادر التشغيلية على مدار الساعة
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            {
+              shift:'الوردية الصباحية',
+              time:'06:00 – 14:00',
+              color:'#f39c12',
+              icon:'🌅',
+              staff:['4 مشغلو رافعات','5 عمال استلام','3 موظفو تجميع','1 مراقب جودة','1 مشرف ميداني'],
+              total: 14,
+              note:'أعلى ذروة الاستلام — توافر أكبر كادر'
+            },
+            {
+              shift:'الوردية المسائية',
+              time:'14:00 – 22:00',
+              color:'#e67e22',
+              icon:'🌇',
+              staff:['2 مشغلو رافعات','3 عمال تخزين','2 موظفو شحن','1 مراقب جودة','1 مشرف'],
+              total: 9,
+              note:'تركيز على تجميع الطلبات والشحن'
+            },
+            {
+              shift:'الوردية الليلية',
+              time:'22:00 – 06:00',
+              color:'#2980b9',
+              icon:'🌙',
+              staff:['2 مشغلو رافعات','2 عمال تخزين','1 فني IT (مناوبة)','2 حراس أمن'],
+              total: 7,
+              note:'عمليات تخزين + مراقبة + أمن'
+            },
+          ].map((ward, i) => (
+            <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4" style={{ borderTopColor: ward.color, borderTopWidth: 3 }}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xl">{ward.icon}</span>
+                <div>
+                  <div className="font-bold text-white text-xs">{ward.shift}</div>
+                  <div className="text-[10px]" style={{ color: ward.color }}>{ward.time}</div>
+                </div>
+                <div className="mr-auto text-right">
+                  <span className="text-2xl font-black" style={{ color: ward.color }}>{ward.total}</span>
+                  <div className="text-[9px] text-gray-500">موظف</div>
+                </div>
+              </div>
+              <ul className="space-y-1 mb-2">
+                {ward.staff.map((s, si) => (
+                  <li key={si} className="text-[10px] text-gray-300 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: ward.color }}></span>
+                    {s}
+                  </li>
+                ))}
+              </ul>
+              <div className="text-[9px] text-gray-500 italic border-t border-white/5 pt-2">{ward.note}</div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 p-3 bg-brand-yellow/5 border border-brand-yellow/15 rounded-xl text-[11px] text-gray-300 flex items-center gap-2">
+          <span className="text-brand-yellow shrink-0">⏰</span>
+          التشغيل {orgStructure.summary.workingHours} بـ {orgStructure.summary.shifts} — بإجمالي {orgStructure.summary.totalStaff} موظف
+        </div>
+      </div>
+
       {/* جدول مسؤوليات الأقسام */}
       <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-8">
         <h4 className="font-bold text-white mb-6">مسؤوليات الأقسام وارتباطاتها بالمستودعات</h4>
@@ -1964,23 +2437,131 @@ const WarehouseMaps = () => {
   return (
     <div className="space-y-6 text-right" dir="rtl" id="report-container">
       <style dangerouslySetInnerHTML={{ __html: `
+        /* ═══════════════════════════════════════════════════
+           قواعد الطباعة — مُعاد بناؤها بالكامل
+           الهدف: ألوان دلالية كاملة + لا اقتصاص + A4 منظم
+        ═══════════════════════════════════════════════════ */
         @media print {
-          @page { size: A4; margin: 15mm; }
-          html, body { background-color: white !important; color: black !important; margin: 0; padding: 0; }
+          /* ─ إعداد الصفحة A4 ─ */
+          @page { size: A4 portrait; margin: 12mm 10mm; }
+
+          /* ─ تفعيل طباعة الألوان والخلفيات فعلياً ─ */
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+
+          /* ─ إخفاء عناصر لا تُطبع ─ */
           .no-print, aside { display: none !important; }
-          #report-container { background-color: white !important; color: black !important; padding: 0; width: 100%; direction: rtl; }
-          #report-container * { background-color: transparent !important; color: black !important; box-shadow: none !important; border-color: #eee !important; }
-          .bg-gradient-to-r, .bg-gradient-to-l { background: white !important; border-bottom: 3px solid #c0392b !important; border-radius: 0 !important; }
-          .text-brand-red { color: #c0392b !important; }
-          .text-brand-yellow, .text-brand-gold { color: #b08d20 !important; }
-          .text-green-400, .text-green-500 { color: #1e7e34 !important; }
-          .text-gray-300, .text-gray-400 { color: #555 !important; }
-          table { border: 1px solid #444 !important; width: 100%; }
-          th { background-color: #f0f0f0 !important; border: 1px solid #444 !important; font-weight: bold; padding: 8px; }
-          td { border: 1px solid #eee !important; padding: 6px; }
-          .print-section-break { break-before: page !important; padding-top: 30px; border-top: 1px solid #eee; }
-          h2, h3, h4, h5 { color: #000 !important; border-right: 4px solid #c0392b !important; padding-right: 12px; }
+
+          /* ─ الجسم والحاوية الرئيسية ─ */
+          html, body { margin: 0; padding: 0; background: white !important; }
+          #report-container {
+            background: white !important;
+            padding: 0 !important;
+            width: 100% !important;
+            direction: rtl !important;
+            box-shadow: none !important;
+          }
+
+          /* ─ الخلفيات الداكنة الكبيرة → تتحول لفاتح مع حد ─ */
+          .bg-\\[\\#141f2e\\], .bg-\\[\\#0f1923\\], .bg-\\[\\#0a1020\\],
+          .bg-\\[\\#1a2840\\], .bg-\\[\\#2a0f0f\\], .bg-\\[\\#1a0f2a\\] {
+            background-color: #f8f9fa !important;
+            border: 1px solid #dee2e6 !important;
+            box-shadow: none !important;
+          }
+
+          /* الخلفيات المتدرجة → فاتحة مع حد سفلي أحمر */
+          .bg-gradient-to-l, .bg-gradient-to-r, .bg-gradient-to-br {
+            background: #f0f4f8 !important;
+            border: 1px solid #c0392b !important;
+            box-shadow: none !important;
+          }
+
+          /* brand-navy كخلفية → فاتح */
+          [class*="bg-brand-navy"] {
+            background-color: #eef2f7 !important;
+          }
+
+          /* النصوص البيضاء على خلفيات فاتحة → داكنة */
+          .text-white { color: #1a1a2e !important; }
+          .text-gray-300 { color: #444 !important; }
+          .text-gray-400 { color: #666 !important; }
+          .text-gray-500 { color: #888 !important; }
+
+          /* ─ الألوان الدلالية تبقى كما هي ─ */
+          .text-brand-red, [class*="text-brand-red"] { color: #c0392b !important; }
+          .text-brand-yellow { color: #b08a14 !important; }
+          .text-green-400 { color: #1a7a3a !important; }
+          .text-green-500 { color: #1a7a3a !important; }
+          .text-blue-400 { color: #1565c0 !important; }
+          .text-blue-500 { color: #1565c0 !important; }
+          .text-orange-400 { color: #d84315 !important; }
+          .text-purple-400 { color: #7b1fa2 !important; }
+
+          /* ─ الشارات (Badges) تحتفظ بخلفيتها اللونية ─ */
+          /* PriorityBadge / EffortBadge / RiskBadge */
+          [class*="bg-brand-red\\/"] { background-color: rgba(192,57,43,0.18) !important; }
+          [class*="bg-orange-500\\/"] { background-color: rgba(230,126,34,0.18) !important; }
+          [class*="bg-green-500\\/"] { background-color: rgba(39,174,96,0.18) !important; }
+          [class*="bg-brand-yellow\\/"] { background-color: rgba(232,184,48,0.18) !important; }
+          [class*="bg-purple-500\\/"] { background-color: rgba(142,68,173,0.18) !important; }
+          [class*="bg-blue-500\\/"] { background-color: rgba(52,152,219,0.18) !important; }
+          [class*="bg-gray-500\\/"] { background-color: rgba(149,165,166,0.15) !important; }
+
+          /* ─ الجداول ─ */
+          .overflow-x-auto { overflow: visible !important; }
+          table { width: 100% !important; table-layout: auto !important; font-size: 8.5px !important; border-collapse: collapse !important; }
+          th { background-color: #eef2f7 !important; color: #333 !important; font-weight: bold !important; padding: 5px 4px !important; border: 1px solid #ccc !important; word-break: break-word; }
+          td { padding: 4px !important; border: 1px solid #ddd !important; word-break: break-word; color: #333 !important; }
+
+          /* ─ الشبكات العريضة → 3 أعمدة كحد أقصى ─ */
+          .grid.lg\\:grid-cols-6 { grid-template-columns: repeat(3,1fr) !important; gap: 6px !important; }
+          .grid.lg\\:grid-cols-7 { grid-template-columns: repeat(3,1fr) !important; gap: 6px !important; }
+          .grid.md\\:grid-cols-6 { grid-template-columns: repeat(3,1fr) !important; gap: 6px !important; }
+
+          /* ─ SVG: منع الاقتصاص ─ */
+          svg { max-width: 100% !important; height: auto !important; }
+          .relative.w-full.rounded-xl.overflow-hidden { overflow: visible !important; }
+
+          /* ─ منع تقسيم العناصر بين صفحتين ─ */
+          .bg-\\[\\#141f2e\\], .rounded-2xl, .rounded-xl,
+          svg, figure, .space-y-5 > div, .space-y-6 > div {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          /* ─ فصل التبويبات بين الصفحات ─ */
+          .print-section-break {
+            break-before: page !important;
+            page-break-before: always !important;
+            padding-top: 20px !important;
+            border-top: 2px solid #c0392b !important;
+          }
+
+          /* ─ العناوين بحد أيمن أحمر ─ */
+          h2, h3, h4, h5 {
+            border-right: 4px solid #c0392b !important;
+            padding-right: 10px !important;
+          }
+
+          /* ─ البطاقات الكبيرة: حدود واضحة ─ */
+          .border.border-white\\/10, .border.border-white\\/5 {
+            border-color: #ddd !important;
+          }
+
+          /* ─ تخفيف padding في الطباعة ─ */
+          .p-8 { padding: 12px !important; }
+          .p-6 { padding: 10px !important; }
+          .p-5 { padding: 8px !important; }
+
+          /* ─ إخفاء العناصر الزخرفية البحتة ─ */
+          .animate-pulse { animation: none !important; }
         }
+
+        /* ═══ حركة الظهور للشاشة فقط ═══ */
         .animate-fade-in { animation: fadeInUp 0.35s ease forwards; }
         @keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
       `}} />
