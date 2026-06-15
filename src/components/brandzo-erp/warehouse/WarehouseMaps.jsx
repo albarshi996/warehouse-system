@@ -2461,12 +2461,18 @@ const WarehouseMaps = () => {
           /* إخفاء عناصر لا تطبع */
           .no-print, aside { display: none !important; }
 
-          /* حاوية التقرير */
+          /* حاوية التقرير — لون نص افتراضي داكن لضمان الظهور */
           #report-container {
             background-color: white !important;
+            color: #111827 !important;
             padding: 0;
             width: 100%;
             direction: rtl;
+          }
+
+          /* كل النصوص ترث اللون الداكن كأساس */
+          #report-container * {
+            color: inherit;
           }
 
           /* تحويل الخلفيات الداكنة إلى فاتحة — انتقائي فقط */
@@ -2487,347 +2493,30 @@ const WarehouseMaps = () => {
             border-radius: 6px !important;
           }
 
-          /* النصوص البيضاء → داكنة على الخلفيات الفاتحة */
-          .text-white { color: #111827 !important; }
-          .text-gray-300 { color: #374151 !important; }
-          .text-gray-400 { color: #4b5563 !important; }
-          .text-gray-500 { color: #6b7280 !important; }
-
-          /* الألوان الدلالية تُحافظ على نفسها */
+          /* الألوان الدلالية — تُعلن صراحةً بـ !important لتتغلب على color:inherit */
           .text-brand-red    { color: #c0392b !important; }
           .text-brand-yellow { color: #b08010 !important; }
           .text-green-400,
           .text-green-500    { color: #166534 !important; }
           .text-green-300    { color: #15803d !important; }
           .text-blue-400     { color: #1d4ed8 !important; }
+          .text-blue-300     { color: #1e40af !important; }
           .text-orange-400   { color: #c2410c !important; }
           .text-purple-400   { color: #7e22ce !important; }
+          .text-yellow-400   { color: #92400e !important; }
+          .text-teal-400     { color: #0f766e !important; }
+
+          /* النصوص الرمادية والبيضاء → لون داكن قابل للقراءة */
+          .text-white        { color: #111827 !important; }
+          .text-gray-100     { color: #1f2937 !important; }
+          .text-gray-200     { color: #1f2937 !important; }
+          .text-gray-300     { color: #374151 !important; }
+          .text-gray-400     { color: #4b5563 !important; }
+          .text-gray-500     { color: #6b7280 !important; }
 
           /* شارات الأولوية — تحتفظ بلونها */
           span[class*="text-brand-red"],
           span[class*="text-green-400"],
-          span[class*="text-orange-400"],
-          span[class*="text-gray-400"] {
+          span[class*="text-orange-400"] {
             border: 1px solid currentColor !important;
           }
-
-          /* إصلاح الجداول العريضة للـ A4 */
-          table {
-            width: 100% !important;
-            table-layout: auto !important;
-            font-size: 8px !important;
-            border-collapse: collapse !important;
-          }
-          th {
-            background-color: #e5e7eb !important;
-            color: #111827 !important;
-            border: 1px solid #9ca3af !important;
-            font-weight: bold;
-            padding: 4px 5px !important;
-          }
-          td {
-            border: 1px solid #d1d5db !important;
-            padding: 3px 5px !important;
-            word-break: break-word;
-          }
-          /* ── إصلاح شامل لـ overflow — يمنع اقتصاص المحتوى ── */
-          .overflow-x-auto,
-          .overflow-y-auto,
-          .overflow-hidden,
-          .overflow-scroll,
-          .overflow-auto {
-            overflow: visible !important;
-          }
-
-          /* إزالة قيود الارتفاع الصارمة التي تقطع الصفحات */
-          .print-expand,
-          [class*="max-h-"] {
-            max-height: none !important;
-            overflow: visible !important;
-          }
-
-          /* حاوية التبويبات */
-          [class*="min-h-"] {
-            min-height: 0 !important;
-          }
-
-          /* ارتفاعات ثابتة تمنع ظهور المحتوى الكامل */
-          .h-72, .h-64, .h-80, .h-96, .h-48, .h-56, .h-40, .h-32 {
-            height: auto !important;
-            min-height: 0 !important;
-            max-height: none !important;
-          }
-
-          /* حاوية التبويبات الرئيسية تمتد بالكامل */
-          .min-h-\\[600px\\] {
-            min-height: 0 !important;
-          }
-
-          /* تحديد أقصى عدد أعمدة للشبكات العريضة في A4 */
-          .lg\\:grid-cols-6,
-          .lg\\:grid-cols-7 {
-            grid-template-columns: repeat(3, 1fr) !important;
-          }
-
-          /* فاصل الصفحات بين التبويبات */
-          .print-section-break {
-            break-before: page !important;
-            padding-top: 16px;
-          }
-
-          /* السماح للبطاقات الكبيرة بالامتداد عبر الصفحات — break-inside: avoid فقط للعناصر الصغيرة */
-          figure {
-            break-inside: avoid !important;
-            page-break-inside: avoid !important;
-          }
-
-          /* الجداول تمتد عبر الصفحات بشكل طبيعي */
-          table { break-inside: auto !important; }
-          tr { break-inside: avoid !important; page-break-inside: avoid !important; }
-
-          svg {
-            break-inside: avoid !important;
-            max-width: 100% !important;
-            height: auto !important;
-          }
-
-          /* عناوين */
-          h2, h3, h4, h5 {
-            color: #111827 !important;
-            border-right: 3px solid #c0392b !important;
-            padding-right: 8px;
-          }
-
-          /* إخفاء أزرار التفاعل */
-          button { display: none !important; }
-          input, select { border: 1px solid #ccc !important; background: white !important; color: #111 !important; }
-        }
-
-        /* ── الحركات للشاشة فقط ── */
-        .animate-fade-in { animation: fadeInUp 0.35s ease forwards; }
-        @keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
-      `}} />
-
-      {/* ── الرأس ──────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-l from-brand-navy to-[#1a2840] rounded-2xl p-8 border border-white/10 shadow-2xl">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div>
-            <div className="flex items-center gap-3 mb-3 flex-wrap">
-              <span className="px-3 py-1 bg-brand-red/20 text-brand-red text-xs font-bold rounded-full border border-brand-red/30">مقترح فني هندسي</span>
-              <span className="px-3 py-1 bg-green-500/15 text-green-400 text-xs font-bold rounded-full border border-green-500/25">Class A Target</span>
-              <span className="px-3 py-1 bg-brand-yellow/15 text-brand-yellow text-xs font-bold rounded-full border border-brand-yellow/25">خطتا تحوير ودمج</span>
-              <span className="px-3 py-1 bg-brand-red/10 text-brand-red text-xs font-bold rounded-full border border-brand-red/20">مبنى إداري + هيكل وظيفي</span>
-            </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">الخرائط الفنية ومقترح التطوير الشامل</h2>
-            <p className="text-gray-300 text-sm max-w-2xl leading-relaxed">
-              تطوير مستودعات موقع 155 (بوهادي، بنغازي) — تحويل المساحات الحالية إلى مستودعات Class A بمعايير دولية مع دراسة شاملة لخطتي التحوير والدمج والهيكل الإداري الكامل.
-            </p>
-            <div className="mt-3 text-[11px] text-gray-400">
-              إعداد: <span className="text-brand-yellow font-bold">محمد البرشي — رمزي باش</span>
-              <span className="mx-2 text-white/20">|</span>
-              إدارة المستودعات
-              <span className="mx-2 text-white/20">|</span>
-              <span className="text-brand-yellow">⚓ {siteInfo.nearestPort}</span>
-            </div>
-          </div>
-          <button
-            onClick={() => window.print()}
-            className="px-6 py-3 bg-brand-red text-white rounded-xl font-bold hover:bg-red-700 transition-all flex items-center gap-2 shadow-lg shadow-brand-red/20 shrink-0 no-print"
-          >
-            <Icon name="printer" size={18} /> طباعة التقرير
-          </button>
-        </div>
-
-        {/* شريط معلومات الموقع */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-8 pt-6 border-t border-white/10">
-          {[
-            { l:'كود الموقع',      v: siteInfo.id },
-            { l:'الموقع',          v: siteInfo.location },
-            { l:'المساحة الكلية',  v: siteInfo.totalSiteArea },
-            { l:'المساحة المغطاة', v: siteInfo.coveredArea },
-            { l:'الارتفاع الحالي', v: siteInfo.currentHeight },
-            { l:'الاستهداف',       v: siteInfo.classification },
-          ].map((item, i) => (
-            <div key={i} className="text-center">
-              <div className="text-gray-400 text-[10px] uppercase mb-1">{item.l}</div>
-              <div className="text-white font-bold text-sm">{item.v}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── التخطيط ────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* المحتوى الرئيسي */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* التبويبات */}
-          <div className="flex flex-wrap gap-1 border-b border-white/10 pb-0 no-print">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-3 py-2.5 rounded-t-lg font-bold transition-all flex items-center gap-1.5 text-xs ${
-                  activeTab === tab.id
-                    ? 'bg-[#1a2840] text-brand-yellow border-t border-x border-white/10 -mb-px'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Icon name={tab.icon} size={14} />
-                {tab.label}
-                {tab.isNew && (
-                  <span className="px-1.5 py-0.5 bg-brand-red/30 text-brand-red text-[8px] font-black rounded-full">جديد</span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          <div className="min-h-[600px]">
-            {renderPrintSummary()}
-            <div className={activeTab === 'floorplan'    ? 'block' : 'hidden print:block'}>{renderFloorPlan()}</div>
-            <div className={activeTab === 'flow'         ? 'block' : 'hidden print:block print-section-break'}>{renderLogisticsFlow()}</div>
-            <div className={activeTab === 'elevation'    ? 'block' : 'hidden print:block print-section-break'}>{renderElevation()}</div>
-            <div className={activeTab === 'standards'    ? 'block' : 'hidden print:block print-section-break'}>{renderStandards()}</div>
-            <div className={activeTab === 'proposal'     ? 'block' : 'hidden print:block print-section-break'}>{renderProposal()}</div>
-            <div className={activeTab === 'modification' ? 'block' : 'hidden print:block print-section-break'}>{renderModificationPlan()}</div>
-            <div className={activeTab === 'merge'        ? 'block' : 'hidden print:block print-section-break'}>{renderMergePlan()}</div>
-            <div className={activeTab === 'admin'        ? 'block' : 'hidden print:block print-section-break'}>{renderAdminBuilding()}</div>
-            <div className={activeTab === 'assessment'   ? 'block' : 'hidden print:block print-section-break'}>{renderSiteAssessment()}</div>
-          </div>
-        </div>
-
-        {/* ── الشريط الجانبي ──────────────────────────────────────── */}
-        <aside className="space-y-5 no-print">
-          {/* مراجعة الامتثال */}
-          <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-5 shadow-xl">
-            <h4 className="font-bold text-white mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
-              <Icon name="clipboardList" size={16} className="text-brand-yellow" /> مراجعة الامتثال
-            </h4>
-            <div className="space-y-3">
-              {[
-                { label:'ارتفاع Class A ≥ 12م',  ok: dimensions.clearHeight >= 12,             val:`${dimensions.clearHeight}م` },
-                { label:'ESFR رشاشات مطلوبة',     ok: dimensions.clearHeight >= 10,             val: dimensions.clearHeight >= 10 ? 'نعم' : 'اختياري' },
-                { label:'أرضية إيبوكسي FF50',     ok: dimensions.flooring.includes('إيبوكسي'), val:'مطابق' },
-                { label:'سعة > 15,000 طبلية',     ok: stats.estPallets > 15000,                val: stats.estPallets.toLocaleString() },
-                { label:'مستويات الرفوف ≥ 5',     ok: stats.rackLevels >= 5,                   val:`${stats.rackLevels} مستويات` },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between text-[11px]">
-                  <span className="text-gray-300">{item.label}</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-white font-bold text-[10px]">{item.val}</span>
-                    <span className={`text-base ${item.ok ? 'text-green-500' : 'text-brand-red'}`}>{item.ok ? '✓' : '✗'}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {dimensions.clearHeight < 12 && (
-              <div className="mt-3 p-2 bg-brand-red/10 border border-brand-red/20 rounded text-[10px] text-brand-red">
-                ⚠️ الارتفاع الحالي أقل من معيار Class A (12م) لـ E-5
-              </div>
-            )}
-          </div>
-
-          {/* لوحة التحكم الفني */}
-          <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-5 shadow-xl">
-            <h4 className="font-bold text-white mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
-              <Icon name="grid" size={16} className="text-brand-yellow" /> لوحة التحكم الفني
-            </h4>
-            <div className="space-y-4">
-              {[
-                { label:'طول المستودع (م)',    field:'length' },
-                { label:'عرض المستودع (م)',    field:'width' },
-                { label:'الارتفاع الصافي (م)', field:'clearHeight' },
-              ].map((f) => (
-                <div key={f.field} className="space-y-1">
-                  <label className="text-xs text-gray-300">{f.label}</label>
-                  <input
-                    type="number"
-                    value={dimensions[f.field]}
-                    onChange={e => setDimensions({ ...dimensions, [f.field]: +e.target.value })}
-                    className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm focus:border-brand-yellow outline-none transition-all"
-                  />
-                </div>
-              ))}
-              <div className="space-y-1">
-                <label className="text-xs text-gray-300">نوع الأرضية</label>
-                <select value={dimensions.flooring} onChange={e => setDimensions({ ...dimensions, flooring: e.target.value })} className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm focus:border-brand-yellow outline-none">
-                  <option>إيبوكسي FF50</option>
-                  <option>خرسانة صناعية</option>
-                  <option>بلاط مقاوم للأحمال</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-gray-300">آلية التخزين</label>
-                <select value={dimensions.rackingSystem} onChange={e => setDimensions({ ...dimensions, rackingSystem: e.target.value })} className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm focus:border-brand-yellow outline-none">
-                  <option>Selective Pallet Racking</option>
-                  <option>Drive-In Racking</option>
-                  <option>VNA System</option>
-                </select>
-              </div>
-            </div>
-            <div className="mt-5 pt-4 border-t border-white/10 space-y-3">
-              {[
-                { l:'مستويات الرفوف',   v:`${stats.rackLevels} مستويات`,              c:'text-brand-yellow' },
-                { l:'السعة التقديرية',  v:`${stats.estPallets.toLocaleString()} طبلية`, c:'text-brand-yellow' },
-                { l:'نوع الرافعة',      v: stats.forkliftType,                         c:'text-green-400' },
-                { l:'الاستغلال المتوقع',v:`${stats.utilization}%`,                     c: stats.utilization > 80 ? 'text-green-400' : 'text-brand-yellow' },
-              ].map((r, i) => (
-                <div key={i} className="flex justify-between items-center text-xs">
-                  <span className="text-gray-300">{r.l}</span>
-                  <span className={`font-bold ${r.c}`}>{r.v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* معلومات الموقع */}
-          <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-5 shadow-xl">
-            <h4 className="font-bold text-white mb-4 flex items-center gap-2">
-              <Icon name="mapPin" size={16} className="text-brand-red" /> معلومات الموقع
-            </h4>
-            <div className="space-y-3">
-              {[
-                { label:'كود الموقع',      val: siteInfo.id },
-                { label:'الموقع',          val: siteInfo.location },
-                { label:'المساحة الكلية',  val: siteInfo.totalSiteArea },
-                { label:'المساحة المغطاة', val: siteInfo.coveredArea },
-                { label:'المقاول المنفذ',  val: siteInfo.contractor, small:true },
-                { label:'الارتفاع الحالي', val: siteInfo.currentHeight },
-                { label:'أقرب ميناء',      val: siteInfo.nearestPort },
-                { label:'إعداد',           val: siteInfo.preparedBy, small:true },
-              ].map((item, i) => (
-                <div key={i} className="flex flex-col border-b border-white/5 pb-2">
-                  <span className="text-[10px] text-gray-400 uppercase">{item.label}</span>
-                  <span className={`text-white font-medium ${item.small ? 'text-[11px]' : 'text-sm'}`}>{item.val}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ملخص الخطط الثلاث */}
-          <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-5 shadow-xl">
-            <h4 className="font-bold text-white mb-4 border-b border-white/10 pb-3 text-sm">ملخص الخطط والمقترحات</h4>
-            <div className="space-y-3">
-              <div onClick={() => setActiveTab('modification')} className="p-3 rounded-xl cursor-pointer hover:scale-[1.02] transition-all border border-brand-yellow/20 bg-brand-yellow/5">
-                <div className="text-brand-yellow font-bold text-xs mb-1">خطة التحوير</div>
-                <div className="text-[10px] text-gray-400">10 وحدات • ترقية داخلية • ~14 أسبوع</div>
-                <div className="text-[10px] text-green-400 mt-1">↑ +80% طبليات</div>
-              </div>
-              <div onClick={() => setActiveTab('merge')} className="p-3 rounded-xl cursor-pointer hover:scale-[1.02] transition-all border border-purple-500/20 bg-purple-500/5">
-                <div className="text-purple-400 font-bold text-xs mb-1">خطة الدمج</div>
-                <div className="text-[10px] text-gray-400">4 مجمعات • إعادة هيكلة • ~28 أسبوع</div>
-                <div className="text-[10px] text-green-400 mt-1">↑ +75% طبليات +60% كفاءة</div>
-              </div>
-              <div onClick={() => setActiveTab('admin')} className="p-3 rounded-xl cursor-pointer hover:scale-[1.02] transition-all border border-brand-red/20 bg-brand-red/5">
-                <div className="text-brand-red font-bold text-xs mb-1">المبنى الإداري</div>
-                <div className="text-[10px] text-gray-400">1,200 م² • 12 قسم • 73 موظف</div>
-                <div className="text-[10px] text-blue-400 mt-1">هيكل وظيفي كامل</div>
-              </div>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </div>
-  );
-};
-
-export default WarehouseMaps;
