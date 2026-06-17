@@ -1,8 +1,54 @@
 ---
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import Icon from '../../components/ui/Icon.astro';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const title = "معرض التوثيق المرئي";
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+
+const imagesDir = path.join(process.cwd(), 'public', 'assets', 'images');
+const videosDir = path.join(process.cwd(), 'public', 'assets', 'videos');
+
+const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+const videoExtensions = ['.mp4', '.webm', '.mov'];
+
+let mediaItems = [];
+
+try {
+  if (fs.existsSync(imagesDir)) {
+    const files = fs.readdirSync(imagesDir);
+    files.forEach(file => {
+      const ext = path.extname(file).toLowerCase();
+      if (!file.startsWith('.') && file !== '.gitkeep' && imageExtensions.includes(ext)) {
+        mediaItems.push({
+          type: 'image',
+          title: path.parse(file).name.replace(/[-_]/g, ' '),
+          url: `${base}/assets/images/${file}`
+        });
+      }
+    });
+  }
+
+  if (fs.existsSync(videosDir)) {
+    const files = fs.readdirSync(videosDir);
+    files.forEach(file => {
+      const ext = path.extname(file).toLowerCase();
+      if (!file.startsWith('.') && file !== '.gitkeep' && videoExtensions.includes(ext)) {
+        mediaItems.push({
+          type: 'video',
+          title: path.parse(file).name.replace(/[-_]/g, ' '),
+          url: `${base}/assets/videos/${file}`
+        });
+      }
+    });
+  }
+} catch (error) {
+  console.error('Error reading media directories:', error);
+}
 ---
 
 <DashboardLayout title={title}>
@@ -20,99 +66,63 @@ const title = "معرض التوثيق المرئي";
       </div>
     </div>
 
-    <!-- Gallery Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Sample Image Card 1 -->
-      <div class="glass-card overflow-hidden group">
-        <div class="aspect-video relative overflow-hidden bg-gray-900">
-          <img
-            src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=800"
-            alt="مستودع حديث"
-            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-80 group-hover:opacity-100"
-          />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
-             <span class="text-brand-gold text-xs font-bold">مقترح تنظيم</span>
-             <h3 class="text-white font-bold">تنظيم الأرفف الذكي</h3>
+    {mediaItems.length > 0 ? (
+      <!-- Gallery Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {mediaItems.map((item) => (
+          <div class="glass-card overflow-hidden group">
+            <div class="aspect-video relative overflow-hidden bg-gray-900">
+              {item.type === 'image' ? (
+                <>
+                  <img
+                    src={item.url}
+                    alt={item.title}
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-80 group-hover:opacity-100"
+                  />
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+                     <span class="text-brand-gold text-xs font-bold">توثيق مرئي</span>
+                     <h3 class="text-white font-bold">{item.title}</h3>
+                  </div>
+                </>
+              ) : (
+                <video
+                  class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                  controls
+                >
+                  <source src={item.url} type={item.url.endsWith('.webm') ? 'video/webm' : (item.url.endsWith('.mov') ? 'video/quicktime' : 'video/mp4')} />
+                  متصفحك لا يدعم تشغيل الفيديو.
+                </video>
+              )}
+            </div>
+            <div class="p-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class={`px-2 py-1 ${item.type === 'image' ? 'bg-brand-red/20 text-brand-red' : 'bg-blue-500/20 text-blue-400'} text-[10px] font-bold rounded uppercase tracking-wider`}>
+                  {item.type === 'image' ? 'صورة توثيقية' : 'فيديو توضيحي'}
+                </span>
+                <span class="text-gray-500 text-xs">2026/06/04</span>
+              </div>
+              <h3 class="text-white font-bold mb-1">{item.title}</h3>
+              <p class="text-gray-400 text-sm leading-relaxed">
+                {item.type === 'image'
+                  ? 'توثيق لمقترح آلية التنظيم ورفع الكفاءة التشغيلية في المستودع.'
+                  : 'شرح مرئي للعمليات اللوجستية وآلية العمل المقترحة.'}
+              </p>
+            </div>
           </div>
-        </div>
-        <div class="p-4">
-          <div class="flex items-center justify-between mb-2">
-            <span class="px-2 py-1 bg-brand-red/20 text-brand-red text-[10px] font-bold rounded uppercase tracking-wider">
-              صورة توثيقية
-            </span>
-            <span class="text-gray-500 text-xs">2026/05/15</span>
-          </div>
-          <h3 class="text-white font-bold mb-1">نموذج المستودع الذكي</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">
-            توثيق لمقترح آلية ترتيب الأرفف لزيادة الكفاءة التشغيلية بنسبة 25%.
-          </p>
-        </div>
+        ))}
       </div>
-
-      <!-- Sample Image Card 2 -->
-      <div class="glass-card overflow-hidden group">
-        <div class="aspect-video relative overflow-hidden bg-gray-900">
-          <img
-            public/assets/images/WhatsApp Image 2026-06-04 at 4.24.04 PM (3).jpeg
-            alt="عمليات لوجستية"
-            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-80 group-hover:opacity-100"
-          />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
-             <span class="text-brand-gold text-xs font-bold">توثيق تشغيلي</span>
-             <h3 class="text-white font-bold">منطقة الفرز والتوزيع</h3>
-          </div>
+    ) : (
+      <!-- Empty State / Placeholder for Future Assets -->
+      <div class="bz-card-dark p-12 text-center border-dashed border-2 border-white/10">
+        <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Icon name="fileUp" size={32} class="text-gray-600" />
         </div>
-        <div class="p-4">
-          <div class="flex items-center justify-between mb-2">
-            <span class="px-2 py-1 bg-brand-gold/20 text-brand-gold text-[10px] font-bold rounded uppercase tracking-wider">
-              مقترح تشغيلي
-            </span>
-            <span class="text-gray-500 text-xs">2026/05/10</span>
-          </div>
-          <h3 class="text-white font-bold mb-1">آلية جرد المركبات</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">
-            مقترح مرئي لآلية جرد وتوثيق المركبات في منطقة الاستلام والتسليم.
-          </p>
-        </div>
+        <h3 class="text-xl font-bold text-gray-300 mb-2">في انتظار المزيد من الوسائط</h3>
+        <p class="text-gray-500 max-w-md mx-auto">
+          سيتم إضافة المزيد من الصور والفيديوهات التوثيقية والمقترحات المرئية تباعاً لتعزيز التوثيق التشغيلي.
+        </p>
       </div>
-
-      <!-- Sample Video Card -->
-      <div class="glass-card overflow-hidden group">
-        <div class="aspect-video relative bg-black">
-          <video
-            class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-            controls
-            poster="https://images.unsplash.com/photo-1566576721346-d4a3b4eaad5b?auto=format&fit=crop&q=80&w=800"
-          >
-            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
-            متصفحك لا يدعم تشغيل الفيديو.
-          </video>
-        </div>
-        <div class="p-4">
-          <div class="flex items-center justify-between mb-2">
-            <span class="px-2 py-1 bg-blue-500/20 text-blue-400 text-[10px] font-bold rounded uppercase tracking-wider">
-              فيديو توضيحي
-            </span>
-            <span class="text-gray-500 text-xs">2026/05/01</span>
-          </div>
-          <h3 class="text-white font-bold mb-1">شرح آلية الصرف</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">
-            توثيق مرئي لمراحل دورة الصرف المخزني من الطلب حتى التسليم.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Empty State / Placeholder for Future Assets -->
-    <div class="bz-card-dark p-12 text-center border-dashed border-2 border-white/10">
-      <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-        <Icon name="fileUp" size={32} class="text-gray-600" />
-      </div>
-      <h3 class="text-xl font-bold text-gray-300 mb-2">في انتظار المزيد من الوسائط</h3>
-      <p class="text-gray-500 max-w-md mx-auto">
-        سيتم إضافة المزيد من الصور والفيديوهات التوثيقية والمقترحات المرئية تباعاً لتعزيز التوثيق التشغيلي.
-      </p>
-    </div>
+    )}
   </div>
 </DashboardLayout>
 
