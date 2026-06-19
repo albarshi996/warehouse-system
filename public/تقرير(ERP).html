@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Brandzo Hub — المرجع التشغيلي الشامل | أودو Enterprise 2026</title>
+<title>Brandzo Hub — المرجع التشغيلي الشامل والملاحق | أودو Enterprise 2026</title>
 <style>
 /* ===================================================
    FONTS — Tahoma primary, system fallbacks
@@ -845,6 +845,176 @@ tr:hover td { background: #fff8f0; }
   .chapter { padding: 16px; }
   .main-wrap { padding: 10px; }
 }
+.highlight {
+  background: #f8f4e8; border-right: 5px solid var(--gold);
+  padding: 14px 18px; margin: 16px 0;
+  font-size: 13.5px; line-height: 1.9; color: var(--text-mid);
+}
+.highlight strong { color: var(--gold); }
+
+/* KPI CARDS */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; margin: 16px 0; }
+.kpi-card {
+  background: var(--bg-white); border: 1px solid var(--border);
+  border-top: 3px solid var(--orange); padding: 16px 12px; text-align: center;
+}
+.kpi-card.gold-card  { border-top-color: var(--gold); }
+.kpi-card.green-card { border-top-color: var(--green); }
+.kpi-card.blue-card  { border-top-color: var(--blue); }
+.kpi-card.teal-card  { border-top-color: var(--teal); }
+.kpi-val  { font-size: 24px; font-weight: 900; color: var(--orange); display: block; font-family: Tahoma, monospace; }
+.kpi-val.green { color: var(--green); }
+.kpi-val.gold  { color: var(--gold); }
+.kpi-val.blue  { color: var(--blue); }
+.kpi-name { font-size: 12px; color: var(--text-mid); margin-top: 6px; line-height: 1.4; }
+.kpi-freq { font-size: 10px; color: #888; margin-top: 4px; letter-spacing: 0.5px; }
+
+/* RULE ITEMS */
+.rule-item {
+  padding: 12px 16px; margin-bottom: 8px;
+  border-right: 5px solid var(--orange);
+  background: #fff5f5; font-size: 13.5px; line-height: 1.8; color: var(--text-mid);
+}
+.rule-item.yes  { background: #f0fff4; border-right-color: var(--green); }
+.rule-item.gold { background: #fffdf0; border-right-color: var(--gold); }
+.rule-item.blue { background: #f0f5ff; border-right-color: var(--blue); }
+.rule-item strong { color: var(--navy); }
+
+/* TAGS */
+.tag {
+  display: inline-block; padding: 2px 8px;
+  font-size: 10.5px; font-weight: 700;
+  border: 1px solid; margin: 2px;
+}
+.tag-r { border-color: var(--orange); color: var(--orange); background: #fff5f5; }
+.tag-g { border-color: var(--green);  color: var(--green);  background: #f0fff4; }
+.tag-b { border-color: var(--blue);   color: var(--blue);   background: #f0f5ff; }
+.tag-t { border-color: var(--teal);   color: var(--teal);   background: #f0fafa; }
+.tag-d { border-color: var(--gold);   color: var(--gold);   background: #fffdf0; }
+.tag-p { border-color: var(--purple); color: var(--purple); background: #f8f0ff; }
+
+/* PHASE GRID */
+.phase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+.phase-card { background: var(--bg-gray); border: 1px solid var(--border); padding: 18px; }
+.phase-card.p1 { border-top: 3px solid var(--orange); }
+.phase-card.p2 { border-top: 3px solid var(--green); }
+.phase-card.p3 { border-top: 3px solid var(--blue); }
+.phase-card.p4 { border-top: 3px solid var(--gold); }
+.phase-title { font-size: 14px; font-weight: 800; color: var(--navy); margin-bottom: 12px; }
+.phase-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: var(--text-mid); padding: 5px 0; }
+.phase-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+.pd-orange { background: var(--orange); }
+.pd-green  { background: var(--green); }
+.pd-blue   { background: var(--blue); }
+.pd-gold   { background: var(--gold); }
+.pd-teal   { background: var(--teal); }
+.pd-purple { background: var(--purple); }
+
+/* STATE FLOW */
+.state-flow {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin: 14px 0;
+}
+.state-node {
+  background: var(--bg-gray); border: 1px solid var(--border);
+  padding: 10px 16px; font-size: 12px; font-weight: 700; color: var(--navy);
+  white-space: nowrap;
+}
+.state-node.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+.state-node.done   { background: var(--green); color: #fff; border-color: var(--green); }
+.state-node.scrap  { background: var(--orange); color: #fff; border-color: var(--orange); }
+.state-node.hold   { background: var(--gold); color: #fff; border-color: var(--gold); }
+.state-arrow { font-size: 16px; color: var(--border-dark); padding: 0 4px; }
+
+/* SIG */
+.sig-area { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 24px; margin-top: 40px; }
+.sig-box { text-align: center; min-width: 150px; }
+.sig-line { border-top: 2px solid var(--orange); padding-top: 10px; margin-top: 55px; }
+.sig-name { font-weight: 700; color: var(--navy); font-size: 13px; }
+.sig-role { font-size: 11px; color: #888; margin-top: 3px; }
+
+/* TOC */
+.toc { background: var(--navy); color: #fff; padding: 28px 30px; margin-bottom: 32px; }
+.toc h2 { font-size: 16px; color: var(--gold-light); margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 8px; }
+.toc-cols { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px 24px; }
+.toc-item { display: flex; align-items: baseline; gap: 6px; padding: 4px 0; border-bottom: 1px dotted rgba(255,255,255,0.1); }
+.toc-num { font-size: 10px; color: var(--orange); font-weight: 700; min-width: 28px; font-family: Tahoma, monospace; }
+.toc-item a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 12.5px; }
+.toc-item a:hover { color: var(--gold-light); }
+
+/* DIVIDER */
+.divider { border: none; border-top: 2px solid var(--border); margin: 28px 0; }
+.divider.orange { border-top-color: var(--orange); }
+.divider.gold   { border-top-color: var(--gold); }
+
+/* APPROVAL MATRIX */
+.approval-matrix { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin: 16px 0; }
+.approval-card {
+  border: 1px solid var(--border); overflow: hidden;
+}
+.approval-card-hdr {
+  padding: 10px 14px; font-weight: 800; font-size: 13px;
+  color: #fff; display: flex; align-items: center; gap: 8px;
+}
+.approval-card-hdr.orange { background: var(--orange); }
+.approval-card-hdr.green  { background: var(--green); }
+.approval-card-hdr.blue   { background: var(--blue); }
+.approval-card-hdr.gold   { background: var(--gold); }
+.approval-card-hdr.teal   { background: var(--teal); }
+.approval-card-body { padding: 12px 14px; background: var(--bg-light); font-size: 12.5px; color: var(--text-mid); line-height: 1.75; }
+
+/* CHECKLIST */
+.checklist { list-style: none; padding: 0; margin: 10px 0; }
+.checklist li {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 12px; margin-bottom: 6px;
+  background: var(--bg-gray); border: 1px solid var(--border);
+  font-size: 13px; color: var(--text-mid); line-height: 1.7;
+}
+.check-icon { font-size: 15px; flex-shrink: 0; margin-top: 2px; }
+
+/* PRINT */
+@page { size: A4 portrait; margin: 15mm 18mm 18mm 18mm; }
+
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { font-family: Tahoma, Arial, sans-serif !important; font-size: 9.5pt !important; background: #fff !important; }
+  .screen-nav { display: none !important; }
+  .main-wrap { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+  .cover { background: #1b3a5c !important; border: 3px solid #c0392b !important; page-break-after: always; }
+  .cover h1 { font-size: 22pt !important; color: #fff !important; }
+  .toc { background: #1b3a5c !important; page-break-after: always; }
+  .chapter { border: 1px solid #ccc !important; border-right: 4px solid #c0392b !important; padding: 14px 16px !important; margin-bottom: 16px !important; page-break-inside: avoid; }
+  .chapter.gold-accent   { border-right-color: #b08000 !important; }
+  .chapter.green-accent  { border-right-color: #1a7a3e !important; }
+  .chapter.teal-accent   { border-right-color: #0e6b6b !important; }
+  .chapter.blue-accent   { border-right-color: #1b3a5c !important; }
+  .chapter.purple-accent { border-right-color: #5a22aa !important; }
+  .chapter-num { background: #c0392b !important; color: #fff !important; }
+  .chapter-num.gold { background: #b08000 !important; }
+  .chapter-num.green { background: #1a7a3e !important; }
+  .chapter-num.teal { background: #0e6b6b !important; }
+  .chapter-num.blue { background: #1b3a5c !important; }
+  thead { background: #1b3a5c !important; }
+  th { background: #1b3a5c !important; color: #fff !important; border: 1px solid #4a6a8c !important; font-size: 8pt !important; }
+  td { border: 1px solid #ddd !important; font-size: 8.5pt !important; }
+  tr:nth-child(even) td { background: #f5f5f5 !important; }
+  .box { background: #f8f8f8 !important; border: 1px solid #ccc !important; }
+  .pipeline { page-break-inside: avoid; }
+  .kpi-grid { page-break-inside: avoid; }
+  .phase-grid { page-break-inside: avoid; }
+  h2, h3, h4 { page-break-after: avoid; }
+}
+
+@media (max-width: 700px) {
+  .cover h1 { font-size: 22px; }
+  .phase-grid { grid-template-columns: 1fr; }
+  .approval-matrix { grid-template-columns: 1fr; }
+  .chapter { padding: 16px; }
+  .main-wrap { padding: 10px; }
+}
+
+/* nav-sep */
+.nav-sep { color: rgba(255,255,255,0.3); margin: 0 4px; }
 </style>
 </head>
 <body>
@@ -876,6 +1046,15 @@ tr:hover td { background: #fff8f0; }
   <a href="#s-emergency">الطوارئ</a>
   <a href="#s-roadmap">خارطة التنفيذ</a>
   <a href="#s-conclusion">الخاتمة</a>
+  <a href="#annex-divider" style="color:var(--gold-light);font-weight:800;">— الملاحق —</a>
+  <a href="#s-annex1">م-١</a>
+  <a href="#s-annex2">م-٢</a>
+  <a href="#s-annex3">م-٣</a>
+  <a href="#s-annex4">م-٤</a>
+  <a href="#s-annex5">م-٥</a>
+  <a href="#s-annex6">م-٦</a>
+  <a href="#s-raci">م-٧</a>
+  <a href="#s-sig-annex">م-٨</a>
   <button class="print-btn" onclick="window.print()">🖨️ طباعة / PDF</button>
 </nav>
 
@@ -2593,3 +2772,940 @@ tr:hover td { background: #fff8f0; }
 
 </body>
 </html>
+<div id="annex-divider" style="
+  background: var(--navy);
+  color: #fff;
+  text-align: center;
+  padding: 40px 24px;
+  margin: 32px 0 0 0;
+  page-break-before: always;
+  border-top: 5px solid var(--gold);
+  border-bottom: 5px solid var(--gold);
+">
+  <div style="font-size:11px;letter-spacing:3px;color:var(--gold-light);margin-bottom:12px;">OFFICIAL ANNEX — ملحق رسمي مكمل</div>
+  <h1 style="font-size:28px;color:#fff;margin-bottom:10px;">الملاحق التكميلية لـ Brandzo Hub</h1>
+  <div style="font-size:14px;color:rgba(255,255,255,0.7);margin-bottom:20px;">
+    المرتجعات · الأسطول واللوجستيات · الصيانة · التقارير القياسية · الإضافات الاستراتيجية · BCP
+  </div>
+  <div style="font-size:11px;color:var(--gold-light);">
+    مكمل للمرجع التشغيلي الشامل الإصدار 4.0 — يُقرأ معه ولا يُستغنى به عنه
+  </div>
+</div>
+
+<!-- ══ فهرس الملاحق ══ -->
+<div class="toc" style="margin-top:0;">
+  <h2>فهرس الملاحق التكميلية</h2>
+  <div class="toc-cols">
+    <div class="toc-item"><span class="toc-num">م-١</span><a href="#s-annex1">توثيق المرتجعات والموافقات وآلية إعدام التالف</a></div>
+    <div class="toc-item"><span class="toc-num">م-٢</span><a href="#s-annex2">إدارة الأسطول والعمليات اللوجستية والتتبع</a></div>
+    <div class="toc-item"><span class="toc-num">م-٣</span><a href="#s-annex3">صيانة المركبات والمعدات والمرافق على النظام</a></div>
+    <div class="toc-item"><span class="toc-num">م-٤</span><a href="#s-annex4">التقارير القياسية والتحليلية الكاملة</a></div>
+    <div class="toc-item"><span class="toc-num">م-٥</span><a href="#s-annex5">الإضافات الاستراتيجية الشاملة (قيمة مضافة)</a></div>
+    <div class="toc-item"><span class="toc-num">م-٦</span><a href="#s-annex6">إدارة الكوارث واستمرارية الأعمال — BCP</a></div>
+    <div class="toc-item"><span class="toc-num">م-٧</span><a href="#s-raci">مصفوفة RACI التكميلية للملاحق</a></div>
+    <div class="toc-item"><span class="toc-num">م-٨</span><a href="#s-sig-annex">توقيعات الاعتماد الرسمية للملحق</a></div>
+  </div>
+</div>
+
+<!-- ====================================================
+     ANNEX 1: RETURNS, APPROVALS & SCRAP
+     ==================================================== -->
+<div class="chapter" id="s-annex1">
+  <div class="chapter-head">
+    <span class="chapter-num">م-١</span>
+    <h2>توثيق المرتجعات — الموافقات وآلية إعدام التالف</h2>
+  </div>
+
+  <div class="highlight"><strong>الهدف من هذا الملحق:</strong> بينما يعالج الفصل التاسع من الدليل الأصلي المرتجعات العامة، يركّز هذا الملحق على الجانب الحرج — <strong>«البضاعة التالفة وإعدامها»</strong> — لضمان عدم وجود أي تسرب مالي أو صحي في منظومة Brandzo Hub.</div>
+
+  <h3>١-١ تصنيف المرتجعات وأنواعها</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>نوع المرتجع</th>
+          <th>السبب</th>
+          <th>الإجراء في Odoo</th>
+          <th>الجهة المعتمِدة</th>
+          <th>الحالة النهائية</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-hot">مرتجع من مورّد</td>
+          <td>جودة غير مطابقة أو كمية زائدة</td>
+          <td class="td-mono">Vendor Return (Reverse Transfer)</td>
+          <td>مدير المشتريات + الجودة</td>
+          <td class="td-ok">إشعار دائن (Credit Note) من المورد</td>
+        </tr>
+        <tr>
+          <td class="td-hot">مرتجع من فرع / عميل</td>
+          <td>تلف أثناء النقل، سوء تخزين، عدم رضا</td>
+          <td class="td-mono">Return Picking → Receipt</td>
+          <td>مدير المستودع + المالية</td>
+          <td class="td-warn">فحص جودة → إعادة مخزون أو إعدام</td>
+        </tr>
+        <tr>
+          <td class="td-hot">بضاعة منتهية الصلاحية</td>
+          <td>انقضاء تاريخ الصلاحية (FEFO)</td>
+          <td class="td-mono">Scrap Order</td>
+          <td>لجنة الإعدام الثلاثية</td>
+          <td class="td-hot">إعدام مادي + قيد محاسبي</td>
+        </tr>
+        <tr>
+          <td class="td-hot">تالف من مناولة داخلية</td>
+          <td>حوادث رافعة شوكية، سقوط، ضغط</td>
+          <td class="td-mono">Internal Transfer → Virtual/Damaged</td>
+          <td>مشرف مستودع + الجودة</td>
+          <td class="td-hot">إعدام أو خصم من المسؤول</td>
+        </tr>
+        <tr>
+          <td class="td-ok">مرتجع سليم قابل للبيع</td>
+          <td>طلب خاطئ أو تغيير مواصفات</td>
+          <td class="td-mono">Return → Back to Stock</td>
+          <td>مدير المستودع</td>
+          <td class="td-ok">إعادة إلى موقعه في الرف</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>١-٢ دورة البضاعة التالفة في Odoo (خطوة بخطوة)</h3>
+  <div class="pipeline">
+    <div class="pipe-step qual">
+      <span class="pipe-icon">🔍</span>
+      <div class="pipe-num">01</div>
+      <div class="pipe-label">الرصد والكشف</div>
+      <div class="pipe-sub">اكتشاف التلف عند الاستلام أو أثناء التخزين أو بعد الفرز اليومي</div>
+    </div>
+    <div class="pipe-step oper">
+      <span class="pipe-icon">🔀</span>
+      <div class="pipe-num">02</div>
+      <div class="pipe-label">نقل داخلي للحجر</div>
+      <div class="pipe-sub">إذن نقل داخلي إلى موقع الحجر الافتراضي<br><em>Virtual / Damaged</em></div>
+    </div>
+    <div class="pipe-step qual">
+      <span class="pipe-icon">📋</span>
+      <div class="pipe-num">03</div>
+      <div class="pipe-label">محضر التلف</div>
+      <div class="pipe-sub">مفتش الجودة يُصدر «تقرير بضاعة تالفة» موضحاً السبب والكمية والقيمة</div>
+    </div>
+    <div class="pipe-step gold">
+      <span class="pipe-icon">✍️</span>
+      <div class="pipe-num">04</div>
+      <div class="pipe-label">اعتماد لجنة الإعدام</div>
+      <div class="pipe-sub">توقيع مدير الجودة + المدير المالي + مدير المستودع</div>
+    </div>
+    <div class="pipe-step">
+      <span class="pipe-icon">🗑️</span>
+      <div class="pipe-num">05</div>
+      <div class="pipe-label">أمر الإعدام (Scrap)</div>
+      <div class="pipe-sub"><em>Inventory › Operations › Scrap</em><br>النظام يخصم الرصيد تلقائياً</div>
+    </div>
+    <div class="pipe-step fin">
+      <span class="pipe-icon">📸</span>
+      <div class="pipe-num">06</div>
+      <div class="pipe-label">التوثيق الميداني</div>
+      <div class="pipe-sub">صور الإتلاف ترفع كـ Attachment في أمر Scrap — حوكمة كاملة</div>
+    </div>
+  </div>
+
+  <h3>١-٣ مصفوفة اعتمادات التخريد والإعدام</h3>
+  <p>لا يتم الإعدام الفعلي أو المالي إلا بعد استيفاء توقيع <strong>لجنة الإعدام الثلاثية</strong> الإلزامية:</p>
+  <div class="approval-matrix">
+    <div class="approval-card">
+      <div class="approval-card-hdr teal">🔬 مدير الجودة</div>
+      <div class="approval-card-body">يُصدر شهادة بعدم صلاحية المنتج للاستخدام الآدمي أو التجاري (تأكيد صحي). يحدد طريقة الإتلاف الآمنة.</div>
+    </div>
+    <div class="approval-card">
+      <div class="approval-card-hdr orange">💰 المدير المالي</div>
+      <div class="approval-card-body">يُقيّم الخسارة المالية ويُصدر قيد الإعدام المحاسبي:<br><strong>Dr. Scrap Loss / Cr. Inventory</strong></div>
+    </div>
+    <div class="approval-card">
+      <div class="approval-card-hdr blue">🏭 مدير المستودع</div>
+      <div class="approval-card-body">يعتمد خروج الصنف نهائياً من العهدة ويُغلق سجل الـ Lot/Serial في أودو.</div>
+    </div>
+  </div>
+
+  <h3>١-٤ آلية الإعدام المادي وضوابط الحوكمة</h3>
+  <div class="box teal-box">
+    <ul>
+      <li>بعد اعتماد أمر الـ <strong>Scrap</strong> في أودو، يقوم النظام آلياً بتخفيض الرصيد المخزني وتسجيل قيد الخسارة.</li>
+      <li><strong>ميدانياً:</strong> تُتلَف المنتجات المرفوضة في منطقة مخصصة خارج المستودع (منطقة النفايات البيولوجية/الصلبة المعتمدة).</li>
+      <li>يُوثَّق الإتلاف بالصور والفيديو ويُرفع كمرفق (Attachment) في أمر الـ Scrap داخل أودو.</li>
+      <li>تُطبَع نسخة ورقية من أمر الإعدام موقّعة من اللجنة الثلاثية وتُحفظ في ملف العمليات.</li>
+      <li>في حال الكميات الكبيرة: يُستدعى مُفتّش بلدي أو جهة معتمدة لإصدار شهادة إتلاف رسمية.</li>
+    </ul>
+  </div>
+
+  <h3>١-٥ حالات الرفض في مرحلة الاستلام (Pre-Scrap Gate)</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>حالة الرفض</th><th>معيار الرفض</th><th>الإجراء الفوري</th><th>التوثيق المطلوب</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>انتهاء الصلاحية</td><td>متبقي أقل من 75% من العمر الكامل</td><td>رفض الشحنة على الرصيف</td><td>تقرير QC + صورة</td></tr>
+        <tr><td>تلف التعبئة</td><td>أكثر من 5% من الوحدات متضررة</td><td>عزل الكراتين التالفة</td><td>صور + محضر استلام جزئي</td></tr>
+        <tr><td>درجة حرارة مبردات</td><td>أعلى من 4°م عند الوصول</td><td>رفض كامل الشحنة</td><td>سجل الحرارة + تقرير مورد</td></tr>
+        <tr><td>عدم تطابق باركود Lot</td><td>اختلاف رقم الدفعة عن ASN</td><td>إيقاف الاستلام + إشعار المشتريات</td><td>تقرير عدم مطابقة</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note warn"><strong>تحذير إلزامي:</strong> يُحظر تماماً إدخال أي بضاعة مرفوضة إلى منطقة التخزين النظيفة قبل معالجة أمر الرفض أو الإعدام في أودو. كل مخالفة توثَّق وتُرفع لمدير العمليات مباشرة.</div>
+</div>
+
+<!-- ====================================================
+     ANNEX 2: FLEET & LOGISTICS
+     ==================================================== -->
+<div class="chapter green-accent" id="s-annex2">
+  <div class="chapter-head green">
+    <span class="chapter-num green">م-٢</span>
+    <h2>إدارة الأسطول — العمليات اللوجستية والتتبع الميداني</h2>
+  </div>
+
+  <p>العمليات اللوجستية هي <strong>عصب التوزيع</strong> للمنافذ (هايبر ماركت، B2B، فروع التجزئة). تُدار بالكامل عبر وحدة <em>Odoo Fleet</em> مدمجةً مع وحدتي <em>Inventory</em> و<em>HR</em>.</p>
+
+  <div class="box green-box" style="display:flex;gap:10px;flex-wrap:wrap;">
+    <span class="tag tag-g">✓ Fleet Module</span>
+    <span class="tag tag-g">✓ Gate Pass مربوط بـ DO</span>
+    <span class="tag tag-g">✓ Odoo Barcode POD</span>
+    <span class="tag tag-g">✓ Fuel Logs تلقائي</span>
+    <span class="tag tag-g">✓ Odometer Tracking</span>
+    <span class="tag tag-g">✓ Driver Custody</span>
+  </div>
+
+  <h3>٢-١ تسجيل المركبات والسائقين في Odoo</h3>
+  <div class="phase-grid">
+    <div class="phase-card p3">
+      <div class="phase-title">🚛 بطاقة المركبة (Vehicle Card)</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>رقم اللوحة والموديل والسنة</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>نوع الشاحنة: مبرد / جاف / متوسط</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>سعة الحمولة بالطن والمتر المكعب</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>نوع الوقود ومتوسط استهلاك الكيلومتر</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>تاريخ آخر صيانة وتاريخ الصيانة القادمة</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>وثائق التأمين وتاريخ انتهائها</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>شهادة الفحص الفني وتاريخ التجديد</div>
+    </div>
+    <div class="phase-card p2">
+      <div class="phase-title">👤 بطاقة السائق (Driver Profile)</div>
+      <div class="phase-item"><span class="phase-dot pd-green"></span>ربط السائق بالمركبة كـ «عهدة» رسمية</div>
+      <div class="phase-item"><span class="phase-dot pd-green"></span>رقم رخصة القيادة وفئتها</div>
+      <div class="phase-item"><span class="phase-dot pd-green"></span>تاريخ انتهاء الرخصة (تنبيه تلقائي قبل 30 يوم)</div>
+      <div class="phase-item"><span class="phase-dot pd-green"></span>ملف HR مرتبط بالرواتب والإجازات</div>
+      <div class="phase-item"><span class="phase-dot pd-green"></span>سجل المخالفات والحوادث</div>
+      <div class="phase-item"><span class="phase-dot pd-green"></span>شهادات تدريب التبريد والسلامة</div>
+    </div>
+  </div>
+
+  <h3>٢-٢ بروتوكول الاستلام والتسليم اليومي للمركبات</h3>
+  <p>لا يُسمح بتسليم أو استلام أي مركبة بين الورديات إلا عبر <strong>نموذج الفحص اليومي (Vehicle Daily Checklist)</strong> المدمج في أودو، ويُوقَّع إلكترونياً من السائق المُسلِّم والمُستلِم:</p>
+
+  <ul class="checklist">
+    <li><span class="check-icon">🌡️</span><div><strong>وحدة التبريد:</strong> التحقق من درجة الحرارة الفعلية مقارنة بالمطلوبة (2°م–4°م للمبردات). توثيق القراءة في أودو.</div></li>
+    <li><span class="check-icon">🚗</span><div><strong>الهيكل الخارجي:</strong> تصوير الخدوش أو الأضرار الموجودة قبل تسلُّم الوردية لإثبات عدم المسؤولية.</div></li>
+    <li><span class="check-icon">⏱️</span><div><strong>قراءة العداد (Odometer):</strong> تسجيل القراءة في أودو لبدء احتساب استهلاك الوقود والمسافة لهذه الوردية.</div></li>
+    <li><span class="check-icon">⛽</span><div><strong>مستوى الوقود:</strong> التحقق من الرصيد وتوثيقه. يُحظر تسليم المركبة بأقل من ربع خزان.</div></li>
+    <li><span class="check-icon">💡</span><div><strong>الأضواء والإشارات:</strong> فحص الأضواء الأمامية والخلفية وإشارات الاتجاه والتحذير.</div></li>
+    <li><span class="check-icon">🔧</span><div><strong>الإطارات والضغط:</strong> فحص الإطارات بصرياً مع توثيق أي تآكل غير طبيعي.</div></li>
+  </ul>
+
+  <div class="note green"><strong>القاعدة:</strong> أي سائق يرفض تعبئة نموذج الفحص اليومي في أودو لا تُطلق له المركبة بأي حال. النموذج هو الشرط الأول لإصدار Gate Pass.</div>
+
+  <h3>٢-٣ دورة الرحلة اللوجستية الكاملة (Dispatch-to-POD)</h3>
+  <div class="pipeline">
+    <div class="pipe-step oper">
+      <span class="pipe-icon">📋</span>
+      <div class="pipe-num">01</div>
+      <div class="pipe-label">أمر التسليم (DO)</div>
+      <div class="pipe-sub">يُنشئ نظام أودو أمر التسليم تلقائياً عند تأكيد أمر البيع أو النقل</div>
+    </div>
+    <div class="pipe-step oper">
+      <span class="pipe-icon">✅</span>
+      <div class="pipe-num">02</div>
+      <div class="pipe-label">تحضير الشحنة</div>
+      <div class="pipe-sub">Picking → Packing وفق FEFO. الباركود يُسجَّل لكل Lot مُشحون</div>
+    </div>
+    <div class="pipe-step gold">
+      <span class="pipe-icon">🎫</span>
+      <div class="pipe-num">03</div>
+      <div class="pipe-num">Gate Pass</div>
+      <div class="pipe-label">تصريح البوابة</div>
+      <div class="pipe-sub">يُربط Gate Pass بـ DO رقمياً. الحارس يُسجّل الخروج في أودو بمسح QR</div>
+    </div>
+    <div class="pipe-step">
+      <span class="pipe-icon">🚚</span>
+      <div class="pipe-num">04</div>
+      <div class="pipe-label">انطلاق الشاحنة</div>
+      <div class="pipe-sub">السائق يرفع إيصالات الوقود عبر تطبيق أودو المحمول خلال الرحلة</div>
+    </div>
+    <div class="pipe-step fin">
+      <span class="pipe-icon">📱</span>
+      <div class="pipe-num">05</div>
+      <div class="pipe-label">إثبات التسليم (POD)</div>
+      <div class="pipe-sub">توقيع إلكتروني + صورة البضاعة. تتحول حالة الـ DO إلى <em>Done</em> فوراً</div>
+    </div>
+    <div class="pipe-step fin">
+      <span class="pipe-icon">⛽</span>
+      <div class="pipe-num">06</div>
+      <div class="pipe-label">مطابقة الوقود</div>
+      <div class="pipe-sub">النظام يطابق إيصال الوقود مع قراءة العداد ويُنبّه عند أي استهلاك غير طبيعي</div>
+    </div>
+  </div>
+
+  <h3>٢-٤ مناطق التوزيع الديموغرافية وأولويات الجدولة</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>المنطقة (بنغازي)</th><th>الفئة</th><th>تكرار التسليم الموصى به</th><th>نوع المركبة المفضّل</th><th>ملاحظات</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="td-hot">المناطق A (مرتفع الاستهلاك)</td><td>A</td><td>يومي / يوم بديل</td><td>شاحنة مبردة كبيرة</td><td>هايبر ماركت، سلاسل كبرى</td></tr>
+        <tr><td class="td-warn">المناطق B (متوسط)</td><td>B</td><td>مرتين أسبوعياً</td><td>شاحنة متوسطة</td><td>سوبر ماركت، محلات متوسطة</td></tr>
+        <tr><td class="td-ok">المناطق C (تجزئة)</td><td>C</td><td>مرة أسبوعياً</td><td>فان / شاحنة صغيرة</td><td>محلات التجزئة الصغيرة</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>٢-٥ إدارة سجل الوقود والتكاليف التشغيلية</h3>
+  <div class="box blue-box">
+    <ul>
+      <li>السائق ملزم برفع إيصال الوقود عبر تطبيق <strong>Odoo Mobile</strong> خلال ساعة من الدفع.</li>
+      <li>يُطابق النظام تلقائياً: <strong>الإيصال + قراءة العداد قبل وبعد + المسافة المقطوعة.</strong></li>
+      <li>أي استهلاك يتجاوز المعدل القياسي بأكثر من <strong>15%</strong> يُطلق تنبيهاً تلقائياً لمدير الأسطول.</li>
+      <li>تقرير شهري لتكلفة الكيلومتر لكل مركبة يُساعد في قرارات الاستبدال.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ====================================================
+     ANNEX 3: MAINTENANCE
+     ==================================================== -->
+<div class="chapter teal-accent" id="s-annex3">
+  <div class="chapter-head teal">
+    <span class="chapter-num teal">م-٣</span>
+    <h2>صيانة المركبات والمعدات والمرافق — Odoo Maintenance</h2>
+  </div>
+
+  <p>لضمان عدم تعطل سلاسل الإمداد، تُفعَّل وحدة <em>Odoo Maintenance</em> لإدارة جميع أصول Brandzo Hub بالكامل. كل عطل يُعدّ تهديداً مباشراً للتسليمات والسلسلة الباردة.</p>
+
+  <h3>٣-١ تصنيف الأصول في نظام الصيانة</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>فئة الأصل</th><th>أمثلة</th><th>دورة الصيانة الوقائية</th><th>المسؤول في أودو</th><th>درجة الحرارة</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>🏗️ معدات المناولة</strong></td>
+          <td>رافعات شوكية (Forklifts)، عربات البليت اليدوية، عربات كهربائية</td>
+          <td>كل 500 ساعة عمل</td>
+          <td>مشرف الصيانة</td>
+          <td class="td-center">—</td>
+        </tr>
+        <tr>
+          <td><strong>🚛 مركبات الأسطول</strong></td>
+          <td>شاحنات مبرّدة، شاحنات جافة، فانات توزيع</td>
+          <td>كل 5,000 كم أو 3 أشهر</td>
+          <td>مدير الأسطول</td>
+          <td class="td-center">—</td>
+        </tr>
+        <tr>
+          <td><strong>❄️ غرف التبريد</strong></td>
+          <td>غرف تبريد CCP-2، ثلاجات الحجر الصحي، أنظمة المكثّف</td>
+          <td>كل 6 أشهر + فحص أسبوعي</td>
+          <td>فني الصيانة + الجودة</td>
+          <td class="td-hot">2°م — 4°م</td>
+        </tr>
+        <tr>
+          <td><strong>⚡ المرافق والبنية التحتية</strong></td>
+          <td>مولدات احتياطية، أبواب الأرصفة الميكانيكية، نظام الإضاءة الطارئة</td>
+          <td>شهري</td>
+          <td>مدير العمليات</td>
+          <td class="td-center">—</td>
+        </tr>
+        <tr>
+          <td><strong>📱 أجهزة التشغيل</strong></td>
+          <td>أجهزة مسح الباركود (PDA)، طابعات الملصقات، أجهزة الوزن</td>
+          <td>فحص فصلي</td>
+          <td>مسؤول IT</td>
+          <td class="td-center">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>٣-٢ أنواع الصيانة المعتمدة وآلية كل منها</h3>
+  <div class="phase-grid">
+    <div class="phase-card p3">
+      <div class="phase-title">🛡️ الصيانة الوقائية (Preventive)</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>جداول تُبرمج في أودو مسبقاً وفق معايير المُصنِّع</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>النظام يُصدر «أمر شغل» (Work Order) تلقائياً قبل الموعد بأسبوع</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>مثال: تغيير زيت الرافعة الشوكية كل 500 ساعة</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>معايرة ثرموستات غرف التبريد كل 6 أشهر</div>
+      <div class="phase-item"><span class="phase-dot pd-blue"></span>اختبار المولد الاحتياطي شهرياً (30 دقيقة)</div>
+    </div>
+    <div class="phase-card p1">
+      <div class="phase-title">🔧 الصيانة العلاجية (Corrective)</div>
+      <div class="phase-item"><span class="phase-dot pd-orange"></span>عند عطل مفاجئ: السائق/المشرف يرفع «طلب صيانة» عبر الجوال</div>
+      <div class="phase-item"><span class="phase-dot pd-orange"></span>تصنيف فوري: عالي الخطورة / متوسط / منخفض</div>
+      <div class="phase-item"><span class="phase-dot pd-orange"></span>العالي الخطورة: تحويل فوري لورشة الصيانة وإيقاف المركبة</div>
+      <div class="phase-item"><span class="phase-dot pd-orange"></span>مثال: تعطل مبرد شاحنة = وقف فوري + تحويل الشحنة لمبردة بديلة</div>
+    </div>
+    <div class="phase-card p4">
+      <div class="phase-title">🔍 الصيانة التنبؤية (Predictive)</div>
+      <div class="phase-item"><span class="phase-dot pd-gold"></span>بيانات IoT من حساسات الحرارة والاهتزاز</div>
+      <div class="phase-item"><span class="phase-dot pd-gold"></span>مراقبة أداء مضخات التبريد لرصد الانحرافات</div>
+      <div class="phase-item"><span class="phase-dot pd-gold"></span>التنبيه قبل وقوع العطل بساعات</div>
+      <div class="phase-item"><span class="phase-dot pd-gold"></span>يُستخدم مع غرف التبريد الحرجة (CCP-2)</div>
+    </div>
+    <div class="phase-card p2">
+      <div class="phase-title">📦 صيانة الاستبدال (Replacement)</div>
+      <div class="phase-item"><span class="phase-dot pd-green"></span>عند انتهاء العمر الافتراضي للأصل أو استحالة الإصلاح</div>
+      <div class="phase-item"><span class="phase-dot pd-green"></span>تقرير تقييم الأصل يُرفع للإدارة المالية</div>
+      <div class="phase-item"><span class="phase-dot pd-green"></span>يُفتح طلب شراء جديد (PR) تلقائياً من أودو</div>
+      <div class="phase-item"><span class="phase-dot pd-green"></span>الأصل القديم يدخل دورة التخريد (Scrap)</div>
+    </div>
+  </div>
+
+  <h3>٣-٣ دورة أمر الشغل الكاملة (Work Order Lifecycle)</h3>
+  <div class="state-flow">
+    <div class="state-node">📝 Draft<br><span style="font-size:10px;color:#888;">مسودة الطلب</span></div>
+    <div class="state-arrow">←</div>
+    <div class="state-node hold">⏳ Confirmed<br><span style="font-size:10px;">اعتماد المشرف</span></div>
+    <div class="state-arrow">←</div>
+    <div class="state-node active">🔧 In Progress<br><span style="font-size:10px;">جاري الإصلاح</span></div>
+    <div class="state-arrow">←</div>
+    <div class="state-node done">✅ Repaired<br><span style="font-size:10px;">تم الإصلاح</span></div>
+    <div class="state-arrow">←</div>
+    <div class="state-node done">🟢 Back in Service<br><span style="font-size:10px;">عودة للخدمة</span></div>
+    <div class="state-arrow" style="color:#999;">/ أو</div>
+    <div class="state-node scrap">🗑️ Scrap<br><span style="font-size:10px;">تكهين الأصل</span></div>
+  </div>
+
+  <h3>٣-٤ جدول الصيانة الوقائية السنوية (النظرة الإجمالية)</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>الأصل</th><th>يناير</th><th>مارس</th><th>مايو</th><th>يوليو</th><th>سبتمبر</th><th>نوفمبر</th><th>المسؤول</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>غرف التبريد (كاملة)</td>
+          <td class="td-ok">✓</td><td></td><td></td><td class="td-ok">✓</td><td></td><td></td>
+          <td>فني صيانة + مدير جودة</td>
+        </tr>
+        <tr>
+          <td>الرافعات الشوكية</td>
+          <td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td>
+          <td>ميكانيكي المستودع</td>
+        </tr>
+        <tr>
+          <td>المولدات الاحتياطية</td>
+          <td class="td-warn">اختبار</td><td class="td-warn">اختبار</td><td class="td-warn">اختبار</td><td class="td-ok">صيانة</td><td class="td-warn">اختبار</td><td class="td-warn">اختبار</td>
+          <td>مدير العمليات</td>
+        </tr>
+        <tr>
+          <td>شاحنات الأسطول (كل 5k كم)</td>
+          <td colspan="6" class="td-blue td-center">حسب قراءة العداد — تلقائي من أودو</td>
+          <td>مدير الأسطول</td>
+        </tr>
+        <tr>
+          <td>أبواب الأرصفة</td>
+          <td></td><td class="td-ok">✓</td><td></td><td></td><td class="td-ok">✓</td><td></td>
+          <td>فني الصيانة</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note"><strong>تنبيه أودو التلقائي:</strong> يُرسل النظام إشعاراً بالبريد الإلكتروني لمسؤول الصيانة قبل 7 أيام من موعد كل صيانة وقائية مجدوَلة. عدم الاعتراف بالإشعار يُصعِّد تلقائياً لمدير العمليات.</div>
+</div>
+
+<!-- ====================================================
+     ANNEX 4: STANDARD REPORTS
+     ==================================================== -->
+<div class="chapter blue-accent" id="s-annex4">
+  <div class="chapter-head blue">
+    <span class="chapter-num blue">م-٤</span>
+    <h2>التقارير القياسية والتحليلية — لوحة إدارة الأداء</h2>
+  </div>
+
+  <p>هذه التقارير مُصمَّمة لتلبية احتياجات الإدارة العليا في قياس كفاءة المستودع والعمليات بناءً على مؤشرات الأداء (KPIs) المحددة في الدليل الأصلي. جميعها متاحة مباشرة من أودو دون برمجة إضافية.</p>
+
+  <h3>٤-١ خريطة التقارير القياسية</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>اسم التقرير</th>
+          <th>الغرض والبيانات الرئيسية</th>
+          <th>المسار في Odoo Enterprise</th>
+          <th>التكرار</th>
+          <th>المستلم</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-hot td-center"><strong>١</strong></td>
+          <td><strong>تقرير الاستلام اليومي</strong><br><em>Receiving Report</em></td>
+          <td>كفاءة Dock-to-Stock: وقت وصول الشاحنة حتى وضع الصنف على الرف. الكميات المستلمة مقارنة بالمطلوبة. معدل الرفض.</td>
+          <td class="td-mono">Inventory › Reporting › Moves History<br>(Filter: Receipts)</td>
+          <td class="td-ok"><strong>يومي</strong></td>
+          <td>مدير المستودع</td>
+        </tr>
+        <tr>
+          <td class="td-hot td-center"><strong>٢</strong></td>
+          <td><strong>تقرير التالف والهالك</strong><br><em>Scrap &amp; Damage Report</em></td>
+          <td>القيمة المالية المهدرة حسب السبب (سوء مناولة، انتهاء صلاحية، تلف مورد). نسبة التالف من إجمالي المخزون.</td>
+          <td class="td-mono">Inventory › Reporting › Stock Valuation<br>(Filter: Scrap Location)</td>
+          <td class="td-warn"><strong>أسبوعي</strong></td>
+          <td>مدير الجودة + المالية</td>
+        </tr>
+        <tr>
+          <td class="td-hot td-center"><strong>٣</strong></td>
+          <td><strong>تقرير التأخير والامتثال</strong><br><em>Delays &amp; OTIF Report</em></td>
+          <td>معدل On-Time In-Full (OTIF). أسباب التأخر: ضغط العمالة، عطل مركبة، ذروة الطلب. مقارنة شهرية.</td>
+          <td class="td-mono">Inventory › Reporting › Delivery Analysis</td>
+          <td class="td-warn"><strong>أسبوعي/شهري</strong></td>
+          <td>مدير العمليات</td>
+        </tr>
+        <tr>
+          <td class="td-hot td-center"><strong>٤</strong></td>
+          <td><strong>تقرير التوصيل والأسطول</strong><br><em>Dispatch &amp; Fleet Report</em></td>
+          <td>عدد الرحلات لكل مركبة. استهلاك الوقود لكل كيلومتر. متوسط وقت التفريغ في الفروع. تكلفة الرحلة.</td>
+          <td class="td-mono">Fleet › Reporting › Costs Analysis</td>
+          <td class="td-blue"><strong>شهري</strong></td>
+          <td>مدير الأسطول</td>
+        </tr>
+        <tr>
+          <td class="td-hot td-center"><strong>٥</strong></td>
+          <td><strong>تقرير اقتراب انتهاء الصلاحية</strong><br><em>Expiry Alert Report</em></td>
+          <td>استباقي: الأصناف التي ستنتهي صلاحيتها خلال 30 أو 60 يوماً (FEFO Alert). قيمتها المالية لاتخاذ قرار التسعير أو الإتلاف.</td>
+          <td class="td-mono">Inventory › Reporting › Expiry Lots</td>
+          <td class="td-warn"><strong>أسبوعي</strong></td>
+          <td>مدير المستودع + تجاري</td>
+        </tr>
+        <tr>
+          <td class="td-hot td-center"><strong>٦</strong></td>
+          <td><strong>تقرير الصيانة والتوقف</strong><br><em>Maintenance &amp; Downtime</em></td>
+          <td>ساعات توقف كل أصل. متوسط وقت الإصلاح (MTTR). تكاليف قطع الغيار شهرياً. الأصول الأكثر عطلاً.</td>
+          <td class="td-mono">Maintenance › Reporting › Maintenance Analysis</td>
+          <td class="td-blue"><strong>شهري</strong></td>
+          <td>مدير العمليات</td>
+        </tr>
+        <tr>
+          <td class="td-hot td-center"><strong>٧</strong></td>
+          <td><strong>تقرير المرتجعات والإعدام</strong><br><em>Returns &amp; Scrap Audit</em></td>
+          <td>إجمالي المرتجعات من الموردين والعملاء. أوامر الإعدام المنفَّذة وقيمتها. مقارنة شهرية بالمعدلات التاريخية.</td>
+          <td class="td-mono">Inventory › Reporting › Moves History<br>(Filter: Scrap + Returns)</td>
+          <td class="td-warn"><strong>أسبوعي</strong></td>
+          <td>مدير الجودة</td>
+        </tr>
+        <tr>
+          <td class="td-hot td-center"><strong>٨</strong></td>
+          <td><strong>تقرير الجرد الدوري</strong><br><em>Cycle Count Report</em></td>
+          <td>الفروقات بين الرصيد الفعلي ورصيد النظام. قيمة التسوية. منطقة مصدر الخطأ (رف/منتج).</td>
+          <td class="td-mono">Inventory › Reporting › Inventory Adjustments</td>
+          <td class="td-blue"><strong>شهري</strong></td>
+          <td>مدير المستودع + مالية</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>٤-٢ مؤشرات الأداء التشغيلية للملحق (KPIs)</h3>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <span class="kpi-val">≥95%</span>
+      <div class="kpi-name">معدل OTIF — التسليم في الوقت وبالكمية</div>
+      <div class="kpi-freq">قياس أسبوعي</div>
+    </div>
+    <div class="kpi-card green-card">
+      <span class="kpi-val green">≤2%</span>
+      <div class="kpi-name">نسبة الهالك من إجمالي المخزون</div>
+      <div class="kpi-freq">قياس شهري</div>
+    </div>
+    <div class="kpi-card gold-card">
+      <span class="kpi-val gold">≤4h</span>
+      <div class="kpi-name">متوسط وقت Dock-to-Stock</div>
+      <div class="kpi-freq">قياس يومي</div>
+    </div>
+    <div class="kpi-card blue-card">
+      <span class="kpi-val blue">≥90%</span>
+      <div class="kpi-name">دقة الجرد (Inventory Accuracy)</div>
+      <div class="kpi-freq">قياس شهري</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-val">≤2h</span>
+      <div class="kpi-name">متوسط وقت الإصلاح العلاجي (MTTR)</div>
+      <div class="kpi-freq">قياس شهري</div>
+    </div>
+    <div class="kpi-card green-card">
+      <span class="kpi-val green">100%</span>
+      <div class="kpi-name">الشحنات الموثقة بـ POD إلكتروني</div>
+      <div class="kpi-freq">قياس يومي</div>
+    </div>
+    <div class="kpi-card gold-card">
+      <span class="kpi-val gold">≤5%</span>
+      <div class="kpi-name">معدل مرتجعات العملاء</div>
+      <div class="kpi-freq">قياس أسبوعي</div>
+    </div>
+    <div class="kpi-card teal-card">
+      <span class="kpi-val blue">0</span>
+      <div class="kpi-name">شحنات خرجت بدون Gate Pass</div>
+      <div class="kpi-freq">صفر تساهل</div>
+    </div>
+  </div>
+
+  <h3>٤-٣ لوحة التحكم التنفيذية (Executive Dashboard)</h3>
+  <div class="box gold-box">
+    <p>يُنصح بإنشاء لوحة تحكم مخصصة في أودو (<em>Dashboards</em>) للإدارة العليا تجمع في شاشة واحدة:</p>
+    <ul>
+      <li><strong>الخريطة الحرارية للتوزيع:</strong> مناطق بنغازي مع نسبة التسليم في الوقت لكل منطقة.</li>
+      <li><strong>مؤشر الهالك اليومي:</strong> خط بياني للقيمة المُهدَرة مقارنة بالهدف الشهري.</li>
+      <li><strong>حالة الأسطول الفوري:</strong> كم مركبة في الطريق / متوقفة / في الصيانة.</li>
+      <li><strong>تنبيهات انتهاء الصلاحية:</strong> عداد فوري للأصناف التي تنتهي صلاحيتها خلال 7 أيام.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ====================================================
+     ANNEX 5: STRATEGIC ADDITIONS
+     ==================================================== -->
+<div class="chapter gold-accent" id="s-annex5">
+  <div class="chapter-head gold">
+    <span class="chapter-num gold">م-٥</span>
+    <h2>الإضافات الاستراتيجية الشاملة — القيمة المضافة لـ Brandzo 2026</h2>
+  </div>
+
+  <div class="highlight"><strong>ملاحظة:</strong> هذه الإضافات تُمثّل الفارق بين مستودع يُطبِّق نظام ERP ومستودع <strong>يتفوق</strong> بنظام ERP. كل بند يُعالج ثغرة حقيقية أو فرصة استراتيجية في بيئة بنغازي العملياتية.</div>
+
+  <h3>٥-١ إدارة العُهد العينية للموظفين</h3>
+  <p><strong>المشكلة الفعلية:</strong> فقدان أجهزة مسح الباركود، طابعات البلوتوث، والعدد اليدوية يُشكّل خسارة شهرية متكررة غير موثقة.</p>
+
+  <div class="approval-matrix">
+    <div class="approval-card">
+      <div class="approval-card-hdr blue">⚙️ الآلية في أودو</div>
+      <div class="approval-card-body">
+        وحدة <strong>HR Equipment / Assets</strong><br>
+        لا يُسلَّم أي جهاز PDA أو لوحي إلا بتوقيع <strong>«سند استلام عهدة»</strong> مطبوع من أودو ومُسجَّل رقمياً.
+      </div>
+    </div>
+    <div class="approval-card">
+      <div class="approval-card-hdr orange">💸 حماية مالية</div>
+      <div class="approval-card-body">
+        في حال الفقدان أو الإتلاف المتعمد، تُخصم القيمة تلقائياً من مسير الرواتب (<strong>Payroll</strong>) بعد موافقة إدارة HR.
+      </div>
+    </div>
+    <div class="approval-card">
+      <div class="approval-card-hdr teal">📊 تتبع كامل</div>
+      <div class="approval-card-body">
+        سجل شامل بكل جهاز: من تسلَّمه، متى، حالته الحالية، تاريخ الصيانة. تنبيه تلقائي عند فقدان جهاز.
+      </div>
+    </div>
+  </div>
+
+  <h3>٥-٢ تكامل إنترنت الأشياء (IoT) مع سلسلة التبريد</h3>
+  <p>بما أن Brandzo تدير <strong>مجمع تبريد «الرحبة»</strong> وشاحنات مبردة متعددة، يُنصح بمرحلة IoT متكاملة:</p>
+
+  <div class="box purp-box">
+    <ul>
+      <li>ربط <strong>حساسات الحرارة</strong> في غرف التبريد وشاحنات النقل مباشرة بـ <strong>Odoo IoT Box</strong>.</li>
+      <li><strong>آلية الحماية التلقائية:</strong> إذا ارتفعت حرارة الثلاجة عن <strong>4°م</strong>، يُطلق النظام تلقائياً:
+        <ul style="margin-top:8px;">
+          <li>تنبيه (Quality Alert) فوري للمدير عبر الجوال.</li>
+          <li>إيقاف عمليات صرف المنتجات من تلك الغرفة تلقائياً.</li>
+          <li>فتح طلب صيانة علاجية طارئة (Corrective Maintenance Request) بأولوية عالية.</li>
+        </ul>
+      </li>
+      <li>سجل حراري مستمر يُشكّل <strong>دليلاً رسمياً</strong> للامتثال لمعايير HACCP/CCP.</li>
+    </ul>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>نقطة القياس</th><th>نوع الحساس</th><th>حد التنبيه الأدنى</th><th>حد التنبيه الأعلى</th><th>الإجراء التلقائي</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>غرف التبريد (CCP-2)</td><td>Temperature Sensor</td><td class="td-blue">0°م</td><td class="td-hot">+5°م</td><td>وقف الصرف + تنبيه + صيانة</td></tr>
+        <tr><td>شاحنات النقل المبرد</td><td>IoT Box متنقل</td><td class="td-blue">-2°م</td><td class="td-hot">+6°م</td><td>تنبيه السائق + مدير الأسطول</td></tr>
+        <tr><td>غرفة الحجر الصحي</td><td>Temperature + Humidity</td><td class="td-blue">2°م</td><td class="td-hot">+8°م</td><td>تنبيه مفتش الجودة</td></tr>
+        <tr><td>منطقة التخزين الجاف</td><td>Humidity Sensor</td><td>—</td><td class="td-hot">&gt;70% رطوبة</td><td>تشغيل مكيف الجفاف</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>٥-٣ قائمة تدقيق الأمن والسلامة المهنية (HSE Checklists)</h3>
+
+  <div class="rule-item gold"><strong>🎯 الهدف:</strong> تحويل السلامة المهنية من إجراء ورقي إلى رقابة رقمية مستمرة مرتبطة بالحوافز.</div>
+
+  <ul class="checklist">
+    <li><span class="check-icon">👷</span><div><strong>ارتداء مهمات الوقاية:</strong> أحذية السلامة، السترات العاكسة، القفازات لعمال التبريد. يُسجَّل يومياً في أودو (Surveys).</div></li>
+    <li><span class="check-icon">🚧</span><div><strong>ممرات الطوارئ:</strong> خلو ممرات الإخلاء بالمستودع من البضائع والمعدات بشكل كامل.</div></li>
+    <li><span class="check-icon">🔥</span><div><strong>طفايات الحريق:</strong> فحص الضغط وتاريخ الانتهاء وموقع كل طفاية. فحص شهري موثق.</div></li>
+    <li><span class="check-icon">🏥</span><div><strong>صناديق الإسعافات:</strong> اكتمال المحتويات الأساسية وصلاحيتها. تجديد فصلي.</div></li>
+    <li><span class="check-icon">⚡</span><div><strong>لوحات الكهرباء:</strong> عدم وجود أسلاك مكشوفة أو تمديدات غير آمنة في منطقة التشغيل.</div></li>
+    <li><span class="check-icon">🔒</span><div><strong>بوابات الأمن:</strong> عمل كاميرات المراقبة وسجلات الدخول الإلكترونية.</div></li>
+  </ul>
+
+  <div class="box green-box"><strong>الحافز:</strong> يُربط تقييم HSE الشهري (نسبة الامتثال) بصرف <strong>مكافآت الإجادة الشهرية</strong> لعمال المستودع. درجة 90% فأكثر = مكافأة كاملة. أقل من 70% = مراجعة أداء.</div>
+
+  <h3>٥-٤ إدارة الموردين الاستراتيجيين (Vendor Scorecard)</h3>
+  <p>ميزة متكاملة في أودو لتقييم الموردين دورياً بناءً على:</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>معيار التقييم</th><th>الوزن النسبي</th><th>آلية القياس في أودو</th><th>حد القبول</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>الالتزام بمواعيد التسليم</td><td class="td-hot">30%</td><td>مقارنة تاريخ التسليم المتوقع بالفعلي</td><td>≥ 90%</td></tr>
+        <tr><td>جودة المنتج (معدل الرفض)</td><td class="td-hot">30%</td><td>نسبة الكميات المرفوضة عند الاستلام</td><td>≤ 3%</td></tr>
+        <tr><td>دقة الكميات والتعبئة</td><td class="td-warn">20%</td><td>الفروقات بين PO والـ GRN</td><td>≤ 2%</td></tr>
+        <tr><td>الامتثال لمعايير التوثيق</td><td class="td-warn">20%</td><td>اكتمال ASN و COA والشهادات</td><td>100%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>الموردون الذين يحصلون على <strong>أقل من 70%</strong> لثلاثة أشهر متتالية يُحالون لإدارة المشتريات لمراجعة العقد أو البحث عن بديل.</p>
+
+  <h3>٥-٥ إدارة التدريب وتأهيل الكوادر عبر Odoo</h3>
+  <div class="box navy-box">
+    <ul>
+      <li>توثيق كل برنامج تدريب (سلامة غذائية، HACCP، تشغيل الرافعات) في ملف كل موظف بـ <em>HR Module</em>.</li>
+      <li>تنبيه تلقائي عند اقتراب انتهاء صلاحية الشهادات (رخصة الرافعة الشوكية، شهادة سلامة الغذاء).</li>
+      <li>لا يُسمح لموظف بتشغيل معدة إلا إذا كانت شهادته سارية في النظام — <strong>تأمين بالصلاحيات.</strong></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ====================================================
+     ANNEX 6: BUSINESS CONTINUITY
+     ==================================================== -->
+<div class="chapter purple-accent" id="s-annex6">
+  <div class="chapter-head purple">
+    <span class="chapter-num purple">م-٦</span>
+    <h2>إدارة الكوارث واستمرارية الأعمال — BCP</h2>
+  </div>
+
+  <p>في بيئة تشغيلية كبيئة بنغازي، تعتبر خطة استمرارية الأعمال (Business Continuity Plan) ركيزة أساسية لا تقل أهمية عن الإجراءات اليومية.</p>
+
+  <h3>٦-١ سيناريوهات الكوارث والاستجابة الفورية</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>السيناريو</th><th>التأثير</th><th>الاستجابة الفورية (أول 2 ساعة)</th><th>الاستجابة اللاحقة (خلال 24 ساعة)</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-hot"><strong>انقطاع الكهرباء</strong></td>
+          <td>توقف غرف التبريد خطر</td>
+          <td>تشغيل المولد الاحتياطي تلقائياً، فحص درجات الحرارة فوراً</td>
+          <td>إشعار مورد الكهرباء، التنسيق مع صيانة المولد</td>
+        </tr>
+        <tr>
+          <td class="td-hot"><strong>عطل نظام أودو</strong></td>
+          <td>توقف كامل العمليات الرقمية</td>
+          <td>التحول لنماذج يدوية مؤقتة معتمدة مسبقاً، إشعار مسؤول IT</td>
+          <td>إدخال بيانات اليد العاملة في النظام بعد استعادته</td>
+        </tr>
+        <tr>
+          <td class="td-hot"><strong>تعطل شاحنة في الطريق</strong></td>
+          <td>تأخر التسليم، خطر الشحنة المبردة</td>
+          <td>إرسال شاحنة بديلة خلال ساعة، نقل الشحنة المبردة أولاً</td>
+          <td>إشعار العميل، إصدار تقرير الحادثة في أودو</td>
+        </tr>
+        <tr>
+          <td class="td-hot"><strong>حريق أو كارثة طبيعية</strong></td>
+          <td>خسائر مخزون كاملة محتملة</td>
+          <td>إخلاء فوري، إشعار السلطات، قطع الكهرباء والغاز</td>
+          <td>جرد الأضرار، إشعار التأمين، تفعيل الموقع البديل</td>
+        </tr>
+        <tr>
+          <td class="td-warn"><strong>نقص مفاجئ في عمالة</strong></td>
+          <td>تأخر العمليات</td>
+          <td>استدعاء قائمة العمالة الاحتياطية المُسجَّلة في HR</td>
+          <td>إعادة جدولة التسليمات حسب الأولوية (A ثم B ثم C)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>٦-٢ بروتوكول النسخ الاحتياطي للبيانات</h3>
+  <div class="box blue-box">
+    <ul>
+      <li><strong>نسخ احتياطي يومي:</strong> قاعدة بيانات أودو تُنسخ تلقائياً يومياً على سيرفر محلي وسحابي.</li>
+      <li><strong>اختبار الاستعادة:</strong> اختبار شهري لاستعادة البيانات للتأكد من سلامة النسخ.</li>
+      <li><strong>نماذج الطوارئ:</strong> مجموعة من النماذج الورقية (15 نموذج طوارئ) محفوظة في خزانة مقاومة للحريق.</li>
+      <li><strong>الصلاحيات الطارئة:</strong> مدير العمليات يمتلك صلاحية «super admin» مؤقتة تُفعَّل فقط في حالات الطوارئ الموثقة.</li>
+    </ul>
+  </div>
+
+  <h3>٦-٣ قائمة جهات التواصل الطارئة</h3>
+  <div class="note warn"><strong>ملاحظة:</strong> تُحفظ هذه القائمة مطبوعة في غرفة المدير، مكتب الحارس، وكل سيارة من سيارات الأسطول. تُحدَّث فصلياً.</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>الجهة</th><th>نوع الطوارئ</th><th>المسؤول</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>مزود خدمة الصيانة (التبريد)</td><td>عطل غرفة تبريد حرجة</td><td>مدير الصيانة</td></tr>
+        <tr><td>مزود IT / Odoo Support</td><td>تعطل النظام</td><td>مسؤول IT</td></tr>
+        <tr><td>شركة التأمين</td><td>حريق، حادث، كارثة</td><td>مدير المالية</td></tr>
+        <tr><td>إدارة المستودع البديل</td><td>تعذر الوصول للمستودع</td><td>مدير العمليات</td></tr>
+        <tr><td>شركة نقل احتياطية</td><td>تعطل جزء من الأسطول</td><td>مدير الأسطول</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ====================================================
+     RACI SUPPLEMENT
+     ==================================================== -->
+<div class="chapter navy-accent" id="s-raci">
+  <div class="chapter-head">
+    <span class="chapter-num" style="background:var(--navy);">م-٧</span>
+    <h2>مصفوفة RACI التكميلية — الملاحق م-١ إلى م-٦</h2>
+  </div>
+
+  <p>تُكمِّل هذه المصفوفة مصفوفة RACI الواردة في الدليل الأصلي، وتُغطي العمليات الخاصة بالملاحق التكميلية.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>العملية / القرار</th>
+          <th>مدير المستودع</th>
+          <th>مدير الجودة</th>
+          <th>مدير الأسطول</th>
+          <th>مدير الصيانة</th>
+          <th>المدير المالي</th>
+          <th>مدير العمليات</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>اعتماد أمر الإعدام (Scrap Order)</strong></td>
+          <td class="td-center raci-A">A</td>
+          <td class="td-center raci-R">R</td>
+          <td class="td-center raci-I">I</td>
+          <td class="td-center raci-I">I</td>
+          <td class="td-center raci-R">R</td>
+          <td class="td-center raci-C">C</td>
+        </tr>
+        <tr>
+          <td><strong>رفض شحنة من المورد</strong></td>
+          <td class="td-center raci-A">A</td>
+          <td class="td-center raci-R">R</td>
+          <td class="td-center">—</td>
+          <td class="td-center">—</td>
+          <td class="td-center raci-C">C</td>
+          <td class="td-center raci-I">I</td>
+        </tr>
+        <tr>
+          <td><strong>إصدار Gate Pass للشاحنة</strong></td>
+          <td class="td-center raci-A">A</td>
+          <td class="td-center raci-I">I</td>
+          <td class="td-center raci-R">R</td>
+          <td class="td-center">—</td>
+          <td class="td-center">—</td>
+          <td class="td-center raci-C">C</td>
+        </tr>
+        <tr>
+          <td><strong>تسليم مركبة لسائق (Checklist)</strong></td>
+          <td class="td-center raci-I">I</td>
+          <td class="td-center">—</td>
+          <td class="td-center raci-R">R</td>
+          <td class="td-center raci-C">C</td>
+          <td class="td-center">—</td>
+          <td class="td-center raci-A">A</td>
+        </tr>
+        <tr>
+          <td><strong>فتح طلب صيانة علاجية</strong></td>
+          <td class="td-center raci-I">I</td>
+          <td class="td-center raci-C">C</td>
+          <td class="td-center raci-R">R</td>
+          <td class="td-center raci-A">A</td>
+          <td class="td-center raci-I">I</td>
+          <td class="td-center raci-I">I</td>
+        </tr>
+        <tr>
+          <td><strong>اعتماد جدول الصيانة الوقائية</strong></td>
+          <td class="td-center raci-I">I</td>
+          <td class="td-center raci-C">C</td>
+          <td class="td-center raci-C">C</td>
+          <td class="td-center raci-R">R</td>
+          <td class="td-center raci-C">C</td>
+          <td class="td-center raci-A">A</td>
+        </tr>
+        <tr>
+          <td><strong>رفع تقرير OTIF الأسبوعي</strong></td>
+          <td class="td-center raci-R">R</td>
+          <td class="td-center raci-I">I</td>
+          <td class="td-center raci-R">R</td>
+          <td class="td-center">—</td>
+          <td class="td-center raci-I">I</td>
+          <td class="td-center raci-A">A</td>
+        </tr>
+        <tr>
+          <td><strong>اعتماد تسليم عهدة جهاز للموظف</strong></td>
+          <td class="td-center raci-C">C</td>
+          <td class="td-center">—</td>
+          <td class="td-center raci-I">I</td>
+          <td class="td-center raci-R">R</td>
+          <td class="td-center raci-A">A</td>
+          <td class="td-center raci-I">I</td>
+        </tr>
+        <tr>
+          <td><strong>تفعيل خطة BCP عند الكوارث</strong></td>
+          <td class="td-center raci-R">R</td>
+          <td class="td-center raci-C">C</td>
+          <td class="td-center raci-C">C</td>
+          <td class="td-center raci-C">C</td>
+          <td class="td-center raci-C">C</td>
+          <td class="td-center raci-A">A</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box" style="display:flex;gap:20px;flex-wrap:wrap;margin-top:16px;">
+    <span><span class="raci-R">R</span> — مسؤول التنفيذ</span>
+    <span><span class="raci-A">A</span> — المساءَل النهائي</span>
+    <span><span class="raci-C">C</span> — يُستشار</span>
+    <span><span class="raci-I">I</span> — يُبلَّغ فحسب</span>
+  </div>
+</div>
+
+<!-- ====================================================
+     SIGNATURES
+     ==================================================== -->
+<div class="chapter" id="s-sig-annex">
+  <div class="chapter-head">
+    <span class="chapter-num">م-٨</span>
+    <h2>الاعتماد الرسمي للملحق التكميلي</h2>
+  </div>
+
+  <div class="note green"><strong>هذا الملحق جزء لا يتجزأ من المرجع التشغيلي الشامل لـ Brandzo Hub.</strong> يُعدّ ساري المفعول بعد اعتماد الأطراف الموقِّعة أدناه ويُطبَّق اعتباراً من تاريخ التوقيع.</div>
+
+  <div class="sig-area">
+    <div class="sig-box">
+      
+    <div class="sig-box">
+      <div class="sig-line"></div>
+      <div class="sig-name">أ. خالد بالروين</div>
+      <div class="sig-role">الاعتماد النهائي — Brandzo Hub</div>
+    </div>
+  </div>
+
+  <hr class="divider orange" style="margin-top:36px;">
+  <p style="text-align:center;font-size:11px;color:#888;margin-top:12px;">
+    <strong>Brandzo Hub</strong> — ملحق المرجع التشغيلي | الإصدار V 1.0 | يونيو ٢٠٢٦ | بنغازي، ليبيا<br>
+    هذه الوثيقة سرية وتخص إدارة Brandzo Hub حصرياً — يُحظر تداولها خارج الجهات المعتمِدة
+  </p>
+</div>
+
+
+
