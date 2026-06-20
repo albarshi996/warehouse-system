@@ -1,1305 +1,1166 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>تقرير تحوير مستودعات 155 لرفع الكفاءة التشغيلية والسعة التخزينية | Brandzo Hub 2026</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#11181F">
+<title>Brandzo Hub | نظام الجرد الذكي</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%2311181F'/%3E%3Crect x='4' y='6' width='2' height='12' fill='%23E89A3C'/%3E%3Crect x='7' y='6' width='1' height='12' fill='%23E89A3C'/%3E%3Crect x='9' y='6' width='3' height='12' fill='%23E89A3C'/%3E%3Crect x='13' y='6' width='1' height='12' fill='%23E89A3C'/%3E%3Crect x='15' y='6' width='2' height='12' fill='%23E89A3C'/%3E%3Crect x='18' y='6' width='1' height='12' fill='%23E89A3C'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800;900&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
+/* ============ Tokens ============ */
 :root{
-  --primary:#C8102E;--secondary:#E63946;--dark-red:#9D0216;
-  --white:#FFFFFF;--light-gray:#F5F5F5;--gray-100:#F8F9FA;
-  --gray-200:#E9ECEF;--gray-300:#DEE2E6;--gray-500:#6C757D;
-  --gray-700:#343A40;--gray-900:#1A1A1A;
-  --shadow-sm:0 2px 8px rgba(200,16,46,.10);
-  --shadow-md:0 4px 20px rgba(200,16,46,.15);
-  --shadow-lg:0 8px 40px rgba(200,16,46,.20);
-  --radius:10px;--transition:all 0.2s ease;
+  --paper-50:#EEF1EE;
+  --paper-0:#FBFCFA;
+  --ink-900:#16212B;
+  --ink-700:#2B3A45;
+  --ink-500:#5C6B73;
+  --line:#DBE1DC;
+  --line-soft:#E7EBE6;
+  --console-bg:#11181F;
+  --console-bg2:#1B2530;
+  --console-text:#F2EFE6;
+  --console-muted:#93A2AC;
+  --amber:#E89A3C;
+  --amber-deep:#C97D22;
+  --amber-soft:#FBEAD2;
+  --green:#2E9E6B;
+  --green-soft:#DCEFE5;
+  --red:#D2483D;
+  --red-soft:#F8DEDC;
+  --blue-steel:#3C5A73;
+  --shadow-sm:0 1px 2px rgba(17,24,31,.07);
+  --shadow-md:0 10px 28px rgba(17,24,31,.12);
+  --radius:14px;
+  --font-display:'Cairo','Segoe UI',Tahoma,Arial,sans-serif;
+  --font-body:'Tajawal','Segoe UI',Tahoma,Arial,sans-serif;
+  --font-mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Cairo','Arial',sans-serif;background:var(--light-gray);color:var(--gray-900);font-size:15px;line-height:1.7;direction:rtl;}
-
-/* HEADER */
-.bfp-header{background:linear-gradient(135deg,var(--dark-red) 0%,var(--primary) 50%,var(--secondary) 100%);color:var(--white);position:relative;overflow:hidden;box-shadow:var(--shadow-lg);}
-.bfp-header::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 30px,rgba(255,255,255,.03) 30px,rgba(255,255,255,.03) 60px);}
-.header-top-bar{background:var(--dark-red);padding:.5rem 2rem;display:flex;align-items:center;justify-content:space-between;font-size:.78rem;opacity:.9;position:relative;}
-.header-main{padding:1.5rem 2rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:2rem;flex-wrap:wrap;position:relative;}
-.header-logo-area{display:flex;align-items:center;gap:1.2rem;flex-shrink:0;}
-.logo-text-badge{background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);border-radius:10px;padding:.6rem 1.2rem;font-size:1.1rem;font-weight:900;letter-spacing:1px;color:#fff;}
-.logo-text-sub{font-size:.65rem;font-weight:600;opacity:.8;display:block;margin-top:.1rem;}
-.header-logo-divider{width:2px;height:50px;background:rgba(255,255,255,.3);}
-.header-title-area{text-align:center;flex:1;}
-.header-report-title{font-size:1.9rem;font-weight:900;text-shadow:0 2px 10px rgba(0,0,0,.3);margin-bottom:.3rem;}
-.header-report-subtitle{font-size:.95rem;opacity:.85;margin-bottom:.8rem;}
-.header-meta-badges{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;}
-.meta-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:50px;padding:.3rem .9rem;font-size:.78rem;backdrop-filter:blur(4px);white-space:nowrap;}
-
-/* CONTAINER */
-.container{max-width:1200px;margin:0 auto;padding:2rem 1.5rem;}
-
-/* TOOLBAR */
-.toolbar{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:1rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;box-shadow:var(--shadow-sm);}
-.toolbar-label{font-weight:700;color:var(--primary);font-size:.9rem;flex-shrink:0;margin-left:.5rem;}
-.btn{display:inline-flex;align-items:center;gap:.4rem;border:none;border-radius:7px;padding:.5rem 1.1rem;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;transition:var(--transition);white-space:nowrap;}
-.btn-primary{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(200,16,46,.35);}
-.btn-primary:hover{background:var(--dark-red);transform:translateY(-1px);}
-.btn-success{background:#16a34a;color:#fff;box-shadow:0 2px 8px rgba(22,163,74,.3);}
-.btn-success:hover{background:#15803d;transform:translateY(-1px);}
-.btn-info{background:#0284c7;color:#fff;box-shadow:0 2px 8px rgba(2,132,199,.3);}
-.btn-info:hover{background:#0369a1;transform:translateY(-1px);}
-.btn-secondary{background:var(--gray-200);color:var(--gray-700);}
-.btn-secondary:hover{background:var(--gray-300);}
-.btn-danger{background:#dc2626;color:#fff;}
-.btn-danger:hover{background:#b91c1c;}
-
-/* SEARCH BAR */
-.search-bar{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:1rem 1.5rem;margin-bottom:1.5rem;box-shadow:var(--shadow-sm);}
-.search-bar-title{font-weight:700;color:var(--primary);margin-bottom:.8rem;font-size:.95rem;}
-.search-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;align-items:end;}
-.search-group{display:flex;flex-direction:column;gap:.25rem;}
-.search-group label{font-size:.75rem;color:var(--gray-500);font-weight:600;}
-.search-input,.search-select{border:1.5px solid var(--gray-300);border-radius:7px;padding:.45rem .75rem;font-size:.85rem;font-family:inherit;direction:rtl;outline:none;background:var(--gray-100);transition:var(--transition);color:var(--gray-900);}
-.search-input:focus,.search-select:focus{border-color:var(--primary);background:var(--white);box-shadow:0 0 0 3px rgba(200,16,46,.1);}
-
-/* KPI */
-.kpi-section-title{font-size:1.3rem;font-weight:800;color:var(--primary);border-right:5px solid var(--primary);padding-right:1rem;margin:2rem 0 1rem;}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;}
-.kpi-card{background:var(--white);border-radius:12px;padding:1.3rem 1.5rem;border:1px solid var(--gray-200);box-shadow:var(--shadow-sm);text-align:center;position:relative;overflow:hidden;transition:var(--transition);}
-.kpi-card.featured{background:linear-gradient(135deg,var(--dark-red) 0%,var(--primary) 100%);color:var(--white);border:none;}
-.kpi-card.featured::before{background:rgba(255,255,255,.3);}
-.kpi-icon{font-size:1.8rem;margin-bottom:.4rem;}
-.kpi-label{font-size:.78rem;color:var(--gray-500);font-weight:600;margin-bottom:.3rem;}
-.kpi-card.featured .kpi-label{color:rgba(255,255,255,.8);}
-.kpi-value{font-size:1.6rem;font-weight:900;color:var(--primary);line-height:1.1;}
-.kpi-card.featured .kpi-value{color:var(--white);}
-.kpi-unit{font-size:.75rem;color:var(--gray-500);margin-top:.2rem;}
-.kpi-card.featured .kpi-unit{color:rgba(255,255,255,.7);}
-
-/* CITY HEADER */
-.city-header{background:linear-gradient(135deg,var(--dark-red) 0%,var(--primary) 100%);color:var(--white);padding:1rem 1.5rem;border-radius:var(--radius);margin:2.5rem 0 1.5rem;display:flex;align-items:center;gap:.8rem;font-size:1.4rem;font-weight:800;box-shadow:var(--shadow-md);}
-
-/* TABLE */
-.table-wrapper{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:2rem;}
-.table-header{background:linear-gradient(135deg,var(--dark-red) 0%,var(--primary) 100%);color:var(--white);padding:.9rem 1.2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;}
-.table-header-title{font-weight:700;font-size:.95rem;}
-.table-actions{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;}
-table{width:100%;border-collapse:collapse;font-size:.85rem;}
-thead th{background:var(--light-gray);color:var(--gray-700);padding:.7rem .9rem;font-weight:700;border-bottom:2px solid var(--gray-200);white-space:nowrap;cursor:pointer;user-select:none;transition:background .15s;}
-thead th:hover{background:var(--gray-200);}
-thead th.sort-asc::after{content:' ▲';font-size:.65rem;color:var(--primary);}
-thead th.sort-desc::after{content:' ▼';font-size:.65rem;color:var(--primary);}
-tbody tr{border-bottom:1px solid #f3f3f3;transition:background .12s;}
-tbody tr:hover{background:#fff5f5;}
-tbody td{padding:.75rem .9rem;vertical-align:middle;}
-.price-cell{font-weight:800;color:var(--dark-red);font-size:.95rem;}
-.area-cell{color:#0369a1;font-weight:700;}
-.pricem2-cell{color:#7c3aed;font-weight:700;}
-.loc-cell{font-weight:600;}
-.street-cell{color:var(--gray-500);font-size:.78rem;}
-.src-badge{display:inline-block;background:#fff5f5;color:var(--primary);border:1px solid #fecaca;border-radius:4px;padding:.12rem .5rem;font-size:.72rem;font-weight:600;}
-.tier-badge{display:inline-block;border-radius:4px;padding:.15rem .55rem;font-size:.72rem;font-weight:700;}
-.tier-premium{background:#fef3c7;color:#92400e;border:1px solid #fcd34d;}
-.tier-mid{background:#f0fdf4;color:#166534;border:1px solid #86efac;}
-.tier-eco{background:#fff7ed;color:#9a3412;border:1px solid #fdba74;}
-.btn-edit-row{background:none;border:none;color:#0284c7;cursor:pointer;font-size:.85rem;padding:.2rem .4rem;border-radius:4px;opacity:.55;transition:var(--transition);}
-.btn-edit-row:hover{opacity:1;background:#e0f2fe;}
-.btn-del-row{background:none;border:none;color:#dc2626;cursor:pointer;font-size:.85rem;padding:.2rem .4rem;border-radius:4px;opacity:.45;transition:var(--transition);}
-.btn-del-row:hover{opacity:1;background:#fee2e2;}
-.pagination{display:flex;justify-content:center;gap:.4rem;padding:.8rem;flex-wrap:wrap;}
-.page-btn{background:var(--white);border:1px solid var(--gray-300);border-radius:6px;padding:.3rem .7rem;font-size:.82rem;cursor:pointer;font-family:inherit;transition:var(--transition);}
-.page-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
-.page-btn:hover:not(.active){background:var(--light-gray);border-color:var(--primary);}
-.table-info{padding:.5rem 1rem;font-size:.78rem;color:var(--gray-500);}
-
-/* DISTRICT CARDS */
-.district-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.9rem;margin:1.2rem 0;}
-.district-card{background:var(--white);border-radius:var(--radius);padding:1rem 1.2rem;border:1px solid var(--gray-200);border-right:4px solid var(--primary);transition:var(--transition);}
-.district-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm);}
-.district-card.high{border-right-color:var(--primary);}
-.district-card.medium{border-right-color:#f59e0b;}
-.district-card.low{border-right-color:#16a34a;}
-.district-name{font-weight:700;font-size:.92rem;margin-bottom:.25rem;}
-.district-range{color:var(--primary);font-size:1rem;font-weight:800;}
-.district-desc{font-size:.75rem;color:var(--gray-500);margin-top:.25rem;}
-
-/* ANALYSIS */
-.analysis-box{background:#fff5f5;border:1px solid #fecaca;border-radius:var(--radius);padding:1.2rem 1.5rem;margin:1.2rem 0;}
-.analysis-box h4{color:var(--primary);font-size:.95rem;margin-bottom:.7rem;}
-.analysis-box ul{padding-right:1.5rem;}
-.analysis-box li{margin-bottom:.5rem;font-size:.88rem;color:#7c1d1d;}
-.note{background:#f8fafc;border-right:3px solid var(--primary);padding:.8rem 1rem;border-radius:0 6px 6px 0;font-size:.85rem;color:var(--gray-700);margin:1rem 0;}
-.divider{border:none;border-top:2px solid var(--gray-200);margin:2.5rem 0;}
-
-/* CHARTS */
-.charts-section{margin:2rem 0;}
-.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:1.2rem;}
-.chart-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);padding:1.2rem;box-shadow:var(--shadow-sm);}
-.chart-card h3{font-size:.9rem;font-weight:700;color:var(--primary);margin-bottom:.8rem;border-bottom:2px solid var(--light-gray);padding-bottom:.5rem;}
-.chart-container{position:relative;height:220px;}
-
-/* COMPARISON & FACTORS */
-.comp-section{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);padding:1.5rem;margin:2rem 0;box-shadow:var(--shadow-sm);}
-.comp-section h3{color:var(--primary);font-weight:800;margin-bottom:1rem;font-size:1.1rem;}
-.comp-table{width:100%;border-collapse:collapse;font-size:.88rem;}
-.comp-table th{background:linear-gradient(135deg,var(--dark-red),var(--primary));color:#fff;padding:.7rem 1rem;font-weight:700;text-align:right;}
-.comp-table td{padding:.7rem 1rem;border-bottom:1px solid var(--gray-200);}
-.comp-table tr:last-child td{border:none;}
-.comp-table tr:hover td{background:#fff5f5;}
-.live-badge{display:inline-block;background:#dcfce7;color:#16a34a;border:1px solid #86efac;border-radius:4px;font-size:.68rem;font-weight:700;padding:.1rem .45rem;margin-right:.3rem;}
-
-/* FACTORS */
-.factors-section{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);padding:1.5rem;margin:2rem 0;box-shadow:var(--shadow-sm);}
-.factors-section h3{color:var(--primary);font-weight:800;margin-bottom:1rem;font-size:1.1rem;}
-.factors-live-summary{background:linear-gradient(135deg,#fff5f5,#fef2f2);border:1px solid #fecaca;border-radius:8px;padding:1rem 1.2rem;margin-top:1rem;}
-.factors-live-summary h4{color:var(--primary);font-size:.88rem;margin-bottom:.6rem;}
-.factors-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.6rem;}
-.factor-stat-item{background:#fff;border:1px solid #fecaca;border-radius:6px;padding:.6rem .9rem;font-size:.82rem;}
-.factor-stat-label{color:var(--gray-500);font-size:.72rem;}
-.factor-stat-value{font-weight:800;color:var(--dark-red);font-size:.95rem;}
-
-/* SOURCES */
-.sources-list{display:flex;flex-wrap:wrap;gap:.5rem;margin:.8rem 0;}
-.source-chip{background:var(--white);border:1px solid var(--gray-200);border-radius:50px;padding:.3rem .9rem;font-size:.8rem;color:var(--gray-700);font-weight:600;}
-
-/* TOAST */
-#toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark-red);color:#fff;padding:.7rem 1.8rem;border-radius:50px;font-size:.88rem;font-weight:700;z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-/* MODAL */
-#row-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:5000;align-items:center;justify-content:center;}
-#row-modal-overlay.active{display:flex;}
-#row-modal{background:#fff;border-radius:14px;width:min(520px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
-.modal-header{background:linear-gradient(135deg,var(--dark-red),var(--primary));color:#fff;padding:1rem 1.5rem;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;}
-.modal-header h3{font-size:1rem;font-weight:800;}
-.modal-close{background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:var(--transition);}
-.modal-close:hover{background:rgba(255,255,255,.35);}
-.modal-body{padding:1.5rem;}
-.mf-group{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.9rem;}
-.mf-group label{font-size:.8rem;font-weight:700;color:var(--gray-700);}
-.mf-group input,.mf-group select{border:1.5px solid var(--gray-300);border-radius:7px;padding:.5rem .8rem;font-size:.9rem;font-family:inherit;direction:rtl;outline:none;background:var(--gray-100);}
-.mf-group input:focus,.mf-group select:focus{border-color:var(--primary);background:#fff;}
-.mf-row2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
-.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--gray-200);display:flex;gap:.6rem;justify-content:flex-end;}
-
-/* FOOTER */
-.bfp-footer{background:linear-gradient(135deg,var(--dark-red) 0%,var(--primary) 100%);color:var(--white);text-align:center;padding:2rem;margin-top:3rem;}
-.footer-logo-text{font-size:1.5rem;font-weight:900;color:#fff;margin-bottom:.6rem;}
-.bfp-footer .footer-text{font-size:.82rem;opacity:.85;line-height:1.8;}
-.footer-sources{margin-top:.8rem;display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
-.footer-source-link{color:rgba(255,255,255,.8);text-decoration:none;font-size:.8rem;}
-.footer-source-link:hover{color:#fff;}
-
-/* PRINT */
-@media print{
-  body{background:#fff;font-size:11px;}
-  .bfp-header,.city-header,.table-header,thead th,.kpi-card.featured,.tier-badge,.src-badge{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-  .no-print{display:none!important;}
-  .toolbar,.search-bar{display:none!important;}
-  .table-wrapper{box-shadow:none!important;}
-  table{page-break-inside:auto;}
-  tr{page-break-inside:avoid;}
-  .charts-section{page-break-before:always;}
-  .bfp-footer{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-  @page{margin:1.5cm;}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper-50);
+  color:var(--ink-900);
+  font-family:var(--font-body);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
 }
-
-/* RESPONSIVE */
-@media(max-width:768px){
-  .header-main{flex-direction:column;text-align:center;padding:1.5rem;}
-  .header-title-area{order:-1;}
-  .header-logo-area{justify-content:center;}
-  .header-report-title{font-size:1.4rem;}
-  .kpi-grid{grid-template-columns:repeat(2,1fr);}
-  .charts-grid{grid-template-columns:1fr;}
-  .search-grid{grid-template-columns:repeat(2,1fr);}
-  table{font-size:.78rem;}
-  tbody td{padding:.5rem .6rem;}
-  .mf-row2{grid-template-columns:1fr;}
+.wrap{max-width:1180px;margin:0 auto;padding:0 22px;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:4px;}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
 }
-@media(max-width:480px){
-  .kpi-grid{grid-template-columns:1fr 1fr;}
-  .header-report-title{font-size:1.2rem;}
-  .container{padding:1rem;}
+body.modal-open{overflow:hidden;}
+
+/* ============ Header ============ */
+.site-header{background:var(--console-bg);color:var(--console-text);padding:22px 0 26px;}
+.site-header .row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.brand-lockup{display:flex;align-items:center;gap:12px;}
+.brand-bars{flex:none;}
+.brand-bars rect{fill:var(--amber);}
+.brand-name{font-family:var(--font-display);font-weight:900;font-size:26px;letter-spacing:.2px;margin:0;}
+.brand-name span{color:var(--amber);}
+.brand-tagline{font-size:13px;color:var(--console-muted);margin:2px 0 0;}
+.storage-badge{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;background:rgba(46,158,107,.16);color:#8FE3B8;border:1px solid rgba(46,158,107,.35);padding:7px 12px;border-radius:999px;white-space:nowrap;}
+.storage-badge.warn{background:rgba(232,154,60,.16);color:var(--amber);border-color:rgba(232,154,60,.4);}
+.storage-badge .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none;}
+
+/* ============ Scan console ============ */
+.scan-console{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,var(--console-bg2),var(--console-bg));border-bottom:1px solid #06090C;box-shadow:0 6px 18px rgba(0,0,0,.18);}
+.scan-console-inner{padding:14px 0 16px;}
+.scan-form{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;}
+.scan-field{position:relative;flex:1 1 320px;display:flex;align-items:center;background:#0D131A;border:1.5px solid #2B3947;border-radius:12px;padding:0 6px 0 14px;overflow:hidden;transition:border-color .15s;}
+.scan-console.scanning .scan-field{border-color:var(--amber);}
+.scan-field .barcode-ico{color:var(--amber);flex:none;}
+.scan-field input{flex:1;background:transparent;border:0;color:var(--console-text);font-family:var(--font-mono);font-size:17px;letter-spacing:.5px;padding:13px 10px;direction:ltr;text-align:left;}
+.scan-field input::placeholder{color:#5E6E7A;font-family:var(--font-body);letter-spacing:0;}
+.scan-field input:focus{outline:none;}
+.scan-submit{flex:none;width:42px;height:42px;margin:5px;border:0;border-radius:9px;background:var(--amber);color:#1A1206;display:flex;align-items:center;justify-content:center;}
+.scan-submit:hover{background:var(--amber-deep);}
+.scan-sweep{position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(232,154,60,.55) 48%,rgba(46,158,107,.55) 56%,transparent);opacity:0;pointer-events:none;width:60%;}
+.scan-console.scanning .scan-sweep{opacity:1;animation:sweep 1.15s ease-in-out infinite;}
+@keyframes sweep{0%{transform:translateX(-160%);}100%{transform:translateX(220%);}}
+.inc-group{display:flex;align-items:center;gap:6px;background:#0D131A;border:1.5px solid #2B3947;border-radius:12px;padding:5px;flex:none;}
+.inc-group span.lbl{font-size:11.5px;color:var(--console-muted);padding:0 6px;white-space:nowrap;}
+.inc-btn{width:32px;height:32px;border:0;border-radius:8px;background:#1E2932;color:var(--console-text);font-size:17px;display:flex;align-items:center;justify-content:center;}
+.inc-btn:hover{background:#28353F;}
+#scanIncrement{width:44px;text-align:center;background:transparent;border:0;color:var(--console-text);font-family:var(--font-mono);font-size:15px;-moz-appearance:textfield;}
+#scanIncrement::-webkit-outer-spin-button,#scanIncrement::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.cam-btn{flex:none;display:flex;align-items:center;gap:8px;background:var(--green);color:#0C1F16;border:0;border-radius:12px;padding:0 18px;font-weight:700;font-size:14px;}
+.cam-btn:hover{background:#268a5d;}
+.scan-help{margin:9px 2px 0;font-size:12.5px;color:var(--console-muted);}
+
+/* ============ Stats ============ */
+.stats{padding:18px 0 6px;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.stat-card{background:var(--paper-0);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);}
+.stat-ico{flex:none;width:38px;height:38px;border-radius:10px;background:var(--amber-soft);color:var(--amber-deep);display:flex;align-items:center;justify-content:center;}
+.stat-card:nth-child(2) .stat-ico{background:var(--green-soft);color:var(--green);}
+.stat-card:nth-child(3) .stat-ico{background:#E4ECF3;color:var(--blue-steel);}
+.stat-card:nth-child(4) .stat-ico{background:var(--red-soft);color:var(--red);}
+.stat-value{font-family:var(--font-mono);font-weight:700;font-size:20px;line-height:1.1;}
+.stat-label{font-size:12px;color:var(--ink-500);margin-top:2px;}
+
+/* ============ Toolbar ============ */
+.toolbar{padding:16px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.search-field{position:relative;flex:1 1 220px;}
+.search-field .ico{position:absolute;inset-inline-start:12px;top:50%;transform:translateY(-50%);color:var(--ink-500);pointer-events:none;}
+.search-field input{width:100%;padding:11px 14px 11px 14px;padding-inline-start:36px;border-radius:11px;border:1.5px solid var(--line);background:var(--paper-0);font-size:14px;color:var(--ink-900);}
+.search-field input:focus{border-color:var(--amber);}
+select.filter-select{padding:11px 14px;border-radius:11px;border:1.5px solid var(--line);background:var(--paper-0);font-size:14px;color:var(--ink-700);min-width:160px;}
+.spacer{flex:1;}
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:11px;padding:11px 16px;font-size:14px;font-weight:700;border:1.5px solid transparent;white-space:nowrap;}
+.btn-primary{background:var(--amber);color:#231505;}
+.btn-primary:hover{background:var(--amber-deep);}
+.btn-outline{background:var(--paper-0);color:var(--ink-700);border-color:var(--line);}
+.btn-outline:hover{border-color:var(--blue-steel);color:var(--blue-steel);}
+.btn-ghost-danger{background:transparent;color:var(--red);border-color:transparent;}
+.btn-ghost-danger:hover{background:var(--red-soft);}
+.btn-sm{padding:8px 12px;font-size:13px;}
+
+/* ============ Table ============ */
+.table-wrap{background:var(--paper-0);border:1px solid var(--line);border-radius:var(--radius);overflow:auto;box-shadow:var(--shadow-sm);margin-bottom:16px;}
+table.inv-table{width:100%;border-collapse:collapse;min-width:920px;}
+.inv-table thead th{position:sticky;top:0;background:#F4F6F2;text-align:right;font-size:12.5px;color:var(--ink-500);font-weight:700;padding:13px 14px;border-bottom:1px solid var(--line);white-space:nowrap;}
+.inv-table thead th.sortable{cursor:pointer;user-select:none;}
+.inv-table thead th.sortable:hover{color:var(--ink-900);}
+.sort-arrow{display:inline-block;width:10px;font-size:10px;opacity:.5;}
+.inv-table tbody td{padding:13px 14px;border-bottom:1px solid var(--line-soft);font-size:14px;vertical-align:middle;}
+.inv-table tbody tr:hover{background:#F7F8F4;}
+.inv-table tbody tr:last-child td{border-bottom:0;}
+.cell-mono{font-family:var(--font-mono);}
+.cell-name{font-weight:600;min-width:180px;}
+.cell-note{color:var(--ink-500);max-width:220px;white-space:normal;}
+.brand-tag{display:inline-block;background:#E9EEF1;color:var(--blue-steel);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:600;white-space:nowrap;}
+.cell-actions{display:flex;gap:6px;}
+.icon-btn{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid var(--line);background:var(--paper-0);color:var(--ink-700);}
+.icon-btn:hover{border-color:var(--blue-steel);color:var(--blue-steel);}
+.icon-btn.danger:hover{border-color:var(--red);color:var(--red);background:var(--red-soft);}
+@keyframes flashRow{0%{background:var(--green-soft);}100%{background:transparent;}}
+tr.flash{animation:flashRow 1.3s ease-out;}
+
+/* ============ Cards (mobile) ============ */
+.card-list{display:none;flex-direction:column;gap:10px;margin-bottom:16px;}
+.item-card{background:var(--paper-0);border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-sm);}
+.item-card.flash{animation:flashRow 1.3s ease-out;}
+.card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.barcode-chip{font-size:12.5px;color:var(--ink-500);background:var(--paper-50);border-radius:6px;padding:3px 8px;}
+.card-name{margin:2px 0 10px;font-size:16px;font-weight:700;font-family:var(--font-display);}
+.card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;}
+.card-grid > div{background:var(--paper-50);border-radius:9px;padding:7px 9px;}
+.card-label{display:block;font-size:11px;color:var(--ink-500);margin-bottom:2px;}
+.card-note{font-size:13px;color:var(--ink-500);margin:0 0 10px;font-style:italic;}
+.card-actions{display:flex;gap:8px;}
+.card-actions .icon-btn{width:auto;padding:0 12px;height:34px;gap:6px;font-size:13px;}
+
+/* ============ Empty / no-results ============ */
+.empty-state,.no-results{display:flex;flex-direction:column;align-items:center;text-align:center;padding:60px 20px;background:var(--paper-0);border:1px dashed var(--line);border-radius:var(--radius);margin-bottom:16px;}
+.empty-bars{opacity:.14;margin-bottom:14px;}
+.empty-bars rect{fill:var(--ink-700);}
+.empty-state h3,.no-results h3{font-family:var(--font-display);font-size:18px;margin:0 0 6px;}
+.empty-state p,.no-results p{color:var(--ink-500);font-size:14px;margin:0 0 18px;max-width:360px;}
+
+/* ============ Modals ============ */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:100;padding:18px;}
+.modal.open{display:flex;}
+.modal-backdrop{position:absolute;inset:0;background:rgba(15,21,27,.58);backdrop-filter:blur(2px);}
+.modal-panel{position:relative;background:var(--paper-0);border-radius:18px;width:100%;max-width:560px;max-height:92vh;overflow:auto;box-shadow:var(--shadow-md);}
+.modal-panel.narrow{max-width:420px;}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--paper-0);z-index:2;}
+.modal-head h2{font-family:var(--font-display);font-size:18px;margin:0;}
+.modal-close{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:transparent;display:flex;align-items:center;justify-content:center;color:var(--ink-700);}
+.modal-close:hover{background:var(--red-soft);color:var(--red);border-color:var(--red);}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 20px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--paper-0);}
+.modal-foot .push-start{margin-inline-end:auto;}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;padding:20px;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field.span-2{grid-column:1/-1;}
+.field label{font-size:12.5px;font-weight:700;color:var(--ink-700);}
+.field input,.field select,.field textarea{padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);font-size:14px;background:var(--paper-0);color:var(--ink-900);}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--amber);}
+.field textarea{resize:vertical;min-height:64px;}
+.field .hint{font-size:11.5px;color:var(--ink-500);}
+@media (max-width:480px){.form-grid{grid-template-columns:1fr;}}
+
+/* camera modal */
+#scanViewport{position:relative;width:100%;aspect-ratio:4/3;background:#000;border-radius:12px;overflow:hidden;}
+#scanViewport video,#scanViewport canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.cam-frame{position:absolute;inset:14%;border:2.5px solid var(--amber);border-radius:14px;box-shadow:0 0 0 2000px rgba(0,0,0,.28);pointer-events:none;}
+.cam-hint{text-align:center;font-size:13px;color:var(--ink-500);padding:14px 20px 0;}
+.cam-gate{display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px 6px 4px;}
+.cam-gate-icon{width:54px;height:54px;border-radius:14px;background:var(--amber-soft);color:var(--amber-deep);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.cam-gate h3{font-family:var(--font-display);font-size:16px;margin:0 0 8px;}
+.cam-gate p{font-size:13.5px;color:var(--ink-500);margin:0 0 18px;line-height:1.7;max-width:340px;}
+.cam-gate-note{display:flex;align-items:flex-start;gap:8px;background:var(--paper-50);border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--ink-700);margin-bottom:18px;text-align:start;}
+.cam-gate-note svg{flex:none;margin-top:1px;color:var(--green);}
+.cam-gate.denied .cam-gate-icon{background:var(--red-soft);color:var(--red);}
+
+/* import modal */
+.import-summary{background:var(--paper-50);border-radius:10px;padding:12px 14px;font-size:13.5px;margin:0 20px 6px;}
+.import-options{display:flex;flex-direction:column;gap:10px;padding:14px 20px 4px;}
+.import-opt{display:flex;align-items:flex-start;gap:10px;border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;cursor:pointer;}
+.import-opt:has(input:checked){border-color:var(--amber);background:var(--amber-soft);}
+.import-opt input{margin-top:3px;}
+.import-opt .opt-title{font-weight:700;font-size:13.5px;}
+.import-opt .opt-desc{font-size:12.5px;color:var(--ink-500);margin-top:2px;}
+
+/* confirm modal */
+#confirmMessage{padding:6px 20px 18px;font-size:14.5px;color:var(--ink-700);line-height:1.7;}
+
+/* ============ Toasts ============ */
+#toastContainer{position:fixed;bottom:18px;inset-inline-start:50%;transform:translateX(50%);z-index:200;display:flex;flex-direction:column-reverse;gap:8px;width:min(92vw,420px);}
+[dir="rtl"] #toastContainer{transform:translateX(-50%);}
+.toast{position:relative;display:flex;align-items:center;gap:10px;background:var(--console-bg);color:var(--console-text);padding:12px 14px;border-radius:12px;box-shadow:var(--shadow-md);font-size:13.5px;overflow:hidden;animation:toastIn .22s ease-out;}
+.toast.hide{opacity:0;transform:translateY(8px);transition:all .3s;}
+.toast-success{border-inline-start:4px solid var(--green);}
+.toast-error{border-inline-start:4px solid var(--red);}
+.toast-info{border-inline-start:4px solid var(--amber);}
+.toast-icon{flex:none;display:flex;}
+.toast-success .toast-icon{color:var(--green);}
+.toast-error .toast-icon{color:var(--red);}
+.toast-info .toast-icon{color:var(--amber);}
+.toast-msg{flex:1;}
+.toast-action{flex:none;background:rgba(232,154,60,.18);color:var(--amber);border:0;border-radius:7px;padding:6px 10px;font-size:12.5px;font-weight:700;}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+footer.app-footer{text-align:center;color:var(--ink-500);font-size:12.5px;padding:24px 0 36px;}
+
+/* ============ Responsive ============ */
+@media (max-width:860px){
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .table-wrap{display:none;}
+  .card-list{display:flex;}
+  .scan-help{display:none;}
+}
+@media (max-width:560px){
+  .brand-name{font-size:21px;}
+  .brand-bars{width:46px;height:18px;}
+  .scan-form{gap:8px;}
+  .inc-group .lbl{display:none;}
+  .cam-btn span.txt{display:none;}
+  .cam-btn{padding:0 13px;}
 }
 </style>
 </head>
 <body>
 
-<!-- MODAL -->
-<div id="row-modal-overlay">
-  <div id="row-modal">
-    <div class="modal-header">
-      <h3 id="modal-title">➕ إضافة سجل جديد</h3>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="mf-group">
-        <label>🏙 المدينة</label>
-        <select id="mf-city">
-          <option value="بنغازي">بنغازي</option>
-          <option value="طرابلس">طرابلس</option>
-        </select>
-      </div>
-      <div class="mf-group">
-        <label>📍 الموقع / المنطقة</label>
-        <input id="mf-location" type="text" placeholder="مثال: بنغازي — فينيسيا"/>
-      </div>
-      <div class="mf-group">
-        <label>🗺 الشارع أو التفاصيل</label>
-        <input id="mf-street" type="text" placeholder="مثال: الشارع الرئيسي"/>
-      </div>
-      <div class="mf-row2">
-        <div class="mf-group">
-          <label>📐 المساحة (م²)</label>
-          <input id="mf-area" type="number" placeholder="0"/>
-        </div>
-        <div class="mf-group">
-          <label>💰 الإيجار الشهري (د.ل)</label>
-          <input id="mf-price" type="number" placeholder="0"/>
-        </div>
-      </div>
-      <div class="mf-row2">
-        <div class="mf-group">
-          <label>📊 سعر المتر (د.ل/م²)</label>
-          <input id="mf-pricem2" type="number" placeholder="0"/>
-        </div>
-        <div class="mf-group">
-          <label>🏷 الفئة</label>
-          <select id="mf-tier">
-            <option value="tier-eco">اقتصادي</option>
-            <option value="tier-mid" selected>متوسط</option>
-            <option value="tier-premium">فاخر</option>
-          </select>
-        </div>
-      </div>
-      <div class="mf-group">
-        <label>🔗 المصدر</label>
-        <input id="mf-source" type="text" placeholder="مثال: OpenSooq"/>
+<header class="site-header">
+  <div class="wrap row">
+    <div class="brand-lockup">
+      <svg class="brand-bars" width="58" height="22" viewBox="0 0 64 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="0" y="0" width="2" height="24"/><rect x="4" y="0" width="1" height="24"/><rect x="7" y="0" width="3" height="24"/><rect x="12" y="0" width="1" height="24"/><rect x="15" y="0" width="2" height="24"/><rect x="19" y="0" width="1" height="24"/><rect x="22" y="0" width="4" height="24"/><rect x="28" y="0" width="2" height="24"/><rect x="32" y="0" width="1" height="24"/><rect x="35" y="0" width="3" height="24"/><rect x="40" y="0" width="1" height="24"/><rect x="43" y="0" width="2" height="24"/><rect x="47" y="0" width="1" height="24"/><rect x="50" y="0" width="3" height="24"/><rect x="55" y="0" width="1" height="24"/><rect x="58" y="0" width="2" height="24"/><rect x="61" y="0" width="1" height="24"/>
+      </svg>
+      <div>
+        <p class="brand-name">Brandzo <span>Hub</span></p>
+        <p class="brand-tagline">نظام الجرد الذكي — تعداد سريع بالباركود</p>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-primary" onclick="saveModal()">💾 حفظ</button>
-      <button class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
-    </div>
-  </div>
-</div>
-
-<!-- TOAST -->
-<div id="toast"></div>
-
-<!-- HEADER -->
-<header class="bfp-header">
-  <div class="header-top-bar">
-    <span>📅 يونيو 2026</span>
-    <span>تقرير تحوير مستودعات 155 لرفع الكفاءة التشغيلية والسعة التخزينية</span>
-    <span>Brandzo Hub 2026 © 2026</span>
-  </div>
-  <div class="header-main">
-    <div class="header-logo-area">
-      <div class="logo-text-badge">BFP<span class="logo-text-sub">Brandzo Hub 2026</span></div>
-      <div class="header-logo-divider"></div>
-    </div>
-    <div class="header-title-area">
-      <div class="header-report-title">تقرير تحوير مستودعات 155 لرفع الكفاءة التشغيلية والسعة التخزينية</div>
-      <div class="header-report-subtitle">بنغازي • موقع 155 • 2025 – 2026</div>
-      <div class="header-meta-badges">
-        <span class="meta-badge">📍 موقع 155</span>
-        <span class="meta-badge">🏪 تحوير فني</span>
-        <span class="meta-badge">📊 رفع الكفاءة</span>
-        <span class="meta-badge">🗓 يونيو 2026</span>
-      </div>
-    </div>
+    <span class="storage-badge" id="storageBadge"><span class="dot"></span> يحفظ تلقائيًا على حسابك</span>
   </div>
 </header>
 
-<div class="container">
-  <!-- TOOLBAR -->
-  <div class="toolbar no-print">
-    <span class="toolbar-label">⚙ أدوات:</span>
-    <label class="btn btn-success" style="cursor:pointer;">
-      📥 استيراد Excel
-      <input type="file" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)"/>
-    </label>
-    <button class="btn btn-primary" onclick="exportExcel()">📤 تصدير Excel</button>
-    <button class="btn btn-info" onclick="window.print()">🖨 طباعة التقرير</button>
-    <button class="btn btn-secondary" onclick="exportPDF()">📄 تحويل PDF</button>
-    <button class="btn btn-danger" onclick="clearStorage()">🗑 مسح البيانات المحفوظة</button>
-  </div>
-
-  <!-- SEARCH BAR -->
-  <div class="search-bar no-print">
-    <div class="search-bar-title">🔍 بحث متقدم وفلترة</div>
-    <div class="search-grid">
-      <div class="search-group">
-        <label>المدينة</label>
-        <select id="f-city" class="search-select">
-          <option value="">الكل</option>
-          <option value="بنغازي">بنغازي</option>
-          <option value="طرابلس">طرابلس</option>
-        </select>
+<div class="scan-console" id="scanConsole">
+  <div class="wrap scan-console-inner">
+    <form class="scan-form" id="scanForm" autocomplete="off">
+      <div class="scan-field">
+        <span class="barcode-ico" id="scanFieldIcon"></span>
+        <input id="scanInput" type="text" placeholder="امسح الباركود أو اكتبه هنا ثم اضغط Enter" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <div class="scan-sweep"></div>
+        <button type="submit" class="scan-submit" aria-label="تأكيد المسح" id="scanSubmitIcon"></button>
       </div>
-      <div class="search-group">
-        <label>المنطقة / الموقع</label>
-        <input id="f-loc" type="text" class="search-input" placeholder="ابحث..."/>
+      <div class="inc-group">
+        <button type="button" class="inc-btn" id="incMinus">−</button>
+        <span class="lbl">الزيادة لكل مسح</span>
+        <input id="scanIncrement" type="number" value="1" min="1" step="1" inputmode="numeric">
+        <button type="button" class="inc-btn" id="incPlus">+</button>
       </div>
-      <div class="search-group">
-        <label>الفئة</label>
-        <select id="f-tier" class="search-select">
-          <option value="">الكل</option>
-          <option value="tier-premium">فاخر</option>
-          <option value="tier-mid">متوسط</option>
-          <option value="tier-eco">اقتصادي</option>
-        </select>
-      </div>
-      <div class="search-group">
-        <label>المصدر</label>
-        <input id="f-src" type="text" class="search-input" placeholder="ابحث..."/>
-      </div>
-      <div class="search-group">
-        <label>الحد الأدنى للسعر (د.ل)</label>
-        <input id="f-pmin" type="number" class="search-input" placeholder="0"/>
-      </div>
-      <div class="search-group">
-        <label>الحد الأقصى للسعر (د.ل)</label>
-        <input id="f-pmax" type="number" class="search-input" placeholder="∞"/>
-      </div>
-      <div class="search-group" style="justify-content:flex-end;flex-direction:row;align-items:flex-end;gap:.4rem;">
-        <button class="btn btn-primary" onclick="applyFilters()">🔍 بحث</button>
-        <button class="btn btn-secondary" onclick="resetFilters()">↺ إعادة</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- SOURCES NOTE -->
-  <div class="note">
-    <strong>منصات البحث المُستخدمة:</strong>
-    <div class="sources-list">
-      <span class="source-chip">🔵 السوق المفتوح (OpenSooq) — ly.opensooq.com</span>
-      <span class="source-chip">🟢 ليبوزل — libozzle.com</span>
-      <span class="source-chip">🟡 عقار ليبيا — aqarlibya.com</span>
-      <span class="source-chip">🟠 بهو ليبيا — bahu.ly</span>
-      <span class="source-chip">⚫ الكيخيا للعقارات بنغازي</span>
-    </div>
-    ⚠ جميع الأسعار بالدينار الليبي (د.ل) وتمثل إيجاراً شهرياً. بعض الإعلانات تشترط دفع 3–6 أشهر مقدماً.
-  </div>
-
-  <!-- ═══ BENGHAZI ═══ -->
-  <div class="city-header">🏙 بنغازي — المحلات التجارية للإيجار</div>
-  <div class="kpi-grid">
-    <div class="kpi-card featured">
-      <div class="kpi-icon">💰</div>
-      <div class="kpi-label">أدنى سعر مُرصود</div>
-      <div class="kpi-value" id="kpi-b-min">—</div>
-      <div class="kpi-unit">د.ل / شهر</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon">📊</div>
-      <div class="kpi-label">متوسط السوق</div>
-      <div class="kpi-value" id="kpi-b-avg">—</div>
-      <div class="kpi-unit">د.ل / شهر</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon">⭐</div>
-      <div class="kpi-label">أعلى سعر مُرصود</div>
-      <div class="kpi-value" id="kpi-b-max">—</div>
-      <div class="kpi-unit">د.ل / شهر</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon">📐</div>
-      <div class="kpi-label">أكبر مبنى مُدرج</div>
-      <div class="kpi-value" id="kpi-b-area">—</div>
-      <div class="kpi-unit">م²</div>
-    </div>
-  </div>
-
-  <div class="table-wrapper">
-    <div class="table-header">
-      <span class="table-header-title">📋 جدول مفصل — محلات بنغازي (بيانات موثقة)</span>
-      <div class="table-actions no-print">
-        <button class="btn btn-primary" style="padding:.35rem .8rem;font-size:.8rem;" onclick="openModal('benghazi')">➕ إضافة</button>
-        <button class="btn btn-info" style="padding:.35rem .8rem;font-size:.8rem;" onclick="printTable('benghazi')">🖨 طباعة</button>
-      </div>
-    </div>
-    <div style="overflow-x:auto;">
-      <table id="table-benghazi">
-        <thead>
-          <tr>
-            <th onclick="sortTable('table-benghazi',0)">#</th>
-            <th onclick="sortTable('table-benghazi',1)">الموقع / المنطقة</th>
-            <th onclick="sortTable('table-benghazi',2)">الشارع / التفاصيل</th>
-            <th onclick="sortTable('table-benghazi',3)">المساحة (م²)</th>
-            <th onclick="sortTable('table-benghazi',4)">الإيجار الشهري</th>
-            <th onclick="sortTable('table-benghazi',5)">سعر المتر</th>
-            <th>الفئة</th>
-            <th>المصدر</th>
-            <th class="no-print">إجراءات</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-benghazi"></tbody>
-      </table>
-    </div>
-    <div class="table-info" id="info-benghazi"></div>
-    <div class="pagination" id="pag-benghazi"></div>
-  </div>
-
-  <!-- Benghazi District Map -->
-  <div class="kpi-section-title">خريطة الأسعار — مناطق بنغازي</div>
-  <div class="district-grid">
-    <div class="district-card high"><div class="district-name">🔴 فينيسيا 1 و2</div><div class="district-range">3,000 – 8,000 د.ل</div><div class="district-desc">منطقة فاخرة حيوية — شارع رئيسي مزدوج — مطلوب 3 أشهر مقدم</div></div>
-    <div class="district-card high"><div class="district-name">🔴 شارع الوكالات</div><div class="district-range">3,000 – 6,000 د.ل</div><div class="district-desc">أرقى الشوارع التجارية في بنغازي — ملابس وإلكترونيات</div></div>
-    <div class="district-card medium"><div class="district-name">🟡 الفويهات</div><div class="district-range">1,500 – 4,000 د.ل</div><div class="district-desc">حي راقٍ — مطاعم وكافيهات ومحلات أزياء</div></div>
-    <div class="district-card medium"><div class="district-name">🟡 الهواري</div><div class="district-range">1,200 – 3,000 د.ل</div><div class="district-desc">منطقة تجارية نشطة — مركز المدينة الموسع</div></div>
-    <div class="district-card medium"><div class="district-name">🟡 الليثي</div><div class="district-range">800 – 2,000 د.ل</div><div class="district-desc">منطقة شعبية نشطة — مقسمات هواتف وإلكترونيات</div></div>
-    <div class="district-card low"><div class="district-name">🟢 بنغازي سنتر</div><div class="district-range">600 – 1,500 د.ل</div><div class="district-desc">قلب المدينة — أسعار اقتصادية — متنوع الأنشطة</div></div>
-  </div>
-  <div class="analysis-box">
-    <h4>📊 تحليل سوق بنغازي:</h4>
-    <ul>
-      <li>بنغازي تُسجل أسعاراً أقل من طرابلس بنسبة 40%–60% للمساحة المماثلة في المناطق المتوسطة.</li>
-      <li>منطقة فينيسيا وشارع الوكالات تُمثلان ذروة الطلب والأسعار في السوق البنغازي.</li>
-      <li>المساحات الكبيرة (+300 م²) تحقق سعر متر أقل نسبياً مع إيجار إجمالي مرتفع.</li>
-      <li>معظم الملاك يشترطون 3 أشهر مقدماً للمحلات الممتازة.</li>
-      <li>أسعار شارع الوكالات ترتفع 300%+ مقارنة بالأسعار اقتصادية في وسط المدينة.</li>
-    </ul>
-  </div>
-  <hr class="divider"/>
-
-  <!-- ═══ TRIPOLI ═══ -->
-  <div class="city-header">🏛 طرابلس — المحلات التجارية للإيجار</div>
-  <div class="kpi-grid">
-    <div class="kpi-card featured">
-      <div class="kpi-icon">💰</div>
-      <div class="kpi-label">أدنى سعر مُرصود</div>
-      <div class="kpi-value" id="kpi-t-min">—</div>
-      <div class="kpi-unit">د.ل / شهر</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon">📊</div>
-      <div class="kpi-label">متوسط السوق</div>
-      <div class="kpi-value" id="kpi-t-avg">—</div>
-      <div class="kpi-unit">د.ل / شهر</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon">⭐</div>
-      <div class="kpi-label">أعلى سعر مُرصود</div>
-      <div class="kpi-value" id="kpi-t-max">—</div>
-      <div class="kpi-unit">د.ل / شهر</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon">📐</div>
-      <div class="kpi-label">أكبر مبنى مُدرج</div>
-      <div class="kpi-value" id="kpi-t-area">—</div>
-      <div class="kpi-unit">م²</div>
-    </div>
-  </div>
-
-  <div class="table-wrapper">
-    <div class="table-header">
-      <span class="table-header-title">📋 جدول مفصل — محلات طرابلس (بيانات موثقة)</span>
-      <div class="table-actions no-print">
-        <button class="btn btn-primary" style="padding:.35rem .8rem;font-size:.8rem;" onclick="openModal('tripoli')">➕ إضافة</button>
-        <button class="btn btn-info" style="padding:.35rem .8rem;font-size:.8rem;" onclick="printTable('tripoli')">🖨 طباعة</button>
-      </div>
-    </div>
-    <div style="overflow-x:auto;">
-      <table id="table-tripoli">
-        <thead>
-          <tr>
-            <th onclick="sortTable('table-tripoli',0)">#</th>
-            <th onclick="sortTable('table-tripoli',1)">الموقع / المنطقة</th>
-            <th onclick="sortTable('table-tripoli',2)">الشارع / التفاصيل</th>
-            <th onclick="sortTable('table-tripoli',3)">المساحة (م²)</th>
-            <th onclick="sortTable('table-tripoli',4)">الإيجار الشهري</th>
-            <th onclick="sortTable('table-tripoli',5)">سعر المتر</th>
-            <th>الفئة</th>
-            <th>المصدر</th>
-            <th class="no-print">إجراءات</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-tripoli"></tbody>
-      </table>
-    </div>
-    <div class="table-info" id="info-tripoli"></div>
-    <div class="pagination" id="pag-tripoli"></div>
-  </div>
-
-  <!-- Tripoli District Map -->
-  <div class="kpi-section-title">خريطة الأسعار — مناطق طرابلس</div>
-  <div class="district-grid">
-    <div class="district-card high"><div class="district-name">🔴 شارع جرابة</div><div class="district-range">4,000 – 20,000 د.ل</div><div class="district-desc">أسمى شوارع طرابلس التجارية — مطاعم ومحلات راقية</div></div>
-    <div class="district-card high"><div class="district-name">🔴 المدينة السياحية</div><div class="district-range">5,000 – 15,000 د.ل</div><div class="district-desc">ترتفع على الحرف — مركزية ومطاعم ومحلات متنوعة</div></div>
-    <div class="district-card high"><div class="district-name">🔴 طريق المطار</div><div class="district-range">2,500 – 10,000 د.ل</div><div class="district-desc">حركة مرور كثيفة — مناسب للمحلات والخدمات</div></div>
-    <div class="district-card medium"><div class="district-name">🟡 عين زارة</div><div class="district-range">2,000 – 7,000 د.ل</div><div class="district-desc">حي راقٍ — سيارات وإدارات ومحلات</div></div>
-    <div class="district-card medium"><div class="district-name">🟡 حي الأندلس</div><div class="district-range">2,000 – 6,000 د.ل</div><div class="district-desc">نشاط تجاري متوسط — سكني تجاري مختلط</div></div>
-    <div class="district-card medium"><div class="district-name">🟡 الغلة</div><div class="district-range">2,000 – 6,000 د.ل</div><div class="district-desc">محلات ومعارض تجارية نشطة</div></div>
-    <div class="district-card medium"><div class="district-name">🟡 الخضراء</div><div class="district-range">1,500 – 6,000 د.ل</div><div class="district-desc">شوارع تجارية طويلة متعددة الأنشطة</div></div>
-    <div class="district-card low"><div class="district-name">🟢 سوق الجمعة</div><div class="district-range">1,500 – 4,000 د.ل</div><div class="district-desc">نشاط تجاري حيوي جداً — وسط شعبي</div></div>
-    <div class="district-card low"><div class="district-name">🟢 المدينة القديمة</div><div class="district-range">800 – 2,500 د.ل</div><div class="district-desc">السوق القديم والبازارات التراثية</div></div>
-    <div class="district-card low"><div class="district-name">🟢 الدريبي</div><div class="district-range">800 – 2,000 د.ل</div><div class="district-desc">أسعار اقتصادية — متاجر في محيط الجمعة</div></div>
-  </div>
-  <div class="analysis-box">
-    <h4>📊 تحليل سوق طرابلس:</h4>
-    <ul>
-      <li>طرابلس تُسجل أسعاراً أعلى عموماً من بنغازي بحكم كونها العاصمة ومركز الاقتصاد.</li>
-      <li>شارع جرابة يُعد الأول والأكثر طلباً من الناحية التجارية.</li>
-      <li>الأسعار واسعة جداً: من 800 د.ل للمحل الصغير إلى 20,000 د.ل للمحل الكبير جداً.</li>
-      <li>المطار (جرابة، الساحة، رارس) في ارتفاع مستمر مع عودة الاستثمارات.</li>
-      <li>الطلب على المساحات الكبيرة (300+ م²) في ارتفاع مستمر مع عودة المراكز التجارية.</li>
-    </ul>
-  </div>
-  <hr class="divider"/>
-
-  <!-- COMPARISON — DYNAMIC -->
-  <div class="comp-section">
-    <h3>⚖ مقارنة شاملة: بنغازي مقابل طرابلس <span class="live-badge">⟳ حي</span></h3>
-    <h4 style="color:var(--primary);margin-bottom:.8rem;font-size:.9rem;">📊 متوسط أسعار الإيجار الشهري حسب الدرجة — محسوب من البيانات الفعلية</h4>
-    <table class="comp-table" id="comp-table-main">
-      <thead>
-        <tr>
-          <th>الدرجة</th>
-          <th>بنغازي (د.ل)</th>
-          <th>طرابلس (د.ل)</th>
-          <th>الفارق التقريبي</th>
-        </tr>
-      </thead>
-      <tbody id="comp-tbody"></tbody>
-    </table>
-  </div>
-
-  <!-- FACTORS — DYNAMIC SUMMARY -->
-  <div class="factors-section">
-    <h3>⚖ العوامل المؤثرة في السعر <span class="live-badge">⟳ حي</span></h3>
-    <table class="comp-table">
-      <thead>
-        <tr>
-          <th>العامل</th>
-          <th>الأثر في بنغازي</th>
-          <th>الأثر في طرابلس</th>
-          <th>الدرجة</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>الموقع على الشارع الرئيسي</td><td>+100% – +300%</td><td>+150% – +400%</td><td>⭐⭐⭐⭐⭐ مرتفع جداً</td></tr>
-        <tr><td>المساحة (لكل إضافة 50م²)</td><td>+20% – +50%</td><td>+30% – +80%</td><td>⭐⭐⭐⭐ مرتفع</td></tr>
-        <tr><td>التشطيب والتجهيز</td><td>+20% – +60%</td><td>+30% – +80%</td><td>⭐⭐⭐⭐ مرتفع</td></tr>
-        <tr><td>التكييف والخدمات</td><td>+10% – +20%</td><td>+15% – +30%</td><td>⭐⭐⭐ متوسط</td></tr>
-        <tr><td>مواقف السيارات</td><td>+15% – +30%</td><td>+20% – +50%</td><td>⭐⭐⭐ متوسط</td></tr>
-        <tr><td>قرب المراكز التجارية</td><td>+20% – +60%</td><td>+30% – +80%</td><td>⭐⭐⭐⭐ مرتفع</td></tr>
-        <tr><td>وجود مصعد / مركز تجاري</td><td>+10% – +25%</td><td>+20% – +40%</td><td>⭐⭐ متوسط</td></tr>
-      </tbody>
-    </table>
-    <div class="factors-live-summary">
-      <h4>📈 ملخص التأثير الفعلي من البيانات الحية:</h4>
-      <div class="factors-stats-grid" id="factors-live-grid"></div>
-    </div>
-  </div>
-
-  <!-- CHARTS -->
-  <div class="kpi-section-title">📊 لوحة المؤشرات البيانية</div>
-  <div class="charts-section">
-    <div class="charts-grid">
-      <div class="chart-card">
-        <h3>🏙 متوسط سعر الإيجار حسب المدينة</h3>
-        <div class="chart-container"><canvas id="chart-city"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>🏷 توزيع المحلات حسب الفئة</h3>
-        <div class="chart-container"><canvas id="chart-tier"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>📍 توزيع الأسعار في بنغازي</h3>
-        <div class="chart-container"><canvas id="chart-benghazi-dist"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>📍 توزيع الأسعار في طرابلس</h3>
-        <div class="chart-container"><canvas id="chart-tripoli-dist"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>📐 متوسط سعر المتر المربع</h3>
-        <div class="chart-container"><canvas id="chart-sqm"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>📢 عدد السجلات لكل مدينة</h3>
-        <div class="chart-container"><canvas id="chart-count"></canvas></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONCLUSION -->
-  <div class="kpi-section-title">✅ الخلاصة والتوصيات 2025/2026</div>
-  <div class="comp-section">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1rem;">
-      <div>
-        <h4 style="color:var(--primary);margin-bottom:.7rem;">🏙 بنغازي</h4>
-        <ul style="padding-right:1.2rem;font-size:.88rem;color:var(--gray-700);line-height:2;">
-          <li>الحد الأدنى: 600 د.ل (محل 30م² وسط المدينة)</li>
-          <li>المتوسط: 1,500 – 3,500 د.ل</li>
-          <li>الفئة الممتازة: 5,000 – 8,000 د.ل</li>
-          <li>أفضل استثمار: فينيسيا، شارع الوكالات</li>
-        </ul>
-      </div>
-      <div>
-        <h4 style="color:#0369a1;margin-bottom:.7rem;">🏛 طرابلس</h4>
-        <ul style="padding-right:1.2rem;font-size:.88rem;color:var(--gray-700);line-height:2;">
-          <li>الحد الأدنى: 800 د.ل (محل صغير الدريبي)</li>
-          <li>المتوسط: 2,500 – 6,000 د.ل</li>
-          <li>الفئة الممتازة: 8,000 – 20,000 د.ل</li>
-          <li>أفضل استثمار: شارع جرابة، المدينة السياحية</li>
-        </ul>
-      </div>
-    </div>
-    <div class="note">📈 <strong>الاتجاه العام:</strong> يشهد السوق العقاري التجاري في كلتا المدينتين ارتفاعاً تدريجياً مع استمرار تحسن الوضع الأمني وعودة الاستثمارات. يُنصح بالتواصل المباشر مع وسطاء عقاريين موثوقين للحصول على أدق الأسعار الآنية.</div>
+      <button type="button" class="cam-btn" id="cameraBtn"><span id="cameraIcon"></span><span class="txt">مسح بالكاميرا</span></button>
+    </form>
+    <p class="scan-help">مسح باركود موجود يزيد كميته تلقائيًا — ومسح باركود جديد يفتح نموذج إضافة صنف جاهزًا للتعبئة.</p>
   </div>
 </div>
 
-<!-- FOOTER -->
-<footer class="bfp-footer">
-  <div class="footer-logo-text">BFP — Brandzo Hub 2026</div>
-  <div class="footer-text">
-    تقرير تحوير مستودعات 155 لرفع الكفاءة التشغيلية والسعة التخزينية<br/>
-    إعداد: Brandzo Hub 2026 (BFP) • تاريخ التقرير: يونيو 2026<br/>
-    هذا التقرير للأغراض البحثية والاستشارية فقط
-  </div>
-  <div class="footer-sources">
-    <a href="https://ly.opensooq.com" target="_blank" class="footer-source-link">OpenSooq Libya</a>
-    <span>|</span>
-    <a href="https://libozzle.com" target="_blank" class="footer-source-link">Libozzle</a>
-    <span>|</span>
-    <a href="https://aqarlibya.com" target="_blank" class="footer-source-link">Aqar Libya</a>
-    <span>|</span>
-    <a href="https://bahu.ly" target="_blank" class="footer-source-link">Bahu.ly</a>
-  </div>
-</footer>
+<main class="wrap">
 
+  <section class="stats">
+    <div class="stats-row">
+      <div class="stat-card"><span class="stat-ico" id="icoTag"></span><div><div class="stat-value" id="statItems">0</div><div class="stat-label">عدد الأصناف</div></div></div>
+      <div class="stat-card"><span class="stat-ico" id="icoLayers"></span><div><div class="stat-value" id="statQty">0</div><div class="stat-label">إجمالي الكمية</div></div></div>
+      <div class="stat-card"><span class="stat-ico" id="icoBox"></span><div><div class="stat-value" id="statBoxes">0</div><div class="stat-label">إجمالي الصناديق</div></div></div>
+      <div class="stat-card"><span class="stat-ico" id="icoBuilding"></span><div><div class="stat-value" id="statBrands">0</div><div class="stat-label">عدد البرندات</div></div></div>
+    </div>
+  </section>
+
+  <section class="toolbar">
+    <div class="search-field">
+      <span class="ico" id="searchIcon"></span>
+      <input id="searchInput" type="text" placeholder="ابحث بالباركود أو اسم الصنف أو البرند…">
+    </div>
+    <select class="filter-select" id="brandFilter"><option value="">كل البرندات</option></select>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="addBtn"><span id="icoPlus"></span> إضافة صنف</button>
+    <button class="btn btn-outline" id="importBtn"><span id="icoImport"></span> استيراد Excel</button>
+    <button class="btn btn-outline" id="exportBtn"><span id="icoExport"></span> تصدير Excel</button>
+    <button class="btn btn-ghost-danger btn-sm" id="clearAllBtn">مسح الكل</button>
+    <input type="file" id="importFile" accept=".xlsx,.xls,.csv" hidden>
+  </section>
+
+  <div class="table-wrap">
+    <table class="inv-table">
+      <thead>
+        <tr>
+          <th class="sortable" data-key="barcode">الباركود <span class="sort-arrow"></span></th>
+          <th class="sortable" data-key="name">اسم الصنف <span class="sort-arrow"></span></th>
+          <th class="sortable" data-key="unit">الوحدة <span class="sort-arrow"></span></th>
+          <th class="sortable" data-key="qty">الكمية <span class="sort-arrow"></span></th>
+          <th class="sortable" data-key="boxes">عدد الصناديق <span class="sort-arrow"></span></th>
+          <th>ملاحظة</th>
+          <th class="sortable" data-key="brand">اسم البرند <span class="sort-arrow"></span></th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="card-list" id="cardList"></div>
+
+  <div class="empty-state" id="emptyState" hidden>
+    <svg class="empty-bars" width="160" height="56" viewBox="0 0 160 56" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="0" y="0" width="4" height="56"/><rect x="8" y="0" width="2" height="56"/><rect x="14" y="0" width="7" height="56"/><rect x="25" y="0" width="2" height="56"/><rect x="31" y="0" width="4" height="56"/><rect x="39" y="0" width="2" height="56"/><rect x="45" y="0" width="9" height="56"/><rect x="58" y="0" width="4" height="56"/><rect x="66" y="0" width="2" height="56"/><rect x="72" y="0" width="6" height="56"/><rect x="82" y="0" width="2" height="56"/><rect x="88" y="0" width="4" height="56"/><rect x="96" y="0" width="2" height="56"/><rect x="102" y="0" width="7" height="56"/><rect x="113" y="0" width="2" height="56"/><rect x="119" y="0" width="4" height="56"/><rect x="127" y="0" width="2" height="56"/><rect x="133" y="0" width="6" height="56"/><rect x="143" y="0" width="2" height="56"/><rect x="149" y="0" width="4" height="56"/><rect x="157" y="0" width="2" height="56"/>
+    </svg>
+    <h3>جرد فارغ تمامًا</h3>
+    <p>ابدأ بمسح أول باركود من وحدة المسح بالأعلى، أو أضِف صنفًا يدويًا، أو استورد شيت Excel جاهز.</p>
+    <button class="btn btn-primary" id="emptyAddBtn"><span></span> إضافة أول صنف</button>
+  </div>
+
+  <div class="no-results" id="noResults" hidden>
+    <h3>لا نتائج مطابقة</h3>
+    <p>جرّب تعديل كلمة البحث أو إزالة فلتر البرند.</p>
+  </div>
+
+</main>
+
+<footer class="app-footer">Brandzo Hub — نظام جرد داخلي · البيانات محفوظة على حسابك ويمكن نسخها احتياطيًا في أي وقت عبر تصدير Excel</footer>
+
+<!-- ============ Item Modal ============ -->
+<div class="modal" id="itemModal">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel">
+    <div class="modal-head">
+      <h2 id="modalTitle">إضافة صنف جديد</h2>
+      <button class="modal-close" data-close aria-label="إغلاق"></button>
+    </div>
+    <form id="itemForm">
+      <div class="form-grid">
+        <div class="field span-2">
+          <label for="formBarcode">الباركود</label>
+          <input id="formBarcode" type="text" dir="ltr" style="text-align:left;font-family:var(--font-mono)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required>
+        </div>
+        <div class="field span-2">
+          <label for="formName">اسم الصنف</label>
+          <input id="formName" type="text" required>
+        </div>
+        <div class="field">
+          <label for="formUnit">الوحدة</label>
+          <input id="formUnit" type="text" list="unitsList" placeholder="قطعة">
+          <datalist id="unitsList">
+            <option value="قطعة"><option value="كرتون"><option value="كيلوغرام"><option value="غرام"><option value="لتر"><option value="مليلتر"><option value="علبة"><option value="دستة"><option value="طقم"><option value="زوج"><option value="رزمة">
+          </datalist>
+        </div>
+        <div class="field">
+          <label for="formBrand">اسم البرند</label>
+          <input id="formBrand" type="text" list="brandsList" placeholder="مثال: Atlas Sport">
+          <datalist id="brandsList"></datalist>
+        </div>
+        <div class="field">
+          <label for="formQty">الكمية</label>
+          <input id="formQty" type="number" min="0" step="1" value="0" dir="ltr" style="text-align:left">
+        </div>
+        <div class="field">
+          <label for="formBoxes">عدد الصناديق</label>
+          <input id="formBoxes" type="number" min="0" step="1" value="0" dir="ltr" style="text-align:left">
+        </div>
+        <div class="field span-2">
+          <label for="formNote">ملاحظة <span class="hint">(اختياري)</span></label>
+          <textarea id="formNote" placeholder="أي تفاصيل إضافية عن الصنف…"></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost-danger push-start" id="deleteFromModalBtn" hidden>حذف الصنف</button>
+        <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+        <button type="submit" class="btn btn-primary">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ Camera Modal ============ -->
+<div class="modal" id="cameraModal">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel narrow">
+    <div class="modal-head">
+      <h2>مسح بالكاميرا</h2>
+      <button class="modal-close" id="cameraCloseBtn" aria-label="إغلاق"></button>
+    </div>
+    <div style="padding:18px;">
+      <div id="camGate" class="cam-gate">
+        <span class="cam-gate-icon" id="camGateIcon"></span>
+        <h3 id="camGateTitle">السماح باستخدام الكاميرا</h3>
+        <p id="camGateText">يحتاج Brandzo Hub إلى إذن الوصول إلى كاميرا جهازك لمسح الباركود مباشرة بدل الكتابة اليدوية.</p>
+        <div class="cam-gate-note"><span id="camGateNoteIcon"></span><span>لا يتم تسجيل أو حفظ أي صورة أو فيديو — تُستخدم الكاميرا فقط للحظة قراءة الباركود.</span></div>
+        <button type="button" class="btn btn-primary" id="camAllowBtn">السماح وفتح الكاميرا</button>
+      </div>
+      <div id="scanViewport" hidden><div class="cam-frame"></div></div>
+      <p class="cam-hint" id="camHint" hidden>وجّه الكاميرا نحو الباركود داخل الإطار — سيتم رصده تلقائيًا.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Import Modal ============ -->
+<div class="modal" id="importModal">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel narrow">
+    <div class="modal-head">
+      <h2>استيراد من Excel</h2>
+      <button class="modal-close" data-close aria-label="إغلاق"></button>
+    </div>
+    <p class="import-summary" id="importSummary"></p>
+    <div class="import-options">
+      <label class="import-opt">
+        <input type="radio" name="importMode" value="merge" checked>
+        <span><span class="opt-title">دمج وتحديث</span><span class="opt-desc">تحديث الأصناف المطابقة بنفس الباركود + إضافة كل صنف جديد</span></span>
+      </label>
+      <label class="import-opt">
+        <input type="radio" name="importMode" value="add-new">
+        <span><span class="opt-title">إضافة الجديد فقط</span><span class="opt-desc">تجاهل أي باركود موجود مسبقًا، وإضافة الأصناف الجديدة فقط</span></span>
+      </label>
+      <label class="import-opt">
+        <input type="radio" name="importMode" value="replace">
+        <span><span class="opt-title">استبدال الجرد بالكامل</span><span class="opt-desc">حذف كل البيانات الحالية، واستبدالها بمحتوى الملف</span></span>
+      </label>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn btn-outline" id="importCancelBtn">إلغاء</button>
+      <button type="button" class="btn btn-primary" id="importConfirmBtn">تنفيذ الاستيراد</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Confirm Modal ============ -->
+<div class="modal" id="confirmModal">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel narrow">
+    <div class="modal-head">
+      <h2>تأكيد</h2>
+      <button class="modal-close" data-close aria-label="إغلاق"></button>
+    </div>
+    <p id="confirmMessage"></p>
+    <div class="modal-foot">
+      <button type="button" class="btn btn-outline" data-close>إلغاء</button>
+      <button type="button" class="btn btn-ghost-danger" id="confirmYes" style="background:var(--red);color:#fff;">تأكيد الحذف</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 <script>
-/* ══════════════════════════════════
-   INITIAL DATA
-══════════════════════════════════ */
-const INIT_DATA = {
-  benghazi: [
-    {loc:"بنغازي — سنتر",street:"مقابل براندز سنتر",area:30,price:600,pm2:20,tier:"tier-eco",src:"ليبوزل"},
-    {loc:"بنغازي — سنتر",street:"مقابل براندز سنتر (مكتبي مفروش)",area:0,price:600,pm2:0,tier:"tier-eco",src:"ليبوزل"},
-    {loc:"بنغازي — طريق المطار",street:"بجوار قاعة الأميرة",area:220,price:0,pm2:0,tier:"tier-mid",src:"ليبوزل"},
-    {loc:"بنغازي — فينيسيا 2",street:"قبل دار الشفاء — مقابل هنجر بنغازي",area:390,price:6000,pm2:15.4,tier:"tier-premium",src:"ليبوزل"},
-    {loc:"بنغازي — شارع الوكالات",street:"الشارع التجاري الرئيسي",area:375,price:5000,pm2:13.3,tier:"tier-premium",src:"OpenSooq"},
-    {loc:"بنغازي — الليثي",street:"شارع مقسمات الهواتف",area:80,price:1000,pm2:12,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — الفويهات",street:"على الشارع الرئيسي",area:100,price:2500,pm2:25,tier:"tier-mid",src:"OpenSooq"},
-    {loc:"بنغازي — الهواري",street:"المنطقة التجارية",area:90,price:2000,pm2:22,tier:"tier-mid",src:"OpenSooq"},
-    {loc:"بنغازي — الهواري",street:"على الرئيسي",area:80,price:1500,pm2:18,tier:"tier-mid",src:"OpenSooq"},
-    {loc:"بنغازي — طلب إيجار",street:"منطقة حيوية (مطلوب، مقدم 6 أشهر)",area:300,price:8000,pm2:26.7,tier:"tier-premium",src:"عقار ليبيا"},
-    {loc:"بنغازي — سنتر",street:"روما — محل حيوي",area:120,price:7000,pm2:58.3,tier:"tier-premium",src:"عقار ليبيا"},
-    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — سيا ماي هوم",area:85,price:5000,pm2:58.8,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — الحمال",street:"شارع الرئيسي — مولتي",area:80,price:4000,pm2:50,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — الهاجر",street:"شارع الرئيسي — طرمول الماس",area:75,price:3500,pm2:46.7,tier:"tier-mid",src:"مصادر متاحة"},
-    {loc:"بنغازي — سنتر",street:"شارع الصقر — ساو داون",area:62,price:4750,pm2:76.6,tier:"tier-premium",src:"عقار ليبيا"},
-    {loc:"بنغازي — سنتر",street:"شارع الصقر — دوحال مول",area:62,price:2600,pm2:41.9,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — سنتر",street:"شارع الهاجر — الامرة",area:55,price:3050,pm2:55.5,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — ديار سيوطر",area:40,price:2000,pm2:50,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — الحل للساعات",area:73,price:4000,pm2:54.8,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — فارح للعطور",area:26,price:1000,pm2:38.5,tier:"tier-eco",src:"عقار ليبيا"},
-    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — الحل للساعات",area:25,price:2000,pm2:80,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — مجوهرات اور",area:43,price:6000,pm2:139.5,tier:"tier-premium",src:"عقار ليبيا"},
-    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — مجوهرات الاسا",area:28,price:5000,pm2:178.6,tier:"tier-premium",src:"عقار ليبيا"},
-    {loc:"بنغازي — فينيسيا",street:"شارع الرئيسي — الاتحاد للمجوهرات",area:24,price:5000,pm2:208.3,tier:"tier-premium",src:"عقار ليبيا"},
-    {loc:"بنغازي — سنتر",street:"مقابل مول — الحجاجات",area:75,price:7500,pm2:100,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — سنتر",street:"مقابل مول — الاتحاد",area:75,price:7500,pm2:100,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — سنتر",street:"مقابل مول — مساحة",area:75,price:7500,pm2:100,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — سنتر",street:"مقابل مول — اويا",area:75,price:7500,pm2:100,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — سنتر",street:"مقابل مول — سعود",area:120,price:20000,pm2:166.7,tier:"tier-premium",src:"عقار ليبيا"},
-    {loc:"بنغازي — سلمان",street:"موقع محدد — للاستثمار",area:375,price:30000,pm2:80,tier:"tier-premium",src:"عقار ليبيا"},
-    {loc:"بنغازي — مركز المدينة",street:"شارع عروبة",area:72,price:4000,pm2:55.6,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — مركز المدينة",street:"شارع عروبة — صاصا",area:49,price:3000,pm2:61.2,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — سدرا الرحمة",street:"موقع محدد",area:100,price:6000,pm2:60,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — الحمال",street:"شارع مولتي",area:80,price:4000,pm2:50,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — السلمانية",street:"للوقوف",area:32,price:1800,pm2:56.3,tier:"tier-eco",src:"عقار ليبيا"},
-    {loc:"بنغازي — مركز المدينة",street:"شارع عبدالحليل",area:35,price:5000,pm2:142.9,tier:"tier-premium",src:"عقار ليبيا"},
-    {loc:"بنغازي — الواحة",street:"شارع 204 — مقابل الجامعة",area:450,price:30000,pm2:66.7,tier:"tier-premium",src:"عقار ليبيا"},
-    {loc:"بنغازي — السد البغدادي",street:"مقابل اول",area:35,price:3000,pm2:85.7,tier:"tier-mid",src:"عقار ليبيا"},
-    {loc:"بنغازي — سنتر",street:"مقابل مول — B&G",area:75,price:7500,pm2:100,tier:"tier-premium",src:"عقار ليبيا"},
-    {loc:"بنغازي — سنتر",street:"مقابل مول — مطعم محاجر",area:600,price:30000,pm2:50,tier:"tier-premium",src:"عقار ليبيا"}
-  ],
-  tripoli: [
-    {loc:"طرابلس — سوق الجمعة",street:"الطابق الأرضي — شهري",area:115,price:3000,pm2:26.1,tier:"tier-mid",src:"OpenSooq"},
-    {loc:"طرابلس — شارع جرابة",street:"شارع جرابة التجاري الرئيسي",area:25,price:1000,pm2:40,tier:"tier-eco",src:"OpenSooq"},
-    {loc:"طرابلس — شارع جرابة",street:"تكييف مركزي — مصعد — سنوي",area:550,price:4000,pm2:7.3,tier:"tier-mid",src:"OpenSooq"},
-    {loc:"طرابلس — شارع جرابة",street:"موقف سيارات — مطعم سارة — سنوي",area:150,price:20000,pm2:133.3,tier:"tier-premium",src:"OpenSooq"},
-    {loc:"طرابلس — عين زارة",street:"مكتبي راسمي حاري",area:60,price:2250,pm2:37.5,tier:"tier-mid",src:"OpenSooq"},
-    {loc:"طرابلس — الغلة",street:"مركز تجاري حيوي",area:250,price:4500,pm2:18,tier:"tier-mid",src:"OpenSooq"},
-    {loc:"طرابلس — الخضراء",street:"شارع الرئيسي طويل",area:100,price:5000,pm2:50,tier:"tier-premium",src:"عقار ليبيا"},
-    {loc:"طرابلس — طريق المطار",street:"شارع رئيسي وحركة عالية",area:120,price:6250,pm2:52,tier:"tier-premium",src:"OpenSooq"},
-    {loc:"طرابلس — المدينة السياحية",street:"شارع الواحدة — الساحة الحرة",area:200,price:10000,pm2:50,tier:"tier-premium",src:"bahu.ly"},
-    {loc:"طرابلس — عين زارة–جاري",street:"سكني تجاري مختلط",area:80,price:3250,pm2:40.6,tier:"tier-mid",src:"OpenSooq"},
-    {loc:"طرابلس — الدريبي",street:"شارع رئيسي حاري",area:50,price:1500,pm2:30,tier:"tier-eco",src:"عقار ليبيا"},
-    {loc:"طرابلس — المدينة القديمة",street:"السوق القديم والبازارات",area:60,price:1650,pm2:27.5,tier:"tier-eco",src:"عقار ليبيا"},
-    {loc:"طرابلس — حي الأندلس",street:"على الطريق الفرعي",area:120,price:4500,pm2:37.5,tier:"tier-mid",src:"bahu.ly"},
-    {loc:"طرابلس — دهماني–جاري",street:"سكني تجاري",area:64,price:1850,pm2:28.9,tier:"tier-eco",src:"OpenSooq"},
-    {loc:"طرابلس — معرض للإيجار",street:"الغلة / عين زارة",area:640,price:15000,pm2:23.4,tier:"tier-premium",src:"OpenSooq"},
-    {loc:"طرابلس — شارع جرابة",street:"طابق علوي — مطعم كبير",area:200,price:12000,pm2:60,tier:"tier-premium",src:"OpenSooq"},
-    {loc:"طرابلس — المدينة السياحية",street:"رارس — الساحة السياحية",area:180,price:14000,pm2:77.8,tier:"tier-premium",src:"bahu.ly"},
-    {loc:"طرابلس — طريق المطار",street:"محطة وقود — محلات جانبية",area:90,price:5500,pm2:61.1,tier:"tier-premium",src:"OpenSooq"},
-    {loc:"طرابلس — سوق الجمعة",street:"شارع علي جنبي — دكان",area:40,price:1800,pm2:45,tier:"tier-eco",src:"OpenSooq"},
-    {loc:"طرابلس — عين زارة",street:"شارع الرئيسي — طابق ارضي",area:70,price:3500,pm2:50,tier:"tier-mid",src:"OpenSooq"},
-    {loc:"طرابلس — الخضراء",street:"شارع المشير — أمام كورنيش",area:50,price:4000,pm2:80,tier:"tier-premium",src:"عقار ليبيا"},
-    {loc:"طرابلس — الغلة",street:"مركز تجاري حيوي — طابق ثاني",area:160,price:3500,pm2:21.9,tier:"tier-mid",src:"OpenSooq"},
-    {loc:"طرابلس — حي الأندلس",street:"شارع الرئيسي حاري",area:85,price:3800,pm2:44.7,tier:"tier-mid",src:"bahu.ly"},
-    {loc:"طرابلس — دهماني",street:"قريب سوق الجمعة",area:55,price:2200,pm2:40,tier:"tier-mid",src:"OpenSooq"},
-    {loc:"طرابلس — الدريبي",street:"بالقرب من السوق",area:35,price:900,pm2:25.7,tier:"tier-eco",src:"عقار ليبيا"},
-    {loc:"طرابلس — شارع جرابة",street:"طابق ارضي — للتجزئة",area:80,price:8000,pm2:100,tier:"tier-premium",src:"OpenSooq"},
-    {loc:"طرابلس — المدينة القديمة",street:"بازار السوق القديم",area:25,price:1200,pm2:48,tier:"tier-eco",src:"عقار ليبيا"},
-    {loc:"طرابلس — طريق المطار",street:"واجهة على الطريق",area:100,price:7000,pm2:70,tier:"tier-premium",src:"OpenSooq"},
-    {loc:"طرابلس — سوق الجمعة",street:"طابق ارضي مباشر",area:85,price:2500,pm2:29.4,tier:"tier-mid",src:"OpenSooq"},
-    {loc:"طرابلس — عين زارة",street:"مجمع تجاري داخلي",area:40,price:2000,pm2:50,tier:"tier-mid",src:"عقار ليبيا"}
-  ]
-};
+(function(){
+"use strict";
 
-/* ══════════════════════════════════
-   STATE
-══════════════════════════════════ */
-let appData = {benghazi:[],tripoli:[]};
-let filteredData = {benghazi:[],tripoli:[]};
-let currentPage = {benghazi:1,tripoli:1};
-const PAGE_SIZE = 15;
-let _modalTable = null;
-let _editingRow = null;
-let _sortState = {};
-let charts = {};
-
-/* ══ STORAGE ══ */
-function saveStorage(){
-  try{localStorage.setItem('bfp_data_v8',JSON.stringify(appData));}catch(e){}
+/* ============ Helpers ============ */
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-function loadStorage(){
+function uid(){ return 'itm_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function num(v){ return Number(v) || 0; }
+
+/* ============ Icons ============ */
+const ICON_EDIT='<svg viewBox="0 0 20 20" width="15" height="15"><path d="M13.4 3.3l3.3 3.3L6 17.3l-4 1 1-4L13.4 3.3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+const ICON_TRASH='<svg viewBox="0 0 20 20" width="15" height="15"><path d="M4 6h12M8 6V4.5A1.5 1.5 0 019.5 3h1A1.5 1.5 0 0112 4.5V6m-7 0v10A1.5 1.5 0 006.5 17.5h7A1.5 1.5 0 0015 16V6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICON_CAMERA='<svg viewBox="0 0 20 20" width="18" height="18"><path d="M3 7a1.5 1.5 0 011.5-1.5h1.2l.8-1.3a1 1 0 01.85-.5h3.3a1 1 0 01.85.5l.8 1.3h1.2A1.5 1.5 0 0115 7v7a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 013 14V7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="9" cy="10.2" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+const ICON_IMPORT='<svg viewBox="0 0 20 20" width="15" height="15"><path d="M10 3v9m0 0l-3-3m3 3l3-3M4 14v1.5A1.5 1.5 0 005.5 17h9a1.5 1.5 0 001.5-1.5V14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICON_EXPORT='<svg viewBox="0 0 20 20" width="15" height="15"><path d="M10 12V3m0 0l-3 3m3-3l3 3M4 14v1.5A1.5 1.5 0 005.5 17h9a1.5 1.5 0 001.5-1.5V14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICON_PLUS='<svg viewBox="0 0 20 20" width="15" height="15"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
+const ICON_CLOSE='<svg viewBox="0 0 20 20" width="14" height="14"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+const ICON_CHECK='<svg viewBox="0 0 20 20" width="16" height="16"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICON_WARNING='<svg viewBox="0 0 20 20" width="16" height="16"><path d="M10 3l8.5 14.5H1.5L10 3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 8v4.2M10 14.6v.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+const ICON_BARCODE='<svg viewBox="0 0 20 20" width="18" height="18"><rect x="2" y="3" width="1.4" height="14" fill="currentColor"/><rect x="5" y="3" width="0.8" height="14" fill="currentColor"/><rect x="7" y="3" width="2" height="14" fill="currentColor"/><rect x="10.5" y="3" width="0.8" height="14" fill="currentColor"/><rect x="12.5" y="3" width="1.4" height="14" fill="currentColor"/><rect x="15.5" y="3" width="0.8" height="14" fill="currentColor"/><rect x="17.5" y="3" width="1.2" height="14" fill="currentColor"/></svg>';
+const ICON_SEARCH='<svg viewBox="0 0 20 20" width="15" height="15"><circle cx="8.5" cy="8.5" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12.5 12.5L17 17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+const ICON_TAG='<svg viewBox="0 0 20 20" width="18" height="18"><path d="M3 3h6l8 8-6 6-8-8V3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="7" cy="7" r="1.1" fill="currentColor"/></svg>';
+const ICON_BOX='<svg viewBox="0 0 20 20" width="18" height="18"><path d="M3 6.5L10 3l7 3.5M3 6.5V14l7 3.5M3 6.5L10 10m0 7.5L17 14V6.5M10 10v7.5M10 10l7-3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+const ICON_LAYERS='<svg viewBox="0 0 20 20" width="18" height="18"><path d="M10 3l7 3.5-7 3.5-7-3.5L10 3z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M3 10.5L10 14l7-3.5M3 14L10 17.5 17 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+const ICON_BUILDING='<svg viewBox="0 0 20 20" width="18" height="18"><path d="M4 17V4.5A1 1 0 015 3.5h6a1 1 0 011 1V17M4 17h13M12 17v-4h3v4M6.5 6.5h2M6.5 9.5h2M6.5 12.5h2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICON_SHIELD='<svg viewBox="0 0 20 20" width="14" height="14"><path d="M10 2.5l6 2.2v4.4c0 4-2.5 6.7-6 8.4-3.5-1.7-6-4.4-6-8.4V4.7l6-2.2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M7.3 10l1.8 1.8L13 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+$('#scanFieldIcon').innerHTML = ICON_BARCODE;
+$('#scanSubmitIcon').innerHTML = ICON_CHECK;
+$('#cameraIcon').innerHTML = ICON_CAMERA;
+$('#searchIcon').innerHTML = ICON_SEARCH;
+$('#icoPlus').innerHTML = ICON_PLUS;
+$('#icoImport').innerHTML = ICON_IMPORT;
+$('#icoExport').innerHTML = ICON_EXPORT;
+$('#icoTag').innerHTML = ICON_TAG;
+$('#icoLayers').innerHTML = ICON_LAYERS;
+$('#icoBox').innerHTML = ICON_BOX;
+$('#icoBuilding').innerHTML = ICON_BUILDING;
+$('#camGateIcon').innerHTML = ICON_CAMERA;
+$('#camGateNoteIcon').innerHTML = ICON_SHIELD;
+$$('.modal-close').forEach(b => b.innerHTML = ICON_CLOSE);
+$('#emptyAddBtn span').innerHTML = ICON_PLUS;
+
+/* ============ State ============ */
+let inventory = [];
+let filterText = '';
+let filterBrand = '';
+let sortKey = null, sortDir = 1;
+let editingId = null;
+let flashId = null;
+let lastScan = null;
+let storageAvailable = true;
+const STORAGE_KEY = 'brandzo-hub-inventory-v1';
+
+function seedDemoData(){
+  const now = Date.now();
+  return [
+    { id: uid(), barcode:'6291041500213', name:'زيت زيتون بكر ممتاز 1 لتر', unit:'قطعة', qty:42, boxes:3, brand:'Cedar & Co', note:'دفعة جديدة وصلت هذا الأسبوع', updatedAt:now },
+    { id: uid(), barcode:'6291041500220', name:'حذاء رياضي مقاس 42', unit:'زوج', qty:18, boxes:2, brand:'Atlas Sport', note:'', updatedAt:now },
+    { id: uid(), barcode:'6291041500237', name:'مفرش طاولة قطني', unit:'قطعة', qty:25, boxes:1, brand:'Nova Home', note:'مقاس 140×200 سم', updatedAt:now },
+    { id: uid(), barcode:'6291041500244', name:'عصير برتقال طبيعي 250مل', unit:'كرتون', qty:60, boxes:5, brand:'Layla Foods', note:'', updatedAt:now },
+    { id: uid(), barcode:'6291041500251', name:'سماعة بلوتوث لاسلكية', unit:'قطعة', qty:12, boxes:1, brand:'Borealis Tech', note:'ضمان سنة كاملة', updatedAt:now },
+  ];
+}
+
+/* ============ Persistence ============ */
+async function loadInventory(){
+  if(typeof window.storage === 'undefined'){
+    storageAvailable = false;
+    const badge = $('#storageBadge');
+    badge.classList.add('warn');
+    badge.innerHTML = '<span class="dot"></span> بلا حفظ تلقائي هنا — صدّر نسخة Excel لحفظ بياناتك';
+    inventory = seedDemoData();
+    return;
+  }
   try{
-    const s=localStorage.getItem('bfp_data_v8');
-    if(s){appData=JSON.parse(s);return true;}
-  }catch(e){}
-  return false;
+    const res = await window.storage.get(STORAGE_KEY, false);
+    inventory = (res && res.value) ? JSON.parse(res.value) : [];
+  }catch(e){
+    inventory = seedDemoData();
+    try{ await window.storage.set(STORAGE_KEY, JSON.stringify(inventory), false); }catch(e2){}
+    setTimeout(() => showToast('أهلًا بك في Brandzo Hub — هذه بيانات تجريبية، يمكنك مسحها من زر «مسح الكل»', 'info'), 500);
+  }
 }
-function clearStorage(){
-  if(!confirm('هل تريد مسح جميع البيانات من الصفحة بالكامل؟ لا يمكن التراجع عن هذا الإجراء.'))return;
-  localStorage.removeItem('bfp_data_v8');
-  appData={benghazi:[],tripoli:[]};
-  filteredData={benghazi:[],tripoli:[]};
-  renderAll();
-  toast('تم مسح جميع البيانات بالكامل 🗑️');
+let saveTimer = null;
+function queueSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveInventory, 350);
 }
-
-/* ══ RENDER ALL ══ */
-function renderAll(){
-  renderTable('benghazi');
-  renderTable('tripoli');
-  updateKPIs();
-  updateComparison();
-  updateFactorsLive();
-  updateCharts();
-  saveStorage();
+async function saveInventory(){
+  if(!storageAvailable) return;
+  try{ await window.storage.set(STORAGE_KEY, JSON.stringify(inventory), false); }
+  catch(e){ console.error('save failed', e); showToast('تعذر حفظ البيانات تلقائيًا', 'error'); }
 }
 
-function tierLabel(t){
-  if(t==='tier-premium')return'فاخر';
-  if(t==='tier-mid')return'متوسط';
-  return'اقتصادي';
+/* ============ Toasts ============ */
+function showToast(msg, type, actionLabel, actionFn){
+  type = type || 'info';
+  const icon = type==='success' ? ICON_CHECK : type==='error' ? ICON_WARNING : ICON_BARCODE;
+  const el = document.createElement('div');
+  el.className = 'toast toast-' + type;
+  el.innerHTML = '<span class="toast-icon">'+icon+'</span><span class="toast-msg">'+esc(msg)+'</span>' +
+    (actionLabel ? '<button class="toast-action">'+esc(actionLabel)+'</button>' : '');
+  if(actionLabel && actionFn){
+    el.querySelector('.toast-action').addEventListener('click', () => { actionFn(); dismiss(); });
+  }
+  $('#toastContainer').appendChild(el);
+  function dismiss(){ el.classList.add('hide'); setTimeout(()=>el.remove(), 300); }
+  setTimeout(dismiss, 4200);
 }
 
-/* ══ RENDER TABLE ══ */
-function renderTable(city){
-  const rows=filteredData[city];
-  const page=currentPage[city];
-  const start=(page-1)*PAGE_SIZE;
-  const end=start+PAGE_SIZE;
-  const pageRows=rows.slice(start,end);
-  const tbody=document.getElementById('tbody-'+city);
-  tbody.innerHTML='';
-  pageRows.forEach((r,i)=>{
-    const rIdx=start+i;
-    const tierC=r.tier||'tier-mid';
-    const priceDisp=r.price>0?r.price.toLocaleString('ar-LY')+' د.ل':'يُتفق عليه';
-    const areaDisp=r.area>0?r.area+' م²':'غير محدد';
-    const pm2Disp=r.pm2>0?r.pm2.toFixed(1)+' د.ل/م²':'—';
-    const tr=document.createElement('tr');
-    tr.innerHTML=
-      '<td>'+(rIdx+1)+'</td>'+
-      '<td class="loc-cell">'+(r.loc||'—')+'</td>'+
-      '<td class="street-cell">'+(r.street||'—')+'</td>'+
-      '<td class="area-cell">'+areaDisp+'</td>'+
-      '<td class="price-cell">'+priceDisp+'</td>'+
-      '<td class="pricem2-cell">'+pm2Disp+'</td>'+
-      '<td><span class="tier-badge '+tierC+'">'+tierLabel(tierC)+'</span></td>'+
-      '<td><span class="src-badge">'+(r.src||'—')+'</span></td>'+
-      '<td class="no-print">'+
-        '<button class="btn-edit-row" onclick="editRow(\''+city+'\','+rIdx+')">✏️</button>'+
-        '<button class="btn-del-row" onclick="delRow(\''+city+'\','+rIdx+')">🗑</button>'+
-      '</td>';
-    tbody.appendChild(tr);
-  });
-
-  const total=rows.length;
-  const pages=Math.ceil(total/PAGE_SIZE);
-  const pag=document.getElementById('pag-'+city);
-  pag.innerHTML='';
-  if(pages>1){
-    for(let p=1;p<=pages;p++){
-      const btn=document.createElement('button');
-      btn.className='page-btn'+(p===page?' active':'');
-      btn.textContent=p;
-      btn.onclick=(()=>{const pp=p;return()=>{currentPage[city]=pp;renderTable(city);}})();
-      pag.appendChild(btn);
+/* ============ Modal helpers ============ */
+function showModal(id){ $('#'+id).classList.add('open'); document.body.classList.add('modal-open'); }
+function hideModal(id){ $('#'+id).classList.remove('open'); document.body.classList.remove('modal-open'); refocusScanInput(); }
+document.addEventListener('click', (e) => {
+  if(e.target.closest('[data-close]')){
+    const m = e.target.closest('.modal');
+    if(m){
+      if(m.id === 'cameraModal') closeCamera(); else hideModal(m.id);
     }
   }
-  document.getElementById('info-'+city).textContent=
-    'عرض '+(total===0?0:start+1)+' – '+Math.min(end,total)+' من '+total+' سجل';
+});
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape'){
+    const open = document.querySelector('.modal.open');
+    if(open){ if(open.id==='cameraModal') closeCamera(); else hideModal(open.id); }
+  }
+});
+
+function refocusScanInput(){
+  if(document.querySelector('.modal.open')) return;
+  const a = document.activeElement;
+  if(a && (a.id === 'searchInput' || a.tagName === 'TEXTAREA')) return;
+  const el = $('#scanInput');
+  if(el) el.focus({preventScroll:true});
 }
 
-/* ══ KPIs ══ */
-function updateKPIs(){
-  ['benghazi','tripoli'].forEach(city=>{
-    const pre=city==='benghazi'?'b':'t';
-    const prices=appData[city].filter(r=>r.price>0).map(r=>r.price);
-    const areas=appData[city].filter(r=>r.area>0).map(r=>r.area);
-    if(prices.length>0){
-      document.getElementById('kpi-'+pre+'-min').textContent=Math.min(...prices).toLocaleString('ar-LY');
-      document.getElementById('kpi-'+pre+'-avg').textContent=Math.round(prices.reduce((a,b)=>a+b,0)/prices.length).toLocaleString('ar-LY');
-      document.getElementById('kpi-'+pre+'-max').textContent=Math.max(...prices).toLocaleString('ar-LY');
-    }else{
-      ['min','avg','max'].forEach(k=>document.getElementById('kpi-'+pre+'-'+k).textContent='—');
-    }
-    const areaEl=document.getElementById('kpi-'+pre+'-area');
-    if(areaEl){
-      if(areas.length>0)areaEl.textContent=Math.max(...areas).toLocaleString('ar-LY');
-      else areaEl.textContent='—';
-    }
+/* ============ Derived data / render ============ */
+function getFiltered(){
+  let list = inventory.slice();
+  if(filterBrand) list = list.filter(i => i.brand === filterBrand);
+  if(filterText){
+    const q = filterText.trim().toLowerCase();
+    list = list.filter(i =>
+      (i.barcode||'').toLowerCase().includes(q) ||
+      (i.name||'').toLowerCase().includes(q) ||
+      (i.brand||'').toLowerCase().includes(q) ||
+      (i.note||'').toLowerCase().includes(q)
+    );
+  }
+  if(sortKey){
+    list.sort((a,b) => {
+      let va = a[sortKey], vb = b[sortKey];
+      if(typeof va === 'string') va = va.toLowerCase();
+      if(typeof vb === 'string') vb = vb.toLowerCase();
+      if(va < vb) return -1*sortDir;
+      if(va > vb) return 1*sortDir;
+      return 0;
+    });
+  }
+  return list;
+}
+
+function render(){
+  renderBrandFilterAndDatalist();
+  renderStats();
+  renderRows();
+}
+
+function renderStats(){
+  const list = getFiltered();
+  const totalItems = list.length;
+  const totalQty = list.reduce((s,i)=> s + num(i.qty), 0);
+  const totalBoxes = list.reduce((s,i)=> s + num(i.boxes), 0);
+  const brands = new Set(list.map(i=>i.brand).filter(Boolean)).size;
+  $('#statItems').textContent = totalItems.toLocaleString('en-US');
+  $('#statQty').textContent = totalQty.toLocaleString('en-US');
+  $('#statBoxes').textContent = totalBoxes.toLocaleString('en-US');
+  $('#statBrands').textContent = brands.toLocaleString('en-US');
+}
+
+function renderBrandFilterAndDatalist(){
+  const sel = $('#brandFilter');
+  const current = sel.value;
+  const brands = [...new Set(inventory.map(i=>i.brand).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ar'));
+  sel.innerHTML = '<option value="">كل البرندات</option>' + brands.map(b=>'<option value="'+esc(b)+'">'+esc(b)+'</option>').join('');
+  if(brands.includes(current)) sel.value = current; else filterBrand='';
+  $('#brandsList').innerHTML = brands.map(b=>'<option value="'+esc(b)+'">').join('');
+}
+
+function renderRows(){
+  const list = getFiltered();
+  const tbody = $('#tbody');
+  const cards = $('#cardList');
+
+  if(list.length === 0){
+    tbody.innerHTML = '';
+    cards.innerHTML = '';
+    $('#emptyState').hidden = inventory.length !== 0;
+    $('#noResults').hidden = inventory.length === 0;
+    return;
+  }
+  $('#emptyState').hidden = true;
+  $('#noResults').hidden = true;
+
+  tbody.innerHTML = list.map(i => (
+    '<tr data-id="'+i.id+'" class="'+(i.id===flashId?'flash':'')+'">' +
+      '<td class="cell-mono" dir="ltr" style="text-align:left">'+esc(i.barcode)+'</td>' +
+      '<td class="cell-name">'+esc(i.name)+'</td>' +
+      '<td>'+esc(i.unit)+'</td>' +
+      '<td class="cell-mono" dir="ltr" style="text-align:left">'+num(i.qty)+'</td>' +
+      '<td class="cell-mono" dir="ltr" style="text-align:left">'+num(i.boxes)+'</td>' +
+      '<td class="cell-note">'+(esc(i.note)||'—')+'</td>' +
+      '<td>'+(i.brand ? '<span class="brand-tag">'+esc(i.brand)+'</span>' : '—')+'</td>' +
+      '<td class="cell-actions">' +
+        '<button class="icon-btn" data-action="edit" data-id="'+i.id+'" title="تعديل">'+ICON_EDIT+'</button>' +
+        '<button class="icon-btn danger" data-action="delete" data-id="'+i.id+'" title="حذف">'+ICON_TRASH+'</button>' +
+      '</td>' +
+    '</tr>'
+  )).join('');
+
+  cards.innerHTML = list.map(i => (
+    '<article class="item-card '+(i.id===flashId?'flash':'')+'" data-id="'+i.id+'">' +
+      '<div class="card-top"><span class="barcode-chip cell-mono" dir="ltr">'+esc(i.barcode)+'</span>' + (i.brand ? '<span class="brand-tag">'+esc(i.brand)+'</span>' : '') + '</div>' +
+      '<h3 class="card-name">'+esc(i.name)+'</h3>' +
+      '<div class="card-grid">' +
+        '<div><span class="card-label">الوحدة</span><span>'+(esc(i.unit)||'—')+'</span></div>' +
+        '<div><span class="card-label">الكمية</span><span class="cell-mono">'+num(i.qty)+'</span></div>' +
+        '<div><span class="card-label">الصناديق</span><span class="cell-mono">'+num(i.boxes)+'</span></div>' +
+      '</div>' +
+      (i.note ? '<p class="card-note">'+esc(i.note)+'</p>' : '') +
+      '<div class="card-actions">' +
+        '<button class="icon-btn" data-action="edit" data-id="'+i.id+'">'+ICON_EDIT+' تعديل</button>' +
+        '<button class="icon-btn danger" data-action="delete" data-id="'+i.id+'">'+ICON_TRASH+' حذف</button>' +
+      '</div>' +
+    '</article>'
+  )).join('');
+
+  flashId = null;
+}
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  if(!btn) return;
+  const id = btn.dataset.id, action = btn.dataset.action;
+  if(action === 'edit') openEditModal(id);
+  if(action === 'delete') confirmDelete(id);
+});
+
+/* sorting */
+$$('.sortable').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.key;
+    if(sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = 1; }
+    $$('.sortable .sort-arrow').forEach(s => s.textContent='');
+    th.querySelector('.sort-arrow').textContent = sortDir===1 ? '▲' : '▼';
+    renderRows();
   });
-}
+});
 
-/* ══ COMPARISON — DYNAMIC ══ */
-function computeTierStats(city,tier){
-  const rows=appData[city].filter(r=>r.tier===tier&&r.price>0).map(r=>r.price);
-  if(!rows.length)return{min:0,max:0,avg:0,count:0};
-  return{min:Math.min(...rows),max:Math.max(...rows),avg:Math.round(rows.reduce((a,b)=>a+b,0)/rows.length),count:rows.length};
-}
+/* search / filter */
+$('#searchInput').addEventListener('input', () => { filterText = $('#searchInput').value; renderStats(); renderRows(); });
+$('#brandFilter').addEventListener('change', () => { filterBrand = $('#brandFilter').value; renderStats(); renderRows(); });
 
-function updateComparison(){
-  const tiers=[
-    {key:'tier-premium',label:'🔴 فاخر'},
-    {key:'tier-mid',label:'🟡 متوسط'},
-    {key:'tier-eco',label:'🟢 اقتصادي'}
-  ];
-  const tbody=document.getElementById('comp-tbody');
-  if(!tbody)return;
-  tbody.innerHTML='';
-  tiers.forEach(t=>{
-    const b=computeTierStats('benghazi',t.key);
-    const tr2=computeTierStats('tripoli',t.key);
-    let bStr='—',trStr='—',diffStr='—';
-    if(b.count>0)bStr=b.min.toLocaleString('ar-LY')+' – '+b.max.toLocaleString('ar-LY')+' د.ل<br><small style="color:#6b7280">متوسط: '+b.avg.toLocaleString('ar-LY')+'</small>';
-    if(tr2.count>0)trStr=tr2.min.toLocaleString('ar-LY')+' – '+tr2.max.toLocaleString('ar-LY')+' د.ل<br><small style="color:#6b7280">متوسط: '+tr2.avg.toLocaleString('ar-LY')+'</small>';
-    if(b.avg>0&&tr2.avg>0){
-      const pct=Math.round((tr2.avg-b.avg)/b.avg*100);
-      diffStr=(pct>0?'+':'')+pct+'%';
-    }
-    const row=document.createElement('tr');
-    row.innerHTML='<td><strong>'+t.label+'</strong></td><td>'+bStr+'</td><td>'+trStr+'</td><td style="font-weight:800;color:var(--dark-red)">'+diffStr+'</td>';
-    tbody.appendChild(row);
-  });
-  // Best investment row
-  const bestRow=document.createElement('tr');
-  bestRow.innerHTML='<td>🏆 أفضل استثمار</td><td>فينيسيا، شارع الوكالات</td><td>شارع جرابة، المدينة السياحية</td><td>—</td>';
-  tbody.appendChild(bestRow);
+/* ============ Add / Edit modal ============ */
+function openAddModal(prefill){
+  prefill = prefill || {};
+  editingId = null;
+  $('#modalTitle').textContent = 'إضافة صنف جديد';
+  $('#formBarcode').value = prefill.barcode || '';
+  $('#formName').value = '';
+  $('#formUnit').value = 'قطعة';
+  $('#formQty').value = prefill.barcode ? (num($('#scanIncrement').value) || 1) : 0;
+  $('#formBoxes').value = 0;
+  $('#formBrand').value = '';
+  $('#formNote').value = '';
+  $('#deleteFromModalBtn').hidden = true;
+  showModal('itemModal');
+  setTimeout(()=> $('#formName').focus(), 60);
 }
+function openEditModal(id){
+  const item = inventory.find(i=>i.id===id);
+  if(!item) return;
+  editingId = id;
+  $('#modalTitle').textContent = 'تعديل الصنف';
+  $('#formBarcode').value = item.barcode;
+  $('#formName').value = item.name;
+  $('#formUnit').value = item.unit || '';
+  $('#formQty').value = num(item.qty);
+  $('#formBoxes').value = num(item.boxes);
+  $('#formBrand').value = item.brand || '';
+  $('#formNote').value = item.note || '';
+  $('#deleteFromModalBtn').hidden = false;
+  showModal('itemModal');
+  setTimeout(()=> $('#formName').focus(), 60);
+}
+$('#addBtn').addEventListener('click', () => openAddModal());
+$('#emptyAddBtn').addEventListener('click', () => openAddModal());
 
-/* ══ FACTORS LIVE SUMMARY ══ */
-function updateFactorsLive(){
-  const grid=document.getElementById('factors-live-grid');
-  if(!grid)return;
-  const allPrices=[...appData.benghazi,...appData.tripoli].filter(r=>r.price>0).map(r=>r.price);
-  const bPrices=appData.benghazi.filter(r=>r.price>0).map(r=>r.price);
-  const tPrices=appData.tripoli.filter(r=>r.price>0).map(r=>r.price);
-  const bPm2=appData.benghazi.filter(r=>r.pm2>0).map(r=>r.pm2);
-  const tPm2=appData.tripoli.filter(r=>r.pm2>0).map(r=>r.pm2);
-  const avgArr=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):0;
-  const bAvg=avgArr(bPrices),tAvg=avgArr(tPrices);
-  const capitalPremium=bAvg>0&&tAvg>0?Math.round((tAvg-bAvg)/bAvg*100):0;
-  const bPrem=appData.benghazi.filter(r=>r.tier==='tier-premium'&&r.price>0).map(r=>r.price);
-  const bEco=appData.benghazi.filter(r=>r.tier==='tier-eco'&&r.price>0).map(r=>r.price);
-  const tPrem=appData.tripoli.filter(r=>r.tier==='tier-premium'&&r.price>0).map(r=>r.price);
-  const tEco=appData.tripoli.filter(r=>r.tier==='tier-eco'&&r.price>0).map(r=>r.price);
-  const tierRatioB=bEco.length>0&&bPrem.length>0?Math.round(avgArr(bPrem)/avgArr(bEco)*100):0;
-  const tierRatioT=tEco.length>0&&tPrem.length>0?Math.round(avgArr(tPrem)/avgArr(tEco)*100):0;
-  const items=[
-    {label:'متوسط الإيجار — بنغازي',value:bAvg>0?bAvg.toLocaleString('ar-LY')+' د.ل':'—'},
-    {label:'متوسط الإيجار — طرابلس',value:tAvg>0?tAvg.toLocaleString('ar-LY')+' د.ل':'—'},
-    {label:'علاوة العاصمة',value:capitalPremium>0?'+'+capitalPremium+'%':'—'},
-    {label:'متوسط م² — بنغازي',value:bPm2.length?avgArr(bPm2).toFixed(0)+' د.ل/م²':'—'},
-    {label:'متوسط م² — طرابلس',value:tPm2.length?avgArr(tPm2).toFixed(0)+' د.ل/م²':'—'},
-    {label:'نسبة فاخر/اقتصادي بنغازي',value:tierRatioB>0?tierRatioB+'%':'—'},
-    {label:'نسبة فاخر/اقتصادي طرابلس',value:tierRatioT>0?tierRatioT+'%':'—'},
-    {label:'إجمالي السجلات',value:(appData.benghazi.length+appData.tripoli.length)+' سجل'}
-  ];
-  grid.innerHTML=items.map(it=>'<div class="factor-stat-item"><div class="factor-stat-label">'+it.label+'</div><div class="factor-stat-value">'+it.value+'</div></div>').join('');
-}
-
-/* ══ FILTERS ══ */
-function applyFilters(){
-  const fCity=document.getElementById('f-city').value;
-  const fLoc=document.getElementById('f-loc').value.trim().toLowerCase();
-  const fTier=document.getElementById('f-tier').value;
-  const fSrc=document.getElementById('f-src').value.trim().toLowerCase();
-  const fPmin=parseFloat(document.getElementById('f-pmin').value)||0;
-  const fPmax=parseFloat(document.getElementById('f-pmax').value)||Infinity;
-  ['benghazi','tripoli'].forEach(city=>{
-    if(fCity&&(city==='benghazi'?'بنغازي':'طرابلس')!==fCity){
-      filteredData[city]=[];
-    }else{
-      filteredData[city]=appData[city].filter(r=>{
-        const loc=(r.loc||'').toLowerCase();
-        const src=(r.src||'').toLowerCase();
-        const price=r.price||0;
-        if(fLoc&&!loc.includes(fLoc))return false;
-        if(fTier&&r.tier!==fTier)return false;
-        if(fSrc&&!src.includes(fSrc))return false;
-        if(price>0&&(price<fPmin||price>fPmax))return false;
-        return true;
-      });
-    }
-    currentPage[city]=1;
-    renderTable(city);
-  });
-}
-function resetFilters(){
-  ['f-city','f-tier'].forEach(id=>document.getElementById(id).value='');
-  ['f-loc','f-src','f-pmin','f-pmax'].forEach(id=>document.getElementById(id).value='');
-  filteredData={benghazi:[...appData.benghazi],tripoli:[...appData.tripoli]};
-  currentPage={benghazi:1,tripoli:1};
-  renderTable('benghazi');
-  renderTable('tripoli');
-}
-
-/* ══ SORT ══ */
-function sortTable(tableId,colIdx){
-  const city=tableId.includes('benghazi')?'benghazi':'tripoli';
-  const key=tableId+'_'+colIdx;
-  _sortState[key]=_sortState[key]==='asc'?'desc':'asc';
-  const asc=_sortState[key]==='asc';
-  const cols=['#','loc','street','area','price','pm2'];
-  const field=cols[colIdx]||'loc';
-  filteredData[city].sort((a,b)=>{
-    let va=a[field]||0,vb=b[field]||0;
-    if(typeof va==='string')va=va.toLowerCase();
-    if(typeof vb==='string')vb=vb.toLowerCase();
-    return asc?(va>vb?1:-1):(va<vb?1:-1);
-  });
-  const ths=document.getElementById(tableId).querySelectorAll('thead th');
-  ths.forEach((th,i)=>{
-    th.classList.remove('sort-asc','sort-desc');
-    if(i===colIdx)th.classList.add(asc?'sort-asc':'sort-desc');
-  });
-  renderTable(city);
-}
-
-/* ══ MODAL ══ */
-function openModal(city){
-  _modalTable=city;_editingRow=null;
-  document.getElementById('modal-title').textContent='➕ إضافة سجل جديد';
-  document.getElementById('mf-city').value=city==='benghazi'?'بنغازي':'طرابلس';
-  ['mf-location','mf-street','mf-area','mf-price','mf-pricem2','mf-source'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('mf-tier').value='tier-mid';
-  document.getElementById('row-modal-overlay').classList.add('active');
-  setTimeout(()=>document.getElementById('mf-location').focus(),100);
-}
-function editRow(city,idx){
-  const r=appData[city][idx];
-  if(!r)return;
-  _modalTable=city;_editingRow=idx;
-  document.getElementById('modal-title').textContent='✏️ تعديل سجل';
-  document.getElementById('mf-city').value=city==='benghazi'?'بنغازي':'طرابلس';
-  document.getElementById('mf-location').value=r.loc||'';
-  document.getElementById('mf-street').value=r.street||'';
-  document.getElementById('mf-area').value=r.area||'';
-  document.getElementById('mf-price').value=r.price||'';
-  document.getElementById('mf-pricem2').value=r.pm2||'';
-  document.getElementById('mf-tier').value=r.tier||'tier-mid';
-  document.getElementById('mf-source').value=r.src||'';
-  document.getElementById('row-modal-overlay').classList.add('active');
-}
-function closeModal(){
-  document.getElementById('row-modal-overlay').classList.remove('active');
-  _editingRow=null;
-}
-function saveModal(){
-  const city=_modalTable;
-  const locVal=document.getElementById('mf-location').value.trim();
-  if(!locVal){alert('الرجاء إدخال الموقع/المنطقة');return;}
-  const newRow={
-    loc:locVal,
-    street:document.getElementById('mf-street').value.trim(),
-    area:parseFloat(document.getElementById('mf-area').value)||0,
-    price:parseFloat(document.getElementById('mf-price').value)||0,
-    pm2:parseFloat(document.getElementById('mf-pricem2').value)||0,
-    tier:document.getElementById('mf-tier').value,
-    src:document.getElementById('mf-source').value.trim()
+$('#itemForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const barcode = $('#formBarcode').value.trim();
+  const name = $('#formName').value.trim();
+  if(!barcode || !name){ showToast('الباركود واسم الصنف حقلان مطلوبان', 'error'); return; }
+  const dupe = inventory.find(i => i.barcode === barcode && i.id !== editingId);
+  if(dupe){ showToast('هذا الباركود مستخدم بالفعل للصنف «'+dupe.name+'»', 'error'); return; }
+  const data = {
+    barcode, name,
+    unit: $('#formUnit').value.trim(),
+    qty: num($('#formQty').value),
+    boxes: num($('#formBoxes').value),
+    brand: $('#formBrand').value.trim(),
+    note: $('#formNote').value.trim(),
+    updatedAt: Date.now(),
   };
-  if(_editingRow!==null){appData[city][_editingRow]=newRow;toast('تم تعديل السجل بنجاح');}
-  else{appData[city].push(newRow);toast('تم إضافة السجل بنجاح');}
-  filteredData[city]=[...appData[city]];
-  closeModal();
-  renderAll();
-}
-function delRow(city,idx){
-  if(!confirm('هل تريد حذف هذا الصف؟'))return;
-  appData[city].splice(idx,1);
-  filteredData[city]=[...appData[city]];
-  renderAll();
-  toast('تم حذف السجل');
-}
-document.getElementById('row-modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+  if(editingId){
+    Object.assign(inventory.find(i=>i.id===editingId), data);
+    showToast('تم حفظ التعديلات', 'success');
+  } else {
+    inventory.push(Object.assign({ id: uid() }, data));
+    showToast('تمت إضافة الصنف بنجاح', 'success');
+  }
+  queueSave();
+  hideModal('itemModal');
+  render();
+});
+$('#deleteFromModalBtn').addEventListener('click', () => {
+  const id = editingId;
+  hideModal('itemModal');
+  confirmDelete(id);
+});
 
-/* ══ EXCEL IMPORT ══ */
-function importExcel(input){
-  const file=input.files[0];
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=function(e){
+/* ============ Confirm modal ============ */
+let pendingConfirmAction = null;
+function openConfirm(message, onConfirm){
+  $('#confirmMessage').textContent = message;
+  pendingConfirmAction = onConfirm;
+  showModal('confirmModal');
+}
+$('#confirmYes').addEventListener('click', () => {
+  if(pendingConfirmAction) pendingConfirmAction();
+  pendingConfirmAction = null;
+  hideModal('confirmModal');
+});
+function confirmDelete(id){
+  const item = inventory.find(i=>i.id===id);
+  if(!item) return;
+  openConfirm('هل تريد حذف الصنف «'+item.name+'» نهائيًا من الجرد؟', () => {
+    inventory = inventory.filter(i=>i.id!==id);
+    queueSave(); render();
+    showToast('تم حذف الصنف', 'info');
+  });
+}
+$('#clearAllBtn').addEventListener('click', () => {
+  if(inventory.length === 0){ showToast('الجرد فارغ بالفعل', 'info'); return; }
+  openConfirm('سيتم حذف جميع الأصناف ('+inventory.length+') نهائيًا من الجرد الحالي. لا يمكن التراجع عن هذا الإجراء.', () => {
+    inventory = [];
+    queueSave(); render();
+    showToast('تم مسح كل البيانات', 'info');
+  });
+});
+
+/* ============ Scan logic ============ */
+const scanConsole = $('#scanConsole');
+const scanInput = $('#scanInput');
+scanInput.addEventListener('focus', () => scanConsole.classList.add('scanning'));
+scanInput.addEventListener('blur', () => scanConsole.classList.remove('scanning'));
+
+$('#incMinus').addEventListener('click', () => { const el=$('#scanIncrement'); el.value = Math.max(1, num(el.value)-1); });
+$('#incPlus').addEventListener('click', () => { const el=$('#scanIncrement'); el.value = num(el.value)+1; });
+
+$('#scanForm').addEventListener('submit', (e) => { e.preventDefault(); commitScan(); });
+
+function commitScan(){
+  const code = scanInput.value.trim();
+  scanInput.value = '';
+  if(!code) return;
+  processScan(code);
+}
+
+function processScan(code){
+  const inc = Math.max(1, num($('#scanIncrement').value));
+  const existing = inventory.find(i => i.barcode === code);
+  if(existing){
+    const prevQty = existing.qty;
+    existing.qty = num(existing.qty) + inc;
+    existing.updatedAt = Date.now();
+    lastScan = { id: existing.id, prevQty };
+    flashId = existing.id;
+    queueSave(); render();
+    showToast('✓ '+existing.name+' — الكمية الآن '+existing.qty, 'success', 'تراجع', undoLastScan);
+  } else {
+    showToast('باركود جديد — أكمل بيانات الصنف', 'info');
+    openAddModal({ barcode: code });
+  }
+}
+function undoLastScan(){
+  if(!lastScan) return;
+  const item = inventory.find(i=>i.id===lastScan.id);
+  if(item){ item.qty = lastScan.prevQty; queueSave(); render(); showToast('تم التراجع عن آخر مسح', 'info'); }
+  lastScan = null;
+}
+
+/* ============ Hardware/Bluetooth barcode scanner fallback ============ */
+// Physical barcode scanners (USB or Bluetooth "HID" guns) work by typing the
+// code as keystrokes then an Enter — exactly like a keyboard. The dedicated
+// #scanInput field already supports this natively since it's a plain text
+// input followed by a submit button. This listener is a safety net for when
+// focus has drifted away from that field (e.g. the user just clicked a table
+// row or a button) so a scan still registers instead of being lost or typed
+// into the wrong place. It only activates when no form field is focused, and
+// tells a scanner burst apart from human typing by how fast the keys arrive.
+let hwScanBuffer = '';
+let hwScanLastKeyTime = 0;
+const HW_SCAN_MAX_GAP_MS = 60; // scanners type far faster than a human can
+document.addEventListener('keydown', (e) => {
+  if(document.querySelector('.modal.open')) return; // modals have their own focused fields
+  const activeTag = (document.activeElement && document.activeElement.tagName) || '';
+  if(['INPUT','TEXTAREA','SELECT'].includes(activeTag)) return; // already typing somewhere on purpose
+
+  const now = Date.now();
+  if(now - hwScanLastKeyTime > HW_SCAN_MAX_GAP_MS) hwScanBuffer = '';
+  hwScanLastKeyTime = now;
+
+  if(e.key === 'Enter'){
+    const code = hwScanBuffer.trim();
+    hwScanBuffer = '';
+    if(code) processScan(code);
+    return;
+  }
+  if(e.key.length === 1) hwScanBuffer += e.key;
+});
+
+/* ============ Camera scanning (Quagga) ============ */
+let camHandlerAttached = false;
+let lastCamCode = null, lastCamTime = 0;
+let camRunning = false;
+let camPermState = null; // 'granted' | 'denied' | 'prompt' | null (unknown / unsupported)
+let scanBuffer = []; // recent reads, used to require a few matching reads before accepting a code
+const SCAN_CONFIRM_COUNT = 3;   // how many consistent reads are needed before we trust a code
+const SCAN_WINDOW_MS = 900;     // only reads within this window count toward the same "burst"
+const SCAN_MAX_ERROR = 0.12;    // Quagga's own per-module decode error — reject noisy reads outright
+
+$('#cameraBtn').addEventListener('click', openCamera);
+$('#cameraCloseBtn').addEventListener('click', closeCamera);
+$('#camAllowBtn').addEventListener('click', startCameraStream);
+
+function setCamGate(state){
+  // state: 'ask' | 'denied'
+  const gate = $('#camGate');
+  const icon = $('#camGateIcon');
+  const title = $('#camGateTitle');
+  const text = $('#camGateText');
+  const btn = $('#camAllowBtn');
+  gate.hidden = false;
+  $('#scanViewport').hidden = true;
+  $('#camHint').hidden = true;
+  if(state === 'denied'){
+    gate.classList.add('denied');
+    icon.innerHTML = ICON_WARNING;
+    title.textContent = 'تم رفض إذن الكاميرا';
+    text.textContent = 'لا يمكن فتح الكاميرا لأن المتصفح يمنع الوصول إليها حاليًا. فعّل إذن الكاميرا لهذا الموقع من إعدادات المتصفح ثم اضغط على «إعادة المحاولة».';
+    btn.textContent = 'إعادة المحاولة';
+  } else {
+    gate.classList.remove('denied');
+    icon.innerHTML = ICON_CAMERA;
+    title.textContent = 'السماح باستخدام الكاميرا';
+    text.textContent = 'يحتاج Brandzo Hub إلى إذن الوصول إلى كاميرا جهازك لمسح الباركود مباشرة بدل الكتابة اليدوية.';
+    btn.textContent = 'السماح وفتح الكاميرا';
+  }
+}
+
+async function openCamera(){
+  if(typeof Quagga === 'undefined'){
+    showToast('تعذر تحميل وحدة الكاميرا — تحقق من الاتصال بالإنترنت', 'error');
+    return;
+  }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    showToast('هذا المتصفح أو السياق لا يدعم الوصول إلى الكاميرا، استخدم جهاز قراءة الباركود بدلًا من ذلك', 'error');
+    return;
+  }
+  camRunning = false;
+  showModal('cameraModal');
+
+  // Check existing permission state where supported, so a previously-denied
+  // permission shows the right message instead of silently failing.
+  let knownDenied = false;
+  try{
+    if(navigator.permissions && navigator.permissions.query){
+      const status = await navigator.permissions.query({ name: 'camera' });
+      camPermState = status.state;
+      knownDenied = status.state === 'denied';
+    }
+  }catch(e){
+    // permissions API may not support 'camera' in this browser — that's fine,
+    // we fall back to asking and handling getUserMedia's own error.
+  }
+  setCamGate(knownDenied ? 'denied' : 'ask');
+}
+
+function startCameraStream(){
+  $('#camAllowBtn').disabled = true;
+  scanBuffer = [];
+  Quagga.init({
+    inputStream:{
+      type:'LiveStream',
+      target: document.querySelector('#scanViewport'),
+      constraints:{
+        facingMode:'environment',
+        width:{ min:640, ideal:1280, max:1920 },
+        height:{ min:480, ideal:720, max:1080 },
+        aspectRatio:{ ideal:1.777 }
+      }
+    },
+    locator:{ patchSize:'medium', halfSample:false },
+    numOfWorkers: Math.min(4, Math.max(2, (navigator.hardwareConcurrency || 2) - 1)),
+    // Only checksum-backed symbologies: codabar / interleaved-2-of-5 have no
+    // built-in checksum and are the main source of garbled, wrong-digit reads.
+    decoder:{ readers:['ean_reader','ean_8_reader','upc_reader','upc_e_reader','code_128_reader'], multiple:false },
+    locate:true
+  }, (err) => {
+    $('#camAllowBtn').disabled = false;
+    if(err){
+      console.error(err);
+      const name = (err && (err.name || (err.message && err.message))) || '';
+      const isDenied = /NotAllowedError|PermissionDenied|Permission denied/i.test(String(name));
+      if(isDenied){
+        setCamGate('denied');
+        showToast('تم رفض إذن الكاميرا — فعّله من إعدادات المتصفح للمتابعة', 'error');
+      } else {
+        showToast('تعذر تشغيل الكاميرا — تأكد من توفر كاميرا وأنها غير مستخدمة من تطبيق آخر', 'error');
+        setCamGate('ask');
+      }
+      return;
+    }
+    camRunning = true;
+    camPermState = 'granted';
+    $('#camGate').hidden = true;
+    $('#scanViewport').hidden = false;
+    $('#camHint').hidden = false;
+    Quagga.start();
+    if(!camHandlerAttached){ Quagga.onDetected(onCameraDetected); camHandlerAttached = true; }
+  });
+}
+function onCameraDetected(result){
+  const code = result.codeResult && result.codeResult.code;
+  if(!code) return;
+
+  // Reject frames Quagga itself decoded with high per-module error —
+  // these are almost always the source of a wrong digit or two.
+  const decoded = result.codeResult.decodedCodes || [];
+  const errors = decoded.map(d => d.error).filter(e => typeof e === 'number');
+  const avgError = errors.length ? errors.reduce((a,b)=>a+b,0) / errors.length : 0;
+  if(avgError > SCAN_MAX_ERROR) return;
+
+  const now = Date.now();
+  scanBuffer = scanBuffer.filter(r => now - r.time < SCAN_WINDOW_MS);
+  scanBuffer.push({ code, time: now });
+
+  const counts = {};
+  scanBuffer.forEach(r => { counts[r.code] = (counts[r.code] || 0) + 1; });
+  const confirmed = Object.keys(counts).find(c => counts[c] >= SCAN_CONFIRM_COUNT);
+  if(!confirmed) return; // not enough agreement yet — keep scanning
+
+  if(confirmed === lastCamCode && now - lastCamTime < 1500) return;
+  lastCamCode = confirmed; lastCamTime = now;
+  scanBuffer = [];
+  processScan(confirmed);
+}
+function closeCamera(){
+  if(camRunning){ try{ Quagga.stop(); }catch(e){} camRunning = false; }
+  scanBuffer = [];
+  hideModal('cameraModal');
+}
+
+/* ============ Excel export ============ */
+$('#exportBtn').addEventListener('click', exportExcel);
+function exportExcel(){
+  if(inventory.length === 0){ showToast('لا توجد بيانات لتصديرها بعد', 'error'); return; }
+  const headers = ['الباركود','اسم الصنف','الوحدة','الكمية','عدد الصناديق','ملاحظة','اسم البرند'];
+  const rows = inventory.map(i => [i.barcode, i.name, i.unit, num(i.qty), num(i.boxes), i.note, i.brand]);
+  const ws = XLSX.utils.aoa_to_sheet([headers].concat(rows));
+  ws['!cols'] = [{wch:16},{wch:28},{wch:10},{wch:9},{wch:13},{wch:28},{wch:18}];
+  const wb = XLSX.utils.book_new();
+  wb.Workbook = { Views: [{ RTL: true }] };
+  XLSX.utils.book_append_sheet(wb, ws, 'الجرد');
+  const ts = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, 'Brandzo-Hub-Inventory-'+ts+'.xlsx');
+  showToast('تم تصدير ملف الإكسل بنجاح', 'success');
+}
+
+/* ============ Excel import ============ */
+$('#importBtn').addEventListener('click', () => $('#importFile').click());
+$('#importFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(file) handleImportFile(file);
+  e.target.value = '';
+});
+
+let pendingImportRows = [];
+function handleImportFile(file){
+  const reader = new FileReader();
+  reader.onload = (ev) => {
     try{
-      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
-      /* مسح البيانات الحالية واستبدالها بالمستوردة */
-      const newData={benghazi:[],tripoli:[]};
-      let imported=0;
-
-      /* دالة مساعدة: تجد قيمة عمود بالبحث الجزئي في مفاتيح الصف */
-      function getCol(row,keywords){
-        const keys=Object.keys(row);
-        for(const kw of keywords){
-          const found=keys.find(k=>k.includes(kw));
-          if(found&&row[found]!==''&&row[found]!==undefined)return row[found].toString().trim();
-        }
-        return '';
-      }
-
-      /* تحويل اسم الفئة العربي إلى المعرّف الداخلي */
-      function parseTier(raw){
-        const v=(raw||'').toString().trim();
-        if(v==='فاخر'||v==='tier-premium')return'tier-premium';
-        if(v==='اقتصادي'||v==='tier-economy')return'tier-economy';
-        return'tier-mid';
-      }
-
-      wb.SheetNames.forEach(name=>{
-        /* تجاهل ورقة الملخص */
-        if(name==='ملخص'||name.toLowerCase()==='summary')return;
-        const ws=wb.Sheets[name];
-        const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
-        rows.forEach(row=>{
-          /* تحديد المدينة من عمود المدينة أو من اسم الورقة */
-          const cityField=getCol(row,['المدينة','City','city']).toLowerCase();
-          let city='benghazi';
-          if(cityField.includes('طرابلس')||cityField.includes('tripoli')||name.includes('طرابلس')||name.toLowerCase().includes('tripoli'))city='tripoli';
-          else if(cityField.includes('بنغازي')||cityField.includes('benghazi')||name.includes('بنغازي')||name.toLowerCase().includes('benghazi'))city='benghazi';
-
-          /* قراءة الحقول بالبحث الجزئي لتتحمل أي صيغة تصدير */
-          const loc=getCol(row,['الموقع','المنطقة','location']);
-          if(!loc)return; /* تجاهل الصفوف الفارغة */
-
-          const street=getCol(row,['الشارع','التفاصيل','street']);
-          const price=parseFloat(getCol(row,['الإيجار الشهري','السعر','price'])||0)||0;
-          const area=parseFloat(getCol(row,['المساحة','area'])||0)||0;
-          const pm2=parseFloat(getCol(row,['سعر المتر','pm2'])||0)||0;
-          const tier=parseTier(getCol(row,['الفئة','tier']));
-          const src=getCol(row,['المصدر','source'])||'Excel';
-
-          newData[city].push({loc,street,area,price,pm2,tier,src});
-          imported++;
-        });
-      });
-      if(imported===0){toast('لم يتم العثور على بيانات صالحة في الملف ⚠️');input.value='';return;}
-      appData=newData;
-      filteredData={benghazi:[...appData.benghazi],tripoli:[...appData.tripoli]};
-      renderAll();
-      toast('تم استيراد '+imported+' سجل — يمكنك الآن التعديل أو الإضافة ✅');
-    }catch(err){alert('خطأ في قراءة الملف: '+err.message);}
-    input.value='';
+      const data = new Uint8Array(ev.target.result);
+      const wb = XLSX.read(data, { type:'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval:'' });
+      const mapped = rows.map(normalizeRow).filter(r => r.barcode || r.name);
+      if(mapped.length === 0){ showToast('لم يتم العثور على بيانات صالحة داخل الملف', 'error'); return; }
+      pendingImportRows = mapped;
+      const newCount = mapped.filter(r => !inventory.some(i=>i.barcode===r.barcode)).length;
+      const dupeCount = mapped.length - newCount;
+      $('#importSummary').textContent = 'تم العثور على '+mapped.length+' صف — '+newCount+' جديد، '+dupeCount+' بنفس باركود موجود مسبقًا.';
+      showModal('importModal');
+    }catch(err){
+      console.error(err);
+      showToast('تعذرت قراءة الملف، تأكد أنه بصيغة Excel صحيحة', 'error');
+    }
   };
   reader.readAsArrayBuffer(file);
 }
-
-/* ══ EXCEL EXPORT ══ */
-function exportExcel(){
-  const wb=XLSX.utils.book_new();
-  ['benghazi','tripoli'].forEach(city=>{
-    const cityName=city==='benghazi'?'بنغازي':'طرابلس';
-    const wsData=[['#','المدينة','الموقع/المنطقة','الشارع/التفاصيل','المساحة (م²)','الإيجار الشهري (د.ل)','سعر المتر (د.ل/م²)','الفئة','المصدر']];
-    appData[city].forEach((r,i)=>wsData.push([i+1,cityName,r.loc||'',r.street||'',r.area||0,r.price||0,r.pm2||0,tierLabel(r.tier||'tier-mid'),r.src||'']));
-    const ws=XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols']=[{wch:5},{wch:10},{wch:30},{wch:35},{wch:12},{wch:18},{wch:18},{wch:10},{wch:15}];
-    XLSX.utils.book_append_sheet(wb,ws,cityName);
-  });
-  const bP=appData.benghazi.filter(r=>r.price>0).map(r=>r.price);
-  const tP=appData.tripoli.filter(r=>r.price>0).map(r=>r.price);
-  const sumData=[
-    ['المؤشر','بنغازي','طرابلس'],
-    ['عدد السجلات',appData.benghazi.length,appData.tripoli.length],
-    ['أدنى سعر (د.ل)',bP.length?Math.min(...bP):0,tP.length?Math.min(...tP):0],
-    ['أعلى سعر (د.ل)',bP.length?Math.max(...bP):0,tP.length?Math.max(...tP):0],
-    ['متوسط السعر (د.ل)',bP.length?Math.round(bP.reduce((a,b)=>a+b,0)/bP.length):0,tP.length?Math.round(tP.reduce((a,b)=>a+b,0)/tP.length):0]
-  ];
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sumData),'ملخص');
-  XLSX.writeFile(wb,'تقرير_ايجار_ليبيا_2026.xlsx');
-  toast('تم تصدير ملف Excel بنجاح ✅');
-}
-
-/* ══ PRINT TABLE ══ */
-function printTable(city){
-  const cityName=city==='benghazi'?'بنغازي':'طرابلس';
-  const title='محلات '+cityName+' — تقرير ليبيا 2025/2026';
-  let tbl='<table><thead><tr><th>#</th><th>الموقع / المنطقة</th><th>الشارع / التفاصيل</th><th>المساحة</th><th>الإيجار الشهري</th><th>سعر المتر</th><th>الفئة</th><th>المصدر</th></tr></thead><tbody>';
-  appData[city].forEach((r,i)=>{
-    const priceD=r.price>0?r.price.toLocaleString('ar-LY')+' د.ل':'يُتفق عليه';
-    const areaD=r.area>0?r.area+' م²':'غير محدد';
-    const pm2D=r.pm2>0?r.pm2.toFixed(1)+' د.ل/م²':'—';
-    const tc=r.tier||'tier-mid';
-    tbl+='<tr><td>'+(i+1)+'</td><td class="loc-cell">'+(r.loc||'—')+'</td><td class="street-cell">'+(r.street||'—')+'</td><td class="area-cell">'+areaD+'</td><td class="price-cell">'+priceD+'</td><td class="pricem2-cell">'+pm2D+'</td><td><span class="tier-badge '+tc+'">'+tierLabel(tc)+'</span></td><td><span class="src-badge">'+(r.src||'—')+'</span></td></tr>';
-  });
-  tbl+='</tbody></table>';
-  const w=window.open('','_blank','width=1100,height=800');
-  if(!w){alert('الرجاء السماح بالنوافذ المنبثقة');return;}
-  w.document.write('<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"/><title>'+title+'</title>'+
-    '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800;900&display=swap" rel="stylesheet"/>'+
-    '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Cairo,Arial,sans-serif;padding:24px;font-size:13px;direction:rtl}'+
-    '.ph{background:linear-gradient(135deg,#9D0216,#C8102E)!important;color:#fff;padding:14px 18px;border-radius:8px;margin-bottom:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.ph h2{color:#fff;font-size:1.1rem}'+
-    'table{width:100%;border-collapse:collapse}thead th{background:#C8102E!important;color:#fff!important;padding:8px 10px;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact;text-align:right}'+
-    'tbody tr{border-bottom:1px solid #e5e7eb}tbody tr:nth-child(even){background:#fef2f2;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
-    'tbody td{padding:7px 10px;vertical-align:middle}.price-cell{font-weight:800;color:#9D0216}.area-cell{color:#0369a1;font-weight:700}.pricem2-cell{color:#7c3aed;font-weight:700}.loc-cell{font-weight:600}.street-cell{color:#6b7280;font-size:.8em}'+
-    '.src-badge{display:inline-block;background:#fff5f5;color:#C8102E;border:1px solid #fecaca;border-radius:4px;padding:1px 6px;font-size:.72em;font-weight:600;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
-    '.tier-badge{display:inline-block;border-radius:4px;padding:2px 6px;font-size:.72em;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
-    '.tier-premium{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}.tier-mid{background:#f0fdf4;color:#166534;border:1px solid #86efac}.tier-eco{background:#fff7ed;color:#9a3412;border:1px solid #fdba74}'+
-    '.foot{margin-top:14px;font-size:.75em;color:#6b7280;text-align:center}'+
-    '@media print{.ph,.tier-badge,.src-badge,thead th{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}'+
-    '</style></head><body>'+
-    '<div class="ph"><h2>📋 '+title+'</h2></div>'+
-    tbl+
-    '<div class="foot">Brandzo Hub 2026 — يونيو 2026</div>'+
-    '<script>window.onload=function(){window.print();setTimeout(function(){window.close();},700);};<\/script>'+
-    '</body></html>');
-  w.document.close();
-}
-
-/* ══ EXPORT PDF ══ */
-function exportPDF(){
-  const tip=document.createElement('div');
-  tip.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#9D0216,#C8102E);color:#fff;padding:1.8rem 2.2rem;border-radius:16px;z-index:10000;text-align:center;font-family:Cairo,Arial,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.5);max-width:380px;line-height:1.7;direction:rtl;min-width:300px;';
-  tip.innerHTML=
-    '<div style="font-size:2.5rem;margin-bottom:.5rem">📄</div>'+
-    '<h3 style="margin-bottom:.5rem">تحويل إلى PDF</h3>'+
-    '<p>في نافذة الطباعة اختر<br/><strong>"Save as PDF"</strong> أو <strong>"حفظ بصيغة PDF"</strong></p>'+
-    '<br/>'+
-    '<button onclick="this.parentNode.remove();window.print();" style="background:#fff;color:#C8102E;border:none;padding:.6rem 1.5rem;border-radius:8px;font-weight:700;font-family:inherit;cursor:pointer;margin-left:.5rem">متابعة ← طباعة</button>'+
-    '<button onclick="this.parentNode.remove();" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);padding:.6rem 1.2rem;border-radius:8px;font-weight:700;font-family:inherit;cursor:pointer">إلغاء</button>';
-  document.body.appendChild(tip);
-}
-
-/* ══ TOAST ══ */
-function toast(msg,dur=2800){
-  const t=document.getElementById('toast');
-  t.textContent=msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),dur);
-}
-
-/* ══ CHARTS ══ */
-const CC={red:'rgba(200,16,46,.85)',blue:'rgba(37,99,168,.85)',green:'rgba(22,163,74,.85)',orange:'rgba(245,158,11,.85)',purple:'rgba(124,58,237,.85)'};
-function avg(arr){return arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0;}
-function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
-function chartOpts(ylabel){
-  return{
-    responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{position:'top',labels:{font:{size:11},color:'#374151'}}},
-    scales:{
-      y:{beginAtZero:true,ticks:{font:{size:10},color:'#6b7280'},grid:{color:'rgba(0,0,0,.05)'}},
-      x:{ticks:{font:{size:10},color:'#6b7280'}}
+function normalizeRow(r){
+  const get = (...keys) => {
+    for(const rk of Object.keys(r)){
+      const norm = rk.trim();
+      if(keys.includes(norm)) return r[rk];
     }
+    return '';
+  };
+  return {
+    barcode: String(get('الباركود','باركود','Barcode')).trim(),
+    name: String(get('اسم الصنف','الصنف','اسم المنتج','Item Name','Name')).trim(),
+    unit: String(get('الوحدة','Unit')).trim(),
+    qty: num(get('الكمية','Quantity')),
+    boxes: num(get('عدد الصناديق','الصناديق','Boxes')),
+    note: String(get('ملاحظة','ملاحظات','Note')).trim(),
+    brand: String(get('اسم البرند','البرند','Brand')).trim(),
   };
 }
-function priceRanges(prices){
-  if(!prices.length)return{labels:['لا بيانات'],counts:[0]};
-  const maxP=Math.max(...prices,1);
-  const step=maxP<=3000?500:maxP<=10000?2000:5000;
-  const buckets={};
-  prices.forEach(p=>{
-    const b=Math.floor(p/step)*step;
-    const lbl=b.toLocaleString('ar-LY')+' – '+(b+step).toLocaleString('ar-LY');
-    buckets[lbl]=(buckets[lbl]||0)+1;
-  });
-  return{labels:Object.keys(buckets),counts:Object.values(buckets)};
-}
-function updateCharts(){
-  const bP=appData.benghazi.filter(r=>r.price>0).map(r=>r.price);
-  const tP=appData.tripoli.filter(r=>r.price>0).map(r=>r.price);
-  const bPm2=appData.benghazi.filter(r=>r.pm2>0).map(r=>r.pm2);
-  const tPm2=appData.tripoli.filter(r=>r.pm2>0).map(r=>r.pm2);
-
-  destroyChart('chart-city');
-  charts['chart-city']=new Chart(document.getElementById('chart-city'),{
-    type:'bar',
-    data:{labels:['أدنى سعر','المتوسط','أعلى سعر'],datasets:[
-      {label:'بنغازي',data:[bP.length?Math.min(...bP):0,avg(bP),bP.length?Math.max(...bP):0],backgroundColor:CC.red},
-      {label:'طرابلس',data:[tP.length?Math.min(...tP):0,avg(tP),tP.length?Math.max(...tP):0],backgroundColor:CC.blue}
-    ]},
-    options:chartOpts('د.ل')
-  });
-
-  const tierC=city=>[
-    appData[city].filter(r=>r.tier==='tier-premium').length,
-    appData[city].filter(r=>r.tier==='tier-mid').length,
-    appData[city].filter(r=>r.tier==='tier-eco').length
-  ];
-  destroyChart('chart-tier');
-  charts['chart-tier']=new Chart(document.getElementById('chart-tier'),{
-    type:'doughnut',
-    data:{labels:['فاخر','متوسط','اقتصادي'],datasets:[{
-      label:'التوزيع',
-      data:[...tierC('benghazi').map((v,i)=>v+tierC('tripoli')[i])],
-      backgroundColor:[CC.red,CC.orange,CC.green]
-    }]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},color:'#374151'}}}}
-  });
-
-  const bR=priceRanges(bP);
-  destroyChart('chart-benghazi-dist');
-  charts['chart-benghazi-dist']=new Chart(document.getElementById('chart-benghazi-dist'),{
-    type:'bar',data:{labels:bR.labels,datasets:[{label:'عدد المحلات',data:bR.counts,backgroundColor:CC.red}]},options:chartOpts('عدد')
-  });
-
-  const tR=priceRanges(tP);
-  destroyChart('chart-tripoli-dist');
-  charts['chart-tripoli-dist']=new Chart(document.getElementById('chart-tripoli-dist'),{
-    type:'bar',data:{labels:tR.labels,datasets:[{label:'عدد المحلات',data:tR.counts,backgroundColor:CC.blue}]},options:chartOpts('عدد')
-  });
-
-  destroyChart('chart-sqm');
-  charts['chart-sqm']=new Chart(document.getElementById('chart-sqm'),{
-    type:'bar',
-    data:{labels:['بنغازي','طرابلس'],datasets:[{label:'متوسط سعر المتر (د.ل/م²)',data:[avg(bPm2),avg(tPm2)],backgroundColor:[CC.red,CC.blue]}]},
-    options:chartOpts('د.ل/م²')
-  });
-
-  destroyChart('chart-count');
-  charts['chart-count']=new Chart(document.getElementById('chart-count'),{
-    type:'doughnut',
-    data:{labels:['بنغازي','طرابلس'],datasets:[{data:[appData.benghazi.length,appData.tripoli.length],backgroundColor:[CC.red,CC.blue]}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},color:'#374151'}}}}
-  });
-}
-
-/* ══ INIT ══ */
-document.addEventListener('DOMContentLoaded',function(){
-  if(!loadStorage()){
-    appData={benghazi:INIT_DATA.benghazi.map(r=>({...r})),tripoli:INIT_DATA.tripoli.map(r=>({...r}))};
-  }
-  filteredData={benghazi:[...appData.benghazi],tripoli:[...appData.tripoli]};
-  renderAll();
+$('#importCancelBtn').addEventListener('click', () => hideModal('importModal'));
+$('#importConfirmBtn').addEventListener('click', () => {
+  const mode = document.querySelector('input[name="importMode"]:checked').value;
+  applyImport(mode, pendingImportRows);
+  hideModal('importModal');
 });
+function applyImport(mode, rows){
+  let added=0, updated=0, skipped=0;
+  if(mode === 'replace'){
+    inventory = rows.map(r => Object.assign({ id: uid(), updatedAt: Date.now() }, r));
+    added = inventory.length;
+  } else {
+    rows.forEach(r => {
+      if(!r.barcode && !r.name){ skipped++; return; }
+      const existing = r.barcode ? inventory.find(i => i.barcode === r.barcode) : null;
+      if(existing){
+        if(mode === 'merge'){
+          existing.name = r.name || existing.name;
+          existing.unit = r.unit || existing.unit;
+          existing.qty = r.qty;
+          existing.boxes = r.boxes;
+          existing.note = r.note || existing.note;
+          existing.brand = r.brand || existing.brand;
+          existing.updatedAt = Date.now();
+          updated++;
+        } else { skipped++; }
+      } else {
+        inventory.push(Object.assign({ id: uid(), updatedAt: Date.now() }, r));
+        added++;
+      }
+    });
+  }
+  queueSave(); render();
+  showToast('الاستيراد: '+added+' جديد، '+updated+' محدث، '+skipped+' متجاهل', 'success');
+}
+
+/* ============ Init ============ */
+async function init(){
+  await loadInventory();
+  render();
+  refocusScanInput();
+}
+init();
+
+})();
 </script>
 </body>
 </html>
