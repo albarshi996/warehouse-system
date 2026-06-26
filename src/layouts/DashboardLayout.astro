@@ -255,6 +255,18 @@ const currentPath = Astro.url.pathname;
             ))
           }
 
+          <!-- زر عمليات مخزنية -->
+          <li data-label="عمليات مخزنية">
+            <a
+              href={`${base}/عمليات-مخزنية.html`}
+              target="_blank"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-right"
+            >
+              <Icon name="package" class="text-brand-gold" />
+              <span class="font-medium">عمليات مخزنية</span>
+            </a>
+          </li>
+
           <!-- زر فتح الدليل التشغيلي -->
           {showGuide && (
             <li data-label="الدليل التشغيلي">
