@@ -1,0 +1,576 @@
+---
+import '../styles/global.css';
+import Icon from '../components/ui/Icon.astro';
+
+const { title, showGuide = false } = Astro.props;
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+
+const navItems = [
+  { href: `${base}/dashboard`, label: 'الرئيسية', icon: 'grid' },
+  { href: `${base}/dashboard/workflows`, label: 'الهيكل والمسارات', icon: 'workflows' },
+  { href: `${base}/تقرير-المقارنة-العالمية.html`, label: 'المقارنة العالمية', icon: 'grid', external: true },
+  { href: `${base}/dashboard/erp-workflows`, label: 'دورات العمل ERP', icon: 'dollarSign' },
+  { href: `${base}/dashboard/odoo-installation`, label: 'تثبيت أودو', icon: 'package' },
+  { href: `${base}/dashboard/forms`, label: 'اختار وظيفتك', icon: 'clipboardList' },
+  { href: `${base}/dashboard/assets-inventory`, label: 'جرد الأصول', icon: 'clipboardList' },
+  { href: `${base}/dashboard/vehicles-inventory`, label: 'جرد المركبات', icon: 'package' },
+  { href: `${base}/dashboard/warehouses`, label: 'المستودعات', icon: 'package' },
+  { href: `${base}/dashboard/warehouse-maps`, label: 'الخرائط الفنية', icon: 'warehouse' },
+  { href: `${base}/تقرير-تحوير-مستودعات-155.html`, label: 'تقرير تحوير 155', icon: 'clipboardList', external: true },
+  { href: `${base}/dashboard/cold-storage-plan`, label: 'مخطط الرحبة - كوزميتك', icon: 'package' },
+  { href: `${base}/dashboard/products`, label: 'الأصناف', icon: 'package' },
+  { href: `${base}/dashboard/grn`, label: 'استلام البضاعة', icon: 'arrowDownTray' },
+  { href: `${base}/dashboard/tasks`, label: 'المهام', icon: 'clipboardList' },
+  { href: `${base}/dashboard/retail-hub`, label: 'خريطة التجزئة', icon: 'mapPin' },
+  { href: `${base}/dashboard/meeting-assistant`, label: 'مساعد الاجتماعات', icon: 'grid' },
+  { href: `${base}/dashboard/development-proposals`, label: 'مقترحات التطوير', icon: 'clipboardList' },
+  { href: `${base}/تقرير-الانجاز.html`, label: 'تقرير الانجاز', icon: 'clipboardList', external: true },
+  { href: `${base}/dashboard/gallery`, label: 'معرض التوثيق المرئي', icon: 'image' },
+  { href: `${base}/تقرير-الدورة-المستندية-الكامل-2026.html`, label: 'الدورة المستندية والتنظيم', icon: 'clipboardList', external: true },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title ? `${title} - Brandzo Hub 2026` : 'Brandzo Hub 2026'}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: 'Cairo', sans-serif;
+      }
+
+      /* ─── Guide Drawer ──────────────────────────────────────────────────────── */
+      /*
+        الـ drawer يخرج من اليمين في واجهة RTL.
+        نستخدم translateX(100%) للإخفاء و translateX(0) للظهور.
+        margin-inline-start: auto يضعه على يمين الشاشة بشكل صحيح بغض
+        النظر عن اتجاه النص.
+      */
+      #guide-drawer {
+        /* الموضع والحجم */
+        margin-inline-start: auto; /* يدفعه لليمين في RTL */
+        margin-inline-end: 0;
+        width: min(90vw, 28rem);   /* مرن: لا يتجاوز 90% العرض ولا 448px */
+        height: 100dvh;            /* dvh يأخذ شريط العنوان في الموبايل بعين الاعتبار */
+        max-height: 100dvh;
+
+        /* المظهر */
+        border: none;
+        border-inline-start: 2px solid #DAAA3C; /* حد ذهبي على يسار الـ drawer */
+        background: rgba(26, 26, 46, 0.92);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        color: white;
+        box-shadow: -10px 0 30px rgba(196, 30, 58, 0.3);
+
+        /* الحركة: مخفي لليمين بداية */
+        transform: translateX(100%);
+        transition: transform 0.3s ease-out;
+
+        /* تخطيط داخلي */
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* حالة الفتح */
+      #guide-drawer[open] {
+        transform: translateX(0) !important; /* !important لتجاوز قيمة المتصفح الافتراضية */
+        display: flex !important;            /* بعض المتصفحات تُعيد display إلى block */
+      }
+
+      /* الـ backdrop الضبابي خلف الـ dialog */
+      #guide-drawer::backdrop {
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+      }
+
+      /* محتوى الـ iframe: يملأ المساحة المتبقية بين الرأس والتذييل */
+      #guide-drawer .guide-body {
+        flex: 1 1 0%;
+        min-height: 0;       /* ضروري لكي يعمل flex-shrink داخل flex column */
+        overflow: hidden;
+      }
+
+      #guide-drawer .guide-body iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+      }
+
+      /* توهجات النيون */
+      .neon-glow-gold {
+        box-shadow: 0 0 10px rgba(218, 170, 60, 0.5), 0 0 20px rgba(218, 170, 60, 0.3);
+      }
+
+      .neon-glow-red {
+        box-shadow: 0 0 10px rgba(196, 30, 58, 0.5), 0 0 20px rgba(196, 30, 58, 0.3);
+      }
+    </style>
+  </head>
+
+  <body class="bz-page-bg min-h-screen">
+
+    <!--
+      ═══════════════════════════════════════════════════════════
+      شريط العنوان العلوي — يظهر فقط على الموبايل (أصغر من md)
+      ═══════════════════════════════════════════════════════════
+      - fixed: يطفو فوق المحتوى ولا يُزاح عند التمرير
+      - inset-x-0: يمتد على كامل عرض الشاشة
+      - z-50: فوق المحتوى لكن تحت السايدبار (z-[70]) والـ backdrop (z-[60])
+    -->
+    <header
+      id="brandzo-mobile-header"
+      class="fixed top-0 inset-x-0 z-50 items-center justify-between bg-brand-navy text-white px-4 py-3 shadow-lg"
+      style="display: flex;"
+    >
+      <div class="flex items-center gap-3">
+        <div
+          class="w-9 h-9 bg-brand-red rounded-lg flex items-center justify-center font-bold text-lg shadow"
+        >
+          B
+        </div>
+        <div class="flex flex-col">
+          <span class="font-bold tracking-tight leading-none">Brandzo Hub</span>
+          <div id="db-status-mobile" class="flex items-center gap-1 mt-1 opacity-80">
+            <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+            <span class="text-[9px] font-bold">جاري الاتصال...</span>
+          </div>
+        </div>
+      </div>
+      <button
+        id="brandzo-menu-toggle"
+        type="button"
+        aria-label="فتح القائمة"
+        aria-controls="brandzo-sidebar"
+        aria-expanded="false"
+        class="p-2 rounded-md hover:bg-gray-800 transition-colors"
+      >
+        <Icon name="menu" size={24} />
+      </button>
+    </header>
+
+    <!--
+      ═══════════════════════════════════════════════════════════
+      السايدبار الجانبي
+      ═══════════════════════════════════════════════════════════
+      - موبايل: مخفي خارج الشاشة عبر translate-x-full (RTL: خارج اليمين)
+      - سطح مكتب (md+): ثابت ومرئي دائماً عبر md:translate-x-0
+      - right-0: مثبت على يمين الشاشة (صحيح لـ RTL)
+      - z-[70]: فوق الـ backdrop (z-[60]) وتحت الـ dialog
+    -->
+    <aside
+      id="brandzo-sidebar"
+      class="fixed top-0 right-0 w-64 max-w-[85vw] h-[100dvh] bg-brand-navy text-white shadow-xl z-[70] flex flex-col transform transition-transform duration-200 ease-out"
+      style="transform: translateX(100%);"
+      aria-hidden="true"
+    >
+      <!-- رأس السايدبار: شعار + زر الإغلاق في الموبايل -->
+      <div class="p-6 border-b border-gray-700 flex items-center justify-between gap-3 sticky top-0 bg-brand-navy z-[80]">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 bg-brand-red rounded-lg flex items-center justify-center font-bold text-xl shadow-lg"
+          >
+            B
+          </div>
+          <div class="flex flex-col">
+            <h1 class="text-xl font-bold tracking-tight leading-none">Brandzo Hub</h1>
+            <div id="db-status-desktop" class="flex items-center gap-1.5 mt-1 opacity-70">
+              <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+              <span class="text-[10px] font-bold">جاري الاتصال بقاعدة البيانات...</span>
+            </div>
+          </div>
+        </div>
+        <!-- زر الإغلاق: يظهر فقط في الموبايل -->
+        <button
+          id="brandzo-menu-close"
+          type="button"
+          aria-label="إغلاق القائمة"
+          class="md:hidden p-2 rounded-md hover:bg-gray-800 transition-colors"
+        >
+          <Icon name="close" size={20} />
+        </button>
+      </div>
+
+      <!-- روابط التنقل السريع -->
+      <div class="px-4 mt-4 space-y-2">
+        <a
+          href={`${base}/dashboard`}
+          class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg bg-brand-red hover:bg-brand-red-dark text-white font-bold text-sm shadow-md transition-colors"
+        >
+          <Icon name="grid" size={18} />
+          <span>لوحة التحكم</span>
+        </a>
+        <a
+          href={`${base}/`}
+          class="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg border border-gray-600 hover:border-brand-red hover:text-brand-red text-gray-100 font-medium text-sm transition-colors"
+        >
+          <Icon name="home" size={16} />
+          <span>الصفحة الرئيسية</span>
+        </a>
+      </div>
+
+      <!-- قائمة التنقل الرئيسية -->
+      <nav class="mt-4 px-4 flex-1 overflow-y-auto">
+        <!-- Search Bar -->
+        <div class="mb-4 sticky top-0 bg-brand-navy z-10 pb-2">
+          <input
+            type="text"
+            id="sidebar-search"
+            placeholder="🔍 ابحث في لوحة التحكم..."
+            class="bg-white/10 border border-white/20 rounded-xl text-white text-sm px-4 py-2 w-full focus:outline-none focus:border-brand-gold/50"
+          />
+        </div>
+
+        <ul id="nav-list" class="space-y-1">
+          <li id="no-results" class="hidden text-gray-400 text-xs text-center py-4">لا توجد نتائج</li>
+          {
+            navItems.map((item) => (
+              <li data-label={item.label}>
+                <a
+                  href={item.href}
+                  target={item.external ? '_blank' : null}
+                  rel={item.external ? 'noopener noreferrer' : null}
+                  class={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    currentPath === item.href || currentPath.startsWith(item.href + '/')
+                      ? 'bg-brand-red text-white font-bold shadow-md'
+                      : 'hover:bg-gray-800 text-gray-100'
+                  }`}
+                  style={currentPath === item.href ? 'border-right: 3px solid #DAAA3C;' : ''}
+                >
+                  <Icon name={item.icon} class="text-brand-red" />
+                  <span class="font-medium">{item.label}</span>
+                </a>
+              </li>
+            ))
+          }
+
+          <!-- زر عمليات مخزنية -->
+          <li data-label="عمليات مخزنية">
+            <a
+              href={`${base}/عمليات-مخزنية.html`}
+              target="_blank"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-right"
+            >
+              <Icon name="package" class="text-brand-gold" />
+              <span class="font-medium">عمليات مخزنية</span>
+            </a>
+          </li>
+
+          <!-- زر فتح الدليل التشغيلي -->
+          {showGuide && (
+            <li data-label="الدليل التشغيلي">
+              <button
+                id="open-guide"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-right"
+                type="button"
+              >
+                <Icon name="bookOpen" class="text-brand-gold" />
+                <span class="font-medium">الدليل التشغيلي</span>
+              </button>
+            </li>
+          )}
+
+          <!-- زر فتح تقرير ERP -->
+          <li data-label="تقرير ERP">
+            <a
+              href={`${base}/تقرير(ERP).html`}
+              target="_blank"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-right"
+            >
+              <Icon name="fileUp" class="text-brand-red" />
+              <span class="font-medium">تقرير ERP</span>
+            </a>
+          </li>
+
+          <!-- زر فتح تقرير التخزين -->
+          <li data-label="تقرير التخزين">
+            <a
+              href={`${base}/تقرير(التخزين).html`}
+              target="_blank"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-right"
+            >
+              <Icon name="package" class="text-brand-gold" />
+              <span class="font-medium">تقرير التخزين</span>
+            </a>
+          </li>
+
+          <!-- زر فتح تقرير هندسة المقترح (متعدد العلامات) -->
+          <li data-label="تقرير هندسة المقترح (متعدد العلامات)">
+            <a
+              href={`${base}/Brandzo_Multi_Brand_Architecture_Odoo_Guide.html`}
+              target="_blank"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-right"
+            >
+              <Icon name="users" class="text-brand-red" />
+              <span class="font-medium">تقرير هندسة المقترح (متعدد العلامات)</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- تذييل السايدبار: مثبت في الأسفل -->
+      <div class="mt-auto border-t border-gray-700 px-4 py-3 text-center">
+        <p class="text-[11px] leading-snug text-gray-100 font-medium" dir="rtl">
+          برمجة وتطوير: محمد إبراهيم البرشي
+        </p>
+        <p class="text-[10px] text-gray-200 mt-1">Brandzo Hub 2026 &copy;</p>
+      </div>
+    </aside>
+
+    <!--
+      Backdrop: طبقة شبه شفافة خلف السايدبار في الموبايل.
+      النقر عليها يُغلق السايدبار.
+      z-[60]: تحت السايدبار (z-[70]) وفوق المحتوى.
+    -->
+    <div
+      id="brandzo-backdrop"
+      class="fixed inset-0 bg-black/50 z-[60]"
+      style="display: none;"
+      aria-hidden="true"
+    ></div>
+
+    <!--
+      ═══════════════════════════════════════════════════════════
+      المحتوى الرئيسي
+      ═══════════════════════════════════════════════════════════
+      - موبايل: padding-top يساوي ارتفاع شريط العنوان (h-14 = 56px ≈ pt-16)
+        نستخدم pt-16 (64px) لإعطاء هامش آمن إضافي.
+      - سطح مكتب: md:pt-8 يلغي الـ padding الزائد (لا يوجد header ثابت).
+      - md:mr-64: هامش يمين بعرض السايدبار لمنع التداخل.
+    -->
+    <main class="md:mr-64 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 pt-16 md:pt-8 relative z-10">
+      <div class="max-w-7xl mx-auto">
+        <slot />
+      </div>
+    </main>
+
+    <!--
+      ═══════════════════════════════════════════════════════════
+      الدليل التشغيلي — dialog يخرج من اليمين
+      ═══════════════════════════════════════════════════════════
+      لا نضع height هنا مباشرةً لأن CSS يتكفل بـ h: 100dvh
+    -->
+    {showGuide && (
+      <dialog id="guide-drawer">
+        <!-- رأس الـ drawer -->
+        <div class="flex items-center justify-between p-4 border-b border-brand-gold/30 bg-brand-navy/50 flex-shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-brand-gold rounded flex items-center justify-center text-brand-navy shadow-lg neon-glow-gold">
+              <Icon name="bookOpen" size={18} />
+            </div>
+            <h2 class="text-xl font-bold text-brand-gold">الدليل التشغيلي</h2>
+          </div>
+          <button id="close-guide" type="button" class="p-2 hover:bg-white/10 rounded-full transition-colors" aria-label="إغلاق الدليل">
+            <Icon name="close" size={20} />
+          </button>
+        </div>
+
+        <!-- جسم الـ drawer: الـ iframe يملأ المساحة المتاحة -->
+        <div class="guide-body">
+          <iframe
+            src={`${base}/Brandzo_Operational_Guide.html`}
+            title="الدليل التشغيلي"
+            loading="lazy"
+          ></iframe>
+        </div>
+
+        <!-- تذييل الـ drawer -->
+        <div class="p-4 border-t border-brand-gold/30 bg-brand-navy/50 text-center text-xs text-gray-200 flex-shrink-0">
+          Brandzo Hub 2026 - Operational Excellence
+        </div>
+      </dialog>
+    )}
+
+    <script is:inline>
+      (function () {
+        'use strict';
+
+        /* ══════════════════════════════════════════════════════════
+           ١. الدليل التشغيلي (Guide Drawer) — إذا كان موجوداً
+           ══════════════════════════════════════════════════════════ */
+        var guideDrawer   = document.getElementById('guide-drawer');
+        var openGuideBtn  = document.getElementById('open-guide');
+        var closeGuideBtn = document.getElementById('close-guide');
+
+        if (guideDrawer && openGuideBtn && closeGuideBtn) {
+          openGuideBtn.addEventListener('click', function () {
+            guideDrawer.showModal();
+          });
+          closeGuideBtn.addEventListener('click', function () {
+            guideDrawer.close();
+          });
+          guideDrawer.addEventListener('click', function (e) {
+            if (e.target === guideDrawer) guideDrawer.close();
+          });
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           ٢. السايدبار الذكي — يعمل على الموبايل بكلا الاتجاهين
+           ══════════════════════════════════════════════════════════ */
+        var sidebar  = document.getElementById('brandzo-sidebar');
+        var backdrop = document.getElementById('brandzo-backdrop');
+        var toggle   = document.getElementById('brandzo-menu-toggle');
+        var closeBtn = document.getElementById('brandzo-menu-close');
+        var header   = document.getElementById('brandzo-mobile-header');
+
+        if (!sidebar) return;
+
+        /* ── نقطة الكسر: 768px = md في Tailwind ── */
+        var BREAKPOINT = 768;
+
+        function isDesktop() {
+          return window.innerWidth >= BREAKPOINT;
+        }
+
+        /* ── إظهار السايدبار ── */
+        function openSidebar() {
+          sidebar.style.transform = 'translateX(0)';
+          if (backdrop) backdrop.style.display = 'block';
+          if (toggle)   toggle.setAttribute('aria-expanded', 'true');
+          document.body.style.overflow = 'hidden';
+        }
+
+        /* ── إخفاء السايدبار ── */
+        function closeSidebar() {
+          sidebar.style.transform = 'translateX(100%)';
+          if (backdrop) backdrop.style.display = 'none';
+          if (toggle)   toggle.setAttribute('aria-expanded', 'false');
+          document.body.style.overflow = '';
+        }
+
+        /* ── ضبط الحالة الأولية وعند تغيير الحجم ── */
+        function syncState() {
+          if (isDesktop()) {
+            sidebar.style.transform = 'translateX(0)';
+            if (backdrop) backdrop.style.display = 'none';
+            if (header)   header.style.display = 'none';
+            document.body.style.overflow = '';
+          } else {
+            sidebar.style.transform = 'translateX(100%)';
+            if (backdrop) backdrop.style.display = 'none';
+            if (header)   header.style.display = 'flex';
+            document.body.style.overflow = '';
+          }
+        }
+
+        /* تطبيق الحالة الأولية فور تحميل الصفحة */
+        syncState();
+
+        /* ── أحداث الأزرار ── */
+        if (toggle) {
+          toggle.addEventListener('click', function () {
+            var isOpen = sidebar.style.transform === 'translateX(0px)' || sidebar.style.transform === 'translateX(0)';
+            if (isOpen) closeSidebar();
+            else openSidebar();
+          });
+        }
+
+        if (closeBtn) {
+          closeBtn.addEventListener('click', closeSidebar);
+        }
+
+        /* إغلاق بالنقر على الـ backdrop */
+        if (backdrop) {
+          backdrop.addEventListener('click', closeSidebar);
+        }
+
+        /* إغلاق بضغط Escape */
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') {
+            if (guideDrawer && guideDrawer.open) return;
+            if (!isDesktop()) closeSidebar();
+          }
+        });
+
+        /* إغلاق بالنقر على رابط داخل السايدبار (على الموبايل فقط) */
+        var sidebarLinks = sidebar.querySelectorAll('a');
+        sidebarLinks.forEach(function (link) {
+          link.addEventListener('click', function () {
+            if (!isDesktop()) closeSidebar();
+          });
+        });
+
+        /* ── مزامنة عند تغيير حجم النافذة أو اتجاهها ── */
+        var resizeTimer;
+        window.addEventListener('resize', function () {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(syncState, 150);
+        });
+
+        window.addEventListener('orientationchange', function () {
+          setTimeout(syncState, 400);
+        });
+
+        /* ─── Sidebar Search Logic ─── */
+        var searchInput = document.getElementById('sidebar-search');
+        var navList = document.getElementById('nav-list');
+        var noResults = document.getElementById('no-results');
+
+        if (searchInput && navList && noResults) {
+          var navItems = navList.querySelectorAll('li[data-label]');
+
+          searchInput.addEventListener('input', function() {
+            var query = this.value.trim().toLowerCase();
+            var visibleCount = 0;
+
+            navItems.forEach(function(item) {
+              var label = item.getAttribute('data-label').toLowerCase();
+              if (label.includes(query)) {
+                item.style.display = '';
+                visibleCount++;
+              } else {
+                item.style.display = 'none';
+              }
+            });
+
+            if (visibleCount === 0 && query !== '') {
+              noResults.classList.remove('hidden');
+            } else {
+              noResults.classList.add('hidden');
+            }
+          });
+        }
+
+        /* ─── Database Status Listener ─── */
+        window.addEventListener('brandzo:db-status', function (e) {
+          var online = e.detail.online;
+          var mobileStatus = document.getElementById('db-status-mobile');
+          var desktopStatus = document.getElementById('db-status-desktop');
+
+          var update = function(el) {
+            if (!el) return;
+            var dot = el.querySelector('span:first-child');
+            var text = el.querySelector('span:last-child');
+
+            if (online) {
+              dot.className = 'w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse';
+              text.textContent = 'Firebase متصل';
+              text.className = 'text-[9px] md:text-[10px] font-bold text-green-400';
+            } else {
+              dot.className = 'w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.6)]';
+              text.textContent = 'وضع محلي';
+              text.className = 'text-[9px] md:text-[10px] font-bold text-yellow-400';
+            }
+          };
+
+          update(mobileStatus);
+          update(desktopStatus);
+        });
+
+      })();
+    </script>
+  </body>
+</html>

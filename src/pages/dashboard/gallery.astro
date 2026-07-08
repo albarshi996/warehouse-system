@@ -1,0 +1,146 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Icon from '../../components/ui/Icon.astro';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const title = "معرض التوثيق المرئي";
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+
+const imagesDir = path.join(process.cwd(), 'public', 'assets', 'images');
+const videosDir = path.join(process.cwd(), 'public', 'assets', 'videos');
+
+const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+const videoExtensions = ['.mp4', '.webm', '.mov'];
+
+let mediaItems = [];
+
+try {
+  if (fs.existsSync(imagesDir)) {
+    const files = fs.readdirSync(imagesDir);
+    files.forEach(file => {
+      const ext = path.extname(file).toLowerCase();
+      if (!file.startsWith('.') && file !== '.gitkeep' && imageExtensions.includes(ext)) {
+        mediaItems.push({
+          type: 'image',
+          title: path.parse(file).name.replace(/[-_]/g, ' '),
+          url: `${base}/assets/images/${file}`
+        });
+      }
+    });
+  }
+
+  if (fs.existsSync(videosDir)) {
+    const files = fs.readdirSync(videosDir);
+    files.forEach(file => {
+      const ext = path.extname(file).toLowerCase();
+      if (!file.startsWith('.') && file !== '.gitkeep' && videoExtensions.includes(ext)) {
+        mediaItems.push({
+          type: 'video',
+          title: path.parse(file).name.replace(/[-_]/g, ' '),
+          url: `${base}/assets/videos/${file}`
+        });
+      }
+    });
+  }
+} catch (error) {
+  console.error('Error reading media directories:', error);
+}
+---
+
+<DashboardLayout title={title}>
+  <div class="space-y-8 animate-fade-in-up">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-white flex items-center gap-3">
+          <Icon name="image" size={32} class="text-brand-red" />
+          معرض التوثيق المرئي
+        </h1>
+        <p class="text-gray-400 mt-2">
+          توثيق مرئي ومقترحات مصورة للمستودعات والعمليات اللوجستية.
+        </p>
+      </div>
+    </div>
+
+    {mediaItems.length > 0 ? (
+      <!-- Gallery Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {mediaItems.map((item) => (
+          <div class="glass-card overflow-hidden group">
+            <div class="aspect-video relative overflow-hidden bg-gray-900">
+              {item.type === 'image' ? (
+                <>
+                  <img
+                    src={item.url}
+                    alt={item.title}
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-80 group-hover:opacity-100"
+                  />
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+                     <span class="text-brand-gold text-xs font-bold">توثيق مرئي</span>
+                     <h3 class="text-white font-bold">{item.title}</h3>
+                  </div>
+                </>
+              ) : (
+                <video
+                  class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                  controls
+                >
+                  <source src={item.url} type={item.url.endsWith('.webm') ? 'video/webm' : (item.url.endsWith('.mov') ? 'video/quicktime' : 'video/mp4')} />
+                  متصفحك لا يدعم تشغيل الفيديو.
+                </video>
+              )}
+            </div>
+            <div class="p-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class={`px-2 py-1 ${item.type === 'image' ? 'bg-brand-red/20 text-brand-red' : 'bg-blue-500/20 text-blue-400'} text-[10px] font-bold rounded uppercase tracking-wider`}>
+                  {item.type === 'image' ? 'صورة توثيقية' : 'فيديو توضيحي'}
+                </span>
+                <span class="text-gray-500 text-xs">2026/06/04</span>
+              </div>
+              <h3 class="text-white font-bold mb-1">{item.title}</h3>
+              <p class="text-gray-400 text-sm leading-relaxed">
+                {item.type === 'image'
+                  ? 'توثيق لمقترح آلية التنظيم ورفع الكفاءة التشغيلية في المستودع.'
+                  : 'شرح مرئي للعمليات اللوجستية وآلية العمل المقترحة.'}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <!-- Empty State / Placeholder for Future Assets -->
+      <div class="bz-card-dark p-12 text-center border-dashed border-2 border-white/10">
+        <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Icon name="fileUp" size={32} class="text-gray-600" />
+        </div>
+        <h3 class="text-xl font-bold text-gray-300 mb-2">في انتظار المزيد من الوسائط</h3>
+        <p class="text-gray-500 max-w-md mx-auto">
+          سيتم إضافة المزيد من الصور والفيديوهات التوثيقية والمقترحات المرئية تباعاً لتعزيز التوثيق التشغيلي.
+        </p>
+      </div>
+    )}
+  </div>
+</DashboardLayout>
+
+<style>
+  .glass-card {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+  }
+
+  .glass-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(196, 30, 58, 0.3);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 0 24px rgba(196, 30, 58, 0.15);
+    transform: translateY(-4px);
+  }
+</style>

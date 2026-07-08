@@ -1,0 +1,313 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Icon from '../../components/ui/Icon.astro';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+
+/**
+ * The 13 operational forms shipped under public/forms/. They are static HTML
+ * pages, fully self-contained, edited in place by the user, and printed via
+ * window.print(). This page is just the launcher.
+ */
+const forms = [
+  {
+    file: 'form_BinCard.html',
+    titleAr: 'بطاقة مراقبة المخزون',
+    titleEn: 'Bin / Pallet Card',
+    description: 'تتبع حركة الصنف داخل الموقع التخزيني (FEFO).',
+    icon: 'package',
+  },
+  {
+    file: 'form_PO.html',
+    titleAr: 'أمر الشراء',
+    titleEn: 'Purchase Order',
+    description: 'إصدار أوامر الشراء للمورّدين والاعتمادات.',
+    icon: 'fileUp',
+  },
+  {
+    file: 'form_GRN.html',
+    titleAr: 'إشعار استلام البضاعة',
+    titleEn: 'Goods Received Note',
+    description: 'تسجيل استلام الأصناف وربطها بأمر الشراء.',
+    icon: 'arrowDownTray',
+  },
+  {
+    file: 'form_ReturnNote.html',
+    titleAr: 'إشعار الإرجاع',
+    titleEn: 'Return Note',
+    description: 'إرجاع البضاعة للمورد مع التوثيق الكامل.',
+    icon: 'arrowUpTray',
+  },
+  {
+    file: 'form_Credit Note.html',
+    titleAr: 'مرتجع مخزني',
+    titleEn: 'Credit / Goods Return Note',
+    description: 'إثبات قيمة الأصناف المرتجعة على المورد.',
+    icon: 'fileUp',
+  },
+  {
+    file: 'form_Picking.html',
+    titleAr: 'قائمة السحب',
+    titleEn: 'Picking List',
+    description: 'تجهيز الطلبات وسحب الأصناف من المواقع.',
+    icon: 'clipboardList',
+  },
+  {
+    file: 'form_Store Requisition.html',
+    titleAr: 'طلب صرف من المخزن',
+    titleEn: 'Store Requisition',
+    description: 'طلب الأقسام لصرف أصناف من المستودع.',
+    icon: 'clipboardList',
+  },
+  {
+    file: 'form_Stock Transfer Slip.html',
+    titleAr: 'إذن نقل مخزني',
+    titleEn: 'Stock Transfer Slip',
+    description: 'نقل الأصناف بين المستودعات أو المواقع.',
+    icon: 'arrowUpTray',
+  },
+  {
+    file: 'form_Stock Adjustment Voucher.html',
+    titleAr: 'سند تسوية مخزون',
+    titleEn: 'Stock Adjustment Voucher',
+    description: 'تسوية الفروقات المخزنية برمز سبب موثّق.',
+    icon: 'alertTriangle',
+  },
+  {
+    file: 'form_CycleCount.html',
+    titleAr: 'محضر الجرد الدوري',
+    titleEn: 'Cycle Count Sheet',
+    description: 'الجرد الدوري للأصناف في موقع محدد.',
+    icon: 'clipboardList',
+  },
+  {
+    file: 'form_Damaged Goods Report.html',
+    titleAr: 'تقرير البضاعة التالفة',
+    titleEn: 'Damaged Goods Report',
+    description: 'حصر التلفيات وتوثيق المسؤولية.',
+    icon: 'alertTriangle',
+  },
+  {
+    file: 'form_DailyHuddle.html',
+    titleAr: 'محضر الاجتماع اليومي',
+    titleEn: 'Daily Huddle',
+    description: 'لوحة الأداء اليومية لفريق المستودع.',
+    icon: 'grid',
+  },
+  {
+    file: 'form_WeeklyCheck.html',
+    titleAr: 'القائمة الأسبوعية',
+    titleEn: 'Weekly Check',
+    description: 'الفحص الأسبوعي للممارسات والمخزون.',
+    icon: 'grid',
+  },
+  // ── Outbound documents ──────────────────────────────────────────────
+  {
+    file: 'form_DeliveryNote.html',
+    titleAr: 'إذن تسليم',
+    titleEn: 'Delivery Note',
+    description: 'إثبات تسليم البضاعة للعميل مع توقيع المُستلم.',
+    icon: 'arrowUpTray',
+  },
+  {
+    file: 'form_PackingList.html',
+    titleAr: 'قائمة التعبئة',
+    titleEn: 'Packing List',
+    description: 'تفصيل محتويات الطرود والكراتين قبل الشحن.',
+    icon: 'package',
+  },
+  {
+    file: 'form_GatePass.html',
+    titleAr: 'تصريح خروج من البوابة',
+    titleEn: 'Gate Pass',
+    description: 'توثيق خروج المركبات والأصناف عبر بوابة الأمن.',
+    icon: 'externalLink',
+  },
+  // ── Inbound documents ───────────────────────────────────────────────
+  {
+    file: 'form_QCReport.html',
+    titleAr: 'تقرير فحص الجودة',
+    titleEn: 'QC Inspection Report',
+    description: 'فحص جودة الأصناف الواردة وقرار القبول/الرفض.',
+    icon: 'alertTriangle',
+  },
+  {
+    file: 'form_PutawayList.html',
+    titleAr: 'أمر التخزين',
+    titleEn: 'Putaway List',
+    description: 'توجيه الأصناف من منطقة الاستلام إلى مواقع التخزين.',
+    icon: 'arrowDownTray',
+  },
+  {
+    file: 'تقرير-استلام-شحنة-كوزميتك.html',
+    titleAr: 'تقرير استلام شحنة كوزميتك',
+    titleEn: 'Cosmetic Shipment Receiving Report',
+    description: 'توثيق عملية استلام وتفريغ شحنات التجميل والتأكد من مطابقتها.',
+    icon: 'arrowDownTray',
+  },
+  // ── General ─────────────────────────────────────────────────────────
+  {
+    file: 'form_PurchaseRequisition.html',
+    titleAr: 'طلب شراء داخلي',
+    titleEn: 'Purchase Requisition',
+    description: 'طلب الشراء الداخلي قبل إصدار أمر الشراء للمورّد.',
+    icon: 'fileUp',
+  },
+  {
+    file: 'form_ItemCreation.html',
+    titleAr: 'بطاقة إنشاء صنف',
+    titleEn: 'Item Creation Card',
+    description: 'تسجيل صنف جديد في نظام المخزون مع البيانات الكاملة.',
+    icon: 'package',
+  },
+  {
+    file: 'form_Report21.html',
+    titleAr: 'تقرير حر',
+    titleEn: 'Free Report',
+    description: 'تقرير مرن لتوثيق البيانات والملاحظات التشغيلية.',
+    icon: 'clipboardList',
+  },
+];
+---
+
+<DashboardLayout title="اختار وظيفتك">
+  <div class="text-right" dir="rtl">
+    <header class="mb-6 sm:mb-8">
+      <h1 class="text-2xl sm:text-3xl font-bold text-brand-navy">
+        اختار وظيفتك (Select Your Role)
+      </h1>
+      <p class="text-gray-200 mt-2 text-sm sm:text-base leading-relaxed">
+        مكتبة النماذج الجاهزة للتعبئة والطباعة. كل نموذج مسؤول عن دورة عمل محددة (شراء، استلام، صرف،
+        جرد، تسوية، إلخ). افتح النموذج، عبّئ بياناتك، ثم اضغط "طباعة / حفظ PDF" داخل النموذج.
+      </p>
+    </header>
+
+    <!-- Role Filter UI -->
+    <div class="mb-6">
+      <div class="flex flex-wrap gap-2 justify-center md:justify-start" id="role-buttons">
+        <button type="button" class="role-btn px-4 py-2 rounded-lg font-bold text-sm bg-brand-red text-white active" data-role="الكل">الكل</button>
+        <button type="button" class="role-btn px-4 py-2 rounded-lg font-bold text-sm bg-gray-200 text-gray-700 hover:bg-gray-300" data-role="مستلم بضاعة">مستلم بضاعة</button>
+        <button type="button" class="role-btn px-4 py-2 rounded-lg font-bold text-sm bg-gray-200 text-gray-700 hover:bg-gray-300" data-role="أمين مخزن">أمين مخزن</button>
+        <button type="button" class="role-btn px-4 py-2 rounded-lg font-bold text-sm bg-gray-200 text-gray-700 hover:bg-gray-300" data-role="موزع / سائق">موزع / سائق</button>
+        <button type="button" class="role-btn px-4 py-2 rounded-lg font-bold text-sm bg-gray-200 text-gray-700 hover:bg-gray-300" data-role="مشرف">مشرف</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      {
+        forms.map((form) => {
+          // Assign roles based on form file
+          const roleMap = {
+            'form_GRN.html': 'مستلم بضاعة',
+            'form_PO.html': 'مستلم بضاعة',
+            'form_ReturnNote.html': 'مستلم بضاعة',
+            'form_PurchaseRequisition.html': 'مستلم بضاعة',
+            'form_QCReport.html': 'مستلم بضاعة',
+            'form_DailyHuddle.html': 'مستلم بضاعة',
+            'تقرير-استلام-شحنة-كوزميتك.html': 'مستلم بضاعة',
+            'form_BinCard.html': 'أمين مخزن',
+            'form_StoreRequisition.html': 'أمين مخزن',
+            'form_StockAdjustmentVoucher.html': 'أمين مخزن',
+            'form_CycleCount.html': 'أمين مخزن',
+            'form_WeeklyCheck.html': 'أمين مخزن',
+            'form_DeliveryNote.html': 'موزع / سائق',
+            'form_GatePass.html': 'موزع / سائق',
+            'form_Picking.html': 'موزع / سائق',
+            'form_PackingList.html': 'موزع / سائق',
+            'form_StockTransferSlip.html': 'موزع / سائق',
+          };
+          const formRole = roleMap[form.file] || 'مشرف'; // Default to supervisor for unassigned forms
+
+          return (
+            <article class={`bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all flex flex-col`} data-role={formRole}>
+              <div class="p-5 sm:p-6 flex-1">
+                <div class="flex items-start gap-3 mb-3">
+                  <div class="w-11 h-11 shrink-0 bg-red-50 text-brand-red rounded-xl flex items-center justify-center">
+                    <Icon name={form.icon} size={22} />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h2 class="text-lg sm:text-xl font-bold text-brand-navy leading-tight">
+                      {form.titleAr}
+                    </h2>
+                    <p class="text-xs text-gray-200 font-medium tracking-wide">{form.titleEn}</p>
+                  </div>
+                </div>
+                <p class="text-sm text-gray-600 leading-relaxed">{form.description}</p>
+              </div>
+              <div class="border-t border-gray-100 bg-gray-50 px-5 sm:px-6 py-3 flex items-center justify-between gap-3">
+                <a
+                  href={`${base}/forms/${form.file}`}
+                  target="_blank"
+                  rel="noopener"
+                  class="inline-flex items-center gap-2 text-sm font-bold text-brand-red hover:text-brand-red-dark transition-colors"
+                >
+                  <Icon name="externalLink" size={16} />
+                  <span>افتح النموذج</span>
+                </a>
+                <span class="text-[11px] text-gray-200 font-mono truncate" title={form.file}>
+                  {form.file}
+                </span>
+              </div>
+            </article>
+          );
+        })
+      }
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const roleButtons = document.querySelectorAll('.role-btn');
+        const formCards = document.querySelectorAll('article[data-role]');
+
+        function filterForms(selectedRole) {
+          formCards.forEach(card => {
+            const cardRole = card.getAttribute('data-role');
+            if (selectedRole === 'الكل' || selectedRole === 'مشرف' || cardRole === selectedRole) {
+              card.style.display = 'flex';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+        }
+
+        roleButtons.forEach(button => {
+          button.addEventListener('click', () => {
+            // Remove active class from all buttons
+            roleButtons.forEach(btn => {
+              btn.classList.remove('bg-brand-red', 'text-white', 'active');
+              btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            // Add active class to clicked button
+            button.classList.remove('bg-gray-200', 'text-gray-700');
+            button.classList.add('bg-brand-red', 'text-white', 'active');
+
+            const selectedRole = button.getAttribute('data-role');
+            filterForms(selectedRole);
+          });
+        });
+
+        // Default filter on page load
+        filterForms('الكل');
+      });
+    </script>
+
+    <style>
+      @media print {
+        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body, html { background: #ffffff !important; color: #000000 !important; }
+        nav, aside, header, footer, #role-buttons, button { display: none !important; }
+        article { background: #ffffff !important; border: 1px solid #cccccc !important; box-shadow: none !important; break-inside: avoid; }
+        h1, h2, p, span, a, li { color: #000000 !important; }
+        a[href] { color: #000000 !important; text-decoration: none !important; }
+        @page { size: A4; margin: 15mm; }
+      }
+    </style>
+
+    <p class="text-xs text-gray-200 mt-8 text-center leading-relaxed">
+      ملاحظة: النماذج تُفتح في تبويب جديد، وتُطبع عبر زر "طباعة / حفظ PDF" داخل كل نموذج. التغييرات
+      التي تكتبها في الحقول لا تُحفظ تلقائياً — احرص على الطباعة أو حفظ PDF قبل إغلاق التبويب.
+    </p>
+  </div>
+</DashboardLayout>

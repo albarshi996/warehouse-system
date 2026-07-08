@@ -1,0 +1,34 @@
+/* ============================================================
+   BRANDZO — CANONICAL BRAND TOKENS (Single Source of Truth)
+   الهوية اللونية الموحّدة لكل النظام. اربط هذا الملف في أي صفحة.
+   القرار: أحمر/ذهبي (الخيار A) — الفيروزي لون ثانوي فقط.
+   ============================================================ */
+:root {
+  /* Primary brand */
+  --brz-red:        #c41e3a;   /* يطابق شعار BFP */
+  --brz-red-dark:   #7e2b2a;
+  --brz-red-light:  #f15a5b;
+  --brz-gold:       #DAAA3C;
+  --brz-gold-light: #f0c040;
+
+  /* Dark surfaces */
+  --brz-burgundy:   #1a0008;
+  --brz-burgundy-2: #2d0006;
+  --brz-navy:       #0d1b2a;
+  --brz-navy-2:     #13263b;
+
+  /* Secondary accent only (لا هوية كاملة) */
+  --brz-teal:       #00897b;
+
+  /* Neutrals & status */
+  --brz-ink:        #1a1a2a;
+  --brz-paper:      #ffffff;
+  --brz-muted:      #6b7280;
+  --brz-border:     #ddd3c8;
+  --brz-success:    #1e7e34;
+  --brz-danger:     #c0392b;
+  --brz-warning:    #DAAA3C;
+
+  /* Typography */
+  --brz-font:       'Cairo', 'Segoe UI', Arial, sans-serif;
+}

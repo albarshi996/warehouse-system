@@ -1,0 +1,8 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import TaskManager from '../../components/brandzo-erp/tasks/TaskManager.jsx';
+---
+
+<DashboardLayout title="المهام التشغيلية" showGuide={false}>
+  <TaskManager client:load />
+</DashboardLayout>

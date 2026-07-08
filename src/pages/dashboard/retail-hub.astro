@@ -1,0 +1,2194 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="خريطة التجزئة — بنغازي 2026">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<style>
+  /* ── Page Root ─────────────────────────────────────────────────────── */
+  #rh-root {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: calc(100vh - 60px);
+    background: #0d1117;
+    font-family: 'IBM Plex Sans Arabic', 'Cairo', sans-serif;
+    direction: rtl;
+  }
+
+  /* ── Page title bar ────────────────────────────────────────────────────── */
+  #rh-page-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 4px 4px;
+    border-bottom: 1px solid #30363d;
+    margin-bottom: 4px;
+  }
+  #rh-page-title .pt-icon { font-size: 22px; }
+  #rh-page-title .pt-text  { font-size: 16px; font-weight: 600; color: #e6edf3; }
+  #rh-page-title .pt-sub   { font-size: 11px; color: #cbd5e1; margin-top: 2px; }
+
+  /* ── CSS Variables ─────────────────────────────────────────────────── */
+  :root {
+    --rh-bg-base:        #0d1117;
+    --rh-bg-surface:     #161b22;
+    --rh-bg-card:        #1c2128;
+    --rh-bg-hover:       #21262d;
+    --rh-border:         #30363d;
+    --rh-border-subtle:  #21262d;
+    --rh-text-primary:   #e6edf3;
+    --rh-text-secondary: #cbd5e1;
+    --rh-text-muted:     #94a3b8;
+    --rh-accent-blue:    #2188ff;
+    --rh-accent-blue-dim:#1a3d6e;
+    --rh-accent-green:   #3fb950;
+    --rh-accent-green-dim:#1a3a24;
+    --rh-accent-orange:  #d29922;
+    --rh-accent-orange-dim:#3d2e0a;
+    --rh-accent-red:     #f85149;
+    --rh-accent-red-dim: #3d1a1a;
+    --rh-accent-purple:  #bc8cff;
+    --rh-accent-purple-dim: #2d1e4a;
+    --rh-radius: 8px;
+    --rh-radius-sm: 5px;
+  }
+
+  /* ── Stat Cards ──────────────────────────────────────────────────── */
+  #rh-stat-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+  .rh-stat {
+    background: var(--rh-bg-card);
+    border: 1px solid var(--rh-border);
+    border-radius: var(--rh-radius);
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .rh-stat::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    border-radius: 8px 0 0 8px;
+  }
+  .rh-stat.blue::before  { background: var(--rh-accent-blue); }
+  .rh-stat.green::before { background: var(--rh-accent-green); }
+  .rh-stat.orange::before{ background: var(--rh-accent-orange); }
+  .rh-stat.red::before   { background: var(--rh-accent-red); }
+  .rh-stat.purple::before{ background: var(--rh-accent-purple); }
+  .s-label { font-size: 10px; color: var(--rh-text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .s-val   { font-size: 26px; font-weight: 700; color: var(--rh-text-primary); line-height: 1; }
+  .rh-stat.blue   .s-val { color: var(--rh-accent-blue); }
+  .rh-stat.green  .s-val { color: var(--rh-accent-green); }
+  .rh-stat.orange .s-val { color: var(--rh-accent-orange); }
+  .rh-stat.red    .s-val { color: var(--rh-accent-red); }
+  .rh-stat.purple .s-val { color: var(--rh-accent-purple); }
+  .s-sub   { font-size: 10px; color: var(--rh-text-muted); margin-top: 2px; }
+
+  /* ── Split Layout ───────────────────────────────────────────────── */
+  #rh-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+    height: calc(100vh - 220px);
+    max-height: calc(100vh - 140px);
+  }
+
+  /* ── Panel Header ───────────────────────────────────────────────── */
+  .ph {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--rh-border);
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .ph-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rh-text-secondary);
+    letter-spacing: .4px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .pulse-dot {
+    width: 7px; height: 7px;
+    background: var(--rh-accent-green);
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50%      { opacity:.5; transform:scale(1.3); }
+  }
+  .btn-hdr {
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 5px;
+    border: 1px solid var(--rh-border);
+    background: var(--rh-bg-surface);
+    color: var(--rh-text-secondary);
+    cursor: pointer;
+    transition: all .15s;
+    font-family: inherit;
+  }
+  .btn-hdr:hover        { border-color: var(--rh-accent-blue); color: var(--rh-accent-blue); background: var(--rh-accent-blue-dim); }
+  .btn-hdr.active-hex   { border-color: var(--rh-accent-green); color: var(--rh-accent-green); background: var(--rh-accent-green-dim); }
+  .btn-hdr.danger:hover { border-color: var(--rh-accent-red); color: var(--rh-accent-red); background: var(--rh-accent-red-dim); }
+
+  /* ── Map Panel ───────────────────────────────────────────────── */
+  #rh-map-panel {
+    background: var(--rh-bg-card);
+    border: 1px solid var(--rh-border);
+    border-radius: var(--rh-radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: 0;
+    height: 100%;
+  }
+  #rh-map { flex: 1; min-height: 460px; height: 100%; }
+  .leaflet-tile { filter: brightness(0.65) saturate(0.35); }
+  .leaflet-popup-content-wrapper {
+    background: var(--rh-bg-card) !important; color: var(--rh-text-primary) !important;
+    border: 1px solid var(--rh-border) !important; border-radius: 8px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,.6) !important;
+    font-family: 'IBM Plex Sans Arabic', 'Cairo', sans-serif !important; direction: rtl;
+  }
+  .leaflet-popup-tip { background: var(--rh-bg-card) !important; }
+  .leaflet-popup-close-button { color: var(--rh-text-muted) !important; }
+
+  /* ── Fullscreen (works inside layout) ──────────────────────────────── */
+  #rh-map-panel.rh-fullscreen {
+    position: fixed !important; inset: 0 !important;
+    z-index: 99999 !important; border-radius: 0 !important;
+    width: 100vw !important; height: 100vh !important;
+  }
+  #rh-map-panel.rh-fullscreen #rh-map {
+    height: 100vh !important;
+    min-height: 100vh !important;
+  }
+
+  .hex-label-tooltip {
+    background: rgba(13,17,23,0.92) !important;
+    border: 1px solid #30363d !important;
+    color: #e6edf3 !important;
+    font-family: 'IBM Plex Sans Arabic', 'Cairo', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    border-radius: 5px !important;
+    padding: 3px 8px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+    white-space: nowrap;
+    direction: rtl;
+  }
+  .hex-label-tooltip::before { display: none !important; }
+
+  /* ── Legend ────────────────────────────────────────────────────── */
+  .rh-legend {
+    position: absolute;
+    bottom: 24px; right: 10px;
+    background: rgba(22,27,34,.9);
+    border: 1px solid var(--rh-border);
+    border-radius: var(--rh-radius-sm);
+    padding: 8px 10px;
+    font-size: 10px;
+    color: var(--rh-text-secondary);
+    z-index: 500;
+    backdrop-filter: blur(4px);
+  }
+  .rh-legend.right { bottom: 24px; right: auto; left: 10px; }
+  .leg-title { font-size: 9px; font-weight: 600; color: var(--rh-text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
+  .leg-row   { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
+  .leg-dot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Table Panel ───────────────────────────────────────────────── */
+  #rh-table-panel {
+    background: var(--rh-bg-card);
+    border: 1px solid var(--rh-border);
+    border-radius: var(--rh-radius);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    height: 100%;
+  }
+  #rh-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--rh-bg-surface);
+    border-bottom: 1px solid var(--rh-border-subtle);
+  }
+  .srch-icon { font-size: 13px; color: var(--rh-text-muted); }
+  #rh-search {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--rh-text-primary);
+    font-size: 12px;
+    font-family: inherit;
+    direction: rtl;
+  }
+  #rh-search::placeholder { color: var(--rh-text-muted); }
+
+  /* ── Filters ───────────────────────────────────────────────────── */
+  #rh-filters, #rh-sector-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--rh-border-subtle);
+  }
+  .fp, .sector-pill {
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    border: 1px solid var(--rh-border);
+    background: var(--rh-bg-surface);
+    color: var(--rh-text-muted);
+    cursor: pointer;
+    transition: all .15s;
+    font-family: inherit;
+  }
+  .fp.active, .sector-pill.active {
+    background: var(--rh-accent-blue-dim);
+    border-color: var(--rh-accent-blue);
+    color: var(--rh-accent-blue);
+  }
+
+  /* ── Table ───────────────────────────────────────────────────── */
+  #rh-tscroll { flex: 1; overflow-y: auto; height: 0; min-height: 0; }
+  /* Grid view للأحياء */
+  #rh-tscroll.grid-view { overflow-y: auto; }
+  #rh-grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 7px;
+    padding: 10px;
+  }
+  .district-card {
+    background: var(--rh-bg-surface);
+    border: 1px solid var(--rh-border);
+    border-radius: var(--rh-radius-sm);
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    direction: rtl;
+  }
+  .district-card:hover {
+    background: var(--rh-bg-hover);
+    border-color: var(--rh-accent-blue);
+    transform: translateY(-1px);
+  }
+  .district-card.selected {
+    border-color: var(--rh-accent-blue);
+    background: var(--rh-accent-blue-dim);
+  }
+  .dc-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dc-name {
+    font-size: 10px;
+    color: var(--rh-text-primary);
+    line-height: 1.3;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .rh-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .rh-table th {
+    background: var(--rh-bg-surface);
+    color: var(--rh-text-muted);
+    font-weight: 500;
+    font-size: 10px;
+    padding: 7px 10px;
+    text-align: right;
+    border-bottom: 1px solid var(--rh-border);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    letter-spacing: .3px;
+  }
+  .rh-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--rh-border-subtle);
+    color: var(--rh-text-primary);
+    vertical-align: middle;
+  }
+  .rh-table tr:hover td { background: var(--rh-bg-hover); }
+  .rh-table tr.rh-active td, .rh-table tr.selected td { background: var(--rh-accent-blue-dim); border-right: 3px solid var(--rh-accent-blue); }
+
+  /* ── Badges ───────────────────────────────────────────────────── */
+  .badge {
+    display: inline-block;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    letter-spacing: .3px;
+    white-space: nowrap;
+  }
+  .badge-match-مطابق   { background: #1a3a24; color: #3fb950; }
+  .badge-match-جزئي    { background: #3d2e0a; color: #d29922; }
+  .badge-match-غير\ مطابق { background: #3d1a1a; color: #f85149; }
+  .badge-infra-ممتاز   { color: #3fb950; }
+  .badge-infra-جيد     { color: #2188ff; }
+  .badge-infra-متوسط   { color: #d29922; }
+  .badge-infra-default { color: #94a3b8; }
+  .badge-A { background: #3d2e0a; color: #d29922; }
+  .badge-B { background: #1a3d6e; color: #2188ff; }
+  .badge-C { background: #21262d; color: #cbd5e1; }
+  .badge-D { background: #2d1e4a; color: #bc8cff; }
+  .badge-AB { background: #2a2818; color: #c0a000; }
+  .badge-BC { background: #1a2a3a; color: #5aa0cc; }
+
+  /* ── Row actions ───────────────────────────────────────────────── */
+  .row-actions { display: flex; gap: 4px; }
+  .btn-ico {
+    width: 22px; height: 22px;
+    border-radius: 4px;
+    border: 1px solid var(--rh-border);
+    background: var(--rh-bg-surface);
+    color: var(--rh-text-muted);
+    cursor: pointer;
+    font-size: 11px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .btn-ico:hover { border-color: var(--rh-accent-blue); color: var(--rh-accent-blue); }
+
+  /* ── Selected Info bar ───────────────────────────────────────────── */
+  #rh-sel-info {
+    padding: 8px 14px;
+    border-top: 1px solid var(--rh-border);
+    font-size: 11px;
+    color: var(--rh-text-muted);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  #rh-sel-name { font-weight: 600; color: var(--rh-text-secondary); }
+
+  /* ── No results ───────────────────────────────────────────────── */
+  .rh-no-results {
+    padding: 32px;
+    text-align: center;
+    color: var(--rh-text-muted);
+    font-size: 12px;
+  }
+
+  /* ── Edit Modal ───────────────────────────────────────────────── */
+  #rh-modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.7); z-index: 100000;
+    align-items: center; justify-content: center;
+    padding: 20px; overflow-y: auto;
+  }
+  #rh-modal-overlay.open { display: flex; }
+  #rh-modal {
+    background: #1c2128;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 22px 24px;
+    width: min(600px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    direction: rtl;
+  }
+  #rh-modal h3 { font-size: 15px; font-weight: 600; color: #e6edf3; margin-bottom: 18px; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .rh-field { display: flex; flex-direction: column; gap: 4px; }
+  .rh-field label { font-size: 10px; color: #cbd5e1; font-weight: 500; letter-spacing: .3px; }
+  .rh-field input, .rh-field select, .rh-field textarea {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 5px;
+    color: #e6edf3;
+    font-size: 12px;
+    padding: 7px 10px;
+    font-family: inherit;
+    direction: rtl;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .rh-field input:focus, .rh-field select:focus, .rh-field textarea:focus { border-color: #2188ff; }
+  .rh-field textarea { resize: vertical; min-height: 70px; }
+  .rh-modal-actions { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
+  .btn-save {
+    padding: 8px 20px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    background: #2188ff; color: #fff; border: none; cursor: pointer; font-family: inherit;
+    transition: background .15s;
+  }
+  .btn-save:hover { background: #1a6fd4; }
+  .btn-cancel {
+    padding: 8px 16px; border-radius: 6px; font-size: 12px;
+    background: #21262d; color: #cbd5e1; border: 1px solid #30363d;
+    cursor: pointer; font-family: inherit;
+  }
+
+  /* ── Toast ─────────────────────────────────────────────────────── */
+  #rh-toast {
+    position: fixed;
+    bottom: 24px; left: 50%; transform: translateX(-50%);
+    z-index: 110000;
+    display: flex; flex-direction: column; gap: 6px;
+    align-items: center; pointer-events: none;
+  }
+  .toast-msg {
+    padding: 9px 18px; border-radius: 7px; font-size: 12px; font-weight: 500;
+    color: #e6edf3; backdrop-filter: blur(8px);
+    opacity: 0; transform: translateY(8px);
+    transition: all .25s; pointer-events: none;
+    font-family: 'IBM Plex Sans Arabic', 'Cairo', sans-serif;
+  }
+  .toast-msg.show { opacity: 1; transform: translateY(0); }
+  .toast-msg.success { background: rgba(14,40,20,.95); border: 1px solid #3fb950; }
+  .toast-msg.error   { background: rgba(40,14,14,.95); border: 1px solid #f85149; }
+  .toast-msg.info    { background: rgba(14,30,50,.95); border: 1px solid #2188ff; }
+
+  /* ── Row count badge ───────────────────────────────────────────────── */
+  #rh-row-count {
+    font-size: 10px;
+    color: var(--rh-text-muted);
+    background: var(--rh-bg-surface);
+    border: 1px solid var(--rh-border);
+    border-radius: 10px;
+    padding: 2px 8px;
+  }
+
+  /* ── Popup styles ───────────────────────────────────────────────── */
+  .rh-popup { font-size: 12px; min-width: 200px; }
+  .rh-popup-title { font-size: 14px; font-weight: 700; color: #e6edf3; margin-bottom: 10px; }
+  .rh-popup-row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 5px; }
+  .rh-popup-key { color: #cbd5e1; font-size: 11px; }
+  .rh-popup-val { color: #e6edf3; font-size: 11px; font-weight: 500; }
+  .popup-title { font-size: 13px; font-weight: 700; color: #e6edf3; margin-bottom: 8px; }
+  .popup-row { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; font-size: 11px; }
+  .popup-row.section { border-top: 1px solid #30363d; margin-top: 6px; padding-top: 4px; }
+  .pk { color: #cbd5e1; }
+  .pv { color: #e6edf3; font-weight: 500; }
+  .pv-desc { color: #cbd5e1; font-size: 10px; line-height: 1.5; }
+  .rh-popup-notes {
+    margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid #30363d;
+    color: #cbd5e1; font-size: 10px; line-height: 1.6;
+  }
+
+  /* ── Body fullscreen lock ───────────────────────────────────────────── */
+  body.map-fullscreen-active { overflow: hidden; }
+
+  /* ── Responsive ──────────────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    #rh-split { grid-template-columns: 1fr; }
+    #rh-stat-row { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 600px) {
+    #rh-stat-row { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+
+<!-- ══ Root ══ -->
+<div id="rh-root">
+
+  <!-- Page Title -->
+  <div id="rh-page-title">
+    <span class="pt-icon">🗺️</span>
+    <div>
+      <div class="pt-text">لوحة التجزئة الجغرافية — بنغازي 2026</div>
+      <div class="pt-sub">تحليل ديموغرافي وتجاري شامل · جميع أحياء المدينة</div>
+  <div style="font-size:11px;color:#cbd5e1;margin-top:5px;display:flex;align-items:center;gap:6px;direction:rtl;">
+    <span style="color:#d29922;font-size:14px;">✍️</span>
+    <span>تم إعداد البحث من قبل: <strong style="color:#e6edf3;font-style:normal;">محمد البرشي</strong> · <strong style="color:#e6edf3;font-style:normal;">رمزي باش</strong></span>
+  </div>
+    </div>
+  </div>
+
+  <!-- Stat Cards -->
+  <div id="rh-stat-row">
+    <div class="rh-stat blue">
+      <div class="s-label">الأحياء المرصودة</div>
+      <div class="s-val" id="stat-total">—</div>
+      <div class="s-sub">حي وتجمع في بنغازي</div>
+    </div>
+    <div class="rh-stat green">
+      <div class="s-label">تطابق كامل</div>
+      <div class="s-val" id="stat-match-full">—</div>
+      <div class="s-sub">أسواق تخدم السكان</div>
+    </div>
+    <div class="rh-stat orange">
+      <div class="s-label">تطابق جزئي</div>
+      <div class="s-val" id="stat-match-partial">—</div>
+      <div class="s-sub">تغطية غير مكتملة</div>
+    </div>
+    <div class="rh-stat red">
+      <div class="s-label">غير مطابق</div>
+      <div class="s-val" id="stat-match-none">—</div>
+      <div class="s-sub">فجوات استثمارية</div>
+    </div>
+    <div class="rh-stat purple">
+      <div class="s-label">إجمالي السكان</div>
+      <div class="s-val" id="stat-pop">—</div>
+      <div class="s-sub">مليون نسمة تقريباً</div>
+    </div>
+  </div>
+
+  <!-- Split -->
+  <div id="rh-split">
+
+    <!-- Map Panel -->
+    <div id="rh-map-panel">
+      <div class="ph">
+        <div class="ph-title">
+          <span class="pulse-dot"></span>
+          الخريطة التفاعلية — بنغازي الكبرى
+        </div>
+        <div style="display:flex;gap:7px;align-items:center;">
+          <button class="btn-hdr" id="btn-hex-toggle">⬡ خرائط سداسية</button>
+          <button class="btn-hdr" id="btn-fullscreen" style="min-width:80px;">⛶ تكبير</button>
+          <button class="btn-hdr" id="btn-grid-toggle">⊞ شبكة الأحياء</button>
+          <button class="btn-hdr danger" id="btn-reset-data">↺ إعادة ضبط</button>
+        </div>
+      </div>
+      <div id="rh-map"></div>
+      <div class="rh-legend">
+        <div class="leg-title">تطابق السوق</div>
+        <div class="leg-row"><div class="leg-dot" style="background:#3fb950"></div> مطابق</div>
+        <div class="leg-row"><div class="leg-dot" style="background:#d29922"></div> جزئي</div>
+        <div class="leg-row"><div class="leg-dot" style="background:#f85149"></div> غير مطابق</div>
+      </div>
+      <div class="rh-legend right">
+        <div class="leg-title">الفئات</div>
+        <div class="leg-row"><div class="leg-dot" style="background:#d29922"></div> A — دخل مرتفع</div>
+        <div class="leg-row"><div class="leg-dot" style="background:#2188ff"></div> B — لوجستي/مختلط</div>
+        <div class="leg-row"><div class="leg-dot" style="background:#8b949e"></div> C — كثافة استهلاكية</div>
+        <div class="leg-row"><div class="leg-dot" style="background:#bc8cff"></div> D — ضواحي توسع</div>
+      </div>
+    </div>
+
+    <!-- Table Panel -->
+    <div id="rh-table-panel">
+      <div class="ph">
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+          <div class="ph-title">قائمة الأحياء</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn-hdr" id="btn-export-excel" style="background:#16a34a;color:white;border-color:#15803d;font-weight:bold;">📊 تصدير Excel</button>
+            <span id="rh-row-count"></span>
+          </div>
+        </div>
+        <div id="rh-search-wrap" style="position:relative;">
+          <span class="srch-icon">🔍</span>
+          <input id="rh-search" type="text" placeholder="ابحث باسم الحي أو المنطقة..." />
+        </div>
+  <div id="rh-ac" style="display:none;position:absolute;top:100%;right:0;left:0;
+    background:#1c2128;border:1px solid #30363d;border-top:none;
+    border-radius:0 0 8px 8px;z-index:2000;max-height:220px;
+    overflow-y:auto;direction:rtl;box-shadow:0 8px 24px rgba(0,0,0,.5);">
+  </div>
+      </div>
+
+      <!-- Class filters -->
+      <div id="rh-filters">
+        <button class="fp active" data-filter="all">الكل</button>
+        <button class="fp" data-filter="A">فئة A</button>
+        <button class="fp" data-filter="B">فئة B</button>
+        <button class="fp" data-filter="C">فئة C</button>
+        <button class="fp" data-filter="D">فئة D</button>
+        <button class="fp" data-filter="none">غير مطابق</button>
+        <button class="fp" data-filter="partial">جزئي</button>
+      </div>
+
+      <!-- Sector filters -->
+      <div id="rh-sector-filters">
+        <button class="sector-pill active" data-sector="all">كل القطاعات</button>
+        <button class="sector-pill" data-sector="1">وسط البلد</button>
+        <button class="sector-pill" data-sector="2">مناطق راقية</button>
+        <button class="sector-pill" data-sector="3">كثافة FMCG</button>
+        <button class="sector-pill" data-sector="4">لوجستي</button>
+        <button class="sector-pill" data-sector="5">ضواحي</button>
+      </div>
+
+      <div id="rh-tscroll">
+        <table class="rh-table">
+          <thead>
+            <tr>
+              <th>الحي</th>
+              <th>الفئة</th>
+              <th>السكان</th>
+              <th>الدخل</th>
+              <th>البنية</th>
+              <th>السوق</th>
+              <th style="width:60px"></th>
+            </tr>
+          </thead>
+          <tbody id="rh-tbody"></tbody>
+        </table>
+        <div id="rh-no-results" class="rh-no-results" style="display:none">لا توجد نتائج مطابقة</div>
+      </div>
+
+      <div id="rh-sel-info">
+        <span id="rh-sel-name">لم يتم تحديد أي حي</span>
+        <span id="rh-sel-detail"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Edit Modal ══ -->
+<div id="rh-modal-overlay">
+  <div id="rh-modal">
+    <h3 id="rh-modal-title">✏️ تعديل بيانات الحي</h3>
+    <input type="hidden" id="edit-id" />
+    <div class="modal-grid">
+      <div class="rh-field">
+        <label>اسم الحي</label>
+        <input id="edit-neighborhood" type="text" />
+      </div>
+      <div class="rh-field">
+        <label>الفئة التجارية</label>
+        <select id="edit-class">
+          <option value="A">A — دخل مرتفع</option>
+          <option value="A-B">A-B</option>
+          <option value="B">B — لوجستي</option>
+          <option value="B-C">B-C</option>
+          <option value="C">C — كثافة</option>
+          <option value="D">D — ضاحية</option>
+        </select>
+      </div>
+      <div class="rh-field">
+        <label>عدد السكان</label>
+        <input id="edit-population" type="number" min="0" />
+      </div>
+      <div class="rh-field">
+        <label>مستوى الدخل</label>
+        <select id="edit-income">
+          <option value="مرتفع">مرتفع</option>
+          <option value="متوسط-جيد">متوسط إلى جيد</option>
+          <option value="متوسط">متوسط</option>
+          <option value="متباين">متباين</option>
+        </select>
+      </div>
+      <div class="rh-field">
+        <label>التدفق المروري</label>
+        <select id="edit-flow">
+          <option value="شلل تام">شلل تام</option>
+          <option value="عالٍ جداً">عالٍ جداً</option>
+          <option value="عالٍ">عالٍ</option>
+          <option value="متوسط">متوسط</option>
+          <option value="منخفض">منخفض</option>
+          <option value="انسيابي">انسيابي</option>
+        </select>
+      </div>
+      <div class="rh-field">
+        <label>البنية التحتية</label>
+        <select id="edit-infra">
+          <option value="ممتاز">ممتازة</option>
+          <option value="جيد">جيدة</option>
+          <option value="متوسط">متوسطة</option>
+          <option value="قديمة">قديمة/متهالكة</option>
+          <option value="قيد التطور">قيد التطور</option>
+        </select>
+      </div>
+      <div class="rh-field">
+        <label>نوع السوق</label>
+        <select id="edit-market-type">
+          <option value="جملة">جملة</option>
+          <option value="تجزئة">تجزئة</option>
+          <option value="مول">مول</option>
+          <option value="شعبي">شعبي</option>
+          <option value="مختلط">مختلط</option>
+          <option value="لوجستي">لوجستي</option>
+          <option value="لا يوجد">لا يوجد</option>
+        </select>
+      </div>
+      <div class="rh-field">
+        <label>تطابق السوق</label>
+        <select id="edit-market-match">
+          <option value="مطابق">مطابق</option>
+          <option value="جزئي">جزئي</option>
+          <option value="غير مطابق">غير مطابق</option>
+        </select>
+      </div>
+    </div>
+    <div class="rh-field" style="margin-top:14px">
+      <label>الفئات السكانية الموجودة</label>
+      <div style="display:flex;gap:12px;padding:4px 0;">
+        <label style="display:flex;align-items:center;gap:5px;color:#e6edf3;cursor:pointer;font-size:11px;">
+          <input type="checkbox" name="edit-segments" value="A" /> A (دخل مرتفع)
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;color:#e6edf3;cursor:pointer;font-size:11px;">
+          <input type="checkbox" name="edit-segments" value="B" /> B (متوسط)
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;color:#e6edf3;cursor:pointer;font-size:11px;">
+          <input type="checkbox" name="edit-segments" value="C" /> C (محدود)
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;color:#e6edf3;cursor:pointer;font-size:11px;">
+          <input type="checkbox" name="edit-segments" value="D" /> D (ضاحية)
+        </label>
+      </div>
+    </div>
+    <div class="rh-field" style="margin-top:14px">
+      <label>ملاحظات البنية والتوزيع</label>
+      <textarea id="edit-notes"></textarea>
+    </div>
+    <div class="rh-field" style="margin-top:14px">
+      <label>الفجوة الاستثمارية</label>
+      <select id="edit-gap">
+        <option value="لا">لا توجد فجوة</option>
+        <option value="جزئياً ⚠">جزئياً ⚠</option>
+        <option value="نعم ⚠">نعم ⚠</option>
+        <option value="نعم ⚠⚠">نعم ⚠⚠ (حرجة)</option>
+      </select>
+    </div>
+    <div class="rh-modal-actions">
+      <button class="btn-save" id="btn-modal-save">💾 حفظ</button>
+      <button class="btn-cancel" id="btn-modal-cancel">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Toast ══ -->
+<div id="rh-toast"></div>
+
+<!-- Leaflet (UMD - loads synchronously before our script) -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- 
+-->
+
+<script>
+/* global L, XLSX */
+(function () {
+  'use strict';
+
+  // ── DATA: كافة أحياء بنغازي مبنية على التقرير ──────────────────────────
+  // القطاع 1: وسط المدينة والقلب التجاري القديم
+  // القطاع 2: مناطق راقية
+  // القطاع 3: كثافة استهلاكية FMCG
+  // القطاع 4: لوجستي/صناعي مختلط
+  // القطاع 5: ضواحي التوسع
+
+  const DEFAULT_DATA = [
+    // ══════════════════════════════════════════════════════════════════
+    // القطاع 1: وسط البلد والقلب التجاري القديم
+    // المرجع الجغرافي: ميناء بنغازي 32.1175, 20.0622 — وسط البلد 32.1151, 20.0682
+    // ══════════════════════════════════════════════════════════════════
+    {
+      id: 1, neighborhood: 'وسط البلد', lat: 32.114800, lng: 20.068200, class: 'C',
+      sector: 1, population: 65000, income: 'متوسط-جيد', flow: 'شلل تام',
+      infra: 'قديمة', market_type: 'جملة', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'اختناقات شديدة ومزمنة. شوارع إيطالية ضيقة. Last-Mile عبر الفانات فقط. مخازن داخل الأزقة.'
+    },
+    {
+      id: 2, neighborhood: 'جليانة', lat: 32.112, lng: 20.064, class: 'C',
+      sector: 1, population: 45000, income: 'متوسط', flow: 'شلل تام',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'جزء من النسيج التجاري القديم. تحديات حادة في توصيل الميل الأخير.'
+    },
+    {
+      id: 3, neighborhood: 'الصابري', lat: 32.1165, lng: 20.0705, class: 'C',
+      sector: 1, population: 40000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'نسيج عمراني مكثف. تجارة تجزئة يومية. بنية تحتية تحت ضغط تشغيلي هائل.'
+    },
+    {
+      id: 4, neighborhood: 'سيدي اخريبيش', lat: 32.1215, lng: 20.0655, class: 'C',
+      sector: 1, population: 38000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'تفتقر لمواقف تحميل وتنزيل. اعتماد حصري على مركبات النقل الخفيف.'
+    },
+    {
+      id: 5, neighborhood: 'منارة بنغازي', lat: 32.1195, lng: 20.0632, class: 'C',
+      sector: 1, population: 10000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'قديمة', market_type: 'مختلط', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'منطقة تجارية تاريخية مركزية. مرجعية للأسواق الشعبية القديمة.'
+    },
+    {
+      id: 6, neighborhood: 'سوق الحوت', lat: 32.119835, lng: 20.062123, class: 'C',
+      sector: 1, population: 5000, income: 'متوسط', flow: 'شلل تام',
+      infra: 'قديمة', market_type: 'جملة', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'سوق الجملة التقليدي للأسماك والمأكولات البحرية. ازدحام شديد في الصباح الباكر.'
+    },
+    {
+      id: 7, neighborhood: 'سوق الحوم', lat: 32.118000, lng: 20.064000, class: 'C',
+      sector: 1, population: 6000, income: 'متوسط', flow: 'شلل تام',
+      infra: 'قديمة', market_type: 'جملة', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'سوق اللحوم التقليدي. ازدحام صباحي شديد. محور تجاري لمنتجات البروتين.'
+    },
+    {
+      id: 8, neighborhood: 'شارع الجزائر', lat: 32.114024, lng: 20.063551, class: 'C',
+      sector: 1, population: 18000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'شارع تجاري شعبي قديم. ازدحام مستمر. معدل دوران بضائع مرتفع.'
+    },
+    {
+      id: 9, neighborhood: 'شارع فلسطين', lat: 32.1135, lng: 20.0758, class: 'C',
+      sector: 1, population: 16000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'شارع شعبي مكتظ. تجارة متنوعة. تحديات Last-Mile حادة.'
+    },
+    {
+      id: 10, neighborhood: 'شارع 1 سبتمبر', lat: 32.109861, lng: 20.075713, class: 'C',
+      sector: 1, population: 25000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'شارع رئيسي تاريخي في قلب المدينة. ازدحام مزمن. تجارة متنوعة.'
+    },
+    {
+      id: 11, neighborhood: 'شارع جمال عبد الناصر', lat: 32.113809, lng: 20.065305, class: 'C',
+      sector: 1, population: 20000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'شارع رئيسي تاريخي. محلات تجارية متنوعة. ازدحام مستمر.'
+    },
+    {
+      id: 12, neighborhood: 'شارع 23 يوليو', lat: 32.111147, lng: 20.066232, class: 'C',
+      sector: 1, population: 18000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'شارع تجاري رئيسي في وسط البلد. ازدحام حاد. تجارة يومية مكثفة.'
+    },
+    {
+      id: 13, neighborhood: 'شارع عبد الجليل', lat: 32.110500, lng: 20.078000, class: 'C',
+      sector: 1, population: 16000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'شارع داخلي يربط وسط البلد بالأحياء الشعبية. تجارة يومية.'
+    },
+    {
+      id: 14, neighborhood: 'شارع عبد الله باله', lat: 32.112500, lng: 20.079500, class: 'C',
+      sector: 1, population: 14000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'شارع داخلي يتفرع من شوارع وسط البلد الرئيسية. تجارة يومية.'
+    },
+    {
+      id: 15, neighborhood: 'شارع الخطوط', lat: 32.1118, lng: 20.0728, class: 'B',
+      sector: 1, population: 12000, income: 'متوسط-جيد', flow: 'عالٍ',
+      infra: 'قديمة', market_type: 'مختلط', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'يضم مكاتب ومتاجر. يغلب عليه الطابع التجاري. مواقف مزدحمة.'
+    },
+    {
+      id: 16, neighborhood: 'شارع النفق', lat: 32.1108, lng: 20.0718, class: 'C',
+      sector: 1, population: 15000, income: 'متوسط', flow: 'شلل تام',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'نقطة اختناق مزمنة في وسط البلد. أسواق شعبية عند مدخل النفق.'
+    },
+    {
+      id: 17, neighborhood: 'شارع سالم سويكر', lat: 32.1095, lng: 20.0785, class: 'C',
+      sector: 1, population: 14000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'شارع داخلي شعبي. تجارة يومية. ازدحام خفيف مقارنة بالشوارع الرئيسية.'
+    },
+    {
+      id: 18, neighborhood: 'شارع عشرين', lat: 32.105015, lng: 20.082743, class: 'C',
+      sector: 1, population: 20000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'شارع قديم في وسط المدينة. تجارة يومية مكثفة. ضيق الشوارع يعيق التوزيع.'
+    },
+    {
+      id: 19, neighborhood: 'الجلاء', lat: 32.119800, lng: 20.071800, class: 'C',
+      sector: 1, population: 12000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'قديمة', market_type: 'مختلط', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'منطقة مركزية قرب الشاطئ. حديقة عامة تجلب حركة يومية.'
+    },
+    {
+      id: 20, neighborhood: 'حديقة الجلاء', lat: 32.121000, lng: 20.071200, class: 'C',
+      sector: 1, population: 5000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'مختلط', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'المحيط التجاري لحديقة الجلاء. أكشاك ومطاعم. حركة عائلية عالية في العطل.'
+    },
+    {
+      id: 21, neighborhood: 'كتيبة فضيل بوعمر', lat: 32.112800, lng: 20.085500, class: 'C',
+      sector: 1, population: 4000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠',
+      notes: 'موقع مؤسسي. محيطه يحتاج تغطية تجارية للمنطقة السكنية القريبة.'
+    },
+    {
+      id: 22, neighborhood: 'شارع القيروان', lat: 32.1155, lng: 20.0812, class: 'A',
+      sector: 2, population: 18000, income: 'مرتفع', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'شارع تجاري رئيسي يربط أحياء الشمال. كثافة محلات متوسطة إلى عالية.'
+    },
+
+    // ══════════════════════════════════════════════════════════════════
+    // القطاع 2: مناطق راقية (شمال وشمال شرق وسط البلد)
+    // ══════════════════════════════════════════════════════════════════
+    {
+      id: 23, neighborhood: 'فينيسيا', lat: 32.120800, lng: 20.081800, class: 'A',
+      sector: 2, population: 28000, income: 'مرتفع', flow: 'عالٍ',
+      infra: 'ممتاز', market_type: 'مول', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'أعلى دخل فردي في المدينة. Basket Size كبير. شارع فينيسيا يشهد ازدحاماً تجارياً.'
+    },
+    {
+      id: 24, neighborhood: 'طابلينو', lat: 32.122800, lng: 20.077800, class: 'A',
+      sector: 2, population: 22000, income: 'مرتفع', flow: 'عالٍ',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'تمدد أفقي. فيلات سكنية. طريق طابلينو يشهد ازدحاماً بسبب المدارس الخاصة.'
+    },
+    {
+      id: 25, neighborhood: 'حي دبي', lat: 32.118200, lng: 20.084500, class: 'A',
+      sector: 2, population: 18000, income: 'مرتفع', flow: 'متوسط',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
+      segments_present: ['A'], gap: 'لا',
+      notes: 'مجمعات سكنية راقية. طلب عالٍ على العلامات التجارية العالمية.'
+    },
+    {
+      id: 26, neighborhood: 'شارع دبي', lat: 32.118000, lng: 20.085000, class: 'A',
+      sector: 2, population: 12000, income: 'مرتفع', flow: 'متوسط',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'شارع راقٍ. محلات متخصصة وعلامات تجارية مرموقة. دخل مرتفع.'
+    },
+    {
+      id: 27, neighborhood: 'الفويهات', lat: 32.1188, lng: 20.0832, class: 'A',
+      sector: 2, population: 35000, income: 'مرتفع', flow: 'عالٍ',
+      infra: 'ممتاز', market_type: 'مختلط', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'شوارع واسعة تستوعب سلاسل الإمداد. مناسب لتوزيع المنتجات الفاخرة.'
+    },
+    {
+      id: 28, neighborhood: 'الحدائق', lat: 32.1225, lng: 20.0878, class: 'A',
+      sector: 2, population: 20000, income: 'مرتفع', flow: 'متوسط',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'حي سكني هادئ راقٍ. يستقطب فئات ذات دخل مرتفع. انسيابية ممتازة.'
+    },
+    {
+      id: 29, neighborhood: 'بلعون', lat: 32.1252, lng: 20.0888, class: 'A',
+      sector: 2, population: 15000, income: 'مرتفع', flow: 'منخفض',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['A','B'], gap: 'جزئياً ⚠',
+      notes: 'كثافة منخفضة. مستوى معيشي مرتفع. يحتاج لتغطية تجزئة أكبر.'
+    },
+    {
+      id: 30, neighborhood: 'الرحبة', lat: 32.1242, lng: 20.0868, class: 'A',
+      sector: 2, population: 14000, income: 'مرتفع', flow: 'منخفض',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['A'], gap: 'جزئياً ⚠',
+      notes: 'حي نخبوي. طلب على المنتجات الفاخرة والمستوردة.'
+    },
+    {
+      id: 31, neighborhood: 'حي المهندسين', lat: 32.119500, lng: 20.089200, class: 'A',
+      sector: 2, population: 12000, income: 'مرتفع', flow: 'منخفض',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['A','B'], gap: 'جزئياً ⚠',
+      notes: 'يسكنه كوادر مهنية. دخل مرتفع. يتطلب تغطية تجزئة مباشرة.'
+    },
+    {
+      id: 32, neighborhood: 'نادي الشمال', lat: 32.1315, lng: 20.0832, class: 'A',
+      sector: 2, population: 8000, income: 'مرتفع', flow: 'منخفض',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['A'], gap: 'جزئياً ⚠',
+      notes: 'محيط النادي الراقي. فئة دخل مرتفع. كثافة منخفضة. يتطلب تجزئة مباشرة.'
+    },
+    {
+      id: 33, neighborhood: 'البوسكو', lat: 32.1232, lng: 20.0858, class: 'A',
+      sector: 2, population: 8000, income: 'مرتفع', flow: 'منخفض',
+      infra: 'ممتاز', market_type: 'مول', market_match: 'مطابق',
+      segments_present: ['A'], gap: 'لا',
+      notes: 'مجمع تجاري راقٍ. يخدم الشريحة المرتفعة الدخل. Basket Size كبير جداً.'
+    },
+    {
+      id: 34, neighborhood: 'شارع الخليج العربي', lat: 32.1278, lng: 20.0748, class: 'A',
+      sector: 2, population: 14000, income: 'مرتفع', flow: 'عالٍ',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'شارع الواجهة البحرية التجارية. محلات فاخرة ومطاعم. وجهة تجارية مرموقة.'
+    },
+    {
+      id: 35, neighborhood: 'شارع الخليج', lat: 32.1272, lng: 20.0742, class: 'A',
+      sector: 2, population: 15000, income: 'مرتفع', flow: 'عالٍ',
+      infra: 'ممتاز', market_type: 'تجزئة', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'شارع تجاري راقٍ. بنوك ومحلات فاخرة. ازدحام في ساعات الذروة التجارية.'
+    },
+    {
+      id: 36, neighborhood: 'شارع الحجاز', lat: 32.1198, lng: 20.0852, class: 'A',
+      sector: 2, population: 12000, income: 'مرتفع', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'شارع تجاري راقٍ. محلات متخصصة وعلامات تجارية. حركة مرورية مكثفة.'
+    },
+    {
+      id: 37, neighborhood: 'الكويفية', lat: 32.1385, lng: 20.0778, class: 'D',
+      sector: 5, population: 25000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['A','B'], gap: 'جزئياً ⚠',
+      notes: 'أسرع مناطق التمدد الحضري شمالاً. انسيابية عالية. نقص في الأسواق المتكاملة.'
+    },
+    {
+      id: 38, neighborhood: 'سيدي خليفة', lat: 32.1448, lng: 20.0912, class: 'D',
+      sector: 5, population: 20000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'تجزئة', market_match: 'غير مطابق',
+      segments_present: ['B'], gap: 'نعم ⚠',
+      notes: 'تمدد سكاني شرقي شمالي. بنية خدمات قيد الاستكمال. فرصة تجارية مستقبلية.'
+    },
+    {
+      id: 39, neighborhood: 'سيدي علي', lat: 32.1398, lng: 20.0858, class: 'D',
+      sector: 5, population: 15000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['B','C'], gap: 'نعم ⚠',
+      notes: 'ضاحية شمالية شرقية. تمدד حضري. تفتقر لبنية تجارية متكاملة.'
+    },
+
+    // ══════════════════════════════════════════════════════════════════
+    // القطاع 3: كثافة استهلاكية FMCG (شرق وجنوب شرق وسط البلد)
+    // ══════════════════════════════════════════════════════════════════
+    {
+      id: 40, neighborhood: 'السلماني الشرقي', lat: 32.116200, lng: 20.088500, class: 'C',
+      sector: 3, population: 55000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'أعلى كتلة سكانية. محرك الاستهلاك اليومي. حجم مبيعات ضخم (Volume). حساسية سعرية عالية.'
+    },
+    {
+      id: 41, neighborhood: 'السلماني الغربي', lat: 32.114115, lng: 20.090861, class: 'C',
+      sector: 3, population: 48000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'FMCG بامتياز. ارتدادات تجارية شبه معدومة. توزيع في ساعات الصباح الباكر فقط.'
+    },
+    {
+      id: 42, neighborhood: 'الماجوري', lat: 32.095101, lng: 20.095943, class: 'C',
+      sector: 3, population: 60000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'طريق الماجوري محور رئيسي مزدحم. الازدحام مستمر طوال اليوم ويشتد مساءً.'
+    },
+    {
+      id: 43, neighborhood: 'البركة', lat: 32.099673, lng: 20.084530, class: 'C',
+      sector: 3, population: 52000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'كثافة سكانية عالية. يعتمد على السلع الأساسية والتموينية. Last-Mile يتطلب فانات صغيرة.'
+    },
+    {
+      id: 44, neighborhood: 'الكيش', lat: 32.1058, lng: 20.0968, class: 'C',
+      sector: 3, population: 58000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'من أكثر المناطق استهلاكاً للسلع سريعة الدوران. يغذي قلب المدينة.'
+    },
+    {
+      id: 45, neighborhood: 'بوهديمة', lat: 32.0985, lng: 20.1125, class: 'C',
+      sector: 3, population: 45000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'طرق داخلية ضيقة. عمليات إنزال البضائع معقدة وتستلزم جدولة دقيقة.'
+    },
+    {
+      id: 46, neighborhood: 'الليثي', lat: 32.091434, lng: 20.126259, class: 'C',
+      sector: 3, population: 55000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'كتلة سكانية حرجة. سلع أساسية ويومية. الارتدادات أمام المحلات معدومة تقريباً.'
+    },
+    {
+      id: 47, neighborhood: 'اليثي القديم', lat: 32.104200, lng: 20.105500, class: 'C',
+      sector: 3, population: 32000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'قديمة', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'النواة التاريخية لحي اليثي. بنية قديمة. أسواق شعبية أصيلة.'
+    },
+    {
+      id: 48, neighborhood: 'سيد حسين', lat: 32.102096, lng: 20.078849, class: 'C',
+      sector: 3, population: 42000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'على الطريق الدائري (الرينق). ازدحام متواصل. فرصة لنقاط توزيع مصغرة.'
+    },
+    {
+      id: 49, neighborhood: 'الزريريعية', lat: 32.112500, lng: 20.090200, class: 'C',
+      sector: 3, population: 35000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'جزء من منطقة الكثافة الاستهلاكية المركزية. نمط استهلاك يومي مكثف.'
+    },
+    {
+      id: 50, neighborhood: 'الثامة', lat: 32.114200, lng: 20.091800, class: 'C',
+      sector: 3, population: 30000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'قريبة من سوق الجريد. حركة تجارية يومية مكثفة. يغلب عليها الطابع الشعبي.'
+    },
+    {
+      id: 51, neighborhood: 'راس عبيدة', lat: 32.105897, lng: 20.090255, class: 'C',
+      sector: 3, population: 40000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'كثافة سكانية مرتفعة. يحتاج تغطية أوسع للسلع الأساسية.'
+    },
+    {
+      id: 52, neighborhood: 'الوحيشي', lat: 32.1065, lng: 20.1018, class: 'C',
+      sector: 3, population: 36000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'توسع سكاني غير مخطط. بنية تحتية تحت ضغط. أرصفة مستغلة بالكامل.'
+    },
+    {
+      id: 53, neighborhood: 'السرتي', lat: 32.111948, lng: 20.116716, class: 'C',
+      sector: 3, population: 32000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'تركز تجاري شعبي. استهلاك يومي للمواد الغذائية الأساسية.'
+    },
+    {
+      id: 54, neighborhood: 'بن يونس', lat: 32.1082, lng: 20.0952, class: 'C',
+      sector: 3, population: 28000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'منطقة سكنية شعبية متوسطة الكثافة. يتطلب توزيع بالفانات الصغيرة.'
+    },
+    {
+      id: 55, neighborhood: 'الحميضة', lat: 32.096295, lng: 20.085010, class: 'C',
+      sector: 3, population: 30000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'منطقة سكنية شعبية. حركة تجارية يومية. يغلب عليها الطابع الاستهلاكي.'
+    },
+    {
+      id: 56, neighborhood: 'الزيتون', lat: 32.083898, lng: 20.087184, class: 'C',
+      sector: 3, population: 26000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['C'], gap: 'لا',
+      notes: 'حي سكني شعبي. استهلاك يومي مرتفع. قرب المحاور التجارية الشعبية.'
+    },
+    {
+      id: 57, neighborhood: 'سيدي عبيد', lat: 32.100800, lng: 20.089500, class: 'C',
+      sector: 3, population: 22000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'منطقة سكنية شعبية. يحتاج تغطية أوسع للسلع الأساسية.'
+    },
+    {
+      id: 58, neighborhood: 'سيدي يونس', lat: 32.1028, lng: 20.0918, class: 'C',
+      sector: 3, population: 20000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'حي سكني شعبي. طلب يومي على السلع الأساسية والغذائية.'
+    },
+    {
+      id: 59, neighborhood: 'الهواري', lat: 32.101200, lng: 20.118800, class: 'A',
+      sector: 2, population: 32000, income: 'مرتفع', flow: 'متوسط',
+      infra: 'جيد', market_type: 'مختلط', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'حي راقٍ ممتد جنوب شرق. شوارع داخلية واسعة. ازدحام عند المدارس فقط.'
+    },
+    {
+      id: 60, neighborhood: 'طريق الهواري', lat: 32.070663, lng: 20.100090, class: 'B',
+      sector: 4, population: 10000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
+      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['A','B'], gap: 'لا',
+      notes: 'محور مروري رئيسي بين القلب التجاري والمناطق الراقية. طرق واسعة.'
+    },
+    {
+      id: 61, neighborhood: 'طريق العروبة', lat: 32.115049, lng: 20.082538, class: 'B',
+      sector: 4, population: 8000, income: 'متوسط-جيد', flow: 'عالٍ',
+      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B'], gap: 'لا',
+      notes: 'طريق رئيسي يربط وسط المدينة بالأحياء الجنوبية الغربية.'
+    },
+    {
+      id: 62, neighborhood: 'حي لبنان', lat: 32.1075, lng: 20.1055, class: 'C',
+      sector: 3, population: 28000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'حي سكني شعبي مكتظ. طرق داخلية ضيقة. يعتمد على السلع الأساسية اليومية.'
+    },
+    {
+      id: 63, neighborhood: 'شارع لبنان', lat: 32.1065, lng: 20.1035, class: 'C',
+      sector: 3, population: 18000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'شارع سكني شعبي. مكتظ. يعتمد على السلع الأساسية.'
+    },
+    {
+      id: 64, neighborhood: 'شارع سوريا', lat: 32.123066, lng: 20.095368, class: 'C',
+      sector: 3, population: 16000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'شارع سكني شعبي. طلب يومي على السلع الأساسية والغذائية.'
+    },
+    {
+      id: 65, neighborhood: 'شارع الكويت', lat: 32.114186, lng: 20.123194, class: 'C',
+      sector: 3, population: 20000, income: 'متوسط', flow: 'عالٍ جداً',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'شارع تجاري شعبي رئيسي. ازدحام مزمن. حركة تجارة متنوعة.'
+    },
+    {
+      id: 66, neighborhood: 'شارع السودان', lat: 32.1055, lng: 20.0992, class: 'C',
+      sector: 3, population: 22000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'شارع شعبي مزدحم. يغلب عليه الطابع الاستهلاكي اليومي.'
+    },
+    {
+      id: 67, neighborhood: 'سيدي منصور', lat: 32.0998, lng: 20.1148, class: 'C',
+      sector: 3, population: 24000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'حي سكني شعبي. يحتاج تغطية تجزئة أفضل للسلع الأساسية.'
+    },
+    {
+      id: 68, neighborhood: 'حي الشقاعبي', lat: 32.0975, lng: 20.1128, class: 'C',
+      sector: 3, population: 22000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'منطقة سكنية شعبية. كثافة استهلاكية معتدلة. يحتاج تغطية أوسع.'
+    },
+
+    // ══════════════════════════════════════════════════════════════════
+    // القطاع 4: لوجستي وصناعي مختلط
+    // ══════════════════════════════════════════════════════════════════
+    {
+      id: 69, neighborhood: 'بوعطني', lat: 32.078679, lng: 20.183923, class: 'B',
+      sector: 4, population: 42000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
+      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['A','B','C'], gap: 'لا',
+      notes: 'شريان التوزيع الرئيسي. طرق واسعة للشاحنات الثقيلة. أفضل موقع للمستودعات المركزية (Hubs).'
+    },
+    {
+      id: 70, neighborhood: 'حي السلام', lat: 32.0958, lng: 20.1455, class: 'B',
+      sector: 4, population: 38000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
+      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'مخازن رئيسية ومحطات وقود مركزية. طابع عمالي. ملاءم لإدارة دورة المخازن.'
+    },
+    {
+      id: 71, neighborhood: 'شبنة', lat: 32.133936, lng: 20.127599, class: 'B',
+      sector: 4, population: 28000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'مختلط', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'طابع صناعي/سكني مختلط. طرق رئيسية جيدة لتحمل أوزان النقل الثقيل.'
+    },
+    {
+      id: 72, neighborhood: 'قاريونس', lat: 32.080800, lng: 20.080800, class: 'B',
+      sector: 4, population: 65000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
+      infra: 'ممتاز', market_type: 'مختلط', market_match: 'مطابق',
+      segments_present: ['A','B','C'], gap: 'لا',
+      notes: 'كثافة جامعية موسمية (طلاب). استهلاك مزدوج منزلي ومؤسسي. بنية تحتية ممتازة.'
+    },
+    {
+      id: 73, neighborhood: 'جامعة بنغازي', lat: 32.093792, lng: 20.085807, class: 'B',
+      sector: 4, population: 12000, income: 'متوسط-جيد', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'مختلط', market_match: 'مطابق',
+      segments_present: ['B','C'], gap: 'لا',
+      notes: 'حرم جامعي ومحيطه. كثافة طلابية موسمية عالية. طلب على المنتجات المحمولة الصغيرة.'
+    },
+    {
+      id: 74, neighborhood: 'تيكا', lat: 32.075200, lng: 20.071500, class: 'C',
+      sector: 3, population: 22000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'منطقة سكنية متوسطة قرب قاريونس. تغطية تجارية محدودة.'
+    },
+    {
+      id: 75, neighborhood: 'الحليس', lat: 32.086500, lng: 20.068500, class: 'C',
+      sector: 3, population: 20000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'حي سكني شعبي. كثافة استهلاكية يومية. بنية تحتية تحتاج تطوير.'
+    },
+    {
+      id: 76, neighborhood: 'أم مبروكة', lat: 32.092500, lng: 20.075500, class: 'C',
+      sector: 3, population: 25000, income: 'متوسط', flow: 'متوسط',
+      infra: 'متوسط', market_type: 'شعبي', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'منطقة سكنية غرب قاريونس. طلب على السلع الأساسية. قرب المحاور اللوجستية.'
+    },
+    {
+      id: 77, neighborhood: 'المساكن', lat: 32.114851, lng: 20.149973, class: 'B',
+      sector: 4, population: 32000, income: 'متوسط', flow: 'متوسط',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'سكن عمال. نمو عمراني نشط. قريب من المحاور اللوجستية الرئيسية.'
+    },
+    {
+      id: 78, neighborhood: 'أرض قريش', lat: 32.084500, lng: 20.124800, class: 'B',
+      sector: 4, population: 22000, income: 'متوسط', flow: 'متوسط',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['B'], gap: 'جزئياً ⚠',
+      notes: 'منطقة سكنية ذات طابع مختلط. صالحة كنقطة ارتكاز ثانوية للتوزيع.'
+    },
+    {
+      id: 79, neighborhood: 'سيدي فرج', lat: 32.104800, lng: 20.039500, class: 'B',
+      sector: 4, population: 45000, income: 'متوسط', flow: 'منخفض جداً',
+      infra: 'متوسط', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠⚠',
+      notes: 'غرب المدينة بعيداً عن مراكز التوزيع. سهولة وصول ضعيفة. فجوة استثمارية حرجة.'
+    },
+    {
+      id: 80, neighborhood: 'أرض زواوة', lat: 32.103500, lng: 20.135800, class: 'B',
+      sector: 4, population: 35000, income: 'متوسط', flow: 'متوسط',
+      infra: 'جيد', market_type: 'مختلط', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'منطقة ذات مساحات واسعة. مناسبة لإقامة مستودعات ومراكز توزيع ثانوية.'
+    },
+    {
+      id: 81, neighborhood: 'أرض زواوة البحرية', lat: 32.105800, lng: 20.138000, class: 'B',
+      sector: 4, population: 12000, income: 'متوسط', flow: 'متوسط',
+      infra: 'جيد', market_type: 'مختلط', market_match: 'جزئي',
+      segments_present: ['B'], gap: 'جزئياً ⚠',
+      notes: 'منطقة مختلطة قرب الساحل. مساحات مفتوحة. صالحة لنقاط توزيع مرنة.'
+    },
+    {
+      id: 82, neighborhood: 'عمارات 602', lat: 32.1055, lng: 20.1425, class: 'C',
+      sector: 4, population: 28000, income: 'متوسط', flow: 'متوسط',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['C'], gap: 'جزئياً ⚠',
+      notes: 'مجمع سكني حكومي. كثافة متوسطة. استهلاك منتظم للسلع الأساسية.'
+    },
+    {
+      id: 83, neighborhood: 'طريق النهر', lat: 32.088242, lng: 20.135936, class: 'B',
+      sector: 4, population: 10000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B'], gap: 'لا',
+      notes: 'محور لوجستي يربط مناطق الجنوب بوسط المدينة. حركة شاحنات مستمرة.'
+    },
+    {
+      id: 84, neighborhood: 'طريق المطار', lat: 32.097933, lng: 20.199927, class: 'B',
+      sector: 4, population: 8000, income: 'متوسط-جيد', flow: 'عالٍ جداً',
+      infra: 'ممتاز', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B'], gap: 'لا',
+      notes: 'الطريق الرئيسي للمطار. حركة مركبات ثقيلة مستمرة. مناسب لنقاط توزيع الجملة.'
+    },
+    {
+      id: 85, neighborhood: 'مصنع الإسمنت', lat: 32.072500, lng: 20.184800, class: 'B',
+      sector: 4, population: 5000, income: 'متوسط', flow: 'متوسط',
+      infra: 'جيد', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B'], gap: 'لا',
+      notes: 'منطقة صناعية جنوب شرق. حركة شاحنات ثقيلة. بنية لوجستية قائمة.'
+    },
+    {
+      id: 86, neighborhood: 'الحي الصناعي القوارشة', lat: 32.065500, lng: 20.118800, class: 'B',
+      sector: 4, population: 6000, income: 'متوسط', flow: 'متوسط',
+      infra: 'جيد', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B'], gap: 'لا',
+      notes: 'منطقة صناعية جنوب. مستودعات ومصانع. قاعدة توزيع مثالية للمنطقة الجنوبية.'
+    },
+    {
+      id: 87, neighborhood: 'سواني القوارشة', lat: 32.065500, lng: 20.088800, class: 'D',
+      sector: 5, population: 18000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠',
+      notes: 'ضاحية جنوبية. بنية خدمات أولية. فرصة دخول تجاري منخفض التكلفة.'
+    },
+    {
+      id: 88, neighborhood: 'طريق مصنع الببسي', lat: 32.079500, lng: 20.178800, class: 'B',
+      sector: 4, population: 7000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B'], gap: 'لا',
+      notes: 'محور صناعي. مصنع الببسي ومرافقه. حركة شاحنات التوزيع مستمرة.'
+    },
+    {
+      id: 89, neighborhood: 'شارع الببسي', lat: 32.078500, lng: 20.175800, class: 'B',
+      sector: 4, population: 8000, income: 'متوسط', flow: 'عالٍ',
+      infra: 'جيد', market_type: 'لوجستي', market_match: 'مطابق',
+      segments_present: ['B'], gap: 'لا',
+      notes: 'محور صناعي-لوجستي شرقي. مصانع ومستودعات. مناسب للتوزيع الصناعي الكبير.'
+    },
+    {
+      id: 90, neighborhood: 'جهاز الاستثمار العسكري', lat: 32.086214, lng: 20.101409, class: 'B',
+      sector: 4, population: 5000, income: 'متوسط-جيد', flow: 'متوسط',
+      infra: 'جيد', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['B'], gap: 'نعم ⚠',
+      notes: 'موقع مؤسسي. المحيط السكني يحتاج تغطية تجارية.'
+    },
+
+    // ══════════════════════════════════════════════════════════════════
+    // القطاع 5: ضواحي التوسع
+    // ══════════════════════════════════════════════════════════════════
+    // المحور الشرقي
+    {
+      id: 91, neighborhood: 'بودزيرة', lat: 32.102500, lng: 20.180800, class: 'D',
+      sector: 5, population: 18000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['B','C'], gap: 'نعم ⚠',
+      notes: 'محور شرقي. خلو من الأسواق المتكاملة. تكاليف لوجستية منخفضة للدخول.'
+    },
+    {
+      id: 92, neighborhood: 'بنينا', lat: 32.087376, lng: 20.254899, class: 'D',
+      sector: 5, population: 28000, income: 'متباين', flow: 'متوسط',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'قرب مطار بنينا الدولي. مدخل رئيسي لبنغازي. ازدحام في ساعات الذروة عند المدخل.'
+    },
+    {
+      id: 93, neighborhood: 'الرجمة', lat: 32.085500, lng: 20.235800, class: 'D',
+      sector: 5, population: 20000, income: 'متوسط-جيد', flow: 'انسيابي',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'جزئي',
+      segments_present: ['B','C'], gap: 'جزئياً ⚠',
+      notes: 'منطقة شرقية هادئة. تضم شرائح من ذوي الدخل الجيد. فرصة للتوسع التجاري.'
+    },
+    {
+      id: 94, neighborhood: 'النواقية', lat: 32.0755, lng: 20.1758, class: 'D',
+      sector: 5, population: 16000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠',
+      notes: 'تمدد جنوبي شرقي. طرق سريعة ممتدة. نقص واضح في الخدمات التجارية.'
+    },
+    {
+      id: 95, neighborhood: 'الأبيار', lat: 32.1748, lng: 20.5758, class: 'D',
+      sector: 5, population: 25000, income: 'متباين', flow: 'انسيابي',
+      infra: 'جيد', market_type: 'تجزئة', market_match: 'غير مطابق',
+      segments_present: ['B','C'], gap: 'نعم ⚠',
+      notes: 'مدينة على الطريق الساحلي شرق بنغازي. فرصة توسع على الخط الساحلي الشرقي.'
+    },
+    {
+      id: 96, neighborhood: 'قمينس', lat: 32.064, lng: 20.5678, class: 'D',
+      sector: 5, population: 18000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠',
+      notes: 'بلدة شرق بنغازي على الطريق الساحلي. نمو سكاني. تفتقر لبنية تجارية متكاملة.'
+    },
+    // المحور الغربي
+    {
+      id: 97, neighborhood: 'قنفوذة', lat: 32.0285, lng: 20.0228, class: 'D',
+      sector: 5, population: 30000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠',
+      notes: 'ضاحية غربية جنوبية. معدلات نمو سكاني مرتفعة. تعتمد على الطرق السريعة.'
+    },
+    {
+      id: 98, neighborhood: 'الفعكات', lat: 32.0385, lng: 20.0428, class: 'D',
+      sector: 5, population: 22000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠',
+      notes: 'تمدد عشوائي غرب جنوب. فرصة توغل تجاري بتكاليف تشغيل منخفضة.'
+    },
+    {
+      id: 99, neighborhood: 'بوصنيب', lat: 32.0485, lng: 20.0558, class: 'D',
+      sector: 5, population: 18000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠⚠',
+      notes: 'ضاحية غربية. بنية خدمات غير مكتملة. سوق تجزئة ناشئ.'
+    },
+    {
+      id: 100, neighborhood: 'المقزحة السكني', lat: 32.0695, lng: 20.1508, class: 'D',
+      sector: 5, population: 12000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['B'], gap: 'نعم ⚠⚠',
+      notes: 'مشروع سكني ناشئ جنوبي. يحتاج بنية تجارية متكاملة. فرصة استثمارية واضحة.'
+    },
+    {
+      id: 101, neighborhood: 'أبو هادي', lat: 31.9585, lng: 20.2188, class: 'D',
+      sector: 5, population: 20000, income: 'متباين', flow: 'انسيابي',
+      infra: 'قيد التطور', market_type: 'لا يوجد', market_match: 'غير مطابق',
+      segments_present: ['C'], gap: 'نعم ⚠',
+      notes: 'ضاحية جنوبية بعيدة. تمدد سكاني. تفتقر تماماً لبنية تجارية متكاملة.'
+    },
+  ];
+
+  let DATA = DEFAULT_DATA.map(d => ({...d}));
+
+  // ── Toast ──────────────────────────────────────────────────────────────
+  function showToast(msg, type = '') {
+    const t = document.getElementById('rh-toast');
+    t.textContent = msg;
+    t.className = 'show' + (type ? ' ' + type : '');
+    setTimeout(() => { t.className = ''; }, 3000);
+  }
+
+  // ── localStorage ──────────────────────────────────────────────────────
+  const LS_KEY = 'benghazi_hub_v3';
+  function loadFromStorage() {
+    try {
+      const saved = localStorage.getItem(LS_KEY);
+      if (!saved) return;
+      const overrides = JSON.parse(saved);
+      overrides.forEach(o => {
+        const idx = DATA.findIndex(d => d.id === o.id);
+        if (idx !== -1) DATA[idx] = {...DATA[idx], ...o};
+      });
+      updateStats(); renderTable(); rebuildMarkers();
+    } catch (e) { console.warn('Load error:', e); }
+  }
+  function saveToStorage(rec) {
+    try {
+      let arr = [];
+      const ex = localStorage.getItem(LS_KEY);
+      if (ex) arr = JSON.parse(ex);
+      const idx = arr.findIndex(o => o.id === rec.id);
+      if (idx !== -1) arr[idx] = rec; else arr.push(rec);
+      localStorage.setItem(LS_KEY, JSON.stringify(arr));
+    } catch { showToast('❌ فشل الحفظ', 'error'); }
+  }
+  function resetToDefaults() {
+    DATA = DEFAULT_DATA.map(d => ({...d}));
+    try { localStorage.removeItem(LS_KEY); } catch { /* ignore */ }
+    updateStats(); renderTable(); rebuildMarkers();
+    if (hexActive) renderHexLayer();
+    showToast('✓ تمت إعادة ضبط البيانات', 'success');
+  }
+
+  // ── Stats ──────────────────────────────────────────────────────────────
+  function updateStats() {
+    document.getElementById('stat-total').textContent = DATA.length;
+    document.getElementById('stat-match-full').textContent = DATA.filter(d => d.market_match === 'مطابق').length;
+    document.getElementById('stat-match-partial').textContent = DATA.filter(d => d.market_match === 'جزئي').length;
+    document.getElementById('stat-match-none').textContent = DATA.filter(d => d.market_match === 'غير مطابق').length;
+    const totalPop = DATA.reduce((s, d) => s + (d.population || 0), 0);
+    document.getElementById('stat-pop').textContent = (totalPop / 1000000).toFixed(2) + 'م';
+  }
+
+  // ── Map ──────────────────────────────────────────────────────────────
+  const rhMap = L.map('rh-map', { zoomControl: false }).setView([32.095, 20.12], 11);
+  L.control.zoom({ position: 'topleft' }).addTo(rhMap);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap', maxZoom: 18
+  }).addTo(rhMap);
+
+  const fsControl = L.control({ position: 'topright' });
+  fsControl.onAdd = function () {
+    const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control rh-fs-btn');
+    btn.innerHTML = '⛶';
+    btn.title = 'تكبير الخريطة';
+    btn.style.cssText = `
+      width:34px;height:34px;line-height:34px;text-align:center;
+      background:#1c2128;color:#e6edf3;border:1px solid #30363d;
+      border-radius:6px;cursor:pointer;font-size:16px;
+      display:block;margin:0;
+    `;
+    L.DomEvent.on(btn, 'click', function(e) {
+      L.DomEvent.stopPropagation(e);
+      document.getElementById('btn-fullscreen').click();
+    });
+    return btn;
+  };
+  fsControl.addTo(rhMap);
+
+  // Fullscreen
+  let mapFS = false;
+  document.getElementById('btn-fullscreen').addEventListener('click', () => {
+    mapFS = !mapFS;
+    const panel = document.getElementById('rh-map-panel');
+    const btn   = document.getElementById('btn-fullscreen');
+    if (mapFS) {
+      panel.classList.add('rh-fullscreen');
+      document.body.classList.add('map-fullscreen-active');
+      btn.textContent = '✕ تصغير';
+      btn.classList.add('active-hex');
+    } else {
+      panel.classList.remove('rh-fullscreen');
+      document.body.classList.remove('map-fullscreen-active');
+      btn.textContent = '⛶ تكبير';
+      btn.classList.remove('active-hex');
+    }
+    setTimeout(() => rhMap.invalidateSize(), 100);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && mapFS) document.getElementById('btn-fullscreen').click();
+  });
+
+  function matchColor(match) {
+    if (match === 'غير مطابق') return '#f85149';
+    if (match === 'جزئي')       return '#d29922';
+    return '#3fb950';
+  }
+
+  function incomeLabel(income) {
+    const map = { 'مرتفع': '💰 مرتفع', 'متوسط-جيد': '💵 متوسط-جيد', 'متوسط': '💴 متوسط', 'متباين': '💱 متباين' };
+    return map[income] || income;
+  }
+
+  function infraLabel(infra) {
+    const map = { 'ممتاز': '🟢 ممتازة', 'جيد': '🔵 جيدة', 'متوسط': '🟡 متوسطة', 'قديمة': '🔴 قديمة', 'قيد التطور': '🟠 قيد التطور' };
+    return map[infra] || infra;
+  }
+
+  function sectorLabel(s) {
+    const map = { 1: 'وسط البلد', 2: 'مناطق راقية', 3: 'كثافة FMCG', 4: 'لوجستي', 5: 'ضواحي توسع' };
+    return map[s] || s;
+  }
+
+  function buildPopup(d) {
+    const segBadges = (d.segments_present || []).map(s => {
+      const cls = s === 'A' ? 'badge-A' : s === 'B' ? 'badge-B' : s === 'D' ? 'badge-D' : 'badge-C';
+      return `<span class="badge ${cls}">${s}</span>`;
+    }).join(' ');
+    return `<div style="min-width:220px;padding:2px">
+      <div class="popup-title">📍 ${d.neighborhood}</div>
+      <div class="popup-row"><span class="pk">القطاع</span><span class="pv">${sectorLabel(d.sector)}</span></div>
+      <div class="popup-row"><span class="pk">الفئات</span><span class="pv">${segBadges}</span></div>
+      <div class="popup-row"><span class="pk">تطابق السوق</span><span class="pv" style="color:${matchColor(d.market_match)}">${d.market_match}</span></div>
+      <div class="popup-row section"><span class="pk">المؤشرات الحيوية</span></div>
+      <div class="popup-row"><span class="pk">👥 عدد السكان</span><span class="pv">${d.population.toLocaleString('ar-EG')}</span></div>
+      <div class="popup-row"><span class="pk">💰 الدخل</span><span class="pv">${incomeLabel(d.income)}</span></div>
+      <div class="popup-row"><span class="pk">🚦 المرور</span><span class="pv">${d.flow}</span></div>
+      <div class="popup-row"><span class="pk">🏗️ البنية</span><span class="pv">${infraLabel(d.infra)}</span></div>
+      <div class="popup-row section"><span class="pk">ملاحظات</span></div>
+      <div style="padding:3px 0"><span class="pv-desc">${d.notes || '—'}</span></div>
+    </div>`;
+  }
+
+  const markerLayer = L.layerGroup().addTo(rhMap);
+  const markers = {};
+  let selectedId = null;
+
+  function rebuildMarkers() {
+    markerLayer.clearLayers();
+    DATA.forEach(d => {
+      const color = matchColor(d.market_match);
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="width:12px;height:12px;background:${color};border:2px solid rgba(255,255,255,0.2);border-radius:50%;box-shadow:0 0 6px ${color}88;cursor:pointer;"></div>`,
+        iconSize: [12,12], iconAnchor: [6,6]
+      });
+      const marker = L.marker([d.lat, d.lng], { icon });
+      marker.on('click', () => showNeighborhood(d, true));
+      marker.bindPopup(buildPopup(d), { maxWidth: 280 });
+      markers[d.id] = marker;
+      if (!hexActive) markerLayer.addLayer(marker);
+    });
+  }
+
+  function showNeighborhood(d, fromMap = false) {
+    selectedId = d.id;
+    document.querySelectorAll('#rh-tbody tr').forEach(r =>
+      r.classList.toggle('selected', r.dataset.id == d.id)
+    );
+    const row = document.querySelector(`#rh-tbody tr[data-id="${d.id}"]`);
+    if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    document.getElementById('rh-sel-name').innerHTML =
+      `<span style="color:var(--rh-text-primary);font-weight:600">${d.neighborhood}</span> · فئة ${d.class} · ${d.population.toLocaleString('ar-EG')} ساكن`;
+    document.getElementById('rh-sel-detail').textContent = sectorLabel(d.sector);
+    if (hexActive) {
+      rhMap.setView([d.lat, d.lng], 13, { animate: true, duration: 0.6 });
+      const hexLyr = hexLayerById[d.id];
+      if (hexLyr) {
+        if (hexLayer) hexLayer.resetStyle();
+        hexLyr.setStyle({ fillOpacity: 0.95, weight: 3, color: '#58a6ff' });
+        setTimeout(() => hexLyr.openPopup(), 400);
+      }
+    } else {
+      if (!fromMap) rhMap.setView([d.lat, d.lng], 14, { animate: true, duration: 0.8 });
+      if (markers[d.id]) markers[d.id].openPopup();
+    }
+  }
+
+  // ── Hex Layer (District-Centered — سداسي واحد لكل حي على إحداثياته الفعلية) ──
+  let hexActive = false;
+  let hexLayer = null;
+  const hexLayerById = {};
+
+  const LAT_CORR = Math.cos(32.1 * Math.PI / 180); // ~0.848
+
+  function hexPolygon(cLat, cLng, r) {
+    const pts = [];
+    for (let i = 0; i < 6; i++) {
+      const angleDeg = 60 * i - 30;
+      const a = (Math.PI / 180) * angleDeg;
+      pts.push([
+        cLng + (r / LAT_CORR) * Math.cos(a),
+        cLat + r * Math.sin(a)
+      ]);
+    }
+    pts.push(pts[0]);
+    return pts;
+  }
+
+  function adaptiveRadius(d) {
+    let minDist = Infinity;
+    for (const other of DATA) {
+      if (other.id === d.id) continue;
+      const dlat = d.lat - other.lat;
+      const dlng = (d.lng - other.lng) * LAT_CORR;
+      const dist = Math.sqrt(dlat * dlat + dlng * dlng);
+      if (dist < minDist) minDist = dist;
+    }
+    return Math.max(0.006, Math.min(0.012, minDist * 0.50));
+  }
+
+  function renderHexLayer() {
+    if (hexLayer) { rhMap.removeLayer(hexLayer); hexLayer = null; }
+    Object.keys(hexLayerById).forEach(k => delete hexLayerById[k]);
+
+    const features = DATA.map(d => ({
+      type: 'Feature',
+      properties: { id: d.id, match: d.market_match, data: d, pop: d.population },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [ hexPolygon(d.lat, d.lng, adaptiveRadius(d)) ]
+      }
+    }));
+
+    const maxPop = Math.max(...DATA.map(d => d.population));
+
+    hexLayer = L.geoJSON({ type: 'FeatureCollection', features }, {
+      style: feat => {
+        const ratio = feat.properties.pop / maxPop;
+        const opacity = 0.45 + ratio * 0.35;
+        return {
+          fillColor:   matchColor(feat.properties.match),
+          fillOpacity: opacity,
+          color:       'rgba(255,255,255,0.25)',
+          weight:      1.5
+        };
+      },
+      onEachFeature: (feat, layer) => {
+        const d = feat.properties.data;
+        hexLayerById[d.id] = layer;
+        layer.bindPopup(buildPopup(d), { maxWidth: 280 });
+        layer.bindTooltip(d.neighborhood, {
+          permanent: true,
+          direction: 'center',
+          className: 'hex-label-tooltip'
+        });
+        layer.on('mouseover', function () {
+          this.setStyle({ fillOpacity: 0.95, weight: 2.5, color: 'rgba(255,255,255,0.7)' });
+        });
+        layer.on('mouseout', function () { hexLayer.resetStyle(this); });
+        layer.on('click', function () {
+          showNeighborhood(d, true);
+          this.openPopup();
+        });
+      }
+    }).addTo(rhMap);
+  }
+
+  document.getElementById('btn-hex-toggle').addEventListener('click', () => {
+    hexActive = !hexActive;
+    const btn = document.getElementById('btn-hex-toggle');
+    if (hexActive) {
+      btn.classList.add('active-hex');
+      btn.textContent = '📍 خريطة عادية';
+      markerLayer.remove();
+      renderHexLayer();
+    } else {
+      btn.classList.remove('active-hex');
+      btn.textContent = '⬡ خرائط سداسية';
+      if (hexLayer) { rhMap.removeLayer(hexLayer); hexLayer = null; }
+      markerLayer.addTo(rhMap);
+    }
+  });
+
+  document.getElementById('btn-reset-data').addEventListener('click', () => {
+    if (confirm('هل تريد إعادة ضبط جميع البيانات للقيم الافتراضية؟')) resetToDefaults();
+  });
+
+  // ── Grid View للأحياء ──────────────────────────────────────────────────
+  let gridActive = false;
+
+  function renderGridCards() {
+    const scroll = document.getElementById('rh-tscroll');
+    scroll.classList.add('grid-view');
+    // أخفِ الجدول
+    const tbl = scroll.querySelector('table');
+    const noRes = document.getElementById('rh-no-results');
+    if (tbl) tbl.style.display = 'none';
+    if (noRes) noRes.style.display = 'none';
+
+    // أزل الـ grid القديم إن وُجد
+    let grid = document.getElementById('rh-grid-cards');
+    if (grid) grid.remove();
+
+    grid = document.createElement('div');
+    grid.id = 'rh-grid-cards';
+
+    const filtered = DATA.filter(d => {
+      if (currentFilter === 'none') return d.market_match === 'غير مطابق';
+      if (currentFilter === 'partial') return d.market_match === 'جزئي';
+      if (currentFilter !== 'all') return d.class === currentFilter;
+      return true;
+    }).filter(d => {
+      if (currentSector !== 'all') return String(d.sector) === currentSector;
+      return true;
+    }).filter(d => {
+      if (!searchVal) return true;
+      return d.neighborhood.includes(searchVal);
+    });
+
+    filtered.forEach(d => {
+      const card = document.createElement('div');
+      card.className = 'district-card' + (d.id === selectedId ? ' selected' : '');
+      card.dataset.id = d.id;
+      card.innerHTML = `<div class="dc-dot" style="background:${matchColor(d.market_match)}"></div>
+        <span class="dc-name">${d.neighborhood}</span>`;
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.district-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        showNeighborhood(d, false);
+      });
+      grid.appendChild(card);
+    });
+
+    scroll.appendChild(grid);
+    document.getElementById('rh-row-count').textContent = filtered.length + ' حي';
+  }
+
+  function destroyGridCards() {
+    const scroll = document.getElementById('rh-tscroll');
+    scroll.classList.remove('grid-view');
+    const tbl = scroll.querySelector('table');
+    if (tbl) tbl.style.display = '';
+    const grid = document.getElementById('rh-grid-cards');
+    if (grid) grid.remove();
+  }
+
+  document.getElementById('btn-grid-toggle').addEventListener('click', () => {
+    gridActive = !gridActive;
+    const btn = document.getElementById('btn-grid-toggle');
+    if (gridActive) {
+      btn.classList.add('active-hex');
+      btn.textContent = '☰ جدول';
+      renderGridCards();
+    } else {
+      btn.classList.remove('active-hex');
+      btn.textContent = '⊞ شبكة الأحياء';
+      destroyGridCards();
+      renderTable();
+    }
+  });
+
+  // ── Table ──────────────────────────────────────────────────────────────
+  let currentFilter = 'all';
+  let currentSector = 'all';
+  let searchVal     = '';
+
+  function segBadge(segments) {
+    return (segments || []).map(s => {
+      const cls = s === 'A' ? 'badge-A' : s === 'B' ? 'badge-B' : s === 'D' ? 'badge-D' : 'badge-C';
+      return `<span class="badge ${cls}">${s}</span>`;
+    }).join(' ');
+  }
+  function matchBadge(match) {
+    if (match === 'مطابق')     return `<span class="badge badge-match-yes">${match}</span>`;
+    if (match === 'جزئي')      return `<span class="badge badge-match-part">${match}</span>`;
+    if (match === 'غير مطابق') return `<span class="badge badge-match-no">${match}</span>`;
+    return `<span class="badge">${match}</span>`;
+  }
+  function infraBadge(infra) {
+    const colors = { 'ممتاز': '#3fb950', 'جيد': '#2188ff', 'متوسط': '#d29922', 'قديمة': '#f85149', 'قيد التطور': '#bc8cff' };
+    const c = colors[infra] || '#8b949e';
+    return `<span style="color:${c};font-size:9px;">${infra}</span>`;
+  }
+
+  function renderTable() {
+    const q = searchVal.trim();
+    const filtered = DATA.filter(d => {
+      if (q && !d.neighborhood.includes(q) && !d.notes.includes(q)) return false;
+      if (currentSector !== 'all' && d.sector !== parseInt(currentSector)) return false;
+      if (currentFilter === 'A') return (d.segments_present || []).includes('A');
+      if (currentFilter === 'B') return (d.segments_present || []).includes('B');
+      if (currentFilter === 'C') return (d.segments_present || []).includes('C');
+      if (currentFilter === 'D') return d.class === 'D';
+      if (currentFilter === 'none')    return d.market_match === 'غير مطابق';
+      if (currentFilter === 'partial') return d.market_match === 'جزئي';
+      return true;
+    });
+
+    document.getElementById('rh-row-count').textContent = `${filtered.length} / ${DATA.length}`;
+    const tbody = document.getElementById('rh-tbody');
+    const noRes = document.getElementById('rh-no-results');
+    if (!filtered.length) { tbody.innerHTML = ''; noRes.style.display = 'block'; return; }
+    noRes.style.display = 'none';
+
+    tbody.innerHTML = filtered.map(d => `
+      <tr data-id="${d.id}" class="${selectedId === d.id ? 'selected' : ''}">
+        <td>${d.neighborhood}</td>
+        <td><div style="display:flex;gap:3px">${segBadge(d.segments_present)}</div></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:9px">${(d.population/1000).toFixed(0)}k</td>
+        <td style="font-size:9px">${d.income}</td>
+        <td>${infraBadge(d.infra)}</td>
+        <td>${matchBadge(d.market_match)}</td>
+        <td style="display:flex;gap:3px">
+          <button class="btn-act" data-pin="${d.id}">📍</button>
+          <button class="btn-act edit" data-edit="${d.id}">✏️</button>
+        </td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('tr').forEach(row => {
+      row.addEventListener('click', e => {
+        if (!e.target.closest('[data-pin]') && !e.target.closest('[data-edit]')) {
+          const d = DATA.find(x => x.id == row.dataset.id);
+          if (d) showNeighborhood(d, false);
+        }
+      });
+    });
+    tbody.querySelectorAll('[data-pin]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const d = DATA.find(x => x.id == btn.dataset.pin);
+        if (d) showNeighborhood(d, false);
+      });
+    });
+    tbody.querySelectorAll('[data-edit]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        openEditModal(parseInt(btn.dataset.edit));
+      });
+    });
+  }
+
+  // ── Filters & Autocomplete ──────────────────────────────────────────────
+  document.getElementById('rh-search').addEventListener('input', e => {
+    searchVal = e.target.value;
+    renderTable();
+    const q = searchVal.trim();
+    const ac = document.getElementById('rh-ac');
+    if (!q) { ac.style.display = 'none'; return; }
+    const hits = DATA.filter(d => d.neighborhood.includes(q)).slice(0, 8);
+    if (!hits.length) { ac.style.display = 'none'; return; }
+    const sectorNames = ['', 'وسط البلد', 'مناطق راقية', 'كثافة FMCG', 'لوجستي', 'ضواحي توسع'];
+    ac.innerHTML = hits.map(d =>
+      `<div data-ac="${d.id}" style="padding:8px 12px;cursor:pointer;font-size:12px;
+        color:#e6edf3;border-bottom:1px solid #21262d;display:flex;
+        justify-content:space-between;align-items:center;gap:8px;"
+        onmouseover="this.style.background='#21262d'"
+        onmouseout="this.style.background=''">
+        <span>${d.neighborhood}</span>
+        <span style="font-size:10px;color:#8b949e;white-space:nowrap;">${sectorNames[d.sector]||''}</span>
+      </div>`
+    ).join('');
+    ac.style.display = 'block';
+    ac.querySelectorAll('[data-ac]').forEach(el => {
+      el.addEventListener('mousedown', ev => {
+        ev.preventDefault();
+        const d = DATA.find(x => x.id == el.dataset.ac);
+        if (d) {
+          document.getElementById('rh-search').value = d.neighborhood;
+          searchVal = d.neighborhood;
+          ac.style.display = 'none';
+          renderTable();
+          showNeighborhood(d, false);
+        }
+      });
+    });
+  });
+  document.getElementById('rh-search').addEventListener('blur', () => {
+    setTimeout(() => {
+      const ac = document.getElementById('rh-ac');
+      if (ac) ac.style.display = 'none';
+    }, 150);
+  });
+
+  document.querySelectorAll('#rh-filters .fp').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('#rh-filters .fp').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentFilter = pill.dataset.filter;
+      renderTable();
+    });
+  });
+  document.querySelectorAll('#rh-sector-filters .sector-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('#rh-sector-filters .sector-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentSector = pill.dataset.sector;
+      renderTable();
+    });
+  });
+
+  // ── Edit Modal ─────────────────────────────────────────────────────────
+  function openEditModal(id) {
+    const d = DATA.find(x => x.id === id);
+    if (!d) return;
+    document.getElementById('edit-id').value = d.id;
+    document.getElementById('edit-neighborhood').value = d.neighborhood;
+    document.getElementById('edit-class').value = d.class;
+    document.getElementById('edit-population').value = d.population;
+    document.getElementById('edit-income').value = d.income;
+    document.getElementById('edit-flow').value = d.flow;
+    document.getElementById('edit-infra').value = d.infra;
+    document.getElementById('edit-market-type').value = d.market_type;
+    document.getElementById('edit-market-match').value = d.market_match;
+    document.getElementById('edit-notes').value = d.notes || '';
+    document.getElementById('edit-gap').value = d.gap;
+    document.querySelectorAll('input[name="edit-segments"]').forEach(cb => {
+      cb.checked = (d.segments_present || []).includes(cb.value);
+    });
+    document.getElementById('rh-modal-title').textContent = `✏️ تعديل: ${d.neighborhood}`;
+    document.getElementById('rh-modal-overlay').classList.add('open');
+  }
+
+  document.getElementById('btn-modal-cancel').addEventListener('click', () => {
+    document.getElementById('rh-modal-overlay').classList.remove('open');
+  });
+  document.getElementById('rh-modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('rh-modal-overlay'))
+      document.getElementById('rh-modal-overlay').classList.remove('open');
+  });
+  document.getElementById('btn-modal-save').addEventListener('click', () => {
+    const id  = parseInt(document.getElementById('edit-id').value);
+    const idx = DATA.findIndex(d => d.id === id);
+    if (idx === -1) return;
+    const selectedSegs = Array.from(document.querySelectorAll('input[name="edit-segments"]:checked')).map(cb => cb.value);
+    const updated = {
+      ...DATA[idx],
+      neighborhood:     document.getElementById('edit-neighborhood').value.trim(),
+      class:            document.getElementById('edit-class').value,
+      population:       parseInt(document.getElementById('edit-population').value) || 0,
+      income:           document.getElementById('edit-income').value,
+      flow:             document.getElementById('edit-flow').value,
+      infra:            document.getElementById('edit-infra').value,
+      market_type:      document.getElementById('edit-market-type').value,
+      market_match:     document.getElementById('edit-market-match').value,
+      notes:            document.getElementById('edit-notes').value,
+      gap:              document.getElementById('edit-gap').value,
+      segments_present: selectedSegs,
+    };
+    DATA[idx] = updated;
+    saveToStorage(updated);
+    updateStats(); renderTable(); rebuildMarkers();
+    if (hexActive) renderHexLayer();
+    document.getElementById('rh-modal-overlay').classList.remove('open');
+    showToast(`✓ تم حفظ بيانات "${updated.neighborhood}"`, 'success');
+  });
+
+  // ── Excel Export ──────────────────────────────────────────────────────
+  function exportToExcel() {
+    if (typeof XLSX === 'undefined') {
+      const script = document.createElement('script');
+      // Using xlsx-js-style for professional formatting (bold, colors)
+      script.src = 'https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js';
+      script.onload = performExport;
+      script.onerror = () => {
+        // Fallback to standard xlsx if style version fails
+        const s2 = document.createElement('script');
+        s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        s2.onload = performExport;
+        document.head.appendChild(s2);
+      };
+      document.head.appendChild(script);
+    } else {
+      performExport();
+    }
+  }
+
+  function performExport() {
+    const q = searchVal.trim();
+    const filtered = DATA.filter(d => {
+      if (q && !d.neighborhood.includes(q) && !d.notes.includes(q)) return false;
+      if (currentSector !== 'all' && d.sector !== parseInt(currentSector)) return false;
+      if (currentFilter === 'A') return (d.segments_present || []).includes('A');
+      if (currentFilter === 'B') return (d.segments_present || []).includes('B');
+      if (currentFilter === 'C') return (d.segments_present || []).includes('C');
+      if (currentFilter === 'D') return d.class === 'D';
+      if (currentFilter === 'none')    return d.market_match === 'غير مطابق';
+      if (currentFilter === 'partial') return d.market_match === 'جزئي';
+      return true;
+    });
+
+    const headers = ['اسم الحي', 'الفئة', 'السكان', 'الدخل', 'المرور', 'البنية', 'السوق', 'تطابق السوق', 'القطاع', 'ملاحظات'];
+    const sectorNames = ['', 'وسط البلد', 'مناطق راقية', 'كثافة FMCG', 'لوجستي', 'ضواحي توسع'];
+
+    const dataRows = filtered.map(d => [
+      d.neighborhood,
+      (d.segments_present || []).join(', '),
+      d.population,
+      d.income,
+      d.flow,
+      d.infra,
+      d.market_type,
+      d.market_match,
+      sectorNames[d.sector] || d.sector,
+      d.notes || ''
+    ]);
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
+
+    // RTL Sheet
+    if (!ws['!views']) ws['!views'] = [];
+    ws['!views'].push({ RTL: true });
+
+    // Auto-fit columns
+    const colWidths = headers.map((h, i) => {
+      let maxLen = h.length * 2;
+      dataRows.forEach(row => {
+        const val = String(row[i] || '');
+        if (val.length > maxLen) maxLen = val.length;
+      });
+      return { wch: Math.min(maxLen + 2, 50) };
+    });
+    ws['!cols'] = colWidths;
+
+    // Apply styles (if using xlsx-js-style)
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let r = range.s.r; r <= range.e.r; r++) {
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cellRef = XLSX.utils.encode_cell({ r, c });
+        if (!ws[cellRef]) continue;
+
+        ws[cellRef].s = {
+          font: { name: 'Cairo', sz: 10 },
+          alignment: { vertical: 'center', horizontal: 'right' }
+        };
+
+        // Header Style
+        if (r === 0) {
+          ws[cellRef].s.font.bold = true;
+          ws[cellRef].s.font.color = { rgb: "FFFFFF" };
+          ws[cellRef].s.fill = { fgColor: { rgb: "16A34A" } };
+          ws[cellRef].s.alignment.horizontal = 'center';
+        }
+        // Alternating Row Colors
+        else if (r % 2 === 0) {
+          ws[cellRef].s.fill = { fgColor: { rgb: "F3F4F6" } };
+        }
+      }
+    }
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'الأحياء');
+
+    const date = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, `neighborhoods-export-${date}.xlsx`);
+    showToast('✓ تم تصدير البيانات إلى Excel', 'success');
+  }
+
+  document.getElementById('btn-export-excel').addEventListener('click', exportToExcel);
+
+  // ── Init ──────────────────────────────────────────────────────────────
+  updateStats();
+  rebuildMarkers();
+  renderTable();
+  loadFromStorage();
+
+})();
+</script>
+
+</DashboardLayout>

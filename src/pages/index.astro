@@ -1,0 +1,263 @@
+---
+import '../styles/global.css';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+---
+
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>توثيق عمليات سلاسل الإمداد — بنغازي ٢٠٢٦</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: 'Cairo', sans-serif;
+      }
+      .hero-gradient {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      }
+      @media print {
+        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body { background: #ffffff !important; color: #000000 !important; }
+        header, footer, button, a[class*="bg-brand-red"], .absolute { display: none !important; }
+        .hero-gradient { background: #ffffff !important; min-height: auto !important; }
+        .hero-gradient h1, .hero-gradient h2, .hero-gradient p,
+        .hero-gradient span, .text-white, .text-gray-200 { color: #000000 !important; }
+        section { background: #ffffff !important; }
+        .rounded-3xl { border: 1px solid #cccccc !important; box-shadow: none !important; }
+        .text-gray-600 { color: #222222 !important; }
+        @page { size: A4; margin: 20mm; }
+      }
+    </style>
+  </head>
+  <body class="bg-[#0f0f1f]">
+    <header class="absolute top-0 w-full p-4 sm:p-6 z-10">
+      <div class="container mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 sm:w-12 sm:h-12 bg-brand-red rounded-xl flex items-center justify-center font-black text-xl sm:text-2xl text-white shadow-lg"
+          >
+            B
+          </div>
+          <span class="text-xl sm:text-2xl font-bold text-white tracking-tight">Brandzo Hub</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section
+        class="hero-gradient min-h-[80vh] flex items-center pt-12 pb-12 sm:pt-20 relative overflow-hidden"
+      >
+        <div
+         class="absolute top-0 right-0 w-1/2 h-full bg-brand-red opacity-5 skew-x-12 translate-x-1/2"
+        >
+        </div>
+        <div class="container mx-auto px-4 sm:px-6 relative z-10">
+          <div class="max-w-4xl">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-brand-yellow leading-tight mb-6">
+              توثيق عمليات سلاسل الإمداد — بنغازي
+            </h1>
+
+            <div class="text-sm sm:text-base text-gray-200 mb-8 sm:mb-10 leading-relaxed max-w-3xl bg-white/5 p-5 sm:p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
+              هذا المقترح يعرض فهماً كاملاً للدورة المستندية،
+              تصنيف أسواق بنغازي، والرؤية التشغيلية لتنفيذ Odoo —
+              من منظور متخصص في سلاسل الإمداد.
+            </div>
+
+            <div class="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
+              <a
+                href={`${base}/dashboard/`}
+                class="px-6 sm:px-10 py-4 sm:py-5 bg-brand-red text-white rounded-2xl font-bold text-base sm:text-xl shadow-2xl hover:bg-brand-red-dark transition-all transform hover:-translate-y-1 active:scale-95 text-center"
+              >
+                الدخول إلى لوحة التحكم
+              </a>
+              <a
+                href={`${base}/Brandzo_Operational_Guide.html`}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="px-6 sm:px-10 py-4 sm:py-5 bg-transparent border-2 border-white text-white rounded-2xl font-bold text-base sm:text-xl hover:bg-white hover:text-brand-navy transition-all text-center cursor-pointer"
+              >
+                الدليل التشغيلي
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="hidden lg:block absolute left-0 bottom-20 w-1/3">
+          <div class="grid grid-cols-2 gap-4 opacity-20">
+            <div class="h-32 bg-white rounded-3xl"></div>
+            <div class="h-32 bg-brand-red rounded-3xl mt-12"></div>
+            <div class="h-32 bg-brand-red rounded-3xl"></div>
+            <div class="h-32 bg-white rounded-3xl mt-12"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="py-12 sm:py-20 bg-[#111827]">
+        <div class="container mx-auto px-4 sm:px-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-12">
+            <div
+              class="p-6 sm:p-8 rounded-3xl border border-white/10 hover:shadow-xl transition-shadow"
+            >
+              <div class="w-14 h-14 bg-red-50 text-brand-red rounded-2xl flex items-center justify-center mb-6 text-3xl">📋</div>
+              <h3 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">١٩ نموذجاً تشغيلياً</h3>
+              <p class="text-gray-200 leading-relaxed">
+                كل عملية في المستودع موثقة بنموذج إلزامي —
+                من استلام البضاعة حتى الصرف والجرد.
+                هذه النماذج هي خلاصة الفهم العملي للمهنة.
+              </p>
+              <a href={`${base}/dashboard/forms`} class="mt-4 inline-block text-brand-yellow text-sm font-bold hover:underline">استعرض النماذج ←</a>
+            </div>
+            <div
+              class="p-6 sm:p-8 rounded-3xl border border-white/10 hover:shadow-xl transition-shadow"
+            >
+              <div class="w-14 h-14 bg-yellow-50 text-brand-yellow rounded-2xl flex items-center justify-center mb-6 text-3xl">🗺️</div>
+              <h3 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">خريطة أسواق بنغازي</h3>
+              <p class="text-gray-200 leading-relaxed">
+                تحليل تقاطع فئات المستهلكين (A/B/C) مع أنواع
+                الأسواق في ٢٠ حياً — أداة لفهم سلوك التوزيع
+                وقرارات سلاسل الإمداد.
+              </p>
+              <a href={`${base}/dashboard/retail-hub`} class="mt-4 inline-block text-brand-yellow text-sm font-bold hover:underline">استعرض الخريطة ←</a>
+            </div>
+            <div
+              class="p-6 sm:p-8 rounded-3xl border border-white/10 hover:shadow-xl transition-shadow"
+            >
+              <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mb-6 text-3xl">⚙️</div>
+              <h3 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">مقترح تنفيذ Odoo</h3>
+              <p class="text-gray-200 leading-relaxed">
+                الدورة المستندية كاملة على Odoo Enterprise —
+                المالية، الموارد البشرية، المشتريات،
+                المستودعات، وسلاسل الإمداد.
+              </p>
+              <a href={`${base}/dashboard/erp-workflows`} class="mt-4 inline-block text-brand-yellow text-sm font-bold hover:underline">استعرض الرؤية ←</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="py-12 sm:py-20 bg-[#111827] border-t border-white/5">
+        <div class="container mx-auto px-4 sm:px-6">
+          <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-12">
+              <h2 class="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-4">
+                🗓️ أجندة الاجتماع — فريق المستودعات مع المدير العام
+              </h2>
+              <div class="flex flex-wrap justify-center gap-4 text-sm sm:text-base">
+                <div class="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-gray-100">
+                  <span class="text-brand-yellow font-bold ml-1">الفريق:</span> محمد البرشي · رمزي باش
+                </div>
+                <div class="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-gray-100">
+                  <span class="text-brand-yellow font-bold ml-1">الجهة:</span> اجتماع مع المدير العام — Brandzo Hub
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
+              <div class="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-4 hover:border-brand-yellow/30 transition-colors">
+                <span class="text-2xl font-black text-brand-yellow">١.</span>
+                <span class="text-white font-bold">الدراسة الديموغرافية لبنغازي بالخرائط السداسية</span>
+              </div>
+              <div class="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-4 hover:border-brand-yellow/30 transition-colors">
+                <span class="text-2xl font-black text-brand-yellow">٢.</span>
+                <span class="text-white font-bold">الدورة المستندية للمستودعات</span>
+              </div>
+              <div class="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-4 hover:border-brand-yellow/30 transition-colors">
+                <span class="text-2xl font-black text-brand-yellow">٣.</span>
+                <span class="text-white font-bold">الهيكل الوظيفي</span>
+              </div>
+              <div class="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-4 hover:border-brand-yellow/30 transition-colors">
+                <span class="text-2xl font-black text-brand-yellow">٤.</span>
+                <span class="text-white font-bold">أودو وربط الدورة المستندية — الأدوار والصلاحيات</span>
+              </div>
+              <div class="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-4 hover:border-brand-yellow/30 transition-colors">
+                <span class="text-2xl font-black text-brand-yellow">٥.</span>
+                <span class="text-white font-bold">استخدام مجمع تبريد الرحبة لتخزين برندات الكوزمتيك</span>
+              </div>
+              <div class="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-4 hover:border-brand-yellow/30 transition-colors">
+                <span class="text-2xl font-black text-brand-yellow">٦.</span>
+                <span class="text-white font-bold">نماذج ذكية للمستودعات — قابلة للتطوير والربط بأودو</span>
+              </div>
+              <div class="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-4 hover:border-brand-yellow/30 transition-colors md:col-span-2">
+                <span class="text-2xl font-black text-brand-yellow">٧.</span>
+                <span class="text-white font-bold">اقتراحات بحثية</span>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <a
+                href={`${base}/dashboard/meeting-assistant/`}
+                class="px-6 sm:px-10 py-4 sm:py-5 bg-brand-red text-white rounded-2xl font-bold text-base sm:text-xl shadow-2xl hover:bg-brand-red-dark transition-all transform hover:-translate-y-1 active:scale-95 text-center inline-block"
+              >
+                📋 فتح مساعد الاجتماع الذكي
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Tech Stack Section -->
+    <section class="py-12 sm:py-16 bg-[#0f0f1f]">
+      <div class="container mx-auto px-4 sm:px-6">
+        <h2 class="text-2xl sm:text-3xl font-bold text-white text-center mb-2">
+          التقنيات والخدمات المستخدمة في هذا المقترح
+        </h2>
+        <div class="w-16 h-1 bg-brand-red mx-auto mb-10 rounded-full"></div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">⚡</div><div class="font-bold text-white text-sm">Astro + React</div><div class="text-xs text-gray-200 mt-1">واجهة حديثة وسريعة</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">☁️</div><div class="font-bold text-white text-sm">Firebase</div><div class="text-xs text-gray-200 mt-1">قاعدة بيانات سحابية</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">📋</div><div class="font-bold text-white text-sm">١٩ نموذجاً</div><div class="text-xs text-gray-200 mt-1">نماذج تشغيلية بمنطق تحقق</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">🔷</div><div class="font-bold text-white text-sm">Odoo Enterprise</div><div class="text-xs text-gray-200 mt-1">توثيق الدورات المستندية</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">📷</div><div class="font-bold text-white text-sm">Barcode Scanner</div><div class="text-xs text-gray-200 mt-1">تكامل قارئ الباركود</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">🌐</div><div class="font-bold text-white text-sm">GitHub Pages</div><div class="text-xs text-gray-200 mt-1">استضافة مجانية وموثوقة</div></div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center"><div class="text-2xl mb-2">🔤</div><div class="font-bold text-white text-sm">Cairo Font + RTL</div><div class="text-xs text-gray-200 mt-1">واجهة عربية كاملة</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Next Steps Section -->
+    <section class="py-12 sm:py-16 bg-[#111827]">
+      <div class="container mx-auto px-4 sm:px-6 max-w-3xl">
+        <h2 class="text-2xl sm:text-3xl font-bold text-white text-center mb-2">الخطوات التالية</h2>
+        <div class="w-16 h-1 bg-brand-red mx-auto mb-10 rounded-full"></div>
+        <div class="space-y-4 mb-8">
+          <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+            <h3 class="font-bold text-brand-yellow mb-2">١. الموافقة المبدئية</h3>
+            <p class="text-gray-200 text-sm leading-relaxed">اعتماد المقترح للانتقال إلى مرحلة التنسيق مع إدارة تقنية المعلومات</p>
+          </div>
+          <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+            <h3 class="font-bold text-brand-yellow mb-2">٢. تعيين مسؤول تقني</h3>
+            <p class="text-gray-200 text-sm leading-relaxed">تحديد مسؤول من IT لدراسة متطلبات التكامل مع الأنظمة القائمة</p>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <button onclick="window.print()" class="px-8 py-4 bg-brand-red text-white rounded-xl font-bold hover:bg-brand-red-dark transition-all shadow-md active:scale-95">
+            🖨️ طباعة التقرير الكامل
+          </button>
+          <a href="mailto:?subject=طلب اجتماع — مقترح سلاسل الإمداد&body=السلام عليكم،%0Aأود مناقشة المقترح المرفق:%0Ahttps://albarshi996.github.io/warehouse-system/" class="px-8 py-4 bg-transparent border-2 border-white text-white rounded-xl font-bold hover:bg-white hover:text-brand-navy transition-all text-center">
+            ✉️ طلب اجتماع بالبريد
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="py-8 sm:py-12 bg-[#0a0a14] border-t border-white/10">
+      <div class="container mx-auto px-4 sm:px-6 text-center">
+        <p class="text-sm sm:text-base text-gray-200 font-bold">
+          إعداد: محمد البرشي — متخصص سلاسل الإمداد<br/>
+          بنغازي ٢٠٢٦ · هذا المقترح إعداد بحثي وتشغيلي — غير تجاري
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

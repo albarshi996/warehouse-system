@@ -1,0 +1,17 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import MeetingAssistant from '../../components/brandzo-erp/MeetingAssistant/MeetingAssistant.jsx';
+---
+
+<DashboardLayout title="Meeting Assistant">
+  <div class="w-full">
+    <MeetingAssistant client:only="react" />
+  </div>
+</DashboardLayout>
+
+<style>
+  /* Smooth scrolling and layout adjustments for Meeting Assistant */
+  :global(html) {
+    scroll-behavior: smooth;
+  }
+</style>

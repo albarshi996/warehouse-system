@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تقرير آلية التخزين المقترحة - نظام Brandzo</title>
+    <style>
+        :root {
+            --primary: #1b3a5c;
+            --secondary: #DAAA3C;
+            --accent: #c41e3a;
+            --gray-light: #f0f2f5;
+            --border: #d0d4da;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 12pt;
+            line-height: 1.8;
+            color: #222;
+            background: white;
+            direction: rtl;
+            text-align: right;
+        }
+
+        @page {
+            size: A4;
+            margin: 2cm 2.2cm 2.2cm 2cm;
+        }
+
+        @media print {
+            body {
+                background: none;
+            }
+            .no-print {
+                display: none;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+            h1, h2, h3, h4 {
+                page-break-after: avoid;
+            }
+            table {
+                page-break-inside: avoid;
+            }
+        }
+
+        .container {
+            max-width: 21cm;
+            margin: auto;
+            padding: 0;
+        }
+
+        .cover {
+            text-align: center;
+            padding: 4cm 2cm 2cm;
+            background: white;
+            border-bottom: 4px solid var(--primary);
+        }
+        .cover .logo-placeholder {
+            font-size: 18pt;
+            font-weight: bold;
+            color: var(--primary);
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+        .cover h1 {
+            font-size: 24pt;
+            color: var(--primary);
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+        .cover .subtitle {
+            font-size: 14pt;
+            color: var(--secondary);
+            margin-bottom: 50px;
+        }
+        .cover .meta {
+            font-size: 12pt;
+            color: #555;
+            margin-top: 50px;
+        }
+        .cover .meta span {
+            display: block;
+            margin-bottom: 6px;
+        }
+        .confidential {
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            padding: 8px 20px;
+            display: inline-block;
+            font-weight: bold;
+            margin-top: 30px;
+            text-transform: uppercase;
+        }
+
+        h2 {
+            font-size: 18pt;
+            color: var(--primary);
+            border-bottom: 3px solid var(--secondary);
+            padding-bottom: 8px;
+            margin-top: 1.5cm;
+            margin-bottom: 0.6cm;
+        }
+        h3 {
+            font-size: 14pt;
+            color: var(--primary);
+            margin-top: 0.8cm;
+            margin-bottom: 0.4cm;
+        }
+        h4 {
+            font-size: 13pt;
+            color: #2d4b6c;
+            margin-top: 0.5cm;
+            margin-bottom: 0.3cm;
+        }
+
+        p {
+            margin-bottom: 0.6cm;
+            text-align: justify;
+            text-justify: inter-word;
+        }
+
+        ul, ol {
+            margin-bottom: 0.6cm;
+            padding-right: 1.5cm;
+        }
+        li {
+            margin-bottom: 0.2cm;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.5cm 0 0.8cm;
+            font-size: 9pt;
+        }
+        table caption {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--primary);
+            font-size: 12pt;
+        }
+        th {
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 6px;
+            font-size: 9pt;
+            text-align: center;
+            font-weight: bold;
+        }
+        td {
+            padding: 6px 4px;
+            border: 1px solid var(--border);
+            font-size: 9pt;
+            vertical-align: middle;
+            text-align: center;
+        }
+        tr:nth-child(even) td {
+            background-color: var(--gray-light);
+        }
+        tr:hover td {
+            background-color: #e8f4f8;
+        }
+
+        .highlight-box {
+            background: #eef3f9;
+            border-right: 6px solid var(--primary);
+            padding: 12px 18px;
+            margin: 0.6cm 0;
+            text-align: justify;
+        }
+
+        .golden-rule {
+            background: #fef8e7;
+            border: 1px solid var(--secondary);
+            border-radius: 5px;
+            padding: 12px 18px;
+            margin: 0.6cm 0;
+            list-style: none;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        .toc {
+            list-style: none;
+            padding: 0;
+        }
+        .toc li {
+            margin-bottom: 6px;
+            border-bottom: 1px dotted #aaa;
+            padding-bottom: 4px;
+        }
+        .toc li a {
+            text-decoration: none;
+            color: #1b3a5c;
+            font-weight: 500;
+        }
+        .toc li a::before {
+            content: "⬥ ";
+            color: var(--secondary);
+        }
+
+        .signature-line {
+            margin-top: 1cm;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-line div {
+            width: 45%;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            text-align: center;
+            font-size: 11pt;
+        }
+
+        /* Warehouse Visualization Styles */
+        .warehouse-visual {
+            background: #f8f9fa;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .rack-row {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+        }
+
+        .rack {
+            width: 120px;
+            height: 150px;
+            border: 3px solid var(--primary);
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            padding: 5px;
+            background: white;
+            position: relative;
+        }
+
+        .rack-label {
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary);
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+            font-size: 10pt;
+        }
+
+        .rack-levels {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+
+        .rack-level {
+            height: 25px;
+            border: 1px dashed #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8pt;
+            background: #f0f0f0;
+        }
+
+        .rack-level.occupied {
+            background: #d4edda;
+            border: 1px solid #28a745;
+        }
+
+        .rack-level.critical {
+            background: #f8d7da;
+            border: 1px solid #dc3545;
+        }
+
+        .rack-aisle {
+            width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--secondary);
+            font-weight: bold;
+            font-size: 9pt;
+        }
+
+        .zone-label {
+            text-align: center;
+            font-weight: bold;
+            color: var(--accent);
+            margin: 20px 0 10px;
+            font-size: 11pt;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            font-size: 9pt;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #333;
+        }
+
+        .legend-color.green {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .legend-color.red {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        .legend-color.gray {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+
+        /* Flow diagram styles */
+        .flow-diagram {
+            background: #f8f9fa;
+            border: 2px solid var(--secondary);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .flow-step {
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px auto;
+            max-width: 400px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .flow-arrow {
+            text-align: center;
+            font-size: 24pt;
+            color: var(--secondary);
+            margin: 5px 0;
+        }
+
+/* ===== UNIFIED PRINT SYSTEM ===== */
+@page { size: A4 portrait; margin: 1.5cm 2cm 2cm 2cm; }
+
+@media print {
+  .print-bar, .tabs-nav, .no-print, button, .nav-tab, [onclick], .sticky { display: none !important; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { background: white !important; color: #111 !important; }
+  .section { display: block !important; }
+  h2 { page-break-before: always; page-break-after: avoid; }
+  h3 { page-break-after: avoid; }
+  table, .stage-card, .org-node { page-break-inside: avoid; }
+
+  /* Readability for dark themes */
+  .hero, .cover, .stage-card, .table-container { background: #f8f9fb !important; color: #111 !important; border-color: #1b3a5c !important; }
+  th { background: #1b3a5c !important; color: #fff !important; }
+  td { color: #111 !important; }
+}
+
+</style>
+    <!-- Brandzo override: palette, font, header bar -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    
+<style id="brandzo-override">
+    :root{
+        --color-brand-navy:#1a1a2e;
+        --color-brand-red:#c41e3a;
+        --color-brand-red-dark:#8b1a1a;
+        --color-brand-gold:#DAAA3C;
+        --color-brand-yellow:#DAAA3C;
+        --color-primary:#c41e3a;
+        --color-surface:#f8f9fa;
+        --color-on-surface:#111;
+        --navy: var(--color-brand-navy);
+        --gold: var(--color-brand-gold);
+        --gold2: #c69030;
+    }
+    body{font-family:'Cairo',sans-serif !important;}
+    .brandzo-topbar{background:var(--color-brand-navy);color:var(--color-brand-gold);padding:14px 18px;display:flex;align-items:center;gap:12px;font-family:'Cairo',sans-serif;}
+    .brandzo-topbar .wordmark{font-weight:700;font-size:20px;}
+    .brandzo-topbar .title{font-size:16px;}
+    .brandzo-topbar .meta{margin-left:auto;font-size:14px;color:#fff;}
+    .no-print{background:#f8f9fa;border-right:4px solid var(--color-brand-navy);padding:10px 15px;}
+    .no-print a{color:var(--color-primary);text-decoration:none;font-weight:700;}
+    a{color:var(--color-brand-red);}
+    @media print{.brandzo-topbar{display:block;}}
+</style>
+
+</head>
+<body>
+<div class="print-bar no-print" style="position: fixed; top: 10px; left: 10px; z-index: 1000;"><button onclick="window.print()" style="padding: 10px 20px; background: #DAAA3C; color: #0d1b2a; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">طباعة / PDF</button></div>
+
+<div class="container">
+    <div class="brandzo-topbar no-print">
+        <div class="wordmark">Brandzo</div>
+        <div class="title">تقرير آلية التخزين المقترحة</div>
+        <div class="meta">التاريخ: 12 مايو 2026</div>
+    </div>
+    <!-- Interactive Site Notification Bar -->
+    <div class="no-print" style="background: #e8f4fd; border-right: 4px solid var(--primary); padding: 10px 15px; margin-bottom: 20px; font-size: 11pt;">
+        <strong>🔗 هذا التقرير جزء من منظومة Brandzo التفاعلية — للعودة إلى الموقع:</strong> 
+        <a href="/" style="color: var(--primary); text-decoration: none; font-weight: bold;">Brandzo Warehouse System</a>
+    </div>
+
+    <!-- غلاف -->
+    <div class="cover">
+        <div class="logo-placeholder">BRANDZO SYSTEMS</div>
+        <h1>تقرير آلية التخزين المقترحة<br>نظام إدارة المستودعات الذكي</h1>
+        <div class="subtitle">نموذج تشغيلي مستوحى من أنظمة التخزين المتطورة (Amazon-style)</div>
+        <div class="meta">
+            <span><strong>التاريخ:</strong> 12 مايو 2026</span>
+            <span><strong>الإصدار:</strong> 1.0</span>
+            <span><strong>الإعداد:</strong> إدارة العمليات والتخزين</span>
+        </div>
+        <div class="confidential">سري – للاستخدام الداخلي</div>
+    </div>
+
+    <!-- جدول المحتويات -->
+    <div class="page-break"></div>
+    <h2>قائمة المحتويات</h2>
+    <ol class="toc">
+        <li><a href="#intro">المقدمة والرؤية الاستراتيجية</a></li>
+        <li><a href="#concept">مفهوم التخزين الذكي - نموذج Amazon</a></li>
+        <li><a href="#zones">تقسيم المناطق التخزينية</a></li>
+        <li><a href="#flow">مسار تدفق البضائع</a></li>
+        <li><a href="#table">جدول تفصيلي لمواقع التخزين (نموذج تجريبي)</a></li>
+        <li><a href="#odoo-mapping">ربط استراتيجيات التخزين مع Odoo</a></li>
+        <li><a href="#forms-mapping">جدول الربط (النماذج ↔ أودو)</a></li>
+        <li><a href="#rules">القواعد التشغيلية لإدارة التخزين</a></li>
+        <li><a href="#installation">دليل التنصيب الفوري لوحدة Inventory في أودو 17</a></li>
+        <li><a href="#conclusion">الخلاصة والتوصيات</a></li>
+    </ol>
+
+    <!-- المقدمة -->
+    <div class="page-break"></div>
+    <h2 id="intro">1. المقدمة والرؤية الاستراتيجية</h2>
+    <p>
+        يهدف هذا التقرير إلى تقديم تصور شامل لآلية التخزين المقترحة لنظام Brandzo لإدارة المستودعات. يستند النظام المقترح إلى أفضل الممارسات العالمية في إدارة المستودعات، مستوحى من أنظمة التخزين المتطورة مثل نظام Amazon، مع مراعاة الاحتياجات المحلية وطبيعة العمليات التشغيلية.
+    </p>
+    <p>
+        تتميز الآلية المقترحة بالدمج بين التقنية الحديثة والكفاءة التشغيلية، مع التركيز على تعظيم استغلال المساحة التخزينية، وتقليل وقت استرجاع البضائع، وضمان دقة المخزون من خلال نظام توثيق متكامل.
+    </p>
+
+    <div class="highlight-box">
+        <strong>الهدف الرئيسي:</strong> إنشاء نظام تخزين ذكي يحقق توازناً مثالياً بين استغلال المساحة، سرعة العمليات، ودقة البيانات، مع الحفاظ على معايير الجودة والامتثال.
+    </div>
+
+    <!-- مفهوم التخزين الذكي -->
+    <h2 id="concept">2. مفهوم التخزين الذكي - نموذج Amazon</h2>
+    <p>
+        يعتمد النظام المقترح على عدة مبادئ أساسية مستوحاة من أنظمة التخزين المتطورة:
+    </p>
+    <ul>
+        <li><strong>التخزين القائم على الطلب (Demand-Based Storage):</strong> تخزين الأصناف عالية الطلب في مواقع سهلة الوصول.</li>
+        <li><strong>التخزين العشوائي الذكي (Random Slotting):</strong> تخصيص مواقع التخزين ديناميكياً بناءً على حجم البضائع ومعدل الدوران.</li>
+        <li><strong>التقسيم المنطقي للمساحات (Zoning):</strong> تقسيم المستودع إلى مناطق متخصصة حسب نوع البضاعة وطبيعة التخزين.</li>
+        <li><strong>التتبع الرقمي الدقيق (Digital Tracking):</strong> رصد حركة كل صنف في الوقت الفعلي باستخدام نظام الترميز المتقدم.</li>
+    </ul>
+
+    <!-- تقسيم المناطق -->
+    <h2 id="zones">3. تقسيم المناطق التخزينية</h2>
+    <p>
+        يتم تقسيم المستودع إلى مناطق متخصصة تضمن كفاءة العمليات وسهولة الوصول:
+    </p>
+
+    <div class="warehouse-visual">
+        <div class="zone-label">المنطقة A: البضائع سريعة الدوران (Fast-Moving Zone)</div>
+        <div class="rack-row">
+            <div class="rack">
+                <div class="rack-label">RACK-A1</div>
+                <div class="rack-levels">
+                    <div class="rack-level occupied">L1: مشغول</div>
+                    <div class="rack-level occupied">L2: مشغول</div>
+                    <div class="rack-level occupied">L3: مشغول</div>
+                    <div class="rack-level">L4: فارغ</div>
+                </div>
+            </div>
+            <div class="rack-aisle">الممر 1</div>
+            <div class="rack">
+                <div class="rack-label">RACK-A2</div>
+                <div class="rack-levels">
+                    <div class="rack-level critical">L1: حرج</div>
+                    <div class="rack-level occupied">L2: مشغول</div>
+                    <div class="rack-level occupied">L3: مشغول</div>
+                    <div class="rack-level occupied">L4: مشغول</div>
+                </div>
+            </div>
+            <div class="rack-aisle">الممر 2</div>
+            <div class="rack">
+                <div class="rack-label">RACK-A3</div>
+                <div class="rack-levels">
+                    <div class="rack-level occupied">L1: مشغول</div>
+                    <div class="rack-level occupied">L2: مشغول</div>
+                    <div class="rack-level">L3: فارغ</div>
+                    <div class="rack-level">L4: فارغ</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="zone-label">المنطقة B: البضائع متوسطة الدوران (Medium-Moving Zone)</div>
+        <div class="rack-row">
+            <div class="rack">
+                <div class="rack-label">RACK-B1</div>
+                <div class="rack-levels">
+                    <div class="rack-level occupied">L1: مشغول</div>
+                    <div class="rack-level">L2: فارغ</div>
+                    <div class="rack-level occupied">L3: مشغول</div>
+                    <div class="rack-level">L4: فارغ</div>
+                </div>
+            </div>
+            <div class="rack-aisle">الممر 3</div>
+            <div class="rack">
+                <div class="rack-label">RACK-B2</div>
+                <div class="rack-levels">
+                    <div class="rack-level occupied">L1: مشغول</div>
+                    <div class="rack-level occupied">L2: مشغول</div>
+                    <div class="rack-level occupied">L3: مشغول</div>
+                    <div class="rack-level occupied">L4: مشغول</div>
+                </div>
+            </div>
+            <div class="rack-aisle">الممر 4</div>
+            <div class="rack">
+                <div class="rack-label">RACK-B3</div>
+                <div class="rack-levels">
+                    <div class="rack-level">L1: فارغ</div>
+                    <div class="rack-level occupied">L2: مشغول</div>
+                    <div class="rack-level occupied">L3: مشغول</div>
+                    <div class="rack-level">L4: فارغ</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color green"></div>
+                <span>مشغول (متاح)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color red"></div>
+                <span>منخفض (حرج)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color gray"></div>
+                <span>فارغ</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- مسار تدفق البضائع -->
+    <h2 id="flow">4. مسار تدفق البضائع</h2>
+    <p>
+        يمر المنتج عبر عدة مراحل من الاستلام حتى التخزين النهائي:
+    </p>
+
+    <div class="flow-diagram">
+        <div class="flow-step">📦 استلام البضاعة (Receiving)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">🔍 فحص الجودة (Quality Check)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">📋 التوثيق والترميز (Documentation)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">📍 تحديد الموقع (Slot Assignment)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">🏗️ التخزين (Putaway)</div>
+    </div>
+
+    <!-- جدول تفصيلي -->
+    <div class="page-break"></div>
+    <h2 id="table">5. جدول تفصيلي لمواقع التخزين (نموذج تجريبي)</h2>
+    <p>
+        يوضح الجدول التالي نموذجاً تجريبياً لكيفية تنظيم البيانات في نظام التخزين المقترح، مع عرض جميع المعلومات الأساسية المطلوبة لإدارة المخزون بكفاءة:
+    </p>
+
+    <table>
+        <caption>جدول مواقع التخزين - نموذج تجريبي</caption>
+        <thead>
+            <tr>
+                <th>S/N</th>
+                <th>Expiry</th>
+                <th>RACK</th>
+                <th>ITEM</th>
+                <th>uom</th>
+                <th>code</th>
+                <th>DESCRIPTION</th>
+                <th>NEW BATCH</th>
+                <th>P</th>
+                <th>BATCH</th>
+                <th>PHYSIC</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>15/12/2026</td>
+                <td>RACK-A1-L1</td>
+                <td>منتج غذائي 1</td>
+                <td>كجم</td>
+                <td>FD-001</td>
+                <td>أرز بسمتي فاخر - 5كجم</td>
+                <td>نعم</td>
+                <td>A</td>
+                <td>BATCH-2026-001</td>
+                <td>150</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>20/11/2026</td>
+                <td>RACK-A1-L2</td>
+                <td>منتج غذائي 2</td>
+                <td>لتر</td>
+                <td>FD-002</td>
+                <td>زيت زيتون بكر - 1لتر</td>
+                <td>لا</td>
+                <td>A</td>
+                <td>BATCH-2026-042</td>
+                <td>200</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>10/01/2027</td>
+                <td>RACK-A1-L3</td>
+                <td>منتج غذائي 3</td>
+                <td>علبة</td>
+                <td>FD-003</td>
+                <td>معجون طماطم - 800جم</td>
+                <td>نعم</td>
+                <td>A</td>
+                <td>BATCH-2026-089</td>
+                <td>300</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>25/10/2026</td>
+                <td>RACK-A2-L1</td>
+                <td>منتج غذائي 4</td>
+                <td>كجم</td>
+                <td>FD-004</td>
+                <td>سكر أبيض - 2كجم</td>
+                <td>لا</td>
+                <td>A</td>
+                <td>BATCH-2026-120</td>
+                <td>25</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>05/02/2027</td>
+                <td>RACK-A2-L2</td>
+                <td>منجم غذائي 5</td>
+                <td>شنطة</td>
+                <td>FD-005</td>
+                <td>دقيق قمح - 1كجم</td>
+                <td>نعم</td>
+                <td>A</td>
+                <td>BATCH-2026-156</td>
+                <td>180</td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td>30/12/2026</td>
+                <td>RACK-A2-L3</td>
+                <td>منتج غذائي 6</td>
+                <td>عبوة</td>
+                <td>FD-006</td>
+                <td>شاي أخضر - 20 كيس</td>
+                <td>لا</td>
+                <td>A</td>
+                <td>BATCH-2026-201</td>
+                <td>95</td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td>18/11/2026</td>
+                <td>RACK-A2-L4</td>
+                <td>منتج غذائي 7</td>
+                <td>علبة</td>
+                <td>FD-007</td>
+                <td>قهوة فورية - 200جم</td>
+                <td>نعم</td>
+                <td>A</td>
+                <td>BATCH-2026-234</td>
+                <td>120</td>
+            </tr>
+            <tr>
+                <td>8</td>
+                <td>08/01/2027</td>
+                <td>RACK-A3-L1</td>
+                <td>منتج غذائي 8</td>
+                <td>زجاجة</td>
+                <td>FD-008</td>
+                <td>عصير برتقال - 1لتر</td>
+                <td>لا</td>
+                <td>A</td>
+                <td>BATCH-2026-278</td>
+                <td>85</td>
+            </tr>
+            <tr>
+                <td>9</td>
+                <td>22/12/2026</td>
+                <td>RACK-A3-L2</td>
+                <td>منتج غذائي 9</td>
+                <td>علبة</td>
+                <td>FD-009</td>
+                <td>حليب مكثف - 400جم</td>
+                <td>نعم</td>
+                <td>A</td>
+                <td>BATCH-2026-312</td>
+                <td>210</td>
+            </tr>
+            <tr>
+                <td>10</td>
+                <td>12/02/2027</td>
+                <td>RACK-B1-L1</td>
+                <td>منتج تنظيف 1</td>
+                <td>لتر</td>
+                <td>CL-001</td>
+                <td>منظف أطباق سائل - 750مل</td>
+                <td>لا</td>
+                <td>B</td>
+                <td>BATCH-2026-015</td>
+                <td>65</td>
+            </tr>
+            <tr>
+                <td>11</td>
+                <td>28/03/2027</td>
+                <td>RACK-B1-L3</td>
+                <td>منتج تنظيف 2</td>
+                <td>عبوة</td>
+                <td>CL-002</td>
+                <td>مسحوق غسيل - 3كجم</td>
+                <td>نعم</td>
+                <td>B</td>
+                <td>BATCH-2026-089</td>
+                <td>140</td>
+            </tr>
+            <tr>
+                <td>12</td>
+                <td>15/01/2027</td>
+                <td>RACK-B2-L1</td>
+                <td>منتج تنظيف 3</td>
+                <td>رشاش</td>
+                <td>CL-003</td>
+                <td>مطهر صناعي - 500مل</td>
+                <td>لا</td>
+                <td>B</td>
+                <td>BATCH-2026-134</td>
+                <td>90</td>
+            </tr>
+            <tr>
+                <td>13</td>
+                <td>20/02/2027</td>
+                <td>RACK-B2-L2</td>
+                <td>منتج تنظيف 4</td>
+                <td>علبة</td>
+                <td>CL-004</td>
+                <td>مناديل مبللة - 80 ورقة</td>
+                <td>نعم</td>
+                <td>B</td>
+                <td>BATCH-2026-178</td>
+                <td>250</td>
+            </tr>
+            <tr>
+                <td>14</td>
+                <td>05/04/2027</td>
+                <td>RACK-B2-L3</td>
+                <td>منتج تنظيف 5</td>
+                <td>لتر</td>
+                <td>CL-005</td>
+                <td>مزيل بقع - 1لتر</td>
+                <td>لا</td>
+                <td>B</td>
+                <td>BATCH-2026-223</td>
+                <td>75</td>
+            </tr>
+            <tr>
+                <td>15</td>
+                <td>10/03/2027</td>
+                <td>RACK-B2-L4</td>
+                <td>منتج تنظيف 6</td>
+                <td>شنطة</td>
+                <td>CL-006</td>
+                <td>قفازات مطاطية - 50 زوج</td>
+                <td>نعم</td>
+                <td>B</td>
+                <td>BATCH-2026-267</td>
+                <td>30</td>
+            </tr>
+            <tr>
+                <td>16</td>
+                <td>25/01/2027</td>
+                <td>RACK-B3-L2</td>
+                <td>منتج شخصي 1</td>
+                <td>عبوة</td>
+                <td>PS-001</td>
+                <td>شامبو - 400مل</td>
+                <td>لا</td>
+                <td>C</td>
+                <td>BATCH-2026-045</td>
+                <td>110</td>
+            </tr>
+            <tr>
+                <td>17</td>
+                <td>18/02/2027</td>
+                <td>RACK-B3-L3</td>
+                <td>منتج شخصي 2</td>
+                <td>أنبوبة</td>
+                <td>PS-002</td>
+                <td>معجون أسنان - 100مل</td>
+                <td>نعم</td>
+                <td>C</td>
+                <td>BATCH-2026-112</td>
+                <td>175</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="highlight-box">
+        <strong>ملاحظات حول الجدول:</strong>
+        <ul>
+            <li><strong>S/N:</strong> الرقم التسلسلي للصنف</li>
+            <li><strong>Expiry:</strong> تاريخ انتهاء الصلاحية</li>
+            <li><strong>RACK:</strong> موقع التخزين (الرف والمستوى)</li>
+            <li><strong>ITEM:</strong> اسم الصنف</li>
+            <li><strong>uom:</strong> وحدة القياس</li>
+            <li><strong>code:</strong> رمز الصنف</li>
+            <li><strong>DESCRIPTION:</strong> الوصف التفصيلي للصنف</li>
+            <li><strong>NEW BATCH:</strong> هل الدفعة جديدة؟</li>
+            <li><strong>P:</strong> الأولوية (A=عالية، B=متوسطة، C=منخفضة)</li>
+            <li><strong>BATCH:</strong> رقم الدفعة</li>
+            <li><strong>PHYSIC:</strong> الكمية الفعلية في المخزون</li>
+        </ul>
+    </div>
+
+    <!-- القواعد التشغيلية -->
+    <h2 id="rules">6. القواعد التشغيلية لإدارة التخزين</h2>
+    <p>
+        يلتزم النظام المقترح بمجموعة من القواعد التشغيلية لضمان الكفاءة والدقة:
+    </p>
+
+    <div class="golden-rule">
+        <strong>القاعدة الذهبية: FEFO (First Expired, First Out)</strong>
+        <p>الصرف بناءً على تاريخ الانتهاء الأقرب،不管 من موقع التخزين. هذا يضمن تقليل الهالك وزيادة الجودة.</p>
+    </div>
+
+    <ul>
+        <li><strong>قاعدة التدوير الدوري (ABC Analysis):</strong> تصنيف الأصناف بناءً على معدل الدوران، وتخصيص مواقع التخزين وفقاً لذلك.</li>
+        <li><strong>قاعدة المساحة الحرجة (Critical Space):</strong> تحديد المواقع الحرجة ومراقبتها بشكل مستمر لتجنب النفاد.</li>
+        <li><strong>قاعدة التدقيق المستمر (Continuous Audit):</strong> إجراء جرد دوري ذكي للأصناف عالية القيمة ومعدل الدوران العالي.</li>
+        <li><strong>قاعدة التوثيق الشامل (Full Documentation):</strong> توثيق كل حركة مخزونية في الوقت الفعلي مع ربطها بالدفعة والتاريخ.</li>
+    </ul>
+
+    <!-- ربط استراتيجيات التخزين مع Odoo -->
+    <div class="page-break"></div>
+    <h2 id="odoo-mapping">6. ربط استراتيجيات التخزين مع Odoo</h2>
+    <p>
+        كل استراتيجية تخزين ذكية في نظام Brandzo لها مسار واضح للتفعيل في Odoo 17 Enterprise. الجدول التالي يوضح كيفية تنفيذ كل استراتيجية في Odoo:
+    </p>
+    
+    <table>
+        <caption>استراتيجيات التخزين ومسارها في Odoo</caption>
+        <thead>
+            <tr>
+                <th>الاستراتيجية</th>
+                <th>الوصف</th>
+                <th>المسار في Odoo</th>
+                <th>الإعدادات المطلوبة</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>FEFO</strong></td>
+                <td>First Expired, First Out - صرف الأقدم صلاحية أولاً</td>
+                <td>Inventory > Configuration > Removal Strategies</td>
+                <td>تفعيل FEFO Strategy + إعدادات تواريخ الصلاحية</td>
+            </tr>
+            <tr>
+                <td><strong>ABC Analysis</strong></td>
+                <td>تصنيف الأصناف حسب الأهمية (A: عالية، B: متوسطة، C: منخفضة)</td>
+                <td>Putaway Rules + Product Replenishment</td>
+                <td>تصنيف المنتجات + قواعد التخزين التلقائية</td>
+            </tr>
+            <tr>
+                <td><strong>Multi-zone</strong></td>
+                <td>تقسيم المستودع إلى مناطق متخصصة (مبرد/مجمد/جاف/غير غذائي)</td>
+                <td>Locations Hierarchy</td>
+                <td>Company/Warehouse/Zone/Rack/Bin</td>
+            </tr>
+            <tr>
+                <td><strong>Random Slotting</strong></td>
+                <td>تخصيص مواقع التخزين ديناميكياً بناءً على الحجم والدوران</td>
+                <td>Inventory > Configuration > Putaway Rules</td>
+                <td>قواعد Putaway قائمة على الحجم والوزن</td>
+            </tr>
+            <tr>
+                <td><strong>Demand-Based Storage</strong></td>
+                <td>تخزين الأصناف عالية الطلب في مواقع سهلة الوصول</td>
+                <td>Reordering Rules + Forecast</td>
+                <td>قواعد إعادة الطلب + تنبؤ الطلب</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>6.1 المناطق التخزينية في Odoo</h3>
+    <table>
+        <caption>تفاصيل المناطق التخزينية ونظيرها في Odoo</caption>
+        <thead>
+            <tr>
+                <th>المنطقة</th>
+                <th>الوصف</th>
+                <th>اسم الـ Location في Odoo</th>
+                <th>قواعد Putaway التلقائية</th>
+                <th>الباركود المقترح</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>المنطقة المبردة</strong></td>
+                <td>منتجات تحتاج تبريد 4°م</td>
+                <td>WH/Stock/Refrigerated</td>
+                <td>قواعد درجة الحرارة + FEFO</td>
+                <td>REF-XXXX</td>
+            </tr>
+            <tr>
+                <td><strong>المنطقة المجمدة</strong></td>
+                <td>منتجات تحتاج تجميد -18°م</td>
+                <td>WH/Stock/Frozen</td>
+                <td>قواعد التجميد + Batch Control</td>
+                <td>FRZ-XXXX</td>
+            </tr>
+            <tr>
+                <td><strong>المنطقة الجافة</strong></td>
+                <td>منتجات لا تحتاج تبريد</td>
+                <td>WH/Stock/Dry</td>
+                <td>قواعد ABC Analysis</td>
+                <td>DRY-XXXX</td>
+            </tr>
+            <tr>
+                <td><strong>منطقة غير الغذائية</strong></td>
+                <td>منتجات تنظيف ومواد شخصية</td>
+                <td>WH/Stock/Non-Food</td>
+                <td>قواعد الفصل Safety</td>
+                <td>NFD-XXXX</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- جدول الربط -->
+    <div class="page-break"></div>
+    <h2 id="forms-mapping">7. جدول الربط (النماذج ↔ أودو)</h2>
+    <p>
+        كل نموذج HTML في موقع Brandzo هو الشكل الورقي لما يُدخَل فعلياً في Odoo. الجدول التالي يوضح الربط المباشر:
+    </p>
+    
+    <table>
+        <caption>ربط نماذج Brandzo مع وحدات Odoo</caption>
+        <thead>
+            <tr>
+                <th>نموذج HTML في الموقع</th>
+                <th>نظيره في Odoo</th>
+                <th>المسار للوصول إليه في Odoo</th>
+                <th>الغرض</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>form_PutawayList.html</td>
+                <td>Odoo: Inventory > Operations > Transfers</td>
+                <td>Inventory > Operations > Putaway</td>
+                <td>أمر التخزين الموجه</td>
+            </tr>
+            <tr>
+                <td>form_GRN.html</td>
+                <td>Odoo: Inventory > Receipts</td>
+                <td>Inventory > Operations > Receipts</td>
+                <td>استلام البضاعة</td>
+            </tr>
+            <tr>
+                <td>form_PO.html</td>
+                <td>Odoo: Purchase > Orders</td>
+                <td>Purchase > Orders</td>
+                <td>أمر الشراء</td>
+            </tr>
+            <tr>
+                <td>form_Picking.html</td>
+                <td>Odoo: Inventory > Operations > Transfers</td>
+                <td>Inventory > Operations > Picking</td>
+                <td>قائمة السحب</td>
+            </tr>
+            <tr>
+                <td>form_DeliveryNote.html</td>
+                <td>Odoo: Inventory > Delivery Orders</td>
+                <td>Inventory > Operations > Delivery</td>
+                <td>إذن التسليم</td>
+            </tr>
+            <tr>
+                <td>form_QCReport.html</td>
+                <td>Odoo: Quality > Quality Checks</td>
+                <td>Quality > Control Points</td>
+                <td>تقرير فحص الجودة</td>
+            </tr>
+            <tr>
+                <td>form_ReturnNote.html</td>
+                <td>Odoo: Inventory > Returns</td>
+                <td>Inventory > Operations > Returns</td>
+                <td>إشعار الإرجاع</td>
+            </tr>
+            <tr>
+                <td>form_Stock Adjustment Voucher.html</td>
+                <td>Odoo: Inventory > Adjustments</td>
+                <td>Inventory > Operations > Adjustments</td>
+                <td>سند تسوية المخزون</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- دليل التنصيب -->
+    <div class="page-break"></div>
+    <h2 id="installation">8. دليل التنصيب الفوري لوحدة Inventory في أودو 17</h2>
+    <p>
+        للبدء الفوري في استخدام وحدة Inventory في Odoo 17، اتبع الخطوات التالية:
+    </p>
+    
+    <ol>
+        <li><strong>تفعيل وحدة Inventory:</strong>
+            <ul>
+                <li>اذهب إلى Settings > Apps</li>
+                <li>ابحث عن "Inventory" وقم بتثبيتها</li>
+                <li>أعد تشغيل Odoo بعد التثبيت</li>
+            </ul>
+        </li>
+        <li><strong>إعدادات المستودع الأساسية:</strong>
+            <ul>
+                <li>Inventory > Configuration > Warehouses</li>
+                <li>أنشئ مستودع جديد باسم "Brandzo Warehouse"</li>
+                <li>فعل 3-step receiving: Receive > Quality Check > Store</li>
+                <li>فعل 3-step shipping: Pick > Pack > Ship</li>
+            </ul>
+        </li>
+        <li><strong>إنشاء هيكل المواقع:</strong>
+            <ul>
+                <li>Inventory > Configuration > Storage Locations</li>
+                <li>أنشئ التسلسل الهرمي: Company > Warehouse > Zone > Rack > Bin</li>
+                <li>حدد نوع كل موقع (مبرد/مجمد/جاف/غير غذائي)</li>
+            </ul>
+        </li>
+        <li><strong>إعدادات المنتجات:</strong>
+            <ul>
+                <li>Inventory > Configuration > Products</li>
+                <li>فعل إدارة تواريخ الصلاحية (Expiration Dates)</li>
+                <li>فعل إدارة الدفعات (Lots)</li>
+                <li>حدد استراتيجية الإزالة (Removal Strategy): FEFO</li>
+            </ul>
+        </li>
+        <li><strong>قواعد التخزين التلقائية:</strong>
+            <ul>
+                <li>Inventory > Configuration > Putaway Rules</li>
+                <li>أنشئ قواعد لكل منطقة تخزين</li>
+                <li>ربط القواعد بفئات المنتجات</li>
+                <li>اختبر القواعد باستخدام عملية استلام تجريبية</li>
+            </ul>
+        </li>
+    </ol>
+
+    <div class="highlight-box">
+        <strong>ملاحظة هامة:</strong> هذه الخطوات الأساسية تكفي للبدء. للتخصيصات المتقدمة (مثل تكامل الباركود، تقارير مخصصة، أو تكامل مع أنظمة أخرى)، يُنصح بالتعاون مع شريك Odoo معتمد.
+    </div>
+
+    <!-- الخلاصة -->
+    <h2 id="conclusion">9. الخلاصة والتوصيات</h2>
+    <p>
+        يمثل النظام المقترح لإدارة التخزين نقلة نوعية في طريقة إدارة المستودعات، حيث يجمع بين الكفاءة التشغيلية والدقة العالية في إدارة المخزون. يستند النظام إلى أفضل الممارسات العالمية مع التكيف مع الاحتياجات المحلية.
+    </p>
+    <p>
+        <strong>التوصيات الرئيسية:</strong>
+    </p>
+    <ol>
+        <li>البدء بتطبيق النظام على مرحلة تجريبية في قسم واحد من المستودع.</li>
+        <li>تدريب الموظفين على استخدام النظام الجديد وفهم القواعد التشغيلية.</li>
+        <li>ربط النظام بنظام ERP المركزي لضمان تكامل البيانات.</li>
+        <li>مراجعة وتحديث النظام بشكل دوري بناءً على التغذية الراجعة والمتطلبات المتغيرة.</li>
+    </ol>
+
+    <!-- التوقيع -->
+    <div class="page-break"></div>
+    <div class="signature-line">
+        <div>
+            <strong>إعداد والمراجعة:</strong><br>
+            إدارة العمليات والتخزين
+        </div>
+        <div>
+            <strong>الموافقة:</strong><br>
+            المدير العام
+        </div>
+    </div>
+
+    <p style="text-align: center; margin-top: 2cm; font-size: 10pt; color: #666;">
+        Brandzo Hub 2026 - نظام إدارة المستودعات الذكي<br>
+        جميع الحقوق محفوظة © 2026
+    </p>
+
+</div>
+  <script defer src="brandzo-report.js"></script>
+</body>
+</html>

@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brandzo Hub — مركز العمليات 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════
+       BRANDZO VISUAL IDENTITY
+    ═══════════════════════════════════════════ */
+    :root {
+      --red: #c41e3a;
+      --red-dark: #8b1a1a;
+      --navy: #1a1a2e;
+      --gold: #DAAA3C;
+      --bg: #08081a;
+      --bg2: #0f0f24;
+      --glass: rgba(255,255,255,0.04);
+      --glass-border: rgba(255,255,255,0.08);
+      --text: #e8e8f0;
+      --text-muted: #9ca3af;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+    body {
+      background: linear-gradient(135deg, #05050f 0%, #0a0a1f 40%, #0f0a1a 70%, #0a0f1f 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      min-height: 100vh;
+      direction: rtl;
+    }
+
+    /* ── LAYOUT ─────────────────────── */
+    .app-shell { display: flex; min-height: 100vh; }
+
+    /* ── SIDEBAR ────────────────────── */
+    .sidebar {
+      width: 260px; flex-shrink: 0;
+      background: linear-gradient(180deg, rgba(15,15,40,0.97) 0%, rgba(10,10,30,0.99) 100%);
+      border-left: 1px solid rgba(255,255,255,0.06);
+      box-shadow: -8px 0 32px rgba(0,0,0,0.6);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; right: 0; bottom: 0; z-index: 100; overflow-y: auto;
+    }
+    .sidebar-logo { padding: 24px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .sidebar-logo-title {
+      font-size: 1.3rem; font-weight: 800;
+      background: linear-gradient(135deg, #fff 30%, var(--gold));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .sidebar-logo-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .neon-line {
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--red), var(--gold), var(--red), transparent);
+      margin: 12px 0; animation: neon-flow 3s ease-in-out infinite;
+    }
+    @keyframes neon-flow { 0%,100%{opacity:0.6} 50%{opacity:1} }
+    .sidebar-nav { padding: 12px; flex: 1; }
+    .nav-section-label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em;
+      color: var(--gold); text-transform: uppercase; padding: 8px 8px 4px; opacity: 0.7;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      border-radius: 10px; cursor: pointer; transition: all 0.2s;
+      color: #aab; font-size: 0.88rem; font-weight: 500; margin-bottom: 2px;
+      border: 1px solid transparent;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); border-color: rgba(255,255,255,0.06); }
+    .nav-item.active { background: rgba(192,57,43,0.15); color: #fff; border-color: rgba(192,57,43,0.3); font-weight: 700; }
+    .nav-item .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; flex-shrink: 0; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.72rem; color: var(--text-muted); }
+
+    /* ── MAIN ───────────────────────── */
+    .main-content { margin-right: 260px; flex: 1; min-height: 100vh; }
+    .page-header {
+      padding: 28px 32px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: space-between;
+    }
+    .page-title { font-size: 1.5rem; font-weight: 800; color: #fff; }
+    .page-subtitle { font-size: 0.82rem; color: var(--text-muted); margin-top: 4px; }
+    .page-body { padding: 28px 32px; }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── CARDS ──────────────────────── */
+    .card {
+      background: rgba(255,255,255,0.04); backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4); transition: all 0.3s;
+    }
+    .card:hover { background: rgba(255,255,255,0.06); border-color: rgba(192,57,43,0.2); }
+    .card-header {
+      padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .card-header h3 { font-size: 1rem; font-weight: 700; color: #fff; }
+    .card-body { padding: 20px; }
+
+    /* ── BADGES ─────────────────────── */
+    .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+    .badge-red { background: rgba(192,57,43,0.2); color: #f87171; border: 1px solid rgba(192,57,43,0.4); }
+    .badge-gold { background: rgba(232,184,48,0.15); color: var(--gold); border: 1px solid rgba(232,184,48,0.3); }
+    .badge-navy { background: rgba(26,26,46,0.5); color: #93c5fd; border: 1px solid rgba(147,197,253,0.2); }
+    .badge-green { background: rgba(34,197,94,0.1); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+    .badge-gray { background: rgba(255,255,255,0.06); color: #9ca3af; border: 1px solid rgba(255,255,255,0.1); }
+
+    /* ── BUTTONS ────────────────────── */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s; border: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--red), var(--red-dark)); color: #fff; box-shadow: 0 4px 12px rgba(192,57,43,0.35); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(192,57,43,0.5); }
+    .btn-gold { background: linear-gradient(135deg, var(--gold), #c99a20); color: #000; box-shadow: 0 4px 12px rgba(232,184,48,0.3); }
+    .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,184,48,0.45); }
+    .btn-ghost { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid rgba(255,255,255,0.1); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+    .btn-danger { background: rgba(192,57,43,0.15); color: #f87171; border: 1px solid rgba(192,57,43,0.3); }
+    .btn-danger:hover { background: rgba(192,57,43,0.3); }
+    .btn-pdf { background: linear-gradient(135deg, #1565c0, #0d47a1); color: #fff; box-shadow: 0 4px 12px rgba(21,101,192,0.4); }
+    .btn-pdf:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(21,101,192,0.6); }
+
+    /* ── FORMS ──────────────────────── */
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--gold); margin-bottom: 6px; }
+    input[type="text"], input[type="date"], input[type="time"], input[type="email"], select, textarea {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: 'Cairo', sans-serif;
+      font-size: 0.88rem; transition: all 0.2s; direction: rtl;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: rgba(192,57,43,0.5);
+      background: rgba(255,255,255,0.07); box-shadow: 0 0 0 3px rgba(192,57,43,0.15);
+    }
+    select option { background: #1a1a2e; color: var(--text); }
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* ── GRIDS ──────────────────────── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    /* ── STATS BAR ──────────────────── */
+    .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-card { padding: 16px 20px; text-align: center; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+    .stat-num { font-size: 1.8rem; font-weight: 900; }
+    .stat-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── PROGRESS ───────────────────── */
+    .progress-bar-wrap { height: 6px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--red), var(--gold)); transition: width 0.4s ease; }
+
+    /* ── MEETING ────────────────────── */
+    .checklist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 400px; overflow-y: auto; padding-left: 4px; }
+    .checklist-item {
+      display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 0.82rem;
+    }
+    .checklist-item:hover { background: rgba(192,57,43,0.08); border-color: rgba(192,57,43,0.2); }
+    .checklist-item.selected { background: rgba(192,57,43,0.12); border-color: rgba(192,57,43,0.4); }
+    .checklist-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--red); cursor: pointer; flex-shrink: 0; margin-top: 2px; }
+    .selected-count { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(232,184,48,0.1); border: 1px solid rgba(232,184,48,0.2); border-radius: 20px; font-size: 0.78rem; color: var(--gold); font-weight: 700; }
+    .meeting-preview { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 16px; font-size: 0.85rem; }
+    .meeting-preview-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); color: #d1d5db; }
+    .meeting-preview-item:last-child { border-bottom: none; }
+
+    /* ── ACHIEVEMENTS ───────────────── */
+    .achievement-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px; margin-bottom: 8px; transition: all 0.2s;
+    }
+    .achievement-item:hover { background: rgba(255,255,255,0.05); }
+    .achievement-item.done-item { opacity: 0.6; border-color: rgba(74,222,128,0.2); background: rgba(34,197,94,0.05); }
+    .achievement-item.done-item .ach-title { text-decoration: line-through; color: var(--text-muted); }
+    .ach-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+    .ach-check.checked { background: #4ade80; border-color: #4ade80; color: #000; font-weight: 900; }
+    .ach-title { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+    .ach-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── TASKS ──────────────────────── */
+    .task-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 16px; margin-bottom: 10px; transition: all 0.2s; }
+    .task-card:hover { background: rgba(255,255,255,0.05); border-color: rgba(192,57,43,0.2); }
+    .task-card.priority-high { border-right: 3px solid var(--red); }
+    .task-card.priority-med  { border-right: 3px solid var(--gold); }
+    .task-card.priority-low  { border-right: 3px solid #60a5fa; }
+    .task-card.task-done { opacity: 0.55; }
+    .task-title { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .task-done .task-title { text-decoration: line-through; color: var(--text-muted); }
+    .task-meta-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .priority-selector { display: flex; gap: 8px; }
+    .priority-btn { flex: 1; padding: 8px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 0.82rem; font-weight: 700; border: 2px solid transparent; transition: all 0.2s; }
+    .priority-btn.p-high { background: rgba(192,57,43,0.1); color: #f87171; border-color: rgba(192,57,43,0.2); }
+    .priority-btn.p-med  { background: rgba(232,184,48,0.1); color: var(--gold); border-color: rgba(232,184,48,0.2); }
+    .priority-btn.p-low  { background: rgba(96,165,250,0.1); color: #60a5fa; border-color: rgba(96,165,250,0.2); }
+    .priority-btn.selected.p-high { background: rgba(192,57,43,0.3); border-color: var(--red); }
+    .priority-btn.selected.p-med  { background: rgba(232,184,48,0.25); border-color: var(--gold); }
+    .priority-btn.selected.p-low  { background: rgba(96,165,250,0.2); border-color: #60a5fa; }
+
+    /* ── CONTENT PAGE ───────────────── */
+    .content-category { margin-bottom: 28px; }
+    .content-category-title { display: flex; align-items: center; gap: 10px; font-size: 1.05rem; font-weight: 800; color: #fff; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .cat-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+    .icon-red { background: rgba(192,57,43,0.2); border: 1px solid rgba(192,57,43,0.3); }
+    .icon-gold { background: rgba(232,184,48,0.15); border: 1px solid rgba(232,184,48,0.25); }
+    .icon-navy { background: rgba(26,26,60,0.6); border: 1px solid rgba(147,197,253,0.2); }
+    .icon-green { background: rgba(34,197,94,0.1); border: 1px solid rgba(74,222,128,0.2); }
+    .bullet-list { list-style: none; display: grid; gap: 8px; }
+    .bullet-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; transition: all 0.2s; font-size: 0.88rem; color: #d1d5db; }
+    .bullet-item:hover { background: rgba(255,255,255,0.05); border-color: rgba(192,57,43,0.2); }
+    .bullet-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .dot-red { background: var(--red); }
+    .dot-gold { background: var(--gold); }
+    .dot-blue { background: #60a5fa; }
+    .dot-green { background: #4ade80; }
+
+    /* ── TAG CHIPS ──────────────────── */
+    .tag-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag-chip { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--text-muted); transition: all 0.2s; user-select: none; }
+    .tag-chip:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .tag-chip.active { background: rgba(192,57,43,0.2); border-color: rgba(192,57,43,0.4); color: #f87171; }
+    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+    .filter-bar input[type="text"] { flex: 1; min-width: 200px; }
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+    .empty-state p { font-size: 0.9rem; }
+    .divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 20px 0; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #111827; }
+    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--red); }
+
+    /* ── TOAST ──────────────────────── */
+    #toast {
+      position: fixed; bottom: 30px; left: 50%;
+      transform: translateX(-50%) translateY(120%);
+      background: rgba(26,26,46,0.97); border: 1px solid rgba(232,184,48,0.25);
+      color: #fff; padding: 10px 20px; border-radius: 40px; font-size: 0.85rem; font-weight: 700;
+      z-index: 9999; transition: transform 0.3s ease; white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.red { border-color: rgba(192,57,43,0.5); background: rgba(192,57,43,0.95); }
+
+    /* ── PDF MODAL ──────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200;
+      align-items: center; justify-content: center; backdrop-filter: blur(4px);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: linear-gradient(135deg, #0f0f28, #1a1a3e);
+      border: 1px solid rgba(232,184,48,0.25); border-radius: 16px;
+      padding: 32px; width: 480px; max-width: 95vw;
+    }
+    .modal-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .modal-option {
+      display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s;
+    }
+    .modal-option:hover { background: rgba(255,255,255,0.08); border-color: rgba(232,184,48,0.3); }
+    .modal-option .opt-icon { font-size: 2rem; flex-shrink: 0; }
+    .modal-option .opt-title { font-size: 0.9rem; font-weight: 700; color: #fff; }
+    .modal-option .opt-desc { font-size: 0.77rem; color: var(--text-muted); margin-top: 2px; }
+
+    .print-only { display: none; }
+
+    /* ══════════════════════════════════
+       PRINT / PDF STYLES — A4 PROFESSIONAL
+    ══════════════════════════════════ */
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      @page { size: A4 portrait; margin: 12mm 16mm; }
+
+      body { background: white !important; color: #000 !important; font-size: 11pt; direction: rtl; }
+      .sidebar, .btn, .no-print, .modal-overlay, #toast { display: none !important; }
+      .main-content { margin-right: 0 !important; }
+      .page-header { background: transparent !important; border: none; padding: 0 0 10px 0; }
+      .page-header .btn { display: none !important; }
+      .section { display: none !important; }
+      .section.print-target { display: block !important; }
+      .page-body { padding: 0 !important; }
+
+      /* ── Print Doc Header ── */
+      .print-doc-header {
+        display: flex !important; justify-content: space-between;
+        align-items: flex-start; margin-bottom: 18pt; padding-bottom: 10pt;
+        border-bottom: 3px solid #c41e3a;
+      }
+      .print-brand { font-size: 20pt; font-weight: 900; color: #c41e3a !important; }
+      .print-sub { font-size: 12pt; font-weight: 700; margin-top: 4pt; color: #000 !important; }
+      .print-meta { font-size: 9pt; color: #555 !important; text-align: left; line-height: 1.6; }
+
+      /* ── Cards ── */
+      .card { background: white !important; border: 1px solid #ddd !important; box-shadow: none !important; break-inside: avoid; margin-bottom: 14pt; }
+      .card-header { background: #f5f5f5 !important; border-bottom: 1px solid #ddd !important; }
+      .card-header h3 { color: #000 !important; }
+      .card-body { padding: 14px !important; }
+
+      /* ── Text Colors ── */
+      h1,h2,h3,h4,h5,p,li,td,th,span,div,label,small,strong,b,em { color: #000 !important; }
+      .page-title { color: #c41e3a !important; font-size: 18pt !important; }
+      .page-subtitle { color: #555 !important; }
+
+      /* ── Bullets ── */
+      .bullet-item { background: white !important; border: 1px solid #e5e5e5 !important; color: #000 !important; break-inside: avoid; }
+      .bullet-dot.dot-red { background: #c41e3a !important; }
+      .bullet-dot.dot-gold { background: #c99a20 !important; }
+      .bullet-dot.dot-blue { background: #3b82f6 !important; }
+      .bullet-dot.dot-green { background: #22c55e !important; }
+      .content-category-title { color: #000 !important; border-bottom-color: #ddd !important; }
+
+      /* ── Badges ── */
+      .badge-red { background: #fce8e7 !important; color: #c41e3a !important; border-color: #c41e3a !important; }
+      .badge-gold { background: #fef9e7 !important; color: #92700b !important; border-color: #c99a20 !important; }
+      .badge-navy { background: #eff6ff !important; color: #1e40af !important; border-color: #93c5fd !important; }
+      .badge-green { background: #f0fdf4 !important; color: #15803d !important; border-color: #4ade80 !important; }
+      .badge-gray { background: #f3f4f6 !important; color: #333 !important; border-color: #d1d5db !important; }
+
+      /* ── Stats ── */
+      .stats-bar { break-inside: avoid; }
+      .stat-card { background: #f9f9f9 !important; border: 1px solid #ddd !important; }
+      .stat-num { color: #c41e3a !important; }
+      .stat-label { color: #555 !important; }
+
+      /* ── Achievements ── */
+      .achievement-item { background: white !important; border: 1px solid #ddd !important; color: #000 !important; break-inside: avoid; margin-bottom: 5pt; }
+      .ach-title { color: #000 !important; }
+      .ach-check { border-color: #aaa !important; }
+      .ach-check.checked { background: #22c55e !important; border-color: #22c55e !important; color: #fff !important; }
+      .achievement-item.done-item .ach-title { color: #888 !important; }
+      .progress-bar-wrap { background: #e5e7eb !important; }
+      .progress-bar-fill { background: linear-gradient(90deg, #c41e3a, #c99a20) !important; }
+
+      /* ── Tasks ── */
+      .task-card { background: white !important; border: 1px solid #ddd !important; color: #000 !important; break-inside: avoid; margin-bottom: 6pt; }
+      .task-card.priority-high { border-right: 4px solid #c41e3a !important; }
+      .task-card.priority-med  { border-right: 4px solid #c99a20 !important; }
+      .task-card.priority-low  { border-right: 4px solid #3b82f6 !important; }
+      .task-title { color: #000 !important; }
+      .task-done .task-title { color: #888 !important; text-decoration: line-through; }
+
+      /* ── Meeting ── */
+      .checklist-grid { max-height: none !important; overflow: visible !important; }
+      .checklist-item { background: white !important; border: 1px solid #ddd !important; color: #000 !important; break-inside: avoid; }
+      .meeting-preview { background: white !important; border: 1px solid #ccc !important; }
+      .meeting-preview-item { color: #000 !important; border-bottom-color: #ddd !important; }
+      .meeting-selected-list { display: block !important; }
+      .screen-only { display: none !important; }
+      .print-only { display: block !important; }
+
+      /* ── Meeting Print Document ── */
+      .meeting-print-doc {
+        border: 2pt solid #c41e3a; border-radius: 6pt; padding: 18pt;
+        margin-bottom: 18pt; break-inside: avoid;
+      }
+      .meeting-print-doc h2 { font-size: 16pt; color: #c41e3a !important; margin-bottom: 12pt; font-weight: 900; }
+      .meeting-print-table { width: 100%; border-collapse: collapse; font-size: 11pt; margin-bottom: 10pt; }
+      .meeting-print-table td { padding: 5pt 8pt; }
+      .meeting-print-table td:first-child { font-weight: 700; color: #555 !important; width: 100pt; }
+      .meeting-agenda-title { font-size: 12pt; font-weight: 800; color: #c41e3a !important; margin: 14pt 0 8pt; border-top: 1pt solid #ddd; padding-top: 10pt; }
+      .meeting-agenda-item { display: flex; align-items: flex-start; gap: 8pt; padding: 5pt 0; border-bottom: 1pt solid #f0f0f0; font-size: 10.5pt; break-inside: avoid; }
+      .meeting-agenda-num { color: #c41e3a !important; font-weight: 700; min-width: 20pt; flex-shrink: 0; }
+      .meeting-agenda-cat { font-size: 8.5pt; color: #666 !important; display: inline-block; margin-right: 6pt; }
+      .meeting-notes-box { background: #fafafa; border: 1pt solid #e0e0e0; border-radius: 4pt; padding: 10pt; margin-top: 12pt; font-size: 10.5pt; }
+      .meeting-notes-box strong { color: #000 !important; display: block; margin-bottom: 4pt; font-weight: 700; }
+
+      /* grid adjustments */
+      .grid-2 { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main-content { margin-right: 0; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .checklist-grid { grid-template-columns: 1fr; }
+      .stats-bar { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- PDF Modal -->
+<div class="modal-overlay" id="pdf-modal">
+  <div class="modal-box">
+    <div class="modal-title">🖨️ طباعة وتصدير PDF</div>
+    <div class="modal-option" onclick="doPrint()">
+      <div class="opt-icon">🖨️</div>
+      <div>
+        <div class="opt-title">طباعة مباشرة</div>
+        <div class="opt-desc">افتح نافذة الطباعة — اختر "حفظ كـ PDF" من الطابعة</div>
+      </div>
+    </div>
+    <div class="modal-option" onclick="doPrintPDF()">
+      <div class="opt-icon">📄</div>
+      <div>
+        <div class="opt-title">تصدير PDF احترافي</div>
+        <div class="opt-desc">يفتح الصفحة في وضع الطباعة المثالي لـ A4 — اختر "حفظ كـ PDF"</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;text-align:center">
+      <button class="btn btn-ghost" onclick="closePdfModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-title">🏭 Brandzo Hub</div>
+      <div class="sidebar-logo-sub">مركز العمليات اليومية — 2026</div>
+      <div class="neon-line"></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">القائمة الرئيسية</div>
+      <div class="nav-item active" onclick="showSection('content')" id="nav-content">
+        <span class="nav-icon">📋</span><span>محتوى المشروع</span>
+      </div>
+      <div class="nav-item" onclick="showSection('meeting')" id="nav-meeting">
+        <span class="nav-icon">🤝</span><span>طلب اجتماع</span>
+      </div>
+      <div class="nav-item" onclick="showSection('daily')" id="nav-daily">
+        <span class="nav-icon">✅</span><span>الإنجاز اليومي</span>
+      </div>
+      <div class="nav-item" onclick="showSection('tasks')" id="nav-tasks">
+        <span class="nav-icon">📌</span><span>إدارة المهام</span>
+      </div>
+      <hr class="divider">
+      <div class="nav-section-label">الأدوات</div>
+      <div class="nav-item no-print" onclick="openPdfModal()">
+        <span class="nav-icon">🖨️</span><span>طباعة / تصدير PDF</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      محمد البرشي — متخصص سلاسل الإمداد<br>
+      Benghazi 2026 · Brandzo Franchise
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- ═══════════════════ PAGE: محتوى المشروع ═══════════════════ -->
+    <div id="section-content" class="section active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">📋 محتوى المشروع</div>
+          <div class="page-subtitle">نظرة شاملة على منظومة إدارة المستودعات — Brandzo Franchise Partners</div>
+        </div>
+        <button class="btn btn-ghost no-print" onclick="openPdfModal()">🖨️ طباعة / PDF</button>
+      </div>
+      <div class="page-body">
+        <div class="print-doc-header">
+          <div>
+            <div class="print-brand">Brandzo Hub 2026</div>
+            <div class="print-sub">محتوى المشروع — منظومة إدارة المستودعات</div>
+          </div>
+          <div class="print-meta" id="print-date-content"></div>
+        </div>
+
+        <div class="content-category">
+          <div class="content-category-title">
+            <div class="cat-icon icon-red">🔄</div>
+            الدورة المستندية (٨ مراحل)
+            <span class="badge badge-red">Document Cycle</span>
+          </div>
+          <ul class="bullet-list grid-2">
+            <li class="bullet-item"><span class="bullet-dot dot-red"></span><div><strong>01 — طلب الشراء (PR)</strong><br><small style="color:#9ca3af">مستند داخلي يصدر تلقائياً عند وصول الرصيد لنقطة إعادة الطلب</small></div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-red"></span><div><strong>02 — أمر الشراء (PO)</strong><br><small style="color:#9ca3af">المستند الرسمي القانوني المرسل للمورد — التزام تعاقدي</small></div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-gold"></span><div><strong>03 — إشعار الشحن المسبق (ASN)</strong><br><small style="color:#9ca3af">إشعار إلكتروني من المورد يُمكّن المستودع من جدولة الاستلام</small></div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-red"></span><div><strong>04 — استلام وفحص الجودة (GRN & QC)</strong><br><small style="color:#9ca3af">الإقرار الرسمي باستلام البضاعة بعد فحص الجودة</small></div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-blue"></span><div><strong>05 — التخزين الموجه (Put-away)</strong><br><small style="color:#9ca3af">توجيه الأصناف لمواقع التخزين المثلى وفق FEFO والوزن</small></div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-red"></span><div><strong>06 — تحضير الطلبات (Picking & Packing)</strong><br><small style="color:#9ca3af">سحب الأصناف من مواقعها وتعبئتها للشحن مع مراجعة الكميات</small></div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-gold"></span><div><strong>07 — الشحن والتوزيع (Dispatch)</strong><br><small style="color:#9ca3af">إذن التسليم وتصريح الخروج وتحميل البضاعة على شاحنات الأسطول</small></div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-blue"></span><div><strong>08 — المرتجعات والتسويات (Returns)</strong><br><small style="color:#9ca3af">استلام المرتجعات وتصنيفها ومعالجة سندات التسوية</small></div></li>
+          </ul>
+        </div>
+
+        <div class="content-category">
+          <div class="content-category-title">
+            <div class="cat-icon icon-gold">🏢</div>
+            الهيكل التنظيمي والأدوار
+            <span class="badge badge-gold">Org Chart</span>
+          </div>
+          <ul class="bullet-list">
+            <li class="bullet-item"><span class="bullet-dot dot-red"></span><div><strong>👑 مدير العمليات العام</strong> — الإشراف الاستراتيجي والميزانية التشغيلية وإدارة علاقات الموردين</div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-red"></span><div><strong>🧭 مدير المستودع التنفيذي</strong> — الإشراف اليومي المباشر على جميع الأقسام وحل المشكلات الطارئة</div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-blue"></span><div><strong>💻 مدير أنظمة المعلومات والتحول الرقمي</strong> — إشراف على WMS والتكامل مع المنظومة المركزية والأتمتة</div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-gold"></span><div><strong>🛡️ مدير الجودة والسلامة الغذائية</strong> — تطبيق معايير سلامة الغذاء واعتماد الموردين وشهادات الجودة</div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-blue"></span><div><strong>📊 مدير المحاسبة والرقابة المالية</strong> — المطابقات المالية والتقارير المالية والرقابة على تكاليف التشغيل</div></li>
+          </ul>
+        </div>
+
+        <div class="content-category">
+          <div class="content-category-title">
+            <div class="cat-icon icon-green">📝</div>
+            النماذج التشغيلية (١٩ نموذجاً)
+            <span class="badge badge-green">Operational Forms</span>
+          </div>
+          <ul class="bullet-list" style="grid-template-columns:1fr 1fr 1fr">
+            <li class="bullet-item"><span class="bullet-dot dot-red"></span>نموذج طلب الشراء الداخلي (PR)</li>
+            <li class="bullet-item"><span class="bullet-dot dot-red"></span>نموذج أمر الشراء (PO)</li>
+            <li class="bullet-item"><span class="bullet-dot dot-red"></span>نموذج استلام البضاعة (GRN)</li>
+            <li class="bullet-item"><span class="bullet-dot dot-gold"></span>تقرير فحص الجودة (QC Report)</li>
+            <li class="bullet-item"><span class="bullet-dot dot-red"></span>مذكرة التسليم من المورد</li>
+            <li class="bullet-item"><span class="bullet-dot dot-blue"></span>أمر التخزين الموجه (Put-away)</li>
+            <li class="bullet-item"><span class="bullet-dot dot-blue"></span>بطاقة الموقع التخزيني (Bin Card)</li>
+            <li class="bullet-item"><span class="bullet-dot dot-red"></span>قائمة السحب (Picking List)</li>
+            <li class="bullet-item"><span class="bullet-dot dot-red"></span>قائمة التعبئة (Packing List)</li>
+            <li class="bullet-item"><span class="bullet-dot dot-red"></span>طلب صرف من المخزن</li>
+            <li class="bullet-item"><span class="bullet-dot dot-gold"></span>إذن التسليم (Delivery Note)</li>
+            <li class="bullet-item"><span class="bullet-dot dot-gold"></span>تصريح خروج البوابة (Gate Pass)</li>
+            <li class="bullet-item"><span class="bullet-dot dot-gold"></span>إذن النقل الداخلي</li>
+            <li class="bullet-item"><span class="bullet-dot dot-blue"></span>إشعار الإرجاع (Return Note)</li>
+            <li class="bullet-item"><span class="bullet-dot dot-blue"></span>الإشعار الدائن (Credit Note)</li>
+            <li class="bullet-item"><span class="bullet-dot dot-blue"></span>تقرير البضاعة التالفة</li>
+            <li class="bullet-item"><span class="bullet-dot dot-blue"></span>سند تسوية المخزون</li>
+            <li class="bullet-item"><span class="bullet-dot dot-gold"></span>نموذج الجرد الدوري (Cycle Count)</li>
+            <li class="bullet-item"><span class="bullet-dot dot-gold"></span>نموذج إنشاء الصنف الجديد</li>
+          </ul>
+        </div>
+
+        <div class="content-category">
+          <div class="content-category-title">
+            <div class="cat-icon icon-green">📈</div>
+            مؤشرات الأداء الرئيسية (KPIs)
+            <span class="badge badge-green">Performance</span>
+          </div>
+          <ul class="bullet-list grid-2">
+            <li class="bullet-item"><span class="bullet-dot dot-gold"></span><div><strong>دقة المخزون</strong> — الهدف: ≥ ٩٩.٥٪ دقة في الجرد الدوري</div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-red"></span><div><strong>معدل الخطأ في الطلبات</strong> — الهدف: &lt; ٠.٥٪ في قوائم السحب</div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-green"></span><div><strong>وقت دورة الاستلام</strong> — الهدف: &lt; ٤ ساعات من الرصيف للتخزين</div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-blue"></span><div><strong>دوران المخزون</strong> — الهدف: تحسين معدل الدوران بنسبة ١٥٪</div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-red"></span><div><strong>نسبة المرتجعات</strong> — الهدف: &lt; ٢٪ من إجمالي الشحنات الصادرة</div></li>
+            <li class="bullet-item"><span class="bullet-dot dot-gold"></span><div><strong>استغلال مساحة التخزين</strong> — الهدف: ≥ ٨٥٪ استغلال فعال</div></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ PAGE: طلب اجتماع ═══════════════════ -->
+    <div id="section-meeting" class="section">
+      <div class="page-header">
+        <div>
+          <div class="page-title">🤝 طلب اجتماع</div>
+          <div class="page-subtitle">اختر نقاط جدول الأعمال وأضف التفاصيل — الوثيقة جاهزة للطباعة فوراً</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost no-print" onclick="resetMeeting()" style="font-size:0.8rem">🔄 تصفير</button>
+          <button class="btn btn-gold no-print" onclick="openPdfModal()">🖨️ طباعة / PDF</button>
+        </div>
+      </div>
+
+      <div class="page-body">
+        <!-- Print Doc Header -->
+        <div class="print-doc-header">
+          <div>
+            <div class="print-brand">Brandzo Hub 2026</div>
+            <div class="print-sub">وثيقة طلب اجتماع رسمي</div>
+          </div>
+          <div class="print-meta" id="print-date-meeting"></div>
+        </div>
+
+        <!-- PRINT-ONLY meeting document -->
+        <div class="print-only" id="meeting-print-doc"></div>
+
+        <!-- SCREEN ONLY: builder UI -->
+        <div class="screen-only">
+          <div class="grid-2" style="gap:20px;align-items:start">
+            <!-- Left: Form + Preview -->
+            <div>
+              <div class="card">
+                <div class="card-header"><span>📋</span><h3>بيانات الاجتماع</h3></div>
+                <div class="card-body" style="display:grid;gap:12px">
+                  <div class="form-group">
+                    <label>📌 موضوع الاجتماع *</label>
+                    <input type="text" id="meeting-title" placeholder="مثال: مراجعة إجراءات الاستلام والجودة" oninput="updateMeetingPreview()">
+                  </div>
+                  <div class="grid-2">
+                    <div class="form-group">
+                      <label>📅 التاريخ</label>
+                      <input type="date" id="meeting-date" oninput="updateMeetingPreview()">
+                    </div>
+                    <div class="form-group">
+                      <label>🕐 الوقت</label>
+                      <input type="time" id="meeting-time" value="10:00" oninput="updateMeetingPreview()">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>👥 الحضور</label>
+                    <input type="text" id="meeting-attendees" placeholder="مثال: مدير العمليات، مدير الجودة، مشرف الاستلام" oninput="updateMeetingPreview()">
+                  </div>
+                  <div class="form-group">
+                    <label>📍 المكان</label>
+                    <input type="text" id="meeting-location" placeholder="مثال: قاعة الاجتماعات الرئيسية — المستودع المركزي" oninput="updateMeetingPreview()">
+                  </div>
+                  <div class="form-group">
+                    <label>🎯 الهدف من الاجتماع</label>
+                    <input type="text" id="meeting-objective" placeholder="مثال: مراجعة أداء الربع الأول وتحديد الأهداف" oninput="updateMeetingPreview()">
+                  </div>
+                  <div class="form-group">
+                    <label>📝 ملاحظات إضافية</label>
+                    <textarea id="meeting-notes" rows="2" placeholder="أضف أي ملاحظات أو توجيهات خاصة..." oninput="updateMeetingPreview()"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Preview -->
+              <div class="card" style="margin-top:16px">
+                <div class="card-header"><span>👁️</span><h3>معاينة الوثيقة</h3></div>
+                <div class="card-body">
+                  <div class="meeting-preview" id="meeting-preview-content">
+                    <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.85rem">أضف بيانات الاجتماع لترى المعاينة هنا</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Agenda Items -->
+            <div>
+              <div class="card">
+                <div class="card-header" style="justify-content:space-between">
+                  <div style="display:flex;align-items:center;gap:10px"><span>📋</span><h3>نقاط جدول الأعمال</h3></div>
+                  <span class="selected-count" id="meeting-selected-count">٠ محدد</span>
+                </div>
+                <div class="card-body" style="padding-top:12px">
+                  <!-- Custom agenda -->
+                  <div style="margin-bottom:14px;padding:12px 14px;background:rgba(232,184,48,0.06);border:1px solid rgba(232,184,48,0.2);border-radius:10px">
+                    <div style="font-size:0.75rem;font-weight:700;color:var(--gold);margin-bottom:8px">✏️ أضف نقطة مخصصة</div>
+                    <div style="display:flex;gap:8px">
+                      <input type="text" id="custom-agenda-input" placeholder="اكتب نقطتك هنا..." style="flex:1" onkeydown="if(event.key==='Enter')addCustomAgendaItem()">
+                      <button class="btn btn-gold" onclick="addCustomAgendaItem()" style="flex-shrink:0;padding:8px 14px;font-size:0.82rem">+ إضافة</button>
+                    </div>
+                    <div id="custom-agenda-list" style="margin-top:8px;display:grid;gap:4px"></div>
+                  </div>
+                  <!-- Search -->
+                  <div style="margin-bottom:12px">
+                    <input type="text" id="meeting-search" placeholder="🔍 ابحث في نقاط المشروع..." oninput="filterMeetingItems(this.value)" style="border-radius:20px">
+                  </div>
+                  <div class="checklist-grid" id="meeting-checklist"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ PAGE: الإنجاز اليومي ═══════════════════ -->
+    <div id="section-daily" class="section">
+      <div class="page-header">
+        <div>
+          <div class="page-title">✅ الإنجاز اليومي</div>
+          <div class="page-subtitle">سجّل إنجازاتك وصادق عليها — التقرير جاهز للطباعة في نهاية الدوام</div>
+        </div>
+        <button class="btn btn-gold no-print" onclick="openPdfModal()">🖨️ طباعة / PDF</button>
+      </div>
+      <div class="page-body">
+        <div class="print-doc-header">
+          <div>
+            <div class="print-brand">Brandzo Hub 2026</div>
+            <div class="print-sub">تقرير الإنجاز اليومي</div>
+          </div>
+          <div class="print-meta" id="print-date-daily"></div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-bar" id="daily-stats">
+          <div class="stat-card"><div class="stat-num" style="color:var(--gold)" id="stat-daily-total">٠</div><div class="stat-label">إجمالي الإنجازات</div></div>
+          <div class="stat-card"><div class="stat-num" style="color:#4ade80" id="stat-daily-done">٠</div><div class="stat-label">مكتمل ✓</div></div>
+          <div class="stat-card"><div class="stat-num" style="color:#f87171" id="stat-daily-pending">٠</div><div class="stat-label">قيد التنفيذ</div></div>
+          <div class="stat-card">
+            <div style="display:flex;flex-direction:column;gap:8px;width:100%">
+              <div class="stat-num" style="color:var(--gold);font-size:1.3rem" id="stat-daily-pct">٠٪</div>
+              <div class="progress-bar-wrap"><div class="progress-bar-fill" id="daily-progress" style="width:0%"></div></div>
+              <div class="stat-label">نسبة الإنجاز</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="gap:20px;align-items:start">
+          <!-- Add form (screen only) -->
+          <div class="screen-only">
+            <div class="card">
+              <div class="card-header"><span>➕</span><h3>إضافة إنجاز</h3></div>
+              <div class="card-body" style="display:grid;gap:12px">
+                <div class="form-group">
+                  <label>📅 التاريخ</label>
+                  <input type="date" id="daily-date" oninput="loadDailyAchievements()">
+                </div>
+                <div class="form-group">
+                  <label>✏️ الإنجاز *</label>
+                  <input type="text" id="daily-title" placeholder="اكتب الإنجاز أو اختر من القائمة أدناه" onkeydown="if(event.key==='Enter')addDailyAchievement()">
+                </div>
+                <div class="form-group">
+                  <label>🏷️ الفئة</label>
+                  <select id="daily-category">
+                    <option value="الدورة المستندية">📋 الدورة المستندية</option>
+                    <option value="الجودة والسلامة">🛡️ الجودة والسلامة</option>
+                    <option value="التخزين">🏬 التخزين والمخزون</option>
+                    <option value="التوزيع">🚚 التوزيع والنقل</option>
+                    <option value="الموارد البشرية">👥 الموارد البشرية</option>
+                    <option value="Odoo والأنظمة">💻 Odoo والأنظمة</option>
+                    <option value="أخرى">📌 أخرى</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>📝 تفاصيل (اختياري)</label>
+                  <textarea id="daily-details" rows="2" placeholder="نتيجة المهمة أو ملاحظات..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="addDailyAchievement()" style="width:100%">➕ إضافة إنجاز</button>
+              </div>
+            </div>
+            <!-- Quick presets -->
+            <div class="card" style="margin-top:16px">
+              <div class="card-header"><span>⚡</span><h3>اختر من قائمة المهام الشائعة</h3></div>
+              <div class="card-body">
+                <div style="max-height:260px;overflow-y:auto;display:grid;gap:6px" id="daily-content-picker"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- List -->
+          <div>
+            <div style="margin-bottom:12px;padding:10px 14px;background:rgba(232,184,48,0.06);border:1px solid rgba(232,184,48,0.2);border-radius:10px" class="screen-only">
+              <div style="font-size:0.75rem;font-weight:700;color:var(--gold);margin-bottom:6px">✏️ إضافة سريعة</div>
+              <div style="display:flex;gap:8px">
+                <input type="text" id="quick-achievement-input" placeholder="اكتب إنجازك واضغط Enter أو إضافة..." style="flex:1" onkeydown="if(event.key==='Enter')addQuickAchievement()">
+                <select id="quick-achievement-cat" style="width:140px;font-size:0.82rem">
+                  <option value="الدورة المستندية">📋 المستندية</option>
+                  <option value="الجودة والسلامة">🛡️ الجودة</option>
+                  <option value="التخزين">🏬 التخزين</option>
+                  <option value="التوزيع">🚚 التوزيع</option>
+                  <option value="الموارد البشرية">👥 الموارد</option>
+                  <option value="Odoo والأنظمة">💻 Odoo</option>
+                  <option value="أخرى">📌 أخرى</option>
+                </select>
+                <button class="btn btn-gold" onclick="addQuickAchievement()" style="flex-shrink:0;padding:8px 14px;font-size:0.82rem">+ إضافة</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header" style="justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:10px"><span>📑</span><h3>إنجازات اليوم</h3></div>
+                <button class="btn btn-ghost no-print" onclick="clearDailyAchievements()" style="font-size:0.75rem;padding:6px 10px">🗑️ مسح الكل</button>
+              </div>
+              <div class="card-body" id="daily-list">
+                <div class="empty-state"><div class="empty-icon">✅</div><p>لا توجد إنجازات — أضف أول إنجاز اليوم!</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ PAGE: إدارة المهام ═══════════════════ -->
+    <div id="section-tasks" class="section">
+      <div class="page-header">
+        <div>
+          <div class="page-title">📌 إدارة المهام</div>
+          <div class="page-subtitle">تتبع المهام التشغيلية وتوزيعها على الفرق — Brandzo Command Center</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost no-print" onclick="clearCompletedTasks()" style="font-size:0.8rem">🧹 حذف المكتملة</button>
+          <button class="btn btn-gold no-print" onclick="openPdfModal()">🖨️ طباعة / PDF</button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="print-doc-header">
+          <div>
+            <div class="print-brand">Brandzo Hub 2026</div>
+            <div class="print-sub">قائمة المهام التشغيلية</div>
+          </div>
+          <div class="print-meta" id="print-date-tasks"></div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-bar">
+          <div class="stat-card"><div class="stat-num" style="color:#fff" id="stat-tasks-total">٠</div><div class="stat-label">إجمالي المهام</div></div>
+          <div class="stat-card"><div class="stat-num" style="color:#4ade80" id="stat-tasks-done">٠</div><div class="stat-label">مكتملة ✓</div></div>
+          <div class="stat-card"><div class="stat-num" style="color:#f87171" id="stat-tasks-high">٠</div><div class="stat-label">عاجلة 🚨</div></div>
+          <div class="stat-card"><div class="stat-num" style="color:var(--gold)" id="stat-tasks-pending">٠</div><div class="stat-label">قيد التنفيذ</div></div>
+        </div>
+
+        <div class="grid-2" style="gap:20px;align-items:start">
+          <!-- Add form (screen only) -->
+          <div class="card screen-only">
+            <div class="card-header"><span>➕</span><h3>مهمة جديدة</h3></div>
+            <div class="card-body" style="display:grid;gap:12px">
+              <div class="form-group">
+                <label>📌 عنوان المهمة *</label>
+                <input type="text" id="task-title" placeholder="اكتب عنوان المهمة" onkeydown="if(event.key==='Enter')addTask()">
+              </div>
+              <div class="form-group">
+                <label>📝 التفاصيل</label>
+                <textarea id="task-desc" rows="2" placeholder="وصف المهمة والخطوات المطلوبة..."></textarea>
+              </div>
+              <div class="form-group">
+                <label>🚨 الأولوية</label>
+                <div class="priority-selector">
+                  <div class="priority-btn p-high selected" onclick="selectPriority('high', this)">🔴 عاجل</div>
+                  <div class="priority-btn p-med" onclick="selectPriority('med', this)">🟡 متوسط</div>
+                  <div class="priority-btn p-low" onclick="selectPriority('low', this)">🔵 عادي</div>
+                </div>
+              </div>
+              <div class="grid-2">
+                <div class="form-group">
+                  <label>🏢 القسم</label>
+                  <select id="task-dept">
+                    <option value="">اختر القسم</option>
+                    <option>الاستلام والرقابة</option>
+                    <option>فحص الجودة (QC)</option>
+                    <option>التخزين الموجه</option>
+                    <option>تحضير الطلبات</option>
+                    <option>الشحن والتوزيع</option>
+                    <option>المرتجعات والتسويات</option>
+                    <option>إدارة المخزون</option>
+                    <option>الصيانة والسلامة</option>
+                    <option>Odoo والأنظمة</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>👤 المسؤول</label>
+                  <input type="text" id="task-owner" placeholder="اسم المسؤول">
+                </div>
+              </div>
+              <div class="grid-2">
+                <div class="form-group">
+                  <label>📅 تاريخ الاستحقاق</label>
+                  <input type="date" id="task-due">
+                </div>
+                <div class="form-group">
+                  <label>🏷️ التصنيف</label>
+                  <input type="text" id="task-tag" placeholder="مثال: HACCP، صيانة">
+                </div>
+              </div>
+              <button class="btn btn-primary" onclick="addTask()" style="width:100%">➕ إضافة المهمة</button>
+            </div>
+          </div>
+
+          <!-- Task list -->
+          <div>
+            <div class="filter-bar screen-only">
+              <input type="text" id="tasks-search" placeholder="🔍 بحث في المهام..." oninput="renderTasks()" style="flex:1">
+              <div class="tag-chips">
+                <span class="tag-chip active" onclick="filterByPriority('all',this)">الكل</span>
+                <span class="tag-chip" onclick="filterByPriority('high',this)">🔴 عاجل</span>
+                <span class="tag-chip" onclick="filterByPriority('med',this)">🟡 متوسط</span>
+                <span class="tag-chip" onclick="filterByPriority('low',this)">🔵 عادي</span>
+                <span class="tag-chip" onclick="filterByPriority('pending',this)">⏳ منتظر</span>
+                <span class="tag-chip" onclick="filterByPriority('done',this)">✅ مكتمل</span>
+              </div>
+            </div>
+            <div id="tasks-list">
+              <div class="empty-state"><div class="empty-icon">📌</div><p>لا توجد مهام — أضف أول مهمة!</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   BRANDZO HUB — CORE APPLICATION v2
+   All data persists in localStorage
+═══════════════════════════════════════════ */
+
+let currentSection = 'content';
+let taskPriority = 'high';
+let taskFilter = 'all';
+
+const toAr = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+
+// ── NAVIGATION ──────────────────────────────
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + name)?.classList.add('active');
+  document.getElementById('nav-' + name)?.classList.add('active');
+  currentSection = name;
+  if (name === 'meeting') initMeetingSection();
+  if (name === 'daily') initDailySection();
+  if (name === 'tasks') renderTasks();
+}
+
+// ── TOAST ───────────────────────────────────
+let toastTimer;
+function showToast(msg, isRed = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (isRed ? ' red' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 2800);
+}
+
+// ── PDF / PRINT ─────────────────────────────
+function openPdfModal() { document.getElementById('pdf-modal').classList.add('open'); }
+function closePdfModal() { document.getElementById('pdf-modal').classList.remove('open'); }
+
+function doPrint() {
+  closePdfModal();
+  setPrintTarget();
+  setPrintDates();
+  if (currentSection === 'meeting') buildMeetingPrintDoc();
+  setTimeout(() => window.print(), 100);
+}
+
+function doPrintPDF() {
+  closePdfModal();
+  setPrintTarget();
+  setPrintDates();
+  if (currentSection === 'meeting') buildMeetingPrintDoc();
+  setTimeout(() => {
+    window.print();
+  }, 150);
+}
+
+function setPrintTarget() {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('print-target'));
+  const el = document.getElementById('section-' + currentSection);
+  if (el) el.classList.add('print-target');
+}
+
+function setPrintDates() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ar-LY', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const timeStr = now.toLocaleTimeString('ar-LY', { hour:'2-digit', minute:'2-digit' });
+  ['content','meeting','daily','tasks'].forEach(id => {
+    const el = document.getElementById('print-date-' + id);
+    if (el) el.innerHTML = `التاريخ: ${dateStr}<br>الوقت: ${timeStr}<br>محمد البرشي -رمزي باش ا — Brandzo Franchise`;
+  });
+}
+
+// Close modal on background click
+document.getElementById('pdf-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePdfModal();
+});
+
+// ═══════════════════════════════════════════
+// MEETING REQUEST
+// ═══════════════════════════════════════════
+const MEETING_ITEMS = [
+  { id:'pr',cat:'الدورة المستندية',text:'طلب الشراء (PR) — آلية الإصدار التلقائي عند نقطة إعادة الطلب' },
+  { id:'po',cat:'الدورة المستندية',text:'أمر الشراء (PO) — التزام تعاقدي مع الموردين' },
+  { id:'asn',cat:'الدورة المستندية',text:'إشعار الشحن المسبق (ASN) — التنسيق مع المورد قبل الاستلام' },
+  { id:'grn',cat:'الدورة المستندية',text:'استلام البضاعة (GRN) — إجراءات الاستلام والقبول الرسمي' },
+  { id:'qc',cat:'الدورة المستندية',text:'فحص الجودة (QC) — المعايير والمرفوضات وإجراءات الحجر' },
+  { id:'putaway',cat:'الدورة المستندية',text:'التخزين الموجه — استراتيجية FEFO وتخصيص المواقع' },
+  { id:'picking',cat:'الدورة المستندية',text:'تحضير الطلبات — دقة السحب والتعبئة ومراجعة الكميات' },
+  { id:'dispatch',cat:'الدورة المستندية',text:'الشحن والتوزيع — إذن التسليم وتصريح البوابة وتحميل الأسطول' },
+  { id:'returns',cat:'الدورة المستندية',text:'المرتجعات والتسويات — تصنيف المرتجع ومعالجة الإشعارات الدائنة' },
+  { id:'map1',cat:'الخرائط والمرافق',text:'مخطط المستودع الرئيسي — تخطيط المناطق والممرات والمداخل' },
+  { id:'map2',cat:'الخرائط والمرافق',text:'خريطة منطقة الاستلام والتفريغ (Receiving Dock)' },
+  { id:'map3',cat:'الخرائط والمرافق',text:'مخطط مناطق التخزين (جاف · مبرد · مجمد · غير غذائي)' },
+  { id:'map4',cat:'الخرائط والمرافق',text:'خريطة Bin Locations — ترميز وتسمية مواقع التخزين' },
+  { id:'cold1',cat:'مجمع التبريد الرحبة',text:'خطة تشغيل مجمع التبريد الرحبة (١٩ وحدة — ١,١٩٧ م²)' },
+  { id:'cold2',cat:'مجمع التبريد الرحبة',text:'توزيع فئات الكوزمتيك على الوحدات (وجه، جسم، شعر، ميكاب، عطور)' },
+  { id:'cold3',cat:'مجمع التبريد الرحبة',text:'تطبيق نظام FEFO لمراقبة تواريخ الصلاحية آلياً' },
+  { id:'org1',cat:'الهيكل التنظيمي',text:'التسلسل الهرمي الكامل — صلاحيات المستويات الثلاثة' },
+  { id:'org2',cat:'الهيكل التنظيمي',text:'صلاحيات الأدوار في Odoo — من Inventory Manager إلى Barcode User' },
+  { id:'org3',cat:'الهيكل التنظيمي',text:'مراجعة التوصيف الوظيفي لقسم الاستلام (~٣٠ موظف)' },
+  { id:'org4',cat:'الهيكل التنظيمي',text:'تطوير معايير أداء فريق فحص الجودة (~١٥ مفتش)' },
+  { id:'org5',cat:'الهيكل التنظيمي',text:'مناقشة خطة التوسع والتوظيف المستقبلي' },
+  { id:'erp1',cat:'Odoo والأنظمة',text:'خطة تطبيق Odoo Enterprise — المراحل الأربع التنفيذية' },
+  { id:'erp2',cat:'Odoo والأنظمة',text:'تكامل الدورة المستندية الكاملة مع وحدات Odoo' },
+  { id:'erp3',cat:'Odoo والأنظمة',text:'إعداد لوحات التحليل ومؤشرات الأداء (KPIs Dashboard)' },
+  { id:'kpi1',cat:'مؤشرات الأداء',text:'دقة المخزون — هدف ≥ ٩٩.٥٪ في الجرد الدوري' },
+  { id:'kpi2',cat:'مؤشرات الأداء',text:'تقليل وقت دورة الاستلام إلى أقل من ٤ ساعات' },
+  { id:'kpi3',cat:'مؤشرات الأداء',text:'خفض نسبة المرتجعات إلى أقل من ٢٪ من الشحنات الصادرة' },
+  { id:'f1',cat:'النماذج التشغيلية',text:'مراجعة وتحديث نماذج الاستلام (GRN، تقرير QC)' },
+  { id:'f2',cat:'النماذج التشغيلية',text:'تحسين نماذج التخزين (Put-away، Bin Card)' },
+  { id:'f3',cat:'النماذج التشغيلية',text:'مراجعة نماذج الشحن (Gate Pass، Delivery Note)' },
+];
+
+let meetingSelectedIds = new Set();
+let customAgendaItems = [];
+
+function initMeetingSection() {
+  const today = new Date().toISOString().split('T')[0];
+  if (!document.getElementById('meeting-date').value)
+    document.getElementById('meeting-date').value = today;
+  renderMeetingChecklist(MEETING_ITEMS);
+  renderCustomAgendaList();
+}
+
+function addCustomAgendaItem() {
+  const input = document.getElementById('custom-agenda-input');
+  const text = input?.value?.trim();
+  if (!text) { showToast('❌ الرجاء كتابة النقطة أولاً', true); return; }
+  customAgendaItems.push({ id: 'custom_' + Date.now(), text, cat: 'نقطة مخصصة' });
+  input.value = '';
+  renderCustomAgendaList();
+  updateMeetingCount();
+  updateMeetingPreview();
+  showToast('✅ تمت إضافة النقطة');
+}
+
+function removeCustomAgendaItem(id) {
+  customAgendaItems = customAgendaItems.filter(i => i.id !== id);
+  renderCustomAgendaList();
+  updateMeetingCount();
+  updateMeetingPreview();
+}
+
+function renderCustomAgendaList() {
+  const container = document.getElementById('custom-agenda-list');
+  if (!container) return;
+  if (!customAgendaItems.length) { container.innerHTML = ''; return; }
+  container.innerHTML = customAgendaItems.map(item => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(232,184,48,0.08);border:1px solid rgba(232,184,48,0.15);border-radius:6px;font-size:0.82rem;color:#d1d5db">
+      <span style="color:var(--gold);font-weight:700;flex-shrink:0">✦</span>
+      <span style="flex:1">${item.text}</span>
+      <button onclick="removeCustomAgendaItem('${item.id}')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:1rem;padding:0 2px" title="حذف">✕</button>
+    </div>`).join('');
+}
+
+function renderMeetingChecklist(items) {
+  const container = document.getElementById('meeting-checklist');
+  if (!container) return;
+  const groups = {};
+  items.forEach(item => { if (!groups[item.cat]) groups[item.cat] = []; groups[item.cat].push(item); });
+  let html = '';
+  Object.keys(groups).forEach(cat => {
+    html += `<div style="grid-column:1/-1;font-size:0.75rem;font-weight:700;color:var(--gold);padding:6px 0 2px;margin-top:6px;border-top:1px solid rgba(255,255,255,0.06)">${cat}</div>`;
+    groups[cat].forEach(item => {
+      const sel = meetingSelectedIds.has(item.id) ? ' selected' : '';
+      html += `<div class="checklist-item${sel}" onclick="toggleMeetingItem('${item.id}',this)">
+        <input type="checkbox" ${meetingSelectedIds.has(item.id)?'checked':''} readonly>
+        <span style="line-height:1.4">${item.text}</span>
+      </div>`;
+    });
+  });
+  container.innerHTML = html;
+  updateMeetingCount();
+}
+
+function toggleMeetingItem(id, el) {
+  if (meetingSelectedIds.has(id)) {
+    meetingSelectedIds.delete(id);
+    el.classList.remove('selected');
+    el.querySelector('input').checked = false;
+  } else {
+    meetingSelectedIds.add(id);
+    el.classList.add('selected');
+    el.querySelector('input').checked = true;
+  }
+  updateMeetingCount();
+  updateMeetingPreview();
+}
+
+function filterMeetingItems(q) {
+  const filtered = q.trim() ? MEETING_ITEMS.filter(i => i.text.includes(q) || i.cat.includes(q)) : MEETING_ITEMS;
+  renderMeetingChecklist(filtered);
+}
+
+function updateMeetingCount() {
+  const n = meetingSelectedIds.size + customAgendaItems.length;
+  const el = document.getElementById('meeting-selected-count');
+  if (el) el.textContent = toAr(n) + ' محدد';
+}
+
+function resetMeeting() {
+  if (!confirm('سيتم مسح جميع بيانات الاجتماع. هل أنت متأكد؟')) return;
+  meetingSelectedIds.clear();
+  customAgendaItems = [];
+  ['meeting-title','meeting-attendees','meeting-location','meeting-objective','meeting-notes'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('meeting-time').value = '10:00';
+  document.getElementById('meeting-date').value = new Date().toISOString().split('T')[0];
+  renderMeetingChecklist(MEETING_ITEMS);
+  renderCustomAgendaList();
+  document.getElementById('meeting-preview-content').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.85rem">أضف بيانات الاجتماع لترى المعاينة هنا</div>';
+  showToast('🔄 تم تصفير بيانات الاجتماع');
+}
+
+function updateMeetingPreview() {
+  const title = document.getElementById('meeting-title')?.value || '';
+  const date  = document.getElementById('meeting-date')?.value || '';
+  const time  = document.getElementById('meeting-time')?.value || '';
+  const att   = document.getElementById('meeting-attendees')?.value || '';
+  const loc   = document.getElementById('meeting-location')?.value || '';
+  const obj   = document.getElementById('meeting-objective')?.value || '';
+  const notes = document.getElementById('meeting-notes')?.value || '';
+  const preview = document.getElementById('meeting-preview-content');
+  if (!preview) return;
+
+  const selectedFromList = MEETING_ITEMS.filter(i => meetingSelectedIds.has(i.id));
+  const allSelected = [...selectedFromList, ...customAgendaItems];
+
+  if (!title && !date && !allSelected.length) {
+    preview.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.85rem">أضف بيانات الاجتماع لترى المعاينة هنا</div>';
+    return;
+  }
+
+  const fmt = (label, val, icon='') => val ? `<div class="meeting-preview-item"><strong style="color:var(--gold);min-width:90px;flex-shrink:0">${icon}${label}</strong><span>${val}</span></div>` : '';
+
+  let dateStr = '';
+  if (date) {
+    dateStr = new Date(date + 'T00:00:00').toLocaleDateString('ar-LY', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  }
+
+  let agendaHtml = '';
+  if (allSelected.length) {
+    agendaHtml = `<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.08);padding-top:10px">
+      <div style="font-weight:700;color:var(--gold);margin-bottom:8px;font-size:0.85rem">📋 جدول الأعمال (${toAr(allSelected.length)} نقطة):</div>
+      ${allSelected.map((item,i) => `<div class="meeting-preview-item">
+        <span style="color:var(--red);min-width:24px;font-weight:700">${toAr(i+1)}.</span>
+        <span>${item.text}${item.cat==='نقطة مخصصة'?' <span style="color:var(--gold);font-size:0.73rem">(✦ مخصصة)</span>':''}</span>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  preview.innerHTML = `
+    ${fmt('الموضوع:', title)}
+    ${fmt('التاريخ:', dateStr + (time ? ' — ' + time : ''))}
+    ${fmt('المكان:', loc)}
+    ${fmt('الحضور:', att)}
+    ${fmt('الهدف:', obj)}
+    ${agendaHtml}
+    ${notes ? `<div class="meeting-preview-item" style="margin-top:8px;flex-direction:column"><strong style="color:var(--gold)">ملاحظات:</strong><span style="margin-top:4px">${notes}</span></div>` : ''}
+  `;
+}
+
+function buildMeetingPrintDoc() {
+  const el = document.getElementById('meeting-print-doc');
+  if (!el) return;
+  const title = document.getElementById('meeting-title')?.value || 'طلب اجتماع';
+  const date  = document.getElementById('meeting-date')?.value || '';
+  const time  = document.getElementById('meeting-time')?.value || '';
+  const att   = document.getElementById('meeting-attendees')?.value || '—';
+  const loc   = document.getElementById('meeting-location')?.value || '—';
+  const obj   = document.getElementById('meeting-objective')?.value || '';
+  const notes = document.getElementById('meeting-notes')?.value || '';
+  const selectedFromList = MEETING_ITEMS.filter(i => meetingSelectedIds.has(i.id));
+  const allSelected = [...selectedFromList, ...customAgendaItems];
+  let dateStr = '';
+  if (date) dateStr = new Date(date + 'T00:00:00').toLocaleDateString('ar-LY', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  el.innerHTML = `
+    <div class="meeting-print-doc">
+      <h2>${title}</h2>
+      <table class="meeting-print-table">
+        <tr><td>التاريخ والوقت:</td><td>${dateStr || '—'} ${time ? '— ' + time : ''}</td></tr>
+        <tr><td>مكان الاجتماع:</td><td>${loc}</td></tr>
+        <tr><td>الحضور:</td><td>${att}</td></tr>
+        ${obj ? `<tr><td>هدف الاجتماع:</td><td>${obj}</td></tr>` : ''}
+      </table>
+    </div>
+    <div class="meeting-agenda-title">📋 جدول أعمال الاجتماع — ${allSelected.length} نقطة</div>
+    ${allSelected.map((item,i) => `
+      <div class="meeting-agenda-item">
+        <span class="meeting-agenda-num">${i+1}.</span>
+        <div>
+          ${item.text}
+          <span class="meeting-agenda-cat">(${item.cat})</span>
+        </div>
+      </div>`).join('')}
+    ${notes ? `<div class="meeting-notes-box"><strong>ملاحظات ختامية:</strong>${notes}</div>` : ''}
+    <div style="margin-top:30pt;padding-top:16pt;border-top:1pt solid #ddd;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20pt;font-size:10pt">
+      <div style="text-align:center"><div style="border-top:1pt solid #000;margin-top:30pt;padding-top:6pt">توقيع مقدم الطلب</div></div>
+      <div style="text-align:center"><div style="border-top:1pt solid #000;margin-top:30pt;padding-top:6pt">توقيع مدير العمليات</div></div>
+      <div style="text-align:center"><div style="border-top:1pt solid #000;margin-top:30pt;padding-top:6pt">توقيع المعتمد</div></div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+// DAILY ACHIEVEMENTS
+// ═══════════════════════════════════════════
+const DAILY_PRESETS = [
+  'متابعة دورة استلام البضاعة (GRN)',
+  'التحقق من تقارير فحص الجودة',
+  'مراجعة قوائم السحب والتعبئة',
+  'متابعة تقارير الشحن والتسليم',
+  'مراجعة المرتجعات وسندات التسوية',
+  'جرد دوري لمناطق التخزين',
+  'متابعة مؤشرات الأداء (KPIs)',
+  'تحديث بيانات Odoo',
+  'اجتماع مع فريق الاستلام',
+  'مراجعة جداول الأسطول',
+  'فحص وحدات التبريد (الرحبة)',
+  'تدريب موظفين جدد',
+  'إعداد تقرير يومي للإدارة',
+  'متابعة أوامر الشراء المعلقة',
+  'مراجعة ومطابقة تقرير المخزون',
+  'الإشراف على إجراءات أمن المستودع',
+];
+
+function initDailySection() {
+  const dateInput = document.getElementById('daily-date');
+  if (!dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
+  loadDailyAchievements();
+  renderDailyContentPicker();
+}
+
+function renderDailyContentPicker() {
+  const container = document.getElementById('daily-content-picker');
+  if (!container) return;
+  container.innerHTML = DAILY_PRESETS.map(p => `
+    <div class="bullet-item" style="cursor:pointer" onclick="quickPickAchievement('${p.replace(/'/g,"\\'")}')">
+      <span class="bullet-dot dot-gold"></span><span>${p}</span>
+    </div>`).join('');
+}
+
+function quickPickAchievement(text) {
+  document.getElementById('daily-title').value = text;
+  document.getElementById('daily-title').focus();
+  showToast('✅ تم نقل النص — اضغط إضافة');
+}
+
+function getDailyKey() {
+  return 'brandzo_daily_' + (document.getElementById('daily-date')?.value || new Date().toISOString().split('T')[0]);
+}
+
+function loadDailyAchievements() {
+  const data = JSON.parse(localStorage.getItem(getDailyKey()) || '[]');
+  renderDailyList(data);
+}
+
+function renderDailyList(data) {
+  const container = document.getElementById('daily-list');
+  if (!container) return;
+  const total = data.length;
+  const done = data.filter(a => a.done).length;
+  const pct = total > 0 ? Math.round((done/total)*100) : 0;
+  document.getElementById('stat-daily-total').textContent = toAr(total);
+  document.getElementById('stat-daily-done').textContent = toAr(done);
+  document.getElementById('stat-daily-pending').textContent = toAr(total - done);
+  document.getElementById('stat-daily-pct').textContent = toAr(pct) + '٪';
+  const bar = document.getElementById('daily-progress');
+  if (bar) bar.style.width = pct + '%';
+  if (!data.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><p>لا توجد إنجازات — أضف أول إنجاز اليوم!</p></div>`;
+    return;
+  }
+  container.innerHTML = data.map((ach, idx) => `
+    <div class="achievement-item ${ach.done ? 'done-item' : ''}">
+      <div class="ach-check ${ach.done ? 'checked' : ''}" onclick="toggleAchievement(${idx})">${ach.done ? '✓' : ''}</div>
+      <div style="flex:1">
+        <div class="ach-title">${ach.title}</div>
+        <div class="ach-meta">
+          <span class="badge badge-gray">${ach.category || 'عام'}</span>
+          ${ach.details ? `<span style="margin-right:8px;font-size:0.75rem;color:var(--text-muted)">${ach.details}</span>` : ''}
+        </div>
+      </div>
+      <button class="btn btn-danger no-print" onclick="deleteAchievement(${idx})" style="padding:4px 8px;font-size:0.75rem">✕</button>
+    </div>`).join('');
+}
+
+function addQuickAchievement() {
+  const input = document.getElementById('quick-achievement-input');
+  const title = input?.value?.trim();
+  if (!title) { showToast('❌ الرجاء كتابة الإنجاز', true); return; }
+  const category = document.getElementById('quick-achievement-cat')?.value || 'أخرى';
+  const key = getDailyKey();
+  const data = JSON.parse(localStorage.getItem(key) || '[]');
+  data.push({ title, category, details: '', done: false, createdAt: new Date().toISOString() });
+  localStorage.setItem(key, JSON.stringify(data));
+  input.value = '';
+  renderDailyList(data);
+  showToast('✅ تم إضافة الإنجاز');
+}
+
+function addDailyAchievement() {
+  const title    = document.getElementById('daily-title')?.value?.trim();
+  const category = document.getElementById('daily-category')?.value || 'أخرى';
+  const details  = document.getElementById('daily-details')?.value?.trim() || '';
+  if (!title) { showToast('❌ الرجاء كتابة الإنجاز', true); return; }
+  const key = getDailyKey();
+  const data = JSON.parse(localStorage.getItem(key) || '[]');
+  data.push({ title, category, details, done: false, createdAt: new Date().toISOString() });
+  localStorage.setItem(key, JSON.stringify(data));
+  document.getElementById('daily-title').value = '';
+  document.getElementById('daily-details').value = '';
+  renderDailyList(data);
+  showToast('✅ تم إضافة الإنجاز');
+}
+
+function toggleAchievement(idx) {
+  const key = getDailyKey();
+  const data = JSON.parse(localStorage.getItem(key) || '[]');
+  if (data[idx]) data[idx].done = !data[idx].done;
+  localStorage.setItem(key, JSON.stringify(data));
+  renderDailyList(data);
+}
+
+function deleteAchievement(idx) {
+  const key = getDailyKey();
+  const data = JSON.parse(localStorage.getItem(key) || '[]');
+  data.splice(idx, 1);
+  localStorage.setItem(key, JSON.stringify(data));
+  renderDailyList(data);
+  showToast('🗑️ تم الحذف');
+}
+
+function clearDailyAchievements() {
+  if (!confirm('سيتم حذف جميع إنجازات هذا اليوم. هل أنت متأكد؟')) return;
+  localStorage.removeItem(getDailyKey());
+  renderDailyList([]);
+  showToast('🗑️ تم مسح الإنجازات');
+}
+
+// ═══════════════════════════════════════════
+// TASKS MANAGER
+// ═══════════════════════════════════════════
+const TASKS_KEY = 'brandzo_tasks_v3';
+function getTasks() { return JSON.parse(localStorage.getItem(TASKS_KEY) || '[]'); }
+function saveTasks(tasks) { localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)); }
+
+function selectPriority(p, el) {
+  taskPriority = p;
+  document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function addTask() {
+  const title = document.getElementById('task-title')?.value?.trim();
+  if (!title) { showToast('❌ الرجاء إدخال عنوان المهمة', true); return; }
+  const tasks = getTasks();
+  tasks.unshift({
+    id: Date.now().toString(),
+    title,
+    desc: document.getElementById('task-desc')?.value?.trim() || '',
+    priority: taskPriority,
+    dept: document.getElementById('task-dept')?.value || '',
+    owner: document.getElementById('task-owner')?.value?.trim() || '',
+    due: document.getElementById('task-due')?.value || '',
+    tag: document.getElementById('task-tag')?.value?.trim() || '',
+    done: false,
+    createdAt: new Date().toISOString(),
+  });
+  saveTasks(tasks);
+  ['task-title','task-desc','task-owner','task-tag'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('task-due').value = '';
+  document.getElementById('task-dept').value = '';
+  renderTasks();
+  showToast('✅ تم إضافة المهمة');
+}
+
+function filterByPriority(p, el) {
+  taskFilter = p;
+  document.querySelectorAll('.tag-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderTasks();
+}
+
+function renderTasks() {
+  const container = document.getElementById('tasks-list');
+  if (!container) return;
+  let tasks = getTasks();
+  const search = document.getElementById('tasks-search')?.value?.toLowerCase() || '';
+  if (taskFilter === 'high') tasks = tasks.filter(t => t.priority === 'high');
+  else if (taskFilter === 'med') tasks = tasks.filter(t => t.priority === 'med');
+  else if (taskFilter === 'low') tasks = tasks.filter(t => t.priority === 'low');
+  else if (taskFilter === 'pending') tasks = tasks.filter(t => !t.done);
+  else if (taskFilter === 'done') tasks = tasks.filter(t => t.done);
+  if (search) tasks = tasks.filter(t => t.title.toLowerCase().includes(search) || (t.desc||'').toLowerCase().includes(search) || (t.dept||'').toLowerCase().includes(search) || (t.owner||'').toLowerCase().includes(search));
+
+  const all = getTasks();
+  document.getElementById('stat-tasks-total').textContent = toAr(all.length);
+  document.getElementById('stat-tasks-done').textContent = toAr(all.filter(t => t.done).length);
+  document.getElementById('stat-tasks-high').textContent = toAr(all.filter(t => t.priority==='high' && !t.done).length);
+  document.getElementById('stat-tasks-pending').textContent = toAr(all.filter(t => !t.done).length);
+
+  if (!tasks.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📌</div><p>لا توجد مهام</p></div>`;
+    return;
+  }
+
+  const pMap = {
+    high: { label:'عاجل', badge:'badge-red' },
+    med:  { label:'متوسط', badge:'badge-gold' },
+    low:  { label:'عادي', badge:'badge-navy' },
+  };
+
+  container.innerHTML = tasks.map(task => {
+    const p = pMap[task.priority] || pMap.low;
+    const dueStr = task.due ? new Date(task.due + 'T00:00:00').toLocaleDateString('ar-LY', { year:'numeric', month:'short', day:'numeric' }) : '';
+    const isOverdue = task.due && !task.done && new Date(task.due) < new Date();
+    return `<div class="task-card priority-${task.priority} ${task.done ? 'task-done' : ''}">
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <div class="ach-check ${task.done ? 'checked' : ''}" onclick="toggleTask('${task.id}')" style="margin-top:2px">${task.done ? '✓' : ''}</div>
+        <div style="flex:1">
+          <div class="task-title">${task.title}</div>
+          ${task.desc ? `<div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;line-height:1.5">${task.desc}</div>` : ''}
+          <div class="task-meta-row" style="margin-top:8px">
+            <span class="badge ${p.badge}">${p.label}</span>
+            ${task.dept ? `<span class="badge badge-gray">🏢 ${task.dept}</span>` : ''}
+            ${task.owner ? `<span class="badge badge-gray">👤 ${task.owner}</span>` : ''}
+            ${dueStr ? `<span class="badge ${isOverdue ? 'badge-red' : 'badge-gray'}">📅 ${dueStr}${isOverdue ? ' ⚠️' : ''}</span>` : ''}
+            ${task.tag ? `<span class="badge badge-navy">🏷️ ${task.tag}</span>` : ''}
+          </div>
+        </div>
+        <button class="btn btn-danger no-print" onclick="deleteTask('${task.id}')" style="padding:4px 8px;font-size:0.75rem;flex-shrink:0">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleTask(id) {
+  const tasks = getTasks();
+  const task = tasks.find(t => t.id === id);
+  if (task) { task.done = !task.done; saveTasks(tasks); renderTasks(); }
+}
+
+function deleteTask(id) {
+  if (!confirm('حذف هذه المهمة؟')) return;
+  saveTasks(getTasks().filter(t => t.id !== id));
+  renderTasks();
+  showToast('🗑️ تم الحذف');
+}
+
+function clearCompletedTasks() {
+  const tasks = getTasks();
+  const active = tasks.filter(t => !t.done);
+  if (tasks.length === active.length) { showToast('لا توجد مهام مكتملة لحذفها', true); return; }
+  if (!confirm(`سيتم حذف ${tasks.length - active.length} مهمة مكتملة. هل أنت متأكد؟`)) return;
+  saveTasks(active);
+  renderTasks();
+  showToast('✅ تم حذف المهام المكتملة');
+}
+
+// ── INIT ─────────────────────────────────────
+window.addEventListener('load', () => {
+  renderTasks();
+});
+</script>
+  <script defer src="brandzo-report.js"></script>
+</body>
+</html>

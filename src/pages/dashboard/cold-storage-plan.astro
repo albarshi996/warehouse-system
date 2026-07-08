@@ -1,0 +1,10 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import ColdStoragePlan from '../../components/brandzo-erp/warehouse/ColdStoragePlan.jsx';
+---
+
+<DashboardLayout title="مخطط الرحبة - كوزميتك" showGuide={false}>
+  <div dir="rtl">
+    <ColdStoragePlan client:load />
+  </div>
+</DashboardLayout>

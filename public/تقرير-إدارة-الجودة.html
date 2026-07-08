@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brandzo — إدارة الجودة الشاملة</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0d1b2a;
+  --blue: #1b3a5c;
+  --gold: #DAAA3C;
+  --gold-light: #f0d98a;
+  --green: #00a650;
+  --green-dim: rgba(0,166,80,0.12);
+  --red: #c41e3a;
+  --white: #f8f9fb;
+  --gray: #8a93a2;
+  --line: rgba(200,157,59,0.22);
+  --card-bg: rgba(255,255,255,0.04);
+  --card-border: rgba(200,157,59,0.18);
+  --text-body: rgba(248,249,251,0.88);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Cairo',sans-serif;background:var(--navy);color:var(--white);direction:rtl;text-align:right;overflow-x:hidden;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--navy);}
+::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px;}
+
+/* ===== TOP BAR ===== */
+.topbar{position:sticky;top:0;z-index:200;background:rgba(13,27,42,0.96);border-bottom:1px solid var(--line);backdrop-filter:blur(12px);padding:0 24px;display:flex;align-items:center;gap:0;}
+.brand{font-size:13px;font-weight:700;color:var(--gold);letter-spacing:2px;padding:14px 0;border-left:1px solid var(--line);padding-left:20px;margin-left:20px;}
+.nav-tabs{display:flex;gap:2px;flex:1;}
+.nav-tab{padding:14px 20px;font-size:13px;font-weight:600;color:var(--gray);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;font-family:'Cairo',sans-serif;background:none;border-top:none;border-right:none;border-left:none;white-space:nowrap;}
+.nav-tab:hover{color:var(--white);}
+.nav-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.topbar-badge{font-size:10px;color:var(--red);border:1px solid var(--red);padding:3px 8px;letter-spacing:1px;margin-right:auto;}
+
+/* ===== PANELS ===== */
+.panel{display:none;min-height:100vh;padding:30px 24px 60px;}
+.panel.active{display:block;}
+
+/* ===== COVER / HERO ===== */
+.hero{text-align:center;padding:50px 20px 40px;border-bottom:1px solid var(--line);margin-bottom:32px;}
+.hero h1{font-size:clamp(22px,4vw,40px);font-weight:900;color:#fff;margin-bottom:10px;}
+.hero h1 span{color:var(--gold);}
+.hero p{font-size:15px;color:var(--gray);line-height:1.8;}
+.hero-stats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+.hstat{background:var(--card-bg);border:1px solid var(--card-border);padding:10px 18px;border-radius:8px;text-align:center;}
+.hstat strong{display:block;color:var(--gold);font-size:18px;font-weight:700;}
+.hstat span{font-size:11px;color:var(--gray);}
+
+/* ===== SECTION LABEL ===== */
+.sec-label{font-size:10px;letter-spacing:3px;color:var(--gold);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;margin-bottom:6px;}
+.sec-title{font-size:22px;font-weight:800;color:#fff;border-right:4px solid var(--gold);padding-right:14px;margin-bottom:24px;}
+
+/* ===== STAGE DETAIL (Used for Task Cards) ===== */
+.stage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; margin-top: 24px; }
+@media(max-width:600px){.stage-grid{grid-template-columns: 1fr;}}
+.stage-detail{background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;padding:26px;position:relative;overflow:hidden; height: 100%;}
+.stage-detail::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;background:var(--gold);}
+.sd-header{display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;}
+.sd-badge{background:var(--gold);color:var(--navy);padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+.sd-title{font-size:18px;font-weight:700;color:#fff;}
+.sd-en{font-size:11px;color:var(--gray);margin-top:2px;font-family:'IBM Plex Mono',monospace;}
+.sd-list{list-style:none; padding-right: 0;}
+.sd-list li{padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;color:var(--text-body);display:flex;gap:10px;line-height:1.6;}
+.sd-list li::before{content:'✓';color:var(--gold);flex-shrink:0;font-size:12px;margin-top:3px;}
+
+/* ===== ORG CHART (Integration) ===== */
+.org-wrap{text-align:center;margin:24px 0;}
+.org-layer-label{font-size:10px;letter-spacing:2px;color:var(--gray);text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-bottom:10px;}
+.org-row{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+.org-connector{width:1px;background:var(--line);height:24px;margin:0 auto;}
+.org-hline{height:1px;background:var(--line);margin:0 auto 6px;max-width:80%;}
+.org-node{background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;padding:12px 16px;min-width:140px;max-width:180px;text-align:center;transition:all .25s;}
+.org-node.layer1{border-color:var(--gold);background:rgba(200,157,59,0.1);}
+.org-node.layer2{border-color:rgba(52,152,219,0.5);}
+.org-node.layer3{border-color:rgba(0,166,80,0.4);}
+.on-icon{font-size:22px;margin-bottom:6px;display:block;}
+.on-title{font-size:13px;font-weight:700;color:#fff;}
+.on-sub{font-size:10px;color:var(--gray);margin-top:3px;}
+
+/* ===== KPIs ===== */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin:20px 0;}
+.kpi-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:20px 16px;text-align:center;transition:all .3s;}
+.kpi-card:hover{border-color:var(--gold);transform:translateY(-2px);}
+.kpi-val{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--gold);margin-bottom:6px;}
+.kpi-name{font-size:13px;color:var(--text-body);margin-bottom:4px;}
+.kpi-freq{font-size:10px;color:var(--gray);letter-spacing:1px;}
+
+/* ===== TABLES ===== */
+.tbl-wrap{overflow-x:auto;margin-top:16px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{background:var(--blue);color:var(--gold);padding:11px 14px;font-size:11px;font-weight:700;border-bottom:2px solid var(--gold);white-space:nowrap;text-align:right;}
+td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--text-body);vertical-align:middle;}
+tr:hover td{background:rgba(200,157,59,0.04);}
+
+/* ===== PHASE COMPARE / CARDS ===== */
+.phase-grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;margin-bottom:24px;}
+@media(max-width:800px){.phase-grid{grid-template-columns:1fr;}}
+.phase-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:20px; border-top:3px solid var(--gold);}
+.phase-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:12px; display: flex; align-items: center; gap: 10px;}
+.phase-content{font-size:13px; color:var(--text-body); line-height:1.6;}
+
+/* ===== HIGHLIGHT BOX ===== */
+.highlight{background:rgba(27,58,92,0.5);border-right:5px solid var(--gold);padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;font-size:14px;line-height:1.9;color:var(--text-body);}
+.highlight strong{color:var(--gold);}
+
+@media print{.topbar{display:none;}.panel{display:block!important;padding:20px;}}
+
+/* ===== UNIFIED PRINT SYSTEM ===== */
+@page { size: A4 portrait; margin: 1.5cm 2cm 2cm 2cm; }
+
+@media print {
+  .print-bar, .tabs-nav, .no-print, button, .nav-tab, [onclick], .sticky { display: none !important; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { background: white !important; color: #111 !important; }
+  .section { display: block !important; }
+  h2 { page-break-before: always; page-break-after: avoid; }
+  h3 { page-break-after: avoid; }
+  table, .stage-card, .org-node { page-break-inside: avoid; }
+
+  /* Readability for dark themes */
+  .hero, .cover, .stage-card, .table-container { background: #f8f9fb !important; color: #111 !important; border-color: #1b3a5c !important; }
+  th { background: #1b3a5c !important; color: #fff !important; }
+  td { color: #111 !important; }
+}
+
+</style>
+</head>
+<body>
+<div class="print-bar no-print" style="position: fixed; top: 10px; left: 10px; z-index: 1000;"><button onclick="window.print()" style="padding: 10px 20px; background: #DAAA3C; color: #0d1b2a; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">طباعة / PDF</button></div>
+
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <span class="brand">BRANDZO</span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPanel('overview')">نظرة عامة</button>
+    <button class="nav-tab" onclick="showPanel('restaurants')">المطاعم</button>
+    <button class="nav-tab" onclick="showPanel('warehouses')">المستودعات</button>
+    <button class="nav-tab" onclick="showPanel('cleaning')">خدمات التنظيف</button>
+    <button class="nav-tab" onclick="showPanel('markets')">أسواق المواد الغذائية</button>
+    <button class="nav-tab" onclick="showPanel('integration')">التكامل والتقاطع</button>
+    <button class="nav-tab" onclick="showPanel('kpis')">المؤشرات والمعايير</button>
+  </div>
+  <span class="topbar-badge">سري — إدارة الجودة</span>
+</div>
+
+<!-- ===================== PANEL: OVERVIEW ===================== -->
+<div id="panel-overview" class="panel active">
+  <div class="hero">
+    <h1>إدارة الجودة الشاملة — <span>العمود الفقري التشغيلي</span></h1>
+    <p>قسم متشعب وعميق التكامل يخترق كل مستوى وقسم في الشركة — من المطعم إلى المستودع — لضمان الامتثال الصارم والتميز التشغيلي</p>
+    <div class="hero-stats">
+      <div class="hstat"><strong>4</strong><span>قطاعات تشغيلية</span></div>
+      <div class="hstat"><strong>+60</strong><span>نقطة تدقيق يومية</span></div>
+      <div class="hstat"><strong>100%</strong><span>نسبة التغطية المستهدفة</span></div>
+      <div class="hstat"><strong>ISO 9001</strong><span>الإطار المرجعي</span></div>
+      <div class="hstat"><strong>صفر تساهل</strong><span>سياسة المخالفات الجسيمة</span></div>
+      <div class="hstat"><strong>24/7</strong><span>نطاق الرقابة</span></div>
+    </div>
+  </div>
+
+  <div class="highlight">
+    إدارة الجودة في Brandzo ليست قسماً يجلس في مكتب وينتظر الشكاوى — هي قوة متحركة تعمل بشكل استباقي داخل كل قطاع تشغيلي، تراقب، تدقق، تتدخل، وترفع التقارير. طبيعتها المرنة والمتشعبة تجعلها الحلقة التي تربط المستودع بالمطعم، وخدمات التنظيف بأسواق المواد الغذائية، كلها تحت إطار موحد من المعايير والإجراءات.
+  </div>
+
+  <div class="sec-title">طبيعة قسم الجودة — ما يجعله مختلفاً</div>
+  <div class="phase-grid">
+    <div class="phase-card">
+      <div class="phase-title"><span>🔀</span> مرونة هيكلية عالية</div>
+      <div class="phase-content">يعمل كجسم مستقل يتقاطع مع جميع الأقسام دون أن يكون تابعاً لأي منها تشغيلياً. يرفع تقاريره مباشرةً للإدارة التنفيذية.</div>
+    </div>
+    <div class="phase-card">
+      <div class="phase-title"><span>🔗</span> تكامل عميق مع كل قطاع</div>
+      <div class="phase-content">لكل قطاع فريق جودة متخصص يفهم طبيعة عمله ومعاييره الخاصة، لكنه يعمل وفق منهجية موحدة.</div>
+    </div>
+    <div class="phase-card">
+      <div class="phase-title"><span>📋</span> الحكم والضابط</div>
+      <div class="phase-content">في أي تعارض بين سرعة التسليم وجودة المنتج، قسم الجودة هو الحكم الأخير. لديه صلاحية الإيقاف التام لأي عملية حتى تُصحَّح.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PANEL: RESTAURANTS ===================== -->
+<div id="panel-restaurants" class="panel">
+  <div class="sec-label">// قطاع الأغذية</div>
+  <div class="sec-title">دور إدارة الجودة في قطاع المطاعم</div>
+  <div class="highlight">
+    المطاعم هي الواجهة المباشرة للعميل النهائي — أي إخفاق في الجودة هنا لا يُرى فقط بل يُشعر ويُطعم ويُروى. لذا يُطبَّق أعلى مستوى من الرقابة المستمرة والتدقيق اليومي على كافة نقاط الاتصال بالغذاء.
+  </div>
+
+  <div class="stage-grid">
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">01</span>
+        <div><div class="sd-title">🌡️ رقابة سلسلة التبريد</div><div class="sd-en">Cold Chain Monitoring</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>التحقق اليومي من درجات حرارة ثلاجات المطبخ، غرف التخزين البارد، وعربات النقل</li>
+        <li>توثيق قراءات درجات الحرارة في نموذج QC-REST-01 كل 4 ساعات</li>
+        <li>إصدار تنبيه فوري عند تجاوز أي قراءة للحد المسموح: +4°م للمبرد، -18°م للمجمد</li>
+        <li>التفتيش على طريقة تخزين المواد الخام والمطبوخة ومنع التلوث المتقاطع</li>
+        <li>متابعة صلاحية جميع المواد الخام المستلمة ورفض ما لا يستوفي معيار 75% من العمر الافتراضي</li>
+        <li>توثيق جميع حالات الرفض والإتلاف مع التحقيق في مصدر الإخفاق</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">02</span>
+        <div><div class="sd-title">🍽️ معايير التحضير والطهي</div><div class="sd-en">Cooking & Preparation Standards</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>التحقق من تطبيق وصفات الشركة المعتمدة (Standard Recipe) لكل صنف في القائمة</li>
+        <li>قياس درجات حرارة الطهي الداخلية للتأكد من بلوغها الحد الآمن (75°م كحد أدنى للدواجن)</li>
+        <li>مراقبة أوقات الطهي وحجم الحصص وفق معايير Brandzo المعتمدة</li>
+        <li>إجراء اختبار تذوق عشوائي (Blind Tasting) على الأقل مرة أسبوعياً لكل مطعم</li>
+        <li>رصد ومتابعة نسبة الهدر الغذائي وتحديد أسبابه وتقديم توصيات التحسين</li>
+        <li>توثيق أي انحراف عن المعايير في تقرير QC-REST-02 والمتابعة حتى التصحيح</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">03</span>
+        <div><div class="sd-title">🧹 النظافة والسلامة الغذائية</div><div class="sd-en">Hygiene & Food Safety</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>إجراء جولات تفتيشية غير مُعلَنة على مستوى النظافة الشخصية للطاقم مرتين أسبوعياً</li>
+        <li>التحقق من صلاحية شهادات سلامة الغذاء لجميع الموظفين التشغيليين</li>
+        <li>مراجعة سجلات تنظيف الأسطح ومعدات الطهي وفق جدول التنظيف اليومي والأسبوعي</li>
+        <li>أخذ مسحات ميكروبيولوجية (Swab Tests) من الأسطح وأدوات الطهي بشكل دوري</li>
+        <li>التفتيش على مخزون مواد التنظيف والتعقيم والتحقق من تركيزاتها وصلاحياتها</li>
+        <li>تقييم مستوى مكافحة الآفات (Pest Control) والتحقق من تنفيذ العقود مع الشركة المتخصصة</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">04</span>
+        <div><div class="sd-title">📦 استلام وتدقيق المواد الواردة</div><div class="sd-en">Incoming Goods Inspection</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>الحضور المباشر أو التدقيق اللاحق على كل شحنة واردة للمطعم من المستودع المركزي</li>
+        <li>التحقق من مطابقة الكميات المستلمة مع أذون الصرف الصادرة من المستودع</li>
+        <li>فحص سلامة تغليف جميع المواد ورفض أي وحدة مكسورة أو مخترقة التغليف</li>
+        <li>التحقق من تواريخ الإنتاج والصلاحية لكل صنف وارد ومقارنتها بمعايير القبول</li>
+        <li>التفتيش على درجة حرارة الشحنة الواردة فور وصولها قبل التفريغ</li>
+        <li>رفع تقرير QC-REST-03 عند أي عملية استلام تتضمن مخالفات أو ملاحظات</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">05</span>
+        <div><div class="sd-title">👥 تقييم الخدمة وتجربة العميل</div><div class="sd-en">Service Quality & Customer Experience</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>إجراء زيارات تقييم سرية (Mystery Shopper) شهرياً لكل فرع مطعم</li>
+        <li>تحليل شكاوى العملاء المسجلة في النظام وتصنيفها وإصدار تقارير الأسباب الجذرية</li>
+        <li>مراجعة معدلات رضا العملاء من قنوات التغذية الراجعة (تطبيق، مواقع، كروت تعليق)</li>
+        <li>تقييم سرعة الخدمة وأوقات الانتظار ومقارنتها بالمعايير المحددة لكل نوع طلب</li>
+        <li>متابعة معدل تكرار الشكاوى من نفس الفرع وفتح ملف تحسين رسمي عند تجاوز الحد</li>
+        <li>تنسيق جلسات تغذية راجعة مع مدراء الفروع ربع سنوياً ورفع نتائجها للإدارة العليا</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">06</span>
+        <div><div class="sd-title">📊 التدقيق الدوري وإعداد التقارير</div><div class="sd-en">Periodic Audits & Reporting</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>إجراء تدقيق شامل (Full Audit) لكل فرع مطعم مرة شهرياً باستخدام قائمة QC-AUDIT-REST</li>
+        <li>إصدار تقرير درجات التدقيق (Scoring Report) لكل فرع مع مقارنته بالأشهر السابقة</li>
+        <li>رفع تقرير أسبوعي ملخص لحالة جميع الفروع إلى مدير الجودة التنفيذي</li>
+        <li>إدارة سجل المخالفات وتصنيفها: خطيرة (تستوجب الإغلاق الفوري) / متوسطة / بسيطة</li>
+        <li>متابعة تنفيذ خطط التصحيح (CAP — Corrective Action Plans) وتوثيق الإغلاق الرسمي</li>
+        <li>إعداد التقرير الربع سنوي المقارن لأداء جميع المطاعم ورفعه لمجلس الإدارة</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PANEL: WAREHOUSES ===================== -->
+<div id="panel-warehouses" class="panel">
+  <div class="sec-label">// قطاع اللوجستيات</div>
+  <div class="sec-title">دور إدارة الجودة في قطاع المستودعات</div>
+  <div class="highlight">
+    المستودع هو قلب سلسلة التوريد — الجودة هنا لا تحمي المنتج فحسب، بل تحمي كل قطاع آخر في الشركة. أي مخالفة جودة في المستودع تنتشر كالعدوى إلى المطعم والسوق والعميل النهائي.
+  </div>
+
+  <div class="stage-grid">
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">01</span>
+        <div><div class="sd-title">📥 تدقيق الاستلام</div><div class="sd-en">Receiving Inspection</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>التحقق المستقل من جودة كل شحنة واردة إلى جانب مشرف الاستلام (فصل المهام)</li>
+        <li>تطبيق معيار AQL (Acceptable Quality Level) على العينات المسحوبة عشوائياً من الشحنة</li>
+        <li>رفض أي شحنة تجاوزت نسبة الوحدات غير المطابقة الحد المسموح به (2% كحد أقصى)</li>
+        <li>إصدار QC-WH-01 عند كل عملية استلام مع تسجيل نتيجة الفحص في Odoo مباشرةً</li>
+        <li>متابعة قضايا الرفض مع قسم المشتريات وتوثيق الإشعارات المرسلة للمورد</li>
+        <li>بناء قاعدة بيانات تاريخية لأداء كل مورد وتقديمها ربع سنوياً لإدارة المشتريات</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">02</span>
+        <div><div class="sd-title">❄️ مراقبة ظروف التخزين</div><div class="sd-en">Storage Conditions Monitoring</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>التفتيش اليومي على درجات حرارة مناطق التخزين: المبرد (+2°م إلى +4°م)، المجمد (-18°م وأقل)، الجاف (18-22°م)</li>
+        <li>التحقق من قراءات مستشعرات الرطوبة في مناطق تخزين المواد الجافة والحبوب</li>
+        <li>مراجعة سجلات صيانة وحدات التبريد وإبلاغ قسم الصيانة فور اكتشاف أي قصور</li>
+        <li>التفتيش على تطبيق قاعدة FEFO (First Expired First Out) في جميع عمليات الصرف</li>
+        <li>التحقق من عدم اختلاط المواد الغذائية مع المواد الكيميائية أو مواد التنظيف في أي منطقة</li>
+        <li>تسجيل جميع قراءات المراقبة في نموذج QC-WH-02 وإصدار تنبيهات آنية عند أي انحراف</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">03</span>
+        <div><div class="sd-title">🔬 برنامج الجودة المستمر</div><div class="sd-en">Ongoing Quality Program</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>إجراء جرد عشوائي لنسبة 10% من الأصناف أسبوعياً للتحقق من التطابق بين الواقع والنظام</li>
+        <li>فحص صلاحية المنتجات في مناطق التخزين وسحب أي صنف اقتربت صلاحيته من الحد الأدنى</li>
+        <li>مراجعة سجلات حركة المخزون في Odoo والتحقق من عدم وجود إدخالات غير موثقة</li>
+        <li>إجراء تدقيق FIFO/FEFO شهري شامل وتوثيق الانحرافات في تقرير QC-WH-03</li>
+        <li>التفتيش على بطاقات تعريف المنتجات (Labels) للتأكد من وضوحها وصحة بياناتها</li>
+        <li>تنسيق برنامج اختبار المنتج الدوري مع المختبرات المعتمدة للأصناف ذات الأولوية</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">04</span>
+        <div><div class="sd-title">📋 تدقيق الدورة المستندية</div><div class="sd-en">Document Cycle Audit</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>مراجعة اكتمال الدورة المستندية الثمانية لكل عملية: PR → PO → ASN → GRN → Putaway → Picking → Dispatch → Returns</li>
+        <li>التحقق من أن كل حركة مخزونية لها مستند رسمي معتمد في Odoo قبل التنفيذ</li>
+        <li>رصد ومتابعة قضايا الحركات المنجزة بدون مستندات (Undocumented Movements) وفتح تحقيق فوري</li>
+        <li>مراجعة عينات من أوامر الشراء للتحقق من مطابقتها لأمر الشراء والفاتورة والاستلام (3-Way Match)</li>
+        <li>تدقيق سجلات المرتجعات والتحقق من اكتمال إجراءاتها ووجود مسوّغ لكل مرتجع</li>
+        <li>إعداد تقرير التوافق المستندي الشهري وتحديد نقاط الضعف للمعالجة الفورية</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">05</span>
+        <div><div class="sd-title">🚛 تدقيق التوزيع والنقل</div><div class="sd-en">Distribution & Transport Audit</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>التفتيش على جاهزية السيارات من الناحية الصحية والتبريدية قبل تحميل أي شحنة</li>
+        <li>مراجعة سجلات درجات حرارة سيارات التبريد خلال رحلات التوزيع (Data Logger)</li>
+        <li>التحقق من أن سائقي التوزيع ملتزمون بممارسات السلامة الغذائية أثناء التحميل والتفريغ</li>
+        <li>مراجعة سجلات صيانة الأسطول بالتنسيق مع قسم الصيانة والتأكد من انتظامها</li>
+        <li>التفتيش العشوائي على عمليات التسليم في الفروع والتحقق من حصول السائق على توقيع استلام صحيح</li>
+        <li>رفع تقرير QC-WH-04 لأي شحنة تعرضت لانقطاع في سلسلة التبريد وتحديد المسؤولية</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">06</span>
+        <div><div class="sd-title">🏭 التدقيق الشامل على بيئة المستودع</div><div class="sd-en">Facility & Environment Audit</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>إجراء جولة تفتيشية أسبوعية كاملة على المستودع تشمل الأرضيات والجدران والأسقف والإضاءة</li>
+        <li>التحقق من خلو المستودع من الآفات والقوارض والتنسيق مع شركة مكافحة الآفات عند الحاجة</li>
+        <li>مراجعة مخططات إخلاء الطوارئ وإمكانية الوصول إلى معدات السلامة وسهولة تشغيلها</li>
+        <li>التفتيش على منطقة البضاعة المحجوزة (Quarantine Zone) والتأكد من عزلها بشكل صحيح</li>
+        <li>مراجعة سجلات حوادث السلامة المهنية وإجراء تحليل الأسباب الجذرية لأي حادثة</li>
+        <li>التحقق من التزام جميع العاملين بمعدات الحماية الشخصية (PPE) المقررة لكل منطقة</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PANEL: CLEANING ===================== -->
+<div id="panel-cleaning" class="panel">
+  <div class="sec-label">// قطاع الخدمات</div>
+  <div class="sec-title">دور إدارة الجودة في قطاع الخدمات التنظيفية الشاملة</div>
+  <div class="highlight">
+    خدمات التنظيف هي قطاع غير مرئي للعميل النهائي لكنه حجر الأساس لكل قطاع آخر. جودة التنظيف في المطبخ تؤثر على سلامة الغذاء، وجودة التنظيف في المستودع تؤثر على سلامة المنتج. إدارة الجودة تضمن أن هذا القطاع "غير المرئي" يعمل بمعايير مرئية وقابلة للقياس.
+  </div>
+
+  <div class="stage-grid">
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">01</span>
+        <div><div class="sd-title">📝 تدقيق معايير التنظيف</div><div class="sd-en">Cleaning Standards Audit</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>التحقق من وجود خطة تنظيف موثقة (Master Cleaning Schedule) لكل موقع يخدمه القطاع</li>
+        <li>مراجعة سجلات إتمام مهام التنظيف اليومية والأسبوعية والشهرية من الفريق المنفذ</li>
+        <li>إجراء فحص بصري منهجي (Visual Inspection Checklist) لمستوى النظافة في المناطق المخدومة</li>
+        <li>أخذ مسحات سطحية (ATP Swab Tests) للتحقق من فعالية عمليات التعقيم ميكروبيولوجياً</li>
+        <li>مقارنة نتائج الفحص بمعايير النظافة المعتمدة وتوثيق أي انحراف في نموذج QC-CL-01</li>
+        <li>متابعة تنفيذ إجراءات التصحيح الفورية ومراجعة فعاليتها بعد 24 ساعة</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">02</span>
+        <div><div class="sd-title">🧴 تدقيق مواد ومعدات التنظيف</div><div class="sd-en">Cleaning Materials & Equipment</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>التحقق من أن جميع مواد التنظيف والتعقيم المستخدمة مُعتمدة ومسجلة في قائمة المواد المعتمدة</li>
+        <li>مراجعة تركيزات المحاليل المستخدمة والتحقق من مطابقتها لتعليمات الشركة المصنعة والبروتوكولات المعتمدة</li>
+        <li>التفتيش على حالة معدات التنظيف (ماكينات غسيل، ممسحات، خراطيم) وتوثيق أي تلف</li>
+        <li>التحقق من صلاحية جميع مواد التنظيف المخزنة والتخلص الآمن من المنتهية الصلاحية</li>
+        <li>مراجعة سجلات صيانة المعدات الكبيرة (Floor Scrubbers, Steam Cleaners) وانتظامها</li>
+        <li>التحقق من الفصل الصحيح لمواد التنظيف المستخدمة في المناطق الغذائية عن غير الغذائية</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">03</span>
+        <div><div class="sd-title">👷 تدقيق الكفاءة والتدريب</div><div class="sd-en">Team Competency & Training</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>التحقق من أن جميع أفراد فريق التنظيف تلقوا التدريب المعتمد على بروتوكولات السلامة الغذائية</li>
+        <li>مراجعة سجلات التدريب وتواريخ آخر تحديث للشهادات وضمان سريان صلاحيتها</li>
+        <li>تقييم أداء الفريق الميداني من خلال ملاحظة مباشرة أثناء تنفيذ مهام التنظيف</li>
+        <li>التحقق من الالتزام بالزي الموحد ومعدات الحماية الشخصية (قفازات، أقنعة، أحذية واقية)</li>
+        <li>رفع توصيات إعادة التدريب إلى مدير القطاع عند اكتشاف قصور في الأداء</li>
+        <li>توثيق حالات المخالفات السلوكية أو الإهمال في سجل QC-CL-02 ومتابعة الإجراء التأديبي</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">04</span>
+        <div><div class="sd-title">🗂️ إدارة التعاقدات والالتزامات</div><div class="sd-en">Contract & SLA Compliance</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>مراجعة عقود تقديم خدمات التنظيف لعملاء Brandzo والتحقق من أن المعايير المتفق عليها تُنفَّذ فعلياً</li>
+        <li>تتبع مؤشرات اتفاقية مستوى الخدمة (SLA) لكل عقد وإصدار تقرير مطابقة شهري</li>
+        <li>التحقق من تنفيذ الزيارات المجدولة وفق جداول العقد وعدم الإخلال بأي موعد متفق عليه</li>
+        <li>متابعة شكاوى العملاء المتعلقة بمستوى الخدمة وضمان معالجتها خلال 24 ساعة</li>
+        <li>إجراء مراجعة ربع سنوية لكل عقد لتحديد فجوات الأداء وفرص تحسين الخدمة</li>
+        <li>تقديم تقرير أداء العقود السنوي كمدخل أساسي لقرارات التجديد والتفاوض</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">05</span>
+        <div><div class="sd-title">📊 التقارير والمؤشرات القطاعية</div><div class="sd-en">Sector Reporting & Metrics</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>إصدار تقرير أداء أسبوعي لخدمات التنظيف يتضمن نتائج جميع التدقيقات الميدانية</li>
+        <li>تتبع مؤشر "نسبة المواقع المطابقة" أسبوعياً (Compliance Rate) مقابل الهدف المحدد (≥95%)</li>
+        <li>إعداد خارطة حرارة (Heatmap) لمواقع المخالفات المتكررة لتحديد أنماط المشكلات البنيوية</li>
+        <li>رفع طلبات رسمية لزيادة الموارد (أفراد، معدات) إلى الإدارة عند تكرار مخالفات منهجية</li>
+        <li>تجميع بيانات التدقيق الشهرية في تقرير QC-CL-MONTHLY ورفعه لمدير الجودة التنفيذي</li>
+        <li>المشاركة في اجتماع مراجعة الجودة الشهري مع تقديم نتائج القطاع وخطة التحسين</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PANEL: MARKETS ===================== -->
+<div id="panel-markets" class="panel">
+  <div class="sec-label">// قطاع التجارة</div>
+  <div class="sec-title">دور إدارة الجودة في قطاع أسواق المواد الغذائية</div>
+  <div class="highlight">
+    أسواق المواد الغذائية تجمع بين تحديات المستودع (تنوع المنتجات وحجم المخزون) وتحديات المطعم (الاتصال المباشر بالعميل). إدارة الجودة هنا تعمل على مستويين متوازيين: ضمان سلامة المنتج على الرف، وضمان تجربة تسوق آمنة وموثوقة.
+  </div>
+
+  <div class="stage-grid">
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">01</span>
+        <div><div class="sd-title">🛒 تدقيق عروض الأرفف والصلاحيات</div><div class="sd-en">Shelf Display & Expiry Audit</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>إجراء جولة يومية على جميع أرفف المنتجات الغذائية للتحقق من سلامة التغليف وصحة التسعير</li>
+        <li>تطبيق معيار الرف الأمامي (FIFO على مستوى الرف): التحقق من أن المنتجات الأقرب لتاريخ الانتهاء في المقدمة</li>
+        <li>مسح يومي لتواريخ انتهاء الصلاحية وسحب فوري لأي منتج وصل لحد التنبيه (7 أيام أو أقل حسب فئة المنتج)</li>
+        <li>التفتيش على مناطق الثلاجات والأجزاء المبردة في السوق والتحقق من درجات الحرارة ونظافتها</li>
+        <li>التحقق من صحة البيانات على بطاقات الأسعار ومطابقتها لبيانات النظام</li>
+        <li>توثيق جميع المنتجات المسحوبة والمتلفة في نموذج QC-MKT-01 مع تحديد سبب السحب</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">02</span>
+        <div><div class="sd-title">🏪 معايير العرض والترتيب</div><div class="sd-en">Display & Merchandising Standards</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>التحقق من تطبيق مخطط الرف (Planogram) المعتمد من الإدارة لكل قسم في السوق</li>
+        <li>مراقبة مستوى إشغال الرفوف وإصدار تنبيه للتموين عند انخفاض المخزون دون الحد الأدنى</li>
+        <li>التفتيش على نظافة الأرفف والأرضيات وحالة الإضاءة والعلامات الإرشادية</li>
+        <li>التحقق من أن المنتجات ذات الاحتياجات الخاصة (ألرجي، خالٍ من الغلوتين، حلال) مُعلَّمة بوضوح</li>
+        <li>مراجعة مناطق التخزين الخلفية (Back-of-House) والتحقق من تنظيمها وخلوها من الآفات</li>
+        <li>التفتيش الدوري على حالة معدات القياس والوزن (Scales) وصلاحية شهاداتها الرسمية</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">03</span>
+        <div><div class="sd-title">🥩 إدارة جودة المنتجات الطازجة</div><div class="sd-en">Fresh Products Quality Management</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>الفحص اليومي الحسي (بصري، شمي) للمنتجات الطازجة: خضروات، فواكه، لحوم، مخبوزات</li>
+        <li>التحقق من درجات حرارة أقسام اللحوم والأسماك ومطابقتها للمعايير (0°م إلى +4°م)</li>
+        <li>مراجعة الكمية الواردة من المستودع المركزي للمنتجات الطازجة والتحقق من اتساقها مع معايير الجودة</li>
+        <li>إتلاف المنتجات الطازجة التي لا ترقى للعرض وتوثيقها في نموذج QC-MKT-02</li>
+        <li>التنسيق مع المستودع للإبلاغ عن أي صنف وصل بجودة غير مقبولة وفتح ملف مراجعة</li>
+        <li>متابعة مؤشر الهدر اليومي للمنتجات الطازجة ورفع تقرير أسبوعي للإدارة</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">04</span>
+        <div><div class="sd-title">🤝 تجربة العميل والامتثال للمستهلك</div><div class="sd-en">Customer Experience & Consumer Compliance</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>مراقبة شكاوى العملاء المتعلقة بجودة المنتجات أو انتهاء صلاحيتها وتحليلها أسبوعياً</li>
+        <li>التحقق من وجود آلية واضحة وفعّالة لاستقبال شكاوى العملاء وتتبع حلها</li>
+        <li>مراجعة سياسة الاستبدال والاسترداد وضمان تطبيقها بشكل منصف ومتسق</li>
+        <li>التفتيش على إجراءات التعامل مع الاسترداد لضمان عدم إعادة منتج مُرتجَع للرف مباشرةً</li>
+        <li>رصد آراء العملاء عبر القنوات الرقمية وتحليل الأنماط المتعلقة بشكاوى الجودة</li>
+        <li>إعداد تقرير تجربة العميل الشهري وتضمينه في التقرير الإجمالي لمدير الجودة</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">05</span>
+        <div><div class="sd-title">📊 التدقيق الشهري الشامل للسوق</div><div class="sd-en">Monthly Full Market Audit</div></div>
+      </div>
+      <ul class="sd-list">
+        <li>إجراء تدقيق شامل لكل سوق مرة شهرياً يشمل جميع الأقسام باستخدام قائمة QC-AUDIT-MKT الموحدة</li>
+        <li>تقييم الأداء على مقياس 100 نقطة: المنتجات (40%)، البيئة (30%)، الخدمة (20%)، التوثيق (10%)</li>
+        <li>إصدار نتيجة التدقيق خلال 48 ساعة ومشاركتها مع مدير السوق والإدارة العليا</li>
+        <li>فتح ملف CAP فوري لأي سوق حصل على أقل من 75 نقطة مع جدول زمني صارم للتصحيح</li>
+        <li>متابعة تنفيذ خطة التصحيح بزيارة إعادة تدقيق مفاجئة خلال أسبوعين من إصدار التقرير</li>
+        <li>إدراج نتائج التدقيق الشهري في لوحة أداء الجودة (Quality Dashboard) على مستوى الشركة</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PANEL: INTEGRATION ===================== -->
+<div id="panel-integration" class="panel">
+  <div class="sec-label">// التكامل التشغيلي</div>
+  <div class="sec-title">التكامل بين القطاعات — إدارة الجودة كحلقة الوصل</div>
+
+  <div class="org-wrap">
+    <div class="org-layer-label">الإشراف والقرار</div>
+    <div class="org-row">
+      <div class="org-node layer2"><span class="on-icon">🏢</span><div class="on-title">الإدارة التنفيذية</div><div class="on-sub">ترفع التقارير إليه</div></div>
+    </div>
+    <div class="org-connector"></div>
+    <div class="org-row">
+      <div class="org-node layer1"><span class="on-icon">🛡️</span><div class="on-title">إدارة الجودة</div><div class="on-sub">الحكم والضابط</div></div>
+    </div>
+    <div class="org-connector"></div>
+    <div class="org-hline"></div>
+    <div class="org-layer-label">القطاعات المخدومة</div>
+    <div class="org-row">
+      <div class="org-node layer3"><span class="on-icon">🍽️</span><div class="on-title">المطاعم</div></div>
+      <div class="org-node layer3"><span class="on-icon">🏭</span><div class="on-title">المستودعات</div></div>
+      <div class="org-node layer3"><span class="on-icon">🧹</span><div class="on-title">خدمات التنظيف</div></div>
+      <div class="org-node layer3"><span class="on-icon">🛒</span><div class="on-title">الأسواق</div></div>
+    </div>
+  </div>
+
+  <div class="stage-grid">
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">🔄</span>
+        <div class="sd-title">التقارير المشتركة بين القطاعات</div>
+      </div>
+      <p class="highlight" style="margin:0 0 16px 0; border-radius:8px;">وثيقة جودة صادرة عن المستودع (رفض شحنة مورد) يجب أن تنعكس فوراً في قرارات المطعم والسوق المتعلقة بنفس الصنف. إدارة الجودة هي الجهة الوحيدة التي تملك رؤية 360 درجة على تأثير أي قرار جودة عبر جميع القطاعات.</p>
+      <ul class="sd-list">
+        <li>إصدار "تنبيه جودة متقاطع" (Cross-Sector Quality Alert) يصل لجميع القطاعات المتأثرة خلال ساعة من اكتشاف المشكلة</li>
+        <li>ربط سجلات الجودة في Odoo بحيث يظهر تقرير رفض المستودع مرتبطاً بمخزون نفس الصنف في السوق والمطعم</li>
+        <li>إجراء اجتماع طارئ متقاطع بين مدراء الجودة في القطاعين المتأثرين عند أي حادثة جودة من الفئة الحمراء</li>
+        <li>تحديث قاعدة بيانات الموردين المشتركة بنتائج جميع فحوصات الجودة عبر القطاعات</li>
+        <li>إصدار "نشرة الجودة الشهرية" التي تُلخص أداء جميع القطاعات وتُوزَّع على الإدارة العليا</li>
+        <li>الإشراف على اجتماع مراجعة الجودة الربع سنوي المشترك لجميع مدراء القطاعات</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">📋</span>
+        <div class="sd-title">توحيد المعايير والإجراءات</div>
+      </div>
+      <p class="highlight" style="margin:0 0 16px 0; border-radius:8px;">إدارة الجودة هي المرجع الوحيد لإصدار وتحديث جميع معايير الجودة عبر الشركة. أي قسم أو فرع لا يمكنه تعديل معايير الجودة المطبقة عليه — يمكنه فقط اقتراح التغيير عبر القناة الرسمية.</p>
+      <ul class="sd-list">
+        <li>إصدار "دليل معايير الجودة الموحد" (QMS Manual) وتحديثه سنوياً وعند كل حدث جوهري</li>
+        <li>مراجعة جميع إجراءات التشغيل القياسية (SOPs) المتعلقة بالجودة في جميع القطاعات كل 6 أشهر</li>
+        <li>إدارة عملية تغيير المعايير (Change Control) وضمان أن أي تعديل يمر بمراجعة رسمية موثقة</li>
+        <li>تدريب مسؤولي الجودة في القطاعات على المعايير المحدّثة فور إصدارها</li>
+        <li>التحقق من أن النسخة المطبقة في كل موقع هي النسخة الأحدث وسحب أي وثيقة قديمة</li>
+        <li>الحفاظ على سجل التحكم في الوثائق (Document Control Log) كجزء من متطلبات ISO 9001:2015</li>
+      </ul>
+    </div>
+    <div class="stage-detail">
+      <div class="sd-header">
+        <span class="sd-badge">🏆</span>
+        <div class="sd-title">برنامج التحسين المستمر</div>
+      </div>
+      <p class="highlight" style="margin:0 0 16px 0; border-radius:8px;">إدارة الجودة لا تكتفي بالرقابة — هي محرك التحسين. تستخدم منهجية PDCA (Plan-Do-Check-Act) لتحويل كل مخالفة إلى فرصة تحسين حقيقية ومستدامة.</p>
+      <ul class="sd-list">
+        <li>إدارة سجل الإجراءات التصحيحية والوقائية (CAPA Register) على مستوى الشركة</li>
+        <li>إجراء تحليل الأسباب الجذرية (RCA — Root Cause Analysis) لكل مخالفة من الفئة A أو B</li>
+        <li>تشغيل برنامج "أفضل ممارسة" (Best Practice Sharing) لنقل الحلول الناجحة من قطاع لآخر</li>
+        <li>قياس معدل إغلاق الإجراءات التصحيحية (CAPA Closure Rate) مقابل الهدف (≥90% خلال 30 يوماً)</li>
+        <li>إجراء مراجعة الإدارة (Management Review) ربع سنوياً بحضور جميع مدراء القطاعات</li>
+        <li>إعداد تقرير مؤشرات الجودة الشامل (Quality KPI Dashboard) ومشاركته شهرياً مع الإدارة العليا</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PANEL: KPIs ===================== -->
+<div id="panel-kpis" class="panel">
+  <div class="sec-label">// المعايير الرقمية</div>
+  <div class="sec-title">مؤشرات أداء إدارة الجودة — KPIs</div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-val">≥98%</div>
+      <div class="kpi-name">معدل الامتثال الكلي</div>
+      <div class="kpi-freq">شهري</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val">&lt;2%</div>
+      <div class="kpi-name">نسبة المرفوضات / المستودع</div>
+      <div class="kpi-freq">يومي</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val">&lt;1%</div>
+      <div class="kpi-name">نسبة الهدر / المطاعم</div>
+      <div class="kpi-freq">يومي</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val">≤24h</div>
+      <div class="kpi-name">وقت إغلاق المخالفة البسيطة</div>
+      <div class="kpi-freq">لكل حادثة</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val">≤72h</div>
+      <div class="kpi-name">وقت إغلاق المخالفة المتوسطة</div>
+      <div class="kpi-freq">لكل حادثة</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val">فوري</div>
+      <div class="kpi-name">استجابة المخالفة الجسيمة</div>
+      <div class="kpi-freq">لكل حادثة</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val">≥95%</div>
+      <div class="kpi-name">نسبة تغطية التدقيق المجدول</div>
+      <div class="kpi-freq">شهري</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val">100%</div>
+      <div class="kpi-name">إغلاق CAPA ضمن الموعد</div>
+      <div class="kpi-freq">شهري</div>
+    </div>
+  </div>
+
+  <div class="sec-title" style="margin-top:30px;">تصنيف المخالفات والاستجابة</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>الفئة</th>
+          <th>الوصف</th>
+          <th>الاستجابة الفورية</th>
+          <th>مثال</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:#e74c3c; font-weight:bold;">🔴 جسيمة</td>
+          <td>تهديد مباشر للسلامة الغذائية أو الإنسانية</td>
+          <td>إيقاف فوري + تحقيق</td>
+          <td>شحنة ملوثة ببكتيريا / حريق مطبخ</td>
+        </tr>
+        <tr>
+          <td style="color:#e67e22; font-weight:bold;">🟠 متوسطة</td>
+          <td>انحراف عن المعيار يؤثر على الجودة</td>
+          <td>تصحيح خلال 72 ساعة</td>
+          <td>انتهاء صلاحية منتج على الرف</td>
+        </tr>
+        <tr>
+          <td style="color:#f1c40f; font-weight:bold;">🟡 بسيطة</td>
+          <td>ملاحظة تشغيلية لا تؤثر فورياً</td>
+          <td>تصحيح خلال 24 ساعة</td>
+          <td>بطاقة سعر مفقودة</td>
+        </tr>
+        <tr>
+          <td style="color:#2ecc71; font-weight:bold;">🟢 ملاحظة</td>
+          <td>فرصة تحسين غير إلزامية</td>
+          <td>توثيق + توصية</td>
+          <td>ترتيب رف يمكن تحسينه</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sec-title" style="margin-top:40px;">الإطار المرجعي والامتثال</div>
+  <div class="highlight">
+    يعمل نظام إدارة الجودة في Brandzo Holding وفق متطلبات ISO 9001:2015 مع تكييف إضافي وفق اشتراطات سلامة الغذاء ISO 22000 لقطاعي المطاعم والأسواق. جميع إجراءات التدقيق والتوثيق مصممة لتكون متوافقة مع متطلبات هذين الإطارين الدوليين.
+  </div>
+</div>
+
+<script>
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  const tabs = ['overview','restaurants','warehouses','cleaning','markets','integration','kpis'];
+  const tabBtns = document.querySelectorAll('.nav-tab');
+  const idx = tabs.indexOf(id);
+  if(idx !== -1 && tabBtns[idx]) tabBtns[idx].classList.add('active');
+}
+</script>
+  <script defer src="brandzo-report.js"></script>
+</body>
+</html>

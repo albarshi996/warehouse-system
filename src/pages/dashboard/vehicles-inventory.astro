@@ -1,0 +1,748 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Brandzo | فحص المركبات">
+<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+<style is:inline>
+  :root {
+    --primary-v: #0d1b2a;
+    --primary2-v: #1b3a5c;
+    --accent-v: #f0a500;
+    --accent2-v: #ffd166;
+    --accent-glow: rgba(240,165,0,0.25);
+    --light-v: #f0f4f8;
+    --border-v: #d4dce8;
+    --ok-v: #00b87a;
+    --warn-v: #f59e0b;
+    --bad-v: #ef4444;
+    --na-v: #94a3b8;
+    --text-v: #1e293b;
+    --white-v: #ffffff;
+    --card-bg-v: #ffffff;
+    --surface-v: #f8fafc;
+  }
+  .vehicles-container { font-family: 'Tajawal', 'Cairo', sans-serif; background: linear-gradient(135deg, #e8edf5 0%, #f0f4fb 100%); color: var(--text-v); min-height: 100vh; position: relative; }
+  .screen-bar { background: var(--primary-v); padding: 0 30px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; height: 64px; box-shadow: 0 4px 20px rgba(0,0,0,0.35); }
+  .screen-bar::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-v), var(--accent2-v), var(--accent-v)); }
+  .bar-brand { display: flex; align-items: center; gap: 14px; }
+  .brand-logo-v { background: linear-gradient(135deg, var(--accent-v), var(--accent2-v)); border-radius: 10px; padding: 7px 14px; font-family: 'Cairo', sans-serif; font-size: 1.3rem; font-weight: 900; color: var(--primary-v); letter-spacing: -0.5px; box-shadow: 0 3px 12px var(--accent-glow); }
+  .brand-divider { width: 1.5px; height: 28px; background: rgba(255,255,255,0.2); }
+  .bar-title { color: rgba(255,255,255,0.85); font-size: 0.95rem; font-weight: 600; }
+  .btn-group { display: flex; gap: 8px; align-items: center; }
+  .btn-v { padding: 9px 18px; border-radius: 9px; border: none; cursor: pointer; font-family: 'Tajawal', sans-serif; font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 7px; transition: all 0.2s ease; position: relative; overflow: hidden; }
+  .btn-v::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0); transition: background 0.2s; }
+  .btn-v:hover::after { background: rgba(255,255,255,0.08); }
+  .btn-v:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+  .btn-v:active { transform: translateY(0); }
+  .btn-ok-all { background: linear-gradient(135deg, #00b87a, #00976a); color: white; box-shadow: 0 3px 12px rgba(0,184,122,0.4); }
+  .btn-import { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; box-shadow: 0 3px 12px rgba(59,130,246,0.4); }
+  .btn-extractor { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; box-shadow: 0 3px 12px rgba(124,58,237,0.4); }
+  .btn-pdf { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; box-shadow: 0 3px 12px rgba(239,68,68,0.4); }
+  .btn-excel-v { background: linear-gradient(135deg, #059669, #047857); color: white; box-shadow: 0 3px 12px rgba(5,150,105,0.4); }
+  .btn-reset { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.2); }
+  .btn-print { background: linear-gradient(135deg, var(--accent-v), var(--accent2-v)); color: var(--primary-v); box-shadow: 0 3px 12px var(--accent-glow); }
+  .form-wrapper { max-width: 980px; margin: 28px auto; padding: 0 20px 70px; }
+  .header-card { background: var(--primary-v); border-radius: 18px; padding: 30px 38px; margin-bottom: 24px; position: relative; overflow: hidden; box-shadow: 0 12px 40px rgba(13,27,42,0.4); }
+  .header-card::before { content: ''; position: absolute; top: -60px; left: -60px; width: 280px; height: 280px; background: radial-gradient(circle, rgba(240,165,0,0.18) 0%, transparent 70%); border-radius: 50%; }
+  .header-inner { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+  .header-branding { display: flex; align-items: center; gap: 20px; }
+  .header-logo-block { background: linear-gradient(135deg, var(--accent-v), var(--accent2-v)); border-radius: 14px; padding: 12px 20px; box-shadow: 0 6px 24px rgba(240,165,0,0.4); }
+  .header-logo-block span { font-family: 'Cairo', sans-serif; font-size: 1.6rem; font-weight: 900; color: var(--primary-v); letter-spacing: -1px; }
+  .header-text h2 { font-size: 1.65rem; font-weight: 900; color: white; margin-bottom: 3px; line-height: 1.2; }
+  .header-text p { color: rgba(255,255,255,0.5); font-size: 0.85rem; }
+  .header-meta { display: flex; gap: 14px; }
+  .meta-badge { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 20px; text-align: center; backdrop-filter: blur(8px); }
+  .meta-badge .num { font-size: 1.6rem; font-weight: 900; color: var(--accent-v); line-height: 1; font-family: 'Cairo', sans-serif; }
+  .meta-badge .lbl { font-size: 0.72rem; opacity: 0.6; color: white; margin-top: 3px; }
+  .summary-bar { background: var(--primary2-v); border-radius: 14px; padding: 16px 24px; display: flex; gap: 12px; align-items: center; margin-bottom: 22px; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(13,27,42,0.2); border: 1px solid rgba(255,255,255,0.07); }
+  .sum-label { color: rgba(255,255,255,0.5); font-size: 0.8rem; font-weight: 700; margin-left: auto; text-transform: uppercase; letter-spacing: 0.05em; }
+  .sum-item { display: flex; align-items: center; gap: 9px; background: rgba(255,255,255,0.07); border-radius: 10px; padding: 9px 16px; border: 1px solid rgba(255,255,255,0.06); }
+  .sum-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 8px currentColor; }
+  .sum-item .sum-text { color: rgba(255,255,255,0.7); font-size: 0.82rem; font-weight: 600; }
+  .sum-item .count { font-size: 1.3rem; font-weight: 900; color: white; font-family: 'Cairo', sans-serif; }
+  .section-card { background: var(--card-bg-v); border-radius: 16px; margin-bottom: 20px; box-shadow: 0 3px 16px rgba(0,0,0,0.07); overflow: hidden; border: 1px solid rgba(0,0,0,0.05); }
+  .section-header-v { background: linear-gradient(135deg, var(--primary-v) 0%, var(--primary2-v) 100%); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .section-header-left { display: flex; align-items: center; gap: 12px; }
+  .s-icon { width: 34px; height: 34px; background: linear-gradient(135deg, var(--accent-v), var(--accent2-v)); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 1rem; box-shadow: 0 3px 10px rgba(240,165,0,0.4); flex-shrink: 0; }
+  .section-header-v h3 { color: white; font-size: 1.05rem; font-weight: 700; }
+  .section-all-ok-btn { background: rgba(0,184,122,0.2); color: #6effd0; border: 1px solid rgba(0,184,122,0.4); border-radius: 8px; padding: 6px 14px; font-family: 'Tajawal', sans-serif; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
+  .section-all-ok-btn:hover { background: rgba(0,184,122,0.35); transform: scale(1.02); }
+  .section-body { padding: 24px; }
+  .fields-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .fields-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .fields-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .fields-grid.cols-1 { grid-template-columns: 1fr; }
+  .field-group { display: flex; flex-direction: column; gap: 5px; }
+  .field-group label { font-size: 0.78rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; }
+  .field-group input, .field-group select, .field-group textarea { border: 1.5px solid var(--border-v); border-radius: 9px; padding: 9px 13px; font-family: 'Tajawal', sans-serif; font-size: 0.95rem; color: var(--text-v); transition: all 0.2s; background: var(--surface-v); width: 100%; }
+  .field-group input:focus, .field-group select:focus, .field-group textarea:focus { outline: none; border-color: var(--accent-v); box-shadow: 0 0 0 4px rgba(240,165,0,0.12); background: white; }
+  .field-group textarea { resize: vertical; min-height: 75px; }
+  .insp-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .insp-table thead tr { background: linear-gradient(135deg, var(--primary-v), var(--primary2-v)); color: white; }
+  .insp-table th { padding: 12px 16px; font-weight: 700; text-align: right; font-size: 0.83rem; letter-spacing: 0.03em; }
+  .insp-table th:first-child { width: 36px; text-align: center; border-radius: 0 8px 0 0; }
+  .insp-table th:last-child { border-radius: 8px 0 0 0; }
+  .insp-table tbody tr { border-bottom: 1px solid #edf0f5; transition: background 0.12s; }
+  .insp-table tbody tr:hover { background: #f8fbff; }
+  .insp-table tbody tr:last-child { border-bottom: none; }
+  .insp-table td { padding: 10px 16px; vertical-align: middle; }
+  .insp-table td:first-child { text-align: center; font-size: 0.72rem; color: #aab4c2; font-weight: 900; font-family: 'Cairo', sans-serif; }
+  .row-label { font-size: 0.88rem; font-weight: 500; color: var(--text-v); line-height: 1.4; }
+  .radio-group { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+  .radio-btn { position: relative; }
+  .radio-btn input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .radio-btn label { display: inline-flex; align-items: center; justify-content: center; padding: 5px 13px; border-radius: 20px; font-size: 0.77rem; font-weight: 700; cursor: pointer; border: 1.5px solid #d8dfe9; background: #f8fafc; transition: all 0.16s; white-space: nowrap; min-width: 54px; user-select: none; }
+  .radio-btn input[type="radio"]:checked + label { border-color: transparent; color: white; box-shadow: 0 3px 10px rgba(0,0,0,0.2); transform: scale(1.05); }
+  .radio-btn.ok-v input[type="radio"]:checked + label { background: linear-gradient(135deg, var(--ok-v), #00976a); box-shadow: 0 3px 10px rgba(0,184,122,0.4); }
+  .radio-btn.warn-v input[type="radio"]:checked + label { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 3px 10px rgba(245,158,11,0.4); }
+  .radio-btn.bad-v input[type="radio"]:checked + label { background: linear-gradient(135deg, var(--bad-v), #dc2626); box-shadow: 0 3px 10px rgba(239,68,68,0.4); }
+  .radio-btn.na-v input[type="radio"]:checked + label { background: linear-gradient(135deg, #94a3b8, #64748b); box-shadow: 0 3px 10px rgba(100,116,139,0.4); }
+  .radio-btn label:hover { border-color: #94a3b8; background: #f1f5f9; transform: translateY(-1px); }
+  .notes-input { border: 1.5px solid var(--border-v); border-radius: 7px; padding: 7px 11px; font-family: 'Tajawal', sans-serif; font-size: 0.82rem; width: 100%; min-width: 130px; background: var(--surface-v); transition: all 0.18s; color: var(--text-v); }
+  .notes-input:focus { outline: none; border-color: var(--accent-v); background: white; box-shadow: 0 0 0 3px rgba(240,165,0,0.1); }
+  .tires-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .tire-item { border: 2px solid var(--border-v); border-radius: 12px; padding: 16px; background: var(--surface-v); transition: border-color 0.2s; }
+  .tire-item:hover { border-color: var(--accent-v); }
+  .tire-label { font-size: 0.88rem; font-weight: 800; color: var(--primary-v); margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
+  .tire-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .sig-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .sig-box { border: 1.5px solid var(--border-v); border-radius: 12px; padding: 18px; text-align: center; background: var(--surface-v); transition: border-color 0.2s; }
+  .sig-box:hover { border-color: var(--accent-v); }
+  .sig-line { border-bottom: 2px dashed #c8d4e0; height: 58px; margin-bottom: 12px; }
+  .sig-box label { font-size: 0.78rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 6px; }
+  .sig-box input { border: none; background: transparent; width: 100%; text-align: center; font-family: 'Tajawal', sans-serif; font-size: 0.92rem; color: var(--text-v); }
+  .sig-box input:focus { outline: none; }
+  .type-toggle { display: flex; background: var(--surface-v); border-radius: 12px; padding: 5px; border: 1.5px solid var(--border-v); width: fit-content; gap: 2px; }
+  .type-toggle label { padding: 9px 22px; border-radius: 9px; font-size: 0.9rem; font-weight: 700; cursor: pointer; color: #7a8a9e; transition: all 0.2s; user-select: none; }
+  .type-toggle input[type="radio"] { display: none; }
+  .type-toggle input[type="radio"]:checked + label { background: var(--primary-v); color: white; box-shadow: 0 3px 12px rgba(13,27,42,0.35); }
+  .divider { border: none; border-top: 1.5px solid #edf2f8; margin: 18px 0; }
+  .section-sub { font-size: 0.82rem; font-weight: 800; color: var(--accent-v); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .section-sub::after { content: ''; flex: 1; border-top: 1.5px solid #edf2f8; }
+  .overall-status { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .status-opt { position: relative; }
+  .status-opt input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .status-opt label { display: inline-flex; align-items: center; gap: 7px; padding: 12px 24px; border-radius: 30px; font-size: 0.92rem; font-weight: 700; cursor: pointer; border: 2px solid #d8dfe9; background: white; transition: all 0.2s; }
+  .status-opt.ok-v input:checked + label { border-color: var(--ok-v); background: linear-gradient(135deg, var(--ok-v), #00976a); color: white; box-shadow: 0 4px 16px rgba(0,184,122,0.4); }
+  .status-opt.cond input:checked + label { border-color: #f59e0b; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; box-shadow: 0 4px 16px rgba(245,158,11,0.4); }
+  .status-opt.rej input:checked + label { border-color: var(--bad-v); background: linear-gradient(135deg, var(--bad-v), #dc2626); color: white; box-shadow: 0 4px 16px rgba(239,68,68,0.4); }
+  .import-overlay { display: none; position: fixed; inset: 0; background: rgba(13,27,42,0.7); z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+  .import-overlay.active { display: flex; }
+  .import-modal { background: white; border-radius: 20px; padding: 36px 40px; max-width: 480px; width: 90%; box-shadow: 0 30px 80px rgba(0,0,0,0.4); text-align: center; animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.85) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  .import-modal .modal-icon { width: 64px; height: 64px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px; box-shadow: 0 8px 24px rgba(59,130,246,0.4); }
+  .import-modal h3 { font-size: 1.3rem; font-weight: 800; color: var(--primary-v); margin-bottom: 8px; }
+  .import-modal p { color: #64748b; font-size: 0.9rem; margin-bottom: 24px; line-height: 1.5; }
+  .import-drop-zone { border: 2px dashed #d4dce8; border-radius: 14px; padding: 28px; margin-bottom: 20px; cursor: pointer; transition: all 0.2s; background: #f8fafc; }
+  .import-drop-zone:hover, .import-drop-zone.dragging { border-color: #3b82f6; background: #eff6ff; }
+  .import-drop-zone .drop-icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .import-drop-zone .drop-text { font-size: 0.88rem; color: #64748b; }
+  .import-drop-zone .drop-text strong { color: #3b82f6; }
+  #excelFileInput { display: none; }
+  .modal-btns { display: flex; gap: 10px; justify-content: center; }
+  .modal-btn { padding: 10px 24px; border-radius: 10px; border: none; cursor: pointer; font-family: 'Tajawal', sans-serif; font-size: 0.9rem; font-weight: 700; transition: all 0.2s; }
+  .modal-btn-primary { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; box-shadow: 0 4px 14px rgba(59,130,246,0.4); }
+  .modal-btn-secondary { background: #f1f5f9; color: #64748b; }
+  .modal-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  /* Extractor Modal */
+  .extractor-overlay { display: none; position: fixed; inset: 0; background: rgba(13,27,42,0.75); z-index: 600; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+  .extractor-overlay.active { display: flex; }
+  .extractor-modal { background: white; border-radius: 20px; padding: 36px 40px; max-width: 560px; width: 92%; max-height: 85vh; overflow-y: auto; box-shadow: 0 30px 80px rgba(0,0,0,0.4); animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .extractor-modal h3 { font-size: 1.25rem; font-weight: 800; color: var(--primary-v); margin-bottom: 6px; text-align: center; }
+  .extractor-modal .ext-sub { color: #64748b; font-size: 0.85rem; text-align: center; margin-bottom: 20px; }
+  .ext-drop-zone { border: 2px dashed #7c3aed; border-radius: 14px; padding: 24px; margin-bottom: 18px; cursor: pointer; transition: all 0.2s; background: #faf5ff; text-align: center; }
+  .ext-drop-zone:hover { border-color: #6d28d9; background: #f3e8ff; }
+  .ext-drop-icon { font-size: 2rem; margin-bottom: 8px; }
+  .ext-drop-text { font-size: 0.85rem; color: #64748b; }
+  .ext-drop-text strong { color: #7c3aed; }
+  #extractorFileInput { display: none; }
+  /* Results displayed vertically stacked */
+  .ext-results { margin-top: 18px; }
+  .ext-results-title { font-size: 0.85rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+  .ext-record { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .ext-record:hover { border-color: #7c3aed; }
+  .ext-record-header { font-size: 0.8rem; font-weight: 800; color: #7c3aed; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 4px; }
+  .ext-field { display: flex; flex-direction: column; gap: 2px; }
+  .ext-field-label { font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; }
+  .ext-field-value { font-size: 0.92rem; font-weight: 600; color: var(--text-v); }
+  .ext-empty { text-align: center; color: #94a3b8; font-size: 0.9rem; padding: 20px; }
+  .toast-container-v { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .toast-v { background: var(--primary-v); color: white; padding: 12px 24px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 10px; animation: toastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); border-right: 4px solid var(--accent-v); }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(20px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .progress-container-v { background: rgba(255,255,255,0.08); border-radius: 8px; height: 4px; width: 180px; overflow: hidden; margin-right: auto; }
+  .progress-bar-v { height: 100%; background: linear-gradient(90deg, var(--ok-v), var(--accent-v)); border-radius: 8px; transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); width: 0%; }
+  .progress-label-v { color: rgba(255,255,255,0.6); font-size: 0.75rem; font-weight: 700; }
+  @media print {
+    .screen-bar, .summary-bar, .import-overlay, .extractor-overlay, .toast-container-v { display: none !important; }
+    body { background: white; font-size: 9pt; }
+    .form-wrapper { max-width: 100%; margin: 0; padding: 0; }
+    .header-card { border-radius: 0; box-shadow: none; print-color-adjust: exact; -webkit-print-color-adjust: exact; page-break-after: avoid; }
+    .section-card { box-shadow: none; border: 1px solid #ccc; margin-bottom: 8px; page-break-inside: avoid; }
+    .section-header-v { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .radio-btn label { border: 1px solid #ccc; padding: 3px 8px; font-size: 7pt; }
+    .radio-btn input[type="radio"]:checked + label { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .field-group input, .field-group select, .field-group textarea, .notes-input { border: none; border-bottom: 1px solid #999; border-radius: 0; background: transparent; padding: 2px 4px; }
+    .insp-table th { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .fields-grid { gap: 8px; }
+    .section-body { padding: 12px; }
+    .insp-table td, .insp-table th { padding: 5px 8px; }
+    @page { size: A4; margin: 10mm 12mm; }
+  }
+</style>
+
+<div class="vehicles-container" dir="rtl">
+<!-- IMPORT OVERLAY -->
+<div class="import-overlay" id="importOverlay">
+  <div class="import-modal">
+    <div class="modal-icon">📥</div>
+    <h3>استيراد بيانات من Excel</h3>
+    <p>اختر ملف Excel (xlsx) تم تصديره من هذا التوثيق لاستعادة البيانات تلقائياً</p>
+    <div class="import-drop-zone" id="dropZone" onclick="document.getElementById('excelFileInput').click()">
+      <div class="drop-icon">📊</div>
+      <div class="drop-text">
+        <strong>انقر لاختيار الملف</strong> أو اسحبه وأفلته هنا<br>
+        <span style="font-size:0.8rem;color:#94a3b8;margin-top:4px;display:block;">ملفات .xlsx فقط</span>
+      </div>
+    </div>
+    <input type="file" id="excelFileInput" accept=".xlsx" onchange="handleImportFile(event)">
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-primary" onclick="document.getElementById('excelFileInput').click()">📂 اختيار ملف</button>
+      <button class="modal-btn modal-btn-secondary" onclick="closeImport()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXTRACTOR OVERLAY -->
+<div class="extractor-overlay" id="extractorOverlay">
+  <div class="extractor-modal">
+    <h3>🔍 مستخرج بيانات المركبات</h3>
+    <p class="ext-sub">استيراد ملف Excel واستخراج البيانات المحددة فقط:<br>نوع السيارة · رقم اللوحة · اسم المستلم · رقم الهيكل · الجهة</p>
+    <div class="ext-drop-zone" id="extDropZone" onclick="document.getElementById('extractorFileInput').click()">
+      <div class="ext-drop-icon">📋</div>
+      <div class="ext-drop-text">
+        <strong>انقر لاختيار ملف Excel</strong><br>
+        <span style="font-size:0.78rem;color:#94a3b8;margin-top:4px;display:block;">ملفات .xlsx و .xls</span>
+      </div>
+    </div>
+    <input type="file" id="extractorFileInput" accept=".xlsx,.xls" onchange="handleExtractorFile(event)">
+    <div id="extractorResults" class="ext-results" style="display:none;">
+      <div class="ext-results-title" id="extractorResultsTitle"></div>
+      <div id="extractorResultsBody"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;">
+      <button class="modal-btn modal-btn-primary" onclick="document.getElementById('extractorFileInput').click()">📂 اختيار ملف آخر</button>
+      <button class="modal-btn modal-btn-secondary" onclick="closeExtractor()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container-v" id="toastContainer"></div>
+
+<!-- TOP BAR -->
+<div class="screen-bar">
+  <div class="bar-brand">
+    <div class="brand-logo-v">Brandzo</div>
+    <div class="brand-divider"></div>
+    <div class="bar-title">توثيق فحص المركبات المستلمة</div>
+  </div>
+  <div class="btn-group">
+    <div class="progress-container-v" title="نسبة اكتمال الفحص">
+      <div class="progress-bar-v" id="progressBar"></div>
+    </div>
+    <span class="progress-label-v" id="progressLabel">0%</span>
+    <button class="btn-v btn-ok-all" onclick="markAllOk()">✅ كل سليم</button>
+    <button class="btn-v btn-import" onclick="openImport()">📥 استيراد</button>
+    <button class="btn-v btn-extractor" onclick="openExtractor()">🔍 مستخرج البيانات</button>
+    <button class="btn-v btn-pdf" onclick="exportPDF()">📄 PDF</button>
+    <button class="btn-v btn-excel-v" onclick="exportExcel()">📊 Excel</button>
+    <button class="btn-v btn-print" onclick="window.print()">🖨 طباعة</button>
+    <button class="btn-v btn-reset" onclick="resetForm()">↺ جديد</button>
+  </div>
+</div>
+
+<div class="form-wrapper" id="mainForm">
+  <div class="header-card">
+    <div class="header-inner">
+      <div class="header-branding">
+        <div class="header-logo-block"><span>Brandzo</span></div>
+        <div class="header-text">
+          <h2>نموذج استلام وفحص المركبة</h2>
+          <p>Vehicle Receiving & Inspection Report · Documentation v2.0</p>
+        </div>
+      </div>
+      <div class="header-meta">
+        <div class="meta-badge">
+          <div class="num" id="formNumber">---</div>
+          <div class="lbl">رقم النموذج</div>
+        </div>
+        <div class="meta-badge">
+          <div class="num" id="liveDate">---</div>
+          <div class="lbl">تاريخ الفحص</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-bar" id="summaryBar">
+    <div class="sum-label">ملخص الفحص ▾</div>
+    <div class="sum-item"><div class="sum-dot" style="background:var(--ok-v);color:var(--ok-v)"></div><span class="sum-text">سليم</span><span class="count" id="cnt-ok">0</span></div>
+    <div class="sum-item"><div class="sum-dot" style="background:#f59e0b;color:#f59e0b"></div><span class="sum-text">متابعة</span><span class="count" id="cnt-warn">0</span></div>
+    <div class="sum-item"><div class="sum-dot" style="background:var(--bad-v);color:var(--bad-v)"></div><span class="sum-text">معطل</span><span class="count" id="cnt-bad">0</span></div>
+    <div class="sum-item"><div class="sum-dot" style="background:var(--na-v);color:var(--na-v)"></div><span class="sum-text">لا ينطبق</span><span class="count" id="cnt-na">0</span></div>
+  </div>
+
+  <!-- SECTION 1 -->
+  <div class="section-card">
+    <div class="section-header-v">
+      <div class="section-header-left"><div class="s-icon">📋</div><h3>١ - البيانات الأساسية</h3></div>
+    </div>
+    <div class="section-body">
+      <div style="margin-bottom:20px;">
+        <div style="font-size:0.8rem;font-weight:700;color:#64748b;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em;">نوع المركبة</div>
+        <div class="type-toggle">
+          <input type="radio" name="vehicleCategory" id="cat-admin" value="سيارة إدارية" checked onchange="toggleVehicleType()">
+          <label for="cat-admin">🚗 سيارة إدارية</label>
+          <input type="radio" name="vehicleCategory" id="cat-transport" value="مركبة نقل" onchange="toggleVehicleType()">
+          <label for="cat-transport">🚛 مركبة نقل</label>
+          <input type="radio" name="vehicleCategory" id="cat-heavy" value="معدة ثقيلة" onchange="toggleVehicleType()">
+          <label for="cat-heavy">🏗 معدة ثقيلة</label>
+          <input type="radio" name="vehicleCategory" id="cat-bus" value="حافلة" onchange="toggleVehicleType()">
+          <label for="cat-bus">🚌 حافلة</label>
+        </div>
+      </div>
+      <div class="fields-grid cols-4">
+        <div class="field-group"><label>تاريخ الفحص</label><input type="date" id="inspDate" name="inspDate" onchange="updateLiveDate()"></div>
+        <div class="field-group"><label>وقت الفحص</label><input type="time" id="inspTime" name="inspTime"></div>
+        <div class="field-group"><label>رقم النموذج</label><input type="text" id="formNo" name="formNo" placeholder="FI-2026-001"></div>
+        <div class="field-group"><label>الجهة / القسم</label><input type="text" id="department" name="department" placeholder="اسم الجهة أو القسم"></div>
+      </div>
+      <hr class="divider">
+      <div class="section-sub">بيانات المركبة</div>
+      <div class="fields-grid cols-4">
+        <div class="field-group"><label>رقم اللوحة</label><input type="text" id="plateNo" name="plateNo" placeholder="أ ب ج 1234"></div>
+        <div class="field-group"><label>الماركة</label><input type="text" id="brand" name="brand" placeholder="تويوتا / فورد..."></div>
+        <div class="field-group"><label>الموديل</label><input type="text" id="model" name="model" placeholder="النوع"></div>
+        <div class="field-group"><label>سنة الصنع</label><input type="number" id="year" name="year" placeholder="2024" min="1990" max="2030"></div>
+        <div class="field-group"><label>اللون</label><input type="text" id="color" name="color" placeholder="اللون"></div>
+        <div class="field-group"><label>رقم الهيكل (VIN)</label><input type="text" id="vin" name="vin" placeholder="17 حرف/رقم"></div>
+        <div class="field-group"><label>رقم المحرك</label><input type="text" id="engineNo" name="engineNo" placeholder="رقم المحرك"></div>
+        <div class="field-group"><label>نوع الوقود</label><select id="fuelType" name="fuelType"><option value="">اختر...</option><option>بنزين</option><option>ديزل</option><option>غاز طبيعي</option><option>كهرباء</option><option>هايبرد</option></select></div>
+      </div>
+      <hr class="divider">
+      <div class="section-sub">بيانات التسجيل والاستلام</div>
+      <div class="fields-grid cols-4">
+        <div class="field-group"><label>عداد المسافة (كم)</label><input type="number" id="odometer" name="odometer" placeholder="0"></div>
+        <div class="field-group"><label>تاريخ آخر صيانة</label><input type="date" id="lastService" name="lastService"></div>
+        <div class="field-group"><label>آخر صيانة عند (كم)</label><input type="number" id="lastServiceKm" name="lastServiceKm" placeholder="0"></div>
+        <div class="field-group"><label>انتهاء الرخصة</label><input type="date" id="licExpiry" name="licExpiry"></div>
+        <div class="field-group"><label>المستلم من</label><input type="text" id="receivedFrom" name="receivedFrom"></div>
+        <div class="field-group"><label>رقم وثيقة التأمين</label><input type="text" id="insNo" name="insNo"></div>
+        <div class="field-group"><label>انتهاء التأمين</label><input type="date" id="insExpiry" name="insExpiry"></div>
+        <div class="field-group"><label>الحمولة المصرح بها (طن)</label><input type="text" id="payload" name="payload" placeholder="للنقل فقط"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTIONS 2-9 (inspection tables, tires, accessories, results, signatures) -->
+  <div class="section-card">
+    <div class="section-header-v"><div class="section-header-left"><div class="s-icon">🔍</div><h3>٢ - الفحص الخارجي للهيكل</h3></div><button class="section-all-ok-btn" onclick="markSectionOk('ext')">✅ كل سليم</button></div>
+    <div class="section-body"><table class="insp-table"><thead><tr><th>#</th><th>بند الفحص</th><th style="text-align:center;min-width:230px;">الحالة</th><th style="min-width:160px;">ملاحظات</th></tr></thead><tbody id="extBody"></tbody></table></div>
+  </div>
+  <div class="section-card">
+    <div class="section-header-v"><div class="section-header-left"><div class="s-icon">⚙️</div><h3>٣ - الفحص الميكانيكي</h3></div><button class="section-all-ok-btn" onclick="markSectionOk('mech')">✅ كل سليم</button></div>
+    <div class="section-body"><table class="insp-table"><thead><tr><th>#</th><th>بند الفحص</th><th style="text-align:center;min-width:230px;">الحالة</th><th style="min-width:160px;">ملاحظات</th></tr></thead><tbody id="mechBody"></tbody></table></div>
+  </div>
+  <div class="section-card">
+    <div class="section-header-v"><div class="section-header-left"><div class="s-icon">⚡</div><h3>٤ - الفحص الكهربائي</h3></div><button class="section-all-ok-btn" onclick="markSectionOk('elec')">✅ كل سليم</button></div>
+    <div class="section-body"><table class="insp-table"><thead><tr><th>#</th><th>بند الفحص</th><th style="text-align:center;min-width:230px;">الحالة</th><th style="min-width:160px;">ملاحظات</th></tr></thead><tbody id="elecBody"></tbody></table></div>
+  </div>
+  <div class="section-card">
+    <div class="section-header-v"><div class="section-header-left"><div class="s-icon">🔧</div><h3>٥ - فحص الإطارات والعجلات</h3></div></div>
+    <div class="section-body">
+      <div class="tires-grid" id="tiresGrid"></div>
+      <hr class="divider">
+      <div class="fields-grid cols-3" style="margin-top:16px;">
+        <div class="field-group"><label>الإطار الاحتياطي</label><select name="spareTire"><option value="">اختر...</option><option>موجود وجيد</option><option>موجود ومتهالك</option><option>غير موجود</option></select></div>
+        <div class="field-group"><label>المثلث العاكس</label><select name="triangle"><option value="">اختر...</option><option>موجود</option><option>غير موجود</option></select></div>
+        <div class="field-group"><label>طفاية الحريق</label><select name="fireExt"><option value="">اختر...</option><option>موجودة وصالحة</option><option>موجودة منتهية</option><option>غير موجودة</option></select></div>
+      </div>
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="section-header-v"><div class="section-header-left"><div class="s-icon">🪑</div><h3>٦ - الفحص الداخلي</h3></div><button class="section-all-ok-btn" onclick="markSectionOk('int')">✅ كل سليم</button></div>
+    <div class="section-body"><table class="insp-table"><thead><tr><th>#</th><th>بند الفحص</th><th style="text-align:center;min-width:230px;">الحالة</th><th style="min-width:160px;">ملاحظات</th></tr></thead><tbody id="intBody"></tbody></table></div>
+  </div>
+  <div class="section-card" id="transportSection">
+    <div class="section-header-v"><div class="section-header-left"><div class="s-icon">🚛</div><h3>٧ - بنود خاصة بمركبات النقل والمعدات</h3></div><button class="section-all-ok-btn" onclick="markSectionOk('trans')">✅ كل سليم</button></div>
+    <div class="section-body"><table class="insp-table"><thead><tr><th>#</th><th>بند الفحص</th><th style="text-align:center;min-width:230px;">الحالة</th><th style="min-width:160px;">ملاحظات</th></tr></thead><tbody id="transBody"></tbody></table></div>
+  </div>
+  <div class="section-card">
+    <div class="section-header-v"><div class="section-header-left"><div class="s-icon">📦</div><h3>٨ - الملحقات والوثائق</h3></div></div>
+    <div class="section-body">
+      <div class="fields-grid cols-4">
+        <div class="field-group"><label>دليل المالك</label><select name="ownerManual"><option value="">اختر...</option><option>موجود</option><option>غير موجود</option></select></div>
+        <div class="field-group"><label>كتالوج قطع الغيار</label><select name="partsCatalog"><option value="">اختر...</option><option>موجود</option><option>غير موجود</option></select></div>
+        <div class="field-group"><label>استمارة تسجيل</label><select name="regCard"><option value="">اختر...</option><option>موجودة وسارية</option><option>موجودة منتهية</option><option>غير موجودة</option></select></div>
+        <div class="field-group"><label>وثيقة التأمين</label><select name="insDoc"><option value="">اختر...</option><option>موجودة وسارية</option><option>موجودة منتهية</option><option>غير موجودة</option></select></div>
+        <div class="field-group"><label>مفاتيح إضافية (العدد)</label><input type="number" name="extraKeys" placeholder="0" min="0"></div>
+        <div class="field-group"><label>بطاقة رفع (جاكاوية)</label><select name="jackCard"><option value="">اختر...</option><option>موجود</option><option>غير موجود</option></select></div>
+        <div class="field-group"><label>مفتاح الإطارات</label><select name="tireWrench"><option value="">اختر...</option><option>موجود</option><option>غير موجود</option></select></div>
+        <div class="field-group"><label>جهاز GPS / تتبع</label><select name="gps"><option value="">اختر...</option><option>موجود وفعال</option><option>موجود غير فعال</option><option>غير موجود</option></select></div>
+      </div>
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="section-header-v"><div class="section-header-left"><div class="s-icon">📝</div><h3>٩ - النتيجة العامة والملاحظات</h3></div></div>
+    <div class="section-body">
+      <div style="margin-bottom:20px;">
+        <div style="font-size:0.8rem;font-weight:800;color:#64748b;margin-bottom:12px;text-transform:uppercase;letter-spacing:.04em;">الحكم العام على المركبة</div>
+        <div class="overall-status">
+          <div class="status-opt ok-v"><input type="radio" name="overallStatus" id="st-ok" value="مقبولة - جاهزة للتشغيل"><label for="st-ok">✅ مقبولة - جاهزة للتشغيل</label></div>
+          <div class="status-opt cond"><input type="radio" name="overallStatus" id="st-cond" value="مقبولة بشروط - تحتاج إصلاحات"><label for="st-cond">⚠️ مقبولة بشروط - تحتاج إصلاحات</label></div>
+          <div class="status-opt rej"><input type="radio" name="overallStatus" id="st-rej" value="مرفوضة - غير صالحة للتشغيل"><label for="st-rej">❌ مرفوضة - غير صالحة للتشغيل</label></div>
+        </div>
+      </div>
+      <div class="fields-grid cols-1">
+        <div class="field-group"><label>الملاحظات العامة والإجراءات المطلوبة</label><textarea name="generalNotes" rows="4" placeholder="اكتب ملاحظاتك وأي إجراءات مطلوبة..."></textarea></div>
+      </div>
+      <hr class="divider">
+      <div class="section-sub">التوقيعات</div>
+      <div class="sig-grid">
+        <div class="sig-box"><div class="sig-line"></div><label>الفاحص الميكانيكي</label><input type="text" name="sigMechanic" placeholder="الاسم"></div>
+        <div class="sig-box"><div class="sig-line"></div><label>المستلم</label><input type="text" name="sigReceiver" placeholder="الاسم"></div>
+        <div class="sig-box"><div class="sig-line"></div><label>المسؤول / المشرف</label><input type="text" name="sigSupervisor" placeholder="الاسم"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script is:inline>
+const EXT_ITEMS = [
+  {id:'ext1',label:'الهيكل العام - وجود صدمات أو تشويه'},{id:'ext2',label:'لون الطلاء - تجانس اللون وعدم وجود طلاء مجدد'},
+  {id:'ext3',label:'الباب الأمامي الأيمن'},{id:'ext4',label:'الباب الأمامي الأيسر'},
+  {id:'ext5',label:'الباب الخلفي الأيمن'},{id:'ext6',label:'الباب الخلفي الأيسر'},
+  {id:'ext7',label:'غطاء المحرك - سلامة الإقفال'},{id:'ext8',label:'الصندوق الخلفي / الكبوت'},
+  {id:'ext9',label:'الجناح الأمامي الأيمن'},{id:'ext10',label:'الجناح الأمامي الأيسر'},
+  {id:'ext11',label:'الجناح الخلفي الأيمن'},{id:'ext12',label:'الجناح الخلفي الأيسر'},
+  {id:'ext13',label:'المصد الأمامي - سلامة وتثبيت'},{id:'ext14',label:'المصد الخلفي - سلامة وتثبيت'},
+  {id:'ext15',label:'الزجاج الأمامي - شقوق أو كسر'},{id:'ext16',label:'الزجاج الخلفي'},
+  {id:'ext17',label:'زجاج الجانب الأيمن (كامل)'},{id:'ext18',label:'زجاج الجانب الأيسر (كامل)'},
+  {id:'ext19',label:'المرايا الجانبية - اتجاه وسلامة'},{id:'ext20',label:'المصابيح الأمامية (هيدلايت)'},
+  {id:'ext21',label:'الإشارات والأضواء الجانبية'},{id:'ext22',label:'المصابيح الخلفية والفرامل'},
+  {id:'ext23',label:'السقف ووجود صدأ أو تلف'},{id:'ext24',label:'الأرضية أسفل المركبة - صدأ أو تسريب'},
+];
+const MECH_ITEMS = [
+  {id:'m1',label:'مستوى زيت المحرك'},{id:'m2',label:'حالة زيت المحرك (اللون والرائحة)'},
+  {id:'m3',label:'مستوى ماء الرادياتير / سائل التبريد'},{id:'m4',label:'حالة الرادياتير - تسريب أو تآكل'},
+  {id:'m5',label:'سائل ناقل الحركة (جير)'},{id:'m6',label:'سائل الدريكسيون الهيدروليكي'},
+  {id:'m7',label:'سائل الفرامل'},{id:'m8',label:'سائل محور الزجاج'},
+  {id:'m9',label:'البطارية - الشحن والتثبيت'},{id:'m10',label:'حزام الميناتور / الداينمو'},
+  {id:'m11',label:'حزام التوقيت أو السلسلة (إن أمكن)'},{id:'m12',label:'آلية العادم والشكمان - تسريب أو صوت'},
+  {id:'m13',label:'الفرامل الأمامية (تآكل وسماكة)'},{id:'m14',label:'الفرامل الخلفية (تآكل وسماكة)'},
+  {id:'m15',label:'الفرامل اليدوية'},{id:'m16',label:'آلية التوجيه والدريكسيون'},
+  {id:'m17',label:'المشكات والروافد'},{id:'m18',label:'الصلبة والقضبان'},
+  {id:'m19',label:'جهاز التعليق الأمامي (مطاط ومساعد)'},{id:'m20',label:'جهاز التعليق الخلفي'},
+  {id:'m21',label:'ناقل الحركة / التروس - سلاسة التحويل'},{id:'m22',label:'الوصلات المرنة والأكسل'},
+  {id:'m23',label:'مضخة الوقود وخط الوقود'},{id:'m24',label:'فلتر الهواء - نظافة'},
+  {id:'m25',label:'فلتر الوقود - حالة'},{id:'m26',label:'آلية التكييف - ضغط الغاز'},
+  {id:'m27',label:'ضاغط التكييف (كمبريسور)'},
+];
+const ELEC_ITEMS = [
+  {id:'e1',label:'تشغيل المحرك - سلاسة الإقلاع'},{id:'e2',label:'مؤشرات لوحة القيادة'},
+  {id:'e3',label:'مؤشر الوقود'},{id:'e4',label:'مؤشر درجة حرارة المحرك'},
+  {id:'e5',label:'الضوء الأمامي القصير والبعيد'},{id:'e6',label:'أضواء الضباب (إن وجدت)'},
+  {id:'e7',label:'إشارات الانعطاف (4 زوايا)'},{id:'e8',label:'أضواء التحذير الطارئة (فلاشر)'},
+  {id:'e9',label:'أضواء الرجوع (النزول)'},{id:'e10',label:'بوق التنبيه'},
+  {id:'e11',label:'شاشة ووسائط الترفيه'},{id:'e12',label:'آلية مسح الزجاج (شبان الشاشة)'},
+  {id:'e13',label:'رافعات النوافذ الكهربائية'},{id:'e14',label:'مرايا كهربائية'},
+  {id:'e15',label:'آلية الإنذار من السرقة'},{id:'e16',label:'أجهزة الاستشعار (Park Sensors)'},
+  {id:'e17',label:'الشاحن والمقابس الداخلية'},
+];
+const INT_ITEMS = [
+  {id:'i1',label:'حالة المقاعد الأمامية - شقوق أو تمزق'},{id:'i2',label:'حالة المقاعد الخلفية'},
+  {id:'i3',label:'حزام الأمان (جميع المقاعد)'},{id:'i4',label:'السقف الداخلي والتنجيد'},
+  {id:'i5',label:'الأرضية وإسفنج الأرضية'},{id:'i6',label:'الكونسول والداشبورد - شقوق'},
+  {id:'i7',label:'مقود القيادة'},{id:'i8',label:'البداليات والكبة'},
+  {id:'i9',label:'عمل التكييف من الداخل'},{id:'i10',label:'فتحة السقف (إن وجدت)'},
+  {id:'i11',label:'نظافة الداخل العام'},
+];
+const TRANS_ITEMS = [
+  {id:'t1',label:'هيكل الصندوق / المقطورة - سلامة'},{id:'t2',label:'باب الصندوق الخلفي - إقفال وإغلاق'},
+  {id:'t3',label:'الرافعة الهيدروليكية (لوري القلاب)'},{id:'t4',label:'خزان الوقود الإضافي - تسريب'},
+  {id:'t5',label:'آلية الهواء المضغوط (الفرامل الهوائية)'},{id:'t6',label:'خزان الهواء وأنابيبه'},
+  {id:'t7',label:'الأرجل الدعامة (الجاك الجانبي للمقطورة)'},{id:'t8',label:'سلسلة/كوبلة ربط المقطورة'},
+  {id:'t9',label:'أضواء المقطورة / الصندوق'},{id:'t10',label:'الإطارات الوسطى (للشاحنات ذات المحور المزدوج)'},
+  {id:'t11',label:'صلابة الشاسيه وحمالات التعليق الخلفي'},{id:'t12',label:'آلية PTO (نقل القدرة) إن وجد'},
+  {id:'t13',label:'الرافعة / الأوناش إن وجدت'},{id:'t14',label:'الأقفاص والحواجز الداخلية للصندوق'},
+];
+const TIRE_POSITIONS = [
+  {id:'fl',label:'الأمامي الأيمن',icon:'↖'},{id:'fr',label:'الأمامي الأيسر',icon:'↗'},
+  {id:'rl',label:'الخلفي الأيمن',icon:'↙'},{id:'rr',label:'الخلفي الأيسر',icon:'↘'},
+];
+const SECTION_ITEMS = {ext:EXT_ITEMS,mech:MECH_ITEMS,elec:ELEC_ITEMS,int:INT_ITEMS,trans:TRANS_ITEMS};
+
+function makeRadios(id) {
+  return `<div class="radio-group">
+    <div class="radio-btn ok-v"><input type="radio" name="status_${id}" id="${id}_ok" value="سليم" onchange="updateSummary()"><label for="${id}_ok">✅ سليم</label></div>
+    <div class="radio-btn warn-v"><input type="radio" name="status_${id}" id="${id}_warn" value="يحتاج متابعة" onchange="updateSummary()"><label for="${id}_warn">⚠️ متابعة</label></div>
+    <div class="radio-btn bad-v"><input type="radio" name="status_${id}" id="${id}_bad" value="معطل" onchange="updateSummary()"><label for="${id}_bad">❌ معطل</label></div>
+    <div class="radio-btn na-v"><input type="radio" name="status_${id}" id="${id}_na" value="لا ينطبق" onchange="updateSummary()"><label for="${id}_na">— لا ينطبق</label></div>
+  </div>`;
+}
+function renderTable(tbodyId, items) {
+  document.getElementById(tbodyId).innerHTML = items.map((item,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td class="row-label">${item.label}</td>
+      <td>${makeRadios(item.id)}</td>
+      <td><input class="notes-input" type="text" name="notes_${item.id}" placeholder="ملاحظة..."></td>
+    </tr>`).join('');
+}
+function renderTires(positions) {
+  document.getElementById('tiresGrid').innerHTML = positions.map(t => `
+    <div class="tire-item">
+      <div class="tire-label">${t.icon} ${t.label}</div>
+      <div class="tire-fields">
+        <div class="field-group"><label>المقاس</label><input type="text" name="tire_size_${t.id}" placeholder="225/75R16"></div>
+        <div class="field-group"><label>العمق (ملم)</label><input type="number" name="tire_depth_${t.id}" placeholder="5" min="0" max="12" step="0.5"></div>
+        <div class="field-group"><label>الضغط (PSI)</label><input type="number" name="tire_pressure_${t.id}" placeholder="35" min="0" max="120"></div>
+        <div class="field-group"><label>الحالة</label><select name="tire_cond_${t.id}"><option value="">اختر...</option><option>جيد</option><option>مقبول</option><option>يحتاج تغيير</option></select></div>
+      </div>
+    </div>`).join('');
+}
+function updateSummary() {
+  const all = document.querySelectorAll('input[type="radio"][name^="status_"]:checked');
+  let ok=0,warn=0,bad=0,na=0;
+  all.forEach(r=>{if(r.value==='سليم')ok++;else if(r.value==='يحتاج متابعة')warn++;else if(r.value==='معطل')bad++;else if(r.value==='لا ينطبق')na++;});
+  document.getElementById('cnt-ok').textContent=ok;
+  document.getElementById('cnt-warn').textContent=warn;
+  document.getElementById('cnt-bad').textContent=bad;
+  document.getElementById('cnt-na').textContent=na;
+  const total=EXT_ITEMS.length+MECH_ITEMS.length+ELEC_ITEMS.length+INT_ITEMS.length+TRANS_ITEMS.length;
+  const done=ok+warn+bad+na;
+  const pct=Math.min(Math.round((done/total)*100),100);
+  document.getElementById('progressBar').style.width=pct+'%';
+  document.getElementById('progressLabel').textContent=pct+'%';
+}
+window.markAllOk = function() {
+  [...EXT_ITEMS,...MECH_ITEMS,...ELEC_ITEMS,...INT_ITEMS,...TRANS_ITEMS].forEach(item=>{
+    const r=document.getElementById(`${item.id}_ok`);if(r)r.checked=true;
+  });
+  updateSummary();showToast('✅ تم تحديد جميع البنود كسليم');
+}
+window.markSectionOk = function(sec) {
+  (SECTION_ITEMS[sec]||[]).forEach(item=>{const r=document.getElementById(`${item.id}_ok`);if(r)r.checked=true;});
+  updateSummary();showToast('✅ تم تحديد القسم كسليم');
+}
+function generateFormNumber() {
+  const now=new Date();
+  const num=`BZ-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(Math.floor(Math.random()*900)+100)}`;
+  document.getElementById('formNumber').textContent=num;
+  document.getElementById('formNo').value=num;
+}
+function setDefaultDateTime() {
+  const now=new Date();
+  document.getElementById('inspDate').value=now.toISOString().split('T')[0];
+  document.getElementById('inspTime').value=now.toTimeString().slice(0,5);
+  updateLiveDate();
+}
+window.updateLiveDate = function() { document.getElementById('liveDate').textContent=document.getElementById('inspDate').value||'---'; }
+window.toggleVehicleType = function() {
+  const val=document.querySelector('input[name="vehicleCategory"]:checked')?.value||'';
+  document.getElementById('transportSection').style.display=(val==='مركبة نقل'||val==='معدة ثقيلة'||val==='حافلة')?'':'none';
+}
+window.resetForm = function() {
+  if(!confirm('هل تريد مسح جميع البيانات وبدء نموذج جديد؟')) return;
+  document.querySelectorAll('input:not([type="radio"]):not([type="date"]):not([type="time"]),textarea,select').forEach(el=>el.value='');
+  document.querySelectorAll('input[type="radio"]').forEach(el=>el.checked=false);
+  document.getElementById('cat-admin').checked=true;
+  generateFormNumber();setDefaultDateTime();updateSummary();showToast('🔄 تم إنشاء نموذج جديد');
+}
+function getVal(name){const el=document.querySelector(`[name="${name}"]`);return el?(el.value||''):''}
+function getRadio(name){const el=document.querySelector(`input[name="${name}"]:checked`);return el?el.value:''}
+function showToast(msg){const c=document.getElementById('toastContainer'); if(!c) return; const t=document.createElement('div');t.className='toast-v';t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),3200);}
+
+// ============ IMPORT ============
+window.openImport = function(){document.getElementById('importOverlay').classList.add('active');}
+window.closeImport = function(){document.getElementById('importOverlay').classList.remove('active');}
+const dropZone=document.getElementById('dropZone');
+if (dropZone) {
+  dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('dragging');});
+  dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('dragging'));
+  dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('dragging');const f=e.dataTransfer.files[0];if(f)processImportFile(f);});
+}
+window.handleImportFile = function(event){const f=event.target.files[0];if(f)processImportFile(f);}
+function processImportFile(file) {
+  if(!file.name.match(/\.xlsx?$/i)){showToast('⚠️ يرجى اختيار ملف .xlsx صحيح');return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      const ws1=wb.Sheets['البيانات الأساسية'];
+      if(ws1){
+        const rows=XLSX.utils.sheet_to_json(ws1,{header:1,defval:''});
+        const fieldMap={'رقم النموذج':'formNo','تاريخ الفحص':'inspDate','وقت الفحص':'inspTime','الجهة / القسم':'department','رقم اللوحة':'plateNo','الماركة':'brand','الموديل':'model','سنة الصنع':'year','اللون':'color','رقم الهيكل (VIN)':'vin','رقم المحرك':'engineNo','نوع الوقود':'fuelType','العداد الحالي (كم)':'odometer','تاريخ آخر صيانة':'lastService','آخر صيانة عند (كم)':'lastServiceKm','انتهاء الرخصة':'licExpiry','المستلم من':'receivedFrom','المستلم':'receivedFrom','رقم وثيقة التأمين':'insNo','انتهاء التأمين':'insExpiry','الحمولة (طن)':'payload'};
+        rows.forEach(row=>{
+          if(row.length>=2){const key=String(row[0]).trim();const val=String(row[1]).trim();if(fieldMap[key]&&val){const el=document.getElementById(fieldMap[key])||document.querySelector(`[name="${fieldMap[key]}"]`);if(el)el.value=val;}if(key==='نوع المركبة'&&val){document.querySelectorAll('input[name="vehicleCategory"]').forEach(r=>{if(r.value===val)r.checked=true;});toggleVehicleType();}if(key==='الحكم على المركبة'&&val){document.querySelectorAll('input[name="overallStatus"]').forEach(r=>{if(r.value===val)r.checked=true;});}}
+        });
+      }
+      const ws2=wb.Sheets['نتائج الفحص'];
+      if(ws2){
+        const rows=XLSX.utils.sheet_to_json(ws2,{header:1,defval:''});
+        const allItems=[...EXT_ITEMS,...MECH_ITEMS,...ELEC_ITEMS,...INT_ITEMS,...TRANS_ITEMS];
+        const statusMap={'سليم':'_ok','يحتاج متابعة':'_warn','معطل':'_bad','لا ينطبق':'_na'};
+        rows.slice(1).forEach(row=>{
+          const label=String(row[1]||'').trim();const status=String(row[2]||'').trim();const notes=String(row[3]||'').trim();
+          const item=allItems.find(x=>x.label===label);
+          if(item&&status&&statusMap[status]){const r=document.getElementById(item.id+statusMap[status]);if(r)r.checked=true;}
+          if(item&&notes){const n=document.querySelector(`[name="notes_${item.id}"]`);if(n)n.value=notes;}
+        });
+      }
+      updateSummary();updateLiveDate();closeImport();showToast('✅ تم استيراد البيانات بنجاح!');
+    }catch(err){showToast('❌ خطأ في قراءة الملف');console.error(err);}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ============ DATA EXTRACTOR — New Feature ============
+window.openExtractor = function() {
+  document.getElementById('extractorResults').style.display='none';
+  document.getElementById('extractorResultsBody').innerHTML='';
+  document.getElementById('extractorFileInput').value='';
+  document.getElementById('extractorOverlay').classList.add('active');
+}
+window.closeExtractor = function(){document.getElementById('extractorOverlay').classList.remove('active');}
+
+const extDropZone=document.getElementById('extDropZone');
+if (extDropZone) {
+  extDropZone.addEventListener('dragover',e=>{e.preventDefault();extDropZone.classList.add('dragging');});
+  extDropZone.addEventListener('dragleave',()=>extDropZone.classList.remove('dragging'));
+  extDropZone.addEventListener('drop',e=>{e.preventDefault();extDropZone.classList.remove('dragging');const f=e.dataTransfer.files[0];if(f)processExtractorFile(f);});
+}
+window.handleExtractorFile = function(event){const f=event.target.files[0];if(f)processExtractorFile(f);}
+
+function processExtractorFile(file) {
+  if(!file.name.match(/\.xlsx?$/i)){showToast('⚠️ يرجى اختيار ملف Excel صحيح');return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true,raw:false});
+      const extracted=[];
+
+      // Strategy: try to find data across all sheets
+      // Look for columns matching our target fields using flexible header detection
+      const TARGET_FIELDS={
+        vehicleType:   ['نوع السيارة','نوع المركبة','نوع الاليه','نوع الآلية','نوع المركبه','vehicle type','type'],
+        plateNo:       ['رقم اللوحة','رقم اللوحه','لوحة','لوحه','plate','plate no','plate number'],
+        receiverName:  ['اسم المستلم','المستلم','مستلم','اسم المستخدم','receiver','received by','اسم المستلم من'],
+        chassisNo:     ['رقم الهيكل','رقم الشاسيه','رقم الشاسي','رقم هيكل','هيكل','chassis','vin','chassis no'],
+        department:    ['الجهة','الإدارة','الادارة','جهة','القسم','قسم','department','dept','الجهة / الإدارة'],
+      };
+
+      wb.SheetNames.forEach(sheetName=>{
+        const ws=wb.Sheets[sheetName];
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+        if(rows.length<2) return;
+
+        // Find header row (first row with multiple non-empty cells)
+        let headerRowIdx=-1;
+        let headerRow=[];
+        for(let i=0;i<Math.min(5,rows.length);i++){
+          const nonEmpty=rows[i].filter(c=>String(c).trim()!='');
+          if(nonEmpty.length>=2){headerRowIdx=i;headerRow=rows[i].map(h=>String(h||'').trim().toLowerCase());break;}
+        }
+        if(headerRowIdx<0) return;
+
+        // Map target fields to column indices
+        const colMap={};
+        Object.entries(TARGET_FIELDS).forEach(([field,aliases])=>{
+          const idx=headerRow.findIndex(h=>aliases.some(a=>h.includes(a.toLowerCase())));
+          if(idx>=0) colMap[field]=idx;
+        });
+
+        // Need at least 2 matching columns to proceed
+        if(Object.keys(colMap).length<2) return;
+
+        const dataRows=rows.slice(headerRowIdx+1).filter(r=>r.some(c=>String(c).trim()!=''));
+        dataRows.forEach((row,rowIdx)=>{
+          const rec={};
+          let hasData=false;
+          Object.entries(colMap).forEach(([field,colIdx])=>{
+            const val=String(row[colIdx]||'').trim();
+            if(val&&val!='undefined') {rec[field]=val;hasData=true;}
+            else rec[field]='—';
+          });
+          if(hasData) extracted.push({...rec, _sheet:sheetName, _row:rowIdx+1});
+        });
+      });
+
+      // Display results vertically stacked
+      const resultsDiv=document.getElementById('extractorResults');
+      const bodyDiv=document.getElementById('extractorResultsBody');
+      const titleDiv=document.getElementById('extractorResultsTitle');
+
+      if(!extracted.length){
+        bodyDiv.innerHTML='<div class="ext-empty">⚠️ لم يتم العثور على البيانات المطلوبة في الملف.<br>تأكد أن الملف يحتوي على أعمدة مناسبة (نوع السيارة، رقم اللوحة، المستلم، رقم الهيكل، الجهة).</div>';
+        titleDiv.textContent='النتائج';
+        resultsDiv.style.display='block';
+        return;
+      }
+
+      titleDiv.textContent=`تم استخراج ${extracted.length} سجل من الملف`;
+
+      const fieldLabels={vehicleType:'نوع السيارة',plateNo:'رقم اللوحة',receiverName:'اسم المستلم',chassisNo:'رقم الهيكل',department:'الجهة / الإدارة'};
+
+      bodyDiv.innerHTML=extracted.map((rec,i)=>`
+        <div class="ext-record">
+          <div class="ext-record-header">سجل ${i+1}${rec._sheet?' — ورقة: '+rec._sheet:''}</div>
+          ${Object.entries(fieldLabels).map(([key,label])=>`
+            <div class="ext-field">
+              <div class="ext-field-label">${label}</div>
+              <div class="ext-field-value">${rec[key]||'—'}</div>
+            </div>`).join('')}
+        </div>`).join('');
+
+      resultsDiv.style.display='block';
+      showToast(`✅ تم استخراج ${extracted.length} سجل بنجاح`);
+    }catch(err){showToast('❌ خطأ في معالجة الملف');console.error(err);}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ============ PDF / EXCEL EXPORT ============
+window.exportPDF = function(){showToast('📄 جاري تحضير PDF...');window.print();}
+window.exportExcel = function(){
+  const wb=XLSX.utils.book_new();
+  const plateno=getVal('plateNo')||'غير محدد';
+  const brand=getVal('brand')||'';const model=getVal('model')||'';
+  const info=[['Brandzo','توثيق فحص المركبات','',''],['Vehicle Inspection Report','',`المركبة: ${brand} ${model}`,''],['','','',''],['رقم النموذج',getVal('formNo'),'نوع المركبة',getRadio('vehicleCategory')],['تاريخ الفحص',getVal('inspDate'),'وقت الفحص',getVal('inspTime')],['الجهة / القسم',getVal('department'),'',''],['','','',''],['── بيانات المركبة ──','','',''],['رقم اللوحة',getVal('plateNo'),'الماركة',getVal('brand')],['الموديل',getVal('model'),'سنة الصنع',getVal('year')],['اللون',getVal('color'),'نوع الوقود',getVal('fuelType')],['رقم الهيكل (VIN)',getVal('vin'),'رقم المحرك',getVal('engineNo')],['','','',''],['── النتيجة العامة ──','','',''],['الحكم على المركبة',getRadio('overallStatus'),'',''],['الملاحظات العامة',document.querySelector('[name="generalNotes"]')?.value||'','',''],['','','',''],['الفاحص الميكانيكي',getVal('sigMechanic'),'المستلم',getVal('sigReceiver')],['المشرف',getVal('sigSupervisor'),'','']];
+  const ws1=XLSX.utils.aoa_to_sheet(info);ws1['!cols']=[{wch:30},{wch:28},{wch:30},{wch:28}];
+  XLSX.utils.book_append_sheet(wb,ws1,'البيانات الأساسية');
+  const allItems=[...EXT_ITEMS.map(x=>({...x,section:'الفحص الخارجي'})),...MECH_ITEMS.map(x=>({...x,section:'الفحص الميكانيكي'})),...ELEC_ITEMS.map(x=>({...x,section:'الفحص الكهربائي'})),...INT_ITEMS.map(x=>({...x,section:'الفحص الداخلي'})),...TRANS_ITEMS.map(x=>({...x,section:'مركبات النقل'}))];
+  const inspRows=[['Brandzo — نتائج الفحص الفني','','',''],['القسم','بند الفحص','الحالة','ملاحظات'],...allItems.map(item=>[item.section,item.label,getRadio(`status_${item.id}`)||'—',getVal(`notes_${item.id}`)])];
+  const ws2=XLSX.utils.aoa_to_sheet(inspRows);ws2['!cols']=[{wch:26},{wch:45},{wch:20},{wch:38}];
+  XLSX.utils.book_append_sheet(wb,ws2,'نتائج الفحص');
+  const tireRows=[['Brandzo — تقرير الإطارات','','','',''],['الإطار','المقاس','العمق (ملم)','الضغط (PSI)','الحالة'],...TIRE_POSITIONS.map(t=>[t.icon+' '+t.label,getVal(`tire_size_${t.id}`),getVal(`tire_depth_${t.id}`),getVal(`tire_pressure_${t.id}`),getVal(`tire_cond_${t.id}`)||'—'])];
+  const ws3=XLSX.utils.aoa_to_sheet(tireRows);ws3['!cols']=[{wch:24},{wch:18},{wch:16},{wch:16},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,ws3,'الإطارات');
+  const plateClean=plateno.replace(/\s/g,'-');const dateStr=getVal('inspDate')||new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb,`Brandzo_فحص_${plateClean}_${dateStr}.xlsx`);showToast('📊 تم تصدير Excel بنجاح!');
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  generateFormNumber();setDefaultDateTime();
+  renderTable('extBody',EXT_ITEMS);renderTable('mechBody',MECH_ITEMS);
+  renderTable('elecBody',ELEC_ITEMS);renderTable('intBody',INT_ITEMS);
+  renderTable('transBody',TRANS_ITEMS);renderTires(TIRE_POSITIONS);
+  toggleVehicleType();updateSummary();
+});
+</script>
+</DashboardLayout>

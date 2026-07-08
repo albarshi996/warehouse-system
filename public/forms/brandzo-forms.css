@@ -1,0 +1,439 @@
+/* ============================================================
+   BRANDZO FORMS — UNIFIED DESIGN SYSTEM v2.0
+   public/forms/brandzo-forms.css
+   Author: Mohammed Ibrahim Al-Barshi | Brandzo Hub 2026
+   ============================================================ */
+
+/* ─── 1. DESIGN TOKENS ──────────────────────────────────────── */
+:root {
+  /* Brand Colors */
+  --bz-red:        #c41e3a;
+  --bz-red-dark:   #7e2b2a;
+  --bz-red-light:  #f15a5b;
+  --bz-gold:       #DAAA3C;
+  --bz-gold-light: #f0c040;
+  --bz-orange:     #E84820;
+
+  /* Surface & Background */
+  --bz-bg-page:    #1a0008;           /* deep burgundy page bg */
+  --bz-bg-card:    #ffffff;           /* white card */
+  --bz-bg-card-alt:#faf8f6;          /* alternate card bg */
+  --bz-bg-header:  #2d0006;          /* section header bg */
+
+  /* Text */
+  --bz-text-primary:   #1a1a2a;      /* main body text — OPAQUE, never transparent */
+  --bz-text-secondary: #4a4a4a;      /* muted labels */
+  --bz-text-inverse:   #ffffff;      /* text on dark bg */
+  --bz-text-gold:      #DAAA3C;      /* accent headings */
+
+  /* Borders */
+  --bz-border:     #ddd3c8;
+  --bz-border-strong: #b0978a;
+
+  /* Spacing */
+  --bz-radius-sm:  6px;
+  --bz-radius-md:  10px;
+  --bz-radius-lg:  16px;
+
+  /* Typography */
+  --bz-font:       'Cairo', 'Segoe UI', Arial, sans-serif;
+  --bz-font-size-base: 13px;
+  --bz-line-height: 1.7;
+}
+
+/* ─── 2. RESET & BASE ───────────────────────────────────────── */
+/* Ensure ALL text is fully opaque by default — fix the transparency bug */
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: var(--bz-font);
+  font-size: var(--bz-font-size-base);
+  line-height: var(--bz-line-height);
+  color: var(--bz-text-primary);      /* ALWAYS opaque */
+  direction: rtl;
+}
+
+/* CRITICAL FIX: Kill all inherited opacity/transparency on text elements */
+p, span, td, th, li, label, input, textarea, select, h1, h2, h3, h4, h5, h6 {
+  color: inherit;
+  opacity: 1 !important;              /* override any accidental opacity */
+}
+
+/* ─── 3. FORM TABLE SYSTEM ─────────────────────────────────── */
+/* Shared table styles for ALL forms */
+.bz-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  background: var(--bz-bg-card);
+  border-radius: var(--bz-radius-md);
+  overflow: hidden;
+}
+.bz-table thead tr {
+  background: var(--bz-bg-header);
+  color: var(--bz-text-inverse);
+}
+.bz-table thead th {
+  padding: 10px 8px;
+  font-weight: 700;
+  font-size: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  white-space: nowrap;
+  color: var(--bz-text-inverse) !important;
+}
+.bz-table tbody tr:nth-child(even) {
+  background: var(--bz-bg-card-alt);
+}
+.bz-table tbody tr:hover {
+  background: #fff3f4;
+}
+.bz-table tbody td {
+  padding: 7px 8px;
+  border: 1px solid var(--bz-border);
+  color: var(--bz-text-primary) !important;
+  vertical-align: middle;
+}
+.bz-table tbody input,
+.bz-table tbody textarea,
+.bz-table tbody select {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: var(--bz-font);
+  font-size: 12px;
+  color: var(--bz-text-primary) !important;
+  outline: none;
+  padding: 2px 4px;
+}
+.bz-table tbody input:focus,
+.bz-table tbody textarea:focus {
+  background: #fff9e6;
+  border-radius: 3px;
+  outline: 2px solid var(--bz-gold);
+}
+
+/* Row flash animation on insert */
+@keyframes bz-row-flash {
+  0%   { background-color: #fff3cd; }
+  100% { background-color: transparent; }
+}
+.row-flash {
+  animation: bz-row-flash 0.6s ease-out;
+}
+
+/* Table scroll wrapper - enables horizontal scrolling for wide tables */
+.bz-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 12px 0;
+}
+.bz-table-wrapper table {
+  min-width: 100%;
+}
+
+/* ─── 4. BUTTON SYSTEM ─────────────────────────────────────── */
+.bz-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border: none;
+  border-radius: var(--bz-radius-sm);
+  cursor: pointer;
+  font-family: var(--bz-font);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.18s, transform 0.1s, box-shadow 0.18s;
+  text-decoration: none;
+}
+.bz-btn:active { transform: scale(0.97); }
+.bz-btn-add    { background: #1e7e34; color: #fff; }
+.bz-btn-add:hover { background: #155724; box-shadow: 0 2px 8px rgba(30,126,52,0.35); }
+.bz-btn-delete { background: #dc3545; color: #fff; }
+.bz-btn-delete:hover { background: #a71d2a; }
+.bz-btn-clear  { background: #6c757d; color: #fff; }
+.bz-btn-clear:hover { background: #495057; }
+.bz-btn-print  { background: var(--bz-red); color: #fff; }
+.bz-btn-print:hover { background: var(--bz-red-dark); box-shadow: 0 3px 12px rgba(196,30,58,0.4); }
+.bz-btn-excel  { background: #217346; color: #fff; }
+.bz-btn-excel:hover { background: #155a32; }
+
+.bz-table-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0 4px;
+  flex-wrap: wrap;
+}
+
+/* ─── 5. FORM FIELD SYSTEM ─────────────────────────────────── */
+.bz-field-group { margin-bottom: 14px; }
+.bz-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--bz-text-secondary);
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+.bz-input,
+.bz-textarea,
+.bz-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid var(--bz-border);
+  border-radius: var(--bz-radius-sm);
+  font-family: var(--bz-font);
+  font-size: 13px;
+  color: var(--bz-text-primary) !important;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.bz-input:focus,
+.bz-textarea:focus,
+.bz-select:focus {
+  border-color: var(--bz-red);
+  box-shadow: 0 0 0 3px rgba(196,30,58,0.12);
+  outline: none;
+}
+
+/* ─── 6. SECTION HEADINGS ──────────────────────────────────── */
+.bz-section-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--bz-red);
+  border-right: 4px solid var(--bz-gold);
+  padding-right: 10px;
+  margin: 18px 0 10px;
+  letter-spacing: -0.01em;
+}
+
+/* ─── 7. UNIVERSAL PRINT SYSTEM ────────────────────────────── */
+/* This replaces fragmented @media print blocks in each form */
+@media print {
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 12mm 10mm;
+  }
+  @page :first { margin-top: 8mm; }
+
+  /* Hide interactive controls */
+  .no-print,
+  .bz-btn,
+  .bz-table-actions,
+  [class*="btn"],
+  [class*="print-btn"],
+  [class*="excel-btn"],
+  .barcode-scanner-modal,
+  .modal-overlay {
+    display: none !important;
+  }
+
+  /* Body reset for print */
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 10.5pt !important;
+    line-height: 1.6 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* ALL text must be black and fully opaque on print */
+  *, *::before, *::after {
+    color: #000 !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+    background-attachment: scroll !important;
+  }
+
+  /* Cards become borderless white blocks */
+  .bz-card, .form-card, [class*="card"], [class*="section"] {
+    background: #ffffff !important;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    break-inside: avoid;
+  }
+
+  /* Tables */
+  .bz-table, table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 9.5pt !important;
+    page-break-inside: auto;
+  }
+  .bz-table thead tr,
+  table thead tr {
+    background: #1a0008 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .bz-table thead th,
+  table thead th {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 9pt !important;
+    padding: 6px 5px !important;
+    border: 1px solid #999 !important;
+  }
+  .bz-table tbody td,
+  table tbody td {
+    padding: 5px !important;
+    border: 1px solid #bbb !important;
+    color: #000 !important;
+    font-size: 9pt !important;
+    vertical-align: top !important;
+  }
+  tr { page-break-inside: avoid; }
+  thead { display: table-header-group; }
+
+  /* Header / Logo area */
+  .brandzo-header, .luxury-header, .print-header {
+    display: flex !important;
+    break-inside: avoid;
+    margin-bottom: 10px;
+  }
+
+  /* Show print-only elements */
+  .print-only { display: block !important; }
+
+  /* Inputs become plain text on print */
+  input, textarea, select {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    min-height: unset !important;
+    color: #000 !important;
+  }
+
+  /* Section titles */
+  .bz-section-title {
+    color: #000 !important;
+    border-right-color: #555 !important;
+  }
+
+  /* Signature lines */
+  .signature-line {
+    border-bottom: 1px solid #000 !important;
+    min-width: 120px;
+    display: inline-block;
+  }
+
+  /* Page footer */
+  .print-footer {
+    position: fixed;
+    bottom: 6mm;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 8pt;
+    color: #555 !important;
+    border-top: 1px solid #ccc;
+    padding-top: 4px;
+  }
+}
+
+/* ─── 8. MOBILE RESPONSIVENESS & iOS ZOOM FIX (إضافي — غير تدميري) ─
+   يُطبَّق على كل النماذج عبر الـ CSS المشترك. لا يؤثر على الطباعة
+   (محصور في max-width:767px فقط) ولا يغيّر أي قاعدة قائمة.
+   ──────────────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* منع تكبير iOS التلقائي عند الكتابة/المسح داخل الحقول */
+  .bz-input, .bz-textarea, .bz-select,
+  input[type="text"], input[type="number"], input[type="search"],
+  input[type="tel"], input[type="date"], input:not([type]) {
+    font-size: 16px !important;
+  }
+  .bz-table tbody input,
+  .bz-table tbody textarea,
+  .bz-table tbody select {
+    font-size: 16px !important;
+  }
+
+  /* أزرار أكبر وأسهل باللمس، وتوزيع مريح */
+  .bz-btn { padding: 11px 18px; font-size: 14px; }
+  .bz-table-actions { gap: 10px; }
+  .bz-table-actions .bz-btn { flex: 1 1 auto; justify-content: center; }
+
+  /* جداول مريحة على الشاشات الصغيرة */
+  .bz-table thead th { padding: 9px 6px; }
+  .bz-table tbody td  { padding: 9px 6px; }
+
+  /* ضمان تمرير أفقي آمن للجداول العريضة (لا تكسر التخطيط) */
+  .bz-table-wrapper { -webkit-overflow-scrolling: touch; }
+
+  /* مسافة أوضح بين مجموعات الحقول */
+  .bz-field-group { margin-bottom: 16px; }
+}
+
+/* ─── 9. UNIFIED LETTERHEAD FOOTER (شريط التواصل الموحّد) ─────────
+   يُحقن عبر brandzo-letterhead.js على كل النماذج. تصميم موحّد
+   للشاشة والطباعة/الـ PDF. إضافي بالكامل.
+   ──────────────────────────────────────────────────────────────── */
+.bz-contact-footer {
+  width: 100%;
+  margin-top: 20px;
+  background: var(--bz-bg-card);
+  border-radius: 0 0 var(--bz-radius-md) var(--bz-radius-md);
+  overflow: hidden;
+}
+.bz-contact-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px 28px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--bz-border);
+}
+.bz-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--bz-text-primary);
+}
+.bz-ci-icon {
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  background: var(--bz-red-light);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+.bz-ci-icon svg { width: 14px; height: 14px; fill: #fff; }
+.bz-ci-text { color: var(--bz-text-primary); text-decoration: none; }
+a.bz-ci-text:hover { color: var(--bz-red); }
+
+/* الأشرطة الحمراء السفلية (تطابق الترويسة) */
+.bz-footer-bars { display: flex; align-items: center; height: 16px; }
+.bz-bar-dark   { height: 16px; flex: 1; background: var(--bz-red-dark); }
+.bz-bar-blocks { display: flex; gap: 5px; margin: 0 12px; }
+.bz-bar-blocks span { width: 10px; height: 22px; background: var(--bz-red-light); }
+.bz-bar-grad   { height: 16px; flex: 1; background: linear-gradient(90deg, var(--bz-red-light), var(--bz-red)); }
+
+/* ضمان ظهور ألوان التذييل عند الطباعة / حفظ PDF */
+@media print {
+  .bz-contact-footer,
+  .bz-ci-icon, .bz-bar-dark, .bz-bar-blocks span, .bz-bar-grad {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .bz-contact-footer { background: #fff !important; break-inside: avoid; margin-top: 12px; }
+  .bz-contact-row { border-top: 1px solid #ccc !important; padding: 10px 12px; }
+  .bz-contact-item { font-size: 9.5pt; color: #1a1a2a !important; }
+  .bz-ci-text { color: #1a1a2a !important; }
+  .bz-ci-icon      { background: var(--bz-red-light) !important; }
+  .bz-ci-icon svg  { fill: #fff !important; }
+  .bz-bar-dark     { background: var(--bz-red-dark) !important; }
+  .bz-bar-blocks span { background: var(--bz-red-light) !important; }
+  .bz-bar-grad     { background: var(--bz-red) !important; }
+}
