@@ -47,6 +47,9 @@ This project follows a specific structure to separate source code from static as
     - **Document Workflows**: Implemented role-based workflow visualization with URL hash routing.
     - **Smart Forms & Barcode Support**: Integrated `formUtils.js` across all 19 static forms for `localStorage` draft saving and improved barcode scanner compatibility (high-speed input capture).
     - **Visual Identity**: Standardized Crimson-Gold glassmorphism and neon glow aesthetics across the UI.
+- **Odoo Integration Layer (Phase 11 — initial)**: Added a proxy-agnostic Odoo client under `src/services/odoo/` (`authenticate / searchRead / create / write / unlink`) that mirrors the existing Firestore service style. Ships alongside — not replacing — the Firestore layer. Includes an offline **mock client** (`mockOdooClient.js`), a **field mapper** (`odooMapper.js`) mapping Odoo ↔ `Items_Master`/log shapes, an env-driven **mode switch** (`PUBLIC_ODOO_MODE`), and two reference server-side proxies under `/odoo-proxy` (Cloudflare Worker + Firebase Function). See the _Odoo Integration_ section below.
+- **Excel Import/Export Gateway**: Added `src/services/excel/` (SheetJS-based) for reading `.xlsx` into the canonical `Items_Master` / `Inbound_Log` / `Outbound_Log` shapes with header-alias resolution + full validation and an error report, and for exporting those datasets (plus blank templates) back to `.xlsx`. See the _Excel Import/Export_ section below.
+- **Odoo Training Simulator**: New `src/pages/dashboard/training.astro` — a safe sandbox that exercises the full Odoo data flow and the Excel gateway against fixed mock data. It imports the mock client **directly**, so it can never touch real Odoo or Firestore.
 
 ---
 
@@ -60,10 +63,105 @@ This project follows a specific structure to separate source code from static as
 - **Quality & CI (Phase 8)**: Vitest + Playwright smoke tests, Sentry, lint/build PR gates.
 - **Auth & Security Rules (Phase 9)**: Re-introduce Firebase Auth + Firestore Security Rules once the operational forms are stable.
 - **Production Readiness (Phase 10)**: dev/prod Firebase split, custom domain, user guide.
+- **Odoo Go-Live (Phase 11 — remaining)**: Deploy one of the reference proxies in `/odoo-proxy`, set `PUBLIC_ODOO_PROXY_URL` + `PUBLIC_ODOO_MODE=production`, confirm the model/method allowlist matches real usage, and adopt the `odoo` client in the pages that should read/write Odoo. Map real Odoo stock models (`stock.quant`, `stock.move`) for live balances.
+- **Excel Wiring (Phase 11 — remaining)**: Connect the validated import rows to real writes (Firestore `itemService`/`inventoryService` or Odoo `create/write`) behind a confirm-and-commit step, and add export buttons to the live inventory pages.
 
 ---
 
-## 5. Local Development
+## 5. Odoo Integration
+
+The frontend is a **static** GitHub Pages site, so Odoo credentials must never
+be shipped to the browser (they are real secrets, unlike the public Firebase web
+keys), and Odoo's `/jsonrpc` endpoint sends no CORS headers. Therefore all Odoo
+calls go through a small **server-side proxy** that holds the secrets.
+
+### Architecture
+
+```
+Browser (Astro/React, GitHub Pages)
+        │   PUBLIC_ODOO_MODE = production
+        ▼
+src/services/odoo/odooClient.js  ──POST──►  Proxy (/odoo-proxy)
+   authenticate / searchRead /              • injects ODOO_DB / USER / API_KEY
+   create / write / unlink                  • enforces model+method allowlist
+                                            • CORS for the Pages origin
+                                                    │
+                                                    ▼
+                                            Odoo JSON-RPC (execute_kw)
+```
+
+In **training** mode (`PUBLIC_ODOO_MODE` unset or `training`) the same interface
+is served by `src/services/odoo/mockOdooClient.js` entirely in-browser — no proxy,
+no network, no Firestore.
+
+Pages import the mode-switched client and never care which is active:
+
+```js
+import { odoo } from '../services/odoo/index.js';
+const items = await odoo.searchRead('product.product', [], ['default_code', 'name']);
+```
+
+### Environment variables
+
+| Variable | Where | Purpose |
+| --- | --- | --- |
+| `PUBLIC_ODOO_MODE` | frontend (`.env`) | `training` (default) or `production` |
+| `PUBLIC_ODOO_PROXY_URL` | frontend (`.env`) | proxy endpoint (production only) |
+| `ODOO_URL` / `ODOO_DB` / `ODOO_USER` / `ODOO_API_KEY` | **proxy secret store only** | injected by the proxy; **never** `PUBLIC_`, never committed |
+
+### Training mode
+
+Open **`/dashboard/training`** (sidebar → “تدريب Odoo (محاكي)”). It runs the full
+Odoo flow (search/create/edit/delete) and the Excel import/export against fixed
+mock data, and is hard-wired to the mock client so it can never reach real Odoo
+or Firestore. Reload the page to reset the sandbox.
+
+To go live, deploy a proxy from `/odoo-proxy` (Cloudflare Worker recommended, or
+Firebase Function) and set `PUBLIC_ODOO_MODE=production` + `PUBLIC_ODOO_PROXY_URL`.
+
+---
+
+## 6. Excel Import/Export
+
+`src/services/excel/` wraps SheetJS (`xlsx`, already a dependency) to move data
+between `.xlsx` files and the app's canonical shapes — the SAME fields used by
+Firestore and the Odoo mapper (`sku`, `nameAr`, `balance`, `minStock`, log
+`itemCode`/`qty`, …), so imported rows flow straight into either backend.
+
+### Import
+
+```js
+import { importSheet } from '../services/excel/excelImport.js';
+
+const report = await importSheet(file, 'items'); // 'items' | 'inbound' | 'outbound'
+// report = { ok, rows, errors:[{ row, column, message }], summary }
+```
+
+- Resolves headers by **Arabic/English aliases** (e.g. `الكود`, `SKU`, `default_code` → `sku`).
+- Validates **before** anything is written: missing required columns, non-numeric
+  or negative numbers, empty required cells, duplicate SKUs — each reported with
+  its row number. Only clean rows appear in `report.rows`.
+
+### Export
+
+```js
+import { exportItemsMaster, exportInboundLog, exportOutboundLog, exportTemplate }
+  from '../services/excel/excelExport.js';
+
+exportItemsMaster(items);      // downloads Brandzo_items.xlsx
+exportTemplate('inbound');     // downloads a blank, correctly-headed template
+```
+
+Exports use the schema's Arabic headers and column order, so an exported file
+re-imports cleanly (round-trip safe). Try it end-to-end on the training page.
+
+> The legacy per-form Excel export in `public/formUtils.js` (the green “تصدير إلى
+> إكسيل” button on the 19 static forms) is unchanged; the new gateway is the
+> structured, validated path for dataset-level import/export.
+
+---
+
+## 7. Local Development
 
 **Prerequisites:** Node.js 22+ and npm 10+.
 
@@ -103,6 +201,6 @@ For the deployed GitHub Pages build, the workflow reads matching `secrets.PUBLIC
 
 ---
 
-## 6. How to Update this README
+## 8. How to Update this README
 
 Any AI tool or developer working on this project **must** update the **'Current State'** and **'Roadmap'** sections whenever a new feature is completed or a new milestone is reached. This file serves as the "Source of Truth" for the project's progress.
