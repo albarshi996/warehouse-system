@@ -1,0 +1,16 @@
+# Copy to `wrangler.toml`, then:
+#   wrangler secret put ODOO_URL
+#   wrangler secret put ODOO_DB
+#   wrangler secret put ODOO_USER
+#   wrangler secret put ODOO_API_KEY
+#   wrangler deploy
+#
+# Secrets are NEVER stored in this file — only the non-secret allowed origin is.
+
+name = "brandzo-odoo-proxy"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[vars]
+# The exact origin of the deployed frontend (GitHub Pages). No trailing slash.
+ALLOWED_ORIGIN = "https://albarshi996.github.io"
