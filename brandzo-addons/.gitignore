@@ -1,0 +1,5 @@
+# Python bytecode / caches (Odoo generates these at runtime)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

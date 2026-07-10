@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- تطبيق Brandzo الجذر -->
+    <menuitem id="menu_bz_root" name="Brandzo"
+              sequence="5"
+              groups="brandzo_warehouse.group_bz_warehouse_user"/>
+
+    <!-- المجموعة الأولى من الدورة: الشراء والتعاقد (المرحلتان 01–02) -->
+    <menuitem id="menu_bz_purchase" name="دورة الشراء والتعاقد"
+              parent="menu_bz_root" sequence="10"/>
+
+    <menuitem id="menu_bz_pr" name="طلبات الشراء (PR)"
+              parent="menu_bz_purchase" sequence="10"
+              action="purchase_requisition.action_purchase_requisition"/>
+
+    <menuitem id="menu_bz_po" name="أوامر الشراء (PO)"
+              parent="menu_bz_purchase" sequence="20"
+              action="purchase.purchase_form_action"/>
+</odoo>

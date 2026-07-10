@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- فئة أذونات Brandzo (تظهر في إعدادات المستخدمين) -->
+    <record id="module_category_brandzo" model="ir.module.category">
+        <field name="name">Brandzo Warehouse</field>
+        <field name="description">أدوار الدورة المستندية اللوجستية لـ Brandzo.</field>
+        <field name="sequence">20</field>
+    </record>
+
+    <!-- المجموعة الأساس: مستخدم المستودع -->
+    <record id="group_bz_warehouse_user" model="res.groups">
+        <field name="name">Brandzo / مستخدم المستودع</field>
+        <field name="category_id" ref="module_category_brandzo"/>
+    </record>
+
+    <!-- مدير المشتريات: يملك اعتماد طلبات الشراء (PR) -->
+    <record id="group_bz_purchase_manager" model="res.groups">
+        <field name="name">Brandzo / مدير المشتريات</field>
+        <field name="category_id" ref="module_category_brandzo"/>
+        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
+    </record>
+</odoo>

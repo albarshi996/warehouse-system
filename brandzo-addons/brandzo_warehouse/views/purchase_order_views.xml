@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- المرحلة 02: عرض اعتماد طلب الشراء المصدر على أمر الشراء -->
+    <record id="view_bz_purchase_order_form" model="ir.ui.view">
+        <field name="name">bz.purchase.order.form</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!-- بطاقة ملوّنة بجانب حالة أمر الشراء (تظهر فقط إن كان متفرّعاً عن PR) -->
+            <field name="state" position="before">
+                <field name="bz_requisition_approval" widget="badge"
+                       decoration-danger="bz_requisition_approval == 'draft'"
+                       decoration-warning="bz_requisition_approval == 'to_approve'"
+                       decoration-success="bz_requisition_approval == 'approved'"
+                       invisible="not bz_requisition_approval"/>
+            </field>
+        </field>
+    </record>
+</odoo>

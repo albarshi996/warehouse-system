@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- المرحلة 01: حوكمة اعتماد Brandzo على نموذج طلب الشراء -->
+    <record id="view_bz_purchase_requisition_form" model="ir.ui.view">
+        <field name="name">bz.purchase.requisition.form</field>
+        <field name="model">purchase.requisition</field>
+        <field name="inherit_id" ref="purchase_requisition.view_purchase_requisition_form"/>
+        <field name="arch" type="xml">
+
+            <!-- أزرار سير الاعتماد قبل زر "تأكيد" القياسي -->
+            <button name="action_confirm" position="before">
+                <button name="action_bz_submit" type="object"
+                        string="رفع للموافقة" class="btn-primary"
+                        invisible="bz_approval_state != 'draft'"/>
+                <button name="action_bz_approve" type="object"
+                        string="اعتماد الطلب" class="btn-primary"
+                        invisible="bz_approval_state != 'to_approve'"
+                        groups="brandzo_warehouse.group_bz_purchase_manager"/>
+                <button name="action_bz_reset_approval" type="object"
+                        string="سحب الاعتماد"
+                        invisible="bz_approval_state != 'approved'"
+                        groups="brandzo_warehouse.group_bz_purchase_manager"/>
+            </button>
+
+            <!-- شريط حالة الاعتماد (ذهبي: قيد الموافقة، أخضر: معتمد) -->
+            <field name="state" position="before">
+                <field name="bz_approval_state" widget="statusbar"
+                       statusbar_visible="draft,to_approve,approved"/>
+            </field>
+
+            <!-- بيانات الاعتماد تظهر بعد الاعتماد -->
+            <field name="reference" position="after">
+                <field name="bz_approved_by" readonly="1"
+                       invisible="bz_approval_state != 'approved'"/>
+                <field name="bz_approval_date" readonly="1"
+                       invisible="bz_approval_state != 'approved'"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- إظهار حالة اعتماد Brandzo كعمود في قائمة الطلبات -->
+    <record id="view_bz_purchase_requisition_tree" model="ir.ui.view">
+        <field name="name">bz.purchase.requisition.list</field>
+        <field name="model">purchase.requisition</field>
+        <field name="inherit_id" ref="purchase_requisition.view_purchase_requisition_tree"/>
+        <field name="arch" type="xml">
+            <field name="state" position="before">
+                <field name="bz_approval_state" widget="badge"
+                       decoration-warning="bz_approval_state == 'to_approve'"
+                       decoration-success="bz_approval_state == 'approved'"
+                       decoration-muted="bz_approval_state == 'draft'"/>
+            </field>
+        </field>
+    </record>
+</odoo>
