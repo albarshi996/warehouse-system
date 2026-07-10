@@ -1,0 +1,84 @@
+/**
+ * Odoo Enterprise UI clone — design tokens, app registry, and seed data.
+ * ─────────────────────────────────────────────────────────────────────────
+ * A high-fidelity, offline training replica of the Odoo Enterprise interface.
+ * The clone renders LTR/English (like the real system) inside the RTL Arabic
+ * portal, so trainees recognise the exact screens they will use in production.
+ *
+ * القاعدة الذهبية: لا حذف — هذه وحدة جديدة بالكامل (odoo-sim) تُكمّل محاكي
+ * الدورة المستندية القائم (training) ولا تمسّه.
+ */
+
+/* ── Odoo design tokens (approximate Enterprise palette) ─────────────────── */
+export const ODOO = {
+  purple: '#714B67',      // Odoo brand aubergine — primary buttons / active state
+  purpleDark: '#5c3d54',
+  purpleSoft: '#f3eef2',  // active menu-item background
+  contentBg: '#f5f5f5',   // app content background (gray)
+  border: '#dee2e6',      // sheet / panel borders
+  borderSoft: '#efefef',
+  text: '#374151',
+  muted: '#8f8f8f',
+  green: '#28a745',
+  teal: '#17a2b8',
+};
+
+/* ── The three core apps and their left-sidebar menus ───────────────────── */
+export const APPS = [
+  {
+    id: 'purchase',
+    name: 'Purchase',
+    icon: '🛒',
+    color: '#714B67',
+    activeItem: 'Purchase Orders',
+    menu: [
+      { section: 'Orders', items: ['Requests for Quotation', 'Purchase Orders', 'Purchase Agreements', 'Vendors'] },
+      { section: 'Products', items: ['Products', 'Product Variants'] },
+      { section: 'Reporting', items: ['Purchase'] },
+      { section: 'Configuration', items: ['Settings'] },
+    ],
+  },
+  {
+    id: 'inventory',
+    name: 'Inventory',
+    icon: '📦',
+    color: '#00A09D',
+    activeItem: 'Receipts',
+    menu: [
+      { section: 'Overview', items: ['Dashboard'] },
+      { section: 'Operations', items: ['Transfers', 'Receipts', 'Delivery Orders', 'Internal Transfers'] },
+      { section: 'Products', items: ['Products', 'Lots/Serial Numbers'] },
+      { section: 'Reporting', items: ['Stock', 'Moves History'] },
+      { section: 'Configuration', items: ['Settings', 'Putaway Rules'] },
+    ],
+  },
+  {
+    id: 'accounting',
+    name: 'Accounting',
+    icon: '💰',
+    color: '#5B899E',
+    activeItem: 'Bills',
+    menu: [
+      { section: 'Vendors', items: ['Bills', 'Refunds', 'Payments', 'Vendors'] },
+      { section: 'Customers', items: ['Invoices', 'Payments'] },
+      { section: 'Reporting', items: ['Balance Sheet', 'Profit and Loss'] },
+      { section: 'Configuration', items: ['Settings'] },
+    ],
+  },
+];
+
+/* ── Seed record: one sample Purchase Order (mirrors the training product) ── */
+export const SAMPLE_PO = {
+  name: 'P00042',
+  vendor: 'Gulf Cosmetics Labs — مختبرات الخليج للتجميل',
+  vendorRef: 'BID/2026/0155',
+  orderDeadline: '2026-07-14 10:00:00',
+  receiptDate: '2026-07-16',
+  buyer: 'Mohammed Al-Barshi',
+  company: 'Brandzo Hub',
+  paymentTerms: '30 Days',
+  currency: 'SAR',
+  lines: [
+    { product: '[BZ-VCS-30] Vitamin C Serum 30ml — سيروم فيتامين C', qty: 200, uom: 'Units', price: 123.5, tax: '15%' },
+  ],
+};
