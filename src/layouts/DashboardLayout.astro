@@ -8,29 +8,71 @@ const base = import.meta.env.BASE_URL.endsWith('/')
   ? import.meta.env.BASE_URL.slice(0, -1)
   : import.meta.env.BASE_URL;
 
-const navItems = [
-  { href: `${base}/dashboard`, label: 'الرئيسية', icon: 'grid' },
-  { href: `${base}/dashboard/workflows`, label: 'الهيكل والمسارات', icon: 'workflows' },
-  { href: `${base}/تقرير-المقارنة-العالمية.html`, label: 'المقارنة العالمية', icon: 'grid', external: true },
-  { href: `${base}/dashboard/erp-workflows`, label: 'دورات العمل ERP', icon: 'dollarSign' },
-  { href: `${base}/dashboard/odoo-installation`, label: 'تثبيت أودو', icon: 'package' },
-  { href: `${base}/dashboard/training`, label: 'تدريب Odoo (محاكي)', icon: 'grid' },
-  { href: `${base}/dashboard/forms`, label: 'اختار وظيفتك', icon: 'clipboardList' },
-  { href: `${base}/dashboard/assets-inventory`, label: 'جرد الأصول', icon: 'clipboardList' },
-  { href: `${base}/dashboard/vehicles-inventory`, label: 'جرد المركبات', icon: 'package' },
-  { href: `${base}/dashboard/warehouses`, label: 'المستودعات', icon: 'package' },
-  { href: `${base}/dashboard/warehouse-maps`, label: 'الخرائط الفنية', icon: 'warehouse' },
-  { href: `${base}/تقرير-تحوير-مستودعات-155.html`, label: 'تقرير تحوير 155', icon: 'clipboardList', external: true },
-  { href: `${base}/dashboard/cold-storage-plan`, label: 'مخطط الرحبة - كوزميتك', icon: 'package' },
-  { href: `${base}/dashboard/products`, label: 'الأصناف', icon: 'package' },
-  { href: `${base}/dashboard/grn`, label: 'استلام البضاعة', icon: 'arrowDownTray' },
-  { href: `${base}/dashboard/tasks`, label: 'المهام', icon: 'clipboardList' },
-  { href: `${base}/dashboard/retail-hub`, label: 'خريطة التجزئة', icon: 'mapPin' },
-  { href: `${base}/dashboard/meeting-assistant`, label: 'مساعد الاجتماعات', icon: 'grid' },
-  { href: `${base}/dashboard/development-proposals`, label: 'مقترحات التطوير', icon: 'clipboardList' },
-  { href: `${base}/تقرير-الانجاز.html`, label: 'تقرير الانجاز', icon: 'clipboardList', external: true },
-  { href: `${base}/dashboard/gallery`, label: 'معرض التوثيق المرئي', icon: 'image' },
-  { href: `${base}/تقرير-الدورة-المستندية-الكامل-2026.html`, label: 'الدورة المستندية والتنظيم', icon: 'clipboardList', external: true },
+// عنصر مثبّت أعلى القائمة (خارج المجموعات)
+const pinnedItem = { href: `${base}/dashboard`, label: 'الرئيسية', icon: 'grid' };
+
+// ─── الدفعة 4: القائمة الجانبية مجمّعة في مجموعات منطقية ─────────────────────
+// القاعدة الذهبية: لا حذف — كل الروابط القائمة أُعيد تنظيمها في مجموعات، وأُضيف
+// رابطا "مركز التقارير" و"الأرشيف التأسيسي" اللذان لم يكونا مربوطَين في القائمة.
+// الترتيب: الأكثر استخداماً يومياً في الأعلى ← المرجعي/التأسيسي في الأسفل.
+const navGroups = [
+  {
+    group: 'العمليات اليومية',
+    emoji: '🗓️',
+    items: [
+      { href: `${base}/dashboard/forms`, label: 'اختار وظيفتك', icon: 'clipboardList' },
+      { href: `${base}/dashboard/grn`, label: 'استلام البضاعة', icon: 'arrowDownTray' },
+      { href: `${base}/dashboard/tasks`, label: 'المهام', icon: 'clipboardList' },
+      { href: `${base}/dashboard/products`, label: 'الأصناف', icon: 'package' },
+      { href: `${base}/عمليات-مخزنية.html`, label: 'عمليات مخزنية', icon: 'package', external: true },
+    ],
+  },
+  {
+    group: 'المستودعات والجرد',
+    emoji: '📦',
+    items: [
+      { href: `${base}/dashboard/warehouses`, label: 'المستودعات', icon: 'package' },
+      { href: `${base}/dashboard/warehouse-maps`, label: 'الخرائط الفنية', icon: 'warehouse' },
+      { href: `${base}/dashboard/cold-storage-plan`, label: 'مخطط الرحبة - كوزميتك', icon: 'package' },
+      { href: `${base}/dashboard/retail-hub`, label: 'خريطة التجزئة', icon: 'mapPin' },
+      { href: `${base}/dashboard/assets-inventory`, label: 'جرد الأصول', icon: 'clipboardList' },
+      { href: `${base}/dashboard/vehicles-inventory`, label: 'جرد المركبات', icon: 'package' },
+    ],
+  },
+  {
+    group: 'دورات أودو والمحاكاة',
+    emoji: '🔄',
+    items: [
+      { href: `${base}/dashboard/workflows`, label: 'الهيكل والمسارات', icon: 'workflows' },
+      { href: `${base}/dashboard/erp-workflows`, label: 'دورات العمل ERP', icon: 'dollarSign' },
+      { href: `${base}/dashboard/odoo-installation`, label: 'تثبيت أودو', icon: 'package' },
+      { href: `${base}/dashboard/training`, label: 'تدريب Odoo (محاكي)', icon: 'grid' },
+    ],
+  },
+  {
+    group: 'مركز التقارير',
+    emoji: '📊',
+    items: [
+      { href: `${base}/dashboard/reports`, label: 'مركز التقارير', icon: 'clipboardList', pinned: true },
+      { href: `${base}/تقرير-المقارنة-العالمية.html`, label: 'المقارنة العالمية', icon: 'grid', external: true },
+      { href: `${base}/تقرير-تحوير-مستودعات-155.html`, label: 'تقرير تحوير 155', icon: 'clipboardList', external: true },
+      { href: `${base}/تقرير-الدورة-المستندية-الكامل-2026.html`, label: 'الدورة المستندية والتنظيم', icon: 'clipboardList', external: true },
+      { href: `${base}/تقرير-الانجاز.html`, label: 'تقرير الانجاز', icon: 'clipboardList', external: true },
+      { href: `${base}/تقرير(ERP).html`, label: 'تقرير ERP', icon: 'fileUp', external: true },
+      { href: `${base}/تقرير(التخزين).html`, label: 'تقرير التخزين', icon: 'package', external: true },
+      { href: `${base}/Brandzo_Multi_Brand_Architecture_Odoo_Guide.html`, label: 'تقرير هندسة المقترح (متعدد العلامات)', icon: 'users', external: true },
+    ],
+  },
+  {
+    group: 'الأرشيف والمرجعية',
+    emoji: '🗄️',
+    items: [
+      { href: `${base}/dashboard/archive`, label: 'الأرشيف التأسيسي', icon: 'package' },
+      { href: `${base}/dashboard/development-proposals`, label: 'مقترحات التطوير', icon: 'clipboardList' },
+      { href: `${base}/dashboard/meeting-assistant`, label: 'مساعد الاجتماعات', icon: 'grid' },
+      { href: `${base}/dashboard/gallery`, label: 'معرض التوثيق المرئي', icon: 'image' },
+    ],
+  },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -237,88 +279,66 @@ const currentPath = Astro.url.pathname;
 
         <ul id="nav-list" class="space-y-1">
           <li id="no-results" class="hidden text-gray-400 text-xs text-center py-4">لا توجد نتائج</li>
-          {
-            navItems.map((item) => (
-              <li data-label={item.label}>
-                <a
-                  href={item.href}
-                  target={item.external ? '_blank' : null}
-                  rel={item.external ? 'noopener noreferrer' : null}
-                  class={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    currentPath === item.href || currentPath.startsWith(item.href + '/')
-                      ? 'bg-brand-red text-white font-bold shadow-md'
-                      : 'hover:bg-gray-800 text-gray-100'
-                  }`}
-                  style={currentPath === item.href ? 'border-right: 3px solid #DAAA3C;' : ''}
-                >
-                  <Icon name={item.icon} class="text-brand-red" />
-                  <span class="font-medium">{item.label}</span>
-                </a>
-              </li>
-            ))
-          }
 
-          <!-- زر عمليات مخزنية -->
-          <li data-label="عمليات مخزنية">
+          {/* عنصر مثبّت أعلى القائمة */}
+          <li data-label={pinnedItem.label}>
             <a
-              href={`${base}/عمليات-مخزنية.html`}
-              target="_blank"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-right"
+              href={pinnedItem.href}
+              class={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                currentPath === pinnedItem.href
+                  ? 'bg-brand-red text-white font-bold shadow-md'
+                  : 'hover:bg-gray-800 text-gray-100'
+              }`}
+              style={currentPath === pinnedItem.href ? 'border-right: 3px solid #DAAA3C;' : ''}
             >
-              <Icon name="package" class="text-brand-gold" />
-              <span class="font-medium">عمليات مخزنية</span>
+              <Icon name={pinnedItem.icon} class="text-brand-red" />
+              <span class="font-medium">{pinnedItem.label}</span>
             </a>
           </li>
 
-          <!-- زر فتح الدليل التشغيلي -->
-          {showGuide && (
-            <li data-label="الدليل التشغيلي">
-              <button
-                id="open-guide"
-                class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-right"
-                type="button"
-              >
-                <Icon name="bookOpen" class="text-brand-gold" />
-                <span class="font-medium">الدليل التشغيلي</span>
-              </button>
+          {/* المجموعات المنطقية (الدفعة 4) */}
+          {navGroups.map((grp) => (
+            <li class="nav-group pt-2" data-nav-group>
+              <div class="px-3 pt-3 pb-1 flex items-center gap-2 text-[11px] font-bold text-brand-gold/70 tracking-wide border-t border-white/5">
+                <span>{grp.emoji}</span>
+                <span>{grp.group}</span>
+              </div>
+              <ul class="space-y-1 mt-1">
+                {grp.items.map((item) => (
+                  <li data-label={item.label}>
+                    <a
+                      href={item.href}
+                      target={item.external ? '_blank' : null}
+                      rel={item.external ? 'noopener noreferrer' : null}
+                      class={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                        currentPath === item.href || currentPath.startsWith(item.href + '/')
+                          ? 'bg-brand-red text-white font-bold shadow-md'
+                          : item.pinned
+                            ? 'bg-white/5 border border-brand-gold/20 hover:bg-white/10 text-gray-100'
+                            : 'hover:bg-gray-800 text-gray-100'
+                      }`}
+                      style={currentPath === item.href ? 'border-right: 3px solid #DAAA3C;' : ''}
+                    >
+                      <Icon name={item.icon} class={item.pinned ? 'text-brand-gold' : 'text-brand-red'} />
+                      <span class="font-medium">{item.label}</span>
+                    </a>
+                  </li>
+                ))}
+                {grp.group === 'الأرشيف والمرجعية' && showGuide && (
+                  <li data-label="الدليل التشغيلي">
+                    <button
+                      id="open-guide"
+                      class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-right"
+                      type="button"
+                    >
+                      <Icon name="bookOpen" class="text-brand-gold" />
+                      <span class="font-medium">الدليل التشغيلي</span>
+                    </button>
+                  </li>
+                )}
+              </ul>
             </li>
-          )}
-
-          <!-- زر فتح تقرير ERP -->
-          <li data-label="تقرير ERP">
-            <a
-              href={`${base}/تقرير(ERP).html`}
-              target="_blank"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-right"
-            >
-              <Icon name="fileUp" class="text-brand-red" />
-              <span class="font-medium">تقرير ERP</span>
-            </a>
-          </li>
-
-          <!-- زر فتح تقرير التخزين -->
-          <li data-label="تقرير التخزين">
-            <a
-              href={`${base}/تقرير(التخزين).html`}
-              target="_blank"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-right"
-            >
-              <Icon name="package" class="text-brand-gold" />
-              <span class="font-medium">تقرير التخزين</span>
-            </a>
-          </li>
-
-          <!-- زر فتح تقرير هندسة المقترح (متعدد العلامات) -->
-          <li data-label="تقرير هندسة المقترح (متعدد العلامات)">
-            <a
-              href={`${base}/Brandzo_Multi_Brand_Architecture_Odoo_Guide.html`}
-              target="_blank"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-right"
-            >
-              <Icon name="users" class="text-brand-red" />
-              <span class="font-medium">تقرير هندسة المقترح (متعدد العلامات)</span>
-            </a>
-          </li>
+          ))}
         </ul>
       </nav>
 
@@ -521,13 +541,14 @@ const currentPath = Astro.url.pathname;
         var noResults = document.getElementById('no-results');
 
         if (searchInput && navList && noResults) {
-          var navItems = navList.querySelectorAll('li[data-label]');
+          var searchableItems = navList.querySelectorAll('li[data-label]');
+          var navGroupEls = navList.querySelectorAll('[data-nav-group]');
 
           searchInput.addEventListener('input', function() {
             var query = this.value.trim().toLowerCase();
             var visibleCount = 0;
 
-            navItems.forEach(function(item) {
+            searchableItems.forEach(function(item) {
               var label = item.getAttribute('data-label').toLowerCase();
               if (label.includes(query)) {
                 item.style.display = '';
@@ -535,6 +556,15 @@ const currentPath = Astro.url.pathname;
               } else {
                 item.style.display = 'none';
               }
+            });
+
+            /* إخفاء رأس أي مجموعة لا تحتوي عناصر ظاهرة */
+            navGroupEls.forEach(function(grp) {
+              var items = grp.querySelectorAll('li[data-label]');
+              var anyVisible = Array.prototype.some.call(items, function(it) {
+                return it.style.display !== 'none';
+              });
+              grp.style.display = anyVisible ? '' : 'none';
             });
 
             if (visibleCount === 0 && query !== '') {
