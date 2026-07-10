@@ -89,6 +89,8 @@ class StockPicking(models.Model):
         'res.users', string='معتمِد الإرجاع', readonly=True, copy=False)
     bz_return_approval_date = fields.Datetime(
         string='تاريخ اعتماد الإرجاع', readonly=True, copy=False)
+    bz_credit_note_id = fields.Many2one(
+        'account.move', string='إشعار دائن مرتبط', readonly=True, copy=False)
 
     @api.depends('return_id')
     def _compute_bz_is_return(self):
@@ -114,6 +116,46 @@ class StockPicking(models.Model):
             'bz_return_approver_id': False,
             'bz_return_approval_date': False,
         })
+
+    def action_bz_create_credit_note(self):
+        """المرحلة 08 — جسر الإشعار الدائن (إرجاع مورد → in_refund).
+
+        يعكس فاتورة المورد المُرحَّلة لأمر شراء الاستلام الأصلي عبر
+        ``account.move._reverse_moves`` (متوفّر في account الأساسي)، ويترك
+        المسودة للمراجعة. الإشعار من نوع ``in_refund`` فلا يمسّه حارس المطابقة
+        الثلاثية (الذي يفلتر ``in_invoice`` فقط).
+        """
+        self.ensure_one()
+        if not self.return_id:
+            raise UserError(_("الإذن «%s» ليس إرجاعاً.", self.display_name))
+        if self.bz_credit_note_id:
+            raise UserError(_(
+                "يوجد إشعار دائن مرتبط بالفعل بهذا الإرجاع: %s",
+                self.bz_credit_note_id.display_name))
+        po = self.return_id.purchase_id or self.purchase_id
+        bills = po.invoice_ids.filtered(
+            lambda m: m.move_type == 'in_invoice' and m.state == 'posted'
+        ) if po else self.env['account.move']
+        if not bills:
+            raise UserError(_(
+                "تعذّر إصدار إشعار دائن: لا توجد فاتورة مورد مُرحَّلة مرتبطة "
+                "بأمر شراء هذا الاستلام."))
+        bill = bills[0]
+        reversal = bill._reverse_moves([{
+            'date': fields.Date.context_today(self),
+            'ref': _("إشعار دائن عن إرجاع %s", self.name),
+            'invoice_origin': self.name,
+        }], cancel=False)
+        self.bz_credit_note_id = reversal[:1].id
+        self.message_post(body=_(
+            "أُنشئ إشعار دائن (مسودة) للمراجعة: %s", reversal.display_name))
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('إشعار دائن'),
+            'res_model': 'account.move',
+            'res_id': reversal[:1].id,
+            'view_mode': 'form',
+        }
 
     # ── إجراءات الفحص (تُقيَّد بمجموعة مفتش الجودة عبر الواجهة) ───────────
     def action_bz_qc_pass(self):

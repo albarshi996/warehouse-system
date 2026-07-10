@@ -123,6 +123,10 @@
                         string="سحب اعتماد الإرجاع"
                         groups="brandzo_warehouse.group_bz_return_manager"
                         invisible="not bz_is_return or bz_return_state != 'approved' or state == 'done'"/>
+                <button name="action_bz_create_credit_note" type="object"
+                        string="إنشاء إشعار دائن" class="btn-secondary"
+                        groups="brandzo_warehouse.group_bz_return_manager"
+                        invisible="not bz_is_return or bz_credit_note_id"/>
             </button>
 
             <field name="state" position="after">
@@ -145,6 +149,8 @@
                         <group>
                             <field name="bz_return_reason"
                                    placeholder="سبب الإرجاع وتصنيف الحالة (سليم/تالف/منتهٍ)..."/>
+                            <field name="bz_credit_note_id" readonly="1"
+                                   invisible="not bz_credit_note_id"/>
                         </group>
                     </group>
                 </page>

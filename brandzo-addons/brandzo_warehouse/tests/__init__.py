@@ -6,3 +6,4 @@ from . import test_gate_pass_guard
 from . import test_three_way_match
 from . import test_returns_guard
 from . import test_scrap_guard
+from . import test_credit_note_bridge
