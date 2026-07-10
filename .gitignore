@@ -30,3 +30,6 @@ pnpm-debug.log*
 /dashboard.png
 /guide.png
 /form_po_filled.png
+
+# Claude Code local state (machine-specific permission allowlist; not shared)
+.claude/settings.local.json
