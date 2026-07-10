@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- حوكمة اعتماد الإتلاف على نموذج stock.scrap -->
+    <record id="view_bz_scrap_form" model="ir.ui.view">
+        <field name="name">bz.stock.scrap.form</field>
+        <field name="model">stock.scrap</field>
+        <field name="inherit_id" ref="stock.stock_scrap_form_view2"/>
+        <field name="arch" type="xml">
+            <field name="scrap_reason_tag_ids" position="after">
+                <field name="bz_scrap_state" widget="badge"
+                       decoration-warning="bz_scrap_state == 'draft'"
+                       decoration-success="bz_scrap_state == 'approved'"/>
+                <field name="bz_scrap_reason" placeholder="بيان/سبب الإتلاف..."/>
+                <field name="bz_scrap_approver_id"
+                       invisible="bz_scrap_state != 'approved'"/>
+            </field>
+            <footer position="inside">
+                <button name="action_bz_scrap_approve" type="object"
+                        string="اعتماد الإتلاف" class="btn-secondary"
+                        groups="brandzo_warehouse.group_bz_return_manager"
+                        invisible="bz_scrap_state == 'approved' or state == 'done'"/>
+            </footer>
+        </field>
+    </record>
+</odoo>

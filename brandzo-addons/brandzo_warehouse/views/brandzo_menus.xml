@@ -25,6 +25,18 @@
               parent="menu_bz_dispatch" sequence="10"
               action="action_bz_gate_pass"/>
 
+    <!-- المرحلة 08: المرتجعات والتالف -->
+    <menuitem id="menu_bz_returns" name="المرتجعات والتالف"
+              parent="menu_bz_root" sequence="35"/>
+
+    <menuitem id="menu_bz_return_pickings" name="إذون الإرجاع"
+              parent="menu_bz_returns" sequence="10"
+              action="action_bz_returns"/>
+
+    <menuitem id="menu_bz_scrap" name="الإتلاف"
+              parent="menu_bz_returns" sequence="20"
+              action="stock.action_stock_scrap"/>
+
     <!-- المجموعة الثالثة: المالية والمطابقة الثلاثية (المرحلة 11) -->
     <menuitem id="menu_bz_finance" name="المالية والمطابقة"
               parent="menu_bz_root" sequence="40"/>

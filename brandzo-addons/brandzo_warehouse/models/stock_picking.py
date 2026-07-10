@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""توسعة إذن المستودع — حُرّاس المراحل 04 (QC) و06 (FEFO) و07 (Gate Pass).
+"""توسعة إذن المستودع — حُرّاس المراحل 04 (QC) و06 (FEFO) و07 (Gate Pass) و08 (المرتجعات).
 
-كل قاعدة ذهبية مُطبَّقة بطبقتين: ``button_validate`` (تفاعلي) و``@api.constrains``
-(صارم لا يُتجاوز حتى برمجياً). لا يُرحَّل الإذن إلى ``done`` ما لم تُستوفَ قاعدته:
-استلامٌ يجتاز الجودة · صرفٌ يحترم FEFO · شحنٌ بتصريح بوابة معتمد.
+كل قاعدة مُطبَّقة بطبقتين: ``button_validate`` (تفاعلي) و``@api.constrains`` (صارم لا
+يُتجاوز حتى برمجياً). لا يُرحَّل الإذن إلى ``done`` ما لم تُستوفَ قاعدته: استلامٌ يجتاز
+الجودة · صرفٌ يحترم FEFO · شحنٌ بتصريح بوابة معتمد · إرجاعٌ معتمد من مسؤول المرتجعات.
 """
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
@@ -76,6 +76,45 @@ class StockPicking(models.Model):
             'context': {'default_picking_id': self.id},
         }
 
+    # ── حوكمة المرتجعات (المرحلة 08 — Returns) ────────────────────────────
+    # ``return_id`` يضيفه موديول stock القياسي (stock/models/stock_picking.py:566).
+    bz_is_return = fields.Boolean(
+        string='إذن إرجاع', compute='_compute_bz_is_return', store=True)
+    bz_return_state = fields.Selection(
+        selection=[('draft', 'مسودة'), ('approved', 'معتمد')],
+        string='حالة اعتماد الإرجاع', default='draft',
+        copy=False, tracking=True, index=True)
+    bz_return_reason = fields.Text(string='سبب الإرجاع', copy=False)
+    bz_return_approver_id = fields.Many2one(
+        'res.users', string='معتمِد الإرجاع', readonly=True, copy=False)
+    bz_return_approval_date = fields.Datetime(
+        string='تاريخ اعتماد الإرجاع', readonly=True, copy=False)
+
+    @api.depends('return_id')
+    def _compute_bz_is_return(self):
+        for picking in self:
+            picking.bz_is_return = bool(picking.return_id)
+
+    def action_bz_return_approve(self):
+        for picking in self:
+            if not picking.return_id:
+                raise UserError(_(
+                    "الإذن «%s» ليس إرجاعاً.", picking.display_name))
+            if picking.bz_return_state != 'draft':
+                raise UserError(_("لا يُعتمد إلا إرجاع في حالة «مسودة»."))
+        self.write({
+            'bz_return_state': 'approved',
+            'bz_return_approver_id': self.env.uid,
+            'bz_return_approval_date': fields.Datetime.now(),
+        })
+
+    def action_bz_return_reset(self):
+        self.write({
+            'bz_return_state': 'draft',
+            'bz_return_approver_id': False,
+            'bz_return_approval_date': False,
+        })
+
     # ── إجراءات الفحص (تُقيَّد بمجموعة مفتش الجودة عبر الواجهة) ───────────
     def action_bz_qc_pass(self):
         self._bz_stamp_qc('passed')
@@ -102,9 +141,10 @@ class StockPicking(models.Model):
 
     # ── الحُرّاس التفاعلية على الترحيل ────────────────────────────────────
     def button_validate(self):
-        self._bz_check_qc_passed()   # المرحلة 04 — لا Done قبل اجتياز الجودة
-        self._bz_check_fefo()        # المرحلة 06 — لا صرف يخالف FEFO
-        self._bz_check_gate_pass()   # المرحلة 07 — لا شحن دون تصريح بوابة معتمد
+        self._bz_check_qc_passed()       # المرحلة 04 — لا Done قبل اجتياز الجودة
+        self._bz_check_fefo()            # المرحلة 06 — لا صرف يخالف FEFO
+        self._bz_check_gate_pass()       # المرحلة 07 — لا شحن دون تصريح بوابة معتمد
+        self._bz_check_return_approved() # المرحلة 08 — لا إرجاع دون اعتماد
         return super().button_validate()
 
     def _bz_check_qc_passed(self):
@@ -189,3 +229,20 @@ class StockPicking(models.Model):
                 raise ValidationError(_(
                     "خرقٌ للقاعدة الذهبية (Gate Pass): الشحن «%s» لا يُرحَّل دون "
                     "تصريح بوابة معتمد.", picking.display_name))
+
+    def _bz_check_return_approved(self):
+        """المرحلة 08 — لا يُرحَّل إذن إرجاع إلى Done قبل اعتماده."""
+        for picking in self:
+            if picking.return_id and picking.bz_return_state != 'approved':
+                raise UserError(_(
+                    "لا يمكن ترحيل إذن الإرجاع «%s» إلى Done: يجب اعتماد الإرجاع "
+                    "أولاً من مسؤول المرتجعات والتالف.", picking.display_name))
+
+    @api.constrains('state', 'bz_return_state')
+    def _bz_check_return_before_done(self):
+        for picking in self:
+            if (picking.state == 'done' and picking.return_id
+                    and picking.bz_return_state != 'approved'):
+                raise ValidationError(_(
+                    "خرقٌ لحوكمة المرتجعات: إذن الإرجاع «%s» لا يُرحَّل دون اعتماد.",
+                    picking.display_name))

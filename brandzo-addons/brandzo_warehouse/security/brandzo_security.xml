@@ -33,4 +33,11 @@
         <field name="category_id" ref="module_category_brandzo"/>
         <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
     </record>
+
+    <!-- مسؤول المرتجعات والتالف: يعتمد الإرجاع والإتلاف (المرحلة 08) -->
+    <record id="group_bz_return_manager" model="res.groups">
+        <field name="name">Brandzo / مسؤول المرتجعات والتالف</field>
+        <field name="category_id" ref="module_category_brandzo"/>
+        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
+    </record>
 </odoo>

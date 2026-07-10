@@ -107,4 +107,56 @@
             </field>
         </field>
     </record>
+
+    <!-- المرحلة 08: حوكمة المرتجعات على إذن المخزون -->
+    <record id="view_bz_picking_form_returns" model="ir.ui.view">
+        <field name="name">bz.stock.picking.form.returns</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <button name="button_validate" position="before">
+                <button name="action_bz_return_approve" type="object"
+                        string="اعتماد الإرجاع" class="btn-primary"
+                        groups="brandzo_warehouse.group_bz_return_manager"
+                        invisible="not bz_is_return or bz_return_state != 'draft' or state in ('done', 'cancel')"/>
+                <button name="action_bz_return_reset" type="object"
+                        string="سحب اعتماد الإرجاع"
+                        groups="brandzo_warehouse.group_bz_return_manager"
+                        invisible="not bz_is_return or bz_return_state != 'approved' or state == 'done'"/>
+            </button>
+
+            <field name="state" position="after">
+                <field name="bz_is_return" invisible="1"/>
+                <field name="bz_return_state" widget="badge"
+                       invisible="not bz_is_return"
+                       decoration-warning="bz_return_state == 'draft'"
+                       decoration-success="bz_return_state == 'approved'"/>
+            </field>
+
+            <notebook position="inside">
+                <page name="bz_return" string="حوكمة الإرجاع"
+                      invisible="not bz_is_return">
+                    <group>
+                        <group>
+                            <field name="bz_return_state"/>
+                            <field name="bz_return_approver_id"/>
+                            <field name="bz_return_approval_date"/>
+                        </group>
+                        <group>
+                            <field name="bz_return_reason"
+                                   placeholder="سبب الإرجاع وتصنيف الحالة (سليم/تالف/منتهٍ)..."/>
+                        </group>
+                    </group>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+    <!-- إجراء قائمة إذون الإرجاع -->
+    <record id="action_bz_returns" model="ir.actions.act_window">
+        <field name="name">إذون الإرجاع</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('return_id', '!=', False)]</field>
+    </record>
 </odoo>

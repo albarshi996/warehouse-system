@@ -18,3 +18,14 @@ def _bz_post_init(env):
         ('state', '=', 'done'),
         ('picking_type_id.code', '=', 'incoming'),
     ]).write({'bz_qc_state': 'passed'})
+
+    # completed returns -> approved (S5a return guard)
+    env['stock.picking'].search([
+        ('state', '=', 'done'),
+        ('return_id', '!=', False),
+    ]).write({'bz_return_state': 'approved'})
+
+    # completed scraps -> approved (S5a scrap guard)
+    env['stock.scrap'].search([
+        ('state', '=', 'done'),
+    ]).write({'bz_scrap_state': 'approved'})
