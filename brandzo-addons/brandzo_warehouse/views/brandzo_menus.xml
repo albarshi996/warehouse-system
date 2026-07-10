@@ -24,4 +24,12 @@
     <menuitem id="menu_bz_gate_pass" name="تصاريح البوابة"
               parent="menu_bz_dispatch" sequence="10"
               action="action_bz_gate_pass"/>
+
+    <!-- المجموعة الثالثة: المالية والمطابقة الثلاثية (المرحلة 11) -->
+    <menuitem id="menu_bz_finance" name="المالية والمطابقة"
+              parent="menu_bz_root" sequence="40"/>
+
+    <menuitem id="menu_bz_bill_match" name="المطابقة الثلاثية"
+              parent="menu_bz_finance" sequence="10"
+              action="action_bz_bill_match"/>
 </odoo>
