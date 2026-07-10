@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_bz_gate_pass_user,bz.gate.pass.user,model_bz_gate_pass,brandzo_warehouse.group_bz_warehouse_user,1,1,1,0
+access_bz_gate_pass_officer,bz.gate.pass.officer,model_bz_gate_pass,brandzo_warehouse.group_bz_gate_officer,1,1,1,1

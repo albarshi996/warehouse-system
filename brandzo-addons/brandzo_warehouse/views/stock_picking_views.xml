@@ -8,6 +8,7 @@
         <field name="arch" type="xml">
             <field name="code" position="after">
                 <field name="bz_qc_required" invisible="code != 'incoming'"/>
+                <field name="bz_is_dispatch" invisible="code != 'outgoing'"/>
             </field>
         </field>
     </record>
@@ -48,7 +49,26 @@
                        invisible="picking_type_code != 'outgoing' or not bz_dispatch_expiry"
                        decoration-danger="bz_has_expired_line"
                        decoration-success="not bz_has_expired_line"/>
+                <field name="bz_is_dispatch" invisible="1"/>
+                <field name="bz_gate_pass_approved" invisible="1"/>
             </field>
+
+            <!-- زر إحصائي لتصاريح البوابة (للشحن الصادر) -->
+            <div name="button_box" position="inside">
+                <button name="action_bz_open_gate_pass" type="object"
+                        class="oe_stat_button" icon="fa-shield"
+                        invisible="not bz_is_dispatch">
+                    <field name="bz_gate_pass_count" widget="statinfo"
+                           string="تصاريح البوابة"/>
+                </button>
+            </div>
+
+            <!-- شريط تنبيه: بانتظار تصريح البوابة -->
+            <xpath expr="//div[@name='button_box']" position="before">
+                <widget name="web_ribbon" title="بانتظار تصريح البوابة"
+                        bg_color="text-bg-warning"
+                        invisible="not bz_is_dispatch or bz_gate_pass_approved or state in ('done', 'cancel')"/>
+            </xpath>
 
             <!-- تبويب فحص الجودة -->
             <notebook position="inside">

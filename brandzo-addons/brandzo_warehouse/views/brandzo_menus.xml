@@ -16,4 +16,12 @@
     <menuitem id="menu_bz_po" name="أوامر الشراء (PO)"
               parent="menu_bz_purchase" sequence="20"
               action="purchase.purchase_form_action"/>
+
+    <!-- المجموعة الثانية: الشحن والبوابة (المرحلة 07) -->
+    <menuitem id="menu_bz_dispatch" name="الشحن والبوابة"
+              parent="menu_bz_root" sequence="30"/>
+
+    <menuitem id="menu_bz_gate_pass" name="تصاريح البوابة"
+              parent="menu_bz_dispatch" sequence="10"
+              action="action_bz_gate_pass"/>
 </odoo>

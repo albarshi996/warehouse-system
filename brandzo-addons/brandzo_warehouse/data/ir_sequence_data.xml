@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="seq_bz_gate_pass" model="ir.sequence">
+        <field name="name">Brandzo Gate Pass</field>
+        <field name="code">bz.gate.pass</field>
+        <field name="prefix">GP-%(year)s-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

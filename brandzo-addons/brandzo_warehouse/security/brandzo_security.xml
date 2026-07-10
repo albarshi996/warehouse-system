@@ -26,4 +26,11 @@
         <field name="category_id" ref="module_category_brandzo"/>
         <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
     </record>
+
+    <!-- ضابط البوابة: يعتمد تصاريح خروج المركبات (Gate Pass) -->
+    <record id="group_bz_gate_officer" model="res.groups">
+        <field name="name">Brandzo / ضابط البوابة</field>
+        <field name="category_id" ref="module_category_brandzo"/>
+        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
+    </record>
 </odoo>

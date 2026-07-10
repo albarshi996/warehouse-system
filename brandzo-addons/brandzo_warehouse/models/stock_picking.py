@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""المرحلة 04 — الاستلام وفحص الجودة (GRN + QC).
+"""توسعة إذن المستودع — حُرّاس المراحل 04 (QC) و06 (FEFO) و07 (Gate Pass).
 
-القاعدة الذهبية الأولى في المخازن: لا يُعتمد إيصال الاستلام (تتحوّل حالته إلى
-``done``) إلا إذا كانت نتيجة فحص الجودة «اجتاز» (passed) بالكامل. يُطبَّق الحارس
-بطبقتين: ``button_validate`` (تفاعلي) و ``@api.constrains`` (صارم لا يُتجاوز).
+كل قاعدة ذهبية مُطبَّقة بطبقتين: ``button_validate`` (تفاعلي) و``@api.constrains``
+(صارم لا يُتجاوز حتى برمجياً). لا يُرحَّل الإذن إلى ``done`` ما لم تُستوفَ قاعدته:
+استلامٌ يجتاز الجودة · صرفٌ يحترم FEFO · شحنٌ بتصريح بوابة معتمد.
 """
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
@@ -46,6 +46,36 @@ class StockPicking(models.Model):
             picking.bz_has_expired_line = any(
                 picking.move_line_ids.mapped('is_expired'))
 
+    # ── تصريح البوابة للشحن الصادر (المرحلة 07 — Gate Pass) ───────────────
+    bz_is_dispatch = fields.Boolean(
+        related='picking_type_id.bz_is_dispatch', store=True,
+        string='شحنة تتطلب تصريح بوابة')
+    bz_gate_pass_ids = fields.One2many(
+        'bz.gate.pass', 'picking_id', string='تصاريح البوابة')
+    bz_gate_pass_count = fields.Integer(
+        compute='_compute_bz_gate_pass', string='عدد التصاريح')
+    bz_gate_pass_approved = fields.Boolean(
+        compute='_compute_bz_gate_pass', store=True,
+        string='تصريح بوابة معتمد')
+
+    @api.depends('bz_gate_pass_ids.state')
+    def _compute_bz_gate_pass(self):
+        for picking in self:
+            picking.bz_gate_pass_count = len(picking.bz_gate_pass_ids)
+            picking.bz_gate_pass_approved = any(
+                gp.state == 'approved' for gp in picking.bz_gate_pass_ids)
+
+    def action_bz_open_gate_pass(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('تصاريح البوابة'),
+            'res_model': 'bz.gate.pass',
+            'view_mode': 'list,form',
+            'domain': [('picking_id', '=', self.id)],
+            'context': {'default_picking_id': self.id},
+        }
+
     # ── إجراءات الفحص (تُقيَّد بمجموعة مفتش الجودة عبر الواجهة) ───────────
     def action_bz_qc_pass(self):
         self._bz_stamp_qc('passed')
@@ -74,6 +104,7 @@ class StockPicking(models.Model):
     def button_validate(self):
         self._bz_check_qc_passed()   # المرحلة 04 — لا Done قبل اجتياز الجودة
         self._bz_check_fefo()        # المرحلة 06 — لا صرف يخالف FEFO
+        self._bz_check_gate_pass()   # المرحلة 07 — لا شحن دون تصريح بوابة معتمد
         return super().button_validate()
 
     def _bz_check_qc_passed(self):
@@ -137,3 +168,24 @@ class StockPicking(models.Model):
                 raise ValidationError(_(
                     "خرقٌ للقاعدة الذهبية (QC): الاستلام «%s» لا يُعتمد قبل "
                     "اجتياز فحص الجودة (Passed).", picking.display_name))
+
+    def _bz_check_gate_pass(self):
+        """المرحلة 07 — الحارس الذهبي الثالث (Gate Pass).
+
+        لا يُرحَّل إذن شحن (bz_is_dispatch) إلى Done قبل اعتماد تصريح بوابة
+        مربوط به (state = approved).
+        """
+        for picking in self:
+            if picking.bz_is_dispatch and not picking.bz_gate_pass_approved:
+                raise UserError(_(
+                    "لا يمكن ترحيل الشحن «%s» إلى Done: لا يوجد تصريح بوابة معتمد "
+                    "(Approved) مربوط بهذا الإذن.", picking.display_name))
+
+    @api.constrains('state', 'bz_is_dispatch', 'bz_gate_pass_approved')
+    def _bz_check_gate_pass_before_done(self):
+        for picking in self:
+            if (picking.state == 'done' and picking.bz_is_dispatch
+                    and not picking.bz_gate_pass_approved):
+                raise ValidationError(_(
+                    "خرقٌ للقاعدة الذهبية (Gate Pass): الشحن «%s» لا يُرحَّل دون "
+                    "تصريح بوابة معتمد.", picking.display_name))

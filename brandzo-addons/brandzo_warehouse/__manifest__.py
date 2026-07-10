@@ -34,9 +34,12 @@ Brandzo Warehouse
     # يُحمَّل بالترتيب: الأمان أولاً، ثم الواجهات، ثم القوائم.
     'data': [
         'security/brandzo_security.xml',
+        'security/ir.model.access.csv',
+        'data/ir_sequence_data.xml',
         'views/purchase_requisition_views.xml',
         'views/purchase_order_views.xml',
         'views/stock_picking_views.xml',
+        'views/gate_pass_views.xml',
         'views/brandzo_menus.xml',
     ],
 
