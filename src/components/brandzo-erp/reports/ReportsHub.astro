@@ -1,0 +1,60 @@
+---
+/**
+ * حاوية مركز التقارير — تعرض التقارير كبطاقات مجمّعة حسب الفئة.
+ * تستهلك المصدر الموحّد reportsData.js، وتبني الروابط بإضافة BASE_URL.
+ */
+import { REPORTS, REPORT_CATEGORIES } from './reportsData.js';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+---
+
+<div class="space-y-10" dir="rtl">
+  {
+    REPORT_CATEGORIES.map((cat) => {
+      const items = REPORTS.filter((r) => r.category === cat.id);
+      if (items.length === 0) return null;
+      return (
+        <section>
+          {/* رأس الفئة */}
+          <div class="flex items-center gap-3 mb-4">
+            <span class="text-2xl">{cat.icon}</span>
+            <h2 class="text-lg sm:text-xl font-bold text-white">{cat.label}</h2>
+            <div class="flex-1 h-px bg-white/10" />
+            <span class="text-xs text-gray-300 whitespace-nowrap">{items.length} تقارير</span>
+          </div>
+
+          {/* شبكة البطاقات */}
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {items.map((r) => (
+              <a
+                href={base + r.path}
+                target={r.external ? '_blank' : null}
+                rel={r.external ? 'noopener noreferrer' : null}
+                class="group flex flex-col bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6 hover:bg-white/10 hover:-translate-y-1 hover:border-brand-gold/40 transition-all"
+              >
+                <div class="flex items-start justify-between mb-3">
+                  <div class="text-3xl">{r.icon}</div>
+                  {r.external && (
+                    <span class="text-[10px] text-gray-300 border border-white/10 rounded-full px-2 py-0.5">
+                      ↗ نافذة جديدة
+                    </span>
+                  )}
+                </div>
+                <h3 class="font-bold text-white mb-2 group-hover:text-brand-gold transition-colors">
+                  {r.title}
+                </h3>
+                <p class="text-sm text-gray-300 leading-relaxed flex-1">{r.desc}</p>
+                <span class="mt-4 inline-flex items-center gap-1 text-brand-yellow text-sm font-bold">
+                  فتح التقرير
+                  <span class="group-hover:-translate-x-1 transition-transform">←</span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      );
+    })
+  }
+</div>

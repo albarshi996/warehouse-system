@@ -84,7 +84,7 @@ const BrandzoDashboard = () => {
           <div className="relative z-10">
             <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-2">
               خارطة طريق أودو
-              <span className="block text-sm font-normal text-gray-200 mt-1">Odoo 17 Enterprise Implementation Roadmap</span>
+              <span className="block text-sm font-normal text-gray-200 mt-1">Odoo Operations Roadmap · دورات العمل التشغيلية</span>
             </h2>
             <div className="w-16 h-1 bg-green-400 mx-auto mb-8 rounded-full" />
 
