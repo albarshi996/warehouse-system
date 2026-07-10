@@ -19,4 +19,11 @@
         <field name="category_id" ref="module_category_brandzo"/>
         <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
     </record>
+
+    <!-- مفتش الجودة: يعتمد/يرفض نتيجة فحص الاستلام (QC) -->
+    <record id="group_bz_qc_inspector" model="res.groups">
+        <field name="name">Brandzo / مفتش الجودة</field>
+        <field name="category_id" ref="module_category_brandzo"/>
+        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
+    </record>
 </odoo>

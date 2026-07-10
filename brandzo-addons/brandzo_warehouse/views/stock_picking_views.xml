@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- نوع العملية: تفعيل اشتراط فحص الجودة على أنواع الاستلام فقط -->
+    <record id="view_bz_picking_type_form" model="ir.ui.view">
+        <field name="name">bz.stock.picking.type.form</field>
+        <field name="model">stock.picking.type</field>
+        <field name="inherit_id" ref="stock.view_picking_type_form"/>
+        <field name="arch" type="xml">
+            <field name="code" position="after">
+                <field name="bz_qc_required" invisible="code != 'incoming'"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- إذن الاستلام: أزرار الفحص + شارة الحالة + تبويب الجودة -->
+    <record id="view_bz_picking_form" model="ir.ui.view">
+        <field name="name">bz.stock.picking.form</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+
+            <!-- أزرار الفحص في الرأس قبل زر Validate (مقصورة على مفتش الجودة) -->
+            <button name="button_validate" position="before">
+                <button name="action_bz_qc_pass" type="object"
+                        string="اعتماد الفحص (اجتاز)" class="btn-success"
+                        groups="brandzo_warehouse.group_bz_qc_inspector"
+                        invisible="picking_type_code != 'incoming' or not bz_qc_required or bz_qc_state == 'passed' or state in ('done', 'cancel')"/>
+                <button name="action_bz_qc_fail" type="object"
+                        string="رفض الفحص (فشل)" class="btn-danger"
+                        groups="brandzo_warehouse.group_bz_qc_inspector"
+                        invisible="picking_type_code != 'incoming' or not bz_qc_required or bz_qc_state == 'failed' or state in ('done', 'cancel')"/>
+                <button name="action_bz_qc_reset" type="object"
+                        string="إعادة الفحص"
+                        groups="brandzo_warehouse.group_bz_qc_inspector"
+                        invisible="picking_type_code != 'incoming' or not bz_qc_required or bz_qc_state == 'pending' or state == 'done'"/>
+            </button>
+
+            <!-- شارة نتيجة الجودة بعد أول statusbar (إذن الوارد) -->
+            <field name="state" position="after">
+                <field name="bz_qc_required" invisible="1"/>
+                <field name="bz_qc_state" widget="badge"
+                       invisible="picking_type_code != 'incoming' or not bz_qc_required"
+                       decoration-warning="bz_qc_state == 'pending'"
+                       decoration-success="bz_qc_state == 'passed'"
+                       decoration-danger="bz_qc_state == 'failed'"/>
+            </field>
+
+            <!-- تبويب فحص الجودة -->
+            <notebook position="inside">
+                <page name="bz_qc" string="فحص الجودة"
+                      invisible="picking_type_code != 'incoming' or not bz_qc_required">
+                    <group>
+                        <group string="النتيجة">
+                            <field name="bz_qc_state"/>
+                            <field name="bz_qc_inspector_id"/>
+                            <field name="bz_qc_date"/>
+                        </group>
+                        <group string="ملاحظات">
+                            <field name="bz_qc_note" nolabel="1"
+                                   placeholder="سبب الرفض أو ملاحظات المفتش..."/>
+                        </group>
+                    </group>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+    <!-- قائمة الإذون: تلوين حسب نتيجة الجودة -->
+    <record id="view_bz_picking_tree" model="ir.ui.view">
+        <field name="name">bz.stock.picking.list</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+            <field name="state" position="before">
+                <field name="bz_qc_required" column_invisible="1"/>
+                <field name="bz_qc_state" widget="badge" optional="show"
+                       invisible="not bz_qc_required"
+                       decoration-warning="bz_qc_state == 'pending'"
+                       decoration-success="bz_qc_state == 'passed'"
+                       decoration-danger="bz_qc_state == 'failed'"/>
+            </field>
+        </field>
+    </record>
+</odoo>

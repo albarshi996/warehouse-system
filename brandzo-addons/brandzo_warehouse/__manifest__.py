@@ -36,6 +36,7 @@ Brandzo Warehouse
         'security/brandzo_security.xml',
         'views/purchase_requisition_views.xml',
         'views/purchase_order_views.xml',
+        'views/stock_picking_views.xml',
         'views/brandzo_menus.xml',
     ],
 

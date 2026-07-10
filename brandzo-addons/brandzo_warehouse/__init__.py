@@ -3,12 +3,18 @@ from . import models
 
 
 def _bz_post_init(env):
-    """Grandfather historical purchase agreements.
+    """Grandfather historical records so the new guards don't retro-block them.
 
-    The new Brandzo approval guard blocks confirming a requisition that is not
-    ``approved``. Records confirmed BEFORE this module was installed have no
-    approval state, so we stamp them as approved to avoid retro-blocking them.
+    Records created BEFORE this module was installed carry no Brandzo governance
+    state, so we stamp the safe/accepted value on already-finalized documents:
+      * confirmed/closed purchase agreements -> approved  (S1 guard)
+      * completed incoming receipts           -> QC passed (S2 guard)
     """
     env['purchase.requisition'].search([
         ('state', 'in', ['confirmed', 'done']),
     ]).write({'bz_approval_state': 'approved'})
+
+    env['stock.picking'].search([
+        ('state', '=', 'done'),
+        ('picking_type_id.code', '=', 'incoming'),
+    ]).write({'bz_qc_state': 'passed'})
