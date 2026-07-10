@@ -40,6 +40,7 @@ Brandzo Warehouse
         'views/purchase_order_views.xml',
         'views/stock_picking_views.xml',
         'views/gate_pass_views.xml',
+        'views/account_move_views.xml',
         'views/brandzo_menus.xml',
     ],
 

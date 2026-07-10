@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- شارة حالة المطابقة الثلاثية على نموذج فاتورة المورد -->
+    <record id="view_bz_move_form_match" model="ir.ui.view">
+        <field name="name">bz.account.move.form.match</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <header position="inside">
+                <field name="bz_match_state" widget="badge"
+                       invisible="move_type != 'in_invoice' or bz_match_state == 'na'"
+                       decoration-success="bz_match_state == 'matched'"
+                       decoration-danger="bz_match_state == 'mismatch'"/>
+            </header>
+        </field>
+    </record>
+
+    <!-- لوحة المطابقة الثلاثية — قائمة مستقلة لفواتير الموردين -->
+    <record id="view_bz_bill_match_list" model="ir.ui.view">
+        <field name="name">bz.bill.match.list</field>
+        <field name="model">account.move</field>
+        <field name="arch" type="xml">
+            <list string="المطابقة الثلاثية — فواتير الموردين" create="0"
+                  decoration-success="bz_match_state == 'matched'"
+                  decoration-danger="bz_match_state == 'mismatch'">
+                <field name="move_type" column_invisible="1"/>
+                <field name="name"/>
+                <field name="invoice_date"/>
+                <field name="partner_id"/>
+                <field name="amount_total"/>
+                <field name="bz_match_state" widget="badge"
+                       decoration-success="bz_match_state == 'matched'"
+                       decoration-danger="bz_match_state == 'mismatch'"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-success="state == 'posted'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_bz_bill_match" model="ir.actions.act_window">
+        <field name="name">المطابقة الثلاثية — فواتير الموردين</field>
+        <field name="res_model">account.move</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('move_type', '=', 'in_invoice')]</field>
+        <field name="context">{'default_move_type': 'in_invoice', 'move_type': 'in_invoice', 'journal_type': 'purchase'}</field>
+    </record>
+</odoo>
