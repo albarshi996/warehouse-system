@@ -9,11 +9,22 @@
  *   • Putaway (Stage 05) unlocks only once the receipt is Done.
  *
  * GRN state machine: draft → ready → in_progress → waiting_qc → done.
+ * Bill state machine: draft → posted → in_payment (gated by the 3-Way Match).
  */
+import { SAMPLE_PO } from './odooTheme.js';
+
+const PO_QTY = SAMPLE_PO.lines[0].qty;
+
+/** Received quantity as seen by Accounting = the GRN's done quantity (else 0). */
+function receivedQtyOf(grn) {
+  if (grn.state !== 'done') return 0;
+  return grn.lot ? grn.lot.qty : PO_QTY;
+}
 
 export const initialState = {
   app: 'purchase', // 'purchase' | 'inventory' | 'accounting'
   invView: 'list', // inventory landing: 'list' | 'form'
+  acctView: 'list', // accounting landing: 'list' | 'form'
   po: { state: 'draft' }, // 'draft' (RFQ) | 'purchase' (confirmed)
   grn: {
     created: false, // the receipt exists once the PO is confirmed
@@ -21,7 +32,12 @@ export const initialState = {
     lot: null, // { number, expiry, qty }
     qc: null, // null | 'passed' | 'failed'
   },
-  wizard: null, // null | 'lots'
+  bill: {
+    created: false, // the vendor bill exists once "Create Bill" is clicked
+    state: 'draft', // draft | posted | in_payment
+    billedQty: PO_QTY, // editable — matches by default; change it to trigger a mismatch
+  },
+  wizard: null, // null | 'lots' | 'payment'
   alert: null, // { kind: 'error'|'warn'|'success', text }
 };
 
@@ -131,6 +147,50 @@ export function simReducer(state, action) {
           kind: 'success',
           text: 'Putaway (Stage 05): assign the storage location per Putaway rules. This screen is the next build phase of the cycle.',
         },
+      };
+
+    /* ── Accounting: Vendor Bill + 3-Way Match + Payment ── */
+    case 'CREATE_BILL':
+      return {
+        ...state,
+        app: 'accounting',
+        acctView: 'form',
+        bill: { ...state.bill, created: true },
+        wizard: null,
+        alert: { kind: 'success', text: `Draft Vendor Bill created from ${SAMPLE_PO.name}. Review the 3-Way Match before posting.` },
+      };
+    case 'ACCT_SHOW_LIST':
+      return { ...state, acctView: 'list', alert: null };
+    case 'ACCT_OPEN_FORM':
+      return { ...state, acctView: 'form', alert: null };
+    case 'SET_BILLED_QTY':
+      return { ...state, bill: { ...state.bill, billedQty: action.qty } };
+
+    case 'POST_BILL': {
+      const received = receivedQtyOf(state.grn);
+      const billed = state.bill.billedQty;
+      if (billed !== PO_QTY || billed !== received) {
+        return {
+          ...state,
+          alert: {
+            kind: 'error',
+            text: `🔒 3-Way Match failed — cannot Post: Billed ${billed} ≠ Received ${received} (PO ${PO_QTY}). Odoo blocks the bill until PO, Receipt and Bill quantities all match.`,
+          },
+        };
+      }
+      return {
+        ...state,
+        bill: { ...state.bill, state: 'posted' },
+        alert: { kind: 'success', text: '✓ 3-Way Match passed. Vendor Bill posted (BILL/2026/07/0001). You can now Register Payment.' },
+      };
+    }
+
+    case 'REGISTER_PAYMENT':
+      return {
+        ...state,
+        bill: { ...state.bill, state: 'in_payment' },
+        wizard: null,
+        alert: { kind: 'success', text: '💳 Payment registered — the bill status is now “In Payment”. Cycle complete: PO → Receipt → Bill → Payment.' },
       };
 
     case 'DISMISS_ALERT':

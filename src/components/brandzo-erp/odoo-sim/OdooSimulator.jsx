@@ -5,6 +5,7 @@ import OdooNavbar from './OdooNavbar.jsx';
 import OdooSidebar from './OdooSidebar.jsx';
 import PurchaseApp from './PurchaseApp.jsx';
 import InventoryApp from './InventoryApp.jsx';
+import AccountingApp from './AccountingApp.jsx';
 
 const ALERT_TONE = {
   error: { borderColor: '#f1aeb5', background: '#fdecee', color: '#b02a37' },
@@ -28,20 +29,6 @@ function Toast({ alert, onClose }) {
   );
 }
 
-/* Placeholder for apps whose screens are built in a later phase. */
-function UnderConstruction({ app }) {
-  return (
-    <div className="flex-1 flex flex-col items-center justify-center text-center p-10" style={{ background: ODOO.contentBg }}>
-      <div className="text-5xl mb-4">{app.icon}</div>
-      <h2 className="text-xl font-semibold text-gray-700">{app.name}</h2>
-      <p className="text-sm text-gray-500 mt-2 max-w-md leading-relaxed" dir="rtl">
-        شاشات تطبيق «{app.name}» (الفواتير والمطابقة الثلاثية والدفع) ستُبنى في المرحلة التالية بنفس دقّة شاشة الاستلام.
-        استخدم مبدّل التطبيقات ⊞ في الأعلى للعودة.
-      </p>
-    </div>
-  );
-}
-
 /**
  * Odoo Simulator — root. A reducer-driven state engine walks the trainee
  * through the Brandzo document cycle across simulated Odoo apps:
@@ -51,13 +38,15 @@ export default function OdooSimulator() {
   const [state, dispatch] = useReducer(simReducer, initialState);
   const app = APPS.find((a) => a.id === state.app);
 
+  const billLabel = state.bill.state === 'draft' ? 'Draft Bill' : 'BILL/2026/07/0001';
   let breadcrumb = [app.activeItem];
   if (state.app === 'purchase') breadcrumb = ['Purchase Orders', SAMPLE_PO.name];
   else if (state.app === 'inventory') breadcrumb = state.invView === 'form' ? ['Receipts', RECEIPT_REF] : ['Receipts'];
-  else if (state.app === 'accounting') breadcrumb = ['Bills'];
+  else if (state.app === 'accounting') breadcrumb = state.acctView === 'form' ? ['Bills', billLabel] : ['Bills'];
 
   const onSelectItem = (item) => {
     if (state.app === 'inventory' && item === 'Receipts') dispatch({ type: 'INV_SHOW_LIST' });
+    if (state.app === 'accounting' && item === 'Bills') dispatch({ type: 'ACCT_SHOW_LIST' });
   };
 
   return (
@@ -75,7 +64,7 @@ export default function OdooSimulator() {
         <OdooSidebar app={app} activeItem={app.activeItem} onSelectItem={onSelectItem} />
         {state.app === 'purchase' && <PurchaseApp state={state} dispatch={dispatch} />}
         {state.app === 'inventory' && <InventoryApp state={state} dispatch={dispatch} />}
-        {state.app === 'accounting' && <UnderConstruction app={app} />}
+        {state.app === 'accounting' && <AccountingApp state={state} dispatch={dispatch} />}
       </div>
       {state.alert && <Toast alert={state.alert} onClose={() => dispatch({ type: 'DISMISS_ALERT' })} />}
     </div>

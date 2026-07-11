@@ -78,7 +78,7 @@ export default function PurchaseApp({ state, dispatch }) {
   const actions = confirmed
     ? [
         { label: 'Receive Products', primary: true, onClick: () => dispatch({ type: 'OPEN_RECEIPT' }) },
-        { label: 'Create Bill', onClick: () => dispatch({ type: 'OPEN_APP', app: 'accounting' }) },
+        { label: 'Create Bill', onClick: () => dispatch({ type: 'CREATE_BILL' }) },
         { label: 'Cancel', onClick: () => dispatch({ type: 'RESET_PO' }) },
       ]
     : [
