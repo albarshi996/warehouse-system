@@ -40,4 +40,18 @@
         <field name="category_id" ref="module_category_brandzo"/>
         <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
     </record>
+
+    <!-- مدقق الجرد: يدير جلسات الجرد الدوري ويصادق على ورقة العدّ (المرحلة 09) -->
+    <record id="group_bz_inventory_auditor" model="res.groups">
+        <field name="name">Brandzo / مدقق الجرد</field>
+        <field name="category_id" ref="module_category_brandzo"/>
+        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
+    </record>
+
+    <!-- المدير المالي: يعتمد سندات تسوية المخزون — شرط تطبيق أي فارق (المرحلة 10) -->
+    <record id="group_bz_finance_manager" model="res.groups">
+        <field name="name">Brandzo / المدير المالي</field>
+        <field name="category_id" ref="module_category_brandzo"/>
+        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
+    </record>
 </odoo>

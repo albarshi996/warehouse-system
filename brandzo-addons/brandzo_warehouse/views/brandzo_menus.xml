@@ -37,6 +37,19 @@
               parent="menu_bz_returns" sequence="20"
               action="stock.action_stock_scrap"/>
 
+    <!-- المرحلتان 09–10: الجرد الدوري وتسويات المخزون -->
+    <menuitem id="menu_bz_inventory_control" name="الجرد والتسويات"
+              parent="menu_bz_root" sequence="37"/>
+
+    <menuitem id="menu_bz_cycle_count" name="جلسات الجرد الدوري"
+              parent="menu_bz_inventory_control" sequence="10"
+              action="action_bz_cycle_count"/>
+
+    <menuitem id="menu_bz_physical_inventory" name="الجرد الفعلي (Odoo)"
+              parent="menu_bz_inventory_control" sequence="20"
+              action="stock.action_view_inventory_tree"
+              groups="brandzo_warehouse.group_bz_finance_manager"/>
+
     <!-- المجموعة الثالثة: المالية والمطابقة الثلاثية (المرحلة 11) -->
     <menuitem id="menu_bz_finance" name="المالية والمطابقة"
               parent="menu_bz_root" sequence="40"/>

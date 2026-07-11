@@ -1,3 +1,7 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_bz_gate_pass_user,bz.gate.pass.user,model_bz_gate_pass,brandzo_warehouse.group_bz_warehouse_user,1,1,1,0
 access_bz_gate_pass_officer,bz.gate.pass.officer,model_bz_gate_pass,brandzo_warehouse.group_bz_gate_officer,1,1,1,1
+access_bz_cycle_count_user,bz.cycle.count.user,model_bz_cycle_count,brandzo_warehouse.group_bz_warehouse_user,1,0,0,0
+access_bz_cycle_count_auditor,bz.cycle.count.auditor,model_bz_cycle_count,brandzo_warehouse.group_bz_inventory_auditor,1,1,1,1
+access_bz_cycle_count_line_user,bz.cycle.count.line.user,model_bz_cycle_count_line,brandzo_warehouse.group_bz_warehouse_user,1,0,0,0
+access_bz_cycle_count_line_auditor,bz.cycle.count.line.auditor,model_bz_cycle_count_line,brandzo_warehouse.group_bz_inventory_auditor,1,1,1,1

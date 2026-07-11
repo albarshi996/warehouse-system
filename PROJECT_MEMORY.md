@@ -13,7 +13,7 @@
 2. Git identity for commits/pushes on this repo: **`albarshi996 <albarshi.96@gmail.com>`** — this is NOT the machine/account email; set `git config user.email albarshi.96@gmail.com` if it does not match.
 3. There is **no local Python interpreter** (Odoo validated statically) and **`gh` CLI is not installed** (use the REST-API path in §6).
 4. This new account will **not** have the previous machine's local Claude memory files. Treat this document as the seed and re-establish memory as you go.
-5. Two parallel tracks exist: **Frontend (Astro simulator/portal)** and **Backend (real Odoo module)**. The backend track is **paused** at S5a; the current active work is the frontend simulator.
+5. Two parallel tracks exist: **Frontend (Astro simulator/portal)** and **Backend (real Odoo module)**. Frontend: simulator Phase 1 + the full 12-stage Arabic guided tour are shipped & live. Backend: **S5b (stage-09 cycle-count `bz.cycle.count` + stage-10 finance-approval adjustment guard) is built and statically validated**; next is **S12** (financial close). Authoritative backend status: `brandzo-addons/brandzo_warehouse/README.md`.
 
 ---
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Brandzo Warehouse — Document Cycle & Golden Rules',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.1.0',
     'category': 'Inventory/Inventory',
     'summary': 'دورة مستندية من 12 مرحلة و21 نموذجاً مع 4 قواعد ذهبية كحُرّاس صارمين',
     'description': """
@@ -9,10 +9,15 @@ Brandzo Warehouse
 =================
 ينقل المنطق اللوجستي من محاكي الواجهة (Astro/React) إلى Backend حقيقي على Odoo 19.
 
-المرحلة الحالية (S0 + S1):
-  * سقالة الموديول القابلة للتثبيت النظيف.
-  * المرحلة 01 — طلب الشراء (PR): حوكمة اعتماد Brandzo فوق ``purchase.requisition``.
-  * المرحلة 02 — أمر الشراء (PO): ربط التأكيد باعتماد طلب الشراء المصدر.
+المراحل المُنجزة:
+  * S1 — حوكمة الشراء (PR/PO) فوق ``purchase.requisition``/``purchase.order``.
+  * S2 — بوابة الجودة على الاستلام (لا Done قبل QC).
+  * S3 — قاعدة FEFO على الصرف (الأقرب انتهاءً يخرج أولاً).
+  * S4 — تصريح خروج البوابة ``bz.gate.pass`` (لا شحن بلا تصريح معتمد).
+  * S5a — المرتجعات والإتلاف + جسر الإشعار الدائن من فاتورة المورد.
+  * S5b — الجرد الدوري ``bz.cycle.count`` (المرحلة 09) + حارس اعتماد
+    المدير المالي على تسويات الأرصدة (المرحلة 10).
+  * S6 — المطابقة الثلاثية على ترحيل فاتورة المورد.
 
 القرارات المعمارية موثّقة في ``ODOO_BACKEND_DEVELOPMENT_PLAN.md`` بجذر المستودع.
 """,
@@ -41,6 +46,7 @@ Brandzo Warehouse
         'views/stock_picking_views.xml',
         'views/stock_scrap_views.xml',
         'views/gate_pass_views.xml',
+        'views/bz_cycle_count_views.xml',
         'views/account_move_views.xml',
         'views/brandzo_menus.xml',
     ],

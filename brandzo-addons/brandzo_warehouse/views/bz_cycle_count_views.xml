@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- نموذج جلسة الجرد الدوري -->
+    <record id="view_bz_cycle_count_form" model="ir.ui.view">
+        <field name="name">bz.cycle.count.form</field>
+        <field name="model">bz.cycle.count</field>
+        <field name="arch" type="xml">
+            <form string="جلسة الجرد الدوري">
+                <header>
+                    <button name="action_start" type="object"
+                            string="بدء الجرد (تجميد اللقطة)" class="btn-primary"
+                            invisible="state != 'draft'"
+                            groups="brandzo_warehouse.group_bz_inventory_auditor"/>
+                    <button name="action_validate" type="object"
+                            string="مصادقة ورقة العدّ" class="btn-primary"
+                            invisible="state != 'in_progress'"
+                            groups="brandzo_warehouse.group_bz_inventory_auditor"/>
+                    <button name="action_finance_approve" type="object"
+                            string="اعتماد المدير المالي"
+                            invisible="state != 'validated' or diff_line_count == 0 or finance_approver_id"
+                            groups="brandzo_warehouse.group_bz_finance_manager"/>
+                    <button name="action_apply" type="object"
+                            string="تطبيق التسويات وإقفال الجلسة" class="btn-primary"
+                            invisible="state != 'validated'"
+                            groups="brandzo_warehouse.group_bz_inventory_auditor"/>
+                    <button name="action_reset_draft" type="object"
+                            string="إعادة لمسودة"
+                            invisible="state not in ('in_progress', 'cancel')"
+                            groups="brandzo_warehouse.group_bz_inventory_auditor"/>
+                    <button name="action_cancel" type="object" string="إلغاء"
+                            invisible="state in ('done', 'cancel')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,in_progress,validated,done"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="ملغاة" bg_color="text-bg-danger"
+                            invisible="state != 'cancel'"/>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="نطاق الجرد">
+                            <field name="location_id" readonly="state != 'draft'"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="diff_line_count"/>
+                        </group>
+                        <group string="السجل">
+                            <field name="started_by_id"/>
+                            <field name="started_on"/>
+                            <field name="validated_by_id"/>
+                            <field name="validated_on"/>
+                        </group>
+                    </group>
+                    <group string="اعتماد التسوية (المدير المالي)"
+                           invisible="not finance_approver_id">
+                        <field name="finance_approver_id"/>
+                        <field name="finance_approval_date"/>
+                    </group>
+                    <notebook>
+                        <page string="بنود العدّ" name="lines">
+                            <field name="line_ids"
+                                   readonly="state not in ('in_progress',)">
+                                <list string="بنود العدّ" editable="bottom"
+                                      decoration-danger="is_counted and difference != 0"
+                                      decoration-success="is_counted and difference == 0">
+                                    <field name="product_id" readonly="1"/>
+                                    <field name="lot_id" readonly="1"/>
+                                    <field name="location_id" readonly="1"/>
+                                    <field name="theoretical_qty" readonly="1"/>
+                                    <field name="counted_qty"/>
+                                    <field name="is_counted"/>
+                                    <field name="difference"/>
+                                    <field name="product_uom_id" column_invisible="1"/>
+                                    <field name="quant_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="ملاحظات" name="notes">
+                            <field name="note" placeholder="ملاحظات لجنة الجرد..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- قائمة جلسات الجرد -->
+    <record id="view_bz_cycle_count_list" model="ir.ui.view">
+        <field name="name">bz.cycle.count.list</field>
+        <field name="model">bz.cycle.count</field>
+        <field name="arch" type="xml">
+            <list string="جلسات الجرد الدوري"
+                  decoration-success="state == 'done'"
+                  decoration-info="state == 'validated'"
+                  decoration-muted="state == 'cancel'">
+                <field name="name"/>
+                <field name="location_id"/>
+                <field name="started_on"/>
+                <field name="diff_line_count"/>
+                <field name="finance_approver_id"/>
+                <field name="state" widget="badge"
+                       decoration-warning="state in ('draft', 'in_progress')"
+                       decoration-info="state == 'validated'"
+                       decoration-success="state == 'done'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_bz_cycle_count" model="ir.actions.act_window">
+        <field name="name">جلسات الجرد الدوري</field>
+        <field name="res_model">bz.cycle.count</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">أنشئ جلسة جرد دوري</p>
+            <p>تُجمَّد لقطة أرصدة الموقع، يُدخل العدّ الفعلي، وتُطبَّق الفوارق
+               كسند تسوية لا ينفذ إلا باعتماد المدير المالي.</p>
+        </field>
+    </record>
+</odoo>
