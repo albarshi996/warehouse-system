@@ -5,9 +5,13 @@ import OdooListView from './OdooListView.jsx';
 import OdooWizard from './OdooWizard.jsx';
 import PutawayForm from './PutawayForm.jsx';
 import DeliveryForm from './DeliveryForm.jsx';
+import GatePassForm from './GatePassForm.jsx';
+import ReturnForm from './ReturnForm.jsx';
+import CycleCountForm from './CycleCountForm.jsx';
+import AdjustmentForm from './AdjustmentForm.jsx';
 
 const GRN_STAGES = [
-  { key: 'draft', label: 'مسودة' },
+  { key: 'scheduled', label: 'مجدول' },
   { key: 'ready', label: 'جاهز' },
   { key: 'in_progress', label: 'قيد التنفيذ' },
   { key: 'waiting_qc', label: 'بانتظار الجودة' },
@@ -158,6 +162,22 @@ function QCPanel({ grn, dispatch }) {
   );
 }
 
+/* ── لافتة إشعار الشحن المسبق (ASN) — المرحلة 03 ─────────────────────────── */
+function AsnBanner() {
+  return (
+    <div className="mb-6 rounded-lg border p-4" style={{ borderColor: '#a9cbe8', background: '#e7f1fa' }}>
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-lg">🚛</span>
+        <h3 className="font-bold text-[14px]" style={{ color: '#1d6fb8' }}>إشعار شحن مسبق (ASN) — ASN/2026/0155</h3>
+      </div>
+      <p className="text-[12px] text-gray-600 leading-relaxed">
+        أرسل المورّد إشعار شحن فور تحميل البضاعة: الوصول المتوقّع <b>{SAMPLE_PO.receiptDate}</b> — جُهّز رصيف
+        الاستلام وجُدولت العملية. عند وصول الشاحنة اضغط «وصلت الشاحنة — بدء الاستلام».
+      </p>
+    </div>
+  );
+}
+
 function DoneBanner() {
   return (
     <div className="mb-6 rounded-lg border p-4 flex items-center gap-3" style={{ borderColor: '#bfe3c9', background: '#e9f7ef' }}>
@@ -199,14 +219,18 @@ export default function InventoryApp({ state, dispatch }) {
 
   if (invView === 'putaway') return <PutawayForm state={state} dispatch={dispatch} />;
   if (invView === 'delivery') return <DeliveryForm state={state} dispatch={dispatch} />;
+  if (invView === 'gatepass') return <GatePassForm state={state} dispatch={dispatch} />;
+  if (invView === 'return') return <ReturnForm state={state} dispatch={dispatch} />;
+  if (invView === 'cyclecount') return <CycleCountForm state={state} dispatch={dispatch} />;
+  if (invView === 'adjustment') return <AdjustmentForm state={state} dispatch={dispatch} />;
 
   /* عرض نموذج الاستلام (GRN) */
   const lotDone = !!grn.lot;
 
   let actions = [];
-  if (grn.state === 'draft') {
+  if (grn.state === 'scheduled') {
     actions = [
-      { label: 'تحديد كـ«للتنفيذ»', primary: true, onClick: () => dispatch({ type: 'GRN_MARK_TODO' }) },
+      { label: 'وصلت الشاحنة — بدء الاستلام', primary: true, onClick: () => dispatch({ type: 'TRUCK_ARRIVED' }) },
       { label: 'تصديق', onClick: () => dispatch({ type: 'GRN_VALIDATE_ATTEMPT' }) },
     ];
   } else if (grn.state === 'ready') {
@@ -225,7 +249,7 @@ export default function InventoryApp({ state, dispatch }) {
     actions = [{ label: 'تصديق', onClick: () => dispatch({ type: 'GRN_VALIDATE_ATTEMPT' }) }];
   } else if (grn.state === 'done') {
     actions = [
-      { label: 'إرجاع', onClick: () => {} },
+      { label: 'إرجاع', onClick: () => dispatch({ type: 'OPEN_RETURN' }) },
       { label: 'طباعة الملصقات', onClick: () => {} },
     ];
   }
@@ -239,7 +263,8 @@ export default function InventoryApp({ state, dispatch }) {
   }
 
   let banner = null;
-  if (grn.state === 'waiting_qc') banner = <QCPanel grn={grn} dispatch={dispatch} />;
+  if (grn.state === 'scheduled') banner = <AsnBanner />;
+  else if (grn.state === 'waiting_qc') banner = <QCPanel grn={grn} dispatch={dispatch} />;
   else if (grn.state === 'done') banner = <DoneBanner />;
 
   const fieldColumns = [

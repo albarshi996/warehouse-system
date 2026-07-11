@@ -1,6 +1,103 @@
 import React from 'react';
-import { ODOO, SAMPLE_PO, fmt } from './odooTheme.js';
+import { ODOO, SAMPLE_PO, PR_REF, fmt } from './odooTheme.js';
 import OdooFormView from './OdooFormView.jsx';
+
+/* ── 01: نموذج طلب الشراء الداخلي (حوكمة الشراء) ─────────────────────────── */
+function PRForm({ state, dispatch }) {
+  const pr = state.pr;
+  const line = SAMPLE_PO.lines[0];
+
+  const stages = [
+    { key: 'draft', label: 'مسودة' },
+    { key: 'to_approve', label: 'قيد الموافقة' },
+    { key: 'approved', label: 'معتمد' },
+  ];
+
+  let actions = [];
+  if (pr.state === 'draft') {
+    actions = [{ label: 'إرسال للموافقة', primary: true, onClick: () => dispatch({ type: 'PR_SUBMIT' }) }];
+  } else if (pr.state === 'to_approve') {
+    actions = [{ label: 'اعتماد (مدير المشتريات)', primary: true, onClick: () => dispatch({ type: 'PR_APPROVE' }) }];
+  } else {
+    actions = [{ label: 'فتح طلب عرض السعر', primary: true, onClick: () => dispatch({ type: 'PURCH_VIEW', view: 'po' }) }];
+  }
+
+  const smartButtons = pr.state === 'approved'
+    ? [{ icon: '📝', value: SAMPLE_PO.name, label: 'طلب عرض السعر', onClick: () => dispatch({ type: 'PURCH_VIEW', view: 'po' }) }]
+    : [];
+
+  const banner = pr.state === 'approved' ? (
+    <div className="mb-6 rounded-lg border p-4 flex items-center gap-3" style={{ borderColor: '#bfe3c9', background: '#e9f7ef' }}>
+      <span className="text-2xl">✅</span>
+      <div>
+        <div className="font-bold text-[14px]" style={{ color: ODOO.green }}>اعتُمد طلب الشراء</div>
+        <div className="text-[12px] text-gray-600">أُنشئ طلب عرض السعر <b>{SAMPLE_PO.name}</b> تلقائياً — تابع من «أوامر الشراء».</div>
+      </div>
+    </div>
+  ) : (
+    <div className="mb-6 rounded-lg border p-4" style={{ borderColor: '#e0c98a', background: '#fdf6e3' }}>
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-lg">🛒</span>
+        <h3 className="font-bold text-[14px] text-gray-800">بداية الدورة المستندية — نقطة إعادة الطلب</h3>
+      </div>
+      <p className="text-[12px] text-gray-600 leading-relaxed">
+        وصل رصيد الصنف إلى نقطة إعادة الطلب، فأصدر النظام طلب شراء داخلياً. القاعدة:
+        <b> لا يُنشأ أمر شراء دون طلب شراء معتمد</b> من مدير المشتريات.
+      </p>
+    </div>
+  );
+
+  const fieldColumns = [
+    [
+      { label: 'مقدّم الطلب', value: 'أمين المستودع' },
+      { label: 'القسم', value: 'المستودعات — براندزو هَب' },
+      { label: 'سبب الطلب', value: 'بلوغ نقطة إعادة الطلب' },
+    ],
+    [
+      { label: 'تاريخ الطلب', value: '2026-07-10' },
+      { label: 'الأولوية', value: 'عادية' },
+      { label: 'المورّد المقترح', value: SAMPLE_PO.vendor },
+    ],
+  ];
+
+  const notebook = [
+    {
+      name: 'الأصناف المطلوبة',
+      content: (
+        <table className="w-full text-[13px]">
+          <thead>
+            <tr className="text-gray-500 border-b" style={{ borderColor: ODOO.border }}>
+              <th className="py-2 text-start font-medium">المنتج</th>
+              <th className="py-2 text-end font-medium">الكمية المطلوبة</th>
+              <th className="py-2 text-end font-medium">الرصيد الحالي</th>
+              <th className="py-2 text-end font-medium">نقطة إعادة الطلب</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="border-b" style={{ borderColor: ODOO.borderSoft }}>
+              <td className="py-2 text-gray-800">{line.product}</td>
+              <td className="py-2 text-end font-semibold text-gray-800">{line.qty} {line.uom}</td>
+              <td className="py-2 text-end text-gray-700">14 {line.uom}</td>
+              <td className="py-2 text-end text-gray-700">25 {line.uom}</td>
+            </tr>
+          </tbody>
+        </table>
+      ),
+    },
+  ];
+
+  return (
+    <OdooFormView
+      statusbar={{ stages, current: pr.state }}
+      actions={actions}
+      smartButtons={smartButtons}
+      title={PR_REF}
+      banner={banner}
+      fieldColumns={fieldColumns}
+      notebook={notebook}
+    />
+  );
+}
 
 function OrderLines({ lines, untaxed, tax, total }) {
   return (
@@ -60,8 +157,9 @@ function OtherInfo({ po }) {
   );
 }
 
-/** تطبيق المشتريات — نموذج طلب عرض السعر / أمر الشراء. */
+/** تطبيق المشتريات — طلب الشراء الداخلي (01) ثم طلب عرض السعر / أمر الشراء (02). */
 export default function PurchaseApp({ state, dispatch }) {
+  if (state.purchView === 'pr') return <PRForm state={state} dispatch={dispatch} />;
   const po = SAMPLE_PO;
   const confirmed = state.po.state === 'purchase';
   const untaxed = po.lines.reduce((s, l) => s + l.qty * l.price, 0);

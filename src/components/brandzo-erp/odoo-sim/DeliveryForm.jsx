@@ -55,7 +55,7 @@ function DoneBanner({ lot }) {
       <span className="text-2xl">✅</span>
       <div>
         <div className="font-bold text-[14px]" style={{ color: ODOO.green }}>تم اعتماد التسليم — شُحنت {lot}</div>
-        <div className="text-[12px] text-gray-600">تحقّقت قاعدة FEFO. اكتملت دورة المخزون كاملة: استلام ← جودة ← تخزين ← تسليم.</div>
+        <div className="text-[12px] text-gray-600">تحقّقت قاعدة FEFO. التالي: <b>تصريح خروج البوابة (Gate Pass)</b> قبل تحرّك الشاحنة — المرحلة 07.</div>
       </div>
     </div>
   );
@@ -97,9 +97,13 @@ export default function DeliveryForm({ state, dispatch }) {
     { key: 'done', label: 'مكتمل' },
   ];
   const actions = dv.done
-    ? [{ label: 'طباعة إذن التسليم', onClick: () => {} }]
+    ? [
+        { label: 'تصريح خروج البوابة', primary: true, onClick: () => dispatch({ type: 'OPEN_GATEPASS' }) },
+        { label: 'طباعة إذن التسليم', onClick: () => {} },
+      ]
     : [{ label: 'تصديق', primary: true, onClick: () => dispatch({ type: 'DELIVERY_VALIDATE' }) }];
   const smartButtons = [{ icon: '🧾', value: SAMPLE_PO.name, label: 'المستند المصدر', onClick: () => dispatch({ type: 'OPEN_APP', app: 'purchase' }) }];
+  if (dv.done) smartButtons.push({ icon: '🚧', value: 'GP/2026/0001', label: 'تصريح البوابة', onClick: () => dispatch({ type: 'OPEN_GATEPASS' }) });
 
   const banner = dv.done ? (
     <DoneBanner lot={dv.pickedLot} />

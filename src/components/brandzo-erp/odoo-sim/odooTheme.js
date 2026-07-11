@@ -3,7 +3,8 @@
  * ─────────────────────────────────────────────────────────────────────────
  * نسخة تدريبية عالية الدقة تعمل دون اتصال، تحاكي واجهة Odoo Enterprise كما
  * تظهر فعلياً في بيئة عربية (RTL) بعملة الدينار الليبي — ليتعرّف المتدرّب على
- * الشاشات نفسها التي سيستخدمها في الإنتاج.
+ * الشاشات نفسها التي سيستخدمها في الإنتاج، عبر الدورة المستندية الكاملة
+ * (12 مرحلة) من المرجع التشغيلي الرسمي.
  *
  * القاعدة الذهبية: لا حذف — هذه وحدة كاملة (odoo-sim) تُكمّل محاكي الدورة
  * المستندية القائم (training) ولا تمسّه.
@@ -34,9 +35,10 @@ export const APPS = [
     name: 'المشتريات',
     icon: '🛒',
     color: '#714B67',
-    activeItem: 'po',
+    activeItem: 'requisitions',
     menu: [
       { section: 'الطلبات', items: [
+        { key: 'requisitions', label: 'طلبات الشراء الداخلية' },
         { key: 'rfq', label: 'طلبات عروض الأسعار' },
         { key: 'po', label: 'أوامر الشراء' },
         { key: 'agreements', label: 'اتفاقيات الشراء' },
@@ -65,18 +67,19 @@ export const APPS = [
         { key: 'dashboard', label: 'لوحة القيادة' },
       ] },
       { section: 'العمليات', items: [
-        { key: 'transfers', label: 'التحويلات' },
         { key: 'receipts', label: 'عمليات الاستلام' },
-        { key: 'delivery', label: 'أوامر التسليم' },
         { key: 'internal', label: 'التحويلات الداخلية' },
+        { key: 'delivery', label: 'أوامر التسليم' },
+        { key: 'gatepass', label: 'تصاريح البوابة' },
+        { key: 'returns', label: 'المرتجعات' },
+      ] },
+      { section: 'الجرد والرقابة', items: [
+        { key: 'physical', label: 'الجرد الدوري' },
+        { key: 'adjust', label: 'تسويات المخزون' },
       ] },
       { section: 'المنتجات', items: [
         { key: 'products', label: 'المنتجات' },
         { key: 'lots', label: 'الدفعات / الأرقام التسلسلية' },
-      ] },
-      { section: 'التقارير', items: [
-        { key: 'rep_stock', label: 'المخزون' },
-        { key: 'moves', label: 'سجل الحركات' },
       ] },
       { section: 'الإعدادات', items: [
         { key: 'settings', label: 'الإعدادات' },
@@ -97,9 +100,8 @@ export const APPS = [
         { key: 'payments_v', label: 'المدفوعات' },
         { key: 'vendors', label: 'المورّدون' },
       ] },
-      { section: 'العملاء', items: [
-        { key: 'invoices', label: 'فواتير العملاء' },
-        { key: 'payments_c', label: 'المدفوعات' },
+      { section: 'الفترة المالية', items: [
+        { key: 'close', label: 'الإغلاق المالي' },
       ] },
       { section: 'التقارير', items: [
         { key: 'balance', label: 'الميزانية العمومية' },
@@ -111,16 +113,6 @@ export const APPS = [
     ],
   },
 ];
-
-/* عناوين عربية معروضة في مسار التنقّل (breadcrumb) لكل مفتاح تنقّل. */
-export const ITEM_LABEL = {
-  po: 'أوامر الشراء',
-  receipts: 'عمليات الاستلام',
-  delivery: 'أوامر التسليم',
-  internal: 'التحويلات الداخلية',
-  bills: 'فواتير المورّدين',
-  refunds: 'الإشعارات الدائنة',
-};
 
 /* ── سجلّ تأسيسي: أمر شراء نموذجي (يطابق منتج التدريب) ────────────────────── */
 export const SAMPLE_PO = {
@@ -138,8 +130,19 @@ export const SAMPLE_PO = {
   ],
 };
 
-/* إذن الاستلام (GRN) المُنشأ عند تأكيد أمر الشراء. */
-export const RECEIPT_REF = 'WH/IN/00001';
+/* ── مراجع المستندات عبر الدورة الكاملة (12 مرحلة) ────────────────────────── */
+export const PR_REF = 'PR-2026-0155';        // 01 طلب الشراء الداخلي
+export const RECEIPT_REF = 'WH/IN/00001';    // 04 إذن الاستلام (GRN)
+export const GP_REF = 'GP/2026/0001';        // 07 تصريح خروج البوابة
+export const RET_REF = 'WH/RET/00001';       // 08 إشعار المرتجع
+export const CN_REF = 'RBILL/2026/07/0001';  // 08 الإشعار الدائن
+export const CC_REF = 'CC/2026/0001';        // 09 ورقة الجرد الدوري
+export const ADJ_REF = 'ADJ/2026/0001';      // 10 سند تسوية المخزون
+
+/* ثوابت سيناريو التدريب */
+export const RETURN_QTY = 20;   // مرتجع العميل: 20 وحدة تالفة تُعاد للمورّد
+export const CC_SYSTEM_QTY = 60; // رصيد النظام للدفعة LOT-2027-NEW عند الجرد
+export const CC_LOT = 'LOT-2027-NEW';
 
 /* ── مُنسّق العملة (الدينار الليبي) + شارات القوائم/الحالات ───────────────── */
 export const fmt = (n) =>
@@ -147,8 +150,16 @@ export const fmt = (n) =>
 
 export const STATE_BADGE = {
   draft: { label: 'مسودة', color: '#6b7280', bg: '#f1f1f1' },
+  scheduled: { label: 'مجدول', color: '#1d6fb8', bg: '#e7f1fa' },
+  to_approve: { label: 'قيد الموافقة', color: '#b8860b', bg: '#fdf6e3' },
+  approved: { label: 'معتمد', color: '#1e7e34', bg: '#e9f7ef' },
   ready: { label: 'جاهز', color: '#1d6fb8', bg: '#e7f1fa' },
   in_progress: { label: 'قيد التنفيذ', color: '#b8860b', bg: '#fdf6e3' },
   waiting_qc: { label: 'بانتظار الجودة', color: '#714B67', bg: '#f3eef2' },
+  validated: { label: 'مُصادَق', color: '#1e7e34', bg: '#e9f7ef' },
+  posted: { label: 'مُرحّلة', color: '#1e7e34', bg: '#e9f7ef' },
+  in_payment: { label: 'قيد الدفع', color: '#b8860b', bg: '#fdf6e3' },
+  open: { label: 'مفتوحة', color: '#1d6fb8', bg: '#e7f1fa' },
+  closed: { label: 'مُغلقة', color: '#1e7e34', bg: '#e9f7ef' },
   done: { label: 'مكتمل', color: '#1e7e34', bg: '#e9f7ef' },
 };
