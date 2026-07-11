@@ -3,6 +3,8 @@ import { ODOO, SAMPLE_PO, RECEIPT_REF } from './odooTheme.js';
 import OdooFormView from './OdooFormView.jsx';
 import OdooListView from './OdooListView.jsx';
 import OdooWizard from './OdooWizard.jsx';
+import PutawayForm from './PutawayForm.jsx';
+import DeliveryForm from './DeliveryForm.jsx';
 
 const GRN_STAGES = [
   { key: 'draft', label: 'Draft' },
@@ -195,7 +197,10 @@ export default function InventoryApp({ state, dispatch }) {
     );
   }
 
-  /* form view */
+  if (invView === 'putaway') return <PutawayForm state={state} dispatch={dispatch} />;
+  if (invView === 'delivery') return <DeliveryForm state={state} dispatch={dispatch} />;
+
+  /* receipt (GRN) form view */
   const lotDone = !!grn.lot;
 
   let actions = [];
@@ -230,7 +235,7 @@ export default function InventoryApp({ state, dispatch }) {
     smartButtons.push({ icon: grn.qc === 'passed' ? '✅' : '⛔', value: grn.qc === 'passed' ? 'Passed' : 'Failed', label: 'Quality Check', onClick: () => {} });
   }
   if (grn.state === 'done') {
-    smartButtons.push({ icon: '📥', value: '1', label: 'Putaway', onClick: () => dispatch({ type: 'PUTAWAY_INFO' }) });
+    smartButtons.push({ icon: '📥', value: '1', label: 'Putaway', onClick: () => dispatch({ type: 'OPEN_PUTAWAY' }) });
   }
 
   let banner = null;

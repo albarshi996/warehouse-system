@@ -21,9 +21,28 @@ function receivedQtyOf(grn) {
   return grn.lot ? grn.lot.qty : PO_QTY;
 }
 
+/** '2026-12-31' → '2027-12-31' (guarantees a strictly later decoy expiry). */
+function nextYear(dateStr) {
+  return String(Number(dateStr.slice(0, 4)) + 1) + dateStr.slice(4);
+}
+
+/**
+ * Lots available at delivery, sorted earliest-expiry first (FEFO order).
+ * Lot A = the one the trainee recorded during the GRN (earliest → must ship).
+ * Lot B = a later batch in stock (the FEFO "trap": newer, must NOT ship first).
+ */
+export function deliveryLots(grn) {
+  const gExp = grn.lot ? grn.lot.expiry : '2026-12-31';
+  const gNum = grn.lot ? grn.lot.number : 'LOT-2026-A';
+  const gQty = grn.lot ? grn.lot.qty : PO_QTY;
+  const a = { number: gNum, expiry: gExp, qty: gQty, source: 'Received — this cycle' };
+  const b = { number: 'LOT-2027-NEW', expiry: nextYear(gExp), qty: 60, source: 'Later batch in stock' };
+  return [a, b].sort((x, z) => x.expiry.localeCompare(z.expiry));
+}
+
 export const initialState = {
   app: 'purchase', // 'purchase' | 'inventory' | 'accounting'
-  invView: 'list', // inventory landing: 'list' | 'form'
+  invView: 'list', // inventory view: 'list' | 'receipt' | 'putaway' | 'delivery'
   acctView: 'list', // accounting landing: 'list' | 'form'
   po: { state: 'draft' }, // 'draft' (RFQ) | 'purchase' (confirmed)
   grn: {
@@ -36,6 +55,14 @@ export const initialState = {
     created: false, // the vendor bill exists once "Create Bill" is clicked
     state: 'draft', // draft | posted | in_payment
     billedQty: PO_QTY, // editable — matches by default; change it to trigger a mismatch
+  },
+  putaway: {
+    state: 'ready', // ready | done  (a putaway transfer is ready once the GRN is done)
+    bin: 'WH/Stock/Rack-A/A3-12', // suggested by the putaway rule; trainee confirms
+  },
+  delivery: {
+    pickedLot: null, // the lot the trainee selected (must be the earliest expiry)
+    done: false,
   },
   wizard: null, // null | 'lots' | 'payment'
   alert: null, // { kind: 'error'|'warn'|'success', text }
@@ -57,13 +84,13 @@ export function simReducer(state, action) {
     case 'RESET_PO':
       return { ...state, po: { state: 'draft' } };
     case 'OPEN_RECEIPT':
-      return { ...state, app: 'inventory', invView: 'form', alert: null, wizard: null };
+      return { ...state, app: 'inventory', invView: 'receipt', alert: null, wizard: null };
 
     /* ── Inventory navigation ── */
     case 'INV_SHOW_LIST':
       return { ...state, invView: 'list', alert: null };
     case 'INV_OPEN_FORM':
-      return { ...state, invView: 'form', alert: null };
+      return { ...state, invView: 'receipt', alert: null };
 
     /* ── GRN state machine ── */
     case 'GRN_MARK_TODO':
@@ -140,13 +167,51 @@ export function simReducer(state, action) {
         },
       };
 
-    case 'PUTAWAY_INFO':
+    /* ── Putaway (Stage 05) ── */
+    case 'OPEN_PUTAWAY':
+      return { ...state, app: 'inventory', invView: 'putaway', alert: null };
+    case 'SET_PUTAWAY_BIN':
+      return { ...state, putaway: { ...state.putaway, bin: action.bin } };
+    case 'PUTAWAY_VALIDATE':
       return {
         ...state,
+        putaway: { ...state.putaway, state: 'done' },
         alert: {
           kind: 'success',
-          text: 'Putaway (Stage 05): assign the storage location per Putaway rules. This screen is the next build phase of the cycle.',
+          text: `Putaway complete — goods stored at ${state.putaway.bin}. Proceed to Delivery (Stage 06).`,
         },
+      };
+    case 'OPEN_DELIVERY':
+      return { ...state, app: 'inventory', invView: 'delivery', alert: null };
+
+    /* ── Picking / Delivery with FEFO enforcement (Stage 06) ── */
+    case 'PICK_LOT': {
+      const lots = deliveryLots(state.grn);
+      const earliest = lots[0];
+      const chosen = lots.find((l) => l.number === action.lotNumber);
+      if (action.lotNumber !== earliest.number) {
+        return {
+          ...state,
+          alert: {
+            kind: 'error',
+            text: `🔒 FEFO violation: ${action.lotNumber} expires ${chosen ? chosen.expiry : '—'}, but ${earliest.number} expires earlier (${earliest.expiry}) and MUST ship first (First-Expiry-First-Out).`,
+          },
+        };
+      }
+      return {
+        ...state,
+        delivery: { ...state.delivery, pickedLot: action.lotNumber },
+        alert: { kind: 'success', text: `✓ Correct — ${earliest.number} (Exp ${earliest.expiry}) is the earliest-expiry lot. FEFO respected.` },
+      };
+    }
+    case 'DELIVERY_VALIDATE':
+      if (!state.delivery.pickedLot) {
+        return { ...state, alert: { kind: 'error', text: 'Select the lot to ship (FEFO) before validating the delivery.' } };
+      }
+      return {
+        ...state,
+        delivery: { ...state.delivery, done: true },
+        alert: { kind: 'success', text: '✅ Delivery validated with the FEFO-correct lot. Inventory cycle complete: Receipt → QC → Putaway → Delivery.' },
       };
 
     /* ── Accounting: Vendor Bill + 3-Way Match + Payment ── */

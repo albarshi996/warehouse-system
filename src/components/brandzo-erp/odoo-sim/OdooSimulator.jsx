@@ -40,12 +40,25 @@ export default function OdooSimulator() {
 
   const billLabel = state.bill.state === 'draft' ? 'Draft Bill' : 'BILL/2026/07/0001';
   let breadcrumb = [app.activeItem];
-  if (state.app === 'purchase') breadcrumb = ['Purchase Orders', SAMPLE_PO.name];
-  else if (state.app === 'inventory') breadcrumb = state.invView === 'form' ? ['Receipts', RECEIPT_REF] : ['Receipts'];
-  else if (state.app === 'accounting') breadcrumb = state.acctView === 'form' ? ['Bills', billLabel] : ['Bills'];
+  let sidebarActive = app.activeItem;
+  if (state.app === 'purchase') {
+    breadcrumb = ['Purchase Orders', SAMPLE_PO.name];
+  } else if (state.app === 'inventory') {
+    if (state.invView === 'receipt') { breadcrumb = ['Receipts', RECEIPT_REF]; sidebarActive = 'Receipts'; }
+    else if (state.invView === 'putaway') { breadcrumb = ['Internal Transfers', 'WH/INT/00001']; sidebarActive = 'Internal Transfers'; }
+    else if (state.invView === 'delivery') { breadcrumb = ['Delivery Orders', 'WH/OUT/00001']; sidebarActive = 'Delivery Orders'; }
+    else { breadcrumb = ['Receipts']; sidebarActive = 'Receipts'; }
+  } else if (state.app === 'accounting') {
+    breadcrumb = state.acctView === 'form' ? ['Bills', billLabel] : ['Bills'];
+    sidebarActive = 'Bills';
+  }
 
   const onSelectItem = (item) => {
-    if (state.app === 'inventory' && item === 'Receipts') dispatch({ type: 'INV_SHOW_LIST' });
+    if (state.app === 'inventory') {
+      if (item === 'Receipts') dispatch({ type: 'INV_SHOW_LIST' });
+      if (item === 'Delivery Orders') dispatch({ type: 'OPEN_DELIVERY' });
+      if (item === 'Internal Transfers') dispatch({ type: 'OPEN_PUTAWAY' });
+    }
     if (state.app === 'accounting' && item === 'Bills') dispatch({ type: 'ACCT_SHOW_LIST' });
   };
 
@@ -61,7 +74,7 @@ export default function OdooSimulator() {
     >
       <OdooNavbar app={app} breadcrumb={breadcrumb} onOpenApp={(id) => dispatch({ type: 'OPEN_APP', app: id })} />
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        <OdooSidebar app={app} activeItem={app.activeItem} onSelectItem={onSelectItem} />
+        <OdooSidebar app={app} activeItem={sidebarActive} onSelectItem={onSelectItem} />
         {state.app === 'purchase' && <PurchaseApp state={state} dispatch={dispatch} />}
         {state.app === 'inventory' && <InventoryApp state={state} dispatch={dispatch} />}
         {state.app === 'accounting' && <AccountingApp state={state} dispatch={dispatch} />}
