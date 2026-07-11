@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { APPS, ODOO } from './odooTheme.js';
 
-/* 3×3 apps-grid glyph (the Odoo "app switcher" icon). */
+/* شعار شبكة التطبيقات 3×3 (أيقونة «مبدّل التطبيقات» في Odoo). */
 function AppsGrid() {
   return (
     <span className="grid grid-cols-3 gap-[3px]">
@@ -12,11 +12,24 @@ function AppsGrid() {
   );
 }
 
+/* أيقونتا الدخول/الخروج من وضع ملء الشاشة. */
+const ExpandIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 2H2v4M10 2h4v4M6 14H2v-4M10 14h4v-4" />
+  </svg>
+);
+const CompressIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 6h4V2M14 6h-4V2M2 10h4v4M14 10h-4v4" />
+  </svg>
+);
+
 /**
- * Odoo top App Navbar: app switcher + current app name + breadcrumb (left),
- * systray icons + user menu (right). White bar, ~46px, bottom border.
+ * شريط تطبيقات Odoo العلوي (RTL): مبدّل التطبيقات + اسم التطبيق + مسار التنقّل
+ * (يمين)، وأيقونات النظام + قائمة المستخدم + زر ملء الشاشة (يسار). شريط أبيض
+ * بارتفاع ~46px وحدّ سفلي.
  */
-export default function OdooNavbar({ app, breadcrumb = [], onOpenApp }) {
+export default function OdooNavbar({ app, breadcrumb = [], onOpenApp, isFullscreen, onToggleFullscreen }) {
   const [showApps, setShowApps] = useState(false);
 
   return (
@@ -24,13 +37,13 @@ export default function OdooNavbar({ app, breadcrumb = [], onOpenApp }) {
       className="relative flex items-center justify-between h-[46px] px-3 bg-white border-b select-none shrink-0"
       style={{ borderColor: ODOO.border }}
     >
-      {/* left: apps + app name + breadcrumb */}
+      {/* يمين: مبدّل التطبيقات + اسم التطبيق + مسار التنقّل */}
       <div className="flex items-center gap-3 min-w-0">
         <button
           type="button"
           onClick={() => setShowApps((v) => !v)}
           className="flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100"
-          aria-label="Apps"
+          aria-label="التطبيقات"
         >
           <AppsGrid />
         </button>
@@ -40,35 +53,46 @@ export default function OdooNavbar({ app, breadcrumb = [], onOpenApp }) {
         <nav className="flex items-center gap-2 text-sm text-gray-500 min-w-0">
           {breadcrumb.map((b, i) => (
             <React.Fragment key={i}>
-              <span className="text-gray-300">›</span>
+              <span className="text-gray-300">‹</span>
               <span className={`truncate ${i === breadcrumb.length - 1 ? 'text-gray-800 font-medium' : ''}`}>{b}</span>
             </React.Fragment>
           ))}
         </nav>
       </div>
 
-      {/* right: systray + user */}
+      {/* يسار: أيقونات النظام + المستخدم + ملء الشاشة */}
       <div className="flex items-center gap-3 shrink-0">
-        <span className="text-gray-400 text-sm hidden sm:inline" title="Activities">🔔</span>
-        <span className="text-gray-400 text-sm hidden sm:inline" title="Messages">💬</span>
+        <span className="text-gray-400 text-sm hidden sm:inline" title="الأنشطة">🔔</span>
+        <span className="text-gray-400 text-sm hidden sm:inline" title="الرسائل">💬</span>
         <div className="flex items-center gap-2">
           <span
             className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
             style={{ background: ODOO.purple }}
           >
-            MB
+            م ب
           </span>
-          <span className="text-sm text-gray-700 hidden md:inline">Mohammed</span>
+          <span className="text-sm text-gray-700 hidden md:inline">محمد</span>
           <span className="text-gray-400 text-xs">▾</span>
         </div>
+        {onToggleFullscreen && (
+          <button
+            type="button"
+            onClick={onToggleFullscreen}
+            className="flex items-center justify-center w-8 h-8 rounded text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+            title={isFullscreen ? 'إنهاء ملء الشاشة' : 'ملء الشاشة'}
+            aria-label={isFullscreen ? 'إنهاء ملء الشاشة' : 'ملء الشاشة'}
+          >
+            {isFullscreen ? <CompressIcon /> : <ExpandIcon />}
+          </button>
+        )}
       </div>
 
-      {/* app switcher dropdown */}
+      {/* قائمة مبدّل التطبيقات المنسدلة */}
       {showApps && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowApps(false)} />
           <div
-            className="absolute z-50 top-[48px] left-3 bg-white border rounded-lg shadow-xl p-3 grid grid-cols-3 gap-2 w-[300px]"
+            className="absolute z-50 top-[48px] right-3 bg-white border rounded-lg shadow-xl p-3 grid grid-cols-3 gap-2 w-[300px]"
             style={{ borderColor: ODOO.border }}
           >
             {APPS.map((a) => (

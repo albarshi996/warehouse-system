@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ODOO } from './odooTheme.js';
 
-/* ── view-switcher glyphs (List / Kanban / Form) ────────────────────────── */
+/* ── شعارات مبدّل العرض (قائمة / كانبان / نموذج) ─────────────────────────── */
 const ICONS = {
   list: (
     <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
@@ -27,14 +27,14 @@ function ViewSwitcher() {
   const btn = 'w-7 h-7 flex items-center justify-center rounded transition-colors';
   return (
     <div className="flex items-center gap-0.5">
-      <button type="button" className={`${btn} text-gray-400 hover:bg-gray-100`} title="List">{ICONS.list}</button>
-      <button type="button" className={`${btn} text-gray-400 hover:bg-gray-100`} title="Kanban">{ICONS.kanban}</button>
-      <button type="button" className={btn} title="Form" style={{ background: ODOO.purple, color: '#fff' }}>{ICONS.form}</button>
+      <button type="button" className={`${btn} text-gray-400 hover:bg-gray-100`} title="قائمة">{ICONS.list}</button>
+      <button type="button" className={`${btn} text-gray-400 hover:bg-gray-100`} title="كانبان">{ICONS.kanban}</button>
+      <button type="button" className={btn} title="نموذج" style={{ background: ODOO.purple, color: '#fff' }}>{ICONS.form}</button>
     </div>
   );
 }
 
-/* ── status bar: chevron step-progress (right of the form header) ─────────── */
+/* ── شريط الحالة: تقدّم على هيئة شيفرونات (يسار رأس النموذج، يشير يساراً RTL) ── */
 function StatusBar({ stages, current }) {
   const curIdx = Math.max(0, stages.findIndex((s) => s.key === current));
   return (
@@ -43,8 +43,8 @@ function StatusBar({ stages, current }) {
         const active = i === curIdx;
         const clip =
           i === 0
-            ? 'polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%)'
-            : 'polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%)';
+            ? 'polygon(100% 0, 10px 0, 0 50%, 10px 100%, 100% 100%)'
+            : 'polygon(100% 0, 10px 0, 0 50%, 10px 100%, 100% 100%, calc(100% - 10px) 50%)';
         return (
           <div
             key={s.key}
@@ -52,9 +52,9 @@ function StatusBar({ stages, current }) {
             style={{
               clipPath: clip,
               WebkitClipPath: clip,
-              marginLeft: i === 0 ? 0 : -6,
-              paddingLeft: i === 0 ? 12 : 18,
-              paddingRight: 14,
+              marginRight: i === 0 ? 0 : -6,
+              paddingRight: i === 0 ? 12 : 18,
+              paddingLeft: 14,
               background: active ? ODOO.purple : '#e7e7e7',
               color: active ? '#fff' : '#8a8a8a',
             }}
@@ -67,7 +67,7 @@ function StatusBar({ stages, current }) {
   );
 }
 
-/* ── smart buttons: stat boxes at the top-right of the sheet ──────────────── */
+/* ── الأزرار الذكية: صناديق إحصائية أعلى الورقة ───────────────────────────── */
 function SmartButtons({ buttons }) {
   if (!buttons.length) return null;
   return (
@@ -81,7 +81,7 @@ function SmartButtons({ buttons }) {
           style={{ borderColor: ODOO.border }}
         >
           <span className="text-lg leading-none">{b.icon}</span>
-          <span className="text-left leading-tight">
+          <span className="text-right leading-tight">
             <span className="block text-sm font-bold" style={{ color: ODOO.purple }}>{b.value}</span>
             <span className="block text-[11px] text-gray-500">{b.label}</span>
           </span>
@@ -91,7 +91,7 @@ function SmartButtons({ buttons }) {
   );
 }
 
-/* ── notebook: tabbed sections inside the sheet ───────────────────────────── */
+/* ── الدفتر: أقسام مبوّبة داخل الورقة ──────────────────────────────────────── */
 function Notebook({ tabs }) {
   const [active, setActive] = useState(0);
   if (!tabs.length) return null;
@@ -116,12 +116,12 @@ function Notebook({ tabs }) {
 }
 
 /**
- * Generic Odoo Form View wrapper. Props:
+ * غلاف «عرض النموذج» العام في Odoo. الخصائص:
  *   statusbar    : { stages:[{key,label}], current }
- *   actions      : [{ label, primary?, onClick }]  → header buttons (left)
+ *   actions      : [{ label, primary?, onClick }]  → أزرار الرأس
  *   smartButtons : [{ icon, value, label, onClick }]
- *   title        : record title (big, light)
- *   fieldColumns : [[{label,value}], [{label,value}]]  → 2-column field groups
+ *   title        : عنوان السجل (كبير خفيف)
+ *   fieldColumns : [[{label,value}], [{label,value}]]  → مجموعتا حقول
  *   notebook     : [{ name, content }]
  */
 export default function OdooFormView({
@@ -135,10 +135,10 @@ export default function OdooFormView({
 }) {
   return (
     <div className="flex-1 min-w-0 flex flex-col overflow-hidden" style={{ background: ODOO.contentBg }}>
-      {/* control panel */}
+      {/* لوحة التحكّم */}
       <div className="flex items-center justify-between px-4 py-1.5 bg-white border-b shrink-0" style={{ borderColor: ODOO.border }}>
         <button type="button" className="text-white text-[13px] font-semibold rounded px-3 py-1" style={{ background: ODOO.purple }}>
-          New
+          جديد
         </button>
         <div className="flex items-center gap-3 text-gray-500">
           <span className="text-xs tabular-nums">1 / 1</span>
@@ -146,7 +146,7 @@ export default function OdooFormView({
         </div>
       </div>
 
-      {/* form header: action buttons (left) + status chevrons (right) */}
+      {/* رأس النموذج: أزرار الإجراءات (يمين) + شيفرونات الحالة (يسار) */}
       <div className="flex items-center justify-between gap-2 px-4 py-2 bg-white border-b flex-wrap shrink-0" style={{ borderColor: ODOO.border }}>
         <div className="flex items-center gap-2 flex-wrap">
           {actions.map((a, i) => (
@@ -168,7 +168,7 @@ export default function OdooFormView({
         {statusbar && <StatusBar stages={statusbar.stages} current={statusbar.current} />}
       </div>
 
-      {/* sheet */}
+      {/* الورقة */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="mx-auto bg-white border rounded shadow-sm w-full max-w-4xl p-6 sm:p-8" style={{ borderColor: ODOO.border }}>
           <SmartButtons buttons={smartButtons} />

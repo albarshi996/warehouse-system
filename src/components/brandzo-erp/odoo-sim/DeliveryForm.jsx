@@ -5,16 +5,16 @@ import OdooFormView from './OdooFormView.jsx';
 
 const LINE = SAMPLE_PO.lines[0];
 
-/* FEFO lot picker — the trainee MUST pick the earliest-expiry lot. */
+/* منتقي الدفعة وفق FEFO — على المتدرّب اختيار الدفعة الأقرب انتهاءً. */
 function FefoPicker({ lots, picked, onPick }) {
   return (
     <div className="mb-6 rounded-lg border p-4" style={{ borderColor: '#e0c98a', background: '#fdf6e3' }}>
       <div className="flex items-center gap-2 mb-1.5">
         <span className="text-lg">⏳</span>
-        <h3 className="font-bold text-[14px] text-gray-800">Select Lot to Deliver — FEFO (First-Expiry-First-Out)</h3>
+        <h3 className="font-bold text-[14px] text-gray-800">اختر الدفعة للتسليم — FEFO (الأقرب انتهاءً يخرج أولاً)</h3>
       </div>
       <p className="text-[12px] text-gray-600 mb-3 leading-relaxed">
-        Scan or pick the lot with the <b>earliest expiry</b>. The system blocks any newer lot so stock never expires on the shelf.
+        امسح أو اختر الدفعة ذات <b>تاريخ الانتهاء الأقرب</b>. يحجب النظام أي دفعة أحدث حتى لا تنتهي صلاحية المخزون على الرفّ.
       </p>
       <div className="space-y-2">
         {lots.map((lot, i) => {
@@ -25,21 +25,21 @@ function FefoPicker({ lots, picked, onPick }) {
               key={lot.number}
               type="button"
               onClick={() => onPick(lot.number)}
-              className="w-full flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left transition-colors bg-white"
+              className="w-full flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-right transition-colors bg-white"
               style={sel ? { borderColor: '#1e7e34', boxShadow: '0 0 0 1px #1e7e34 inset' } : { borderColor: ODOO.border }}
             >
               <span className="flex items-center gap-2 min-w-0">
                 <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0" style={{ borderColor: sel ? '#1e7e34' : '#c4c4c4' }}>
                   {sel && <span className="w-2 h-2 rounded-full" style={{ background: '#1e7e34' }} />}
                 </span>
-                <span className="text-gray-400 text-xs" title="Lot / Serial barcode">‖‖‖</span>
-                <span className="font-mono text-[13px] text-gray-800">{lot.number}</span>
-                <span className="text-[12px] text-gray-500 hidden sm:inline">Exp {lot.expiry} · Qty {lot.qty} · {lot.source}</span>
+                <span className="text-gray-400 text-xs" title="باركود الدفعة/التسلسل">‖‖‖</span>
+                <span className="font-mono text-[13px] text-gray-800" dir="ltr">{lot.number}</span>
+                <span className="text-[12px] text-gray-500 hidden sm:inline">انتهاء {lot.expiry} · كمية {lot.qty} · {lot.source}</span>
               </span>
               {isEarliest ? (
-                <span className="text-[10px] font-bold rounded px-1.5 py-0.5 shrink-0" style={{ color: '#1e7e34', background: '#e9f7ef' }}>FEFO ✓ earliest</span>
+                <span className="text-[10px] font-bold rounded px-1.5 py-0.5 shrink-0" style={{ color: '#1e7e34', background: '#e9f7ef' }}>FEFO ✓ الأقرب</span>
               ) : (
-                <span className="text-[10px] font-bold rounded px-1.5 py-0.5 shrink-0" style={{ color: '#b02a37', background: '#fdecee' }}>newer</span>
+                <span className="text-[10px] font-bold rounded px-1.5 py-0.5 shrink-0" style={{ color: '#b02a37', background: '#fdecee' }}>أحدث</span>
               )}
             </button>
           );
@@ -54,8 +54,8 @@ function DoneBanner({ lot }) {
     <div className="mb-6 rounded-lg border p-4 flex items-center gap-3" style={{ borderColor: '#bfe3c9', background: '#e9f7ef' }}>
       <span className="text-2xl">✅</span>
       <div>
-        <div className="font-bold text-[14px]" style={{ color: ODOO.green }}>Delivery validated — {lot} shipped</div>
-        <div className="text-[12px] text-gray-600">FEFO respected. The full inventory cycle is complete: Receipt → QC → Putaway → Delivery.</div>
+        <div className="font-bold text-[14px]" style={{ color: ODOO.green }}>تم اعتماد التسليم — شُحنت {lot}</div>
+        <div className="text-[12px] text-gray-600">تحقّقت قاعدة FEFO. اكتملت دورة المخزون كاملة: استلام ← جودة ← تخزين ← تسليم.</div>
       </div>
     </div>
   );
@@ -66,40 +66,40 @@ function Operations({ picked }) {
     <table className="w-full text-[13px]">
       <thead>
         <tr className="text-gray-500 border-b" style={{ borderColor: ODOO.border }}>
-          <th className="py-2 text-left font-medium">Product</th>
-          <th className="py-2 text-right font-medium">Demand</th>
-          <th className="py-2 text-right font-medium">Done</th>
-          <th className="py-2 text-left font-medium pl-4">Lot/Serial</th>
+          <th className="py-2 text-start font-medium">المنتج</th>
+          <th className="py-2 text-end font-medium">المطلوب</th>
+          <th className="py-2 text-end font-medium">المُنجَز</th>
+          <th className="py-2 text-start font-medium ps-4">الدفعة/التسلسل</th>
         </tr>
       </thead>
       <tbody>
         <tr className="border-b" style={{ borderColor: ODOO.borderSoft }}>
           <td className="py-2 text-gray-800">{LINE.product}</td>
-          <td className="py-2 text-right text-gray-700 whitespace-nowrap">{LINE.qty} {LINE.uom}</td>
-          <td className="py-2 text-right font-semibold whitespace-nowrap" style={{ color: picked ? ODOO.green : '#9ca3af' }}>
+          <td className="py-2 text-end text-gray-700 whitespace-nowrap">{LINE.qty} {LINE.uom}</td>
+          <td className="py-2 text-end font-semibold whitespace-nowrap" style={{ color: picked ? ODOO.green : '#9ca3af' }}>
             {picked ? LINE.qty : 0} {LINE.uom}
           </td>
-          <td className="py-2 pl-4 text-gray-700 font-mono">{picked || '—'}</td>
+          <td className="py-2 ps-4 text-gray-700 font-mono" dir="ltr">{picked || '—'}</td>
         </tr>
       </tbody>
     </table>
   );
 }
 
-/* Delivery Order / Picking (Stage 06) — FEFO-enforced lot selection. */
+/* أمر التسليم / السحب (المرحلة 06) — اختيار الدفعة بفرض قاعدة FEFO. */
 export default function DeliveryForm({ state, dispatch }) {
   const dv = state.delivery;
   const lots = deliveryLots(state.grn);
 
   const stages = [
-    { key: 'draft', label: 'Draft' },
-    { key: 'ready', label: 'Ready' },
-    { key: 'done', label: 'Done' },
+    { key: 'draft', label: 'مسودة' },
+    { key: 'ready', label: 'جاهز' },
+    { key: 'done', label: 'مكتمل' },
   ];
   const actions = dv.done
-    ? [{ label: 'Print Delivery Slip', onClick: () => {} }]
-    : [{ label: 'Validate', primary: true, onClick: () => dispatch({ type: 'DELIVERY_VALIDATE' }) }];
-  const smartButtons = [{ icon: '🧾', value: SAMPLE_PO.name, label: 'Source Document', onClick: () => dispatch({ type: 'OPEN_APP', app: 'purchase' }) }];
+    ? [{ label: 'طباعة إذن التسليم', onClick: () => {} }]
+    : [{ label: 'تصديق', primary: true, onClick: () => dispatch({ type: 'DELIVERY_VALIDATE' }) }];
+  const smartButtons = [{ icon: '🧾', value: SAMPLE_PO.name, label: 'المستند المصدر', onClick: () => dispatch({ type: 'OPEN_APP', app: 'purchase' }) }];
 
   const banner = dv.done ? (
     <DoneBanner lot={dv.pickedLot} />
@@ -109,18 +109,18 @@ export default function DeliveryForm({ state, dispatch }) {
 
   const fieldColumns = [
     [
-      { label: 'Delivery Address', value: 'Brandzo Retail — Benghazi' },
-      { label: 'Operation Type', value: 'Brandzo Hub: Delivery Orders' },
-      { label: 'Source Document', value: SAMPLE_PO.name },
+      { label: 'عنوان التسليم', value: 'براندزو للتجزئة — بنغازي' },
+      { label: 'نوع العملية', value: 'براندزو هَب: أوامر التسليم' },
+      { label: 'المستند المصدر', value: SAMPLE_PO.name },
     ],
     [
-      { label: 'Scheduled Date', value: SAMPLE_PO.receiptDate },
-      { label: 'Source Location', value: 'WH/Stock' },
-      { label: 'Company', value: 'Brandzo Hub' },
+      { label: 'التاريخ المجدول', value: SAMPLE_PO.receiptDate },
+      { label: 'موقع المصدر', value: 'WH/Stock' },
+      { label: 'الشركة', value: 'براندزو هَب' },
     ],
   ];
 
-  const notebook = [{ name: 'Operations', content: <Operations picked={dv.pickedLot} /> }];
+  const notebook = [{ name: 'العمليات', content: <Operations picked={dv.pickedLot} /> }];
 
   return (
     <OdooFormView

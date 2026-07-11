@@ -19,7 +19,7 @@ export default function OdooWizard({ title, onClose, children, footer }) {
       >
         <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: ODOO.border }}>
           <h3 className="text-base font-semibold text-gray-800">{title}</h3>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-700 text-2xl leading-none" aria-label="Close">
+          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-700 text-2xl leading-none" aria-label="إغلاق">
             ×
           </button>
         </div>

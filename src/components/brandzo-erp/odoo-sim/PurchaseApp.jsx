@@ -8,31 +8,31 @@ function OrderLines({ lines, untaxed, tax, total }) {
       <table className="w-full text-[13px]">
         <thead>
           <tr className="text-gray-500 border-b" style={{ borderColor: ODOO.border }}>
-            <th className="py-2 text-left font-medium">Product</th>
-            <th className="py-2 text-right font-medium">Quantity</th>
-            <th className="py-2 text-right font-medium">Unit Price</th>
-            <th className="py-2 text-right font-medium">Taxes</th>
-            <th className="py-2 text-right font-medium">Subtotal</th>
+            <th className="py-2 text-start font-medium">المنتج</th>
+            <th className="py-2 text-end font-medium">الكمية</th>
+            <th className="py-2 text-end font-medium">سعر الوحدة</th>
+            <th className="py-2 text-end font-medium">الضرائب</th>
+            <th className="py-2 text-end font-medium">الإجمالي الفرعي</th>
           </tr>
         </thead>
         <tbody>
           {lines.map((l, i) => (
             <tr key={i} className="border-b" style={{ borderColor: ODOO.borderSoft }}>
               <td className="py-2 text-gray-800">{l.product}</td>
-              <td className="py-2 text-right text-gray-700 whitespace-nowrap">{l.qty.toLocaleString('en-US')} {l.uom}</td>
-              <td className="py-2 text-right text-gray-700 whitespace-nowrap">{fmt(l.price)}</td>
-              <td className="py-2 text-right text-gray-700">{l.tax}</td>
-              <td className="py-2 text-right font-semibold text-gray-800 whitespace-nowrap">{fmt(l.qty * l.price)}</td>
+              <td className="py-2 text-end text-gray-700 whitespace-nowrap">{l.qty.toLocaleString('en-US')} {l.uom}</td>
+              <td className="py-2 text-end text-gray-700 whitespace-nowrap">{fmt(l.price)}</td>
+              <td className="py-2 text-end text-gray-700">{l.tax}</td>
+              <td className="py-2 text-end font-semibold text-gray-800 whitespace-nowrap">{fmt(l.qty * l.price)}</td>
             </tr>
           ))}
         </tbody>
       </table>
       <div className="flex justify-end mt-4">
         <div className="w-64 space-y-1 text-[13px]">
-          <div className="flex justify-between text-gray-500"><span>Untaxed Amount</span><span>{fmt(untaxed)}</span></div>
-          <div className="flex justify-between text-gray-500"><span>Taxes (15%)</span><span>{fmt(tax)}</span></div>
+          <div className="flex justify-between text-gray-500"><span>المبلغ قبل الضريبة</span><span>{fmt(untaxed)}</span></div>
+          <div className="flex justify-between text-gray-500"><span>الضرائب (15%)</span><span>{fmt(tax)}</span></div>
           <div className="flex justify-between text-gray-900 font-bold text-base border-t pt-1" style={{ borderColor: ODOO.border }}>
-            <span>Total</span><span>{fmt(total)}</span>
+            <span>الإجمالي</span><span>{fmt(total)}</span>
           </div>
         </div>
       </div>
@@ -42,11 +42,11 @@ function OrderLines({ lines, untaxed, tax, total }) {
 
 function OtherInfo({ po }) {
   const rows = [
-    ['Buyer', po.buyer],
-    ['Company', po.company],
-    ['Payment Terms', po.paymentTerms],
-    ['Receipt Date', po.receiptDate],
-    ['Source Document', po.vendorRef],
+    ['المشتري', po.buyer],
+    ['الشركة', po.company],
+    ['شروط الدفع', po.paymentTerms],
+    ['تاريخ الاستلام', po.receiptDate],
+    ['المستند المصدر', po.vendorRef],
   ];
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-1">
@@ -60,7 +60,7 @@ function OtherInfo({ po }) {
   );
 }
 
-/** Purchase app — the RFQ / Purchase Order form. */
+/** تطبيق المشتريات — نموذج طلب عرض السعر / أمر الشراء. */
 export default function PurchaseApp({ state, dispatch }) {
   const po = SAMPLE_PO;
   const confirmed = state.po.state === 'purchase';
@@ -69,44 +69,44 @@ export default function PurchaseApp({ state, dispatch }) {
   const total = untaxed + tax;
 
   const stages = [
-    { key: 'draft', label: 'RFQ' },
-    { key: 'sent', label: 'RFQ Sent' },
-    { key: 'purchase', label: 'Purchase Order' },
+    { key: 'draft', label: 'طلب عرض سعر' },
+    { key: 'sent', label: 'أُرسل الطلب' },
+    { key: 'purchase', label: 'أمر شراء' },
   ];
   const current = confirmed ? 'purchase' : 'draft';
 
   const actions = confirmed
     ? [
-        { label: 'Receive Products', primary: true, onClick: () => dispatch({ type: 'OPEN_RECEIPT' }) },
-        { label: 'Create Bill', onClick: () => dispatch({ type: 'CREATE_BILL' }) },
-        { label: 'Cancel', onClick: () => dispatch({ type: 'RESET_PO' }) },
+        { label: 'استلام المنتجات', primary: true, onClick: () => dispatch({ type: 'OPEN_RECEIPT' }) },
+        { label: 'إنشاء فاتورة', onClick: () => dispatch({ type: 'CREATE_BILL' }) },
+        { label: 'إلغاء', onClick: () => dispatch({ type: 'RESET_PO' }) },
       ]
     : [
-        { label: 'Confirm Order', primary: true, onClick: () => dispatch({ type: 'CONFIRM_PO' }) },
-        { label: 'Send by Email', onClick: () => {} },
-        { label: 'Cancel', onClick: () => {} },
+        { label: 'تأكيد الطلب', primary: true, onClick: () => dispatch({ type: 'CONFIRM_PO' }) },
+        { label: 'إرسال بالبريد', onClick: () => {} },
+        { label: 'إلغاء', onClick: () => {} },
       ];
 
   const smartButtons = confirmed
-    ? [{ icon: '📦', value: '1', label: 'Receipt', onClick: () => dispatch({ type: 'OPEN_RECEIPT' }) }]
+    ? [{ icon: '📦', value: '1', label: 'الاستلام', onClick: () => dispatch({ type: 'OPEN_RECEIPT' }) }]
     : [];
 
   const fieldColumns = [
     [
-      { label: 'Vendor', value: po.vendor },
-      { label: 'Vendor Reference', value: po.vendorRef },
-      { label: 'Blanket Order', value: '—' },
+      { label: 'المورّد', value: po.vendor },
+      { label: 'مرجع المورّد', value: po.vendorRef },
+      { label: 'أمر إطاري', value: '—' },
     ],
     [
-      { label: 'Order Deadline', value: po.orderDeadline },
-      { label: 'Expected Arrival', value: po.receiptDate },
-      { label: 'Currency', value: po.currency },
+      { label: 'الموعد النهائي للطلب', value: po.orderDeadline },
+      { label: 'الوصول المتوقّع', value: po.receiptDate },
+      { label: 'العملة', value: 'دينار ليبي — LYD' },
     ],
   ];
 
   const notebook = [
-    { name: 'Order Lines', content: <OrderLines lines={po.lines} untaxed={untaxed} tax={tax} total={total} /> },
-    { name: 'Other Info', content: <OtherInfo po={po} /> },
+    { name: 'بنود الطلب', content: <OrderLines lines={po.lines} untaxed={untaxed} tax={tax} total={total} /> },
+    { name: 'معلومات أخرى', content: <OtherInfo po={po} /> },
   ];
 
   return (

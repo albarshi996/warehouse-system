@@ -11,18 +11,19 @@ function Badge({ state }) {
 }
 
 /**
- * Generic Odoo List (Tree) view. Columns: [{ key, label, align? }]; a column
- * with key '_status' renders a status Badge from row.state. Rows are clickable.
+ * عرض «قائمة» عام في Odoo (شجرة). الأعمدة: [{ key, label, align? }]؛ العمود
+ * ذو المفتاح '_status' يعرض شارة الحالة من row.state. الصفوف قابلة للنقر.
+ * المحاذاة منطقية (start/end) لتحترم اتجاه RTL.
  */
 export default function OdooListView({ columns, rows, onOpenRow, emptyText }) {
   return (
     <div className="flex-1 min-w-0 flex flex-col overflow-hidden" style={{ background: ODOO.contentBg }}>
-      {/* control panel */}
+      {/* لوحة التحكّم */}
       <div className="flex items-center justify-between px-4 py-1.5 bg-white border-b shrink-0" style={{ borderColor: ODOO.border }}>
         <button type="button" className="text-white text-[13px] font-semibold rounded px-3 py-1" style={{ background: ODOO.purple }}>
-          New
+          جديد
         </button>
-        <span className="text-xs text-gray-500 tabular-nums">{rows.length} record(s)</span>
+        <span className="text-xs text-gray-500 tabular-nums">{rows.length} سجلّ</span>
       </div>
 
       <div className="flex-1 overflow-auto p-4">
@@ -31,7 +32,7 @@ export default function OdooListView({ columns, rows, onOpenRow, emptyText }) {
             <thead>
               <tr className="text-gray-500 border-b bg-gray-50" style={{ borderColor: ODOO.border }}>
                 {columns.map((c) => (
-                  <th key={c.key} className={`px-3 py-2 font-medium ${c.align === 'right' ? 'text-right' : 'text-left'}`}>
+                  <th key={c.key} className={`px-3 py-2 font-medium ${c.align === 'right' ? 'text-end' : 'text-start'}`}>
                     {c.label}
                   </th>
                 ))}
@@ -41,7 +42,7 @@ export default function OdooListView({ columns, rows, onOpenRow, emptyText }) {
               {rows.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length} className="px-3 py-8 text-center text-gray-400">
-                    {emptyText || 'No records'}
+                    {emptyText || 'لا توجد سجلّات'}
                   </td>
                 </tr>
               ) : (
@@ -53,7 +54,7 @@ export default function OdooListView({ columns, rows, onOpenRow, emptyText }) {
                     style={{ borderColor: ODOO.borderSoft }}
                   >
                     {columns.map((c) => (
-                      <td key={c.key} className={`px-3 py-2 ${c.align === 'right' ? 'text-right' : 'text-left'} text-gray-700`}>
+                      <td key={c.key} className={`px-3 py-2 ${c.align === 'right' ? 'text-end' : 'text-start'} text-gray-700`}>
                         {c.key === '_status' ? <Badge state={r.state} /> : r[c.key]}
                       </td>
                     ))}
