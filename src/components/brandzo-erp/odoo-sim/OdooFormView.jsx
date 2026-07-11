@@ -129,6 +129,7 @@ export default function OdooFormView({
   actions = [],
   smartButtons = [],
   title,
+  banner = null,
   fieldColumns = [],
   notebook = [],
 }) {
@@ -172,6 +173,7 @@ export default function OdooFormView({
         <div className="mx-auto bg-white border rounded shadow-sm w-full max-w-4xl p-6 sm:p-8" style={{ borderColor: ODOO.border }}>
           <SmartButtons buttons={smartButtons} />
           <h1 className="text-[26px] font-light text-gray-800 leading-tight mb-6">{title}</h1>
+          {banner}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-1">
             {fieldColumns.map((col, ci) => (
               <div key={ci} className="space-y-1">
