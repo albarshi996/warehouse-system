@@ -1,0 +1,27 @@
+---
+/**
+ * الصلاحيات والأدوار — مركز تصميم نظام الوصول لبوابة العمليات.
+ * حاوية تفاعلية قابلة للتوسّع: الأدوار، منطق الصلاحيات، كيفية الدخول،
+ * وماذا يرى كل دور — مبنية على مجموعات موديول brandzo_warehouse.
+ *
+ * القاعدة الذهبية: لا حذف — صفحة ومكوّن جديدان بالكامل (access/).
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import AccessControlHub from '../../components/brandzo-erp/access/AccessControlHub.jsx';
+---
+
+<DashboardLayout title="الصلاحيات والأدوار" showGuide={false}>
+  <div class="text-right" dir="rtl">
+    <div class="mb-4">
+      <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">🛡️ الصلاحيات والأدوار</h1>
+      <p class="text-gray-300 text-sm leading-relaxed max-w-3xl">
+        من يدخل بوابة العمليات، وبأي دور، وماذا يرى ويعتمد. حاوية حيّة تنمو حتى يكتمل
+        نظام الوصول — مبنية على مجموعات الصلاحيات الحقيقية في موديول
+        <span class="font-mono text-brand-gold">brandzo_warehouse</span>.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <AccessControlHub client:load />
+  </div>
+</DashboardLayout>
