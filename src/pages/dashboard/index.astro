@@ -4,219 +4,376 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 const base = import.meta.env.BASE_URL.endsWith('/')
   ? import.meta.env.BASE_URL.slice(0, -1)
   : import.meta.env.BASE_URL;
+
+/*
+ * ─── لوحة التحكم كبوابة عمليات متعددة (خطة OneNote — 12 يوليو 2026) ───────────
+ * القاعدة الذهبية: صفر حذف — كل الروابط القائمة أُعيد تنظيمها في أقسام مجمّعة،
+ * ولم يُحذف أي مقصد. التغييرات: عنوان جديد · شريط أنظمة بدل البانر الأحمر ·
+ * تجميع البطاقات · إخفاء قابل للتخصيص · نمط «قريباً» للمحتوى غير الجاهز.
+ * (إطار تقرير الجودة أُزيل من هنا لأنه متاح في «مركز التقارير» وكملف HTML.)
+ */
+
+// شريط الأنظمة الأساسية (يستبدل البانر الأحمر).
+const systems = [
+  {
+    id: 'sys-learn', path: '/dashboard/learn-odoo', icon: '🎓',
+    title: 'تعلّم أودو · محاكي أودو',
+    desc: 'جولة موجّهة تفاعلية على دورة أودو الكاملة (١٢ مرحلة) مع فرض القواعد الذهبية آليًّا.',
+  },
+  {
+    id: 'sys-access', path: '/dashboard/access-control', icon: '🛡️',
+    title: 'الصلاحيات والأدوار',
+    desc: 'تصميم نظام الوصول للبوابة: مَن يدخل، وبأي دور، وماذا يرى ويعتمد.',
+  },
+];
+
+// الأقسام المجمّعة — كل بطاقة لها معرّف ثابت لحفظ حالة الإخفاء.
+const groups = [
+  {
+    id: 'daily', title: 'العمليات اليومية', emoji: '🗓️',
+    cards: [
+      { id: 'forms', path: '/dashboard/forms', icon: '📋', tone: 'text-blue-400',
+        title: 'النماذج التشغيلية', desc: 'استعرض النماذج الـ١٩ — قلب التوثيق العملي' },
+      { id: 'stock-ops', path: '/عمليات-مخزنية.html', newtab: true, icon: '📦', tone: 'text-teal-400',
+        title: 'عمليات مخزنية', desc: 'نظام تفاعلي لإدارة الجرد والعمليات اليومية' },
+      { id: 'achievement', path: '/dashboard/achievement-report', icon: '✅', tone: 'text-green-400',
+        title: 'تقرير الإنجاز', desc: 'سجل الإنجازات اليومية والمهام التشغيلية' },
+    ],
+  },
+  {
+    id: 'inventory', title: 'المستودعات والجرد', emoji: '📦',
+    cards: [
+      { id: 'cold', path: '/dashboard/cold-storage-plan', icon: '🏭', tone: 'text-brand-gold',
+        title: 'مخطط مجمع التبريد الرحبة', desc: 'خريطة الوحدات والتوزيع لتخزين الكوزميتيك' },
+      { id: 'retail', path: '/dashboard/retail-hub', icon: '🗺️', tone: 'text-brand-yellow',
+        title: 'خريطة الأسواق', desc: 'تحليل فئات المستهلكين والأسواق في بنغازي' },
+      { id: 'assets', path: '/dashboard/assets-inventory', icon: '🗂️', tone: 'text-brand-yellow',
+        title: 'جرد الأصول', desc: 'جرد أجهزة ومركبات ومكاتب برانزو مع التصدير' },
+      { id: 'vehicles', path: '/dashboard/vehicles-inventory', icon: '🚗', tone: 'text-green-400',
+        title: 'جرد المركبات', desc: 'تفتيش شامل للمركبات مع استمارة التسليم والاستلام' },
+    ],
+  },
+  {
+    id: 'cycles', title: 'الدورات والمحاكاة', emoji: '🔄',
+    cards: [
+      { id: 'workflows', path: '/dashboard/workflows', icon: '🏢', tone: 'text-brand-yellow',
+        title: 'الدورة المستندية', desc: 'الهيكل التنظيمي ومسارات المستندات' },
+      { id: 'erp', path: '/dashboard/erp-workflows', icon: '⚙️', tone: 'text-green-400',
+        title: 'دورات عمل Odoo', desc: 'الدورات المستندية التشغيلية على Odoo' },
+    ],
+  },
+  {
+    id: 'reports', title: 'التقارير والتحليل', emoji: '📊',
+    cards: [
+      { id: 'reports-center', path: '/dashboard/reports', icon: '📊', tone: 'text-brand-gold', featured: true,
+        title: 'مركز التقارير', desc: 'كل تقارير المنظومة — التشغيلية والجودة والتحليلية والتوثيق المرئي — في مكان واحد' },
+      { id: 'global', path: '/dashboard/global-warehouse-report', icon: '🌍', tone: 'text-teal-400',
+        title: 'المقارنة العالمية', desc: 'مقارنة النظام التشغيلي مع عمالقة اللوجستيات العالمية' },
+      { id: 'staffing', path: '/تقرير-التوظيف-والجدول-الزمني.html', newtab: true, icon: '👥', tone: 'text-brand-yellow',
+        title: 'تقرير التوظيف', desc: 'جدول زمن إدارة المستودعات والهيكل الوظيفي' },
+      { id: 'w155', path: '/dashboard/warehouse-155-report', icon: '🏢', tone: 'text-brand-red',
+        title: 'تقرير تحوير 155', desc: 'تحوير المستودعات لرفع الكفاءة التشغيلية' },
+    ],
+  },
+  {
+    id: 'reference', title: 'المرجعية والتطوير', emoji: '🗄️',
+    cards: [
+      { id: 'archive', path: '/dashboard/archive', icon: '🗄️', tone: 'text-brand-gold',
+        title: 'الأرشيف التأسيسي', desc: 'خطة تنفيذ أودو، مزايا التكامل، التقنيات المشغِّلة، وخطوات الاعتماد' },
+      { id: 'proposals', path: '/dashboard/development-proposals', icon: '💡', tone: 'text-brand-yellow',
+        title: 'مقترحات التطوير', desc: 'تحسين كفاءة المستودعات والمعايير الهندسية' },
+    ],
+  },
+];
+
+// أنظمة قادمة — نمط «قريباً» للمحتوى غير الجاهز بعد (رؤية البوابة المتعددة).
+const soon = [
+  { id: 'soon-brands', icon: '🏷️', title: 'بوابات علامات إضافية',
+    desc: 'إدارة مستودعات لعلامات تجارية أخرى ضمن نفس البوابة.' },
+  { id: 'soon-kpi', icon: '📈', title: 'لوحة المؤشرات المالية',
+    desc: 'مؤشرات الأداء والتكاليف التشغيلية لحظيًّا.' },
+];
 ---
 
 <DashboardLayout title="لوحة التحكم" showGuide={false}>
-  <div class="text-right" dir="rtl">
-    {/* Header */}
+  <div id="dash-root" class="text-right" dir="rtl">
+    {/* ─── الترويسة + زر التخصيص ─────────────────────────────────────────── */}
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-white mb-2">
-        محمد البرشي — متخصص سلاسل الإمداد
-        <span class="block text-lg font-normal text-gray-200 mt-1">Supply Chain Specialist — Benghazi 2026</span>
-      </h1>
-      <p class="text-gray-200 text-sm mb-4 leading-relaxed">
-        بوابة العمليات الرسمية لإدارة المستودعات والتوزيع في بنغازي
-      </p>
-      <div class="w-20 h-1 bg-brand-red rounded-full mb-6" />
-
-      <!-- Prominent Report Banner -->
-      <a href={`${base}/dashboard/cold-storage-plan`} class="block mb-6">
-        <div class="rounded-2xl p-6 shadow-2xl border border-brand-red/30 bg-gradient-to-r from-brand-red via-[#c41e3a] to-[#7e2b2a]">
-          <h2 class="text-3xl font-extrabold text-white">مخطط وتقرير تخزين الكوزمتيك</h2>
-          <p class="text-white/90 mt-3 max-w-2xl">عرض المخطط الفني وتوليد تقارير التخزين لوحدات الرحبة.</p>
-          <div class="mt-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white/90">
-            🏭 فتح مخطط مجمع التبريد
-          </div>
+      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-bold text-white mb-2">
+            إدارة مستودعات برند زو
+            <span class="block text-lg font-normal text-gray-200 mt-1">Brandzo Warehouse Management — Benghazi 2026</span>
+          </h1>
+          <p class="text-gray-200 text-sm leading-relaxed">
+            بوابة العمليات الرسمية لإدارة المستودعات والتوزيع في بنغازي
+          </p>
         </div>
-      </a>
-      
-      <div class="bg-gradient-to-r from-blue-900/20 to-green-900/20 rounded-xl p-6 border border-blue-500/30">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
-          <div>
-            <div class="text-2xl font-bold text-blue-400">١٩ نموذجاً</div>
-            <div class="text-sm text-gray-200">النماذج التشغيلية الموثقة</div>
-          </div>
-          <div>
-            <div class="text-2xl font-bold text-green-400">٢٠ حياً</div>
-            <div class="text-sm text-gray-200">مرصودة في خريطة التجزئة</div>
-          </div>
-          <div>
-            <div class="text-2xl font-bold text-yellow-400">٥ دورات</div>
-            <div class="text-sm text-gray-200">مالية · HR · مشتريات · مستودعات · سلاسل الإمداد</div>
-          </div>
-          <div>
-            <div class="text-2xl font-bold text-purple-400">٤ قواعد ذهبية</div>
-            <div class="text-sm text-gray-200">دورات عمل Odoo التشغيلية</div>
+
+        {/* أدوات التخصيص */}
+        <div class="shrink-0 flex flex-wrap items-center gap-2">
+          <button id="btn-customize" type="button"
+            class="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 px-4 py-2 text-sm font-bold text-gray-100 transition-colors">
+            <span>🎛️</span><span id="btn-customize-label">تخصيص العرض</span>
+          </button>
+          <div id="customize-actions" class="hidden flex-wrap items-center gap-2">
+            <span id="hidden-count" class="text-xs text-gray-300"></span>
+            <button id="btn-showall" type="button"
+              class="rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 px-3 py-2 text-xs font-bold text-gray-100 transition-colors">
+              إظهار الكل
+            </button>
+            <button id="btn-done" type="button"
+              class="rounded-xl bg-brand-red hover:bg-brand-red-dark px-4 py-2 text-xs font-bold text-white transition-colors">
+              تم ✓
+            </button>
           </div>
         </div>
       </div>
+
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-4 mb-2" />
+      <p id="customize-hint" class="hidden text-xs text-brand-gold/90 bg-brand-gold/5 border border-brand-gold/20 rounded-lg px-3 py-2">
+        وضع التخصيص مُفعّل — انقر أي بطاقة لإخفائها أو إظهارها. تُحفظ اختياراتك في هذا المتصفّح.
+      </p>
     </div>
 
-    {/* Centers: Reports + Foundation Archive */}
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
-      <a href={`${base}/dashboard/reports`} class="block group">
-        <div class="h-full rounded-2xl p-6 border border-brand-gold/30 bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] shadow-xl hover:-translate-y-1 transition-all">
-          <div class="flex items-center gap-3 mb-2">
-            <span class="text-3xl">📊</span>
-            <h3 class="text-lg font-bold text-brand-gold">مركز التقارير</h3>
-          </div>
-          <p class="text-sm text-gray-200 leading-relaxed">كل تقارير المنظومة — التشغيلية والجودة والتحليلية والتوثيق المرئي — في مكان واحد.</p>
-          <span class="mt-3 inline-flex items-center gap-1 text-brand-yellow text-sm font-bold">فتح المركز <span class="group-hover:-translate-x-1 transition-transform">←</span></span>
-        </div>
-      </a>
-      <a href={`${base}/dashboard/archive`} class="block group">
-        <div class="h-full rounded-2xl p-6 border border-white/10 bg-white/5 backdrop-blur shadow-xl hover:bg-white/10 hover:-translate-y-1 transition-all">
-          <div class="flex items-center gap-3 mb-2">
-            <span class="text-3xl">🗄️</span>
-            <h3 class="text-lg font-bold text-white">الأرشيف التأسيسي</h3>
-          </div>
-          <p class="text-sm text-gray-200 leading-relaxed">الوثائق التأسيسية: خطة تنفيذ أودو، مزايا التكامل، التقنيات المشغِّلة، وخطوات الاعتماد.</p>
-          <span class="mt-3 inline-flex items-center gap-1 text-brand-yellow text-sm font-bold">فتح الأرشيف <span class="group-hover:-translate-x-1 transition-transform">←</span></span>
-        </div>
-      </a>
-    </div>
-
-    {/* Quick Actions */}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-      <a href={`${base}/dashboard/forms`} class="block group">
-        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
-          <div class="text-3xl mb-3">📋</div>
-          <h3 class="font-bold text-blue-400 mb-2">النماذج التشغيلية</h3>
-          <p class="text-sm text-gray-100">استعرض النماذج الـ١٩ — قلب التوثيق العملي</p>
-        </div>
-      </a>
-      <a href={`${base}/dashboard/retail-hub`} class="block group">
-        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
-          <div class="text-3xl mb-3">🗺️</div>
-          <h3 class="font-bold text-brand-yellow mb-2">خريطة الأسواق</h3>
-          <p class="text-sm text-gray-100">تحليل فئات المستهلكين والأسواق في بنغازي</p>
-        </div>
-      </a>
-      <a href={`${base}/dashboard/workflows`} class="block group">
-        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
-          <div class="text-3xl mb-3">🏢</div>
-          <h3 class="font-bold text-brand-yellow mb-2">الدورة المستندية</h3>
-          <p class="text-sm text-gray-100">الهيكل التنظيمي ومسارات المستندات</p>
-        </div>
-      </a>
-      <a href={`${base}/dashboard/cold-storage-plan`} class="block group">
-        <div class="bg-brand-navy border border-brand-gold/20 rounded-xl p-6 hover:bg-brand-navy/90 transition-all hover:-translate-y-1">
-          <div class="text-4xl mb-3">🏭</div>
-          <h3 class="font-bold text-brand-gold mb-2">مخطط مجمع التبريد الرحبة</h3>
-          <p class="text-sm text-gray-200">خريطة الوحدات والتوزيع داخل الرحبة لتخزين الكوزميتيك.</p>
-        </div>
-      </a>
-      <a href={`${base}/dashboard/erp-workflows`} class="block group">
-        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
-          <div class="text-3xl mb-3">⚙️</div>
-          <h3 class="font-bold text-green-400 mb-2">دورات عمل Odoo</h3>
-          <p class="text-sm text-gray-100">الدورات المستندية التشغيلية على Odoo</p>
-        </div>
-      </a>
-      <a href={`${base}/dashboard/assets-inventory`} class="block group">
-        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
-          <div class="text-3xl mb-3">🗂️</div>
-          <h3 class="font-bold text-brand-yellow mb-2">جرد الأصول</h3>
-          <p class="text-sm text-gray-100">جرد أجهزة ومركبات ومكاتب برانزو مع التصدير</p>
-        </div>
-      </a>
-      <a href={`${base}/dashboard/vehicles-inventory`} class="block group">
-        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
-          <div class="text-3xl mb-3">🚗</div>
-          <h3 class="font-bold text-green-400 mb-2">جرد المركبات</h3>
-          <p class="text-sm text-gray-100">تفتيش شامل للمركبات مع استمارة التسليم والاستلام</p>
-        </div>
-      </a>
-      <a href={`${base}/dashboard/global-warehouse-report`} class="block group">
-        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
-          <div class="text-3xl mb-3">🌍</div>
-          <h3 class="font-bold text-teal-400 mb-2">المقارنة العالمية</h3>
-          <p class="text-sm text-gray-100">مقارنة النظام التشغيلي مع عمالقة اللوجستيات العالمية</p>
-        </div>
-      </a>
-      <a href={`${base}/تقرير-التوظيف-والجدول-الزمني.html`} target="_blank" class="block group">
-        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
-          <div class="text-3xl mb-3">👥</div>
-          <h3 class="font-bold text-brand-yellow mb-2">تقرير التوظيف</h3>
-          <p class="text-sm text-gray-100">جدول زمن إدارة المستودعات والهيكل الوظيفي</p>
-        </div>
-      </a>
-      <a href={`${base}/dashboard/achievement-report`} class="block group">
-        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
-          <div class="text-3xl mb-3">✅</div>
-          <h3 class="font-bold text-green-400 mb-2">تقرير الانجاز</h3>
-          <p class="text-sm text-gray-100">سجل الإنجازات اليومية والمهام التشغيلية</p>
-        </div>
-      </a>
-      <a href={`${base}/dashboard/development-proposals`} class="block group">
-        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
-          <div class="text-3xl mb-3">💡</div>
-          <h3 class="font-bold text-brand-yellow mb-2">مقترحات التطوير</h3>
-          <p class="text-sm text-gray-100">تحسين كفاءة المستودعات والمعايير الهندسية</p>
-        </div>
-      </a>
-      <a href={`${base}/dashboard/warehouse-155-report`} class="block group">
-        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
-          <div class="text-3xl mb-3">🏢</div>
-          <h3 class="font-bold text-brand-red mb-2">تقرير تحوير 155</h3>
-          <p class="text-sm text-gray-100">تحوير المستودعات لرفع الكفاءة التشغيلية</p>
-        </div>
-      </a>
-      <a href={`${base}/عمليات-مخزنية.html`} target="_blank" class="block group">
-        <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1">
-          <div class="text-3xl mb-3">📦</div>
-          <h3 class="font-bold text-teal-400 mb-2">عمليات مخزنية</h3>
-          <p class="text-sm text-gray-100">نظام تفاعلي لإدارة الجرد والعمليات اليومية</p>
-        </div>
-      </a>
-    </div>
-
-    {/* Quality Management Report Section */}
-    <section class="mb-8">
-      <div class="rounded-2xl overflow-hidden border border-brand-red/20 shadow-2xl bg-brand-navy/50" style="height: 80vh; min-height: 600px;">
-        <div class="bg-brand-red/10 px-6 py-3 border-b border-brand-red/20 flex items-center justify-between">
-          <h2 class="text-xl font-bold text-white flex items-center gap-2">
-            <span>🏆</span> تقرير إدارة الجودة الشاملة
-          </h2>
-          <a href={`${base}/تقرير-إدارة-الجودة.html`} target="_blank" class="text-xs text-brand-yellow hover:underline flex items-center gap-1">
-             فتح في نافذة جديدة ↗
+    {/* ─── شريط الأنظمة الأساسية (بديل البانر الأحمر) ─────────────────────── */}
+    <div data-section class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
+      {systems.map((s) => (
+        <div class="dash-card relative" data-card-id={s.id}>
+          <span class="card-badge"></span>
+          <a href={`${base}${s.path}`}
+            class="block h-full rounded-2xl p-6 shadow-2xl border border-brand-red/30 bg-gradient-to-br from-brand-red via-[#a11e33] to-[#5e2320] hover:-translate-y-1 transition-all">
+            <div class="text-4xl mb-3">{s.icon}</div>
+            <h2 class="text-2xl font-extrabold text-white mb-2">{s.title}</h2>
+            <p class="text-white/90 text-sm leading-relaxed">{s.desc}</p>
+            <span class="mt-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm text-white/90">
+              فتح ←
+            </span>
           </a>
         </div>
-        <iframe
-          src={`${base}/تقرير-إدارة-الجودة.html`}
-          title="تقرير إدارة الجودة الشاملة"
-          class="w-full h-full border-0"
-          loading="lazy"
-        ></iframe>
+      ))}
+    </div>
+
+    {/* ─── شريط الإحصاءات ────────────────────────────────────────────────── */}
+    <div class="bg-gradient-to-r from-blue-900/20 to-green-900/20 rounded-xl p-6 border border-blue-500/30 mb-10">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div>
+          <div class="text-2xl font-bold text-blue-400">١٩ نموذجاً</div>
+          <div class="text-sm text-gray-200">النماذج التشغيلية الموثقة</div>
+        </div>
+        <div>
+          <div class="text-2xl font-bold text-green-400">٢٠ حياً</div>
+          <div class="text-sm text-gray-200">مرصودة في خريطة التجزئة</div>
+        </div>
+        <div>
+          <div class="text-2xl font-bold text-yellow-400">٥ دورات</div>
+          <div class="text-sm text-gray-200">مالية · HR · مشتريات · مستودعات · سلاسل الإمداد</div>
+        </div>
+        <div>
+          <div class="text-2xl font-bold text-purple-400">٦ قواعد ذهبية</div>
+          <div class="text-sm text-gray-200">حرّاس النظام في موديول أودو</div>
+        </div>
+      </div>
+    </div>
+
+    {/* ─── الأقسام المجمّعة ──────────────────────────────────────────────── */}
+    {groups.map((grp) => (
+      <section data-section data-group={grp.id} class="mb-9">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="text-2xl">{grp.emoji}</span>
+          <h2 class="text-lg sm:text-xl font-bold text-white">{grp.title}</h2>
+          <div class="flex-1 h-px bg-white/10" />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {grp.cards.map((c) => (
+            <div class="dash-card relative" data-card-id={c.id}>
+              <span class="card-badge"></span>
+              <a href={`${base}${c.path}`}
+                target={c.newtab ? '_blank' : null}
+                rel={c.newtab ? 'noopener noreferrer' : null}
+                class:list={[
+                  'block h-full backdrop-blur border rounded-xl p-6 transition-all hover:-translate-y-1',
+                  c.featured
+                    ? 'bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border-brand-gold/30 hover:border-brand-gold/50'
+                    : 'bg-white/5 border-white/10 hover:bg-white/10',
+                ]}>
+                <div class="flex items-start justify-between mb-3">
+                  <div class="text-3xl">{c.icon}</div>
+                  {c.newtab && (
+                    <span class="text-[10px] text-gray-300 border border-white/10 rounded-full px-2 py-0.5">↗ نافذة جديدة</span>
+                  )}
+                </div>
+                <h3 class:list={['font-bold mb-2', c.tone]}>{c.title}</h3>
+                <p class="text-sm text-gray-100 leading-relaxed">{c.desc}</p>
+              </a>
+            </div>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    {/* ─── أنظمة قادمة (نمط «قريباً») ─────────────────────────────────────── */}
+    <section data-section data-group="soon" class="mb-9">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-2xl">🧩</span>
+        <h2 class="text-lg sm:text-xl font-bold text-white">أنظمة قادمة</h2>
+        <div class="flex-1 h-px bg-white/10" />
+        <span class="text-xs text-gray-400 whitespace-nowrap">قيد التطوير</span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {soon.map((c) => (
+          <div class="dash-card relative" data-card-id={c.id}>
+            <span class="card-badge"></span>
+            <button type="button" class="soon-btn block w-full text-right h-full bg-white/[0.03] border border-dashed border-white/15 rounded-xl p-6 cursor-not-allowed">
+              <div class="flex items-start justify-between mb-3">
+                <div class="text-3xl opacity-70">{c.icon}</div>
+                <span class="text-[10px] font-bold text-brand-gold border border-brand-gold/30 bg-brand-gold/10 rounded-full px-2 py-0.5">قريباً</span>
+              </div>
+              <h3 class="font-bold text-gray-300 mb-2">{c.title}</h3>
+              <p class="text-sm text-gray-400 leading-relaxed">{c.desc}</p>
+            </button>
+          </div>
+        ))}
       </div>
     </section>
 
-    {/* Foundation Archive pointer — moved founding/evaluation sections */}
-    <section class="mt-10 mb-8">
-      <a href={`${base}/dashboard/archive`} class="block group">
-        <div class="rounded-2xl border border-brand-gold/25 bg-brand-gold/5 p-6 sm:p-8 hover:bg-brand-gold/10 transition-all">
-          <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
-            <div class="flex items-start gap-3">
-              <span class="text-3xl">🗄️</span>
-              <div>
-                <h2 class="text-lg sm:text-xl font-bold text-brand-gold mb-1">الأرشيف التأسيسي</h2>
-                <p class="text-sm text-gray-200 leading-relaxed max-w-2xl">
-                  نظرة عامة على تنفيذ أودو (٤ مراحل)، ومزايا التكامل، والتقنيات المشغِّلة
-                  للمنصة، وخطوات الاعتماد المبدئي — محفوظة كمرجع تأسيسي بعيداً عن العمل اليومي.
-                </p>
-              </div>
-            </div>
-            <span class="inline-flex items-center gap-1 text-brand-yellow text-sm font-bold whitespace-nowrap">
-              فتح الأرشيف <span class="group-hover:-translate-x-1 transition-transform">←</span>
-            </span>
-          </div>
-        </div>
-      </a>
-    </section>
-
-    {/* Footer */}
+    {/* ─── التذييل ───────────────────────────────────────────────────────── */}
     <div class="text-center text-sm text-gray-200 mt-8">
       إعداد: محمد البرشي — متخصص سلاسل الإمداد · بنغازي ٢٠٢٦ · غير تجاري
     </div>
   </div>
+
+  {/* توست بسيط لبطاقات «قريباً» */}
+  <div id="soon-toast" class="fixed bottom-6 inset-x-0 z-[80] hidden justify-center px-4 pointer-events-none">
+    <div class="rounded-xl bg-brand-navy border border-brand-gold/30 text-white text-sm font-bold px-5 py-3 shadow-2xl">
+      🚧 هذا النظام قيد التطوير — قريباً
+    </div>
+  </div>
+
+  <style>
+    /* شارة الحالة أعلى البطاقة — تظهر فقط في وضع التخصيص */
+    .dash-card .card-badge {
+      position: absolute; top: .5rem; left: .5rem; z-index: 5;
+      display: none; align-items: center; gap: .25rem;
+      font-size: 11px; font-weight: 700; line-height: 1;
+      padding: .3rem .55rem; border-radius: 9999px;
+      pointer-events: none;
+    }
+    #dash-root.customizing .dash-card .card-badge { display: inline-flex; }
+    .dash-card .card-badge.shown  { background: rgba(34,197,94,.15);  color: #86efac; border: 1px solid rgba(34,197,94,.4); }
+    .dash-card .card-badge.hidden-b { background: rgba(148,163,184,.15); color: #cbd5e1; border: 1px solid rgba(148,163,184,.4); }
+
+    /* في الوضع العادي: البطاقات المخفية لا تظهر */
+    #dash-root:not(.customizing) .dash-card.is-hidden { display: none; }
+
+    /* في وضع التخصيص: تظهر باهتة وقابلة للنقر لإعادتها */
+    #dash-root.customizing .dash-card { cursor: pointer; outline: 1px dashed rgba(255,255,255,.18); outline-offset: 3px; border-radius: .75rem; }
+    #dash-root.customizing .dash-card.is-hidden { opacity: .4; }
+    #dash-root.customizing .dash-card a,
+    #dash-root.customizing .dash-card button { pointer-events: none; }
+  </style>
+
+  <script is:inline>
+    (function () {
+      'use strict';
+      var root = document.getElementById('dash-root');
+      if (!root) return;
+
+      var KEY = 'bz-dash-hidden-v1';
+      var cards = Array.prototype.slice.call(root.querySelectorAll('.dash-card'));
+      var sections = Array.prototype.slice.call(root.querySelectorAll('[data-section]'));
+
+      function load() {
+        try { return new Set(JSON.parse(localStorage.getItem(KEY) || '[]')); }
+        catch { return new Set(); }
+      }
+      function save(set) {
+        try { localStorage.setItem(KEY, JSON.stringify(Array.from(set))); }
+        catch { /* التخزين غير متاح — نتجاهل */ }
+      }
+      var hidden = load();
+
+      function refresh() {
+        var count = 0;
+        cards.forEach(function (c) {
+          var isHidden = hidden.has(c.getAttribute('data-card-id'));
+          c.classList.toggle('is-hidden', isHidden);
+          if (isHidden) count++;
+          var badge = c.querySelector('.card-badge');
+          if (badge) {
+            badge.textContent = isHidden ? '🚫 مخفية' : '👁 ظاهرة';
+            badge.classList.toggle('hidden-b', isHidden);
+            badge.classList.toggle('shown', !isHidden);
+          }
+        });
+
+        // إخفاء رأس أي قسم لا يحوي بطاقة ظاهرة (في الوضع العادي فقط)
+        var customizing = root.classList.contains('customizing');
+        sections.forEach(function (s) {
+          if (customizing) { s.style.display = ''; return; }
+          var anyVisible = Array.prototype.some.call(
+            s.querySelectorAll('.dash-card'),
+            function (c) { return !hidden.has(c.getAttribute('data-card-id')); }
+          );
+          s.style.display = anyVisible ? '' : 'none';
+        });
+
+        var hc = document.getElementById('hidden-count');
+        if (hc) hc.textContent = count ? (count + ' بطاقة مخفية') : 'لا بطاقات مخفية';
+      }
+
+      // تبديل بطاقة عند النقر في وضع التخصيص
+      cards.forEach(function (c) {
+        c.addEventListener('click', function (e) {
+          if (!root.classList.contains('customizing')) return;
+          e.preventDefault();
+          var id = c.getAttribute('data-card-id');
+          if (hidden.has(id)) hidden.delete(id); else hidden.add(id);
+          save(hidden);
+          refresh();
+        });
+      });
+
+      // زر التخصيص
+      var btn = document.getElementById('btn-customize');
+      var actions = document.getElementById('customize-actions');
+      var hint = document.getElementById('customize-hint');
+      var label = document.getElementById('btn-customize-label');
+      function setCustomizing(on) {
+        root.classList.toggle('customizing', on);
+        if (actions) actions.classList.toggle('hidden', !on);
+        if (actions) actions.classList.toggle('flex', on);
+        if (hint) hint.classList.toggle('hidden', !on);
+        if (label) label.textContent = on ? 'إنهاء التخصيص' : 'تخصيص العرض';
+        refresh();
+      }
+      if (btn) btn.addEventListener('click', function () {
+        setCustomizing(!root.classList.contains('customizing'));
+      });
+      var done = document.getElementById('btn-done');
+      if (done) done.addEventListener('click', function () { setCustomizing(false); });
+      var showAll = document.getElementById('btn-showall');
+      if (showAll) showAll.addEventListener('click', function () {
+        hidden.clear(); save(hidden); refresh();
+      });
+
+      // توست بطاقات «قريباً»
+      var toast = document.getElementById('soon-toast');
+      var toastTimer;
+      root.querySelectorAll('.soon-btn').forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (root.classList.contains('customizing') || !toast) return;
+          toast.classList.remove('hidden');
+          toast.classList.add('flex');
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(function () {
+            toast.classList.add('hidden');
+            toast.classList.remove('flex');
+          }, 2200);
+        });
+      });
+
+      refresh();
+    })();
+  </script>
 </DashboardLayout>
