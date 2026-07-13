@@ -15,14 +15,18 @@ import { getAuth } from 'firebase/auth';
  * shipped to browsers. The dashboard is currently open access; auth and
  * Firestore Security Rules will be revisited in a later phase.
  */
+// NOTE: `||` (not `??`) so that an EMPTY-string env var (which is what a
+// missing `PUBLIC_FIREBASE_*` becomes in CI builds with no `.env`) also falls
+// back to the real project values below. `getAuth()` validates the API key
+// eagerly at build time, so an empty key would break the static build.
 const firebaseConfig = {
-  apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY ?? 'AIzaSyAWhqQVdhODZT0bdXnbyYzcmpnv11s9qoU',
-  authDomain: import.meta.env.PUBLIC_FIREBASE_AUTH_DOMAIN ?? 'brandzo-erp-2026.firebaseapp.com',
-  projectId: import.meta.env.PUBLIC_FIREBASE_PROJECT_ID ?? 'brandzo-erp-2026',
+  apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY || 'AIzaSyAWhqQVdhODZT0bdXnbyYzcmpnv11s9qoU',
+  authDomain: import.meta.env.PUBLIC_FIREBASE_AUTH_DOMAIN || 'brandzo-erp-2026.firebaseapp.com',
+  projectId: import.meta.env.PUBLIC_FIREBASE_PROJECT_ID || 'brandzo-erp-2026',
   storageBucket:
-    import.meta.env.PUBLIC_FIREBASE_STORAGE_BUCKET ?? 'brandzo-erp-2026.firebasestorage.app',
-  messagingSenderId: import.meta.env.PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '991460523040',
-  appId: import.meta.env.PUBLIC_FIREBASE_APP_ID ?? '1:991460523040:web:d3c6f76b1ff13a1ab8d045',
+    import.meta.env.PUBLIC_FIREBASE_STORAGE_BUCKET || 'brandzo-erp-2026.firebasestorage.app',
+  messagingSenderId: import.meta.env.PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '991460523040',
+  appId: import.meta.env.PUBLIC_FIREBASE_APP_ID || '1:991460523040:web:d3c6f76b1ff13a1ab8d045',
 };
 
 // Initialize the Firebase app exactly once (HMR-safe).
