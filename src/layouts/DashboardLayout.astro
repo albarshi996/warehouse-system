@@ -1,6 +1,8 @@
 ---
 import '../styles/global.css';
 import Icon from '../components/ui/Icon.astro';
+import AuthGate from '../components/brandzo-erp/access/AuthGate.jsx';
+import UserMenu from '../components/brandzo-erp/access/UserMenu.jsx';
 
 const { title, showGuide = false } = Astro.props;
 
@@ -167,6 +169,22 @@ const currentPath = Astro.url.pathname;
   </head>
 
   <body class="bz-page-bg min-h-screen">
+
+    <!--
+      ═══════════════════════════════════════════════════════════
+      حارس الدخول (M1) — طبقة تغطية تُخفي المحتوى حتى يُتحقّق من الجلسة.
+      موجودة منذ أول رسم (قبل ترطيب React) فلا يظهر محتوى محمي للحظة.
+      AuthGate يُخفيها إن كان مسجّلًا، أو يحوّل إلى /login إن لم يكن.
+      ═══════════════════════════════════════════════════════════
+    -->
+    <div
+      id="bz-auth-overlay"
+      class="fixed inset-0 z-[999] flex flex-col items-center justify-center gap-4 bg-brand-navy text-white"
+    >
+      <div class="w-12 h-12 border-4 border-white/20 border-t-brand-gold rounded-full animate-spin"></div>
+      <span class="text-sm font-medium opacity-80">جارٍ التحقّق من الدخول...</span>
+    </div>
+    <AuthGate client:load />
 
     <!--
       ═══════════════════════════════════════════════════════════
@@ -346,6 +364,7 @@ const currentPath = Astro.url.pathname;
 
       <!-- تذييل السايدبار: مثبت في الأسفل -->
       <div class="mt-auto border-t border-gray-700 px-4 py-3 text-center">
+        <UserMenu client:load />
         <p class="text-[11px] leading-snug text-gray-100 font-medium" dir="rtl">
           برمجة وتطوير: محمد إبراهيم البرشي
         </p>

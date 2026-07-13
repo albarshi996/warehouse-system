@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, initializeFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 /**
  * Firebase configuration.
@@ -26,6 +27,13 @@ const firebaseConfig = {
 
 // Initialize the Firebase app exactly once (HMR-safe).
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+
+/**
+ * Firebase Authentication (M1 — الأدوار والصلاحيات).
+ * يُستخدم لتسجيل الدخول بالبريد/كلمة المرور وحماية صفحات البوابة.
+ * فعّل مزوّد Email/Password من Firebase Console → Authentication → Sign-in method.
+ */
+export const auth = getAuth(app);
 
 /**
  * Initialize Firestore with long-polling enabled. Long-polling is required
