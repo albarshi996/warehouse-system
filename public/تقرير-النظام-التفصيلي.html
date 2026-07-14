@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>تقرير نظام برند زو — الخريطة التفصيلية الكاملة</title>
+</head>
+<body>
+<style>
+  :root {
+    --bg: #f5f6fa;
+    --surface: #ffffff;
+    --surface-2: #eef0f6;
+    --ink: #1a1a2e;
+    --ink-soft: #4a4a63;
+    --ink-faint: #7a7a92;
+    --line: #e2e4ee;
+    --line-strong: #cfd2e0;
+    --red: #c41e3a;
+    --red-soft: #f7e3e7;
+    --navy: #1a1a2e;
+    --gold: #b8860b;
+    --gold-bg: #f6efdc;
+    --good: #1a7f4b;
+    --good-bg: #e2f3ea;
+    --warn: #9a6a00;
+    --warn-bg: #f7eecf;
+    --idle: #6a6a80;
+    --idle-bg: #e9eaf0;
+    --mono: 'SF Mono', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+    --sans: system-ui, 'Segoe UI', Tahoma, 'Noto Sans Arabic', Arial, sans-serif;
+    --shadow: 0 1px 2px rgba(26,26,46,.04), 0 4px 16px rgba(26,26,46,.06);
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141422;
+      --surface: #1e1e30;
+      --surface-2: #26263c;
+      --ink: #f0f1f7;
+      --ink-soft: #b9bace;
+      --ink-faint: #8688a0;
+      --line: #2f2f47;
+      --line-strong: #3a3a55;
+      --red: #ef5a72;
+      --red-soft: #3a1f28;
+      --gold: #e2b64a;
+      --gold-bg: #332c14;
+      --good: #4cc98a;
+      --good-bg: #123024;
+      --warn: #e0b24a;
+      --warn-bg: #33290f;
+      --idle: #9698b2;
+      --idle-bg: #2a2a40;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f5f6fa; --surface: #ffffff; --surface-2: #eef0f6; --ink: #1a1a2e; --ink-soft: #4a4a63;
+    --ink-faint: #7a7a92; --line: #e2e4ee; --line-strong: #cfd2e0; --red: #c41e3a; --red-soft: #f7e3e7;
+    --gold: #b8860b; --gold-bg: #f6efdc; --good: #1a7f4b; --good-bg: #e2f3ea; --warn: #9a6a00;
+    --warn-bg: #f7eecf; --idle: #6a6a80; --idle-bg: #e9eaf0; --shadow: 0 1px 2px rgba(26,26,46,.04), 0 4px 16px rgba(26,26,46,.06);
+  }
+  :root[data-theme="dark"] {
+    --bg: #141422; --surface: #1e1e30; --surface-2: #26263c; --ink: #f0f1f7; --ink-soft: #b9bace;
+    --ink-faint: #8688a0; --line: #2f2f47; --line-strong: #3a3a55; --red: #ef5a72; --red-soft: #3a1f28;
+    --gold: #e2b64a; --gold-bg: #332c14; --good: #4cc98a; --good-bg: #123024; --warn: #e0b24a;
+    --warn-bg: #33290f; --idle: #9698b2; --idle-bg: #2a2a40; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  .doc {
+    direction: rtl;
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.75;
+    min-height: 100vh;
+    padding: 0 0 5rem;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 1.25rem; }
+
+  /* ── Header ── */
+  .masthead {
+    background: linear-gradient(135deg, var(--navy) 0%, #24243e 60%, #2d1b24 100%);
+    color: #fff; padding: 3rem 0 2.5rem; margin-bottom: 2rem;
+    border-bottom: 3px solid var(--red);
+  }
+  .brand-badge {
+    display: inline-flex; align-items: center; gap: .6rem; margin-bottom: 1.1rem;
+  }
+  .brand-mark {
+    width: 40px; height: 40px; background: var(--red); border-radius: 10px;
+    display: grid; place-items: center; font-weight: 800; font-size: 1.3rem;
+    box-shadow: 0 0 18px rgba(196,30,58,.5);
+  }
+  .brand-badge span { font-weight: 700; letter-spacing: .02em; opacity: .95; }
+  .masthead h1 { font-size: clamp(1.7rem, 4vw, 2.6rem); font-weight: 800; margin: 0 0 .5rem; text-wrap: balance; line-height: 1.25; }
+  .masthead .sub { font-size: 1.05rem; color: #c9cade; max-width: 60ch; margin: 0; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: .5rem 1.4rem; margin-top: 1.5rem; font-size: .82rem; color: #a9aac6; }
+  .meta-row b { color: var(--gold); font-weight: 700; }
+  .meta-row code { font-family: var(--mono); color: #dfe0ee; direction: ltr; unicode-bidi: embed; }
+
+  /* ── Stat strip ── */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(115px,1fr)); gap: .8rem; margin: 1.75rem 0 0; }
+  .stat { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: .85rem .9rem; }
+  .stat .n { font-size: 1.6rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; line-height: 1; }
+  .stat .l { font-size: .74rem; color: #b6b7d0; margin-top: .35rem; }
+
+  /* ── TOC ── */
+  nav.toc { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.1rem 1.3rem; margin-bottom: 2.5rem; box-shadow: var(--shadow); }
+  nav.toc h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-faint); margin: 0 0 .8rem; font-weight: 700; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px,1fr)); gap: .3rem .9rem; counter-reset: toc; }
+  nav.toc a { display: flex; gap: .6rem; align-items: baseline; text-decoration: none; color: var(--ink-soft); padding: .35rem .4rem; border-radius: 8px; font-size: .92rem; transition: background .15s, color .15s; }
+  nav.toc a:hover { background: var(--surface-2); color: var(--red); }
+  nav.toc a::before { counter-increment: toc; content: counter(toc, decimal); font-family: var(--mono); font-size: .78rem; color: var(--gold); font-weight: 700; min-width: 1.3em; }
+
+  /* ── Sections ── */
+  section { margin-bottom: 3rem; scroll-margin-top: 1.5rem; }
+  .sec-head { display: flex; align-items: center; gap: .8rem; margin-bottom: 1.1rem; padding-bottom: .7rem; border-bottom: 2px solid var(--line); }
+  .sec-num { font-family: var(--mono); font-size: .85rem; font-weight: 700; color: #fff; background: var(--red); border-radius: 8px; padding: .25rem .55rem; flex-shrink: 0; }
+  .sec-head h2 { font-size: clamp(1.3rem, 3vw, 1.7rem); font-weight: 800; margin: 0; text-wrap: balance; }
+  .lead { color: var(--ink-soft); font-size: 1rem; margin: 0 0 1.3rem; max-width: 68ch; }
+
+  h3.blk { font-size: 1.08rem; font-weight: 700; margin: 1.8rem 0 .7rem; color: var(--ink); display: flex; align-items: center; gap: .5rem; }
+  h3.blk .ic { font-size: 1.1rem; }
+
+  p { margin: 0 0 1rem; }
+  .doc a.inl { color: var(--red); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+
+  /* ── Cards ── */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 1rem; margin: 1.2rem 0; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.15rem 1.2rem; box-shadow: var(--shadow); }
+  .card.rail { border-right: 3px solid var(--gold); }
+  .card h4 { margin: 0 0 .5rem; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: .5rem; }
+  .card p { font-size: .9rem; color: var(--ink-soft); margin: 0; }
+  .card .k { font-family: var(--mono); font-size: .8rem; color: var(--red); direction: ltr; unicode-bidi: embed; display: inline-block; }
+
+  /* ── Architecture stack ── */
+  .stack { display: flex; flex-direction: column; gap: .5rem; margin: 1.3rem 0; }
+  .layer { background: var(--surface); border: 1px solid var(--line); border-right: 4px solid var(--red); border-radius: 12px; padding: .9rem 1.1rem; box-shadow: var(--shadow); }
+  .layer .top { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+  .layer .lname { font-weight: 800; font-size: 1rem; }
+  .layer .ltag { font-family: var(--mono); font-size: .72rem; background: var(--surface-2); color: var(--ink-faint); padding: .1rem .5rem; border-radius: 6px; direction: ltr; }
+  .layer p { font-size: .87rem; color: var(--ink-soft); margin: .4rem 0 0; }
+  .layer.l-gold { border-right-color: var(--gold); }
+  .layer.l-navy { border-right-color: var(--navy); }
+  .flow-arrow { text-align: center; color: var(--ink-faint); font-size: 1.1rem; line-height: 1; }
+
+  /* ── Tables ── */
+  .tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); margin: 1.2rem 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .88rem; background: var(--surface); min-width: 560px; }
+  thead th { background: var(--surface-2); color: var(--ink); text-align: right; font-weight: 700; padding: .7rem .85rem; border-bottom: 2px solid var(--line-strong); white-space: nowrap; font-size: .82rem; }
+  tbody td { padding: .65rem .85rem; border-bottom: 1px solid var(--line); color: var(--ink-soft); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--surface-2); }
+  td .pg { font-weight: 700; color: var(--ink); }
+  td code, .mono { font-family: var(--mono); font-size: .8rem; direction: ltr; unicode-bidi: embed; color: var(--red); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ── Chips ── */
+  .chip { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; font-weight: 700; padding: .12rem .55rem; border-radius: 20px; white-space: nowrap; }
+  .chip.live { background: var(--good-bg); color: var(--good); }
+  .chip.pend { background: var(--warn-bg); color: var(--warn); }
+  .chip.plan { background: var(--idle-bg); color: var(--idle); }
+  .chip.dot::before { content: "●"; font-size: .6rem; }
+
+  .grp { display:inline-block; font-size:.7rem; font-weight:700; padding:.1rem .5rem; border-radius:6px; background: var(--gold-bg); color: var(--gold); white-space:nowrap; }
+
+  /* ── Callout ── */
+  .callout { border-radius: var(--radius); padding: 1.1rem 1.3rem; margin: 1.3rem 0; font-size: .92rem; border: 1px solid; }
+  .callout.warn { background: var(--warn-bg); border-color: color-mix(in srgb, var(--warn) 35%, transparent); color: var(--ink); }
+  .callout.info { background: var(--red-soft); border-color: color-mix(in srgb, var(--red) 30%, transparent); color: var(--ink); }
+  .callout b { color: var(--red); }
+  .callout .h { font-weight: 800; display: block; margin-bottom: .3rem; }
+
+  /* ── Definition rows ── */
+  .deflist { display: grid; gap: .1rem; margin: 1.2rem 0; }
+  .defrow { display: grid; grid-template-columns: minmax(120px, 200px) 1fr; gap: .5rem 1.2rem; padding: .7rem .2rem; border-bottom: 1px solid var(--line); }
+  .defrow dt { font-family: var(--mono); font-size: .82rem; color: var(--red); direction: ltr; unicode-bidi: embed; font-weight: 600; }
+  .defrow dd { margin: 0; font-size: .9rem; color: var(--ink-soft); }
+  .defrow dd b { color: var(--ink); font-weight: 700; }
+
+  ul.feat { list-style: none; padding: 0; margin: 1rem 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: .6rem; }
+  ul.feat li { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: .7rem .9rem; font-size: .9rem; color: var(--ink-soft); display: flex; gap: .55rem; align-items: flex-start; box-shadow: var(--shadow); }
+  ul.feat li .ck { color: var(--good); font-weight: 800; flex-shrink: 0; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1rem; font-size: .8rem; color: var(--ink-faint); margin: .6rem 0 0; }
+  .legend span { display: inline-flex; align-items: center; gap: .35rem; }
+
+  footer.foot { text-align: center; color: var(--ink-faint); font-size: .82rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+  footer.foot b { color: var(--red); }
+
+  @media (max-width: 560px) {
+    .defrow { grid-template-columns: 1fr; gap: .15rem; }
+    .masthead { padding: 2.2rem 0 1.8rem; }
+  }
+</style>
+
+<div class="doc">
+  <header class="masthead">
+    <div class="wrap">
+      <div class="brand-badge"><span class="brand-mark">B</span><span>Brandzo Hub 2026</span></div>
+      <h1>تقرير النظام الكامل — خريطة برند زو التفصيلية</h1>
+      <p class="sub">شرحٌ شاملٌ ومُفصّل لكل مكوّنات المشروع: المواقع (الصفحات)، الأدوات، قواعد البيانات، الخدمات، والميزات — مبنيٌّ على فحصٍ فعليٍّ للكود لا على التقدير.</p>
+      <div class="meta-row">
+        <span>📅 التاريخ: <b>2026-07-13</b></span>
+        <span>🌐 الموقع الحيّ: <code>albarshi996.github.io/warehouse-system</code></span>
+        <span>📦 المستودع: <code>albarshi996/warehouse-system</code></span>
+        <span>🔀 آخر إصدار: <code>f71ce8c</code></span>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="n">29</div><div class="l">صفحة منشورة</div></div>
+        <div class="stat"><div class="n">5</div><div class="l">مجموعات Firestore</div></div>
+        <div class="stat"><div class="n">10</div><div class="l">أدوار مستخدمين</div></div>
+        <div class="stat"><div class="n">16</div><div class="l">ملف خدمات</div></div>
+        <div class="stat"><div class="n">12</div><div class="l">مرحلة أودو</div></div>
+        <div class="stat"><div class="n">6</div><div class="l">حرّاس ذهبية</div></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <nav class="toc" aria-label="فهرس التقرير">
+      <h2>فهرس التقرير</h2>
+      <ol>
+        <li><a href="#s1">نظرة عامة والمعمارية</a></li>
+        <li><a href="#s2">قواعد البيانات</a></li>
+        <li><a href="#s3">خريطة الصفحات الـ29</a></li>
+        <li><a href="#s4">نظام الوصول والأدوار</a></li>
+        <li><a href="#s5">طبقة الخدمات</a></li>
+        <li><a href="#s6">الأدوات والاعتماديات</a></li>
+        <li><a href="#s7">الباك اند — موديول أودو</a></li>
+        <li><a href="#s8">طبقة التكامل مع أودو</a></li>
+        <li><a href="#s9">الملفات العامة والنماذج</a></li>
+        <li><a href="#s10">الميزات والحالة</a></li>
+      </ol>
+    </nav>
+
+    <!-- ═══ 1 ═══ -->
+    <section id="s1">
+      <div class="sec-head"><span class="sec-num">01</span><h2>نظرة عامة والمعمارية</h2></div>
+      <p class="lead">«برند زو هَب» منتَجان من دليل عمليات واحد مكوّن من 12 مرحلة: <b>محاكٍ تدريبي عالي الدقة</b> يُعلّم دورة المستودع، و<b>موديول أودو حقيقي</b> يفرض قواعدها كقيود صارمة — داخل <b>بوابة عمليات رسمية</b>.</p>
+
+      <div class="cards">
+        <div class="card rail"><h4>🎨 الواجهة الأمامية</h4><p><b>Astro + React + Tailwind</b> — موقع ثابت (SSG) بجزُر تفاعلية، عربي RTL بخط Cairo، يُنشَر تلقائيًّا على GitHub Pages.</p></div>
+        <div class="card rail"><h4>🧠 الباك اند</h4><p><b>Python + XML</b> — موديول <span class="k">brandzo_warehouse</span> لأودو 19 Community، يفرض 6 حرّاس ذهبية.</p></div>
+        <div class="card rail"><h4>💾 البيانات</h4><p><b>Firebase</b> (Firestore + Auth) للواجهة، و<b>PostgreSQL</b> داخل أودو للباك اند، وطبقة <b>Excel</b> للتبادل.</p></div>
+      </div>
+
+      <h3 class="blk"><span class="ic">🏗️</span> الطبقات المعمارية (من المستخدم إلى قاعدة البيانات)</h3>
+      <div class="stack">
+        <div class="layer"><div class="top"><span class="lname">1. المتصفّح — واجهة المستخدم</span><span class="ltag">RTL · Cairo</span></div><p>29 صفحة Astro ثابتة + جزُر React تفاعلية (client:load). حارس دخول على كل صفحات لوحة التحكم.</p></div>
+        <div class="flow-arrow">↓</div>
+        <div class="layer l-gold"><div class="top"><span class="lname">2. طبقة الخدمات (JavaScript)</span><span class="ltag">src/services</span></div><p>16 ملفًا: المصادقة والأدوار · قراءة/كتابة البيانات · استيراد/تصدير Excel · محوّل أودو.</p></div>
+        <div class="flow-arrow">↓</div>
+        <div class="layer l-navy"><div class="top"><span class="lname">3. قواعد بيانات الواجهة</span><span class="ltag">Firebase · localStorage</span></div><p>Firestore السحابية (5 مجموعات) + مصادقة Firebase + تخزين محلي في المتصفّح + ملفات Excel.</p></div>
+        <div class="flow-arrow">↓</div>
+        <div class="layer"><div class="top"><span class="lname">4. جسر التكامل (اختياري)</span><span class="ltag">odoo-proxy</span></div><p>وسيط Cloudflare/Firebase يربط الواجهة بأودو الحقيقي — <span class="chip plan dot">غير مفعّل (وضع training)</span></p></div>
+        <div class="flow-arrow">↓</div>
+        <div class="layer l-navy"><div class="top"><span class="lname">5. الباك اند — أودو 19</span><span class="ltag">PostgreSQL</span></div><p>موديول <span class="k">brandzo_warehouse</span>: 10 كائنات، 7 مجموعات أمان، 6 حرّاس، 42 اختبارًا. <span class="chip pend dot">جاهز — بانتظار بيئة تشغيل حيّة (M2)</span></p></div>
+      </div>
+    </section>
+
+    <!-- ═══ 2 ═══ -->
+    <section id="s2">
+      <div class="sec-head"><span class="sec-num">02</span><h2>قواعد البيانات</h2></div>
+      <p class="lead">المشروع يستخدم <b>أربعة أنواع تخزين</b> لأغراض مختلفة. الفعّال حاليًّا هو Firebase (Firestore + Auth) والتخزين المحلي؛ وPostgreSQL داخل أودو ينتظر بيئة التشغيل.</p>
+
+      <h3 class="blk"><span class="ic">🔥</span> Firebase Firestore — قاعدة السحابة الأساسية</h3>
+      <p>مشروع <span class="mono">brandzo-erp-2026</span> على <b>خطة Spark المجانية</b>. قاعدة بيانات NoSQL تعمل بنمط offline-first (تعمل دون إنترنت وتزامن عند العودة). المجموعات المستخدمة فعليًّا في الكود:</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>المجموعة (Collection)</th><th>الغرض</th><th>يكتب فيها</th><th>الحالة</th></tr></thead>
+          <tbody>
+            <tr><td><code>Items_Master</code></td><td>سجلّ الأصناف الرئيسي (بطاقة كل صنف)</td><td>صفحة «الأصناف» عبر <span class="mono">itemService</span></td><td><span class="chip live dot">حيّة</span></td></tr>
+            <tr><td><code>Inbound_Log</code></td><td>سجلّ الوارد (حركات الاستلام)</td><td><span class="mono">logService</span></td><td><span class="chip live dot">حيّة</span></td></tr>
+            <tr><td><code>Outbound_Log</code></td><td>سجلّ الصادر (حركات الصرف)</td><td><span class="mono">logService</span></td><td><span class="chip live dot">حيّة</span></td></tr>
+            <tr><td><code>warehouses</code></td><td>بيانات المستودعات ومواقعها</td><td><span class="mono">warehouseService</span></td><td><span class="chip live dot">حيّة</span></td></tr>
+            <tr><td><code>users</code></td><td>أدوار المستخدمين (الدور · الاسم · الحالة)</td><td>صفحة «إدارة المستخدمين» عبر <span class="mono">usersService</span></td><td><span class="chip live dot">حيّة (جديدة)</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="blk"><span class="ic">🔐</span> Firebase Authentication — الهويّة والدخول</h3>
+      <p>مزوّد <b>Email/Password</b> مُفعّل. كل حساب له <span class="mono">User UID</span> فريد، ويُربط بمستند في مجموعة <code>users</code> لتحديد دوره. المدير العام يُمنح صلاحية الأدمن تلقائيًّا عبر <b>تمهيد بالبريد</b>.</p>
+
+      <h3 class="blk"><span class="ic">💽</span> التخزين المحلي (localStorage)</h3>
+      <p>يُخزّن تفضيلات المتصفّح دون سحابة:</p>
+      <dl class="deflist">
+        <div class="defrow"><dt>csp_units_v2 / v3</dt><dd>حالة <b>مخطط تخزين الرحبة</b> (الوحدات والمواقع) في صفحة cold-storage-plan.</dd></div>
+        <div class="defrow"><dt>dashboard cards</dt><dd>البطاقات المُخفاة في <b>لوحة التحكم</b> (التخصيص يُحفظ محليًّا لكل متصفّح).</dd></div>
+      </dl>
+
+      <h3 class="blk"><span class="ic">📊</span> طبقة Excel — تبادل البيانات</h3>
+      <p>عبر مكتبة <span class="mono">xlsx</span>: استيراد/تصدير الأصناف والسجلّات بأسماء حقول موحّدة (<span class="mono">excelSchema.js</span>) تُطابق أسماء أودو — فيتحوّل الملف من/إلى نفس بنية Firestore.</p>
+
+      <h3 class="blk"><span class="ic">🐘</span> PostgreSQL — قاعدة أودو (الباك اند)</h3>
+      <div class="callout info"><span class="h">لماذا لم تُفعّل بعد؟</span> موديول <span class="mono">brandzo_warehouse</span> يحتاج خادم أودو حيًّا (Python + PostgreSQL). لا يوجد مفسّر Python على جهاز التطوير، لذا تحقّقنا من الموديول <b>ساكنًا</b> فقط. تشغيله الحيّ = المرحلة <b>M2</b> (Oracle Cloud المجاني).</div>
+    </section>
+
+    <!-- ═══ 3 ═══ -->
+    <section id="s3">
+      <div class="sec-head"><span class="sec-num">03</span><h2>خريطة الصفحات الـ29</h2></div>
+      <p class="lead">كل صفحات الموقع، وظيفتها، ونوعها (<b>تفاعلية</b> = جزيرة React، <b>عرض</b> = محتوى ثابت/تقرير)، ومجموعتها في القائمة (تحدّد من يراها حسب دوره).</p>
+      <div class="legend">
+        <span><span class="grp">يومية</span> العمليات اليومية</span>
+        <span><span class="grp">مستودعات</span> المستودعات والجرد</span>
+        <span><span class="grp">أودو</span> دورات أودو والمحاكاة</span>
+        <span><span class="grp">تقارير</span> مركز التقارير</span>
+        <span><span class="grp">أرشيف</span> الأرشيف والمرجعية</span>
+      </div>
+
+      <h3 class="blk"><span class="ic">🚪</span> صفحات الدخول والجذر</h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>الصفحة</th><th>الوظيفة</th><th>النوع</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pg">الصفحة الرئيسية</span> <code>index</code></td><td>واجهة الموقع العامة (مدخل الزائر)</td><td><span class="chip plan">عرض</span></td></tr>
+          <tr><td><span class="pg">تسجيل الدخول</span> <code>login</code></td><td>شاشة الدخول العربية (Firebase Auth)</td><td><span class="chip live">تفاعلية · LoginForm</span></td></tr>
+          <tr><td><span class="pg">لوحة التحكم</span> <code>dashboard/index</code></td><td>البوابة الرئيسية: أقسام مجمّعة + بطاقات قابلة للتخصيص</td><td><span class="chip plan">عرض</span></td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="blk"><span class="ic">🗓️</span> العمليات اليومية</h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>الصفحة</th><th>الوظيفة</th><th>النوع · الجزيرة</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pg">اختار وظيفتك</span> <code>forms</code></td><td>مدخل موحّد لاختيار المهمة/النموذج المناسب</td><td><span class="chip plan">عرض</span></td></tr>
+          <tr><td><span class="pg">استلام البضاعة</span> <code>grn</code></td><td>نموذج إذن استلام البضاعة (GRN)</td><td><span class="chip plan">عرض/نموذج</span></td></tr>
+          <tr><td><span class="pg">المهام</span> <code>tasks</code></td><td>إدارة المهام اليومية وتتبّعها</td><td><span class="chip live">تفاعلية · TaskManager</span></td></tr>
+          <tr><td><span class="pg">الأصناف</span> <code>products</code></td><td>سجلّ الأصناف الرئيسي (بحث/إضافة/تصدير)</td><td><span class="chip live">تفاعلية · ItemMaster</span></td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="blk"><span class="ic">📦</span> المستودعات والجرد</h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>الصفحة</th><th>الوظيفة</th><th>النوع · الجزيرة</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pg">المستودعات</span> <code>warehouses</code></td><td>إدارة المستودعات ومواقعها</td><td><span class="chip live">تفاعلية · WarehouseManager</span></td></tr>
+          <tr><td><span class="pg">الخرائط الفنية</span> <code>warehouse-maps</code></td><td>خرائط المستودعات التفصيلية</td><td><span class="chip live">تفاعلية · WarehouseMaps</span></td></tr>
+          <tr><td><span class="pg">مخطط الرحبة</span> <code>cold-storage-plan</code></td><td>مخطط تخزين الرحبة (كوزميتك) — يُحفظ محليًّا</td><td><span class="chip live">تفاعلية · ColdStoragePlan</span></td></tr>
+          <tr><td><span class="pg">خريطة التجزئة</span> <code>retail-hub</code></td><td>خريطة نقاط التجزئة</td><td><span class="chip plan">عرض</span></td></tr>
+          <tr><td><span class="pg">جرد الأصول</span> <code>assets-inventory</code></td><td>جرد الأصول الثابتة</td><td><span class="chip plan">عرض</span></td></tr>
+          <tr><td><span class="pg">جرد المركبات</span> <code>vehicles-inventory</code></td><td>جرد المركبات</td><td><span class="chip plan">عرض</span></td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="blk"><span class="ic">🔄</span> دورات أودو والمحاكاة</h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>الصفحة</th><th>الوظيفة</th><th>النوع · الجزيرة</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pg">تعلّم أودو</span> <code>learn-odoo</code></td><td>محاكي واجهة أودو الكامل (12 مرحلة، دورة كاملة بالقواعد الذهبية)</td><td><span class="chip live">تفاعلية · OdooSimulator</span></td></tr>
+          <tr><td><span class="pg">الهيكل والمسارات</span> <code>workflows</code></td><td>أسئلة شائعة وهيكل الدورة</td><td><span class="chip live">تفاعلية · FAQ</span></td></tr>
+          <tr><td><span class="pg">دورات العمل ERP</span> <code>erp-workflows</code></td><td>شرح مسارات عمل ERP</td><td><span class="chip plan">عرض</span></td></tr>
+          <tr><td><span class="pg">تثبيت أودو</span> <code>odoo-installation</code></td><td>دليل تثبيت أودو</td><td><span class="chip plan">عرض</span></td></tr>
+          <tr><td><span class="pg">تدريب أودو (محاكي)</span> <code>training</code></td><td>المحاكي الأقدم: 12 مرحلة + 21 نموذج + 4 قواعد ذهبية</td><td><span class="chip live">تفاعلية · OdooTrainingConsole</span></td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="blk"><span class="ic">📊</span> مركز التقارير</h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>الصفحة</th><th>الوظيفة</th><th>النوع</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pg">مركز التقارير</span> <code>reports</code></td><td>فهرس موحّد لكل التقارير</td><td><span class="chip plan">عرض</span></td></tr>
+          <tr><td><span class="pg">تقرير الإنجاز</span> <code>achievement-report</code></td><td>تقرير الإنجازات</td><td><span class="chip plan">عرض</span></td></tr>
+          <tr><td><span class="pg">المقارنة العالمية</span> <code>global-warehouse-report</code></td><td>مقارنة المستودعات عالميًّا</td><td><span class="chip plan">عرض</span></td></tr>
+          <tr><td><span class="pg">تقرير 155</span> <code>warehouse-155-report</code></td><td>تقرير تحوير مستودعات 155</td><td><span class="chip plan">عرض</span></td></tr>
+          <tr><td><span class="pg">الدورة المستندية</span> <code>تقرير-الدورة-المستندية</code></td><td>الدورة المستندية الكاملة</td><td><span class="chip plan">عرض</span></td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="blk"><span class="ic">🗄️</span> الأرشيف والمرجعية</h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>الصفحة</th><th>الوظيفة</th><th>النوع · الوصول</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pg">إدارة المستخدمين</span> <code>users</code></td><td>إسناد الأدوار وتفعيل/تعطيل الحسابات</td><td><span class="chip live">تفاعلية · UsersAdmin</span> <span class="chip pend">أدمن فقط</span></td></tr>
+          <tr><td><span class="pg">الصلاحيات والأدوار</span> <code>access-control</code></td><td>مركز تصميم نظام الوصول</td><td><span class="chip live">AccessControlHub</span> <span class="chip pend">أدمن فقط</span></td></tr>
+          <tr><td><span class="pg">الأرشيف التأسيسي</span> <code>archive</code></td><td>أرشيف التأسيس والتقييم</td><td><span class="chip plan">عرض</span></td></tr>
+          <tr><td><span class="pg">مقترحات التطوير</span> <code>development-proposals</code></td><td>مقترحات تطوير النظام</td><td><span class="chip plan">عرض</span></td></tr>
+          <tr><td><span class="pg">مساعد الاجتماعات</span> <code>meeting-assistant</code></td><td>أداة تنظيم/تلخيص الاجتماعات</td><td><span class="chip live">تفاعلية · MeetingAssistant</span></td></tr>
+          <tr><td><span class="pg">معرض التوثيق المرئي</span> <code>gallery</code></td><td>معرض الصور والتوثيق</td><td><span class="chip plan">عرض</span></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ═══ 4 ═══ -->
+    <section id="s4">
+      <div class="sec-head"><span class="sec-num">04</span><h2>نظام الوصول والأدوار</h2></div>
+      <p class="lead">أحدث ما بُني: نظام دخول كامل يربط <b>من يدخل</b> بـ<b>ما يراه</b> وبـ<b>ما يفعله</b> — على أربع طبقات.</p>
+
+      <div class="cards">
+        <div class="card rail"><h4>1️⃣ الدخول</h4><p>شاشة <span class="k">/login</span> عربية بـ Firebase Auth. جلسة محفوظة بين الزيارات.</p></div>
+        <div class="card rail"><h4>2️⃣ الحارس</h4><p><span class="k">AuthGate</span> يحمي كل صفحات لوحة التحكم؛ غير المسجّل يُحوّل للدخول قبل ظهور المحتوى.</p></div>
+        <div class="card rail"><h4>3️⃣ القائمة حسب الدور</h4><p><span class="k">RoleNav</span> يُخفي المجموعات/الروابط التي لا تخصّ الدور. المصدر: <span class="k">navAccess.js</span>.</p></div>
+        <div class="card rail"><h4>4️⃣ إدارة المستخدمين</h4><p>صفحة أدمن تُسند الأدوار العشرة وتفعّل/تعطّل الحسابات عبر Firestore.</p></div>
+      </div>
+
+      <h3 class="blk"><span class="ic">👥</span> الأدوار العشرة — من يرى ماذا</h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>الدور</th><th>المجموعات المرئية</th></tr></thead>
+        <tbody>
+          <tr><td>👑 <b>المدير العام</b></td><td>كل شيء + إدارة المستخدمين والصلاحيات</td></tr>
+          <tr><td>🏢 مدير المستودع</td><td>كل المجموعات (بلا شاشات الأدمن)</td></tr>
+          <tr><td>📦 أمين المخزن</td><td>يومية · مستودعات · أودو</td></tr>
+          <tr><td>🔬 مفتّش الجودة</td><td>يومية · أودو · تقارير</td></tr>
+          <tr><td>🛡️ ضابط البوابة</td><td>يومية · أودو</td></tr>
+          <tr><td>🛒 موظف المشتريات</td><td>يومية · أودو · تقارير</td></tr>
+          <tr><td>💰 المدير المالي</td><td>مستودعات · أودو · تقارير</td></tr>
+          <tr><td>↩️ مسؤول المرتجعات</td><td>يومية · مستودعات · أودو</td></tr>
+          <tr><td>🔎 مدقّق الجرد</td><td>مستودعات · أودو · تقارير</td></tr>
+          <tr><td>👁️ مشاهد</td><td>مركز التقارير فقط</td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout warn"><span class="h">⚠️ خطوة أمان معلّقة على المالك</span> يجب نشر <b>قواعد أمان Firestore</b> (جاهزة داخل صفحة إدارة المستخدمين) لحصر تعديل الأدوار بالأدمن فقط. حتى ذلك الحين، الكتابة على الأدوار مفتوحة لأي مستخدم مصادق.</div>
+    </section>
+
+    <!-- ═══ 5 ═══ -->
+    <section id="s5">
+      <div class="sec-head"><span class="sec-num">05</span><h2>طبقة الخدمات (16 ملفًا)</h2></div>
+      <p class="lead">المنطق البرمجي المشترك خلف الواجهة، مقسّم إلى أربع عائلات في <span class="mono">src/services</span>.</p>
+
+      <h3 class="blk"><span class="ic">🔐</span> المصادقة والأدوار — <span class="mono">auth/</span></h3>
+      <dl class="deflist">
+        <div class="defrow"><dt>authService.js</dt><dd>الدخول/الخروج · قراءة دور المستخدم من Firestore · رسائل أخطاء عربية · تمهيد الأدمن بالبريد.</dd></div>
+        <div class="defrow"><dt>roles.js</dt><dd>تعريف الأدوار العشرة (الاسم · الرمز · اللون) + دوال <span class="mono">getRole/isAdmin</span>.</dd></div>
+        <div class="defrow"><dt>navAccess.js</dt><dd><b>المصدر الوحيد</b> لخريطة «الدور → المجموعات المرئية» + قيود العناصر.</dd></div>
+        <div class="defrow"><dt>usersService.js</dt><dd>قراءة/إنشاء/تحديث مستندات الأدوار في مجموعة <code>users</code>.</dd></div>
+      </dl>
+
+      <h3 class="blk"><span class="ic">📊</span> Excel — <span class="mono">excel/</span></h3>
+      <dl class="deflist">
+        <div class="defrow"><dt>excelSchema.js</dt><dd>تعريف مجموعات البيانات القياسية بأسماء حقول موحّدة (تُطابق أودو).</dd></div>
+        <div class="defrow"><dt>excelImport.js</dt><dd>استيراد ملفات Excel وتحويلها لبنية التطبيق.</dd></div>
+        <div class="defrow"><dt>excelExport.js</dt><dd>تصدير البيانات إلى Excel.</dd></div>
+      </dl>
+
+      <h3 class="blk"><span class="ic">🔌</span> أودو — <span class="mono">odoo/</span></h3>
+      <dl class="deflist">
+        <div class="defrow"><dt>index.js</dt><dd>نقطة الدخول: يختار العميل الحقيقي أو الوهمي حسب الوضع.</dd></div>
+        <div class="defrow"><dt>odooConfig.js</dt><dd>الإعداد: <span class="mono">training</span> (وهمي، افتراضي) أو <span class="mono">production</span>.</dd></div>
+        <div class="defrow"><dt>mockOdooClient.js</dt><dd>عميل وهمي يعمل دون إنترنت (الوضع الافتراضي).</dd></div>
+        <div class="defrow"><dt>odooClient.js</dt><dd>العميل الحقيقي عبر الوسيط (عند التفعيل).</dd></div>
+        <div class="defrow"><dt>odooMapper.js</dt><dd><b>المصدر الوحيد</b> لتحويل حقول أودو ↔ بنية التطبيق.</dd></div>
+      </dl>
+
+      <h3 class="blk"><span class="ic">📦</span> بيانات المخزون</h3>
+      <dl class="deflist">
+        <div class="defrow"><dt>itemService.js</dt><dd>عمليات الأصناف (Items_Master).</dd></div>
+        <div class="defrow"><dt>inventoryService.js</dt><dd>منطق المخزون بمنهجية Excel (الوارد/الصادر/الرصيد).</dd></div>
+        <div class="defrow"><dt>logService.js</dt><dd>سجلّات الوارد والصادر (Inbound/Outbound Log).</dd></div>
+        <div class="defrow"><dt>warehouseService.js</dt><dd>عمليات المستودعات (warehouses).</dd></div>
+      </dl>
+    </section>
+
+    <!-- ═══ 6 ═══ -->
+    <section id="s6">
+      <div class="sec-head"><span class="sec-num">06</span><h2>الأدوات والاعتماديات</h2></div>
+      <p class="lead">كل مكتبة في المشروع ودورها الفعلي.</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>الأداة</th><th>النسخة</th><th>الدور</th></tr></thead>
+        <tbody>
+          <tr><td><code>astro</code></td><td class="num mono">6.3.1</td><td>إطار الموقع (توليد صفحات ثابتة + جزُر)</td></tr>
+          <tr><td><code>react / react-dom</code></td><td class="num mono">18.3.1</td><td>المكوّنات التفاعلية (الجزُر)</td></tr>
+          <tr><td><code>@astrojs/react</code></td><td class="num mono">4.2.0</td><td>دمج React داخل Astro</td></tr>
+          <tr><td><code>firebase</code></td><td class="num mono">12.12.1</td><td>Firestore + Authentication (السحابة + الدخول)</td></tr>
+          <tr><td><code>tailwindcss</code> + postcss</td><td class="num mono">4.2.4</td><td>التنسيق (utility CSS) + رموز برند زو اللونية</td></tr>
+          <tr><td><code>xlsx</code></td><td class="num mono">0.18.5</td><td>استيراد/تصدير Excel</td></tr>
+          <tr><td><code>html2pdf.js</code></td><td class="num mono">0.14.0</td><td>تحويل الصفحات/التقارير إلى PDF</td></tr>
+          <tr><td><code>mermaid</code></td><td class="num mono">11.15.0</td><td>رسم المخططات والمسارات</td></tr>
+          <tr><td><code>puppeteer</code> <span class="chip plan">dev</span></td><td class="num mono">24.43.0</td><td>لقطات/اختبار آلي عبر متصفّح مُدار</td></tr>
+          <tr><td><code>eslint</code> + prettier <span class="chip plan">dev</span></td><td class="num mono">9.39 / 3.8</td><td>فحص جودة الكود وتنسيقه</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ═══ 7 ═══ -->
+    <section id="s7">
+      <div class="sec-head"><span class="sec-num">07</span><h2>الباك اند — موديول أودو</h2></div>
+      <p class="lead">موديول <span class="mono">brandzo_warehouse</span> لأودو 19 Community: يحوّل دورة الـ12 مرحلة إلى قيود صارمة. <b>10 من 12 مرحلة مُنجزة</b> بـ 6 حرّاس ذهبية.</p>
+
+      <h3 class="blk"><span class="ic">🛡️</span> الحرّاس الذهبية الستة (طبقتان: زر + قيد صارم)</h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>الحارس</th><th>ما يمنعه</th></tr></thead>
+        <tbody>
+          <tr><td>🥇 حوكمة الشراء</td><td>أمر شراء دون طلب معتمد من مدير المشتريات</td></tr>
+          <tr><td>🥈 بوابة الجودة (QC)</td><td>اعتماد استلام «Done» قبل موافقة مفتّش الجودة</td></tr>
+          <tr><td>🥉 FEFO</td><td>صرف دفعة أحدث قبل الأقرب انتهاءً</td></tr>
+          <tr><td>🏅 تصريح البوابة</td><td>خروج مركبة دون تصريح معتمد</td></tr>
+          <tr><td>⚖️ المطابقة الثلاثية</td><td>ترحيل فاتورة قبل تطابق (أمر + استلام + فاتورة)</td></tr>
+          <tr><td>🔒 حارس التسويات</td><td>تعديل رصيد يدويًّا دون اعتماد المدير المالي</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="blk"><span class="ic">🧩</span> الكائنات (10) ومجموعات الأمان (7)</h3>
+      <p><b>الكائنات:</b> <span class="mono">purchase.requisition · purchase.order · stock.picking · stock.picking.type · stock.scrap · stock.quant · account.move</span> + مخصّصة: <span class="mono">bz.gate.pass · bz.cycle.count · bz.cycle.count.line</span>.</p>
+      <p><b>مجموعات الأمان السبع:</b> مستخدم المستودع · مدير المشتريات · مفتّش الجودة · ضابط البوابة · مسؤول المرتجعات · مدقّق الجرد · المدير المالي.</p>
+      <div class="callout info"><span class="h">المتبقّي في الباك اند</span> المرحلة <b>S12 (الإغلاق المالي)</b> فقط — بعد توفّر بيئة أودو الحيّة (M2) لتشغيل الـ<b>42 اختبارًا</b> فعليًّا.</div>
+    </section>
+
+    <!-- ═══ 8 ═══ -->
+    <section id="s8">
+      <div class="sec-head"><span class="sec-num">08</span><h2>طبقة التكامل مع أودو</h2></div>
+      <p class="lead">جسرٌ جاهز يربط الواجهة بأودو الحقيقي — مبنيّ لكنه غير مفعّل (الوضع الافتراضي آمن وبلا شبكة).</p>
+      <dl class="deflist">
+        <div class="defrow"><dt>odoo-proxy/cloudflare-worker</dt><dd>وسيط Cloudflare Worker يحمل أسرار أودو (لا تُكشف للمتصفّح).</dd></div>
+        <div class="defrow"><dt>odoo-proxy/firebase-function</dt><dd>بديل وسيط عبر Firebase Function.</dd></div>
+        <div class="defrow"><dt>وضع التشغيل</dt><dd><span class="mono">training</span> (وهمي، افتراضي) — يتحوّل إلى <span class="mono">production</span> عند نشر الوسيط + تفعيل allowlist.</dd></div>
+      </dl>
+      <div class="callout warn"><span class="h">🔒 قاعدة الأسرار</span> مفاتيح أودو الحقيقية (URL · DB · USER · API_KEY) تعيش <b>فقط</b> داخل الوسيط الخادمي، ولا تُوضع أبدًا في متغيّرات <span class="mono">PUBLIC_</span> ولا تصل المتصفّح.</div>
+    </section>
+
+    <!-- ═══ 9 ═══ -->
+    <section id="s9">
+      <div class="sec-head"><span class="sec-num">09</span><h2>الملفات العامة والنماذج</h2></div>
+      <p class="lead">مجلد <span class="mono">public/</span> يضم 80 ملفًا جاهزًا للعرض/الطباعة دون بناء.</p>
+      <div class="cards">
+        <div class="card rail"><h4>🖨️ النماذج المطبوعة</h4><p><b>24 نموذجًا</b> في <span class="k">public/forms/</span> — النماذج الرسمية الـ21 للدورة المستندية بهوية برند زو.</p></div>
+        <div class="card rail"><h4>📄 التقارير الجاهزة</h4><p><b>35 تقرير HTML</b> في جذر <span class="k">public/</span> — تقارير التخزين والدورة المستندية والمقارنات والإنجاز.</p></div>
+      </div>
+    </section>
+
+    <!-- ═══ 10 ═══ -->
+    <section id="s10">
+      <div class="sec-head"><span class="sec-num">10</span><h2>الميزات والحالة</h2></div>
+      <p class="lead">ملخّص قدرات النظام الحيّة، وما يتبقّى.</p>
+
+      <h3 class="blk"><span class="ic">✅</span> ميزات تعمل الآن</h3>
+      <ul class="feat">
+        <li><span class="ck">✓</span> نظام دخول حقيقي (Firebase Auth) + حارس على كل الصفحات</li>
+        <li><span class="ck">✓</span> 10 أدوار + قائمة جانبية مقيّدة حسب الدور</li>
+        <li><span class="ck">✓</span> صفحة إدارة المستخدمين (إسناد الأدوار)</li>
+        <li><span class="ck">✓</span> محاكي أودو كامل (12 مرحلة، دورة حقيقية)</li>
+        <li><span class="ck">✓</span> قاعدة بيانات سحابية (Firestore، offline-first)</li>
+        <li><span class="ck">✓</span> استيراد/تصدير Excel + تقارير PDF</li>
+        <li><span class="ck">✓</span> بوابة عمليات عربية RTL كاملة (29 صفحة)</li>
+        <li><span class="ck">✓</span> موديول أودو حقيقي (10/12 مرحلة، 6 حرّاس)</li>
+      </ul>
+
+      <h3 class="blk"><span class="ic">⏳</span> المتبقّي (خريطة الطريق)</h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>المهمة</th><th>الطبقة</th><th>الحالة</th></tr></thead>
+        <tbody>
+          <tr><td>نشر قواعد أمان Firestore</td><td>الواجهة/الأمان</td><td><span class="chip pend dot">على المالك</span></td></tr>
+          <tr><td>M2 — بيئة أودو الحيّة (Oracle مجاني)</td><td>الباك اند</td><td><span class="chip plan dot">التالية</span></td></tr>
+          <tr><td>S12 — الإغلاق المالي</td><td>موديول أودو</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
+          <tr><td>تفعيل تكامل أودو (production)</td><td>التكامل</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
+          <tr><td>ربط النطاق <span class="mono">warehousehub.com.ly</span></td><td>النشر</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <footer class="foot">
+      <p>تقرير مُولّد من فحص الكود الفعلي — <b>Brandzo Hub 2026</b> · إعداد وتطوير: محمد إبراهيم البرشي</p>
+    </footer>
+  </div>
+</div>
+</body>
+</html>
