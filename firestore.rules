@@ -1,0 +1,107 @@
+rules_version = '2';
+
+/*
+ * ═══════════════════════════════════════════════════════════════════
+ *  قواعد أمان Firestore — Brandzo Hub
+ * ═══════════════════════════════════════════════════════════════════
+ *  ⚠️ الحالة قبل هذه القواعد: قاعدة البيانات كانت مفتوحة للعالم —
+ *     أي شخص يقرأ ويكتب ويحذف دون حساب (مُثبت بالاختبار 2026-07-14).
+ *
+ *  المبادئ:
+ *   1. لا شيء بلا تسجيل دخول.
+ *   2. الأدوار لا يعدّلها إلا المدير العام (وإلا رقّى كل موظّف نفسه).
+ *   3. سجلّ المسح **غير قابل للتعديل أو الحذف** — التاريخ لا يُزوَّر
+ *      (التصحيح يكون بقيد جديد، لا بمحو القديم).
+ *
+ *  كيف تنشرها:
+ *   Firebase Console → Firestore Database → Rules → الصق هذا الملف → Publish
+ * ═══════════════════════════════════════════════════════════════════
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── دوال مساعدة ──────────────────────────────────────────────
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function myRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function hasProfile() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // تمهيد المدير العام بالبريد — يطابق التمهيد في authService.js.
+    // ضروري لكسر الحلقة المفرغة: بلا مستند دور لا صلاحية، وبلا صلاحية
+    // لا يمكن إنشاء مستند الدور. عدّل البريد هنا وهناك معاً عند الحاجة.
+    function isBootstrapAdmin() {
+      return signedIn() && request.auth.token.email == 'albarshi.96@gmail.com';
+    }
+
+    function isAdmin() {
+      return isBootstrapAdmin() || (signedIn() && hasProfile() && myRole() == 'admin');
+    }
+
+    function isManager() {
+      return isBootstrapAdmin() ||
+             (signedIn() && hasProfile() && myRole() in ['admin', 'warehouse_manager']);
+    }
+
+    // ── المستخدمون والأدوار ──────────────────────────────────────
+    // القراءة لأي مُصادَق (الواجهة تحتاج معرفة دور المستخدم).
+    // الكتابة للمدير العام فقط — وإلا استطاع أي مستخدم ترقية نفسه.
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── العمليات المخزنية ────────────────────────────────────────
+    match /operations/{opId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      // الإقفال والملخّص للمديرين فقط؛ ولا حذف للعمليات إطلاقاً.
+      allow update: if isManager();
+      allow delete: if false;
+
+      // سجلّ المسح: إضافة فقط — لا تعديل ولا حذف (سجلّ تدقيق دائم).
+      match /scans/{scanId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+                      && request.resource.data.byUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+
+    // ── بيانات المخزون ───────────────────────────────────────────
+    match /Items_Master/{docId} {
+      allow read: if signedIn();
+      allow write: if isManager();
+    }
+
+    match /warehouses/{docId} {
+      allow read: if signedIn();
+      allow write: if isManager();
+    }
+
+    // سجلّات الوارد والصادر: إضافة فقط — لا محو للتاريخ.
+    match /Inbound_Log/{docId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /Outbound_Log/{docId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    // ── الافتراضي: امنع كل ما لم يُذكر صراحةً ────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

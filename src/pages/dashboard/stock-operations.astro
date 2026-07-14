@@ -289,6 +289,15 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
   style="position:fixed;top:10px;left:10px;z-index:60;display:inline-flex;align-items:center;gap:.4rem;background:rgba(26,35,50,.9);color:#e7e9ea;border:1px solid #2f3b4a;border-radius:8px;padding:.35rem .7rem;font-size:.75rem;font-weight:700;text-decoration:none;backdrop-filter:blur(6px)"
   title="العودة إلى لوحة التحكم"
 >← البوابة</a>
+
+<!-- ☁️ مؤشّر حالة السحابة: يُطمئن الموظّف أن عمله محفوظ (أو يُنذره فوراً) -->
+<div
+  id="bzCloudStatus"
+  style="position:fixed;top:10px;left:96px;z-index:60;display:none;align-items:center;gap:.4rem;background:rgba(26,35,50,.9);border:1px solid #2f3b4a;border-radius:8px;padding:.35rem .7rem;font-size:.72rem;font-weight:700;backdrop-filter:blur(6px)"
+>
+  <span id="bzCloudDot" style="width:8px;height:8px;border-radius:50%;background:#8899a6"></span>
+  <span id="bzCloudText" style="color:#8899a6">…</span>
+</div>
 <div class="toast-container" id="toastContainer"></div>
 <div class="item-tooltip" id="itemTooltip"></div>
 
@@ -1008,6 +1017,80 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
     window.__bzProfile = profile;
     if (typeof window.applyBzRole === 'function') window.applyBzRole(profile);
   });
+
+  /* ─────────────────────────────────────────────────────────────
+     جسر السحابة (المرحلة 2): كل مسح يُحفظ كقيد دائم في Firestore.
+     يعمل بلا إنترنت (Firestore يُخزّن محلياً ويرفع تلقائياً عند العودة).
+     ───────────────────────────────────────────────────────────── */
+  import {
+    createOperation,
+    appendScan,
+    closeOperation,
+    updateOperationSummary,
+  } from '../../services/stock/operationsService.js';
+
+  window.__bzCloud = {
+    opId: null,
+    pending: 0,
+    failed: 0,
+
+    /** يبدأ عملية سحابية جديدة (يُستدعى عند بدء العمل). */
+    async startOperation(type) {
+      if (this.opId) return this.opId;
+      try {
+        this.opId = await createOperation({ type, profile: window.__bzProfile });
+        localStorage.setItem('bzCloudOpId', this.opId);
+        window.__bzSetCloudStatus?.('synced', `عملية سحابية: ${this.opId.slice(0, 6)}…`);
+        return this.opId;
+      } catch (e) {
+        window.__bzSetCloudStatus?.('error', 'تعذّر إنشاء العملية السحابية');
+        console.error('[cloud] createOperation failed', e);
+        return null;
+      }
+    },
+
+    /** يُرسل قيد مسح دائم. لا يُسقط المسح أبداً إن فشل — يُبلّغ فقط. */
+    async pushScan(entry) {
+      if (!this.opId) await this.startOperation(entry.opType || 'جرد');
+      if (!this.opId) return;
+      this.pending++;
+      window.__bzSetCloudStatus?.('syncing', `جارٍ الرفع (${this.pending})…`);
+      try {
+        await appendScan(this.opId, { ...entry, profile: window.__bzProfile });
+        this.pending--;
+        window.__bzSetCloudStatus?.(
+          this.pending > 0 ? 'syncing' : 'synced',
+          this.pending > 0 ? `جارٍ الرفع (${this.pending})…` : 'محفوظ في السحابة ✓'
+        );
+      } catch (e) {
+        this.pending--;
+        this.failed++;
+        window.__bzSetCloudStatus?.('error', `تعذّر رفع ${this.failed} قيد`);
+        console.error('[cloud] appendScan failed', e);
+      }
+    },
+
+    async saveSummary(itemCount, scannedCount) {
+      if (!this.opId) return;
+      try {
+        await updateOperationSummary(this.opId, { itemCount, scannedCount });
+      } catch (e) {
+        console.error('[cloud] summary failed', e);
+      }
+    },
+
+    async close() {
+      if (!this.opId) return;
+      try {
+        await closeOperation(this.opId);
+        localStorage.removeItem('bzCloudOpId');
+        window.__bzSetCloudStatus?.('synced', 'أُقفلت العملية');
+        this.opId = null;
+      } catch (e) {
+        console.error('[cloud] close failed', e);
+      }
+    },
+  };
 </script>
 <script is:inline>
 /* ========================================================
@@ -1602,9 +1685,28 @@ function downloadTemplate() {
 /* ========================================================
    التنقل بين الشاشات
    ======================================================== */
+/* ☁️ مؤشّر حالة السحابة — يُستدعى من جسر السحابة. */
+window.__bzSetCloudStatus = function (state, text) {
+  const box = document.getElementById('bzCloudStatus');
+  const dot = document.getElementById('bzCloudDot');
+  const txt = document.getElementById('bzCloudText');
+  if (!box || !dot || !txt) return;
+  box.style.display = 'inline-flex';
+  const colors = { synced: '#22c55e', syncing: '#DAAA3C', error: '#ef4444', offline: '#8899a6' };
+  dot.style.background = colors[state] || '#8899a6';
+  txt.style.color = colors[state] || '#8899a6';
+  txt.textContent = text || '';
+};
+
 function switchToDashboard() {
   document.getElementById('importScreen').classList.add('hidden');
   document.getElementById('dashboardScreen').classList.remove('hidden');
+
+  /* ☁️ بدء عملية سحابية لهذه الجلسة (مرّة واحدة) */
+  if (window.__bzCloud && !window.__bzCloud.opId) {
+    window.__bzCloud.startOperation(operationType);
+  }
+
   document.getElementById('currentOperationType').textContent = getOperationTypeIcon(operationType) + ' ' + operationType;
   applyOperationConfigToUI();
   
@@ -2500,6 +2602,18 @@ function saveEditItem() {
 function addToScanLog(item, qty) {
   scanLog.push({ barcode: item.barcode, name: item.name, qty, time: getNow() });
   if (scanLog.length > 1000) scanLog = scanLog.slice(-1000);
+
+  /* ☁️ المرحلة 2: كل مسح يُرفع كقيد دائم في السحابة (لا يُحذف أبداً).
+     كل مسارات المسح (مفرد · جملة · كاميرا · لصق) تمرّ من هنا، فلا يفوت شيء.
+     الرفع لا يُعطّل الواجهة، ويُخزَّن محلياً ويُرسل تلقائياً عند عودة الإنترنت. */
+  if (window.__bzCloud) {
+    window.__bzCloud.pushScan({
+      barcode: item.barcode,
+      name: item.name,
+      qty,
+      opType: operationType,
+    });
+  }
 }
 
 /* ========================================================

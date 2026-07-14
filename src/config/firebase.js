@@ -1,5 +1,10 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, initializeFirestore } from 'firebase/firestore';
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 /**
@@ -44,12 +49,21 @@ export const auth = getAuth(app);
  * for cloud IDEs (Codespaces, Stackblitz, …) and for some restrictive
  * corporate networks. It also works fine in normal browsers.
  *
+ * Also enables a PERSISTENT local cache (offline-first): writes are accepted
+ * while offline and flushed automatically when the connection returns, and
+ * reads are served from disk. This is what lets warehouse staff keep scanning
+ * on a weak/absent connection without losing a single entry.
+ * `persistentMultipleTabManager` keeps several open tabs consistent.
+ *
  * `initializeFirestore` may only be called once per app, so we guard against
  * re-initialization on hot module reload.
  */
 function createDb() {
   try {
-    return initializeFirestore(app, { experimentalForceLongPolling: true });
+    return initializeFirestore(app, {
+      experimentalForceLongPolling: true,
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+    });
   } catch {
     return getFirestore(app);
   }
