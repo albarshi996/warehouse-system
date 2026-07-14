@@ -8,6 +8,28 @@
   --color-brand-navy: #1a1a2e;
   --color-brand-yellow: #DAAA3C;
   --color-brand-gold: #DAAA3C;
+
+  /* مقاييس ألوان «العمليات المخزنية» — نُقلت من إعداد Tailwind CDN القديم
+     إلى بناء المشروع، كي تعمل الصفحة بلا اعتماد على الإنترنت. */
+  --color-brand-300: #f28b93;
+  --color-brand-400: #e85d68;
+  --color-brand-500: #c41e3a;
+  --color-brand-600: #a11a30;
+  --color-brand-700: #7e2b2a;
+  --color-brand-800: #5c1a1f;
+
+  --color-gold-300: #f0d98a;
+  --color-gold-400: #e6c04f;
+  --color-gold-500: #DAAA3C;
+  --color-gold-600: #b8862a;
+
+  --color-dark-400: #546e8a;
+  --color-dark-500: #3d4f65;
+  --color-dark-600: #2f3b4a;
+  --color-dark-700: #243044;
+  --color-dark-800: #1a2332;
+  --color-dark-900: #0f1419;
+  --color-dark-950: #090d12;
 }
 
 /* Tell Tailwind v4 explicitly where to look for class names. */
