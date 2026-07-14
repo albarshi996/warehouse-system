@@ -3,6 +3,7 @@ import '../styles/global.css';
 import Icon from '../components/ui/Icon.astro';
 import AuthGate from '../components/brandzo-erp/access/AuthGate.jsx';
 import UserMenu from '../components/brandzo-erp/access/UserMenu.jsx';
+import RoleNav from '../components/brandzo-erp/access/RoleNav.jsx';
 
 const { title, showGuide = false } = Astro.props;
 
@@ -17,8 +18,11 @@ const pinnedItem = { href: `${base}/dashboard`, label: 'الرئيسية', icon:
 // القاعدة الذهبية: لا حذف — كل الروابط القائمة أُعيد تنظيمها في مجموعات، وأُضيف
 // رابطا "مركز التقارير" و"الأرشيف التأسيسي" اللذان لم يكونا مربوطَين في القائمة.
 // الترتيب: الأكثر استخداماً يومياً في الأعلى ← المرجعي/التأسيسي في الأسفل.
+// `key` يربط كل مجموعة بخريطة الصلاحيات في services/auth/navAccess.js،
+// و`roles` على أي عنصر يحصره بأدوار بعينها (الأدمن يرى كل شيء دائمًا).
 const navGroups = [
   {
+    key: 'daily',
     group: 'العمليات اليومية',
     emoji: '🗓️',
     items: [
@@ -30,6 +34,7 @@ const navGroups = [
     ],
   },
   {
+    key: 'warehouses',
     group: 'المستودعات والجرد',
     emoji: '📦',
     items: [
@@ -42,6 +47,7 @@ const navGroups = [
     ],
   },
   {
+    key: 'odoo',
     group: 'دورات أودو والمحاكاة',
     emoji: '🔄',
     items: [
@@ -53,6 +59,7 @@ const navGroups = [
     ],
   },
   {
+    key: 'reports',
     group: 'مركز التقارير',
     emoji: '📊',
     items: [
@@ -67,10 +74,12 @@ const navGroups = [
     ],
   },
   {
+    key: 'archive',
     group: 'الأرشيف والمرجعية',
     emoji: '🗄️',
     items: [
-      { href: `${base}/dashboard/access-control`, label: 'الصلاحيات والأدوار', icon: 'users' },
+      { href: `${base}/dashboard/users`, label: 'إدارة المستخدمين', icon: 'users', roles: ['admin'] },
+      { href: `${base}/dashboard/access-control`, label: 'الصلاحيات والأدوار', icon: 'users', roles: ['admin'] },
       { href: `${base}/dashboard/archive`, label: 'الأرشيف التأسيسي', icon: 'package' },
       { href: `${base}/dashboard/development-proposals`, label: 'مقترحات التطوير', icon: 'clipboardList' },
       { href: `${base}/dashboard/meeting-assistant`, label: 'مساعد الاجتماعات', icon: 'grid' },
@@ -185,6 +194,7 @@ const currentPath = Astro.url.pathname;
       <span class="text-sm font-medium opacity-80">جارٍ التحقّق من الدخول...</span>
     </div>
     <AuthGate client:load />
+    <RoleNav client:load />
 
     <!--
       ═══════════════════════════════════════════════════════════
@@ -318,14 +328,14 @@ const currentPath = Astro.url.pathname;
 
           {/* المجموعات المنطقية (الدفعة 4) */}
           {navGroups.map((grp) => (
-            <li class="nav-group pt-2" data-nav-group>
+            <li class="nav-group pt-2" data-nav-group data-group-key={grp.key}>
               <div class="px-3 pt-3 pb-1 flex items-center gap-2 text-[11px] font-bold text-brand-gold/70 tracking-wide border-t border-white/5">
                 <span>{grp.emoji}</span>
                 <span>{grp.group}</span>
               </div>
               <ul class="space-y-1 mt-1">
                 {grp.items.map((item) => (
-                  <li data-label={item.label}>
+                  <li data-label={item.label} data-item-roles={item.roles ? item.roles.join(',') : null}>
                     <a
                       href={item.href}
                       target={item.external ? '_blank' : null}
@@ -570,6 +580,11 @@ const currentPath = Astro.url.pathname;
             var visibleCount = 0;
 
             searchableItems.forEach(function(item) {
+              /* لا يُظهر البحث أبداً عنصراً مخفيّاً حسب الدور */
+              if (item.hasAttribute('data-role-hidden')) {
+                item.style.display = 'none';
+                return;
+              }
               var label = item.getAttribute('data-label').toLowerCase();
               if (label.includes(query)) {
                 item.style.display = '';
@@ -579,8 +594,12 @@ const currentPath = Astro.url.pathname;
               }
             });
 
-            /* إخفاء رأس أي مجموعة لا تحتوي عناصر ظاهرة */
+            /* إخفاء رأس أي مجموعة لا تحتوي عناصر ظاهرة (أو مخفيّة بالدور) */
             navGroupEls.forEach(function(grp) {
+              if (grp.hasAttribute('data-role-hidden')) {
+                grp.style.display = 'none';
+                return;
+              }
               var items = grp.querySelectorAll('li[data-label]');
               var anyVisible = Array.prototype.some.call(items, function(it) {
                 return it.style.display !== 'none';
