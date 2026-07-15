@@ -15,6 +15,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '../config/firebase.js';
 import { normalizeBarcode } from './excel/excelSchema.js';
+import { normalizeStatus } from './items/itemStatus.js';
+
+export { normalizeStatus };
 
 /**
  * ═══════════════════════════════════════════════════════════════════
@@ -214,8 +217,12 @@ export const upsertItems = async (items, { existingBySku = new Map() } = {}) => 
       for (const [key, cast] of Object.entries(OPTIONAL_CASTS)) {
         if (raw[key] !== undefined && raw[key] !== '') payload[key] = cast(raw[key]);
       }
+      // «الحالة» في الشيت تُكتب في `archived` — اسمان مختلفان لمعنى واحد.
+      if (raw.status !== undefined && raw.status !== '') {
+        payload.archived = normalizeStatus(raw.status);
+      }
       if (!prior) {
-        payload.archived = false;
+        if (payload.archived === undefined) payload.archived = false;
         payload.odooId = null;
         payload.createdAt = serverTimestamp();
         created++;
@@ -324,3 +331,4 @@ export function normalizeUnit(raw) {
 export function unitLabel(value) {
   return UNIT_OPTIONS.find((u) => u.value === value)?.labelAr || value || '';
 }
+

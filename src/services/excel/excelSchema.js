@@ -72,17 +72,24 @@ export const DATASETS = {
 
       { field: 'supplier', labelAr: 'المورد', type: 'string', required: false, aliases: ['المورد', 'المورّد', 'supplier', 'vendor', 'اسم المورد'] },
 
+      // حدّ إعادة الطلب — خاصّية **تعريف** لا رصيد (لا يتغيّر يوميًّا).
+      // بدونه كانت ميزة «تنبيه المخزون المنخفض» المبنيّة في شاشة الأصناف
+      // (balance <= minStock) ميتةً: لا سبيل لضبط الحدّ إلا صنفًا صنفًا بيدك.
+      { field: 'minStock', labelAr: 'Min Stock (الحد الأدنى)', type: 'number', required: false, nonNegative: true, aliases: ['minstock', 'min stock', 'الحد الأدنى', 'الحد الادنى', 'حد الطلب', 'reorder', 'reorder point'] },
+      // حالة الصنف — بدونها لا سبيل لإيقاف صنف من الشيت، والنظام يحمل
+      // `archived` أصلًا فيبقى معطَّلًا من جهة إكسيل.
+      { field: 'status', labelAr: 'Status (الحالة)', type: 'string', required: false, aliases: ['status', 'الحالة', 'item status', 'حالة الصنف', 'active', 'نشط'] },
+
       // ── اختيارية: يقبلها المستورد ولا يحملها القالب القياسي ──────────
       { field: 'shade', labelAr: 'الظل/اللون', type: 'string', required: false, aliases: ['shade', 'الظل', 'اللون', 'الظل/اللون', 'color', 'colour', 'درجة اللون'] },
       { field: 'balance', labelAr: 'الكمية الدفترية', type: 'number', required: false, nonNegative: true, aliases: ['balance', 'الرصيد', 'الكمية', 'الكمية الدفترية', 'المتوفر', 'qty', 'quantity', 'on hand', 'qty_available'] },
-      { field: 'minStock', labelAr: 'الحد الأدنى', type: 'number', required: false, nonNegative: true, aliases: ['minstock', 'الحد الأدنى', 'حد الطلب', 'min stock', 'reorder'] },
       { field: 'notes', labelAr: 'ملاحظات', type: 'string', required: false, aliases: ['notes', 'ملاحظات', 'ملاحظة', 'remarks', 'البيان'] },
     ],
     /** أعمدة القالب القياسي بالترتيب — ما يُصدَّر ويُسلَّم للمورّدين. */
     templateFields: [
       'sku', 'nameAr', 'barcode', 'barcodeAlt', 'costPrice', 'sellPrice',
       'uomGroupCode', 'uomGroupName', 'department', 'section', 'family',
-      'subFamily', 'supplier',
+      'subFamily', 'supplier', 'minStock', 'status',
     ],
   },
   /**
@@ -109,10 +116,14 @@ export const DATASETS = {
       { field: 'batch', labelAr: 'Batch / Lot (التشغيلة)', type: 'string', required: false, aliases: ['batch', 'lot', 'التشغيلة', 'رقم التشغيلة', 'lot no', 'batch no', 'التشغيله'] },
       { field: 'expiry', labelAr: 'Expiry (تاريخ الصلاحية)', type: 'string', required: false, aliases: ['expiry', 'expiry date', 'تاريخ الصلاحية', 'الصلاحية', 'exp', 'expiration', 'انتهاء الصلاحية'] },
       { field: 'qty', labelAr: 'Qty (الكمية)', type: 'number', required: true, nonNegative: true, aliases: ['qty', 'quantity', 'الكمية', 'الرصيد', 'الكمية الدفترية', 'on hand', 'العدد', 'stock'] },
+      // تكلفة **هذه التشغيلة** — لا سعر الشراء الحالي في ورقة التعريف.
+      // الفرق جوهري: التشغيلة اشتُريت بسعر ذلك اليوم، وتقييم المخزون يُبنى
+      // على ما دفعتَه فعلًا لا على سعر اليوم. وهذا أساس الإغلاق المالي (S12).
+      { field: 'unitCost', labelAr: 'Unit Cost (تكلفة الوحدة)', type: 'number', required: false, nonNegative: true, aliases: ['unit cost', 'unitcost', 'تكلفة الوحدة', 'التكلفة', 'cost', 'سعر التكلفة'] },
       { field: 'countDate', labelAr: 'Count Date (تاريخ الرصيد)', type: 'string', required: false, aliases: ['count date', 'تاريخ الرصيد', 'تاريخ الجرد', 'date', 'التاريخ', 'as of'] },
       { field: 'notes', labelAr: 'ملاحظات', type: 'string', required: false, aliases: ['notes', 'ملاحظات', 'ملاحظة', 'remarks'] },
     ],
-    templateFields: ['barcode', 'sku', 'nameAr', 'warehouse', 'location', 'batch', 'expiry', 'qty', 'countDate'],
+    templateFields: ['barcode', 'sku', 'nameAr', 'warehouse', 'location', 'batch', 'expiry', 'qty', 'unitCost', 'countDate'],
   },
   inbound: {
     key: 'inbound',
