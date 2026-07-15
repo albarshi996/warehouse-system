@@ -93,6 +93,17 @@ export async function listOpenOperations(max = 20) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+/**
+ * يستمع لكل العمليات لحظياً (الأحدث أولاً) — لشاشة متابعة المدير.
+ * نرتّب بحقل واحد فقط ونُصفّي الحالة في الواجهة، فلا نحتاج فهرساً مركّباً.
+ */
+export function listenOperations(callback, max = 50) {
+  const q = query(collection(db, OPS), orderBy('createdAt', 'desc'), limit(max));
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  });
+}
+
 /** يقفل العملية (لا مسح بعدها). */
 export function closeOperation(opId) {
   return updateDoc(doc(db, OPS, opId), { status: 'closed', closedAt: serverTimestamp() });
