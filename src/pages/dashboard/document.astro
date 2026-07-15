@@ -1,0 +1,45 @@
+---
+/**
+ * شاشة المستند الواحد — تحرير · إرسال · اعتماد · طباعة برقم حقيقي.
+ * تُستدعى بـ `?type=GRN` لمستند جديد، أو `?type=GRN&id=…` لمستند قائم.
+ * شاشة واحدة لكل الأنواع — المحرّك يقرأ المخطّط ويرسمه (ROADMAP §11.2).
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import DocumentEngine from '../../components/brandzo-erp/documents/DocumentEngine.jsx';
+---
+
+<DashboardLayout title="مستند" showGuide={false}>
+  <div class="text-right" dir="rtl">
+    <div class="mb-5 doc-screen">
+      <a
+        href="documents"
+        class="text-sm text-gray-400 hover:text-brand-gold transition-colors">← صندوق المستندات</a
+      >
+    </div>
+    <DocumentEngine client:load />
+  </div>
+</DashboardLayout>
+
+<style is:global>
+  /*
+    عند الطباعة تختفي البوابة وتبقى الورقة الرسمية وحدها.
+    نستهدف أبناء <body> بأسمائهم (طبقة الحارس · شريط الموبايل · السايدبار)
+    ولا نستخدم `body > *:not(.doc-print)` — فعرض الطباعة متداخل داخل <main>
+    لا ابنًا مباشرًا للـ body، وكانت تلك القاعدة ستُخفيه هو نفسه.
+  */
+  @media print {
+    #bz-auth-overlay,
+    #brandzo-mobile-header,
+    aside {
+      display: none !important;
+    }
+    main {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    body {
+      background: #fff !important;
+      min-height: 0 !important;
+    }
+  }
+</style>

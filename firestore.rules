@@ -75,6 +75,90 @@ service cloud.firestore {
       }
     }
 
+    // ── المستندات (محرّك النماذج — ROADMAP §11) ──────────────────
+    //
+    // ⚠️ ازدواج مقصود: أدوار الاعتماد أدناه تكرّر ما في مخطّطات
+    //    `src/services/documents/schemas/*.js`. القواعد لا تستورد JS، فلا
+    //    مفرّ. **عدّلهما معًا** — تمامًا كبريد تمهيد الأدمن أعلاه.
+    function approveRoles(docType) {
+      return docType == 'GRN' ? ['qc_inspector', 'warehouse_manager'] : [];
+    }
+    function completeRoles(docType) {
+      return docType == 'GRN' ? ['storekeeper', 'warehouse_manager'] : [];
+    }
+
+    match /documents/{docId} {
+      function isCreator() {
+        return signedIn() && resource.data.createdByUid == request.auth.uid;
+      }
+      // الحقول التي لا يجوز أن تتغيّر بعد الإنشاء — أي منها = تزوير هويّة المستند.
+      function immutableKept() {
+        return request.resource.data.type == resource.data.type
+               && request.resource.data.createdByUid == resource.data.createdByUid
+               && request.resource.data.createdAt == resource.data.createdAt;
+      }
+      // الرقم الرسمي يُكتب مرّة واحدة: من null إلى قيمة، ثم لا يتغيّر أبدًا.
+      function numberWriteOnce() {
+        return resource.data.number == null
+               || request.resource.data.number == resource.data.number;
+      }
+      function movingTo(states) {
+        return request.resource.data.state in states;
+      }
+
+      allow read: if signedIn();
+
+      // يولد مسودّةً باسم صاحبه وبلا رقم — لا أحد يُنشئ مستندًا معتمَدًا ابتداءً.
+      allow create: if signedIn()
+                    && request.resource.data.createdByUid == request.auth.uid
+                    && request.resource.data.state == 'draft'
+                    && request.resource.data.number == null;
+
+      // ثلاث بوّابات لا رابع لها:
+      //  (أ) صاحب المستند يحرّر مسودّته أو يُرسلها.
+      //  (ب) صاحب دور الاعتماد يبتّ في المُرسَل: يعتمد أو يرفض.
+      //  (ج) صاحب دور الإنهاء يُنهي **المعتمَد** فقط.
+      //
+      // 🥇 هنا يصير حارس الجودة حقيقيًّا: لا طريق من 'submitted' إلى 'done'.
+      //    من أراد إنهاء استلام فعليه المرور باعتماد مفتّش الجودة — ولو زوّر
+      //    الواجهة كلّها، فهذه القاعدة على الخادم لا تُتجاوَز.
+      allow update: if signedIn() && immutableKept() && numberWriteOnce() && (
+                      isAdmin()
+                      || (isCreator()
+                          && resource.data.state in ['draft', 'rejected']
+                          && movingTo(['draft', 'submitted']))
+                      || (hasProfile()
+                          && resource.data.state == 'submitted'
+                          && myRole() in approveRoles(resource.data.type)
+                          && movingTo(['approved', 'rejected']))
+                      || (hasProfile()
+                          && resource.data.state == 'approved'
+                          && myRole() in completeRoles(resource.data.type)
+                          && movingTo(['done']))
+                    );
+
+      // لا حذف لمستند أبدًا. المستند الخاطئ يُرفض ويبقى أثره.
+      allow delete: if false;
+
+      // سجلّ التدقيق: إضافة فقط باسم فاعلها — لا تعديل ولا حذف (نمط scans).
+      match /audit/{entryId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+                      && request.resource.data.byUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+
+    // ── عدّادات الترقيم التسلسلي ──────────────────────────────────
+    // العدّاد يزيد **واحدًا فقط في كل مرّة، وإلى الأمام فقط**: لا تصفير ولا
+    // قفز. بهذا يستحيل إنتاج رقمين متطابقين أو إعادة استخدام رقم محروق.
+    match /counters/{counterId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.seq == 1;
+      allow update: if signedIn() && request.resource.data.seq == resource.data.seq + 1;
+      allow delete: if false;
+    }
+
     // ── بيانات المخزون ───────────────────────────────────────────
     match /Items_Master/{docId} {
       allow read: if signedIn();

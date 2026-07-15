@@ -12,6 +12,13 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "preview", "--", "--port", "4322"],
       "port": 4322
+    },
+    {
+      "name": "astro-preview-worktree",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview"],
+      "port": 4322,
+      "autoPort": true
     }
   ]
 }
