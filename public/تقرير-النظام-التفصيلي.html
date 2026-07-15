@@ -208,10 +208,10 @@
         <span>📅 التاريخ: <b>2026-07-15</b></span>
         <span>🌐 الموقع الحيّ: <code>albarshi996.github.io/warehouse-system</code></span>
         <span>📦 المستودع: <code>albarshi996/warehouse-system</code></span>
-        <span>🔀 آخر إصدار: <code>f434247</code></span>
+        <span>🔀 آخر إصدار: <code>c8b6101</code></span>
       </div>
       <div class="stats">
-        <div class="stat"><div class="n">30</div><div class="l">صفحة منشورة</div></div>
+        <div class="stat"><div class="n">31</div><div class="l">صفحة منشورة</div></div>
         <div class="stat"><div class="n">6</div><div class="l">مجموعات Firestore</div></div>
         <div class="stat"><div class="n">10</div><div class="l">أدوار مستخدمين</div></div>
         <div class="stat"><div class="n">17</div><div class="l">ملف خدمات</div></div>
@@ -338,6 +338,7 @@
           <tr><td><span class="pg">المهام</span> <code>tasks</code></td><td>إدارة المهام اليومية وتتبّعها</td><td><span class="chip live">تفاعلية · TaskManager</span></td></tr>
           <tr><td><span class="pg">الأصناف</span> <code>products</code></td><td>سجلّ الأصناف الرئيسي (بحث/إضافة/تصدير)</td><td><span class="chip live">تفاعلية · ItemMaster</span></td></tr>
           <tr><td><span class="pg">عمليات مخزنية</span> <code>stock-operations</code> <span class="chip live">جديد</span></td><td><b>الجرد الذكي بالباركود</b> — 6 أنواع عمليات (جرد · استلام · صرف · إضافة · تالف · مرتجع)، استيراد/تصدير Excel، كاميرا، مسح بالجملة، <b>وحفظ سحابي لحظي بسجلّ دائم</b></td><td><span class="chip live">تفاعلية · سحابية</span></td></tr>
+          <tr><td><span class="pg">متابعة العمليات</span> <code>operations</code> <span class="chip live">جديد</span></td><td><b>شاشة رقابة المدير</b> — العمليات المفتوحة ومن بدأها · سجلّ مسح حيّ يتحدّث تلقائيًّا · توزيع الإنتاجية على الموظّفين · إقفال العملية <span class="chip pend">مديرون فقط</span></td><td><span class="chip live">تفاعلية · لحظية</span></td></tr>
         </tbody>
       </table></div>
 
@@ -454,7 +455,7 @@
 
       <h3 class="blk"><span class="ic">☁️</span> العمليات السحابية — <span class="mono">stock/</span></h3>
       <dl class="deflist">
-        <div class="defrow"><dt>operationsService.js</dt><dd><b>جديد.</b> إنشاء العملية · إضافة قيد مسح <b>دائم لا يُحذف</b> · الاستماع اللحظي لعمل بقيّة الموظفين · إقفال العملية. الهوية تُؤخذ من المصادقة مباشرةً لتطابق قواعد الأمان.</dd></div>
+        <div class="defrow"><dt>operationsService.js</dt><dd><b>جديد — 8 دوال.</b> إنشاء العملية · إضافة قيد مسح <b>دائم لا يُحذف</b> · الاستماع اللحظي للمسوحات (<span class="mono">listenScans</span>) وللعمليات (<span class="mono">listenOperations</span>) · إقفال العملية · ملخّص. الهوية تُؤخذ من المصادقة مباشرةً لتطابق قواعد الأمان، والاستعلامات ترتّب بحقل واحد فلا تحتاج فهرسًا مركّبًا.</dd></div>
       </dl>
 
       <h3 class="blk"><span class="ic">📦</span> بيانات المخزون</h3>
@@ -546,7 +547,8 @@
         <li><span class="ck">✓</span> محاكي أودو كامل (12 مرحلة، دورة حقيقية)</li>
         <li><span class="ck">✓</span> قاعدة بيانات سحابية (Firestore، offline-first)</li>
         <li><span class="ck">✓</span> استيراد/تصدير Excel + تقارير PDF</li>
-        <li><span class="ck">✓</span> بوابة عمليات عربية RTL كاملة (30 صفحة)</li>
+        <li><span class="ck">✓</span> بوابة عمليات عربية RTL كاملة (31 صفحة)</li>
+        <li><span class="ck">✓</span> <b>رقابة إدارية لحظية:</b> المدير يتابع الجرد وإنتاجية كل موظّف من مكتبه</li>
         <li><span class="ck">✓</span> موديول أودو حقيقي (10/12 مرحلة، 6 حرّاس)</li>
         <li><span class="ck">✓</span> <b>جرد ذكي حيّ:</b> كل مسح يُحفظ سحابيًّا لحظيًّا — عدّة موظفين معًا</li>
         <li><span class="ck">✓</span> <b>سجلّ تدقيق دائم</b> لا يقبل التعديل أو الحذف (من مسح ماذا ومتى)</li>
@@ -558,7 +560,7 @@
       <div class="tbl-wrap"><table>
         <thead><tr><th>المهمة</th><th>الطبقة</th><th>الحالة</th></tr></thead>
         <tbody>
-          <tr><td>شاشة متابعة العمليات للمدير (الخدمة جاهزة، تنقصها الواجهة)</td><td>الواجهة</td><td><span class="chip plan dot">التالية</span></td></tr>
+          <tr><td>تقرير/تصدير عملية مكتملة · ربط الجرد بـ<span class="mono">Items_Master</span> · قيد عكسي للتصحيح</td><td>الواجهة</td><td><span class="chip plan dot">التالية</span></td></tr>
           <tr><td>M2 — بيئة أودو الحيّة (Oracle مجاني)</td><td>الباك اند</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
           <tr><td>S12 — الإغلاق المالي</td><td>موديول أودو</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
           <tr><td>تفعيل تكامل أودو (production)</td><td>التكامل</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
