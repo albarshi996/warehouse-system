@@ -359,8 +359,12 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
     </div>
 
     <div class="flex flex-col gap-3">
-      <button class="btn btn-primary w-full justify-center pulse-glow" onclick="document.getElementById('fileInput').click()">
-        <i class="fa-solid fa-file-import"></i> استيراد ملف Excel
+      <!-- I-ب: الكتالوج يأتي من الماستر السحابي — لا استيراد شيت في كل جلسة -->
+      <button class="btn btn-primary w-full justify-center pulse-glow" onclick="loadFromMaster()">
+        <i class="fa-solid fa-cloud-arrow-down"></i> جلب الأصناف من الماستر السحابي
+      </button>
+      <button class="btn btn-info w-full justify-center" onclick="document.getElementById('fileInput').click()">
+        <i class="fa-solid fa-file-import"></i> استيراد ملف Excel (بديل يدوي)
       </button>
       <button class="btn btn-accent w-full justify-center" onclick="startDirectWork()">
         <i class="fa-solid fa-bolt"></i> بدء العمل مباشرة
@@ -1104,6 +1108,38 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
       }
     },
   };
+
+  /* ─────────────────────────────────────────────────────────────
+     جسر الماستر (I-ب): الشاشة تستدعي أصنافها من `Items_Master`
+     السحابي بدل استيراد الشيت يدويًّا في كل جلسة. نفس نمط __bzCloud.
+     ───────────────────────────────────────────────────────────── */
+  import { lookupByBarcode, subscribeItems } from '../../services/itemService.js';
+
+  window.__bzMaster = {
+    /** باركود (أو كود) ← صنف من الماستر. null إن لم يوجد أو تعذّرت الشبكة. */
+    lookup(code) {
+      return lookupByBarcode(code).catch((e) => {
+        console.error('[master] lookup failed', e);
+        return null;
+      });
+    },
+
+    /** يجلب كل أصناف الماستر مرّة واحدة (يشمل الأرصدة الدفترية). */
+    fetchAll() {
+      return new Promise((resolve, reject) => {
+        const unsub = subscribeItems(
+          (items) => {
+            unsub();
+            resolve(items);
+          },
+          (err) => {
+            unsub();
+            reject(err);
+          }
+        );
+      });
+    },
+  };
 </script>
 <script is:inline>
 /* ========================================================
@@ -1125,6 +1161,85 @@ let soundEnabled = true;
 /* ========================================================
    أدوات مساعدة
    ======================================================== */
+
+/**
+ * البحث الموحّد: باركود أساسي ← قائمة باركودات الصنف ← كود الصنف.
+ * المواضع التسعة كانت تكرّر نمط بحثٍ ثنائيًّا لا يعرف أن الصنف قد يحمل
+ * أكثر من باركود — فمسحُ الباركود الثاني كان سيُنشئ سجلًّا مكرّرًا.
+ */
+function findInvIdx(lower) {
+  let idx = inventoryDB.findIndex(i => i.barcodeLower === lower);
+  if (idx < 0) idx = inventoryDB.findIndex(i => Array.isArray(i.barcodes) && i.barcodes.includes(lower));
+  if (idx < 0) idx = inventoryDB.findIndex(i => i.itemCode && i.itemCode.toLowerCase() === lower);
+  return idx;
+}
+function findInvItem(lower) {
+  const i = findInvIdx(lower);
+  return i >= 0 ? inventoryDB[i] : null;
+}
+
+/** يحوّل صنف الماستر السحابي إلى سجلّ محلي بشكل الشاشة نفسه. */
+function masterItemToLocal(m, preferBarcode) {
+  const codes = (m.barcodes || []).map(b => String(b).toLowerCase());
+  const primary = String(preferBarcode || (m.barcodes && m.barcodes[0]) || m.sku || '');
+  return {
+    id: `master-${m.sku || primary}-${Date.now()}`,
+    barcode: primary, barcodeLower: primary.toLowerCase(),
+    barcodes: codes,
+    itemCode: m.sku || '',
+    name: m.nameAr || m.nameEn || '',
+    shade: m.shade || '',
+    category: m.category || m.family || '',
+    subcategory: m.subcategory || m.subFamily || '',
+    systemQty: Number(m.balance) || 0,
+    unit: m.unit || m.uomGroupName || '',
+    unitPrice: Number(m.unitPrice != null ? m.unitPrice : m.costPrice) || 0,
+    notes: m.notes || '',
+    actualQty: 0, scanned: false, timestamp: null,
+    source: 'الماستر السحابي', isManual: false,
+    operationType: operationType, operationMeta: {}
+  };
+}
+
+/**
+ * يجلب كتالوج الماستر كاملًا إلى جلسة العمل — بديل استيراد الشيت يدويًّا
+ * في كل مرّة. الموجود مسبقًا لا يُمسّ (لا دهس لكميات جلسة جارية).
+ */
+async function loadFromMaster() {
+  if (!window.__bzMaster) { showToast('جسر الماستر غير متاح', 'error'); return; }
+  showToast('جارٍ جلب الأصناف من الماستر السحابي…', 'info');
+  try {
+    const items = await window.__bzMaster.fetchAll();
+    if (!items.length) {
+      showToast('الماستر فارغ — استورد شيت الأصناف من شاشة «الأصناف» أولًا', 'warning');
+      return;
+    }
+    const known = new Set();
+    inventoryDB.forEach(i => {
+      if (i.barcodeLower) known.add(i.barcodeLower);
+      (i.barcodes || []).forEach(c => known.add(c));
+      if (i.itemCode) known.add(String(i.itemCode).toLowerCase());
+    });
+    let added = 0, skipped = 0;
+    for (const m of items) {
+      const codes = (m.barcodes || []).map(b => String(b).toLowerCase());
+      const skuLower = String(m.sku || '').toLowerCase();
+      if (!codes.length && !skuLower) { skipped++; continue; }
+      if (codes.some(c => known.has(c)) || (skuLower && known.has(skuLower))) { skipped++; continue; }
+      inventoryDB.push(masterItemToLocal(m));
+      codes.forEach(c => known.add(c));
+      if (skuLower) known.add(skuLower);
+      added++;
+    }
+    saveSessionDebounced();
+    showToast(`جُلب ${added} صنفًا من الماستر${skipped ? ` (تُخطّي ${skipped} موجودًا)` : ''}`, 'success');
+    if (added > 0 && inventoryDB.length > 0) switchToDashboard();
+  } catch (e) {
+    console.error('[master] fetchAll failed', e);
+    showToast('تعذّر جلب الماستر — تحقّق من تسجيل الدخول والشبكة', 'error');
+  }
+}
+
 function showToast(message, type = 'info') {
   const container = document.getElementById('toastContainer');
   const icons = { success:'fa-circle-check', error:'fa-circle-xmark', warning:'fa-triangle-exclamation', info:'fa-circle-info' };
@@ -1760,12 +1875,23 @@ function handleSingleScan() {
   openScanDetailModal(raw);
 }
 
-/* ✅ الحزمة الثالثة: openScanDetailModal محدّثة */
-function openScanDetailModal(barcode) {
+/* ✅ الحزمة الثالثة: openScanDetailModal محدّثة (+ استدعاء الماستر I-ب) */
+async function openScanDetailModal(barcode) {
   activeScanBarcode = barcode;
   const lower = barcode.toLowerCase();
-  let item = inventoryDB.find(i => i.barcodeLower === lower);
-  if (!item) item = inventoryDB.find(i => i.itemCode && i.itemCode.toLowerCase() === lower);
+  let item = findInvItem(lower);
+
+  // ليس في الجلسة؟ اسأل الماستر السحابي قبل الحكم بأنه «صنف غير موجود».
+  // (Firestore يخدمها من التخزين المحلي عند انقطاع الشبكة، فلا تعليق.)
+  if (!item && window.__bzMaster) {
+    const m = await window.__bzMaster.lookup(barcode);
+    if (m) {
+      item = masterItemToLocal(m, barcode);
+      inventoryDB.push(item);
+      saveSessionDebounced();
+      showToast(`☁️ استُدعي من الماستر: ${item.name}`, 'success');
+    }
+  }
   activeScanIsNew = !item;
 
   const cfg = getOperationConfig(operationType);
@@ -1870,8 +1996,7 @@ function confirmScanEntry() {
     if (el) operationMeta[field.id] = el.value.trim();
   }
 
-  let idx = inventoryDB.findIndex(i => i.barcodeLower === lower);
-  if (idx < 0) idx = inventoryDB.findIndex(i => i.itemCode && i.itemCode.toLowerCase() === lower);
+  let idx = findInvIdx(lower);
 
   if (idx >= 0) {
     const item = inventoryDB[idx];
@@ -1922,7 +2047,7 @@ function confirmScanEntry() {
 function deleteScanEntry() {
   if (!confirm('هل تريد إلغاء مسح هذا الصنف وإعادة الكمية الفعلية إلى 0؟')) return;
   const lower = activeScanBarcode.toLowerCase();
-  const idx = inventoryDB.findIndex(i => i.barcodeLower === lower);
+  const idx = findInvIdx(lower);
   if (idx >= 0) {
     inventoryDB[idx].actualQty = 0;
     inventoryDB[idx].scanned = false;
@@ -2001,8 +2126,7 @@ function processBatch() {
   let found = 0, notFound = 0;
   for (const [bc, cnt] of Object.entries(counts)) {
     const lower = bc.toLowerCase();
-    let idx = inventoryDB.findIndex(i => i.barcodeLower === lower);
-    if (idx < 0) idx = inventoryDB.findIndex(i => i.itemCode && i.itemCode.toLowerCase() === lower);
+    let idx = findInvIdx(lower);
     if (idx >= 0) {
       inventoryDB[idx].actualQty += cnt;
       inventoryDB[idx].scanned = true;
@@ -2296,8 +2420,7 @@ async function beginBulkScanLoop() {
 
 function addToBulkList(barcode) {
   const lower = barcode.toLowerCase();
-  const dbItem = inventoryDB.find(i => i.barcodeLower === lower) ||
-                 inventoryDB.find(i => i.itemCode && i.itemCode.toLowerCase() === lower);
+  const dbItem = findInvItem(lower);
   const name = dbItem ? (dbItem.name || '—') : 'غير موجود';
 
   const existing = bulkScanItems.find(i => i.barcode.toLowerCase() === lower);
@@ -2365,8 +2488,7 @@ function applyBulkScans() {
   let found = 0, notFound = 0;
   bulkScanItems.forEach(scan => {
     const lower = scan.barcode.toLowerCase();
-    let idx = inventoryDB.findIndex(i => i.barcodeLower === lower);
-    if (idx < 0) idx = inventoryDB.findIndex(i => i.itemCode && i.itemCode.toLowerCase() === lower);
+    let idx = findInvIdx(lower);
     if (idx >= 0) {
       inventoryDB[idx].actualQty += scan.qty;
       inventoryDB[idx].scanned = true;
@@ -2503,8 +2625,7 @@ function processAdvancedPaste() {
   let updated = 0;
   const notFound = [];
   for (const [key, item] of Object.entries(grouped)) {
-    let idx = inventoryDB.findIndex(i => i.barcodeLower === key);
-    if (idx < 0) idx = inventoryDB.findIndex(i => i.itemCode && i.itemCode.toLowerCase() === key);
+    let idx = findInvIdx(key);
     if (idx >= 0) {
       inventoryDB[idx].actualQty += item.qty;
       inventoryDB[idx].scanned = true;
@@ -2540,7 +2661,7 @@ function saveManualAdd() {
   if (!barcode) { showToast('الباركود مطلوب', 'warning'); return; }
   if (!name) { showToast('اسم الصنف مطلوب', 'warning'); return; }
   const lower = barcode.toLowerCase();
-  if (inventoryDB.some(i => i.barcodeLower === lower)) {
+  if (findInvIdx(lower) >= 0) {
     showToast('هذا الباركود موجود مسبقاً في قاعدة البيانات', 'warning'); return;
   }
   const actualQty = parseFloat(document.getElementById('manualActualQty').value) || 0;

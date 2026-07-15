@@ -16,8 +16,9 @@ import {
 import { db } from '../config/firebase.js';
 import { normalizeBarcode } from './excel/excelSchema.js';
 import { normalizeStatus } from './items/itemStatus.js';
+import { shapeImportedItem, normalizeUnit } from './items/itemShape.js';
 
-export { normalizeStatus };
+export { normalizeStatus, normalizeUnit };
 
 /**
  * ═══════════════════════════════════════════════════════════════════
@@ -213,10 +214,10 @@ export const upsertItems = async (items, { existingBySku = new Map() } = {}) => 
         nameAr: String(raw.nameAr ?? '').trim(),
         updatedAt: serverTimestamp(),
       };
-      // الحقول الاختيارية تُكتب فقط إن ذكرها الشيت — فلا يمحو عمودٌ غائب بياناتٍ قائمة.
-      for (const [key, cast] of Object.entries(OPTIONAL_CASTS)) {
-        if (raw[key] !== undefined && raw[key] !== '') payload[key] = cast(raw[key]);
-      }
+      // الحقول الاختيارية تُكتب فقط إن ذكرها الشيت — فلا يمحو عمودٌ غائب بياناتٍ
+      // قائمة. التشكيل في وحدة خالصة (itemShape.js) يحرسها اختبارٌ يقارنها
+      // بمخطّط الشيت عمودًا عمودًا — بعد أن ضاعت الأعمدة الجديدة صامتةً هنا.
+      Object.assign(payload, shapeImportedItem(raw));
       // «الحالة» في الشيت تُكتب في `archived` — اسمان مختلفان لمعنى واحد.
       if (raw.status !== undefined && raw.status !== '') {
         payload.archived = normalizeStatus(raw.status);
@@ -234,19 +235,6 @@ export const upsertItems = async (items, { existingBySku = new Map() } = {}) => 
     await batch.commit();
   }
   return { created, updated };
-};
-
-/** كيف يُحوَّل كل حقل اختياري قادم من الشيت. */
-const OPTIONAL_CASTS = {
-  nameEn: (v) => String(v).trim(),
-  shade: (v) => String(v).trim(),
-  category: (v) => String(v).trim(),
-  subcategory: (v) => String(v).trim(),
-  unit: (v) => normalizeUnit(v),
-  unitPrice: (v) => Number(v) || 0,
-  balance: (v) => Number(v) || 0,
-  minStock: (v) => Number(v) || 0,
-  notes: (v) => String(v).trim(),
 };
 
 /**
@@ -300,32 +288,6 @@ export const UNIT_OPTIONS = [
   { value: 'litre', labelAr: 'لتر' },
   { value: 'metre', labelAr: 'متر' },
 ];
-
-/** مرادفات الوحدات كما تُكتب فعلًا في الشيتات العربية. */
-const UNIT_ALIASES = {
-  piece: ['piece', 'pcs', 'pc', 'unit', 'each', 'ea', 'قطعة', 'قطع', 'حبة', 'حبات', 'وحدة'],
-  box: ['box', 'carton', 'ctn', 'كرتون', 'كرتونة', 'صندوق', 'كارتون'],
-  pack: ['pack', 'pk', 'packet', 'علبة', 'عبوة', 'باكيت', 'طقم'],
-  kg: ['kg', 'kgs', 'kilo', 'kilogram', 'كيلو', 'كجم', 'كيلوجرام', 'كيلوغرام'],
-  litre: ['litre', 'liter', 'l', 'ltr', 'لتر', 'لتره'],
-  metre: ['metre', 'meter', 'm', 'mtr', 'متر', 'أمتار'],
-};
-
-/**
- * يحوّل وحدةً مكتوبة بأي صيغة إلى القيمة القياسية.
- *
- * ضروري لأن الشيت يكتب «قطعة» بينما التخزين والواجهة وأودو يتعاملون بـ`piece`.
- * بلا هذا التحويل تدخل الوحدات نصًّا عربيًّا حرًّا فتنهار القوائم والمقارنات.
- * ما لا يُعرف يبقى كما هو (خير من طمسه) — والافتراضي `piece` للفارغ.
- */
-export function normalizeUnit(raw) {
-  const s = String(raw ?? '').trim().toLowerCase();
-  if (!s) return 'piece';
-  for (const [value, aliases] of Object.entries(UNIT_ALIASES)) {
-    if (value === s || aliases.includes(s)) return value;
-  }
-  return String(raw).trim();
-}
 
 /** الاسم العربي للوحدة (للعرض والطباعة). */
 export function unitLabel(value) {

@@ -81,6 +81,8 @@ export const DATASETS = {
       { field: 'status', labelAr: 'Status (الحالة)', type: 'string', required: false, aliases: ['status', 'الحالة', 'item status', 'حالة الصنف', 'active', 'نشط'] },
 
       // ── اختيارية: يقبلها المستورد ولا يحملها القالب القياسي ──────────
+      // (أعادها حارس الانحراف 2026-07-16 — سقطت سهوًا أثناء اعتماد أعمدة المالك)
+      { field: 'nameEn', labelAr: 'الاسم (إنجليزي)', type: 'string', required: false, aliases: ['nameen', 'name en', 'english name', 'الاسم بالانجليزي', 'الاسم الانجليزي'] },
       { field: 'shade', labelAr: 'الظل/اللون', type: 'string', required: false, aliases: ['shade', 'الظل', 'اللون', 'الظل/اللون', 'color', 'colour', 'درجة اللون'] },
       { field: 'balance', labelAr: 'الكمية الدفترية', type: 'number', required: false, nonNegative: true, aliases: ['balance', 'الرصيد', 'الكمية', 'الكمية الدفترية', 'المتوفر', 'qty', 'quantity', 'on hand', 'qty_available'] },
       { field: 'notes', labelAr: 'ملاحظات', type: 'string', required: false, aliases: ['notes', 'ملاحظات', 'ملاحظة', 'remarks', 'البيان'] },
