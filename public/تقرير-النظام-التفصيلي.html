@@ -208,13 +208,14 @@
         <span>📅 التاريخ: <b>2026-07-15</b></span>
         <span>🌐 الموقع الحيّ: <code>albarshi996.github.io/warehouse-system</code></span>
         <span>📦 المستودع: <code>albarshi996/warehouse-system</code></span>
-        <span>🔀 آخر إصدار: <code>c8b6101</code></span>
+        <span>🔀 آخر إصدار: <code>55ee5e5</code></span>
       </div>
       <div class="stats">
-        <div class="stat"><div class="n">31</div><div class="l">صفحة منشورة</div></div>
-        <div class="stat"><div class="n">6</div><div class="l">مجموعات Firestore</div></div>
+        <div class="stat"><div class="n">33</div><div class="l">صفحة منشورة</div></div>
+        <div class="stat"><div class="n">8</div><div class="l">مجموعات Firestore</div></div>
         <div class="stat"><div class="n">10</div><div class="l">أدوار مستخدمين</div></div>
-        <div class="stat"><div class="n">17</div><div class="l">ملف خدمات</div></div>
+        <div class="stat"><div class="n">26</div><div class="l">ملف خدمات</div></div>
+        <div class="stat"><div class="n">64</div><div class="l">اختبار JS · +42 Python</div></div>
         <div class="stat"><div class="n">12</div><div class="l">مرحلة أودو</div></div>
         <div class="stat"><div class="n">6</div><div class="l">حرّاس ذهبية</div></div>
       </div>
@@ -227,14 +228,16 @@
       <ol>
         <li><a href="#s1">نظرة عامة والمعمارية</a></li>
         <li><a href="#s2">قواعد البيانات</a></li>
-        <li><a href="#s3">خريطة الصفحات الـ29</a></li>
+        <li><a href="#s3">خريطة الصفحات الـ33</a></li>
         <li><a href="#s4">نظام الوصول والأدوار</a></li>
         <li><a href="#s5">طبقة الخدمات</a></li>
         <li><a href="#s6">الأدوات والاعتماديات</a></li>
         <li><a href="#s7">الباك اند — موديول أودو</a></li>
         <li><a href="#s8">طبقة التكامل مع أودو</a></li>
         <li><a href="#s9">الملفات العامة والنماذج</a></li>
-        <li><a href="#s10">الميزات والحالة</a></li>
+        <li><a href="#s10">نظام المستندات الحيّ</a></li>
+        <li><a href="#s11">ماستر الأصناف والباركود</a></li>
+        <li><a href="#s12">الميزات والحالة</a></li>
       </ol>
     </nav>
 
@@ -251,11 +254,11 @@
 
       <h3 class="blk"><span class="ic">🏗️</span> الطبقات المعمارية (من المستخدم إلى قاعدة البيانات)</h3>
       <div class="stack">
-        <div class="layer"><div class="top"><span class="lname">1. المتصفّح — واجهة المستخدم</span><span class="ltag">RTL · Cairo</span></div><p>29 صفحة Astro ثابتة + جزُر React تفاعلية (client:load). حارس دخول على كل صفحات لوحة التحكم.</p></div>
+        <div class="layer"><div class="top"><span class="lname">1. المتصفّح — واجهة المستخدم</span><span class="ltag">RTL · Cairo</span></div><p>33 صفحة Astro ثابتة + جزُر React تفاعلية (client:load). حارس دخول على كل صفحات لوحة التحكم.</p></div>
         <div class="flow-arrow">↓</div>
-        <div class="layer l-gold"><div class="top"><span class="lname">2. طبقة الخدمات (JavaScript)</span><span class="ltag">src/services</span></div><p>16 ملفًا: المصادقة والأدوار · قراءة/كتابة البيانات · استيراد/تصدير Excel · محوّل أودو.</p></div>
+        <div class="layer l-gold"><div class="top"><span class="lname">2. طبقة الخدمات (JavaScript)</span><span class="ltag">src/services</span></div><p>26 ملفًا: المصادقة والأدوار · قراءة/كتابة البيانات · محرّك المستندات · ماستر الأصناف والباركود · استيراد/تصدير Excel · محوّل أودو.</p></div>
         <div class="flow-arrow">↓</div>
-        <div class="layer l-navy"><div class="top"><span class="lname">3. قواعد بيانات الواجهة</span><span class="ltag">Firebase · localStorage</span></div><p>Firestore السحابية (5 مجموعات) + مصادقة Firebase + تخزين محلي في المتصفّح + ملفات Excel.</p></div>
+        <div class="layer l-navy"><div class="top"><span class="lname">3. قواعد بيانات الواجهة</span><span class="ltag">Firebase · localStorage</span></div><p>Firestore السحابية (8 مجموعات) + مصادقة Firebase + تخزين محلي في المتصفّح + ملفات Excel.</p></div>
         <div class="flow-arrow">↓</div>
         <div class="layer"><div class="top"><span class="lname">4. جسر التكامل (اختياري)</span><span class="ltag">odoo-proxy</span></div><p>وسيط Cloudflare/Firebase يربط الواجهة بأودو الحقيقي — <span class="chip plan dot">غير مفعّل (وضع training)</span></p></div>
         <div class="flow-arrow">↓</div>
@@ -279,7 +282,9 @@
             <tr><td><code>Outbound_Log</code></td><td>سجلّ الصادر (حركات الصرف)</td><td><span class="mono">logService</span></td><td><span class="chip live dot">حيّة</span></td></tr>
             <tr><td><code>warehouses</code></td><td>بيانات المستودعات ومواقعها</td><td><span class="mono">warehouseService</span></td><td><span class="chip live dot">حيّة</span></td></tr>
             <tr><td><code>users</code></td><td>أدوار المستخدمين (الدور · الاسم · الحالة)</td><td>صفحة «إدارة المستخدمين» عبر <span class="mono">usersService</span></td><td><span class="chip live dot">حيّة</span></td></tr>
-            <tr><td><code>operations</code><br><code>operations/{id}/scans</code></td><td><b>العمليات المخزنية وسجلّ المسح الدائم</b> — رأس العملية (النوع · من بدأها · الحالة)، وتحتها قيود المسح <b>append-only</b> (باركود · كمية · من · متى)</td><td>«الجرد الذكي» عبر <span class="mono">operationsService</span></td><td><span class="chip live dot">حيّة (جديدة)</span></td></tr>
+            <tr><td><code>operations</code><br><code>operations/{id}/scans</code></td><td><b>العمليات المخزنية وسجلّ المسح الدائم</b> — رأس العملية (النوع · من بدأها · الحالة)، وتحتها قيود المسح <b>append-only</b> (باركود · كمية · من · متى)</td><td>«الجرد الذكي» عبر <span class="mono">operationsService</span></td><td><span class="chip live dot">حيّة</span></td></tr>
+            <tr><td><code>documents</code><br><code>documents/{id}/audit</code></td><td><b>المستندات الحيّة وسجلّ تدقيقها</b> — رأس المستند (النوع · الرقم · الحالة · المُنشئ/المعتمِد)، وتحته <b>سجلّ تدقيق دائم append-only</b> لكل تغيير (من · ماذا · متى)</td><td>محرّك المستندات عبر <span class="mono">documentsService</span></td><td><span class="chip live dot">حيّة (جديدة)</span></td></tr>
+            <tr><td><code>counters</code></td><td><b>الترقيم التسلسلي</b> للمستندات — عدّاد يُحجز عبر معاملة ذرّية فيحصل كل مستند على رقم فريد (<span class="mono">GRN-2026-0001</span>)</td><td>محرّك المستندات عبر <span class="mono">numbering</span></td><td><span class="chip live dot">حيّة (جديدة)</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -309,7 +314,7 @@
 
     <!-- ═══ 3 ═══ -->
     <section id="s3">
-      <div class="sec-head"><span class="sec-num">03</span><h2>خريطة الصفحات الـ29</h2></div>
+      <div class="sec-head"><span class="sec-num">03</span><h2>خريطة الصفحات الـ33</h2></div>
       <p class="lead">كل صفحات الموقع، وظيفتها، ونوعها (<b>تفاعلية</b> = جزيرة React، <b>عرض</b> = محتوى ثابت/تقرير)، ومجموعتها في القائمة (تحدّد من يراها حسب دوره).</p>
       <div class="legend">
         <span><span class="grp">يومية</span> العمليات اليومية</span>
@@ -335,6 +340,8 @@
         <tbody>
           <tr><td><span class="pg">اختار وظيفتك</span> <code>forms</code></td><td>مدخل موحّد لاختيار المهمة/النموذج المناسب</td><td><span class="chip plan">عرض</span></td></tr>
           <tr><td><span class="pg">استلام البضاعة</span> <code>grn</code></td><td>نموذج إذن استلام البضاعة (GRN)</td><td><span class="chip plan">عرض/نموذج</span></td></tr>
+          <tr><td><span class="pg">صندوق المستندات</span> <code>documents</code> <span class="chip live">جديد</span></td><td><b>صندوق وارد المستندات الحيّة</b> — قائمة المستندات وأرقامها التسلسلية وحالاتها (مسودّة · مُقدَّم · معتمَد · مُنجَز)</td><td><span class="chip live">تفاعلية · سحابية</span></td></tr>
+          <tr><td><span class="pg">شاشة المستند</span> <code>document</code> <span class="chip live">جديد</span></td><td><b>محرّر المستند الواحد</b> — إنشاء/تقديم/اعتماد يرسمه محرّك المخطّطات، مع بوابة الجودة وسجلّ تدقيق دائم</td><td><span class="chip live">تفاعلية · سحابية</span></td></tr>
           <tr><td><span class="pg">المهام</span> <code>tasks</code></td><td>إدارة المهام اليومية وتتبّعها</td><td><span class="chip live">تفاعلية · TaskManager</span></td></tr>
           <tr><td><span class="pg">الأصناف</span> <code>products</code></td><td>سجلّ الأصناف الرئيسي (بحث/إضافة/تصدير)</td><td><span class="chip live">تفاعلية · ItemMaster</span></td></tr>
           <tr><td><span class="pg">عمليات مخزنية</span> <code>stock-operations</code> <span class="chip live">جديد</span></td><td><b>الجرد الذكي بالباركود</b> — 6 أنواع عمليات (جرد · استلام · صرف · إضافة · تالف · مرتجع)، استيراد/تصدير Excel، كاميرا، مسح بالجملة، <b>وحفظ سحابي لحظي بسجلّ دائم</b></td><td><span class="chip live">تفاعلية · سحابية</span></td></tr>
@@ -426,8 +433,8 @@
 
     <!-- ═══ 5 ═══ -->
     <section id="s5">
-      <div class="sec-head"><span class="sec-num">05</span><h2>طبقة الخدمات (16 ملفًا)</h2></div>
-      <p class="lead">المنطق البرمجي المشترك خلف الواجهة، مقسّم إلى أربع عائلات في <span class="mono">src/services</span>.</p>
+      <div class="sec-head"><span class="sec-num">05</span><h2>طبقة الخدمات (26 ملفًا)</h2></div>
+      <p class="lead">المنطق البرمجي المشترك خلف الواجهة، مقسّم إلى عائلات في <span class="mono">src/services</span>: المصادقة · محرّك المستندات · ماستر الأصناف · Excel · أودو · العمليات السحابية · بيانات المخزون.</p>
 
       <h3 class="blk"><span class="ic">🔐</span> المصادقة والأدوار — <span class="mono">auth/</span></h3>
       <dl class="deflist">
@@ -435,6 +442,21 @@
         <div class="defrow"><dt>roles.js</dt><dd>تعريف الأدوار العشرة (الاسم · الرمز · اللون) + دوال <span class="mono">getRole/isAdmin</span>.</dd></div>
         <div class="defrow"><dt>navAccess.js</dt><dd><b>المصدر الوحيد</b> لخريطة «الدور → المجموعات المرئية» + قيود العناصر.</dd></div>
         <div class="defrow"><dt>usersService.js</dt><dd>قراءة/إنشاء/تحديث مستندات الأدوار في مجموعة <code>users</code>.</dd></div>
+      </dl>
+
+      <h3 class="blk"><span class="ic">📄</span> محرّك المستندات — <span class="mono">documents/</span> <span class="chip live">جديد · 7 ملفات</span></h3>
+      <dl class="deflist">
+        <div class="defrow"><dt>documentsService.js</dt><dd><b>قلب المحرّك:</b> إنشاء/قراءة/تقديم/اعتماد المستند سحابيًّا · هويّة المُنشئ والمعتمِد من المصادقة · كتابة سجلّ التدقيق الدائم في <code>documents/{id}/audit</code>.</dd></div>
+        <div class="defrow"><dt>numbering.js</dt><dd>حجز الرقم التسلسلي (<span class="mono">GRN-2026-0001</span>) عبر <b>معاملة Firestore</b> على مجموعة <code>counters</code> — لا تكرار حتى مع تقديمين متزامنين.</dd></div>
+        <div class="defrow"><dt>states.js</dt><dd>آلة الحالات: <span class="mono">draft → submitted → approved → done</span> (+ <span class="mono">rejected</span>) و<b>بوابة الجودة</b> بينها.</dd></div>
+        <div class="defrow"><dt>schemaUtils.js · numberFormat.js</dt><dd>أدوات وصف النموذج بـ«مخطّط» وتنسيق الأرقام — المحرّك يرسم أي نموذج من مخطّطه.</dd></div>
+        <div class="defrow"><dt>schemas/grn.js · schemas/index.js</dt><dd>أول مخطّط مُنفَّذ (إذن استلام GRN) وفهرس المخطّطات — نموذجٌ واحدٌ اليوم، والبقية تُضاف كملفات وصف لا كتطبيقات.</dd></div>
+      </dl>
+
+      <h3 class="blk"><span class="ic">🏷️</span> ماستر الأصناف — <span class="mono">items/</span> <span class="chip live">جديد</span></h3>
+      <dl class="deflist">
+        <div class="defrow"><dt>itemsImportService.js</dt><dd><b>خط استيراد Excel:</b> كشف صفّ العناوين · مترادفات عربية/إنجليزية · معاينة التغيير · كتابات مجمّعة إلى <code>Items_Master</code>.</dd></div>
+        <div class="defrow"><dt>itemStatus.js</dt><dd>اشتقاق حالة الصنف (نشِط · تحت الحد الأدنى · متوقّف) وقواعدها.</dd></div>
       </dl>
 
       <h3 class="blk"><span class="ic">📊</span> Excel — <span class="mono">excel/</span></h3>
@@ -460,7 +482,7 @@
 
       <h3 class="blk"><span class="ic">📦</span> بيانات المخزون</h3>
       <dl class="deflist">
-        <div class="defrow"><dt>itemService.js</dt><dd>عمليات الأصناف (Items_Master).</dd></div>
+        <div class="defrow"><dt>itemService.js</dt><dd>عمليات الأصناف (Items_Master) — <b>وُسِّع:</b> حقل <span class="mono">barcodes[]</span> (عدّة باركودات للصنف) + <span class="mono">lookupByBarcode()</span> النداء الموحّد لكل شاشة + <span class="mono">upsertItems()</span> للكتابة المجمّعة.</dd></div>
         <div class="defrow"><dt>inventoryService.js</dt><dd>منطق المخزون بمنهجية Excel (الوارد/الصادر/الرصيد).</dd></div>
         <div class="defrow"><dt>logService.js</dt><dd>سجلّات الوارد والصادر (Inbound/Outbound Log).</dd></div>
         <div class="defrow"><dt>warehouseService.js</dt><dd>عمليات المستودعات (warehouses).</dd></div>
@@ -536,7 +558,56 @@
 
     <!-- ═══ 10 ═══ -->
     <section id="s10">
-      <div class="sec-head"><span class="sec-num">10</span><h2>الميزات والحالة</h2></div>
+      <div class="sec-head"><span class="sec-num">10</span><h2>نظام المستندات الحيّ (محرّك المستندات + GRN)</h2></div>
+      <p class="lead">تحويل النماذج الورقية القابلة للطباعة إلى <b>مستندات حيّة</b>. المبدأ الحاكم: <b>محرّكٌ واحدٌ للمستندات لا 21 تطبيقًا</b> — كل نموذج يُوصَف بـ«مخطّط» (schema) والمحرّك يرسمه. <span class="chip live dot">شُحن ونُشر اليوم 2026-07-15</span> <span class="chip pend dot">منشور — بانتظار نشر قواعد الأمان</span></p>
+
+      <div class="cards">
+        <div class="card rail"><h4>🔢 ترقيم تسلسلي حقيقي</h4><p>رقمٌ مثل <span class="k">GRN-2026-0001</span> يُحجز عبر <b>معاملة Firestore</b> (مجموعة <span class="k">counters</span>)، فيحصل تقديمان متزامنان على رقمين مختلفين — بديلًا عن <span class="k">GRN-002</span> الثابت الذي كان يتكرّر في كل طباعة.</p></div>
+        <div class="card rail"><h4>☁️ حفظ سحابي + هويّة</h4><p>حفظٌ سحابيٌّ دائم، وهويّة المُنشئ والمعتمِد من <b>Firebase Auth</b>، و<b>سجلّ تدقيق دائم append-only</b> في <span class="k">documents/{id}/audit</span>.</p></div>
+        <div class="card rail"><h4>🔬 بوابة الجودة صارت حقيقية</h4><p>لا مسار من «مُقدَّم» إلى «مُنجَز» دون موافقة مفتّش الجودة — مفروضةٌ في <b>ثلاث طبقات</b>، آخرها قواعد خادم Firestore.</p></div>
+      </div>
+
+      <h3 class="blk"><span class="ic">🔄</span> آلة الحالات ونقاطها</h3>
+      <div class="stack">
+        <div class="layer"><div class="top"><span class="lname">المسار الكامل للمستند</span><span class="ltag">state machine</span></div><p><span class="mono">draft → submitted → approved → done</span> (+ <span class="mono">rejected</span>). بوابة الجودة تقف بين «مُقدَّم» و«مُنجَز» فلا اعتماد دون مفتّش الجودة.</p></div>
+      </div>
+
+      <h3 class="blk"><span class="ic">📄</span> الصفحتان الحيّتان</h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>الصفحة</th><th>الوظيفة</th><th>النوع</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pg">صندوق المستندات</span> <code>dashboard/documents</code></td><td>صندوق الوارد: قائمة المستندات وأرقامها وحالاتها</td><td><span class="chip live">تفاعلية · سحابية</span></td></tr>
+          <tr><td><span class="pg">شاشة المستند الواحد</span> <code>dashboard/document</code></td><td>محرّر المستند الواحد (إنشاء · تقديم · اعتماد)</td><td><span class="chip live">تفاعلية · سحابية</span></td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="callout warn"><span class="h">الحالة: مبنيّ · مُختبَر بالوحدات (30 اختبارًا) · منشور</span>
+        ⚠ يحتاج المسار الحيّ من طرف إلى طرف أن ينشر المالك ملف <span class="mono">firestore.rules</span> المحدَّث (قواعد <code>documents</code> و<code>counters</code>) أوّلًا.
+        <b>لم يُختبَر المسار الكامل من المستخدم بعد</b> — التحقّق حتى الآن باختبارات الوحدة والنشر فقط.
+      </div>
+    </section>
+
+    <!-- ═══ 11 ═══ -->
+    <section id="s11">
+      <div class="sec-head"><span class="sec-num">11</span><h2>ماستر الأصناف + الاستيراد بالباركود</h2></div>
+      <p class="lead">مصدرٌ واحدٌ رسميٌّ للأصناف تعمل منه البوابة كلّها: يُحمَّل بورقة Excel، ويُستدعى بالباركود. <span class="chip live dot">شُحن ونُشر اليوم 2026-07-15</span></p>
+
+      <div class="cards">
+        <div class="card rail"><h4>🏷️ باركود متعدّد لكل صنف</h4><p>اكتسب <span class="k">Items_Master</span> حقل <span class="k">barcodes[]</span> (الصنف الواحد يحمل عدّة باركودات) ودالة <span class="k">lookupByBarcode()</span> — النداء الوحيد الذي تستخدمه كل شاشة.</p></div>
+        <div class="card rail"><h4>📥 خط استيراد Excel ذكي</h4><p>كشفٌ ذكيٌّ لصفّ العناوين · أسماء عربية/إنجليزية مترادفة · معاينة لما سيتغيّر · كتابات مجمّعة. في <span class="k">src/services/excel/</span> و<span class="k">itemsImportService.js</span>.</p></div>
+        <div class="card rail"><h4>📋 قالب قياسي من المخطّط</h4><p><span class="k">Brandzo-Items-Template.xlsx</span> — مصنّفٌ واحد، 3 أوراق: Items (15 عمودًا: التعريف + الحد الأدنى + الحالة) · Balances (10 أعمدة لكل مستودع E5/E2/E3 + دفعة + انتهاء + تكلفة) · تعليمات.</p></div>
+      </div>
+
+      <div class="callout info"><span class="h">🔑 الهُويّة</span> الكود الداخلي «حاوية» تُملأ من أودو لاحقًا، لذا يبقى <b>الباركود هو المفتاح العملي</b> الذي يشتغل به النظام اليوم.</div>
+
+      <div class="callout warn"><span class="h">الحالة: أساسٌ مبنيّ · 34 اختبار وحدة (excelSchema + itemStatus) · منشور</span>
+        هذا <b>حجر أساس</b> تُبنى عليه بقية الشاشات — <b>شاشة واجهة الاستيراد لم تُبنَ بعد</b>؛ الخدمات والقالب جاهزة والربط بالواجهة هو الخطوة التالية.
+      </div>
+    </section>
+
+    <!-- ═══ 12 ═══ -->
+    <section id="s12">
+      <div class="sec-head"><span class="sec-num">12</span><h2>الميزات والحالة</h2></div>
       <p class="lead">ملخّص قدرات النظام الحيّة، وما يتبقّى.</p>
 
       <h3 class="blk"><span class="ic">✅</span> ميزات تعمل الآن</h3>
@@ -547,19 +618,24 @@
         <li><span class="ck">✓</span> محاكي أودو كامل (12 مرحلة، دورة حقيقية)</li>
         <li><span class="ck">✓</span> قاعدة بيانات سحابية (Firestore، offline-first)</li>
         <li><span class="ck">✓</span> استيراد/تصدير Excel + تقارير PDF</li>
-        <li><span class="ck">✓</span> بوابة عمليات عربية RTL كاملة (31 صفحة)</li>
+        <li><span class="ck">✓</span> بوابة عمليات عربية RTL كاملة (33 صفحة)</li>
         <li><span class="ck">✓</span> <b>رقابة إدارية لحظية:</b> المدير يتابع الجرد وإنتاجية كل موظّف من مكتبه</li>
         <li><span class="ck">✓</span> موديول أودو حقيقي (10/12 مرحلة، 6 حرّاس)</li>
         <li><span class="ck">✓</span> <b>جرد ذكي حيّ:</b> كل مسح يُحفظ سحابيًّا لحظيًّا — عدّة موظفين معًا</li>
         <li><span class="ck">✓</span> <b>سجلّ تدقيق دائم</b> لا يقبل التعديل أو الحذف (من مسح ماذا ومتى)</li>
         <li><span class="ck">✓</span> <b>العمل دون إنترنت</b> ورفع تلقائي عند عودتها</li>
         <li><span class="ck">✓</span> <b>قاعدة بيانات مؤمَّنة</b> بقواعد شاملة ومُختبَرة</li>
+        <li><span class="ck">✓</span> <b>محرّك مستندات حيّ:</b> ترقيم تسلسلي حقيقي + بوابة جودة مفروضة (نُشر · بانتظار قواعد الأمان)</li>
+        <li><span class="ck">✓</span> <b>ماستر أصناف بالباركود:</b> مصدرٌ واحدٌ + قالب Excel قياسي 3 أوراق</li>
+        <li><span class="ck">✓</span> <b>مجموعة اختبارات JS:</b> 64 اختبار وحدة (<span class="mono">npm test</span>) — إلى جانب 42 اختبار Python لموديول أودو</li>
       </ul>
 
       <h3 class="blk"><span class="ic">⏳</span> المتبقّي (خريطة الطريق)</h3>
       <div class="tbl-wrap"><table>
         <thead><tr><th>المهمة</th><th>الطبقة</th><th>الحالة</th></tr></thead>
         <tbody>
+          <tr><td>نشر <span class="mono">firestore.rules</span> المحدَّث (قواعد documents/counters) — على المالك</td><td>الأمان</td><td><span class="chip pend dot">معلّقة على المالك</span></td></tr>
+          <tr><td>شاشة واجهة استيراد الأصناف بالباركود (الخدمات والقالب جاهزة)</td><td>الواجهة</td><td><span class="chip plan dot">التالية</span></td></tr>
           <tr><td>تقرير/تصدير عملية مكتملة · ربط الجرد بـ<span class="mono">Items_Master</span> · قيد عكسي للتصحيح</td><td>الواجهة</td><td><span class="chip plan dot">التالية</span></td></tr>
           <tr><td>M2 — بيئة أودو الحيّة (Oracle مجاني)</td><td>الباك اند</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
           <tr><td>S12 — الإغلاق المالي</td><td>موديول أودو</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
