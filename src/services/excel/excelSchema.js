@@ -40,19 +40,49 @@ export const DATASETS = {
     key: 'items',
     labelAr: 'الأصناف (Items_Master)',
     columns: [
-      { field: 'sku', labelAr: 'كود الصنف', type: 'string', required: true, aliases: ['sku', 'الكود', 'كود', 'كود الصنف', 'رقم الصنف', 'item code', 'itemcode', 'code', 'part no', 'default_code'] },
-      // متعدّد: يقبل عدّة باركودات في الخانة الواحدة مفصولة بـ , أو / أو |
-      { field: 'barcode', labelAr: 'الباركود', type: 'string', required: false, multi: true, aliases: ['barcode', 'الباركود', 'باركود', 'الباركودات', 'ean', 'ean13', 'upc', 'product id', 'bar code'] },
-      { field: 'nameAr', labelAr: 'اسم الصنف', type: 'string', required: true, aliases: ['namear', 'الاسم', 'الاسم بالعربي', 'اسم الصنف', 'name', 'الصنف', 'product name', 'description', 'الوصف'] },
-      { field: 'nameEn', labelAr: 'الاسم (إنجليزي)', type: 'string', required: false, aliases: ['nameen', 'الاسم بالانجليزي', 'name en', 'english name'] },
+      // ── الهوية ───────────────────────────────────────────────────────
+      // «حاوية الكود» (قرار المالك 2026-07-15): العمود موجود ويبقى **فارغًا**
+      // اليوم، ويُملأ من أودو يوم الربط. لذلك **ليس إلزاميًّا وليس المعرّف** —
+      // المعرّف كود داخلي ثابت، لأن أي قيمة ستُستبدل لاحقًا لا تصلح هوية:
+      // لو كانت المعرّف لانكسر كل مستند أشار للصنف يوم وصلت أكواد أودو.
+      { field: 'sku', labelAr: 'Item Code (كود الصنف)', type: 'string', required: false, aliases: ['sku', 'الكود', 'كود الصنف', 'رقم الصنف', 'item code', 'itemcode', 'item no', 'code', 'part no', 'default_code'] },
+      { field: 'nameAr', labelAr: 'Item Description (اسم الصنف)', type: 'string', required: true, aliases: ['item description', 'itemdescription', 'namear', 'الاسم', 'اسم الصنف', 'الصنف', 'name', 'item name', 'product name', 'description', 'الوصف'] },
+
+      // ── الباركودات: عمودان يُضمّان في barcodes[] ─────────────────────
+      // شيتك يحمل عمودين، وقد أكّدت أن الفكرة «أكثر من باركود للصنف».
+      // كلٌّ منهما يقبل أيضًا عدّة قيم في الخانة مفصولة بـ , أو / أو |
+      { field: 'barcode', labelAr: 'Bar Code', type: 'string', required: false, multi: true, aliases: ['bar code', 'barcode', 'الباركود', 'باركود', 'الباركودات', 'ean', 'ean13', 'upc', 'product id'] },
+      { field: 'barcodeAlt', labelAr: 'Bar Code - Code', type: 'string', required: false, multi: true, aliases: ['bar code - code', 'barcode - code', 'bar code code', 'barcode2', 'باركود اضافي', 'باركود إضافي', 'الباركود الثاني'] },
+
+      // ── الأسعار ──────────────────────────────────────────────────────
+      // سعران منفصلان: خلط الشراء بالبيع خطأ محاسبي.
+      // ملاحظة: شيتك يكتبها «Purchese Price» — نقبل الإملاءين.
+      { field: 'costPrice', labelAr: 'Purchase Price (سعر الشراء)', type: 'number', required: false, nonNegative: true, aliases: ['purchase price', 'purchese price', 'purchaseprice', 'سعر الشراء', 'cost', 'التكلفة', 'سعر الوحدة', 'unitprice', 'price'] },
+      { field: 'sellPrice', labelAr: 'Sell Price (سعر البيع)', type: 'number', required: false, nonNegative: true, aliases: ['sell price', 'sellprice', 'selling price', 'سعر البيع', 'retail price', 'sale price'] },
+
+      // ── الوحدة ───────────────────────────────────────────────────────
+      { field: 'uomGroupCode', labelAr: 'UoM Group Code', type: 'string', required: false, aliases: ['uom group code', 'uomgroupcode', 'كود مجموعة الوحدة'] },
+      { field: 'uomGroupName', labelAr: 'UoM Group Name', type: 'string', required: false, aliases: ['uom group name', 'uomgroupname', 'مجموعة الوحدة', 'unit', 'الوحدة', 'وحدة القياس', 'uom'] },
+
+      // ── التسلسل الهرمي الرباعي (كما تعمل به فعلًا) ───────────────────
+      { field: 'department', labelAr: 'Department (القسم)', type: 'string', required: false, aliases: ['department', 'القسم', 'dept'] },
+      { field: 'section', labelAr: 'Section (الشعبة)', type: 'string', required: false, aliases: ['section', 'الشعبة', 'القطاع'] },
+      { field: 'family', labelAr: 'Family (العائلة)', type: 'string', required: false, aliases: ['family', 'العائلة', 'category', 'الفئة', 'التصنيف', 'المجموعة', 'brand', 'براند'] },
+      { field: 'subFamily', labelAr: 'Sub-Family (العائلة الفرعية)', type: 'string', required: false, aliases: ['sub-family', 'sub family', 'subfamily', 'العائلة الفرعية', 'subcategory', 'sub category', 'التصنيف الفرعي', 'الفئة الفرعية'] },
+
+      { field: 'supplier', labelAr: 'المورد', type: 'string', required: false, aliases: ['المورد', 'المورّد', 'supplier', 'vendor', 'اسم المورد'] },
+
+      // ── اختيارية: يقبلها المستورد ولا يحملها القالب القياسي ──────────
       { field: 'shade', labelAr: 'الظل/اللون', type: 'string', required: false, aliases: ['shade', 'الظل', 'اللون', 'الظل/اللون', 'color', 'colour', 'درجة اللون'] },
-      { field: 'category', labelAr: 'التصنيف', type: 'string', required: false, aliases: ['category', 'الفئة', 'التصنيف', 'المجموعة', 'categ', 'brand', 'براند', 'العلامة'] },
-      { field: 'subcategory', labelAr: 'التصنيف الفرعي', type: 'string', required: false, aliases: ['subcategory', 'التصنيف الفرعي', 'الفئة الفرعية', 'sub category', 'sub-category'] },
-      { field: 'unit', labelAr: 'الوحدة', type: 'string', required: false, aliases: ['unit', 'الوحدة', 'وحدة القياس', 'uom'] },
-      { field: 'unitPrice', labelAr: 'سعر الوحدة', type: 'number', required: false, nonNegative: true, aliases: ['unitprice', 'سعر الوحدة', 'السعر', 'price', 'cost', 'التكلفة'] },
       { field: 'balance', labelAr: 'الكمية الدفترية', type: 'number', required: false, nonNegative: true, aliases: ['balance', 'الرصيد', 'الكمية', 'الكمية الدفترية', 'المتوفر', 'qty', 'quantity', 'on hand', 'qty_available'] },
       { field: 'minStock', labelAr: 'الحد الأدنى', type: 'number', required: false, nonNegative: true, aliases: ['minstock', 'الحد الأدنى', 'حد الطلب', 'min stock', 'reorder'] },
       { field: 'notes', labelAr: 'ملاحظات', type: 'string', required: false, aliases: ['notes', 'ملاحظات', 'ملاحظة', 'remarks', 'البيان'] },
+    ],
+    /** أعمدة القالب القياسي بالترتيب — ما يُصدَّر ويُسلَّم للمورّدين. */
+    templateFields: [
+      'sku', 'nameAr', 'barcode', 'barcodeAlt', 'costPrice', 'sellPrice',
+      'uomGroupCode', 'uomGroupName', 'department', 'section', 'family',
+      'subFamily', 'supplier',
     ],
   },
   inbound: {

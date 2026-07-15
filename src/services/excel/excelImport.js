@@ -168,14 +168,33 @@ export async function importSheet(input, datasetKey, opts = {}) {
     if (datasetKey === 'items') {
       const sku = String(shaped.sku ?? '').trim().toUpperCase();
       shaped.sku = sku;
-      shaped.barcodes = shaped.barcode || [];
-      delete shaped.barcode;
 
-      // تكرار الـSKU **ليس خطأً** — الصنف الواحد قد يحمل عدّة باركودات، وهكذا
+      // عمودا «Bar Code» و«Bar Code - Code» باركودان لنفس الصنف — يُضمّان.
+      shaped.barcodes = [...new Set([...(shaped.barcode || []), ...(shaped.barcodeAlt || [])])];
+      delete shaped.barcode;
+      delete shaped.barcodeAlt;
+
+      // الهوية العملية اليوم هي الباركود («حاوية الكود» تُملأ من أودو لاحقًا)،
+      // فصفٌّ بلا كود **وبلا باركود** لا سبيل إلى التعرّف عليه أبدًا.
+      if (!sku && shaped.barcodes.length === 0) {
+        errors.push({
+          row: rowNum,
+          column: 'barcode',
+          message: `الصفّ بلا كود صنف وبلا باركود — لا سبيل للتعرّف على هذا الصنف. | Row has neither code nor barcode.`,
+        });
+        rowHasError = true;
+      }
+
+      // مفتاح الدمج: الكود إن وُجد، وإلا **أول باركود** — لأن «حاوية الكود»
+      // تبقى فارغة حتى ربط أودو، فالدمج بالكود وحده كان سيدمج كل الصفوف
+      // الفارغة الكود في صنف واحد. (اسم الصنف لا يصلح مفتاحًا: يتغيّر ويتكرّر.)
+      const mergeKey = sku || shaped.barcodes[0] || '';
+
+      // تكرار المفتاح **ليس خطأً** — الصنف الواحد قد يحمل عدّة باركودات، وهكذا
       // تبدو الشيتات الحقيقية: صفّ لكل باركود. ندمج الباركودات ونُبقي بيانات
       // أول صفّ. (قرار المالك 2026-07-15: نعم، الباركود قد يتعدّد.)
-      if (sku && !rowHasError && skuAt.has(sku)) {
-        const target = rows[skuAt.get(sku)];
+      if (mergeKey && !rowHasError && skuAt.has(mergeKey)) {
+        const target = rows[skuAt.get(mergeKey)];
         const before = target.barcodes.length;
         for (const code of shaped.barcodes) {
           if (!target.barcodes.includes(code)) target.barcodes.push(code);
@@ -192,7 +211,7 @@ export async function importSheet(input, datasetKey, opts = {}) {
         }
         continue; // دُمج — لا يُضاف صفًّا مستقلًّا
       }
-      if (sku && !rowHasError) skuAt.set(sku, rows.length);
+      if (mergeKey && !rowHasError) skuAt.set(mergeKey, rows.length);
     } else {
       // logs: normalize itemCode + require qty > 0
       shaped.itemCode = String(shaped.itemCode ?? '').trim().toUpperCase();
