@@ -280,7 +280,20 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
   <div style="width:48px;height:48px;border:4px solid rgba(255,255,255,.15);border-top-color:#DAAA3C;border-radius:50%;animation:bzspin .8s linear infinite"></div>
   <span style="font-size:.9rem;opacity:.8">جارٍ التحقّق من الدخول...</span>
 </div>
-<style is:global>@keyframes bzspin{to{transform:rotate(360deg)}}</style>
+<style is:global>@keyframes bzspin{to{transform:rotate(360deg)}}
+
+/* 🐛 إصلاح ترحيل: global.css يفرض `*,*::before{font-family:'Cairo' !important}`،
+   وهو يسحق خطّ أيقونات FontAwesome (تُرسم عبر ::before) فتظهر مربّعات فارغة.
+   نستثني أصناف الأيقونات صراحةً ونُعيد لها خطّها. */
+.fa, .fas, .fa-solid, .far, .fa-regular, .fal, .fa-light, .fad, .fa-duotone,
+.fa::before, .fas::before, .fa-solid::before, .far::before, .fa-regular::before,
+.fal::before, .fa-light::before, .fad::before, .fa-duotone::before {
+  font-family: "Font Awesome 6 Free" !important;
+}
+.fab, .fa-brands, .fab::before, .fa-brands::before {
+  font-family: "Font Awesome 6 Brands" !important;
+}
+</style>
 <AuthGate client:load />
 
 <!-- طريق العودة إلى البوابة (الصفحة ملء الشاشة بلا سايدبار) -->
