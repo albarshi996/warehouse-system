@@ -15,6 +15,7 @@ function emptyDraft() {
     sku: '',
     nameAr: '',
     nameEn: '',
+    barcodesText: '',
     category: '',
     unit: 'piece',
     balance: '0',
@@ -35,6 +36,7 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
         sku: item.sku ?? '',
         nameAr: item.nameAr ?? '',
         nameEn: item.nameEn ?? '',
+        barcodesText: (item.barcodes || []).join(', '),
         category: item.category ?? '',
         unit: item.unit ?? 'piece',
         balance: String(item.balance ?? 0),
@@ -70,10 +72,13 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
     setError('');
     setSubmitting(true);
     try {
+      // «8059…, 8059…» ⇒ ['8059…','8059…'] — الخدمة تطبّعها وتزيل التكرار.
+      const barcodes = draft.barcodesText.split(/[,،/|;\n]+/).map((s) => s.trim()).filter(Boolean);
       if (isEdit) {
         await updateItem(draft.sku, {
           nameAr: draft.nameAr,
           nameEn: draft.nameEn,
+          barcodes,
           category: draft.category,
           unit: draft.unit,
           balance: draft.balance,
@@ -81,7 +86,7 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
         });
         onSaved?.(draft.sku);
       } else {
-        const sku = await createItem(draft);
+        const sku = await createItem({ ...draft, barcodes });
         onSaved?.(sku);
       }
       setHasUnsavedChanges(false);
@@ -139,6 +144,17 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
           />
         </Field>
 
+        <Field label="الباركود" hint="عدّة باركودات؟ افصلها بفاصلة — الصنف الواحد قد يحمل أكثر من باركود">
+          <input
+            type="text"
+            placeholder="8059692040599, 8059692040605"
+            className={inputClass}
+            style={{ direction: 'ltr', textAlign: 'right' }}
+            value={draft.barcodesText}
+            onChange={update('barcodesText')}
+          />
+        </Field>
+
         <Field label="الفئة">
           <input
             type="text"
@@ -159,9 +175,11 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
           </select>
         </Field>
 
+        {/* الوعد القديم «يتحدث تلقائياً عبر سندات الاستلام/الصرف» كان كاذبًا —
+            لا كود ينفّذه. الحقيقة المعتمدة: مصدر الرصيد شيت الأرصدة. */}
         <Field
           label="الرصيد الافتتاحي"
-          hint={isEdit ? 'يتحدث تلقائياً عبر سندات الاستلام/الصرف' : undefined}
+          hint={isEdit ? 'مصدره استيراد شيت الأرصدة (Balances) — لا يُعدَّل هنا' : undefined}
         >
           <input
             type="number"

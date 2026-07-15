@@ -5,12 +5,15 @@ import {
   unarchiveItem,
   UNIT_OPTIONS,
 } from '../../../services/itemService.js';
+import { canImport } from '../../../services/items/itemsImportService.js';
+import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Icon from '../../ui/Icon.jsx';
 import ItemForm from './ItemForm.jsx';
+import ItemsImport from './ItemsImport.jsx';
 
 /**
  * Items master screen. Real-time list of `Items_Master`, with search,
- * add/edit/archive controls.
+ * add/edit/archive controls, and Excel import (managers only).
  */
 export default function ItemMaster() {
   const [items, setItems] = useState([]);
@@ -19,7 +22,17 @@ export default function ItemMaster() {
   const [search, setSearch] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [editor, setEditor] = useState(null); // null | { mode, item? }
+  const [importing, setImporting] = useState(false);
+  const [me, setMe] = useState(null);
   const [toast, setToast] = useState(null); // { kind, text }
+
+  // الدور — لإظهار زرّ الاستيراد للمخوَّلين فقط (الإلزام الحقيقي في قواعد Firestore).
+  useEffect(() => {
+    const unsub = subscribeAuth(async (user) => {
+      setMe(user ? await fetchUserProfile(user) : null);
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = subscribeItems(
@@ -45,7 +58,7 @@ export default function ItemMaster() {
     const term = search.trim().toLowerCase();
     if (!term) return items;
     return items.filter((it) =>
-      [it.sku, it.nameAr, it.nameEn, it.category]
+      [it.sku, it.nameAr, it.nameEn, it.category, ...(it.barcodes || [])]
         .filter(Boolean)
         .some((field) => String(field).toLowerCase().includes(term))
     );
@@ -80,14 +93,31 @@ export default function ItemMaster() {
             إنشاء وتعديل بيانات أصناف Brandzo. كود SKU هو المعرف الفريد لكل صنف.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setEditor({ mode: 'create' })}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-red text-white px-4 py-2 font-bold shadow hover:bg-brand-red-dark active:scale-95 transition-all"
-        >
-          <Icon name="package" size={18} />
-          إضافة صنف
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {canImport(me?.role) && (
+            <button
+              type="button"
+              onClick={() => {
+                setImporting((v) => !v);
+                setEditor(null);
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-brand-red text-brand-red px-4 py-2 font-bold hover:bg-brand-red hover:text-white active:scale-95 transition-all"
+            >
+              📥 استيراد شيت
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setEditor({ mode: 'create' });
+              setImporting(false);
+            }}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-red text-white px-4 py-2 font-bold shadow hover:bg-brand-red-dark active:scale-95 transition-all"
+          >
+            <Icon name="package" size={18} />
+            إضافة صنف
+          </button>
+        </div>
       </header>
 
       {toast && (
@@ -105,6 +135,18 @@ export default function ItemMaster() {
       {error && !loading && (
         <div className="mb-4 p-3 rounded-lg font-bold text-sm bg-red-100 text-red-700 border border-red-200">
           {error}
+        </div>
+      )}
+
+      {importing && (
+        <div className="mb-6">
+          <ItemsImport
+            onDone={({ created, updated }) => {
+              setImporting(false);
+              flashToast('success', `تم الاستيراد: ${created} صنف جديد · ${updated} حُدِّث`);
+            }}
+            onCancel={() => setImporting(false)}
+          />
         </div>
       )}
 
@@ -150,6 +192,7 @@ export default function ItemMaster() {
             <thead className="bg-gray-50 text-gray-700">
               <tr>
                 <th className="px-4 py-3 font-bold whitespace-nowrap">SKU</th>
+                <th className="px-4 py-3 font-bold whitespace-nowrap">الباركود</th>
                 <th className="px-4 py-3 font-bold">الاسم (AR)</th>
                 <th className="px-4 py-3 font-bold hidden md:table-cell">الاسم (EN)</th>
                 <th className="px-4 py-3 font-bold hidden sm:table-cell">الفئة</th>
@@ -164,13 +207,13 @@ export default function ItemMaster() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-gray-200 italic">
+                  <td colSpan={9} className="p-8 text-center text-gray-200 italic">
                     جاري جلب البيانات من السحابة...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-gray-200 italic">
+                  <td colSpan={9} className="p-8 text-center text-gray-200 italic">
                     {items.length === 0
                       ? 'لا توجد أصناف بعد. ابدأ بإضافة صنف جديد.'
                       : 'لا توجد نتائج مطابقة للبحث.'}
@@ -183,6 +226,24 @@ export default function ItemMaster() {
                     <tr key={it.sku} className={it.archived ? 'opacity-60' : ''}>
                       <td className="px-4 py-3 font-mono text-brand-red font-bold whitespace-nowrap">
                         {it.sku}
+                      </td>
+                      <td
+                        className="px-4 py-3 font-mono text-xs whitespace-nowrap"
+                        style={{ direction: 'ltr', textAlign: 'right' }}
+                        title={(it.barcodes || []).join('\n')}
+                      >
+                        {it.barcodes?.length ? (
+                          <>
+                            {it.barcodes[0]}
+                            {it.barcodes.length > 1 && (
+                              <span className="mr-1 text-blue-600 font-bold">
+                                +{it.barcodes.length - 1}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          '—'
+                        )}
                       </td>
                       <td className="px-4 py-3 font-medium">{it.nameAr || '—'}</td>
                       <td className="px-4 py-3 hidden md:table-cell text-gray-200">
