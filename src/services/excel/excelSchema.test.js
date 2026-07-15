@@ -133,6 +133,42 @@ test('«حاوية الكود» ليست إلزامية — تُملأ من أو
   assert.equal(sku.required, false, 'لو كانت إلزامية لرُفض شيت المالك كلّه اليوم');
 });
 
+// ── ورقة الأرصدة ───────────────────────────────────────────────────
+test('أعمدة الأرصدة تُقرأ عربيّها وإنجليزيّها', () => {
+  const index = buildHeaderIndex('balances');
+  const headers = ['Bar Code', 'Warehouse (المخزن)', 'Batch / Lot (التشغيلة)', 'Expiry (تاريخ الصلاحية)', 'Qty (الكمية)'];
+  assert.deepEqual(
+    headers.map((h) => resolveHeaderCell(h, index)?.field),
+    ['barcode', 'warehouse', 'batch', 'expiry', 'qty']
+  );
+});
+
+test('المخزن والكمية إلزاميان في الأرصدة — رصيد بلا مخزن رقم بلا معنى', () => {
+  const required = DATASETS.balances.columns.filter((c) => c.required).map((c) => c.field);
+  assert.deepEqual(required.sort(), ['qty', 'warehouse']);
+});
+
+test('الأرصدة تحمل ما يحتاجه حارس FEFO', () => {
+  const fields = DATASETS.balances.columns.map((c) => c.field);
+  for (const f of ['batch', 'expiry', 'warehouse', 'qty']) {
+    assert.ok(fields.includes(f), `FEFO يحتاج ${f}`);
+  }
+});
+
+test('الأرصدة والتعريفات مجموعتان مستقلّتان — فلا يدهس رفعُ إحداهما الأخرى', () => {
+  assert.ok(DATASETS.items && DATASETS.balances);
+  assert.ok(!DATASETS.items.templateFields.includes('balance'), 'قالب التعريفات بلا كمية');
+  assert.ok(!DATASETS.balances.templateFields.includes('costPrice'), 'قالب الأرصدة بلا أسعار');
+});
+
+test('عناوين الأرصدة العربية المجرّدة تُقرأ (شيت جرد يدوي)', () => {
+  const index = buildHeaderIndex('balances');
+  assert.deepEqual(
+    ['الباركود', 'المخزن', 'التشغيلة', 'تاريخ الصلاحية', 'الكمية'].map((h) => resolveHeaderCell(h, index)?.field),
+    ['barcode', 'warehouse', 'batch', 'expiry', 'qty']
+  );
+});
+
 test('العنوان المزيّن يُحلّ بالاحتواء', () => {
   const index = buildHeaderIndex('items');
   assert.equal(resolveHeaderCell('الباركود (EAN)', index)?.field, 'barcode');

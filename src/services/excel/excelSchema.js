@@ -85,6 +85,35 @@ export const DATASETS = {
       'subFamily', 'supplier',
     ],
   },
+  /**
+   * الأرصدة — الكميات، منفصلةً عن التعريفات (قرار المالك 2026-07-15).
+   *
+   * لماذا ورقة مستقلّة؟ لأن تعريف الصنف يتغيّر نادرًا ورصيده يتغيّر يوميًّا.
+   * دمجهما يعني أن كل تصحيح اسمٍ فرصةٌ لدهس الأرصدة بأرقام قديمة من ملف
+   * محفوظ — وهو أشيع سبب لفساد بيانات المخزون. الورقتان في **ملف واحد**،
+   * فالمالك يتعامل مع ملف واحد والنظام يعاملهما منفصلين.
+   *
+   * المفتاح مركّب: (الصنف × المخزن × التشغيلة) — فالصنف الواحد له رصيد في
+   * كل مخزن، ولكل تشغيلة صلاحيتها. بدون الصلاحية لا يملك حارس **FEFO**
+   * (القاعدة الذهبية الثالثة) ما يحكم به، ولا تنبيه لقرب الانتهاء.
+   */
+  balances: {
+    key: 'balances',
+    labelAr: 'الأرصدة (Balances)',
+    columns: [
+      { field: 'barcode', labelAr: 'Bar Code', type: 'string', required: false, aliases: ['bar code', 'barcode', 'الباركود', 'باركود', 'ean', 'upc'] },
+      { field: 'sku', labelAr: 'Item Code (كود الصنف)', type: 'string', required: false, aliases: ['sku', 'item code', 'itemcode', 'كود الصنف', 'الكود', 'code', 'default_code'] },
+      { field: 'nameAr', labelAr: 'Item Description (اسم الصنف)', type: 'string', required: false, aliases: ['item description', 'اسم الصنف', 'الصنف', 'name', 'description', 'الوصف'] },
+      { field: 'warehouse', labelAr: 'Warehouse (المخزن)', type: 'string', required: true, aliases: ['warehouse', 'المخزن', 'المستودع', 'whs', 'wh', 'الموقع العام', 'store'] },
+      { field: 'location', labelAr: 'Location (الموقع/الرف)', type: 'string', required: false, aliases: ['location', 'الموقع', 'الرف', 'الرفّ', 'bin', 'rack', 'shelf', 'بوكس'] },
+      { field: 'batch', labelAr: 'Batch / Lot (التشغيلة)', type: 'string', required: false, aliases: ['batch', 'lot', 'التشغيلة', 'رقم التشغيلة', 'lot no', 'batch no', 'التشغيله'] },
+      { field: 'expiry', labelAr: 'Expiry (تاريخ الصلاحية)', type: 'string', required: false, aliases: ['expiry', 'expiry date', 'تاريخ الصلاحية', 'الصلاحية', 'exp', 'expiration', 'انتهاء الصلاحية'] },
+      { field: 'qty', labelAr: 'Qty (الكمية)', type: 'number', required: true, nonNegative: true, aliases: ['qty', 'quantity', 'الكمية', 'الرصيد', 'الكمية الدفترية', 'on hand', 'العدد', 'stock'] },
+      { field: 'countDate', labelAr: 'Count Date (تاريخ الرصيد)', type: 'string', required: false, aliases: ['count date', 'تاريخ الرصيد', 'تاريخ الجرد', 'date', 'التاريخ', 'as of'] },
+      { field: 'notes', labelAr: 'ملاحظات', type: 'string', required: false, aliases: ['notes', 'ملاحظات', 'ملاحظة', 'remarks'] },
+    ],
+    templateFields: ['barcode', 'sku', 'nameAr', 'warehouse', 'location', 'batch', 'expiry', 'qty', 'countDate'],
+  },
   inbound: {
     key: 'inbound',
     labelAr: 'الوارد (Inbound_Log)',

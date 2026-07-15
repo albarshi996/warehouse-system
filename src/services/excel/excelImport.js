@@ -6,6 +6,7 @@ import {
   detectHeaderRow,
   resolveHeaderCell,
   splitMulti,
+  normalizeBarcode,
 } from './excelSchema.js';
 
 /**
@@ -212,6 +213,21 @@ export async function importSheet(input, datasetKey, opts = {}) {
         continue; // دُمج — لا يُضاف صفًّا مستقلًّا
       }
       if (mergeKey && !rowHasError) skuAt.set(mergeKey, rows.length);
+    } else if (datasetKey === 'balances') {
+      // الهوية: باركود أو كود — أحدهما يكفي، وغيابهما معًا يجعل الرصيد بلا صاحب.
+      shaped.barcode = normalizeBarcode(shaped.barcode);
+      shaped.sku = String(shaped.sku ?? '').trim().toUpperCase();
+      if (!shaped.barcode && !shaped.sku) {
+        errors.push({
+          row: rowNum,
+          column: 'barcode',
+          message: 'رصيد بلا باركود وبلا كود — لا يُعرف صاحبه. | Balance row has no item identity.',
+        });
+        rowHasError = true;
+      }
+      // ملاحظة: **لا نشترط qty > 0** هنا خلافًا للسجلّات — رصيد الصفر رقم
+      // مشروع ومهمّ (يعني «الصنف نفد من هذا المخزن»)، وحذفه يُبقي رصيدًا
+      // قديمًا كاذبًا في النظام.
     } else {
       // logs: normalize itemCode + require qty > 0
       shaped.itemCode = String(shaped.itemCode ?? '').trim().toUpperCase();
