@@ -1,5 +1,12 @@
 import * as XLSX from 'xlsx';
-import { DATASETS, buildHeaderIndex, normalizeHeader, toNumber } from './excelSchema.js';
+import {
+  DATASETS,
+  buildHeaderIndex,
+  toNumber,
+  detectHeaderRow,
+  resolveHeaderCell,
+  splitMulti,
+} from './excelSchema.js';
 
 /**
  * Excel import gateway.
@@ -61,7 +68,9 @@ export async function importSheet(input, datasetKey, opts = {}) {
   }
 
   // Read as arrays-of-arrays so we control header resolution ourselves.
-  const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false, defval: '' });
+  // `raw: false` keeps long barcodes as text — otherwise SheetJS hands us
+  // 8059692040599 as a float and it prints as 8.05969e+12.
+  const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false, defval: '', raw: false });
   const errors = [];
 
   if (matrix.length < 2) {
@@ -70,18 +79,21 @@ export async function importSheet(input, datasetKey, opts = {}) {
       dataset: datasetKey,
       rows: [],
       errors: [{ row: 1, column: '-', message: 'الملف لا يحتوي على صف عناوين وبيانات. | File has no header + data rows.' }],
-      summary: { total: 0, valid: 0, invalid: 0, missingColumns: ds.columns.filter((c) => c.required).map((c) => c.field) },
+      summary: { total: 0, valid: 0, invalid: 0, missingColumns: ds.columns.filter((c) => c.required).map((c) => c.field), headerRow: 1, sheetName },
     };
   }
 
   // ── Resolve headers ──────────────────────────────────────────────────────
-  const headerRow = matrix[0];
+  // العناوين ليست بالضرورة في الصف الأول — نُرجّحها بفحص أول 10 صفوف.
+  const detected = detectHeaderRow(matrix, datasetKey, opts.maxHeaderScan ?? 10);
+  const headerRowIdx = detected.hits > 0 ? detected.index : 0;
+  const headerRow = matrix[headerRowIdx];
   const headerIndex = buildHeaderIndex(datasetKey);
   /** column position -> ColumnDef */
   const posToCol = new Map();
   const seenFields = new Set();
   headerRow.forEach((cell, pos) => {
-    const col = headerIndex.get(normalizeHeader(cell));
+    const col = resolveHeaderCell(cell, headerIndex);
     if (col && !seenFields.has(col.field)) {
       posToCol.set(pos, col);
       seenFields.add(col.field);
@@ -98,17 +110,24 @@ export async function importSheet(input, datasetKey, opts = {}) {
 
   // ── Validate + shape each data row ───────────────────────────────────────
   const rows = [];
-  const seenSku = new Set();
+  /** sku -> موضعه في `rows` — لدمج الصفوف التي تحمل نفس الصنف. */
+  const skuAt = new Map();
   let invalid = 0;
+  let merged = 0;
 
-  for (let i = 1; i < matrix.length; i++) {
+  for (let i = headerRowIdx + 1; i < matrix.length; i++) {
     const rawRow = matrix[i];
-    const rowNum = i + 1; // 1-based, header is row 1
+    const rowNum = i + 1; // 1-based spreadsheet row number
     const shaped = {};
     let rowHasError = false;
 
     for (const [pos, col] of posToCol.entries()) {
       const raw = rawRow[pos];
+
+      if (col.multi) {
+        shaped[col.field] = splitMulti(raw);
+        continue;
+      }
 
       if (col.type === 'number') {
         const n = toNumber(raw);
@@ -130,7 +149,9 @@ export async function importSheet(input, datasetKey, opts = {}) {
 
     // Skip fully blank rows silently — BEFORE required-field validation, so a
     // stray empty row never produces spurious "required field empty" errors.
-    const isBlank = Object.values(shaped).every((v) => v === '' || v === 0 || v == null);
+    const isBlank = Object.values(shaped).every(
+      (v) => v === '' || v === 0 || v == null || (Array.isArray(v) && v.length === 0)
+    );
     if (isBlank) continue;
 
     // Required-field presence (only for columns that exist in the sheet).
@@ -147,11 +168,31 @@ export async function importSheet(input, datasetKey, opts = {}) {
     if (datasetKey === 'items') {
       const sku = String(shaped.sku ?? '').trim().toUpperCase();
       shaped.sku = sku;
-      if (sku && seenSku.has(sku)) {
-        errors.push({ row: rowNum, column: 'sku', message: `تكرار SKU داخل الملف: «${sku}». | Duplicate SKU in file.` });
-        rowHasError = true;
+      shaped.barcodes = shaped.barcode || [];
+      delete shaped.barcode;
+
+      // تكرار الـSKU **ليس خطأً** — الصنف الواحد قد يحمل عدّة باركودات، وهكذا
+      // تبدو الشيتات الحقيقية: صفّ لكل باركود. ندمج الباركودات ونُبقي بيانات
+      // أول صفّ. (قرار المالك 2026-07-15: نعم، الباركود قد يتعدّد.)
+      if (sku && !rowHasError && skuAt.has(sku)) {
+        const target = rows[skuAt.get(sku)];
+        const before = target.barcodes.length;
+        for (const code of shaped.barcodes) {
+          if (!target.barcodes.includes(code)) target.barcodes.push(code);
+        }
+        if (target.barcodes.length > before) merged++;
+        // اختلاف الاسم بين صفّين لنفس الكود مؤشّر خطأ في الشيت — نُنبّه ولا نمنع.
+        if (shaped.nameAr && target.nameAr && shaped.nameAr !== target.nameAr) {
+          errors.push({
+            row: rowNum,
+            column: 'nameAr',
+            severity: 'warning',
+            message: `الكود «${sku}» يحمل اسمين مختلفين («${target.nameAr}» و«${shaped.nameAr}») — اعتُمد الأول. | Same SKU, different names.`,
+          });
+        }
+        continue; // دُمج — لا يُضاف صفًّا مستقلًّا
       }
-      if (sku) seenSku.add(sku);
+      if (sku && !rowHasError) skuAt.set(sku, rows.length);
     } else {
       // logs: normalize itemCode + require qty > 0
       shaped.itemCode = String(shaped.itemCode ?? '').trim().toUpperCase();
@@ -168,8 +209,11 @@ export async function importSheet(input, datasetKey, opts = {}) {
     }
   }
 
+  // التنبيهات لا تُبطل الاستيراد — الأخطاء وحدها تفعل.
+  const blocking = errors.filter((e) => e.severity !== 'warning');
+
   return {
-    ok: errors.length === 0,
+    ok: blocking.length === 0,
     dataset: datasetKey,
     rows,
     errors,
@@ -177,7 +221,11 @@ export async function importSheet(input, datasetKey, opts = {}) {
       total: rows.length + invalid,
       valid: rows.length,
       invalid,
+      merged,
       missingColumns,
+      headerRow: headerRowIdx + 1,
+      sheetName,
+      detectedColumns: [...seenFields],
     },
   };
 }
