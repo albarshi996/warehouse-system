@@ -205,16 +205,16 @@
       <h1>تقرير النظام الكامل — خريطة برند زو التفصيلية</h1>
       <p class="sub">شرحٌ شاملٌ ومُفصّل لكل مكوّنات المشروع: المواقع (الصفحات)، الأدوات، قواعد البيانات، الخدمات، والميزات — مبنيٌّ على فحصٍ فعليٍّ للكود لا على التقدير.</p>
       <div class="meta-row">
-        <span>📅 التاريخ: <b>2026-07-13</b></span>
+        <span>📅 التاريخ: <b>2026-07-15</b></span>
         <span>🌐 الموقع الحيّ: <code>albarshi996.github.io/warehouse-system</code></span>
         <span>📦 المستودع: <code>albarshi996/warehouse-system</code></span>
-        <span>🔀 آخر إصدار: <code>f71ce8c</code></span>
+        <span>🔀 آخر إصدار: <code>f434247</code></span>
       </div>
       <div class="stats">
-        <div class="stat"><div class="n">29</div><div class="l">صفحة منشورة</div></div>
-        <div class="stat"><div class="n">5</div><div class="l">مجموعات Firestore</div></div>
+        <div class="stat"><div class="n">30</div><div class="l">صفحة منشورة</div></div>
+        <div class="stat"><div class="n">6</div><div class="l">مجموعات Firestore</div></div>
         <div class="stat"><div class="n">10</div><div class="l">أدوار مستخدمين</div></div>
-        <div class="stat"><div class="n">16</div><div class="l">ملف خدمات</div></div>
+        <div class="stat"><div class="n">17</div><div class="l">ملف خدمات</div></div>
         <div class="stat"><div class="n">12</div><div class="l">مرحلة أودو</div></div>
         <div class="stat"><div class="n">6</div><div class="l">حرّاس ذهبية</div></div>
       </div>
@@ -278,9 +278,16 @@
             <tr><td><code>Inbound_Log</code></td><td>سجلّ الوارد (حركات الاستلام)</td><td><span class="mono">logService</span></td><td><span class="chip live dot">حيّة</span></td></tr>
             <tr><td><code>Outbound_Log</code></td><td>سجلّ الصادر (حركات الصرف)</td><td><span class="mono">logService</span></td><td><span class="chip live dot">حيّة</span></td></tr>
             <tr><td><code>warehouses</code></td><td>بيانات المستودعات ومواقعها</td><td><span class="mono">warehouseService</span></td><td><span class="chip live dot">حيّة</span></td></tr>
-            <tr><td><code>users</code></td><td>أدوار المستخدمين (الدور · الاسم · الحالة)</td><td>صفحة «إدارة المستخدمين» عبر <span class="mono">usersService</span></td><td><span class="chip live dot">حيّة (جديدة)</span></td></tr>
+            <tr><td><code>users</code></td><td>أدوار المستخدمين (الدور · الاسم · الحالة)</td><td>صفحة «إدارة المستخدمين» عبر <span class="mono">usersService</span></td><td><span class="chip live dot">حيّة</span></td></tr>
+            <tr><td><code>operations</code><br><code>operations/{id}/scans</code></td><td><b>العمليات المخزنية وسجلّ المسح الدائم</b> — رأس العملية (النوع · من بدأها · الحالة)، وتحتها قيود المسح <b>append-only</b> (باركود · كمية · من · متى)</td><td>«الجرد الذكي» عبر <span class="mono">operationsService</span></td><td><span class="chip live dot">حيّة (جديدة)</span></td></tr>
           </tbody>
         </table>
+      </div>
+
+      <div class="callout warn"><span class="h">🔒 قواعد أمان Firestore — نُشرت 2026-07-15</span>
+        كشف اختبارٌ مباشر أن قاعدة البيانات كانت <b>مفتوحة للعالم</b>: أي شخص بلا حساب يقرأ ويكتب ويحذف، بل ويرقّي نفسه إلى مدير عام.
+        الآن يحكمها ملف <span class="mono">firestore.rules</span> (107 أسطر): لا وصول بلا تسجيل دخول · الأدوار لا يكتبها إلا المدير العام ·
+        <b>سجلّ المسح غير قابل للتعديل أو الحذف</b> · منع افتراضي لكل ما لم يُذكر. أُعيد الاختبار: كل المحاولات <span class="mono">PERMISSION_DENIED</span>.
       </div>
 
       <h3 class="blk"><span class="ic">🔐</span> Firebase Authentication — الهويّة والدخول</h3>
@@ -330,6 +337,7 @@
           <tr><td><span class="pg">استلام البضاعة</span> <code>grn</code></td><td>نموذج إذن استلام البضاعة (GRN)</td><td><span class="chip plan">عرض/نموذج</span></td></tr>
           <tr><td><span class="pg">المهام</span> <code>tasks</code></td><td>إدارة المهام اليومية وتتبّعها</td><td><span class="chip live">تفاعلية · TaskManager</span></td></tr>
           <tr><td><span class="pg">الأصناف</span> <code>products</code></td><td>سجلّ الأصناف الرئيسي (بحث/إضافة/تصدير)</td><td><span class="chip live">تفاعلية · ItemMaster</span></td></tr>
+          <tr><td><span class="pg">عمليات مخزنية</span> <code>stock-operations</code> <span class="chip live">جديد</span></td><td><b>الجرد الذكي بالباركود</b> — 6 أنواع عمليات (جرد · استلام · صرف · إضافة · تالف · مرتجع)، استيراد/تصدير Excel، كاميرا، مسح بالجملة، <b>وحفظ سحابي لحظي بسجلّ دائم</b></td><td><span class="chip live">تفاعلية · سحابية</span></td></tr>
         </tbody>
       </table></div>
 
@@ -444,6 +452,11 @@
         <div class="defrow"><dt>odooMapper.js</dt><dd><b>المصدر الوحيد</b> لتحويل حقول أودو ↔ بنية التطبيق.</dd></div>
       </dl>
 
+      <h3 class="blk"><span class="ic">☁️</span> العمليات السحابية — <span class="mono">stock/</span></h3>
+      <dl class="deflist">
+        <div class="defrow"><dt>operationsService.js</dt><dd><b>جديد.</b> إنشاء العملية · إضافة قيد مسح <b>دائم لا يُحذف</b> · الاستماع اللحظي لعمل بقيّة الموظفين · إقفال العملية. الهوية تُؤخذ من المصادقة مباشرةً لتطابق قواعد الأمان.</dd></div>
+      </dl>
+
       <h3 class="blk"><span class="ic">📦</span> بيانات المخزون</h3>
       <dl class="deflist">
         <div class="defrow"><dt>itemService.js</dt><dd>عمليات الأصناف (Items_Master).</dd></div>
@@ -533,16 +546,20 @@
         <li><span class="ck">✓</span> محاكي أودو كامل (12 مرحلة، دورة حقيقية)</li>
         <li><span class="ck">✓</span> قاعدة بيانات سحابية (Firestore، offline-first)</li>
         <li><span class="ck">✓</span> استيراد/تصدير Excel + تقارير PDF</li>
-        <li><span class="ck">✓</span> بوابة عمليات عربية RTL كاملة (29 صفحة)</li>
+        <li><span class="ck">✓</span> بوابة عمليات عربية RTL كاملة (30 صفحة)</li>
         <li><span class="ck">✓</span> موديول أودو حقيقي (10/12 مرحلة، 6 حرّاس)</li>
+        <li><span class="ck">✓</span> <b>جرد ذكي حيّ:</b> كل مسح يُحفظ سحابيًّا لحظيًّا — عدّة موظفين معًا</li>
+        <li><span class="ck">✓</span> <b>سجلّ تدقيق دائم</b> لا يقبل التعديل أو الحذف (من مسح ماذا ومتى)</li>
+        <li><span class="ck">✓</span> <b>العمل دون إنترنت</b> ورفع تلقائي عند عودتها</li>
+        <li><span class="ck">✓</span> <b>قاعدة بيانات مؤمَّنة</b> بقواعد شاملة ومُختبَرة</li>
       </ul>
 
       <h3 class="blk"><span class="ic">⏳</span> المتبقّي (خريطة الطريق)</h3>
       <div class="tbl-wrap"><table>
         <thead><tr><th>المهمة</th><th>الطبقة</th><th>الحالة</th></tr></thead>
         <tbody>
-          <tr><td>نشر قواعد أمان Firestore</td><td>الواجهة/الأمان</td><td><span class="chip pend dot">على المالك</span></td></tr>
-          <tr><td>M2 — بيئة أودو الحيّة (Oracle مجاني)</td><td>الباك اند</td><td><span class="chip plan dot">التالية</span></td></tr>
+          <tr><td>شاشة متابعة العمليات للمدير (الخدمة جاهزة، تنقصها الواجهة)</td><td>الواجهة</td><td><span class="chip plan dot">التالية</span></td></tr>
+          <tr><td>M2 — بيئة أودو الحيّة (Oracle مجاني)</td><td>الباك اند</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
           <tr><td>S12 — الإغلاق المالي</td><td>موديول أودو</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
           <tr><td>تفعيل تكامل أودو (production)</td><td>التكامل</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
           <tr><td>ربط النطاق <span class="mono">warehousehub.com.ly</span></td><td>النشر</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
