@@ -15,8 +15,15 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         <span class="block text-sm font-normal text-gray-200 mt-1">Integrated ERP Document Cycles (Odoo Enterprise)</span>
       </h1>
       <p class="text-gray-100 mt-2 text-sm sm:text-base leading-relaxed">
-        تصميم الدورات المستندية لبيئة Odoo Enterprise، تغطي الإدارة المالية، الموارد البشرية، والإدارة التجارية.
+        تصميم الدورات المستندية لبيئة Odoo Enterprise، تغطي الإدارة المالية، الموارد البشرية، والإدارة التجارية —
+        مطابقة للمرجع التشغيلي الرسمي (الدورة الـ١٢ مرحلة · مصفوفة الـ٢١ نموذج) وهيكل الـ١٨ وظيفة المعتمد.
       </p>
+      <div class="flex flex-wrap gap-2 mt-4 text-xs">
+        <a href={`${base}/المرجع-التشغيلي-الرسمي.html`} target="_blank" class="inline-block px-4 py-2 bg-white/10 border border-white/20 text-white rounded-lg font-bold hover:bg-white/20 transition-all">📘 المرجع التشغيلي الرسمي</a>
+        <a href={`${base}/تقرير-هيكل-الوظائف-والادوار.html`} target="_blank" class="inline-block px-4 py-2 bg-white/10 border border-white/20 text-white rounded-lg font-bold hover:bg-white/20 transition-all">📄 تقرير هيكل الوظائف والأدوار</a>
+        <a href={`${base}/dashboard/recruitment`} class="inline-block px-4 py-2 bg-white/10 border border-white/20 text-white rounded-lg font-bold hover:bg-white/20 transition-all">🧑‍💼 الهيكل والتوظيف</a>
+        <a href={`${base}/dashboard/documents`} class="inline-block px-4 py-2 bg-white/10 border border-white/20 text-white rounded-lg font-bold hover:bg-white/20 transition-all">📑 المستندات الحيّة</a>
+      </div>
     </header>
 
     <!-- Tabs Navigation -->
@@ -93,28 +100,28 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                       <tr>
                         <td class="px-4 py-3">1</td>
                         <td class="px-4 py-3 font-bold text-white">فاتورة المورد (Vendor Bill)</td>
-                        <td class="px-4 py-3">محاسب الموردين</td>
+                        <td class="px-4 py-3">موظف المالية / المحاسبة</td>
                         <td class="px-4 py-3">Accounting</td>
                         <td class="px-4 py-3">Draft ➔ Posted</td>
                       </tr>
                       <tr>
                         <td class="px-4 py-3">2</td>
                         <td class="px-4 py-3 font-bold text-white">ربط أمر الشراء (PO Linking)</td>
-                        <td class="px-4 py-3">محاسب الموردين</td>
+                        <td class="px-4 py-3">موظف المالية / المحاسبة</td>
                         <td class="px-4 py-3">Accounting</td>
                         <td class="px-4 py-3">Unlinked ➔ Linked</td>
                       </tr>
                       <tr>
                         <td class="px-4 py-3">3</td>
                         <td class="px-4 py-3 font-bold text-white">الدفع والمطابقة (Payment)</td>
-                        <td class="px-4 py-3">المدير المالي</td>
+                        <td class="px-4 py-3">مدير إدارة المالية</td>
                         <td class="px-4 py-3">Accounting</td>
                         <td class="px-4 py-3">Posted ➔ In Payment</td>
                       </tr>
                       <tr>
                         <td class="px-4 py-3">4</td>
                         <td class="px-4 py-3 font-bold text-white">التسوية البنكية (Bank Recon)</td>
-                        <td class="px-4 py-3">محاسب البنوك</td>
+                        <td class="px-4 py-3">موظف المالية / المحاسبة</td>
                         <td class="px-4 py-3">Accounting</td>
                         <td class="px-4 py-3">In Payment ➔ Paid</td>
                       </tr>
@@ -157,11 +164,15 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                   <ul class="space-y-3 text-sm text-gray-100">
                     <li class="flex items-start gap-2">
                       <span class="text-brand-red">•</span>
-                      <span><strong>اعتماد الفاتورة (Bill Validation):</strong> مراجعة تطابق الكميات والأسعار (3-Way Matching).</span>
+                      <span><strong>اعتماد الفاتورة (Bill Validation):</strong> الحارس الذهبي ⚖️ المطابقة الثلاثية (3-Way Match) — لا ترحيل قبل تطابق (أمر الشراء + مذكرة الاستلام + الفاتورة). المرحلتان ٠٩–١٠ من الدورة المستندية.</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <span class="text-brand-red">•</span>
-                      <span><strong>اعتماد الدفع (Payment Authorization):</strong> موافقة المدير المالي على خروج النقدية.</span>
+                      <span><strong>اعتماد الدفع (Payment Authorization):</strong> موافقة مدير إدارة المالية على خروج النقدية.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-brand-red">•</span>
+                      <span><strong>حارس التسويات 🔒:</strong> لا تعديل لأي رصيد مخزني دون سند تسوية (النموذج ١٦) معتمد من مدير إدارة المالية.</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <span class="text-brand-red">•</span>
@@ -213,6 +224,12 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                         <td class="px-4 py-3">Accounting</td>
                         <td class="px-4 py-3 font-mono text-xs text-brand-yellow">account.payment</td>
                         <td class="px-4 py-3">يولد قيد الدفع ويرتبط بالفاتورة مباشرة</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3 font-bold text-white">إشعار دائن (النموذج ١٧)</td>
+                        <td class="px-4 py-3">Accounting</td>
+                        <td class="px-4 py-3 font-mono text-xs text-brand-yellow">account.move (in_refund)</td>
+                        <td class="px-4 py-3">يُنشأ من فاتورة المورّد الأصلية عند المرتجعات — اعتماد مدير إدارة المالية</td>
                       </tr>
                     </tbody>
                   </table>
@@ -269,7 +286,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                       <tr>
                         <td class="px-4 py-3">4</td>
                         <td class="px-4 py-3 font-bold text-white">مسير الرواتب (Payslip Batch)</td>
-                        <td class="px-4 py-3">مسؤول الرواتب</td>
+                        <td class="px-4 py-3">مدير الموارد البشرية</td>
                         <td class="px-4 py-3">Payroll</td>
                         <td class="px-4 py-3">Draft ➔ Waiting</td>
                       </tr>
@@ -400,29 +417,43 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                     <tbody class="divide-y divide-gray-700">
                       <tr>
                         <td class="px-4 py-3">1</td>
+                        <td class="px-4 py-3 font-bold text-white">طلب شراء داخلي (PR) — النموذج ١</td>
+                        <td class="px-4 py-3">موظف التجارية / المشتريات · اعتماد مدير الإدارة التجارية</td>
+                        <td class="px-4 py-3">Purchase</td>
+                        <td class="px-4 py-3">Draft ➔ Approved</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">2</td>
                         <td class="px-4 py-3 font-bold text-white">طلب عرض سعر (RFQ)</td>
-                        <td class="px-4 py-3">موظف المشتريات</td>
+                        <td class="px-4 py-3">موظف التجارية / المشتريات</td>
                         <td class="px-4 py-3">Purchase</td>
                         <td class="px-4 py-3">Draft ➔ RFQ Sent</td>
                       </tr>
                       <tr>
-                        <td class="px-4 py-3">2</td>
-                        <td class="px-4 py-3 font-bold text-white">أمر الشراء (PO)</td>
-                        <td class="px-4 py-3">مدير المشتريات</td>
+                        <td class="px-4 py-3">3</td>
+                        <td class="px-4 py-3 font-bold text-white">أمر الشراء (PO) — النموذج ٢</td>
+                        <td class="px-4 py-3">مدير الإدارة التجارية + مدير إدارة المالية</td>
                         <td class="px-4 py-3">Purchase</td>
                         <td class="px-4 py-3">RFQ ➔ Purchase Order</td>
                       </tr>
                       <tr>
-                        <td class="px-4 py-3">3</td>
-                        <td class="px-4 py-3 font-bold text-white">سند الاستلام (GRN)</td>
-                        <td class="px-4 py-3">مدير المخزن</td>
+                        <td class="px-4 py-3">4</td>
+                        <td class="px-4 py-3 font-bold text-white">إشعار الشحن المسبق (ASN) — النموذج ٣</td>
+                        <td class="px-4 py-3">موظف التجارية / المشتريات + قسم عمليات المستودع</td>
+                        <td class="px-4 py-3">Inventory</td>
+                        <td class="px-4 py-3">N/A ➔ Scheduled</td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">5</td>
+                        <td class="px-4 py-3 font-bold text-white">مذكرة استلام بضاعة (GRN) — النموذج ٤</td>
+                        <td class="px-4 py-3">قسم عمليات المستودع · اعتماد مدير إدارة المستودعات</td>
                         <td class="px-4 py-3">Inventory</td>
                         <td class="px-4 py-3">Ready ➔ Done</td>
                       </tr>
                       <tr>
-                        <td class="px-4 py-3">4</td>
+                        <td class="px-4 py-3">6</td>
                         <td class="px-4 py-3 font-bold text-white">سند دفع مبدئي (Bill Draft)</td>
-                        <td class="px-4 py-3">المشتريات/المالية</td>
+                        <td class="px-4 py-3">موظف المالية / المحاسبة</td>
                         <td class="px-4 py-3">Purchase</td>
                         <td class="px-4 py-3">N/A ➔ Draft Bill</td>
                       </tr>
@@ -466,11 +497,15 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                   <ul class="space-y-3 text-sm text-gray-100">
                     <li class="flex items-start gap-2">
                       <span class="text-brand-red">•</span>
-                      <span><strong>تقييم المورد واعتماد الـ PO:</strong> مقارنة عروض الأسعار واختيار الأفضل.</span>
+                      <span><strong>حوكمة الشراء 🥇:</strong> لا أمر شراء (PO) دون طلب شراء (PR) معتمد — الحارس الذهبي الأول.</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <span class="text-brand-red">•</span>
-                      <span><strong>فحص الجودة والاستلام (GRN):</strong> عدم التحويل إلى Done إلا بعد الفحص الفعلي.</span>
+                      <span><strong>تقييم المورد واعتماد الـ PO:</strong> مقارنة لا تقل عن ثلاثة عروض أسعار واختيار الأفضل.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-brand-red">•</span>
+                      <span><strong>فحص الجودة والاستلام (GRN) 🥈:</strong> لا Done قبل اعتماد موظف الجودة — بوابة الجودة.</span>
                     </li>
                   </ul>
                 </section>
@@ -541,9 +576,50 @@ const base = import.meta.env.BASE_URL.endsWith('/')
              <span>المستودعات (Warehouse Operations)</span>
            </h2>
 
+           <!-- Official 12-Stage Document Cycle -->
+           <section class="mb-8">
+             <h3 class="text-lg font-bold text-brand-yellow mb-2">الدورة المستندية الرسمية الكاملة (١٢ مرحلة)</h3>
+             <p class="text-xs text-gray-300 mb-4">
+               وفق <a href={`${base}/المرجع-التشغيلي-الرسمي.html`} target="_blank" class="text-brand-yellow underline hover:text-white">المرجع التشغيلي الرسمي</a> —
+               كل مرحلة يحكمها نموذج من مصفوفة الـ٢١ نموذج (تُدار في <a href={`${base}/dashboard/documents`} class="text-brand-yellow underline hover:text-white">المستندات الحيّة</a>)
+               ومسؤول من هيكل الـ١٨ وظيفة (<a href={`${base}/dashboard/recruitment`} class="text-brand-yellow underline hover:text-white">الهيكل والتوظيف</a>).
+             </p>
+             <div class="overflow-x-auto rounded-xl border border-gray-700">
+               <table class="w-full text-sm text-right text-gray-100">
+                 <thead class="bg-gray-800 text-white">
+                   <tr>
+                     <th class="px-4 py-3">#</th>
+                     <th class="px-4 py-3">المرحلة</th>
+                     <th class="px-4 py-3">النموذج الحاكم (مصفوفة الـ٢١)</th>
+                     <th class="px-4 py-3">المسؤول (هيكل الـ١٨ وظيفة)</th>
+                     <th class="px-4 py-3">الحارس الذهبي</th>
+                   </tr>
+                 </thead>
+                 <tbody class="divide-y divide-gray-700">
+                   <tr><td class="px-4 py-3">01</td><td class="px-4 py-3 font-bold text-white">طلب الشراء (PR)</td><td class="px-4 py-3">النموذج ١ — طلب شراء داخلي</td><td class="px-4 py-3">موظف التجارية / المشتريات · اعتماد مدير الإدارة التجارية</td><td class="px-4 py-3">🥇 حوكمة الشراء</td></tr>
+                   <tr><td class="px-4 py-3">02</td><td class="px-4 py-3 font-bold text-white">أمر الشراء (PO)</td><td class="px-4 py-3">النموذج ٢ — أمر الشراء</td><td class="px-4 py-3">مدير الإدارة التجارية + مدير إدارة المالية</td><td class="px-4 py-3">🥇 حوكمة الشراء</td></tr>
+                   <tr><td class="px-4 py-3">03</td><td class="px-4 py-3 font-bold text-white">إشعار الشحن المسبق (ASN)</td><td class="px-4 py-3">النموذج ٣ — إشعار الشحن المسبق</td><td class="px-4 py-3">موظف التجارية / المشتريات + قسم عمليات المستودع</td><td class="px-4 py-3">—</td></tr>
+                   <tr><td class="px-4 py-3">04</td><td class="px-4 py-3 font-bold text-white">الاستلام والفحص (GRN + QC)</td><td class="px-4 py-3">النموذجان ٤ و٥ — مذكرة استلام بضاعة + تقرير فحص جودة</td><td class="px-4 py-3">قسم عمليات المستودع + موظف الجودة</td><td class="px-4 py-3">🥈 بوابة الجودة</td></tr>
+                   <tr><td class="px-4 py-3">05</td><td class="px-4 py-3 font-bold text-white">التخزين الموجّه (Putaway)</td><td class="px-4 py-3">النموذجان ٦ و٧ — أمر تخزين موجه + بطاقة مراقبة الموقع</td><td class="px-4 py-3">قسم عمليات المستودع</td><td class="px-4 py-3">—</td></tr>
+                   <tr><td class="px-4 py-3">06</td><td class="px-4 py-3 font-bold text-white">التحضير (Pick &amp; Pack)</td><td class="px-4 py-3">النماذج ٨ و٩ و١٠ — طلب صرف داخلي + قائمة السحب + قائمة التعبئة</td><td class="px-4 py-3">قسم عمليات المستودع</td><td class="px-4 py-3">🥉 FEFO</td></tr>
+                   <tr><td class="px-4 py-3">07</td><td class="px-4 py-3 font-bold text-white">الشحن والتوزيع (Dispatch)</td><td class="px-4 py-3">النموذجان ١١ و١٢ — إذن تسليم + تصريح خروج بوابة</td><td class="px-4 py-3">قسم العمليات اللوجستية + موظف النقل والحركة</td><td class="px-4 py-3">🏅 تصريح البوابة</td></tr>
+                   <tr><td class="px-4 py-3">08</td><td class="px-4 py-3 font-bold text-white">المرتجعات (Returns)</td><td class="px-4 py-3">النماذج ١٤ و١٥ و١٧ — إشعار مرتجع + تقرير بضاعة تالفة + إشعار دائن</td><td class="px-4 py-3">قسم عمليات المستودع · اعتماد مدير إدارة المستودعات</td><td class="px-4 py-3">حوكمة الإرجاع</td></tr>
+                   <tr><td class="px-4 py-3">09</td><td class="px-4 py-3 font-bold text-white">المطابقة الثلاثية (3-Way Match)</td><td class="px-4 py-3">مطابقة: النموذج ٢ + النموذج ٤ + فاتورة المورد</td><td class="px-4 py-3">موظف المالية / المحاسبة</td><td class="px-4 py-3">⚖️ 3-Way Match</td></tr>
+                   <tr><td class="px-4 py-3">10</td><td class="px-4 py-3 font-bold text-white">فاتورة المورد (Vendor Bill)</td><td class="px-4 py-3">تسجيل الالتزام المالي بعد نجاح المطابقة</td><td class="px-4 py-3">موظف المالية / المحاسبة · اعتماد مدير إدارة المالية</td><td class="px-4 py-3">⚖️ 3-Way Match</td></tr>
+                   <tr><td class="px-4 py-3">11</td><td class="px-4 py-3 font-bold text-white">قيد اليومية (Journal Entry)</td><td class="px-4 py-3">ترحيل آلي من تقييم المخزون</td><td class="px-4 py-3">موظف المالية / المحاسبة</td><td class="px-4 py-3">—</td></tr>
+                   <tr><td class="px-4 py-3">12</td><td class="px-4 py-3 font-bold text-white">الإغلاق المالي (Financial Close)</td><td class="px-4 py-3">قائمة إغلاق الفترة — تشمل النموذجين ١٦ و١٨ (سند التسوية + ورقة الجرد)</td><td class="px-4 py-3">مدير إدارة المالية</td><td class="px-4 py-3">🔒 حارس التسويات</td></tr>
+                 </tbody>
+               </table>
+             </div>
+             <p class="text-xs text-gray-400 mt-3">
+               وبين المرحلتين ٠٨ و٠٩ تجري رقابة المخزون المستمرة: الجرد الدوري (النموذج ١٨ — ورقة جرد دوري) والتسويات المخزنية
+               (النموذج ١٦ — سند تسوية مخزون) بحارس 🔒 اعتماد مدير إدارة المالية.
+             </p>
+           </section>
+
            <!-- Workflow Table -->
            <section class="mb-8">
-             <h3 class="text-lg font-bold text-brand-yellow mb-4">دورة العمل المستندية — المستودعات</h3>
+             <h3 class="text-lg font-bold text-brand-yellow mb-4">نماذج عمليات المستودع (من مصفوفة الـ٢١ نموذج رسمي)</h3>
              <div class="overflow-x-auto rounded-xl border border-gray-700">
                <table class="w-full text-sm text-right text-gray-100">
                  <thead class="bg-gray-800 text-white">
@@ -556,18 +632,20 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                    </tr>
                  </thead>
                  <tbody class="divide-y divide-gray-700">
-                   <tr><td class="px-4 py-3">1</td><td class="px-4 py-3 font-bold text-white">أمر الشراء (PO)</td><td class="px-4 py-3">مدير المشتريات</td><td class="px-4 py-3">Purchase</td><td class="px-4 py-3">Draft → Confirmed</td></tr>
-                   <tr><td class="px-4 py-3">2</td><td class="px-4 py-3 font-bold text-white">إشعار استلام البضاعة (GRN)</td><td class="px-4 py-3">أمين المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Ready → Done</td></tr>
-                   <tr><td class="px-4 py-3">3</td><td class="px-4 py-3 font-bold text-white">فحص الجودة (QC)</td><td class="px-4 py-3">مفتش الجودة</td><td class="px-4 py-3">Quality</td><td class="px-4 py-3">Draft → Approved</td></tr>
-                   <tr><td class="px-4 py-3">4</td><td class="px-4 py-3 font-bold text-white">قائمة التخزين (Putaway)</td><td class="px-4 py-3">أمين المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Ready → Done</td></tr>
-                   <tr><td class="px-4 py-3">5</td><td class="px-4 py-3 font-bold text-white">بطاقة مراقبة المخزون (Bin Card)</td><td class="px-4 py-3">أمين المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">مستمر</td></tr>
-                   <tr><td class="px-4 py-3">6</td><td class="px-4 py-3 font-bold text-white">قائمة السحب (Picking)</td><td class="px-4 py-3">موظف المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Ready → Done</td></tr>
-                   <tr><td class="px-4 py-3">7</td><td class="px-4 py-3 font-bold text-white">قائمة التعبئة (Packing)</td><td class="px-4 py-3">موظف المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Ready → Done</td></tr>
-                   <tr><td class="px-4 py-3">8</td><td class="px-4 py-3 font-bold text-white">إذن التسليم (Delivery Note)</td><td class="px-4 py-3">سائق / موزع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Ready → Done</td></tr>
-                   <tr><td class="px-4 py-3">9</td><td class="px-4 py-3 font-bold text-white">إذن نقل مخزني</td><td class="px-4 py-3">أمين المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Draft → Done</td></tr>
-                   <tr><td class="px-4 py-3">10</td><td class="px-4 py-3 font-bold text-white">سند تسوية مخزون</td><td class="px-4 py-3">مدير المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Draft → Posted</td></tr>
-                   <tr><td class="px-4 py-3">11</td><td class="px-4 py-3 font-bold text-white">محضر الجرد الدوري</td><td class="px-4 py-3">لجنة الجرد</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Draft → Validated</td></tr>
-                   <tr><td class="px-4 py-3">12</td><td class="px-4 py-3 font-bold text-white">تقرير البضاعة التالفة</td><td class="px-4 py-3">مدير المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Draft → Approved</td></tr>
+                   <tr><td class="px-4 py-3">1</td><td class="px-4 py-3 font-bold text-white">أمر الشراء (PO) — النموذج ٢</td><td class="px-4 py-3">مدير الإدارة التجارية</td><td class="px-4 py-3">Purchase</td><td class="px-4 py-3">Draft → Confirmed</td></tr>
+                   <tr><td class="px-4 py-3">2</td><td class="px-4 py-3 font-bold text-white">مذكرة استلام بضاعة (GRN) — النموذج ٤</td><td class="px-4 py-3">قسم عمليات المستودع · اعتماد مدير إدارة المستودعات</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Ready → Done</td></tr>
+                   <tr><td class="px-4 py-3">3</td><td class="px-4 py-3 font-bold text-white">تقرير فحص جودة (QC) — النموذج ٥</td><td class="px-4 py-3">موظف الجودة · اعتماد مدير إدارة الجودة</td><td class="px-4 py-3">Quality</td><td class="px-4 py-3">Draft → Passed / Failed</td></tr>
+                   <tr><td class="px-4 py-3">4</td><td class="px-4 py-3 font-bold text-white">أمر تخزين موجه (Putaway List) — النموذج ٦</td><td class="px-4 py-3">قسم عمليات المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Ready → Done</td></tr>
+                   <tr><td class="px-4 py-3">5</td><td class="px-4 py-3 font-bold text-white">بطاقة مراقبة الموقع المخزني (Bin Card) — النموذج ٧</td><td class="px-4 py-3">قسم عمليات المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">مستمر</td></tr>
+                   <tr><td class="px-4 py-3">6</td><td class="px-4 py-3 font-bold text-white">طلب صرف داخلي (Store Requisition) — النموذج ٨</td><td class="px-4 py-3">القسم الطالب · اعتماد مدير إدارة المستودعات</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Draft → Done</td></tr>
+                   <tr><td class="px-4 py-3">7</td><td class="px-4 py-3 font-bold text-white">قائمة السحب (Picking List) — النموذج ٩</td><td class="px-4 py-3">قسم عمليات المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Ready → Done</td></tr>
+                   <tr><td class="px-4 py-3">8</td><td class="px-4 py-3 font-bold text-white">قائمة التعبئة (Packing List) — النموذج ١٠</td><td class="px-4 py-3">قسم عمليات المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Ready → Done</td></tr>
+                   <tr><td class="px-4 py-3">9</td><td class="px-4 py-3 font-bold text-white">إذن التسليم (Delivery Note) — النموذج ١١</td><td class="px-4 py-3">موظف النقل والحركة</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Ready → Done</td></tr>
+                   <tr><td class="px-4 py-3">10</td><td class="px-4 py-3 font-bold text-white">تصريح خروج بوابة (Gate Pass) — النموذج ١٢</td><td class="px-4 py-3">قسم العمليات اللوجستية · اعتماد أمن المستودع</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Draft → Done</td></tr>
+                   <tr><td class="px-4 py-3">11</td><td class="px-4 py-3 font-bold text-white">إذن نقل داخلي (Stock Transfer Slip) — النموذج ١٣</td><td class="px-4 py-3">قسم عمليات المستودع · اعتماد مدير إدارة المستودعات</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Draft → Done</td></tr>
+                   <tr><td class="px-4 py-3">12</td><td class="px-4 py-3 font-bold text-white">سند تسوية مخزون (Stock Adjustment) — النموذج ١٦</td><td class="px-4 py-3">اعتماد مدير إدارة المالية 🔒</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Draft → Validated</td></tr>
+                   <tr><td class="px-4 py-3">13</td><td class="px-4 py-3 font-bold text-white">ورقة جرد دوري (Cycle Count Sheet) — النموذج ١٨</td><td class="px-4 py-3">قسم عمليات المستودع · اعتماد مدير إدارة المستودعات</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Draft → Done</td></tr>
+                   <tr><td class="px-4 py-3">14</td><td class="px-4 py-3 font-bold text-white">تقرير بضاعة تالفة (Damaged Goods) — النموذج ١٥</td><td class="px-4 py-3">موظف الجودة · اعتماد مدير إدارة المستودعات + المالية</td><td class="px-4 py-3">Inventory</td><td class="px-4 py-3">Draft → Approved</td></tr>
                  </tbody>
                </table>
              </div>
@@ -625,7 +703,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                  </li>
                  <li class="flex items-start gap-2">
                    <span class="text-brand-red">•</span>
-                   <span><strong>التسوية:</strong> أي فرق بين الجرد الفعلي والنظام يُرفع فوراً لمدير المستودع.</span>
+                   <span><strong>التسوية 🔒:</strong> أي فرق بين الجرد الفعلي والنظام يُرفع فورًا لمدير إدارة المستودعات، ولا يُعدَّل الرصيد إلا بسند تسوية (النموذج ١٦) معتمد من مدير إدارة المالية.</span>
                  </li>
                </ul>
              </section>
@@ -638,7 +716,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                <div class="space-y-3">
                  <div class="bg-black/20 p-3 rounded-lg border border-blue-500/20">
                    <p class="text-xs text-blue-300 font-bold mb-1">مخزون دون الحد الأدنى</p>
-                   <p class="text-sm text-gray-100">تنبيه تلقائي لمدير المستودع عند وصول صنف لنقطة إعادة الطلب.</p>
+                   <p class="text-sm text-gray-100">تنبيه تلقائي لمدير إدارة المستودعات عند وصول صنف لنقطة إعادة الطلب.</p>
                  </div>
                  <div class="bg-black/20 p-3 rounded-lg border border-yellow-500/20">
                    <p class="text-xs text-yellow-400 font-bold mb-1">انتهاء صلاحية وشيك</p>
@@ -646,7 +724,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                  </div>
                  <div class="bg-black/20 p-3 rounded-lg border border-red-500/20">
                    <p class="text-xs text-red-400 font-bold mb-1">فارق الجرد</p>
-                   <p class="text-sm text-gray-100">تنبيه فوري لمدير المستودع عند وجود فرق بين العد الفعلي والنظام.</p>
+                   <p class="text-sm text-gray-100">تنبيه فوري لمدير إدارة المستودعات عند وجود فرق بين العد الفعلي والنظام.</p>
                  </div>
                </div>
              </section>
@@ -654,11 +732,16 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
            <!-- Operational Principles -->
            <section class="mb-8">
-             <h3 class="text-lg font-bold text-brand-yellow mb-4">المبادئ التشغيلية</h3>
+             <h3 class="text-lg font-bold text-brand-yellow mb-4">المبادئ التشغيلية والقواعد الذهبية (الحُرّاس الستة)</h3>
              <div class="bg-white/5 border border-green-500/30 rounded-xl p-6">
                <ul class="space-y-3 text-gray-100">
-                 <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">✓</span><span>معيار الصرف FEFO (First Expired First Out) — إلزامي في جميع عمليات الصرف</span></li>
-                 <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">✓</span><span>لا حركة بدون مستند إلزامي موقّع — كل عملية لها نموذج خاص بها</span></li>
+                 <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">✓</span><span>لا حركة بدون مستند إلزامي موقّع — كل عملية لها نموذج خاص بها من مصفوفة الـ٢١ نموذج</span></li>
+                 <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">🥇</span><span><strong>حوكمة الشراء:</strong> لا أمر شراء (PO) دون طلب شراء (PR) معتمد</span></li>
+                 <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">🥈</span><span><strong>بوابة الجودة:</strong> لا اعتماد استلام «Done» قبل توقيع موظف الجودة</span></li>
+                 <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">🥉</span><span><strong>FEFO</strong> (First Expired First Out) — إلزامي في جميع عمليات الصرف</span></li>
+                 <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">🏅</span><span><strong>تصريح البوابة:</strong> لا تخرج أي مركبة دون Gate Pass معتمد مربوط بإذن التسليم</span></li>
+                 <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">⚖️</span><span><strong>المطابقة الثلاثية:</strong> لا ترحيل لفاتورة مورّد قبل تطابق (أمر + استلام + فاتورة)</span></li>
+                 <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">🔒</span><span><strong>حارس التسويات:</strong> لا تعديل لأي رصيد يدويًّا دون سند تسوية معتمد من مدير إدارة المالية</span></li>
                  <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">✓</span><span>كل عملية تمر بطبقة تحقق قبل الإرسال للـ ERP — لا بيانات خاطئة تصل للنظام</span></li>
                  <li class="flex items-start gap-3"><span class="text-green-400 font-bold mt-0.5">✓</span><span>الباركود إلزامي في الاستلام والصرف — لا إدخال يدوي في المراحل الحرجة</span></li>
                </ul>
@@ -690,17 +773,17 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                    </tr>
                  </thead>
                  <tbody class="divide-y divide-gray-700">
-                   <tr><td class="px-4 py-3">1</td><td class="px-4 py-3 font-bold text-white">تخطيط الطلب</td><td class="px-4 py-3">تقرير التنبؤ بالطلب</td><td class="px-4 py-3">مدير سلاسل الإمداد</td><td class="px-4 py-3 text-blue-400">Odoo Forecast</td></tr>
-                   <tr><td class="px-4 py-3">2</td><td class="px-4 py-3 font-bold text-white">طلب الشراء (PR)</td><td class="px-4 py-3">طلب الشراء الداخلي</td><td class="px-4 py-3">مدير القسم</td><td class="px-4 py-3 text-blue-400">Purchase Request</td></tr>
-                   <tr><td class="px-4 py-3">3</td><td class="px-4 py-3 font-bold text-white">تأهيل الموردين</td><td class="px-4 py-3">ملف تقييم المورد</td><td class="px-4 py-3">مدير المشتريات</td><td class="px-4 py-3 text-blue-400">Vendor Pricelist</td></tr>
-                   <tr><td class="px-4 py-3">4</td><td class="px-4 py-3 font-bold text-white">إصدار أمر الشراء (PO)</td><td class="px-4 py-3">أمر الشراء الرسمي</td><td class="px-4 py-3">مدير المشتريات</td><td class="px-4 py-3 text-blue-400">Purchase Order</td></tr>
-                   <tr><td class="px-4 py-3">5</td><td class="px-4 py-3 font-bold text-white">متابعة الشحن</td><td class="px-4 py-3">وثيقة الشحن (BL/AWB)</td><td class="px-4 py-3">مسؤول اللوجستيك</td><td class="px-4 py-3 text-blue-400">Odoo Inventory</td></tr>
-                   <tr><td class="px-4 py-3">6</td><td class="px-4 py-3 font-bold text-white">استلام وفحص</td><td class="px-4 py-3">GRN + QC Report</td><td class="px-4 py-3">أمين المستودع</td><td class="px-4 py-3 text-blue-400">Receipts</td></tr>
-                   <tr><td class="px-4 py-3">7</td><td class="px-4 py-3 font-bold text-white">التخزين والتوزيع</td><td class="px-4 py-3">Putaway + Bin Card</td><td class="px-4 py-3">أمين المستودع</td><td class="px-4 py-3 text-blue-400">Storage Locations</td></tr>
-                   <tr><td class="px-4 py-3">8</td><td class="px-4 py-3 font-bold text-white">تنفيذ الطلبات</td><td class="px-4 py-3">Picking + Packing</td><td class="px-4 py-3">موظف المستودع</td><td class="px-4 py-3 text-blue-400">Delivery Orders</td></tr>
-                   <tr><td class="px-4 py-3">9</td><td class="px-4 py-3 font-bold text-white">التسليم النهائي</td><td class="px-4 py-3">Delivery Note + POD</td><td class="px-4 py-3">سائق / موزع</td><td class="px-4 py-3 text-blue-400">Transfers</td></tr>
-                   <tr><td class="px-4 py-3">10</td><td class="px-4 py-3 font-bold text-white">المرتجعات</td><td class="px-4 py-3">Return Note + Credit</td><td class="px-4 py-3">أمين المستودع</td><td class="px-4 py-3 text-blue-400">Return Transfers</td></tr>
-                   <tr><td class="px-4 py-3">11</td><td class="px-4 py-3 font-bold text-white">قياس الأداء (KPIs)</td><td class="px-4 py-3">تقرير الأداء الشهري</td><td class="px-4 py-3">مدير سلاسل الإمداد</td><td class="px-4 py-3 text-blue-400">Odoo Reporting</td></tr>
+                   <tr><td class="px-4 py-3">1</td><td class="px-4 py-3 font-bold text-white">تخطيط الطلب</td><td class="px-4 py-3">تقرير التنبؤ بالطلب</td><td class="px-4 py-3">مدير إدارة سلاسل الإمداد</td><td class="px-4 py-3 text-blue-400">Odoo Forecast</td></tr>
+                   <tr><td class="px-4 py-3">2</td><td class="px-4 py-3 font-bold text-white">طلب الشراء (PR)</td><td class="px-4 py-3">طلب الشراء الداخلي — النموذج ١</td><td class="px-4 py-3">موظف التجارية / المشتريات · اعتماد مدير الإدارة التجارية</td><td class="px-4 py-3 text-blue-400">Purchase Request</td></tr>
+                   <tr><td class="px-4 py-3">3</td><td class="px-4 py-3 font-bold text-white">تأهيل الموردين</td><td class="px-4 py-3">ملف تقييم المورد</td><td class="px-4 py-3">مدير الإدارة التجارية</td><td class="px-4 py-3 text-blue-400">Vendor Pricelist</td></tr>
+                   <tr><td class="px-4 py-3">4</td><td class="px-4 py-3 font-bold text-white">إصدار أمر الشراء (PO)</td><td class="px-4 py-3">أمر الشراء الرسمي — النموذج ٢</td><td class="px-4 py-3">مدير الإدارة التجارية</td><td class="px-4 py-3 text-blue-400">Purchase Order</td></tr>
+                   <tr><td class="px-4 py-3">5</td><td class="px-4 py-3 font-bold text-white">متابعة الشحن</td><td class="px-4 py-3">وثيقة الشحن (BL/AWB)</td><td class="px-4 py-3">قسم العمليات اللوجستية</td><td class="px-4 py-3 text-blue-400">Odoo Inventory</td></tr>
+                   <tr><td class="px-4 py-3">6</td><td class="px-4 py-3 font-bold text-white">استلام وفحص</td><td class="px-4 py-3">GRN + QC — النموذجان ٤ و٥</td><td class="px-4 py-3">قسم عمليات المستودع + موظف الجودة</td><td class="px-4 py-3 text-blue-400">Receipts</td></tr>
+                   <tr><td class="px-4 py-3">7</td><td class="px-4 py-3 font-bold text-white">التخزين والتوزيع</td><td class="px-4 py-3">Putaway + Bin Card — النموذجان ٦ و٧</td><td class="px-4 py-3">قسم عمليات المستودع</td><td class="px-4 py-3 text-blue-400">Storage Locations</td></tr>
+                   <tr><td class="px-4 py-3">8</td><td class="px-4 py-3 font-bold text-white">تنفيذ الطلبات</td><td class="px-4 py-3">Picking + Packing — النموذجان ٩ و١٠</td><td class="px-4 py-3">قسم عمليات المستودع</td><td class="px-4 py-3 text-blue-400">Delivery Orders</td></tr>
+                   <tr><td class="px-4 py-3">9</td><td class="px-4 py-3 font-bold text-white">التسليم النهائي</td><td class="px-4 py-3">Delivery Note + POD — النموذج ١١</td><td class="px-4 py-3">موظف النقل والحركة</td><td class="px-4 py-3 text-blue-400">Transfers</td></tr>
+                   <tr><td class="px-4 py-3">10</td><td class="px-4 py-3 font-bold text-white">المرتجعات</td><td class="px-4 py-3">Return Note + Credit — النموذجان ١٤ و١٧</td><td class="px-4 py-3">قسم عمليات المستودع</td><td class="px-4 py-3 text-blue-400">Return Transfers</td></tr>
+                   <tr><td class="px-4 py-3">11</td><td class="px-4 py-3 font-bold text-white">قياس الأداء (KPIs)</td><td class="px-4 py-3">تقرير الأداء الشهري</td><td class="px-4 py-3">مدير إدارة سلاسل الإمداد</td><td class="px-4 py-3 text-blue-400">Odoo Reporting</td></tr>
                  </tbody>
                </table>
              </div>
@@ -720,7 +803,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                  graph TD
                  A([بدء: تخطيط الطلب]) --> B[توليد تقرير التنبؤ بالطلب Forecast]
                  B --> C[إنشاء طلب الشراء الداخلي PR]
-                 C --> D[اعتماد PR من مدير القسم]
+                 C --> D[اعتماد PR من مدير الإدارة التجارية]
                  D --> E[إرسال طلبات عروض أسعار RFQs للموردين]
                  E --> F{"{تقييم واختيار المورد}"}
                  F --> G[إصدار أمر الشراء الرسمي PO]
@@ -749,7 +832,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                <ul class="space-y-3 text-sm text-gray-100">
                  <li class="flex items-start gap-2">
                    <span class="text-brand-red">•</span>
-                   <span><strong>اعتماد PR:</strong> لا PO بدون موافقة مدير القسم أولاً.</span>
+                   <span><strong>اعتماد PR 🥇:</strong> لا PO بدون طلب شراء معتمد من مدير الإدارة التجارية أولاً (حوكمة الشراء).</span>
                  </li>
                  <li class="flex items-start gap-2">
                    <span class="text-brand-red">•</span>
@@ -774,15 +857,15 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                <div class="space-y-3">
                  <div class="bg-black/20 p-3 rounded-lg border border-blue-500/20">
                    <p class="text-xs text-blue-300 font-bold mb-1">تأخر توريد المورد</p>
-                   <p class="text-sm text-gray-100">إشعار لمسؤول اللوجستيك عند تأخر الشحنة عن الموعد المتفق عليه.</p>
+                   <p class="text-sm text-gray-100">إشعار لقسم العمليات اللوجستية عند تأخر الشحنة عن الموعد المتفق عليه.</p>
                  </div>
                  <div class="bg-black/20 p-3 rounded-lg border border-yellow-500/20">
                    <p class="text-xs text-yellow-400 font-bold mb-1">OTIF دون الهدف</p>
-                   <p class="text-sm text-gray-100">تنبيه أسبوعي لمدير سلاسل الإمداد إذا انخفض معدل التسليم في الموعد عن 95%.</p>
+                   <p class="text-sm text-gray-100">تنبيه أسبوعي لمدير إدارة سلاسل الإمداد إذا انخفض معدل التسليم في الموعد عن 95%.</p>
                  </div>
                  <div class="bg-black/20 p-3 rounded-lg border border-red-500/20">
                    <p class="text-xs text-red-400 font-bold mb-1">ارتفاع معدل المرتجعات</p>
-                   <p class="text-sm text-gray-100">تنبيه لمدير الجودة عند تجاوز نسبة المرتجعات من مورد معين عن 2%.</p>
+                   <p class="text-sm text-gray-100">تنبيه لمدير إدارة الجودة عند تجاوز نسبة المرتجعات من مورد معين عن 2%.</p>
                  </div>
                </div>
              </section>
@@ -833,12 +916,15 @@ const base = import.meta.env.BASE_URL.endsWith('/')
            <!-- Closing Statement -->
            <div class="bg-gradient-to-r from-brand-red/20 to-brand-red/5 border border-brand-red/30 rounded-xl p-6">
              <p class="text-gray-100 leading-relaxed text-center">
-               هذه الدورات موثقة بالكامل في النماذج التشغيلية الـ١٩ المرفقة في هذا المقترح —
-               كل مرحلة لها نموذج إلزامي جاهز.
+               هذه الدورات موثقة بالكامل في مصفوفة الـ٢١ نموذج رسمي في المرجع التشغيلي —
+               كل مرحلة لها نموذج إلزامي جاهز يُنشأ ويُعتمد في المستندات الحيّة.
              </p>
-             <div class="text-center mt-4">
+             <div class="text-center mt-4 flex flex-wrap justify-center gap-3">
                <a href={`${base}/dashboard/forms`} class="inline-block px-6 py-3 bg-brand-red text-white rounded-xl font-bold hover:bg-brand-red-dark transition-all">
-                 استعرض النماذج الـ١٩ ←
+                 استعرض النماذج ←
+               </a>
+               <a href={`${base}/dashboard/documents`} class="inline-block px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-bold hover:bg-white/20 transition-all">
+                 📑 المستندات الحيّة
                </a>
              </div>
            </div>

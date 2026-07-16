@@ -21,7 +21,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { title: 'إدارة الحوكمة', icon: '🛡️', desc: 'السياسات والامتثال' },
+            { title: 'إدارة التوثيق والاعتماد', icon: '🛡️', desc: 'اعتماد الأذونات والترحيل' },
             { title: 'إدارة الجودة', icon: '🔬', desc: 'التدقيق والتحقق' },
             { title: 'سلاسل الإمداد', icon: '💻', desc: 'التخطيط واللوجستيات' },
             { title: 'إدارة المستودعات', icon: '🧭', desc: 'ملكية المخزون' },
@@ -38,11 +38,19 @@ const base = import.meta.env.BASE_URL.endsWith('/')
           ))}
         </div>
         
-        <div class="mt-8 text-center">
-          <a href={`${base}/تقرير-هيكل-الوظائف-والادوار.html`} 
-             target="_blank" 
+        <p class="mt-6 text-center text-xs text-gray-300">
+          ٨ إدارات رسمية تتفرّع إلى <strong class="text-brand-yellow">١٨ وظيفة معتمدة</strong> وفق تقرير هيكل الوظائف والأدوار.
+        </p>
+
+        <div class="mt-4 text-center flex flex-wrap justify-center gap-3">
+          <a href={`${base}/تقرير-هيكل-الوظائف-والادوار.html`}
+             target="_blank"
              class="inline-block px-6 py-3 bg-brand-red text-white rounded-xl font-bold hover:bg-brand-red-dark transition-all">
             📄 عرض التقرير الكامل
+          </a>
+          <a href={`${base}/dashboard/recruitment`}
+             class="inline-block px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-bold hover:bg-white/20 transition-all">
+            🧑‍💼 الهيكل والتوظيف
           </a>
         </div>
       </section>
@@ -57,29 +65,74 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { num: '1', title: 'طلب الشراء', desc: 'PR - Purchase Requisition', color: 'border-brand-red' },
-            { num: '2', title: 'أمر الشراء', desc: 'PO - Purchase Order', color: 'border-brand-yellow' },
-            { num: '3', title: 'إشعار الاستلام', desc: 'ASN - Advanced Shipping Notice', color: 'border-blue-400' },
-            { num: '4', title: 'إذن التسليم', desc: 'GRN - Goods Receipt Note', color: 'border-green-400' },
-            { num: '5', title: 'إذن التخزين', desc: 'Putaway Authorization', color: 'border-purple-400' },
-            { num: '6', title: 'إذن الصرف', desc: 'Picking Order', color: 'border-orange-400' },
-            { num: '7', title: 'إذن الشحن', desc: 'Dispatch Order', color: 'border-pink-400' },
-            { num: '8', title: 'إذن المرتجعات', desc: 'Return Authorization', color: 'border-indigo-400' }
+            { num: '01', title: 'طلب الشراء (PR)', desc: 'Purchase Requisition', color: 'border-brand-red', form: 'النموذج ١ — طلب شراء داخلي', role: 'موظف التجارية / المشتريات · اعتماد مدير الإدارة التجارية' },
+            { num: '02', title: 'أمر الشراء (PO)', desc: 'Purchase Order', color: 'border-brand-yellow', form: 'النموذج ٢ — أمر الشراء', role: 'مدير الإدارة التجارية + مدير إدارة المالية' },
+            { num: '03', title: 'إشعار الشحن المسبق (ASN)', desc: 'Advanced Shipping Notice', color: 'border-blue-400', form: 'النموذج ٣ — إشعار الشحن المسبق', role: 'موظف التجارية / المشتريات + قسم عمليات المستودع' },
+            { num: '04', title: 'الاستلام والفحص (GRN + QC)', desc: 'Goods Received Note + Quality Check', color: 'border-green-400', form: 'النموذجان ٤ و٥ — مذكرة استلام بضاعة + تقرير فحص جودة', role: 'قسم عمليات المستودع + موظف الجودة' },
+            { num: '05', title: 'التخزين الموجّه (Putaway)', desc: 'Putaway List + Bin Card', color: 'border-purple-400', form: 'النموذجان ٦ و٧ — أمر تخزين موجه + بطاقة مراقبة الموقع', role: 'قسم عمليات المستودع' },
+            { num: '06', title: 'التحضير (Pick & Pack)', desc: 'Picking & Packing — FEFO', color: 'border-orange-400', form: 'النماذج ٨ و٩ و١٠ — طلب صرف داخلي + قائمة السحب + قائمة التعبئة', role: 'قسم عمليات المستودع' },
+            { num: '07', title: 'الشحن والتوزيع (Dispatch)', desc: 'Delivery + Gate Pass', color: 'border-pink-400', form: 'النموذجان ١١ و١٢ — إذن تسليم + تصريح خروج بوابة', role: 'قسم العمليات اللوجستية + موظف النقل والحركة' },
+            { num: '08', title: 'المرتجعات (Returns)', desc: 'Return Note / Damaged Goods', color: 'border-indigo-400', form: 'النماذج ١٤ و١٥ و١٧ — إشعار مرتجع + تقرير بضاعة تالفة + إشعار دائن', role: 'قسم عمليات المستودع · اعتماد مدير إدارة المستودعات' },
+            { num: '09', title: 'المطابقة الثلاثية', desc: '3-Way Match', color: 'border-teal-400', form: 'مطابقة: أمر الشراء + مذكرة الاستلام + فاتورة المورد', role: 'موظف المالية / المحاسبة' },
+            { num: '10', title: 'فاتورة المورد (Bill)', desc: 'Vendor Bill', color: 'border-cyan-400', form: 'تسجيل الالتزام المالي بعد نجاح المطابقة', role: 'موظف المالية / المحاسبة · اعتماد مدير إدارة المالية' },
+            { num: '11', title: 'قيد اليومية', desc: 'Journal Entry', color: 'border-lime-400', form: 'ترحيل آلي من تقييم المخزون (Inventory Valuation)', role: 'موظف المالية / المحاسبة' },
+            { num: '12', title: 'الإغلاق المالي', desc: 'Financial Close', color: 'border-red-400', form: 'إغلاق الفترة — يشمل النموذجين ١٦ و١٨ (سند التسوية + ورقة الجرد)', role: 'مدير إدارة المالية' }
           ].map((stage, i) => (
             <div key={i} class={`bg-white/5 backdrop-blur border ${stage.color} rounded-xl p-4 hover:bg-white/10 transition-all`}>
               <div class="text-2xl font-bold text-white mb-2">{stage.num}</div>
               <h3 class="font-bold text-brand-yellow mb-1">{stage.title}</h3>
               <p class="text-xs text-gray-200">{stage.desc}</p>
+              <p class="text-[10px] text-gray-300 mt-2">📑 {stage.form}</p>
+              <p class="text-[10px] text-gray-400 mt-1">👤 {stage.role}</p>
             </div>
           ))}
         </div>
-        
-        <div class="mt-8 text-center">
-          <a href={`${base}/تقرير-الدورة-المستندية.html`} 
-             target="_blank" 
+
+        <p class="mt-6 text-center text-xs text-gray-300">
+          وبين المرحلتين ٠٨ و٠٩ تجري رقابة المخزون المستمرة: <strong class="text-brand-yellow">الجرد الدوري</strong> (النموذج ١٨)
+          و<strong class="text-brand-yellow">التسويات المخزنية</strong> (النموذج ١٦) — بحارس اعتماد المدير المالي 🔒.
+          النماذج المذكورة كلها من <strong class="text-white">مصفوفة الـ٢١ نموذج رسمي</strong> وتُنشأ وتُعتمد في
+          <a href={`${base}/dashboard/documents`} class="text-brand-yellow underline hover:text-white">المستندات الحيّة</a>.
+        </p>
+
+        <div class="mt-6 text-center flex flex-wrap justify-center gap-3">
+          <a href={`${base}/المرجع-التشغيلي-الرسمي.html`}
+             target="_blank"
              class="inline-block px-6 py-3 bg-brand-yellow text-black rounded-xl font-bold hover:bg-brand-yellow-dark transition-all">
-            📄 عرض تقرير الدورة المستندية
+            📘 المرجع التشغيلي الرسمي
           </a>
+          <a href={`${base}/تقرير-الدورة-المستندية.html`}
+             target="_blank"
+             class="inline-block px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-bold hover:bg-white/20 transition-all">
+            📄 تقرير الدورة المستندية
+          </a>
+        </div>
+      </section>
+
+      <!-- القواعد الذهبية Section -->
+      <section class="rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] shadow-2xl border border-brand-yellow/20 p-6 sm:p-10">
+        <h2 class="text-xl font-bold text-white text-center mb-2">
+          القواعد الذهبية — الحُرّاس الستة
+          <span class="block text-sm font-normal text-gray-200 mt-1">The Six Golden Guards</span>
+        </h2>
+        <p class="text-center text-xs text-gray-300 mb-6">المبدأ الذهبي: «لا حركة بدون مستند موقّع» — قواعد إلزامية لا يجوز الاستثناء منها، مفروضة آليًّا داخل موديول أودو.</p>
+        <div class="w-16 h-1 bg-brand-red mx-auto mb-8 rounded-full"></div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[
+            { icon: '🥇', title: 'حوكمة الشراء', desc: 'لا أمر شراء (PO) دون طلب شراء (PR) معتمد من مدير الإدارة التجارية.' },
+            { icon: '🥈', title: 'بوابة الجودة (QC)', desc: 'لا اعتماد استلام «Done» قبل توقيع موظف الجودة على تقرير الفحص.' },
+            { icon: '🥉', title: 'FEFO', desc: 'يُصرف الأقرب انتهاءً أولًا (First Expired, First Out) في كل عمليات الصرف.' },
+            { icon: '🏅', title: 'تصريح البوابة (Gate Pass)', desc: 'لا تخرج أي مركبة من بوابة المستودع دون تصريح معتمد مربوط بإذن التسليم.' },
+            { icon: '⚖️', title: 'المطابقة الثلاثية (3-Way Match)', desc: 'لا ترحيل لفاتورة مورّد قبل تطابق (أمر الشراء + مذكرة الاستلام + الفاتورة).' },
+            { icon: '🔒', title: 'حارس التسويات', desc: 'لا تعديل لأي رصيد يدويًّا دون سند تسوية معتمد من مدير إدارة المالية.' }
+          ].map((rule) => (
+            <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all">
+              <div class="text-2xl mb-2">{rule.icon}</div>
+              <h3 class="font-bold text-brand-yellow text-sm mb-1">{rule.title}</h3>
+              <p class="text-xs text-gray-200 leading-relaxed">{rule.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -149,7 +202,11 @@ const base = import.meta.env.BASE_URL.endsWith('/')
     <FAQ client:load />
 
     <footer class="mt-10 text-center text-xs text-gray-200">
-      مصدر البيانات: الدليل التشغيلي — الباب الثاني والثالث.
+      مصدر البيانات:
+      <a href={`${base}/المرجع-التشغيلي-الرسمي.html`} target="_blank" class="text-brand-yellow underline hover:text-white">المرجع التشغيلي الرسمي</a>
+      (الدورة الـ١٢ ومصفوفة الـ٢١ نموذج) ·
+      <a href={`${base}/تقرير-هيكل-الوظائف-والادوار.html`} target="_blank" class="text-brand-yellow underline hover:text-white">تقرير هيكل الوظائف والأدوار</a>
+      (١٨ وظيفة).
     </footer>
   </div>
 </DashboardLayout>
