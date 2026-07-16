@@ -13,11 +13,13 @@ import {
   CANDIDATE_STATES,
   candidateState,
   addCandidate,
+  updateCandidate,
   setCandidateState,
   listenCandidates,
   openCv,
 } from '../../../services/recruitment/candidatesService.js';
 import { validateCv, ACCEPTED_CV_TYPES } from '../../../services/recruitment/cvFile.js';
+import CandidatePrint from './CandidatePrint.jsx';
 
 const LYD = (n) => `${Number(n || 0).toLocaleString('ar-LY')} د.ل`;
 
@@ -26,7 +28,8 @@ export default function RecruitmentBoard() {
   const [ready, setReady] = useState(false);
   const [rows, setRows] = useState([]);
   const [err, setErr] = useState('');
-  const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState(null); // null | 'new' | candidate object
+  const [printing, setPrinting] = useState(null); // المرشح المراد طباعته
   const [filter, setFilter] = useState('all');
   const [msg, setMsg] = useState(null);
 
@@ -75,6 +78,15 @@ export default function RecruitmentBoard() {
     }
   }
 
+  function printCandidate(row) {
+    setPrinting(row);
+    // ننتظر رسم بطاقة الطباعة ثم نطبع، ونُخفيها بعدها.
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => setPrinting(null), 400);
+    }, 60);
+  }
+
   if (!ready) return <p className="text-gray-300 text-sm py-10 text-center">جارٍ التحقّق…</p>;
   if (!me || !canRecruit(me?.role)) {
     return (
@@ -86,7 +98,8 @@ export default function RecruitmentBoard() {
   }
 
   return (
-    <div dir="rtl" className="space-y-5">
+    <>
+    <div dir="rtl" className="space-y-5 recruit-screen">
       {msg && (
         <div
           className={`rounded-xl px-4 py-2.5 text-sm text-center border ${
@@ -130,20 +143,23 @@ export default function RecruitmentBoard() {
         </div>
         <button
           type="button"
-          onClick={() => setAdding((v) => !v)}
+          onClick={() => setEditing((v) => (v ? null : 'new'))}
           className="px-4 py-2 rounded-lg text-sm font-bold bg-brand-gold text-brand-navy hover:bg-brand-gold/85 transition-colors"
         >
-          {adding ? 'إغلاق النموذج' : '＋ إضافة مرشح'}
+          {editing ? 'إغلاق النموذج' : '＋ إضافة مرشح'}
         </button>
       </div>
 
-      {adding && (
+      {editing && (
         <CandidateForm
+          key={editing === 'new' ? 'new' : editing.id}
           profile={me}
-          onSaved={(name) => {
-            setAdding(false);
-            flash(`أُضيف المرشح ${name} وحُفظ في السحابة.`);
+          candidate={editing === 'new' ? null : editing}
+          onSaved={(name, isEdit) => {
+            setEditing(null);
+            flash(isEdit ? `حُفظت تعديلات ${name}.` : `أُضيف المرشح ${name} وحُفظ في السحابة.`);
           }}
+          onCancel={() => setEditing(null)}
           onError={(t) => flash(t, 'err')}
         />
       )}
@@ -153,7 +169,7 @@ export default function RecruitmentBoard() {
         <table className="w-full min-w-[760px] text-right">
           <thead>
             <tr className="bg-white/10">
-              {['المرشح', 'الوظيفة', 'الحالة', 'الراتب المتوقّع', 'السيرة', 'أُضيف', 'نقل إلى'].map((h) => (
+              {['المرشح', 'الوظيفة', 'الحالة', 'الراتب المتوقّع', 'السيرة', 'أُضيف', 'نقل إلى', 'إجراءات'].map((h) => (
                 <th key={h} className="px-3 py-2 text-xs font-bold text-gray-300">{h}</th>
               ))}
             </tr>
@@ -161,7 +177,7 @@ export default function RecruitmentBoard() {
           <tbody>
             {shown.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-gray-500 text-sm">
+                <td colSpan={8} className="p-8 text-center text-gray-500 text-sm">
                   {rows.length === 0 ? 'لا مرشحين بعد — ابدأ بالإضافة.' : 'لا نتائج لهذا المرشّح.'}
                 </td>
               </tr>
@@ -213,6 +229,29 @@ export default function RecruitmentBoard() {
                         ))}
                       </select>
                     </td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-2 whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditing(r);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className="text-xs font-bold text-brand-gold hover:underline"
+                          title="تعديل بيانات المرشح"
+                        >
+                          ✏️ تعديل
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => printCandidate(r)}
+                          className="text-xs font-bold text-gray-300 hover:text-white hover:underline"
+                          title="طباعة بطاقة المرشح"
+                        >
+                          🖨️ طباعة
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })
@@ -221,23 +260,34 @@ export default function RecruitmentBoard() {
         </table>
       </div>
     </div>
+
+    {/* بطاقة الطباعة — شقيقة للشاشة (لا داخلها) كي لا يُخفيها إخفاء الشاشة */}
+    {printing && <CandidatePrint candidate={printing} job={getJob(printing.jobId)} />}
+    </>
   );
 }
 
-function CandidateForm({ profile, onSaved, onError }) {
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [jobId, setJobId] = useState('');
-  const [salary, setSalary] = useState('');
-  const [notes, setNotes] = useState('');
+function CandidateForm({ profile, candidate, onSaved, onCancel, onError }) {
+  const isEdit = Boolean(candidate);
+  const [name, setName] = useState(candidate?.name || '');
+  const [phone, setPhone] = useState(candidate?.phone || '');
+  const [email, setEmail] = useState(candidate?.email || '');
+  const [qualification, setQualification] = useState(candidate?.qualification || '');
+  const [experienceYears, setExperienceYears] = useState(
+    candidate?.experienceYears ? String(candidate.experienceYears) : ''
+  );
+  const [jobId, setJobId] = useState(candidate?.jobId || '');
+  const [salary, setSalary] = useState(candidate?.expectedSalary ? String(candidate.expectedSalary) : '');
+  const [notes, setNotes] = useState(candidate?.notes || '');
   const [cv, setCv] = useState(null);
   const [cvError, setCvError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [showDetails, setShowDetails] = useState(false); // التفاصيل تُطوى وتُفتح
+  // في التحرير: التفاصيل مفتوحة (المستخدم جاء ليعدّلها)؛ في الإضافة: مطويّة.
+  const [showDetails, setShowDetails] = useState(isEdit);
 
   const job = jobId ? getJob(jobId) : null;
   // كم تفصيلًا اختياريًّا مُلئ — يظهر على زرّ الطيّ فيُعرَف أن تحته بيانات.
-  const filledDetails = [phone, salary, notes, cv].filter(Boolean).length;
+  const filledDetails = [phone, email, qualification, experienceYears, salary, notes, cv].filter(Boolean).length;
 
   function pickCv(e) {
     const f = e.target.files?.[0] || null;
@@ -254,9 +304,14 @@ function CandidateForm({ profile, onSaved, onError }) {
   async function submit(e) {
     e.preventDefault();
     setSaving(true);
+    const payload = {
+      name, phone, email, qualification, experienceYears,
+      job, expectedSalary: salary, notes, cvFile: cv, profile,
+    };
     try {
-      await addCandidate({ name, phone, job, expectedSalary: salary, notes, cvFile: cv, profile });
-      onSaved(name);
+      if (isEdit) await updateCandidate(candidate.id, payload);
+      else await addCandidate(payload);
+      onSaved(name, isEdit);
     } catch (ex) {
       onError(ex.message || 'تعذّر الحفظ.');
     } finally {
@@ -268,11 +323,22 @@ function CandidateForm({ profile, onSaved, onError }) {
     'w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-brand-gold/60';
 
   return (
-    <form onSubmit={submit} className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-4">
+    <form onSubmit={submit} className="bg-white/5 border border-brand-gold/25 rounded-2xl p-4 sm:p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-base font-bold text-brand-gold">
+          {isEdit ? `✏️ تعديل: ${candidate.name}` : '＋ مرشح جديد'}
+        </h3>
+        {onCancel && (
+          <button type="button" onClick={onCancel} className="text-xs text-gray-400 hover:text-white">
+            إلغاء
+          </button>
+        )}
+      </div>
+
       {/* الأساسي فقط: الاسم والوظيفة — البقية تُطوى كي لا يواجه المستخدم جدارًا */}
       <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
         <L label="اسم المرشح" required>
-          <input className={input} value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
+          <input className={input} value={name} onChange={(e) => setName(e.target.value)} required autoFocus={!isEdit} />
         </L>
         <L label="الوظيفة (من الهيكل الرسمي)" required>
           <select className={input} value={jobId} onChange={(e) => setJobId(e.target.value)} required>
@@ -321,24 +387,36 @@ function CandidateForm({ profile, onSaved, onError }) {
 
         <Reveal open={showDetails}>
           <div className="pt-4 space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <L label="الهاتف">
                 <input className={input} style={{ direction: 'ltr', textAlign: 'right' }} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="09x-xxxxxxx" />
+              </L>
+              <L label="البريد الإلكتروني">
+                <input type="email" className={input} style={{ direction: 'ltr', textAlign: 'right' }} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" />
               </L>
               <L label="الراتب المتوقّع (دينار ليبي)">
                 <input type="number" min="0" className={input} value={salary} onChange={(e) => setSalary(e.target.value)} placeholder="0 د.ل" />
               </L>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
+              <L label="المؤهل العلمي">
+                <input className={input} value={qualification} onChange={(e) => setQualification(e.target.value)} placeholder="بكالوريوس، دبلوم…" />
+              </L>
+              <L label="سنوات الخبرة">
+                <input type="number" min="0" className={input} value={experienceYears} onChange={(e) => setExperienceYears(e.target.value)} placeholder="0" />
+              </L>
               <L label={`السيرة الذاتية (${Object.values(ACCEPTED_CV_TYPES).join('/')} حتى 700KB)`}>
                 <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={pickCv} className="text-xs text-gray-400 file:ml-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-brand-gold file:text-brand-navy file:font-bold file:cursor-pointer" />
                 {cvError && <p className="text-[11px] text-red-300 mt-1">⚠️ {cvError}</p>}
                 {cv && !cvError && <p className="text-[11px] text-green-300 mt-1">✓ {cv.name} ({Math.round(cv.size / 1024)}KB)</p>}
-              </L>
-              <L label="ملاحظات">
-                <textarea className={`${input} min-h-[42px]`} value={notes} onChange={(e) => setNotes(e.target.value)} />
+                {isEdit && candidate.hasCv && !cv && (
+                  <p className="text-[11px] text-gray-500 mt-1">سيرة مرفقة حاليًا — ارفع ملفًا جديدًا لاستبدالها.</p>
+                )}
               </L>
             </div>
+            <L label="ملاحظات">
+              <textarea className={`${input} min-h-[42px]`} value={notes} onChange={(e) => setNotes(e.target.value)} />
+            </L>
           </div>
         </Reveal>
       </div>
@@ -349,7 +427,7 @@ function CandidateForm({ profile, onSaved, onError }) {
           disabled={saving || Boolean(cvError)}
           className="px-6 py-2 rounded-lg text-sm font-bold bg-brand-gold text-brand-navy hover:bg-brand-gold/85 disabled:opacity-50 transition-colors"
         >
-          {saving ? 'جارٍ الحفظ…' : '💾 حفظ المرشح في السحابة'}
+          {saving ? 'جارٍ الحفظ…' : isEdit ? '💾 حفظ التعديلات' : '💾 حفظ المرشح في السحابة'}
         </button>
       </div>
     </form>

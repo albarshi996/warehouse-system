@@ -73,8 +73,27 @@ function appendAudit(candidateId, { action, note = '', profile }) {
  * الكتالوج لاحقًا بقيت بطاقة المرشح تحكي ما قُدِّم إليه فعلًا).
  * `cvFile` اختياري (File من المتصفح) — يُتحقّق منه ويُرمّز ويُحفظ فرعيًّا.
  */
-export async function addCandidate({ name, phone, job, expectedSalary, notes, cvFile, profile }) {
-  if (!String(name || '').trim()) throw new Error('اسم المرشح إلزامي.');
+/** يشكّل حقول المرشح من مدخلات النموذج (مشترك بين الإضافة والتحرير). */
+function shapeFields({ name, phone, email, qualification, experienceYears, job, expectedSalary, notes }) {
+  const out = {
+    name: String(name ?? '').trim(),
+    phone: String(phone ?? '').trim(),
+    email: String(email ?? '').trim(),
+    qualification: String(qualification ?? '').trim(),
+    experienceYears: Number(experienceYears) || 0,
+    expectedSalary: Number(expectedSalary) || 0, // بالدينار الليبي
+    notes: String(notes ?? '').trim(),
+  };
+  if (job?.id) {
+    out.jobId = job.id;
+    out.jobTitle = job.title;
+  }
+  return out;
+}
+
+export async function addCandidate(input) {
+  const { job, cvFile, profile } = input;
+  if (!String(input.name || '').trim()) throw new Error('اسم المرشح إلزامي.');
   if (!job?.id) throw new Error('اختر الوظيفة.');
 
   let cvMeta = null;
@@ -87,12 +106,7 @@ export async function addCandidate({ name, phone, job, expectedSalary, notes, cv
   }
 
   const ref = await addDoc(collection(db, COL), {
-    name: String(name).trim(),
-    phone: String(phone || '').trim(),
-    jobId: job.id,
-    jobTitle: job.title,
-    expectedSalary: Number(expectedSalary) || 0, // بالدينار الليبي
-    notes: String(notes || '').trim(),
+    ...shapeFields(input),
     state: 'new',
     hasCv: Boolean(cvMeta),
     cvMeta,
@@ -106,6 +120,31 @@ export async function addCandidate({ name, phone, job, expectedSalary, notes, cv
   }
   await appendAudit(ref.id, { action: 'create', note: `تقدّم لوظيفة ${job.title}`, profile });
   return ref.id;
+}
+
+/**
+ * يحرّر بيانات مرشح قائم. لا يمسّ الحالة (لها `setCandidateState`) ولا
+ * التاريخ. السيرة تُستبدَل فقط إن رُفعت جديدة — وإلا تبقى القديمة.
+ */
+export async function updateCandidate(candidateId, input) {
+  const { job, cvFile, profile } = input;
+  if (!String(input.name || '').trim()) throw new Error('اسم المرشح إلزامي.');
+  if (!job?.id) throw new Error('اختر الوظيفة.');
+
+  const patch = { ...shapeFields(input), updatedAt: serverTimestamp() };
+
+  if (cvFile) {
+    const check = validateCv(cvFile);
+    if (!check.ok) throw new Error(check.error);
+    const cvBase64 = await fileToBase64(cvFile);
+    const cvMeta = { fileName: cvFile.name, kind: check.kind, size: cvFile.size };
+    patch.hasCv = true;
+    patch.cvMeta = cvMeta;
+    await setDoc(doc(db, COL, candidateId, 'files', 'cv'), { ...cvMeta, data: cvBase64 });
+  }
+
+  await updateDoc(doc(db, COL, candidateId), patch);
+  await appendAudit(candidateId, { action: 'edit', note: 'تعديل بيانات المرشح', profile });
 }
 
 /** ينقل مرشحًا في الخط — الرفض يلزمه سبب (يُوثَّق باسم من رفض). */
