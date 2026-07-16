@@ -1141,6 +1141,8 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
     },
   };
 </script>
+<!-- كاشف الباركود الموحّد (يعمل على آيفون عبر الاحتياطي html5-qrcode) -->
+<script is:inline src={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/lib/bz-barcode.js`}></script>
 <script is:inline>
 /* ========================================================
    الحالة العامة
@@ -2229,13 +2231,16 @@ async function beginSingleScanLoop() {
   const video = document.getElementById('cameraVideo');
   const flash = document.getElementById('cameraFlash');
 
-  // BarcodeDetector أو fallback
+  // كاشف موحّد: أصلي حيث توفّر، وإلا احتياطي html5-qrcode (آيفون/سفاري).
   if (!singleBarcodeDetector) {
-    if ('BarcodeDetector' in window) {
-      singleBarcodeDetector = new BarcodeDetector({ formats: ['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','codabar','itf','data_matrix','pdf417'] });
-    } else {
-      document.getElementById('cameraStatusBadge').textContent = 'BarcodeDetector غير متاح — جرب Chrome أو Edge';
-      showToast('هذا المتصفح لا يدعم BarcodeDetector. استخدم Chrome أو Edge.', 'warning');
+    try {
+      singleBarcodeDetector = await window.BZBarcode.createDetector();
+      if (singleBarcodeDetector.engine === 'html5-qrcode') {
+        document.getElementById('cameraStatusBadge').textContent = 'جارٍ المسح (وضع متوافق)…';
+      }
+    } catch {
+      document.getElementById('cameraStatusBadge').textContent = 'تعذّر تشغيل الماسح';
+      showToast('تعذّر تشغيل ماسح الباركود على هذا المتصفح.', 'error');
       return;
     }
   }
@@ -2382,11 +2387,14 @@ async function beginBulkScanLoop() {
   const flash = document.getElementById('bulkCameraFlash');
 
   if (!bulkBarcodeDetector) {
-    if ('BarcodeDetector' in window) {
-      bulkBarcodeDetector = new BarcodeDetector({ formats: ['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','codabar','itf','data_matrix','pdf417'] });
-    } else {
-      document.getElementById('bulkCameraStatus').textContent = 'BarcodeDetector غير متاح — جرب Chrome أو Edge';
-      showToast('هذا المتصفح لا يدعم BarcodeDetector. استخدم Chrome أو Edge.', 'warning');
+    try {
+      bulkBarcodeDetector = await window.BZBarcode.createDetector();
+      if (bulkBarcodeDetector.engine === 'html5-qrcode') {
+        document.getElementById('bulkCameraStatus').textContent = 'جارٍ المسح (وضع متوافق)…';
+      }
+    } catch {
+      document.getElementById('bulkCameraStatus').textContent = 'تعذّر تشغيل الماسح';
+      showToast('تعذّر تشغيل ماسح الباركود على هذا المتصفح.', 'error');
       return;
     }
   }
