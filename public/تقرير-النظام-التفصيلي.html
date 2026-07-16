@@ -205,17 +205,17 @@
       <h1>تقرير النظام الكامل — خريطة برند زو التفصيلية</h1>
       <p class="sub">شرحٌ شاملٌ ومُفصّل لكل مكوّنات المشروع: المواقع (الصفحات)، الأدوات، قواعد البيانات، الخدمات، والميزات — مبنيٌّ على فحصٍ فعليٍّ للكود لا على التقدير.</p>
       <div class="meta-row">
-        <span>📅 التاريخ: <b>2026-07-15</b></span>
+        <span>📅 التاريخ: <b>2026-07-16</b></span>
         <span>🌐 الموقع الحيّ: <code>albarshi996.github.io/warehouse-system</code></span>
         <span>📦 المستودع: <code>albarshi996/warehouse-system</code></span>
-        <span>🔀 آخر إصدار: <code>55ee5e5</code></span>
+        <span>🔀 آخر إصدار: <code>6323988</code></span>
       </div>
       <div class="stats">
         <div class="stat"><div class="n">33</div><div class="l">صفحة منشورة</div></div>
         <div class="stat"><div class="n">8</div><div class="l">مجموعات Firestore</div></div>
         <div class="stat"><div class="n">10</div><div class="l">أدوار مستخدمين</div></div>
-        <div class="stat"><div class="n">26</div><div class="l">ملف خدمات</div></div>
-        <div class="stat"><div class="n">64</div><div class="l">اختبار JS · +42 Python</div></div>
+        <div class="stat"><div class="n">27</div><div class="l">ملف خدمات</div></div>
+        <div class="stat"><div class="n">71</div><div class="l">اختبار JS · +42 Python</div></div>
         <div class="stat"><div class="n">12</div><div class="l">مرحلة أودو</div></div>
         <div class="stat"><div class="n">6</div><div class="l">حرّاس ذهبية</div></div>
       </div>
@@ -256,7 +256,7 @@
       <div class="stack">
         <div class="layer"><div class="top"><span class="lname">1. المتصفّح — واجهة المستخدم</span><span class="ltag">RTL · Cairo</span></div><p>33 صفحة Astro ثابتة + جزُر React تفاعلية (client:load). حارس دخول على كل صفحات لوحة التحكم.</p></div>
         <div class="flow-arrow">↓</div>
-        <div class="layer l-gold"><div class="top"><span class="lname">2. طبقة الخدمات (JavaScript)</span><span class="ltag">src/services</span></div><p>26 ملفًا: المصادقة والأدوار · قراءة/كتابة البيانات · محرّك المستندات · ماستر الأصناف والباركود · استيراد/تصدير Excel · محوّل أودو.</p></div>
+        <div class="layer l-gold"><div class="top"><span class="lname">2. طبقة الخدمات (JavaScript)</span><span class="ltag">src/services</span></div><p>27 ملفًا: المصادقة والأدوار · قراءة/كتابة البيانات · محرّك المستندات · ماستر الأصناف والباركود · استيراد/تصدير Excel · محوّل أودو.</p></div>
         <div class="flow-arrow">↓</div>
         <div class="layer l-navy"><div class="top"><span class="lname">3. قواعد بيانات الواجهة</span><span class="ltag">Firebase · localStorage</span></div><p>Firestore السحابية (8 مجموعات) + مصادقة Firebase + تخزين محلي في المتصفّح + ملفات Excel.</p></div>
         <div class="flow-arrow">↓</div>
@@ -343,8 +343,8 @@
           <tr><td><span class="pg">صندوق المستندات</span> <code>documents</code> <span class="chip live">جديد</span></td><td><b>صندوق وارد المستندات الحيّة</b> — قائمة المستندات وأرقامها التسلسلية وحالاتها (مسودّة · مُقدَّم · معتمَد · مُنجَز)</td><td><span class="chip live">تفاعلية · سحابية</span></td></tr>
           <tr><td><span class="pg">شاشة المستند</span> <code>document</code> <span class="chip live">جديد</span></td><td><b>محرّر المستند الواحد</b> — إنشاء/تقديم/اعتماد يرسمه محرّك المخطّطات، مع بوابة الجودة وسجلّ تدقيق دائم</td><td><span class="chip live">تفاعلية · سحابية</span></td></tr>
           <tr><td><span class="pg">المهام</span> <code>tasks</code></td><td>إدارة المهام اليومية وتتبّعها</td><td><span class="chip live">تفاعلية · TaskManager</span></td></tr>
-          <tr><td><span class="pg">الأصناف</span> <code>products</code></td><td>سجلّ الأصناف الرئيسي (بحث/إضافة/تصدير)</td><td><span class="chip live">تفاعلية · ItemMaster</span></td></tr>
-          <tr><td><span class="pg">عمليات مخزنية</span> <code>stock-operations</code> <span class="chip live">جديد</span></td><td><b>الجرد الذكي بالباركود</b> — 6 أنواع عمليات (جرد · استلام · صرف · إضافة · تالف · مرتجع)، استيراد/تصدير Excel، كاميرا، مسح بالجملة، <b>وحفظ سحابي لحظي بسجلّ دائم</b></td><td><span class="chip live">تفاعلية · سحابية</span></td></tr>
+          <tr><td><span class="pg">الأصناف</span> <code>products</code></td><td>سجلّ الأصناف الرئيسي (بحث/إضافة/تصدير) + <b>استيراد شيت بمعاينة</b> (زرّ للمديرين — تحقّق المالك حيًّا) + عمود الباركود والبحث به</td><td><span class="chip live">تفاعلية · ItemMaster</span></td></tr>
+          <tr><td><span class="pg">عمليات مخزنية</span> <code>stock-operations</code> <span class="chip live">جديد</span></td><td><b>الجرد الذكي بالباركود</b> — 6 أنواع عمليات (جرد · استلام · صرف · إضافة · تالف · مرتجع)، استيراد/تصدير Excel، كاميرا، مسح بالجملة، <b>حفظ سحابي لحظي بسجلّ دائم</b>، و<b>استدعاء الماستر السحابي</b> (زرّ جلب الكتالوج + سؤال الماستر عند مسح باركود غير معروف)</td><td><span class="chip live">تفاعلية · سحابية</span></td></tr>
           <tr><td><span class="pg">متابعة العمليات</span> <code>operations</code> <span class="chip live">جديد</span></td><td><b>شاشة رقابة المدير</b> — العمليات المفتوحة ومن بدأها · سجلّ مسح حيّ يتحدّث تلقائيًّا · توزيع الإنتاجية على الموظّفين · إقفال العملية <span class="chip pend">مديرون فقط</span></td><td><span class="chip live">تفاعلية · لحظية</span></td></tr>
         </tbody>
       </table></div>
@@ -428,13 +428,13 @@
           <tr><td>👁️ مشاهد</td><td>مركز التقارير فقط</td></tr>
         </tbody>
       </table></div>
-      <div class="callout warn"><span class="h">⚠️ خطوة أمان معلّقة على المالك</span> يجب نشر <b>قواعد أمان Firestore</b> (جاهزة داخل صفحة إدارة المستخدمين) لحصر تعديل الأدوار بالأدمن فقط. حتى ذلك الحين، الكتابة على الأدوار مفتوحة لأي مستخدم مصادق.</div>
+      <div class="callout"><span class="h">🔒 قواعد أمان Firestore — منشورة</span> نشر المالك القواعد (2026-07-15) بعد أن أثبت فحصٌ أن القاعدة كانت مفتوحة للعالم: الآن لا وصول بلا دخول، وتعديل الأدوار محصور بالأدمن، وسجلّ المسح لا يُعدَّل ولا يُحذف، وأُعيد الفحص الخارجي فكانت كل المحاولات مرفوضة.</div>
     </section>
 
     <!-- ═══ 5 ═══ -->
     <section id="s5">
-      <div class="sec-head"><span class="sec-num">05</span><h2>طبقة الخدمات (26 ملفًا)</h2></div>
-      <p class="lead">المنطق البرمجي المشترك خلف الواجهة، مقسّم إلى عائلات في <span class="mono">src/services</span>: المصادقة · محرّك المستندات · ماستر الأصناف · Excel · أودو · العمليات السحابية · بيانات المخزون.</p>
+      <div class="sec-head"><span class="sec-num">05</span><h2>طبقة الخدمات (27 ملفًا)</h2></div>
+      <p class="lead">المنطق البرمجي المشترك خلف الواجهة، مقسّم إلى عائلات في <span class="mono">src/services</span>: المصادقة · محرّك المستندات · ماستر الأصناف · Excel · أودو · العمليات السحابية · بيانات المخزون. (العدّ = ملفات <span class="mono">.js</span> بلا ملفات الاختبار <span class="mono">*.test.js</span> الأربعة.)</p>
 
       <h3 class="blk"><span class="ic">🔐</span> المصادقة والأدوار — <span class="mono">auth/</span></h3>
       <dl class="deflist">
@@ -453,9 +453,10 @@
         <div class="defrow"><dt>schemas/grn.js · schemas/index.js</dt><dd>أول مخطّط مُنفَّذ (إذن استلام GRN) وفهرس المخطّطات — نموذجٌ واحدٌ اليوم، والبقية تُضاف كملفات وصف لا كتطبيقات.</dd></div>
       </dl>
 
-      <h3 class="blk"><span class="ic">🏷️</span> ماستر الأصناف — <span class="mono">items/</span> <span class="chip live">جديد</span></h3>
+      <h3 class="blk"><span class="ic">🏷️</span> ماستر الأصناف — <span class="mono">items/</span> <span class="chip live">3 ملفات + اختباران</span></h3>
       <dl class="deflist">
         <div class="defrow"><dt>itemsImportService.js</dt><dd><b>خط استيراد Excel:</b> كشف صفّ العناوين · مترادفات عربية/إنجليزية · معاينة التغيير · كتابات مجمّعة إلى <code>Items_Master</code>.</dd></div>
+        <div class="defrow"><dt>itemShape.js</dt><dd><b>جديد — تشكيل حقول الصنف المستورَد</b> (منطق خالص بلا Firebase): تقييس الوحدات العربية/الإنجليزية · مرايا توافُق خلفي (<span class="mono">family→category</span> · <span class="mono">costPrice→unitPrice</span>) · الحقل الفارغ لا يُكتب فلا يمحو بياناتٍ قائمة. سدّ خللًا صامتًا وقع فعلًا: ترقية مخطّط الشيت تركت الكتابة ترمي الأعمدة الجديدة (الأسعار · التسلسل الرباعي · المورّد · الوحدة) بلا رسالة — واختباره المرافق يقارن التشكيل بالمخطّط <b>عمودًا عمودًا</b> فيمنع عودة الانحراف.</dd></div>
         <div class="defrow"><dt>itemStatus.js</dt><dd>اشتقاق حالة الصنف (نشِط · تحت الحد الأدنى · متوقّف) وقواعدها.</dd></div>
       </dl>
 
@@ -559,7 +560,7 @@
     <!-- ═══ 10 ═══ -->
     <section id="s10">
       <div class="sec-head"><span class="sec-num">10</span><h2>نظام المستندات الحيّ (محرّك المستندات + GRN)</h2></div>
-      <p class="lead">تحويل النماذج الورقية القابلة للطباعة إلى <b>مستندات حيّة</b>. المبدأ الحاكم: <b>محرّكٌ واحدٌ للمستندات لا 21 تطبيقًا</b> — كل نموذج يُوصَف بـ«مخطّط» (schema) والمحرّك يرسمه. <span class="chip live dot">شُحن ونُشر اليوم 2026-07-15</span> <span class="chip pend dot">منشور — بانتظار نشر قواعد الأمان</span></p>
+      <p class="lead">تحويل النماذج الورقية القابلة للطباعة إلى <b>مستندات حيّة</b>. المبدأ الحاكم: <b>محرّكٌ واحدٌ للمستندات لا 21 تطبيقًا</b> — كل نموذج يُوصَف بـ«مخطّط» (schema) والمحرّك يرسمه. <span class="chip live dot">شُحن ونُشر 2026-07-15</span> <span class="chip pend dot">منشور — بانتظار نشر قواعد الأمان</span></p>
 
       <div class="cards">
         <div class="card rail"><h4>🔢 ترقيم تسلسلي حقيقي</h4><p>رقمٌ مثل <span class="k">GRN-2026-0001</span> يُحجز عبر <b>معاملة Firestore</b> (مجموعة <span class="k">counters</span>)، فيحصل تقديمان متزامنان على رقمين مختلفين — بديلًا عن <span class="k">GRN-002</span> الثابت الذي كان يتكرّر في كل طباعة.</p></div>
@@ -590,18 +591,20 @@
     <!-- ═══ 11 ═══ -->
     <section id="s11">
       <div class="sec-head"><span class="sec-num">11</span><h2>ماستر الأصناف + الاستيراد بالباركود</h2></div>
-      <p class="lead">مصدرٌ واحدٌ رسميٌّ للأصناف تعمل منه البوابة كلّها: يُحمَّل بورقة Excel، ويُستدعى بالباركود. <span class="chip live dot">شُحن ونُشر اليوم 2026-07-15</span></p>
+      <p class="lead">مصدرٌ واحدٌ رسميٌّ للأصناف تعمل منه البوابة كلّها: يُحمَّل بورقة Excel، ويُستدعى بالباركود. <span class="chip live dot">حيّ — تحقّق المالك 2026-07-15: «تعمل 100%»</span></p>
 
       <div class="cards">
         <div class="card rail"><h4>🏷️ باركود متعدّد لكل صنف</h4><p>اكتسب <span class="k">Items_Master</span> حقل <span class="k">barcodes[]</span> (الصنف الواحد يحمل عدّة باركودات) ودالة <span class="k">lookupByBarcode()</span> — النداء الوحيد الذي تستخدمه كل شاشة.</p></div>
-        <div class="card rail"><h4>📥 خط استيراد Excel ذكي</h4><p>كشفٌ ذكيٌّ لصفّ العناوين · أسماء عربية/إنجليزية مترادفة · معاينة لما سيتغيّر · كتابات مجمّعة. في <span class="k">src/services/excel/</span> و<span class="k">itemsImportService.js</span>.</p></div>
+        <div class="card rail"><h4>📥 واجهة استيراد داخل شاشة الأصناف</h4><p>زرّ «استيراد شيت» (مدير/مدير مستودع فقط) بمبدأ <b>لا كتابة قبل معاينة</b>: تحليل الملف ← عرض ما سيتغيّر بالضبط (جديد · تحديث بفروقه · بلا تغيير · أخطاء) ← تأكيد ← كتابة مجمّعة. كشفٌ ذكيٌّ لصفّ العناوين ومترادفات عربية/إنجليزية. <span class="k">ItemsImport.jsx</span> + <span class="k">itemsImportService.js</span> — <b>تحقّق المالك حيًّا بالمسار الكامل</b>: قالب ← رفع ← معاينة ← كتابة سحابية.</p></div>
         <div class="card rail"><h4>📋 قالب قياسي من المخطّط</h4><p><span class="k">Brandzo-Items-Template.xlsx</span> — مصنّفٌ واحد، 3 أوراق: Items (15 عمودًا: التعريف + الحد الأدنى + الحالة) · Balances (10 أعمدة لكل مستودع E5/E2/E3 + دفعة + انتهاء + تكلفة) · تعليمات.</p></div>
+        <div class="card rail"><h4>☁️ شاشة العمليات تستدعي الماستر</h4><p>زرّ <b>«جلب الأصناف من الماستر السحابي»</b> يملأ جلسة الجرد من الكتالوج بدل استيراد الشيت يدويًّا كل مرّة (الموجود مسبقًا لا يُمسّ) · <b>مسحُ باركودٍ غير موجود يسأل الماستر</b> قبل الحكم «صنف غير موجود» · توحيد مواضع البحث التسعة على <span class="k">findInvIdx</span> الذي يعرف الباركودات المتعدّدة (مسح الباركود الثاني كان يُنشئ سجلًّا مكرّرًا).</p></div>
       </div>
 
       <div class="callout info"><span class="h">🔑 الهُويّة</span> الكود الداخلي «حاوية» تُملأ من أودو لاحقًا، لذا يبقى <b>الباركود هو المفتاح العملي</b> الذي يشتغل به النظام اليوم.</div>
 
-      <div class="callout warn"><span class="h">الحالة: أساسٌ مبنيّ · 34 اختبار وحدة (excelSchema + itemStatus) · منشور</span>
-        هذا <b>حجر أساس</b> تُبنى عليه بقية الشاشات — <b>شاشة واجهة الاستيراد لم تُبنَ بعد</b>؛ الخدمات والقالب جاهزة والربط بالواجهة هو الخطوة التالية.
+      <div class="callout warn"><span class="h">الحالة: الاستيراد حيّ ومُتحقَّق من المالك · 41 اختبار وحدة (excelSchema + itemShape + itemStatus) · منشور</span>
+        واجهة الاستيراد <b>تحقّق منها المالك حيًّا (2026-07-15): «تعمل 100%»</b>. أمّا استدعاء الماستر في شاشة العمليات (زرّ الجلب + سؤال الماستر عند المسح) فهو <b>منشور 2026-07-16 ولم يجرّبه المالك حيًّا بعد</b>.
+        المتبقّي: <b>I-ب/2</b> استدعاء الماستر في بنود GRN · <b>I-ج</b> ماسحٌ يعمل على آيفون (الجرد لا يمسح عليه اليوم) · <b>I-د</b> شاشة الأصناف المعلّقة · مخزن الأرصدة (ورقة Balances موجودة في القالب لكن الاستيراد لا يقرؤها بعد — يقرأ ورقة Items فقط).
       </div>
     </section>
 
@@ -626,17 +629,19 @@
         <li><span class="ck">✓</span> <b>العمل دون إنترنت</b> ورفع تلقائي عند عودتها</li>
         <li><span class="ck">✓</span> <b>قاعدة بيانات مؤمَّنة</b> بقواعد شاملة ومُختبَرة</li>
         <li><span class="ck">✓</span> <b>محرّك مستندات حيّ:</b> ترقيم تسلسلي حقيقي + بوابة جودة مفروضة (نُشر · بانتظار قواعد الأمان)</li>
-        <li><span class="ck">✓</span> <b>ماستر أصناف بالباركود:</b> مصدرٌ واحدٌ + قالب Excel قياسي 3 أوراق</li>
-        <li><span class="ck">✓</span> <b>مجموعة اختبارات JS:</b> 64 اختبار وحدة (<span class="mono">npm test</span>) — إلى جانب 42 اختبار Python لموديول أودو</li>
+        <li><span class="ck">✓</span> <b>ماستر أصناف بالباركود:</b> مصدرٌ واحدٌ + قالب Excel قياسي 3 أوراق + <b>استيراد بمعاينة من داخل شاشة الأصناف</b> (تحقّق المالك حيًّا: «تعمل 100%»)</li>
+        <li><span class="ck">✓</span> <b>شاشة العمليات تستدعي الماستر:</b> زرّ جلب الكتالوج + سؤال الماستر عند مسح باركود غير معروف + بحث موحّد يعرف الباركودات المتعدّدة (منشور — لم يجرّبه المالك حيًّا بعد)</li>
+        <li><span class="ck">✓</span> <b>مجموعة اختبارات JS:</b> 71 اختبار وحدة (<span class="mono">npm test</span>) — إلى جانب 42 اختبار Python لموديول أودو</li>
       </ul>
 
       <h3 class="blk"><span class="ic">⏳</span> المتبقّي (خريطة الطريق)</h3>
       <div class="tbl-wrap"><table>
         <thead><tr><th>المهمة</th><th>الطبقة</th><th>الحالة</th></tr></thead>
         <tbody>
-          <tr><td>نشر <span class="mono">firestore.rules</span> المحدَّث (قواعد documents/counters) — على المالك</td><td>الأمان</td><td><span class="chip pend dot">معلّقة على المالك</span></td></tr>
-          <tr><td>شاشة واجهة استيراد الأصناف بالباركود (الخدمات والقالب جاهزة)</td><td>الواجهة</td><td><span class="chip plan dot">التالية</span></td></tr>
-          <tr><td>تقرير/تصدير عملية مكتملة · ربط الجرد بـ<span class="mono">Items_Master</span> · قيد عكسي للتصحيح</td><td>الواجهة</td><td><span class="chip plan dot">التالية</span></td></tr>
+          <tr><td>قواعد <span class="mono">firestore.rules</span> الموسَّعة (documents/counters) — نشرها المالك بتأكيده (15.07)؛ يتبقّى تجربة مسار المستندات حيًّا (إنشاء ← إرسال ← رقم) للتثبّت النهائي</td><td>الأمان</td><td><span class="chip pend dot">بانتظار تجربة حيّة</span></td></tr>
+          <tr><td>I-ب/2 — استدعاء الماستر بالباركود في <b>بنود GRN</b> (نفس نداء <span class="mono">lookupByBarcode</span> المستخدم في شاشة العمليات)</td><td>الواجهة</td><td><span class="chip plan dot">التالية</span></td></tr>
+          <tr><td>I-ج — ماسح موحّد يعمل على آيفون (الجرد لا يمسح عليه اليوم) · I-د — شاشة الأصناف المعلّقة · مخزن الأرصدة (ورقة Balances)</td><td>الواجهة</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
+          <tr><td>تقرير/تصدير عملية مكتملة · قيد عكسي للتصحيح (السجلّ append-only فلا حذف)</td><td>الواجهة</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
           <tr><td>M2 — بيئة أودو الحيّة (Oracle مجاني)</td><td>الباك اند</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
           <tr><td>S12 — الإغلاق المالي</td><td>موديول أودو</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
           <tr><td>تفعيل تكامل أودو (production)</td><td>التكامل</td><td><span class="chip plan dot">مخطّطة</span></td></tr>
