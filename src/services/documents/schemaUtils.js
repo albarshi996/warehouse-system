@@ -93,3 +93,29 @@ export function checklistCount(schema, doc) {
 export function isEmptyLine(line) {
   return Object.values(line || {}).every((v) => String(v ?? '').trim() === '');
 }
+
+/**
+ * يطبّق صنفًا من الماستر على بند مستند — **يملأ الفارغ فقط ولا يدهس المكتوب**.
+ *
+ * هذه قطعة الحلقة الأخيرة (I-ب/2): مسح باركود في بند GRN يستدعي الصنف
+ * فيتعبّأ الكود والوصف تلقائيًّا بدل الكتابة اليدوية. لو كان الموظّف قد كتب
+ * وصفًا بيده فهو أعلم — لا نمحوه.
+ *
+ * @param {object} line البند الحالي
+ * @param {object} item صنف الماستر { sku, nameAr, shade, ... }
+ * @returns {{ line: object, filled: string[] }} البند المحدَّث وأسماء ما مُلئ
+ */
+export function applyItemToLine(line, item) {
+  if (!item) return { line, filled: [] };
+  const description = [item.nameAr, item.shade].filter(Boolean).join(' — ');
+  const candidates = { sku: item.sku || '', description };
+  const next = { ...line };
+  const filled = [];
+  for (const [key, value] of Object.entries(candidates)) {
+    if (!value) continue;
+    if (String(next[key] ?? '').trim() !== '') continue;
+    next[key] = value;
+    filled.push(key);
+  }
+  return { line: next, filled };
+}

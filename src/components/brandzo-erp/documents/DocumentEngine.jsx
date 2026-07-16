@@ -21,7 +21,8 @@ import {
   listenDocument,
   listenAudit,
 } from '../../../services/documents/documentsService.js';
-import { emptyDocument, emptyChecklist, missingRequired, isEmptyLine } from '../../../services/documents/schemaUtils.js';
+import { emptyDocument, emptyChecklist, missingRequired, isEmptyLine, applyItemToLine } from '../../../services/documents/schemaUtils.js';
+import { lookupByBarcode } from '../../../services/itemService.js';
 import { isEditable } from '../../../services/documents/states.js';
 import FieldInput from './FieldInput.jsx';
 import LineItemsTable from './LineItemsTable.jsx';
@@ -109,6 +110,35 @@ export default function DocumentEngine() {
   function patchLines(lines) {
     setDoc((d) => ({ ...d, lines }));
     setDirty(true);
+  }
+
+  /**
+   * استدعاء الماستر من بند (I-ب/2): باركود مكتمل ⇒ يتعبّأ الكود والوصف.
+   * الفارغ فقط يُملأ — ما كتبه الموظّف بيده لا يُدهس. والمجهول لا يوقف
+   * العمل (قرار المالك): تنبيه، ويُكمل البند يدويًّا.
+   */
+  async function handleLineLookup(kind, value, index) {
+    if (kind !== 'item') return;
+    try {
+      const item = await lookupByBarcode(value);
+      if (!item) {
+        flash(`⚠️ الباركود ${value} غير معرّف في الماستر — أكمل البند يدويًّا وسجِّل الصنف لاحقًا.`, 'err');
+        return;
+      }
+      setDoc((d) => {
+        const current = d.lines?.[index];
+        if (!current) return d;
+        const { line, filled } = applyItemToLine(current, item);
+        if (filled.length === 0) return d;
+        const lines = d.lines.map((l, i) => (i === index ? line : l));
+        return { ...d, lines };
+      });
+      setDirty(true);
+      flash(`☁️ ${item.nameAr} — استُدعي من الماستر.`);
+    } catch {
+      // شبكة/صلاحية — لا نعطّل الإدخال اليدوي.
+      flash('تعذّر سؤال الماستر — أكمل يدويًّا.', 'err');
+    }
   }
 
   function patchChecklist(next) {
@@ -273,6 +303,7 @@ export default function DocumentEngine() {
                 lines={doc.lines || []}
                 disabled={!editable}
                 onChange={patchLines}
+                onLookup={handleLineLookup}
               />
             )}
 

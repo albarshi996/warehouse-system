@@ -11,12 +11,19 @@ const CELL =
   'w-full bg-transparent border-0 px-2 py-1.5 text-sm text-white focus:outline-none ' +
   'focus:bg-white/10 rounded disabled:opacity-60';
 
-export default function LineItemsTable({ schema, section, lines, onChange, disabled }) {
+export default function LineItemsTable({ schema, section, lines, onChange, onLookup, disabled }) {
   const columns = section.columns || [];
 
   function setCell(index, key, value) {
     const next = lines.map((line, i) => (i === index ? { ...line, [key]: value } : line));
     onChange(next);
+  }
+
+  /** عمود عليه lookup: اكتمال القيمة (Enter/مغادرة الحقل) يستدعي الماستر. */
+  function triggerLookup(column, index, value) {
+    if (!column.lookup || !onLookup) return;
+    const v = String(value ?? '').trim();
+    if (v) onLookup(column.lookup, v, index);
   }
 
   function addRow() {
@@ -56,6 +63,7 @@ export default function LineItemsTable({ schema, section, lines, onChange, disab
                       value={line[c.key] ?? ''}
                       disabled={disabled}
                       onChange={(v) => setCell(i, c.key, v)}
+                      onCommit={(v) => triggerLookup(c, i, v)}
                     />
                   </td>
                 ))}
@@ -90,7 +98,7 @@ export default function LineItemsTable({ schema, section, lines, onChange, disab
   );
 }
 
-function Cell({ column, value, onChange, disabled }) {
+function Cell({ column, value, onChange, onCommit, disabled }) {
   if (column.kind === 'select') {
     return (
       <select className={CELL} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
@@ -115,6 +123,14 @@ function Cell({ column, value, onChange, disabled }) {
       disabled={disabled}
       placeholder={column.scannable ? 'امسح أو اكتب' : ''}
       onChange={(e) => onChange(e.target.value)}
+      onBlur={(e) => onCommit?.(e.target.value)}
+      onKeyDown={(e) => {
+        // قارئ الباركود «يكتب» ثم يرسل Enter — هذه لحظة الاستدعاء.
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          onCommit?.(e.currentTarget.value);
+        }
+      }}
     />
   );
 }

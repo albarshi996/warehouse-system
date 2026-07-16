@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { formatNumber, counterId, parseNumber } from './numberFormat.js';
 import { isEditable, isLegalTransition, canDo, availableTransitions, TRANSITIONS } from './states.js';
 import grn, { ccp1Violations } from './schemas/grn.js';
-import { emptyDocument, missingRequired, checklistCount, fieldValue, isEmptyLine } from './schemaUtils.js';
+import { emptyDocument, missingRequired, checklistCount, fieldValue, isEmptyLine, applyItemToLine } from './schemaUtils.js';
 
 // ── الترقيم ────────────────────────────────────────────────────────
 test('الرقم الرسمي يتبع الصيغة المعتمدة GRN-2026-0001', () => {
@@ -205,6 +205,38 @@ test('البند الفارغ يُعرف فيُستبعد من الحفظ', () =
   assert.equal(isEmptyLine({ sku: '', qty: '' }), true);
   assert.equal(isEmptyLine({ sku: '  ', qty: '' }), true);
   assert.equal(isEmptyLine({ sku: 'A-1', qty: '' }), false);
+});
+
+// ── I-ب/2: استدعاء الماستر في البنود ───────────────────────────────
+test('الباركود يملأ الكود والوصف — والظلّ يلتحق بالوصف', () => {
+  const item = { sku: 'WNW-001', nameAr: 'أساس سائل', shade: 'شفاف' };
+  const { line, filled } = applyItemToLine({ barcode: '8059692040599', sku: '', description: '' }, item);
+  assert.equal(line.sku, 'WNW-001');
+  assert.equal(line.description, 'أساس سائل — شفاف');
+  assert.deepEqual(filled.sort(), ['description', 'sku']);
+});
+
+test('🚨 ما كتبه الموظّف بيده لا يُدهس — الفارغ فقط يُملأ', () => {
+  const item = { sku: 'WNW-001', nameAr: 'أساس سائل' };
+  const { line, filled } = applyItemToLine(
+    { sku: 'MY-CODE', description: '', barcode: 'x' },
+    item
+  );
+  assert.equal(line.sku, 'MY-CODE', 'الكود اليدوي بقي');
+  assert.equal(line.description, 'أساس سائل', 'الوصف الفارغ مُلئ');
+  assert.deepEqual(filled, ['description']);
+});
+
+test('صنف بلا ظلّ: الوصف اسمه فقط بلا شرطة يتيمة', () => {
+  const { line } = applyItemToLine({ description: '' }, { sku: 'A', nameAr: 'صنف' });
+  assert.equal(line.description, 'صنف');
+});
+
+test('لا صنف = لا تغيير (المجهول لا يوقف العمل)', () => {
+  const original = { barcode: '123', sku: '', description: '' };
+  const { line, filled } = applyItemToLine(original, null);
+  assert.deepEqual(line, original);
+  assert.deepEqual(filled, []);
 });
 
 // ── تطابق المخطّط مع قواعد الأمان (منع الانحراف) ───────────────────

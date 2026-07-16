@@ -135,7 +135,9 @@ const schema = {
       minRows: 1,
       columns: [
         { key: 'sku', label: 'رمز SKU', kind: 'text', scannable: true, width: '9%' },
-        { key: 'barcode', label: 'باركود', kind: 'text', scannable: true, ltr: true, width: '11%' },
+        // lookup: 'item' — كتابة/مسح الباركود يستدعي الصنف من الماستر فيملأ
+        // الكود والوصف تلقائيًّا (I-ب/2). المحرّك يتولّى التنفيذ لكل الأنواع.
+        { key: 'barcode', label: 'باركود', kind: 'text', scannable: true, ltr: true, lookup: 'item', width: '11%' },
         { key: 'description', label: 'الوصف', kind: 'text', width: '18%' },
         { key: 'qtyOrdered', label: 'الكمية المطلوبة', kind: 'number', width: '8%' },
         { key: 'qtyReceived', label: 'الكمية المستلمة', kind: 'number', width: '8%' },
