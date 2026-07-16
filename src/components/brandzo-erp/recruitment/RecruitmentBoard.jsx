@@ -233,8 +233,11 @@ function CandidateForm({ profile, onSaved, onError }) {
   const [cv, setCv] = useState(null);
   const [cvError, setCvError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showDetails, setShowDetails] = useState(false); // التفاصيل تُطوى وتُفتح
 
   const job = jobId ? getJob(jobId) : null;
+  // كم تفصيلًا اختياريًّا مُلئ — يظهر على زرّ الطيّ فيُعرَف أن تحته بيانات.
+  const filledDetails = [phone, salary, notes, cv].filter(Boolean).length;
 
   function pickCv(e) {
     const f = e.target.files?.[0] || null;
@@ -266,12 +269,10 @@ function CandidateForm({ profile, onSaved, onError }) {
 
   return (
     <form onSubmit={submit} className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-4">
-      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+      {/* الأساسي فقط: الاسم والوظيفة — البقية تُطوى كي لا يواجه المستخدم جدارًا */}
+      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
         <L label="اسم المرشح" required>
-          <input className={input} value={name} onChange={(e) => setName(e.target.value)} required />
-        </L>
-        <L label="الهاتف">
-          <input className={input} style={{ direction: 'ltr', textAlign: 'right' }} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="09x-xxxxxxx" />
+          <input className={input} value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
         </L>
         <L label="الوظيفة (من الهيكل الرسمي)" required>
           <select className={input} value={jobId} onChange={(e) => setJobId(e.target.value)} required>
@@ -283,37 +284,63 @@ function CandidateForm({ profile, onSaved, onError }) {
             ))}
           </select>
         </L>
-        <L label="الراتب المتوقّع (دينار ليبي)">
-          <input type="number" min="0" className={input} value={salary} onChange={(e) => setSalary(e.target.value)} placeholder="0 د.ل" />
-        </L>
       </div>
 
-      {/* الوصف الوظيفي يتعبّأ من الكتالوج — لا يُكتب يدويًّا */}
-      {job && (
-        <div className="bg-brand-gold/5 border border-brand-gold/20 rounded-xl p-3 text-xs leading-relaxed">
-          <p className="font-bold text-brand-gold mb-1">
-            {job.icon} {job.title} — {job.layer}
-          </p>
-          <p className="text-gray-400 mb-1">التبعية: {job.reportingTo} · المؤشرات: {job.kpis}</p>
-          <ul className="text-gray-300 space-y-0.5 pr-4 list-disc">
-            {job.duties.slice(0, 4).map((d) => (
-              <li key={d}>{d}</li>
-            ))}
-            {job.duties.length > 4 && <li className="text-gray-500">… و{job.duties.length - 4} مهام أخرى</li>}
-          </ul>
-          {job.occupied && <p className="text-brand-red mt-1.5 font-bold">⚠️ هذا المنصب مشغول حاليًا حسب الهيكل — الترشيح له للتعاقب أو التوسّع.</p>}
-        </div>
-      )}
+      {/* الوصف الوظيفي يظهر تلقائيًّا عند اختيار المسمّى — لا يُكتب يدويًّا */}
+      <Reveal open={Boolean(job)}>
+        {job && (
+          <div className="bg-brand-gold/5 border border-brand-gold/20 rounded-xl p-3 text-xs leading-relaxed">
+            <p className="font-bold text-brand-gold mb-1">
+              {job.icon} {job.title} — {job.layer}
+            </p>
+            <p className="text-gray-400 mb-1">التبعية: {job.reportingTo} · المؤشرات: {job.kpis}</p>
+            <ul className="text-gray-300 space-y-0.5 pr-4 list-disc">
+              {job.duties.slice(0, 4).map((d) => (
+                <li key={d}>{d}</li>
+              ))}
+              {job.duties.length > 4 && <li className="text-gray-500">… و{job.duties.length - 4} مهام أخرى</li>}
+            </ul>
+            {job.occupied && <p className="text-brand-red mt-1.5 font-bold">⚠️ هذا المنصب مشغول حاليًا حسب الهيكل — الترشيح له للتعاقب أو التوسّع.</p>}
+          </div>
+        )}
+      </Reveal>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <L label={`السيرة الذاتية (${Object.values(ACCEPTED_CV_TYPES).join('/')} حتى 700KB)`}>
-          <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={pickCv} className="text-xs text-gray-400 file:ml-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-brand-gold file:text-brand-navy file:font-bold file:cursor-pointer" />
-          {cvError && <p className="text-[11px] text-red-300 mt-1">⚠️ {cvError}</p>}
-          {cv && !cvError && <p className="text-[11px] text-green-300 mt-1">✓ {cv.name} ({Math.round(cv.size / 1024)}KB)</p>}
-        </L>
-        <L label="ملاحظات">
-          <textarea className={`${input} min-h-[42px]`} value={notes} onChange={(e) => setNotes(e.target.value)} />
-        </L>
+      {/* التفاصيل الاختيارية: مطويّة، تُفتح بضغطة */}
+      <div className="border-t border-white/10 pt-3">
+        <button
+          type="button"
+          onClick={() => setShowDetails((v) => !v)}
+          className="flex items-center gap-2 text-sm font-bold text-gray-300 hover:text-brand-gold transition-colors"
+        >
+          <span className={`inline-block transition-transform duration-200 ${showDetails ? 'rotate-90' : ''}`}>▸</span>
+          تفاصيل إضافية (اختياري)
+          {!showDetails && filledDetails > 0 && (
+            <span className="text-[11px] bg-brand-gold/20 text-brand-gold rounded-full px-2 py-0.5">{filledDetails} مُدخَل</span>
+          )}
+        </button>
+
+        <Reveal open={showDetails}>
+          <div className="pt-4 space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <L label="الهاتف">
+                <input className={input} style={{ direction: 'ltr', textAlign: 'right' }} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="09x-xxxxxxx" />
+              </L>
+              <L label="الراتب المتوقّع (دينار ليبي)">
+                <input type="number" min="0" className={input} value={salary} onChange={(e) => setSalary(e.target.value)} placeholder="0 د.ل" />
+              </L>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <L label={`السيرة الذاتية (${Object.values(ACCEPTED_CV_TYPES).join('/')} حتى 700KB)`}>
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={pickCv} className="text-xs text-gray-400 file:ml-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-brand-gold file:text-brand-navy file:font-bold file:cursor-pointer" />
+                {cvError && <p className="text-[11px] text-red-300 mt-1">⚠️ {cvError}</p>}
+                {cv && !cvError && <p className="text-[11px] text-green-300 mt-1">✓ {cv.name} ({Math.round(cv.size / 1024)}KB)</p>}
+              </L>
+              <L label="ملاحظات">
+                <textarea className={`${input} min-h-[42px]`} value={notes} onChange={(e) => setNotes(e.target.value)} />
+              </L>
+            </div>
+          </div>
+        </Reveal>
       </div>
 
       <div className="flex justify-end">
@@ -326,6 +353,21 @@ function CandidateForm({ profile, onSaved, onError }) {
         </button>
       </div>
     </form>
+  );
+}
+
+/**
+ * غلاف طيّ سلس — يفتح/يغلق محتواه بانتقال ارتفاع بدل الظهور المفاجئ.
+ * grid-rows من 0fr إلى 1fr حيلة CSS تعطي انتقالًا سلسًا دون معرفة الارتفاع.
+ */
+function Reveal({ open, children }) {
+  return (
+    <div
+      className="grid transition-all duration-300 ease-out"
+      style={{ gridTemplateRows: open ? '1fr' : '0fr', opacity: open ? 1 : 0 }}
+    >
+      <div className="overflow-hidden min-h-0">{children}</div>
+    </div>
   );
 }
 
