@@ -159,6 +159,26 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── التوظيف (بيانات حسّاسة: أسماء · هواتف · سير · رواتب) ─────
+    // قراءةً وكتابةً للمديرَين فقط (قرار المالك 2026-07-16) — حتى القراءة،
+    // بخلاف بقية المجموعات، لأن بيانات المرشحين ليست شأن كل مصادق.
+    match /candidates/{candidateId} {
+      allow read, create, update: if isManager();
+      allow delete: if false; // المرشح المرفوض يبقى أثره — لا محو للتاريخ.
+
+      match /files/{fileId} {
+        allow read, create, update: if isManager();
+        allow delete: if false;
+      }
+      // سجلّ التدقيق: إضافة فقط باسم فاعلها — نمط scans نفسه.
+      match /audit/{entryId} {
+        allow read: if isManager();
+        allow create: if isManager()
+                      && request.resource.data.byUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+
     // ── بيانات المخزون ───────────────────────────────────────────
     match /Items_Master/{docId} {
       allow read: if signedIn();
