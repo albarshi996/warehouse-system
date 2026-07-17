@@ -212,6 +212,21 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // ── طلبات التوظيف من الإدارات (منفصلة عن `candidates` الحسّاسة) ──────
+    // أي إدارة تكتب طلبها فقط (مسمّى وظيفي + بطاقة تعريفية)، وتقرأ طلباتها
+    // هي دون سواها — لا تختلط ببيانات مرشحين حقيقيين ولا تراها إدارة أخرى.
+    // المدير العام ومدير المستودع يراجعان كل الطلبات. لا حذف — نمط
+    // `operations` نفسه: إنشاء حرّ، تحديث للمديرَين، حذف ممنوع دائمًا.
+    match /hiring_requests/{reqId} {
+      allow read: if isManager()
+                  || (signedIn() && resource.data.createdByUid == request.auth.uid);
+      allow create: if signedIn()
+                    && request.resource.data.createdByUid == request.auth.uid
+                    && request.resource.data.status == 'submitted';
+      allow update: if isManager();
+      allow delete: if false;
+    }
+
     // ── الافتراضي: امنع كل ما لم يُذكر صراحةً ────────────────────
     match /{document=**} {
       allow read, write: if false;
