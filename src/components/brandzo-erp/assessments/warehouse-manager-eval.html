@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تقييم مرشح — مدير إدارة المستودعات | Brandzo Franchise Partners</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   BRANDZO — نظام تقييم المرشحين | Crimson-Gold
+   ═══════════════════════════════════════════════════════════ */
+:root{
+  --red:#c41e3a; --red-dark:#7e2b2a; --red-light:#f15a5b;
+  --gold:#DAAA3C; --gold-light:#f0c040;
+  --navy:#1a1a2e; --bg:#1a0008; --bg-2:#2d0006;
+  --ink:#1a1a2a; --muted:#5c5c6b; --line:#e2d9cf;
+  --ok:#1f9d55; --warn:#d97706; --bad:#c0392b;
+  --font:'Cairo','Segoe UI',Arial,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:150px}
+body{
+  font-family:var(--font); background:
+    radial-gradient(1200px 600px at 80% -10%, #4a0d1a 0%, transparent 60%),
+    radial-gradient(900px 500px at 10% 10%, #2d0006 0%, transparent 55%),
+    var(--bg);
+  background-attachment:fixed; color:var(--ink); line-height:1.85; padding:0 0 60px;
+}
+
+/* ─── TOP BAR ─────────────────────────────────────── */
+.topbar{
+  position:sticky; top:0; z-index:60;
+  background:rgba(26,0,8,.82); backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(218,170,60,.28);
+  padding:10px 18px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.brandmark{display:flex;align-items:center;gap:10px;margin-inline-end:auto}
+.brandmark .logo{
+  width:38px;height:38px;border-radius:9px;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--red),var(--red-dark));
+  border:1px solid rgba(218,170,60,.5); color:var(--gold);
+  font-weight:900;font-size:15px; box-shadow:0 0 18px rgba(196,30,58,.5);
+}
+.brandmark b{color:#fff;font-size:14px;display:block;line-height:1.3}
+.brandmark span{color:var(--gold);font-size:11px;font-weight:600}
+.btn{
+  font-family:var(--font); font-weight:700; font-size:12.5px; cursor:pointer;
+  padding:8px 14px; border-radius:8px; border:1px solid rgba(218,170,60,.35);
+  background:rgba(255,255,255,.06); color:#f3e9dd; transition:.18s;
+}
+.btn:hover{background:rgba(218,170,60,.18);border-color:var(--gold);transform:translateY(-1px)}
+.btn.gold{background:linear-gradient(135deg,var(--gold),#b98a22);color:#2d0006;border-color:var(--gold-light)}
+.btn.red{background:linear-gradient(135deg,var(--red),var(--red-dark));color:#fff;border-color:var(--red-light)}
+.saved{font-size:11px;color:var(--gold);opacity:0;transition:.4s;font-weight:600}
+.saved.on{opacity:1}
+
+/* ─── HUD ─────────────────────────────────────────── */
+.hud{
+  position:sticky; top:59px; z-index:55;
+  background:rgba(45,0,6,.9); backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(218,170,60,.22);
+  padding:12px 18px; display:flex; gap:20px; align-items:center; flex-wrap:wrap;
+}
+.ring{position:relative;width:74px;height:74px;flex-shrink:0}
+.ring svg{transform:rotate(-90deg)}
+.ring .val{
+  position:absolute;inset:0;display:grid;place-items:center;
+  font-weight:900;font-size:19px;color:var(--gold);line-height:1
+}
+.ring .val small{display:block;font-size:9px;color:#c9a97e;font-weight:600}
+.axes{display:flex;gap:14px;flex:1;flex-wrap:wrap;min-width:240px}
+.ax{flex:1;min-width:118px}
+.ax .lbl{display:flex;justify-content:space-between;font-size:10.5px;color:#e7d3b8;font-weight:600;margin-bottom:4px}
+.ax .lbl b{color:var(--gold)}
+.ax .bar{height:6px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
+.ax .fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--red-light),var(--gold));transition:width .45s cubic-bezier(.4,0,.2,1)}
+.verdict{
+  padding:9px 18px;border-radius:10px;font-weight:900;font-size:13px;
+  border:1.5px solid; white-space:nowrap; transition:.35s
+}
+.verdict.none{color:#9b8b7a;border-color:#5c4a3a;background:rgba(255,255,255,.04)}
+.verdict.bad{color:#ff8b7a;border-color:var(--bad);background:rgba(192,57,43,.2)}
+.verdict.warn{color:#ffc978;border-color:var(--warn);background:rgba(217,119,6,.2)}
+.verdict.ok{color:#7ee2a8;border-color:var(--ok);background:rgba(31,157,85,.2)}
+
+/* ─── NAV ─────────────────────────────────────────── */
+.nav{display:flex;gap:7px;padding:12px 18px;flex-wrap:wrap;justify-content:center}
+.nav a{
+  font-size:12px;font-weight:700;color:#e7d3b8;text-decoration:none;
+  padding:7px 13px;border-radius:99px;border:1px solid rgba(218,170,60,.3);
+  background:rgba(255,255,255,.05);transition:.18s
+}
+.nav a:hover{background:var(--gold);color:#2d0006;border-color:var(--gold)}
+
+/* ─── SHEET ───────────────────────────────────────── */
+.sheet{
+  max-width:1000px;margin:0 auto 22px;background:#fff;border-radius:16px;
+  box-shadow:0 24px 70px rgba(0,0,0,.5),0 0 0 1px rgba(218,170,60,.25);
+  overflow:hidden
+}
+.cover{
+  background:linear-gradient(135deg,var(--bg-2) 0%,var(--red-dark) 55%,var(--red) 100%);
+  padding:34px 30px;color:#fff;position:relative;overflow:hidden
+}
+.cover::after{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(560px 240px at 88% 0%,rgba(218,170,60,.28),transparent 65%);
+  pointer-events:none
+}
+.cover h1{font-size:27px;font-weight:900;margin-bottom:6px;position:relative;z-index:1}
+.cover .sub{color:var(--gold);font-weight:700;font-size:14px;position:relative;z-index:1}
+.cover .meta{
+  margin-top:8px;font-size:11.5px;color:#e9d4bb;position:relative;z-index:1;
+  display:flex;gap:14px;flex-wrap:wrap
+}
+.cover .meta span{border-inline-start:2px solid var(--gold);padding-inline-start:8px}
+.goldrule{height:4px;background:linear-gradient(90deg,var(--gold),var(--red),var(--gold))}
+
+.idgrid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));
+  gap:12px;padding:22px 30px;background:#faf7f3;border-bottom:1px solid var(--line)
+}
+.fld label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.fld input,.fld select{
+  width:100%;font-family:var(--font);font-size:13.5px;font-weight:600;color:var(--ink);
+  padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;transition:.18s
+}
+.fld input:focus,.fld select:focus{
+  outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(218,170,60,.2)
+}
+
+.brief{
+  margin:0;padding:20px 30px;background:linear-gradient(180deg,#fffdf7,#fff);
+  border-bottom:1px solid var(--line);font-size:13px
+}
+.brief h3{color:var(--red-dark);font-size:14.5px;margin-bottom:8px}
+.brief ul{margin-inline-start:18px;color:#3d3d4a}
+.brief li{margin:3px 0}
+.brief .warnbox{
+  margin-top:12px;background:#fff8e6;border:1px solid #f0d9a0;
+  border-inline-start:4px solid var(--gold);border-radius:8px;padding:11px 13px;font-size:12.5px
+}
+
+/* ─── SECTIONS ────────────────────────────────────── */
+.axis{padding:0 0 6px}
+.axhead{
+  background:linear-gradient(135deg,var(--bg-2),var(--red-dark));
+  color:#fff;padding:15px 30px;display:flex;align-items:center;gap:12px;
+  border-inline-start:6px solid var(--gold);margin-top:26px
+}
+.axhead h2{font-size:17px;font-weight:900;flex:1}
+.axhead .pts{
+  background:rgba(218,170,60,.22);border:1px solid var(--gold);color:var(--gold);
+  padding:4px 12px;border-radius:99px;font-size:12px;font-weight:800;white-space:nowrap
+}
+.axhead .live{font-size:13px;font-weight:900;color:#fff;white-space:nowrap}
+
+.q{padding:22px 30px;border-bottom:1px dashed var(--line)}
+.q:last-child{border-bottom:none}
+.qhead{display:flex;align-items:flex-start;gap:11px;margin-bottom:11px;flex-wrap:wrap}
+.qnum{
+  width:32px;height:32px;border-radius:9px;flex-shrink:0;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--red),var(--red-dark));color:#fff;
+  font-weight:900;font-size:14px;box-shadow:0 3px 10px rgba(196,30,58,.35)
+}
+.qhead h3{flex:1;font-size:15.5px;color:var(--red-dark);font-weight:800;min-width:200px}
+.qw{
+  background:#fdf4e3;border:1px solid var(--gold);color:#8a6410;
+  padding:3px 11px;border-radius:99px;font-size:11.5px;font-weight:800;white-space:nowrap
+}
+.ref{
+  display:inline-block;background:#f2f6fb;border:1px solid #cfe0f2;color:#2f5f8f;
+  font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:6px;margin-bottom:10px
+}
+.tag-open{background:#f3e9fb;border-color:#dcc4f0;color:#6b3fa0}
+.tag-trap{background:#ffeef0;border-color:#f5c2c7;color:#a3232f}
+
+.scen{
+  background:linear-gradient(135deg,#f7fbfd,#eef6fa);border:1px solid #c9e2ef;
+  border-inline-start:4px solid #2f7fa8;border-radius:10px;padding:14px 16px;margin-bottom:12px;font-size:13px
+}
+.scen b.t{color:#1d5f80;display:block;margin-bottom:7px;font-size:13.5px}
+.scen table{width:100%;border-collapse:collapse;margin:9px 0;font-size:12.5px;background:#fff;border-radius:7px;overflow:hidden}
+.scen th{background:#1d5f80;color:#fff;padding:7px 9px;text-align:right;font-size:11.5px;font-weight:700}
+.scen td{border:1px solid #d9e8f0;padding:7px 9px;text-align:right}
+.scen tr:nth-child(even) td{background:#f8fcfe}
+.num{font-weight:800;color:#0d4d6b;font-variant-numeric:tabular-nums}
+.hot{color:var(--bad);font-weight:800}
+
+.asks{margin:11px 0}
+.asks .t{font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:6px}
+.asks ol{margin-inline-start:20px;font-size:13px}
+.asks li{margin:4px 0}
+
+.probe{
+  background:#f6f1fb;border:1px solid #ddcaf0;border-inline-start:4px solid #7b4fb0;
+  border-radius:9px;padding:11px 14px;margin:11px 0;font-size:12.5px
+}
+.probe b{color:#5f3491;display:block;margin-bottom:5px}
+.probe ul{margin-inline-start:17px;color:#4a3a5c}
+.probe li{margin:2px 0}
+
+.ans{margin:13px 0}
+.ans label{font-size:11.5px;font-weight:700;color:var(--muted);display:block;margin-bottom:5px}
+.ans textarea{
+  width:100%;min-height:118px;font-family:var(--font);font-size:13px;color:var(--ink);
+  padding:10px 12px;border:1px solid var(--line);border-radius:9px;resize:vertical;
+  line-height:29px;
+  background-image:repeating-linear-gradient(transparent,transparent 28px,#eef0f3 28px,#eef0f3 29px);
+  background-attachment:local;transition:.18s
+}
+.ans textarea:focus{
+  outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(218,170,60,.18)
+}
+
+.model{margin:11px 0;border:1px solid #f0d9a0;border-radius:10px;overflow:hidden;background:#fffbf0}
+.model summary{
+  cursor:pointer;padding:9px 14px;font-weight:800;font-size:12.5px;color:#8a6410;
+  background:#fdf4e3;list-style:none;user-select:none
+}
+.model summary::-webkit-details-marker{display:none}
+.model summary::before{content:"▸ ";transition:.2s;display:inline-block}
+.model[open] summary::before{transform:rotate(90deg)}
+.model .body{padding:12px 15px;font-size:12.5px;border-top:1px solid #f0d9a0}
+.model .body ul{margin-inline-start:17px}
+.model .body li{margin:3px 0}
+.model .body .key{background:#fff3cd;padding:1px 5px;border-radius:4px;font-weight:800;color:#7a5200}
+
+.crit{
+  background:#f2faf4;border:1px solid #c6e6d0;border-inline-start:4px solid var(--ok);
+  border-radius:9px;padding:12px 14px;margin:11px 0
+}
+.crit .t{font-weight:800;color:#166534;font-size:12.5px;margin-bottom:8px;display:flex;justify-content:between;gap:10px;align-items:center}
+.crit .t span{margin-inline-start:auto;font-size:13px;color:#166534}
+.crow{display:flex;align-items:center;gap:9px;padding:5px 0;border-bottom:1px dotted #cfe6d7;font-size:12.5px}
+.crow:last-child{border-bottom:none}
+.crow .cl{flex:1;color:#25402e}
+.crow input{
+  width:56px;font-family:var(--font);font-weight:800;font-size:13px;text-align:center;
+  padding:5px;border:1px solid #a8d5b8;border-radius:7px;color:#166534;background:#fff
+}
+.crow input:focus{outline:none;border-color:var(--ok);box-shadow:0 0 0 3px rgba(31,157,85,.16)}
+.crow .mx{color:#5d8a6c;font-weight:700;font-size:11.5px;width:34px}
+
+.flags{
+  background:#fff5f5;border:1px solid #f5c2c7;border-inline-start:4px solid var(--bad);
+  border-radius:9px;padding:11px 14px;margin:11px 0;font-size:12.5px
+}
+.flags b{color:#9b2226;display:block;margin-bottom:5px}
+.flags ul{margin-inline-start:17px;color:#6d2429}
+.flags li{margin:2px 0}
+
+.note{margin-top:10px}
+.note label{font-size:11.5px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px}
+.note input{
+  width:100%;font-family:var(--font);font-size:12.5px;padding:8px 11px;
+  border:1px solid var(--line);border-radius:8px
+}
+.note input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(218,170,60,.18)}
+
+/* ─── SUMMARY ─────────────────────────────────────── */
+.sumtbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+.sumtbl th{background:var(--bg-2);color:#fff;padding:10px;font-size:12px;text-align:right}
+.sumtbl td{border:1px solid var(--line);padding:9px 10px}
+.sumtbl tr:nth-child(even) td{background:#faf8f5}
+.sumtbl tfoot td{background:linear-gradient(135deg,var(--bg-2),var(--red-dark))!important;color:#fff;font-weight:900;font-size:14px}
+.sumtbl .sc{font-weight:900;color:var(--red-dark);font-variant-numeric:tabular-nums}
+.sumtbl tfoot .sc{color:var(--gold)}
+
+.comp{display:grid;gap:7px;margin:12px 0}
+.crow2{display:flex;align-items:center;gap:10px;font-size:12.5px;background:#faf8f5;padding:7px 11px;border-radius:8px;border:1px solid var(--line)}
+.crow2 .cl{flex:1;font-weight:600}
+.stars{display:flex;gap:3px}
+.stars input{display:none}
+.stars label{
+  cursor:pointer;width:25px;height:25px;border-radius:6px;display:grid;place-items:center;
+  background:#fff;border:1px solid var(--line);font-size:11px;font-weight:800;color:#b0a89c;transition:.15s
+}
+.stars label:hover{border-color:var(--gold);color:var(--gold)}
+.stars input:checked+label{background:linear-gradient(135deg,var(--gold),#b98a22);color:#2d0006;border-color:var(--gold)}
+
+.recs{display:grid;gap:8px;margin:12px 0}
+.rec{
+  display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid var(--line);
+  border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;transition:.18s;background:#fff
+}
+.rec:hover{border-color:var(--gold);background:#fffdf6}
+.rec input{width:17px;height:17px;accent-color:var(--red);cursor:pointer}
+.rec:has(input:checked){
+  border-color:var(--red);background:linear-gradient(135deg,#fff5f6,#fff);
+  box-shadow:0 0 0 3px rgba(196,30,58,.1)
+}
+
+.sign{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:26px;padding-top:20px;border-top:2px solid var(--line)}
+.sign div{font-size:12.5px}
+.sign .ln{border-bottom:1.5px dotted #999;height:34px;margin-top:6px}
+
+.bzfoot{
+  background:linear-gradient(135deg,var(--bg-2),var(--red-dark));color:#e9d4bb;
+  padding:16px 30px;font-size:11.5px;display:flex;gap:16px;flex-wrap:wrap;
+  align-items:center;justify-content:center;border-top:3px solid var(--gold)
+}
+.bzfoot span{display:flex;align-items:center;gap:5px}
+.bzfoot b{color:var(--gold)}
+
+/* ─── CANDIDATE MODE ──────────────────────────────── */
+body.cand .model,body.cand .crit,body.cand .flags,body.cand .probe,
+body.cand .hud,body.cand #summary,body.cand .ref{display:none!important}
+
+/* ─── PRINT ───────────────────────────────────────── */
+@media print{
+  @page{size:A4;margin:11mm}
+  body{background:#fff!important;padding:0;line-height:1.6}
+  .topbar,.hud,.nav,.noprint{display:none!important}
+  .sheet{max-width:100%;box-shadow:none;border-radius:0;margin:0}
+  .cover{background:var(--bg-2)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .axhead,.qnum,.sumtbl th,.sumtbl tfoot td,.bzfoot{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .scen,.crit,.flags,.model,.probe,.q{break-inside:avoid;page-break-inside:avoid}
+  .axhead{break-after:avoid;page-break-after:avoid}
+  .model[open] .body{display:block}
+  .model summary{background:#fdf4e3!important;-webkit-print-color-adjust:exact}
+  .ans textarea{min-height:105px;border:1px solid #bbb}
+  #summary{page-break-before:always}
+}
+@media(max-width:640px){
+  .cover h1{font-size:20px}
+  .q,.idgrid,.brief,.axhead{padding-inline:16px}
+  .sign{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ TOP BAR ══ -->
+<div class="topbar noprint">
+  <div class="brandmark">
+    <div class="logo">BFP</div>
+    <div><b>Brandzo Franchise Partners</b><span>نظام تقييم المرشحين — إدارة المستودعات</span></div>
+  </div>
+  <span class="saved" id="saved">✓ حُفظ</span>
+  <button class="btn" id="modeBtn">👁 وضع المرشح</button>
+  <button class="btn" onclick="expandAll()">📖 فتح النماذج</button>
+  <button class="btn gold" onclick="window.print()">🖨 طباعة / PDF</button>
+  <button class="btn" onclick="exportJSON()">⬇ تصدير</button>
+  <button class="btn red" onclick="clearAll()">🗑 تفريغ</button>
+</div>
+
+<!-- ══ HUD ══ -->
+<div class="hud noprint">
+  <div class="ring">
+    <svg width="74" height="74">
+      <circle cx="37" cy="37" r="31" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="7"/>
+      <circle id="ring" cx="37" cy="37" r="31" fill="none" stroke="url(#g)" stroke-width="7"
+              stroke-linecap="round" stroke-dasharray="194.8" stroke-dashoffset="194.8"
+              style="transition:stroke-dashoffset .5s cubic-bezier(.4,0,.2,1)"/>
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#f15a5b"/><stop offset="100%" stop-color="#DAAA3C"/>
+      </linearGradient></defs>
+    </svg>
+    <div class="val"><span id="tot">0</span><small>من 100</small></div>
+  </div>
+  <div class="axes" id="axes"></div>
+  <div class="verdict none" id="verdict">لم يبدأ التقييم</div>
+</div>
+
+<!-- ══ NAV ══ -->
+<div class="nav noprint">
+  <a href="#a1">١· الدورة المستندية</a>
+  <a href="#a2">٢· الاستلام والجودة</a>
+  <a href="#a3">٣· التخزين والصرف</a>
+  <a href="#a4">٤· الجرد والمؤشرات</a>
+  <a href="#a5">٥· القيادة والأزمات</a>
+  <a href="#a6">٦· المفاهيم والفلسفة</a>
+  <a href="#summary">📋 الملخص</a>
+</div>
+
+<div class="sheet">
+
+  <!-- ══ COVER ══ -->
+  <div class="cover">
+    <h1>تقرير تقييم مرشح</h1>
+    <div class="sub">مدير إدارة المستودعات — Warehouse Management Director</div>
+    <div class="meta">
+      <span>الموقع رقم 155 — بوهادي، بنغازي</span>
+      <span>المستودع المركزي الرئيسي</span>
+      <span>الكود: BFP-HR-EVAL-001</span>
+      <span>الإصدار 3.0</span>
+    </div>
+  </div>
+  <div class="goldrule"></div>
+
+  <!-- ══ IDENTITY ══ -->
+  <div class="idgrid">
+    <div class="fld"><label>اسم المرشح</label><input id="c_name" placeholder="الاسم الثلاثي"></div>
+    <div class="fld"><label>تاريخ المقابلة</label><input id="c_date" type="date"></div>
+    <div class="fld"><label>المُقيِّم</label><input id="c_by" placeholder="اسم المقابِل"></div>
+    <div class="fld"><label>سنوات الخبرة المعلنة</label><input id="c_exp" placeholder="مثال: 8 سنوات"></div>
+    <div class="fld"><label>القطاعات السابقة</label><input id="c_sect" placeholder="أغذية / تجميل / تجزئة…"></div>
+    <div class="fld"><label>خبرة ERP (Odoo / SAP / غيره)</label><input id="c_erp" placeholder="النظام + عدد السنوات"></div>
+  </div>
+
+  <!-- ══ BRIEF ══ -->
+  <div class="brief">
+    <h3>📋 تعليمات إدارة المقابلة</h3>
+    <ul>
+      <li><b>المدة:</b> 110–140 دقيقة · 19 سؤالاً على 6 محاور · الدرجة الكاملة <b>125</b> وتُحتسب النتيجة <b>كنسبة مئوية٪</b>.</li>
+      <li><b>ابدأ بالمحور السادس (المفاهيم والفلسفة)</b> كإحماءٍ نوعيّ يكشف عمق التفكير والشخصية، ثم انتقل إلى محاور السيناريوهات.</li>
+      <li><b>الأسئلة المفتوحة (🟣)</b> تُقاس بعمق الخبرة لا بحفظ الإجابة — دع المرشح يتكلم ولا تقاطعه، ثم استخدم «أسئلة الاستقصاء» للحفر.</li>
+      <li><b>أسئلة الفخ (🔴)</b> تحتوي مصيدة مقصودة — لا تلمّح لها إطلاقاً وسجّل ردّ الفعل الأول.</li>
+      <li>اضغط <b>«وضع المرشح»</b> لإخفاء نماذج الإجابة والمعايير قبل طباعة نسخة تُسلَّم للمرشح.</li>
+      <li>يُحفظ كل ما تكتبه تلقائياً في المتصفح — أغلق الصفحة وارجع إليها دون فقد شيء.</li>
+    </ul>
+    <div class="warnbox">
+      <b>⚠️ ملاحظة جوهرية للمُقيِّم:</b> عدة أسئلة تتضمن <b>تعارضات حقيقية قائمة في منظومتنا اليوم</b>
+      (تضارب أهداف دقة المخزون، تعارض شروط الدفع 30 مقابل 60 يوماً، غياب نموذج POD رغم وجود مؤشر له،
+      وغياب حارس برمجي للتخزين الموجَّه). المرشح الممتاز <b>يكتشفها ويسأل عنها</b> — وهذا أقوى مؤشر
+      على خبرة حقيقية من أي إجابة نموذجية محفوظة.
+    </div>
+  </div>
+
+  <!-- ═══════════ AXIS 1 ═══════════ -->
+  <div class="axis" id="a1">
+    <div class="axhead">
+      <h2>المحور الأول · الدورة المستندية والحوكمة</h2>
+      <span class="live"><b id="ax1s">0</b>/25</span>
+      <span class="pts">25 نقطة</span>
+    </div>
+
+    <!-- Q1 -->
+    <div class="q" data-axis="1">
+      <div class="qhead"><div class="qnum">١</div>
+        <h3>السؤال الافتتاحي الكبير — الدورة المستندية وتوثيق العمليات اليومية</h3>
+        <span class="qw">10 نقاط</span>
+      </div>
+      <span class="ref tag-open">🟣 سؤال مفتوح — استخراج خبرة</span>
+      <div class="scen">
+        <b class="t">الإطار:</b>
+        نحن <b>شركة قابضة متعددة القطاعات</b> — أغذية (سلسلة تبريد وتجميد)، مستحضرات تجميل،
+        وتجزئة تخدم هايبر ماركت وسوبر ماركت ومتاجر صغيرة. المستودع المركزي في
+        <b>الموقع 155 (بوهادي — بنغازي)</b>: مساحة إجمالية <span class="num">65,000 م²</span>،
+        مغطاة <span class="num">18,500 م²</span>، <span class="num">10</span> مستودعات (E-1 … E-10)،
+        بالإضافة إلى <b>مجمع الرحبة للتبريد</b> (<span class="num">19</span> وحدة).
+        <br><br>
+        <b>أنت الآن مدير مستودعات هذه المجموعة.</b>
+      </div>
+      <div class="asks">
+        <div class="t">اطرح السؤال هكذا حرفياً ثم اصمت:</div>
+        <ol>
+          <li>ارسم لي <b>الدورة المستندية الكاملة</b> التي ستتبعها — من لحظة نشوء الاحتياج حتى الإغلاق المالي في الدفاتر. سمِّ كل مستند بالاسم.</li>
+          <li>عند كل مستند: <b>من يُنشئه؟ ومن يعتمده؟</b> ولماذا الفصل بينهما ضروري؟</li>
+          <li>كيف <b>توثّق آلية العمليات اليومية</b> بحيث لو غبتَ شهراً يمشي المستودع بلا ارتباك؟</li>
+          <li>ما الذي يختلف في الدورة بين قطاع <b>الأغذية</b> وقطاع <b>مستحضرات التجميل</b>؟ ولماذا؟</li>
+          <li>كم مستنداً رسمياً تتوقع أن تحتاجه منظومة بهذا الحجم؟ ولماذا هذا العدد تحديداً؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء (للحفر عند الإجابة السطحية):</b>
+        <ul>
+          <li>«ذكرتَ الاستلام — طيب، ماذا يمنع مشرف الاستلام من ترحيل استلام لم تُوقّعه الجودة؟ آلياً أم بالثقة؟»</li>
+          <li>«من يملك صلاحية إنشاء بطاقة صنف جديد؟ ولماذا لا يكون المستودع؟»</li>
+          <li>«أين تقف المالية في هذه الدورة بالضبط — وفي أي مرحلة تحديداً تدخل أول مرة؟»</li>
+          <li>«حدّثني عن آخر مرة اكتشفت فيها أن مستنداً في دورتك كان زائداً عن الحاجة. ماذا فعلت؟»</li>
+          <li>«كيف تُثبت لمدقق خارجي أن كل حركة مخزون في آخر 90 يوماً لها سند؟»</li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح / ملاحظات حرفية:</label><textarea id="q1a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي — منظومة Brandzo الفعلية</summary>
+        <div class="body">
+          <b>الدورة المعتمدة = 12 مرحلة</b> (لا 8 كما في بعض الصفحات القديمة):
+          <ul>
+            <li><b>لوجستية (01–08):</b> طلب شراء داخلي PR → أمر شراء PO → إشعار شحن مسبق ASN →
+                استلام وفحص GRN → تخزين موجَّه Putaway → تحضير Pick &amp; Pack →
+                شحن وتوزيع Dispatch (Delivery Note + Gate Pass) → مرتجعات Returns.</li>
+            <li><b>مالية (09–12):</b> مطابقة ثلاثية 3-Way Match → فاتورة المورد Bill →
+                قيد يومية Journal Entry → <span class="key">الإغلاق المالي Financial Close</span>.</li>
+          </ul>
+          <b>الفصل بين المُنشئ والمُعتمِد</b> (مصفوفة الصلاحيات الفعلية):
+          <ul>
+            <li>GRN: يُنشئه <b>مشرف الاستلام</b> — يعتمده <b>مدير المستودع</b>. المشرف <span class="key">لا يملك صلاحية تعديل رصيد</span> إطلاقاً.</li>
+            <li>تقرير الجودة: يُنشئه <b>فاحص الجودة</b> — يعتمده <b>مدير الجودة</b> (Quality Release).</li>
+            <li>Gate Pass: يُنشئه <b>مشرف الشحن</b> — يعتمده <b>أمن المستودع / ضابط البوابة</b>.</li>
+            <li>سند تسوية مخزون: يُنشئه <b>مدقق الجرد</b> — يعتمده <span class="key">المدير المالي حصراً</span>.</li>
+            <li>أوامر التخريد Scrap: صلاحية <b>مدير المستودع التنفيذي</b> وحده (Inventory Manager).</li>
+            <li><span class="key">الصلاحية الحصرية:</span> الإدارة التجارية هي <b>الجهة الوحيدة</b> المخوّلة بإنشاء الأصناف والموردين والعملاء. المستودع يُثري لاحقاً (UoM، الباركود، قواعد الـ Putaway) والمالية تُقفل (التكلفة الدفترية).</li>
+          </ul>
+          <b>العدد الصحيح: <span class="key">21 نموذجاً رسمياً</span></b> — من BFP-PO-001 حتى BFP-FR-021.
+          <br><br>
+          <b>توثيق العمليات اليومية:</b> سجل الاجتماع اليومي (Daily Huddle — BFP-DH-006) يعتمده مدير العمليات ·
+          الفحص الأسبوعي / جولة Gemba (BFP-WC) يعتمده مدير المستودع · بطاقة الموقع المخزني (Bin Card) تُحدَّث
+          <b>آلياً</b> بمسح باركود الرف · كل العمليات الميدانية <span class="key">حصرياً عبر الماسحات/الهواتف</span> لا ورق.
+          <br><br>
+          <b>الفرق بين القطاعين:</b> الأغذية تخضع لـ HACCP و CCP-1/2/3 وسلسلة تبريد (≤4°م مبرد / ≤−18°م مجمد)
+          ودورة سحب Recall وتتبع Lot أمامي للفروع. التجميل يخضع لنظام حراري مختلف تماماً
+          (<span class="key">15–18°م</span>) وحساسية ضوء وثبات رائحة وعنونة UU-A-BB-LL.
+          <b>الدورة المستندية واحدة — لكن معايير القبول والحدود الحرجة مختلفة جذرياً.</b>
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/10</span></div>
+        <div class="crow"><span class="cl">شمول الدورة (يذكر المراحل المالية 09–12 لا اللوجستية فقط)</span><input class="c" data-max="4" type="number" min="0" max="4" step="0.5" id="q1c1"><span class="mx">/4</span></div>
+        <div class="crow"><span class="cl">فهم فصل الصلاحيات (مُنشئ ≠ مُعتمِد) وتبريره</span><input class="c" data-max="3" type="number" min="0" max="3" step="0.5" id="q1c2"><span class="mx">/3</span></div>
+        <div class="crow"><span class="cl">آلية توثيق يومية قابلة للتشغيل بدونه + تمييز القطاعات</span><input class="c" data-max="3" type="number" min="0" max="3" step="0.5" id="q1c3"><span class="mx">/3</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>يتوقف عند «استلام وصرف» ولا يذكر المطابقة أو الإغلاق المالي → خبرة تشغيلية لا إدارية.</li>
+          <li>يقول «أنا أعتمد وأنا أنفّذ» → لا يفهم الرقابة المزدوجة، خطر احتيال.</li>
+          <li>يعتمد على «الخبرة والذاكرة» بدل المستندات → كارثة عند غيابه.</li>
+          <li>لا يفرّق بين قطاع وآخر → سيطبّق حد الـ4°م على الكريمات.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q1n"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="q" data-axis="1">
+      <div class="qhead"><div class="qnum">٢</div>
+        <h3>المطابقة الثلاثية — قرار دفع بأرقام حقيقية</h3>
+        <span class="qw">10 نقاط</span>
+      </div>
+      <span class="ref">المرجع: القاعدة الذهبية الرابعة · account.move._post · تسامح السعر = 0.0</span>
+      <div class="scen">
+        <b class="t">السيناريو:</b>
+        <table>
+          <tr><th>المستند</th><th>الصنف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>
+          <tr><td><b>PO-2026-0155</b></td><td>BZ-VCS-30 — سيروم فيتامين C 30مل</td><td class="num">380</td><td class="num">65.00 د.ل</td><td class="num">24,700 د.ل</td></tr>
+          <tr><td><b>GRN (المستلم فعلياً)</b></td><td>نفس الصنف</td><td class="num hot">360</td><td>—</td><td>—</td></tr>
+          <tr><td><b>فاتورة المورد</b></td><td>نفس الصنف</td><td class="num hot">380</td><td class="num hot">68.00 د.ل</td><td class="num hot">25,840 د.ل</td></tr>
+        </table>
+        المورد: <b>مختبرات الخليج للتجميل</b> · 20 كرتوناً رفضتها الجودة عند الاستلام ·
+        المورد يطالب بالسداد اليوم ويهدد بوقف التوريد.
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li>هل تُجيز الترحيل والدفع؟ <b>احسب المبلغ الصحيح أمامي</b>.</li>
+          <li>كم عدد نقاط عدم التطابق بالضبط؟ سمِّ كلاً منها.</li>
+          <li>ما المبلغ الذي كان سيُدفع زائداً لو مرّت الفاتورة؟</li>
+          <li>أين يتوقف النظام تحديداً — وهل يمكن لأحد تجاوزه؟</li>
+          <li>المورد يضغط والإنتاج متوقف. ماذا تفعل عملياً <b>خلال الساعة القادمة</b>؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li>«لو كان فرق السعر 0.10 د.ل فقط — هل يمرّ؟» <i>(الجواب: لا — التسامح مضبوط على صفر)</i></li>
+          <li>«من يملك صلاحية تغيير نسبة التسامح؟ وهل يجب أن تكون بيدك أنت؟»</li>
+          <li>«حدّثني عن مورد ضغط عليك فعلاً لتجاوز مطابقة. ماذا حصل؟» <i>(أقوى سؤال في البطاقة)</i></li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q2a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي</summary>
+        <div class="body">
+          <b>❌ رفض الترحيل قطعاً.</b> نقطتا عدم تطابق:
+          <ul>
+            <li><b>الكمية:</b> المفوتر 380 &gt; المستلَم فعلياً (GRN) 360 — فرق 20 كرتوناً رفضتها الجودة.</li>
+            <li><b>السعر:</b> 68.00 ≠ 65.00 المتعاقد عليه في PO — والتسامح
+                <span class="key">match_price_tolerance = 0.0</span> أي <b>صفر تسامح مطلق</b>.</li>
+          </ul>
+          <b>المبلغ الصحيح = 360 × 65 = <span class="key">23,400 د.ل</span></b><br>
+          <b>الفرق = 25,840 − 23,400 = <span class="key">2,440 د.ل</span> كانت ستُدفع زائدة.</b>
+          <br><br>
+          <b>نقطة التوقف البرمجية:</b> الحارس مربوط على <span class="key">account.move._post</span>
+          — وليس <code>action_post</code> — تحديداً لأن الترحيل البرمجي يتجاوز الأخير.
+          يرفع <b>UserError</b> ويمنع الترحيل. <b>لا يوجد تجاوز</b>؛ القاعدة مفروضة بـ <code>@api.constrains</code>.
+          <br><br>
+          <b>الإجراء خلال الساعة:</b> إشعار المورد بالفرق كتابياً + طلب فاتورة مصحّحة 360×65 +
+          إصدار <b>Return Note</b> للعشرين المرفوضة + إخطار المدير المالي والمشتريات.
+          <span class="key">لا يُحلّ ضغط المورد بتعطيل الحارس — بل بسرعة تصحيح المستند.</span>
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/10</span></div>
+        <div class="crow"><span class="cl">القرار الصحيح فوراً (رفض بلا تردد)</span><input class="c" data-max="3" type="number" min="0" max="3" step="0.5" id="q2c1"><span class="mx">/3</span></div>
+        <div class="crow"><span class="cl">دقة الحساب (23,400 والفرق 2,440) وتحديد نقطتَي التعارض</span><input class="c" data-max="4" type="number" min="0" max="4" step="0.5" id="q2c2"><span class="mx">/4</span></div>
+        <div class="crow"><span class="cl">الإجراء العملي والصمود أمام ضغط المورد</span><input class="c" data-max="3" type="number" min="0" max="3" step="0.5" id="q2c3"><span class="mx">/3</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>«ندفع ونسوّي لاحقاً» → <b>مستبعد فوراً</b> من منصب رقابي.</li>
+          <li>يدفع 380×65 (يتجاهل الرفض) أو 360×68 (يقبل زيادة السعر) → لا يفهم المطابقة.</li>
+          <li>يقترح رفع نسبة التسامح لتمرير الفاتورة → خطر حوكمي جسيم.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q2n"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="q" data-axis="1">
+      <div class="qhead"><div class="qnum">٣</div>
+        <h3>الطلب الشفهي من مدير كبير — اختبار الصلابة</h3>
+        <span class="qw">5 نقاط</span>
+      </div>
+      <span class="ref">المرجع: القاعدة الذهبية الأم — «لا حركة بدون مستند»</span>
+      <div class="scen">
+        <b class="t">السيناريو:</b>
+        الخميس <b>16:00</b>. <b>المدير التجاري</b> — أعلى منك في الهيكل — يدخل مكتبك:
+        <br>💬 «عندي عميل VIP، يحتاج 100 كرتون <b>اليوم</b> وما في وقت لطلبات رسمية. نزّلها وأنا أتحمّل المسؤولية.»
+        <br><br>الرصيد متوفر · السائق جاهز · <b>لا يوجد أي طلب رسمي في النظام</b> · البوابة تُغلق 17:00.
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li>ماذا تفعل؟ وبأي كلمات ترد عليه <b>حرفياً</b>؟</li>
+          <li>ما القاعدة الحاكمة هنا؟ اذكرها بنصها.</li>
+          <li>هل «أنا أتحمّل المسؤولية» تكفي؟ لماذا؟</li>
+          <li>ما أسرع مسار <b>نظامي</b> لتلبية العميل قبل 17:00؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li>«لو أصرّ وهدّد بالشكوى للرئيس التنفيذي؟»</li>
+          <li>«لو كانت البضاعة خرجت فعلاً بدون مستند واكتُشف الأمر بعد أسبوع — ماذا تفعل؟»</li>
+          <li>«احكِ لي موقفاً حقيقياً رفضت فيه طلب مسؤول أعلى منك.» <i>(اطلب تفاصيل — الاسم والنتيجة)</i></li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q3a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي</summary>
+        <div class="body">
+          <b>❌ ممنوع منعاً باتاً.</b> القاعدة الذهبية الأم نصاً:
+          <span class="key">«لا يتم تحريك أي صنف، أياً كانت قيمته أو حجمه، بدون مستند رسمي معتمد يبرر هذه الحركة ويوضح تفاصيلها.»</span>
+          <br><br>
+          «أتحمّل المسؤولية» <b>لا قيمة لها</b>: المسؤولية المستندية لا تُنقل شفاهةً، والعهدة في النظام
+          باسم المستودع لا باسمه. وعملياً <b>الشحنة لن تخرج أصلاً</b> — لا Gate Pass معتمد ⇒
+          الحارس يمنع الترحيل (القاعدة الذهبية الثالثة).
+          <br><br>
+          <b>الرد الصحيح:</b> «تمام سيدي، البضاعة محجوزة باسم عميلك من الآن — أحتاج فقط أمر بيع في
+          النظام، خمس دقائق من المبيعات، وتخرج قبل 17:00.» <b>لا ترفض الخدمة — ارفض تجاوز المستند.</b>
+          <br><br>
+          <b>المسار السريع:</b> المبيعات تُدخل DO → مدير المستودع يعتمد → Picking بـ FEFO →
+          Delivery Note → Gate Pass معتمد من ضابط البوابة. <span class="key">30 دقيقة كافية تماماً.</span>
+          ولو خرج الوقت: <b>Gate Pass استثنائي</b> بتصعيد لمدير العمليات اللوجستية + <b>تقرير حادثة</b> مرفق.
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/5</span></div>
+        <div class="crow"><span class="cl">الرفض الحازم + معرفة القاعدة بنصها</span><input class="c" data-max="3" type="number" min="0" max="3" step="0.5" id="q3c1"><span class="mx">/3</span></div>
+        <div class="crow"><span class="cl">الحل البديل السريع (يخدم العميل دون كسر القاعدة)</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q3c2"><span class="mx">/2</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>ينفّذ ثم «يسوّي الورق بكرة» → <b>مستبعد</b>.</li>
+          <li>يرفض بجفاف دون تقديم بديل → جامد، سيصطدم بالتجارية أسبوعياً.</li>
+          <li>يقول «حسب الشخص ومركزه» → القاعدة عنده قابلة للتفاوض.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q3n"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ AXIS 2 ═══════════ -->
+  <div class="axis" id="a2">
+    <div class="axhead">
+      <h2>المحور الثاني · الاستلام وضبط الجودة</h2>
+      <span class="live"><b id="ax2s">0</b>/20</span>
+      <span class="pts">20 نقطة</span>
+    </div>
+
+    <!-- Q4 -->
+    <div class="q" data-axis="2">
+      <div class="qhead"><div class="qnum">٤</div>
+        <h3>قاعدة الـ 75% — العمر الافتراضي المتبقي</h3>
+        <span class="qw">7 نقاط</span>
+      </div>
+      <span class="ref">المرجع: CCP-3 · الرفض التلقائي لأي شحنة عمرها المتبقي &lt; 75%</span>
+      <div class="scen">
+        <b class="t">السيناريو — شحنة وصلت اليوم 2026/07/16، دفعتان:</b>
+        <table>
+          <tr><th>الدفعة</th><th>تاريخ الإنتاج</th><th>تاريخ الانتهاء</th><th>الكمية</th></tr>
+          <tr><td><b>LOT-A</b></td><td class="num">2026/03/01</td><td class="num">2027/03/01</td><td class="num">150 كرتون</td></tr>
+          <tr><td><b>LOT-B</b></td><td class="num">2026/06/01</td><td class="num">2027/06/01</td><td class="num">200 كرتون</td></tr>
+        </table>
+        التغليف سليم · الحرارة مطابقة · المورد معتمد · <b>الفرع ينتظر البضاعة اليوم</b>.
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li><b>احسب أمامي</b> نسبة العمر المتبقي لكل دفعة.</li>
+          <li>ما قرارك في كل واحدة؟ ولماذا؟</li>
+          <li>ما اسم هذا النوع من القرارات في تقرير الجودة؟</li>
+          <li>ما المستند الذي تُصدره للدفعة المرفوضة؟ ومن يعتمده؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li>«المورد يقول: خذها بخصم 20%، ما زال أمامها 7 أشهر. ردّك؟»</li>
+          <li>«هل تملك أنت صلاحية استثنائها؟ من يملكها؟»</li>
+          <li>«لو الفرع اشتكى أنك عطّلت البيع — بم تردّ على الإدارة؟»</li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q4a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي — الحساب الكامل</summary>
+        <div class="body">
+          <b>LOT-A:</b> العمر الكامل = 365 يوماً · المنقضي حتى 2026/07/16 = <b>137</b> يوماً ·
+          المتبقي = 365 − 137 = <b>228</b> يوماً → <b>228 ÷ 365 = <span class="key">62.5%</span></b>
+          → <b class="hot">أقل من 75% ⇒ رفض تلقائي</b> + نقل إلى Quarantine.
+          <br><br>
+          <b>LOT-B:</b> المنقضي = <b>45</b> يوماً · المتبقي = <b>320</b> يوماً →
+          <b>320 ÷ 365 = <span class="key">87.7%</span></b> → <b>✅ قبول</b>.
+          <br><br>
+          <b>القرار = «قبول جزئي» (Partial Acceptance)</b> — أحد القرارات الثلاثة المعتمدة في تقرير
+          الجودة: قبول كامل / <span class="key">قبول جزئي</span> / رفض كامل.
+          <br><br>
+          <b>المستند:</b> <b>Return Note</b> (BFP-RT-008) للـ150 كرتوناً المرفوضة، يعتمده
+          <b>مدير المستودع</b> · مع <b>تقرير فحص الجودة</b> (BFP-QC-016) يعتمده <b>مدير الجودة</b> ·
+          وصور مرفقة عبر الكاميرا. الرفض <b>آلي في النظام</b> — لا يملك أحد صلاحية استثنائه،
+          والشرط منصوص عليه في PO نفسه <span class="key">«العمر الافتراضي المتبقي 75%»</span>
+          أي أن قبولها <b>خرق تعاقدي</b> لا مجرد مخالفة داخلية.
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/7</span></div>
+        <div class="crow"><span class="cl">صحة الحساب (62.5% و 87.7%)</span><input class="c" data-max="3" type="number" min="0" max="3" step="0.5" id="q4c1"><span class="mx">/3</span></div>
+        <div class="crow"><span class="cl">قرار «القبول الجزئي» بالمصطلح الصحيح</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q4c2"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">المستند الصحيح + معتمِده + إدراك البُعد التعاقدي</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q4c3"><span class="mx">/2</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>يقبل الاثنتين «لأن فيهما صلاحية باقية» → لا يعرف قاعدة الـ75%.</li>
+          <li>يرفض الاثنتين → لا يفرّق ولا يحسب.</li>
+          <li>يقبل خصم الـ20% → <b>خرق تعاقدي</b>، ويكشف قابلية للمساومة على الجودة.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q4n"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="q" data-axis="2">
+      <div class="qhead"><div class="qnum">٥</div>
+        <h3>الشاحنة المختلطة — أخطر سؤال في البطاقة</h3>
+        <span class="qw">8 نقاط</span>
+      </div>
+      <span class="ref tag-trap">🔴 سؤال فخ — لا تلمّح إطلاقاً</span>
+      <div class="scen">
+        <b class="t">السيناريو:</b> شاحنة واحدة وصلت الرصيف تحمل <b>ثلاث حمولات</b> لثلاثة قطاعات:
+        <table>
+          <tr><th>#</th><th>الحمولة</th><th>الوجهة</th><th class="num">الحرارة عند الوصول</th></tr>
+          <tr><td>أ</td><td>40 كرتون سيروم فيتامين C (تجميل)</td><td>مجمع الرحبة — وحدة 01</td><td class="num hot">+21°م</td></tr>
+          <tr><td>ب</td><td>60 كرتون ألبان مبردة (أغذية)</td><td>E-1 ← المبرد</td><td class="num hot">+6.5°م</td></tr>
+          <tr><td>ج</td><td>30 كرتون مثلجات (أغذية مجمدة)</td><td>المجمد</td><td class="num hot">−15°م</td></tr>
+        </table>
+        السائق مستعجل والرصيف مزدحم وخلفه شاحنتان.
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li>قرارك في <b>كل حمولة على حدة</b> — ولماذا؟</li>
+          <li>ما <b>الحد الحرج</b> المعتمد لكل واحدة؟ اذكر الرقم.</li>
+          <li>هل تتعامل معها بنفس المعيار؟ فسّر.</li>
+          <li>أي نقطة CCP تنطبق هنا؟ وما إجراؤها التصحيحي؟</li>
+          <li>من تُشعر فوراً وبأي مستند؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li><b>إن رفض الحمولة (أ) بحجة تجاوز 4°م — توقّف واحفر:</b> «طيب، ما هي درجة التخزين المعتمدة للكريمات عندنا؟»</li>
+          <li><b>إن قبل الحمولة (ب) — احفر:</b> «كم درجة سلسلة التبريد للألبان بالضبط؟»</li>
+          <li>«من يقرر مصير الحمولة (أ) نهائياً — أنت أم مدير الجودة؟»</li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q5a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي — الفخ وتفكيكه</summary>
+        <div class="body">
+          <b>الفخ:</b> منظومتنا فيها <b>نظامان حراريان مختلفان تماماً</b>، والمرشح الضعيف يطبّق حداً واحداً على الجميع.
+          <ul>
+            <li><b>(أ) التجميل — المستهدف <span class="key">15–18°م</span></b> (مجمع الرحبة). الوصول 21°م ⇒ تجاوز.
+                لكنه <b>ليس CCP-1 غذائياً ولا رفض تلقائي</b> — ينطبق منطق <b>CCP-2</b>
+                (إنذار عند ارتفاع &gt;1°م عن المستهدف؛ 21 &gt; 19). الإجراء: <b>حجر نظامي + Quality Alert</b>
+                والقرار النهائي <b>لمدير الجودة</b> (حساسية حرارية/ثبات رائحة).
+                <span class="key">من يرفضها بحجة «تجاوزت 4°م» فقد كشف أنه لا يعرف قطاع التجميل.</span></li>
+            <li><b>(ب) الألبان — الحد <span class="key">≤ 4°م</span></b>. الوصول 6.5°م ⇒
+                <b class="hot">CCP-1 مخترق ⇒ رفض الحمولة كاملة فوراً</b> + Return Note. لا اجتهاد ولا استثناء.</li>
+            <li><b>(ج) المثلجات — الحد <span class="key">≤ −18°م</span></b>. الوصول −15°م <b>أدفأ من الحد</b> ⇒
+                <b class="hot">CCP-1 مخترق ⇒ رفض</b>. (فخ فرعي: بعضهم يظن −15 «أبرد» من −18.)</li>
+          </ul>
+          <b>الخلاصة:</b> رفض (ب) و(ج) فوراً · حجر (أ) بانتظار قرار الجودة ·
+          إشعار <b>مدير الجودة + المشتريات</b> فوراً · <b>Quality Alert + Return Note</b> في النظام ·
+          توثيق الحرارة بالصور. والرصيف المزدحم <b>ليس مبرراً</b> —
+          <span class="key">لا Done قبل الجودة (القاعدة الذهبية الأولى)</span>.
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/8</span></div>
+        <div class="crow"><span class="cl">التمييز بين النظامين الحراريين (لم يقع في الفخ)</span><input class="c" data-max="4" type="number" min="0" max="4" step="0.5" id="q5c1"><span class="mx">/4</span></div>
+        <div class="crow"><span class="cl">القرار الصحيح في الحمولات الثلاث + الأرقام</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q5c2"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">التصعيد والتوثيق (CCP الصحيح + المستند + من يقرر)</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q5c3"><span class="mx">/2</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>يطبّق ≤4°م على مستحضرات التجميل → <b>وقع في الفخ</b> — خبرة أغذية فقط.</li>
+          <li>يقبل الألبان عند 6.5°م → خطر سلامة غذائية مباشر، <b>مستبعد</b>.</li>
+          <li>يظن −15°م مطابقة → لا يقرأ الإشارة السالبة.</li>
+          <li>يقبل كل شيء «لأن الرصيف مزدحم» → يخضع لضغط التشغيل على حساب الجودة.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q5n"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="q" data-axis="2">
+      <div class="qhead"><div class="qnum">٦</div>
+        <h3>سحب منتج (Recall) — التتبع تحت ضغط الوقت</h3>
+        <span class="qw">5 نقاط</span>
+      </div>
+      <span class="ref">المرجع: التتبع الأمامي + الحجر النظامي</span>
+      <div class="scen">
+        <b class="t">السيناريو:</b> الساعة <b>19:40</b>. المورد يتصل: دفعة <b>LOT-2409</b> فيها عيب تصنيعي
+        ويجب سحبها فوراً. الدفعة <b>وُزّعت جزئياً</b> على الفروع خلال اليومين الماضيين.
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li>ما أول ما تفعله <b>في النظام</b> — قبل أي مكالمة؟</li>
+          <li>كيف تعرف <b>أي الفروع</b> استلمت هذه الدفعة بالضبط؟</li>
+          <li>ما مصير الكمية المتبقية في المستودع؟</li>
+          <li>كيف تُثبت لاحقاً أن السحب كان كاملاً 100%؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li>«كم دقيقة تحتاج لتعرف قائمة الفروع؟» <i>(الصحيح: ثوانٍ — النظام يعرضها فوراً)</i></li>
+          <li>«لو دفعة بيعت للعميل النهائي؟»</li>
+          <li>«هل سبق أن أدرت Recall حقيقياً؟ احكِ لي.»</li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q6a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي</summary>
+        <div class="body">
+          <b>أولاً في النظام — لا الهاتف:</b> وضع الصنف في حالة
+          <span class="key">«حجر نظامي»</span> فوراً لتجميد أي صرف إضافي أثناء إدارة الأزمة.
+          <br><br>
+          <b>التتبع الأمامي:</b> بإدخال رقم التشغيلة <b>LOT-2409</b> يعرض النظام <b>فوراً</b>:
+          تاريخ الاستلام · الموقع الحالي · <span class="key">والفروع التي استلمتها</span>.
+          هذا هو جوهر تتبع الـ Lot — ولهذا رقم الدفعة <b>إلزامي</b> عند الاستلام.
+          <br><br>
+          <b>الإجراء:</b> سحب الكميات فعلياً إلى <b>منطقة الحجر الصحي</b> · إشعار عاجل لجميع الفروع ·
+          Return Note للمورد · تقرير حادثة. <b>الإثبات:</b> مطابقة الكمية المستلمة من الدفعة
+          = المسحوبة + المتبقية بالمستودع، وكلها مسجلة بالماسح — <b>سجل النظام هو الدليل</b>.
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/5</span></div>
+        <div class="crow"><span class="cl">التجميد النظامي أولاً + التتبع الأمامي بالـ Lot</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q6c1"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">الحجر الصحي والمسار الصحيح للكمية</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q6c2"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">إثبات اكتمال السحب بالسجل</span><input class="c" data-max="1" type="number" min="0" max="1" step="0.5" id="q6c3"><span class="mx">/1</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>يبدأ بالاتصال بالفروع قبل تجميد الصنف → تستمر الحركة أثناء الأزمة.</li>
+          <li>«أراجع الأوراق لأعرف الفروع» → لا يثق بالنظام أو لا يعرف قدراته.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q6n"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ AXIS 3 ═══════════ -->
+  <div class="axis" id="a3">
+    <div class="axhead">
+      <h2>المحور الثالث · التخزين والصرف و FEFO</h2>
+      <span class="live"><b id="ax3s">0</b>/20</span>
+      <span class="pts">20 نقطة</span>
+    </div>
+
+    <!-- Q7 -->
+    <div class="q" data-axis="3">
+      <div class="qhead"><div class="qnum">٧</div>
+        <h3>FEFO — الترتيب والفرض والاستثناء</h3>
+        <span class="qw">8 نقاط</span>
+      </div>
+      <span class="ref">المرجع: القاعدة الذهبية الثانية · _bz_check_fefo · ترتيب removal_date</span>
+      <div class="scen">
+        <b class="t">السيناريو — مجمع الرحبة، وحدة 01 (العناية بالوجه)، اليوم 2026/07/20:</b>
+        <table>
+          <tr><th>الدفعة</th><th>الكمية</th><th>تاريخ الانتهاء</th><th>الموقع</th></tr>
+          <tr><td><b>LOT-2409</b></td><td class="num">200 كرتون</td><td class="num">2026/09/30</td><td>01-L-03-02</td></tr>
+          <tr><td><b>LOT-2411</b></td><td class="num">180 كرتون</td><td class="num">2026/11/30</td><td>01-R-01-01</td></tr>
+        </table>
+        <b>طلب فرع الهايبر:</b> <span class="num">250 كرتون</span>.
+        العامل يقول: «LOT-2411 أقرب للباب والممر مزدحم — أسحب منها أسرع.»
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li>ما ترتيب السحب الصحيح؟ <b>بالأرقام</b>.</li>
+          <li>كم يتبقى من كل دفعة بعد التنفيذ؟</li>
+          <li>ماذا يحدث لو حاول العامل السحب من LOT-2411 أولاً؟</li>
+          <li>هل يمكن تجاوز FEFO؟ ومن يملك ذلك؟</li>
+          <li>ماذا يعني عنوان <b>01-L-03-02</b>؟ فكّكه لي.</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li>«لو عدّل أحدهم تاريخ الإزالة ليمرّر السحب؟»</li>
+          <li>«كيف تراقب الالتزام الفعلي على الأرض لا في النظام فقط؟»</li>
+          <li>«مؤشر تجاوزات FEFO عندنا هدفه صفر مطلق — كيف تحافظ عليه مع 250 عاملاً؟»</li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q7a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي</summary>
+        <div class="body">
+          <b>الترتيب الصحيح (FEFO = الأقرب انتهاءً أولاً):</b>
+          <ul>
+            <li><b>1)</b> LOT-2409 كاملة: <span class="key">200 كرتون</span> (تنتهي 2026/09/30 — الأقرب).</li>
+            <li><b>2)</b> LOT-2411: <span class="key">50 كرتون</span> فقط لإكمال الـ250.</li>
+            <li><b>المتبقي:</b> LOT-2409 = <b>صفر</b> · LOT-2411 = <b>130 كرتون</b>.</li>
+          </ul>
+          <b>عند المخالفة:</b> النظام <b>يرفض الترحيل</b> برسالة صريحة:
+          <span class="key">«خرقٌ لقاعدة FEFO … تُصرَف التشغيلة LOT-2411 (انتهاء 2026-11-30) بينما التشغيلة
+          الأقدم LOT-2409 (انتهاء 2026-09-30) ما تزال متاحة … اصرف الأقدم انتهاءً أولاً.»</span>
+          والحارس مربوط على <code>button_validate</code> فوق <code>product_expiry</code> بترتيب
+          <code>removal_date, in_date, id</code>.
+          <br><br>
+          <b>⚠️ الإجابة الحاسمة:</b> <b>لا يوجد تجاوز — إطلاقاً.</b> القاعدة مفروضة بـ
+          <code>@api.constrains</code>، وحتى <b>محاولة التلاعب بتواريخ الإزالة تُرفض</b> بـ UserError.
+          <span class="key">من يقول «بموافقة خطية من المدير» فهو يصف نظاماً آخر لا نظامنا</span> — وهذا فارق
+          جوهري بين من قرأ عن FEFO ومن طبّقه عندنا.
+          <br><br>
+          <b>العنوان 01-L-03-02</b> بنظام <b>UU-A-BB-LL</b>: الثلاجة <b>01</b> · الجهة <b>L = يسار</b> ·
+          الباي <b>03</b> · المستوى <b>02</b>. (المستوى 01 = الأرضي للأثقل، 05 = القمة للأخف.)
+          <br><br>
+          <b>حجة «الممر مزدحم» مرفوضة</b> — المسافة لا تُقدَّم على الصلاحية، والنظام لن يسمح أصلاً.
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/8</span></div>
+        <div class="crow"><span class="cl">الترتيب والأرقام الصحيحة (200 + 50، متبقي 130)</span><input class="c" data-max="4" type="number" min="0" max="4" step="0.5" id="q7c1"><span class="mx">/4</span></div>
+        <div class="crow"><span class="cl">آلية الفرض البرمجي وسلوك النظام عند الخرق</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q7c2"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">إدراك أنه لا يوجد تجاوز + فك العنونة</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q7c3"><span class="mx">/2</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>يسحب من LOT-2411 أولاً → لا يعرف FEFO أصلاً، <b>مستبعد</b>.</li>
+          <li>«يجوز التجاوز بموافقة خطية» → يصف نظاماً غير نظامنا.</li>
+          <li>يوافق العامل على حجة الازدحام → يقدّم الراحة على القاعدة.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q7n"></div>
+    </div>
+
+    <!-- Q8 -->
+    <div class="q" data-axis="3">
+      <div class="qhead"><div class="qnum">٨</div>
+        <h3>التخزين الموجَّه — واكتشاف ثغرة حقيقية</h3>
+        <span class="qw">6 نقاط</span>
+      </div>
+      <span class="ref tag-trap">🔴 سؤال كاشف — فجوة قائمة فعلاً</span>
+      <div class="scen">
+        <b class="t">السيناريو:</b> في جولة صباحية وجدتَ <b>18 طبلية</b> موضوعة على أرضية ممر E-7 بلا مواقع،
+        ومسجّلة في النظام كـ«مستلمة» منذ أمس. العامل: «المواقع كانت ممتلئة والاستلام كان متأخراً،
+        وبنسكّنها اليوم إن شاء الله.»
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li>ما تسلسل التخزين الموجَّه الصحيح <b>خطوة بخطوة</b>؟</li>
+          <li>أي قاعدة انتُهكت هنا بالضبط؟</li>
+          <li><b>سؤال مهم:</b> هل منعك النظام من هذا؟ ولماذا في رأيك؟</li>
+          <li>ما أثر هذه الطبليات على دقة بطاقة الموقع (Bin Card)؟</li>
+          <li>ما إجراؤك — الآن ولاحقاً؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li><b>احفر في السؤال 3:</b> «هل كل قواعدنا مفروضة برمجياً؟ أيّها ليس كذلك؟» <i>(الكاشف الحقيقي)</i></li>
+          <li>«ما الفرق بين قاعدة في SOP وقاعدة في الكود؟ أيهما تثق بها أكثر؟»</li>
+          <li>«لو كنت مكاني، ما أول ما تطلب من فريق IT؟»</li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q8a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي — والثغرة</summary>
+        <div class="body">
+          <b>التسلسل الصحيح:</b> بعد الاستلام تصل <b>مهمة توجيه آلي</b> على جهاز العامل →
+          يمسح الصنف → التطبيق يرشده إلى <b>الرف الأمثل</b> → يصل ويمسح
+          <span class="key">باركود الرف (Bin Barcode) للتأكيد</span> → يضغط تأكيد →
+          <b>تُحدَّث بطاقة الموقع آلياً</b>. القاعدة: <b>مسح الرف ثم الصنف</b>.
+          <br><br>
+          <b>القاعدة المنتهكة نصاً:</b> <span class="key">«يمنع التخزين العشوائي على أرضية المستودع.»</span>
+          <br><br>
+          <b>⭐ الإجابة التي تفصل المرشح الممتاز:</b> <b>لا — النظام لم يمنعه.</b>
+          مرحلة الـ Putaway عندنا <span class="key">تعتمد على Odoo القياسي بلا حارس برمجي مخصص</span>،
+          بخلاف القواعد الذهبية الأربع (الجودة، FEFO، Gate Pass، المطابقة) المحمية بـ
+          <code>@api.constrains</code>. أي أن قاعدة التخزين الموجَّه <b>موجودة في الـ SOP فقط</b> —
+          <b>فجوة حقيقية قائمة اليوم في المنظومة</b>. المرشح الذي يكتشفها وحده أو يسأل
+          «هل هذه مفروضة آلياً؟» = <b>خبرة نظم حقيقية، لا حفظ إجراءات</b>.
+          <br><br>
+          <b>الأثر:</b> الرصيد صحيح لكن <b>الموقع مجهول</b> ⇒ Bin Card غير دقيقة ⇒ السحب يفشل ⇒
+          دقة المواقع تنهار (الهدف ≥99.5%) ⇒ ويظهر لاحقاً كفارق جرد.
+          <br><br>
+          <b>الإجراء:</b> تسكين فوري بالماسح + سجل الاجتماع اليومي + جذر المشكلة
+          (سعة المواقع؟ توقيت الاستلام؟) + <b>مطالبة IT بحارس برمجي</b> يمنع إغلاق الاستلام بلا Putaway مكتمل.
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/6</span></div>
+        <div class="crow"><span class="cl">تسلسل المسح الصحيح (الرف ثم الصنف) + نص القاعدة</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q8c1"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">أثر الفوضى على Bin Card ودقة المواقع والجرد</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q8c2"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">⭐ إدراك أن القاعدة غير مفروضة برمجياً (SOP لا كود)</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q8c3"><span class="mx">/2</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>يقبل العذر «المواقع ممتلئة» → لن يفرض انضباطاً.</li>
+          <li>يعاقب العامل فقط دون معالجة الجذر → قيادة سطحية.</li>
+          <li>يفترض أن النظام يمنع كل شيء تلقائياً → ثقة عمياء بالنظام.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q8n"></div>
+    </div>
+
+    <!-- Q9 -->
+    <div class="q" data-axis="3">
+      <div class="qhead"><div class="qnum">٩</div>
+        <h3>عهدة السائق — تسوية الشاحنة الافتراضية</h3>
+        <span class="qw">6 نقاط</span>
+      </div>
+      <span class="ref">المرجع: Virtual VAN Locations · Gate Pass · عتبة التصعيد 2%</span>
+      <div class="scen">
+        <b class="t">السيناريو — نهاية يوم التوزيع، الشاحنة VAN-001:</b>
+        <table>
+          <tr><th>البند</th><th class="num">الكمية</th></tr>
+          <tr><td>حُمّلت صباحاً من المستودع الرئيسي</td><td class="num">120 كرتون</td></tr>
+          <tr><td>سُلّمت للعملاء (موثّقة)</td><td class="num">95 كرتون</td></tr>
+          <tr><td><b>الموجود فعلياً في الشاحنة عند العودة</b></td><td class="num hot">22 كرتون</td></tr>
+        </table>
+        سعر الكرتون <span class="num">65 د.ل</span> · السائق: «أكيد غلط في العدّ الصباحي.»
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li><b>احسب الفرق</b> وقيمته بالدينار.</li>
+          <li>كيف تُعرَّف شاحنة التوزيع في النظام؟ ولماذا هذا التصميم؟</li>
+          <li>متى تنتقل البضاعة إلى <b>عهدة السائق المحاسبية</b> بالضبط؟</li>
+          <li>هل يستدعي هذا الفرق تصعيداً؟ <b>احسب النسبة</b> وقرّر.</li>
+          <li>ما شرطا اعتماد Gate Pass اللذان يمنعان تكرار هذا؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li>«لو تكرر مع نفس السائق ثلاث مرات في شهر؟»</li>
+          <li>«من يعتمد سند التسوية النهائي؟ هل تملك أنت ذلك؟»</li>
+          <li>«كيف تمنع هذا هيكلياً لا عقابياً؟»</li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q9a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي</summary>
+        <div class="body">
+          <b>الحساب:</b> المتوقع = 120 − 95 = <b>25 كرتون</b> · الفعلي = <b>22</b> ⇒
+          <b class="hot">عجز 3 كراتين</b> = 3 × 65 = <span class="key">195 د.ل</span>.
+          <br><br>
+          <b>التصميم:</b> كل شاحنة تُعرَّف كـ <span class="key">«موقع تخزين افتراضي» (Virtual Location)</span>.
+          التحميل = إذن نقل داخلي من Main WH ← VAN-001، فيصبح للشاحنة <b>رصيد مستقل قابل للجرد</b>
+          بدل أن تكون «صندوقاً أسود».
+          <br><br>
+          <b>انتقال العهدة:</b> لحظة إصدار مشرف الشحن لإذن الخروج ⇒
+          <span class="key">تصبح البضاعة في عهدة السائق المحاسبية</span>. ونهاية اليوم
+          <b>يجب أن يُطابق رصيد الـ VAN البضاعة المتبقية فعلياً</b> — وهذا نص الإجراء.
+          <br><br>
+          <b>التصعيد:</b> 3 ÷ 120 = <span class="key">2.5%</span> — <b>يتجاوز عتبة الـ2%</b> ⇒
+          <b>تجميد حركة الصنف + فتح تحقيق + رفع Stock Adjustment Voucher</b>، والتصعيد:
+          مدير المستودع التنفيذي ← <b>المدير المالي + التجاري</b>. والسند
+          <span class="key">لا يُعتمد إلا من المدير المالي حصراً</span> — لا أنت ولا السائق.
+          <br><br>
+          <b>شرطا Gate Pass:</b> لا يُعتمد التصريح دون <span class="key">تحديد لوحة المركبة واسم السائق</span>،
+          ولا يُصدر إلا لإذون الشحن الصادرة، ولا تخرج مركبة بلا تصريح معتمد مربوط برقم إذن التسليم.
+          <b>حجة «غلط في العدّ» مرفوضة</b> — التحميل تم بالماسح.
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/6</span></div>
+        <div class="crow"><span class="cl">الحساب (عجز 3 = 195 د.ل) ونسبة 2.5%</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q9c1"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">منطق الـ VAN الافتراضي ولحظة انتقال العهدة</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q9c2"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">قرار التصعيد الصحيح + اعتماد المالية + شروط Gate Pass</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q9c3"><span class="mx">/2</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>يقبل «غلط في العدّ» ويسوّي بهدوء → باب مفتوح للسرقة.</li>
+          <li>يعدّل الرصيد بنفسه → <b>خرق قاعدة التسويات</b>، مستبعد.</li>
+          <li>لا يحسب النسبة ولا يعرف عتبة الـ2% → لا يعرف مصفوفة التصعيد.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q9n"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ AXIS 4 ═══════════ -->
+  <div class="axis" id="a4">
+    <div class="axhead">
+      <h2>المحور الرابع · الجرد والمؤشرات والتكلفة</h2>
+      <span class="live"><b id="ax4s">0</b>/20</span>
+      <span class="pts">20 نقطة</span>
+    </div>
+
+    <!-- Q10 -->
+    <div class="q" data-axis="4">
+      <div class="qhead"><div class="qnum">١٠</div>
+        <h3>الجرد الدوري — الاستراتيجية ودورة حياة الجلسة</h3>
+        <span class="qw">8 نقاط</span>
+      </div>
+      <span class="ref">المرجع: تحليل ABC · جلسة CC-2026-#### · قاعدة التسويات</span>
+      <div class="scen">
+        <b class="t">السيناريو:</b> ورثتَ مستودعاً يُجري <b>جرداً سنوياً شاملاً</b> واحداً يوقف العمل
+        <b>3 أيام</b> كاملة، والفروقات تُصحَّح «بالتفاهم» مع المحاسب. تريد تغيير هذا.
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li>ما البديل الذي تقترحه؟ وعلى أي أساس تُصنّف الأصناف؟</li>
+          <li>ما تكرار الجرد لكل فئة؟ <b>بالأرقام</b>.</li>
+          <li>اشرح <b>دورة حياة جلسة الجرد</b> من الفتح حتى تطبيق التسوية.</li>
+          <li>وجدت فرقاً <b>3.4%</b> في صنف عالي القيمة. ماذا تفعل؟</li>
+          <li>هل تملك أنت صلاحية تعديل الرصيد؟</li>
+          <li>هل يمكن إلغاء جلسة جرد مكتملة؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li>«المحاسب يقول: فرق بسيط خلّينا نقفله ونمشي. ردّك؟»</li>
+          <li>«ما الفرق بين فرق جرد وفرق سرقة؟ كيف تميّز؟»</li>
+          <li>«كم نسبة الفروقات المقبولة عندك شخصياً؟ ولماذا؟»</li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q10a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي</summary>
+        <div class="body">
+          <b>البديل المعتمد نصاً:</b> <span class="key">«إلغاء الجرد السنوي المعطل للعمل، واستبداله بمهام
+          جرد دوري موجه (يومياً/أسبوعياً) للأصناف عالية الدوران.»</span>
+          <br><br>
+          <b>التصنيف بتحليل ABC:</b>
+          <ul>
+            <li><b>الفئة A</b> (قيمة عالية + دوران سريع): <span class="key">أسبوعي</span></li>
+            <li><b>الفئة B</b>: <span class="key">شهري</span></li>
+            <li><b>الفئة C</b>: <span class="key">ربع سنوي</span></li>
+          </ul>
+          <b>دورة حياة الجلسة (CC-2026-####):</b>
+          <ol>
+            <li><b>مسودة → قيد العدّ:</b> يُجمّد النظام لقطة الرصيد النظري (theoretical_qty).</li>
+            <li><b>قيد العدّ → مصادَق:</b> <span class="key">لا مصادقة وورقة العدّ ناقصة</span> — أي بند بلا عدّ فعلي يمنع المصادقة.</li>
+            <li><b>اعتماد المدير المالي:</b> <span class="key">صلاحية المدير المالي حصراً</span>.</li>
+            <li><b>تطبيق التسوية:</b> لا تُطبَّق قبل المصادقة + الاعتماد.</li>
+            <li><b>الإلغاء:</b> <span class="key">«لا تُلغى جلسة مكتملة — سجلّها التاريخي محفوظ.»</span></li>
+          </ol>
+          <b>فرق 3.4% (&gt; 2%):</b> ⇒ <b>تجميد حركة الصنف فوراً + فتح تحقيق + رفع Stock Adjustment Voucher</b>،
+          تصعيد إلى <b>المدير المالي + التجاري</b>.
+          <br><br>
+          <b>هل أملك تعديل الرصيد؟ لا.</b> القاعدة نصاً:
+          <span class="key">«لا يُعدَّل أي رصيد يدوياً بدون سند تسوية معتمد من المدير المالي.»</span>
+          والنظام يرفض التطبيق بلا تسجيل الاعتماد. <b>«التفاهم مع المحاسب» جريمة حوكمية</b> — لا اختصار إجراء.
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/8</span></div>
+        <div class="crow"><span class="cl">ABC بالتكرار الصحيح (أسبوعي/شهري/ربعي)</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q10c1"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">دورة حياة الجلسة كاملة + عدم إلغاء المكتملة</span><input class="c" data-max="3" type="number" min="0" max="3" step="0.5" id="q10c2"><span class="mx">/3</span></div>
+        <div class="crow"><span class="cl">عتبة 2% والتصعيد + اعتماد المالية حصراً</span><input class="c" data-max="3" type="number" min="0" max="3" step="0.5" id="q10c3"><span class="mx">/3</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>يتمسك بالجرد السنوي الشامل → لم يواكب الممارسات الحديثة.</li>
+          <li>«أعدّل الرصيد وأبلّغ المالية» → عكس القاعدة تماماً، <b>مستبعد</b>.</li>
+          <li>يقبل تسوية 3.4% بلا تحقيق → لا يميّز الفرق عن السرقة.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q10n"></div>
+    </div>
+
+    <!-- Q11 -->
+    <div class="q" data-axis="4">
+      <div class="qhead"><div class="qnum">١١</div>
+        <h3>لوحة المؤشرات — وتعارض قائم في منظومتنا</h3>
+        <span class="qw">7 نقاط</span>
+      </div>
+      <span class="ref tag-trap">🔴 سؤال كاشف — تعارض حقيقي</span>
+      <div class="scen">
+        <b class="t">أداء يوليو 2026 — البيانات الخام:</b>
+        <table>
+          <tr><th>البند</th><th class="num">القيمة</th></tr>
+          <tr><td>إجمالي الطلبات / منها مكتملة في الوقت والكمية</td><td class="num">640 / 601</td></tr>
+          <tr><td>أصناف مجرودة / منها مطابقة</td><td class="num">2,400 / 2,352</td></tr>
+          <tr><td>قيمة التالف والفاقد / إجمالي قيمة المخزون</td><td class="num">3,180 / 265,000 د.ل</td></tr>
+          <tr><td>كمية مشحونة / كمية مطلوبة</td><td class="num">58,900 / 60,500</td></tr>
+          <tr><td>متوسط Dock-to-Stock</td><td class="num">4.8 ساعة</td></tr>
+          <tr><td>إنتاجية العامل</td><td class="num">76 CPH</td></tr>
+          <tr><td><b>تجاوزات FEFO المسجّلة</b></td><td class="num hot">2</td></tr>
+        </table>
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li><b>احسب:</b> OTIF · دقة المخزون · نسبة الفاقد · Fill Rate.</li>
+          <li>قارن كلاً منها بهدفه — أيها داخل الهدف وأيها خارجه؟</li>
+          <li><b>أي مؤشر يجب أن يوقظك ليلاً؟ ولماذا؟</b></li>
+          <li>ما خطتك للشهر القادم لأخطر مؤشر؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li><b>الكاشف:</b> «دقة المخزون 98% — هل هي داخل الهدف أم خارجه؟» <i>(لا تساعده. الجواب: يعتمد على أي وثيقة تقرأ — وهذا هو بيت القصيد)</i></li>
+          <li>«لو أعطيتك مؤشراً واحداً فقط تحكم به على مستودع، أيّها تختار؟ ولماذا؟»</li>
+          <li>«تجاوزا FEFO — كيف حدثا أصلاً والنظام يمنعهما برمجياً؟»</li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q11a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي — والتعارض</summary>
+        <div class="body">
+          <b>الحسابات:</b>
+          <ul>
+            <li><b>OTIF</b> = 601 ÷ 640 = <span class="key">93.9%</span> — الهدف ≥95% ⇒ <b class="hot">خارج</b>.</li>
+            <li><b>دقة المخزون</b> = 2,352 ÷ 2,400 = <span class="key">98.0%</span> — ⚠️ انظر أدناه.</li>
+            <li><b>نسبة الفاقد</b> = 3,180 ÷ 265,000 = <span class="key">1.2%</span> — الهدف &lt;0.8% ⇒ <b class="hot">خارج (50%+ فوق الهدف)</b>.</li>
+            <li><b>Fill Rate</b> = 58,900 ÷ 60,500 = <span class="key">97.4%</span> — الهدف ≥97% ⇒ <b>✅ داخل</b>.</li>
+            <li><b>Dock-to-Stock</b> 4.8h — الهدف ≤4h ⇒ <b class="hot">خارج</b> · <b>الإنتاجية</b> 76 — الهدف 80–100 ⇒ <b class="hot">خارج</b>.</li>
+          </ul>
+          <b>⭐ التعارض الحقيقي (يكشف المرشح الممتاز):</b> دقة المخزون <b>98.0%</b> لها
+          <span class="key">أربعة أهداف متضاربة في وثائقنا</span>: ≥98.5% (الدليل التشغيلي) ·
+          ≥98% (جدول المؤشرات) · ≥99.0% (جرد دوري) · ≥90% (لوحة أخرى).
+          فهي <b>ناجحة وراسبة في آن واحد حسب الوثيقة التي تفتحها</b>.
+          والفاقد كذلك: &lt;0.8% مقابل ≤2%. <b>المرشح الممتاز يتوقف ويسأل: «أي هدف هو المعتمد؟»</b>
+          ويطالب بتوحيد التعريف قبل أي خطة تحسين.
+          <br><br>
+          <b>⚠️ المؤشر الذي يوقظ ليلاً = تجاوزات FEFO = 2 (الهدف صفر مطلق).</b>
+          هذا <b>ليس انحراف أداء — بل خرق لقاعدة ذهبية مفروضة بـ <code>@api.constrains</code></b>.
+          ورياضياً <b>يستحيل</b> أن يحدث مع عمل الحارس ⇒ إما أن أحدهم <b>عطّل الحارس</b>، أو هناك
+          <b>مسار خلفي</b> يتجاوز <code>button_validate</code>، أو <b>خلل في القياس</b>.
+          <span class="key">الأولوية: تحقيق فوري في سلامة الحارس — قبل الفاقد وقبل OTIF.</span>
+          <b>رقم واحد هنا أخطر من كل الانحرافات مجتمعة.</b>
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/7</span></div>
+        <div class="crow"><span class="cl">دقة الحسابات الأربعة</span><input class="c" data-max="3" type="number" min="0" max="3" step="0.5" id="q11c1"><span class="mx">/3</span></div>
+        <div class="crow"><span class="cl">⭐ إدراك خطورة تجاوزَي FEFO (خرق قاعدة لا انحراف)</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q11c2"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">⭐ اكتشاف تضارب أهداف دقة المخزون والمطالبة بتوحيدها</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q11c3"><span class="mx">/2</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>يمرّ على «تجاوزات FEFO = 2» دون توقف → لا يميّز الخرق عن الانحراف.</li>
+          <li>يقول «98% ممتازة» بلا سؤال عن الهدف المعتمد → يقبل الأرقام بلا تدقيق.</li>
+          <li>يختار الفاقد كأخطر مؤشر → منطقي لكنه ليس الأعمق (اقبل جزئياً).</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q11n"></div>
+    </div>
+
+    <!-- Q12 -->
+    <div class="q" data-axis="4">
+      <div class="qhead"><div class="qnum">١٢</div>
+        <h3>تكلفة المناولة — الكفاءة المالية</h3>
+        <span class="qw">5 نقاط</span>
+      </div>
+      <span class="ref">المرجع: الدينار الليبي (د.ل) — عملة المنظومة المعتمدة</span>
+      <div class="scen">
+        <b class="t">تكاليف يوليو 2026:</b>
+        <table>
+          <tr><th>البند</th><th class="num">القيمة (د.ل)</th></tr>
+          <tr><td>رواتب تشغيلية</td><td class="num">96,000</td></tr>
+          <tr><td>محروقات ومناولة</td><td class="num">11,400</td></tr>
+          <tr><td>تالف وفاقد</td><td class="num">3,180</td></tr>
+          <tr><td>صيانة معدات</td><td class="num">4,200</td></tr>
+          <tr><td><b>الإجمالي</b></td><td class="num"><b>114,780</b></td></tr>
+          <tr><td>الكمية المعالجة</td><td class="num">382,600 كرتون</td></tr>
+        </table>
+        <b>المعيار الداخلي:</b> <span class="num">0.28 د.ل / كرتون</span>.
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li>احسب تكلفة معالجة الكرتون الواحد.</li>
+          <li>كم نسبة الانحراف عن المعيار؟</li>
+          <li>ما <b>الأثر السنوي</b> لو استمر؟</li>
+          <li>أي بند تهاجم أولاً؟ ولماذا؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li>«الإدارة طلبت خفض 15% خلال شهرين — ممكن؟ وما ثمنه؟»</li>
+          <li>«أي بند خفضه يبدو ذكياً لكنه يضرّك لاحقاً؟» <i>(الصيانة — الجواب الناضج)</i></li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q12a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي</summary>
+        <div class="body">
+          <b>التكلفة</b> = 114,780 ÷ 382,600 = <span class="key">0.30 د.ل / كرتون</span><br>
+          <b>الانحراف</b> = (0.30 − 0.28) ÷ 0.28 = <span class="key">+7.1%</span> فوق المعيار<br>
+          <b>الأثر السنوي</b> = 0.02 × 382,600 × 12 = <span class="key">91,824 د.ل / سنة</span>
+          <br><br>
+          <b>البند الأول = التالف والفاقد (3,180):</b> ليس أكبر بند لكنه <b>الوحيد الذي قيمته صفر</b> —
+          خسارة صافية بلا مقابل، وهو <b>مرتبط مباشرة</b> بتجاوزَي FEFO وبنسبة فاقد 1.2% (الهدف &lt;0.8%).
+          إصلاحه يحسّن <b>ثلاثة مؤشرات دفعة واحدة</b>.
+          <br><br>
+          <b>الإنتاجية 76 CPH</b> (الهدف 80–100) تعني أن الرواتب تشتري إنتاجية أقل من المستهدف —
+          رفعها إلى 85 يخفّض التكلفة/كرتون <b>دون تسريح أحد</b>.
+          <span class="key">⚠️ خفض الصيانة (4,200) يبدو مغرياً — لكنه يرفع الأعطال والتالف لاحقاً.</span>
+          <br><br>
+          <b>ملاحظة:</b> العملة المعتمدة هي <b>الدينار الليبي (LYD / د.ل)</b> —
+          وأي رقم بالريال في وثائقنا هو <b>إرث قديم يجب تصحيحه</b>.
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/5</span></div>
+        <div class="crow"><span class="cl">الحسابات (0.30 · +7.1% · 91,824)</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q12c1"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">اختيار البند الصحيح بتبرير مقنع (لا الأكبر بل الأهدر)</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q12c2"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">وعي بمخاطر الخفض الخاطئ (الصيانة)</span><input class="c" data-max="1" type="number" min="0" max="1" step="0.5" id="q12c3"><span class="mx">/1</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>يهاجم الرواتب أولاً بالتسريح → حل كسول ومدمّر للروح المعنوية.</li>
+          <li>يقترح خفض الصيانة → قصر نظر مالي.</li>
+          <li>لا يربط التالف بتجاوزات FEFO في السؤال السابق → لا يرى المنظومة ككل.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q12n"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ AXIS 5 ═══════════ -->
+  <div class="axis" id="a5">
+    <div class="axhead">
+      <h2>المحور الخامس · القيادة والأزمات والرؤية</h2>
+      <span class="live"><b id="ax5s">0</b>/15</span>
+      <span class="pts">15 نقطة</span>
+    </div>
+
+    <!-- Q13 -->
+    <div class="q" data-axis="5">
+      <div class="qhead"><div class="qnum">١٣</div>
+        <h3>الرمز الأحمر — انهيار شامل</h3>
+        <span class="qw">6 نقاط</span>
+      </div>
+      <span class="ref">المرجع: إجراءات الطوارئ — الباب الثامن</span>
+      <div class="scen">
+        <b class="t">السيناريو:</b> الساعة <b>14:00</b> — انقطاع كهربائي كامل عن الموقع 155.
+        <br>⛔ نظام Odoo متوقف بالكامل · ❄️ حرارة غرف التبريد ترتفع ·
+        🚛 <b>3 شاحنات</b> على الرصيف نصف مفرّغة · 📦 عمال يحملون طبليات في منتصف المهام.
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li>أول <b>5 دقائق</b> — بالترتيب. ما أول أمر تُصدره؟</li>
+          <li>كيف تعمل <b>6 ساعات</b> بلا نظام؟</li>
+          <li>كيف تميّز البضاعة التي تحرّكت بلا نظام؟</li>
+          <li>بعد عودة التيار — ما ترتيب خطواتك؟</li>
+          <li>ما مصير البضاعة التي ارتفعت حرارتها؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li>«لماذا لا تفتح أبواب التبريد لتفقّد البضاعة؟» <i>(اختبار: الفتح يسرّع الانهيار)</i></li>
+          <li>«من يقرر استئناف العمل — أنت أم الجودة؟»</li>
+          <li>«احكِ لي عن أزمة حقيقية أدرتها. ماذا تعلّمت؟»</li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q13a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي</summary>
+        <div class="body">
+          <b>الدقائق 0–5 (نصاً من الدليل):</b>
+          <ol>
+            <li>إعلان حالة الطوارئ <span class="key">«الرمز الأحمر»</span>.</li>
+            <li>بدء تشغيل <b>المولد الاحتياطي</b> فوراً.</li>
+            <li><span class="key">«فتح أبواب غرف التبريد فقط للضرورة القصوى»</span> — كل فتحة تسرّع الانهيار الحراري.</li>
+          </ol>
+          <b>أول 15 دقيقة:</b> الانتقال إلى <b>الوضع اليدوي</b> — سحب
+          <span class="key">«حقيبة الطوارئ الإجرائية» (الحقيبة الحمراء)</span>: نماذج GRN ورقية وقوائم تحضير ورقية،
+          وفتح <span class="key">«سجل العمليات أثناء انقطاع التيار»</span>.
+          <br><br>
+          <b>التمييز:</b> <span class="key">أي طبلية تُعامل بدون نظام يُلصق عليها «ملصق تتبع أحمر»</span> —
+          فتُعرف لاحقاً بالنظر بلا اجتهاد. ولا مناولة بلا توثيق ورقي صريح.
+          <br><br>
+          <b>بعد عودة التيار — بالترتيب:</b>
+          <ol>
+            <li><b>فحص درجات حرارة جميع الغرف</b> (السلامة قبل البيانات).</li>
+            <li><span class="key">تحويل المنتجات المتأثرة إلى منطقة الحجر الصحي</span> — لا تعود للمخزون تلقائياً.</li>
+            <li>إدخال كافة الحركات المسجّلة يدوياً إلى النظام.</li>
+            <li>تقرير حادثة رسمي.</li>
+          </ol>
+          <b>مصير البضاعة المتأثرة:</b> <b>حجر صحي</b> — والقرار <b>لمدير الجودة</b> لا لك.
+          <b>والشاحنات:</b> توقف — <span class="key">لا Done قبل الجودة</span>، ولا استلام يُغلق بلا فحص.
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/6</span></div>
+        <div class="crow"><span class="cl">أول 5 دقائق بالترتيب (الرمز الأحمر + المولد + عدم الفتح)</span><input class="c" data-max="3" type="number" min="0" max="3" step="0.5" id="q13c1"><span class="mx">/3</span></div>
+        <div class="crow"><span class="cl">الوضع اليدوي (الحقيبة الحمراء + الملصق الأحمر + السجل)</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q13c2"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">الاستعادة بالترتيب الصحيح + الحجر الصحي</span><input class="c" data-max="1" type="number" min="0" max="1" step="0.5" id="q13c3"><span class="mx">/1</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>يفتح غرف التبريد ليتفقّد → يضاعف الخسارة.</li>
+          <li>يوقف كل شيء وينتظر → شلل تام، لا خطة استمرارية.</li>
+          <li>يُدخل البضاعة المتأثرة للمخزون مباشرة → خطر سلامة غذائية.</li>
+          <li>لا يعرف الحقيبة الحمراء ولا الملصق الأحمر → لم يقرأ إجراءات الطوارئ.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q13n"></div>
+    </div>
+
+    <!-- Q14 -->
+    <div class="q" data-axis="5">
+      <div class="qhead"><div class="qnum">١٤</div>
+        <h3>بناء الفريق — التحدي البشري الحقيقي</h3>
+        <span class="qw">5 نقاط</span>
+      </div>
+      <span class="ref">المرجع: المرحلة الأولى 32–46 موظفاً · العمل الميداني حصراً بالماسحات</span>
+      <div class="scen">
+        <b class="t">الواقع بلا تجميل:</b>
+        <br>• المرحلة الأولى: <span class="num">32–46</span> موظفاً · فريق المناولة <span class="num">10–15</span> للتخزين والسحب و<span class="num">5–8</span> للاستلام.
+        <br>• <b>60%</b> من عمال المناولة يقرأون بصعوبة · لا خبرة رقمية إطلاقاً · التدوير عالٍ.
+        <br>• <b>3 أسابيع فقط</b> قبل التشغيل الفعلي.
+        <br>• <b class="hot">والقاعدة:</b> كل العمليات الميدانية تتم <b>«حصرياً»</b> عبر الهواتف والماسحات — <b>لا ورق</b>.
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li>كيف تُدرّب من لا يقرأ على نظام يعتمد على الشاشة؟ <b>خطة عملية</b>.</li>
+          <li>كم تحتاج واقعياً للاستقرار؟ لا تجاملني.</li>
+          <li>ما الأخطاء التي تتوقعها في الأسبوعين الأولين؟</li>
+          <li>كيف تربط الأداء بالحوافز <b>بعدل وموضوعية</b>؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li>«موظف كسر ماسحاً ثالث مرة — قرارك؟»</li>
+          <li>«عامل خبير عمره 50 سنة يرفض الجهاز ويقول: 20 سنة وأنا أشتغل بالورق. ماذا تفعل؟» <i>(أقوى سؤال قيادي)</i></li>
+          <li>«3 أسابيع غير كافية — بم تردّ على الإدارة؟» <i>(اختبار الشجاعة)</i></li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q14a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي</summary>
+        <div class="body">
+          <b>المفتاح:</b> الأمية <b>ليست</b> مانعاً — الماسح <b>أيقونات وباركود وصوت</b>، لا نصوص.
+          التدريب <b>بصري وعملي</b>: ألوان، رموز، تكرار حركي، لا محاضرات ولا أوراق.
+          <br><br>
+          <b>خطة الأسابيع الثلاثة:</b>
+          <ul>
+            <li><b>1:</b> محاكاة على بضاعة وهمية — <b>لا عقاب على الخطأ إطلاقاً</b> (بناء الثقة أولاً).</li>
+            <li><b>2:</b> عمل حقيقي بكميات صغيرة + <b>مرافق لكل عامل</b> (Buddy System).</li>
+            <li><b>3:</b> تشغيل كامل بإشراف مكثف + <b>بيئة تدريب Odoo الآمنة</b> (لا تمسّ البيانات الحقيقية).</li>
+          </ul>
+          <b>الاستقرار الواقعي: 4–6 أسابيع بعد التشغيل — لا 3.</b>
+          <span class="key">المرشح الصادق يقول ذلك صراحةً ويطلب خطة تخفيف للأسابيع الأولى.</span>
+          <br><br>
+          <b>الأخطاء المتوقعة:</b> عدم مسح باركود الرف قبل الصنف · إهمال رقم الدفعة (Lot) ·
+          خلط عمليات · تجاوز الترتيب. <b>وأخطرها:</b> «التحايل على الجهاز» — مسح رف واحد لكل الطبليات.
+          <br><br>
+          <b>الحوافز:</b> تُبنى على <b>بيانات النظام الموضوعية</b> لا الانطباع —
+          دقة السحب · <b>التزام FEFO</b> · دقة الجرد · الحضور. مع <b>حق اعتراض</b> وتوثيق كل قرار.
+          <br><br>
+          <b>العامل الرافض:</b> لا تصطدم به — <b>اجعله بطلاً</b>. خبرته 20 سنة ثروة؛
+          دربه أولاً واجعله <b>مدرّباً للباقين</b>. <span class="key">من يكسبه يكسب المستودع كله.</span>
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/5</span></div>
+        <div class="crow"><span class="cl">خطة تدريب بصرية واقعية + صدق في المدة (4–6 أسابيع)</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q14c1"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">توقع الأخطاء الحقيقية (خاصة التحايل على الجهاز)</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q14c2"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">حوافز موضوعية + ذكاء في احتواء المقاومة</span><input class="c" data-max="1" type="number" min="0" max="1" step="0.5" id="q14c3"><span class="mx">/1</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>«3 أسابيع تكفي» → إما لا يعرف أو يجامل — كلاهما خطر.</li>
+          <li>يبدأ بالعقاب والفصل → سيفقد فريقه في شهر.</li>
+          <li>يقترح إبقاء الورق للأميين → يكسر قاعدة «العمل الميداني حصراً بالماسح».</li>
+          <li>يفصل العامل الرافض فوراً → يهدر خبرة 20 سنة ويخيف الباقين.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q14n"></div>
+    </div>
+
+    <!-- Q15 -->
+    <div class="q" data-axis="5">
+      <div class="qhead"><div class="qnum">١٥</div>
+        <h3>الرؤية — 12 شهراً والتوسع</h3>
+        <span class="qw">4 نقاط</span>
+      </div>
+      <span class="ref tag-open">🟣 سؤال مفتوح — قياس عمق التفكير</span>
+      <div class="scen">
+        <b class="t">معطيات حقيقية عن الموقع 155:</b>
+        <table>
+          <tr><th>البند</th><th>الوضع الحالي</th><th>المستهدف</th></tr>
+          <tr><td>الارتفاع الصافي</td><td class="num hot">6.80 م</td><td class="num">Class A</td></tr>
+          <tr><td>البنية الرقمية (تقييم)</td><td class="num hot">5 / 10</td><td>WiFi صناعي + WMS</td></tr>
+          <tr><td>أنظمة السلامة</td><td class="num hot">6 / 10</td><td>ESFR K-25</td></tr>
+          <tr><td>السعة التخزينية</td><td class="num">10,930 طبلية</td><td class="num">19,200+ طبلية</td></tr>
+          <tr><td>الوحدات التشغيلية</td><td class="num">10 مستودعات</td><td class="num">4 مجمعات</td></tr>
+          <tr><td>القوى العاملة</td><td class="num">32–46</td><td class="num">117–182 (المرحلة 2)</td></tr>
+        </table>
+        <b>ملاحظة:</b> المرحلة 12 من الدورة (الإغلاق المالي) <b class="hot">لم تُبرمج بعد</b>.
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li>بعد 12 شهراً — ماذا تكون قد أنجزت؟ <b>بأرقام لا شعارات</b>.</li>
+          <li>ما أول ثلاثة أشياء تفعلها في أول <b>30 يوماً</b>؟</li>
+          <li>كيف تجهّز فريقاً لقفزة من 46 إلى 182 موظفاً؟</li>
+          <li>كيف تبني منظومة <b>لا تنهار لو تركتَ الشركة</b>؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li>«ما الشيء الذي لن تفعله رغم أن الجميع سيطلبه منك؟»</li>
+          <li>«لو أعطيتك ميزانية لبند واحد فقط، أيّها تختار؟» <i>(الإجابة الناضجة: البنية الرقمية 5/10 — لأن كل شيء آخر يعتمد عليها)</i></li>
+          <li>«ما الذي يجعلك تستقيل من هذا المنصب؟»</li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q15a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي</summary>
+        <div class="body">
+          <b>أهداف مرقّمة (لا شعارات):</b> OTIF من 93.9% ← ≥95% · الفاقد من 1.2% ← &lt;0.8% ·
+          Dock-to-Stock من 4.8h ← ≤4h · الإنتاجية من 76 ← 85+ CPH ·
+          <span class="key">تجاوزات FEFO ← صفر مطلق</span> · دقة المخزون ← هدف <b>موحّد</b> معتمد.
+          <br><br>
+          <b>أول 30 يوماً:</b>
+          <ol>
+            <li><b>توحيد تعريف المؤشرات</b> — مستحيل أن تُدير ما لا يُقاس باتفاق (4 أهداف متضاربة اليوم).</li>
+            <li><b>التحقيق في تجاوزَي FEFO</b> — سلامة الحارس قبل أي تحسين.</li>
+            <li><b>سدّ فجوة حارس الـ Putaway</b> + إغلاق المرحلة 12 (الإغلاق المالي غير المبرمج).</li>
+          </ol>
+          <b>التوسع 46 ← 182:</b> يستحيل بالتوظيف وحده —
+          <b>SOPs موثّقة + مركز تدريب داخلي + قيادات وسطى مُعدّة مسبقاً</b>.
+          خطة الدمج: 10 مستودعات ← <b>4 مجمعات</b>، السعة 10,930 ← <b>19,200+ طبلية (+76%)</b>،
+          <b>28 أسبوعاً بالتوازي</b>. <span class="key">أخطر مرحلة: M-B (High-Bay) — 16 أسبوعاً بخطر مرتفع.</span>
+          <br><br>
+          <b>الاستثمار الأول = البنية الرقمية (5/10):</b> بلا WiFi صناعي <b>لا يعمل الماسح</b>،
+          وبلا ماسح <b>تنهار كل القواعد الذهبية</b> — فهي مفروضة داخل النظام لا على الورق.
+          <br><br>
+          <b>منظومة لا تنهار بغيابك:</b> القاعدة مفروضة <b>بالكود لا بالشخص</b> · SOPs مكتوبة ·
+          <b>3 قيادات وسطى مفوّضة تدريجياً</b> · كل قرار موثّق. <span class="key">المدير الناجح يجعل نفسه قابلاً للاستبدال.</span>
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/4</span></div>
+        <div class="crow"><span class="cl">أهداف مرقّمة مبنية على أرقام الشهر لا شعارات</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q15c1"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">وعي بالتوسع والبنية التحتية كأولوية</span><input class="c" data-max="1" type="number" min="0" max="1" step="0.5" id="q15c2"><span class="mx">/1</span></div>
+        <div class="crow"><span class="cl">نقل المعرفة وبناء منظومة مستقلة عنه</span><input class="c" data-max="1" type="number" min="0" max="1" step="0.5" id="q15c3"><span class="mx">/1</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>كلام عام بلا رقم واحد → لا يفكر بلغة الأداء.</li>
+          <li>يبني نفسه كـ«الرجل الذي لا يُستغنى عنه» → خطر تنظيمي.</li>
+          <li>يتجاهل البنية الرقمية → لا يربط التقنية بالتشغيل.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q15n"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ AXIS 6 ═══════════ -->
+  <div class="axis" id="a6">
+    <div class="axhead">
+      <h2>المحور السادس · المفاهيم والفلسفة الإدارية والبشرية</h2>
+      <span class="live"><b id="ax6s">0</b>/25</span>
+      <span class="pts">25 نقطة</span>
+    </div>
+
+    <div class="brief" style="border-bottom:1px dashed var(--line);background:linear-gradient(180deg,#fbf7ff,#fff)">
+      <div class="warnbox" style="background:#f6f1fb;border-color:#ddcaf0;border-inline-start-color:#7b4fb0">
+        <b>🧠 كيف تُدير هذا المحور:</b> هذه أسئلة <b>نوعية في الصميم</b> تقيس <b>كيف يفكّر المرشح ويقود البشر</b>
+        لا كيف يحسب. يُفضَّل <b>افتتاح المقابلة بها</b> كإحماء قبل السيناريوهات — فهي تكشف العمق الحقيقي والشخصية.
+        لا تبحث عن «الإجابة المحفوظة» بل عن <b>الفلسفة والاتساق</b>: دعه يتكلم، ثم احفر بأسئلة الاستقصاء.
+      </div>
+    </div>
+
+    <!-- Q16 -->
+    <div class="q" data-axis="6">
+      <div class="qhead"><div class="qnum">١٦</div>
+        <h3>المفاهيم التأسيسية الأربعة — المخزون · الجرد · الدورة المستندية · تنوّع القطاعات</h3>
+        <span class="qw">8 نقاط</span>
+      </div>
+      <span class="ref tag-open">🟣 سؤال مفتوح — قياس عمق الفهم لا الحفظ</span>
+      <div class="scen">
+        <b class="t">الإطار:</b> قبل أي سيناريو، نريد أن نعرف كيف يرى المرشح <b>جوهر المهنة</b>.
+        اطرح المفاهيم الأربعة بالتتابع، ودَعه يعرّف كلاً منها <b>بكلماته هو</b>، ثم قِس العمق.
+      </div>
+      <div class="asks">
+        <div class="t">اطرحها واحداً واحداً وأنصت:</div>
+        <ol>
+          <li><b>المخزون</b> — ماذا يعني لك في جملة واحدة؟ ثم اشرح.</li>
+          <li><b>الجرد</b> — ما هو في جوهره؟ ولماذا نفعله أصلاً؟</li>
+          <li><b>الدورة المستندية</b> — ما مفهومها؟ ولماذا تُسمّى عمود المخزن الفقري؟</li>
+          <li><b>«مدير مستودعات متنوّعة القطاعات»</b> — صف لي هذا الدور. بم يختلف عن مدير مستودع قطاع واحد؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li>«هل المخزون أصلٌ أم عبء؟» <i>(الناضج: كلاهما — أصل مجمّد يتحوّل إلى عبء إن ركد أو انتهى)</i></li>
+          <li>«لو قلتُ لك الجرد "عدّ بضاعة" فقط — بم تصحّحني؟»</li>
+          <li>«أعطني مثالاً على قرار يصحّ في الأغذية ويُخطئ في التجميل.» <i>(يربط بفخّ الشاحنة المختلطة)</i></li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح / تعريفاته الحرفية:</label><textarea id="q16a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي — الأعماق المطلوبة</summary>
+        <div class="body">
+          <b>1) المخزون = رأس مالٍ مجمّد</b> — نقدٌ على هيئة بضاعة. كل كرتون راكد <b>دينار متوقّف عن العمل</b>،
+          وكل صنف منتهٍ <b>خسارة صافية</b>. المخزون الجيد ليس «مستودعاً ممتلئاً» بل <span class="key">تدفّقاً منضبطاً</span>
+          يوازن بين توفّر الخدمة (Fill Rate / OTIF) وكلفة التجميد والتلف. <i>(يربط بالفاقد 1.2٪ والهدف &lt;0.8٪).</i>
+          <br><br>
+          <b>2) الجرد = التحقّق من صدق الثقة بين الدفتر والواقع</b> — إثباتٌ أن ما في النظام = ما على الرف.
+          ليس عدّاً بل <span class="key">مراجعة حوكمية</span> غايتها اكتشاف الفروقات مبكراً، <b>تمييز الخطأ عن السرقة</b>،
+          وحماية القوائم المالية. <i>(يربط بتحليل ABC والجرد الدوري وعتبة 2٪).</i>
+          <br><br>
+          <b>3) الدورة المستندية = سلسلة المسؤولية الموثّقة</b> من نشوء الاحتياج حتى الإغلاق المالي —
+          مبدؤها <span class="key">«لا حركة بلا مستند»</span>. كل مستند يجيب: مَن فعل؟ ماذا؟ متى؟ بأي سند؟ ومَن اعتمد؟
+          إنها العمود الفقري للرقابة، ومنع الاحتيال، والفصل بين المُنشئ والمُعتمِد. <i>(21 نموذجاً · 12 مرحلة).</i>
+          <br><br>
+          <b>4) مدير متعدّد القطاعات = يدير أنظمة قواعد مختلفة تحت حوكمة واحدة.</b>
+          الدورة المستندية واحدة، لكن <span class="key">الحدود الحرجة متباينة جذرياً</span>: أغذية (HACCP، سلسلة تبريد
+          ≤4°م / ≤−18°م، Recall، تتبّع Lot) مقابل تجميل (15–18°م، حساسية ضوء ورائحة، عنونة UU-A-BB-LL).
+          مهارته الحقيقية = <b>إتقان الانتقال بين المنطقَين دون خلط</b>، وعدم تعميم حدّ قطاع على آخر.
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/8</span></div>
+        <div class="crow"><span class="cl">عمق مفهومَي المخزون والجرد (يتجاوز «بضاعة/عدّ» إلى رأس مال/تحقّق)</span><input class="c" data-max="3" type="number" min="0" max="3" step="0.5" id="q16c1"><span class="mx">/3</span></div>
+        <div class="crow"><span class="cl">الدورة المستندية كسلسلة مسؤولية وحوكمة لا كأوراق روتينية</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q16c2"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">وصف دقيق لتنوّع القطاعات (قواعد مختلفة / حوكمة واحدة)</span><input class="c" data-max="3" type="number" min="0" max="3" step="0.5" id="q16c3"><span class="mx">/3</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>«المخزون بضاعة في المخزن» فقط → رؤية سطحية لا مالية.</li>
+          <li>«الجرد عدّ آخر السنة» → لا يرى البُعد الرقابي والمالي.</li>
+          <li>يعرّف الدورة كأوراق روتينية → لا يفهم الحوكمة والفصل بين الصلاحيات.</li>
+          <li>لا يفرّق بين القطاعات → سيطبّق حدّاً واحداً على الجميع.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q16n"></div>
+    </div>
+
+    <!-- Q17 -->
+    <div class="q" data-axis="6">
+      <div class="qhead"><div class="qnum">١٧</div>
+        <h3>الأدوات الرقمية المساعِدة — و ERP مقابل الإعداد الداخلي</h3>
+        <span class="qw">6 نقاط</span>
+      </div>
+      <span class="ref">المرجع: Odoo ERP · العمل الميداني حصراً بالماسحات · القواعد مفروضة داخل الكود</span>
+      <div class="scen">
+        <b class="t">الإطار:</b> منظومتنا تقوم على <b>نظام ERP (Odoo)</b>، وماسحات/هواتف ميدانية، ولوحات مؤشرات،
+        وبطاقة موقع آلية. <b>العمل الميداني يتم «حصرياً» رقمياً — لا ورق.</b>
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li>ماذا تعرف عن <b>الأدوات الرقمية المساعِدة</b> في المخازن؟ عدّد ما استخدمته <b>فعلاً</b> لا ما سمعت عنه.</li>
+          <li>ما <b>الفرق الجوهري</b> بين نظام <b>ERP</b> و<b>«إعداد داخلي»</b> (إكسل / أوراق / أنظمة منفصلة)؟</li>
+          <li>لماذا نُصرّ أن يتم العمل الميداني <b>حصريّاً بالماسح</b> لا بالورق؟</li>
+          <li>أعطني <b>عيباً حقيقياً واحداً</b> في الاعتماد الكامل على النظام — وكيف تديره؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li>«ما فائدة أن يكون النظام <b>مصدر الحقيقة الوحيد</b>؟»</li>
+          <li>«لو انهار النظام ساعتين — الإعداد الداخلي أم ERP أسرع تعافياً؟ ولماذا؟» <i>(يربط بالرمز الأحمر والحقيبة الحمراء)</i></li>
+          <li>«هل استخدمت <b>WMS</b> منفصلاً عن ERP؟ ما الفرق عملياً؟»</li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q17a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي</summary>
+        <div class="body">
+          <b>الأدوات:</b> ماسحات/هواتف RF · باركود ورقم تشغيلة (Lot) · <b>بطاقة موقع آلية (Bin Card)</b> ·
+          توجيه تخزين آلي (Putaway) · <b>لوحات مؤشرات</b> (OTIF / دقة المخزون / الفاقد / CPH) ·
+          مواقع افتراضية للشاحنات (Virtual VAN) · جلسات جرد دوري. الماسح عندنا <span class="key">أيقونات وباركود وصوت</span>
+          — يعمل حتى مع محدودية القراءة.
+          <br><br>
+          <b>الفرق الجوهري (وهو بيت القصيد):</b>
+          <ul>
+            <li><b>ERP = نظام متكامل بمصدر حقيقة واحد</b> يربط المخزون بالمالية بالمشتريات <b>لحظياً</b>،
+                ويفرض القواعد <span class="key">داخل الكود</span> (‎@api.constrains‎: الجودة، FEFO، Gate Pass، المطابقة الثلاثية)،
+                ويترك <b>أثراً تدقيقياً كاملاً</b>.</li>
+            <li><b>الإعداد الداخلي</b> (إكسل/أوراق/أنظمة منفصلة) = <span class="key">جزر معلومات مبعثرة</span>،
+                <b>لا قاعدة تُفرض تلقائياً</b>، مطابقات يدوية، اعتماد على أشخاص، وانهيار فور غياب «صاحب الملف».</li>
+          </ul>
+          <span class="key">الفرق ليس التقنية ولا الثمن — بل فرض الحوكمة وتكامل البيانات والأثر التدقيقي.</span>
+          <br><br>
+          <b>لماذا الماسح حصراً:</b> لأن القواعد الذهبية <b>مفروضة داخل النظام لا على الورق</b> — الورق يسمح بالتجاوز،
+          الماسح لا. وبلا مسح: لا Bin Card دقيقة، ولا تتبّع Lot، ولا فرض FEFO.
+          <br><br>
+          <b>العيب الحقيقي:</b> الاعتماد على البنية التحتية (الكهرباء/الشبكة — تقييمها اليوم <b>5/10</b>) —
+          يُدار <b>بخطة استمرارية</b> (مولد + الحقيبة الحمراء + الملصق الأحمر + سجل الانقطاع)، لا بالعودة إلى الفوضى الورقية.
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/6</span></div>
+        <div class="crow"><span class="cl">معرفة فعلية بالأدوات (استخدام حقيقي لا مصطلحات محفوظة)</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q17c1"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">الفرق الجوهري ERP/الإعداد الداخلي (تكامل + فرض القواعد + أثر تدقيقي)</span><input class="c" data-max="3" type="number" min="0" max="3" step="0.5" id="q17c2"><span class="mx">/3</span></div>
+        <div class="crow"><span class="cl">وعي متوازن بعيوب الاعتماد على النظام وخطة إدارتها</span><input class="c" data-max="1" type="number" min="0" max="1" step="0.5" id="q17c3"><span class="mx">/1</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>يعدّد مصطلحات دون استخدام حقيقي → حفظٌ لا خبرة.</li>
+          <li>«الفرق أن ERP أكبر/أغلى» → لا يفهم الجوهر (التكامل وفرض الحوكمة).</li>
+          <li>يرى الورق بديلاً مقبولاً للماسح → يكسر قاعدة العمل الرقمي الحصري.</li>
+          <li>ثقة عمياء بالنظام بلا خطة انقطاع → خطر استمرارية.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q17n"></div>
+    </div>
+
+    <!-- Q18 -->
+    <div class="q" data-axis="6">
+      <div class="qhead"><div class="qnum">١٨</div>
+        <h3>أدوات قيادة البشر — ونقل الخبرة — والتعامل مع الأمهر منك</h3>
+        <span class="qw">6 نقاط</span>
+      </div>
+      <span class="ref tag-open">🟣 سؤال قيادي مفتوح — أقوى كاشف للنضج</span>
+      <div class="scen">
+        <b class="t">الواقع:</b> ستقود <span class="num">32–46</span> موظفاً (تصل إلى <span class="num">182</span> في المرحلة 2)،
+        <b>60٪</b> منهم محدودو القراءة، وضمن فريقك <b>خبراء يفوقونك</b> في مجالات بعينها (فنّي تبريد، خبير Odoo…).
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li>ما <b>أدواتك الفعلية</b> في قيادة البشر؟ (لا شعارات — أدواتٌ تستخدمها يوميّاً)</li>
+          <li>كيف <b>تنقل الخبرة وتؤهّل الكوادر</b> بحيث لا تعتمد المنظومة عليك وحدك؟</li>
+          <li>موظف تحت إدارتك <b>أمهر منك</b> في مجاله — كيف تتعامل معه؟ وهل يُهدّدك؟</li>
+          <li>ما <b>مصدر سلطتك</b> الحقيقي — منصبك أم شيء آخر؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li>«هل تفوّض فعلاً؟ أعطني قراراً فوّضته وتحمّلت نتيجته.»</li>
+          <li>«العامل الأمهر خالفك <b>أمام الفريق</b> — ماذا تفعل في اللحظة؟»</li>
+          <li>«كيف تصنع <b>بديلاً لنفسك</b> خلال سنة؟» <i>(يربط بـ«المدير الناجح يجعل نفسه قابلاً للاستبدال»)</i></li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q18a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي</summary>
+        <div class="body">
+          <b>أدوات القيادة الحقيقية:</b> <span class="key">القدوة</span> (أول من يلتزم بالماسح والقاعدة) ·
+          <b>الوضوح</b> (أهداف ومعايير معلنة) · <b>القيادة بالبيانات</b> لا الانطباع ·
+          <b>التمكين والتفويض المتدرّج</b> · <span class="key">العدالة</span> (نفس القاعدة للجميع) ·
+          <b>الحضور الميداني (Gemba)</b> · <b>الإنصات</b>. القيادة <b>تأثير لا تسلّط</b>.
+          <br><br>
+          <b>نقل الخبرة وبناء البديل:</b> SOPs مكتوبة + <b>بيئة/مركز تدريب</b> + نظام المرافقة (Buddy) +
+          إعداد <span class="key">قيادات وسطى (3 مفوّضين تدريجياً)</span> + بيئة Odoo آمنة للتدريب.
+          الهدف: منظومة <b>مفروضة بالكود لا بالشخص</b> — تمشي شهراً لو غاب المدير.
+          <br><br>
+          <b>الأمهر منك:</b> <span class="key">القائد الواثق يستثمر التفوّق لا يخافه</span> — يفوّضه، يجعله
+          <b>مرجعاً ومدرّباً للباقين</b>، ينسب له الفضل علناً. من يخشى الأمهر منه ويكبته = <b>قائد هشّ يطرد الكفاءات</b>.
+          سلطتك ليست معرفتك التفصيلية بكل شيء، بل قدرتك على <b>تنسيق الكفاءات نحو الهدف</b>.
+          <i>(نفس منطق احتواء العامل الرافض ذي الـ20 سنة: اجعله بطلاً ومدرّباً — Q14).</i>
+          <br><br>
+          <b>مصدر السلطة الحقيقي = الثقة والعدالة والكفاءة، لا اللقب.</b>
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/6</span></div>
+        <div class="crow"><span class="cl">أدوات قيادة حقيقية قابلة للتطبيق (قدوة/بيانات/تمكين/عدالة)</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q18c1"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">خطة نقل خبرة تبني بديلاً ولا تحتكر المعرفة</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q18c2"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">نضج في التعامل مع الأمهر منه (استثمار لا تهديد)</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q18c3"><span class="mx">/2</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>أدواته = «الحزم والعقاب» فقط → قيادة تسلّطية.</li>
+          <li>يحتكر المعرفة ليبقى «لا غنى عنه» → خطر تنظيمي.</li>
+          <li>يشعر بالتهديد من الأمهر منه أو يكبته → يطرد الكفاءات، هشاشة قيادية.</li>
+          <li>«سلطتي من منصبي» → لا يفهم القيادة بالتأثير.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q18n"></div>
+    </div>
+
+    <!-- Q19 -->
+    <div class="q" data-axis="6">
+      <div class="qhead"><div class="qnum">١٩</div>
+        <h3>فلسفة العقاب والمكافأة — والعدالة في معالجة الفروقات</h3>
+        <span class="qw">5 نقاط</span>
+      </div>
+      <span class="ref">المرجع: العدالة تصنع ثقافة المخزن · التسويات باعتماد المالية حصراً · لا عقاب على خطأ التعلّم</span>
+      <div class="scen">
+        <b class="t">الإطار:</b> العدالة في <b>الثواب والعقاب</b> هي ما يصنع ثقافة المخزن — لا القسوة ولا التساهل.
+        نريد <b>فلسفتك</b>، لا إجابة مثالية محفوظة.
+      </div>
+      <div class="asks">
+        <div class="t">الأسئلة:</div>
+        <ol>
+          <li>كيف <b>تعاقب</b>؟ اعطِ آليتك خطوة بخطوة — وأين يبدأ العقاب ومتى.</li>
+          <li>كيف <b>تكافئ</b>؟ وعلى أي أساس — انطباع أم بيانات؟</li>
+          <li>اكتشفت <b>فرقاً</b> في الجرد أو العهدة — كيف تفكّر: خطأ أم سوء نية؟ وكيف تحلّه دون ظلم؟</li>
+          <li>متى يكون العقاب <b>فوريّاً بلا تدرّج</b>؟</li>
+        </ol>
+      </div>
+      <div class="probe">
+        <b>🔍 أسئلة الاستقصاء:</b>
+        <ul>
+          <li>«عاقبت موظفاً ثم تبيّن أن الجذر <b>نظامٌ لا شخص</b> — ماذا تفعل؟»</li>
+          <li>«مكافأة جماعية أم فردية؟ ولماذا؟»</li>
+          <li>«هل تعاقب على الخطأ <b>الصادق</b> أثناء فترة التدريب؟» <i>(الصحيح: لا — بناء الثقة أولاً)</i></li>
+        </ul>
+      </div>
+      <div class="ans"><label>إجابة المرشح:</label><textarea id="q19a"></textarea></div>
+      <details class="model"><summary>✅ نموذج الإجابة المرجعي</summary>
+        <div class="body">
+          <b>العقاب — تدرّجي وخاص وموثّق وبعد فهم الجذر:</b> الأصل <b>تصحيح لا انتقام</b>.
+          لا عقاب علني، ولا عقاب على <b>خطأ صادق أثناء التعلّم</b>. التسلسل:
+          <span class="key">توجيه شفهي ← إنذار مكتوب ← إجراء أشدّ</span>.
+          <br><br>
+          <b>الاستثناء الفوري (بلا تدرّج):</b> ما يمسّ <span class="key">النزاهة</span> (تلاعب، سرقة،
+          تجاوز قاعدة ذهبية متعمّد، عبثٌ بالماسح) أو <b>السلامة</b> (كسر CCP متعمّد) = <b>حاسمٌ فوراً</b>.
+          القاعدة: <b>تعاقب الفعل المتعمّد، لا الخطأ.</b>
+          <br><br>
+          <b>المكافأة — موضوعية بالبيانات لا الانطباع:</b> تُبنى على أرقام النظام
+          (<span class="key">دقة السحب · التزام FEFO · دقة الجرد · الحضور · CPH</span>)، تكون <b>فوريّة</b>
+          (قريبة من الإنجاز)، مزيجاً من <b>مادي + تقدير معنوي علني</b>، وبعدالةٍ تمنع المحسوبية، مع حق اعتراض وتوثيق.
+          <br><br>
+          <b>الفروقات — افترض الخطأ لا الجريمة أولاً:</b> حقّق في <b>الجذر</b> (عملية؟ نظام؟ عدّ؟) قبل الاتهام.
+          ميّز <b>فرق الجرد</b> (عشوائي، صغير، بلا نمط) عن <b>السرقة</b> (نمط، صنف عالي القيمة، توقيت).
+          الحل: تجميد الصنف عند تجاوز <span class="key">عتبة 2٪</span> + سند تسوية <b>باعتماد المالية حصراً</b> +
+          معالجة الجذر هيكليّاً. <span class="key">لا تعديل رصيد بيدك أبداً.</span> <i>(يربط Q9 و Q10).</i>
+        </div>
+      </details>
+      <div class="crit">
+        <div class="t">معايير التقييم <span>المجموع: <b class="qs">0</b>/5</span></div>
+        <div class="crow"><span class="cl">عقاب تدرّجي عادل + استثناء النزاهة الفوري + لا عقاب على خطأ التعلّم</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q19c1"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">مكافأة موضوعية بالبيانات لا الانطباع + عدالة</span><input class="c" data-max="2" type="number" min="0" max="2" step="0.5" id="q19c2"><span class="mx">/2</span></div>
+        <div class="crow"><span class="cl">فلسفة الفروقات: جذر قبل اتهام · تمييز خطأ/سرقة · تسوية بالمالية حصراً</span><input class="c" data-max="1" type="number" min="0" max="1" step="0.5" id="q19c3"><span class="mx">/1</span></div>
+      </div>
+      <div class="flags"><b>🚩 مؤشرات إنذار</b>
+        <ul>
+          <li>يبدأ بالعقاب/الفصل مباشرة → ثقافة خوف.</li>
+          <li>يعاقب علناً أو على الخطأ الصادق أثناء التعلّم → يدمّر الثقة.</li>
+          <li>يكافئ بالانطباع أو المحسوبية → يفقد العدالة ومصداقية الحوافز.</li>
+          <li>يسوّي الفروقات بنفسه أو يتّهم فوراً بلا تحقيق → خرقٌ حوكمي وظلم.</li>
+          <li>لا يميّز فرق الجرد عن السرقة → قرارات خاطئة في الاتجاهين.</li>
+        </ul>
+      </div>
+      <div class="note"><label>ملاحظة المُقيِّم:</label><input id="q19n"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SUMMARY ═══════════ -->
+  <div id="summary">
+    <div class="axhead"><h2>📋 ملخص التقييم والتوصية النهائية</h2></div>
+    <div style="padding:22px 30px">
+
+      <table class="sumtbl">
+        <thead><tr><th>المحور</th><th>الأسئلة</th><th>الكاملة</th><th>المحققة</th><th>النسبة</th></tr></thead>
+        <tbody>
+          <tr><td><b>١· الدورة المستندية والحوكمة</b></td><td>1–3</td><td>25</td><td class="sc" id="s1">0</td><td class="sc" id="p1">0%</td></tr>
+          <tr><td><b>٢· الاستلام وضبط الجودة</b></td><td>4–6</td><td>20</td><td class="sc" id="s2">0</td><td class="sc" id="p2">0%</td></tr>
+          <tr><td><b>٣· التخزين والصرف و FEFO</b></td><td>7–9</td><td>20</td><td class="sc" id="s3">0</td><td class="sc" id="p3">0%</td></tr>
+          <tr><td><b>٤· الجرد والمؤشرات والتكلفة</b></td><td>10–12</td><td>20</td><td class="sc" id="s4">0</td><td class="sc" id="p4">0%</td></tr>
+          <tr><td><b>٥· القيادة والأزمات والرؤية</b></td><td>13–15</td><td>15</td><td class="sc" id="s5">0</td><td class="sc" id="p5">0%</td></tr>
+          <tr><td><b>٦· المفاهيم والفلسفة الإدارية والبشرية</b></td><td>16–19</td><td>25</td><td class="sc" id="s6">0</td><td class="sc" id="p6">0%</td></tr>
+        </tbody>
+        <tfoot><tr><td colspan="2">المجموع النهائي</td><td>125</td><td class="sc" id="sT">0</td><td class="sc" id="pT">0%</td></tr></tfoot>
+      </table>
+
+      <div style="background:#fff8e6;border:1px solid #f0d9a0;border-inline-start:4px solid var(--gold);border-radius:9px;padding:13px;font-size:12.5px;margin-bottom:16px">
+        <b>🎯 حدود القرار</b> (نسبة مئوية من الدرجة الكلية <b>125</b>):
+        &nbsp;<b style="color:#166534">≥ 70٪</b> مقبول &nbsp;·&nbsp;
+        <b style="color:#b45309">50–69٪</b> مراجعة / قبول مشروط &nbsp;·&nbsp;
+        <b style="color:#b91c1c">&lt; 50٪</b> غير مقبول
+        <br><b>⛔ شرط الاستبعاد المطلق:</b> أي إجابة تقبل تجاوز قاعدة ذهبية (الدفع بلا مطابقة · الصرف بلا مستند ·
+        كسر FEFO · تعديل رصيد بلا سند) = <b>استبعاد بغض النظر عن الدرجة</b>.
+      </div>
+
+      <h4 style="color:var(--red-dark);margin:16px 0 8px;font-size:14px">🧭 التقييم السلوكي والقيادي</h4>
+      <div class="comp" id="comp"></div>
+
+      <h4 style="color:var(--red-dark);margin:18px 0 8px;font-size:14px">📝 خلاصة المُقيِّم</h4>
+      <div class="ans"><label>أبرز نقاط القوة (بأمثلة من إجاباته):</label><textarea id="sw" style="min-height:80px"></textarea></div>
+      <div class="ans"><label>أبرز نقاط الضعف والفجوات:</label><textarea id="wk" style="min-height:80px"></textarea></div>
+      <div class="ans"><label>ملاحظات على السلوك والحضور تحت الضغط:</label><textarea id="bh" style="min-height:60px"></textarea></div>
+      <div class="ans"><label>إن قُبل — خطة الـ90 يوماً المقترحة له:</label><textarea id="pl" style="min-height:60px"></textarea></div>
+
+      <h4 style="color:var(--red-dark);margin:18px 0 8px;font-size:14px">💼 التوصية النهائية</h4>
+      <div class="recs">
+        <label class="rec"><input type="radio" name="rec" id="r1"><span>✅ <b>قبول فوري</b> — مؤهل بقوة، يبدأ دون تحفظ</span></label>
+        <label class="rec"><input type="radio" name="rec" id="r2"><span>🟢 <b>قبول</b> مع خطة تأهيل مكثفة (3 أسابيع)</span></label>
+        <label class="rec"><input type="radio" name="rec" id="r3"><span>🟡 <b>قبول مشروط</b> — فترة تجربة 3 أشهر بمؤشرات محددة</span></label>
+        <label class="rec"><input type="radio" name="rec" id="r4"><span>🔵 <b>مقابلة ثانية</b> — يحتاج تعمّقاً في محاور محددة</span></label>
+        <label class="rec"><input type="radio" name="rec" id="r5"><span>🟠 <b>مناسب لمستوى أدنى</b> (مشرف استلام / مشرف تخزين)</span></label>
+        <label class="rec"><input type="radio" name="rec" id="r6"><span>❌ <b>غير مقبول</b> — لا يستوفي المتطلبات</span></label>
+      </div>
+
+      <div class="sign">
+        <div>توقيع المُقيِّم<div class="ln"></div><div style="margin-top:6px;color:var(--muted)">التاريخ: ____/____/________</div></div>
+        <div>توقيع المدير المباشر<div class="ln"></div><div style="margin-top:6px;color:var(--muted)">التاريخ: ____/____/________</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bzfoot">
+    <span>📞 <b>0912203770</b></span>
+    <span>🌐 <b>www.brandzo.com</b></span>
+    <span>✉️ <b>Info@brandzo.com</b></span>
+    <span>📍 <b>نادي الأهلي — بنغازي، ليبيا</b></span>
+    <span style="width:100%;text-align:center;opacity:.75;margin-top:4px">
+      وثيقة سرية — للاستخدام الداخلي فقط · BFP-HR-EVAL-001 · إصدار 3.0
+    </span>
+  </div>
+</div>
+
+<script>
+/* ═══════ CONFIG ═══════ */
+const KEY='brandzo_eval_wh_director_v2';
+const AX=[
+  {n:1,t:'الدورة المستندية',max:25},
+  {n:2,t:'الاستلام والجودة',max:20},
+  {n:3,t:'التخزين والصرف',max:20},
+  {n:4,t:'الجرد والمؤشرات',max:20},
+  {n:5,t:'القيادة والأزمات',max:15},
+  {n:6,t:'المفاهيم والفلسفة',max:25}
+];
+const GT=AX.reduce((s,a)=>s+a.max,0);
+const COMPS=['الاتصال ووضوح الطرح','الحسم تحت الضغط','الالتزام بالقواعد والحوكمة','التفكير التحليلي بالأرقام','القيادة وإدارة الفريق','الصدق والشفافية','الفضول والقدرة على التعلم'];
+
+/* ═══════ BUILD ═══════ */
+(function(){
+  document.getElementById('axes').innerHTML = AX.map(a=>`
+    <div class="ax"><div class="lbl"><span>${a.t}</span><b><span id="axl${a.n}">0</span>/${a.max}</b></div>
+    <div class="bar"><div class="fill" id="axf${a.n}"></div></div></div>`).join('');
+  document.getElementById('comp').innerHTML = COMPS.map((c,i)=>`
+    <div class="crow2"><span class="cl">${c}</span><div class="stars">
+      ${[1,2,3,4,5].map(v=>`<input type="radio" name="cp${i}" id="cp${i}_${v}"><label for="cp${i}_${v}">${v}</label>`).join('')}
+    </div></div>`).join('');
+})();
+
+/* ═══════ SCORING ═══════ */
+function calc(){
+  let tot=0;
+  AX.forEach(a=>{
+    let s=0;
+    document.querySelectorAll(`.q[data-axis="${a.n}"]`).forEach(q=>{
+      let qs=0;
+      q.querySelectorAll('.c').forEach(i=>{
+        const mx=+i.dataset.max;
+        let v=parseFloat(i.value);
+        if(isNaN(v)||v<0)v=0;
+        if(v>mx){v=mx;i.value=mx;}
+        qs+=v;
+      });
+      const el=q.querySelector('.qs'); if(el)el.textContent=+qs.toFixed(1);
+      s+=qs;
+    });
+    s=+s.toFixed(1); tot+=s;
+    const pc=Math.round(s/a.max*100);
+    document.getElementById('axl'+a.n).textContent=s;
+    document.getElementById('axf'+a.n).style.width=pc+'%';
+    document.getElementById('ax'+a.n+'s').textContent=s;
+    document.getElementById('s'+a.n).textContent=s;
+    document.getElementById('p'+a.n).textContent=pc+'%';
+  });
+  tot=+tot.toFixed(1);
+  const pct=Math.round(tot/GT*100);
+  document.getElementById('tot').textContent=pct;
+  document.getElementById('sT').textContent=tot;
+  document.getElementById('pT').textContent=pct+'%';
+  document.getElementById('ring').style.strokeDashoffset=194.8*(1-pct/100);
+  const v=document.getElementById('verdict');
+  if(tot===0){v.className='verdict none';v.textContent='لم يبدأ التقييم';}
+  else if(pct>=70){v.className='verdict ok';v.textContent='✅ مقبول — '+tot+'/'+GT+' ('+pct+'٪)';}
+  else if(pct>=50){v.className='verdict warn';v.textContent='⚠️ مراجعة — '+tot+'/'+GT+' ('+pct+'٪)';}
+  else{v.className='verdict bad';v.textContent='❌ غير مقبول — '+tot+'/'+GT+' ('+pct+'٪)';}
+}
+
+/* ═══════ PERSIST ═══════ */
+let t;
+function save(){
+  const d={};
+  document.querySelectorAll('input[id],textarea[id]').forEach(el=>{
+    d[el.id]=(el.type==='radio'||el.type==='checkbox')?el.checked:el.value;
+  });
+  try{localStorage.setItem(KEY,JSON.stringify(d));}catch(e){}
+  const s=document.getElementById('saved');
+  s.classList.add('on'); clearTimeout(t); t=setTimeout(()=>s.classList.remove('on'),1400);
+}
+function load(){
+  let d; try{d=JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){return;}
+  Object.keys(d).forEach(k=>{
+    const el=document.getElementById(k); if(!el)return;
+    if(el.type==='radio'||el.type==='checkbox')el.checked=!!d[k]; else el.value=d[k];
+  });
+}
+document.addEventListener('input',e=>{
+  if(e.target.matches('input,textarea')){ if(e.target.classList.contains('c'))calc(); save(); }
+});
+document.addEventListener('change',e=>{
+  if(e.target.matches('input')){ calc(); save(); }
+});
+
+/* ═══════ ACTIONS ═══════ */
+document.getElementById('modeBtn').onclick=function(){
+  document.body.classList.toggle('cand');
+  const on=document.body.classList.contains('cand');
+  this.textContent = on ? '👁 وضع المُقيِّم' : '👁 وضع المرشح';
+  this.classList.toggle('gold',on);
+};
+function expandAll(){
+  const d=document.querySelectorAll('details.model');
+  const any=[...d].some(x=>!x.open);
+  d.forEach(x=>x.open=any);
+}
+function clearAll(){
+  if(!confirm('سيُمسح كل ما كُتب في هذا التقييم نهائياً.\n\nهل أنت متأكد؟'))return;
+  if(!confirm('تأكيد أخير — لا يمكن التراجع.'))return;
+  localStorage.removeItem(KEY);
+  document.querySelectorAll('input,textarea').forEach(el=>{
+    if(el.type==='radio'||el.type==='checkbox')el.checked=false; else el.value='';
+  });
+  calc();
+}
+function exportJSON(){
+  const d={};
+  document.querySelectorAll('input[id],textarea[id]').forEach(el=>{
+    d[el.id]=(el.type==='radio'||el.type==='checkbox')?el.checked:el.value;
+  });
+  d._total=document.getElementById('tot').textContent;
+  d._exported=new Date().toISOString();
+  const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(b);
+  const nm=(document.getElementById('c_name').value||'مرشح').trim().replace(/[\\/:*?"<>|]/g,'');
+  a.download=`تقييم_${nm}_${d._total}-100.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ═══════ INIT ═══════ */
+load(); calc();
+window.addEventListener('beforeprint',()=>document.querySelectorAll('details.model').forEach(d=>d.open=true));
+</script>
+</body>
+</html>

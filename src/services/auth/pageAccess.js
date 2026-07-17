@@ -11,6 +11,7 @@ export const RESTRICTED_ROLE_PATHS = {
     '/dashboard/hiring-requests',
     '/dashboard/tasks',
     '/dashboard/meeting-assistant',
+    '/dashboard/wh-manager-eval',
   ],
 };
 

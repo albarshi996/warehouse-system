@@ -95,6 +95,8 @@ const navGroups = [
     emoji: '🏬',
     items: [
       { href: `${base}/dashboard/hiring-requests`, label: 'طلب توظيف', icon: 'clipboardList' },
+      // أداة تقييم سرّية — المدير العام ومستخدم الإدارة فقط:
+      { href: `${base}/dashboard/wh-manager-eval`, label: 'تقييم مدير المستودعات', icon: 'clipboardList', roles: ['admin', 'department_user'] },
       // روابط تعاونية لمستخدم الإدارة فقط (بياناتها محليّة في متصفّحه — خاصّة به):
       { href: `${base}/dashboard/tasks`, label: 'المهام', icon: 'clipboardList', roles: ['department_user'] },
       { href: `${base}/dashboard/meeting-assistant`, label: 'مساعد الاجتماعات', icon: 'grid', roles: ['department_user'] },
