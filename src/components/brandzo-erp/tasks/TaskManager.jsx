@@ -4,8 +4,13 @@ import TaskList from './TaskList.jsx';
 import StatsBar from './StatsBar.jsx';
 import {
   getAllTasks,
+  updateTask,
   markSent,
   markEmailSent,
+  markDone,
+  markUndone,
+  exportTasks,
+  importTasks,
   deleteTask as deleteTaskService,
 } from './taskService';
 
@@ -13,6 +18,12 @@ const PRIORITY_LABELS = {
   high: 'عاجل',
   med: 'متوسط',
   low: 'عادي',
+};
+
+const PRIORITY_COLORS = {
+  high: '#c41e3a',
+  med: '#DAAA3C',
+  low: '#3498db',
 };
 
 function buildMessage(task) {
@@ -62,8 +73,192 @@ function formatPhone(phone = '') {
   return phone.replace(/\s+/g, '').replace(/^0+/, '');
 }
 
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Build a standalone RTL Arabic HTML document (Brandzo identity) for a task,
+ * ready to be opened in a print window and saved as PDF by the user.
+ */
+function buildPrintDocument(task) {
+  const prioLabel = PRIORITY_LABELS[task.priority] || 'عادي';
+  const prioColor = PRIORITY_COLORS[task.priority] || PRIORITY_COLORS.low;
+  const createdAt = task.createdAt ? new Date(task.createdAt).toLocaleDateString('ar-LY') : '—';
+  const todayKey = new Date().toISOString().split('T')[0];
+  const isOverdue = !task.done && task.dueDate && task.dueDate < todayKey;
+
+  const totalSteps = task.checklist?.length || 0;
+  const doneSteps = task.checklist?.filter((s) => s.done).length || 0;
+  const checklistHtml = (task.checklist || [])
+    .map(
+      (item, i) => `
+        <li class="check-item${item.done ? ' done' : ''}">
+          <span class="check-mark">${item.done ? '✓' : '☐'}</span>
+          <span class="check-text">${i + 1}. ${escapeHtml(item.text)}</span>
+        </li>`
+    )
+    .join('');
+
+  const tagsHtml = task.tags?.length
+    ? task.tags.map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join(' ')
+    : '—';
+
+  return `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8" />
+  <title>BZ-${escapeHtml(task.id)}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    @page { size: A4; margin: 10mm; }
+    body {
+      font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+      background: #ffffff;
+      color: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .header {
+      background: #1a1a2e;
+      color: #ffffff;
+      padding: 22px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 10px 10px 0 0;
+    }
+    .header .brand { font-size: 20px; font-weight: 900; }
+    .header .brand small { display: block; font-size: 11px; font-weight: 600; color: #DAAA3C; margin-top: 2px; }
+    .header .meta { text-align: left; font-size: 11px; line-height: 1.8; color: rgba(255, 255, 255, 0.85); }
+    .accent-stripe { height: 6px; background: #c41e3a; }
+    .content { flex: 1; padding: 24px 28px; }
+    h1.task-title { font-size: 22px; font-weight: 900; margin-bottom: 10px; }
+    .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .badge {
+      display: inline-block;
+      padding: 3px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .badge-done { background: #10b981; }
+    .badge-overdue { background: #dc2626; }
+    .gold-sep { border: 0; border-top: 2px solid #DAAA3C; margin: 14px 0; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; font-size: 13px; }
+    .info-grid .label { color: #a37c1f; font-weight: 700; margin-left: 6px; }
+    .info-full { grid-column: 1 / -1; }
+    .tag {
+      display: inline-block;
+      background: rgba(218, 170, 60, 0.15);
+      color: #8a6914;
+      border: 1px solid rgba(218, 170, 60, 0.5);
+      border-radius: 999px;
+      padding: 1px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      margin: 0 0 2px 4px;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 900;
+      color: #1a1a2e;
+      margin-bottom: 8px;
+      border-right: 4px solid #c41e3a;
+      padding-right: 8px;
+    }
+    .desc-box {
+      background: #f8f5ed;
+      border: 1px solid #e5d9b8;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.9;
+      white-space: pre-wrap;
+    }
+    .check-list { list-style: none; margin-top: 4px; }
+    .check-item {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      padding: 6px 0;
+      border-bottom: 1px dashed #e2e2e2;
+      font-size: 13px;
+    }
+    .check-item .check-mark { font-weight: 900; color: #9ca3af; }
+    .check-item.done .check-mark { color: #10b981; }
+    .check-item.done .check-text { text-decoration: line-through; color: #6b7280; }
+    .footer {
+      background: #1a1a2e;
+      color: #DAAA3C;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 12px;
+      border-radius: 0 0 10px 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">🏭 Brandzo Hub 2026<small>مهمة تشغيلية — Operational Task</small></div>
+    <div class="meta">BZ-${escapeHtml(task.id)}<br />تاريخ الإنشاء: ${escapeHtml(createdAt)}</div>
+  </div>
+  <div class="accent-stripe"></div>
+  <div class="content">
+    <h1 class="task-title">${escapeHtml(task.title)}</h1>
+    <div class="badges">
+      <span class="badge" style="background:${prioColor}">الأولوية: ${prioLabel}</span>
+      ${task.done ? '<span class="badge badge-done">✔ منجزة</span>' : ''}
+      ${isOverdue ? '<span class="badge badge-overdue">⏰ متأخرة</span>' : ''}
+    </div>
+    <hr class="gold-sep" />
+    <div class="info-grid">
+      <div><span class="label">القسم:</span>${escapeHtml(task.dept || '—')}</div>
+      <div><span class="label">المسؤول:</span>${escapeHtml(task.owner || '—')}</div>
+      <div><span class="label">تاريخ الاستحقاق:</span>${escapeHtml(task.dueDate || '—')}</div>
+      <div><span class="label">الوقت:</span>${escapeHtml(task.dueTime || '—')}</div>
+      <div class="info-full"><span class="label">التصنيفات:</span>${tagsHtml}</div>
+    </div>
+    <hr class="gold-sep" />
+    <div class="section-title">التفاصيل</div>
+    <div class="desc-box">${escapeHtml(task.description || '—')}</div>
+    ${
+      totalSteps > 0
+        ? `<hr class="gold-sep" />
+    <div class="section-title">قائمة التحقق (${doneSteps}/${totalSteps})</div>
+    <ul class="check-list">${checklistHtml}</ul>`
+        : ''
+    }
+  </div>
+  <div class="footer">Brandzo Franchise Partners — COMMAND CENTER</div>
+  <script>
+    window.addEventListener('load', function () {
+      var go = function () { setTimeout(function () { window.print(); }, 200); };
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(go);
+      } else {
+        go();
+      }
+    });
+  ${'</'}script>
+</body>
+</html>`;
+}
+
 export default function TaskManager() {
   const [tasks, setTasks] = useState([]);
+  const [editingTask, setEditingTask] = useState(null);
   const [toast, setToast] = useState({ message: '', visible: false, isRed: false });
   const toastTimer = useRef(null);
 
@@ -92,6 +287,58 @@ export default function TaskManager() {
 
   const handleTaskAdded = (task) => {
     setTasks((prev) => [task, ...prev]);
+  };
+
+  const handleTaskUpdated = () => {
+    refreshTasks();
+    setEditingTask(null);
+  };
+
+  const handleEdit = (id) => {
+    const task = tasks.find((item) => item.id === id);
+    if (!task) {
+      showToast('❌ لم يتم العثور على المهمة', true);
+      return;
+    }
+    setEditingTask(task);
+  };
+
+  const handleToggleDone = (id) => {
+    const task = tasks.find((item) => item.id === id);
+    if (!task) {
+      showToast('❌ لم يتم العثور على المهمة', true);
+      return;
+    }
+    try {
+      if (task.done) {
+        markUndone(id);
+        showToast('↩️ تمت إعادة فتح المهمة', false);
+      } else {
+        markDone(id);
+        showToast('✅ تم إنجاز المهمة — أحسنت!', false);
+      }
+      refreshTasks();
+    } catch (err) {
+      console.error(err);
+      showToast('❌ تعذر تحديث حالة المهمة', true);
+    }
+  };
+
+  const handleChecklistToggle = (id, index) => {
+    const task = tasks.find((item) => item.id === id);
+    if (!task || !Array.isArray(task.checklist) || !task.checklist[index]) {
+      return;
+    }
+    const checklist = task.checklist.map((step, i) =>
+      i === index ? { ...step, done: !step.done } : step
+    );
+    try {
+      updateTask(id, { checklist });
+      refreshTasks();
+    } catch (err) {
+      console.error(err);
+      showToast('❌ تعذر تحديث قائمة التحقق', true);
+    }
   };
 
   const handleWhatsApp = (id) => {
@@ -157,6 +404,9 @@ export default function TaskManager() {
       return;
     }
     setTasks((prev) => prev.filter((task) => task.id !== id));
+    if (editingTask?.id === id) {
+      setEditingTask(null);
+    }
     showToast('✅ تم حذف المهمة', false);
   };
 
@@ -167,126 +417,47 @@ export default function TaskManager() {
       return;
     }
 
-    if (!window.jspdf || !window.jspdf.jsPDF) {
-      showToast('❌ مكتبة jsPDF غير متاحة', true);
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      showToast('❌ حظر المتصفح النافذة المنبثقة — اسمح بالنوافذ المنبثقة ثم أعد المحاولة', true);
       return;
     }
 
-    const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
-    const width = doc.internal.pageSize.getWidth();
-    const height = doc.internal.pageSize.getHeight();
+    printWindow.document.open();
+    printWindow.document.write(buildPrintDocument(task));
+    printWindow.document.close();
+    printWindow.focus();
+    showToast('📄 تم تجهيز المستند — اختر «حفظ كـ PDF» من نافذة الطباعة', false);
+  };
 
-    const headerHeight = 40;
-    const stripeWidth = 6;
-    const margin = 12;
+  const handleExport = () => {
+    const all = exportTasks();
+    if (!all.length) {
+      showToast('❌ لا توجد مهام للتصدير', true);
+      return;
+    }
+    const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Brandzo-Tasks-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showToast(`⬇ تم تصدير ${all.length} مهمة كنسخة احتياطية`, false);
+  };
 
-    // Header bar
-    doc.setFillColor(26, 26, 46);
-    doc.rect(0, 0, width, headerHeight, 'F');
-
-    doc.setFontSize(14);
-    doc.setTextColor(255, 255, 255);
-    doc.text('Brandzo Hub 2026', width / 2, 18, { align: 'center' });
-
-    doc.setFontSize(8);
-    doc.text(`BZ-${task.id}`, width - margin, 12, { align: 'right' });
-    doc.text(
-      `تاريخ الإنشاء: ${task.createdAt ? new Date(task.createdAt).toLocaleDateString('ar-LY') : '—'}`,
-      width - margin,
-      20,
-      { align: 'right' }
-    );
-
-    // Crimson right stripe
-    doc.setFillColor(196, 30, 58);
-    doc.rect(width - stripeWidth, 0, stripeWidth, height, 'F');
-
-    // Gold separator
-    doc.setDrawColor(218, 170, 60);
-    doc.setLineWidth(0.8);
-    doc.line(margin, headerHeight + 2, width - stripeWidth - margin, headerHeight + 2);
-
-    // Info grid
-    const dataStartY = headerHeight + 12;
-    const labelColor = [218, 170, 60];
-    doc.setFontSize(10);
-    doc.setTextColor(255, 255, 255);
-
-    const lineGap = 7;
-    const leftX = margin;
-    const rightX = width - stripeWidth - margin;
-
-    const writeRow = (label, value, y) => {
-      doc.setTextColor(...labelColor);
-      doc.text(label, leftX, y);
-      doc.setTextColor(255, 255, 255);
-      doc.text(value, rightX, y, { align: 'right', maxWidth: width - stripeWidth - margin * 2 - 30 });
-    };
-
-    writeRow('القسم:', task.dept || '—', dataStartY);
-    writeRow('المسؤول:', task.owner || '—', dataStartY + lineGap);
-    writeRow(
-      'الاستحقاق:',
-      `${task.dueDate || '—'}${task.dueTime ? ' — ' + task.dueTime : ''}`,
-      dataStartY + lineGap * 2
-    );
-    writeRow('الأولوية:', PRIORITY_LABELS[task.priority] || 'عادي', dataStartY + lineGap * 3);
-    writeRow('التصنيفات:', task.tags?.join(' · ') || '—', dataStartY + lineGap * 4);
-
-    // Description box
-    const descY = dataStartY + lineGap * 5 + 4;
-    const descHeight = 32;
-    doc.setFillColor(26, 26, 46);
-    doc.roundedRect(leftX, descY, width - stripeWidth - margin * 2, descHeight, 4, 4, 'F');
-
-    doc.setFontSize(9);
-    doc.setTextColor(218, 170, 60);
-    doc.text('التفاصيل', leftX + 2, descY + 7);
-    doc.setTextColor(255, 255, 255);
-    doc.text(task.description || '—', leftX + 2, descY + 14, {
-      maxWidth: width - stripeWidth - margin * 2 - 6,
-    });
-
-    // Checklist
-    const checklistStartY = descY + descHeight + 14;
-    doc.setFontSize(10);
-    doc.setTextColor(218, 170, 60);
-    doc.text('قائمة التحقق', leftX, checklistStartY);
-    doc.setFontSize(9);
-    doc.setTextColor(255, 255, 255);
-
-    let currentY = checklistStartY + 7;
-    const checkboxSize = 4;
-    const checklistMaxWidth = width - stripeWidth - margin * 2 - 12;
-
-    (task.checklist || []).forEach((item, index) => {
-      if (currentY > height - 30) {
-        doc.addPage();
-        currentY = margin;
-      }
-      doc.setDrawColor(255, 255, 255);
-      doc.rect(leftX, currentY - 4, checkboxSize, checkboxSize);
-      if (item.done) {
-        doc.setTextColor(54, 179, 126);
-        doc.text('✓', leftX + 1, currentY + 1);
-      }
-      doc.setTextColor(255, 255, 255);
-      doc.text(`${index + 1}. ${item.text}`, leftX + checkboxSize + 4, currentY, {
-        maxWidth: checklistMaxWidth,
-      });
-      currentY += 7;
-    });
-
-    // Footer
-    doc.setFillColor(26, 26, 46);
-    doc.rect(0, height - 20, width - stripeWidth, 20, 'F');
-    doc.setFontSize(9);
-    doc.setTextColor(218, 170, 60);
-    doc.text('Brandzo Franchise Partners — COMMAND CENTER', width / 2, height - 8, {
-      align: 'center',
-    });
-
-    doc.save(`BZ-Task-${task.id}.pdf`);
+  const handleImportFile = (text) => {
+    try {
+      const parsed = JSON.parse(text);
+      const result = importTasks(parsed);
+      refreshTasks();
+      showToast(`✅ تم الاستيراد: ${result.added} جديدة · ${result.updated} محدّثة`, false);
+    } catch (err) {
+      console.error(err);
+      showToast('❌ ملف غير صالح — تأكد من أنه نسخة احتياطية JSON للمهام', true);
+    }
   };
 
   return (
@@ -294,13 +465,24 @@ export default function TaskManager() {
       <StatsBar tasks={tasks} />
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_1.9fr]">
-        <TaskForm onTaskAdded={handleTaskAdded} onShowToast={showToast} />
+        <TaskForm
+          onTaskAdded={handleTaskAdded}
+          onShowToast={showToast}
+          editingTask={editingTask}
+          onTaskUpdated={handleTaskUpdated}
+          onCancelEdit={() => setEditingTask(null)}
+        />
         <TaskList
           tasks={tasks}
           onWhatsApp={handleWhatsApp}
           onEmail={handleEmail}
           onPDF={generatePDF}
           onDelete={handleDelete}
+          onToggleDone={handleToggleDone}
+          onEdit={handleEdit}
+          onChecklistToggle={handleChecklistToggle}
+          onExport={handleExport}
+          onImportFile={handleImportFile}
         />
       </div>
 

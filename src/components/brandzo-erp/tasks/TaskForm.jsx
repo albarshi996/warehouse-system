@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { addTask } from './taskService';
+import React, { useEffect, useRef, useState } from 'react';
+import { addTask, updateTask } from './taskService';
 
 const DEPARTMENTS = [
   'الاستلام والرقابة',
@@ -27,9 +27,15 @@ const TAGS_LIST = [
 
 /**
  * TaskForm Component
- * Handles task creation with all required fields
+ * Handles task creation, plus edit mode when `editingTask` is provided
  */
-export default function TaskForm({ onTaskAdded, onShowToast }) {
+export default function TaskForm({
+  onTaskAdded,
+  onShowToast,
+  editingTask = null,
+  onTaskUpdated,
+  onCancelEdit,
+}) {
   // Core fields
   const [title, setTitle] = useState('');
   const [dept, setDept] = useState('');
@@ -44,6 +50,49 @@ export default function TaskForm({ onTaskAdded, onShowToast }) {
   const [checklistInput, setChecklistInput] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const formRef = useRef(null);
+
+  // Load task into form when edit mode starts
+  useEffect(() => {
+    if (!editingTask) return;
+    setTitle(editingTask.title || '');
+    setDept(editingTask.dept || '');
+    setOwner(editingTask.owner || '');
+    setDueDate(editingTask.dueDate || new Date().toISOString().split('T')[0]);
+    setDueTime(editingTask.dueTime || '09:00');
+    setPriority(editingTask.priority || 'low');
+    setTags(new Set(editingTask.tags || []));
+    setCustomTag(editingTask.customTag || '');
+    setDescription(editingTask.description || '');
+    setChecklist((editingTask.checklist || []).map((s) => ({ ...s })));
+    setChecklistInput('');
+    setPhone(editingTask.phone || '');
+    setEmail(editingTask.email || '');
+    // Bring the form into view (important on mobile where the list is above/below)
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [editingTask]);
+
+  // Reset all fields back to create-mode defaults
+  const resetForm = () => {
+    setTitle('');
+    setDept('');
+    setOwner('');
+    setDueDate(new Date().toISOString().split('T')[0]);
+    setDueTime('09:00');
+    setPriority('low');
+    setTags(new Set());
+    setCustomTag('');
+    setDescription('');
+    setChecklist([]);
+    setChecklistInput('');
+    setPhone('');
+    setEmail('');
+  };
+
+  const handleCancelEdit = () => {
+    resetForm();
+    onCancelEdit?.();
+  };
 
   // Toggle tag selection
   const toggleTag = (tag) => {
@@ -86,7 +135,7 @@ export default function TaskForm({ onTaskAdded, onShowToast }) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
   };
 
-  // Save task
+  // Save task (create or update depending on mode)
   const handleSaveTask = () => {
     // Validation: title is required
     if (!title.trim()) {
@@ -94,9 +143,9 @@ export default function TaskForm({ onTaskAdded, onShowToast }) {
       return;
     }
 
-    // Build tag array including custom tag
+    // Build tag array including custom tag (avoid duplicating it in edit mode)
     const allTags = Array.from(tags);
-    if (customTag.trim() && tags.has('أخرى')) {
+    if (customTag.trim() && tags.has('أخرى') && !allTags.includes(customTag.trim())) {
       allTags.push(customTag.trim());
     }
 
@@ -117,27 +166,19 @@ export default function TaskForm({ onTaskAdded, onShowToast }) {
     };
 
     try {
-      const savedTask = addTask(taskData);
-      onShowToast('✅ تم حفظ المهمة بنجاح', false);
-      
-      // Reset form
-      setTitle('');
-      setDept('');
-      setOwner('');
-      setDueDate(new Date().toISOString().split('T')[0]);
-      setDueTime('09:00');
-      setPriority('low');
-      setTags(new Set());
-      setCustomTag('');
-      setDescription('');
-      setChecklist([]);
-      setChecklistInput('');
-      setPhone('');
-      setEmail('');
-
-      // Notify parent
-      onTaskAdded?.(savedTask);
+      if (editingTask) {
+        const savedTask = updateTask(editingTask.id, taskData);
+        onShowToast('✅ تم تحديث المهمة بنجاح', false);
+        resetForm();
+        onTaskUpdated?.(savedTask);
+      } else {
+        const savedTask = addTask(taskData);
+        onShowToast('✅ تم حفظ المهمة بنجاح', false);
+        resetForm();
+        onTaskAdded?.(savedTask);
+      }
     } catch (err) {
+      console.error(err);
       onShowToast('❌ حدث خطأ أثناء حفظ المهمة', true);
     }
   };
@@ -218,10 +259,21 @@ export default function TaskForm({ onTaskAdded, onShowToast }) {
   };
 
   return (
-    <div className="glass-card p-6 space-y-6">
-      <h2 className="text-2xl font-bold text-white" style={{ color: 'var(--color-brand-yellow)' }}>
-        📋 إنشاء مهمة جديدة
-      </h2>
+    <div ref={formRef} className="glass-card p-6 space-y-6">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-2xl font-bold text-white" style={{ color: 'var(--color-brand-yellow)' }}>
+          {editingTask ? '✏️ تعديل المهمة' : '📋 إنشاء مهمة جديدة'}
+        </h2>
+        {editingTask && (
+          <button
+            onClick={handleCancelEdit}
+            className="text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-100 hover:border-red-400/60 hover:text-red-300 transition-colors whitespace-nowrap"
+            title="إلغاء التعديل والعودة لوضع الإنشاء"
+          >
+            ✖ إلغاء التعديل
+          </button>
+        )}
+      </div>
 
       {/* Title */}
       <div>
@@ -475,7 +527,7 @@ export default function TaskForm({ onTaskAdded, onShowToast }) {
             '--color-brand-red-dark': 'var(--color-brand-red-dark)',
           }}
         >
-          💾 حفظ المهمة
+          {editingTask ? '💾 حفظ التعديلات' : '💾 حفظ المهمة'}
         </button>
 
         {/* WhatsApp Send Button */}

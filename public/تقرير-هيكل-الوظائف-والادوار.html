@@ -362,6 +362,137 @@ tr:hover td{background:rgba(200,157,59,0.04);}
   .support-band div { border: 1px solid #000 !important; background: #fff !important; }
 }
 
+/* ===== V2 ENHANCEMENTS (interactive layer) ===== */
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:3px;}
+
+/* panel transition */
+@keyframes panelIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+.panel.active{animation:panelIn .32s ease both;}
+
+/* flash highlight (search / cross-links) */
+@keyframes flashHl{0%{background:rgba(200,157,59,.38);}100%{background:rgba(200,157,59,0);}}
+.flash-hl{animation:flashHl 1.8s ease;}
+tr.flash-hl>td{animation:flashHl 1.8s ease;}
+
+@media (prefers-reduced-motion: reduce){
+  .panel.active,.flash-hl,tr.flash-hl>td,.sp-fill{animation:none !important;transition:none !important;}
+  html{scroll-behavior:auto;}
+}
+
+/* topbar v2 */
+.topbar{gap:10px;}
+.nav-tabs{overflow-x:auto;scrollbar-width:none;}
+.nav-tabs::-webkit-scrollbar{display:none;}
+.back-link{font-size:12px;color:var(--gray);text-decoration:none;white-space:nowrap;padding:6px 10px;border:1px solid var(--card-border);border-radius:8px;transition:all .2s;}
+.back-link:hover{color:var(--gold);border-color:var(--gold);}
+
+/* global search */
+.search-wrap{position:relative;display:flex;align-items:center;gap:6px;}
+.search-toggle{background:none;border:1px solid var(--card-border);border-radius:8px;color:var(--gray);cursor:pointer;padding:6px 9px;font-size:13px;line-height:1;transition:all .2s;}
+.search-toggle:hover{border-color:var(--gold);color:var(--gold);}
+.search-input{background:rgba(255,255,255,0.05);border:1px solid var(--card-border);border-radius:8px;color:var(--white);font-family:'Cairo',sans-serif;font-size:12px;padding:7px 12px;width:200px;transition:all .25s;}
+.search-input::placeholder{color:var(--gray);}
+.search-input:focus{border-color:var(--gold);outline:none;background:rgba(200,157,59,0.06);}
+.search-results{position:absolute;top:calc(100% + 8px);left:0;min-width:320px;max-width:420px;max-height:60vh;overflow-y:auto;background:#12233a;border:1px solid var(--card-border);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.5);display:none;z-index:400;padding:6px;text-align:right;}
+.search-results.open{display:block;}
+.sr-group{font-size:10px;color:var(--gold);letter-spacing:2px;font-family:'IBM Plex Mono',monospace;padding:8px 10px 4px;}
+.sr-item{display:block;width:100%;text-align:right;background:none;border:none;border-radius:8px;padding:8px 10px;cursor:pointer;font-family:'Cairo',sans-serif;color:var(--text-body);font-size:13px;transition:background .15s;}
+.sr-item:hover,.sr-item.sr-active{background:rgba(200,157,59,0.12);color:#fff;}
+.sr-item small{display:block;color:var(--gray);font-size:11px;margin-top:2px;font-family:'Cairo',sans-serif;}
+.sr-empty{padding:14px;color:var(--gray);font-size:12px;text-align:center;}
+@media(max-width:900px){
+  .search-input{width:0;opacity:0;padding:7px 0;border-width:0;}
+  .search-wrap.open .search-input{width:160px;opacity:1;padding:7px 12px;border-width:1px;}
+}
+@media(max-width:560px){
+  .search-results{position:fixed;left:10px;right:10px;top:56px;min-width:0;max-width:none;}
+}
+@media(max-width:860px){
+  .brand{display:none;}
+  .topbar{padding:0 10px;gap:6px;}
+  .nav-tab{padding:12px 10px;font-size:12px;}
+  .back-link{font-size:11px;padding:5px 8px;}
+}
+
+/* stages: progress + related-forms chips */
+.stage-progress{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.sp-label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gold);white-space:nowrap;}
+.sp-track{flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;}
+.sp-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:2px;transition:width .35s ease;}
+.sp-hint{font-size:10px;color:var(--gray);white-space:nowrap;}
+@media(max-width:600px){.sp-hint{display:none;}}
+.stage-forms-chips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:16px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px dashed var(--card-border);border-radius:8px;}
+.sfc-label{font-size:12px;color:var(--gray);margin-left:4px;}
+.sfc-chip{background:rgba(200,157,59,0.08);border:1px solid var(--card-border);color:var(--gold-light);border-radius:16px;padding:4px 12px;font-size:12px;cursor:pointer;font-family:'Cairo',sans-serif;transition:all .2s;}
+.sfc-chip:hover{border-color:var(--gold);background:rgba(200,157,59,0.16);color:#fff;}
+
+/* forms + jobs toolbars (shared chip/search styles) */
+.forms-toolbar{display:flex;flex-direction:column;gap:10px;margin-bottom:6px;padding:14px;background:rgba(27,58,92,0.3);border:1px solid var(--line);border-radius:10px;}
+.ft-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.ft-search{flex:1;min-width:180px;background:rgba(255,255,255,0.05);border:1px solid var(--card-border);border-radius:8px;color:var(--white);font-family:'Cairo',sans-serif;font-size:13px;padding:8px 12px;}
+.ft-search::placeholder{color:var(--gray);}
+.ft-search:focus{border-color:var(--gold);outline:none;}
+.ft-select{background:#12233a;border:1px solid var(--card-border);border-radius:8px;color:var(--white);font-family:'Cairo',sans-serif;font-size:12px;padding:8px 10px;cursor:pointer;}
+.ft-count{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gold);white-space:nowrap;}
+.ft-chips{display:flex;gap:8px;flex-wrap:wrap;}
+.ft-chip{background:none;border:1px solid var(--card-border);color:var(--gray);border-radius:16px;padding:4px 12px;font-size:12px;cursor:pointer;font-family:'Cairo',sans-serif;transition:all .2s;}
+.ft-chip:hover{color:var(--white);border-color:rgba(200,157,59,0.4);}
+.ft-chip.active{border-color:var(--gold);color:var(--gold);background:rgba(200,157,59,0.1);}
+.ft-chip b{font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:.75;margin-right:4px;font-weight:600;}
+th.th-sort{cursor:pointer;user-select:none;}
+th.th-sort:hover{color:var(--gold-light);}
+.ft-empty{text-align:center;color:var(--gray);padding:24px !important;}
+button.stage-dot{border:none;cursor:pointer;padding:0;font-family:'IBM Plex Mono',monospace;transition:transform .15s;}
+button.stage-dot:hover{transform:scale(1.15);}
+
+/* jobs v2 */
+.jobs-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:rgba(27,58,92,0.3);border:1px solid var(--line);border-radius:10px;}
+button.job-item{width:100%;text-align:right;font-family:'Cairo',sans-serif;}
+@media(min-width:681px){.job-list{max-height:78vh;overflow-y:auto;position:sticky;top:70px;align-self:start;}}
+.jdp-nav{display:flex;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);}
+.jdp-nav button{background:var(--card-bg);border:1px solid var(--card-border);color:var(--gray);padding:7px 16px;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;transition:all .2s;}
+.jdp-nav button:hover:not(:disabled){border-color:var(--gold);color:var(--gold);}
+.jdp-nav button:disabled{opacity:.3;cursor:default;}
+
+/* raci v2 */
+.raci-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.rt-label{font-size:12px;color:var(--gray);}
+.rt-hint{font-size:11px;color:var(--gray);}
+.raci-cell{cursor:pointer;transition:background .15s,opacity .2s;}
+.raci-col-hl{background:rgba(200,157,59,0.12) !important;}
+.raci-table tbody tr:hover td{background:rgba(200,157,59,0.07);}
+.raci-dim{opacity:.16;}
+#raciTip{position:fixed;z-index:500;background:#12233a;border:1px solid var(--gold);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text-body);max-width:280px;box-shadow:0 10px 30px rgba(0,0,0,.5);display:none;line-height:1.9;text-align:right;}
+#raciTip b{color:var(--gold);}
+
+/* org tree collapsible */
+.org-node.has-children{cursor:pointer;}
+.org-caret{background:none;border:none;color:var(--gold);cursor:pointer;font-size:11px;margin-right:6px;padding:0;font-family:inherit;line-height:1;}
+.org-caret::after{content:'▾';}
+.org-tree li.collapsed > .org-node .org-caret::after{content:'▸';}
+.org-badge{display:none;background:rgba(200,157,59,0.2);border:1px solid var(--gold);color:var(--gold-light);border-radius:10px;font-size:10px;padding:0 6px;margin-right:6px;font-family:'IBM Plex Mono',monospace;}
+.org-tree li.collapsed > .org-node .org-badge{display:inline-block;}
+.org-tree li.collapsed > ul{display:none;}
+
+/* scroll-to-top + footer */
+.scroll-top{position:fixed;bottom:22px;left:22px;z-index:900;width:42px;height:42px;border-radius:50%;background:var(--gold);color:var(--navy);border:none;font-size:18px;font-weight:700;cursor:pointer;opacity:0;pointer-events:none;transform:translateY(8px);transition:all .3s;box-shadow:0 6px 20px rgba(0,0,0,.4);}
+.scroll-top.show{opacity:1;pointer-events:auto;transform:none;}
+.site-footer{border-top:1px solid var(--line);padding:18px 24px;text-align:center;font-size:11px;color:var(--gray);}
+.site-footer span{color:var(--gold);}
+
+/* V2 print safety: hide every new interactive control, restore print-critical bits */
+@media print {
+  .search-wrap,.search-results,.back-link,.forms-toolbar,.jobs-toolbar,.raci-toolbar,
+  .stage-progress,.stage-forms-chips,.jdp-nav,.scroll-top,.site-footer,#raciTip{display:none !important;}
+  .panel{animation:none !important;}
+  .stage-dot{display:inline-block !important;}
+  .org-caret,.org-badge{display:none !important;}
+  .org-tree li.collapsed > ul{display:block !important;}
+  .raci-dim{opacity:1 !important;}
+  .raci-col-hl{background:transparent !important;}
+  th.th-sort{cursor:default;}
+}
+
 </style>
 </head>
 <body>
@@ -371,15 +502,21 @@ tr:hover td{background:rgba(200,157,59,0.04);}
 <!-- TOP BAR -->
 <div class="topbar">
   <span class="brand">BRANDZO</span>
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPanel('overview')">نظرة عامة</button>
-    <button class="nav-tab" onclick="showPanel('stages')">الدورة المستندية</button>
-    <button class="nav-tab" onclick="showPanel('forms')">المستندات (21)</button>
-    <button class="nav-tab" onclick="showPanel('kpis')">القواعد والـ KPIs</button>
-    <button class="nav-tab" onclick="showPanel('org')">الهيكل الوظيفي</button>
-    <button class="nav-tab" onclick="showPanel('jobs')">بطاقات الوظائف</button>
-    <button class="nav-tab" onclick="showPanel('raci')">مصفوفة RACI</button>
-    <button class="nav-tab" onclick="showPanel('odoo')">أودو — الصلاحيات</button>
+  <a class="back-link no-print" href="dashboard/">← بوابة العمليات</a>
+  <div class="nav-tabs" role="tablist" aria-label="أقسام الدليل">
+    <button class="nav-tab active" role="tab" aria-selected="true" aria-controls="panel-overview" onclick="showPanel('overview')">نظرة عامة</button>
+    <button class="nav-tab" role="tab" aria-selected="false" aria-controls="panel-stages" onclick="showPanel('stages')">الدورة المستندية</button>
+    <button class="nav-tab" role="tab" aria-selected="false" aria-controls="panel-forms" onclick="showPanel('forms')">المستندات (21)</button>
+    <button class="nav-tab" role="tab" aria-selected="false" aria-controls="panel-kpis" onclick="showPanel('kpis')">القواعد والـ KPIs</button>
+    <button class="nav-tab" role="tab" aria-selected="false" aria-controls="panel-org" onclick="showPanel('org')">الهيكل الوظيفي</button>
+    <button class="nav-tab" role="tab" aria-selected="false" aria-controls="panel-jobs" onclick="showPanel('jobs')">بطاقات الوظائف</button>
+    <button class="nav-tab" role="tab" aria-selected="false" aria-controls="panel-raci" onclick="showPanel('raci')">مصفوفة RACI</button>
+    <button class="nav-tab" role="tab" aria-selected="false" aria-controls="panel-odoo" onclick="showPanel('odoo')">أودو — الصلاحيات</button>
+  </div>
+  <div class="search-wrap no-print" id="searchWrap">
+    <button class="search-toggle" id="searchToggle" aria-label="فتح البحث الشامل" title="بحث شامل">🔍</button>
+    <input id="globalSearch" class="search-input" type="search" placeholder="بحث شامل… وظائف، نماذج، مراحل" autocomplete="off" aria-label="بحث شامل في الدليل">
+    <div class="search-results" id="searchResults" role="listbox" aria-label="نتائج البحث"></div>
   </div>
   <span class="topbar-badge">سري</span>
 </div>
@@ -388,7 +525,7 @@ tr:hover td{background:rgba(200,157,59,0.04);}
 <div id="panel-overview" class="panel active">
   <div class="hero">
     <h1>دليل Brandzo <span>التشغيلي الكامل</span></h1>
-    <p>الدورة المستندية × الهيكل الوظيفي × تكامل Odoo 17 Enterprise<br>إصدار 1.0 — 12 مايو 2026</p>
+    <p>الدورة المستندية × الهيكل الوظيفي × تكامل Odoo 17 Enterprise<br>إصدار 2.0 — 17 يوليو 2026</p>
     <div class="hero-stats">
       <div class="hstat"><strong>8</strong><span>مراحل مستندية</span></div>
       <div class="hstat"><strong>21</strong><span>نموذج رسمي</span></div>
@@ -448,6 +585,11 @@ tr:hover td{background:rgba(200,157,59,0.04);}
   <div class="sec-title">المراحل الثمانية التفصيلية</div>
 
   <div class="stage-flow" id="stageFlow"></div>
+  <div class="stage-progress no-print" aria-hidden="true">
+    <span class="sp-label" id="spLabel">المرحلة 1 / 8</span>
+    <div class="sp-track"><div class="sp-fill" id="spFill" style="width:12.5%"></div></div>
+    <span class="sp-hint">استخدم أسهم لوحة المفاتيح ← → للتنقل بين المراحل</span>
+  </div>
   <div id="stageDetail"></div>
 </div>
 
@@ -455,7 +597,15 @@ tr:hover td{background:rgba(200,157,59,0.04);}
 <div id="panel-forms" class="panel">
   <div class="sec-label">// القسم الرابع</div>
   <div class="sec-title">مصفوفة المستندات — 21 نموذج</div>
-  <p style="font-size:14px;color:var(--text-body);margin-bottom:16px;">ربط جميع نماذج Brandzo (21 نموذج) مع وحدات Odoo 17 المقابلة ومساراتها التنفيذية.</p>
+  <p style="font-size:14px;color:var(--text-body);margin-bottom:16px;">ربط جميع نماذج Brandzo (21 نموذج) مع وحدات Odoo 17 المقابلة ومساراتها التنفيذية. اضغط على رقم المرحلة داخل الجدول للانتقال إلى تفاصيلها، وعلى عناوين الأعمدة للفرز.</p>
+  <div class="forms-toolbar no-print">
+    <div class="ft-row">
+      <input id="formsSearch" class="ft-search" type="search" placeholder="🔎 ابحث في النماذج (الاسم، الغرض، المسار)…" autocomplete="off" aria-label="بحث في النماذج">
+      <select id="formsStageSel" class="ft-select" aria-label="تصفية حسب المرحلة"></select>
+      <span class="ft-count" id="formsCount">21 من 21</span>
+    </div>
+    <div class="ft-chips" id="formsChips" role="group" aria-label="تصفية حسب الوحدة"></div>
+  </div>
   <div class="tbl-wrap">
     <table id="formsTable"></table>
   </div>
@@ -585,6 +735,11 @@ tr:hover td{background:rgba(200,157,59,0.04);}
 <div id="panel-jobs" class="panel">
   <div class="sec-label">// القسم الثالث</div>
   <div class="sec-title">بطاقات الوصف الوظيفي</div>
+  <div class="jobs-toolbar no-print">
+    <input id="jobsSearch" class="ft-search" type="search" placeholder="🔎 ابحث في الوظائف والمهام…" autocomplete="off" aria-label="بحث في الوظائف">
+    <div class="ft-chips" id="jobsPills" role="group" aria-label="تصفية حسب مستوى الصلاحية"></div>
+    <span class="ft-count" id="jobsCount"></span>
+  </div>
   <div class="jobs-layout">
     <div class="job-list" id="jobList"></div>
     <div class="job-detail-panel" id="jobDetail"></div>
@@ -600,6 +755,11 @@ tr:hover td{background:rgba(200,157,59,0.04);}
     <div class="rl-item"><span class="rl-A">A</span> Accountable — المساءل والمعتمد النهائي</div>
     <div class="rl-item"><span class="rl-C">C</span> Consulted — يُستشار رأيه</div>
     <div class="rl-item"><span class="rl-I">I</span> Informed — يُعلَم بالنتيجة فقط</div>
+  </div>
+  <div class="raci-toolbar no-print">
+    <label class="rt-label" for="raciRole">🎯 تركيز على دور:</label>
+    <select id="raciRole" class="ft-select" onchange="raciFocus(this.value)"><option value="">كل الأدوار</option></select>
+    <span class="rt-hint">مرّر فوق أي خلية لإبراز الصف والعمود · اضغط عليها لشرح الحرف</span>
   </div>
   <div class="tbl-wrap">
     <table class="raci-table" id="raciTable"></table>
@@ -621,6 +781,10 @@ tr:hover td{background:rgba(200,157,59,0.04);}
     <strong>⚠️ ملاحظة هامة:</strong> هذا الجدول يضمن تعيين الأدوار المناسبة لكل مستخدم في Odoo مع الصلاحيات المناسبة، مما يضمن الأمان والامتثال في النظام ومنع التعارض في الصلاحيات.
   </div>
 </div>
+
+<button class="scroll-top no-print" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="العودة إلى أعلى الصفحة" title="العودة للأعلى">↑</button>
+<div id="raciTip" role="tooltip"></div>
+<footer class="site-footer no-print">دليل Brandzo التشغيلي الكامل · <span>إصدار 2.0 — 17 يوليو 2026</span> · وثيقة داخلية سرية</footer>
 
 <script>
 // =================== DATA ===================
@@ -1258,6 +1422,28 @@ const orgTable = [
 
 // =================== STATE ===================
 let curStage = 0, curJob = 0;
+const TABS = ['overview','stages','forms','kpis','org','jobs','raci','odoo'];
+let currentPanel = 'overview';
+const formsState = {q:'', module:'all', stage:'all', sortKey:'stage', sortDir:1};
+const jobsState = {q:'', level:'all'};
+
+// =================== V2 HELPERS ===================
+function norm(s){
+  return String(s).toLowerCase()
+    .replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي')
+    .replace(/[ً-ٟ]/g,'');
+}
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function flashEl(el){
+  if(!el) return;
+  el.scrollIntoView({behavior:'smooth', block:'center'});
+  el.classList.remove('flash-hl');
+  void el.offsetWidth;
+  el.classList.add('flash-hl');
+  setTimeout(()=>el.classList.remove('flash-hl'), 2000);
+}
 
 // =================== RENDER FUNCTIONS ===================
 function renderStageFlow() {
@@ -1275,6 +1461,12 @@ function renderStageFlow() {
 
 function renderStageDetail() {
   const s = stages[curStage];
+  const related = forms.filter(f => f.stage === s.num);
+  const chipsHtml = related.length ? `
+      <div class="stage-forms-chips no-print">
+        <span class="sfc-label">📑 النماذج المرتبطة بهذه المرحلة:</span>
+        ${related.map(f=>`<button class="sfc-chip" onclick="openFormsFiltered('${s.num}')" title="${escapeHtml(f.name)} — فتح مصفوفة المستندات مصفّاة على المرحلة ${s.num}">${f.purpose}</button>`).join('')}
+      </div>` : '';
   document.getElementById('stageDetail').innerHTML = `
     <div class="stage-detail">
       <div class="sd-header">
@@ -1291,6 +1483,7 @@ function renderStageDetail() {
         <div class="sd-box"><h4>المخرجات</h4><ul>${s.outputs.map(x=>`<li>${x}</li>`).join('')}</ul></div>
         <div class="sd-box"><h4>نقاط التحقق</h4><ul>${s.checks.map(x=>`<li>${x}</li>`).join('')}</ul></div>
       </div>
+      ${chipsHtml}
       <div class="sd-nav">
         <button onclick="selectStage(${curStage-1})" ${curStage===0?'disabled':''}>← المرحلة السابقة</button>
         <button onclick="selectStage(${curStage+1})" ${curStage===7?'disabled':''}>المرحلة التالية →</button>
@@ -1298,37 +1491,122 @@ function renderStageDetail() {
     </div>`;
 }
 
+function updateStageProgress() {
+  const f = document.getElementById('spFill'), l = document.getElementById('spLabel');
+  if(f) f.style.width = (((curStage+1)/stages.length)*100) + '%';
+  if(l) l.textContent = 'المرحلة ' + (curStage+1) + ' / ' + stages.length;
+}
+
 function selectStage(i) {
   if(i<0||i>7) return;
   curStage = i;
   renderStageFlow();
   renderStageDetail();
+  updateStageProgress();
+}
+
+function formsFiltered() {
+  const nq = norm(formsState.q.trim());
+  let list = forms.map((f,i)=>Object.assign({_i:i}, f));
+  if(formsState.module !== 'all') list = list.filter(f=>f.module===formsState.module);
+  if(formsState.stage !== 'all') list = list.filter(f=>f.stage===formsState.stage);
+  if(nq) list = list.filter(f=>norm(f.name+' '+f.purpose+' '+f.path+' '+f.module).includes(nq));
+  const k = formsState.sortKey, d = formsState.sortDir;
+  list.sort((a,b)=>d*String(a[k]).localeCompare(String(b[k]),'ar',{numeric:true}));
+  return list;
+}
+
+function renderFormsChips() {
+  const wrap = document.getElementById('formsChips');
+  if(!wrap) return;
+  const mods = ['Purchase','Inventory','Quality','Accounting','Manufacturing'];
+  let html = `<button class="ft-chip ${formsState.module==='all'?'active':''}" onclick="setFormsModule('all')" aria-pressed="${formsState.module==='all'}">الكل <b>${forms.length}</b></button>`;
+  mods.forEach(m=>{
+    const n = forms.filter(f=>f.module===m).length;
+    html += `<button class="ft-chip ${formsState.module===m?'active':''}" onclick="setFormsModule('${m}')" aria-pressed="${formsState.module===m}">${m} <b>${n}</b></button>`;
+  });
+  wrap.innerHTML = html;
 }
 
 function renderForms() {
-  document.getElementById('formsTable').innerHTML = `
-    <thead><tr>
-      <th>المرحلة</th><th>اسم النموذج</th><th>الوحدة</th><th>المسار في Odoo</th><th>الغرض</th>
-    </tr></thead>
-    <tbody>${forms.map(f=>`<tr>
-      <td><span class="stage-dot">${f.stage}</span></td>
+  const list = formsFiltered();
+  const arrow = k => formsState.sortKey===k ? (formsState.sortDir===1?' ▲':' ▼') : '';
+  const ariaSort = k => formsState.sortKey===k ? (formsState.sortDir===1?'ascending':'descending') : 'none';
+  const rows = list.length ? list.map(f=>`<tr id="form-row-${f._i}">
+      <td><button class="stage-dot" onclick="gotoStageFromForm('${f.stage}')" title="الانتقال إلى تفاصيل المرحلة ${f.stage}" aria-label="الانتقال إلى المرحلة ${f.stage}">${f.stage}</button></td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;"><a href="forms/${f.name}" target="_blank" style="color:var(--gold-light);text-decoration:none;border-bottom:1px dashed var(--gold-light);padding-bottom:1px;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--gold-light)'">${f.name}</a></td>
       <td><span class="mtag ${moduleClass[f.module]||'m-i'}">${f.module}</span></td>
       <td style="font-size:12px;">${f.path}</td>
       <td>${f.purpose}</td>
-    </tr>`).join('')}</tbody>`;
+    </tr>`).join('') : `<tr><td colspan="5" class="ft-empty">لا توجد نتائج مطابقة للتصفية الحالية</td></tr>`;
+  document.getElementById('formsTable').innerHTML = `
+    <thead><tr>
+      <th class="th-sort" data-key="stage" role="button" tabindex="0" aria-sort="${ariaSort('stage')}" title="فرز حسب المرحلة">المرحلة${arrow('stage')}</th>
+      <th class="th-sort" data-key="name" role="button" tabindex="0" aria-sort="${ariaSort('name')}" title="فرز حسب الاسم">اسم النموذج${arrow('name')}</th>
+      <th class="th-sort" data-key="module" role="button" tabindex="0" aria-sort="${ariaSort('module')}" title="فرز حسب الوحدة">الوحدة${arrow('module')}</th>
+      <th>المسار في Odoo</th><th>الغرض</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>`;
+  const c = document.getElementById('formsCount');
+  if(c) c.textContent = list.length + ' من ' + forms.length;
+  renderFormsChips();
+  const sel = document.getElementById('formsStageSel');
+  if(sel && sel.value !== formsState.stage) sel.value = formsState.stage;
+  const si = document.getElementById('formsSearch');
+  if(si && si.value !== formsState.q) si.value = formsState.q;
+}
+
+function setFormsModule(m){ formsState.module = m; renderForms(); }
+function sortForms(k){
+  if(!k) return;
+  if(formsState.sortKey===k) formsState.sortDir *= -1;
+  else { formsState.sortKey = k; formsState.sortDir = 1; }
+  renderForms();
+}
+function gotoStageFromForm(st){
+  showPanel('stages');
+  selectStage(parseInt(st,10)-1);
+  setTimeout(()=>{ const el=document.querySelector('#stageDetail .stage-detail'); if(el) flashEl(el); }, 120);
+}
+function openFormsFiltered(st){
+  formsState.stage = st; formsState.module = 'all'; formsState.q = '';
+  showPanel('forms');
+  renderForms();
+  setTimeout(()=>{ const el=document.querySelector('#panel-forms .sec-title'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }, 80);
+}
+function focusFormRow(i){
+  formsState.q=''; formsState.module='all'; formsState.stage='all';
+  showPanel('forms');
+  renderForms();
+  setTimeout(()=>flashEl(document.getElementById('form-row-'+i)), 120);
+}
+function initFormsControls(){
+  const sel = document.getElementById('formsStageSel');
+  if(sel){
+    sel.innerHTML = '<option value="all">كل المراحل (01–08)</option>' + stages.map(s=>`<option value="${s.num}">${s.num} — ${s.ar}</option>`).join('');
+    sel.addEventListener('change', ()=>{ formsState.stage = sel.value; renderForms(); });
+  }
+  const si = document.getElementById('formsSearch');
+  if(si) si.addEventListener('input', ()=>{ formsState.q = si.value; renderForms(); });
+  const ft = document.getElementById('formsTable');
+  ft.addEventListener('click', e=>{ const th=e.target.closest('th.th-sort'); if(th) sortForms(th.dataset.key); });
+  ft.addEventListener('keydown', e=>{
+    if((e.key==='Enter'||e.key===' ') && e.target.classList && e.target.classList.contains('th-sort')){
+      e.preventDefault(); sortForms(e.target.dataset.key);
+    }
+  });
 }
 
 function renderKPIs() {
   const icons = ['❌','❌','❌','✅','✅','✅','🎯'];
   document.getElementById('rulesList').innerHTML = rules.map((r,i)=>`
-    <div class="rule ${r.type}">
+    <div class="rule ${r.type}" id="rule-${i}">
       <span class="r-icon">${icons[i]}</span>
       <span>${r.text}</span>
     </div>`).join('');
 
-  document.getElementById('kpiGrid').innerHTML = kpis.map(k=>`
-    <div class="kpi-card">
+  document.getElementById('kpiGrid').innerHTML = kpis.map((k,i)=>`
+    <div class="kpi-card" id="kpi-card-${i}">
       <div class="kpi-val">${k.val}</div>
       <div class="kpi-name">${k.name}</div>
       <div class="kpi-freq">${k.freq}</div>
@@ -1336,7 +1614,7 @@ function renderKPIs() {
 
   document.getElementById('kpiTable').innerHTML = `
     <thead><tr><th>المؤشر</th><th>الهدف</th><th>طريقة القياس</th><th>التكرار</th></tr></thead>
-    <tbody>${kpiDetail.map(k=>`<tr>
+    <tbody>${kpiDetail.map((k,i)=>`<tr id="kpi-row-${i}">
       <td style="font-weight:600">${k.name}</td>
       <td style="color:var(--gold);font-weight:700;font-family:'IBM Plex Mono',monospace;">${k.target}</td>
       <td style="font-size:12px;">${k.formula}</td>
@@ -1360,16 +1638,58 @@ function renderOrgTable() {
     </tr>`).join('')}</tbody>`;
 }
 
+function visibleJobIdx() {
+  const nq = norm(jobsState.q.trim());
+  const out = [];
+  jobs.forEach((j,i)=>{
+    if(jobsState.level!=='all' && j.odooLevel!==jobsState.level) return;
+    if(nq && !norm(j.title+' '+j.layer+' '+j.odooRole+' '+j.modules+' '+j.duties.join(' ')).includes(nq)) return;
+    out.push(i);
+  });
+  return out;
+}
+
+function renderJobsPills() {
+  const wrap = document.getElementById('jobsPills');
+  if(!wrap) return;
+  const levels = ['Admin','Manager','User'];
+  let html = `<button class="ft-chip ${jobsState.level==='all'?'active':''}" onclick="setJobsLevel('all')" aria-pressed="${jobsState.level==='all'}">الكل <b>${jobs.length}</b></button>`;
+  levels.forEach(l=>{
+    const n = jobs.filter(j=>j.odooLevel===l).length;
+    html += `<button class="ft-chip ${jobsState.level===l?'active':''}" onclick="setJobsLevel('${l}')" aria-pressed="${jobsState.level===l}">${l} <b>${n}</b></button>`;
+  });
+  wrap.innerHTML = html;
+}
+
 function renderJobList() {
-  document.getElementById('jobList').innerHTML = jobs.map((j,i)=>`
-    <div class="job-item ${i===curJob?'active':''}" onclick="selectJob(${i})">
+  const vis = visibleJobIdx();
+  document.getElementById('jobList').innerHTML = vis.length ? vis.map(i=>{
+    const j = jobs[i];
+    return `<button class="job-item ${i===curJob?'active':''}" onclick="selectJob(${i})" aria-pressed="${i===curJob}">
       <div class="ji-title">${j.icon} ${j.title}</div>
       <div class="ji-layer">${j.layer}</div>
-    </div>`).join('');
+    </button>`;
+  }).join('') : '<div class="ft-empty" style="padding:18px;font-size:12px;">لا توجد وظائف مطابقة</div>';
+  renderJobsPills();
+  const c = document.getElementById('jobsCount');
+  if(c) c.textContent = vis.length + ' من ' + jobs.length;
+}
+
+function setJobsLevel(l){ jobsState.level = l; renderJobList(); }
+
+function jobNav(d){
+  const vis = visibleJobIdx();
+  if(!vis.length) return;
+  let p = vis.indexOf(curJob);
+  p = (p===-1) ? 0 : p + d;
+  if(p<0 || p>=vis.length) return;
+  selectJob(vis[p]);
 }
 
 function renderJobDetail() {
   const j = jobs[curJob];
+  const jvis = visibleJobIdx();
+  const jp = jvis.indexOf(curJob);
   let relationsHtml = '';
 
   if (j.reportingTo) {
@@ -1414,6 +1734,10 @@ function renderJobDetail() {
         <span style="font-size:12px;color:var(--gray);">الوحدات:</span>
         <span style="font-size:13px;color:var(--text-body);">${j.modules}</span>
       </div>
+    </div>
+    <div class="jdp-nav no-print">
+      <button onclick="jobNav(-1)" ${jp<=0?'disabled':''}>← الوظيفة السابقة</button>
+      <button onclick="jobNav(1)" ${(jp===-1||jp>=jvis.length-1)?'disabled':''}>الوظيفة التالية →</button>
     </div>`;
 }
 
@@ -1421,16 +1745,74 @@ function selectJob(i) {
   curJob = i;
   renderJobList();
   renderJobDetail();
+  const a = document.querySelector('#jobList .job-item.active');
+  if(a && a.scrollIntoView) a.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
 function renderRaci() {
   const {stages:rs, roles, matrix} = raciMatrix;
-  let html = `<thead><tr><th style="text-align:right">المرحلة</th>${roles.map(r=>`<th style="font-size:10px">${r}</th>`).join('')}</tr></thead><tbody>`;
+  let html = `<thead><tr><th style="text-align:right">المرحلة</th>${roles.map((r,j)=>`<th style="font-size:10px" data-col="${j}">${r}</th>`).join('')}</tr></thead><tbody>`;
   matrix.forEach((row,i) => {
-    html += `<tr><td>${rs[i]}</td>${row.map(c=>`<td class="rc-${c}">${c}</td>`).join('')}</tr>`;
+    html += `<tr><td>${rs[i]}</td>${row.map((c,j)=>`<td class="rc-${c} raci-cell" data-col="${j}" data-row="${i}" data-letter="${c}" tabindex="0">${c}</td>`).join('')}</tr>`;
   });
   html += `</tbody>`;
   document.getElementById('raciTable').innerHTML = html;
+  const sel = document.getElementById('raciRole');
+  if(sel && sel.options.length <= 1){
+    sel.innerHTML = '<option value="">كل الأدوار</option>' + roles.map((r,j)=>`<option value="${j}">${r}</option>`).join('');
+  }
+}
+
+// =================== RACI INTERACTIONS ===================
+const raciMeanings = {
+  R: '<b>R — Responsible:</b> المسؤول المباشر عن التنفيذ',
+  A: '<b>A — Accountable:</b> المساءل والمعتمد النهائي',
+  C: '<b>C — Consulted:</b> يُستشار رأيه قبل التنفيذ',
+  I: '<b>I — Informed:</b> يُعلَم بالنتيجة فقط'
+};
+function clearRaciHl(){
+  document.querySelectorAll('#raciTable .raci-col-hl').forEach(c=>c.classList.remove('raci-col-hl'));
+}
+function showRaciTip(td){
+  const tip = document.getElementById('raciTip');
+  const L = td.dataset.letter, ri = +td.dataset.row, rj = +td.dataset.col;
+  tip.innerHTML = `${raciMeanings[L]||''}<br><span style="color:var(--gray);font-size:11px;">${raciMatrix.roles[rj]} × ${raciMatrix.stages[ri]}</span>`;
+  tip.style.display = 'block';
+  const r = td.getBoundingClientRect(), tw = tip.offsetWidth, th2 = tip.offsetHeight;
+  let x = r.left + r.width/2 - tw/2;
+  x = Math.max(8, Math.min(x, window.innerWidth - tw - 8));
+  let y = r.top - th2 - 10;
+  if(y < 8) y = r.bottom + 10;
+  tip.style.left = x + 'px';
+  tip.style.top = y + 'px';
+}
+function hideRaciTip(){
+  const t = document.getElementById('raciTip');
+  if(t) t.style.display = 'none';
+}
+function raciFocus(v){
+  document.querySelectorAll('#raciTable [data-col]').forEach(c=>{
+    c.classList.toggle('raci-dim', v !== '' && c.dataset.col !== v);
+  });
+}
+function initRaci(){
+  const tbl = document.getElementById('raciTable');
+  if(!tbl) return;
+  tbl.addEventListener('mouseover', e=>{
+    const td = e.target.closest('[data-col]');
+    clearRaciHl();
+    if(td) document.querySelectorAll('#raciTable [data-col="'+td.dataset.col+'"]').forEach(c=>c.classList.add('raci-col-hl'));
+  });
+  tbl.addEventListener('mouseleave', ()=>{ clearRaciHl(); });
+  tbl.addEventListener('click', e=>{
+    const td = e.target.closest('td.raci-cell');
+    if(td) showRaciTip(td); else hideRaciTip();
+  });
+  tbl.addEventListener('keydown', e=>{
+    if((e.key==='Enter'||e.key===' ') && e.target.classList && e.target.classList.contains('raci-cell')){
+      e.preventDefault(); showRaciTip(e.target);
+    }
+  });
 }
 
 function renderOdoo() {
@@ -1448,7 +1830,7 @@ function renderOdoo() {
   const levelColor = {Admin:'color:var(--gold)',Manager:'color:#3498db',User:'color:var(--green)'};
   document.getElementById('odooRolesTable').innerHTML = `<table>
     <thead><tr><th>المنصب</th><th>Role في أودو</th><th>الوحدات المسموح بها</th><th>مستوى الصلاحية</th></tr></thead>
-    <tbody>${odooRoles.map(r=>`<tr>
+    <tbody>${odooRoles.map((r,i)=>`<tr id="odoo-role-row-${i}">
       <td style="font-weight:600">${r.pos}</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gold-light)">${r.role}</td>
       <td style="font-size:13px">${r.modules}</td>
@@ -1457,14 +1839,31 @@ function renderOdoo() {
   </table>`;
 }
 
-// =================== TAB SWITCH ===================
-function showPanel(id) {
+// =================== TAB SWITCH + HASH ROUTING ===================
+function applyPanel(id) {
+  if(TABS.indexOf(id) === -1) id = 'overview';
+  const target = document.getElementById('panel-'+id);
+  if(currentPanel === id && target.classList.contains('active')) return; // idempotent (hashchange echo)
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
-  document.getElementById('panel-'+id).classList.add('active');
-  const tabs = ['overview','stages','forms','kpis','org','jobs','raci','odoo'];
-  document.querySelectorAll('.nav-tab')[tabs.indexOf(id)].classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach((b,i)=>{
+    const on = TABS[i] === id;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  target.classList.add('active');
+  currentPanel = id;
+  hideRaciTip();
 }
+
+function showPanel(id) {
+  if(TABS.indexOf(id) === -1) id = 'overview';
+  applyPanel(id); // switch immediately
+  if(location.hash !== '#'+id) location.hash = id; // keep URL in sync (enables back/forward)
+}
+
+window.addEventListener('hashchange', ()=>{
+  applyPanel(decodeURIComponent((location.hash||'#overview').slice(1)) || 'overview');
+});
 
 // =================== PRINT HANDLERS ===================
 window.onbeforeprint = function() {
@@ -1543,6 +1942,184 @@ window.onafterprint = function() {
   }
 };
 
+// =================== GLOBAL SEARCH ===================
+let searchIndex = [], srActions = [], srActive = -1;
+
+function buildSearchIndex() {
+  const ix = [];
+  stages.forEach((s,i)=>ix.push({
+    g:'مرحلة', label:`${s.num} — ${s.ar}`, sub:s.en,
+    t:norm(s.num+' '+s.ar+' '+s.en+' '+s.desc),
+    act:()=>{ showPanel('stages'); selectStage(i); setTimeout(()=>{ const el=document.querySelector('#stageDetail .stage-detail'); if(el) flashEl(el); },120); }
+  }));
+  forms.forEach((f,i)=>ix.push({
+    g:'نموذج', label:f.purpose, sub:f.name,
+    t:norm(f.name+' '+f.purpose+' '+f.module+' '+f.path),
+    act:()=>focusFormRow(i)
+  }));
+  jobs.forEach((j,i)=>ix.push({
+    g:'وظيفة', label:`${j.icon} ${j.title}`, sub:j.layer,
+    t:norm(j.title+' '+j.layer+' '+j.odooRole+' '+j.modules+' '+j.duties.join(' ')),
+    act:()=>{
+      jobsState.q=''; jobsState.level='all';
+      const si=document.getElementById('jobsSearch'); if(si) si.value='';
+      showPanel('jobs'); selectJob(i);
+      setTimeout(()=>flashEl(document.getElementById('jobDetail')),120);
+    }
+  }));
+  odooRoles.forEach((r,i)=>ix.push({
+    g:'دور أودو', label:r.pos, sub:r.role+' · '+r.level,
+    t:norm(r.pos+' '+r.role+' '+r.modules+' '+r.level),
+    act:()=>{ showPanel('odoo'); setTimeout(()=>flashEl(document.getElementById('odoo-role-row-'+i)),120); }
+  }));
+  rules.forEach((r,i)=>ix.push({
+    g:'قاعدة', label:(r.text.length>60 ? r.text.slice(0,60)+'…' : r.text), sub:'قواعد التنفيذ الإلزامية',
+    t:norm(r.text),
+    act:()=>{ showPanel('kpis'); setTimeout(()=>flashEl(document.getElementById('rule-'+i)),120); }
+  }));
+  kpiDetail.forEach((k,i)=>ix.push({
+    g:'مؤشر KPI', label:`${k.name} — ${k.target}`, sub:k.formula,
+    t:norm(k.name+' '+k.target+' '+k.formula),
+    act:()=>{ showPanel('kpis'); setTimeout(()=>flashEl(document.getElementById('kpi-row-'+i)),120); }
+  }));
+  return ix;
+}
+
+function closeSearch(){
+  const res = document.getElementById('searchResults');
+  if(res){ res.classList.remove('open'); res.innerHTML=''; }
+  srActions = []; srActive = -1;
+}
+
+function renderSearchResults(q){
+  const res = document.getElementById('searchResults');
+  const nq = norm(q.trim());
+  if(nq.length < 2){ closeSearch(); return; }
+  const hits = searchIndex.filter(it=>it.t.includes(nq));
+  srActions = []; srActive = -1;
+  if(!hits.length){
+    res.innerHTML = '<div class="sr-empty">لا توجد نتائج لـ «'+escapeHtml(q)+'»</div>';
+    res.classList.add('open');
+    return;
+  }
+  const groups = {};
+  hits.forEach(h=>{ (groups[h.g] = groups[h.g] || []).push(h); });
+  let html = '';
+  Object.keys(groups).forEach(g=>{
+    html += `<div class="sr-group">${g} (${groups[g].length})</div>`;
+    groups[g].slice(0,6).forEach(h=>{
+      const idx = srActions.length;
+      srActions.push(h);
+      html += `<button class="sr-item" data-idx="${idx}" role="option">${h.label}<small>${escapeHtml(h.sub||'')}</small></button>`;
+    });
+  });
+  res.innerHTML = html;
+  res.classList.add('open');
+}
+
+function updateSrActive(items){
+  items.forEach((el,i)=>el.classList.toggle('sr-active', i===srActive));
+  if(srActive>=0 && items[srActive]) items[srActive].scrollIntoView({block:'nearest'});
+}
+
+function initSearchUI(){
+  const wrap = document.getElementById('searchWrap');
+  const input = document.getElementById('globalSearch');
+  const results = document.getElementById('searchResults');
+  const toggle = document.getElementById('searchToggle');
+  if(!wrap || !input) return;
+  toggle.addEventListener('click', ()=>{
+    wrap.classList.toggle('open');
+    if(wrap.classList.contains('open')) input.focus();
+    else closeSearch();
+  });
+  input.addEventListener('input', ()=>renderSearchResults(input.value));
+  input.addEventListener('focus', ()=>{ if(input.value.trim().length>=2) renderSearchResults(input.value); });
+  input.addEventListener('keydown', e=>{
+    if(e.key==='Escape'){ closeSearch(); input.blur(); return; }
+    const items = results.querySelectorAll('.sr-item');
+    if(!items.length) return;
+    if(e.key==='ArrowDown'){ e.preventDefault(); srActive = Math.min(srActive+1, items.length-1); updateSrActive(items); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); srActive = Math.max(srActive-1, 0); updateSrActive(items); }
+    else if(e.key==='Enter'){ e.preventDefault(); const btn = items[srActive>=0?srActive:0]; if(btn) btn.click(); }
+  });
+  results.addEventListener('click', e=>{
+    const btn = e.target.closest('.sr-item');
+    if(!btn) return;
+    const act = srActions[+btn.dataset.idx];
+    closeSearch();
+    if(act) act.act();
+  });
+  document.addEventListener('click', e=>{
+    if(!wrap.contains(e.target)) closeSearch();
+    const tip = document.getElementById('raciTip');
+    if(tip && tip.style.display==='block' && !e.target.closest('#raciTable') && !e.target.closest('#raciTip')) hideRaciTip();
+  });
+}
+
+// =================== HERO COUNTERS ===================
+function animateCounters(){
+  const els = document.querySelectorAll('.hero .hstat strong');
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  els.forEach(el=>{
+    const raw = el.textContent.trim();
+    const m = raw.match(/^([^0-9]*)([0-9]+(?:\.[0-9]+)?)(.*)$/);
+    if(!m || reduce) return; // non-numeric or reduced motion: leave as-is
+    const prefix = m[1], target = parseFloat(m[2]), suffix = m[3];
+    const dec = (m[2].split('.')[1]||'').length;
+    const dur = 1100, start = performance.now();
+    el.textContent = prefix + (0).toFixed(dec) + suffix;
+    function tick(now){
+      const p = Math.min(1, (now-start)/dur);
+      const e = 1 - Math.pow(1-p, 3);
+      el.textContent = prefix + (target*e).toFixed(dec) + suffix;
+      if(p<1) requestAnimationFrame(tick); else el.textContent = raw;
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+// =================== ORG TREE COLLAPSE ===================
+function initOrgTree(){
+  document.querySelectorAll('.org-tree li').forEach(li=>{
+    const childUl = li.querySelector(':scope > ul');
+    const node = li.querySelector(':scope > .org-node');
+    if(!childUl || !node) return;
+    const count = childUl.querySelectorAll('.org-node').length;
+    const caret = document.createElement('button');
+    caret.className = 'org-caret no-print';
+    caret.setAttribute('aria-expanded','true');
+    caret.setAttribute('aria-label','طي أو توسيع الفرع');
+    const badge = document.createElement('span');
+    badge.className = 'org-badge no-print';
+    badge.textContent = '+' + count;
+    badge.title = count + ' عنصر مخفي';
+    node.appendChild(caret);
+    node.appendChild(badge);
+    node.classList.add('has-children');
+    node.addEventListener('click', ()=>{
+      const collapsed = li.classList.toggle('collapsed');
+      caret.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    });
+  });
+}
+
+// =================== KEYBOARD + SCROLL ===================
+document.addEventListener('keydown', e=>{
+  const tag = (e.target.tagName||'').toUpperCase();
+  if(tag==='INPUT' || tag==='TEXTAREA' || tag==='SELECT') return;
+  if(e.key==='Escape'){ closeSearch(); hideRaciTip(); return; }
+  if(currentPanel==='stages' && !e.altKey && !e.ctrlKey && !e.metaKey){
+    if(e.key==='ArrowRight'){ e.preventDefault(); selectStage(curStage-1); }
+    else if(e.key==='ArrowLeft'){ e.preventDefault(); selectStage(curStage+1); }
+  }
+});
+
+window.addEventListener('scroll', ()=>{
+  const st = document.getElementById('scrollTop');
+  if(st) st.classList.toggle('show', window.scrollY > 400);
+}, {passive:true});
+
 // =================== INIT ===================
 renderStageFlow();
 renderStageDetail();
@@ -1553,6 +2130,15 @@ renderJobList();
 renderJobDetail();
 renderRaci();
 renderOdoo();
+// v2 init
+initFormsControls();
+initRaci();
+initOrgTree();
+initSearchUI();
+searchIndex = buildSearchIndex();
+updateStageProgress();
+animateCounters();
+applyPanel(decodeURIComponent((location.hash||'').slice(1)) || 'overview');
 </script>
 </body>
 </html>

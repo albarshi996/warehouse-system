@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './MeetingAssistant.module.css';
 
+const ARCHIVE_KEY = 'BrandzoMeetings';
+
 const i18n = {
   ar: {
     app_title: 'مساعد الاجتماعات الذكي',
@@ -8,6 +10,7 @@ const i18n = {
     status_recording: 'جاري التسجيل...',
     status_paused: 'متوقف مؤقتاً',
     status_processing: 'جاري المعالجة...',
+    status_translating: 'جاري الترجمة',
     btn_stop: 'إيقاف',
     btn_pause: 'تعليق',
     btn_resume: 'استئناف',
@@ -17,7 +20,9 @@ const i18n = {
     btn_clear: 'مسح الكل',
     btn_copy: 'نسخ الكل',
     transcript_title: 'تفريغ المحادثة',
-    transcript_placeholder: 'اكتب ملاحظاتك هنا أو ابدأ التسجيل... ✍️',
+    transcript_placeholder: 'ابدأ التسجيل أو اكتب في الملاحظات اليدوية بالأسفل... ✍️',
+    manual_notes: 'ملاحظات يدوية',
+    manual_notes_placeholder: 'اكتب ملاحظاتك هنا... تُضاف إلى التفريغ في التلخيص والترجمة والتصدير',
     summary_title: 'الملخص الذكي',
     key_points: 'النقاط الرئيسية',
     decisions: 'القرارات',
@@ -28,12 +33,28 @@ const i18n = {
     word_count: 'الكلمات:',
     badge_live: '● مباشر',
     mic_status: 'الميكروفون جاهز',
+    unsupported_browser: 'المتصفح لا يدعم التعرف الصوتي — يمكنك الكتابة يدويًا',
+    segment_edit_hint: 'انقر للتعديل',
+    segment_delete: 'حذف المقطع',
+    btn_save_session: 'حفظ الجلسة',
+    btn_archive: 'الأرشيف',
+    archive_title: 'أرشيف الاجتماعات',
+    archive_empty: 'لا توجد اجتماعات محفوظة بعد',
+    btn_load: 'تحميل',
+    btn_delete: 'حذف',
+    btn_confirm_delete: 'تأكيد الحذف',
+    btn_cancel: 'إلغاء',
+    btn_close: 'إغلاق',
+    meeting_title_placeholder: 'عنوان الجلسة (اختياري)',
     toast_copied: '✅ تم النسخ',
     toast_pdf_exported: '✅ تم تصدير PDF',
     toast_translated: '✅ تمت الترجمة',
     toast_summarized: '✅ تم التلخيص',
     toast_cleared: '🗑️ تم المسح',
     toast_saved: '💾 تم الحفظ',
+    toast_session_saved: '💾 تم حفظ الجلسة في الأرشيف',
+    toast_session_loaded: '📂 تم تحميل الجلسة',
+    toast_session_deleted: '🗑️ تم حذف الجلسة',
     toast_no_content: '⚠️ لا يوجد محتوى',
     toast_mic_error: '⚠️ تعذر الوصول للميكروفون',
     no_summary: 'لم يتم التلخيص بعد',
@@ -44,6 +65,7 @@ const i18n = {
     status_recording: 'Recording...',
     status_paused: 'Paused',
     status_processing: 'Processing...',
+    status_translating: 'Translating',
     btn_stop: 'Stop',
     btn_pause: 'Pause',
     btn_resume: 'Resume',
@@ -53,7 +75,9 @@ const i18n = {
     btn_clear: 'Clear All',
     btn_copy: 'Copy All',
     transcript_title: 'Transcript',
-    transcript_placeholder: 'Type your notes or start recording... ✍️',
+    transcript_placeholder: 'Start recording or type in the manual notes below... ✍️',
+    manual_notes: 'Manual Notes',
+    manual_notes_placeholder: 'Type your notes here... included with the transcript in summary, translation and export',
     summary_title: 'AI Summary',
     key_points: 'Key Points',
     decisions: 'Decisions',
@@ -64,24 +88,50 @@ const i18n = {
     word_count: 'Words:',
     badge_live: '● Live',
     mic_status: 'Microphone ready',
+    unsupported_browser: 'This browser does not support speech recognition — you can type notes manually',
+    segment_edit_hint: 'Click to edit',
+    segment_delete: 'Delete segment',
+    btn_save_session: 'Save Session',
+    btn_archive: 'Archive',
+    archive_title: 'Meeting Archive',
+    archive_empty: 'No saved meetings yet',
+    btn_load: 'Load',
+    btn_delete: 'Delete',
+    btn_confirm_delete: 'Confirm delete',
+    btn_cancel: 'Cancel',
+    btn_close: 'Close',
+    meeting_title_placeholder: 'Session title (optional)',
     toast_copied: '✅ Copied to clipboard',
     toast_pdf_exported: '✅ PDF exported successfully',
     toast_translated: '✅ Translation complete',
     toast_summarized: '✅ Summary generated',
     toast_cleared: '🗑️ Content cleared',
     toast_saved: '💾 Recording saved',
+    toast_session_saved: '💾 Session saved to archive',
+    toast_session_loaded: '📂 Session loaded',
+    toast_session_deleted: '🗑️ Session deleted',
     toast_no_content: '⚠️ No content available',
     toast_mic_error: '⚠️ Microphone access denied',
     no_summary: 'No summary yet. Record then tap Summarize.',
   },
 };
 
+const translate = (uiLang, key) => i18n[uiLang]?.[key] || i18n.ar[key] || key;
+
+const formatTime = (sec) =>
+  `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+
 const MeetingAssistant = () => {
   // State
   const [lang, setLang] = useState('ar');
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(true);
+  const [elapsedSec, setElapsedSec] = useState(0);
   const [transcriptSegments, setTranscriptSegments] = useState([]);
+  const [manualNotes, setManualNotes] = useState('');
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingText, setEditingText] = useState('');
   const [summaryData, setSummaryData] = useState(null);
   const [englishTranslation, setEnglishTranslation] = useState('');
   const [wordCount, setWordCount] = useState(0);
@@ -89,11 +139,17 @@ const MeetingAssistant = () => {
   const [waveHeights, setWaveHeights] = useState(Array(10).fill(0).map((_, i) => 6 + (i % 3) * 5));
   const [selectedLang, setSelectedLang] = useState('ar-SA');
   const [statusDot, setStatusDot] = useState('ready');
+  const [processingMsg, setProcessingMsg] = useState('');
+  // Meeting archive
+  const [meetingTitle, setMeetingTitle] = useState('');
+  const [savedMeetings, setSavedMeetings] = useState([]);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   // Slide mode for presentation
   const [slideMode, setSlideMode] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
-  const [slideTitle, setSlideTitle] = useState('تقرير تخزين الكوزمتيك — استراتيجية استغلال مجمع التبريد الرحبة');
-  const [agendaItems, setAgendaItems] = useState([
+  const [slideTitle] = useState('تقرير تخزين الكوزمتيك — استراتيجية استغلال مجمع التبريد الرحبة');
+  const [agendaItems] = useState([
     {
       title: 'مقدمة: لماذا نستغل الرحبة الآن؟',
       content: 'عرض موجز للفرصة الاستراتيجية لاستغلال الرحبة ضمن نموذج Brandzo للكوزميتيك، خاصة مع قربها من مسارات التوزيع وشبكات البيع.'
@@ -128,31 +184,73 @@ const MeetingAssistant = () => {
     },
   ]);
 
-  // Refs
+  // Refs — mirrors of mutable state so the one-time recognition handlers never read stale closures
   const recognitionRef = useRef(null);
+  const isRecordingRef = useRef(false);
+  const isPausedRef = useRef(false);
+  const langRef = useRef('ar');
   const interimTranscriptRef = useRef('');
   const finalTranscriptRef = useRef('');
   const waveIntervalRef = useRef(null);
-  const transcriptAreaRef = useRef(null);
-  const translationAreaRef = useRef(null);
+  const restartTimerRef = useRef(null);
   const toastTimerRef = useRef(null);
-  const pdfTemplateRef = useRef(null);
+  const stopRecordingRef = useRef(() => {});
+  const actionsRef = useRef({});
+  const skipSaveRef = useRef(false);
 
-  const t = (key) => i18n[lang]?.[key] || i18n.ar[key] || key;
+  const t = (key) => translate(lang, key);
 
-  // Initialize Speech Recognition
+  // Keep refs in sync with state (handlers also write them directly for immediacy)
+  useEffect(() => {
+    isRecordingRef.current = isRecording;
+    isPausedRef.current = isPaused;
+  }, [isRecording, isPaused]);
+
+  useEffect(() => {
+    langRef.current = lang;
+  }, [lang]);
+
+  const showToast = (msg, duration = 2800) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ msg, show: true });
+    toastTimerRef.current = setTimeout(() => {
+      setToast({ msg: '', show: false });
+    }, duration);
+  };
+
+  // Stable segment appender — only touches refs and setState, safe inside mount-once handlers
+  const appendSegment = (text) => {
+    const speaker = langRef.current === 'ar' ? '🗣 المتحدث' : '🗣 Speaker';
+    setTranscriptSegments((prev) => [
+      ...prev,
+      { speaker: `${speaker} ${prev.length + 1}`, text, ts: new Date().toISOString() },
+    ]);
+  };
+
+  const flushInterim = () => {
+    const pending = interimTranscriptRef.current.trim();
+    if (pending) {
+      finalTranscriptRef.current += pending + ' ';
+      appendSegment(pending);
+      interimTranscriptRef.current = '';
+    }
+  };
+
+  // Initialize Speech Recognition ONCE — all mutable state is read via refs
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition) {
+      setSpeechSupported(false);
+      return undefined;
+    }
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = selectedLang;
     recognition.maxAlternatives = 1;
 
     recognition.onresult = (e) => {
-      if (isPaused) return;
+      if (!isRecordingRef.current || isPausedRef.current) return;
 
       let interim = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -160,15 +258,7 @@ const MeetingAssistant = () => {
         if (e.results[i].isFinal) {
           if (transcript) {
             finalTranscriptRef.current += transcript + ' ';
-            const speaker = lang === 'ar' ? '🗣 المتحدث' : '🗣 Speaker';
-            setTranscriptSegments((prev) => [
-              ...prev,
-              {
-                speaker: speaker + ' ' + (prev.length + 1),
-                text: transcript,
-                ts: new Date().toISOString(),
-              },
-            ]);
+            appendSegment(transcript);
           }
         } else {
           interim += transcript;
@@ -178,34 +268,59 @@ const MeetingAssistant = () => {
     };
 
     recognition.onerror = (e) => {
-      if (e.error === 'not-allowed') {
-        showToast(t('toast_mic_error'));
-        stopRecording();
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        showToast(translate(langRef.current, 'toast_mic_error'));
+        stopRecordingRef.current();
       }
+      // 'no-speech' / 'network' etc. fall through — onend handles the restart
     };
 
     recognition.onend = () => {
-      if (isRecording && !isPaused && recognitionRef.current) {
-        try {
-          recognitionRef.current.start();
-        } catch (ex) {
-          // Ignore
-        }
+      // Auto-restart after silence, reading LIVE state from refs (not a stale closure)
+      if (!isRecordingRef.current || isPausedRef.current) return;
+      try {
+        recognition.start();
+      } catch {
+        if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+        restartTimerRef.current = setTimeout(() => {
+          if (isRecordingRef.current && !isPausedRef.current) {
+            try {
+              recognition.start();
+            } catch {
+              // Give up silently — the next onend will retry
+            }
+          }
+        }, 300);
       }
     };
 
     recognitionRef.current = recognition;
 
     return () => {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.abort();
-        } catch (ex) {
-          // Ignore
-        }
+      if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      isRecordingRef.current = false;
+      try {
+        recognition.abort();
+      } catch {
+        // Ignore
       }
+      recognitionRef.current = null;
     };
-  }, [isPaused, selectedLang, lang]);
+  }, []);
+
+  // Load meeting archive from localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ARCHIVE_KEY);
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) setSavedMeetings(list);
+      }
+    } catch {
+      // Corrupt archive — start fresh
+    }
+  }, []);
 
   // Waveform animation
   useEffect(() => {
@@ -215,7 +330,7 @@ const MeetingAssistant = () => {
         clearInterval(waveIntervalRef.current);
         waveIntervalRef.current = null;
       }
-      return;
+      return undefined;
     }
 
     waveIntervalRef.current = setInterval(() => {
@@ -229,15 +344,26 @@ const MeetingAssistant = () => {
     return () => {
       if (waveIntervalRef.current) {
         clearInterval(waveIntervalRef.current);
+        waveIntervalRef.current = null;
       }
     };
   }, [isRecording, isPaused]);
 
-  // Update word count
+  // Recording timer — ticks only while actively recording (pauses while paused)
   useEffect(() => {
-    const text = transcriptSegments.map((s) => s.text).filter(Boolean).join(' ');
+    if (!isRecording || isPaused) return undefined;
+    const id = setInterval(() => setElapsedSec((s) => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [isRecording, isPaused]);
+
+  // Update word count (transcript segments + manual notes)
+  useEffect(() => {
+    const text = [
+      transcriptSegments.map((s) => s.text).filter(Boolean).join(' '),
+      manualNotes,
+    ].join(' ');
     setWordCount(text.trim().split(/\s+/).filter((x) => x.length > 0).length);
-  }, [transcriptSegments]);
+  }, [transcriptSegments, manualNotes]);
 
   // Update status dot
   useEffect(() => {
@@ -250,16 +376,8 @@ const MeetingAssistant = () => {
     }
   }, [isRecording, isPaused]);
 
-  const showToast = (msg, duration = 2800) => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToast({ msg, show: true });
-    toastTimerRef.current = setTimeout(() => {
-      setToast({ msg: '', show: false });
-    }, duration);
-  };
-
   const startRecording = () => {
-    if (!recognitionRef.current) {
+    if (!speechSupported || !recognitionRef.current) {
       showToast(t('toast_mic_error'));
       return;
     }
@@ -267,85 +385,74 @@ const MeetingAssistant = () => {
     recognitionRef.current.lang = selectedLang;
     finalTranscriptRef.current = '';
     interimTranscriptRef.current = '';
+    setElapsedSec(0);
 
+    isRecordingRef.current = true;
+    isPausedRef.current = false;
     setIsRecording(true);
     setIsPaused(false);
 
     try {
       recognitionRef.current.start();
-    } catch (ex) {
-      // Ignore
+    } catch {
+      // Already started — ignore
     }
 
     showToast('🎙️ ' + (lang === 'ar' ? 'بدأ التسجيل...' : 'Recording started...'));
   };
 
   const stopRecording = () => {
+    isRecordingRef.current = false;
+    isPausedRef.current = false;
     setIsRecording(false);
     setIsPaused(false);
 
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-      } catch (ex) {
+      } catch {
         // Ignore
       }
     }
 
-    if (interimTranscriptRef.current.trim()) {
-      finalTranscriptRef.current += interimTranscriptRef.current + ' ';
-      const speaker = lang === 'ar' ? '🗣 المتحدث' : '🗣 Speaker';
-      setTranscriptSegments((prev) => [
-        ...prev,
-        {
-          speaker: speaker + ' ' + (prev.length + 1),
-          text: interimTranscriptRef.current.trim(),
-          ts: new Date().toISOString(),
-        },
-      ]);
-      interimTranscriptRef.current = '';
-    }
-
+    flushInterim();
     showToast(t('toast_saved'), 3000);
+  };
+
+  // Keep the ref pointing at the latest closure (used by recognition.onerror)
+  useEffect(() => {
+    stopRecordingRef.current = stopRecording;
+  });
+
+  const resumeRecognition = () => {
+    isPausedRef.current = false;
+    setIsPaused(false);
+    if (recognitionRef.current) {
+      recognitionRef.current.lang = selectedLang;
+      try {
+        recognitionRef.current.start();
+      } catch {
+        // Already started — ignore
+      }
+    }
   };
 
   const togglePause = () => {
     if (!isRecording) return;
 
-    const newPaused = !isPaused;
-    setIsPaused(newPaused);
-
-    if (newPaused) {
+    if (!isPaused) {
+      isPausedRef.current = true;
+      setIsPaused(true);
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
-        } catch (ex) {
+        } catch {
           // Ignore
         }
       }
-
-      if (interimTranscriptRef.current.trim()) {
-        finalTranscriptRef.current += interimTranscriptRef.current + ' ';
-        const speaker = lang === 'ar' ? '🗣 المتحدث' : '🗣 Speaker';
-        setTranscriptSegments((prev) => [
-          ...prev,
-          {
-            speaker: speaker + ' ' + (prev.length + 1),
-            text: interimTranscriptRef.current.trim(),
-            ts: new Date().toISOString(),
-          },
-        ]);
-        interimTranscriptRef.current = '';
-      }
+      flushInterim();
     } else {
-      if (recognitionRef.current) {
-        recognitionRef.current.lang = selectedLang;
-        try {
-          recognitionRef.current.start();
-        } catch (ex) {
-          // Ignore
-        }
-      }
+      resumeRecognition();
     }
   };
 
@@ -353,22 +460,46 @@ const MeetingAssistant = () => {
     if (!isRecording) {
       startRecording();
     } else if (isPaused) {
-      setIsPaused(false);
-      if (recognitionRef.current) {
-        recognitionRef.current.lang = selectedLang;
-        try {
-          recognitionRef.current.start();
-        } catch (ex) {
-          // Ignore
-        }
-      }
+      resumeRecognition();
     } else {
       togglePause();
     }
   };
 
+  const getSegmentsText = (segments) => (segments || []).map((s) => s.text).filter(Boolean).join(' ');
+
   const getText = () => {
-    return transcriptSegments.map((s) => s.text).filter(Boolean).join(' ');
+    const segText = getSegmentsText(transcriptSegments);
+    const notes = manualNotes.trim();
+    return [segText, notes].filter(Boolean).join('\n');
+  };
+
+  // ── Transcript segment editing ──
+  const beginEditSegment = (i) => {
+    setEditingIndex(i);
+    setEditingText(transcriptSegments[i]?.text || '');
+  };
+
+  const saveSegmentEdit = () => {
+    if (skipSaveRef.current) {
+      skipSaveRef.current = false;
+      setEditingIndex(null);
+      return;
+    }
+    if (editingIndex === null) return;
+    const idx = editingIndex;
+    const newText = editingText.trim();
+    setTranscriptSegments((prev) =>
+      newText
+        ? prev.map((s, j) => (j === idx ? { ...s, text: newText } : s))
+        : prev.filter((_, j) => j !== idx)
+    );
+    setEditingIndex(null);
+  };
+
+  const deleteSegment = (i) => {
+    if (editingIndex === i) setEditingIndex(null);
+    setTranscriptSegments((prev) => prev.filter((_, j) => j !== i));
   };
 
   const smartSummarize = (text) => {
@@ -441,6 +572,36 @@ const MeetingAssistant = () => {
     showToast(t('toast_summarized'), 3000);
   };
 
+  // Split text into ≤maxLen chunks, preferring sentence boundaries
+  const splitIntoChunks = (text, maxLen = 450) => {
+    const sentences = text.match(/[^.!?؟\n]+[.!?؟\n]*/g) || [text];
+    const chunks = [];
+    let current = '';
+
+    for (let sentence of sentences) {
+      // Hard-split any single sentence longer than maxLen (on a space when possible)
+      while (sentence.length > maxLen) {
+        let cut = sentence.lastIndexOf(' ', maxLen);
+        if (cut <= 0) cut = maxLen;
+        if (current.trim()) {
+          chunks.push(current.trim());
+          current = '';
+        }
+        chunks.push(sentence.slice(0, cut).trim());
+        sentence = sentence.slice(cut);
+      }
+      if ((current + sentence).length > maxLen && current.trim()) {
+        chunks.push(current.trim());
+        current = sentence;
+      } else {
+        current += sentence;
+      }
+    }
+    if (current.trim()) chunks.push(current.trim());
+
+    return chunks.filter(Boolean);
+  };
+
   const doTranslate = async () => {
     const txt = getText();
     if (!txt || txt.trim().length < 5) {
@@ -448,35 +609,45 @@ const MeetingAssistant = () => {
       return;
     }
 
+    const chunks = splitIntoChunks(txt);
     setStatusDot('processing');
 
     try {
-      const res = await fetch(
-        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(txt.substring(0, 500))}&langpair=ar|en&de=meeting@assistant.ai`
-      );
-      const data = await res.json();
-
-      if (data?.responseData?.translatedText) {
-        setEnglishTranslation(data.responseData.translatedText);
-        showToast(t('toast_translated'), 3000);
-      } else {
-        throw new Error('no translation');
+      const results = [];
+      for (let i = 0; i < chunks.length; i++) {
+        setProcessingMsg(`${t('status_translating')} ${i + 1}/${chunks.length}…`);
+        const res = await fetch(
+          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunks[i])}&langpair=ar|en&de=meeting@assistant.ai`
+        );
+        const data = await res.json();
+        const piece = data?.responseData?.translatedText;
+        if (!piece) throw new Error('no translation');
+        results.push(piece);
       }
-    } catch (err) {
+      setEnglishTranslation(results.join(' '));
+      showToast(t('toast_translated'), 3000);
+    } catch {
       setEnglishTranslation('[Translation unavailable. Please try again.]');
       showToast('⚠️ ' + (lang === 'ar' ? 'خدمة الترجمة غير متاحة' : 'Translation service unavailable'));
     }
 
-    setStatusDot(isRecording && !isPaused ? 'recording' : isRecording && isPaused ? 'paused' : 'ready');
+    setProcessingMsg('');
+    setStatusDot(
+      isRecordingRef.current && !isPausedRef.current
+        ? 'recording'
+        : isRecordingRef.current
+          ? 'paused'
+          : 'ready'
+    );
   };
 
-  const exportPDF = async () => {
-    if (typeof window === 'undefined') {
-      return;
-    }
+  // Shared PDF builder — works from live state or from an archived meeting
+  const exportPDFData = async ({ segments, notes, summary, translation, title }) => {
+    if (typeof window === 'undefined') return;
 
-    const txt = getText();
-    if (!txt || txt.trim().length < 3) {
+    const segText = getSegmentsText(segments);
+    const notesTrim = (notes || '').trim();
+    if (!segText.trim() && !notesTrim) {
       showToast(t('toast_no_content'));
       return;
     }
@@ -491,26 +662,32 @@ const MeetingAssistant = () => {
     });
 
     let sumHTML = '';
-    if (summaryData) {
-      sumHTML += `<p><strong>🔑 ${lang === 'ar' ? 'النقاط الرئيسية' : 'Key Points'}:</strong><br>${summaryData.keyPoints.map((p) => '• ' + p).join('<br>')}</p>`;
-      sumHTML += `<p style="margin-top:10px;"><strong>✅ ${lang === 'ar' ? 'القرارات' : 'Decisions'}:</strong><br>${summaryData.decisions.map((d) => '• ' + d).join('<br>')}</p>`;
-      sumHTML += `<p style="margin-top:10px;"><strong>📋 ${lang === 'ar' ? 'المهام' : 'Action Items'}:</strong><br>${summaryData.actions.map((a) => '• ' + a).join('<br>')}</p>`;
+    if (summary) {
+      sumHTML += `<p><strong>🔑 ${lang === 'ar' ? 'النقاط الرئيسية' : 'Key Points'}:</strong><br>${summary.keyPoints.map((p) => '• ' + p).join('<br>')}</p>`;
+      sumHTML += `<p style="margin-top:10px;"><strong>✅ ${lang === 'ar' ? 'القرارات' : 'Decisions'}:</strong><br>${summary.decisions.map((d) => '• ' + d).join('<br>')}</p>`;
+      sumHTML += `<p style="margin-top:10px;"><strong>📋 ${lang === 'ar' ? 'المهام' : 'Action Items'}:</strong><br>${summary.actions.map((a) => '• ' + a).join('<br>')}</p>`;
     } else {
       sumHTML = `<p>${lang === 'ar' ? 'لا يوجد ملخص' : 'No summary available'}</p>`;
     }
 
-    const trans = englishTranslation || '';
+    const trans = translation || '';
+    const titleTrim = (title || '').trim();
     const htmlContent = `
       <div style="font-family: 'Segoe UI', sans-serif; line-height: 1.7; direction: ${lang === 'ar' ? 'rtl' : 'ltr'}; padding: 48px;">
         <div style="border-bottom: 3px solid #4a90ff; padding-bottom: 20px; margin-bottom: 24px;">
           <h1 style="font-size: 1.6rem; color: #0a0a1f; margin-bottom: 4px;">📋 ${lang === 'ar' ? 'محضر اجتماع' : 'Meeting Minutes'}</h1>
+          ${titleTrim ? `<p style="font-size: 1rem; color: #333; font-weight: bold;">${titleTrim}</p>` : ''}
           <p style="font-size: 0.8rem; color: #666;">AI Meeting Assistant</p>
           <p style="margin-top: 3px; color: #888; font-size: 0.75rem;">${dateStr}</p>
         </div>
-        <div style="background: #f7f9ff; border-radius: 9px; border-right: 5px solid #4a90ff; padding: 14px 16px; margin-bottom: 18px;">
+        ${segText.trim() ? `<div style="background: #f7f9ff; border-radius: 9px; border-right: 5px solid #4a90ff; padding: 14px 16px; margin-bottom: 18px;">
           <h3 style="color: #4a90ff; margin-bottom: 8px;">📝 ${lang === 'ar' ? 'تفريغ المحادثة' : 'Transcript'}</h3>
-          <p style="color: #333; font-size: 0.88rem; white-space: pre-wrap;">${txt}</p>
-        </div>
+          <p style="color: #333; font-size: 0.88rem; white-space: pre-wrap;">${segText}</p>
+        </div>` : ''}
+        ${notesTrim ? `<div style="background: #fffaf0; border-radius: 9px; border-right: 5px solid #f0a500; padding: 14px 16px; margin-bottom: 18px;">
+          <h3 style="color: #b07d00; margin-bottom: 8px;">🖊️ ${lang === 'ar' ? 'ملاحظات يدوية' : 'Manual Notes'}</h3>
+          <p style="color: #333; font-size: 0.88rem; white-space: pre-wrap;">${notesTrim}</p>
+        </div>` : ''}
         <div style="background: #f7f9ff; border-radius: 9px; border-right: 5px solid #4a90ff; padding: 14px 16px; margin-bottom: 18px;">
           <h3 style="color: #4a90ff; margin-bottom: 8px;">🧠 ${lang === 'ar' ? 'الملخص' : 'Summary'}</h3>
           ${sumHTML}
@@ -547,10 +724,93 @@ const MeetingAssistant = () => {
     }
   };
 
+  const exportPDF = () =>
+    exportPDFData({
+      segments: transcriptSegments,
+      notes: manualNotes,
+      summary: summaryData,
+      translation: englishTranslation,
+      title: meetingTitle,
+    });
+
+  // ── Meeting archive (localStorage) ──
+  const persistArchive = (list) => {
+    setSavedMeetings(list);
+    try {
+      localStorage.setItem(ARCHIVE_KEY, JSON.stringify(list));
+    } catch {
+      // Storage full — keep in-memory state anyway
+    }
+  };
+
+  const meetingWordCount = (m) => {
+    const text = [getSegmentsText(m.segments), m.manualNotes || ''].join(' ');
+    return text.trim().split(/\s+/).filter((x) => x.length > 0).length;
+  };
+
+  const saveSession = () => {
+    const txt = getText();
+    if (!txt || txt.trim().length < 3) {
+      showToast(t('toast_no_content'));
+      return;
+    }
+
+    const segText = getSegmentsText(transcriptSegments).trim();
+    const source = segText || manualNotes.trim();
+    const defaultTitle = source
+      ? source.split(/\s+/).slice(0, 6).join(' ')
+      : new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US');
+
+    const meeting = {
+      id: 'm-' + Date.now(),
+      title: meetingTitle.trim() || defaultTitle,
+      date: new Date().toISOString(),
+      segments: transcriptSegments,
+      manualNotes,
+      summaryData,
+      englishTranslation,
+    };
+
+    persistArchive([meeting, ...savedMeetings]);
+    showToast(t('toast_session_saved'), 3000);
+  };
+
+  const loadMeeting = (m) => {
+    setTranscriptSegments(Array.isArray(m.segments) ? m.segments : []);
+    setManualNotes(m.manualNotes || '');
+    setSummaryData(m.summaryData || null);
+    setEnglishTranslation(m.englishTranslation || '');
+    setMeetingTitle(m.title || '');
+    setEditingIndex(null);
+    finalTranscriptRef.current = getSegmentsText(m.segments) + ' ';
+    interimTranscriptRef.current = '';
+    setArchiveOpen(false);
+    setConfirmDeleteId(null);
+    showToast(t('toast_session_loaded'), 2500);
+  };
+
+  const deleteMeeting = (id) => {
+    persistArchive(savedMeetings.filter((m) => m.id !== id));
+    setConfirmDeleteId(null);
+    showToast(t('toast_session_deleted'), 2500);
+  };
+
+  const exportMeetingPDF = (m) =>
+    exportPDFData({
+      segments: m.segments,
+      notes: m.manualNotes,
+      summary: m.summaryData,
+      translation: m.englishTranslation,
+      title: m.title,
+    });
+
   const clearAll = () => {
     finalTranscriptRef.current = '';
     interimTranscriptRef.current = '';
     setTranscriptSegments([]);
+    setManualNotes('');
+    setMeetingTitle('');
+    setEditingIndex(null);
     setEnglishTranslation('');
     setSummaryData(null);
     setWordCount(0);
@@ -580,34 +840,39 @@ const MeetingAssistant = () => {
     showToast(lang === 'ar' ? '🌐 Switched to English' : '🌐 تم التبديل للعربية');
   };
 
-  // Keyboard shortcuts
+  // Keep the latest action closures available to the mount-once keyboard listener
+  useEffect(() => {
+    actionsRef.current = { doSummarize, exportPDF, doTranslate, toggleRecord };
+  });
+
+  // Keyboard shortcuts — registered once, dispatching through actionsRef (no stale closures)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.ctrlKey && e.key === 's') {
+      if (e.ctrlKey && !e.shiftKey && e.key === 's') {
         e.preventDefault();
-        doSummarize();
+        actionsRef.current.doSummarize();
       }
-      if (e.ctrlKey && e.key === 'p') {
+      if (e.ctrlKey && !e.shiftKey && e.key === 'p') {
         e.preventDefault();
-        exportPDF();
+        actionsRef.current.exportPDF();
       }
-      if (e.ctrlKey && e.key === 't') {
+      if (e.ctrlKey && !e.shiftKey && e.key === 't') {
         e.preventDefault();
-        doTranslate();
+        actionsRef.current.doTranslate();
       }
       if (e.ctrlKey && e.shiftKey && e.key === 'R') {
         e.preventDefault();
-        toggleRecord();
+        actionsRef.current.toggleRecord();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isRecording, isPaused, transcriptSegments]);
+  }, []);
 
   // Slide mode keyboard navigation
   useEffect(() => {
-    if (!slideMode) return;
+    if (!slideMode) return undefined;
     const onKey = (e) => {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') setSlideIndex((s) => Math.min(s + 1, agendaItems.length - 1));
       if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') setSlideIndex((s) => Math.max(s - 1, 0));
@@ -661,6 +926,91 @@ const MeetingAssistant = () => {
         </div>
       )}
 
+      {/* Archive Drawer */}
+      {archiveOpen && (
+        <div
+          className="fixed inset-0 z-[90] bg-black/70 flex items-end sm:items-center justify-center"
+          onClick={() => { setArchiveOpen(false); setConfirmDeleteId(null); }}
+        >
+          <div
+            className="w-full max-w-lg max-h-[75vh] bg-slate-900 border border-white/10 rounded-t-xl sm:rounded-xl overflow-hidden flex flex-col shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+              <div className="flex items-center gap-2 text-sm font-bold">
+                📂 <span>{t('archive_title')}</span>
+                <span className="text-xs text-gray-400 font-mono">({savedMeetings.length})</span>
+              </div>
+              <button
+                onClick={() => { setArchiveOpen(false); setConfirmDeleteId(null); }}
+                className="w-7 h-7 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 flex items-center justify-center text-xs transition"
+                title={t('btn_close')}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {savedMeetings.length === 0 && (
+                <div className="text-gray-400 italic text-sm text-center py-8">{t('archive_empty')}</div>
+              )}
+              {savedMeetings.map((m) => (
+                <div key={m.id} className="bg-white/3 border border-white/10 rounded-lg p-3">
+                  <div className="font-bold text-sm text-gray-100 truncate">{m.title}</div>
+                  <div className="text-xs text-gray-400 font-mono mt-0.5" dir="ltr">
+                    {new Date(m.date).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                    {' · '}
+                    {t('word_count')} {meetingWordCount(m)}
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <button
+                      onClick={() => loadMeeting(m)}
+                      className="py-1 px-3 rounded-lg border border-teal-500/30 bg-teal-500/10 text-teal-400 font-semibold text-xs hover:bg-teal-500/20 transition"
+                    >
+                      📥 {t('btn_load')}
+                    </button>
+                    <button
+                      onClick={() => exportMeetingPDF(m)}
+                      className="py-1 px-3 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-400 font-semibold text-xs hover:bg-blue-500/20 transition"
+                    >
+                      📄 {t('btn_export_pdf')}
+                    </button>
+                    {confirmDeleteId === m.id ? (
+                      <>
+                        <button
+                          onClick={() => deleteMeeting(m.id)}
+                          className="py-1 px-3 rounded-lg bg-red-500 text-white font-semibold text-xs hover:bg-red-600 transition"
+                        >
+                          {t('btn_confirm_delete')}
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="py-1 px-3 rounded-lg border border-white/10 bg-white/5 text-gray-200 font-semibold text-xs hover:bg-white/10 transition"
+                        >
+                          {t('btn_cancel')}
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeleteId(m.id)}
+                        className="py-1 px-3 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 font-semibold text-xs hover:bg-red-500/20 transition"
+                      >
+                        🗑️ {t('btn_delete')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 h-16 bg-black/80 border-b border-white/10 backdrop-blur-xl z-40 flex items-center justify-between px-4">
         <div className="flex items-center gap-3">
@@ -679,8 +1029,13 @@ const MeetingAssistant = () => {
               {statusDot === 'ready' && t('status_ready')}
               {statusDot === 'recording' && t('status_recording')}
               {statusDot === 'paused' && t('status_paused')}
-              {statusDot === 'processing' && t('status_processing')}
+              {statusDot === 'processing' && (processingMsg || t('status_processing'))}
             </span>
+            {isRecording && (
+              <span className="font-mono text-gray-300 border-s border-white/10 ps-2" dir="ltr">
+                {formatTime(elapsedSec)}
+              </span>
+            )}
           </div>
           <button
             onClick={clearAll}
@@ -711,6 +1066,14 @@ const MeetingAssistant = () => {
 
       {/* Main Content */}
       <div className="relative z-10 flex-1 flex flex-col pt-16 pb-20 px-4">
+        {/* Unsupported browser banner */}
+        {!speechSupported && (
+          <div className="mt-3 px-4 py-3 rounded-xl border border-amber-400/40 bg-amber-500/10 text-amber-300 text-sm flex items-center gap-2">
+            <span className="flex-shrink-0">⚠️</span>
+            <span>{t('unsupported_browser')}</span>
+          </div>
+        )}
+
         {/* Recording Ring */}
         <div className="flex flex-col items-center gap-5 py-6">
           <div className={`relative w-32 h-32 flex items-center justify-center ${isRecording && !isPaused ? styles.ringLive : ''}`}>
@@ -720,7 +1083,8 @@ const MeetingAssistant = () => {
 
             <button
               onClick={toggleRecord}
-              className={`w-20 h-20 rounded-full border-2 border-transparent flex items-center justify-center text-2xl font-bold transition-all transform active:scale-95 z-10 relative ${
+              disabled={!speechSupported}
+              className={`w-20 h-20 rounded-full border-2 border-transparent flex items-center justify-center text-2xl font-bold transition-all transform active:scale-95 z-10 relative disabled:opacity-40 disabled:cursor-not-allowed ${
                 isRecording
                   ? 'bg-slate-800 border-red-500 shadow-lg shadow-red-500/30'
                   : 'bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/40'
@@ -790,6 +1154,30 @@ const MeetingAssistant = () => {
               📋
             </button>
           </div>
+
+          {/* Session save / archive bar */}
+          <div className="w-full flex gap-2">
+            <input
+              type="text"
+              value={meetingTitle}
+              onChange={(e) => setMeetingTitle(e.target.value)}
+              placeholder={t('meeting_title_placeholder')}
+              className="flex-1 min-w-0 py-2 px-3 rounded-lg border border-white/10 bg-white/5 text-sm text-gray-100 outline-none focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/10 transition"
+            />
+            <button
+              onClick={saveSession}
+              className="py-2 px-3 rounded-lg border border-amber-400/30 bg-amber-500/10 text-amber-300 font-semibold text-sm hover:bg-amber-500/20 transition whitespace-nowrap"
+            >
+              💾 {t('btn_save_session')}
+            </button>
+            <button
+              onClick={() => setArchiveOpen(true)}
+              className="py-2 px-3 rounded-lg border border-white/10 bg-white/5 text-gray-100 font-semibold text-sm hover:bg-white/10 transition whitespace-nowrap"
+            >
+              📂 {t('btn_archive')}
+              <span className="text-xs text-gray-400 font-mono ms-1">({savedMeetings.length})</span>
+            </button>
+          </div>
         </div>
 
         {/* Transcript Card */}
@@ -801,19 +1189,67 @@ const MeetingAssistant = () => {
             {isRecording && !isPaused && <div className="text-xs text-red-400 font-bold animate-pulse">● {t('badge_live')}</div>}
           </div>
           <div className="px-4 py-3">
-            <div
-              ref={transcriptAreaRef}
-              contentEditable
-              className="w-full min-h-40 max-h-60 overflow-y-auto bg-black/25 border border-white/10 rounded-lg p-3 text-sm leading-relaxed text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 resize-none"
-              placeholder={t('transcript_placeholder')}
-            >
+            {/* Segments list — click a segment to edit, ✕ to delete */}
+            <div className="w-full min-h-40 max-h-60 overflow-y-auto bg-black/25 border border-white/10 rounded-lg p-3 text-sm leading-relaxed text-gray-200 space-y-2">
+              {transcriptSegments.length === 0 && (
+                <div className="text-gray-400 italic">{t('transcript_placeholder')}</div>
+              )}
               {transcriptSegments.map((seg, i) => (
-                <div key={i}>
-                  <span className="text-teal-400 text-xs font-bold">{seg.speaker}</span>
-                  <span className="text-gray-200"> {seg.text}</span>
+                <div key={`${seg.ts}-${i}`} className="group flex items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-teal-400 text-xs font-bold">{seg.speaker}</span>{' '}
+                    {editingIndex === i ? (
+                      <textarea
+                        value={editingText}
+                        autoFocus
+                        rows={2}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        onBlur={saveSegmentEdit}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            e.target.blur();
+                          }
+                          if (e.key === 'Escape') {
+                            skipSaveRef.current = true;
+                            e.target.blur();
+                          }
+                        }}
+                        className="w-full mt-1 bg-black/40 border border-blue-500/50 rounded-lg p-2 text-sm leading-relaxed text-gray-100 outline-none focus:ring-2 focus:ring-blue-500/10 resize-y"
+                      />
+                    ) : (
+                      <span
+                        onClick={() => beginEditSegment(i)}
+                        title={t('segment_edit_hint')}
+                        className="text-gray-200 cursor-text hover:bg-white/5 rounded px-0.5 transition"
+                      >
+                        {seg.text}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => deleteSegment(i)}
+                    title={t('segment_delete')}
+                    className="opacity-40 group-hover:opacity-100 hover:text-red-400 text-gray-400 text-xs px-1 py-0.5 flex-shrink-0 transition"
+                  >
+                    ✕
+                  </button>
                 </div>
               ))}
             </div>
+
+            {/* Manual notes — included in summary / translation / PDF / copy */}
+            <div className="mt-3">
+              <label className="block text-xs font-bold text-amber-400 mb-1.5">🖊️ {t('manual_notes')}</label>
+              <textarea
+                value={manualNotes}
+                onChange={(e) => setManualNotes(e.target.value)}
+                placeholder={t('manual_notes_placeholder')}
+                rows={3}
+                className="w-full bg-black/25 border border-white/10 rounded-lg p-3 text-sm leading-relaxed text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 resize-y"
+              />
+            </div>
+
             <div className="mt-2 text-xs text-gray-200 font-mono">
               {t('word_count')} <strong className="text-gray-100">{wordCount}</strong>
             </div>
@@ -878,7 +1314,6 @@ const MeetingAssistant = () => {
               </button>
             </div>
             <div
-              ref={translationAreaRef}
               className="w-full min-h-24 max-h-40 overflow-y-auto bg-black/25 border border-white/10 rounded-lg p-3 text-sm leading-relaxed text-gray-100 font-sans"
               dir="ltr"
               style={{ textAlign: 'left' }}
@@ -913,7 +1348,8 @@ const MeetingAssistant = () => {
       <div className="fixed bottom-0 left-0 right-0 h-20 bg-black/80 border-t border-white/10 backdrop-blur-xl z-40 flex items-center justify-between px-4 gap-2">
         <button
           onClick={toggleRecord}
-          className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold transition-all transform active:scale-95 flex-shrink-0 ${
+          disabled={!speechSupported}
+          className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold transition-all transform active:scale-95 flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed ${
             isRecording
               ? 'bg-slate-800 border-2 border-red-500 shadow-lg shadow-red-500/30'
               : 'bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/40'
@@ -948,9 +1384,6 @@ const MeetingAssistant = () => {
           {toast.msg}
         </div>
       )}
-
-      {/* Hidden PDF Template */}
-      <div ref={pdfTemplateRef} style={{ position: 'absolute', left: '-9999px', top: 0 }} />
     </div>
   );
 };

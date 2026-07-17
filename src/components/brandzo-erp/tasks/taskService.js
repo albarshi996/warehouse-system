@@ -43,6 +43,8 @@ export function addTask(data) {
       sentAt: null,
       emailSent: false,
       emailSentAt: null,
+      done: false,
+      doneAt: null,
     };
     
     tasks.unshift(newTask); // Add to beginning (newest first)
@@ -142,4 +144,100 @@ export function markEmailSent(id) {
     console.error('Error marking task as email sent:', err);
     throw err;
   }
+}
+
+/**
+ * Mark a task as done
+ * Updates done: true and sets doneAt timestamp
+ * @param {string} id - Task ID
+ * @returns {Object} The updated task
+ */
+export function markDone(id) {
+  try {
+    return updateTask(id, {
+      done: true,
+      doneAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('Error marking task as done:', err);
+    throw err;
+  }
+}
+
+/**
+ * Reopen a task (mark as not done)
+ * Updates done: false and clears doneAt
+ * @param {string} id - Task ID
+ * @returns {Object} The updated task
+ */
+export function markUndone(id) {
+  try {
+    return updateTask(id, {
+      done: false,
+      doneAt: null,
+    });
+  } catch (err) {
+    console.error('Error reopening task:', err);
+    throw err;
+  }
+}
+
+/**
+ * Export all tasks (for JSON backup download)
+ * @returns {Array} Array of all task objects
+ */
+export function exportTasks() {
+  return getAllTasks();
+}
+
+/**
+ * Import tasks from a backup and merge by id:
+ * existing ids are updated, new ids are appended.
+ * @param {Array} incoming - Array of task objects (parsed JSON backup)
+ * @returns {{added: number, updated: number, total: number}} Merge counts
+ */
+export function importTasks(incoming) {
+  if (!Array.isArray(incoming)) {
+    throw new Error('Invalid import payload: expected an array of tasks');
+  }
+
+  const tasks = getAllTasks();
+  const byId = new Map(tasks.map((t) => [t.id, t]));
+  const now = new Date().toISOString();
+  let added = 0;
+  let updated = 0;
+
+  incoming.forEach((item) => {
+    if (!item || typeof item !== 'object' || !item.title) {
+      return; // skip malformed entries
+    }
+
+    if (item.id && byId.has(item.id)) {
+      byId.set(item.id, {
+        ...byId.get(item.id),
+        ...item,
+        updatedAt: now,
+      });
+      updated += 1;
+    } else {
+      const id = item.id || `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      byId.set(id, {
+        createdAt: now,
+        sent: false,
+        sentAt: null,
+        emailSent: false,
+        emailSentAt: null,
+        done: false,
+        doneAt: null,
+        ...item,
+        id,
+        updatedAt: now,
+      });
+      added += 1;
+    }
+  });
+
+  const merged = Array.from(byId.values());
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+  return { added, updated, total: merged.length };
 }
