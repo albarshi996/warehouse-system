@@ -6,10 +6,13 @@ import {
   UNIT_OPTIONS,
 } from '../../../services/itemService.js';
 import { canImport } from '../../../services/items/itemsImportService.js';
+import { listenBalances } from '../../../services/balances/balancesService.js';
+import { totalQty, stockValue, fefoSort, expiryStatus } from '../../../services/balances/balanceKey.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Icon from '../../ui/Icon.jsx';
 import ItemForm from './ItemForm.jsx';
 import ItemsImport from './ItemsImport.jsx';
+import BalancesImport from './BalancesImport.jsx';
 
 /**
  * Items master screen. Real-time list of `Items_Master`, with search,
@@ -23,6 +26,8 @@ export default function ItemMaster() {
   const [showArchived, setShowArchived] = useState(false);
   const [editor, setEditor] = useState(null); // null | { mode, item? }
   const [importing, setImporting] = useState(false);
+  const [importingBalances, setImportingBalances] = useState(false);
+  const [balances, setBalances] = useState([]);
   const [me, setMe] = useState(null);
   const [toast, setToast] = useState(null); // { kind, text }
 
@@ -48,6 +53,25 @@ export default function ItemMaster() {
     );
     return () => unsubscribe();
   }, [showArchived]);
+
+  // أرصدة المخزون الحيّة — لعرض الكمية الحقيقية والقيمة وحالة الصلاحية.
+  useEffect(() => {
+    const unsub = listenBalances(setBalances, () => {});
+    return () => unsub();
+  }, []);
+
+  // فهرسة الأرصدة بكود الصنف وبباركوده — للربط السريع بصفوف الجدول.
+  const balByItem = useMemo(() => {
+    const map = new Map();
+    for (const b of balances) {
+      for (const k of [b.sku, b.barcode].filter(Boolean)) {
+        const key = String(k).toUpperCase();
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push(b);
+      }
+    }
+    return map;
+  }, [balances]);
 
   const flashToast = (kind, text) => {
     setToast({ kind, text });
@@ -95,16 +119,30 @@ export default function ItemMaster() {
         </div>
         <div className="flex flex-wrap gap-2">
           {canImport(me?.role) && (
-            <button
-              type="button"
-              onClick={() => {
-                setImporting((v) => !v);
-                setEditor(null);
-              }}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-brand-red text-brand-red px-4 py-2 font-bold hover:bg-brand-red hover:text-white active:scale-95 transition-all"
-            >
-              📥 استيراد شيت
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setImporting((v) => !v);
+                  setImportingBalances(false);
+                  setEditor(null);
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-brand-red text-brand-red px-4 py-2 font-bold hover:bg-brand-red hover:text-white active:scale-95 transition-all"
+              >
+                📥 استيراد الأصناف
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setImportingBalances((v) => !v);
+                  setImporting(false);
+                  setEditor(null);
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-brand-navy text-brand-navy px-4 py-2 font-bold hover:bg-brand-navy hover:text-white active:scale-95 transition-all"
+              >
+                📊 استيراد الأرصدة
+              </button>
+            </>
           )}
           <button
             type="button"
@@ -146,6 +184,32 @@ export default function ItemMaster() {
               flashToast('success', `تم الاستيراد: ${created} صنف جديد · ${updated} حُدِّث`);
             }}
             onCancel={() => setImporting(false)}
+          />
+        </div>
+      )}
+
+      {importingBalances && (
+        <div className="mb-6">
+          <BalancesImport
+            onDone={({ created, updated }) => {
+              setImportingBalances(false);
+              flashToast('success', `أرصدة: ${created} جديد · ${updated} حُدِّث`);
+            }}
+            onCancel={() => setImportingBalances(false)}
+          />
+        </div>
+      )}
+
+      {/* ملخّص المخزون الحيّ — يظهر متى وُجدت أرصدة */}
+      {balances.length > 0 && (
+        <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <SummaryTile label="سطور أرصدة" value={balances.length.toLocaleString('ar-LY')} />
+          <SummaryTile label="إجمالي الكمية" value={totalQty(balances).toLocaleString('ar-LY')} />
+          <SummaryTile label="قيمة المخزون" value={`${stockValue(balances).toLocaleString('ar-LY')} د.ل`} gold />
+          <SummaryTile
+            label="تشغيلات قاربت الانتهاء"
+            value={balances.filter((b) => expiryStatus(b.expiry, Date.now()) === 'near' || expiryStatus(b.expiry, Date.now()) === 'expired').length}
+            danger
           />
         </div>
       )}
@@ -221,7 +285,22 @@ export default function ItemMaster() {
                 </tr>
               ) : (
                 filtered.map((it) => {
-                  const lowStock = (it.balance ?? 0) <= (it.minStock ?? 0);
+                  // الرصيد الحقيقي من مخزن الأرصدة إن وُجد، وإلا الحقل المستورد.
+                  const keys = [it.sku, ...(it.barcodes || [])].filter(Boolean).map((k) => String(k).toUpperCase());
+                  const itemBal = [];
+                  const seen = new Set();
+                  for (const k of keys) {
+                    for (const b of balByItem.get(k) || []) {
+                      if (!seen.has(b.id)) { seen.add(b.id); itemBal.push(b); }
+                    }
+                  }
+                  const liveQty = itemBal.length ? totalQty(itemBal) : null;
+                  const shownQty = liveQty != null ? liveQty : (it.balance ?? 0);
+                  const nearExpiry = itemBal.some(
+                    (b) => ['near', 'expired'].includes(expiryStatus(b.expiry, Date.now()))
+                  );
+                  const lowStock = shownQty <= (it.minStock ?? 0);
+                  const fefoNext = liveQty != null ? fefoSort(itemBal).find((b) => (Number(b.qty) || 0) > 0) : null;
                   return (
                     <tr key={it.sku} className={it.archived ? 'opacity-60' : ''}>
                       <td className="px-4 py-3 font-mono text-brand-red font-bold whitespace-nowrap">
@@ -255,8 +334,19 @@ export default function ItemMaster() {
                         className={`px-4 py-3 font-bold whitespace-nowrap ${
                           lowStock ? 'text-brand-yellow' : 'text-gray-900'
                         }`}
+                        title={
+                          fefoNext
+                            ? `FEFO: أقرب تشغيلة ${fefoNext.batch || '—'} @ ${fefoNext.warehouse} تنتهي ${fefoNext.expiry || '—'}`
+                            : liveQty != null
+                              ? `موزّع على ${itemBal.length} موقع/تشغيلة`
+                              : 'من الشيت — لا أرصدة تفصيلية بعد'
+                        }
                       >
-                        {it.balance ?? 0}
+                        {shownQty}
+                        {nearExpiry && <span className="mr-1 text-brand-red" title="تشغيلة قاربت الانتهاء">⏳</span>}
+                        {liveQty == null && it.balance != null && (
+                          <span className="mr-1 text-[10px] text-gray-400" title="من شيت الأصناف — لا أرصدة تفصيلية">≈</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">{it.minStock ?? 0}</td>
                       <td className="px-4 py-3">
@@ -295,6 +385,19 @@ export default function ItemMaster() {
           </table>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SummaryTile({ label, value, gold, danger }) {
+  return (
+    <div
+      className={`rounded-xl border p-3 text-center ${
+        danger ? 'bg-red-50 border-red-200' : gold ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200'
+      }`}
+    >
+      <p className={`text-lg font-bold ${danger ? 'text-red-700' : gold ? 'text-amber-700' : 'text-brand-navy'}`}>{value}</p>
+      <p className="text-[11px] text-gray-500 mt-0.5">{label}</p>
     </div>
   );
 }

@@ -62,10 +62,13 @@ export async function importSheet(input, datasetKey, opts = {}) {
     throw new Error('تعذّر قراءة ملف Excel (قد يكون تالفًا أو بصيغة غير مدعومة). | Could not read the Excel file.');
   }
 
-  const sheetName = opts.sheetName ?? workbook.SheetNames[0];
+  // الورقة المطلوبة إن وُجدت، وإلا **أول ورقة** لا رمي خطأ — فملفٌّ برقة واحدة
+  // باسم مختلف (شيت جرد يدوي) يُستورد بدل أن يُرفض لعدم تطابق اسم الورقة.
+  const requested = opts.sheetName;
+  const sheetName = requested && workbook.Sheets[requested] ? requested : workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
   if (!sheet) {
-    throw new Error(`لم يُعثر على ورقة العمل "${sheetName}". | Worksheet not found.`);
+    throw new Error('الملف لا يحوي أي ورقة عمل. | The file has no worksheet.');
   }
 
   // Read as arrays-of-arrays so we control header resolution ourselves.

@@ -190,6 +190,15 @@ service cloud.firestore {
       allow write: if isManager();
     }
 
+    // ── الأرصدة (كمية لكل صنف×مخزن×تشغيلة) ───────────────────────
+    // القراءة لأي مصادَق (الجرد والمستندات تحتاج معرفة الرصيد)؛ الكتابة
+    // للمديرَين فقط. لا حذف — الرصيد الصفري يُكتب لا يُمحى (نفاد مخزن حقيقة).
+    match /balances/{balId} {
+      allow read: if signedIn();
+      allow write: if isManager();
+      allow delete: if false;
+    }
+
     // سجلّات الوارد والصادر: إضافة فقط — لا محو للتاريخ.
     match /Inbound_Log/{docId} {
       allow read: if signedIn();
