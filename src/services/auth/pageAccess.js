@@ -7,7 +7,11 @@
  * كما كان قبل هذا الملف).
  */
 export const RESTRICTED_ROLE_PATHS = {
-  department_user: ['/dashboard/hiring-requests'],
+  department_user: [
+    '/dashboard/hiring-requests',
+    '/dashboard/tasks',
+    '/dashboard/meeting-assistant',
+  ],
 };
 
 /** المسارات المسموحة لدور مقيّد، أو null إن كان الدور غير مقيّد. */

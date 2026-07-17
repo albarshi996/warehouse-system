@@ -225,6 +225,17 @@ service cloud.firestore {
                     && request.resource.data.status == 'submitted';
       allow update: if isManager();
       allow delete: if false;
+
+      // السيرة الاختيارية: يقرؤها صاحب الطلب أو المدير، ويكتبها صاحب الطلب
+      // نفسه (مطابقةً لملكيّة البطاقة الأم). لا حذف — نمط candidates/files.
+      match /files/{fileId} {
+        allow read: if isManager()
+                    || (signedIn()
+                        && get(/databases/$(database)/documents/hiring_requests/$(reqId)).data.createdByUid == request.auth.uid);
+        allow create, update: if signedIn()
+                    && get(/databases/$(database)/documents/hiring_requests/$(reqId)).data.createdByUid == request.auth.uid;
+        allow delete: if false;
+      }
     }
 
     // ── الافتراضي: امنع كل ما لم يُذكر صراحةً ────────────────────

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import { canSeeGroup, canSeeItem } from '../../../services/auth/navAccess.js';
+import { restrictedAllowedPaths } from '../../../services/auth/pageAccess.js';
 
 /**
  * تقييد القائمة الجانبية حسب الدور — يُحقن في DashboardLayout.
@@ -24,6 +25,11 @@ export default function RoleNav() {
       const profile = await fetchUserProfile(user);
       if (!profile) return;
       const role = profile.role;
+
+      // 0) دور مقيّد بصفحات (pageAccess) لا يصل للرئيسية — نُخفي رابطها المثبّت.
+      if (restrictedAllowedPaths(role)) {
+        document.querySelectorAll('[data-pinned-home]').forEach(hide);
+      }
 
       // 1) العناصر المحصورة بأدوار بعينها
       document.querySelectorAll('li[data-item-roles]').forEach((li) => {

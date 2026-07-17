@@ -95,6 +95,9 @@ const navGroups = [
     emoji: '🏬',
     items: [
       { href: `${base}/dashboard/hiring-requests`, label: 'طلب توظيف', icon: 'clipboardList' },
+      // روابط تعاونية لمستخدم الإدارة فقط (بياناتها محليّة في متصفّحه — خاصّة به):
+      { href: `${base}/dashboard/tasks`, label: 'المهام', icon: 'clipboardList', roles: ['department_user'] },
+      { href: `${base}/dashboard/meeting-assistant`, label: 'مساعد الاجتماعات', icon: 'grid', roles: ['department_user'] },
     ],
   },
 ];
@@ -321,8 +324,8 @@ const currentPath = Astro.url.pathname;
         <ul id="nav-list" class="space-y-1">
           <li id="no-results" class="hidden text-gray-400 text-xs text-center py-4">لا توجد نتائج</li>
 
-          {/* عنصر مثبّت أعلى القائمة */}
-          <li data-label={pinnedItem.label}>
+          {/* عنصر مثبّت أعلى القائمة — يُخفى للأدوار المقيّدة بصفحات (لا تصل للرئيسية) */}
+          <li data-label={pinnedItem.label} data-pinned-home>
             <a
               href={pinnedItem.href}
               class={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
