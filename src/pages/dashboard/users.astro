@@ -21,45 +21,28 @@ import UsersAdmin from '../../components/brandzo-erp/access/UsersAdmin.jsx';
     <UsersAdmin client:load />
 
     <!-- تنبيه أمني: قواعد Firestore يجب أن تحصر الكتابة بالأدمن -->
-    <details class="mt-8 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5">
-      <summary class="text-amber-300 font-bold cursor-pointer">
-        🚨 عاجل — قاعدة البيانات مكشوفة حتى تنشر قواعد الأمان (اضغط للتفاصيل)
+    <details class="mt-8 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5">
+      <summary class="text-emerald-300 font-bold cursor-pointer">
+        ✅ قاعدة البيانات مقفولة — قواعد الأمان منشورة وفعّالة (اضغط للتفاصيل)
       </summary>
       <div class="mt-3 text-sm text-gray-200 space-y-3">
         <p>
-          <b class="text-red-300">ثبت بالاختبار (2026-07-14):</b> قاعدة البيانات مفتوحة للعالم —
-          أي شخص بلا حساب يستطيع القراءة والكتابة والحذف، بما يشمل ترقية نفسه إلى مدير عام.
+          <b class="text-emerald-300">آخر تحقّق (2026-07-17):</b> تم اختبار القراءة بلا تسجيل دخول على
+          كل المجموعات الحسّاسة (<span class="font-mono">users</span>،
+          <span class="font-mono">candidates</span>، <span class="font-mono">operations</span>،
+          <span class="font-mono">Items_Master</span>، <span class="font-mono">balances</span>،
+          <span class="font-mono">documents</span>) — كلها ترفض الوصول (403) كما هو متوقّع.
         </p>
         <p>
-          <b>الحل:</b> القواعد الكاملة (لكل المجموعات، لا الأدوار فقط) في ملف
-          <span class="font-mono text-amber-300">firestore.rules</span> بجذر المستودع.
-          افتح <span class="font-mono text-amber-300">Firebase Console → Firestore Database → Rules</span>،
-          الصق محتواه، ثم <span class="font-bold">Publish</span>. المختصر أدناه للأدوار:
+          القواعد الكاملة والمحدَّثة (لكل المجموعات، لا الأدوار فقط) موجودة في ملف
+          <span class="font-mono text-emerald-300">firestore.rules</span> بجذر المستودع وهي المصدر
+          الوحيد المعتمد. عند أي تعديل عليها لازم تُنشَر يدويًا من
+          <span class="font-mono text-emerald-300">Firebase Console → Firestore Database → Rules → Publish</span>
+          — هذه الخطوة تلامس إعدادات أمان الحساب فلا تتم تلقائيًا من الكود.
         </p>
-        <pre class="bg-black/40 border border-white/10 rounded-lg p-4 overflow-x-auto text-xs leading-relaxed" dir="ltr"><code>rules_version = '2';
-service cloud.firestore {'{'}
-  match /databases/{'{'}database{'}'}/documents {'{'}
-
-    function isAdmin() {'{'}
-      return request.auth != null
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    {'}'}
-
-    // أدوار المستخدمين: القراءة لكل مصادق، الكتابة للأدمن فقط
-    match /users/{'{'}uid{'}'} {'{'}
-      allow read: if request.auth != null;
-      allow write: if isAdmin();
-    {'}'}
-
-    // بقيّة المجموعات: للمصادقين فقط (عدّل حسب حاجتك)
-    match /{'{'}document=**{'}'} {'{'}
-      allow read, write: if request.auth != null;
-    {'}'}
-  {'}'}
-{'}'}</code></pre>
         <p class="text-gray-400 text-xs">
           ملاحظة: بريد المدير العام يبقى أدمن عبر التمهيد المدمج حتى قبل إنشاء مستنده،
-          لذا تستطيع نشر هذه القواعد ثم إدارة الباقي من هنا.
+          فلا تنقطع صلاحيتك مهما تغيّرت القواعد.
         </p>
       </div>
     </details>
