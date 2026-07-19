@@ -48,8 +48,11 @@ export default function WarehouseManagerEval() {
       <iframe
         title="تقييم مرشّح — مدير المستودعات"
         srcDoc={evalHtml}
+        /* صلاحيات مفوَّضة للإطار المعزول: التفريغ الصوتي + التقاط صوت الاجتماع + ملء الشاشة + النسخ */
+        allow="microphone; display-capture; fullscreen; clipboard-write"
+        allowFullScreen
         className="w-full block"
-        style={{ height: 'calc(100vh - 130px)', minHeight: '600px', border: '0' }}
+        style={{ height: 'calc(100vh - 96px)', minHeight: '620px', border: '0' }}
       />
     </div>
   );

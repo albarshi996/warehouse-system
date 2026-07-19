@@ -10,13 +10,11 @@ import WarehouseManagerEval from '../../components/brandzo-erp/assessments/Wareh
 
 <DashboardLayout title="تقييم مدير المستودعات" showGuide={false}>
   <div class="text-right" dir="rtl">
-    <div class="mb-4">
-      <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">📝 تقييم مرشّح — مدير المستودعات</h1>
-      <p class="text-gray-300 text-sm leading-relaxed max-w-3xl">
-        أداة تقييم داخلية سرّية (٦ محاور · تنقيط ٠-١٠٠ · حفظ تلقائي في متصفّحك).
-        متاحة للمدير العام ومستخدم الإدارة فقط.
-      </p>
-      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    <div class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+      <h1 class="text-xl sm:text-2xl font-bold text-white">📝 تقييم مرشّح — مدير المستودعات</h1>
+      <span class="text-gray-300 text-xs sm:text-[13px] leading-relaxed">
+        🎙️ إملاء صوتي للإجابات · 🔴 تسجيل المكالمة · ⛶ ملء الشاشة — من شريط الأدوات داخل النموذج
+      </span>
     </div>
 
     <WarehouseManagerEval client:load />

@@ -96,7 +96,7 @@ body{
 
 /* ─── SHEET ───────────────────────────────────────── */
 .sheet{
-  max-width:1000px;margin:0 auto 22px;background:#fff;border-radius:16px;
+  max-width:min(1180px,100%);margin:0 auto 22px;background:#fff;border-radius:16px;
   box-shadow:0 24px 70px rgba(0,0,0,.5),0 0 0 1px rgba(218,170,60,.25);
   overflow:hidden
 }
@@ -328,7 +328,92 @@ body.cand .hud,body.cand #summary,body.cand .ref{display:none!important}
   .cover h1{font-size:20px}
   .q,.idgrid,.brief,.axhead{padding-inline:16px}
   .sign{grid-template-columns:1fr}
+  .mi-panel{inset-inline-end:8px;bottom:8px;width:min(300px,calc(100vw - 16px))}
 }
+
+/* ─── FULLSCREEN (يملأ الشاشة أثناء المقابلة) ───────── */
+:root:fullscreen,:root:-webkit-full-screen{overflow:auto;background:var(--bg)}
+:root:fullscreen body,:root:-webkit-full-screen body{min-height:100vh;padding-bottom:80px}
+
+/* ─── INTERVIEW ASSISTANT — قدرة «مساعد الاجتماعات» مدمجة ───────── */
+/* أزرار ميكروفون على كل حقل إجابة (إملاء صوتي مباشر في الحقل) */
+.micbtn{
+  margin-inline-start:8px;border:1px solid var(--line);background:#fff;border-radius:7px;cursor:pointer;
+  font-size:12px;line-height:1;padding:3px 8px;vertical-align:middle;transition:.15s;font-family:var(--font)
+}
+.micbtn:hover{border-color:var(--red);background:#fff5f6}
+.micbtn.on{border-color:var(--red);background:#fff5f6;box-shadow:0 0 0 2px rgba(196,30,58,.15);animation:mipulse 1.2s infinite}
+@keyframes mipulse{50%{opacity:.4}}
+
+/* اللوحة العائمة للتحكّم بالتسجيل والتفريغ */
+.mi-panel{
+  position:fixed;bottom:14px;inset-inline-end:14px;z-index:70;
+  width:308px;min-width:238px;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);
+  display:flex;flex-direction:column;
+  background:rgba(26,0,8,.93);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(218,170,60,.4);border-radius:14px;color:#f3e9dd;
+  box-shadow:0 18px 50px rgba(0,0,0,.55);font-size:12.5px;overflow:hidden;
+  transition:box-shadow .2s,border-color .2s
+}
+.mi-panel.rec{border-color:var(--red-light);box-shadow:0 0 0 2px rgba(241,90,91,.35),0 18px 50px rgba(0,0,0,.55)}
+.mi-head{display:flex;align-items:center;gap:8px;padding:9px 12px;flex-shrink:0;
+  background:rgba(45,0,6,.6);border-bottom:1px solid rgba(218,170,60,.22);
+  cursor:move;user-select:none;-webkit-user-select:none;touch-action:none}
+.mi-head b{font-size:12.5px;color:#fff}
+.mi-dot{width:9px;height:9px;border-radius:50%;background:#7a6a58;flex-shrink:0}
+.mi-dot.on{background:#ff5a5b;box-shadow:0 0 8px #ff5a5b;animation:mipulse 1s infinite}
+.mi-dot.pause{background:var(--gold)}
+.mi-time{font-family:'Courier New',monospace;font-size:12px;color:#e7d3b8;margin-inline-start:auto}
+.mi-x{background:transparent;border:0;color:#e7d3b8;cursor:pointer;font-size:15px;padding:0 3px;line-height:1}
+.mi-body{padding:10px 12px;display:flex;flex-direction:column;gap:8px;flex:1 1 auto;min-height:0;overflow:auto}
+.mi-panel.collapsed{width:auto;height:auto!important}
+.mi-panel.collapsed .mi-body,.mi-panel.collapsed .mi-grip{display:none}
+.mi-panel.collapsed .mi-time{margin-inline-start:8px}
+/* مقبض التكبير (اسحب لتغيير الحجم) */
+.mi-grip{
+  position:absolute;bottom:3px;right:3px;width:16px;height:16px;z-index:3;cursor:nwse-resize;touch-action:none;
+  background:
+    linear-gradient(135deg,transparent 46%,rgba(218,170,60,.8) 46%,rgba(218,170,60,.8) 54%,transparent 54%,
+    transparent 66%,rgba(218,170,60,.8) 66%,rgba(218,170,60,.8) 74%,transparent 74%);
+}
+.mi-warn{display:none;background:rgba(217,119,6,.18);border:1px solid rgba(217,119,6,.5);color:#ffd79a;border-radius:8px;padding:6px 8px;font-size:11px;line-height:1.6}
+.mi-row{display:flex;align-items:center;gap:6px}
+.mi-row2{display:flex;gap:6px}
+.mi-mic{
+  width:42px;height:42px;border-radius:50%;flex-shrink:0;cursor:pointer;font-size:18px;line-height:1;
+  border:1px solid var(--red-light);background:linear-gradient(135deg,var(--red),var(--red-dark));color:#fff;transition:.15s
+}
+.mi-mic:hover{filter:brightness(1.1)}
+.mi-mic.live{background:#2d0006;box-shadow:0 0 0 3px rgba(241,90,91,.3)}
+.mi-btn{
+  font-family:var(--font);font-weight:700;font-size:11.5px;cursor:pointer;color:#f3e9dd;
+  padding:7px 9px;border-radius:8px;border:1px solid rgba(218,170,60,.35);background:rgba(255,255,255,.06);transition:.15s
+}
+.mi-btn:hover{background:rgba(218,170,60,.18);border-color:var(--gold)}
+.mi-btn.wide{flex:1;text-align:center;white-space:nowrap}
+.mi-btn.on{background:linear-gradient(135deg,var(--red),var(--red-dark));border-color:var(--red-light);color:#fff}
+.mi-sel{font-family:var(--font);font-size:11.5px;padding:7px 5px;border-radius:8px;border:1px solid rgba(218,170,60,.35);background:#2d0006;color:#f3e9dd;cursor:pointer}
+.mi-st{font-size:11px;color:#e7d3b8;margin-inline-start:auto;white-space:nowrap}
+.mi-target{font-size:11px;color:var(--gold);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mi-interim{flex:1 1 auto;min-height:16px;max-height:none;overflow:auto;font-size:11.5px;color:#cbb89e;font-style:italic;line-height:1.5}
+.mi-chk{display:flex;align-items:center;gap:6px;font-size:11px;color:#e7d3b8;cursor:pointer;line-height:1.4}
+.mi-chk input{accent-color:var(--red);flex-shrink:0}
+.mi-audiobox{display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,.05);border-radius:8px;padding:6px}
+.mi-audiobox:empty{display:none}
+.mi-audiobox audio{width:100%;height:34px}
+.mi-dl{font-size:11.5px;font-weight:700;color:var(--gold);text-decoration:none;text-align:center}
+.mi-dl:hover{text-decoration:underline}
+.mi-hint{font-size:10.5px;color:#b49a86;line-height:1.6;border-top:1px dashed rgba(218,170,60,.2);padding-top:6px}
+.mi-toast{
+  position:fixed;bottom:84px;left:50%;transform:translateX(-50%);z-index:80;
+  background:#2d0006;border:1px solid rgba(218,170,60,.5);color:#f3e9dd;padding:9px 16px;border-radius:99px;
+  font-size:12.5px;font-weight:700;opacity:0;pointer-events:none;transition:.3s;max-width:90vw;text-align:center
+}
+.mi-toast.on{opacity:1}
+
+/* إخفاء أدوات المساعد في وضع المرشح وفي الطباعة */
+body.cand .mi-panel,body.cand .micbtn{display:none!important}
+@media print{.mi-panel,.mi-toast,.micbtn{display:none!important}}
 </style>
 </head>
 <body>
@@ -340,6 +425,7 @@ body.cand .hud,body.cand #summary,body.cand .ref{display:none!important}
     <div><b>Brandzo Franchise Partners</b><span>نظام تقييم المرشحين — إدارة المستودعات</span></div>
   </div>
   <span class="saved" id="saved">✓ حُفظ</span>
+  <button class="btn" id="fsBtn" onclick="miToggleFS()">⛶ ملء الشاشة</button>
   <button class="btn" id="modeBtn">👁 وضع المرشح</button>
   <button class="btn" onclick="expandAll()">📖 فتح النماذج</button>
   <button class="btn gold" onclick="window.print()">🖨 طباعة / PDF</button>
@@ -374,6 +460,44 @@ body.cand .hud,body.cand #summary,body.cand .ref{display:none!important}
   <a href="#a5">٥· القيادة والأزمات</a>
   <a href="#a6">٦· المفاهيم والفلسفة</a>
   <a href="#summary">📋 الملخص</a>
+</div>
+
+<!-- ══ مساعد المقابلة (قدرة «مساعد الاجتماعات»: تفريغ صوتي + إملاء + تسجيل المكالمة) ══ -->
+<div class="mi-panel noprint" id="mi_panel" dir="rtl">
+  <div class="mi-head" id="mi_head">
+    <span class="mi-dot" id="mi_dot"></span>
+    <b>🎙️ مساعد المقابلة</b>
+    <span class="mi-time" id="mi_time">00:00</span>
+    <button type="button" class="mi-x" id="mi_toggle" title="طيّ / بسط اللوحة">▾</button>
+  </div>
+  <div class="mi-body">
+    <div class="mi-warn" id="mi_unsupported">المتصفح لا يدعم التفريغ الصوتي — استخدم Chrome أو Edge. (تسجيل صوت المكالمة يبقى متاحًا.)</div>
+    <div class="mi-row">
+      <button type="button" class="mi-mic" id="mi_mic" onclick="miTogglePanelMic()" title="إملاء صوتي في الحقل النشط (تشغيل/تعليق)">🎙️</button>
+      <button type="button" class="mi-btn" onclick="miStop()" title="إيقاف التفريغ">⏹</button>
+      <select id="mi_lang" class="mi-sel" title="لغة التفريغ الصوتي">
+        <option value="ar-SA">🇸🇦 عربي</option>
+        <option value="ar-EG">🇪🇬 مصري</option>
+        <option value="ar-LY">🇱🇾 ليبي</option>
+        <option value="en-US">🇺🇸 EN</option>
+      </select>
+      <span class="mi-st" id="mi_status">جاهز</span>
+    </div>
+    <div class="mi-target" id="mi_target">↳ التفريغ العام</div>
+    <div class="mi-interim" id="mi_interim"></div>
+    <div class="mi-row2">
+      <button type="button" class="mi-btn wide" onclick="miSummarize()" title="استخلاص أبرز النقاط من التفريغ إلى حقل الانطباع">📝 استخلص الانطباع</button>
+      <button type="button" class="mi-btn wide" id="mi_rec" onclick="miToggleAudio()" title="تسجيل صوتي للمكالمة كملف قابل للتنزيل">🔴 سجّل صوت المكالمة</button>
+    </div>
+    <label class="mi-chk"><input type="checkbox" id="mi_incl"> ضمّ صوت الاجتماع/الزوم (مشاركة تبويب أو شاشة مع الصوت)</label>
+    <div class="mi-audiobox" id="mi_audiobox"></div>
+    <div class="mi-row2">
+      <button type="button" class="mi-btn wide" onclick="miOpenAssistant()" title="فتح مساعد الاجتماعات الكامل (ترجمة + PDF)">🎙️ المساعد الكامل</button>
+      <button type="button" class="mi-btn wide" onclick="miGoTranscript()" title="الانتقال إلى نص التفريغ">📄 اذهب للتفريغ</button>
+    </div>
+    <div class="mi-hint">🎤 اضغط ميكروفون أي حقل ليُملأ صوتيًّا. التفريغ يسمع الميكروفون — اجعل مكالمة الزوم على السمّاعة. لتسجيل صوتي ثنائي الاتجاه فعّل «ضمّ صوت الاجتماع» ثم شارك تبويب الزوم مع الصوت.<br>↔️ اسحب الرأس لتحريك اللوحة · اسحب الزاوية لتكبيرها.</div>
+  </div>
+  <div class="mi-grip" id="mi_grip" title="اسحب لتغيير الحجم"></div>
 </div>
 
 <div class="sheet">
@@ -1873,6 +1997,16 @@ body.cand .hud,body.cand #summary,body.cand .ref{display:none!important}
       <h4 style="color:var(--red-dark);margin:16px 0 8px;font-size:14px">🧭 التقييم السلوكي والقيادي</h4>
       <div class="comp" id="comp"></div>
 
+      <h4 style="color:var(--red-dark);margin:18px 0 8px;font-size:14px">🎙️ الانطباع العام وتفريغ المقابلة</h4>
+      <div class="ans">
+        <label>الانطباع العام عن المرشح والمقابلة:</label>
+        <textarea id="imp_overall" style="min-height:90px" placeholder="انطباعك الكلّي فور انتهاء المقابلة — الحضور، الثقة، الصدق، ومدى الملاءمة… (يمكن إملاؤه صوتيًّا عبر 🎤 أو زر «استخلص الانطباع»)."></textarea>
+      </div>
+      <div class="ans">
+        <label>تفريغ المقابلة (يُكتب تلقائيًّا أثناء التسجيل الصوتي — قابل للتحرير):</label>
+        <textarea id="mi_transcript" style="min-height:120px" placeholder="شغّل «مساعد المقابلة» أسفل الشاشة لبدء التفريغ الصوتي المباشر، أو اكتب هنا يدويًّا."></textarea>
+      </div>
+
       <h4 style="color:var(--red-dark);margin:18px 0 8px;font-size:14px">📝 خلاصة المُقيِّم</h4>
       <div class="ans"><label>أبرز نقاط القوة (بأمثلة من إجاباته):</label><textarea id="sw" style="min-height:80px"></textarea></div>
       <div class="ans"><label>أبرز نقاط الضعف والفجوات:</label><textarea id="wk" style="min-height:80px"></textarea></div>
@@ -1989,7 +2123,11 @@ function load(){
   });
 }
 document.addEventListener('input',e=>{
-  if(e.target.matches('input,textarea')){ if(e.target.classList.contains('c'))calc(); save(); }
+  if(e.target.matches('input,textarea')){
+    if(e.target.classList.contains('c'))calc();
+    if(e.target.matches('.ans textarea'))agFit(e.target);
+    save();
+  }
 });
 document.addEventListener('change',e=>{
   if(e.target.matches('input')){ calc(); save(); }
@@ -2010,11 +2148,12 @@ function expandAll(){
 function clearAll(){
   if(!confirm('سيُمسح كل ما كُتب في هذا التقييم نهائياً.\n\nهل أنت متأكد؟'))return;
   if(!confirm('تأكيد أخير — لا يمكن التراجع.'))return;
+  miStop(); miStopAudio();
   localStorage.removeItem(KEY);
   document.querySelectorAll('input,textarea').forEach(el=>{
     if(el.type==='radio'||el.type==='checkbox')el.checked=false; else el.value='';
   });
-  calc();
+  calc(); agAll();
 }
 function exportJSON(){
   const d={};
@@ -2031,8 +2170,391 @@ function exportJSON(){
   a.click(); URL.revokeObjectURL(a.href);
 }
 
+/* ═══════════════════════════════════════════════════════════
+   INTERVIEW ASSISTANT — قدرة «مساعد الاجتماعات» مدمجة
+   تفريغ صوتي مباشر · إملاء في أي حقل · تسجيل صوت المكالمة · انطباع
+   ═══════════════════════════════════════════════════════════ */
+const MI={rec:null,recording:false,paused:false,target:null,lastField:null,
+  secs:0,timer:null,supported:false,
+  audio:{mr:null,chunks:[],stream:null,disp:null,ac:null,on:false}};
+
+/* ── تكبير تلقائي لحقول الإجابة (كتابة سلسة بلا شريط تمرير داخلي) ── */
+function agFit(el){
+  if(!el)return;
+  const mh=parseInt(getComputedStyle(el).minHeight)||90;
+  el.style.height='auto';
+  el.style.height=Math.min(Math.max(el.scrollHeight+2,mh),1600)+'px';
+}
+function agAll(){document.querySelectorAll('.ans textarea').forEach(agFit);}
+
+/* ── ملء الشاشة ── */
+function miToggleFS(){
+  const d=document.documentElement;
+  if(!document.fullscreenElement&&!document.webkitFullscreenElement){
+    const req=d.requestFullscreen||d.webkitRequestFullscreen;
+    if(req)Promise.resolve(req.call(d)).catch(()=>miToast('تعذّر تفعيل ملء الشاشة'));
+  }else{
+    const ex=document.exitFullscreen||document.webkitExitFullscreen;
+    if(ex)ex.call(document);
+  }
+}
+document.addEventListener('fullscreenchange',miFSsync);
+document.addEventListener('webkitfullscreenchange',miFSsync);
+function miFSsync(){
+  const b=document.getElementById('fsBtn');
+  const on=document.fullscreenElement||document.webkitFullscreenElement;
+  if(b)b.textContent=on?'⛶ إنهاء ملء الشاشة':'⛶ ملء الشاشة';
+}
+
+/* ── إشعار خفيف ── */
+let miToastT;
+function miToast(msg){
+  let el=document.getElementById('mi_toast');
+  if(!el){el=document.createElement('div');el.id='mi_toast';el.className='mi-toast noprint';document.body.appendChild(el);}
+  el.textContent=msg;el.classList.add('on');
+  clearTimeout(miToastT);miToastT=setTimeout(()=>el.classList.remove('on'),2600);
+}
+
+/* ── مؤقّت التسجيل ── */
+function miStartTimer(){miStopTimer();MI.timer=setInterval(()=>{MI.secs++;miRenderTime();},1000);miRenderTime();}
+function miStopTimer(){if(MI.timer){clearInterval(MI.timer);MI.timer=null;}}
+function miRenderTime(){
+  const el=document.getElementById('mi_time');if(!el)return;
+  el.textContent=String(Math.floor(MI.secs/60)).padStart(2,'0')+':'+String(MI.secs%60).padStart(2,'0');
+}
+
+/* ── التعرّف الصوتي (يُنشأ مرة واحدة) ── */
+function miEnsureRec(){
+  if(MI.rec)return MI.rec;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){MI.supported=false;return null;}
+  MI.supported=true;
+  const r=new SR();r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
+  r.onresult=(e)=>{
+    if(!MI.recording||MI.paused)return;
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const tr=e.results[i][0].transcript;
+      if(e.results[i].isFinal)miAppend(tr.trim());
+      else interim+=tr;
+    }
+    const il=document.getElementById('mi_interim');if(il)il.textContent=interim;
+  };
+  r.onerror=(e)=>{
+    if(e.error==='not-allowed'||e.error==='service-not-allowed'){
+      miToast('تعذّر الوصول للميكروفون — اسمح به في المتصفح');miStop();
+    }
+    /* no-speech / network → onend يعيد التشغيل */
+  };
+  r.onend=()=>{
+    if(!MI.recording||MI.paused)return;
+    try{r.start();}catch(_){
+      setTimeout(()=>{if(MI.recording&&!MI.paused){try{r.start();}catch(__){}}},300);
+    }
+  };
+  MI.rec=r;return r;
+}
+
+/* ── إلحاق النص المُفرَّغ بالحقل الهدف ── */
+function miAppend(text){
+  if(!text)return;
+  const t=MI.target||MI.lastField||document.getElementById('mi_transcript');
+  if(!t)return;
+  const sep=t.value&&!/\s$/.test(t.value)?' ':'';
+  t.value+=sep+text+' ';
+  t.dispatchEvent(new Event('input',{bubbles:true})); /* يشغّل الحفظ والتكبير */
+  agFit(t);
+}
+
+/* ── وصف الحقل الهدف ── */
+function miLabelFor(el){
+  if(!el)return'التفريغ العام';
+  if(el.id==='mi_transcript')return'تفريغ المقابلة';
+  if(el.id==='imp_overall')return'الانطباع العام';
+  const q=el.closest('.q');
+  if(q){const n=q.querySelector('.qnum');const h=q.querySelector('.qhead h3');
+    return'إجابة'+(n?(' س'+n.textContent):'')+(h?(' — '+h.textContent.slice(0,22)):'');}
+  const lab=el.closest('.ans')?.querySelector('label');
+  return lab?lab.textContent.replace(':','').trim():'حقل';
+}
+function miSetTargetLabel(){
+  const t=MI.target||MI.lastField||document.getElementById('mi_transcript');
+  const el=document.getElementById('mi_target');if(el)el.textContent='↳ '+miLabelFor(t);
+}
+
+/* ── مزامنة واجهة اللوحة وأزرار الميكروفون ── */
+function miSyncUI(){
+  const rec=MI.recording&&!MI.paused;
+  const btn=document.getElementById('mi_mic');
+  const dot=document.getElementById('mi_dot');
+  const st=document.getElementById('mi_status');
+  const panel=document.getElementById('mi_panel');
+  if(btn){btn.textContent=MI.recording?(MI.paused?'▶️':'⏸️'):'🎙️';btn.classList.toggle('live',rec);}
+  if(dot)dot.className='mi-dot '+(rec?'on':(MI.recording?'pause':''));
+  if(st)st.textContent=rec?'يسجّل…':(MI.recording?'موقوف مؤقتًا':'جاهز');
+  if(panel)panel.classList.toggle('rec',rec);
+}
+function miSyncMics(){
+  document.querySelectorAll('.ans').forEach(a=>{
+    const ta=a.querySelector('textarea');const b=a.querySelector('.micbtn');
+    if(!b)return;
+    const active=MI.recording&&!MI.paused&&(MI.target?MI.target===ta:MI.lastField===ta);
+    b.classList.toggle('on',!!active);
+    b.textContent=active?'🔴':'🎤';
+  });
+}
+
+/* ── بدء/تبديل الإملاء إلى حقل ── */
+function miStartInto(target){
+  const r=miEnsureRec();
+  if(!r){miToast('المتصفح لا يدعم التفريغ الصوتي — استخدم Chrome أو Edge');return;}
+  MI.target=target||null;
+  if(target)MI.lastField=target;
+  const sel=document.getElementById('mi_lang');if(sel)r.lang=sel.value;
+  if(!MI.recording){
+    MI.recording=true;MI.paused=false;MI.secs=0;miStartTimer();
+    try{r.start();}catch(_){}
+    miToast('🎙️ بدأ التفريغ الصوتي');
+  }else if(MI.paused){
+    MI.paused=false;try{r.start();}catch(_){}miStartTimer();
+  }
+  miSyncUI();miSetTargetLabel();miSyncMics();
+}
+function miTogglePanelMic(){
+  if(MI.recording&&!MI.paused)miPause();
+  else if(MI.recording&&MI.paused)miStartInto(MI.target||MI.lastField);
+  else miStartInto(MI.lastField||document.getElementById('mi_transcript'));
+}
+function miPause(){
+  if(!MI.recording||MI.paused)return;
+  MI.paused=true;if(MI.rec){try{MI.rec.stop();}catch(_){}}
+  miStopTimer();miSyncUI();miSyncMics();
+  const il=document.getElementById('mi_interim');if(il)il.textContent='';
+}
+function miStop(){
+  MI.recording=false;MI.paused=false;MI.target=null;
+  if(MI.rec){try{MI.rec.stop();}catch(_){}}
+  miStopTimer();
+  const il=document.getElementById('mi_interim');if(il)il.textContent='';
+  miSyncUI();miSetTargetLabel();miSyncMics();
+}
+
+/* ── حقن أزرار الميكروفون على كل حقل إجابة + تتبّع التركيز ── */
+function miInjectMics(){
+  document.querySelectorAll('.ans').forEach(a=>{
+    const ta=a.querySelector('textarea');const lab=a.querySelector('label');
+    if(!ta||!lab||lab.querySelector('.micbtn'))return;
+    const b=document.createElement('button');
+    b.type='button';b.className='micbtn';b.title='إملاء صوتي في هذا الحقل (تشغيل/إيقاف)';b.textContent='🎤';
+    b.addEventListener('click',(ev)=>{
+      ev.preventDefault();
+      if(MI.recording&&!MI.paused&&MI.target===ta)miStop();
+      else miStartInto(ta);
+    });
+    lab.appendChild(b);
+    ta.addEventListener('focus',()=>{MI.lastField=ta;if(!MI.recording)miSetTargetLabel();});
+  });
+}
+
+/* ── استخلاص نقاط الانطباع من التفريغ ── */
+function miSummarize(){
+  const tx=(document.getElementById('mi_transcript')?.value||'').trim();
+  if(tx.length<15){miToast('لا يوجد تفريغ كافٍ للتلخيص');return;}
+  const sents=tx.split(/[.!?؟\n]+/).map(s=>s.trim()).filter(s=>s.length>6);
+  if(!sents.length){miToast('لا يوجد تفريغ كافٍ للتلخيص');return;}
+  const kw=['مهم','هام','أساسي','ضروري','عاجل','حرج','محوري','رئيسي','أولوية','لاحظ','واضح','قوي','ضعيف',
+    'لم','لا يعرف','متردد','واثق','خبرة','ممتاز','ضعف','قرر','يجب','أكد','لخّص','خلاصة'];
+  let picked=sents.filter(s=>kw.some(k=>s.includes(k)));
+  if(picked.length<3)picked=picked.concat([...sents].sort((a,b)=>b.length-a.length).slice(0,5));
+  picked=[...new Set(picked)].slice(0,6);
+  const imp=document.getElementById('imp_overall');if(!imp)return;
+  const bullets=picked.map(s=>'• '+s).join('\n');
+  imp.value=(imp.value.trim()?imp.value.trim()+'\n':'')+bullets;
+  imp.dispatchEvent(new Event('input',{bubbles:true}));agFit(imp);
+  imp.scrollIntoView({behavior:'smooth',block:'center'});
+  miToast('📝 استُخلصت نقاط الانطباع — راجعها وحرّرها');
+}
+
+/* ── الانتقال لنص التفريغ ── */
+function miGoTranscript(){
+  const t=document.getElementById('mi_transcript');
+  if(t){t.scrollIntoView({behavior:'smooth',block:'center'});t.focus();}
+}
+
+/* ── فتح مساعد الاجتماعات الكامل (اشتقاق الرابط من موقع الأب) ── */
+function miOpenAssistant(){
+  try{
+    const href=window.parent.location.href;
+    const i=href.indexOf('/dashboard/');
+    const url=(i>=0?href.slice(0,i):window.parent.location.origin)+'/dashboard/meeting-assistant/';
+    window.open(url,'_blank','noopener');
+  }catch(_){miToast('افتح «مساعد الاجتماعات» من القائمة الجانبية');}
+}
+
+/* ── تسجيل صوت المكالمة (ميكروفون + صوت الاجتماع اختياريًّا) ── */
+async function miToggleAudio(){
+  if(MI.audio.on){miStopAudio();return;}
+  if(!window.MediaRecorder||!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){
+    miToast('تسجيل الصوت غير مدعوم في هذا المتصفح');return;
+  }
+  try{
+    const mic=await navigator.mediaDevices.getUserMedia({audio:true});
+    MI.audio.stream=mic;
+    let recStream=mic;
+    const wantMeeting=document.getElementById('mi_incl')?.checked;
+    if(wantMeeting&&navigator.mediaDevices.getDisplayMedia){
+      try{
+        const disp=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
+        MI.audio.disp=disp;
+        const dtracks=disp.getAudioTracks();
+        if(dtracks.length){
+          const AC=window.AudioContext||window.webkitAudioContext;
+          const ac=new AC();const dest=ac.createMediaStreamDestination();
+          ac.createMediaStreamSource(mic).connect(dest);
+          ac.createMediaStreamSource(new MediaStream(dtracks)).connect(dest);
+          MI.audio.ac=ac;recStream=dest.stream;
+        }else miToast('لم يُشارَك صوت الاجتماع — سيُسجَّل الميكروفون فقط');
+      }catch(_){miToast('أُلغيت مشاركة الاجتماع — سيُسجَّل الميكروفون فقط');}
+    }
+    const mime=MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':'';
+    const mr=new MediaRecorder(recStream,mime?{mimeType:mime}:undefined);
+    MI.audio.chunks=[];
+    mr.ondataavailable=e=>{if(e.data&&e.data.size)MI.audio.chunks.push(e.data);};
+    mr.onstop=()=>{
+      const blob=new Blob(MI.audio.chunks,{type:mime||'audio/webm'});
+      const url=URL.createObjectURL(blob);
+      const box=document.getElementById('mi_audiobox');
+      if(box){
+        box.innerHTML='';
+        const au=document.createElement('audio');au.controls=true;au.src=url;
+        const dl=document.createElement('a');dl.href=url;dl.className='mi-dl';
+        const nm=(document.getElementById('c_name')?.value||'مرشح').trim().replace(/[\\/:*?"<>|]/g,'')||'مرشح';
+        dl.download='تسجيل_مقابلة_'+nm+'.webm';dl.textContent='⬇ تنزيل التسجيل';
+        box.appendChild(au);box.appendChild(dl);
+      }
+    };
+    /* لو أوقف المستخدم مشاركة الشاشة من شريط المتصفح ننهي التسجيل بسلاسة */
+    if(MI.audio.disp)MI.audio.disp.getVideoTracks().forEach(tk=>tk.addEventListener('ended',()=>{if(MI.audio.on)miStopAudio();}));
+    mr.start();MI.audio.mr=mr;MI.audio.on=true;
+    miAudioUI();miToast('🔴 بدأ تسجيل الصوت');
+  }catch(_){miToast('تعذّر بدء التسجيل — تحقّق من إذن الميكروفون');}
+}
+function miStopAudio(){
+  try{if(MI.audio.mr&&MI.audio.mr.state!=='inactive')MI.audio.mr.stop();}catch(_){}
+  [MI.audio.stream,MI.audio.disp].forEach(s=>{try{s&&s.getTracks().forEach(t=>t.stop());}catch(_){}});
+  try{if(MI.audio.ac)MI.audio.ac.close();}catch(_){}
+  MI.audio.on=false;MI.audio.disp=null;MI.audio.stream=null;MI.audio.ac=null;
+  miAudioUI();
+}
+function miAudioUI(){
+  const b=document.getElementById('mi_rec');
+  if(b){b.textContent=MI.audio.on?'⏹ إيقاف التسجيل':'🔴 سجّل صوت المكالمة';b.classList.toggle('on',MI.audio.on);}
+}
+
+/* ── جعل اللوحة قابلة للتحريك والتكبير (widget عائم يتذكّر مكانه وحجمه) ──
+   في RTL لا يكفي insetInlineEnd عبر الـIDL؛ نُلغي الإزاحات المنطقية بـsetProperty
+   ثم نُثبّت الزاوية العليا-اليسرى فيزيائيًّا (left/top)، فيكبر للأسفل واليمين ويبقى داخل الشاشة. */
+const MI_GEO='brandzo_eval_mi_geo';
+let miDocked=false;
+function miDock(panel,r){
+  panel.style.setProperty('inset-inline-end','auto');
+  panel.style.setProperty('inset-inline-start','auto');
+  panel.style.setProperty('right','auto');
+  panel.style.setProperty('bottom','auto');
+  panel.style.setProperty('left',Math.round(r.left)+'px');
+  panel.style.setProperty('top',Math.round(r.top)+'px');
+  miDocked=true;
+}
+function miClamp(panel){
+  if(!miDocked)return;
+  const r=panel.getBoundingClientRect();
+  const l=Math.min(Math.max(r.left,4),Math.max(4,innerWidth-r.width-4));
+  const t=Math.min(Math.max(r.top,4),Math.max(4,innerHeight-34));
+  panel.style.setProperty('left',Math.round(l)+'px');
+  panel.style.setProperty('top',Math.round(t)+'px');
+}
+function miSaveGeo(panel){
+  try{const r=panel.getBoundingClientRect();
+    localStorage.setItem(MI_GEO,JSON.stringify({l:Math.round(r.left),t:Math.round(r.top),w:Math.round(r.width),h:Math.round(r.height)}));
+  }catch(_){}
+}
+function miMakeMovable(){
+  const panel=document.getElementById('mi_panel');
+  const head=document.getElementById('mi_head');
+  const grip=document.getElementById('mi_grip');
+  if(!panel||!head)return;
+  /* استرجاع آخر مكان/حجم */
+  try{
+    const g=JSON.parse(localStorage.getItem(MI_GEO)||'null');
+    if(g&&typeof g.l==='number'){
+      if(g.w)panel.style.width=g.w+'px';
+      if(g.h)panel.style.height=g.h+'px';
+      miDock(panel,{left:g.l,top:g.t});
+      miClamp(panel);
+    }
+  }catch(_){}
+  /* سحب من الرأس */
+  head.addEventListener('pointerdown',e=>{
+    if(e.target.closest('#mi_toggle'))return;
+    const r=panel.getBoundingClientRect();
+    miDock(panel,r);
+    const ox=e.clientX-r.left,oy=e.clientY-r.top,w=r.width;
+    try{head.setPointerCapture(e.pointerId);}catch(_){}
+    const mv=ev=>{
+      const l=Math.min(Math.max(ev.clientX-ox,4),Math.max(4,innerWidth-w-4));
+      const t=Math.min(Math.max(ev.clientY-oy,4),innerHeight-34);
+      panel.style.setProperty('left',Math.round(l)+'px');
+      panel.style.setProperty('top',Math.round(t)+'px');
+    };
+    const up=()=>{head.removeEventListener('pointermove',mv);head.removeEventListener('pointerup',up);miSaveGeo(panel);};
+    head.addEventListener('pointermove',mv);head.addEventListener('pointerup',up);
+    e.preventDefault();
+  });
+  /* تكبير من الزاوية (يبقى داخل الشاشة؛ يُزحزح عند الحافة) */
+  if(grip)grip.addEventListener('pointerdown',e=>{
+    const r=panel.getBoundingClientRect();
+    miDock(panel,r);
+    const sx=e.clientX,sy=e.clientY,sw=r.width,sh=r.height,left=r.left,top=r.top;
+    try{grip.setPointerCapture(e.pointerId);}catch(_){}
+    const mv=ev=>{
+      let w=Math.min(Math.max(sw+(ev.clientX-sx),238),innerWidth-8);
+      let h=Math.min(Math.max(sh+(ev.clientY-sy),150),innerHeight-8);
+      let l=left,t=top;
+      if(l+w>innerWidth-4)l=Math.max(4,innerWidth-4-w);
+      if(t+h>innerHeight-4)t=Math.max(4,innerHeight-4-h);
+      panel.style.width=Math.round(w)+'px';panel.style.height=Math.round(h)+'px';
+      panel.style.setProperty('left',Math.round(l)+'px');
+      panel.style.setProperty('top',Math.round(t)+'px');
+    };
+    const up=()=>{grip.removeEventListener('pointermove',mv);grip.removeEventListener('pointerup',up);miSaveGeo(panel);};
+    grip.addEventListener('pointermove',mv);grip.addEventListener('pointerup',up);
+    e.preventDefault();e.stopPropagation();
+  });
+  window.addEventListener('resize',()=>miClamp(panel));
+}
+
+/* ── تهيئة المساعد ── */
+function miInit(){
+  miEnsureRec();
+  miInjectMics();
+  miMakeMovable();
+  agAll();
+  miSetTargetLabel();
+  miSyncUI();miAudioUI();miFSsync();
+  const tog=document.getElementById('mi_toggle');const panel=document.getElementById('mi_panel');
+  if(tog&&panel)tog.addEventListener('click',()=>{
+    panel.classList.toggle('collapsed');
+    tog.textContent=panel.classList.contains('collapsed')?'▴':'▾';
+  });
+  if(!MI.supported){
+    const w=document.getElementById('mi_unsupported');if(w)w.style.display='block';
+    const mic=document.getElementById('mi_mic');if(mic)mic.style.opacity='.45';
+    document.querySelectorAll('.micbtn').forEach(b=>{b.style.opacity='.45';});
+  }
+}
+
 /* ═══════ INIT ═══════ */
-load(); calc();
+load(); calc(); miInit();
 window.addEventListener('beforeprint',()=>document.querySelectorAll('details.model').forEach(d=>d.open=true));
 </script>
 </body>
