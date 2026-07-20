@@ -14,6 +14,7 @@ import { isAdmin, DEFAULT_ROLE } from './roles.js';
 export const NAV_GROUP_LABELS = {
   daily: 'العمليات اليومية',
   warehouses: 'المستودعات والجرد',
+  fleet: 'إدارة الحركة',
   odoo: 'دورات أودو والمحاكاة',
   reports: 'مركز التقارير',
   archive: 'الأرشيف والمرجعية',
@@ -25,8 +26,8 @@ export const NAV_GROUP_LABELS = {
  * الأدمن (المدير العام) يرى كل شيء دائمًا ولا يحتاج إدراجًا.
  */
 export const ROLE_NAV = {
-  admin: ['daily', 'warehouses', 'odoo', 'reports', 'archive', 'dept'],
-  warehouse_manager: ['daily', 'warehouses', 'odoo', 'reports', 'archive', 'dept'],
+  admin: ['daily', 'warehouses', 'fleet', 'odoo', 'reports', 'archive', 'dept'],
+  warehouse_manager: ['daily', 'warehouses', 'fleet', 'odoo', 'reports', 'archive', 'dept'],
   storekeeper: ['daily', 'warehouses', 'odoo'],
   qc_inspector: ['daily', 'odoo', 'reports'],
   gate_officer: ['daily', 'odoo'],
@@ -38,6 +39,8 @@ export const ROLE_NAV = {
   // دور مقيّد بالكامل — لا يرى أي مجموعة أخرى (الإلزام الحقيقي في AuthGate
   // عبر pageAccess.js؛ هذا فقط يمنع تسريب روابط أخرى في القائمة الجانبية).
   department_user: ['dept'],
+  // دور «الحركة»: مجموعة إدارة الحركة وحدها (مقيّد بصفحة جرد المركبات في pageAccess.js).
+  fleet: ['fleet'],
 };
 
 /** هل يرى هذا الدور مجموعة القائمة؟ */

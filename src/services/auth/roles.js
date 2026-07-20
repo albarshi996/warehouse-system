@@ -17,6 +17,7 @@ export const ROLES = {
   inventory_auditor: { id: 'inventory_auditor', label: 'مدقّق الجرد',      emoji: '🔎', color: '#0ea5e9' },
   viewer:            { id: 'viewer',            label: 'مشاهد',            emoji: '👁️', color: '#6b7280' },
   department_user:   { id: 'department_user',   label: 'مستخدم إدارة',     emoji: '🏬', color: '#14b8a6' },
+  fleet:             { id: 'fleet',             label: 'الحركة',           emoji: '🚚', color: '#f97316' },
 };
 
 /** الدور الافتراضي الآمن لمن لا ملف دور له بعد (أقل صلاحية). */

@@ -13,6 +13,9 @@ export const RESTRICTED_ROLE_PATHS = {
     '/dashboard/meeting-assistant',
     '/dashboard/wh-manager-eval',
   ],
+  // دور «الحركة»: صفحة جرد المركبات وحدها — إسناد الدور لبريد جديد يفتح له
+  // هذه الصفحة بالمشاهدة والتحرير، ولا شيء سواها.
+  fleet: ['/dashboard/vehicles-inventory'],
 };
 
 /** المسارات المسموحة لدور مقيّد، أو null إن كان الدور غير مقيّد. */

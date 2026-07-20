@@ -1,0 +1,6616 @@
+{
+ "source": "أرشيف جرد المركبات (إكسل)",
+ "count": 23,
+ "records": [
+  {
+   "file": "KIA  BINGO.xlsx",
+   "vehicleId": "veh-8-68839",
+   "summary": {
+    "ok": 93,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 93,
+    "total": 93,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "مركبة نقل",
+     "formNo": "Y2026-6-1-20",
+     "inspDate": "2026-06-01",
+     "inspTime": "14:27",
+     "department": "شركة العروس البيضاء",
+     "plateNo": "8-68839",
+     "brand": "KIA",
+     "model": "BINGO",
+     "year": "2020",
+     "color": "ابيض",
+     "fuelType": "ديزل",
+     "vin": "7400614",
+     "odometer": "76303",
+     "licExpiry": "2026-11-01",
+     "receivedFrom": "تستحدم لكافة قطاعات الشركة",
+     "insExpiry": "2026-06-17"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     },
+     "t1": {
+      "status": "سليم"
+     },
+     "t2": {
+      "status": "سليم"
+     },
+     "t3": {
+      "status": "سليم"
+     },
+     "t4": {
+      "status": "سليم"
+     },
+     "t5": {
+      "status": "سليم"
+     },
+     "t6": {
+      "status": "سليم"
+     },
+     "t7": {
+      "status": "سليم"
+     },
+     "t8": {
+      "status": "سليم"
+     },
+     "t9": {
+      "status": "سليم"
+     },
+     "t10": {
+      "status": "سليم"
+     },
+     "t11": {
+      "status": "سليم"
+     },
+     "t12": {
+      "status": "سليم"
+     },
+     "t13": {
+      "status": "سليم"
+     },
+     "t14": {
+      "status": "سليم"
+     }
+    },
+    "tires": {
+     "fl": {
+      "cond": "—"
+     },
+     "fr": {
+      "cond": "—"
+     },
+     "rl": {
+      "cond": "—"
+     },
+     "rr": {
+      "cond": "—"
+     }
+    },
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "MITSUBISHI نقل.xlsx",
+   "vehicleId": "veh-8-68842",
+   "summary": {
+    "ok": 93,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 93,
+    "total": 93,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "مركبة نقل",
+     "formNo": "FI-20260601-987",
+     "inspDate": "2026-06-01",
+     "inspTime": "13:57",
+     "department": "شركة العروس البيضاء",
+     "plateNo": "8-68842",
+     "brand": "MITSUBISHI",
+     "model": "TRUCK",
+     "year": "2019",
+     "color": "ابيض",
+     "fuelType": "ديزل",
+     "vin": "003010",
+     "odometer": "50710",
+     "lastService": "2026-03-20",
+     "licExpiry": "2026-07-10",
+     "receivedFrom": "تستخدم لشحن تخدم كافة قطاعات الشركة",
+     "insExpiry": "2026-07-20"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     },
+     "t1": {
+      "status": "سليم"
+     },
+     "t2": {
+      "status": "سليم"
+     },
+     "t3": {
+      "status": "سليم"
+     },
+     "t4": {
+      "status": "سليم"
+     },
+     "t5": {
+      "status": "سليم"
+     },
+     "t6": {
+      "status": "سليم"
+     },
+     "t7": {
+      "status": "سليم"
+     },
+     "t8": {
+      "status": "سليم"
+     },
+     "t9": {
+      "status": "سليم"
+     },
+     "t10": {
+      "status": "سليم"
+     },
+     "t11": {
+      "status": "سليم"
+     },
+     "t12": {
+      "status": "سليم"
+     },
+     "t13": {
+      "status": "سليم"
+     },
+     "t14": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "احمد مفتاح القبايلي.xlsx",
+   "vehicleId": "veh-8-648323",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-2",
+     "inspDate": "2026-06-01",
+     "inspTime": "11:29",
+     "department": "ركن المال",
+     "plateNo": "8-648323",
+     "brand": "تويوتا",
+     "model": "فورتي",
+     "year": "2021",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "0350923",
+     "odometer": "76800",
+     "lastService": "2026-05-20",
+     "licExpiry": "2026-11-09",
+     "receivedFrom": "احمد مفتاح القبايلي",
+     "insExpiry": "2026-11-10"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "اسامة مصباح الحداد.xlsx",
+   "vehicleId": "veh-8-540733",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y-2026-1-6--3",
+     "inspDate": "2026-06-01",
+     "inspTime": "11:42",
+     "department": "ركن المال",
+     "plateNo": "8-540733",
+     "brand": "هواندي",
+     "model": "اكسنت",
+     "year": "2019",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "164393",
+     "odometer": "170000",
+     "lastService": "2026-03-20",
+     "licExpiry": "2026-11-09",
+     "receivedFrom": "اسامة مصباح الحداد",
+     "insExpiry": "2026-11-10"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة بشروط - تحتاج إصلاحات",
+    "generalNotes": "صيانة بركوربي خلفي - صطوب خلفي - تشطيبات مراية جنبية",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "المراسم.xlsx",
+   "vehicleId": "veh-8-756229",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-12",
+     "inspDate": "2026-06-01",
+     "inspTime": "12:29",
+     "department": "انجاز المشرق",
+     "plateNo": "8-756229",
+     "brand": "كيا",
+     "model": "كرنفال",
+     "year": "2021",
+     "color": "اسود",
+     "fuelType": "بنزين",
+     "vin": "029011",
+     "odometer": "58725",
+     "lastService": "2026-03-20",
+     "licExpiry": "2028-01-15",
+     "receivedFrom": "المراسم",
+     "insExpiry": "2027-01-16"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "بلقاسم الاحمر.xlsx",
+   "vehicleId": "veh-8-765249",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-14",
+     "inspDate": "2026-06-01",
+     "inspTime": "12:42",
+     "department": "انجاز المشارق",
+     "plateNo": "8-765249",
+     "brand": "كيا",
+     "model": "بيجاس",
+     "year": "2023",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "0237604",
+     "odometer": "4890",
+     "lastService": "2026-03-20",
+     "licExpiry": "2027-04-06",
+     "receivedFrom": "بلقاسم الاحمر",
+     "insExpiry": "2027-03-24"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "جاد الله العشيبي.xlsx",
+   "vehicleId": "veh-8-518681",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-18",
+     "inspDate": "2026-06-01",
+     "inspTime": "13:30",
+     "department": "المورد",
+     "plateNo": "8-518681",
+     "brand": "هواندي",
+     "model": "اكسنت",
+     "year": "2020",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "147812",
+     "odometer": "127033",
+     "lastService": "2026-03-20",
+     "licExpiry": "2026-01-26",
+     "receivedFrom": "جاد الله العشيبي",
+     "insExpiry": "2026-01-26"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "رمزي باش.xlsx",
+   "vehicleId": "veh-8-774380",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-11",
+     "inspDate": "2026-06-01",
+     "inspTime": "12:25",
+     "department": "انجاز المشرق",
+     "plateNo": "8-774380",
+     "brand": "تويوتا",
+     "model": "كرولا",
+     "year": "2024",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "0848794",
+     "odometer": "1200",
+     "lastService": "2026-03-20",
+     "licExpiry": "2028-05-24",
+     "receivedFrom": "رمزي باش",
+     "insExpiry": "2027-05-26"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "زياد العلواني.xlsx",
+   "vehicleId": "veh-8-419928",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-16",
+     "inspDate": "2026-06-01",
+     "inspTime": "13:10",
+     "department": "شركة المورد",
+     "plateNo": "8-419928",
+     "brand": "هواندي",
+     "model": "سنتافي",
+     "year": "2019",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "054186",
+     "odometer": "159959",
+     "lastService": "2026-03-20",
+     "licExpiry": "2027-04-15",
+     "receivedFrom": "زياد العلواني",
+     "insExpiry": "2026-12-24"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "سراج العوامي.xlsx",
+   "vehicleId": "veh-8-774378",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-13",
+     "inspDate": "2026-06-01",
+     "inspTime": "12:34",
+     "department": "انجاز المشرق",
+     "plateNo": "8-774378",
+     "brand": "تويوتا",
+     "model": "كارولا",
+     "year": "2024",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "0840253",
+     "odometer": "700",
+     "lastService": "2026-03-20",
+     "licExpiry": "2028-05-24",
+     "receivedFrom": "سراج العوامي",
+     "insExpiry": "2027-05-26"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "سعيد الحسناوي.xlsx",
+   "vehicleId": "veh-8-671831",
+   "summary": {
+    "ok": 78,
+    "warn": 1,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-1",
+     "inspDate": "2026-06-01",
+     "inspTime": "11:30",
+     "department": "شركة ركن المال",
+     "plateNo": "8-671831",
+     "brand": "تيوتا",
+     "model": "برادو",
+     "year": "2023",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "5095872",
+     "odometer": "89276",
+     "lastServiceKm": "89000",
+     "lastService": "2026-05-20",
+     "licExpiry": "2026-03-19",
+     "receivedFrom": "سعيد الحسناوي",
+     "insExpiry": "2026-11-10"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "يحتاج متابعة",
+      "notes": "صيانة وزواق"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {
+     "fl": {
+      "cond": "جيد"
+     }
+    },
+    "safety": {
+     "spareTire": "موجود وجيد"
+    },
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "عادل الشحومي.xlsx",
+   "vehicleId": "veh-8-580302",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-17",
+     "inspDate": "2026-06-01",
+     "inspTime": "13:24",
+     "department": "برند زو",
+     "plateNo": "8-580302",
+     "brand": "كيا",
+     "model": "سيرتو",
+     "year": "2021",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "843882",
+     "odometer": "100000",
+     "lastService": "2026-03-20",
+     "licExpiry": "2026-11-16",
+     "receivedFrom": "عادل الشحومي",
+     "insExpiry": "2026-11-17"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "عبد العزيز العبار.xlsx",
+   "vehicleId": "veh-8-638236",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-14",
+     "inspDate": "2026-06-01",
+     "inspTime": "12:38",
+     "department": "انجاز المشرق",
+     "plateNo": "8-638236",
+     "brand": "هواندي",
+     "model": "اكسنت",
+     "year": "2023",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "370358",
+     "odometer": "84000",
+     "lastService": "2026-03-20",
+     "licExpiry": "2026-11-25",
+     "receivedFrom": "عبد العزيز العبار",
+     "insExpiry": "2026-11-26"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "عبد العزيز العلوني.xlsx",
+   "vehicleId": "veh-8-615627",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "FI-20260601-247",
+     "inspDate": "2026-06-01",
+     "inspTime": "11:35",
+     "plateNo": "8-615627",
+     "brand": "TOYOTA",
+     "model": "FJ",
+     "year": "2018",
+     "color": "رصاصي",
+     "fuelType": "بنزين",
+     "vin": "249590",
+     "odometer": "160000",
+     "lastService": "2026-05-20",
+     "licExpiry": "2026-09-10",
+     "receivedFrom": "عبد العزيز العلوني",
+     "insExpiry": "2026-09-10"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "عبد الكريم السيد عبد الكريم.xlsx",
+   "vehicleId": "veh-8-638237",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-16",
+     "inspDate": "2026-06-01",
+     "inspTime": "13:18",
+     "department": "برند زو",
+     "plateNo": "8-638237",
+     "brand": "هواندي",
+     "model": "اكسنت",
+     "year": "2023",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "370375",
+     "odometer": "45306",
+     "lastService": "2026-03-20",
+     "licExpiry": "2026-11-09",
+     "receivedFrom": "عبد الكريم السيد عبد الكريم",
+     "insExpiry": "2026-11-10"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "علي محمد الترهوني.xlsx",
+   "vehicleId": "veh-8-488243",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1--8",
+     "inspDate": "2026-06-01",
+     "inspTime": "12:03",
+     "department": "ركن المال",
+     "plateNo": "8-488243",
+     "brand": "كيا",
+     "model": "سيرتو",
+     "year": "2019",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "5868650",
+     "odometer": "135000",
+     "lastService": "2026-03-20",
+     "licExpiry": "2026-02-25",
+     "receivedFrom": "على محمد الترهوني",
+     "insExpiry": "2025-09-06"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "محمد الحسناوي.xlsx",
+   "vehicleId": "veh-8-670125",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-7",
+     "inspDate": "2026-06-01",
+     "inspTime": "12:00",
+     "department": "ركن المال",
+     "plateNo": "8-670125",
+     "brand": "هواندي",
+     "model": "فينو",
+     "year": "2023",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "257253",
+     "lastService": "2026-03-20",
+     "licExpiry": "2027-04-15",
+     "receivedFrom": "محمد الحسناوي",
+     "insExpiry": "2027-03-04"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "محمد الزوي.xlsx",
+   "vehicleId": "veh-8-756232",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-15",
+     "inspDate": "2026-06-01",
+     "inspTime": "12:51",
+     "department": "انجاز المشارق",
+     "plateNo": "8-756232",
+     "brand": "هواندي",
+     "model": "سنتافي",
+     "year": "2025",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "429728",
+     "odometer": "5000",
+     "lastService": "2026-03-20",
+     "licExpiry": "2027-04-06",
+     "receivedFrom": "محمد الزوي",
+     "insExpiry": "2027-03-24"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "محمد العقوري.xlsx",
+   "vehicleId": "veh-5-3142908",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-19",
+     "inspDate": "2026-06-01",
+     "inspTime": "13:48",
+     "department": "برند زو",
+     "plateNo": "5-3142908",
+     "brand": "هواندي",
+     "model": "اكسنت",
+     "year": "2022",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "380508",
+     "odometer": "29582",
+     "lastService": "2026-03-20",
+     "licExpiry": "2026-08-30",
+     "receivedFrom": "محمد العقوري",
+     "insExpiry": "2026-08-30"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "محمد الغدامسي.xlsx",
+   "vehicleId": "veh-8-578847",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-5",
+     "inspDate": "2026-06-01",
+     "inspTime": "11:56",
+     "department": "ركن المال",
+     "plateNo": "8-578847",
+     "brand": "هواندي",
+     "model": "سنتافي",
+     "year": "2021",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "378797",
+     "odometer": "111000",
+     "lastService": "2026-03-20",
+     "licExpiry": "2027-04-15",
+     "receivedFrom": "محمد الغدامسي",
+     "insExpiry": "2027-04-15"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "منير العشيبي.xlsx",
+   "vehicleId": "veh-8-580307",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1--16",
+     "inspDate": "2026-06-01",
+     "inspTime": "13:14",
+     "department": "ركن المال",
+     "plateNo": "8-580307",
+     "brand": "كيا",
+     "model": "سيرتو",
+     "year": "2021",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "5868655",
+     "odometer": "138500",
+     "lastService": "2026-03-20",
+     "licExpiry": "2026-01-26",
+     "receivedFrom": "منير العشيبي",
+     "insExpiry": "2026-11-12"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "همام القطراني.xlsx",
+   "vehicleId": "veh-8-615207",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y2026-6-1-5",
+     "inspDate": "2026-06-01",
+     "inspTime": "11:48",
+     "department": "ركن المال",
+     "plateNo": "8-615207",
+     "brand": "ليكزيز",
+     "year": "2023",
+     "color": "رمادي",
+     "fuelType": "بنزين",
+     "vin": "2012195",
+     "odometer": "28500",
+     "lastService": "2026-03-20",
+     "licExpiry": "2026-03-19",
+     "receivedFrom": "همام القطراني",
+     "insExpiry": "2027-01-11"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  },
+  {
+   "file": "يوسف الصهبي.xlsx",
+   "vehicleId": "veh-8-726343",
+   "summary": {
+    "ok": 79,
+    "warn": 0,
+    "bad": 0,
+    "na": 0,
+    "done": 79,
+    "total": 79,
+    "pct": 100
+   },
+   "inspection": {
+    "info": {
+     "category": "سيارة إدارية",
+     "formNo": "Y-2026-6-1-10",
+     "inspDate": "2026-06-01",
+     "inspTime": "12:14",
+     "department": "شركة اديل",
+     "plateNo": "8-726343",
+     "brand": "هونداي",
+     "model": "صالون",
+     "year": "2020",
+     "color": "ابيض",
+     "fuelType": "بنزين",
+     "vin": "030203",
+     "odometer": "39600",
+     "lastService": "2026-03-20",
+     "licExpiry": "2027-06-22",
+     "receivedFrom": "يوسف الصهبي",
+     "insExpiry": "2026-06-22"
+    },
+    "items": {
+     "ext1": {
+      "status": "سليم"
+     },
+     "ext2": {
+      "status": "سليم"
+     },
+     "ext3": {
+      "status": "سليم"
+     },
+     "ext4": {
+      "status": "سليم"
+     },
+     "ext5": {
+      "status": "سليم"
+     },
+     "ext6": {
+      "status": "سليم"
+     },
+     "ext7": {
+      "status": "سليم"
+     },
+     "ext8": {
+      "status": "سليم"
+     },
+     "ext9": {
+      "status": "سليم"
+     },
+     "ext10": {
+      "status": "سليم"
+     },
+     "ext11": {
+      "status": "سليم"
+     },
+     "ext12": {
+      "status": "سليم"
+     },
+     "ext13": {
+      "status": "سليم"
+     },
+     "ext14": {
+      "status": "سليم"
+     },
+     "ext15": {
+      "status": "سليم"
+     },
+     "ext16": {
+      "status": "سليم"
+     },
+     "ext17": {
+      "status": "سليم"
+     },
+     "ext18": {
+      "status": "سليم"
+     },
+     "ext19": {
+      "status": "سليم"
+     },
+     "ext20": {
+      "status": "سليم"
+     },
+     "ext21": {
+      "status": "سليم"
+     },
+     "ext22": {
+      "status": "سليم"
+     },
+     "ext23": {
+      "status": "سليم"
+     },
+     "ext24": {
+      "status": "سليم"
+     },
+     "m1": {
+      "status": "سليم"
+     },
+     "m2": {
+      "status": "سليم"
+     },
+     "m3": {
+      "status": "سليم"
+     },
+     "m4": {
+      "status": "سليم"
+     },
+     "m5": {
+      "status": "سليم"
+     },
+     "m6": {
+      "status": "سليم"
+     },
+     "m7": {
+      "status": "سليم"
+     },
+     "m8": {
+      "status": "سليم"
+     },
+     "m9": {
+      "status": "سليم"
+     },
+     "m10": {
+      "status": "سليم"
+     },
+     "m11": {
+      "status": "سليم"
+     },
+     "m12": {
+      "status": "سليم"
+     },
+     "m13": {
+      "status": "سليم"
+     },
+     "m14": {
+      "status": "سليم"
+     },
+     "m15": {
+      "status": "سليم"
+     },
+     "m16": {
+      "status": "سليم"
+     },
+     "m17": {
+      "status": "سليم"
+     },
+     "m18": {
+      "status": "سليم"
+     },
+     "m19": {
+      "status": "سليم"
+     },
+     "m20": {
+      "status": "سليم"
+     },
+     "m21": {
+      "status": "سليم"
+     },
+     "m22": {
+      "status": "سليم"
+     },
+     "m23": {
+      "status": "سليم"
+     },
+     "m24": {
+      "status": "سليم"
+     },
+     "m25": {
+      "status": "سليم"
+     },
+     "m26": {
+      "status": "سليم"
+     },
+     "m27": {
+      "status": "سليم"
+     },
+     "e1": {
+      "status": "سليم"
+     },
+     "e2": {
+      "status": "سليم"
+     },
+     "e3": {
+      "status": "سليم"
+     },
+     "e4": {
+      "status": "سليم"
+     },
+     "e5": {
+      "status": "سليم"
+     },
+     "e6": {
+      "status": "سليم"
+     },
+     "e7": {
+      "status": "سليم"
+     },
+     "e8": {
+      "status": "سليم"
+     },
+     "e9": {
+      "status": "سليم"
+     },
+     "e10": {
+      "status": "سليم"
+     },
+     "e11": {
+      "status": "سليم"
+     },
+     "e12": {
+      "status": "سليم"
+     },
+     "e13": {
+      "status": "سليم"
+     },
+     "e14": {
+      "status": "سليم"
+     },
+     "e15": {
+      "status": "سليم"
+     },
+     "e16": {
+      "status": "سليم"
+     },
+     "e17": {
+      "status": "سليم"
+     },
+     "i1": {
+      "status": "سليم"
+     },
+     "i2": {
+      "status": "سليم"
+     },
+     "i3": {
+      "status": "سليم"
+     },
+     "i4": {
+      "status": "سليم"
+     },
+     "i5": {
+      "status": "سليم"
+     },
+     "i6": {
+      "status": "سليم"
+     },
+     "i7": {
+      "status": "سليم"
+     },
+     "i8": {
+      "status": "سليم"
+     },
+     "i9": {
+      "status": "سليم"
+     },
+     "i10": {
+      "status": "سليم"
+     },
+     "i11": {
+      "status": "سليم"
+     }
+    },
+    "tires": {},
+    "safety": {},
+    "accessories": {},
+    "overallStatus": "مقبولة - جاهزة للتشغيل",
+    "generalNotes": "",
+    "signatures": {
+     "mechanic": "",
+     "receiver": "",
+     "supervisor": ""
+    }
+   }
+  }
+ ]
+}

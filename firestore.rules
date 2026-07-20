@@ -50,6 +50,12 @@ service cloud.firestore {
              (signedIn() && hasProfile() && myRole() in ['admin', 'warehouse_manager']);
     }
 
+    // كاتبو جرد المركبات: دور «الحركة» + المديرَان (تعاون المخازن والحركة).
+    function isFleetWriter() {
+      return isBootstrapAdmin() ||
+             (signedIn() && hasProfile() && myRole() in ['admin', 'warehouse_manager', 'fleet']);
+    }
+
     // ── المستخدمون والأدوار ──────────────────────────────────────
     // القراءة لأي مُصادَق (الواجهة تحتاج معرفة دور المستخدم).
     // الكتابة للمدير العام فقط — وإلا استطاع أي مستخدم ترقية نفسه.
@@ -210,6 +216,41 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create: if signedIn();
       allow update, delete: if isAdmin();
+    }
+
+    // ── جرد المركبات (سجلّ الأسطول الحيّ — إدارة الحركة) ─────────────────
+    // القراءة لأي مصادَق (المخازن والموارد البشرية تطالعان السجلّ)، والكتابة
+    // لدور «الحركة» والمديرَين. لا حذف لمركبة ولا لفحص ولا لمحضر — نمط
+    // `operations` نفسه: التصحيح بقيد جديد لا بمحو التاريخ.
+    match /vehicles/{vehicleId} {
+      allow read: if signedIn();
+      allow create, update: if isFleetWriter();
+      allow delete: if false;
+
+      // نماذج الفحص الكاملة (تاريخ المركبة).
+      match /inspections/{inspId} {
+        allow read: if signedIn();
+        allow create, update: if isFleetWriter();
+        allow delete: if false;
+      }
+      // طلبات الصيانة (مفتوحة → منجزة).
+      match /maintenance/{reqId} {
+        allow read: if signedIn();
+        allow create, update: if isFleetWriter();
+        allow delete: if false;
+      }
+      // سجلّ تغيير الزيت.
+      match /oil_changes/{entryId} {
+        allow read: if signedIn();
+        allow create, update: if isFleetWriter();
+        allow delete: if false;
+      }
+      // محاضر الحوادث.
+      match /accidents/{caseId} {
+        allow read: if signedIn();
+        allow create, update: if isFleetWriter();
+        allow delete: if false;
+      }
     }
 
     // ── طلبات التوظيف من الإدارات (منفصلة عن `candidates` الحسّاسة) ──────
