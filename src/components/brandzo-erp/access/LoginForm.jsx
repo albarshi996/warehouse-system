@@ -4,6 +4,7 @@ import {
   subscribeAuth,
   authErrorMessage,
   getBasePath,
+  sendPasswordReset,
 } from '../../../services/auth/authService.js';
 
 /**
@@ -19,6 +20,8 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState('');
+  const [resetMsg, setResetMsg] = useState('');
+  const [resetting, setResetting] = useState(false);
 
   const base = getBasePath();
 
@@ -36,6 +39,7 @@ export default function LoginForm() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    setResetMsg('');
     if (!email || !password) {
       setError('أدخل البريد الإلكتروني وكلمة المرور.');
       return;
@@ -48,6 +52,26 @@ export default function LoginForm() {
       setError(authErrorMessage(err && err.code));
       setLoading(false);
     }
+  }
+
+  /** «نسيت كلمة المرور؟» — يرسل رابط إعادة التعيين للبريد المكتوب في الحقل. */
+  async function handleReset() {
+    setError('');
+    setResetMsg('');
+    if (!email) {
+      setError('اكتب بريدك الإلكتروني في الحقل أولًا ثم اضغط «نسيت كلمة المرور؟».');
+      return;
+    }
+    setResetting(true);
+    try {
+      await sendPasswordReset(email);
+      setResetMsg(
+        'أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك. افتح الرسالة (تفقّد أيضًا "غير المرغوب") واتبع الرابط، ثم عُد وسجّل الدخول بكلمتك الجديدة.'
+      );
+    } catch (err) {
+      setError(authErrorMessage(err && err.code));
+    }
+    setResetting(false);
   }
 
   if (checking) {
@@ -121,6 +145,12 @@ export default function LoginForm() {
             </div>
           )}
 
+          {resetMsg && (
+            <div className="bg-green-500/10 border border-green-500/40 text-green-200 text-sm rounded-xl px-4 py-3 text-center">
+              ✉️ {resetMsg}
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading}
@@ -134,6 +164,15 @@ export default function LoginForm() {
             ) : (
               <span>تسجيل الدخول</span>
             )}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={resetting}
+            className="w-full text-center text-xs text-gray-400 hover:text-brand-gold disabled:opacity-60 transition pt-1"
+          >
+            {resetting ? 'جارٍ إرسال رابط إعادة التعيين...' : 'نسيت كلمة المرور؟'}
           </button>
         </form>
       </div>

@@ -11,6 +11,7 @@ import {
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../config/firebase.js';
@@ -37,6 +38,11 @@ export async function signIn(email, password) {
 /** تسجيل الخروج. */
 export function signOutUser() {
   return signOut(auth);
+}
+
+/** يرسل بريد إعادة تعيين كلمة المرور إلى العنوان المُدخل. */
+export function sendPasswordReset(email) {
+  return sendPasswordResetEmail(auth, String(email).trim());
 }
 
 /**
