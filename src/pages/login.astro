@@ -4,6 +4,7 @@
  * تحمي بقيّة البوابة عبر حارس AuthGate الموجود في DashboardLayout.
  */
 import '../styles/global.css';
+import PwaHead from '../components/pwa/PwaHead.astro';
 import LoginForm from '../components/brandzo-erp/access/LoginForm.jsx';
 ---
 
@@ -18,6 +19,7 @@ import LoginForm from '../components/brandzo-erp/access/LoginForm.jsx';
       href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
+    <PwaHead />
     <style>
       body {
         font-family: 'Cairo', sans-serif;

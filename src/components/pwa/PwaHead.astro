@@ -1,0 +1,98 @@
+---
+/**
+ * رأس PWA — يُدرَج داخل <head> في كل صفحة (DashboardLayout + index + login).
+ * يربط ملف التعريف والأيقونات، ويسجّل «العامل الخفي» مع إشعار تحديث لطيف.
+ */
+// في Astro 6 قد يأتي BASE_URL بلا شرطة ختامية (/warehouse-system)، فنطبّعه
+// ليصير دائمًا منتهيًا بشرطة واحدة (/warehouse-system/) — وإلا التصقت الروابط.
+const raw = import.meta.env.BASE_URL;
+const base = raw.endsWith('/') ? raw : `${raw}/`;
+---
+<link rel="manifest" href={`${base}manifest.webmanifest`} />
+<meta name="theme-color" content="#1A1A2E" />
+<link rel="icon" href={`${base}icons/icon.svg`} type="image/svg+xml" />
+<link rel="icon" href={`${base}icons/favicon-32.png`} sizes="32x32" type="image/png" />
+<link rel="apple-touch-icon" href={`${base}icons/apple-touch-icon.png`} />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Brandzo Hub" />
+<meta name="mobile-web-app-capable" content="yes" />
+
+<script is:inline>
+  (function () {
+    'use strict';
+    if (!('serviceWorker' in navigator)) return;
+
+    // نشتقّ المسار الأساسي من رابط الـmanifest في الرأس نفسه (بلا اعتماد على
+    // متغيّرات محقونة) — يبقى صحيحًا سواء نُشر على /warehouse-system/ أو نطاق مستقلّ.
+    var manifestLink = document.querySelector('link[rel="manifest"]');
+    var base = manifestLink
+      ? manifestLink.getAttribute('href').replace(/manifest\.webmanifest$/, '')
+      : '/';
+    var swUrl = base + 'sw.js';
+
+    // إشعار «نسخة جديدة متاحة» — بسيط، بهوية Brandzo، يمين الأسفل، RTL.
+    function showUpdateToast(onUpdate) {
+      if (document.getElementById('bz-sw-toast')) return;
+      var box = document.createElement('div');
+      box.id = 'bz-sw-toast';
+      box.dir = 'rtl';
+      box.style.cssText =
+        'position:fixed;bottom:18px;right:18px;z-index:2147483647;max-width:320px;' +
+        'background:#1A1A2E;color:#fff;border:1.5px solid #DAAA3C;border-radius:14px;' +
+        'padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.4);font-family:Cairo,sans-serif;' +
+        'display:flex;align-items:center;gap:12px;font-size:14px;line-height:1.5';
+      var txt = document.createElement('span');
+      txt.textContent = '🔄 نسخة جديدة من النظام متاحة';
+      txt.style.cssText = 'flex:1';
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = 'تحديث';
+      btn.style.cssText =
+        'background:#C41E3A;color:#fff;border:none;border-radius:9px;padding:8px 16px;' +
+        'font-weight:700;font-family:inherit;font-size:13px;cursor:pointer;white-space:nowrap';
+      btn.addEventListener('click', function () {
+        btn.disabled = true;
+        btn.textContent = 'جارٍ…';
+        onUpdate();
+      });
+      box.appendChild(txt);
+      box.appendChild(btn);
+      document.body.appendChild(box);
+    }
+
+    window.addEventListener('load', function () {
+      navigator.serviceWorker
+        .register(swUrl)
+        .then(function (reg) {
+          var updating = false;
+
+          function promptFor(worker) {
+            if (!worker) return;
+            showUpdateToast(function () {
+              updating = true;
+              worker.postMessage('SKIP_WAITING');
+            });
+          }
+
+          // نسخة منتظرة جاهزة قبل اكتمال التحميل.
+          if (reg.waiting && navigator.serviceWorker.controller) promptFor(reg.waiting);
+
+          reg.addEventListener('updatefound', function () {
+            var nw = reg.installing;
+            if (!nw) return;
+            nw.addEventListener('statechange', function () {
+              if (nw.state === 'installed' && navigator.serviceWorker.controller) promptFor(nw);
+            });
+          });
+
+          navigator.serviceWorker.addEventListener('controllerchange', function () {
+            if (updating) window.location.reload();
+          });
+        })
+        .catch(function () {
+          /* في وضع التطوير (astro dev) لا يوجد sw.js — نتجاهل بهدوء. */
+        });
+    });
+  })();
+</script>

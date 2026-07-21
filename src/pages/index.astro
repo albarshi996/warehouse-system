@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import PwaHead from '../components/pwa/PwaHead.astro';
 
 const base = import.meta.env.BASE_URL.endsWith('/')
   ? import.meta.env.BASE_URL.slice(0, -1)
@@ -18,6 +19,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
       href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap"
       rel="stylesheet"
     />
+    <PwaHead />
     <style>
       body {
         font-family: 'Cairo', sans-serif;

@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import Icon from '../components/ui/Icon.astro';
+import PwaHead from '../components/pwa/PwaHead.astro';
 import AuthGate from '../components/brandzo-erp/access/AuthGate.jsx';
 import UserMenu from '../components/brandzo-erp/access/UserMenu.jsx';
 import RoleNav from '../components/brandzo-erp/access/RoleNav.jsx';
@@ -127,6 +128,7 @@ const currentPath = Astro.url.pathname;
       href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
+    <PwaHead />
     <style>
       body {
         font-family: 'Cairo', sans-serif;

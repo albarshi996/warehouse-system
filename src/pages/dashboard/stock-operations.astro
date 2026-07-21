@@ -10,6 +10,7 @@
  * منطق التطبيق نفسه لم يُمسّ (نقل أمين).
  */
 import '../../styles/global.css';
+import PwaHead from '../../components/pwa/PwaHead.astro';
 import AuthGate from '../../components/brandzo-erp/access/AuthGate.jsx';
 
 const base = import.meta.env.BASE_URL.endsWith('/')
@@ -24,6 +25,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 <title>العمليات المخزنية — Brandzo Hub</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<PwaHead />
 <style is:global>
 :root{
   --bg:#0f1419; --surface:#1a2332; --surface-2:#243044;
