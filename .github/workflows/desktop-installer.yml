@@ -1,0 +1,47 @@
+# بناء برنامج التنصيب لسطح المكتب (Brandzo Hub Setup.exe)
+# يعمل عند أي تعديل في src-tauri/ أو يدويًّا، ويرفع ملف التنصيب إلى صفحة Releases.
+# البرنامج قشرة حول النظام السحابي الحيّ — تحديثات المحتوى تصل عبر الويب
+# (العامل الخفي) فلا يلزم إعادة بنائه إلا عند تغيير القشرة نفسها.
+name: Build Desktop Installer
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'src-tauri/**'
+      - '.github/workflows/desktop-installer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Build and release installer
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: desktop-v__VERSION__
+          releaseName: 'Brandzo Hub Desktop v__VERSION__'
+          releaseBody: |
+            📦 برنامج تنصيب Brandzo Hub لويندوز
+
+            حمّل الملف المنتهي بـ `-setup.exe` من الأسفل وثبّته.
+            أول تشغيل يحتاج اتصالًا بالإنترنت (دخول + مزامنة أولى)، ثم يعمل دون اتصال.
+            التحديثات تصل تلقائيًّا عبر الويب — لا حاجة لإعادة التنصيب.
+          releaseDraft: false
+          prerelease: false
