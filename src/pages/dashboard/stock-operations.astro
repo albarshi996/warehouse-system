@@ -1120,6 +1120,8 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
     lookup(code) {
       return lookupByBarcode(code).catch((e) => {
         console.error('[master] lookup failed', e);
+        // الفشل الصامت كان يجعل «تعذّر السؤال» يبدو «صنفًا غير موجود» — نفرّق بينهما.
+        window.showToast?.('⚠️ تعذّر سؤال الماستر السحابي — تحقّق من الشبكة وتسجيل الدخول', 'error');
         return null;
       });
     },
@@ -1165,14 +1167,27 @@ let soundEnabled = true;
    ======================================================== */
 
 /**
+ * الصيغة القياسية للمقارنة: حروف صغيرة، بلا مسافات/شرطات، والأرقام الخالصة
+ * **بلا أصفار بادئة** — فالملصق قد يطبع `00251` والشيت يحمل `251` وهما صنف
+ * واحد (نفس قاعدة `normalizeBarcode` في الخدمات السحابية — تبقيان متطابقتين).
+ */
+function bzCanonCode(v) {
+  const s = String(v ?? '').trim().toLowerCase().replace(/[\s\-_]/g, '');
+  return /^\d+$/.test(s) ? s.replace(/^0+(?=\d)/, '') : s;
+}
+
+/**
  * البحث الموحّد: باركود أساسي ← قائمة باركودات الصنف ← كود الصنف.
  * المواضع التسعة كانت تكرّر نمط بحثٍ ثنائيًّا لا يعرف أن الصنف قد يحمل
  * أكثر من باركود — فمسحُ الباركود الثاني كان سيُنشئ سجلًّا مكرّرًا.
+ * المقارنة بالصيغة القياسية من الجهتين — `251` تجد `00251` والعكس.
  */
 function findInvIdx(lower) {
-  let idx = inventoryDB.findIndex(i => i.barcodeLower === lower);
-  if (idx < 0) idx = inventoryDB.findIndex(i => Array.isArray(i.barcodes) && i.barcodes.includes(lower));
-  if (idx < 0) idx = inventoryDB.findIndex(i => i.itemCode && i.itemCode.toLowerCase() === lower);
+  const key = bzCanonCode(lower);
+  if (!key) return -1;
+  let idx = inventoryDB.findIndex(i => bzCanonCode(i.barcodeLower) === key);
+  if (idx < 0) idx = inventoryDB.findIndex(i => Array.isArray(i.barcodes) && i.barcodes.some(c => bzCanonCode(c) === key));
+  if (idx < 0) idx = inventoryDB.findIndex(i => i.itemCode && bzCanonCode(i.itemCode) === key);
   return idx;
 }
 function findInvItem(lower) {
@@ -1216,21 +1231,23 @@ async function loadFromMaster() {
       showToast('الماستر فارغ — استورد شيت الأصناف من شاشة «الأصناف» أولًا', 'warning');
       return;
     }
+    // المطابقة بالصيغة القياسية (bzCanonCode) — حتى لا يتكرّر الصنف حين
+    // يحمل الشيت المحلي `00251` والماستر `251`.
     const known = new Set();
     inventoryDB.forEach(i => {
-      if (i.barcodeLower) known.add(i.barcodeLower);
-      (i.barcodes || []).forEach(c => known.add(c));
-      if (i.itemCode) known.add(String(i.itemCode).toLowerCase());
+      if (i.barcodeLower) known.add(bzCanonCode(i.barcodeLower));
+      (i.barcodes || []).forEach(c => known.add(bzCanonCode(c)));
+      if (i.itemCode) known.add(bzCanonCode(i.itemCode));
     });
     let added = 0, skipped = 0;
     for (const m of items) {
-      const codes = (m.barcodes || []).map(b => String(b).toLowerCase());
-      const skuLower = String(m.sku || '').toLowerCase();
-      if (!codes.length && !skuLower) { skipped++; continue; }
-      if (codes.some(c => known.has(c)) || (skuLower && known.has(skuLower))) { skipped++; continue; }
+      const codes = (m.barcodes || []).map(b => bzCanonCode(b));
+      const skuCanon = bzCanonCode(m.sku || '');
+      if (!codes.length && !skuCanon) { skipped++; continue; }
+      if (codes.some(c => known.has(c)) || (skuCanon && known.has(skuCanon))) { skipped++; continue; }
       inventoryDB.push(masterItemToLocal(m));
       codes.forEach(c => known.add(c));
-      if (skuLower) known.add(skuLower);
+      if (skuCanon) known.add(skuCanon);
       added++;
     }
     saveSessionDebounced();

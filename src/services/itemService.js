@@ -14,7 +14,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../config/firebase.js';
-import { normalizeBarcode } from './excel/excelSchema.js';
+import { normalizeBarcode, barcodeLookupVariants } from './excel/excelSchema.js';
 import { normalizeStatus } from './items/itemStatus.js';
 import { shapeImportedItem, normalizeUnit } from './items/itemShape.js';
 
@@ -120,16 +120,22 @@ export const getItem = async (sku) => {
  * @returns {Promise<object|null>} الصنف، أو null إن كان الباركود مجهولًا.
  */
 export const lookupByBarcode = async (code) => {
-  const needle = normalizeBarcode(code);
-  if (!needle) return null;
+  // صيغتان: القياسية (بلا أصفار بادئة — طلب المالك: `00251` ≡ `251`)
+  // والأساسية كما كُتبت، لالتقاط أصناف خُزّنت قبل اعتماد الإسقاط.
+  const variants = barcodeLookupVariants(code);
+  if (!variants.length) return null;
 
   const snap = await getDocs(
-    query(collection(db, COLLECTION), where('barcodes', 'array-contains', needle), fsLimit(1))
+    query(collection(db, COLLECTION), where('barcodes', 'array-contains-any', variants), fsLimit(1))
   );
   if (!snap.empty) return snap.docs[0].data();
 
   // مهرب: الباركود المكتوب قد يكون كود الصنف نفسه.
-  return getItem(needle);
+  for (const v of variants) {
+    const hit = await getItem(v);
+    if (hit) return hit;
+  }
+  return null;
 };
 
 /**

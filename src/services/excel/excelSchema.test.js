@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import {
   DATASETS,
   normalizeBarcode,
+  barcodeLookupVariants,
   splitMulti,
   detectHeaderRow,
   buildHeaderIndex,
@@ -39,6 +40,30 @@ test('الفارغ يبقى فارغًا لا "undefined"', () => {
   assert.equal(normalizeBarcode(''), '');
   assert.equal(normalizeBarcode(null), '');
   assert.equal(normalizeBarcode(undefined), '');
+});
+
+// ── الأصفار البادئة (طلب المالك 2026-07-21: `00251` ≡ `251`) ────────
+test('🚨 الأصفار البادئة تُسقط من الأرقام الخالصة — الملصق 00251 يطابق الشيت 251', () => {
+  assert.equal(normalizeBarcode('00251'), '251');
+  assert.equal(normalizeBarcode('251'), '251');
+  // قارئ EAN-13 يعطي UPC-A بصفر بادئ — القارئان يلتقيان على صيغة واحدة:
+  assert.equal(normalizeBarcode('085715324009'), '85715324009');
+  assert.equal(normalizeBarcode('85715324009'), '85715324009');
+  // كله أصفار ⇒ يبقى صفر واحد لا سلسلة فارغة:
+  assert.equal(normalizeBarcode('0000'), '0');
+});
+
+test('غير الرقمي الخالص لا تُمسّ أصفاره — الكود يبقى كما هو', () => {
+  assert.equal(normalizeBarcode('IP34927'), 'ip34927');
+  assert.equal(normalizeBarcode('0IP34927'), '0ip34927');
+  assert.equal(normalizeBarcode('MB 007X'), 'mb007x');
+});
+
+test('صيغتا البحث: القياسية + كما كُتبت (لالتقاط مخزون ما قبل الإسقاط)', () => {
+  assert.deepEqual(barcodeLookupVariants('00251'), ['251', '00251']);
+  assert.deepEqual(barcodeLookupVariants('251'), ['251']);
+  assert.deepEqual(barcodeLookupVariants('IP 34927'), ['ip34927']);
+  assert.deepEqual(barcodeLookupVariants(''), []);
 });
 
 test('عدّة باركودات في خانة واحدة تُفصل بأي فاصل شائع', () => {
