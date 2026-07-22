@@ -1,20 +1,21 @@
 /**
- * كتالوج الوظائف الرسمي — مولَّد آليًّا من «تقرير هيكل الوظائف والأدوار».
+ * كتالوج الوظائف الرسمي — **مولَّد آليًّا** من `src/data/org-structure.json`.
  *
- * ⚠️ لا تحرّر هذا الملف يدويًّا: التعديل يكون في ملف الهيكل ثم
- * `node scripts/build-jobs-catalog.mjs`. (قرار المالك 2026-07-16: الكتالوج
- * ثابت من الملف — مصدر واحد للحقيقة.)
+ * ⚠️ لا تحرّر هذا الملف يدويًّا: التعديل يكون في ملف الهيكل (أو في الصفحة
+ * التفاعلية `/dashboard/org-structure` ثم تصدير JSON) ثم:
+ *     node scripts/build-org.mjs
  *
- * اختيار المسمّى في شاشة التوظيف يتعبّأ منه الوصف (المهام) والتبعية
- * والمؤشرات تلقائيًّا. `occupied` مستخرَجة من علامة «📌 مشغول» في المصدر.
+ * `orgId` يربط كل بطاقة بعقدتها في شجرة الهيكل — فتظهر بطاقات الوصف
+ * تلقائيًّا عند اختيار الصندوق في الصفحة التفاعلية.
  */
 
 export const JOBS = [
   {
     "id": "J01",
-    "title": "مدير إدارة التوثيق والاعتماد",
+    "orgId": "sec-doc",
+    "title": "رئيس قسم التوثيق والاعتماد",
     "icon": "🛡️",
-    "layer": "العمود التشغيلي الأول — Operational Pillar",
+    "layer": "قسم التوثيق والاعتماد",
     "odooRole": "Documentation & Accreditation Manager",
     "odooLevel": "Admin",
     "modules": "Inventory (Entry/Post), Audit Logs",
@@ -28,15 +29,16 @@ export const JOBS = [
       "مراجعة سجلات الأنشطة (Audit Logs) يومياً والتحقق من الالتزام بمسارات الموافقة المعتمدة",
       "تقديم تقارير دورية للإدارة العامة حول اكتمال ودقة التوثيق"
     ],
-    "reportingTo": "الإدارة العامة (تبعية مباشرة)",
+    "reportingTo": "مدير إدارة السلاسل والإمداد والمخازن",
     "kpis": "نسبة اكتمال التوثيق، دقة الترحيل، الالتزام بالدورة المستندية",
     "occupied": true
   },
   {
     "id": "J02",
-    "title": "مدير إدارة سلاسل الإمداد",
+    "orgId": "mgmt-logistics",
+    "title": "مدير إدارة الخدمات اللوجستية والخدمية",
     "icon": "💻",
-    "layer": "العمود التشغيلي الثاني — Operational Pillar",
+    "layer": "القيادة العليا — تبعية مباشرة",
     "odooRole": "Supply Chain Manager",
     "odooLevel": "Admin",
     "modules": "Purchase, Inventory, Planning",
@@ -50,15 +52,16 @@ export const JOBS = [
       "تحليل كفاءة العمليات الميدانية وتقديم الدعم اللوجستي للمستودعات",
       "المسؤول عن جاهزية الأسطول والمعدات والقوى العاملة"
     ],
-    "reportingTo": "الإدارة العامة",
+    "reportingTo": "مدير إدارة السلاسل والإمداد والمخازن",
     "kpis": "جاهزية الأسطول، كفاءة توزيع العمالة، تكلفة النقل",
     "occupied": true
   },
   {
     "id": "J03",
-    "title": "مدير إدارة المستودعات",
+    "orgId": "sec-wh-ops",
+    "title": "رئيس قسم عمليات المستودعات",
     "icon": "🧭",
-    "layer": "العمود التشغيلي الثالث — Operational Pillar",
+    "layer": "قسم عمليات المستودعات",
     "odooRole": "Warehouse Manager",
     "odooLevel": "Admin",
     "modules": "Inventory, Barcode, Quality",
@@ -72,12 +75,13 @@ export const JOBS = [
       "المسؤول عن مطابقة الجرد الفعلي مع النظام (Stock Accountability)",
       "سلطة اتخاذ القرار في تنفيذ الحركات المخزونية اليومية"
     ],
-    "reportingTo": "الإدارة العامة",
+    "reportingTo": "مدير إدارة السلاسل والإمداد والمخازن",
     "kpis": "دقة المخزون (98.5%+)، إنتاجية السحب، سرعة الاستلام",
     "occupied": false
   },
   {
     "id": "J04",
+    "orgId": "support-quality",
     "title": "مدير إدارة الجودة",
     "icon": "🔬",
     "layer": "وظيفة مساندة — Support Function",
@@ -100,6 +104,7 @@ export const JOBS = [
   },
   {
     "id": "J05",
+    "orgId": "support-commercial",
     "title": "مدير الإدارة التجارية",
     "icon": "💼",
     "layer": "وظيفة مساندة — Support Function",
@@ -121,6 +126,7 @@ export const JOBS = [
   },
   {
     "id": "J06",
+    "orgId": "support-finance",
     "title": "مدير إدارة المالية",
     "icon": "💰",
     "layer": "وظيفة مساندة — Support Function",
@@ -142,6 +148,7 @@ export const JOBS = [
   },
   {
     "id": "J07",
+    "orgId": "support-it",
     "title": "مدير الإدارة التقنية",
     "icon": "💾",
     "layer": "وظيفة مساندة — Support Function",
@@ -163,6 +170,7 @@ export const JOBS = [
   },
   {
     "id": "J08",
+    "orgId": "support-hr",
     "title": "مدير الموارد البشرية",
     "icon": "👥",
     "layer": "وظيفة مساندة — Support Function",
@@ -184,6 +192,7 @@ export const JOBS = [
   },
   {
     "id": "J09",
+    "orgId": "sec-transport",
     "title": "قسم العمليات اللوجستية",
     "icon": "⚙️",
     "layer": "وحدة تشغيلية (سلاسل الإمداد)",
@@ -204,6 +213,7 @@ export const JOBS = [
   },
   {
     "id": "J10",
+    "orgId": "sec-wh-ops",
     "title": "قسم عمليات المستودع",
     "icon": "📦",
     "layer": "وحدة تشغيلية (المستودعات)",
@@ -224,6 +234,7 @@ export const JOBS = [
   },
   {
     "id": "J11",
+    "orgId": "support-quality",
     "title": "موظف الجودة",
     "icon": "🔬",
     "layer": "وظيفة رقابية مساندة",
@@ -244,6 +255,7 @@ export const JOBS = [
   },
   {
     "id": "J12",
+    "orgId": "support-commercial",
     "title": "موظف التجارية / المشتريات",
     "icon": "🛒",
     "layer": "وظيفة دعم تجاري",
@@ -264,6 +276,7 @@ export const JOBS = [
   },
   {
     "id": "J13",
+    "orgId": "support-finance",
     "title": "موظف المالية / المحاسبة",
     "icon": "📊",
     "layer": "وظيفة دعم مالي",
@@ -284,6 +297,7 @@ export const JOBS = [
   },
   {
     "id": "J14",
+    "orgId": "support-it",
     "title": "موظف تقنية المعلومات",
     "icon": "💾",
     "layer": "وظيفة دعم تقني",
@@ -304,6 +318,7 @@ export const JOBS = [
   },
   {
     "id": "J15",
+    "orgId": "unit-doc-approve",
     "title": "موظف التوثيق والاعتماد",
     "icon": "⚖️",
     "layer": "وحدة التوثيق والاعتماد",
@@ -325,6 +340,7 @@ export const JOBS = [
   },
   {
     "id": "J16",
+    "orgId": "mgmt-logistics",
     "title": "مدير العمليات (Operations Manager)",
     "icon": "⚙️",
     "layer": "قسم العمليات اللوجستية",
@@ -345,6 +361,7 @@ export const JOBS = [
   },
   {
     "id": "J17",
+    "orgId": "sec-wh-ops",
     "title": "رئيس قسم عمليات المستودع",
     "icon": "📦",
     "layer": "قسم عمليات المستودع",
@@ -365,6 +382,7 @@ export const JOBS = [
   },
   {
     "id": "J18",
+    "orgId": "sec-transport",
     "title": "موظف النقل والحركة",
     "icon": "🚚",
     "layer": "العمليات اللوجستية",
@@ -384,9 +402,10 @@ export const JOBS = [
   },
   {
     "id": "J19",
-    "title": "مدير المستودع التنفيذي",
+    "orgId": "root",
+    "title": "مدير إدارة السلاسل والإمداد والمخازن",
     "icon": "👔",
-    "layer": "الإدارة التنفيذية للمستودعات",
+    "layer": "القيادة العليا — Executive Leadership",
     "odooRole": "Executive Warehouse Manager",
     "odooLevel": "Admin",
     "modules": "Inventory, Barcode, Quality, Fleet",
@@ -401,10 +420,11 @@ export const JOBS = [
     ],
     "reportingTo": "الإدارة العامة",
     "kpis": "دقة المخزون، إنتاجية العمليات، رضا العملاء",
-    "occupied": false
+    "occupied": true
   },
   {
     "id": "J20",
+    "orgId": "unit-doc-sops",
     "title": "فريق صياغة المعايير والإجراءات (SOPs)",
     "icon": "📋",
     "layer": "وحدة التوثيق والاعتماد",
@@ -416,7 +436,7 @@ export const JOBS = [
     "duties": [
       "صياغة وتوثيق معايير التشغيل الموحدة (SOPs) لجميع العمليات",
       "تحديث الإجراءات بناءً على التطورات والدروس المستفادة",
-      "ضمان وضوح الإجراءات ووسهولة فهمها من قبل جميع الموظفين",
+      "ضمان وضوح الإجراءات وسهولة فهمها من قبل جميع الموظفين",
       "توثيق أفضل الممارسات وتعميمها على جميع الفروع"
     ],
     "reportingTo": "إدارة التوثيق والاعتماد",
@@ -425,6 +445,7 @@ export const JOBS = [
   },
   {
     "id": "J21",
+    "orgId": "unit-doc-posting",
     "title": "موظف إدخال وترحيل الحركات المخزنية",
     "icon": "📊",
     "layer": "وحدة التوثيق والاعتماد",
@@ -445,6 +466,7 @@ export const JOBS = [
   },
   {
     "id": "J22",
+    "orgId": "sec-maintenance",
     "title": "مدير الصيانة والمعدات",
     "icon": "🔧",
     "layer": "وحدة صيانة الأسطول والمعدات",
@@ -465,6 +487,7 @@ export const JOBS = [
   },
   {
     "id": "J23",
+    "orgId": "sec-safety",
     "title": "فريق الأمن الصناعي والسلامة",
     "icon": "🛡️",
     "layer": "وحدة الأمن والسلامة",
@@ -485,6 +508,7 @@ export const JOBS = [
   },
   {
     "id": "J24",
+    "orgId": "unit-outsourced-labor",
     "title": "وحدة إدارة العمالة الخارجية",
     "icon": "👷",
     "layer": "وحدة تشغيل العمالة",
@@ -505,6 +529,7 @@ export const JOBS = [
   },
   {
     "id": "J25",
+    "orgId": "unit-receiving",
     "title": "وحدة الاستلام والرقابة",
     "icon": "🔍",
     "layer": "قسم عمليات المستودع",
@@ -525,6 +550,7 @@ export const JOBS = [
   },
   {
     "id": "J26",
+    "orgId": "sub-doc-verify",
     "title": "موظف قسم التحقق من المستندات",
     "icon": "📄",
     "layer": "قسم عمليات المستودع",
@@ -545,6 +571,7 @@ export const JOBS = [
   },
   {
     "id": "J27",
+    "orgId": "unit-storage",
     "title": "وحدة التخزين وتحديد المواقع",
     "icon": "📍",
     "layer": "قسم عمليات المستودع",
@@ -565,6 +592,7 @@ export const JOBS = [
   },
   {
     "id": "J28",
+    "orgId": "sub-dry",
     "title": "قسم التخزين الجاف",
     "icon": "📦",
     "layer": "قسم عمليات المستودع",
@@ -585,6 +613,7 @@ export const JOBS = [
   },
   {
     "id": "J29",
+    "orgId": "sub-cold",
     "title": "قسم التخزين البارد",
     "icon": "❄️",
     "layer": "قسم عمليات المستودع",
@@ -605,6 +634,7 @@ export const JOBS = [
   },
   {
     "id": "J30",
+    "orgId": "sub-barcode",
     "title": "قسم الباركود والتسمية",
     "icon": "📲",
     "layer": "قسم عمليات المستودع",
@@ -625,6 +655,7 @@ export const JOBS = [
   },
   {
     "id": "J31",
+    "orgId": "unit-picking",
     "title": "وحدة تحضير الطلبات والصرف",
     "icon": "🎯",
     "layer": "قسم عمليات المستودع",
@@ -645,6 +676,7 @@ export const JOBS = [
   },
   {
     "id": "J32",
+    "orgId": "sub-pick",
     "title": "قسم الانتقاء (Picking)",
     "icon": "👆",
     "layer": "قسم عمليات المستودع",
@@ -665,6 +697,7 @@ export const JOBS = [
   },
   {
     "id": "J33",
+    "orgId": "sub-pack",
     "title": "قسم التعبئة والتغليف",
     "icon": "📦",
     "layer": "قسم عمليات المستودع",
@@ -685,6 +718,7 @@ export const JOBS = [
   },
   {
     "id": "J34",
+    "orgId": "sub-ship",
     "title": "قسم الشحن والتوزيع",
     "icon": "🚚",
     "layer": "قسم عمليات المستودع",
@@ -705,6 +739,7 @@ export const JOBS = [
   },
   {
     "id": "J35",
+    "orgId": "unit-returns",
     "title": "وحدة إدارة المرتجعات",
     "icon": "🔄",
     "layer": "قسم عمليات المستودع",
@@ -725,6 +760,7 @@ export const JOBS = [
   },
   {
     "id": "J36",
+    "orgId": "sub-ret-receive",
     "title": "قسم استلام المرتجعات",
     "icon": "📥",
     "layer": "قسم عمليات المستودع",

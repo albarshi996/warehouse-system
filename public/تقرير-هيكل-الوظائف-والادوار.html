@@ -130,6 +130,9 @@ tr:hover td{background:rgba(200,157,59,0.04);}
 .org-node.root { background: rgba(200,157,59,0.2); border-color: var(--gold); font-weight: 700; font-size: 15px; }
 .org-node.dept { background: rgba(27,58,92,0.6); border-color: rgba(200,157,59,0.4); }
 .org-node.unit { background: rgba(255,255,255,0.05); border-color: rgba(200,157,59,0.2); font-size: 12px; }
+/* بند مقترح لم يُعتمد بعد — إطار متقطّع يميّزه عن المعتمد */
+.org-node.proposed { border-style: dashed; opacity: .82; }
+.org-node .who { display: block; font-size: 10px; font-weight: 400; opacity: .75; margin-top: 3px; }
 
 /* ===== ORG CHART (Legacy) ===== */
 .org-wrap{text-align:center;margin:24px 0;}
@@ -633,95 +636,25 @@ button.job-item{width:100%;text-align:right;font-family:'Cairo',sans-serif;}
   <div class="sec-label">// القسم الثاني</div>
   <div class="sec-title">شجرة الهيكل التنظيمي الكامل</div>
 
+<!-- ORG:TREE:START — مولَّد من src/data/org-structure.json — لا تحرّره يدويًّا -->
   <div class="org-tree">
-    <ul>
-      <li>
-        <div class="org-node root">مدير المستودع التنفيذي</div>
-        <ul>
-          <li>
-            <div class="org-node dept">إدارة التوثيق والاعتماد</div>
-            <ul>
-              <li>
-                <div class="org-node unit">التوثيق والاعتماد</div>
-                <ul>
-                  <li><div class="org-node unit">توثيق واعتماد المستندات</div></li>
-                  <li><div class="org-node unit">فريق صياغة SOPs</div></li>
-                  <li><div class="org-node unit">إدخال وترحيل الحركات المخزنية بالنظام</div></li>
-                </ul>
-              </li>
-            </ul>
-          </li>
-          <li>
-            <div class="org-node dept">إدارة سلاسل الإمداد</div>
-            <ul>
-              <li>
-                <div class="org-node unit">قسم العمليات اللوجستية</div>
-                <ul>
-                  <li><div class="org-node unit">مدير العمليات</div></li>
-                  <li><div class="org-node unit">وحدة النقل والحركة</div></li>
-                  <li><div class="org-node unit">وحدة صيانة الأسطول والمعدات</div></li>
-                  <li><div class="org-node unit">فريق الأمن الصناعي والسلامة</div></li>
-                  <li><div class="org-node unit">وحدة إدارة العمالة الخارجية</div></li>
-                </ul>
-              </li>
-            </ul>
-          </li>
-          <li>
-            <div class="org-node dept">إدارة المستودعات</div>
-            <ul>
-              <li>
-                <div class="org-node unit">قسم عمليات المستودع</div>
-                <ul>
-                  <li>
-                    <div class="org-node unit">وحدة الاستلام والرقابة</div>
-                    <ul>
-                      <li><div class="org-node unit">قسم استلام البضاعة</div></li>
-                      <li><div class="org-node unit">قسم التحقق من المستندات</div></li>
-                      <li><div class="org-node unit">قسم فحص الجودة عند الاستلام</div></li>
-                    </ul>
-                  </li>
-                  <li>
-                    <div class="org-node unit">وحدة التخزين وتحديد المواقع</div>
-                    <ul>
-                      <li><div class="org-node unit">قسم التخزين الجاف</div></li>
-                      <li><div class="org-node unit">قسم التخزين البارد</div></li>
-                      <li><div class="org-node unit">قسم الباركود والتسمية</div></li>
-                    </ul>
-                  </li>
-                  <li>
-                    <div class="org-node unit">وحدة تحضير الطلبات والصرف</div>
-                    <ul>
-                      <li><div class="org-node unit">قسم الانتقاء (Picking)</div></li>
-                      <li><div class="org-node unit">قسم التعبئة والتغليف</div></li>
-                      <li><div class="org-node unit">قسم الشحن والتوزيع</div></li>
-                    </ul>
-                  </li>
-                  <li>
-                    <div class="org-node unit">وحدة إدارة المرتجعات</div>
-                    <ul>
-                      <li><div class="org-node unit">قسم استلام المرتجعات</div></li>
-                      <li><div class="org-node unit">قسم إعادة التقييم والتصرف</div></li>
-                    </ul>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </li>
-    </ul>
+    <ul><li><div class="org-node root">🏛️ إدارة السلاسل والإمداد والمخازن<span class="who">👤 محمد البرشي</span></div><ul><li><div class="org-node root">🚚 إدارة الخدمات اللوجستية والخدمية<span class="who">👤 رمزي الباش</span></div><ul><li><div class="org-node dept">🛣️ قسم النقل والحركة</div><ul><li><div class="org-node unit">وحدة الأسطول والسائقين</div></li><li><div class="org-node unit proposed">وحدة تصاريح البوابة والرحلات</div></li><li><div class="org-node unit proposed">وحدة الاستلام والتسليم اليومي</div></li></ul></li><li><div class="org-node dept">🔧 قسم الصيانة والمعدات</div><ul><li><div class="org-node unit">وحدة صيانة المركبات</div></li><li><div class="org-node unit">وحدة صيانة المعدات</div></li><li><div class="org-node unit proposed">وحدة المرافق</div></li></ul></li><li><div class="org-node dept">🦺 قسم الأمن الصناعي والسلامة</div></li><li><div class="org-node dept proposed">🧰 قسم الخدمات المساندة</div><ul><li><div class="org-node unit">وحدة إدارة العمالة الخارجية</div></li><li><div class="org-node unit proposed">وحدة العُهد العينية</div></li></ul></li></ul></li><li><div class="org-node dept">🛡️ قسم التوثيق والاعتماد</div><ul><li><div class="org-node unit">وحدة توثيق واعتماد المستندات</div></li><li><div class="org-node unit">وحدة صياغة المعايير والإجراءات (SOPs)</div></li><li><div class="org-node unit">وحدة إدخال وترحيل الحركات المخزنية</div></li></ul></li><li><div class="org-node dept proposed">📈 قسم التخطيط والتوريد</div><ul><li><div class="org-node unit proposed">وحدة تخطيط الاحتياجات</div></li><li><div class="org-node unit proposed">وحدة متابعة الموردين</div></li><li><div class="org-node unit proposed">وحدة ماستر الأصناف والأرصدة</div></li></ul></li><li><div class="org-node dept">🧭 قسم عمليات المستودعات</div><ul><li><div class="org-node unit">وحدة الاستلام والرقابة</div><ul><li><div class="org-node unit">استلام البضاعة</div></li><li><div class="org-node unit">التحقق من المستندات</div></li><li><div class="org-node unit">فحص الجودة عند الاستلام</div></li></ul></li><li><div class="org-node unit">وحدة التخزين وتحديد المواقع</div><ul><li><div class="org-node unit">التخزين الجاف</div></li><li><div class="org-node unit">التخزين البارد</div></li><li><div class="org-node unit">الباركود والتسمية</div></li></ul></li><li><div class="org-node unit">وحدة تحضير الطلبات والصرف</div><ul><li><div class="org-node unit">الانتقاء (Picking)</div></li><li><div class="org-node unit">التعبئة والتغليف</div></li><li><div class="org-node unit">الشحن والتوزيع</div></li></ul></li><li><div class="org-node unit">وحدة إدارة المرتجعات</div><ul><li><div class="org-node unit">استلام المرتجعات</div></li><li><div class="org-node unit">إعادة التقييم والتصرف</div></li></ul></li></ul></li></ul></li></ul>
   </div>
+<!-- ORG:TREE:END -->
 
-  <!-- Support Functions Band -->
-  <div class="support-band" style="margin-top: 60px; display: flex; justify-content: center; gap: 20px; position: relative; border-top: 2px dashed var(--gold); padding-top: 20px;">
+    <!-- Support Functions Band -->
+<!-- ORG:SUPPORT:START — مولَّد من src/data/org-structure.json — لا تحرّره يدويًّا -->
+  <div class="support-band" style="margin-top: 60px; display: flex; justify-content: center; gap: 20px; position: relative; border-top: 2px dashed var(--gold); padding-top: 20px; flex-wrap: wrap;">
     <div style="position: absolute; top: -60px; left: 50%; border-left: 2px dashed var(--gold); height: 60px;"></div>
-    <div class="org-node unit" style="border-style: dashed; background: rgba(200,157,59,0.05);">إدارة الجودة (Quality Management)<br>ISO 9001</div>
-    <div class="org-node unit" style="border-style: dashed; background: rgba(200,157,59,0.05);">نظام المعلومات وERP (IT & ERP)<br>Odoo 17</div>
-    <div class="org-node unit" style="border-style: dashed; background: rgba(200,157,59,0.05);">المشتريات (Procurement)<br>Purchase Module</div>
-    <div class="org-node unit" style="border-style: dashed; background: rgba(200,157,59,0.05);">Financial Management (االادارة المالية)<br>Accounting Module</div>
+    <div class="org-node unit" style="border-style: dashed; background: rgba(200,157,59,0.05);">🔬 إدارة الجودة<br>ISO 9001 / HACCP</div>
+    <div class="org-node unit" style="border-style: dashed; background: rgba(200,157,59,0.05);">💾 تقنية المعلومات<br>Odoo Enterprise</div>
+    <div class="org-node unit" style="border-style: dashed; background: rgba(200,157,59,0.05);">💼 المشتريات والإدارة التجارية<br>Purchase Module</div>
+    <div class="org-node unit" style="border-style: dashed; background: rgba(200,157,59,0.05);">💰 الإدارة المالية<br>Accounting Module</div>
+    <div class="org-node unit" style="border-style: dashed; background: rgba(200,157,59,0.05);">👥 الموارد البشرية<br>Recruitment &amp; Training</div>
   </div>
+<!-- ORG:SUPPORT:END -->
 
-  <p style="font-size:12px;color:var(--gray);margin-top:40px;padding:12px 16px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid var(--line);">
+    <p style="font-size:12px;color:var(--gray);margin-top:40px;padding:12px 16px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid var(--line);">
     📌 الأعداد الموضحة تمثل التخطيط الكامل (المرحلة الثانية). في التشغيل الأولي يُكتفى بـ 50–60 موظف جوهري موزعين على 4 أقسام نشطة.
   </p>
 
@@ -910,8 +843,8 @@ const kpiDetail = [
 const jobs = [
   {
     "icon": "🛡️",
-    "title": "مدير إدارة التوثيق والاعتماد",
-    "layer": "العمود التشغيلي الأول — Operational Pillar",
+    "title": "رئيس قسم التوثيق والاعتماد",
+    "layer": "قسم التوثيق والاعتماد",
     "odooRole": "Documentation & Accreditation Manager",
     "odooLevel": "Admin",
     "modules": "Inventory (Entry/Post), Audit Logs",
@@ -926,13 +859,14 @@ const jobs = [
       "تقديم تقارير دورية للإدارة العامة حول اكتمال ودقة التوثيق",
       "📌 الحالة: هذا المنصب مشغول حالياً"
     ],
-    "reportingTo": "الإدارة العامة (تبعية مباشرة)",
+    "reportingTo": "مدير إدارة السلاسل والإمداد والمخازن",
     "kpis": "نسبة اكتمال التوثيق، دقة الترحيل، الالتزام بالدورة المستندية"
   },
   {
     "icon": "💻",
-    "title": "مدير إدارة سلاسل الإمداد",
-    "layer": "العمود التشغيلي الثاني — Operational Pillar",
+    "title": "مدير إدارة الخدمات اللوجستية والخدمية",
+    "holder": "رمزي الباش",
+    "layer": "القيادة العليا — تبعية مباشرة",
     "odooRole": "Supply Chain Manager",
     "odooLevel": "Admin",
     "modules": "Purchase, Inventory, Planning",
@@ -947,13 +881,13 @@ const jobs = [
       "المسؤول عن جاهزية الأسطول والمعدات والقوى العاملة",
       "📌 الحالة: هذا المنصب مشغول حالياً"
     ],
-    "reportingTo": "الإدارة العامة",
+    "reportingTo": "مدير إدارة السلاسل والإمداد والمخازن",
     "kpis": "جاهزية الأسطول، كفاءة توزيع العمالة، تكلفة النقل"
   },
   {
     "icon": "🧭",
-    "title": "مدير إدارة المستودعات",
-    "layer": "العمود التشغيلي الثالث — Operational Pillar",
+    "title": "رئيس قسم عمليات المستودعات",
+    "layer": "قسم عمليات المستودعات",
     "odooRole": "Warehouse Manager",
     "odooLevel": "Admin",
     "modules": "Inventory, Barcode, Quality",
@@ -967,7 +901,7 @@ const jobs = [
       "المسؤول عن مطابقة الجرد الفعلي مع النظام (Stock Accountability)",
       "سلطة اتخاذ القرار في تنفيذ الحركات المخزونية اليومية"
     ],
-    "reportingTo": "الإدارة العامة",
+    "reportingTo": "مدير إدارة السلاسل والإمداد والمخازن",
     "kpis": "دقة المخزون (98.5%+)، إنتاجية السحب، سرعة الاستلام"
   },
   {
@@ -987,8 +921,8 @@ const jobs = [
       "التحقق من سلامة سلسلة التبريد ومعايير التخزين والتحضير",
       "رفع تقارير عدم المطابقة ومتابعة فعاليتها التحسينية"
     ],
-    "functionalReporting": "الإدارة العامة",
-    "operationalReporting": "إدارة الجودة (إدارة مساندة مستقلة) — دون ارتباط تشغيلي بإدارة المستودعات"
+    "operationalReporting": "إدارة الجودة (إدارة مساندة مستقلة) — دون ارتباط تشغيلي بإدارة المستودعات",
+    "functionalReporting": "الإدارة العامة"
   },
   {
     "icon": "💼",
@@ -1006,8 +940,8 @@ const jobs = [
       "المسؤول عن دورة الشراء من الطلب وحتى وصول البضاعة للمستودع",
       "التنسيق مع المالية لضمان سداد مستحقات الموردين وتطبيق العقود"
     ],
-    "functionalReporting": "الإدارة العامة",
-    "operationalReporting": "إدارة سلاسل الإمداد (دعم التوريد)"
+    "operationalReporting": "إدارة سلاسل الإمداد (دعم التوريد)",
+    "functionalReporting": "الإدارة العامة"
   },
   {
     "icon": "💰",
@@ -1025,8 +959,8 @@ const jobs = [
       "الإشراف على عمليات الجرد المالي السنوي والمطابقة الدفترية",
       "إصدار التقارير المالية الدورية للإدارة العامة"
     ],
-    "functionalReporting": "الإدارة العامة",
-    "operationalReporting": "إدارة المستودعات (رقابة الأصول)"
+    "operationalReporting": "إدارة المستودعات (رقابة الأصول)",
+    "functionalReporting": "الإدارة العامة"
   },
   {
     "icon": "💾",
@@ -1044,8 +978,8 @@ const jobs = [
       "إدارة صلاحيات الوصول بناءً على مصفوفة الحوكمة المعتمدة",
       "مواكبة التطورات التقنية لتحسين كفاءة العمليات الرقمية"
     ],
-    "functionalReporting": "الإدارة العامة",
-    "operationalReporting": "إدارة سلاسل الإمداد (دعم الأنظمة)"
+    "operationalReporting": "إدارة سلاسل الإمداد (دعم الأنظمة)",
+    "functionalReporting": "الإدارة العامة"
   },
   {
     "icon": "👥",
@@ -1114,8 +1048,8 @@ const jobs = [
       "مراقبة درجات الحرارة وصلاحية المنتجات ونظافة المرافق",
       "التحقق من التزام العمالة بالمعايير الصحية والمهنية"
     ],
-    "functionalReporting": "إدارة الجودة",
-    "operationalReporting": "إدارة الجودة (إدارة مساندة مستقلة)"
+    "operationalReporting": "إدارة الجودة (إدارة مساندة مستقلة)",
+    "functionalReporting": "إدارة الجودة"
   },
   {
     "icon": "🛒",
@@ -1132,8 +1066,8 @@ const jobs = [
       "تحديث بيانات الأصناف والموردين في نظام أودو",
       "التنسيق مع المستودع لجدولة الاستلامات الواردة"
     ],
-    "functionalReporting": "الإدارة التجارية",
-    "operationalReporting": "إدارة سلاسل الإمداد"
+    "operationalReporting": "إدارة سلاسل الإمداد",
+    "functionalReporting": "الإدارة التجارية"
   },
   {
     "icon": "📊",
@@ -1150,8 +1084,8 @@ const jobs = [
       "المشاركة في عمليات الجرد الفعلي ومطابقته دفترياً",
       "إعداد مسودات التقارير المالية الشهرية"
     ],
-    "functionalReporting": "إدارة المالية",
-    "operationalReporting": "إدارة المستودعات"
+    "operationalReporting": "إدارة المستودعات",
+    "functionalReporting": "إدارة المالية"
   },
   {
     "icon": "💾",
@@ -1168,8 +1102,8 @@ const jobs = [
       "إدارة صلاحيات الوصول للمستخدمين بناءً على مصفوفة الأدوار",
       "توفير التدريب المستمر للموظفين على الأدوات التقنية الجديدة"
     ],
-    "functionalReporting": "الإدارة التقنية",
-    "operationalReporting": "إدارة سلاسل الإمداد"
+    "operationalReporting": "إدارة سلاسل الإمداد",
+    "functionalReporting": "الإدارة التقنية"
   },
   {
     "icon": "⚖️",
@@ -1241,8 +1175,9 @@ const jobs = [
   },
   {
     "icon": "👔",
-    "title": "مدير المستودع التنفيذي",
-    "layer": "الإدارة التنفيذية للمستودعات",
+    "title": "مدير إدارة السلاسل والإمداد والمخازن",
+    "holder": "محمد البرشي",
+    "layer": "القيادة العليا — Executive Leadership",
     "odooRole": "Executive Warehouse Manager",
     "odooLevel": "Admin",
     "modules": "Inventory, Barcode, Quality, Fleet",
@@ -1253,7 +1188,8 @@ const jobs = [
       "ضمان تحقيق الأهداف الاستراتيجية ومعايير الأداء الشاملة",
       "التنسيق بين جميع الأقسام التشغيلية وضمان التكامل بينها",
       "اتخاذ القرارات الإدارية الحرجة بشأن توزيع الموارد والاستثمارات",
-      "تقديم التقارير الشهرية للإدارة العامة حول أداء المستودع"
+      "تقديم التقارير الشهرية للإدارة العامة حول أداء المستودع",
+      "📌 الحالة: هذا المنصب مشغول حالياً"
     ],
     "reportingTo": "الإدارة العامة",
     "kpis": "دقة المخزون، إنتاجية العمليات، رضا العملاء"
@@ -1690,52 +1626,64 @@ const odooRoles = [
 
 const orgTable = [
   {
-    "dept": "🛡️ إدارة التوثيق والاعتماد",
+    "dept": "🏛️ إدارة السلاسل والإمداد والمخازن",
     "p1": "1 مدير (مشغول)",
-    "p2": "مدير + فريق توثيق",
-    "role": "العمود التشغيلي 1: توثيق واعتماد المستندات، إدخال وترحيل الحركات المخزنية بالنظام"
+    "p2": "مدير + مساعدون",
+    "role": "القيادة العليا: ملكية المخزون والتخطيط والتكامل بين الأقسام"
   },
   {
-    "dept": "💻 إدارة سلاسل الإمداد",
+    "dept": "🚚 إدارة الخدمات اللوجستية والخدمية",
     "p1": "1 مدير (مشغول)",
     "p2": "مدير + رؤساء أقسام",
-    "role": "العمود التشغيلي 2: التخطيط، اللوجستيات، التوريد"
+    "role": "النقل والحركة، الصيانة، السلامة، الخدمات المساندة"
   },
   {
-    "dept": "🧭 إدارة المستودعات",
-    "p1": "1 مدير",
-    "p2": "1 + مدراء فروع",
-    "role": "العمود التشغيلي 3: ملكية المخزون، العمليات الميدانية"
+    "dept": "🛡️ قسم التوثيق والاعتماد",
+    "p1": "1 رئيس قسم",
+    "p2": "رئيس + فريق توثيق",
+    "role": "توثيق واعتماد المستندات، إدخال وترحيل الحركات المخزنية"
   },
   {
-    "dept": "🔬 إدارة الجودة",
+    "dept": "📈 قسم التخطيط والتوريد",
+    "p1": "1 موظف",
+    "p2": "رئيس + فريق تخطيط",
+    "role": "تخطيط الاحتياجات، متابعة الموردين، ماستر الأصناف"
+  },
+  {
+    "dept": "🧭 قسم عمليات المستودعات",
+    "p1": "1 رئيس قسم",
+    "p2": "رئيس + رؤساء وحدات",
+    "role": "الاستلام، التخزين، التحضير والصرف، المرتجعات"
+  },
+  {
+    "dept": "🔬 إدارة الجودة (مساندة)",
     "p1": "1 مدير",
     "p2": "مدير + فريق جودة",
-    "role": "وظيفة مساندة: التدقيق الفني، فحص الجودة، CAPA"
+    "role": "التدقيق الفني، فحص الجودة، CAPA"
   },
   {
-    "dept": "💼 الإدارة التجارية",
+    "dept": "💼 المشتريات (مساندة)",
     "p1": "1 مدير",
     "p2": "مدير + مشتريات",
-    "role": "وظيفة مساندة: المشتريات، العقود، علاقات الموردين"
+    "role": "المشتريات، العقود، علاقات الموردين"
   },
   {
-    "dept": "💰 إدارة المالية",
+    "dept": "💰 الإدارة المالية (مساندة)",
     "p1": "1 مدير",
     "p2": "مدير + محاسبة",
-    "role": "وظيفة مساندة: الرقابة المالية، الميزانيات، التدقيق"
+    "role": "الرقابة المالية، الميزانيات، التدقيق"
   },
   {
-    "dept": "💾 الإدارة التقنية",
+    "dept": "💾 تقنية المعلومات (مساندة)",
     "p1": "1 موظف",
     "p2": "مدير + فريق IT",
-    "role": "وظيفة مساندة: الأنظمة (Odoo)، البنية التحتية"
+    "role": "الأنظمة (Odoo)، البنية التحتية"
   },
   {
-    "dept": "👥 الموارد البشرية",
+    "dept": "👥 الموارد البشرية (مساندة)",
     "p1": "1 موظف",
     "p2": "مدير + فريق HR",
-    "role": "وظيفة مساندة: التوظيف، التدريب، شؤون الموظفين"
+    "role": "التوظيف، التدريب، شؤون الموظفين"
   },
   {
     "dept": "📊 الإجمالي التقريبي",

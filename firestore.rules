@@ -353,6 +353,23 @@ service cloud.firestore {
       }
     }
 
+    // ── الهيكل التنظيمي (المصدر الواحد للحقيقة) ──────────────────
+    // وثيقة تنظيمية تُعرض على سبع إدارات وتُعتمد من الإدارة العامة ⇒
+    // يقرؤها كل مصادَق (الموظّف يرى موقعه)، ويكتبها المديران وحدهما.
+    // اللقطات في `versions` **لا تُعدَّل ولا تُحذف أبدًا** — بلا ذلك تصير
+    // مقارنة «قبل/بعد» في التقرير النهائي ادّعاءً لا دليلًا.
+    match /org_structure/{docId} {
+      allow read: if signedIn();
+      allow create, update: if isManager();
+      allow delete: if false;
+
+      match /versions/{versionId} {
+        allow read: if signedIn();
+        allow create: if isManager();
+        allow update, delete: if false;
+      }
+    }
+
     // ── الافتراضي: امنع كل ما لم يُذكر صراحةً ────────────────────
     match /{document=**} {
       allow read, write: if false;

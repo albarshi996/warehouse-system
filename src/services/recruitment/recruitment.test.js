@@ -3,9 +3,13 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { validateCv, base64Size, MAX_CV_BYTES } from './cvFile.js';
 import { JOBS, getJob, jobOptions } from './jobsCatalog.js';
+
+/** مصدر الهيكل الواحد — الكتالوج مولَّد منه، فيُقاس عليه لا على رقم ثابت. */
+const ORG = JSON.parse(readFileSync(new URL('../../data/org-structure.json', import.meta.url), 'utf8'));
 
 // ── السيرة الذاتية ─────────────────────────────────────────────────
 test('🚨 حد 700KB يحمي سقف مستند Firestore (ميغابايت واحد بعد الترميز)', () => {
@@ -34,9 +38,29 @@ test('الحد نفسه بالضبط مقبول (لا خطأ الحدود)', () 
   assert.equal(validateCv({ name: 'cv.pdf', size: MAX_CV_BYTES, type: 'application/pdf' }).ok, true);
 });
 
-// ── كتالوج الوظائف (مولَّد من ملف الهيكل الرسمي) ───────────────────
-test('الكتالوج يحمل 18 وظيفة الهيكل الرسمي كاملة', () => {
-  assert.equal(JOBS.length, 18);
+// ── كتالوج الوظائف (مولَّد من `src/data/org-structure.json`) ────────
+// كان هذا الاختبار يتوقّع 18 بينما الكتالوج يحمل 36 منذ توليده من ملف
+// الهيكل الكامل — فظلّ أحمر. الآن يُقاس **من المصدر نفسه** فلا يتقادم
+// كلّما أضاف المالك وظيفةً أو حذفها من الهيكل.
+test('الكتالوج يطابق بطاقات الوصف في مصدر الهيكل عددًا ومعرّفات', () => {
+  assert.equal(JOBS.length, ORG.jobs.length);
+  assert.ok(JOBS.length >= 18, 'الهيكل الرسمي لا يقلّ عن 18 وظيفة');
+  assert.deepEqual(
+    JOBS.map((j) => j.id),
+    ORG.jobs.map((j) => j.id)
+  );
+});
+
+test('كل وظيفة في الكتالوج مربوطة بعقدة في شجرة الهيكل', () => {
+  const ids = new Set();
+  const walk = (n) => {
+    ids.add(n.id);
+    (n.children || []).forEach(walk);
+  };
+  walk(ORG.tree);
+  ORG.supportFunctions.forEach((s) => ids.add(s.id));
+  const orphans = JOBS.filter((j) => !ids.has(j.orgId)).map((j) => `${j.id} → ${j.orgId}`);
+  assert.deepEqual(orphans, []);
 });
 
 test('كل وظيفة كاملة الحقول: معرّف فريد · مسمّى · مهام · تبعية', () => {

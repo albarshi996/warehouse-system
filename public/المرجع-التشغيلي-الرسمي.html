@@ -534,6 +534,9 @@ tr:hover td { background: #fff8f0; }
 .org-node.dept  { background: #e8f0f8; border-color: var(--blue); }
 .org-node.unit  { background: var(--bg-gray); border-color: var(--border); font-size: 11px; }
 .org-node.supp  { background: #fff8e0; border: 2px dashed var(--gold); font-size: 11px; }
+/* بند مقترح لم يُعتمد بعد — إطار متقطّع يميّزه عن المعتمد */
+.org-node.proposed { border-style: dashed; opacity: .82; }
+.org-node .who { display: block; font-size: 10px; font-weight: 400; opacity: .75; margin-top: 3px; }
 
 /* ===================================================
    RELATION CARDS
@@ -2076,92 +2079,44 @@ tr:hover td { background: #fff8f0; }
   </div>
 
   <h3>شجرة إدارة المستودعات وسلاسل الإمداد</h3>
+<!-- ORG:TREE:START — مولَّد من src/data/org-structure.json — لا تحرّره يدويًّا -->
   <div class="org-tree">
-    <ul>
-      <li>
-        <div class="org-node root">مدير المستودع التنفيذي</div>
-        <ul>
-          <li>
-            <div class="org-node dept">إدارة التوثيق والاعتماد</div>
-            <ul>
-              <li><div class="org-node unit">توثيق واعتماد المستندات</div></li>
-              <li><div class="org-node unit">فريق صياغة SOPs</div></li>
-              <li><div class="org-node unit">إدخال وترحيل الحركات المخزنية بالنظام</div></li>
-            </ul>
-          </li>
-          <li>
-            <div class="org-node dept">إدارة سلاسل الإمداد</div>
-            <ul>
-              <li><div class="org-node unit">مدير العمليات اللوجستية</div></li>
-              <li><div class="org-node unit">وحدة النقل والحركة</div></li>
-              <li><div class="org-node unit">وحدة صيانة الأسطول</div></li>
-              <li><div class="org-node unit">فريق الأمن الصناعي</div></li>
-            </ul>
-          </li>
-          <li>
-            <div class="org-node dept">إدارة المستودعات</div>
-            <ul>
-              <li>
-                <div class="org-node unit">قسم الاستلام والرقابة</div>
-                <ul>
-                  <li><div class="org-node unit">استلام البضاعة</div></li>
-                  <li><div class="org-node unit">التحقق من المستندات</div></li>
-                  <li><div class="org-node unit">فحص الجودة عند الاستلام</div></li>
-                </ul>
-              </li>
-              <li>
-                <div class="org-node unit">قسم التخزين وتحديد المواقع</div>
-                <ul>
-                  <li><div class="org-node unit">التخزين الجاف</div></li>
-                  <li><div class="org-node unit">التخزين البارد</div></li>
-                  <li><div class="org-node unit">الباركود والتسمية</div></li>
-                </ul>
-              </li>
-              <li>
-                <div class="org-node unit">قسم تحضير الطلبات</div>
-                <ul>
-                  <li><div class="org-node unit">قسم السحب (Picking)</div></li>
-                  <li><div class="org-node unit">قسم التعبئة (Packing)</div></li>
-                  <li><div class="org-node unit">قسم الشحن والتوزيع</div></li>
-                </ul>
-              </li>
-              <li>
-                <div class="org-node unit">وحدة إدارة المرتجعات</div>
-                <ul>
-                  <li><div class="org-node unit">استلام المرتجعات</div></li>
-                  <li><div class="org-node unit">إعادة التقييم والتصرف</div></li>
-                </ul>
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </li>
-    </ul>
+    <ul><li><div class="org-node root">🏛️ إدارة السلاسل والإمداد والمخازن<span class="who">👤 محمد البرشي</span></div><ul><li><div class="org-node root">🚚 إدارة الخدمات اللوجستية والخدمية<span class="who">👤 رمزي الباش</span></div><ul><li><div class="org-node dept">🛣️ قسم النقل والحركة</div><ul><li><div class="org-node unit">وحدة الأسطول والسائقين</div></li><li><div class="org-node unit proposed">وحدة تصاريح البوابة والرحلات</div></li><li><div class="org-node unit proposed">وحدة الاستلام والتسليم اليومي</div></li></ul></li><li><div class="org-node dept">🔧 قسم الصيانة والمعدات</div><ul><li><div class="org-node unit">وحدة صيانة المركبات</div></li><li><div class="org-node unit">وحدة صيانة المعدات</div></li><li><div class="org-node unit proposed">وحدة المرافق</div></li></ul></li><li><div class="org-node dept">🦺 قسم الأمن الصناعي والسلامة</div></li><li><div class="org-node dept proposed">🧰 قسم الخدمات المساندة</div><ul><li><div class="org-node unit">وحدة إدارة العمالة الخارجية</div></li><li><div class="org-node unit proposed">وحدة العُهد العينية</div></li></ul></li></ul></li><li><div class="org-node dept">🛡️ قسم التوثيق والاعتماد</div><ul><li><div class="org-node unit">وحدة توثيق واعتماد المستندات</div></li><li><div class="org-node unit">وحدة صياغة المعايير والإجراءات (SOPs)</div></li><li><div class="org-node unit">وحدة إدخال وترحيل الحركات المخزنية</div></li></ul></li><li><div class="org-node dept proposed">📈 قسم التخطيط والتوريد</div><ul><li><div class="org-node unit proposed">وحدة تخطيط الاحتياجات</div></li><li><div class="org-node unit proposed">وحدة متابعة الموردين</div></li><li><div class="org-node unit proposed">وحدة ماستر الأصناف والأرصدة</div></li></ul></li><li><div class="org-node dept">🧭 قسم عمليات المستودعات</div><ul><li><div class="org-node unit">وحدة الاستلام والرقابة</div><ul><li><div class="org-node unit">استلام البضاعة</div></li><li><div class="org-node unit">التحقق من المستندات</div></li><li><div class="org-node unit">فحص الجودة عند الاستلام</div></li></ul></li><li><div class="org-node unit">وحدة التخزين وتحديد المواقع</div><ul><li><div class="org-node unit">التخزين الجاف</div></li><li><div class="org-node unit">التخزين البارد</div></li><li><div class="org-node unit">الباركود والتسمية</div></li></ul></li><li><div class="org-node unit">وحدة تحضير الطلبات والصرف</div><ul><li><div class="org-node unit">الانتقاء (Picking)</div></li><li><div class="org-node unit">التعبئة والتغليف</div></li><li><div class="org-node unit">الشحن والتوزيع</div></li></ul></li><li><div class="org-node unit">وحدة إدارة المرتجعات</div><ul><li><div class="org-node unit">استلام المرتجعات</div></li><li><div class="org-node unit">إعادة التقييم والتصرف</div></li></ul></li></ul></li></ul></li></ul>
   </div>
+<!-- ORG:TREE:END -->
 
+  <!-- ORG:SUPPORT:START — مولَّد من src/data/org-structure.json — لا تحرّره يدويًّا -->
   <div style="display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:28px;padding-top:20px;border-top:2px dashed var(--gold);">
-    <div class="org-node supp">إدارة الجودة<br><small>ISO 9001 / HACCP</small></div>
-    <div class="org-node supp">تقنية المعلومات (IT)<br><small>Odoo 17 Enterprise</small></div>
-    <div class="org-node supp">المشتريات<br><small>Purchase Module</small></div>
-    <div class="org-node supp">الإدارة المالية<br><small>Accounting Module</small></div>
+    <div class="org-node supp">🔬 إدارة الجودة<small>ISO 9001 / HACCP</small></div>
+    <div class="org-node supp">💾 تقنية المعلومات<small>Odoo Enterprise</small></div>
+    <div class="org-node supp">💼 المشتريات والإدارة التجارية<small>Purchase Module</small></div>
+    <div class="org-node supp">💰 الإدارة المالية<small>Accounting Module</small></div>
+    <div class="org-node supp">👥 الموارد البشرية<small>Recruitment &amp; Training</small></div>
   </div>
-  <p style="font-size:11px;color:#888;margin-top:12px;padding:8px 12px;background:#f5f5f0;border:1px solid var(--border);">📌 الأعداد الموضحة تمثل التخطيط الكامل (المرحلة الثانية). في التشغيل الأولي يُكتفى بـ 50–60 موظف جوهري موزعين على 4 أقسام نشطة.</p>
+<!-- ORG:SUPPORT:END -->
+
+    <p style="font-size:11px;color:#888;margin-top:12px;padding:8px 12px;background:#f5f5f0;border:1px solid var(--border);">📌 الأعداد الموضحة تمثل التخطيط الكامل (المرحلة الثانية). في التشغيل الأولي يُكتفى بـ 50–60 موظف جوهري موزعين على 4 أقسام نشطة.</p>
 
   <h3>جدول مقارنة الكادر الوظيفي — المرحلتان</h3>
   <div class="tbl-wrap">
     <table>
       <thead><tr><th>الإدارة / القسم</th><th>🚀 المرحلة الأولى</th><th>🏗️ المرحلة الكاملة</th><th>الدور الأساسي</th></tr></thead>
       <tbody>
-        <tr><td>🛡️ إدارة التوثيق والاعتماد</td><td class="td-blue">1 مدير (مشغول)</td><td class="td-warn">مدير + فريق توثيق</td><td>توثيق واعتماد المستندات، إدخال وترحيل الحركات المخزنية بالنظام</td></tr>
-        <tr><td>💻 إدارة سلاسل الإمداد</td><td class="td-blue">1 مدير (مشغول)</td><td class="td-warn">مدير + رؤساء أقسام</td><td>التخطيط، اللوجستيات، التوريد</td></tr>
-        <tr><td>🧭 إدارة المستودعات</td><td class="td-blue">1 مدير</td><td class="td-warn">1 + مدراء فروع</td><td>ملكية المخزون، العمليات الميدانية</td></tr>
-        <tr><td>🔬 إدارة الجودة</td><td class="td-blue">1 مدير</td><td class="td-warn">مدير + فريق جودة</td><td>التدقيق الفني، فحص الجودة، CAPA</td></tr>
-        <tr><td>💼 الإدارة التجارية</td><td class="td-blue">1 مدير</td><td class="td-warn">مدير + مشتريات</td><td>المشتريات، العقود، علاقات الموردين</td></tr>
-        <tr><td>💰 إدارة المالية</td><td class="td-blue">1 مدير</td><td class="td-warn">مدير + محاسبة</td><td>الرقابة المالية، الميزانيات، التدقيق</td></tr>
-        <tr><td>💾 الإدارة التقنية</td><td class="td-blue">1 موظف</td><td class="td-warn">مدير + فريق IT</td><td>الأنظمة (Odoo)، البنية التحتية</td></tr>
-        <tr><td>👥 الموارد البشرية</td><td class="td-blue">1 موظف</td><td class="td-warn">مدير + فريق HR</td><td>التوظيف، التدريب، شؤون الموظفين</td></tr>
+<!-- ORG:STAFFING:START — مولَّد من src/data/org-structure.json — لا تحرّره يدويًّا -->
+        <tr><td>🏛️ إدارة السلاسل والإمداد والمخازن</td><td class="td-blue">1 مدير (مشغول)</td><td class="td-warn">مدير + مساعدون</td><td>القيادة العليا: ملكية المخزون والتخطيط والتكامل بين الأقسام</td></tr>
+        <tr><td>🚚 إدارة الخدمات اللوجستية والخدمية</td><td class="td-blue">1 مدير (مشغول)</td><td class="td-warn">مدير + رؤساء أقسام</td><td>النقل والحركة، الصيانة، السلامة، الخدمات المساندة</td></tr>
+        <tr><td>🛡️ قسم التوثيق والاعتماد</td><td class="td-blue">1 رئيس قسم</td><td class="td-warn">رئيس + فريق توثيق</td><td>توثيق واعتماد المستندات، إدخال وترحيل الحركات المخزنية</td></tr>
+        <tr><td>📈 قسم التخطيط والتوريد</td><td class="td-blue">1 موظف</td><td class="td-warn">رئيس + فريق تخطيط</td><td>تخطيط الاحتياجات، متابعة الموردين، ماستر الأصناف</td></tr>
+        <tr><td>🧭 قسم عمليات المستودعات</td><td class="td-blue">1 رئيس قسم</td><td class="td-warn">رئيس + رؤساء وحدات</td><td>الاستلام، التخزين، التحضير والصرف، المرتجعات</td></tr>
+        <tr><td>🔬 إدارة الجودة (مساندة)</td><td class="td-blue">1 مدير</td><td class="td-warn">مدير + فريق جودة</td><td>التدقيق الفني، فحص الجودة، CAPA</td></tr>
+        <tr><td>💼 المشتريات (مساندة)</td><td class="td-blue">1 مدير</td><td class="td-warn">مدير + مشتريات</td><td>المشتريات، العقود، علاقات الموردين</td></tr>
+        <tr><td>💰 الإدارة المالية (مساندة)</td><td class="td-blue">1 مدير</td><td class="td-warn">مدير + محاسبة</td><td>الرقابة المالية، الميزانيات، التدقيق</td></tr>
+        <tr><td>💾 تقنية المعلومات (مساندة)</td><td class="td-blue">1 موظف</td><td class="td-warn">مدير + فريق IT</td><td>الأنظمة (Odoo)، البنية التحتية</td></tr>
+        <tr><td>👥 الموارد البشرية (مساندة)</td><td class="td-blue">1 موظف</td><td class="td-warn">مدير + فريق HR</td><td>التوظيف، التدريب، شؤون الموظفين</td></tr>
         <tr><td><strong>📊 الإجمالي التقريبي</strong></td><td class="td-hot"><strong>~55–65 موظف</strong></td><td class="td-hot"><strong>~350 موظف</strong></td><td>—</td></tr>
-      </tbody>
+<!-- ORG:STAFFING:END -->
+
+        </tbody>
     </table>
   </div>
 
