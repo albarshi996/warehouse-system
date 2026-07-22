@@ -1,0 +1,1514 @@
+{
+  "meta": {
+    "version": 1,
+    "title": "الهيكل التنظيمي — إدارة السلاسل والإمداد والمخازن",
+    "status": "draft",
+    "issuedAt": "2026-07-22",
+    "reference": "BFP-SCM-ORG-2026-001",
+    "basedOn": "تقرير هيكل الوظائف والأدوار — الإصدار 2.0",
+    "note": "الإصدار الأول القابل للتعديل — يُعرض على الإدارات ثم يُرفع للإدارة العامة للاعتماد",
+    "signatories": [
+      {
+        "name": "محمد البرشي",
+        "role": "مدير إدارة السلاسل والإمداد والمخازن",
+        "file": "signature-2"
+      },
+      {
+        "name": "رمزي الباش",
+        "role": "مدير إدارة الخدمات اللوجستية والخدمية",
+        "file": "signature-1"
+      }
+    ]
+  },
+  "tree": {
+    "id": "root",
+    "title": "إدارة السلاسل والإمداد والمخازن",
+    "type": "management",
+    "source": "owner",
+    "titleEn": "Supply Chain, Logistics & Warehousing",
+    "icon": "🏛️",
+    "holder": "محمد البرشي",
+    "pages": [
+      "/dashboard/supply-chain"
+    ],
+    "note": "الإدارة العليا — تبعيتها المباشرة للإدارة العامة",
+    "children": [
+      {
+        "id": "mgmt-logistics",
+        "title": "إدارة الخدمات اللوجستية والخدمية",
+        "type": "management",
+        "source": "owner",
+        "titleEn": "Logistics & Support Services",
+        "icon": "🚚",
+        "holder": "رمزي الباش",
+        "pages": [
+          "/dashboard/fleet-operations"
+        ],
+        "note": "تبعية مباشرة لمدير السلاسل والإمداد والمخازن",
+        "children": [
+          {
+            "id": "sec-transport",
+            "title": "قسم النقل والحركة",
+            "type": "section",
+            "source": "report",
+            "titleEn": "Transport & Movement",
+            "icon": "🛣️",
+            "pages": [
+              "/dashboard/vehicles-inventory",
+              "/dashboard/fleet-operations"
+            ],
+            "children": [
+              {
+                "id": "unit-fleet",
+                "title": "وحدة الأسطول والسائقين",
+                "type": "unit",
+                "source": "report",
+                "pages": [
+                  "/dashboard/vehicles-inventory"
+                ],
+                "children": []
+              },
+              {
+                "id": "unit-trips",
+                "title": "وحدة تصاريح البوابة والرحلات",
+                "type": "unit",
+                "source": "proposed",
+                "pages": [
+                  "/dashboard/fleet-operations"
+                ],
+                "note": "مقترحة — تقابل دورة TRIP المبنيّة في النظام",
+                "children": []
+              },
+              {
+                "id": "unit-handover",
+                "title": "وحدة الاستلام والتسليم اليومي",
+                "type": "unit",
+                "source": "proposed",
+                "pages": [
+                  "/dashboard/fleet-operations"
+                ],
+                "note": "مقترحة — تقابل بروتوكول التسليم اليومي المبنيّ",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "sec-maintenance",
+            "title": "قسم الصيانة والمعدات",
+            "type": "section",
+            "source": "report",
+            "titleEn": "Maintenance & Equipment",
+            "icon": "🔧",
+            "pages": [
+              "/dashboard/maintenance-center"
+            ],
+            "children": [
+              {
+                "id": "unit-veh-maint",
+                "title": "وحدة صيانة المركبات",
+                "type": "unit",
+                "source": "report",
+                "pages": [
+                  "/dashboard/maintenance-center"
+                ],
+                "children": []
+              },
+              {
+                "id": "unit-equip-maint",
+                "title": "وحدة صيانة المعدات",
+                "type": "unit",
+                "source": "report",
+                "pages": [
+                  "/dashboard/maintenance-center"
+                ],
+                "children": []
+              },
+              {
+                "id": "unit-facilities",
+                "title": "وحدة المرافق",
+                "type": "unit",
+                "source": "proposed",
+                "note": "مقترحة — فئة المرافق قائمة في مركز الصيانة",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "sec-safety",
+            "title": "قسم الأمن الصناعي والسلامة",
+            "type": "section",
+            "source": "report",
+            "titleEn": "Industrial Security & Safety",
+            "icon": "🦺",
+            "children": []
+          },
+          {
+            "id": "sec-support-svc",
+            "title": "قسم الخدمات المساندة",
+            "type": "section",
+            "source": "proposed",
+            "titleEn": "Support Services",
+            "icon": "🧰",
+            "note": "مقترح — يجمع الخدمات الخدمية المتفرّقة تحت مظلّة واحدة",
+            "children": [
+              {
+                "id": "unit-outsourced-labor",
+                "title": "وحدة إدارة العمالة الخارجية",
+                "type": "unit",
+                "source": "report",
+                "children": []
+              },
+              {
+                "id": "unit-custody",
+                "title": "وحدة العُهد العينية",
+                "type": "unit",
+                "source": "proposed",
+                "pages": [
+                  "/dashboard/custody"
+                ],
+                "note": "مقترحة — تقابل سندات CUST المبنيّة في النظام",
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "sec-doc",
+        "title": "قسم التوثيق والاعتماد",
+        "type": "section",
+        "source": "report",
+        "titleEn": "Documentation & Accreditation",
+        "icon": "🛡️",
+        "pages": [
+          "/dashboard/documents"
+        ],
+        "children": [
+          {
+            "id": "unit-doc-approve",
+            "title": "وحدة توثيق واعتماد المستندات",
+            "type": "unit",
+            "source": "report",
+            "pages": [
+              "/dashboard/documents"
+            ],
+            "children": []
+          },
+          {
+            "id": "unit-doc-sops",
+            "title": "وحدة صياغة المعايير والإجراءات (SOPs)",
+            "type": "unit",
+            "source": "report",
+            "children": []
+          },
+          {
+            "id": "unit-doc-posting",
+            "title": "وحدة إدخال وترحيل الحركات المخزنية",
+            "type": "unit",
+            "source": "report",
+            "pages": [
+              "/dashboard/stock-operations"
+            ],
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "sec-planning",
+        "title": "قسم التخطيط والتوريد",
+        "type": "section",
+        "source": "proposed",
+        "titleEn": "Planning & Sourcing",
+        "icon": "📈",
+        "pages": [
+          "/dashboard/products"
+        ],
+        "note": "مقترح — يستوعب مهام التخطيط التي كانت في إدارة سلاسل الإمداد",
+        "children": [
+          {
+            "id": "unit-demand",
+            "title": "وحدة تخطيط الاحتياجات",
+            "type": "unit",
+            "source": "proposed",
+            "children": []
+          },
+          {
+            "id": "unit-vendors",
+            "title": "وحدة متابعة الموردين",
+            "type": "unit",
+            "source": "proposed",
+            "children": []
+          },
+          {
+            "id": "unit-item-master",
+            "title": "وحدة ماستر الأصناف والأرصدة",
+            "type": "unit",
+            "source": "proposed",
+            "pages": [
+              "/dashboard/products"
+            ],
+            "note": "مقترحة — تقابل ماستر الأصناف ومخزن الأرصدة المبنيَّين",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "sec-wh-ops",
+        "title": "قسم عمليات المستودعات",
+        "type": "section",
+        "source": "report",
+        "titleEn": "Warehouse Operations",
+        "icon": "🧭",
+        "pages": [
+          "/dashboard/warehouses",
+          "/dashboard/stock-operations"
+        ],
+        "children": [
+          {
+            "id": "unit-receiving",
+            "title": "وحدة الاستلام والرقابة",
+            "type": "unit",
+            "source": "report",
+            "pages": [
+              "/dashboard/documents"
+            ],
+            "children": [
+              {
+                "id": "sub-receive",
+                "title": "استلام البضاعة",
+                "type": "subunit",
+                "source": "report",
+                "children": []
+              },
+              {
+                "id": "sub-doc-verify",
+                "title": "التحقق من المستندات",
+                "type": "subunit",
+                "source": "report",
+                "children": []
+              },
+              {
+                "id": "sub-qc-receive",
+                "title": "فحص الجودة عند الاستلام",
+                "type": "subunit",
+                "source": "report",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "unit-storage",
+            "title": "وحدة التخزين وتحديد المواقع",
+            "type": "unit",
+            "source": "report",
+            "pages": [
+              "/dashboard/warehouse-maps"
+            ],
+            "children": [
+              {
+                "id": "sub-dry",
+                "title": "التخزين الجاف",
+                "type": "subunit",
+                "source": "report",
+                "children": []
+              },
+              {
+                "id": "sub-cold",
+                "title": "التخزين البارد",
+                "type": "subunit",
+                "source": "report",
+                "pages": [
+                  "/dashboard/cold-storage-plan"
+                ],
+                "children": []
+              },
+              {
+                "id": "sub-barcode",
+                "title": "الباركود والتسمية",
+                "type": "subunit",
+                "source": "report",
+                "pages": [
+                  "/dashboard/stock-operations"
+                ],
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "unit-picking",
+            "title": "وحدة تحضير الطلبات والصرف",
+            "type": "unit",
+            "source": "report",
+            "children": [
+              {
+                "id": "sub-pick",
+                "title": "الانتقاء (Picking)",
+                "type": "subunit",
+                "source": "report",
+                "children": []
+              },
+              {
+                "id": "sub-pack",
+                "title": "التعبئة والتغليف",
+                "type": "subunit",
+                "source": "report",
+                "children": []
+              },
+              {
+                "id": "sub-ship",
+                "title": "الشحن والتوزيع",
+                "type": "subunit",
+                "source": "report",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "unit-returns",
+            "title": "وحدة إدارة المرتجعات",
+            "type": "unit",
+            "source": "report",
+            "children": [
+              {
+                "id": "sub-ret-receive",
+                "title": "استلام المرتجعات",
+                "type": "subunit",
+                "source": "report",
+                "children": []
+              },
+              {
+                "id": "sub-ret-dispose",
+                "title": "إعادة التقييم والتصرف",
+                "type": "subunit",
+                "source": "report",
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "supportFunctions": [
+    {
+      "id": "support-quality",
+      "title": "إدارة الجودة",
+      "titleEn": "Quality Management",
+      "icon": "🔬",
+      "note": "ISO 9001 / HACCP"
+    },
+    {
+      "id": "support-it",
+      "title": "تقنية المعلومات",
+      "titleEn": "IT & ERP",
+      "icon": "💾",
+      "note": "Odoo Enterprise"
+    },
+    {
+      "id": "support-commercial",
+      "title": "المشتريات والإدارة التجارية",
+      "titleEn": "Procurement",
+      "icon": "💼",
+      "note": "Purchase Module"
+    },
+    {
+      "id": "support-finance",
+      "title": "الإدارة المالية",
+      "titleEn": "Financial Management",
+      "icon": "💰",
+      "note": "Accounting Module"
+    },
+    {
+      "id": "support-hr",
+      "title": "الموارد البشرية",
+      "titleEn": "Human Resources",
+      "icon": "👥",
+      "note": "Recruitment & Training"
+    }
+  ],
+  "jobs": [
+    {
+      "id": "J01",
+      "orgId": "sec-doc",
+      "title": "رئيس قسم التوثيق والاعتماد",
+      "formerTitle": "مدير إدارة التوثيق والاعتماد",
+      "icon": "🛡️",
+      "layer": "قسم التوثيق والاعتماد",
+      "odooRole": "Documentation & Accreditation Manager",
+      "odooLevel": "Admin",
+      "modules": "Inventory (Entry/Post), Audit Logs",
+      "phase1": "مدير واحد",
+      "phase2": "مدير + فريق توثيق",
+      "duties": [
+        "توثيق واعتماد أذونات الإضافة والصرف والتحويل، وإدراج وترحيل الحركات المخزنية اليومية في نظام ERP (أودو)",
+        "التحقق من مطابقة كل حركة مخزنية للدورة المستندية المعتمدة قبل الإدراج والترحيل النهائي",
+        "إصدار وتحديث أدلة السياسات والإجراءات (SOPs) واللوائح التنظيمية",
+        "تصميم مصفوفة الصلاحيات وضوابط الرقابة الداخلية (Internal Controls)",
+        "مراجعة سجلات الأنشطة (Audit Logs) يومياً والتحقق من الالتزام بمسارات الموافقة المعتمدة",
+        "تقديم تقارير دورية للإدارة العامة حول اكتمال ودقة التوثيق"
+      ],
+      "reportingTo": "مدير إدارة السلاسل والإمداد والمخازن",
+      "directReporting": true,
+      "kpis": "نسبة اكتمال التوثيق، دقة الترحيل، الالتزام بالدورة المستندية",
+      "occupied": true
+    },
+    {
+      "id": "J02",
+      "orgId": "mgmt-logistics",
+      "title": "مدير إدارة الخدمات اللوجستية والخدمية",
+      "formerTitle": "مدير إدارة سلاسل الإمداد",
+      "icon": "💻",
+      "layer": "القيادة العليا — تبعية مباشرة",
+      "odooRole": "Supply Chain Manager",
+      "odooLevel": "Admin",
+      "modules": "Purchase, Inventory, Planning",
+      "phase1": "مدير واحد",
+      "phase2": "مدير + رؤساء أقسام",
+      "duties": [
+        "التنسيق الاستراتيجي للتدفقات اللوجستية وتخطيط الموارد",
+        "الإشراف على قسم العمليات اللوجستية (النقل، الحركة، العمالة)",
+        "إدارة توزيع الموارد والعمالة بين الأقسام التشغيلية",
+        "تخطيط التوريد وضمان استمرارية السلسلة دون تملك المخزون",
+        "تحليل كفاءة العمليات الميدانية وتقديم الدعم اللوجستي للمستودعات",
+        "المسؤول عن جاهزية الأسطول والمعدات والقوى العاملة"
+      ],
+      "reportingTo": "مدير إدارة السلاسل والإمداد والمخازن",
+      "directReporting": true,
+      "kpis": "جاهزية الأسطول، كفاءة توزيع العمالة، تكلفة النقل",
+      "occupied": true,
+      "holder": "رمزي الباش"
+    },
+    {
+      "id": "J03",
+      "orgId": "sec-wh-ops",
+      "title": "رئيس قسم عمليات المستودعات",
+      "formerTitle": "مدير إدارة المستودعات",
+      "icon": "🧭",
+      "layer": "قسم عمليات المستودعات",
+      "odooRole": "Warehouse Manager",
+      "odooLevel": "Admin",
+      "modules": "Inventory, Barcode, Quality",
+      "phase1": "مدير واحد",
+      "phase2": "1 + مدراء فروع",
+      "duties": [
+        "المالك الرسمي للمخزون والمسؤول عن دقة وسلامة الأرصدة",
+        "الإشراف على قسم عمليات المستودع (استلام، تخزين، صرف، مرتجعات)",
+        "ضمان الالتزام الصارم بقواعد FEFO والباركود في كافة التحركات",
+        "إدارة المساحات التخزينية وتحسين كفاءة التنفيذ الميداني",
+        "المسؤول عن مطابقة الجرد الفعلي مع النظام (Stock Accountability)",
+        "سلطة اتخاذ القرار في تنفيذ الحركات المخزونية اليومية"
+      ],
+      "reportingTo": "مدير إدارة السلاسل والإمداد والمخازن",
+      "directReporting": true,
+      "kpis": "دقة المخزون (98.5%+)، إنتاجية السحب، سرعة الاستلام",
+      "occupied": false
+    },
+    {
+      "id": "J04",
+      "orgId": "support-quality",
+      "title": "مدير إدارة الجودة",
+      "icon": "🔬",
+      "layer": "وظيفة مساندة — Support Function",
+      "odooRole": "Quality Manager",
+      "odooLevel": "Admin",
+      "modules": "Quality, Inventory (Read)",
+      "phase1": "مدير واحد",
+      "phase2": "مدير + فريق جودة متخصص",
+      "duties": [
+        "المسؤول عن التحقق التشغيلي من تطبيق قواعد الجودة السلامة",
+        "إجراء عمليات التدقيق والفحص الميداني (Audits & Inspections)",
+        "إدارة برامج الإجراءات التصحيحية والوقائية (CAPA Programs)",
+        "الإشراف على جودة المنتجات في المستودعات والمطاعم والأسواق",
+        "التحقق من سلامة سلسلة التبريد ومعايير التخزين والتحضير",
+        "رفع تقارير عدم المطابقة ومتابعة فعاليتها التحسينية"
+      ],
+      "reportingTo": "وظيفيًّا: الإدارة العامة · تشغيليًّا: إدارة الجودة (إدارة مساندة مستقلة) — دون ارتباط تشغيلي بإدارة المستودعات",
+      "operationalReporting": "إدارة الجودة (إدارة مساندة مستقلة) — دون ارتباط تشغيلي بإدارة المستودعات",
+      "functionalReporting": "الإدارة العامة",
+      "kpis": "",
+      "occupied": false
+    },
+    {
+      "id": "J05",
+      "orgId": "support-commercial",
+      "title": "مدير الإدارة التجارية",
+      "icon": "💼",
+      "layer": "وظيفة مساندة — Support Function",
+      "odooRole": "Commercial Manager",
+      "odooLevel": "Admin",
+      "modules": "Purchase, Sales",
+      "phase1": "مدير واحد",
+      "phase2": "مدير + فريق مشتريات",
+      "duties": [
+        "إدارة الأنشطة التجارية وعلاقات الموردين واتفاقيات الشراء",
+        "الإشراف المباشر على قسم المشتريات وضمان أفضل شروط توريد",
+        "تحليل السوق واختيار الموردين المعتمدين وتطوير الشراكات",
+        "المسؤول عن دورة الشراء من الطلب وحتى وصول البضاعة للمستودع",
+        "التنسيق مع المالية لضمان سداد مستحقات الموردين وتطبيق العقود"
+      ],
+      "reportingTo": "وظيفيًّا: الإدارة العامة · تشغيليًّا: إدارة سلاسل الإمداد (دعم التوريد)",
+      "operationalReporting": "إدارة سلاسل الإمداد (دعم التوريد)",
+      "functionalReporting": "الإدارة العامة",
+      "kpis": "",
+      "occupied": false
+    },
+    {
+      "id": "J06",
+      "orgId": "support-finance",
+      "title": "مدير إدارة المالية",
+      "icon": "💰",
+      "layer": "وظيفة مساندة — Support Function",
+      "odooRole": "Finance Manager",
+      "odooLevel": "Admin",
+      "modules": "Accounting, Invoicing",
+      "phase1": "مدير واحد",
+      "phase2": "مدير + فريق محاسبة",
+      "duties": [
+        "الرقابة المالية الشاملة على التدفقات النقدية والأصول والمخزون",
+        "إدارة الميزانيات والتحليل المالي لنتائج التشغيل",
+        "التحقق المالي من فواتير الموردين ومطابقتها مع الاستلام (3-Way Match)",
+        "الإشراف على عمليات الجرد المالي السنوي والمطابقة الدفترية",
+        "إصدار التقارير المالية الدورية للإدارة العامة"
+      ],
+      "reportingTo": "وظيفيًّا: الإدارة العامة · تشغيليًّا: إدارة المستودعات (رقابة الأصول)",
+      "operationalReporting": "إدارة المستودعات (رقابة الأصول)",
+      "functionalReporting": "الإدارة العامة",
+      "kpis": "",
+      "occupied": false
+    },
+    {
+      "id": "J07",
+      "orgId": "support-it",
+      "title": "مدير الإدارة التقنية",
+      "icon": "💾",
+      "layer": "وظيفة مساندة — Support Function",
+      "odooRole": "IT Manager",
+      "odooLevel": "Admin",
+      "modules": "Settings, Technical Support",
+      "phase1": "موظف تقني",
+      "phase2": "مدير + فريق IT",
+      "duties": [
+        "إدارة وتطوير البنية التحتية التقنية ونظام Odoo ERP",
+        "ضمان أمن البيانات واستمرارية عمل الأنظمة والشبكات",
+        "تقديم الدعم الفني لمستخدمي أجهزة الباركود والطابعات",
+        "إدارة صلاحيات الوصول بناءً على مصفوفة الحوكمة المعتمدة",
+        "مواكبة التطورات التقنية لتحسين كفاءة العمليات الرقمية"
+      ],
+      "reportingTo": "وظيفيًّا: الإدارة العامة · تشغيليًّا: إدارة سلاسل الإمداد (دعم الأنظمة)",
+      "operationalReporting": "إدارة سلاسل الإمداد (دعم الأنظمة)",
+      "functionalReporting": "الإدارة العامة",
+      "kpis": "",
+      "occupied": false
+    },
+    {
+      "id": "J08",
+      "orgId": "support-hr",
+      "title": "مدير الموارد البشرية",
+      "icon": "👥",
+      "layer": "وظيفة مساندة — Support Function",
+      "odooRole": "HR Manager",
+      "odooLevel": "Admin",
+      "modules": "Employees, Payroll, Recruitment",
+      "phase1": "موظف HR",
+      "phase2": "مدير + فريق HR",
+      "duties": [
+        "تخطيط القوى العاملة وإدارة عمليات التوظيف والتدريب",
+        "إدارة شؤون الموظفين والرواتب والتعويضات والامتثال العمالي",
+        "تطوير الأداء المؤسسي والثقافة التنظيمية للشركة",
+        "ضمان توفر الكوادر المؤهلة لكل الأقسام التشغيلية",
+        "إدارة علاقات الموظفين والبيئة العملية المحفزة"
+      ],
+      "reportingTo": "وظيفيًّا: الإدارة العامة",
+      "functionalReporting": "الإدارة العامة",
+      "kpis": "",
+      "occupied": false
+    },
+    {
+      "id": "J09",
+      "orgId": "sec-transport",
+      "title": "قسم العمليات اللوجستية",
+      "icon": "⚙️",
+      "layer": "وحدة تشغيلية (سلاسل الإمداد)",
+      "odooRole": "Operations User",
+      "odooLevel": "User",
+      "modules": "Fleet, Maintenance, Labor",
+      "phase1": "رئيس قسم + عمالة",
+      "phase2": "مدير قسم + أسطول كامل",
+      "duties": [
+        "إدارة حركة النقل وتوزيع الشحنات اليومية",
+        "الإشراف على العمالة اليدوية وتوزيع المهام الميدانية",
+        "متابعة صيانة المعدات والآليات وضمان جاهزيتها",
+        "تأمين المرافق وإدارة خدمات النظافة والأمن الصناعي"
+      ],
+      "reportingTo": "إدارة سلاسل الإمداد",
+      "directReporting": true,
+      "kpis": "",
+      "occupied": false
+    },
+    {
+      "id": "J10",
+      "orgId": "sec-wh-ops",
+      "title": "قسم عمليات المستودع",
+      "icon": "📦",
+      "layer": "وحدة تشغيلية (المستودعات)",
+      "odooRole": "Inventory User",
+      "odooLevel": "User",
+      "modules": "Inventory, Barcode",
+      "phase1": "مشرفون + عمالة",
+      "phase2": "مدير قسم + فرق متخصصة",
+      "duties": [
+        "تنفيذ عمليات الاستلام والتفريغ وفحص الكميات",
+        "إدارة عمليات التخزين الموجه Putaway في المواقع",
+        "سحب وتعبئة الطلبات Picking & Packing بدقة عالية",
+        "معالجة المرتجعات وتسويتها في النظام فوراً"
+      ],
+      "reportingTo": "إدارة المستودعات",
+      "directReporting": true,
+      "kpis": "",
+      "occupied": false
+    },
+    {
+      "id": "J11",
+      "orgId": "support-quality",
+      "title": "موظف الجودة",
+      "icon": "🔬",
+      "layer": "وظيفة رقابية مساندة",
+      "odooRole": "Quality User",
+      "odooLevel": "User",
+      "modules": "Quality, Inventory (Read)",
+      "phase1": "مفتش واحد",
+      "phase2": "فريق مفتشين",
+      "duties": [
+        "التنفيذ الميداني لعمليات الفحص والتدقيق في كافة المواقع",
+        "توثيق حالات عدم المطابقة ورفع تقارير الجودة اليومية",
+        "مراقبة درجات الحرارة وصلاحية المنتجات ونظافة المرافق",
+        "التحقق من التزام العمالة بالمعايير الصحية والمهنية"
+      ],
+      "reportingTo": "وظيفيًّا: إدارة الجودة · تشغيليًّا: إدارة الجودة (إدارة مساندة مستقلة)",
+      "operationalReporting": "إدارة الجودة (إدارة مساندة مستقلة)",
+      "functionalReporting": "إدارة الجودة",
+      "kpis": "",
+      "occupied": false
+    },
+    {
+      "id": "J12",
+      "orgId": "support-commercial",
+      "title": "موظف التجارية / المشتريات",
+      "icon": "🛒",
+      "layer": "وظيفة دعم تجاري",
+      "odooRole": "Purchase User",
+      "odooLevel": "User",
+      "modules": "Purchase",
+      "phase1": "مشتري واحد",
+      "phase2": "فريق مشترين",
+      "duties": [
+        "تنفيذ طلبات الشراء والتفاوض مع الموردين على الأسعار",
+        "متابعة أوامر الشراء المتأخرة وضمان وصولها في الموعد",
+        "تحديث بيانات الأصناف والموردين في نظام أودو",
+        "التنسيق مع المستودع لجدولة الاستلامات الواردة"
+      ],
+      "reportingTo": "وظيفيًّا: الإدارة التجارية · تشغيليًّا: إدارة سلاسل الإمداد",
+      "operationalReporting": "إدارة سلاسل الإمداد",
+      "functionalReporting": "الإدارة التجارية",
+      "kpis": "",
+      "occupied": false
+    },
+    {
+      "id": "J13",
+      "orgId": "support-finance",
+      "title": "موظف المالية / المحاسبة",
+      "icon": "📊",
+      "layer": "وظيفة دعم مالي",
+      "odooRole": "Accountant",
+      "odooLevel": "User",
+      "modules": "Accounting",
+      "phase1": "محاسب واحد",
+      "phase2": "فريق محاسبة",
+      "duties": [
+        "تسجيل القيود المحاسبية وفواتير الموردين والعملاء",
+        "إجراء المطابقات البنكية وتسوية حسابات العهد",
+        "المشاركة في عمليات الجرد الفعلي ومطابقته دفترياً",
+        "إعداد مسودات التقارير المالية الشهرية"
+      ],
+      "reportingTo": "وظيفيًّا: إدارة المالية · تشغيليًّا: إدارة المستودعات",
+      "operationalReporting": "إدارة المستودعات",
+      "functionalReporting": "إدارة المالية",
+      "kpis": "",
+      "occupied": false
+    },
+    {
+      "id": "J14",
+      "orgId": "support-it",
+      "title": "موظف تقنية المعلومات",
+      "icon": "💾",
+      "layer": "وظيفة دعم تقني",
+      "odooRole": "System User",
+      "odooLevel": "User",
+      "modules": "Technical Support",
+      "phase1": "موظف واحد",
+      "phase2": "فريق IT",
+      "duties": [
+        "تقديم الدعم التقني اليومي لمستخدمي نظام Odoo وحل المشكلات",
+        "صيانة أجهزة الباركود والطابعات والشبكات اللاسلكية",
+        "إدارة صلاحيات الوصول للمستخدمين بناءً على مصفوفة الأدوار",
+        "توفير التدريب المستمر للموظفين على الأدوات التقنية الجديدة"
+      ],
+      "reportingTo": "وظيفيًّا: الإدارة التقنية · تشغيليًّا: إدارة سلاسل الإمداد",
+      "operationalReporting": "إدارة سلاسل الإمداد",
+      "functionalReporting": "الإدارة التقنية",
+      "kpis": "",
+      "occupied": false
+    },
+    {
+      "id": "J15",
+      "orgId": "unit-doc-approve",
+      "title": "موظف التوثيق والاعتماد",
+      "icon": "⚖️",
+      "layer": "وحدة التوثيق والاعتماد",
+      "odooRole": "Documentation User",
+      "odooLevel": "User",
+      "modules": "Inventory (Entry/Post), Audit Logs",
+      "phase1": "موظف واحد",
+      "phase2": "فريق توثيق",
+      "duties": [
+        "توثيق واعتماد أذونات الإضافة والصرف والتحويل قبل إدراجها بالنظام",
+        "إدراج وترحيل الحركات المخزنية اليومية في نظام ERP (أودو) بعد التحقق من مطابقتها للدورة المستندية",
+        "مراجعة السجلات اليومية (Audit Logs) لضمان صحة العمليات",
+        "التأكد من توقيع كافة المستندات والاعتمادات حسب الأصول",
+        "تحديث مسودات SOPs بناءً على المتطلبات التشغيلية"
+      ],
+      "reportingTo": "إدارة التوثيق والاعتماد",
+      "directReporting": true,
+      "kpis": "",
+      "occupied": false
+    },
+    {
+      "id": "J16",
+      "orgId": "mgmt-logistics",
+      "title": "مدير العمليات (Operations Manager)",
+      "icon": "⚙️",
+      "layer": "قسم العمليات اللوجستية",
+      "odooRole": "Operations Admin",
+      "odooLevel": "Manager",
+      "modules": "Fleet, Labor, Maintenance",
+      "phase1": "مدير واحد",
+      "phase2": "مدير + مساعدين",
+      "duties": [
+        "إدارة حركة أسطول النقل بالكامل (Transport Management)",
+        "توفير وتوزيع العمالة اليدوية لكافة أقسام المستودع",
+        "الإشراف على صيانة المعدات (رافعة شوكية، ترولي) وجاهزيتها",
+        "المسؤول عن الأمن والحراسة ونظافة المرافق اللوجستية"
+      ],
+      "reportingTo": "إدارة سلاسل الإمداد",
+      "directReporting": true,
+      "kpis": "",
+      "occupied": false
+    },
+    {
+      "id": "J17",
+      "orgId": "sec-wh-ops",
+      "title": "رئيس قسم عمليات المستودع",
+      "icon": "📦",
+      "layer": "قسم عمليات المستودع",
+      "odooRole": "Inventory Admin",
+      "odooLevel": "Manager",
+      "modules": "Inventory, Barcode",
+      "phase1": "رئيس واحد",
+      "phase2": "رئيس قسم + مشرفين",
+      "duties": [
+        "الإشراف الميداني المباشر على (استلام، تخزين، صرف، مرتجعات)",
+        "تحسين تدفق العمل الميداني وتقليل زمن الدورة التشغيلية",
+        "حل المعوقات الميدانية فوراً لضمان استمرارية العمل",
+        "التنسيق مع منسق العمليات لتوفير العمالة اللازمة لكل وردية"
+      ],
+      "reportingTo": "إدارة المستودعات",
+      "directReporting": true,
+      "kpis": "",
+      "occupied": false
+    },
+    {
+      "id": "J18",
+      "orgId": "sec-transport",
+      "title": "موظف النقل والحركة",
+      "icon": "🚚",
+      "layer": "العمليات اللوجستية",
+      "odooRole": "Fleet User",
+      "odooLevel": "User",
+      "modules": "Fleet, Dashboard",
+      "phase1": "سائقون + منسق",
+      "phase2": "أسطول متكامل",
+      "duties": [
+        "تنفيذ رحلات التوزيع اليومية للفروع والمطاعم",
+        "الالتزام بجدول المواعيد ومعايير سلامة الشحنة",
+        "تحديث حالة الشحنة في النظام فور الوصول والتسليم"
+      ],
+      "reportingTo": "قسم العمليات اللوجستية",
+      "directReporting": true,
+      "kpis": "",
+      "occupied": false
+    },
+    {
+      "id": "J19",
+      "orgId": "root",
+      "title": "مدير إدارة السلاسل والإمداد والمخازن",
+      "formerTitle": "مدير المستودع التنفيذي",
+      "icon": "👔",
+      "layer": "القيادة العليا — Executive Leadership",
+      "odooRole": "Executive Warehouse Manager",
+      "odooLevel": "Admin",
+      "modules": "Inventory, Barcode, Quality, Fleet",
+      "phase1": "مدير تنفيذي",
+      "phase2": "مدير + مساعدين",
+      "duties": [
+        "الإشراف التنفيذي الكامل على جميع عمليات المستودع والعمليات اللوجستية",
+        "ضمان تحقيق الأهداف الاستراتيجية ومعايير الأداء الشاملة",
+        "التنسيق بين جميع الأقسام التشغيلية وضمان التكامل بينها",
+        "اتخاذ القرارات الإدارية الحرجة بشأن توزيع الموارد والاستثمارات",
+        "تقديم التقارير الشهرية للإدارة العامة حول أداء المستودع"
+      ],
+      "reportingTo": "الإدارة العامة",
+      "directReporting": true,
+      "kpis": "دقة المخزون، إنتاجية العمليات، رضا العملاء",
+      "occupied": true,
+      "holder": "محمد البرشي"
+    },
+    {
+      "id": "J20",
+      "orgId": "unit-doc-sops",
+      "title": "فريق صياغة المعايير والإجراءات (SOPs)",
+      "icon": "📋",
+      "layer": "وحدة التوثيق والاعتماد",
+      "odooRole": "SOP Writer",
+      "odooLevel": "User",
+      "modules": "Documentation",
+      "phase1": "فريق متخصص (2-3 أفراد)",
+      "phase2": "فريق موسع",
+      "duties": [
+        "صياغة وتوثيق معايير التشغيل الموحدة (SOPs) لجميع العمليات",
+        "تحديث الإجراءات بناءً على التطورات والدروس المستفادة",
+        "ضمان وضوح الإجراءات وسهولة فهمها من قبل جميع الموظفين",
+        "توثيق أفضل الممارسات وتعميمها على جميع الفروع"
+      ],
+      "reportingTo": "إدارة التوثيق والاعتماد",
+      "directReporting": true,
+      "kpis": "نسبة اكتمال SOPs، درجة التطبيق الفعلي",
+      "occupied": false
+    },
+    {
+      "id": "J21",
+      "orgId": "unit-doc-posting",
+      "title": "موظف إدخال وترحيل الحركات المخزنية",
+      "icon": "📊",
+      "layer": "وحدة التوثيق والاعتماد",
+      "odooRole": "Inventory Posting User",
+      "odooLevel": "User",
+      "modules": "Inventory (Entry/Post), Audit Logs",
+      "phase1": "موظف واحد",
+      "phase2": "فريق من الموظفين",
+      "duties": [
+        "إدراج وترحيل جميع الحركات المخزنية في نظام ERP (أودو) بدقة",
+        "التحقق من صحة البيانات المدخلة ومطابقتها للمستندات الأصلية",
+        "توثيق المستندات المرفوعة ومراجعة الأرصدة النهائية",
+        "معالجة التعديلات والتصحيحات في الوقت المناسب"
+      ],
+      "reportingTo": "إدارة التوثيق والاعتماد",
+      "directReporting": true,
+      "kpis": "دقة الترحيل (100%)، سرعة المعالجة",
+      "occupied": false
+    },
+    {
+      "id": "J22",
+      "orgId": "sec-maintenance",
+      "title": "مدير الصيانة والمعدات",
+      "icon": "🔧",
+      "layer": "وحدة صيانة الأسطول والمعدات",
+      "odooRole": "Maintenance Manager",
+      "odooLevel": "Manager",
+      "modules": "Maintenance, Fleet",
+      "phase1": "مدير صيانة",
+      "phase2": "مدير + فريق فنيين",
+      "duties": [
+        "الإشراف على صيانة جميع المعدات والآليات (رافعات شوكية، ترولي، أسطول النقل)",
+        "جدولة الصيانة الدورية والعاجلة وضمان إكمالها في الوقت المحدد",
+        "تقييم حالة المعدات وتوصية بالإصلاح أو الاستبدال",
+        "تسجيل سجلات الصيانة والنفقات في نظام الإدارة"
+      ],
+      "reportingTo": "قسم العمليات اللوجستية",
+      "directReporting": true,
+      "kpis": "نسبة جاهزية الأسطول، تكاليف الصيانة",
+      "occupied": false
+    },
+    {
+      "id": "J23",
+      "orgId": "sec-safety",
+      "title": "فريق الأمن الصناعي والسلامة",
+      "icon": "🛡️",
+      "layer": "وحدة الأمن والسلامة",
+      "odooRole": "Safety Officer",
+      "odooLevel": "User",
+      "modules": "Safety, Compliance",
+      "phase1": "فريق أمان (3-4 أفراد)",
+      "phase2": "فريق موسع",
+      "duties": [
+        "تنفيذ معايير الأمن والسلامة الصناعية في جميع المرافق",
+        "إجراء جولات تفتيشية دورية والتحقق من الالتزام بقواعس الأمان",
+        "توثيق الحوادث والإصابات وتقديم توصيات لمنع تكرارها",
+        "تدريب الموظفين على معايير السلامة والمخاطر"
+      ],
+      "reportingTo": "قسم العمليات اللوجستية",
+      "directReporting": true,
+      "kpis": "عدد الحوادث، درجة الالتزام بالمعايير",
+      "occupied": false
+    },
+    {
+      "id": "J24",
+      "orgId": "unit-outsourced-labor",
+      "title": "وحدة إدارة العمالة الخارجية",
+      "icon": "👷",
+      "layer": "وحدة تشغيل العمالة",
+      "odooRole": "Labor Management",
+      "odooLevel": "User",
+      "modules": "Labor, Payroll",
+      "phase1": "منسق عمالة",
+      "phase2": "فريق إدارة عمالة",
+      "duties": [
+        "تنسيق وإدارة العمالة الخارجية المؤقتة والدائمة",
+        "ضمان توفر الأيدي العاملة المؤهلة حسب احتياجات العمليات اليومية",
+        "متابعة الأداء والحضور والالتزام بالسلوك المهني",
+        "التنسيق مع الموارد البشرية بشأن التعاقد والرواتب"
+      ],
+      "reportingTo": "إدارة الموارد البشرية / قسم العمليات اللوجستية",
+      "directReporting": true,
+      "kpis": "معدل التوفر، نسبة الحضور، رضا الأداء",
+      "occupied": false
+    },
+    {
+      "id": "J25",
+      "orgId": "unit-receiving",
+      "title": "وحدة الاستلام والرقابة",
+      "icon": "🔍",
+      "layer": "قسم عمليات المستودع",
+      "odooRole": "Receiving Supervisor",
+      "odooLevel": "Manager",
+      "modules": "Inventory, Quality",
+      "phase1": "مشرف الاستلام",
+      "phase2": "مشرف + فريق استلام",
+      "duties": [
+        "الإشراف على تنفيذ عمليات الاستلام والتفريغ الكامل",
+        "التحقق من كميات وأنواع البضائع مقابل فواتير الشراء",
+        "إجراء الفحص الأولي وتسجيل أي نواقص أو أضرار",
+        "ضمان دقة المستندات وتسجيلها في النظام قبل نقل البضائع للتخزين"
+      ],
+      "reportingTo": "قسم عمليات المستودع",
+      "directReporting": true,
+      "kpis": "دقة الاستقبال (99%+)، سرعة المعالجة",
+      "occupied": false
+    },
+    {
+      "id": "J26",
+      "orgId": "sub-doc-verify",
+      "title": "موظف قسم التحقق من المستندات",
+      "icon": "📄",
+      "layer": "قسم عمليات المستودع",
+      "odooRole": "Document Verification",
+      "odooLevel": "User",
+      "modules": "Inventory, Documentation",
+      "phase1": "موظف واحد",
+      "phase2": "فريق تحقق",
+      "duties": [
+        "التحقق من اكتمال ودقة جميع المستندات المرافقة للبضائع",
+        "مطابقة البيانات المستندية مع بيانات النظام",
+        "تسجيل أي تناقضات وإبلاغ الإدارة عنها فوراً",
+        "حفظ نسخ من المستندات ووضع علامات الموافقة عليها"
+      ],
+      "reportingTo": "قسم عمليات المستودع",
+      "directReporting": true,
+      "kpis": "دقة المطابقة، سرعة التحقق",
+      "occupied": false
+    },
+    {
+      "id": "J27",
+      "orgId": "unit-storage",
+      "title": "وحدة التخزين وتحديد المواقع",
+      "icon": "📍",
+      "layer": "قسم عمليات المستودع",
+      "odooRole": "Putaway Supervisor",
+      "odooLevel": "Manager",
+      "modules": "Inventory, Barcode",
+      "phase1": "مشرف التخزين",
+      "phase2": "مشرف + فريق تخزين",
+      "duties": [
+        "إدارة عمليات التخزين الموجه (Putaway) والتموضع المحسّن",
+        "تطبيق قواعس FEFO وتحديد المواقع المثلى للبضائع",
+        "الإشراف على تنظيم المستودع وضمان سهولة الوصول",
+        "تحديث خرائط التخزين والتنسيق مع عمليات الصرف"
+      ],
+      "reportingTo": "قسم عمليات المستودع",
+      "directReporting": true,
+      "kpis": "كفاءة الفراغ، سرعة التخزين",
+      "occupied": false
+    },
+    {
+      "id": "J28",
+      "orgId": "sub-dry",
+      "title": "قسم التخزين الجاف",
+      "icon": "📦",
+      "layer": "قسم عمليات المستودع",
+      "odooRole": "Dry Storage Unit",
+      "odooLevel": "User",
+      "modules": "Inventory, Barcode",
+      "phase1": "مشرف + عمالة",
+      "phase2": "مشرف + فريق متخصص",
+      "duties": [
+        "تنفيذ عمليات التخزين والحفاظ على ظروف التخزين المناسبة",
+        "الامتثال لقواعس الترتيب والنظافة والسلامة في المخزن الجاف",
+        "التحقق الدوري من صلاحيات المنتجات وتطبيق FEFO",
+        "الإبلاغ عن أي تلف أو ضرر أثناء عمليات التخزين"
+      ],
+      "reportingTo": "وحدة التخزين وتحديد المواقع",
+      "directReporting": true,
+      "kpis": "دقة الأرصدة، سرعة الاستجابة",
+      "occupied": false
+    },
+    {
+      "id": "J29",
+      "orgId": "sub-cold",
+      "title": "قسم التخزين البارد",
+      "icon": "❄️",
+      "layer": "قسم عمليات المستودع",
+      "odooRole": "Cold Storage Unit",
+      "odooLevel": "User",
+      "modules": "Inventory, Quality",
+      "phase1": "مشرف + عمالة متخصصة",
+      "phase2": "مشرف + فريق متدرب",
+      "duties": [
+        "إدارة عمليات التخزين البارد والتجميد والتبريد",
+        "مراقبة درجات الحرارة والرطوبة والحفاظ على معايير السلامة الغذائية",
+        "تطبيق معايير FEFO وضمان عدم انقطاع السلسلة الباردة",
+        "تسجيل قراءات درجات الحرارة يومياً وإبلاغ عن أي انحرافات"
+      ],
+      "reportingTo": "وحدة التخزين وتحديد المواقع",
+      "directReporting": true,
+      "kpis": "ثبات درجات الحرارة، صفر انقطاعات سلسلة برد",
+      "occupied": false
+    },
+    {
+      "id": "J30",
+      "orgId": "sub-barcode",
+      "title": "قسم الباركود والتسمية",
+      "icon": "📲",
+      "layer": "قسم عمليات المستودع",
+      "odooRole": "Barcode & Labeling",
+      "odooLevel": "User",
+      "modules": "Barcode, Inventory",
+      "phase1": "موظف + أجهزة",
+      "phase2": "فريق متخصص",
+      "duties": [
+        "طباعة وتطبيق الباركودات على جميع البضائع الواردة",
+        "ضمان صحة الباركودات وتطابقها مع بيانات النظام",
+        "تحديث تسميات المنتجات وتصحيح البيانات عند الحاجة",
+        "صيانة أجهزة الطباعة والماسحات الضوئية"
+      ],
+      "reportingTo": "قسم عمليات المستودع",
+      "directReporting": true,
+      "kpis": "دقة الباركودات (99.9%+)، سرعة التطبيق",
+      "occupied": false
+    },
+    {
+      "id": "J31",
+      "orgId": "unit-picking",
+      "title": "وحدة تحضير الطلبات والصرف",
+      "icon": "🎯",
+      "layer": "قسم عمليات المستودع",
+      "odooRole": "Order Fulfillment Supervisor",
+      "odooLevel": "Manager",
+      "modules": "Inventory, Barcode",
+      "phase1": "مشرف الصرف",
+      "phase2": "مشرف + فريق صرف",
+      "duties": [
+        "الإشراف على تحضير الطلبات وفقاً لأوامر التوزيع",
+        "ضمان دقة تجميع البضائع وسرعة المعالجة",
+        "تنسيق بين عمليات الانتقاء والتعبئة والشحن",
+        "معالجة الطلبات الخاصة والعاجلة"
+      ],
+      "reportingTo": "قسم عمليات المستودع",
+      "directReporting": true,
+      "kpis": "دقة الطلبات (99%+)، زمن التحضير",
+      "occupied": false
+    },
+    {
+      "id": "J32",
+      "orgId": "sub-pick",
+      "title": "قسم الانتقاء (Picking)",
+      "icon": "👆",
+      "layer": "قسم عمليات المستودع",
+      "odooRole": "Picking Operator",
+      "odooLevel": "User",
+      "modules": "Inventory, Barcode",
+      "phase1": "منتقي + أجهزة محمولة",
+      "phase2": "فريق انتقاء متخصص",
+      "duties": [
+        "استلام أوامر الانتقاء من النظام وتنفيذها بدقة",
+        "استخدام أجهزة المسح الضوئي لقراءة الباركودات والتحقق",
+        "تجميع البضائع حسب الكميات المطلوبة والمواقع الصحيحة",
+        "الإبلاغ عن أي نقص أو بضائع غير متوفرة على الفور"
+      ],
+      "reportingTo": "وحدة تحضير الطلبات والصرف",
+      "directReporting": true,
+      "kpis": "دقة الانتقاء (99.5%+)، إنتاجية الموظف",
+      "occupied": false
+    },
+    {
+      "id": "J33",
+      "orgId": "sub-pack",
+      "title": "قسم التعبئة والتغليف",
+      "icon": "📦",
+      "layer": "قسم عمليات المستودع",
+      "odooRole": "Packing Operator",
+      "odooLevel": "User",
+      "modules": "Inventory",
+      "phase1": "مُعبّي + مشرف",
+      "phase2": "فريق تعبئة متخصص",
+      "duties": [
+        "تعبئة البضائع المجمعة في صناديق ورزم مناسبة",
+        "ضمان سلامة المنتجات وعدم تعرضها للتلف أثناء التعبئة",
+        "إضافة ملصقات الشحن والمعلومات المطلوبة على كل رزمة",
+        "التحقق من وزن الرزم والامتثال لمعايير الشحن"
+      ],
+      "reportingTo": "وحدة تحضير الطلبات والصرف",
+      "directReporting": true,
+      "kpis": "سرعة التعبئة، نسبة الأخطاء",
+      "occupied": false
+    },
+    {
+      "id": "J34",
+      "orgId": "sub-ship",
+      "title": "قسم الشحن والتوزيع",
+      "icon": "🚚",
+      "layer": "قسم عمليات المستودع",
+      "odooRole": "Shipping & Dispatch",
+      "odooLevel": "User",
+      "modules": "Fleet, Inventory",
+      "phase1": "موظف شحن + سائقون",
+      "phase2": "مشرف شحن + فريق",
+      "duties": [
+        "تنسيق عمليات تحميل البضائع على المركبات",
+        "إعداد وثائق الشحن والفواتير وبيانات التسليم",
+        "ضمان سلامة الحمولة وتأمينها بشكل صحيح",
+        "تتبع الشحنات وتحديث حالاتها في النظام"
+      ],
+      "reportingTo": "وحدة تحضير الطلبات والصرف",
+      "directReporting": true,
+      "kpis": "التزام الجداول الزمنية، نسبة الأضرار",
+      "occupied": false
+    },
+    {
+      "id": "J35",
+      "orgId": "unit-returns",
+      "title": "وحدة إدارة المرتجعات",
+      "icon": "🔄",
+      "layer": "قسم عمليات المستودع",
+      "odooRole": "Returns Management",
+      "odooLevel": "Manager",
+      "modules": "Inventory, Quality",
+      "phase1": "مشرف مرتجعات",
+      "phase2": "مشرف + فريق معالجة",
+      "duties": [
+        "استقبال والتعامل مع البضائع المرتجعة من العملاء",
+        "فحص حالة المرتجعات وتصنيفها (صالح للبيع، تالف، انتهاء صلاحية)",
+        "معالجة المرتجعات في النظام وتحديث الأرصدة",
+        "التنسيق مع الموردين بشأن المرتجعات والمبالغ المستحقة"
+      ],
+      "reportingTo": "قسم عمليات المستودع",
+      "directReporting": true,
+      "kpis": "سرعة المعالجة، دقة التصنيف",
+      "occupied": false
+    },
+    {
+      "id": "J36",
+      "orgId": "sub-ret-receive",
+      "title": "قسم استلام المرتجعات",
+      "icon": "📥",
+      "layer": "قسم عمليات المستودع",
+      "odooRole": "Returns Receiving",
+      "odooLevel": "User",
+      "modules": "Inventory",
+      "phase1": "موظف استلام",
+      "phase2": "فريق متخصص",
+      "duties": [
+        "استقبال البضائع المرتجعة وتسجيلها في النظام",
+        "الفحص الأولي للحالة والتحقق من الكميات",
+        "إصدار إشعارات الاستقبال والتقارير الأولية",
+        "توجيه المرتجعات إلى الفحص التفصيلي أو المعالجة"
+      ],
+      "reportingTo": "وحدة إدارة المرتجعات",
+      "directReporting": true,
+      "kpis": "دقة التسجيل، سرعة الاستقبال",
+      "occupied": false
+    }
+  ],
+  "staffing": [
+    {
+      "unit": "🏛️ إدارة السلاسل والإمداد والمخازن",
+      "phase1": "1 مدير (مشغول)",
+      "phase2": "مدير + مساعدون",
+      "role": "القيادة العليا: ملكية المخزون والتخطيط والتكامل بين الأقسام"
+    },
+    {
+      "unit": "🚚 إدارة الخدمات اللوجستية والخدمية",
+      "phase1": "1 مدير (مشغول)",
+      "phase2": "مدير + رؤساء أقسام",
+      "role": "النقل والحركة، الصيانة، السلامة، الخدمات المساندة"
+    },
+    {
+      "unit": "🛡️ قسم التوثيق والاعتماد",
+      "phase1": "1 رئيس قسم",
+      "phase2": "رئيس + فريق توثيق",
+      "role": "توثيق واعتماد المستندات، إدخال وترحيل الحركات المخزنية"
+    },
+    {
+      "unit": "📈 قسم التخطيط والتوريد",
+      "phase1": "1 موظف",
+      "phase2": "رئيس + فريق تخطيط",
+      "role": "تخطيط الاحتياجات، متابعة الموردين، ماستر الأصناف"
+    },
+    {
+      "unit": "🧭 قسم عمليات المستودعات",
+      "phase1": "1 رئيس قسم",
+      "phase2": "رئيس + رؤساء وحدات",
+      "role": "الاستلام، التخزين، التحضير والصرف، المرتجعات"
+    },
+    {
+      "unit": "🔬 إدارة الجودة (مساندة)",
+      "phase1": "1 مدير",
+      "phase2": "مدير + فريق جودة",
+      "role": "التدقيق الفني، فحص الجودة، CAPA"
+    },
+    {
+      "unit": "💼 المشتريات (مساندة)",
+      "phase1": "1 مدير",
+      "phase2": "مدير + مشتريات",
+      "role": "المشتريات، العقود، علاقات الموردين"
+    },
+    {
+      "unit": "💰 الإدارة المالية (مساندة)",
+      "phase1": "1 مدير",
+      "phase2": "مدير + محاسبة",
+      "role": "الرقابة المالية، الميزانيات، التدقيق"
+    },
+    {
+      "unit": "💾 تقنية المعلومات (مساندة)",
+      "phase1": "1 موظف",
+      "phase2": "مدير + فريق IT",
+      "role": "الأنظمة (Odoo)، البنية التحتية"
+    },
+    {
+      "unit": "👥 الموارد البشرية (مساندة)",
+      "phase1": "1 موظف",
+      "phase2": "مدير + فريق HR",
+      "role": "التوظيف، التدريب، شؤون الموظفين"
+    },
+    {
+      "unit": "📊 الإجمالي التقريبي",
+      "phase1": "~55–65 موظف",
+      "phase2": "~350 موظف",
+      "role": "—"
+    }
+  ],
+  "raci": {
+    "stages": [
+      "PR — طلب الشراء",
+      "PO — أمر الشراء",
+      "ASN — إشعار الشحن",
+      "GRN — الاستلام والجودة",
+      "Putaway — التخزين",
+      "Picking — تحضير الطلبات",
+      "Dispatch — الشحن",
+      "Returns — المرتجعات"
+    ],
+    "roles": [
+      "إدارة التوثيق والاعتماد",
+      "إدارة الجودة",
+      "إدارة س.الإمداد",
+      "إدارة المستودعات",
+      "إدارة التجارية",
+      "إدارة المالية",
+      "العمليات اللوجستية",
+      "عمليات المستودع",
+      "قسم المشتريات",
+      "قسم النقل"
+    ],
+    "matrix": [
+      [
+        "A",
+        "I",
+        "C",
+        "I",
+        "R",
+        "I",
+        "I",
+        "I",
+        "R",
+        "I"
+      ],
+      [
+        "A",
+        "I",
+        "I",
+        "I",
+        "R",
+        "C",
+        "I",
+        "I",
+        "R",
+        "I"
+      ],
+      [
+        "I",
+        "I",
+        "R",
+        "C",
+        "I",
+        "I",
+        "I",
+        "I",
+        "C",
+        "I"
+      ],
+      [
+        "A",
+        "A",
+        "I",
+        "R",
+        "I",
+        "C",
+        "I",
+        "R",
+        "I",
+        "I"
+      ],
+      [
+        "A",
+        "I",
+        "I",
+        "R",
+        "I",
+        "I",
+        "I",
+        "R",
+        "I",
+        "I"
+      ],
+      [
+        "A",
+        "I",
+        "C",
+        "R",
+        "I",
+        "I",
+        "I",
+        "R",
+        "I",
+        "I"
+      ],
+      [
+        "A",
+        "I",
+        "R",
+        "R",
+        "I",
+        "I",
+        "R",
+        "I",
+        "I",
+        "R"
+      ],
+      [
+        "A",
+        "A",
+        "I",
+        "R",
+        "C",
+        "C",
+        "I",
+        "R",
+        "I",
+        "I"
+      ]
+    ]
+  },
+  "odooRoles": [
+    {
+      "pos": "مدير إدارة المستودعات",
+      "role": "Inventory Manager",
+      "modules": "Inventory, Barcode, Quality",
+      "level": "Admin"
+    },
+    {
+      "pos": "مدير إدارة سلاسل الإمداد",
+      "role": "Supply Chain Manager",
+      "modules": "Purchase, Inventory, Fleet",
+      "level": "Admin"
+    },
+    {
+      "pos": "مدير إدارة التوثيق والاعتماد",
+      "role": "Documentation & Accreditation Manager",
+      "modules": "Inventory (Entry/Post), Audit Logs",
+      "level": "Admin"
+    },
+    {
+      "pos": "مدير إدارة الجودة",
+      "role": "Quality Manager",
+      "modules": "Quality, Inventory (Read)",
+      "level": "Admin"
+    },
+    {
+      "pos": "مدير الإدارة التجارية",
+      "role": "Purchase Manager",
+      "modules": "Purchase, Sales",
+      "level": "Admin"
+    },
+    {
+      "pos": "مدير إدارة المالية",
+      "role": "Accounting Manager",
+      "modules": "Accounting, Invoicing",
+      "level": "Admin"
+    },
+    {
+      "pos": "موظف الجودة",
+      "role": "Quality User",
+      "modules": "Quality, Inventory (Read)",
+      "level": "User"
+    },
+    {
+      "pos": "موظف المشتريات",
+      "role": "Purchase User",
+      "modules": "Purchase",
+      "level": "User"
+    },
+    {
+      "pos": "موظف المحاسبة",
+      "role": "Accounting User",
+      "modules": "Accounting",
+      "level": "User"
+    },
+    {
+      "pos": "عامل المستودع",
+      "role": "Barcode User",
+      "modules": "Barcode, Inventory",
+      "level": "User"
+    },
+    {
+      "pos": "مدير العمليات",
+      "role": "Operations Admin",
+      "modules": "Fleet, Labor, Maintenance",
+      "level": "Manager"
+    },
+    {
+      "pos": "رئيس قسم عمليات المستودع",
+      "role": "Inventory Admin",
+      "modules": "Inventory, Barcode",
+      "level": "Manager"
+    }
+  ]
+}

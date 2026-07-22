@@ -1,0 +1,795 @@
+---
+/**
+ * الهيكل التنظيمي التفاعلي — الإصدار الأول القابل للتعديل.
+ *
+ * المشكلة التي يحلّها: الهيكل كان مكتوبًا يدويًّا في أربعة أماكن (تقريران
+ * منشوران + كتالوج الوظائف + الأدوار) وقد انحرفت عن بعضها فعلًا. هنا يصير
+ * المصدر واحدًا: `src/data/org-structure.json` أساسًا مرفقًا مع البناء،
+ * ونسخة سحابية حيّة يعدّلها المالك بإصدارات لا تُحذف.
+ *
+ * لماذا الإصدارات؟ لأن هذه الوثيقة ستُعرض على سبع إدارات وتتغيّر في كل
+ * اجتماع — «قبل/بعد» في التقرير النهائي يحتاج دليلًا لا ذاكرة.
+ *
+ * الوصول: المديران يكتبان (قواعد Firestore تفرضه)، وبقية المصادقين مشاهدة.
+ * المنطق الخالص كله في `services/org/orgModel.js` ومُختبَر (20 اختبارًا).
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Brandzo | الهيكل التنظيمي">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+<style is:inline>
+  :root {
+    --o-navy: #0d1b2a; --o-gold: #c89d3b; --o-gold-l: #f0d98a;
+    --o-blue: #1b3a5c; --o-ok: #00b87a; --o-warn: #f59e0b; --o-bad: #ef4444;
+    --o-text: #1e293b; --o-line: #d4dce8;
+  }
+  .org-wrap { font-family: 'Tajawal', 'Cairo', sans-serif; background: linear-gradient(135deg, #eef2f8, #f6f1e6); color: var(--o-text); min-height: 100vh; }
+
+  /* شريط علوي */
+  .obar { background: var(--o-navy); padding: 10px 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,.35); }
+  .obar::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--o-gold), var(--o-gold-l), var(--o-gold)); }
+  .obrand { display: flex; align-items: center; gap: 13px; flex-wrap: wrap; }
+  .ologo { background: linear-gradient(135deg, var(--o-gold), #a8802a); border-radius: 10px; padding: 7px 14px; font-family: 'Cairo', sans-serif; font-size: 1.25rem; font-weight: 900; color: #fff; }
+  .otitle { color: rgba(255,255,255,.85); font-size: .93rem; font-weight: 600; }
+  .ochip { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.85); border-radius: 20px; padding: 5px 13px; font-size: .76rem; font-weight: 700; }
+  .ochip .dot { width: 9px; height: 9px; border-radius: 50%; background: #94a3b8; }
+  .ochip.online .dot { background: var(--o-ok); } .ochip.pending .dot { background: var(--o-warn); } .ochip.dirty .dot { background: var(--o-bad); }
+
+  .omain { max-width: 1280px; margin: 20px auto; padding: 0 18px 80px; }
+
+  /* بطاقة الترويسة */
+  .ohero { background: var(--o-navy); border-radius: 18px; padding: 22px 28px; margin-bottom: 16px; position: relative; overflow: hidden; box-shadow: 0 12px 40px rgba(13,27,42,.35); }
+  .ohero::before { content: ''; position: absolute; top: -70px; left: -50px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(200,157,59,.22), transparent 70%); border-radius: 50%; }
+  .ohin { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; position: relative; z-index: 1; }
+  .ohin h2 { font-size: 1.45rem; font-weight: 900; color: #fff; }
+  .ohin p { color: rgba(255,255,255,.58); font-size: .84rem; margin-top: 4px; max-width: 620px; line-height: 1.7; }
+  .okpis { display: flex; gap: 10px; flex-wrap: wrap; }
+  .okpi { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 9px 16px; text-align: center; min-width: 88px; }
+  .okpi .n { font-size: 1.35rem; font-weight: 900; color: var(--o-gold-l); font-family: 'Cairo', sans-serif; line-height: 1.2; }
+  .okpi .l { font-size: .7rem; opacity: .65; color: #fff; margin-top: 2px; }
+  .okpi.warn .n { color: #ffd08a; }
+
+  /* أزرار */
+  .obtn { padding: 8px 15px; border-radius: 9px; border: none; cursor: pointer; font-family: 'Tajawal', sans-serif; font-size: .83rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; transition: all .2s; white-space: nowrap; }
+  .obtn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.2); }
+  .obtn:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+  .b-gold { background: linear-gradient(135deg, var(--o-gold), #a8802a); color: #fff; }
+  .b-navy { background: linear-gradient(135deg, var(--o-navy), var(--o-blue)); color: #fff; }
+  .b-ok { background: linear-gradient(135deg, #00b87a, #00976a); color: #fff; }
+  .b-bad { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+  .b-ghost { background: #eef2f7; color: #475569; }
+  .mini { border: 1.5px solid var(--o-line); background: #fff; border-radius: 8px; padding: 4px 10px; font-family: 'Tajawal', sans-serif; font-size: .76rem; font-weight: 700; cursor: pointer; color: var(--o-navy); }
+  .mini:hover { border-color: var(--o-gold); background: #fffaf0; }
+  .mini:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* شريط الأدوات */
+  .otools { background: #fff; border-radius: 14px; padding: 11px 16px; margin-bottom: 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; box-shadow: 0 3px 14px rgba(0,0,0,.06); }
+  .oseg { display: inline-flex; border: 1.5px solid var(--o-line); border-radius: 9px; overflow: hidden; }
+  .oseg button { border: none; background: #fff; padding: 6px 14px; font-family: 'Tajawal', sans-serif; font-size: .8rem; font-weight: 700; cursor: pointer; color: #64748b; }
+  .oseg button.on { background: var(--o-navy); color: #fff; }
+  .otools input[type=search] { border: 1.5px solid var(--o-line); border-radius: 9px; padding: 7px 12px; font-family: 'Tajawal', sans-serif; font-size: .83rem; min-width: 190px; }
+  .oswitch { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 700; color: #475569; cursor: pointer; }
+
+  /* التخطيط: شجرة + لوحة */
+  .olayout { display: grid; grid-template-columns: 1fr 350px; gap: 16px; align-items: start; }
+  @media (max-width: 1000px) { .olayout { grid-template-columns: 1fr; } }
+  .ocard { background: #fff; border-radius: 16px; box-shadow: 0 3px 16px rgba(0,0,0,.07); overflow: hidden; border: 1px solid rgba(0,0,0,.05); margin-bottom: 16px; }
+  .ochead { background: linear-gradient(135deg, var(--o-navy), var(--o-blue)); padding: 11px 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .ochead h3 { color: #fff; font-size: .96rem; font-weight: 700; }
+  .ocbody { padding: 16px 18px; }
+
+  /* الشجرة المسنّنة */
+  .otree { padding: 6px 4px; }
+  .orow { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 9px; cursor: pointer; border: 1.5px solid transparent; transition: background .15s; }
+  .orow:hover { background: #f6f8fc; }
+  .orow.sel { background: #fffaf0; border-color: var(--o-gold); }
+  .orow .tw { width: 20px; text-align: center; font-size: .72rem; color: #94a3b8; flex-shrink: 0; user-select: none; }
+  .orow .ico { font-size: 1rem; flex-shrink: 0; }
+  .orow .ttl { font-weight: 700; font-size: .9rem; }
+  .orow .en { font-size: .7rem; color: #94a3b8; }
+  .orow.t-management .ttl { color: var(--o-navy); font-size: .98rem; font-weight: 900; }
+  .orow.t-section .ttl { color: #1b3a5c; }
+  .orow.t-unit .ttl { color: #475569; font-weight: 600; }
+  .orow.t-subunit .ttl { color: #64748b; font-weight: 500; font-size: .84rem; }
+  .otag { border-radius: 12px; padding: 1px 8px; font-size: .66rem; font-weight: 800; white-space: nowrap; }
+  .tg-type { background: #eef2f7; color: #64748b; }
+  .tg-prop { background: #fff4e0; color: #b45309; border: 1px dashed #f59e0b; }
+  .tg-owner { background: #e7f7f0; color: #067a52; }
+  .tg-holder { background: #eef2ff; color: #4338ca; }
+  .tg-pages { background: #f3e8ff; color: #7e22ce; }
+  .ohit { background: #fef08a !important; }
+  .oindent { border-right: 1.5px dashed #e2e8f0; margin-right: 10px; }
+
+  /* لوحة التفاصيل */
+  .opanel { position: sticky; top: 74px; }
+  .fld { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+  .fld label { font-size: .74rem; font-weight: 800; color: #64748b; }
+  .fld input, .fld select, .fld textarea { border: 1.5px solid var(--o-line); border-radius: 9px; padding: 8px 11px; font-family: 'Tajawal', sans-serif; font-size: .88rem; background: #f8fafc; width: 100%; }
+  .fld input:focus, .fld select:focus, .fld textarea:focus { outline: none; border-color: var(--o-gold); box-shadow: 0 0 0 4px rgba(200,157,59,.13); background: #fff; }
+  .fld textarea { resize: vertical; min-height: 54px; }
+  .pbtns { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 6px; }
+  .crumb { font-size: .74rem; color: #94a3b8; margin-bottom: 10px; line-height: 1.7; }
+  .jobcard { border: 1.5px solid #e8edf4; border-radius: 11px; padding: 10px 13px; margin-top: 9px; background: #fbfcfe; }
+  .jobcard h5 { font-size: .86rem; font-weight: 800; color: var(--o-navy); }
+  .jobcard .meta { font-size: .72rem; color: #94a3b8; margin: 3px 0 6px; }
+  .jobcard li { font-size: .78rem; color: #475569; margin-right: 14px; line-height: 1.75; }
+  .pglink { display: inline-block; background: #f3e8ff; color: #7e22ce; border-radius: 7px; padding: 3px 9px; font-size: .73rem; font-weight: 700; margin: 3px 3px 0 0; text-decoration: none; }
+  .pglink:hover { background: #e9d5ff; }
+
+  /* فروق قبل/بعد */
+  .difflist { display: flex; flex-direction: column; gap: 6px; }
+  .diffrow { display: flex; align-items: flex-start; gap: 9px; padding: 8px 12px; border-radius: 8px; font-size: .82rem; line-height: 1.7; }
+  .d-add { background: #e7f7f0; border-right: 3px solid var(--o-ok); }
+  .d-del { background: #fdecec; border-right: 3px solid var(--o-bad); }
+  .d-ren { background: #fff6e5; border-right: 3px solid var(--o-warn); }
+  .d-mov { background: #eef2ff; border-right: 3px solid #6366f1; }
+
+  .otable { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  .otable thead tr { background: linear-gradient(135deg, var(--o-navy), var(--o-blue)); color: #fff; }
+  .otable th { padding: 9px 12px; text-align: right; font-size: .78rem; font-weight: 700; }
+  .otable td { padding: 8px 12px; border-bottom: 1px solid #eef1f6; }
+  .otable tbody tr:hover { background: #fafbff; }
+  .oempty { text-align: center; padding: 26px 16px; color: #94a3b8; font-size: .9rem; }
+  .supp-band { display: flex; gap: 10px; flex-wrap: wrap; }
+  .supp { border: 1.5px dashed #cbb47a; background: #fffdf6; border-radius: 11px; padding: 9px 15px; font-size: .84rem; font-weight: 700; color: var(--o-navy); text-align: center; }
+  .supp small { display: block; font-weight: 500; color: #94a3b8; font-size: .7rem; margin-top: 2px; }
+
+  /* المخطط الهرمي (عرض وطباعة) */
+  .chart { display: flex; flex-direction: column; align-items: center; overflow-x: auto; padding: 14px 4px; }
+  .chart ul { padding-top: 18px; position: relative; display: flex; flex-wrap: nowrap; justify-content: center; margin: 0; }
+  .chart ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid var(--o-gold); height: 18px; }
+  .chart li { text-align: center; list-style-type: none; position: relative; padding: 18px 8px 0; }
+  .chart li::before, .chart li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid var(--o-gold); width: 50%; height: 18px; }
+  .chart li::after { right: auto; left: 50%; border-left: 2px solid var(--o-gold); }
+  .chart li:only-child::after, .chart li:only-child::before { display: none; }
+  .chart li:only-child { padding-top: 0; }
+  .chart li:first-child::before, .chart li:last-child::after { border: 0 none; }
+  .chart li:last-child::before { border-right: 2px solid var(--o-gold); border-radius: 0 5px 0 0; }
+  .chart li:first-child::after { border-radius: 5px 0 0 0; }
+  .chart li:only-child::after { border-left: 2px solid var(--o-gold); border-radius: 5px 5px 0 0; }
+  .cnode { border: 1.5px solid var(--o-gold); border-radius: 9px; background: #fff; padding: 7px 13px; display: inline-block; font-size: .8rem; min-width: 118px; color: var(--o-navy); font-weight: 700; cursor: pointer; }
+  .cnode.t-management { background: var(--o-navy); color: #fff; font-size: .88rem; font-weight: 900; }
+  .cnode.t-section { background: #fdf8ec; }
+  .cnode.t-unit { font-weight: 600; font-size: .76rem; border-color: #e0cf9e; }
+  .cnode.t-subunit { font-weight: 500; font-size: .72rem; border-color: #ece3cc; color: #64748b; }
+  .cnode.prop { border-style: dashed; }
+  .cnode .who { display: block; font-size: .68rem; font-weight: 500; opacity: .75; margin-top: 2px; }
+
+  /* وضع العرض للاجتماع */
+  .present .obar, .present .otools, .present .opanel, .present .no-present { display: none !important; }
+  .present .olayout { grid-template-columns: 1fr; }
+  .present .omain { max-width: 100%; padding: 8px 14px 30px; }
+  .present .cnode { font-size: 1rem; padding: 11px 20px; }
+  .present .cnode.t-management { font-size: 1.15rem; }
+  .present .cnode.t-unit { font-size: .9rem; }
+  .present .cnode.t-subunit { font-size: .84rem; }
+  .present .orow .ttl { font-size: 1.05rem; }
+  .exit-present { display: none; position: fixed; top: 12px; left: 12px; z-index: 400; }
+  .present .exit-present { display: inline-flex; }
+
+  .toastw { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .toast { background: var(--o-navy); color: #fff; padding: 11px 22px; border-radius: 12px; font-size: .88rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.3); border-right: 4px solid var(--o-gold); max-width: min(560px, 90vw); white-space: pre-line; }
+
+  .ov { display: none; position: fixed; inset: 0; background: rgba(13,27,42,.72); z-index: 500; align-items: flex-start; justify-content: center; backdrop-filter: blur(6px); padding: 28px 14px; overflow-y: auto; }
+  .ov.active { display: flex; }
+  .omodal { background: #fff; border-radius: 18px; width: min(620px, 96vw); box-shadow: 0 30px 80px rgba(0,0,0,.4); }
+  .omhead { background: linear-gradient(135deg, var(--o-navy), var(--o-blue)); color: #fff; padding: 14px 20px; border-radius: 18px 18px 0 0; display: flex; justify-content: space-between; align-items: center; }
+  .omhead h3 { font-size: 1rem; font-weight: 800; }
+  .omclose { background: rgba(255,255,255,.12); border: none; color: #fff; border-radius: 8px; padding: 5px 11px; cursor: pointer; font-family: 'Tajawal', sans-serif; font-weight: 700; }
+  .ombody { padding: 18px 20px 24px; }
+  .vrow { border: 1.5px solid #e8edf4; border-radius: 10px; padding: 9px 13px; margin-bottom: 7px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: .84rem; align-items: center; }
+
+  /* الطباعة */
+  #orgPrint { position: absolute; left: -12000px; top: 0; direction: rtl; }
+  .sheet { width: 297mm; min-height: 210mm; background: #fff; box-sizing: border-box; padding: 12mm 14mm; font-family: 'Tajawal', 'Cairo', sans-serif; color: #1e293b; }
+  .sh-head { display: flex; justify-content: space-between; align-items: center; border-bottom: .8mm solid var(--o-gold); padding-bottom: 3mm; margin-bottom: 5mm; }
+  .sh-logo { background: linear-gradient(135deg, var(--o-gold), #a8802a); color: #fff; border-radius: 3mm; padding: 2.5mm 6mm; font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 13pt; }
+  .sh-t { text-align: center; }
+  .sh-t h1 { font-size: 14pt; font-weight: 900; color: var(--o-navy); }
+  .sh-t .en { font-size: 8pt; color: #64748b; }
+  .sh-ref { border: .3mm solid var(--o-gold); background: #fdf9ee; border-radius: 2mm; padding: 1.5mm 4mm; font-size: 8.5pt; font-weight: 900; font-family: 'Cairo', sans-serif; text-align: center; }
+  .sh-sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 14mm; margin-top: 10mm; }
+  .sh-sig { text-align: center; font-size: 9pt; }
+  .sh-sig .line { border-bottom: .3mm dashed #94a3b8; height: 14mm; margin-bottom: 1.5mm; }
+  .sh-sig b { display: block; font-size: 9.5pt; }
+  .sh-sig span { color: #64748b; font-size: 8pt; }
+  .sh-foot { margin-top: 6mm; font-size: 7pt; color: #94a3b8; text-align: center; border-top: .2mm solid #e2e8f0; padding-top: 2mm; }
+  @media print {
+    @page { size: A4 landscape; margin: 0; }
+    body * { visibility: hidden !important; }
+    #orgPrint, #orgPrint * { visibility: visible !important; }
+    #orgPrint { position: absolute !important; left: 0 !important; top: 0 !important; }
+    .sheet { print-color-adjust: exact; -webkit-print-color-adjust: exact; margin: 0 auto; page-break-after: always; }
+  }
+</style>
+
+<div class="org-wrap" dir="rtl" id="orgWrap">
+<div class="toastw" id="toastWrap"></div>
+<button class="obtn b-navy exit-present" onclick="togglePresent(false)">✕ إنهاء وضع العرض</button>
+
+<div class="obar">
+  <div class="obrand">
+    <div class="ologo">Brandzo</div>
+    <div class="otitle">الهيكل التنظيمي — الإصدار الأول القابل للتعديل</div>
+    <span class="ochip" id="cloudChip"><span class="dot"></span><span id="cloudChipText">جارٍ الاتصال…</span></span>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="obtn b-navy" onclick="togglePresent(true)">🖥 وضع العرض</button>
+    <button class="obtn b-ghost" onclick="printStructure()">🖨 طباعة / PDF</button>
+    <button class="obtn b-ok writer-only" id="saveBtn" onclick="openSave()" disabled>💾 حفظ نسخة</button>
+  </div>
+</div>
+
+<div class="omain">
+  <div class="ohero">
+    <div class="ohin">
+      <div>
+        <h2 id="heroTitle">🏛️ إدارة السلاسل والإمداد والمخازن</h2>
+        <p id="heroNote">إدارتان عُليا والباقي أقسام ووحدات. كل صندوق يحمل مصدره: من التقرير المعتمد، أو باعتمادك، أو <b>مقترح</b> ينتظر قرارك — عدّله أو احذفه بضغطة.</p>
+      </div>
+      <div class="okpis">
+        <div class="okpi"><div class="n" id="kMgmt">0</div><div class="l">إدارة</div></div>
+        <div class="okpi"><div class="n" id="kSec">0</div><div class="l">قسم</div></div>
+        <div class="okpi"><div class="n" id="kUnit">0</div><div class="l">وحدة</div></div>
+        <div class="okpi"><div class="n" id="kSub">0</div><div class="l">فريق</div></div>
+        <div class="okpi warn"><div class="n" id="kProp">0</div><div class="l">مقترح</div></div>
+        <div class="okpi"><div class="n" id="kVer">—</div><div class="l">الإصدار</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="otools no-present">
+    <div class="oseg">
+      <button id="vList" class="on" onclick="setView('list')">☰ قائمة</button>
+      <button id="vChart" onclick="setView('chart')">🗂 مخطط</button>
+    </div>
+    <input type="search" id="oSearch" placeholder="🔎 ابحث في المسمّيات…" oninput="render()">
+    <label class="oswitch"><input type="checkbox" id="showProp" checked onchange="render()"> إظهار المقترحات</label>
+    <button class="mini" onclick="expandAll(true)">⊞ فتح الكل</button>
+    <button class="mini" onclick="expandAll(false)">⊟ طيّ الكل</button>
+    <span style="flex:1"></span>
+    <button class="mini" onclick="exportJson()">⬇ تصدير JSON</button>
+    <button class="mini writer-only" onclick="document.getElementById('impFile').click()">⬆ استيراد JSON</button>
+    <button class="mini writer-only" onclick="resetToBaseline()">↺ استعادة الأساس</button>
+    <button class="mini" onclick="openVersions()">🕓 الإصدارات</button>
+    <input type="file" id="impFile" accept="application/json" hidden onchange="importJson(event)">
+  </div>
+
+  <div class="olayout">
+    <div>
+      <div class="ocard">
+        <div class="ochead">
+          <h3 id="treeHead">🌳 شجرة الهيكل</h3>
+          <span style="color:rgba(255,255,255,.6);font-size:.76rem;" id="treeHint">انقر أي صندوق لعرض تفاصيله وتعديله</span>
+        </div>
+        <div class="ocbody" style="padding:10px 12px;">
+          <div class="otree" id="treeBox"></div>
+          <div class="chart" id="chartBox" hidden></div>
+        </div>
+      </div>
+
+      <div class="ocard no-present" id="diffCard" hidden>
+        <div class="ochead"><h3>🔀 ما تغيّر عن الأساس المعتمد</h3>
+          <span style="color:rgba(255,255,255,.6);font-size:.76rem;" id="diffCount"></span></div>
+        <div class="ocbody"><div class="difflist" id="diffBox"></div></div>
+      </div>
+
+      <div class="ocard">
+        <div class="ochead"><h3>🤝 وظائف مساندة (خارج التبعية المباشرة)</h3></div>
+        <div class="ocbody"><div class="supp-band" id="suppBox"></div></div>
+      </div>
+
+      <div class="ocard">
+        <div class="ochead"><h3>👥 الكادر الوظيفي — المرحلتان</h3></div>
+        <div class="ocbody" style="padding:0;overflow-x:auto;">
+          <table class="otable">
+            <thead><tr><th>الوحدة التنظيمية</th><th>🚀 المرحلة الأولى</th><th>🏗️ المرحلة الكاملة</th><th>الدور الأساسي</th></tr></thead>
+            <tbody id="staffBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="opanel no-present">
+      <div class="ocard">
+        <div class="ochead"><h3 id="panelHead">🔍 التفاصيل</h3></div>
+        <div class="ocbody" id="panelBody">
+          <div class="oempty">انقر أي صندوق في الشجرة لعرض تفاصيله وتعديله.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة الحفظ -->
+<div class="ov" id="saveOv">
+  <div class="omodal">
+    <div class="omhead"><h3>💾 حفظ نسخة جديدة</h3><button class="omclose" onclick="closeOv('saveOv')">✕</button></div>
+    <div class="ombody">
+      <div id="saveSummary" style="font-size:.86rem;margin-bottom:12px;line-height:1.9;"></div>
+      <div class="fld"><label>سبب التعديل (يظهر في سجل الإصدارات)</label>
+        <input type="text" id="saveNote" placeholder="مثال: اعتماد الهيكل الجديد بإدارتين — اجتماع الإدارة المالية"></div>
+      <div class="pbtns">
+        <button class="obtn b-ok" onclick="doSave()">💾 احفظ الإصدار</button>
+        <button class="obtn b-ghost" onclick="closeOv('saveOv')">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة النقل -->
+<div class="ov" id="moveOv">
+  <div class="omodal">
+    <div class="omhead"><h3>⇄ نقل إلى</h3><button class="omclose" onclick="closeOv('moveOv')">✕</button></div>
+    <div class="ombody">
+      <div id="moveWhat" style="font-size:.88rem;font-weight:700;margin-bottom:10px;"></div>
+      <div class="fld"><label>الأب الجديد</label><select id="moveTarget"></select></div>
+      <div class="pbtns">
+        <button class="obtn b-navy" onclick="doMove()">⇄ نفّذ النقل</button>
+        <button class="obtn b-ghost" onclick="closeOv('moveOv')">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة الإصدارات -->
+<div class="ov" id="verOv">
+  <div class="omodal">
+    <div class="omhead"><h3>🕓 سجل الإصدارات</h3><button class="omclose" onclick="closeOv('verOv')">✕</button></div>
+    <div class="ombody" id="verBody"><div class="oempty">جارٍ التحميل…</div></div>
+  </div>
+</div>
+
+<div id="orgPrint" aria-hidden="true"></div>
+</div>
+
+<script>
+  import baseline from '../../data/org-structure.json';
+  import {
+    TYPE_LABELS,
+    SOURCE_LABELS,
+    NODE_TYPES,
+    flatten,
+    findNode,
+    pathTo,
+    countByType,
+    proposedCount,
+    validateTree,
+    updateNode,
+    addChild,
+    removeNode,
+    moveNode,
+    reorderNode,
+    diffTrees,
+    hasChanges,
+    jobsOfNode,
+  } from '../../services/org/orgModel.js';
+  import {
+    esc,
+    chartHtml,
+    treeRowsHtml,
+    supportBandHtml,
+    staffingRowsHtml,
+    diffListHtml,
+    jobCardsHtml,
+  } from '../../services/org/orgView.js';
+  import {
+    listenOrgStructure,
+    saveOrgStructure,
+    listVersions,
+  } from '../../services/org/orgService.js';
+  import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
+
+  const WRITER_ROLES = ['admin', 'warehouse_manager'];
+  const BASE = JSON.parse(JSON.stringify(baseline));
+
+  /** الحالة. `dirty` مرجع حيّ: المستمع السحابي لا يدهس تعديلًا جاريًا. */
+  let doc = JSON.parse(JSON.stringify(baseline));
+  let cloudVersion = 0;
+  let dirty = false;
+  let selectedId = 'root';
+  let view = 'list';
+  let collapsed = new Set();
+  let profile = null;
+  let canWrite = false;
+  let moveId = null;
+
+  const $ = (id) => document.getElementById(id);
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+  function toast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    $('toastWrap').appendChild(t);
+    setTimeout(() => t.remove(), 5200);
+  }
+  function setCloud(state, text) {
+    const chip = $('cloudChip');
+    chip.className = 'ochip ' + state;
+    $('cloudChipText').textContent = text;
+  }
+  // تُعرَّف محليًّا ثم تُصدَّر للنطاق العام: تُستدعى من `onclick` في الوسم
+  // ومن داخل الوحدة معًا، والاعتماد على النطاق العام وحده يكسر التتبّع.
+  function closeOv(id) {
+    $(id).classList.remove('active');
+  }
+  window.closeOv = closeOv;
+
+  function markDirty() {
+    dirty = true;
+    $('saveBtn').disabled = !canWrite;
+    setCloud('dirty', 'تعديلات غير محفوظة');
+  }
+
+  /* ═══════════ العرض ═══════════ */
+
+  function renderList() {
+    $('treeBox').innerHTML = treeRowsHtml(doc.tree, {
+      selectedId,
+      collapsed,
+      showProposed: $('showProp').checked,
+      term: ($('oSearch').value || '').trim(),
+    });
+  }
+
+  function renderChart() {
+    $('chartBox').innerHTML = chartHtml(doc.tree, {
+      skin: 'portal',
+      showProposed: $('showProp').checked,
+      collapsed,
+      onClick: 'selectNode',
+    });
+  }
+
+  function renderPanel() {
+    const node = findNode(doc.tree, selectedId);
+    if (!node) { $('panelBody').innerHTML = '<div class="oempty">اختر صندوقًا من الشجرة.</div>'; return; }
+    const crumb = pathTo(doc.tree, node.id).join(' ← ');
+    const jobs = jobsOfNode(doc.jobs, node.id);
+    const isRoot = node.id === doc.tree.id;
+    const ro = canWrite ? '' : 'disabled';
+
+    $('panelHead').textContent = `${node.icon || '▫'} ${node.title}`;
+    $('panelBody').innerHTML = `
+      <div class="crumb">📍 ${esc(crumb)}</div>
+      <div class="fld"><label>المسمّى</label><input type="text" id="fTitle" value="${esc(node.title)}" ${ro}></div>
+      <div class="fld"><label>المسمّى بالإنجليزية</label><input type="text" id="fTitleEn" value="${esc(node.titleEn || '')}" ${ro}></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+        <div class="fld"><label>المستوى</label><select id="fType" ${ro}>
+          ${NODE_TYPES.map((t) => `<option value="${t}" ${node.type === t ? 'selected' : ''}>${TYPE_LABELS[t]}</option>`).join('')}
+        </select></div>
+        <div class="fld"><label>الرمز</label><input type="text" id="fIcon" value="${esc(node.icon || '')}" ${ro}></div>
+      </div>
+      <div class="fld"><label>شاغل المنصب</label><input type="text" id="fHolder" value="${esc(node.holder || '')}" placeholder="اتركه فارغًا إن كان شاغرًا" ${ro}></div>
+      <div class="fld"><label>ملاحظة</label><textarea id="fNote" ${ro}>${esc(node.note || '')}</textarea></div>
+      <div class="fld"><label>المصدر</label><select id="fSource" ${ro}>
+        ${Object.entries(SOURCE_LABELS).map(([k, v]) => `<option value="${k}" ${(node.source || 'report') === k ? 'selected' : ''}>${v}</option>`).join('')}
+      </select></div>
+      ${canWrite ? `<div class="pbtns">
+        <button class="obtn b-ok" onclick="applyEdit()">✔ طبّق التعديل</button>
+        <button class="obtn b-navy" onclick="addUnder()">＋ أضف تحتها</button>
+        <button class="mini" onclick="reorder(-1)" ${isRoot ? 'disabled' : ''}>↑</button>
+        <button class="mini" onclick="reorder(1)" ${isRoot ? 'disabled' : ''}>↓</button>
+        <button class="mini" onclick="openMove()" ${isRoot ? 'disabled' : ''}>⇄ نقل</button>
+        <button class="obtn b-bad" onclick="removeSel()" ${isRoot ? 'disabled' : ''}>🗑 حذف</button>
+      </div>` : '<p style="font-size:.78rem;color:#94a3b8;">وضع المشاهدة — التعديل للمديرَين.</p>'}
+
+      ${(node.pages || []).length ? `<div style="margin-top:14px;">
+        <label style="font-size:.74rem;font-weight:800;color:#64748b;">🔗 يخدمها في النظام الحيّ</label><br>
+        ${(node.pages || []).map((p) => `<a class="pglink" href="${base}${esc(p)}">${esc(p.replace('/dashboard/', ''))}</a>`).join('')}
+      </div>` : ''}
+
+      ${jobs.length ? `<div style="margin-top:14px;">
+        <label style="font-size:.74rem;font-weight:800;color:#64748b;">📇 بطاقات الوصف الوظيفي (${jobs.length})</label>
+        ${jobCardsHtml(jobs)}
+      </div>` : ''}
+    `;
+  }
+
+  function renderDiff() {
+    const d = diffTrees(BASE.tree, doc.tree);
+    const any = hasChanges(d);
+    $('diffCard').hidden = !any;
+    if (!any) return;
+    const n = d.added.length + d.removed.length + d.renamed.length + d.moved.length;
+    $('diffCount').textContent = `${n} تغيير`;
+    $('diffBox').innerHTML = diffListHtml(d);
+  }
+
+  function renderStatic() {
+    $('suppBox').innerHTML = supportBandHtml(doc.supportFunctions);
+    $('staffBody').innerHTML = staffingRowsHtml(doc.staffing);
+    $('heroTitle').textContent = `${doc.tree.icon || '🏛️'} ${doc.tree.title}`;
+  }
+
+  function render() {
+    const c = countByType(doc.tree);
+    $('kMgmt').textContent = c.management;
+    $('kSec').textContent = c.section;
+    $('kUnit').textContent = c.unit;
+    $('kSub').textContent = c.subunit;
+    $('kProp').textContent = proposedCount(doc.tree);
+    $('kVer').textContent = cloudVersion ? `v${cloudVersion}${dirty ? '+' : ''}` : 'الأساس';
+    if (view === 'list') renderList(); else renderChart();
+    renderPanel();
+    renderDiff();
+    renderStatic();
+  }
+  window.render = render;
+
+  /* ═══════════ التفاعل ═══════════ */
+
+  function setView(v) {
+    view = v;
+    $('vList').classList.toggle('on', v === 'list');
+    $('vChart').classList.toggle('on', v === 'chart');
+    $('treeBox').hidden = v !== 'list';
+    $('chartBox').hidden = v !== 'chart';
+    render();
+  }
+  window.setView = setView;
+  window.selectNode = (id) => { selectedId = id; render(); };
+  window.toggleFold = (id) => {
+    if (collapsed.has(id)) collapsed.delete(id); else collapsed.add(id);
+    render();
+  };
+  window.expandAll = (open) => {
+    collapsed = open ? new Set() : new Set(flatten(doc.tree).filter((r) => (r.node.children || []).length).map((r) => r.node.id));
+    render();
+  };
+
+  window.applyEdit = () => {
+    const title = $('fTitle').value.trim();
+    if (!title) { toast('❌ المسمّى لا يكون فارغًا'); return; }
+    doc.tree = updateNode(doc.tree, selectedId, {
+      title,
+      titleEn: $('fTitleEn').value.trim(),
+      type: $('fType').value,
+      icon: $('fIcon').value.trim(),
+      holder: $('fHolder').value.trim(),
+      note: $('fNote').value.trim(),
+      source: $('fSource').value,
+    });
+    markDirty();
+    render();
+    toast('✔ طُبّق التعديل — لا يُحفظ سحابيًّا حتى تضغط «حفظ نسخة»');
+  };
+
+  window.addUnder = () => {
+    const title = prompt('مسمّى الوحدة الجديدة:');
+    if (!title || !title.trim()) return;
+    const parent = findNode(doc.tree, selectedId);
+    const deeper = { management: 'section', section: 'unit', unit: 'subunit', subunit: 'subunit' };
+    const id = `n-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e4).toString(36)}`;
+    try {
+      doc.tree = addChild(doc.tree, selectedId, {
+        id, title: title.trim(), type: deeper[parent.type] || 'unit', source: 'proposed', children: [],
+      });
+      collapsed.delete(selectedId);
+      selectedId = id;
+      markDirty();
+      render();
+      toast('＋ أُضيفت — معلَّمة «مقترح» حتى تعتمدها');
+    } catch (e) { toast('❌ ' + e.message); }
+  };
+
+  window.removeSel = () => {
+    const node = findNode(doc.tree, selectedId);
+    const n = flatten(node).length;
+    if (!confirm(`حذف «${node.title}»${n > 1 ? ` وما تحتها (${n - 1})` : ''}؟`)) return;
+    try {
+      doc.tree = removeNode(doc.tree, selectedId);
+      selectedId = doc.tree.id;
+      markDirty();
+      render();
+      toast('🗑 حُذفت — يمكن استعادتها بـ«استعادة الأساس» قبل الحفظ');
+    } catch (e) { toast('❌ ' + e.message); }
+  };
+
+  window.reorder = (delta) => {
+    try { doc.tree = reorderNode(doc.tree, selectedId, delta); markDirty(); render(); }
+    catch (e) { toast('❌ ' + e.message); }
+  };
+
+  window.openMove = () => {
+    moveId = selectedId;
+    const node = findNode(doc.tree, moveId);
+    const banned = new Set(flatten(node).map((r) => r.node.id));
+    $('moveWhat').textContent = `نقل: ${node.title}`;
+    $('moveTarget').innerHTML = flatten(doc.tree)
+      .filter((r) => !banned.has(r.node.id))
+      .map((r) => `<option value="${esc(r.node.id)}">${'— '.repeat(r.depth)}${esc(r.node.title)}</option>`)
+      .join('');
+    $('moveOv').classList.add('active');
+  };
+  window.doMove = () => {
+    try {
+      doc.tree = moveNode(doc.tree, moveId, $('moveTarget').value);
+      closeOv('moveOv');
+      markDirty();
+      render();
+      toast('⇄ تم النقل');
+    } catch (e) { toast('❌ ' + e.message); }
+  };
+
+  window.resetToBaseline = () => {
+    if (!confirm('استعادة الأساس المرفق تُلغي كل تعديلاتك غير المحفوظة. متابعة؟')) return;
+    doc = JSON.parse(JSON.stringify(BASE));
+    selectedId = doc.tree.id;
+    markDirty();
+    render();
+    toast('↺ عاد الهيكل إلى الأساس المرفق');
+  };
+
+  window.exportJson = () => {
+    const blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `org-structure-v${cloudVersion || 0}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  window.importJson = (ev) => {
+    const file = ev.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        const v = validateTree(parsed?.tree);
+        if (!v.ok) { toast('❌ ملف غير صالح:\n• ' + v.problems.slice(0, 4).join('\n• ')); return; }
+        doc = { ...doc, ...parsed };
+        selectedId = doc.tree.id;
+        markDirty();
+        render();
+        toast('⬆ استُورد الهيكل — راجعه ثم احفظ');
+      } catch (e) { toast('❌ تعذّرت قراءة الملف: ' + e.message); }
+      ev.target.value = '';
+    };
+    reader.readAsText(file);
+  };
+
+  /* ═══════════ الحفظ والإصدارات ═══════════ */
+
+  window.openSave = () => {
+    const d = diffTrees(BASE.tree, doc.tree);
+    $('saveSummary').innerHTML = hasChanges(d)
+      ? `مقارنةً بالأساس المعتمد: <b>${d.added.length}</b> إضافة · <b>${d.removed.length}</b> حذف · <b>${d.renamed.length}</b> إعادة تسمية · <b>${d.moved.length}</b> نقل.`
+      : 'لا فروق عن الأساس المعتمد — ستُحفظ النسخة كما هي.';
+    $('saveOv').classList.add('active');
+  };
+
+  window.doSave = async () => {
+    try {
+      const v = await saveOrgStructure(
+        { meta: doc.meta, tree: doc.tree, supportFunctions: doc.supportFunctions, jobs: doc.jobs, staffing: doc.staffing },
+        $('saveNote').value.trim(),
+        profile
+      );
+      cloudVersion = v;
+      dirty = false;
+      $('saveBtn').disabled = true;
+      $('saveNote').value = '';
+      closeOv('saveOv');
+      setCloud('online', 'متصل — متزامن');
+      render();
+      toast(`💾 حُفظ الإصدار v${v} — اللقطة محفوظة ولا تُحذف`);
+    } catch (e) { toast('❌ ' + e.message); }
+  };
+
+  window.openVersions = async () => {
+    $('verOv').classList.add('active');
+    $('verBody').innerHTML = '<div class="oempty">جارٍ التحميل…</div>';
+    try {
+      const list = await listVersions();
+      $('verBody').innerHTML = list.length
+        ? list.map((v) => `<div class="vrow">
+            <div><b>v${v.version}</b> — ${esc(v.note || 'بلا سبب مذكور')}</div>
+            <div style="color:#94a3b8;font-size:.76rem;">${esc(v.byName || '')}</div>
+          </div>`).join('')
+        : '<div class="oempty">لا إصدارات محفوظة بعد — النسخة المعروضة هي الأساس المرفق.</div>';
+    } catch (e) { $('verBody').innerHTML = `<div class="oempty">تعذّرت القراءة: ${esc(e.message)}</div>`; }
+  };
+
+  /* ═══════════ وضع العرض والطباعة ═══════════ */
+
+  function togglePresent(on) {
+    $('orgWrap').classList.toggle('present', on);
+    if (on && view === 'list') setView('chart');
+    if (on && document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else if (!on && document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
+  window.togglePresent = togglePresent;
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && $('orgWrap').classList.contains('present')) togglePresent(false);
+  });
+
+  window.printStructure = () => {
+    const m = doc.meta || {};
+    const sigs = m.signatories || [];
+    const c = countByType(doc.tree);
+    $('orgPrint').innerHTML = `
+      <div class="sheet">
+        <div class="sh-head">
+          <div class="sh-logo">Brandzo</div>
+          <div class="sh-t"><h1>${esc(m.title || 'الهيكل التنظيمي')}</h1>
+            <div class="en">Organizational Structure · Brandzo Hub — ${esc(m.status === 'approved' ? 'نسخة معتمدة' : 'مسودة للعرض')}</div></div>
+          <div class="sh-ref">${esc(m.reference || '')}<br>${esc(m.issuedAt || '')}${cloudVersion ? `<br>v${cloudVersion}` : ''}</div>
+        </div>
+        <div class="chart" style="overflow:visible;">${chartHtml(doc.tree, { skin: 'portal' })}</div>
+        <p style="font-size:8pt;color:#64748b;text-align:center;margin-top:4mm;">
+          ${c.management} إدارة · ${c.section} قسم · ${c.unit} وحدة · ${c.subunit} فريق
+          ${proposedCount(doc.tree) ? ` · ${proposedCount(doc.tree)} بند مقترح (بإطار متقطّع) لم يُعتمد بعد` : ''}
+        </p>
+        <div class="sh-sigs">
+          ${sigs.map((s) => `<div class="sh-sig"><div class="line"></div><b>${esc(s.name)}</b><span>${esc(s.role)}</span></div>`).join('')}
+        </div>
+        <div class="sh-foot">وُلّد من نظام Brandzo Hub — المصدر الواحد للهيكل التنظيمي · ${esc(m.reference || '')}</div>
+      </div>
+
+      <div class="sheet">
+        <div class="sh-head">
+          <div class="sh-logo">Brandzo</div>
+          <div class="sh-t"><h1>الكادر الوظيفي — المرحلتان</h1><div class="en">Staffing Plan</div></div>
+          <div class="sh-ref">${esc(m.reference || '')}</div>
+        </div>
+        <table class="otable" style="font-size:9pt;">
+          <thead><tr><th>الوحدة التنظيمية</th><th>المرحلة الأولى</th><th>المرحلة الكاملة</th><th>الدور الأساسي</th></tr></thead>
+          <tbody>${staffingRowsHtml(doc.staffing)}</tbody>
+        </table>
+        <div class="sh-sigs">
+          ${sigs.map((s) => `<div class="sh-sig"><div class="line"></div><b>${esc(s.name)}</b><span>${esc(s.role)}</span></div>`).join('')}
+        </div>
+        <div class="sh-foot">وُلّد من نظام Brandzo Hub · ${esc(m.reference || '')}</div>
+      </div>`;
+    window.print();
+  };
+
+  /* ═══════════ الإقلاع ═══════════ */
+
+  window.addEventListener('beforeunload', (e) => {
+    if (dirty) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  let started = false;
+  subscribeAuth(async (user) => {
+    if (!user) return;
+    profile = await fetchUserProfile(user);
+    canWrite = WRITER_ROLES.includes(profile?.role);
+    document.querySelectorAll('.writer-only').forEach((el) => { el.hidden = !canWrite; });
+    if (started) return;
+    started = true;
+    listenOrgStructure((cloud, pending) => {
+      if (!cloud) {
+        setCloud('online', 'لا نسخة سحابية — يعمل على الأساس المرفق');
+        return;
+      }
+      cloudVersion = Number(cloud.version) || 0;
+      if (dirty) {
+        setCloud('dirty', `تعديلاتك غير محفوظة (السحابة عند v${cloudVersion})`);
+        return; // لا ندهس ما يكتبه المستخدم الآن
+      }
+      doc = {
+        meta: cloud.meta || doc.meta,
+        tree: cloud.tree,
+        supportFunctions: cloud.supportFunctions || doc.supportFunctions,
+        jobs: cloud.jobs || doc.jobs,
+        staffing: cloud.staffing || doc.staffing,
+      };
+      if (!findNode(doc.tree, selectedId)) selectedId = doc.tree.id;
+      setCloud(pending ? 'pending' : 'online', pending ? 'بانتظار مزامنة…' : `متصل — v${cloudVersion}`);
+      render();
+    });
+  });
+
+  render();
+</script>
+</DashboardLayout>
