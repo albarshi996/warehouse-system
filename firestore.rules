@@ -251,6 +251,80 @@ service cloud.firestore {
         allow create, update: if isFleetWriter();
         allow delete: if false;
       }
+      // بروتوكول الاستلام والتسليم اليومي (سلاسل الإمداد م-٢): نموذج
+      // الوردية شرط إصدار تصريح البوابة — معرّفه حتمي (تاريخ__وردية).
+      match /handovers/{handId} {
+        allow read: if signedIn();
+        allow create, update: if isFleetWriter();
+        allow delete: if false;
+      }
+    }
+
+    // ── الرحلات اللوجستية (Dispatch-to-POD — سلاسل الإمداد م-٢) ─────────
+    // القراءة لأي مصادَق، والكتابة للحركة والمديرَين. لا حذف لرحلة:
+    // الخاطئة تُلغى قبل تصريح البوابة وتبقى أثرًا. الرقم الرسمي TRIP-…
+    // يُكتب مرة واحدة (من null إلى قيمة) كنمط المستندات.
+    match /trips/{tripId} {
+      allow read: if signedIn();
+      allow create: if isFleetWriter()
+                    && request.resource.data.state == 'preparing'
+                    && request.resource.data.number == null;
+      allow update: if isFleetWriter()
+                    && (resource.data.number == null
+                        || request.resource.data.number == resource.data.number);
+      allow delete: if false;
+
+      // قيود الوقود: إضافة فقط باسم فاعلها — لا تعديل ولا حذف (نمط scans).
+      match /fuel/{entryId} {
+        allow read: if signedIn();
+        allow create: if isFleetWriter()
+                      && request.resource.data.byUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+      // سجل تدقيق الانتقالات: إضافة فقط.
+      match /events/{eventId} {
+        allow read: if signedIn();
+        allow create: if isFleetWriter()
+                      && request.resource.data.byUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+
+    // ── الصيانة: الأصول وأوامر الشغل (سلاسل الإمداد م-٣) ────────────────
+    match /assets/{assetId} {
+      allow read: if signedIn();
+      allow create, update: if isFleetWriter();
+      allow delete: if false; // الأصل المنتهي يُكهَّن (status) لا يُمحى.
+    }
+
+    match /work_orders/{woId} {
+      allow read: if signedIn();
+      allow create: if isFleetWriter()
+                    && request.resource.data.state == 'draft'
+                    && request.resource.data.number == null;
+      allow update: if isFleetWriter()
+                    && (resource.data.number == null
+                        || request.resource.data.number == resource.data.number);
+      allow delete: if false;
+
+      match /events/{eventId} {
+        allow read: if signedIn();
+        allow create: if isFleetWriter()
+                      && request.resource.data.byUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+
+    // ── العُهد العينية (سلاسل الإمداد ٥-١) ───────────────────────────────
+    // بيانات ذات أثر مالي على الرواتب (خصومات) ⇒ الكتابة للمديرَين فقط،
+    // والقراءة لأي مصادَق (الموظف يرى عهدته). لا حذف لسند أبدًا.
+    match /custodies/{custodyId} {
+      allow read: if signedIn();
+      allow create: if isManager()
+                    && request.resource.data.state == 'active';
+      allow update: if isManager()
+                    && request.resource.data.number == resource.data.number;
+      allow delete: if false;
     }
 
     // ── طلبات التوظيف من الإدارات (منفصلة عن `candidates` الحسّاسة) ──────

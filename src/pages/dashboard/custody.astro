@@ -1,0 +1,393 @@
+---
+/**
+ * العُهد العينية للموظفين — سلاسل الإمداد (المرجع التشغيلي ٥-١).
+ *
+ * المشكلة الفعلية: فقدان أجهزة المسح والطابعات والعدد اليدوية خسارة شهرية
+ * متكررة غير موثقة. القاعدة: لا يُسلَّم أي جهاز إلا بـ«سند استلام عهدة»
+ * رسمي مُرقَّم (CUST-2026-####) يُطبع بهوية Brandzo ويُسجَّل رقميًّا.
+ *
+ * عند الفقد/الإتلاف تُوثَّق قيمة الخصم (تُعتمد من HR قبل تنفيذها في الرواتب).
+ *
+ * الوصول: المديران فقط يكتبان (أثر مالي على الرواتب) — قواعد Firestore
+ * تفرض ذلك؛ بقية المصادقين مشاهدة. المنطق الخالص في `custodyModel.js`.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Brandzo | العُهد العينية">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+<style is:inline>
+  :root {
+    --primary-c: #0d1b2a; --accent-c: #8b5cf6; --accent2-c: #c4b5fd;
+    --border-c: #d4dce8; --ok-c: #00b87a; --warn-c: #f59e0b; --bad-c: #ef4444;
+    --text-c: #1e293b; --surface-c: #f8fafc;
+  }
+  .cus-wrap { font-family: 'Tajawal', 'Cairo', sans-serif; background: linear-gradient(135deg, #efeaf9, #f0f4fb); color: var(--text-c); min-height: 100vh; }
+  .cbar { background: var(--primary-c); padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.35); }
+  .cbar::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-c), var(--accent2-c), var(--accent-c)); }
+  .cbrand { display: flex; align-items: center; gap: 14px; }
+  .clogo { background: linear-gradient(135deg, var(--accent-c), var(--accent2-c)); border-radius: 10px; padding: 7px 14px; font-family: 'Cairo', sans-serif; font-size: 1.3rem; font-weight: 900; color: white; }
+  .ctitle { color: rgba(255,255,255,0.85); font-size: 0.95rem; font-weight: 600; }
+  .chip-c { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); border-radius: 20px; padding: 6px 14px; font-size: 0.78rem; font-weight: 700; }
+  .chip-c .dot { width: 9px; height: 9px; border-radius: 50%; background: #94a3b8; box-shadow: 0 0 8px currentColor; }
+  .chip-c.online .dot { background: var(--ok-c); color: var(--ok-c); }
+  .chip-c.pending .dot { background: var(--warn-c); color: var(--warn-c); }
+  .cmain { max-width: 1100px; margin: 24px auto; padding: 0 20px 70px; }
+  .hcard-c { background: var(--primary-c); border-radius: 18px; padding: 24px 30px; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 12px 40px rgba(13,27,42,0.4); }
+  .hcard-c::before { content: ''; position: absolute; top: -60px; left: -60px; width: 280px; height: 280px; background: radial-gradient(circle, rgba(139,92,246,0.2), transparent 70%); border-radius: 50%; }
+  .hin-c { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; position: relative; z-index: 1; }
+  .hin-c h2 { font-size: 1.5rem; font-weight: 900; color: white; }
+  .hin-c p { color: rgba(255,255,255,0.55); font-size: 0.85rem; margin-top: 3px; }
+  .kwrap-c { display: flex; gap: 12px; flex-wrap: wrap; }
+  .kb-c { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 18px; text-align: center; min-width: 95px; }
+  .kb-c .num { font-size: 1.4rem; font-weight: 900; color: var(--accent2-c); font-family: 'Cairo', sans-serif; line-height: 1.2; }
+  .kb-c .lbl { font-size: 0.72rem; opacity: 0.65; color: white; margin-top: 3px; }
+  .kb-c.alert .num { color: #ff7b7b; }
+  .scard-c { background: white; border-radius: 16px; margin-bottom: 18px; box-shadow: 0 3px 16px rgba(0,0,0,0.07); overflow: hidden; border: 1px solid rgba(0,0,0,0.05); }
+  .shead-c { background: linear-gradient(135deg, var(--primary-c), #4c1d95); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .shead-c h3 { color: white; font-size: 1rem; font-weight: 700; }
+  .sbody-c { padding: 20px; }
+  .btn-c { padding: 9px 16px; border-radius: 9px; border: none; cursor: pointer; font-family: 'Tajawal', sans-serif; font-size: 0.86rem; font-weight: 700; display: inline-flex; align-items: center; gap: 7px; transition: all 0.2s; }
+  .btn-c:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.22); }
+  .btn-purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; }
+  .btn-green-c { background: linear-gradient(135deg, #00b87a, #00976a); color: white; }
+  .btn-red-c { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+  .btn-warn-c { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+  .btn-ghost-c { background: #f1f5f9; color: #475569; }
+  .cgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .cgrid { grid-template-columns: 1fr 1fr; } }
+  .fg-c { display: flex; flex-direction: column; gap: 5px; }
+  .fg-c label { font-size: 0.78rem; font-weight: 700; color: #64748b; }
+  .fg-c input, .fg-c select { border: 1.5px solid var(--border-c); border-radius: 9px; padding: 9px 13px; font-family: 'Tajawal', sans-serif; font-size: 0.95rem; background: var(--surface-c); width: 100%; }
+  .fg-c input:focus, .fg-c select:focus { outline: none; border-color: var(--accent-c); box-shadow: 0 0 0 4px rgba(139,92,246,0.12); background: white; }
+  .ctable { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  .ctable thead tr { background: linear-gradient(135deg, var(--primary-c), #4c1d95); color: white; }
+  .ctable th { padding: 10px 12px; text-align: right; font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
+  .ctable td { padding: 9px 12px; border-bottom: 1px solid #edf0f5; vertical-align: middle; }
+  .ctable tbody tr:hover { background: #faf8ff; }
+  .cnum { font-family: 'Cairo', sans-serif; font-weight: 800; color: var(--primary-c); white-space: nowrap; }
+  .cb { display: inline-flex; align-items: center; gap: 5px; border-radius: 14px; padding: 3px 11px; font-size: 0.75rem; font-weight: 800; white-space: nowrap; }
+  .cempty { text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 0.95rem; }
+  .mini-c { border: 1.5px solid var(--border-c); background: white; border-radius: 8px; padding: 5px 12px; font-family: 'Tajawal', sans-serif; font-size: 0.78rem; font-weight: 700; cursor: pointer; color: var(--primary-c); }
+  .mini-c:hover { border-color: var(--accent-c); background: #faf5ff; }
+  .writer-only[hidden] { display: none !important; }
+  .cov { display: none; position: fixed; inset: 0; background: rgba(13,27,42,0.72); z-index: 500; align-items: flex-start; justify-content: center; backdrop-filter: blur(6px); padding: 30px 16px; overflow-y: auto; }
+  .cov.active { display: flex; }
+  .cmodal { background: white; border-radius: 20px; width: min(720px, 96vw); box-shadow: 0 30px 80px rgba(0,0,0,0.4); }
+  .cmhead { background: linear-gradient(135deg, var(--primary-c), #4c1d95); color: white; padding: 16px 22px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; }
+  .cmhead h3 { font-size: 1.02rem; font-weight: 800; }
+  .cmclose { background: rgba(255,255,255,0.12); border: none; color: white; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-family: 'Tajawal', sans-serif; font-weight: 700; }
+  .cmbody { padding: 20px 22px 26px; }
+  .emp-row { border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 11px 15px; margin-bottom: 9px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 0.85rem; align-items: center; }
+  .toast-wrap-c { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .toast-c { background: var(--primary-c); color: white; padding: 12px 24px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-right: 4px solid var(--accent-c); max-width: min(560px, 90vw); white-space: pre-line; }
+  /* قالب سند الطباعة */
+  #printArea { position: absolute; left: -12000px; top: 0; direction: rtl; }
+  .voucher { width: 210mm; min-height: 148mm; background: white; box-sizing: border-box; padding: 14mm 16mm; font-family: 'Tajawal', 'Cairo', sans-serif; color: #1e293b; border: 0.5mm solid #4c1d95; border-radius: 3mm; position: relative; }
+  .v-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 0.8mm solid #4c1d95; padding-bottom: 4mm; margin-bottom: 6mm; }
+  .v-logo { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; border-radius: 3mm; padding: 3mm 6mm; font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 14pt; }
+  .v-title { text-align: center; }
+  .v-title h1 { font-size: 15pt; font-weight: 900; color: #0d1b2a; }
+  .v-title .en { font-size: 8.5pt; color: #64748b; }
+  .v-num { border: 0.4mm solid #d4b364; background: #fdf9ee; border-radius: 2.5mm; padding: 2mm 5mm; font-size: 10pt; font-weight: 900; font-family: 'Cairo', sans-serif; }
+  .v-grid { display: grid; grid-template-columns: 1fr 1fr; border: 0.35mm solid #cbd5e1; border-radius: 2mm; overflow: hidden; margin-bottom: 5mm; }
+  .v-grid .cell { padding: 2.4mm 3.5mm; font-size: 9.5pt; border-bottom: 0.25mm solid #e2e8f0; }
+  .v-grid .cell.lbl { background: #f5f3ff; font-weight: 800; color: #4c1d95; }
+  .v-terms { font-size: 8.5pt; line-height: 1.9; border: 0.35mm solid #e2e8f0; border-radius: 2mm; padding: 3mm 4mm; background: #fafafa; margin-bottom: 8mm; }
+  .v-sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; }
+  .v-sig { text-align: center; font-size: 9.5pt; }
+  .v-sig .line { border-bottom: 0.35mm dashed #94a3b8; height: 13mm; margin-bottom: 2mm; }
+  .v-foot { margin-top: 8mm; font-size: 7.5pt; color: #94a3b8; text-align: center; }
+  @media print {
+    @page { size: A4; margin: 0; }
+    body * { visibility: hidden !important; }
+    #printArea, #printArea * { visibility: visible !important; }
+    #printArea { position: absolute !important; left: 0 !important; top: 0 !important; }
+    .voucher { print-color-adjust: exact; -webkit-print-color-adjust: exact; margin: 20mm auto; }
+  }
+</style>
+
+<div class="cus-wrap" dir="rtl">
+<div class="toast-wrap-c" id="toastWrap"></div>
+
+<div class="cbar">
+  <div class="cbrand">
+    <div class="clogo">Brandzo</div>
+    <div class="ctitle">العُهد العينية — سندات الاستلام الرسمية</div>
+    <span class="chip-c" id="cloudChip"><span class="dot"></span><span id="cloudChipText">جارٍ الاتصال…</span></span>
+  </div>
+  <button class="btn-c btn-purple writer-only" onclick="openIssue()">＋ سند عهدة جديد</button>
+</div>
+
+<div class="cmain">
+  <div class="hcard-c">
+    <div class="hin-c">
+      <div>
+        <h2>🤝 لا جهاز يُسلَّم بلا سند</h2>
+        <p>سند استلام رسمي مُرقَّم لكل PDA وطابعة وجهاز — وعند الفقد تُوثَّق قيمة الخصم (بعد موافقة HR)</p>
+      </div>
+      <div class="kwrap-c">
+        <div class="kb-c"><div class="num" id="kActive">0</div><div class="lbl">عهدة نشطة</div></div>
+        <div class="kb-c"><div class="num" id="kValue">0</div><div class="lbl">قيمة بالعهدة (د.ل)</div></div>
+        <div class="kb-c"><div class="num" id="kReturned">0</div><div class="lbl">أُرجعت</div></div>
+        <div class="kb-c alert"><div class="num" id="kLost">0</div><div class="lbl">مفقودة/متلفة</div></div>
+        <div class="kb-c alert"><div class="num" id="kLoss">0</div><div class="lbl">خصومات (د.ل)</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scard-c">
+    <div class="shead-c"><h3>📜 سجل السندات</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <select id="cFilter" onchange="renderCustodies()" style="border-radius:8px;border:none;padding:6px 12px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:0.8rem;">
+          <option value="">الكل</option><option value="active">نشطة</option>
+          <option value="returned">أُرجعت</option><option value="lost">مفقودة</option><option value="damaged">متلفة</option>
+        </select>
+        <input id="cSearch" type="search" placeholder="🔎 موظف أو جهاز…" oninput="renderCustodies()" style="border-radius:8px;border:none;padding:6px 12px;font-family:'Tajawal',sans-serif;font-size:0.8rem;min-width:170px;">
+      </div>
+    </div>
+    <div class="sbody-c" style="padding:0;overflow-x:auto;">
+      <table class="ctable">
+        <thead><tr><th>رقم السند</th><th>الموظف</th><th>العهدة</th><th>التسلسلي</th><th>القيمة</th><th>تاريخ التسليم</th><th>الحالة</th><th></th></tr></thead>
+        <tbody id="cBody"></tbody>
+      </table>
+      <div class="cempty" id="cEmpty">لا سندات بعد. <span class="writer-only">ابدأ بـ«＋ سند عهدة جديد».</span></div>
+    </div>
+  </div>
+
+  <div class="scard-c">
+    <div class="shead-c"><h3>👥 العُهد النشطة لكل موظف</h3></div>
+    <div class="sbody-c" id="empList"><div class="cempty">لا عُهد نشطة.</div></div>
+  </div>
+</div>
+
+<!-- نافذة سند جديد -->
+<div class="cov" id="issueOv">
+  <div class="cmodal">
+    <div class="cmhead"><h3>＋ سند استلام عهدة</h3><button class="cmclose" onclick="$('issueOv').classList.remove('active')">✕</button></div>
+    <div class="cmbody">
+      <div class="cgrid">
+        <div class="fg-c"><label>اسم الموظف</label><input type="text" id="iEmp"></div>
+        <div class="fg-c"><label>وظيفته / قسمه</label><input type="text" id="iRole"></div>
+        <div class="fg-c"><label>نوع العهدة</label><select id="iKind"></select></div>
+        <div class="fg-c"><label>وصف العهدة</label><input type="text" id="iDesc" placeholder="PDA زيبرا TC21 أسود…"></div>
+        <div class="fg-c"><label>الرقم التسلسلي</label><input type="text" id="iSerial"></div>
+        <div class="fg-c"><label>الحالة عند التسليم</label><select id="iCond"></select></div>
+        <div class="fg-c"><label>القيمة (د.ل)</label><input type="number" step="0.01" id="iValue"></div>
+        <div class="fg-c"><label>تاريخ التسليم</label><input type="date" id="iDate"></div>
+        <div class="fg-c"><label>ملاحظات</label><input type="text" id="iNotes"></div>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:10px;">
+        <button class="btn-c btn-purple" onclick="submitIssue()">🧾 إصدار السند برقم رسمي</button>
+        <button class="btn-c btn-ghost-c" onclick="$('issueOv').classList.remove('active')">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة إغلاق عهدة -->
+<div class="cov" id="closeOv">
+  <div class="cmodal">
+    <div class="cmhead"><h3 id="clTitle">إغلاق العهدة</h3><button class="cmclose" onclick="$('closeOv').classList.remove('active')">✕</button></div>
+    <div class="cmbody">
+      <div id="clInfo" style="font-size:0.9rem;font-weight:700;margin-bottom:14px;"></div>
+      <div class="cgrid">
+        <div class="fg-c"><label>النتيجة</label><select id="clState">
+          <option value="returned">✅ أُرجعت سليمة</option>
+          <option value="damaged">⚠️ أُتلفت</option>
+          <option value="lost">🚨 فُقدت</option></select></div>
+        <div class="fg-c"><label>الحالة عند الإرجاع</label><select id="clCond"></select></div>
+        <div class="fg-c"><label>قيمة الخصم المقترح (د.ل)</label><input type="number" step="0.01" id="clDeduction" placeholder="عند الفقد/الإتلاف"></div>
+      </div>
+      <div class="fg-c" style="margin-top:12px;"><label>ملاحظات</label><input type="text" id="clNotes"></div>
+      <p style="font-size:0.78rem;color:#64748b;margin-top:10px;">الخصم يُنفَّذ في الرواتب بعد موافقة إدارة الموارد البشرية (قاعدة ٥-١) — النظام يوثّقه هنا.</p>
+      <div style="margin-top:16px;display:flex;gap:10px;">
+        <button class="btn-c btn-warn-c" onclick="submitClose()">تأكيد الإغلاق</button>
+        <button class="btn-c btn-ghost-c" onclick="$('closeOv').classList.remove('active')">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- قالب سند الطباعة -->
+<div id="printArea" aria-hidden="true"></div>
+
+</div>
+
+<script>
+  import {
+    CUSTODY_STATES,
+    CUSTODY_ITEM_KINDS,
+    CONDITIONS,
+    custodySummary,
+    byEmployee,
+  } from '../../services/custody/custodyModel.js';
+  import { listenCustodies, issueCustody, closeCustody } from '../../services/custody/custodyService.js';
+  import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
+
+  // الكتابة للمديرَين فقط — أثر مالي على الرواتب (قواعد Firestore تفرضها).
+  const WRITER_ROLES = ['admin', 'warehouse_manager'];
+  let records = [];
+  let profile = null;
+  let canWrite = false;
+  let closingId = null;
+
+  const $ = (id) => document.getElementById(id);
+  window.$ = $;
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast-c';
+    t.textContent = msg;
+    $('toastWrap').appendChild(t);
+    setTimeout(() => t.remove(), 5200);
+  }
+  function setCloud(state, text) {
+    const chip = $('cloudChip');
+    chip.classList.remove('online', 'pending');
+    chip.classList.add(state);
+    $('cloudChipText').textContent = text;
+  }
+
+  $('iKind').innerHTML = CUSTODY_ITEM_KINDS.map((k) => `<option>${k}</option>`).join('');
+  $('iCond').innerHTML = CONDITIONS.map((c) => `<option>${c}</option>`).join('');
+  $('clCond').innerHTML = ['سليمة', ...CONDITIONS, 'غير صالحة'].map((c) => `<option>${c}</option>`).join('');
+  $('iDate').value = new Date().toISOString().slice(0, 10);
+
+  let started = false;
+  subscribeAuth(async (user) => {
+    if (!user) return;
+    profile = await fetchUserProfile(user);
+    canWrite = WRITER_ROLES.includes(profile?.role);
+    document.querySelectorAll('.writer-only').forEach((el) => { el.hidden = !canWrite; });
+    if (!started) {
+      started = true;
+      listenCustodies((list, pending) => {
+        records = list;
+        setCloud(pending ? 'pending' : 'online', pending ? 'بانتظار مزامنة…' : 'متصل — متزامن');
+        renderCustodies();
+      });
+    }
+  });
+
+  function stateBadge(state) {
+    const s = CUSTODY_STATES[state];
+    return s ? `<span class="cb" style="background:${s.color}1f;color:${s.color};">${s.emoji} ${s.label}</span>` : '';
+  }
+
+  function renderCustodies() {
+    const sum = custodySummary(records);
+    $('kActive').textContent = sum.active;
+    $('kValue').textContent = sum.valueAtRisk.toLocaleString('ar-LY');
+    $('kReturned').textContent = sum.returned;
+    $('kLost').textContent = sum.lost + sum.damaged;
+    $('kLoss').textContent = sum.lossValue.toLocaleString('ar-LY');
+
+    const f = $('cFilter').value;
+    const term = ($('cSearch').value || '').trim();
+    const rows = records.filter((r) =>
+      (!f || r.state === f) &&
+      (!term || [r.employeeName, r.itemDesc, r.serial, r.number].some((x) => String(x || '').includes(term)))
+    );
+    $('cEmpty').style.display = rows.length ? 'none' : '';
+    $('cBody').innerHTML = rows.map((r) => `<tr>
+      <td class="cnum">${esc(r.number)}</td>
+      <td><b>${esc(r.employeeName)}</b><br><span style="font-size:0.74rem;color:#94a3b8;">${esc(r.employeeRole || '')}</span></td>
+      <td>${esc(r.itemDesc)}<br><span style="font-size:0.74rem;color:#94a3b8;">${esc(r.itemKind || '')}</span></td>
+      <td>${esc(r.serial || '—')}</td>
+      <td>${r.value != null ? r.value + ' د.ل' : '—'}${r.deduction != null ? `<br><span style="color:#b91c1c;font-size:0.74rem;">خصم ${r.deduction} د.ل</span>` : ''}</td>
+      <td>${esc(r.issueDate)}</td>
+      <td>${stateBadge(r.state)}</td>
+      <td style="white-space:nowrap;">
+        <button class="mini-c" onclick="printVoucher('${r.id}')">🖨 سند</button>
+        ${canWrite && r.state === 'active' ? `<button class="mini-c" onclick="openClose('${r.id}')">🔚 إغلاق</button>` : ''}
+      </td>
+    </tr>`).join('');
+
+    const emps = byEmployee(records);
+    $('empList').innerHTML = emps.length ? emps.map((e) => `
+      <div class="emp-row"><div><b>👤 ${esc(e.employeeName)}</b></div>
+      <div>${e.count} عهدة · ${e.value.toLocaleString('ar-LY')} د.ل</div></div>`).join('')
+      : '<div class="cempty">لا عُهد نشطة.</div>';
+  }
+  window.renderCustodies = renderCustodies;
+
+  window.openIssue = () => { $('issueOv').classList.add('active'); };
+  window.submitIssue = async () => {
+    try {
+      const { number } = await issueCustody({
+        employeeName: $('iEmp').value, employeeRole: $('iRole').value,
+        itemKind: $('iKind').value, itemDesc: $('iDesc').value,
+        serial: $('iSerial').value, condition: $('iCond').value,
+        value: $('iValue').value, issueDate: $('iDate').value, notes: $('iNotes').value,
+      }, profile);
+      $('issueOv').classList.remove('active');
+      for (const id of ['iEmp', 'iRole', 'iDesc', 'iSerial', 'iValue', 'iNotes']) $(id).value = '';
+      showToast(`🧾 صدر السند ${number} — اطبعه ووقّعه مع الموظف`);
+    } catch (e) { showToast('❌ ' + e.message); }
+  };
+
+  window.openClose = (id) => {
+    closingId = id;
+    const r = records.find((x) => x.id === id);
+    if (!r) return;
+    $('clTitle').textContent = `إغلاق العهدة ${r.number}`;
+    $('clInfo').textContent = `${r.employeeName} — ${r.itemDesc}${r.value != null ? ` (${r.value} د.ل)` : ''}`;
+    $('clDeduction').value = '';
+    $('closeOv').classList.add('active');
+  };
+  window.submitClose = async () => {
+    try {
+      await closeCustody(closingId, $('clState').value, {
+        closeCondition: $('clCond').value,
+        closeNotes: $('clNotes').value,
+        deduction: $('clDeduction').value,
+      }, profile);
+      $('closeOv').classList.remove('active');
+      showToast($('clState').value === 'returned' ? '✅ أُرجعت العهدة' : '📋 وُثّق الإغلاق وقيمة الخصم المقترح — يُعتمد من HR');
+    } catch (e) { showToast('❌ ' + e.message); }
+  };
+
+  /* ─── طباعة السند بهوية Brandzo ─── */
+  window.printVoucher = (id) => {
+    const r = records.find((x) => x.id === id);
+    if (!r) return;
+    const cell = (l, v) => `<div class="cell lbl">${l}</div><div class="cell">${esc(v || '—')}</div>`;
+    $('printArea').innerHTML = `
+      <div class="voucher">
+        <div class="v-head">
+          <div class="v-logo">Brandzo</div>
+          <div class="v-title"><h1>سند استلام عهدة عينية</h1><div class="en">Equipment Custody Receipt · Brandzo Hub</div></div>
+          <div class="v-num">${esc(r.number)}</div>
+        </div>
+        <div class="v-grid">
+          ${cell('اسم الموظف', r.employeeName)}
+          ${cell('الوظيفة / القسم', r.employeeRole)}
+          ${cell('نوع العهدة', r.itemKind)}
+          ${cell('وصف العهدة', r.itemDesc)}
+          ${cell('الرقم التسلسلي', r.serial)}
+          ${cell('الحالة عند التسليم', r.condition)}
+          ${cell('القيمة التقديرية', r.value != null ? r.value + ' د.ل' : '—')}
+          ${cell('تاريخ التسليم', r.issueDate)}
+          ${r.state !== 'active' ? cell('حالة السند', (CUSTODY_STATES[r.state] || {}).label) : ''}
+          ${r.state !== 'active' ? cell('تاريخ الإغلاق', r.closeDate) : ''}
+          ${r.deduction != null ? cell('الخصم الموثق', r.deduction + ' د.ل') : ''}
+        </div>
+        <div class="v-terms">
+          <b>إقرار:</b> أقرّ أنا الموقّع أدناه باستلامي العهدة الموصوفة أعلاه بالحالة المذكورة، وألتزم بالمحافظة عليها
+          واستخدامها في أغراض العمل، وإعادتها عند الطلب أو عند انتهاء علاقتي الوظيفية. وفي حال الفقدان أو الإتلاف
+          المتعمد أُقرّ بحق الشركة في خصم قيمتها من مستحقاتي وفق لائحة الموارد البشرية (المرجع التشغيلي ٥-١).
+        </div>
+        <div class="v-sigs">
+          <div class="v-sig"><div class="line"></div><b>الموظف المستلم:</b> ${esc(r.employeeName)}</div>
+          <div class="v-sig"><div class="line"></div><b>المسلِّم (الإدارة):</b> ${esc(r.createdBy || '')}</div>
+        </div>
+        <div class="v-foot">وُلّد من نظام Brandzo Hub — ${esc(r.number)} · لا يُعتد بسند غير مُرقَّم</div>
+      </div>`;
+    window.print();
+  };
+</script>
+</DashboardLayout>

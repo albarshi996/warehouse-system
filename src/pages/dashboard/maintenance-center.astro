@@ -1,0 +1,584 @@
+---
+/**
+ * مركز الصيانة — سلاسل الإمداد (المرجع التشغيلي م-٣ · Odoo Maintenance).
+ *
+ * سجل الأصول بتصنيفاته الخمسة (مناولة · مركبات · تبريد · مرافق · أجهزة)
+ * + أوامر الشغل بدورتها الرسمية الكاملة:
+ *   مسودة → اعتماد المشرف (رقم WO رسمي) → جاري الإصلاح → تم الإصلاح →
+ *   عودة للخدمة / تكهين
+ * + لوحة استحقاق الصيانة الوقائية (بالتاريخ والكيلومترات، تحذير 7 أيام).
+ *
+ * كل عطل تهديد مباشر للتسليمات والسلسلة الباردة — لذا الأولوية العالية
+ * توقف الأصل فورًا. المنطق الخالص في `services/maintenance/workOrderModel.js`.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Brandzo | مركز الصيانة">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+<style is:inline>
+  :root {
+    --primary-m: #0d1b2a; --primary2-m: #14532d; --accent-m: #10b981; --accent2-m: #6ee7b7;
+    --border-m: #d4dce8; --warn-m: #f59e0b; --bad-m: #ef4444; --text-m: #1e293b; --surface-m: #f8fafc;
+  }
+  .mnt-wrap { font-family: 'Tajawal', 'Cairo', sans-serif; background: linear-gradient(135deg, #e8f5ee, #f0f4fb); color: var(--text-m); min-height: 100vh; }
+  .mbar { background: var(--primary-m); padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.35); }
+  .mbar::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-m), var(--accent2-m), var(--accent-m)); }
+  .mlogo { background: linear-gradient(135deg, var(--accent-m), var(--accent2-m)); border-radius: 10px; padding: 7px 14px; font-family: 'Cairo', sans-serif; font-size: 1.3rem; font-weight: 900; color: var(--primary-m); }
+  .mtitle { color: rgba(255,255,255,0.85); font-size: 0.95rem; font-weight: 600; }
+  .mbrand { display: flex; align-items: center; gap: 14px; }
+  .chip-m { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); border-radius: 20px; padding: 6px 14px; font-size: 0.78rem; font-weight: 700; }
+  .chip-m .dot { width: 9px; height: 9px; border-radius: 50%; background: #94a3b8; box-shadow: 0 0 8px currentColor; }
+  .chip-m.online .dot { background: var(--accent-m); color: var(--accent-m); }
+  .chip-m.pending .dot { background: var(--warn-m); color: var(--warn-m); }
+  .mmain { max-width: 1150px; margin: 24px auto; padding: 0 20px 70px; }
+  .hcard-m { background: var(--primary-m); border-radius: 18px; padding: 24px 30px; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 12px 40px rgba(13,27,42,0.4); }
+  .hcard-m::before { content: ''; position: absolute; top: -60px; left: -60px; width: 280px; height: 280px; background: radial-gradient(circle, rgba(16,185,129,0.18), transparent 70%); border-radius: 50%; }
+  .hin-m { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; position: relative; z-index: 1; }
+  .hin-m h2 { font-size: 1.5rem; font-weight: 900; color: white; }
+  .hin-m p { color: rgba(255,255,255,0.55); font-size: 0.85rem; margin-top: 3px; }
+  .kwrap { display: flex; gap: 12px; flex-wrap: wrap; }
+  .kb { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 18px; text-align: center; min-width: 90px; }
+  .kb .num { font-size: 1.5rem; font-weight: 900; color: var(--accent-m); font-family: 'Cairo', sans-serif; line-height: 1.2; }
+  .kb .lbl { font-size: 0.72rem; opacity: 0.65; color: white; margin-top: 3px; }
+  .kb.alert .num { color: #ff7b7b; }
+  .mtabs { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+  .mtab { border: 1.5px solid var(--border-m); background: white; border-radius: 12px; padding: 10px 22px; font-family: 'Tajawal', sans-serif; font-size: 0.92rem; font-weight: 700; color: #64748b; cursor: pointer; }
+  .mtab.active { background: var(--primary-m); color: white; border-color: var(--primary-m); box-shadow: 0 4px 14px rgba(13,27,42,0.3); }
+  .scard-m { background: white; border-radius: 16px; margin-bottom: 18px; box-shadow: 0 3px 16px rgba(0,0,0,0.07); overflow: hidden; border: 1px solid rgba(0,0,0,0.05); }
+  .shead-m { background: linear-gradient(135deg, var(--primary-m), #1b3a5c); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .shead-m h3 { color: white; font-size: 1rem; font-weight: 700; }
+  .sbody-m { padding: 20px; }
+  .btn-m { padding: 9px 16px; border-radius: 9px; border: none; cursor: pointer; font-family: 'Tajawal', sans-serif; font-size: 0.86rem; font-weight: 700; display: inline-flex; align-items: center; gap: 7px; transition: all 0.2s; }
+  .btn-m:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.22); }
+  .btn-green-m { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+  .btn-blue-m { background: linear-gradient(135deg, #0ea5e9, #0369a1); color: white; }
+  .btn-dark-m { background: var(--primary-m); color: white; }
+  .btn-red-m { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+  .btn-ghost-m { background: #f1f5f9; color: #475569; }
+  .mgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .mgrid.c4 { grid-template-columns: repeat(4, 1fr); }
+  .mgrid.c2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 760px) { .mgrid, .mgrid.c4 { grid-template-columns: 1fr 1fr; } }
+  .fg-m { display: flex; flex-direction: column; gap: 5px; }
+  .fg-m label { font-size: 0.78rem; font-weight: 700; color: #64748b; }
+  .fg-m input, .fg-m select, .fg-m textarea { border: 1.5px solid var(--border-m); border-radius: 9px; padding: 9px 13px; font-family: 'Tajawal', sans-serif; font-size: 0.95rem; background: var(--surface-m); width: 100%; }
+  .fg-m input:focus, .fg-m select:focus, .fg-m textarea:focus { outline: none; border-color: var(--accent-m); box-shadow: 0 0 0 4px rgba(16,185,129,0.12); background: white; }
+  .mtable { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  .mtable thead tr { background: linear-gradient(135deg, var(--primary-m), #1b3a5c); color: white; }
+  .mtable th { padding: 10px 12px; text-align: right; font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
+  .mtable td { padding: 9px 12px; border-bottom: 1px solid #edf0f5; vertical-align: middle; }
+  .mtable tbody tr:hover { background: #f6fdf9; }
+  .mnum { font-family: 'Cairo', sans-serif; font-weight: 800; color: var(--primary-m); white-space: nowrap; }
+  .mb { display: inline-flex; align-items: center; gap: 5px; border-radius: 14px; padding: 3px 11px; font-size: 0.75rem; font-weight: 800; white-space: nowrap; }
+  .mempty { text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 0.95rem; }
+  .mini-m { border: 1.5px solid var(--border-m); background: white; border-radius: 8px; padding: 5px 12px; font-family: 'Tajawal', sans-serif; font-size: 0.78rem; font-weight: 700; cursor: pointer; color: var(--primary-m); }
+  .mini-m:hover { border-color: var(--accent-m); background: #f0fdf6; }
+  .writer-only[hidden] { display: none !important; }
+  .mov { display: none; position: fixed; inset: 0; background: rgba(13,27,42,0.72); z-index: 500; align-items: flex-start; justify-content: center; backdrop-filter: blur(6px); padding: 30px 16px; overflow-y: auto; }
+  .mov.active { display: flex; }
+  .mmodal { background: white; border-radius: 20px; width: min(760px, 96vw); box-shadow: 0 30px 80px rgba(0,0,0,0.4); }
+  .mmhead { background: linear-gradient(135deg, var(--primary-m), #1b3a5c); color: white; padding: 16px 22px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; }
+  .mmhead h3 { font-size: 1.02rem; font-weight: 800; }
+  .mmclose { background: rgba(255,255,255,0.12); border: none; color: white; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-family: 'Tajawal', sans-serif; font-weight: 700; }
+  .mmbody { padding: 20px 22px 26px; }
+  .wo-pipe { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .wo-pipe .st { flex: 1; min-width: 96px; text-align: center; border: 1.5px solid var(--border-m); border-radius: 12px; padding: 8px 5px; font-size: 0.72rem; font-weight: 800; color: #94a3b8; background: var(--surface-m); }
+  .wo-pipe .st.done { border-color: var(--accent-m); color: #047857; background: rgba(16,185,129,0.07); }
+  .wo-pipe .st.now { border-color: var(--warn-m); color: var(--primary-m); background: #fffbeb; box-shadow: 0 3px 12px rgba(245,158,11,0.25); }
+  .wo-pipe .st .ic { font-size: 1.1rem; display: block; margin-bottom: 2px; }
+  .catcard { border: 1.5px solid var(--border-m); border-radius: 14px; padding: 13px 16px; background: white; font-size: 0.8rem; line-height: 1.9; }
+  .catcard h4 { font-size: 0.9rem; font-weight: 900; margin-bottom: 4px; }
+  .pm-row { border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 11px 15px; margin-bottom: 9px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 0.85rem; align-items: center; }
+  .pm-row.overdue { border-color: #fecaca; background: #fef2f2; }
+  .pm-row.due { border-color: #fde68a; background: #fffbeb; }
+  .toast-wrap-m { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .toast-m { background: var(--primary-m); color: white; padding: 12px 24px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-right: 4px solid var(--accent-m); max-width: min(560px, 90vw); white-space: pre-line; }
+</style>
+
+<div class="mnt-wrap" dir="rtl">
+<div class="toast-wrap-m" id="toastWrap"></div>
+
+<div class="mbar">
+  <div class="mbrand">
+    <div class="mlogo">Brandzo</div>
+    <div class="mtitle">مركز الصيانة — المركبات والمعدات والمرافق</div>
+    <span class="chip-m" id="cloudChip"><span class="dot"></span><span id="cloudChipText">جارٍ الاتصال…</span></span>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="btn-m btn-green-m writer-only" onclick="openAssetModal()">＋ تسجيل أصل</button>
+    <button class="btn-m btn-blue-m writer-only" onclick="openWoModal()">🔧 طلب صيانة</button>
+  </div>
+</div>
+
+<div class="mmain">
+  <div class="hcard-m">
+    <div class="hin-m">
+      <div>
+        <h2>🔧 صيانة الأصول — كل عطل تهديد للتسليمات</h2>
+        <p>وقائية · علاجية · تنبؤية · استبدال — دورة أمر الشغل الرسمية الكاملة مع MTTR</p>
+      </div>
+      <div class="kwrap">
+        <div class="kb"><div class="num" id="kAssets">0</div><div class="lbl">أصل مسجل</div></div>
+        <div class="kb"><div class="num" id="kOpen">0</div><div class="lbl">أوامر مفتوحة</div></div>
+        <div class="kb alert"><div class="num" id="kHigh">0</div><div class="lbl">عالي الخطورة</div></div>
+        <div class="kb alert"><div class="num" id="kPmDue">0</div><div class="lbl">وقائية مستحقة</div></div>
+        <div class="kb"><div class="num" id="kMttr">—</div><div class="lbl">MTTR (ساعة)</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mtabs">
+    <button class="mtab active" data-tab="wos" onclick="switchTab('wos')">🔧 أوامر الشغل</button>
+    <button class="mtab" data-tab="assets" onclick="switchTab('assets')">🗃️ سجل الأصول</button>
+    <button class="mtab" data-tab="pm" onclick="switchTab('pm')">🛡️ الاستحقاق الوقائي</button>
+  </div>
+
+  <!-- أوامر الشغل -->
+  <div id="tab-wos">
+    <div class="scard-m">
+      <div class="shead-m"><h3>🔧 أوامر الشغل (Work Orders)</h3>
+        <select id="woFilter" onchange="renderWos()" style="border-radius:8px;border:none;padding:6px 12px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:0.8rem;">
+          <option value="open">المفتوحة</option>
+          <option value="">الكل</option>
+          <option value="draft">مسودة</option><option value="confirmed">معتمد</option>
+          <option value="in_progress">جاري الإصلاح</option><option value="repaired">تم الإصلاح</option>
+          <option value="back_in_service">عاد للخدمة</option><option value="scrapped">مُكهَّن</option>
+        </select>
+      </div>
+      <div class="sbody-m" style="padding:0;overflow-x:auto;">
+        <table class="mtable">
+          <thead><tr><th>الرقم</th><th>الأصل</th><th>النوع</th><th>الأولوية</th><th>الوصف</th><th>الحالة</th><th>التكلفة</th><th></th></tr></thead>
+          <tbody id="wosBody"></tbody>
+        </table>
+        <div class="mempty" id="wosEmpty">لا أوامر شغل. <span class="writer-only">افتح «🔧 طلب صيانة».</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- الأصول -->
+  <div id="tab-assets" style="display:none">
+    <div class="scard-m">
+      <div class="shead-m"><h3>🗃️ سجل الأصول</h3>
+        <input id="assetSearch" type="search" placeholder="🔎 بحث…" oninput="renderAssets()" style="border-radius:8px;border:none;padding:6px 12px;font-family:'Tajawal',sans-serif;font-size:0.8rem;">
+      </div>
+      <div class="sbody-m" style="padding:0;overflow-x:auto;">
+        <table class="mtable">
+          <thead><tr><th>الكود</th><th>الاسم</th><th>الفئة</th><th>الموقع</th><th>الحالة</th><th>أوامر مفتوحة</th><th>الوقائية القادمة</th><th></th></tr></thead>
+          <tbody id="assetsBody"></tbody>
+        </table>
+        <div class="mempty" id="assetsEmpty">لا أصول مسجلة بعد.</div>
+      </div>
+    </div>
+    <div class="scard-m">
+      <div class="shead-m"><h3>📚 تصنيف الأصول الخمسة (م-٣)</h3></div>
+      <div class="sbody-m"><div class="mgrid" id="catGrid"></div></div>
+    </div>
+  </div>
+
+  <!-- الاستحقاق الوقائي -->
+  <div id="tab-pm" style="display:none">
+    <div class="scard-m">
+      <div class="shead-m"><h3>🛡️ لوحة الاستحقاق الوقائي</h3>
+        <span style="color:rgba(255,255,255,0.7);font-size:0.76rem;">تنبيه قبل 7 أيام — عدم المعالجة يُصعَّد لمدير العمليات</span></div>
+      <div class="sbody-m" id="pmList"><div class="mempty">لا أصول مجدولة وقائيًّا.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة تسجيل أصل -->
+<div class="mov" id="assetOv">
+  <div class="mmodal">
+    <div class="mmhead"><h3>＋ تسجيل / تحديث أصل</h3><button class="mmclose" onclick="$('assetOv').classList.remove('active')">✕</button></div>
+    <div class="mmbody">
+      <div class="mgrid">
+        <div class="fg-m"><label>كود الأصل (المعرّف)</label><input type="text" id="asCode" placeholder="FL-01 / CR-02 / PDA-07"></div>
+        <div class="fg-m"><label>الاسم</label><input type="text" id="asName" placeholder="رافعة شوكية تويوتا 2.5 طن"></div>
+        <div class="fg-m"><label>الفئة</label><select id="asCat" onchange="applyCatDefaults()"></select></div>
+        <div class="fg-m"><label>الموقع</label><input type="text" id="asLoc" placeholder="مخزن الرحبة / E5…"></div>
+        <div class="fg-m"><label>الرقم التسلسلي</label><input type="text" id="asSerial"></div>
+        <div class="fg-m"><label>الحالة</label><select id="asStatus">
+          <option value="in_service">في الخدمة</option><option value="down">متوقف</option><option value="scrapped">مُكهَّن</option></select></div>
+        <div class="fg-m"><label>الوقائية كل (أيام)</label><input type="number" id="asPmDays"></div>
+        <div class="fg-m"><label>الوقائية كل (كم) — للمركبات</label><input type="number" id="asPmKm"></div>
+        <div class="fg-m"><label>الاستحقاق القادم (تاريخ)</label><input type="date" id="asNextDate"></div>
+        <div class="fg-m"><label>الاستحقاق القادم (كم)</label><input type="number" id="asNextKm"></div>
+        <div class="fg-m"><label>العداد الحالي (كم)</label><input type="number" id="asCurKm"></div>
+        <div class="fg-m"><label>ملاحظات</label><input type="text" id="asNotes"></div>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:10px;">
+        <button class="btn-m btn-green-m" onclick="submitAsset()">💾 حفظ الأصل</button>
+        <button class="btn-m btn-ghost-m" onclick="$('assetOv').classList.remove('active')">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة طلب صيانة -->
+<div class="mov" id="woOv">
+  <div class="mmodal">
+    <div class="mmhead"><h3>🔧 طلب صيانة جديد</h3><button class="mmclose" onclick="$('woOv').classList.remove('active')">✕</button></div>
+    <div class="mmbody">
+      <div class="mgrid">
+        <div class="fg-m"><label>الأصل</label><select id="woAsset"></select></div>
+        <div class="fg-m"><label>نوع الصيانة</label><select id="woType"></select></div>
+        <div class="fg-m"><label>التصنيف الفوري</label><select id="woPriority">
+          <option value="high">عالي الخطورة — إيقاف فوري</option>
+          <option value="medium" selected>متوسط</option>
+          <option value="low">منخفض</option></select></div>
+      </div>
+      <div class="fg-m" style="margin-top:12px;"><label>وصف العطل / العمل المطلوب</label>
+        <textarea id="woDesc" rows="3" placeholder="مثال: تعطل مبرد الشاحنة — الحرارة 9°م…"></textarea></div>
+      <div style="margin-top:16px;display:flex;gap:10px;">
+        <button class="btn-m btn-blue-m" onclick="submitWo()">🔧 فتح الطلب (مسودة)</button>
+        <button class="btn-m btn-ghost-m" onclick="$('woOv').classList.remove('active')">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة ملف أمر الشغل -->
+<div class="mov" id="woFileOv">
+  <div class="mmodal">
+    <div class="mmhead"><div><h3 id="wfTitle">أمر شغل</h3><div style="font-size:0.76rem;opacity:0.65;" id="wfSub"></div></div>
+      <button class="mmclose" onclick="$('woFileOv').classList.remove('active')">✕</button></div>
+    <div class="mmbody">
+      <div class="wo-pipe" id="wfPipe"></div>
+      <div id="wfInfo" style="font-size:0.88rem;line-height:2;margin-bottom:14px;"></div>
+      <div id="wfRepairPanel" style="display:none;border:2px solid var(--accent-m);border-radius:14px;padding:14px;margin-bottom:14px;background:#f0fdf6;">
+        <div class="mgrid">
+          <div class="fg-m"><label>ما الذي أُصلح؟</label><input type="text" id="wfResolution"></div>
+          <div class="fg-m"><label>تكلفة القطع (د.ل)</label><input type="number" step="0.01" id="wfParts"></div>
+          <div class="fg-m"><label>تكلفة العمالة (د.ل)</label><input type="number" step="0.01" id="wfLabor"></div>
+        </div>
+        <button class="btn-m btn-green-m" style="margin-top:12px;" onclick="submitRepair()">✅ تم الإصلاح</button>
+      </div>
+      <div id="wfActions" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+  import {
+    ASSET_CATEGORIES,
+    MAINTENANCE_TYPES,
+    WO_PRIORITIES,
+    WO_STATES,
+    OPEN_WO_STATES,
+    pmStatus,
+    mttrHours,
+    woSnapshot,
+  } from '../../services/maintenance/workOrderModel.js';
+  import {
+    listenAssets,
+    listenWorkOrders,
+    saveAsset,
+    createWorkOrder,
+    advanceWorkOrder,
+    reschedulePm,
+  } from '../../services/maintenance/maintenanceService.js';
+  import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
+
+  const WRITER_ROLES = ['admin', 'warehouse_manager', 'fleet'];
+  let assets = [];
+  let wos = [];
+  let profile = null;
+  let canWrite = false;
+  let currentWo = null;
+
+  const $ = (id) => document.getElementById(id);
+  window.$ = $;
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const today = () => new Date().toISOString().slice(0, 10);
+
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast-m';
+    t.textContent = msg;
+    $('toastWrap').appendChild(t);
+    setTimeout(() => t.remove(), 5200);
+  }
+  function setCloud(state, text) {
+    const chip = $('cloudChip');
+    chip.classList.remove('online', 'pending');
+    chip.classList.add(state);
+    $('cloudChipText').textContent = text;
+  }
+
+  let started = false;
+  subscribeAuth(async (user) => {
+    if (!user) return;
+    profile = await fetchUserProfile(user);
+    canWrite = WRITER_ROLES.includes(profile?.role);
+    document.querySelectorAll('.writer-only').forEach((el) => { el.hidden = !canWrite; });
+    if (!started) {
+      started = true;
+      listenAssets((list, pending) => {
+        assets = list;
+        setCloud(pending ? 'pending' : 'online', pending ? 'بانتظار مزامنة…' : 'متصل — متزامن');
+        fillAssetSelect(); renderAssets(); renderPm(); renderKpis();
+      });
+      listenWorkOrders((list) => {
+        wos = list;
+        renderWos(); renderKpis();
+        if (currentWo) {
+          const fresh = wos.find((w) => w.id === currentWo.id);
+          if (fresh) { currentWo = fresh; renderWoFile(); }
+        }
+      });
+    }
+  });
+
+  window.switchTab = (tab) => {
+    document.querySelectorAll('.mtab').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+    for (const t of ['wos', 'assets', 'pm']) $(`tab-${t}`).style.display = t === tab ? '' : 'none';
+  };
+
+  function renderKpis() {
+    const snap = woSnapshot(wos);
+    $('kAssets').textContent = assets.filter((a) => a.status !== 'scrapped').length;
+    $('kOpen').textContent = snap.open;
+    $('kHigh').textContent = snap.highOpen;
+    $('kPmDue').textContent = assets.filter((a) => ['due', 'overdue'].includes(pmStatus(a, today()).status)).length;
+    const mttr = mttrHours(wos);
+    $('kMttr').textContent = mttr == null ? '—' : mttr.toFixed(1);
+  }
+
+  /* ─── الأصول ─── */
+  const CAT_OPTS = Object.values(ASSET_CATEGORIES)
+    .map((c) => `<option value="${c.id}">${c.emoji} ${c.label}</option>`).join('');
+  $('asCat').innerHTML = CAT_OPTS;
+  $('catGrid').innerHTML = Object.values(ASSET_CATEGORIES).map((c) => `
+    <div class="catcard"><h4>${c.emoji} ${c.label}</h4>
+      <b>أمثلة:</b> ${c.examples}<br><b>الدورة الوقائية:</b> ${c.pmRule}<br><b>المسؤول:</b> ${c.responsible}${c.tempRange ? `<br><b>الحرارة:</b> ${c.tempRange}` : ''}</div>`).join('');
+
+  window.applyCatDefaults = () => {
+    const c = ASSET_CATEGORIES[$('asCat').value];
+    if (!c) return;
+    if (!$('asPmDays').value && c.defaultPmDays) $('asPmDays').value = c.defaultPmDays;
+    if (!$('asPmKm').value && c.defaultPmKm) $('asPmKm').value = c.defaultPmKm;
+  };
+
+  window.openAssetModal = () => { $('assetOv').classList.add('active'); };
+  window.submitAsset = async () => {
+    try {
+      await saveAsset({
+        code: $('asCode').value, name: $('asName').value, category: $('asCat').value,
+        location: $('asLoc').value, serial: $('asSerial').value, status: $('asStatus').value,
+        pmEveryDays: $('asPmDays').value, pmEveryKm: $('asPmKm').value,
+        nextPmDate: $('asNextDate').value, nextPmKm: $('asNextKm').value,
+        currentKm: $('asCurKm').value, notes: $('asNotes').value,
+      }, profile);
+      $('assetOv').classList.remove('active');
+      showToast('💾 حُفظ الأصل — إعادة الحفظ بنفس الكود تُحدّث لا تكرّر');
+    } catch (e) { showToast('❌ ' + e.message); }
+  };
+
+  function pmBadge(a) {
+    const s = pmStatus(a, today());
+    if (s.status === 'overdue') return '<span class="mb" style="background:#fef2f2;color:#b91c1c;">⛔ متأخرة</span>';
+    if (s.status === 'due') return '<span class="mb" style="background:#fffbeb;color:#b45309;">⏰ خلال أسبوع</span>';
+    if (s.status === 'ok') return '<span class="mb" style="background:#f0fdf6;color:#047857;">✓ في المدى</span>';
+    return '<span class="mb" style="background:#f1f5f9;color:#64748b;">— بلا جدولة</span>';
+  }
+  const STATUS_BADGE = {
+    in_service: '<span class="mb" style="background:#f0fdf6;color:#047857;">🟢 في الخدمة</span>',
+    down: '<span class="mb" style="background:#fef2f2;color:#b91c1c;">🔴 متوقف</span>',
+    scrapped: '<span class="mb" style="background:#f1f5f9;color:#64748b;">🗑️ مُكهَّن</span>',
+  };
+
+  function renderAssets() {
+    const term = ($('assetSearch').value || '').trim();
+    const rows = assets.filter((a) => !term || [a.code, a.name, a.location, a.serial].some((f) => String(f || '').includes(term)));
+    $('assetsEmpty').style.display = rows.length ? 'none' : '';
+    $('assetsBody').innerHTML = rows.map((a) => {
+      const cat = ASSET_CATEGORIES[a.category];
+      return `<tr>
+        <td class="mnum">${esc(a.code || a.id)}</td>
+        <td>${esc(a.name)}</td>
+        <td>${cat ? cat.emoji + ' ' + cat.label : '—'}</td>
+        <td>${esc(a.location || '—')}</td>
+        <td>${STATUS_BADGE[a.status] || '—'}</td>
+        <td style="text-align:center;">${Number(a.openWorkOrders) || 0}</td>
+        <td>${pmBadge(a)} <span style="color:#94a3b8;font-size:0.74rem;">${esc(a.nextPmDate || '')}${a.nextPmKm ? ' · ' + a.nextPmKm + ' كم' : ''}</span></td>
+        <td>${canWrite ? `<button class="mini-m" onclick="editAsset('${esc(a.id)}')">✏️ تحرير</button>` : ''}</td>
+      </tr>`;
+    }).join('');
+  }
+  window.renderAssets = renderAssets;
+
+  window.editAsset = (id) => {
+    const a = assets.find((x) => x.id === id);
+    if (!a) return;
+    $('asCode').value = a.code || a.id; $('asName').value = a.name || '';
+    $('asCat').value = a.category || 'device'; $('asLoc').value = a.location || '';
+    $('asSerial').value = a.serial || ''; $('asStatus').value = a.status || 'in_service';
+    $('asPmDays').value = a.pmEveryDays || ''; $('asPmKm').value = a.pmEveryKm || '';
+    $('asNextDate').value = a.nextPmDate || ''; $('asNextKm').value = a.nextPmKm || '';
+    $('asCurKm').value = a.currentKm || ''; $('asNotes').value = a.notes || '';
+    $('assetOv').classList.add('active');
+  };
+
+  /* ─── لوحة الاستحقاق الوقائي ─── */
+  function renderPm() {
+    const scheduled = assets
+      .filter((a) => a.status !== 'scrapped')
+      .map((a) => ({ a, s: pmStatus(a, today()) }))
+      .filter((x) => x.s.status !== 'none')
+      .sort((x, y) => ({ overdue: 0, due: 1, ok: 2 })[x.s.status] - ({ overdue: 0, due: 1, ok: 2 })[y.s.status]);
+    $('pmList').innerHTML = scheduled.length ? scheduled.map(({ a, s }) => `
+      <div class="pm-row ${s.status}">
+        <div><b>${esc(a.name || a.code)}</b> <span style="color:#64748b;">· ${esc(a.location || '')}</span><br>
+          <span style="font-size:0.78rem;color:#64748b;">
+            ${a.nextPmDate ? `📅 ${a.nextPmDate}${s.daysLeft != null ? ` (${s.daysLeft >= 0 ? 'بعد ' + s.daysLeft + ' يوم' : 'متأخرة ' + Math.abs(s.daysLeft) + ' يوم'})` : ''}` : ''}
+            ${a.nextPmKm ? ` · 🛣️ عند ${a.nextPmKm} كم${s.kmLeft != null ? ` (${s.kmLeft >= 0 ? 'باقٍ ' + s.kmLeft : 'تجاوز ' + Math.abs(s.kmLeft)} كم)` : ''}` : ''}
+          </span></div>
+        <div style="display:flex;gap:8px;align-items:center;">${pmBadge(a)}
+          ${canWrite && ['due', 'overdue'].includes(s.status)
+            ? `<button class="mini-m" onclick="doPm('${esc(a.id)}')">✅ نُفِّذت — أعد الجدولة</button>` : ''}</div>
+      </div>`).join('') : '<div class="mempty">لا أصول مجدولة وقائيًّا.</div>';
+  }
+
+  window.doPm = async (assetId) => {
+    try {
+      await reschedulePm(assetId, { fromDate: today() }, profile);
+      showToast('🛡️ أُعيدت جدولة الوقائية من فترتها المعتمدة');
+    } catch (e) { showToast('❌ ' + e.message); }
+  };
+
+  /* ─── أوامر الشغل ─── */
+  function fillAssetSelect() {
+    $('woAsset').innerHTML = ['<option value="">— اختر الأصل —</option>']
+      .concat(assets.filter((a) => a.status !== 'scrapped')
+        .map((a) => `<option value="${esc(a.id)}">${esc(a.code || a.id)} — ${esc(a.name)}</option>`)).join('');
+  }
+  $('woType').innerHTML = Object.values(MAINTENANCE_TYPES)
+    .map((t) => `<option value="${t.id}" ${t.id === 'corrective' ? 'selected' : ''}>${t.emoji} ${t.label}</option>`).join('');
+
+  window.openWoModal = () => { $('woOv').classList.add('active'); };
+  window.submitWo = async () => {
+    try {
+      const a = assets.find((x) => x.id === $('woAsset').value);
+      await createWorkOrder({
+        assetId: a?.id || '', assetName: a ? `${a.code || a.id} — ${a.name}` : '',
+        category: a?.category || '', type: $('woType').value,
+        priority: $('woPriority').value, description: $('woDesc').value,
+      }, profile);
+      $('woOv').classList.remove('active');
+      $('woDesc').value = '';
+      showToast($('woPriority').value === 'high'
+        ? '🚨 فُتح الطلب — الأولوية العالية أوقفت الأصل فورًا (قاعدة ٣-٢)'
+        : '🔧 فُتح طلب الصيانة (مسودة) — يعتمده المشرف ليأخذ رقمًا رسميًّا');
+    } catch (e) { showToast('❌ ' + e.message); }
+  };
+
+  function woBadge(state) {
+    const s = WO_STATES[state];
+    return s ? `<span class="mb" style="background:${s.color}1f;color:${s.color};">${s.emoji} ${s.label}</span>` : '';
+  }
+
+  function renderWos() {
+    const f = $('woFilter').value;
+    const rows = wos.filter((w) => f === 'open' ? OPEN_WO_STATES.includes(w.state) : (!f || w.state === f));
+    $('wosEmpty').style.display = rows.length ? 'none' : '';
+    $('wosBody').innerHTML = rows.map((w) => {
+      const type = MAINTENANCE_TYPES[w.type];
+      const pr = WO_PRIORITIES[w.priority];
+      const cost = (Number(w.partsCost) || 0) + (Number(w.laborCost) || 0);
+      return `<tr>
+        <td class="mnum">${esc(w.number || '— مسودة')}</td>
+        <td>${esc(w.assetName || '—')}</td>
+        <td>${type ? type.emoji + ' ' + type.label : '—'}</td>
+        <td><span class="mb" style="background:${pr?.color}1f;color:${pr?.color};">${pr?.label || '—'}</span></td>
+        <td style="max-width:240px;">${esc(w.description)}</td>
+        <td>${woBadge(w.state)}</td>
+        <td>${cost ? cost.toFixed(2) + ' د.ل' : '—'}</td>
+        <td><button class="mini-m" onclick="openWoFile('${w.id}')">📂 فتح</button></td>
+      </tr>`;
+    }).join('');
+  }
+  window.renderWos = renderWos;
+
+  const WO_PIPE = ['draft', 'confirmed', 'in_progress', 'repaired', 'back_in_service'];
+  window.openWoFile = (id) => {
+    currentWo = wos.find((w) => w.id === id);
+    if (!currentWo) return;
+    $('woFileOv').classList.add('active');
+    renderWoFile();
+  };
+
+  function renderWoFile() {
+    const w = currentWo;
+    if (!w) return;
+    $('wfTitle').textContent = `أمر شغل ${w.number || '(مسودة)'}`;
+    $('wfSub').textContent = w.assetName || '';
+    const idx = WO_PIPE.indexOf(w.state);
+    $('wfPipe').innerHTML = w.state === 'scrapped'
+      ? `<div class="st now" style="border-color:var(--bad-m);color:#b91c1c;background:#fef2f2;"><span class="ic">🗑️</span>تكهين الأصل</div>`
+      : WO_PIPE.map((s, i) => {
+          const st = WO_STATES[s];
+          return `<div class="st ${i < idx ? 'done' : i === idx ? 'now' : ''}"><span class="ic">${st.emoji}</span>${st.label}</div>`;
+        }).join('');
+
+    const type = MAINTENANCE_TYPES[w.type];
+    const mins = (ms1, ms2) => ms1 && ms2 ? ((ms2 - ms1) / 3600000).toFixed(1) + ' ساعة' : '—';
+    $('wfInfo').innerHTML = `
+      <b>الوصف:</b> ${esc(w.description)}<br>
+      <b>النوع:</b> ${type ? type.emoji + ' ' + type.label : '—'} · <b>الأولوية:</b> ${WO_PRIORITIES[w.priority]?.label || '—'}<br>
+      ${w.resolution ? `<b>الإصلاح:</b> ${esc(w.resolution)}<br>` : ''}
+      ${w.state !== 'draft' ? `<b>زمن الإصلاح (اعتماد→تم):</b> ${mins(w.confirmedAtMs, w.repairedAtMs)}<br>` : ''}
+      <b>فتحه:</b> ${esc(w.createdBy || '—')} ${w.closedBy ? `· <b>أغلقه:</b> ${esc(w.closedBy)}` : ''}`;
+
+    const acts = [];
+    if (canWrite) {
+      if (w.state === 'draft') acts.push(`<button class="btn-m btn-green-m" onclick="doWo('confirmed')">⏳ اعتماد المشرف (رقم رسمي)</button>`);
+      if (w.state === 'confirmed') {
+        acts.push(`<button class="btn-m btn-blue-m" onclick="doWo('in_progress')">🔧 بدء الإصلاح</button>`);
+        acts.push(`<button class="btn-m btn-red-m" onclick="doWo('scrapped')">🗑️ تكهين</button>`);
+      }
+      if (w.state === 'in_progress') {
+        acts.push(`<button class="btn-m btn-green-m" onclick="$('wfRepairPanel').style.display=''">✅ تم الإصلاح…</button>`);
+        acts.push(`<button class="btn-m btn-red-m" onclick="doWo('scrapped')">🗑️ تكهين</button>`);
+      }
+      if (w.state === 'repaired') {
+        acts.push(`<button class="btn-m btn-green-m" onclick="doWo('back_in_service')">🟢 عودة للخدمة</button>`);
+        acts.push(`<button class="btn-m btn-red-m" onclick="doWo('scrapped')">🗑️ تكهين</button>`);
+      }
+    }
+    $('wfActions').innerHTML = acts.join('');
+    $('wfRepairPanel').style.display = 'none';
+  }
+
+  window.doWo = async (to) => {
+    try {
+      const number = await advanceWorkOrder(currentWo.id, to, {}, profile);
+      if (to === 'confirmed') showToast(`⏳ اعتُمد — الرقم الرسمي ${number}`);
+      else if (to === 'back_in_service') {
+        showToast('🟢 عاد الأصل للخدمة');
+        // أمر وقائي منجز ⇒ إعادة جدولة الاستحقاق تلقائيًا من اليوم.
+        if (currentWo.type === 'preventive' && currentWo.assetId) {
+          await reschedulePm(currentWo.assetId, { fromDate: today() }, profile);
+          showToast('🛡️ أُعيدت جدولة الوقائية القادمة تلقائيًّا');
+        }
+      }
+      else if (to === 'scrapped') showToast('🗑️ كُهِّن الأصل — يُفتح طلب شراء بديل من المشتريات (٣-٢)');
+      else showToast('✅ تم الانتقال');
+    } catch (e) { showToast('❌ ' + e.message); }
+  };
+
+  window.submitRepair = async () => {
+    try {
+      await advanceWorkOrder(currentWo.id, 'repaired', {
+        resolution: $('wfResolution').value,
+        partsCost: $('wfParts').value,
+        laborCost: $('wfLabor').value,
+      }, profile);
+      showToast('✅ سُجّل الإصلاح — يبقى اعتماد العودة للخدمة');
+    } catch (e) { showToast('❌ ' + e.message); }
+  };
+</script>
+</DashboardLayout>

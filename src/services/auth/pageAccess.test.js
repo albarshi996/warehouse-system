@@ -41,6 +41,16 @@ test('لا تتطابق صفحة بادئتها مشابهة عرضًا (لا ث
   assert.equal(isPathAllowed('department_user', `${BASE}/dashboard/hiring-requests-extra`, BASE), false);
 });
 
+test('fleet: يصل لصفحات سلاسل الإمداد التشغيلية الثلاث فقط', () => {
+  assert.equal(isPathAllowed('fleet', `${BASE}/dashboard/vehicles-inventory`, BASE), true);
+  assert.equal(isPathAllowed('fleet', `${BASE}/dashboard/fleet-operations`, BASE), true);
+  assert.equal(isPathAllowed('fleet', `${BASE}/dashboard/maintenance-center`, BASE), true);
+  // العُهد (أثر مالي) واللوحة التنفيذية للمديرَين — لا يصلهما دور الحركة.
+  assert.equal(isPathAllowed('fleet', `${BASE}/dashboard/custody`, BASE), false);
+  assert.equal(isPathAllowed('fleet', `${BASE}/dashboard/supply-chain`, BASE), false);
+  assert.equal(isPathAllowed('fleet', `${BASE}/dashboard`, BASE), false);
+});
+
 test('كل قيم RESTRICTED_ROLE_PATHS مصفوفات غير فارغة', () => {
   for (const [role, paths] of Object.entries(RESTRICTED_ROLE_PATHS)) {
     assert.ok(Array.isArray(paths) && paths.length > 0, `دور ${role} بلا مسارات`);

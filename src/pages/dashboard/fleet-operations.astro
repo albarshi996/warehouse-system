@@ -1,0 +1,768 @@
+---
+/**
+ * عمليات الأسطول — سلاسل الإمداد (المرجع التشغيلي م-٢).
+ *
+ * دورة الرحلة اللوجستية الكاملة Dispatch-to-POD:
+ *   قيد التحضير → تصريح البوابة (رقم TRIP رسمي) → في الطريق →
+ *   POD بتوقيع إلكتروني → إقفال بمطابقة الوقود (تنبيه انحراف >15%).
+ *
+ * + بروتوكول الاستلام والتسليم اليومي للمركبات (شرط إصدار تصريح البوابة)
+ * + سجل الوقود على كل رحلة + مناطق التوزيع الديموغرافية A/B/C.
+ *
+ * الوصول: دور «الحركة» والمديران يكتبون؛ بقية المصادقين مشاهدة
+ * (قواعد Firestore تفرض ذلك). المنطق الخالص في `services/fleet/fleetModel.js`.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Brandzo | عمليات الأسطول">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+<style is:inline>
+  :root {
+    --primary-f: #0d1b2a; --primary2-f: #1b3a5c; --accent-f: #f0a500; --accent2-f: #ffd166;
+    --border-f: #d4dce8; --ok-f: #00b87a; --warn-f: #f59e0b; --bad-f: #ef4444;
+    --text-f: #1e293b; --surface-f: #f8fafc;
+  }
+  .fleet-wrap { font-family: 'Tajawal', 'Cairo', sans-serif; background: linear-gradient(135deg, #e8edf5, #f0f4fb); color: var(--text-f); min-height: 100vh; }
+  .fbar { background: var(--primary-f); padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.35); }
+  .fbar::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-f), var(--accent2-f), var(--accent-f)); }
+  .fbrand { display: flex; align-items: center; gap: 14px; }
+  .flogo { background: linear-gradient(135deg, var(--accent-f), var(--accent2-f)); border-radius: 10px; padding: 7px 14px; font-family: 'Cairo', sans-serif; font-size: 1.3rem; font-weight: 900; color: var(--primary-f); }
+  .ftitle { color: rgba(255,255,255,0.85); font-size: 0.95rem; font-weight: 600; }
+  .chip-f { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); border-radius: 20px; padding: 6px 14px; font-size: 0.78rem; font-weight: 700; }
+  .chip-f .dot { width: 9px; height: 9px; border-radius: 50%; background: #94a3b8; box-shadow: 0 0 8px currentColor; }
+  .chip-f.online .dot { background: var(--ok-f); color: var(--ok-f); }
+  .chip-f.pending .dot { background: var(--warn-f); color: var(--warn-f); }
+  .chip-f.offline .dot { background: var(--bad-f); color: var(--bad-f); }
+  .fmain { max-width: 1150px; margin: 24px auto; padding: 0 20px 70px; }
+  .hcard { background: var(--primary-f); border-radius: 18px; padding: 24px 30px; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 12px 40px rgba(13,27,42,0.4); }
+  .hcard::before { content: ''; position: absolute; top: -60px; left: -60px; width: 280px; height: 280px; background: radial-gradient(circle, rgba(240,165,0,0.18), transparent 70%); border-radius: 50%; }
+  .hinner { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; position: relative; z-index: 1; }
+  .htext h2 { font-size: 1.5rem; font-weight: 900; color: white; }
+  .htext p { color: rgba(255,255,255,0.55); font-size: 0.85rem; margin-top: 3px; }
+  .hkpis { display: flex; gap: 12px; flex-wrap: wrap; }
+  .kbadge { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 18px; text-align: center; min-width: 90px; }
+  .kbadge .num { font-size: 1.5rem; font-weight: 900; color: var(--accent-f); font-family: 'Cairo', sans-serif; line-height: 1.2; }
+  .kbadge .lbl { font-size: 0.72rem; opacity: 0.65; color: white; margin-top: 3px; }
+  .kbadge.alert .num { color: #ff7b7b; }
+  .ftabs { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+  .ftab { border: 1.5px solid var(--border-f); background: white; border-radius: 12px; padding: 10px 22px; font-family: 'Tajawal', sans-serif; font-size: 0.92rem; font-weight: 700; color: #64748b; cursor: pointer; transition: all 0.2s; }
+  .ftab.active { background: var(--primary-f); color: white; border-color: var(--primary-f); box-shadow: 0 4px 14px rgba(13,27,42,0.3); }
+  .scard { background: white; border-radius: 16px; margin-bottom: 18px; box-shadow: 0 3px 16px rgba(0,0,0,0.07); overflow: hidden; border: 1px solid rgba(0,0,0,0.05); }
+  .shead { background: linear-gradient(135deg, var(--primary-f), var(--primary2-f)); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .shead h3 { color: white; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 9px; }
+  .sbody { padding: 20px; }
+  .btn-f { padding: 9px 16px; border-radius: 9px; border: none; cursor: pointer; font-family: 'Tajawal', sans-serif; font-size: 0.86rem; font-weight: 700; display: inline-flex; align-items: center; gap: 7px; transition: all 0.2s; }
+  .btn-f:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.22); }
+  .btn-f:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-gold { background: linear-gradient(135deg, var(--accent-f), var(--accent2-f)); color: var(--primary-f); }
+  .btn-blue { background: linear-gradient(135deg, #0ea5e9, #0369a1); color: white; }
+  .btn-green { background: linear-gradient(135deg, #00b87a, #00976a); color: white; }
+  .btn-red { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+  .btn-dark { background: var(--primary-f); color: white; }
+  .btn-ghost { background: #f1f5f9; color: #475569; }
+  .fgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .fgrid.c2 { grid-template-columns: repeat(2, 1fr); }
+  .fgrid.c4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 760px) { .fgrid, .fgrid.c4 { grid-template-columns: 1fr 1fr; } }
+  .fg { display: flex; flex-direction: column; gap: 5px; }
+  .fg label { font-size: 0.78rem; font-weight: 700; color: #64748b; }
+  .fg input, .fg select, .fg textarea { border: 1.5px solid var(--border-f); border-radius: 9px; padding: 9px 13px; font-family: 'Tajawal', sans-serif; font-size: 0.95rem; color: var(--text-f); background: var(--surface-f); width: 100%; }
+  .fg input:focus, .fg select:focus, .fg textarea:focus { outline: none; border-color: var(--accent-f); box-shadow: 0 0 0 4px rgba(240,165,0,0.12); background: white; }
+  .ftable { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  .ftable thead tr { background: linear-gradient(135deg, var(--primary-f), var(--primary2-f)); color: white; }
+  .ftable th { padding: 10px 12px; text-align: right; font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
+  .ftable td { padding: 9px 12px; border-bottom: 1px solid #edf0f5; vertical-align: middle; }
+  .ftable tbody tr:hover { background: #f8fbff; }
+  .fnum { font-family: 'Cairo', sans-serif; font-weight: 800; color: var(--primary-f); white-space: nowrap; }
+  .fbadge { display: inline-flex; align-items: center; gap: 5px; border-radius: 14px; padding: 3px 11px; font-size: 0.75rem; font-weight: 800; white-space: nowrap; }
+  .fempty { text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 0.95rem; line-height: 2; }
+  .mini-f { border: 1.5px solid var(--border-f); background: white; border-radius: 8px; padding: 5px 12px; font-family: 'Tajawal', sans-serif; font-size: 0.78rem; font-weight: 700; cursor: pointer; color: var(--primary-f); }
+  .mini-f:hover { border-color: var(--accent-f); background: #fffbeb; }
+  .writer-only[hidden] { display: none !important; }
+  /* نوافذ */
+  .fov { display: none; position: fixed; inset: 0; background: rgba(13,27,42,0.72); z-index: 500; align-items: flex-start; justify-content: center; backdrop-filter: blur(6px); padding: 30px 16px; overflow-y: auto; }
+  .fov.active { display: flex; }
+  .fmodal { background: white; border-radius: 20px; width: min(880px, 96vw); box-shadow: 0 30px 80px rgba(0,0,0,0.4); }
+  .fmhead { background: linear-gradient(135deg, var(--primary-f), var(--primary2-f)); color: white; padding: 16px 22px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .fmhead h3 { font-size: 1.02rem; font-weight: 800; }
+  .fmhead .sub { font-size: 0.76rem; opacity: 0.65; margin-top: 2px; }
+  .fmclose { background: rgba(255,255,255,0.12); border: none; color: white; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-family: 'Tajawal', sans-serif; font-weight: 700; }
+  .fmbody { padding: 20px 22px 26px; }
+  /* خط الرحلة */
+  .pipe { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+  .pipe .st { flex: 1; min-width: 105px; text-align: center; border: 1.5px solid var(--border-f); border-radius: 12px; padding: 9px 6px; font-size: 0.76rem; font-weight: 800; color: #94a3b8; background: var(--surface-f); }
+  .pipe .st.done { border-color: var(--ok-f); color: #00976a; background: rgba(0,184,122,0.07); }
+  .pipe .st.now { border-color: var(--accent-f); color: var(--primary-f); background: #fffbeb; box-shadow: 0 3px 12px rgba(240,165,0,0.25); }
+  .pipe .st .ic { font-size: 1.15rem; display: block; margin-bottom: 3px; }
+  /* بروتوكول التسليم */
+  .hitem { display: flex; align-items: center; gap: 12px; border: 1.5px solid var(--border-f); border-radius: 12px; padding: 11px 15px; margin-bottom: 9px; background: var(--surface-f); flex-wrap: wrap; }
+  .hitem .ic { font-size: 1.3rem; }
+  .hitem .lb { flex: 1; min-width: 180px; font-size: 0.88rem; font-weight: 700; }
+  .hitem input[type="text"], .hitem input[type="number"] { border: 1.5px solid var(--border-f); border-radius: 8px; padding: 6px 10px; font-family: 'Tajawal', sans-serif; font-size: 0.85rem; background: white; }
+  .hradio { display: flex; gap: 5px; }
+  .hradio label { padding: 5px 14px; border-radius: 18px; font-size: 0.78rem; font-weight: 700; cursor: pointer; border: 1.5px solid #d8dfe9; background: white; user-select: none; }
+  .hradio input { display: none; }
+  .hradio input:checked + label.okl { background: linear-gradient(135deg, var(--ok-f), #00976a); color: white; border-color: transparent; }
+  .hradio input:checked + label.warnl { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-color: transparent; }
+  .problems { border: 1.5px solid #fecaca; background: #fef2f2; color: #b91c1c; border-radius: 12px; padding: 12px 16px; font-size: 0.85rem; font-weight: 700; line-height: 2; margin-top: 12px; display: none; }
+  .problems.show { display: block; }
+  /* مناطق التوزيع */
+  .zones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 760px) { .zones { grid-template-columns: 1fr; } }
+  .zone { border: 1.5px solid var(--border-f); border-radius: 14px; padding: 14px 16px; background: white; border-top: 4px solid var(--zc, #64748b); }
+  .zone h4 { font-size: 0.92rem; font-weight: 900; margin-bottom: 6px; }
+  .zone .zl { font-size: 0.78rem; color: #64748b; line-height: 1.9; }
+  /* التوقيع */
+  .sigpad { border: 2px dashed var(--border-f); border-radius: 12px; background: white; touch-action: none; display: block; width: 100%; height: 130px; cursor: crosshair; }
+  .fuel-row { border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 11px 15px; margin-bottom: 9px; background: var(--surface-f); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 0.84rem; }
+  .tl { border-right: 2.5px solid var(--border-f); margin-right: 8px; padding-right: 16px; }
+  .tl .ev { position: relative; padding-bottom: 12px; font-size: 0.82rem; color: #475569; }
+  .tl .ev::before { content: ''; position: absolute; right: -22.5px; top: 4px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent-f); border: 2px solid white; box-shadow: 0 0 0 1.5px var(--border-f); }
+  .toast-wrap { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .toast-f { background: var(--primary-f); color: white; padding: 12px 24px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-right: 4px solid var(--accent-f); max-width: min(560px, 90vw); white-space: pre-line; }
+</style>
+
+<div class="fleet-wrap" dir="rtl">
+<div class="toast-wrap" id="toastWrap"></div>
+
+<div class="fbar">
+  <div class="fbrand">
+    <div class="flogo">Brandzo</div>
+    <div class="ftitle">عمليات الأسطول — سلاسل الإمداد</div>
+    <span class="chip-f" id="cloudChip"><span class="dot"></span><span id="cloudChipText">جارٍ الاتصال…</span></span>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="btn-f btn-gold writer-only" onclick="openNewTrip()">＋ رحلة جديدة</button>
+  </div>
+</div>
+
+<div class="fmain">
+  <div class="hcard">
+    <div class="hinner">
+      <div class="htext">
+        <h2>🚚 العمليات اللوجستية والتتبع الميداني</h2>
+        <p>دورة Dispatch-to-POD الكاملة · بروتوكول التسليم اليومي · سجل الوقود — عصب التوزيع للمنافذ</p>
+      </div>
+      <div class="hkpis">
+        <div class="kbadge"><div class="num" id="kToday">0</div><div class="lbl">رحلات اليوم</div></div>
+        <div class="kbadge"><div class="num" id="kEnroute">0</div><div class="lbl">في الطريق</div></div>
+        <div class="kbadge"><div class="num" id="kPod">—</div><div class="lbl">موثقة POD</div></div>
+        <div class="kbadge alert"><div class="num" id="kFuelAlerts">0</div><div class="lbl">تنبيهات وقود</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ftabs">
+    <button class="ftab active" data-tab="trips" onclick="switchTab('trips')">🚚 الرحلات</button>
+    <button class="ftab" data-tab="handover" onclick="switchTab('handover')">📝 التسليم اليومي</button>
+    <button class="ftab" data-tab="zones" onclick="switchTab('zones')">🗺️ مناطق التوزيع</button>
+  </div>
+
+  <!-- ═══ الرحلات ═══ -->
+  <div id="tab-trips">
+    <div class="scard">
+      <div class="shead">
+        <h3>📋 سجل الرحلات</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="tripFilter" onchange="renderTrips()" style="border-radius:8px;border:none;padding:6px 12px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:0.8rem;">
+            <option value="">كل الحالات</option>
+            <option value="preparing">قيد التحضير</option>
+            <option value="gatepass">تصريح بوابة</option>
+            <option value="enroute">في الطريق</option>
+            <option value="delivered">سُلّمت (POD)</option>
+            <option value="closed">مقفلة</option>
+            <option value="cancelled">ملغاة</option>
+          </select>
+          <input id="tripSearch" type="search" placeholder="🔎 بحث…" oninput="renderTrips()" style="border-radius:8px;border:none;padding:6px 12px;font-family:'Tajawal',sans-serif;font-size:0.8rem;min-width:170px;">
+        </div>
+      </div>
+      <div class="sbody" style="padding:0;overflow-x:auto;">
+        <table class="ftable">
+          <thead><tr>
+            <th>الرقم</th><th>التاريخ المخطط</th><th>المركبة</th><th>السائق</th><th>المنطقة</th>
+            <th>الوجهة</th><th>مستند الصرف</th><th>الحالة</th><th>وقود</th><th></th>
+          </tr></thead>
+          <tbody id="tripsBody"></tbody>
+        </table>
+        <div class="fempty" id="tripsEmpty">لا رحلات بعد. <span class="writer-only">ابدأ بـ«＋ رحلة جديدة».</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ التسليم اليومي ═══ -->
+  <div id="tab-handover" style="display:none">
+    <div class="scard">
+      <div class="shead"><h3>📝 بروتوكول الاستلام والتسليم اليومي</h3></div>
+      <div class="sbody">
+        <p style="font-size:0.85rem;color:#64748b;margin-bottom:16px;line-height:1.9;">
+          <b>القاعدة (٢-٢):</b> لا تُطلق مركبة بين الورديات إلا بنموذج فحص يومي مكتمل موقَّع من المُسلِّم والمُستلِم —
+          <b>النموذج هو الشرط الأول لإصدار تصريح البوابة</b>. يُحظر التسليم بأقل من ربع خزان.
+        </p>
+        <div class="fgrid c4" style="margin-bottom:16px;">
+          <div class="fg"><label>المركبة</label><select id="hoVehicle" onchange="onHoVehicle()"></select></div>
+          <div class="fg"><label>التاريخ</label><input type="date" id="hoDate"></div>
+          <div class="fg"><label>الوردية</label><select id="hoShift"><option>صباحية</option><option>مسائية</option></select></div>
+          <div class="fg"><label>مركبة مبردة؟</label><select id="hoRefrig" onchange="toggleTemp()"><option value="no">لا</option><option value="yes">نعم — سلسلة باردة</option></select></div>
+        </div>
+        <div id="hoLast" style="font-size:0.8rem;color:#0369a1;font-weight:700;margin-bottom:14px;"></div>
+
+        <div id="hoItems"></div>
+
+        <div class="fgrid" style="margin-top:14px;">
+          <div class="fg"><label>السائق المُسلِّم</label><input type="text" id="hoFrom" placeholder="الاسم"></div>
+          <div class="fg"><label>السائق المُستلِم</label><input type="text" id="hoTo" placeholder="الاسم"></div>
+          <div class="fg"><label>ملاحظات عامة</label><input type="text" id="hoNotes" placeholder="اختياري"></div>
+        </div>
+
+        <div class="problems" id="hoProblems"></div>
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn-f btn-green writer-only" onclick="saveHandoverForm()">✅ اعتماد النموذج وحفظه</button>
+        </div>
+      </div>
+    </div>
+    <div class="scard">
+      <div class="shead"><h3>🗂️ آخر نماذج هذه المركبة</h3></div>
+      <div class="sbody" id="hoHistory"><div class="fempty">اختر مركبة لعرض نماذجها.</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ مناطق التوزيع ═══ -->
+  <div id="tab-zones" style="display:none">
+    <div class="scard">
+      <div class="shead"><h3>🗺️ مناطق التوزيع الديموغرافية وأولويات الجدولة (بنغازي)</h3></div>
+      <div class="sbody"><div class="zones" id="zonesGrid"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ نافذة رحلة جديدة ═══ -->
+<div class="fov" id="newTripOv">
+  <div class="fmodal">
+    <div class="fmhead"><div><h3>＋ رحلة جديدة (أمر إرسالية)</h3><div class="sub">تُنشأ قيد التحضير — الرقم الرسمي يُمنح عند إصدار تصريح البوابة</div></div>
+      <button class="fmclose" onclick="closeOv('newTripOv')">✕</button></div>
+    <div class="fmbody">
+      <div class="fgrid">
+        <div class="fg"><label>المركبة</label><select id="ntVehicle"></select></div>
+        <div class="fg"><label>السائق</label><input type="text" id="ntDriver" placeholder="اسم السائق"></div>
+        <div class="fg"><label>منطقة التوزيع</label><select id="ntZone">
+          <option value="A">A — استهلاك مرتفع (يومي)</option>
+          <option value="B">B — متوسط (مرتين أسبوعيًا)</option>
+          <option value="C">C — تجزئة (أسبوعي)</option>
+        </select></div>
+        <div class="fg"><label>الوجهة / المنفذ</label><input type="text" id="ntDest" placeholder="هايبر ماركت …"></div>
+        <div class="fg"><label>مستند الصرف المرتبط (DO/GRN…)</label><input type="text" id="ntDoRef" placeholder="مثال: GIN-2026-0004"></div>
+        <div class="fg"><label>التاريخ المخطط للتسليم</label><input type="date" id="ntPlanned"></div>
+        <div class="fg"><label>قراءة العداد عند الانطلاق (كم)</label><input type="number" id="ntOdo" placeholder="0"></div>
+        <div class="fg"><label>الاستهلاك القياسي (كم/لتر)</label><input type="number" step="0.1" id="ntBaseline" placeholder="مثال: 8"></div>
+        <div class="fg"><label>ملاحظات</label><input type="text" id="ntNotes" placeholder="اختياري"></div>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:10px;">
+        <button class="btn-f btn-gold" onclick="submitNewTrip()">إنشاء الرحلة</button>
+        <button class="btn-f btn-ghost" onclick="closeOv('newTripOv')">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ نافذة ملف الرحلة ═══ -->
+<div class="fov" id="tripOv">
+  <div class="fmodal">
+    <div class="fmhead"><div><h3 id="tpTitle">ملف الرحلة</h3><div class="sub" id="tpSub"></div></div>
+      <button class="fmclose" onclick="closeOv('tripOv')">✕</button></div>
+    <div class="fmbody">
+      <div class="pipe" id="tpPipe"></div>
+      <div id="tpDetails" class="fgrid c4" style="margin-bottom:16px;"></div>
+      <div id="tpActions" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;"></div>
+
+      <!-- POD -->
+      <div id="tpPodPanel" style="display:none;border:2px solid var(--accent-f);border-radius:14px;padding:16px;margin-bottom:18px;background:#fffbeb;">
+        <h4 style="font-weight:900;margin-bottom:12px;">📱 إثبات التسليم (POD) — توقيع إلكتروني</h4>
+        <div class="fgrid c2">
+          <div class="fg"><label>اسم المستلم في المنفذ</label><input type="text" id="podName"></div>
+          <div class="fg"><label>ملاحظات التسليم</label><input type="text" id="podNotes" placeholder="اختياري"></div>
+        </div>
+        <div class="fg" style="margin-top:10px;"><label>توقيع المستلم (ارسم بالإصبع أو الفأرة)</label>
+          <canvas class="sigpad" id="sigPad" width="600" height="130"></canvas>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <button class="mini-f" onclick="clearSig()">🧹 مسح التوقيع</button>
+            <label class="mini-f" style="cursor:pointer;">📷 صورة البضاعة (اختياري)
+              <input type="file" id="podPhoto" accept="image/*" style="display:none" onchange="podPhotoPicked(event)"></label>
+            <span id="podPhotoName" style="font-size:0.76rem;color:#64748b;align-self:center;"></span>
+          </div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:10px;">
+          <button class="btn-f btn-green" onclick="submitPod()">✅ توثيق التسليم</button>
+          <button class="btn-f btn-ghost" onclick="hidePodPanel()">إلغاء</button>
+        </div>
+      </div>
+
+      <!-- إقفال -->
+      <div id="tpClosePanel" style="display:none;border:2px solid var(--border-f);border-radius:14px;padding:16px;margin-bottom:18px;background:var(--surface-f);">
+        <h4 style="font-weight:900;margin-bottom:12px;">🔒 إقفال الرحلة — مطابقة الوقود</h4>
+        <div class="fgrid c2">
+          <div class="fg"><label>قراءة العداد النهائية (كم)</label><input type="number" id="closeOdo"></div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:10px;">
+          <button class="btn-f btn-dark" onclick="submitClose()">🔒 مطابقة وإقفال</button>
+          <button class="btn-f btn-ghost" onclick="$('tpClosePanel').style.display='none'">إلغاء</button>
+        </div>
+      </div>
+
+      <!-- الوقود -->
+      <div class="scard" style="box-shadow:none;border:1.5px solid var(--border-f);">
+        <div class="shead"><h3>⛽ سجل الوقود</h3><span style="color:rgba(255,255,255,0.7);font-size:0.76rem;">السائق ملزم برفع الإيصال خلال ساعة (٢-٥)</span></div>
+        <div class="sbody">
+          <div class="fgrid c4 writer-only" id="fuelForm">
+            <div class="fg"><label>المحطة</label><input type="text" id="fStation"></div>
+            <div class="fg"><label>رقم الإيصال</label><input type="text" id="fReceipt"></div>
+            <div class="fg"><label>اللترات</label><input type="number" step="0.1" id="fLiters"></div>
+            <div class="fg"><label>التكلفة (د.ل)</label><input type="number" step="0.01" id="fCost"></div>
+            <div class="fg"><label>العداد قبل</label><input type="number" id="fOdoB"></div>
+            <div class="fg"><label>العداد بعد</label><input type="number" id="fOdoA"></div>
+            <div class="fg" style="grid-column:span 2;align-self:end;"><button class="btn-f btn-blue" onclick="submitFuel()">⛽ قيد الوقود</button></div>
+          </div>
+          <div id="fuelList" style="margin-top:14px;"></div>
+        </div>
+      </div>
+
+      <!-- سجل التدقيق -->
+      <h4 style="font-weight:900;margin:16px 0 10px;">🕐 سجل الرحلة</h4>
+      <div class="tl" id="tpEvents"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+  import {
+    TRIP_STATES,
+    ZONES,
+    HANDOVER_ITEMS,
+    FUEL_LEVELS,
+    emptyHandover,
+    handoverVerdict,
+    tripSnapshot,
+    podRate,
+  } from '../../services/fleet/fleetModel.js';
+  import {
+    listenTrips,
+    listenTripFuel,
+    listenTripEvents,
+    createTrip,
+    issueGatePass,
+    departTrip,
+    recordPod,
+    closeTrip,
+    cancelTrip,
+    addFuelEntry,
+    saveHandover,
+    listenHandovers,
+  } from '../../services/fleet/fleetOpsService.js';
+  import { listenVehicles } from '../../services/vehicles/vehiclesService.js';
+  import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
+
+  const WRITER_ROLES = ['admin', 'warehouse_manager', 'fleet'];
+  let trips = [];
+  let vehicles = [];
+  let profile = null;
+  let canWrite = false;
+  let currentTrip = null;
+  let tripUnsubs = [];
+  let hoUnsub = null;
+
+  const $ = (id) => document.getElementById(id);
+  window.$ = $;
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast-f';
+    t.textContent = msg;
+    $('toastWrap').appendChild(t);
+    setTimeout(() => t.remove(), 5200);
+  }
+
+  function setCloud(state, text) {
+    const chip = $('cloudChip');
+    chip.classList.remove('online', 'pending', 'offline');
+    chip.classList.add(state);
+    $('cloudChipText').textContent = text;
+  }
+  window.addEventListener('online', () => setCloud('online', 'متصل — متزامن'));
+  window.addEventListener('offline', () => setCloud('offline', 'بلا إنترنت'));
+
+  /* ─── المصادقة ثم الاستماع ─── */
+  let started = false;
+  subscribeAuth(async (user) => {
+    if (!user) return;
+    profile = await fetchUserProfile(user);
+    canWrite = WRITER_ROLES.includes(profile?.role);
+    document.querySelectorAll('.writer-only').forEach((el) => { el.hidden = !canWrite; });
+    if (!started) {
+      started = true;
+      listenTrips((list, pending) => {
+        trips = list;
+        setCloud(pending ? 'pending' : 'online', pending ? 'بانتظار مزامنة…' : 'متصل — متزامن');
+        renderTrips();
+        if (currentTrip) {
+          const fresh = trips.find((t) => t.id === currentTrip.id);
+          if (fresh) { currentTrip = fresh; renderTripFile(); }
+        }
+      });
+      listenVehicles((list) => { vehicles = list; fillVehicleSelects(); });
+    }
+  });
+
+  /* ─── تبويبات ─── */
+  window.switchTab = (tab) => {
+    document.querySelectorAll('.ftab').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+    for (const t of ['trips', 'handover', 'zones']) $(`tab-${t}`).style.display = t === tab ? '' : 'none';
+  };
+
+  /* ─── الرحلات ─── */
+  function stateBadge(state) {
+    const s = TRIP_STATES[state];
+    if (!s) return '';
+    return `<span class="fbadge" style="background:${s.color}1f;color:${s.color};">${s.emoji} ${s.label}</span>`;
+  }
+
+  function renderTrips() {
+    const today = new Date().toISOString().slice(0, 10);
+    const snap = tripSnapshot(trips);
+    $('kToday').textContent = trips.filter((t) => t.plannedDate === today || t.deliveredDate === today).length;
+    $('kEnroute').textContent = snap.enroute + snap.gatepass;
+    const pr = podRate(trips);
+    $('kPod').textContent = pr == null ? '—' : Math.round(pr * 100) + '%';
+    $('kFuelAlerts').textContent = trips.reduce((n, t) => n + (Number(t.fuelSummary?.anomalies) || 0), 0);
+
+    const filter = $('tripFilter').value;
+    const term = ($('tripSearch').value || '').trim();
+    const rows = trips.filter((t) =>
+      (!filter || t.state === filter) &&
+      (!term || [t.number, t.plateNo, t.driverName, t.destination, t.doRef].some((f) => String(f || '').includes(term)))
+    );
+    $('tripsEmpty').style.display = rows.length ? 'none' : '';
+    $('tripsBody').innerHTML = rows.map((t) => {
+      const anomaly = Number(t.fuelSummary?.anomalies) > 0 || t.tripStats?.anomalous;
+      return `<tr>
+        <td class="fnum">${esc(t.number || '— مسودة')}</td>
+        <td>${esc(t.plannedDate || '—')}</td>
+        <td>${esc(t.plateNo || '—')}</td>
+        <td>${esc(t.driverName || '—')}</td>
+        <td><span class="fbadge" style="background:#eef2ff;color:#4338ca;">${esc(t.zone || '—')}</span></td>
+        <td>${esc(t.destination || '—')}</td>
+        <td>${esc(t.doRef || '—')}</td>
+        <td>${stateBadge(t.state)}</td>
+        <td>${anomaly ? '<span class="fbadge" style="background:#fef2f2;color:#b91c1c;">⚠️ انحراف</span>' : (t.fuelSummary?.entries || 0) + ' قيد'}</td>
+        <td><button class="mini-f" onclick="openTrip('${t.id}')">📂 فتح</button></td>
+      </tr>`;
+    }).join('');
+  }
+  window.renderTrips = renderTrips;
+
+  function fillVehicleSelects() {
+    const opts = ['<option value="">— اختر مركبة —</option>']
+      .concat(vehicles.map((v) => `<option value="${esc(v.id)}">${esc(v.plateNo || v.id)} — ${esc([v.brand, v.model].filter(Boolean).join(' '))}</option>`))
+      .join('');
+    for (const id of ['ntVehicle', 'hoVehicle']) {
+      const sel = $(id);
+      const cur = sel.value;
+      sel.innerHTML = opts;
+      if (cur) sel.value = cur;
+    }
+  }
+
+  window.openNewTrip = () => { $('newTripOv').classList.add('active'); };
+  function closeOv(id) { $(id).classList.remove('active'); if (id === 'tripOv') closeTripFile(); }
+  window.closeOv = closeOv;
+
+  window.submitNewTrip = async () => {
+    try {
+      const vid = $('ntVehicle').value;
+      const v = vehicles.find((x) => x.id === vid);
+      if (!v) return showToast('اختر المركبة أولًا');
+      if (!$('ntDest').value.trim()) return showToast('الوجهة مطلوبة');
+      await createTrip({
+        vehicleId: vid,
+        plateNo: v.plateNo || vid,
+        vehicleDesc: [v.brand, v.model].filter(Boolean).join(' '),
+        driverName: $('ntDriver').value,
+        zone: $('ntZone').value,
+        destination: $('ntDest').value,
+        doRef: $('ntDoRef').value,
+        plannedDate: $('ntPlanned').value,
+        odoStart: $('ntOdo').value,
+        baselineKmPerLiter: $('ntBaseline').value,
+        notes: $('ntNotes').value,
+      }, profile);
+      closeOv('newTripOv');
+      showToast('✅ أُنشئت الرحلة قيد التحضير — أكمل بروتوكول التسليم اليومي ثم أصدر تصريح البوابة');
+    } catch (e) { showToast('❌ ' + e.message); }
+  };
+
+  /* ─── ملف الرحلة ─── */
+  window.openTrip = (id) => {
+    currentTrip = trips.find((t) => t.id === id);
+    if (!currentTrip) return;
+    $('tripOv').classList.add('active');
+    renderTripFile();
+    tripUnsubs.push(listenTripFuel(id, renderFuel));
+    tripUnsubs.push(listenTripEvents(id, renderEvents));
+  };
+  function closeTripFile() {
+    tripUnsubs.forEach((u) => u && u());
+    tripUnsubs = [];
+    currentTrip = null;
+    hidePodPanel();
+    $('tpClosePanel').style.display = 'none';
+  }
+
+  const PIPE_ORDER = ['preparing', 'gatepass', 'enroute', 'delivered', 'closed'];
+  function renderTripFile() {
+    const t = currentTrip;
+    if (!t) return;
+    $('tpTitle').textContent = `ملف الرحلة ${t.number || '(مسودة)'}`;
+    $('tpSub').textContent = `${t.plateNo || ''} · ${t.driverName || ''} → ${t.destination || ''}`;
+
+    const idx = PIPE_ORDER.indexOf(t.state);
+    $('tpPipe').innerHTML = t.state === 'cancelled'
+      ? `<div class="st now" style="border-color:var(--bad-f);color:#b91c1c;background:#fef2f2;"><span class="ic">⛔</span>ملغاة${t.cancelReason ? ' — ' + esc(t.cancelReason) : ''}</div>`
+      : PIPE_ORDER.map((s, i) => {
+          const st = TRIP_STATES[s];
+          return `<div class="st ${i < idx ? 'done' : i === idx ? 'now' : ''}"><span class="ic">${st.emoji}</span>${st.label}</div>`;
+        }).join('');
+
+    const cell = (l, v) => `<div class="fg"><label>${l}</label><div style="font-weight:800;font-size:0.92rem;">${esc(v || '—')}</div></div>`;
+    const stats = t.tripStats;
+    $('tpDetails').innerHTML = [
+      cell('المنطقة', t.zone), cell('التاريخ المخطط', t.plannedDate),
+      cell('مستند الصرف', t.doRef), cell('العداد انطلاقًا', t.odoStart),
+      cell('تصريح البوابة', t.gatePass ? `${t.gatePass.number} (${t.gatePass.date})` : '—'),
+      cell('سُلّمت بتاريخ', t.deliveredDate),
+      cell('المستلم (POD)', t.pod?.receiverName),
+      cell('العداد ختامًا', t.odoEnd),
+      stats ? cell('المسافة', `${stats.distanceKm} كم`) : '',
+      stats?.kmPerLiter ? cell('كم/لتر', stats.kmPerLiter.toFixed(1) + (stats.anomalous ? ' ⚠️' : '')) : '',
+      stats?.costPerKm ? cell('تكلفة الكيلومتر', stats.costPerKm.toFixed(3) + ' د.ل') : '',
+    ].join('');
+
+    const acts = [];
+    if (canWrite) {
+      if (t.state === 'preparing') {
+        acts.push(`<button class="btn-f btn-gold" onclick="doGatePass()">🎫 إصدار تصريح البوابة</button>`);
+        acts.push(`<button class="btn-f btn-red" onclick="doCancel()">⛔ إلغاء الرحلة</button>`);
+      }
+      if (t.state === 'gatepass') acts.push(`<button class="btn-f btn-blue" onclick="doDepart()">🚚 تسجيل الانطلاق</button>`);
+      if (t.state === 'enroute') acts.push(`<button class="btn-f btn-green" onclick="showPodPanel()">📱 إثبات التسليم POD</button>`);
+      if (t.state === 'delivered') acts.push(`<button class="btn-f btn-dark" onclick="$('tpClosePanel').style.display='';$('closeOdo').focus()">🔒 إقفال بمطابقة الوقود</button>`);
+    }
+    $('tpActions').innerHTML = acts.join('');
+    // توقيع POD المحفوظ
+    if (t.pod?.signature) {
+      $('tpActions').insertAdjacentHTML('beforeend',
+        `<img src="${t.pod.signature}" alt="توقيع المستلم" style="height:52px;border:1.5px solid var(--border-f);border-radius:8px;background:white;">`);
+    }
+  }
+
+  window.doGatePass = async () => {
+    try {
+      const { number } = await issueGatePass(currentTrip.id, {}, profile);
+      showToast(`🎫 صدر تصريح البوابة — الرقم الرسمي ${number}`);
+    } catch (e) { showToast('❌ ' + e.message); }
+  };
+  window.doDepart = async () => {
+    try { await departTrip(currentTrip.id, profile); showToast('🚚 انطلقت الشاحنة'); }
+    catch (e) { showToast('❌ ' + e.message); }
+  };
+  window.doCancel = async () => {
+    const reason = prompt('سبب الإلغاء (تبقى الرحلة أثرًا في السجل):');
+    if (reason == null) return;
+    try { await cancelTrip(currentTrip.id, reason, profile); showToast('⛔ أُلغيت الرحلة'); }
+    catch (e) { showToast('❌ ' + e.message); }
+  };
+  window.submitClose = async () => {
+    try {
+      const { stats, anomaly } = await closeTrip(currentTrip.id, { odoEnd: $('closeOdo').value }, profile);
+      $('tpClosePanel').style.display = 'none';
+      showToast(anomaly?.anomalous
+        ? `⚠️ أُقفلت — استهلاك غير طبيعي (انحراف ${(anomaly.deviation * 100).toFixed(0)}%) — يُنبَّه مدير الأسطول`
+        : stats ? `🔒 أُقفلت — ${stats.distanceKm} كم بمعدل ${stats.kmPerLiter ? stats.kmPerLiter.toFixed(1) : '—'} كم/لتر` : '🔒 أُقفلت الرحلة');
+    } catch (e) { showToast('❌ ' + e.message); }
+  };
+
+  /* ─── التوقيع الإلكتروني ─── */
+  let sigDrawn = false;
+  let podPhotoData = null;
+  function sigCtx() { return $('sigPad').getContext('2d'); }
+  function setupSig() {
+    const c = $('sigPad');
+    const ctx = c.getContext('2d');
+    ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.strokeStyle = '#0d1b2a';
+    let drawing = false;
+    const pos = (e) => {
+      const r = c.getBoundingClientRect();
+      return [(e.clientX - r.left) * (c.width / r.width), (e.clientY - r.top) * (c.height / r.height)];
+    };
+    c.addEventListener('pointerdown', (e) => { drawing = true; sigDrawn = true; const [x, y] = pos(e); ctx.beginPath(); ctx.moveTo(x, y); c.setPointerCapture(e.pointerId); });
+    c.addEventListener('pointermove', (e) => { if (!drawing) return; const [x, y] = pos(e); ctx.lineTo(x, y); ctx.stroke(); });
+    c.addEventListener('pointerup', () => { drawing = false; });
+  }
+  setupSig();
+  function clearSig() { sigCtx().clearRect(0, 0, 600, 130); sigDrawn = false; }
+  window.clearSig = clearSig;
+  window.showPodPanel = () => { $('tpPodPanel').style.display = ''; };
+  function hidePodPanel() { $('tpPodPanel').style.display = 'none'; clearSig(); podPhotoData = null; $('podPhotoName').textContent = ''; }
+  window.hidePodPanel = hidePodPanel;
+
+  window.podPhotoPicked = (ev) => {
+    const file = ev.target.files?.[0];
+    if (!file) return;
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 800 / Math.max(img.width, img.height));
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(img.width * scale);
+      cv.height = Math.round(img.height * scale);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      podPhotoData = cv.toDataURL('image/jpeg', 0.6);
+      if (podPhotoData.length > 400000) podPhotoData = cv.toDataURL('image/jpeg', 0.35);
+      $('podPhotoName').textContent = `📷 ${file.name} (${Math.round(podPhotoData.length / 1024)}KB)`;
+      URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(file);
+  };
+
+  window.submitPod = async () => {
+    try {
+      await recordPod(currentTrip.id, {
+        receiverName: $('podName').value,
+        signature: sigDrawn ? $('sigPad').toDataURL('image/png') : null,
+        photo: podPhotoData,
+        notes: $('podNotes').value,
+      }, profile);
+      hidePodPanel();
+      showToast('📱 وُثّق التسليم — حالة الرحلة: سُلّمت');
+    } catch (e) { showToast('❌ ' + e.message); }
+  };
+
+  /* ─── الوقود ─── */
+  window.submitFuel = async () => {
+    try {
+      const { anomaly } = await addFuelEntry(currentTrip.id, {
+        station: $('fStation').value, receiptNo: $('fReceipt').value,
+        liters: $('fLiters').value, cost: $('fCost').value,
+        odoBefore: $('fOdoB').value, odoAfter: $('fOdoA').value,
+      }, profile);
+      for (const id of ['fStation', 'fReceipt', 'fLiters', 'fCost', 'fOdoB', 'fOdoA']) $(id).value = '';
+      showToast(anomaly?.anomalous
+        ? `⚠️ قُيّد الوقود — استهلاك يتجاوز القياسي بـ${(anomaly.deviation * 100).toFixed(0)}% (تنبيه مدير الأسطول)`
+        : '⛽ قُيّد الوقود');
+    } catch (e) { showToast('❌ ' + e.message); }
+  };
+  function renderFuel(entries) {
+    $('fuelList').innerHTML = entries.length ? entries.map((e) => `
+      <div class="fuel-row">
+        <div><b>${esc(e.station || 'محطة غير مسماة')}</b> · إيصال ${esc(e.receiptNo || '—')} · ${e.liters} لتر · ${e.cost} د.ل</div>
+        <div>${e.kmPerLiter ? e.kmPerLiter.toFixed(1) + ' كم/لتر' : ''}
+          ${e.anomalous ? '<span class="fbadge" style="background:#fef2f2;color:#b91c1c;">⚠️ انحراف ' + (e.deviation != null ? (e.deviation * 100).toFixed(0) + '%' : '') + '</span>' : ''}
+          <span style="color:#94a3b8;font-size:0.75rem;">${esc(e.byName || '')}</span></div>
+      </div>`).join('') : '<div class="fempty" style="padding:16px;">لا قيود وقود على هذه الرحلة.</div>';
+  }
+  function renderEvents(events) {
+    $('tpEvents').innerHTML = events.length ? events.map((e) => {
+      const when = e.at?.toDate ? e.at.toDate().toLocaleString('ar-LY') : '';
+      return `<div class="ev"><b>${esc(e.action)}</b> — ${esc(e.detail || '')} <span style="color:#94a3b8;">· ${esc(e.byName || '')} · ${when}</span></div>`;
+    }).join('') : '<div class="ev">لا أحداث بعد.</div>';
+  }
+
+  /* ─── بروتوكول التسليم اليومي ─── */
+  function renderHandoverItems() {
+    $('hoItems').innerHTML = HANDOVER_ITEMS.map((it) => {
+      if (it.type === 'temp') return `
+        <div class="hitem" id="hoTempRow" style="display:none;">
+          <span class="ic">${it.icon}</span><span class="lb">${it.label}</span>
+          <input type="number" step="0.1" id="hoTemp" placeholder="°م" style="width:110px;">
+        </div>`;
+      if (it.type === 'odo') return `
+        <div class="hitem"><span class="ic">${it.icon}</span><span class="lb">${it.label}</span>
+          <input type="number" id="hoOdo" placeholder="كم" style="width:130px;"></div>`;
+      if (it.type === 'fuel') return `
+        <div class="hitem"><span class="ic">${it.icon}</span><span class="lb">${it.label} — <b>يُحظر التسليم بأقل من ربع خزان</b></span>
+          <select id="hoFuel" style="border:1.5px solid var(--border-f);border-radius:8px;padding:6px 10px;font-family:'Tajawal',sans-serif;">
+            <option value="">—</option>
+            ${FUEL_LEVELS.map((f) => `<option value="${f.id}">${f.label}</option>`).join('')}
+          </select></div>`;
+      return `
+        <div class="hitem"><span class="ic">${it.icon}</span><span class="lb">${it.label}</span>
+          <div class="hradio">
+            <input type="radio" name="ho-${it.id}" id="ho-${it.id}-ok" value="سليم"><label for="ho-${it.id}-ok" class="okl">سليم</label>
+            <input type="radio" name="ho-${it.id}" id="ho-${it.id}-w" value="ملاحظة"><label for="ho-${it.id}-w" class="warnl">ملاحظة</label>
+          </div>
+          <input type="text" id="ho-${it.id}-notes" placeholder="وصف الملاحظة…" style="flex:1;min-width:140px;"></div>`;
+    }).join('');
+  }
+  renderHandoverItems();
+  $('hoDate').value = new Date().toISOString().slice(0, 10);
+
+  window.toggleTemp = () => { $('hoTempRow').style.display = $('hoRefrig').value === 'yes' ? '' : 'none'; };
+
+  window.onHoVehicle = () => {
+    const vid = $('hoVehicle').value;
+    if (hoUnsub) { hoUnsub(); hoUnsub = null; }
+    $('hoHistory').innerHTML = '<div class="fempty">اختر مركبة لعرض نماذجها.</div>';
+    $('hoLast').textContent = '';
+    if (!vid) return;
+    const v = vehicles.find((x) => x.id === vid);
+    if (v?.lastHandover) {
+      $('hoLast').textContent = `آخر نموذج: ${v.lastHandover.date} (${v.lastHandover.shift}) — عداد ${v.lastHandover.odometer} كم`;
+    }
+    hoUnsub = listenHandovers(vid, (list) => {
+      $('hoHistory').innerHTML = list.length ? list.slice(0, 10).map((h) => `
+        <div class="fuel-row"><div><b>${esc(h.date)} — ${esc(h.shift)}</b> · عداد ${esc(h.odometer)} كم · وقود ${esc((FUEL_LEVELS.find((f) => f.id === h.fuelLevel) || {}).label || '—')}</div>
+        <div>${esc(h.fromDriver)} ← ${esc(h.toDriver)} <span style="color:#94a3b8;font-size:0.75rem;">${esc(h.byName || '')}</span></div></div>`).join('')
+        : '<div class="fempty">لا نماذج محفوظة لهذه المركبة.</div>';
+    });
+  };
+
+  window.saveHandoverForm = async () => {
+    const vid = $('hoVehicle').value;
+    if (!vid) return showToast('اختر المركبة أولًا');
+    const h = emptyHandover($('hoDate').value, $('hoShift').value);
+    h.refrigerated = $('hoRefrig').value === 'yes';
+    h.tempReading = $('hoTemp').value;
+    h.odometer = $('hoOdo').value;
+    h.fuelLevel = $('hoFuel').value;
+    h.fromDriver = $('hoFrom').value.trim();
+    h.toDriver = $('hoTo').value.trim();
+    h.notes = $('hoNotes').value.trim();
+    for (const it of HANDOVER_ITEMS) {
+      if (it.type !== 'check') continue;
+      const status = document.querySelector(`input[name="ho-${it.id}"]:checked`)?.value || '';
+      h.items[it.id] = { status, notes: $(`ho-${it.id}-notes`).value.trim() };
+    }
+    const verdict = handoverVerdict(h);
+    const box = $('hoProblems');
+    if (!verdict.ok) {
+      box.innerHTML = '🚫 النموذج لا يُعتمد:<br>• ' + verdict.problems.map(esc).join('<br>• ');
+      box.classList.add('show');
+      return;
+    }
+    box.classList.remove('show');
+    try {
+      await saveHandover(vid, h, profile);
+      showToast('✅ اعتُمد نموذج التسليم اليومي — المركبة مؤهلة لتصريح البوابة اليوم');
+    } catch (e) { showToast('❌ ' + e.message); }
+  };
+
+  /* ─── مناطق التوزيع ─── */
+  $('zonesGrid').innerHTML = ZONES.map((z) => `
+    <div class="zone" style="--zc:${z.color};">
+      <h4>${z.label}</h4>
+      <div class="zl">🔁 <b>التكرار:</b> ${z.freq}<br>🚛 <b>المركبة المفضلة:</b> ${z.vehicle}<br>🏪 <b>أمثلة:</b> ${z.examples}</div>
+    </div>`).join('');
+</script>
+</DashboardLayout>

@@ -51,10 +51,14 @@ const navGroups = [
     // مجموعة مستقلة لدور «الحركة» — رابط جرد المركبات انتقل إليها من
     // «المستودعات والجرد» (نقل لا حذف) كي يرى دور fleet مجموعته وحدها.
     key: 'fleet',
-    group: 'إدارة الحركة',
+    group: 'سلاسل الإمداد والحركة',
     emoji: '🚚',
     items: [
       { href: `${base}/dashboard/vehicles-inventory`, label: 'جرد المركبات', icon: 'package' },
+      { href: `${base}/dashboard/fleet-operations`, label: 'عمليات الأسطول', icon: 'clipboardList' },
+      { href: `${base}/dashboard/maintenance-center`, label: 'مركز الصيانة', icon: 'grid' },
+      { href: `${base}/dashboard/custody`, label: 'العُهد العينية', icon: 'users', roles: ['admin', 'warehouse_manager'] },
+      { href: `${base}/dashboard/supply-chain`, label: 'لوحة سلاسل الإمداد', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
     ],
   },
   {

@@ -1,0 +1,259 @@
+---
+/**
+ * لوحة سلاسل الإمداد التنفيذية — المرجع التشغيلي ٤-٣ (Executive Dashboard).
+ *
+ * شاشة واحدة للإدارة العليا تجمع لحظيًّا (onSnapshot):
+ *   - حالة الأسطول الفوري: في الطريق / متوقفة / في الصيانة.
+ *   - POD% (هدف 100%) و OTIF (هدف ≥95%) وتنبيهات انحراف الوقود.
+ *   - أوامر الشغل المفتوحة + العالي الخطورة + MTTR (هدف ≤2 ساعة).
+ *   - العُهد النشطة وقيمتها.
+ *   - تنبيهات انتهاء الصلاحية خلال 7/30 يومًا من مخزن الأرصدة (FEFO).
+ *
+ * الوصول: المديران (رابط القائمة مقيّد + حارس ذاتي في الصفحة).
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Brandzo | لوحة سلاسل الإمداد">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+<style is:inline>
+  :root {
+    --p-sc: #0d1b2a; --gold-sc: #f0a500; --gold2-sc: #ffd166;
+    --border-sc: #d4dce8; --ok-sc: #00b87a; --warn-sc: #f59e0b; --bad-sc: #ef4444;
+  }
+  .sc-wrap { font-family: 'Tajawal', 'Cairo', sans-serif; background: linear-gradient(160deg, #0d1b2a 0%, #14263c 55%, #1b3a5c 100%); color: white; min-height: 100vh; padding-bottom: 60px; }
+  .sc-head { padding: 28px 28px 8px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .sc-head h1 { font-size: 1.55rem; font-weight: 900; }
+  .sc-head .sub { color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-top: 4px; }
+  .sc-live { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,184,122,0.12); border: 1px solid rgba(0,184,122,0.35); color: #6effd0; border-radius: 20px; padding: 7px 16px; font-size: 0.8rem; font-weight: 800; }
+  .sc-live .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok-sc); box-shadow: 0 0 10px var(--ok-sc); animation: pulse-sc 2s infinite; }
+  @keyframes pulse-sc { 50% { opacity: 0.4; } }
+  .sc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 18px 28px; }
+  @media (max-width: 1000px) { .sc-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .sc-grid { grid-template-columns: 1fr; } }
+  .kpi { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09); border-radius: 16px; padding: 18px 20px; position: relative; overflow: hidden; }
+  .kpi::after { content: ''; position: absolute; top: 0; right: 0; left: 0; height: 3px; background: var(--kc, var(--gold-sc)); }
+  .kpi .t { font-size: 0.78rem; color: rgba(255,255,255,0.55); font-weight: 700; }
+  .kpi .v { font-size: 2rem; font-weight: 900; font-family: 'Cairo', sans-serif; margin-top: 6px; color: var(--kc, var(--gold-sc)); line-height: 1.2; }
+  .kpi .g { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 5px; }
+  .sc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 0 28px; }
+  @media (max-width: 1000px) { .sc-cols { grid-template-columns: 1fr; } }
+  .panel { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); border-radius: 16px; overflow: hidden; }
+  .panel h3 { background: rgba(255,255,255,0.05); padding: 12px 18px; font-size: 0.92rem; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; justify-content: space-between; align-items: center; }
+  .panel .pb { padding: 14px 18px; }
+  .row-sc { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; background: rgba(255,255,255,0.04); margin-bottom: 7px; font-size: 0.84rem; flex-wrap: wrap; }
+  .row-sc b { font-weight: 800; }
+  .row-sc .meta { color: rgba(255,255,255,0.45); font-size: 0.74rem; }
+  .tag-sc { display: inline-flex; align-items: center; gap: 5px; border-radius: 12px; padding: 2px 10px; font-size: 0.72rem; font-weight: 800; }
+  .empty-sc { text-align: center; color: rgba(255,255,255,0.35); padding: 22px; font-size: 0.86rem; }
+  .bar-wrap { background: rgba(255,255,255,0.08); border-radius: 8px; height: 9px; overflow: hidden; flex: 1; min-width: 90px; }
+  .bar { height: 100%; border-radius: 8px; }
+  .fleet-strip { display: flex; gap: 10px; flex-wrap: wrap; }
+  .fchip { flex: 1; min-width: 120px; text-align: center; border-radius: 14px; padding: 14px 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); }
+  .fchip .n { font-size: 1.7rem; font-weight: 900; font-family: 'Cairo', sans-serif; }
+  .fchip .l { font-size: 0.74rem; color: rgba(255,255,255,0.55); margin-top: 3px; font-weight: 700; }
+  .denied { max-width: 520px; margin: 80px auto; text-align: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 46px 30px; }
+  .denied h2 { font-size: 1.3rem; font-weight: 900; margin-bottom: 10px; }
+  .denied p { color: rgba(255,255,255,0.55); font-size: 0.9rem; }
+</style>
+
+<div class="sc-wrap" dir="rtl">
+  <div id="deniedView" class="denied" style="display:none">
+    <h2>🔒 غير مصرّح</h2>
+    <p>لوحة سلاسل الإمداد التنفيذية متاحة للمدير العام ومدير المستودع فقط.</p>
+  </div>
+
+  <div id="dashView" style="display:none">
+    <div class="sc-head">
+      <div>
+        <h1>📊 لوحة سلاسل الإمداد التنفيذية</h1>
+        <div class="sub">أسطول · صيانة · عُهد · صلاحيات — لحظيًّا من قاعدة البيانات الحية (المرجع ٤-٣)</div>
+      </div>
+      <span class="sc-live"><span class="dot"></span> بث مباشر</span>
+    </div>
+
+    <!-- KPIs -->
+    <div class="sc-grid">
+      <div class="kpi" style="--kc:#0ea5e9;"><div class="t">🚚 رحلات في الطريق الآن</div><div class="v" id="xEnroute">0</div><div class="g">حالة الأسطول الفوري</div></div>
+      <div class="kpi" style="--kc:#00b87a;"><div class="t">📱 الشحنات الموثقة POD</div><div class="v" id="xPod">—</div><div class="g">الهدف: 100% — صفر تسليم بلا توثيق</div></div>
+      <div class="kpi" style="--kc:#ffd166;"><div class="t">⏱️ OTIF — في الوقت</div><div class="v" id="xOtif">—</div><div class="g">الهدف: ≥95% أسبوعيًّا</div></div>
+      <div class="kpi" style="--kc:#ef4444;"><div class="t">⛽ تنبيهات انحراف الوقود</div><div class="v" id="xFuel">0</div><div class="g">استهلاك يتجاوز القياسي بـ15%</div></div>
+      <div class="kpi" style="--kc:#f59e0b;"><div class="t">🔧 أوامر شغل مفتوحة</div><div class="v" id="xWo">0</div><div class="g">منها <span id="xWoHigh">0</span> عالي الخطورة</div></div>
+      <div class="kpi" style="--kc:#8b5cf6;"><div class="t">🕐 متوسط وقت الإصلاح MTTR</div><div class="v" id="xMttr">—</div><div class="g">الهدف: ≤ ساعتان (علاجي)</div></div>
+      <div class="kpi" style="--kc:#c4b5fd;"><div class="t">🤝 عُهد نشطة</div><div class="v" id="xCust">0</div><div class="g">بقيمة <span id="xCustVal">0</span> د.ل</div></div>
+      <div class="kpi" style="--kc:#ff7b7b;"><div class="t">⏳ تنتهي صلاحيتها ≤7 أيام</div><div class="v" id="xExp7">0</div><div class="g">و<span id="xExp30">0</span> تشغيلة خلال 30 يومًا (FEFO)</div></div>
+    </div>
+
+    <!-- حالة الأسطول -->
+    <div style="padding: 4px 28px 18px;">
+      <div class="panel">
+        <h3>🚛 حالة الأسطول الفوري</h3>
+        <div class="pb"><div class="fleet-strip">
+          <div class="fchip"><div class="n" style="color:#64748b;" id="fPrep">0</div><div class="l">قيد التحضير</div></div>
+          <div class="fchip"><div class="n" style="color:#ffd166;" id="fGate">0</div><div class="l">تصريح بوابة</div></div>
+          <div class="fchip"><div class="n" style="color:#38bdf8;" id="fEnroute">0</div><div class="l">في الطريق</div></div>
+          <div class="fchip"><div class="n" style="color:#6effd0;" id="fDeliv">0</div><div class="l">سُلّمت اليوم</div></div>
+          <div class="fchip"><div class="n" style="color:#ff7b7b;" id="fDown">0</div><div class="l">أصول متوقفة</div></div>
+          <div class="fchip"><div class="n" style="color:#c4b5fd;" id="fMaint">0</div><div class="l">صيانة مركبات مفتوحة</div></div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="sc-cols">
+      <div class="panel">
+        <h3>🗺️ التوزيع حسب المناطق (آخر 30 رحلة منتهية) <span style="font-size:0.7rem;color:rgba(255,255,255,0.4);">نسبة الالتزام بالموعد</span></h3>
+        <div class="pb" id="zonesPerf"><div class="empty-sc">لا رحلات منتهية بعد.</div></div>
+      </div>
+      <div class="panel">
+        <h3>🚨 يتطلب تدخلًا الآن</h3>
+        <div class="pb" id="attention"><div class="empty-sc">لا شيء عاجل — المنظومة خضراء ✅</div></div>
+      </div>
+      <div class="panel">
+        <h3>🔧 أحدث أوامر الشغل</h3>
+        <div class="pb" id="latestWos"><div class="empty-sc">لا أوامر شغل.</div></div>
+      </div>
+      <div class="panel">
+        <h3>🚚 أحدث الرحلات</h3>
+        <div class="pb" id="latestTrips"><div class="empty-sc">لا رحلات.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { TRIP_STATES, ZONES, tripSnapshot, podRate, otifRate } from '../../services/fleet/fleetModel.js';
+  import { WO_STATES, OPEN_WO_STATES, mttrHours, woSnapshot, pmStatus } from '../../services/maintenance/workOrderModel.js';
+  import { custodySummary } from '../../services/custody/custodyModel.js';
+  import { listenTrips } from '../../services/fleet/fleetOpsService.js';
+  import { listenAssets, listenWorkOrders } from '../../services/maintenance/maintenanceService.js';
+  import { listenCustodies } from '../../services/custody/custodyService.js';
+  import { listenBalances } from '../../services/balances/balancesService.js';
+  import { expiryStatus } from '../../services/balances/balanceKey.js';
+  import { listenVehicles } from '../../services/vehicles/vehiclesService.js';
+  import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
+
+  const ALLOWED = ['admin', 'warehouse_manager'];
+  let trips = [], wos = [], assets = [], custodies = [], balances = [], vehicles = [];
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const today = () => new Date().toISOString().slice(0, 10);
+  const pct = (x) => x == null ? '—' : Math.round(x * 100) + '%';
+
+  let started = false;
+  subscribeAuth(async (user) => {
+    if (!user) return;
+    const profile = await fetchUserProfile(user);
+    if (!ALLOWED.includes(profile?.role)) {
+      $('deniedView').style.display = '';
+      return;
+    }
+    $('dashView').style.display = '';
+    if (started) return;
+    started = true;
+    listenTrips((l) => { trips = l; render(); });
+    listenWorkOrders((l) => { wos = l; render(); });
+    listenAssets((l) => { assets = l; render(); });
+    listenCustodies((l) => { custodies = l; render(); });
+    listenVehicles((l) => { vehicles = l; render(); });
+    listenBalances((l) => { balances = l; render(); }, () => {});
+  });
+
+  function render() {
+    const snap = tripSnapshot(trips);
+    $('xEnroute').textContent = snap.enroute;
+    $('xPod').textContent = pct(podRate(trips));
+    $('xOtif').textContent = pct(otifRate(trips));
+    $('xFuel').textContent = trips.reduce((n, t) => n + (Number(t.fuelSummary?.anomalies) || 0) + (t.tripStats?.anomalous ? 1 : 0), 0);
+
+    const ws = woSnapshot(wos);
+    $('xWo').textContent = ws.open;
+    $('xWoHigh').textContent = ws.highOpen;
+    const mttr = mttrHours(wos.filter((w) => w.type === 'corrective'));
+    $('xMttr').textContent = mttr == null ? '—' : mttr.toFixed(1) + 'س';
+
+    const cs = custodySummary(custodies);
+    $('xCust').textContent = cs.active;
+    $('xCustVal').textContent = cs.valueAtRisk.toLocaleString('ar-LY');
+
+    // انتهاء الصلاحية من مخزن الأرصدة (استباقي — تقرير ٥ في م-٤).
+    const now = Date.now();
+    let exp7 = 0, exp30 = 0;
+    for (const b of balances) {
+      if (!(Number(b.qty) > 0)) continue;
+      if (expiryStatus(b.expiry, now, 7) === 'near' || expiryStatus(b.expiry, now, 7) === 'expired') exp7 += 1;
+      else if (expiryStatus(b.expiry, now, 30) === 'near') exp30 += 1;
+    }
+    $('xExp7').textContent = exp7;
+    $('xExp30').textContent = exp30;
+
+    // حالة الأسطول الفوري.
+    $('fPrep').textContent = snap.preparing;
+    $('fGate').textContent = snap.gatepass;
+    $('fEnroute').textContent = snap.enroute;
+    $('fDeliv').textContent = trips.filter((t) => t.deliveredDate === today()).length;
+    $('fDown').textContent = assets.filter((a) => a.status === 'down').length;
+    $('fMaint').textContent = vehicles.reduce((n, v) => n + (Number(v.openMaintenance) || 0), 0);
+
+    renderZones();
+    renderAttention();
+    renderLists();
+  }
+
+  function renderZones() {
+    const finished = trips
+      .filter((t) => (t.state === 'delivered' || t.state === 'closed') && t.plannedDate && t.deliveredDate)
+      .slice(0, 30);
+    if (!finished.length) return;
+    $('zonesPerf').innerHTML = ZONES.map((z) => {
+      const zt = finished.filter((t) => t.zone === z.id);
+      const onTime = zt.filter((t) => t.deliveredDate <= t.plannedDate).length;
+      const rate = zt.length ? onTime / zt.length : null;
+      return `<div class="row-sc">
+        <b style="color:${z.color};">●</b> <b>${z.label}</b>
+        <span class="meta">${zt.length} رحلة</span>
+        <div class="bar-wrap"><div class="bar" style="width:${rate == null ? 0 : rate * 100}%;background:${z.color};"></div></div>
+        <b>${pct(rate)}</b>
+      </div>`;
+    }).join('');
+  }
+
+  function renderAttention() {
+    const items = [];
+    for (const w of wos) {
+      if (OPEN_WO_STATES.includes(w.state) && w.priority === 'high') {
+        items.push(`<div class="row-sc"><b>🔴 عالي الخطورة:</b> ${esc(w.assetName || '')} — ${esc(w.description)} <span class="tag-sc" style="background:rgba(239,68,68,0.15);color:#ff7b7b;">${WO_STATES[w.state]?.label}</span></div>`);
+      }
+    }
+    for (const a of assets) {
+      const s = pmStatus(a, today());
+      if (s.status === 'overdue') items.push(`<div class="row-sc"><b>⛔ وقائية متأخرة:</b> ${esc(a.name || a.code)} <span class="meta">${esc(a.nextPmDate || '')}${a.nextPmKm ? ' · ' + a.nextPmKm + ' كم' : ''}</span></div>`);
+    }
+    for (const t of trips) {
+      if (t.state === 'enroute' && t.plannedDate && t.plannedDate < today()) {
+        items.push(`<div class="row-sc"><b>⏰ رحلة متأخرة عن موعدها:</b> ${esc(t.number || '')} → ${esc(t.destination)} <span class="meta">مخطط ${esc(t.plannedDate)}</span></div>`);
+      }
+      if ((t.tripStats?.anomalous) || Number(t.fuelSummary?.anomalies) > 0) {
+        items.push(`<div class="row-sc"><b>⛽ انحراف وقود:</b> ${esc(t.number || t.plateNo || '')} — ${esc(t.driverName || '')} <span class="tag-sc" style="background:rgba(245,158,11,0.15);color:#ffd166;">يُراجع مدير الأسطول</span></div>`);
+      }
+    }
+    $('attention').innerHTML = items.length ? items.slice(0, 12).join('') : '<div class="empty-sc">لا شيء عاجل — المنظومة خضراء ✅</div>';
+  }
+
+  function renderLists() {
+    $('latestWos').innerHTML = wos.slice(0, 6).map((w) => `
+      <div class="row-sc"><b>${esc(w.number || 'مسودة')}</b> ${esc(w.assetName || '')}
+        <span class="meta">${esc(w.description).slice(0, 60)}</span>
+        <span class="tag-sc" style="background:${WO_STATES[w.state]?.color}26;color:${WO_STATES[w.state]?.color};">${WO_STATES[w.state]?.emoji || ''} ${WO_STATES[w.state]?.label || ''}</span></div>`).join('')
+      || '<div class="empty-sc">لا أوامر شغل.</div>';
+
+    $('latestTrips').innerHTML = trips.slice(0, 6).map((t) => `
+      <div class="row-sc"><b>${esc(t.number || 'مسودة')}</b> ${esc(t.plateNo || '')} → ${esc(t.destination || '')}
+        <span class="meta">${esc(t.driverName || '')}</span>
+        <span class="tag-sc" style="background:${TRIP_STATES[t.state]?.color}26;color:${TRIP_STATES[t.state]?.color};">${TRIP_STATES[t.state]?.emoji || ''} ${TRIP_STATES[t.state]?.label || ''}</span></div>`).join('')
+      || '<div class="empty-sc">لا رحلات.</div>';
+  }
+</script>
+</DashboardLayout>
