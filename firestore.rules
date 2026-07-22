@@ -370,6 +370,22 @@ service cloud.firestore {
       }
     }
 
+    // ── الاجتماعات التحضيرية مع الإدارات السبع ───────────────────
+    // محاضر رسمية مرقّمة تُرفع خلاصتها للإدارة العامة ⇒ الكتابة للمديرَين،
+    // والقراءة لكل مصادَق. لا حذف: المحضر الصادر أثر تنظيمي لا يُمحى.
+    // الرقم الرسمي (MOM/LTR) **لا يُغيَّر بعد حجزه** — وإلّا فقد الترقيم
+    // معناه وصار وسمًا قابلًا لإعادة الكتابة.
+    match /preparatory_meetings/{meetingId} {
+      allow read: if signedIn();
+      allow create: if isManager();
+      allow update: if isManager()
+                    && (!('number' in resource.data)
+                        || request.resource.data.number == resource.data.number)
+                    && (!('letterNumber' in resource.data)
+                        || request.resource.data.letterNumber == resource.data.letterNumber);
+      allow delete: if false;
+    }
+
     // ── الافتراضي: امنع كل ما لم يُذكر صراحةً ────────────────────
     match /{document=**} {
       allow read, write: if false;
