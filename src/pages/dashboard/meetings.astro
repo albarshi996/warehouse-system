@@ -1,0 +1,675 @@
+---
+/**
+ * الاجتماعات التحضيرية مع الإدارات السبع — أداة تُشغَّل داخل الغرفة.
+ *
+ * ثلاث حالات لشاشة واحدة:
+ *   1. **وضع العرض** — ملء الشاشة على البروجكتر: ما نطلبه · لماذا · ما
+ *      يخصّ الطرف الآخر، بندًا بندًا.
+ *   2. **المحضر الحيّ** — القرار يُكتب لحظة الاتفاق ويُحفظ سحابيًّا فورًا،
+ *      لا بعد يومين وقد ضاع نصفه.
+ *   3. **المحضر الرسمي** — رقم من عدّاد `counters` (MOM-2026-####) لا
+ *      يُصدَر إلا بعد اجتياز `minutesVerdict`، ثم يُطبع بهوية Brandzo.
+ *
+ * وخطاب الدعوة لكل إدارة (LTR-2026-####) ببنودها ونصوص المالك حرفيًّا.
+ * النظام يُنتج الملف فقط — الإرسال بيد المالك.
+ *
+ * الأجندة بذرة ثابتة في `meetings-seed.json` (36 بندًا من خطاب المالك)،
+ * وما يُكتب في الغرفة يُحفظ منفصلًا ويُدمج عند العرض — فتصحيحُ صياغةٍ في
+ * البذرة لا يمحو ما سُجّل في اجتماع سابق.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Brandzo | الاجتماعات التحضيرية">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+<style is:inline>
+  :root {
+    --k-navy: #0d1b2a; --k-blue: #1b3a5c; --k-gold: #c89d3b; --k-gold-l: #f0d98a;
+    --k-ok: #00b87a; --k-warn: #f59e0b; --k-bad: #ef4444; --k-line: #d4dce8; --k-text: #1e293b;
+  }
+  .mt-wrap { font-family: 'Tajawal','Cairo',sans-serif; background: linear-gradient(135deg,#eef2f8,#f6f1e6); color: var(--k-text); min-height: 100vh; }
+
+  .kbar { background: var(--k-navy); padding: 10px 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,.35); }
+  .kbar::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; background: linear-gradient(90deg,var(--k-gold),var(--k-gold-l),var(--k-gold)); }
+  .kbrand { display: flex; align-items: center; gap: 13px; flex-wrap: wrap; }
+  .klogo { background: linear-gradient(135deg,var(--k-gold),#a8802a); border-radius: 10px; padding: 7px 14px; font-family: 'Cairo',sans-serif; font-size: 1.25rem; font-weight: 900; color: #fff; }
+  .ktitle { color: rgba(255,255,255,.85); font-size: .93rem; font-weight: 600; }
+  .kchip { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.85); border-radius: 20px; padding: 5px 13px; font-size: .76rem; font-weight: 700; }
+  .kchip .dot { width: 9px; height: 9px; border-radius: 50%; background: #94a3b8; }
+  .kchip.online .dot { background: var(--k-ok); } .kchip.pending .dot { background: var(--k-warn); } .kchip.dirty .dot { background: var(--k-bad); }
+
+  .kmain { max-width: 1320px; margin: 20px auto; padding: 0 18px 80px; }
+
+  .khero { background: var(--k-navy); border-radius: 18px; padding: 22px 28px; margin-bottom: 16px; position: relative; overflow: hidden; box-shadow: 0 12px 40px rgba(13,27,42,.35); }
+  .khero::before { content:''; position:absolute; top:-70px; left:-50px; width:300px; height:300px; background: radial-gradient(circle, rgba(200,157,59,.22), transparent 70%); border-radius:50%; }
+  .khin { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; position: relative; z-index: 1; }
+  .khin h2 { font-size: 1.4rem; font-weight: 900; color: #fff; }
+  .khin p { color: rgba(255,255,255,.58); font-size: .84rem; margin-top: 4px; max-width: 640px; line-height: 1.75; }
+  .kkpis { display: flex; gap: 10px; flex-wrap: wrap; }
+  .kkpi { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 9px 16px; text-align: center; min-width: 86px; }
+  .kkpi .n { font-size: 1.35rem; font-weight: 900; color: var(--k-gold-l); font-family: 'Cairo',sans-serif; line-height: 1.2; }
+  .kkpi .l { font-size: .7rem; opacity: .65; color: #fff; margin-top: 2px; }
+  .kkpi.alert .n { color: #ff9b9b; }
+
+  .kbtn { padding: 8px 15px; border-radius: 9px; border: none; cursor: pointer; font-family: 'Tajawal',sans-serif; font-size: .83rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; transition: all .2s; white-space: nowrap; }
+  .kbtn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.2); }
+  .kbtn:disabled { opacity: .45; cursor: not-allowed; }
+  .b-gold { background: linear-gradient(135deg,var(--k-gold),#a8802a); color: #fff; }
+  .b-navy { background: linear-gradient(135deg,var(--k-navy),var(--k-blue)); color: #fff; }
+  .b-ok { background: linear-gradient(135deg,#00b87a,#00976a); color: #fff; }
+  .b-ghost { background: #eef2f7; color: #475569; }
+  .mini { border: 1.5px solid var(--k-line); background: #fff; border-radius: 8px; padding: 4px 11px; font-family: 'Tajawal',sans-serif; font-size: .76rem; font-weight: 700; cursor: pointer; color: var(--k-navy); }
+  .mini:hover { border-color: var(--k-gold); background: #fffaf0; }
+
+  /* بطاقات الاجتماعات */
+  .mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px,1fr)); gap: 11px; margin-bottom: 16px; }
+  .mcard { text-align: right; background: #fff; border: 2px solid transparent; border-radius: 13px; padding: 12px 14px; cursor: pointer; font-family: 'Tajawal',sans-serif; box-shadow: 0 3px 12px rgba(0,0,0,.06); transition: all .2s; }
+  .mcard:hover { border-color: var(--k-gold-l); transform: translateY(-2px); }
+  .mcard.sel { border-color: var(--k-gold); background: #fffdf7; }
+  .mc-top { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+  .mc-no { background: var(--k-navy); color: #fff; border-radius: 6px; padding: 1px 7px; font-family: 'Cairo',sans-serif; font-size: .7rem; font-weight: 900; }
+  .mc-ico { font-size: 1.05rem; }
+  .mc-dept { font-size: .88rem; font-weight: 800; color: var(--k-navy); }
+  .mc-state { font-size: .74rem; font-weight: 700; margin-bottom: 7px; }
+  .mc-bar { height: 5px; background: #eef2f7; border-radius: 3px; overflow: hidden; margin-bottom: 5px; }
+  .mc-bar span { display: block; height: 100%; background: linear-gradient(90deg,var(--k-gold),var(--k-gold-l)); }
+  .mc-meta { font-size: .7rem; color: #94a3b8; }
+
+  .kcard { background: #fff; border-radius: 16px; box-shadow: 0 3px 16px rgba(0,0,0,.07); overflow: hidden; border: 1px solid rgba(0,0,0,.05); margin-bottom: 16px; }
+  .kchead { background: linear-gradient(135deg,var(--k-navy),var(--k-blue)); padding: 11px 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .kchead h3 { color: #fff; font-size: .96rem; font-weight: 700; }
+  .kcbody { padding: 16px 18px; }
+
+  .fld { display: flex; flex-direction: column; gap: 4px; }
+  .fld label { font-size: .74rem; font-weight: 800; color: #64748b; }
+  .fld input, .fld select, .fld textarea { border: 1.5px solid var(--k-line); border-radius: 9px; padding: 8px 11px; font-family: 'Tajawal',sans-serif; font-size: .88rem; background: #f8fafc; width: 100%; }
+  .fld input:focus, .fld select:focus, .fld textarea:focus { outline: none; border-color: var(--k-gold); box-shadow: 0 0 0 4px rgba(200,157,59,.13); background: #fff; }
+  .fld textarea { resize: vertical; min-height: 56px; }
+  .frow { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+  @media (max-width: 860px) { .frow { grid-template-columns: 1fr 1fr; } }
+
+  /* بنود المحضر */
+  .item { border: 1.5px solid #e8edf4; border-radius: 13px; margin-bottom: 11px; overflow: hidden; }
+  .item.st-agreed { border-color: rgba(0,184,122,.45); }
+  .item.st-escalate { border-color: rgba(239,68,68,.45); }
+  .item.st-deferred { border-color: rgba(245,158,11,.45); }
+  .it-head { background: #f8fafc; padding: 9px 14px; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; cursor: pointer; }
+  .it-n { background: var(--k-navy); color: #fff; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 800; flex-shrink: 0; }
+  .it-t { font-weight: 800; font-size: .9rem; color: var(--k-navy); flex: 1; }
+  .it-body { padding: 13px 15px; border-top: 1px solid #eef1f6; }
+  .it-body[hidden] { display: none; }
+  .mb { border-radius: 12px; padding: 2px 9px; font-size: .7rem; font-weight: 800; white-space: nowrap; }
+  .tag-draft { background: #fff4e0; color: #b45309; border: 1px dashed #f59e0b; border-radius: 12px; padding: 1px 8px; font-size: .66rem; font-weight: 800; }
+  .brief { background: #fbfcfe; border: 1px solid #eef1f6; border-radius: 10px; padding: 10px 13px; margin-bottom: 11px; }
+  .brief h5 { font-size: .72rem; font-weight: 800; color: var(--k-gold); letter-spacing: .5px; margin-bottom: 3px; }
+  .brief p { font-size: .82rem; line-height: 1.85; color: #475569; margin-bottom: 8px; }
+  .brief p:last-child { margin-bottom: 0; }
+
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .chip { border: 1.5px solid var(--k-line); background: #fff; border-radius: 18px; padding: 4px 12px; font-family: 'Tajawal',sans-serif; font-size: .76rem; font-weight: 700; cursor: pointer; color: #64748b; }
+  .chip.on { color: #fff; border-color: transparent; }
+
+  .prow { border: 1.5px solid #e8edf4; border-radius: 10px; padding: 8px 12px; margin-bottom: 7px; display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px; align-items: center; }
+  @media (max-width: 720px) { .prow { grid-template-columns: 1fr 1fr; } }
+  .prow input, .prow select { border: 1.5px solid var(--k-line); border-radius: 8px; padding: 6px 10px; font-family: 'Tajawal',sans-serif; font-size: .84rem; background: #f8fafc; }
+
+  /* وضع العرض */
+  .present .kbar, .present .mgrid, .present .no-present, .present .khero { display: none !important; }
+  .present .kmain { max-width: 100%; padding: 0; margin: 0; }
+  .stage { display: none; }
+  .present .stage { display: flex; flex-direction: column; min-height: 100vh; background: var(--k-navy); color: #fff; padding: 26px 40px 80px; }
+  .slide { max-width: 1050px; margin: 0 auto; width: 100%; }
+  .sl-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .sl-count { background: var(--k-gold); color: var(--k-navy); border-radius: 16px; padding: 3px 14px; font-family: 'Cairo',sans-serif; font-size: .85rem; font-weight: 900; }
+  .sl-dept { color: rgba(255,255,255,.55); font-size: .95rem; font-weight: 700; }
+  .sl-draft { background: rgba(245,158,11,.18); color: #ffd08a; border: 1px dashed #f59e0b; border-radius: 12px; padding: 2px 10px; font-size: .72rem; font-weight: 700; }
+  .sl-title { font-size: clamp(1.5rem,3.2vw,2.5rem); font-weight: 900; color: #fff; margin-bottom: 22px; line-height: 1.4; border-right: 5px solid var(--k-gold); padding-right: 16px; }
+  .sl-box { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 16px 22px; margin-bottom: 13px; }
+  .sl-box h4 { font-size: .82rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px; color: var(--k-gold-l); }
+  .sl-box p { font-size: clamp(1rem,1.7vw,1.35rem); line-height: 1.85; color: rgba(255,255,255,.9); margin-bottom: 7px; }
+  .sl-box p:last-child { margin-bottom: 0; }
+  .sl-box.ask { border-right: 4px solid var(--k-gold); }
+  .sl-box.why { border-right: 4px solid #3b82f6; }
+  .sl-box.them { border-right: 4px solid #a78bfa; }
+  .sl-box.decided { border-right: 4px solid var(--k-ok); background: rgba(0,184,122,.1); }
+  .sl-nav { position: fixed; bottom: 0; inset-inline: 0; background: rgba(13,27,42,.96); border-top: 1px solid rgba(200,157,59,.3); padding: 10px 24px; display: none; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; z-index: 300; }
+  .present .sl-nav { display: flex; }
+  .sl-prog { flex: 1; height: 6px; background: rgba(255,255,255,.12); border-radius: 3px; overflow: hidden; min-width: 120px; }
+  .sl-prog span { display: block; height: 100%; background: linear-gradient(90deg,var(--k-gold),var(--k-gold-l)); }
+
+  .ktable { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  .ktable thead tr { background: linear-gradient(135deg,var(--k-navy),var(--k-blue)); color: #fff; }
+  .ktable th { padding: 9px 12px; text-align: right; font-size: .78rem; font-weight: 700; }
+  .ktable td { padding: 8px 12px; border-bottom: 1px solid #eef1f6; }
+  .kempty { text-align: center; padding: 26px 16px; color: #94a3b8; font-size: .9rem; }
+
+  .toastw { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .toast { background: var(--k-navy); color: #fff; padding: 11px 22px; border-radius: 12px; font-size: .88rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.3); border-right: 4px solid var(--k-gold); max-width: min(600px,92vw); white-space: pre-line; }
+
+  /* المستندات (المحضر والخطاب) */
+  #docPrint { position: absolute; left: -12000px; top: 0; direction: rtl; }
+  .doc { width: 210mm; min-height: 297mm; background: #fff; box-sizing: border-box; padding: 14mm 16mm; font-family: 'Tajawal','Cairo',sans-serif; color: #1e293b; }
+  .d-head { display: flex; justify-content: space-between; align-items: center; border-bottom: .8mm solid var(--k-gold); padding-bottom: 3.5mm; margin-bottom: 5mm; }
+  .d-logo { background: linear-gradient(135deg,var(--k-gold),#a8802a); color: #fff; border-radius: 3mm; padding: 2.5mm 6mm; font-family: 'Cairo',sans-serif; font-weight: 900; font-size: 13pt; }
+  .d-t { text-align: center; }
+  .d-t h1 { font-size: 14pt; font-weight: 900; color: var(--k-navy); }
+  .d-t .en { font-size: 7.5pt; color: #64748b; }
+  .d-ref { border: .3mm solid var(--k-gold); background: #fdf9ee; border-radius: 2mm; padding: 1.5mm 4mm; font-size: 8.5pt; font-weight: 900; font-family: 'Cairo',sans-serif; text-align: center; white-space: nowrap; }
+  .d-grid { display: grid; grid-template-columns: auto 1fr auto 1fr; border: .3mm solid #cbd5e1; border-radius: 2mm; overflow: hidden; margin-bottom: 4mm; }
+  .d-grid .cell { padding: 2mm 3.5mm; font-size: 9pt; border-bottom: .2mm solid #e2e8f0; }
+  .d-grid .cell.lbl { background: #fdf9ee; font-weight: 800; color: #8a6d24; white-space: nowrap; }
+  .d-goal { background: #f8fafc; border-right: 1mm solid var(--k-gold); padding: 2.5mm 4mm; font-size: 9pt; margin-bottom: 4mm; }
+  .d-h { font-size: 10.5pt; font-weight: 900; color: var(--k-navy); border-right: 1mm solid var(--k-gold); padding-right: 3mm; margin: 5mm 0 2.5mm; }
+  .d-att { list-style: none; font-size: 9pt; }
+  .d-att li { padding: 1.2mm 0 1.2mm 0; border-bottom: .2mm dotted #e2e8f0; }
+  .d-att i { color: #8a6d24; font-style: normal; font-size: 8pt; }
+  .d-tbl { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+  .d-tbl th { background: var(--k-navy); color: #fff; padding: 2mm 2.5mm; text-align: right; font-size: 8pt; font-weight: 700; }
+  .d-tbl td { padding: 2mm 2.5mm; border-bottom: .2mm solid #e2e8f0; vertical-align: top; }
+  .d-tbl .d-n { text-align: center; font-weight: 800; color: #8a6d24; width: 8mm; }
+  .d-tbl .d-c { text-align: center; white-space: nowrap; }
+  .d-disc { color: #64748b; font-size: 7.5pt; margin-top: 1mm; }
+  .d-muted { color: #94a3b8; }
+  .d-warn { background: #fdecec; border-right: 1mm solid var(--k-bad); padding: 2.5mm 4mm; font-size: 8.5pt; margin-top: 4mm; }
+  .d-outcome { background: #fdf9ee; border: .3mm solid var(--k-gold); border-radius: 2mm; padding: 3mm 4mm; font-size: 8.5pt; line-height: 1.8; margin-top: 5mm; }
+  .d-sigs { display: grid; grid-template-columns: repeat(auto-fit,minmax(55mm,1fr)); gap: 10mm; margin-top: 12mm; }
+  .d-sig { text-align: center; font-size: 9pt; }
+  .d-sig .line { border-bottom: .3mm dashed #94a3b8; height: 14mm; margin-bottom: 1.5mm; }
+  .d-sig b { display: block; font-size: 9.5pt; }
+  .d-sig span { color: #64748b; font-size: 8pt; }
+  .d-foot { margin-top: 6mm; font-size: 7pt; color: #94a3b8; text-align: center; border-top: .2mm solid #e2e8f0; padding-top: 2mm; }
+  .letter .l-to { font-size: 11pt; font-weight: 800; margin: 4mm 0 2mm; }
+  .letter .l-sub { font-size: 10pt; margin-bottom: 4mm; }
+  .letter .l-greet { font-size: 10pt; margin-bottom: 3mm; }
+  .letter .l-body { font-size: 10pt; line-height: 2; margin-bottom: 3mm; text-align: justify; }
+  .letter .l-items { list-style: none; margin: 0 0 4mm; }
+  .letter .l-items li { font-size: 10pt; padding: 1.5mm 0; border-bottom: .2mm dotted #e2e8f0; }
+  .letter .l-n { display: inline-flex; align-items: center; justify-content: center; width: 6mm; height: 6mm; border-radius: 50%; background: #fdf9ee; border: .2mm solid var(--k-gold); color: #8a6d24; font-weight: 800; font-size: 8pt; margin-left: 2mm; }
+  .letter .l-close { font-size: 10pt; margin-top: 5mm; line-height: 2; }
+
+  @media print {
+    @page { size: A4; margin: 0; }
+    body * { visibility: hidden !important; }
+    #docPrint, #docPrint * { visibility: visible !important; }
+    #docPrint { position: absolute !important; left: 0 !important; top: 0 !important; }
+    .doc { print-color-adjust: exact; -webkit-print-color-adjust: exact; margin: 0 auto; page-break-after: always; }
+  }
+</style>
+
+<div class="mt-wrap" dir="rtl" id="mtWrap">
+<div class="toastw" id="toastWrap"></div>
+
+<div class="kbar">
+  <div class="kbrand">
+    <div class="klogo">Brandzo</div>
+    <div class="ktitle">الاجتماعات التحضيرية مع إدارات الشركة</div>
+    <span class="kchip" id="cloudChip"><span class="dot"></span><span id="cloudChipText">جارٍ الاتصال…</span></span>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="kbtn b-navy" onclick="startPresent()">🖥 ابدأ العرض</button>
+    <button class="kbtn b-ghost" onclick="printLetter()">✉️ خطاب الدعوة</button>
+    <button class="kbtn b-gold" onclick="printMinutes()">🖨 طباعة المحضر</button>
+  </div>
+</div>
+
+<div class="kmain">
+  <div class="khero">
+    <div class="khin">
+      <div>
+        <h2>🤝 سبعة اجتماعات · ٣٦ بندًا</h2>
+        <p>اعرض ما تطلبه، واكتب ما اتُّفق عليه لحظةَ الاتفاق، واخرج بمحضر رسمي مُرقَّم. البنود منقولة حرفيًّا من خطابك، ومحتوى العرض <b>مسودّة</b> عدّلها كما تشاء.</p>
+      </div>
+      <div class="kkpis">
+        <div class="kkpi"><div class="n" id="kHeld">0</div><div class="l">انعقد</div></div>
+        <div class="kkpi"><div class="n" id="kSigned">0</div><div class="l">موقّع</div></div>
+        <div class="kkpi"><div class="n" id="kAgreed">0</div><div class="l">بند متفق</div></div>
+        <div class="kkpi"><div class="n" id="kPending">36</div><div class="l">لم يُحسم</div></div>
+        <div class="kkpi alert"><div class="n" id="kEsc">0</div><div class="l">للتصعيد</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mgrid" id="mGrid"></div>
+
+  <div class="kcard no-present">
+    <div class="kchead">
+      <h3 id="mHead">تفاصيل الاجتماع</h3>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;">
+        <button class="mini writer-only" onclick="issueLetterNo()">✉️ رقم الخطاب</button>
+        <button class="mini writer-only" onclick="doIssue()">📜 إصدار المحضر برقم رسمي</button>
+        <button class="mini writer-only" onclick="doSign()">✅ اعتماد بعد التوقيع</button>
+      </div>
+    </div>
+    <div class="kcbody">
+      <div class="frow" style="margin-bottom:12px;">
+        <div class="fld"><label>تاريخ الاجتماع</label><input type="date" id="fDate" onchange="onMeta()"></div>
+        <div class="fld"><label>المكان</label><input type="text" id="fPlace" placeholder="قاعة الاجتماعات…" onchange="onMeta()"></div>
+        <div class="fld"><label>رقم المحضر</label><input type="text" id="fNum" readonly style="background:#fdf9ee;font-weight:800;"></div>
+        <div class="fld"><label>رقم الخطاب</label><input type="text" id="fLtr" readonly style="background:#fdf9ee;font-weight:800;"></div>
+      </div>
+      <div class="fld" style="margin-bottom:12px;"><label>هدف الاجتماع</label><textarea id="fGoal" onchange="onMeta()"></textarea></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" id="peopleGrid">
+        <div>
+          <label style="font-size:.74rem;font-weight:800;color:#64748b;">👥 الحاضرون</label>
+          <div id="attBox" style="margin-top:6px;"></div>
+          <button class="mini writer-only" onclick="addPerson('att')">＋ أضف حاضرًا</button>
+        </div>
+        <div>
+          <label style="font-size:.74rem;font-weight:800;color:#64748b;">✍️ الموقّعون على المحضر</label>
+          <div id="sigBox" style="margin-top:6px;"></div>
+          <button class="mini writer-only" onclick="addPerson('sig')">＋ أضف موقّعًا</button>
+        </div>
+      </div>
+
+      <div class="fld" style="margin-top:12px;"><label>ملاحظات عامة على الاجتماع</label><textarea id="fNotes" onchange="onMeta()"></textarea></div>
+    </div>
+  </div>
+
+  <div class="kcard no-present">
+    <div class="kchead"><h3>📋 البنود ومحضرها</h3>
+      <span style="color:rgba(255,255,255,.6);font-size:.76rem;" id="itemsHint">انقر البند لفتحه · ما تكتبه يُحفظ سحابيًّا فورًا</span></div>
+    <div class="kcbody" id="itemsBox"></div>
+  </div>
+</div>
+
+<!-- خشبة العرض -->
+<div class="stage" id="stage"><div id="slideBox"></div></div>
+<div class="sl-nav">
+  <button class="kbtn b-ghost" onclick="endPresent()">✕ إنهاء</button>
+  <button class="kbtn b-navy" onclick="slideMove(-1)">→ السابق</button>
+  <div class="sl-prog"><span id="slProg" style="width:0%"></span></div>
+  <button class="kbtn b-gold" onclick="slideMove(1)">التالي ←</button>
+</div>
+
+<div id="docPrint" aria-hidden="true"></div>
+</div>
+
+<script>
+  import SEED from '../../data/meetings-seed.json';
+  import {
+    MEETING_STATES,
+    ITEM_STATES,
+    mergeAll,
+    overallSummary,
+    minutesVerdict,
+  } from '../../services/meetings/meetingsModel.js';
+  import {
+    esc,
+    stateBadge,
+    slideHtml,
+    minutesHtml,
+    invitationHtml,
+    meetingCardHtml,
+  } from '../../services/meetings/meetingsView.js';
+  import {
+    listenMeetings,
+    saveMeeting,
+    setMeetingState,
+    issueMinutes,
+    signMinutes,
+    issueLetter,
+  } from '../../services/meetings/meetingsService.js';
+  import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
+
+  const WRITER_ROLES = ['admin', 'warehouse_manager'];
+  const ORG_TITLE = 'إدارة السلاسل والإمداد والمخازن';
+
+  let meetings = mergeAll(SEED.meetings, {});
+  let selectedId = meetings[0].id;
+  let openItem = null;
+  let slideIdx = 0;
+  let profile = null;
+  let canWrite = false;
+  let saveTimer = null;
+
+  const $ = (id) => document.getElementById(id);
+  const current = () => meetings.find((m) => m.id === selectedId) || meetings[0];
+
+  function toast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    $('toastWrap').appendChild(t);
+    setTimeout(() => t.remove(), 5200);
+  }
+  function setCloud(state, text) {
+    $('cloudChip').className = 'kchip ' + state;
+    $('cloudChipText').textContent = text;
+  }
+
+  /** حفظ مؤجَّل — الكتابة في الغرفة سريعة، فلا نُرسل عند كل حرف. */
+  function queueSave() {
+    if (!canWrite) return;
+    setCloud('dirty', 'يُحفظ…');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+      try {
+        await saveMeeting(current(), profile);
+        setCloud('online', 'محفوظ سحابيًّا');
+      } catch (e) {
+        setCloud('dirty', 'تعذّر الحفظ');
+        toast('❌ ' + e.message);
+      }
+    }, 700);
+  }
+
+  /* ═══════════ العرض ═══════════ */
+
+  function renderCards() {
+    $('mGrid').innerHTML = meetings
+      .map((m) => meetingCardHtml(m, { states: MEETING_STATES, selectedId }))
+      .join('');
+    const s = overallSummary(meetings);
+    $('kHeld').textContent = s.held;
+    $('kSigned').textContent = s.signed;
+    $('kAgreed').textContent = s.agreed;
+    $('kPending').textContent = s.pending;
+    $('kEsc').textContent = s.escalate;
+  }
+
+  function personRows(list, kind) {
+    const ro = canWrite ? '' : 'disabled';
+    return (list.length ? list : [{ name: '', role: '', side: 'them' }])
+      .map(
+        (p, i) => `<div class="prow">
+          <input type="text" value="${esc(p.name || '')}" placeholder="الاسم" ${ro}
+                 oninput="setPerson('${kind}',${i},'name',this.value)">
+          <input type="text" value="${esc(p.role || '')}" placeholder="المسمّى" ${ro}
+                 oninput="setPerson('${kind}',${i},'role',this.value)">
+          <select ${ro} onchange="setPerson('${kind}',${i},'side',this.value)">
+            <option value="us" ${p.side === 'us' ? 'selected' : ''}>إدارتنا</option>
+            <option value="them" ${p.side !== 'us' ? 'selected' : ''}>الطرف الآخر</option>
+          </select>
+          <button class="mini writer-only" onclick="removePerson('${kind}',${i})" ${ro}>🗑</button>
+        </div>`
+      )
+      .join('');
+  }
+
+  function renderMeta() {
+    const m = current();
+    const st = MEETING_STATES[m.state] || {};
+    $('mHead').textContent = `${m.icon || ''} ${m.no} — ${m.dept} · ${st.emoji || ''} ${st.label || ''}`;
+    $('fDate').value = m.date || '';
+    $('fPlace').value = m.place || '';
+    $('fGoal').value = m.goal || '';
+    $('fNotes').value = m.notes || '';
+    $('fNum').value = m.number || '—';
+    $('fLtr').value = m.letterNumber || '—';
+    $('attBox').innerHTML = personRows(m.attendees, 'att');
+    $('sigBox').innerHTML = personRows(m.signatories, 'sig');
+    document.querySelectorAll('.writer-only').forEach((el) => { el.hidden = !canWrite; });
+  }
+
+  function renderItems() {
+    const m = current();
+    const ro = canWrite ? '' : 'disabled';
+    $('itemsBox').innerHTML = m.items
+      .map((it, i) => {
+        const open = openItem === it.id;
+        const brief = (label, text) =>
+          text && text.trim()
+            ? `<h5>${label}</h5><p>${esc(text).replace(/\n/g, '<br>')}</p>`
+            : '';
+        return `<div class="item st-${it.state}">
+          <div class="it-head" onclick="toggleItem('${esc(it.id)}')">
+            <span class="it-n">${i + 1}</span>
+            <span class="it-t">${esc(it.title)}</span>
+            ${it.draft ? '<span class="tag-draft">مسودّة</span>' : ''}
+            ${stateBadge(it.state)}
+            <span style="color:#94a3b8;">${open ? '▲' : '▼'}</span>
+          </div>
+          <div class="it-body" ${open ? '' : 'hidden'}>
+            <div class="brief">
+              ${brief('🎯 ما نطلبه', it.ask)}
+              ${brief('❓ لماذا', it.why)}
+              ${brief(`🤝 ما يخصّ ${esc(m.dept)}`, it.theirSide)}
+            </div>
+            <div class="chips">
+              ${Object.values(ITEM_STATES)
+                .map(
+                  (s) => `<button class="chip ${it.state === s.id ? 'on' : ''}"
+                    style="${it.state === s.id ? `background:${s.color};` : ''}"
+                    onclick="setItemState('${esc(it.id)}','${s.id}')" ${ro}>${s.emoji} ${s.label}</button>`
+                )
+                .join('')}
+            </div>
+            <div class="fld" style="margin-bottom:9px;"><label>ما نوقش</label>
+              <textarea ${ro} oninput="setItem('${esc(it.id)}','discussion',this.value)">${esc(it.discussion)}</textarea></div>
+            <div class="fld" style="margin-bottom:9px;"><label>✅ القرار المتفق عليه (يُكتب في المحضر)</label>
+              <textarea ${ro} oninput="setItem('${esc(it.id)}','decision',this.value)">${esc(it.decision)}</textarea></div>
+            <div class="frow">
+              <div class="fld"><label>المسؤول من إدارتنا</label>
+                <input type="text" value="${esc(it.ownerUs)}" ${ro} oninput="setItem('${esc(it.id)}','ownerUs',this.value)"></div>
+              <div class="fld"><label>المسؤول من ${esc(m.dept)}</label>
+                <input type="text" value="${esc(it.ownerThem)}" ${ro} oninput="setItem('${esc(it.id)}','ownerThem',this.value)"></div>
+              <div class="fld"><label>الموعد</label>
+                <input type="date" value="${esc(it.due)}" ${ro} onchange="setItem('${esc(it.id)}','due',this.value)"></div>
+              <div class="fld"><label>&nbsp;</label>
+                <button class="mini writer-only" onclick="editBrief('${esc(it.id)}')" ${ro}>✎ عدّل مسودّة العرض</button></div>
+            </div>
+          </div>
+        </div>`;
+      })
+      .join('');
+    document.querySelectorAll('.writer-only').forEach((el) => { el.hidden = !canWrite; });
+  }
+
+  function render() {
+    renderCards();
+    renderMeta();
+    renderItems();
+  }
+
+  /* ═══════════ التفاعل ═══════════ */
+
+  function selectMeeting(id) {
+    selectedId = id;
+    openItem = null;
+    render();
+  }
+  window.selectMeeting = selectMeeting;
+
+  window.toggleItem = (id) => {
+    openItem = openItem === id ? null : id;
+    renderItems();
+  };
+
+  window.setItem = (id, field, value) => {
+    const it = current().items.find((x) => x.id === id);
+    if (!it) return;
+    it[field] = value;
+    queueSave();
+  };
+
+  window.setItemState = (id, state) => {
+    const it = current().items.find((x) => x.id === id);
+    if (!it) return;
+    it.state = state;
+    if (current().state === 'scheduled') current().state = 'held';
+    queueSave();
+    render();
+  };
+
+  window.editBrief = (id) => {
+    const it = current().items.find((x) => x.id === id);
+    if (!it) return;
+    const ask = prompt('ما نطلبه:', it.ask);
+    if (ask === null) return;
+    const why = prompt('لماذا:', it.why);
+    if (why === null) return;
+    const them = prompt(`ما يخصّ ${current().dept}:`, it.theirSide);
+    if (them === null) return;
+    it.ask = ask;
+    it.why = why;
+    it.theirSide = them;
+    it.draft = false;
+    queueSave();
+    renderItems();
+    toast('✎ عُدّلت المسودّة — لم تعد مسودّة');
+  };
+
+  window.onMeta = () => {
+    const m = current();
+    m.date = $('fDate').value;
+    m.place = $('fPlace').value;
+    m.goal = $('fGoal').value;
+    m.notes = $('fNotes').value;
+    queueSave();
+  };
+
+  window.setPerson = (kind, i, field, value) => {
+    const m = current();
+    const list = kind === 'att' ? (m.attendees = m.attendees || []) : (m.signatories = m.signatories || []);
+    if (!list[i]) list[i] = { name: '', role: '', side: 'them' };
+    list[i][field] = value;
+    queueSave();
+  };
+
+  window.addPerson = (kind) => {
+    const m = current();
+    const list = kind === 'att' ? (m.attendees = m.attendees || []) : (m.signatories = m.signatories || []);
+    list.push({ name: '', role: '', side: list.length === 0 ? 'us' : 'them' });
+    queueSave();
+    renderMeta();
+  };
+
+  window.removePerson = (kind, i) => {
+    const m = current();
+    const list = kind === 'att' ? m.attendees : m.signatories;
+    if (!list) return;
+    list.splice(i, 1);
+    queueSave();
+    renderMeta();
+  };
+
+  /* ═══════════ وضع العرض ═══════════ */
+
+  function paintSlide() {
+    const m = current();
+    const items = m.items;
+    slideIdx = Math.max(0, Math.min(slideIdx, items.length - 1));
+    $('slideBox').innerHTML = slideHtml(items[slideIdx], {
+      index: slideIdx,
+      total: items.length,
+      dept: m.dept,
+    });
+    $('slProg').style.width = `${Math.round(((slideIdx + 1) / items.length) * 100)}%`;
+  }
+
+  // تُعرَّف محليًّا ثم تُصدَّر: تُستدعى من `onclick` في الوسم ومن مستمع
+  // لوحة المفاتيح داخل الوحدة معًا.
+  function slideMove(d) {
+    slideIdx += d;
+    paintSlide();
+  }
+  window.slideMove = slideMove;
+
+  window.startPresent = () => {
+    slideIdx = 0;
+    $('mtWrap').classList.add('present');
+    paintSlide();
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  };
+
+  function endPresent() {
+    $('mtWrap').classList.remove('present');
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  }
+  window.endPresent = endPresent;
+
+  document.addEventListener('keydown', (e) => {
+    if (!$('mtWrap').classList.contains('present')) return;
+    if (e.key === 'Escape') endPresent();
+    if (e.key === 'ArrowLeft') slideMove(1);
+    if (e.key === 'ArrowRight') slideMove(-1);
+  });
+
+  /* ═══════════ الإصدار والطباعة ═══════════ */
+
+  window.doIssue = async () => {
+    const m = current();
+    const v = minutesVerdict(m);
+    if (!v.ok) {
+      toast('📜 لا يُصدَر المحضر بعد:\n• ' + v.problems.join('\n• '));
+      return;
+    }
+    try {
+      if (m.state === 'scheduled') await setMeetingState(m, 'held', profile);
+      await saveMeeting(m, profile);
+      const { number, reused } = await issueMinutes({ ...m, state: 'held' }, profile);
+      m.number = number;
+      m.state = 'issued';
+      render();
+      toast(reused ? `📜 المحضر يحمل الرقم ${number} أصلًا` : `📜 صدر المحضر برقم ${number} — اطبعه ووقّعه`);
+    } catch (e) {
+      toast('❌ ' + e.message);
+    }
+  };
+
+  window.doSign = async () => {
+    const m = current();
+    try {
+      await signMinutes(m, profile);
+      m.state = 'signed';
+      render();
+      toast('✅ اعتُمد المحضر — لا يعود مسودّة بعد اليوم');
+    } catch (e) {
+      toast('❌ ' + e.message);
+    }
+  };
+
+  window.issueLetterNo = async () => {
+    try {
+      const m = current();
+      const { number, reused } = await issueLetter(m, profile);
+      m.letterNumber = number;
+      renderMeta();
+      toast(reused ? `✉️ الخطاب يحمل الرقم ${number} أصلًا` : `✉️ حُجز رقم الخطاب ${number}`);
+    } catch (e) {
+      toast('❌ ' + e.message);
+    }
+  };
+
+  window.printMinutes = () => {
+    $('docPrint').innerHTML = minutesHtml(current(), { meta: SEED.meta, orgTitle: ORG_TITLE });
+    window.print();
+  };
+
+  window.printLetter = () => {
+    const m = current();
+    const sigs = (m.signatories || []).filter((s) => s.side === 'us' && String(s.name || '').trim());
+    $('docPrint').innerHTML = invitationHtml(m, {
+      meta: SEED.meta,
+      orgTitle: ORG_TITLE,
+      signatories: sigs.length ? sigs : SEED.defaultSignatories.filter((s) => s.side === 'us'),
+    });
+    window.print();
+  };
+
+  /* ═══════════ الإقلاع ═══════════ */
+
+  let started = false;
+  subscribeAuth(async (user) => {
+    if (!user) return;
+    profile = await fetchUserProfile(user);
+    canWrite = WRITER_ROLES.includes(profile?.role);
+    if (started) return;
+    started = true;
+    listenMeetings((savedById, pending) => {
+      const keepOpen = openItem;
+      meetings = mergeAll(SEED.meetings, savedById);
+      openItem = keepOpen;
+      setCloud(pending ? 'pending' : 'online', pending ? 'بانتظار مزامنة…' : 'متصل — متزامن');
+      render();
+    });
+  });
+
+  render();
+</script>
+</DashboardLayout>
