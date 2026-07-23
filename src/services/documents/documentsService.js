@@ -24,10 +24,13 @@ import {
   where,
   serverTimestamp,
   limit,
+  getDocs,
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
 import { reserveNumber } from './numbering.js';
 import { INITIAL_STATE, isEditable, isLegalTransition, canDo, TRANSITIONS } from './states.js';
+import { deriveDocument } from './chain.js';
+import { getSchema } from './schemas/index.js';
 
 const DOCS = 'documents';
 const AUDIT = 'audit';
@@ -182,6 +185,90 @@ export function listenPendingApproval(callback, max = 50) {
 export function listenAllDocuments(callback, max = 100) {
   const q = query(collection(db, DOCS), orderBy('createdAt', 'desc'), limit(max));
   return onSnapshot(q, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
+}
+
+/* ═══════════════ سلسلة الشراء (F2) ═══════════════ */
+
+/**
+ * ينشئ المستند التالي في السلسلة مشتقًّا من مستند معتمَد.
+ *
+ * كل المنطق في `chain.js` الخالص (يُختبَر بلا شبكة)؛ هنا الكتابة وحدها
+ * وقيد التدقيق الذي يربط المولود بأصله — فيبقى الأثر في المستندين معًا.
+ */
+export async function createNextInChain(sourceDoc, profile) {
+  const draft = deriveDocument(sourceDoc);
+  const schema = getSchema(draft.type);
+  const newId = await addDoc(collection(db, DOCS), {
+    type: draft.type,
+    stage: schema?.stage ?? null,
+    number: null,
+    state: INITIAL_STATE,
+    header: draft.header,
+    lines: draft.lines,
+    links: draft.links,
+    createdByUid: currentUid(),
+    createdByName: currentName(profile),
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  }).then((r) => r.id);
+
+  await appendAudit(newId, {
+    action: 'create',
+    to: INITIAL_STATE,
+    note: `مشتقّ من ${sourceDoc.type} ${sourceDoc.number || ''}`.trim(),
+    profile,
+  });
+  // أثرٌ في الأصل أيضًا: من فتح الحلقة التالية ومتى.
+  await appendAudit(sourceDoc.id, {
+    action: 'derive',
+    to: draft.type,
+    note: `أُنشئ منه ${draft.type}`,
+    profile,
+  });
+  return newId;
+}
+
+/**
+ * يجلب مستندات السلسلة المرتبطة بمستند: أسلافه (من `links`) وأبناءه
+ * (من يشير إليه). يُستهلك في شريط السلسلة وفي المطابقة الثلاثية.
+ *
+ * الاستعلام بحقل واحد (`links.<type>.id`) فلا يلزم فهرس مركّب — نفس درس
+ * شاشة متابعة العمليات.
+ */
+export async function fetchChainDocuments(docData) {
+  if (!docData?.id) return [];
+  const found = new Map();
+
+  // الأسلاف: معرّفاتهم مكتوبة في روابط المستند نفسه.
+  const ancestors = Object.values(docData.links || {})
+    .map((l) => l?.id)
+    .filter(Boolean);
+  await Promise.all(
+    ancestors.map(async (id) => {
+      const d = await getDocument(id);
+      if (d) found.set(d.id, d);
+    })
+  );
+
+  // الأبناء: من يحمل رابطًا إلى نوعي ومعرّفي.
+  const kids = await getDocs(
+    query(collection(db, DOCS), where(`links.${docData.type}.id`, '==', docData.id), limit(20))
+  );
+  kids.docs.forEach((d) => found.set(d.id, { id: d.id, ...d.data() }));
+
+  // وأبناء الأسلاف (شقيقي في السلسلة: مثلًا QC أخو GRN تحت نفس PO).
+  await Promise.all(
+    [...found.values()].map(async (rel) => {
+      const sub = await getDocs(
+        query(collection(db, DOCS), where(`links.${rel.type}.id`, '==', rel.id), limit(20))
+      );
+      sub.docs.forEach((d) => {
+        if (!found.has(d.id) && d.id !== docData.id) found.set(d.id, { id: d.id, ...d.data() });
+      });
+    })
+  );
+
+  return [...found.values()];
 }
 
 /** ترتيب محلّي بالأحدث — يُغني عن فهرس مركّب مع `where`. */

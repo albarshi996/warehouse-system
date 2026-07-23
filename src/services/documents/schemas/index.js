@@ -8,10 +8,16 @@
  * `null` = لم يُبنَ مخطّطه بعد، والنموذج الورقي في `public/forms/` يخدمه مؤقّتًا.
  */
 import grn from './grn.js';
+import pr from './pr.js';
+import po from './po.js';
+import qc from './qc.js';
 
 /** المخطّطات الجاهزة. */
 const SCHEMAS = {
+  PR: pr,
+  PO: po,
   GRN: grn,
+  QC: qc,
 };
 
 /**

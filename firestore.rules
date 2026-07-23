@@ -86,11 +86,20 @@ service cloud.firestore {
     // ⚠️ ازدواج مقصود: أدوار الاعتماد أدناه تكرّر ما في مخطّطات
     //    `src/services/documents/schemas/*.js`. القواعد لا تستورد JS، فلا
     //    مفرّ. **عدّلهما معًا** — تمامًا كبريد تمهيد الأدمن أعلاه.
+    //    سلسلة الشراء F2: PR → PO → GRN → QC.
     function approveRoles(docType) {
-      return docType == 'GRN' ? ['qc_inspector', 'warehouse_manager'] : [];
+      return docType == 'GRN' ? ['qc_inspector', 'warehouse_manager']
+           : docType == 'PR'  ? ['warehouse_manager', 'purchase_officer']
+           : docType == 'PO'  ? ['warehouse_manager', 'finance_manager']
+           : docType == 'QC'  ? ['qc_inspector', 'warehouse_manager']
+           : [];
     }
     function completeRoles(docType) {
-      return docType == 'GRN' ? ['storekeeper', 'warehouse_manager'] : [];
+      return docType == 'GRN' ? ['storekeeper', 'warehouse_manager']
+           : docType == 'PR'  ? ['purchase_officer', 'warehouse_manager']
+           : docType == 'PO'  ? ['purchase_officer', 'warehouse_manager']
+           : docType == 'QC'  ? ['qc_inspector', 'warehouse_manager']
+           : [];
     }
 
     match /documents/{docId} {

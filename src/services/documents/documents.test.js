@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import { formatNumber, counterId, parseNumber } from './numberFormat.js';
 import { isEditable, isLegalTransition, canDo, availableTransitions, TRANSITIONS } from './states.js';
 import grn, { ccp1Violations } from './schemas/grn.js';
+import { getSchema, readyTypes } from './schemas/index.js';
 import { emptyDocument, missingRequired, checklistCount, fieldValue, isEmptyLine, applyItemToLine } from './schemaUtils.js';
 
 // ── الترقيم ────────────────────────────────────────────────────────
@@ -240,10 +241,36 @@ test('لا صنف = لا تغيير (المجهول لا يوقف العمل)', 
 });
 
 // ── تطابق المخطّط مع قواعد الأمان (منع الانحراف) ───────────────────
-test('أدوار الاعتماد في المخطّط تطابق ما في firestore.rules', async () => {
+//
+// الاختبار السابق كان يكتفي بوجود اسم الدور في أي موضع من الملف، فمرّت
+// عليه أنواع F2 الثلاثة بلا تغطية أصلًا (كانت `approveRoles` تعرف GRN
+// وحدها فيرتدّ اعتمادها بـpermission-denied). الآن يُقرأ **لكل نوع
+// جاهز** ما تُعيده دالتا القواعد فعلًا، ويُطابَق بمخطّطه دورًا بدور.
+
+/** يستخرج أدوار نوعٍ بعينه من دالة في قواعد الأمان. */
+function rolesFromRules(rules, fnName, type) {
+  const start = rules.indexOf(`function ${fnName}(`);
+  if (start < 0) return null;
+  const body = rules.slice(start, rules.indexOf('}', start));
+  const re = new RegExp(`docType == '${type}'\\s*\\?\\s*\\[([^\\]]*)\\]`);
+  const m = body.match(re);
+  if (!m) return null;
+  return [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]).sort();
+}
+
+test('أدوار الاعتماد والإنهاء في كل مخطّط جاهز تطابق firestore.rules', async () => {
   const { readFileSync } = await import('node:fs');
   const rules = readFileSync(new URL('../../../firestore.rules', import.meta.url), 'utf8');
-  for (const role of grn.roles.approve) {
-    assert.ok(rules.includes(`'${role}'`), `الدور ${role} غائب عن قواعد الأمان — انحراف بين الطبقتين`);
+
+  for (const type of readyTypes()) {
+    const schema = getSchema(type);
+
+    const approve = rolesFromRules(rules, 'approveRoles', type);
+    assert.ok(approve, `النوع ${type} غير مذكور في approveRoles — اعتماده سيرتدّ من الخادم`);
+    assert.deepEqual(approve, [...schema.roles.approve].sort(), `${type}: أدوار الاعتماد منحرفة بين المخطّط والقواعد`);
+
+    const complete = rolesFromRules(rules, 'completeRoles', type);
+    assert.ok(complete, `النوع ${type} غير مذكور في completeRoles — إنهاؤه سيرتدّ من الخادم`);
+    assert.deepEqual(complete, [...schema.roles.complete].sort(), `${type}: أدوار الإنهاء منحرفة بين المخطّط والقواعد`);
   }
 });

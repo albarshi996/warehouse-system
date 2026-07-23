@@ -30,6 +30,7 @@ import Checklist from './Checklist.jsx';
 import StateBar from './StateBar.jsx';
 import AuditTrail from './AuditTrail.jsx';
 import DocumentPrint from './DocumentPrint.jsx';
+import ChainBar from './ChainBar.jsx';
 
 /** يقرأ معاملات الرابط (الموقع ثابت — لا توجيه من الخادم). */
 function readParams() {
@@ -202,7 +203,7 @@ export default function DocumentEngine() {
   if (!schema) {
     return (
       <Notice tone="err" title="نوع مستند غير معروف">
-        لا يوجد مخطّط للنوع «{type}». الجاهز اليوم: مذكرة الاستلام (GRN).
+        لا يوجد مخطّط للنوع «{type}». الجاهز اليوم: طلب الشراء (PR) · أمر الشراء (PO) · مذكرة الاستلام (GRN) · تقرير الجودة (QC).
       </Notice>
     );
   }
@@ -211,7 +212,7 @@ export default function DocumentEngine() {
   if (!docId && !canCreate) {
     return (
       <Notice tone="err" title="🚫 غير مصرّح">
-        إنشاء «{schema.titleAr}» متاح لـ: أمين المخزن · مدير المستودع · موظف المشتريات.
+        إنشاء «{schema.titleAr}» متاح لأصحاب الأدوار المخوّلة به وحدهم — ودورك الحالي ليس منها.
       </Notice>
     );
   }
@@ -241,6 +242,9 @@ export default function DocumentEngine() {
           onTransition={handleTransition}
           onPrint={() => window.print()}
         />
+
+        {/* سلسلة الشراء والمطابقة الثلاثية (F2) — تظهر للأنواع المترابطة فقط */}
+        <ChainBar doc={doc} me={me} onFlash={flash} />
 
         {violations.length > 0 && (
           <div className="bg-brand-red/10 border border-brand-red/40 rounded-xl px-4 py-3">
