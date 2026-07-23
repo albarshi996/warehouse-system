@@ -52,10 +52,17 @@ export async function analyzeItemsFile(file) {
   const created = [];
   const updated = [];
   const unchanged = [];
+  // صفوف بلا كود: لا يمكن كتابتها (SKU معرّف المستند في الماستر). كانت تُعدّ
+  // «جديدة» في المعاينة ثم يُسقطها upsertItems صامتًا — الآن تُفرز وتُعرض صراحةً.
+  const skipped = [];
   let newBarcodes = 0;
 
   for (const row of result.rows) {
     const id = normalizeSku(row.sku);
+    if (!id) {
+      skipped.push(row);
+      continue;
+    }
     const prior = existingBySku.get(id);
     if (!prior) {
       created.push(row);
@@ -71,7 +78,7 @@ export async function analyzeItemsFile(file) {
     else updated.push({ ...row, _diff: diff, _addedBarcodes: added });
   }
 
-  return { ...result, plan: { created, updated, unchanged, newBarcodes }, existingBySku };
+  return { ...result, plan: { created, updated, unchanged, newBarcodes, skipped }, existingBySku };
 }
 
 /** الحقول التي سيغيّرها الشيت فعلًا على صنف قائم — لعرضها في المعاينة. */

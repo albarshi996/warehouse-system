@@ -134,6 +134,24 @@ export default function ItemsImport({ onDone, onCancel }) {
             </div>
           )}
 
+          {/* صفوف بلا كود — لن تُستورد (كانت تُسقَط صامتةً قبل هذا الإصلاح) */}
+          {plan.skipped && plan.skipped.length > 0 && (
+            <div className="p-3 rounded-lg border border-orange-300 bg-orange-50">
+              <p className="text-sm font-bold text-orange-700 mb-2">
+                🚫 {plan.skipped.length} صفًّا بلا «كود صنف» — لن يُستورد (الكود هو معرّف الماستر):
+              </p>
+              <ul className="text-xs text-orange-700 space-y-1 max-h-32 overflow-y-auto">
+                {plan.skipped.slice(0, 8).map((row, i) => (
+                  <li key={i}>
+                    {row.nameAr || row.nameEn || 'صف بلا اسم'}
+                    {(row.barcodes || []).length > 0 && <> · باركود: {(row.barcodes || []).join('، ')}</>}
+                  </li>
+                ))}
+                {plan.skipped.length > 8 && <li>… و{plan.skipped.length - 8} أخرى</li>}
+              </ul>
+            </div>
+          )}
+
           {/* تنبيهات لا تمنع */}
           {warnings.length > 0 && (
             <div className="p-3 rounded-lg border border-amber-200 bg-amber-50">

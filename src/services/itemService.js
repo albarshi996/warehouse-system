@@ -207,12 +207,18 @@ const BATCH_LIMIT = 500;
 export const upsertItems = async (items, { existingBySku = new Map() } = {}) => {
   let created = 0;
   let updated = 0;
+  // الصفوف بلا كود لا يمكن كتابتها (SKU هو معرّف المستند) — تُعدّ وتُعاد
+  // للمستدعي بدل إسقاطها صامتةً بينما المعاينة وعدت بأنها «جديدة».
+  let skipped = 0;
 
   for (let i = 0; i < items.length; i += BATCH_LIMIT) {
     const batch = writeBatch(db);
     for (const raw of items.slice(i, i + BATCH_LIMIT)) {
       const id = normalizeSku(raw.sku);
-      if (!id) continue;
+      if (!id) {
+        skipped++;
+        continue;
+      }
       const prior = existingBySku.get(id);
       const payload = {
         sku: id,
@@ -240,7 +246,7 @@ export const upsertItems = async (items, { existingBySku = new Map() } = {}) => 
     }
     await batch.commit();
   }
-  return { created, updated };
+  return { created, updated, skipped };
 };
 
 /**
