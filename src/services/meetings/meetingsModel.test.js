@@ -23,6 +23,12 @@ import {
   itemsByState,
   allAgreements,
   itemPatch,
+  commitments,
+  escalations,
+  deferrals,
+  sourceRegister,
+  systemReportVerdict,
+  consolidate,
 } from './meetingsModel.js';
 
 const SEED = JSON.parse(readFileSync(new URL('../../data/meetings-seed.json', import.meta.url), 'utf8'));
@@ -277,4 +283,136 @@ test('الحفظ يخزّن ما كُتب لا البذرة كاملةً', () =>
     'ask', 'decision', 'discussion', 'due', 'id', 'ownerThem', 'ownerUs', 'state', 'theirSide', 'why',
   ]);
   assert.equal(patch.title, undefined, 'العنوان يبقى في البذرة ولا يُكرَّر');
+});
+
+// ═══════════ التقرير المجمّع (دفعة ٣) ═══════════
+
+/**
+ * سلسلة اجتماعات جاهزة للتقرير المجمّع: محضران صادران بأرقام،
+ * قرارات بنصوصها ومسؤوليها ومواعيدها، مع مؤجَّل ومصعَّد.
+ */
+function readySeries() {
+  const mk = (id, no, dept, states) => {
+    const m = mergeMeeting(
+      {
+        id, no, dept, icon: '🧪', goal: 'هدف',
+        items: states.map((_, k) => ({ id: `${id}-${k + 1}`, title: `بند ${k + 1} — ${dept}`, ask: 'أ', why: 'ب', theirSide: 'ج', draft: true })),
+      },
+      null
+    );
+    m.date = '2026-08-0' + no;
+    m.number = `MOM-2026-000${no}`;
+    m.state = 'issued';
+    m.attendees = [{ name: 'حاضر', role: 'مدير' }];
+    m.signatories = [
+      { name: 'محمد البرشي', role: 'مدير السلاسل', side: 'us' },
+      { name: 'ممثل', role: 'مدير', side: 'them' },
+    ];
+    states.forEach((st, k) => Object.assign(m.items[k], st));
+    return m;
+  };
+
+  return [
+    mk('MA', '1', 'الإدارة المالية', [
+      { state: 'agreed', decision: 'قرار أ', ownerUs: 'البرشي', ownerThem: 'المالية', due: '2026-09-10' },
+      { state: 'agreed', decision: 'قرار ب', ownerUs: 'البرشي', due: '2026-08-15' },
+      { state: 'escalate', discussion: 'خلاف على الصلاحية' },
+    ]),
+    mk('MB', '2', 'إدارة الجودة', [
+      { state: 'agreed', decision: 'قرار ج' }, // بلا مسؤول ولا موعد ⇒ تنبيه
+      { state: 'deferred', discussion: 'يحتاج دراسة' },
+    ]),
+  ];
+}
+
+test('التقرير المجمّع: القرارات تُجمَع تحت إداراتها ولا يظهر من لا قرار له', () => {
+  const c = consolidate(readySeries());
+  assert.equal(c.byDept.length, 2);
+  assert.deepEqual(c.byDept.map((d) => d.dept), ['الإدارة المالية', 'إدارة الجودة']);
+  assert.equal(c.byDept[0].decisions.length, 2);
+  assert.equal(c.byDept[1].decisions.length, 1);
+  assert.equal(c.byDept[0].number, 'MOM-2026-0001');
+});
+
+test('الالتزامات مرتّبة بالموعد وما لا موعد له في الآخر', () => {
+  const rows = commitments(readySeries());
+  assert.deepEqual(rows.map((r) => r.due), ['2026-08-15', '2026-09-10', '']);
+  assert.equal(rows.at(-1).hasDue, false);
+  assert.equal(rows.at(-1).hasOwner, false);
+});
+
+test('المصعَّد والمؤجَّل يُفرَزان في قسمين مستقلّين بمصدرهما', () => {
+  const s = readySeries();
+  const esc = escalations(s);
+  const def = deferrals(s);
+  assert.equal(esc.length, 1);
+  assert.equal(esc[0].dept, 'الإدارة المالية');
+  assert.equal(esc[0].discussion, 'خلاف على الصلاحية');
+  assert.equal(def.length, 1);
+  assert.equal(def[0].dept, 'إدارة الجودة');
+});
+
+test('سجلّ المصادر يجعل كل بند قابلًا للردّ إلى محضر مرقّم', () => {
+  const reg = sourceRegister(readySeries());
+  assert.equal(reg.length, 2);
+  assert.ok(reg.every((r) => r.number && r.date));
+  assert.deepEqual(reg.map((r) => [r.agreed, r.escalate, r.deferred]), [[2, 1, 0], [1, 0, 1]]);
+});
+
+test('الحكم: سلسلة جاهزة تمرّ مع تنبيهات لا تمنع', () => {
+  const v = systemReportVerdict(readySeries());
+  assert.equal(v.ok, true);
+  assert.deepEqual(v.problems, []);
+  assert.ok(v.warnings.some((w) => w.includes('بلا مسؤول')));
+  assert.ok(v.warnings.some((w) => w.includes('بلا موعد')));
+  assert.ok(v.warnings.some((w) => w.includes('لم يُعتمد بالتوقيع')));
+});
+
+test('الحكم يمنع: اجتماع بلا محضر رسمي', () => {
+  const s = readySeries();
+  s[1].number = null;
+  const v = systemReportVerdict(s);
+  assert.equal(v.ok, false);
+  assert.ok(v.problems.some((p) => p.includes('لم يصدر محضره')));
+});
+
+test('الحكم يمنع: بند لم يُحسم بعد', () => {
+  const s = readySeries();
+  s[0].items[0].state = 'pending';
+  const v = systemReportVerdict(s);
+  assert.equal(v.ok, false);
+  assert.ok(v.problems.some((p) => p.includes('لم يُحسم')));
+});
+
+test('الحكم يمنع: قرار متفق عليه بلا نصّ مكتوب', () => {
+  const s = readySeries();
+  s[0].items[0].decision = '';
+  const v = systemReportVerdict(s);
+  assert.equal(v.ok, false);
+  assert.ok(v.problems.some((p) => p.includes('بلا نصّ')));
+});
+
+test('الحكم يمنع: لا قرار متفق عليه إطلاقًا', () => {
+  const s = readySeries();
+  for (const m of s) for (const i of m.items) if (i.state === 'agreed') i.state = 'deferred';
+  const v = systemReportVerdict(s);
+  assert.equal(v.ok, false);
+  assert.ok(v.problems.some((p) => p.includes('لا مادّة للتقرير')));
+});
+
+test('الملخّص يعدّ القرارات والمسؤوليات والمواعيد', () => {
+  const c = consolidate(readySeries());
+  assert.equal(c.summary.agreed, 3);
+  assert.equal(c.summary.escalate, 1);
+  assert.equal(c.summary.deferred, 1);
+  assert.equal(c.summary.withOwner, 2);
+  assert.equal(c.summary.withDue, 2);
+});
+
+test('التقرير المجمّع على البذرة الحقيقية: يُرفض قبل انعقاد الاجتماعات', () => {
+  const fresh = mergeAll(SEED.meetings, {});
+  const v = systemReportVerdict(fresh);
+  assert.equal(v.ok, false);
+  assert.ok(v.problems.some((p) => p.includes('لم يصدر محضره')));
+  assert.equal(consolidate(fresh).byDept.length, 0);
 });

@@ -177,6 +177,43 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   .d-sigs { display: grid; grid-template-columns: repeat(auto-fit,minmax(55mm,1fr)); gap: 10mm; margin-top: 12mm; }
   .d-sig { text-align: center; font-size: 9pt; }
   .d-sig .line { border-bottom: .3mm dashed #94a3b8; height: 14mm; margin-bottom: 1.5mm; }
+
+  /* ── لوحة التقرير المجمّع ── */
+  .rpanel { background:#fff; border:1px solid #e2e8f0; border-radius:16px; margin:0 0 18px; overflow:hidden; box-shadow:0 18px 44px -30px rgba(13,27,42,.5); }
+  .rphead { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; padding:16px 20px; background:linear-gradient(90deg,#0d1b2a,#1b3a5c); color:#fff; flex-wrap:wrap; }
+  .rphead h3 { font-size:1.05rem; font-weight:900; }
+  .rphead p { font-size:.8rem; opacity:.72; margin-top:4px; max-width:70ch; }
+  .rpbody { padding:16px 20px 20px; }
+  .rready { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+  .rrow { display:flex; align-items:flex-start; gap:9px; font-size:.85rem; border-radius:10px; padding:9px 13px; }
+  .rrow.ok { background:rgba(0,184,122,.09); color:#046c4e; border:1px solid rgba(0,184,122,.28); }
+  .rrow.bad { background:rgba(239,68,68,.08); color:#b91c1c; border:1px solid rgba(239,68,68,.28); }
+  .rrow.warn { background:rgba(245,158,11,.09); color:#92400e; border:1px solid rgba(245,158,11,.3); }
+  .rrow b { font-weight:900; }
+  .rpactions { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .rpreview { border:1px solid #e2e8f0; border-radius:12px; max-height:60vh; overflow:auto; background:#f8fafc; padding:10px; display:none; }
+  .rpreview.on { display:block; }
+  .rpreview .doc { transform:scale(.92); transform-origin:top center; }
+
+  /* ── التقرير المجمّع (مستند الطباعة) ── */
+  .report .r-tallies { display:grid; grid-template-columns:repeat(6,1fr); gap:2.5mm; margin:5mm 0; }
+  .report .r-tally { border:.3mm solid #e2e8f0; border-radius:2mm; padding:2.5mm 1mm; text-align:center; background:#f8fafc; }
+  .report .r-tally b { display:block; font-size:13pt; font-weight:900; color:#0d1b2a; }
+  .report .r-tally span { font-size:6.6pt; color:#64748b; font-weight:700; }
+  .report .r-note { font-size:8pt; color:#64748b; margin:1.5mm 0 2.5mm; }
+  .report .r-dept { margin-bottom:5mm; break-inside:avoid; }
+  .report .r-dept-h { display:flex; justify-content:space-between; align-items:baseline; gap:4mm; font-size:10pt; font-weight:900; background:#f1f5f9; border-right:1mm solid #0d1b2a; padding:2mm 3mm; margin-bottom:1.5mm; }
+  .report .r-dept-ref { font-size:7.5pt; color:#64748b; font-weight:700; }
+  .report .r-list { padding-right:6mm; font-size:9pt; }
+  .report .r-list li { margin-bottom:2.5mm; }
+  .report .r-src { font-size:7.5pt; color:#64748b; font-weight:700; }
+  .report .r-approve { border:.4mm solid #0d1b2a; border-radius:2mm; padding:3mm 4mm; margin-top:6mm; break-inside:avoid; }
+  .report .r-approve h4 { font-size:9.5pt; font-weight:900; margin-bottom:3mm; }
+  .report .r-approve-grid { display:grid; grid-template-columns:1fr 1fr; gap:4mm 6mm; }
+  .report .r-approve-grid span { font-size:7.5pt; color:#64748b; font-weight:700; }
+  .report .r-line { border-bottom:.3mm dotted #94a3b8; height:7mm; }
+  .report .r-line.tall { height:14mm; }
+  @media (max-width:700px) { .report .r-tallies { grid-template-columns:repeat(3,1fr); } }
   /* التوقيع المعتمد PNG يطفو فوق سطر التوقيع دون أن يزيح بقية العناصر */
   .d-sig { position: relative; }
   .d-sig .sig-img { position: absolute; top: -2mm; left: 50%; transform: translateX(-50%); height: 17mm; max-width: 90%; object-fit: contain; z-index: 2; }
@@ -214,6 +251,30 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     <button class="kbtn b-navy" onclick="startPresent()">🖥 ابدأ العرض</button>
     <button class="kbtn b-ghost" onclick="printLetter()">✉️ خطاب الدعوة</button>
     <button class="kbtn b-gold" onclick="printMinutes()">🖨 طباعة المحضر</button>
+    <button class="kbtn b-navy" onclick="openSystemReport()">📘 التقرير المجمّع</button>
+  </div>
+</div>
+
+<!--
+  التقرير المجمّع — «النظام الإداري التعاوني الموحّد»: مخرج الاجتماعات
+  السبعة الذي نصّ عليه خطاب المالك، يُرفع للإدارة العامة لاعتماده.
+-->
+<div class="rpanel no-present" id="rPanel" style="display:none">
+  <div class="rphead">
+    <div>
+      <h3>📘 النظام الإداري التعاوني الموحّد</h3>
+      <p>الوثيقة النهائية المُجمَّعة من محاضر الاجتماعات السبعة — تُرفع للإدارة العامة لاعتمادها والعمل بموجبها.</p>
+    </div>
+    <button class="kbtn b-ghost" onclick="closeSystemReport()">✕ إغلاق</button>
+  </div>
+  <div class="rpbody">
+    <div class="rready" id="rReady"></div>
+    <div class="rpactions">
+      <button class="kbtn b-ghost" onclick="previewSystemReport()">👁 معاينة</button>
+      <button class="kbtn b-gold" onclick="printSystemReport()">🖨 طباعة</button>
+      <button class="kbtn b-navy" id="rIssueBtn" onclick="doIssueSystemReport()">📘 إصدار رسمي</button>
+    </div>
+    <div class="rpreview" id="rPreview"></div>
   </div>
 </div>
 
@@ -298,6 +359,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     mergeAll,
     overallSummary,
     minutesVerdict,
+    consolidate,
+    systemReportVerdict,
   } from '../../services/meetings/meetingsModel.js';
   import {
     esc,
@@ -306,6 +369,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     minutesHtml,
     invitationHtml,
     meetingCardHtml,
+    systemReportHtml,
   } from '../../services/meetings/meetingsView.js';
   import {
     listenMeetings,
@@ -314,6 +378,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     issueMinutes,
     signMinutes,
     issueLetter,
+    getSystemReport,
+    issueSystemReport,
   } from '../../services/meetings/meetingsService.js';
   import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
 
@@ -469,6 +535,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     renderCards();
     renderMeta();
     renderItems();
+    // لوحة التقرير المجمّع تتحدّث مع كل تغيّر ما دامت مفتوحة، فلا يبقى
+    // «غير جاهز» معروضًا بعد أن يُحسم آخر بند.
+    if ($('rPanel')?.style.display === 'block') renderReady();
   }
 
   /* ═══════════ التفاعل ═══════════ */
@@ -638,6 +707,88 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       m.letterNumber = number;
       renderMeta();
       toast(reused ? `✉️ الخطاب يحمل الرقم ${number} أصلًا` : `✉️ حُجز رقم الخطاب ${number}`);
+    } catch (e) {
+      toast('❌ ' + e.message);
+    }
+  };
+
+  /* ═══════════ التقرير المجمّع (دفعة ٣) ═══════════ */
+
+  /* رقم التقرير إن كان قد صدر — يُقرأ مرّة عند فتح اللوحة. */
+  let systemNumber = null;
+
+  /** يبني الوثيقة من الحالة الحيّة للاجتماعات — لا نسخة مخزَّنة تنحرف. */
+  function buildSystemReport() {
+    return systemReportHtml(consolidate(meetings), {
+      meta: SEED.meta,
+      orgTitle: ORG_TITLE,
+      number: systemNumber,
+      date: new Date().toISOString().slice(0, 10),
+      // التوقيعان المعتمدان للإدارة — لا موقّع الإدارة الأخرى: هذه وثيقة
+      // تصدرها إدارتنا وتُرفع للإدارة العامة، لا محضرًا ثنائيًّا.
+      signatories: SEED.reportSignatories,
+      assetBase: ASSET_BASE,
+    });
+  }
+
+  /** لوحة الجاهزية: ما يمنع الإصدار (أحمر) وما ينقص ولا يمنعه (أصفر). */
+  function renderReady() {
+    const v = systemReportVerdict(meetings);
+    const c = consolidate(meetings);
+    const rows = [];
+
+    if (systemNumber) {
+      rows.push(`<div class="rrow ok">📘 <span>صدر التقرير رسميًّا برقم <b>${esc(systemNumber)}</b> — الطباعة تحمله.</span></div>`);
+    }
+    rows.push(
+      v.ok
+        ? `<div class="rrow ok">✅ <span>جاهز للإصدار: <b>${c.summary.agreed}</b> قرارًا معتمدًا من <b>${c.byDept.length}</b> إدارات، كلّها مستندة إلى محاضر مرقَّمة.</span></div>`
+        : `<div class="rrow bad">⛔ <span><b>لا يُصدَر بعد</b> — وثيقةٌ تُرفع للإدارة العامة لا تُبنى على ناقص:</span></div>`
+    );
+    v.problems.forEach((p) => rows.push(`<div class="rrow bad">• <span>${esc(p)}</span></div>`));
+    v.warnings.forEach((w) => rows.push(`<div class="rrow warn">⚠️ <span>${esc(w)}</span></div>`));
+
+    $('rReady').innerHTML = rows.join('');
+    const btn = $('rIssueBtn');
+    btn.disabled = !v.ok || !canWrite || Boolean(systemNumber);
+    btn.textContent = systemNumber ? '📘 صدر رسميًّا' : '📘 إصدار رسمي';
+  }
+
+  window.openSystemReport = async () => {
+    $('rPanel').style.display = 'block';
+    $('rPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    try {
+      const rec = await getSystemReport();
+      systemNumber = rec?.number || null;
+    } catch {
+      /* تعذّر القراءة (شبكة) — نعرض اللوحة كمسودّة ولا نُسقط الشاشة */
+    }
+    renderReady();
+  };
+
+  window.closeSystemReport = () => {
+    $('rPanel').style.display = 'none';
+    $('rPreview').classList.remove('on');
+  };
+
+  window.previewSystemReport = () => {
+    const box = $('rPreview');
+    box.innerHTML = buildSystemReport();
+    box.classList.add('on');
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
+  window.printSystemReport = () => {
+    $('docPrint').innerHTML = buildSystemReport();
+    window.print();
+  };
+
+  window.doIssueSystemReport = async () => {
+    try {
+      const { number, reused } = await issueSystemReport(meetings, profile);
+      systemNumber = number;
+      renderReady();
+      toast(reused ? `📘 التقرير يحمل الرقم ${number} أصلًا` : `📘 صدر «النظام الإداري التعاوني الموحّد» برقم ${number} — اطبعه وارفعه للإدارة العامة`);
     } catch (e) {
       toast('❌ ' + e.message);
     }

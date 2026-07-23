@@ -232,6 +232,170 @@ export function invitationHtml(meeting, opts = {}) {
   );
 }
 
+/* ═══════════════ 4) التقرير المجمّع — «النظام الإداري التعاوني الموحّد» ═══════════════ */
+
+/** خلية جدول بنصّ متعدد الأسطر أو شرطة إن كان فارغًا. */
+function cell(text) {
+  return String(text || '').trim() ? multiline(text) : '<span class="d-muted">—</span>';
+}
+
+/** بطاقات الحصيلة أعلى التقرير. */
+function tallyBlock(s) {
+  const card = (v, l) => `<div class="r-tally"><b>${esc(String(v))}</b><span>${esc(l)}</span></div>`;
+  return (
+    `<div class="r-tallies">` +
+    card(s.meetings, 'اجتماعًا') +
+    card(s.agreed, 'قرارًا معتمدًا') +
+    card(s.withOwner, 'قرارًا بمسؤول') +
+    card(s.withDue, 'قرارًا بموعد') +
+    card(s.escalate, 'بندًا للإدارة العامة') +
+    card(s.deferred, 'بندًا مؤجَّلًا') +
+    `</div>`
+  );
+}
+
+/** سجلّ المصادر — يجعل كل بند في التقرير قابلًا للردّ إلى محضره. */
+function sourcesTable(sources) {
+  const rows = sources
+    .map(
+      (s) =>
+        `<tr><td class="d-n">${esc(s.no)}</td><td><b>${esc(s.dept)}</b></td>` +
+        `<td class="d-c">${s.number ? esc(s.number) : '<span class="d-muted">بلا رقم</span>'}</td>` +
+        `<td class="d-c">${esc(s.date || '—')}</td>` +
+        `<td class="d-c">${s.total}</td><td class="d-c">${s.agreed}</td>` +
+        `<td class="d-c">${s.deferred}</td><td class="d-c">${s.escalate}</td></tr>`
+    )
+    .join('');
+  return (
+    `<table class="d-tbl"><thead><tr><th>#</th><th>الإدارة</th><th>رقم المحضر</th><th>التاريخ</th>` +
+    `<th>البنود</th><th>معتمد</th><th>مؤجَّل</th><th>مُصعَّد</th></tr></thead><tbody>${rows}</tbody></table>`
+  );
+}
+
+/** القرارات المعتمدة مجمّعة تحت إداراتها — متن التقرير. */
+function decisionsByDept(byDept) {
+  return byDept
+    .map((d) => {
+      const rows = d.decisions
+        .map(
+          (x, i) =>
+            `<tr><td class="d-n">${i + 1}</td><td><b>${esc(x.title)}</b></td>` +
+            `<td>${cell(x.decision)}</td>` +
+            `<td>${esc(x.ownerUs || '—')}<br><span class="d-muted">${esc(x.ownerThem || '')}</span></td>` +
+            `<td class="d-c">${esc(x.due || '—')}</td></tr>`
+        )
+        .join('');
+      return (
+        `<div class="r-dept">` +
+        `<h4 class="r-dept-h">${esc(d.icon || '')} ${esc(d.dept)}` +
+        `<span class="r-dept-ref">${d.number ? esc(d.number) : 'بلا رقم'}${d.date ? ' · ' + esc(d.date) : ''}</span></h4>` +
+        `<table class="d-tbl"><thead><tr><th>#</th><th>البند</th><th>القرار المعتمد</th>` +
+        `<th>المسؤول</th><th>الموعد</th></tr></thead><tbody>${rows}</tbody></table>` +
+        `</div>`
+      );
+    })
+    .join('');
+}
+
+/** خطة التنفيذ: كل الالتزامات مرتّبة بموعدها عبر الإدارات. */
+function planTable(rows) {
+  if (!rows.length) return '<p class="d-muted">لا التزامات مسجّلة.</p>';
+  const body = rows
+    .map(
+      (r) =>
+        `<tr><td class="d-c">${r.due ? esc(r.due) : '<span class="d-muted">غير محدَّد</span>'}</td>` +
+        `<td>${esc(r.dept)}</td><td><b>${esc(r.title)}</b></td>` +
+        `<td>${esc(r.ownerUs || '—')}${r.ownerThem ? ` <span class="d-muted">/ ${esc(r.ownerThem)}</span>` : ''}</td>` +
+        `<td class="d-c">${r.number ? esc(r.number) : '—'}</td></tr>`
+    )
+    .join('');
+  return (
+    `<table class="d-tbl"><thead><tr><th>الموعد</th><th>الإدارة</th><th>الالتزام</th>` +
+    `<th>المسؤول</th><th>المحضر</th></tr></thead><tbody>${body}</tbody></table>`
+  );
+}
+
+/** قائمة بنود بعنوانها ومصدرها ونقاشها — للمصعَّد والمؤجَّل. */
+function itemList(items, emptyText) {
+  if (!items.length) return `<p class="d-muted">${esc(emptyText)}</p>`;
+  return (
+    `<ol class="r-list">` +
+    items
+      .map(
+        (x) =>
+          `<li><b>${esc(x.title)}</b> <span class="r-src">${esc(x.dept)}${x.number ? ' · ' + esc(x.number) : ''}</span>` +
+          (String(x.discussion || '').trim() ? `<div class="d-disc">${multiline(x.discussion)}</div>` : '') +
+          `</li>`
+      )
+      .join('') +
+    `</ol>`
+  );
+}
+
+/**
+ * التقرير المجمّع كاملًا — الوثيقة النهائية التي تُرفع للإدارة العامة.
+ *
+ * @param {object} report مخرج `consolidate(meetings)`
+ * @param {object} opts { meta, orgTitle, number, date, signatories, assetBase }
+ */
+export function systemReportHtml(report, opts = {}) {
+  const meta = opts.meta || {};
+  const org = opts.orgTitle || 'إدارة السلاسل والإمداد والمخازن';
+  const s = report.summary;
+
+  return (
+    `<div class="doc report">` +
+    `<div class="d-head"><div class="d-logo">Brandzo</div>` +
+    `<div class="d-t"><h1>النظام الإداري التعاوني الموحّد</h1>` +
+    `<div class="en">Unified Collaborative Administrative System · Brandzo Hub</div></div>` +
+    `<div class="d-ref">${esc(opts.number || 'مسودّة — بلا رقم')}<br>${esc(opts.date || '')}</div></div>` +
+
+    `<div class="d-grid">` +
+    `<div class="cell lbl">الجهة المُعِدّة</div><div class="cell">${esc(org)}</div>` +
+    `<div class="cell lbl">يُرفع إلى</div><div class="cell">الإدارة العامة — للاعتماد والعمل بموجبه</div>` +
+    `<div class="cell lbl">المصدر</div><div class="cell">${esc(meta.basedOn || 'الاجتماعات التحضيرية مع إدارات الشركة')}</div>` +
+    `<div class="cell lbl">النطاق</div><div class="cell">${s.meetings} اجتماعًا · ${s.items} بندًا · ${s.agreed} قرارًا معتمدًا</div>` +
+    `</div>` +
+
+    (meta.preamble ? `<div class="d-goal"><b>تمهيد:</b> ${esc(meta.preamble)}</div>` : '') +
+
+    tallyBlock(s) +
+
+    `<h3 class="d-h">أولًا: سجلّ المحاضر المرجعية</h3>` +
+    `<p class="r-note">كل قرارٍ في هذا التقرير مردودٌ إلى محضرٍ رسميٍّ مرقَّم أدناه — فلا بند بلا سند.</p>` +
+    sourcesTable(report.sources) +
+
+    `<h3 class="d-h">ثانيًا: القرارات المعتمدة موزَّعةً على الإدارات</h3>` +
+    (report.byDept.length
+      ? decisionsByDept(report.byDept)
+      : '<p class="d-muted">لم تُعتمد قرارات بعد.</p>') +
+
+    `<h3 class="d-h">ثالثًا: خطة التنفيذ — المسؤوليات والمواعيد</h3>` +
+    `<p class="r-note">مرتَّبة بموعد الاستحقاق؛ وما لا موعد له في آخر الجدول ويحتاج تحديدًا.</p>` +
+    planTable(report.commitments) +
+
+    `<h3 class="d-h">رابعًا: بنود مرفوعة إلى الإدارة العامة للبتّ فيها</h3>` +
+    itemList(report.escalations, 'لا بنود مرفوعة — حُسمت جميعها في اجتماعاتها.') +
+
+    `<h3 class="d-h">خامسًا: بنود مؤجَّلة</h3>` +
+    itemList(report.deferrals, 'لا بنود مؤجَّلة.') +
+
+    (meta.outcome ? `<div class="d-outcome">${esc(meta.outcome)}</div>` : '') +
+
+    `<div class="r-approve"><h4>اعتماد الإدارة العامة</h4>` +
+    `<div class="r-approve-grid">` +
+    `<div><span>القرار</span><div class="r-line"></div></div>` +
+    `<div><span>الاسم والصفة</span><div class="r-line"></div></div>` +
+    `<div><span>التاريخ</span><div class="r-line"></div></div>` +
+    `<div><span>التوقيع والختم</span><div class="r-line tall"></div></div>` +
+    `</div></div>` +
+
+    sigBlock(opts.signatories || [], opts.assetBase || '') +
+    `<div class="d-foot">${esc(org)} — ${esc(opts.number || 'مسودّة')} · وُلّد من نظام Brandzo Hub بتجميع محاضر الاجتماعات التحضيرية</div>` +
+    `</div>`
+  );
+}
+
 /* ═══════════════ بطاقات القائمة ═══════════════ */
 
 /** بطاقة اجتماع في اللوحة الرئيسية. */

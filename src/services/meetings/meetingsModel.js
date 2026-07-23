@@ -189,6 +189,179 @@ export function allAgreements(meetings) {
   );
 }
 
+/* ═══════════════ التقرير المجمّع — «النظام الإداري التعاوني الموحّد» ═══════════════
+ *
+ * مخرج الاجتماعات السبعة كما نصّ عليه خطاب المالك حرفيًّا:
+ * «يُفضي تنفيذ هذه الاجتماعات إلى إعداد نظام إداري تعاوني متكامل ومعتمد …
+ *  على أن تُعدَّ النسخة النهائية وتُرفع إلى الإدارة العامة لاعتمادها».
+ *
+ * فهذا التقرير ليس ملخّصًا بل **الوثيقة النهائية**: يجمع ما اتُّفق عليه في
+ * الغرف السبع في نظام واحد، ويُرقّم رسميًّا، ويُرفع للاعتماد. ولذلك لا
+ * يُصدَر إلا بعد أن تصير كل قراراته موثّقة بمحاضر رسمية مرقّمة — قرارٌ
+ * بلا محضر لا يُلزم أحدًا.
+ */
+
+/** يُرتّب بالموعد تصاعديًّا، وما لا موعد له في الآخر (لا يتصدّر الفارغ). */
+function byDue(a, b) {
+  if (!a.due && !b.due) return 0;
+  if (!a.due) return 1;
+  if (!b.due) return -1;
+  return String(a.due).localeCompare(String(b.due));
+}
+
+/**
+ * الالتزامات التنفيذية: كل ما اتُّفق عليه، مرتّبًا بموعد التنفيذ.
+ * تُبنى فوق `allAgreements` فلا يتكرّر منطق الاستخراج.
+ */
+export function commitments(meetings) {
+  return allAgreements(meetings)
+    .map((a) => ({ ...a, hasOwner: Boolean(a.ownerUs || a.ownerThem), hasDue: Boolean(a.due) }))
+    .sort(byDue);
+}
+
+/** بنود تحتاج قرار الإدارة العامة — تُرفع في قسم مستقلّ لا تضيع في الجدول. */
+export function escalations(meetings) {
+  return (meetings || []).flatMap((m) =>
+    itemsByState(m, 'escalate').map((i) => ({
+      meetingId: m.id,
+      dept: m.dept,
+      number: m.number,
+      itemId: i.id,
+      title: i.title,
+      discussion: i.discussion || '',
+      ask: i.ask || '',
+    }))
+  );
+}
+
+/** بنود أُجّلت — تُذكر صراحةً كي لا تُنسى بحجّة أنها «ليست خلافًا». */
+export function deferrals(meetings) {
+  return (meetings || []).flatMap((m) =>
+    itemsByState(m, 'deferred').map((i) => ({
+      meetingId: m.id,
+      dept: m.dept,
+      itemId: i.id,
+      title: i.title,
+      discussion: i.discussion || '',
+    }))
+  );
+}
+
+/**
+ * سجلّ المصادر: لكل اجتماع رقم محضره وتاريخه وحصيلته.
+ * هو ما يجعل التقرير **قابلًا للتتبّع** — كل بند فيه يُردّ إلى محضر مرقّم.
+ */
+export function sourceRegister(meetings) {
+  return (meetings || []).map((m) => {
+    const p = meetingProgress(m);
+    return {
+      meetingId: m.id,
+      no: m.no,
+      dept: m.dept,
+      icon: m.icon,
+      number: m.number || null,
+      date: m.date || '',
+      state: m.state,
+      total: p.total,
+      agreed: p.agreed,
+      deferred: p.deferred,
+      escalate: p.escalate,
+      pending: p.pending,
+    };
+  });
+}
+
+/**
+ * حكم إصدار التقرير المجمّع — `{ ok, problems[], warnings[] }`.
+ *
+ * **مانع** (لا يُصدَر معه): اجتماع لم يصدر محضره · بند لم يُحسم ·
+ * قرارٌ متفق عليه بلا نصّ · لا قرار متفق عليه إطلاقًا.
+ * **تنبيه** (يُصدَر ويُذكر): قرار بلا مسؤول أو بلا موعد — نقصٌ في خطة
+ * التنفيذ لا في مشروعية القرار، فلا يُعطّل رفع الوثيقة.
+ */
+export function systemReportVerdict(meetings) {
+  const all = meetings || [];
+  const problems = [];
+  const warnings = [];
+
+  if (!all.length) return { ok: false, problems: ['لا اجتماعات'], warnings };
+
+  const notIssued = all.filter((m) => !m.number);
+  if (notIssued.length) {
+    problems.push(
+      `${notIssued.length} اجتماعًا لم يصدر محضره الرسمي: ${notIssued.map((m) => m.dept).join(' · ')}`
+    );
+  }
+
+  const unsettled = all.flatMap((m) =>
+    (m.items || []).filter((i) => !SETTLED.includes(i.state)).map((i) => `${m.dept}: ${i.title}`)
+  );
+  if (unsettled.length) {
+    problems.push(
+      `${unsettled.length} بندًا لم يُحسم بعد: ${unsettled.slice(0, 3).join(' · ')}${unsettled.length > 3 ? ' …' : ''}`
+    );
+  }
+
+  const agreed = allAgreements(all);
+  if (!agreed.length) problems.push('لا يوجد بند واحد متفق عليه — لا مادّة للتقرير');
+
+  const noText = agreed.filter((a) => !String(a.decision || '').trim());
+  if (noText.length) problems.push(`${noText.length} قرارًا بلا نصّ مكتوب`);
+
+  const noOwner = agreed.filter((a) => !a.ownerUs && !a.ownerThem);
+  if (noOwner.length) warnings.push(`${noOwner.length} قرارًا بلا مسؤول تنفيذ محدَّد`);
+
+  const noDue = agreed.filter((a) => !a.due);
+  if (noDue.length) warnings.push(`${noDue.length} قرارًا بلا موعد تنفيذ`);
+
+  const unsigned = all.filter((m) => m.number && m.state !== 'signed');
+  if (unsigned.length) warnings.push(`${unsigned.length} محضرًا صادرًا لم يُعتمد بالتوقيع بعد`);
+
+  return { ok: problems.length === 0, problems, warnings };
+}
+
+/**
+ * التقرير المجمّع بنيةَ بياناتٍ واحدة — يستهلكها العرض والاختبار معًا.
+ * كل حقولها مشتقّة، فلا حالة مخزَّنة تنحرف عن الاجتماعات.
+ */
+export function consolidate(meetings) {
+  const all = meetings || [];
+  const summary = overallSummary(all);
+  const rows = commitments(all);
+  return {
+    summary: {
+      ...summary,
+      deferred: all.flatMap((m) => itemsByState(m, 'deferred')).length,
+      withOwner: rows.filter((r) => r.hasOwner).length,
+      withDue: rows.filter((r) => r.hasDue).length,
+    },
+    sources: sourceRegister(all),
+    /** القرارات مجمّعة تحت إدارتها — عمود التقرير الرئيسي. */
+    byDept: all
+      .map((m) => ({
+        meetingId: m.id,
+        no: m.no,
+        dept: m.dept,
+        icon: m.icon,
+        number: m.number || null,
+        date: m.date || '',
+        decisions: itemsByState(m, 'agreed').map((i) => ({
+          itemId: i.id,
+          title: i.title,
+          decision: i.decision || '',
+          ownerUs: i.ownerUs || '',
+          ownerThem: i.ownerThem || '',
+          due: i.due || '',
+        })),
+      }))
+      .filter((d) => d.decisions.length > 0),
+    commitments: rows,
+    escalations: escalations(all),
+    deferrals: deferrals(all),
+    verdict: systemReportVerdict(all),
+  };
+}
+
 /** الصفوف التي تُحفظ سحابيًّا من بند (نتفادى تخزين البذرة مرّتين). */
 export function itemPatch(item) {
   return {
