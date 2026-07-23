@@ -76,17 +76,38 @@ export function slidesHtml(meeting) {
 
 /* ═══════════════ 2) المحضر الرسمي ═══════════════ */
 
-function sigBlock(signatories) {
+/*
+ * التوقيعان المعتمدان (قرار المالك 23.07.2026): حين يطابق اسم الموقّع أحد
+ * المديرَين تُدرَج صورة توقيعه الرسمية فوق سطر التوقيع تلقائيًّا.
+ * الملفات في public/identity/signatures — والمطابقة باسم العائلة تتسامح مع
+ * كتابة الاسم كاملًا أو مختصرًا.
+ */
+const OFFICIAL_SIGNATURES = [
+  { match: 'البرشي', file: 'identity/signatures/signature-2.png' },
+  { match: 'الباش', file: 'identity/signatures/signature-1.png' },
+];
+
+function officialSigFile(name) {
+  const hit = OFFICIAL_SIGNATURES.find((o) => String(name || '').includes(o.match));
+  return hit ? hit.file : '';
+}
+
+function sigBlock(signatories, assetBase = '') {
   const list = (signatories || []).filter((s) => String(s.name || '').trim());
   if (!list.length) return '';
   return (
     `<div class="d-sigs">` +
     list
-      .map(
-        (s) =>
-          `<div class="d-sig"><div class="line"></div><b>${esc(s.name)}</b>` +
+      .map((s) => {
+        const file = officialSigFile(s.name);
+        const img = file
+          ? `<img class="sig-img" src="${esc(assetBase + file)}" alt="توقيع ${esc(s.name)}">`
+          : '';
+        return (
+          `<div class="d-sig">${img}<div class="line"></div><b>${esc(s.name)}</b>` +
           `<span>${esc(s.role || '')}</span></div>`
-      )
+        );
+      })
       .join('') +
     `</div>`
   );
@@ -160,7 +181,7 @@ export function minutesHtml(meeting, opts = {}) {
 
     (meta.outcome ? `<div class="d-outcome">${esc(meta.outcome)}</div>` : '') +
 
-    sigBlock(meeting.signatories) +
+    sigBlock(meeting.signatories, opts.assetBase || '') +
     `<div class="d-foot">وُلّد من نظام Brandzo Hub — ${esc(meeting.number || '')} · لا يُعتد بمحضر غير مُرقَّم</div>` +
     `</div>`
   );
@@ -205,7 +226,7 @@ export function invitationHtml(meeting, opts = {}) {
     (meta.outcome ? `<p class="l-body"><b>المخرج النهائي للخطة:</b> ${esc(meta.outcome)}</p>` : '') +
     (meta.closing ? `<p class="l-close">${esc(meta.closing)}</p>` : '') +
 
-    sigBlock(sigs) +
+    sigBlock(sigs, opts.assetBase || '') +
     `<div class="d-foot">${esc(org)} — ${esc(meeting.letterNumber || '')}</div>` +
     `</div>`
   );

@@ -13,6 +13,32 @@ const base = import.meta.env.BASE_URL.endsWith('/')
  * (إطار تقرير الجودة أُزيل من هنا لأنه متاح في «مركز التقارير» وكملف HTML.)
  */
 
+// ─── الأنظمة الرئيسية الثمانية (طلب المالك 23.07.2026) ──────────────────────
+// تظهر في صدارة اللوحة عند الدخول. المحصور بأدوار يحمل roles فيُخفيه RoleNav
+// تلقائيًّا لغير أصحابه — نفس آلية القائمة الجانبية (li[data-item-roles]).
+const featured = [
+  { id: 'ft-recruitment', path: '/dashboard/recruitment', icon: '🧑‍💼',
+    title: 'التوظيف الذكي', desc: 'كتالوج الوظائف وخط أنابيب المرشحين والتدقيق',
+    roles: 'admin,warehouse_manager' },
+  { id: 'ft-documents', path: '/dashboard/documents', icon: '📑',
+    title: 'المستندات', desc: 'صندوق المستندات الرسمية والدورة المحكومة — GRN وأخواتها' },
+  { id: 'ft-products', path: '/dashboard/products', icon: '📦',
+    title: 'إدارة الأصناف', desc: 'ماستر الأصناف: استيراد الشيتات والباركود وأرصدة FEFO' },
+  { id: 'ft-operations', path: '/dashboard/operations', icon: '📡',
+    title: 'متابعة العمليات', desc: 'مراقبة حيّة للعمليات المخزنية وسجلّ المسح والإنتاجية',
+    roles: 'admin,warehouse_manager' },
+  { id: 'ft-supply', path: '/dashboard/supply-chain', icon: '📊',
+    title: 'لوحة سلاسل الإمداد التنفيذية', desc: 'مؤشرات الأسطول والصيانة والعُهد — وبوابة صفحات سلاسل الإمداد والحركة',
+    roles: 'admin,warehouse_manager' },
+  { id: 'ft-meetings', path: '/dashboard/meetings', icon: '🤝',
+    title: 'الاجتماعات التحضيرية', desc: 'الاجتماعات السبعة مع إدارات الشركة: عرض ومحضر حيّ وخطاب',
+    roles: 'admin,warehouse_manager' },
+  { id: 'ft-tasks', path: '/dashboard/tasks', icon: '✅',
+    title: 'المهام', desc: 'إدارة المهام اليومية بقوائم تحقق وشارات التأخر والطباعة' },
+  { id: 'ft-workflows', path: '/dashboard/workflows', icon: '🏢',
+    title: 'الهيكل التنظيمي للمستودعات', desc: 'الهيكل التنظيمي ومسارات الدورة المستندية' },
+];
+
 // شريط الأنظمة الأساسية (يستبدل البانر الأحمر).
 const systems = [
   {
@@ -133,6 +159,31 @@ const soon = [
         وضع التخصيص مُفعّل — انقر أي بطاقة لإخفائها أو إظهارها. تُحفظ اختياراتك في هذا المتصفّح.
       </p>
     </div>
+
+    {/* ─── الأنظمة الرئيسية — صدارة اللوحة (البطاقات الثماني) ──────────────── */}
+    <section data-section data-group="featured" class="mb-10">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-2xl">🚀</span>
+        <h2 class="text-lg sm:text-xl font-bold text-white">الأنظمة الرئيسية</h2>
+        <div class="flex-1 h-px bg-gradient-to-l from-brand-gold/50 to-transparent" />
+      </div>
+      <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 list-none p-0 m-0">
+        {featured.map((c) => (
+          <li class="dash-card relative" data-card-id={c.id} data-item-roles={c.roles || null}>
+            <span class="card-badge"></span>
+            <a href={`${base}${c.path}`}
+              class="group block h-full rounded-2xl p-5 bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-brand-gold/25 hover:border-brand-gold/60 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(218,170,60,0.15)] transition-all">
+              <div class="text-4xl mb-3">{c.icon}</div>
+              <h3 class="font-extrabold text-white mb-1.5 leading-snug">{c.title}</h3>
+              <p class="text-xs text-gray-300 leading-relaxed">{c.desc}</p>
+              <span class="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-brand-gold/80 group-hover:text-brand-gold transition-colors">
+                دخول ←
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
 
     {/* ─── شريط الأنظمة الأساسية (بديل البانر الأحمر) ─────────────────────── */}
     <div data-section class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">

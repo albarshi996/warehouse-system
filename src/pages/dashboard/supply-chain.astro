@@ -12,6 +12,18 @@
  * الوصول: المديران (رابط القائمة مقيّد + حارس ذاتي في الصفحة).
  */
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+
+// أزرار الدخول لصفحات مجموعة «سلاسل الإمداد والحركة» من داخل اللوحة التنفيذية.
+const scLinks = [
+  { href: `${base}/dashboard/fleet-operations`, icon: '🚚', label: 'عمليات الأسطول' },
+  { href: `${base}/dashboard/maintenance-center`, icon: '🛠️', label: 'مركز الصيانة' },
+  { href: `${base}/dashboard/custody`, icon: '🤝', label: 'العُهد العينية' },
+  { href: `${base}/dashboard/vehicles-inventory`, icon: '🚗', label: 'جرد المركبات' },
+];
 ---
 
 <DashboardLayout title="Brandzo | لوحة سلاسل الإمداد">
@@ -54,6 +66,11 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   .fchip { flex: 1; min-width: 120px; text-align: center; border-radius: 14px; padding: 14px 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); }
   .fchip .n { font-size: 1.7rem; font-weight: 900; font-family: 'Cairo', sans-serif; }
   .fchip .l { font-size: 0.74rem; color: rgba(255,255,255,0.55); margin-top: 3px; font-weight: 700; }
+  .sc-nav { display: flex; gap: 10px; flex-wrap: wrap; padding: 4px 28px 0; }
+  .sc-nav-btn { display: inline-flex; align-items: center; gap: 8px; background: rgba(240,165,0,0.1); border: 1px solid rgba(240,165,0,0.35); color: var(--gold2-sc); border-radius: 14px; padding: 9px 18px; font-size: 0.85rem; font-weight: 800; text-decoration: none; transition: all 0.2s ease; }
+  .sc-nav-btn:hover { background: rgba(240,165,0,0.22); border-color: var(--gold-sc); transform: translateY(-2px); }
+  .sc-nav-btn .ic { font-size: 1.1rem; }
+  .sc-nav-btn .arr { opacity: 0.55; font-size: 0.8rem; }
   .denied { max-width: 520px; margin: 80px auto; text-align: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 46px 30px; }
   .denied h2 { font-size: 1.3rem; font-weight: 900; margin-bottom: 10px; }
   .denied p { color: rgba(255,255,255,0.55); font-size: 0.9rem; }
@@ -72,6 +89,17 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         <div class="sub">أسطول · صيانة · عُهد · صلاحيات — لحظيًّا من قاعدة البيانات الحية (المرجع ٤-٣)</div>
       </div>
       <span class="sc-live"><span class="dot"></span> بث مباشر</span>
+    </div>
+
+    <!-- أزرار الدخول لصفحات سلاسل الإمداد والحركة -->
+    <div class="sc-nav">
+      {scLinks.map((l) => (
+        <a class="sc-nav-btn" href={l.href}>
+          <span class="ic">{l.icon}</span>
+          <span>{l.label}</span>
+          <span class="arr">←</span>
+        </a>
+      ))}
     </div>
 
     <!-- KPIs -->

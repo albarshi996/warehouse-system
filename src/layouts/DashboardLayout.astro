@@ -135,6 +135,14 @@ const currentPath = Astro.url.pathname;
       rel="stylesheet"
     />
     <PwaHead />
+    <script is:inline>
+      /* حالة تثبيت الشريط الجانبي تُقرأ قبل الرسم كي لا يومض العرض عند التحميل */
+      try {
+        if (localStorage.getItem('bz-sb-pinned-v1') === '1') {
+          document.documentElement.classList.add('bz-sb-pinned');
+        }
+      } catch { /* التخزين غير متاح */ }
+    </script>
     <style>
       body {
         font-family: 'Cairo', sans-serif;
@@ -206,6 +214,57 @@ const currentPath = Astro.url.pathname;
 
       .neon-glow-red {
         box-shadow: 0 0 10px rgba(196, 30, 58, 0.5), 0 0 20px rgba(196, 30, 58, 0.3);
+      }
+
+      /* ─── الشريط الجانبي الذكي (سطح المكتب md+) ─────────────────────────── */
+      /*
+        الوضع الافتراضي: شريط مصغّر (أيقونات فقط) يوفّر مساحة الشاشة.
+        يتمدّد في حالتين:
+          1. Hover / focus-within — تمدّد مؤقّت يطفو فوق المحتوى.
+          2. html.bz-sb-pinned — تثبيت بزر ☰ (يدفع المحتوى ويُحفظ في localStorage).
+        عناصر .sb-x تختفي في الوضع المصغّر (نصوص · بحث · تذييل).
+      */
+      @media (min-width: 768px) {
+        #brandzo-sidebar {
+          width: 4.75rem;
+          overflow-x: hidden;
+          transition: width 0.25s ease-out, box-shadow 0.25s ease-out;
+        }
+        html.bz-sb-pinned #brandzo-sidebar,
+        #brandzo-sidebar:hover,
+        #brandzo-sidebar:focus-within {
+          width: 16rem;
+        }
+        /* التمدّد المؤقّت (غير المثبّت) يطفو فوق المحتوى بظلّ أوضح */
+        html:not(.bz-sb-pinned) #brandzo-sidebar:hover,
+        html:not(.bz-sb-pinned) #brandzo-sidebar:focus-within {
+          box-shadow: -14px 0 34px rgba(0, 0, 0, 0.45);
+        }
+
+        /* المحتوى الرئيسي يتحرّك مع حالة التثبيت فقط */
+        #bz-main { margin-right: 4.75rem; transition: margin-right 0.25s ease-out; }
+        html.bz-sb-pinned #bz-main { margin-right: 16rem; }
+
+        /* منع التفاف النص أثناء حركة العرض */
+        #brandzo-sidebar nav ul,
+        #brandzo-sidebar .sb-quick { white-space: nowrap; }
+
+        /* الوضع المصغّر: إخفاء النصوص وتوسيط الأيقونات */
+        html:not(.bz-sb-pinned) #brandzo-sidebar:not(:hover):not(:focus-within) .sb-x {
+          display: none;
+        }
+        html:not(.bz-sb-pinned) #brandzo-sidebar:not(:hover):not(:focus-within) nav a,
+        html:not(.bz-sb-pinned) #brandzo-sidebar:not(:hover):not(:focus-within) nav button,
+        html:not(.bz-sb-pinned) #brandzo-sidebar:not(:hover):not(:focus-within) .sb-quick a,
+        html:not(.bz-sb-pinned) #brandzo-sidebar:not(:hover):not(:focus-within) .sb-group-head {
+          justify-content: center;
+          padding-left: 0.5rem;
+          padding-right: 0.5rem;
+        }
+        html:not(.bz-sb-pinned) #brandzo-sidebar:not(:hover):not(:focus-within) #bz-sb-head {
+          padding: 1rem 0.5rem;
+          justify-content: center;
+        }
       }
     </style>
   </head>
@@ -283,9 +342,9 @@ const currentPath = Astro.url.pathname;
       style="transform: translateX(100%);"
       aria-hidden="true"
     >
-      <!-- رأس السايدبار: شعار + زر الإغلاق في الموبايل -->
-      <div class="p-6 border-b border-gray-700 flex items-center justify-between gap-3 sticky top-0 bg-brand-navy z-[80]">
-        <div class="flex items-center gap-3">
+      <!-- رأس السايدبار: شعار + زر ☰ (سطح المكتب) + زر الإغلاق (الموبايل) -->
+      <div id="bz-sb-head" class="p-6 border-b border-gray-700 flex items-center justify-between gap-3 sticky top-0 bg-brand-navy z-[80]">
+        <div class="flex items-center gap-3 sb-x">
           <div
             class="w-10 h-10 bg-brand-red rounded-lg flex items-center justify-center font-bold text-xl shadow-lg"
           >
@@ -299,6 +358,17 @@ const currentPath = Astro.url.pathname;
             </div>
           </div>
         </div>
+        <!-- زر التحكم ☰ (سطح المكتب): يثبّت التمدد أو يعيده مصغّرًا -->
+        <button
+          id="brandzo-desktop-toggle"
+          type="button"
+          aria-label="تثبيت القائمة أو تصغيرها"
+          aria-pressed="false"
+          title="تثبيت / تصغير القائمة"
+          class="hidden md:inline-flex p-2 rounded-md hover:bg-gray-800 transition-colors shrink-0"
+        >
+          <Icon name="menu" size={22} />
+        </button>
         <!-- زر الإغلاق: يظهر فقط في الموبايل -->
         <button
           id="brandzo-menu-close"
@@ -311,33 +381,45 @@ const currentPath = Astro.url.pathname;
       </div>
 
       <!-- روابط التنقل السريع -->
-      <div class="px-4 mt-4 space-y-2">
+      <div class="px-4 mt-4 space-y-2 sb-quick">
         <a
           href={`${base}/dashboard`}
+          title="لوحة التحكم"
           class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg bg-brand-red hover:bg-brand-red-dark text-white font-bold text-sm shadow-md transition-colors"
         >
           <Icon name="grid" size={18} />
-          <span>لوحة التحكم</span>
+          <span class="sb-x">لوحة التحكم</span>
         </a>
         <a
           href={`${base}/`}
+          title="الصفحة الرئيسية"
           class="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg border border-gray-600 hover:border-brand-red hover:text-brand-red text-gray-100 font-medium text-sm transition-colors"
         >
           <Icon name="home" size={16} />
-          <span>الصفحة الرئيسية</span>
+          <span class="sb-x">الصفحة الرئيسية</span>
         </a>
       </div>
 
       <!-- قائمة التنقل الرئيسية -->
       <nav class="mt-4 px-4 flex-1 overflow-y-auto">
         <!-- Search Bar -->
-        <div class="mb-4 sticky top-0 bg-brand-navy z-10 pb-2">
-          <input
-            type="text"
-            id="sidebar-search"
-            placeholder="🔍 ابحث في لوحة التحكم..."
-            class="bg-white/10 border border-white/20 rounded-xl text-white text-sm px-4 py-2 w-full focus:outline-none focus:border-brand-gold/50"
-          />
+        <div class="mb-4 sticky top-0 bg-brand-navy z-10 pb-2 sb-x">
+          <div class="relative">
+            <input
+              type="text"
+              id="sidebar-search"
+              placeholder="🔍 ابحث في لوحة التحكم..."
+              autocomplete="off"
+              class="bg-white/10 border border-white/20 rounded-xl text-white text-sm ps-4 pe-9 py-2 w-full focus:outline-none focus:border-brand-gold/50"
+            />
+            <button
+              id="sidebar-search-clear"
+              type="button"
+              aria-label="مسح البحث"
+              class="hidden absolute end-2 top-1/2 -translate-y-1/2 w-6 h-6 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-gray-300 text-xs transition-colors"
+            >✕</button>
+          </div>
+          <div id="sidebar-search-count" class="hidden text-[10px] text-brand-gold/80 font-bold mt-1.5 px-1"></div>
         </div>
 
         <ul id="nav-list" class="space-y-1">
@@ -347,6 +429,7 @@ const currentPath = Astro.url.pathname;
           <li data-label={pinnedItem.label} data-pinned-home>
             <a
               href={pinnedItem.href}
+              title={pinnedItem.label}
               class={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 currentPath === pinnedItem.href
                   ? 'bg-brand-red text-white font-bold shadow-md'
@@ -355,22 +438,23 @@ const currentPath = Astro.url.pathname;
               style={currentPath === pinnedItem.href ? 'border-right: 3px solid #DAAA3C;' : ''}
             >
               <Icon name={pinnedItem.icon} class="text-brand-red" />
-              <span class="font-medium">{pinnedItem.label}</span>
+              <span class="font-medium sb-x">{pinnedItem.label}</span>
             </a>
           </li>
 
           {/* المجموعات المنطقية (الدفعة 4) */}
           {navGroups.map((grp) => (
             <li class="nav-group pt-2" data-nav-group data-group-key={grp.key}>
-              <div class="px-3 pt-3 pb-1 flex items-center gap-2 text-[11px] font-bold text-brand-gold/70 tracking-wide border-t border-white/5">
+              <div class="sb-group-head px-3 pt-3 pb-1 flex items-center gap-2 text-[11px] font-bold text-brand-gold/70 tracking-wide border-t border-white/5" title={grp.group}>
                 <span>{grp.emoji}</span>
-                <span>{grp.group}</span>
+                <span class="sb-x">{grp.group}</span>
               </div>
               <ul class="space-y-1 mt-1">
                 {grp.items.map((item) => (
                   <li data-label={item.label} data-item-roles={item.roles ? item.roles.join(',') : null}>
                     <a
                       href={item.href}
+                      title={item.label}
                       target={item.external ? '_blank' : null}
                       rel={item.external ? 'noopener noreferrer' : null}
                       class={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
@@ -383,7 +467,7 @@ const currentPath = Astro.url.pathname;
                       style={currentPath === item.href ? 'border-right: 3px solid #DAAA3C;' : ''}
                     >
                       <Icon name={item.icon} class={item.pinned ? 'text-brand-gold' : 'text-brand-red'} />
-                      <span class="font-medium">{item.label}</span>
+                      <span class="font-medium sb-x">{item.label}</span>
                     </a>
                   </li>
                 ))}
@@ -391,11 +475,12 @@ const currentPath = Astro.url.pathname;
                   <li data-label="الدليل التشغيلي">
                     <button
                       id="open-guide"
+                      title="الدليل التشغيلي"
                       class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors text-right"
                       type="button"
                     >
                       <Icon name="bookOpen" class="text-brand-gold" />
-                      <span class="font-medium">الدليل التشغيلي</span>
+                      <span class="font-medium sb-x">الدليل التشغيلي</span>
                     </button>
                   </li>
                 )}
@@ -407,11 +492,13 @@ const currentPath = Astro.url.pathname;
 
       <!-- تذييل السايدبار: مثبت في الأسفل -->
       <div class="mt-auto border-t border-gray-700 px-4 py-3 text-center">
-        <UserMenu client:load />
-        <p class="text-[11px] leading-snug text-gray-100 font-medium" dir="rtl">
-          برمجة وتطوير: محمد إبراهيم البرشي
-        </p>
-        <p class="text-[10px] text-gray-200 mt-1">Brandzo Hub 2026 &copy;</p>
+        <div class="sb-x">
+          <UserMenu client:load />
+          <p class="text-[11px] leading-snug text-gray-100 font-medium" dir="rtl">
+            برمجة وتطوير: محمد إبراهيم البرشي
+          </p>
+          <p class="text-[10px] text-gray-200 mt-1">Brandzo Hub 2026 &copy;</p>
+        </div>
       </div>
     </aside>
 
@@ -436,7 +523,7 @@ const currentPath = Astro.url.pathname;
       - سطح مكتب: md:pt-8 يلغي الـ padding الزائد (لا يوجد header ثابت).
       - md:mr-64: هامش يمين بعرض السايدبار لمنع التداخل.
     -->
-    <main class="md:mr-64 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 pt-16 md:pt-8 relative z-10">
+    <main id="bz-main" class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 pt-16 md:pt-8 relative z-10">
       <div class="max-w-7xl mx-auto">
         <slot />
       </div>
@@ -567,6 +654,20 @@ const currentPath = Astro.url.pathname;
           closeBtn.addEventListener('click', closeSidebar);
         }
 
+        /* ── زر ☰ (سطح المكتب): تثبيت التمدد أو العودة للوضع المصغّر ── */
+        var deskToggle = document.getElementById('brandzo-desktop-toggle');
+        if (deskToggle) {
+          deskToggle.setAttribute(
+            'aria-pressed',
+            document.documentElement.classList.contains('bz-sb-pinned') ? 'true' : 'false'
+          );
+          deskToggle.addEventListener('click', function () {
+            var pinned = document.documentElement.classList.toggle('bz-sb-pinned');
+            deskToggle.setAttribute('aria-pressed', pinned ? 'true' : 'false');
+            try { localStorage.setItem('bz-sb-pinned-v1', pinned ? '1' : '0'); } catch { /* التخزين غير متاح */ }
+          });
+        }
+
         /* إغلاق بالنقر على الـ backdrop */
         if (backdrop) {
           backdrop.addEventListener('click', closeSidebar);
@@ -599,42 +700,104 @@ const currentPath = Astro.url.pathname;
           setTimeout(syncState, 400);
         });
 
-        /* ─── Sidebar Search Logic ─── */
+        /* ─── Sidebar Search Logic ───
+           تحسينات تجربة البحث:
+           - تطبيع عربي (أ/إ/آ→ا · ة→ه · ى→ي · حذف التشكيل) فالبحث يصيب
+             «الاصناف» و«الأصناف» سواء.
+           - البحث يشمل اسم المجموعة أيضًا (كتابة «سلاسل» تُظهر عناصر مجموعتها).
+           - إبراز الجزء المطابق داخل الاسم + عدّاد نتائج + زر مسح ✕.
+        */
         var searchInput = document.getElementById('sidebar-search');
+        var searchClear = document.getElementById('sidebar-search-clear');
+        var searchCount = document.getElementById('sidebar-search-count');
         var navList = document.getElementById('nav-list');
         var noResults = document.getElementById('no-results');
 
         if (searchInput && navList && noResults) {
-          var searchableItems = navList.querySelectorAll('li[data-label]');
+          var searchableItems = Array.prototype.slice.call(navList.querySelectorAll('li[data-label]'));
           var navGroupEls = navList.querySelectorAll('[data-nav-group]');
 
-          searchInput.addEventListener('input', function() {
-            var query = this.value.trim().toLowerCase();
+          /* تطبيع محرف واحد — يُستخدم لبناء خريطة النص المطبَّع → الأصلي */
+          function normChar(ch) {
+            if (/[ً-ْـ]/.test(ch)) return '';
+            if ('أإآٱ'.indexOf(ch) >= 0) return 'ا';
+            if (ch === 'ة') return 'ه';
+            if (ch === 'ى' || ch === 'ئ') return 'ي';
+            if (ch === 'ؤ') return 'و';
+            return ch.toLowerCase();
+          }
+          function bzNorm(s) {
+            var out = '';
+            Array.prototype.forEach.call(String(s || ''), function (ch) { out += normChar(ch); });
+            return out;
+          }
+
+          /* اسم مجموعة كل عنصر (للبحث بها) + مرجع خانة النص (للإبراز) */
+          searchableItems.forEach(function (item) {
+            var grp = item.closest('[data-nav-group]');
+            var head = grp ? grp.querySelector('.sb-group-head') : null;
+            item._bzGroupNorm = head ? bzNorm(head.textContent) : '';
+            item._bzLabel = item.getAttribute('data-label');
+            item._bzLabelNorm = bzNorm(item._bzLabel);
+            item._bzSpan = item.querySelector('span.font-medium');
+          });
+
+          /* إبراز الجزء المطابق: نبني خريطة مواضع النص المطبَّع إلى الأصلي */
+          function highlightLabel(item, queryNorm) {
+            var span = item._bzSpan;
+            if (!span) return;
+            var label = item._bzLabel;
+            if (!queryNorm) { span.textContent = label; return; }
+            var chars = Array.prototype.slice.call(label);
+            var norm = '', map = [];
+            chars.forEach(function (ch, i) {
+              var n = normChar(ch);
+              for (var k = 0; k < n.length; k++) { norm += n[k]; map.push(i); }
+            });
+            var idx = norm.indexOf(queryNorm);
+            if (idx < 0) { span.textContent = label; return; }
+            var from = map[idx];
+            var to = map[idx + queryNorm.length - 1];
+            span.textContent = '';
+            span.appendChild(document.createTextNode(chars.slice(0, from).join('')));
+            var mark = document.createElement('mark');
+            mark.style.cssText = 'background:rgba(218,170,60,.4);color:#fff;border-radius:3px;padding:0 1px;';
+            mark.textContent = chars.slice(from, to + 1).join('');
+            span.appendChild(mark);
+            span.appendChild(document.createTextNode(chars.slice(to + 1).join('')));
+          }
+
+          function runSearch() {
+            var raw = searchInput.value.trim();
+            var query = bzNorm(raw);
             var visibleCount = 0;
 
-            searchableItems.forEach(function(item) {
+            searchableItems.forEach(function (item) {
               /* لا يُظهر البحث أبداً عنصراً مخفيّاً حسب الدور */
               if (item.hasAttribute('data-role-hidden')) {
                 item.style.display = 'none';
                 return;
               }
-              var label = item.getAttribute('data-label').toLowerCase();
-              if (label.includes(query)) {
+              var byLabel = item._bzLabelNorm.indexOf(query) >= 0;
+              var byGroup = query !== '' && item._bzGroupNorm.indexOf(query) >= 0;
+              if (byLabel || byGroup) {
                 item.style.display = '';
                 visibleCount++;
+                highlightLabel(item, byLabel ? query : '');
               } else {
                 item.style.display = 'none';
+                highlightLabel(item, '');
               }
             });
 
             /* إخفاء رأس أي مجموعة لا تحتوي عناصر ظاهرة (أو مخفيّة بالدور) */
-            navGroupEls.forEach(function(grp) {
+            navGroupEls.forEach(function (grp) {
               if (grp.hasAttribute('data-role-hidden')) {
                 grp.style.display = 'none';
                 return;
               }
               var items = grp.querySelectorAll('li[data-label]');
-              var anyVisible = Array.prototype.some.call(items, function(it) {
+              var anyVisible = Array.prototype.some.call(items, function (it) {
                 return it.style.display !== 'none';
               });
               grp.style.display = anyVisible ? '' : 'none';
@@ -644,6 +807,39 @@ const currentPath = Astro.url.pathname;
               noResults.classList.remove('hidden');
             } else {
               noResults.classList.add('hidden');
+            }
+
+            /* عدّاد النتائج + زر المسح */
+            if (searchCount) {
+              if (query !== '') {
+                searchCount.textContent = visibleCount === 0 ? '' : '✨ ' + visibleCount + ' نتيجة';
+                searchCount.classList.toggle('hidden', visibleCount === 0);
+              } else {
+                searchCount.classList.add('hidden');
+              }
+            }
+            if (searchClear) {
+              searchClear.classList.toggle('hidden', raw === '');
+              searchClear.classList.toggle('flex', raw !== '');
+            }
+          }
+
+          searchInput.addEventListener('input', runSearch);
+
+          if (searchClear) {
+            searchClear.addEventListener('click', function () {
+              searchInput.value = '';
+              runSearch();
+              searchInput.focus();
+            });
+          }
+
+          /* Escape داخل حقل البحث: يمسح البحث أولًا قبل أن يُغلق الشريط */
+          searchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && searchInput.value !== '') {
+              e.stopPropagation();
+              searchInput.value = '';
+              runSearch();
             }
           });
         }

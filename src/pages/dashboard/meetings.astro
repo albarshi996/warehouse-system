@@ -177,6 +177,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   .d-sigs { display: grid; grid-template-columns: repeat(auto-fit,minmax(55mm,1fr)); gap: 10mm; margin-top: 12mm; }
   .d-sig { text-align: center; font-size: 9pt; }
   .d-sig .line { border-bottom: .3mm dashed #94a3b8; height: 14mm; margin-bottom: 1.5mm; }
+  /* التوقيع المعتمد PNG يطفو فوق سطر التوقيع دون أن يزيح بقية العناصر */
+  .d-sig { position: relative; }
+  .d-sig .sig-img { position: absolute; top: -2mm; left: 50%; transform: translateX(-50%); height: 17mm; max-width: 90%; object-fit: contain; z-index: 2; }
   .d-sig b { display: block; font-size: 9.5pt; }
   .d-sig span { color: #64748b; font-size: 8pt; }
   .d-foot { margin-top: 6mm; font-size: 7pt; color: #94a3b8; text-align: center; border-top: .2mm solid #e2e8f0; padding-top: 2mm; }
@@ -316,6 +319,10 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
   const WRITER_ROLES = ['admin', 'warehouse_manager'];
   const ORG_TITLE = 'إدارة السلاسل والإمداد والمخازن';
+  /* جذر الأصول العامة — لصور التوقيعات المعتمدة في المحضر والخطاب */
+  const ASSET_BASE = import.meta.env.BASE_URL.endsWith('/')
+    ? import.meta.env.BASE_URL
+    : import.meta.env.BASE_URL + '/';
 
   let meetings = mergeAll(SEED.meetings, {});
   let selectedId = meetings[0].id;
@@ -637,7 +644,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   };
 
   window.printMinutes = () => {
-    $('docPrint').innerHTML = minutesHtml(current(), { meta: SEED.meta, orgTitle: ORG_TITLE });
+    $('docPrint').innerHTML = minutesHtml(current(), { meta: SEED.meta, orgTitle: ORG_TITLE, assetBase: ASSET_BASE });
     window.print();
   };
 
@@ -648,6 +655,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       meta: SEED.meta,
       orgTitle: ORG_TITLE,
       signatories: sigs.length ? sigs : SEED.defaultSignatories.filter((s) => s.side === 'us'),
+      assetBase: ASSET_BASE,
     });
     window.print();
   };
