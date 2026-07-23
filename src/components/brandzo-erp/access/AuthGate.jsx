@@ -1,18 +1,21 @@
 import { useEffect } from 'react';
 import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
-import { isPathAllowed, restrictedAllowedPaths } from '../../../services/auth/pageAccess.js';
+import { isPathAllowed, landingPathFor } from '../../../services/auth/pageAccess.js';
 
 /**
  * حارس الدخول — يُحقن في DashboardLayout لحماية كل صفحات البوابة.
  * لا يرسم شيئًا؛ يتحكّم في طبقة التغطية `#bz-auth-overlay` الموجودة في التخطيط:
  *   - غير مسجّل → تحويل إلى /login.
- *   - دور مقيّد بصفحات معيّنة (pageAccess.js) خارج صفحته المسموحة → تحويل
- *     لأول صفحة مسموحة له (لا يكفي إخفاء الرابط من القائمة الجانبية —
- *     كتابة الرابط مباشرة كانت تتجاوزها قبل هذا الحارس).
+ *   - **أي دور** خارج صفحاته المسموحة → تحويل لصفحة هبوطه. الصلاحية تُشتقّ من
+ *     كتالوج القائمة (`navCatalog.js`) فتُطابق تمامًا ما يراه في القائمة.
  *   - غير ذلك → إخفاء التغطية وإظهار المحتوى.
  *
+ * ⚠️ **قبل تدقيق 23.07.2026** كان هذا الحارس يقيّد دورين فقط، وكل دور آخر
+ * يفتح أي صفحة بكتابة رابطها رغم إخفائها من قائمته. الآن يسري على الجميع.
+ *
  * ملاحظة: التغطية موجودة في HTML منذ أول رسم (قبل ترطيب React) فلا يظهر
- * المحتوى المحمي للحظة قبل التحقّق. الإلزام الحقيقي يبقى في الباك اند.
+ * المحتوى المحمي للحظة قبل التحقّق. الإلزام الحقيقي يبقى في الباك اند
+ * (`firestore.rules`) — هذا يمنع الشاشة، وتلك تمنع البيانات.
  */
 export default function AuthGate() {
   useEffect(() => {
@@ -28,7 +31,7 @@ export default function AuthGate() {
       const profile = await fetchUserProfile(user);
       const path = window.location.pathname;
       if (!isPathAllowed(profile?.role, path, base)) {
-        window.location.replace(`${base}${restrictedAllowedPaths(profile?.role)[0]}`);
+        window.location.replace(`${base}${landingPathFor(profile?.role)}`);
         return;
       }
 

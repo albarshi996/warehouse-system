@@ -5,6 +5,7 @@ import PwaHead from '../components/pwa/PwaHead.astro';
 import AuthGate from '../components/brandzo-erp/access/AuthGate.jsx';
 import UserMenu from '../components/brandzo-erp/access/UserMenu.jsx';
 import RoleNav from '../components/brandzo-erp/access/RoleNav.jsx';
+import { NAV_GROUPS, PINNED_ITEM } from '../services/auth/navCatalog.js';
 
 const { title, showGuide = false } = Astro.props;
 
@@ -12,113 +13,15 @@ const base = import.meta.env.BASE_URL.endsWith('/')
   ? import.meta.env.BASE_URL.slice(0, -1)
   : import.meta.env.BASE_URL;
 
-// عنصر مثبّت أعلى القائمة (خارج المجموعات)
-const pinnedItem = { href: `${base}/dashboard`, label: 'الرئيسية', icon: 'grid' };
-
-// ─── الدفعة 4: القائمة الجانبية مجمّعة في مجموعات منطقية ─────────────────────
-// القاعدة الذهبية: لا حذف — كل الروابط القائمة أُعيد تنظيمها في مجموعات، وأُضيف
-// رابطا "مركز التقارير" و"الأرشيف التأسيسي" اللذان لم يكونا مربوطَين في القائمة.
-// الترتيب: الأكثر استخداماً يومياً في الأعلى ← المرجعي/التأسيسي في الأسفل.
-// `key` يربط كل مجموعة بخريطة الصلاحيات في services/auth/navAccess.js،
-// و`roles` على أي عنصر يحصره بأدوار بعينها (الأدمن يرى كل شيء دائمًا).
-const navGroups = [
-  {
-    key: 'daily',
-    group: 'العمليات اليومية',
-    emoji: '🗓️',
-    items: [
-      { href: `${base}/dashboard/documents`, label: 'المستندات', icon: 'clipboardList' },
-      { href: `${base}/dashboard/forms`, label: 'اختار وظيفتك', icon: 'clipboardList' },
-      { href: `${base}/dashboard/tasks`, label: 'المهام', icon: 'clipboardList' },
-      { href: `${base}/dashboard/products`, label: 'الأصناف', icon: 'package' },
-      { href: `${base}/dashboard/stock-operations`, label: 'عمليات مخزنية', icon: 'package' },
-      { href: `${base}/dashboard/operations`, label: 'متابعة العمليات', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
-    ],
-  },
-  {
-    key: 'warehouses',
-    group: 'المستودعات والجرد',
-    emoji: '📦',
-    items: [
-      { href: `${base}/dashboard/warehouses`, label: 'المستودعات', icon: 'package' },
-      { href: `${base}/dashboard/warehouse-maps`, label: 'الخرائط الفنية', icon: 'warehouse' },
-      { href: `${base}/dashboard/cold-storage-plan`, label: 'مخطط الرحبة - كوزميتك', icon: 'package' },
-      { href: `${base}/dashboard/retail-hub`, label: 'خريطة التجزئة', icon: 'mapPin' },
-      { href: `${base}/dashboard/assets-inventory`, label: 'جرد الأصول', icon: 'clipboardList' },
-    ],
-  },
-  {
-    // مجموعة مستقلة لدور «الحركة» — رابط جرد المركبات انتقل إليها من
-    // «المستودعات والجرد» (نقل لا حذف) كي يرى دور fleet مجموعته وحدها.
-    key: 'fleet',
-    group: 'سلاسل الإمداد والحركة',
-    emoji: '🚚',
-    items: [
-      { href: `${base}/dashboard/vehicles-inventory`, label: 'جرد المركبات', icon: 'package' },
-      { href: `${base}/dashboard/fleet-operations`, label: 'عمليات الأسطول', icon: 'clipboardList' },
-      { href: `${base}/dashboard/maintenance-center`, label: 'مركز الصيانة', icon: 'grid' },
-      { href: `${base}/dashboard/custody`, label: 'العُهد العينية', icon: 'users', roles: ['admin', 'warehouse_manager'] },
-      { href: `${base}/dashboard/supply-chain`, label: 'لوحة سلاسل الإمداد', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
-    ],
-  },
-  {
-    key: 'odoo',
-    group: 'دورات أودو والمحاكاة',
-    emoji: '🔄',
-    items: [
-      { href: `${base}/dashboard/learn-odoo`, label: 'تعلم أودو', icon: 'bookOpen' },
-      { href: `${base}/dashboard/workflows`, label: 'الهيكل والمسارات', icon: 'workflows' },
-      { href: `${base}/dashboard/erp-workflows`, label: 'دورات العمل ERP', icon: 'dollarSign' },
-      { href: `${base}/dashboard/odoo-installation`, label: 'تثبيت أودو', icon: 'package' },
-      { href: `${base}/dashboard/training`, label: 'تدريب Odoo (محاكي)', icon: 'grid' },
-    ],
-  },
-  {
-    key: 'reports',
-    group: 'مركز التقارير',
-    emoji: '📊',
-    items: [
-      { href: `${base}/dashboard/reports`, label: 'مركز التقارير', icon: 'clipboardList', pinned: true },
-      { href: `${base}/تقرير-المقارنة-العالمية.html`, label: 'المقارنة العالمية', icon: 'grid', external: true },
-      { href: `${base}/تقرير-تحوير-مستودعات-155.html`, label: 'تقرير تحوير 155', icon: 'clipboardList', external: true },
-      { href: `${base}/تقرير-الدورة-المستندية-الكامل-2026.html`, label: 'الدورة المستندية والتنظيم', icon: 'clipboardList', external: true },
-      { href: `${base}/المرجع-التشغيلي-الرسمي.html`, label: 'المرجع التشغيلي الرسمي', icon: 'bookOpen', external: true },
-      { href: `${base}/تقرير-هيكل-الوظائف-والادوار.html`, label: 'هيكل الوظائف والأدوار', icon: 'users', external: true },
-      { href: `${base}/تقرير-الانجاز.html`, label: 'تقرير الانجاز', icon: 'clipboardList', external: true },
-      { href: `${base}/تقرير(ERP).html`, label: 'تقرير ERP', icon: 'fileUp', external: true },
-      { href: `${base}/تقرير(التخزين).html`, label: 'تقرير التخزين', icon: 'package', external: true },
-      { href: `${base}/Brandzo_Multi_Brand_Architecture_Odoo_Guide.html`, label: 'تقرير هندسة المقترح (متعدد العلامات)', icon: 'users', external: true },
-    ],
-  },
-  {
-    key: 'archive',
-    group: 'الأرشيف والمرجعية',
-    emoji: '🗄️',
-    items: [
-      { href: `${base}/dashboard/org-structure`, label: 'الهيكل التنظيمي', icon: 'users', roles: ['admin', 'warehouse_manager'] },
-      { href: `${base}/dashboard/meetings`, label: 'الاجتماعات التحضيرية', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
-      { href: `${base}/dashboard/recruitment`, label: 'التوظيف', icon: 'users', roles: ['admin', 'warehouse_manager'] },
-      { href: `${base}/dashboard/users`, label: 'إدارة المستخدمين', icon: 'users', roles: ['admin'] },
-      { href: `${base}/dashboard/access-control`, label: 'الصلاحيات والأدوار', icon: 'users', roles: ['admin'] },
-      { href: `${base}/dashboard/archive`, label: 'الأرشيف التأسيسي', icon: 'package' },
-      { href: `${base}/dashboard/meeting-assistant`, label: 'مساعد الاجتماعات', icon: 'grid' },
-      { href: `${base}/dashboard/gallery`, label: 'معرض التوثيق المرئي', icon: 'image' },
-    ],
-  },
-  {
-    key: 'dept',
-    group: 'طلبات الإدارات',
-    emoji: '🏬',
-    items: [
-      { href: `${base}/dashboard/hiring-requests`, label: 'طلب توظيف', icon: 'clipboardList' },
-      // أداة تقييم سرّية — المدير العام ومستخدم الإدارة فقط:
-      { href: `${base}/dashboard/wh-manager-eval`, label: 'تقييم مدير المستودعات', icon: 'clipboardList', roles: ['admin', 'department_user'] },
-      // روابط تعاونية لمستخدم الإدارة فقط (بياناتها محليّة في متصفّحه — خاصّة به):
-      { href: `${base}/dashboard/tasks`, label: 'المهام', icon: 'clipboardList', roles: ['department_user'] },
-      { href: `${base}/dashboard/meeting-assistant`, label: 'مساعد الاجتماعات', icon: 'grid', roles: ['department_user'] },
-    ],
-  },
-];
+// ─── القائمة الجانبية: تُقرأ من المصدر الواحد ────────────────────────────────
+// بنية القائمة وصلاحياتها انتقلت إلى `services/auth/navCatalog.js` كي يقرأها
+// حارس الدخول أيضًا. كانت هنا مصفوفة مضمّنة لا يستطيع الحارس رؤيتها، فكُتبت
+// قائمة صلاحيات ثانية يدويًّا وانحرفت عنها (تدقيق 23.07). هنا نضيف `base` فقط.
+const pinnedItem = { ...PINNED_ITEM, href: `${base}${PINNED_ITEM.path}` };
+const navGroups = NAV_GROUPS.map((g) => ({
+  ...g,
+  items: g.items.map((it) => ({ ...it, href: `${base}${it.path}` })),
+}));
 
 const currentPath = Astro.url.pathname;
 ---
@@ -261,9 +164,14 @@ const currentPath = Astro.url.pathname;
           padding-left: 0.5rem;
           padding-right: 0.5rem;
         }
+        /*
+          الحشو العلوي والسفلي والأيمن تبقى كحال الوضع الممدّد (1.5rem)،
+          فيظلّ زرّ ☰ في **الموضع نفسه بالضبط أفقيًّا ورأسيًّا** بين الحالتين
+          ولا يهرب من تحت المؤشّر لحظة التمدّد. المتغيّر هو الحشو الأيسر وحده
+          (وهو الجانب الذي يتمدّد الشريط نحوه فلا أثر لتغيّره على الزرّ).
+        */
         html:not(.bz-sb-pinned) #brandzo-sidebar:not(:hover):not(:focus-within) #bz-sb-head {
-          padding: 1rem 0.5rem;
-          justify-content: center;
+          padding: 1.5rem 1.5rem 1.5rem 0.5rem;
         }
       }
     </style>
@@ -342,22 +250,15 @@ const currentPath = Astro.url.pathname;
       style="transform: translateX(100%);"
       aria-hidden="true"
     >
-      <!-- رأس السايدبار: شعار + زر ☰ (سطح المكتب) + زر الإغلاق (الموبايل) -->
-      <div id="bz-sb-head" class="p-6 border-b border-gray-700 flex items-center justify-between gap-3 sticky top-0 bg-brand-navy z-[80]">
-        <div class="flex items-center gap-3 sb-x">
-          <div
-            class="w-10 h-10 bg-brand-red rounded-lg flex items-center justify-center font-bold text-xl shadow-lg"
-          >
-            B
-          </div>
-          <div class="flex flex-col">
-            <h1 class="text-xl font-bold tracking-tight leading-none">Brandzo Hub</h1>
-            <div id="db-status-desktop" class="flex items-center gap-1.5 mt-1 opacity-70">
-              <span class="w-2 h-2 rounded-full bg-gray-400"></span>
-              <span class="text-[10px] font-bold">جاري الاتصال بقاعدة البيانات...</span>
-            </div>
-          </div>
-        </div>
+      <!--
+        رأس السايدبار: زر ☰ أولًا (سطح المكتب) ثم الشعار ثم زر الإغلاق (الموبايل).
+
+        ⚠️ ترتيب الزرّ أولًا مقصود: في RTL يُثبّته ذلك على **الحافة اليمنى** —
+        وهي الحافة التي لا تتحرّك (الشريط مثبّت `right:0` ويتمدّد يسارًا). حين
+        كان الزرّ في آخر الرأس كان يقفز 175px هربًا من المؤشّر لحظة تمرير
+        الماوس (لأن التمرير يوسّع الشريط)، فيطارده المستخدم ولا يصيبه.
+      -->
+      <div id="bz-sb-head" class="p-6 border-b border-gray-700 flex items-center gap-3 sticky top-0 bg-brand-navy z-[80]">
         <!-- زر التحكم ☰ (سطح المكتب): يثبّت التمدد أو يعيده مصغّرًا -->
         <button
           id="brandzo-desktop-toggle"
@@ -365,16 +266,30 @@ const currentPath = Astro.url.pathname;
           aria-label="تثبيت القائمة أو تصغيرها"
           aria-pressed="false"
           title="تثبيت / تصغير القائمة"
-          class="hidden md:inline-flex p-2 rounded-md hover:bg-gray-800 transition-colors shrink-0"
+          class="hidden md:inline-flex self-start p-2 rounded-md hover:bg-gray-800 transition-colors shrink-0"
         >
           <Icon name="menu" size={22} />
         </button>
+        <div class="flex items-center gap-3 sb-x flex-1 min-w-0">
+          <div
+            class="w-10 h-10 bg-brand-red rounded-lg flex items-center justify-center font-bold text-xl shadow-lg shrink-0"
+          >
+            B
+          </div>
+          <div class="flex flex-col min-w-0">
+            <h1 class="text-xl font-bold tracking-tight leading-none">Brandzo Hub</h1>
+            <div id="db-status-desktop" class="flex items-center gap-1.5 mt-1 opacity-70">
+              <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+              <span class="text-[10px] font-bold">جاري الاتصال بقاعدة البيانات...</span>
+            </div>
+          </div>
+        </div>
         <!-- زر الإغلاق: يظهر فقط في الموبايل -->
         <button
           id="brandzo-menu-close"
           type="button"
           aria-label="إغلاق القائمة"
-          class="md:hidden p-2 rounded-md hover:bg-gray-800 transition-colors"
+          class="md:hidden p-2 rounded-md hover:bg-gray-800 transition-colors shrink-0"
         >
           <Icon name="close" size={20} />
         </button>

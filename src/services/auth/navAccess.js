@@ -50,6 +50,24 @@ export function canSeeGroup(roleId, groupKey) {
   return allowed.includes(groupKey);
 }
 
+/** المجموعات التي يراها هذا الدور (الأدمن: كلّها). */
+export function groupsFor(roleId) {
+  if (isAdmin(roleId)) return [...ROLE_NAV.admin];
+  return [...(ROLE_NAV[roleId] || ROLE_NAV[DEFAULT_ROLE])];
+}
+
+/**
+ * هل يرى هذا الدور **لوحة التحكم الرئيسية**؟
+ *
+ * الدور «المركّز» (يرى مجموعة واحدة فقط — مثل «الحركة» و«مستخدم إدارة»
+ * و«المشاهد») يذهب مباشرة إلى صفحة عمله بدل لوحة مليئة ببطاقات لا يفتحها.
+ * هذا يحفظ السلوك الذي كان مفروضًا يدويًّا قبل تدقيق 23.07، ويعمّمه على كل
+ * دور مركّز بدل ذكر دورين بالاسم.
+ */
+export function canSeeHome(roleId) {
+  return groupsFor(roleId).length > 1;
+}
+
 /**
  * هل يرى هذا الدور عنصرًا محصورًا بأدوار بعينها؟
  * `itemRoles` فارغة/غائبة ⇒ العنصر متاح لكل من يرى مجموعته.

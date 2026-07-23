@@ -19,8 +19,44 @@ env:
   BUILD_PATH: '.'
 
 jobs:
+  # ═══════════════════════════════════════════════════════════════════════
+  # بوابة الجودة — أُضيفت بعد تدقيق 23.07.2026.
+  # قبلها كان خط النشر يبني وينشر مباشرةً بلا تشغيل اختبار واحد، فكان أي
+  # انحدار يصل إلى الموقع الحيّ دون أن يوقفه شيء.
+  #   • `npm test` و`npm run audit` حاجزان صلبان: فشلٌ ⇒ لا بناء ولا نشر.
+  #   • اللينت يُطبع ولا يُعطّل: خطّ أساسه 122 مشكلة سابقة على هذا التغيير،
+  #     ومنعُ النشر بسببها يوقف العمل بلا فائدة. يُرفع الحجب بعد تصفيته.
+  # ═══════════════════════════════════════════════════════════════════════
+  test:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Portal audit (orphan pages · broken links · Firestore rules · role leaks)
+        run: npm run audit
+
+      - name: Lint (report only — pre-existing baseline)
+        continue-on-error: true
+        run: npx eslint .
+
   build:
     name: Build
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
