@@ -11,6 +11,11 @@ import grn from './grn.js';
 import pr from './pr.js';
 import po from './po.js';
 import qc from './qc.js';
+import putaway from './putaway.js';
+import pick from './pick.js';
+import pack from './pack.js';
+import dn from './dn.js';
+import gp from './gp.js';
 
 /** المخطّطات الجاهزة. */
 const SCHEMAS = {
@@ -18,6 +23,11 @@ const SCHEMAS = {
   PO: po,
   GRN: grn,
   QC: qc,
+  PUTAWAY: putaway,
+  PICK: pick,
+  PACK: pack,
+  DN: dn,
+  GP: gp,
 };
 
 /**

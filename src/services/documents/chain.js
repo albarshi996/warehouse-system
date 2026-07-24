@@ -16,21 +16,39 @@
  */
 
 /**
- * سلسلة الشراء الرسمية: كل نوع وما يُشتقّ منه.
- * `PR → PO → GRN → QC`
+ * سلسلتا الدورة الرسميتان:
+ *   **الوارد:**  `PR → PO → GRN → QC → PUTAWAY`  (طلب ← أمر ← استلام ← فحص ← تخزين)
+ *   **الصادر:**  `PICK → PACK → DN → GP`         (سحب ← تعبئة ← إذن ← تصريح)
+ *
+ * لماذا سلسلتان لا واحدة؟ لأن التخزين ينهي رحلة البضاعة الداخلة، والسحب
+ * يبدأ رحلةً جديدة قد تقع بعد شهور وبطلبٍ من فرعٍ آخر — وربطهما قسرًا كان
+ * سيجعل كل سحبٍ يدّعي أصلًا في أمر شراءٍ بعينه، وهو غير صحيح.
  */
-export const PURCHASE_CHAIN = ['PR', 'PO', 'GRN', 'QC'];
+export const PURCHASE_CHAIN = ['PR', 'PO', 'GRN', 'QC', 'PUTAWAY'];
+export const OUTBOUND_CHAIN = ['PICK', 'PACK', 'DN', 'GP'];
+
+/** كل السلاسل — لتجول عليها الدوال بلا معرفة مسبقة بأيّها. */
+export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN];
+
+/** السلسلة التي ينتمي إليها النوع، أو null. */
+export function chainFor(type) {
+  return CHAINS.find((c) => c.includes(type)) || null;
+}
 
 /** ما الذي يُشتقّ من هذا النوع؟ (null = نهاية السلسلة) */
 export function nextInChain(type) {
-  const i = PURCHASE_CHAIN.indexOf(type);
-  return i >= 0 && i < PURCHASE_CHAIN.length - 1 ? PURCHASE_CHAIN[i + 1] : null;
+  const chain = chainFor(type);
+  if (!chain) return null;
+  const i = chain.indexOf(type);
+  return i < chain.length - 1 ? chain[i + 1] : null;
 }
 
 /** ما الذي سبقه؟ */
 export function previousInChain(type) {
-  const i = PURCHASE_CHAIN.indexOf(type);
-  return i > 0 ? PURCHASE_CHAIN[i - 1] : null;
+  const chain = chainFor(type);
+  if (!chain) return null;
+  const i = chain.indexOf(type);
+  return i > 0 ? chain[i - 1] : null;
 }
 
 /**
@@ -38,9 +56,16 @@ export function previousInChain(type) {
  * ما لا يُذكر هنا لا يُنقل — الاشتقاق لا يخترع بيانات.
  */
 const LINE_MAP = {
+  // الوارد
   'PR>PO': { sku: 'sku', barcode: 'barcode', description: 'description', uom: 'uom', qty: 'qty', estPrice: 'unitPrice' },
   'PO>GRN': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qtyOrdered' },
   'GRN>QC': { sku: 'sku', barcode: 'barcode', description: 'description', qtyReceived: 'qtyInspected' },
+  // المقبول جودةً وحده هو ما يُخزَّن — لا المستلَم كلّه.
+  'QC>PUTAWAY': { sku: 'sku', barcode: 'barcode', description: 'description', qtyAccepted: 'qty' },
+  // الصادر
+  'PICK>PACK': { sku: 'sku', barcode: 'barcode', description: 'description', qtyPicked: 'qty', uom: 'uom' },
+  'PACK>DN': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', uom: 'uom' },
+  'DN>GP': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty' },
 };
 
 /** خرائط نقل بيانات الرأس. */
@@ -48,6 +73,11 @@ const HEADER_MAP = {
   'PR>PO': { warehouse: 'warehouse' },
   'PO>GRN': { supplier: 'supplier' },
   'GRN>QC': { supplier: 'supplier' },
+  'QC>PUTAWAY': { supplier: 'supplier' },
+  'PICK>PACK': { destination: 'destination' },
+  'PACK>DN': { customer: 'customer', destination: 'deliveryAddress' },
+  // بيانات النقل تُورَّث للتصريح فلا تُعاد كتابتها على البوابة.
+  'DN>GP': { driverName: 'driverName', vehiclePlate: 'vehiclePlate', customer: 'destination' },
 };
 
 /** هل البند فارغ فعليًّا؟ (لا نورّث صفوفًا بيضاء) */
@@ -96,8 +126,10 @@ export function deriveDocument(source) {
   }
 
   // المراجع النصّية المطبوعة على الورق — تُشتقّ ولا تُكتب.
-  const refField = { PO: 'prRef', GRN: 'poRef', QC: 'grnRef' }[to];
+  const refField = { PO: 'prRef', GRN: 'poRef', QC: 'grnRef', PUTAWAY: 'grnRef', PACK: 'pickRef', DN: 'packRef', GP: 'dnRef' }[to];
   if (refField && source.number) header[refField] = source.number;
+  // أمر التخزين يحمل رقم الاستلام لا رقم تقرير الفحص (هكذا ينصّ الورق).
+  if (to === 'PUTAWAY' && source.links?.GRN?.number) header.grnRef = source.links.GRN.number;
   // QC يحمل مرجع أمر الشراء أيضًا (الورق يطلبه) — نأخذه من سلسلة الروابط.
   if (to === 'QC' && source.header?.poRef) header.poRef = source.header.poRef;
 
@@ -228,6 +260,122 @@ export function threeWayMatch({ po, grn, qc } = {}, tolerance = DEFAULT_TOLERANC
       totalAccepted: rows.reduce((t, r) => t + r.qtyAccepted, 0),
     },
   };
+}
+
+/* ═══════════════ 🥇 حارس FEFO (F3) ═══════════════ */
+
+/** يحوّل تاريخًا إلى رقم للترتيب؛ الفارغ = ما لا نهاية (يُسحب أخيرًا). */
+function expiryValue(raw) {
+  if (!raw) return Infinity;
+  const t = Date.parse(raw);
+  return Number.isNaN(t) ? Infinity : t;
+}
+
+/**
+ * **First-Expired-First-Out**: لا يُسحب صنفٌ من تشغيلةٍ أبعدَ انتهاءً وفي
+ * المخزن ما هو أقرب. مخالفتُه تعني أن القديم يبقى حتى ينتهي فيُتلف —
+ * وهي خسارةٌ صامتة لا يكشفها جردٌ ولا تقرير.
+ *
+ * يُقارن كل بندٍ مسحوب بأقرب تشغيلةٍ **متاحة فعلًا** (كمية > 0) لنفس
+ * الصنف: إن كانت المسحوبة أبعد انتهاءً، فهي مخالفة.
+ *
+ * @param {object} pickDoc مستند السحب (بنوده تحمل sku/barcode و expiry)
+ * @param {object[]} balances أرصدة المخزن (`balances/{صنف__مخزن__تشغيلة}`)
+ * @returns {object[]} قائمة المخالفات (فارغة = مطابق)
+ */
+export function fefoViolations(pickDoc, balances) {
+  const out = [];
+  const stock = balances || [];
+  if (!stock.length) return out;
+
+  for (const line of pickDoc?.lines || []) {
+    const picked = Number(line?.qtyPicked) || 0;
+    if (picked <= 0) continue;
+
+    const key = lineKey(line);
+    if (!key) continue;
+
+    // تشغيلات هذا الصنف المتاحة فعلًا
+    const lots = stock.filter((b) => {
+      const bKey = String(b?.sku || b?.barcode || '').trim().toUpperCase();
+      return bKey === key && (Number(b?.qty) || 0) > 0;
+    });
+    if (!lots.length) continue;
+
+    const earliest = lots.reduce((a, b) => (expiryValue(a.expiry) <= expiryValue(b.expiry) ? a : b));
+    const earliestVal = expiryValue(earliest.expiry);
+    const pickedVal = expiryValue(line.expiry);
+
+    // لا صلاحية للأقرب ⇒ لا معيار للمقارنة أصلًا
+    if (earliestVal === Infinity) continue;
+
+    if (pickedVal > earliestVal) {
+      out.push({
+        key,
+        description: line.description || key,
+        pickedExpiry: line.expiry || 'بلا تاريخ',
+        earliestExpiry: earliest.expiry,
+        earliestBatch: earliest.batch || '',
+        earliestQty: Number(earliest.qty) || 0,
+        message: `سُحب من تشغيلةٍ تنتهي ${line.expiry || 'بلا تاريخ'} بينما في المخزن ${earliest.qty} تنتهي ${earliest.expiry}`,
+      });
+    }
+  }
+  return out;
+}
+
+/* ═══════════════ 🏅 حارس البوابة (F3) ═══════════════ */
+
+/**
+ * «لا خروج بلا تصريح معتمد» — إحدى القواعد الذهبية الستّ.
+ *
+ * يفحص مشروعية تصريح خروج: هل يستند إلى **إذن تسليم معتمَد**؟ وهل كمياته
+ * لا تتجاوز ما أذن به الإذن؟ فتصريحٌ بكمياتٍ أكبر من الإذن هو خروج بضاعة
+ * غير مأذون بها ولو حمل رقمًا رسميًّا.
+ *
+ * @param {object} gpDoc تصريح الخروج
+ * @param {object|null} dnDoc إذن التسليم المرتبط
+ * @returns {{ok:boolean, problems:string[], warnings:string[]}}
+ */
+export function gateVerdict(gpDoc, dnDoc) {
+  const problems = [];
+  const warnings = [];
+
+  if (!dnDoc) {
+    problems.push('لا إذن تسليم مرتبط — لا خروج بلا سند');
+    return { ok: false, problems, warnings };
+  }
+  if (!['approved', 'done'].includes(dnDoc.state)) {
+    problems.push(`إذن التسليم ${dnDoc.number || ''} لم يُعتمد بعد — لا يُصرَّح بالخروج على إذنٍ معلَّق`.trim());
+  }
+  if (!dnDoc.number) {
+    problems.push('إذن التسليم بلا رقم رسمي');
+  }
+
+  // الكميات: ما يخرج لا يتجاوز ما أُذن به
+  const allowed = new Map();
+  for (const l of dnDoc.lines || []) {
+    const k = lineKey(l);
+    if (k) allowed.set(k, (allowed.get(k) || 0) + (Number(l.qty) || 0));
+  }
+  for (const l of gpDoc?.lines || []) {
+    const k = lineKey(l);
+    if (!k) continue;
+    const qty = Number(l.qty) || 0;
+    if (qty <= 0) continue;
+    if (!allowed.has(k)) {
+      problems.push(`«${l.description || k}» يخرج ولا وجود له في إذن التسليم`);
+    } else if (qty > allowed.get(k)) {
+      problems.push(`«${l.description || k}»: يخرج ${qty} والمأذون به ${allowed.get(k)}`);
+    } else if (qty < allowed.get(k)) {
+      warnings.push(`«${l.description || k}»: يخرج ${qty} من أصل ${allowed.get(k)} مأذونة — خروج جزئي`);
+    }
+  }
+
+  const h = gpDoc?.header || {};
+  if (!String(h.driverId || '').trim()) warnings.push('رقم بطاقة السائق غير مُدخل');
+
+  return { ok: problems.length === 0, problems, warnings };
 }
 
 /** تسميات عربية لحالات المطابقة — تُستهلك في الواجهة والطباعة. */

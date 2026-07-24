@@ -18,11 +18,20 @@ import {
   threeWayMatch,
   chainOf,
   DEFAULT_TOLERANCE,
+  OUTBOUND_CHAIN,
+  chainFor,
+  fefoViolations,
+  gateVerdict,
 } from './chain.js';
 import { getSchema, GOVERNED_FORMS, readyTypes } from './schemas/index.js';
 import { estimatedTotal, lineEstimate, budgetWarnings } from './schemas/pr.js';
 import { subtotal, netTotal, lineTotal, poWarnings } from './schemas/po.js';
 import { rejectionRate, qcWarnings } from './schemas/qc.js';
+import { putawayWarnings } from './schemas/putaway.js';
+import { lineShortage, lineValue, orderValue, pickWarnings } from './schemas/pick.js';
+import { cartonCount, packWarnings } from './schemas/pack.js';
+import { dnWarnings } from './schemas/dn.js';
+import { gateWarnings } from './schemas/gp.js';
 
 /** طلب شراء معتمَد ببندين. */
 function approvedPR() {
@@ -44,10 +53,9 @@ function approvedPR() {
 // ═══════════ السلسلة والاشتقاق ═══════════
 
 test('سلسلة الشراء: الترتيب والتالي والسابق', () => {
-  assert.deepEqual(PURCHASE_CHAIN, ['PR', 'PO', 'GRN', 'QC']);
+  // امتدّت في F3 بأمر التخزين — التفاصيل في اختبار السلسلتين أدناه.
   assert.equal(nextInChain('PR'), 'PO');
   assert.equal(nextInChain('GRN'), 'QC');
-  assert.equal(nextInChain('QC'), null, 'QC نهاية السلسلة');
   assert.equal(previousInChain('GRN'), 'PO');
   assert.equal(previousInChain('PR'), null);
 });
@@ -235,14 +243,15 @@ test('سلسلة المستند: ما قبله وما بعده', () => {
 
 // ═══════════ المخطّطات الثلاثة الجديدة ═══════════
 
-test('المخطّطات الأربعة مسجّلة وخارطة الـ12 تعكس الواقع', () => {
+test('مخطّطات F1+F2 مسجّلة وخارطة الـ12 لا تنحرف عن السجلّ', () => {
   for (const t of ['PR', 'PO', 'GRN', 'QC']) {
     assert.ok(getSchema(t), `مخطّط ${t} غير مسجّل`);
     assert.equal(getSchema(t).type, t);
   }
-  assert.deepEqual(readyTypes().sort(), ['GRN', 'PO', 'PR', 'QC']);
+  // الخارطة تُشتقّ `ready` من السجلّ، فتساويهما هو الحارس ضدّ الانحراف.
   const ready = GOVERNED_FORMS.filter((f) => f.ready).map((f) => f.type).sort();
-  assert.deepEqual(ready, ['GRN', 'PO', 'PR', 'QC'], 'خارطة الـ12 تنحرف عن السجلّ');
+  assert.deepEqual(ready, readyTypes().sort(), 'خارطة الـ12 تنحرف عن السجلّ');
+  for (const t of ['PR', 'PO', 'GRN', 'QC']) assert.ok(ready.includes(t));
 });
 
 test('كل مخطّط جديد يحمل أدواره وأقسامه وتوقيعاته', () => {
@@ -286,4 +295,209 @@ test('QC: نسبة الرفض وتحذيرات العدّ والقرار', () =>
   const noNcr = qcWarnings({ lines: [], header: { finalDecision: 'رفض' } });
   assert.ok(noNcr.some((w) => /NCR/.test(w)));
   assert.equal(qcWarnings({ lines: [], header: { finalDecision: 'قبول' } }).length, 0);
+});
+
+// ═══════════ F3: سلسلة الصرف وحارسا FEFO والبوابة ═══════════
+
+test('السلسلتان: الوارد ينتهي بالتخزين، والصادر مستقلّ ينتهي بالتصريح', () => {
+  assert.deepEqual(PURCHASE_CHAIN, ['PR', 'PO', 'GRN', 'QC', 'PUTAWAY']);
+  assert.deepEqual(OUTBOUND_CHAIN, ['PICK', 'PACK', 'DN', 'GP']);
+  assert.equal(nextInChain('QC'), 'PUTAWAY');
+  assert.equal(nextInChain('PUTAWAY'), null, 'التخزين ينهي الوارد');
+  assert.equal(nextInChain('PICK'), 'PACK');
+  assert.equal(nextInChain('GP'), null, 'التصريح ينهي الصادر');
+  assert.equal(previousInChain('PICK'), null, 'السحب يبدأ رحلةً جديدة لا يرث الوارد');
+  assert.equal(previousInChain('GP'), 'DN');
+  assert.equal(chainFor('GRN'), PURCHASE_CHAIN);
+  assert.equal(chainFor('DN'), OUTBOUND_CHAIN);
+  assert.equal(chainFor('RET'), null, 'نوع خارج السلسلتين');
+});
+
+test('الاشتقاق QC ← PUTAWAY ينقل المقبول جودةً وحده لا المستلَم كلّه', () => {
+  const qcDoc = {
+    id: 'qc1', type: 'QC', number: 'QC-2026-0005', state: 'approved',
+    header: { supplier: 'مورّد الشمال', grnRef: 'GRN-2026-0003' },
+    lines: [{ sku: 'A1', description: 'صنف أول', qtyInspected: 100, qtyAccepted: 90, qtyRejected: 10 }],
+    links: { GRN: { id: 'g1', number: 'GRN-2026-0003' } },
+  };
+  const put = deriveDocument(qcDoc);
+  assert.equal(put.type, 'PUTAWAY');
+  assert.equal(put.lines[0].qty, 90, 'المرفوض لا يُخزَّن');
+  assert.equal(put.header.grnRef, 'GRN-2026-0003', 'الورق يطلب رقم الاستلام لا رقم الفحص');
+  assert.equal(put.header.supplier, 'مورّد الشمال');
+});
+
+test('سلسلة الصرف كاملة: سحب ← تعبئة ← إذن ← تصريح', () => {
+  const pickDoc = {
+    id: 'pk1', type: 'PICK', number: 'PICK-2026-0001', state: 'approved',
+    header: { destination: 'فرع بنغازي' },
+    lines: [{ sku: 'A1', description: 'صنف أول', qtyRequested: 50, qtyPicked: 48, uom: 'قطعة' }],
+    links: {},
+  };
+  const packDraft = deriveDocument(pickDoc);
+  assert.equal(packDraft.type, 'PACK');
+  assert.equal(packDraft.lines[0].qty, 48, 'المسحوب فعلًا هو ما يُعبَّأ');
+  assert.equal(packDraft.header.pickRef, 'PICK-2026-0001');
+  assert.equal(packDraft.header.destination, 'فرع بنغازي');
+
+  const packDoc = { ...packDraft, id: 'pc1', number: 'PACK-2026-0001', state: 'approved', header: { ...packDraft.header, customer: 'عميل الجنوب' } };
+  const dnDraft = deriveDocument(packDoc);
+  assert.equal(dnDraft.type, 'DN');
+  assert.equal(dnDraft.header.packRef, 'PACK-2026-0001');
+  assert.equal(dnDraft.header.customer, 'عميل الجنوب');
+
+  const dnDoc = {
+    ...dnDraft, id: 'dn1', number: 'DN-2026-0001', state: 'approved',
+    header: { ...dnDraft.header, driverName: 'سائق', vehiclePlate: '12-3456' },
+  };
+  const gpDraft = deriveDocument(dnDoc);
+  assert.equal(gpDraft.type, 'GP');
+  assert.equal(gpDraft.header.dnRef, 'DN-2026-0001');
+  assert.equal(gpDraft.header.driverName, 'سائق', 'بيانات النقل تُورَّث فلا تُعاد كتابتها على البوابة');
+  assert.equal(gpDraft.header.vehiclePlate, '12-3456');
+  assert.deepEqual(Object.keys(gpDraft.links).sort(), ['DN', 'PACK', 'PICK']);
+});
+
+// ── 🥇 حارس FEFO ──
+
+const STOCK = [
+  { sku: 'A1', batch: 'L1', expiry: '2026-09-01', qty: 40 },
+  { sku: 'A1', batch: 'L2', expiry: '2027-03-01', qty: 60 },
+  { sku: 'B2', batch: 'M1', expiry: '2026-10-01', qty: 20 },
+];
+
+test('FEFO: السحب من الأقرب انتهاءً مطابق', () => {
+  assert.deepEqual(fefoViolations({ lines: [{ sku: 'A1', qtyPicked: 10, expiry: '2026-09-01' }] }, STOCK), []);
+});
+
+test('🥇 FEFO: السحب من الأبعد انتهاءً مخالفة تُكشف بتفاصيلها', () => {
+  const v = fefoViolations({ lines: [{ sku: 'A1', description: 'صنف أول', qtyPicked: 10, expiry: '2027-03-01' }] }, STOCK);
+  assert.equal(v.length, 1);
+  assert.equal(v[0].key, 'A1');
+  assert.equal(v[0].earliestExpiry, '2026-09-01');
+  assert.equal(v[0].earliestBatch, 'L1');
+  assert.equal(v[0].earliestQty, 40);
+  assert.match(v[0].message, /2026-09-01/);
+});
+
+test('FEFO: تشغيلة نفدت كميتها لا تُحسب معيارًا', () => {
+  const stock = [
+    { sku: 'A1', batch: 'L1', expiry: '2026-09-01', qty: 0 },
+    { sku: 'A1', batch: 'L2', expiry: '2027-03-01', qty: 60 },
+  ];
+  assert.deepEqual(fefoViolations({ lines: [{ sku: 'A1', qtyPicked: 5, expiry: '2027-03-01' }] }, stock), []);
+});
+
+test('FEFO: بند بلا سحب فعلي لا يُفحص، وصنف بلا رصيد لا يُفحص', () => {
+  assert.deepEqual(fefoViolations({ lines: [{ sku: 'A1', qtyPicked: 0, expiry: '2027-03-01' }] }, STOCK), []);
+  assert.deepEqual(fefoViolations({ lines: [{ sku: 'ZZ', qtyPicked: 9, expiry: '2030-01-01' }] }, STOCK), []);
+  assert.deepEqual(fefoViolations({ lines: [{ sku: 'A1', qtyPicked: 5 }] }, []), [], 'بلا أرصدة لا حكم');
+});
+
+test('FEFO: بندٌ مسحوب بلا تاريخ يُعدّ الأبعد فيُكشف', () => {
+  const v = fefoViolations({ lines: [{ sku: 'A1', qtyPicked: 5, expiry: '' }] }, STOCK);
+  assert.equal(v.length, 1, 'الفارغ = ما لا نهاية ⇒ أبعد من الأقرب');
+  assert.equal(v[0].pickedExpiry, 'بلا تاريخ');
+});
+
+// ── 🏅 حارس البوابة ──
+
+const DN_APPROVED = {
+  id: 'dn1', type: 'DN', number: 'DN-2026-0001', state: 'approved',
+  lines: [{ sku: 'A1', description: 'صنف أول', qty: 50 }, { sku: 'B2', description: 'صنف ثانٍ', qty: 20 }],
+};
+
+test('🏅 البوابة: تصريح مطابق لإذن معتمَد يمرّ', () => {
+  const v = gateVerdict(
+    { header: { driverId: '123456' }, lines: [{ sku: 'A1', qty: 50 }, { sku: 'B2', qty: 20 }] },
+    DN_APPROVED
+  );
+  assert.equal(v.ok, true);
+  assert.deepEqual(v.problems, []);
+});
+
+test('🏅 البوابة: لا خروج بلا إذن', () => {
+  const v = gateVerdict({ lines: [{ sku: 'A1', qty: 5 }] }, null);
+  assert.equal(v.ok, false);
+  assert.match(v.problems[0], /لا خروج بلا سند/);
+});
+
+test('🏅 البوابة: لا خروج على إذن لم يُعتمد', () => {
+  const v = gateVerdict({ lines: [{ sku: 'A1', qty: 50 }] }, { ...DN_APPROVED, state: 'submitted' });
+  assert.equal(v.ok, false);
+  assert.ok(v.problems.some((p) => /لم يُعتمد/.test(p)));
+});
+
+test('🏅 البوابة: كمية تتجاوز المأذون به تُمنع', () => {
+  const v = gateVerdict({ lines: [{ sku: 'A1', description: 'صنف أول', qty: 80 }] }, DN_APPROVED);
+  assert.equal(v.ok, false);
+  assert.ok(v.problems.some((p) => /يخرج 80 والمأذون به 50/.test(p)));
+});
+
+test('🏅 البوابة: صنف خارج الإذن يُمنع — أخطر تسريب', () => {
+  const v = gateVerdict({ lines: [{ sku: 'Z9', description: 'صنف مهرَّب', qty: 5 }] }, DN_APPROVED);
+  assert.equal(v.ok, false);
+  assert.ok(v.problems.some((p) => /لا وجود له في إذن التسليم/.test(p)));
+});
+
+test('🏅 البوابة: الخروج الجزئي يُنبَّه ولا يُمنع', () => {
+  const v = gateVerdict(
+    { header: { driverId: '1' }, lines: [{ sku: 'A1', description: 'صنف أول', qty: 30 }] },
+    DN_APPROVED
+  );
+  assert.equal(v.ok, true, 'الجزئي مشروع — قد تُشحن على دفعتين');
+  assert.ok(v.warnings.some((w) => /خروج جزئي/.test(w)));
+});
+
+test('🏅 البوابة: بلا بطاقة سائق تنبيه لا منع', () => {
+  const v = gateVerdict({ header: {}, lines: [{ sku: 'A1', qty: 50 }] }, DN_APPROVED);
+  assert.equal(v.ok, true);
+  assert.ok(v.warnings.some((w) => /بطاقة السائق/.test(w)));
+});
+
+// ── مخطّطات F3 ──
+
+test('مخطّطات F3 الخمسة مسجّلة وخارطة الـ12 تعكسها', () => {
+  for (const t of ['PUTAWAY', 'PICK', 'PACK', 'DN', 'GP']) {
+    const s = getSchema(t);
+    assert.ok(s, `مخطّط ${t} غير مسجّل`);
+    assert.equal(s.type, t);
+    assert.ok(s.roles.create.length && s.roles.approve.length && s.roles.complete.length);
+    assert.ok(s.sections.some((sec) => sec.kind === 'table'));
+    assert.equal(s.signatures.length, 3, `${t}: خانات التوقيع ثلاث كما في الورق`);
+    assert.ok(typeof s.warnings === 'function');
+  }
+  assert.equal(readyTypes().length, 9, 'تسعة من اثني عشر جاهزة');
+  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 9);
+});
+
+test('🏅 اعتماد تصريح البوابة لضابط البوابة والمدير — لا لأمين المخزن', () => {
+  const gp = getSchema('GP');
+  assert.ok(gp.roles.approve.includes('gate_officer'));
+  assert.ok(!gp.roles.approve.includes('storekeeper'), 'من جهّز الشحنة لا يُصرّح لها');
+  assert.ok(gp.roles.create.includes('storekeeper'), 'لكنه يُعدّها');
+});
+
+test('PICK: الفرق والقيمة محسوبان، والتحذيرات مسبَّبة', () => {
+  assert.equal(lineShortage({ qtyRequested: 50, qtyPicked: 48 }), -2);
+  assert.equal(lineValue({ qtyPicked: 10, unitPrice: 5 }), 50);
+  assert.equal(orderValue([{ qtyPicked: 10, unitPrice: 5 }, { qtyPicked: 2, unitPrice: 25 }]), 100);
+  assert.ok(pickWarnings({ lines: [{ qtyRequested: 50, qtyPicked: 48, expiry: '2026-09-01' }] }).some((x) => /أقلّ من المطلوب/.test(x)));
+  assert.ok(pickWarnings({ lines: [{ qtyRequested: 10, qtyPicked: 10 }] }).some((x) => /بلا تاريخ صلاحية/.test(x)));
+});
+
+test('PACK: عدد الطرود يعدّ المميّز لا الأسطر', () => {
+  assert.equal(cartonCount([{ cartonNo: 'C1' }, { cartonNo: 'C1' }, { cartonNo: 'C2' }]), 2);
+  assert.equal(cartonCount([{ cartonNo: '' }, {}]), 0);
+  const w = packWarnings({ lines: [{ qty: 5, cartonNo: '', weight: 0 }] });
+  assert.ok(w.some((x) => /بلا رقم طرد/.test(x)));
+  assert.ok(w.some((x) => /بلا وزن/.test(x)));
+});
+
+test('PUTAWAY و DN و GP: تحذيرات الموقع والتتبّع والسند', () => {
+  assert.ok(putawayWarnings({ lines: [{ qty: 5, bin: '', expiry: '' }] }).some((x) => /بلا موقع/.test(x)));
+  assert.ok(putawayWarnings({ lines: [{ qty: 5, bin: 'A-01', expiry: '' }] }).some((x) => /FEFO/.test(x)));
+  assert.ok(dnWarnings({ header: {}, lines: [{ qty: 5 }] }).some((x) => /السائق ولوحة المركبة/.test(x)));
+  assert.ok(gateWarnings({ header: {}, lines: [] }).some((x) => /لا مستند مرجعي/.test(x)));
+  assert.ok(gateWarnings({ header: { dnRef: 'DN-1' }, lines: [] }).some((x) => /بطاقة السائق/.test(x)));
 });

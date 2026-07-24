@@ -12,7 +12,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getBasePath } from '../../../services/auth/authService.js';
 import { fetchChainDocuments, createNextInChain } from '../../../services/documents/documentsService.js';
-import { chainOf, threeWayMatch, nextInChain, MATCH_STATUS, PURCHASE_CHAIN } from '../../../services/documents/chain.js';
+import { chainOf, threeWayMatch, nextInChain, MATCH_STATUS, PURCHASE_CHAIN, OUTBOUND_CHAIN, fefoViolations, gateVerdict } from '../../../services/documents/chain.js';
+import { listenBalances } from '../../../services/balances/balancesService.js';
 import { getSchema } from '../../../services/documents/schemas/index.js';
 import { getState } from '../../../services/documents/states.js';
 
@@ -44,6 +45,14 @@ export default function ChainBar({ doc, me, onFlash }) {
   const [related, setRelated] = useState([]);
   const [busy, setBusy] = useState(false);
   const [showMatch, setShowMatch] = useState(false);
+  /** أرصدة المخزن — تُجلب لقوائم السحب وحدها (حارس FEFO يحتاجها). */
+  const [balances, setBalances] = useState([]);
+
+  useEffect(() => {
+    if (doc?.type !== 'PICK') return undefined;
+    const unsub = listenBalances(setBalances, () => setBalances([]));
+    return () => unsub();
+  }, [doc?.type]);
 
   useEffect(() => {
     let alive = true;
@@ -72,6 +81,19 @@ export default function ChainBar({ doc, me, onFlash }) {
     return threeWayMatch({ po, grn, qc: pick('QC') });
   }, [doc, related]);
 
+  /** 🥇 حارس FEFO — قوائم السحب وحدها. */
+  const fefo = useMemo(
+    () => (doc?.type === 'PICK' && balances.length ? fefoViolations(doc, balances) : []),
+    [doc, balances]
+  );
+
+  /** 🏅 حارس البوابة — تصاريح الخروج وحدها، مقيسةً بإذن التسليم المرتبط. */
+  const gate = useMemo(() => {
+    if (doc?.type !== 'GP') return null;
+    const dn = related.find((d) => d.type === 'DN') || null;
+    return gateVerdict(doc, dn);
+  }, [doc, related]);
+
   const next = nextInChain(doc?.type);
   const nextSchema = next ? getSchema(next) : null;
   const alreadyDerived = (chain?.after || []).some((a) => a.type === next);
@@ -93,13 +115,15 @@ export default function ChainBar({ doc, me, onFlash }) {
     }
   }
 
-  if (!doc?.id || !PURCHASE_CHAIN.includes(doc.type)) return null;
+  if (!doc?.id || ![...PURCHASE_CHAIN, ...OUTBOUND_CHAIN].includes(doc.type)) return null;
 
   return (
     <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
       {/* ── مسار السلسلة ── */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs font-bold text-brand-gold/80 ml-1">🔗 سلسلة الشراء</span>
+        <span className="text-xs font-bold text-brand-gold/80 ml-1">
+          🔗 {OUTBOUND_CHAIN.includes(doc.type) ? 'سلسلة الصرف والخروج' : 'سلسلة الشراء'}
+        </span>
         {chain.before.map((n) => (
           <span key={n.id} className="flex items-center gap-2">
             <DocChip node={n} />
@@ -130,6 +154,53 @@ export default function ChainBar({ doc, me, onFlash }) {
         <p className="text-[11px] text-gray-400">
           يُنشأ «{nextSchema?.titleAr}» بعد اعتماد هذا المستند — لا يُبنى التزامٌ على ما لم يُعتمد.
         </p>
+      )}
+
+      {/* ── 🥇 حارس FEFO ── */}
+      {fefo.length > 0 && (
+        <div className="border-t border-white/10 pt-3">
+          <p className="text-xs font-bold text-amber-300 mb-1.5">
+            🥇 مخالفة FEFO — {fefo.length} بندًا سُحب من تشغيلةٍ أبعدَ انتهاءً
+          </p>
+          <ul className="space-y-1">
+            {fefo.map((v) => (
+              <li key={v.key} className="text-[11px] text-amber-200/90">
+                · <b>{v.description}</b>: {v.message}
+                {v.earliestBatch && <span className="text-gray-400"> (تشغيلة {v.earliestBatch})</span>}
+              </li>
+            ))}
+          </ul>
+          <p className="text-[10px] text-gray-500 mt-1.5">
+            القاعدة: الأقرب انتهاءً يخرج أولًا — وإلا تراكم القديم حتى يُتلف. صحّح البنود أو وثّق سبب المخالفة.
+          </p>
+        </div>
+      )}
+
+      {/* ── 🏅 حارس البوابة ── */}
+      {gate && (
+        <div className="border-t border-white/10 pt-3">
+          {gate.ok ? (
+            <p className="text-xs font-bold text-emerald-300">
+              🏅 مطابق لإذن التسليم — الخروج مأذون به
+            </p>
+          ) : (
+            <>
+              <p className="text-xs font-bold text-red-300 mb-1.5">🏅 حارس البوابة يمنع: لا خروج بلا إذن مطابق</p>
+              <ul className="space-y-1">
+                {gate.problems.map((p) => (
+                  <li key={p} className="text-[11px] text-red-200/90">· {p}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {gate.warnings.length > 0 && (
+            <ul className="space-y-1 mt-1.5">
+              {gate.warnings.map((w) => (
+                <li key={w} className="text-[11px] text-amber-200/80">⚠️ {w}</li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
 
       {/* ── المطابقة الثلاثية ── */}

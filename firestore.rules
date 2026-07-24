@@ -86,19 +86,34 @@ service cloud.firestore {
     // ⚠️ ازدواج مقصود: أدوار الاعتماد أدناه تكرّر ما في مخطّطات
     //    `src/services/documents/schemas/*.js`. القواعد لا تستورد JS، فلا
     //    مفرّ. **عدّلهما معًا** — تمامًا كبريد تمهيد الأدمن أعلاه.
-    //    سلسلة الشراء F2: PR → PO → GRN → QC.
+    //    الوارد F2:  PR → PO → GRN → QC → PUTAWAY
+    //    الصادر F3:  PICK → PACK → DN → GP
+    //
+    // 🏅 حارس البوابة: اعتماد GP لضابط البوابة والمدير — **لا لأمين
+    //    المخزن** الذي جهّز الشحنة. الفصل بين مَن يُعِدّ ومَن يُجيز هو
+    //    الحارس نفسه، وهذه الطبقة على الخادم لا تُتجاوَز بتعديل الواجهة.
     function approveRoles(docType) {
-      return docType == 'GRN' ? ['qc_inspector', 'warehouse_manager']
-           : docType == 'PR'  ? ['warehouse_manager', 'purchase_officer']
-           : docType == 'PO'  ? ['warehouse_manager', 'finance_manager']
-           : docType == 'QC'  ? ['qc_inspector', 'warehouse_manager']
+      return docType == 'GRN'     ? ['qc_inspector', 'warehouse_manager']
+           : docType == 'PR'      ? ['warehouse_manager', 'purchase_officer']
+           : docType == 'PO'      ? ['warehouse_manager', 'finance_manager']
+           : docType == 'QC'      ? ['qc_inspector', 'warehouse_manager']
+           : docType == 'PUTAWAY' ? ['warehouse_manager', 'inventory_auditor']
+           : docType == 'PICK'    ? ['warehouse_manager']
+           : docType == 'PACK'    ? ['qc_inspector', 'warehouse_manager']
+           : docType == 'DN'      ? ['warehouse_manager']
+           : docType == 'GP'      ? ['gate_officer', 'warehouse_manager']
            : [];
     }
     function completeRoles(docType) {
-      return docType == 'GRN' ? ['storekeeper', 'warehouse_manager']
-           : docType == 'PR'  ? ['purchase_officer', 'warehouse_manager']
-           : docType == 'PO'  ? ['purchase_officer', 'warehouse_manager']
-           : docType == 'QC'  ? ['qc_inspector', 'warehouse_manager']
+      return docType == 'GRN'     ? ['storekeeper', 'warehouse_manager']
+           : docType == 'PR'      ? ['purchase_officer', 'warehouse_manager']
+           : docType == 'PO'      ? ['purchase_officer', 'warehouse_manager']
+           : docType == 'QC'      ? ['qc_inspector', 'warehouse_manager']
+           : docType == 'PUTAWAY' ? ['storekeeper', 'warehouse_manager']
+           : docType == 'PICK'    ? ['storekeeper', 'warehouse_manager']
+           : docType == 'PACK'    ? ['storekeeper', 'warehouse_manager']
+           : docType == 'DN'      ? ['storekeeper', 'warehouse_manager']
+           : docType == 'GP'      ? ['gate_officer', 'warehouse_manager']
            : [];
     }
 
