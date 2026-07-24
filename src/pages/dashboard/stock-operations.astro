@@ -1116,8 +1116,21 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
      السحابي بدل استيراد الشيت يدويًّا في كل جلسة. نفس نمط __bzCloud.
      ───────────────────────────────────────────────────────────── */
   import { lookupByBarcode, subscribeItems } from '../../services/itemService.js';
+  import { registerPending } from '../../services/items/pendingService.js';
 
   window.__bzMaster = {
+    /**
+     * I-د: يسجّل باركودًا مجهولًا **معلّقًا للمراجعة** بدل أن يضيع مع
+     * الجلسة. لا يوقف العمل (قرار المالك) ولا يلوّث الماستر — المدير
+     * يعتمده لاحقًا من شاشة الأصناف فيدخل الماستر بكوده واسمه.
+     */
+    registerUnknown(input) {
+      return registerPending(input, window.__bzProfile).catch((e) => {
+        console.error('[pending] register failed', e);
+        return null;
+      });
+    },
+
     /** باركود (أو كود) ← صنف من الماستر. null إن لم يوجد أو تعذّرت الشبكة. */
     lookup(code) {
       return lookupByBarcode(code).catch((e) => {
@@ -2043,6 +2056,22 @@ function confirmScanEntry() {
     inventoryDB.push(newItem);
     addToScanLog(newItem, qty);
     showToast(`أُضيف صنف جديد: ${activeScanBarcode}`, 'info');
+
+    /* I-د: الباركود المجهول يُرفع «معلّقًا للمراجعة» فلا يضيع مع الجلسة.
+       لا ننتظره (العمل الميداني لا يتوقّف على الشبكة)، ونُعلم الموظّف
+       أنّ أثره حُفظ وأنّ المدير سيبتّ فيه. */
+    if (window.__bzMaster?.registerUnknown) {
+      window.__bzMaster
+        .registerUnknown({
+          barcode: activeScanBarcode,
+          name: newItem.name,
+          qty,
+          operationType,
+        })
+        .then((res) => {
+          if (res?.created) showToast('📋 سُجّل «معلّقًا للمراجعة» — سيبتّ فيه المدير', 'info');
+        });
+    }
   }
 
   closeModal('scanDetailModal');
@@ -2100,7 +2129,38 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('fileInput').addEventListener('change', e => handleFileSelect(e.target.files));
   checkAdminSession();
   checkExistingSession();
+  autoHydrateFromMaster();
 });
+
+/* ════════════════════════════════════════════════════════
+   I-هـ: الماستر السحابي مصدر الأصناف — لا استيراد شيت كل جلسة.
+   ════════════════════════════════════════════════════════
+   كانت الشاشة تبدأ فارغةً فيُضطرّ الموظّف لاستيراد ملف إكسيل في كل
+   جلسة، وتعيش الأصناف في `localStorage` وحده. الآن: إن بدأت الجلسة بلا
+   أصناف، تُجلب تلقائيًّا من `Items_Master` (وFirestore يخدمها من كاشه
+   المحلي عند انقطاع الشبكة، فلا تعليق ولا فشل صامت).
+
+   ما يبقى في localStorage عن قصد: **تقدّم المسح** (الكميات الفعلية أثناء
+   الجلسة) — وهي حالة جلسة لا كتالوج، ولها نسختها السحابية في سجلّ
+   المسح `operations/{opId}/scans` أصلًا. */
+async function autoHydrateFromMaster() {
+  if (inventoryDB.length > 0) return;      // جلسة مستعادة — لا ندهسها
+  if (!window.__bzMaster) return;          // الجسر غير جاهز (خارج البوابة)
+  if (localStorage.getItem('inventorySession')) return; // مودال الاستعادة معروض
+  try {
+    const items = await window.__bzMaster.fetchAll();
+    if (!items.length) return;             // ماستر فارغ: الاستيراد اليدوي يبقى بديلًا
+    items.forEach((m) => inventoryDB.push(masterItemToLocal(m)));
+    saveSessionDebounced();
+    updateStats();
+    showToast(`☁️ جُلب ${items.length} صنفًا من الماستر السحابي تلقائيًّا`, 'success');
+    switchToDashboard();
+  } catch (e) {
+    console.error('[master] auto-hydrate failed', e);
+    // صامتة عمدًا: الاستيراد اليدوي وزرّ الجلب يبقيان بديلين، ولا نُفزع
+    // الموظّف بخطأ عند فتح الشاشة بلا شبكة.
+  }
+}
 
 /* ========================================================
    لصق عادي — Batch (بتبويبين الآن)

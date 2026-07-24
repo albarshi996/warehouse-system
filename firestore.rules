@@ -200,6 +200,24 @@ service cloud.firestore {
       allow write: if isManager();
     }
 
+    // ── الأصناف المعلّقة (I-د) ────────────────────────────────────
+    // الباركود المجهول يُسجَّل هنا بدل أن يضيع مع جلسة الماسح.
+    // الكتابة الأولى لأي مصادق (الماسح موظّف ميداني لا مدير)، لكن **البتّ
+    // للمديرَين وحدهما**: الاعتماد يكتب في Items_Master (وهي isManager أصلًا)
+    // فلا يستطيع الماسح ترقية صنفٍ لنفسه. ولا حذف — السجلّ المرفوض يبقى
+    // أثرًا يمنع إعادة السؤال عن الباركود نفسه كل جلسة.
+    match /Items_Pending/{barcode} {
+      allow read: if signedIn();
+      // إنشاء: بحالة «معلّق» فقط — لا أحد يُنشئ سجلًّا معتمَدًا ابتداءً.
+      allow create: if signedIn() && request.resource.data.state == 'pending';
+      allow update: if isManager()
+                    || (signedIn()
+                        // تكرار مشاهدة: الحالة لا تتغيّر، والبتّ لا يُنتحل.
+                        && request.resource.data.state == resource.data.state
+                        && request.resource.data.state == 'pending');
+      allow delete: if false;
+    }
+
     match /warehouses/{docId} {
       allow read: if signedIn();
       allow write: if isManager();

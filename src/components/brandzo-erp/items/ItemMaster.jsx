@@ -13,6 +13,7 @@ import Icon from '../../ui/Icon.jsx';
 import ItemForm from './ItemForm.jsx';
 import ItemsImport from './ItemsImport.jsx';
 import BalancesImport from './BalancesImport.jsx';
+import PendingItems from './PendingItems.jsx';
 
 /**
  * Items master screen. Real-time list of `Items_Master`, with search,
@@ -199,6 +200,9 @@ export default function ItemMaster() {
           />
         </div>
       )}
+
+      {/* الأصناف المعلّقة (I-د) — للمديرَين وحدهما: هما من يبتّ فيها */}
+      {canImport(me?.role) && <PendingItems me={me} onFlash={flashToast} />}
 
       {/* ملخّص المخزون الحيّ — يظهر متى وُجدت أرصدة */}
       {balances.length > 0 && (
