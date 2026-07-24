@@ -1,11 +1,14 @@
 /**
  * سجلّ مخطّطات المستندات — أضف نموذجًا هنا، فيعمل في المحرّك كاملًا.
  *
- * النطاق المعتمد (قرار المالك 2026-07-15): **الـ12 نموذجًا داخل الدورة المحكومة**.
- * النماذج الإدارية (Report21 · DailyHuddle · WeeklyCheck) تبقى للطباعة كما هي.
+ * النطاق المعتمد (قرار المالك 2026-07-15): **الدورة المحكومة**. النماذج
+ * الإدارية (Report21 · DailyHuddle · WeeklyCheck) تبقى للطباعة كما هي.
+ *
+ * ⚠️ نمت المجموعة من «12» إلى **14** حين فصّلت F4 عنقودَ المرتجعات والمالية
+ * إلى خمسة مستندات مستقلّة (إرجاع · تالف · جرد · تسوية · إشعار دائن) كما نصّ
+ * المرجع الورقي — والصدق مع الواقع أولى من التمسّك برقمٍ قديم (تحقّق قبل الثقة).
  *
  * الجدول أدناه هو خطة F2→F4 مرئيةً في الكود: كل نموذج ومرحلته وحارسه.
- * `null` = لم يُبنَ مخطّطه بعد، والنموذج الورقي في `public/forms/` يخدمه مؤقّتًا.
  */
 import grn from './grn.js';
 import pr from './pr.js';
@@ -16,6 +19,11 @@ import pick from './pick.js';
 import pack from './pack.js';
 import dn from './dn.js';
 import gp from './gp.js';
+import ret from './ret.js';
+import dmg from './dmg.js';
+import cc from './cc.js';
+import adj from './adj.js';
+import cn from './cn.js';
 
 /** المخطّطات الجاهزة. */
 const SCHEMAS = {
@@ -28,6 +36,11 @@ const SCHEMAS = {
   PACK: pack,
   DN: dn,
   GP: gp,
+  RET: ret,
+  DMG: dmg,
+  CC: cc,
+  ADJ: adj,
+  CN: cn,
 };
 
 /**
@@ -45,8 +58,10 @@ export const GOVERNED_FORMS = [
   { type: 'DN', stage: 7, titleAr: 'إذن تسليم', file: 'form_DeliveryNote.html', phase: 'F3' },
   { type: 'GP', stage: 7, titleAr: 'تصريح خروج من البوابة', file: 'form_GatePass.html', phase: 'F3' },
   { type: 'RET', stage: 8, titleAr: 'إشعار الإرجاع', file: 'form_ReturnNote.html', phase: 'F4' },
+  { type: 'DMG', stage: 8, titleAr: 'سند التالف', file: 'form_Damaged Goods Report.html', phase: 'F4' },
   { type: 'CC', stage: 9, titleAr: 'محضر الجرد الدوري', file: 'form_CycleCount.html', phase: 'F4' },
   { type: 'ADJ', stage: 10, titleAr: 'سند تسوية مخزون', file: 'form_Stock Adjustment Voucher.html', phase: 'F4' },
+  { type: 'CN', stage: 11, titleAr: 'إشعار دائن', file: 'form_Credit Note.html', phase: 'F4' },
 ].map((f) => ({ ...f, ready: Boolean(SCHEMAS[f.type]) }));
 
 /** يُعيد مخطّط النوع، أو null إن لم يُبنَ بعد. */

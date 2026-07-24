@@ -12,7 +12,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getBasePath } from '../../../services/auth/authService.js';
 import { fetchChainDocuments, createNextInChain } from '../../../services/documents/documentsService.js';
-import { chainOf, threeWayMatch, nextInChain, MATCH_STATUS, PURCHASE_CHAIN, OUTBOUND_CHAIN, fefoViolations, gateVerdict } from '../../../services/documents/chain.js';
+import { chainOf, threeWayMatch, nextInChain, MATCH_STATUS, PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, fefoViolations, gateVerdict, adjustmentVerdict, creditNoteVerdict } from '../../../services/documents/chain.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { getSchema } from '../../../services/documents/schemas/index.js';
 import { getState } from '../../../services/documents/states.js';
@@ -94,6 +94,20 @@ export default function ChainBar({ doc, me, onFlash }) {
     return gateVerdict(doc, dn);
   }, [doc, related]);
 
+  /** 🔒 حارس التسوية — سندات التسوية، مقيسةً بمحضر الجرد المرتبط. */
+  const adj = useMemo(() => {
+    if (doc?.type !== 'ADJ') return null;
+    const cc = related.find((d) => d.type === 'CC') || null;
+    return adjustmentVerdict(doc, cc);
+  }, [doc, related]);
+
+  /** ⚖️ حارس الإشعار الدائن — مقيسًا بإشعار الإرجاع المرتبط. */
+  const credit = useMemo(() => {
+    if (doc?.type !== 'CN') return null;
+    const ret = related.find((d) => d.type === 'RET') || null;
+    return creditNoteVerdict(doc, ret);
+  }, [doc, related]);
+
   const next = nextInChain(doc?.type);
   const nextSchema = next ? getSchema(next) : null;
   const alreadyDerived = (chain?.after || []).some((a) => a.type === next);
@@ -115,14 +129,14 @@ export default function ChainBar({ doc, me, onFlash }) {
     }
   }
 
-  if (!doc?.id || ![...PURCHASE_CHAIN, ...OUTBOUND_CHAIN].includes(doc.type)) return null;
+  if (!doc?.id || ![...PURCHASE_CHAIN, ...OUTBOUND_CHAIN, ...RETURN_CHAIN, ...COUNT_CHAIN].includes(doc.type)) return null;
 
   return (
     <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
       {/* ── مسار السلسلة ── */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs font-bold text-brand-gold/80 ml-1">
-          🔗 {OUTBOUND_CHAIN.includes(doc.type) ? 'سلسلة الصرف والخروج' : 'سلسلة الشراء'}
+          🔗 {RETURN_CHAIN.includes(doc.type) ? 'سلسلة المرتجعات' : COUNT_CHAIN.includes(doc.type) ? 'سلسلة الجرد والتسوية' : OUTBOUND_CHAIN.includes(doc.type) ? 'سلسلة الصرف والخروج' : 'سلسلة الشراء'}
         </span>
         {chain.before.map((n) => (
           <span key={n.id} className="flex items-center gap-2">
@@ -201,6 +215,36 @@ export default function ChainBar({ doc, me, onFlash }) {
             </ul>
           )}
         </div>
+      )}
+
+      {/* ── 🔒 حارس التسوية / ⚖️ حارس الإشعار الدائن ── */}
+      {[
+        { v: adj, okMsg: '🔒 مطابق لمحضر الجرد — التسوية مسنَدة', badMsg: '🔒 حارس التسوية يمنع: لا تسوية بلا جردٍ مصادَق' },
+        { v: credit, okMsg: '⚖️ مطابق لإشعار الإرجاع — الخصم مسنَد', badMsg: '⚖️ حارس الإشعار الدائن يمنع: لا خصم بلا مرتجعٍ معتمَد' },
+      ].map(({ v, okMsg, badMsg }, i) =>
+        v ? (
+          <div key={i} className="border-t border-white/10 pt-3">
+            {v.ok ? (
+              <p className="text-xs font-bold text-emerald-300">{okMsg}</p>
+            ) : (
+              <>
+                <p className="text-xs font-bold text-red-300 mb-1.5">{badMsg}</p>
+                <ul className="space-y-1">
+                  {v.problems.map((p) => (
+                    <li key={p} className="text-[11px] text-red-200/90">· {p}</li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {v.warnings.length > 0 && (
+              <ul className="space-y-1 mt-1.5">
+                {v.warnings.map((w) => (
+                  <li key={w} className="text-[11px] text-amber-200/80">⚠️ {w}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ) : null
       )}
 
       {/* ── المطابقة الثلاثية ── */}

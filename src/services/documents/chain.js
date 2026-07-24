@@ -16,19 +16,23 @@
  */
 
 /**
- * سلسلتا الدورة الرسميتان:
- *   **الوارد:**  `PR → PO → GRN → QC → PUTAWAY`  (طلب ← أمر ← استلام ← فحص ← تخزين)
- *   **الصادر:**  `PICK → PACK → DN → GP`         (سحب ← تعبئة ← إذن ← تصريح)
+ * سلاسل الدورة الرسمية الأربع:
+ *   **الوارد:**    `PR → PO → GRN → QC → PUTAWAY`  (طلب ← أمر ← استلام ← فحص ← تخزين)
+ *   **الصادر:**    `PICK → PACK → DN → GP`         (سحب ← تعبئة ← إذن ← تصريح)
+ *   **المرتجعات:** `RET → CN`                      (إرجاع ← إشعار دائن)
+ *   **التسوية:**   `CC → ADJ`                       (جرد دوري ← سند تسوية)
  *
- * لماذا سلسلتان لا واحدة؟ لأن التخزين ينهي رحلة البضاعة الداخلة، والسحب
- * يبدأ رحلةً جديدة قد تقع بعد شهور وبطلبٍ من فرعٍ آخر — وربطهما قسرًا كان
- * سيجعل كل سحبٍ يدّعي أصلًا في أمر شراءٍ بعينه، وهو غير صحيح.
+ * لماذا سلاسل منفصلة لا واحدة؟ لأن كلًّا منها رحلةٌ مستقلّة قد تقع في زمنٍ
+ * آخر ولسببٍ آخر — وربطها قسرًا كان سيجعل كل مستندٍ يدّعي أصلًا في سلسلةٍ
+ * لا تخصّه. والتالف (DMG) مستندٌ مفردٌ بلا سلسلة: قد يُكتشف بلا إرجاعٍ أصلًا.
  */
 export const PURCHASE_CHAIN = ['PR', 'PO', 'GRN', 'QC', 'PUTAWAY'];
 export const OUTBOUND_CHAIN = ['PICK', 'PACK', 'DN', 'GP'];
+export const RETURN_CHAIN = ['RET', 'CN'];
+export const COUNT_CHAIN = ['CC', 'ADJ'];
 
 /** كل السلاسل — لتجول عليها الدوال بلا معرفة مسبقة بأيّها. */
-export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN];
+export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN];
 
 /** السلسلة التي ينتمي إليها النوع، أو null. */
 export function chainFor(type) {
@@ -66,6 +70,10 @@ const LINE_MAP = {
   'PICK>PACK': { sku: 'sku', barcode: 'barcode', description: 'description', qtyPicked: 'qty', uom: 'uom' },
   'PACK>DN': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', uom: 'uom' },
   'DN>GP': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty' },
+  // المرتجعات: الإشعار الدائن يأخذ الكمية المُرجعة وسعرها لحساب مبلغ الخصم.
+  'RET>CN': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', unitPrice: 'unitPrice', reason: 'reason' },
+  // التسوية: الفعلي المعدود يصير «الفعلي»، والدفتري يصير «الدفتري».
+  'CC>ADJ': { sku: 'sku', barcode: 'barcode', description: 'description', bookQty: 'bookQty', count2: 'actualQty', unitPrice: 'unitPrice' },
 };
 
 /** خرائط نقل بيانات الرأس. */
@@ -78,6 +86,8 @@ const HEADER_MAP = {
   'PACK>DN': { customer: 'customer', destination: 'deliveryAddress' },
   // بيانات النقل تُورَّث للتصريح فلا تُعاد كتابتها على البوابة.
   'DN>GP': { driverName: 'driverName', vehiclePlate: 'vehiclePlate', customer: 'destination' },
+  'RET>CN': { returningBranch: 'beneficiary' },
+  'CC>ADJ': { zone: 'zone' },
 };
 
 /** هل البند فارغ فعليًّا؟ (لا نورّث صفوفًا بيضاء) */
@@ -126,7 +136,11 @@ export function deriveDocument(source) {
   }
 
   // المراجع النصّية المطبوعة على الورق — تُشتقّ ولا تُكتب.
-  const refField = { PO: 'prRef', GRN: 'poRef', QC: 'grnRef', PUTAWAY: 'grnRef', PACK: 'pickRef', DN: 'packRef', GP: 'dnRef' }[to];
+  const refField = {
+    PO: 'prRef', GRN: 'poRef', QC: 'grnRef', PUTAWAY: 'grnRef',
+    PACK: 'pickRef', DN: 'packRef', GP: 'dnRef',
+    CN: 'returnRef', ADJ: 'cycleCountRef',
+  }[to];
   if (refField && source.number) header[refField] = source.number;
   // أمر التخزين يحمل رقم الاستلام لا رقم تقرير الفحص (هكذا ينصّ الورق).
   if (to === 'PUTAWAY' && source.links?.GRN?.number) header.grnRef = source.links.GRN.number;
@@ -374,6 +388,91 @@ export function gateVerdict(gpDoc, dnDoc) {
 
   const h = gpDoc?.header || {};
   if (!String(h.driverId || '').trim()) warnings.push('رقم بطاقة السائق غير مُدخل');
+
+  return { ok: problems.length === 0, problems, warnings };
+}
+
+/* ═══════════════ 🔒 حارس التسوية (F4) ═══════════════ */
+
+/**
+ * «لا تسوية بلا محضر جرد مصادَق» — إحدى القواعد الذهبية.
+ *
+ * تصحيح رقمٍ في النظام أثرٌ ماليّ على قيمة المخزون؛ فبلا محضر جردٍ **معتمَد**
+ * يستند إليه، التسويةُ تغييرٌ للأرقام بالنيّة. ويفحص أيضًا أن كل بندٍ يُسوّى
+ * له فرقٌ فعليّ وسببٌ موثَّق — فسندٌ يُصحّح ما لا فرق فيه عبثٌ يُربك التدقيق.
+ *
+ * @param {object} adjDoc سند التسوية
+ * @param {object|null} ccDoc محضر الجرد المرتبط
+ * @returns {{ok:boolean, problems:string[], warnings:string[]}}
+ */
+export function adjustmentVerdict(adjDoc, ccDoc) {
+  const problems = [];
+  const warnings = [];
+
+  if (!ccDoc) {
+    problems.push('لا محضر جرد مرتبط — التسوية تُبنى على عدٍّ موثَّق لا على تقدير');
+    return { ok: false, problems, warnings };
+  }
+  if (!['approved', 'done'].includes(ccDoc.state)) {
+    problems.push(`محضر الجرد ${ccDoc.number || ''} لم يُصادَق بعد — لا تُسوّى أرقامٌ على جردٍ معلَّق`.trim());
+  }
+  if (!ccDoc.number) {
+    problems.push('محضر الجرد بلا رقم رسمي');
+  }
+
+  const lines = (adjDoc?.lines || []).filter((l) => String(l?.sku || l?.description || '').trim());
+  for (const l of lines) {
+    const variance = (Number(l.actualQty) || 0) - (Number(l.bookQty) || 0);
+    const label = l.description || l.sku;
+    if (variance === 0) {
+      warnings.push(`«${label}»: لا فرق بين الدفتري والفعلي — لا شيء يُسوّى`);
+    } else if (!String(l.notes || '').trim()) {
+      problems.push(`«${label}»: فرقٌ ${variance > 0 ? '+' : ''}${variance} بلا سبب مكتوب`);
+    }
+  }
+  if (!lines.length) problems.push('لا بنود للتسوية');
+
+  return { ok: problems.length === 0, problems, warnings };
+}
+
+/* ═══════════════ ⚖️ حارس الإشعار الدائن (F4) ═══════════════ */
+
+/**
+ * «لا خصم ماليّ بلا مرتجعٍ معتمَد» — الإشعار الدائن أثرٌ ماليّ يُبنى على
+ * إشعار إرجاعٍ **معتمَد جودةً**، لا على طلبٍ شفهيّ. ويفحص ألّا يتجاوز
+ * المخصوم ما أُرجع فعلًا.
+ *
+ * @param {object} cnDoc الإشعار الدائن
+ * @param {object|null} retDoc إشعار الإرجاع المرتبط
+ */
+export function creditNoteVerdict(cnDoc, retDoc) {
+  const problems = [];
+  const warnings = [];
+
+  if (!retDoc) {
+    problems.push('لا إشعار إرجاع مرتبط — الخصم الماليّ يُبنى على مرتجعٍ معتمَد');
+    return { ok: false, problems, warnings };
+  }
+  if (!['approved', 'done'].includes(retDoc.state)) {
+    problems.push(`إشعار الإرجاع ${retDoc.number || ''} لم يُعتمد بعد`.trim());
+  }
+
+  const returned = new Map();
+  for (const l of retDoc.lines || []) {
+    const k = lineKey(l);
+    if (k) returned.set(k, (returned.get(k) || 0) + (Number(l.qty) || 0));
+  }
+  for (const l of cnDoc?.lines || []) {
+    const k = lineKey(l);
+    if (!k) continue;
+    const qty = Number(l.qty) || 0;
+    if (qty <= 0) continue;
+    if (!returned.has(k)) {
+      problems.push(`«${l.description || k}» يُخصَم ولا وجود له في المرتجع`);
+    } else if (qty > returned.get(k)) {
+      problems.push(`«${l.description || k}»: يُخصَم ${qty} والمُرجَع ${returned.get(k)}`);
+    }
+  }
 
   return { ok: problems.length === 0, problems, warnings };
 }
