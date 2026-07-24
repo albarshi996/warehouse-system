@@ -9,3 +9,4 @@ from . import test_scrap_guard
 from . import test_credit_note_bridge
 from . import test_cycle_count
 from . import test_adjustment_finance_guard
+from . import test_period_close

@@ -57,4 +57,10 @@
     <menuitem id="menu_bz_bill_match" name="المطابقة الثلاثية"
               parent="menu_bz_finance" sequence="10"
               action="action_bz_bill_match"/>
+
+    <!-- المرحلة 12: الإغلاق المالي الشهري (آخر مراحل الدورة) -->
+    <menuitem id="menu_bz_period_close" name="الإغلاق المالي"
+              parent="menu_bz_finance" sequence="20"
+              action="action_bz_period_close"
+              groups="brandzo_warehouse.group_bz_finance_manager"/>
 </odoo>

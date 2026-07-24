@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Brandzo Warehouse — Document Cycle & Golden Rules',
-    'version': '19.0.1.1.0',
+    'version': '19.0.1.2.0',
     'category': 'Inventory/Inventory',
-    'summary': 'دورة مستندية من 12 مرحلة و21 نموذجاً مع 4 قواعد ذهبية كحُرّاس صارمين',
+    'summary': 'دورة مستندية كاملة 12/12 مرحلة و21 نموذجاً مع قواعد ذهبية كحُرّاس صارمين — حتى الإغلاق المالي',
     'description': """
 Brandzo Warehouse
 =================
@@ -17,7 +17,10 @@ Brandzo Warehouse
   * S5a — المرتجعات والإتلاف + جسر الإشعار الدائن من فاتورة المورد.
   * S5b — الجرد الدوري ``bz.cycle.count`` (المرحلة 09) + حارس اعتماد
     المدير المالي على تسويات الأرصدة (المرحلة 10).
-  * S6 — المطابقة الثلاثية على ترحيل فاتورة المورد.
+  * S6 — المطابقة الثلاثية على ترحيل فاتورة المورد (المرحلة 11).
+  * S12 — الإغلاق المالي الشهري ``bz.period.close`` (المرحلة 12): قائمة تحقّق
+    مشتقّة تمنع الإغلاق ببنود مفتوحة + قفل فترة على ``res.company`` + حارس
+    ``account.move._post`` يمنع الترحيل داخل فترة مقفلة. **الدورة تكتمل 12/12.**
 
 القرارات المعمارية موثّقة في ``ODOO_BACKEND_DEVELOPMENT_PLAN.md`` بجذر المستودع.
 """,
@@ -48,6 +51,7 @@ Brandzo Warehouse
         'views/gate_pass_views.xml',
         'views/bz_cycle_count_views.xml',
         'views/account_move_views.xml',
+        'views/bz_period_close_views.xml',
         'views/brandzo_menus.xml',
     ],
 

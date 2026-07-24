@@ -5,3 +5,5 @@ access_bz_cycle_count_user,bz.cycle.count.user,model_bz_cycle_count,brandzo_ware
 access_bz_cycle_count_auditor,bz.cycle.count.auditor,model_bz_cycle_count,brandzo_warehouse.group_bz_inventory_auditor,1,1,1,1
 access_bz_cycle_count_line_user,bz.cycle.count.line.user,model_bz_cycle_count_line,brandzo_warehouse.group_bz_warehouse_user,1,0,0,0
 access_bz_cycle_count_line_auditor,bz.cycle.count.line.auditor,model_bz_cycle_count_line,brandzo_warehouse.group_bz_inventory_auditor,1,1,1,1
+access_bz_period_close_user,bz.period.close.user,model_bz_period_close,brandzo_warehouse.group_bz_warehouse_user,1,0,0,0
+access_bz_period_close_finance,bz.period.close.finance,model_bz_period_close,brandzo_warehouse.group_bz_finance_manager,1,1,1,1
