@@ -86,6 +86,11 @@ export const NAV_GROUPS = [
     emoji: '📊',
     items: [
       { path: '/dashboard/reports', label: 'مركز التقارير', icon: 'clipboardList', pinned: true },
+      // مركز الدراسات — مرجع الدراسات والمقارنات (25.07): الدراسة المقارنة
+      // العالمية + مكتبة الدورات المستندية للشركات الثماني كمحتوى أصيل.
+      { path: '/dashboard/studies', label: 'مركز الدراسات والمقارنات', icon: 'bookOpen' },
+      { path: '/dashboard/comparative-study', label: 'الدراسة المقارنة العالمية', icon: 'grid' },
+      { path: '/dashboard/global-doc-cycles', label: 'الدورات المستندية العالمية', icon: 'bookOpen' },
       { path: '/dashboard/achievement-report', label: 'تقرير الإنجاز اليومي', icon: 'clipboardList' },
       { path: '/dashboard/global-warehouse-report', label: 'المقارنة العالمية (تفاعلي)', icon: 'grid' },
       { path: '/dashboard/warehouse-155-report', label: 'تقرير تحوير 155 (تفاعلي)', icon: 'clipboardList' },

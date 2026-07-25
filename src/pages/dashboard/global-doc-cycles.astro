@@ -1,0 +1,263 @@
+---
+/**
+ * مكتبة الدورات المستندية العالمية — ثمانية نماذج تشغيلية كاملة
+ * (وول مارت · أمازون · إيكيا · شي إن · علي بابا · كارفور · نون · إي باي)
+ * تُعرض محتوى أصيلًا في البوابة من المصدر الواحد `global-doc-cycles.json`
+ * — لا ملفات مرفقة. حارس `companiesVerdict` في studiesModel يحرس البنية.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import data from '../../data/global-doc-cycles.json';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+
+const companies = data.companies;
+---
+
+<DashboardLayout title="الدورات المستندية العالمية">
+  <div class="text-right" dir="rtl">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-white mb-2">🌍 {data.meta.title}</h1>
+      <p class="text-gray-200 text-sm leading-relaxed max-w-3xl">{data.meta.subtitle}</p>
+      <p class="text-gray-400 text-xs mt-2">المصدر: {data.meta.source}</p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-4"></div>
+    </div>
+
+    {/* مصفوفة النماذج — المقارنة البنيوية في نظرة */}
+    <section class="rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-brand-red/20 shadow-2xl p-6 sm:p-8 mb-8">
+      <h2 class="text-xl font-bold text-white mb-1">مصفوفة النماذج الثمانية</h2>
+      <p class="text-xs text-gray-300 mb-5">
+        أربعة أسئلة بنيوية تفصل نموذجًا عن نموذج: من يملك المخزون؟ ما إشارة الطلب؟ ما المستند المحوري؟ ما شكل الشبكة؟
+      </p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs text-right border-collapse min-w-[900px]">
+          <thead>
+            <tr class="text-brand-yellow border-b border-white/20">
+              <th class="p-2 font-bold">الشركة</th>
+              <th class="p-2 font-bold">النموذج</th>
+              <th class="p-2 font-bold">من يملك المخزون</th>
+              <th class="p-2 font-bold">إشارة الطلب</th>
+              <th class="p-2 font-bold">المستند المحوري</th>
+              <th class="p-2 font-bold">الشبكة</th>
+            </tr>
+          </thead>
+          <tbody>
+            {companies.map((c) => (
+              <tr class="border-b border-white/5 hover:bg-white/5 transition-colors align-top">
+                <td class="p-2 font-bold text-white whitespace-nowrap">{c.emoji} {c.nameAr}</td>
+                <td class="p-2 text-brand-yellow">{c.modelLabel}</td>
+                <td class="p-2 text-gray-200">{c.profile.inventoryOwner}</td>
+                <td class="p-2 text-gray-200">{c.profile.demandSignal}</td>
+                <td class="p-2 text-gray-200">{c.profile.coreDocument}</td>
+                <td class="p-2 text-gray-200">{c.profile.network}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    {/* اختيار الشركة */}
+    <div class="flex flex-wrap gap-2 mb-6" id="gdcTabs">
+      {companies.map((c, i) => (
+        <button
+          type="button"
+          data-gdc-tab={c.id}
+          class={`gdc-tab px-4 py-2.5 rounded-xl border text-sm font-bold transition-all ${i === 0 ? 'bg-brand-red text-white border-brand-red' : 'bg-white/5 text-gray-200 border-white/15 hover:bg-white/10'}`}
+        >
+          {c.emoji} {c.nameAr}
+        </button>
+      ))}
+    </div>
+
+    {/* لوحات الشركات */}
+    {companies.map((c, i) => (
+      <section
+        data-gdc-panel={c.id}
+        class={`gdc-panel space-y-6 ${i === 0 ? '' : 'hidden'}`}
+      >
+        {/* بطاقة الهوية */}
+        <div class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-white/10 shadow-2xl p-6 sm:p-8" style={`border-top: 4px solid ${c.accent}`}>
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white">{c.emoji} {c.nameAr} <span class="text-base font-normal text-gray-400">{c.nameEn}</span></h2>
+              <p class="text-sm text-gray-300 mt-1">{c.sector}</p>
+              <p class="text-brand-yellow font-bold text-sm mt-2">⚡ {c.modelLabel}</p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              {c.stats.map((s) => (
+                <div class="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-center">
+                  <div class="text-lg font-extrabold text-brand-yellow">{s.value}</div>
+                  <div class="text-[10px] text-gray-300 max-w-[140px]">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* الفلسفة */}
+        <div class="rounded-2xl bg-white/5 border border-white/10 p-6">
+          <h3 class="font-bold text-white mb-4">🧭 فلسفة العمل</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {c.philosophy.map((p) => (
+              <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+                <h4 class="font-bold text-brand-yellow text-sm mb-1">{p.title}</h4>
+                <p class="text-xs text-gray-200 leading-relaxed">{p.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* مراحل الدورة */}
+        <div class="rounded-2xl bg-white/5 border border-white/10 p-6">
+          <h3 class="font-bold text-white mb-4">🔄 الدورة المستندية — المراحل</h3>
+          <div class="space-y-3">
+            {c.stages.map((s) => (
+              <div class="flex gap-4 bg-white/5 border border-white/10 rounded-xl p-4">
+                <div class="text-2xl font-extrabold shrink-0" style={`color:${c.accent === '#111111' ? '#e9d8a6' : c.accent}`}>{s.num}</div>
+                <div>
+                  <h4 class="font-bold text-white text-sm">{s.title}</h4>
+                  <p class="text-xs text-gray-200 leading-relaxed mt-1">{s.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* جدول المستندات */}
+        <div class="rounded-2xl bg-white/5 border border-white/10 p-6">
+          <h3 class="font-bold text-white mb-4">📑 المستندات الأساسية في الدورة</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-right border-collapse min-w-[640px]">
+              <thead>
+                <tr class="text-brand-yellow border-b border-white/20">
+                  <th class="p-2 font-bold">المستند</th>
+                  <th class="p-2 font-bold">الوظيفة</th>
+                  <th class="p-2 font-bold">من يديره / ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {c.documents.map((d) => (
+                  <tr class="border-b border-white/5 align-top">
+                    <td class="p-2 font-bold text-white">{d.name}</td>
+                    <td class="p-2 text-gray-200">{d.purpose}</td>
+                    <td class="p-2 text-gray-300">{d.manager}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* تجديد الفروع + ERP */}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="rounded-2xl bg-white/5 border border-white/10 p-6">
+            <h3 class="font-bold text-white mb-3">🏪 الطلب على مستوى الفروع (أو مكافئه)</h3>
+            <p class="text-xs text-gray-200 leading-relaxed mb-3">{c.branchReplenishment.summary}</p>
+            <ul class="space-y-2">
+              {c.branchReplenishment.points.map((p) => (
+                <li class="text-xs text-gray-300 flex gap-2"><span class="text-brand-yellow shrink-0">◂</span><span>{p}</span></li>
+              ))}
+            </ul>
+          </div>
+          <div class="rounded-2xl bg-white/5 border border-white/10 p-6">
+            <h3 class="font-bold text-white mb-3">💻 دور أنظمة ERP</h3>
+            <p class="text-xs text-gray-200 leading-relaxed mb-3">{c.erp.summary}</p>
+            <ul class="space-y-2">
+              {c.erp.points.map((p) => (
+                <li class="text-xs text-gray-300 flex gap-2"><span class="text-brand-yellow shrink-0">◂</span><span>{p}</span></li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* إسقاط Odoo */}
+        <div class="rounded-2xl bg-white/5 border border-white/10 p-6">
+          <h3 class="font-bold text-white mb-1">🔁 إسقاط النموذج على نظام ERP حديث (Odoo)</h3>
+          <p class="text-[11px] text-gray-400 mb-4">الجسر العملي بين ممارسة الشركة وبين ما سنشغّله في موديول brandzo_warehouse.</p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-right border-collapse min-w-[560px]">
+              <thead>
+                <tr class="text-brand-yellow border-b border-white/20">
+                  <th class="p-2 font-bold">المفهوم عند {c.nameAr}</th>
+                  <th class="p-2 font-bold">ما يقابله في Odoo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {c.odooMapping.map((m) => (
+                  <tr class="border-b border-white/5 align-top">
+                    <td class="p-2 text-white font-bold">{m.concept}</td>
+                    <td class="p-2 text-gray-200">{m.odoo}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* الإدارات + المثلث */}
+        <div class="rounded-2xl bg-white/5 border border-white/10 p-6">
+          <h3 class="font-bold text-white mb-4">🏛️ الإدارات الرئيسية وتنسيقها</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
+            {c.departments.map((d) => (
+              <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                <h4 class="font-bold text-brand-yellow text-xs mb-1">{d.name}</h4>
+                <p class="text-[11px] text-gray-200 leading-relaxed">{d.role}</p>
+              </div>
+            ))}
+          </div>
+          <div class="rounded-xl border border-brand-yellow/40 bg-brand-yellow/5 p-4">
+            <h4 class="font-bold text-brand-yellow text-sm mb-2">⚖️ مثلث المالية – المشتريات – المخازن</h4>
+            <p class="text-xs text-gray-100 leading-relaxed">{c.triangle}</p>
+          </div>
+        </div>
+
+        {/* الدروس والخلاصة */}
+        <div class="rounded-2xl bg-gradient-to-br from-[#0d0d2b] to-brand-navy border border-white/10 p-6">
+          <h3 class="font-bold text-white mb-4">🎓 الدروس القابلة للنقل إلى نظامنا</h3>
+          <ul class="space-y-2 mb-5">
+            {c.lessons.map((l) => (
+              <li class="text-sm text-gray-100 flex gap-2"><span class="text-green-400 shrink-0">✔</span><span>{l}</span></li>
+            ))}
+          </ul>
+          <div class="rounded-xl bg-white/5 border-r-4 p-4" style={`border-color:${c.accent === '#111111' ? '#e9d8a6' : c.accent}`}>
+            <p class="text-sm text-white font-bold leading-relaxed">💡 الخلاصة: {c.keyTakeaway}</p>
+          </div>
+        </div>
+      </section>
+    ))}
+
+    {/* الربط بمنظومة الدراسات */}
+    <div class="mt-10 rounded-2xl bg-white/5 border border-white/10 p-6 text-center">
+      <p class="text-sm text-gray-200 mb-4">
+        هذه المكتبة هي المصدر الميداني للدراسة المقارنة العالمية — حيث تُقاس ممارسات هذه الشركات على دورتنا المستندية وهيكلنا الوظيفي.
+      </p>
+      <div class="flex flex-wrap justify-center gap-3">
+        <a href={`${base}/dashboard/comparative-study`} class="px-6 py-3 bg-brand-red text-white rounded-xl font-bold hover:bg-brand-red-dark transition-all">⚖️ الدراسة المقارنة العالمية</a>
+        <a href={`${base}/dashboard/workflows`} class="px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-bold hover:bg-white/20 transition-all">🧭 هيكلنا ودورتنا المستندية</a>
+        <a href={`${base}/dashboard/studies`} class="px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-bold hover:bg-white/20 transition-all">📚 مركز الدراسات</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // تبديل لوحات الشركات — تفاعل خفيف بلا أطر.
+    const tabs = document.querySelectorAll('[data-gdc-tab]');
+    const panels = document.querySelectorAll('[data-gdc-panel]');
+    const ACTIVE = ['bg-brand-red', 'text-white', 'border-brand-red'];
+    const IDLE = ['bg-white/5', 'text-gray-200', 'border-white/15'];
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const id = tab.getAttribute('data-gdc-tab');
+        panels.forEach((p) => p.classList.toggle('hidden', p.getAttribute('data-gdc-panel') !== id));
+        tabs.forEach((t) => {
+          const on = t === tab;
+          ACTIVE.forEach((cls) => t.classList.toggle(cls, on));
+          IDLE.forEach((cls) => t.classList.toggle(cls, !on));
+        });
+        tab.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+      });
+    });
+  </script>
+</DashboardLayout>

@@ -79,6 +79,24 @@ export const REPORTS = [
 
   // ── التحليل والمقارنات ─────────────────────────────────────────────
   {
+    id: 'studies-hub', category: 'analytics', icon: '📚', external: false,
+    title: 'مركز الدراسات والمقارنات',
+    desc: 'المرجع الواحد لكل الدراسات والمقارنات والتقارير الاحترافية الداعمة للقرار.',
+    path: '/dashboard/studies',
+  },
+  {
+    id: 'comparative-study', category: 'analytics', icon: '⚖️', external: false,
+    title: 'الدراسة المقارنة العالمية',
+    desc: 'الأنظمة العالمية × هيكلنا × دورتنا المستندية: فجوات ومخاطر وKPIs وأسئلة وتوصيات.',
+    path: '/dashboard/comparative-study',
+  },
+  {
+    id: 'global-doc-cycles', category: 'analytics', icon: '🌐', external: false,
+    title: 'الدورات المستندية العالمية',
+    desc: 'ثمانية نماذج تشغيلية كاملة: وول مارت وأمازون وإيكيا وشي إن وعلي بابا وكارفور ونون وإي باي.',
+    path: '/dashboard/global-doc-cycles',
+  },
+  {
     id: 'global', category: 'analytics', icon: '🌍', external: false,
     title: 'المقارنة العالمية',
     desc: 'مقارنة النظام التشغيلي مع عمالقة اللوجستيات العالمية.',
