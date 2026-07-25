@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './MeetingAssistant.module.css';
+import { useOverlayBack } from '../../../services/ui/useOverlayBack.js';
 
 const ARCHIVE_KEY = 'BrandzoMeetings';
 
@@ -145,8 +146,12 @@ const MeetingAssistant = () => {
   const [savedMeetings, setSavedMeetings] = useState([]);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  // زرّ الرجوع (وهو الزرّ الوحيد على الهاتف) يُغلق الدرج بدل مغادرة الصفحة.
+  useOverlayBack(archiveOpen, () => { setArchiveOpen(false); setConfirmDeleteId(null); }, 'meeting-archive');
   // Slide mode for presentation
   const [slideMode, setSlideMode] = useState(false);
+  // وضع العرض يملأ الشاشة — فالرجوع يُنهيه كما يُنهيه Escape تمامًا.
+  useOverlayBack(slideMode, () => setSlideMode(false), 'meeting-slides');
   const [slideIndex, setSlideIndex] = useState(0);
   const [slideTitle] = useState('تقرير تخزين الكوزمتيك — استراتيجية استغلال مجمع التبريد الرحبة');
   const [agendaItems] = useState([

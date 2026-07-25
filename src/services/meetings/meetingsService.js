@@ -22,7 +22,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
 import { reserveNumber } from '../documents/numbering.js';
-import { canTransitionMeeting, minutesVerdict, systemReportVerdict, itemPatch } from './meetingsModel.js';
+import { canTransitionMeeting, minutesVerdict, systemReportVerdict, itemsPatch } from './meetingsModel.js';
 
 const COL = 'preparatory_meetings';
 
@@ -82,7 +82,9 @@ export async function saveMeeting(meeting, profile) {
     notes: meeting.notes || '',
     attendees: (meeting.attendees || []).filter((a) => String(a.name || '').trim()),
     signatories: (meeting.signatories || []).filter((s) => String(s.name || '').trim()),
-    items: (meeting.items || []).map(itemPatch),
+    // البنود القائمة يليها شواهد حذف بنود البذرة — فالحذف يُحفظ كما تُحفظ
+    // الكتابة، ويبقى الاسترجاع ممكنًا.
+    items: itemsPatch(meeting),
     updatedAt: serverTimestamp(),
     ...whoami(profile),
   };

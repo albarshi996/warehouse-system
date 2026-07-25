@@ -630,6 +630,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     reserveInspectionNumber,
   } from '../../services/vehicles/vehiclesService.js';
   import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
+  import { trackOverlay } from '../../services/ui/overlayHistory.js';
 
   const XLSX = XLSXmod;
   const BASE = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL.slice(0, -1) : import.meta.env.BASE_URL;
@@ -1461,5 +1462,15 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   toggleVehicleType();
   updateSummary();
   setCloud(navigator.onLine ? 'online' : 'offline', navigator.onLine ? 'جارٍ الاتصال…' : 'بلا إنترنت');
+
+  // ─── زرّ الرجوع يُغلق الطبقة ──────────────────────────────────────────
+  // طبقات هذه الصفحة تملأ العرض، وعلى الهاتف لا يملك المستخدم غير زرّ
+  // الرجوع — فكان يقذفه خارج الصفحة وقد ملأ نموذج فحصٍ لم يُحفظ بعد.
+  // نمرّر دوالّ الإغلاق الأصلية لا مجرّد إزالة الصنف: فيها ما يجب أن يجري
+  // (فكّ اشتراكات ملفّ المركبة وتفريغ حالتها) ولا يُغني عنه إخفاء الوسم.
+  trackOverlay('#vehOverlay', { close: () => closeVehicleFile() });
+  trackOverlay('#importOverlay', { close: () => closeImport() });
+  trackOverlay('#cloudImportOverlay', { close: () => window.closeCloudImport() });
+  trackOverlay('#extractorOverlay', { close: () => window.closeExtractor() });
 </script>
 </DashboardLayout>

@@ -787,5 +787,32 @@ const currentPath = Astro.url.pathname;
 
       })();
     </script>
+
+    <!--
+      زرّ الرجوع يُغلق الطبقة، لا يغادر الصفحة.
+
+      السايدبار والدليل يملآن الشاشة على الهاتف، وزرّ الرجوع هناك هو الزرّ
+      الوحيد — فكان يقذف المستخدم خارج الصفحة بدل أن يُغلق ما فتحه. نربطهما
+      بتاريخ المتصفّح من هنا فيسري الإصلاح على صفحات البوابة كلّها.
+
+      الوسم يُراقَب كما هو ولا يُمسّ منطق الفتح والإغلاق أعلاه:
+      شارة الفتح للسايدبار هي **الحجاب** لا السايدبار نفسه — فالأخير ظاهر
+      دائمًا على سطح المكتب.
+    -->
+    <script>
+      import { trackOverlay } from '../services/ui/overlayHistory.js';
+
+      trackOverlay('#brandzo-backdrop', {
+        name: 'sidebar',
+        isOpen: (el) => el.style.display === 'block',
+        close: () => document.getElementById('brandzo-menu-close')?.click(),
+      });
+
+      trackOverlay('#guide-drawer', {
+        name: 'guide',
+        isOpen: (el) => el.open,
+        close: (el) => el.close(),
+      });
+    </script>
   </body>
 </html>

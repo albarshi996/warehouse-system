@@ -8,6 +8,7 @@ import {
   GOLDEN_RULES,
   createInitialState,
 } from './trainingCycleData.js';
+import { useOverlayBack } from '../../../services/ui/useOverlayBack.js';
 
 /**
  * Odoo Training Simulator — وضع التدريب.
@@ -847,6 +848,11 @@ export default function OdooTrainingConsole() {
   const [moduleFilter, setModuleFilter] = useState(null);
   const [openForm, setOpenForm] = useState(null);
   const [showMatrix, setShowMatrix] = useState(false);
+  /* النافذتان تملآن الشاشة ولا تجتمعان: فتح نموذجٍ من المصفوفة يُغلقها في اللحظة
+     نفسها. فنُسجّلهما طبقةً واحدة — وإلّا لالتقى إغلاقٌ وفتحٌ في تصييرٍ واحد،
+     فتبتلع قفزةُ التاريخ النافذةَ الجديدة. والرجوع يصرف المفتوحة منهما تمامًا
+     كما يفعل Escape أدناه. */
+  useOverlayBack(!!openForm || showMatrix, () => { setOpenForm(null); setShowMatrix(false); }, 'training-modal');
 
   // Keep the detail panel on the active stage as the cycle advances.
   useEffect(() => {

@@ -382,6 +382,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     listVersions,
   } from '../../services/org/orgService.js';
   import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
+  import { trackOverlay, trackOverlays } from '../../services/ui/overlayHistory.js';
 
   const WRITER_ROLES = ['admin', 'warehouse_manager'];
   const BASE = JSON.parse(JSON.stringify(baseline));
@@ -752,6 +753,19 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       </div>`;
     window.print();
   };
+
+  /* ═══════════ زرّ الرجوع ═══════════ */
+
+  /* الهيكل يُحرَّر على الصفحة نفسها، فمغادرتها تُضيّع تعديلًا غير محفوظ.
+     وضع العرض يملأ الشاشة كاملةً حتى يغيب معه شريط المتصفّح، والنوافذ تحجب ما
+     تحتها — فردّ الفعل الطبيعي (وعلى الهاتف: الوحيد) هو زرّ الرجوع. نربط كلًّا
+     منها بمنطق إغلاقها القائم فيصير الرجوع إغلاقًا. راجع `overlayHistory.js`. */
+  trackOverlay('#orgWrap', {
+    name: 'present',
+    isOpen: (el) => el.classList.contains('present'),
+    close: () => togglePresent(false), // ليخرج من ملء الشاشة أيضًا لا أن يُزال الصنف وحده
+  });
+  trackOverlays(['#moveOv', '#saveOv', '#verOv'], { close: (el) => closeOv(el.id) });
 
   /* ═══════════ الإقلاع ═══════════ */
 

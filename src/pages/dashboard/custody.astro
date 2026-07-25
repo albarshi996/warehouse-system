@@ -226,6 +226,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   } from '../../services/custody/custodyModel.js';
   import { listenCustodies, issueCustody, closeCustody } from '../../services/custody/custodyService.js';
   import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
+  import { trackOverlays } from '../../services/ui/overlayHistory.js';
 
   // الكتابة للمديرَين فقط — أثر مالي على الرواتب (قواعد Firestore تفرضها).
   const WRITER_ROLES = ['admin', 'warehouse_manager'];
@@ -389,5 +390,12 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       </div>`;
     window.print();
   };
+
+  // ─── زرّ الرجوع يُغلق الطبقة ──────────────────────────────────────────
+  // سند الاستلام وسند الإغلاق يملآن العرض، والرجوع على الهاتف كان يغادر
+  // الصفحة فيضيع سندٌ نصف مكتوب. لا دالّة إغلاق نستدعيها هنا — الإغلاق في
+  // القالب مجرّد إزالة صنف `active`، وهو سلوك المُراقب الافتراضي.
+  // (`closeOv` اسم نموذج «إغلاق العهدة» لا زرّ إغلاق.)
+  trackOverlays(['#issueOv', '#closeOv']);
 </script>
 </DashboardLayout>

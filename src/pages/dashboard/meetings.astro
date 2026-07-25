@@ -102,6 +102,32 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   .it-body[hidden] { display: none; }
   .mb { border-radius: 12px; padding: 2px 9px; font-size: .7rem; font-weight: 800; white-space: nowrap; }
   .tag-draft { background: #fff4e0; color: #b45309; border: 1px dashed #f59e0b; border-radius: 12px; padding: 1px 8px; font-size: .66rem; font-weight: 800; }
+  .tag-custom { background: #e8f1ff; color: #1d4ed8; border: 1px solid #93c5fd; border-radius: 12px; padding: 1px 8px; font-size: .66rem; font-weight: 800; }
+
+  /* أدوات البند — تظهر للمحرّر وحده ولا تفتح البند عند الضغط */
+  .it-acts { display: flex; gap: 5px; }
+  .it-acts[hidden] { display: none; }
+  .iact { border: 1.5px solid var(--k-line); background: #fff; border-radius: 7px; padding: 2px 9px; font-family: 'Tajawal',sans-serif; font-size: .78rem; cursor: pointer; color: #64748b; }
+  .iact:hover { border-color: var(--k-gold); background: #fffaf0; color: var(--k-navy); }
+  .iact.del:hover { border-color: var(--k-bad); background: #fef2f2; color: var(--k-bad); }
+
+  /* بنود محذوفة — الحذف قابل للتراجع ما دام المحضر لم يُعتمد */
+  .trash { border: 1.5px dashed #cbd5e1; background: #f8fafc; border-radius: 12px; padding: 10px 14px; margin-top: 4px; }
+  .trash h5 { font-size: .76rem; font-weight: 800; color: #64748b; margin-bottom: 7px; }
+  .trashrow { display: flex; align-items: center; gap: 9px; padding: 5px 0; border-bottom: 1px dotted #e2e8f0; font-size: .84rem; }
+  .trashrow:last-child { border-bottom: none; }
+  .trashrow b { flex: 1; font-weight: 700; color: #64748b; text-decoration: line-through; }
+
+  /* نافذة تحرير البند */
+  .dlg { position: fixed; inset: 0; z-index: 400; background: rgba(13,27,42,.55); display: none; align-items: center; justify-content: center; padding: 16px; }
+  .dlg.on { display: flex; }
+  .dlgbox { background: #fff; border-radius: 16px; width: min(680px,100%); max-height: 92vh; overflow: auto; box-shadow: 0 26px 70px rgba(0,0,0,.42); }
+  .dlghead { position: sticky; top: 0; background: linear-gradient(135deg,var(--k-navy),var(--k-blue)); color: #fff; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .dlghead h3 { font-size: .98rem; font-weight: 800; }
+  .dlgbody { padding: 15px 18px; display: flex; flex-direction: column; gap: 11px; }
+  .dlgfoot { padding: 0 18px 16px; display: flex; gap: 8px; justify-content: flex-start; flex-wrap: wrap; }
+  .dlgwarn { background: #fff7e6; border: 1px solid #f5d38a; color: #92400e; border-radius: 10px; padding: 8px 13px; font-size: .8rem; line-height: 1.7; }
+  .dlgwarn[hidden] { display: none; }
   .brief { background: #fbfcfe; border: 1px solid #eef1f6; border-radius: 10px; padding: 10px 13px; margin-bottom: 11px; }
   .brief h5 { font-size: .72rem; font-weight: 800; color: var(--k-gold); letter-spacing: .5px; margin-bottom: 3px; }
   .brief p { font-size: .82rem; line-height: 1.85; color: #475569; margin-bottom: 8px; }
@@ -137,7 +163,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   .sl-nav { position: fixed; bottom: 0; inset-inline: 0; background: rgba(13,27,42,.96); border-top: 1px solid rgba(200,157,59,.3); padding: 10px 24px; display: none; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; z-index: 300; }
   .present .sl-nav { display: flex; }
   .sl-prog { flex: 1; height: 6px; background: rgba(255,255,255,.12); border-radius: 3px; overflow: hidden; min-width: 120px; }
-  .sl-prog span { display: block; height: 100%; background: linear-gradient(90deg,var(--k-gold),var(--k-gold-l)); }
+  .sl-prog span { display: block; height: 100%; background: linear-gradient(90deg,var(--k-gold),var(--k-gold-l)); transition: width .2s; }
+  .sl-hint { color: rgba(255,255,255,.45); font-size: .72rem; font-weight: 600; }
+  @media (max-width: 720px) { .sl-hint { display: none; } }
 
   .ktable { width: 100%; border-collapse: collapse; font-size: .84rem; }
   .ktable thead tr { background: linear-gradient(135deg,var(--k-navy),var(--k-blue)); color: #fff; }
@@ -357,8 +385,40 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
   <div class="kcard no-present">
     <div class="kchead"><h3>📋 البنود ومحضرها</h3>
-      <span style="color:rgba(255,255,255,.6);font-size:.76rem;" id="itemsHint">انقر البند لفتحه · ما تكتبه يُحفظ سحابيًّا فورًا</span></div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="color:rgba(255,255,255,.6);font-size:.76rem;" id="itemsHint">انقر البند لفتحه · ✎ تعديل · 🗑 حذف · كل تغيير يُحفظ سحابيًّا فورًا</span>
+        <button class="mini writer-only" onclick="addItem()">＋ أضف بندًا</button>
+      </div>
+    </div>
     <div class="kcbody" id="itemsBox"></div>
+  </div>
+</div>
+
+<!--
+  نافذة تحرير البند — إضافةً وتعديلًا. زرّ الرجوع يُغلقها ولا يغادر الصفحة
+  (راجع `overlayHistory.js`).
+-->
+<div class="dlg" id="itemDlg" onclick="if(event.target===this)closeItemDialog()">
+  <div class="dlgbox" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+    <div class="dlghead">
+      <h3 id="dlgTitle">تحرير البند</h3>
+      <button class="kbtn b-ghost" onclick="closeItemDialog()">✕ إغلاق</button>
+    </div>
+    <div class="dlgbody">
+      <div class="dlgwarn" id="dWarn" hidden></div>
+      <div class="fld"><label>عنوان البند — السؤال كما يُطرح على الطاولة *</label>
+        <input type="text" id="dTitle" placeholder="مثال: آلية اعتماد طلبات الشراء العاجلة"></div>
+      <div class="fld"><label>🎯 ما نطلبه</label>
+        <textarea id="dAsk" placeholder="الطلب المحدّد الذي نخرج به من هذا البند…"></textarea></div>
+      <div class="fld"><label>❓ لماذا</label>
+        <textarea id="dWhy" placeholder="المشكلة القائمة التي يعالجها الطلب…"></textarea></div>
+      <div class="fld"><label id="dThemLbl">🤝 ما يخصّ الطرف الآخر</label>
+        <textarea id="dThem" placeholder="ما نطلب من الإدارة المقابلة تحديدًا…"></textarea></div>
+    </div>
+    <div class="dlgfoot">
+      <button class="kbtn b-gold" onclick="saveItemDialog()">💾 حفظ</button>
+      <button class="kbtn b-ghost" onclick="closeItemDialog()">إلغاء</button>
+    </div>
   </div>
 </div>
 
@@ -366,9 +426,10 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 <div class="stage" id="stage"><div id="slideBox"></div></div>
 <div class="sl-nav">
   <button class="kbtn b-ghost" onclick="endPresent()">✕ إنهاء</button>
-  <button class="kbtn b-navy" onclick="slideMove(-1)">→ السابق</button>
+  <button class="kbtn b-navy" id="slPrev" onclick="slideMove(-1)">→ السابق</button>
   <div class="sl-prog"><span id="slProg" style="width:0%"></span></div>
-  <button class="kbtn b-gold" onclick="slideMove(1)">التالي ←</button>
+  <button class="kbtn b-gold" id="slNext" onclick="slideMove(1)">التالي ←</button>
+  <span class="sl-hint">الأسهم للتنقّل · زرّ الرجوع أو Esc للخروج</span>
 </div>
 
 <div id="docPrint" aria-hidden="true"></div>
@@ -384,7 +445,10 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     minutesVerdict,
     consolidate,
     systemReportVerdict,
+    agendaVerdict,
+    createItem,
   } from '../../services/meetings/meetingsModel.js';
+  import { openOverlay, closeOverlay } from '../../services/ui/overlayHistory.js';
   import {
     esc,
     stateBadge,
@@ -436,20 +500,26 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     $('cloudChipText').textContent = text;
   }
 
+  /** إرسال فوري للسحابة — لتغييرٍ بنيويّ لا يُنتظر به (إضافة بند أو حذفه). */
+  async function saveNow() {
+    if (!canWrite) return;
+    clearTimeout(saveTimer);
+    setCloud('dirty', 'يُحفظ…');
+    try {
+      await saveMeeting(current(), profile);
+      setCloud('online', 'محفوظ سحابيًّا');
+    } catch (e) {
+      setCloud('dirty', 'تعذّر الحفظ');
+      toast('❌ ' + e.message);
+    }
+  }
+
   /** حفظ مؤجَّل — الكتابة في الغرفة سريعة، فلا نُرسل عند كل حرف. */
   function queueSave() {
     if (!canWrite) return;
     setCloud('dirty', 'يُحفظ…');
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(async () => {
-      try {
-        await saveMeeting(current(), profile);
-        setCloud('online', 'محفوظ سحابيًّا');
-      } catch (e) {
-        setCloud('dirty', 'تعذّر الحفظ');
-        toast('❌ ' + e.message);
-      }
-    }, 700);
+    saveTimer = setTimeout(saveNow, 700);
   }
 
   /* ═══════════ العرض ═══════════ */
@@ -472,9 +542,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       .map(
         (p, i) => `<div class="prow">
           <input type="text" value="${esc(p.name || '')}" placeholder="الاسم" ${ro}
-                 oninput="setPerson('${kind}',${i},'name',this.value)">
+                 data-f="${kind}:${i}:name" oninput="setPerson('${kind}',${i},'name',this.value)">
           <input type="text" value="${esc(p.role || '')}" placeholder="المسمّى" ${ro}
-                 oninput="setPerson('${kind}',${i},'role',this.value)">
+                 data-f="${kind}:${i}:role" oninput="setPerson('${kind}',${i},'role',this.value)">
           <select ${ro} onchange="setPerson('${kind}',${i},'side',this.value)">
             <option value="us" ${p.side === 'us' ? 'selected' : ''}>إدارتنا</option>
             <option value="them" ${p.side !== 'us' ? 'selected' : ''}>الطرف الآخر</option>
@@ -485,14 +555,20 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       .join('');
   }
 
+  /** لا نكتب في حقلٍ تحت يد الكاتب — إسناد القيمة يقذف المؤشّر إلى آخره. */
+  function setField(id, value) {
+    const el = $(id);
+    if (el && el !== document.activeElement) el.value = value;
+  }
+
   function renderMeta() {
     const m = current();
     const st = MEETING_STATES[m.state] || {};
     $('mHead').textContent = `${m.icon || ''} ${m.no} — ${m.dept} · ${st.emoji || ''} ${st.label || ''}`;
-    $('fDate').value = m.date || '';
-    $('fPlace').value = m.place || '';
-    $('fGoal').value = m.goal || '';
-    $('fNotes').value = m.notes || '';
+    setField('fDate', m.date || '');
+    setField('fPlace', m.place || '');
+    setField('fGoal', m.goal || '');
+    setField('fNotes', m.notes || '');
     $('fNum').value = m.number || '—';
     $('fLtr').value = m.letterNumber || '—';
     $('attBox').innerHTML = personRows(m.attendees, 'att');
@@ -514,8 +590,15 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
           <div class="it-head" onclick="toggleItem('${esc(it.id)}')">
             <span class="it-n">${i + 1}</span>
             <span class="it-t">${esc(it.title)}</span>
+            ${it.custom ? '<span class="tag-custom">مُضاف</span>' : ''}
             ${it.draft ? '<span class="tag-draft">مسودّة</span>' : ''}
             ${stateBadge(it.state)}
+            <span class="it-acts writer-only">
+              <button class="iact" title="تعديل البند"
+                      onclick="event.stopPropagation();editItem('${esc(it.id)}')">✎</button>
+              <button class="iact del" title="حذف البند"
+                      onclick="event.stopPropagation();deleteItem('${esc(it.id)}')">🗑</button>
+            </span>
             <span style="color:#94a3b8;">${open ? '▲' : '▼'}</span>
           </div>
           <div class="it-body" ${open ? '' : 'hidden'}>
@@ -534,33 +617,87 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
                 .join('')}
             </div>
             <div class="fld" style="margin-bottom:9px;"><label>ما نوقش</label>
-              <textarea ${ro} oninput="setItem('${esc(it.id)}','discussion',this.value)">${esc(it.discussion)}</textarea></div>
+              <textarea ${ro} data-f="${esc(it.id)}:discussion"
+                oninput="setItem('${esc(it.id)}','discussion',this.value)">${esc(it.discussion)}</textarea></div>
             <div class="fld" style="margin-bottom:9px;"><label>✅ القرار المتفق عليه (يُكتب في المحضر)</label>
-              <textarea ${ro} oninput="setItem('${esc(it.id)}','decision',this.value)">${esc(it.decision)}</textarea></div>
+              <textarea ${ro} data-f="${esc(it.id)}:decision"
+                oninput="setItem('${esc(it.id)}','decision',this.value)">${esc(it.decision)}</textarea></div>
             <div class="frow">
               <div class="fld"><label>المسؤول من إدارتنا</label>
-                <input type="text" value="${esc(it.ownerUs)}" ${ro} oninput="setItem('${esc(it.id)}','ownerUs',this.value)"></div>
+                <input type="text" value="${esc(it.ownerUs)}" ${ro} data-f="${esc(it.id)}:ownerUs"
+                  oninput="setItem('${esc(it.id)}','ownerUs',this.value)"></div>
               <div class="fld"><label>المسؤول من ${esc(m.dept)}</label>
-                <input type="text" value="${esc(it.ownerThem)}" ${ro} oninput="setItem('${esc(it.id)}','ownerThem',this.value)"></div>
+                <input type="text" value="${esc(it.ownerThem)}" ${ro} data-f="${esc(it.id)}:ownerThem"
+                  oninput="setItem('${esc(it.id)}','ownerThem',this.value)"></div>
               <div class="fld"><label>الموعد</label>
-                <input type="date" value="${esc(it.due)}" ${ro} onchange="setItem('${esc(it.id)}','due',this.value)"></div>
+                <input type="date" value="${esc(it.due)}" ${ro} data-f="${esc(it.id)}:due"
+                  onchange="setItem('${esc(it.id)}','due',this.value)"></div>
               <div class="fld"><label>&nbsp;</label>
-                <button class="mini writer-only" onclick="editBrief('${esc(it.id)}')" ${ro}>✎ عدّل مسودّة العرض</button></div>
+                <button class="mini writer-only" onclick="editItem('${esc(it.id)}')" ${ro}>✎ عدّل نصّ البند</button></div>
             </div>
           </div>
         </div>`;
       })
-      .join('');
+      .join('') + trashHtml(m);
     document.querySelectorAll('.writer-only').forEach((el) => { el.hidden = !canWrite; });
   }
 
+  /**
+   * البنود المحذوفة من هذا الاجتماع — تُعرض للمحرّر وحده كي يبقى الحذف
+   * قابلًا للتراجع: بندُ بذرةٍ حُذف لا يُمحى بل يُخفى، فلا يضيع سؤالٌ بضغطة.
+   */
+  function trashHtml(meeting) {
+    const gone = meeting.removedItems || [];
+    if (!gone.length || !canWrite) return '';
+    return (
+      `<div class="trash writer-only"><h5>🗑 بنود محذوفة من هذا الاجتماع (${gone.length}) — لا تظهر في العرض ولا في المحضر</h5>` +
+      gone
+        .map(
+          (it) => `<div class="trashrow"><b>${esc(it.title)}</b>
+            <button class="iact" onclick="restoreItem('${esc(it.id)}')">↩ استرجاع</button></div>`
+        )
+        .join('') +
+      `</div>`
+    );
+  }
+
+  /**
+   * إعادة الرسم لا تقطع الكتابة.
+   *
+   * الحفظ الحيّ يُرجع لقطةً من السحابة بعد كل تعديل، وإعادة بناء الوسم
+   * كانت تسحب المؤشّر من تحت يد الكاتب في منتصف الجملة. فنحفظ الحقل الذي
+   * فيه التركيز (`data-f`) وموضع المؤشّر فيه، ونُعيدهما بعد الرسم.
+   */
   function render() {
+    const active = document.activeElement;
+    const key = active?.dataset?.f || null;
+    let start = null;
+    let end = null;
+    try {
+      start = active.selectionStart;
+      end = active.selectionEnd;
+    } catch {
+      /* حقول كالتاريخ لا تدعم تحديد النصّ */
+    }
+
     renderCards();
     renderMeta();
     renderItems();
     // لوحة التقرير المجمّع تتحدّث مع كل تغيّر ما دامت مفتوحة، فلا يبقى
     // «غير جاهز» معروضًا بعد أن يُحسم آخر بند.
     if ($('rPanel')?.style.display === 'block') renderReady();
+
+    if (!key) return;
+    const back = document.querySelector(`[data-f="${key}"]`);
+    if (!back) return;
+    back.focus({ preventScroll: true });
+    if (start !== null && typeof back.setSelectionRange === 'function') {
+      try {
+        back.setSelectionRange(start, end);
+      } catch {
+        /* الحقل لا يقبل تحديدًا — التركيز وحده يكفي */
+      }
+    }
   }
 
   /* ═══════════ التفاعل ═══════════ */
@@ -593,22 +730,138 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     render();
   };
 
-  window.editBrief = (id) => {
+  /* ═══════════ إضافة بند وحذفه وتعديله ═══════════
+   *
+   * البذرة نقلت خطاب المالك، لكنّ الطاولة تُنبت أسئلة لم تخطر في الخطاب
+   * وتُسقط أخرى لا تخصّ الإدارة الجالسة. فكل تغيير هنا يُحفظ سحابيًّا فورًا
+   * (لا بعد الاجتماع)، ويتوقّف عند حدٍّ واحد: المحضر الموقّع لا تُمسّ بنوده.
+   */
+
+  let dlgToken = null;
+  let dlgMode = 'add';
+  let dlgItemId = null;
+
+  /** يمنع التحرير إن كان المحضر معتمدًا، ويُنبّه إن كان صادرًا برقم. */
+  function agendaGate() {
+    const v = agendaVerdict(current());
+    if (!v.ok) toast('🔒 ' + v.reason);
+    return v;
+  }
+
+  function openItemDialog(mode, item) {
+    const v = agendaGate();
+    if (!v.ok) return;
+    dlgMode = mode;
+    dlgItemId = item?.id || null;
+    $('dlgTitle').textContent = mode === 'add' ? '＋ بند جديد' : '✎ تعديل البند';
+    $('dTitle').value = item?.title || '';
+    $('dAsk').value = item?.ask || '';
+    $('dWhy').value = item?.why || '';
+    $('dThem').value = item?.theirSide || '';
+    $('dThemLbl').textContent = `🤝 ما يخصّ ${current().dept}`;
+    $('dWarn').textContent = v.warn;
+    $('dWarn').hidden = !v.warn;
+    $('itemDlg').classList.add('on');
+    // زرّ الرجوع يُغلق النافذة ولا يغادر الصفحة
+    dlgToken = openOverlay(hideItemDialog, 'item-dialog');
+    setTimeout(() => $('dTitle').focus(), 40);
+  }
+
+  /** إخفاءٌ صِرف — آمن التكرار، فقد يأتي من `popstate` ومن الزرّ معًا. */
+  function hideItemDialog() {
+    $('itemDlg').classList.remove('on');
+  }
+
+  function closeItemDialog() {
+    const token = dlgToken;
+    dlgToken = null;
+    if (!closeOverlay(token)) hideItemDialog();
+  }
+  window.closeItemDialog = closeItemDialog;
+
+  window.addItem = () => openItemDialog('add', null);
+
+  window.editItem = (id) => {
     const it = current().items.find((x) => x.id === id);
-    if (!it) return;
-    const ask = prompt('ما نطلبه:', it.ask);
-    if (ask === null) return;
-    const why = prompt('لماذا:', it.why);
-    if (why === null) return;
-    const them = prompt(`ما يخصّ ${current().dept}:`, it.theirSide);
-    if (them === null) return;
-    it.ask = ask;
-    it.why = why;
-    it.theirSide = them;
-    it.draft = false;
-    queueSave();
-    renderItems();
-    toast('✎ عُدّلت المسودّة — لم تعد مسودّة');
+    if (it) openItemDialog('edit', it);
+  };
+
+  window.saveItemDialog = () => {
+    const m = current();
+    const title = $('dTitle').value.trim();
+    if (!title) {
+      toast('✍️ البند يحتاج عنوانًا — هو السؤال الذي يُطرح على الطاولة');
+      $('dTitle').focus();
+      return;
+    }
+    const fields = {
+      title,
+      ask: $('dAsk').value.trim(),
+      why: $('dWhy').value.trim(),
+      theirSide: $('dThem').value.trim(),
+    };
+
+    if (dlgMode === 'add') {
+      const it = createItem(m, fields);
+      m.items.push(it);
+      openItem = it.id;
+      toast(`＋ أُضيف البند «${title}»`);
+    } else {
+      const it = m.items.find((x) => x.id === dlgItemId);
+      if (!it) return;
+      if (it.title !== title) it.titleEdited = true;
+      Object.assign(it, fields);
+      it.draft = false; // نصٌّ راجعه المالك لم يعد مسودّة
+      toast('✎ عُدّل البند');
+    }
+
+    closeItemDialog();
+    render();
+    saveNow();
+  };
+
+  window.deleteItem = (id) => {
+    const m = current();
+    if (!agendaGate().ok) return;
+    const at = m.items.findIndex((x) => x.id === id);
+    if (at === -1) return;
+    const it = m.items[at];
+
+    // بندٌ كُتب فيه نقاشٌ أو قرار يخرج من المحضر والتقرير المجمّع معًا —
+    // فلا يُحذف بضغطةٍ عابرة.
+    const written = [it.discussion, it.decision].some((t) => String(t || '').trim());
+    const ask = written
+      ? `«${it.title}»\n\nفي هذا البند نقاشٌ أو قرارٌ مكتوب، وحذفه يُخرجه من المحضر ومن التقرير المجمّع.\nهل تحذفه؟`
+      : `حذف البند «${it.title}»؟`;
+    if (!confirm(ask)) return;
+
+    m.items.splice(at, 1);
+    // بند البذرة يُحفظ شاهدُ حذفٍ له فيبقى الاسترجاع ممكنًا؛ والمُضاف يزول.
+    if (!it.custom) (m.removedItems = m.removedItems || []).push(it);
+    if (openItem === id) openItem = null;
+
+    render();
+    saveNow();
+    toast(it.custom ? '🗑 حُذف البند' : '🗑 حُذف البند — يمكن استرجاعه من قائمة المحذوفات أسفل البنود');
+  };
+
+  window.restoreItem = (id) => {
+    const m = current();
+    if (!agendaGate().ok) return;
+    const at = (m.removedItems || []).findIndex((x) => x.id === id);
+    if (at === -1) return;
+    const [it] = m.removedItems.splice(at, 1);
+
+    // يعود إلى موضعه من البذرة لا إلى ذيل القائمة — ترتيب الخطاب محفوظ.
+    const seedIds = (SEED.meetings.find((s) => s.id === m.id)?.items || []).map((x) => x.id);
+    const pos = seedIds.indexOf(it.id);
+    let insertAt = m.items.findIndex((x) => seedIds.indexOf(x.id) > pos);
+    if (insertAt === -1) insertAt = m.items.filter((x) => seedIds.includes(x.id)).length;
+    m.items.splice(insertAt, 0, it);
+
+    render();
+    saveNow();
+    toast(`↩ استُرجع البند «${it.title}»`);
   };
 
   window.onMeta = () => {
@@ -650,6 +903,12 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   function paintSlide() {
     const m = current();
     const items = m.items;
+    if (!items.length) {
+      $('slideBox').innerHTML =
+        '<div class="slide"><h2 class="sl-title">لا بنود في هذا الاجتماع</h2></div>';
+      $('slProg').style.width = '0%';
+      return;
+    }
     slideIdx = Math.max(0, Math.min(slideIdx, items.length - 1));
     $('slideBox').innerHTML = slideHtml(items[slideIdx], {
       index: slideIdx,
@@ -657,6 +916,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       dept: m.dept,
     });
     $('slProg').style.width = `${Math.round(((slideIdx + 1) / items.length) * 100)}%`;
+    // طرفا الشريط يُعطَّلان عند الحدّ — فلا ضغطٌ لا أثر له أمام الحاضرين
+    $('slPrev').disabled = slideIdx === 0;
+    $('slNext').disabled = slideIdx === items.length - 1;
   }
 
   // تُعرَّف محليًّا ثم تُصدَّر: تُستدعى من `onclick` في الوسم ومن مستمع
@@ -667,27 +929,61 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   }
   window.slideMove = slideMove;
 
+  const presenting = () => $('mtWrap').classList.contains('present');
+
+  /* وضع العرض طبقةٌ تملأ الشاشة، فزرّ الرجوع — وهو الزرّ الوحيد على
+     الهاتف — يجب أن يُنهيه لا أن يغادر الصفحة. راجع `overlayHistory.js`. */
+  let presentToken = null;
+
+  /** إخفاءٌ صِرف — آمن التكرار، فقد يأتي من `popstate` ومن زرّ الإنهاء معًا. */
+  function hidePresent() {
+    $('mtWrap').classList.remove('present');
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  }
+
   window.startPresent = () => {
     slideIdx = 0;
     $('mtWrap').classList.add('present');
     paintSlide();
+    presentToken = openOverlay(hidePresent, 'present');
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(() => {});
     }
   };
 
   function endPresent() {
-    $('mtWrap').classList.remove('present');
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    const token = presentToken;
+    presentToken = null;
+    if (!closeOverlay(token)) hidePresent();
   }
   window.endPresent = endPresent;
 
   document.addEventListener('keydown', (e) => {
-    if (!$('mtWrap').classList.contains('present')) return;
+    // النافذة أولى بالمفاتيح ما دامت مفتوحة فوق الشاشة
+    if (dlgToken) {
+      if (e.key === 'Escape') closeItemDialog();
+      return;
+    }
+    if (!presenting()) return;
     if (e.key === 'Escape') endPresent();
-    if (e.key === 'ArrowLeft') slideMove(1);
-    if (e.key === 'ArrowRight') slideMove(-1);
+    // في RTL يتقدّم العرض يسارًا؛ ومفاتيح العارض (Space/PageDown) تتقدّم أيضًا
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') slideMove(1);
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'PageUp') slideMove(-1);
+    else if (e.key === 'Home') { slideIdx = 0; paintSlide(); }
+    else if (e.key === 'End') { slideIdx = current().items.length - 1; paintSlide(); }
+    else return;
+    e.preventDefault();
   });
+
+  /* سحبٌ بالإصبع على اللوح — كثيرًا ما يُدار العرض من جهاز لمس لا فأرة. */
+  let touchX = null;
+  $('stage').addEventListener('touchstart', (e) => { touchX = e.changedTouches[0].clientX; }, { passive: true });
+  $('stage').addEventListener('touchend', (e) => {
+    if (touchX === null || !presenting()) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    touchX = null;
+    if (Math.abs(dx) > 60) slideMove(dx < 0 ? 1 : -1);
+  }, { passive: true });
 
   /* ═══════════ الإصدار والطباعة ═══════════ */
 

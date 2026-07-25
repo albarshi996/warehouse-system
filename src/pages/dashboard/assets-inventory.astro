@@ -896,4 +896,26 @@ window.switchView = switchView;
 updateStats();
 renderTable();
 </script>
+
+<!--
+  زرّ الرجوع يُغلق نافذة تأكيد الحذف، لا يغادر الصفحة.
+
+  النافذة تعترض حذفًا لا رجعة فيه، فهي أوّل ما يهرب منه المستخدم بزرّ
+  الرجوع — وكان يخرجه من شاشة الجرد كلّها بدل أن يلغي الحذف. نربطها
+  بتاريخ المتصفّح دون المساس بـ`openDelModal`/`closeDelModal`.
+
+  شارة الفتح هنا `open` لا `active` (راجع `.modal-bg.open` في التنسيق)،
+  ونُغلق بدالّة الصفحة نفسها كي يُصفَّر `deleteId` فلا يبقى أصلٌ مرشَّحًا
+  للحذف بعد إلغائه. أمّا `#form-panel` فيتدفّق مع الصفحة ولا يحجبها،
+  فلا شأن لزرّ الرجوع به.
+-->
+<script>
+  import { trackOverlay } from '../../services/ui/overlayHistory.js';
+
+  trackOverlay('#del-modal', {
+    name: 'delete-asset',
+    isOpen: (el) => el.classList.contains('open'),
+    close: () => window.closeDelModal(),
+  });
+</script>
 </DashboardLayout>

@@ -282,6 +282,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     reschedulePm,
   } from '../../services/maintenance/maintenanceService.js';
   import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
+  import { trackOverlays } from '../../services/ui/overlayHistory.js';
 
   const WRITER_ROLES = ['admin', 'warehouse_manager', 'fleet'];
   let assets = [];
@@ -580,5 +581,11 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       showToast('✅ سُجّل الإصلاح — يبقى اعتماد العودة للخدمة');
     } catch (e) { showToast('❌ ' + e.message); }
   };
+
+  // ─── زرّ الرجوع يُغلق الطبقة ──────────────────────────────────────────
+  // النوافذ الثلاث تملأ العرض، والرجوع على الهاتف كان يغادر الصفحة بدل أن
+  // يُغلقها فيضيع طلب صيانةٍ نصف مكتوب. لا دالّة إغلاق نستدعيها هنا —
+  // الإغلاق في القالب مجرّد إزالة صنف `active`، وهو سلوك المُراقب الافتراضي.
+  trackOverlays(['#assetOv', '#woOv', '#woFileOv']);
 </script>
 </DashboardLayout>

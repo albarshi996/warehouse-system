@@ -1,11 +1,17 @@
 import React from 'react';
 import { ODOO } from './odooTheme.js';
+import { useOverlayBack } from '../../../services/ui/useOverlayBack.js';
 
 /**
  * Generic Odoo modal / wizard dialog — scoped to the simulator window
  * (absolute over the .odoo-sim root, which is position:relative).
  */
 export default function OdooWizard({ title, onClose, children, footer }) {
+  /* لا تُركَّب هذه النافذة إلّا وهي مفتوحة (`state.wizard`)، فعمرها هو عمر الطبقة:
+     تُسجَّل في التاريخ عند ظهورها، ويُستهلك مدخلها متى أُغلقت أو حُفظت — والرجوع
+     يصرفها كزرّ «تجاهل» تمامًا بدل مغادرة صفحة المحاكي. */
+  useOverlayBack(true, onClose, 'odoo-wizard');
+
   return (
     <div
       className="absolute inset-0 z-[60] flex items-center justify-center p-4"

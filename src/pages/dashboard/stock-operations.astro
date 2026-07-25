@@ -1157,6 +1157,37 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
       });
     },
   };
+
+  /* ─────────────────────────────────────────────────────────────
+     زرّ الرجوع يُغلق النافذة، لا يغادر الشاشة.
+
+     الجرد يجري بيدٍ واحدة على الهاتف، وزرّ الرجوع هناك هو الزرّ الوحيد
+     وردّ الفعل الطبيعي أمام نافذةٍ تملأ العرض — فكان يقذف العامل خارج
+     الجلسة ومعها ما لم يُرفع من مسحٍ بعد. نربط النوافذ العشر بتاريخ
+     المتصفّح من هنا ولا نمسّ `openModal`/`closeModal` ولا دوالّ الإغلاق.
+
+     ما له دالّة إغلاق خاصّة يُغلق بها لا بإزالة الصنف، وإلّا ضاع تنظيفه:
+     نافذة الكاميرا **توقف بثّ الكاميرا** — وتركه يعمل خلف شاشةٍ مغلقة
+     يستنزف البطارية ويُبقي مؤشّر التصوير مضاءً — ونافذة الدفعة توقف
+     كاميرا الدفعة، وتفاصيل المسح تُفرغ الباركود النشط وتُعيد التركيز
+     لحقل المسح. الدوالّ عالمية لأنها مُعرَّفة في السكربت المضمّن أدناه،
+     وهذا السكربت وحدة مؤجّلة فلا تُنادى إلّا بعد تعريفها.
+     ───────────────────────────────────────────────────────────── */
+  import { trackOverlay, trackOverlays } from '../../services/ui/overlayHistory.js';
+
+  trackOverlays([
+    '#restoreSessionModal',
+    '#adminLoginModal',
+    '#adminSettingsModal',
+    '#advancedPasteModal',
+    '#manualAddModal',
+    '#editItemModal',
+    '#exportModal',
+  ]);
+
+  trackOverlay('#scanDetailModal', { close: () => window.closeScanDetail() });
+  trackOverlay('#batchModal', { close: () => window.closeBatchModal() });
+  trackOverlay('#cameraScanModal', { close: () => window.closeCameraModal() });
 </script>
 <!-- كاشف الباركود الموحّد (يعمل على آيفون عبر الاحتياطي html5-qrcode) -->
 <script is:inline src={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/lib/bz-barcode.js`}></script>

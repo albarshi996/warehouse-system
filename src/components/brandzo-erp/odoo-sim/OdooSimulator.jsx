@@ -2,6 +2,7 @@ import React, { useReducer, useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { ODOO, APPS, SAMPLE_PO, RECEIPT_REF, PR_REF, GP_REF, RET_REF, CN_REF, CC_REF, ADJ_REF } from './odooTheme.js';
 import { initialState, simReducer } from './simReducer.js';
+import { useOverlayBack } from '../../../services/ui/useOverlayBack.js';
 import OdooNavbar from './OdooNavbar.jsx';
 import OdooSidebar from './OdooSidebar.jsx';
 import PurchaseApp from './PurchaseApp.jsx';
@@ -43,6 +44,9 @@ function Toast({ alert, onClose }) {
 export default function OdooSimulator() {
   const [state, dispatch] = useReducer(simReducer, initialState);
   const [fsMode, setFsMode] = useState(null); // null | 'native' | 'overlay'
+  /* وضع الطبقة البديلة وحده هو الذي يغطّي الصفحة بـportal ولا يعلم به المتصفّح،
+     فالرجوع يُخرج منه. أمّا ملء الشاشة الأصلي فالمتصفّح يتولّى الخروج منه بنفسه. */
+  useOverlayBack(fsMode === 'overlay', () => setFsMode(null), 'odoo-fullscreen');
   const shellRef = useRef(null);
   const app = APPS.find((a) => a.id === state.app);
 
@@ -131,6 +135,8 @@ export default function OdooSimulator() {
     : 'odoo-sim relative flex flex-col rounded-lg border overflow-hidden shadow-xl h-[calc(100vh-150px)] min-h-[600px]';
 
   const showCompletion = state.close.state === 'closed' && !state.completionDismissed;
+  /* شاشة الإنجاز تغطّي نافذة المحاكي كلّها — فالرجوع يصرفها كزرّ «متابعة الاستكشاف». */
+  useOverlayBack(showCompletion, () => dispatch({ type: 'DISMISS_COMPLETION' }), 'odoo-completion');
 
   const shell = (
     <div

@@ -45,19 +45,31 @@ export function canTransitionMeeting(from, to) {
 
 /**
  * يدمج بذرة الاجتماع مع ما حُفظ سحابيًّا.
- * البذرة تحكم **العناوين والترتيب**؛ والمحفوظ يحكم **ما جرى في الغرفة**
- * وأي تحرير للمسودّة. بند محفوظ لا أصل له في البذرة يُلحق في آخر القائمة
- * (لئلّا يضيع شيء كتبه المالك ثم حُذف عنوانه من البذرة).
+ * البذرة تحكم **الترتيب والنصّ الأصلي**؛ والمحفوظ يحكم **ما جرى في الغرفة**
+ * وما حرّره المالك. وثلاث حالات للبند:
+ *
+ *  1. **بند بذرة** — يُدمج فوقه المحفوظ. لا يُكتب عنوانه في السحابة إلّا إذا
+ *     حرّره المالك (`titleEdited`)، فتصحيحُ صياغةٍ في البذرة يصل لِما لم يُحرَّر.
+ *  2. **بند مُضاف** (`custom`) — لا أصل له في البذرة، فيُحفظ كاملًا ويُلحق
+ *     في آخر القائمة بترتيب إضافته.
+ *  3. **بند بذرة محذوف** — لا يُمحى من البذرة (لا نملكها)، بل يُسجَّل شاهدُ
+ *     حذفٍ `{deleted:true}` يُخرجه من `items` إلى `removedItems` فيبقى
+ *     الاسترجاع ممكنًا. والبند المُضاف إذا حُذف زال أثره تمامًا.
  */
 export function mergeMeeting(seed, saved) {
   const s = saved || {};
   const savedItems = new Map((s.items || []).map((i) => [i.id, i]));
 
-  const items = (seed.items || []).map((item) => {
+  const items = [];
+  const removedItems = [];
+
+  for (const item of seed.items || []) {
     const rec = savedItems.get(item.id) || {};
     savedItems.delete(item.id);
-    return {
+    const merged = {
       ...item,
+      title: rec.title ?? item.title,
+      titleEdited: rec.title !== undefined,
       ask: rec.ask ?? item.ask,
       why: rec.why ?? item.why,
       theirSide: rec.theirSide ?? item.theirSide,
@@ -69,10 +81,21 @@ export function mergeMeeting(seed, saved) {
       due: rec.due || '',
       state: rec.state || 'pending',
     };
-  });
+    (rec.deleted ? removedItems : items).push(merged);
+  }
 
   for (const orphan of savedItems.values()) {
-    items.push({ draft: false, state: 'pending', ...orphan, orphan: true });
+    if (orphan.deleted) continue; // بند مُضاف ثم حُذف — لا شيء يُسترجَع
+    items.push({
+      draft: false,
+      state: 'pending',
+      ask: '',
+      why: '',
+      theirSide: '',
+      ...orphan,
+      orphan: true,
+      custom: true,
+    });
   }
 
   return {
@@ -90,6 +113,7 @@ export function mergeMeeting(seed, saved) {
     letterNumber: s.letterNumber || null,
     notes: s.notes || '',
     items,
+    removedItems,
   };
 }
 
@@ -362,9 +386,75 @@ export function consolidate(meetings) {
   };
 }
 
+/* ═══════════════ تحرير الأجندة — إضافة بند وحذفه وتعديله ═══════════════
+ *
+ * البذرة نقلت خطاب المالك، لكن الطاولة تُنبت أسئلة لم تخطر في الخطاب،
+ * وتُسقط أخرى لا تخصّ الإدارة الجالسة. فصار البند قابلًا للإضافة والحذف
+ * والتعديل — على أن يبقى كلّ ذلك في **طبقة المحفوظ** لا في البذرة، وأن
+ * يتوقّف عند حدٍّ واحد: **المحضر المعتمد بالتوقيع لا تُمسّ بنوده.**
+ */
+
+/** هل يجوز تحرير أجندة هذا الاجتماع الآن؟ `{ ok, reason, warn }`. */
+export function agendaVerdict(meeting) {
+  if (!meeting) return { ok: false, reason: 'لا اجتماع', warn: '' };
+  if (meeting.state === 'signed') {
+    return {
+      ok: false,
+      reason: 'المحضر معتمد وموقّع — بنوده لا تُعدَّل. أنشئ محضر متابعة بدلًا من ذلك.',
+      warn: '',
+    };
+  }
+  if (meeting.number) {
+    return {
+      ok: true,
+      reason: '',
+      warn: `المحضر صادر برقم ${meeting.number} — أي تعديل على البنود يستوجب إعادة طباعته وتوقيعه.`,
+    };
+  }
+  return { ok: true, reason: '', warn: '' };
+}
+
+/**
+ * معرّف بند جديد لا يصطدم بموجود ولا بمحذوف.
+ * البادئة `-c` تميّز المُضاف عن بنود البذرة (`M01-1`).
+ */
+export function nextItemId(meeting) {
+  const used = new Set(
+    [...(meeting.items || []), ...(meeting.removedItems || [])].map((i) => i.id)
+  );
+  let n = 1;
+  while (used.has(`${meeting.id}-c${n}`)) n += 1;
+  return `${meeting.id}-c${n}`;
+}
+
+/**
+ * بند جديد جاهز للإلحاق بـ`meeting.items`.
+ * @throws إن كان العنوان فارغًا — بندٌ بلا عنوان لا يُعرض ولا يُطبع.
+ */
+export function createItem(meeting, fields = {}) {
+  const title = String(fields.title || '').trim();
+  if (!title) throw new Error('البند يحتاج عنوانًا');
+  return {
+    id: fields.id || nextItemId(meeting),
+    title,
+    ask: String(fields.ask || '').trim(),
+    why: String(fields.why || '').trim(),
+    theirSide: String(fields.theirSide || '').trim(),
+    discussion: '',
+    decision: '',
+    ownerUs: '',
+    ownerThem: '',
+    due: '',
+    state: 'pending',
+    draft: false,
+    custom: true,
+    titleEdited: true,
+  };
+}
+
 /** الصفوف التي تُحفظ سحابيًّا من بند (نتفادى تخزين البذرة مرّتين). */
 export function itemPatch(item) {
-  return {
+  const patch = {
     id: item.id,
     ask: item.ask,
     why: item.why,
@@ -376,4 +466,17 @@ export function itemPatch(item) {
     due: item.due || '',
     state: item.state || 'pending',
   };
+  // العنوان لا يُحفظ إلّا لبندٍ مُضاف أو عنوانٍ حرّره المالك — فيبقى
+  // تصحيح البذرة نافذًا في كل ما لم يُحرَّر.
+  if (item.custom || item.titleEdited) patch.title = item.title;
+  if (item.custom) patch.custom = true;
+  return patch;
+}
+
+/** كل ما يُكتب في حقل `items` — البنود القائمة يليها شواهد الحذف. */
+export function itemsPatch(meeting) {
+  return [
+    ...(meeting.items || []).map(itemPatch),
+    ...(meeting.removedItems || []).map((i) => ({ id: i.id, deleted: true })),
+  ];
 }

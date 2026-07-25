@@ -779,6 +779,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
 <script>
 /* global L, XLSX */
+import { trackOverlay } from '../../services/ui/overlayHistory.js';
+
 (function () {
   'use strict';
 
@@ -2187,6 +2189,23 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   rebuildMarkers();
   renderTable();
   loadFromStorage();
+
+  // ── زرّ الرجوع ─────────────────────────────────────────────────────────
+  /* الخريطة بملء الشاشة تُقفل تمرير الصفحة وتُخفي كل ما حولها، ونافذة تعديل
+     الحيّ تحمل بيانات لم تُحفظ بعد — والرجوع في الحالتين يجب أن يُغلق الطبقة
+     لا أن يغادر الصفحة (وهو الزرّ الوحيد على الهاتف). نستدعي أزرار الإغلاق
+     القائمة نفسها كي تُعاد حالة الزرّ ويُعاد حساب مقاس الخريطة كما لو أُغلقت
+     باليد. راجع `overlayHistory.js`. */
+  trackOverlay('#rh-map-panel', {
+    name: 'map-fullscreen',
+    isOpen: (el) => el.classList.contains('rh-fullscreen'),
+    close: () => document.getElementById('btn-fullscreen').click(),
+  });
+  trackOverlay('#rh-modal-overlay', {
+    name: 'edit-modal',
+    isOpen: (el) => el.classList.contains('open'),
+    close: () => document.getElementById('btn-modal-cancel').click(),
+  });
 
 })();
 </script>

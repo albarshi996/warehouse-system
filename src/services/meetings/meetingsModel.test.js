@@ -23,6 +23,10 @@ import {
   itemsByState,
   allAgreements,
   itemPatch,
+  itemsPatch,
+  agendaVerdict,
+  nextItemId,
+  createItem,
   commitments,
   escalations,
   deferrals,
@@ -415,4 +419,138 @@ test('التقرير المجمّع على البذرة الحقيقية: يُر
   assert.equal(v.ok, false);
   assert.ok(v.problems.some((p) => p.includes('لم يصدر محضره')));
   assert.equal(consolidate(fresh).byDept.length, 0);
+});
+
+/* ═══════════ تحرير الأجندة: إضافة بند وحذفه وتعديله ═══════════
+ *
+ * الحكم الحاكم: التحرير يعيش في **طبقة المحفوظ** لا في البذرة. فبند بذرةٍ
+ * حُذف لا يُمحى بل يُخفى بشاهد حذف (استرجاعه ممكن)، وعنوانٌ لم يُحرَّر لا
+ * يُجمَّد في السحابة (فتصحيح البذرة يصل إليه)، والمحضر الموقّع لا تُمسّ بنوده.
+ */
+
+/** بذرة اجتماعٍ صغيرة للاختبار — بندان لا أكثر. */
+function tinySeed() {
+  return {
+    id: 'MT', no: '99', dept: 'إدارة الاختبار', icon: '🧪', goal: 'هدف',
+    items: [
+      { id: 'MT-1', title: 'الأول', ask: 'أ', why: 'ب', theirSide: 'ج', draft: true },
+      { id: 'MT-2', title: 'الثاني', ask: 'أ', why: 'ب', theirSide: 'ج', draft: true },
+    ],
+  };
+}
+
+test('بند مُضاف: معرّفه لا يصطدم، ويُحفظ كاملًا بعنوانه', () => {
+  const m = mergeMeeting(tinySeed(), null);
+  const it = createItem(m, { title: '  سؤال الطاولة  ', ask: 'نطلب', why: 'لأن' });
+  assert.equal(it.id, 'MT-c1');
+  assert.equal(it.title, 'سؤال الطاولة'); // مشذّب
+  assert.equal(it.custom, true);
+  assert.equal(it.state, 'pending');
+  assert.equal(it.draft, false);
+
+  const patch = itemPatch(it);
+  assert.equal(patch.title, 'سؤال الطاولة');
+  assert.equal(patch.custom, true);
+});
+
+test('بند بلا عنوان يُرفض — لا يُعرض ولا يُطبع', () => {
+  const m = mergeMeeting(tinySeed(), null);
+  assert.throws(() => createItem(m, { title: '   ' }), /عنوانًا/);
+});
+
+test('المعرّف الجديد يتجاوز المُستعمل والمحذوف معًا', () => {
+  const m = mergeMeeting(tinySeed(), {
+    items: [{ id: 'MT-c1', title: 'مضاف', custom: true }, { id: 'MT-2', deleted: true }],
+  });
+  assert.equal(nextItemId(m), 'MT-c2');
+});
+
+test('المُضاف يدور كاملًا: حفظ ثم قراءة يُعيده بعنوانه في آخر القائمة', () => {
+  const m = mergeMeeting(tinySeed(), null);
+  m.items.push(createItem(m, { title: 'سؤال جديد', ask: 'نطلب' }));
+  const back = mergeMeeting(tinySeed(), { items: itemsPatch(m) });
+  assert.equal(back.items.length, 3);
+  assert.equal(back.items[2].title, 'سؤال جديد');
+  assert.equal(back.items[2].custom, true);
+});
+
+test('حذف بند بذرة: يخرج من البنود إلى المحذوفات ويبقى قابلًا للاسترجاع', () => {
+  const m = mergeMeeting(tinySeed(), null);
+  const [gone] = m.items.splice(0, 1);
+  m.removedItems.push(gone);
+
+  const saved = { items: itemsPatch(m) };
+  assert.ok(saved.items.some((i) => i.id === 'MT-1' && i.deleted === true));
+
+  const back = mergeMeeting(tinySeed(), saved);
+  assert.deepEqual(back.items.map((i) => i.id), ['MT-2']);
+  assert.deepEqual(back.removedItems.map((i) => i.id), ['MT-1']);
+  assert.equal(back.removedItems[0].title, 'الأول'); // العنوان باقٍ للعرض في قائمة المحذوفات
+
+  // الاسترجاع: يكفي إسقاط شاهد الحذف
+  const restored = mergeMeeting(tinySeed(), { items: saved.items.filter((i) => !i.deleted) });
+  assert.deepEqual(restored.items.map((i) => i.id), ['MT-1', 'MT-2']);
+});
+
+test('البند المحذوف لا يدخل التقدّم ولا يمنع إصدار المحضر', () => {
+  const m = mergeMeeting(tinySeed(), null);
+  m.items[0].state = 'agreed';
+  m.items[0].decision = 'قرار';
+  const [gone] = m.items.splice(1, 1); // الثاني لم يُحسم — نحذفه
+  m.removedItems.push(gone);
+
+  assert.equal(meetingProgress(m).total, 1);
+  assert.equal(meetingProgress(m).pending, 0);
+  m.date = '2026-08-01';
+  m.attendees = [{ name: 'فلان' }];
+  m.signatories = [{ name: 'أ', side: 'us' }, { name: 'ب', side: 'them' }];
+  assert.equal(minutesVerdict(m).ok, true);
+});
+
+test('بند مُضاف ثم محذوف يزول أثره تمامًا — لا شاهد ولا سطر', () => {
+  const back = mergeMeeting(tinySeed(), { items: [{ id: 'MT-c1', deleted: true, custom: true }] });
+  assert.equal(back.items.length, 2);
+  assert.equal(back.removedItems.length, 0);
+});
+
+test('العنوان لا يُجمَّد في السحابة إلّا إذا حُرِّر — فتصحيح البذرة يصل', () => {
+  const m = mergeMeeting(tinySeed(), null);
+  m.items[0].decision = 'قرار'; // كتابةٌ في الغرفة لا تمسّ العنوان
+  const saved = { items: itemsPatch(m) };
+  assert.equal('title' in saved.items[0], false);
+
+  // البذرة صُحّحت لاحقًا — العنوان الجديد يظهر
+  const fixed = tinySeed();
+  fixed.items[0].title = 'الأول (بعد التصحيح)';
+  assert.equal(mergeMeeting(fixed, saved).items[0].title, 'الأول (بعد التصحيح)');
+});
+
+test('العنوان المحرَّر يصمد أمام تصحيح البذرة — قرار المالك أعلى', () => {
+  const m = mergeMeeting(tinySeed(), null);
+  m.items[0].title = 'صياغة المالك';
+  m.items[0].titleEdited = true;
+  const saved = { items: itemsPatch(m) };
+  assert.equal(saved.items[0].title, 'صياغة المالك');
+
+  const fixed = tinySeed();
+  fixed.items[0].title = 'صياغة البذرة';
+  const back = mergeMeeting(fixed, saved);
+  assert.equal(back.items[0].title, 'صياغة المالك');
+  assert.equal(back.items[0].titleEdited, true);
+});
+
+test('حكم التحرير: المحضر الموقّع مقفل، والصادر يُحرَّر بتنبيه', () => {
+  const m = mergeMeeting(tinySeed(), null);
+  assert.equal(agendaVerdict(m).ok, true);
+  assert.equal(agendaVerdict(m).warn, '');
+
+  m.number = 'MOM-2026-0001';
+  const issued = agendaVerdict(m);
+  assert.equal(issued.ok, true);
+  assert.ok(issued.warn.includes('MOM-2026-0001'));
+
+  m.state = 'signed';
+  const signed = agendaVerdict(m);
+  assert.equal(signed.ok, false);
+  assert.ok(signed.reason.includes('لا تُعدَّل'));
 });

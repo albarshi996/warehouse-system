@@ -364,6 +364,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   } from '../../services/fleet/fleetOpsService.js';
   import { listenVehicles } from '../../services/vehicles/vehiclesService.js';
   import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
+  import { trackOverlays } from '../../services/ui/overlayHistory.js';
 
   const WRITER_ROLES = ['admin', 'warehouse_manager', 'fleet'];
   let trips = [];
@@ -757,6 +758,14 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       showToast('✅ اعتُمد نموذج التسليم اليومي — المركبة مؤهلة لتصريح البوابة اليوم');
     } catch (e) { showToast('❌ ' + e.message); }
   };
+
+  /* ─── زرّ الرجوع ─── */
+
+  /* ملف الرحلة ونافذة الرحلة الجديدة يملآن الشاشة على الهاتف — وهو جهاز
+     السائق ومسؤول البوابة — فالرجوع يجب أن يُغلق النافذة لا أن يخرج من
+     المتابعة. نمرّ عبر `closeOv` نفسها كي يُفكّ اشتراك الوقود والأحداث
+     ولا تبقى مستمعات معلّقة. راجع `overlayHistory.js`. */
+  trackOverlays(['#newTripOv', '#tripOv'], { close: (el) => closeOv(el.id) });
 
   /* ─── مناطق التوزيع ─── */
   $('zonesGrid').innerHTML = ZONES.map((z) => `
