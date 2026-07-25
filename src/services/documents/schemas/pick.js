@@ -76,6 +76,13 @@ const schema = {
       fields: [
         { key: 'orderDate', label: 'تاريخ الطلب (Order Date)', kind: 'date', required: true },
         { key: 'branchOrderRef', label: 'رقم طلب الفرع (Branch Order Ref.)', kind: 'text' },
+        {
+          key: 'warehouse',
+          label: 'المستودع المصدر (Source Warehouse)',
+          kind: 'text',
+          required: true,
+          hint: 'كود المستودع الذي يخرج منه الرصيد فعلًا — عليه يقع القيد المخزني.',
+        },
         { key: 'destination', label: 'الفرع المستفيد (Destination Branch)', kind: 'text', required: true },
         { key: 'priority', label: 'أولوية الطلب (Priority)', kind: 'select', options: ['عاجل', 'عادي', 'منخفض'] },
         { key: 'wave', label: 'الموجة (Wave No.)', kind: 'text' },

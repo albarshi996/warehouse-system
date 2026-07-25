@@ -68,7 +68,14 @@ const schema = {
       columns: 3,
       fields: [
         { key: 'discoveryDate', label: 'تاريخ الاكتشاف (Discovery Date)', kind: 'date', required: true },
-        { key: 'location', label: 'الموقع / المستودع (Location)', kind: 'text', required: true },
+        { key: 'location', label: 'الموقع التفصيلي (Bin / Area)', kind: 'text', required: true },
+        {
+          key: 'warehouse',
+          label: 'المستودع (Warehouse)',
+          kind: 'text',
+          required: true,
+          hint: 'كود المستودع الذي يخرج منه التالف — عليه يقع القيد وخصم القيمة الدفترية.',
+        },
         {
           key: 'discoveredBy',
           label: 'المكتشف (Discovered By)',

@@ -56,6 +56,19 @@ service cloud.firestore {
              (signedIn() && hasProfile() && myRole() in ['admin', 'warehouse_manager', 'fleet']);
     }
 
+    // الفاعلون المخزنيون: من يملكون إنجاز مستندٍ يُحرّك المخزون، فيحتاجون
+    // قيد الحركة وتعديل الرصيد. المجموعة = كل من يظهر `complete` في مخطّطات
+    // الدورة (GRN·QC·PUTAWAY·PICK·DN·RET·DMG·ADJ) + المديرَان. المشاهد ومستخدم
+    // الإدارة ودور الحركة خارجها — لا يُنجزون مستندًا مخزنيًّا أصلًا.
+    function isStockActor() {
+      return isBootstrapAdmin() ||
+             (signedIn() && hasProfile() && myRole() in [
+               'admin', 'warehouse_manager', 'storekeeper', 'qc_inspector',
+               'gate_officer', 'purchase_officer', 'return_manager',
+               'inventory_auditor', 'finance_manager'
+             ]);
+    }
+
     // ── المستخدمون والأدوار ──────────────────────────────────────
     // القراءة لأي مُصادَق (الواجهة تحتاج معرفة دور المستخدم).
     // الكتابة للمدير العام فقط — وإلا استطاع أي مستخدم ترقية نفسه.
@@ -254,11 +267,33 @@ service cloud.firestore {
     }
 
     // ── الأرصدة (كمية لكل صنف×مخزن×تشغيلة) ───────────────────────
-    // القراءة لأي مصادَق (الجرد والمستندات تحتاج معرفة الرصيد)؛ الكتابة
-    // للمديرَين فقط. لا حذف — الرصيد الصفري يُكتب لا يُمحى (نفاد مخزن حقيقة).
+    // القراءة لأي مصادَق (الجرد والمستندات تحتاج معرفة الرصيد). الكتابة:
+    //   · المديرَان — للاستيراد الافتتاحي وتصحيح استثنائي.
+    //   · الفاعل المخزني — لأن قيد المستند يزيد/ينقص الرصيد ذرّيًّا، ومن
+    //     يُنجز قائمة السحب قد يكون أمين مخزن لا مديرًا. الحقيقة الملحقة تبقى
+    //     في `stock_moves` غير القابل للتعديل؛ والرصيد هنا ذاكرةٌ مُسرَّعة.
+    // لا حذف — الرصيد الصفري يُكتب لا يُمحى (نفاد مخزن حقيقة).
     match /balances/{balId} {
       allow read: if signedIn();
-      allow write: if isManager();
+      allow write: if isStockActor();
+      allow delete: if false;
+    }
+
+    // ── دفتر حركات المخزون (الحقيقة الملحقة) ─────────────────────
+    // كل حركة تقول: أيّ صنف، من أين إلى أين، بأيّ كمية، بأيّ مستند، ومن قيّدها.
+    // إضافة فقط — لا تعديل ولا حذف أبدًا (نفس نمط `scans` و`audit`). القيد
+    // بمعرّف حتميّ `docId__lineIndex`، فالكتابة الثانية تحلّ محلّ الأولى ولا
+    // تُضاعف؛ ومنع التعديل يمنع العبث بتاريخٍ صار مرجعًا.
+    match /stock_moves/{moveId} {
+      allow read: if signedIn();
+      allow create: if isStockActor()
+                    && request.resource.data.postedByUid == request.auth.uid;
+      // السماح بالكتابة على نفس المعرّف الحتمي (إعادة محاولة القيد الذرّي)
+      // شرط بقاء الهوية والمستند والكمية كما هي — لا تحوير لحركةٍ قُيّدت.
+      allow update: if isStockActor()
+                    && request.resource.data.docId == resource.data.docId
+                    && request.resource.data.qty == resource.data.qty
+                    && request.resource.data.sku == resource.data.sku;
       allow delete: if false;
     }
 

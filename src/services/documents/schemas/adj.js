@@ -87,6 +87,13 @@ const schema = {
       fields: [
         { key: 'adjustmentDate', label: 'تاريخ التسوية (Adjustment Date)', kind: 'date', required: true },
         {
+          key: 'warehouse',
+          label: 'المستودع (Warehouse)',
+          kind: 'text',
+          required: true,
+          hint: 'كود المستودع الذي تقع عليه التسوية — عليه يُصحَّح الرصيد.',
+        },
+        {
           key: 'cycleCountRef',
           label: 'مرجع الجرد (Cycle Count Ref.)',
           kind: 'text',

@@ -11,6 +11,9 @@ const ACTION_LABELS = {
   approved: { label: 'اعتمد', emoji: '✅' },
   rejected: { label: 'رفض', emoji: '❌' },
   done: { label: 'أنهى المستند', emoji: '🏁' },
+  derive: { label: 'اشتقّ مستندًا تاليًا', emoji: '🔗' },
+  post: { label: 'قُيّد الأثر المخزني', emoji: '📇' },
+  'post-failed': { label: 'تعذّر قيد الأثر المخزني', emoji: '⚠️' },
 };
 
 function fmt(ts) {

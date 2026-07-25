@@ -1,0 +1,31 @@
+---
+/**
+ * دفتر حركات المخزون — الأثر المخزني الحيّ لكل مستند منجَز.
+ *
+ * لماذا وُجدت؟ لأن المبدأ الحاكم «لا حركة بدون مستند، ولا مستند بدون أثر»
+ * صار قانونًا مُنفَّذًا: كل مستند يبلغ «منجَز» يُقيَّد حركةً في دفترٍ ملحق-فقط،
+ * ويُحدَّث الرصيد ذرّيًّا. هذه الصفحة نافذة ذلك الدفتر: الرصيد المتاح الحقيقي
+ * (الموجود ناقص المحجوز)، وكشف حركة كل صنف بمستنداته، ولوحة استثناءات تعرض
+ * ما عَلِق في مواقع كان يجب أن تفرغ.
+ *
+ * القاعدة الذهبية: لا حذف — صفحة ومكوّن جديدان (ledger/).
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import StockLedger from '../../components/brandzo-erp/ledger/StockLedger.jsx';
+---
+
+<DashboardLayout title="دفتر حركات المخزون" showGuide={false}>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">📇 دفتر حركات المخزون</h1>
+      <p class="text-gray-300 text-sm leading-relaxed max-w-3xl">
+        الرصيد الذي <span class="text-brand-gold font-bold">لا يكذب</span>: كل مستند منجَز يُقيَّد حركةً في
+        دفترٍ لا يُعدَّل ولا يُحذف، والرصيد يُحدَّث لحظتها. اقرأ المتاح الحقيقي لكل صنف
+        (الموجود ناقص المحجوز)، وتتبّع رحلته من الاستلام حتى التسليم، وراقب ما عَلِق في الطريق.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <StockLedger client:load />
+  </div>
+</DashboardLayout>

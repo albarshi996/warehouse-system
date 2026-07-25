@@ -16,7 +16,7 @@ import {
 } from '../../../services/documents/documentsService.js';
 import { getSchema, GOVERNED_FORMS } from '../../../services/documents/schemas/index.js';
 import { getState, STATES } from '../../../services/documents/states.js';
-import { PURCHASE_CHAIN, OUTBOUND_CHAIN } from '../../../services/documents/chain.js';
+import { PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN } from '../../../services/documents/chain.js';
 import {
   awaitingMyApproval,
   sortByUrgency,
@@ -116,6 +116,9 @@ export default function DocumentsInbox() {
   const groups = [
     { title: '📥 الوارد', types: PURCHASE_CHAIN },
     { title: '📤 الصادر', types: OUTBOUND_CHAIN },
+    { title: '↩️ المرتجعات', types: RETURN_CHAIN },
+    { title: '⚖️ الجرد', types: COUNT_CHAIN },
+    { title: '🗑️ التالف', types: ['DMG'] },
   ];
 
   return (

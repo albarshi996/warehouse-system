@@ -494,7 +494,10 @@ export const MATCH_STATUS = {
  */
 export function chainOf(doc, related = []) {
   const links = doc?.links || {};
-  const before = PURCHASE_CHAIN.slice(0, PURCHASE_CHAIN.indexOf(doc?.type))
+  // السلسلة التي ينتمي إليها المستند — لا سلسلة الشراء دائمًا. قبل هذا كان
+  // شريط «ما قبل» يخلو للصادر والمرتجعات والجرد، لأن indexOf يُعيد -1 فيهم.
+  const chain = chainFor(doc?.type) || PURCHASE_CHAIN;
+  const before = chain.slice(0, chain.indexOf(doc?.type))
     .map((type) => {
       const link = links[type];
       if (!link) return null;

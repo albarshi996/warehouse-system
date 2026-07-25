@@ -58,6 +58,13 @@ const schema = {
       fields: [
         { key: 'putawayDate', label: 'تاريخ التخزين (Putaway Date)', kind: 'date', required: true },
         {
+          key: 'warehouse',
+          label: 'المستودع (Warehouse)',
+          kind: 'text',
+          required: true,
+          hint: 'كود المستودع الذي يدخله الرصيد فعلًا — عليه يقع القيد المخزني.',
+        },
+        {
           key: 'grnRef',
           label: 'رقم GRN المرجعي (GRN Ref.)',
           kind: 'text',

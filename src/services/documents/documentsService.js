@@ -31,6 +31,9 @@ import { reserveNumber } from './numbering.js';
 import { INITIAL_STATE, isEditable, isLegalTransition, canDo, TRANSITIONS } from './states.js';
 import { deriveDocument } from './chain.js';
 import { getSchema } from './schemas/index.js';
+import { movesStock, POSTING_STATE } from '../ledger/postingRules.js';
+import { buildMoves } from '../ledger/movements.js';
+import { postDocument } from '../ledger/ledgerService.js';
 
 const DOCS = 'documents';
 const AUDIT = 'audit';
@@ -128,6 +131,19 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
     throw new Error('اكتب السبب أولًا — الرفض بلا سبب لا يُوثَّق.');
   }
 
+  // 🥇 حارس الأثر المخزني: لا يُنجَز مستندٌ يستحيل قيده.
+  // نفحص **قبل** تغيير الحالة، لا بعده — فمستندٌ «منجَز» بلا أثر أسوأ من
+  // مستندٍ عالق: الأوّل يكذب على الرصيد بصمت، والثاني يطلب التصحيح بصوت.
+  if (to === POSTING_STATE && movesStock(data.type)) {
+    const { moves, problems } = buildMoves({ ...data, id: docId });
+    if (problems.length) {
+      throw new Error(`تعذّر قيد الأثر المخزني: ${problems.join(' · ')}`);
+    }
+    if (!moves.length) {
+      throw new Error('لا بند بكمية — مستندٌ بلا أثر مخزني لا يُنجَز.');
+    }
+  }
+
   const patch = { state: to, updatedAt: serverTimestamp() };
 
   if (to === 'submitted' && !data.number) {
@@ -143,6 +159,28 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
 
   await updateDoc(ref, patch);
   await appendAudit(docId, { action: to, note, from, to, profile });
+
+  // الأثر المخزني يقع بعد الحالة لا قبلها: الدفتر يوثّق ما وقع، ولم يقع بعد
+  // إلا الآن. وقد فُحص أعلاه فلا يُتوقّع فشلٌ — وإن وقع كُتب في سجلّ التدقيق
+  // كي لا يُخفيه النظام: مستندٌ منجَز بلا قيد استثناءٌ يُلاحَق، لا صمتٌ يُحتمل.
+  if (to === POSTING_STATE && movesStock(data.type)) {
+    try {
+      const result = await postDocument({ ...data, id: docId, state: to }, profile);
+      await appendAudit(docId, {
+        action: 'post',
+        note: `قُيّد الأثر المخزني: ${result.moves} حركة، إجمالي ${result.totalQty}`,
+        profile,
+      });
+    } catch (err) {
+      await appendAudit(docId, {
+        action: 'post-failed',
+        note: `تعذّر قيد الأثر المخزني: ${err?.message || err}`,
+        profile,
+      });
+      throw new Error(`أُنجز المستند لكن تعذّر قيد أثره المخزني: ${err?.message || err}`);
+    }
+  }
+
   return patch.number || data.number || null;
 }
 
