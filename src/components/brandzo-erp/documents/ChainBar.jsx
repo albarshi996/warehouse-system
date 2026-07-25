@@ -12,7 +12,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getBasePath } from '../../../services/auth/authService.js';
 import { fetchChainDocuments, createNextInChain } from '../../../services/documents/documentsService.js';
-import { chainOf, threeWayMatch, nextInChain, MATCH_STATUS, PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, fefoViolations, gateVerdict, adjustmentVerdict, creditNoteVerdict } from '../../../services/documents/chain.js';
+import { chainOf, threeWayMatch, derivationTargets, MATCH_STATUS, PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN, fefoViolations, gateVerdict, adjustmentVerdict, creditNoteVerdict } from '../../../services/documents/chain.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { getSchema } from '../../../services/documents/schemas/index.js';
 import { getState } from '../../../services/documents/states.js';
@@ -108,35 +108,45 @@ export default function ChainBar({ doc, me, onFlash }) {
     return creditNoteVerdict(doc, ret);
   }, [doc, related]);
 
-  const next = nextInChain(doc?.type);
-  const nextSchema = next ? getSchema(next) : null;
-  const alreadyDerived = (chain?.after || []).some((a) => a.type === next);
-  const canDerive =
-    next &&
-    nextSchema &&
-    ['approved', 'done'].includes(doc?.state) &&
-    !alreadyDerived &&
-    (me?.role === 'admin' || (nextSchema.roles?.create || []).includes(me?.role));
+  /**
+   * وجهات الاشتقاق — قد تكون أكثر من واحدة (إذن التسليم يتفرّع: تصريح وفاتورة).
+   * لكلٍّ زرُّها، ولا يظهر إلا لمن يملك إنشاءه وبعد الاعتماد وما لم يُشتقّ سلفًا.
+   */
+  const targets = useMemo(() => {
+    if (!doc?.type) return [];
+    return derivationTargets(doc.type)
+      .map((t) => ({ type: t, schema: getSchema(t) }))
+      .filter((t) => t.schema)
+      .map((t) => ({
+        ...t,
+        alreadyDerived: (chain?.after || []).some((a) => a.type === t.type),
+        canCreate: me?.role === 'admin' || (t.schema.roles?.create || []).includes(me?.role),
+      }));
+  }, [doc?.type, chain, me]);
 
-  async function handleDerive() {
+  const approvedOrDone = ['approved', 'done'].includes(doc?.state);
+  const derivable = targets.filter((t) => !t.alreadyDerived && t.canCreate && approvedOrDone);
+  const pending = targets.filter((t) => !t.alreadyDerived && !approvedOrDone);
+
+  async function handleDerive(toType) {
     setBusy(true);
     try {
-      const newId = await createNextInChain(doc, me);
-      window.location.href = `${getBasePath()}/dashboard/document?type=${next}&id=${newId}`;
+      const newId = await createNextInChain(doc, me, toType);
+      window.location.href = `${getBasePath()}/dashboard/document?type=${toType}&id=${newId}`;
     } catch (e) {
       onFlash?.(e.message || 'تعذّر إنشاء المستند التالي.', 'err');
       setBusy(false);
     }
   }
 
-  if (!doc?.id || ![...PURCHASE_CHAIN, ...OUTBOUND_CHAIN, ...RETURN_CHAIN, ...COUNT_CHAIN].includes(doc.type)) return null;
+  if (!doc?.id || ![...PURCHASE_CHAIN, ...OUTBOUND_CHAIN, ...RETURN_CHAIN, ...COUNT_CHAIN, ...BILLING_CHAIN].includes(doc.type)) return null;
 
   return (
     <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
       {/* ── مسار السلسلة ── */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs font-bold text-brand-gold/80 ml-1">
-          🔗 {RETURN_CHAIN.includes(doc.type) ? 'سلسلة المرتجعات' : COUNT_CHAIN.includes(doc.type) ? 'سلسلة الجرد والتسوية' : OUTBOUND_CHAIN.includes(doc.type) ? 'سلسلة الصرف والخروج' : 'سلسلة الشراء'}
+          🔗 {doc.type === 'INV' ? 'سلسلة الفوترة' : RETURN_CHAIN.includes(doc.type) ? 'سلسلة المرتجعات' : COUNT_CHAIN.includes(doc.type) ? 'سلسلة الجرد والتسوية' : OUTBOUND_CHAIN.includes(doc.type) ? 'سلسلة المبيعات والصرف' : 'سلسلة الشراء'}
         </span>
         {chain.before.map((n) => (
           <span key={n.id} className="flex items-center gap-2">
@@ -152,21 +162,26 @@ export default function ChainBar({ doc, me, onFlash }) {
           </span>
         ))}
 
-        {canDerive && (
-          <button
-            type="button"
-            onClick={handleDerive}
-            disabled={busy}
-            className="mr-auto rounded-xl bg-brand-red hover:bg-brand-red-dark disabled:opacity-50 px-4 py-2 text-xs font-bold text-white transition-colors"
-          >
-            {busy ? '…' : `＋ أنشئ ${nextSchema.titleAr}`}
-          </button>
+        {derivable.length > 0 && (
+          <div className="mr-auto flex flex-wrap gap-2">
+            {derivable.map((t) => (
+              <button
+                key={t.type}
+                type="button"
+                onClick={() => handleDerive(t.type)}
+                disabled={busy}
+                className="rounded-xl bg-brand-red hover:bg-brand-red-dark disabled:opacity-50 px-4 py-2 text-xs font-bold text-white transition-colors"
+              >
+                {busy ? '…' : `＋ أنشئ ${t.schema.titleAr}`}
+              </button>
+            ))}
+          </div>
         )}
       </div>
 
-      {next && !alreadyDerived && !['approved', 'done'].includes(doc.state) && (
+      {pending.length > 0 && (
         <p className="text-[11px] text-gray-400">
-          يُنشأ «{nextSchema?.titleAr}» بعد اعتماد هذا المستند — لا يُبنى التزامٌ على ما لم يُعتمد.
+          يُنشأ {pending.map((t) => `«${t.schema.titleAr}»`).join(' و')} بعد اعتماد هذا المستند — لا يُبنى التزامٌ على ما لم يُعتمد.
         </p>
       )}
 

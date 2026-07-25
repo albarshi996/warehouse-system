@@ -59,6 +59,15 @@ export async function balancesForBarcode(barcode) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+/**
+ * يقرأ كل الأرصدة مرّة كمصفوفة — لتخصيص أمر البيع (يحتاج كل التشغيلات المتاحة).
+ * قراءةٌ واحدة بلا اشتراك؛ المجموعة ليست ضخمة والتخصيص لحظةٌ لا حلقة.
+ */
+export async function fetchBalancesOnce() {
+  const snap = await getDocs(collection(db, COL));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
 /** يقرأ كل الأرصدة مرّة (لبناء المعاينة). */
 function fetchAllOnce() {
   return new Promise((resolve, reject) => {

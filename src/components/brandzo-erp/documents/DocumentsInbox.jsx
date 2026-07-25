@@ -115,7 +115,8 @@ export default function DocumentsInbox() {
   const readyForms = GOVERNED_FORMS.filter((f) => f.ready);
   const groups = [
     { title: '📥 الوارد', types: PURCHASE_CHAIN },
-    { title: '📤 الصادر', types: OUTBOUND_CHAIN },
+    { title: '🛒 المبيعات والصرف', types: OUTBOUND_CHAIN },
+    { title: '🧾 الفوترة', types: ['INV'] },
     { title: '↩️ المرتجعات', types: RETURN_CHAIN },
     { title: '⚖️ الجرد', types: COUNT_CHAIN },
     { title: '🗑️ التالف', types: ['DMG'] },

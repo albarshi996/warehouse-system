@@ -24,6 +24,8 @@ import dmg from './dmg.js';
 import cc from './cc.js';
 import adj from './adj.js';
 import cn from './cn.js';
+import so from './so.js';
+import inv from './inv.js';
 
 /** المخطّطات الجاهزة. */
 const SCHEMAS = {
@@ -32,10 +34,12 @@ const SCHEMAS = {
   GRN: grn,
   QC: qc,
   PUTAWAY: putaway,
+  SO: so,
   PICK: pick,
   PACK: pack,
   DN: dn,
   GP: gp,
+  INV: inv,
   RET: ret,
   DMG: dmg,
   CC: cc,
@@ -53,10 +57,12 @@ export const GOVERNED_FORMS = [
   { type: 'GRN', stage: 4, titleAr: 'مذكرة استلام البضائع', file: 'form_GRN.html', phase: 'F1' },
   { type: 'QC', stage: 4, titleAr: 'تقرير فحص الجودة', file: 'form_QCReport.html', phase: 'F2' },
   { type: 'PUTAWAY', stage: 5, titleAr: 'أمر التخزين', file: 'form_PutawayList.html', phase: 'F3' },
+  { type: 'SO', stage: 6, titleAr: 'أمر البيع', file: '', phase: 'F6' },
   { type: 'PICK', stage: 6, titleAr: 'قائمة السحب', file: 'form_Picking.html', phase: 'F3' },
   { type: 'PACK', stage: 6, titleAr: 'قائمة التعبئة', file: 'form_PackingList.html', phase: 'F3' },
   { type: 'DN', stage: 7, titleAr: 'إذن تسليم', file: 'form_DeliveryNote.html', phase: 'F3' },
   { type: 'GP', stage: 7, titleAr: 'تصريح خروج من البوابة', file: 'form_GatePass.html', phase: 'F3' },
+  { type: 'INV', stage: 12, titleAr: 'فاتورة العميل', file: '', phase: 'F6' },
   { type: 'RET', stage: 8, titleAr: 'إشعار الإرجاع', file: 'form_ReturnNote.html', phase: 'F4' },
   { type: 'DMG', stage: 8, titleAr: 'سند التالف', file: 'form_Damaged Goods Report.html', phase: 'F4' },
   { type: 'CC', stage: 9, titleAr: 'محضر الجرد الدوري', file: 'form_CycleCount.html', phase: 'F4' },

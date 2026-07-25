@@ -34,6 +34,7 @@ import { getSchema } from './schemas/index.js';
 import { movesStock, POSTING_STATE } from '../ledger/postingRules.js';
 import { buildMoves } from '../ledger/movements.js';
 import { postDocument } from '../ledger/ledgerService.js';
+import { allocateAndReserve, releaseReservation } from '../ledger/salesService.js';
 
 const DOCS = 'documents';
 const AUDIT = 'audit';
@@ -181,6 +182,27 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
     }
   }
 
+  // 🛒 حجز أمر البيع: يُحجز عند الاعتماد، ويُفكّ عند الإنجاز. أفضلُ جهدٍ لا
+  // شرطُ اعتماد — فشلُ الحجز يُثبَّت في التدقيق ولا يُبطل قرار المدير.
+  if (data.type === 'SO' && (to === 'approved' || to === POSTING_STATE)) {
+    try {
+      if (to === 'approved') {
+        const r = await allocateAndReserve({ ...data, id: docId });
+        const shortNote = r.shortfall.length ? ` — عجزٌ في ${r.shortfall.length} صنفًا` : '';
+        await appendAudit(docId, { action: 'reserve', note: `حُجز ${r.reserved} تشغيلة${shortNote}`, profile });
+      } else {
+        const r = await releaseReservation({ ...data, id: docId });
+        if (!r.already) await appendAudit(docId, { action: 'release', note: `فُكّ حجز ${r.released} تشغيلة`, profile });
+      }
+    } catch (err) {
+      await appendAudit(docId, {
+        action: to === 'approved' ? 'reserve-failed' : 'release-failed',
+        note: `تعذّر ${to === 'approved' ? 'حجز' : 'فكّ حجز'} الرصيد: ${err?.message || err}`,
+        profile,
+      });
+    }
+  }
+
   return patch.number || data.number || null;
 }
 
@@ -233,8 +255,8 @@ export function listenAllDocuments(callback, max = 100) {
  * كل المنطق في `chain.js` الخالص (يُختبَر بلا شبكة)؛ هنا الكتابة وحدها
  * وقيد التدقيق الذي يربط المولود بأصله — فيبقى الأثر في المستندين معًا.
  */
-export async function createNextInChain(sourceDoc, profile) {
-  const draft = deriveDocument(sourceDoc);
+export async function createNextInChain(sourceDoc, profile, toType = null) {
+  const draft = deriveDocument(sourceDoc, toType);
   const schema = getSchema(draft.type);
   const newId = await addDoc(collection(db, DOCS), {
     type: draft.type,

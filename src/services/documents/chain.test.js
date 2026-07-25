@@ -310,12 +310,14 @@ test('QC: نسبة الرفض وتحذيرات العدّ والقرار', () =>
 
 test('السلسلتان: الوارد ينتهي بالتخزين، والصادر مستقلّ ينتهي بالتصريح', () => {
   assert.deepEqual(PURCHASE_CHAIN, ['PR', 'PO', 'GRN', 'QC', 'PUTAWAY']);
-  assert.deepEqual(OUTBOUND_CHAIN, ['PICK', 'PACK', 'DN', 'GP']);
+  assert.deepEqual(OUTBOUND_CHAIN, ['SO', 'PICK', 'PACK', 'DN', 'GP']);
   assert.equal(nextInChain('QC'), 'PUTAWAY');
   assert.equal(nextInChain('PUTAWAY'), null, 'التخزين ينهي الوارد');
+  assert.equal(nextInChain('SO'), 'PICK', 'أمر البيع يرأس الصادر');
   assert.equal(nextInChain('PICK'), 'PACK');
   assert.equal(nextInChain('GP'), null, 'التصريح ينهي الصادر');
-  assert.equal(previousInChain('PICK'), null, 'السحب يبدأ رحلةً جديدة لا يرث الوارد');
+  assert.equal(previousInChain('PICK'), 'SO', 'السحب يُشتقّ من أمر البيع');
+  assert.equal(previousInChain('SO'), null, 'أمر البيع رأس السلسلة');
   assert.equal(previousInChain('GP'), 'DN');
   assert.equal(chainFor('GRN'), PURCHASE_CHAIN);
   assert.equal(chainFor('DN'), OUTBOUND_CHAIN);
@@ -636,8 +638,8 @@ test('مخطّطات F4 الخمسة مسجّلة — والمجموعة صار�
     assert.equal(s.signatures.length, 3);
     assert.ok(typeof s.warnings === 'function');
   }
-  assert.equal(readyTypes().length, 14, 'أربعة عشر نموذجًا جاهزًا');
-  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 14);
+  assert.equal(readyTypes().length, 16, 'ستّة عشر نموذجًا جاهزًا بعد المبيعات والفوترة');
+  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 16);
 });
 
 test('🔒 اعتماد سند التسوية للمالية والمدير — لا لمن أدخله', () => {

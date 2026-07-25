@@ -27,12 +27,31 @@
  * لا تخصّه. والتالف (DMG) مستندٌ مفردٌ بلا سلسلة: قد يُكتشف بلا إرجاعٍ أصلًا.
  */
 export const PURCHASE_CHAIN = ['PR', 'PO', 'GRN', 'QC', 'PUTAWAY'];
-export const OUTBOUND_CHAIN = ['PICK', 'PACK', 'DN', 'GP'];
+export const OUTBOUND_CHAIN = ['SO', 'PICK', 'PACK', 'DN', 'GP'];
 export const RETURN_CHAIN = ['RET', 'CN'];
 export const COUNT_CHAIN = ['CC', 'ADJ'];
+/**
+ * سلسلة الفوترة: الفاتورة تُشتقّ من إذن التسليم. لماذا سلسلةٌ مستقلّة لا حلقة
+ * في الصادر؟ لأن إذن التسليم **يتفرّع**: منه يخرج تصريحُ البوابة (رقابة الخروج)
+ * ومنه تخرج الفاتورة (الأثر المالي) — مساران لا مسارٌ واحد. الخطّية لا تحتمل
+ * التفرّع، فأفردنا الفوترة كي يحمل كلٌّ من الفرعين معناه.
+ */
+export const BILLING_CHAIN = ['DN', 'INV'];
 
 /** كل السلاسل — لتجول عليها الدوال بلا معرفة مسبقة بأيّها. */
-export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN];
+export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN];
+
+/**
+ * وجهات الاشتقاق من نوعٍ ما — قد تكون أكثر من واحدة (التفرّع).
+ * إذن التسليم وحده يتفرّع: تصريح بوابة (خروج) وفاتورة (مالية).
+ * البقيّة خطّية: وجهةٌ واحدة هي التالي في سلسلتها.
+ */
+export function derivationTargets(type) {
+  const branches = { DN: ['GP', 'INV'] };
+  if (branches[type]) return branches[type];
+  const n = nextInChain(type);
+  return n ? [n] : [];
+}
 
 /** السلسلة التي ينتمي إليها النوع، أو null. */
 export function chainFor(type) {
@@ -66,10 +85,13 @@ const LINE_MAP = {
   'GRN>QC': { sku: 'sku', barcode: 'barcode', description: 'description', qtyReceived: 'qtyInspected' },
   // المقبول جودةً وحده هو ما يُخزَّن — لا المستلَم كلّه.
   'QC>PUTAWAY': { sku: 'sku', barcode: 'barcode', description: 'description', qtyAccepted: 'qty' },
-  // الصادر
-  'PICK>PACK': { sku: 'sku', barcode: 'barcode', description: 'description', qtyPicked: 'qty', uom: 'uom' },
-  'PACK>DN': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', uom: 'uom' },
+  // الصادر — السعر يركب مع البنود من أمر البيع حتى الفاتورة (لا يُعاد إدخاله).
+  'SO>PICK': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qtyRequested', uom: 'uom', unitPrice: 'unitPrice' },
+  'PICK>PACK': { sku: 'sku', barcode: 'barcode', description: 'description', qtyPicked: 'qty', uom: 'uom', unitPrice: 'unitPrice' },
+  'PACK>DN': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', uom: 'uom', unitPrice: 'unitPrice' },
   'DN>GP': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty' },
+  // الفوترة: الكمية من التسليم (ما خرج فعلًا)، والسعر مورَّثٌ عبر السلسلة.
+  'DN>INV': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', uom: 'uom', unitPrice: 'unitPrice' },
   // المرتجعات: الإشعار الدائن يأخذ الكمية المُرجعة وسعرها لحساب مبلغ الخصم.
   'RET>CN': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', unitPrice: 'unitPrice', reason: 'reason' },
   // التسوية: الفعلي المعدود يصير «الفعلي»، والدفتري يصير «الدفتري».
@@ -82,10 +104,14 @@ const HEADER_MAP = {
   'PO>GRN': { supplier: 'supplier' },
   'GRN>QC': { supplier: 'supplier' },
   'QC>PUTAWAY': { supplier: 'supplier' },
+  // أمر البيع يورّث عميله ومستودعه: المستودع يصير مصدر السحب، والعميل وجهته.
+  'SO>PICK': { warehouse: 'warehouse', customer: 'destination', customerCode: 'branchOrderRef' },
   'PICK>PACK': { destination: 'destination' },
   'PACK>DN': { customer: 'customer', destination: 'deliveryAddress' },
   // بيانات النقل تُورَّث للتصريح فلا تُعاد كتابتها على البوابة.
   'DN>GP': { driverName: 'driverName', vehiclePlate: 'vehiclePlate', customer: 'destination' },
+  // الفاتورة ترث عميل التسليم؛ ومراجعها (تسليم·أمر بيع) من الأرقام لا بالقلم.
+  'DN>INV': { customer: 'customer', customerCode: 'customerCode' },
   'RET>CN': { returningBranch: 'beneficiary' },
   'CC>ADJ': { zone: 'zone' },
 };
@@ -107,12 +133,18 @@ function hasContent(line) {
  *    فما كان يُنسخ بالقلم صار مشتقًّا.
  *
  * @param {object} source المستند الأصل (بـ id و type و number و lines)
+ * @param {string} [toType] وجهة الاشتقاق الصريحة — تلزم حين يتفرّع المصدر
+ *   (إذن التسليم إلى تصريح أو فاتورة). بلا تمرير: التالي الخطّي.
  * @returns {{type, header, lines, links}} مسودّة جاهزة للإنشاء
  */
-export function deriveDocument(source) {
+export function deriveDocument(source, toType = null) {
   if (!source) throw new Error('لا مستند مصدر');
-  const to = nextInChain(source.type);
-  if (!to) throw new Error(`لا يُشتقّ من «${source.type}» مستندٌ تالٍ في سلسلة الشراء`);
+  const targets = derivationTargets(source.type);
+  const to = toType || targets[0] || null;
+  if (!to) throw new Error(`لا يُشتقّ من «${source.type}» مستندٌ تالٍ`);
+  if (!targets.includes(to)) {
+    throw new Error(`«${to}» ليس وجهة اشتقاقٍ صحيحة من «${source.type}».`);
+  }
   if (!['approved', 'done'].includes(source.state)) {
     throw new Error('لا يُشتقّ مستند إلا من مستندٍ معتمَد — الاعتماد أولًا');
   }
@@ -138,7 +170,7 @@ export function deriveDocument(source) {
   // المراجع النصّية المطبوعة على الورق — تُشتقّ ولا تُكتب.
   const refField = {
     PO: 'prRef', GRN: 'poRef', QC: 'grnRef', PUTAWAY: 'grnRef',
-    PACK: 'pickRef', DN: 'packRef', GP: 'dnRef',
+    PACK: 'pickRef', DN: 'packRef', GP: 'dnRef', INV: 'deliveryRef',
     CN: 'returnRef', ADJ: 'cycleCountRef',
   }[to];
   if (refField && source.number) header[refField] = source.number;
@@ -146,6 +178,8 @@ export function deriveDocument(source) {
   if (to === 'PUTAWAY' && source.links?.GRN?.number) header.grnRef = source.links.GRN.number;
   // QC يحمل مرجع أمر الشراء أيضًا (الورق يطلبه) — نأخذه من سلسلة الروابط.
   if (to === 'QC' && source.header?.poRef) header.poRef = source.header.poRef;
+  // الفاتورة تحمل رقم أمر البيع أيضًا (من سلسلة الروابط) لا رقم التسليم وحده.
+  if (to === 'INV' && source.links?.SO?.number) header.salesOrderRef = source.links.SO.number;
 
   const links = { ...(source.links || {}), [source.type]: { id: source.id, number: source.number || null } };
 

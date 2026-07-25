@@ -116,10 +116,12 @@ service cloud.firestore {
            : docType == 'PO'      ? ['warehouse_manager', 'finance_manager']
            : docType == 'QC'      ? ['qc_inspector', 'warehouse_manager']
            : docType == 'PUTAWAY' ? ['warehouse_manager', 'inventory_auditor']
+           : docType == 'SO'      ? ['warehouse_manager']
            : docType == 'PICK'    ? ['warehouse_manager']
            : docType == 'PACK'    ? ['qc_inspector', 'warehouse_manager']
            : docType == 'DN'      ? ['warehouse_manager']
            : docType == 'GP'      ? ['gate_officer', 'warehouse_manager']
+           : docType == 'INV'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'RET'     ? ['qc_inspector', 'warehouse_manager']
            : docType == 'DMG'     ? ['qc_inspector', 'warehouse_manager']
            : docType == 'CC'      ? ['inventory_auditor', 'warehouse_manager']
@@ -133,10 +135,12 @@ service cloud.firestore {
            : docType == 'PO'      ? ['purchase_officer', 'warehouse_manager']
            : docType == 'QC'      ? ['qc_inspector', 'warehouse_manager']
            : docType == 'PUTAWAY' ? ['storekeeper', 'warehouse_manager']
+           : docType == 'SO'      ? ['storekeeper', 'warehouse_manager']
            : docType == 'PICK'    ? ['storekeeper', 'warehouse_manager']
            : docType == 'PACK'    ? ['storekeeper', 'warehouse_manager']
            : docType == 'DN'      ? ['storekeeper', 'warehouse_manager']
            : docType == 'GP'      ? ['gate_officer', 'warehouse_manager']
+           : docType == 'INV'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'RET'     ? ['return_manager', 'warehouse_manager']
            : docType == 'DMG'     ? ['return_manager', 'warehouse_manager']
            : docType == 'CC'      ? ['inventory_auditor', 'warehouse_manager']
@@ -180,8 +184,24 @@ service cloud.firestore {
       // 🥇 هنا يصير حارس الجودة حقيقيًّا: لا طريق من 'submitted' إلى 'done'.
       //    من أراد إنهاء استلام فعليه المرور باعتماد مفتّش الجودة — ولو زوّر
       //    الواجهة كلّها، فهذه القاعدة على الخادم لا تُتجاوَز.
+      // ختمُ أثرٍ جانبيّ لا يغيّر الحالة: القيد المخزني يضع `posted` على مستندٍ
+      // منجَز، وحجز أمر البيع يضع `soAllocation` على معتمَد. كلاهما يكتبه فاعلٌ
+      // مخزنيّ، وكلاهما **لا يمسّ الحالة ولا الحقول الثابتة ولا الرقم** — فنسمح
+      // به بشرط ألّا يتغيّر إلا من هذه الحقول المعدودة. بدون هذا كان قيد أمين
+      // المخزن (وهو الغالب) يرتدّ من الخادم.
+      function isSideEffectStamp() {
+        return isStockActor()
+               && request.resource.data.state == resource.data.state
+               && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                    'posted', 'postedAt', 'postedByUid', 'postedMoves',
+                    'soAllocation', 'soShortfall', 'soReserved', 'soReleased',
+                    'updatedAt'
+                  ]);
+      }
+
       allow update: if signedIn() && immutableKept() && numberWriteOnce() && (
                       isAdmin()
+                      || isSideEffectStamp()
                       || (isCreator()
                           && resource.data.state in ['draft', 'rejected']
                           && movingTo(['draft', 'submitted']))
