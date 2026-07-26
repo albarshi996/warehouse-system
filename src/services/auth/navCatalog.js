@@ -49,6 +49,7 @@ export const NAV_GROUPS = [
     items: [
       { path: '/dashboard/warehouses', label: 'المستودعات', icon: 'package' },
       { path: '/dashboard/stock-ledger', label: 'دفتر حركات المخزون', icon: 'clipboardList' },
+      { path: '/dashboard/transfers', label: 'النقل بين المستودعات', icon: 'truck' },
       { path: '/dashboard/warehouse-maps', label: 'الخرائط الفنية', icon: 'warehouse' },
       { path: '/dashboard/cold-storage-plan', label: 'مخطط الرحبة - كوزميتك', icon: 'package' },
       { path: '/dashboard/retail-hub', label: 'خريطة التجزئة', icon: 'mapPin' },

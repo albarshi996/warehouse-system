@@ -16,7 +16,7 @@ import {
 } from '../../../services/documents/documentsService.js';
 import { getSchema, GOVERNED_FORMS } from '../../../services/documents/schemas/index.js';
 import { getState, STATES } from '../../../services/documents/states.js';
-import { PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN } from '../../../services/documents/chain.js';
+import { PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, TRANSFER_CHAIN } from '../../../services/documents/chain.js';
 import {
   awaitingMyApproval,
   sortByUrgency,
@@ -117,6 +117,7 @@ export default function DocumentsInbox() {
     { title: '📥 الوارد', types: PURCHASE_CHAIN },
     { title: '🛒 المبيعات والصرف', types: OUTBOUND_CHAIN },
     { title: '🧾 الفوترة', types: ['INV'] },
+    { title: '🚚 النقل بين المستودعات', types: TRANSFER_CHAIN },
     { title: '↩️ المرتجعات', types: RETURN_CHAIN },
     { title: '⚖️ الجرد', types: COUNT_CHAIN },
     { title: '🗑️ التالف', types: ['DMG'] },

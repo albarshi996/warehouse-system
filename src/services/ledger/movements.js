@@ -14,7 +14,7 @@
  *      مكتوب، لا يُقيَّد بصمتٍ ثم يُكتشف في الجرد بعد شهر.
  */
 import { balanceId } from '../balances/balanceKey.js';
-import { postingRuleFor, WAREHOUSE, POSTING_STATE } from './postingRules.js';
+import { postingRuleFor, WAREHOUSE_TOKENS, isWarehouseToken, POSTING_STATE } from './postingRules.js';
 
 /** فاصل المعرّف الحتمي — نفس نمط `balanceId`. */
 const SEP = '__';
@@ -32,12 +32,14 @@ export function moveId(docId, lineIndex) {
 }
 
 /**
- * يحلّ الموقع: رمز موقع نظام يُعاد كما هو، و`WAREHOUSE` يُقرأ من رأس المستند.
+ * يحلّ الموقع: رمز موقع نظام يُعاد كما هو، ورمز مستودعٍ يُقرأ من الحقل الموافق
+ * في رأس المستند (`warehouse` أو `fromWarehouse` أو `toWarehouse`).
  * `null` تعني «خارج المنشأة» وهي قيمة صالحة لا غياب.
  */
 function resolveLocation(slot, header) {
-  if (slot === WAREHOUSE) {
-    const wh = String(header?.warehouse ?? '').trim().toUpperCase();
+  if (isWarehouseToken(slot)) {
+    const field = WAREHOUSE_TOKENS[slot];
+    const wh = String(header?.[field] ?? '').trim().toUpperCase();
     return wh || undefined; // undefined = ناقص، وسيُرفض بسبب مكتوب
   }
   return slot; // رمز نظام، أو null للخارج

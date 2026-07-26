@@ -203,7 +203,7 @@ export default function DocumentEngine() {
   if (!schema) {
     return (
       <Notice tone="err" title="نوع مستند غير معروف">
-        لا يوجد مخطّط للنوع «{type}». الأنواع المحكومة اليوم ستّة عشر: الوارد (PR · PO · GRN · QC · PUTAWAY) · المبيعات والصرف (SO · PICK · PACK · DN · GP) · الفوترة (INV) · المرتجعات (RET · CN) · الجرد (CC · ADJ) · والتالف (DMG).
+        لا يوجد مخطّط للنوع «{type}». الأنواع المحكومة اليوم تسعة عشر: الوارد (PR · PO · GRN · QC · PUTAWAY) · المبيعات والصرف (SO · PICK · PACK · DN · GP) · الفوترة (INV) · النقل (TR · TRN · TRC) · المرتجعات (RET · CN) · الجرد (CC · ADJ) · والتالف (DMG).
       </Notice>
     );
   }

@@ -85,11 +85,13 @@ test('الأنواع المحرّكة للمخزون وحدها لها قواع�
   assert.equal(movesStock('CC'), false, 'عدٌّ لا يغيّر');
 });
 
-test('أربعة أنواع فقط تحتاج حقل المستودع', () => {
+test('الأنواع التي تحتاج حقل مستودع (بما فيها النقل بمستودعَيه)', () => {
   const need = warehouseRequiringTypes().sort();
-  assert.deepEqual(need, ['ADJ', 'DMG', 'PICK', 'PUTAWAY']);
+  assert.deepEqual(need, ['ADJ', 'DMG', 'PICK', 'PUTAWAY', 'TRC', 'TRN']);
   assert.equal(needsWarehouse('GRN'), false, 'GRN يدخل ساحة الاستلام النظامية');
   assert.equal(needsWarehouse('DN'), false, 'DN يخرج من التجهيز النظامي');
+  assert.equal(needsWarehouse('TRN'), true, 'مستند النقل يخرج من مستودع المصدر');
+  assert.equal(needsWarehouse('TRC'), true, 'استلام النقل يدخل مستودع الوجهة');
 });
 
 test('POSTING_STATE هو الإنجاز لا الاعتماد', () => {

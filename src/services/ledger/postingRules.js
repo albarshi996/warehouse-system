@@ -26,13 +26,32 @@
  */
 import { SYSTEM_LOCATIONS, EXTERNAL } from './locations.js';
 
-const { RECEIVING, QUARANTINE, STAGING, SCRAP, ADJUSTMENT } = SYSTEM_LOCATIONS;
+const { RECEIVING, QUARANTINE, STAGING, TRANSIT, SCRAP, ADJUSTMENT } = SYSTEM_LOCATIONS;
 
 /**
- * `WAREHOUSE` رمزٌ خاصّ يعني: «اقرأ المستودع من رأس المستند» — لأن الموقع
- * الحقيقي لا يُعرف إلا وقت التنفيذ، بخلاف مواقع النظام الثابتة.
+ * رموز المستودعات المقروءة من رأس المستند وقت التنفيذ (لا مواقع نظامٍ ثابتة).
+ *   `WAREHOUSE`      — مستودعٌ واحد في `header.warehouse` (الوارد/الصادر).
+ *   `WAREHOUSE_FROM` — مستودع المصدر في `header.fromWarehouse` (النقل).
+ *   `WAREHOUSE_TO`   — مستودع الوجهة في `header.toWarehouse` (النقل).
+ *
+ * النقل وحده يحتاج مستودعَين: الرصيد يخرج من مصدرٍ ويدخل وجهةً، وبينهما مخزن
+ * النقل. لذلك لم يعُد رمزٌ واحد يكفي.
  */
 export const WAREHOUSE = '@warehouse';
+export const WAREHOUSE_FROM = '@warehouseFrom';
+export const WAREHOUSE_TO = '@warehouseTo';
+
+/** خريطة الرمز ← حقل رأس المستند الذي يُقرأ منه. */
+export const WAREHOUSE_TOKENS = {
+  [WAREHOUSE]: 'warehouse',
+  [WAREHOUSE_FROM]: 'fromWarehouse',
+  [WAREHOUSE_TO]: 'toWarehouse',
+};
+
+/** هل هذا الموقع رمزُ مستودعٍ يُقرأ من الرأس (لا موقع نظامٍ ثابت)؟ */
+export function isWarehouseToken(slot) {
+  return Object.hasOwn(WAREHOUSE_TOKENS, slot);
+}
 
 /**
  * جدول القيد. لكل نوعٍ يُحرّك المخزون:
@@ -126,6 +145,29 @@ export const POSTING_RULES = {
     // الفارق لا يُكتب بل يُحسب: الفعلي المعدود ناقص الدفتري.
     computeQty: (line) => (Number(line?.actualQty) || 0) - (Number(line?.bookQty) || 0),
   },
+  // ═══ النقل بين المستودعات ═══
+  // مستند النقل يُخرج المشحون من المصدر إلى **مخزن النقل** (لا إلى الوجهة
+  // مباشرةً): فبين المغادرة والاستلام لحظةٌ يقبع فيها الرصيد «في الطريق»،
+  // وهي مصدر تقرير الشحنات المعلّقة. واستلام الفرع يُخرجه من مخزن النقل إلى
+  // مستودع الوجهة — فيعود مخزن النقل إلى الصفر. أيّ بقيّةٍ فيه = فرق نقلٍ يُلاحَق.
+  TRN: {
+    from: WAREHOUSE_FROM,
+    to: TRANSIT.code,
+    qtyField: 'qtyShipped',
+    expiryField: 'expiry',
+    costField: 'unitCost',
+    reason: 'transfer-out',
+    labelAr: 'شحن نقل (مغادرة)',
+  },
+  TRC: {
+    from: TRANSIT.code,
+    to: WAREHOUSE_TO,
+    qtyField: 'qtyReceived',
+    expiryField: 'expiry',
+    costField: 'unitCost',
+    reason: 'transfer-in',
+    labelAr: 'استلام نقل (وصول)',
+  },
 };
 
 /** الأنواع التي تُحرّك المخزون فعلًا. */
@@ -144,12 +186,19 @@ export function movesStock(type) {
 }
 
 /**
- * هل يحتاج هذا النوع حقل «المستودع» في رأسه؟
- * أربعة فقط — لأن البقيّة تتنقّل بين مواقع نظامٍ معروفة سلفًا.
+ * هل يحتاج هذا النوع خانة مستودعٍ في رأسه (واحدة أو أكثر)؟
+ * ما عداه يتنقّل بين مواقع نظامٍ معروفة سلفًا فلا يحتاج.
  */
 export function needsWarehouse(type) {
   const rule = POSTING_RULES[type];
-  return Boolean(rule) && (rule.from === WAREHOUSE || rule.to === WAREHOUSE);
+  return Boolean(rule) && (isWarehouseToken(rule.from) || isWarehouseToken(rule.to));
+}
+
+/** رموز المستودعات التي يقرؤها هذا النوع من رأسه (لفحص المخطّطات). */
+export function warehouseFieldsFor(type) {
+  const rule = POSTING_RULES[type];
+  if (!rule) return [];
+  return [rule.from, rule.to].filter(isWarehouseToken).map((t) => WAREHOUSE_TOKENS[t]);
 }
 
 /** الأنواع التي تلزمها خانة مستودع — لفحص المخطّطات في الاختبارات. */

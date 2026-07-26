@@ -1,0 +1,30 @@
+---
+/**
+ * لوحة النقل بين المستودعات — نافذة مخزن النقل وتقريراه الرقابيان.
+ *
+ * لماذا وُجدت؟ لأن النقل بين المستودعات والفروع أخطر نقطةٍ يضيع فيها الفرق:
+ * «خرجت من الرئيسي ولم تصل الفرع». الحلّ الذي بنيناه: مخزن نقلٍ وسيط يجب أن
+ * يعود صفرًا. هذه الصفحة تعرضه حيًّا مع تقرير الشحنات المعلّقة (ما في الطريق)
+ * وتقرير فروقات النقل (أين ضاع الفرق، وحالة تسويته).
+ *
+ * القاعدة الذهبية: لا حذف — صفحة ومكوّن جديدان (ledger/TransferBoard).
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import TransferBoard from '../../components/brandzo-erp/ledger/TransferBoard.jsx';
+---
+
+<DashboardLayout title="النقل بين المستودعات" showGuide={false}>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">🚚 النقل بين المستودعات</h1>
+      <p class="text-gray-300 text-sm leading-relaxed max-w-3xl">
+        كل شحنةٍ تمرّ بـ<span class="text-brand-gold font-bold">مخزن نقلٍ وسيط</span> بين مغادرتها المصدرَ
+        ووصولها الفرع — ولا يعود إلى الصفر إلا باكتمال الاستلام. راقب ما في الطريق، واكشف الفروق
+        وأسبابها وحالة تسويتها، وتأكّد أن مخزن النقل فرغ فعلًا.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <TransferBoard client:load />
+  </div>
+</DashboardLayout>

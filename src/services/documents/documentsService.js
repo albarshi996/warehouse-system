@@ -247,6 +247,21 @@ export function listenAllDocuments(callback, max = 100) {
   return onSnapshot(q, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
 }
 
+/**
+ * مستندات أنواعٍ بعينها — لِلوحاتٍ متخصّصة (النقل مثلًا).
+ * `in` بحقلٍ واحد فلا يلزم فهرس مركّب؛ نرتّب محليًّا (درس متابعة العمليات).
+ * حدّ Firestore عشرة أنواع في `in` — يكفي لأيّ سلسلة.
+ */
+export function listenDocumentsByTypes(types, callback, max = 200) {
+  const list = (types || []).slice(0, 10);
+  if (!list.length) {
+    callback([]);
+    return () => {};
+  }
+  const q = query(collection(db, DOCS), where('type', 'in', list), limit(max));
+  return onSnapshot(q, (snap) => callback(sortByCreated(snap)));
+}
+
 /* ═══════════════ سلسلة الشراء (F2) ═══════════════ */
 
 /**

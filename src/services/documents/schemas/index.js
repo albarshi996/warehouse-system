@@ -26,6 +26,9 @@ import adj from './adj.js';
 import cn from './cn.js';
 import so from './so.js';
 import inv from './inv.js';
+import tr from './tr.js';
+import trn from './trn.js';
+import trc from './trc.js';
 
 /** المخطّطات الجاهزة. */
 const SCHEMAS = {
@@ -40,6 +43,9 @@ const SCHEMAS = {
   DN: dn,
   GP: gp,
   INV: inv,
+  TR: tr,
+  TRN: trn,
+  TRC: trc,
   RET: ret,
   DMG: dmg,
   CC: cc,
@@ -63,6 +69,9 @@ export const GOVERNED_FORMS = [
   { type: 'DN', stage: 7, titleAr: 'إذن تسليم', file: 'form_DeliveryNote.html', phase: 'F3' },
   { type: 'GP', stage: 7, titleAr: 'تصريح خروج من البوابة', file: 'form_GatePass.html', phase: 'F3' },
   { type: 'INV', stage: 12, titleAr: 'فاتورة العميل', file: '', phase: 'F6' },
+  { type: 'TR', stage: 6, titleAr: 'طلب نقل', file: '', phase: 'F7' },
+  { type: 'TRN', stage: 7, titleAr: 'مستند النقل', file: '', phase: 'F7' },
+  { type: 'TRC', stage: 8, titleAr: 'استلام النقل', file: '', phase: 'F7' },
   { type: 'RET', stage: 8, titleAr: 'إشعار الإرجاع', file: 'form_ReturnNote.html', phase: 'F4' },
   { type: 'DMG', stage: 8, titleAr: 'سند التالف', file: 'form_Damaged Goods Report.html', phase: 'F4' },
   { type: 'CC', stage: 9, titleAr: 'محضر الجرد الدوري', file: 'form_CycleCount.html', phase: 'F4' },

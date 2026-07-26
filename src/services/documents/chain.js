@@ -37,9 +37,14 @@ export const COUNT_CHAIN = ['CC', 'ADJ'];
  * التفرّع، فأفردنا الفوترة كي يحمل كلٌّ من الفرعين معناه.
  */
 export const BILLING_CHAIN = ['DN', 'INV'];
+/**
+ * سلسلة النقل بين المستودعات: طلبٌ ← شحنٌ (يدخل مخزن النقل) ← استلامٌ (يفرغه).
+ * ثلاث حلقات لأن الرصيد يمرّ بموقعٍ وسيط (مخزن النقل) بين المغادرة والوصول.
+ */
+export const TRANSFER_CHAIN = ['TR', 'TRN', 'TRC'];
 
 /** كل السلاسل — لتجول عليها الدوال بلا معرفة مسبقة بأيّها. */
-export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN];
+export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN, TRANSFER_CHAIN];
 
 /**
  * وجهات الاشتقاق من نوعٍ ما — قد تكون أكثر من واحدة (التفرّع).
@@ -92,6 +97,9 @@ const LINE_MAP = {
   'DN>GP': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty' },
   // الفوترة: الكمية من التسليم (ما خرج فعلًا)، والسعر مورَّثٌ عبر السلسلة.
   'DN>INV': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', uom: 'uom', unitPrice: 'unitPrice' },
+  // النقل: المطلوب يصير المشحون، والمشحون يُورَّث للاستلام مرجعًا (والمستلَم يُملأ).
+  'TR>TRN': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qtyShipped', uom: 'uom' },
+  'TRN>TRC': { sku: 'sku', barcode: 'barcode', description: 'description', qtyShipped: 'qtyShipped', uom: 'uom', batch: 'batch', expiry: 'expiry', unitCost: 'unitCost' },
   // المرتجعات: الإشعار الدائن يأخذ الكمية المُرجعة وسعرها لحساب مبلغ الخصم.
   'RET>CN': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', unitPrice: 'unitPrice', reason: 'reason' },
   // التسوية: الفعلي المعدود يصير «الفعلي»، والدفتري يصير «الدفتري».
@@ -112,6 +120,9 @@ const HEADER_MAP = {
   'DN>GP': { driverName: 'driverName', vehiclePlate: 'vehiclePlate', customer: 'destination' },
   // الفاتورة ترث عميل التسليم؛ ومراجعها (تسليم·أمر بيع) من الأرقام لا بالقلم.
   'DN>INV': { customer: 'customer', customerCode: 'customerCode' },
+  // النقل: المستودعان يُورَّثان عبر السلسلة كلها — لا يُعاد كتابتهما.
+  'TR>TRN': { fromWarehouse: 'fromWarehouse', toWarehouse: 'toWarehouse' },
+  'TRN>TRC': { fromWarehouse: 'fromWarehouse', toWarehouse: 'toWarehouse', driverName: 'driverName', vehiclePlate: 'vehiclePlate' },
   'RET>CN': { returningBranch: 'beneficiary' },
   'CC>ADJ': { zone: 'zone' },
 };
@@ -171,6 +182,7 @@ export function deriveDocument(source, toType = null) {
   const refField = {
     PO: 'prRef', GRN: 'poRef', QC: 'grnRef', PUTAWAY: 'grnRef',
     PACK: 'pickRef', DN: 'packRef', GP: 'dnRef', INV: 'deliveryRef',
+    TRN: 'transferReqRef', TRC: 'transferNoteRef',
     CN: 'returnRef', ADJ: 'cycleCountRef',
   }[to];
   if (refField && source.number) header[refField] = source.number;
