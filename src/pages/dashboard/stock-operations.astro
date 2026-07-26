@@ -1310,7 +1310,13 @@ function showToast(message, type = 'info') {
   const icons = { success:'fa-circle-check', error:'fa-circle-xmark', warning:'fa-triangle-exclamation', info:'fa-circle-info' };
   const el = document.createElement('div');
   el.className = `toast toast-${type}`;
-  el.innerHTML = `<i class="fa-solid ${icons[type]||icons.info}"></i><span>${message}</span>`;
+  // الأيقونة ثابتة (آمنة)، أمّا الرسالة فقد تحمل اسم صنف من قاعدة البيانات —
+  // تُوضع كنصّ (textContent) لا كـHTML، فلا يُنفَّذ وسمٌ خبيث في اسم صنف.
+  const icon = document.createElement('i');
+  icon.className = `fa-solid ${icons[type]||icons.info}`;
+  const span = document.createElement('span');
+  span.textContent = message;
+  el.append(icon, span);
   container.appendChild(el);
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 4000);
 }
@@ -1525,11 +1531,11 @@ function showItemTooltipForId(event, itemId) {
   tooltip.innerHTML = `
     <div class="item-tooltip-row">
       <span class="item-tooltip-label">الظل/اللون:</span>
-      <span class="item-tooltip-value">${item.shade || '—'}</span>
+      <span class="item-tooltip-value">${escapeHtml(item.shade || '—')}</span>
     </div>
     <div class="item-tooltip-row">
       <span class="item-tooltip-label">التصنيف:</span>
-      <span class="item-tooltip-value">${item.category || '—'}</span>
+      <span class="item-tooltip-value">${escapeHtml(item.category || '—')}</span>
     </div>
     <div class="item-tooltip-row">
       <span class="item-tooltip-label">سعر الوحدة:</span>
@@ -2629,6 +2635,22 @@ function escapeHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+/**
+ * تهريب قيمة تُدرَج في سلسلة JS داخل سمة HTML مزدوجة الاقتباس — مثل
+ * `onclick="fn('${escAttr(x)}')"`. المتصفّح يفكّ ترميز HTML أولًا ثم يشغّل JS،
+ * فنُهرّب طبقتين: `\` و`'` لسلسلة JS، ثم `& " < >` لسمة HTML. بدونه كان باركود
+ * أو معرّف يحمل `'` أو `"` يكسر السمة ويحقن سكربتًا في جلسة من يفتح الجدول.
+ */
+function escAttr(str) {
+  return String(str)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 /* ========================================================
    صوت Beep (AudioContext)
    ======================================================== */
@@ -2718,9 +2740,9 @@ function showPastePreview() {
     const found = inventoryDB.some(item => item.barcodeLower === row.barcode.toLowerCase());
     return `<tr>
       <td class="text-xs text-dark-400">${i+1}</td>
-      <td class="font-mono text-xs">${row.barcode}</td>
+      <td class="font-mono text-xs">${escapeHtml(row.barcode)}</td>
       <td class="text-center">${row.qty}</td>
-      <td class="text-xs text-dark-400">${row.notes||'-'}</td>
+      <td class="text-xs text-dark-400">${escapeHtml(row.notes||'-')}</td>
       <td>${found ? '<span class="text-green-400 font-semibold">✓ موجود</span>' : '<span class="text-red-400 font-semibold">✗ غير موجود</span>'}</td>
     </tr>`;
   }).join('') + (rows.length > 5 ? `<tr><td colspan="5" class="text-center text-xs text-dark-400 py-2">...و ${rows.length-5} صف آخر</td></tr>` : '');
@@ -2984,14 +3006,14 @@ function renderCurrentTable() {
       <td class="text-dark-400 text-xs">${globalIdx}</td>
       <td class="text-xs font-semibold ${opTypeColor}">${getOperationTypeIcon(itemOp)} ${itemOp}</td>
       <td>
-        <button class="font-mono text-xs text-brand-400 hover:text-brand-300 transition" onclick="openScanDetailModal('${item.barcode.replace(/'/g,"\\'")}')">
-          ${statusDot}${item.barcode}
+        <button class="font-mono text-xs text-brand-400 hover:text-brand-300 transition" onclick="openScanDetailModal('${escAttr(item.barcode)}')">
+          ${statusDot}${escapeHtml(item.barcode)}
         </button>
       </td>
-      <td class="text-xs text-dark-400">${item.itemCode || '—'}</td>
-      <td class="wrap-cell font-semibold item-name-cell" data-item-id="${item.id}" onmouseenter="showItemTooltipForId(event, '${item.id}')" onmouseleave="hideItemTooltip()">${item.name || '—'}</td>
-      <td class="text-xs text-dark-400">${item.shade || '—'}</td>
-      <td class="text-xs">${item.category || '—'}</td>`;
+      <td class="text-xs text-dark-400">${escapeHtml(item.itemCode || '—')}</td>
+      <td class="wrap-cell font-semibold item-name-cell" data-item-id="${escAttr(item.id)}" onmouseenter="showItemTooltipForId(event, '${escAttr(item.id)}')" onmouseleave="hideItemTooltip()">${escapeHtml(item.name || '—')}</td>
+      <td class="text-xs text-dark-400">${escapeHtml(item.shade || '—')}</td>
+      <td class="text-xs">${escapeHtml(item.category || '—')}</td>`;
 
     if (showSysQtyCol) {
       row += `<td class="text-center font-bold text-gold-500">${formatNum(item.systemQty)}</td>`;
@@ -3000,11 +3022,11 @@ function renderCurrentTable() {
     if (showDiffCol) {
       row += `<td class="text-center ${diffClass}">${item.scanned ? diffText : '—'}</td>`;
     }
-    row += `<td class="text-xs text-dark-400 wrap-cell" style="max-width:160px">${item.notes || '—'}</td>
+    row += `<td class="text-xs text-dark-400 wrap-cell" style="max-width:160px">${escapeHtml(item.notes || '—')}</td>
       <td>
         <div class="flex gap-1">
-          <button class="btn btn-ghost btn-sm !py-1 !px-2" onclick="openEditItem('${item.id}')" title="تعديل"><i class="fa-solid fa-pen text-xs"></i></button>
-          <button class="btn btn-danger btn-sm !py-1 !px-2" onclick="deleteItem('${item.id}')" title="حذف"><i class="fa-solid fa-trash text-xs"></i></button>
+          <button class="btn btn-ghost btn-sm !py-1 !px-2" onclick="openEditItem('${escAttr(item.id)}')" title="تعديل"><i class="fa-solid fa-pen text-xs"></i></button>
+          <button class="btn btn-danger btn-sm !py-1 !px-2" onclick="deleteItem('${escAttr(item.id)}')" title="حذف"><i class="fa-solid fa-trash text-xs"></i></button>
         </div>
       </td>
     </tr>`;
@@ -3270,9 +3292,9 @@ function buildPrintTable(data, maxRows, showDiff) {
     if (diff > 0) { dc = 'print-diff-pos'; dt = '+'+diff; }
     else if (diff < 0) { dc = 'print-diff-neg'; dt = String(diff); }
     if (showDiff) {
-      html += `<tr><td>${idx+1}</td><td>${item.operationType || operationType}</td><td style="font-family:monospace;font-size:7.5pt">${item.barcode||'-'}</td><td>${item.itemCode||'-'}</td><td>${item.name||'-'}</td><td>${item.category||'-'}</td><td style="text-align:center">${item.systemQty}</td><td style="text-align:center">${item.actualQty}</td><td class="${dc}" style="text-align:center">${dt}</td><td>${item.notes||'-'}</td></tr>`;
+      html += `<tr><td>${idx+1}</td><td>${escapeHtml(item.operationType || operationType)}</td><td style="font-family:monospace;font-size:7.5pt">${escapeHtml(item.barcode||'-')}</td><td>${escapeHtml(item.itemCode||'-')}</td><td>${escapeHtml(item.name||'-')}</td><td>${escapeHtml(item.category||'-')}</td><td style="text-align:center">${item.systemQty}</td><td style="text-align:center">${item.actualQty}</td><td class="${dc}" style="text-align:center">${dt}</td><td>${escapeHtml(item.notes||'-')}</td></tr>`;
     } else {
-      html += `<tr><td>${idx+1}</td><td>${item.operationType || operationType}</td><td style="font-family:monospace;font-size:7.5pt">${item.barcode||'-'}</td><td>${item.itemCode||'-'}</td><td>${item.name||'-'}</td><td>${item.category||'-'}</td><td style="text-align:center">${item.systemQty}</td></tr>`;
+      html += `<tr><td>${idx+1}</td><td>${escapeHtml(item.operationType || operationType)}</td><td style="font-family:monospace;font-size:7.5pt">${escapeHtml(item.barcode||'-')}</td><td>${escapeHtml(item.itemCode||'-')}</td><td>${escapeHtml(item.name||'-')}</td><td>${escapeHtml(item.category||'-')}</td><td style="text-align:center">${item.systemQty}</td></tr>`;
     }
   });
   html += '</tbody></table>';
@@ -3289,12 +3311,12 @@ function buildDamagedPrintTable(data) {
     const meta = item.operationMeta || {};
     html += `<tr>
       <td>${idx+1}</td>
-      <td style="font-family:monospace;font-size:7.5pt">${item.barcode||'-'}</td>
-      <td>${item.name||'-'}</td>
+      <td style="font-family:monospace;font-size:7.5pt">${escapeHtml(item.barcode||'-')}</td>
+      <td>${escapeHtml(item.name||'-')}</td>
       <td style="text-align:center">${item.actualQty}</td>
-      <td>${meta.metaDamageReason || '-'}</td>
-      <td style="text-align:center">${meta.metaCanReturn || '-'}</td>
-      <td>${item.notes||'-'}</td>
+      <td>${escapeHtml(meta.metaDamageReason || '-')}</td>
+      <td style="text-align:center">${escapeHtml(meta.metaCanReturn || '-')}</td>
+      <td>${escapeHtml(item.notes||'-')}</td>
     </tr>`;
   });
   html += '</tbody></table>';

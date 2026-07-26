@@ -173,6 +173,14 @@ service cloud.firestore {
       function movingTo(states) {
         return request.resource.data.state in states;
       }
+      // البنود والرأس لا يتغيّران أثناء الاعتماد أو الإنجاز: المعتمِد يبتّ فيما
+      // أُرسِل، لا يُعيد تسعيره. بدون هذا كان صاحب دور اعتمادٍ (مثل المالي على
+      // أمر الشراء) يبدّل `unitPrice` في **نفس** كتابة الاعتماد — تلاعبٌ ماليّ
+      // بلا أثرٍ في سجلّ التدقيق. تحرير البنود حكرٌ على مسودّة صاحبها وحده.
+      function contentUnchanged() {
+        return request.resource.data.lines == resource.data.lines
+               && request.resource.data.header == resource.data.header;
+      }
 
       allow read: if signedIn();
 
@@ -214,11 +222,13 @@ service cloud.firestore {
                       || (hasProfile()
                           && resource.data.state == 'submitted'
                           && myRole() in approveRoles(resource.data.type)
-                          && movingTo(['approved', 'rejected']))
+                          && movingTo(['approved', 'rejected'])
+                          && contentUnchanged())
                       || (hasProfile()
                           && resource.data.state == 'approved'
                           && myRole() in completeRoles(resource.data.type)
-                          && movingTo(['done']))
+                          && movingTo(['done'])
+                          && contentUnchanged())
                     );
 
       // لا حذف لمستند أبدًا. المستند الخاطئ يُرفض ويبقى أثره.

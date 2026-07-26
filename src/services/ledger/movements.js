@@ -178,6 +178,36 @@ export function canPost(docData) {
 }
 
 /**
+ * حارس الرصيد السالب — نقيّ وقابل للاختبار وحده.
+ *
+ * يأخذ الدلتاوات (من `balanceDeltas`) وخريطة الرصيد الحالي `{id: qty}`، ويُعيد
+ * أوّل حركةٍ مُنقِصة تُنزل رصيدها تحت الصفر (أو `null` إن كانت كلّها آمنة).
+ * الحركات المُزيدة (`delta >= 0`) لا تُفحص — لا تنقص شيئًا. رصيدٌ غائب = 0،
+ * فأيّ إنقاصٍ منه خرقٌ (يمنع خلق صفٍّ وهميّ سالب عبر `merge:true`).
+ *
+ * تُستدعى داخل معاملة القيد بأرصدةٍ قُرئت لحظتها، وفي الاختبار بخريطةٍ ثابتة.
+ */
+export function findNegativeBalance(deltas, currentById = {}) {
+  for (const d of deltas || []) {
+    if (!(d.delta < 0)) continue;
+    const current = Number(currentById[d.id]) || 0;
+    if (current + d.delta < 0) {
+      return {
+        id: d.id,
+        sku: d.sku,
+        barcode: d.barcode,
+        nameAr: d.nameAr,
+        warehouse: d.warehouse,
+        batch: d.batch,
+        current,
+        requested: -d.delta,
+      };
+    }
+  }
+  return null;
+}
+
+/**
  * معاينة الأثر قبل وقوعه — تُعرض للموظّف قبل ضغط «إنهاء المستند».
  * يجمع البناء والدلتا والمشاكل في نتيجةٍ واحدة صالحة للعرض.
  */

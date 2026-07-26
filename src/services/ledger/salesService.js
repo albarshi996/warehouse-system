@@ -16,65 +16,158 @@
  * عالٍ ونُعيد النتيجة كي تُعالَج، فمستندٌ معتمَد بلا حجز استثناءٌ يُلاحَق لا
  * صمتٌ يُحتمل. (والمعتمِد وارهاوس-مانجر وهو فاعلٌ مخزنيّ، فالفشل نادر.)
  *
+ * ═══ الذرّية: لماذا معاملةٌ لا قراءةٌ ثم كتابة؟ ═══
+ * لو قرأنا الأرصدة خارج معاملة ثم حجزنا على أساسها، لأمكن لأمرَي بيعٍ متزامنَين
+ * أن يقرآ «متاح 100» معًا فيحجز كلٌّ مئة ⇒ التزامٌ بضعف الموجود. لذا التخصيص
+ * والحجز والبصمة يقعون **داخل `runTransaction`**: تُقرأ الأرصدة المرشّحة طازجةً
+ * لحظتها، فأيّ حجزٍ متزامن يظهر، وتعيد Firestore تشغيل المعاملة عند التعارض.
+ * ولأن المعاملة **لا تشغّل استعلامًا** (تقرأ مستندات بعينها)، نكتشف معرّفات
+ * الصفوف المرشّحة أوّلًا خارجها، ثم نقرؤها بعينها داخلها.
+ *
  * ═══ حدٌّ معروف موثَّق ═══
  * الحجز يبقى قائمًا حتى **إنجاز** أمر البيع لا حتى سحبه. فبين الاعتماد والإنجاز
  * — حين تخرج البضاعة بقائمة السحب — يبقى «المتاح» متحفّظًا (أقلّ من الحقيقي
  * بمقدار المحجوز الجاري). هذا **آمنٌ لا خطِر**: يُنقص المتاح فلا يُبيع ما لا
  * يوجد، ولا يزيده فيُبيع مرّتين. وعند الإنجاز يعود المتاح دقيقًا.
  */
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import {
+  doc,
+  serverTimestamp,
+  runTransaction,
+  increment,
+} from 'firebase/firestore';
 import { db } from '../../config/firebase.js';
 import { fetchBalancesOnce } from '../balances/balancesService.js';
-import { allocateDocument } from './reservations.js';
-import { reserve, release } from './ledgerService.js';
+import { allocateDocument, reservationDeltas } from './reservations.js';
 
 const DOCS = 'documents';
+const BALANCES = 'balances';
+
+/** مجموعة معرّفات أصناف أمر البيع (sku أو barcode) بصيغة موحّدة. */
+function orderItemKeys(soDoc) {
+  return new Set(
+    (soDoc?.lines || [])
+      .map((l) => String(l?.sku || l?.barcode || '').trim().toUpperCase())
+      .filter(Boolean)
+  );
+}
+
+function toShortfall(lines) {
+  return lines
+    .filter((l) => l.shortfall > 0)
+    .map((l) => ({
+      sku: l.sku,
+      barcode: l.barcode,
+      nameAr: l.nameAr,
+      requested: l.requested,
+      allocated: l.allocated,
+      shortfall: l.shortfall,
+    }));
+}
 
 /**
- * يخصّص بنود أمر البيع من الأرصدة المتاحة (FEFO) ويحجزها، ويثبّت الخطّة على
- * المستند كي يُفكّ الحجز لاحقًا بدقّة. يُعيد ملخّص التخصيص (بما فيه العجز).
+ * يخصّص بنود أمر البيع من الأرصدة المتاحة (FEFO) ويحجزها ذرّيًّا، ويثبّت الخطّة
+ * على المستند كي يُفكّ الحجز لاحقًا بدقّة. يُعيد ملخّص التخصيص (بما فيه العجز).
  *
  * العجز لا يمنع — يُخزَّن على المستند كي يقرأه تقرير الأصناف غير المتوفّرة.
+ * إيديمبوتنت: إن سبق الحجز (`soReserved`) لم يُكرَّر — يُفحص داخل المعاملة.
  */
 export async function allocateAndReserve(soDoc) {
-  const balances = await fetchBalancesOnce();
-  const result = allocateDocument(soDoc, balances);
+  // خارج المعاملة: اكتشاف **معرّفات** الصفوف المرشّحة لأصناف الأمر فقط
+  // (لا يمكن تشغيل استعلام داخل معاملة). قيمها تُقرأ طازجةً داخل المعاملة.
+  const wantKeys = orderItemKeys(soDoc);
+  const candidateIds = (await fetchBalancesOnce())
+    .filter((b) => {
+      const s = String(b?.sku || '').trim().toUpperCase();
+      const bc = String(b?.barcode || '').trim().toUpperCase();
+      return wantKeys.has(s) || wantKeys.has(bc);
+    })
+    .map((b) => b.id)
+    .filter(Boolean);
 
-  // كل التخصيصات عبر البنود في قائمة واحدة — هي ما سيُحجز ويُفكّ.
-  const allocations = result.lines.flatMap((line) => line.allocations || []);
-  if (allocations.length) {
-    await reserve(allocations);
-  }
+  return runTransaction(db, async (tx) => {
+    const soRef = doc(db, DOCS, soDoc.id);
+    const soSnap = await tx.get(soRef);
+    if (!soSnap.exists()) throw new Error('أمر البيع غير موجود.');
+    const fresh = soSnap.data();
+    if (fresh.soReserved) {
+      // حُجز من قبل — لا نكرّر (يمنع الحجز المزدوج تحت التزامن).
+      return {
+        reserved: (fresh.soAllocation || []).length,
+        shortfall: fresh.soShortfall || [],
+        fullyAllocated: (fresh.soShortfall || []).length === 0,
+        already: true,
+      };
+    }
 
-  // بصمة الحجز على المستند: الخطّة (للفكّ الدقيق) والعجز (للتقارير).
-  const shortfall = result.lines
-    .filter((l) => l.shortfall > 0)
-    .map((l) => ({ sku: l.sku, barcode: l.barcode, nameAr: l.nameAr, requested: l.requested, allocated: l.allocated, shortfall: l.shortfall }));
+    // قراءة الأرصدة المرشّحة **طازجةً داخل المعاملة** (كلّ القراءات قبل الكتابة).
+    const freshBalances = [];
+    for (const id of candidateIds) {
+      const bSnap = await tx.get(doc(db, BALANCES, id));
+      if (bSnap.exists()) freshBalances.push({ id, ...bSnap.data() });
+    }
 
-  await updateDoc(doc(db, DOCS, soDoc.id), {
-    soAllocation: allocations,
-    soShortfall: shortfall,
-    soReserved: true,
-    soReleased: false,
-    updatedAt: serverTimestamp(),
+    // التخصيص على المتاح الطازج (qty − qtyReserved) بترتيب FEFO.
+    const result = allocateDocument(fresh, freshBalances);
+    const allocations = result.lines.flatMap((line) => line.allocations || []);
+    const shortfall = toShortfall(result.lines);
+
+    // الحجز على `qtyReserved` ذرّيًّا مع بصمة الأمر — كلّها أو لا شيء.
+    reservationDeltas(allocations, 1).forEach((d) => {
+      tx.set(
+        doc(db, BALANCES, d.id),
+        {
+          sku: d.sku,
+          barcode: d.barcode,
+          warehouse: d.warehouse,
+          batch: d.batch,
+          qtyReserved: increment(d.delta),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    });
+
+    tx.update(soRef, {
+      soAllocation: allocations,
+      soShortfall: shortfall,
+      soReserved: true,
+      soReleased: false,
+      updatedAt: serverTimestamp(),
+    });
+
+    return {
+      reserved: allocations.length,
+      shortfall,
+      fullyAllocated: result.fullyAllocated,
+      already: false,
+    };
   });
-
-  return { reserved: allocations.length, shortfall, fullyAllocated: result.fullyAllocated };
 }
 
 /**
  * يفكّ حجز أمر البيع من الخطّة المثبّتة عليه. يُستدعى عند إنجاز الأمر.
- * آمنٌ للتكرار: إن فُكّ الحجز من قبل لم يُفكّ ثانيةً (فلا يصير المحجوز سالبًا).
+ * ذرّيّ وإيديمبوتنت: يُقرأ `soReleased` **داخل المعاملة**، فنقرتان متزامنتان
+ * لا تفكّان مرّتين — وإلّا صار المحجوز سالبًا (مخزونٌ وهميّ يُباع مرّتين).
  */
 export async function releaseReservation(soDoc) {
-  if (soDoc?.soReleased) return { released: 0, already: true };
-  const allocations = soDoc?.soAllocation || [];
-  if (allocations.length) {
-    await release(allocations);
-  }
-  await updateDoc(doc(db, DOCS, soDoc.id), {
-    soReleased: true,
-    updatedAt: serverTimestamp(),
+  return runTransaction(db, async (tx) => {
+    const soRef = doc(db, DOCS, soDoc.id);
+    const soSnap = await tx.get(soRef);
+    if (!soSnap.exists()) throw new Error('أمر البيع غير موجود.');
+    const fresh = soSnap.data();
+    if (fresh.soReleased) return { released: 0, already: true };
+
+    const allocations = fresh.soAllocation || [];
+    reservationDeltas(allocations, -1).forEach((d) => {
+      tx.set(
+        doc(db, BALANCES, d.id),
+        { qtyReserved: increment(d.delta), updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+    });
+
+    tx.update(soRef, { soReleased: true, updatedAt: serverTimestamp() });
+    return { released: allocations.length, already: false };
   });
-  return { released: allocations.length, already: false };
 }

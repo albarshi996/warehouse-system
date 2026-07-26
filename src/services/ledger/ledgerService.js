@@ -33,7 +33,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
-import { buildMoves, balanceDeltas, canPost } from './movements.js';
+import { buildMoves, balanceDeltas, canPost, findNegativeBalance } from './movements.js';
 import { reservationDeltas } from './reservations.js';
 
 const MOVES = 'stock_moves';
@@ -90,6 +90,30 @@ export async function postDocument(docData, profile) {
     const fresh = snap.data();
     if (fresh.posted) throw new Error('قُيّد هذا المستند من قبل — لا يُقيَّد مرّتين.');
     if (fresh.state !== 'done') throw new Error('حالة المستند تغيّرت — لم يعد منجَزًا.');
+
+    // ── حارس الرصيد السالب (يُقرأ داخل المعاملة قبل أي كتابة) ──────────
+    // كلّ حركةٍ تُنقص رصيدًا (delta<0) نتحقّق أنّ الناتج ≥ 0: لا يُقيَّد سحبٌ
+    // أو صرفٌ يفوق الموجود على الرفّ. بدون هذا كان `increment(delta)` يمرّ
+    // بلا فحص فينزل الرصيد إلى قيمة سالبة صامتة (بيعٌ زائد يُسمّم الدفتر)،
+    // وأسوأ: `merge:true` على رصيدٍ غير موجود كان يخلق صفًّا وهميًّا سالبًا.
+    // Firestore يشترط كلّ القراءات قبل أيّ كتابة — لذا نجمعها هنا أوّلًا،
+    // ثم نحكم بالدالّة النقيّة `findNegativeBalance` (المُختبَرة وحدها).
+    const currentById = {};
+    for (const d of deltas) {
+      if (d.delta < 0) {
+        const snapB = await tx.get(doc(db, BALANCES, d.id));
+        currentById[d.id] = snapB.exists() ? Number(snapB.data().qty) || 0 : 0;
+      }
+    }
+    const violation = findNegativeBalance(deltas, currentById);
+    if (violation) {
+      throw new Error(
+        `رصيدٌ غير كافٍ: ${violation.nameAr || violation.sku || violation.barcode || 'صنف'} في ` +
+          `${violation.warehouse || 'المخزن'}` +
+          (violation.batch ? ` (تشغيلة ${violation.batch})` : '') +
+          ` — المتوفّر ${violation.current}، والحركة تطلب ${violation.requested}. القيد لا يُنفَّذ.`
+      );
+    }
 
     moves.forEach((move) => {
       tx.set(doc(db, MOVES, move.id), {

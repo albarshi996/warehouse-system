@@ -22,7 +22,14 @@ import {
   warehouseRequiringTypes,
   POSTING_STATE,
 } from './postingRules.js';
-import { buildMoves, balanceDeltas, canPost, moveId, previewImpact } from './movements.js';
+import {
+  buildMoves,
+  balanceDeltas,
+  canPost,
+  moveId,
+  previewImpact,
+  findNegativeBalance,
+} from './movements.js';
 import {
   availableQty,
   totalAvailable,
@@ -345,4 +352,49 @@ test('summarizeMovement يميّز الوارد من الخارج عبر الم�
   assert.equal(s.totalIn, 10);
   assert.equal(s.totalOut, 4);
   assert.equal(s.value, 48);
+});
+
+/* ───────────────── حارس الرصيد السالب ───────────────── */
+
+test('findNegativeBalance: سحبٌ يفوق الموجود يُرفَض بأوّل خرق', () => {
+  const deltas = [
+    { id: 'A__E5__x', sku: 'A', warehouse: 'E5', delta: -100, nameAr: 'صنف أ' },
+  ];
+  const v = findNegativeBalance(deltas, { 'A__E5__x': 50 });
+  assert.ok(v, 'يجب أن يُكتشف الخرق');
+  assert.equal(v.current, 50);
+  assert.equal(v.requested, 100);
+  assert.equal(v.sku, 'A');
+});
+
+test('findNegativeBalance: سحبٌ مساوٍ للموجود تمامًا يمرّ (الرصيد يصير صفرًا)', () => {
+  const deltas = [{ id: 'A__E5__x', sku: 'A', warehouse: 'E5', delta: -50 }];
+  assert.equal(findNegativeBalance(deltas, { 'A__E5__x': 50 }), null);
+});
+
+test('findNegativeBalance: رصيدٌ غائب = 0 فأيّ إنقاصٍ منه خرق (لا صفّ وهميّ سالب)', () => {
+  const deltas = [{ id: 'ghost__E5__x', sku: 'G', warehouse: 'E5', delta: -1 }];
+  const v = findNegativeBalance(deltas, {});
+  assert.ok(v);
+  assert.equal(v.current, 0);
+  assert.equal(v.requested, 1);
+});
+
+test('findNegativeBalance: الحركات المُزيدة (delta>=0) لا تُفحص ولا تُرفَض', () => {
+  const deltas = [
+    { id: 'A__RECEIVING__x', sku: 'A', delta: +100 },
+    { id: 'B__E5__x', sku: 'B', delta: 0 },
+  ];
+  assert.equal(findNegativeBalance(deltas, {}), null);
+});
+
+test('findNegativeBalance: يعبر الآمن ويتوقّف عند الخرق (نقلٌ داخليّ سليم + سحبٌ زائد)', () => {
+  const deltas = [
+    { id: 'A__RECEIVING__x', sku: 'A', delta: -10 }, // متوفّر 10 → صفر، آمن
+    { id: 'A__E5__x', sku: 'A', delta: +10 }, // مُزيد، لا يُفحص
+    { id: 'B__E5__x', sku: 'B', warehouse: 'E5', delta: -5 }, // متوفّر 2 → خرق
+  ];
+  const v = findNegativeBalance(deltas, { 'A__RECEIVING__x': 10, 'B__E5__x': 2 });
+  assert.ok(v);
+  assert.equal(v.sku, 'B');
 });
