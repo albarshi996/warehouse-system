@@ -47,6 +47,7 @@ export const NAV_GROUPS = [
     group: 'المستودعات والجرد',
     emoji: '📦',
     items: [
+      { path: '/dashboard/command-center', label: 'لوحة القيادة التشغيلية', icon: 'grid' },
       { path: '/dashboard/warehouses', label: 'المستودعات', icon: 'package' },
       { path: '/dashboard/stock-ledger', label: 'دفتر حركات المخزون', icon: 'clipboardList' },
       { path: '/dashboard/transfers', label: 'النقل بين المستودعات', icon: 'truck' },
