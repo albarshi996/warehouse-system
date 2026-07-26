@@ -80,6 +80,13 @@ const schema = {
         { key: 'priority', label: 'الأولوية (Priority)', kind: 'select', options: ['عاجل', 'عادي', 'منخفض'] },
         { key: 'paymentTerms', label: 'شروط الدفع (Payment Terms)', kind: 'text' },
         { key: 'channel', label: 'قناة الطلب (Channel)', kind: 'select', options: ['فرع', 'جملة', 'تجزئة', 'مشروع'] },
+        {
+          key: 'holdReason',
+          label: 'سبب الإيقاف (Hold Reason)',
+          kind: 'select',
+          options: ['—', 'مشكلة لوجستية', 'إيقاف من العميل', 'مشكلة بالنظام'],
+          hint: 'يُترك «—» عادةً؛ يُحدَّد إن أُوقف الطلب رغم توفّر الرصيد — فيظهر في تقرير الطلبات المعلّقة.',
+        },
       ],
     },
 
