@@ -34,11 +34,31 @@ function ofType(docs, t) {
 /* ═══════════════════ المؤشرات ═══════════════════ */
 
 /**
+ * يقصر المستندات على نافذةٍ زمنية (آخر `windowDays` يومًا) إن طُلبت.
+ *
+ * لماذا؟ المؤشرات تقيس **الأداء الحديث** لا التاريخ كلّه؛ وحسابها على «أحدث N
+ * مستند» (حدّ العرض) يجعلها تنحرف صامتةً متى تجاوز الإجمالي ذلك الحدّ. النافذة
+ * الزمنية تجعل الرقم صحيحًا ومستقرًّا مهما نما الحجم. المستند بلا تاريخ يُحتسب
+ * (لا نُسقط ما نجهل تاريخه). بلا نافذة (الوضع الافتراضي) تُحسب على الكلّ.
+ */
+function withinWindow(docs, nowMs, windowDays) {
+  if (nowMs == null || !(windowDays > 0)) return docs || [];
+  const cutoff = nowMs - windowDays * DAY;
+  return (docs || []).filter((d) => {
+    const t = toMillis(d?.createdAt);
+    return t == null || t >= cutoff;
+  });
+}
+
+/**
  * المؤشرات الأربعة. كلٌّ يُعيد `null` إن غابت بياناته — فلا نلوّن نجاحًا مزيّفًا
  * من لا شيء. المقامُ ظاهرٌ في `basis` لتُقرأ الثقة في الرقم.
+ *
+ * `opts.windowDays` + `opts.nowMs` (اختياريّان): يقصران الحساب على آخر N يومًا.
  */
-export function computeKpis(docs) {
-  const sos = ofType(docs, 'SO');
+export function computeKpis(docs, opts = {}) {
+  const scoped = withinWindow(docs, opts.nowMs, opts.windowDays);
+  const sos = ofType(scoped, 'SO');
 
   // نسبة التنفيذ (Fill Rate) = المخصَّص ÷ المطلوب عبر الأوامر المحجوزة.
   let requested = 0;
@@ -51,7 +71,7 @@ export function computeKpis(docs) {
   const fillRate = requested > 0 ? allocated / requested : null;
 
   // زمن دورة الطلب = متوسط (تسليمٌ منجَز − إنشاء الأمر) بالأيام.
-  const doneDN = ofType(docs, 'DN').filter((d) => d.state === 'done');
+  const doneDN = ofType(scoped, 'DN').filter((d) => d.state === 'done');
   const cycles = [];
   for (const so of sos) {
     const dn = doneDN.find((d) => d?.links?.SO?.id === so.id);
@@ -66,7 +86,7 @@ export function computeKpis(docs) {
   let book = 0;
   let absVar = 0;
   let anyCount = false;
-  for (const cc of ofType(docs, 'CC').filter((d) => d.state === 'done')) {
+  for (const cc of ofType(scoped, 'CC').filter((d) => d.state === 'done')) {
     for (const l of cc.lines || []) {
       const b = Number(l?.bookQty) || 0;
       const c = Number(l?.count2 ?? l?.actualQty) || 0;
@@ -81,7 +101,7 @@ export function computeKpis(docs) {
   // دقّة التسليم = المستلَم ÷ المشحون عبر استلامات النقل (نقطة التحقّق الوحيدة).
   let shipped = 0;
   let received = 0;
-  for (const trc of ofType(docs, 'TRC').filter((d) => d.state === 'done')) {
+  for (const trc of ofType(scoped, 'TRC').filter((d) => d.state === 'done')) {
     for (const l of trc.lines || []) {
       shipped += Number(l?.qtyShipped) || 0;
       received += Number(l?.qtyReceived) || 0;
@@ -94,7 +114,15 @@ export function computeKpis(docs) {
     cycleTimeDays,
     inventoryAccuracy,
     deliveryAccuracy,
-    basis: { requested, allocated, deliveries: cycles.length, countedBook: book, shipped },
+    basis: {
+      requested,
+      allocated,
+      deliveries: cycles.length,
+      countedBook: book,
+      shipped,
+      windowDays: opts.windowDays || null,
+      scopedDocs: scoped.length,
+    },
   };
 }
 

@@ -4,6 +4,17 @@ import { listenAllDocuments } from '../../../services/documents/documentsService
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { subscribeItems } from '../../../services/itemService.js';
 import { computeKpis, operationsSnapshot, operationExceptions } from '../../../services/ledger/operationsDashboard.js';
+import { toMillis } from '../../../services/documents/inbox.js';
+
+/**
+ * حدّ عرض المستندات: اللوحة تقرأ أحدث DOC_CAP مستند وتحسب في المتصفّح. رقمٌ
+ * كبيرٌ يكفي لحجم اليوم؛ وإن بلغه الإجمالي يظهر شريط تنبيه صادق (لا صمت). الحلّ
+ * الجذريّ عند التوسّع هو تجميع خادميّ (Cloud Function) يُغني عن القراءة الكاملة.
+ */
+const DOC_CAP = 800;
+/** نافذة المؤشرات: تقيس الأداء الحديث لا التاريخ كلّه — فتبقى صحيحة مع النموّ. */
+const KPI_WINDOW_DAYS = 90;
+const DAY_MS = 86400000;
 
 /**
  * لوحة القيادة التشغيلية — الشاشة الواحدة التي تُتوّج الدورة كلها.
@@ -47,7 +58,7 @@ export default function OperationsCommand() {
 
   useEffect(() => {
     if (!me) return undefined;
-    const u1 = listenAllDocuments(setDocs, 400);
+    const u1 = listenAllDocuments(setDocs, DOC_CAP);
     const u2 = listenBalances(setBalances, () => setBalances([]));
     const u3 = subscribeItems(setItems, () => setItems([]));
     return () => {
@@ -57,9 +68,23 @@ export default function OperationsCommand() {
     };
   }, [me]);
 
-  const kpis = useMemo(() => computeKpis(docs), [docs]);
+  const kpis = useMemo(() => computeKpis(docs, { nowMs, windowDays: KPI_WINDOW_DAYS }), [docs, nowMs]);
   const snap = useMemo(() => operationsSnapshot(docs, balances, items), [docs, balances, items]);
   const exceptions = useMemo(() => operationExceptions(docs, balances, nowMs, items), [docs, balances, items, nowMs]);
+
+  // صدقُ البتر: إن بلغ عدد المستندات حدّ العرض فثمّة أقدمُ منها لم يُقرأ.
+  // وإن كان أقدم مستندٍ مقروء أحدثَ من بداية نافذة المؤشرات، فالنافذة نفسها
+  // ناقصة ⇒ المؤشرات قد لا تعكس كل الـ90 يومًا. نقولها صراحةً لا نُخفيها.
+  const truncated = docs.length >= DOC_CAP;
+  const oldestMs = useMemo(() => {
+    let m = null;
+    for (const d of docs) {
+      const t = toMillis(d?.createdAt);
+      if (t != null && (m == null || t < m)) m = t;
+    }
+    return m;
+  }, [docs]);
+  const kpiWindowIncomplete = truncated && oldestMs != null && oldestMs > nowMs - KPI_WINDOW_DAYS * DAY_MS;
 
   if (!ready) return <p className="text-gray-300 text-sm py-10 text-center">جارٍ التحميل…</p>;
   if (!me) return <Notice>افتح الصفحة بعد تسجيل الدخول.</Notice>;
@@ -68,12 +93,33 @@ export default function OperationsCommand() {
 
   return (
     <div dir="rtl" className="space-y-6">
+      {/* ── شريط صدق البتر (لا يظهر إلا عند بلوغ حدّ العرض) ── */}
+      {truncated && (
+        <div
+          className={`rounded-xl border p-3 text-xs leading-relaxed ${
+            kpiWindowIncomplete
+              ? 'border-red-500/40 bg-red-500/10 text-red-200'
+              : 'border-amber-500/30 bg-amber-500/10 text-amber-200'
+          }`}
+        >
+          {kpiWindowIncomplete
+            ? `⚠️ المؤشرات محسوبة على جزءٍ من آخر ${KPI_WINDOW_DAYS} يومًا فقط — بلغت اللوحة حدّ عرض ${num(DOC_CAP)} مستند، فقد تكون الأرقام ناقصة. للدقّة الكاملة عند هذا الحجم يلزم تجميع خادميّ (Cloud Function).`
+            : `ℹ️ اللقطة والعدّادات تعرض أحدث ${num(DOC_CAP)} مستند وقد لا تعكس الإجمالي التاريخي. المؤشرات محسوبة على آخر ${KPI_WINDOW_DAYS} يومًا (نافذتها مكتملة).`}
+        </div>
+      )}
+
       {/* ── المؤشرات الأربعة ── */}
+      <div className="space-y-2">
+      <div className="flex items-center justify-between px-1">
+        <h2 className="text-sm font-bold text-white">المؤشرات الأربعة</h2>
+        <span className="text-[11px] text-gray-500">لآخر {KPI_WINDOW_DAYS} يومًا</span>
+      </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi label="نسبة تنفيذ الطلبات" hint="Fill Rate · هدف ≥95%" value={pct(kpis.fillRate)} color={tone(kpis.fillRate, 0.95, 0.85)} />
         <Kpi label="زمن دورة الطلب" hint="Order Cycle · من الأمر للتسليم" value={days(kpis.cycleTimeDays)} color={tone(kpis.cycleTimeDays == null ? null : 1 / (kpis.cycleTimeDays || 1), 0.5, 0.2)} />
         <Kpi label="دقّة المخزون" hint="من محاضر الجرد · هدف ≥98%" value={pct(kpis.inventoryAccuracy)} color={tone(kpis.inventoryAccuracy, 0.98, 0.9)} />
         <Kpi label="دقّة التسليم" hint="استلام النقل ÷ الشحن" value={pct(kpis.deliveryAccuracy)} color={tone(kpis.deliveryAccuracy, 0.98, 0.9)} />
+      </div>
       </div>
 
       {/* ── لوحة الاستثناءات ── */}

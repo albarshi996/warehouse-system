@@ -90,3 +90,36 @@ test('استثناء الرصيد المنتهي على رصيدٍ موجب', ()
 test('لا استثناءات من لا شيء', () => {
   assert.equal(operationExceptions([], [], NOW, []).length, 0);
 });
+
+/* ───────────────── نافذة المؤشرات الزمنية ───────────────── */
+
+test('نافذة المؤشرات: تُسقط الأوامر الأقدم من windowDays', () => {
+  const docs = [
+    // داخل النافذة (قبل 10 أيام): 6 من 10
+    { id: 'new', type: 'SO', state: 'approved', soReserved: true, createdAt: ms('2026-07-17T00:00:00Z'), lines: [{ qty: 10 }], soAllocation: [{ qty: 6 }] },
+    // خارج النافذة (قبل 120 يومًا): لو حُسب لغيّر النسبة
+    { id: 'old', type: 'SO', state: 'approved', soReserved: true, createdAt: ms('2026-03-29T00:00:00Z'), lines: [{ qty: 100 }], soAllocation: [{ qty: 100 }] },
+  ];
+  const k = computeKpis(docs, { nowMs: NOW, windowDays: 90 });
+  assert.equal(k.fillRate, 0.6, 'الأمر القديم خارج النافذة لا يُحتسب');
+  assert.equal(k.basis.requested, 10);
+  assert.equal(k.basis.windowDays, 90);
+});
+
+test('نافذة المؤشرات: بلا نافذة (الوضع الافتراضي) تُحسب على الكلّ', () => {
+  const docs = [
+    { id: 'new', type: 'SO', state: 'approved', soReserved: true, createdAt: ms('2026-07-17T00:00:00Z'), lines: [{ qty: 10 }], soAllocation: [{ qty: 6 }] },
+    { id: 'old', type: 'SO', state: 'approved', soReserved: true, createdAt: ms('2026-03-29T00:00:00Z'), lines: [{ qty: 10 }], soAllocation: [{ qty: 10 }] },
+  ];
+  const k = computeKpis(docs);
+  assert.equal(k.fillRate, 0.8, '16 من 20 — القديم محسوب بلا نافذة');
+  assert.equal(k.basis.windowDays, null);
+});
+
+test('نافذة المؤشرات: مستندٌ بلا تاريخ يُحتسب (لا نُسقط ما نجهله)', () => {
+  const docs = [
+    { id: 'noDate', type: 'SO', state: 'approved', soReserved: true, lines: [{ qty: 10 }], soAllocation: [{ qty: 5 }] },
+  ];
+  const k = computeKpis(docs, { nowMs: NOW, windowDays: 90 });
+  assert.equal(k.fillRate, 0.5, 'بلا createdAt يبقى داخل الحساب');
+});
