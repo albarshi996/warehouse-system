@@ -13,47 +13,76 @@ const base = import.meta.env.BASE_URL.endsWith('/')
  * (إطار تقرير الجودة أُزيل من هنا لأنه متاح في «مركز التقارير» وكملف HTML.)
  */
 
-// ─── الأنظمة الرئيسية الثمانية (طلب المالك 23.07.2026) ──────────────────────
-// تظهر في صدارة اللوحة عند الدخول. المحصور بأدوار يحمل roles فيُخفيه RoleNav
-// تلقائيًّا لغير أصحابه — نفس آلية القائمة الجانبية (li[data-item-roles]).
-const featured = [
-  { id: 'ft-recruitment', path: '/dashboard/recruitment', icon: '🧑‍💼',
-    title: 'التوظيف الذكي', desc: 'كتالوج الوظائف وخط أنابيب المرشحين والتدقيق',
-    roles: 'admin,warehouse_manager' },
-  { id: 'ft-documents', path: '/dashboard/documents', icon: '📑',
-    title: 'المستندات', desc: 'صندوق المستندات الرسمية والدورة المحكومة — GRN وأخواتها' },
-  { id: 'ft-products', path: '/dashboard/products', icon: '📦',
-    title: 'إدارة الأصناف', desc: 'ماستر الأصناف: استيراد الشيتات والباركود وأرصدة FEFO' },
-  { id: 'ft-operations', path: '/dashboard/operations', icon: '📡',
-    title: 'متابعة العمليات', desc: 'مراقبة حيّة للعمليات المخزنية وسجلّ المسح والإنتاجية',
-    roles: 'admin,warehouse_manager' },
-  { id: 'ft-supply', path: '/dashboard/supply-chain', icon: '📊',
-    title: 'لوحة سلاسل الإمداد التنفيذية', desc: 'مؤشرات الأسطول والصيانة والعُهد — وبوابة صفحات سلاسل الإمداد والحركة',
-    roles: 'admin,warehouse_manager' },
-  { id: 'ft-meetings', path: '/dashboard/meetings', icon: '🤝',
-    title: 'الاجتماعات التحضيرية', desc: 'الاجتماعات السبعة مع إدارات الشركة: عرض ومحضر حيّ وخطاب',
-    roles: 'admin,warehouse_manager' },
-  { id: 'ft-tasks', path: '/dashboard/tasks', icon: '✅',
-    title: 'المهام', desc: 'إدارة المهام اليومية بقوائم تحقق وشارات التأخر والطباعة' },
-  { id: 'ft-workflows', path: '/dashboard/workflows', icon: '🏢',
-    title: 'الهيكل التنظيمي للمستودعات', desc: 'الهيكل التنظيمي ومسارات الدورة المستندية' },
-];
-
-// شريط الأنظمة الأساسية (يستبدل البانر الأحمر).
-const systems = [
+// ─── البطاقات الحاوية الرئيسية (إعادة الترتيب الجراحية — طلب المالك 27.07.2026) ─
+// كل حاوية = بوابة موضوعية تجمع مقاصدها في مكان واحد. القاعدة الذهبية: صفر حذف —
+// لا مقصد فُقد؛ فقط أُعيد جمعه. التقييد بالأدوار على مستوى الحاوية (roles) أو
+// الرابط الفرعي (link.roles) — يُخفيه RoleNav تلقائيًّا عبر li[data-item-roles].
+const hubs = [
   {
-    id: 'sys-learn', path: '/dashboard/learn-odoo', icon: '🎓',
-    title: 'تعلّم أودو · محاكي أودو',
-    desc: 'جولة موجّهة تفاعلية على دورة أودو الكاملة (١٢ مرحلة) مع فرض القواعد الذهبية آليًّا.',
+    id: 'hub-structure', icon: '🏢', title: 'الهيكل التنظيمي للمستودعات',
+    desc: 'بوابة التوظيف والتقارير الإدارية والهيكل والدورة المستندية.',
+    links: [
+      { path: '/dashboard/org-structure', icon: '🗂️', label: 'الهيكل التنظيمي' },
+      { path: '/dashboard/workflows', icon: '🔀', label: 'الهيكل والمسارات (الدورة المستندية)' },
+      { path: '/dashboard/recruitment', icon: '🧑‍💼', label: 'التوظيف الذكي', roles: 'admin,warehouse_manager' },
+    ],
   },
   {
-    id: 'sys-access', path: '/dashboard/access-control', icon: '🛡️',
-    title: 'الصلاحيات والأدوار',
-    desc: 'تصميم نظام الوصول للبوابة: مَن يدخل، وبأي دور، وماذا يرى ويعتمد.',
+    id: 'hub-warehouse-ops', icon: '📦', title: 'عمليات المخزنية',
+    desc: 'المستندات والأصناف والمهام والعمليات وإدارة المستودعات.',
+    links: [
+      { path: '/dashboard/documents', icon: '📑', label: 'المستندات' },
+      { path: '/dashboard/products', icon: '📦', label: 'إدارة الأصناف' },
+      { path: '/dashboard/tasks', icon: '✅', label: 'المهام التشغيلية' },
+      { path: '/dashboard/stock-operations', icon: '🔧', label: 'عمليات مخزنية' },
+      { path: '/dashboard/warehouses', icon: '🏬', label: 'إدارة المستودعات' },
+    ],
+  },
+  {
+    id: 'hub-dashboards', icon: '📊', title: 'لوحات القيادة',
+    desc: 'المؤشرات والمتابعة الحيّة ودفتر الحركات والنقل والرقابة على الطلبات.',
+    roles: 'admin,warehouse_manager',
+    links: [
+      { path: '/dashboard/command-center', icon: '🎯', label: 'لوحة القيادة التشغيلية' },
+      { path: '/dashboard/supply-chain', icon: '📊', label: 'لوحة سلاسل الإمداد' },
+      { path: '/dashboard/operations', icon: '📡', label: 'متابعة العمليات' },
+      { path: '/dashboard/stock-ledger', icon: '📒', label: 'دفتر حركات المخزون' },
+      { path: '/dashboard/transfers', icon: '🔁', label: 'النقل بين المستودعات' },
+      { path: '/dashboard/order-control', icon: '🚦', label: 'الرقابة على الطلبات' },
+    ],
+  },
+  {
+    id: 'hub-training', icon: '🎓', title: 'التدريب والتطوير',
+    desc: 'محاكي أودو ودورات ERP ودليل التثبيت والأرشيف التأسيسي.',
+    links: [
+      { path: '/dashboard/learn-odoo', icon: '🎓', label: 'تعلّم أودو (محاكي الواجهة)' },
+      { path: '/dashboard/erp-workflows', icon: '⚙️', label: 'دورات عمل ERP' },
+      { path: '/dashboard/odoo-installation', icon: '🧰', label: 'دليل تثبيت أودو' },
+      { path: '/dashboard/archive', icon: '🗄️', label: 'الأرشيف التأسيسي' },
+    ],
+  },
+  {
+    id: 'hub-access', icon: '🛡️', title: 'الصلاحيات والأدوار',
+    desc: 'مَن يدخل، وبأي دور، وماذا يرى ويعتمد.',
+    roles: 'admin',
+    links: [
+      { path: '/dashboard/users', icon: '👤', label: 'إدارة المستخدمين' },
+      { path: '/dashboard/access-control', icon: '🛡️', label: 'الصلاحيات والأدوار' },
+    ],
   },
 ];
 
-// الأقسام المجمّعة — كل بطاقة لها معرّف ثابت لحفظ حالة الإخفاء.
+// بطاقة الاجتماعات — تبقى مفردة كما هي (طلب المالك).
+const meetingsCard = {
+  id: 'ft-meetings', path: '/dashboard/meetings', icon: '🤝',
+  title: 'الاجتماعات التحضيرية',
+  desc: 'الاجتماعات السبعة مع إدارات الشركة: عرض ومحضر حيّ وخطاب.',
+  roles: 'admin,warehouse_manager',
+};
+
+// الأقسام المجمّعة السفلية — مقاصد لم تُغطِّها الحاويات (صفر حذف).
+// (أُزيل قسما «الدورات والمحاكاة» و«المرجعية والتطوير» لأن مقاصدهما — workflows
+//  وerp-workflows وarchive — صارت داخل الحاويات أعلاه، فلا مقصد فُقد.)
 const groups = [
   {
     id: 'daily', title: 'العمليات اليومية', emoji: '🗓️',
@@ -80,15 +109,6 @@ const groups = [
     ],
   },
   {
-    id: 'cycles', title: 'الدورات والمحاكاة', emoji: '🔄',
-    cards: [
-      { id: 'workflows', path: '/dashboard/workflows', icon: '🏢', tone: 'text-brand-yellow',
-        title: 'الدورة المستندية', desc: 'الهيكل التنظيمي ومسارات المستندات' },
-      { id: 'erp', path: '/dashboard/erp-workflows', icon: '⚙️', tone: 'text-green-400',
-        title: 'دورات عمل Odoo', desc: 'الدورات المستندية التشغيلية على Odoo' },
-    ],
-  },
-  {
     id: 'reports', title: 'التقارير والتحليل', emoji: '📊',
     cards: [
       { id: 'reports-center', path: '/dashboard/reports', icon: '📊', tone: 'text-brand-gold', featured: true,
@@ -99,13 +119,6 @@ const groups = [
         title: 'تقرير التوظيف', desc: 'جدول زمن إدارة المستودعات والهيكل الوظيفي' },
       { id: 'w155', path: '/dashboard/warehouse-155-report', icon: '🏢', tone: 'text-brand-red',
         title: 'تقرير تحوير 155', desc: 'تحوير المستودعات لرفع الكفاءة التشغيلية' },
-    ],
-  },
-  {
-    id: 'reference', title: 'المرجعية والتطوير', emoji: '🗄️',
-    cards: [
-      { id: 'archive', path: '/dashboard/archive', icon: '🗄️', tone: 'text-brand-gold',
-        title: 'الأرشيف التأسيسي', desc: 'خطة تنفيذ أودو، مزايا التكامل، التقنيات المشغِّلة، وخطوات الاعتماد' },
     ],
   },
 ];
@@ -160,48 +173,54 @@ const soon = [
       </p>
     </div>
 
-    {/* ─── الأنظمة الرئيسية — صدارة اللوحة (البطاقات الثماني) ──────────────── */}
-    <section data-section data-group="featured" class="mb-10">
+    {/* ─── البطاقات الحاوية الرئيسية — صدارة اللوحة ───────────────────────── */}
+    <section data-section data-group="hubs" class="mb-10">
       <div class="flex items-center gap-3 mb-4">
         <span class="text-2xl">🚀</span>
         <h2 class="text-lg sm:text-xl font-bold text-white">الأنظمة الرئيسية</h2>
         <div class="flex-1 h-px bg-gradient-to-l from-brand-gold/50 to-transparent" />
       </div>
-      <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 list-none p-0 m-0">
-        {featured.map((c) => (
-          <li class="dash-card relative" data-card-id={c.id} data-item-roles={c.roles || null}>
+      <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 list-none p-0 m-0 items-start">
+        {hubs.map((h) => (
+          <li class="dash-card relative" data-card-id={h.id} data-item-roles={h.roles || null}>
             <span class="card-badge"></span>
-            <a href={`${base}${c.path}`}
-              class="group block h-full rounded-2xl p-5 bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-brand-gold/25 hover:border-brand-gold/60 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(218,170,60,0.15)] transition-all">
-              <div class="text-4xl mb-3">{c.icon}</div>
-              <h3 class="font-extrabold text-white mb-1.5 leading-snug">{c.title}</h3>
-              <p class="text-xs text-gray-300 leading-relaxed">{c.desc}</p>
-              <span class="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-brand-gold/80 group-hover:text-brand-gold transition-colors">
-                دخول ←
-              </span>
-            </a>
+            <div class="h-full rounded-2xl p-5 bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-brand-gold/25">
+              <div class="flex items-center gap-3 mb-1.5">
+                <div class="text-3xl">{h.icon}</div>
+                <h3 class="font-extrabold text-white text-lg leading-snug">{h.title}</h3>
+              </div>
+              <p class="text-xs text-gray-300 leading-relaxed mb-4">{h.desc}</p>
+              <ul class="space-y-2 list-none p-0 m-0">
+                {h.links.map((l) => (
+                  <li data-item-roles={l.roles || null}>
+                    <a href={`${base}${l.path}`}
+                      class="group flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-brand-gold/40 px-3 py-2.5 transition-all">
+                      <span class="text-lg">{l.icon}</span>
+                      <span class="flex-1 text-sm font-bold text-gray-100 group-hover:text-white transition-colors">{l.label}</span>
+                      <span class="text-brand-gold/60 group-hover:text-brand-gold text-sm transition-colors">←</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </li>
         ))}
-      </ul>
-    </section>
 
-    {/* ─── شريط الأنظمة الأساسية (بديل البانر الأحمر) ─────────────────────── */}
-    <div data-section class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
-      {systems.map((s) => (
-        <div class="dash-card relative" data-card-id={s.id}>
+        {/* بطاقة الاجتماعات — مفردة كما هي */}
+        <li class="dash-card relative" data-card-id={meetingsCard.id} data-item-roles={meetingsCard.roles || null}>
           <span class="card-badge"></span>
-          <a href={`${base}${s.path}`}
-            class="block h-full rounded-2xl p-6 shadow-2xl border border-brand-red/30 bg-gradient-to-br from-brand-red via-[#a11e33] to-[#5e2320] hover:-translate-y-1 transition-all">
-            <div class="text-4xl mb-3">{s.icon}</div>
-            <h2 class="text-2xl font-extrabold text-white mb-2">{s.title}</h2>
-            <p class="text-white/90 text-sm leading-relaxed">{s.desc}</p>
+          <a href={`${base}${meetingsCard.path}`}
+            class="group block h-full rounded-2xl p-5 bg-gradient-to-br from-brand-red via-[#a11e33] to-[#5e2320] border border-brand-red/40 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(178,34,52,0.25)] transition-all">
+            <div class="text-4xl mb-3">{meetingsCard.icon}</div>
+            <h3 class="font-extrabold text-white text-lg mb-1.5 leading-snug">{meetingsCard.title}</h3>
+            <p class="text-xs text-white/85 leading-relaxed">{meetingsCard.desc}</p>
             <span class="mt-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm text-white/90">
-              فتح ←
+              دخول ←
             </span>
           </a>
-        </div>
-      ))}
-    </div>
+        </li>
+      </ul>
+    </section>
 
     {/* ─── شريط الإحصاءات ────────────────────────────────────────────────── */}
     <div class="bg-gradient-to-r from-blue-900/20 to-green-900/20 rounded-xl p-6 border border-blue-500/30 mb-10">
