@@ -1098,10 +1098,12 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
     listOpenOperations,
   } from '../../services/stock/operationsService.js';
 
-  /* محرّك الدمج الخالص المُختبَر — يُتاح للسكربت المضمّن عبر window (نطاقان
+  /* المحرّكات الخالصة المُختبَرة — تُتاح للسكربت المضمّن عبر window (نطاقان
      مختلفان: الوحدة لا ترى متغيّرات السكربت المضمّن والعكس، فالجسر عبر window). */
   import * as __scanMerge from '../../services/stock/scanMerge.js';
   window.__scanMerge = __scanMerge;
+  import * as __masterSync from '../../services/stock/masterSync.js';
+  window.__masterSync = __masterSync;
 
   window.__bzCloud = {
     opId: null,
@@ -1255,6 +1257,22 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
           }
         );
       });
+    },
+
+    /* ☁️ الماستر الحيّ: اشتراكٌ **دائم** يُبقي الأرصدة الدفترية والأسعار
+       طازجةً أثناء الجلسة (بدل لقطةٍ واحدة عند البدء)، ويعالج **عودة الشبكة**
+       تلقائيًّا لأنّ onSnapshot يعيد الإرسال عند الاتصال. اشتراكٌ واحدٌ فقط. */
+    _unsubLive: null,
+    subscribeLive(onItems) {
+      if (this._unsubLive) return this._unsubLive;
+      this._unsubLive = subscribeItems(
+        (items) => onItems(items),
+        (err) => console.error('[master] live subscribe failed', err)
+      );
+      return this._unsubLive;
+    },
+    stopLive() {
+      if (this._unsubLive) { try { this._unsubLive(); } catch { /* تجاهل */ } this._unsubLive = null; }
     },
   };
 
@@ -2007,6 +2025,9 @@ function switchToDashboard() {
     window.__bzCloud.startOperation(operationType);
   }
 
+  /* ☁️ الماستر الحيّ: اشتراكٌ دائمٌ يُبقي الأرصدة الدفترية طازجة (مرّة واحدة). */
+  startMasterLive();
+
   document.getElementById('currentOperationType').textContent = getOperationTypeIcon(operationType) + ' ' + operationType;
   applyOperationConfigToUI();
   
@@ -2312,6 +2333,32 @@ async function autoHydrateFromMaster() {
     // صامتة عمدًا: الاستيراد اليدوي وزرّ الجلب يبقيان بديلين، ولا نُفزع
     // الموظّف بخطأ عند فتح الشاشة بلا شبكة.
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ☁️ الماستر الحيّ — الأرصدة الدفترية والأسعار تبقى طازجة أثناء الجلسة
+   ═══════════════════════════════════════════════════════════════
+   يُغذَّى من الاشتراك الدائم (subscribeLive)، والمحرّك الخالص (masterSync)
+   يحدّث systemQty/unitPrice للأصناف المطابقة **دون مسّ** الكميات الممسوحة.
+   أوّل لقطةٍ صامتة (= بيانات الجلب الأولى نفسها)، والتغيّرات اللاحقة تُعلَن. */
+let masterLiveSynced = false;
+let masterLiveStarted = false;
+window.__bzRefreshMaster = function (masterItems) {
+  if (!window.__masterSync || !Array.isArray(inventoryDB)) return;
+  const { updated } = window.__masterSync.refreshMasterFields(inventoryDB, masterItems, bzCanonCode);
+  if (updated) {
+    updateStats();
+    updateProgressBar();
+    renderCurrentTable();
+    saveSessionDebounced();
+    if (masterLiveSynced) showToast(`☁️ حُدّثت بيانات ${updated} صنفًا من الماستر`, 'info');
+  }
+  masterLiveSynced = true;
+};
+function startMasterLive() {
+  if (masterLiveStarted || !window.__bzMaster?.subscribeLive) return;
+  masterLiveStarted = true;
+  window.__bzMaster.subscribeLive((items) => window.__bzRefreshMaster(items));
 }
 
 /* ========================================================
