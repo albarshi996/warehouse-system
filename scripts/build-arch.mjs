@@ -12,7 +12,8 @@
  *
  * المخرَجات (كلها مولَّدة — لا تُحرَّر يدويًّا):
  *   • architecture.json          → المصدر الواحد المخصّص للـAI (خريطة كاملة)
- *   • public/arch-wiki/index.html → لوحة تفاعليّة للبشر (بحث + تنقّل سريع)
+ *   • src/generated/arch-wiki.html → لوحة تفاعليّة للبشر، تُعرَض داخل صفحة
+ *     `/dashboard/arch-wiki` المحميّة (iframe srcdoc) — لا تُخدَم للعامّة
  *
  * نطاق النسخة الأولى (MVP): الموديولات + الخدمات + الصلاحيات/RBAC.
  * لاحقًا: موديول Odoo + البنية التحتية + طوبولوجيا الخدمات.
@@ -499,9 +500,9 @@ writeFileSync(P('architecture.json'), JSON.stringify(architecture, null, 2) + '\
 
 // ───────────────────────── لوحة البشر ─────────────────────────
 
-const outDir = P('public', 'arch-wiki');
+const outDir = P('src', 'generated');
 mkdirSync(outDir, { recursive: true });
-writeFileSync(join(outDir, 'index.html'), renderDashboard(architecture), 'utf8');
+writeFileSync(join(outDir, 'arch-wiki.html'), renderDashboard(architecture), 'utf8');
 
 console.info(
   `✓ Arch Wiki: ${architecture.counts.modules} موديول · ` +
@@ -509,7 +510,7 @@ console.info(
   `${architecture.counts.collections} مجموعة · ${architecture.counts.roles} دور` +
   (odoo ? ` · Odoo: ${odoo.counts.models} نموذج (${odoo.counts.guards} حارس · ${odoo.counts.groups} مجموعة)` : '') +
   ` · بنية: ${infra.nodes.length} عقدة · ${infra.pipelines.length} خطّ CI` +
-  `\n  → architecture.json\n  → public/arch-wiki/index.html`,
+  `\n  → architecture.json\n  → src/generated/arch-wiki.html (تُعرَض في /dashboard/arch-wiki المحميّة)`,
 );
 
 // ───────────────────────── مولّد HTML ─────────────────────────

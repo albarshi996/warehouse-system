@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 45,
+    "modules": 46,
     "serviceDomains": 18,
     "serviceFiles": 111,
     "collections": 34,
@@ -42,6 +42,14 @@
       "title": "تقرير الانجاز",
       "summary": "",
       "file": "src/pages/dashboard/achievement-report.astro",
+      "usesServices": []
+    },
+    {
+      "name": "arch-wiki",
+      "route": "/dashboard/arch-wiki",
+      "title": "Brandzo | خريطة النظام",
+      "summary": "خريطة النظام (Arch Wiki) — التوثيق المعماريّ الحيّ، صفحة محميّة للمدير.",
+      "file": "src/pages/dashboard/arch-wiki.astro",
       "usesServices": []
     },
     {

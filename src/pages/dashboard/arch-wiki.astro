@@ -1,0 +1,35 @@
+---
+/**
+ * خريطة النظام (Arch Wiki) — التوثيق المعماريّ الحيّ، صفحة محميّة للمدير.
+ *
+ * الوصول: المدير فقط — يفرضه `pageAccess`/`AuthGate` عبر بند الكتالوج
+ * (`navCatalog.js`) بدور `['admin']`. لا تُخدَم كصفحة عامّة: اللوحة مولَّدة في
+ * `src/generated/arch-wiki.html` (خارج `public/`) وتُدمَج هنا عبر `iframe srcdoc`
+ * فتُعزَل أنماطها تمامًا عن `global.css` ولا تنكشف بنية النظام لغير المدير.
+ *
+ * المصدر المولَّد يتجدّد آليًّا قبل كل بناء عبر `prebuild` (build-arch.mjs).
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import archHtml from '../../generated/arch-wiki.html?raw';
+---
+
+<DashboardLayout title="Brandzo | خريطة النظام">
+  <div class="aw-page">
+    <iframe class="aw-frame" srcdoc={archHtml} title="خريطة النظام — Arch Wiki" loading="lazy"></iframe>
+  </div>
+
+  <style>
+    .aw-page { margin: 0; padding: 0; background: #f0f4fb; }
+    .aw-frame {
+      display: block;
+      width: 100%;
+      height: calc(100vh - 72px);
+      min-height: 620px;
+      border: 0;
+      background: #f0f4fb;
+    }
+    @media (max-width: 768px) {
+      .aw-frame { height: calc(100vh - 60px); min-height: 520px; }
+    }
+  </style>
+</DashboardLayout>
