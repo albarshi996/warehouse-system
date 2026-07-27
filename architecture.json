@@ -13,7 +13,11 @@
     "serviceDomains": 18,
     "serviceFiles": 111,
     "collections": 34,
-    "roles": 12
+    "roles": 12,
+    "odooModels": 12,
+    "odooGuards": 51,
+    "infraNodes": 6,
+    "pipelines": 3
   },
   "modules": [
     {
@@ -2473,5 +2477,902 @@
       }
     ],
     "file": "firestore.rules"
+  },
+  "odoo": {
+    "path": "brandzo-addons/brandzo_warehouse",
+    "manifest": {
+      "name": "Brandzo Warehouse — Document Cycle & Golden Rules",
+      "version": "19.0.1.2.0",
+      "category": "Inventory/Inventory",
+      "summary": "دورة مستندية كاملة 12/12 مرحلة و21 نموذجاً مع قواعد ذهبية كحُرّاس صارمين — حتى الإغلاق المالي",
+      "license": "LGPL-3",
+      "depends": [
+        "account",
+        "barcodes",
+        "product_expiry",
+        "purchase_requisition",
+        "purchase_stock",
+        "stock_account"
+      ]
+    },
+    "models": [
+      {
+        "name": "bz.cycle.count",
+        "kind": "new",
+        "inherits": [
+          "mail.thread",
+          "mail.activity.mixin"
+        ],
+        "description": "جلسة الجرد الدوري",
+        "summary": "المرحلتان 09–10 — جلسة الجرد الدوري وسند التسوية.",
+        "fields": [
+          {
+            "name": "name",
+            "type": "Char"
+          },
+          {
+            "name": "location_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "company_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "state",
+            "type": "Selection"
+          },
+          {
+            "name": "line_ids",
+            "type": "One2many"
+          },
+          {
+            "name": "started_by_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "started_on",
+            "type": "Datetime"
+          },
+          {
+            "name": "validated_by_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "validated_on",
+            "type": "Datetime"
+          },
+          {
+            "name": "finance_approver_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "finance_approval_date",
+            "type": "Datetime"
+          },
+          {
+            "name": "diff_line_count",
+            "type": "Integer"
+          },
+          {
+            "name": "note",
+            "type": "Text"
+          }
+        ],
+        "fieldCount": 13,
+        "states": [
+          {
+            "key": "draft",
+            "label": "مسودة"
+          },
+          {
+            "key": "in_progress",
+            "label": "قيد العدّ"
+          },
+          {
+            "key": "validated",
+            "label": "مُصادَق"
+          },
+          {
+            "key": "done",
+            "label": "مكتمل"
+          },
+          {
+            "key": "cancel",
+            "label": "ملغاة"
+          }
+        ],
+        "guards": 10,
+        "methods": 8,
+        "file": "brandzo-addons/brandzo_warehouse/models/bz_cycle_count.py"
+      },
+      {
+        "name": "bz.cycle.count.line",
+        "kind": "new",
+        "inherits": [],
+        "description": "بند عدّ في جلسة الجرد الدوري",
+        "summary": "المرحلتان 09–10 — جلسة الجرد الدوري وسند التسوية.",
+        "fields": [
+          {
+            "name": "count_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "state",
+            "type": "Selection"
+          },
+          {
+            "name": "quant_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "product_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "product_uom_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "lot_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "location_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "theoretical_qty",
+            "type": "Float"
+          },
+          {
+            "name": "counted_qty",
+            "type": "Float"
+          },
+          {
+            "name": "is_counted",
+            "type": "Boolean"
+          },
+          {
+            "name": "difference",
+            "type": "Float"
+          }
+        ],
+        "fieldCount": 11,
+        "states": [],
+        "guards": 0,
+        "methods": 3,
+        "file": "brandzo-addons/brandzo_warehouse/models/bz_cycle_count.py"
+      },
+      {
+        "name": "bz.gate.pass",
+        "kind": "new",
+        "inherits": [
+          "mail.thread",
+          "mail.activity.mixin"
+        ],
+        "description": "تصريح خروج البوابة",
+        "summary": "المرحلة 07 — تصريح خروج البوابة (Gate Pass).",
+        "fields": [
+          {
+            "name": "name",
+            "type": "Char"
+          },
+          {
+            "name": "picking_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "partner_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "scheduled_date",
+            "type": "Datetime"
+          },
+          {
+            "name": "vehicle_plate",
+            "type": "Char"
+          },
+          {
+            "name": "driver_name",
+            "type": "Char"
+          },
+          {
+            "name": "driver_id_number",
+            "type": "Char"
+          },
+          {
+            "name": "transporter",
+            "type": "Char"
+          },
+          {
+            "name": "note",
+            "type": "Text"
+          },
+          {
+            "name": "state",
+            "type": "Selection"
+          },
+          {
+            "name": "approver_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "approval_date",
+            "type": "Datetime"
+          }
+        ],
+        "fieldCount": 12,
+        "states": [
+          {
+            "key": "draft",
+            "label": "مسودة"
+          },
+          {
+            "key": "approved",
+            "label": "معتمد"
+          },
+          {
+            "key": "cancel",
+            "label": "ملغى"
+          }
+        ],
+        "guards": 4,
+        "methods": 5,
+        "file": "brandzo-addons/brandzo_warehouse/models/gate_pass.py"
+      },
+      {
+        "name": "bz.period.close",
+        "kind": "new",
+        "inherits": [
+          "mail.thread",
+          "mail.activity.mixin"
+        ],
+        "description": "إغلاق فترة مالية",
+        "summary": "المرحلة 12 — الإغلاق المالي الشهري ``bz.period.close`` (آخر مراحل الدورة).",
+        "fields": [
+          {
+            "name": "name",
+            "type": "Char"
+          },
+          {
+            "name": "date_from",
+            "type": "Date"
+          },
+          {
+            "name": "date_to",
+            "type": "Date"
+          },
+          {
+            "name": "company_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "state",
+            "type": "Selection"
+          },
+          {
+            "name": "closed_by_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "closed_on",
+            "type": "Datetime"
+          },
+          {
+            "name": "lock_date_applied",
+            "type": "Date"
+          },
+          {
+            "name": "lock_date_before",
+            "type": "Date"
+          },
+          {
+            "name": "is_ready",
+            "type": "Boolean"
+          },
+          {
+            "name": "blocker_count",
+            "type": "Integer"
+          },
+          {
+            "name": "checklist_html",
+            "type": "Html"
+          },
+          {
+            "name": "note",
+            "type": "Text"
+          }
+        ],
+        "fieldCount": 13,
+        "states": [
+          {
+            "key": "open",
+            "label": "مفتوحة"
+          },
+          {
+            "key": "closed",
+            "label": "مُغلقة"
+          }
+        ],
+        "guards": 7,
+        "methods": 10,
+        "file": "brandzo-addons/brandzo_warehouse/models/bz_period_close.py"
+      },
+      {
+        "name": "account.move",
+        "kind": "extension",
+        "inherits": [],
+        "description": "",
+        "summary": "",
+        "fields": [
+          {
+            "name": "bz_match_state",
+            "type": "Selection"
+          }
+        ],
+        "fieldCount": 1,
+        "states": [
+          {
+            "key": "na",
+            "label": "غير منطبق"
+          },
+          {
+            "key": "matched",
+            "label": "مطابقة سليمة"
+          },
+          {
+            "key": "mismatch",
+            "label": "تعارض في المطابقة"
+          }
+        ],
+        "guards": 1,
+        "methods": 3,
+        "file": "brandzo-addons/brandzo_warehouse/models/account_move.py"
+      },
+      {
+        "name": "account.move",
+        "kind": "extension",
+        "inherits": [],
+        "description": "",
+        "summary": "",
+        "fields": [],
+        "fieldCount": 0,
+        "states": [],
+        "guards": 1,
+        "methods": 2,
+        "file": "brandzo-addons/brandzo_warehouse/models/bz_period_close.py"
+      },
+      {
+        "name": "purchase.order",
+        "kind": "extension",
+        "inherits": [],
+        "description": "",
+        "summary": "",
+        "fields": [
+          {
+            "name": "bz_requisition_approval",
+            "type": "Selection"
+          }
+        ],
+        "fieldCount": 1,
+        "states": [],
+        "guards": 1,
+        "methods": 1,
+        "file": "brandzo-addons/brandzo_warehouse/models/purchase_order.py"
+      },
+      {
+        "name": "purchase.requisition",
+        "kind": "extension",
+        "inherits": [],
+        "description": "",
+        "summary": "",
+        "fields": [
+          {
+            "name": "bz_approval_state",
+            "type": "Selection"
+          },
+          {
+            "name": "bz_approved_by",
+            "type": "Many2one"
+          },
+          {
+            "name": "bz_approval_date",
+            "type": "Datetime"
+          }
+        ],
+        "fieldCount": 3,
+        "states": [
+          {
+            "key": "draft",
+            "label": "مسودة"
+          },
+          {
+            "key": "to_approve",
+            "label": "قيد الموافقة"
+          },
+          {
+            "key": "approved",
+            "label": "معتمد"
+          }
+        ],
+        "guards": 5,
+        "methods": 5,
+        "file": "brandzo-addons/brandzo_warehouse/models/purchase_requisition.py"
+      },
+      {
+        "name": "stock.picking",
+        "kind": "extension",
+        "inherits": [],
+        "description": "",
+        "summary": "",
+        "fields": [
+          {
+            "name": "bz_qc_required",
+            "type": "Boolean"
+          },
+          {
+            "name": "bz_qc_state",
+            "type": "Selection"
+          },
+          {
+            "name": "bz_qc_inspector_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "bz_qc_date",
+            "type": "Datetime"
+          },
+          {
+            "name": "bz_qc_note",
+            "type": "Char"
+          },
+          {
+            "name": "bz_dispatch_expiry",
+            "type": "Datetime"
+          },
+          {
+            "name": "bz_has_expired_line",
+            "type": "Boolean"
+          },
+          {
+            "name": "bz_is_dispatch",
+            "type": "Boolean"
+          },
+          {
+            "name": "bz_gate_pass_ids",
+            "type": "One2many"
+          },
+          {
+            "name": "bz_gate_pass_count",
+            "type": "Integer"
+          },
+          {
+            "name": "bz_gate_pass_approved",
+            "type": "Boolean"
+          },
+          {
+            "name": "bz_is_return",
+            "type": "Boolean"
+          },
+          {
+            "name": "bz_return_state",
+            "type": "Selection"
+          },
+          {
+            "name": "bz_return_reason",
+            "type": "Text"
+          },
+          {
+            "name": "bz_return_approver_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "bz_return_approval_date",
+            "type": "Datetime"
+          },
+          {
+            "name": "bz_credit_note_id",
+            "type": "Many2one"
+          }
+        ],
+        "fieldCount": 17,
+        "states": [
+          {
+            "key": "pending",
+            "label": "بانتظار الفحص"
+          },
+          {
+            "key": "passed",
+            "label": "اجتاز الفحص"
+          },
+          {
+            "key": "failed",
+            "label": "فشل الفحص"
+          }
+        ],
+        "guards": 16,
+        "methods": 19,
+        "file": "brandzo-addons/brandzo_warehouse/models/stock_picking.py"
+      },
+      {
+        "name": "stock.picking.type",
+        "kind": "extension",
+        "inherits": [],
+        "description": "",
+        "summary": "",
+        "fields": [
+          {
+            "name": "bz_qc_required",
+            "type": "Boolean"
+          },
+          {
+            "name": "bz_is_dispatch",
+            "type": "Boolean"
+          }
+        ],
+        "fieldCount": 2,
+        "states": [],
+        "guards": 0,
+        "methods": 0,
+        "file": "brandzo-addons/brandzo_warehouse/models/stock_picking_type.py"
+      },
+      {
+        "name": "stock.quant",
+        "kind": "extension",
+        "inherits": [],
+        "description": "",
+        "summary": "",
+        "fields": [],
+        "fieldCount": 0,
+        "states": [],
+        "guards": 1,
+        "methods": 3,
+        "file": "brandzo-addons/brandzo_warehouse/models/stock_quant.py"
+      },
+      {
+        "name": "stock.scrap",
+        "kind": "extension",
+        "inherits": [],
+        "description": "",
+        "summary": "",
+        "fields": [
+          {
+            "name": "bz_scrap_state",
+            "type": "Selection"
+          },
+          {
+            "name": "bz_scrap_approver_id",
+            "type": "Many2one"
+          },
+          {
+            "name": "bz_scrap_approval_date",
+            "type": "Datetime"
+          },
+          {
+            "name": "bz_scrap_reason",
+            "type": "Text"
+          }
+        ],
+        "fieldCount": 4,
+        "states": [
+          {
+            "key": "draft",
+            "label": "مسودة"
+          },
+          {
+            "key": "approved",
+            "label": "معتمد"
+          }
+        ],
+        "guards": 5,
+        "methods": 4,
+        "file": "brandzo-addons/brandzo_warehouse/models/stock_scrap.py"
+      }
+    ],
+    "groups": [
+      {
+        "id": "group_bz_finance_manager",
+        "name": "Brandzo / المدير المالي"
+      },
+      {
+        "id": "group_bz_gate_officer",
+        "name": "Brandzo / ضابط البوابة"
+      },
+      {
+        "id": "group_bz_inventory_auditor",
+        "name": "Brandzo / مدقق الجرد"
+      },
+      {
+        "id": "group_bz_purchase_manager",
+        "name": "Brandzo / مدير المشتريات"
+      },
+      {
+        "id": "group_bz_qc_inspector",
+        "name": "Brandzo / مفتش الجودة"
+      },
+      {
+        "id": "group_bz_return_manager",
+        "name": "Brandzo / مسؤول المرتجعات والتالف"
+      },
+      {
+        "id": "group_bz_warehouse_user",
+        "name": "Brandzo / مستخدم المستودع"
+      }
+    ],
+    "access": [
+      {
+        "model": "bz.gate.pass",
+        "group": "group_bz_warehouse_user",
+        "perms": [
+          "read",
+          "write",
+          "create"
+        ]
+      },
+      {
+        "model": "bz.gate.pass",
+        "group": "group_bz_gate_officer",
+        "perms": [
+          "read",
+          "write",
+          "create",
+          "unlink"
+        ]
+      },
+      {
+        "model": "bz.cycle.count",
+        "group": "group_bz_warehouse_user",
+        "perms": [
+          "read"
+        ]
+      },
+      {
+        "model": "bz.cycle.count",
+        "group": "group_bz_inventory_auditor",
+        "perms": [
+          "read",
+          "write",
+          "create",
+          "unlink"
+        ]
+      },
+      {
+        "model": "bz.cycle.count.line",
+        "group": "group_bz_warehouse_user",
+        "perms": [
+          "read"
+        ]
+      },
+      {
+        "model": "bz.cycle.count.line",
+        "group": "group_bz_inventory_auditor",
+        "perms": [
+          "read",
+          "write",
+          "create",
+          "unlink"
+        ]
+      },
+      {
+        "model": "bz.period.close",
+        "group": "group_bz_warehouse_user",
+        "perms": [
+          "read"
+        ]
+      },
+      {
+        "model": "bz.period.close",
+        "group": "group_bz_finance_manager",
+        "perms": [
+          "read",
+          "write",
+          "create",
+          "unlink"
+        ]
+      }
+    ],
+    "viewsByModel": {
+      "account.move": 2,
+      "bz.cycle.count": 2,
+      "bz.period.close": 2,
+      "bz.gate.pass": 2,
+      "purchase.order": 1,
+      "purchase.requisition": 2,
+      "stock.picking.type": 1,
+      "stock.picking": 3,
+      "stock.scrap": 1
+    },
+    "counts": {
+      "models": 12,
+      "newModels": 4,
+      "extensions": 8,
+      "groups": 7,
+      "accessRules": 8,
+      "views": 16,
+      "guards": 51
+    }
+  },
+  "infra": {
+    "hosting": {
+      "site": "https://albarshi996.github.io",
+      "base": "/warehouse-system",
+      "url": "https://albarshi996.github.io/warehouse-system"
+    },
+    "nodes": [
+      {
+        "id": "host-pages",
+        "layer": "الاستضافة والحافة",
+        "name": "GitHub Pages",
+        "tech": "Astro (static + React islands) + PWA",
+        "role": "يستضيف الواجهة الرسميّة — بناء ثابت يُخدَم من CDN، وservice worker يتيح العمل دون اتصال والتحديث الذاتي",
+        "url": "https://albarshi996.github.io/warehouse-system",
+        "refs": [
+          "astro.config.mjs",
+          "src/integrations/pwa-sw.mjs"
+        ],
+        "meta": {
+          "integrations": [
+            "react",
+            "pwaServiceWorker"
+          ]
+        }
+      },
+      {
+        "id": "client-browser",
+        "layer": "العملاء",
+        "name": "المتصفّح",
+        "tech": "PWA",
+        "role": "وصول الموظّفين عبر الويب — قابل للتثبيت ويعمل دون اتصال",
+        "refs": []
+      },
+      {
+        "id": "client-desktop",
+        "layer": "العملاء",
+        "name": "Brandzo Hub (سطح المكتب)",
+        "tech": "Tauri (Rust shell)",
+        "role": "تطبيق سطح مكتب يغلّف الواجهة المستضافة",
+        "identifier": "ly.brandzo.hub",
+        "wraps": "https://albarshi996.github.io/warehouse-system/",
+        "refs": [
+          "src-tauri/tauri.conf.json"
+        ]
+      },
+      {
+        "id": "data-firebase",
+        "layer": "البيانات والمصادقة",
+        "name": "Firebase",
+        "tech": "Firestore + Auth",
+        "role": "قاعدة البيانات الحيّة والمصادقة — مصدر الحقيقة التشغيليّ (القواعد في firestore.rules)",
+        "refs": [
+          "src/config/firebase.js",
+          "firestore.rules"
+        ],
+        "meta": {
+          "services": [
+            "Firestore",
+            "Auth"
+          ]
+        }
+      },
+      {
+        "id": "proxy-odoo",
+        "layer": "الخلفية",
+        "name": "وكيل Odoo",
+        "tech": "Cloudflare Worker / Firebase Function",
+        "role": "بوّابة CORS بين الواجهة وخادم Odoo (نسختان قابلتان للنشر)",
+        "refs": [
+          "odoo-proxy/"
+        ],
+        "meta": {
+          "variants": [
+            "Cloudflare Worker",
+            "Firebase Function"
+          ]
+        }
+      },
+      {
+        "id": "backend-odoo",
+        "layer": "الخلفية",
+        "name": "Odoo 19 — Brandzo Warehouse — Document Cycle & Golden Rules",
+        "tech": "Python (12 نموذج · 51 حارس)",
+        "role": "الباك-إند الحقيقي للدورة المستنديّة والقواعد الذهبية (تفصيله في تبويب Odoo)",
+        "refs": [
+          "brandzo-addons/brandzo_warehouse"
+        ],
+        "link": "odoo"
+      }
+    ],
+    "edges": [
+      {
+        "from": "client-desktop",
+        "to": "host-pages",
+        "label": "يحمّل الواجهة المستضافة"
+      },
+      {
+        "from": "client-browser",
+        "to": "host-pages",
+        "label": "يفتح الموقع"
+      },
+      {
+        "from": "host-pages",
+        "to": "data-firebase",
+        "label": "Firestore/Auth SDK (مباشر)"
+      },
+      {
+        "from": "host-pages",
+        "to": "proxy-odoo",
+        "label": "استدعاءات Odoo API"
+      },
+      {
+        "from": "proxy-odoo",
+        "to": "backend-odoo",
+        "label": "يمرّر إلى خادم Odoo"
+      }
+    ],
+    "pipelines": [
+      {
+        "name": "Build Desktop Installer",
+        "triggers": [
+          "push",
+          "workflow_dispatch"
+        ],
+        "file": ".github/workflows/desktop-installer.yml"
+      },
+      {
+        "name": "Deploy Astro site to Pages",
+        "triggers": [
+          "push",
+          "workflow_dispatch"
+        ],
+        "file": ".github/workflows/astro.yml"
+      },
+      {
+        "name": "Gemini AI Developer",
+        "triggers": [
+          "issues"
+        ],
+        "file": ".github/workflows/gemini-developer.yml"
+      }
+    ],
+    "dependencies": {
+      "runtime": [
+        "@astrojs/react",
+        "@tailwindcss/postcss",
+        "astro",
+        "firebase",
+        "html2pdf.js",
+        "mermaid",
+        "react",
+        "react-dom",
+        "tailwindcss",
+        "xlsx"
+      ],
+      "dev": [
+        "@eslint/js",
+        "eslint",
+        "eslint-plugin-astro",
+        "eslint-plugin-react",
+        "globals",
+        "prettier",
+        "prettier-plugin-astro",
+        "puppeteer"
+      ]
+    },
+    "scripts": {
+      "dev": "astro dev",
+      "start": "astro dev",
+      "build": "astro build",
+      "preview": "astro preview",
+      "astro": "astro",
+      "arch": "node scripts/build-arch.mjs",
+      "prebuild": "node scripts/build-arch.mjs",
+      "test": "node --test \"src/**/*.test.js\"",
+      "audit": "node scripts/audit-portal.mjs",
+      "lint": "eslint .",
+      "format": "prettier --write .",
+      "format:check": "prettier --check ."
+    }
   }
 }
