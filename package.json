@@ -13,6 +13,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "arch": "node scripts/build-arch.mjs",
+    "prebuild": "node scripts/build-arch.mjs",
     "test": "node --test \"src/**/*.test.js\"",
     "audit": "node scripts/audit-portal.mjs",
     "lint": "eslint .",
