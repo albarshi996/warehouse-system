@@ -273,6 +273,23 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
   .bz-float-bar{display:flex}
   /* هامش سفلي آمن حتى لا يحجب الشريط أزرار الترقيم */
   #dashboardScreen main{padding-bottom:96px}
+
+  /* ── عرض بطاقات للجدول الرئيسي بدل التمرير الأفقي المزعج (راحة الهاتف) ──
+     كل صفٍّ يصير بطاقةً مستقلّة، وكلُّ خانةٍ سطرٌ «عنوان: قيمة» عبر data-label.
+     منطق الرسم لم يُمسّ — أُضيفت سمة data-label فقط. */
+  #mainTable thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+  #mainTable, #mainTable tbody, #mainTable tr, #mainTable td{display:block;width:100%}
+  #mainTable tr{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin:0 0 10px;padding:6px 12px;box-shadow:0 2px 10px rgba(0,0,0,.28)}
+  #mainTable tbody tr:hover{background:var(--surface)}
+  #mainTable td{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 0!important;border:none!important;text-align:left!important;white-space:normal!important;font-size:13px}
+  #mainTable td::before{content:attr(data-label);color:var(--text-muted);font-size:11px;font-weight:700;flex:0 0 38%;text-align:right}
+  #mainTable td[data-label="#"]{display:none}
+  #mainTable td .wrap-cell,#mainTable td.wrap-cell{max-width:none!important}
+  #mainTable td.actions-cell{justify-content:flex-end;padding-top:8px!important;border-top:1px solid var(--border)!important;margin-top:4px}
+  #mainTable td.actions-cell::before{display:none}
+  /* صفّ «لا توجد بيانات» يبقى ممتدًّا بلا عنوان جانبي */
+  #mainTable td[colspan]{justify-content:center}
+  #mainTable td[colspan]::before{display:none}
 }
 </style>
 </head>
@@ -500,6 +517,11 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
       <button class="btn btn-ghost btn-sm" onclick="openManualAddModal()"><i class="fa-solid fa-keyboard"></i><span class="hidden sm:inline"> إضافة يدوية</span></button>
       <!-- ✅ الحزمة الأولى: زر مسح بالكاميرا -->
       <button class="btn btn-info btn-sm" onclick="openCameraModal()"><i class="fa-solid fa-camera"></i><span class="hidden sm:inline"> مسح بالكاميرا</span></button>
+      <!-- 👥 العمل الجماعي: دمج قراءات الأجهزة لحظيًّا (منع ازدواج العدّ) -->
+      <button class="btn btn-ghost btn-sm relative" onclick="openLiveOpsModal()" title="العمل الجماعي — دمج قراءات الأجهزة">
+        <i class="fa-solid fa-users"></i><span class="hidden sm:inline"> جماعي</span>
+        <span id="liveBadge" style="display:none;position:absolute;top:-3px;left:-3px;width:9px;height:9px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 2px var(--surface),0 0 8px #22c55e"></span>
+      </button>
     </div>
   </div>
 
@@ -886,6 +908,32 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
   </div>
 </div>
 
+<!-- ===================== مودال: العمل الجماعي ===================== -->
+<div class="modal-overlay" id="liveOpsModal">
+  <div class="modal-box narrow">
+    <div class="flex items-center justify-between p-5 border-b border-dark-600">
+      <h3 class="font-bold text-lg"><i class="fa-solid fa-users ml-2 text-brand-400"></i>العمل الجماعي</h3>
+      <button class="text-dark-400 hover:text-white" onclick="closeModal('liveOpsModal')"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <div class="p-5 space-y-4">
+      <p class="text-sm text-dark-400">
+        عند تفعيله، تُدمَج قراءات كل الأجهزة على عمليةٍ واحدة <b>لحظيًّا</b> — فلا يُحسب الصنف مرّتين حين يجرد موظّفان المستودع نفسه.
+      </p>
+      <div id="liveCurrentBox"></div>
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-semibold">عمليات جارية للانضمام</span>
+          <button class="btn btn-ghost btn-sm" onclick="renderLiveOps()"><i class="fa-solid fa-rotate"></i> تحديث</button>
+        </div>
+        <div id="liveOpsList" class="space-y-2" style="max-height:16rem;overflow-y:auto"></div>
+      </div>
+    </div>
+    <div class="flex gap-3 p-5 border-t border-dark-600 justify-end">
+      <button class="btn btn-ghost" onclick="closeModal('liveOpsModal')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== مودال: إعدادات المسؤول ===================== -->
 <div class="modal-overlay" id="adminSettingsModal">
   <div class="modal-box narrow">
@@ -1046,12 +1094,24 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
     appendScan,
     closeOperation,
     updateOperationSummary,
+    listenScans,
+    listOpenOperations,
   } from '../../services/stock/operationsService.js';
+
+  /* محرّك الدمج الخالص المُختبَر — يُتاح للسكربت المضمّن عبر window (نطاقان
+     مختلفان: الوحدة لا ترى متغيّرات السكربت المضمّن والعكس، فالجسر عبر window). */
+  import * as __scanMerge from '../../services/stock/scanMerge.js';
+  window.__scanMerge = __scanMerge;
 
   window.__bzCloud = {
     opId: null,
     pending: 0,
     failed: 0,
+    /* الوضع الجماعي: حين يكون حيًّا، نستمع لقيود العملية ونوفّق الكميات من
+       الدفتر (مصدر الحقيقة) فيرى كل جهازٍ عمل البقيّة بلا ازدواج عدّ. مطفأ
+       افتراضيًّا — لا يُفعَّل إلّا بقرار المستخدم من «العمل الجماعي». */
+    isLive: false,
+    unsubLive: null,
 
     /** يبدأ عملية سحابية جديدة (يُستدعى عند بدء العمل). */
     async startOperation(type) {
@@ -1104,11 +1164,51 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
         await closeOperation(this.opId);
         localStorage.removeItem('bzCloudOpId');
         window.__bzSetCloudStatus?.('synced', 'أُقفلت العملية');
+        this.stopLive();
         this.opId = null;
       } catch (e) {
         console.error('[cloud] close failed', e);
       }
     },
+
+    /* يبدأ الاستماع الحيّ لقيود العملية الحالية ويوفّق الكميات من الدفتر.
+       آمنٌ للاستدعاء المتكرّر (يُلغى السابق أوّلًا). */
+    startLive() {
+      if (!this.opId) return false;
+      this.stopLive();
+      this.isLive = true;
+      this.unsubLive = listenScans(this.opId, (scans) => {
+        // القيود مرتّبة زمنيًّا؛ نُمرّرها للسكربت المضمّن ليوفّق inventoryDB.
+        window.__bzReconcileScans?.(scans);
+      });
+      window.__bzSetCloudStatus?.('synced', `العمل الجماعي حيّ: ${this.opId.slice(0, 6)}…`);
+      window.__bzUpdateLiveBadge?.();
+      return true;
+    },
+
+    stopLive() {
+      if (this.unsubLive) { try { this.unsubLive(); } catch { /* تجاهل */ } this.unsubLive = null; }
+      this.isLive = false;
+      window.__bzUpdateLiveBadge?.();
+    },
+
+    /* ينضمّ لعملية قائمة بدل إنشاء واحدة — هكذا تتشارك الأجهزة الدفتر نفسه.
+       يُستدعى قبل بدء المسح عادةً (التبديل بعد مسحٍ محلّي يُنبَّه عليه في الواجهة). */
+    joinOperation(opId) {
+      if (!opId) return false;
+      this.opId = opId;
+      localStorage.setItem('bzCloudOpId', opId);
+      return this.startLive();
+    },
+  };
+
+  /* جسر إدارة العمليات الجماعية للسكربت المضمّن (قائمة/انضمام/تفعيل). */
+  window.__bzOps = {
+    listOpen: (max) => listOpenOperations(max),
+    join: (opId) => window.__bzCloud.joinOperation(opId),
+    goLiveCurrent: () => window.__bzCloud.startLive(),
+    isLive: () => !!window.__bzCloud.isLive,
+    currentId: () => window.__bzCloud.opId,
   };
 
   /* ─────────────────────────────────────────────────────────────
@@ -1183,6 +1283,7 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
     '#manualAddModal',
     '#editItemModal',
     '#exportModal',
+    '#liveOpsModal',
   ]);
 
   trackOverlay('#scanDetailModal', { close: () => window.closeScanDetail() });
@@ -2136,9 +2237,16 @@ function deleteScanEntry() {
   const lower = activeScanBarcode.toLowerCase();
   const idx = findInvIdx(lower);
   if (idx >= 0) {
-    inventoryDB[idx].actualQty = 0;
-    inventoryDB[idx].scanned = false;
-    inventoryDB[idx].timestamp = null;
+    const item = inventoryDB[idx];
+    /* الوضع الجماعي: الإلغاء لا يمحو التاريخ — نكتب قيدًا مضادًّا (كمية سالبة)
+       فيصير مجموع الدفتر صفرًا ويراه بقيّة الأجهزة. القواعد تمنع تعديل/حذف
+       القيود، فالعكس هو الطريق الصحيح الوحيد. */
+    if (window.__bzCloud?.isLive && item.actualQty) {
+      window.__bzCloud.pushScan({ barcode: item.barcode, name: item.name, qty: -item.actualQty, opType: operationType });
+    }
+    item.actualQty = 0;
+    item.scanned = false;
+    item.timestamp = null;
     showToast('تم إلغاء المسح للصنف', 'info');
   }
   closeModal('scanDetailModal');
@@ -2154,6 +2262,13 @@ function deleteScanEntry() {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('scanInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') handleSingleScan();
+  });
+  /* تسريع المسح على الهاتف: Enter داخل حقلَي الكمية/السعر يؤكّد القيد فورًا
+     بدل التمرير للزرّ. لا يشمل الملاحظات (textarea) ولا القوائم المنسدلة. */
+  ['scanQtyInput', 'scanPriceInput'].forEach(id => {
+    document.getElementById(id)?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); confirmScanEntry(); }
+    });
   });
   const dz = document.getElementById('dropZone');
   dz.addEventListener('click', () => document.getElementById('fileInput').click());
@@ -2860,7 +2975,13 @@ function saveEditItem() {
   item.category = document.getElementById('editCategory').value.trim();
   item.shade = document.getElementById('editShade').value.trim();
   item.systemQty = parseFloat(document.getElementById('editSystemQty').value) || 0;
+  const prevQty = item.actualQty || 0;
   item.actualQty = parseFloat(document.getElementById('editActualQty').value) || 0;
+  /* الوضع الجماعي: تعديل الكمية يدويًّا يُسجَّل كفرقٍ في الدفتر (قيد بمقدار
+     التغيّر) وإلّا لَمحاه التوفيقُ من الدفتر عند أوّل لقطة. */
+  if (window.__bzCloud?.isLive && item.actualQty !== prevQty) {
+    window.__bzCloud.pushScan({ barcode: item.barcode, name: item.name, qty: item.actualQty - prevQty, opType: operationType });
+  }
   item.scanned = item.actualQty > 0;
   item.unit = document.getElementById('editUnit').value.trim();
   item.unitPrice = parseFloat(document.getElementById('editUnitPrice').value) || 0;
@@ -2887,6 +3008,117 @@ function addToScanLog(item, qty) {
       qty,
       opType: operationType,
     });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   الوضع الجماعي — توفيق الكميات من الدفتر السحابي (منع ازدواج العدّ)
+   ═══════════════════════════════════════════════════════════════
+   يُستدعى من مستمع listenScans عند كل تغيّر في العملية المشتركة. المحرّك
+   الخالص (scanMerge) يجمع قيود الدفتر ويستبدل actualQty لكل صنف بمجموع
+   قيوده — فيرى كل جهازٍ الرقمَ نفسه، ولا يُحسب صنفٌ مرّتين. نمرّر مفتاح
+   الصفحة القانوني (bzCanonCode) ليطابق التوفيقُ بحثَ findInvIdx. */
+function makeLedgerItem(m) {
+  return {
+    id: `ledger-${m.barcode}`,
+    barcode: m.barcode, barcodeLower: String(m.barcode).toLowerCase(),
+    itemCode: '', name: m.name || m.barcode,
+    shade: '', category: 'غير مصنف', subcategory: '',
+    systemQty: 0, unit: '', unitPrice: 0, notes: '',
+    actualQty: m.qty, scanned: m.qty !== 0,
+    source: 'مسح زميل (جماعي)', operationType: operationType,
+  };
+}
+window.__bzReconcileScans = function (scans) {
+  if (!window.__scanMerge || !Array.isArray(inventoryDB)) return;
+  const led = window.__scanMerge.summarizeScans(scans, bzCanonCode);
+  const { changed, missing } = window.__scanMerge.applyLedgerToItems(inventoryDB, led, bzCanonCode);
+  for (const m of missing) inventoryDB.push(makeLedgerItem(m));
+  if (changed || missing.length) {
+    updateStats();
+    updateProgressBar();
+    renderCurrentTable();
+    saveSessionDebounced();
+  }
+};
+
+/* شارة الوضع الجماعي على زرّ «جماعي» (نقطة خضراء = حيّ). */
+window.__bzUpdateLiveBadge = function () {
+  const b = document.getElementById('liveBadge');
+  if (b) b.style.display = window.__bzCloud?.isLive ? '' : 'none';
+};
+
+/* ───────── واجهة العمل الجماعي ───────── */
+function openLiveOpsModal() {
+  openModal('liveOpsModal');
+  renderLiveCurrent();
+  renderLiveOps();
+}
+
+function renderLiveCurrent() {
+  const box = document.getElementById('liveCurrentBox');
+  if (!box) return;
+  const id = window.__bzOps?.currentId?.();
+  const live = window.__bzOps?.isLive?.();
+  if (live && id) {
+    box.innerHTML = `<div style="background:rgba(34,197,94,.12);border:1px solid #15803d;border-radius:10px;padding:12px" class="text-sm">
+      <i class="fa-solid fa-tower-broadcast text-green-400"></i>
+      أنت في وضعٍ جماعيّ حيّ — العملية <span class="font-mono text-green-400">${escapeHtml(String(id).slice(0, 6))}…</span>.
+      أعطِ زملاءك هذا الرقم للانضمام.</div>`;
+  } else if (id) {
+    box.innerHTML = `<div class="bg-dark-700 rounded-lg p-3 text-sm flex items-center justify-between gap-3">
+      <span>لديك عمليةٌ فرديّة جارية. فعّل الجماعي ليتمكّن زملاؤك من الانضمام إليها.</span>
+      <button class="btn btn-accent btn-sm shrink-0" onclick="enableLiveCurrent()">تفعيل</button></div>`;
+  } else {
+    box.innerHTML = `<div class="bg-dark-700 rounded-lg p-3 text-sm text-dark-400">ابدأ المسح لإنشاء عملية، أو انضمّ لعمليةٍ جارية أدناه.</div>`;
+  }
+}
+
+async function renderLiveOps() {
+  const list = document.getElementById('liveOpsList');
+  if (!list) return;
+  list.innerHTML = `<div class="text-dark-400 text-sm text-center py-4"><i class="fa-solid fa-spinner fa-spin"></i> جارٍ الجلب…</div>`;
+  try {
+    const ops = await window.__bzOps.listOpen(20);
+    const cur = window.__bzOps.currentId();
+    const others = (ops || []).filter((o) => o.id !== cur);
+    if (!others.length) {
+      list.innerHTML = `<div class="text-dark-400 text-sm text-center py-4">لا عمليات جارية أخرى.</div>`;
+      return;
+    }
+    list.innerHTML = others
+      .map(
+        (o) => `<div class="flex items-center justify-between gap-2 bg-dark-700 rounded-lg p-3">
+        <div class="text-sm min-w-0">
+          <div class="font-semibold truncate">${escapeHtml(o.type || '—')} <span class="font-mono text-xs text-dark-400">${escapeHtml(String(o.id).slice(0, 6))}…</span></div>
+          <div class="text-xs text-dark-400 truncate">بدأها ${escapeHtml(o.createdByName || '—')}</div>
+        </div>
+        <button class="btn btn-primary btn-sm shrink-0" onclick="joinLiveOp('${escAttr(o.id)}')"><i class="fa-solid fa-right-to-bracket"></i> انضمام</button>
+      </div>`
+      )
+      .join('');
+  } catch (e) {
+    list.innerHTML = `<div class="text-red-400 text-sm text-center py-4">تعذّر جلب العمليات — تحقّق من الشبكة والدخول.</div>`;
+  }
+}
+
+function enableLiveCurrent() {
+  if (window.__bzOps?.goLiveCurrent?.()) {
+    showToast('فُعّل الوضع الجماعي — شارِك رقم العملية مع زملائك', 'success');
+    renderLiveCurrent();
+  } else {
+    showToast('ابدأ المسح أولًا لإنشاء عملية', 'warning');
+  }
+}
+
+function joinLiveOp(opId) {
+  const scannedCount = inventoryDB.filter((i) => i.scanned).length;
+  if (scannedCount > 0 && !confirm('لديك قراءاتٌ محلّية في عمليتك الحالية. الانضمام لعمليةٍ أخرى سيوفّق شاشتك على دفترها (تبقى قراءاتك في عمليتك السابقة). متابعة؟')) return;
+  if (window.__bzOps?.join?.(opId)) {
+    showToast('انضممتَ للعملية الجماعية ✓', 'success');
+    closeModal('liveOpsModal');
+  } else {
+    showToast('تعذّر الانضمام', 'error');
   }
 }
 
@@ -3003,27 +3235,27 @@ function renderCurrentTable() {
     const opTypeColor = opTypeColors[itemOp] || 'text-brand-400';
 
     let row = `<tr class="${rowClass}">
-      <td class="text-dark-400 text-xs">${globalIdx}</td>
-      <td class="text-xs font-semibold ${opTypeColor}">${getOperationTypeIcon(itemOp)} ${itemOp}</td>
-      <td>
+      <td class="text-dark-400 text-xs" data-label="#">${globalIdx}</td>
+      <td class="text-xs font-semibold ${opTypeColor}" data-label="نوع العملية">${getOperationTypeIcon(itemOp)} ${itemOp}</td>
+      <td data-label="الباركود">
         <button class="font-mono text-xs text-brand-400 hover:text-brand-300 transition" onclick="openScanDetailModal('${escAttr(item.barcode)}')">
           ${statusDot}${escapeHtml(item.barcode)}
         </button>
       </td>
-      <td class="text-xs text-dark-400">${escapeHtml(item.itemCode || '—')}</td>
-      <td class="wrap-cell font-semibold item-name-cell" data-item-id="${escAttr(item.id)}" onmouseenter="showItemTooltipForId(event, '${escAttr(item.id)}')" onmouseleave="hideItemTooltip()">${escapeHtml(item.name || '—')}</td>
-      <td class="text-xs text-dark-400">${escapeHtml(item.shade || '—')}</td>
-      <td class="text-xs">${escapeHtml(item.category || '—')}</td>`;
+      <td class="text-xs text-dark-400" data-label="كود الصنف">${escapeHtml(item.itemCode || '—')}</td>
+      <td class="wrap-cell font-semibold item-name-cell" data-label="الصنف" data-item-id="${escAttr(item.id)}" onmouseenter="showItemTooltipForId(event, '${escAttr(item.id)}')" onmouseleave="hideItemTooltip()">${escapeHtml(item.name || '—')}</td>
+      <td class="text-xs text-dark-400" data-label="الظل">${escapeHtml(item.shade || '—')}</td>
+      <td class="text-xs" data-label="التصنيف">${escapeHtml(item.category || '—')}</td>`;
 
     if (showSysQtyCol) {
-      row += `<td class="text-center font-bold text-gold-500">${formatNum(item.systemQty)}</td>`;
+      row += `<td class="text-center font-bold text-gold-500" data-label="الكمية الدفترية">${formatNum(item.systemQty)}</td>`;
     }
-    row += `<td class="text-center font-bold text-brand-400">${item.scanned ? formatNum(item.actualQty) : '—'}</td>`;
+    row += `<td class="text-center font-bold text-brand-400" data-label="${escapeHtml(qtyColLabel)}">${item.scanned ? formatNum(item.actualQty) : '—'}</td>`;
     if (showDiffCol) {
-      row += `<td class="text-center ${diffClass}">${item.scanned ? diffText : '—'}</td>`;
+      row += `<td class="text-center ${diffClass}" data-label="الفرق">${item.scanned ? diffText : '—'}</td>`;
     }
-    row += `<td class="text-xs text-dark-400 wrap-cell" style="max-width:160px">${escapeHtml(item.notes || '—')}</td>
-      <td>
+    row += `<td class="text-xs text-dark-400 wrap-cell" style="max-width:160px" data-label="ملاحظات">${escapeHtml(item.notes || '—')}</td>
+      <td class="actions-cell" data-label="إجراء">
         <div class="flex gap-1">
           <button class="btn btn-ghost btn-sm !py-1 !px-2" onclick="openEditItem('${escAttr(item.id)}')" title="تعديل"><i class="fa-solid fa-pen text-xs"></i></button>
           <button class="btn btn-danger btn-sm !py-1 !px-2" onclick="deleteItem('${escAttr(item.id)}')" title="حذف"><i class="fa-solid fa-trash text-xs"></i></button>
@@ -3073,10 +3305,16 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   renderCurrentTable();
 }
+/* البحث الحيّ: نؤخّر إعادة رسم الجدول ~180ms بعد آخر ضغطة، فلا يُعاد بناء
+   كل الصفوف مع كل حرفٍ يُكتب — كان ذلك يُقطّع الكتابة على الهاتف بقائمة كبيرة. */
+let searchDebounceTimer = null;
 function handleSearch() {
-  searchQuery = document.getElementById('searchInput').value.trim();
-  currentPage = 1;
-  renderCurrentTable();
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => {
+    searchQuery = document.getElementById('searchInput').value.trim();
+    currentPage = 1;
+    renderCurrentTable();
+  }, 180);
 }
 
 /* ========================================================
