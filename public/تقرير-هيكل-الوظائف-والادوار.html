@@ -305,19 +305,50 @@ tr:hover td{background:rgba(200,157,59,0.04);}
      For print we drop the visual connectors and render the same
      markup as a clean indented outline, which paginates correctly
      no matter how deep or long the tree is. */
-  .org-tree { display: block !important; transform: none !important; width: auto !important; margin: 0 !important; }
-  .org-tree ul { display: block !important; position: static !important; padding: 0 0 0 0 !important;
-                 margin: 4px 20px 4px 0 !important; border-right: 2px solid #ddd !important; padding-right: 12px !important; }
+  /* ORG CHART — printed as a true hierarchy (indented elbow tree).
+     The on-screen horizontal connector tree (absolute ::before/::after
+     lines + floats) cannot be split across pages, so the browser used to
+     cut boxes mid-tree and scramble the connectors — the "primitive" look.
+     Here we keep the parent→child structure but draw proper gold elbow
+     connectors down an indented outline: it reads as a real org chart AND
+     paginates cleanly no matter how deep or long the tree is. */
+  .org-tree { display: block !important; transform: none !important; width: auto !important;
+              margin: 0 !important; text-align: right !important; direction: rtl !important; }
+  .org-tree, .org-tree * { float: none !important; }
+  /* every nested list is indented from the right and carries a gold spine */
+  .org-tree ul { display: block !important; position: static !important; list-style: none !important;
+                 margin: 0 10px 0 0 !important; padding: 0 15px 0 0 !important;
+                 border-right: 1.4px solid #b98a2e !important; }
   .org-tree ul::before { display: none !important; }
-  .org-tree li { float: none !important; display: block !important; text-align: right !important;
-                 padding: 3px 0 !important; page-break-inside: avoid; }
+  /* the outer wrapper's single <ul> is the root — no spine, no indent */
+  .org-tree > ul { margin: 0 !important; padding: 0 !important; border-right: 0 !important; }
+  .org-tree li { position: relative !important; display: block !important;
+                 text-align: right !important; padding: 6px 0 0 0 !important; }
   .org-tree li::before, .org-tree li::after { display: none !important; }
+  /* horizontal elbow: from the gold spine across to each node */
+  .org-tree ul > li::before { content: '' !important; display: block !important; position: absolute !important;
+                 top: 17px !important; right: -15px !important; width: 15px !important; height: 0 !important;
+                 border-top: 1.4px solid #b98a2e !important; }
+  /* last child: mask the spine below its own elbow for a clean corner */
+  .org-tree ul > li:last-child::after { content: '' !important; display: block !important; position: absolute !important;
+                 top: 18px !important; right: -16px !important; width: 5px !important; bottom: -2px !important;
+                 background: #fff !important; }
+  /* root node carries no connector */
+  .org-tree > ul > li::before, .org-tree > ul > li::after { display: none !important; }
+  /* node cards: brand-colored by level, kept intact across page breaks */
   .org-node { display: inline-block !important; min-width: 0 !important; max-width: none !important;
-              font-size: 12px !important; padding: 5px 10px !important;
-              background: #fafafa !important; color: #000 !important; border: 1px solid #999 !important; }
-  .org-node.root { background: #ececec !important; font-weight: bold; border-color: #000 !important; }
-  .org-node.dept { background: #f2f2f2 !important; }
-  .org-node.unit { background: #fff !important; }
+              font-size: 11px !important; line-height: 1.35 !important; font-weight: 600 !important;
+              padding: 5px 12px !important; border-radius: 7px !important; page-break-inside: avoid;
+              background: #ffffff !important; color: #14233a !important; border: 1px solid #cbb069 !important; }
+  .org-node .who { display: block !important; font-size: 9px !important; font-weight: 400 !important;
+              color: #6b6250 !important; margin-top: 2px !important; }
+  .org-node.root { background: #0d1b2a !important; color: #ffffff !important; font-weight: 800 !important;
+              font-size: 12.5px !important; border-color: #0d1b2a !important; }
+  .org-node.root .who { color: #e6d3a3 !important; }
+  .org-node.dept { background: #eaf0f6 !important; color: #12314f !important; font-weight: 700 !important;
+              border-color: #9db4cc !important; }
+  .org-node.unit { background: #fbf6ea !important; color: #3d3620 !important; border-color: #d8c489 !important; }
+  .org-node.proposed { border-style: dashed !important; opacity: .92 !important; }
   .org-layer-label { display: none !important; }
 
   /* Stage Detail */
@@ -638,7 +669,7 @@ button.job-item{width:100%;text-align:right;font-family:'Cairo',sans-serif;}
 
 <!-- ORG:TREE:START — مولَّد من src/data/org-structure.json — لا تحرّره يدويًّا -->
   <div class="org-tree">
-    <ul><li><div class="org-node root">🏛️ إدارة السلاسل والإمداد والمخازن<span class="who">👤 محمد البرشي</span></div><ul><li><div class="org-node root">🚚 إدارة الخدمات اللوجستية والخدمية<span class="who">👤 رمزي الباش</span></div><ul><li><div class="org-node dept">🛣️ قسم النقل والحركة</div><ul><li><div class="org-node unit">وحدة الأسطول والسائقين</div></li><li><div class="org-node unit proposed">وحدة تصاريح البوابة والرحلات</div></li><li><div class="org-node unit proposed">وحدة الاستلام والتسليم اليومي</div></li></ul></li><li><div class="org-node dept">🔧 قسم الصيانة والمعدات</div><ul><li><div class="org-node unit">وحدة صيانة المركبات</div></li><li><div class="org-node unit">وحدة صيانة المعدات</div></li><li><div class="org-node unit proposed">وحدة المرافق</div></li></ul></li><li><div class="org-node dept">🦺 قسم الأمن الصناعي والسلامة</div></li><li><div class="org-node dept proposed">🧰 قسم الخدمات المساندة</div><ul><li><div class="org-node unit">وحدة إدارة العمالة الخارجية</div></li><li><div class="org-node unit proposed">وحدة العُهد العينية</div></li></ul></li></ul></li><li><div class="org-node dept">🛡️ قسم التوثيق والاعتماد</div><ul><li><div class="org-node unit">وحدة توثيق واعتماد المستندات</div></li><li><div class="org-node unit">وحدة صياغة المعايير والإجراءات (SOPs)</div></li><li><div class="org-node unit">وحدة إدخال وترحيل الحركات المخزنية</div></li></ul></li><li><div class="org-node dept proposed">📈 قسم التخطيط والتوريد</div><ul><li><div class="org-node unit proposed">وحدة تخطيط الاحتياجات</div></li><li><div class="org-node unit proposed">وحدة متابعة الموردين</div></li><li><div class="org-node unit proposed">وحدة ماستر الأصناف والأرصدة</div></li></ul></li><li><div class="org-node dept">🧭 قسم عمليات المستودعات</div><ul><li><div class="org-node unit">وحدة الاستلام والرقابة</div><ul><li><div class="org-node unit">استلام البضاعة</div></li><li><div class="org-node unit">التحقق من المستندات</div></li><li><div class="org-node unit">فحص الجودة عند الاستلام</div></li></ul></li><li><div class="org-node unit">وحدة التخزين وتحديد المواقع</div><ul><li><div class="org-node unit">التخزين الجاف</div></li><li><div class="org-node unit">التخزين البارد</div></li><li><div class="org-node unit">الباركود والتسمية</div></li></ul></li><li><div class="org-node unit">وحدة تحضير الطلبات والصرف</div><ul><li><div class="org-node unit">الانتقاء (Picking)</div></li><li><div class="org-node unit">التعبئة والتغليف</div></li><li><div class="org-node unit">الشحن والتوزيع</div></li></ul></li><li><div class="org-node unit">وحدة إدارة المرتجعات</div><ul><li><div class="org-node unit">استلام المرتجعات</div></li><li><div class="org-node unit">إعادة التقييم والتصرف</div></li></ul></li></ul></li></ul></li></ul>
+    <ul><li><div class="org-node root">🏛️ إدارة السلاسل والإمداد والمخازن<span class="who">👤 محمد البرشي</span></div><ul><li><div class="org-node root">🚚 إدارة الخدمات اللوجستية والخدمية<span class="who">👤 رمزي الباش</span></div><ul><li><div class="org-node dept">🛣️ قسم النقل والحركة</div><ul><li><div class="org-node unit">وحدة الأسطول والسائقين</div></li><li><div class="org-node unit proposed">وحدة تصاريح البوابة والرحلات</div></li><li><div class="org-node unit proposed">وحدة الاستلام والتسليم اليومي</div></li></ul></li><li><div class="org-node dept">🔧 قسم الصيانة والمعدات</div><ul><li><div class="org-node unit">وحدة صيانة المركبات</div></li><li><div class="org-node unit">وحدة صيانة المعدات</div></li><li><div class="org-node unit proposed">وحدة المرافق</div></li></ul></li><li><div class="org-node dept">🦺 قسم الأمن الصناعي والسلامة</div></li><li><div class="org-node dept proposed">🧰 قسم الخدمات المساندة</div><ul><li><div class="org-node unit">وحدة إدارة العمالة الخارجية</div></li><li><div class="org-node unit proposed">وحدة العُهد العينية</div></li></ul></li></ul></li><li><div class="org-node dept">🛡️ قسم التوثيق والاعتماد</div><ul><li><div class="org-node unit">وحدة توثيق واعتماد المستندات</div></li><li><div class="org-node unit">وحدة صياغة المعايير والإجراءات (SOPs)</div></li><li><div class="org-node unit">وحدة إدخال وترحيل الحركات المخزنية</div></li></ul></li><li><div class="org-node dept proposed">📈 قسم التخطيط والتوريد</div><ul><li><div class="org-node unit proposed">وحدة تخطيط الاحتياجات</div></li><li><div class="org-node unit proposed">وحدة متابعة الموردين</div></li><li><div class="org-node unit proposed">وحدة ماستر الأصناف والأرصدة</div></li></ul></li><li><div class="org-node dept">🧭 قسم عمليات المستودعات</div><ul><li><div class="org-node unit">وحدة الاستلام والرقابة</div><ul><li><div class="org-node unit">استلام البضاعة</div></li><li><div class="org-node unit">التحقق من المستندات</div></li></ul></li><li><div class="org-node unit">وحدة التخزين وتحديد المواقع</div><ul><li><div class="org-node unit">التخزين الجاف</div></li><li><div class="org-node unit">التخزين البارد</div></li><li><div class="org-node unit">الباركود والتسمية</div></li></ul></li><li><div class="org-node unit">وحدة تحضير الطلبات والصرف</div><ul><li><div class="org-node unit">الانتقاء (Picking)</div></li><li><div class="org-node unit">التعبئة والتغليف</div></li><li><div class="org-node unit">الشحن والتوزيع</div></li></ul></li><li><div class="org-node unit">وحدة إدارة المرتجعات</div><ul><li><div class="org-node unit">استلام المرتجعات</div></li><li><div class="org-node unit">إعادة التقييم والتصرف</div></li></ul></li></ul></li></ul></li></ul>
   </div>
 <!-- ORG:TREE:END -->
 

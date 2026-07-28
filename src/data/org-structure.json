@@ -286,13 +286,6 @@
                 "type": "subunit",
                 "source": "report",
                 "children": []
-              },
-              {
-                "id": "sub-qc-receive",
-                "title": "فحص الجودة عند الاستلام",
-                "type": "subunit",
-                "source": "report",
-                "children": []
               }
             ]
           },
