@@ -9,49 +9,35 @@
 
     <!-- المجموعة الأساس: مستخدم المستودع -->
     <record id="group_bz_warehouse_user" model="res.groups">
-        <field name="name">Brandzo / مستخدم المستودع</field>
-        <field name="category_id" ref="module_category_brandzo"/>
-    </record>
+        <field name="name">Brandzo / مستخدم المستودع</field>    </record>
 
     <!-- مدير المشتريات: يملك اعتماد طلبات الشراء (PR) -->
     <record id="group_bz_purchase_manager" model="res.groups">
-        <field name="name">Brandzo / مدير المشتريات</field>
-        <field name="category_id" ref="module_category_brandzo"/>
-        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
+        <field name="name">Brandzo / مدير المشتريات</field>        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
     </record>
 
     <!-- مفتش الجودة: يعتمد/يرفض نتيجة فحص الاستلام (QC) -->
     <record id="group_bz_qc_inspector" model="res.groups">
-        <field name="name">Brandzo / مفتش الجودة</field>
-        <field name="category_id" ref="module_category_brandzo"/>
-        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
+        <field name="name">Brandzo / مفتش الجودة</field>        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
     </record>
 
     <!-- ضابط البوابة: يعتمد تصاريح خروج المركبات (Gate Pass) -->
     <record id="group_bz_gate_officer" model="res.groups">
-        <field name="name">Brandzo / ضابط البوابة</field>
-        <field name="category_id" ref="module_category_brandzo"/>
-        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
+        <field name="name">Brandzo / ضابط البوابة</field>        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
     </record>
 
     <!-- مسؤول المرتجعات والتالف: يعتمد الإرجاع والإتلاف (المرحلة 08) -->
     <record id="group_bz_return_manager" model="res.groups">
-        <field name="name">Brandzo / مسؤول المرتجعات والتالف</field>
-        <field name="category_id" ref="module_category_brandzo"/>
-        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
+        <field name="name">Brandzo / مسؤول المرتجعات والتالف</field>        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
     </record>
 
     <!-- مدقق الجرد: يدير جلسات الجرد الدوري ويصادق على ورقة العدّ (المرحلة 09) -->
     <record id="group_bz_inventory_auditor" model="res.groups">
-        <field name="name">Brandzo / مدقق الجرد</field>
-        <field name="category_id" ref="module_category_brandzo"/>
-        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
+        <field name="name">Brandzo / مدقق الجرد</field>        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
     </record>
 
     <!-- المدير المالي: يعتمد سندات تسوية المخزون — شرط تطبيق أي فارق (المرحلة 10) -->
     <record id="group_bz_finance_manager" model="res.groups">
-        <field name="name">Brandzo / المدير المالي</field>
-        <field name="category_id" ref="module_category_brandzo"/>
-        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
+        <field name="name">Brandzo / المدير المالي</field>        <field name="implied_ids" eval="[(4, ref('group_bz_warehouse_user'))]"/>
     </record>
 </odoo>

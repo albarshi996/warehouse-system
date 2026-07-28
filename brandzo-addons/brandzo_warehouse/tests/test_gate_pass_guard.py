@@ -24,7 +24,6 @@ class TestBzGatePassGuard(TransactionCase):
             'location_id': self.stock_loc.id,
             'location_dest_id': self.customer_loc.id,
             'move_ids': [(0, 0, {
-                'name': self.product.name,
                 'product_id': self.product.id,
                 'product_uom_qty': qty,
                 'product_uom': self.product.uom_id.id,

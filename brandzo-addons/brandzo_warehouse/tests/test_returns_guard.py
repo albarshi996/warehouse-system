@@ -32,7 +32,6 @@ class TestBzReturnsGuard(TransactionCase):
             'location_dest_id': self.supplier_loc.id,
             'return_id': self.original.id,   # يجعله إذن إرجاع
             'move_ids': [(0, 0, {
-                'name': self.product.name,
                 'product_id': self.product.id,
                 'product_uom_qty': qty,
                 'product_uom': self.product.uom_id.id,

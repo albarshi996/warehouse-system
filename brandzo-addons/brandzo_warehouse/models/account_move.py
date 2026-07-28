@@ -66,7 +66,7 @@ class AccountMove(models.Model):
 
         # (2) مطابقة الكمية تراكمياً على مستوى سطر أمر الشراء
         for pol in po_bill_lines.mapped('purchase_line_id'):
-            rounding = pol.product_uom.rounding or 0.01
+            rounding = pol.product_uom_id.rounding or 0.01
             billed = sum(
                 (l.quantity if l.move_id.move_type == 'in_invoice' else -l.quantity)
                 for l in pol.invoice_lines

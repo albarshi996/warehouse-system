@@ -53,15 +53,19 @@ class StockPicking(models.Model):
     bz_gate_pass_ids = fields.One2many(
         'bz.gate.pass', 'picking_id', string='تصاريح البوابة')
     bz_gate_pass_count = fields.Integer(
-        compute='_compute_bz_gate_pass', string='عدد التصاريح')
+        compute='_compute_bz_gate_pass_count', string='عدد التصاريح')
     bz_gate_pass_approved = fields.Boolean(
-        compute='_compute_bz_gate_pass', store=True,
+        compute='_compute_bz_gate_pass_approved', store=True,
         string='تصريح بوابة معتمد')
 
-    @api.depends('bz_gate_pass_ids.state')
-    def _compute_bz_gate_pass(self):
+    @api.depends('bz_gate_pass_ids')
+    def _compute_bz_gate_pass_count(self):
         for picking in self:
             picking.bz_gate_pass_count = len(picking.bz_gate_pass_ids)
+
+    @api.depends('bz_gate_pass_ids.state')
+    def _compute_bz_gate_pass_approved(self):
+        for picking in self:
             picking.bz_gate_pass_approved = any(
                 gp.state == 'approved' for gp in picking.bz_gate_pass_ids)
 

@@ -27,9 +27,10 @@ class TestBzAdjustmentFinanceGuard(TransactionCase):
             ('location_id', '=', cls.stock_loc.id)], limit=1)
 
         stock_mgr = cls.env.ref('stock.group_stock_manager').id
+        product_mgr = cls.env.ref('product.group_product_manager').id
         cls.warehouse_mgr = cls.env['res.users'].create({
             'name': 'BZ Warehouse Manager', 'login': 'bz_wh_mgr',
-            'group_ids': [(6, 0, [stock_mgr])],
+            'group_ids': [(6, 0, [stock_mgr, product_mgr])],
         })
         cls.finance = cls.env['res.users'].create({
             'name': 'BZ Finance User', 'login': 'bz_finance_adj',
@@ -67,12 +68,12 @@ class TestBzAdjustmentFinanceGuard(TransactionCase):
 
     def test_r1_product_inverse_qty_not_broken(self):
         """R1 (المستدعي 1): ضبط كمية المنتج من بطاقته (from_inverse_qty) يعمل."""
-        product = self.env['product.product'].with_user(
-            self.warehouse_mgr).create({
-                'name': 'Inverse Qty Product',
-                'type': 'consu',
-                'is_storable': True,
-            })
+        product = self.env['product.product'].create({
+            'name': 'Inverse Qty Product',
+            'type': 'consu',
+            'is_storable': True,
+        })
+        product = product.with_user(self.warehouse_mgr)
         product.qty_available = 50.0  # يستدعي ‎_apply_inventory‎ داخلياً
         self.assertEqual(product.qty_available, 50.0)
 

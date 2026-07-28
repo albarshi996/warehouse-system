@@ -34,7 +34,7 @@ class TestBzThreeWayMatch(AccountTestInvoicingCommon):
                 'name': cls.service.name,
                 'product_qty': 10.0,
                 'price_unit': 100.0,
-                'product_uom': cls.service.uom_id.id,
+                'product_uom_id': cls.service.uom_id.id,
             })],
         })
         cls.po.button_confirm()

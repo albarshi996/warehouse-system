@@ -36,7 +36,7 @@ class TestBzCreditNoteBridge(AccountTestInvoicingCommon):
                 'name': cls.product.name,
                 'product_qty': 10.0,
                 'price_unit': 50.0,
-                'product_uom': cls.product.uom_id.id,
+                'product_uom_id': cls.product.uom_id.id,
             })],
         })
         cls.po.button_confirm()
