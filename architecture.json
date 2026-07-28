@@ -3001,7 +3001,7 @@
           }
         ],
         "guards": 16,
-        "methods": 19,
+        "methods": 20,
         "file": "brandzo-addons/brandzo_warehouse/models/stock_picking.py"
       },
       {
