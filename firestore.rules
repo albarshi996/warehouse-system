@@ -297,6 +297,21 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── شركاء الأعمال: الموردون والعملاء (§15.2/15.3) ────────────
+    // القراءة لأي مصادَق (أوامر الشراء والبيع والتقارير تحتاج الشريك).
+    // الكتابة للمديرَين. **لا حذف** — أرشفة لا محو (archived=true)، فشريكٌ
+    // استُعمل في مستندٍ يبقى أثره ولا يُمحى (نفس مبدأ عدم حذف المستندات).
+    match /Suppliers_Master/{docId} {
+      allow read: if signedIn();
+      allow create, update: if isManager();
+      allow delete: if false;
+    }
+    match /Customers_Master/{docId} {
+      allow read: if signedIn();
+      allow create, update: if isManager();
+      allow delete: if false;
+    }
+
     match /warehouses/{docId} {
       allow read: if signedIn();
       allow write: if isManager();

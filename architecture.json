@@ -10,9 +10,9 @@
   },
   "counts": {
     "modules": 47,
-    "serviceDomains": 19,
-    "serviceFiles": 115,
-    "collections": 34,
+    "serviceDomains": 20,
+    "serviceFiles": 118,
+    "collections": 36,
     "roles": 12,
     "odooModels": 12,
     "odooGuards": 51,
@@ -1163,6 +1163,26 @@
       ]
     },
     {
+      "domain": "partners",
+      "dir": "src/services/partners",
+      "files": [
+        "partnerShape.js",
+        "partnerShape.test.js",
+        "partnersImportService.js"
+      ],
+      "fileCount": 3,
+      "testCount": 1,
+      "exports": [
+        "IMPORT_ROLES",
+        "SHAPED_PARTNER_FIELDS",
+        "analyzePartnersFile",
+        "canImport",
+        "commitPartnersImport",
+        "shapeImportedPartner"
+      ],
+      "collections": []
+    },
+    {
       "domain": "recruitment",
       "dir": "src/services/recruitment",
       "files": [
@@ -1577,6 +1597,38 @@
               "update"
             ],
             "condition": "isManager() && request.resource.data.number == resource.data.number",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "Customers_Master",
+        "path": "Customers_Master",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager()",
             "roles": [
               "isManager"
             ]
@@ -2085,6 +2137,38 @@
             "condition": "isStockActor() && request.resource.data.docId == resource.data.docId && request.resource.data.qty == resource.data.qty && request.resource.data.sku == resource.",
             "roles": [
               "isStockActor"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "Suppliers_Master",
+        "path": "Suppliers_Master",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager()",
+            "roles": [
+              "isManager"
             ]
           },
           {

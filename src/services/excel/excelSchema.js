@@ -21,6 +21,48 @@
  * @property {boolean} [nonNegative] number columns that must be >= 0
  */
 
+/**
+ * أعمدة ماستر شركاء الأعمال (مورّد/عميل) — بنية موحّدة (§15.2/15.3): الموردون
+ * والعملاء توأمان، فمحرّكٌ واحد لا نسختان تتباعدان. `kind` يغيّر المرادفات
+ * العربية فقط (مورّد ↔ عميل)؛ والحقول والأنواع واحدة. مبنيّة على نموذج
+ * «موردين v.xlsx» (BP Code · BP Name · المفوّض · الهاتف · البريد · الأرصدة)
+ * ومُثراة بحقول عالميّة (الرقم الضريبي · التصنيف · شروط الدفع · العملة · حد
+ * الائتمان · العنوان · الحالة) — كلّها Odoo-Ready عبر `res.partner` لاحقًا.
+ * الأرصدة الثلاثة **افتتاحيّة للعرض** (قرار المالك §19#3) لا محرّك تسوية.
+ */
+function partnerColumns(kind) {
+  const ar = kind === 'customer' ? 'العميل' : 'المورد';
+  const arAlt = kind === 'customer' ? 'الزبون' : 'المورّد';
+  const en = kind === 'customer' ? 'customer' : 'supplier';
+  const enAlt = kind === 'customer' ? 'client' : 'vendor';
+  return [
+    { field: 'code', labelAr: `BP Code (رمز ${ar})`, type: 'string', required: false, aliases: ['bp code', 'bpcode', 'business partner', `${en} code`, `${enAlt} code`, 'partner code', 'code', 'الرمز', 'الكود', `رمز ${ar}`, `كود ${ar}`] },
+    { field: 'nameAr', labelAr: `BP Name (اسم ${ar})`, type: 'string', required: true, aliases: ['bp name', 'bpname', `${en} name`, `${enAlt} name`, 'partner name', 'name', 'الاسم', 'اسم الشركة', 'الشركة', `اسم ${ar}`, `اسم ${arAlt}`] },
+    { field: 'contactPerson', labelAr: 'الشخص المفوّض', type: 'string', required: false, aliases: ['الشخص المفوض', 'الشخص المفوّض', 'المفوض', 'جهة الاتصال', 'المسؤول', 'المندوب', 'contact', 'contact person', 'authorized person', 'representative'] },
+    { field: 'phone', labelAr: 'رقم الهاتف', type: 'string', required: false, aliases: ['رقم الهاتف', 'الهاتف', 'هاتف', 'تلفون', 'الجوال', 'رقم الجوال', 'الموبايل', 'phone', 'tel', 'telephone', 'mobile'] },
+    { field: 'email', labelAr: 'البريد الإلكتروني', type: 'string', required: false, aliases: ['البريد الالكتروني', 'البريد الإلكتروني', 'البريد', 'ايميل', 'إيميل', 'email', 'e-mail', 'mail'] },
+    { field: 'accountBalance', labelAr: 'Account Balance (رصيد الحساب)', type: 'number', required: false, aliases: ['account balance', 'accountbalance', 'account', 'رصيد الحساب', 'الرصيد', 'رصيد', 'balance'] },
+    { field: 'openOrders', labelAr: 'Open Orders Balance (أوامر مفتوحة)', type: 'number', required: false, aliases: ['open orders balance', 'open orders', 'openorders', 'أوامر مفتوحة', 'اوامر مفتوحة', 'رصيد الأوامر المفتوحة', 'الطلبات المفتوحة'] },
+    { field: 'openDeliveries', labelAr: 'Open Deliveries/GRPO (استلامات مفتوحة)', type: 'number', required: false, aliases: ['open deliveries/grpo balance', 'open deliveries', 'opendeliveries', 'grpo', 'grpo balance', 'استلامات مفتوحة', 'رصيد الاستلامات المفتوحة', 'تسليمات مفتوحة'] },
+    { field: 'nameEn', labelAr: 'الاسم (إنجليزي)', type: 'string', required: false, aliases: ['nameen', 'name en', 'english name', 'الاسم بالانجليزي', 'الاسم الانجليزي'] },
+    { field: 'taxNo', labelAr: 'الرقم الضريبي', type: 'string', required: false, aliases: ['tax number', 'taxno', 'tax', 'vat', 'vat no', 'الرقم الضريبي', 'الرقم الضريبى', 'رقم ضريبي'] },
+    { field: 'category', labelAr: 'التصنيف', type: 'string', required: false, aliases: ['category', 'التصنيف', 'الفئة', 'النوع', 'المجموعة', 'type', 'group'] },
+    { field: 'paymentTerms', labelAr: 'شروط الدفع', type: 'string', required: false, aliases: ['payment terms', 'paymentterms', 'شروط الدفع', 'شروط السداد', 'الشروط', 'terms'] },
+    { field: 'currency', labelAr: 'العملة', type: 'string', required: false, aliases: ['currency', 'العملة', 'عملة', 'cur'] },
+    { field: 'creditLimit', labelAr: 'حد الائتمان', type: 'number', required: false, nonNegative: true, aliases: ['credit limit', 'creditlimit', 'حد الائتمان', 'الحد الائتماني', 'سقف الائتمان', 'الائتمان'] },
+    { field: 'address', labelAr: 'العنوان', type: 'string', required: false, aliases: ['address', 'العنوان', 'عنوان', 'المدينة', 'city', 'الدولة', 'country'] },
+    { field: 'status', labelAr: 'الحالة', type: 'string', required: false, aliases: ['status', 'الحالة', 'active', 'نشط', `حالة ${ar}`] },
+    { field: 'notes', labelAr: 'ملاحظات', type: 'string', required: false, aliases: ['notes', 'ملاحظات', 'ملاحظة', 'remarks', 'البيان'] },
+  ];
+}
+
+/** أعمدة القالب القياسيّ للشركاء بالترتيب — ما يُصدَّر ويُسلَّم. */
+const PARTNER_TEMPLATE_FIELDS = [
+  'code', 'nameAr', 'contactPerson', 'phone', 'email',
+  'accountBalance', 'openOrders', 'openDeliveries',
+  'taxNo', 'category', 'paymentTerms', 'currency', 'creditLimit', 'status',
+];
+
 /** @type {Record<string, { key:string, labelAr:string, columns: ColumnDef[] }>} */
 export const DATASETS = {
   /**
@@ -93,6 +135,26 @@ export const DATASETS = {
       'uomGroupCode', 'uomGroupName', 'department', 'section', 'family',
       'subFamily', 'supplier', 'minStock', 'status',
     ],
+  },
+  /**
+   * الموردون — ماستر الموردين (§15.2). المعرّف رمز المورّد (BP Code)، وينبع
+   * الاستيراد من نموذج «موردين v.xlsx». لا حذف — أرشفة (`status`) لا محو.
+   */
+  suppliers: {
+    key: 'suppliers',
+    labelAr: 'الموردون (Suppliers_Master)',
+    columns: partnerColumns('supplier'),
+    templateFields: PARTNER_TEMPLATE_FIELDS,
+  },
+  /**
+   * العملاء — ماستر العملاء (§15.3). توأم الموردين بنيةً؛ نفس المحرّك والحقول،
+   * ومرادفات عربية للعميل بدل المورّد. المعرّف رمز العميل، وربط كل بيع بمعرّفه.
+   */
+  customers: {
+    key: 'customers',
+    labelAr: 'العملاء (Customers_Master)',
+    columns: partnerColumns('customer'),
+    templateFields: PARTNER_TEMPLATE_FIELDS,
   },
   /**
    * الأرصدة — الكميات، منفصلةً عن التعريفات (قرار المالك 2026-07-15).
