@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
 import { listenAllDocuments } from '../../../services/documents/documentsService.js';
 import { computeProcurementKpis } from '../../../services/kpi/procurementKpis.js';
+import { supplierSpend } from '../../../services/kpi/supplierSpend.js';
 import { toMillis } from '../../../services/documents/inbox.js';
 
 /**
@@ -16,11 +17,14 @@ import { toMillis } from '../../../services/documents/inbox.js';
 
 const DOC_CAP = 800;
 const KPI_WINDOW_DAYS = 90;
+/** نافذة الإنفاق أوسع: ديلويت يسأل عن الإنفاق السنويّ وتركّزه (لا آخر 90 يومًا). */
+const SPEND_WINDOW_DAYS = 365;
 const DAY_MS = 86400000;
 
 const pct = (v) => (v == null ? '—' : `${Math.round(v * 100)}%`);
 const days = (v) => (v == null ? '—' : `${v.toFixed(1)} يوم`);
 const num = (n) => (Number(n) || 0).toLocaleString('ar-LY');
+const money = (n) => `${(Number(n) || 0).toLocaleString('ar-LY', { maximumFractionDigits: 0 })} د.ل`;
 
 /** لون المؤشر حسب هدفه. `invert` للمؤشرات التي الأقلّ فيها أفضل (المدد والنفاد). */
 function tone(v, good, ok, invert = false) {
@@ -54,6 +58,7 @@ export default function ProcurementKpis() {
   }, [me]);
 
   const kpis = useMemo(() => computeProcurementKpis(docs, { nowMs, windowDays: KPI_WINDOW_DAYS }), [docs, nowMs]);
+  const spend = useMemo(() => supplierSpend(docs, { nowMs, windowDays: SPEND_WINDOW_DAYS }), [docs, nowMs]);
 
   const truncated = docs.length >= DOC_CAP;
   const oldestMs = useMemo(() => {
@@ -120,12 +125,58 @@ export default function ProcurementKpis() {
         />
       </div>
 
+      {/* ── الموردون: الإنفاق والتركّز ── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-sm font-bold text-white">الموردون — الإنفاق والتركّز</h2>
+          <span className="text-[11px] text-gray-500">لآخر ١٢ شهرًا · من أوامر الشراء المُصدَرة</span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Kpi
+            label="الموردون النشطون"
+            hint="لهم أمر شراء مُصدَر في آخر ١٢ شهرًا"
+            value={spend.activeCount ? num(spend.activeCount) : '—'}
+            color="#e5e7eb"
+            basis={spend.totalSpend ? `إجمالي الإنفاق ${money(spend.totalSpend)}` : 'لا أوامر شراء مُصدَرة بعد'}
+          />
+          <Kpi
+            label="تركّز أكبر ٥ موردين"
+            hint="حصّتهم من الإنفاق · الأقلّ أأمن (مخاطر انقطاع التوريد)"
+            value={pct(spend.top5Concentration)}
+            color={tone(spend.top5Concentration, 0.6, 0.8, true)}
+            basis={spend.top5Spend ? `${money(spend.top5Spend)} من ${money(spend.totalSpend)}` : '—'}
+          />
+          <div className="rounded-2xl bg-black/20 border border-white/5 p-4 sm:col-span-2">
+            <div className="text-sm font-bold text-gray-100 mb-2">أكبر الموردين إنفاقًا</div>
+            {spend.suppliers.length === 0 ? (
+              <p className="text-[11px] text-gray-500 py-2">لا أوامر شراء مُصدَرة بعد — يظهر الترتيب فور اعتماد أوّل أمر.</p>
+            ) : (
+              <div className="space-y-2">
+                {spend.suppliers.slice(0, 6).map((s) => (
+                  <div key={s.key}>
+                    <div className="flex items-center justify-between text-[11px] mb-0.5">
+                      <span className="text-gray-200 font-bold truncate">{s.name}</span>
+                      <span className="text-gray-400 flex-shrink-0">{money(s.spend)} · {pct(s.share)}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                      <div className="h-full rounded-full bg-brand-gold" style={{ width: `${Math.round((s.share || 0) * 100)}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* ── ملاحظة تفسيرية ── */}
       <div className="rounded-2xl border border-white/10 bg-black/20 p-4 space-y-2">
         <p className="text-xs text-gray-300 leading-relaxed">
-          <span className="text-brand-gold font-bold">لماذا هذه المؤشرات؟</span> هي المحور الرابع في مقابلة تقييم
-          السلاسل — «الأداء والمؤشرات». وكلٌّ منها مردودٌ إلى مستنده: مدة الدورة من طوابع الطلب والأمر، ومهلة التوريد
-          من الأمر والاستلام، والالتزام من تاريخ التسليم المطلوب مقابل الاستلام الفعليّ.
+          <span className="text-brand-gold font-bold">لماذا هذه المؤشرات؟</span> هي المحوران الرابع والخامس في مقابلة
+          تقييم السلاسل — «الأداء والمؤشرات» و«الموردون». وكلٌّ منها مردودٌ إلى مستنده: مدة الدورة من طوابع الطلب والأمر،
+          ومهلة التوريد من الأمر والاستلام، والالتزام من تاريخ التسليم المطلوب، وإنفاق الموردين وتركّزه من صافي أوامر الشراء.
+          <span className="text-gray-400"> الإنفاق والتركّز محسوبان من أوامر الشراء الحالية (المورّد حقلٌ عليها)؛ ماستر
+          الموردين الكامل (استيراد + بطاقة لكلّ مورّد) هو الخطوة التالية.</span>
         </p>
         <p className="text-[11px] text-gray-500 leading-relaxed">
           ملاحظة صدقٍ: <span className="text-gray-300">التزام الموردين (OTD)</span> هنا يقيس التزام <span className="text-gray-300">مورّدينا</span> —

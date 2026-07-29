@@ -11,7 +11,7 @@
   "counts": {
     "modules": 47,
     "serviceDomains": 19,
-    "serviceFiles": 113,
+    "serviceFiles": 115,
     "collections": 34,
     "roles": 12,
     "odooModels": 12,
@@ -878,16 +878,19 @@
       "dir": "src/services/kpi",
       "files": [
         "procurementKpis.js",
-        "procurementKpis.test.js"
+        "procurementKpis.test.js",
+        "supplierSpend.js",
+        "supplierSpend.test.js"
       ],
-      "fileCount": 2,
-      "testCount": 1,
+      "fileCount": 4,
+      "testCount": 2,
       "exports": [
         "computeProcurementKpis",
         "poCycleTime",
         "stockoutRate",
         "supplierLeadTime",
-        "supplierOtd"
+        "supplierOtd",
+        "supplierSpend"
       ],
       "collections": []
     },
