@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 50,
-    "serviceDomains": 21,
-    "serviceFiles": 120,
+    "modules": 51,
+    "serviceDomains": 22,
+    "serviceFiles": 122,
     "collections": 36,
     "roles": 12,
     "odooModels": 12,
@@ -202,6 +202,16 @@
       "summary": "",
       "file": "src/pages/dashboard/index.astro",
       "usesServices": []
+    },
+    {
+      "name": "interview-readiness",
+      "route": "/dashboard/interview-readiness",
+      "title": "حزمة الاستعداد — البروفة",
+      "summary": "حزمة الاستعداد لمقابلة تقييم السلاسل — البروفة. قمرةٌ تجمع المكوّنات الستّة",
+      "file": "src/pages/dashboard/interview-readiness.astro",
+      "usesServices": [
+        "readiness"
+      ]
     },
     {
       "name": "kpis",
@@ -1205,6 +1215,23 @@
         "canImport",
         "commitPartnersImport",
         "shapeImportedPartner"
+      ],
+      "collections": []
+    },
+    {
+      "domain": "readiness",
+      "dir": "src/services/readiness",
+      "files": [
+        "readinessModel.js",
+        "readinessModel.test.js"
+      ],
+      "fileCount": 2,
+      "testCount": 1,
+      "exports": [
+        "criticalNumbers",
+        "objectionsResolved",
+        "readinessSummary",
+        "readinessVerdict"
       ],
       "collections": []
     },

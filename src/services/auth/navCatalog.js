@@ -103,6 +103,9 @@ export const NAV_GROUPS = [
       // الهيكل التشغيليّ المستهدف وخارطة التحوّل — طبقتا التصميم وخارطة الطريق من
       // نموذج ديلويت TOM، مبنيّتان فوق الدراسة المقارنة (استعداد ديلويت — اليوم 4).
       { path: '/dashboard/target-operating-model', label: 'الهيكل التشغيليّ المستهدف', icon: 'workflows', roles: ['admin', 'warehouse_manager'] },
+      // حزمة الاستعداد للمقابلة — القمرة الجامعة (٦ مكوّنات) للبروفة قبل تقييم
+      // ديلويت، بأرقامٍ حيّة من الدراسة (استعداد ديلويت — اليوم 5).
+      { path: '/dashboard/interview-readiness', label: 'حزمة الاستعداد — البروفة', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/global-doc-cycles', label: 'الدورات المستندية العالمية', icon: 'bookOpen' },
       { path: '/dashboard/achievement-report', label: 'تقرير الإنجاز اليومي', icon: 'clipboardList' },
       { path: '/dashboard/global-warehouse-report', label: 'المقارنة العالمية (تفاعلي)', icon: 'grid' },
