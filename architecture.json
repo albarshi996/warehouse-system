@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 47,
+    "modules": 49,
     "serviceDomains": 20,
     "serviceFiles": 118,
     "collections": 36,
@@ -107,6 +107,14 @@
         "custody",
         "ui"
       ]
+    },
+    {
+      "name": "customers",
+      "route": "/dashboard/customers",
+      "title": "ماستر العملاء",
+      "summary": "ماستر العملاء (§15.3) — توأم ماستر الموردين بنفس المحرّك (kind='customer').",
+      "file": "src/pages/dashboard/customers.astro",
+      "usesServices": []
     },
     {
       "name": "document",
@@ -344,6 +352,14 @@
       "usesServices": [
         "studies"
       ]
+    },
+    {
+      "name": "suppliers",
+      "route": "/dashboard/suppliers",
+      "title": "ماستر الموردين",
+      "summary": "ماستر الموردين (§15.2) — مصدر واحد لبيانات الموردين بديلًا للحقل النصّي الحرّ.",
+      "file": "src/pages/dashboard/suppliers.astro",
+      "usesServices": []
     },
     {
       "name": "supply-chain",

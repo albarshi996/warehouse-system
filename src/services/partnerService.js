@@ -10,7 +10,7 @@ import {
   writeBatch,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db } from './config/firebase.js';
+import { db } from '../config/firebase.js';
 import { shapeImportedPartner } from './partners/partnerShape.js';
 import { normalizeStatus } from './items/itemStatus.js';
 

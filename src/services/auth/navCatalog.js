@@ -38,6 +38,9 @@ export const NAV_GROUPS = [
       { path: '/dashboard/forms', label: 'اختار وظيفتك', icon: 'clipboardList' },
       { path: '/dashboard/tasks', label: 'المهام', icon: 'clipboardList' },
       { path: '/dashboard/products', label: 'الأصناف', icon: 'package' },
+      // ماستر شركاء الأعمال (§15.2/15.3) — للمديرَين كإدارة بياناتٍ مرجعية.
+      { path: '/dashboard/suppliers', label: 'ماستر الموردين', icon: 'users', roles: ['admin', 'warehouse_manager'] },
+      { path: '/dashboard/customers', label: 'ماستر العملاء', icon: 'users', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/stock-operations', label: 'عمليات مخزنية', icon: 'package' },
       { path: '/dashboard/operations', label: 'متابعة العمليات', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
     ],
