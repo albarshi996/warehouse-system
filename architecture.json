@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 49,
-    "serviceDomains": 20,
-    "serviceFiles": 118,
+    "modules": 50,
+    "serviceDomains": 21,
+    "serviceFiles": 120,
     "collections": 36,
     "roles": 12,
     "odooModels": 12,
@@ -374,6 +374,16 @@
         "fleet",
         "maintenance",
         "vehicles"
+      ]
+    },
+    {
+      "name": "target-operating-model",
+      "route": "/dashboard/target-operating-model",
+      "title": "الهيكل التشغيليّ المستهدف",
+      "summary": "الهيكل التشغيليّ المستهدف وخارطة التحوّل — طبقتا «التصميم» و«خارطة الطريق»",
+      "file": "src/pages/dashboard/target-operating-model.astro",
+      "usesServices": [
+        "tom"
       ]
     },
     {
@@ -1288,6 +1298,26 @@
         "recsByHorizon",
         "riskMatrix",
         "studyVerdict"
+      ],
+      "collections": []
+    },
+    {
+      "domain": "tom",
+      "dir": "src/services/tom",
+      "files": [
+        "tomModel.js",
+        "tomModel.test.js"
+      ],
+      "fileCount": 2,
+      "testCount": 1,
+      "exports": [
+        "designMatrix",
+        "foundationPillars",
+        "maturityBand",
+        "maturitySnapshot",
+        "tomExecutiveSummary",
+        "tomVerdict",
+        "transformationWaves"
       ],
       "collections": []
     },

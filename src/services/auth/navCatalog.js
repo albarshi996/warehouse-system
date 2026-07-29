@@ -100,6 +100,9 @@ export const NAV_GROUPS = [
       // العالمية + مكتبة الدورات المستندية للشركات الثماني كمحتوى أصيل.
       { path: '/dashboard/studies', label: 'مركز الدراسات والمقارنات', icon: 'bookOpen' },
       { path: '/dashboard/comparative-study', label: 'الدراسة المقارنة العالمية', icon: 'grid' },
+      // الهيكل التشغيليّ المستهدف وخارطة التحوّل — طبقتا التصميم وخارطة الطريق من
+      // نموذج ديلويت TOM، مبنيّتان فوق الدراسة المقارنة (استعداد ديلويت — اليوم 4).
+      { path: '/dashboard/target-operating-model', label: 'الهيكل التشغيليّ المستهدف', icon: 'workflows', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/global-doc-cycles', label: 'الدورات المستندية العالمية', icon: 'bookOpen' },
       { path: '/dashboard/achievement-report', label: 'تقرير الإنجاز اليومي', icon: 'clipboardList' },
       { path: '/dashboard/global-warehouse-report', label: 'المقارنة العالمية (تفاعلي)', icon: 'grid' },
