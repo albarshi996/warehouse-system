@@ -88,8 +88,8 @@ export default function ProcurementKpis() {
           }`}
         >
           {windowIncomplete
-            ? `⚠️ المؤشرات محسوبة على جزءٍ من آخر ${KPI_WINDOW_DAYS} يومًا فقط — بلغت اللوحة حدّ عرض ${num(DOC_CAP)} مستند، فقد تكون الأرقام ناقصة. للدقّة الكاملة عند هذا الحجم يلزم تجميع خادميّ.`
-            : `ℹ️ محسوبة على آخر ${KPI_WINDOW_DAYS} يومًا (نافذة مكتملة)، من أحدث ${num(DOC_CAP)} مستند.`}
+            ? `المؤشرات محسوبة على جزءٍ من آخر ${KPI_WINDOW_DAYS} يومًا فقط — بلغت اللوحة حدّ عرض ${num(DOC_CAP)} مستند، فقد تكون الأرقام ناقصة. للدقّة الكاملة عند هذا الحجم يلزم تجميع خادميّ.`
+            : `محسوبة على آخر ${KPI_WINDOW_DAYS} يومًا (نافذة مكتملة)، من أحدث ${num(DOC_CAP)} مستند.`}
         </div>
       )}
 
@@ -182,7 +182,7 @@ export default function ProcurementKpis() {
           ملاحظة صدقٍ: <span className="text-gray-300">التزام الموردين (OTD)</span> هنا يقيس التزام <span className="text-gray-300">مورّدينا</span> —
           وهو غير <span className="text-gray-300">OTIF الأسطول</span> في لوحة سلاسل الإمداد الذي يقيس التزام <span className="text-gray-300">شاحناتنا</span>.
           للمؤشرات التشغيلية الأربعة (التنفيذ · دورة البيع · دقّة المخزون · دقّة التسليم) انظر{' '}
-          <a href={`${base}/dashboard/command-center`} className="text-brand-gold hover:underline">لوحة القيادة التشغيلية ↗</a>.
+          <a href={`${base}/dashboard/command-center`} className="text-brand-gold hover:underline">لوحة القيادة التشغيلية</a>.
         </p>
       </div>
     </div>

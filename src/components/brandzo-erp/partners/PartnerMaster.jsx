@@ -8,6 +8,7 @@ import {
 } from '../../../services/partnerService.js';
 import { canImport, analyzePartnersFile, commitPartnersImport } from '../../../services/partners/partnersImportService.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
+import Icon from '../../ui/Icon.jsx';
 
 /**
  * شاشة ماستر شركاء الأعمال — واحدة تخدم الموردين والعملاء (توأمان) بـ`kind`.
@@ -110,7 +111,7 @@ export default function PartnerMaster({ kind = 'supplier' }) {
               }}
               className="inline-flex items-center gap-2 rounded-lg border-2 border-brand-gold text-brand-gold px-4 py-2 font-bold hover:bg-brand-gold hover:text-black active:scale-95 transition-all"
             >
-              📥 استيراد {cfg.title}
+              <Icon name="arrowDownTray" size={16} /> استيراد {cfg.title}
             </button>
           )}
           <button
@@ -121,7 +122,7 @@ export default function PartnerMaster({ kind = 'supplier' }) {
             }}
             className="inline-flex items-center gap-2 rounded-lg bg-brand-red text-white px-4 py-2 font-bold shadow hover:opacity-90 active:scale-95 transition-all"
           >
-            ➕ إضافة {cfg.one}
+            <Icon name="users" size={16} /> إضافة {cfg.one}
           </button>
         </div>
       </header>
@@ -307,7 +308,7 @@ function PartnerForm({ kind, cfg, mode, row, onSaved, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-black/25 p-4 sm:p-6 rounded-xl border border-white/10" dir="rtl">
-      <h3 className="text-lg font-bold text-brand-gold mb-4">{mode === 'create' ? `➕ إضافة ${cfg.one}` : `✏️ تعديل ${cfg.one} ${row?.code || ''}`}</h3>
+      <h3 className="text-lg font-bold text-brand-gold mb-4">{mode === 'create' ? `إضافة ${cfg.one}` : `تعديل ${cfg.one} ${row?.code || ''}`}</h3>
       {err && <div className="mb-4 p-3 rounded-lg bg-red-500/15 text-red-200 border border-red-500/30 text-sm font-bold">{err}</div>}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Field label={`${cfg.codeLabel} (BP Code) *`}>
@@ -395,14 +396,14 @@ function PartnerImport({ kind, cfg, onDone, onCancel }) {
 
   return (
     <div className="bg-black/25 p-4 sm:p-6 rounded-xl border border-white/10" dir="rtl">
-      <h3 className="text-lg font-bold text-brand-gold">📥 استيراد شيت {cfg.title}</h3>
+      <h3 className="text-lg font-bold text-brand-gold flex items-center gap-2"><Icon name="arrowDownTray" size={18} /> استيراد شيت {cfg.title}</h3>
       <p className="text-xs text-gray-400 mt-1 mb-4">
         الأعمدة تُطابَق تلقائيًّا بمرادفات عربية/إنجليزية (BP Code · BP Name · المفوّض · الهاتف · الأرصدة…). لا يُكتب شيء قبل أن تراجع المعاينة وتؤكّد.
       </p>
 
       <label className="inline-flex items-center gap-2 cursor-pointer rounded-lg border-2 border-dashed border-white/20 px-4 py-2.5 text-sm font-bold text-gray-300 hover:border-brand-gold hover:text-brand-gold transition-colors">
         <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFile} disabled={analyzing || committing} />
-        {analyzing ? 'جارٍ تحليل الملف…' : '📂 اختر ملف Excel'}
+        {analyzing ? 'جارٍ تحليل الملف…' : 'اختر ملف Excel'}
       </label>
       {fileName && <span className="text-xs text-gray-500 font-mono truncate mr-3">{fileName}</span>}
 
@@ -425,7 +426,7 @@ function PartnerImport({ kind, cfg, onDone, onCancel }) {
 
           {blocking.length > 0 && (
             <div className="p-3 rounded-lg border border-red-500/30 bg-red-500/10">
-              <p className="text-sm font-bold text-red-200 mb-2">❌ {blocking.length} خطأ يمنع الاستيراد — صحّح الملف وأعد اختياره:</p>
+              <p className="text-sm font-bold text-red-200 mb-2 flex items-center gap-2"><Icon name="alertTriangle" size={16} /> {blocking.length} خطأ يمنع الاستيراد — صحّح الملف وأعد اختياره:</p>
               <ul className="text-xs text-red-300 space-y-1 max-h-40 overflow-y-auto">
                 {blocking.slice(0, 12).map((e, i) => (<li key={i}>صفّ {e.row} · {e.message}</li>))}
                 {blocking.length > 12 && <li>… و{blocking.length - 12} أخرى</li>}
@@ -435,7 +436,7 @@ function PartnerImport({ kind, cfg, onDone, onCancel }) {
 
           {plan.skipped.length > 0 && (
             <div className="p-3 rounded-lg border border-orange-500/30 bg-orange-500/10">
-              <p className="text-sm font-bold text-orange-200 mb-2">🚫 {plan.skipped.length} صفًّا بلا رمز — لن يُستورد (الرمز معرّف الماستر):</p>
+              <p className="text-sm font-bold text-orange-200 mb-2 flex items-center gap-2"><Icon name="alertTriangle" size={16} /> {plan.skipped.length} صفًّا بلا رمز — لن يُستورد (الرمز معرّف الماستر):</p>
               <ul className="text-xs text-orange-300 space-y-1 max-h-32 overflow-y-auto">
                 {plan.skipped.slice(0, 8).map((row, i) => (<li key={i}>{row.nameAr || 'صف بلا اسم'}</li>))}
                 {plan.skipped.length > 8 && <li>… و{plan.skipped.length - 8} أخرى</li>}
