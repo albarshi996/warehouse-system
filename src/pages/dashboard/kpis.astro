@@ -1,0 +1,31 @@
+---
+/**
+ * لوحة مؤشرات المشتريات والأداء — الأرقام التي يسأل عنها مُقيّم السلاسل أوّلًا.
+ *
+ * لماذا وُجدت؟ لوحة القيادة التشغيلية تقيس دورة البيع والأسطول، لكن مقابلة
+ * تقييم السلاسل (محورها الرابع «الأداء والمؤشرات») تسأل عن مؤشرات المشتريات:
+ * مدة دورة أمر الشراء · مهلة التوريد · التزام الموردين OTD · نسبة نفاد المخزون.
+ * هذه الشاشة تحسبها من المستندات وسجلّها — لا من انطباع — فتُقرأ الأرقام دفاعيًّا.
+ *
+ * القاعدة الذهبية: لا حذف — صفحة ومكوّن جديدان (kpi/ProcurementKpis)، والحساب
+ * في procurementKpis.js الخالص المُختبَر. الوصول للمديرَين (مقيَّد في القائمة).
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import ProcurementKpis from '../../components/brandzo-erp/kpi/ProcurementKpis.jsx';
+---
+
+<DashboardLayout title="مؤشرات المشتريات والأداء" showGuide={false}>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">📈 مؤشرات المشتريات والأداء</h1>
+      <p class="text-gray-300 text-sm leading-relaxed max-w-3xl">
+        المحور الرابع في تقييم السلاسل — <span class="text-brand-gold font-bold">الأداء بالأرقام لا بالانطباع</span>:
+        مدة دورة أمر الشراء، ومهلة التوريد، والتزام الموردين، ونسبة نفاد المخزون. كلّها محسوبةٌ لحظيًّا من
+        طوابع المستندات وروابطها — وكل رقمٍ يحمل مقامه فتُقرأ الثقة فيه.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <ProcurementKpis client:load />
+  </div>
+</DashboardLayout>

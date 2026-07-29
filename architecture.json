@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 46,
-    "serviceDomains": 18,
-    "serviceFiles": 111,
+    "modules": 47,
+    "serviceDomains": 19,
+    "serviceFiles": 113,
     "collections": 34,
     "roles": 12,
     "odooModels": 12,
@@ -193,6 +193,14 @@
       "title": "لوحة التحكم",
       "summary": "",
       "file": "src/pages/dashboard/index.astro",
+      "usesServices": []
+    },
+    {
+      "name": "kpis",
+      "route": "/dashboard/kpis",
+      "title": "مؤشرات المشتريات والأداء",
+      "summary": "لوحة مؤشرات المشتريات والأداء — الأرقام التي يسأل عنها مُقيّم السلاسل أوّلًا.",
+      "file": "src/pages/dashboard/kpis.astro",
       "usesServices": []
     },
     {
@@ -864,6 +872,24 @@
       "collections": [
         "Items_Pending"
       ]
+    },
+    {
+      "domain": "kpi",
+      "dir": "src/services/kpi",
+      "files": [
+        "procurementKpis.js",
+        "procurementKpis.test.js"
+      ],
+      "fileCount": 2,
+      "testCount": 1,
+      "exports": [
+        "computeProcurementKpis",
+        "poCycleTime",
+        "stockoutRate",
+        "supplierLeadTime",
+        "supplierOtd"
+      ],
+      "collections": []
     },
     {
       "domain": "ledger",

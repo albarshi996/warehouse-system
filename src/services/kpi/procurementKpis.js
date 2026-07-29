@@ -1,0 +1,177 @@
+/**
+ * مؤشرات المشتريات والدورة المستندية — منطق خالص يحوّل المستندات إلى أرقامٍ
+ * دفاعية تُقاس بها إدارة السلاسل (استعداد اختبار ديلويت · الأفق الأوّل).
+ *
+ * لماذا هذا الملف؟ لوحة القيادة الحالية تقيس **دورة البيع** (الأمر ← التسليم)
+ * و**الأسطول** (OTIF الشاحنات)، لكنها لا تقيس ما يسأل عنه مُقيّم السلاسل أوّلًا:
+ *   1. **مدة دورة أمر الشراء** — من رفع الطلب (PR) حتى إصدار الأمر (PO).
+ *      تكشف بيروقراطية الاعتماد وطبقات الصلاحية الزائدة.
+ *   2. **مهلة التوريد** — من إصدار الأمر (PO) حتى الاستلام الفعلي (GRN).
+ *      أساس تحديد مستويات المخزون الأمثل.
+ *   3. **التزام الموردين (OTD)** — نسبة الاستلامات في موعدها المطلوب أو قبله.
+ *      المؤشر الصحيح بديلًا عن OTIF الأسطول الذي يقيس شاحناتنا لا موردينا.
+ *   4. **نسبة نفاد المخزون** — نسبة الأصناف المطلوبة التي عجز المخزون عنها.
+ *      تربط أداء الإدارة بخسارة الإيراد.
+ *
+ * كل رقم يحمل **مقامه** (`basis`) لتُقرأ الثقة فيه: مؤشرٌ من ثلاث حالاتٍ ليس
+ * كمؤشرٍ من ثلاثمئة. وكلٌّ يُعيد `null` حين تغيب بياناته — فلا نلوّن نجاحًا
+ * مزيّفًا من لا شيء (نفس مبدأ `operationsDashboard.js`).
+ *
+ * خالصٌ عمدًا: بلا Firestore، والوقت يُمرَّر `nowMs` لا يُقرأ — كي يُختبَر في
+ * Node ويبقى حسابه ثابتًا. المطابقة بين المستندات عبر `links` المشتقّة
+ * (PO يحمل `links.PR`، وGRN يحمل `links.PO`) لا بالنصّ.
+ */
+import { toMillis } from '../documents/inbox.js';
+
+const DAY = 86400000;
+
+/** مفتاح الصنف: الكود أولًا فالباركود، مطبَّعًا. */
+function itemKey(row) {
+  return String(row?.sku || row?.barcode || '').trim().toUpperCase();
+}
+
+/** متوسط قائمة أرقام (null إن فرغت). */
+function avg(list) {
+  return list.length ? list.reduce((a, b) => a + b, 0) / list.length : null;
+}
+
+/** الوسيط — أمتن من المتوسط أمام القيم الشاذّة (أمرٌ تعطّل شهرًا لا يُفسد الصورة). */
+function median(list) {
+  if (!list.length) return null;
+  const s = [...list].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
+
+function ofType(docs, t) {
+  return (docs || []).filter((d) => d?.type === t);
+}
+
+/**
+ * يقصر المستندات على آخر `windowDays` يومًا إن طُلبت (بلا نافذة = الكلّ).
+ * المستند بلا تاريخ يُحتسب — لا نُسقط ما نجهل تاريخه. مطابقٌ لمنطق اللوحة.
+ */
+function withinWindow(docs, nowMs, windowDays) {
+  if (nowMs == null || !(windowDays > 0)) return docs || [];
+  const cutoff = nowMs - windowDays * DAY;
+  return (docs || []).filter((d) => {
+    const t = toMillis(d?.createdAt);
+    return t == null || t >= cutoff;
+  });
+}
+
+/** لحظة «إصدار أمر الشراء»: الاعتماد أولًا، فالترقيم، فالإنشاء (أوّل موجود). */
+function poIssuedMs(po) {
+  return toMillis(po?.approvedAt) ?? toMillis(po?.numberedAt) ?? toMillis(po?.createdAt);
+}
+
+/** لحظة «الاستلام الفعلي»: تاريخ الاستلام المُدخل، فالاعتماد، فآخر تحديث. */
+function grnReceivedMs(grn) {
+  return toMillis(grn?.header?.receivedAt) ?? toMillis(grn?.approvedAt) ?? toMillis(grn?.updatedAt);
+}
+
+/**
+ * مدة دورة أمر الشراء = متوسط/وسيط (إصدار الأمر − إنشاء طلبه) بالأيام، عبر كل
+ * أمرٍ مشتقٍّ من طلبٍ معروف تاريخه. يُقاس من إنشاء الطلب (بداية الاحتياج) لا من
+ * اعتماده، فيلتقط الدورة كاملةً: اعتماد الطلب + إنشاء الأمر + اعتماد الأمر.
+ *
+ * @returns {{avgDays, medianDays, count, samples}}
+ */
+export function poCycleTime(docs) {
+  const prById = new Map(ofType(docs, 'PR').map((d) => [d.id, d]));
+  const spans = [];
+  for (const po of ofType(docs, 'PO')) {
+    const prId = po?.links?.PR?.id;
+    const pr = prId ? prById.get(prId) : null;
+    const start = toMillis(pr?.createdAt);
+    const end = poIssuedMs(po);
+    if (start != null && end != null && end >= start) spans.push((end - start) / DAY);
+  }
+  return { avgDays: avg(spans), medianDays: median(spans), count: spans.length, samples: spans };
+}
+
+/**
+ * مهلة التوريد = متوسط/وسيط (الاستلام الفعلي − إصدار الأمر) بالأيام، عبر كل
+ * مذكرة استلامٍ مشتقّةٍ من أمرٍ معروف لحظة إصداره.
+ *
+ * @returns {{avgDays, medianDays, count, samples}}
+ */
+export function supplierLeadTime(docs) {
+  const poById = new Map(ofType(docs, 'PO').map((d) => [d.id, d]));
+  const spans = [];
+  for (const grn of ofType(docs, 'GRN')) {
+    const poId = grn?.links?.PO?.id;
+    const po = poId ? poById.get(poId) : null;
+    const start = poIssuedMs(po);
+    const end = grnReceivedMs(grn);
+    if (start != null && end != null && end >= start) spans.push((end - start) / DAY);
+  }
+  return { avgDays: avg(spans), medianDays: median(spans), count: spans.length, samples: spans };
+}
+
+/**
+ * التزام الموردين (On-Time Delivery) = نسبة الاستلامات التي وقعت في تاريخ
+ * التسليم المطلوب على الأمر أو قبله. مهلة السماح يومٌ واحد: تاريخ التسليم
+ * المطلوب يُخزَّن منتصفَ ليلٍ، فاستلامٌ في يومه نفسه يجب أن يُعدّ ملتزمًا.
+ *
+ * يُحتسب فقط ما لأمره تاريخُ تسليمٍ مطلوب واستلامٌ معروف — فبلا موعدٍ لا التزام
+ * يُقاس. يُعيد `rate = null` إن لم توجد عيّنة.
+ *
+ * @returns {{rate, onTime, total}}
+ */
+export function supplierOtd(docs, grace = DAY) {
+  const poById = new Map(ofType(docs, 'PO').map((d) => [d.id, d]));
+  let onTime = 0;
+  let total = 0;
+  for (const grn of ofType(docs, 'GRN')) {
+    const poId = grn?.links?.PO?.id;
+    const po = poId ? poById.get(poId) : null;
+    const planned = toMillis(po?.header?.requiredDelivery);
+    const actual = grnReceivedMs(grn);
+    if (planned == null || actual == null) continue;
+    total += 1;
+    if (actual <= planned + grace) onTime += 1;
+  }
+  return { rate: total ? onTime / total : null, onTime, total };
+}
+
+/**
+ * نسبة نفاد المخزون = الأصناف التي عجز المخزون عن تلبيتها ÷ الأصناف المطلوبة.
+ * أصنافٌ مميّزة لا كميات: «كم صنفًا نفد» أوضح رقابيًّا من «كم وحدة». مصدر العجز
+ * هو `soShortfall` المثبَّت على أمر البيع لحظة اعتماده (انظر `salesService.js`).
+ *
+ * @returns {{rate, stockoutItems, orderedItems}}
+ */
+export function stockoutRate(docs) {
+  const ordered = new Set();
+  const stockedOut = new Set();
+  for (const so of ofType(docs, 'SO')) {
+    for (const l of so.lines || []) {
+      const k = itemKey(l);
+      if (k) ordered.add(k);
+    }
+    for (const s of so.soShortfall || []) {
+      const k = itemKey(s);
+      if (k) stockedOut.add(k);
+    }
+  }
+  const orderedItems = ordered.size;
+  const stockoutItems = [...stockedOut].filter((k) => ordered.has(k)).length;
+  return { rate: orderedItems ? stockoutItems / orderedItems : null, stockoutItems, orderedItems };
+}
+
+/**
+ * يجمع مؤشرات المشتريات الأربعة في نتيجةٍ واحدة، مقصورةً على نافذةٍ زمنية إن
+ * طُلبت. هذا ما تستهلكه الشاشة — والدوال المفردة أعلاه تبقى مصدَّرة للاختبار
+ * ولإعادة الاستعمال.
+ */
+export function computeProcurementKpis(docs, opts = {}) {
+  const scoped = withinWindow(docs, opts.nowMs, opts.windowDays);
+  return {
+    poCycle: poCycleTime(scoped),
+    leadTime: supplierLeadTime(scoped),
+    otd: supplierOtd(scoped),
+    stockout: stockoutRate(scoped),
+    basis: { windowDays: opts.windowDays || null, scopedDocs: scoped.length },
+  };
+}

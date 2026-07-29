@@ -90,6 +90,9 @@ export const NAV_GROUPS = [
     emoji: '📊',
     items: [
       { path: '/dashboard/reports', label: 'مركز التقارير', icon: 'clipboardList', pinned: true },
+      // مؤشرات المشتريات والأداء — المحور الرابع في تقييم السلاسل، محسوبة من
+      // طوابع المستندات وروابطها (procurementKpis.js). للمديرَين كلوحةٍ إدارية.
+      { path: '/dashboard/kpis', label: 'مؤشرات المشتريات والأداء', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
       // مركز الدراسات — مرجع الدراسات والمقارنات (25.07): الدراسة المقارنة
       // العالمية + مكتبة الدورات المستندية للشركات الثماني كمحتوى أصيل.
       { path: '/dashboard/studies', label: 'مركز الدراسات والمقارنات', icon: 'bookOpen' },
