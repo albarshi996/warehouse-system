@@ -1,0 +1,101 @@
+/* =========================================================================
+   tokens.css — رموز نظام تصميم أودو (D1)
+   المصدر: odoo/addons/web/static/src/scss/primary_variables.scss (فرع 19.0)
+   ونسخةً عن المرجع المرفق odoo-design-system-ar.html.
+
+   قاعدة الهوية (R3): لون النظام كلّه يُعرَّف هنا في --o-brand-primary وحده.
+   يُمنع كتابة أي لون هوية مباشرة داخل المكوّنات. لتحويل الواجهة كاملةً
+   إلى هويّة براندزو: غيّر --o-brand-primary فقط.
+
+   ⚠️ المرحلة ٠ — إضافة صرفة ومعزولة: هذه المتغيّرات مجرّد قيم في :root
+   (لا تُغيّر مظهر أي صفحة قائمة)، وتُستهلك حصرًا داخل حاوية .o_theme في
+   صفحة الأنماط وشاشة الاستلام. لا مساس بثيم البوابة الداكن في هذه المرحلة.
+   ========================================================================= */
+:root {
+  /* --- الهوية (نقطة التحكم الواحدة) --- */
+  --o-community-color: #71639e;   /* لون أودو المجتمعي */
+  --o-enterprise-color: #714B67;  /* لون أودو المؤسسي (الأشهر) */
+  --o-enterprise-action: #017e84;
+
+  /* اللون الأساسي — نقطة التحكم الواحدة للهوية (R3).
+     ✅ القرار المعتمد (المالك، 2026-07-30): أودو المؤسسي #714B67 — أقصى راحة
+        وتطابق مع واجهة أودو 19 التي تعمل خلف النظام.
+     بدائل مؤرشفة (لتغييرٍ لاحق بسطر واحد إن لزم): أحمر براندزو #c41e3a · أحمر غامق #8B1E2D. */
+  --o-brand-primary: var(--o-enterprise-color); /* = #714B67 */
+  --o-community-primary: var(--o-community-color);
+  --o-action: var(--o-brand-primary);
+
+  /* --- سلّم الرمادي كاملًا --- */
+  --o-white: #FFFFFF;
+  --o-black: #000000;
+  --o-gray-100: #f8f9fa;
+  --o-gray-200: #e9ecef;
+  --o-gray-300: #dee2e6;
+  --o-gray-400: #ced4da;
+  --o-gray-500: #adb5bd;
+  --o-gray-600: #6c757d;
+  --o-gray-700: #495057;
+  --o-gray-800: #343a40;
+  --o-gray-900: #212529;
+
+  /* --- ألوان الحالة (خلفية / نص) --- */
+  --o-success: #28a745;
+  --o-info: #17a2b8;
+  --o-warning: #ffac00;
+  --o-danger: #dc3545;
+  --o-text-success: #008818;
+  --o-text-info: #0180a5;
+  --o-text-warning: #9a6b01;
+  --o-text-danger: #d23f3a;
+  --o-favorite: #f3cc00;
+
+  /* --- النصوص --- */
+  --o-main-text-color: var(--o-gray-900);
+  /* ملاحظة R10 (الوصول): قيمة أودو الأصلية rgba(73,80,87,.76) تُركَّب فوق الأبيض
+     إلى ≈4.34:1 — دون عتبة 4.5:1 للنصّ الصغير. نعتّمها لأقرب لون معتِم يحقّق ≥4.5:1
+     ويبقى «باهتًا» مقابل نصّ المتن. الوصول قاعدة إلزامية تعلو المطابقة الحرفية هنا. */
+  --o-main-color-muted: #5f676e;
+  --o-font-size-base: 14px;   /* أودو يستعمل 14px لا 16px (R5) */
+  --o-font-size-sm: 13px;     /* الجداول */
+  --o-font-size-xs: 12px;     /* الشارات والتسميات */
+  --o-line-height-base: 1.5;
+  --o-font-weight-medium: 500;
+  --o-font-weight-bold: 700;
+  --o-label-font-size-factor: 0.8;  /* تسمية الحقل أصغر من قيمته */
+
+  /* --- المسافات والحواف --- */
+  --o-spacer: 16px;
+  --o-form-spacing-unit: 5px;
+  --o-horizontal-padding: 16px;
+  --o-border-radius: 4px;
+  --o-border-radius-sm: 3px;
+  --o-border-radius-lg: 6px;
+  --o-statusbar-height: 33px;
+  --o-statbutton-height: 44px;
+
+  /* --- الأسطح --- */
+  --o-view-background: #FFFFFF;
+  --o-sheet-background: #f9f9f9;   /* الخلفية حول ورقة النموذج */
+  --o-border-color: var(--o-gray-300);
+
+  /* --- خلفيات الشارات (تدرّجات فاتحة مشتقّة من ألوان الحالة) ومراحل السهم ---
+     مشتقّة من المرجع؛ نُجمع هنا كي يبقى tokens.css الموضع الوحيد لأي لون (R3)
+     ولا يحمل أي ملف آخر لونًا حرفيًّا. */
+  --o-badge-draft-bg: var(--o-gray-200);
+  --o-badge-info-bg: #e6f4f6;
+  --o-badge-success-bg: #e5f4e8;
+  --o-badge-warning-bg: #fdf2dc;
+  --o-badge-danger-bg: #fbe9e9;
+  --o-arrow-done-bg: #dfe7e0;
+  --o-arrow-done-text: #3d6b48;
+
+  /* --- الظلال (رمادي محايد، لا لون هوية) --- */
+  --o-shadow-sm: 0 1px 2px rgba(48, 48, 48, 0.06);
+  --o-shadow-card: 0 1px 4px rgba(48, 48, 48, 0.06);
+  --o-shadow-card-hover: 0 2px 8px rgba(48, 48, 48, 0.14);
+
+  /* --- الخط العربي (R6/§6) — أودو يحمّل Noto لنطاق اليونيكود العربي.
+     البوابة تعمل بلا اتصال (PWA) فلا نحمّل خطًّا خارجيًّا؛ نبقي Noto أولًا
+     في السلسلة فيُستعمل حين يتوفّر، ويتدرّج بأمان إلى خطوط النظام. --- */
+  --o-font-family: "Noto Sans Arabic", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}

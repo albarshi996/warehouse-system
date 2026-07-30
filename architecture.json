@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 52,
+    "modules": 54,
     "serviceDomains": 23,
     "serviceFiles": 124,
     "collections": 36,
@@ -314,6 +314,14 @@
       "usesServices": []
     },
     {
+      "name": "receipts",
+      "route": "/dashboard/receipts",
+      "title": "أوامر الاستلام — الشاشة التجريبية",
+      "summary": "",
+      "file": "src/pages/dashboard/receipts.astro",
+      "usesServices": []
+    },
+    {
       "name": "recruitment",
       "route": "/dashboard/recruitment",
       "title": "التوظيف",
@@ -370,6 +378,14 @@
       "usesServices": [
         "studies"
       ]
+    },
+    {
+      "name": "styleguide",
+      "route": "/dashboard/styleguide",
+      "title": "دليل الأنماط — نظام التصميم",
+      "summary": "",
+      "file": "src/pages/dashboard/styleguide.astro",
+      "usesServices": []
     },
     {
       "name": "suppliers",

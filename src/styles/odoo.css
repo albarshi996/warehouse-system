@@ -1,0 +1,296 @@
+/* =========================================================================
+   odoo.css — أنماط مكوّنات نظام تصميم أودو (تُستهلكها مكوّنات D2)
+   منقولة من المرجع odoo-design-system-ar.html بأسماء أصناف أودو نفسها
+   (o_control_panel · o_list_view · o_form_sheet · o_kanban_record …)
+   لتسهيل الصيانة لاحقًا كما يطلب القسم ٧.
+
+   قواعد ملتزَمة:
+     • R3 — لا لون هوية مكتوب مباشرة؛ كل لون من متغيّرات tokens.css.
+     • R6 — خصائص منطقية حصرًا (inline-start/inline-end/start/end)؛
+            لا استعمال للاتجاهات الفيزيائية، فيعمل في الاتجاهين بلا ملف منفصل.
+     • R7 — كثافة أودو (صف ~32px، حشوة الخلية .5rem .3rem، خط الجدول 13px).
+     • R8 — أرقام الجداول للنهاية مع tabular-nums لتصطفّ عموديًّا.
+     • R10 — حلقة تركيز ظاهرة + احترام prefers-reduced-motion.
+
+   العزل (المرحلة ٠): كل قاعدة مسبوقة بـ.o_theme فلا تتسرّب إلى بقية البوابة،
+   ولا تتأثّر بثيمها الداكن. الحاوية .o_theme هي «تطبيق أودو» الفاتح.
+   ========================================================================= */
+
+/* ─── الحاوية الجذر ─────────────────────────────────────────────────────── */
+.o_theme {
+  background: var(--o-view-background);
+  color: var(--o-main-text-color);
+  font-size: var(--o-font-size-base);
+  line-height: var(--o-line-height-base);
+  /* R2 — أرقام لاتينية مصطفّة على مستوى الحاوية، لا تُترك للتنسيق التلقائي */
+  font-variant-numeric: lining-nums tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  border-radius: var(--o-border-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--o-border-color);
+}
+
+/* خط أودو داخل الحاوية — يتغلّب على قاعدة الخط العامّة (Dubai !important) */
+.o_theme,
+.o_theme * {
+  font-family: var(--o-font-family) !important;
+  box-sizing: border-box;
+}
+
+/* R10 — حلقة تركيز ظاهرة على كل عنصر تفاعلي بلوحة المفاتيح */
+.o_theme a:focus-visible,
+.o_theme button:focus-visible,
+.o_theme input:focus-visible,
+.o_theme [tabindex]:focus-visible {
+  outline: 2px solid var(--o-action);
+  outline-offset: 1px;
+  border-radius: var(--o-border-radius-sm);
+}
+
+/* ─── الشريط العلوي  o_main_navbar ─────────────────────────────────────── */
+.o_theme .o_main_navbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 46px;
+  background: var(--o-brand-primary);
+  color: var(--o-white);
+  padding: 0 8px;
+  font-size: var(--o-font-size-sm);
+}
+.o_theme .o_navbar_apps_menu { padding: 0 12px; font-size: 16px; opacity: 0.9; cursor: pointer; }
+.o_theme .o_menu_brand { font-weight: var(--o-font-weight-bold); padding: 0 10px; font-size: 15px; }
+.o_theme .o_menu_sections { display: flex; gap: 2px; flex: 1; }
+.o_theme .o_menu_sections a {
+  color: rgba(255, 255, 255, 0.9); text-decoration: none;
+  padding: 6px 10px; border-radius: var(--o-border-radius-sm);
+}
+.o_theme .o_menu_sections a:hover,
+.o_theme .o_menu_sections a.active { background: rgba(0, 0, 0, 0.15); color: var(--o-white); }
+.o_theme .o_menu_systray { display: flex; align-items: center; gap: 10px; padding-inline-start: 10px; opacity: 0.92; }
+.o_theme .o_avatar {
+  width: 26px; height: 26px; border-radius: 50%; background: rgba(255, 255, 255, 0.25);
+  display: grid; place-items: center; font-size: 11px; font-weight: 700;
+}
+
+/* ─── لوحة التحكم  o_control_panel ─────────────────────────────────────── */
+.o_theme .o_control_panel {
+  background: var(--o-white); border-bottom: 1px solid var(--o-border-color);
+  padding: 8px var(--o-horizontal-padding);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+}
+.o_theme .o_cp_start { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 280px; }
+.o_theme .o_cp_end { display: flex; align-items: center; gap: 10px; margin-inline-start: auto; }
+.o_theme .o_breadcrumb { display: flex; align-items: center; gap: 6px; font-size: var(--o-font-size-sm); }
+.o_theme .o_breadcrumb a { color: var(--o-main-color-muted); text-decoration: none; }
+.o_theme .o_breadcrumb a:hover { color: var(--o-action); }
+.o_theme .o_breadcrumb .o_sep { color: var(--o-gray-400); }
+.o_theme .o_breadcrumb .o_active { font-size: 17px; font-weight: var(--o-font-weight-bold); }
+
+/* الأزرار */
+.o_theme .btn {
+  border: 1px solid transparent; border-radius: var(--o-border-radius);
+  padding: 4px 12px; font-size: var(--o-font-size-sm); font-family: inherit;
+  cursor: pointer; background: none; line-height: 1.5;
+}
+.o_theme .btn-primary { background: var(--o-action); border-color: var(--o-action); color: var(--o-white); }
+.o_theme .btn-primary:hover { filter: brightness(0.92); }
+.o_theme .btn-secondary { border-color: var(--o-gray-400); color: var(--o-gray-800); background: var(--o-white); }
+.o_theme .btn-secondary:hover { background: var(--o-gray-100); }
+.o_theme .btn-link { color: var(--o-action); padding: 4px 6px; }
+.o_theme .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* حقل البحث بالرقائق (facets) — علامة أودو المميّزة */
+.o_theme .o_searchview {
+  flex: 1; min-width: 220px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  border: 1px solid var(--o-border-color); border-radius: var(--o-border-radius);
+  padding: 2px 8px; background: var(--o-white);
+}
+.o_theme .o_searchview:focus-within { border-color: var(--o-action); }
+.o_theme .o_searchview_icon { color: var(--o-gray-500); font-size: 12px; }
+.o_theme .o_facet {
+  display: inline-flex; align-items: stretch; border-radius: var(--o-border-radius-sm);
+  overflow: hidden; font-size: var(--o-font-size-xs); border: 1px solid var(--o-action);
+}
+.o_theme .o_facet_key { background: var(--o-action); color: var(--o-white); padding: 1px 6px; font-weight: 500; }
+.o_theme .o_facet_val { background: var(--o-white); color: var(--o-gray-800); padding: 1px 6px; }
+.o_theme .o_searchview input {
+  border: 0; outline: 0; flex: 1; min-width: 80px; font-family: inherit;
+  font-size: var(--o-font-size-sm); padding: 3px 0; background: transparent;
+}
+.o_theme .o_pager { font-size: var(--o-font-size-sm); color: var(--o-gray-700); white-space: nowrap; }
+.o_theme .o_switch_view {
+  display: flex; border: 1px solid var(--o-border-color);
+  border-radius: var(--o-border-radius); overflow: hidden;
+}
+.o_theme .o_switch_view button {
+  border: 0; background: var(--o-white); padding: 4px 9px; cursor: pointer;
+  color: var(--o-gray-600); font-family: inherit; font-size: 12px;
+}
+.o_theme .o_switch_view button.active { background: var(--o-gray-200); color: var(--o-gray-900); }
+
+/* ─── عرض القائمة  o_list_view ─────────────────────────────────────────── */
+.o_theme .o_list_view { width: 100%; border-collapse: collapse; background: var(--o-view-background); }
+.o_theme .o_list_scroll { overflow-x: auto; }  /* 360px: تمرير الجدول أفقيًّا داخل الحاوية بدل قصّه */
+.o_theme .o_list_view th {
+  text-align: start; font-size: var(--o-font-size-xs); font-weight: var(--o-font-weight-bold);
+  color: var(--o-gray-700); padding: 0.5rem 0.3rem; border-bottom: 1px solid var(--o-gray-400);
+  white-space: nowrap; cursor: pointer;
+}
+.o_theme .o_list_view th:first-child,
+.o_theme .o_list_view td:first-child { padding-inline-start: var(--o-horizontal-padding); }
+.o_theme .o_list_view th:last-child,
+.o_theme .o_list_view td:last-child { padding-inline-end: var(--o-horizontal-padding); }
+.o_theme .o_list_view td {
+  padding: 0.5rem 0.3rem; font-size: var(--o-font-size-sm);
+  border-bottom: 1px solid var(--o-gray-200); white-space: nowrap;
+}
+.o_theme .o_list_view tbody tr:hover { background: var(--o-gray-100); cursor: pointer; }
+.o_theme .o_list_number { text-align: end; font-variant-numeric: tabular-nums; }  /* R8 */
+.o_theme .o_list_view tfoot td {
+  font-weight: var(--o-font-weight-bold); background: transparent;
+  border-top: 1px solid var(--o-gray-400); border-bottom: 0;
+}
+/* تلوين الصفوف كما في decoration-* بأودو */
+.o_theme .decoration-muted { color: var(--o-main-color-muted); }
+.o_theme .decoration-danger { color: var(--o-text-danger); }
+.o_theme .decoration-bf { font-weight: var(--o-font-weight-bold); }
+
+/* شارات الحالة  o_badge */
+.o_theme .o_badge {
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-size: 11px; font-weight: 500; line-height: 1.5;
+}
+.o_theme .o_badge-draft { background: var(--o-badge-draft-bg); color: var(--o-gray-700); }
+.o_theme .o_badge-progress { background: var(--o-badge-info-bg); color: var(--o-text-info); }
+.o_theme .o_badge-done { background: var(--o-badge-success-bg); color: var(--o-text-success); }
+.o_theme .o_badge-warn { background: var(--o-badge-warning-bg); color: var(--o-text-warning); }
+.o_theme .o_badge-danger { background: var(--o-badge-danger-bg); color: var(--o-text-danger); }
+
+/* ─── عرض النموذج  o_form_view — الورقة فوق خلفية رمادية ───────────────── */
+.o_theme .o_form_view { background: var(--o-sheet-background); padding: 16px 0 24px; }
+.o_theme .o_form_sheet {
+  max-width: 1140px; margin: 0 auto; background: var(--o-white);
+  border: 1px solid var(--o-gray-300); border-radius: var(--o-border-radius);
+  box-shadow: var(--o-shadow-card);
+}
+.o_theme .o_form_statusbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: var(--o-statusbar-height); padding: 6px var(--o-horizontal-padding);
+  border-bottom: 1px solid var(--o-gray-300); flex-wrap: wrap;
+}
+.o_theme .o_statusbar_buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+/* أشرطة المراحل السهمية — تنقلب تلقائيًّا في RTL بفضل margin-inline */
+.o_theme .o_statusbar_status { display: flex; overflow-x: auto; }  /* 360px: تمرير المراحل بدل قصّها */
+.o_theme .o_arrow {
+  position: relative; background: var(--o-gray-200); color: var(--o-gray-700); /* R10: تباين ≥4.5:1 على gray-200 */
+  font-size: var(--o-font-size-xs); padding: 3px 16px 3px 22px; margin-inline-start: -8px;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%);
+}
+.o_theme .o_arrow:first-child {
+  margin-inline-start: 0;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%);
+}
+.o_theme .o_arrow.done { background: var(--o-arrow-done-bg); color: var(--o-arrow-done-text); }
+.o_theme .o_arrow.active { background: var(--o-action); color: var(--o-white); font-weight: 500; }
+
+/* أزرار الإحصاء  o_stat_button */
+.o_theme .o_button_box { display: flex; gap: 6px; flex-wrap: wrap; padding: 12px var(--o-horizontal-padding) 0; }
+.o_theme .o_stat_button {
+  min-height: var(--o-statbutton-height); min-width: 120px; text-align: start;
+  border: 1px solid var(--o-gray-300); border-radius: var(--o-border-radius);
+  background: var(--o-white); padding: 6px 10px; cursor: pointer; font-family: inherit;
+}
+.o_theme .o_stat_button:hover { border-color: var(--o-action); color: var(--o-action); }
+.o_theme .o_stat_value { display: block; font-size: 16px; font-weight: var(--o-font-weight-bold); font-variant-numeric: tabular-nums; }
+.o_theme .o_stat_text { display: block; font-size: var(--o-font-size-xs); color: var(--o-gray-600); }
+
+.o_theme .o_form_body { padding: 8px var(--o-horizontal-padding) var(--o-horizontal-padding); }
+.o_theme .o_form_title { font-size: 26px; font-weight: var(--o-font-weight-bold); margin: 8px 0 2px; }
+.o_theme .o_form_subtitle { font-size: var(--o-font-size-sm); color: var(--o-main-color-muted); margin-bottom: 16px; }
+
+/* مجموعات الحقول: عمودان، التسمية أصغر بمعامل 0.8 (R5) */
+.o_theme .o_group { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; margin-top: 8px; }
+.o_theme .o_inner_group { display: grid; grid-template-columns: minmax(90px, 180px) 1fr; align-items: baseline; gap: 0 8px; }
+.o_theme .o_form_label {
+  font-size: calc(var(--o-font-size-base) * var(--o-label-font-size-factor));
+  color: var(--o-gray-700); font-weight: 500; padding: 5px 0; white-space: nowrap;
+}
+.o_theme .o_field { padding: 4px 0; border-bottom: 1px dotted transparent; font-size: var(--o-font-size-sm); }
+.o_theme .o_field.editable { border-bottom-color: var(--o-gray-400); }
+.o_theme .o_field.required { border-bottom: 1px solid var(--o-brand-primary); }
+.o_theme .o_field_link { color: var(--o-action); text-decoration: none; }
+.o_theme .o_field_link:hover { text-decoration: underline; }
+
+/* الدفتر  o_notebook */
+.o_theme .o_notebook { margin-top: 22px; }
+.o_theme .o_notebook_headers { display: flex; gap: 2px; border-bottom: 1px solid var(--o-gray-300); }
+.o_theme .o_notebook_headers button {
+  border: 0; background: none; padding: 8px 14px; cursor: pointer; font-family: inherit;
+  font-size: var(--o-font-size-sm); color: var(--o-gray-600);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.o_theme .o_notebook_headers button.active { color: var(--o-action); border-bottom-color: var(--o-action); font-weight: 500; }
+.o_theme .o_notebook_page { padding-top: 10px; }
+.o_theme .o_notebook_page[hidden] { display: none; }
+
+/* المحادثة  o_chatter */
+.o_theme .o_chatter { max-width: 1140px; margin: 16px auto 0; padding: 0 4px; }
+.o_theme .o_chatter_topbar { display: flex; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--o-gray-300); }
+.o_theme .o_message { display: flex; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--o-gray-200); }
+.o_theme .o_message_avatar {
+  width: 32px; height: 32px; border-radius: 50%; flex: none;
+  background: var(--o-gray-300); display: grid; place-items: center; font-size: 12px;
+  font-weight: 700; color: var(--o-gray-700);
+}
+.o_theme .o_message_author { font-weight: var(--o-font-weight-bold); font-size: var(--o-font-size-sm); }
+.o_theme .o_message_date { font-size: var(--o-font-size-xs); color: var(--o-main-color-muted); margin-inline-start: 6px; }
+.o_theme .o_message_body { font-size: var(--o-font-size-sm); margin-top: 2px; }
+.o_theme .o_tracking { font-size: var(--o-font-size-xs); color: var(--o-gray-700); margin-top: 6px; }
+.o_theme .o_tracking span { color: var(--o-gray-900); font-weight: 500; }
+
+/* ─── عرض كانبان  o_kanban ─────────────────────────────────────────────── */
+.o_theme .o_kanban_view { display: flex; gap: 12px; padding: 16px; background: var(--o-gray-100); overflow-x: auto; }
+.o_theme .o_kanban_group { flex: 0 0 250px; }
+.o_theme .o_kanban_header {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: var(--o-font-size-sm); font-weight: var(--o-font-weight-bold); padding: 4px 2px 10px;
+}
+.o_theme .o_kanban_count { background: var(--o-gray-300); border-radius: 10px; padding: 0 8px; font-size: 11px; color: var(--o-gray-800); }
+.o_theme .o_kanban_record {
+  background: var(--o-white); border: 1px solid var(--o-gray-300); border-radius: var(--o-border-radius);
+  padding: 10px; margin-bottom: 8px; box-shadow: var(--o-shadow-sm); cursor: pointer;
+}
+.o_theme .o_kanban_record.o_current { border-inline-start: 3px solid var(--o-action); }
+.o_theme .o_kanban_record:hover { box-shadow: var(--o-shadow-card-hover); }
+.o_theme .o_kanban_title { font-weight: var(--o-font-weight-bold); font-size: var(--o-font-size-sm); }
+.o_theme .o_kanban_sub { font-size: var(--o-font-size-xs); color: var(--o-main-color-muted); margin-top: 2px; }
+.o_theme .o_kanban_footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.o_theme .o_kanban_empty {
+  border: 1px dashed var(--o-gray-400); border-radius: var(--o-border-radius);
+  padding: 18px; text-align: center; font-size: var(--o-font-size-xs); color: var(--o-gray-700); /* R10: تباين */
+}
+.o_theme .o_priority { color: var(--o-favorite); font-size: 13px; }
+
+/* ─── صفحة الأنماط: مساعِدات عرض ───────────────────────────────────────── */
+.o_theme .o_sg_label {
+  padding: 22px var(--o-horizontal-padding) 6px; font-size: var(--o-font-size-xs);
+  font-weight: var(--o-font-weight-bold); letter-spacing: 0.04em; color: var(--o-gray-600);
+}
+.o_theme .o_sg_note { padding: 4px var(--o-horizontal-padding) 12px; font-size: var(--o-font-size-sm); color: var(--o-gray-700); }
+.o_theme .o_sg_swatches { display: flex; flex-wrap: wrap; gap: 10px; padding: 4px var(--o-horizontal-padding) 16px; }
+.o_theme .o_sg_swatch { display: flex; align-items: center; gap: 8px; font-size: var(--o-font-size-xs); color: var(--o-gray-700); }
+.o_theme .o_sg_chip { width: 26px; height: 26px; border-radius: var(--o-border-radius-sm); border: 1px solid rgba(0, 0, 0, 0.15); }
+
+@media (max-width: 820px) {
+  .o_theme .o_group { grid-template-columns: 1fr; }
+  .o_theme .o_menu_sections { display: none; }
+}
+
+/* R10 — احترام تفضيل تقليل الحركة */
+@media (prefers-reduced-motion: reduce) {
+  .o_theme *, .o_theme *::before, .o_theme *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

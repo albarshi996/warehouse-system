@@ -1,0 +1,22 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import ReceiptsPilot from '../../components/odoo/ReceiptsPilot.jsx';
+/*
+ * /dashboard/receipts — شاشة «أوامر الاستلام» التجريبية (D4).
+ * قائمة + نموذج بأسلوب أودو الكامل، ببيانات تمثيلية (القسم ٣ يستثني تدفّق
+ * البيانات). نموذج الاعتماد قبل التعميم على باقي الوحدات (طلب منفصل).
+ */
+---
+
+<DashboardLayout title="أوامر الاستلام — الشاشة التجريبية" showGuide={false}>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-white mb-1">أوامر الاستلام — الشاشة التجريبية</h1>
+    <p class="text-sm text-gray-300 mb-5 leading-relaxed">
+      نموذج اعتماد نظام التصميم على شاشة واحدة (قائمة + نموذج) ببيانات تمثيلية —
+      قالبٌ للاعتماد قبل التعميم على باقي الوحدات.
+    </p>
+    <ReceiptsPilot client:load />
+  </div>
+</DashboardLayout>
