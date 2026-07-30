@@ -7,10 +7,10 @@
 import { fieldValue } from '../../../services/documents/schemaUtils.js';
 
 const BASE =
-  'w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white ' +
-  'placeholder:text-gray-500 focus:outline-none focus:border-brand-gold/60 disabled:opacity-60';
+  'w-full bg-chip border border-line rounded-lg px-3 py-2 text-sm text-ink ' +
+  'placeholder:text-gray-500 focus:outline-none focus:border-accent/60 disabled:opacity-60';
 
-const READONLY = 'w-full bg-brand-gold/10 border border-brand-gold/30 rounded-lg px-3 py-2 text-sm text-brand-gold font-bold';
+const READONLY = 'w-full bg-accent/10 border border-accent/30 rounded-lg px-3 py-2 text-sm text-accent font-bold';
 
 export default function FieldInput({ field, doc, onChange, disabled, violation }) {
   const value = fieldValue(field, doc);
@@ -21,7 +21,7 @@ export default function FieldInput({ field, doc, onChange, disabled, violation }
       <Wrap field={field}>
         <div className={READONLY}>
           {value === '' || value == null ? '—' : String(value)}
-          {field.kind === 'computed' && <span className="text-[10px] text-brand-gold/60 mr-2">محسوب</span>}
+          {field.kind === 'computed' && <span className="text-[10px] text-accent/60 mr-2">محسوب</span>}
         </div>
       </Wrap>
     );
@@ -35,9 +35,9 @@ export default function FieldInput({ field, doc, onChange, disabled, violation }
           checked={Boolean(value)}
           disabled={disabled}
           onChange={(e) => onChange(field.key, e.target.checked)}
-          className="w-4 h-4 accent-brand-gold"
+          className="w-4 h-4 accent-accent"
         />
-        <span className="text-sm text-gray-200">{field.label}</span>
+        <span className="text-sm text-ink-2">{field.label}</span>
       </label>
     );
   }
@@ -53,7 +53,7 @@ export default function FieldInput({ field, doc, onChange, disabled, violation }
         >
           <option value="">— اختر —</option>
           {(field.options || []).map((o) => (
-            <option key={o} value={o} className="bg-brand-navy">
+            <option key={o} value={o} className="bg-surface">
               {o}
             </option>
           ))}
@@ -95,7 +95,7 @@ export default function FieldInput({ field, doc, onChange, disabled, violation }
 function Wrap({ field, violation, children }) {
   return (
     <div>
-      <label className="block text-xs font-bold text-gray-300 mb-1.5">
+      <label className="block text-xs font-bold text-ink-2 mb-1.5">
         {field.label}
         {field.required && <span className="text-brand-red mr-1">*</span>}
       </label>

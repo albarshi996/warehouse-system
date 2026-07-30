@@ -509,6 +509,17 @@ html.bz-light .bz-text-body    { color: #495057 !important; }
 html.bz-light .bz-text-heading { color: #212529 !important; }
 html.bz-light .bz-text-accent  { color: #714B67 !important; }
 
+/* درجات ألوان الحالة المكتوبة للداكن (red-200/green-300/yellow-400…) لا تقرأ
+   على الأبيض — تُعتَّم هنا لدرجةٍ مكافئةٍ دون لمس مظهر الصفحات الداكنة */
+html.bz-light .text-red-200,
+html.bz-light .text-red-300,
+html.bz-light .text-red-400 { color: #b02a37 !important; }
+html.bz-light .text-green-300,
+html.bz-light .text-green-400 { color: #1e7c47 !important; }
+html.bz-light .text-yellow-400,
+html.bz-light .text-amber-400,
+html.bz-light .text-yellow-300 { color: #9a6b01 !important; }
+
 /* شريط التمرير الفاتح */
 html.bz-light ::-webkit-scrollbar-track { background: #f1f1f4; }
 html.bz-light ::-webkit-scrollbar-thumb { background: #ced4da; }

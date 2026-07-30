@@ -96,8 +96,8 @@ export default function PartnerMaster({ kind = 'supplier' }) {
     <div className="text-right" dir="rtl">
       <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-white">إدارة {cfg.title}</h2>
-          <p className="text-gray-300 mt-1 text-sm">
+          <h2 className="text-2xl sm:text-3xl font-bold text-ink">إدارة {cfg.title}</h2>
+          <p className="text-ink-2 mt-1 text-sm">
             {cfg.codeLabel} (BP Code) هو المعرّف الفريد. لا حذف — أرشفة فقط، فشريكٌ استُعمل في مستندٍ يبقى أثره.
           </p>
         </div>
@@ -109,7 +109,7 @@ export default function PartnerMaster({ kind = 'supplier' }) {
                 setImporting((v) => !v);
                 setEditor(null);
               }}
-              className="inline-flex items-center gap-2 rounded-lg border-2 border-brand-gold text-brand-gold px-4 py-2 font-bold hover:bg-brand-gold hover:text-black active:scale-95 transition-all"
+              className="inline-flex items-center gap-2 rounded-lg border-2 border-accent text-accent px-4 py-2 font-bold hover:bg-accent hover:text-black active:scale-95 transition-all"
             >
               <Icon name="arrowDownTray" size={16} /> استيراد {cfg.title}
             </button>
@@ -182,24 +182,24 @@ export default function PartnerMaster({ kind = 'supplier' }) {
         </div>
       )}
 
-      <div className="bg-black/20 rounded-xl border border-white/10 overflow-hidden">
-        <div className="p-4 border-b border-white/10 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div className="bg-surface rounded-xl border border-line overflow-hidden">
+        <div className="p-4 border-b border-line flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <input
             type="search"
             placeholder={`بحث بالرمز أو الاسم أو المفوّض أو الهاتف…`}
-            className="flex-1 md:max-w-md bg-black/30 border border-white/15 rounded-lg p-2 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-gold"
+            className="flex-1 md:max-w-md bg-chip border border-line rounded-lg p-2 text-ink-2 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <label className="inline-flex items-center gap-2 text-sm text-gray-300 select-none">
-            <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} className="accent-brand-gold" />
+          <label className="inline-flex items-center gap-2 text-sm text-ink-2 select-none">
+            <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} className="accent-accent" />
             إظهار المؤرشفين
           </label>
         </div>
 
         <div className="overflow-x-auto w-full">
           <table className="w-full text-right text-sm">
-            <thead className="bg-white/5 text-gray-300">
+            <thead className="bg-chip text-ink-2">
               <tr>
                 <th className="px-4 py-3 font-bold whitespace-nowrap">الرمز</th>
                 <th className="px-4 py-3 font-bold">الاسم</th>
@@ -213,36 +213,36 @@ export default function PartnerMaster({ kind = 'supplier' }) {
             <tbody className="divide-y divide-white/5">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-gray-400 italic">جارٍ الجلب من السحابة…</td>
+                  <td colSpan={7} className="p-8 text-center text-muted italic">جارٍ الجلب من السحابة…</td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-gray-400 italic">
+                  <td colSpan={7} className="p-8 text-center text-muted italic">
                     {rows.length === 0 ? `لا ${cfg.title} بعد. ابدأ بالإضافة أو الاستيراد.` : 'لا نتائج مطابقة.'}
                   </td>
                 </tr>
               ) : (
                 filtered.map((r) => (
                   <tr key={r.code} className={r.archived ? 'opacity-50' : ''}>
-                    <td className="px-4 py-3 font-mono text-brand-gold font-bold whitespace-nowrap">{r.code}</td>
-                    <td className="px-4 py-3 font-medium text-gray-100">{r.nameAr || '—'}</td>
-                    <td className="px-4 py-3 hidden sm:table-cell text-gray-300">{r.contactPerson || '—'}</td>
-                    <td className="px-4 py-3 hidden md:table-cell text-gray-300 font-mono text-xs" style={{ direction: 'ltr', textAlign: 'right' }}>{r.phone || '—'}</td>
-                    <td className="px-4 py-3 hidden lg:table-cell text-gray-300">{r.category || '—'}</td>
-                    <td className="px-4 py-3 font-bold text-gray-100 whitespace-nowrap">{money(r.accountBalance)}</td>
+                    <td className="px-4 py-3 font-mono text-accent font-bold whitespace-nowrap">{r.code}</td>
+                    <td className="px-4 py-3 font-medium text-ink-2">{r.nameAr || '—'}</td>
+                    <td className="px-4 py-3 hidden sm:table-cell text-ink-2">{r.contactPerson || '—'}</td>
+                    <td className="px-4 py-3 hidden md:table-cell text-ink-2 font-mono text-xs" style={{ direction: 'ltr', textAlign: 'right' }}>{r.phone || '—'}</td>
+                    <td className="px-4 py-3 hidden lg:table-cell text-ink-2">{r.category || '—'}</td>
+                    <td className="px-4 py-3 font-bold text-ink-2 whitespace-nowrap">{money(r.accountBalance)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
                         <button
                           type="button"
                           onClick={() => setEditor({ mode: 'edit', row: r })}
-                          className="text-xs font-bold text-brand-gold border border-brand-gold rounded-md px-3 py-1 hover:bg-brand-gold hover:text-black transition-colors"
+                          className="text-xs font-bold text-accent border border-accent rounded-md px-3 py-1 hover:bg-accent hover:text-black transition-colors"
                         >
                           تعديل
                         </button>
                         {r.archived ? (
                           <button type="button" onClick={() => handleUnarchive(r)} className="text-xs font-bold text-green-300 border border-green-500/40 rounded-md px-3 py-1 hover:bg-green-600 hover:text-white transition-colors">استعادة</button>
                         ) : (
-                          <button type="button" onClick={() => handleArchive(r)} className="text-xs font-bold text-gray-400 border border-white/15 rounded-md px-3 py-1 hover:bg-gray-600 hover:text-white transition-colors">أرشفة</button>
+                          <button type="button" onClick={() => handleArchive(r)} className="text-xs font-bold text-muted border border-line rounded-md px-3 py-1 hover:bg-gray-600 hover:text-white transition-colors">أرشفة</button>
                         )}
                       </div>
                     </td>
@@ -307,8 +307,8 @@ function PartnerForm({ kind, cfg, mode, row, onSaved, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-black/25 p-4 sm:p-6 rounded-xl border border-white/10" dir="rtl">
-      <h3 className="text-lg font-bold text-brand-gold mb-4">{mode === 'create' ? `إضافة ${cfg.one}` : `تعديل ${cfg.one} ${row?.code || ''}`}</h3>
+    <form onSubmit={handleSubmit} className="bg-surface p-4 sm:p-6 rounded-xl border border-line" dir="rtl">
+      <h3 className="text-lg font-bold text-accent mb-4">{mode === 'create' ? `إضافة ${cfg.one}` : `تعديل ${cfg.one} ${row?.code || ''}`}</h3>
       {err && <div className="mb-4 p-3 rounded-lg bg-red-500/15 text-red-200 border border-red-500/30 text-sm font-bold">{err}</div>}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Field label={`${cfg.codeLabel} (BP Code) *`}>
@@ -330,12 +330,12 @@ function PartnerForm({ kind, cfg, mode, row, onSaved, onCancel }) {
         ))}
       </div>
       <div className="flex flex-col sm:flex-row gap-3 sm:justify-end pt-5">
-        <button type="button" onClick={onCancel} className="px-4 py-2 rounded font-bold text-gray-300 border border-white/15 hover:bg-white/5 transition-colors">إلغاء</button>
+        <button type="button" onClick={onCancel} className="px-4 py-2 rounded font-bold text-ink-2 border border-line hover:bg-chip transition-colors">إلغاء</button>
         <button type="submit" disabled={busy} className="px-6 py-2 rounded bg-brand-red text-white font-bold shadow hover:opacity-90 active:scale-95 transition-all disabled:opacity-50">
           {busy ? 'جارٍ الحفظ…' : mode === 'create' ? 'إضافة' : 'حفظ التعديلات'}
         </button>
       </div>
-      <style>{`.fld{width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:.5rem;padding:.5rem .65rem;color:#f3f4f6}.fld:focus{outline:none;box-shadow:0 0 0 2px var(--brand-gold,#f0a500)}`}</style>
+      <style>{`.fld{width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:.5rem;padding:.5rem .65rem;color:#f3f4f6}.fld:focus{outline:none;box-shadow:0 0 0 2px var(--accent,#f0a500)}`}</style>
     </form>
   );
 }
@@ -343,7 +343,7 @@ function PartnerForm({ kind, cfg, mode, row, onSaved, onCancel }) {
 function Field({ label, children }) {
   return (
     <label className="block">
-      <span className="block text-xs font-bold text-gray-300 mb-1">{label}</span>
+      <span className="block text-xs font-bold text-ink-2 mb-1">{label}</span>
       {children}
     </label>
   );
@@ -395,13 +395,13 @@ function PartnerImport({ kind, cfg, onDone, onCancel }) {
   const toWrite = plan ? plan.created.length + plan.updated.length : 0;
 
   return (
-    <div className="bg-black/25 p-4 sm:p-6 rounded-xl border border-white/10" dir="rtl">
-      <h3 className="text-lg font-bold text-brand-gold flex items-center gap-2"><Icon name="arrowDownTray" size={18} /> استيراد شيت {cfg.title}</h3>
-      <p className="text-xs text-gray-400 mt-1 mb-4">
+    <div className="bg-surface p-4 sm:p-6 rounded-xl border border-line" dir="rtl">
+      <h3 className="text-lg font-bold text-accent flex items-center gap-2"><Icon name="arrowDownTray" size={18} /> استيراد شيت {cfg.title}</h3>
+      <p className="text-xs text-muted mt-1 mb-4">
         الأعمدة تُطابَق تلقائيًّا بمرادفات عربية/إنجليزية (BP Code · BP Name · المفوّض · الهاتف · الأرصدة…). لا يُكتب شيء قبل أن تراجع المعاينة وتؤكّد.
       </p>
 
-      <label className="inline-flex items-center gap-2 cursor-pointer rounded-lg border-2 border-dashed border-white/20 px-4 py-2.5 text-sm font-bold text-gray-300 hover:border-brand-gold hover:text-brand-gold transition-colors">
+      <label className="inline-flex items-center gap-2 cursor-pointer rounded-lg border-2 border-dashed border-line px-4 py-2.5 text-sm font-bold text-ink-2 hover:border-accent hover:text-accent transition-colors">
         <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFile} disabled={analyzing || committing} />
         {analyzing ? 'جارٍ تحليل الملف…' : 'اختر ملف Excel'}
       </label>
@@ -445,12 +445,12 @@ function PartnerImport({ kind, cfg, onDone, onCancel }) {
           )}
 
           {plan.updated.length > 0 && (
-            <div className="p-3 rounded-lg border border-white/10 bg-white/5">
-              <p className="text-sm font-bold text-gray-200 mb-2">ما سيتغيّر على شركاء قائمين (عيّنة):</p>
-              <ul className="text-xs text-gray-400 space-y-1 max-h-40 overflow-y-auto">
+            <div className="p-3 rounded-lg border border-line bg-chip">
+              <p className="text-sm font-bold text-ink-2 mb-2">ما سيتغيّر على شركاء قائمين (عيّنة):</p>
+              <ul className="text-xs text-muted space-y-1 max-h-40 overflow-y-auto">
                 {plan.updated.slice(0, 6).map((row) => (
                   <li key={row.code}>
-                    <b className="font-mono text-brand-gold">{row.code}</b>
+                    <b className="font-mono text-accent">{row.code}</b>
                     {row._diff?.slice(0, 3).map((d) => (<span key={d.field} className="mr-2">· {d.labelAr}: «{String(d.before) || '—'}» ← «{String(d.after)}»</span>))}
                   </li>
                 ))}
@@ -460,7 +460,7 @@ function PartnerImport({ kind, cfg, onDone, onCancel }) {
           )}
 
           <div className="flex flex-col sm:flex-row gap-3 sm:justify-end pt-1">
-            <button type="button" onClick={onCancel} className="px-4 py-2 rounded font-bold text-gray-300 border border-white/15 hover:bg-white/5 transition-colors">إغلاق</button>
+            <button type="button" onClick={onCancel} className="px-4 py-2 rounded font-bold text-ink-2 border border-line hover:bg-chip transition-colors">إغلاق</button>
             <button
               type="button"
               onClick={handleCommit}
@@ -479,7 +479,7 @@ function PartnerImport({ kind, cfg, onDone, onCancel }) {
 const TONES = {
   green: 'bg-green-500/10 border-green-500/30 text-green-200',
   amber: 'bg-amber-500/10 border-amber-500/30 text-amber-200',
-  gray: 'bg-white/5 border-white/10 text-gray-300',
+  gray: 'bg-chip border-line text-ink-2',
   red: 'bg-red-500/10 border-red-500/30 text-red-200',
 };
 
@@ -494,9 +494,9 @@ function Stat({ label, value, tone }) {
 
 function SummaryTile({ label, value, gold }) {
   return (
-    <div className={`rounded-xl border p-3 text-center ${gold ? 'bg-amber-500/10 border-amber-500/30' : 'bg-black/20 border-white/10'}`}>
-      <p className={`text-lg font-bold ${gold ? 'text-brand-gold' : 'text-white'}`}>{value}</p>
-      <p className="text-[11px] text-gray-400 mt-0.5">{label}</p>
+    <div className={`rounded-xl border p-3 text-center ${gold ? 'bg-amber-500/10 border-amber-500/30' : 'bg-surface border-line'}`}>
+      <p className={`text-lg font-bold ${gold ? 'text-accent' : 'text-ink'}`}>{value}</p>
+      <p className="text-[11px] text-muted mt-0.5">{label}</p>
     </div>
   );
 }

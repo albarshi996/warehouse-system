@@ -71,7 +71,7 @@ export default function ProcurementKpis() {
   }, [docs]);
   const windowIncomplete = truncated && oldestMs != null && oldestMs > nowMs - KPI_WINDOW_DAYS * DAY_MS;
 
-  if (!ready) return <p className="text-gray-300 text-sm py-10 text-center">جارٍ التحميل…</p>;
+  if (!ready) return <p className="text-ink-2 text-sm py-10 text-center">جارٍ التحميل…</p>;
   if (!me) return <Notice>افتح الصفحة بعد تسجيل الدخول.</Notice>;
 
   const base = getBasePath();
@@ -128,7 +128,7 @@ export default function ProcurementKpis() {
       {/* ── الموردون: الإنفاق والتركّز ── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-sm font-bold text-white">الموردون — الإنفاق والتركّز</h2>
+          <h2 className="text-sm font-bold text-ink">الموردون — الإنفاق والتركّز</h2>
           <span className="text-[11px] text-gray-500">لآخر ١٢ شهرًا · من أوامر الشراء المُصدَرة</span>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -146,8 +146,8 @@ export default function ProcurementKpis() {
             color={tone(spend.top5Concentration, 0.6, 0.8, true)}
             basis={spend.top5Spend ? `${money(spend.top5Spend)} من ${money(spend.totalSpend)}` : '—'}
           />
-          <div className="rounded-2xl bg-black/20 border border-white/5 p-4 sm:col-span-2">
-            <div className="text-sm font-bold text-gray-100 mb-2">أكبر الموردين إنفاقًا</div>
+          <div className="rounded-2xl bg-surface border border-line p-4 sm:col-span-2">
+            <div className="text-sm font-bold text-ink-2 mb-2">أكبر الموردين إنفاقًا</div>
             {spend.suppliers.length === 0 ? (
               <p className="text-[11px] text-gray-500 py-2">لا أوامر شراء مُصدَرة بعد — يظهر الترتيب فور اعتماد أوّل أمر.</p>
             ) : (
@@ -155,11 +155,11 @@ export default function ProcurementKpis() {
                 {spend.suppliers.slice(0, 6).map((s) => (
                   <div key={s.key}>
                     <div className="flex items-center justify-between text-[11px] mb-0.5">
-                      <span className="text-gray-200 font-bold truncate">{s.name}</span>
-                      <span className="text-gray-400 flex-shrink-0">{money(s.spend)} · {pct(s.share)}</span>
+                      <span className="text-ink-2 font-bold truncate">{s.name}</span>
+                      <span className="text-muted flex-shrink-0">{money(s.spend)} · {pct(s.share)}</span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
-                      <div className="h-full rounded-full bg-brand-gold" style={{ width: `${Math.round((s.share || 0) * 100)}%` }} />
+                    <div className="h-1.5 rounded-full bg-chip overflow-hidden">
+                      <div className="h-full rounded-full bg-accent" style={{ width: `${Math.round((s.share || 0) * 100)}%` }} />
                     </div>
                   </div>
                 ))}
@@ -170,19 +170,19 @@ export default function ProcurementKpis() {
       </div>
 
       {/* ── ملاحظة تفسيرية ── */}
-      <div className="rounded-2xl border border-white/10 bg-black/20 p-4 space-y-2">
-        <p className="text-xs text-gray-300 leading-relaxed">
-          <span className="text-brand-gold font-bold">لماذا هذه المؤشرات؟</span> هي المحوران الرابع والخامس في مقابلة
+      <div className="rounded-2xl border border-line bg-surface p-4 space-y-2">
+        <p className="text-xs text-ink-2 leading-relaxed">
+          <span className="text-accent font-bold">لماذا هذه المؤشرات؟</span> هي المحوران الرابع والخامس في مقابلة
           تقييم السلاسل — «الأداء والمؤشرات» و«الموردون». وكلٌّ منها مردودٌ إلى مستنده: مدة الدورة من طوابع الطلب والأمر،
           ومهلة التوريد من الأمر والاستلام، والالتزام من تاريخ التسليم المطلوب، وإنفاق الموردين وتركّزه من صافي أوامر الشراء.
-          <span className="text-gray-400"> الإنفاق والتركّز محسوبان من أوامر الشراء الحالية (المورّد حقلٌ عليها)؛ ماستر
+          <span className="text-muted"> الإنفاق والتركّز محسوبان من أوامر الشراء الحالية (المورّد حقلٌ عليها)؛ ماستر
           الموردين الكامل (استيراد + بطاقة لكلّ مورّد) هو الخطوة التالية.</span>
         </p>
         <p className="text-[11px] text-gray-500 leading-relaxed">
-          ملاحظة صدقٍ: <span className="text-gray-300">التزام الموردين (OTD)</span> هنا يقيس التزام <span className="text-gray-300">مورّدينا</span> —
-          وهو غير <span className="text-gray-300">OTIF الأسطول</span> في لوحة سلاسل الإمداد الذي يقيس التزام <span className="text-gray-300">شاحناتنا</span>.
+          ملاحظة صدقٍ: <span className="text-ink-2">التزام الموردين (OTD)</span> هنا يقيس التزام <span className="text-ink-2">مورّدينا</span> —
+          وهو غير <span className="text-ink-2">OTIF الأسطول</span> في لوحة سلاسل الإمداد الذي يقيس التزام <span className="text-ink-2">شاحناتنا</span>.
           للمؤشرات التشغيلية الأربعة (التنفيذ · دورة البيع · دقّة المخزون · دقّة التسليم) انظر{' '}
-          <a href={`${base}/dashboard/command-center`} className="text-brand-gold hover:underline">لوحة القيادة التشغيلية</a>.
+          <a href={`${base}/dashboard/command-center`} className="text-accent hover:underline">لوحة القيادة التشغيلية</a>.
         </p>
       </div>
     </div>
@@ -191,11 +191,11 @@ export default function ProcurementKpis() {
 
 function Kpi({ label, hint, value, color, basis }) {
   return (
-    <div className="rounded-2xl bg-black/20 border border-white/5 p-4">
+    <div className="rounded-2xl bg-surface border border-line p-4">
       <div className="text-3xl font-black" style={{ color }}>{value}</div>
-      <div className="text-sm font-bold text-gray-100 mt-1">{label}</div>
+      <div className="text-sm font-bold text-ink-2 mt-1">{label}</div>
       <div className="text-[10px] text-gray-500 mt-0.5">{hint}</div>
-      <div className="text-[10px] text-gray-400 mt-2 border-t border-white/5 pt-2">{basis}</div>
+      <div className="text-[10px] text-muted mt-2 border-t border-line pt-2">{basis}</div>
     </div>
   );
 }

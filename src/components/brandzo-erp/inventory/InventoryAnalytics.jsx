@@ -58,8 +58,8 @@ export default function InventoryAnalytics() {
     [items, moves, nowMs, stagnantDays],
   );
 
-  if (!ready) return <p className="text-gray-400 text-sm">جارٍ التحميل…</p>;
-  if (!me) return <p className="text-gray-400 text-sm">يلزم تسجيل الدخول.</p>;
+  if (!ready) return <p className="text-muted text-sm">جارٍ التحميل…</p>;
+  if (!me) return <p className="text-muted text-sm">يلزم تسجيل الدخول.</p>;
 
   const stagnantHigh = summary.stagnantShare != null && summary.stagnantShare >= 0.25;
 
@@ -80,17 +80,17 @@ export default function InventoryAnalytics() {
 
       {/* تقييم المخزون بالفئات */}
       <section>
-        <h2 className="text-lg font-bold text-white mb-1">تقييم المخزون بالفئات</h2>
-        <p className="text-xs text-gray-400 mb-3">
+        <h2 className="text-lg font-bold text-ink mb-1">تقييم المخزون بالفئات</h2>
+        <p className="text-xs text-muted mb-3">
           القيمة = الرصيد × التكلفة، من ماستر الأصناف.
           {summary.itemsUnpriced > 0 && (
             <span className="text-gray-500"> {' '}({num(summary.itemsUnpriced)} صنفًا بلا تكلفةٍ لا يدخل التقييم.)</span>
           )}
         </p>
-        <div className="overflow-x-auto rounded-2xl border border-white/10">
+        <div className="overflow-x-auto rounded-2xl border border-line">
           <table className="w-full text-sm text-right border-collapse min-w-[420px]">
             <thead>
-              <tr className="text-gray-300 border-b border-white/15 text-[11px] bg-white/5">
+              <tr className="text-ink-2 border-b border-line text-[11px] bg-chip">
                 <th className="p-3 font-bold">الفئة</th>
                 <th className="p-3 font-bold">عدد الأصناف</th>
                 <th className="p-3 font-bold">القيمة</th>
@@ -99,11 +99,11 @@ export default function InventoryAnalytics() {
             </thead>
             <tbody>
               {valuation.categories.map((c) => (
-                <tr key={c.category} className="border-b border-white/5">
-                  <td className="p-3 text-white font-bold">{c.category}</td>
-                  <td className="p-3 text-gray-300">{num(c.count)}</td>
-                  <td className="p-3 text-brand-yellow font-bold">{money(c.value)}</td>
-                  <td className="p-3 text-gray-400">
+                <tr key={c.category} className="border-b border-line">
+                  <td className="p-3 text-ink font-bold">{c.category}</td>
+                  <td className="p-3 text-ink-2">{num(c.count)}</td>
+                  <td className="p-3 text-accent font-bold">{money(c.value)}</td>
+                  <td className="p-3 text-muted">
                     {valuation.total > 0 ? `${Math.round((c.value / valuation.total) * 100)}٪` : '—'}
                   </td>
                 </tr>
@@ -119,19 +119,19 @@ export default function InventoryAnalytics() {
       {/* إعادة الطلب */}
       <section>
         <div className="flex items-baseline justify-between gap-2 mb-1 flex-wrap">
-          <h2 className="text-lg font-bold text-white">مقترحات إعادة الطلب</h2>
-          <span className="text-xs text-gray-400">{num(reorder.count)} صنفًا تحت الحدّ الأدنى</span>
+          <h2 className="text-lg font-bold text-ink">مقترحات إعادة الطلب</h2>
+          <span className="text-xs text-muted">{num(reorder.count)} صنفًا تحت الحدّ الأدنى</span>
         </div>
-        <p className="text-xs text-gray-400 mb-3">
+        <p className="text-xs text-muted mb-3">
           الرصيد ≤ الحدّ الأدنى المعرَّف (`minStock`). الكمية المقترحة تُعيد الرصيد إلى الحدّ.
           {reorder.withoutMin > 0 && (
             <span className="text-gray-500"> {' '}({num(reorder.withoutMin)} صنفًا بلا حدٍّ أدنى — فجوة تغطية، تُضبط في ماستر الأصناف.)</span>
           )}
         </p>
-        <div className="overflow-x-auto rounded-2xl border border-white/10">
+        <div className="overflow-x-auto rounded-2xl border border-line">
           <table className="w-full text-sm text-right border-collapse min-w-[640px]">
             <thead>
-              <tr className="text-gray-300 border-b border-white/15 text-[11px] bg-white/5">
+              <tr className="text-ink-2 border-b border-line text-[11px] bg-chip">
                 <th className="p-3 font-bold">الصنف</th>
                 <th className="p-3 font-bold">الرصيد</th>
                 <th className="p-3 font-bold">الحدّ الأدنى</th>
@@ -141,12 +141,12 @@ export default function InventoryAnalytics() {
             </thead>
             <tbody>
               {reorder.rows.map((r) => (
-                <tr key={r.key} className="border-b border-white/5">
-                  <td className="p-3"><span className="text-white font-bold">{r.nameAr}</span>{r.sku && <span className="text-[10px] text-gray-500 block">{r.sku}</span>}</td>
+                <tr key={r.key} className="border-b border-line">
+                  <td className="p-3"><span className="text-ink font-bold">{r.nameAr}</span>{r.sku && <span className="text-[10px] text-gray-500 block">{r.sku}</span>}</td>
                   <td className="p-3 text-red-400 font-bold">{num(r.balance)} {r.unit}</td>
-                  <td className="p-3 text-gray-300">{num(r.minStock)}</td>
-                  <td className="p-3 text-white font-bold">{num(r.shortfall)}</td>
-                  <td className="p-3 text-brand-yellow">{money(r.orderValue)}</td>
+                  <td className="p-3 text-ink-2">{num(r.minStock)}</td>
+                  <td className="p-3 text-ink font-bold">{num(r.shortfall)}</td>
+                  <td className="p-3 text-accent">{money(r.orderValue)}</td>
                 </tr>
               ))}
               {reorder.rows.length === 0 && (
@@ -160,16 +160,16 @@ export default function InventoryAnalytics() {
       {/* الراكد */}
       <section>
         <div className="flex items-baseline justify-between gap-3 mb-1 flex-wrap">
-          <h2 className="text-lg font-bold text-white">المخزون الراكد</h2>
+          <h2 className="text-lg font-bold text-ink">المخزون الراكد</h2>
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-gray-400">بلا صرفٍ منذ</span>
+            <span className="text-[11px] text-muted">بلا صرفٍ منذ</span>
             {WINDOWS.map((w) => (
               <button
                 key={w}
                 type="button"
                 onClick={() => setStagnantDays(w)}
                 className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all ${
-                  stagnantDays === w ? 'bg-brand-red text-white border-brand-red' : 'bg-white/5 text-gray-300 border-white/15 hover:bg-white/10'
+                  stagnantDays === w ? 'bg-brand-red text-white border-brand-red' : 'bg-chip text-ink-2 border-line hover:bg-surface-2'
                 }`}
               >
                 {w} يومًا
@@ -177,14 +177,14 @@ export default function InventoryAnalytics() {
             ))}
           </div>
         </div>
-        <p className="text-xs text-gray-400 mb-3">
+        <p className="text-xs text-muted mb-3">
           أصنافٌ برصيدٍ موجبٍ وقيمةٍ لم تُصرَف للخارج ضمن النافذة — رأس مالٌ محتجز.
-          إجماليّه <span className="text-white font-bold">{money(stagnant.value)}</span>.
+          إجماليّه <span className="text-ink font-bold">{money(stagnant.value)}</span>.
         </p>
-        <div className="overflow-x-auto rounded-2xl border border-white/10">
+        <div className="overflow-x-auto rounded-2xl border border-line">
           <table className="w-full text-sm text-right border-collapse min-w-[560px]">
             <thead>
-              <tr className="text-gray-300 border-b border-white/15 text-[11px] bg-white/5">
+              <tr className="text-ink-2 border-b border-line text-[11px] bg-chip">
                 <th className="p-3 font-bold">الصنف</th>
                 <th className="p-3 font-bold">الرصيد</th>
                 <th className="p-3 font-bold">القيمة الراقدة</th>
@@ -193,11 +193,11 @@ export default function InventoryAnalytics() {
             </thead>
             <tbody>
               {stagnant.rows.slice(0, 100).map((r) => (
-                <tr key={r.key} className="border-b border-white/5">
-                  <td className="p-3"><span className="text-white font-bold">{r.nameAr}</span>{r.sku && <span className="text-[10px] text-gray-500 block">{r.sku}</span>}</td>
-                  <td className="p-3 text-gray-300">{num(r.balance)} {r.unit}</td>
-                  <td className="p-3 text-brand-yellow font-bold">{money(r.value)}</td>
-                  <td className="p-3 text-gray-400">{r.daysIdle == null ? 'لم يُصرف قطّ' : `${num(r.daysIdle)} يومًا`}</td>
+                <tr key={r.key} className="border-b border-line">
+                  <td className="p-3"><span className="text-ink font-bold">{r.nameAr}</span>{r.sku && <span className="text-[10px] text-gray-500 block">{r.sku}</span>}</td>
+                  <td className="p-3 text-ink-2">{num(r.balance)} {r.unit}</td>
+                  <td className="p-3 text-accent font-bold">{money(r.value)}</td>
+                  <td className="p-3 text-muted">{r.daysIdle == null ? 'لم يُصرف قطّ' : `${num(r.daysIdle)} يومًا`}</td>
                 </tr>
               ))}
               {stagnant.rows.length === 0 && (
@@ -219,9 +219,9 @@ export default function InventoryAnalytics() {
 
 function Tile({ v, l, accent = false, warn = false }) {
   return (
-    <div className={`rounded-xl border p-4 text-center ${warn ? 'border-brand-red/40 bg-brand-red/5' : 'border-white/10 bg-white/5'}`}>
-      <div className={`text-xl font-extrabold ${warn ? 'text-red-400' : accent ? 'text-brand-yellow' : 'text-white'}`}>{v}</div>
-      <div className="text-[10px] text-gray-300 mt-1 leading-snug">{l}</div>
+    <div className={`rounded-xl border p-4 text-center ${warn ? 'border-brand-red/40 bg-brand-red/5' : 'border-line bg-chip'}`}>
+      <div className={`text-xl font-extrabold ${warn ? 'text-red-400' : accent ? 'text-accent' : 'text-ink'}`}>{v}</div>
+      <div className="text-[10px] text-ink-2 mt-1 leading-snug">{l}</div>
     </div>
   );
 }

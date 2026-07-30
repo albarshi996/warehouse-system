@@ -20,10 +20,10 @@ export default function Checklist({ section, state, onChange, disabled }) {
     <div>
       {!disabled && (
         <div className="flex flex-wrap items-center gap-3 mb-3">
-          <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-300">
+          <label className="flex items-center gap-2 cursor-pointer text-xs text-ink-2">
             <input
               type="checkbox"
-              className="w-4 h-4 accent-brand-gold"
+              className="w-4 h-4 accent-accent"
               checked={checked === items.length && items.length > 0}
               ref={(el) => {
                 if (el) el.indeterminate = checked > 0 && checked < items.length;
@@ -35,7 +35,7 @@ export default function Checklist({ section, state, onChange, disabled }) {
           <button
             type="button"
             onClick={() => selectAll(false)}
-            className="text-xs text-gray-400 hover:text-white underline underline-offset-2"
+            className="text-xs text-muted hover:text-ink underline underline-offset-2"
           >
             مسح الاختيارات
           </button>
@@ -52,8 +52,8 @@ export default function Checklist({ section, state, onChange, disabled }) {
                 s.checked
                   ? 'bg-green-500/10 border-green-500/30'
                   : s.na
-                    ? 'bg-white/5 border-white/10 opacity-60'
-                    : 'bg-white/5 border-white/10'
+                    ? 'bg-chip border-line opacity-60'
+                    : 'bg-chip border-line'
               }`}
             >
               <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
@@ -64,7 +64,7 @@ export default function Checklist({ section, state, onChange, disabled }) {
                   disabled={disabled}
                   onChange={(e) => set(item.key, { checked: e.target.checked, na: false })}
                 />
-                <span className="text-sm text-gray-200 truncate" title={item.label}>
+                <span className="text-sm text-ink-2 truncate" title={item.label}>
                   {item.label}
                 </span>
               </label>
@@ -83,8 +83,8 @@ export default function Checklist({ section, state, onChange, disabled }) {
         })}
       </div>
 
-      <p className="text-xs text-gray-400 mt-3" aria-live="polite">
-        <strong className="text-brand-gold">
+      <p className="text-xs text-muted mt-3" aria-live="polite">
+        <strong className="text-accent">
           {checked} / {items.length}
         </strong>{' '}
         بنود مطابقة.

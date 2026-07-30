@@ -207,7 +207,7 @@ export default function DocumentEngine() {
       </Notice>
     );
   }
-  if (!ready || !doc) return <p className="text-gray-300 text-sm py-10 text-center">جارٍ التحميل…</p>;
+  if (!ready || !doc) return <p className="text-ink-2 text-sm py-10 text-center">جارٍ التحميل…</p>;
   if (!me) return <Notice tone="err" title="🔒 يلزم تسجيل الدخول">افتح المستند بعد الدخول لتُسجَّل هويتك على كل إجراء.</Notice>;
   if (!docId && !canCreate) {
     return (
@@ -225,7 +225,7 @@ export default function DocumentEngine() {
             className={`rounded-xl px-4 py-2.5 text-sm text-center border ${
               msg.tone === 'err'
                 ? 'bg-brand-red/10 border-brand-red/40 text-red-200'
-                : 'bg-brand-gold/15 border-brand-gold/40 text-brand-gold'
+                : 'bg-accent/15 border-accent/40 text-accent'
             }`}
           >
             {msg.text}
@@ -261,16 +261,16 @@ export default function DocumentEngine() {
         )}
 
         {!editable && doc.state !== 'draft' && (
-          <p className="text-xs text-gray-400 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+          <p className="text-xs text-muted bg-chip border border-line rounded-lg px-3 py-2">
             🔒 المستند خرج من طور التحرير — الحقول للقراءة فقط.
           </p>
         )}
 
         {schema.sections.map((section) => (
-          <section key={section.key} className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5">
-            <h2 className="text-base font-bold text-white mb-3">{section.title}</h2>
+          <section key={section.key} className="bg-chip border border-line rounded-2xl p-4 sm:p-5">
+            <h2 className="text-base font-bold text-ink mb-3">{section.title}</h2>
             {section.note && section.kind !== 'table' && (
-              <p className="text-[11px] text-brand-gold/80 mb-3 leading-relaxed">{section.note}</p>
+              <p className="text-[11px] text-accent/80 mb-3 leading-relaxed">{section.note}</p>
             )}
 
             {section.kind === 'fields' && (
@@ -323,8 +323,8 @@ export default function DocumentEngine() {
         ))}
 
         {docId && (
-          <section className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5">
-            <h2 className="text-base font-bold text-white mb-1">🔏 سجلّ التدقيق</h2>
+          <section className="bg-chip border border-line rounded-2xl p-4 sm:p-5">
+            <h2 className="text-base font-bold text-ink mb-1">🔏 سجلّ التدقيق</h2>
             <p className="text-[11px] text-gray-500 mb-3">قيود دائمة — لا تُعدَّل ولا تُحذف.</p>
             <AuditTrail entries={audit} />
           </section>
@@ -349,7 +349,7 @@ function Notice({ tone, title, children }) {
     <div
       dir="rtl"
       className={`rounded-2xl p-6 text-center border ${
-        err ? 'bg-brand-red/10 border-brand-red/40 text-red-200' : 'bg-white/5 border-white/10 text-gray-300'
+        err ? 'bg-brand-red/10 border-brand-red/40 text-red-200' : 'bg-chip border-line text-ink-2'
       }`}
     >
       <p className="font-bold text-lg mb-1">{title}</p>

@@ -37,11 +37,11 @@ function fmt(ts) {
 }
 
 /** بطاقة عدّ في شريط اللقطة. */
-function Tile({ value, label, tone = 'text-gray-100' }) {
+function Tile({ value, label, tone = 'text-ink-2' }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-center">
+    <div className="rounded-xl border border-line bg-chip px-3 py-2 text-center">
       <div className={`text-lg font-extrabold leading-tight ${tone}`}>{value}</div>
-      <div className="text-[10px] text-gray-400 font-bold mt-0.5">{label}</div>
+      <div className="text-[10px] text-muted font-bold mt-0.5">{label}</div>
     </div>
   );
 }
@@ -96,7 +96,7 @@ export default function DocumentsInbox() {
     URL.revokeObjectURL(url);
   }
 
-  if (!ready) return <p className="text-gray-300 text-sm py-10 text-center">جارٍ التحقّق…</p>;
+  if (!ready) return <p className="text-ink-2 text-sm py-10 text-center">جارٍ التحقّق…</p>;
   if (!me) {
     return (
       <div className="bg-brand-red/10 border border-brand-red/40 text-red-200 rounded-2xl p-6 text-center" dir="rtl">
@@ -132,12 +132,12 @@ export default function DocumentsInbox() {
           if (!forms.length) return null;
           return (
             <div key={g.title} className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold text-gray-400 w-16">{g.title}</span>
+              <span className="text-xs font-bold text-muted w-16">{g.title}</span>
               {forms.map((f) => (
                 <a
                   key={f.type}
                   href={`${base}/dashboard/document?type=${f.type}`}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-brand-gold text-brand-navy hover:bg-brand-gold/85 transition-colors"
+                  className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-accent text-brand-navy hover:bg-accent/85 transition-colors"
                 >
                   ＋ {f.titleAr}
                 </a>
@@ -152,7 +152,7 @@ export default function DocumentsInbox() {
               <span
                 key={f.type}
                 title={`يصل في المرحلة ${f.phase} — النموذج الورقي متاح الآن في مكتبة النماذج`}
-                className="px-3.5 py-1.5 rounded-lg text-xs bg-white/5 text-gray-500 border border-white/10 cursor-default"
+                className="px-3.5 py-1.5 rounded-lg text-xs bg-chip text-gray-500 border border-line cursor-default"
               >
                 {f.titleAr} <span className="text-[10px] text-gray-600">({f.phase})</span>
               </span>
@@ -162,18 +162,18 @@ export default function DocumentsInbox() {
       </div>
 
       {/* ── التبويبات ── */}
-      <div className="flex gap-2 border-b border-white/10 flex-wrap">
+      <div className="flex gap-2 border-b border-line flex-wrap">
         {tabs.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
             className={`px-4 py-2 text-sm font-bold border-b-2 -mb-px transition-colors ${
-              tab === t.key ? 'border-brand-gold text-brand-gold' : 'border-transparent text-gray-400 hover:text-white'
+              tab === t.key ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-ink'
             }`}
           >
             {t.label}
-            {t.count > 0 && <span className="mr-2 text-[11px] bg-white/10 rounded-full px-2 py-0.5">{t.count}</span>}
+            {t.count > 0 && <span className="mr-2 text-[11px] bg-chip rounded-full px-2 py-0.5">{t.count}</span>}
           </button>
         ))}
       </div>
@@ -186,7 +186,7 @@ export default function DocumentsInbox() {
           <Tile value={stats.submitted} label="بانتظار الاعتماد" tone="text-amber-300" />
           <Tile value={stats.approved} label="معتمَد" tone="text-emerald-300" />
           <Tile value={stats.done} label="منجَز" tone="text-emerald-400" />
-          <Tile value={stats.stale} label="⏰ متأخّر" tone={stats.stale ? 'text-red-300' : 'text-gray-400'} />
+          <Tile value={stats.stale} label="⏰ متأخّر" tone={stats.stale ? 'text-red-300' : 'text-muted'} />
         </div>
       )}
 
@@ -197,12 +197,12 @@ export default function DocumentsInbox() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="🔍 ابحث برقم المستند أو نوعه أو منشئه…"
-          className="flex-1 min-w-[14rem] bg-white/10 border border-white/20 rounded-lg text-white text-sm px-3 py-2 focus:outline-none focus:border-brand-gold/50"
+          className="flex-1 min-w-[14rem] bg-chip border border-line rounded-lg text-ink text-sm px-3 py-2 focus:outline-none focus:border-accent/50"
         />
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="bg-white/10 border border-white/20 rounded-lg text-white text-sm px-3 py-2 focus:outline-none focus:border-brand-gold/50"
+          className="bg-chip border border-line rounded-lg text-ink text-sm px-3 py-2 focus:outline-none focus:border-accent/50"
         >
           <option value="">كل الأنواع</option>
           {readyForms.map((f) => (
@@ -214,7 +214,7 @@ export default function DocumentsInbox() {
         <select
           value={stateFilter}
           onChange={(e) => setStateFilter(e.target.value)}
-          className="bg-white/10 border border-white/20 rounded-lg text-white text-sm px-3 py-2 focus:outline-none focus:border-brand-gold/50"
+          className="bg-chip border border-line rounded-lg text-ink text-sm px-3 py-2 focus:outline-none focus:border-accent/50"
         >
           <option value="">كل الحالات</option>
           {Object.values(STATES).map((s) => (
@@ -227,7 +227,7 @@ export default function DocumentsInbox() {
           type="button"
           onClick={exportCsv}
           disabled={rows.length === 0}
-          className="rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 disabled:opacity-40 px-4 py-2 text-sm font-bold text-gray-100 transition-colors"
+          className="rounded-lg border border-line bg-chip hover:bg-surface-2 disabled:opacity-40 px-4 py-2 text-sm font-bold text-ink-2 transition-colors"
         >
           ⬇️ تصدير ({rows.length})
         </button>
@@ -242,12 +242,12 @@ export default function DocumentsInbox() {
               : 'لا مستندات بعد — ابدأ واحدًا من الأعلى.'}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-white/10">
+        <div className="overflow-x-auto rounded-xl border border-line">
           <table className="w-full min-w-[720px] text-right">
             <thead>
-              <tr className="bg-white/10">
+              <tr className="bg-chip">
                 {['الرقم', 'النوع', 'الحالة', 'أنشأه', 'الانتظار', 'آخر تحديث', ''].map((h) => (
-                  <th key={h} className="px-3 py-2 text-xs font-bold text-gray-300">
+                  <th key={h} className="px-3 py-2 text-xs font-bold text-ink-2">
                     {h}
                   </th>
                 ))}
@@ -260,9 +260,9 @@ export default function DocumentsInbox() {
                 const age = ageInState(d, now);
                 const stale = isStale(d, now);
                 return (
-                  <tr key={d.id} className={`border-t border-white/5 hover:bg-white/5 ${stale ? 'bg-red-500/5' : ''}`}>
-                    <td className="px-3 py-2 font-mono text-sm text-brand-gold">{d.number || '— مسودّة'}</td>
-                    <td className="px-3 py-2 text-sm text-gray-200">{schema?.titleAr || d.type}</td>
+                  <tr key={d.id} className={`border-t border-line hover:bg-chip ${stale ? 'bg-red-500/5' : ''}`}>
+                    <td className="px-3 py-2 font-mono text-sm text-accent">{d.number || '— مسودّة'}</td>
+                    <td className="px-3 py-2 text-sm text-ink-2">{schema?.titleAr || d.type}</td>
                     <td className="px-3 py-2">
                       <span
                         className="text-[11px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap"
@@ -271,21 +271,21 @@ export default function DocumentsInbox() {
                         {state.emoji} {state.label}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-sm text-gray-300">{d.createdByName}</td>
+                    <td className="px-3 py-2 text-sm text-ink-2">{d.createdByName}</td>
                     <td className="px-3 py-2 text-xs whitespace-nowrap">
                       {age == null ? (
                         <span className="text-gray-600">—</span>
                       ) : stale ? (
                         <span className="text-red-300 font-bold">⏰ {age} يومًا</span>
                       ) : (
-                        <span className="text-gray-400">{age} يومًا</span>
+                        <span className="text-muted">{age} يومًا</span>
                       )}
                     </td>
                     <td className="px-3 py-2 text-xs text-gray-500">{fmt(d.updatedAt || d.createdAt)}</td>
                     <td className="px-3 py-2">
                       <a
                         href={`${base}/dashboard/document?type=${d.type}&id=${d.id}`}
-                        className="text-sm font-bold text-brand-gold hover:underline whitespace-nowrap"
+                        className="text-sm font-bold text-accent hover:underline whitespace-nowrap"
                       >
                         فتح ←
                       </a>

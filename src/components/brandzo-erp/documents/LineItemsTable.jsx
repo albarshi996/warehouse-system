@@ -8,8 +8,8 @@
 import { emptyLine } from '../../../services/documents/schemaUtils.js';
 
 const CELL =
-  'w-full bg-transparent border-0 px-2 py-1.5 text-sm text-white focus:outline-none ' +
-  'focus:bg-white/10 rounded disabled:opacity-60';
+  'w-full bg-transparent border-0 px-2 py-1.5 text-sm text-ink focus:outline-none ' +
+  'focus:bg-surface-2 rounded disabled:opacity-60';
 
 export default function LineItemsTable({ schema, section, lines, onChange, onLookup, disabled }) {
   const columns = section.columns || [];
@@ -37,15 +37,15 @@ export default function LineItemsTable({ schema, section, lines, onChange, onLoo
 
   return (
     <div>
-      {section.note && <p className="text-[11px] text-gray-400 mb-2 leading-relaxed">{section.note}</p>}
+      {section.note && <p className="text-[11px] text-muted mb-2 leading-relaxed">{section.note}</p>}
 
-      <div className="overflow-x-auto rounded-xl border border-white/10">
+      <div className="overflow-x-auto rounded-xl border border-line">
         <table className="w-full min-w-[900px] text-right border-collapse">
           <thead>
-            <tr className="bg-white/10">
-              <th className="px-2 py-2 text-xs font-bold text-gray-300 w-8">#</th>
+            <tr className="bg-chip">
+              <th className="px-2 py-2 text-xs font-bold text-ink-2 w-8">#</th>
               {columns.map((c) => (
-                <th key={c.key} className="px-2 py-2 text-xs font-bold text-gray-300" style={{ width: c.width }}>
+                <th key={c.key} className="px-2 py-2 text-xs font-bold text-ink-2" style={{ width: c.width }}>
                   {c.label}
                 </th>
               ))}
@@ -54,7 +54,7 @@ export default function LineItemsTable({ schema, section, lines, onChange, onLoo
           </thead>
           <tbody>
             {lines.map((line, i) => (
-              <tr key={i} className="border-t border-white/5 hover:bg-white/5">
+              <tr key={i} className="border-t border-line hover:bg-chip">
                 <td className="px-2 py-1 text-xs text-gray-500 text-center">{i + 1}</td>
                 {columns.map((c) => (
                   <td key={c.key} className="px-1 py-0.5">
@@ -89,7 +89,7 @@ export default function LineItemsTable({ schema, section, lines, onChange, onLoo
         <button
           type="button"
           onClick={addRow}
-          className="mt-3 text-sm font-bold text-brand-gold hover:text-brand-gold/80 transition-colors"
+          className="mt-3 text-sm font-bold text-accent hover:text-accent/80 transition-colors"
         >
           ＋ إضافة بند
         </button>
@@ -104,7 +104,7 @@ function Cell({ column, value, onChange, onCommit, disabled }) {
       <select className={CELL} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
         <option value="">—</option>
         {(column.options || []).map((o) => (
-          <option key={o} value={o} className="bg-brand-navy">
+          <option key={o} value={o} className="bg-surface">
             {o}
           </option>
         ))}

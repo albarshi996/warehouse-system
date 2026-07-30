@@ -20,9 +20,9 @@ const base = import.meta.env.BASE_URL.endsWith('/')
           {/* رأس الفئة */}
           <div class="flex items-center gap-3 mb-4">
             <span class="text-2xl">{cat.icon}</span>
-            <h2 class="text-lg sm:text-xl font-bold text-white">{cat.label}</h2>
-            <div class="flex-1 h-px bg-white/10" />
-            <span class="text-xs text-gray-300 whitespace-nowrap">{items.length} تقارير</span>
+            <h2 class="text-lg sm:text-xl font-bold text-ink">{cat.label}</h2>
+            <div class="flex-1 h-px bg-line" />
+            <span class="text-xs text-ink-2 whitespace-nowrap">{items.length} تقارير</span>
           </div>
 
           {/* شبكة البطاقات */}
@@ -32,21 +32,21 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                 href={base + r.path}
                 target={r.external ? '_blank' : null}
                 rel={r.external ? 'noopener noreferrer' : null}
-                class="group flex flex-col bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6 hover:bg-white/10 hover:-translate-y-1 hover:border-brand-gold/40 transition-all"
+                class="group flex flex-col bg-chip backdrop-blur border border-line rounded-2xl p-6 hover:bg-surface-2 hover:-translate-y-1 hover:border-accent/40 transition-all"
               >
                 <div class="flex items-start justify-between mb-3">
                   <div class="text-3xl">{r.icon}</div>
                   {r.external && (
-                    <span class="text-[10px] text-gray-300 border border-white/10 rounded-full px-2 py-0.5">
+                    <span class="text-[10px] text-ink-2 border border-line rounded-full px-2 py-0.5">
                       ↗ نافذة جديدة
                     </span>
                   )}
                 </div>
-                <h3 class="font-bold text-white mb-2 group-hover:text-brand-gold transition-colors">
+                <h3 class="font-bold text-ink mb-2 group-hover:text-accent transition-colors">
                   {r.title}
                 </h3>
-                <p class="text-sm text-gray-300 leading-relaxed flex-1">{r.desc}</p>
-                <span class="mt-4 inline-flex items-center gap-1 text-brand-yellow text-sm font-bold">
+                <p class="text-sm text-ink-2 leading-relaxed flex-1">{r.desc}</p>
+                <span class="mt-4 inline-flex items-center gap-1 text-accent text-sm font-bold">
                   فتح التقرير
                   <span class="group-hover:-translate-x-1 transition-transform">←</span>
                 </span>
