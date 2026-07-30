@@ -426,36 +426,69 @@ body {
    ═══════════════════════════════════════════════════════════════════ */
 
 html.bz-light {
-  /* قلب التوكِنز الدلالية — البطاقة سطح ورقي أبيض والحدود رمادي أودو */
+  /* قلب التوكِنز الدلالية — البطاقة سطح ورقي أبيض ترتفع بظلٍّ لا بحدّ.
+
+     ★ إصلاح «القصّ واللصق» (2026-07-30): الحدّ الرمادي الصريح كان يجعل كل
+       بطاقة تبدو مقصوصةً وملصوقةً. أودو الحقيقي لا يحيط البطاقة بإطارٍ بل
+       يرفعها عن السطح بظلٍّ ناعمٍ جدًّا وحدٍّ شبه معدوم (أبيض مائل للرمادي
+       بـ6% فقط). فتذوب البطاقة في الصفحة بدل أن تُقصَّ منها. */
   --color-surface: #ffffff;
-  --color-surface-2: #f8f9fa;
-  --color-line: #dee2e6;
-  --color-muted: #5f676e;
+  --color-surface-2: #f6f6f8;
+  --color-line: rgba(15, 15, 30, 0.06);   /* حدّ شبه معدوم — الظلّ يفصل لا الخط */
+  --color-line-strong: #e5e5ea;            /* حدّ أوضح للجداول والفواصل فقط */
+  --color-muted: #6b7280;
   --color-accent: #714B67;        /* الذهبي لا يقرأ على الأبيض؛ التمييز = لون الهوية */
-  --color-ink: #212529;
-  --color-ink-2: #495057;
-  --color-chip: rgba(33, 37, 41, 0.03);
-  --radius-card: 0.5rem;          /* أودو أهدأ تقويسًا من الثيم الداكن */
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 6px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 4px 14px rgba(0, 0, 0, 0.10);
+  --color-ink: #1f2430;
+  --color-ink-2: #565f6e;
+  --color-chip: rgba(113, 75, 103, 0.05);  /* الشريحة بصبغة الهوية الباهتة لا رمادي ميّت */
+  --radius-card: 0.75rem;         /* تقويس أنعم — البطاقات أقلّ حدّةً */
+  /* ظلٌّ من طبقتين على طريقة أودو: طبقة قريبة حادّة + طبقة بعيدة ناعمة واسعة،
+     كلاهما بصبغةٍ رماديّةٍ دافئةٍ (لا أسود صرف) فلا يبدو الظلّ «جامدًا» */
+  --shadow-card: 0 1px 3px rgba(20, 20, 40, 0.04), 0 6px 16px rgba(20, 20, 40, 0.05);
+  --shadow-card-hover: 0 2px 6px rgba(20, 20, 40, 0.06), 0 14px 32px rgba(113, 75, 103, 0.10);
 }
 
-/* خلفية الصفحة: رمادي أودو الورقي بدل التدرّج الكوني — والحُبيبات تُطفأ */
-html.bz-light body {
-  background: #f1f1f4;
-  color: #212529;
+/* ★ إصلاح جذريّ للظلّ الجامد (2026-07-30): أداة Tailwind ‏`.shadow-card` تُجمَّد
+   قيمتها وقت البناء من قيمة الثيم الداكن (‏0 8px 24px بأسود 35%!) فلا يصلها قلب
+   التوكِن في الفاتح — فتظهر البطاقات بظلٍّ أسود ثقيل يبدو كقصاصة ملصوقة. الحلّ
+   الجرّاحيّ: نعيد تعريف متغيّر Tailwind الداخليّ ‏--tw-shadow تحت الفاتح فتُعيد
+   الأداة تركيب الظلّ بقيمة أودو الناعمة (طبقتان رماديّتان دافئتان). */
+html.bz-light .shadow-card {
+  --tw-shadow: 0 1px 3px rgba(20, 20, 40, 0.04), 0 6px 16px rgba(20, 20, 40, 0.05);
+  --tw-shadow-color: initial;
 }
-html.bz-light .bz-page-bg { background: #f1f1f4; }
+html.bz-light .shadow-card-hover,
+html.bz-light .hover\:shadow-card-hover:hover,
+html.bz-light .hover\:shadow-card:hover {
+  --tw-shadow: 0 2px 6px rgba(20, 20, 40, 0.06), 0 14px 32px rgba(113, 75, 103, 0.10);
+  --tw-shadow-color: initial;
+}
+/* شبكة أمان: أي ظلّ Tailwind ثقيل عامّ (shadow-lg/xl/2xl) على الفاتح يُلطّف */
+html.bz-light .shadow-lg,
+html.bz-light .shadow-xl,
+html.bz-light .shadow-2xl {
+  --tw-shadow: 0 4px 12px rgba(20, 20, 40, 0.06), 0 12px 28px rgba(20, 20, 40, 0.06);
+  --tw-shadow-color: initial;
+}
+
+/* خلفية الصفحة: رمادي أودو دافئ فاتح (لا #f1f1f4 الميّت) — يعطي البطاقات
+   البيضاء عمقًا لطيفًا دون أن يبدو كظلٍّ جامد. الحُبيبات الكونيّة تُطفأ. */
+html.bz-light body {
+  background: #f5f5f7;
+  color: #1f2430;
+}
+html.bz-light .bz-page-bg { background: #f5f5f7; }
 html.bz-light .bz-page-bg::before { background-image: none; }
 
 /* تحرير البطاقات البيضاء: القاعدة الداكنة أعلاه كانت تقلبها قسرًا بـ!important،
-   وفي الفاتح تعود بيضاء حقيقية بحدّ أودو الرمادي */
+   وفي الفاتح تعود بيضاء ترتفع بظلٍّ ناعمٍ لا بحدٍّ صريح (إصلاح القصّ واللصق) */
 html.bz-light .bg-white.shadow-sm.border.border-gray-200,
 html.bz-light .bg-white.shadow-sm.border {
   background: #ffffff !important;
-  border-color: #dee2e6 !important;
-  color: #212529 !important;
-  border-radius: 0.5rem;
+  border-color: rgba(15, 15, 30, 0.06) !important;
+  color: #1f2430 !important;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(20, 20, 40, 0.04), 0 6px 16px rgba(20, 20, 40, 0.05);
 }
 
 /* إبطال قلب text-brand-navy الذي فرضه الثيم الداكن */
@@ -465,42 +498,51 @@ html.bz-light .text-brand-navy { color: #1a1a2e !important; }
    في الداكن التمييز ذهبي ونصّه داكن، فلا تصلح قيمة واحدة للثيمين */
 html.bz-light .bg-accent { color: #ffffff !important; }
 
-/* أصناف الثيم الداكن القديمة تُعاد رسمًا كسطح أودو الورقي */
+/* أصناف الثيم الداكن القديمة تُعاد رسمًا كسطح أودو الورقي — ظلٌّ لا حدّ */
 html.bz-light .glass-card,
 html.bz-light .bz-card-dark {
   background: #ffffff;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  border: 1px solid #dee2e6;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 6px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(15, 15, 30, 0.06);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(20, 20, 40, 0.04), 0 6px 16px rgba(20, 20, 40, 0.05);
 }
 html.bz-light .glass-card:hover {
   background: #ffffff;
-  border-color: #b8a2b1;         /* هالة الهوية الهادئة بدل توهج الأحمر */
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
-  transform: translateY(-1px);
+  border-color: rgba(113, 75, 103, 0.20);   /* هالة الهوية الهادئة */
+  box-shadow: 0 2px 6px rgba(20, 20, 40, 0.06), 0 14px 32px rgba(113, 75, 103, 0.10);
+  transform: translateY(-2px);
 }
 html.bz-light .bz-kpi-card {
   background: #ffffff !important;
-  border-color: #dee2e6 !important;
+  border-color: rgba(15, 15, 30, 0.06) !important;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(20, 20, 40, 0.04), 0 6px 16px rgba(20, 20, 40, 0.05);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
-html.bz-light .bz-kpi-card:hover { background: #f8f9fa !important; }
+html.bz-light .bz-kpi-card:hover {
+  background: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(20, 20, 40, 0.06), 0 14px 32px rgba(113, 75, 103, 0.10);
+  transform: translateY(-2px);
+}
 
 html.bz-light .bz-dashboard-table {
   background: #ffffff;
-  border: 1px solid #dee2e6;
+  border: 1px solid rgba(15, 15, 30, 0.06);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(20, 20, 40, 0.04), 0 6px 16px rgba(20, 20, 40, 0.05);
 }
 html.bz-light .bz-dashboard-table thead th {
-  background: #f8f9fa !important;
-  color: #495057 !important;
-  border-bottom: 1px solid #adb5bd;
+  background: #f6f6f8 !important;
+  color: #565f6e !important;
+  border-bottom: 1px solid #e5e5ea;
 }
-html.bz-light .bz-dashboard-table tbody tr:hover { background: #f5f0f4; }
+html.bz-light .bz-dashboard-table tbody tr:hover { background: #faf7f9; }
 html.bz-light .bz-dashboard-table tbody td {
-  border-color: #e9ecef !important;
-  color: #212529 !important;
+  border-color: #f0f0f3 !important;
+  color: #1f2430 !important;
 }
 
 /* نصوص الثيم القديم على الفاتح */

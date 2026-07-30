@@ -196,25 +196,27 @@ const currentPath = Astro.url.pathname;
          في global.css. تُقلَّص هذه الكتلة في المرحلة ٥ حين يزول الداكن.
          ═══════════════════════════════════════════════════════════════ */
 
-      /* --- الشريط الجانبي: السطح والحدود --- */
+      /* --- الشريط الجانبي: السطح والحدود ---
+         إصلاح «الاعوجاج» (2026-07-30): سطح أبيض ناعم بحدٍّ شبه معدوم يفصله
+         عن المحتوى بظلٍّ لطيف لا بخطٍّ صريح. */
       html.bz-light #brandzo-sidebar {
         background: #ffffff !important;
         backdrop-filter: none !important;
-        border-left: 1px solid #e9ecef;
-        box-shadow: -1px 0 6px rgba(0, 0, 0, 0.05) !important;
-        color: #495057;
+        border-left: 1px solid rgba(15, 15, 30, 0.05);
+        box-shadow: -1px 0 3px rgba(20, 20, 40, 0.03) !important;
+        color: #565f6e;
       }
       html.bz-light:not(.bz-sb-pinned) #brandzo-sidebar:hover,
       html.bz-light:not(.bz-sb-pinned) #brandzo-sidebar:focus-within {
-        box-shadow: -14px 0 34px rgba(33, 37, 41, 0.16) !important;
+        box-shadow: -14px 0 40px rgba(20, 20, 40, 0.12) !important;
       }
 
-      /* رأس الشريط: أبيض لاصق وحدّ سفلي رمادي، والنص داكن */
+      /* رأس الشريط: أبيض لاصق وحدّ سفلي شبه معدوم، والنص داكن */
       html.bz-light #bz-sb-head {
         background: #ffffff;
-        border-color: #e9ecef;
+        border-color: rgba(15, 15, 30, 0.05);
       }
-      html.bz-light #brandzo-sidebar h1 { color: #212529; }
+      html.bz-light #brandzo-sidebar h1 { color: #1f2430; letter-spacing: -0.01em; }
 
       /* مكعّب الشعار وزرّا ☰/إغلاق */
       html.bz-light #brandzo-sidebar .bg-brand-red { background-color: #714B67; }
@@ -241,51 +243,68 @@ const currentPath = Astro.url.pathname;
       }
 
       /* --- قائمة التنقل --- */
-      /* رؤوس المجموعات: رمادي أودو الهادئ بدل الذهبي */
+      /* رؤوس المجموعات: رمادي أودو الهادئ بدل الذهبي، وحدٌّ فاصلٌ خفيفٌ جدًّا */
       html.bz-light #brandzo-sidebar .sb-group-head {
-        color: #6c757d;
-        border-color: #e9ecef;
+        color: #8a909c;
+        border-color: rgba(15, 15, 30, 0.04);
+        font-weight: 700;
+        letter-spacing: 0.02em;
       }
       html.bz-light #brandzo-sidebar .sb-group-head svg,
       html.bz-light #brandzo-sidebar .sb-group-head [class*='text-brand-gold'] { color: #6c757d; }
 
-      /* الروابط: نص داكن، تحويم صبغة هوية خفيفة */
+      /* الروابط: نص هادئ، تحويم صبغة هوية خفيفة، انتقال ناعم.
+         حشوٌ رأسيٌّ أهدأ (py مضبوط) وتقويسٌ أنعم فلا تبدو الروابط متلاصقة. */
       html.bz-light #brandzo-sidebar nav a,
       html.bz-light #brandzo-sidebar nav button {
-        color: #495057;
+        color: #565f6e;
+        border-radius: 0.5rem;
+        transition: background-color .15s ease, color .15s ease;
       }
       html.bz-light #brandzo-sidebar nav a:hover,
       html.bz-light #brandzo-sidebar nav button:hover {
-        background-color: #f5f0f4;
-        color: #212529;
+        background-color: #f5f1f4;
+        color: #1f2430;
       }
       /* أيقونات العناصر: صبغة الهوية بدل الأحمر/الذهبي */
       html.bz-light #brandzo-sidebar nav .text-brand-red,
-      html.bz-light #brandzo-sidebar nav .text-brand-gold { color: #714B67; }
+      html.bz-light #brandzo-sidebar nav .text-brand-gold { color: #8a6b80; }
+      html.bz-light #brandzo-sidebar nav a:hover .text-brand-red,
+      html.bz-light #brandzo-sidebar nav a:hover .text-brand-gold { color: #714B67; }
 
-      /* العنصر النشط: صبغة #714B67 وحدّ يمين بلونها (يغلب الذهبي المضمَّن) */
+      /* ★ العنصر النشط — إصلاح الاعوجاج: بدل border-right المستقيم الذي كان
+         يقطع الزاوية المستديرة ويُحدث السنّ المسنّن، نستعمل مؤشّرًا داخليًّا
+         عبر box-shadow inset يحترم التقويس تمامًا (خطّ هويّة على الحافّة
+         اليمنى دون كسر الاستدارة). الخلفية صبغة هوية ناعمة. */
       html.bz-light #brandzo-sidebar nav a.bg-brand-red {
-        background-color: rgba(113, 75, 103, 0.10);
+        background-color: rgba(113, 75, 103, 0.09);
         color: #714B67;
-        border-right: 3px solid #714B67 !important;
+        border-right: 0 !important;
+        box-shadow: inset -3px 0 0 0 #714B67;
+        font-weight: 700;
       }
-      html.bz-light #brandzo-sidebar nav a.bg-brand-red:hover { background-color: rgba(113, 75, 103, 0.16); }
-      html.bz-light #brandzo-sidebar nav a.bg-brand-red .text-brand-red { color: #714B67; }
+      html.bz-light #brandzo-sidebar nav a.bg-brand-red:hover { background-color: rgba(113, 75, 103, 0.14); }
+      html.bz-light #brandzo-sidebar nav a.bg-brand-red .text-brand-red,
+      html.bz-light #brandzo-sidebar nav a.bg-brand-red .text-brand-gold { color: #714B67; }
       /* العنصر المثبّت غير النشط */
       html.bz-light #brandzo-sidebar nav a.bg-white\/5 {
-        background-color: #faf9fb;
-        border-color: rgba(113, 75, 103, 0.25);
-        color: #495057;
+        background-color: #faf7f9;
+        border-color: rgba(113, 75, 103, 0.18);
+        color: #565f6e;
       }
 
       /* --- البحث --- */
       html.bz-light #sidebar-search {
-        background-color: #f1f1f4;
-        border-color: #dee2e6;
-        color: #212529;
+        background-color: #f5f5f7;
+        border-color: rgba(15, 15, 30, 0.08);
+        color: #1f2430;
       }
-      html.bz-light #sidebar-search::placeholder { color: #6c757d; }
-      html.bz-light #sidebar-search:focus { border-color: #714B67; }
+      html.bz-light #sidebar-search::placeholder { color: #8a909c; }
+      html.bz-light #sidebar-search:focus {
+        border-color: #714B67;
+        background-color: #ffffff;
+        box-shadow: 0 0 0 3px rgba(113, 75, 103, 0.10);
+      }
       html.bz-light #brandzo-sidebar .sb-x .sticky { background: #ffffff; }
       html.bz-light #sidebar-search-clear { background: #e9ecef; color: #495057; }
       html.bz-light #sidebar-search-count { color: #714B67; }
@@ -314,8 +333,8 @@ const currentPath = Astro.url.pathname;
 
       /* --- طبقة حارس الدخول --- */
       html.bz-light #bz-auth-overlay {
-        background-color: #f1f1f4 !important;
-        color: #495057;
+        background-color: #f5f5f7 !important;
+        color: #565f6e;
       }
       html.bz-light #bz-auth-overlay > div {
         border-color: rgba(113, 75, 103, 0.2);
