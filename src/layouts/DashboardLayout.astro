@@ -305,7 +305,11 @@ const currentPath = Astro.url.pathname;
         background-color: #ffffff;
         box-shadow: 0 0 0 3px rgba(113, 75, 103, 0.10);
       }
-      html.bz-light #brandzo-sidebar .sb-x .sticky { background: #ffffff; }
+      /* ★ إصلاح تشوّه خانة البحث (2026-07-30): الحاوية اللاصقة للبحث تحمل صنف
+         bg-brand-navy (كحليّ داكن) على العنصر نفسه، فتظهر كإطارٍ داكنٍ حول
+         الحقل. أيّ bg-brand-navy داخل الشريط الجانبي يُبيَّض (القِشرة والرأس
+         مُبيَّضان أصلًا، والباقي الوحيد هو غلاف البحث). */
+      html.bz-light #brandzo-sidebar .bg-brand-navy { background-color: #ffffff !important; }
       html.bz-light #sidebar-search-clear { background: #e9ecef; color: #495057; }
       html.bz-light #sidebar-search-count { color: #714B67; }
       html.bz-light #brandzo-sidebar mark { background: rgba(113, 75, 103, 0.18) !important; color: #212529 !important; }
