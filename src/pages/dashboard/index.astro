@@ -140,15 +140,16 @@ const soon = [
 ];
 ---
 
-<DashboardLayout title="لوحة التحكم" showGuide={false}>
+{/* light: الرئيسية أول صفحة مرحَّلة لنظام أودو الفاتح (المرحلة ١، 2026-07-30) */}
+<DashboardLayout title="لوحة التحكم" showGuide={false} light>
   <div id="dash-root" class="text-right" dir="rtl">
     {/* ─── الترويسة + زر التخصيص ─────────────────────────────────────────── */}
     <div class="mb-8">
       <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 class="text-3xl font-bold text-white mb-2">
+          <h1 class="text-3xl font-bold text-ink mb-2">
             إدارة مستودعات برند زو
-            <span class="block text-lg font-normal text-gray-300 mt-1">Brandzo Warehouse Management — Benghazi 2026</span>
+            <span class="block text-lg font-normal text-ink-2 mt-1">Brandzo Warehouse Management — Benghazi 2026</span>
           </h1>
           <p class="text-muted text-sm leading-relaxed">
             بوابة العمليات الرسمية لإدارة المستودعات والتوزيع في بنغازي
@@ -158,13 +159,13 @@ const soon = [
         {/* أدوات التخصيص */}
         <div class="shrink-0 flex flex-wrap items-center gap-2">
           <button id="btn-customize" type="button"
-            class="inline-flex items-center gap-2 rounded-xl border border-line bg-white/5 hover:bg-surface-2 px-4 py-2 text-sm font-bold text-gray-100 transition-colors">
+            class="inline-flex items-center gap-2 rounded-xl border border-line bg-chip hover:bg-surface-2 px-4 py-2 text-sm font-bold text-ink-2 transition-colors">
             <Icon name="settings" size={16} /><span id="btn-customize-label">تخصيص العرض</span>
           </button>
           <div id="customize-actions" class="hidden flex-wrap items-center gap-2">
             <span id="hidden-count" class="text-xs text-muted"></span>
             <button id="btn-showall" type="button"
-              class="rounded-xl border border-line bg-white/5 hover:bg-surface-2 px-3 py-2 text-xs font-bold text-gray-100 transition-colors">
+              class="rounded-xl border border-line bg-chip hover:bg-surface-2 px-3 py-2 text-xs font-bold text-ink-2 transition-colors">
               إظهار الكل
             </button>
             <button id="btn-done" type="button"
@@ -185,7 +186,7 @@ const soon = [
     <section data-section data-group="start" class="mb-10">
       <div class="flex items-center gap-3 mb-4">
         <span class="inline-grid place-items-center w-8 h-8 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name="rocket" size={17} /></span>
-        <h2 class="text-lg sm:text-xl font-bold text-white">ابدأ من هنا</h2>
+        <h2 class="text-lg sm:text-xl font-bold text-ink">ابدأ من هنا</h2>
         <div class="flex-1 h-px bg-line"></div>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -196,7 +197,7 @@ const soon = [
               class="group flex items-center gap-4 h-full rounded-card p-5 bg-surface border border-line shadow-card hover:bg-surface-2 hover:border-accent/40 hover:-translate-y-0.5 transition-all">
               <span class="inline-grid place-items-center w-12 h-12 rounded-xl bg-accent/10 border border-accent/25 text-accent shrink-0"><Icon name={c.icon} size={24} /></span>
               <span class="flex-1 min-w-0">
-                <span class="block font-bold text-white">{c.title}</span>
+                <span class="block font-bold text-ink">{c.title}</span>
                 <span class="block text-xs text-muted mt-1 leading-relaxed">{c.desc}</span>
               </span>
               <span class="text-muted group-hover:text-accent text-xl transition-all group-hover:-translate-x-1">←</span>
@@ -210,7 +211,7 @@ const soon = [
     <section data-section data-group="hubs" class="mb-10">
       <div class="flex items-center gap-3 mb-4">
         <span class="inline-grid place-items-center w-8 h-8 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name="grid" size={17} /></span>
-        <h2 class="text-lg sm:text-xl font-bold text-white">الأنظمة الرئيسية</h2>
+        <h2 class="text-lg sm:text-xl font-bold text-ink">الأنظمة الرئيسية</h2>
         <div class="flex-1 h-px bg-gradient-to-l from-accent/40 to-transparent"></div>
       </div>
       <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 list-none p-0 m-0 items-start">
@@ -220,16 +221,16 @@ const soon = [
             <div class="h-full rounded-card p-5 bg-surface border border-line shadow-card hover:border-accent/40 transition-all">
               <div class="flex items-center gap-3 mb-1.5">
                 <span class="inline-grid place-items-center w-11 h-11 rounded-xl bg-accent/10 border border-accent/25 text-accent shrink-0"><Icon name={h.icon} size={20} /></span>
-                <h3 class="font-extrabold text-white text-base leading-snug">{h.title}</h3>
+                <h3 class="font-extrabold text-ink text-base leading-snug">{h.title}</h3>
               </div>
               <p class="text-xs text-muted leading-relaxed mb-4">{h.desc}</p>
               <ul class="space-y-2 list-none p-0 m-0">
                 {h.links.map((l) => (
                   <li data-item-roles={l.roles || null}>
                     <a href={`${base}${l.path}`}
-                      class="group flex items-center gap-2.5 rounded-xl border border-line bg-white/[0.02] hover:bg-surface-2 hover:border-accent/40 px-3 py-2.5 transition-all">
+                      class="group flex items-center gap-2.5 rounded-xl border border-line bg-chip hover:bg-surface-2 hover:border-accent/40 px-3 py-2.5 transition-all">
                       <Icon name={l.icon} size={16} class="text-muted group-hover:text-accent transition-colors" />
-                      <span class="flex-1 text-sm font-bold text-gray-200 group-hover:text-white transition-colors">{l.label}</span>
+                      <span class="flex-1 text-sm font-bold text-ink-2 group-hover:text-ink transition-colors">{l.label}</span>
                       <span class="text-accent/60 group-hover:text-accent text-sm transition-colors">←</span>
                     </a>
                   </li>
@@ -245,9 +246,9 @@ const soon = [
           <a href={`${base}${meetingsCard.path}`}
             class="group block h-full rounded-card p-5 bg-surface border border-line shadow-card hover:bg-surface-2 hover:border-accent/40 hover:-translate-y-1 transition-all">
             <span class="inline-grid place-items-center w-12 h-12 rounded-xl bg-accent/10 border border-accent/25 text-accent mb-3"><Icon name={meetingsCard.icon} size={22} /></span>
-            <h3 class="font-extrabold text-white text-base mb-1.5 leading-snug">{meetingsCard.title}</h3>
+            <h3 class="font-extrabold text-ink text-base mb-1.5 leading-snug">{meetingsCard.title}</h3>
             <p class="text-xs text-muted leading-relaxed">{meetingsCard.desc}</p>
-            <span class="mt-4 inline-flex items-center gap-2 rounded-chip border border-line bg-white/5 px-4 py-1.5 text-sm text-gray-200 group-hover:border-accent/40 transition-colors">
+            <span class="mt-4 inline-flex items-center gap-2 rounded-chip border border-line bg-chip px-4 py-1.5 text-sm text-ink-2 group-hover:border-accent/40 transition-colors">
               دخول ←
             </span>
           </a>
@@ -260,7 +261,7 @@ const soon = [
       <section data-section data-group={grp.id} class="mb-9">
         <div class="flex items-center gap-3 mb-4">
           <span class="inline-grid place-items-center w-8 h-8 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name={grp.icon} size={17} /></span>
-          <h2 class="text-lg sm:text-xl font-bold text-white">{grp.title}</h2>
+          <h2 class="text-lg sm:text-xl font-bold text-ink">{grp.title}</h2>
           <div class="flex-1 h-px bg-line"></div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -282,7 +283,7 @@ const soon = [
                     <span class="text-[10px] text-muted border border-line rounded-chip px-2 py-0.5">↗ نافذة جديدة</span>
                   )}
                 </div>
-                <h3 class="font-bold text-white mb-2">{c.title}</h3>
+                <h3 class="font-bold text-ink mb-2">{c.title}</h3>
                 <p class="text-sm text-muted leading-relaxed">{c.desc}</p>
               </a>
             </div>
@@ -294,8 +295,8 @@ const soon = [
     {/* ─── أنظمة قادمة ───────────────────────────────────────────────────── */}
     <section data-section data-group="soon" class="mb-9">
       <div class="flex items-center gap-3 mb-4">
-        <span class="inline-grid place-items-center w-8 h-8 rounded-lg bg-white/5 border border-line text-muted"><Icon name="puzzle" size={17} /></span>
-        <h2 class="text-lg sm:text-xl font-bold text-white">أنظمة قادمة</h2>
+        <span class="inline-grid place-items-center w-8 h-8 rounded-lg bg-chip border border-line text-muted"><Icon name="puzzle" size={17} /></span>
+        <h2 class="text-lg sm:text-xl font-bold text-ink">أنظمة قادمة</h2>
         <div class="flex-1 h-px bg-line"></div>
         <span class="text-xs text-muted whitespace-nowrap">قيد التطوير</span>
       </div>
@@ -303,12 +304,12 @@ const soon = [
         {soon.map((c) => (
           <div class="dash-card relative" data-card-id={c.id}>
             <span class="card-badge"></span>
-            <button type="button" class="soon-btn block w-full text-right h-full bg-white/[0.02] border border-dashed border-line rounded-card p-5 cursor-not-allowed">
+            <button type="button" class="soon-btn block w-full text-right h-full bg-chip border border-dashed border-line rounded-card p-5 cursor-not-allowed">
               <div class="flex items-start justify-between mb-3">
-                <span class="inline-grid place-items-center w-11 h-11 rounded-xl bg-white/5 border border-line text-muted"><Icon name={c.icon} size={20} /></span>
+                <span class="inline-grid place-items-center w-11 h-11 rounded-xl bg-chip border border-line text-muted"><Icon name={c.icon} size={20} /></span>
                 <span class="text-[10px] font-bold text-accent border border-accent/30 bg-accent/10 rounded-chip px-2 py-0.5">قريبًا</span>
               </div>
-              <h3 class="font-bold text-gray-300 mb-2">{c.title}</h3>
+              <h3 class="font-bold text-ink-2 mb-2">{c.title}</h3>
               <p class="text-sm text-muted leading-relaxed">{c.desc}</p>
             </button>
           </div>
@@ -324,7 +325,7 @@ const soon = [
 
   {/* توست بسيط لبطاقات «قريباً» */}
   <div id="soon-toast" class="fixed bottom-6 inset-x-0 z-[80] hidden justify-center px-4 pointer-events-none">
-    <div class="inline-flex items-center gap-2 rounded-xl bg-surface border border-accent/30 text-white text-sm font-bold px-5 py-3 shadow-2xl">
+    <div class="inline-flex items-center gap-2 rounded-xl bg-surface border border-accent/30 text-ink text-sm font-bold px-5 py-3 shadow-2xl">
       <Icon name="puzzle" size={16} class="text-accent" /> هذا النظام قيد التطوير — قريبًا
     </div>
   </div>
@@ -347,6 +348,11 @@ const soon = [
 
     /* في وضع التخصيص: تظهر باهتة وقابلة للنقر لإعادتها */
     #dash-root.customizing .dash-card { cursor: pointer; outline: 1px dashed rgba(255,255,255,.18); outline-offset: 3px; border-radius: 1rem; }
+
+    /* نسخ الثيم الفاتح (bz-light) — ألوان الشارات أعلاه محسوبة على الداكن */
+    :global(html.bz-light) .dash-card .card-badge.shown    { background: rgba(46,158,91,.12);   color: #1e7c47; border-color: rgba(46,158,91,.45); }
+    :global(html.bz-light) .dash-card .card-badge.hidden-b { background: rgba(100,116,139,.12); color: #475569; border-color: rgba(100,116,139,.45); }
+    :global(html.bz-light) #dash-root.customizing .dash-card { outline-color: rgba(33,37,41,.25); }
     #dash-root.customizing .dash-card.is-hidden { opacity: .4; }
     #dash-root.customizing .dash-card a,
     #dash-root.customizing .dash-card button { pointer-events: none; }

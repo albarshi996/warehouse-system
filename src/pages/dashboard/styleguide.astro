@@ -10,12 +10,12 @@ import StyleguideApp from '../../components/odoo/StyleguideApp.jsx';
  */
 ---
 
-<DashboardLayout title="دليل الأنماط — نظام التصميم" showGuide={false}>
+<DashboardLayout title="دليل الأنماط — نظام التصميم" showGuide={false} light>
   <div class="text-right" dir="rtl">
-    <h1 class="text-2xl font-bold text-white mb-1">دليل الأنماط — مرحلة الاعتماد</h1>
-    <p class="text-sm text-gray-300 mb-5 leading-relaxed">
+    <h1 class="text-2xl font-bold text-ink mb-1">دليل الأنماط — مرحلة الاعتماد</h1>
+    <p class="text-sm text-ink-2 mb-5 leading-relaxed">
       مرجع المكوّنات المشتركة (D2) بحالاتها كاملةً — لون الهوية معتمَد من
-      <code class="text-brand-gold" dir="ltr">tokens.css</code> (نقطة تحكّم واحدة).
+      <code class="text-accent" dir="ltr">tokens.css</code> (نقطة تحكّم واحدة).
     </p>
     <StyleguideApp client:load />
   </div>

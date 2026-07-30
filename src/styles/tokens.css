@@ -97,5 +97,8 @@
   /* --- الخط العربي (R6/§6) — أودو يحمّل Noto لنطاق اليونيكود العربي.
      البوابة تعمل بلا اتصال (PWA) فلا نحمّل خطًّا خارجيًّا؛ نبقي Noto أولًا
      في السلسلة فيُستعمل حين يتوفّر، ويتدرّج بأمان إلى خطوط النظام. --- */
-  --o-font-family: "Noto Sans Arabic", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* الخط المعتمد (المالك 2026-07-30): IBM Plex Sans Arabic — لاتينيّته من نفس
+     العائلة فتتجانس المراجع والأرقام اللاتينية (R2) مع العربي في الجدول الواحد.
+     مستضاف ذاتيًّا في fonts.css (شرط العمل دون اتصال). */
+  --o-font-family: "IBM Plex Sans Arabic", "Noto Sans Arabic", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }

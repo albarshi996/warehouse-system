@@ -7,7 +7,15 @@ import UserMenu from '../components/brandzo-erp/access/UserMenu.jsx';
 import RoleNav from '../components/brandzo-erp/access/RoleNav.jsx';
 import { NAV_GROUPS, PINNED_ITEM } from '../services/auth/navCatalog.js';
 
-const { title, showGuide = false } = Astro.props;
+// `light` — نظام أودو الفاتح (المرحلة ١): يضع bz-light على <html> فينقلب
+// الإطار (الشريط الجانبي + الرأس + الخلفية) وتوكِنز global.css الدلالية للفاتح.
+// الترحيل انسيابي لكل صفحة: ما لم تمرّر الصفحة light تبقى داكنة حرفيًّا،
+// وتُرحَّل الصفحات دفعاتٍ في المرحلة ٣ ثم يصبح الفاتح هو الافتراضي.
+const { title, showGuide = false, light = false } = Astro.props;
+
+// روابط الخط المبثوثة بأسماء مجزّأة — للتحميل المسبق (أهم سماكتين فقط)
+import fontArabic400 from '../assets/fonts/plex-arabic-400-arabic.woff2';
+import fontArabic700 from '../assets/fonts/plex-arabic-700-arabic.woff2';
 
 const base = import.meta.env.BASE_URL.endsWith('/')
   ? import.meta.env.BASE_URL.slice(0, -1)
@@ -26,13 +34,18 @@ const navGroups = NAV_GROUPS.map((g) => ({
 const currentPath = Astro.url.pathname;
 ---
 
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class:list={[light && 'bz-light']}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title ? `${title} - Brandzo Hub 2026` : 'Brandzo Hub 2026'}</title>
     {/* خط الواجهة = «دبي» النظاميّ (Windows) + احتياطات — بلا تحميل خطّ خارجيّ،
-        أفضل للعمل دون اتصال (PWA) وأريح للعين (اعتماد المالك 2026-07-29). */}
+        أفضل للعمل دون اتصال (PWA) وأريح للعين (اعتماد المالك 2026-07-29).
+        تحديث 2026-07-30: الخط الأول صار IBM Plex Sans Arabic مستضافًا ذاتيًّا
+        (fonts.css) — شرط العمل دون اتصال باقٍ، و«دبي» احتياط نظاميّ.
+        التحميل المسبق لسماكتي المتن والعناوين العربيّتين فقط. */}
+    <link rel="preload" href={fontArabic400} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={fontArabic700} as="font" type="font/woff2" crossorigin />
     <PwaHead />
     <script is:inline>
       /* حالة تثبيت الشريط الجانبي تُقرأ قبل الرسم كي لا يومض العرض عند التحميل */
@@ -44,7 +57,7 @@ const currentPath = Astro.url.pathname;
     </script>
     <style>
       body {
-        font-family: 'Dubai', 'Sakkal Majalla', 'Segoe UI', Tahoma, 'Cairo', sans-serif;
+        font-family: 'IBM Plex Sans Arabic', 'Dubai', 'Sakkal Majalla', 'Segoe UI', Tahoma, sans-serif;
       }
 
       /* ─── Guide Drawer ──────────────────────────────────────────────────────── */
@@ -170,6 +183,159 @@ const currentPath = Astro.url.pathname;
           padding: 1.5rem 1.5rem 1.5rem 0.5rem;
         }
       }
+    </style>
+    <style is:global>
+      /* ═══════════════════════════════════════════════════════════════
+         الإطار الفاتح — نظام أودو (bz-light، المرحلة ١)
+
+         شريط جانبي أبيض على مرجع Metronic layout-20: سطح ورقي، حدود
+         رمادية هادئة، العنصر النشط صبغة الهوية #714B67 لا كتلة حمراء.
+         كتلة is:global مقصودة: بعض العناصر يعيد JS كتابة أصنافها
+         (شارة حالة القاعدة، إبراز البحث) فتسقط عنها بصمة عزل Astro.
+         !important حيث نصارع قواعد الثيم الداكن المعلَنة !important
+         في global.css. تُقلَّص هذه الكتلة في المرحلة ٥ حين يزول الداكن.
+         ═══════════════════════════════════════════════════════════════ */
+
+      /* --- الشريط الجانبي: السطح والحدود --- */
+      html.bz-light #brandzo-sidebar {
+        background: #ffffff !important;
+        backdrop-filter: none !important;
+        border-left: 1px solid #e9ecef;
+        box-shadow: -1px 0 6px rgba(0, 0, 0, 0.05) !important;
+        color: #495057;
+      }
+      html.bz-light:not(.bz-sb-pinned) #brandzo-sidebar:hover,
+      html.bz-light:not(.bz-sb-pinned) #brandzo-sidebar:focus-within {
+        box-shadow: -14px 0 34px rgba(33, 37, 41, 0.16) !important;
+      }
+
+      /* رأس الشريط: أبيض لاصق وحدّ سفلي رمادي، والنص داكن */
+      html.bz-light #bz-sb-head {
+        background: #ffffff;
+        border-color: #e9ecef;
+      }
+      html.bz-light #brandzo-sidebar h1 { color: #212529; }
+
+      /* مكعّب الشعار وزرّا ☰/إغلاق */
+      html.bz-light #brandzo-sidebar .bg-brand-red { background-color: #714B67; }
+      html.bz-light #brandzo-desktop-toggle,
+      html.bz-light #brandzo-menu-close { color: #495057; }
+      html.bz-light #brandzo-desktop-toggle:hover,
+      html.bz-light #brandzo-menu-close:hover { background-color: #f1f1f4; }
+
+      /* --- روابط التنقل السريع --- */
+      /* الزر الأول (لوحة التحكم): كتلة الهوية */
+      html.bz-light #brandzo-sidebar .sb-quick a:first-child {
+        background-color: #714B67;
+        color: #ffffff;
+      }
+      html.bz-light #brandzo-sidebar .sb-quick a:first-child:hover { background-color: #5d3e55; }
+      /* الزر الثاني (الرئيسية): حدّ رمادي ونص داكن */
+      html.bz-light #brandzo-sidebar .sb-quick a:last-child {
+        border-color: #ced4da;
+        color: #495057;
+      }
+      html.bz-light #brandzo-sidebar .sb-quick a:last-child:hover {
+        border-color: #714B67;
+        color: #714B67;
+      }
+
+      /* --- قائمة التنقل --- */
+      /* رؤوس المجموعات: رمادي أودو الهادئ بدل الذهبي */
+      html.bz-light #brandzo-sidebar .sb-group-head {
+        color: #6c757d;
+        border-color: #e9ecef;
+      }
+      html.bz-light #brandzo-sidebar .sb-group-head svg,
+      html.bz-light #brandzo-sidebar .sb-group-head [class*='text-brand-gold'] { color: #6c757d; }
+
+      /* الروابط: نص داكن، تحويم صبغة هوية خفيفة */
+      html.bz-light #brandzo-sidebar nav a,
+      html.bz-light #brandzo-sidebar nav button {
+        color: #495057;
+      }
+      html.bz-light #brandzo-sidebar nav a:hover,
+      html.bz-light #brandzo-sidebar nav button:hover {
+        background-color: #f5f0f4;
+        color: #212529;
+      }
+      /* أيقونات العناصر: صبغة الهوية بدل الأحمر/الذهبي */
+      html.bz-light #brandzo-sidebar nav .text-brand-red,
+      html.bz-light #brandzo-sidebar nav .text-brand-gold { color: #714B67; }
+
+      /* العنصر النشط: صبغة #714B67 وحدّ يمين بلونها (يغلب الذهبي المضمَّن) */
+      html.bz-light #brandzo-sidebar nav a.bg-brand-red {
+        background-color: rgba(113, 75, 103, 0.10);
+        color: #714B67;
+        border-right: 3px solid #714B67 !important;
+      }
+      html.bz-light #brandzo-sidebar nav a.bg-brand-red:hover { background-color: rgba(113, 75, 103, 0.16); }
+      html.bz-light #brandzo-sidebar nav a.bg-brand-red .text-brand-red { color: #714B67; }
+      /* العنصر المثبّت غير النشط */
+      html.bz-light #brandzo-sidebar nav a.bg-white\/5 {
+        background-color: #faf9fb;
+        border-color: rgba(113, 75, 103, 0.25);
+        color: #495057;
+      }
+
+      /* --- البحث --- */
+      html.bz-light #sidebar-search {
+        background-color: #f1f1f4;
+        border-color: #dee2e6;
+        color: #212529;
+      }
+      html.bz-light #sidebar-search::placeholder { color: #6c757d; }
+      html.bz-light #sidebar-search:focus { border-color: #714B67; }
+      html.bz-light #brandzo-sidebar .sb-x .sticky { background: #ffffff; }
+      html.bz-light #sidebar-search-clear { background: #e9ecef; color: #495057; }
+      html.bz-light #sidebar-search-count { color: #714B67; }
+      html.bz-light #brandzo-sidebar mark { background: rgba(113, 75, 103, 0.18) !important; color: #212529 !important; }
+
+      /* شارة حالة القاعدة (JS يعيد كتابة أصنافها فنستهدف الحاوية) */
+      html.bz-light #db-status-desktop .text-green-400,
+      html.bz-light #db-status-mobile .text-green-400 { color: #008818 !important; }
+      html.bz-light #db-status-desktop .text-yellow-400,
+      html.bz-light #db-status-mobile .text-yellow-400 { color: #9a6b01 !important; }
+
+      /* --- تذييل الشريط --- */
+      html.bz-light #brandzo-sidebar .mt-auto {
+        border-color: #e9ecef;
+      }
+      html.bz-light #brandzo-sidebar .mt-auto p { color: #6c757d !important; }
+
+      /* --- شريط الموبايل العلوي: أبيض بحدّ سفلي --- */
+      html.bz-light #brandzo-mobile-header {
+        background-color: #ffffff;
+        color: #212529;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+      }
+      html.bz-light #brandzo-menu-toggle { color: #495057; }
+      html.bz-light #brandzo-menu-toggle:hover { background-color: #f1f1f4; }
+
+      /* --- طبقة حارس الدخول --- */
+      html.bz-light #bz-auth-overlay {
+        background-color: #f1f1f4 !important;
+        color: #495057;
+      }
+      html.bz-light #bz-auth-overlay > div {
+        border-color: rgba(113, 75, 103, 0.2);
+        border-top-color: #714B67;
+      }
+
+      /* --- درج الدليل التشغيلي --- */
+      html.bz-light #guide-drawer {
+        background: #ffffff;
+        color: #212529;
+        border-inline-start-color: #714B67;
+        box-shadow: -10px 0 30px rgba(33, 37, 41, 0.18);
+      }
+      html.bz-light #guide-drawer .bg-brandzo,
+      html.bz-light #guide-drawer [class*='bg-brand-navy'] { background: #f8f9fa !important; }
+      html.bz-light #guide-drawer h2 { color: #714B67; }
+      html.bz-light #guide-drawer .border-t,
+      html.bz-light #guide-drawer .border-b { border-color: #e9ecef !important; }
+      html.bz-light #guide-drawer .text-gray-200 { color: #6c757d !important; }
+      html.bz-light #guide-drawer .neon-glow-gold { box-shadow: none; }
     </style>
   </head>
 
