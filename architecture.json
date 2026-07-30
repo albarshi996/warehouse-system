@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 51,
-    "serviceDomains": 22,
-    "serviceFiles": 122,
+    "modules": 52,
+    "serviceDomains": 23,
+    "serviceFiles": 124,
     "collections": 36,
     "roles": 12,
     "odooModels": 12,
@@ -212,6 +212,14 @@
       "usesServices": [
         "readiness"
       ]
+    },
+    {
+      "name": "inventory-analytics",
+      "route": "/dashboard/inventory-analytics",
+      "title": "تحليل المخزون",
+      "summary": "تحليل المخزون: التقييم والراكد وإعادة الطلب — أوّل بنود حزمة التقارير §17",
+      "file": "src/pages/dashboard/inventory-analytics.astro",
+      "usesServices": []
     },
     {
       "name": "kpis",
@@ -865,6 +873,26 @@
       "collections": [
         "hiring_requests"
       ]
+    },
+    {
+      "domain": "inventory",
+      "dir": "src/services/inventory",
+      "files": [
+        "inventoryAnalytics.js",
+        "inventoryAnalytics.test.js"
+      ],
+      "fileCount": 2,
+      "testCount": 1,
+      "exports": [
+        "canonKey",
+        "inventorySummary",
+        "lastOutflowByItem",
+        "outflowQtySince",
+        "reorderReport",
+        "stagnantReport",
+        "valuationReport"
+      ],
+      "collections": []
     },
     {
       "domain": "items",
