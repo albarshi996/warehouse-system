@@ -30,13 +30,30 @@
   --color-dark-800: #1a2332;
   --color-dark-900: #0f1419;
   --color-dark-950: #090d12;
+
+  /* ── طبقة التوكِنز الدلالية الموحّدة (إعادة تصميم اللوحة — إضافة صرفة، لا تُلغي شيئًا) ──
+     أسماء جديدة تولّد أدوات Tailwind: bg-surface / border-line / text-muted / text-accent /
+     bg-danger … و rounded-card / shadow-card. المصدر الواحد لشكل اللوحة الجديد. */
+  --color-surface: #15152b;        /* طبقة البطاقة الداكنة الواحدة (لون صلب كي يعمل bg-surface/60) */
+  --color-surface-2: #1c1c38;      /* حالة hover */
+  --color-line: #2a2a45;           /* الحدّ المحايد الوحيد */
+  --color-muted: #a6aabc;          /* النصّ الباهت المحايد */
+  --color-accent: #DAAA3C;         /* لون التمييز = الذهبي */
+  --color-success: #2e9e5b;        /* دلالة: نجاح/منجَز */
+  --color-warning: #e0a83c;        /* دلالة: تنبيه/بانتظار (شريحة حالة) */
+  --color-danger: #c41e3a;         /* دلالة: خطر/متأخّر = الأحمر (للحالة/التحذير فقط) */
+
+  --radius-card: 1rem;             /* rounded-card — نصف قطر موحّد */
+  --radius-chip: 9999px;           /* rounded-chip */
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
 
 /* Tell Tailwind v4 explicitly where to look for class names. */
 @source "../**/*.{astro,html,js,jsx,ts,tsx,md,mdx}";
 
 *, *::before, *::after {
-  font-family: 'Cairo', sans-serif !important;
+  font-family: 'Dubai', 'Sakkal Majalla', 'Segoe UI', Tahoma, 'Cairo', sans-serif !important;
 }
 
 /* Typography Scale */

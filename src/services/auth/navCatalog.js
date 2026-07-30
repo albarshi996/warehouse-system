@@ -32,7 +32,7 @@ export const NAV_GROUPS = [
   {
     key: 'daily',
     group: 'العمليات اليومية',
-    emoji: '🗓️',
+    emoji: '🗓️', icon: 'calendar',
     items: [
       { path: '/dashboard/documents', label: 'المستندات', icon: 'clipboardList' },
       { path: '/dashboard/forms', label: 'اختار وظيفتك', icon: 'clipboardList' },
@@ -48,7 +48,7 @@ export const NAV_GROUPS = [
   {
     key: 'warehouses',
     group: 'المستودعات والجرد',
-    emoji: '📦',
+    emoji: '📦', icon: 'warehouse',
     items: [
       { path: '/dashboard/command-center', label: 'لوحة القيادة التشغيلية', icon: 'grid' },
       { path: '/dashboard/warehouses', label: 'المستودعات', icon: 'package' },
@@ -66,7 +66,7 @@ export const NAV_GROUPS = [
     // «المستودعات والجرد» (نقل لا حذف) كي يرى دور fleet مجموعته وحدها.
     key: 'fleet',
     group: 'سلاسل الإمداد والحركة',
-    emoji: '🚚',
+    emoji: '🚚', icon: 'truck',
     items: [
       { path: '/dashboard/vehicles-inventory', label: 'جرد المركبات', icon: 'package' },
       { path: '/dashboard/fleet-operations', label: 'عمليات الأسطول', icon: 'clipboardList' },
@@ -78,7 +78,7 @@ export const NAV_GROUPS = [
   {
     key: 'odoo',
     group: 'دورات أودو والمحاكاة',
-    emoji: '🔄',
+    emoji: '🔄', icon: 'graduationCap',
     items: [
       { path: '/dashboard/learn-odoo', label: 'تعلم أودو', icon: 'bookOpen' },
       { path: '/dashboard/workflows', label: 'الهيكل والمسارات', icon: 'workflows' },
@@ -90,7 +90,7 @@ export const NAV_GROUPS = [
   {
     key: 'reports',
     group: 'مركز التقارير',
-    emoji: '📊',
+    emoji: '📊', icon: 'barChart3',
     items: [
       { path: '/dashboard/reports', label: 'مركز التقارير', icon: 'clipboardList', pinned: true },
       // مؤشرات المشتريات والأداء — المحور الرابع في تقييم السلاسل، محسوبة من
@@ -126,7 +126,7 @@ export const NAV_GROUPS = [
   {
     key: 'archive',
     group: 'الأرشيف والمرجعية',
-    emoji: '🗄️',
+    emoji: '🗄️', icon: 'archive',
     items: [
       { path: '/dashboard/org-structure', label: 'الهيكل التنظيمي', icon: 'users', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/meetings', label: 'الاجتماعات التحضيرية', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
@@ -142,7 +142,7 @@ export const NAV_GROUPS = [
   {
     key: 'dept',
     group: 'طلبات الإدارات',
-    emoji: '🏬',
+    emoji: '🏬', icon: 'building2',
     items: [
       { path: '/dashboard/hiring-requests', label: 'طلب توظيف', icon: 'clipboardList' },
       // أداة تقييم سرّية — المدير العام ومستخدم الإدارة فقط:

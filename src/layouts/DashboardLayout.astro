@@ -31,12 +31,8 @@ const currentPath = Astro.url.pathname;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title ? `${title} - Brandzo Hub 2026` : 'Brandzo Hub 2026'}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
+    {/* خط الواجهة = «دبي» النظاميّ (Windows) + احتياطات — بلا تحميل خطّ خارجيّ،
+        أفضل للعمل دون اتصال (PWA) وأريح للعين (اعتماد المالك 2026-07-29). */}
     <PwaHead />
     <script is:inline>
       /* حالة تثبيت الشريط الجانبي تُقرأ قبل الرسم كي لا يومض العرض عند التحميل */
@@ -48,7 +44,7 @@ const currentPath = Astro.url.pathname;
     </script>
     <style>
       body {
-        font-family: 'Cairo', sans-serif;
+        font-family: 'Dubai', 'Sakkal Majalla', 'Segoe UI', Tahoma, 'Cairo', sans-serif;
       }
 
       /* ─── Guide Drawer ──────────────────────────────────────────────────────── */
@@ -361,7 +357,7 @@ const currentPath = Astro.url.pathname;
           {navGroups.map((grp) => (
             <li class="nav-group pt-2" data-nav-group data-group-key={grp.key}>
               <div class="sb-group-head px-3 pt-3 pb-1 flex items-center gap-2 text-[11px] font-bold text-brand-gold/70 tracking-wide border-t border-white/5" title={grp.group}>
-                <span>{grp.emoji}</span>
+                {grp.icon ? <Icon name={grp.icon} size={15} class="text-brand-gold/70" /> : <span>{grp.emoji}</span>}
                 <span class="sb-x">{grp.group}</span>
               </div>
               <ul class="space-y-1 mt-1">
