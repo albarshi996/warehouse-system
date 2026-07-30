@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 54,
+    "modules": 46,
     "serviceDomains": 23,
     "serviceFiles": 124,
     "collections": 36,
@@ -21,27 +21,11 @@
   },
   "modules": [
     {
-      "name": "تقرير-الدورة-المستندية-الكامل",
-      "route": "/dashboard/تقرير-الدورة-المستندية-الكامل",
-      "title": "الدورة المستندية الكاملة",
-      "summary": "",
-      "file": "src/pages/dashboard/تقرير-الدورة-المستندية-الكامل.astro",
-      "usesServices": []
-    },
-    {
       "name": "access-control",
       "route": "/dashboard/access-control",
       "title": "الصلاحيات والأدوار",
       "summary": "الصلاحيات والأدوار — مركز تصميم نظام الوصول لبوابة العمليات.",
       "file": "src/pages/dashboard/access-control.astro",
-      "usesServices": []
-    },
-    {
-      "name": "achievement-report",
-      "route": "/dashboard/achievement-report",
-      "title": "تقرير الانجاز",
-      "summary": "",
-      "file": "src/pages/dashboard/achievement-report.astro",
       "usesServices": []
     },
     {
@@ -69,14 +53,6 @@
       "usesServices": [
         "ui"
       ]
-    },
-    {
-      "name": "cold-storage-plan",
-      "route": "/dashboard/cold-storage-plan",
-      "title": "مخطط الرحبة - كوزميتك",
-      "summary": "",
-      "file": "src/pages/dashboard/cold-storage-plan.astro",
-      "usesServices": []
     },
     {
       "name": "command-center",
@@ -162,27 +138,11 @@
       "usesServices": []
     },
     {
-      "name": "gallery",
-      "route": "/dashboard/gallery",
-      "title": "معرض التوثيق المرئي",
-      "summary": "",
-      "file": "src/pages/dashboard/gallery.astro",
-      "usesServices": []
-    },
-    {
       "name": "global-doc-cycles",
       "route": "/dashboard/global-doc-cycles",
       "title": "الدورات المستندية العالمية",
       "summary": "مكتبة الدورات المستندية العالمية — ثمانية نماذج تشغيلية كاملة",
       "file": "src/pages/dashboard/global-doc-cycles.astro",
-      "usesServices": []
-    },
-    {
-      "name": "global-warehouse-report",
-      "route": "/dashboard/global-warehouse-report",
-      "title": "المقارنة العالمية للمستودعات",
-      "summary": "",
-      "file": "src/pages/dashboard/global-warehouse-report.astro",
       "usesServices": []
     },
     {
@@ -268,14 +228,6 @@
         "meetings",
         "ui"
       ]
-    },
-    {
-      "name": "odoo-installation",
-      "route": "/dashboard/odoo-installation",
-      "title": "دليل تثبيت أودو",
-      "summary": "",
-      "file": "src/pages/dashboard/odoo-installation.astro",
-      "usesServices": []
     },
     {
       "name": "operations",
@@ -463,22 +415,6 @@
         "ui",
         "vehicles"
       ]
-    },
-    {
-      "name": "warehouse-155-report",
-      "route": "/dashboard/warehouse-155-report",
-      "title": "تقرير تحوير مستودعات 155",
-      "summary": "",
-      "file": "src/pages/dashboard/warehouse-155-report.astro",
-      "usesServices": []
-    },
-    {
-      "name": "warehouse-maps",
-      "route": "/dashboard/warehouse-maps",
-      "title": "خرائط المستودعات الفنية",
-      "summary": "",
-      "file": "src/pages/dashboard/warehouse-maps.astro",
-      "usesServices": []
     },
     {
       "name": "warehouses",

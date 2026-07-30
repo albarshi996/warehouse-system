@@ -66,7 +66,6 @@ const hubs = [
     links: [
       { path: '/dashboard/learn-odoo', icon: 'graduationCap', label: 'تعلّم أودو (محاكي الواجهة)' },
       { path: '/dashboard/erp-workflows', icon: 'settings', label: 'دورات عمل ERP' },
-      { path: '/dashboard/odoo-installation', icon: 'wrench', label: 'دليل تثبيت أودو' },
       { path: '/dashboard/archive', icon: 'archive', label: 'الأرشيف التأسيسي' },
     ],
   },
@@ -99,15 +98,11 @@ const groups = [
         title: 'النماذج التشغيلية', desc: 'استعرض النماذج الـ19 — قلب التوثيق العملي' },
       { id: 'stock-ops', path: '/dashboard/stock-operations', icon: 'wrench',
         title: 'عمليات مخزنية', desc: 'نظام تفاعلي لإدارة الجرد والعمليات اليومية' },
-      { id: 'achievement', path: '/dashboard/achievement-report', icon: 'checkCircle',
-        title: 'تقرير الإنجاز', desc: 'سجل الإنجازات اليومية والمهام التشغيلية' },
     ],
   },
   {
     id: 'inventory', title: 'المستودعات والجرد', icon: 'package',
     cards: [
-      { id: 'cold', path: '/dashboard/cold-storage-plan', icon: 'factory',
-        title: 'مخطط مجمع التبريد الرحبة', desc: 'خريطة الوحدات والتوزيع لتخزين الكوزميتيك' },
       { id: 'retail', path: '/dashboard/retail-hub', icon: 'mapPin',
         title: 'خريطة الأسواق', desc: 'تحليل فئات المستهلكين والأسواق في بنغازي' },
       { id: 'assets', path: '/dashboard/assets-inventory', icon: 'layers',
@@ -121,12 +116,8 @@ const groups = [
     cards: [
       { id: 'reports-center', path: '/dashboard/reports', icon: 'barChart3', featured: true,
         title: 'مركز التقارير', desc: 'كل تقارير المنظومة — التشغيلية والجودة والتحليلية والتوثيق المرئي — في مكان واحد' },
-      { id: 'global', path: '/dashboard/global-warehouse-report', icon: 'globe',
-        title: 'المقارنة العالمية', desc: 'مقارنة النظام التشغيلي مع عمالقة اللوجستيات العالمية' },
       { id: 'staffing', path: '/تقرير-التوظيف-والجدول-الزمني.html', newtab: true, icon: 'users',
         title: 'تقرير التوظيف', desc: 'جدول زمن إدارة المستودعات والهيكل الوظيفي' },
-      { id: 'w155', path: '/dashboard/warehouse-155-report', icon: 'building',
-        title: 'تقرير تحوير 155', desc: 'تحوير المستودعات لرفع الكفاءة التشغيلية' },
     ],
   },
 ];
