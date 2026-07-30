@@ -52,7 +52,7 @@ export default function HiringRequestsBoard() {
     setTimeout(() => setMsg(''), 4000);
   };
 
-  if (!ready) return <p className="text-gray-300 text-sm py-10 text-center">جارٍ التحقّق…</p>;
+  if (!ready) return <p className="text-ink-2 text-sm py-10 text-center">جارٍ التحقّق…</p>;
 
   if (!me || (!isReviewer && !isRequester)) {
     return (
@@ -66,7 +66,7 @@ export default function HiringRequestsBoard() {
   return (
     <div dir="rtl" className="space-y-5">
       {msg && (
-        <div className="bg-brand-gold/15 border border-brand-gold/40 text-brand-gold rounded-xl px-4 py-2.5 text-sm text-center">
+        <div className="bg-accent/15 border border-accent/40 text-accent rounded-xl px-4 py-2.5 text-sm text-center">
           {msg}
         </div>
       )}
@@ -84,10 +84,10 @@ export default function HiringRequestsBoard() {
         />
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-white/10">
+      <div className="overflow-x-auto rounded-xl border border-line">
         <table className="w-full min-w-[760px] text-right">
           <thead>
-            <tr className="bg-white/10">
+            <tr className="bg-chip">
               {[
                 'المرشّح',
                 'الإدارة',
@@ -98,7 +98,7 @@ export default function HiringRequestsBoard() {
                 'التاريخ',
                 'الحالة',
               ].map((h) => (
-                <th key={h} className="px-3 py-2 text-xs font-bold text-gray-300 whitespace-nowrap">{h}</th>
+                <th key={h} className="px-3 py-2 text-xs font-bold text-ink-2 whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
@@ -111,14 +111,14 @@ export default function HiringRequestsBoard() {
               </tr>
             ) : (
               rows.map((r) => (
-                <tr key={r.id} className="border-t border-white/5 hover:bg-white/5">
+                <tr key={r.id} className="border-t border-line hover:bg-surface-2">
                   <td className="px-3 py-2">
-                    <p className="text-sm font-bold text-white">{r.name || '—'}</p>
+                    <p className="text-sm font-bold text-ink">{r.name || '—'}</p>
                     <p className="text-[11px] text-gray-500" style={{ direction: 'ltr', textAlign: 'right' }}>{r.phone || '—'}</p>
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-200 whitespace-nowrap">{r.departmentName}</td>
-                  <td className="px-3 py-2 text-sm text-gray-200">{r.jobTitle}</td>
-                  <td className="px-3 py-2 text-xs text-gray-300 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-ink-2 whitespace-nowrap">{r.departmentName}</td>
+                  <td className="px-3 py-2 text-sm text-ink-2">{r.jobTitle}</td>
+                  <td className="px-3 py-2 text-xs text-ink-2 whitespace-nowrap">
                     {r.qualification || '—'}{r.experienceYears ? ` · ${r.experienceYears} سنة` : ''}
                   </td>
                   <td className="px-3 py-2">
@@ -126,7 +126,7 @@ export default function HiringRequestsBoard() {
                       <button
                         type="button"
                         onClick={() => openCv(r.id).catch((e) => setErr(e.message))}
-                        className="text-xs font-bold text-brand-gold hover:underline"
+                        className="text-xs font-bold text-accent hover:underline"
                       >
                         📄 فتح
                       </button>
@@ -135,11 +135,11 @@ export default function HiringRequestsBoard() {
                     )}
                   </td>
                   {isReviewer && (
-                    <td className="px-3 py-2 text-xs text-gray-400 whitespace-nowrap">{r.createdByName}</td>
+                    <td className="px-3 py-2 text-xs text-muted whitespace-nowrap">{r.createdByName}</td>
                   )}
                   <td className="px-3 py-2 text-[11px] text-gray-500 whitespace-nowrap">{fmtDate(r.createdAt)}</td>
                   <td className="px-3 py-2">
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap bg-brand-gold/15 border-brand-gold/40 text-brand-gold">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap bg-accent/15 border-accent/40 text-accent">
                       🆕 مُرسَل
                     </span>
                   </td>
@@ -170,7 +170,7 @@ function RequestForm({ profile, onSaved, onError }) {
   const filledDetails = [phone, email, qualification, experienceYears, notes, cv].filter(Boolean).length;
 
   const input =
-    'w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-brand-gold/60';
+    'w-full bg-chip border border-line rounded-lg px-3 py-2 text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:border-accent/60';
 
   function pickCv(e) {
     const f = e.target.files?.[0] || null;
@@ -211,8 +211,8 @@ function RequestForm({ profile, onSaved, onError }) {
   }
 
   return (
-    <form onSubmit={submit} className="bg-white/5 border border-brand-gold/25 rounded-2xl p-4 sm:p-5 space-y-4">
-      <h3 className="text-base font-bold text-brand-gold">＋ طلب توظيف جديد</h3>
+    <form onSubmit={submit} className="bg-chip border border-accent/25 rounded-2xl p-4 sm:p-5 space-y-4">
+      <h3 className="text-base font-bold text-accent">＋ طلب توظيف جديد</h3>
 
       {/* الأساسي: الإدارة · المرشّح · المسمّى */}
       <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
@@ -233,16 +233,16 @@ function RequestForm({ profile, onSaved, onError }) {
       </div>
 
       {/* التفاصيل الإضافية: مطويّة كي لا يواجه المستخدم جدارًا */}
-      <div className="border-t border-white/10 pt-3">
+      <div className="border-t border-line pt-3">
         <button
           type="button"
           onClick={() => setShowDetails((v) => !v)}
-          className="flex items-center gap-2 text-sm font-bold text-gray-300 hover:text-brand-gold transition-colors"
+          className="flex items-center gap-2 text-sm font-bold text-ink-2 hover:text-accent transition-colors"
         >
           <span className={`inline-block transition-transform duration-200 ${showDetails ? 'rotate-90' : ''}`}>▸</span>
           بطاقة تعريفية (رقم الهاتف · المؤهل · السيرة …)
           {!showDetails && filledDetails > 0 && (
-            <span className="text-[11px] bg-brand-gold/20 text-brand-gold rounded-full px-2 py-0.5">{filledDetails} مُدخَل</span>
+            <span className="text-[11px] bg-accent/20 text-accent rounded-full px-2 py-0.5">{filledDetails} مُدخَل</span>
           )}
         </button>
 
@@ -269,13 +269,13 @@ function RequestForm({ profile, onSaved, onError }) {
 
             <L label="السيرة الذاتية (PDF أو صورة — حتى 700KB)">
               <input
-                className="w-full text-xs text-gray-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-brand-gold/20 file:text-brand-gold file:font-bold file:cursor-pointer"
+                className="w-full text-xs text-ink-2 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-accent/20 file:text-accent file:font-bold file:cursor-pointer"
                 type="file"
                 accept={Object.keys(ACCEPTED_CV_TYPES).join(',')}
                 onChange={pickCv}
               />
               {cvError && <p className="text-xs text-red-300 mt-1">{cvError}</p>}
-              {cv && !cvError && <p className="text-xs text-brand-gold mt-1">📄 {cv.name}</p>}
+              {cv && !cvError && <p className="text-xs text-accent mt-1">📄 {cv.name}</p>}
             </L>
           </div>
         )}
@@ -284,7 +284,7 @@ function RequestForm({ profile, onSaved, onError }) {
       <button
         type="submit"
         disabled={saving}
-        className="px-4 py-2 rounded-lg text-sm font-bold bg-brand-gold text-brand-navy hover:bg-brand-gold/85 transition-colors disabled:opacity-50"
+        className="px-4 py-2 rounded-lg text-sm font-bold bg-accent text-brand-navy hover:bg-accent/85 transition-colors disabled:opacity-50"
       >
         {saving ? 'جارٍ الإرسال…' : 'إرسال الطلب'}
       </button>
@@ -295,7 +295,7 @@ function RequestForm({ profile, onSaved, onError }) {
 function L({ label, required, children }) {
   return (
     <div>
-      <label className="block text-xs font-bold text-gray-300 mb-1.5">
+      <label className="block text-xs font-bold text-ink-2 mb-1.5">
         {label}
         {required && <span className="text-brand-red mr-1">*</span>}
       </label>

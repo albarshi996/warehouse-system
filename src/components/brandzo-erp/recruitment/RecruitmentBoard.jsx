@@ -87,7 +87,7 @@ export default function RecruitmentBoard() {
     }, 60);
   }
 
-  if (!ready) return <p className="text-gray-300 text-sm py-10 text-center">جارٍ التحقّق…</p>;
+  if (!ready) return <p className="text-ink-2 text-sm py-10 text-center">جارٍ التحقّق…</p>;
   if (!me || !canRecruit(me?.role)) {
     return (
       <div className="bg-brand-red/10 border border-brand-red/40 text-red-200 rounded-2xl p-6 text-center" dir="rtl">
@@ -105,7 +105,7 @@ export default function RecruitmentBoard() {
           className={`rounded-xl px-4 py-2.5 text-sm text-center border ${
             msg.tone === 'err'
               ? 'bg-brand-red/10 border-brand-red/40 text-red-200'
-              : 'bg-brand-gold/15 border-brand-gold/40 text-brand-gold'
+              : 'bg-accent/15 border-accent/40 text-accent'
           }`}
         >
           {msg.text}
@@ -121,7 +121,7 @@ export default function RecruitmentBoard() {
         ))}
       </div>
       <p className="text-xs text-gray-500">
-        الوظائف الشاغرة في الهيكل الرسمي: <b className="text-brand-gold">{JOBS.filter((j) => !j.occupied).length}</b> من {JOBS.length}
+        الوظائف الشاغرة في الهيكل الرسمي: <b className="text-accent">{JOBS.filter((j) => !j.occupied).length}</b> من {JOBS.length}
       </p>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -133,8 +133,8 @@ export default function RecruitmentBoard() {
               onClick={() => setFilter(k)}
               className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
                 filter === k
-                  ? 'bg-brand-gold text-brand-navy border-brand-gold'
-                  : 'bg-white/5 text-gray-300 border-white/15 hover:border-brand-gold/50'
+                  ? 'bg-accent text-brand-navy border-accent'
+                  : 'bg-chip text-ink-2 border-line hover:border-accent/50'
               }`}
             >
               {k === 'all' ? 'الكل' : candidateState(k).label}
@@ -144,7 +144,7 @@ export default function RecruitmentBoard() {
         <button
           type="button"
           onClick={() => setEditing((v) => (v ? null : 'new'))}
-          className="px-4 py-2 rounded-lg text-sm font-bold bg-brand-gold text-brand-navy hover:bg-brand-gold/85 transition-colors"
+          className="px-4 py-2 rounded-lg text-sm font-bold bg-accent text-brand-navy hover:bg-accent/85 transition-colors"
         >
           {editing ? 'إغلاق النموذج' : '＋ إضافة مرشح'}
         </button>
@@ -165,12 +165,12 @@ export default function RecruitmentBoard() {
       )}
 
       {/* الجدول */}
-      <div className="overflow-x-auto rounded-xl border border-white/10">
+      <div className="overflow-x-auto rounded-xl border border-line">
         <table className="w-full min-w-[760px] text-right">
           <thead>
-            <tr className="bg-white/10">
+            <tr className="bg-chip">
               {['المرشح', 'الوظيفة', 'الحالة', 'الراتب المتوقّع', 'السيرة', 'أُضيف', 'نقل إلى', 'إجراءات'].map((h) => (
-                <th key={h} className="px-3 py-2 text-xs font-bold text-gray-300">{h}</th>
+                <th key={h} className="px-3 py-2 text-xs font-bold text-ink-2">{h}</th>
               ))}
             </tr>
           </thead>
@@ -185,12 +185,12 @@ export default function RecruitmentBoard() {
               shown.map((r) => {
                 const st = candidateState(r.state);
                 return (
-                  <tr key={r.id} className="border-t border-white/5 hover:bg-white/5">
+                  <tr key={r.id} className="border-t border-line hover:bg-surface-2">
                     <td className="px-3 py-2">
-                      <p className="text-sm font-bold text-white">{r.name}</p>
+                      <p className="text-sm font-bold text-ink">{r.name}</p>
                       <p className="text-[11px] text-gray-500" style={{ direction: 'ltr', textAlign: 'right' }}>{r.phone || '—'}</p>
                     </td>
-                    <td className="px-3 py-2 text-sm text-gray-200">{r.jobTitle}</td>
+                    <td className="px-3 py-2 text-sm text-ink-2">{r.jobTitle}</td>
                     <td className="px-3 py-2">
                       <span
                         className="text-[11px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap"
@@ -199,13 +199,13 @@ export default function RecruitmentBoard() {
                         {st.emoji} {st.label}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-sm text-brand-gold font-bold whitespace-nowrap">{r.expectedSalary ? LYD(r.expectedSalary) : '—'}</td>
+                    <td className="px-3 py-2 text-sm text-accent font-bold whitespace-nowrap">{r.expectedSalary ? LYD(r.expectedSalary) : '—'}</td>
                     <td className="px-3 py-2">
                       {r.hasCv ? (
                         <button
                           type="button"
                           onClick={() => openCv(r.id).catch((e) => flash(e.message, 'err'))}
-                          className="text-xs font-bold text-brand-gold hover:underline"
+                          className="text-xs font-bold text-accent hover:underline"
                         >
                           📄 فتح
                         </button>
@@ -220,7 +220,7 @@ export default function RecruitmentBoard() {
                       <select
                         value={r.state}
                         onChange={(e) => changeState(r, e.target.value)}
-                        className="bg-white/5 border border-white/15 rounded-lg px-2 py-1 text-xs text-white focus:outline-none"
+                        className="bg-chip border border-line rounded-lg px-2 py-1 text-xs text-ink focus:outline-none"
                       >
                         {Object.values(CANDIDATE_STATES).map((s) => (
                           <option key={s.id} value={s.id} className="bg-brand-navy">
@@ -237,7 +237,7 @@ export default function RecruitmentBoard() {
                             setEditing(r);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                           }}
-                          className="text-xs font-bold text-brand-gold hover:underline"
+                          className="text-xs font-bold text-accent hover:underline"
                           title="تعديل بيانات المرشح"
                         >
                           ✏️ تعديل
@@ -245,7 +245,7 @@ export default function RecruitmentBoard() {
                         <button
                           type="button"
                           onClick={() => printCandidate(r)}
-                          className="text-xs font-bold text-gray-300 hover:text-white hover:underline"
+                          className="text-xs font-bold text-ink-2 hover:text-ink hover:underline"
                           title="طباعة بطاقة المرشح"
                         >
                           🖨️ طباعة
@@ -320,16 +320,16 @@ function CandidateForm({ profile, candidate, onSaved, onCancel, onError }) {
   }
 
   const input =
-    'w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-brand-gold/60';
+    'w-full bg-chip border border-line rounded-lg px-3 py-2 text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:border-accent/60';
 
   return (
-    <form onSubmit={submit} className="bg-white/5 border border-brand-gold/25 rounded-2xl p-4 sm:p-5 space-y-4">
+    <form onSubmit={submit} className="bg-chip border border-accent/25 rounded-2xl p-4 sm:p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-bold text-brand-gold">
+        <h3 className="text-base font-bold text-accent">
           {isEdit ? `✏️ تعديل: ${candidate.name}` : '＋ مرشح جديد'}
         </h3>
         {onCancel && (
-          <button type="button" onClick={onCancel} className="text-xs text-gray-400 hover:text-white">
+          <button type="button" onClick={onCancel} className="text-xs text-muted hover:text-ink">
             إلغاء
           </button>
         )}
@@ -355,12 +355,12 @@ function CandidateForm({ profile, candidate, onSaved, onCancel, onError }) {
       {/* الوصف الوظيفي يظهر تلقائيًّا عند اختيار المسمّى — لا يُكتب يدويًّا */}
       <Reveal open={Boolean(job)}>
         {job && (
-          <div className="bg-brand-gold/5 border border-brand-gold/20 rounded-xl p-3 text-xs leading-relaxed">
-            <p className="font-bold text-brand-gold mb-1">
+          <div className="bg-accent/5 border border-accent/20 rounded-xl p-3 text-xs leading-relaxed">
+            <p className="font-bold text-accent mb-1">
               {job.icon} {job.title} — {job.layer}
             </p>
-            <p className="text-gray-400 mb-1">التبعية: {job.reportingTo} · المؤشرات: {job.kpis}</p>
-            <ul className="text-gray-300 space-y-0.5 pr-4 list-disc">
+            <p className="text-muted mb-1">التبعية: {job.reportingTo} · المؤشرات: {job.kpis}</p>
+            <ul className="text-ink-2 space-y-0.5 pr-4 list-disc">
               {job.duties.slice(0, 4).map((d) => (
                 <li key={d}>{d}</li>
               ))}
@@ -372,16 +372,16 @@ function CandidateForm({ profile, candidate, onSaved, onCancel, onError }) {
       </Reveal>
 
       {/* التفاصيل الاختيارية: مطويّة، تُفتح بضغطة */}
-      <div className="border-t border-white/10 pt-3">
+      <div className="border-t border-line pt-3">
         <button
           type="button"
           onClick={() => setShowDetails((v) => !v)}
-          className="flex items-center gap-2 text-sm font-bold text-gray-300 hover:text-brand-gold transition-colors"
+          className="flex items-center gap-2 text-sm font-bold text-ink-2 hover:text-accent transition-colors"
         >
           <span className={`inline-block transition-transform duration-200 ${showDetails ? 'rotate-90' : ''}`}>▸</span>
           تفاصيل إضافية (اختياري)
           {!showDetails && filledDetails > 0 && (
-            <span className="text-[11px] bg-brand-gold/20 text-brand-gold rounded-full px-2 py-0.5">{filledDetails} مُدخَل</span>
+            <span className="text-[11px] bg-accent/20 text-accent rounded-full px-2 py-0.5">{filledDetails} مُدخَل</span>
           )}
         </button>
 
@@ -406,7 +406,7 @@ function CandidateForm({ profile, candidate, onSaved, onCancel, onError }) {
                 <input type="number" min="0" className={input} value={experienceYears} onChange={(e) => setExperienceYears(e.target.value)} placeholder="0" />
               </L>
               <L label={`السيرة الذاتية (${Object.values(ACCEPTED_CV_TYPES).join('/')} حتى 700KB)`}>
-                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={pickCv} className="text-xs text-gray-400 file:ml-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-brand-gold file:text-brand-navy file:font-bold file:cursor-pointer" />
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={pickCv} className="text-xs text-muted file:ml-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-accent file:text-brand-navy file:font-bold file:cursor-pointer" />
                 {cvError && <p className="text-[11px] text-red-300 mt-1">⚠️ {cvError}</p>}
                 {cv && !cvError && <p className="text-[11px] text-green-300 mt-1">✓ {cv.name} ({Math.round(cv.size / 1024)}KB)</p>}
                 {isEdit && candidate.hasCv && !cv && (
@@ -425,7 +425,7 @@ function CandidateForm({ profile, candidate, onSaved, onCancel, onError }) {
         <button
           type="submit"
           disabled={saving || Boolean(cvError)}
-          className="px-6 py-2 rounded-lg text-sm font-bold bg-brand-gold text-brand-navy hover:bg-brand-gold/85 disabled:opacity-50 transition-colors"
+          className="px-6 py-2 rounded-lg text-sm font-bold bg-accent text-brand-navy hover:bg-accent/85 disabled:opacity-50 transition-colors"
         >
           {saving ? 'جارٍ الحفظ…' : isEdit ? '💾 حفظ التعديلات' : '💾 حفظ المرشح في السحابة'}
         </button>
@@ -452,7 +452,7 @@ function Reveal({ open, children }) {
 function L({ label, required, children }) {
   return (
     <div>
-      <label className="block text-xs font-bold text-gray-300 mb-1.5">
+      <label className="block text-xs font-bold text-ink-2 mb-1.5">
         {label}
         {required && <span className="text-brand-red mr-1">*</span>}
       </label>
@@ -463,9 +463,9 @@ function L({ label, required, children }) {
 
 function Stat({ label, value, color }) {
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-3 text-center">
+    <div className="bg-chip border border-line rounded-2xl p-3 text-center">
       <p className="text-xl font-bold" style={{ color }}>{value}</p>
-      <p className="text-[11px] text-gray-400 mt-0.5">{label}</p>
+      <p className="text-[11px] text-muted mt-0.5">{label}</p>
     </div>
   );
 }

@@ -314,13 +314,13 @@ const WarehouseManager = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="p-8 text-center text-gray-200 italic">
+                  <td colSpan="4" className="p-8 text-center text-ink-2 italic">
                     جاري جلب البيانات من السحابة...
                   </td>
                 </tr>
               ) : warehouses.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="p-8 text-center text-gray-200 font-bold">
+                  <td colSpan="4" className="p-8 text-center text-ink-2 font-bold">
                     لا توجد مستودعات مسجلة حالياً
                   </td>
                 </tr>

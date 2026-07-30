@@ -361,7 +361,7 @@ const WarehouseMaps = () => {
       'منخفض': 'bg-green-500/15 text-green-400 border-green-500/30',
     };
     return (
-      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${map[level] || 'bg-gray-500/15 text-gray-400 border-gray-500/30'}`}>
+      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${map[level] || 'bg-gray-500/15 text-muted border-gray-500/30'}`}>
         {level}
       </span>
     );
@@ -374,7 +374,7 @@ const WarehouseMaps = () => {
       'منخفض': 'bg-green-500/15 text-green-400 border-green-500/30',
     };
     return (
-      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${map[level] || 'bg-gray-500/15 text-gray-400 border-gray-500/30'}`}>
+      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${map[level] || 'bg-gray-500/15 text-muted border-gray-500/30'}`}>
         خطورة {level}
       </span>
     );
@@ -384,7 +384,7 @@ const WarehouseMaps = () => {
     const map = {
       'Critical': 'bg-brand-red/15 text-brand-red border-brand-red/30',
       'High':     'bg-orange-500/15 text-orange-400 border-orange-500/30',
-      'Medium':   'bg-gray-500/15 text-gray-400 border-gray-500/30',
+      'Medium':   'bg-gray-500/15 text-muted border-gray-500/30',
     };
     return (
       <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${map[priority] || map['Medium']}`}>
@@ -406,22 +406,22 @@ const WarehouseMaps = () => {
           { label:'سعة الطبليات',    value:stats.estPallets.toLocaleString(),         icon:'clipboardList', color:'text-green-400' },
           { label:'نوع الرافعة',     value:stats.forkliftType,                        icon:'truck',         color:'text-blue-400' },
         ].map((s, i) => (
-          <div key={i} className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center gap-3">
+          <div key={i} className="bg-chip border border-line p-4 rounded-xl flex items-center gap-3">
             <div className={`w-10 h-10 bg-brand-navy rounded-lg flex items-center justify-center ${s.color} shrink-0`}>
               <Icon name={s.icon} size={20} />
             </div>
             <div>
-              <div className="text-gray-400 text-[10px] mb-0.5">{s.label}</div>
-              <div className="text-sm font-bold text-white leading-tight">{s.value}</div>
+              <div className="text-muted text-[10px] mb-0.5">{s.label}</div>
+              <div className="text-sm font-bold text-ink leading-tight">{s.value}</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* SVG Floor Plan */}
-      <div className="bg-[#0f1923] border border-white/10 rounded-2xl p-6">
+      <div className="bg-[#0f1923] border border-line rounded-2xl p-6">
         <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
-          <h4 className="font-bold text-white text-sm">المخطط الكابوري الشامل — موقع 155 (بوهادي)</h4>
+          <h4 className="font-bold text-ink text-sm">المخطط الكابوري الشامل — موقع 155 (بوهادي)</h4>
           <div className="flex flex-wrap gap-3 text-[10px]">
             {[
               { color:'#27ae60', label:'استلام' },
@@ -432,7 +432,7 @@ const WarehouseMaps = () => {
               { color:'#DAAA3C', label:'أرصفة' },
               { color:'#c41e3a', label:'إداري' },
             ].map((l, i) => (
-              <span key={i} className="flex items-center gap-1 text-gray-300">
+              <span key={i} className="flex items-center gap-1 text-ink-2">
                 <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: l.color }}></span>
                 {l.label}
               </span>
@@ -440,7 +440,7 @@ const WarehouseMaps = () => {
           </div>
         </div>
 
-        <div className="relative w-full rounded-xl overflow-hidden border border-white/5 bg-[#0a1020]">
+        <div className="relative w-full rounded-xl overflow-hidden border border-line bg-[#0a1020]">
           <svg viewBox="0 0 420 185" className="w-full" style={{ minHeight: 240 }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <pattern id="grid-fp" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -535,8 +535,8 @@ const WarehouseMaps = () => {
         </div>
 
         {/* مفتاح الألوان المطبوع */}
-        <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/5">
-          <div className="text-[10px] text-gray-400 font-bold mb-2 uppercase">مفتاح الألوان والأسهم — Legend</div>
+        <div className="mt-4 p-3 bg-chip rounded-xl border border-line">
+          <div className="text-[10px] text-muted font-bold mb-2 uppercase">مفتاح الألوان والأسهم — Legend</div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px]">
             {[
               { color:'#27ae60', label:'استلام (Input)',    type:'zone' },
@@ -548,9 +548,9 @@ const WarehouseMaps = () => {
               { color:'#27ae60', label:'مسار الاستلام',    type:'arrow' },
               { color:'#e67e22', label:'مسار الشحن',       type:'arrow' },
             ].map((l, i) => (
-              <div key={i} className="flex items-center gap-1.5 text-gray-300">
+              <div key={i} className="flex items-center gap-1.5 text-ink-2">
                 {l.type === 'zone'
-                  ? <span className="w-3 h-3 rounded-sm shrink-0 border border-white/20" style={{ backgroundColor: l.color+'55', borderColor: l.color }}></span>
+                  ? <span className="w-3 h-3 rounded-sm shrink-0 border border-line" style={{ backgroundColor: l.color+'55', borderColor: l.color }}></span>
                   : <span className="w-5 h-0.5 shrink-0 rounded" style={{ backgroundColor: l.color }}></span>
                 }
                 {l.label}
@@ -570,11 +570,11 @@ const WarehouseMaps = () => {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: wh.color }}></span>
-                  <h5 className="font-bold text-white text-base">{wh.id} — {wh.name}</h5>
+                  <h5 className="font-bold text-ink text-base">{wh.id} — {wh.name}</h5>
                 </div>
-                <p className="text-xs text-gray-400">{wh.function}</p>
+                <p className="text-xs text-muted">{wh.function}</p>
               </div>
-              <button onClick={() => setSelectedZone(null)} className="text-gray-500 hover:text-white text-xs px-2 py-1 bg-white/5 rounded-lg">✕ إغلاق</button>
+              <button onClick={() => setSelectedZone(null)} className="text-gray-500 hover:text-ink text-xs px-2 py-1 bg-chip rounded-lg">✕ إغلاق</button>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
               {[
@@ -585,9 +585,9 @@ const WarehouseMaps = () => {
                 { l:'المعيار',          v:wh.standard },
                 { l:'دور التدفق',      v:wh.flowRole },
               ].map((r, i) => (
-                <div key={i} className="bg-white/5 p-2.5 rounded-lg">
+                <div key={i} className="bg-chip p-2.5 rounded-lg">
                   <div className="text-gray-500 text-[10px] mb-0.5">{r.l}</div>
-                  <div className="text-white font-bold text-[11px]">{r.v}</div>
+                  <div className="text-ink font-bold text-[11px]">{r.v}</div>
                 </div>
               ))}
             </div>
@@ -595,35 +595,35 @@ const WarehouseMaps = () => {
         );
       })()}
       {!selectedZone && (
-        <div className="mt-3 p-3 bg-white/5 rounded-xl text-center text-[10px] text-gray-500">
+        <div className="mt-3 p-3 bg-chip rounded-xl text-center text-[10px] text-gray-500">
           ← اضغط على أي مستودع لعرض تفاصيله
         </div>
       )}
 
       {/* جدول الوحدات */}
-      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
-        <h4 className="font-bold text-white mb-4 text-sm">جدول الوحدات التشغيلية — 10 مستودعات</h4>
+      <div className="bg-[#141f2e] border border-line rounded-2xl p-6">
+        <h4 className="font-bold text-ink mb-4 text-sm">جدول الوحدات التشغيلية — 10 مستودعات</h4>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-white/10">
+              <tr className="border-b border-line">
                 {['الوحدة','الوظيفة','المساحة','الارتفاع','سعة الطبليات','المعيار','الدور'].map((h, i) => (
-                  <th key={i} className="text-right text-gray-400 font-bold pb-3 pr-3 whitespace-nowrap">{h}</th>
+                  <th key={i} className="text-right text-muted font-bold pb-3 pr-3 whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {warehouses.map(wh => (
-                <tr key={wh.id} className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => setSelectedZone(wh.id)}>
+                <tr key={wh.id} className="border-b border-line hover:bg-surface-2 transition-colors cursor-pointer" onClick={() => setSelectedZone(wh.id)}>
                   <td className="py-2.5 pr-3">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: wh.color }}></span>
-                      <span className="font-bold text-white">{wh.id}</span>
+                      <span className="font-bold text-ink">{wh.id}</span>
                     </div>
                   </td>
-                  <td className="py-2.5 pr-3 text-gray-300">{wh.name}</td>
-                  <td className="py-2.5 pr-3 text-gray-400">{wh.area.toLocaleString()} م²</td>
-                  <td className="py-2.5 pr-3 text-gray-400">{wh.height} م</td>
+                  <td className="py-2.5 pr-3 text-ink-2">{wh.name}</td>
+                  <td className="py-2.5 pr-3 text-muted">{wh.area.toLocaleString()} م²</td>
+                  <td className="py-2.5 pr-3 text-muted">{wh.height} م</td>
                   <td className="py-2.5 pr-3 font-bold" style={{ color: wh.color }}>{wh.palletCapacity.toLocaleString()}</td>
                   <td className="py-2.5 pr-3 text-gray-500 text-[10px] font-mono">{wh.standard.split('/')[0]}</td>
                   <td className="py-2.5 pr-3">
@@ -632,15 +632,15 @@ const WarehouseMaps = () => {
                       wh.flowRole === 'output'  ? 'bg-orange-500/20 text-orange-400' :
                       wh.flowRole === 'qc'      ? 'bg-purple-500/20 text-purple-400' :
                       wh.flowRole === 'staging' ? 'bg-blue-500/20 text-blue-400' :
-                                                  'bg-gray-500/20 text-gray-400'
+                                                  'bg-gray-500/20 text-muted'
                     }`}>{wh.flowRole}</span>
                   </td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t border-white/10">
-                <td colSpan={4} className="pt-3 pr-3 text-gray-400 font-bold text-[11px]">الإجمالي</td>
+              <tr className="border-t border-line">
+                <td colSpan={4} className="pt-3 pr-3 text-muted font-bold text-[11px]">الإجمالي</td>
                 <td className="pt-3 pr-3 font-black text-brand-yellow">
                   {warehouses.reduce((a,w) => a + w.palletCapacity, 0).toLocaleString()} طبلية
                 </td>
@@ -652,14 +652,14 @@ const WarehouseMaps = () => {
       </div>
 
       {/* جدول مسارات الحركة الرئيسية — مكمّل للطباعة */}
-      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
-        <h4 className="font-bold text-white mb-4 text-sm">مسارات الحركة الرئيسية بين الوحدات</h4>
+      <div className="bg-[#141f2e] border border-line rounded-2xl p-6">
+        <h4 className="font-bold text-ink mb-4 text-sm">مسارات الحركة الرئيسية بين الوحدات</h4>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-white/10">
+              <tr className="border-b border-line">
                 {['من','إلى','نوع الحركة','المعدة المستخدمة','اتجاه السهم'].map((h,i) => (
-                  <th key={i} className="text-right text-gray-400 font-bold pb-2 pr-3">{h}</th>
+                  <th key={i} className="text-right text-muted font-bold pb-2 pr-3">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -673,11 +673,11 @@ const WarehouseMaps = () => {
                 { from:'E-9',          to:'E-10',type:'شحن / Cross-Dock',  eq:'رافعة + Dock Leveler',    arrow:'برتقالي ▶' },
                 { from:'E-10',         to:'بوابة الخروج', type:'تسليم الشاحنة', eq:'Dock Leveler هيدروليكي', arrow:'أحمر ▶' },
               ].map((r, i) => (
-                <tr key={i} className="border-b border-white/5 hover:bg-white/3">
-                  <td className="py-2 pr-3 text-white font-medium">{r.from}</td>
-                  <td className="py-2 pr-3 text-white font-medium">{r.to}</td>
-                  <td className="py-2 pr-3 text-gray-300">{r.type}</td>
-                  <td className="py-2 pr-3 text-gray-400 text-[10px] font-mono">{r.eq}</td>
+                <tr key={i} className="border-b border-line hover:bg-white/3">
+                  <td className="py-2 pr-3 text-ink font-medium">{r.from}</td>
+                  <td className="py-2 pr-3 text-ink font-medium">{r.to}</td>
+                  <td className="py-2 pr-3 text-ink-2">{r.type}</td>
+                  <td className="py-2 pr-3 text-muted text-[10px] font-mono">{r.eq}</td>
                   <td className="py-2 pr-3 text-brand-yellow text-[10px]">{r.arrow}</td>
                 </tr>
               ))}
@@ -701,22 +701,22 @@ const WarehouseMaps = () => {
       {/* مؤشر الزمن الإجمالي */}
       <div className="bg-[#0f1923] border border-brand-yellow/20 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="text-[10px] text-gray-400 uppercase font-bold mb-1">زمن الدورة الإجمالي — Total Cycle Time (تقديري)</div>
-          <div className="text-3xl font-black text-brand-yellow">{totalCycleMinutes} <span className="text-base text-gray-400">دقيقة / شحنة</span></div>
-          <div className="text-[11px] text-gray-400 mt-1">من وصول الشاحنة إلى تأكيد التسليم عبر GPS</div>
+          <div className="text-[10px] text-muted uppercase font-bold mb-1">زمن الدورة الإجمالي — Total Cycle Time (تقديري)</div>
+          <div className="text-3xl font-black text-brand-yellow">{totalCycleMinutes} <span className="text-base text-muted">دقيقة / شحنة</span></div>
+          <div className="text-[11px] text-muted mt-1">من وصول الشاحنة إلى تأكيد التسليم عبر GPS</div>
         </div>
         <div className="flex flex-wrap gap-2">
           {logisticsFlow.map(s => (
             <div key={s.step} className="flex flex-col items-center text-center">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black text-white mb-1" style={{ backgroundColor: s.color }}>{s.step}</div>
-              <div className="text-[9px] text-gray-400">{s.cycleTime}</div>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black text-ink mb-1" style={{ backgroundColor: s.color }}>{s.step}</div>
+              <div className="text-[9px] text-muted">{s.cycleTime}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="bg-[#0f1923] border border-white/10 rounded-2xl p-6">
-        <h4 className="font-bold text-white mb-6 text-sm">تدفق العمليات اللوجستية — من وصول الشاحنة إلى التسليم</h4>
+      <div className="bg-[#0f1923] border border-line rounded-2xl p-6">
+        <h4 className="font-bold text-ink mb-6 text-sm">تدفق العمليات اللوجستية — من وصول الشاحنة إلى التسليم</h4>
         <div className="relative">
           <div className="hidden md:block absolute top-10 left-8 right-8 h-0.5 bg-gradient-to-l from-orange-500/40 via-blue-500/40 to-green-500/40"></div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 relative z-10">
@@ -740,10 +740,10 @@ const WarehouseMaps = () => {
                 >
                   {step.icon}
                 </div>
-                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white mb-1.5" style={{ backgroundColor: step.color }}>
+                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-ink mb-1.5" style={{ backgroundColor: step.color }}>
                   {step.step}
                 </div>
-                <div className="text-[11px] font-bold text-white leading-tight">{step.title}</div>
+                <div className="text-[11px] font-bold text-ink leading-tight">{step.title}</div>
                 <div className="text-[9px] text-gray-500 mt-0.5">{step.subtitle}</div>
                 {/* وسم لوني للوحدة */}
                 {zoneWh && (
@@ -763,40 +763,40 @@ const WarehouseMaps = () => {
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{activeFlowStep.icon}</span>
                 <div>
-                  <h5 className="font-bold text-white text-base">{activeFlowStep.title}</h5>
-                  <div className="text-xs text-gray-400">{activeFlowStep.zone}</div>
+                  <h5 className="font-bold text-ink text-base">{activeFlowStep.title}</h5>
+                  <div className="text-xs text-muted">{activeFlowStep.zone}</div>
                 </div>
               </div>
-              <button onClick={() => setActiveFlowStep(null)} className="text-gray-500 hover:text-white text-xs px-2 py-1 bg-white/5 rounded-lg">✕</button>
+              <button onClick={() => setActiveFlowStep(null)} className="text-gray-500 hover:text-ink text-xs px-2 py-1 bg-chip rounded-lg">✕</button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <div className="text-[10px] text-gray-400 mb-2">خطوات التنفيذ</div>
+                <div className="text-[10px] text-muted mb-2">خطوات التنفيذ</div>
                 <div className="space-y-2">
                   {activeFlowStep.details.map((d, i) => (
-                    <div key={i} className="flex items-start gap-2 text-[11px] text-gray-300">
-                      <span className="w-5 h-5 rounded flex items-center justify-center shrink-0 text-[10px] font-bold text-white mt-0.5" style={{ backgroundColor: activeFlowStep.color }}>{i + 1}</span>
+                    <div key={i} className="flex items-start gap-2 text-[11px] text-ink-2">
+                      <span className="w-5 h-5 rounded flex items-center justify-center shrink-0 text-[10px] font-bold text-ink mt-0.5" style={{ backgroundColor: activeFlowStep.color }}>{i + 1}</span>
                       {d}
                     </div>
                   ))}
                 </div>
               </div>
               <div className="space-y-3">
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-[10px] text-gray-400 mb-1">المعيار المعتمد</div>
+                <div className="bg-chip rounded-xl p-4">
+                  <div className="text-[10px] text-muted mb-1">المعيار المعتمد</div>
                   <div className="text-xs text-brand-yellow font-bold">{activeFlowStep.standard}</div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-[10px] text-gray-400 mb-1">مؤشر الأداء (KPI)</div>
+                <div className="bg-chip rounded-xl p-4">
+                  <div className="text-[10px] text-muted mb-1">مؤشر الأداء (KPI)</div>
                   <div className="text-xs text-green-400 font-bold">{activeFlowStep.kpi}</div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-[10px] text-gray-400 mb-1">المعدات المطلوبة</div>
-                  <div className="text-xs text-white">{activeFlowStep.equipment}</div>
+                <div className="bg-chip rounded-xl p-4">
+                  <div className="text-[10px] text-muted mb-1">المعدات المطلوبة</div>
+                  <div className="text-xs text-ink">{activeFlowStep.equipment}</div>
                 </div>
                 <div className="bg-brand-red/8 border border-brand-red/20 rounded-xl p-4">
                   <div className="text-[10px] text-brand-red mb-1">نقطة الاختناق المحتملة</div>
-                  <div className="text-xs text-gray-200 font-medium">{activeFlowStep.bottleneck}</div>
+                  <div className="text-xs text-ink-2 font-medium">{activeFlowStep.bottleneck}</div>
                   <div className="text-[10px] text-brand-yellow mt-1">الإجراء: {activeFlowStep.bottleneckAction}</div>
                 </div>
               </div>
@@ -804,31 +804,31 @@ const WarehouseMaps = () => {
           </div>
         )}
         {!activeFlowStep && (
-          <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/10 text-center text-xs text-gray-400">
+          <div className="mt-4 p-3 bg-chip rounded-xl border border-line text-center text-xs text-muted">
             ↑ اضغط على أي خطوة لعرض تفاصيلها الكاملة
           </div>
         )}
       </div>
 
-      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
-        <h4 className="font-bold text-white mb-4">ملخص تدفق العمليات — مؤشرات الأداء المستهدفة</h4>
+      <div className="bg-[#141f2e] border border-line rounded-2xl p-6">
+        <h4 className="font-bold text-ink mb-4">ملخص تدفق العمليات — مؤشرات الأداء المستهدفة</h4>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-white/10">
+              <tr className="border-b border-line">
                 {['#','المرحلة','المنطقة','المعيار','KPI المستهدف','زمن الدورة','نقطة الاختناق'].map((h, i) => (
-                  <th key={i} className="text-right text-gray-400 font-bold pb-3 pr-3">{h}</th>
+                  <th key={i} className="text-right text-muted font-bold pb-3 pr-3">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {logisticsFlow.map(step => (
-                <tr key={step.step} className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => setActiveFlowStep(step)}>
+                <tr key={step.step} className="border-b border-line hover:bg-surface-2 transition-colors cursor-pointer" onClick={() => setActiveFlowStep(step)}>
                   <td className="py-3 pr-3">
-                    <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: step.color }}>{step.step}</span>
+                    <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-ink" style={{ backgroundColor: step.color }}>{step.step}</span>
                   </td>
-                  <td className="py-3 pr-3 text-white font-medium">{step.title}</td>
-                  <td className="py-3 pr-3 text-gray-300 text-[10px]">{step.zone}</td>
+                  <td className="py-3 pr-3 text-ink font-medium">{step.title}</td>
+                  <td className="py-3 pr-3 text-ink-2 text-[10px]">{step.zone}</td>
                   <td className="py-3 pr-3 text-brand-yellow text-[10px]">{step.standard.split('/')[0]}</td>
                   <td className="py-3 pr-3 text-green-400 font-bold text-[10px]">{step.kpi}</td>
                   <td className="py-3 pr-3 text-brand-yellow text-[10px] font-bold">{step.cycleTime}</td>
@@ -855,10 +855,10 @@ const WarehouseMaps = () => {
     <div className="space-y-8 animate-fade-in">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* الوضع الحالي */}
-        <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
-          <h4 className="font-bold text-white mb-1 border-b border-white/10 pb-2">الوضع الحالي — Current State</h4>
-          <p className="text-xs text-gray-400 mb-4">ارتفاع صافٍ 6.80 م — 3 مستويات تخزين فقط</p>
-          <div className="relative h-72 bg-brand-navy/30 rounded-xl overflow-hidden border border-white/5">
+        <div className="bg-[#141f2e] border border-line rounded-2xl p-6">
+          <h4 className="font-bold text-ink mb-1 border-b border-line pb-2">الوضع الحالي — Current State</h4>
+          <p className="text-xs text-muted mb-4">ارتفاع صافٍ 6.80 م — 3 مستويات تخزين فقط</p>
+          <div className="relative h-72 bg-brand-navy/30 rounded-xl overflow-hidden border border-line">
             <svg viewBox="0 0 200 150" className="w-full h-full p-3" preserveAspectRatio="xMidYMid meet">
               <rect x="10" y="128" width="180" height="5" fill="#2c3e50" />
               <line x1="10" y1="48" x2="190" y2="48" stroke="#c41e3a" strokeWidth="1.5" strokeDasharray="4,2" />
@@ -884,9 +884,9 @@ const WarehouseMaps = () => {
               { l:'نوع الرافعة',     v:'رافعة قياسية',   bad:false },
               { l:'الإهدار العمودي', v:'45% مساحة ضائعة',bad:true },
             ].map((r, i) => (
-              <div key={i} className="flex items-center justify-between bg-white/5 p-2 rounded-lg">
-                <span className="text-gray-400">{r.l}</span>
-                <span className={r.bad ? 'text-brand-red font-bold' : 'text-gray-300 font-bold'}>{r.v}</span>
+              <div key={i} className="flex items-center justify-between bg-chip p-2 rounded-lg">
+                <span className="text-muted">{r.l}</span>
+                <span className={r.bad ? 'text-brand-red font-bold' : 'text-ink-2 font-bold'}>{r.v}</span>
               </div>
             ))}
           </div>
@@ -894,9 +894,9 @@ const WarehouseMaps = () => {
 
         {/* الوضع المقترح */}
         <div className="bg-[#141f2e] border rounded-2xl p-6" style={{ borderColor:'#1abc9c44' }}>
-          <h4 className="font-bold text-brand-yellow mb-1 border-b border-white/10 pb-2">الوضع المقترح — Class A Standard</h4>
-          <p className="text-xs text-gray-400 mb-4">ارتفاع صافٍ 12.0 م — 6 مستويات تخزين (E-5) — خلوص رشاشات {dimensions.sprinklerClearance}م</p>
-          <div className="relative h-72 bg-brand-navy/30 rounded-xl overflow-hidden border border-white/5">
+          <h4 className="font-bold text-brand-yellow mb-1 border-b border-line pb-2">الوضع المقترح — Class A Standard</h4>
+          <p className="text-xs text-muted mb-4">ارتفاع صافٍ 12.0 م — 6 مستويات تخزين (E-5) — خلوص رشاشات {dimensions.sprinklerClearance}م</p>
+          <div className="relative h-72 bg-brand-navy/30 rounded-xl overflow-hidden border border-line">
             <svg viewBox="0 0 200 150" className="w-full h-full p-3" preserveAspectRatio="xMidYMid meet">
               <rect x="10" y="128" width="180" height="5" fill="#2c3e50" />
               <line x1="10" y1="10" x2="190" y2="10" stroke="#27ae60" strokeWidth="1.5" strokeDasharray="4,2" />
@@ -942,9 +942,9 @@ const WarehouseMaps = () => {
               { l:'نوع الرافعة',      v:'Reach Truck / VNA', good:true },
               { l:'الاستغلال العمودي',v:'95% كفاءة',        good:true },
             ].map((r, i) => (
-              <div key={i} className="flex items-center justify-between bg-white/5 p-2 rounded-lg">
-                <span className="text-gray-400">{r.l}</span>
-                <span className={r.good ? 'text-green-400 font-bold' : 'text-gray-300 font-bold'}>{r.v}</span>
+              <div key={i} className="flex items-center justify-between bg-chip p-2 rounded-lg">
+                <span className="text-muted">{r.l}</span>
+                <span className={r.good ? 'text-green-400 font-bold' : 'text-ink-2 font-bold'}>{r.v}</span>
               </div>
             ))}
           </div>
@@ -952,14 +952,14 @@ const WarehouseMaps = () => {
       </div>
 
       {/* جدول مقارنة الارتفاع الحالي مقابل المستهدف */}
-      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
-        <h4 className="font-bold text-white mb-4 text-sm">مقارنة الارتفاع — الحالي مقابل المستهدف (بالوحدة)</h4>
+      <div className="bg-[#141f2e] border border-line rounded-2xl p-6">
+        <h4 className="font-bold text-ink mb-4 text-sm">مقارنة الارتفاع — الحالي مقابل المستهدف (بالوحدة)</h4>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-white/10">
+              <tr className="border-b border-line">
                 {['الوحدة','الارتفاع الحالي','الارتفاع المستهدف','مستويات الرفوف المستهدفة','الفارق','الأولوية'].map((h,i) => (
-                  <th key={i} className="text-right text-gray-400 font-bold pb-2 pr-3">{h}</th>
+                  <th key={i} className="text-right text-muted font-bold pb-2 pr-3">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -970,11 +970,11 @@ const WarehouseMaps = () => {
                 const delta = (targetHeight - 6.80).toFixed(2);
                 const needsUpgrade = parseFloat(delta) > 0.5;
                 return (
-                  <tr key={wh.id} className="border-b border-white/5 hover:bg-white/3">
+                  <tr key={wh.id} className="border-b border-line hover:bg-white/3">
                     <td className="py-2 pr-3">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: wh.color }}></span>
-                        <span className="font-bold text-white">{wh.id}</span>
+                        <span className="font-bold text-ink">{wh.id}</span>
                       </div>
                     </td>
                     <td className="py-2 pr-3 text-brand-red font-medium">6.80 م</td>
@@ -995,9 +995,9 @@ const WarehouseMaps = () => {
       </div>
 
       {/* Dock Platform Detail */}
-      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-8">
-        <h4 className="font-bold text-white mb-6">تفصيل منصة الشحن والاستلام — Dock Platform Detail</h4>
-        <div className="relative w-full rounded-xl overflow-hidden border border-white/5 bg-[#0a1020]">
+      <div className="bg-[#141f2e] border border-line rounded-2xl p-8">
+        <h4 className="font-bold text-ink mb-6">تفصيل منصة الشحن والاستلام — Dock Platform Detail</h4>
+        <div className="relative w-full rounded-xl overflow-hidden border border-line bg-[#0a1020]">
           <svg viewBox="0 0 420 155" className="w-full" style={{ minHeight:180 }} preserveAspectRatio="xMidYMid meet">
             <rect x="0" y="130" width="420" height="25" fill="#1a1a2a" />
             <rect x="260" y="90" width="160" height="40" fill="#2c3344" />
@@ -1023,9 +1023,9 @@ const WarehouseMaps = () => {
             { title:'Dock Shelter (عازل حراري)', desc:'مطاط عازل يحيط بفتحة الشاحنة لمنع دخول الغبار والحرارة وتحسين كفاءة الطاقة بنسبة 40%.' },
             { title:'Safety Light System',       desc:'إشارة أحمر/أخضر لتنظيم حركة الشاحنات، تمنع حوادث الدخول المبكر أثناء التحميل.' },
           ].map((item, i) => (
-            <div key={i} className="bg-white/5 p-4 rounded-xl border border-white/5">
+            <div key={i} className="bg-chip p-4 rounded-xl border border-line">
               <div className="text-brand-yellow font-bold text-sm mb-2">{item.title}</div>
-              <p className="text-[11px] text-gray-300 leading-relaxed">{item.desc}</p>
+              <p className="text-[11px] text-ink-2 leading-relaxed">{item.desc}</p>
             </div>
           ))}
         </div>
@@ -1048,9 +1048,9 @@ const WarehouseMaps = () => {
             { label:'تطويرات مطلوبة',   value:upgradeCount,          color:'text-brand-yellow', bg:'bg-brand-yellow/10', icon:'arrowUpTray' },
             { label:'نسبة الامتثال',    value:`${complianceRate}%`,  color:'text-green-400',    bg:'bg-green-500/10',    icon:'clipboardList' },
           ].map((s, i) => (
-            <div key={i} className="bg-[#141f2e] border border-white/10 p-6 rounded-2xl flex items-center justify-between">
+            <div key={i} className="bg-[#141f2e] border border-line p-6 rounded-2xl flex items-center justify-between">
               <div>
-                <div className="text-gray-300 text-xs font-bold uppercase mb-1">{s.label}</div>
+                <div className="text-ink-2 text-xs font-bold uppercase mb-1">{s.label}</div>
                 <div className={`text-3xl font-bold ${s.color}`}>{s.value}</div>
               </div>
               <div className={`w-12 h-12 ${s.bg} rounded-full flex items-center justify-center ${s.color}`}>
@@ -1064,7 +1064,7 @@ const WarehouseMaps = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {standards.map((s, i) => (
             <div key={i} className={`border rounded-2xl p-5 hover:border-white/30 transition-all group ${
-              s.status === 'Upgrade Required' ? 'bg-brand-yellow/4 border-brand-yellow/15' : 'bg-[#141f2e] border-white/10'
+              s.status === 'Upgrade Required' ? 'bg-brand-yellow/4 border-brand-yellow/15' : 'bg-[#141f2e] border-line'
             }`}>
               <div className="flex justify-between items-start mb-3">
                 <PriorityBadge priority={s.priority} />
@@ -1075,17 +1075,17 @@ const WarehouseMaps = () => {
                   </span>
                 </div>
               </div>
-              <h5 className="font-bold text-white text-sm mb-0.5 group-hover:text-brand-yellow transition-colors">{s.name}</h5>
-              <div className="text-[10px] text-gray-400 mb-3 font-mono">{s.ref}</div>
-              <div className="bg-white/5 p-3 rounded-lg border border-white/5 mb-2">
-                <div className="text-[10px] text-gray-400 mb-0.5">المطلب الفني</div>
-                <div className="text-[11px] text-gray-200 leading-relaxed">{s.req}</div>
+              <h5 className="font-bold text-ink text-sm mb-0.5 group-hover:text-brand-yellow transition-colors">{s.name}</h5>
+              <div className="text-[10px] text-muted mb-3 font-mono">{s.ref}</div>
+              <div className="bg-chip p-3 rounded-lg border border-line mb-2">
+                <div className="text-[10px] text-muted mb-0.5">المطلب الفني</div>
+                <div className="text-[11px] text-ink-2 leading-relaxed">{s.req}</div>
               </div>
               <div className="text-[10px] text-gray-500 mb-2">المنطقة: <span className="text-brand-yellow">{s.zone}</span></div>
               {/* الإجراء المطلوب وجهة التنفيذ */}
-              <div className="mt-2 pt-2 border-t border-white/5 space-y-1">
-                <div className="text-[9px] font-bold text-gray-400 uppercase">الإجراء المطلوب</div>
-                <div className="text-[10px] text-gray-300 leading-relaxed">{s.action}</div>
+              <div className="mt-2 pt-2 border-t border-line space-y-1">
+                <div className="text-[9px] font-bold text-muted uppercase">الإجراء المطلوب</div>
+                <div className="text-[10px] text-ink-2 leading-relaxed">{s.action}</div>
                 <div className="text-[9px] text-blue-400 mt-1">المسؤول: <span className="font-bold">{s.responsible}</span></div>
               </div>
             </div>
@@ -1093,22 +1093,22 @@ const WarehouseMaps = () => {
         </div>
 
         {/* جدول ملخص المعايير للطباعة */}
-        <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
-          <h4 className="font-bold text-white mb-4 text-sm">جدول ملخص المعايير — Standards Summary Table</h4>
+        <div className="bg-[#141f2e] border border-line rounded-2xl p-6">
+          <h4 className="font-bold text-ink mb-4 text-sm">جدول ملخص المعايير — Standards Summary Table</h4>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-white/10">
+                <tr className="border-b border-line">
                   {['المعيار','المرجع','الأولوية','الحالة','المنطقة','الجهة المسؤولة'].map((h,i) => (
-                    <th key={i} className="text-right text-gray-400 font-bold pb-2 pr-2">{h}</th>
+                    <th key={i} className="text-right text-muted font-bold pb-2 pr-2">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {standards.map((s, i) => (
-                  <tr key={i} className={`border-b border-white/5 ${s.status === 'Upgrade Required' ? 'bg-brand-yellow/4' : ''} ${s.priority === 'Critical' && s.status === 'Upgrade Required' ? 'bg-brand-red/5' : ''}`}>
-                    <td className="py-2 pr-2 text-white text-[10px] font-medium">{s.name}</td>
-                    <td className="py-2 pr-2 text-gray-400 text-[9px] font-mono">{s.ref}</td>
+                  <tr key={i} className={`border-b border-line ${s.status === 'Upgrade Required' ? 'bg-brand-yellow/4' : ''} ${s.priority === 'Critical' && s.status === 'Upgrade Required' ? 'bg-brand-red/5' : ''}`}>
+                    <td className="py-2 pr-2 text-ink text-[10px] font-medium">{s.name}</td>
+                    <td className="py-2 pr-2 text-muted text-[9px] font-mono">{s.ref}</td>
                     <td className="py-2 pr-2"><PriorityBadge priority={s.priority} /></td>
                     <td className="py-2 pr-2">
                       <span className={`text-[10px] font-bold ${s.status === 'Compliant' ? 'text-green-400' : 'text-brand-yellow'}`}>
@@ -1134,7 +1134,7 @@ const WarehouseMaps = () => {
     <div className="space-y-8 animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {proposalCards.map((card, i) => (
-          <div key={i} className="bg-[#141f2e] border border-white/10 rounded-2xl p-6 hover:border-brand-yellow/30 hover:scale-[1.01] transition-all group shadow-xl relative overflow-hidden">
+          <div key={i} className="bg-[#141f2e] border border-line rounded-2xl p-6 hover:border-brand-yellow/30 hover:scale-[1.01] transition-all group shadow-xl relative overflow-hidden">
             <div className={`absolute top-0 left-0 right-0 h-0.5 ${card.priority === 'Critical' ? 'bg-brand-red' : card.priority === 'High' ? 'bg-brand-yellow' : 'bg-blue-500'}`}></div>
             <div className="flex justify-between items-start mb-4">
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${card.priority === 'Critical' ? 'bg-brand-red/15 text-brand-red' : card.priority === 'High' ? 'bg-brand-yellow/15 text-brand-yellow' : 'bg-blue-500/15 text-blue-400'}`}>
@@ -1142,31 +1142,31 @@ const WarehouseMaps = () => {
               </div>
               <PriorityBadge priority={card.priority} />
             </div>
-            <h4 className="font-bold text-white group-hover:text-brand-yellow transition-colors mb-0.5">{card.title}</h4>
-            <p className="text-[10px] text-gray-400 mb-4">{card.subtitle}</p>
+            <h4 className="font-bold text-ink group-hover:text-brand-yellow transition-colors mb-0.5">{card.title}</h4>
+            <p className="text-[10px] text-muted mb-4">{card.subtitle}</p>
             <ul className="space-y-2 mb-4">
               {card.details.map((d, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-[11px] text-gray-300">
+                <li key={idx} className="flex items-start gap-2 text-[11px] text-ink-2">
                   <span className="text-brand-yellow mt-0.5 shrink-0">✓</span>
                   {d}
                 </li>
               ))}
             </ul>
             {/* التبعية والأثر التشغيلي */}
-            <div className="space-y-2 mt-3 pt-3 border-t border-white/5">
+            <div className="space-y-2 mt-3 pt-3 border-t border-line">
               <div className="bg-blue-500/8 border border-blue-500/15 rounded-lg p-2">
                 <div className="text-[9px] text-blue-400 font-bold uppercase mb-0.5">التبعية</div>
-                <div className="text-[10px] text-gray-300">{card.dependency}</div>
+                <div className="text-[10px] text-ink-2">{card.dependency}</div>
               </div>
               <div className="bg-green-500/8 border border-green-500/15 rounded-lg p-2">
                 <div className="text-[9px] text-green-400 font-bold uppercase mb-0.5">الأثر التشغيلي</div>
-                <div className="text-[10px] text-gray-300">{card.operationalImpact}</div>
+                <div className="text-[10px] text-ink-2">{card.operationalImpact}</div>
               </div>
             </div>
-            <div className="pt-3 border-t border-white/5 flex items-center justify-between text-[10px] mt-3">
+            <div className="pt-3 border-t border-line flex items-center justify-between text-[10px] mt-3">
               <div>
                 <div className="text-gray-500">المدة الزمنية</div>
-                <div className="text-white font-bold">{card.duration}</div>
+                <div className="text-ink font-bold">{card.duration}</div>
               </div>
               <PriorityBadge priority={card.priority} />
             </div>
@@ -1175,8 +1175,8 @@ const WarehouseMaps = () => {
       </div>
 
       {/* الجدول الزمني */}
-      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-8">
-        <h4 className="font-bold text-white mb-8 border-b border-white/10 pb-4">الجدول الزمني للتنفيذ — Implementation Gantt Overview</h4>
+      <div className="bg-[#141f2e] border border-line rounded-2xl p-8">
+        <h4 className="font-bold text-ink mb-8 border-b border-line pb-4">الجدول الزمني للتنفيذ — Implementation Gantt Overview</h4>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[
             { phase:'المرحلة 1', title:'الهدم والإنشاءات', time:'أسابيع 1 – 8',  color:'#e74c3c', items:['رفع أسقف E-5 إلى 12م','تقوية الأعمدة الإنشائية','صب أرضيات الإيبوكسي FF50'] },
@@ -1184,13 +1184,13 @@ const WarehouseMaps = () => {
             { phase:'المرحلة 3', title:'التجهيزات الفنية', time:'أسابيع 12 – 22',color:'#2980b9', items:['هيكل رفوف E-5 (6 مستويات)','رشاشات ESFR K-25','إضاءة LED صناعية'] },
             { phase:'المرحلة 4', title:'الرقمنة والتشغيل', time:'أسابيع 20 – 28',color:'#27ae60', items:['تكامل Odoo WMS','تدريب فرق التشغيل','اختبار الأحمال الكاملة'] },
           ].map((step, i) => (
-            <div key={i} className="bg-brand-navy/30 border border-white/5 p-5 rounded-xl" style={{ borderTopColor: step.color, borderTopWidth:3 }}>
+            <div key={i} className="bg-brand-navy/30 border border-line p-5 rounded-xl" style={{ borderTopColor: step.color, borderTopWidth:3 }}>
               <div className="font-bold text-xs mb-1" style={{ color: step.color }}>{step.phase}</div>
-              <div className="text-white font-bold text-sm mb-1">{step.title}</div>
-              <div className="text-[10px] text-gray-400 mb-4">{step.time}</div>
+              <div className="text-ink font-bold text-sm mb-1">{step.title}</div>
+              <div className="text-[10px] text-muted mb-4">{step.time}</div>
               <ul className="space-y-1.5">
                 {step.items.map((item, idx) => (
-                  <li key={idx} className="text-[10px] text-gray-300 flex items-center gap-1.5">
+                  <li key={idx} className="text-[10px] text-ink-2 flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: step.color }}></span>
                     {item}
                   </li>
@@ -1199,18 +1199,18 @@ const WarehouseMaps = () => {
             </div>
           ))}
         </div>
-        <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/10 flex items-center justify-between text-sm">
-          <span className="text-gray-300">المدة الإجمالية للمشروع:</span>
+        <div className="mt-6 p-4 bg-chip rounded-xl border border-line flex items-center justify-between text-sm">
+          <span className="text-ink-2">المدة الإجمالية للمشروع:</span>
           <div className="text-right">
             <span className="text-brand-yellow font-bold text-lg">28 أسبوعاً (7 أشهر)</span>
-            <div className="text-xs text-gray-400 mt-0.5">تنفيذ موازي للمراحل مع الحفاظ على التشغيل</div>
+            <div className="text-xs text-muted mt-0.5">تنفيذ موازي للمراحل مع الحفاظ على التشغيل</div>
           </div>
         </div>
       </div>
 
       {/* مؤشرات الأداء */}
-      <div className="bg-gradient-to-br from-[#1a2840] to-brand-navy border border-white/10 p-8 rounded-2xl">
-        <h4 className="font-bold text-white mb-6">نتائج الأداء المتوقعة — Expected KPIs</h4>
+      <div className="bg-gradient-to-br from-[#1a2840] to-brand-navy border border-line p-8 rounded-2xl">
+        <h4 className="font-bold text-ink mb-6">نتائج الأداء المتوقعة — Expected KPIs</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             { label:'زيادة السعة التخزينية',   val:'+140%', icon:'grid',          color:'text-green-400' },
@@ -1220,12 +1220,12 @@ const WarehouseMaps = () => {
             { label:'تقليص زمن النقل الداخلي', val:'-65%',  icon:'workflows',     color:'text-blue-400' },
             { label:'تحسن كفاءة التشغيل',     val:'+80%',  icon:'package',       color:'text-brand-yellow' },
           ].map((kpi, i) => (
-            <div key={i} className="flex items-center gap-4 bg-white/5 p-4 rounded-xl">
-              <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center text-gray-400">
+            <div key={i} className="flex items-center gap-4 bg-chip p-4 rounded-xl">
+              <div className="w-10 h-10 bg-chip rounded-lg flex items-center justify-center text-muted">
                 <Icon name={kpi.icon} size={18} />
               </div>
               <div className="flex-1">
-                <div className="text-xs text-gray-300 mb-0.5">{kpi.label}</div>
+                <div className="text-xs text-ink-2 mb-0.5">{kpi.label}</div>
                 <div className={`text-lg font-bold ${kpi.color}`}>{kpi.val}</div>
               </div>
             </div>
@@ -1253,20 +1253,20 @@ const WarehouseMaps = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div className="bg-brand-red/8 border border-brand-red/20 rounded-2xl p-6 text-center">
           <div className="text-[10px] text-brand-red uppercase font-bold mb-2">إجمالي السعة قبل التحوير</div>
-          <div className="text-3xl font-black text-white">{totalOldPallets.toLocaleString()}</div>
-          <div className="text-xs text-gray-400 mt-1">طبلية — 10 وحدات حالية</div>
+          <div className="text-3xl font-black text-ink">{totalOldPallets.toLocaleString()}</div>
+          <div className="text-xs text-muted mt-1">طبلية — 10 وحدات حالية</div>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center flex items-center justify-center">
+        <div className="bg-chip border border-line rounded-2xl p-6 text-center flex items-center justify-center">
           <div>
             <div className="text-4xl mb-2">⟹</div>
             <div className="text-[10px] text-brand-yellow font-bold">مدة التنفيذ ~14 أسبوع</div>
-            <div className="text-[10px] text-gray-400">تنفيذ مرحلي بدون إيقاف كامل</div>
+            <div className="text-[10px] text-muted">تنفيذ مرحلي بدون إيقاف كامل</div>
           </div>
         </div>
         <div className="bg-green-500/8 border border-green-500/20 rounded-2xl p-6 text-center">
           <div className="text-[10px] text-green-400 uppercase font-bold mb-2">إجمالي السعة بعد التحوير</div>
           <div className="text-3xl font-black text-green-400">{totalNewPallets.toLocaleString()}+</div>
-          <div className="text-xs text-gray-400 mt-1">طبلية — زيادة تقديرية +{Math.round(((totalNewPallets-totalOldPallets)/totalOldPallets)*100)}%</div>
+          <div className="text-xs text-muted mt-1">طبلية — زيادة تقديرية +{Math.round(((totalNewPallets-totalOldPallets)/totalOldPallets)*100)}%</div>
         </div>
       </div>
 
@@ -1280,8 +1280,8 @@ const WarehouseMaps = () => {
               <span className="px-3 py-1 bg-brand-yellow/15 text-brand-yellow text-xs font-bold rounded-full border border-brand-yellow/30">خطة أولى</span>
               <span className="px-3 py-1 bg-green-500/15 text-green-400 text-xs font-bold rounded-full border border-green-500/25">تحوير داخلي</span>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">{modificationPlan.title}</h3>
-            <p className="text-sm text-gray-300 leading-relaxed">{modificationPlan.description}</p>
+            <h3 className="text-xl font-bold text-ink mb-2">{modificationPlan.title}</h3>
+            <p className="text-sm text-ink-2 leading-relaxed">{modificationPlan.description}</p>
           </div>
           <div className="grid grid-cols-3 gap-3 text-center shrink-0">
             {[
@@ -1289,8 +1289,8 @@ const WarehouseMaps = () => {
               { l:'مدة التنفيذ', v:'~14 أسبوع',   c:'text-green-400' },
               { l:'نوع التدخل',  v:'ترقية وظيفية', c:'text-blue-400' },
             ].map((s, i) => (
-              <div key={i} className="bg-white/5 rounded-xl p-3 border border-white/5">
-                <div className="text-[10px] text-gray-400 mb-1">{s.l}</div>
+              <div key={i} className="bg-chip rounded-xl p-3 border border-line">
+                <div className="text-[10px] text-muted mb-1">{s.l}</div>
                 <div className={`font-bold text-sm ${s.c}`}>{s.v}</div>
               </div>
             ))}
@@ -1299,16 +1299,16 @@ const WarehouseMaps = () => {
       </div>
 
       {/* مخطط جانت مبسط */}
-      <div className="bg-[#0f1923] border border-white/10 rounded-2xl p-6">
-        <h4 className="font-bold text-white mb-4 text-sm">مخطط جانت — Gantt Chart (تسلسل المراحل)</h4>
+      <div className="bg-[#0f1923] border border-line rounded-2xl p-6">
+        <h4 className="font-bold text-ink mb-4 text-sm">مخطط جانت — Gantt Chart (تسلسل المراحل)</h4>
         <div className="overflow-x-auto">
           <div className="min-w-[600px]">
             {/* رأس الأسابيع */}
             <div className="flex mb-2">
-              <div className="w-36 shrink-0 text-[10px] text-gray-400 font-bold">المرحلة</div>
+              <div className="w-36 shrink-0 text-[10px] text-muted font-bold">المرحلة</div>
               <div className="flex-1 grid text-[9px] text-gray-500 text-center" style={{ gridTemplateColumns: 'repeat(14,1fr)' }}>
                 {Array.from({length:14},(_,i)=>(
-                  <div key={i} className="border-r border-white/5 pb-1">أ{i+1}</div>
+                  <div key={i} className="border-r border-line pb-1">أ{i+1}</div>
                 ))}
               </div>
             </div>
@@ -1321,15 +1321,15 @@ const WarehouseMaps = () => {
               { id:'M-9/10',label:'E-9+E-10 شحن',      start:6, len:6,  color:'#e67e22' },
             ].map((phase, i) => (
               <div key={i} className="flex items-center mb-1.5">
-                <div className="w-36 shrink-0 text-[10px] text-gray-300 font-medium pr-2">{phase.label}</div>
+                <div className="w-36 shrink-0 text-[10px] text-ink-2 font-medium pr-2">{phase.label}</div>
                 <div className="flex-1 grid h-5" style={{ gridTemplateColumns: 'repeat(14,1fr)' }}>
                   {Array.from({length:14},(_,wi)=>(
-                    <div key={wi} className={`border-r border-white/5 ${wi >= phase.start && wi < phase.start+phase.len ? 'rounded-sm' : ''}`}
+                    <div key={wi} className={`border-r border-line ${wi >= phase.start && wi < phase.start+phase.len ? 'rounded-sm' : ''}`}
                       style={{ backgroundColor: wi >= phase.start && wi < phase.start+phase.len ? `${phase.color}60` : 'transparent',
                         borderLeft: wi === phase.start ? `2px solid ${phase.color}` : undefined }}>
                       {wi === phase.start && (
                         <div className="h-full flex items-center justify-center">
-                          <span className="text-[8px] font-bold text-white px-1">{phase.id}</span>
+                          <span className="text-[8px] font-bold text-ink px-1">{phase.id}</span>
                         </div>
                       )}
                     </div>
@@ -1344,28 +1344,28 @@ const WarehouseMaps = () => {
 
       <div className="space-y-5">
         {modificationPlan.phases.map((phase, i) => (
-          <div key={i} className="bg-[#141f2e] border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all">
-            <div className="flex flex-wrap items-center gap-4 p-5 border-b border-white/5" style={{ borderRightWidth:4, borderRightColor: phase.color }}>
+          <div key={i} className="bg-[#141f2e] border border-line rounded-2xl overflow-hidden hover:border-line transition-all">
+            <div className="flex flex-wrap items-center gap-4 p-5 border-b border-line" style={{ borderRightWidth:4, borderRightColor: phase.color }}>
               <span className="text-2xl">{phase.icon}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-0.5">
                   <span className="text-xs font-mono font-bold px-2 py-0.5 rounded" style={{ backgroundColor:`${phase.color}22`, color: phase.color }}>{phase.id}</span>
-                  <h5 className="font-bold text-white text-base">{phase.name}</h5>
+                  <h5 className="font-bold text-ink text-base">{phase.name}</h5>
                 </div>
-                <div className="text-xs text-gray-400">الوضع الحالي: {phase.current}</div>
+                <div className="text-xs text-muted">الوضع الحالي: {phase.current}</div>
               </div>
               <div className="flex flex-wrap gap-2 items-center">
                 <EffortBadge level={phase.effort} />
-                <span className="text-[10px] text-gray-400 bg-white/5 px-2 py-1 rounded-lg">⏱ {phase.duration}</span>
+                <span className="text-[10px] text-muted bg-chip px-2 py-1 rounded-lg">⏱ {phase.duration}</span>
               </div>
             </div>
             <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-2">
-                <div className="text-[10px] text-gray-400 mb-3 uppercase font-bold">المقترح: {phase.proposed}</div>
+                <div className="text-[10px] text-muted mb-3 uppercase font-bold">المقترح: {phase.proposed}</div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {phase.changes.map((change, ci) => (
-                    <div key={ci} className="flex items-start gap-2 text-[11px] text-gray-300 bg-white/3 p-2 rounded-lg">
-                      <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0 mt-0.5" style={{ backgroundColor: phase.color }}>{ci+1}</span>
+                    <div key={ci} className="flex items-start gap-2 text-[11px] text-ink-2 bg-white/3 p-2 rounded-lg">
+                      <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-ink shrink-0 mt-0.5" style={{ backgroundColor: phase.color }}>{ci+1}</span>
                       {change}
                     </div>
                   ))}
@@ -1374,20 +1374,20 @@ const WarehouseMaps = () => {
                 {/* الأثر على التشغيل أثناء التنفيذ */}
                 <div className="mt-3 p-2 rounded-lg border border-blue-500/20 bg-blue-500/5">
                   <div className="text-[9px] text-blue-400 font-bold uppercase mb-0.5">الأثر على التشغيل أثناء التنفيذ</div>
-                  <div className="text-[10px] text-gray-300">{phase.operationalImpact}</div>
+                  <div className="text-[10px] text-ink-2">{phase.operationalImpact}</div>
                 </div>
               </div>
               <div className="space-y-3">
                 <div className="bg-brand-red/8 border border-brand-red/15 rounded-xl p-3">
                   <div className="text-[10px] text-brand-red mb-1">قبل التحوير</div>
-                  <div className="text-xs text-gray-200 font-medium">{phase.kpiOld}</div>
+                  <div className="text-xs text-ink-2 font-medium">{phase.kpiOld}</div>
                 </div>
                 <div className="bg-green-500/8 border border-green-500/15 rounded-xl p-3">
                   <div className="text-[10px] text-green-400 mb-1">بعد التحوير</div>
-                  <div className="text-xs text-gray-200 font-medium">{phase.kpiNew}</div>
+                  <div className="text-xs text-ink-2 font-medium">{phase.kpiNew}</div>
                 </div>
                 <div className="rounded-xl p-3 flex items-center justify-between" style={{ backgroundColor:`${phase.color}18`, border:`1px solid ${phase.color}33` }}>
-                  <div className="text-[10px] text-gray-400">نسبة التحسين</div>
+                  <div className="text-[10px] text-muted">نسبة التحسين</div>
                   <div className="text-lg font-black" style={{ color: phase.color }}>{phase.gain}</div>
                 </div>
               </div>
@@ -1396,30 +1396,30 @@ const WarehouseMaps = () => {
         ))}
       </div>
 
-      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-8">
-        <h4 className="font-bold text-white mb-6">ملخص مؤشرات خطة التحوير</h4>
+      <div className="bg-[#141f2e] border border-line rounded-2xl p-8">
+        <h4 className="font-bold text-ink mb-6">ملخص مؤشرات خطة التحوير</h4>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-white/10">
+              <tr className="border-b border-line">
                 {['الوحدة','الوضع الحالي','بعد التحوير','التحسين','المدة','الجهد'].map((h, i) => (
-                  <th key={i} className="text-right text-gray-400 font-bold pb-3 pr-4">{h}</th>
+                  <th key={i} className="text-right text-muted font-bold pb-3 pr-4">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {modificationPlan.phases.map((p, i) => (
-                <tr key={i} className="border-b border-white/5 hover:bg-white/3">
+                <tr key={i} className="border-b border-line hover:bg-white/3">
                   <td className="py-3 pr-4">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }}></span>
-                      <span className="font-bold text-white">{p.id}</span>
+                      <span className="font-bold text-ink">{p.id}</span>
                     </div>
                   </td>
-                  <td className="py-3 pr-4 text-gray-400 text-[10px]">{p.kpiOld}</td>
+                  <td className="py-3 pr-4 text-muted text-[10px]">{p.kpiOld}</td>
                   <td className="py-3 pr-4 text-green-400 text-[10px] font-medium">{p.kpiNew}</td>
                   <td className="py-3 pr-4"><span className="font-black" style={{ color: p.color }}>{p.gain}</span></td>
-                  <td className="py-3 pr-4 text-gray-400 text-[10px]">{p.duration}</td>
+                  <td className="py-3 pr-4 text-muted text-[10px]">{p.duration}</td>
                   <td className="py-3 pr-4"><EffortBadge level={p.effort} /></td>
                 </tr>
               ))}
@@ -1431,7 +1431,7 @@ const WarehouseMaps = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="bg-green-500/5 border border-green-500/20 rounded-2xl p-6">
           <h5 className="font-bold text-green-400 mb-4 flex items-center gap-2"><span>✅</span> مزايا هذه الخطة</h5>
-          <ul className="space-y-2 text-[11px] text-gray-300">
+          <ul className="space-y-2 text-[11px] text-ink-2">
             {['لا تتطلب إغلاق كامل للمستودعات — يمكن التنفيذ مرحلياً','خطر إنشائي منخفض — لا هدم للجدران الحاملة','مدة تنفيذ أقصر مقارنةً بخطة الدمج','الحفاظ على الحدود الإنشائية القائمة','مرونة في تعديل الأولويات حسب الظروف'].map((item, i) => (
               <li key={i} className="flex items-start gap-2">
                 <span className="text-green-500 mt-0.5 shrink-0">✓</span>
@@ -1442,7 +1442,7 @@ const WarehouseMaps = () => {
         </div>
         <div className="bg-brand-yellow/5 border border-brand-yellow/20 rounded-2xl p-6">
           <h5 className="font-bold text-brand-yellow mb-4 flex items-center gap-2"><span>⚠️</span> نقاط تحتاج اهتمام</h5>
-          <ul className="space-y-2 text-[11px] text-gray-300">
+          <ul className="space-y-2 text-[11px] text-ink-2">
             {['E-5 تتطلب إغلاق مؤقت لرفع السقف (4–6 أسابيع)','التنسيق بين الوحدات المتجاورة خلال التنفيذ','الحفاظ على تدفق التشغيل اليومي في الوحدات الأخرى','مراجعة إنشائية لـ E-5 قبل بدء رفع السقف','تدريب الكوادر على المعدات والأنظمة الجديدة'].map((item, i) => (
               <li key={i} className="flex items-start gap-2">
                 <span className="text-brand-yellow mt-0.5 shrink-0">!</span>
@@ -1474,8 +1474,8 @@ const WarehouseMaps = () => {
               <span className="px-3 py-1 bg-purple-500/15 text-purple-400 text-xs font-bold rounded-full border border-purple-500/30">خطة ثانية</span>
               <span className="px-3 py-1 bg-brand-red/15 text-brand-red text-xs font-bold rounded-full border border-brand-red/30">إعادة هيكلة</span>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">{mergePlan.title}</h3>
-            <p className="text-sm text-gray-300 leading-relaxed">{mergePlan.description}</p>
+            <h3 className="text-xl font-bold text-ink mb-2">{mergePlan.title}</h3>
+            <p className="text-sm text-ink-2 leading-relaxed">{mergePlan.description}</p>
           </div>
           <div className="grid grid-cols-3 gap-3 text-center shrink-0">
             {[
@@ -1483,8 +1483,8 @@ const WarehouseMaps = () => {
               { l:'مدة التنفيذ',      v:'~28 أسبوع', c:'text-brand-yellow' },
               { l:'زيادة السعة',      v:'+75%',       c:'text-green-400' },
             ].map((s, i) => (
-              <div key={i} className="bg-white/5 rounded-xl p-3 border border-white/5">
-                <div className="text-[10px] text-gray-400 mb-1">{s.l}</div>
+              <div key={i} className="bg-chip rounded-xl p-3 border border-line">
+                <div className="text-[10px] text-muted mb-1">{s.l}</div>
                 <div className={`font-bold text-sm ${s.c}`}>{s.v}</div>
               </div>
             ))}
@@ -1496,10 +1496,10 @@ const WarehouseMaps = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div className="bg-brand-red/8 border border-brand-red/20 rounded-2xl p-6 text-center">
           <div className="text-[10px] text-brand-red uppercase font-bold mb-2">الطبليات الحالية (10 وحدات)</div>
-          <div className="text-3xl font-black text-white">{totalCurrentPallets}</div>
-          <div className="text-xs text-gray-400 mt-1">طبلية — قبل الدمج</div>
+          <div className="text-3xl font-black text-ink">{totalCurrentPallets}</div>
+          <div className="text-xs text-muted mt-1">طبلية — قبل الدمج</div>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center flex items-center justify-center">
+        <div className="bg-chip border border-line rounded-2xl p-6 text-center flex items-center justify-center">
           <div>
             <div className="text-3xl mb-1">⟹</div>
             <div className="text-[10px] text-purple-400 font-bold">دمج 10 → 4 مجمعات</div>
@@ -1508,13 +1508,13 @@ const WarehouseMaps = () => {
         <div className="bg-green-500/8 border border-green-500/20 rounded-2xl p-6 text-center">
           <div className="text-[10px] text-green-400 uppercase font-bold mb-2">الطبليات بعد الدمج (4 مجمعات)</div>
           <div className="text-3xl font-black text-green-400">{totalMergedPallets}</div>
-          <div className="text-xs text-gray-400 mt-1">طبلية — بعد الدمج</div>
+          <div className="text-xs text-muted mt-1">طبلية — بعد الدمج</div>
         </div>
       </div>
 
       {/* خريطة الدمج البصرية */}
-      <div className="bg-[#0f1923] border border-white/10 rounded-2xl p-6">
-        <h4 className="font-bold text-white mb-4 text-sm">خريطة الدمج — من 10 وحدات إلى 4 مجمعات</h4>
+      <div className="bg-[#0f1923] border border-line rounded-2xl p-6">
+        <h4 className="font-bold text-ink mb-4 text-sm">خريطة الدمج — من 10 وحدات إلى 4 مجمعات</h4>
         <div className="overflow-x-auto">
           <svg viewBox="0 0 680 120" className="w-full" style={{ minHeight:130 }} preserveAspectRatio="xMidYMid meet">
             <defs>
@@ -1560,37 +1560,37 @@ const WarehouseMaps = () => {
       {/* بطاقات المجمعات */}
       <div className="space-y-6">
         {mergePlan.mergedUnits.map((unit, i) => (
-          <div key={i} className="bg-[#141f2e] border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all">
-            <div className="p-5 border-b border-white/5 flex flex-wrap items-center gap-4" style={{ background:`linear-gradient(135deg, ${unit.color}18 0%, transparent 50%)` }}>
+          <div key={i} className="bg-[#141f2e] border border-line rounded-2xl overflow-hidden hover:border-line transition-all">
+            <div className="p-5 border-b border-line flex flex-wrap items-center gap-4" style={{ background:`linear-gradient(135deg, ${unit.color}18 0%, transparent 50%)` }}>
               <span className="text-3xl">{unit.icon}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   <span className="text-xs font-mono font-black px-2 py-0.5 rounded" style={{ backgroundColor:`${unit.color}30`, color: unit.color }}>{unit.id}</span>
-                  <h5 className="font-bold text-white text-lg">{unit.name}</h5>
+                  <h5 className="font-bold text-ink text-lg">{unit.name}</h5>
                 </div>
-                <div className="flex flex-wrap gap-3 text-[10px] text-gray-400 mb-1">
-                  <span>يدمج: <span className="text-white font-bold">{unit.mergedFrom.join(' + ')}</span></span>
+                <div className="flex flex-wrap gap-3 text-[10px] text-muted mb-1">
+                  <span>يدمج: <span className="text-ink font-bold">{unit.mergedFrom.join(' + ')}</span></span>
                   <span>•</span>
-                  <span>المساحة: <span className="text-white font-bold">{unit.newArea}</span></span>
+                  <span>المساحة: <span className="text-ink font-bold">{unit.newArea}</span></span>
                   <span>•</span>
-                  <span>الأبعاد: <span className="text-white font-bold">{unit.newDims}</span></span>
+                  <span>الأبعاد: <span className="text-ink font-bold">{unit.newDims}</span></span>
                 </div>
-                <p className="text-[11px] text-gray-400 leading-relaxed">{unit.concept}</p>
+                <p className="text-[11px] text-muted leading-relaxed">{unit.concept}</p>
               </div>
               <div className="flex flex-wrap gap-2 items-center">
                 <EffortBadge level={unit.effort} />
                 <RiskBadge level={unit.riskLevel} />
-                <span className="text-[10px] text-gray-400 bg-white/5 px-2 py-1 rounded-lg">⏱ {unit.duration}</span>
+                <span className="text-[10px] text-muted bg-chip px-2 py-1 rounded-lg">⏱ {unit.duration}</span>
               </div>
             </div>
             <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <div className="text-[10px] text-gray-400 mb-3 font-bold uppercase flex items-center gap-2">
+                <div className="text-[10px] text-muted mb-3 font-bold uppercase flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-brand-red"></span>الأعمال الإنشائية المطلوبة
                 </div>
                 <div className="space-y-2">
                   {unit.structuralWork.map((work, wi) => (
-                    <div key={wi} className="flex items-start gap-2 text-[11px] text-gray-300 bg-brand-red/5 p-2 rounded-lg border border-brand-red/10">
+                    <div key={wi} className="flex items-start gap-2 text-[11px] text-ink-2 bg-brand-red/5 p-2 rounded-lg border border-brand-red/10">
                       <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white bg-brand-red/60 shrink-0 mt-0.5">{wi+1}</span>
                       {work}
                     </div>
@@ -1598,12 +1598,12 @@ const WarehouseMaps = () => {
                 </div>
               </div>
               <div>
-                <div className="text-[10px] text-gray-400 mb-3 font-bold uppercase flex items-center gap-2">
+                <div className="text-[10px] text-muted mb-3 font-bold uppercase flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500"></span>التغييرات التشغيلية
                 </div>
                 <div className="space-y-2">
                   {unit.operationalChanges.map((op, oi) => (
-                    <div key={oi} className="flex items-start gap-2 text-[11px] text-gray-300 bg-green-500/5 p-2 rounded-lg border border-green-500/10">
+                    <div key={oi} className="flex items-start gap-2 text-[11px] text-ink-2 bg-green-500/5 p-2 rounded-lg border border-green-500/10">
                       <span className="text-green-400 shrink-0 mt-0.5">✓</span>
                       {op}
                     </div>
@@ -1612,15 +1612,15 @@ const WarehouseMaps = () => {
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   <div className="bg-brand-red/8 border border-brand-red/15 rounded-xl p-3">
                     <div className="text-[10px] text-brand-red mb-1">قبل الدمج</div>
-                    <div className="text-[11px] text-gray-200">{unit.kpiOld}</div>
+                    <div className="text-[11px] text-ink-2">{unit.kpiOld}</div>
                   </div>
                   <div className="bg-green-500/8 border border-green-500/15 rounded-xl p-3">
                     <div className="text-[10px] text-green-400 mb-1">بعد الدمج</div>
-                    <div className="text-[11px] text-gray-200">{unit.kpiNew}</div>
+                    <div className="text-[11px] text-ink-2">{unit.kpiNew}</div>
                   </div>
                 </div>
                 <div className="mt-3 p-3 rounded-xl flex items-center justify-between" style={{ backgroundColor:`${unit.color}15`, border:`1px solid ${unit.color}30` }}>
-                  <div className="text-[10px] text-gray-400">التحسين الكلي</div>
+                  <div className="text-[10px] text-muted">التحسين الكلي</div>
                   <div className="font-black text-base" style={{ color: unit.color }}>{unit.gain}</div>
                 </div>
               </div>
@@ -1650,22 +1650,22 @@ const WarehouseMaps = () => {
       </div>
 
       {/* جدول المقارنة */}
-      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-8">
-        <h4 className="font-bold text-white mb-6">جدول المقارنة الشاملة — قبل وبعد الدمج</h4>
+      <div className="bg-[#141f2e] border border-line rounded-2xl p-8">
+        <h4 className="font-bold text-ink mb-6">جدول المقارنة الشاملة — قبل وبعد الدمج</h4>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-white/10">
+              <tr className="border-b border-line">
                 {['المعيار','الوضع الحالي','بعد الدمج','الأثر'].map((h, i) => (
-                  <th key={i} className="text-right text-gray-400 font-bold pb-3 pr-4">{h}</th>
+                  <th key={i} className="text-right text-muted font-bold pb-3 pr-4">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {mergePlan.comparison.map((row, i) => (
-                <tr key={i} className="border-b border-white/5 hover:bg-white/3">
-                  <td className="py-3 pr-4 font-medium text-white">{row.metric}</td>
-                  <td className="py-3 pr-4 text-gray-400">{row.before}</td>
+                <tr key={i} className="border-b border-line hover:bg-white/3">
+                  <td className="py-3 pr-4 font-medium text-ink">{row.metric}</td>
+                  <td className="py-3 pr-4 text-muted">{row.before}</td>
                   <td className={`py-3 pr-4 font-bold ${row.better ? 'text-green-400' : 'text-brand-yellow'}`}>{row.after}</td>
                   <td className="py-3 pr-4">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${row.better ? 'bg-green-500/15 text-green-400 border border-green-500/30' : 'bg-brand-yellow/15 text-brand-yellow border border-brand-yellow/30'}`}>
@@ -1680,8 +1680,8 @@ const WarehouseMaps = () => {
       </div>
 
       {/* مقارنة الخطتين */}
-      <div className="bg-[#0f1923] border border-white/10 rounded-2xl p-8">
-        <h4 className="font-bold text-white mb-6 text-center">خلاصة المقارنة بين الخطتين</h4>
+      <div className="bg-[#0f1923] border border-line rounded-2xl p-8">
+        <h4 className="font-bold text-ink mb-6 text-center">خلاصة المقارنة بين الخطتين</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-brand-yellow/5 border border-brand-yellow/20 rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -1690,7 +1690,7 @@ const WarehouseMaps = () => {
               </div>
               <div>
                 <div className="text-brand-yellow font-black text-base">خطة التحوير</div>
-                <div className="text-[10px] text-gray-400">ترقية داخلية للوحدات القائمة</div>
+                <div className="text-[10px] text-muted">ترقية داخلية للوحدات القائمة</div>
               </div>
             </div>
             <div className="space-y-2 text-[11px]">
@@ -1702,9 +1702,9 @@ const WarehouseMaps = () => {
                 { label:'تعقيد التنسيق',    val:'متوسط',           good:true },
                 { label:'التغيير الهيكلي',  val:'لا يوجد',         good:false },
               ].map((r, i) => (
-                <div key={i} className="flex justify-between items-center py-1.5 border-b border-white/5">
-                  <span className="text-gray-400">{r.label}</span>
-                  <span className={r.good ? 'text-green-400 font-bold' : 'text-gray-400 font-bold'}>{r.val}</span>
+                <div key={i} className="flex justify-between items-center py-1.5 border-b border-line">
+                  <span className="text-muted">{r.label}</span>
+                  <span className={r.good ? 'text-green-400 font-bold' : 'text-muted font-bold'}>{r.val}</span>
                 </div>
               ))}
             </div>
@@ -1716,7 +1716,7 @@ const WarehouseMaps = () => {
               </div>
               <div>
                 <div className="text-purple-400 font-black text-base">خطة الدمج</div>
-                <div className="text-[10px] text-gray-400">إعادة هيكلة وتوحيد المستودعات</div>
+                <div className="text-[10px] text-muted">إعادة هيكلة وتوحيد المستودعات</div>
               </div>
             </div>
             <div className="space-y-2 text-[11px]">
@@ -1728,8 +1728,8 @@ const WarehouseMaps = () => {
                 { label:'تعقيد التنسيق',    val:'مرتفع',              good:false },
                 { label:'كفاءة التشغيل',    val:'+60% طويل المدى',    good:true },
               ].map((r, i) => (
-                <div key={i} className="flex justify-between items-center py-1.5 border-b border-white/5">
-                  <span className="text-gray-400">{r.label}</span>
+                <div key={i} className="flex justify-between items-center py-1.5 border-b border-line">
+                  <span className="text-muted">{r.label}</span>
                   <span className={r.good ? 'text-green-400 font-bold' : 'text-brand-yellow font-bold'}>{r.val}</span>
                 </div>
               ))}
@@ -1742,8 +1742,8 @@ const WarehouseMaps = () => {
               <Icon name="clipboardList" size={16} />
             </div>
             <div>
-              <div className="font-bold text-white mb-2">التوصية المقترحة للإدارة العامة</div>
-              <p className="text-sm text-gray-300 leading-relaxed">
+              <div className="font-bold text-ink mb-2">التوصية المقترحة للإدارة العامة</div>
+              <p className="text-sm text-ink-2 leading-relaxed">
                 يُنصح بتبني <span className="text-brand-yellow font-bold">خطة التحوير أولاً (الخطة الأولى)</span> كمرحلة تجريبية لمدة 14 أسبوعاً، مع الإبقاء على خيار تنفيذ <span className="text-purple-400 font-bold">خطة الدمج (الخطة الثانية)</span> كمشروع متوسط المدى بعد تقييم نتائج المرحلة الأولى. يتيح هذا النهج تحقيق تحسين فوري في الكفاءة التشغيلية بأقل قدر من المخاطر الإنشائية والتعطيل.
               </p>
             </div>
@@ -1792,20 +1792,20 @@ const WarehouseMaps = () => {
 
     return (
     <div className="space-y-6 animate-fade-in">
-      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-8">
+      <div className="bg-[#141f2e] border border-line rounded-2xl p-8">
         <div className="flex items-center gap-4 mb-8">
-          <div className="w-12 h-12 bg-brand-navy rounded-xl flex items-center justify-center text-brand-yellow text-2xl border border-white/5">
+          <div className="w-12 h-12 bg-brand-navy rounded-xl flex items-center justify-center text-brand-yellow text-2xl border border-line">
             <Icon name="mapPin" size={22} className="text-brand-yellow" />
           </div>
           <div>
-            <h4 className="font-black text-white text-lg">تقييم الموقع — Site 155 Assessment</h4>
-            <p className="text-gray-400 text-xs">مراجعة المعايير التشغيلية لموقع بوهادي، بنغازي وفق معايير Class A اللوجستية</p>
+            <h4 className="font-black text-ink text-lg">تقييم الموقع — Site 155 Assessment</h4>
+            <p className="text-muted text-xs">مراجعة المعايير التشغيلية لموقع بوهادي، بنغازي وفق معايير Class A اللوجستية</p>
           </div>
         </div>
 
         {/* Radar Chart SVG */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div className="bg-brand-navy/30 rounded-2xl border border-white/5 p-4 flex items-center justify-center">
+          <div className="bg-brand-navy/30 rounded-2xl border border-line p-4 flex items-center justify-center">
             <svg viewBox="0 0 200 200" className="w-full max-w-xs" preserveAspectRatio="xMidYMid meet">
               {/* شبكة Radar */}
               {gridLevels.map((gl, gi) => {
@@ -1847,11 +1847,11 @@ const WarehouseMaps = () => {
             </svg>
           </div>
           <div className="space-y-3">
-            <div className="text-[10px] text-gray-400 font-bold uppercase mb-2">تفسير مخطط الرادار</div>
+            <div className="text-[10px] text-muted font-bold uppercase mb-2">تفسير مخطط الرادار</div>
             {assessmentCriteria.map((c, i) => (
               <div key={i} className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full shrink-0 ${c.score >= 8 ? 'bg-green-500' : c.score >= 6 ? 'bg-brand-yellow' : 'bg-brand-red'}`}></div>
-                <div className="flex-1 text-[10px] text-gray-300 truncate">{c.name.split('(')[0].trim()}</div>
+                <div className="flex-1 text-[10px] text-ink-2 truncate">{c.name.split('(')[0].trim()}</div>
                 <div className={`font-black text-sm shrink-0 ${c.score >= 8 ? 'text-green-400' : c.score >= 6 ? 'text-brand-yellow' : 'text-brand-red'}`}>{c.score}/10</div>
               </div>
             ))}
@@ -1860,23 +1860,23 @@ const WarehouseMaps = () => {
 
         <div className="space-y-5">
           {assessmentCriteria.map((item, i) => (
-            <div key={i} className="bg-white/5 border border-white/10 p-5 rounded-2xl hover:border-brand-yellow/20 transition-all">
+            <div key={i} className="bg-chip border border-line p-5 rounded-2xl hover:border-brand-yellow/20 transition-all">
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-3">
                   <span className="text-brand-yellow font-black text-base w-7">0{i + 1}</span>
                   <div>
-                    <div className="text-white font-bold text-sm">{item.name}</div>
-                    <div className="text-gray-400 text-[10px] mt-0.5">{item.notes}</div>
+                    <div className="text-ink font-bold text-sm">{item.name}</div>
+                    <div className="text-muted text-[10px] mt-0.5">{item.notes}</div>
                   </div>
                 </div>
                 <div className="text-right shrink-0 ml-4">
-                  <div className="text-gray-400 text-[10px]">الوزن: {item.weight}%</div>
+                  <div className="text-muted text-[10px]">الوزن: {item.weight}%</div>
                   <div className={`font-black text-xl ${item.score >= 8 ? 'text-green-400' : item.score >= 6 ? 'text-brand-yellow' : 'text-brand-red'}`}>
-                    {item.score}<span className="text-sm text-gray-400">/10</span>
+                    {item.score}<span className="text-sm text-muted">/10</span>
                   </div>
                 </div>
               </div>
-              <div className="w-full h-2.5 bg-brand-navy rounded-full overflow-hidden border border-white/5">
+              <div className="w-full h-2.5 bg-brand-navy rounded-full overflow-hidden border border-line">
                 <div
                   className={`h-full rounded-full transition-all duration-1000 ${item.score >= 8 ? 'bg-green-500' : item.score >= 6 ? 'bg-brand-yellow' : 'bg-brand-red'}`}
                   style={{ width: `${item.score * 10}%` }}
@@ -1887,15 +1887,15 @@ const WarehouseMaps = () => {
         </div>
 
         {/* التقييم الإجمالي مع الصياغة السردية */}
-        <div className="mt-8 p-6 bg-brand-navy/50 rounded-2xl border border-brand-yellow/20">
+        <div className="mt-8 p-6 bg-surface rounded-2xl border border-brand-yellow/20">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
               <div className="text-4xl">🏅</div>
               <div>
-                <div className="text-white font-bold text-base">التقييم الإجمالي الموزون للموقع</div>
-                <div className="text-gray-400 text-xs">مرجح حسب الأوزان النسبية لكل معيار</div>
+                <div className="text-ink font-bold text-base">التقييم الإجمالي الموزون للموقع</div>
+                <div className="text-muted text-xs">مرجح حسب الأوزان النسبية لكل معيار</div>
                 <div className="text-[11px] text-green-400 mt-1 font-bold">✓ {narrativeScore}</div>
-                <div className="text-[10px] text-gray-400 mt-1 max-w-md leading-relaxed">
+                <div className="text-[10px] text-muted mt-1 max-w-md leading-relaxed">
                   الموقع مؤهل للترقية إلى Class A بشرط تنفيذ المحاور الثلاثة الأساسية:
                   <span className="text-brand-yellow font-bold"> رفع الارتفاع</span> +
                   <span className="text-brand-red font-bold"> ترقية السلامة</span> +
@@ -1904,8 +1904,8 @@ const WarehouseMaps = () => {
               </div>
             </div>
             <div className="text-right shrink-0">
-              <div className="text-4xl font-black text-brand-yellow">{totalWeightedScore.toFixed(1)}<span className="text-base text-gray-400"> / 10</span></div>
-              <div className="text-xs text-gray-400 mt-1">من أصل 10 نقاط</div>
+              <div className="text-4xl font-black text-brand-yellow">{totalWeightedScore.toFixed(1)}<span className="text-base text-muted"> / 10</span></div>
+              <div className="text-xs text-muted mt-1">من أصل 10 نقاط</div>
             </div>
           </div>
         </div>
@@ -1914,7 +1914,7 @@ const WarehouseMaps = () => {
       {/* التوصيات ذات الأولوية لمعايير ≤ 6 */}
       {priorityRecommendations.length > 0 && (
         <div className="bg-[#141f2e] border border-brand-red/20 rounded-2xl p-8">
-          <h4 className="font-bold text-white mb-4 flex items-center gap-2">
+          <h4 className="font-bold text-ink mb-4 flex items-center gap-2">
             <span className="w-6 h-6 bg-brand-red/20 rounded flex items-center justify-center text-brand-red text-xs font-black">{priorityRecommendations.length}</span>
             توصيات أولوية قصوى — معايير حصلت على درجة ≤ 6
           </h4>
@@ -1923,15 +1923,15 @@ const WarehouseMaps = () => {
               <div key={i} className="p-4 rounded-xl border border-brand-red/15 bg-brand-red/4">
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
-                    <div className="text-white font-bold text-sm">{c.name}</div>
-                    <div className="text-gray-400 text-xs mt-0.5">{c.notes}</div>
+                    <div className="text-ink font-bold text-sm">{c.name}</div>
+                    <div className="text-muted text-xs mt-0.5">{c.notes}</div>
                   </div>
                   <div className={`text-2xl font-black shrink-0 ${c.score >= 6 ? 'text-brand-yellow' : 'text-brand-red'}`}>{c.score}/10</div>
                 </div>
                 {c.linkedCard && (
-                  <div className="mt-2 pt-2 border-t border-white/5">
+                  <div className="mt-2 pt-2 border-t border-line">
                     <div className="text-[9px] text-blue-400 font-bold uppercase mb-1">مرتبط ببطاقة المقترح</div>
-                    <div className="text-[11px] text-gray-300">
+                    <div className="text-[11px] text-ink-2">
                       <span className="text-brand-yellow font-bold">{c.linkedCard.title}</span> —
                       مدة التنفيذ: {c.linkedCard.duration} — أولوية: <PriorityBadge priority={c.linkedCard.priority} />
                     </div>
@@ -1943,8 +1943,8 @@ const WarehouseMaps = () => {
         </div>
       )}
 
-      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-8">
-        <h4 className="font-bold text-white mb-6">توصيات التحسين ذات الأولوية</h4>
+      <div className="bg-[#141f2e] border border-line rounded-2xl p-8">
+        <h4 className="font-bold text-ink mb-6">توصيات التحسين ذات الأولوية</h4>
         <div className="space-y-4">
           {[
             { priority:'فوري',  color:'#e74c3c', title:'رفع الارتفاع الصافي إلى 12م (E-5)',    detail:'أعلى أثر على سعة التخزين — ينقل الموقع مباشرة لـ Class A ويُمكّن من 6 مستويات رفوف.' },
@@ -1952,11 +1952,11 @@ const WarehouseMaps = () => {
             { priority:'قريب',  color:'#e67e22', title:'إنشاء منصات الدوك ودمج Dock Levelers', detail:'يرفع كفاءة التحميل بنسبة 250% ويلغي الأضرار الناتجة عن التحميل الأرضي.' },
             { priority:'متوسط', color:'#2980b9', title:'تطبيق نظام WMS مع Odoo ERP',            detail:'دقة مخزون 99.9% وإلغاء ورق العمل اليدوي — عائد تشغيلي خلال 12 شهراً.' },
           ].map((r, i) => (
-            <div key={i} className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/5">
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold shrink-0 mt-0.5 text-white" style={{ backgroundColor: r.color }}>{r.priority}</span>
+            <div key={i} className="flex items-start gap-4 p-4 bg-chip rounded-xl border border-line">
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold shrink-0 mt-0.5 text-ink" style={{ backgroundColor: r.color }}>{r.priority}</span>
               <div>
-                <div className="text-white font-bold text-sm mb-1">{r.title}</div>
-                <div className="text-gray-400 text-xs leading-relaxed">{r.detail}</div>
+                <div className="text-ink font-bold text-sm mb-1">{r.title}</div>
+                <div className="text-muted text-xs leading-relaxed">{r.detail}</div>
               </div>
             </div>
           ))}
@@ -1982,8 +1982,8 @@ const WarehouseMaps = () => {
               <span className="px-3 py-1 bg-blue-500/15 text-blue-400 text-xs font-bold rounded-full border border-blue-500/25">الهيكل التنظيمي</span>
               <span className="px-3 py-1 bg-green-500/15 text-green-400 text-xs font-bold rounded-full border border-green-500/25">موقع 155</span>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">{adminBuilding.title}</h3>
-            <p className="text-sm text-gray-300 leading-relaxed">{adminBuilding.description}</p>
+            <h3 className="text-xl font-bold text-ink mb-2">{adminBuilding.title}</h3>
+            <p className="text-sm text-ink-2 leading-relaxed">{adminBuilding.description}</p>
           </div>
           <div className="grid grid-cols-3 gap-3 text-center shrink-0">
             {[
@@ -1991,8 +1991,8 @@ const WarehouseMaps = () => {
               { l:'عدد الطوابق',  v:`${adminBuilding.floors} طوابق`,    c:'text-brand-yellow' },
               { l:'عدد الغرف',    v:`${adminBuilding.rooms.length} وحدة`,c:'text-green-400' },
             ].map((s, i) => (
-              <div key={i} className="bg-white/5 rounded-xl p-3 border border-white/5">
-                <div className="text-[10px] text-gray-400 mb-1">{s.l}</div>
+              <div key={i} className="bg-chip rounded-xl p-3 border border-line">
+                <div className="text-[10px] text-muted mb-1">{s.l}</div>
                 <div className={`font-bold text-sm ${s.c}`}>{s.v}</div>
               </div>
             ))}
@@ -2001,11 +2001,11 @@ const WarehouseMaps = () => {
       </div>
 
       {/* مخطط المبنى الإداري SVG */}
-      <div className="bg-[#0f1923] border border-white/10 rounded-2xl p-6">
-        <h4 className="font-bold text-white mb-4 text-sm">مخطط المبنى الإداري — الطابق الأول والثاني</h4>
+      <div className="bg-[#0f1923] border border-line rounded-2xl p-6">
+        <h4 className="font-bold text-ink mb-4 text-sm">مخطط المبنى الإداري — الطابق الأول والثاني</h4>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* الطابق الأول */}
-          <div className="bg-[#0a1020] rounded-xl border border-white/5 p-4">
+          <div className="bg-[#0a1020] rounded-xl border border-line p-4">
             <div className="text-xs text-brand-yellow font-bold mb-3 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-brand-yellow"></span>
               الطابق الأول — Ground Floor
@@ -2059,7 +2059,7 @@ const WarehouseMaps = () => {
           </div>
 
           {/* الطابق الثاني */}
-          <div className="bg-[#0a1020] rounded-xl border border-white/5 p-4">
+          <div className="bg-[#0a1020] rounded-xl border border-line p-4">
             <div className="text-xs text-brand-yellow font-bold mb-3 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-purple-400"></span>
               الطابق الثاني — First Floor
@@ -2100,7 +2100,7 @@ const WarehouseMaps = () => {
 
         {/* تفاصيل الغرف */}
         <div className="mt-6">
-          <h5 className="text-sm font-bold text-white mb-4">تفاصيل مكاتب وأقسام المبنى الإداري</h5>
+          <h5 className="text-sm font-bold text-ink mb-4">تفاصيل مكاتب وأقسام المبنى الإداري</h5>
           <div
             className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-1 print-expand"
             style={{ scrollbarWidth:'thin', scrollbarColor:'rgba(255,255,255,0.1) transparent' }}
@@ -2109,7 +2109,7 @@ const WarehouseMaps = () => {
               <div
                 key={i}
                 className={`p-4 rounded-xl border cursor-pointer transition-all hover:scale-[1.01] ${
-                  selectedDept === room.id ? 'border-opacity-60 scale-[1.01]' : 'border-white/10 hover:border-white/25'
+                  selectedDept === room.id ? 'border-opacity-60 scale-[1.01]' : 'border-line hover:border-white/25'
                 }`}
                 style={{
                   backgroundColor: selectedDept === room.id ? `${room.color}18` : undefined,
@@ -2124,14 +2124,14 @@ const WarehouseMaps = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-0.5">
                       <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor:`${room.color}25`, color: room.color }}>{room.id}</span>
-                      <span className="font-bold text-white text-xs">{room.name}</span>
+                      <span className="font-bold text-ink text-xs">{room.name}</span>
                     </div>
                     <div className="flex gap-3 text-[10px] text-gray-500 mb-1">
-                      <span>المساحة: <span className="text-gray-300">{room.area}</span></span>
-                      <span>الطابق: <span className="text-gray-300">{room.floor === 1 ? 'الأول' : 'الثاني'}</span></span>
+                      <span>المساحة: <span className="text-ink-2">{room.area}</span></span>
+                      <span>الطابق: <span className="text-ink-2">{room.floor === 1 ? 'الأول' : 'الثاني'}</span></span>
                     </div>
                     {selectedDept === room.id && (
-                      <p className="text-[11px] text-gray-300 leading-relaxed mt-2 border-t border-white/10 pt-2">{room.desc}</p>
+                      <p className="text-[11px] text-ink-2 leading-relaxed mt-2 border-t border-line pt-2">{room.desc}</p>
                     )}
                   </div>
                 </div>
@@ -2142,15 +2142,15 @@ const WarehouseMaps = () => {
       </div>
 
       {/* الهيكل التنظيمي */}
-      <div className="bg-[#0f1923] border border-white/10 rounded-2xl p-6">
+      <div className="bg-[#0f1923] border border-line rounded-2xl p-6">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <div>
-            <h4 className="font-bold text-white text-sm">{orgStructure.title}</h4>
-            <p className="text-gray-400 text-[11px] mt-0.5">{orgStructure.subtitle}</p>
+            <h4 className="font-bold text-ink text-sm">{orgStructure.title}</h4>
+            <p className="text-muted text-[11px] mt-0.5">{orgStructure.subtitle}</p>
           </div>
           <div className="flex flex-wrap gap-3 text-[10px]">
             {[
-              { label:`${orgStructure.summary.totalStaff} موظف`, color:'text-white', bg:'bg-white/10' },
+              { label:`${orgStructure.summary.totalStaff} موظف`, color:'text-ink', bg:'bg-chip' },
               { label:orgStructure.summary.shifts, color:'text-brand-yellow', bg:'bg-brand-yellow/10' },
               { label:orgStructure.summary.workingHours, color:'text-green-400', bg:'bg-green-500/10' },
             ].map((s, i) => (
@@ -2163,8 +2163,8 @@ const WarehouseMaps = () => {
           {orgStructure.levels.map((level, li) => (
             <div key={li}>
               <div className="flex items-center gap-3 mb-3">
-                <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-gray-300">{level.level}</span>
-                <span className="text-xs font-bold text-gray-300 uppercase">{level.title}</span>
+                <span className="w-6 h-6 rounded-full bg-chip flex items-center justify-center text-[10px] font-bold text-ink-2">{level.level}</span>
+                <span className="text-xs font-bold text-ink-2 uppercase">{level.title}</span>
                 <div className="flex-1 h-px bg-white/8"></div>
               </div>
               <div className={`grid gap-3 ${level.nodes.length === 1 ? 'grid-cols-1 max-w-sm mx-auto' : level.nodes.length === 2 ? 'grid-cols-1 md:grid-cols-2' : level.nodes.length <= 3 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
@@ -2182,14 +2182,14 @@ const WarehouseMaps = () => {
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className="text-xl">{node.icon}</span>
                         <div className="flex-1 min-w-0">
-                          <div className="font-bold text-white text-xs leading-tight">{node.title}</div>
+                          <div className="font-bold text-ink text-xs leading-tight">{node.title}</div>
                           <div className="text-[10px] font-medium" style={{ color: node.color }}>{node.subtitle}</div>
                         </div>
                       </div>
                       {(node.staff || node.count || node.zone) && (
                         <div className="flex flex-wrap gap-2 mt-1.5">
-                          {node.staff && <span className="text-[9px] bg-white/10 text-gray-300 px-1.5 py-0.5 rounded">{node.staff} موظف</span>}
-                          {node.count && <span className="text-[9px] bg-white/10 text-gray-300 px-1.5 py-0.5 rounded">{node.count}</span>}
+                          {node.staff && <span className="text-[9px] bg-chip text-ink-2 px-1.5 py-0.5 rounded">{node.staff} موظف</span>}
+                          {node.count && <span className="text-[9px] bg-chip text-ink-2 px-1.5 py-0.5 rounded">{node.count}</span>}
                           {node.zone && (
                             <span className="text-[9px] px-1.5 py-0.5 rounded" style={{
                               backgroundColor: warehouses.find(w => node.zone.includes(w.id)) ? `${warehouses.find(w => node.zone.includes(w.id)).color}20` : 'rgba(255,255,255,0.05)',
@@ -2199,11 +2199,11 @@ const WarehouseMaps = () => {
                         </div>
                       )}
                       {selectedOrgNode === node.id && node.responsibilities && (
-                        <div className="mt-3 pt-3 border-t border-white/10">
-                          <div className="text-[9px] text-gray-400 mb-1.5 uppercase font-bold">المسؤوليات الرئيسية</div>
+                        <div className="mt-3 pt-3 border-t border-line">
+                          <div className="text-[9px] text-muted mb-1.5 uppercase font-bold">المسؤوليات الرئيسية</div>
                           <ul className="space-y-1">
                             {node.responsibilities.map((r, ri) => (
-                              <li key={ri} className="text-[10px] text-gray-300 flex items-start gap-1.5">
+                              <li key={ri} className="text-[10px] text-ink-2 flex items-start gap-1.5">
                                 <span className="shrink-0 mt-0.5" style={{ color: node.color }}>▸</span>
                                 {r}
                               </li>
@@ -2219,14 +2219,14 @@ const WarehouseMaps = () => {
           ))}
         </div>
 
-        <div className="mt-4 p-3 bg-white/5 rounded-xl text-center text-[10px] text-gray-500">
+        <div className="mt-4 p-3 bg-chip rounded-xl text-center text-[10px] text-gray-500">
           ← اضغط على أي موظف أو قسم لعرض مسؤولياته التفصيلية
         </div>
       </div>
 
       {/* إحصاءات الكوادر البشرية */}
-      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-8">
-        <h4 className="font-bold text-white mb-6">توزيع الكوادر البشرية — Staff Distribution</h4>
+      <div className="bg-[#141f2e] border border-line rounded-2xl p-8">
+        <h4 className="font-bold text-ink mb-6">توزيع الكوادر البشرية — Staff Distribution</h4>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           {[
             { label:'إجمالي الموظفين', val:orgStructure.summary.totalStaff,  color:'#DAAA3C', icon:'👥' },
@@ -2236,17 +2236,17 @@ const WarehouseMaps = () => {
             { label:'تقنيون',           val:orgStructure.summary.technical,    color:'#1abc9c', icon:'💻' },
             { label:'دعم وخدمات',       val:orgStructure.summary.support,      color:'#95a5a6', icon:'🔧' },
           ].map((s, i) => (
-            <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+            <div key={i} className="bg-chip border border-line rounded-xl p-4 text-center">
               <div className="text-2xl mb-1">{s.icon}</div>
               <div className="text-2xl font-black" style={{ color: s.color }}>{s.val}</div>
-              <div className="text-[10px] text-gray-400 mt-0.5">{s.label}</div>
+              <div className="text-[10px] text-muted mt-0.5">{s.label}</div>
             </div>
           ))}
         </div>
 
         {/* شريط توزيع بصري */}
-        <div className="bg-brand-navy/30 rounded-xl p-4 border border-white/5 mb-6">
-          <div className="text-[10px] text-gray-400 mb-2">التوزيع النسبي للكوادر</div>
+        <div className="bg-brand-navy/30 rounded-xl p-4 border border-line mb-6">
+          <div className="text-[10px] text-muted mb-2">التوزيع النسبي للكوادر</div>
           <div className="flex h-5 rounded-full overflow-hidden">
             {[
               { val:orgStructure.summary.management,   color:'#e74c3c', label:'إداريون' },
@@ -2258,7 +2258,7 @@ const WarehouseMaps = () => {
               const pct = Math.round((seg.val / orgStructure.summary.totalStaff) * 100);
               return (
                 <div key={i} title={`${seg.label}: ${seg.val} (${pct}%)`} style={{ width:`${pct}%`, backgroundColor: seg.color }} className="relative group">
-                  {pct >= 8 && <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-white">{pct}%</span>}
+                  {pct >= 8 && <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-ink">{pct}%</span>}
                 </div>
               );
             })}
@@ -2269,7 +2269,7 @@ const WarehouseMaps = () => {
               { color:'#27ae60', label:'تشغيليون'}, { color:'#1abc9c', label:'تقنيون' },
               { color:'#95a5a6', label:'دعم وخدمات' },
             ].map((l, i) => (
-              <span key={i} className="flex items-center gap-1 text-gray-400">
+              <span key={i} className="flex items-center gap-1 text-muted">
                 <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: l.color }}></span>{l.label}
               </span>
             ))}
@@ -2285,13 +2285,13 @@ const WarehouseMaps = () => {
               { name:'الوردية المسائية', time:'14:00 – 22:00', staff:24, color:'#2980b9', roles:['مشغلو الرافعات (3)','عمال التخزين (5)','موظفو الشحن (3)','مراقبو الجودة (1)','مشرفون (3)','أمن (1)'] },
               { name:'الوردية الليلية',  time:'22:00 – 6:00',  staff:13, color:'#8e44ad', roles:['مشغلو الرافعات (1)','عمال التخزين (2)','موظفو المراقبة (2)','مشرف واحد (1)','فنيو الصيانة (3)','أمن (1)'] },
             ].map((shift, i) => (
-              <div key={i} className="bg-white/5 rounded-xl p-4 border border-white/5" style={{ borderTopColor: shift.color, borderTopWidth: 2 }}>
+              <div key={i} className="bg-chip rounded-xl p-4 border border-line" style={{ borderTopColor: shift.color, borderTopWidth: 2 }}>
                 <div className="font-bold text-xs mb-1" style={{ color: shift.color }}>{shift.name}</div>
-                <div className="text-white font-bold text-sm mb-1">{shift.time}</div>
-                <div className="text-2xl font-black mb-2" style={{ color: shift.color }}>{shift.staff} <span className="text-xs text-gray-400">موظف</span></div>
+                <div className="text-ink font-bold text-sm mb-1">{shift.time}</div>
+                <div className="text-2xl font-black mb-2" style={{ color: shift.color }}>{shift.staff} <span className="text-xs text-muted">موظف</span></div>
                 <ul className="space-y-1">
                   {shift.roles.map((r, ri) => (
-                    <li key={ri} className="text-[9px] text-gray-400 flex items-center gap-1">
+                    <li key={ri} className="text-[9px] text-muted flex items-center gap-1">
                       <span className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: shift.color }}></span>
                       {r}
                     </li>
@@ -2304,14 +2304,14 @@ const WarehouseMaps = () => {
       </div>
 
       {/* جدول مسؤوليات الأقسام */}
-      <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-8">
-        <h4 className="font-bold text-white mb-6">مسؤوليات الأقسام وارتباطاتها بالمستودعات</h4>
+      <div className="bg-[#141f2e] border border-line rounded-2xl p-8">
+        <h4 className="font-bold text-ink mb-6">مسؤوليات الأقسام وارتباطاتها بالمستودعات</h4>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-white/10">
+              <tr className="border-b border-line">
                 {['القسم','المسؤول','عدد الكوادر','الوحدات المرتبطة','الأنظمة المستخدمة','معيار الجودة'].map((h, i) => (
-                  <th key={i} className="text-right text-gray-400 font-bold pb-3 pr-3 whitespace-nowrap">{h}</th>
+                  <th key={i} className="text-right text-muted font-bold pb-3 pr-3 whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -2324,17 +2324,17 @@ const WarehouseMaps = () => {
                 { dept:'المشتريات',          resp:'رئيس قسم المشتريات', staff:2,  zones:'ADM-08 / E-1',    sys:'Odoo Purchase',       std:'ISO 9001',           color:'#2980b9' },
                 { dept:'الصيانة',            resp:'مشرف الصيانة',       staff:3,  zones:'كل الموقع',       sys:'CMMS متكامل',         std:'OSHA / EN 15620',    color:'#95a5a6' },
               ].map((row, i) => (
-                <tr key={i} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                <tr key={i} className="border-b border-line hover:bg-white/3 transition-colors">
                   <td className="py-3 pr-3">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: row.color }}></span>
-                      <span className="font-bold text-white">{row.dept}</span>
+                      <span className="font-bold text-ink">{row.dept}</span>
                     </div>
                   </td>
-                  <td className="py-3 pr-3 text-gray-300">{row.resp}</td>
+                  <td className="py-3 pr-3 text-ink-2">{row.resp}</td>
                   <td className="py-3 pr-3 font-bold" style={{ color: row.color }}>{row.staff}</td>
-                  <td className="py-3 pr-3 text-gray-400 text-[10px]">{row.zones}</td>
-                  <td className="py-3 pr-3 text-gray-400 text-[10px] font-mono">{row.sys}</td>
+                  <td className="py-3 pr-3 text-muted text-[10px]">{row.zones}</td>
+                  <td className="py-3 pr-3 text-muted text-[10px] font-mono">{row.sys}</td>
                   <td className="py-3 pr-3 text-[10px]">
                     <span className="px-1.5 py-0.5 bg-brand-yellow/10 text-brand-yellow rounded text-[9px] font-bold">{row.std}</span>
                   </td>
@@ -2346,21 +2346,21 @@ const WarehouseMaps = () => {
       </div>
 
       {/* خطة التوظيف التدريجية */}
-      <div className="bg-gradient-to-br from-[#1a2840] to-brand-navy border border-white/10 p-8 rounded-2xl">
-        <h4 className="font-bold text-white mb-6">خطة التوظيف التدريجية — Phased Hiring Plan</h4>
+      <div className="bg-gradient-to-br from-[#1a2840] to-brand-navy border border-line p-8 rounded-2xl">
+        <h4 className="font-bold text-ink mb-6">خطة التوظيف التدريجية — Phased Hiring Plan</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             { phase:'المرحلة الأولى', time:'الأشهر 1 – 3', color:'#27ae60', hires:['مدير المستودعات ,','4 مشرفون ميدانيون','8 مشغلو رافعات شوكية'], total:14 },
             { phase:'المرحلة الثانية', time:'الأشهر 4 – 6', color:'#e67e22', hires:['رؤساء أقسام (جودة + IT + HR)','10 عمال استلام وتخزين','3 مراقبو جودة','2 فنيو IT + WMS'], total:29 },
             { phase:'المرحلة الثالثة', time:'الأشهر 7 – 12', color:'#2980b9', hires:['موظفو تجميع وشحن (7 موظفين)','فريق الأمن (4 حراس)','موظفو الدعم والخدمات (9)','استكمال الهيكل الكامل'], total:73 },
           ].map((ph, i) => (
-            <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-5" style={{ borderTopColor: ph.color, borderTopWidth: 3 }}>
+            <div key={i} className="bg-chip border border-line rounded-xl p-5" style={{ borderTopColor: ph.color, borderTopWidth: 3 }}>
               <div className="font-bold text-xs mb-1" style={{ color: ph.color }}>{ph.phase}</div>
-              <div className="text-white font-bold text-sm mb-1">{ph.time}</div>
-              <div className="text-2xl font-black mb-3" style={{ color: ph.color }}>{ph.total} <span className="text-sm text-gray-400">موظف</span></div>
+              <div className="text-ink font-bold text-sm mb-1">{ph.time}</div>
+              <div className="text-2xl font-black mb-3" style={{ color: ph.color }}>{ph.total} <span className="text-sm text-muted">موظف</span></div>
               <ul className="space-y-1.5">
                 {ph.hires.map((h, hi) => (
-                  <li key={hi} className="text-[10px] text-gray-300 flex items-start gap-1.5">
+                  <li key={hi} className="text-[10px] text-ink-2 flex items-start gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1" style={{ backgroundColor: ph.color }}></span>
                     {h}
                   </li>
@@ -2379,8 +2379,8 @@ const WarehouseMaps = () => {
   const renderPrintSummary = () => (
     <div className="print-summary-block space-y-6 mb-8">
       <div className="grid grid-cols-2 gap-6">
-        <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
-          <h4 className="font-bold text-white mb-4">معلومات الموقع</h4>
+        <div className="bg-[#141f2e] border border-line rounded-2xl p-6">
+          <h4 className="font-bold text-ink mb-4">معلومات الموقع</h4>
           <div className="grid grid-cols-2 gap-3">
             {Object.entries({
               'كود الموقع':    siteInfo.id,
@@ -2391,15 +2391,15 @@ const WarehouseMaps = () => {
               'الارتفاع الحالي':siteInfo.currentHeight,
               'إعداد':         siteInfo.preparedBy,
             }).map(([label, val], i) => (
-              <div key={i} className="border-b border-white/5 pb-2">
-                <div className="text-[10px] text-gray-400 uppercase">{label}</div>
-                <div className="text-white font-medium text-sm">{val}</div>
+              <div key={i} className="border-b border-line pb-2">
+                <div className="text-[10px] text-muted uppercase">{label}</div>
+                <div className="text-ink font-medium text-sm">{val}</div>
               </div>
             ))}
           </div>
         </div>
-        <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-6">
-          <h4 className="font-bold text-white mb-4">مراجعة الامتثال</h4>
+        <div className="bg-[#141f2e] border border-line rounded-2xl p-6">
+          <h4 className="font-bold text-ink mb-4">مراجعة الامتثال</h4>
           <div className="space-y-3">
             {[
               { label:'ارتفاع السقف (Class A)', ok: dimensions.clearHeight >= 12, val: `${dimensions.clearHeight}م` },
@@ -2408,9 +2408,9 @@ const WarehouseMaps = () => {
               { label:'سعة التخزين المستهدفة', ok: stats.estPallets > 15000, val: stats.estPallets.toLocaleString() },
             ].map((item, i) => (
               <div key={i} className="flex items-center justify-between text-sm">
-                <span className="text-gray-300">{item.label}</span>
+                <span className="text-ink-2">{item.label}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-white font-bold">{item.val}</span>
+                  <span className="text-ink font-bold">{item.val}</span>
                   <span className={item.ok ? 'text-green-500' : 'text-brand-red'}>{item.ok ? '✓' : '✗'}</span>
                 </div>
               </div>
@@ -2512,11 +2512,11 @@ const WarehouseMaps = () => {
           .text-teal-400     { color: #0f766e !important; }
 
           /* النصوص الرمادية والبيضاء → لون داكن قابل للقراءة */
-          .text-white        { color: #111827 !important; }
-          .text-gray-100     { color: #1f2937 !important; }
-          .text-gray-200     { color: #1f2937 !important; }
-          .text-gray-300     { color: #374151 !important; }
-          .text-gray-400     { color: #4b5563 !important; }
+          .text-ink        { color: #111827 !important; }
+          .text-ink-2     { color: #1f2937 !important; }
+          .text-ink-2     { color: #1f2937 !important; }
+          .text-ink-2     { color: #374151 !important; }
+          .text-muted     { color: #4b5563 !important; }
           .text-gray-500     { color: #6b7280 !important; }
 
           /* شارات الأولوية — تحتفظ بلونها */
@@ -2629,7 +2629,7 @@ const WarehouseMaps = () => {
       `}} />
 
       {/* ── الرأس ──────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-l from-brand-navy to-[#1a2840] rounded-2xl p-8 border border-white/10 shadow-2xl">
+      <div className="bg-gradient-to-l from-brand-navy to-[#1a2840] rounded-2xl p-8 border border-line shadow-2xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <div className="flex items-center gap-3 mb-3 flex-wrap">
@@ -2638,15 +2638,15 @@ const WarehouseMaps = () => {
               <span className="px-3 py-1 bg-brand-yellow/15 text-brand-yellow text-xs font-bold rounded-full border border-brand-yellow/25">خطتا تحوير ودمج</span>
               <span className="px-3 py-1 bg-brand-red/10 text-brand-red text-xs font-bold rounded-full border border-brand-red/20">مبنى إداري + هيكل وظيفي</span>
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">الخرائط الفنية ومقترح التطوير الشامل</h2>
-            <p className="text-gray-300 text-sm max-w-2xl leading-relaxed">
+            <h2 className="text-2xl md:text-3xl font-bold text-ink mb-2">الخرائط الفنية ومقترح التطوير الشامل</h2>
+            <p className="text-ink-2 text-sm max-w-2xl leading-relaxed">
               تطوير مستودعات موقع 155 (بوهادي، بنغازي) — تحويل المساحات الحالية إلى مستودعات Class A بمعايير دولية مع دراسة شاملة لخطتي التحوير والدمج والهيكل الإداري الكامل.
             </p>
-            <div className="mt-3 text-[11px] text-gray-400">
+            <div className="mt-3 text-[11px] text-muted">
               إعداد: <span className="text-brand-yellow font-bold">محمد البرشي — رمزي باش</span>
-              <span className="mx-2 text-white/20">|</span>
+              <span className="mx-2 text-ink/20">|</span>
               إدارة المستودعات
-              <span className="mx-2 text-white/20">|</span>
+              <span className="mx-2 text-ink/20">|</span>
               <span className="text-brand-yellow">⚓ {siteInfo.nearestPort}</span>
             </div>
           </div>
@@ -2659,7 +2659,7 @@ const WarehouseMaps = () => {
         </div>
 
         {/* شريط معلومات الموقع */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-8 pt-6 border-t border-white/10">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-8 pt-6 border-t border-line">
           {[
             { l:'كود الموقع',      v: siteInfo.id },
             { l:'الموقع',          v: siteInfo.location },
@@ -2669,8 +2669,8 @@ const WarehouseMaps = () => {
             { l:'الاستهداف',       v: siteInfo.classification },
           ].map((item, i) => (
             <div key={i} className="text-center">
-              <div className="text-gray-400 text-[10px] uppercase mb-1">{item.l}</div>
-              <div className="text-white font-bold text-sm">{item.v}</div>
+              <div className="text-muted text-[10px] uppercase mb-1">{item.l}</div>
+              <div className="text-ink font-bold text-sm">{item.v}</div>
             </div>
           ))}
         </div>
@@ -2681,15 +2681,15 @@ const WarehouseMaps = () => {
         {/* المحتوى الرئيسي */}
         <div className="lg:col-span-3 space-y-6">
           {/* التبويبات */}
-          <div className="flex flex-wrap gap-1 border-b border-white/10 pb-0 no-print">
+          <div className="flex flex-wrap gap-1 border-b border-line pb-0 no-print">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-3 py-2.5 rounded-t-lg font-bold transition-all flex items-center gap-1.5 text-xs ${
                   activeTab === tab.id
-                    ? 'bg-[#1a2840] text-brand-yellow border-t border-x border-white/10 -mb-px'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-[#1a2840] text-brand-yellow border-t border-x border-line -mb-px'
+                    : 'text-muted hover:text-ink hover:bg-surface-2'
                 }`}
               >
                 <Icon name={tab.icon} size={14} />
@@ -2718,8 +2718,8 @@ const WarehouseMaps = () => {
         {/* ── الشريط الجانبي ──────────────────────────────────────── */}
         <aside className="space-y-5 no-print">
           {/* مراجعة الامتثال */}
-          <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-5 shadow-xl">
-            <h4 className="font-bold text-white mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
+          <div className="bg-[#141f2e] border border-line rounded-2xl p-5 shadow-xl">
+            <h4 className="font-bold text-ink mb-4 flex items-center gap-2 border-b border-line pb-3">
               <Icon name="clipboardList" size={16} className="text-brand-yellow" /> مراجعة الامتثال
             </h4>
             <div className="space-y-3">
@@ -2731,9 +2731,9 @@ const WarehouseMaps = () => {
                 { label:'مستويات الرفوف ≥ 5',     ok: stats.rackLevels >= 5,                   val:`${stats.rackLevels} مستويات` },
               ].map((item, i) => (
                 <div key={i} className="flex items-center justify-between text-[11px]">
-                  <span className="text-gray-300">{item.label}</span>
+                  <span className="text-ink-2">{item.label}</span>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-white font-bold text-[10px]">{item.val}</span>
+                    <span className="text-ink font-bold text-[10px]">{item.val}</span>
                     <span className={`text-base ${item.ok ? 'text-green-500' : 'text-brand-red'}`}>{item.ok ? '✓' : '✗'}</span>
                   </div>
                 </div>
@@ -2747,8 +2747,8 @@ const WarehouseMaps = () => {
           </div>
 
           {/* لوحة التحكم الفني */}
-          <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-5 shadow-xl">
-            <h4 className="font-bold text-white mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
+          <div className="bg-[#141f2e] border border-line rounded-2xl p-5 shadow-xl">
+            <h4 className="font-bold text-ink mb-4 flex items-center gap-2 border-b border-line pb-3">
               <Icon name="grid" size={16} className="text-brand-yellow" /> لوحة التحكم الفني
             </h4>
             <div className="space-y-4">
@@ -2758,33 +2758,33 @@ const WarehouseMaps = () => {
                 { label:'الارتفاع الصافي (م)', field:'clearHeight' },
               ].map((f) => (
                 <div key={f.field} className="space-y-1">
-                  <label className="text-xs text-gray-300">{f.label}</label>
+                  <label className="text-xs text-ink-2">{f.label}</label>
                   <input
                     type="number"
                     value={dimensions[f.field]}
                     onChange={e => setDimensions({ ...dimensions, [f.field]: +e.target.value })}
-                    className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm focus:border-brand-yellow outline-none transition-all"
+                    className="w-full bg-brand-navy border border-line rounded-lg p-2 text-white text-sm focus:border-brand-yellow outline-none transition-all"
                   />
                 </div>
               ))}
               <div className="space-y-1">
-                <label className="text-xs text-gray-300">نوع الأرضية</label>
-                <select value={dimensions.flooring} onChange={e => setDimensions({ ...dimensions, flooring: e.target.value })} className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm focus:border-brand-yellow outline-none">
+                <label className="text-xs text-ink-2">نوع الأرضية</label>
+                <select value={dimensions.flooring} onChange={e => setDimensions({ ...dimensions, flooring: e.target.value })} className="w-full bg-brand-navy border border-line rounded-lg p-2 text-white text-sm focus:border-brand-yellow outline-none">
                   <option>إيبوكسي FF50</option>
                   <option>خرسانة صناعية</option>
                   <option>بلاط مقاوم للأحمال</option>
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-gray-300">آلية التخزين</label>
-                <select value={dimensions.rackingSystem} onChange={e => setDimensions({ ...dimensions, rackingSystem: e.target.value })} className="w-full bg-brand-navy border border-white/20 rounded-lg p-2 text-white text-sm focus:border-brand-yellow outline-none">
+                <label className="text-xs text-ink-2">آلية التخزين</label>
+                <select value={dimensions.rackingSystem} onChange={e => setDimensions({ ...dimensions, rackingSystem: e.target.value })} className="w-full bg-brand-navy border border-line rounded-lg p-2 text-white text-sm focus:border-brand-yellow outline-none">
                   <option>Selective Pallet Racking</option>
                   <option>Drive-In Racking</option>
                   <option>VNA System</option>
                 </select>
               </div>
             </div>
-            <div className="mt-5 pt-4 border-t border-white/10 space-y-3">
+            <div className="mt-5 pt-4 border-t border-line space-y-3">
               {[
                 { l:'مستويات الرفوف',   v:`${stats.rackLevels} مستويات`,              c:'text-brand-yellow' },
                 { l:'السعة التقديرية',  v:`${stats.estPallets.toLocaleString()} طبلية`, c:'text-brand-yellow' },
@@ -2792,7 +2792,7 @@ const WarehouseMaps = () => {
                 { l:'الاستغلال المتوقع',v:`${stats.utilization}%`,                     c: stats.utilization > 80 ? 'text-green-400' : 'text-brand-yellow' },
               ].map((r, i) => (
                 <div key={i} className="flex justify-between items-center text-xs">
-                  <span className="text-gray-300">{r.l}</span>
+                  <span className="text-ink-2">{r.l}</span>
                   <span className={`font-bold ${r.c}`}>{r.v}</span>
                 </div>
               ))}
@@ -2800,8 +2800,8 @@ const WarehouseMaps = () => {
           </div>
 
           {/* معلومات الموقع */}
-          <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-5 shadow-xl">
-            <h4 className="font-bold text-white mb-4 flex items-center gap-2">
+          <div className="bg-[#141f2e] border border-line rounded-2xl p-5 shadow-xl">
+            <h4 className="font-bold text-ink mb-4 flex items-center gap-2">
               <Icon name="mapPin" size={16} className="text-brand-red" /> معلومات الموقع
             </h4>
             <div className="space-y-3">
@@ -2815,31 +2815,31 @@ const WarehouseMaps = () => {
                 { label:'أقرب ميناء',      val: siteInfo.nearestPort },
                 { label:'إعداد',           val: siteInfo.preparedBy, small:true },
               ].map((item, i) => (
-                <div key={i} className="flex flex-col border-b border-white/5 pb-2">
-                  <span className="text-[10px] text-gray-400 uppercase">{item.label}</span>
-                  <span className={`text-white font-medium ${item.small ? 'text-[11px]' : 'text-sm'}`}>{item.val}</span>
+                <div key={i} className="flex flex-col border-b border-line pb-2">
+                  <span className="text-[10px] text-muted uppercase">{item.label}</span>
+                  <span className={`text-ink font-medium ${item.small ? 'text-[11px]' : 'text-sm'}`}>{item.val}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* ملخص الخطط الثلاث */}
-          <div className="bg-[#141f2e] border border-white/10 rounded-2xl p-5 shadow-xl">
-            <h4 className="font-bold text-white mb-4 border-b border-white/10 pb-3 text-sm">ملخص الخطط والمقترحات</h4>
+          <div className="bg-[#141f2e] border border-line rounded-2xl p-5 shadow-xl">
+            <h4 className="font-bold text-ink mb-4 border-b border-line pb-3 text-sm">ملخص الخطط والمقترحات</h4>
             <div className="space-y-3">
               <div onClick={() => setActiveTab('modification')} className="p-3 rounded-xl cursor-pointer hover:scale-[1.02] transition-all border border-brand-yellow/20 bg-brand-yellow/5">
                 <div className="text-brand-yellow font-bold text-xs mb-1">خطة التحوير</div>
-                <div className="text-[10px] text-gray-400">10 وحدات • ترقية داخلية • ~14 أسبوع</div>
+                <div className="text-[10px] text-muted">10 وحدات • ترقية داخلية • ~14 أسبوع</div>
                 <div className="text-[10px] text-green-400 mt-1">↑ +80% طبليات</div>
               </div>
               <div onClick={() => setActiveTab('merge')} className="p-3 rounded-xl cursor-pointer hover:scale-[1.02] transition-all border border-purple-500/20 bg-purple-500/5">
                 <div className="text-purple-400 font-bold text-xs mb-1">خطة الدمج</div>
-                <div className="text-[10px] text-gray-400">4 مجمعات • إعادة هيكلة • ~28 أسبوع</div>
+                <div className="text-[10px] text-muted">4 مجمعات • إعادة هيكلة • ~28 أسبوع</div>
                 <div className="text-[10px] text-green-400 mt-1">↑ +75% طبليات +60% كفاءة</div>
               </div>
               <div onClick={() => setActiveTab('admin')} className="p-3 rounded-xl cursor-pointer hover:scale-[1.02] transition-all border border-brand-red/20 bg-brand-red/5">
                 <div className="text-brand-red font-bold text-xs mb-1">المبنى الإداري</div>
-                <div className="text-[10px] text-gray-400">1,200 م² • 12 قسم • 73 موظف</div>
+                <div className="text-[10px] text-muted">1,200 م² • 12 قسم • 73 موظف</div>
                 <div className="text-[10px] text-blue-400 mt-1">هيكل وظيفي كامل</div>
               </div>
             </div>

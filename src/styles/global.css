@@ -509,6 +509,19 @@ html.bz-light .bz-text-body    { color: #495057 !important; }
 html.bz-light .bz-text-heading { color: #212529 !important; }
 html.bz-light .bz-text-accent  { color: #714B67 !important; }
 
+/* شبكة أمان الكتل الكحلية الثابتة: كتلة bg-brand-navy (أو تدرّج منها) تبقى
+   داكنة في الثيمين عمدًا — فأي نص متكيّف (ink/ink-2/muted) بداخلها يجب أن
+   يعود فاتحًا وإلا صار داكنًا على داكن. تغطي الحالات المتداخلة التي لا
+   يصلها التحويل السطري */
+html.bz-light .bg-brand-navy,
+html.bz-light [class*='from-brand-navy'] { color: #e8e8f0; }
+html.bz-light .bg-brand-navy .text-ink,
+html.bz-light [class*='from-brand-navy'] .text-ink { color: #ffffff !important; }
+html.bz-light .bg-brand-navy .text-ink-2,
+html.bz-light [class*='from-brand-navy'] .text-ink-2 { color: #d1d5db !important; }
+html.bz-light .bg-brand-navy .text-muted,
+html.bz-light [class*='from-brand-navy'] .text-muted { color: #9ca3af !important; }
+
 /* درجات ألوان الحالة المكتوبة للداكن (red-200/green-300/yellow-400…) لا تقرأ
    على الأبيض — تُعتَّم هنا لدرجةٍ مكافئةٍ دون لمس مظهر الصفحات الداكنة */
 html.bz-light .text-red-200,

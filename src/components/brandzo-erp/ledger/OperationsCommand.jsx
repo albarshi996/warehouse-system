@@ -86,7 +86,7 @@ export default function OperationsCommand() {
   }, [docs]);
   const kpiWindowIncomplete = truncated && oldestMs != null && oldestMs > nowMs - KPI_WINDOW_DAYS * DAY_MS;
 
-  if (!ready) return <p className="text-gray-300 text-sm py-10 text-center">جارٍ التحميل…</p>;
+  if (!ready) return <p className="text-ink-2 text-sm py-10 text-center">جارٍ التحميل…</p>;
   if (!me) return <Notice>افتح الصفحة بعد تسجيل الدخول.</Notice>;
 
   const base = getBasePath();
@@ -111,7 +111,7 @@ export default function OperationsCommand() {
       {/* ── المؤشرات الأربعة ── */}
       <div className="space-y-2">
       <div className="flex items-center justify-between px-1">
-        <h2 className="text-sm font-bold text-white">المؤشرات الأربعة</h2>
+        <h2 className="text-sm font-bold text-ink">المؤشرات الأربعة</h2>
         <span className="text-[11px] text-gray-500">لآخر {KPI_WINDOW_DAYS} يومًا</span>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -123,10 +123,10 @@ export default function OperationsCommand() {
       </div>
 
       {/* ── لوحة الاستثناءات ── */}
-      <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+      <div className="rounded-2xl border border-line bg-surface p-4">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">🚨</span>
-          <h2 className="text-sm font-bold text-white">لوحة الاستثناءات — ما يحتاج تدخّلًا</h2>
+          <h2 className="text-sm font-bold text-ink">لوحة الاستثناءات — ما يحتاج تدخّلًا</h2>
           <span className="text-xs text-gray-500">({num(exceptions.length)})</span>
         </div>
         {exceptions.length === 0 ? (
@@ -139,12 +139,12 @@ export default function OperationsCommand() {
                 <a
                   key={i}
                   href={`${base}${e.href}`}
-                  className="flex items-start gap-3 rounded-xl bg-black/20 border border-white/5 hover:border-white/20 p-3 transition-colors"
+                  className="flex items-start gap-3 rounded-xl bg-surface border border-line hover:border-line p-3 transition-colors"
                 >
                   <span className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ background: sev }} />
                   <div className="min-w-0">
-                    <div className="text-xs font-bold text-white">{e.title}</div>
-                    <div className="text-[11px] text-gray-400 leading-snug">{e.detail}</div>
+                    <div className="text-xs font-bold text-ink">{e.title}</div>
+                    <div className="text-[11px] text-muted leading-snug">{e.detail}</div>
                   </div>
                 </a>
               );
@@ -200,9 +200,9 @@ export default function OperationsCommand() {
 
 function Kpi({ label, hint, value, color }) {
   return (
-    <div className="rounded-2xl bg-black/20 border border-white/5 p-4">
+    <div className="rounded-2xl bg-surface border border-line p-4">
       <div className="text-3xl font-black" style={{ color }}>{value}</div>
-      <div className="text-sm font-bold text-gray-100 mt-1">{label}</div>
+      <div className="text-sm font-bold text-ink-2 mt-1">{label}</div>
       <div className="text-[10px] text-gray-500 mt-0.5">{hint}</div>
     </div>
   );
@@ -210,10 +210,10 @@ function Kpi({ label, hint, value, color }) {
 
 function Panel({ title, href, children }) {
   return (
-    <div className="rounded-2xl bg-black/20 border border-white/5 p-4">
+    <div className="rounded-2xl bg-surface border border-line p-4">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-bold text-white">{title}</h3>
-        <a href={href} className="text-[11px] text-brand-gold hover:underline">فتح ↗</a>
+        <h3 className="text-sm font-bold text-ink">{title}</h3>
+        <a href={href} className="text-[11px] text-accent hover:underline">فتح ↗</a>
       </div>
       <div className="space-y-1">{children}</div>
     </div>
@@ -222,8 +222,8 @@ function Panel({ title, href, children }) {
 
 function Row({ label, value, tone }) {
   return (
-    <div className="flex items-center justify-between text-xs border-t border-white/5 py-1.5 first:border-t-0">
-      <span className="text-gray-400">{label}</span>
+    <div className="flex items-center justify-between text-xs border-t border-line py-1.5 first:border-t-0">
+      <span className="text-muted">{label}</span>
       <span className="font-bold" style={{ color: tone || '#e5e7eb' }}>{value}</span>
     </div>
   );

@@ -153,7 +153,7 @@ function DetailPanel({ stage, base }) {
   const c = ACCENT[stage.accent] || ACCENT.navy;
   return (
     <div
-      className={['mt-6 rounded-2xl border-2 bg-white/5 p-5 sm:p-6 shadow-lg', c.border].join(' ')}
+      className={['mt-6 rounded-2xl border-2 bg-chip p-5 sm:p-6 shadow-lg', c.border].join(' ')}
       dir="rtl"
     >
       <div className="flex items-start gap-3 mb-3">
@@ -166,13 +166,13 @@ function DetailPanel({ stage, base }) {
           {stage.icon}
         </span>
         <div>
-          <div className="font-bold text-gray-200 text-lg sm:text-xl">
+          <div className="font-bold text-ink-2 text-lg sm:text-xl">
             {stage.num} · {stage.titleAr}
           </div>
-          <div className="text-xs sm:text-sm text-gray-200">{stage.titleEn}</div>
+          <div className="text-xs sm:text-sm text-ink-2">{stage.titleEn}</div>
         </div>
       </div>
-      <p className="text-sm text-gray-200 leading-relaxed mb-4">{stage.descAr}</p>
+      <p className="text-sm text-ink-2 leading-relaxed mb-4">{stage.descAr}</p>
 
       {stage.forms.length > 0 ? (
         <div>
@@ -193,19 +193,19 @@ function DetailPanel({ stage, base }) {
                   rel="noreferrer"
                   className={[
                     'flex items-center justify-between gap-2 px-3 py-2 rounded-lg border transition-colors',
-                    'border-white/10 hover:border-brand-red hover:bg-brand-red/5',
-                    'text-sm text-gray-200 hover:text-brand-red font-medium',
+                    'border-line hover:border-brand-red hover:bg-brand-red/5',
+                    'text-sm text-ink-2 hover:text-brand-red font-medium',
                   ].join(' ')}
                 >
                   <span>{f.titleAr}</span>
-                  <span className="text-[11px] text-gray-200 group-hover:text-brand-red">↗</span>
+                  <span className="text-[11px] text-ink-2 group-hover:text-brand-red">↗</span>
                 </a>
               </li>
             ))}
           </ul>
         </div>
       ) : (
-        <p className="text-sm text-gray-200 italic">
+        <p className="text-sm text-ink-2 italic">
           هذه المرحلة لا يوجد لها نموذج مطبوع داخل المنظومة (يتم تبادلها إلكترونياً مع المورد).
         </p>
       )}
@@ -253,7 +253,7 @@ export default function DocumentFlow({ base = '' }) {
 
   return (
     <section
-      className="bg-white/5 rounded-2xl p-4 sm:p-6 lg:p-8 border border-white/10"
+      className="bg-chip rounded-2xl p-4 sm:p-6 lg:p-8 border border-line"
       dir="rtl"
     >
       <header className="mb-5 sm:mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -262,18 +262,18 @@ export default function DocumentFlow({ base = '' }) {
             <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-brand-red text-white text-lg shadow-md">
               🔄
             </span>
-            <h2 className="text-xl sm:text-2xl font-bold text-white">
+            <h2 className="text-xl sm:text-2xl font-bold text-ink">
               الدورة المستندية الكاملة
             </h2>
           </div>
-          <p className="text-sm text-gray-200 leading-relaxed">
+          <p className="text-sm text-ink-2 leading-relaxed">
             مراحل دورة المستودع الثماني — من طلب الشراء حتى المرتجعات. مرّر أو اضغط على أي مرحلة لعرض
             وصفها والنماذج التشغيلية المرتبطة بها.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 bg-white/5 p-2 rounded-xl border border-white/10 w-full lg:w-auto justify-center lg:justify-start">
-          <span className="text-xs font-bold text-gray-200 px-2 w-full lg:w-auto text-center lg:text-right mb-1 lg:mb-0">عرض حسب الدور:</span>
+        <div className="flex flex-wrap items-center gap-2 bg-chip p-2 rounded-xl border border-line w-full lg:w-auto justify-center lg:justify-start">
+          <span className="text-xs font-bold text-ink-2 px-2 w-full lg:w-auto text-center lg:text-right mb-1 lg:mb-0">عرض حسب الدور:</span>
           {ROLES.map((role) => (
             <button
               key={role.id}
@@ -282,7 +282,7 @@ export default function DocumentFlow({ base = '' }) {
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
                 activeRole === role.id
                   ? 'bg-brand-navy text-white shadow-md'
-                  : 'text-gray-200 hover:bg-white/10',
+                  : 'text-ink-2 hover:bg-surface-2',
               ].join(' ')}
             >
               <span>{role.icon}</span>

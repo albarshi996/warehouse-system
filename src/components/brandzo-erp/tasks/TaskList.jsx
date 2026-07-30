@@ -162,18 +162,18 @@ export default function TaskList({
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-white/10">
+        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-line">
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="🔍 بحث بالعنوان، التفاصيل، المسؤول، القسم أو التصنيف..."
-            className="flex-1 min-w-[200px] px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
+            className="flex-1 min-w-[200px] px-4 py-2 bg-chip border border-line rounded-lg text-ink text-sm placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
           />
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
+            className="px-3 py-2 bg-chip border border-line rounded-lg text-ink text-sm focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
             title="ترتيب المهام"
           >
             <option value="newest">الأحدث</option>
@@ -182,14 +182,14 @@ export default function TaskList({
           </select>
           <button
             onClick={() => onExport?.()}
-            className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-100 text-xs font-bold hover:border-brand-yellow/60 hover:text-white transition-colors"
+            className="px-3 py-2 bg-chip border border-line rounded-lg text-ink-2 text-xs font-bold hover:border-brand-yellow/60 hover:text-ink transition-colors"
             title="تصدير جميع المهام كملف JSON"
           >
             ⬇ نسخة احتياطية
           </button>
           <button
             onClick={() => importInputRef.current?.click()}
-            className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-100 text-xs font-bold hover:border-brand-yellow/60 hover:text-white transition-colors"
+            className="px-3 py-2 bg-chip border border-line rounded-lg text-ink-2 text-xs font-bold hover:border-brand-yellow/60 hover:text-ink transition-colors"
             title="استيراد مهام من ملف JSON (دمج حسب المعرّف)"
           >
             ⬆ استيراد
@@ -208,10 +208,10 @@ export default function TaskList({
       {filteredTasks.length === 0 ? (
         <div className="glass-card p-12 text-center">
           <div className="text-5xl mb-4">📭</div>
-          <p className="text-gray-100 text-lg font-medium mb-2">
+          <p className="text-ink-2 text-lg font-medium mb-2">
             {search.trim() ? 'لا توجد نتائج مطابقة لبحثك' : 'لا توجد مهام في هذا التصنيف'}
           </p>
-          <p className="text-gray-200 text-sm">
+          <p className="text-ink-2 text-sm">
             {search.trim()
               ? 'جرّب كلمات بحث مختلفة أو غيّر التصنيف'
               : filter === 'all'

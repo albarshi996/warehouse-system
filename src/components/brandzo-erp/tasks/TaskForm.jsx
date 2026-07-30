@@ -261,13 +261,13 @@ export default function TaskForm({
   return (
     <div ref={formRef} className="glass-card p-6 space-y-6">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-2xl font-bold text-white" style={{ color: 'var(--color-brand-yellow)' }}>
+        <h2 className="text-2xl font-bold text-ink" style={{ color: 'var(--color-brand-yellow)' }}>
           {editingTask ? '✏️ تعديل المهمة' : '📋 إنشاء مهمة جديدة'}
         </h2>
         {editingTask && (
           <button
             onClick={handleCancelEdit}
-            className="text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-100 hover:border-red-400/60 hover:text-red-300 transition-colors whitespace-nowrap"
+            className="text-xs font-bold px-3 py-1.5 rounded-lg bg-chip border border-line text-ink-2 hover:border-red-400/60 hover:text-red-300 transition-colors whitespace-nowrap"
             title="إلغاء التعديل والعودة لوضع الإنشاء"
           >
             ✖ إلغاء التعديل
@@ -277,7 +277,7 @@ export default function TaskForm({
 
       {/* Title */}
       <div>
-        <label className="block text-sm font-medium text-white mb-2">
+        <label className="block text-sm font-medium text-ink mb-2">
           عنوان المهمة <span className="text-red-500">*</span>
         </label>
         <input
@@ -285,7 +285,7 @@ export default function TaskForm({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="ادخل عنوان المهمة..."
-          className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
+          className="w-full px-4 py-2 bg-chip border border-line rounded-lg text-ink placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
           style={{
             '--color-brand-yellow': 'var(--color-brand-yellow)',
           }}
@@ -294,11 +294,11 @@ export default function TaskForm({
 
       {/* Department */}
       <div>
-        <label className="block text-sm font-medium text-white mb-2">القسم</label>
+        <label className="block text-sm font-medium text-ink mb-2">القسم</label>
         <select
           value={dept}
           onChange={(e) => setDept(e.target.value)}
-          className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
+          className="w-full px-4 py-2 bg-chip border border-line rounded-lg text-ink focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
         >
           <option value="">-- اختر القسم --</option>
           {DEPARTMENTS.map((d) => (
@@ -311,48 +311,48 @@ export default function TaskForm({
 
       {/* Owner */}
       <div>
-        <label className="block text-sm font-medium text-white mb-2">المسؤول</label>
+        <label className="block text-sm font-medium text-ink mb-2">المسؤول</label>
         <input
           type="text"
           value={owner}
           onChange={(e) => setOwner(e.target.value)}
           placeholder="اسم الموظف..."
-          className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
+          className="w-full px-4 py-2 bg-chip border border-line rounded-lg text-ink placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
         />
       </div>
 
       {/* Due Date & Time */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-white mb-2">تاريخ الاستحقاق</label>
+          <label className="block text-sm font-medium text-ink mb-2">تاريخ الاستحقاق</label>
           <input
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
+            className="w-full px-4 py-2 bg-chip border border-line rounded-lg text-ink focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-white mb-2">الوقت</label>
+          <label className="block text-sm font-medium text-ink mb-2">الوقت</label>
           <input
             type="time"
             value={dueTime}
             onChange={(e) => setDueTime(e.target.value)}
-            className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
+            className="w-full px-4 py-2 bg-chip border border-line rounded-lg text-ink focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
           />
         </div>
       </div>
 
       {/* Priority */}
       <div>
-        <label className="block text-sm font-medium text-white mb-3">الأولوية</label>
+        <label className="block text-sm font-medium text-ink mb-3">الأولوية</label>
         <div className="flex gap-3">
           <button
             onClick={() => setPriority('low')}
             className={`flex-1 py-2 px-4 rounded-lg font-bold transition-all ${
               priority === 'low'
                 ? 'bg-blue-600/40 border-2 border-blue-400 text-blue-300 shadow-lg shadow-blue-500/30'
-                : 'bg-white/5 border border-white/10 text-gray-100 hover:border-blue-400/50'
+                : 'bg-chip border border-line text-ink-2 hover:border-blue-400/50'
             }`}
           >
             عادي
@@ -362,7 +362,7 @@ export default function TaskForm({
             className={`flex-1 py-2 px-4 rounded-lg font-bold transition-all ${
               priority === 'med'
                 ? 'bg-amber-600/40 border-2 border-amber-400 text-amber-300 shadow-lg shadow-amber-500/30'
-                : 'bg-white/5 border border-white/10 text-gray-100 hover:border-amber-400/50'
+                : 'bg-chip border border-line text-ink-2 hover:border-amber-400/50'
             }`}
           >
             متوسط
@@ -372,7 +372,7 @@ export default function TaskForm({
             className={`flex-1 py-2 px-4 rounded-lg font-bold transition-all ${
               priority === 'high'
                 ? 'bg-brand-red/40 border-2 border-brand-red text-red-300 shadow-lg shadow-brand-red/30'
-                : 'bg-white/5 border border-white/10 text-gray-100 hover:border-brand-red/50'
+                : 'bg-chip border border-line text-ink-2 hover:border-brand-red/50'
             }`}
             style={{
               '--color-brand-red': 'var(--color-brand-red)',
@@ -385,7 +385,7 @@ export default function TaskForm({
 
       {/* Tags */}
       <div>
-        <label className="block text-sm font-medium text-white mb-3">التصنيفات</label>
+        <label className="block text-sm font-medium text-ink mb-3">التصنيفات</label>
         <div className="flex flex-wrap gap-2 mb-3">
           {TAGS_LIST.map((tag) => (
             <button
@@ -394,7 +394,7 @@ export default function TaskForm({
               className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
                 tags.has(tag)
                   ? 'bg-brand-yellow text-brand-navy'
-                  : 'bg-white/5 border border-white/10 text-gray-100 hover:border-brand-yellow/50'
+                  : 'bg-chip border border-line text-ink-2 hover:border-brand-yellow/50'
               }`}
               style={{
                 '--color-brand-yellow': 'var(--color-brand-yellow)',
@@ -409,7 +409,7 @@ export default function TaskForm({
             className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
               tags.has('أخرى')
                 ? 'bg-brand-yellow text-brand-navy'
-                : 'bg-white/5 border border-white/10 text-gray-100 hover:border-brand-yellow/50'
+                : 'bg-chip border border-line text-ink-2 hover:border-brand-yellow/50'
             }`}
           >
             أخرى
@@ -423,33 +423,33 @@ export default function TaskForm({
             value={customTag}
             onChange={(e) => setCustomTag(e.target.value)}
             placeholder="اكتب تصنيف مخصص..."
-            className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
+            className="w-full px-4 py-2 bg-chip border border-line rounded-lg text-ink placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
           />
         )}
       </div>
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-white mb-2">التفاصيل</label>
+        <label className="block text-sm font-medium text-ink mb-2">التفاصيل</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="اكتب تفاصيل المهمة..."
           rows={4}
-          className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow resize-none"
+          className="w-full px-4 py-2 bg-chip border border-line rounded-lg text-ink placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow resize-none"
         />
       </div>
 
       {/* Checklist */}
       <div>
-        <label className="block text-sm font-medium text-white mb-3">قائمة التحقق</label>
+        <label className="block text-sm font-medium text-ink mb-3">قائمة التحقق</label>
         <div className="flex gap-2 mb-3">
           <input
             type="text"
             value={checklistInput}
             onChange={(e) => setChecklistInput(e.target.value)}
             placeholder="أضف خطوة..."
-            className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
+            className="flex-1 px-4 py-2 bg-chip border border-line rounded-lg text-ink placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
             onKeyPress={(e) => e.key === 'Enter' && addStep()}
           />
           <button
@@ -465,14 +465,14 @@ export default function TaskForm({
         </div>
         <div className="space-y-2">
           {checklist.map((step, idx) => (
-            <div key={idx} className="flex items-center gap-3 bg-white/5 p-3 rounded-lg">
+            <div key={idx} className="flex items-center gap-3 bg-chip p-3 rounded-lg">
               <input
                 type="checkbox"
                 checked={step.done}
                 onChange={() => toggleStep(idx)}
                 className="w-5 h-5 cursor-pointer"
               />
-              <span className={step.done ? 'line-through text-gray-200' : 'text-white flex-1'}>
+              <span className={step.done ? 'line-through text-ink-2' : 'text-ink flex-1'}>
                 {step.text}
               </span>
               <button
@@ -488,9 +488,9 @@ export default function TaskForm({
 
       {/* WhatsApp Phone */}
       <div>
-        <label className="block text-sm font-medium text-white mb-2">رقم WhatsApp</label>
+        <label className="block text-sm font-medium text-ink mb-2">رقم WhatsApp</label>
         <div className="flex gap-2">
-          <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white font-bold flex items-center">
+          <div className="px-4 py-2 bg-chip border border-line rounded-lg text-ink font-bold flex items-center">
             +218
           </div>
           <input
@@ -498,20 +498,20 @@ export default function TaskForm({
             value={phone}
             onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
             placeholder="9XXXXXXXX (بدون الصفر الأول)"
-            className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
+            className="flex-1 px-4 py-2 bg-chip border border-line rounded-lg text-ink placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
           />
         </div>
       </div>
 
       {/* Email */}
       <div>
-        <label className="block text-sm font-medium text-white mb-2">📧 البريد الإلكتروني</label>
+        <label className="block text-sm font-medium text-ink mb-2">📧 البريد الإلكتروني</label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="example@mail.com"
-          className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
+          className="w-full px-4 py-2 bg-chip border border-line rounded-lg text-ink placeholder-gray-400 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow"
         />
       </div>
 
@@ -544,7 +544,7 @@ export default function TaskForm({
         {/* Email Send Button */}
         <button
           onClick={handleSendEmail}
-          className="w-full py-3 px-4 bg-white/5 border-2 border-brand-yellow hover:bg-white/10 text-brand-yellow rounded-lg font-bold transition-all"
+          className="w-full py-3 px-4 bg-chip border-2 border-brand-yellow hover:bg-surface-2 text-brand-yellow rounded-lg font-bold transition-all"
           style={{
             borderColor: 'var(--color-brand-yellow)',
             color: 'var(--color-brand-yellow)',

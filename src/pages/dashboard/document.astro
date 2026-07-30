@@ -8,12 +8,12 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import DocumentEngine from '../../components/brandzo-erp/documents/DocumentEngine.jsx';
 ---
 
-<DashboardLayout title="مستند" showGuide={false}>
+<DashboardLayout title="مستند" showGuide={false} light>
   <div class="text-right" dir="rtl">
     <div class="mb-5 doc-screen">
       <a
         href="documents"
-        class="text-sm text-gray-400 hover:text-brand-gold transition-colors">← صندوق المستندات</a
+        class="text-sm text-muted hover:text-accent transition-colors">← صندوق المستندات</a
       >
     </div>
     <DocumentEngine client:load />

@@ -260,7 +260,7 @@ function DetailPanel({ stage, base }) {
   
   return (
     <div
-      className={`mt-6 rounded-2xl border-2 bg-white/5 p-5 sm:p-6 shadow-lg ${c.border}`}
+      className={`mt-6 rounded-2xl border-2 bg-chip p-5 sm:p-6 shadow-lg ${c.border}`}
       dir="rtl"
     >
       <div className="flex items-start gap-3 mb-4">
@@ -274,14 +274,14 @@ function DetailPanel({ stage, base }) {
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
         </span>
         <div>
-          <div className="font-bold text-gray-200 text-lg sm:text-xl">
+          <div className="font-bold text-ink-2 text-lg sm:text-xl">
             {stage.num} · {stage.titleAr}
           </div>
-          <div className="text-xs sm:text-sm text-gray-200">{stage.titleEn}</div>
+          <div className="text-xs sm:text-sm text-ink-2">{stage.titleEn}</div>
         </div>
       </div>
       
-      <p className="text-sm text-gray-200 leading-relaxed mb-4">{stage.descAr}</p>
+      <p className="text-sm text-ink-2 leading-relaxed mb-4">{stage.descAr}</p>
 
       {/* Odoo Integration Section */}
       <div className="bg-gradient-to-r from-green-900/20 to-blue-900/20 to-green-900/20 rounded-xl p-4 mb-4 border border-green-500/30">
@@ -292,25 +292,25 @@ function DetailPanel({ stage, base }) {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <div className="text-xs text-gray-200 mb-1">الوحدة المقابلة</div>
-            <div className="font-bold text-white">{odooData.module}</div>
+            <div className="text-xs text-ink-2 mb-1">الوحدة المقابلة</div>
+            <div className="font-bold text-ink">{odooData.module}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-200 mb-1">المسار للوصول</div>
+            <div className="text-xs text-ink-2 mb-1">المسار للوصول</div>
             <div className="font-bold text-blue-300">{odooData.path}</div>
           </div>
         </div>
         
         <div className="mt-3">
-          <div className="text-xs text-gray-200 mb-1">مسار التفعيل</div>
-          <div className="font-mono text-sm text-yellow-300 bg-black/30 rounded px-2 py-1">
+          <div className="text-xs text-ink-2 mb-1">مسار التفعيل</div>
+          <div className="font-mono text-sm text-yellow-300 bg-surface rounded px-2 py-1">
             {odooData.activation}
           </div>
         </div>
         
         <div className="mt-3">
-          <div className="text-xs text-gray-200 mb-2">الوصف</div>
-          <p className="text-sm text-gray-100 leading-relaxed">{odooData.description}</p>
+          <div className="text-xs text-ink-2 mb-2">الوصف</div>
+          <p className="text-sm text-ink-2 leading-relaxed">{odooData.description}</p>
         </div>
       </div>
 
@@ -322,7 +322,7 @@ function DetailPanel({ stage, base }) {
         </div>
         <ol className="space-y-2">
           {odooData.setupSteps.map((step, index) => (
-            <li key={index} className="flex items-start gap-2 text-sm text-gray-100">
+            <li key={index} className="flex items-start gap-2 text-sm text-ink-2">
               <span className="shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mt-0.5">
                 {index + 1}
               </span>
@@ -345,10 +345,10 @@ function DetailPanel({ stage, base }) {
                   href={`${base}/forms/${encodeURI(f.file)}`}
                   target="_blank"
                   rel="noreferrer"
-                  className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border transition-colors border-white/10 hover:border-brand-red hover:bg-brand-red/5 text-sm text-gray-200 hover:text-brand-red font-medium`}
+                  className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border transition-colors border-line hover:border-brand-red hover:bg-brand-red/5 text-sm text-ink-2 hover:text-brand-red font-medium`}
                 >
                   <span>{f.titleAr}</span>
-                  <span className="text-[11px] text-gray-200 group-hover:text-brand-red">↗</span>
+                  <span className="text-[11px] text-ink-2 group-hover:text-brand-red">↗</span>
                 </a>
               </li>
             ))}
@@ -357,7 +357,7 @@ function DetailPanel({ stage, base }) {
       )}
       
       {stage.forms.length === 0 && (
-        <p className="text-sm text-gray-200 italic">
+        <p className="text-sm text-ink-2 italic">
           هذه المرحلة لا يوجد لها نموذج مطبوع داخل المنظومة (يتم تبادلها إلكترونياً مع المورد).
         </p>
       )}
@@ -423,7 +423,7 @@ export default function DocumentCycleOdoo({ base = '' }) {
                 'flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200',
                 selectedRole === role.id
                   ? 'bg-brand-red border-brand-red text-white shadow-lg scale-105'
-                  : 'border-white/20 text-gray-100 hover:border-brand-red hover:text-brand-red',
+                  : 'border-line text-ink-2 hover:border-brand-red hover:text-brand-red',
               ].join(' ')}
             >
               <span className="text-lg">{role.icon}</span>

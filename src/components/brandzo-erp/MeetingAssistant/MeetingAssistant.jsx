@@ -896,7 +896,7 @@ const MeetingAssistant = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-slate-950 text-gray-100 flex flex-col ${lang === 'ar' ? 'dir-rtl' : 'dir-ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className={`min-h-screen bg-slate-950 text-ink-2 flex flex-col ${lang === 'ar' ? 'dir-rtl' : 'dir-ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       {/* Background mesh */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute inset-0 bg-gradient-radial from-blue-500/10 via-transparent to-transparent blur-3xl" />
@@ -912,16 +912,16 @@ const MeetingAssistant = () => {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-2xl font-bold text-brand-navy">{slideTitle}</h2>
-                  <p className="mt-2 text-sm text-gray-200">عرض شرائح لتقديم خطة استغلال الرحبة لتخزين الكوزميتيك.</p>
+                  <p className="mt-2 text-sm text-ink-2">عرض شرائح لتقديم خطة استغلال الرحبة لتخزين الكوزميتيك.</p>
                 </div>
                 <button onClick={()=> setSlideMode(false)} className="px-3 py-1 rounded bg-gray-200">إغلاق</button>
               </div>
             </div>
             <div className="mt-6 text-gray-700" style={{minHeight:180}}>
-              {agendaItems[slideIndex]?.content || <p className="text-gray-200">لا توجد تفاصيل محددة لهذه الشريحة حالياً.</p>}
+              {agendaItems[slideIndex]?.content || <p className="text-ink-2">لا توجد تفاصيل محددة لهذه الشريحة حالياً.</p>}
             </div>
             <div className="mt-6 flex items-center justify-between">
-              <div className="text-sm text-gray-200">الشريحة {slideIndex + 1} من {agendaItems.length}</div>
+              <div className="text-sm text-ink-2">الشريحة {slideIndex + 1} من {agendaItems.length}</div>
               <div className="flex gap-2">
                 <button onClick={()=> setSlideIndex(s => Math.max(0, s-1))} className="px-3 py-1 rounded bg-white border">السابق</button>
                 <button onClick={()=> setSlideIndex(s => Math.min(agendaItems.length-1, s+1))} className="px-3 py-1 rounded bg-brand-red text-white">التالي</button>
@@ -938,17 +938,17 @@ const MeetingAssistant = () => {
           onClick={() => { setArchiveOpen(false); setConfirmDeleteId(null); }}
         >
           <div
-            className="w-full max-w-lg max-h-[75vh] bg-slate-900 border border-white/10 rounded-t-xl sm:rounded-xl overflow-hidden flex flex-col shadow-2xl"
+            className="w-full max-w-lg max-h-[75vh] bg-slate-900 border border-line rounded-t-xl sm:rounded-xl overflow-hidden flex flex-col shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-line">
               <div className="flex items-center gap-2 text-sm font-bold">
                 📂 <span>{t('archive_title')}</span>
-                <span className="text-xs text-gray-400 font-mono">({savedMeetings.length})</span>
+                <span className="text-xs text-muted font-mono">({savedMeetings.length})</span>
               </div>
               <button
                 onClick={() => { setArchiveOpen(false); setConfirmDeleteId(null); }}
-                className="w-7 h-7 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 flex items-center justify-center text-xs transition"
+                className="w-7 h-7 bg-chip border border-line rounded-lg hover:bg-surface-2 flex items-center justify-center text-xs transition"
                 title={t('btn_close')}
               >
                 ✕
@@ -956,12 +956,12 @@ const MeetingAssistant = () => {
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {savedMeetings.length === 0 && (
-                <div className="text-gray-400 italic text-sm text-center py-8">{t('archive_empty')}</div>
+                <div className="text-muted italic text-sm text-center py-8">{t('archive_empty')}</div>
               )}
               {savedMeetings.map((m) => (
-                <div key={m.id} className="bg-white/3 border border-white/10 rounded-lg p-3">
-                  <div className="font-bold text-sm text-gray-100 truncate">{m.title}</div>
-                  <div className="text-xs text-gray-400 font-mono mt-0.5" dir="ltr">
+                <div key={m.id} className="bg-white/3 border border-line rounded-lg p-3">
+                  <div className="font-bold text-sm text-ink-2 truncate">{m.title}</div>
+                  <div className="text-xs text-muted font-mono mt-0.5" dir="ltr">
                     {new Date(m.date).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US', {
                       year: 'numeric',
                       month: 'short',
@@ -995,7 +995,7 @@ const MeetingAssistant = () => {
                         </button>
                         <button
                           onClick={() => setConfirmDeleteId(null)}
-                          className="py-1 px-3 rounded-lg border border-white/10 bg-white/5 text-gray-200 font-semibold text-xs hover:bg-white/10 transition"
+                          className="py-1 px-3 rounded-lg border border-line bg-chip text-ink-2 font-semibold text-xs hover:bg-surface-2 transition"
                         >
                           {t('btn_cancel')}
                         </button>
@@ -1017,18 +1017,18 @@ const MeetingAssistant = () => {
       )}
 
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 h-16 bg-black/80 border-b border-white/10 backdrop-blur-xl z-40 flex items-center justify-between px-4">
+      <nav className="fixed top-0 left-0 right-0 h-16 bg-black/80 border-b border-line backdrop-blur-xl z-40 flex items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
             🎙️
           </div>
           <div className="flex flex-col">
             <div className="text-sm font-bold leading-tight">{t('app_title')}</div>
-            <div className="text-xs text-gray-200 font-mono">AI Meeting Assistant</div>
+            <div className="text-xs text-ink-2 font-mono">AI Meeting Assistant</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-2 text-xs text-gray-100">
+          <div className="flex items-center gap-2 bg-chip border border-line rounded-full px-3 py-2 text-xs text-ink-2">
             <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDotClasses[statusDot]}`} />
             <span>
               {statusDot === 'ready' && t('status_ready')}
@@ -1037,21 +1037,21 @@ const MeetingAssistant = () => {
               {statusDot === 'processing' && (processingMsg || t('status_processing'))}
             </span>
             {isRecording && (
-              <span className="font-mono text-gray-300 border-s border-white/10 ps-2" dir="ltr">
+              <span className="font-mono text-ink-2 border-s border-line ps-2" dir="ltr">
                 {formatTime(elapsedSec)}
               </span>
             )}
           </div>
           <button
             onClick={clearAll}
-            className="w-8 h-8 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 flex items-center justify-center text-sm transition"
+            className="w-8 h-8 bg-chip border border-line rounded-lg hover:bg-surface-2 flex items-center justify-center text-sm transition"
             title={t('btn_clear')}
           >
             🗑️
           </button>
           <button
             onClick={() => setSlideMode(true)}
-            className="ml-2 px-3 py-1 rounded-lg bg-brand-gold text-brand-navy text-sm font-semibold hover:opacity-90 transition"
+            className="ml-2 px-3 py-1 rounded-lg bg-accent text-brand-navy text-sm font-semibold hover:opacity-90 transition"
             title="تحميل القالب المسبق"
           >
             📥 تحميل القالب
@@ -1061,7 +1061,7 @@ const MeetingAssistant = () => {
               if (!slideMode) setSlideIndex(0);
               setSlideMode((prev) => !prev);
             }}
-            className={`ml-2 px-3 py-1 rounded-lg text-sm font-semibold transition ${slideMode ? 'bg-brand-red text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+            className={`ml-2 px-3 py-1 rounded-lg text-sm font-semibold transition ${slideMode ? 'bg-brand-red text-white' : 'bg-chip text-white hover:bg-surface-2'}`}
             title={slideMode ? 'إيقاف وضع العرض' : 'تشغيل وضع العرض'}
           >
             📽️ {slideMode ? 'إيقاف العرض' : 'عرض'}
@@ -1129,7 +1129,7 @@ const MeetingAssistant = () => {
             <select
               value={selectedLang}
               onChange={(e) => setSelectedLang(e.target.value)}
-              className="flex-1 py-2 rounded-lg border border-white/10 bg-white/5 text-gray-200 font-semibold text-sm hover:bg-white/10 transition appearance-none px-2"
+              className="flex-1 py-2 rounded-lg border border-line bg-chip text-ink-2 font-semibold text-sm hover:bg-surface-2 transition appearance-none px-2"
             >
               <option value="ar-SA">🇸🇦 العربية</option>
               <option value="ar-EG">🇪🇬 مصري</option>
@@ -1142,7 +1142,7 @@ const MeetingAssistant = () => {
           <div className="w-full flex gap-2">
             <button
               onClick={toggleLang}
-              className="py-2 px-3 rounded-lg border border-white/10 bg-white/5 text-gray-100 font-semibold text-sm hover:bg-white/10 transition whitespace-nowrap"
+              className="py-2 px-3 rounded-lg border border-line bg-chip text-ink-2 font-semibold text-sm hover:bg-surface-2 transition whitespace-nowrap"
             >
               🌐 {lang === 'ar' ? 'AR' : 'EN'}
             </button>
@@ -1154,7 +1154,7 @@ const MeetingAssistant = () => {
             </button>
             <button
               onClick={copyAll}
-              className="py-2 px-3 rounded-lg border border-white/10 bg-white/5 text-gray-100 font-semibold text-sm hover:bg-white/10 transition"
+              className="py-2 px-3 rounded-lg border border-line bg-chip text-ink-2 font-semibold text-sm hover:bg-surface-2 transition"
             >
               📋
             </button>
@@ -1167,7 +1167,7 @@ const MeetingAssistant = () => {
               value={meetingTitle}
               onChange={(e) => setMeetingTitle(e.target.value)}
               placeholder={t('meeting_title_placeholder')}
-              className="flex-1 min-w-0 py-2 px-3 rounded-lg border border-white/10 bg-white/5 text-sm text-gray-100 outline-none focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/10 transition"
+              className="flex-1 min-w-0 py-2 px-3 rounded-lg border border-line bg-chip text-sm text-ink-2 outline-none focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/10 transition"
             />
             <button
               onClick={saveSession}
@@ -1177,17 +1177,17 @@ const MeetingAssistant = () => {
             </button>
             <button
               onClick={() => setArchiveOpen(true)}
-              className="py-2 px-3 rounded-lg border border-white/10 bg-white/5 text-gray-100 font-semibold text-sm hover:bg-white/10 transition whitespace-nowrap"
+              className="py-2 px-3 rounded-lg border border-line bg-chip text-ink-2 font-semibold text-sm hover:bg-surface-2 transition whitespace-nowrap"
             >
               📂 {t('btn_archive')}
-              <span className="text-xs text-gray-400 font-mono ms-1">({savedMeetings.length})</span>
+              <span className="text-xs text-muted font-mono ms-1">({savedMeetings.length})</span>
             </button>
           </div>
         </div>
 
         {/* Transcript Card */}
-        <div className="bg-white/3 border border-white/10 rounded-xl overflow-hidden mb-3">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+        <div className="bg-white/3 border border-line rounded-xl overflow-hidden mb-3">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-line">
             <div className="flex items-center gap-2 text-sm font-bold">
               📝 <span>{t('transcript_title')}</span>
             </div>
@@ -1195,9 +1195,9 @@ const MeetingAssistant = () => {
           </div>
           <div className="px-4 py-3">
             {/* Segments list — click a segment to edit, ✕ to delete */}
-            <div className="w-full min-h-40 max-h-60 overflow-y-auto bg-black/25 border border-white/10 rounded-lg p-3 text-sm leading-relaxed text-gray-200 space-y-2">
+            <div className="w-full min-h-40 max-h-60 overflow-y-auto bg-surface border border-line rounded-lg p-3 text-sm leading-relaxed text-ink-2 space-y-2">
               {transcriptSegments.length === 0 && (
-                <div className="text-gray-400 italic">{t('transcript_placeholder')}</div>
+                <div className="text-muted italic">{t('transcript_placeholder')}</div>
               )}
               {transcriptSegments.map((seg, i) => (
                 <div key={`${seg.ts}-${i}`} className="group flex items-start gap-2">
@@ -1220,13 +1220,13 @@ const MeetingAssistant = () => {
                             e.target.blur();
                           }
                         }}
-                        className="w-full mt-1 bg-black/40 border border-blue-500/50 rounded-lg p-2 text-sm leading-relaxed text-gray-100 outline-none focus:ring-2 focus:ring-blue-500/10 resize-y"
+                        className="w-full mt-1 bg-black/40 border border-blue-500/50 rounded-lg p-2 text-sm leading-relaxed text-ink-2 outline-none focus:ring-2 focus:ring-blue-500/10 resize-y"
                       />
                     ) : (
                       <span
                         onClick={() => beginEditSegment(i)}
                         title={t('segment_edit_hint')}
-                        className="text-gray-200 cursor-text hover:bg-white/5 rounded px-0.5 transition"
+                        className="text-ink-2 cursor-text hover:bg-surface-2 rounded px-0.5 transition"
                       >
                         {seg.text}
                       </span>
@@ -1235,7 +1235,7 @@ const MeetingAssistant = () => {
                   <button
                     onClick={() => deleteSegment(i)}
                     title={t('segment_delete')}
-                    className="opacity-40 group-hover:opacity-100 hover:text-red-400 text-gray-400 text-xs px-1 py-0.5 flex-shrink-0 transition"
+                    className="opacity-40 group-hover:opacity-100 hover:text-red-400 text-muted text-xs px-1 py-0.5 flex-shrink-0 transition"
                   >
                     ✕
                   </button>
@@ -1251,54 +1251,54 @@ const MeetingAssistant = () => {
                 onChange={(e) => setManualNotes(e.target.value)}
                 placeholder={t('manual_notes_placeholder')}
                 rows={3}
-                className="w-full bg-black/25 border border-white/10 rounded-lg p-3 text-sm leading-relaxed text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 resize-y"
+                className="w-full bg-surface border border-line rounded-lg p-3 text-sm leading-relaxed text-ink-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 resize-y"
               />
             </div>
 
-            <div className="mt-2 text-xs text-gray-200 font-mono">
-              {t('word_count')} <strong className="text-gray-100">{wordCount}</strong>
+            <div className="mt-2 text-xs text-ink-2 font-mono">
+              {t('word_count')} <strong className="text-ink-2">{wordCount}</strong>
             </div>
           </div>
         </div>
 
         {/* Summary Card */}
-        <div className="bg-white/3 border border-white/10 rounded-xl overflow-hidden mb-3">
-          <div className="px-4 py-3 border-b border-white/10">
+        <div className="bg-white/3 border border-line rounded-xl overflow-hidden mb-3">
+          <div className="px-4 py-3 border-b border-line">
             <div className="flex items-center gap-2 text-sm font-bold">
               🧠 <span>{t('summary_title')}</span>
             </div>
           </div>
           <div className="px-4 py-3 space-y-2">
-            <div className="bg-black/20 border border-white/10 rounded-lg p-3">
+            <div className="bg-surface border border-line rounded-lg p-3">
               <div className="text-xs font-bold text-teal-400 mb-2">🔑 {t('key_points')}</div>
-              <div className="text-sm text-gray-100 space-y-1">
+              <div className="text-sm text-ink-2 space-y-1">
                 {summaryData?.keyPoints?.length > 0
                   ? summaryData.keyPoints.map((p, i) => <div key={i}>• {p}</div>)
-                  : <div className="text-gray-200 italic">{t('no_summary')}</div>}
+                  : <div className="text-ink-2 italic">{t('no_summary')}</div>}
               </div>
             </div>
-            <div className="bg-black/20 border border-white/10 rounded-lg p-3">
+            <div className="bg-surface border border-line rounded-lg p-3">
               <div className="text-xs font-bold text-blue-400 mb-2">✅ {t('decisions')}</div>
-              <div className="text-sm text-gray-100 space-y-1">
+              <div className="text-sm text-ink-2 space-y-1">
                 {summaryData?.decisions?.length > 0
                   ? summaryData.decisions.map((d, i) => <div key={i}>✅ {d}</div>)
-                  : <div className="text-gray-200">—</div>}
+                  : <div className="text-ink-2">—</div>}
               </div>
             </div>
-            <div className="bg-black/20 border border-white/10 rounded-lg p-3">
+            <div className="bg-surface border border-line rounded-lg p-3">
               <div className="text-xs font-bold text-amber-400 mb-2">📋 {t('action_items')}</div>
-              <div className="text-sm text-gray-100 space-y-1">
+              <div className="text-sm text-ink-2 space-y-1">
                 {summaryData?.actions?.length > 0
                   ? summaryData.actions.map((a, i) => <div key={i}>📌 {a}</div>)
-                  : <div className="text-gray-200">—</div>}
+                  : <div className="text-ink-2">—</div>}
               </div>
             </div>
           </div>
         </div>
 
         {/* Translation & Export Card */}
-        <div className="bg-white/3 border border-white/10 rounded-xl overflow-hidden mb-3">
-          <div className="px-4 py-3 border-b border-white/10">
+        <div className="bg-white/3 border border-line rounded-xl overflow-hidden mb-3">
+          <div className="px-4 py-3 border-b border-line">
             <div className="flex items-center gap-2 text-sm font-bold">
               🌍 <span>{t('translation_export')}</span>
             </div>
@@ -1319,13 +1319,13 @@ const MeetingAssistant = () => {
               </button>
             </div>
             <div
-              className="w-full min-h-24 max-h-40 overflow-y-auto bg-black/25 border border-white/10 rounded-lg p-3 text-sm leading-relaxed text-gray-100 font-sans"
+              className="w-full min-h-24 max-h-40 overflow-y-auto bg-surface border border-line rounded-lg p-3 text-sm leading-relaxed text-ink-2 font-sans"
               dir="ltr"
               style={{ textAlign: 'left' }}
             >
-              {englishTranslation || <span className="text-gray-200 italic">{t('translation_placeholder')}</span>}
+              {englishTranslation || <span className="text-ink-2 italic">{t('translation_placeholder')}</span>}
             </div>
-            <p className="text-xs text-gray-200 font-mono">{t('translation_note')}</p>
+            <p className="text-xs text-ink-2 font-mono">{t('translation_note')}</p>
           </div>
         </div>
 
@@ -1338,7 +1338,7 @@ const MeetingAssistant = () => {
           <div className="flex-1">
             <div className="font-bold text-sm">AI Meeting Assistant</div>
             <div className="text-xs text-amber-500 font-mono">Official Recorder</div>
-            <div className="text-xs text-gray-200 font-mono" dir="ltr">
+            <div className="text-xs text-ink-2 font-mono" dir="ltr">
               {new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', {
                 year: 'numeric',
                 month: 'short',
@@ -1350,7 +1350,7 @@ const MeetingAssistant = () => {
       </div>
 
       {/* Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 h-20 bg-black/80 border-t border-white/10 backdrop-blur-xl z-40 flex items-center justify-between px-4 gap-2">
+      <div className="fixed bottom-0 left-0 right-0 h-20 bg-black/80 border-t border-line backdrop-blur-xl z-40 flex items-center justify-between px-4 gap-2">
         <button
           onClick={toggleRecord}
           disabled={!speechSupported}
@@ -1385,7 +1385,7 @@ const MeetingAssistant = () => {
 
       {/* Toast Notification */}
       {toast.show && (
-        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-slate-800 border border-white/15 text-gray-100 px-5 py-2 rounded-full text-sm font-semibold z-50 shadow-lg max-w-xs text-center">
+        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-slate-800 border border-line text-ink-2 px-5 py-2 rounded-full text-sm font-semibold z-50 shadow-lg max-w-xs text-center">
           {toast.msg}
         </div>
       )}

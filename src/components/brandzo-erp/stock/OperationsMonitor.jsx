@@ -132,7 +132,7 @@ export default function OperationsMonitor() {
   }
 
   if (!ready) {
-    return <div className="text-gray-300 text-sm py-10 text-center">جارٍ التحقّق...</div>;
+    return <div className="text-ink-2 text-sm py-10 text-center">جارٍ التحقّق...</div>;
   }
 
   if (!me || !MANAGER_ROLES.includes(me.role)) {
@@ -149,36 +149,36 @@ export default function OperationsMonitor() {
   return (
     <div dir="rtl" className="space-y-6">
       {msg && (
-        <div className="bg-brand-gold/15 border border-brand-gold/40 text-brand-gold rounded-xl px-4 py-2 text-sm text-center">
+        <div className="bg-accent/15 border border-accent/40 text-accent rounded-xl px-4 py-2 text-sm text-center">
           {msg}
         </div>
       )}
 
       {/* لقطة سريعة */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-          <p className="text-2xl font-bold text-white">{ops.length}</p>
-          <p className="text-gray-400 text-xs mt-1">إجمالي العمليات</p>
+        <div className="bg-chip border border-line rounded-2xl p-4">
+          <p className="text-2xl font-bold text-ink">{ops.length}</p>
+          <p className="text-muted text-xs mt-1">إجمالي العمليات</p>
         </div>
         <div className="bg-green-500/10 border border-green-500/25 rounded-2xl p-4">
           <p className="text-2xl font-bold text-green-300">{openCount}</p>
-          <p className="text-gray-400 text-xs mt-1">مفتوحة الآن</p>
+          <p className="text-muted text-xs mt-1">مفتوحة الآن</p>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-          <p className="text-2xl font-bold text-white">{ops.length - openCount}</p>
-          <p className="text-gray-400 text-xs mt-1">مُقفلة</p>
+        <div className="bg-chip border border-line rounded-2xl p-4">
+          <p className="text-2xl font-bold text-ink">{ops.length - openCount}</p>
+          <p className="text-muted text-xs mt-1">مُقفلة</p>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-5 gap-5">
         {/* قائمة العمليات */}
-        <div className="lg:col-span-2 bg-white/5 border border-white/10 rounded-2xl p-4">
+        <div className="lg:col-span-2 bg-chip border border-line rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3 gap-2">
-            <h2 className="text-white font-bold text-sm">📦 العمليات</h2>
+            <h2 className="text-ink font-bold text-sm">📦 العمليات</h2>
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="bg-brand-navy border border-white/15 rounded-lg text-white text-xs px-2 py-1 focus:outline-none focus:border-brand-gold/60"
+              className="bg-brand-navy border border-line rounded-lg text-white text-xs px-2 py-1 focus:outline-none focus:border-accent/60"
             >
               <option value="all">الكل</option>
               <option value="open">مفتوحة</option>
@@ -187,9 +187,9 @@ export default function OperationsMonitor() {
           </div>
 
           {loadingOps ? (
-            <p className="text-gray-400 text-sm text-center py-8">جارٍ التحميل...</p>
+            <p className="text-muted text-sm text-center py-8">جارٍ التحميل...</p>
           ) : shown.length === 0 ? (
-            <p className="text-gray-400 text-sm text-center py-8 leading-relaxed">
+            <p className="text-muted text-sm text-center py-8 leading-relaxed">
               لا توجد عمليات بعد.
               <br />
               <span className="text-xs">تظهر هنا فور بدء أي موظّف عملية جرد أو استلام.</span>
@@ -203,24 +203,24 @@ export default function OperationsMonitor() {
                     className={`w-full text-right rounded-xl border p-3 transition ${
                       selected === o.id
                         ? 'bg-brand-red/20 border-brand-red/50'
-                        : 'bg-white/5 border-white/10 hover:bg-white/10'
+                        : 'bg-chip border-line hover:bg-surface-2'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-white font-bold text-sm">
+                      <span className="text-ink font-bold text-sm">
                         {OP_ICONS[o.type] || '📦'} {o.type}
                       </span>
                       <span
                         className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                           o.status === 'open'
                             ? 'bg-green-500/20 text-green-300'
-                            : 'bg-gray-500/20 text-gray-400'
+                            : 'bg-gray-500/20 text-muted'
                         }`}
                       >
                         {o.status === 'open' ? '● مفتوحة' : '○ مُقفلة'}
                       </span>
                     </div>
-                    <p className="text-gray-400 text-xs mt-1.5">
+                    <p className="text-muted text-xs mt-1.5">
                       👤 {o.createdByName || 'غير معروف'}
                     </p>
                     <p className="text-gray-500 text-[10px] mt-0.5">
@@ -234,22 +234,22 @@ export default function OperationsMonitor() {
         </div>
 
         {/* تفاصيل العملية المختارة */}
-        <div className="lg:col-span-3 bg-white/5 border border-white/10 rounded-2xl p-4">
+        <div className="lg:col-span-3 bg-chip border border-line rounded-2xl p-4">
           {!sel ? (
-            <p className="text-gray-400 text-sm text-center py-16">
+            <p className="text-muted text-sm text-center py-16">
               اختر عملية من القائمة لعرض سجلّ المسح الحيّ.
             </p>
           ) : (
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
-                  <h2 className="text-white font-bold">
+                  <h2 className="text-ink font-bold">
                     {OP_ICONS[sel.type] || '📦'} {sel.type}
                     <span className="text-gray-500 text-xs font-mono mr-2" dir="ltr">
                       {sel.id.slice(0, 8)}
                     </span>
                   </h2>
-                  <p className="text-gray-400 text-xs mt-1">
+                  <p className="text-muted text-xs mt-1">
                     بدأها {sel.createdByName || 'غير معروف'} · {fmtTime(sel.createdAt)}
                   </p>
                 </div>
@@ -265,31 +265,31 @@ export default function OperationsMonitor() {
 
               {/* إجماليات */}
               <div className="grid grid-cols-3 gap-2">
-                <div className="bg-white/5 rounded-xl p-3 text-center">
-                  <p className="text-xl font-bold text-white">{scans.length}</p>
-                  <p className="text-gray-400 text-[10px]">عملية مسح</p>
+                <div className="bg-chip rounded-xl p-3 text-center">
+                  <p className="text-xl font-bold text-ink">{scans.length}</p>
+                  <p className="text-muted text-[10px]">عملية مسح</p>
                 </div>
-                <div className="bg-white/5 rounded-xl p-3 text-center">
-                  <p className="text-xl font-bold text-brand-gold">{agg.totalQty}</p>
-                  <p className="text-gray-400 text-[10px]">إجمالي الكمية</p>
+                <div className="bg-chip rounded-xl p-3 text-center">
+                  <p className="text-xl font-bold text-accent">{agg.totalQty}</p>
+                  <p className="text-muted text-[10px]">إجمالي الكمية</p>
                 </div>
-                <div className="bg-white/5 rounded-xl p-3 text-center">
-                  <p className="text-xl font-bold text-white">{agg.byItem.length}</p>
-                  <p className="text-gray-400 text-[10px]">صنف مختلف</p>
+                <div className="bg-chip rounded-xl p-3 text-center">
+                  <p className="text-xl font-bold text-ink">{agg.byItem.length}</p>
+                  <p className="text-muted text-[10px]">صنف مختلف</p>
                 </div>
               </div>
 
               {/* من يعمل عليها */}
               {agg.byUser.length > 0 && (
                 <div>
-                  <h3 className="text-gray-300 text-xs font-bold mb-2">👥 توزيع العمل</h3>
+                  <h3 className="text-ink-2 text-xs font-bold mb-2">👥 توزيع العمل</h3>
                   <div className="flex flex-wrap gap-2">
                     {agg.byUser.map(([name, qty]) => (
                       <span
                         key={name}
-                        className="bg-white/5 border border-white/10 rounded-full px-3 py-1 text-xs text-gray-200"
+                        className="bg-chip border border-line rounded-full px-3 py-1 text-xs text-ink-2"
                       >
-                        {name} — <b className="text-brand-gold">{qty}</b>
+                        {name} — <b className="text-accent">{qty}</b>
                       </span>
                     ))}
                   </div>
@@ -298,19 +298,19 @@ export default function OperationsMonitor() {
 
               {/* سجلّ المسح الحيّ */}
               <div>
-                <h3 className="text-gray-300 text-xs font-bold mb-2">
+                <h3 className="text-ink-2 text-xs font-bold mb-2">
                   🔴 سجلّ المسح الحيّ{' '}
                   <span className="text-gray-500 font-normal">(يتحدّث تلقائيًّا)</span>
                 </h3>
                 {loadingScans ? (
-                  <p className="text-gray-400 text-sm text-center py-8">جارٍ التحميل...</p>
+                  <p className="text-muted text-sm text-center py-8">جارٍ التحميل...</p>
                 ) : scans.length === 0 ? (
-                  <p className="text-gray-400 text-sm text-center py-8">لا مسح بعد على هذه العملية.</p>
+                  <p className="text-muted text-sm text-center py-8">لا مسح بعد على هذه العملية.</p>
                 ) : (
-                  <div className="overflow-x-auto max-h-[300px] overflow-y-auto rounded-xl border border-white/10">
+                  <div className="overflow-x-auto max-h-[300px] overflow-y-auto rounded-xl border border-line">
                     <table className="w-full text-xs">
                       <thead className="sticky top-0 bg-brand-navy">
-                        <tr className="text-gray-400">
+                        <tr className="text-muted">
                           <th className="text-right font-semibold py-2 px-2">الصنف</th>
                           <th className="text-right font-semibold py-2 px-2">الكمية</th>
                           <th className="text-right font-semibold py-2 px-2">من</th>
@@ -319,15 +319,15 @@ export default function OperationsMonitor() {
                       </thead>
                       <tbody>
                         {[...scans].reverse().map((s) => (
-                          <tr key={s.id} className="border-t border-white/5">
+                          <tr key={s.id} className="border-t border-line">
                             <td className="py-2 px-2">
-                              <p className="text-white font-medium">{s.name || s.barcode}</p>
+                              <p className="text-ink font-medium">{s.name || s.barcode}</p>
                               <p className="text-gray-500 text-[10px] font-mono" dir="ltr">
                                 {s.barcode}
                               </p>
                             </td>
-                            <td className="py-2 px-2 text-brand-gold font-bold">{s.qty}</td>
-                            <td className="py-2 px-2 text-gray-300">{s.byName || '—'}</td>
+                            <td className="py-2 px-2 text-accent font-bold">{s.qty}</td>
+                            <td className="py-2 px-2 text-ink-2">{s.byName || '—'}</td>
                             <td className="py-2 px-2 text-gray-500">{fmtRelative(s.at) || '…'}</td>
                           </tr>
                         ))}

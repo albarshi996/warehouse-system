@@ -40,7 +40,7 @@ export default function OrderControlBoard() {
   const pending = useMemo(() => pendingOrders(docs), [docs]);
   const shortage = useMemo(() => outOfStockItems(docs), [docs]);
 
-  if (!ready) return <p className="text-gray-300 text-sm py-10 text-center">جارٍ التحميل…</p>;
+  if (!ready) return <p className="text-ink-2 text-sm py-10 text-center">جارٍ التحميل…</p>;
   if (!me) return <Notice>افتح الصفحة بعد تسجيل الدخول.</Notice>;
 
   const base = getBasePath();
@@ -64,7 +64,7 @@ export default function OrderControlBoard() {
             key={k}
             type="button"
             onClick={() => setTab(k)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${tab === k ? 'bg-brand-red text-white' : 'bg-white/5 text-gray-300 hover:bg-white/10'}`}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${tab === k ? 'bg-brand-red text-white' : 'bg-chip text-ink-2 hover:bg-surface-2'}`}
           >
             {t}
           </button>
@@ -84,10 +84,10 @@ export default function OrderControlBoard() {
               );
             })}
           </div>
-          <div className="rounded-xl bg-black/20 border border-white/5 p-4 overflow-x-auto">
+          <div className="rounded-xl bg-surface border border-line p-4 overflow-x-auto">
             <table className="w-full text-xs bz-dashboard-table">
               <thead>
-                <tr className="text-gray-400 text-right">
+                <tr className="text-muted text-right">
                   <th className="py-2">أمر البيع</th>
                   <th>العميل</th>
                   <th>المستودع</th>
@@ -100,16 +100,16 @@ export default function OrderControlBoard() {
                 {pending.rows.map((r) => {
                   const s = ORDER_STATUS[r.status];
                   return (
-                    <tr key={r.id} className="border-t border-white/5">
+                    <tr key={r.id} className="border-t border-line">
                       <td className="py-2">
-                        <a href={`${base}/dashboard/document?type=SO&id=${r.id}`} className="font-bold text-brand-gold hover:underline">
+                        <a href={`${base}/dashboard/document?type=SO&id=${r.id}`} className="font-bold text-accent hover:underline">
                           {r.number || 'مسودّة'}
                         </a>
                       </td>
-                      <td className="text-gray-200">{r.customer || '—'}</td>
-                      <td className="text-gray-400">{r.warehouse || '—'}</td>
-                      <td className="text-gray-400 whitespace-nowrap">{r.orderDate || '—'}</td>
-                      <td className="text-gray-200 whitespace-nowrap">{money(r.value)}</td>
+                      <td className="text-ink-2">{r.customer || '—'}</td>
+                      <td className="text-muted">{r.warehouse || '—'}</td>
+                      <td className="text-muted whitespace-nowrap">{r.orderDate || '—'}</td>
+                      <td className="text-ink-2 whitespace-nowrap">{money(r.value)}</td>
                       <td className="whitespace-nowrap font-bold" style={{ color: s.color }}>
                         {s.emoji} {r.holdReason || s.label}
                         {r.status === 'no-stock' && r.shortfallCount > 0 && (
@@ -127,15 +127,15 @@ export default function OrderControlBoard() {
       )}
 
       {tab === 'shortage' && (
-        <div className="rounded-xl bg-black/20 border border-white/5 p-4">
-          <p className="text-xs text-gray-400 mb-3 leading-relaxed">
-            🚫 كل صنفٍ عجز المخزون عن تلبيته — مرتّبًا بالقيمة المفقودة. يُغذّي <b className="text-gray-200">التنبؤ بالطلب</b> و<b className="text-gray-200">التخطيط الشرائي</b> وضبط <b className="text-gray-200">حدّ المخزون الأدنى</b>.
+        <div className="rounded-xl bg-surface border border-line p-4">
+          <p className="text-xs text-muted mb-3 leading-relaxed">
+            🚫 كل صنفٍ عجز المخزون عن تلبيته — مرتّبًا بالقيمة المفقودة. يُغذّي <b className="text-ink-2">التنبؤ بالطلب</b> و<b className="text-ink-2">التخطيط الشرائي</b> وضبط <b className="text-ink-2">حدّ المخزون الأدنى</b>.
             <span className="text-gray-500"> (متوسط الطلب الشهري محسوبٌ على {num(shortage.monthsSpanned)} شهرًا)</span>
           </p>
           <div className="overflow-x-auto">
             <table className="w-full text-xs bz-dashboard-table">
               <thead>
-                <tr className="text-gray-400 text-right">
+                <tr className="text-muted text-right">
                   <th className="py-2">الصنف</th>
                   <th>مرّات الطلب</th>
                   <th>الكمية العاجزة</th>
@@ -146,16 +146,16 @@ export default function OrderControlBoard() {
               </thead>
               <tbody>
                 {shortage.rows.map((r) => (
-                  <tr key={r.key} className="border-t border-white/5">
+                  <tr key={r.key} className="border-t border-line">
                     <td className="py-2">
-                      <div className="font-bold text-white">{r.sku || r.barcode}</div>
-                      <div className="text-gray-400">{r.nameAr}</div>
+                      <div className="font-bold text-ink">{r.sku || r.barcode}</div>
+                      <div className="text-muted">{r.nameAr}</div>
                     </td>
-                    <td className="text-gray-200">{num(r.times)}</td>
+                    <td className="text-ink-2">{num(r.times)}</td>
                     <td className="text-amber-300 font-bold">{num(r.shortQty)}</td>
                     <td className="text-red-300 font-bold whitespace-nowrap">{money(r.lostValue)}</td>
-                    <td className="text-gray-200">{num(Math.round(r.avgMonthly))}</td>
-                    <td className="text-gray-400 whitespace-nowrap">{r.lastStockout || '—'}</td>
+                    <td className="text-ink-2">{num(Math.round(r.avgMonthly))}</td>
+                    <td className="text-muted whitespace-nowrap">{r.lastStockout || '—'}</td>
                   </tr>
                 ))}
                 {!shortage.rows.length && <Empty cols={6}>لا عجز — كل ما طُلب توفّر ✓</Empty>}
@@ -170,9 +170,9 @@ export default function OrderControlBoard() {
 
 function Stat({ label, value, tone, hint }) {
   return (
-    <div className="rounded-xl bg-black/20 border border-white/5 p-3">
+    <div className="rounded-xl bg-surface border border-line p-3">
       <div className="text-2xl font-bold" style={{ color: tone }}>{value}</div>
-      <div className="text-xs font-bold text-gray-200 mt-1">{label}</div>
+      <div className="text-xs font-bold text-ink-2 mt-1">{label}</div>
       <div className="text-[10px] text-gray-500 mt-0.5 leading-snug">{hint}</div>
     </div>
   );

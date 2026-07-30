@@ -109,7 +109,7 @@ const ROADMAP = [
   { t: 'سجلّ التدقيق (Audit Log)', d: 'من فعل ماذا ومتى — لكل اعتماد أو تعديل حسّاس.', s: 'مقترح' },
 ];
 
-const card = 'rounded-2xl border border-white/10 bg-white/5 backdrop-blur';
+const card = 'rounded-2xl border border-line bg-chip backdrop-blur';
 
 export default function AccessControlHub() {
   const [sel, setSel] = useState('admin');
@@ -117,15 +117,15 @@ export default function AccessControlHub() {
   const roleById = (id) => ROLES.find((r) => r.id === id);
 
   return (
-    <div dir="rtl" className="space-y-6 text-gray-100">
+    <div dir="rtl" className="space-y-6 text-ink-2">
       {/* مقدّمة + حالة النظام */}
       <div className={`${card} p-5`}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-xl font-bold text-white">🛡️ الصلاحيات والأدوار</h2>
-            <p className="text-sm text-gray-300 mt-1 max-w-2xl leading-relaxed">
+            <h2 className="text-xl font-bold text-ink">🛡️ الصلاحيات والأدوار</h2>
+            <p className="text-sm text-ink-2 mt-1 max-w-2xl leading-relaxed">
               مركز تصميم نظام الوصول لبوابة العمليات — مَن يدخل، وبأي دور، وماذا يرى ويعتمد.
-              الأدوار مبنية على مجموعات موديول <span className="font-mono text-brand-gold">brandzo_warehouse</span> الحقيقية.
+              الأدوار مبنية على مجموعات موديول <span className="font-mono text-accent">brandzo_warehouse</span> الحقيقية.
             </p>
           </div>
           <span className="shrink-0 text-xs font-bold rounded-full px-3 py-1.5 border"
@@ -137,27 +137,27 @@ export default function AccessControlHub() {
 
       {/* كيفية الدخول */}
       <div className={`${card} p-5`}>
-        <h3 className="text-sm font-bold text-brand-gold mb-4">كيفية الدخول إلى بوابة العمليات</h3>
+        <h3 className="text-sm font-bold text-accent mb-4">كيفية الدخول إلى بوابة العمليات</h3>
         <div className="flex flex-wrap items-stretch gap-3">
           {FLOW.map((f, i) => (
             <React.Fragment key={f.n}>
-              <div className="flex-1 min-w-[150px] rounded-xl border border-white/10 bg-black/20 p-4 text-center">
+              <div className="flex-1 min-w-[150px] rounded-xl border border-line bg-surface p-4 text-center">
                 <div className="text-2xl mb-1">{f.ic}</div>
-                <div className="text-sm font-bold text-white">{f.t}</div>
-                <div className="text-xs text-gray-400 mt-1 leading-relaxed">{f.d}</div>
+                <div className="text-sm font-bold text-ink">{f.t}</div>
+                <div className="text-xs text-muted mt-1 leading-relaxed">{f.d}</div>
               </div>
               {i < FLOW.length - 1 && <div className="self-center text-gray-500 font-bold">◄</div>}
             </React.Fragment>
           ))}
         </div>
-        <p className="text-xs text-gray-400 mt-3 leading-relaxed">
-          المبدأ: <b className="text-gray-200">الدور يأتي من أودو</b> (مصدر الحقيقة الواحد)، والبوابة تعرض فقط ما يخصّ ذلك الدور.
+        <p className="text-xs text-muted mt-3 leading-relaxed">
+          المبدأ: <b className="text-ink-2">الدور يأتي من أودو</b> (مصدر الحقيقة الواحد)، والبوابة تعرض فقط ما يخصّ ذلك الدور.
         </p>
       </div>
 
       {/* اختيار الدور */}
       <div className={`${card} p-5`}>
-        <h3 className="text-sm font-bold text-brand-gold mb-4">اختر دورًا لاستعراض صلاحياته وما يراه</h3>
+        <h3 className="text-sm font-bold text-accent mb-4">اختر دورًا لاستعراض صلاحياته وما يراه</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           {ROLES.map((r) => {
             const active = r.id === sel;
@@ -175,7 +175,7 @@ export default function AccessControlHub() {
                   <span className="text-lg leading-none">{r.emoji}</span>
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ background: r.accent }} />
                 </div>
-                <div className="text-[13px] font-bold text-white mt-2 leading-tight">{r.name}</div>
+                <div className="text-[13px] font-bold text-ink mt-2 leading-tight">{r.name}</div>
               </button>
             );
           })}
@@ -187,13 +187,13 @@ export default function AccessControlHub() {
         <div className={`${card} p-5`}>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xl">{role.emoji}</span>
-            <h3 className="text-base font-bold text-white">{role.name}</h3>
+            <h3 className="text-base font-bold text-ink">{role.name}</h3>
           </div>
-          <div className="text-[11px] font-mono text-gray-400 mb-4">{role.group}</div>
-          <div className="text-xs font-bold text-brand-gold mb-2">ماذا يفعل هذا الدور؟</div>
+          <div className="text-[11px] font-mono text-muted mb-4">{role.group}</div>
+          <div className="text-xs font-bold text-accent mb-2">ماذا يفعل هذا الدور؟</div>
           <ul className="space-y-2">
             {role.can.map((c) => (
-              <li key={c} className="flex items-start gap-2 text-sm text-gray-200">
+              <li key={c} className="flex items-start gap-2 text-sm text-ink-2">
                 <span className="mt-0.5 shrink-0" style={{ color: role.accent }}>✓</span>
                 <span>{c}</span>
               </li>
@@ -202,8 +202,8 @@ export default function AccessControlHub() {
         </div>
 
         <div className={`${card} p-5`}>
-          <div className="text-xs font-bold text-brand-gold mb-1">ماذا يرى في البوابة؟</div>
-          <p className="text-[11px] text-gray-400 mb-4 leading-relaxed">الأقسام المُضاءة يراها هذا الدور؛ الباقي مخفيّ عنه.</p>
+          <div className="text-xs font-bold text-accent mb-1">ماذا يرى في البوابة؟</div>
+          <p className="text-[11px] text-muted mb-4 leading-relaxed">الأقسام المُضاءة يراها هذا الدور؛ الباقي مخفيّ عنه.</p>
           <div className="flex flex-wrap gap-2">
             {Object.entries(AREAS).map(([key, label]) => {
               const on = role.sees.includes(key);
@@ -225,8 +225,8 @@ export default function AccessControlHub() {
 
       {/* مصفوفة الصلاحيات: منطق الاعتماد */}
       <div className={`${card} p-5`}>
-        <h3 className="text-sm font-bold text-brand-gold mb-1">منطق الصلاحيات — مَن يعتمد ماذا؟</h3>
-        <p className="text-[11px] text-gray-400 mb-4 leading-relaxed">
+        <h3 className="text-sm font-bold text-accent mb-1">منطق الصلاحيات — مَن يعتمد ماذا؟</h3>
+        <p className="text-[11px] text-muted mb-4 leading-relaxed">
           كل حارس ذهبي يتطلّب اعتماد الدور المخوّل — والدور المختار حاليًا مُميّز.
         </p>
         <div className="space-y-2">
@@ -241,7 +241,7 @@ export default function AccessControlHub() {
                   : { borderColor: 'rgba(255,255,255,.08)', background: 'rgba(0,0,0,.15)' }}
               >
                 <span className="text-[10px] font-mono text-gray-500 w-6 shrink-0">{cap.stage}</span>
-                <span className="text-sm font-semibold text-gray-100 flex-1 min-w-[160px]">{cap.label}</span>
+                <span className="text-sm font-semibold text-ink-2 flex-1 min-w-[160px]">{cap.label}</span>
                 <span className="flex flex-wrap gap-1.5">
                   {cap.roles.map((rid) => {
                     const r = roleById(rid);
@@ -270,31 +270,31 @@ export default function AccessControlHub() {
       {/* الحاوية: نقاط قادمة لاكتمال المشروع */}
       <div className={`${card} p-5`}>
         <div className="flex items-center justify-between gap-3 mb-1">
-          <h3 className="text-sm font-bold text-brand-gold">نقاط قادمة لاكتمال نظام الوصول</h3>
-          <span className="text-[11px] text-gray-400">حاوية قابلة للتوسّع</span>
+          <h3 className="text-sm font-bold text-accent">نقاط قادمة لاكتمال نظام الوصول</h3>
+          <span className="text-[11px] text-muted">حاوية قابلة للتوسّع</span>
         </div>
-        <p className="text-[11px] text-gray-400 mb-4 leading-relaxed">
+        <p className="text-[11px] text-muted mb-4 leading-relaxed">
           هذه الصفحة مصمّمة لتنمو — نضيف كل نقطة هنا ونبنيها تباعًا حتى يكتمل النظام.
         </p>
         <div className="space-y-2.5">
           {ROADMAP.map((it, i) => (
-            <div key={it.t} className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/20 p-3">
+            <div key={it.t} className="flex items-start gap-3 rounded-xl border border-line bg-surface p-3">
               <span className="shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold"
                 style={{ background: 'rgba(218,170,60,.12)', color: GOLD }}>{i + 1}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-bold text-white">{it.t}</span>
+                  <span className="text-sm font-bold text-ink">{it.t}</span>
                   <span className="text-[10px] font-bold rounded-full px-2 py-0.5 border"
                     style={{ color: '#e5b7bf', borderColor: 'rgba(196,30,58,.5)', background: 'rgba(196,30,58,.12)' }}>
                     {it.s}
                   </span>
                 </div>
-                <div className="text-xs text-gray-400 mt-1 leading-relaxed">{it.d}</div>
+                <div className="text-xs text-muted mt-1 leading-relaxed">{it.d}</div>
               </div>
             </div>
           ))}
         </div>
-        <div className="mt-4 rounded-xl border border-dashed border-white/15 p-3 text-center text-xs text-gray-500">
+        <div className="mt-4 rounded-xl border border-dashed border-line p-3 text-center text-xs text-gray-500">
           ＋ نقطة جديدة تُضاف هنا عند طلبها
         </div>
       </div>

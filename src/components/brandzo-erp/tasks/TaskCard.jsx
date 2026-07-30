@@ -64,7 +64,7 @@ export default function TaskCard({
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1">
           <h3
-            className={`text-lg font-bold text-white mb-1 ${
+            className={`text-lg font-bold text-ink mb-1 ${
               isDone ? 'line-through decoration-emerald-400/70' : ''
             }`}
           >
@@ -73,7 +73,7 @@ export default function TaskCard({
           <div className="flex gap-2 flex-wrap">
             {/* Priority Badge */}
             <span
-              className="text-xs font-bold px-2 py-1 rounded text-white"
+              className="text-xs font-bold px-2 py-1 rounded text-ink"
               style={{
                 backgroundColor: prioColor.stripe,
               }}
@@ -113,44 +113,44 @@ export default function TaskCard({
       </div>
 
       {/* Card Info Grid */}
-      <div className="grid grid-cols-2 gap-2 text-xs text-gray-100 mb-3 pb-3 border-b border-white/10">
+      <div className="grid grid-cols-2 gap-2 text-xs text-ink-2 mb-3 pb-3 border-b border-line">
         {task.dept && (
           <div>
-            <span className="text-gray-200">القسم:</span> {task.dept}
+            <span className="text-ink-2">القسم:</span> {task.dept}
           </div>
         )}
         {task.owner && (
           <div>
-            <span className="text-gray-200">المسؤول:</span> {task.owner}
+            <span className="text-ink-2">المسؤول:</span> {task.owner}
           </div>
         )}
         {task.dueDate && (
           <div>
-            <span className="text-gray-200">الاستحقاق:</span> {formatDate(task.dueDate)}
+            <span className="text-ink-2">الاستحقاق:</span> {formatDate(task.dueDate)}
           </div>
         )}
         {task.dueTime && (
           <div>
-            <span className="text-gray-200">الوقت:</span> {task.dueTime}
+            <span className="text-ink-2">الوقت:</span> {task.dueTime}
           </div>
         )}
       </div>
 
       {/* Description Preview */}
       {task.description && (
-        <p className="text-sm text-gray-100 mb-3 line-clamp-2">{task.description}</p>
+        <p className="text-sm text-ink-2 mb-3 line-clamp-2">{task.description}</p>
       )}
 
       {/* Checklist: progress bar + interactive items */}
       {totalSteps > 0 && (
         <div className="mb-3">
-          <div className="flex justify-between text-xs text-gray-200 mb-1">
+          <div className="flex justify-between text-xs text-ink-2 mb-1">
             <span>قائمة التحقق</span>
             <span>
               {completedSteps}/{totalSteps}
             </span>
           </div>
-          <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-chip rounded-full overflow-hidden">
             <div
               className="h-full transition-all duration-300"
               style={{
@@ -165,17 +165,17 @@ export default function TaskCard({
               <li key={idx}>
                 <button
                   onClick={() => onChecklistToggle?.(task.id, idx)}
-                  className="w-full flex items-start gap-2 text-right text-xs rounded px-2 py-1 hover:bg-white/10 transition-colors"
+                  className="w-full flex items-start gap-2 text-right text-xs rounded px-2 py-1 hover:bg-surface-2 transition-colors"
                   title={step.done ? 'إلغاء إتمام الخطوة' : 'إتمام الخطوة'}
                 >
                   <span
-                    className={`font-bold ${step.done ? 'text-emerald-400' : 'text-gray-300'}`}
+                    className={`font-bold ${step.done ? 'text-emerald-400' : 'text-ink-2'}`}
                   >
                     {step.done ? '✓' : '☐'}
                   </span>
                   <span
                     className={`flex-1 ${
-                      step.done ? 'line-through text-gray-300' : 'text-gray-100'
+                      step.done ? 'line-through text-ink-2' : 'text-ink-2'
                     }`}
                   >
                     {step.text}
@@ -188,7 +188,7 @@ export default function TaskCard({
           {totalSteps > 3 && (
             <button
               onClick={() => setChecklistExpanded((prev) => !prev)}
-              className="mt-1 text-xs font-bold px-2 py-1 rounded text-brand-yellow hover:bg-white/10 transition-colors"
+              className="mt-1 text-xs font-bold px-2 py-1 rounded text-brand-yellow hover:bg-surface-2 transition-colors"
               style={{ color: 'var(--color-brand-yellow)' }}
             >
               {checklistExpanded ? '▲ إخفاء' : `▼ عرض الكل (${totalSteps})`}
@@ -220,7 +220,7 @@ export default function TaskCard({
         onClick={() => onToggleDone?.(task.id)}
         className={`w-full mb-2 py-2 rounded text-xs font-bold border transition-colors ${
           isDone
-            ? 'bg-white/5 border-white/10 text-gray-200 hover:border-amber-400/60 hover:text-amber-300'
+            ? 'bg-chip border-line text-ink-2 hover:border-amber-400/60 hover:text-amber-300'
             : 'bg-emerald-600/30 border-emerald-600/50 text-emerald-300 hover:bg-emerald-600/50'
         }`}
         title={isDone ? 'إعادة فتح المهمة' : 'وضع علامة منجزة'}

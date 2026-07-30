@@ -111,7 +111,7 @@ function DetailPanel({ node }) {
   
   return (
     <div
-      className={['mt-6 rounded-2xl border-2 bg-white/5 p-5 sm:p-6 shadow-lg', colors.border].join(
+      className={['mt-6 rounded-2xl border-2 bg-chip p-5 sm:p-6 shadow-lg', colors.border].join(
         ' '
       )}
       dir="rtl"
@@ -127,7 +127,7 @@ function DetailPanel({ node }) {
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" title="دور أودو معرف" />
         </span>
         <div>
-          <div className="font-bold text-gray-200 text-lg sm:text-xl">
+          <div className="font-bold text-ink-2 text-lg sm:text-xl">
             {node.titleAr}
             {node.isOccupied && (
               <span className="mr-3 text-xs bg-green-600 text-white px-2 py-0.5 rounded-full font-bold">
@@ -135,12 +135,12 @@ function DetailPanel({ node }) {
               </span>
             )}
           </div>
-          <div className="text-xs sm:text-sm text-gray-200">{node.titleEn}</div>
+          <div className="text-xs sm:text-sm text-ink-2">{node.titleEn}</div>
         </div>
       </div>
       
       <div className={['text-sm font-bold mb-2', colors.text].join(' ')}>{heading}</div>
-      <ul className="space-y-1.5 text-sm text-gray-200 leading-relaxed mb-4">
+      <ul className="space-y-1.5 text-sm text-ink-2 leading-relaxed mb-4">
         {items.map((line, i) => (
           <li key={i} className="flex items-start gap-2">
             <span
@@ -162,11 +162,11 @@ function DetailPanel({ node }) {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <div className="text-xs text-gray-200 mb-1">الوظيفة في أودو</div>
-              <div className="font-bold text-white">{node.odooRole}</div>
+              <div className="text-xs text-ink-2 mb-1">الوظيفة في أودو</div>
+              <div className="font-bold text-ink">{node.odooRole}</div>
             </div>
             <div>
-              <div className="text-xs text-gray-200 mb-1">الوحدات المسموح بها</div>
+              <div className="text-xs text-ink-2 mb-1">الوحدات المسموح بها</div>
               <div className="font-bold text-blue-300">{node.odooAccess}</div>
             </div>
           </div>
@@ -224,7 +224,7 @@ export default function OrgChart() {
 
   return (
     <section
-      className="bg-white/5 rounded-2xl p-4 sm:p-6 lg:p-8 border border-white/10"
+      className="bg-chip rounded-2xl p-4 sm:p-6 lg:p-8 border border-line"
       dir="rtl"
     >
       <header className="mb-5 sm:mb-6 text-center">
@@ -232,11 +232,11 @@ export default function OrgChart() {
           <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-brand-red text-white text-lg shadow-md">
             🏛️
           </span>
-          <h2 className="text-xl sm:text-2xl font-bold text-white">
+          <h2 className="text-xl sm:text-2xl font-bold text-ink">
             الهيكل التنظيمي المطور — Brandzo Hub 2026
           </h2>
         </div>
-        <p className="text-sm text-gray-200 leading-relaxed max-w-2xl mx-auto">
+        <p className="text-sm text-ink-2 leading-relaxed max-w-2xl mx-auto">
           تمت إعادة هيكلة النظام إلى 3 أعمدة تشغيلية أساسية مع فصل الوظائف المساندة لضمان الكفاءة والرقابة المستقلة.
         </p>
       </header>
@@ -285,9 +285,9 @@ export default function OrgChart() {
       </div>
 
       {/* Support Functions Section */}
-      <div className="mt-12 pt-8 border-t border-white/10">
+      <div className="mt-12 pt-8 border-t border-line">
         <div className="text-center mb-6">
-          <h3 className="text-lg font-bold text-brand-gold bg-brand-gold/10 inline-block px-4 py-1 rounded-full border border-brand-gold/20">
+          <h3 className="text-lg font-bold text-accent bg-accent/10 inline-block px-4 py-1 rounded-full border border-accent/20">
             الوظائف والخدمات المساندة (Support Functions)
           </h3>
         </div>
@@ -311,9 +311,9 @@ export default function OrgChart() {
           <span>💡</span>
           <span>ملاحظة حول مقارنة الكادر الوظيفي:</span>
         </div>
-        <p className="text-sm text-gray-200 leading-relaxed">
+        <p className="text-sm text-ink-2 leading-relaxed">
           مدراء الوظائف المساندة (الجودة، التجارية، المالية، التقنية، الموارد البشرية) هم
-          <strong className="text-white mx-1">موظفون يعملون داخل المستودعات الفرعية</strong>،
+          <strong className="text-ink mx-1">موظفون يعملون داخل المستودعات الفرعية</strong>،
           ويتبعون إدارياً للإدارات المركزية وتشغيلياً لإدارة العمليات في المستودع.
           هم أدوار مساندة لضمان الامتثال والرقابة — وليسوا أعمدة تشغيلية مستقلة في الميدان.
         </p>

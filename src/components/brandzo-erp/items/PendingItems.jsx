@@ -93,11 +93,11 @@ export default function PendingItems({ me, onFlash }) {
   }
 
   return (
-    <section className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-6" dir="rtl">
+    <section className="bg-chip border border-line rounded-2xl p-5 mb-6" dir="rtl">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
-          <h3 className="text-lg font-bold text-white">⏳ الأصناف المعلّقة</h3>
-          <p className="text-xs text-gray-300 mt-1 max-w-2xl leading-relaxed">
+          <h3 className="text-lg font-bold text-ink">⏳ الأصناف المعلّقة</h3>
+          <p className="text-xs text-ink-2 mt-1 max-w-2xl leading-relaxed">
             باركودات مُسحت في الميدان ولا يعرفها الماستر. لا توقف العمل ولا تدخل الماستر
             حتى تعتمدها — والمعرّف حتميّ فمسحُ الباركود عشرًا يُنشئ سجلًّا واحدًا بعدّاده.
           </p>
@@ -127,7 +127,7 @@ export default function PendingItems({ me, onFlash }) {
             type="button"
             onClick={() => setFilter(key)}
             className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
-              filter === key ? 'bg-brand-gold/20 text-brand-gold border border-brand-gold/40' : 'bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10'
+              filter === key ? 'bg-accent/20 text-accent border border-accent/40' : 'bg-chip text-ink-2 border border-line hover:bg-surface-2'
             }`}
           >
             {label}
@@ -136,14 +136,14 @@ export default function PendingItems({ me, onFlash }) {
       </div>
 
       {shown.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-6">
+        <p className="text-sm text-muted text-center py-6">
           {filter === 'pending' ? '✅ لا أصناف معلّقة — كل ما مُسح معروف في الماستر.' : 'لا سجلّات في هذا التصنيف.'}
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-gray-400 border-b border-white/10">
+              <tr className="text-muted border-b border-line">
                 <th className="text-right py-2 px-2">الباركود</th>
                 <th className="text-right py-2 px-2">الاسم الميداني</th>
                 <th className="py-2 px-2">مرّات المسح</th>
@@ -156,24 +156,24 @@ export default function PendingItems({ me, onFlash }) {
               {shown.map((r) => {
                 const st = PENDING_STATES[r.state] || PENDING_STATES.pending;
                 return (
-                  <tr key={r.id} className="border-b border-white/5">
-                    <td className="py-2 px-2 font-mono text-gray-100" dir="ltr">{r.rawBarcode || r.barcode}</td>
-                    <td className="py-2 px-2 text-gray-200">
+                  <tr key={r.id} className="border-b border-line">
+                    <td className="py-2 px-2 font-mono text-ink-2" dir="ltr">{r.rawBarcode || r.barcode}</td>
+                    <td className="py-2 px-2 text-ink-2">
                       {r.name && r.name !== r.barcode ? r.name : <span className="text-gray-500">— بلا اسم</span>}
                     </td>
                     <td className="py-2 px-2 text-center">
-                      <span className={`font-bold ${(r.seenCount || 0) > 3 ? 'text-brand-gold' : 'text-gray-300'}`}>
+                      <span className={`font-bold ${(r.seenCount || 0) > 3 ? 'text-accent' : 'text-ink-2'}`}>
                         {r.seenCount || 1}
                       </span>
                     </td>
-                    <td className="py-2 px-2 text-center text-gray-300">{r.firstSeenByName || '—'}</td>
+                    <td className="py-2 px-2 text-center text-ink-2">{r.firstSeenByName || '—'}</td>
                     <td className="py-2 px-2 text-center whitespace-nowrap" style={{ color: st.color }}>
                       {st.emoji} {st.label}
                       {r.state === 'approved' && r.approvedSku && (
-                        <span className="block text-[10px] text-gray-400">{r.approvedSku}</span>
+                        <span className="block text-[10px] text-muted">{r.approvedSku}</span>
                       )}
                       {r.state === 'rejected' && r.rejectReason && (
-                        <span className="block text-[10px] text-gray-400">{r.rejectReason}</span>
+                        <span className="block text-[10px] text-muted">{r.rejectReason}</span>
                       )}
                     </td>
                     <td className="py-2 px-2 text-center whitespace-nowrap">
@@ -191,7 +191,7 @@ export default function PendingItems({ me, onFlash }) {
                             type="button"
                             disabled={busy}
                             onClick={() => doReject(r)}
-                            className="rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-50 px-3 py-1 text-gray-200 font-bold"
+                            className="rounded-lg bg-chip hover:bg-surface-2 disabled:opacity-50 px-3 py-1 text-ink-2 font-bold"
                           >
                             رفض
                           </button>
@@ -210,11 +210,11 @@ export default function PendingItems({ me, onFlash }) {
 
       {/* ── نموذج الاعتماد ── */}
       {editing && (
-        <div className="mt-4 border-t border-white/10 pt-4">
-          <p className="text-sm font-bold text-white mb-1">
-            اعتماد الباركود <span className="font-mono text-brand-gold" dir="ltr">{editing.rec.rawBarcode || editing.rec.barcode}</span>
+        <div className="mt-4 border-t border-line pt-4">
+          <p className="text-sm font-bold text-ink mb-1">
+            اعتماد الباركود <span className="font-mono text-accent" dir="ltr">{editing.rec.rawBarcode || editing.rec.barcode}</span>
           </p>
-          <p className="text-[11px] text-gray-400 mb-3">
+          <p className="text-[11px] text-muted mb-3">
             الباركود يُضاف تلقائيًّا إلى فهرس الاستدعاء، فيُعرَف بمسحه فور الاعتماد.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -227,12 +227,12 @@ export default function PendingItems({ me, onFlash }) {
               ['unitPrice', 'سعر الوحدة (د.ل)', 'number'],
             ].map(([key, label, type]) => (
               <label key={key} className="flex flex-col gap-1">
-                <span className="text-[11px] font-bold text-gray-300">{label}</span>
+                <span className="text-[11px] font-bold text-ink-2">{label}</span>
                 <input
                   type={type}
                   value={editing.draft[key]}
                   onChange={(e) => setEditing((s) => ({ ...s, draft: { ...s.draft, [key]: e.target.value } }))}
-                  className="bg-white/10 border border-white/20 rounded-lg text-white text-sm px-3 py-2 focus:outline-none focus:border-brand-gold/50"
+                  className="bg-chip border border-line rounded-lg text-ink text-sm px-3 py-2 focus:outline-none focus:border-accent/50"
                 />
               </label>
             ))}
@@ -249,7 +249,7 @@ export default function PendingItems({ me, onFlash }) {
             <button
               type="button"
               onClick={() => setEditing(null)}
-              className="rounded-lg bg-white/10 hover:bg-white/20 px-4 py-2 text-sm font-bold text-gray-200"
+              className="rounded-lg bg-chip hover:bg-surface-2 px-4 py-2 text-sm font-bold text-ink-2"
             >
               إلغاء
             </button>

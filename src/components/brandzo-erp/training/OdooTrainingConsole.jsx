@@ -28,7 +28,7 @@ const TONE = {
   pending: { chip: 'bg-brand-yellow/15 text-brand-yellow border-brand-yellow/40', dot: 'bg-brand-yellow' },
   done:    { chip: 'bg-green-500/15 text-green-400 border-green-500/40',           dot: 'bg-green-500' },
   reject:  { chip: 'bg-brand-red/15 text-brand-red border-brand-red/50',           dot: 'bg-brand-red' },
-  locked:  { chip: 'bg-white/5 text-gray-500 border-white/10',                     dot: 'bg-gray-600' },
+  locked:  { chip: 'bg-chip text-gray-500 border-line',                     dot: 'bg-gray-600' },
 };
 
 const MOD_ACCENT = {
@@ -239,7 +239,7 @@ function GoldenRulesStrip() {
           <span className="text-lg leading-none mt-0.5">{r.icon}</span>
           <div className="min-w-0">
             <div className="text-[11px] font-bold text-brand-yellow leading-tight">{r.titleAr}</div>
-            <div className="text-[10px] text-gray-400 leading-snug line-clamp-2">{r.textAr}</div>
+            <div className="text-[10px] text-muted leading-snug line-clamp-2">{r.textAr}</div>
           </div>
         </div>
       ))}
@@ -251,10 +251,10 @@ function ModuleSidebar({ state, moduleFilter, setModuleFilter, onOpenMatrix }) {
   const currentModules = STAGES.find((s) => s.id === state.currentStage)?.modules || [];
   return (
     <aside className="w-full lg:w-60 shrink-0 space-y-3">
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+      <div className="rounded-2xl border border-line bg-chip p-3">
         <div className="flex items-center gap-2 mb-3 px-1">
           <Icon name="grid" size={16} className="text-brand-yellow" />
-          <h3 className="text-sm font-bold text-gray-100">وحدات أودو</h3>
+          <h3 className="text-sm font-bold text-ink-2">وحدات أودو</h3>
         </div>
         <ul className="space-y-1.5">
           {MODULES.map((m) => {
@@ -269,7 +269,7 @@ function ModuleSidebar({ state, moduleFilter, setModuleFilter, onOpenMatrix }) {
                   onClick={() => setModuleFilter(isFilter ? null : m.id)}
                   aria-pressed={isFilter}
                   className={`w-full flex items-center gap-2.5 rounded-xl border px-3 py-2 text-right transition-all ${
-                    isFilter ? `${a.ring} ${a.soft}` : 'border-white/10 hover:border-white/25 bg-white/[0.02]'
+                    isFilter ? `${a.ring} ${a.soft}` : 'border-line hover:border-white/25 bg-chip'
                   }`}
                 >
                   <Icon name={m.icon} size={18} className={a.text} />
@@ -292,7 +292,7 @@ function ModuleSidebar({ state, moduleFilter, setModuleFilter, onOpenMatrix }) {
           <button
             type="button"
             onClick={() => setModuleFilter(null)}
-            className="mt-2 w-full text-[11px] text-gray-400 hover:text-white border border-white/10 rounded-lg py-1.5"
+            className="mt-2 w-full text-[11px] text-muted hover:text-ink border border-line rounded-lg py-1.5"
           >
             إظهار كل المراحل
           </button>
@@ -312,7 +312,7 @@ function ModuleSidebar({ state, moduleFilter, setModuleFilter, onOpenMatrix }) {
 
 function PipelineStepper({ state, viewId, setViewId, moduleFilter }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+    <div className="rounded-2xl border border-line bg-chip p-3">
       <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:flex-wrap lg:overflow-visible">
         {STAGES.map((stage, i) => {
           const st = state.stages[stage.id];
@@ -331,16 +331,16 @@ function PipelineStepper({ state, viewId, setViewId, moduleFilter }) {
                 onClick={() => !locked && setViewId(stage.id)}
                 aria-current={isView}
                 className={`relative shrink-0 w-[112px] rounded-xl border px-2 py-2 text-center transition-all ${
-                  isView ? 'border-brand-yellow ring-2 ring-brand-yellow/40 bg-white/[0.06]' : t.chip
+                  isView ? 'border-brand-yellow ring-2 ring-brand-yellow/40 bg-chip' : t.chip
                 } ${locked ? 'opacity-45 cursor-not-allowed' : 'cursor-pointer hover:-translate-y-0.5'} ${
                   dimmed ? 'opacity-30 grayscale' : ''
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-lg leading-none">{stage.icon}</span>
-                  <span className="text-[10px] font-mono font-bold text-gray-400">{stage.num}</span>
+                  <span className="text-[10px] font-mono font-bold text-muted">{stage.num}</span>
                 </div>
-                <div className="text-[11px] font-bold leading-tight text-gray-100 line-clamp-2 min-h-[28px]">
+                <div className="text-[11px] font-bold leading-tight text-ink-2 line-clamp-2 min-h-[28px]">
                   {stage.titleAr}
                 </div>
                 <div className="mt-1 flex items-center justify-center gap-1">
@@ -374,8 +374,8 @@ function StageControls({ stage, state, dispatch }) {
         <div className="flex items-center gap-2 text-teal-300 font-bold text-sm">
           <span>🔬</span> بوابة الجودة (QC) — القاعدة: لا Done قبل الاعتماد
         </div>
-        <p className="text-xs text-gray-400">
-          الكمية المستلمة: <b className="text-gray-200">{o.orderedQty}</b> {o.product.uom} · رقم الدفعة يُدخل عند
+        <p className="text-xs text-muted">
+          الكمية المستلمة: <b className="text-ink-2">{o.orderedQty}</b> {o.product.uom} · رقم الدفعة يُدخل عند
           المسح. الحالة الحالية للاستلام تنتظر قرار مفتش الجودة.
         </p>
         <div className="flex flex-wrap gap-2">
@@ -402,7 +402,7 @@ function StageControls({ stage, state, dispatch }) {
             ✕ رفض (Failed → حجر)
           </button>
           {o.qcResult && (
-            <span className="self-center text-xs text-gray-400">
+            <span className="self-center text-xs text-muted">
               النتيجة: <b className={o.qcResult === 'passed' ? 'text-green-400' : 'text-brand-red'}>
                 {STATUS_META[o.qcResult].labelAr}
               </b>
@@ -434,7 +434,7 @@ function StageControls({ stage, state, dispatch }) {
                     ? isFefo
                       ? 'border-green-500 bg-green-500/10'
                       : 'border-brand-red bg-brand-red/10'
-                    : 'border-white/10 hover:border-white/30 bg-white/[0.02]'
+                    : 'border-line hover:border-white/30 bg-chip'
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -445,15 +445,15 @@ function StageControls({ stage, state, dispatch }) {
                   >
                     {picked && <span className={`w-2 h-2 rounded-full ${isFefo ? 'bg-green-500' : 'bg-brand-red'}`} />}
                   </span>
-                  <span className="font-mono font-bold text-gray-100">{lot.lot}</span>
+                  <span className="font-mono font-bold text-ink-2">{lot.lot}</span>
                   {i === 0 && (
                     <span className="text-[9px] font-bold text-green-400 bg-green-500/15 rounded px-1.5 py-0.5">
                       FEFO ✓
                     </span>
                   )}
                 </span>
-                <span className="text-xs text-gray-400">
-                  الكمية {lot.qty} · انتهاء <b className="text-gray-200">{lot.expiry}</b>
+                <span className="text-xs text-muted">
+                  الكمية {lot.qty} · انتهاء <b className="text-ink-2">{lot.expiry}</b>
                 </span>
               </button>
             );
@@ -469,9 +469,9 @@ function StageControls({ stage, state, dispatch }) {
         <div className="flex items-center gap-2 text-brand-red font-bold text-sm">
           <span>🚧</span> تصريح خروج البوابة (Gate Pass) — إلزامي قبل الشحن
         </div>
-        <div className="text-xs text-gray-400 space-y-1">
+        <div className="text-xs text-muted space-y-1">
           <div>
-            إذن التسليم: <b className="text-gray-200 font-mono">{o.deliveryNoteNo || '—'}</b>
+            إذن التسليم: <b className="text-ink-2 font-mono">{o.deliveryNoteNo || '—'}</b>
           </div>
           <div>
             حالة التصريح:{' '}
@@ -500,27 +500,27 @@ function StageControls({ stage, state, dispatch }) {
 
   if (stage.id === 'cyclecount') {
     return (
-      <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 space-y-3">
-        <div className="flex items-center gap-2 text-gray-100 font-bold text-sm">
+      <div className="rounded-xl border border-line bg-chip p-4 space-y-3">
+        <div className="flex items-center gap-2 text-ink-2 font-bold text-sm">
           <span>🔢</span> إدخال العدّ الفعلي — الأرصدة مُجمَّدة
         </div>
         <div className="flex flex-wrap items-end gap-4">
-          <div className="text-xs text-gray-400">
+          <div className="text-xs text-muted">
             رصيد النظام
-            <div className="text-xl font-bold text-gray-100 tabular-nums">{o.systemQty}</div>
+            <div className="text-xl font-bold text-ink-2 tabular-nums">{o.systemQty}</div>
           </div>
           <div>
-            <label className="text-xs text-gray-400 block mb-1">العدّ الفعلي</label>
+            <label className="text-xs text-muted block mb-1">العدّ الفعلي</label>
             <input
               type="number"
               value={o.countedQty ?? ''}
               onChange={(e) => dispatch({ type: 'SET_COUNT', value: e.target.value })}
               placeholder="أدخل العدد"
-              className="w-32 bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-brand-yellow"
+              className="w-32 bg-chip border border-line rounded-lg px-3 py-2 text-ink-2 focus:outline-none focus:border-brand-yellow"
             />
           </div>
           {o.countedQty != null && (
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-muted">
               الفارق
               <div
                 className={`text-xl font-bold tabular-nums ${
@@ -539,14 +539,14 @@ function StageControls({ stage, state, dispatch }) {
   if (stage.id === 'adjustment') {
     const diff = o.adjustmentQty;
     return (
-      <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 space-y-2">
-        <div className="flex items-center gap-2 text-gray-100 font-bold text-sm">
+      <div className="rounded-xl border border-line bg-chip p-4 space-y-2">
+        <div className="flex items-center gap-2 text-ink-2 font-bold text-sm">
           <span>⚖️</span> سند تسوية المخزون — يُنشئ قيداً محاسبياً تلقائياً
         </div>
         {diff == null ? (
           <p className="text-xs text-brand-yellow">أكمل الجرد الدوري (المرحلة 09) أولاً لتحديد الفارق.</p>
         ) : (
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-ink-2">
             الفارق المعتمد للتسوية:{' '}
             <b className={diff === 0 ? 'text-green-400' : 'text-brand-yellow'}>
               {diff > 0 ? `+${diff}` : diff} {o.product.uom}
@@ -572,19 +572,19 @@ function StageControls({ stage, state, dispatch }) {
         </div>
         <div className="grid grid-cols-3 gap-2">
           {cols.map((c) => (
-            <div key={c.k} className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-center">
-              <div className="text-[10px] font-mono font-bold text-gray-400">{c.k}</div>
-              <div className="text-[11px] text-gray-300">{c.labelAr}</div>
+            <div key={c.k} className="rounded-lg border border-line bg-chip p-2.5 text-center">
+              <div className="text-[10px] font-mono font-bold text-muted">{c.k}</div>
+              <div className="text-[11px] text-ink-2">{c.labelAr}</div>
               {c.k === 'Bill' ? (
                 <input
                   type="number"
                   value={o.billAmount ?? ''}
                   onChange={(e) => dispatch({ type: 'SET_BILL', value: e.target.value })}
                   placeholder="0"
-                  className="mt-1 w-full bg-white/5 border border-white/20 rounded px-2 py-1 text-center text-gray-100 text-sm focus:outline-none focus:border-green-400"
+                  className="mt-1 w-full bg-chip border border-line rounded px-2 py-1 text-center text-ink-2 text-sm focus:outline-none focus:border-green-400"
                 />
               ) : (
-                <div className="mt-1 text-sm font-bold text-gray-100">{c.val}</div>
+                <div className="mt-1 text-sm font-bold text-ink-2">{c.val}</div>
               )}
               <div className="text-[10px] text-gray-500 mt-0.5">{c.sub}</div>
             </div>
@@ -624,7 +624,7 @@ function StageDetail({ stage, state, dispatch, onOpenForm, allDone }) {
         : `التالي: ${STATUS_META[flow[idx + 1]].labelAr}`;
 
   return (
-    <div className={`rounded-2xl border ${a.ring} bg-white/[0.03] p-5 space-y-4`}>
+    <div className={`rounded-2xl border ${a.ring} bg-chip p-5 space-y-4`}>
       {/* head */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-start gap-3">
@@ -633,7 +633,7 @@ function StageDetail({ stage, state, dispatch, onOpenForm, allDone }) {
           </span>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-lg font-bold text-gray-100">
+              <h3 className="text-lg font-bold text-ink-2">
                 {stage.num} · {stage.titleAr}
               </h3>
               {stage.modules.map((m) => {
@@ -645,7 +645,7 @@ function StageDetail({ stage, state, dispatch, onOpenForm, allDone }) {
                 );
               })}
             </div>
-            <div className="text-xs text-gray-400 font-mono">{stage.titleEn}</div>
+            <div className="text-xs text-muted font-mono">{stage.titleEn}</div>
           </div>
         </div>
         <span
@@ -657,7 +657,7 @@ function StageDetail({ stage, state, dispatch, onOpenForm, allDone }) {
         </span>
       </div>
 
-      <p className="text-sm text-gray-300 leading-relaxed">{stage.descAr}</p>
+      <p className="text-sm text-ink-2 leading-relaxed">{stage.descAr}</p>
 
       {/* status flow */}
       <div>
@@ -668,7 +668,7 @@ function StageDetail({ stage, state, dispatch, onOpenForm, allDone }) {
       {/* odoo path */}
       <div className="flex items-center gap-2 text-xs">
         <span className="text-gray-500">المسار في أودو:</span>
-        <code className="font-mono text-brand-yellow bg-black/30 rounded px-2 py-0.5">{stage.odooPath}</code>
+        <code className="font-mono text-brand-yellow bg-surface rounded px-2 py-0.5">{stage.odooPath}</code>
       </div>
 
       {/* interactive controls */}
@@ -684,7 +684,7 @@ function StageDetail({ stage, state, dispatch, onOpenForm, allDone }) {
                 key={f.n}
                 type="button"
                 onClick={() => onOpenForm(f)}
-                className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.02] px-3 py-1.5 text-xs font-medium text-gray-200 hover:border-brand-yellow hover:text-brand-yellow transition-colors"
+                className="inline-flex items-center gap-2 rounded-lg border border-line bg-chip px-3 py-1.5 text-xs font-medium text-ink-2 hover:border-brand-yellow hover:text-brand-yellow transition-colors"
               >
                 <span className="font-mono text-[10px] text-gray-500">#{f.n}</span>
                 {f.titleAr}
@@ -718,7 +718,7 @@ function StageDetail({ stage, state, dispatch, onOpenForm, allDone }) {
         <div className="rounded-xl border border-green-500/40 bg-green-500/10 p-4 text-center">
           <div className="text-2xl mb-1">🎉</div>
           <div className="text-green-400 font-bold">اكتملت الدورة المستندية الكاملة (12/12)</div>
-          <div className="text-xs text-gray-400 mt-1">أُغلقت الفترة المالية. اضغط «إعادة ضبط» لتكرار التدريب.</div>
+          <div className="text-xs text-muted mt-1">أُغلقت الفترة المالية. اضغط «إعادة ضبط» لتكرار التدريب.</div>
         </div>
       )}
     </div>
@@ -731,14 +731,14 @@ function FormModal({ form, formHref, onClose }) {
   return (
     <div className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-3" onClick={onClose}>
       <div
-        className="bg-brand-navy border border-white/15 rounded-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden shadow-2xl"
+        className="bg-brand-navy border border-line rounded-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         dir="rtl"
       >
-        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10 bg-white/[0.03]">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-line bg-chip">
           <div className="flex items-center gap-2 min-w-0">
             <span className="font-mono text-xs text-gray-500">#{form.n}</span>
-            <h4 className="font-bold text-gray-100 truncate">{form.titleAr}</h4>
+            <h4 className="font-bold text-ink-2 truncate">{form.titleAr}</h4>
             <span className="text-[11px] text-gray-500 font-mono hidden sm:inline">{form.titleEn}</span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -752,8 +752,8 @@ function FormModal({ form, formHref, onClose }) {
                 <Icon name="externalLink" size={13} /> فتح في تبويب
               </a>
             )}
-            <button type="button" onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10" aria-label="إغلاق">
-              <Icon name="close" size={18} className="text-gray-300" />
+            <button type="button" onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-2" aria-label="إغلاق">
+              <Icon name="close" size={18} className="text-ink-2" />
             </button>
           </div>
         </div>
@@ -781,19 +781,19 @@ function MatrixModal({ open, onClose, onOpenForm }) {
   return (
     <div className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-3" onClick={onClose}>
       <div
-        className="bg-brand-navy border border-white/15 rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl"
+        className="bg-brand-navy border border-line rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         dir="rtl"
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/[0.03]">
-          <h4 className="font-bold text-gray-100">مصفوفة الـ21 نموذج الرسمي — الربط مع أودو</h4>
-          <button type="button" onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10" aria-label="إغلاق">
-            <Icon name="close" size={18} className="text-gray-300" />
+        <div className="flex items-center justify-between px-4 py-3 border-b border-line bg-chip">
+          <h4 className="font-bold text-ink-2">مصفوفة الـ21 نموذج الرسمي — الربط مع أودو</h4>
+          <button type="button" onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-2" aria-label="إغلاق">
+            <Icon name="close" size={18} className="text-ink-2" />
           </button>
         </div>
         <div className="overflow-auto">
           <table className="w-full text-right text-xs">
-            <thead className="bg-white/[0.04] text-gray-400 sticky top-0">
+            <thead className="bg-chip text-muted sticky top-0">
               <tr>
                 <th className="px-3 py-2 font-bold">#</th>
                 <th className="px-3 py-2 font-bold">النموذج</th>
@@ -807,14 +807,14 @@ function MatrixModal({ open, onClose, onOpenForm }) {
               {FORMS.map((f) => {
                 const meta = STATUS_META[f.finalStatus] || STATUS_META.done;
                 return (
-                  <tr key={f.n} className="hover:bg-white/[0.03]">
+                  <tr key={f.n} className="hover:bg-chip">
                     <td className="px-3 py-2 font-mono text-gray-500">{f.n}</td>
                     <td className="px-3 py-2">
-                      <div className="font-bold text-gray-100">{f.titleAr}</div>
+                      <div className="font-bold text-ink-2">{f.titleAr}</div>
                       <div className="text-[10px] text-gray-500 font-mono">{f.titleEn}</div>
                     </td>
-                    <td className="px-3 py-2 hidden sm:table-cell text-gray-300">{f.module}</td>
-                    <td className="px-3 py-2 hidden md:table-cell font-mono text-[10px] text-gray-400">{f.odooPath}</td>
+                    <td className="px-3 py-2 hidden sm:table-cell text-ink-2">{f.module}</td>
+                    <td className="px-3 py-2 hidden md:table-cell font-mono text-[10px] text-muted">{f.odooPath}</td>
                     <td className="px-3 py-2">
                       <span className={`inline-block rounded-full border px-2 py-0.5 text-[10px] font-bold ${TONE[meta.tone].chip}`}>
                         {meta.labelAr}
@@ -891,8 +891,8 @@ export default function OdooTrainingConsole() {
       {/* header */}
       <header className="mb-5 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-100">وضع التدريب — محاكي دورة مستندات Odoo</h2>
-          <p className="text-gray-400 mt-1 text-sm max-w-2xl leading-relaxed">
+          <h2 className="text-2xl sm:text-3xl font-bold text-ink-2">وضع التدريب — محاكي دورة مستندات Odoo</h2>
+          <p className="text-muted mt-1 text-sm max-w-2xl leading-relaxed">
             محاكاة تفاعلية لدورة Brandzo Hub المستندية الكاملة (12 مرحلة، 21 نموذجاً رسمياً). أكمل كل مرحلة لفتح
             التالية — والنظام يمنعك عند مخالفة أي قاعدة ذهبية. بيانات وهمية بالكامل، بلا اتصال حقيقي بـ Odoo.
           </p>
@@ -905,7 +905,7 @@ export default function OdooTrainingConsole() {
           <button
             type="button"
             onClick={() => dispatch({ type: 'RESET' })}
-            className="inline-flex items-center gap-2 rounded-lg border border-white/15 text-gray-300 px-3 py-1.5 text-sm font-bold hover:bg-white/5"
+            className="inline-flex items-center gap-2 rounded-lg border border-line text-ink-2 px-3 py-1.5 text-sm font-bold hover:bg-surface-2"
           >
             إعادة ضبط
           </button>
@@ -913,23 +913,23 @@ export default function OdooTrainingConsole() {
       </header>
 
       {/* order context */}
-      <div className="mb-4 rounded-2xl border border-white/10 bg-white/[0.03] p-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
+      <div className="mb-4 rounded-2xl border border-line bg-chip p-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
         <span className="text-gray-500">المنتج التجريبي:</span>
         <span className="font-mono font-bold text-brand-red">{o.product.sku}</span>
-        <span className="font-bold text-gray-100">{o.product.nameAr}</span>
-        <span className="text-gray-400">{o.product.category}</span>
+        <span className="font-bold text-ink-2">{o.product.nameAr}</span>
+        <span className="text-muted">{o.product.category}</span>
         <span className="text-gray-500">·</span>
-        <span className="text-gray-400">
-          المورد: <b className="text-gray-200">{o.supplier}</b>
+        <span className="text-muted">
+          المورد: <b className="text-ink-2">{o.supplier}</b>
         </span>
-        <span className="text-gray-400">
-          PO: <b className="font-mono text-gray-200">{o.poNumber}</b>
+        <span className="text-muted">
+          PO: <b className="font-mono text-ink-2">{o.poNumber}</b>
         </span>
-        <span className="text-gray-400">
-          الكمية: <b className="text-gray-200">{o.orderedQty}</b> {o.product.uom}
+        <span className="text-muted">
+          الكمية: <b className="text-ink-2">{o.orderedQty}</b> {o.product.uom}
         </span>
-        <span className="text-gray-400">
-          القيمة: <b className="text-gray-200">{fmt(o.poTotal)}</b>
+        <span className="text-muted">
+          القيمة: <b className="text-ink-2">{fmt(o.poTotal)}</b>
         </span>
       </div>
 
@@ -940,13 +940,13 @@ export default function OdooTrainingConsole() {
 
       {/* progress */}
       <div className="mb-4">
-        <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+        <div className="flex items-center justify-between text-xs text-muted mb-1">
           <span>تقدّم الدورة</span>
-          <span dir="ltr" className="font-bold text-gray-200 tabular-nums inline-block">
+          <span dir="ltr" className="font-bold text-ink-2 tabular-nums inline-block">
             {doneCount} / {STAGES.length}
           </span>
         </div>
-        <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+        <div className="h-2 rounded-full bg-chip overflow-hidden">
           <div
             className="h-full bg-gradient-to-l from-green-500 via-brand-yellow to-brand-red transition-all duration-500"
             style={{ width: `${(doneCount / STAGES.length) * 100}%` }}

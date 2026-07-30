@@ -76,8 +76,8 @@ export default function LoginForm() {
 
   if (checking) {
     return (
-      <div className="flex flex-col items-center gap-3 text-white/80">
-        <div className="w-10 h-10 border-4 border-white/20 border-t-brand-gold rounded-full animate-spin" />
+      <div className="flex flex-col items-center gap-3 text-ink/80">
+        <div className="w-10 h-10 border-4 border-line border-t-accent rounded-full animate-spin" />
         <span className="text-sm font-medium">جارٍ التحقّق...</span>
       </div>
     );
@@ -85,19 +85,19 @@ export default function LoginForm() {
 
   return (
     <div className="w-full max-w-md" dir="rtl">
-      <div className="bg-brand-navy/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-8 sm:p-10">
+      <div className="bg-brand-navy/70 backdrop-blur-xl border border-line rounded-2xl shadow-2xl p-8 sm:p-10">
         {/* الهوية */}
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-16 h-16 bg-brand-red rounded-2xl flex items-center justify-center font-bold text-3xl text-white shadow-lg mb-4">
             B
           </div>
-          <h1 className="text-2xl font-bold text-white">بوابة عمليات برند زو</h1>
-          <p className="text-gray-300 text-sm mt-1">سجّل دخولك للمتابعة</p>
+          <h1 className="text-2xl font-bold text-ink">بوابة عمليات برند زو</h1>
+          <p className="text-ink-2 text-sm mt-1">سجّل دخولك للمتابعة</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-gray-200 mb-1.5">
+            <label htmlFor="email" className="block text-sm font-semibold text-ink-2 mb-1.5">
               البريد الإلكتروني
             </label>
             <input
@@ -109,12 +109,12 @@ export default function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@brandzo.ly"
-              className="w-full text-left bg-white/5 border border-white/15 rounded-xl text-white px-4 py-3 focus:outline-none focus:border-brand-gold/60 focus:ring-2 focus:ring-brand-gold/20 transition"
+              className="w-full text-left bg-chip border border-line rounded-xl text-ink px-4 py-3 focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/20 transition"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-semibold text-gray-200 mb-1.5">
+            <label htmlFor="password" className="block text-sm font-semibold text-ink-2 mb-1.5">
               كلمة المرور
             </label>
             <div className="relative">
@@ -126,12 +126,12 @@ export default function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full text-left bg-white/5 border border-white/15 rounded-xl text-white px-4 py-3 pl-12 focus:outline-none focus:border-brand-gold/60 focus:ring-2 focus:ring-brand-gold/20 transition"
+                className="w-full text-left bg-chip border border-line rounded-xl text-ink px-4 py-3 pl-12 focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/20 transition"
               />
               <button
                 type="button"
                 onClick={() => setShowPass((s) => !s)}
-                className="absolute inset-y-0 left-0 px-3 flex items-center text-gray-400 hover:text-brand-gold transition text-xs font-bold"
+                className="absolute inset-y-0 left-0 px-3 flex items-center text-muted hover:text-accent transition text-xs font-bold"
                 aria-label={showPass ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
               >
                 {showPass ? 'إخفاء' : 'إظهار'}
@@ -170,14 +170,14 @@ export default function LoginForm() {
             type="button"
             onClick={handleReset}
             disabled={resetting}
-            className="w-full text-center text-xs text-gray-400 hover:text-brand-gold disabled:opacity-60 transition pt-1"
+            className="w-full text-center text-xs text-muted hover:text-accent disabled:opacity-60 transition pt-1"
           >
             {resetting ? 'جارٍ إرسال رابط إعادة التعيين...' : 'نسيت كلمة المرور؟'}
           </button>
         </form>
       </div>
 
-      <p className="text-center text-gray-400 text-xs mt-6">
+      <p className="text-center text-muted text-xs mt-6">
         نظام إدارة مستودعات برند زو &copy; 2026
       </p>
     </div>

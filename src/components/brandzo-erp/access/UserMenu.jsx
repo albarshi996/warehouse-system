@@ -35,7 +35,7 @@ export default function UserMenu() {
   const role = getRole(profile.role);
 
   return (
-    <div className="mb-3 rounded-xl bg-white/5 border border-white/10 p-3 text-right" dir="rtl">
+    <div className="mb-3 rounded-xl bg-chip border border-line p-3 text-right" dir="rtl">
       <div className="flex items-center gap-3">
         <div
           className="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0"
@@ -45,7 +45,7 @@ export default function UserMenu() {
           {role.emoji}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-white truncate">{profile.name}</p>
+          <p className="text-sm font-bold text-ink truncate">{profile.name}</p>
           <span
             className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5"
             style={{ backgroundColor: role.color + '22', color: role.color }}
@@ -58,7 +58,7 @@ export default function UserMenu() {
         type="button"
         onClick={handleLogout}
         disabled={loggingOut}
-        className="mt-3 w-full text-xs font-bold text-gray-200 hover:text-white bg-white/5 hover:bg-brand-red/80 border border-white/10 rounded-lg py-2 transition-colors disabled:opacity-60"
+        className="mt-3 w-full text-xs font-bold text-ink-2 hover:text-white bg-chip hover:bg-brand-red/80 border border-line rounded-lg py-2 transition-colors disabled:opacity-60"
       >
         {loggingOut ? 'جارٍ الخروج...' : '↩ تسجيل الخروج'}
       </button>

@@ -114,7 +114,7 @@ export default function ItemMaster() {
       <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-brand-navy">إدارة الأصناف (Items)</h2>
-          <p className="text-gray-200 mt-1 text-sm sm:text-base">
+          <p className="text-ink-2 mt-1 text-sm sm:text-base">
             إنشاء وتعديل بيانات أصناف Brandzo. كود SKU هو المعرف الفريد لكل صنف.
           </p>
         </div>
@@ -275,13 +275,13 @@ export default function ItemMaster() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-gray-200 italic">
+                  <td colSpan={9} className="p-8 text-center text-ink-2 italic">
                     جاري جلب البيانات من السحابة...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-gray-200 italic">
+                  <td colSpan={9} className="p-8 text-center text-ink-2 italic">
                     {items.length === 0
                       ? 'لا توجد أصناف بعد. ابدأ بإضافة صنف جديد.'
                       : 'لا توجد نتائج مطابقة للبحث.'}
@@ -329,7 +329,7 @@ export default function ItemMaster() {
                         )}
                       </td>
                       <td className="px-4 py-3 font-medium">{it.nameAr || '—'}</td>
-                      <td className="px-4 py-3 hidden md:table-cell text-gray-200">
+                      <td className="px-4 py-3 hidden md:table-cell text-ink-2">
                         {it.nameEn || '—'}
                       </td>
                       <td className="px-4 py-3 hidden sm:table-cell">{it.category || '—'}</td>
@@ -349,7 +349,7 @@ export default function ItemMaster() {
                         {shownQty}
                         {nearExpiry && <span className="mr-1 text-brand-red" title="تشغيلة قاربت الانتهاء">⏳</span>}
                         {liveQty == null && it.balance != null && (
-                          <span className="mr-1 text-[10px] text-gray-400" title="من شيت الأصناف — لا أرصدة تفصيلية">≈</span>
+                          <span className="mr-1 text-[10px] text-muted" title="من شيت الأصناف — لا أرصدة تفصيلية">≈</span>
                         )}
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">{it.minStock ?? 0}</td>
@@ -374,7 +374,7 @@ export default function ItemMaster() {
                             <button
                               type="button"
                               onClick={() => handleArchive(it)}
-                              className="text-xs font-bold text-gray-200 border border-gray-300 rounded-md px-3 py-1 hover:bg-gray-500 hover:text-white transition-colors"
+                              className="text-xs font-bold text-ink-2 border border-gray-300 rounded-md px-3 py-1 hover:bg-gray-500 hover:text-ink transition-colors"
                             >
                               أرشفة
                             </button>

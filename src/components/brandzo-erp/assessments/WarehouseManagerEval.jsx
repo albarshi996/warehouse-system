@@ -32,7 +32,7 @@ export default function WarehouseManagerEval() {
     return () => unsub();
   }, []);
 
-  if (!ready) return <p className="text-gray-300 text-sm py-10 text-center">جارٍ التحقّق…</p>;
+  if (!ready) return <p className="text-ink-2 text-sm py-10 text-center">جارٍ التحقّق…</p>;
 
   if (!me || !ALLOWED_ROLES.includes(me.role)) {
     return (
@@ -44,7 +44,7 @@ export default function WarehouseManagerEval() {
   }
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/20">
+    <div className="rounded-2xl overflow-hidden border border-line bg-surface">
       <iframe
         title="تقييم مرشّح — مدير المستودعات"
         srcDoc={evalHtml}
