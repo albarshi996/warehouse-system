@@ -85,7 +85,7 @@ export default function LoginForm() {
 
   return (
     <div className="w-full max-w-md" dir="rtl">
-      <div className="bg-brand-navy/70 backdrop-blur-xl border border-line rounded-2xl shadow-2xl p-8 sm:p-10">
+      <div className="bg-surface border border-line rounded-2xl shadow-card p-8 sm:p-10">
         {/* الهوية */}
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-16 h-16 bg-brand-red rounded-2xl flex items-center justify-center font-bold text-3xl text-white shadow-lg mb-4">

@@ -8,23 +8,15 @@ import PwaHead from '../components/pwa/PwaHead.astro';
 import LoginForm from '../components/brandzo-erp/access/LoginForm.jsx';
 ---
 
-<html lang="ar" dir="rtl">
+{/* bz-light: صفحة الدخول أوّل ما يراه المستخدم كل جلسة — تُوحَّد مع اللوحة
+    الفاتحة بدل تنافر «دخول داكن ← لوحة فاتحة». الخطّ من global.css (IBM Plex
+    مستضاف ذاتيًّا) فحُذف رابط Cairo الخارجيّ احترامًا لقاعدة العمل دون اتصال. */}
+<html lang="ar" dir="rtl" class="bz-light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>تسجيل الدخول - Brandzo Hub 2026</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
     <PwaHead />
-    <style>
-      body {
-        font-family: 'Cairo', sans-serif;
-      }
-    </style>
   </head>
 
   <body class="bz-page-bg min-h-screen flex items-center justify-center px-4 py-10">
