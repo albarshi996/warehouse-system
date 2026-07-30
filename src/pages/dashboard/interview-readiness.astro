@@ -29,17 +29,17 @@ const summary = readinessSummary(prep);
 
 const href = (p) => `${base}${p}`;
 /** لون درجة النضج بالنطاق — الأحمر للضعيف (تحذير) وحده. */
-const scoreTone = (s) => (s < 2 ? 'text-brand-red' : s < 3.5 ? 'text-brand-gold' : 'text-emerald-300');
+const scoreTone = (s) => (s < 2 ? 'text-brand-red' : s < 3.5 ? 'text-accent' : 'text-emerald-300');
 ---
 
-<DashboardLayout title="حزمة الاستعداد — البروفة" showGuide={false}>
+<DashboardLayout title="حزمة الاستعداد — البروفة" showGuide={false} light>
   <div class="text-right doc-prep" dir="rtl">
 
     {/* الترويسة */}
-    <div class="mb-8 rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-brand-gold/30 p-6 sm:p-10">
-      <p class="text-[11px] text-gray-400 mb-2">{prep.meta.refNumber} · الإصدار {prep.meta.version} · {prep.meta.issued}</p>
-      <h1 class="text-2xl sm:text-3xl font-extrabold text-white leading-snug mb-3">{prep.meta.title}</h1>
-      <p class="text-sm text-gray-200 leading-relaxed max-w-4xl">{prep.meta.purpose}</p>
+    <div class="mb-8 rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-accent/30 p-6 sm:p-10">
+      <p class="text-[11px] text-muted mb-2">{prep.meta.refNumber} · الإصدار {prep.meta.version} · {prep.meta.issued}</p>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-ink leading-snug mb-3">{prep.meta.title}</h1>
+      <p class="text-sm text-ink-2 leading-relaxed max-w-4xl">{prep.meta.purpose}</p>
       <div class="w-20 h-1 bg-brand-red rounded-full mt-4 mb-5"></div>
       <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-5">
         {[
@@ -49,16 +49,16 @@ const scoreTone = (s) => (s < 2 ? 'text-brand-red' : s < 3.5 ? 'text-brand-gold'
           { v: summary.objections, l: 'اعتراض بردّ' },
           { v: summary.evidence, l: 'دليل حيّ' },
         ].map((s) => (
-          <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+          <div class="bg-chip border border-line rounded-xl p-3 text-center">
             <div class="text-lg font-extrabold text-brand-yellow">{s.v}</div>
-            <div class="text-[10px] text-gray-300 mt-1">{s.l}</div>
+            <div class="text-[10px] text-ink-2 mt-1">{s.l}</div>
           </div>
         ))}
       </div>
       <div class="flex flex-wrap gap-3 no-print">
-        <a href={href('/dashboard/kpis')} class="px-4 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-xs font-bold hover:bg-white/20 transition-all inline-flex items-center gap-2"><Icon name="grid" size={15} /> التشخيص</a>
-        <a href={href('/dashboard/comparative-study')} class="px-4 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-xs font-bold hover:bg-white/20 transition-all inline-flex items-center gap-2"><Icon name="bookOpen" size={15} /> التقييم</a>
-        <a href={href('/dashboard/target-operating-model')} class="px-4 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-xs font-bold hover:bg-white/20 transition-all inline-flex items-center gap-2"><Icon name="workflows" size={15} /> التصميم والخارطة</a>
+        <a href={href('/dashboard/kpis')} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all inline-flex items-center gap-2"><Icon name="grid" size={15} /> التشخيص</a>
+        <a href={href('/dashboard/comparative-study')} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all inline-flex items-center gap-2"><Icon name="bookOpen" size={15} /> التقييم</a>
+        <a href={href('/dashboard/target-operating-model')} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all inline-flex items-center gap-2"><Icon name="workflows" size={15} /> التصميم والخارطة</a>
         <button type="button" id="printPrep" class="px-4 py-2 bg-brand-red text-white rounded-xl text-xs font-bold hover:bg-brand-red-dark transition-all inline-flex items-center gap-2"><Icon name="printer" size={15} /> طباعة الحزمة</button>
       </div>
     </div>
@@ -66,35 +66,35 @@ const scoreTone = (s) => (s < 2 ? 'text-brand-red' : s < 3.5 ? 'text-brand-gold'
     {/* المكوّن 1: بطاقة الأرقام الحرجة */}
     <section class="mb-12">
       <div class="flex items-center gap-2 mb-1">
-        <span class="w-6 h-6 rounded-full bg-brand-gold/20 text-brand-gold grid place-items-center text-xs font-bold shrink-0">1</span>
-        <h2 class="text-xl font-bold text-white">بطاقة الأرقام الحرجة</h2>
+        <span class="w-6 h-6 rounded-full bg-accent/20 text-accent grid place-items-center text-xs font-bold shrink-0">1</span>
+        <h2 class="text-xl font-bold text-ink">بطاقة الأرقام الحرجة</h2>
       </div>
-      <p class="text-xs text-gray-400 mb-5">ما تُسمّعه فورًا — كلّه مشتقٌّ من الدراسة المُتحقَّقة، لا رقم يُحفَظ خطأً.</p>
+      <p class="text-xs text-muted mb-5">ما تُسمّعه فورًا — كلّه مشتقٌّ من الدراسة المُتحقَّقة، لا رقم يُحفَظ خطأً.</p>
 
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         {nums.systemStats.map((s) => (
-          <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+          <div class="bg-chip border border-line rounded-xl p-4 text-center">
             <div class="text-2xl font-extrabold text-brand-yellow">{s.value}</div>
-            <div class="text-[10px] text-gray-300 mt-1 leading-snug">{s.label}</div>
+            <div class="text-[10px] text-ink-2 mt-1 leading-snug">{s.label}</div>
           </div>
         ))}
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div class="rounded-2xl bg-white/5 border border-white/10 p-5 text-center">
-          <div class="text-3xl font-extrabold text-brand-yellow">{nums.maturity}<span class="text-lg text-gray-400">/5</span></div>
-          <p class="text-[11px] text-gray-300 mt-1">متوسط النضج على {nums.dimensionsTotal} أبعاد</p>
+        <div class="rounded-2xl bg-chip border border-line p-5 text-center">
+          <div class="text-3xl font-extrabold text-brand-yellow">{nums.maturity}<span class="text-lg text-muted">/5</span></div>
+          <p class="text-[11px] text-ink-2 mt-1">متوسط النضج على {nums.dimensionsTotal} أبعاد</p>
         </div>
-        <div class="rounded-2xl bg-white/5 border border-white/10 p-5">
+        <div class="rounded-2xl bg-chip border border-line p-5">
           <p class="text-[11px] font-bold text-emerald-300 mb-2">الأقوى — نصونه</p>
           {nums.strongest.map((d) => (
-            <p class="text-xs text-gray-200 flex items-center justify-between gap-2 mb-1"><span>{d.nameAr}</span><span class={`font-extrabold ${scoreTone(d.score)}`}>{d.score}</span></p>
+            <p class="text-xs text-ink-2 flex items-center justify-between gap-2 mb-1"><span>{d.nameAr}</span><span class={`font-extrabold ${scoreTone(d.score)}`}>{d.score}</span></p>
           ))}
         </div>
-        <div class="rounded-2xl bg-white/5 border border-white/10 p-5">
+        <div class="rounded-2xl bg-chip border border-line p-5">
           <p class="text-[11px] font-bold text-brand-red mb-2">الأضعف — نملكه بخطة</p>
           {nums.weakest.map((d) => (
-            <p class="text-xs text-gray-200 flex items-center justify-between gap-2 mb-1"><span>{d.nameAr}</span><span class={`font-extrabold ${scoreTone(d.score)}`}>{d.score}</span></p>
+            <p class="text-xs text-ink-2 flex items-center justify-between gap-2 mb-1"><span>{d.nameAr}</span><span class={`font-extrabold ${scoreTone(d.score)}`}>{d.score}</span></p>
           ))}
         </div>
       </div>
@@ -106,9 +106,9 @@ const scoreTone = (s) => (s < 2 ? 'text-brand-red' : s < 3.5 ? 'text-brand-gold'
           { v: nums.recsTotal, l: `مبادرة في ${nums.waves} موجات` },
           { v: nums.quickWins, l: 'مكسب سريع (90 يومًا)' },
         ].map((s) => (
-          <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+          <div class="bg-chip border border-line rounded-xl p-3 text-center">
             <div class="text-lg font-extrabold text-brand-yellow">{s.v}</div>
-            <div class="text-[10px] text-gray-300 mt-1 leading-snug">{s.l}</div>
+            <div class="text-[10px] text-ink-2 mt-1 leading-snug">{s.l}</div>
           </div>
         ))}
       </div>
@@ -118,50 +118,50 @@ const scoreTone = (s) => (s < 2 ? 'text-brand-red' : s < 3.5 ? 'text-brand-gold'
     {/* المكوّن 2: مسار العرض */}
     <section class="mb-12">
       <div class="flex items-center gap-2 mb-1">
-        <span class="w-6 h-6 rounded-full bg-brand-gold/20 text-brand-gold grid place-items-center text-xs font-bold shrink-0">2</span>
-        <h2 class="text-xl font-bold text-white">مسار العرض — {prep.pitch.durationMin} دقيقة</h2>
+        <span class="w-6 h-6 rounded-full bg-accent/20 text-accent grid place-items-center text-xs font-bold shrink-0">2</span>
+        <h2 class="text-xl font-bold text-ink">مسار العرض — {prep.pitch.durationMin} دقيقة</h2>
       </div>
-      <p class="text-xs text-gray-400 mb-5">القوس السرديّ: افتتاحيةٌ ← ثلاث محطّاتٍ بشاشاتها ← خاتمة.</p>
+      <p class="text-xs text-muted mb-5">القوس السرديّ: افتتاحيةٌ ← ثلاث محطّاتٍ بشاشاتها ← خاتمة.</p>
 
-      <div class="rounded-xl border border-white/10 bg-white/5 p-4 mb-3">
-        <p class="text-[10px] font-bold text-gray-400 mb-1">الافتتاحية</p>
-        <p class="text-sm text-gray-100 leading-relaxed">{prep.pitch.opening}</p>
+      <div class="rounded-xl border border-line bg-chip p-4 mb-3">
+        <p class="text-[10px] font-bold text-muted mb-1">الافتتاحية</p>
+        <p class="text-sm text-ink-2 leading-relaxed">{prep.pitch.opening}</p>
       </div>
 
       <div class="space-y-3">
         {prep.pitch.stations.map((s) => (
-          <div class="rounded-2xl bg-white/5 border border-white/10 p-5">
+          <div class="rounded-2xl bg-chip border border-line p-5">
             <div class="flex items-center justify-between gap-3 flex-wrap mb-2">
               <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded-lg bg-brand-gold/15 text-brand-gold text-[10px] font-bold">المحطّة {s.step} · {s.phase}</span>
-                <span class="text-[10px] text-gray-400">{s.minutes} دقائق</span>
+                <span class="px-2 py-0.5 rounded-lg bg-accent/15 text-accent text-[10px] font-bold">المحطّة {s.step} · {s.phase}</span>
+                <span class="text-[10px] text-muted">{s.minutes} دقائق</span>
               </div>
-              <a href={href(s.page)} class="text-[11px] text-brand-yellow underline hover:text-white no-print inline-flex items-center gap-1"><Icon name="externalLink" size={12} /> افتح الشاشة</a>
+              <a href={href(s.page)} class="text-[11px] text-brand-yellow underline hover:text-ink no-print inline-flex items-center gap-1"><Icon name="externalLink" size={12} /> افتح الشاشة</a>
             </div>
-            <p class="text-sm text-gray-100 leading-relaxed">{s.say}</p>
+            <p class="text-sm text-ink-2 leading-relaxed">{s.say}</p>
           </div>
         ))}
       </div>
 
-      <div class="rounded-xl border border-brand-gold/30 bg-brand-gold/5 p-4 mt-3">
-        <p class="text-[10px] font-bold text-brand-gold mb-1">الخاتمة</p>
-        <p class="text-sm text-gray-100 leading-relaxed">{prep.pitch.closing}</p>
+      <div class="rounded-xl border border-accent/30 bg-accent/5 p-4 mt-3">
+        <p class="text-[10px] font-bold text-accent mb-1">الخاتمة</p>
+        <p class="text-sm text-ink-2 leading-relaxed">{prep.pitch.closing}</p>
       </div>
     </section>
 
     {/* المكوّن 3: بنك الأسئلة بأجوبة نموذجية */}
     <section class="mb-12">
       <div class="flex items-center gap-2 mb-1">
-        <span class="w-6 h-6 rounded-full bg-brand-gold/20 text-brand-gold grid place-items-center text-xs font-bold shrink-0">3</span>
-        <h2 class="text-xl font-bold text-white">بنك الأسئلة بأجوبةٍ نموذجية</h2>
+        <span class="w-6 h-6 rounded-full bg-accent/20 text-accent grid place-items-center text-xs font-bold shrink-0">3</span>
+        <h2 class="text-xl font-bold text-ink">بنك الأسئلة بأجوبةٍ نموذجية</h2>
       </div>
-      <p class="text-xs text-gray-400 mb-5">أسئلة المُقيّم المتوقّعة، وكل جوابٍ مسنودٌ بشاشةٍ حيّة تُثبته.</p>
+      <p class="text-xs text-muted mb-5">أسئلة المُقيّم المتوقّعة، وكل جوابٍ مسنودٌ بشاشةٍ حيّة تُثبته.</p>
       <div class="space-y-3">
         {prep.qa.map((q, i) => (
-          <div class="rounded-2xl bg-white/5 border border-white/10 p-5">
-            <h3 class="font-bold text-white text-sm leading-snug mb-2"><span class="text-brand-yellow">س{i + 1}.</span> {q.question}</h3>
-            <p class="text-xs text-gray-200 leading-relaxed mb-2"><span class="font-bold text-brand-gold">الجواب: </span>{q.answer}</p>
-            <a href={href(q.evidencePage)} class="text-[11px] text-brand-yellow underline hover:text-white no-print inline-flex items-center gap-1"><Icon name="externalLink" size={12} /> الدليل الحيّ</a>
+          <div class="rounded-2xl bg-chip border border-line p-5">
+            <h3 class="font-bold text-ink text-sm leading-snug mb-2"><span class="text-brand-yellow">س{i + 1}.</span> {q.question}</h3>
+            <p class="text-xs text-ink-2 leading-relaxed mb-2"><span class="font-bold text-accent">الجواب: </span>{q.answer}</p>
+            <a href={href(q.evidencePage)} class="text-[11px] text-brand-yellow underline hover:text-ink no-print inline-flex items-center gap-1"><Icon name="externalLink" size={12} /> الدليل الحيّ</a>
           </div>
         ))}
       </div>
@@ -170,23 +170,23 @@ const scoreTone = (s) => (s < 2 ? 'text-brand-red' : s < 3.5 ? 'text-brand-gold'
     {/* المكوّن 4: الردّ على الاعتراضات */}
     <section class="mb-12">
       <div class="flex items-center gap-2 mb-1">
-        <span class="w-6 h-6 rounded-full bg-brand-gold/20 text-brand-gold grid place-items-center text-xs font-bold shrink-0">4</span>
-        <h2 class="text-xl font-bold text-white">الردّ على الاعتراضات — تحويل الضعف إلى خطة</h2>
+        <span class="w-6 h-6 rounded-full bg-accent/20 text-accent grid place-items-center text-xs font-bold shrink-0">4</span>
+        <h2 class="text-xl font-bold text-ink">الردّ على الاعتراضات — تحويل الضعف إلى خطة</h2>
       </div>
-      <p class="text-xs text-gray-400 mb-5">كل طعنةٍ صعبةٍ تُقابَل بردٍّ مسنودٍ ببُعد نضجها الحقيقيّ وبالموجة التي تُغلقها.</p>
+      <p class="text-xs text-muted mb-5">كل طعنةٍ صعبةٍ تُقابَل بردٍّ مسنودٍ ببُعد نضجها الحقيقيّ وبالموجة التي تُغلقها.</p>
       <div class="space-y-4">
         {objections.map((o) => (
-          <div class="rounded-2xl bg-white/5 border border-white/10 p-5">
+          <div class="rounded-2xl bg-chip border border-line p-5">
             <div class="rounded-xl border border-brand-red/40 bg-brand-red/5 p-3 mb-3">
               <div class="flex items-start gap-2">
                 <Icon name="alertTriangle" size={16} class="text-brand-red shrink-0 mt-0.5" />
-                <p class="text-sm text-gray-100 leading-relaxed">{o.objection}</p>
+                <p class="text-sm text-ink-2 leading-relaxed">{o.objection}</p>
               </div>
             </div>
-            <p class="text-xs text-gray-200 leading-relaxed mb-3"><span class="font-bold text-emerald-300">الردّ: </span>{o.rebuttal}</p>
+            <p class="text-xs text-ink-2 leading-relaxed mb-3"><span class="font-bold text-emerald-300">الردّ: </span>{o.rebuttal}</p>
             <div class="flex flex-wrap items-center gap-2 text-[10px]">
-              <span class="px-2 py-0.5 rounded-lg border border-white/15 bg-white/5 text-gray-300">البُعد: {o.dimensionName} <span class={`font-bold ${scoreTone(o.dimensionScore)}`}>{o.dimensionScore}/5</span></span>
-              <span class="px-2 py-0.5 rounded-lg border border-brand-gold/30 bg-brand-gold/5 text-brand-gold">تُغلقه موجة: {o.linkedWaveHorizon} ({o.waveWindow})</span>
+              <span class="px-2 py-0.5 rounded-lg border border-line bg-chip text-ink-2">البُعد: {o.dimensionName} <span class={`font-bold ${scoreTone(o.dimensionScore)}`}>{o.dimensionScore}/5</span></span>
+              <span class="px-2 py-0.5 rounded-lg border border-accent/30 bg-accent/5 text-accent">تُغلقه موجة: {o.linkedWaveHorizon} ({o.waveWindow})</span>
             </div>
           </div>
         ))}
@@ -196,15 +196,15 @@ const scoreTone = (s) => (s < 2 ? 'text-brand-red' : s < 3.5 ? 'text-brand-gold'
     {/* المكوّن 5: خارطة الأدلّة */}
     <section class="mb-12">
       <div class="flex items-center gap-2 mb-1">
-        <span class="w-6 h-6 rounded-full bg-brand-gold/20 text-brand-gold grid place-items-center text-xs font-bold shrink-0">5</span>
-        <h2 class="text-xl font-bold text-white">خارطة الأدلّة — كل ادّعاءٍ وشاشته</h2>
+        <span class="w-6 h-6 rounded-full bg-accent/20 text-accent grid place-items-center text-xs font-bold shrink-0">5</span>
+        <h2 class="text-xl font-bold text-ink">خارطة الأدلّة — كل ادّعاءٍ وشاشته</h2>
       </div>
-      <p class="text-xs text-gray-400 mb-5">لا تقل ما لا يُبرهَن؛ لكل بندٍ شاشةٌ تفتحها وما تُريه فيها.</p>
-      <div class="rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
+      <p class="text-xs text-muted mb-5">لا تقل ما لا يُبرهَن؛ لكل بندٍ شاشةٌ تفتحها وما تُريه فيها.</p>
+      <div class="rounded-2xl bg-chip border border-line overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-right border-collapse min-w-[720px]">
             <thead>
-              <tr class="text-gray-300 border-b border-white/20 text-[10px]">
+              <tr class="text-ink-2 border-b border-line text-[10px]">
                 <th class="p-3 font-bold">الادّعاء</th>
                 <th class="p-3 font-bold">ما تُريه</th>
                 <th class="p-3 font-bold no-print">الشاشة</th>
@@ -212,10 +212,10 @@ const scoreTone = (s) => (s < 2 ? 'text-brand-red' : s < 3.5 ? 'text-brand-gold'
             </thead>
             <tbody>
               {prep.evidenceMap.map((e) => (
-                <tr class="border-b border-white/5 align-top">
-                  <td class="p-3 text-gray-100 font-bold">{e.claim}</td>
-                  <td class="p-3 text-gray-300">{e.whatToShow}</td>
-                  <td class="p-3 no-print"><a href={href(e.page)} class="text-brand-yellow underline hover:text-white inline-flex items-center gap-1"><Icon name="externalLink" size={12} /> افتح</a></td>
+                <tr class="border-b border-line align-top">
+                  <td class="p-3 text-ink-2 font-bold">{e.claim}</td>
+                  <td class="p-3 text-ink-2">{e.whatToShow}</td>
+                  <td class="p-3 no-print"><a href={href(e.page)} class="text-brand-yellow underline hover:text-ink inline-flex items-center gap-1"><Icon name="externalLink" size={12} /> افتح</a></td>
                 </tr>
               ))}
             </tbody>
@@ -227,28 +227,28 @@ const scoreTone = (s) => (s < 2 ? 'text-brand-red' : s < 3.5 ? 'text-brand-gold'
     {/* المكوّن 6: بطاقة الرؤية */}
     <section class="mb-10">
       <div class="flex items-center gap-2 mb-1">
-        <span class="w-6 h-6 rounded-full bg-brand-gold/20 text-brand-gold grid place-items-center text-xs font-bold shrink-0">6</span>
-        <h2 class="text-xl font-bold text-white">بطاقة الرؤية — الختام في ثلاثين ثانية</h2>
+        <span class="w-6 h-6 rounded-full bg-accent/20 text-accent grid place-items-center text-xs font-bold shrink-0">6</span>
+        <h2 class="text-xl font-bold text-ink">بطاقة الرؤية — الختام في ثلاثين ثانية</h2>
       </div>
-      <div class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-brand-gold/25 p-6 mt-3">
-        <p class="text-sm text-gray-100 leading-relaxed mb-4">{prep.vision.thirtySec}</p>
-        <p class="text-base text-brand-yellow font-bold leading-relaxed border-r-2 border-brand-gold pr-3">{prep.vision.closingLine}</p>
+      <div class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-accent/25 p-6 mt-3">
+        <p class="text-sm text-ink-2 leading-relaxed mb-4">{prep.vision.thirtySec}</p>
+        <p class="text-base text-brand-yellow font-bold leading-relaxed border-r-2 border-accent pr-3">{prep.vision.closingLine}</p>
       </div>
     </section>
 
     {/* الاعتماد */}
-    <section class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-white/10 p-6">
-      <h2 class="text-sm font-bold text-white mb-6 text-center">اعتماد الحزمة</h2>
+    <section class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-line p-6">
+      <h2 class="text-sm font-bold text-ink mb-6 text-center">اعتماد الحزمة</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto text-center">
         <div>
           <img src={href('/identity/signatures/signature-2.png')} alt="توقيع محمد البرشي" class="h-16 mx-auto mb-2 object-contain" />
-          <p class="font-bold text-white text-sm">محمد البرشي</p>
-          <p class="text-[11px] text-gray-400">مدير إدارة السلاسل والإمداد والمخازن</p>
+          <p class="font-bold text-ink text-sm">محمد البرشي</p>
+          <p class="text-[11px] text-muted">مدير إدارة السلاسل والإمداد والمخازن</p>
         </div>
         <div>
           <img src={href('/identity/signatures/signature-1.png')} alt="توقيع رمزي الباش" class="h-16 mx-auto mb-2 object-contain" />
-          <p class="font-bold text-white text-sm">رمزي الباش</p>
-          <p class="text-[11px] text-gray-400">مدير إدارة الخدمات اللوجستية والخدمية</p>
+          <p class="font-bold text-ink text-sm">رمزي الباش</p>
+          <p class="text-[11px] text-muted">مدير إدارة الخدمات اللوجستية والخدمية</p>
         </div>
       </div>
     </section>

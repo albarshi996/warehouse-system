@@ -33,35 +33,35 @@ const foundation = foundationPillars(tom, study);
 const waves = transformationWaves(tom, study);
 
 /** لون شريط النضج بالنطاق — الأحمر للضعيف (تحذير) وحده. */
-const barColor = (score) => (score < 2 ? 'bg-brand-red' : score < 3.5 ? 'bg-brand-gold' : 'bg-emerald-500');
+const barColor = (score) => (score < 2 ? 'bg-brand-red' : score < 3.5 ? 'bg-accent' : 'bg-emerald-500');
 const bandChip = {
   'ضعيف': 'border-brand-red/50 bg-brand-red/10 text-brand-red',
-  'متوسط': 'border-brand-gold/50 bg-brand-gold/10 text-brand-gold',
+  'متوسط': 'border-accent/50 bg-accent/10 text-accent',
   'متين': 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
 };
 /** شارة خطورة الفجوة — تدرّجٌ محايد، والأحمر للحرجة وحدها. */
 const sevChip = {
   'حرجة': 'border-brand-red/50 bg-brand-red/10 text-brand-red',
-  'عالية': 'border-brand-gold/50 bg-brand-gold/10 text-brand-gold',
-  'متوسطة': 'border-white/20 bg-white/5 text-gray-300',
-  'منخفضة': 'border-white/15 bg-white/5 text-gray-400',
+  'عالية': 'border-accent/50 bg-accent/10 text-accent',
+  'متوسطة': 'border-line bg-chip text-ink-2',
+  'منخفضة': 'border-line bg-chip text-muted',
 };
 const impactChip = {
-  'تحويلي': 'border-brand-gold/50 bg-brand-gold/10 text-brand-gold',
-  'مرتفع': 'border-white/20 bg-white/5 text-gray-200',
-  'متوسط': 'border-white/15 bg-white/5 text-gray-400',
+  'تحويلي': 'border-accent/50 bg-accent/10 text-accent',
+  'مرتفع': 'border-line bg-chip text-ink-2',
+  'متوسط': 'border-line bg-chip text-muted',
 };
 const waveIcon = ['clipboardList', 'workflows', 'mapPin'];
 ---
 
-<DashboardLayout title="الهيكل التشغيليّ المستهدف" showGuide={false}>
+<DashboardLayout title="الهيكل التشغيليّ المستهدف" showGuide={false} light>
   <div class="text-right doc-tom" dir="rtl">
 
     {/* الترويسة */}
-    <div class="mb-8 rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-brand-gold/30 p-6 sm:p-10">
-      <p class="text-[11px] text-gray-400 mb-2">{tom.meta.refNumber} · الإصدار {tom.meta.version} · {tom.meta.issued}</p>
-      <h1 class="text-2xl sm:text-3xl font-extrabold text-white leading-snug mb-3">{tom.meta.title}</h1>
-      <p class="text-sm text-gray-200 leading-relaxed max-w-4xl">{tom.meta.purpose}</p>
+    <div class="mb-8 rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-accent/30 p-6 sm:p-10">
+      <p class="text-[11px] text-muted mb-2">{tom.meta.refNumber} · الإصدار {tom.meta.version} · {tom.meta.issued}</p>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-ink leading-snug mb-3">{tom.meta.title}</h1>
+      <p class="text-sm text-ink-2 leading-relaxed max-w-4xl">{tom.meta.purpose}</p>
       <div class="w-20 h-1 bg-brand-red rounded-full mt-4 mb-5"></div>
 
       {/* شريط مراحل النموذج التشغيلي المستهدف */}
@@ -72,19 +72,19 @@ const waveIcon = ['clipboardList', 'workflows', 'mapPin'];
           { n: '3', t: 'تصميم', d: 'هذه الوثيقة', done: false },
           { n: '4', t: 'خارطة طريق', d: 'هذه الوثيقة', done: false },
         ].map((p) => (
-          <div class={`rounded-xl border p-3 ${p.done ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-brand-gold/40 bg-brand-gold/5'}`}>
+          <div class={`rounded-xl border p-3 ${p.done ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-accent/40 bg-accent/5'}`}>
             <div class="flex items-center gap-2">
-              <span class={`w-5 h-5 rounded-full grid place-items-center text-[10px] font-bold shrink-0 ${p.done ? 'bg-emerald-500/20 text-emerald-300' : 'bg-brand-gold/20 text-brand-gold'}`}>{p.n}</span>
-              <span class="text-xs font-bold text-white">{p.t}</span>
+              <span class={`w-5 h-5 rounded-full grid place-items-center text-[10px] font-bold shrink-0 ${p.done ? 'bg-emerald-500/20 text-emerald-300' : 'bg-accent/20 text-accent'}`}>{p.n}</span>
+              <span class="text-xs font-bold text-ink">{p.t}</span>
             </div>
-            <p class="text-[10px] text-gray-400 mt-1 pr-7">{p.d}</p>
+            <p class="text-[10px] text-muted mt-1 pr-7">{p.d}</p>
           </div>
         ))}
       </div>
 
       <div class="flex flex-wrap gap-3 no-print">
-        <a href={`${base}/dashboard/kpis`} class="px-4 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-xs font-bold hover:bg-white/20 transition-all inline-flex items-center gap-2"><Icon name="grid" size={15} /> لوحة المؤشرات (التشخيص)</a>
-        <a href={`${base}/dashboard/comparative-study`} class="px-4 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-xs font-bold hover:bg-white/20 transition-all inline-flex items-center gap-2"><Icon name="bookOpen" size={15} /> الدراسة المقارنة (التقييم)</a>
+        <a href={`${base}/dashboard/kpis`} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all inline-flex items-center gap-2"><Icon name="grid" size={15} /> لوحة المؤشرات (التشخيص)</a>
+        <a href={`${base}/dashboard/comparative-study`} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all inline-flex items-center gap-2"><Icon name="bookOpen" size={15} /> الدراسة المقارنة (التقييم)</a>
         <button type="button" id="printTom" class="px-4 py-2 bg-brand-red text-white rounded-xl text-xs font-bold hover:bg-brand-red-dark transition-all inline-flex items-center gap-2"><Icon name="printer" size={15} /> طباعة الوثيقة</button>
       </div>
     </div>
@@ -100,15 +100,15 @@ const waveIcon = ['clipboardList', 'workflows', 'mapPin'];
           { v: summary.gapsTotal, l: 'فجوة في الخارطة' },
           { v: summary.recsTotal, l: `مبادرة في ${summary.waves} موجات` },
         ].map((s) => (
-          <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+          <div class="bg-chip border border-line rounded-xl p-3 text-center">
             <div class="text-xl font-extrabold text-brand-yellow">{s.v}</div>
-            <div class="text-[10px] text-gray-300 mt-1 leading-snug">{s.l}</div>
+            <div class="text-[10px] text-ink-2 mt-1 leading-snug">{s.l}</div>
           </div>
         ))}
       </div>
-      <div class="mt-5 rounded-2xl bg-white/5 border border-white/10 p-5 space-y-2">
+      <div class="mt-5 rounded-2xl bg-chip border border-line p-5 space-y-2">
         {tom.principles.map((p) => (
-          <p class="text-xs text-gray-100 leading-relaxed flex gap-2"><span class="text-brand-yellow shrink-0">—</span><span>{p}</span></p>
+          <p class="text-xs text-ink-2 leading-relaxed flex gap-2"><span class="text-brand-yellow shrink-0">—</span><span>{p}</span></p>
         ))}
       </div>
     </section>
@@ -116,22 +116,22 @@ const waveIcon = ['clipboardList', 'workflows', 'mapPin'];
     {/* الطبقة الأولى: أين نحن (النضج) */}
     <section class="mb-12">
       <div class="flex items-center gap-2 mb-1">
-        <Icon name="grid" size={18} class="text-brand-gold" />
-        <h2 class="text-xl font-bold text-white">الطبقة الأولى — أين نحن: النضج على عشرة أبعاد</h2>
+        <Icon name="grid" size={18} class="text-accent" />
+        <h2 class="text-xl font-bold text-ink">الطبقة الأولى — أين نحن: النضج على عشرة أبعاد</h2>
       </div>
-      <p class="text-xs text-gray-400 mb-5">مرتّبة من الأضعف؛ ما دون درجتين تدخّلٌ عاجل. السلّم: 0 غائب · 3 مبنيّ ومختبَر · 5 مستوى عالميّ — والأرقام من الدراسة المقارنة المُتحقَّقة.</p>
+      <p class="text-xs text-muted mb-5">مرتّبة من الأضعف؛ ما دون درجتين تدخّلٌ عاجل. السلّم: 0 غائب · 3 مبنيّ ومختبَر · 5 مستوى عالميّ — والأرقام من الدراسة المقارنة المُتحقَّقة.</p>
 
-      <div class="rounded-2xl bg-white/5 border border-white/10 p-5 sm:p-6 space-y-4">
+      <div class="rounded-2xl bg-chip border border-line p-5 sm:p-6 space-y-4">
         {snapshot.dimensions.map((d) => (
           <div>
             <div class="flex items-center justify-between gap-3 mb-1.5 flex-wrap">
               <div class="flex items-center gap-2">
-                <h3 class="font-bold text-white text-sm">{d.nameAr}</h3>
+                <h3 class="font-bold text-ink text-sm">{d.nameAr}</h3>
                 <span class={`px-2 py-0.5 rounded-lg border text-[10px] font-bold ${bandChip[d.band]}`}>{d.band}</span>
               </div>
               <span class="text-brand-yellow font-extrabold text-sm">{d.score}/5</span>
             </div>
-            <div class="h-2.5 rounded-full bg-white/10 overflow-hidden">
+            <div class="h-2.5 rounded-full bg-chip overflow-hidden">
               <div class={`h-full rounded-full ${barColor(d.score)}`} style={`width:${(d.score / 5) * 100}%`}></div>
             </div>
           </div>
@@ -141,7 +141,7 @@ const waveIcon = ['clipboardList', 'workflows', 'mapPin'];
       {snapshot.interveneNow.length > 0 && (
         <div class="mt-4 rounded-xl border border-brand-red/40 bg-brand-red/5 p-4 flex gap-3">
           <Icon name="alertTriangle" size={18} class="text-brand-red shrink-0 mt-0.5" />
-          <p class="text-xs text-gray-100 leading-relaxed">
+          <p class="text-xs text-ink-2 leading-relaxed">
             <span class="font-bold text-brand-red">تدخّلٌ عاجل: </span>
             {snapshot.interveneNow.map((d) => `${d.nameAr} (${d.score})`).join(' · ')} — هذه أوسع مسافةٍ بيننا وبين النماذج العالمية، وعليها تتركّز الموجة الأولى.
           </p>
@@ -152,47 +152,47 @@ const waveIcon = ['clipboardList', 'workflows', 'mapPin'];
     {/* الطبقة الثانية: الهيكل المستهدف (التصميم) */}
     <section class="mb-12">
       <div class="flex items-center gap-2 mb-1">
-        <Icon name="workflows" size={18} class="text-brand-gold" />
-        <h2 class="text-xl font-bold text-white">الطبقة الثانية — الهيكل المستهدف: التصميم</h2>
+        <Icon name="workflows" size={18} class="text-accent" />
+        <h2 class="text-xl font-bold text-ink">الطبقة الثانية — الهيكل المستهدف: التصميم</h2>
       </div>
-      <p class="text-xs text-gray-400 mb-5">كل بُعدٍ مستهدفٍ: من أين ننطلق، وإلى أين نقصد، وأيّ فجواتٍ مُدلَّلةٍ يغلقها. لا حالة تُكتب هنا إلا ولها فجوةٌ في الدراسة.</p>
+      <p class="text-xs text-muted mb-5">كل بُعدٍ مستهدفٍ: من أين ننطلق، وإلى أين نقصد، وأيّ فجواتٍ مُدلَّلةٍ يغلقها. لا حالة تُكتب هنا إلا ولها فجوةٌ في الدراسة.</p>
 
       {/* الهيكل مزدوج الأفق */}
-      <div class="rounded-2xl bg-white/5 border border-white/10 p-5 sm:p-6 mb-6">
+      <div class="rounded-2xl bg-chip border border-line p-5 sm:p-6 mb-6">
         <h3 class="font-bold text-brand-yellow text-sm mb-1">الهيكل مزدوج الأفق</h3>
-        <p class="text-xs text-gray-300 leading-relaxed mb-5">{tom.targetArchitecture.summary}</p>
+        <p class="text-xs text-ink-2 leading-relaxed mb-5">{tom.targetArchitecture.summary}</p>
         <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-4 items-stretch">
           {/* الآن */}
           <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
             <p class="text-[10px] text-emerald-300 font-bold mb-1">المصدر الآن</p>
-            <p class="font-bold text-white text-sm mb-1">{tom.targetArchitecture.now.engine}</p>
-            <p class="text-[11px] text-gray-400 mb-3">{tom.targetArchitecture.now.role}</p>
+            <p class="font-bold text-ink text-sm mb-1">{tom.targetArchitecture.now.engine}</p>
+            <p class="text-[11px] text-muted mb-3">{tom.targetArchitecture.now.role}</p>
             <ul class="space-y-1.5">
               {tom.targetArchitecture.now.points.map((pt) => (
-                <li class="text-[11px] text-gray-200 leading-relaxed flex gap-1.5"><span class="text-emerald-400 shrink-0">•</span><span>{pt}</span></li>
+                <li class="text-[11px] text-ink-2 leading-relaxed flex gap-1.5"><span class="text-emerald-400 shrink-0">•</span><span>{pt}</span></li>
               ))}
             </ul>
           </div>
           {/* الجسر */}
-          <div class="rounded-xl border border-brand-gold/40 bg-brand-gold/5 p-4 lg:w-64 flex flex-col">
+          <div class="rounded-xl border border-accent/40 bg-accent/5 p-4 lg:w-64 flex flex-col">
             <div class="flex items-center gap-1.5 mb-1">
-              <Icon name="workflows" size={14} class="text-brand-gold" />
-              <p class="text-[10px] text-brand-gold font-bold">{tom.targetArchitecture.bridge.label}</p>
+              <Icon name="workflows" size={14} class="text-accent" />
+              <p class="text-[10px] text-accent font-bold">{tom.targetArchitecture.bridge.label}</p>
             </div>
             <ul class="space-y-1.5 mt-1">
               {tom.targetArchitecture.bridge.points.map((pt) => (
-                <li class="text-[11px] text-gray-200 leading-relaxed flex gap-1.5"><span class="text-brand-gold shrink-0">•</span><span>{pt}</span></li>
+                <li class="text-[11px] text-ink-2 leading-relaxed flex gap-1.5"><span class="text-accent shrink-0">•</span><span>{pt}</span></li>
               ))}
             </ul>
           </div>
           {/* الوجهة */}
-          <div class="rounded-xl border border-white/15 bg-white/5 p-4">
-            <p class="text-[10px] text-gray-300 font-bold mb-1">الوجهة عند M2</p>
-            <p class="font-bold text-white text-sm mb-1">{tom.targetArchitecture.destination.engine}</p>
-            <p class="text-[11px] text-gray-400 mb-3">{tom.targetArchitecture.destination.role}</p>
+          <div class="rounded-xl border border-line bg-chip p-4">
+            <p class="text-[10px] text-ink-2 font-bold mb-1">الوجهة عند M2</p>
+            <p class="font-bold text-ink text-sm mb-1">{tom.targetArchitecture.destination.engine}</p>
+            <p class="text-[11px] text-muted mb-3">{tom.targetArchitecture.destination.role}</p>
             <ul class="space-y-1.5">
               {tom.targetArchitecture.destination.points.map((pt) => (
-                <li class="text-[11px] text-gray-200 leading-relaxed flex gap-1.5"><span class="text-gray-400 shrink-0">•</span><span>{pt}</span></li>
+                <li class="text-[11px] text-ink-2 leading-relaxed flex gap-1.5"><span class="text-muted shrink-0">•</span><span>{pt}</span></li>
               ))}
             </ul>
           </div>
@@ -202,22 +202,22 @@ const waveIcon = ['clipboardList', 'workflows', 'mapPin'];
       {/* أبعاد التصميم */}
       <div class="space-y-4">
         {design.map((d) => (
-          <div class="rounded-2xl bg-white/5 border border-white/10 p-5">
+          <div class="rounded-2xl bg-chip border border-line p-5">
             <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
-              <h3 class="font-bold text-white text-sm leading-snug">{d.name}</h3>
+              <h3 class="font-bold text-ink text-sm leading-snug">{d.name}</h3>
               <div class="flex items-center gap-2 shrink-0">
-                <span class="text-[10px] text-gray-400">النضج</span>
+                <span class="text-[10px] text-muted">النضج</span>
                 <span class={`px-2 py-0.5 rounded-lg border text-[10px] font-bold ${bandChip[d.band]}`}>{d.score}/5 · {d.band}</span>
               </div>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
-              <div class="rounded-xl bg-white/5 border border-white/10 p-3">
-                <p class="text-[10px] font-bold text-gray-400 mb-1">من أين ننطلق</p>
-                <p class="text-xs text-gray-200 leading-relaxed">{d.currentState}</p>
+              <div class="rounded-xl bg-chip border border-line p-3">
+                <p class="text-[10px] font-bold text-muted mb-1">من أين ننطلق</p>
+                <p class="text-xs text-ink-2 leading-relaxed">{d.currentState}</p>
               </div>
-              <div class="rounded-xl bg-brand-gold/5 border border-brand-gold/25 p-3">
-                <p class="text-[10px] font-bold text-brand-gold mb-1">إلى أين نقصد</p>
-                <p class="text-xs text-gray-100 leading-relaxed">{d.targetState}</p>
+              <div class="rounded-xl bg-accent/5 border border-accent/25 p-3">
+                <p class="text-[10px] font-bold text-accent mb-1">إلى أين نقصد</p>
+                <p class="text-xs text-ink-2 leading-relaxed">{d.targetState}</p>
               </div>
             </div>
             <div class="flex flex-wrap gap-1.5">
@@ -233,15 +233,15 @@ const waveIcon = ['clipboardList', 'workflows', 'mapPin'];
       {/* الأساس المتين */}
       <div class="mt-6 rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-5">
         <h3 class="font-bold text-emerald-300 text-sm mb-1">الأساس المتين — يُصان في التحوّل</h3>
-        <p class="text-[11px] text-gray-400 mb-4">{tom.foundation.note}</p>
+        <p class="text-[11px] text-muted mb-4">{tom.foundation.note}</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {foundation.map((p) => (
-            <div class="rounded-xl bg-white/5 border border-white/10 p-3">
+            <div class="rounded-xl bg-chip border border-line p-3">
               <div class="flex items-center justify-between gap-2 mb-1">
-                <p class="font-bold text-white text-xs">{p.label}</p>
+                <p class="font-bold text-ink text-xs">{p.label}</p>
                 <span class="text-emerald-300 font-extrabold text-xs">{p.score}/5</span>
               </div>
-              <p class="text-[11px] text-gray-300 leading-relaxed">{p.why}</p>
+              <p class="text-[11px] text-ink-2 leading-relaxed">{p.why}</p>
             </div>
           ))}
         </div>
@@ -251,34 +251,34 @@ const waveIcon = ['clipboardList', 'workflows', 'mapPin'];
     {/* الطبقة الثالثة: خارطة التحوّل (الموجات) */}
     <section class="mb-10">
       <div class="flex items-center gap-2 mb-1">
-        <Icon name="mapPin" size={18} class="text-brand-gold" />
-        <h2 class="text-xl font-bold text-white">الطبقة الثالثة — خارطة التحوّل: ثلاث موجات</h2>
+        <Icon name="mapPin" size={18} class="text-accent" />
+        <h2 class="text-xl font-bold text-ink">الطبقة الثالثة — خارطة التحوّل: ثلاث موجات</h2>
       </div>
-      <p class="text-xs text-gray-400 mb-5">كل مبادرةٍ مربوطةٌ بفجوتها ولها مؤشر نجاح ودورٌ مسؤول ومسارٌ في أودو — والترتيب داخل الموجة بالأثر (التحويليّ أوّلًا).</p>
+      <p class="text-xs text-muted mb-5">كل مبادرةٍ مربوطةٌ بفجوتها ولها مؤشر نجاح ودورٌ مسؤول ومسارٌ في أودو — والترتيب داخل الموجة بالأثر (التحويليّ أوّلًا).</p>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {waves.map((w, i) => (
-          <div class="rounded-2xl bg-white/5 border border-white/10 p-4 flex flex-col">
+          <div class="rounded-2xl bg-chip border border-line p-4 flex flex-col">
             <div class="mb-3">
               <div class="flex items-center gap-2 mb-1">
-                <Icon name={waveIcon[i]} size={16} class="text-brand-gold" />
+                <Icon name={waveIcon[i]} size={16} class="text-accent" />
                 <h3 class="font-bold text-brand-yellow text-sm">{w.horizon}</h3>
-                <span class="text-[10px] text-gray-400">({w.recommendations.length})</span>
+                <span class="text-[10px] text-muted">({w.recommendations.length})</span>
               </div>
-              <p class="text-[11px] font-bold text-white">{w.window}</p>
-              <p class="text-[11px] text-gray-300 mt-1 leading-relaxed">{w.theme}</p>
+              <p class="text-[11px] font-bold text-ink">{w.window}</p>
+              <p class="text-[11px] text-ink-2 mt-1 leading-relaxed">{w.theme}</p>
               <p class="text-[10px] text-gray-500 mt-1.5 leading-relaxed">{w.goal}</p>
             </div>
             <div class="space-y-3">
               {w.recommendations.map((r) => (
-                <div class="rounded-xl bg-white/5 border border-white/10 p-3.5">
+                <div class="rounded-xl bg-chip border border-line p-3.5">
                   <div class="flex items-start justify-between gap-2 mb-1.5">
-                    <h4 class="font-bold text-white text-xs leading-snug">{r.title}</h4>
+                    <h4 class="font-bold text-ink text-xs leading-snug">{r.title}</h4>
                     <span class={`px-1.5 py-0.5 rounded border text-[9px] font-bold shrink-0 ${impactChip[r.impact]}`}>{r.impact}</span>
                   </div>
-                  <p class="text-[11px] text-gray-200 leading-relaxed mb-2">{r.desc}</p>
-                  <div class="space-y-1 border-t border-white/10 pt-2">
-                    <p class="text-[10px] text-gray-400 leading-relaxed"><span class="text-brand-gold font-bold">مؤشر النجاح:</span> {r.successMetric}</p>
+                  <p class="text-[11px] text-ink-2 leading-relaxed mb-2">{r.desc}</p>
+                  <div class="space-y-1 border-t border-line pt-2">
+                    <p class="text-[10px] text-muted leading-relaxed"><span class="text-accent font-bold">مؤشر النجاح:</span> {r.successMetric}</p>
                     <p class="text-[10px] text-gray-500 leading-relaxed"><span class="font-bold">في أودو:</span> {r.odooPath}</p>
                     <p class="text-[10px] text-gray-500">{r.ownerRole} · الجهد: {r.effort}</p>
                   </div>
@@ -290,24 +290,24 @@ const waveIcon = ['clipboardList', 'workflows', 'mapPin'];
       </div>
 
       <p class="text-[11px] text-gray-500 mt-4 leading-relaxed">
-        المبادرات مصدرها خارطة توصيات <a href={`${base}/dashboard/comparative-study`} class="text-brand-yellow underline hover:text-white">الدراسة المقارنة</a> —
+        المبادرات مصدرها خارطة توصيات <a href={`${base}/dashboard/comparative-study`} class="text-brand-yellow underline hover:text-ink">الدراسة المقارنة</a> —
         هذه الوثيقة تمنحها نوافذَ زمنيةً وتصميمًا جامعًا، ولا تكرّرها.
       </p>
     </section>
 
     {/* الاعتماد */}
-    <section class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-white/10 p-6">
-      <h2 class="text-sm font-bold text-white mb-6 text-center">اعتماد الوثيقة</h2>
+    <section class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-line p-6">
+      <h2 class="text-sm font-bold text-ink mb-6 text-center">اعتماد الوثيقة</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto text-center">
         <div>
           <img src={`${base}/identity/signatures/signature-2.png`} alt="توقيع محمد البرشي" class="h-16 mx-auto mb-2 object-contain" />
-          <p class="font-bold text-white text-sm">محمد البرشي</p>
-          <p class="text-[11px] text-gray-400">مدير إدارة السلاسل والإمداد والمخازن</p>
+          <p class="font-bold text-ink text-sm">محمد البرشي</p>
+          <p class="text-[11px] text-muted">مدير إدارة السلاسل والإمداد والمخازن</p>
         </div>
         <div>
           <img src={`${base}/identity/signatures/signature-1.png`} alt="توقيع رمزي الباش" class="h-16 mx-auto mb-2 object-contain" />
-          <p class="font-bold text-white text-sm">رمزي الباش</p>
-          <p class="text-[11px] text-gray-400">مدير إدارة الخدمات اللوجستية والخدمية</p>
+          <p class="font-bold text-ink text-sm">رمزي الباش</p>
+          <p class="text-[11px] text-muted">مدير إدارة الخدمات اللوجستية والخدمية</p>
         </div>
       </div>
     </section>

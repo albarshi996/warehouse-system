@@ -7,15 +7,15 @@ const base = import.meta.env.BASE_URL.endsWith('/')
   : import.meta.env.BASE_URL;
 ---
 
-<DashboardLayout title="الهيكل والمسارات">
+<DashboardLayout title="الهيكل والمسارات" light>
   <div class="text-right" dir="rtl">
     <!-- Simple Static Content -->
     <div class="space-y-8">
       <!-- الهيكل التنظيمي Section -->
       <section class="rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] shadow-2xl border border-brand-red/20 p-6 sm:p-10">
-        <h2 class="text-xl font-bold text-white text-center mb-6">
+        <h2 class="text-xl font-bold text-ink text-center mb-6">
           الهيكل التنظيمي للمستودعات
-          <span class="block text-sm font-normal text-gray-200 mt-1">Warehouse Organizational Structure</span>
+          <span class="block text-sm font-normal text-ink-2 mt-1">Warehouse Organizational Structure</span>
         </h2>
         <div class="w-16 h-1 bg-brand-red mx-auto mb-8 rounded-full"></div>
         
@@ -30,15 +30,15 @@ const base = import.meta.env.BASE_URL.endsWith('/')
             { title: 'الإدارة التقنية', icon: '💾', desc: 'الأنظمة والدعم' },
             { title: 'الموارد البشرية', icon: '👥', desc: 'رأس المال البشري' }
           ].map((pillar) => (
-            <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 transition-all">
+            <div class="bg-chip backdrop-blur border border-line rounded-xl p-4 text-center hover:bg-surface-2 transition-all">
               <div class="text-2xl mb-2">{pillar.icon}</div>
               <h3 class="font-bold text-brand-yellow text-sm mb-1">{pillar.title}</h3>
-              <p class="text-[10px] text-gray-300">{pillar.desc}</p>
+              <p class="text-[10px] text-ink-2">{pillar.desc}</p>
             </div>
           ))}
         </div>
         
-        <p class="mt-6 text-center text-xs text-gray-300">
+        <p class="mt-6 text-center text-xs text-ink-2">
           ٨ إدارات رسمية تتفرّع إلى <strong class="text-brand-yellow">١٨ وظيفة معتمدة</strong> وفق تقرير هيكل الوظائف والأدوار.
         </p>
 
@@ -49,17 +49,17 @@ const base = import.meta.env.BASE_URL.endsWith('/')
             📄 عرض التقرير الكامل
           </a>
           <a href={`${base}/dashboard/recruitment`}
-             class="inline-block px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-bold hover:bg-white/20 transition-all">
+             class="inline-block px-6 py-3 bg-chip border border-line text-ink rounded-xl font-bold hover:bg-surface-2 transition-all">
             🧑‍💼 الهيكل والتوظيف
           </a>
         </div>
       </section>
 
       <!-- الدورة المستندية Section -->
-      <section class="rounded-2xl bg-gradient-to-br from-[#0d0d2b] to-brand-navy shadow-2xl border border-white/10 p-6 sm:p-10">
-        <h2 class="text-xl font-bold text-white text-center mb-6">
+      <section class="rounded-2xl bg-gradient-to-br from-[#0d0d2b] to-brand-navy shadow-2xl border border-line p-6 sm:p-10">
+        <h2 class="text-xl font-bold text-ink text-center mb-6">
           الدورة المستندية الكاملة
-          <span class="block text-sm font-normal text-gray-200 mt-1">Complete Document Cycle</span>
+          <span class="block text-sm font-normal text-ink-2 mt-1">Complete Document Cycle</span>
         </h2>
         <div class="w-16 h-1 bg-brand-yellow mx-auto mb-8 rounded-full"></div>
         
@@ -78,21 +78,21 @@ const base = import.meta.env.BASE_URL.endsWith('/')
             { num: '11', title: 'قيد اليومية', desc: 'Journal Entry', color: 'border-lime-400', form: 'ترحيل آلي من تقييم المخزون (Inventory Valuation)', role: 'موظف المالية / المحاسبة' },
             { num: '12', title: 'الإغلاق المالي', desc: 'Financial Close', color: 'border-red-400', form: 'إغلاق الفترة — يشمل النموذجين ١٦ و١٨ (سند التسوية + ورقة الجرد)', role: 'مدير إدارة المالية' }
           ].map((stage, i) => (
-            <div key={i} class={`bg-white/5 backdrop-blur border ${stage.color} rounded-xl p-4 hover:bg-white/10 transition-all`}>
-              <div class="text-2xl font-bold text-white mb-2">{stage.num}</div>
+            <div key={i} class={`bg-chip backdrop-blur border ${stage.color} rounded-xl p-4 hover:bg-surface-2 transition-all`}>
+              <div class="text-2xl font-bold text-ink mb-2">{stage.num}</div>
               <h3 class="font-bold text-brand-yellow mb-1">{stage.title}</h3>
-              <p class="text-xs text-gray-200">{stage.desc}</p>
-              <p class="text-[10px] text-gray-300 mt-2">📑 {stage.form}</p>
-              <p class="text-[10px] text-gray-400 mt-1">👤 {stage.role}</p>
+              <p class="text-xs text-ink-2">{stage.desc}</p>
+              <p class="text-[10px] text-ink-2 mt-2">📑 {stage.form}</p>
+              <p class="text-[10px] text-muted mt-1">👤 {stage.role}</p>
             </div>
           ))}
         </div>
 
-        <p class="mt-6 text-center text-xs text-gray-300">
+        <p class="mt-6 text-center text-xs text-ink-2">
           وبين المرحلتين ٠٨ و٠٩ تجري رقابة المخزون المستمرة: <strong class="text-brand-yellow">الجرد الدوري</strong> (النموذج ١٨)
           و<strong class="text-brand-yellow">التسويات المخزنية</strong> (النموذج ١٦) — بحارس اعتماد المدير المالي 🔒.
-          النماذج المذكورة كلها من <strong class="text-white">مصفوفة الـ٢١ نموذج رسمي</strong> وتُنشأ وتُعتمد في
-          <a href={`${base}/dashboard/documents`} class="text-brand-yellow underline hover:text-white">المستندات الحيّة</a>.
+          النماذج المذكورة كلها من <strong class="text-ink">مصفوفة الـ٢١ نموذج رسمي</strong> وتُنشأ وتُعتمد في
+          <a href={`${base}/dashboard/documents`} class="text-brand-yellow underline hover:text-ink">المستندات الحيّة</a>.
         </p>
 
         <div class="mt-6 text-center flex flex-wrap justify-center gap-3">
@@ -103,7 +103,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
           </a>
           <a href={`${base}/تقرير-الدورة-المستندية.html`}
              target="_blank"
-             class="inline-block px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-bold hover:bg-white/20 transition-all">
+             class="inline-block px-6 py-3 bg-chip border border-line text-ink rounded-xl font-bold hover:bg-surface-2 transition-all">
             📄 تقرير الدورة المستندية
           </a>
         </div>
@@ -111,11 +111,11 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
       <!-- القواعد الذهبية Section -->
       <section class="rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] shadow-2xl border border-brand-yellow/20 p-6 sm:p-10">
-        <h2 class="text-xl font-bold text-white text-center mb-2">
+        <h2 class="text-xl font-bold text-ink text-center mb-2">
           القواعد الذهبية — الحُرّاس الستة
-          <span class="block text-sm font-normal text-gray-200 mt-1">The Six Golden Guards</span>
+          <span class="block text-sm font-normal text-ink-2 mt-1">The Six Golden Guards</span>
         </h2>
-        <p class="text-center text-xs text-gray-300 mb-6">المبدأ الذهبي: «لا حركة بدون مستند موقّع» — قواعد إلزامية لا يجوز الاستثناء منها، مفروضة آليًّا داخل موديول أودو.</p>
+        <p class="text-center text-xs text-ink-2 mb-6">المبدأ الذهبي: «لا حركة بدون مستند موقّع» — قواعد إلزامية لا يجوز الاستثناء منها، مفروضة آليًّا داخل موديول أودو.</p>
         <div class="w-16 h-1 bg-brand-red mx-auto mb-8 rounded-full"></div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -127,10 +127,10 @@ const base = import.meta.env.BASE_URL.endsWith('/')
             { icon: '⚖️', title: 'المطابقة الثلاثية (3-Way Match)', desc: 'لا ترحيل لفاتورة مورّد قبل تطابق (أمر الشراء + مذكرة الاستلام + الفاتورة).' },
             { icon: '🔒', title: 'حارس التسويات', desc: 'لا تعديل لأي رصيد يدويًّا دون سند تسوية معتمد من مدير إدارة المالية.' }
           ].map((rule) => (
-            <div class="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all">
+            <div class="bg-chip backdrop-blur border border-line rounded-xl p-4 hover:bg-surface-2 transition-all">
               <div class="text-2xl mb-2">{rule.icon}</div>
               <h3 class="font-bold text-brand-yellow text-sm mb-1">{rule.title}</h3>
-              <p class="text-xs text-gray-200 leading-relaxed">{rule.desc}</p>
+              <p class="text-xs text-ink-2 leading-relaxed">{rule.desc}</p>
             </div>
           ))}
         </div>
@@ -138,16 +138,16 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
       <!-- Odoo Integration Section -->
       <section class="rounded-2xl bg-gradient-to-br from-green-900/20 via-blue-900/20 to-green-900/20 shadow-2xl border border-green-500/30 p-6 sm:p-10">
-        <h2 class="text-xl font-bold text-white text-center mb-6">
+        <h2 class="text-xl font-bold text-ink text-center mb-6">
           التكامل مع أودو
-          <span class="block text-sm font-normal text-gray-200 mt-1">Odoo Integration Mapping</span>
+          <span class="block text-sm font-normal text-ink-2 mt-1">Odoo Integration Mapping</span>
         </h2>
         <div class="w-16 h-1 bg-green-400 mx-auto mb-8 rounded-full"></div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-white/5 backdrop-blur border border-green-500/30 rounded-xl p-6">
+          <div class="bg-chip backdrop-blur border border-green-500/30 rounded-xl p-6">
             <h3 class="font-bold text-green-400 mb-4">الوحدات المقابلة في أودو</h3>
-            <ul class="space-y-2 text-sm text-gray-100">
+            <ul class="space-y-2 text-sm text-ink-2">
               <li class="flex items-center gap-2">
                 <span class="text-green-400">•</span>
                 <span>المخزون → Inventory Module</span>
@@ -167,9 +167,9 @@ const base = import.meta.env.BASE_URL.endsWith('/')
             </ul>
           </div>
           
-          <div class="bg-white/5 backdrop-blur border border-blue-500/30 rounded-xl p-6">
+          <div class="bg-chip backdrop-blur border border-blue-500/30 rounded-xl p-6">
             <h3 class="font-bold text-blue-400 mb-4">مزايا التكامل</h3>
-            <ul class="space-y-2 text-sm text-gray-100">
+            <ul class="space-y-2 text-sm text-ink-2">
               <li class="flex items-center gap-2">
                 <span class="text-blue-400">•</span>
                 <span>بيانات دقيقة 98.5%</span>
@@ -199,13 +199,13 @@ const base = import.meta.env.BASE_URL.endsWith('/')
       </section>
 
       <!-- هذا الهيكل مُقاس على العالم — الربط بمركز الدراسات -->
-      <section class="rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] shadow-2xl border border-brand-gold/30 p-6 sm:p-10">
-        <h2 class="text-xl font-bold text-white text-center mb-2">
+      <section class="rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] shadow-2xl border border-accent/30 p-6 sm:p-10">
+        <h2 class="text-xl font-bold text-ink text-center mb-2">
           هذا الهيكل مُقاس على العالم
-          <span class="block text-sm font-normal text-gray-200 mt-1">Benchmarked Against Global Leaders</span>
+          <span class="block text-sm font-normal text-ink-2 mt-1">Benchmarked Against Global Leaders</span>
         </h2>
-        <div class="w-16 h-1 bg-brand-gold mx-auto mb-6 rounded-full"></div>
-        <p class="text-center text-xs text-gray-200 leading-relaxed max-w-3xl mx-auto mb-6">
+        <div class="w-16 h-1 bg-accent mx-auto mb-6 rounded-full"></div>
+        <p class="text-center text-xs text-ink-2 leading-relaxed max-w-3xl mx-auto mb-6">
           الدورة الاثنتا عشرة والهيكل الوظيفي أعلاه ليسا اجتهادًا محليًّا: قِيسا في
           <strong class="text-brand-yellow">دراسة مقارنة عالمية</strong> على ثمانية نماذج تشغيلية
           (وول مارت · أمازون · إيكيا · شي إن · علي بابا · كارفور · نون · إي باي) —
@@ -217,11 +217,11 @@ const base = import.meta.env.BASE_URL.endsWith('/')
             ⚖️ الدراسة المقارنة العالمية
           </a>
           <a href={`${base}/dashboard/global-doc-cycles`}
-             class="inline-block px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-bold hover:bg-white/20 transition-all">
+             class="inline-block px-6 py-3 bg-chip border border-line text-ink rounded-xl font-bold hover:bg-surface-2 transition-all">
             🌍 الدورات المستندية العالمية
           </a>
           <a href={`${base}/dashboard/studies`}
-             class="inline-block px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-bold hover:bg-white/20 transition-all">
+             class="inline-block px-6 py-3 bg-chip border border-line text-ink rounded-xl font-bold hover:bg-surface-2 transition-all">
             📚 مركز الدراسات
           </a>
         </div>
@@ -230,11 +230,11 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
     <FAQ client:load />
 
-    <footer class="mt-10 text-center text-xs text-gray-200">
+    <footer class="mt-10 text-center text-xs text-ink-2">
       مصدر البيانات:
-      <a href={`${base}/المرجع-التشغيلي-الرسمي.html`} target="_blank" class="text-brand-yellow underline hover:text-white">المرجع التشغيلي الرسمي</a>
+      <a href={`${base}/المرجع-التشغيلي-الرسمي.html`} target="_blank" class="text-brand-yellow underline hover:text-ink">المرجع التشغيلي الرسمي</a>
       (الدورة الـ١٢ ومصفوفة الـ٢١ نموذج) ·
-      <a href={`${base}/تقرير-هيكل-الوظائف-والادوار.html`} target="_blank" class="text-brand-yellow underline hover:text-white">تقرير هيكل الوظائف والأدوار</a>
+      <a href={`${base}/تقرير-هيكل-الوظائف-والادوار.html`} target="_blank" class="text-brand-yellow underline hover:text-ink">تقرير هيكل الوظائف والأدوار</a>
       (١٨ وظيفة).
     </footer>
   </div>

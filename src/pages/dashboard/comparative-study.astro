@@ -36,7 +36,7 @@ const SEVERITY_STYLE = {
   'حرجة': 'border-red-500/60 bg-red-500/10 text-red-300',
   'عالية': 'border-orange-400/60 bg-orange-400/10 text-orange-300',
   'متوسطة': 'border-yellow-400/50 bg-yellow-400/10 text-yellow-200',
-  'منخفضة': 'border-gray-400/40 bg-gray-400/10 text-gray-300',
+  'منخفضة': 'border-gray-400/40 bg-gray-400/10 text-ink-2',
 };
 const STATUS_STYLE = {
   'مطبَّق': 'bg-green-500/15 text-green-300 border-green-500/40',
@@ -51,24 +51,24 @@ const BAND_STYLE = {
 const HORIZON_ICON = { 'مكسب سريع': '⚡', 'متوسط المدى': '🛠️', 'استراتيجي': '🧭' };
 ---
 
-<DashboardLayout title="الدراسة المقارنة العالمية">
+<DashboardLayout title="الدراسة المقارنة العالمية" light>
   <div class="text-right doc-study" dir="rtl">
     {/* ترويسة الدراسة */}
-    <div class="mb-8 rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-brand-gold/30 p-6 sm:p-10">
-      <p class="text-[11px] text-gray-400 mb-2">{study.meta.refNumber} · الإصدار {study.meta.version} · {study.meta.issued}</p>
-      <h1 class="text-2xl sm:text-3xl font-extrabold text-white leading-snug mb-3">⚖️ {study.meta.title}</h1>
-      <p class="text-sm text-gray-200 leading-relaxed max-w-4xl">{study.meta.purpose}</p>
+    <div class="mb-8 rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-accent/30 p-6 sm:p-10">
+      <p class="text-[11px] text-muted mb-2">{study.meta.refNumber} · الإصدار {study.meta.version} · {study.meta.issued}</p>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-ink leading-snug mb-3">⚖️ {study.meta.title}</h1>
+      <p class="text-sm text-ink-2 leading-relaxed max-w-4xl">{study.meta.purpose}</p>
       <div class="mt-5 flex flex-wrap gap-3 no-print">
-        <a href={`${base}/dashboard/global-doc-cycles`} class="px-4 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-xs font-bold hover:bg-white/20 transition-all">🌍 المكتبة العالمية (المصدر)</a>
-        <a href={`${base}/dashboard/workflows`} class="px-4 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-xs font-bold hover:bg-white/20 transition-all">🧭 هيكلنا ودورتنا (طرف المقارنة)</a>
-        <a href={`${base}/dashboard/meetings`} class="px-4 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-xs font-bold hover:bg-white/20 transition-all">🤝 الاجتماعات التحضيرية (المستفيد)</a>
+        <a href={`${base}/dashboard/global-doc-cycles`} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all">🌍 المكتبة العالمية (المصدر)</a>
+        <a href={`${base}/dashboard/workflows`} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all">🧭 هيكلنا ودورتنا (طرف المقارنة)</a>
+        <a href={`${base}/dashboard/meetings`} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all">🤝 الاجتماعات التحضيرية (المستفيد)</a>
         <button type="button" id="printStudy" class="px-4 py-2 bg-brand-red text-white rounded-xl text-xs font-bold hover:bg-brand-red-dark transition-all">🖨️ طباعة الدراسة</button>
       </div>
     </div>
 
     {/* الملخص التنفيذي */}
     <section class="mb-10">
-      <h2 class="text-xl font-bold text-white mb-4">📌 الملخص التنفيذي</h2>
+      <h2 class="text-xl font-bold text-ink mb-4">📌 الملخص التنفيذي</h2>
       <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-5">
         {[
           { v: cycles.meta.companiesCount, l: 'نماذج عالمية' },
@@ -80,104 +80,104 @@ const HORIZON_ICON = { 'مكسب سريع': '⚡', 'متوسط المدى': '�
           { v: summary.recsTotal, l: 'توصية' },
           { v: `${summary.maturity}/5`, l: 'متوسط النضج' },
         ].map((s) => (
-          <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+          <div class="bg-chip border border-line rounded-xl p-3 text-center">
             <div class="text-xl font-extrabold text-brand-yellow">{s.v}</div>
-            <div class="text-[10px] text-gray-300 mt-1">{s.l}</div>
+            <div class="text-[10px] text-ink-2 mt-1">{s.l}</div>
           </div>
         ))}
       </div>
-      <div class="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-3">
+      <div class="rounded-2xl bg-chip border border-line p-6 space-y-3">
         {study.meta.executiveNotes.map((n) => (
-          <p class="text-sm text-gray-100 leading-relaxed flex gap-2"><span class="text-brand-yellow shrink-0">◆</span><span>{n}</span></p>
+          <p class="text-sm text-ink-2 leading-relaxed flex gap-2"><span class="text-brand-yellow shrink-0">◆</span><span>{n}</span></p>
         ))}
       </div>
     </section>
 
     {/* نظامنا في سطور */}
     <section class="mb-10">
-      <h2 class="text-xl font-bold text-white mb-4">🏠 طرف المقارنة: نظامنا في سطور</h2>
-      <div class="rounded-2xl bg-white/5 border border-white/10 p-6">
+      <h2 class="text-xl font-bold text-ink mb-4">🏠 طرف المقارنة: نظامنا في سطور</h2>
+      <div class="rounded-2xl bg-chip border border-line p-6">
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
           {study.ourSystem.stats.map((s) => (
-            <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+            <div class="bg-chip border border-line rounded-xl p-3 text-center">
               <div class="text-xl font-extrabold text-brand-yellow">{s.value}</div>
-              <div class="text-[10px] text-gray-300 mt-1">{s.label}</div>
+              <div class="text-[10px] text-ink-2 mt-1">{s.label}</div>
             </div>
           ))}
         </div>
         <ul class="space-y-2">
           {study.ourSystem.highlights.map((h) => (
-            <li class="text-xs text-gray-200 leading-relaxed flex gap-2"><span class="text-green-400 shrink-0">✔</span><span>{h}</span></li>
+            <li class="text-xs text-ink-2 leading-relaxed flex gap-2"><span class="text-green-400 shrink-0">✔</span><span>{h}</span></li>
           ))}
         </ul>
-        <p class="text-[11px] text-gray-400 mt-4">
-          التفصيل الحي: <a href={`${base}/dashboard/workflows`} class="text-brand-yellow underline hover:text-white">الهيكل والمسارات</a>
-          — والنماذج تُنشأ وتُعتمد في <a href={`${base}/dashboard/documents`} class="text-brand-yellow underline hover:text-white">المستندات</a>.
+        <p class="text-[11px] text-muted mt-4">
+          التفصيل الحي: <a href={`${base}/dashboard/workflows`} class="text-brand-yellow underline hover:text-ink">الهيكل والمسارات</a>
+          — والنماذج تُنشأ وتُعتمد في <a href={`${base}/dashboard/documents`} class="text-brand-yellow underline hover:text-ink">المستندات</a>.
         </p>
       </div>
     </section>
 
     {/* بطاقة النضج */}
     <section class="mb-10">
-      <h2 class="text-xl font-bold text-white mb-1">📈 بطاقة النضج — عشرة أبعاد مُقاسة على سقف الشركات الثماني</h2>
-      <p class="text-xs text-gray-400 mb-4">السلّم: 0 غائب · 1 موثَّق بلا بناء · 2 بناء جزئي · 3 مبني ومختبَر · 4 مُشغَّل ومقيس · 5 مستوى عالمي.</p>
-      <div class="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-5">
+      <h2 class="text-xl font-bold text-ink mb-1">📈 بطاقة النضج — عشرة أبعاد مُقاسة على سقف الشركات الثماني</h2>
+      <p class="text-xs text-muted mb-4">السلّم: 0 غائب · 1 موثَّق بلا بناء · 2 بناء جزئي · 3 مبني ومختبَر · 4 مُشغَّل ومقيس · 5 مستوى عالمي.</p>
+      <div class="rounded-2xl bg-chip border border-line p-6 space-y-5">
         {study.scores.dimensions.map((d) => (
           <div>
             <div class="flex items-center justify-between gap-3 mb-1.5 flex-wrap">
-              <h3 class="font-bold text-white text-sm">{d.nameAr}</h3>
+              <h3 class="font-bold text-ink text-sm">{d.nameAr}</h3>
               <span class="text-brand-yellow font-extrabold text-sm">{d.score}/5</span>
             </div>
-            <div class="h-2.5 rounded-full bg-white/10 overflow-hidden mb-2">
+            <div class="h-2.5 rounded-full bg-chip overflow-hidden mb-2">
               <div class={`h-full rounded-full ${d.score >= 3.5 ? 'bg-green-500' : d.score >= 2 ? 'bg-yellow-400' : 'bg-red-500'}`} style={`width:${(d.score / 5) * 100}%`}></div>
             </div>
-            <p class="text-[11px] text-gray-300 leading-relaxed">{d.justification}</p>
+            <p class="text-[11px] text-ink-2 leading-relaxed">{d.justification}</p>
             <div class="flex flex-wrap gap-x-6 gap-y-1 mt-1.5">
-              <p class="text-[11px] text-gray-400"><span class="text-brand-yellow font-bold">المرجع الأعلى:</span> {d.worldAnchor}</p>
-              <p class="text-[11px] text-gray-400"><span class="text-green-400 font-bold">أسرع رافعة:</span> {d.quickestLift}</p>
+              <p class="text-[11px] text-muted"><span class="text-brand-yellow font-bold">المرجع الأعلى:</span> {d.worldAnchor}</p>
+              <p class="text-[11px] text-muted"><span class="text-green-400 font-bold">أسرع رافعة:</span> {d.quickestLift}</p>
             </div>
           </div>
         ))}
         <div class="rounded-xl border border-brand-yellow/40 bg-brand-yellow/5 p-4">
-          <p class="text-xs text-gray-100 leading-relaxed"><span class="font-bold text-brand-yellow">قراءة البطاقة: </span>{study.scores.overallNote}</p>
+          <p class="text-xs text-ink-2 leading-relaxed"><span class="font-bold text-brand-yellow">قراءة البطاقة: </span>{study.scores.overallNote}</p>
         </div>
       </div>
     </section>
 
     {/* تحليل الفجوات */}
     <section class="mb-10">
-      <h2 class="text-xl font-bold text-white mb-1">🕳️ تحليل الفجوات (Gap Analysis)</h2>
-      <p class="text-xs text-gray-400 mb-4">كل فجوة مسنودة بممارسة عالمية موثقة وبحالتنا الفعلية من الكود — لا انطباعات.</p>
+      <h2 class="text-xl font-bold text-ink mb-1">🕳️ تحليل الفجوات (Gap Analysis)</h2>
+      <p class="text-xs text-muted mb-4">كل فجوة مسنودة بممارسة عالمية موثقة وبحالتنا الفعلية من الكود — لا انطباعات.</p>
       <div class="flex flex-wrap gap-2 mb-5 no-print" id="gapFilters">
         <button type="button" data-gap-filter="all" class="gap-filter px-4 py-2 rounded-xl border text-xs font-bold bg-brand-red text-white border-brand-red transition-all">الكل ({study.gaps.length})</button>
         {severityGroups.map((g) => (
-          <button type="button" data-gap-filter={g.severity} class="gap-filter px-4 py-2 rounded-xl border text-xs font-bold bg-white/5 text-gray-200 border-white/15 hover:bg-white/10 transition-all">
+          <button type="button" data-gap-filter={g.severity} class="gap-filter px-4 py-2 rounded-xl border text-xs font-bold bg-chip text-ink-2 border-line hover:bg-surface-2 transition-all">
             {g.severity} ({g.gaps.length})
           </button>
         ))}
       </div>
       <div class="space-y-4">
         {study.gaps.map((g) => (
-          <div data-gap-severity={g.severity} class="gap-card rounded-2xl bg-white/5 border border-white/10 p-5">
+          <div data-gap-severity={g.severity} class="gap-card rounded-2xl bg-chip border border-line p-5">
             <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
-              <h3 class="font-bold text-white text-sm leading-snug">{g.title}</h3>
+              <h3 class="font-bold text-ink text-sm leading-snug">{g.title}</h3>
               <div class="flex gap-2 shrink-0">
                 <span class={`px-2.5 py-1 rounded-lg border text-[10px] font-bold ${SEVERITY_STYLE[g.severity]}`}>{g.severity}</span>
-                <span class="px-2.5 py-1 rounded-lg border border-white/20 bg-white/5 text-[10px] font-bold text-gray-300">الجهد: {g.effort}</span>
+                <span class="px-2.5 py-1 rounded-lg border border-line bg-chip text-[10px] font-bold text-ink-2">الجهد: {g.effort}</span>
               </div>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
               <div class="rounded-xl bg-green-500/5 border border-green-500/20 p-3">
                 <p class="text-[10px] font-bold text-green-300 mb-1">🌍 الممارسة العالمية — {g.worldCompanies.map(showCompany).join(' · ')}</p>
-                <p class="text-xs text-gray-200 leading-relaxed">{g.worldPractice}</p>
+                <p class="text-xs text-ink-2 leading-relaxed">{g.worldPractice}</p>
               </div>
               <div class="rounded-xl bg-red-500/5 border border-red-500/20 p-3">
                 <p class="text-[10px] font-bold text-red-300 mb-1">🏠 حالنا اليوم</p>
-                <p class="text-xs text-gray-200 leading-relaxed">{g.ourState}</p>
-                <p class="text-[10px] text-gray-400 mt-1.5">الدليل: {g.ourEvidence}</p>
+                <p class="text-xs text-ink-2 leading-relaxed">{g.ourState}</p>
+                <p class="text-[10px] text-muted mt-1.5">الدليل: {g.ourEvidence}</p>
               </div>
             </div>
-            <p class="text-xs text-gray-300 leading-relaxed"><span class="font-bold text-brand-yellow">الأثر علينا: </span>{g.impact}</p>
+            <p class="text-xs text-ink-2 leading-relaxed"><span class="font-bold text-brand-yellow">الأثر علينا: </span>{g.impact}</p>
           </div>
         ))}
       </div>
@@ -185,21 +185,21 @@ const HORIZON_ICON = { 'مكسب سريع': '⚡', 'متوسط المدى': '�
 
     {/* أفضل الممارسات */}
     <section class="mb-10">
-      <h2 class="text-xl font-bold text-white mb-1">🏅 أفضل الممارسات العالمية — وأين نقف من كل واحدة</h2>
-      <p class="text-xs text-gray-400 mb-4">
+      <h2 class="text-xl font-bold text-ink mb-1">🏅 أفضل الممارسات العالمية — وأين نقف من كل واحدة</h2>
+      <p class="text-xs text-muted mb-4">
         مطبَّق: {summary.practices['مطبَّق']} · جزئي: {summary.practices['جزئي']} · غائب: {summary.practices['غائب']} — الأحكام مُتحقَّق منها ضد الكود الفعلي.
       </p>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {study.practices.map((p) => (
-          <div class="rounded-2xl bg-white/5 border border-white/10 p-5">
+          <div class="rounded-2xl bg-chip border border-line p-5">
             <div class="flex items-start justify-between gap-3 mb-2">
-              <h3 class="font-bold text-white text-sm leading-snug">{p.title}</h3>
+              <h3 class="font-bold text-ink text-sm leading-snug">{p.title}</h3>
               <span class={`px-2.5 py-1 rounded-lg border text-[10px] font-bold shrink-0 ${STATUS_STYLE[p.ourStatus]}`}>{p.ourStatus}</span>
             </div>
-            <p class="text-xs text-gray-200 leading-relaxed mb-2">{p.desc}</p>
-            <p class="text-[10px] text-gray-400 mb-1">يطبقها: {p.companies.map(showCompany).join(' · ')}</p>
-            <p class="text-[10px] text-gray-400 mb-2">حكمنا مسنود بـ: {p.ourEvidence}</p>
-            <p class="text-[11px] text-gray-300 leading-relaxed rounded-lg bg-white/5 border border-white/10 p-2.5"><span class="font-bold text-brand-yellow">خطوتنا: </span>{p.adoptionNote}</p>
+            <p class="text-xs text-ink-2 leading-relaxed mb-2">{p.desc}</p>
+            <p class="text-[10px] text-muted mb-1">يطبقها: {p.companies.map(showCompany).join(' · ')}</p>
+            <p class="text-[10px] text-muted mb-2">حكمنا مسنود بـ: {p.ourEvidence}</p>
+            <p class="text-[11px] text-ink-2 leading-relaxed rounded-lg bg-chip border border-line p-2.5"><span class="font-bold text-brand-yellow">خطوتنا: </span>{p.adoptionNote}</p>
           </div>
         ))}
       </div>
@@ -207,18 +207,18 @@ const HORIZON_ICON = { 'مكسب سريع': '⚡', 'متوسط المدى': '�
 
     {/* إطار مؤشرات الأداء */}
     <section class="mb-10">
-      <h2 class="text-xl font-bold text-white mb-1">🎯 إطار مؤشرات الأداء (KPIs)</h2>
-      <p class="text-xs text-gray-400 mb-4">
+      <h2 class="text-xl font-bold text-ink mb-1">🎯 إطار مؤشرات الأداء (KPIs)</h2>
+      <p class="text-xs text-muted mb-4">
         {summary.kpisMeasurable} من أصل {summary.kpisTotal} مؤشرًا قابلة للقياس اليوم من بيانات النظام القائمة — البقية تنتظر بناء مصدر بياناتها.
       </p>
       <div class="space-y-6">
         {kpis.map((grp) => (
-          <div class="rounded-2xl bg-white/5 border border-white/10 p-5">
-            <h3 class="font-bold text-brand-yellow text-sm mb-3">{grp.group} <span class="text-[10px] text-gray-400 font-normal">({grp.measurableNow}/{grp.kpis.length} قابل للقياس اليوم)</span></h3>
+          <div class="rounded-2xl bg-chip border border-line p-5">
+            <h3 class="font-bold text-brand-yellow text-sm mb-3">{grp.group} <span class="text-[10px] text-muted font-normal">({grp.measurableNow}/{grp.kpis.length} قابل للقياس اليوم)</span></h3>
             <div class="overflow-x-auto">
               <table class="w-full text-xs text-right border-collapse min-w-[860px]">
                 <thead>
-                  <tr class="text-gray-300 border-b border-white/20 text-[10px]">
+                  <tr class="text-ink-2 border-b border-line text-[10px]">
                     <th class="p-2 font-bold">المؤشر</th>
                     <th class="p-2 font-bold">الصيغة</th>
                     <th class="p-2 font-bold">المعيار العالمي</th>
@@ -230,13 +230,13 @@ const HORIZON_ICON = { 'مكسب سريع': '⚡', 'متوسط المدى': '�
                 </thead>
                 <tbody>
                   {grp.kpis.map((k) => (
-                    <tr class="border-b border-white/5 align-top">
-                      <td class="p-2"><span class="font-bold text-white">{k.nameAr}</span><br /><span class="text-[10px] text-gray-400">{k.nameEn}</span></td>
-                      <td class="p-2 text-gray-200">{k.formula}</td>
-                      <td class="p-2 text-gray-200">{k.benchmark}<br /><span class="text-[10px] text-gray-400">{showCompany(k.benchmarkSource)}</span></td>
+                    <tr class="border-b border-line align-top">
+                      <td class="p-2"><span class="font-bold text-ink">{k.nameAr}</span><br /><span class="text-[10px] text-muted">{k.nameEn}</span></td>
+                      <td class="p-2 text-ink-2">{k.formula}</td>
+                      <td class="p-2 text-ink-2">{k.benchmark}<br /><span class="text-[10px] text-muted">{showCompany(k.benchmarkSource)}</span></td>
                       <td class="p-2 text-brand-yellow font-bold">{k.target}</td>
-                      <td class="p-2 text-gray-200">{k.dataSource}</td>
-                      <td class="p-2 text-gray-300">{k.frequency} · {k.ownerRole}</td>
+                      <td class="p-2 text-ink-2">{k.dataSource}</td>
+                      <td class="p-2 text-ink-2">{k.frequency} · {k.ownerRole}</td>
                       <td class="p-2">{k.measurableToday ? <span class="text-green-400 font-bold">✔ نعم</span> : <span class="text-red-400 font-bold">✘ بعد البناء</span>}</td>
                     </tr>
                   ))}
@@ -250,23 +250,23 @@ const HORIZON_ICON = { 'مكسب سريع': '⚡', 'متوسط المدى': '�
 
     {/* سجل المخاطر */}
     <section class="mb-10">
-      <h2 class="text-xl font-bold text-white mb-1">⚠️ سجل المخاطر</h2>
-      <p class="text-xs text-gray-400 mb-4">التقدير = الاحتمال (1–5) × الأثر (1–5) — والنطاقات: مرتفع ≥ 15 · متوسط ≥ 8 · منخفض دونها.</p>
+      <h2 class="text-xl font-bold text-ink mb-1">⚠️ سجل المخاطر</h2>
+      <p class="text-xs text-muted mb-4">التقدير = الاحتمال (1–5) × الأثر (1–5) — والنطاقات: مرتفع ≥ 15 · متوسط ≥ 8 · منخفض دونها.</p>
       <div class="space-y-6">
         {Object.entries(risks).map(([band, list]) => list.length > 0 && (
           <div>
-            <h3 class="font-bold text-white text-sm mb-3">{BAND_STYLE[band].label} <span class="text-gray-400 font-normal">({list.length})</span></h3>
+            <h3 class="font-bold text-ink text-sm mb-3">{BAND_STYLE[band].label} <span class="text-muted font-normal">({list.length})</span></h3>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {list.map((r) => (
-                <div class="rounded-2xl bg-white/5 border border-white/10 p-5">
+                <div class="rounded-2xl bg-chip border border-line p-5">
                   <div class="flex items-start justify-between gap-3 mb-2">
-                    <h4 class="font-bold text-white text-sm leading-snug">{r.title}</h4>
+                    <h4 class="font-bold text-ink text-sm leading-snug">{r.title}</h4>
                     <span class={`px-2.5 py-1 rounded-lg border text-[10px] font-bold shrink-0 ${BAND_STYLE[band].chip}`}>{r.probability}×{r.impact} = {r.score}</span>
                   </div>
-                  <p class="text-[10px] text-gray-400 mb-2">{r.category}</p>
-                  <p class="text-xs text-gray-200 leading-relaxed mb-2"><span class="font-bold text-red-300">السيناريو: </span>{r.scenario}</p>
-                  <p class="text-xs text-gray-200 leading-relaxed mb-2"><span class="font-bold text-brand-yellow">درس العالم: </span>{r.worldLesson}</p>
-                  <p class="text-xs text-gray-200 leading-relaxed rounded-lg bg-green-500/5 border border-green-500/20 p-2.5"><span class="font-bold text-green-300">المعالجة: </span>{r.mitigation}</p>
+                  <p class="text-[10px] text-muted mb-2">{r.category}</p>
+                  <p class="text-xs text-ink-2 leading-relaxed mb-2"><span class="font-bold text-red-300">السيناريو: </span>{r.scenario}</p>
+                  <p class="text-xs text-ink-2 leading-relaxed mb-2"><span class="font-bold text-brand-yellow">درس العالم: </span>{r.worldLesson}</p>
+                  <p class="text-xs text-ink-2 leading-relaxed rounded-lg bg-green-500/5 border border-green-500/20 p-2.5"><span class="font-bold text-green-300">المعالجة: </span>{r.mitigation}</p>
                 </div>
               ))}
             </div>
@@ -277,11 +277,11 @@ const HORIZON_ICON = { 'مكسب سريع': '⚡', 'متوسط المدى': '�
 
     {/* بنك الأسئلة الاحترافية */}
     <section class="mb-10">
-      <h2 class="text-xl font-bold text-white mb-1">❓ بنك الأسئلة الاحترافية — وقود الاجتماعات</h2>
-      <p class="text-xs text-gray-400 mb-4">أسئلة تكشف قرارات مؤجلة وافتراضات صامتة؛ كل سؤال مسنود بمرجع عالمي وينتهي بقرار مطلوب. تُطبع صفحة الإدارة قبل اجتماعها.</p>
+      <h2 class="text-xl font-bold text-ink mb-1">❓ بنك الأسئلة الاحترافية — وقود الاجتماعات</h2>
+      <p class="text-xs text-muted mb-4">أسئلة تكشف قرارات مؤجلة وافتراضات صامتة؛ كل سؤال مسنود بمرجع عالمي وينتهي بقرار مطلوب. تُطبع صفحة الإدارة قبل اجتماعها.</p>
       <div class="flex flex-wrap gap-2 mb-5 no-print" id="deptTabs">
         {deptQuestions.map((d, i) => (
-          <button type="button" data-dept-tab={d.department} class={`dept-tab px-4 py-2 rounded-xl border text-xs font-bold transition-all ${i === 0 ? 'bg-brand-red text-white border-brand-red' : 'bg-white/5 text-gray-200 border-white/15 hover:bg-white/10'}`}>
+          <button type="button" data-dept-tab={d.department} class={`dept-tab px-4 py-2 rounded-xl border text-xs font-bold transition-all ${i === 0 ? 'bg-brand-red text-white border-brand-red' : 'bg-chip text-ink-2 border-line hover:bg-surface-2'}`}>
             {d.department} ({d.questions.length})
           </button>
         ))}
@@ -289,12 +289,12 @@ const HORIZON_ICON = { 'مكسب سريع': '⚡', 'متوسط المدى': '�
       {deptQuestions.map((d, i) => (
         <div data-dept-panel={d.department} class={`dept-panel space-y-4 ${i === 0 ? '' : 'hidden'}`}>
           {d.questions.map((q, qi) => (
-            <div class="rounded-2xl bg-white/5 border border-white/10 p-5">
-              <h3 class="font-bold text-white text-sm leading-relaxed mb-3"><span class="text-brand-yellow">س{qi + 1}.</span> {q.question}</h3>
+            <div class="rounded-2xl bg-chip border border-line p-5">
+              <h3 class="font-bold text-ink text-sm leading-relaxed mb-3"><span class="text-brand-yellow">س{qi + 1}.</span> {q.question}</h3>
               <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 text-xs">
-                <p class="text-gray-200 leading-relaxed"><span class="font-bold text-gray-400 block mb-1">لماذا يهم؟</span>{q.whyItMatters}</p>
-                <p class="text-gray-200 leading-relaxed"><span class="font-bold text-gray-400 block mb-1">المرجع العالمي</span>{q.worldReference}</p>
-                <p class="text-gray-100 leading-relaxed rounded-lg bg-brand-yellow/5 border border-brand-yellow/30 p-2.5"><span class="font-bold text-brand-yellow block mb-1">القرار المطلوب</span>{q.decisionNeeded}</p>
+                <p class="text-ink-2 leading-relaxed"><span class="font-bold text-muted block mb-1">لماذا يهم؟</span>{q.whyItMatters}</p>
+                <p class="text-ink-2 leading-relaxed"><span class="font-bold text-muted block mb-1">المرجع العالمي</span>{q.worldReference}</p>
+                <p class="text-ink-2 leading-relaxed rounded-lg bg-brand-yellow/5 border border-brand-yellow/30 p-2.5"><span class="font-bold text-brand-yellow block mb-1">القرار المطلوب</span>{q.decisionNeeded}</p>
               </div>
             </div>
           ))}
@@ -304,23 +304,23 @@ const HORIZON_ICON = { 'مكسب سريع': '⚡', 'متوسط المدى': '�
 
     {/* خارطة التوصيات */}
     <section class="mb-10">
-      <h2 class="text-xl font-bold text-white mb-1">🗺️ خارطة توصيات التطوير</h2>
-      <p class="text-xs text-gray-400 mb-4">ثلاثة آفاق متسقة مع خطة المشروع (البوابة القائمة ← تشغيل أودو M2 ← التكاملات) — كل توصية مربوطة بفجوتها ولها مؤشر نجاح.</p>
+      <h2 class="text-xl font-bold text-ink mb-1">🗺️ خارطة توصيات التطوير</h2>
+      <p class="text-xs text-muted mb-4">ثلاثة آفاق متسقة مع خطة المشروع (البوابة القائمة ← تشغيل أودو M2 ← التكاملات) — كل توصية مربوطة بفجوتها ولها مؤشر نجاح.</p>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {horizons.map((h) => (
-          <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+          <div class="rounded-2xl bg-chip border border-line p-4">
             <h3 class="font-bold text-brand-yellow text-sm mb-3 text-center">{HORIZON_ICON[h.horizon]} {h.horizon} ({h.recommendations.length})</h3>
             <div class="space-y-3">
               {h.recommendations.map((r) => (
-                <div class="rounded-xl bg-white/5 border border-white/10 p-3.5">
+                <div class="rounded-xl bg-chip border border-line p-3.5">
                   <div class="flex items-start justify-between gap-2 mb-1.5">
-                    <h4 class="font-bold text-white text-xs leading-snug">{r.title}</h4>
-                    <span class="px-2 py-0.5 rounded border border-white/20 text-[9px] font-bold text-gray-300 shrink-0">{r.impact}</span>
+                    <h4 class="font-bold text-ink text-xs leading-snug">{r.title}</h4>
+                    <span class="px-2 py-0.5 rounded border border-line text-[9px] font-bold text-ink-2 shrink-0">{r.impact}</span>
                   </div>
-                  <p class="text-[11px] text-gray-200 leading-relaxed mb-2">{r.desc}</p>
-                  <p class="text-[10px] text-gray-400 mb-1">🧩 في أودو: {r.odooPath}</p>
-                  <p class="text-[10px] text-gray-400 mb-1">📏 مؤشر النجاح: {r.successMetric}</p>
-                  <p class="text-[10px] text-gray-400">👤 {r.ownerRole} · الجهد: {r.effort}</p>
+                  <p class="text-[11px] text-ink-2 leading-relaxed mb-2">{r.desc}</p>
+                  <p class="text-[10px] text-muted mb-1">🧩 في أودو: {r.odooPath}</p>
+                  <p class="text-[10px] text-muted mb-1">📏 مؤشر النجاح: {r.successMetric}</p>
+                  <p class="text-[10px] text-muted">👤 {r.ownerRole} · الجهد: {r.effort}</p>
                 </div>
               ))}
             </div>
@@ -330,14 +330,14 @@ const HORIZON_ICON = { 'مكسب سريع': '⚡', 'متوسط المدى': '�
     </section>
 
     {/* المنهجية والحدود والمراجع */}
-    <section class="mb-10 rounded-2xl bg-white/5 border border-white/10 p-6">
-      <h2 class="text-lg font-bold text-white mb-4">📖 المنهجية والحدود والمراجع</h2>
+    <section class="mb-10 rounded-2xl bg-chip border border-line p-6">
+      <h2 class="text-lg font-bold text-ink mb-4">📖 المنهجية والحدود والمراجع</h2>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 text-xs">
         <div>
           <h3 class="font-bold text-brand-yellow mb-2">المنهجية</h3>
           <ul class="space-y-1.5">
             {study.meta.methodology.map((m) => (
-              <li class="text-gray-200 leading-relaxed flex gap-2"><span class="text-brand-yellow shrink-0">•</span><span>{m}</span></li>
+              <li class="text-ink-2 leading-relaxed flex gap-2"><span class="text-brand-yellow shrink-0">•</span><span>{m}</span></li>
             ))}
           </ul>
         </div>
@@ -345,7 +345,7 @@ const HORIZON_ICON = { 'مكسب سريع': '⚡', 'متوسط المدى': '�
           <h3 class="font-bold text-brand-yellow mb-2">حدود الدراسة</h3>
           <ul class="space-y-1.5">
             {study.meta.limitations.map((l) => (
-              <li class="text-gray-200 leading-relaxed flex gap-2"><span class="text-brand-yellow shrink-0">•</span><span>{l}</span></li>
+              <li class="text-ink-2 leading-relaxed flex gap-2"><span class="text-brand-yellow shrink-0">•</span><span>{l}</span></li>
             ))}
           </ul>
         </div>
@@ -353,7 +353,7 @@ const HORIZON_ICON = { 'مكسب سريع': '⚡', 'متوسط المدى': '�
           <h3 class="font-bold text-brand-yellow mb-2">المراجع</h3>
           <ul class="space-y-1.5">
             {study.meta.sources.map((s) => (
-              <li class="text-gray-200 leading-relaxed flex gap-2"><span class="text-brand-yellow shrink-0">•</span><span>{s}</span></li>
+              <li class="text-ink-2 leading-relaxed flex gap-2"><span class="text-brand-yellow shrink-0">•</span><span>{s}</span></li>
             ))}
           </ul>
         </div>
@@ -361,18 +361,18 @@ const HORIZON_ICON = { 'مكسب سريع': '⚡', 'متوسط المدى': '�
     </section>
 
     {/* اعتماد الدراسة */}
-    <section class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-white/10 p-6">
-      <h2 class="text-sm font-bold text-white mb-6 text-center">اعتماد الدراسة</h2>
+    <section class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-line p-6">
+      <h2 class="text-sm font-bold text-ink mb-6 text-center">اعتماد الدراسة</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto text-center">
         <div>
           <img src={`${base}/identity/signatures/signature-2.png`} alt="توقيع محمد البرشي" class="h-16 mx-auto mb-2 object-contain" />
-          <p class="font-bold text-white text-sm">محمد البرشي</p>
-          <p class="text-[11px] text-gray-400">مدير إدارة السلاسل والإمداد والمخازن</p>
+          <p class="font-bold text-ink text-sm">محمد البرشي</p>
+          <p class="text-[11px] text-muted">مدير إدارة السلاسل والإمداد والمخازن</p>
         </div>
         <div>
           <img src={`${base}/identity/signatures/signature-1.png`} alt="توقيع رمزي الباش" class="h-16 mx-auto mb-2 object-contain" />
-          <p class="font-bold text-white text-sm">رمزي الباش</p>
-          <p class="text-[11px] text-gray-400">مدير إدارة الخدمات اللوجستية والخدمية</p>
+          <p class="font-bold text-ink text-sm">رمزي الباش</p>
+          <p class="text-[11px] text-muted">مدير إدارة الخدمات اللوجستية والخدمية</p>
         </div>
       </div>
     </section>
@@ -390,7 +390,7 @@ const HORIZON_ICON = { 'مكسب سريع': '⚡', 'متوسط المدى': '�
     const filters = document.querySelectorAll('[data-gap-filter]');
     const cards = document.querySelectorAll('[data-gap-severity]');
     const ON = ['bg-brand-red', 'text-white', 'border-brand-red'];
-    const OFF = ['bg-white/5', 'text-gray-200', 'border-white/15'];
+    const OFF = ['bg-chip', 'text-ink-2', 'border-line'];
     filters.forEach((btn) => {
       btn.addEventListener('click', () => {
         const val = btn.getAttribute('data-gap-filter');
