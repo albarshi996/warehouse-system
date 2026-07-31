@@ -30,10 +30,14 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 <PwaHead />
 <style is:global>
 :root{
-  --bg:#0f1419; --surface:#1a2332; --surface-2:#243044;
+  /* ★ ثيم أودو الفاتح (2026-07-31): «الجرد الذكي» كان آخر صفحة داكنة في البوابة.
+     القيم تطابق html.bz-light في global.css فتتّسق مع بقيّة الصفحات. هوية البراند
+     (الأحمر --primary والذهبي --accent) والدلالات (danger/success) تبقى كما هي —
+     يُقلَب المحايد فقط (خلفية/أسطح/حبر/حدود). راجع [[project-odoo-design-adoption]]. */
+  --bg:#f5f5f7; --surface:#ffffff; --surface-2:#f6f6f8;
   --primary:#c41e3a; --primary-light:#e85d68;
-  --accent:#DAAA3C; --text:#e7e9ea; --text-muted:#8899a6;
-  --border:#2f3b4a; --danger:#ef4444; --success:#22c55e;
+  --accent:#DAAA3C; --text:#1f2430; --text-muted:#5f676e;
+  --border:#e5e5ea; --danger:#ef4444; --success:#22c55e;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
@@ -43,7 +47,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);overf
 ::-webkit-scrollbar-thumb:hover{background:var(--primary)}
 
 .import-bg{
-  background:linear-gradient(135deg,#090d12 0%,#0f1f2e 30%,#0d2626 60%,#0f1419 100%);
+  background:linear-gradient(135deg,#f5f5f7 0%,#eef0f4 35%,#f1eff3 65%,#f5f5f7 100%);
   background-size:400% 400%;
   animation:gradShift 12s ease infinite;
   min-height:100vh
@@ -51,10 +55,9 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);overf
 @keyframes gradShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 
 .glass-card{
-  background:rgba(26,35,50,.88);
-  backdrop-filter:blur(20px);
-  border:1px solid rgba(196, 30, 58,.18);
-  box-shadow:0 25px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04)
+  background:#ffffff;
+  border:1px solid rgba(15,15,30,.06);
+  box-shadow:0 1px 3px rgba(20,20,40,.04),0 6px 16px rgba(20,20,40,.05)
 }
 .drop-zone{border:2px dashed var(--border);transition:all .3s;position:relative;overflow:hidden}
 .drop-zone:hover,.drop-zone.drag-over{border-color:var(--primary);background:rgba(196, 30, 58,.06)}
@@ -86,14 +89,14 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);overf
 .toast{
   padding:12px 20px;border-radius:10px;font-size:14px;font-weight:500;
   display:flex;align-items:center;gap:10px;min-width:300px;max-width:460px;
-  animation:toastIn .35s ease;box-shadow:0 10px 30px rgba(0,0,0,.4);
-  border:1px solid rgba(255,255,255,.06)
+  animation:toastIn .35s ease;box-shadow:0 10px 30px rgba(20,20,40,.12);
+  border:1px solid rgba(15,15,30,.06)
 }
 .toast.out{animation:toastOut .3s ease forwards}
-.toast-success{background:#064e3b;color:#a7f3d0;border-color:#065f46}
-.toast-error{background:#450a0a;color:#fca5a5;border-color:#7f1d1d}
-.toast-warning{background:#451a03;color:#fde68a;border-color:#78350f}
-.toast-info{background:#0c2d48;color:#7dd3fc;border-color:#0c4a6e}
+.toast-success{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
+.toast-error{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+.toast-warning{background:#fffbeb;color:#92400e;border-color:#fde68a}
+.toast-info{background:#eff6ff;color:#075985;border-color:#bae6fd}
 @keyframes toastIn{from{opacity:0;transform:translateX(-40px) scale(.95)}to{opacity:1;transform:translateX(0) scale(1)}}
 @keyframes toastOut{to{opacity:0;transform:translateX(-40px) scale(.95)}}
 
@@ -105,7 +108,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);overf
 .modal-box{
   background:var(--surface);border:1px solid var(--border);border-radius:16px;
   width:100%;max-width:640px;max-height:92vh;overflow-y:auto;
-  box-shadow:0 30px 80px rgba(0,0,0,.5);animation:modalIn .3s ease
+  box-shadow:0 20px 60px rgba(20,20,40,.15);animation:modalIn .3s ease
 }
 .modal-box.wide{max-width:860px}
 .modal-box.narrow{max-width:480px}
@@ -123,11 +126,11 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);overf
 .data-table tbody tr.row-scanned{background:rgba(196, 30, 58,.04)}
 .data-table tbody tr.row-diff{background:rgba(249,168,37,.04)}
 .data-table tbody tr.row-damaged{background:rgba(249,115,22,.07)}
-.data-table tbody td{padding:8px 12px;border-bottom:1px solid rgba(47,59,74,.5);vertical-align:middle;white-space:nowrap}
+.data-table tbody td{padding:8px 12px;border-bottom:1px solid #f0f0f3;vertical-align:middle;white-space:nowrap}
 .data-table tbody td.wrap-cell{white-space:normal;min-width:150px}
-.diff-pos{color:#f59e0b;font-weight:700}
-.diff-neg{color:#ef4444;font-weight:700}
-.diff-zero{color:#22c55e;font-weight:700}
+.diff-pos{color:#b45309;font-weight:700}
+.diff-neg{color:#dc2626;font-weight:700}
+.diff-zero{color:#15803d;font-weight:700}
 
 /* Tooltip للصنف */
 .item-tooltip{
@@ -138,7 +141,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);overf
   border-radius:8px;
   padding:8px 12px;
   min-width:180px;
-  box-shadow:0 10px 30px rgba(0,0,0,.4);
+  box-shadow:0 10px 30px rgba(20,20,40,.12);
   pointer-events:none;
   opacity:0;
   transition:opacity .2s;
@@ -156,8 +159,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);overf
 .stat-pill .stat-lbl{font-size:11px;color:var(--text-muted);font-weight:500}
 
 .tab-btn{padding:8px 18px;border-radius:8px 8px 0 0;font-weight:600;font-size:13px;cursor:pointer;border:1px solid transparent;border-bottom:none;background:transparent;color:var(--text-muted);transition:all .2s;font-family:'Cairo',sans-serif}
-.tab-btn.active{background:var(--surface-2);color:var(--primary-light);border-color:var(--border)}
-.tab-btn:hover:not(.active){color:var(--text);background:rgba(36,48,68,.5)}
+.tab-btn.active{background:var(--surface-2);color:var(--primary);border-color:var(--border)}
+.tab-btn:hover:not(.active){color:var(--text);background:rgba(0,0,0,.04)}
 
 .modal-tab-btn{padding:6px 16px;border-radius:6px;font-weight:600;font-size:12px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-muted);transition:all .2s;font-family:'Cairo',sans-serif}
 .modal-tab-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
@@ -196,7 +199,7 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
 .camera-status-badge{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:4px 14px;border-radius:20px;font-family:'Cairo',sans-serif;white-space:nowrap}
 
 /* bulk scan list */
-.bulk-item-row{display:grid;grid-template-columns:30px 1fr 1fr 70px 32px;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid rgba(47,59,74,.4);font-size:12px}
+.bulk-item-row{display:grid;grid-template-columns:30px 1fr 1fr 70px 32px;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #f0f0f3;font-size:12px}
 .bulk-item-row:hover{background:rgba(196, 30, 58,.05)}
 .bulk-qty-input{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px 6px;color:var(--text);font-family:'Cairo',sans-serif;font-size:12px;width:100%;text-align:center}
 
@@ -251,10 +254,10 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
   position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
   z-index:900; display:none; align-items:center; gap:10px;
   padding:10px 14px; border-radius:16px; max-width:calc(100vw - 24px);
-  background:rgba(26,35,50,.85);
+  background:rgba(255,255,255,.9);
   -webkit-backdrop-filter:blur(20px) saturate(180%);
   backdrop-filter:blur(20px) saturate(180%);
-  border:1px solid var(--border); box-shadow:0 10px 30px rgba(0,0,0,.45);
+  border:1px solid var(--border); box-shadow:0 10px 30px rgba(20,20,40,.14);
   font-family:'Cairo',sans-serif;
 }
 .bz-float-stat{display:flex;flex-direction:column;align-items:center;line-height:1.15;min-width:52px}
@@ -281,7 +284,7 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
      منطق الرسم لم يُمسّ — أُضيفت سمة data-label فقط. */
   #mainTable thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
   #mainTable, #mainTable tbody, #mainTable tr, #mainTable td{display:block;width:100%}
-  #mainTable tr{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin:0 0 10px;padding:6px 12px;box-shadow:0 2px 10px rgba(0,0,0,.28)}
+  #mainTable tr{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin:0 0 10px;padding:6px 12px;box-shadow:0 2px 10px rgba(20,20,40,.08)}
   #mainTable tbody tr:hover{background:var(--surface)}
   #mainTable td{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 0!important;border:none!important;text-align:left!important;white-space:normal!important;font-size:13px}
   #mainTable td::before{content:attr(data-label);color:var(--text-muted);font-size:11px;font-weight:700;flex:0 0 38%;text-align:right}
@@ -297,8 +300,8 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
 </head>
 <body>
 <!-- حارس الدخول: طبقة تغطية قبل الترطيب + تحويل غير المسجّل إلى /login -->
-<div id="bz-auth-overlay" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;background:#0f1419;color:#e7e9ea;font-family:'Cairo',sans-serif">
-  <div style="width:48px;height:48px;border:4px solid rgba(255,255,255,.15);border-top-color:#DAAA3C;border-radius:50%;animation:bzspin .8s linear infinite"></div>
+<div id="bz-auth-overlay" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;background:#f5f5f7;color:#1f2430;font-family:'Cairo',sans-serif">
+  <div style="width:48px;height:48px;border:4px solid rgba(0,0,0,.1);border-top-color:#c41e3a;border-radius:50%;animation:bzspin .8s linear infinite"></div>
   <span style="font-size:.9rem;opacity:.8">جارٍ التحقّق من الدخول...</span>
 </div>
 <style is:global>@keyframes bzspin{to{transform:rotate(360deg)}}
@@ -320,17 +323,17 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
 <!-- طريق العودة إلى البوابة (الصفحة ملء الشاشة بلا سايدبار) -->
 <a
   href={`${base}/dashboard`}
-  style="position:fixed;top:10px;left:10px;z-index:60;display:inline-flex;align-items:center;gap:.4rem;background:rgba(26,35,50,.9);color:#e7e9ea;border:1px solid #2f3b4a;border-radius:8px;padding:.35rem .7rem;font-size:.75rem;font-weight:700;text-decoration:none;backdrop-filter:blur(6px)"
+  style="position:fixed;top:10px;left:10px;z-index:60;display:inline-flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.92);color:#1f2430;border:1px solid #e5e5ea;border-radius:8px;padding:.35rem .7rem;font-size:.75rem;font-weight:700;text-decoration:none;backdrop-filter:blur(6px)"
   title="العودة إلى لوحة التحكم"
 >← البوابة</a>
 
 <!-- ☁️ مؤشّر حالة السحابة: يُطمئن الموظّف أن عمله محفوظ (أو يُنذره فوراً) -->
 <div
   id="bzCloudStatus"
-  style="position:fixed;top:10px;left:96px;z-index:60;display:none;align-items:center;gap:.4rem;background:rgba(26,35,50,.9);border:1px solid #2f3b4a;border-radius:8px;padding:.35rem .7rem;font-size:.72rem;font-weight:700;backdrop-filter:blur(6px)"
+  style="position:fixed;top:10px;left:96px;z-index:60;display:none;align-items:center;gap:.4rem;background:rgba(255,255,255,.92);border:1px solid #e5e5ea;border-radius:8px;padding:.35rem .7rem;font-size:.72rem;font-weight:700;backdrop-filter:blur(6px)"
 >
-  <span id="bzCloudDot" style="width:8px;height:8px;border-radius:50%;background:#8899a6"></span>
-  <span id="bzCloudText" style="color:#8899a6">…</span>
+  <span id="bzCloudDot" style="width:8px;height:8px;border-radius:50%;background:#5f676e"></span>
+  <span id="bzCloudText" style="color:#5f676e">…</span>
 </div>
 <div class="toast-container" id="toastContainer"></div>
 <div class="item-tooltip" id="itemTooltip"></div>
@@ -2012,9 +2015,9 @@ window.__bzSetCloudStatus = function (state, text) {
   const txt = document.getElementById('bzCloudText');
   if (!box || !dot || !txt) return;
   box.style.display = 'inline-flex';
-  const colors = { synced: '#22c55e', syncing: '#DAAA3C', error: '#ef4444', offline: '#8899a6' };
-  dot.style.background = colors[state] || '#8899a6';
-  txt.style.color = colors[state] || '#8899a6';
+  const colors = { synced: '#15803d', syncing: '#b45309', error: '#dc2626', offline: '#5f676e' };
+  dot.style.background = colors[state] || '#5f676e';
+  txt.style.color = colors[state] || '#5f676e';
   txt.textContent = text || '';
 };
 
