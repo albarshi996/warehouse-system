@@ -4,13 +4,15 @@
  * القاعدة الذهبية: لا حذف — صفحة ومكوّن جديدان (access/).
  */
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
 import UsersAdmin from '../../components/brandzo-erp/access/UsersAdmin.jsx';
 ---
 
 <DashboardLayout title="إدارة المستخدمين" showGuide={false} light>
   <div class="text-right" dir="rtl">
     <div class="mb-6">
-      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">👥 إدارة المستخدمين</h1>
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">إدارة المستخدمين</h1>
       <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
         أسنِد الأدوار وفعّل/عطّل الحسابات. أنشئ الحساب أولًا في Firebase Console،
         ثم انسخ الـ <span class="font-mono text-accent">User UID</span> وأسند له دورًا هنا.
@@ -23,7 +25,7 @@ import UsersAdmin from '../../components/brandzo-erp/access/UsersAdmin.jsx';
     <!-- تنبيه أمني: قواعد Firestore يجب أن تحصر الكتابة بالأدمن -->
     <details class="mt-8 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5">
       <summary class="text-emerald-300 font-bold cursor-pointer">
-        ✅ قاعدة البيانات مقفولة — قواعد الأمان منشورة وفعّالة (اضغط للتفاصيل)
+        قاعدة البيانات مقفولة — قواعد الأمان منشورة وفعّالة (اضغط للتفاصيل)
       </summary>
       <div class="mt-3 text-sm text-ink-2 space-y-3">
         <p>

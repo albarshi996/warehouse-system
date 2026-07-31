@@ -9,13 +9,15 @@
  * القاعدة الذهبية: لا حذف — صفحة ومكوّن جديدان (ledger/OrderControlBoard).
  */
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
 import OrderControlBoard from '../../components/brandzo-erp/ledger/OrderControlBoard.jsx';
 ---
 
 <DashboardLayout title="الرقابة على الطلبات" showGuide={false} light>
   <div class="text-right" dir="rtl">
     <div class="mb-6">
-      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">📋 الرقابة على الطلبات</h1>
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">الرقابة على الطلبات</h1>
       <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
         كل طلبٍ لم يُنفَّذ له <span class="text-accent font-bold">سببٌ ظاهر</span>: أهو رصيدٌ ناقص أم تنفيذٌ
         متعثّر؟ راقب الطلبات المعلّقة مصنّفةً بالرصيد وسبب التوقّف، واقرأ الأصناف غير المتوفّرة

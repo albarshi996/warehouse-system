@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import Icon from '../../ui/Icon.jsx';
+import ListView from '../../odoo/ListView.jsx';
+import Badge from '../../odoo/Badge.jsx';
+import { int } from '../../odoo/format.js';
 
 /**
  * مركز الصلاحيات والأدوار — حاوية تفاعلية لتصميم نظام الوصول لبوابة العمليات.
@@ -12,6 +16,11 @@ import React, { useState } from 'react';
  *
  * القاعدة الذهبية: لا حذف — صفحة ومكوّن جديدان بالكامل. الحاوية قابلة للتوسّع:
  * تُضاف «نقطة» جديدة بإضافة عنصر إلى مصفوفة `ROADMAP`.
+ *
+ * المرحلة ٤ (2026-07-31): أُعيد كساء العرض بمكوّنات أودو داخل `.o_theme`
+ * (ControlPanel + ListView + Badge + o_kpi/section + Icon بدل الإيموجي) —
+ * **المنطق (الحالة والبيانات والمساعدات) لم يُمسّ**، غُيّر ما يُرسَم فقط.
+ * الأرقام لاتينية (R2) عبر format.
  */
 
 const GOLD = '#DAAA3C';
@@ -109,193 +118,194 @@ const ROADMAP = [
   { t: 'سجلّ التدقيق (Audit Log)', d: 'من فعل ماذا ومتى — لكل اعتماد أو تعديل حسّاس.', s: 'مقترح' },
 ];
 
-const card = 'rounded-2xl border border-line bg-chip backdrop-blur';
+/* ── كساء أودو (المرحلة ٤): خرائط عرض بدل الإيموجي — لا منطق. ─────────────── */
+const ROLE_ICONS = {
+  admin: 'shieldCheck',
+  warehouse_user: 'package',
+  purchase_manager: 'shoppingCart',
+  qc_inspector: 'checkCircle',
+  gate_officer: 'truck',
+  return_manager: 'arrowLeftRight',
+  inventory_auditor: 'clipboardList',
+  finance_manager: 'dollarSign',
+};
+const FLOW_ICONS = { 1: 'shield', 2: 'users', 3: 'gauge' };
+const STATUS_VARIANT = { 'التالي': 'progress', 'مخطّط': 'draft', 'مقترح': 'draft' };
+const CAP_COLS = [
+  { key: 'stage', label: 'المرحلة', width: '64px' },
+  { key: 'label', label: 'الحارس الذهبي' },
+  { key: 'roles', label: 'مَن يعتمد؟' },
+];
 
 export default function AccessControlHub() {
   const [sel, setSel] = useState('admin');
   const role = ROLES.find((r) => r.id === sel);
   const roleById = (id) => ROLES.find((r) => r.id === id);
 
-  return (
-    <div dir="rtl" className="space-y-6 text-ink-2">
-      {/* مقدّمة + حالة النظام */}
-      <div className={`${card} p-5`}>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-bold text-ink">🛡️ الصلاحيات والأدوار</h2>
-            <p className="text-sm text-ink-2 mt-1 max-w-2xl leading-relaxed">
-              مركز تصميم نظام الوصول لبوابة العمليات — مَن يدخل، وبأي دور، وماذا يرى ويعتمد.
-              الأدوار مبنية على مجموعات موديول <span className="font-mono text-accent">brandzo_warehouse</span> الحقيقية.
-            </p>
-          </div>
-          <span className="shrink-0 text-xs font-bold rounded-full px-3 py-1.5 border"
-            style={{ color: GOLD, borderColor: 'rgba(218,170,60,.4)', background: 'rgba(218,170,60,.08)' }}>
-            الحالة: البوابة مفتوحة — هذه خطة النظام
-          </span>
-        </div>
-      </div>
-
-      {/* كيفية الدخول */}
-      <div className={`${card} p-5`}>
-        <h3 className="text-sm font-bold text-accent mb-4">كيفية الدخول إلى بوابة العمليات</h3>
-        <div className="flex flex-wrap items-stretch gap-3">
-          {FLOW.map((f, i) => (
-            <React.Fragment key={f.n}>
-              <div className="flex-1 min-w-[150px] rounded-xl border border-line bg-surface p-4 text-center">
-                <div className="text-2xl mb-1">{f.ic}</div>
-                <div className="text-sm font-bold text-ink">{f.t}</div>
-                <div className="text-xs text-muted mt-1 leading-relaxed">{f.d}</div>
-              </div>
-              {i < FLOW.length - 1 && <div className="self-center text-gray-500 font-bold">◄</div>}
-            </React.Fragment>
-          ))}
-        </div>
-        <p className="text-xs text-muted mt-3 leading-relaxed">
-          المبدأ: <b className="text-ink-2">الدور يأتي من أودو</b> (مصدر الحقيقة الواحد)، والبوابة تعرض فقط ما يخصّ ذلك الدور.
-        </p>
-      </div>
-
-      {/* اختيار الدور */}
-      <div className={`${card} p-5`}>
-        <h3 className="text-sm font-bold text-accent mb-4">اختر دورًا لاستعراض صلاحياته وما يراه</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          {ROLES.map((r) => {
-            const active = r.id === sel;
+  const capRows = CAPS.map((cap) => ({
+    id: cap.label,
+    decoration: cap.roles.includes(sel) ? 'bf' : undefined,
+    cells: {
+      stage: <span className="decoration-bf" style={{ fontFamily: 'monospace', color: 'var(--o-gray-500)' }}>{cap.stage}</span>,
+      label: cap.label,
+      roles: (
+        <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '6px' }}>
+          {cap.roles.map((rid) => {
+            const r = roleById(rid);
+            const isSel = rid === sel;
             return (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => setSel(r.id)}
-                className="rounded-xl border p-3 text-right transition-colors"
-                style={active
-                  ? { borderColor: r.accent, background: 'rgba(255,255,255,.08)', boxShadow: `0 0 0 1px ${r.accent} inset` }
-                  : { borderColor: 'rgba(255,255,255,.1)', background: 'rgba(0,0,0,.2)' }}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-lg leading-none">{r.emoji}</span>
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: r.accent }} />
-                </div>
-                <div className="text-[13px] font-bold text-ink mt-2 leading-tight">{r.name}</div>
-              </button>
+              <Badge key={rid} variant={isSel ? 'done' : 'progress'}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <Icon name={ROLE_ICONS[rid]} size={11} /> {r.name}
+                </span>
+              </Badge>
             );
           })}
+        </span>
+      ),
+    },
+  }));
+
+  return (
+    <div className="o_theme" dir="rtl">
+      <div className="o_control_panel">
+        <div className="o_cp_start">
+          <nav className="o_breadcrumb" aria-label="مسار التنقّل"><span className="o_active">الصلاحيات والأدوار</span></nav>
+        </div>
+        <div className="o_cp_end">
+          <Badge variant="warn">البوابة مفتوحة — هذه خطة النظام</Badge>
         </div>
       </div>
 
-      {/* تفاصيل الدور: ماذا يفعل + ماذا يرى */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className={`${card} p-5`}>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xl">{role.emoji}</span>
-            <h3 className="text-base font-bold text-ink">{role.name}</h3>
-          </div>
-          <div className="text-[11px] font-mono text-muted mb-4">{role.group}</div>
-          <div className="text-xs font-bold text-accent mb-2">ماذا يفعل هذا الدور؟</div>
-          <ul className="space-y-2">
-            {role.can.map((c) => (
-              <li key={c} className="flex items-start gap-2 text-sm text-ink-2">
-                <span className="mt-0.5 shrink-0" style={{ color: role.accent }}>✓</span>
-                <span>{c}</span>
-              </li>
+      <div className="o_ds">
+        <p style={{ fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)', margin: '0 0 18px', lineHeight: 1.6, maxWidth: '52rem' }}>
+          مركز تصميم نظام الوصول لبوابة العمليات — مَن يدخل، وبأي دور، وماذا يرى ويعتمد.
+          الأدوار مبنية على مجموعات موديول <span style={{ fontFamily: 'monospace', color: 'var(--o-action)' }}>brandzo_warehouse</span> الحقيقية.
+        </p>
+
+        {/* كيفية الدخول */}
+        <div className="o_dashboard_section">
+          <h3 className="o_dashboard_section_title"><Icon name="workflows" size={16} /> كيفية الدخول إلى بوابة العمليات</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', gap: '12px' }}>
+            {FLOW.map((f, i) => (
+              <React.Fragment key={f.n}>
+                <div className="o_ds_card o_ds_pad" style={{ flex: '1', minWidth: '160px', textAlign: 'center' }}>
+                  <span className="o_kpi_icon" style={{ margin: '0 auto 10px' }}><Icon name={FLOW_ICONS[f.n]} size={20} /></span>
+                  <div style={{ fontWeight: 'var(--o-font-weight-bold)' }}>{f.t}</div>
+                  <div style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', marginTop: '4px', lineHeight: 1.6 }}>{f.d}</div>
+                </div>
+                {i < FLOW.length - 1 && (
+                  <div style={{ alignSelf: 'center', color: 'var(--o-gray-400)' }}><Icon name="arrowLeftRight" size={18} /></div>
+                )}
+              </React.Fragment>
             ))}
-          </ul>
+          </div>
+          <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', marginTop: '10px', lineHeight: 1.6 }}>
+            المبدأ: <b style={{ color: 'var(--o-main-text-color)' }}>الدور يأتي من أودو</b> (مصدر الحقيقة الواحد)، والبوابة تعرض فقط ما يخصّ ذلك الدور.
+          </p>
         </div>
 
-        <div className={`${card} p-5`}>
-          <div className="text-xs font-bold text-accent mb-1">ماذا يرى في البوابة؟</div>
-          <p className="text-[11px] text-muted mb-4 leading-relaxed">الأقسام المُضاءة يراها هذا الدور؛ الباقي مخفيّ عنه.</p>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(AREAS).map(([key, label]) => {
-              const on = role.sees.includes(key);
+        {/* اختيار الدور */}
+        <div className="o_dashboard_section">
+          <h3 className="o_dashboard_section_title"><Icon name="users" size={16} /> اختر دورًا لاستعراض صلاحياته وما يراه</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
+            {ROLES.map((r) => {
+              const active = r.id === sel;
               return (
-                <span
-                  key={key}
-                  className="text-xs font-semibold rounded-lg px-2.5 py-1.5 border transition-colors"
-                  style={on
-                    ? { color: '#fff', borderColor: role.accent, background: 'rgba(255,255,255,.08)' }
-                    : { color: '#6b7280', borderColor: 'rgba(255,255,255,.06)', background: 'transparent', opacity: .55 }}
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => setSel(r.id)}
+                  className={active ? 'btn btn-primary' : 'btn btn-secondary'}
+                  style={{ height: 'auto', textAlign: 'start', padding: '12px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}
                 >
-                  {on ? '● ' : '○ '}{label}
-                </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <Icon name={ROLE_ICONS[r.id]} size={18} />
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', flex: 'none', background: r.accent }} />
+                  </span>
+                  <span style={{ fontSize: '13px', fontWeight: 'var(--o-font-weight-bold)', lineHeight: 1.3 }}>{r.name}</span>
+                </button>
               );
             })}
           </div>
         </div>
-      </div>
 
-      {/* مصفوفة الصلاحيات: منطق الاعتماد */}
-      <div className={`${card} p-5`}>
-        <h3 className="text-sm font-bold text-accent mb-1">منطق الصلاحيات — مَن يعتمد ماذا؟</h3>
-        <p className="text-[11px] text-muted mb-4 leading-relaxed">
-          كل حارس ذهبي يتطلّب اعتماد الدور المخوّل — والدور المختار حاليًا مُميّز.
-        </p>
-        <div className="space-y-2">
-          {CAPS.map((cap) => {
-            const selHas = cap.roles.includes(sel);
-            return (
-              <div
-                key={cap.label}
-                className="flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2.5"
-                style={selHas
-                  ? { borderColor: role.accent, background: 'rgba(255,255,255,.05)' }
-                  : { borderColor: 'rgba(255,255,255,.08)', background: 'rgba(0,0,0,.15)' }}
-              >
-                <span className="text-[10px] font-mono text-gray-500 w-6 shrink-0">{cap.stage}</span>
-                <span className="text-sm font-semibold text-ink-2 flex-1 min-w-[160px]">{cap.label}</span>
-                <span className="flex flex-wrap gap-1.5">
-                  {cap.roles.map((rid) => {
-                    const r = roleById(rid);
-                    const isSel = rid === sel;
-                    return (
-                      <span
-                        key={rid}
-                        className="text-[11px] font-bold rounded-full px-2 py-0.5 border"
-                        style={{
-                          color: isSel ? '#fff' : r.accent,
-                          borderColor: r.accent,
-                          background: isSel ? r.accent : 'transparent',
-                        }}
-                      >
-                        {r.emoji} {r.name}
-                      </span>
-                    );
-                  })}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+        {/* تفاصيل الدور: ماذا يفعل + ماذا يرى */}
+        <div className="o_dashboard_grid2">
+          <div className="o_dashboard_card">
+            <div className="o_dashboard_card_head">
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <Icon name={ROLE_ICONS[role.id]} size={16} /> {role.name}
+              </span>
+              <span className="o_count" style={{ fontFamily: 'monospace' }}>{role.group}</span>
+            </div>
+            <div className="o_ds_pad">
+              <div style={{ fontSize: 'var(--o-font-size-xs)', fontWeight: 'var(--o-font-weight-bold)', color: 'var(--o-action)', marginBottom: '10px' }}>ماذا يفعل هذا الدور؟</div>
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {role.can.map((c) => (
+                  <li key={c} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: 'var(--o-font-size-sm)' }}>
+                    <span style={{ color: 'var(--o-text-success)', flex: 'none', marginTop: '2px' }}><Icon name="checkCircle" size={14} /></span>
+                    <span>{c}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
 
-      {/* الحاوية: نقاط قادمة لاكتمال المشروع */}
-      <div className={`${card} p-5`}>
-        <div className="flex items-center justify-between gap-3 mb-1">
-          <h3 className="text-sm font-bold text-accent">نقاط قادمة لاكتمال نظام الوصول</h3>
-          <span className="text-[11px] text-muted">حاوية قابلة للتوسّع</span>
-        </div>
-        <p className="text-[11px] text-muted mb-4 leading-relaxed">
-          هذه الصفحة مصمّمة لتنمو — نضيف كل نقطة هنا ونبنيها تباعًا حتى يكتمل النظام.
-        </p>
-        <div className="space-y-2.5">
-          {ROADMAP.map((it, i) => (
-            <div key={it.t} className="flex items-start gap-3 rounded-xl border border-line bg-surface p-3">
-              <span className="shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold"
-                style={{ background: 'rgba(218,170,60,.12)', color: GOLD }}>{i + 1}</span>
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-bold text-ink">{it.t}</span>
-                  <span className="text-[10px] font-bold rounded-full px-2 py-0.5 border"
-                    style={{ color: '#e5b7bf', borderColor: 'rgba(196,30,58,.5)', background: 'rgba(196,30,58,.12)' }}>
-                    {it.s}
-                  </span>
-                </div>
-                <div className="text-xs text-muted mt-1 leading-relaxed">{it.d}</div>
+          <div className="o_dashboard_card">
+            <div className="o_dashboard_card_head">
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><Icon name="grid" size={16} /> ماذا يرى في البوابة؟</span>
+            </div>
+            <div className="o_ds_pad">
+              <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', margin: '0 0 12px', lineHeight: 1.6 }}>الأقسام المُضاءة يراها هذا الدور؛ الباقي مخفيّ عنه.</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {Object.entries(AREAS).map(([key, label]) => {
+                  const on = role.sees.includes(key);
+                  return on ? (
+                    <Badge key={key} variant="done">{label}</Badge>
+                  ) : (
+                    <span key={key} className="o_badge o_badge-draft" style={{ opacity: 0.6 }}>{label}</span>
+                  );
+                })}
               </div>
             </div>
-          ))}
+          </div>
         </div>
-        <div className="mt-4 rounded-xl border border-dashed border-line p-3 text-center text-xs text-gray-500">
-          ＋ نقطة جديدة تُضاف هنا عند طلبها
+
+        {/* مصفوفة الصلاحيات: منطق الاعتماد */}
+        <div className="o_dashboard_section" style={{ marginTop: '22px' }}>
+          <h3 className="o_dashboard_section_title"><Icon name="shieldCheck" size={16} /> منطق الصلاحيات — مَن يعتمد ماذا؟</h3>
+          <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', margin: '0 0 10px', lineHeight: 1.6 }}>
+            كل حارس ذهبي يتطلّب اعتماد الدور المخوّل — والدور المختار حاليًا مُميّز.
+          </p>
+          <div className="o_ds_card">
+            <ListView selectable={false} columns={CAP_COLS} rows={capRows} />
+          </div>
+        </div>
+
+        {/* الحاوية: نقاط قادمة لاكتمال المشروع */}
+        <div className="o_dashboard_section">
+          <h3 className="o_dashboard_section_title"><Icon name="rocket" size={16} /> نقاط قادمة لاكتمال نظام الوصول</h3>
+          <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', margin: '0 0 12px', lineHeight: 1.6 }}>
+            هذه الصفحة مصمّمة لتنمو — نضيف كل نقطة هنا ونبنيها تباعًا حتى يكتمل النظام.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {ROADMAP.map((it, i) => (
+              <div key={it.t} className="o_ds_card" style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px 14px' }}>
+                <span style={{ flex: 'none', width: '26px', height: '26px', borderRadius: 'var(--o-border-radius)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--o-badge-info-bg)', color: 'var(--o-action)', fontSize: '12px', fontWeight: 'var(--o-font-weight-bold)' }}>{int(i + 1)}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontWeight: 'var(--o-font-weight-bold)' }}>{it.t}</span>
+                    <Badge variant={STATUS_VARIANT[it.s] || 'draft'}>{it.s}</Badge>
+                  </div>
+                  <div style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', marginTop: '4px', lineHeight: 1.6 }}>{it.d}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: '12px', border: '1px dashed var(--o-gray-400)', borderRadius: 'var(--o-border-radius)', padding: '12px', textAlign: 'center', fontSize: 'var(--o-font-size-xs)', color: 'var(--o-gray-500)' }}>
+            نقطة جديدة تُضاف هنا عند طلبها
+          </div>
         </div>
       </div>
     </div>

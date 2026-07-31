@@ -5,13 +5,15 @@
  * department_user (الإلزام في AuthGate عبر services/auth/pageAccess.js).
  */
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
 import HiringRequestsBoard from '../../components/brandzo-erp/hiring/HiringRequestsBoard.jsx';
 ---
 
 <DashboardLayout title="طلبات التوظيف" showGuide={false} light>
   <div class="text-right" dir="rtl">
     <div class="mb-6">
-      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">🏬 طلبات التوظيف من الإدارات</h1>
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">طلبات التوظيف من الإدارات</h1>
       <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
         كل إدارة ترسل مسمّاها الوظيفي المطلوب وبطاقة تعريفية عن الحاجة، وترى طلباتها هي فقط.
         المدير العام ومدير المستودع يراجعان كل الطلبات من هنا.

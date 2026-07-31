@@ -2,12 +2,26 @@ import { useEffect, useState } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import { listUsers, upsertUser, updateUserRole, setUserActive } from '../../../services/auth/usersService.js';
 import { ROLES, getRole, isAdmin } from '../../../services/auth/roles.js';
+import Icon from '../../ui/Icon.jsx';
+import ListView from '../../odoo/ListView.jsx';
+import { int } from '../../odoo/format.js';
 
 const ROLE_OPTIONS = Object.values(ROLES);
+
+const LIST_COLS = [
+  { key: 'user', label: 'المستخدم' },
+  { key: 'role', label: 'الدور' },
+  { key: 'status', label: 'الحالة' },
+];
 
 /**
  * إدارة المستخدمين — للأدمن فقط. تُسند الأدوار عبر Firestore `users/{uid}`.
  * تعتمد إنشاء الحساب في Firebase Console أولًا (نسخ الـ UID) ثم إسناد الدور هنا.
+ *
+ * المرحلة ٤ (2026-07-31): أُعيد كساء العرض بمكوّنات أودو داخل `.o_theme`
+ * (ControlPanel + o_ds_card + o_form_grid + ListView + o_badge للدور) —
+ * **المنطق (الاشتراك والقراءة وخدمات الكتابة) لم يُمسّ**، غُيّر ما يُرسَم فقط.
+ * الأرقام لاتينية (R2) عبر format، والإيموجي استُبدلت بمكوّن Icon (R1).
  */
 export default function UsersAdmin() {
   const [me, setMe] = useState(null);
@@ -79,108 +93,136 @@ export default function UsersAdmin() {
   }
 
   if (!ready) {
-    return <div className="text-ink-2 text-sm py-8 text-center">جارٍ التحقّق...</div>;
-  }
-
-  if (!me || !isAdmin(me.role)) {
     return (
-      <div className="bg-brand-red/10 border border-brand-red/40 text-red-200 rounded-xl p-6 text-center" dir="rtl">
-        <p className="font-bold text-lg mb-1">🚫 غير مصرّح</p>
-        <p className="text-sm">هذه الصفحة للمدير العام فقط.</p>
+      <div className="o_theme" dir="rtl">
+        <div className="o_ds">
+          <div className="o_dashboard_empty">جارٍ التحقّق...</div>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div dir="rtl" className="space-y-6">
-      {msg && (
-        <div className="bg-accent/15 border border-accent/40 text-accent rounded-xl px-4 py-2 text-sm text-center">
-          {msg}
-        </div>
-      )}
-
-      {/* إضافة مستخدم */}
-      <form onSubmit={addUser} className="bg-chip border border-line rounded-2xl p-5">
-        <h2 className="text-ink font-bold mb-1">➕ إضافة / تحديث مستخدم</h2>
-        <p className="text-muted text-xs mb-4">
-          أنشئ الحساب أولًا في Firebase Console ثم انسخ الـ <span className="font-mono">User UID</span> والصقه هنا.
-        </p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <input value={form.uid} onChange={(e) => setForm({ ...form, uid: e.target.value })} dir="ltr"
-            placeholder="User UID" className="bg-chip border border-line rounded-lg text-ink text-sm px-3 py-2 focus:outline-none focus:border-accent/60" />
-          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="الاسم" className="bg-chip border border-line rounded-lg text-ink text-sm px-3 py-2 focus:outline-none focus:border-accent/60" />
-          <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} dir="ltr"
-            placeholder="البريد (اختياري)" className="bg-chip border border-line rounded-lg text-ink text-sm px-3 py-2 focus:outline-none focus:border-accent/60" />
-          <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
-            className="bg-brand-navy border border-line rounded-lg text-white text-sm px-3 py-2 focus:outline-none focus:border-accent/60">
-            {ROLE_OPTIONS.map((r) => <option key={r.id} value={r.id}>{r.emoji} {r.label}</option>)}
-          </select>
-        </div>
-        <button type="submit" className="mt-4 bg-brand-red hover:bg-brand-red-dark text-white font-bold text-sm rounded-lg px-5 py-2 transition">
-          حفظ
-        </button>
-      </form>
-
-      {/* قائمة المستخدمين */}
-      <div className="bg-chip border border-line rounded-2xl p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-ink font-bold">👥 المستخدمون ({rows.length})</h2>
-          <button onClick={load} className="text-xs text-ink-2 hover:text-ink border border-line rounded-lg px-3 py-1.5 transition">
-            ↻ تحديث
-          </button>
-        </div>
-
-        {loading ? (
-          <p className="text-muted text-sm text-center py-8">جارٍ التحميل...</p>
-        ) : rows.length === 0 ? (
-          <p className="text-muted text-sm text-center py-8">
-            لا مستخدمين بعد. أضف أول مستخدم من النموذج أعلاه (بعد إنشائه في Firebase Console).
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-muted text-xs border-b border-line">
-                  <th className="text-right font-semibold py-2 px-2">المستخدم</th>
-                  <th className="text-right font-semibold py-2 px-2">الدور</th>
-                  <th className="text-right font-semibold py-2 px-2">الحالة</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((u) => {
-                  const role = getRole(u.role);
-                  return (
-                    <tr key={u.uid} className="border-b border-line">
-                      <td className="py-3 px-2">
-                        <p className="text-ink font-medium">{u.name || u.uid}</p>
-                        {u.email && <p className="text-muted text-xs" dir="ltr">{u.email}</p>}
-                        <p className="text-gray-500 text-[10px] font-mono" dir="ltr">{u.uid}</p>
-                      </td>
-                      <td className="py-3 px-2">
-                        <select value={role.id} onChange={(e) => changeRole(u.uid, e.target.value)}
-                          className="bg-brand-navy border border-line rounded-lg text-white text-xs px-2 py-1.5 focus:outline-none focus:border-accent/60"
-                          style={{ color: role.color }}>
-                          {ROLE_OPTIONS.map((r) => <option key={r.id} value={r.id} style={{ color: '#fff' }}>{r.emoji} {r.label}</option>)}
-                        </select>
-                      </td>
-                      <td className="py-3 px-2">
-                        <button onClick={() => toggleActive(u.uid, !(u.active !== false))}
-                          className={`text-xs font-bold rounded-full px-3 py-1 transition ${
-                            u.active !== false
-                              ? 'bg-green-500/15 text-green-300 hover:bg-green-500/25'
-                              : 'bg-gray-500/15 text-muted hover:bg-gray-500/25'
-                          }`}>
-                          {u.active !== false ? '● فعّال' : '○ معطّل'}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+  if (!me || !isAdmin(me.role)) {
+    return (
+      <div className="o_theme" dir="rtl">
+        <div className="o_ds">
+          <div className="o_alert danger">
+            <div className="o_alert_title"><Icon name="shield" size={16} /> غير مصرّح</div>
+            <p style={{ margin: 0 }}>هذه الصفحة للمدير العام فقط.</p>
           </div>
-        )}
+        </div>
+      </div>
+    );
+  }
+
+  const listRows = rows.map((u) => {
+    const role = getRole(u.role);
+    const active = u.active !== false;
+    return {
+      id: u.uid,
+      decoration: active ? undefined : 'muted',
+      cells: {
+        user: (
+          <div>
+            <p style={{ margin: 0, fontWeight: 'var(--o-font-weight-medium)' }}>{u.name || u.uid}</p>
+            {u.email && (
+              <p style={{ margin: '2px 0 0', fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', direction: 'ltr', textAlign: 'right' }}>{u.email}</p>
+            )}
+            <p style={{ margin: '2px 0 0', fontSize: '10px', fontFamily: 'monospace', color: 'var(--o-gray-500)', direction: 'ltr', textAlign: 'right' }}>{u.uid}</p>
+          </div>
+        ),
+        role: (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
+            <span className="o_badge" style={{ backgroundColor: `${role.color}1f`, color: role.color }}>{role.label}</span>
+            <select
+              className="o_input"
+              value={role.id}
+              onChange={(e) => changeRole(u.uid, e.target.value)}
+              style={{ padding: '3px 8px', fontSize: 'var(--o-font-size-xs)' }}
+            >
+              {ROLE_OPTIONS.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+            </select>
+          </div>
+        ),
+        status: (
+          <button
+            type="button"
+            onClick={() => toggleActive(u.uid, !active)}
+            className="btn btn-secondary btn-sm"
+            style={{ color: active ? 'var(--o-success)' : 'var(--o-main-color-muted)', gap: '6px' }}
+          >
+            <Icon name={active ? 'checkCircle' : 'close'} size={14} /> {active ? 'فعّال' : 'معطّل'}
+          </button>
+        ),
+      },
+    };
+  });
+
+  return (
+    <div className="o_theme" dir="rtl">
+      <div className="o_control_panel">
+        <div className="o_cp_start">
+          <nav className="o_breadcrumb" aria-label="مسار التنقّل"><span className="o_active">إدارة المستخدمين</span></nav>
+        </div>
+        <div className="o_cp_end">
+          <button type="button" className="btn btn-secondary btn-sm" onClick={load}>تحديث</button>
+        </div>
+      </div>
+
+      <div className="o_ds">
+        {msg && <div className="o_alert success">{msg}</div>}
+
+        {/* إضافة مستخدم */}
+        <form onSubmit={addUser} className="o_ds_card o_ds_pad" style={{ marginBottom: '18px' }}>
+          <h3 className="o_form_title" style={{ fontSize: '18px', marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Icon name="userPlus" size={18} /> إضافة / تحديث مستخدم
+          </h3>
+          <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', margin: '2px 0 14px', lineHeight: 1.6 }}>
+            أنشئ الحساب أولًا في Firebase Console ثم انسخ الـ <span style={{ fontFamily: 'monospace' }}>User UID</span> والصقه هنا.
+          </p>
+          <div className="o_form_grid">
+            <label className="o_field_block">
+              <span className="o_form_label">User UID</span>
+              <input className="o_input" value={form.uid} onChange={(e) => setForm({ ...form, uid: e.target.value })} dir="ltr" placeholder="User UID" style={{ textAlign: 'right' }} />
+            </label>
+            <label className="o_field_block">
+              <span className="o_form_label">الاسم</span>
+              <input className="o_input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="الاسم" />
+            </label>
+            <label className="o_field_block">
+              <span className="o_form_label">البريد (اختياري)</span>
+              <input className="o_input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} dir="ltr" placeholder="البريد (اختياري)" style={{ textAlign: 'right' }} />
+            </label>
+            <label className="o_field_block">
+              <span className="o_form_label">الدور</span>
+              <select className="o_input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+                {ROLE_OPTIONS.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+              </select>
+            </label>
+          </div>
+          <div className="o_form_actions">
+            <button type="submit" className="btn btn-primary">حفظ</button>
+          </div>
+        </form>
+
+        {/* قائمة المستخدمين */}
+        <div className="o_ds_card">
+          <div className="o_ds_toolbar">
+            <span style={{ fontWeight: 'var(--o-font-weight-bold)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Icon name="users" size={16} /> المستخدمون ({int(rows.length)})
+            </span>
+          </div>
+
+          {loading ? (
+            <div className="o_dashboard_empty">جارٍ التحميل...</div>
+          ) : rows.length === 0 ? (
+            <div className="o_dashboard_empty">
+              لا مستخدمين بعد. أضف أول مستخدم من النموذج أعلاه (بعد إنشائه في Firebase Console).
+            </div>
+          ) : (
+            <ListView selectable={false} columns={LIST_COLS} rows={listRows} />
+          )}
+        </div>
       </div>
     </div>
   );

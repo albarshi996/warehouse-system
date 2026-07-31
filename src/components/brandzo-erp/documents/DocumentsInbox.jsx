@@ -6,6 +6,10 @@
  * بإلحاحه**، ويرى المُنشئ أين وصل مستنده، ويُكشف المنسيّ بشارة «متأخّر».
  *
  * كل الحساب في `inbox.js` الخالص المُختبَر؛ هذا عرضٌ وتفاعل.
+ *
+ * المرحلة ٤ (2026-07-31): أُعيد كساء العرض بمكوّنات أودو داخل `.o_theme`
+ * (ListView + Badge + o_kpi + o_input) — **المنطق (الاشتراكات والتصفية والفرز
+ * والتصدير) لم يُمسّ**، غُيّر ما يُرسَم فقط. الأرقام لاتينية (R2) عبر format.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
@@ -27,21 +31,46 @@ import {
   toCsv,
   csvFileName,
 } from '../../../services/documents/inbox.js';
+import Icon from '../../ui/Icon.jsx';
+import ListView from '../../odoo/ListView.jsx';
+import Badge from '../../odoo/Badge.jsx';
+import { int } from '../../odoo/format.js';
 
 const MANAGER_ROLES = ['admin', 'warehouse_manager'];
+
+/** خريطة عرض: حالة المستند ← نوع شارة أودو (عرضٌ فقط، لا منطق). */
+const STATE_BADGE = {
+  draft: 'draft',
+  submitted: 'warn',
+  approved: 'progress',
+  rejected: 'danger',
+  done: 'done',
+};
+
+/** أعمدة قائمة أودو — نفس ترتيب الجدول السابق. */
+const LIST_COLS = [
+  { key: 'number', label: 'الرقم' },
+  { key: 'type', label: 'النوع' },
+  { key: 'state', label: 'الحالة' },
+  { key: 'creator', label: 'أنشأه' },
+  { key: 'age', label: 'الانتظار' },
+  { key: 'updated', label: 'آخر تحديث' },
+  { key: 'actions', label: '' },
+];
 
 function fmt(ts) {
   const d = ts?.toDate?.();
   if (!d) return '—';
-  return d.toLocaleString('ar-LY', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleString('ar-LY-u-nu-latn', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
-/** بطاقة عدّ في شريط اللقطة. */
-function Tile({ value, label, tone = 'text-ink-2' }) {
+/** بطاقة عدّ في شريط اللقطة — بمظهر مؤشّر أودو o_kpi. */
+function Tile({ value, label, icon, alert }) {
   return (
-    <div className="rounded-xl border border-line bg-chip px-3 py-2 text-center">
-      <div className={`text-lg font-extrabold leading-tight ${tone}`}>{value}</div>
-      <div className="text-[10px] text-muted font-bold mt-0.5">{label}</div>
+    <div className={`o_kpi${alert ? ' alert' : ''}`}>
+      {icon && <span className="o_kpi_icon"><Icon name={icon} size={18} /></span>}
+      <span className="o_kpi_value">{int(value)}</span>
+      <span className="o_kpi_label">{label}</span>
     </div>
   );
 }
@@ -96,11 +125,21 @@ export default function DocumentsInbox() {
     URL.revokeObjectURL(url);
   }
 
-  if (!ready) return <p className="text-ink-2 text-sm py-10 text-center">جارٍ التحقّق…</p>;
+  if (!ready) {
+    return (
+      <div className="o_theme" dir="rtl">
+        <div className="o_ds"><div className="o_dashboard_empty">جارٍ التحقّق…</div></div>
+      </div>
+    );
+  }
   if (!me) {
     return (
-      <div className="bg-brand-red/10 border border-brand-red/40 text-red-200 rounded-2xl p-6 text-center" dir="rtl">
-        <p className="font-bold text-lg mb-1">🔒 يلزم تسجيل الدخول</p>
+      <div className="o_theme" dir="rtl">
+        <div className="o_ds">
+          <div className="o_alert danger">
+            <div className="o_alert_title"><Icon name="shield" size={16} /> يلزم تسجيل الدخول</div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -114,196 +153,181 @@ export default function DocumentsInbox() {
   /** أزرار البدء مجمّعة بسلسلتها — تسعة أزرار مسطّحة تُربك لا تُيسّر. */
   const readyForms = GOVERNED_FORMS.filter((f) => f.ready);
   const groups = [
-    { title: '📥 الوارد', types: PURCHASE_CHAIN },
-    { title: '🛒 المبيعات والصرف', types: OUTBOUND_CHAIN },
-    { title: '🧾 الفوترة', types: ['INV'] },
-    { title: '🚚 النقل بين المستودعات', types: TRANSFER_CHAIN },
-    { title: '↩️ المرتجعات', types: RETURN_CHAIN },
-    { title: '⚖️ الجرد', types: COUNT_CHAIN },
-    { title: '🗑️ التالف', types: ['DMG'] },
+    { title: 'الوارد', icon: 'arrowDownTray', types: PURCHASE_CHAIN },
+    { title: 'المبيعات والصرف', icon: 'shoppingCart', types: OUTBOUND_CHAIN },
+    { title: 'الفوترة', icon: 'fileText', types: ['INV'] },
+    { title: 'النقل بين المستودعات', icon: 'truck', types: TRANSFER_CHAIN },
+    { title: 'المرتجعات', icon: 'arrowLeftRight', types: RETURN_CHAIN },
+    { title: 'الجرد', icon: 'clipboardList', types: COUNT_CHAIN },
+    { title: 'التالف', icon: 'alertTriangle', types: ['DMG'] },
   ];
 
+  const listRows = rows.map((d) => {
+    const state = getState(d.state);
+    const schema = getSchema(d.type);
+    const age = ageInState(d, now);
+    const stale = isStale(d, now);
+    return {
+      id: d.id,
+      decoration: stale ? 'danger' : undefined,
+      cells: {
+        number: <span className="decoration-bf" style={{ fontFamily: 'monospace' }}>{d.number || '— مسودّة'}</span>,
+        type: schema?.titleAr || d.type,
+        state: <Badge variant={STATE_BADGE[d.state] || 'draft'}>{state.label}</Badge>,
+        creator: d.createdByName,
+        age:
+          age == null ? (
+            <span style={{ color: 'var(--o-gray-500)' }}>—</span>
+          ) : stale ? (
+            <span className="decoration-danger decoration-bf" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+              <Icon name="alertTriangle" size={13} /> {int(age)} يومًا
+            </span>
+          ) : (
+            <span style={{ color: 'var(--o-main-color-muted)', whiteSpace: 'nowrap' }}>{int(age)} يومًا</span>
+          ),
+        updated: <span style={{ color: 'var(--o-gray-500)', fontSize: 'var(--o-font-size-xs)' }}>{fmt(d.updatedAt || d.createdAt)}</span>,
+        actions: (
+          <a href={`${base}/dashboard/document?type=${d.type}&id=${d.id}`} className="btn btn-secondary btn-sm" style={{ whiteSpace: 'nowrap' }}>
+            فتح ←
+          </a>
+        ),
+      },
+    };
+  });
+
   return (
-    <div dir="rtl" className="space-y-5">
-      {/* ── بدء مستند جديد، مجمّعًا بالسلسلة ── */}
-      <div className="space-y-2">
-        {groups.map((g) => {
-          const forms = readyForms.filter((f) => g.types.includes(f.type));
-          if (!forms.length) return null;
-          return (
-            <div key={g.title} className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold text-muted w-16">{g.title}</span>
-              {forms.map((f) => (
-                <a
-                  key={f.type}
-                  href={`${base}/dashboard/document?type=${f.type}`}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-accent text-brand-navy hover:bg-accent/85 transition-colors"
-                >
-                  ＋ {f.titleAr}
-                </a>
-              ))}
-            </div>
-          );
-        })}
-        {GOVERNED_FORMS.some((f) => !f.ready) && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-gray-500 w-16">⏳ قادم</span>
-            {GOVERNED_FORMS.filter((f) => !f.ready).map((f) => (
-              <span
-                key={f.type}
-                title={`يصل في المرحلة ${f.phase} — النموذج الورقي متاح الآن في مكتبة النماذج`}
-                className="px-3.5 py-1.5 rounded-lg text-xs bg-chip text-gray-500 border border-line cursor-default"
-              >
-                {f.titleAr} <span className="text-[10px] text-gray-600">({f.phase})</span>
-              </span>
-            ))}
+    <div className="o_theme" dir="rtl">
+      <div className="o_control_panel">
+        <div className="o_cp_start">
+          <nav className="o_breadcrumb" aria-label="مسار التنقّل"><span className="o_active">صندوق المستندات</span></nav>
+        </div>
+        <div className="o_cp_end">
+          <button type="button" className="btn btn-secondary" onClick={exportCsv} disabled={rows.length === 0}>
+            <Icon name="arrowDownTray" size={15} /> تصدير ({int(rows.length)})
+          </button>
+        </div>
+      </div>
+
+      <div className="o_ds">
+        {/* ── بدء مستند جديد، مجمّعًا بالسلسلة ── */}
+        <div className="o_ds_card o_ds_pad" style={{ marginBottom: '18px' }}>
+          <h3 className="o_form_title" style={{ fontSize: '16px', marginTop: 0, marginBottom: '12px' }}>بدء مستند جديد</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {groups.map((g) => {
+              const forms = readyForms.filter((f) => g.types.includes(f.type));
+              if (!forms.length) return null;
+              return (
+                <div key={g.title} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', minWidth: '128px', fontSize: 'var(--o-font-size-xs)', fontWeight: 'var(--o-font-weight-bold)', color: 'var(--o-main-color-muted)' }}>
+                    <Icon name={g.icon} size={14} /> {g.title}
+                  </span>
+                  {forms.map((f) => (
+                    <a key={f.type} href={`${base}/dashboard/document?type=${f.type}`} className="btn btn-primary btn-sm">
+                      {f.titleAr}
+                    </a>
+                  ))}
+                </div>
+              );
+            })}
+            {GOVERNED_FORMS.some((f) => !f.ready) && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', minWidth: '128px', fontSize: 'var(--o-font-size-xs)', fontWeight: 'var(--o-font-weight-bold)', color: 'var(--o-gray-500)' }}>
+                  <Icon name="calendar" size={14} /> قادم
+                </span>
+                {GOVERNED_FORMS.filter((f) => !f.ready).map((f) => (
+                  <span
+                    key={f.type}
+                    title={`يصل في المرحلة ${f.phase} — النموذج الورقي متاح الآن في مكتبة النماذج`}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: 'var(--o-border-radius)', fontSize: 'var(--o-font-size-xs)', background: 'var(--o-gray-100)', color: 'var(--o-gray-500)', border: '1px solid var(--o-gray-200)', cursor: 'default' }}
+                  >
+                    {f.titleAr} <span style={{ fontSize: '10px', color: 'var(--o-gray-400)' }}>({f.phase})</span>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── التبويبات ── */}
+        <div className="o_ds_toolbar" style={{ marginBottom: '14px' }}>
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className={`btn btn-sm ${tab === t.key ? 'btn-primary' : 'btn-secondary'}`}
+            >
+              {t.label}
+              {t.count > 0 && (
+                <span style={{ marginInlineStart: '6px', fontSize: '11px', background: 'var(--o-gray-200)', color: 'var(--o-gray-700)', borderRadius: '999px', padding: '1px 7px' }}>{int(t.count)}</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* ── لقطة الحالة ── */}
+        {stats.total > 0 && (
+          <div className="o_dashboard_kpis" style={{ marginBottom: '18px' }}>
+            <Tile icon="fileText" value={stats.total} label="الإجمالي" />
+            <Tile icon="notebook" value={stats.draft} label="مسودّة" />
+            <Tile icon="clipboardList" value={stats.submitted} label="بانتظار الاعتماد" />
+            <Tile icon="checkCircle" value={stats.approved} label="معتمَد" />
+            <Tile icon="checkSquare" value={stats.done} label="منجَز" />
+            <Tile icon="alertTriangle" value={stats.stale} label="متأخّر" alert={stats.stale > 0} />
           </div>
         )}
-      </div>
 
-      {/* ── التبويبات ── */}
-      <div className="flex gap-2 border-b border-line flex-wrap">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setTab(t.key)}
-            className={`px-4 py-2 text-sm font-bold border-b-2 -mb-px transition-colors ${
-              tab === t.key ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-ink'
-            }`}
-          >
-            {t.label}
-            {t.count > 0 && <span className="mr-2 text-[11px] bg-chip rounded-full px-2 py-0.5">{t.count}</span>}
-          </button>
-        ))}
-      </div>
+        {/* ── القائمة مع البحث والتصفية ── */}
+        <div className="o_ds_card">
+          <div className="o_ds_toolbar">
+            <div className="o_searchview">
+              <span className="o_searchview_icon" aria-hidden="true">⌕</span>
+              <input
+                type="text"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="ابحث برقم المستند أو نوعه أو منشئه…"
+                aria-label="بحث"
+              />
+            </div>
+            <select className="o_input" style={{ maxWidth: '190px' }} value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+              <option value="">كل الأنواع</option>
+              {readyForms.map((f) => (
+                <option key={f.type} value={f.type}>
+                  {f.titleAr}
+                </option>
+              ))}
+            </select>
+            <select className="o_input" style={{ maxWidth: '170px' }} value={stateFilter} onChange={(e) => setStateFilter(e.target.value)}>
+              <option value="">كل الحالات</option>
+              {Object.values(STATES).map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      {/* ── لقطة الحالة ── */}
-      {stats.total > 0 && (
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-          <Tile value={stats.total} label="الإجمالي" />
-          <Tile value={stats.draft} label="مسودّة" />
-          <Tile value={stats.submitted} label="بانتظار الاعتماد" tone="text-amber-300" />
-          <Tile value={stats.approved} label="معتمَد" tone="text-emerald-300" />
-          <Tile value={stats.done} label="منجَز" tone="text-emerald-400" />
-          <Tile value={stats.stale} label="⏰ متأخّر" tone={stats.stale ? 'text-red-300' : 'text-muted'} />
+          {rows.length === 0 ? (
+            <div className="o_dashboard_empty">
+              {q || typeFilter || stateFilter
+                ? 'لا نتائج لهذا البحث.'
+                : tab === 'pending'
+                  ? 'لا شيء ينتظر اعتمادك.'
+                  : 'لا مستندات بعد — ابدأ واحدًا من الأعلى.'}
+            </div>
+          ) : (
+            <ListView selectable={false} columns={LIST_COLS} rows={listRows} />
+          )}
         </div>
-      )}
 
-      {/* ── البحث والتصفية والتصدير ── */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <input
-          type="text"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="🔍 ابحث برقم المستند أو نوعه أو منشئه…"
-          className="flex-1 min-w-[14rem] bg-chip border border-line rounded-lg text-ink text-sm px-3 py-2 focus:outline-none focus:border-accent/50"
-        />
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="bg-chip border border-line rounded-lg text-ink text-sm px-3 py-2 focus:outline-none focus:border-accent/50"
-        >
-          <option value="">كل الأنواع</option>
-          {readyForms.map((f) => (
-            <option key={f.type} value={f.type} className="text-black">
-              {f.titleAr}
-            </option>
-          ))}
-        </select>
-        <select
-          value={stateFilter}
-          onChange={(e) => setStateFilter(e.target.value)}
-          className="bg-chip border border-line rounded-lg text-ink text-sm px-3 py-2 focus:outline-none focus:border-accent/50"
-        >
-          <option value="">كل الحالات</option>
-          {Object.values(STATES).map((s) => (
-            <option key={s.id} value={s.id} className="text-black">
-              {s.label}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          onClick={exportCsv}
-          disabled={rows.length === 0}
-          className="rounded-lg border border-line bg-chip hover:bg-surface-2 disabled:opacity-40 px-4 py-2 text-sm font-bold text-ink-2 transition-colors"
-        >
-          ⬇️ تصدير ({rows.length})
-        </button>
+        {stats.stale > 0 && (
+          <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', marginTop: '14px', lineHeight: 1.6 }}>
+            «متأخّر» = تجاوز مهلة حالته (بانتظار الاعتماد: يومان · معتمَد: 5 أيام · مسودّة: أسبوعان) —
+            وهو ما كان الورق يُخفيه على المكاتب.
+          </p>
+        )}
       </div>
-
-      {rows.length === 0 ? (
-        <p className="text-center text-gray-500 text-sm py-10">
-          {q || typeFilter || stateFilter
-            ? 'لا نتائج لهذا البحث.'
-            : tab === 'pending'
-              ? 'لا شيء ينتظر اعتمادك. ✅'
-              : 'لا مستندات بعد — ابدأ واحدًا من الأعلى.'}
-        </p>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-line">
-          <table className="w-full min-w-[720px] text-right">
-            <thead>
-              <tr className="bg-chip">
-                {['الرقم', 'النوع', 'الحالة', 'أنشأه', 'الانتظار', 'آخر تحديث', ''].map((h) => (
-                  <th key={h} className="px-3 py-2 text-xs font-bold text-ink-2">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((d) => {
-                const state = getState(d.state);
-                const schema = getSchema(d.type);
-                const age = ageInState(d, now);
-                const stale = isStale(d, now);
-                return (
-                  <tr key={d.id} className={`border-t border-line hover:bg-chip ${stale ? 'bg-red-500/5' : ''}`}>
-                    <td className="px-3 py-2 font-mono text-sm text-accent">{d.number || '— مسودّة'}</td>
-                    <td className="px-3 py-2 text-sm text-ink-2">{schema?.titleAr || d.type}</td>
-                    <td className="px-3 py-2">
-                      <span
-                        className="text-[11px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap"
-                        style={{ color: state.color, borderColor: `${state.color}66`, background: `${state.color}1a` }}
-                      >
-                        {state.emoji} {state.label}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 text-sm text-ink-2">{d.createdByName}</td>
-                    <td className="px-3 py-2 text-xs whitespace-nowrap">
-                      {age == null ? (
-                        <span className="text-gray-600">—</span>
-                      ) : stale ? (
-                        <span className="text-red-300 font-bold">⏰ {age} يومًا</span>
-                      ) : (
-                        <span className="text-muted">{age} يومًا</span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2 text-xs text-gray-500">{fmt(d.updatedAt || d.createdAt)}</td>
-                    <td className="px-3 py-2">
-                      <a
-                        href={`${base}/dashboard/document?type=${d.type}&id=${d.id}`}
-                        className="text-sm font-bold text-accent hover:underline whitespace-nowrap"
-                      >
-                        فتح ←
-                      </a>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {stats.stale > 0 && (
-        <p className="text-[11px] text-gray-500">
-          ⏰ «متأخّر» = تجاوز مهلة حالته (بانتظار الاعتماد: يومان · معتمَد: ٥ أيام · مسودّة: أسبوعان) —
-          وهو ما كان الورق يُخفيه على المكاتب.
-        </p>
-      )}
     </div>
   );
 }

@@ -3,6 +3,10 @@
  * إدارة تكتب بطاقة تعريفية كاملة عن مرشّحها (اسم · مسمّى · هاتف · مؤهل …
  * وسيرة اختيارية) وترى طلباتها هي فقط؛ المدير العام ومدير المستودع يراجعان
  * كل الطلبات من كل الإدارات. النموذج بنفس حقول شاشة التوظيف الأصلية.
+ *
+ * المرحلة ٤ (2026-07-31): أُعيد كساء العرض بمكوّنات أودو داخل `.o_theme`
+ * (ListView + Badge + o_input + o_alert) — **المنطق (الاشتراكات والصلاحيات
+ * والإرسال ورفع السيرة) لم يُمسّ**، غُيّر ما يُرسَم فقط. الأرقام لاتينية (R2).
  */
 import { useEffect, useState } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
@@ -16,8 +20,12 @@ import {
   listenAllHiringRequests,
   openCv,
 } from '../../../services/hiring/hiringRequestsService.js';
+import Icon from '../../ui/Icon.jsx';
+import ListView from '../../odoo/ListView.jsx';
+import Badge from '../../odoo/Badge.jsx';
+import { int } from '../../odoo/format.js';
 
-const fmtDate = (ts) => ts?.toDate?.()?.toLocaleDateString('ar-LY') || '—';
+const fmtDate = (ts) => ts?.toDate?.()?.toLocaleDateString('ar-LY-u-nu-latn') || '—';
 
 export default function HiringRequestsBoard() {
   const [me, setMe] = useState(null);
@@ -52,102 +60,94 @@ export default function HiringRequestsBoard() {
     setTimeout(() => setMsg(''), 4000);
   };
 
-  if (!ready) return <p className="text-ink-2 text-sm py-10 text-center">جارٍ التحقّق…</p>;
-
-  if (!me || (!isReviewer && !isRequester)) {
+  if (!ready) {
     return (
-      <div className="bg-brand-red/10 border border-brand-red/40 text-red-200 rounded-2xl p-6 text-center" dir="rtl">
-        <p className="font-bold text-lg mb-1">🚫 غير مصرّح</p>
-        <p className="text-sm">هذه الشاشة لطلبات التوظيف من الإدارات فقط.</p>
+      <div className="o_theme" dir="rtl">
+        <div className="o_ds"><div className="o_ds_card"><div className="o_dashboard_empty">جارٍ التحقّق…</div></div></div>
       </div>
     );
   }
 
+  if (!me || (!isReviewer && !isRequester)) {
+    return (
+      <div className="o_theme" dir="rtl">
+        <div className="o_ds">
+          <div className="o_alert danger">
+            <div className="o_alert_title"><Icon name="shield" size={16} /> غير مصرّح</div>
+            هذه الشاشة لطلبات التوظيف من الإدارات فقط.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const cols = [
+    { key: 'candidate', label: 'المرشّح' },
+    { key: 'department', label: 'الإدارة' },
+    { key: 'jobTitle', label: 'المسمى الوظيفي' },
+    { key: 'qual', label: 'المؤهل · الخبرة' },
+    { key: 'cv', label: 'السيرة' },
+    ...(isReviewer ? [{ key: 'by', label: 'أُرسل بواسطة' }] : []),
+    { key: 'date', label: 'التاريخ' },
+    { key: 'status', label: 'الحالة' },
+  ];
+
+  const listRows = rows.map((r) => ({
+    id: r.id,
+    cells: {
+      candidate: (
+        <div>
+          <span className="decoration-bf">{r.name || '—'}</span>
+          <div style={{ direction: 'ltr', textAlign: 'right', fontSize: 'var(--o-font-size-xs)', color: 'var(--o-gray-500)' }}>{r.phone || '—'}</div>
+        </div>
+      ),
+      department: r.departmentName,
+      jobTitle: r.jobTitle,
+      qual: `${r.qualification || '—'}${r.experienceYears ? ` · ${r.experienceYears} سنة` : ''}`,
+      cv: r.hasCv ? (
+        <button type="button" className="btn btn-secondary btn-sm" onClick={() => openCv(r.id).catch((e) => setErr(e.message))}>
+          <Icon name="fileText" size={14} /> فتح
+        </button>
+      ) : (
+        <span style={{ color: 'var(--o-gray-500)' }}>—</span>
+      ),
+      ...(isReviewer ? { by: r.createdByName } : {}),
+      date: fmtDate(r.createdAt),
+      status: <Badge variant="progress">مُرسَل</Badge>,
+    },
+  }));
+
   return (
-    <div dir="rtl" className="space-y-5">
-      {msg && (
-        <div className="bg-accent/15 border border-accent/40 text-accent rounded-xl px-4 py-2.5 text-sm text-center">
-          {msg}
+    <div className="o_theme" dir="rtl">
+      <div className="o_control_panel">
+        <div className="o_cp_start">
+          <nav className="o_breadcrumb" aria-label="مسار التنقّل"><span className="o_active">طلبات التوظيف</span></nav>
         </div>
-      )}
-      {err && (
-        <div className="bg-brand-red/10 border border-brand-red/40 text-red-200 rounded-xl px-4 py-2 text-sm text-center">
-          {err}
+      </div>
+
+      <div className="o_ds">
+        {msg && <div className="o_alert success">{msg}</div>}
+        {err && <div className="o_alert danger">{err}</div>}
+
+        {isRequester && (
+          <div style={{ marginBottom: '18px' }}>
+            <RequestForm
+              profile={me}
+              onSaved={() => flash('أُرسل الطلب بنجاح وحُفظ في السحابة.')}
+              onError={(t) => setErr(t)}
+            />
+          </div>
+        )}
+
+        <div className="o_ds_card">
+          {rows.length === 0 ? (
+            <div className="o_dashboard_empty">
+              {isReviewer ? 'لا طلبات بعد من أي إدارة.' : 'لا طلبات لك بعد — أرسل أول طلب أعلاه.'}
+            </div>
+          ) : (
+            <ListView selectable={false} columns={cols} rows={listRows} />
+          )}
         </div>
-      )}
-
-      {isRequester && (
-        <RequestForm
-          profile={me}
-          onSaved={() => flash('أُرسل الطلب بنجاح وحُفظ في السحابة.')}
-          onError={(t) => setErr(t)}
-        />
-      )}
-
-      <div className="overflow-x-auto rounded-xl border border-line">
-        <table className="w-full min-w-[760px] text-right">
-          <thead>
-            <tr className="bg-chip">
-              {[
-                'المرشّح',
-                'الإدارة',
-                'المسمى الوظيفي',
-                'المؤهل · الخبرة',
-                'السيرة',
-                ...(isReviewer ? ['أُرسل بواسطة'] : []),
-                'التاريخ',
-                'الحالة',
-              ].map((h) => (
-                <th key={h} className="px-3 py-2 text-xs font-bold text-ink-2 whitespace-nowrap">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={isReviewer ? 8 : 7} className="p-8 text-center text-gray-500 text-sm">
-                  {isReviewer ? 'لا طلبات بعد من أي إدارة.' : 'لا طلبات لك بعد — أرسل أول طلب أعلاه.'}
-                </td>
-              </tr>
-            ) : (
-              rows.map((r) => (
-                <tr key={r.id} className="border-t border-line hover:bg-surface-2">
-                  <td className="px-3 py-2">
-                    <p className="text-sm font-bold text-ink">{r.name || '—'}</p>
-                    <p className="text-[11px] text-gray-500" style={{ direction: 'ltr', textAlign: 'right' }}>{r.phone || '—'}</p>
-                  </td>
-                  <td className="px-3 py-2 text-sm text-ink-2 whitespace-nowrap">{r.departmentName}</td>
-                  <td className="px-3 py-2 text-sm text-ink-2">{r.jobTitle}</td>
-                  <td className="px-3 py-2 text-xs text-ink-2 whitespace-nowrap">
-                    {r.qualification || '—'}{r.experienceYears ? ` · ${r.experienceYears} سنة` : ''}
-                  </td>
-                  <td className="px-3 py-2">
-                    {r.hasCv ? (
-                      <button
-                        type="button"
-                        onClick={() => openCv(r.id).catch((e) => setErr(e.message))}
-                        className="text-xs font-bold text-accent hover:underline"
-                      >
-                        📄 فتح
-                      </button>
-                    ) : (
-                      <span className="text-xs text-gray-600">—</span>
-                    )}
-                  </td>
-                  {isReviewer && (
-                    <td className="px-3 py-2 text-xs text-muted whitespace-nowrap">{r.createdByName}</td>
-                  )}
-                  <td className="px-3 py-2 text-[11px] text-gray-500 whitespace-nowrap">{fmtDate(r.createdAt)}</td>
-                  <td className="px-3 py-2">
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap bg-accent/15 border-accent/40 text-accent">
-                      🆕 مُرسَل
-                    </span>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
       </div>
     </div>
   );
@@ -169,8 +169,7 @@ function RequestForm({ profile, onSaved, onError }) {
 
   const filledDetails = [phone, email, qualification, experienceYears, notes, cv].filter(Boolean).length;
 
-  const input =
-    'w-full bg-chip border border-line rounded-lg px-3 py-2 text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:border-accent/60';
+  const input = 'o_input';
 
   function pickCv(e) {
     const f = e.target.files?.[0] || null;
@@ -211,11 +210,13 @@ function RequestForm({ profile, onSaved, onError }) {
   }
 
   return (
-    <form onSubmit={submit} className="bg-chip border border-accent/25 rounded-2xl p-4 sm:p-5 space-y-4">
-      <h3 className="text-base font-bold text-accent">＋ طلب توظيف جديد</h3>
+    <form onSubmit={submit} className="o_ds_card o_ds_pad" dir="rtl" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <h3 className="o_form_title" style={{ fontSize: '18px', marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Icon name="userPlus" size={18} /> طلب توظيف جديد
+      </h3>
 
       {/* الأساسي: الإدارة · المرشّح · المسمّى */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+      <div className="o_form_grid">
         <L label="اسم الإدارة" required>
           <input className={input} value={departmentName} onChange={(e) => setDepartmentName(e.target.value)} required autoFocus />
         </L>
@@ -233,22 +234,23 @@ function RequestForm({ profile, onSaved, onError }) {
       </div>
 
       {/* التفاصيل الإضافية: مطويّة كي لا يواجه المستخدم جدارًا */}
-      <div className="border-t border-line pt-3">
+      <div style={{ borderTop: '1px solid var(--o-border-color)', paddingTop: '12px' }}>
         <button
           type="button"
           onClick={() => setShowDetails((v) => !v)}
-          className="flex items-center gap-2 text-sm font-bold text-ink-2 hover:text-accent transition-colors"
+          className="btn btn-secondary btn-sm"
+          aria-expanded={showDetails}
         >
-          <span className={`inline-block transition-transform duration-200 ${showDetails ? 'rotate-90' : ''}`}>▸</span>
+          <span style={{ display: 'inline-block', transition: 'transform 0.2s', transform: showDetails ? 'rotate(90deg)' : 'none' }}>▸</span>
           بطاقة تعريفية (رقم الهاتف · المؤهل · السيرة …)
           {!showDetails && filledDetails > 0 && (
-            <span className="text-[11px] bg-accent/20 text-accent rounded-full px-2 py-0.5">{filledDetails} مُدخَل</span>
+            <Badge variant="progress">{int(filledDetails)} مُدخَل</Badge>
           )}
         </button>
 
         {showDetails && (
-          <div className="pt-4 space-y-4">
-            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+          <div style={{ paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="o_form_grid">
               <L label="رقم الهاتف">
                 <input className={input} value={phone} onChange={(e) => setPhone(e.target.value)} style={{ direction: 'ltr', textAlign: 'right' }} />
               </L>
@@ -269,37 +271,36 @@ function RequestForm({ profile, onSaved, onError }) {
 
             <L label="السيرة الذاتية (PDF أو صورة — حتى 700KB)">
               <input
-                className="w-full text-xs text-ink-2 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-accent/20 file:text-accent file:font-bold file:cursor-pointer"
+                className="o_input"
                 type="file"
                 accept={Object.keys(ACCEPTED_CV_TYPES).join(',')}
                 onChange={pickCv}
               />
-              {cvError && <p className="text-xs text-red-300 mt-1">{cvError}</p>}
-              {cv && !cvError && <p className="text-xs text-accent mt-1">📄 {cv.name}</p>}
+              {cvError && <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-text-danger)', marginTop: '4px' }}>{cvError}</p>}
+              {cv && !cvError && (
+                <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-action)', marginTop: '4px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <Icon name="fileText" size={13} /> {cv.name}
+                </p>
+              )}
             </L>
           </div>
         )}
       </div>
 
-      <button
-        type="submit"
-        disabled={saving}
-        className="px-4 py-2 rounded-lg text-sm font-bold bg-accent text-brand-navy hover:bg-accent/85 transition-colors disabled:opacity-50"
-      >
-        {saving ? 'جارٍ الإرسال…' : 'إرسال الطلب'}
-      </button>
+      <div className="o_form_actions">
+        <button type="submit" disabled={saving} className="btn btn-primary">
+          {saving ? 'جارٍ الإرسال…' : 'إرسال الطلب'}
+        </button>
+      </div>
     </form>
   );
 }
 
 function L({ label, required, children }) {
   return (
-    <div>
-      <label className="block text-xs font-bold text-ink-2 mb-1.5">
-        {label}
-        {required && <span className="text-brand-red mr-1">*</span>}
-      </label>
+    <label className="o_field_block">
+      <span className="o_form_label">{label}{required ? ' *' : ''}</span>
       {children}
-    </div>
+    </label>
   );
 }

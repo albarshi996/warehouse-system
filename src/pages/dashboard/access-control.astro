@@ -7,13 +7,15 @@
  * القاعدة الذهبية: لا حذف — صفحة ومكوّن جديدان بالكامل (access/).
  */
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
 import AccessControlHub from '../../components/brandzo-erp/access/AccessControlHub.jsx';
 ---
 
 <DashboardLayout title="الصلاحيات والأدوار" showGuide={false} light>
   <div class="text-right" dir="rtl">
     <div class="mb-4">
-      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">🛡️ الصلاحيات والأدوار</h1>
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">الصلاحيات والأدوار</h1>
       <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
         من يدخل بوابة العمليات، وبأي دور، وماذا يرى ويعتمد. حاوية حيّة تنمو حتى يكتمل
         نظام الوصول — مبنية على مجموعات الصلاحيات الحقيقية في موديول
