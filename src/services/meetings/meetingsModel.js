@@ -36,7 +36,7 @@ export const ITEM_STATES = {
 };
 
 /** البنود التي تُعدّ «محسومة» عند حساب اكتمال المحضر. */
-const SETTLED = ['agreed', 'deferred', 'escalate', 'na'];
+export const SETTLED = ['agreed', 'deferred', 'escalate', 'na'];
 
 /** هل يجوز الانتقال من حالة إلى أخرى؟ */
 export function canTransitionMeeting(from, to) {

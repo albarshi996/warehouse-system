@@ -18,6 +18,7 @@
  * البذرة لا يمحو ما سُجّل في اجتماع سابق.
  */
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import GroupMeetings from '../../components/brandzo-erp/meetings/GroupMeetings.jsx';
 ---
 
 <DashboardLayout title="Brandzo | الاجتماعات التحضيرية" light>
@@ -257,6 +258,22 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   .letter .l-n { display: inline-flex; align-items: center; justify-content: center; width: 6mm; height: 6mm; border-radius: 50%; background: #fdf9ee; border: .2mm solid var(--k-gold); color: #8a6d24; font-weight: 800; font-size: 8pt; margin-left: 2mm; }
   .letter .l-close { font-size: 10pt; margin-top: 5mm; line-height: 2; }
 
+  /* ── الاجتماعات الجماعية: المسجّل والحقول المضمّنة (جزيرة React) ── */
+  .gm-wrap, .gm-room { margin-bottom: 16px; }
+  .gm-room > .kcard { margin-bottom: 14px; }
+  .rec-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .rec-btn { width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer; font-size: 1.4rem; background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; box-shadow: 0 6px 18px rgba(239,68,68,.35); transition: all .2s; flex-shrink: 0; }
+  .rec-btn:hover:not(:disabled) { transform: translateY(-2px); }
+  .rec-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .rec-btn.live { animation: recPulse 1.4s infinite; background: var(--k-navy); border: 2px solid var(--k-bad); }
+  @keyframes recPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.4); } 50% { box-shadow: 0 0 0 12px rgba(239,68,68,0); } }
+  .rec-meta { display: flex; flex-direction: column; min-width: 76px; }
+  .rec-time { font-family: 'Cairo',monospace; font-size: 1.3rem; font-weight: 900; color: var(--k-navy); line-height: 1.1; }
+  .rec-dot-lbl { font-size: .74rem; color: #64748b; font-weight: 700; }
+  .rec-transcript { background: #f8fafc; border: 1.5px solid #e8edf4; border-radius: 10px; padding: 12px 14px; min-height: 90px; max-height: 260px; overflow-y: auto; font-size: .88rem; line-height: 1.85; color: #334155; }
+  .gm-item-title { flex: 1; min-width: 120px; border: 1.5px solid var(--k-line); border-radius: 8px; padding: 5px 10px; font-family: 'Tajawal',sans-serif; font-size: .9rem; font-weight: 700; color: var(--k-navy); background: #fff; }
+  .gm-item-title:disabled { background: #f8fafc; color: #64748b; }
+
   @media print {
     @page { size: A4; margin: 0; }
     body * { visibility: hidden !important; }
@@ -322,6 +339,14 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       </div>
     </div>
   </div>
+
+  <!--
+    الاجتماعات الجماعية — خيار عقد اجتماعٍ يجمع إداراتنا معًا على طاولة واحدة
+    (جزيرة React مستقلّة). تعيش في هذه الصفحة فترث أنماطها، وتُخزَّن في مجموعة
+    `preparatory_meetings` بوسم group — بلا قاعدة أمانٍ جديدة. التسجيل الصوتي
+    والتفريغ الحيّ مدمجان في غرفتها.
+  -->
+  <GroupMeetings client:only="react" />
 
   <!--
     مراجع داعمة للقرار — بطاقة ثابتة بلا منطق: تصل غرفة الاجتماع بمركز

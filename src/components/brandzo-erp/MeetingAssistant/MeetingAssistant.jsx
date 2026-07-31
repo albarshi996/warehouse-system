@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './MeetingAssistant.module.css';
 import { useOverlayBack } from '../../../services/ui/useOverlayBack.js';
+import { useAudioRecorder } from './useAudioRecorder.js';
 
 const ARCHIVE_KEY = 'BrandzoMeetings';
 
@@ -18,6 +19,7 @@ const i18n = {
     btn_summarize: 'تلخيص ذكي',
     btn_translate: 'ترجمة للإنجليزية',
     btn_export_pdf: 'تصدير PDF',
+    btn_download_audio: 'تنزيل التسجيل الصوتي',
     btn_clear: 'مسح الكل',
     btn_copy: 'نسخ الكل',
     transcript_title: 'تفريغ المحادثة',
@@ -73,6 +75,7 @@ const i18n = {
     btn_summarize: 'Smart Summary',
     btn_translate: 'Translate to English',
     btn_export_pdf: 'Export PDF',
+    btn_download_audio: 'Download Audio',
     btn_clear: 'Clear All',
     btn_copy: 'Copy All',
     transcript_title: 'Transcript',
@@ -202,6 +205,9 @@ const MeetingAssistant = () => {
   const stopRecordingRef = useRef(() => {});
   const actionsRef = useRef({});
   const skipSaveRef = useRef(false);
+
+  // تسجيل صوتيّ فعليّ بالتوازي مع التفريغ — يُنزَّل محليًّا (قرار المالك: بلا رفع سحابيّ).
+  const audio = useAudioRecorder();
 
   const t = (key) => translate(lang, key);
 
@@ -403,6 +409,8 @@ const MeetingAssistant = () => {
       // Already started — ignore
     }
 
+    audio.startAudio(); // تسجيل صوتيّ موازٍ (fire-and-forget؛ يفشل بصمتٍ إن رُفض الميكروفون)
+
     showToast('🎙️ ' + (lang === 'ar' ? 'بدأ التسجيل...' : 'Recording started...'));
   };
 
@@ -421,6 +429,7 @@ const MeetingAssistant = () => {
     }
 
     flushInterim();
+    audio.stopAudio(); // يبني ملف الصوت (يتاح تنزيله بعدها)
     showToast(t('toast_saved'), 3000);
   };
 
@@ -432,6 +441,7 @@ const MeetingAssistant = () => {
   const resumeRecognition = () => {
     isPausedRef.current = false;
     setIsPaused(false);
+    audio.resumeAudio();
     if (recognitionRef.current) {
       recognitionRef.current.lang = selectedLang;
       try {
@@ -456,6 +466,7 @@ const MeetingAssistant = () => {
         }
       }
       flushInterim();
+      audio.pauseAudio();
     } else {
       resumeRecognition();
     }
@@ -819,7 +830,18 @@ const MeetingAssistant = () => {
     setEnglishTranslation('');
     setSummaryData(null);
     setWordCount(0);
+    audio.resetAudio();
     showToast(t('toast_cleared'));
+  };
+
+  // ينزّل ملف التسجيل الصوتي محليًّا (webm) — لا يُرفع للسحابة.
+  const downloadMeetingAudio = () => {
+    const base = (meetingTitle.trim() || (lang === 'ar' ? 'تسجيل-اجتماع' : 'meeting-audio'))
+      .replace(/\s+/g, '-')
+      .slice(0, 40);
+    if (!audio.downloadAudio(base)) {
+      showToast('⚠️ ' + (lang === 'ar' ? 'لا يوجد تسجيل صوتي بعد' : 'No audio recorded yet'));
+    }
   };
 
   const copyAll = () => {
@@ -1318,6 +1340,14 @@ const MeetingAssistant = () => {
                 📄 {t('btn_export_pdf')}
               </button>
             </div>
+            {/* تنزيل التسجيل الصوتي محليًّا (webm) — يظهر مفعّلًا بعد إيقاف تسجيلٍ فيه صوت */}
+            <button
+              onClick={downloadMeetingAudio}
+              disabled={!audio.audioBlob}
+              className="w-full py-2 rounded-lg border border-amber-400/30 bg-amber-500/10 text-amber-300 font-semibold text-sm hover:bg-amber-500/20 transition disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              ⬇️ {t('btn_download_audio')}
+            </button>
             <div
               className="w-full min-h-24 max-h-40 overflow-y-auto bg-surface border border-line rounded-lg p-3 text-sm leading-relaxed text-ink-2 font-sans"
               dir="ltr"

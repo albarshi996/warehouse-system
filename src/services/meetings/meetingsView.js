@@ -187,6 +187,88 @@ export function minutesHtml(meeting, opts = {}) {
   );
 }
 
+/* ═══════════════ 2ب) المحضر الجماعيّ ═══════════════
+ *
+ * الفرق عن المحضر الثنائيّ: طاولة واحدة لعدّة إدارات لا طرفان. فالرأس يذكر
+ * «الإدارات المشاركة» بدل «الطرف الأول/الثاني»، وعمود المسؤول واحدٌ لا اثنان،
+ * والحاضرون تُذكر إداراتهم. التوقيعات والتصعيد والملاحظات كنظيرها الثنائيّ.
+ */
+
+/** كتلة حاضري الاجتماع الجماعيّ — الاسم والصفة والإدارة. */
+function groupAttendeesBlock(attendees) {
+  const list = (attendees || []).filter((a) => String(a.name || '').trim());
+  if (!list.length) return '<p class="d-muted">لم يُسجَّل حاضرون.</p>';
+  return (
+    `<ul class="d-att">` +
+    list
+      .map(
+        (a) =>
+          `<li><b>${esc(a.name)}</b>${a.role ? ` — ${esc(a.role)}` : ''}${a.dept ? ` <i>(${esc(a.dept)})</i>` : ''}</li>`
+      )
+      .join('') +
+    `</ul>`
+  );
+}
+
+/**
+ * المحضر الجماعيّ كاملًا — يُطبع ويُصدَّر PDF.
+ * @param {object} meeting اجتماع جماعيّ (departments · title · items …)
+ * @param {object} opts { assetBase }
+ */
+export function groupMinutesHtml(meeting, opts = {}) {
+  const p = meetingProgress(meeting);
+  const depts = (meeting.departments || []).join(' · ') || '—';
+  const rows = (meeting.items || [])
+    .map(
+      (it, i) =>
+        `<tr><td class="d-n">${i + 1}</td>` +
+        `<td><b>${esc(it.title)}</b>${it.discussion && it.discussion.trim() ? `<div class="d-disc">${multiline(it.discussion)}</div>` : ''}</td>` +
+        `<td>${it.decision && it.decision.trim() ? multiline(it.decision) : '<span class="d-muted">—</span>'}</td>` +
+        `<td>${esc(it.ownerUs || '—')}</td>` +
+        `<td class="d-c">${esc(it.due || '—')}</td>` +
+        `<td class="d-c">${stateBadge(it.state)}</td></tr>`
+    )
+    .join('');
+
+  const escalated = itemsByState(meeting, 'escalate');
+
+  return (
+    `<div class="doc">` +
+    `<div class="d-head"><div class="d-logo">Brandzo</div>` +
+    `<div class="d-t"><h1>محضر اجتماع جماعيّ</h1>` +
+    `<div class="en">Joint Meeting Minutes · Brandzo Hub</div></div>` +
+    `<div class="d-ref">${esc(meeting.number || 'بلا رقم')}<br>${esc(meeting.date || '')}</div></div>` +
+
+    `<div class="d-grid">` +
+    `<div class="cell lbl">عنوان الاجتماع</div><div class="cell">${esc(meeting.title || '—')}</div>` +
+    `<div class="cell lbl">الإدارات المشاركة</div><div class="cell">${esc(depts)}</div>` +
+    `<div class="cell lbl">التاريخ</div><div class="cell">${esc(meeting.date || '—')}</div>` +
+    `<div class="cell lbl">المكان</div><div class="cell">${esc(meeting.place || '—')}</div>` +
+    `<div class="cell lbl">عدد البنود</div><div class="cell">${p.total} بندًا — ${p.agreed} متفق عليه · ${p.deferred} مؤجَّل · ${p.escalate} للتصعيد</div>` +
+    `</div>` +
+
+    (meeting.goal ? `<div class="d-goal"><b>هدف الاجتماع:</b> ${esc(meeting.goal)}</div>` : '') +
+
+    `<h3 class="d-h">الحاضرون</h3>${groupAttendeesBlock(meeting.attendees)}` +
+
+    `<h3 class="d-h">بنود الاجتماع وما اتُّفق عليه</h3>` +
+    `<table class="d-tbl"><thead><tr><th>#</th><th>البند</th><th>القرار المتفق عليه</th>` +
+    `<th>المسؤول</th><th>الموعد</th><th>الحالة</th></tr></thead><tbody>${rows}</tbody></table>` +
+
+    (escalated.length
+      ? `<div class="d-warn"><b>بنود تحتاج تصعيدًا للإدارة العامة (${escalated.length}):</b> ` +
+        escalated.map((i) => esc(i.title)).join(' · ') +
+        `</div>`
+      : '') +
+
+    (meeting.notes && meeting.notes.trim() ? `<h3 class="d-h">ملاحظات</h3>${multiline(meeting.notes)}` : '') +
+
+    sigBlock(meeting.signatories, opts.assetBase || '') +
+    `<div class="d-foot">وُلّد من نظام Brandzo Hub — ${esc(meeting.number || '')} · لا يُعتد بمحضر غير مُرقَّم</div>` +
+    `</div>`
+  );
+}
+
 /* ═══════════════ 3) خطاب الدعوة ═══════════════ */
 
 /**

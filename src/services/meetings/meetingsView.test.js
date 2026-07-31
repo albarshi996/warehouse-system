@@ -10,12 +10,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { mergeMeeting, MEETING_STATES, consolidate } from './meetingsModel.js';
+import { blankGroupMeeting, newGroupItem } from './groupMeetingsModel.js';
 import {
   esc,
   stateBadge,
   slideHtml,
   slidesHtml,
   minutesHtml,
+  groupMinutesHtml,
   invitationHtml,
   meetingCardHtml,
   systemReportHtml,
@@ -168,6 +170,65 @@ test('عدد الموقّعين حرّ — ثلاثة موقّعين تُرسم 
 test('ملخّص البنود في رأس المحضر يطابق الحالات', () => {
   const html = minutesHtml(filled(), {});
   assert.ok(html.includes('10 بندًا — 1 متفق عليه · 1 مؤجَّل · 1 للتصعيد'));
+});
+
+// ═══════════ المحضر الجماعيّ ═══════════
+
+/** اجتماع جماعيّ مملوء صالحٌ لطباعة محضره. */
+function filledGroup() {
+  const m = blankGroupMeeting({
+    idSeed: 'g1',
+    title: 'اجتماع تنسيقي شهري',
+    date: '2026-08-05',
+    place: 'قاعة الإدارة العامة',
+    departments: ['الإدارة المالية', 'إدارة الجودة', 'إدارة التسويق'],
+  });
+  m.number = 'MOM-2026-0009';
+  m.attendees = [
+    { name: 'محمد البرشي', role: 'مدير السلاسل', dept: 'إدارة السلاسل والإمداد والمخازن' },
+    { name: 'ممثل المالية', role: 'محاسب', dept: 'الإدارة المالية' },
+  ];
+  const a = newGroupItem(m, { title: 'توحيد نموذج طلب الصرف' });
+  a.state = 'agreed';
+  a.decision = 'يُعتمد النموذج الموحّد\nويبدأ العمل به الشهر القادم';
+  a.ownerUs = 'إدارة المالية';
+  a.due = '2026-09-01';
+  const b = newGroupItem(m, { title: 'بند خلافيّ يحتاج الإدارة العامة' });
+  b.state = 'escalate';
+  m.items.push(a, b);
+  return m;
+}
+
+test('المحضر الجماعيّ يذكر الإدارات المشاركة لا طرفًا ثانيًا واحدًا', () => {
+  const html = groupMinutesHtml(filledGroup());
+  assert.ok(html.includes('الإدارات المشاركة'));
+  assert.ok(html.includes('الإدارة المالية · إدارة الجودة · إدارة التسويق'));
+  assert.ok(html.includes('اجتماع تنسيقي شهري'));
+  assert.ok(html.includes('محضر اجتماع جماعيّ'));
+  assert.ok(html.includes('MOM-2026-0009'));
+  assertClean(html, 'groupMinutesHtml');
+});
+
+test('المحضر الجماعيّ يبني صفًّا لكل بند ويبرز التصعيد', () => {
+  const html = groupMinutesHtml(filledGroup());
+  assert.equal((html.match(/<tr><td class="d-n">/g) || []).length, 2);
+  assert.ok(html.includes('بنود تحتاج تصعيدًا للإدارة العامة (1)'));
+  assert.ok(html.includes('<p>يُعتمد النموذج الموحّد</p>'));
+});
+
+test('المحضر الجماعيّ يُدرج توقيعَي المديرَين المعتمدَين', () => {
+  const html = groupMinutesHtml(filledGroup(), { assetBase: '/' });
+  assert.equal((html.match(/class="d-sig"/g) || []).length, 2);
+  assert.ok(html.includes('signature-2.png'), 'توقيع البرشي');
+  assert.ok(html.includes('signature-1.png'), 'توقيع الباش');
+});
+
+test('المحضر الجماعيّ يهرّب الحقن في القرار', () => {
+  const m = filledGroup();
+  m.items[0].decision = '<script>bad()</script>';
+  const html = groupMinutesHtml(m);
+  assert.ok(!html.includes('<script>bad()'));
+  assert.ok(html.includes('&lt;script&gt;'));
 });
 
 // ═══════════ الخطاب ═══════════
