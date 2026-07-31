@@ -296,6 +296,38 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
   #mainTable td[colspan]{justify-content:center}
   #mainTable td[colspan]::before{display:none}
 }
+
+/* ============================================================
+   ★ شاشة الجرد فاتحة (2026-07-31) — إكمال ما فات القلبَ الأول
+   شاشة #dashboardScreen مبنيّة على مقياس Tailwind الأداتيّ «dark»
+   (مثل bg-dark-800 و text-dark-400 و border-dark-600) لا على متغيّرات :root — فبقيت
+   داكنةً، ونصُّ var(--text) الداكن فوقها اختفى (بلاغ المالك بالصور). الأصناف
+   العاديّة تُصرَّف إلى var(--color-dark-*)، لكنْ ⚠️ لا يصحّ قلب المتغيّر في :root
+   إذ يجمع Vite/Tailwind متغيّرات الثيم في ‎@layer theme‎ ويُسقط تجاوزنا (تحقّقتُ
+   حيًّا: يبقى #0f1419). فنتجاوز الأصناف الأداتيّة نفسها مباشرةً بـ!important —
+   وهو يفوز يقينًا (اختُبر حيًّا). ومتغيّرات الشفافية مضمَّنة hex فتُتجاوَز إفرادًا.
+   ============================================================ */
+/* خلفيّات: من مقياس dark الداكن إلى أسطح أودو الفاتحة */
+.bg-dark-900{background-color:#f5f5f7!important}  /* خلفية الشاشة */
+.bg-dark-800{background-color:#ffffff!important}  /* سطح البطاقة/الجدول */
+.bg-dark-700{background-color:#f6f6f8!important}  /* سطح مرتفع */
+.bg-dark-600{background-color:#e5e5ea!important}  /* فاصل ومسار مفتاح التبديل */
+.bg-dark-500{background-color:#495057!important}  /* نقطة رماديّة صغيرة */
+/* نصوص وحدود */
+.text-dark-400{color:#5f676e!important}           /* نصّ مكتوم */
+.text-dark-500{color:#495057!important}           /* نصّ أغمق */
+.border-dark-600{border-color:#e5e5ea!important}  /* حدود وفواصل */
+/* متغيّرا الشفافية المضمَّنان: الشريط اللاصق العلويّ + تذييل الجدول */
+.bg-dark-900\/95{background-color:#f5f5f7f2!important}
+.bg-dark-800\/50{background-color:#ffffff80!important}
+/* العناوين/القيم التي كانت بيضاء على أسطح صارت فاتحة → حبر داكن مقروء
+   (عنوان الاستيراد · عنوان اللوحة · الإجمالي · اسم الصنف الممسوح).
+   الانتقاء بالأصناف الأساسيّة فقط فلا يمسّ hover:text-white على الأزرار. */
+.glass-card .text-white,
+#dashboardScreen .text-white{color:var(--text)!important}
+/* الذهبي والأخضر الفاتح لا يقرآن كأرقامٍ كبيرة على الأبيض — تُغمَّق درجتهما */
+#statRemaining{color:#a86a00!important}
+#statPct{color:#15803d!important}
 </style>
 </head>
 <body>
