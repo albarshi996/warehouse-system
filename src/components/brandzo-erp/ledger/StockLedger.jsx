@@ -4,6 +4,9 @@ import { listenBalances } from '../../../services/balances/balancesService.js';
 import { movesForSku, movesForBarcode } from '../../../services/ledger/ledgerService.js';
 import { availableQty } from '../../../services/ledger/reservations.js';
 import { stuckBalances } from '../../../services/ledger/locations.js';
+import Icon from '../../ui/Icon.jsx';
+import ListView from '../../odoo/ListView.jsx';
+import { num } from '../../odoo/format.js';
 
 /**
  * دفتر حركات المخزون — أوّل ثمرة يلمسها المستخدم من الدفتر.
@@ -14,14 +17,16 @@ import { stuckBalances } from '../../../services/ledger/locations.js';
  *
  * ولوحة الاستثناءات أعلاه تعرض ما لا ينبغي أن يكون: رصيدٌ عالق في موقعٍ كان
  * يجب أن يفرغ — بضاعةٌ وصلت ولم تُخزَّن، أو شُحنت ولم تُستلم.
+ *
+ * المرحلة ٤ (2026-07-31): أُعيد كساء العرض بمكوّنات أودو داخل `.o_theme`
+ * (ListView + o_alert + o_ds_card) — **المنطق (الاشتراكات والأرصدة والكشف
+ * ولوحة الاستثناءات) لم يُمسّ**، غُيّر ما يُرسَم فقط. الأرقام لاتينية (R2) عبر format.
  */
-
-const num = (n) => (Number(n) || 0).toLocaleString('ar-LY');
 
 function fmtTime(ts) {
   const d = ts?.toDate?.();
   if (!d) return '—';
-  return d.toLocaleString('ar-LY', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleString('ar-LY-u-nu-latn', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
 const REASON_TONE = {
@@ -34,6 +39,22 @@ const REASON_TONE = {
   damage: '#ef4444',
   adjustment: '#DAAA3C',
 };
+
+const ITEM_COLS = [
+  { key: 'item', label: 'الصنف' },
+  { key: 'qty', label: 'الموجود', numeric: true },
+  { key: 'reserved', label: 'المحجوز', numeric: true },
+  { key: 'available', label: 'المتاح', numeric: true },
+];
+
+const MOVE_COLS = [
+  { key: 'date', label: 'التاريخ' },
+  { key: 'reason', label: 'الحركة' },
+  { key: 'doc', label: 'المستند' },
+  { key: 'inQty', label: 'وارد', numeric: true },
+  { key: 'outQty', label: 'صادر', numeric: true },
+  { key: 'balance', label: 'الرصيد', numeric: true },
+];
 
 export default function StockLedger() {
   const [me, setMe] = useState(null);
@@ -139,138 +160,156 @@ export default function StockLedger() {
     return { rows, closing: running };
   }, [selected, moves]);
 
-  if (!ready) return <p className="text-ink-2 text-sm py-10 text-center">جارٍ التحميل…</p>;
-  if (!me) return <Notice>افتح الصفحة بعد تسجيل الدخول ليُقرأ رصيدك.</Notice>;
+  if (!ready) {
+    return (
+      <div className="o_theme" dir="rtl">
+        <div className="o_ds"><div className="o_dashboard_empty">جارٍ التحميل…</div></div>
+      </div>
+    );
+  }
+  if (!me) {
+    return (
+      <div className="o_theme" dir="rtl">
+        <div className="o_ds"><Notice>افتح الصفحة بعد تسجيل الدخول ليُقرأ رصيدك.</Notice></div>
+      </div>
+    );
+  }
+
+  const itemRows = filtered.map((it) => ({
+    id: it.key,
+    item: it,
+    decoration: selected?.key === it.key ? 'bf' : undefined,
+    cells: {
+      item: (
+        <div>
+          <div className="decoration-bf">{it.sku || it.barcode}</div>
+          <div style={{ color: 'var(--o-main-color-muted)', fontSize: 'var(--o-font-size-xs)' }}>{it.nameAr}</div>
+        </div>
+      ),
+      qty: num(it.qty),
+      reserved: <span style={{ color: 'var(--o-text-warning)' }}>{num(it.reserved)}</span>,
+      available: <span className="decoration-bf" style={{ color: 'var(--o-text-success)' }}>{num(it.available)}</span>,
+    },
+  }));
+
+  const moveRows = (card?.rows || []).map((r) => ({
+    id: r.id,
+    cells: {
+      date: <span style={{ color: 'var(--o-main-color-muted)' }}>{fmtTime(r.postedAt)}</span>,
+      reason: (
+        <span
+          style={{
+            display: 'inline-block',
+            padding: '2px 8px',
+            borderRadius: '10px',
+            fontSize: '11px',
+            fontWeight: 600,
+            background: `${REASON_TONE[r.reason] || '#6b7280'}22`,
+            color: REASON_TONE[r.reason] || '#9ca3af',
+          }}
+        >
+          {r.reasonLabel || r.reason}
+        </span>
+      ),
+      doc: r.docNumber || r.docType,
+      inQty: r.signed > 0 ? <span style={{ color: 'var(--o-text-success)' }}>{num(r.qty)}</span> : '',
+      outQty: r.signed < 0 ? <span style={{ color: 'var(--o-text-warning)' }}>{num(r.qty)}</span> : '',
+      balance: <span className="decoration-bf">{num(r.balance)}</span>,
+    },
+  }));
 
   return (
-    <div dir="rtl" className="space-y-5">
-      {/* لوحة الاستثناءات: العالق في مواقع التصفير */}
-      {stuck.length > 0 && (
-        <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">⚠️</span>
-            <h3 className="text-sm font-bold text-amber-300">
-              {num(stuck.length)} رصيدًا عالقًا في مواقع يجب أن تفرغ
-            </h3>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {stuck.slice(0, 12).map((s, i) => (
-              <div key={i} className="rounded-lg bg-surface p-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="font-bold text-ink">{s.sku || s.barcode}</span>
-                  <span className="text-amber-300">{num(s.qty)} في {s.locationLabel}</span>
-                </div>
-                <p className="text-muted mt-1 leading-snug">{s.hint}</p>
-              </div>
-            ))}
-          </div>
+    <div className="o_theme" dir="rtl">
+      <div className="o_control_panel">
+        <div className="o_cp_start">
+          <nav className="o_breadcrumb" aria-label="مسار التنقّل"><span className="o_active">دفتر حركات المخزون</span></nav>
         </div>
-      )}
+      </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* قائمة الأصناف بأرصدتها الحيّة */}
-        <div className="rounded-xl bg-surface border border-line p-4">
-          <input
-            value={term}
-            onChange={(e) => setTerm(e.target.value)}
-            placeholder="ابحث بالكود أو الاسم أو الباركود…"
-            className="w-full mb-3 px-3 py-2 rounded-lg bg-surface border border-line text-ink text-sm placeholder-gray-500"
-          />
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs bz-dashboard-table">
-              <thead>
-                <tr className="text-muted text-right">
-                  <th className="py-2">الصنف</th>
-                  <th>الموجود</th>
-                  <th>المحجوز</th>
-                  <th>المتاح</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((it) => (
-                  <tr
-                    key={it.key}
-                    onClick={() => openCard(it)}
-                    className={`cursor-pointer border-t border-line hover:bg-surface-2 ${selected?.key === it.key ? 'bg-accent/10' : ''}`}
-                  >
-                    <td className="py-2">
-                      <div className="font-bold text-ink">{it.sku || it.barcode}</div>
-                      <div className="text-muted">{it.nameAr}</div>
-                    </td>
-                    <td className="text-ink-2">{num(it.qty)}</td>
-                    <td className="text-amber-300">{num(it.reserved)}</td>
-                    <td className="font-bold text-emerald-300">{num(it.available)}</td>
-                  </tr>
-                ))}
-                {filtered.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="py-6 text-center text-gray-500">
-                      {items.length ? 'لا نتيجة للبحث.' : 'لا أرصدة بعد — ابدأ بقيد مستند أو استيراد رصيد افتتاحي.'}
-                    </td>
-                  </tr>
+      <div className="o_ds">
+        {/* لوحة الاستثناءات: العالق في مواقع التصفير */}
+        {stuck.length > 0 && (
+          <div className="o_alert warning" style={{ marginBottom: '18px' }}>
+            <div className="o_alert_title">
+              <Icon name="alertTriangle" size={16} /> {num(stuck.length)} رصيدًا عالقًا في مواقع يجب أن تفرغ
+            </div>
+            <div style={{ display: 'grid', gap: '10px', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+              {stuck.slice(0, 12).map((s, i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: 'var(--o-view-background)',
+                    border: '1px solid var(--o-border-color)',
+                    borderRadius: 'var(--o-border-radius)',
+                    padding: '10px 12px',
+                    color: 'var(--o-main-text-color)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
+                    <span className="decoration-bf">{s.sku || s.barcode}</span>
+                    <span style={{ color: 'var(--o-text-warning)' }}>{num(s.qty)} في {s.locationLabel}</span>
+                  </div>
+                  <p style={{ color: 'var(--o-main-color-muted)', margin: '6px 0 0', fontSize: 'var(--o-font-size-xs)', lineHeight: 1.5 }}>{s.hint}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="o_dashboard_grid2">
+          {/* قائمة الأصناف بأرصدتها الحيّة */}
+          <div className="o_ds_card">
+            <div className="o_ds_toolbar">
+              <div className="o_searchview">
+                <span className="o_searchview_icon" aria-hidden="true">⌕</span>
+                <input
+                  type="search"
+                  aria-label="بحث"
+                  placeholder="ابحث بالكود أو الاسم أو الباركود…"
+                  value={term}
+                  onChange={(e) => setTerm(e.target.value)}
+                />
+              </div>
+            </div>
+            {filtered.length === 0 ? (
+              <div className="o_dashboard_empty">
+                {items.length ? 'لا نتيجة للبحث.' : 'لا أرصدة بعد — ابدأ بقيد مستند أو استيراد رصيد افتتاحي.'}
+              </div>
+            ) : (
+              <ListView selectable={false} columns={ITEM_COLS} rows={itemRows} onRowClick={(row) => openCard(row.item)} />
+            )}
+          </div>
+
+          {/* كشف حركة الصنف المختار */}
+          <div className="o_ds_card o_ds_pad">
+            {!selected ? (
+              <div className="o_dashboard_empty">اختر صنفًا لعرض كشف حركته الكامل — من الاستلام حتى التسليم.</div>
+            ) : (
+              <>
+                <div style={{ marginBottom: '12px' }}>
+                  <h3 className="o_form_title" style={{ fontSize: '16px', margin: '0 0 2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Icon name="notebook" size={16} /> كشف حركة: {selected.sku || selected.barcode}
+                  </h3>
+                  <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', margin: 0 }}>{selected.nameAr}</p>
+                </div>
+                {loadingMoves ? (
+                  <div className="o_dashboard_empty">جارٍ تحميل الحركات…</div>
+                ) : !card || !card.rows.length ? (
+                  <div className="o_dashboard_empty">لا حركات مقيّدة لهذا الصنف بعد.</div>
+                ) : (
+                  <ListView
+                    selectable={false}
+                    columns={MOVE_COLS}
+                    rows={moveRows}
+                    footer={{
+                      label: 'الرصيد الصافي في المستودعات الحقيقية',
+                      cells: { balance: <span className="decoration-bf" style={{ color: 'var(--o-action)' }}>{num(card.closing)}</span> },
+                    }}
+                  />
                 )}
-              </tbody>
-            </table>
+              </>
+            )}
           </div>
-        </div>
-
-        {/* كشف حركة الصنف المختار */}
-        <div className="rounded-xl bg-surface border border-line p-4">
-          {!selected ? (
-            <p className="text-gray-500 text-sm py-10 text-center">اختر صنفًا لعرض كشف حركته الكامل — من الاستلام حتى التسليم.</p>
-          ) : (
-            <>
-              <div className="mb-3">
-                <h3 className="text-sm font-bold text-ink">📇 كشف حركة: {selected.sku || selected.barcode}</h3>
-                <p className="text-xs text-muted">{selected.nameAr}</p>
-              </div>
-              {loadingMoves ? (
-                <p className="text-muted text-sm py-8 text-center">جارٍ تحميل الحركات…</p>
-              ) : !card || !card.rows.length ? (
-                <p className="text-gray-500 text-sm py-8 text-center">لا حركات مقيّدة لهذا الصنف بعد.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs bz-dashboard-table">
-                    <thead>
-                      <tr className="text-muted text-right">
-                        <th className="py-2">التاريخ</th>
-                        <th>الحركة</th>
-                        <th>المستند</th>
-                        <th>وارد</th>
-                        <th>صادر</th>
-                        <th>الرصيد</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {card.rows.map((r) => (
-                        <tr key={r.id} className="border-t border-line">
-                          <td className="py-2 text-muted whitespace-nowrap">{fmtTime(r.postedAt)}</td>
-                          <td>
-                            <span
-                              className="px-2 py-0.5 rounded text-[10px] font-bold"
-                              style={{ background: `${REASON_TONE[r.reason] || '#6b7280'}22`, color: REASON_TONE[r.reason] || '#9ca3af' }}
-                            >
-                              {r.reasonLabel || r.reason}
-                            </span>
-                          </td>
-                          <td className="text-ink-2 whitespace-nowrap">{r.docNumber || r.docType}</td>
-                          <td className="text-emerald-300">{r.signed > 0 ? num(r.qty) : ''}</td>
-                          <td className="text-red-300">{r.signed < 0 ? num(r.qty) : ''}</td>
-                          <td className="font-bold text-ink">{num(r.balance)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr className="border-t-2 border-line">
-                        <td colSpan={5} className="py-2 text-left font-bold text-ink-2">الرصيد الصافي في المستودعات الحقيقية</td>
-                        <td className="font-bold text-accent">{num(card.closing)}</td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              )}
-            </>
-          )}
         </div>
       </div>
     </div>
@@ -283,5 +322,5 @@ function isSystem(code) {
 }
 
 function Notice({ children }) {
-  return <div className="rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-sm p-4">{children}</div>;
+  return <div className="o_alert danger">{children}</div>;
 }

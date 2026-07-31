@@ -5,6 +5,10 @@ import { listenBalances } from '../../../services/balances/balancesService.js';
 import { TRANSFER_CHAIN } from '../../../services/documents/chain.js';
 import { pendingShipments, transferVariances, SHIPMENT_STATUS } from '../../../services/ledger/transferReports.js';
 import { getBasePath } from '../../../services/auth/authService.js';
+import Icon from '../../ui/Icon.jsx';
+import ListView from '../../odoo/ListView.jsx';
+import Badge from '../../odoo/Badge.jsx';
+import { int, num } from '../../odoo/format.js';
 
 /**
  * لوحة النقل بين المستودعات — نافذة مخزن النقل وتقريراه.
@@ -12,10 +16,50 @@ import { getBasePath } from '../../../services/auth/authService.js';
  * تجيب عن ثلاثة أسئلة تشغيلية: ماذا في الطريق الآن؟ أين ضاعت الفروق؟ وهل عاد
  * مخزن النقل صفرًا؟ الأوّلان تقريران محكومان، والثالث رصيدُ موقع `TRANSIT`
  * الحيّ — فإن لم يكن صفرًا، فما تبقّى فيه هو مجموع ما لم يصل بعد.
+ *
+ * المرحلة ٤ (2026-07-31): أُعيد كساء العرض بمكوّنات أودو داخل `.o_theme`
+ * (o_control_panel + o_kpi + o_notebook + ListView + Badge + o_alert) —
+ * **المنطق (الاشتراكات وتقارير النقل والرصيد الحيّ) لم يُمسّ**، غُيّر ما يُرسَم
+ * فقط. الأرقام لاتينية (R2) عبر format، والأحمر للتحذير فقط.
  */
 
-const num = (n) => (Number(n) || 0).toLocaleString('ar-LY');
 const TRANSIT = 'TRANSIT';
+
+/** حالة الشحنة ← نوع شارة أودو (progress = في الطريق · done = وصلت · danger = فرق). */
+const STATUS_VARIANT = {
+  draft: 'draft',
+  'in-transit': 'progress',
+  received: 'done',
+  variance: 'danger',
+};
+
+const PENDING_COLS = [
+  { key: 'doc', label: 'مستند النقل' },
+  { key: 'route', label: 'المسار' },
+  { key: 'date', label: 'التاريخ' },
+  { key: 'shipped', label: 'مشحون', numeric: true },
+  { key: 'received', label: 'مستلَم', numeric: true },
+  { key: 'remaining', label: 'متبقٍّ', numeric: true },
+  { key: 'status', label: 'الحالة' },
+];
+
+const VARIANCE_COLS = [
+  { key: 'doc', label: 'المستند' },
+  { key: 'item', label: 'الصنف' },
+  { key: 'route', label: 'المسار' },
+  { key: 'shipped', label: 'مشحون', numeric: true },
+  { key: 'received', label: 'مستلَم', numeric: true },
+  { key: 'variance', label: 'الفارق', numeric: true },
+  { key: 'reason', label: 'السبب' },
+  { key: 'settlement', label: 'التسوية' },
+];
+
+const TRANSIT_COLS = [
+  { key: 'item', label: 'الصنف' },
+  { key: 'batch', label: 'التشغيلة' },
+  { key: 'expiry', label: 'الصلاحية' },
+  { key: 'stuck', label: 'العالق', numeric: true },
+];
 
 export default function TransferBoard() {
   const [me, setMe] = useState(null);
@@ -56,174 +100,178 @@ export default function TransferBoard() {
   );
   const transitTotal = useMemo(() => transitRows.reduce((s, b) => s + (Number(b.qty) || 0), 0), [transitRows]);
 
-  if (!ready) return <p className="text-ink-2 text-sm py-10 text-center">جارٍ التحميل…</p>;
-  if (!me) return <Notice>افتح الصفحة بعد تسجيل الدخول.</Notice>;
+  if (!ready) {
+    return (
+      <div className="o_theme" dir="rtl">
+        <div className="o_ds"><div className="o_dashboard_empty">جارٍ التحميل…</div></div>
+      </div>
+    );
+  }
+  if (!me) {
+    return (
+      <div className="o_theme" dir="rtl">
+        <div className="o_ds"><Notice>افتح الصفحة بعد تسجيل الدخول.</Notice></div>
+      </div>
+    );
+  }
 
   const base = getBasePath();
 
+  const pendingListRows = pending.rows.map((r) => {
+    const s = SHIPMENT_STATUS[r.status];
+    return {
+      id: r.id,
+      cells: {
+        doc: (
+          <div>
+            <a href={`${base}/dashboard/document?type=TRN&id=${r.id}`} className="o_field_link decoration-bf">
+              {r.number || 'مسودّة'}
+            </a>
+            {r.driverName && (
+              <div className="decoration-muted" style={{ fontSize: 'var(--o-font-size-xs)' }}>{r.driverName} · {r.vehiclePlate}</div>
+            )}
+          </div>
+        ),
+        route: <span style={{ whiteSpace: 'nowrap' }}>{r.fromWarehouse} ← {r.toWarehouse}</span>,
+        date: <span className="decoration-muted">{r.shipmentDate || '—'}</span>,
+        shipped: num(r.shipped),
+        received: num(r.received),
+        remaining: r.remaining > 0
+          ? <span className="decoration-bf">{num(r.remaining)}</span>
+          : <span className="decoration-muted">{num(r.remaining)}</span>,
+        status: <Badge variant={STATUS_VARIANT[r.status]}>{s.label}</Badge>,
+      },
+    };
+  });
+
+  const varianceListRows = variances.rows.map((r, i) => ({
+    id: `${r.transferNote}·${r.key}·${i}`,
+    cells: {
+      doc: <span className="decoration-muted" style={{ whiteSpace: 'nowrap' }}>{r.transferNote}</span>,
+      item: r.description,
+      route: <span style={{ whiteSpace: 'nowrap' }}>{r.fromWarehouse} ← {r.toWarehouse}</span>,
+      shipped: num(r.shipped),
+      received: num(r.received),
+      variance: (
+        <span className="decoration-bf" style={{ color: r.variance < 0 ? 'var(--o-text-danger)' : 'var(--o-text-success)' }}>
+          {r.variance > 0 ? `+${num(r.variance)}` : num(r.variance)}
+        </span>
+      ),
+      reason: r.reason || <span className="decoration-danger">بلا سبب</span>,
+      settlement: <Badge variant={r.resolved ? 'done' : 'warn'}>{r.settlement}</Badge>,
+    },
+  }));
+
+  const transitListRows = transitRows.map((b) => ({
+    id: b.id,
+    cells: {
+      item: (
+        <div>
+          <div className="decoration-bf">{b.sku || b.barcode}</div>
+          <div className="decoration-muted" style={{ fontSize: 'var(--o-font-size-xs)' }}>{b.nameAr}</div>
+        </div>
+      ),
+      batch: <span className="decoration-muted">{b.batch || '—'}</span>,
+      expiry: <span className="decoration-muted">{b.expiry || '—'}</span>,
+      stuck: <span className="decoration-bf" style={{ color: 'var(--o-text-warning)' }}>{num(b.qty)}</span>,
+    },
+  }));
+
   return (
-    <div dir="rtl" className="space-y-5">
-      {/* شريط مؤشّرات مخزن النقل */}
-      <div className="grid gap-3 sm:grid-cols-4">
-        <Stat label="في الطريق" value={pending.inTransit} tone="#f59e0b" hint="شحنات غادرت ولم تُستلم" />
-        <Stat label="بفرق كميات" value={pending.withVariance} tone="#ef4444" hint="استُلمت ناقصةً" />
-        <Stat label="رصيد مخزن النقل" value={num(transitTotal)} tone={transitTotal > 0 ? '#f59e0b' : '#10b981'} hint={transitTotal > 0 ? 'يجب أن يعود صفرًا' : 'صفرٌ — لا شيء عالق ✓'} />
-        <Stat label="فروق غير مسوّاة" value={variances.unresolved} tone="#ef4444" hint={`نقصٌ إجماليّ ${num(variances.totalShortage)}`} />
+    <div className="o_theme" dir="rtl">
+      <div className="o_control_panel">
+        <div className="o_cp_start">
+          <nav className="o_breadcrumb" aria-label="مسار التنقّل"><span className="o_active">النقل بين المستودعات</span></nav>
+        </div>
       </div>
 
-      {/* التبويبات */}
-      <div className="flex gap-2 flex-wrap">
-        {[
-          ['pending', '🚚 الشحنات المعلّقة'],
-          ['variance', '⚖️ فروقات النقل'],
-          ['transit', '📦 رصيد مخزن النقل'],
-        ].map(([k, t]) => (
-          <button
-            key={k}
-            type="button"
-            onClick={() => setTab(k)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${tab === k ? 'bg-brand-red text-white' : 'bg-chip text-ink-2 hover:bg-surface-2'}`}
-          >
-            {t}
-          </button>
-        ))}
+      <div className="o_ds">
+        {/* شريط مؤشّرات مخزن النقل */}
+        <div className="o_dashboard_kpis">
+          <Stat label="في الطريق" value={int(pending.inTransit)} icon="truck" hint="شحنات غادرت ولم تُستلم" />
+          <Stat label="بفرق كميات" value={int(pending.withVariance)} icon="alertTriangle" alert={pending.withVariance > 0} hint="استُلمت ناقصةً" />
+          <Stat label="رصيد مخزن النقل" value={num(transitTotal)} icon="package" hint={transitTotal > 0 ? 'يجب أن يعود صفرًا' : 'صفرٌ — لا شيء عالق'} />
+          <Stat label="فروق غير مسوّاة" value={int(variances.unresolved)} icon="alertTriangle" alert={variances.unresolved > 0} hint={`نقصٌ إجماليّ ${num(variances.totalShortage)}`} />
+        </div>
+
+        {/* التبويبات */}
+        <div className="o_notebook">
+          <div className="o_notebook_headers">
+            {[
+              ['pending', 'الشحنات المعلّقة', 'truck'],
+              ['variance', 'فروقات النقل', 'arrowLeftRight'],
+              ['transit', 'رصيد مخزن النقل', 'package'],
+            ].map(([k, t, ic]) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setTab(k)}
+                className={tab === k ? 'active' : ''}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Icon name={ic} size={15} /> {t}
+              </button>
+            ))}
+          </div>
+
+          <div className="o_notebook_page">
+            {tab === 'pending' && (
+              <div className="o_ds_card">
+                {pending.rows.length === 0 ? (
+                  <div className="o_dashboard_empty">لا شحنات نقلٍ بعد.</div>
+                ) : (
+                  <ListView selectable={false} columns={PENDING_COLS} rows={pendingListRows} />
+                )}
+              </div>
+            )}
+
+            {tab === 'variance' && (
+              <div className="o_ds_card">
+                {variances.rows.length === 0 ? (
+                  <div className="o_dashboard_empty">لا فروق نقلٍ — كل ما شُحن وصل كاملًا.</div>
+                ) : (
+                  <ListView selectable={false} columns={VARIANCE_COLS} rows={varianceListRows} />
+                )}
+              </div>
+            )}
+
+            {tab === 'transit' && (
+              <>
+                <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', margin: '0 0 12px', lineHeight: 1.6 }}>
+                  <b style={{ color: 'var(--o-main-text-color)' }}>مخزن النقل</b> موقعٌ وسيط يجب أن يعود <b style={{ color: 'var(--o-text-success)' }}>صفرًا</b> بعد اكتمال كل استلام.
+                  أيّ رصيدٍ باقٍ هنا = بضاعةٌ غادرت المصدر ولم تصل الوجهة بعد — شحنةٌ في الطريق أو فرقٌ لم يُسوَّ.
+                </p>
+                {transitRows.length === 0 ? (
+                  <div className="o_ds_card o_ds_pad">
+                    <div className="o_alert success" style={{ margin: 0 }}>
+                      <div className="o_alert_title"><Icon name="checkCircle" size={16} /> مخزن النقل صفرٌ — لا شيء عالق في الطريق.</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="o_ds_card">
+                    <ListView selectable={false} columns={TRANSIT_COLS} rows={transitListRows} />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
       </div>
-
-      {tab === 'pending' && (
-        <div className="rounded-xl bg-surface border border-line p-4 overflow-x-auto">
-          <table className="w-full text-xs bz-dashboard-table">
-            <thead>
-              <tr className="text-muted text-right">
-                <th className="py-2">مستند النقل</th>
-                <th>المسار</th>
-                <th>التاريخ</th>
-                <th>مشحون</th>
-                <th>مستلَم</th>
-                <th>متبقٍّ</th>
-                <th>الحالة</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pending.rows.map((r) => {
-                const s = SHIPMENT_STATUS[r.status];
-                return (
-                  <tr key={r.id} className="border-t border-line">
-                    <td className="py-2">
-                      <a href={`${base}/dashboard/document?type=TRN&id=${r.id}`} className="font-bold text-accent hover:underline">
-                        {r.number || 'مسودّة'}
-                      </a>
-                      {r.driverName && <div className="text-gray-500">{r.driverName} · {r.vehiclePlate}</div>}
-                    </td>
-                    <td className="text-ink-2 whitespace-nowrap">{r.fromWarehouse} ← {r.toWarehouse}</td>
-                    <td className="text-muted whitespace-nowrap">{r.shipmentDate || '—'}</td>
-                    <td className="text-ink-2">{num(r.shipped)}</td>
-                    <td className="text-ink-2">{num(r.received)}</td>
-                    <td className={r.remaining > 0 ? 'text-amber-300 font-bold' : 'text-gray-500'}>{num(r.remaining)}</td>
-                    <td className="whitespace-nowrap font-bold" style={{ color: s.color }}>{s.emoji} {s.label}</td>
-                  </tr>
-                );
-              })}
-              {!pending.rows.length && <Empty cols={7}>لا شحنات نقلٍ بعد.</Empty>}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {tab === 'variance' && (
-        <div className="rounded-xl bg-surface border border-line p-4 overflow-x-auto">
-          <table className="w-full text-xs bz-dashboard-table">
-            <thead>
-              <tr className="text-muted text-right">
-                <th className="py-2">المستند</th>
-                <th>الصنف</th>
-                <th>المسار</th>
-                <th>مشحون</th>
-                <th>مستلَم</th>
-                <th>الفارق</th>
-                <th>السبب</th>
-                <th>التسوية</th>
-              </tr>
-            </thead>
-            <tbody>
-              {variances.rows.map((r, i) => (
-                <tr key={i} className="border-t border-line">
-                  <td className="py-2 text-ink-2 whitespace-nowrap">{r.transferNote}</td>
-                  <td className="text-ink">{r.description}</td>
-                  <td className="text-muted whitespace-nowrap">{r.fromWarehouse} ← {r.toWarehouse}</td>
-                  <td className="text-ink-2">{num(r.shipped)}</td>
-                  <td className="text-ink-2">{num(r.received)}</td>
-                  <td className="font-bold" style={{ color: r.variance < 0 ? '#ef4444' : '#10b981' }}>
-                    {r.variance > 0 ? `+${num(r.variance)}` : num(r.variance)}
-                  </td>
-                  <td className="text-ink-2">{r.reason || <span className="text-red-300">بلا سبب</span>}</td>
-                  <td className={r.resolved ? 'text-emerald-300' : 'text-amber-300'}>{r.settlement}</td>
-                </tr>
-              ))}
-              {!variances.rows.length && <Empty cols={8}>لا فروق نقلٍ — كل ما شُحن وصل كاملًا ✓</Empty>}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {tab === 'transit' && (
-        <div className="rounded-xl bg-surface border border-line p-4">
-          <p className="text-xs text-muted mb-3 leading-relaxed">
-            🚚 <b className="text-ink-2">مخزن النقل</b> موقعٌ وسيط يجب أن يعود <b className="text-emerald-300">صفرًا</b> بعد اكتمال كل استلام.
-            أيّ رصيدٍ باقٍ هنا = بضاعةٌ غادرت المصدر ولم تصل الوجهة بعد — شحنةٌ في الطريق أو فرقٌ لم يُسوَّ.
-          </p>
-          {transitRows.length === 0 ? (
-            <p className="text-emerald-300 text-sm py-8 text-center font-bold">✓ مخزن النقل صفرٌ — لا شيء عالق في الطريق.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs bz-dashboard-table">
-                <thead>
-                  <tr className="text-muted text-right">
-                    <th className="py-2">الصنف</th>
-                    <th>التشغيلة</th>
-                    <th>الصلاحية</th>
-                    <th>العالق</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transitRows.map((b) => (
-                    <tr key={b.id} className="border-t border-line">
-                      <td className="py-2">
-                        <div className="font-bold text-ink">{b.sku || b.barcode}</div>
-                        <div className="text-muted">{b.nameAr}</div>
-                      </td>
-                      <td className="text-ink-2">{b.batch || '—'}</td>
-                      <td className="text-muted">{b.expiry || '—'}</td>
-                      <td className="font-bold text-amber-300">{num(b.qty)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
 
-function Stat({ label, value, tone, hint }) {
+function Stat({ label, value, icon, hint, alert }) {
   return (
-    <div className="rounded-xl bg-surface border border-line p-3">
-      <div className="text-2xl font-bold" style={{ color: tone }}>{value}</div>
-      <div className="text-xs font-bold text-ink-2 mt-1">{label}</div>
-      <div className="text-[10px] text-gray-500 mt-0.5 leading-snug">{hint}</div>
+    <div className={`o_kpi${alert ? ' alert' : ''}`}>
+      <span className="o_kpi_icon"><Icon name={icon} size={20} /></span>
+      <span className="o_kpi_value">{value}</span>
+      <span className="o_kpi_label">{label}</span>
+      {hint && <span className="o_kpi_sub">{hint}</span>}
     </div>
-  );
-}
-
-function Empty({ cols, children }) {
-  return (
-    <tr>
-      <td colSpan={cols} className="py-6 text-center text-gray-500">{children}</td>
-    </tr>
   );
 }
 
 function Notice({ children }) {
-  return <div className="rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-sm p-4">{children}</div>;
+  return <div className="o_alert danger">{children}</div>;
 }

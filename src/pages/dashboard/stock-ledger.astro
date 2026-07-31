@@ -11,13 +11,15 @@
  * القاعدة الذهبية: لا حذف — صفحة ومكوّن جديدان (ledger/).
  */
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
 import StockLedger from '../../components/brandzo-erp/ledger/StockLedger.jsx';
 ---
 
 <DashboardLayout title="دفتر حركات المخزون" showGuide={false} light>
   <div class="text-right" dir="rtl">
     <div class="mb-6">
-      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">📇 دفتر حركات المخزون</h1>
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">دفتر حركات المخزون</h1>
       <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
         الرصيد الذي <span class="text-accent font-bold">لا يكذب</span>: كل مستند منجَز يُقيَّد حركةً في
         دفترٍ لا يُعدَّل ولا يُحذف، والرصيد يُحدَّث لحظتها. اقرأ المتاح الحقيقي لكل صنف

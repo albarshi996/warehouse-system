@@ -10,13 +10,15 @@
  * القاعدة الذهبية: لا حذف — صفحة ومكوّن جديدان (ledger/TransferBoard).
  */
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
 import TransferBoard from '../../components/brandzo-erp/ledger/TransferBoard.jsx';
 ---
 
 <DashboardLayout title="النقل بين المستودعات" showGuide={false} light>
   <div class="text-right" dir="rtl">
     <div class="mb-6">
-      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">🚚 النقل بين المستودعات</h1>
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">النقل بين المستودعات</h1>
       <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
         كل شحنةٍ تمرّ بـ<span class="text-accent font-bold">مخزن نقلٍ وسيط</span> بين مغادرتها المصدرَ
         ووصولها الفرع — ولا يعود إلى الصفر إلا باكتمال الاستلام. راقب ما في الطريق، واكشف الفروق

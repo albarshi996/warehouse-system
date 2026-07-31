@@ -5,23 +5,28 @@ import {
   listenScans,
   closeOperation,
 } from '../../../services/stock/operationsService.js';
+import Icon from '../../ui/Icon.jsx';
+import ListView from '../../odoo/ListView.jsx';
+import Badge from '../../odoo/Badge.jsx';
+import { int } from '../../odoo/format.js';
 
 const MANAGER_ROLES = ['admin', 'warehouse_manager'];
 
+// خرائط نوع العملية → اسم أيقونة أودو (بدل الإيموجي؛ FontAwesome غير مُحمَّل).
 const OP_ICONS = {
-  'جرد': '📋',
-  'استلام': '📥',
-  'صرف': '📤',
-  'إضافة أصناف': '➕',
-  'تالف': '⚠️',
-  'مرتجع': '↩️',
+  'جرد': 'clipboardList',
+  'استلام': 'arrowDownTray',
+  'صرف': 'arrowUpTray',
+  'إضافة أصناف': 'layers',
+  'تالف': 'alertTriangle',
+  'مرتجع': 'arrowLeftRight',
 };
 
 /** يحوّل طابع Firestore الزمني إلى نص عربي مقروء. */
 function fmtTime(ts) {
   const d = ts?.toDate?.();
   if (!d) return '—';
-  return d.toLocaleString('ar-LY', {
+  return d.toLocaleString('ar-LY-u-nu-latn', {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
@@ -40,9 +45,27 @@ function fmtRelative(ts) {
   return `قبل ${Math.floor(h / 24)} ي`;
 }
 
+const OP_COLS = [
+  { key: 'type', label: 'العملية' },
+  { key: 'status', label: 'الحالة' },
+  { key: 'by', label: 'المنفّذ' },
+  { key: 'when', label: 'الوقت' },
+];
+
+const SCAN_COLS = [
+  { key: 'item', label: 'الصنف' },
+  { key: 'qty', label: 'الكمية', numeric: true },
+  { key: 'by', label: 'من' },
+  { key: 'when', label: 'متى' },
+];
+
 /**
  * شاشة متابعة العمليات — للمدير العام ومدير المستودع.
  * تعرض العمليات لحظياً، ومن يعمل عليها، وسجلّ المسح الحيّ لكل عملية.
+ *
+ * المرحلة ٤ (2026-07-31): أُعيد كساء العرض بمكوّنات أودو داخل `.o_theme`
+ * (ControlPanel + ListView + Badge + o_kpi + o_alert) — **المنطق (الاشتراكات
+ * وخدمة الإقفال والتجميع) لم يُمسّ**، غُيّر ما يُرسَم فقط. الأرقام لاتينية (R2).
  */
 export default function OperationsMonitor() {
   const [me, setMe] = useState(null);
@@ -132,212 +155,216 @@ export default function OperationsMonitor() {
   }
 
   if (!ready) {
-    return <div className="text-ink-2 text-sm py-10 text-center">جارٍ التحقّق...</div>;
+    return (
+      <div className="o_theme" dir="rtl">
+        <div className="o_ds">
+          <div className="o_dashboard_empty">جارٍ التحقّق…</div>
+        </div>
+      </div>
+    );
   }
 
   if (!me || !MANAGER_ROLES.includes(me.role)) {
     return (
-      <div className="bg-brand-red/10 border border-brand-red/40 text-red-200 rounded-xl p-6 text-center" dir="rtl">
-        <p className="font-bold text-lg mb-1">🚫 غير مصرّح</p>
-        <p className="text-sm">هذه الشاشة للمدير العام ومدير المستودع فقط.</p>
+      <div className="o_theme" dir="rtl">
+        <div className="o_ds">
+          <div className="o_alert danger">
+            <div className="o_alert_title"><Icon name="shield" size={16} /> غير مصرّح</div>
+            هذه الشاشة للمدير العام ومدير المستودع فقط.
+          </div>
+        </div>
       </div>
     );
   }
 
   const sel = ops.find((o) => o.id === selected);
 
-  return (
-    <div dir="rtl" className="space-y-6">
-      {msg && (
-        <div className="bg-accent/15 border border-accent/40 text-accent rounded-xl px-4 py-2 text-sm text-center">
-          {msg}
-        </div>
-      )}
+  const opRows = shown.map((o) => ({
+    id: o.id,
+    decoration: selected === o.id ? 'bf' : o.status !== 'open' ? 'muted' : undefined,
+    cells: {
+      type: (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <Icon name={OP_ICONS[o.type] || 'package'} size={15} /> {o.type}
+        </span>
+      ),
+      status: (
+        <Badge variant={o.status === 'open' ? 'done' : 'draft'}>
+          {o.status === 'open' ? 'مفتوحة' : 'مُقفلة'}
+        </Badge>
+      ),
+      by: o.createdByName || 'غير معروف',
+      when: (
+        <span style={{ color: 'var(--o-main-color-muted)', fontSize: 'var(--o-font-size-xs)' }}>
+          {fmtTime(o.createdAt)} · {fmtRelative(o.createdAt)}
+        </span>
+      ),
+    },
+  }));
 
-      {/* لقطة سريعة */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <div className="bg-chip border border-line rounded-2xl p-4">
-          <p className="text-2xl font-bold text-ink">{ops.length}</p>
-          <p className="text-muted text-xs mt-1">إجمالي العمليات</p>
+  const scanRows = [...scans].reverse().map((s) => ({
+    id: s.id,
+    cells: {
+      item: (
+        <div>
+          <div style={{ fontWeight: 'var(--o-font-weight-medium)' }}>{s.name || s.barcode}</div>
+          <div style={{ color: 'var(--o-gray-500)', fontFamily: 'monospace', fontSize: 'var(--o-font-size-xs)' }} dir="ltr">
+            {s.barcode}
+          </div>
         </div>
-        <div className="bg-green-500/10 border border-green-500/25 rounded-2xl p-4">
-          <p className="text-2xl font-bold text-green-300">{openCount}</p>
-          <p className="text-muted text-xs mt-1">مفتوحة الآن</p>
-        </div>
-        <div className="bg-chip border border-line rounded-2xl p-4">
-          <p className="text-2xl font-bold text-ink">{ops.length - openCount}</p>
-          <p className="text-muted text-xs mt-1">مُقفلة</p>
+      ),
+      qty: <span className="decoration-bf">{int(s.qty)}</span>,
+      by: s.byName || '—',
+      when: fmtRelative(s.at) || '…',
+    },
+  }));
+
+  return (
+    <div className="o_theme" dir="rtl">
+      <div className="o_control_panel">
+        <div className="o_cp_start">
+          <nav className="o_breadcrumb" aria-label="مسار التنقّل"><span className="o_active">متابعة العمليات</span></nav>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-5 gap-5">
-        {/* قائمة العمليات */}
-        <div className="lg:col-span-2 bg-chip border border-line rounded-2xl p-4">
-          <div className="flex items-center justify-between mb-3 gap-2">
-            <h2 className="text-ink font-bold text-sm">📦 العمليات</h2>
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="bg-brand-navy border border-line rounded-lg text-white text-xs px-2 py-1 focus:outline-none focus:border-accent/60"
-            >
-              <option value="all">الكل</option>
-              <option value="open">مفتوحة</option>
-              <option value="closed">مُقفلة</option>
-            </select>
+      <div className="o_ds">
+        {msg && (
+          <div className="o_alert" style={{ background: 'var(--o-badge-info-bg)', color: 'var(--o-text-info)', borderColor: 'var(--o-badge-info-bg)' }}>
+            {msg}
           </div>
+        )}
 
-          {loadingOps ? (
-            <p className="text-muted text-sm text-center py-8">جارٍ التحميل...</p>
-          ) : shown.length === 0 ? (
-            <p className="text-muted text-sm text-center py-8 leading-relaxed">
-              لا توجد عمليات بعد.
-              <br />
-              <span className="text-xs">تظهر هنا فور بدء أي موظّف عملية جرد أو استلام.</span>
-            </p>
-          ) : (
-            <ul className="space-y-2 max-h-[520px] overflow-y-auto">
-              {shown.map((o) => (
-                <li key={o.id}>
-                  <button
-                    onClick={() => setSelected(o.id)}
-                    className={`w-full text-right rounded-xl border p-3 transition ${
-                      selected === o.id
-                        ? 'bg-brand-red/20 border-brand-red/50'
-                        : 'bg-chip border-line hover:bg-surface-2'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-ink font-bold text-sm">
-                        {OP_ICONS[o.type] || '📦'} {o.type}
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          o.status === 'open'
-                            ? 'bg-green-500/20 text-green-300'
-                            : 'bg-gray-500/20 text-muted'
-                        }`}
-                      >
-                        {o.status === 'open' ? '● مفتوحة' : '○ مُقفلة'}
-                      </span>
-                    </div>
-                    <p className="text-muted text-xs mt-1.5">
-                      👤 {o.createdByName || 'غير معروف'}
-                    </p>
-                    <p className="text-gray-500 text-[10px] mt-0.5">
-                      {fmtTime(o.createdAt)} · {fmtRelative(o.createdAt)}
-                    </p>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+        {/* لقطة سريعة */}
+        <div className="o_dashboard_kpis">
+          <div className="o_kpi">
+            <span className="o_kpi_icon"><Icon name="clipboardList" size={20} /></span>
+            <span className="o_kpi_value">{int(ops.length)}</span>
+            <span className="o_kpi_label">إجمالي العمليات</span>
+          </div>
+          <div className="o_kpi">
+            <span className="o_kpi_icon"><Icon name="activity" size={20} /></span>
+            <span className="o_kpi_value">{int(openCount)}</span>
+            <span className="o_kpi_label">مفتوحة الآن</span>
+          </div>
+          <div className="o_kpi">
+            <span className="o_kpi_icon"><Icon name="checkCircle" size={20} /></span>
+            <span className="o_kpi_value">{int(ops.length - openCount)}</span>
+            <span className="o_kpi_label">مُقفلة</span>
+          </div>
         </div>
 
-        {/* تفاصيل العملية المختارة */}
-        <div className="lg:col-span-3 bg-chip border border-line rounded-2xl p-4">
-          {!sel ? (
-            <p className="text-muted text-sm text-center py-16">
-              اختر عملية من القائمة لعرض سجلّ المسح الحيّ.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div>
-                  <h2 className="text-ink font-bold">
-                    {OP_ICONS[sel.type] || '📦'} {sel.type}
-                    <span className="text-gray-500 text-xs font-mono mr-2" dir="ltr">
+        <div className="o_dashboard_grid2">
+          {/* قائمة العمليات */}
+          <div className="o_dashboard_card">
+            <div className="o_dashboard_card_head">
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <Icon name="package" size={16} /> العمليات
+              </span>
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="o_input"
+                style={{ width: 'auto' }}
+              >
+                <option value="all">الكل</option>
+                <option value="open">مفتوحة</option>
+                <option value="closed">مُقفلة</option>
+              </select>
+            </div>
+
+            {loadingOps ? (
+              <div className="o_dashboard_empty">جارٍ التحميل…</div>
+            ) : shown.length === 0 ? (
+              <div className="o_dashboard_empty">
+                لا توجد عمليات بعد. تظهر هنا فور بدء أي موظّف عملية جرد أو استلام.
+              </div>
+            ) : (
+              <div style={{ maxHeight: '520px', overflowY: 'auto' }}>
+                <ListView
+                  selectable={false}
+                  columns={OP_COLS}
+                  rows={opRows}
+                  onRowClick={(row) => setSelected(row.id)}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* تفاصيل العملية المختارة */}
+          <div className="o_dashboard_card">
+            {!sel ? (
+              <div className="o_dashboard_empty">اختر عملية من القائمة لعرض سجلّ المسح الحيّ.</div>
+            ) : (
+              <>
+                <div className="o_dashboard_card_head">
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <Icon name={OP_ICONS[sel.type] || 'package'} size={16} /> {sel.type}
+                    <span style={{ color: 'var(--o-gray-500)', fontFamily: 'monospace', fontSize: 'var(--o-font-size-xs)' }} dir="ltr">
                       {sel.id.slice(0, 8)}
                     </span>
-                  </h2>
-                  <p className="text-muted text-xs mt-1">
+                  </span>
+                  {sel.status === 'open' && (
+                    <button type="button" className="btn btn-primary btn-sm" onClick={() => handleClose(sel.id)}>
+                      <Icon name="checkCircle" size={14} /> إقفال العملية
+                    </button>
+                  )}
+                </div>
+
+                <div className="o_ds_pad">
+                  <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', margin: '0 0 14px' }}>
                     بدأها {sel.createdByName || 'غير معروف'} · {fmtTime(sel.createdAt)}
                   </p>
-                </div>
-                {sel.status === 'open' && (
-                  <button
-                    onClick={() => handleClose(sel.id)}
-                    className="text-xs font-bold bg-brand-red/80 hover:bg-brand-red text-white rounded-lg px-3 py-1.5 transition"
-                  >
-                    🔒 إقفال العملية
-                  </button>
-                )}
-              </div>
 
-              {/* إجماليات */}
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-chip rounded-xl p-3 text-center">
-                  <p className="text-xl font-bold text-ink">{scans.length}</p>
-                  <p className="text-muted text-[10px]">عملية مسح</p>
-                </div>
-                <div className="bg-chip rounded-xl p-3 text-center">
-                  <p className="text-xl font-bold text-accent">{agg.totalQty}</p>
-                  <p className="text-muted text-[10px]">إجمالي الكمية</p>
-                </div>
-                <div className="bg-chip rounded-xl p-3 text-center">
-                  <p className="text-xl font-bold text-ink">{agg.byItem.length}</p>
-                  <p className="text-muted text-[10px]">صنف مختلف</p>
-                </div>
-              </div>
-
-              {/* من يعمل عليها */}
-              {agg.byUser.length > 0 && (
-                <div>
-                  <h3 className="text-ink-2 text-xs font-bold mb-2">👥 توزيع العمل</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {agg.byUser.map(([name, qty]) => (
-                      <span
-                        key={name}
-                        className="bg-chip border border-line rounded-full px-3 py-1 text-xs text-ink-2"
-                      >
-                        {name} — <b className="text-accent">{qty}</b>
-                      </span>
-                    ))}
+                  {/* إجماليات */}
+                  <div className="o_dashboard_kpis" style={{ marginBottom: '18px' }}>
+                    <div className="o_kpi">
+                      <span className="o_kpi_value">{int(scans.length)}</span>
+                      <span className="o_kpi_label">عملية مسح</span>
+                    </div>
+                    <div className="o_kpi">
+                      <span className="o_kpi_value">{int(agg.totalQty)}</span>
+                      <span className="o_kpi_label">إجمالي الكمية</span>
+                    </div>
+                    <div className="o_kpi">
+                      <span className="o_kpi_value">{int(agg.byItem.length)}</span>
+                      <span className="o_kpi_label">صنف مختلف</span>
+                    </div>
                   </div>
-                </div>
-              )}
 
-              {/* سجلّ المسح الحيّ */}
-              <div>
-                <h3 className="text-ink-2 text-xs font-bold mb-2">
-                  🔴 سجلّ المسح الحيّ{' '}
-                  <span className="text-gray-500 font-normal">(يتحدّث تلقائيًّا)</span>
-                </h3>
-                {loadingScans ? (
-                  <p className="text-muted text-sm text-center py-8">جارٍ التحميل...</p>
-                ) : scans.length === 0 ? (
-                  <p className="text-muted text-sm text-center py-8">لا مسح بعد على هذه العملية.</p>
-                ) : (
-                  <div className="overflow-x-auto max-h-[300px] overflow-y-auto rounded-xl border border-line">
-                    <table className="w-full text-xs">
-                      <thead className="sticky top-0 bg-brand-navy">
-                        <tr className="text-muted">
-                          <th className="text-right font-semibold py-2 px-2">الصنف</th>
-                          <th className="text-right font-semibold py-2 px-2">الكمية</th>
-                          <th className="text-right font-semibold py-2 px-2">من</th>
-                          <th className="text-right font-semibold py-2 px-2">متى</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...scans].reverse().map((s) => (
-                          <tr key={s.id} className="border-t border-line">
-                            <td className="py-2 px-2">
-                              <p className="text-ink font-medium">{s.name || s.barcode}</p>
-                              <p className="text-gray-500 text-[10px] font-mono" dir="ltr">
-                                {s.barcode}
-                              </p>
-                            </td>
-                            <td className="py-2 px-2 text-accent font-bold">{s.qty}</td>
-                            <td className="py-2 px-2 text-ink-2">{s.byName || '—'}</td>
-                            <td className="py-2 px-2 text-gray-500">{fmtRelative(s.at) || '…'}</td>
-                          </tr>
+                  {/* من يعمل عليها */}
+                  {agg.byUser.length > 0 && (
+                    <div style={{ marginBottom: '18px' }}>
+                      <h3 className="o_dashboard_section_title"><Icon name="users" size={16} /> توزيع العمل</h3>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        {agg.byUser.map(([name, qty]) => (
+                          <Badge key={name} variant="progress">{name} — {int(qty)}</Badge>
                         ))}
-                      </tbody>
-                    </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* سجلّ المسح الحيّ */}
+                  <div>
+                    <h3 className="o_dashboard_section_title">
+                      <Icon name="activity" size={16} /> سجلّ المسح الحيّ
+                      <span style={{ color: 'var(--o-gray-500)', fontWeight: 400, fontSize: 'var(--o-font-size-xs)' }}>
+                        (يتحدّث تلقائيًّا)
+                      </span>
+                    </h3>
+                    {loadingScans ? (
+                      <div className="o_dashboard_empty">جارٍ التحميل…</div>
+                    ) : scans.length === 0 ? (
+                      <div className="o_dashboard_empty">لا مسح بعد على هذه العملية.</div>
+                    ) : (
+                      <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--o-border-color)', borderRadius: 'var(--o-border-radius)' }}>
+                        <ListView selectable={false} columns={SCAN_COLS} rows={scanRows} />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

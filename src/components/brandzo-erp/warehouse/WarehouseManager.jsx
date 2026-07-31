@@ -12,8 +12,30 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { db } from '../../../config/firebase.js';
+import Icon from '../../ui/Icon.jsx';
+import ListView from '../../odoo/ListView.jsx';
+import Badge from '../../odoo/Badge.jsx';
+import { int } from '../../odoo/format.js';
+
+/**
+ * شاشة ماستر المستودعات — قائمة حيّة + إضافة/تعديل/حذف + تصدير/استيراد JSON،
+ * مع تراجُع محلّيّ (localStorage) عند انقطاع الاتصال بالسحابة.
+ *
+ * المرحلة ٤ (2026-07-31): أُعيد كساء العرض بمكوّنات أودو داخل `.o_theme`
+ * (ControlPanel + ListView + Badge + o_input + o_alert + o_kpi) — **المنطق
+ * (الاشتراك، الكتابة، التصدير/الاستيراد، الوضع المحلّيّ) لم يُمسّ**، غُيّر ما
+ * يُرسَم فقط. الأرقام لاتينية (R2) عبر format، والأيقونات عبر مكوّن Icon (R1).
+ */
 
 const STORAGE_KEY = 'brandzo_warehouses_local';
+
+const LIST_COLS = [
+  { key: 'code', label: 'الكود' },
+  { key: 'name', label: 'الاسم' },
+  { key: 'manager', label: 'المدير' },
+  { key: 'status', label: 'الحالة' },
+  { key: 'actions', label: 'الإجراءات' },
+];
 
 const WarehouseManager = () => {
   const [warehouses, setWarehouses] = useState([]);
@@ -117,7 +139,7 @@ const WarehouseManager = () => {
 
       setFormData({ code: '', name: '', manager: '' });
       setEditingId(null);
-      setStatusMsg({ type: 'success', text: editingId ? 'تم تعديل المستودع بنجاح ✅' : 'تمت إضافة المستودع بنجاح ✅' });
+      setStatusMsg({ type: 'success', text: editingId ? 'تم تعديل المستودع بنجاح' : 'تمت إضافة المستودع بنجاح' });
       setHasUnsavedChanges(false);
       setTimeout(() => setStatusMsg({ type: '', text: '' }), 3000);
     } catch (error) {
@@ -202,174 +224,151 @@ const WarehouseManager = () => {
     setHasUnsavedChanges(true);
   };
 
+  const activeCount = warehouses.filter((wh) => (wh.status || 'نشط') === 'نشط').length;
+  const managedCount = warehouses.filter((wh) => wh.manager).length;
+
+  const listRows = warehouses.map((wh) => ({
+    id: wh.id,
+    cells: {
+      code: <span className="decoration-bf" style={{ fontFamily: 'monospace' }}>{wh.code}</span>,
+      name: wh.name,
+      manager: wh.manager || '—',
+      status: <Badge variant={(wh.status || 'نشط') === 'نشط' ? 'done' : 'danger'}>{wh.status || 'نشط'}</Badge>,
+      actions: (
+        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => startEdit(wh)}>تعديل</button>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleDelete(wh.id)}>حذف</button>
+        </div>
+      ),
+    },
+  }));
+
   return (
-    <div className="font-['Cairo'] text-right" dir="rtl">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-2xl sm:text-3xl font-bold text-brand-navy">
-          إدارة المستودعات (Warehouses)
-        </h2>
-        <div className="flex gap-2">
-          <button
-            onClick={handleExport}
-            className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg border border-gray-300 transition-all flex items-center gap-1"
-          >
-            📤 تصدير JSON
+    <div className="o_theme" dir="rtl">
+      <div className="o_control_panel">
+        <div className="o_cp_start">
+          <nav className="o_breadcrumb" aria-label="مسار التنقّل"><span className="o_active">إدارة المستودعات</span></nav>
+        </div>
+        <div className="o_cp_end" style={{ gap: '8px' }}>
+          <button type="button" className="btn btn-secondary" onClick={handleExport}>
+            <Icon name="arrowUpTray" size={15} /> تصدير JSON
           </button>
-          <button
-            onClick={handleImport}
-            className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg border border-gray-300 transition-all flex items-center gap-1"
-          >
-            📥 استيراد JSON
+          <button type="button" className="btn btn-secondary" onClick={handleImport}>
+            <Icon name="arrowDownTray" size={15} /> استيراد JSON
           </button>
         </div>
       </div>
 
-      {/* وضع العمل المحلي */}
-      {offlineMode && (
-        <div className="mb-4 p-4 bg-yellow-50 border-r-4 border-yellow-400 text-yellow-800 rounded-lg shadow-sm font-bold flex items-center gap-2">
-          <span>⚠️ وضع عمل محلي — البيانات محفوظة على هذا الجهاز فقط</span>
-        </div>
-      )}
+      <div className="o_ds">
+        <p style={{ fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)', margin: '0 0 14px', lineHeight: 1.6 }}>
+          كود المستودع (WH Code) هو المعرّف الفريد. عند انقطاع السحابة يعمل النظام محلّيًّا ثم يزامن لاحقًا.
+        </p>
 
-      {/* منطقة التنبيهات */}
-      {statusMsg.text && (
-        <div
-          className={`mb-4 p-4 rounded-lg font-bold shadow-sm ${
-            statusMsg.type === 'error'
-              ? 'bg-red-100 text-red-700 border border-red-200'
-              : statusMsg.type === 'success'
-                ? 'bg-green-100 text-green-700 border border-green-200'
-                : 'bg-blue-100 text-blue-700'
-          }`}
-        >
-          {statusMsg.text}
-        </div>
-      )}
+        {offlineMode && (
+          <div className="o_alert warning" style={{ marginBottom: '14px' }}>
+            <div className="o_alert_title"><Icon name="alertTriangle" size={16} /> وضع عمل محلي — البيانات محفوظة على هذا الجهاز فقط</div>
+          </div>
+        )}
 
-      {/* نموذج الإضافة / التعديل */}
-      <form
-        onSubmit={handleSubmit}
-        className="mb-6 sm:mb-8 bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200 transition-all"
-      >
-        <h3 className="text-lg font-bold mb-4 text-brand-red">
-          {editingId ? 'تعديل بيانات المستودع' : 'إضافة مستودع جديد'}
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <input
-            type="text"
-            placeholder="كود المستودع (WH001)"
-            className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-brand-red"
-            value={formData.code}
-            onChange={handleInputChange('code')}
-            required
-          />
-          <input
-            type="text"
-            placeholder="اسم المستودع"
-            className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-brand-red"
-            value={formData.name}
-            onChange={handleInputChange('name')}
-            required
-          />
-          <input
-            type="text"
-            placeholder="المدير المسئول"
-            className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-brand-red"
-            value={formData.manager}
-            onChange={handleInputChange('manager')}
-          />
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              className="flex-1 bg-brand-red text-white px-4 py-2 rounded font-bold hover:bg-brand-red-dark transition-all shadow-md active:scale-95"
-            >
-              {editingId ? 'حفظ التعديلات' : 'إضافة مستودع'}
-            </button>
+        {statusMsg.text && (
+          <div className={`o_alert ${statusMsg.type === 'error' ? 'danger' : statusMsg.type === 'success' ? 'success' : ''}`} style={{ marginBottom: '14px' }}>
+            {statusMsg.text}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="o_ds_card o_ds_pad" dir="rtl" style={{ marginBottom: '18px' }}>
+          <h3 className="o_form_title" style={{ fontSize: '18px', marginTop: 0 }}>
+            {editingId ? 'تعديل بيانات المستودع' : 'إضافة مستودع جديد'}
+          </h3>
+          <div className="o_form_grid">
+            <FieldWrap label="كود المستودع (WH001) *">
+              <input
+                type="text"
+                className="o_input"
+                placeholder="كود المستودع (WH001)"
+                value={formData.code}
+                onChange={handleInputChange('code')}
+                required
+                style={{ direction: 'ltr', textAlign: 'right' }}
+              />
+            </FieldWrap>
+            <FieldWrap label="اسم المستودع *">
+              <input
+                type="text"
+                className="o_input"
+                placeholder="اسم المستودع"
+                value={formData.name}
+                onChange={handleInputChange('name')}
+                required
+              />
+            </FieldWrap>
+            <FieldWrap label="المدير المسؤول">
+              <input
+                type="text"
+                className="o_input"
+                placeholder="المدير المسئول"
+                value={formData.manager}
+                onChange={handleInputChange('manager')}
+              />
+            </FieldWrap>
+          </div>
+          <div className="o_form_actions">
             {editingId && (
               <button
                 type="button"
+                className="btn btn-secondary"
                 onClick={() => { setEditingId(null); setFormData({ code: '', name: '', manager: '' }); }}
-                className="bg-gray-200 text-gray-700 px-4 py-2 rounded font-bold hover:bg-gray-300"
               >
                 إلغاء
               </button>
             )}
+            <button type="submit" className="btn btn-primary">
+              {editingId ? 'حفظ التعديلات' : 'إضافة مستودع'}
+            </button>
           </div>
-        </div>
-      </form>
+        </form>
 
-      {/* قائمة المستودعات */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-right text-sm border-collapse">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="p-3 sm:p-4 font-bold text-gray-700 whitespace-nowrap">الكود</th>
-                <th className="p-3 sm:p-4 font-bold text-gray-700">الاسم</th>
-                <th className="p-3 sm:p-4 font-bold text-gray-700 hidden sm:table-cell">المدير</th>
-                <th className="p-3 sm:p-4 font-bold text-gray-700">الحالة</th>
-                <th className="p-3 sm:p-4 font-bold text-gray-700 w-24 text-center">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="4" className="p-8 text-center text-ink-2 italic">
-                    جاري جلب البيانات من السحابة...
-                  </td>
-                </tr>
-              ) : warehouses.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="p-8 text-center text-ink-2 font-bold">
-                    لا توجد مستودعات مسجلة حالياً
-                  </td>
-                </tr>
-              ) : (
-                warehouses.map((wh) => (
-                  <tr key={wh.id} className="border-b hover:bg-gray-50 transition-colors">
-                    <td className="p-3 sm:p-4 font-mono text-brand-red font-bold whitespace-nowrap">
-                      {wh.code}
-                    </td>
-                    <td className="p-3 sm:p-4 font-semibold">{wh.name}</td>
-                    <td className="p-3 sm:p-4 hidden sm:table-cell">{wh.manager || '—'}</td>
-                    <td className="p-3 sm:p-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${
-                          wh.status === 'نشط'
-                            ? 'bg-green-100 text-green-800 border border-green-200'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {wh.status || 'نشط'}
-                      </span>
-                    </td>
-                    <td className="p-3 sm:p-4 text-center">
-                      <div className="flex justify-center gap-2">
-                        <button
-                          onClick={() => startEdit(wh)}
-                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                          title="تعديل"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          onClick={() => handleDelete(wh.id)}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
-                          title="حذف"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        {warehouses.length > 0 && (
+          <div className="o_dashboard_kpis" style={{ marginBottom: '18px' }}>
+            <div className="o_kpi">
+              <span className="o_kpi_icon"><Icon name="warehouse" size={20} /></span>
+              <span className="o_kpi_value">{int(warehouses.length)}</span>
+              <span className="o_kpi_label">المستودعات</span>
+            </div>
+            <div className="o_kpi">
+              <span className="o_kpi_icon"><Icon name="checkCircle" size={20} /></span>
+              <span className="o_kpi_value">{int(activeCount)}</span>
+              <span className="o_kpi_label">مستودعات نشطة</span>
+            </div>
+            <div className="o_kpi">
+              <span className="o_kpi_icon"><Icon name="users" size={20} /></span>
+              <span className="o_kpi_value">{int(managedCount)}</span>
+              <span className="o_kpi_label">بمدير مسؤول</span>
+            </div>
+          </div>
+        )}
+
+        <div className="o_ds_card">
+          {loading ? (
+            <div className="o_dashboard_empty">جاري جلب البيانات من السحابة...</div>
+          ) : warehouses.length === 0 ? (
+            <div className="o_dashboard_empty">لا توجد مستودعات مسجلة حالياً</div>
+          ) : (
+            <ListView selectable={false} columns={LIST_COLS} rows={listRows} />
+          )}
         </div>
       </div>
     </div>
   );
 };
+
+function FieldWrap({ label, children }) {
+  return (
+    <label className="o_field_block">
+      <span className="o_form_label">{label}</span>
+      {children}
+    </label>
+  );
+}
 
 export default WarehouseManager;
