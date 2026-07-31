@@ -10,6 +10,8 @@ import { listenBalances } from '../../../services/balances/balancesService.js';
 import { totalQty, stockValue, fefoSort, expiryStatus } from '../../../services/balances/balanceKey.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Icon from '../../ui/Icon.jsx';
+import ListView from '../../odoo/ListView.jsx';
+import { int, num } from '../../odoo/format.js';
 import ItemForm from './ItemForm.jsx';
 import ItemsImport from './ItemsImport.jsx';
 import BalancesImport from './BalancesImport.jsx';
@@ -18,7 +20,25 @@ import PendingItems from './PendingItems.jsx';
 /**
  * Items master screen. Real-time list of `Items_Master`, with search,
  * add/edit/archive controls, and Excel import (managers only).
+ *
+ * المرحلة ٤ (2026-07-31): أُعيد كساء العرض بمكوّنات أودو داخل `.o_theme`
+ * (ListView + o_input + o_alert + o_kpi + Icon) — **المنطق (الاشتراكات،
+ * الأرصدة الحيّة، FEFO، الاستيراد) لم يُمسّ**، غُيّر ما يُرسَم فقط.
+ * الأرقام لاتينية (R2) عبر format.
  */
+
+const LIST_COLS = [
+  { key: 'sku', label: 'SKU' },
+  { key: 'barcode', label: 'الباركود' },
+  { key: 'nameAr', label: 'الاسم (AR)' },
+  { key: 'nameEn', label: 'الاسم (EN)' },
+  { key: 'category', label: 'الفئة' },
+  { key: 'unit', label: 'الوحدة' },
+  { key: 'balance', label: 'الرصيد', numeric: true },
+  { key: 'minStock', label: 'الحد الأدنى', numeric: true },
+  { key: 'actions', label: 'إجراءات' },
+];
+
 export default function ItemMaster() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -109,299 +129,255 @@ export default function ItemMaster() {
     }
   };
 
+  // بناء صفوف ListView — نُبقي منطق الرصيد الحيّ حرفيًّا وننقل عرضه فقط لخلايا.
+  const listRows = filtered.map((it) => {
+    // الرصيد الحقيقي من مخزن الأرصدة إن وُجد، وإلا الحقل المستورد.
+    const keys = [it.sku, ...(it.barcodes || [])].filter(Boolean).map((k) => String(k).toUpperCase());
+    const itemBal = [];
+    const seen = new Set();
+    for (const k of keys) {
+      for (const b of balByItem.get(k) || []) {
+        if (!seen.has(b.id)) { seen.add(b.id); itemBal.push(b); }
+      }
+    }
+    const liveQty = itemBal.length ? totalQty(itemBal) : null;
+    const shownQty = liveQty != null ? liveQty : (it.balance ?? 0);
+    const nearExpiry = itemBal.some(
+      (b) => ['near', 'expired'].includes(expiryStatus(b.expiry, Date.now()))
+    );
+    const lowStock = shownQty <= (it.minStock ?? 0);
+    const fefoNext = liveQty != null ? fefoSort(itemBal).find((b) => (Number(b.qty) || 0) > 0) : null;
+    return {
+      id: it.sku,
+      decoration: it.archived ? 'muted' : undefined,
+      cells: {
+        sku: <span className="decoration-bf" style={{ fontFamily: 'monospace' }}>{it.sku}</span>,
+        barcode: (
+          <span
+            style={{ direction: 'ltr', display: 'inline-block', fontFamily: 'monospace', fontSize: 'var(--o-font-size-xs)' }}
+            title={(it.barcodes || []).join('\n')}
+          >
+            {it.barcodes?.length ? (
+              <>
+                {it.barcodes[0]}
+                {it.barcodes.length > 1 && (
+                  <span style={{ marginInlineStart: '4px', color: 'var(--o-action)', fontWeight: 'var(--o-font-weight-bold)' }}>
+                    +{int(it.barcodes.length - 1)}
+                  </span>
+                )}
+              </>
+            ) : (
+              '—'
+            )}
+          </span>
+        ),
+        nameAr: it.nameAr || '—',
+        nameEn: it.nameEn || '—',
+        category: it.category || '—',
+        unit: unitLabel(it.unit),
+        balance: (
+          <span
+            style={{ fontWeight: 'var(--o-font-weight-bold)', whiteSpace: 'nowrap', color: lowStock ? 'var(--o-text-warning)' : undefined }}
+            title={
+              fefoNext
+                ? `FEFO: أقرب تشغيلة ${fefoNext.batch || '—'} @ ${fefoNext.warehouse} تنتهي ${fefoNext.expiry || '—'}`
+                : liveQty != null
+                  ? `موزّع على ${int(itemBal.length)} موقع/تشغيلة`
+                  : 'من الشيت — لا أرصدة تفصيلية بعد'
+            }
+          >
+            {num(shownQty)}
+            {nearExpiry && (
+              <span
+                title="تشغيلة قاربت الانتهاء"
+                style={{ marginInlineStart: '4px', color: 'var(--o-text-danger)', display: 'inline-flex', verticalAlign: 'middle' }}
+              >
+                <Icon name="alertTriangle" size={13} />
+              </span>
+            )}
+            {liveQty == null && it.balance != null && (
+              <span style={{ marginInlineStart: '4px', fontSize: '10px', color: 'var(--o-main-color-muted)' }} title="من شيت الأصناف — لا أرصدة تفصيلية">
+                ~
+              </span>
+            )}
+          </span>
+        ),
+        minStock: num(it.minStock ?? 0),
+        actions: (
+          <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditor({ mode: 'edit', item: it })}>تعديل</button>
+            {it.archived ? (
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleUnarchive(it)}>استعادة</button>
+            ) : (
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleArchive(it)}>أرشفة</button>
+            )}
+          </div>
+        ),
+      },
+    };
+  });
+
   return (
-    <div className="text-right" dir="rtl">
-      <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-brand-navy">إدارة الأصناف (Items)</h2>
-          <p className="text-ink-2 mt-1 text-sm sm:text-base">
-            إنشاء وتعديل بيانات أصناف Brandzo. كود SKU هو المعرف الفريد لكل صنف.
-          </p>
+    <div className="o_theme" dir="rtl">
+      <div className="o_control_panel">
+        <div className="o_cp_start">
+          <nav className="o_breadcrumb" aria-label="مسار التنقّل"><span className="o_active">إدارة الأصناف</span></nav>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="o_cp_end" style={{ gap: '8px' }}>
           {canImport(me?.role) && (
             <>
               <button
                 type="button"
+                className="btn btn-secondary"
                 onClick={() => {
                   setImporting((v) => !v);
                   setImportingBalances(false);
                   setEditor(null);
                 }}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-brand-red text-brand-red px-4 py-2 font-bold hover:bg-brand-red hover:text-white active:scale-95 transition-all"
               >
-                📥 استيراد الأصناف
+                <Icon name="arrowDownTray" size={15} /> استيراد الأصناف
               </button>
               <button
                 type="button"
+                className="btn btn-secondary"
                 onClick={() => {
                   setImportingBalances((v) => !v);
                   setImporting(false);
                   setEditor(null);
                 }}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-brand-navy text-brand-navy px-4 py-2 font-bold hover:bg-brand-navy hover:text-white active:scale-95 transition-all"
               >
-                📊 استيراد الأرصدة
+                <Icon name="barChart3" size={15} /> استيراد الأرصدة
               </button>
             </>
           )}
           <button
             type="button"
+            className="btn btn-primary"
             onClick={() => {
               setEditor({ mode: 'create' });
               setImporting(false);
             }}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-red text-white px-4 py-2 font-bold shadow hover:bg-brand-red-dark active:scale-95 transition-all"
           >
-            <Icon name="package" size={18} />
-            إضافة صنف
+            <Icon name="package" size={15} /> إضافة صنف
           </button>
         </div>
-      </header>
+      </div>
 
-      {toast && (
-        <div
-          className={`mb-4 p-3 rounded-lg font-bold text-sm shadow-sm ${
-            toast.kind === 'error'
-              ? 'bg-red-100 text-red-700 border border-red-200'
-              : 'bg-green-100 text-green-700 border border-green-200'
-          }`}
-        >
-          {toast.text}
-        </div>
-      )}
+      <div className="o_ds">
+        <p style={{ fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)', margin: '0 0 14px', lineHeight: 1.6 }}>
+          إنشاء وتعديل بيانات أصناف Brandzo. كود SKU هو المعرّف الفريد لكل صنف.
+        </p>
 
-      {error && !loading && (
-        <div className="mb-4 p-3 rounded-lg font-bold text-sm bg-red-100 text-red-700 border border-red-200">
-          {error}
-        </div>
-      )}
+        {toast && <div className={`o_alert ${toast.kind === 'error' ? 'danger' : 'success'}`}>{toast.text}</div>}
+        {error && !loading && <div className="o_alert danger">{error}</div>}
 
-      {importing && (
-        <div className="mb-6">
-          <ItemsImport
-            onDone={({ created, updated }) => {
-              setImporting(false);
-              flashToast('success', `تم الاستيراد: ${created} صنف جديد · ${updated} حُدِّث`);
-            }}
-            onCancel={() => setImporting(false)}
-          />
-        </div>
-      )}
-
-      {importingBalances && (
-        <div className="mb-6">
-          <BalancesImport
-            onDone={({ created, updated }) => {
-              setImportingBalances(false);
-              flashToast('success', `أرصدة: ${created} جديد · ${updated} حُدِّث`);
-            }}
-            onCancel={() => setImportingBalances(false)}
-          />
-        </div>
-      )}
-
-      {/* الأصناف المعلّقة (I-د) — للمديرَين وحدهما: هما من يبتّ فيها */}
-      {canImport(me?.role) && <PendingItems me={me} onFlash={flashToast} />}
-
-      {/* ملخّص المخزون الحيّ — يظهر متى وُجدت أرصدة */}
-      {balances.length > 0 && (
-        <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <SummaryTile label="سطور أرصدة" value={balances.length.toLocaleString('ar-LY')} />
-          <SummaryTile label="إجمالي الكمية" value={totalQty(balances).toLocaleString('ar-LY')} />
-          <SummaryTile label="قيمة المخزون" value={`${stockValue(balances).toLocaleString('ar-LY')} د.ل`} gold />
-          <SummaryTile
-            label="تشغيلات قاربت الانتهاء"
-            value={balances.filter((b) => expiryStatus(b.expiry, Date.now()) === 'near' || expiryStatus(b.expiry, Date.now()) === 'expired').length}
-            danger
-          />
-        </div>
-      )}
-
-      {editor && (
-        <div className="mb-6">
-          <ItemForm
-            mode={editor.mode}
-            item={editor.item}
-            onSaved={(sku) => {
-              setEditor(null);
-              flashToast(
-                'success',
-                editor.mode === 'create' ? `تمت إضافة الصنف ${sku}` : `تم حفظ تعديلات ${sku}`
-              );
-            }}
-            onCancel={() => setEditor(null)}
-          />
-        </div>
-      )}
-
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <input
-            type="search"
-            placeholder="بحث بالكود أو الاسم أو الفئة..."
-            className="flex-1 md:max-w-md border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-brand-red"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700 select-none">
-            <input
-              type="checkbox"
-              checked={showArchived}
-              onChange={(e) => setShowArchived(e.target.checked)}
-              className="accent-brand-red"
+        {importing && (
+          <div style={{ marginBottom: '18px' }}>
+            <ItemsImport
+              onDone={({ created, updated }) => {
+                setImporting(false);
+                flashToast('success', `تم الاستيراد: ${created} صنف جديد · ${updated} حُدِّث`);
+              }}
+              onCancel={() => setImporting(false)}
             />
-            إظهار الأصناف المؤرشفة
-          </label>
-        </div>
+          </div>
+        )}
 
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-right text-sm">
-            <thead className="bg-gray-50 text-gray-700">
-              <tr>
-                <th className="px-4 py-3 font-bold whitespace-nowrap">SKU</th>
-                <th className="px-4 py-3 font-bold whitespace-nowrap">الباركود</th>
-                <th className="px-4 py-3 font-bold">الاسم (AR)</th>
-                <th className="px-4 py-3 font-bold hidden md:table-cell">الاسم (EN)</th>
-                <th className="px-4 py-3 font-bold hidden sm:table-cell">الفئة</th>
-                <th className="px-4 py-3 font-bold hidden sm:table-cell">الوحدة</th>
-                <th className="px-4 py-3 font-bold whitespace-nowrap">الرصيد</th>
-                <th className="px-4 py-3 font-bold hidden md:table-cell whitespace-nowrap">
-                  الحد الأدنى
-                </th>
-                <th className="px-4 py-3 font-bold text-center">إجراءات</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {loading ? (
-                <tr>
-                  <td colSpan={9} className="p-8 text-center text-ink-2 italic">
-                    جاري جلب البيانات من السحابة...
-                  </td>
-                </tr>
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="p-8 text-center text-ink-2 italic">
-                    {items.length === 0
-                      ? 'لا توجد أصناف بعد. ابدأ بإضافة صنف جديد.'
-                      : 'لا توجد نتائج مطابقة للبحث.'}
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((it) => {
-                  // الرصيد الحقيقي من مخزن الأرصدة إن وُجد، وإلا الحقل المستورد.
-                  const keys = [it.sku, ...(it.barcodes || [])].filter(Boolean).map((k) => String(k).toUpperCase());
-                  const itemBal = [];
-                  const seen = new Set();
-                  for (const k of keys) {
-                    for (const b of balByItem.get(k) || []) {
-                      if (!seen.has(b.id)) { seen.add(b.id); itemBal.push(b); }
-                    }
-                  }
-                  const liveQty = itemBal.length ? totalQty(itemBal) : null;
-                  const shownQty = liveQty != null ? liveQty : (it.balance ?? 0);
-                  const nearExpiry = itemBal.some(
-                    (b) => ['near', 'expired'].includes(expiryStatus(b.expiry, Date.now()))
-                  );
-                  const lowStock = shownQty <= (it.minStock ?? 0);
-                  const fefoNext = liveQty != null ? fefoSort(itemBal).find((b) => (Number(b.qty) || 0) > 0) : null;
-                  return (
-                    <tr key={it.sku} className={it.archived ? 'opacity-60' : ''}>
-                      <td className="px-4 py-3 font-mono text-brand-red font-bold whitespace-nowrap">
-                        {it.sku}
-                      </td>
-                      <td
-                        className="px-4 py-3 font-mono text-xs whitespace-nowrap"
-                        style={{ direction: 'ltr', textAlign: 'right' }}
-                        title={(it.barcodes || []).join('\n')}
-                      >
-                        {it.barcodes?.length ? (
-                          <>
-                            {it.barcodes[0]}
-                            {it.barcodes.length > 1 && (
-                              <span className="mr-1 text-blue-600 font-bold">
-                                +{it.barcodes.length - 1}
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
-                      <td className="px-4 py-3 font-medium">{it.nameAr || '—'}</td>
-                      <td className="px-4 py-3 hidden md:table-cell text-ink-2">
-                        {it.nameEn || '—'}
-                      </td>
-                      <td className="px-4 py-3 hidden sm:table-cell">{it.category || '—'}</td>
-                      <td className="px-4 py-3 hidden sm:table-cell">{unitLabel(it.unit)}</td>
-                      <td
-                        className={`px-4 py-3 font-bold whitespace-nowrap ${
-                          lowStock ? 'text-brand-yellow' : 'text-gray-900'
-                        }`}
-                        title={
-                          fefoNext
-                            ? `FEFO: أقرب تشغيلة ${fefoNext.batch || '—'} @ ${fefoNext.warehouse} تنتهي ${fefoNext.expiry || '—'}`
-                            : liveQty != null
-                              ? `موزّع على ${itemBal.length} موقع/تشغيلة`
-                              : 'من الشيت — لا أرصدة تفصيلية بعد'
-                        }
-                      >
-                        {shownQty}
-                        {nearExpiry && <span className="mr-1 text-brand-red" title="تشغيلة قاربت الانتهاء">⏳</span>}
-                        {liveQty == null && it.balance != null && (
-                          <span className="mr-1 text-[10px] text-muted" title="من شيت الأصناف — لا أرصدة تفصيلية">≈</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 hidden md:table-cell">{it.minStock ?? 0}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setEditor({ mode: 'edit', item: it })}
-                            className="text-xs font-bold text-brand-red border border-brand-red rounded-md px-3 py-1 hover:bg-brand-red hover:text-white transition-colors"
-                          >
-                            تعديل
-                          </button>
-                          {it.archived ? (
-                            <button
-                              type="button"
-                              onClick={() => handleUnarchive(it)}
-                              className="text-xs font-bold text-green-700 border border-green-700 rounded-md px-3 py-1 hover:bg-green-700 hover:text-white transition-colors"
-                            >
-                              استعادة
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleArchive(it)}
-                              className="text-xs font-bold text-ink-2 border border-gray-300 rounded-md px-3 py-1 hover:bg-gray-500 hover:text-ink transition-colors"
-                            >
-                              أرشفة
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+        {importingBalances && (
+          <div style={{ marginBottom: '18px' }}>
+            <BalancesImport
+              onDone={({ created, updated }) => {
+                setImportingBalances(false);
+                flashToast('success', `أرصدة: ${created} جديد · ${updated} حُدِّث`);
+              }}
+              onCancel={() => setImportingBalances(false)}
+            />
+          </div>
+        )}
+
+        {/* الأصناف المعلّقة (I-د) — للمديرَين وحدهما: هما من يبتّ فيها */}
+        {canImport(me?.role) && <PendingItems me={me} onFlash={flashToast} />}
+
+        {/* ملخّص المخزون الحيّ — يظهر متى وُجدت أرصدة */}
+        {balances.length > 0 && (
+          <div className="o_dashboard_kpis" style={{ marginBottom: '18px' }}>
+            <div className="o_kpi">
+              <span className="o_kpi_icon"><Icon name="layers" size={20} /></span>
+              <span className="o_kpi_value">{int(balances.length)}</span>
+              <span className="o_kpi_label">سطور أرصدة</span>
+            </div>
+            <div className="o_kpi">
+              <span className="o_kpi_icon"><Icon name="package" size={20} /></span>
+              <span className="o_kpi_value">{int(totalQty(balances))}</span>
+              <span className="o_kpi_label">إجمالي الكمية</span>
+            </div>
+            <div className="o_kpi">
+              <span className="o_kpi_icon"><Icon name="dollarSign" size={20} /></span>
+              <span className="o_kpi_value">{int(stockValue(balances))} د.ل</span>
+              <span className="o_kpi_label">قيمة المخزون</span>
+            </div>
+            <div className="o_kpi alert">
+              <span className="o_kpi_icon"><Icon name="alertTriangle" size={20} /></span>
+              <span className="o_kpi_value">
+                {int(balances.filter((b) => expiryStatus(b.expiry, Date.now()) === 'near' || expiryStatus(b.expiry, Date.now()) === 'expired').length)}
+              </span>
+              <span className="o_kpi_label">تشغيلات قاربت الانتهاء</span>
+            </div>
+          </div>
+        )}
+
+        {editor && (
+          <div style={{ marginBottom: '18px' }}>
+            <ItemForm
+              mode={editor.mode}
+              item={editor.item}
+              onSaved={(sku) => {
+                setEditor(null);
+                flashToast(
+                  'success',
+                  editor.mode === 'create' ? `تمت إضافة الصنف ${sku}` : `تم حفظ تعديلات ${sku}`
+                );
+              }}
+              onCancel={() => setEditor(null)}
+            />
+          </div>
+        )}
+
+        <div className="o_ds_card">
+          <div className="o_ds_toolbar">
+            <div className="o_searchview">
+              <span className="o_searchview_icon" aria-hidden="true">⌕</span>
+              <input
+                type="search"
+                aria-label="بحث"
+                placeholder="بحث بالكود أو الاسم أو الفئة…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <label className="o_toggle">
+              <input
+                type="checkbox"
+                checked={showArchived}
+                onChange={(e) => setShowArchived(e.target.checked)}
+              />
+              إظهار الأصناف المؤرشفة
+            </label>
+          </div>
+
+          {loading ? (
+            <div className="o_dashboard_empty">جاري جلب البيانات من السحابة…</div>
+          ) : filtered.length === 0 ? (
+            <div className="o_dashboard_empty">
+              {items.length === 0
+                ? 'لا توجد أصناف بعد. ابدأ بإضافة صنف جديد.'
+                : 'لا توجد نتائج مطابقة للبحث.'}
+            </div>
+          ) : (
+            <ListView selectable={false} columns={LIST_COLS} rows={listRows} />
+          )}
         </div>
       </div>
-    </div>
-  );
-}
-
-function SummaryTile({ label, value, gold, danger }) {
-  return (
-    <div
-      className={`rounded-xl border p-3 text-center ${
-        danger ? 'bg-red-50 border-red-200' : gold ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200'
-      }`}
-    >
-      <p className={`text-lg font-bold ${danger ? 'text-red-700' : gold ? 'text-amber-700' : 'text-brand-navy'}`}>{value}</p>
-      <p className="text-[11px] text-gray-500 mt-0.5">{label}</p>
     </div>
   );
 }

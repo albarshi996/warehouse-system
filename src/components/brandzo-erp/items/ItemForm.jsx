@@ -9,6 +9,10 @@ import { createItem, updateItem, UNIT_OPTIONS } from '../../../services/itemServ
  *   item      — the existing item when mode==="edit"; undefined otherwise
  *   onSaved   — callback fired with the saved item's sku on success
  *   onCancel  — callback to dismiss the form
+ *
+ * المرحلة ٤ (2026-07-31): أُعيد كساء العرض بمكوّنات أودو (o_ds_card + o_form_grid
+ * + o_input + o_alert) — يُرسَم داخل ItemMaster تحت `.o_theme`. **المنطق (الحالة
+ * والتأثيرات والتحقّق وإدارة الباركود وcreateItem/updateItem) لم يُمسّ**.
  */
 function emptyDraft() {
   return {
@@ -98,37 +102,31 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200"
-    >
-      <h3 className="text-lg font-bold mb-4 text-brand-red">
+    <form onSubmit={handleSubmit} className="o_ds_card o_ds_pad" dir="rtl">
+      <h3 className="o_form_title" style={{ fontSize: '18px', marginTop: 0 }}>
         {isEdit ? `تعديل الصنف ${draft.sku}` : 'إضافة صنف جديد'}
       </h3>
 
-      {error && (
-        <div className="mb-4 p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-bold">
-          {error}
-        </div>
-      )}
+      {error && <div className="o_alert danger">{error}</div>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="o_form_grid">
         <Field label="SKU" required>
           <input
             type="text"
             placeholder="ITM-001"
-            className={inputClass}
+            className="o_input"
             value={draft.sku}
             onChange={update('sku')}
             disabled={isEdit}
             required
+            style={{ direction: 'ltr', textAlign: 'right' }}
           />
         </Field>
 
         <Field label="الاسم بالعربي" required>
           <input
             type="text"
-            className={inputClass}
+            className="o_input"
             value={draft.nameAr}
             onChange={update('nameAr')}
             required
@@ -138,7 +136,7 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
         <Field label="Name (English)">
           <input
             type="text"
-            className={inputClass}
+            className="o_input"
             value={draft.nameEn}
             onChange={update('nameEn')}
           />
@@ -148,7 +146,7 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
           <input
             type="text"
             placeholder="8059692040599, 8059692040605"
-            className={inputClass}
+            className="o_input"
             style={{ direction: 'ltr', textAlign: 'right' }}
             value={draft.barcodesText}
             onChange={update('barcodesText')}
@@ -159,14 +157,14 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
           <input
             type="text"
             placeholder="إلكترونيات"
-            className={inputClass}
+            className="o_input"
             value={draft.category}
             onChange={update('category')}
           />
         </Field>
 
         <Field label="الوحدة">
-          <select className={inputClass} value={draft.unit} onChange={update('unit')}>
+          <select className="o_input" value={draft.unit} onChange={update('unit')}>
             {UNIT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.labelAr}
@@ -185,7 +183,7 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
             type="number"
             min="0"
             step="1"
-            className={inputClass}
+            className="o_input"
             value={draft.balance}
             onChange={update('balance')}
             disabled={isEdit}
@@ -197,26 +195,18 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
             type="number"
             min="0"
             step="1"
-            className={inputClass}
+            className="o_input"
             value={draft.minStock}
             onChange={update('minStock')}
           />
         </Field>
       </div>
 
-      <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:justify-end">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 rounded font-bold text-gray-700 border border-gray-300 hover:bg-gray-100 transition-colors"
-        >
+      <div className="o_form_actions">
+        <button type="button" className="btn btn-secondary" onClick={onCancel}>
           إلغاء
         </button>
-        <button
-          type="submit"
-          disabled={submitting}
-          className="px-6 py-2 rounded bg-brand-red text-white font-bold shadow hover:bg-brand-red-dark active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-        >
+        <button type="submit" className="btn btn-primary" disabled={submitting}>
           {submitting ? 'جاري الحفظ...' : isEdit ? 'حفظ التعديلات' : 'إضافة الصنف'}
         </button>
       </div>
@@ -224,18 +214,19 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
   );
 }
 
-const inputClass =
-  'w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-brand-red disabled:bg-gray-100 disabled:text-gray-700';
-
 function Field({ label, required = false, hint, children }) {
   return (
-    <label className="flex flex-col gap-1 text-sm">
-      <span className="font-bold text-gray-700">
+    <label className="o_field_block">
+      <span className="o_form_label">
         {label}
-        {required && <span className="text-brand-red"> *</span>}
+        {required && ' *'}
       </span>
       {children}
-      {hint && <span className="text-xs text-gray-700">{hint}</span>}
+      {hint && (
+        <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+          {hint}
+        </span>
+      )}
     </label>
   );
 }

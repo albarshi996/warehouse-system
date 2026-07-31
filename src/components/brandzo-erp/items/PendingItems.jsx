@@ -7,17 +7,40 @@
  * فيعتمده صنفًا حقيقيًّا في الماستر أو يرفضه بسببٍ موثَّق.
  *
  * كل الأحكام في `pendingModel.js` الخالص المُختبَر؛ هذا عرضٌ وإدخال.
+ *
+ * المرحلة ٤ (2026-07-31): أُعيد كساء العرض بمكوّنات أودو (ListView + Badge
+ * + o_kpi + o_input + o_alert + Icon + format.int) — **بلا لفّ في `.o_theme`**
+ * (اللوحة مضمَّنة في ماستر الأصناف الذي يملك سياق الثيم). المنطق (الاشتراك
+ * والاعتماد والرفض) لم يُمسّ؛ غُيّر ما يُرسَم فقط، والأرقام لاتينية (R2).
  */
 import { useEffect, useMemo, useState } from 'react';
 import { listenPending, approvePending, rejectPending } from '../../../services/items/pendingService.js';
 import { PENDING_STATES, pendingSummary } from '../../../services/items/pendingModel.js';
+import Icon from '../../ui/Icon.jsx';
+import ListView from '../../odoo/ListView.jsx';
+import Badge from '../../odoo/Badge.jsx';
+import { int } from '../../odoo/format.js';
 
-/** بطاقة عدّ صغيرة. */
-function Tally({ value, label, tone }) {
+/** ربط حالة السجلّ بشارة أودو (عرض فقط). */
+const STATE_VARIANT = { pending: 'warn', approved: 'done', rejected: 'danger' };
+
+/** أعمدة قائمة المعلّقة. */
+const LIST_COLS = [
+  { key: 'barcode', label: 'الباركود' },
+  { key: 'name', label: 'الاسم الميداني' },
+  { key: 'seen', label: 'مرّات المسح', numeric: true },
+  { key: 'firstSeen', label: 'أول من رآه' },
+  { key: 'status', label: 'الحالة' },
+  { key: 'actions', label: 'إجراء' },
+];
+
+/** بطاقة عدّ صغيرة (o_kpi). */
+function Tally({ value, label, icon, alert }) {
   return (
-    <div className={`rounded-xl border px-4 py-2 text-center ${tone}`}>
-      <div className="text-xl font-extrabold leading-tight">{value}</div>
-      <div className="text-[11px] font-bold opacity-80">{label}</div>
+    <div className={`o_kpi${alert ? ' alert' : ''}`}>
+      <span className="o_kpi_icon"><Icon name={icon} size={20} /></span>
+      <span className="o_kpi_value">{int(value)}</span>
+      <span className="o_kpi_label">{label}</span>
     </div>
   );
 }
@@ -92,30 +115,62 @@ export default function PendingItems({ me, onFlash }) {
     }
   }
 
+  const listRows = shown.map((r) => {
+    const st = PENDING_STATES[r.state] || PENDING_STATES.pending;
+    return {
+      id: r.id,
+      cells: {
+        barcode: <span className="decoration-bf" dir="ltr">{r.rawBarcode || r.barcode}</span>,
+        name: r.name && r.name !== r.barcode ? r.name : <span style={{ color: 'var(--o-gray-500)' }}>— بلا اسم</span>,
+        seen: <span className={(r.seenCount || 0) > 3 ? 'decoration-bf' : ''}>{int(r.seenCount || 1)}</span>,
+        firstSeen: r.firstSeenByName || '—',
+        status: (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', alignItems: 'flex-start' }}>
+            <Badge variant={STATE_VARIANT[r.state] || 'warn'}>{st.label}</Badge>
+            {r.state === 'approved' && r.approvedSku && (
+              <span style={{ fontSize: '10px', color: 'var(--o-main-color-muted)', fontFamily: 'monospace' }}>{r.approvedSku}</span>
+            )}
+            {r.state === 'rejected' && r.rejectReason && (
+              <span style={{ fontSize: '10px', color: 'var(--o-main-color-muted)' }}>{r.rejectReason}</span>
+            )}
+          </div>
+        ),
+        actions:
+          r.state === 'pending' ? (
+            <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => openApprove(r)}>اعتماد</button>
+              <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => doReject(r)}>رفض</button>
+            </div>
+          ) : (
+            <span style={{ color: 'var(--o-gray-500)' }}>—</span>
+          ),
+      },
+    };
+  });
+
   return (
-    <section className="bg-chip border border-line rounded-2xl p-5 mb-6" dir="rtl">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div>
-          <h3 className="text-lg font-bold text-ink">⏳ الأصناف المعلّقة</h3>
-          <p className="text-xs text-ink-2 mt-1 max-w-2xl leading-relaxed">
-            باركودات مُسحت في الميدان ولا يعرفها الماستر. لا توقف العمل ولا تدخل الماستر
-            حتى تعتمدها — والمعرّف حتميّ فمسحُ الباركود عشرًا يُنشئ سجلًّا واحدًا بعدّاده.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Tally value={summary.pending} label="بانتظار المراجعة" tone="bg-amber-500/10 border-amber-500/30 text-amber-300" />
-          <Tally value={summary.approved} label="اعتُمد" tone="bg-emerald-500/10 border-emerald-500/30 text-emerald-300" />
-          <Tally value={summary.rejected} label="مرفوض" tone="bg-red-500/10 border-red-500/30 text-red-300" />
-        </div>
+    <section className="o_ds_card o_ds_pad" dir="rtl" style={{ marginBottom: '18px' }}>
+      <h3 className="o_form_title" style={{ fontSize: '20px', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Icon name="clipboardList" size={18} /> الأصناف المعلّقة
+      </h3>
+      <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', margin: 0, maxWidth: '42rem', lineHeight: 1.6 }}>
+        باركودات مُسحت في الميدان ولا يعرفها الماستر. لا توقف العمل ولا تدخل الماستر
+        حتى تعتمدها — والمعرّف حتميّ فمسحُ الباركود عشرًا يُنشئ سجلًّا واحدًا بعدّاده.
+      </p>
+
+      <div className="o_dashboard_kpis" style={{ margin: '16px 0' }}>
+        <Tally value={summary.pending} label="بانتظار المراجعة" icon="clipboardList" />
+        <Tally value={summary.approved} label="اعتُمد" icon="checkCircle" />
+        <Tally value={summary.rejected} label="مرفوض" icon="alertTriangle" alert />
       </div>
 
       {error && (
-        <p className="text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 mb-3">
+        <div className="o_alert danger">
           {error} — تأكّد من نشر قواعد الأمان المحدَّثة (Items_Pending).
-        </p>
+        </div>
       )}
 
-      <div className="flex gap-2 mb-3">
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '0 0 14px' }}>
         {[
           ['pending', 'بانتظار المراجعة'],
           ['approved', 'المعتمَدة'],
@@ -126,9 +181,7 @@ export default function PendingItems({ me, onFlash }) {
             key={key}
             type="button"
             onClick={() => setFilter(key)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
-              filter === key ? 'bg-accent/20 text-accent border border-accent/40' : 'bg-chip text-ink-2 border border-line hover:bg-surface-2'
-            }`}
+            className={`btn btn-sm ${filter === key ? 'btn-primary' : 'btn-secondary'}`}
           >
             {label}
           </button>
@@ -136,88 +189,27 @@ export default function PendingItems({ me, onFlash }) {
       </div>
 
       {shown.length === 0 ? (
-        <p className="text-sm text-muted text-center py-6">
-          {filter === 'pending' ? '✅ لا أصناف معلّقة — كل ما مُسح معروف في الماستر.' : 'لا سجلّات في هذا التصنيف.'}
-        </p>
+        filter === 'pending' ? (
+          <div className="o_alert success" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Icon name="checkCircle" size={16} /> لا أصناف معلّقة — كل ما مُسح معروف في الماستر.
+          </div>
+        ) : (
+          <div className="o_dashboard_empty">لا سجلّات في هذا التصنيف.</div>
+        )
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-muted border-b border-line">
-                <th className="text-right py-2 px-2">الباركود</th>
-                <th className="text-right py-2 px-2">الاسم الميداني</th>
-                <th className="py-2 px-2">مرّات المسح</th>
-                <th className="py-2 px-2">أول من رآه</th>
-                <th className="py-2 px-2">الحالة</th>
-                <th className="py-2 px-2">إجراء</th>
-              </tr>
-            </thead>
-            <tbody>
-              {shown.map((r) => {
-                const st = PENDING_STATES[r.state] || PENDING_STATES.pending;
-                return (
-                  <tr key={r.id} className="border-b border-line">
-                    <td className="py-2 px-2 font-mono text-ink-2" dir="ltr">{r.rawBarcode || r.barcode}</td>
-                    <td className="py-2 px-2 text-ink-2">
-                      {r.name && r.name !== r.barcode ? r.name : <span className="text-gray-500">— بلا اسم</span>}
-                    </td>
-                    <td className="py-2 px-2 text-center">
-                      <span className={`font-bold ${(r.seenCount || 0) > 3 ? 'text-accent' : 'text-ink-2'}`}>
-                        {r.seenCount || 1}
-                      </span>
-                    </td>
-                    <td className="py-2 px-2 text-center text-ink-2">{r.firstSeenByName || '—'}</td>
-                    <td className="py-2 px-2 text-center whitespace-nowrap" style={{ color: st.color }}>
-                      {st.emoji} {st.label}
-                      {r.state === 'approved' && r.approvedSku && (
-                        <span className="block text-[10px] text-muted">{r.approvedSku}</span>
-                      )}
-                      {r.state === 'rejected' && r.rejectReason && (
-                        <span className="block text-[10px] text-muted">{r.rejectReason}</span>
-                      )}
-                    </td>
-                    <td className="py-2 px-2 text-center whitespace-nowrap">
-                      {r.state === 'pending' ? (
-                        <>
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => openApprove(r)}
-                            className="rounded-lg bg-emerald-600/80 hover:bg-emerald-600 disabled:opacity-50 px-3 py-1 text-white font-bold ml-1"
-                          >
-                            اعتماد
-                          </button>
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => doReject(r)}
-                            className="rounded-lg bg-chip hover:bg-surface-2 disabled:opacity-50 px-3 py-1 text-ink-2 font-bold"
-                          >
-                            رفض
-                          </button>
-                        </>
-                      ) : (
-                        <span className="text-gray-500">—</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <ListView selectable={false} columns={LIST_COLS} rows={listRows} />
       )}
 
       {/* ── نموذج الاعتماد ── */}
       {editing && (
-        <div className="mt-4 border-t border-line pt-4">
-          <p className="text-sm font-bold text-ink mb-1">
-            اعتماد الباركود <span className="font-mono text-accent" dir="ltr">{editing.rec.rawBarcode || editing.rec.barcode}</span>
-          </p>
-          <p className="text-[11px] text-muted mb-3">
+        <div style={{ marginTop: '18px', borderTop: '1px solid var(--o-border-color)', paddingTop: '18px' }}>
+          <h4 className="o_form_title" style={{ fontSize: '16px', margin: '0 0 2px' }}>
+            اعتماد الباركود <span className="decoration-bf" dir="ltr" style={{ color: 'var(--o-action)', fontFamily: 'monospace' }}>{editing.rec.rawBarcode || editing.rec.barcode}</span>
+          </h4>
+          <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', margin: '0 0 14px', lineHeight: 1.6 }}>
             الباركود يُضاف تلقائيًّا إلى فهرس الاستدعاء، فيُعرَف بمسحه فور الاعتماد.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="o_form_grid">
             {[
               ['sku', 'كود الصنف (SKU) *', 'text'],
               ['nameAr', 'الاسم العربي *', 'text'],
@@ -226,32 +218,21 @@ export default function PendingItems({ me, onFlash }) {
               ['unit', 'الوحدة', 'text'],
               ['unitPrice', 'سعر الوحدة (د.ل)', 'number'],
             ].map(([key, label, type]) => (
-              <label key={key} className="flex flex-col gap-1">
-                <span className="text-[11px] font-bold text-ink-2">{label}</span>
+              <label key={key} className="o_field_block">
+                <span className="o_form_label">{label}</span>
                 <input
                   type={type}
+                  className="o_input"
                   value={editing.draft[key]}
                   onChange={(e) => setEditing((s) => ({ ...s, draft: { ...s.draft, [key]: e.target.value } }))}
-                  className="bg-chip border border-line rounded-lg text-ink text-sm px-3 py-2 focus:outline-none focus:border-accent/50"
                 />
               </label>
             ))}
           </div>
-          <div className="flex gap-2 mt-3">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={doApprove}
-              className="rounded-lg bg-brand-red hover:bg-brand-red-dark disabled:opacity-50 px-5 py-2 text-sm font-bold text-white"
-            >
-              {busy ? '…' : '✅ اعتماد وإضافة للماستر'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditing(null)}
-              className="rounded-lg bg-chip hover:bg-surface-2 px-4 py-2 text-sm font-bold text-ink-2"
-            >
-              إلغاء
+          <div className="o_form_actions">
+            <button type="button" className="btn btn-secondary" onClick={() => setEditing(null)}>إلغاء</button>
+            <button type="button" className="btn btn-primary" disabled={busy} onClick={doApprove}>
+              {busy ? '…' : 'اعتماد وإضافة للماستر'}
             </button>
           </div>
         </div>

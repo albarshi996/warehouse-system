@@ -3,6 +3,8 @@ import {
   analyzeItemsFile,
   commitItemsImport,
 } from '../../../services/items/itemsImportService.js';
+import Icon from '../../ui/Icon.jsx';
+import { int } from '../../odoo/format.js';
 
 /**
  * استيراد شيت الأصناف من داخل شاشة الأصناف.
@@ -14,6 +16,10 @@ import {
  * الملف المتوقّع: القالب القياسي `Brandzo-Items-Template.xlsx` (ورقة Items)،
  * لكن المستورد يتقبّل أي شيت بأعمدة معروفة — يكتشف صفّ العناوين بنفسه
  * ويقرأ المرادفات العربية والإنجليزية (بما فيها أعمدة شيت المالك الحرفية).
+ *
+ * المرحلة ٤ (2026-07-31): أُعيد كساء العرض بمكوّنات أودو (o_ds_card + o_kpi
+ * + o_alert + Icon + format.int) — **منطق التحليل والمعاينة والالتزام لم
+ * يُمسّ**، غُيّر ما يُرسَم فقط. الأرقام لاتينية (R2).
  */
 export default function ItemsImport({ onDone, onCancel }) {
   const fileRef = useRef(null);
@@ -63,55 +69,52 @@ export default function ItemsImport({ onDone, onCancel }) {
   const toWrite = plan ? plan.created.length + plan.updated.length : 0;
 
   return (
-    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200" dir="rtl">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+    <div className="o_ds_card o_ds_pad" dir="rtl">
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '14px' }}>
         <div>
-          <h3 className="text-lg font-bold text-brand-red">📥 استيراد شيت الأصناف</h3>
-          <p className="text-xs text-gray-600 mt-1">
+          <h3 className="o_form_title" style={{ fontSize: '18px', marginTop: 0, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Icon name="arrowDownTray" size={18} /> استيراد شيت الأصناف
+          </h3>
+          <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', margin: 0, lineHeight: 1.6 }}>
             يُقرأ من ورقة <b>Items</b> (الورقة الأولى). لا يُكتب شيء قبل أن تراجع المعاينة وتؤكّد.
           </p>
         </div>
         <a
           href={`${base}/templates/Brandzo-Items-Template.xlsx`}
           download
-          className="text-sm font-bold text-brand-red hover:underline whitespace-nowrap"
+          className="btn btn-secondary"
+          style={{ whiteSpace: 'nowrap' }}
         >
-          ⬇️ تنزيل القالب القياسي
+          <Icon name="fileText" size={15} /> تنزيل القالب القياسي
         </a>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <label className="inline-flex items-center gap-2 cursor-pointer rounded-lg border-2 border-dashed border-gray-300 px-4 py-2.5 text-sm font-bold text-gray-700 hover:border-brand-red hover:text-brand-red transition-colors">
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".xlsx,.xls"
-            className="hidden"
-            onChange={handleFile}
-            disabled={analyzing || committing}
-          />
-          {analyzing ? 'جارٍ تحليل الملف…' : '📂 اختر ملف Excel'}
-        </label>
-        {fileName && <span className="text-xs text-gray-500 font-mono truncate">{fileName}</span>}
-      </div>
+      <label className="o_filedrop">
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".xlsx,.xls"
+          style={{ display: 'none' }}
+          onChange={handleFile}
+          disabled={analyzing || committing}
+        />
+        {analyzing ? 'جارٍ تحليل الملف…' : 'اختر ملف Excel'}
+      </label>
+      {fileName && <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-gray-500)', marginInlineStart: '10px', fontFamily: 'monospace' }}>{fileName}</span>}
 
-      {error && (
-        <div className="mt-4 p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-bold">
-          {error}
-        </div>
-      )}
+      {error && <div className="o_alert danger" style={{ marginTop: '14px' }}>{error}</div>}
 
       {analysis && (
-        <div className="mt-5 space-y-4">
+        <div style={{ marginTop: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {/* لقطة التحليل */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Stat label="صنف جديد" value={plan.created.length} tone="green" />
-            <Stat label="سيُحدَّث" value={plan.updated.length} tone="amber" />
-            <Stat label="بلا تغيير" value={plan.unchanged.length} tone="gray" />
-            <Stat label="باركود جديد" value={plan.newBarcodes} tone="blue" />
+          <div className="o_dashboard_kpis" style={{ margin: 0 }}>
+            <Stat label="صنف جديد" value={plan.created.length} />
+            <Stat label="سيُحدَّث" value={plan.updated.length} />
+            <Stat label="بلا تغيير" value={plan.unchanged.length} />
+            <Stat label="باركود جديد" value={plan.newBarcodes} />
           </div>
 
-          <p className="text-xs text-gray-500">
+          <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-gray-500)' }}>
             الورقة: <b>{analysis.summary.sheetName}</b> · صفّ العناوين: {analysis.summary.headerRow} ·
             الأعمدة المتعرَّف عليها: {analysis.summary.detectedColumns.length}
             {analysis.summary.merged > 0 && <> · دُمجت باركودات من {analysis.summary.merged} صفّ مكرّر</>}
@@ -119,11 +122,11 @@ export default function ItemsImport({ onDone, onCancel }) {
 
           {/* الأخطاء المانعة */}
           {blockingErrors.length > 0 && (
-            <div className="p-3 rounded-lg border border-red-200 bg-red-50">
-              <p className="text-sm font-bold text-red-700 mb-2">
-                ❌ {blockingErrors.length} خطأ يمنع الاستيراد — صحّح الملف وأعد اختياره:
-              </p>
-              <ul className="text-xs text-red-600 space-y-1 max-h-40 overflow-y-auto">
+            <div className="o_alert danger">
+              <div className="o_alert_title">
+                <Icon name="alertTriangle" size={16} /> {blockingErrors.length} خطأ يمنع الاستيراد — صحّح الملف وأعد اختياره:
+              </div>
+              <ul>
                 {blockingErrors.slice(0, 12).map((e, i) => (
                   <li key={i}>
                     صفّ {e.row} · {e.message}
@@ -136,11 +139,11 @@ export default function ItemsImport({ onDone, onCancel }) {
 
           {/* صفوف بلا كود — لن تُستورد (كانت تُسقَط صامتةً قبل هذا الإصلاح) */}
           {plan.skipped && plan.skipped.length > 0 && (
-            <div className="p-3 rounded-lg border border-orange-300 bg-orange-50">
-              <p className="text-sm font-bold text-orange-700 mb-2">
-                🚫 {plan.skipped.length} صفًّا بلا «كود صنف» — لن يُستورد (الكود هو معرّف الماستر):
-              </p>
-              <ul className="text-xs text-orange-700 space-y-1 max-h-32 overflow-y-auto">
+            <div className="o_alert warning">
+              <div className="o_alert_title">
+                <Icon name="alertTriangle" size={16} /> {plan.skipped.length} صفًّا بلا «كود صنف» — لن يُستورد (الكود هو معرّف الماستر):
+              </div>
+              <ul>
                 {plan.skipped.slice(0, 8).map((row, i) => (
                   <li key={i}>
                     {row.nameAr || row.nameEn || 'صف بلا اسم'}
@@ -154,9 +157,9 @@ export default function ItemsImport({ onDone, onCancel }) {
 
           {/* تنبيهات لا تمنع */}
           {warnings.length > 0 && (
-            <div className="p-3 rounded-lg border border-amber-200 bg-amber-50">
-              <p className="text-sm font-bold text-amber-700 mb-2">⚠️ تنبيهات (لا تمنع الاستيراد):</p>
-              <ul className="text-xs text-amber-700 space-y-1 max-h-32 overflow-y-auto">
+            <div className="o_alert warning">
+              <div className="o_alert_title"><Icon name="alertTriangle" size={16} /> تنبيهات (لا تمنع الاستيراد):</div>
+              <ul>
                 {warnings.slice(0, 8).map((e, i) => (
                   <li key={i}>
                     صفّ {e.row} · {e.message}
@@ -168,19 +171,19 @@ export default function ItemsImport({ onDone, onCancel }) {
 
           {/* عيّنة ممّا سيتغيّر على أصناف قائمة */}
           {plan.updated.length > 0 && (
-            <div className="p-3 rounded-lg border border-gray-200 bg-gray-50">
-              <p className="text-sm font-bold text-gray-700 mb-2">ما سيتغيّر على أصناف قائمة (عيّنة):</p>
-              <ul className="text-xs text-gray-600 space-y-1 max-h-40 overflow-y-auto">
+            <div className="o_ds_card" style={{ padding: '12px 14px', boxShadow: 'none' }}>
+              <p style={{ fontSize: 'var(--o-font-size-sm)', fontWeight: 'var(--o-font-weight-bold)', margin: '0 0 8px' }}>ما سيتغيّر على أصناف قائمة (عيّنة):</p>
+              <ul style={{ margin: 0, paddingInlineStart: '18px', maxHeight: '160px', overflowY: 'auto', fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
                 {plan.updated.slice(0, 6).map((row) => (
                   <li key={row.sku || row.barcodes?.[0]}>
-                    <b className="font-mono">{row.sku || row.barcodes?.[0]}</b>
+                    <b style={{ color: 'var(--o-action)', fontFamily: 'monospace' }}>{row.sku || row.barcodes?.[0]}</b>
                     {row._diff?.slice(0, 3).map((d) => (
-                      <span key={d.field} className="mr-2">
+                      <span key={d.field} style={{ marginInlineStart: '8px' }}>
                         · {d.labelAr}: «{String(d.before) || '—'}» ← «{String(d.after)}»
                       </span>
                     ))}
                     {row._addedBarcodes?.length > 0 && (
-                      <span className="mr-2 text-blue-600">+ {row._addedBarcodes.length} باركود</span>
+                      <span style={{ marginInlineStart: '8px', color: 'var(--o-action)' }}>+ {row._addedBarcodes.length} باركود</span>
                     )}
                   </li>
                 ))}
@@ -190,19 +193,13 @@ export default function ItemsImport({ onDone, onCancel }) {
           )}
 
           {/* التأكيد */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:justify-end pt-1">
+          <div className="o_form_actions">
+            <button type="button" className="btn btn-secondary" onClick={onCancel}>إغلاق</button>
             <button
               type="button"
-              onClick={onCancel}
-              className="px-4 py-2 rounded font-bold text-gray-700 border border-gray-300 hover:bg-gray-100 transition-colors"
-            >
-              إغلاق
-            </button>
-            <button
-              type="button"
+              className="btn btn-primary"
               onClick={handleCommit}
               disabled={!analysis.ok || toWrite === 0 || committing}
-              className="px-6 py-2 rounded bg-brand-red text-white font-bold shadow hover:bg-brand-red-dark active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {committing
                 ? 'جارٍ الاستيراد…'
@@ -217,18 +214,11 @@ export default function ItemsImport({ onDone, onCancel }) {
   );
 }
 
-const TONES = {
-  green: 'bg-green-50 border-green-200 text-green-700',
-  amber: 'bg-amber-50 border-amber-200 text-amber-700',
-  gray: 'bg-gray-50 border-gray-200 text-gray-600',
-  blue: 'bg-blue-50 border-blue-200 text-blue-700',
-};
-
-function Stat({ label, value, tone }) {
+function Stat({ label, value }) {
   return (
-    <div className={`rounded-lg border p-3 text-center ${TONES[tone]}`}>
-      <p className="text-2xl font-bold">{value}</p>
-      <p className="text-xs font-bold mt-0.5">{label}</p>
+    <div className="o_kpi">
+      <span className="o_kpi_value">{int(value)}</span>
+      <span className="o_kpi_label">{label}</span>
     </div>
   );
 }
