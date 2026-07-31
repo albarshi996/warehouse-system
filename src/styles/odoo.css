@@ -294,3 +294,193 @@
     animation: none !important;
   }
 }
+
+/* =========================================================================
+   لوحة اللوجستيات التنفيذيّة (المرحلة ٤) — بطاقات مؤشّرات وأقسام بأسلوب
+   TailAdmin، مبنيّة كلّها على توكِنز أودو (var(--o-...)) ومعزولة تحت .o_theme
+   فلا تتسرّب. الأحمر للتنبيه فقط (حوكمة الواجهة). صفر لون هوية حرفيّ.
+   ========================================================================= */
+.o_theme .o_dashboard { padding: 16px; background: var(--o-sheet-background); }
+
+.o_theme .o_dashboard_kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.o_theme .o_kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 16px;
+  background: var(--o-view-background);
+  border: 1px solid var(--o-border-color);
+  border-radius: var(--o-border-radius-lg);
+  box-shadow: var(--o-shadow-card);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.o_theme .o_kpi:hover { box-shadow: var(--o-shadow-card-hover); transform: translateY(-2px); }
+.o_theme .o_kpi_icon {
+  width: 40px; height: 40px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--o-border-radius-lg);
+  font-size: 18px;
+  background: var(--o-badge-info-bg);
+  color: var(--o-action);
+}
+.o_theme .o_kpi_value { font-size: 26px; font-weight: var(--o-font-weight-bold); line-height: 1.1; color: var(--o-main-text-color); }
+.o_theme .o_kpi_label { font-size: var(--o-font-size-sm); color: var(--o-main-color-muted); }
+.o_theme .o_kpi_sub { font-size: var(--o-font-size-xs); color: var(--o-main-color-muted); }
+.o_theme .o_kpi.alert .o_kpi_icon { background: var(--o-badge-danger-bg); color: var(--o-text-danger); }
+.o_theme .o_kpi.alert .o_kpi_value { color: var(--o-text-danger); }
+
+.o_theme .o_dashboard_section { margin-bottom: 22px; }
+.o_theme .o_dashboard_section_title {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0 0 10px;
+  font-size: 15px; font-weight: var(--o-font-weight-bold);
+  color: var(--o-main-text-color);
+}
+.o_theme .o_dashboard_section_title svg { color: var(--o-action); }
+
+.o_theme .o_dashboard_grid2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+}
+.o_theme .o_dashboard_card {
+  background: var(--o-view-background);
+  border: 1px solid var(--o-border-color);
+  border-radius: var(--o-border-radius-lg);
+  box-shadow: var(--o-shadow-card);
+  overflow: hidden;
+}
+.o_theme .o_dashboard_card_head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--o-border-color);
+  font-size: var(--o-font-size-sm); font-weight: var(--o-font-weight-bold);
+  color: var(--o-main-text-color);
+}
+.o_theme .o_dashboard_card_head .o_count {
+  font-weight: var(--o-font-weight-medium);
+  font-size: var(--o-font-size-xs);
+  color: var(--o-main-color-muted);
+}
+.o_theme .o_dashboard_empty {
+  padding: 22px 14px; text-align: center;
+  font-size: var(--o-font-size-sm); color: var(--o-main-color-muted);
+}
+
+.o_theme .o_catbar_row { display: flex; align-items: center; gap: 10px; padding: 8px 14px; font-size: var(--o-font-size-sm); }
+.o_theme .o_catbar_row + .o_catbar_row { border-top: 1px solid var(--o-gray-200); }
+.o_theme .o_catbar_name { min-width: 96px; color: var(--o-main-text-color); }
+.o_theme .o_catbar_track { flex: 1; height: 8px; background: var(--o-gray-200); border-radius: 4px; overflow: hidden; }
+.o_theme .o_catbar_fill { height: 100%; background: var(--o-action); border-radius: 4px; }
+.o_theme .o_catbar_val { min-width: 92px; text-align: end; color: var(--o-main-color-muted); }
+
+.o_theme .o_dashboard_links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+}
+.o_theme .o_quicklink {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  background: var(--o-view-background);
+  border: 1px solid var(--o-border-color);
+  border-radius: var(--o-border-radius-lg);
+  box-shadow: var(--o-shadow-sm);
+  text-decoration: none;
+  color: var(--o-main-text-color);
+  font-size: var(--o-font-size-sm); font-weight: var(--o-font-weight-medium);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.o_theme .o_quicklink:hover { box-shadow: var(--o-shadow-card-hover); border-color: var(--o-action); }
+.o_theme .o_quicklink svg { color: var(--o-action); flex: none; }
+
+@media (max-width: 600px) {
+  .o_theme .o_dashboard_kpis { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* =========================================================================
+   شاشات البيانات القابلة للتحرير (المرحلة ٤) — مدخلات وأدوات وتنبيهات أودو.
+   مكوّنات أودو الأصليّة للعرض فقط؛ هذه تُكمِلها للنماذج الحيّة (CRUD)، كلّها
+   تحت .o_theme بتوكِنز --o-. الأحمر للتنبيه فقط.
+   ========================================================================= */
+.o_theme .o_ds { padding: 16px; background: var(--o-sheet-background); }
+
+.o_theme .o_input {
+  width: 100%;
+  background: var(--o-view-background);
+  border: 1px solid var(--o-gray-400);
+  border-radius: var(--o-border-radius);
+  padding: 7px 10px;
+  font-size: var(--o-font-size-sm);
+  color: var(--o-main-text-color);
+  font-family: var(--o-font-family);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.o_theme .o_input:focus {
+  outline: none;
+  border-color: var(--o-action);
+  box-shadow: 0 0 0 3px rgba(113, 75, 103, 0.12);
+}
+.o_theme .o_input:disabled { background: var(--o-gray-100); opacity: 0.75; cursor: not-allowed; }
+.o_theme .o_input::placeholder { color: var(--o-gray-500); }
+.o_theme textarea.o_input { min-height: 72px; resize: vertical; line-height: 1.5; }
+
+.o_theme .btn-sm { padding: 3px 10px; font-size: var(--o-font-size-xs); }
+
+.o_theme .o_ds_card {
+  background: var(--o-view-background);
+  border: 1px solid var(--o-border-color);
+  border-radius: var(--o-border-radius-lg);
+  box-shadow: var(--o-shadow-card);
+  overflow: hidden;
+}
+.o_theme .o_ds_pad { padding: 18px; }
+
+.o_theme .o_ds_toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--o-border-color);
+}
+.o_theme .o_ds_toolbar .o_searchview { flex: 1; min-width: 220px; max-width: 440px; }
+.o_theme .o_toggle {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: var(--o-font-size-sm); color: var(--o-main-color-muted);
+  cursor: pointer; user-select: none;
+}
+.o_theme .o_toggle input { accent-color: var(--o-action); width: 15px; height: 15px; }
+
+.o_theme .o_alert {
+  padding: 10px 14px; margin-bottom: 14px;
+  border-radius: var(--o-border-radius);
+  border: 1px solid transparent;
+  font-size: var(--o-font-size-sm); font-weight: var(--o-font-weight-medium);
+}
+.o_theme .o_alert.success { background: var(--o-badge-success-bg); color: var(--o-text-success); border-color: #cfe8d6; }
+.o_theme .o_alert.danger  { background: var(--o-badge-danger-bg);  color: var(--o-text-danger);  border-color: #f2cccc; }
+.o_theme .o_alert.warning { background: var(--o-badge-warning-bg); color: var(--o-text-warning); border-color: #f4e1b6; }
+.o_theme .o_alert_title { display: flex; align-items: center; gap: 8px; font-weight: var(--o-font-weight-bold); margin-bottom: 6px; }
+.o_theme .o_alert ul { margin: 0; padding-inline-start: 18px; max-height: 160px; overflow-y: auto; font-size: var(--o-font-size-xs); }
+
+.o_theme .o_form_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.o_theme .o_form_actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; padding-top: 18px; }
+.o_theme .o_field_block { display: block; }
+.o_theme .o_field_block > .o_form_label { display: block; margin-bottom: 4px; }
+
+.o_theme .o_filedrop {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  padding: 9px 16px;
+  border: 2px dashed var(--o-gray-400); border-radius: var(--o-border-radius);
+  font-size: var(--o-font-size-sm); font-weight: var(--o-font-weight-bold);
+  color: var(--o-main-color-muted);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.o_theme .o_filedrop:hover { border-color: var(--o-action); color: var(--o-action); }

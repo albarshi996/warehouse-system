@@ -90,6 +90,9 @@ export const NAV_GROUPS = [
     emoji: '📊', icon: 'barChart3',
     items: [
       { path: '/dashboard/reports', label: 'مركز التقارير', icon: 'clipboardList', pinned: true },
+      // لوحة اللوجستيات التنفيذيّة (المرحلة ٤) — قمرةٌ جامعةٌ بمكوّنات أودو تجمّع
+      // مؤشّرات المخزون والعمليّات والسلاسل في نظرةٍ واحدة. للمديرَين كلوحةٍ إدارية.
+      { path: '/dashboard/logistics-dashboard', label: 'لوحة اللوجستيات التنفيذيّة', icon: 'gauge', roles: ['admin', 'warehouse_manager'] },
       // مؤشرات المشتريات والأداء — المحور الرابع في تقييم السلاسل، محسوبة من
       // طوابع المستندات وروابطها (procurementKpis.js). للمديرَين كلوحةٍ إدارية.
       { path: '/dashboard/kpis', label: 'مؤشرات المشتريات والأداء', icon: 'grid', roles: ['admin', 'warehouse_manager'] },

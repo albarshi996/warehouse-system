@@ -1,0 +1,23 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import LogisticsDashboard from '../../components/brandzo-erp/dashboard/LogisticsDashboard.jsx';
+/*
+ * /dashboard/logistics-dashboard — لوحة اللوجستيات التنفيذيّة (المرحلة ٤).
+ * قمرةٌ جامعةٌ للمدير بمكوّنات أودو الحقيقيّة (ListView/Badge داخل .o_theme):
+ * مؤشّرات المخزون والعمليّات والسلاسل + قوائم «تدخّل الآن» والنشاط الأخير،
+ * مبنيّةٌ فوق logisticsModel الخالص المُختبَر. محصورة بالمديرَين عبر navCatalog.
+ */
+---
+
+<DashboardLayout title="لوحة اللوجستيات التنفيذيّة" showGuide={false} light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">لوحة اللوجستيات التنفيذيّة</h1>
+    <p class="text-sm text-ink-2 mb-5 leading-relaxed">
+      نظرةٌ واحدةٌ على حالة المخزون والعمليّات والسلاسل — مؤشّرات حيّة، وقوائم
+      «تدخّل الآن»، ونشاطٌ أخير، بمكوّنات أودو الحقيقيّة.
+    </p>
+    <LogisticsDashboard client:load />
+  </div>
+</DashboardLayout>

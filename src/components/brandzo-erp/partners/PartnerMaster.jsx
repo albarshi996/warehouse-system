@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   subscribePartners,
   createPartner,
@@ -9,11 +9,17 @@ import {
 import { canImport, analyzePartnersFile, commitPartnersImport } from '../../../services/partners/partnersImportService.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Icon from '../../ui/Icon.jsx';
+import ListView from '../../odoo/ListView.jsx';
+import { int } from '../../odoo/format.js';
 
 /**
  * شاشة ماستر شركاء الأعمال — واحدة تخدم الموردين والعملاء (توأمان) بـ`kind`.
  * قائمة حيّة (`Suppliers_Master`/`Customers_Master`) + بحث + إضافة/تعديل/أرشفة
  * + استيراد Excel بمعاينة (للمديرَين). الإلزام الحقيقيّ في قواعد Firestore.
+ *
+ * المرحلة ٤ (2026-07-31): أُعيد كساء العرض بمكوّنات أودو داخل `.o_theme`
+ * (ListView + o_input + o_alert) — **المنطق (الاشتراكات وخدمات الكتابة
+ * والاستيراد) لم يُمسّ**، غُيّر ما يُرسَم فقط. الأرقام لاتينية (R2) عبر format.
  */
 
 const KINDS = {
@@ -21,7 +27,17 @@ const KINDS = {
   customer: { title: 'العملاء', one: 'عميل', codeLabel: 'رمز العميل' },
 };
 
-const money = (n) => `${(Number(n) || 0).toLocaleString('ar-LY', { maximumFractionDigits: 0 })} د.ل`;
+const money = (n) => `${int(n)} د.ل`;
+
+const LIST_COLS = [
+  { key: 'code', label: 'الرمز' },
+  { key: 'name', label: 'الاسم' },
+  { key: 'contact', label: 'المفوّض' },
+  { key: 'phone', label: 'الهاتف' },
+  { key: 'category', label: 'التصنيف' },
+  { key: 'balance', label: 'رصيد الحساب', numeric: true },
+  { key: 'actions', label: '' },
+];
 
 export default function PartnerMaster({ kind = 'supplier' }) {
   const cfg = KINDS[kind] || KINDS.supplier;
@@ -92,165 +108,132 @@ export default function PartnerMaster({ kind = 'supplier' }) {
     }
   };
 
-  return (
-    <div className="text-right" dir="rtl">
-      <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-ink">إدارة {cfg.title}</h2>
-          <p className="text-ink-2 mt-1 text-sm">
-            {cfg.codeLabel} (BP Code) هو المعرّف الفريد. لا حذف — أرشفة فقط، فشريكٌ استُعمل في مستندٍ يبقى أثره.
-          </p>
+  const listRows = filtered.map((r) => ({
+    id: r.code,
+    decoration: r.archived ? 'muted' : undefined,
+    cells: {
+      code: <span className="decoration-bf">{r.code}</span>,
+      name: r.nameAr || '—',
+      contact: r.contactPerson || '—',
+      phone: <span style={{ direction: 'ltr', display: 'inline-block' }}>{r.phone || '—'}</span>,
+      category: r.category || '—',
+      balance: money(r.accountBalance),
+      actions: (
+        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setEditor({ mode: 'edit', row: r }); setImporting(false); }}>تعديل</button>
+          {r.archived ? (
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleUnarchive(r)}>استعادة</button>
+          ) : (
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleArchive(r)}>أرشفة</button>
+          )}
         </div>
-        <div className="flex flex-wrap gap-2">
+      ),
+    },
+  }));
+
+  return (
+    <div className="o_theme" dir="rtl">
+      <div className="o_control_panel">
+        <div className="o_cp_start">
+          <nav className="o_breadcrumb" aria-label="مسار التنقّل"><span className="o_active">إدارة {cfg.title}</span></nav>
+        </div>
+        <div className="o_cp_end" style={{ gap: '8px' }}>
           {canImport(me?.role) && (
-            <button
-              type="button"
-              onClick={() => {
-                setImporting((v) => !v);
-                setEditor(null);
-              }}
-              className="inline-flex items-center gap-2 rounded-lg border-2 border-accent text-accent px-4 py-2 font-bold hover:bg-accent hover:text-black active:scale-95 transition-all"
-            >
-              <Icon name="arrowDownTray" size={16} /> استيراد {cfg.title}
+            <button type="button" className="btn btn-secondary" onClick={() => { setImporting((v) => !v); setEditor(null); }}>
+              <Icon name="arrowDownTray" size={15} /> استيراد {cfg.title}
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => {
-              setEditor({ mode: 'create' });
-              setImporting(false);
-            }}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-red text-white px-4 py-2 font-bold shadow hover:opacity-90 active:scale-95 transition-all"
-          >
-            <Icon name="users" size={16} /> إضافة {cfg.one}
+          <button type="button" className="btn btn-primary" onClick={() => { setEditor({ mode: 'create' }); setImporting(false); }}>
+            <Icon name="userPlus" size={15} /> إضافة {cfg.one}
           </button>
         </div>
-      </header>
+      </div>
 
-      {toast && (
-        <div
-          className={`mb-4 p-3 rounded-lg font-bold text-sm ${
-            toast.kind === 'error'
-              ? 'bg-red-500/15 text-red-200 border border-red-500/30'
-              : 'bg-green-500/15 text-green-200 border border-green-500/30'
-          }`}
-        >
-          {toast.text}
-        </div>
-      )}
+      <div className="o_ds">
+        <p style={{ fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)', margin: '0 0 14px', lineHeight: 1.6 }}>
+          {cfg.codeLabel} (BP Code) هو المعرّف الفريد. لا حذف — أرشفة فقط، فشريكٌ استُعمل في مستندٍ يبقى أثره.
+        </p>
 
-      {error && !loading && (
-        <div className="mb-4 p-3 rounded-lg font-bold text-sm bg-red-500/15 text-red-200 border border-red-500/30">{error}</div>
-      )}
+        {toast && <div className={`o_alert ${toast.kind === 'error' ? 'danger' : 'success'}`}>{toast.text}</div>}
+        {error && !loading && <div className="o_alert danger">{error}</div>}
 
-      {importing && (
-        <div className="mb-6">
-          <PartnerImport
-            kind={kind}
-            cfg={cfg}
-            onDone={({ created, updated }) => {
-              setImporting(false);
-              flashToast('success', `تم الاستيراد: ${created} ${cfg.one} جديد · ${updated} حُدِّث`);
-            }}
-            onCancel={() => setImporting(false)}
-          />
-        </div>
-      )}
+        {importing && (
+          <div style={{ marginBottom: '18px' }}>
+            <PartnerImport
+              kind={kind}
+              cfg={cfg}
+              onDone={({ created, updated }) => {
+                setImporting(false);
+                flashToast('success', `تم الاستيراد: ${created} ${cfg.one} جديد · ${updated} حُدِّث`);
+              }}
+              onCancel={() => setImporting(false)}
+            />
+          </div>
+        )}
 
-      {editor && (
-        <div className="mb-6">
-          <PartnerForm
-            kind={kind}
-            cfg={cfg}
-            mode={editor.mode}
-            row={editor.row}
-            onSaved={(code) => {
-              setEditor(null);
-              flashToast('success', editor.mode === 'create' ? `تمت إضافة ${code}` : `حُفظت تعديلات ${code}`);
-            }}
-            onCancel={() => setEditor(null)}
-          />
-        </div>
-      )}
+        {editor && (
+          <div style={{ marginBottom: '18px' }}>
+            <PartnerForm
+              kind={kind}
+              cfg={cfg}
+              mode={editor.mode}
+              row={editor.row}
+              onSaved={(code) => {
+                setEditor(null);
+                flashToast('success', editor.mode === 'create' ? `تمت إضافة ${code}` : `حُفظت تعديلات ${code}`);
+              }}
+              onCancel={() => setEditor(null)}
+            />
+          </div>
+        )}
 
-      {/* ملخّص */}
-      {rows.length > 0 && (
-        <div className="mb-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <SummaryTile label={cfg.title} value={rows.length.toLocaleString('ar-LY')} />
-          <SummaryTile label="إجمالي رصيد الحساب (افتتاحيّ)" value={money(totalBalance)} gold />
-          <SummaryTile label="بحصّة إنفاق" value={rows.filter((r) => Number(r.accountBalance)).length.toLocaleString('ar-LY')} />
-        </div>
-      )}
+        {rows.length > 0 && (
+          <div className="o_dashboard_kpis" style={{ marginBottom: '18px' }}>
+            <div className="o_kpi">
+              <span className="o_kpi_icon"><Icon name="users" size={20} /></span>
+              <span className="o_kpi_value">{int(rows.length)}</span>
+              <span className="o_kpi_label">{cfg.title}</span>
+            </div>
+            <div className="o_kpi">
+              <span className="o_kpi_icon"><Icon name="dollarSign" size={20} /></span>
+              <span className="o_kpi_value">{money(totalBalance)}</span>
+              <span className="o_kpi_label">إجمالي رصيد الحساب (افتتاحيّ)</span>
+            </div>
+            <div className="o_kpi">
+              <span className="o_kpi_icon"><Icon name="trendingUp" size={20} /></span>
+              <span className="o_kpi_value">{int(rows.filter((r) => Number(r.accountBalance)).length)}</span>
+              <span className="o_kpi_label">بحصّة إنفاق</span>
+            </div>
+          </div>
+        )}
 
-      <div className="bg-surface rounded-xl border border-line overflow-hidden">
-        <div className="p-4 border-b border-line flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <input
-            type="search"
-            placeholder={`بحث بالرمز أو الاسم أو المفوّض أو الهاتف…`}
-            className="flex-1 md:max-w-md bg-chip border border-line rounded-lg p-2 text-ink-2 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <label className="inline-flex items-center gap-2 text-sm text-ink-2 select-none">
-            <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} className="accent-accent" />
-            إظهار المؤرشفين
-          </label>
-        </div>
+        <div className="o_ds_card">
+          <div className="o_ds_toolbar">
+            <div className="o_searchview">
+              <span className="o_searchview_icon" aria-hidden="true">⌕</span>
+              <input
+                type="search"
+                aria-label="بحث"
+                placeholder="بحث بالرمز أو الاسم أو المفوّض أو الهاتف…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <label className="o_toggle">
+              <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
+              إظهار المؤرشفين
+            </label>
+          </div>
 
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-right text-sm">
-            <thead className="bg-chip text-ink-2">
-              <tr>
-                <th className="px-4 py-3 font-bold whitespace-nowrap">الرمز</th>
-                <th className="px-4 py-3 font-bold">الاسم</th>
-                <th className="px-4 py-3 font-bold hidden sm:table-cell">الشخص المفوّض</th>
-                <th className="px-4 py-3 font-bold hidden md:table-cell whitespace-nowrap">الهاتف</th>
-                <th className="px-4 py-3 font-bold hidden lg:table-cell">التصنيف</th>
-                <th className="px-4 py-3 font-bold whitespace-nowrap">رصيد الحساب</th>
-                <th className="px-4 py-3 font-bold text-center">إجراءات</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="p-8 text-center text-muted italic">جارٍ الجلب من السحابة…</td>
-                </tr>
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="p-8 text-center text-muted italic">
-                    {rows.length === 0 ? `لا ${cfg.title} بعد. ابدأ بالإضافة أو الاستيراد.` : 'لا نتائج مطابقة.'}
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((r) => (
-                  <tr key={r.code} className={r.archived ? 'opacity-50' : ''}>
-                    <td className="px-4 py-3 font-mono text-accent font-bold whitespace-nowrap">{r.code}</td>
-                    <td className="px-4 py-3 font-medium text-ink-2">{r.nameAr || '—'}</td>
-                    <td className="px-4 py-3 hidden sm:table-cell text-ink-2">{r.contactPerson || '—'}</td>
-                    <td className="px-4 py-3 hidden md:table-cell text-ink-2 font-mono text-xs" style={{ direction: 'ltr', textAlign: 'right' }}>{r.phone || '—'}</td>
-                    <td className="px-4 py-3 hidden lg:table-cell text-ink-2">{r.category || '—'}</td>
-                    <td className="px-4 py-3 font-bold text-ink-2 whitespace-nowrap">{money(r.accountBalance)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setEditor({ mode: 'edit', row: r })}
-                          className="text-xs font-bold text-accent border border-accent rounded-md px-3 py-1 hover:bg-accent hover:text-black transition-colors"
-                        >
-                          تعديل
-                        </button>
-                        {r.archived ? (
-                          <button type="button" onClick={() => handleUnarchive(r)} className="text-xs font-bold text-green-300 border border-green-500/40 rounded-md px-3 py-1 hover:bg-green-600 hover:text-white transition-colors">استعادة</button>
-                        ) : (
-                          <button type="button" onClick={() => handleArchive(r)} className="text-xs font-bold text-muted border border-line rounded-md px-3 py-1 hover:bg-gray-600 hover:text-white transition-colors">أرشفة</button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          {loading ? (
+            <div className="o_dashboard_empty">جارٍ الجلب من السحابة…</div>
+          ) : filtered.length === 0 ? (
+            <div className="o_dashboard_empty">
+              {rows.length === 0 ? `لا ${cfg.title} بعد. ابدأ بالإضافة أو الاستيراد.` : 'لا نتائج مطابقة.'}
+            </div>
+          ) : (
+            <ListView selectable={false} columns={LIST_COLS} rows={listRows} />
+          )}
         </div>
       </div>
     </div>
@@ -307,43 +290,42 @@ function PartnerForm({ kind, cfg, mode, row, onSaved, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-surface p-4 sm:p-6 rounded-xl border border-line" dir="rtl">
-      <h3 className="text-lg font-bold text-accent mb-4">{mode === 'create' ? `إضافة ${cfg.one}` : `تعديل ${cfg.one} ${row?.code || ''}`}</h3>
-      {err && <div className="mb-4 p-3 rounded-lg bg-red-500/15 text-red-200 border border-red-500/30 text-sm font-bold">{err}</div>}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Field label={`${cfg.codeLabel} (BP Code) *`}>
-          <input value={form.code} onChange={(e) => set('code', e.target.value)} disabled={mode === 'edit'} className="fld disabled:opacity-60" style={{ direction: 'ltr', textAlign: 'right' }} />
-        </Field>
-        <Field label="الاسم (BP Name) *">
-          <input value={form.nameAr} onChange={(e) => set('nameAr', e.target.value)} className="fld" />
-        </Field>
+    <form onSubmit={handleSubmit} className="o_ds_card o_ds_pad" dir="rtl">
+      <h3 className="o_form_title" style={{ fontSize: '18px', marginTop: 0 }}>{mode === 'create' ? `إضافة ${cfg.one}` : `تعديل ${cfg.one} ${row?.code || ''}`}</h3>
+      {err && <div className="o_alert danger">{err}</div>}
+      <div className="o_form_grid">
+        <FieldWrap label={`${cfg.codeLabel} (BP Code) *`}>
+          <input className="o_input" value={form.code} onChange={(e) => set('code', e.target.value)} disabled={mode === 'edit'} style={{ direction: 'ltr', textAlign: 'right' }} />
+        </FieldWrap>
+        <FieldWrap label="الاسم (BP Name) *">
+          <input className="o_input" value={form.nameAr} onChange={(e) => set('nameAr', e.target.value)} />
+        </FieldWrap>
         {FORM_FIELDS.map((f) => (
-          <Field key={f.key} label={f.label}>
+          <FieldWrap key={f.key} label={f.label}>
             <input
+              className="o_input"
               type={f.number ? 'number' : 'text'}
               value={form[f.key]}
               onChange={(e) => set(f.key, e.target.value)}
-              className="fld"
               style={f.ltr ? { direction: 'ltr', textAlign: 'right' } : undefined}
             />
-          </Field>
+          </FieldWrap>
         ))}
       </div>
-      <div className="flex flex-col sm:flex-row gap-3 sm:justify-end pt-5">
-        <button type="button" onClick={onCancel} className="px-4 py-2 rounded font-bold text-ink-2 border border-line hover:bg-chip transition-colors">إلغاء</button>
-        <button type="submit" disabled={busy} className="px-6 py-2 rounded bg-brand-red text-white font-bold shadow hover:opacity-90 active:scale-95 transition-all disabled:opacity-50">
+      <div className="o_form_actions">
+        <button type="button" className="btn btn-secondary" onClick={onCancel}>إلغاء</button>
+        <button type="submit" className="btn btn-primary" disabled={busy}>
           {busy ? 'جارٍ الحفظ…' : mode === 'create' ? 'إضافة' : 'حفظ التعديلات'}
         </button>
       </div>
-      <style>{`.fld{width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:.5rem;padding:.5rem .65rem;color:#f3f4f6}.fld:focus{outline:none;box-shadow:0 0 0 2px var(--accent,#f0a500)}`}</style>
     </form>
   );
 }
 
-function Field({ label, children }) {
+function FieldWrap({ label, children }) {
   return (
-    <label className="block">
-      <span className="block text-xs font-bold text-ink-2 mb-1">{label}</span>
+    <label className="o_field_block">
+      <span className="o_form_label">{label}</span>
       {children}
     </label>
   );
@@ -395,39 +377,41 @@ function PartnerImport({ kind, cfg, onDone, onCancel }) {
   const toWrite = plan ? plan.created.length + plan.updated.length : 0;
 
   return (
-    <div className="bg-surface p-4 sm:p-6 rounded-xl border border-line" dir="rtl">
-      <h3 className="text-lg font-bold text-accent flex items-center gap-2"><Icon name="arrowDownTray" size={18} /> استيراد شيت {cfg.title}</h3>
-      <p className="text-xs text-muted mt-1 mb-4">
+    <div className="o_ds_card o_ds_pad" dir="rtl">
+      <h3 className="o_form_title" style={{ fontSize: '18px', marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Icon name="arrowDownTray" size={18} /> استيراد شيت {cfg.title}
+      </h3>
+      <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', margin: '2px 0 14px', lineHeight: 1.6 }}>
         الأعمدة تُطابَق تلقائيًّا بمرادفات عربية/إنجليزية (BP Code · BP Name · المفوّض · الهاتف · الأرصدة…). لا يُكتب شيء قبل أن تراجع المعاينة وتؤكّد.
       </p>
 
-      <label className="inline-flex items-center gap-2 cursor-pointer rounded-lg border-2 border-dashed border-line px-4 py-2.5 text-sm font-bold text-ink-2 hover:border-accent hover:text-accent transition-colors">
-        <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFile} disabled={analyzing || committing} />
+      <label className="o_filedrop">
+        <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' }} onChange={handleFile} disabled={analyzing || committing} />
         {analyzing ? 'جارٍ تحليل الملف…' : 'اختر ملف Excel'}
       </label>
-      {fileName && <span className="text-xs text-gray-500 font-mono truncate mr-3">{fileName}</span>}
+      {fileName && <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-gray-500)', marginInlineStart: '10px', fontFamily: 'monospace' }}>{fileName}</span>}
 
-      {error && <div className="mt-4 p-3 rounded-lg border border-red-500/30 bg-red-500/15 text-red-200 text-sm font-bold">{error}</div>}
+      {error && <div className="o_alert danger" style={{ marginTop: '14px' }}>{error}</div>}
 
       {analysis && (
-        <div className="mt-5 space-y-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Stat label={`${cfg.one} جديد`} value={plan.created.length} tone="green" />
-            <Stat label="سيُحدَّث" value={plan.updated.length} tone="amber" />
-            <Stat label="بلا تغيير" value={plan.unchanged.length} tone="gray" />
-            <Stat label="بلا رمز (يُتجاوز)" value={plan.skipped.length} tone="red" />
+        <div style={{ marginTop: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div className="o_dashboard_kpis" style={{ margin: 0 }}>
+            <Stat label={`${cfg.one} جديد`} value={plan.created.length} />
+            <Stat label="سيُحدَّث" value={plan.updated.length} />
+            <Stat label="بلا تغيير" value={plan.unchanged.length} />
+            <Stat label="بلا رمز (يُتجاوز)" value={plan.skipped.length} alert={plan.skipped.length > 0} />
           </div>
 
           {analysis.summary && (
-            <p className="text-xs text-gray-500">
+            <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-gray-500)' }}>
               الورقة: <b>{analysis.summary.sheetName}</b> · صفّ العناوين: {analysis.summary.headerRow} · الأعمدة المتعرَّف عليها: {analysis.summary.detectedColumns?.length ?? '—'}
             </p>
           )}
 
           {blocking.length > 0 && (
-            <div className="p-3 rounded-lg border border-red-500/30 bg-red-500/10">
-              <p className="text-sm font-bold text-red-200 mb-2 flex items-center gap-2"><Icon name="alertTriangle" size={16} /> {blocking.length} خطأ يمنع الاستيراد — صحّح الملف وأعد اختياره:</p>
-              <ul className="text-xs text-red-300 space-y-1 max-h-40 overflow-y-auto">
+            <div className="o_alert danger">
+              <div className="o_alert_title"><Icon name="alertTriangle" size={16} /> {blocking.length} خطأ يمنع الاستيراد — صحّح الملف وأعد اختياره:</div>
+              <ul>
                 {blocking.slice(0, 12).map((e, i) => (<li key={i}>صفّ {e.row} · {e.message}</li>))}
                 {blocking.length > 12 && <li>… و{blocking.length - 12} أخرى</li>}
               </ul>
@@ -435,9 +419,9 @@ function PartnerImport({ kind, cfg, onDone, onCancel }) {
           )}
 
           {plan.skipped.length > 0 && (
-            <div className="p-3 rounded-lg border border-orange-500/30 bg-orange-500/10">
-              <p className="text-sm font-bold text-orange-200 mb-2 flex items-center gap-2"><Icon name="alertTriangle" size={16} /> {plan.skipped.length} صفًّا بلا رمز — لن يُستورد (الرمز معرّف الماستر):</p>
-              <ul className="text-xs text-orange-300 space-y-1 max-h-32 overflow-y-auto">
+            <div className="o_alert warning">
+              <div className="o_alert_title"><Icon name="alertTriangle" size={16} /> {plan.skipped.length} صفًّا بلا رمز — لن يُستورد (الرمز معرّف الماستر):</div>
+              <ul>
                 {plan.skipped.slice(0, 8).map((row, i) => (<li key={i}>{row.nameAr || 'صف بلا اسم'}</li>))}
                 {plan.skipped.length > 8 && <li>… و{plan.skipped.length - 8} أخرى</li>}
               </ul>
@@ -445,13 +429,13 @@ function PartnerImport({ kind, cfg, onDone, onCancel }) {
           )}
 
           {plan.updated.length > 0 && (
-            <div className="p-3 rounded-lg border border-line bg-chip">
-              <p className="text-sm font-bold text-ink-2 mb-2">ما سيتغيّر على شركاء قائمين (عيّنة):</p>
-              <ul className="text-xs text-muted space-y-1 max-h-40 overflow-y-auto">
+            <div className="o_ds_card" style={{ padding: '12px 14px', boxShadow: 'none' }}>
+              <p style={{ fontSize: 'var(--o-font-size-sm)', fontWeight: 'var(--o-font-weight-bold)', margin: '0 0 8px' }}>ما سيتغيّر على شركاء قائمين (عيّنة):</p>
+              <ul style={{ margin: 0, paddingInlineStart: '18px', maxHeight: '160px', overflowY: 'auto', fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
                 {plan.updated.slice(0, 6).map((row) => (
                   <li key={row.code}>
-                    <b className="font-mono text-accent">{row.code}</b>
-                    {row._diff?.slice(0, 3).map((d) => (<span key={d.field} className="mr-2">· {d.labelAr}: «{String(d.before) || '—'}» ← «{String(d.after)}»</span>))}
+                    <b style={{ color: 'var(--o-action)', fontFamily: 'monospace' }}>{row.code}</b>
+                    {row._diff?.slice(0, 3).map((d) => (<span key={d.field} style={{ marginInlineStart: '8px' }}>· {d.labelAr}: «{String(d.before) || '—'}» ← «{String(d.after)}»</span>))}
                   </li>
                 ))}
                 {plan.updated.length > 6 && <li>… و{plan.updated.length - 6} آخر</li>}
@@ -459,13 +443,13 @@ function PartnerImport({ kind, cfg, onDone, onCancel }) {
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:justify-end pt-1">
-            <button type="button" onClick={onCancel} className="px-4 py-2 rounded font-bold text-ink-2 border border-line hover:bg-chip transition-colors">إغلاق</button>
+          <div className="o_form_actions">
+            <button type="button" className="btn btn-secondary" onClick={onCancel}>إغلاق</button>
             <button
               type="button"
+              className="btn btn-primary"
               onClick={handleCommit}
               disabled={!analysis.ok || toWrite === 0 || committing}
-              className="px-6 py-2 rounded bg-brand-red text-white font-bold shadow hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {committing ? 'جارٍ الاستيراد…' : toWrite === 0 ? 'لا شيء ليُستورد' : `تأكيد استيراد ${toWrite} ${cfg.one}`}
             </button>
@@ -476,27 +460,11 @@ function PartnerImport({ kind, cfg, onDone, onCancel }) {
   );
 }
 
-const TONES = {
-  green: 'bg-green-500/10 border-green-500/30 text-green-200',
-  amber: 'bg-amber-500/10 border-amber-500/30 text-amber-200',
-  gray: 'bg-chip border-line text-ink-2',
-  red: 'bg-red-500/10 border-red-500/30 text-red-200',
-};
-
-function Stat({ label, value, tone }) {
+function Stat({ label, value, alert }) {
   return (
-    <div className={`rounded-lg border p-3 text-center ${TONES[tone]}`}>
-      <p className="text-2xl font-bold">{value}</p>
-      <p className="text-xs font-bold mt-0.5">{label}</p>
-    </div>
-  );
-}
-
-function SummaryTile({ label, value, gold }) {
-  return (
-    <div className={`rounded-xl border p-3 text-center ${gold ? 'bg-amber-500/10 border-amber-500/30' : 'bg-surface border-line'}`}>
-      <p className={`text-lg font-bold ${gold ? 'text-accent' : 'text-ink'}`}>{value}</p>
-      <p className="text-[11px] text-muted mt-0.5">{label}</p>
+    <div className={`o_kpi${alert ? ' alert' : ''}`}>
+      <span className="o_kpi_value">{int(value)}</span>
+      <span className="o_kpi_label">{label}</span>
     </div>
   );
 }
