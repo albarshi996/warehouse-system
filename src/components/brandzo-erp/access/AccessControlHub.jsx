@@ -103,12 +103,23 @@ export default function AccessControlHub() {
     setSaving(true);
     setMsg(null);
     try {
-      await saveMatrix(draft, {
+      const res = await saveMatrix(draft, {
         updatedBy: user?.uid || null,
         updatedByName: me?.name || me?.email || null,
       });
-      setDirty(false);
-      setMsg({ ok: true, text: 'حُفظت المصفوفة — تسري فورًا على فتح الشاشات والقائمة الجانبية.' });
+      if (res.echoCount !== null && res.echoCount !== res.sent) {
+        // الخادم يقول غير ما أرسلناه — لا نزعم النجاح
+        setMsg({
+          ok: false,
+          text: `أُرسل ${res.sent} تجاوزًا لكن الخادم يؤكد ${res.echoCount} — الحفظ لم يثبت. أرسل لقطة من Console (F12) للمطوّر.`,
+        });
+      } else {
+        setDirty(false);
+        setMsg({
+          ok: true,
+          text: `حُفظت المصفوفة${res.echoCount !== null ? ` — الخادم يؤكد ${res.echoCount} تجاوزًا` : ''}. تسري فورًا على فتح الشاشات والقائمة الجانبية.`,
+        });
+      }
     } catch (err) {
       const code = err?.code || err?.message || String(err);
       setMsg({
@@ -124,6 +135,12 @@ export default function AccessControlHub() {
   };
 
   const revert = () => {
+    if (
+      dirty &&
+      !window.confirm('ستفقد كل التعديلات غير المحفوظة وتعود للنسخة السحابية — متأكد؟')
+    ) {
+      return;
+    }
     setDraft(cloud || { overrides: {} });
     setDirty(false);
     setMsg(null);
