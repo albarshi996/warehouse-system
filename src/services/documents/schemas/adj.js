@@ -96,9 +96,10 @@ const schema = {
         {
           key: 'cycleCountRef',
           label: 'مرجع الجرد (Cycle Count Ref.)',
-          kind: 'text',
+          kind: 'docref',
+          docType: 'CC',
           required: true,
-          hint: 'يُملأ تلقائيًّا عند اشتقاق السند من محضر جرد',
+          hint: 'اكتب رقم محضر الجرد (CC-…) فيُتعرَّف عليه ويُربط تلقائيًّا — أو يُملأ عند الاشتقاق',
         },
         { key: 'zone', label: 'المنطقة / الموقع (Zone/Location)', kind: 'text' },
         {

@@ -67,9 +67,10 @@ const schema = {
         {
           key: 'grnRef',
           label: 'رقم GRN المرجعي (GRN Ref.)',
-          kind: 'text',
+          kind: 'docref',
+          docType: 'GRN',
           required: true,
-          hint: 'يُملأ تلقائيًّا عند اشتقاق الأمر من مذكرة الاستلام',
+          hint: 'اكتب رقم مذكرة الاستلام (GRN-…) فيُتعرَّف عليه ويُربط تلقائيًّا — أو يُملأ عند الاشتقاق',
         },
         { key: 'supplier', label: 'اسم المورد (Supplier Name)', kind: 'text' },
         { key: 'stagingZone', label: 'منطقة الاستلام / Staging Zone', kind: 'text' },

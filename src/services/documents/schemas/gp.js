@@ -71,9 +71,10 @@ const schema = {
         {
           key: 'dnRef',
           label: 'المستند المرجعي (إذن التسليم)',
-          kind: 'text',
+          kind: 'docref',
+          docType: 'DN',
           required: true,
-          hint: 'يُملأ تلقائيًّا عند اشتقاق التصريح من إذن تسليم معتمَد',
+          hint: 'اكتب رقم إذن التسليم (DN-…) فيُتعرَّف عليه ويُربط تلقائيًّا — أو يُملأ عند الاشتقاق',
         },
         { key: 'reason', label: 'سبب الخروج (Reason)', kind: 'select', options: ['تسليم عميل', 'تحويل بين فروع', 'إرجاع لمورّد', 'صيانة', 'أخرى'] },
         { key: 'destination', label: 'الوجهة (Destination)', kind: 'text', required: true },

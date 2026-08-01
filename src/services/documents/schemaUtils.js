@@ -81,6 +81,24 @@ export function missingRequired(schema, doc) {
     .map((f) => f.label);
 }
 
+/**
+ * حقول المرجع المستنديّ (`docref`) في المخطّط — كلٌّ يعلن نوع أبيه (`docType`).
+ * تُستهلك في واجهة التعرّف التلقائيّ وفي حارس «لا إنجاز قبل اعتماد الأب».
+ */
+export function docrefFields(schema) {
+  return allFields(schema).filter((f) => f.kind === 'docref' && f.docType);
+}
+
+/**
+ * نوع الأب المرجعيّ الأساسيّ للمخطّط — من أوّل حقل `docref` **إلزاميّ**
+ * (وإلا أوّل docref). يُستعمل في الحارس لمعرفة أيّ رابطٍ يجب أن يكون معتمَدًا.
+ */
+export function primaryParentType(schema) {
+  const fields = docrefFields(schema);
+  const req = fields.find((f) => f.required);
+  return (req || fields[0])?.docType || null;
+}
+
 /** عدد بنود قائمة الفحص المطابقة (المؤشَّرة) وإجماليها — لعدّاد «N / 10». */
 export function checklistCount(schema, doc) {
   const items = (schema?.sections || []).filter((s) => s.kind === 'checklist').flatMap((s) => s.items || []);

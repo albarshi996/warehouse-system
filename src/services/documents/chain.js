@@ -199,6 +199,47 @@ export function deriveDocument(source, toType = null) {
   return { type: to, header, lines, links };
 }
 
+/* ═══════════════ الربط اليدويّ بالرقم (docref) ═══════════════ */
+
+/**
+ * يربط مستندًا حاليًّا بأبٍ عُرِف **برقمه يدويًّا** (لا بالاشتقاق) — يُعيد خريطة
+ * `links` تراكمية بنفس منطق الاشتقاق (سطر 197): روابط الأب + روابط الابن
+ * القائمة + الأب نفسه. لا يمسّ الحالة ولا الرقم. هذا النظير الخالص لحقل
+ * `docref` في الواجهة، فتعمل المطابقة الثلاثية وشريط السلسلة كأنّه اشتقاق.
+ */
+export function mergeParentLink(currentLinks, parentDoc) {
+  const base = { ...(currentLinks || {}) };
+  if (!parentDoc?.id || !parentDoc.type) return base;
+  return {
+    ...(parentDoc.links || {}),
+    ...base,
+    [parentDoc.type]: { id: parentDoc.id, number: parentDoc.number || null },
+  };
+}
+
+/**
+ * حارس «لا إنجاز قبل اعتماد الأب»: يمنع الابن من بلوغ «منجَز» ما لم يكن
+ * أبوه المرجعيّ المعلن (`parentType`) معتمَدًا أو منجَزًا. الربط بأبٍ غير
+ * معتمَد مسموح (تحذير أصفر في الواجهة)، لكنّ الإنجاز يُمنع حتى يُعتمد الأب.
+ * دالّة خالصة — تُستدعى في `transitionDocument` بعد جلب الأب. تعيد رسالة أو null.
+ */
+export function parentApprovalProblem(parentType, parentDoc) {
+  if (!parentType) return null; // لا أب مرجعيّ معلن ⇒ لا قيد
+  if (!parentDoc) return `الأب المرجعيّ (${parentType}) غير موجود في النظام — لا إنجاز بلا سلسلة`;
+  if (!['approved', 'done'].includes(parentDoc.state)) {
+    return `الأب ${parentDoc.number || parentType} غير معتمَد بعد — اعتماده أولًا قبل إنجاز هذا المستند`;
+  }
+  return null;
+}
+
+/** نوع الأب الذي يمثّله كلّ حقل مرجع نصّي — عكسُ خريطة `refField` في الاشتقاق. */
+export const DOCREF_PARENT_TYPE = {
+  prRef: 'PR', poRef: 'PO', grnRef: 'GRN', pickRef: 'PICK', packRef: 'PACK',
+  dnRef: 'DN', deliveryRef: 'DN', transferReqRef: 'TR', transferNoteRef: 'TRN',
+  returnRef: 'RET', cycleCountRef: 'CC', salesOrderRef: 'SO', branchOrderRef: 'SO',
+  dispatchRef: 'DN',
+};
+
 /* ═══════════════ المطابقة الثلاثية ═══════════════ */
 
 /** مفتاح مطابقة البند: SKU أولًا، فالباركود، فالوصف — أول موجود. */

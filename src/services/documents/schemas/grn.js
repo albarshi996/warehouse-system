@@ -74,7 +74,7 @@ const schema = {
           kind: 'datetime',
           required: true,
         },
-        { key: 'poRef', label: 'رقم أمر الشراء المرجعي (PO Ref.)', kind: 'text', required: true },
+        { key: 'poRef', label: 'رقم أمر الشراء المرجعي (PO Ref.)', kind: 'docref', docType: 'PO', required: true, hint: 'اكتب رقم أمر الشراء (PO-…) فيُتعرَّف عليه ويُربط تلقائيًّا — أو يُملأ عند الاشتقاق' },
         { key: 'supplier', label: 'اسم المورد (Supplier)', kind: 'text', required: true },
         { key: 'truckPlate', label: 'رقم اللوحة / الشاحنة (Truck Plate)', kind: 'text' },
         { key: 'dockNo', label: 'رقم الرصيف (Dock No.)', kind: 'text' },

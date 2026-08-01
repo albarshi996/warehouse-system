@@ -75,9 +75,10 @@ const schema = {
         {
           key: 'returnRef',
           label: 'رقم إشعار الإرجاع المرجعي (Return Ref.)',
-          kind: 'text',
+          kind: 'docref',
+          docType: 'RET',
           required: true,
-          hint: 'يُملأ تلقائيًّا عند اشتقاق الإشعار من مرتجع معتمَد',
+          hint: 'اكتب رقم إشعار المرتجع (RET-…) فيُتعرَّف عليه ويُربط تلقائيًّا — أو يُملأ عند الاشتقاق',
         },
         {
           key: 'beneficiaryType',

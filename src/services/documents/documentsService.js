@@ -29,8 +29,9 @@ import {
 import { db, auth } from '../../config/firebase.js';
 import { reserveNumber } from './numbering.js';
 import { INITIAL_STATE, isEditable, isLegalTransition, canDo, TRANSITIONS } from './states.js';
-import { deriveDocument } from './chain.js';
+import { deriveDocument, parentApprovalProblem } from './chain.js';
 import { getSchema } from './schemas/index.js';
+import { primaryParentType } from './schemaUtils.js';
 import { movesStock, POSTING_STATE } from '../ledger/postingRules.js';
 import { buildMoves } from '../ledger/movements.js';
 import { postDocument } from '../ledger/ledgerService.js';
@@ -142,6 +143,21 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
     }
     if (!moves.length) {
       throw new Error('لا بند بكمية — مستندٌ بلا أثر مخزني لا يُنجَز.');
+    }
+  }
+
+  // 🔗 حارس السلسلة: لا يُنجَز مستندٌ قبل اعتماد أبيه المرجعيّ (المربوط بحقل
+  //    docref — يدويًّا بالرقم أو بالاشتقاق). الربط بأبٍ غير معتمَد مسموح (تحذير
+  //    أصفر في الواجهة)، لكنّ الإنجاز يُمنع حتى يُعتمد الأب — فلا تُغلق حلقةٌ
+  //    ابنٌ قبل أبيها. المستندات المشتقّة تجتازه دومًا (اشتقاقها اشترط اعتماد الأب).
+  if (to === 'done') {
+    const sc = schema || getSchema(data.type);
+    const parentType = primaryParentType(sc);
+    const parentLink = parentType ? data.links?.[parentType] : null;
+    if (parentType && parentLink?.id) {
+      const parentDoc = await getDocument(parentLink.id);
+      const problem = parentApprovalProblem(parentType, parentDoc);
+      if (problem) throw new Error(problem);
     }
   }
 
@@ -344,6 +360,22 @@ export async function fetchChainDocuments(docData) {
   );
 
   return [...found.values()];
+}
+
+/**
+ * يبحث عن مستندٍ برقمه الرسميّ (التعرّف التلقائيّ لحقل `docref`).
+ *
+ * الرقم عالميّ الفرادة (`TYPE-YEAR-SEQ` يتضمّن النوع) فيكفي استعلامٌ بحقلٍ
+ * واحد (`number`) — فهرسه المفرد تلقائيّ، **لا فهرس مركّب ولا تدخّل من المالك**.
+ * النوع يُتحقَّق محلّيًّا بعد الجلب. يعيد المستند أو null.
+ */
+export async function lookupByNumber(number) {
+  const clean = String(number || '').trim();
+  if (!clean) return null;
+  const snap = await getDocs(query(collection(db, DOCS), where('number', '==', clean), limit(1)));
+  if (snap.empty) return null;
+  const d = snap.docs[0];
+  return { id: d.id, ...d.data() };
 }
 
 /** ترتيب محلّي بالأحدث — يُغني عن فهرس مركّب مع `where`. */

@@ -81,9 +81,10 @@ const schema = {
         {
           key: 'grnRef',
           label: 'رقم GRN المرجعي (GRN Ref.)',
-          kind: 'text',
+          kind: 'docref',
+          docType: 'GRN',
           required: true,
-          hint: 'يُملأ تلقائيًّا عند اشتقاق التقرير من مذكرة الاستلام',
+          hint: 'اكتب رقم مذكرة الاستلام (GRN-…) فيُتعرَّف عليه ويُربط تلقائيًّا — أو يُملأ عند الاشتقاق',
         },
         { key: 'poRef', label: 'رقم أمر الشراء (PO Ref.)', kind: 'text' },
         { key: 'supplier', label: 'اسم المورد (Supplier Name)', kind: 'text', required: true },
