@@ -41,19 +41,28 @@ service cloud.firestore {
       return signedIn() && request.auth.token.email == 'albarshi.96@gmail.com';
     }
 
+    // الحساب المفعَّل: `active != false` يعامل غياب الحقل (وثائق قديمة)
+    // كمفعَّل، فلا ينكسر أحد. الموقوف (`active == false`) يسقط من كل الأدوار
+    // أدناه فلا يكتب شيئًا حسّاسًا — حتى لو التفّ على الواجهة برمزٍ صالح بعدُ.
+    // الاستدعاء يعيد استعمال قراءة get() نفسها المخزّنة مع myRole() فبلا كلفة.
+    // المدير العام المُمهَّد بالبريد فوق هذا (يستحيل أن يقفل نفسه).
+    function isActive() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active != false;
+    }
+
     function isAdmin() {
-      return isBootstrapAdmin() || (signedIn() && hasProfile() && myRole() == 'admin');
+      return isBootstrapAdmin() || (signedIn() && hasProfile() && isActive() && myRole() == 'admin');
     }
 
     function isManager() {
       return isBootstrapAdmin() ||
-             (signedIn() && hasProfile() && myRole() in ['admin', 'warehouse_manager']);
+             (signedIn() && hasProfile() && isActive() && myRole() in ['admin', 'warehouse_manager']);
     }
 
     // كاتبو جرد المركبات: دور «الحركة» + المديرَان (تعاون المخازن والحركة).
     function isFleetWriter() {
       return isBootstrapAdmin() ||
-             (signedIn() && hasProfile() && myRole() in ['admin', 'warehouse_manager', 'fleet']);
+             (signedIn() && hasProfile() && isActive() && myRole() in ['admin', 'warehouse_manager', 'fleet']);
     }
 
     // الفاعلون المخزنيون: من يملكون إنجاز مستندٍ يُحرّك المخزون، فيحتاجون
@@ -62,25 +71,37 @@ service cloud.firestore {
     // الإدارة ودور الحركة خارجها — لا يُنجزون مستندًا مخزنيًّا أصلًا.
     function isStockActor() {
       return isBootstrapAdmin() ||
-             (signedIn() && hasProfile() && myRole() in [
+             (signedIn() && hasProfile() && isActive() && myRole() in [
                'admin', 'warehouse_manager', 'storekeeper', 'qc_inspector',
                'gate_officer', 'purchase_officer', 'return_manager',
                'inventory_auditor', 'finance_manager'
              ]);
     }
 
+    // من يحقّ له حجز رقمٍ رسميّ من عدّاد `counters`: كل من يُنشئ مستندًا
+    // مرقّمًا فعلًا — الفاعل المخزني (مستندات·عُهد) أو كاتب الأسطول (رحلات·
+    // أوامر شغل·فحوصات) أو المدير (اجتماعات·تقارير). المشاهد ومستخدم الإدارة
+    // خارجها فلا يحرقان أرقامًا (كان أي مصادَق يحرقها — خرق أُغلق بالمحور ٤).
+    function canReserveNumber() {
+      return isStockActor() || isFleetWriter();
+    }
+
     // ── المستخدمون والأدوار ──────────────────────────────────────
-    // القراءة لأي مُصادَق (الواجهة تحتاج معرفة دور المستخدم).
-    // الكتابة للمدير العام فقط — وإلا استطاع أي مستخدم ترقية نفسه.
+    // القراءة: ملفّ المستخدم نفسه (الواجهة تحتاج دوره) أو مدير (شاشة الإدارة
+    // تسرد الكلّ). كان أي مصادَق يقرأ دليل المستخدمين كاملًا — دور وبريد كلّ
+    // زميل؛ حُصر بالمحور ٤. الكتابة للمدير العام فقط — وإلا رقّى كلٌّ نفسه.
     match /users/{uid} {
-      allow read: if signedIn();
+      allow read: if isManager() || (signedIn() && request.auth.uid == uid);
       allow write: if isAdmin();
     }
 
     // ── العمليات المخزنية ────────────────────────────────────────
     match /operations/{opId} {
       allow read: if signedIn();
-      allow create: if signedIn();
+      // إنشاء جلسة جرد/مسح: فاعل مخزنيّ فقط — لا أي مصادَق (كان viewer
+      // يُنشئ عمليات؛ حُصر بالمحور ٤). شاشة «الجرد الذكي» لا يراها إلا
+      // الأدوار المخزنية أصلًا، فلا تقييد جديد على من يعمل فعلًا.
+      allow create: if isStockActor();
       // الإقفال والملخّص للمديرين فقط؛ ولا حذف للعمليات إطلاقاً.
       allow update: if isManager();
       allow delete: if false;
@@ -88,7 +109,7 @@ service cloud.firestore {
       // سجلّ المسح: إضافة فقط — لا تعديل ولا حذف (سجلّ تدقيق دائم).
       match /scans/{scanId} {
         allow read: if signedIn();
-        allow create: if signedIn()
+        allow create: if isStockActor()
                       && request.resource.data.byUid == request.auth.uid;
         allow update, delete: if false;
       }
@@ -185,7 +206,8 @@ service cloud.firestore {
       allow read: if signedIn();
 
       // يولد مسودّةً باسم صاحبه وبلا رقم — لا أحد يُنشئ مستندًا معتمَدًا ابتداءً.
-      allow create: if signedIn()
+      // فاعل مخزنيّ فقط (كان أي مصادَق يُنشئ مسودّات — بابُ إغراق أُغلق بالمحور ٤).
+      allow create: if isStockActor()
                     && request.resource.data.createdByUid == request.auth.uid
                     && request.resource.data.state == 'draft'
                     && request.resource.data.number == null;
@@ -248,8 +270,10 @@ service cloud.firestore {
     // قفز. بهذا يستحيل إنتاج رقمين متطابقين أو إعادة استخدام رقم محروق.
     match /counters/{counterId} {
       allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.seq == 1;
-      allow update: if signedIn() && request.resource.data.seq == resource.data.seq + 1;
+      // حاجز الأرقام: من يُنشئ مستندًا مرقّمًا فقط (كان أي مصادَق يقدر أن
+      // يحرق أرقامًا رسمية — أخطر خرق كشفه المسح؛ أُغلق بالمحور ٤).
+      allow create: if canReserveNumber() && request.resource.data.seq == 1;
+      allow update: if canReserveNumber() && request.resource.data.seq == resource.data.seq + 1;
       allow delete: if false;
     }
 
@@ -287,8 +311,9 @@ service cloud.firestore {
     // أثرًا يمنع إعادة السؤال عن الباركود نفسه كل جلسة.
     match /Items_Pending/{barcode} {
       allow read: if signedIn();
-      // إنشاء: بحالة «معلّق» فقط — لا أحد يُنشئ سجلًّا معتمَدًا ابتداءً.
-      allow create: if signedIn() && request.resource.data.state == 'pending';
+      // إنشاء: فاعل مخزنيّ بحالة «معلّق» فقط (الماسح موظّف مخزني، والبتّ
+      // للمديرَين). كان أي مصادَق يُنشئ — حُصر بالمحور ٤.
+      allow create: if isStockActor() && request.resource.data.state == 'pending';
       allow update: if isManager()
                     || (signedIn()
                         // تكرار مشاهدة: الحالة لا تتغيّر، والبتّ لا يُنتحل.
@@ -348,16 +373,17 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // سجلّات الوارد والصادر: إضافة فقط — لا محو للتاريخ.
+    // سجلّات الوارد والصادر: إضافة للفاعل المخزنيّ فقط — لا محو للتاريخ.
+    // (كان أي مصادَق يُنشئ قيودًا — حُصر بالمحور ٤.)
     match /Inbound_Log/{docId} {
       allow read: if signedIn();
-      allow create: if signedIn();
+      allow create: if isStockActor();
       allow update, delete: if isAdmin();
     }
 
     match /Outbound_Log/{docId} {
       allow read: if signedIn();
-      allow create: if signedIn();
+      allow create: if isStockActor();
       allow update, delete: if isAdmin();
     }
 

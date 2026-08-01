@@ -17,6 +17,7 @@
     "org": "node scripts/build-org.mjs",
     "prebuild": "node scripts/build-arch.mjs && node scripts/build-org.mjs",
     "test": "node --test \"src/**/*.test.js\"",
+    "test:rules": "firebase emulators:exec --only firestore \"node --test test/firestore-rules.test.mjs\"",
     "audit": "node scripts/audit-portal.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",

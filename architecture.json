@@ -13,7 +13,7 @@
     "serviceDomains": 24,
     "serviceFiles": 134,
     "collections": 38,
-    "roles": 12,
+    "roles": 13,
     "odooModels": 12,
     "odooGuards": 51,
     "infraNodes": 6,
@@ -1475,6 +1475,7 @@
       "approveRoles",
       "completeRoles",
       "hasProfile",
+      "isActive",
       "isAdmin",
       "isBootstrapAdmin",
       "isCreator",
@@ -1487,10 +1488,12 @@
     ],
     "functions": [
       "approveRoles",
+      "canReserveNumber",
       "completeRoles",
       "contentUnchanged",
       "hasProfile",
       "immutableKept",
+      "isActive",
       "isAdmin",
       "isBootstrapAdmin",
       "isCreator",
@@ -1728,18 +1731,18 @@
             "actions": [
               "create"
             ],
-            "condition": "signedIn() && request.resource.data.seq == 1",
+            "condition": "canReserveNumber() && request.resource.data.seq == 1",
             "roles": [
-              "signedIn"
+              "canReserveNumber"
             ]
           },
           {
             "actions": [
               "update"
             ],
-            "condition": "signedIn() && request.resource.data.seq == resource.data.seq + 1",
+            "condition": "canReserveNumber() && request.resource.data.seq == resource.data.seq + 1",
             "roles": [
-              "signedIn"
+              "canReserveNumber"
             ]
           },
           {
@@ -1840,9 +1843,9 @@
             "actions": [
               "create"
             ],
-            "condition": "signedIn() && request.resource.data.createdByUid == request.auth.uid && request.resource.data.state == 'draft' && request.resource.data.number == null",
+            "condition": "isStockActor() && request.resource.data.createdByUid == request.auth.uid && request.resource.data.state == 'draft' && request.resource.data.number == null",
             "roles": [
-              "signedIn"
+              "isStockActor"
             ]
           },
           {
@@ -1997,9 +2000,9 @@
             "actions": [
               "create"
             ],
-            "condition": "signedIn()",
+            "condition": "isStockActor()",
             "roles": [
-              "signedIn"
+              "isStockActor"
             ]
           },
           {
@@ -2055,9 +2058,9 @@
             "actions": [
               "create"
             ],
-            "condition": "signedIn() && request.resource.data.state == 'pending'",
+            "condition": "isStockActor() && request.resource.data.state == 'pending'",
             "roles": [
-              "signedIn"
+              "isStockActor"
             ]
           },
           {
@@ -2096,9 +2099,9 @@
             "actions": [
               "create"
             ],
-            "condition": "signedIn()",
+            "condition": "isStockActor()",
             "roles": [
-              "signedIn"
+              "isStockActor"
             ]
           },
           {
@@ -2136,9 +2139,9 @@
             "actions": [
               "create"
             ],
-            "condition": "signedIn() && request.resource.data.byUid == request.auth.uid",
+            "condition": "isStockActor() && request.resource.data.byUid == request.auth.uid",
             "roles": [
-              "signedIn"
+              "isStockActor"
             ]
           },
           {
@@ -2232,9 +2235,9 @@
             "actions": [
               "create"
             ],
-            "condition": "signedIn()",
+            "condition": "isStockActor()",
             "roles": [
-              "signedIn"
+              "isStockActor"
             ]
           },
           {
@@ -2473,8 +2476,9 @@
             "actions": [
               "read"
             ],
-            "condition": "signedIn()",
+            "condition": "isManager() || (signedIn() && request.auth.uid == uid)",
             "roles": [
+              "isManager",
               "signedIn"
             ]
           },
@@ -3672,6 +3676,7 @@
       "org": "node scripts/build-org.mjs",
       "prebuild": "node scripts/build-arch.mjs && node scripts/build-org.mjs",
       "test": "node --test \"src/**/*.test.js\"",
+      "test:rules": "firebase emulators:exec --only firestore \"node --test test/firestore-rules.test.mjs\"",
       "audit": "node scripts/audit-portal.mjs",
       "lint": "eslint .",
       "format": "prettier --write .",
