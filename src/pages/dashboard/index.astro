@@ -1,6 +1,7 @@
 ---
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import Icon from '../../components/ui/Icon.astro';
+import OperationsCommand from '../../components/brandzo-erp/ledger/OperationsCommand.jsx';
 
 const base = import.meta.env.BASE_URL.endsWith('/')
   ? import.meta.env.BASE_URL.slice(0, -1)
@@ -172,6 +173,29 @@ const soon = [
         وضع التخصيص مُفعّل — انقر أي بطاقة لإخفائها أو إظهارها. تُحفظ اختياراتك في هذا المتصفّح.
       </p>
     </div>
+
+    {/* ─── الطبقة صفر: النبض الحيّ — لوحة القيادة التشغيلية مدمجة ─────────────
+         إعادة استخدام لمكوّن OperationsCommand نفسه (لا نسخ): أي تطوير له
+         ينعكس هنا وفي /dashboard/command-center معًا. القاعدة الذهبية: صفر حذف —
+         الصفحة المستقلة باقية كما هي. مقيَّد بأدوار الإدارة أسوةً ببطاقة
+         «لوحات القيادة»، وقابل للإخفاء من «تخصيص العرض» كأي بطاقة. */}
+    <ul class="list-none p-0 m-0">
+      <li data-item-roles="admin,warehouse_manager">
+        <section data-section data-group="pulse" class="mb-10">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="inline-grid place-items-center w-8 h-8 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name="target" size={17} /></span>
+            <h2 class="text-lg sm:text-xl font-bold text-ink">النبض الحيّ — لوحة القيادة التشغيلية</h2>
+            <div class="flex-1 h-px bg-line"></div>
+            <a href={`${base}/dashboard/command-center`}
+              class="text-xs font-bold text-accent hover:underline whitespace-nowrap">الصفحة الكاملة ←</a>
+          </div>
+          <div class="dash-card relative" data-card-id="live-pulse">
+            <span class="card-badge"></span>
+            <OperationsCommand client:load />
+          </div>
+        </section>
+      </li>
+    </ul>
 
     {/* ─── الطبقة الأولى: ابدأ من هنا ─────────────────────────────────────── */}
     <section data-section data-group="start" class="mb-10">
