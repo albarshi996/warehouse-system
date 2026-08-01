@@ -36,7 +36,7 @@ import ListView from '../../odoo/ListView.jsx';
 import Badge from '../../odoo/Badge.jsx';
 import { int } from '../../odoo/format.js';
 
-const MANAGER_ROLES = ['admin', 'warehouse_manager'];
+import { MANAGER_ROLES } from '../../../services/auth/roles.js';
 
 /** خريطة عرض: حالة المستند ← نوع شارة أودو (عرضٌ فقط، لا منطق). */
 const STATE_BADGE = {

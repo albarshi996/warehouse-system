@@ -1,7 +1,13 @@
 import { useEffect } from 'react';
-import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
+import {
+  subscribeAuth,
+  fetchUserProfile,
+  getBasePath,
+} from '../../../services/auth/authService.js';
 import { canSeeGroup, canSeeItem } from '../../../services/auth/navAccess.js';
 import { canSeeHome } from '../../../services/auth/navAccess.js';
+import { toCatalogPath } from '../../../services/auth/pageAccess.js';
+import { fetchMatrixOnce } from '../../../services/auth/accessMatrixService.js';
 
 /**
  * تقييد القائمة الجانبية حسب الدور — يُحقن في DashboardLayout.
@@ -53,6 +59,41 @@ export default function RoleNav() {
         );
         if (!anyVisible) hide(grp);
       });
+
+      // 3) مصفوفة التجاوزات (شاشة الصلاحيات) — تُطبَّق بعد قواعد الدور كي
+      // تغلبها: الحجب يُخفي الرابط، والسماح الإضافي يُظهره (وعنصرَ مجموعته)
+      // ولو أخفته القواعد الافتراضية. تعذُّر الجلب ⇒ null ⇒ الكتالوج وحده.
+      const matrix = await fetchMatrixOnce();
+      const o = matrix?.overrides?.[role];
+      if (o && (o.allow?.length || o.deny?.length)) {
+        const base = getBasePath();
+        document.querySelectorAll('li[data-label]').forEach((li) => {
+          const a = li.querySelector('a[href]');
+          if (!a) return;
+          const p = toCatalogPath(a.getAttribute('href') || '', base);
+          if (o.deny?.includes(p)) {
+            hide(li);
+          } else if (o.allow?.includes(p)) {
+            li.removeAttribute('data-role-hidden');
+            li.style.display = '';
+            const grp = li.closest('[data-nav-group]');
+            if (grp) {
+              grp.removeAttribute('data-role-hidden');
+              grp.style.display = '';
+            }
+          }
+        });
+        // مجموعة أفرغها الحجب بالكامل → تُخفى ترويستها أيضًا
+        document.querySelectorAll('[data-nav-group]').forEach((grp) => {
+          if (grp.hasAttribute('data-role-hidden')) return;
+          const items = grp.querySelectorAll('li[data-label]');
+          const anyVisible = Array.prototype.some.call(
+            items,
+            (li) => !li.hasAttribute('data-role-hidden')
+          );
+          if (items.length && !anyVisible) hide(grp);
+        });
+      }
 
       // تُعلِم بحث القائمة أن التقييد طُبِّق
       document.body.setAttribute('data-role-nav-ready', role);

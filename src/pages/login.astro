@@ -20,6 +20,22 @@ import LoginForm from '../components/brandzo-erp/access/LoginForm.jsx';
   </head>
 
   <body class="bz-page-bg min-h-screen flex items-center justify-center px-4 py-10">
-    <LoginForm client:load />
+    <div class="w-full max-w-md">
+      {/* يظهر حين يطرد AuthGate حسابًا موقوفًا (?disabled=1) — المحور ٢-ب */}
+      <div
+        id="bz-disabled-note"
+        hidden
+        class="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 text-center"
+      >
+        هذا الحساب موقوف — راجع المدير العام لإعادة تفعيله.
+      </div>
+      <LoginForm client:load />
+    </div>
+    <script>
+      if (new URLSearchParams(location.search).get('disabled') === '1') {
+        const el = document.getElementById('bz-disabled-note');
+        if (el) el.hidden = false;
+      }
+    </script>
   </body>
 </html>

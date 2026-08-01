@@ -23,7 +23,7 @@ import Icon from '../../ui/Icon.jsx';
  * الأيقونات من مجموعة البوابة SVG (Icon) لأنّ FontAwesome غير مُحمَّل هنا.
  */
 
-const MANAGER_ROLES = ['admin', 'warehouse_manager'];
+import { MANAGER_ROLES } from '../../../services/auth/roles.js';
 const MOVES_CAP = 2500;
 
 const BASE = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');

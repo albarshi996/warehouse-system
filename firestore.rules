@@ -529,6 +529,22 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── مصفوفة الصلاحيات (شاشة الصلاحيات والأدوار — المحور ٢-ب) ──
+    // طبقة الشاشات: القراءة لكل مصادَق (يحتاجها حارس الواجهة والقائمة)،
+    // والكتابة للمدير العام وحده، مع سجلّ نسخ ملحق-فقط. تذكير: هذه
+    // المصفوفة تضبط فتح الشاشات؛ حماية البيانات تبقى بقواعد المجموعات أعلاه.
+    match /access_control/{docId} {
+      allow read: if signedIn();
+      allow create, update: if isAdmin();
+      allow delete: if false;
+
+      match /versions/{versionId} {
+        allow read: if signedIn();
+        allow create: if isAdmin();
+        allow update, delete: if false; // سجلّ لا يُمحى ولا يُعدَّل
+      }
+    }
+
     // ── الافتراضي: امنع كل ما لم يُذكر صراحةً ────────────────────
     match /{document=**} {
       allow read, write: if false;

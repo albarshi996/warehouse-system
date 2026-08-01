@@ -60,10 +60,21 @@ export function toCatalogPath(pathname, base = '') {
   return clean;
 }
 
-/** هل يسمح دور هذا المستخدم بفتح هذه الصفحة؟ (المسار بصيغة الكتالوج) */
-export function canOpenPath(roleId, catalogPath) {
+/**
+ * هل يسمح دور هذا المستخدم بفتح هذه الصفحة؟ (المسار بصيغة الكتالوج)
+ *
+ * `matrix` اختيارية — مصفوفة التجاوزات المحرَّرة من شاشة الصلاحيات
+ * (`access_control/matrix`): `deny` يحجب، `allow` يمنح، والافتراضي يبقى
+ * الكتالوج. غيابها (null) = السلوك الأصلي حرفيًّا — سقوطٌ آمن لا يوسّع أحدًا.
+ * `admin` فوق المصفوفة دائمًا فيستحيل قفله عن البوابة.
+ */
+export function canOpenPath(roleId, catalogPath, matrix = null) {
   if (isAdmin(roleId)) return true;
   const path = trimSlash(String(catalogPath || ''));
+
+  const o = matrix?.overrides?.[roleId];
+  if (o?.deny?.includes(path)) return false;
+  if (o?.allow?.includes(path)) return true;
 
   if (path === HOME_PATH) return canSeeHome(roleId);
   if (ALWAYS_ALLOWED.includes(path)) return true;
@@ -79,10 +90,11 @@ export function canOpenPath(roleId, catalogPath) {
   );
 }
 
-/** كل الصفحات التي يفتحها هذا الدور فعلًا. */
-export function allowedPathsFor(roleId) {
-  const pages = [HOME_PATH, ...ALWAYS_ALLOWED, ...internalPaths()];
-  return [...new Set(pages)].filter((p) => canOpenPath(roleId, p));
+/** كل الصفحات التي يفتحها هذا الدور فعلًا (مع تجاوزات المصفوفة إن مُرِّرت). */
+export function allowedPathsFor(roleId, matrix = null) {
+  const extra = matrix?.overrides?.[roleId]?.allow || [];
+  const pages = [HOME_PATH, ...ALWAYS_ALLOWED, ...internalPaths(), ...extra];
+  return [...new Set(pages)].filter((p) => canOpenPath(roleId, p, matrix));
 }
 
 /**
@@ -92,20 +104,20 @@ export function allowedPathsFor(roleId) {
  * لا أوّل صفحة مسموحة في الكتالوج كلّه، وإلا هبط «مستخدم الإدارة» على
  * «المهام» (أول ما يصادفه الكتالوج) بدل «طلب توظيف» صفحته الأساسية.
  */
-export function landingPathFor(roleId) {
-  if (canOpenPath(roleId, HOME_PATH)) return HOME_PATH;
+export function landingPathFor(roleId, matrix = null) {
+  if (canOpenPath(roleId, HOME_PATH, matrix)) return HOME_PATH;
 
   for (const key of groupsFor(roleId)) {
     const group = NAV_GROUPS.find((g) => g.key === key);
-    const hit = group?.items.find((it) => !it.external && canOpenPath(roleId, it.path));
+    const hit = group?.items.find((it) => !it.external && canOpenPath(roleId, it.path, matrix));
     if (hit) return hit.path;
   }
 
-  const any = internalPaths().find((p) => canOpenPath(roleId, p));
+  const any = internalPaths().find((p) => canOpenPath(roleId, p, matrix));
   return any || HOME_PATH;
 }
 
 /** الواجهة التي يستدعيها `AuthGate` — تقبل مسار المتصفّح الكامل مع `base`. */
-export function isPathAllowed(roleId, pathname, base) {
-  return canOpenPath(roleId, toCatalogPath(pathname, base));
+export function isPathAllowed(roleId, pathname, base, matrix = null) {
+  return canOpenPath(roleId, toCatalogPath(pathname, base), matrix);
 }

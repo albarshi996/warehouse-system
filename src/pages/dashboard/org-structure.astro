@@ -382,9 +382,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     listVersions,
   } from '../../services/org/orgService.js';
   import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
+  import { MANAGER_ROLES as WRITER_ROLES } from '../../services/auth/roles.js';
   import { trackOverlay, trackOverlays } from '../../services/ui/overlayHistory.js';
-
-  const WRITER_ROLES = ['admin', 'warehouse_manager'];
   const BASE = JSON.parse(JSON.stringify(baseline));
 
   /** الحالة. `dirty` مرجع حيّ: المستمع السحابي لا يدهس تعديلًا جاريًا. */

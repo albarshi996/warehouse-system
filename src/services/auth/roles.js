@@ -23,6 +23,13 @@ export const ROLES = {
 /** الدور الافتراضي الآمن لمن لا ملف دور له بعد (أقل صلاحية). */
 export const DEFAULT_ROLE = 'viewer';
 
+/**
+ * المديران — المصدر الواحد. كان مكرَّرًا يدويًّا في أربعة ملفات
+ * (LogisticsDashboard · DocumentsInbox · OperationsMonitor · org-structure)
+ * فوُحِّد هنا ضمن «العملية الجراحية» المحور ٢-ب.
+ */
+export const MANAGER_ROLES = ['admin', 'warehouse_manager'];
+
 /** يُعيد كائن الدور، أو الافتراضي إن كان المعرّف غير معروف. */
 export function getRole(roleId) {
   return ROLES[roleId] || ROLES[DEFAULT_ROLE];

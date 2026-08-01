@@ -11,8 +11,8 @@
   "counts": {
     "modules": 47,
     "serviceDomains": 24,
-    "serviceFiles": 129,
-    "collections": 36,
+    "serviceFiles": 132,
+    "collections": 38,
     "roles": 12,
     "odooModels": 12,
     "odooGuards": 51,
@@ -24,7 +24,7 @@
       "name": "access-control",
       "route": "/dashboard/access-control",
       "title": "الصلاحيات والأدوار",
-      "summary": "الصلاحيات والأدوار — مركز تصميم نظام الوصول لبوابة العمليات.",
+      "summary": "الصلاحيات والأدوار — **محرر الصلاحيات الفعلي** (المحور ٢-ب، 2026-08-02).",
       "file": "src/pages/dashboard/access-control.astro",
       "usesServices": []
     },
@@ -454,6 +454,9 @@
       "domain": "auth",
       "dir": "src/services/auth",
       "files": [
+        "accessMatrix.js",
+        "accessMatrix.test.js",
+        "accessMatrixService.js",
         "authService.js",
         "navAccess.js",
         "navAccess.test.js",
@@ -463,12 +466,14 @@
         "roles.js",
         "usersService.js"
       ],
-      "fileCount": 8,
-      "testCount": 2,
+      "fileCount": 11,
+      "testCount": 3,
       "exports": [
         "ALWAYS_ALLOWED",
         "DEFAULT_ROLE",
+        "EMPTY_MATRIX",
         "HOME_PATH",
+        "MANAGER_ROLES",
         "NAV_GROUPS",
         "NAV_GROUP_LABELS",
         "PINNED_ITEM",
@@ -480,7 +485,9 @@
         "canSeeGroup",
         "canSeeHome",
         "canSeeItem",
+        "countOverrides",
         "externalPaths",
+        "fetchMatrixOnce",
         "fetchUserProfile",
         "flatItems",
         "getBasePath",
@@ -491,17 +498,23 @@
         "isPathAllowed",
         "landingPathFor",
         "listUsers",
+        "normalizeMatrix",
+        "overrideFor",
         "placementsFor",
+        "saveMatrix",
         "sendPasswordReset",
+        "setOverride",
         "setUserActive",
         "signIn",
         "signOutUser",
         "subscribeAuth",
+        "subscribeMatrix",
         "toCatalogPath",
         "updateUserRole",
         "upsertUser"
       ],
       "collections": [
+        "access_control",
         "users"
       ]
     },
@@ -1485,6 +1498,70 @@
       "signedIn"
     ],
     "collections": [
+      {
+        "name": "access_control",
+        "path": "access_control",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isAdmin()",
+            "roles": [
+              "isAdmin"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "versions",
+        "path": "access_control/versions",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isAdmin()",
+            "roles": [
+              "isAdmin"
+            ]
+          },
+          {
+            "actions": [
+              "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
       {
         "name": "assets",
         "path": "assets",
