@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './MeetingAssistant.module.css';
 import { useOverlayBack } from '../../../services/ui/useOverlayBack.js';
+import { esc } from '../../../services/ui/escape.js';
 import { useAudioRecorder } from './useAudioRecorder.js';
 
 const ARCHIVE_KEY = 'BrandzoMeetings';
@@ -677,11 +678,15 @@ const MeetingAssistant = () => {
       minute: '2-digit',
     });
 
+    // كل الحقول أدناه تُحقن في innerHTML ثم تُمرَّر لـhtml2pdf — وبعضها من
+    // مصادر غير موثوقة (التفريغ الصوتي، الملاحظات الحرّة، وردّ خدمة الترجمة
+    // الخارجية). تُهرَّب كلها قبل الحقن (المحور ٤: إغلاق ثغرة `<img onerror>`).
     let sumHTML = '';
     if (summary) {
-      sumHTML += `<p><strong>🔑 ${lang === 'ar' ? 'النقاط الرئيسية' : 'Key Points'}:</strong><br>${summary.keyPoints.map((p) => '• ' + p).join('<br>')}</p>`;
-      sumHTML += `<p style="margin-top:10px;"><strong>✅ ${lang === 'ar' ? 'القرارات' : 'Decisions'}:</strong><br>${summary.decisions.map((d) => '• ' + d).join('<br>')}</p>`;
-      sumHTML += `<p style="margin-top:10px;"><strong>📋 ${lang === 'ar' ? 'المهام' : 'Action Items'}:</strong><br>${summary.actions.map((a) => '• ' + a).join('<br>')}</p>`;
+      const bullets = (arr) => (arr || []).map((x) => '• ' + esc(x)).join('<br>');
+      sumHTML += `<p><strong>🔑 ${lang === 'ar' ? 'النقاط الرئيسية' : 'Key Points'}:</strong><br>${bullets(summary.keyPoints)}</p>`;
+      sumHTML += `<p style="margin-top:10px;"><strong>✅ ${lang === 'ar' ? 'القرارات' : 'Decisions'}:</strong><br>${bullets(summary.decisions)}</p>`;
+      sumHTML += `<p style="margin-top:10px;"><strong>📋 ${lang === 'ar' ? 'المهام' : 'Action Items'}:</strong><br>${bullets(summary.actions)}</p>`;
     } else {
       sumHTML = `<p>${lang === 'ar' ? 'لا يوجد ملخص' : 'No summary available'}</p>`;
     }
@@ -692,23 +697,23 @@ const MeetingAssistant = () => {
       <div style="font-family: 'Segoe UI', sans-serif; line-height: 1.7; direction: ${lang === 'ar' ? 'rtl' : 'ltr'}; padding: 48px;">
         <div style="border-bottom: 3px solid #4a90ff; padding-bottom: 20px; margin-bottom: 24px;">
           <h1 style="font-size: 1.6rem; color: #0a0a1f; margin-bottom: 4px;">📋 ${lang === 'ar' ? 'محضر اجتماع' : 'Meeting Minutes'}</h1>
-          ${titleTrim ? `<p style="font-size: 1rem; color: #333; font-weight: bold;">${titleTrim}</p>` : ''}
+          ${titleTrim ? `<p style="font-size: 1rem; color: #333; font-weight: bold;">${esc(titleTrim)}</p>` : ''}
           <p style="font-size: 0.8rem; color: #666;">AI Meeting Assistant</p>
           <p style="margin-top: 3px; color: #888; font-size: 0.75rem;">${dateStr}</p>
         </div>
         ${segText.trim() ? `<div style="background: #f7f9ff; border-radius: 9px; border-right: 5px solid #4a90ff; padding: 14px 16px; margin-bottom: 18px;">
           <h3 style="color: #4a90ff; margin-bottom: 8px;">📝 ${lang === 'ar' ? 'تفريغ المحادثة' : 'Transcript'}</h3>
-          <p style="color: #333; font-size: 0.88rem; white-space: pre-wrap;">${segText}</p>
+          <p style="color: #333; font-size: 0.88rem; white-space: pre-wrap;">${esc(segText)}</p>
         </div>` : ''}
         ${notesTrim ? `<div style="background: #fffaf0; border-radius: 9px; border-right: 5px solid #f0a500; padding: 14px 16px; margin-bottom: 18px;">
           <h3 style="color: #b07d00; margin-bottom: 8px;">🖊️ ${lang === 'ar' ? 'ملاحظات يدوية' : 'Manual Notes'}</h3>
-          <p style="color: #333; font-size: 0.88rem; white-space: pre-wrap;">${notesTrim}</p>
+          <p style="color: #333; font-size: 0.88rem; white-space: pre-wrap;">${esc(notesTrim)}</p>
         </div>` : ''}
         <div style="background: #f7f9ff; border-radius: 9px; border-right: 5px solid #4a90ff; padding: 14px 16px; margin-bottom: 18px;">
           <h3 style="color: #4a90ff; margin-bottom: 8px;">🧠 ${lang === 'ar' ? 'الملخص' : 'Summary'}</h3>
           ${sumHTML}
         </div>
-        ${trans && trans.length > 5 ? `<div style="background: #f0fbf8; border-radius: 9px; border-left: 5px solid #00a587; padding: 14px 16px; direction: ltr; text-align: left;"><h3 style="color: #00a587; margin-bottom: 8px;">🌍 English Translation</h3><p style="color: #333; font-size: 0.88rem; white-space: pre-wrap;">${trans}</p></div>` : ''}
+        ${trans && trans.length > 5 ? `<div style="background: #f0fbf8; border-radius: 9px; border-left: 5px solid #00a587; padding: 14px 16px; direction: ltr; text-align: left;"><h3 style="color: #00a587; margin-bottom: 8px;">🌍 English Translation</h3><p style="color: #333; font-size: 0.88rem; white-space: pre-wrap;">${esc(trans)}</p></div>` : ''}
       </div>
     `;
 

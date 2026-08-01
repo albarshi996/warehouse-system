@@ -11,7 +11,7 @@
   "counts": {
     "modules": 47,
     "serviceDomains": 24,
-    "serviceFiles": 132,
+    "serviceFiles": 134,
     "collections": 38,
     "roles": 12,
     "odooModels": 12,
@@ -1390,16 +1390,22 @@
       "domain": "ui",
       "dir": "src/services/ui",
       "files": [
+        "escape.js",
+        "escape.test.js",
         "overlayHistory.js",
         "overlayHistory.test.js",
         "useOverlayBack.js"
       ],
-      "fileCount": 3,
-      "testCount": 1,
+      "fileCount": 5,
+      "testCount": 2,
       "exports": [
         "OVERLAY_KEY",
         "closeOverlay",
         "createOverlayHistory",
+        "esc",
+        "escAttr",
+        "escJsAttr",
+        "escMultiline",
         "openOverlay",
         "overlayDepth",
         "trackOverlay",
