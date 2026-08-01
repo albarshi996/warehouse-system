@@ -180,22 +180,61 @@ export default function AccessControlHub() {
         </ul>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          flexWrap: 'wrap',
+          marginBottom: 10,
+          padding: '10px 12px',
+          background: '#fff',
+          border: '1px solid #dee2e6',
+          borderRadius: 8,
+          position: 'sticky',
+          top: 0,
+          zIndex: 5,
+        }}
+      >
         <button
-          className="o_btn o_btn-primary"
+          type="button"
           onClick={save}
-          disabled={saving || !dirty}
-          title={dirty ? 'حفظ التعديلات سحابيًّا' : 'عدّل أي خلية في الشبكة أولًا ليتفعّل الحفظ'}
+          disabled={saving}
+          style={{
+            background: saving ? '#9b7f94' : '#714B67',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 6,
+            padding: '10px 26px',
+            fontSize: 14,
+            fontWeight: 800,
+            cursor: saving ? 'wait' : 'pointer',
+            boxShadow: '0 1px 3px rgba(0,0,0,.25)',
+          }}
         >
           {saving ? 'جارٍ الحفظ…' : 'حفظ المصفوفة'}
         </button>
-        <button className="o_btn" onClick={revert} disabled={saving || !dirty}>
+        <button
+          type="button"
+          onClick={revert}
+          disabled={saving || !dirty}
+          style={{
+            background: '#fff',
+            color: dirty ? '#714B67' : '#adb5bd',
+            border: `1px solid ${dirty ? '#714B67' : '#dee2e6'}`,
+            borderRadius: 6,
+            padding: '9px 18px',
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: dirty ? 'pointer' : 'default',
+          }}
+        >
           تراجُع للنسخة المحفوظة
         </button>
         {dirty ? (
-          <Badge variant="warn">تعديلات غير محفوظة</Badge>
+          <Badge variant="warn">تعديلات غير محفوظة — اضغط الحفظ</Badge>
         ) : (
-          <Badge variant="done">مطابقة للسحابة — الزر يتفعّل عند أول تعديل</Badge>
+          <Badge variant="done">مطابقة للسحابة</Badge>
         )}
         <span style={{ fontSize: 12, color: '#6b7280' }}>
           التجاوزات المعرَّفة: <strong>{countOverrides(draft)}</strong>
@@ -206,7 +245,18 @@ export default function AccessControlHub() {
       </div>
 
       {msg && (
-        <div className={`o_alert ${msg.ok ? 'o_alert-success' : 'o_alert-danger'}`} style={{ marginBottom: 10 }}>
+        <div
+          style={{
+            marginBottom: 10,
+            padding: '10px 14px',
+            borderRadius: 6,
+            fontSize: 13,
+            fontWeight: 700,
+            background: msg.ok ? '#e5f4e8' : '#fdeceb',
+            color: msg.ok ? '#0a7a3d' : '#c0392b',
+            border: `1px solid ${msg.ok ? '#bfe3cf' : '#f2c4c0'}`,
+          }}
+        >
           {msg.text}
         </div>
       )}
