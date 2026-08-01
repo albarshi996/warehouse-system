@@ -25,7 +25,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>العمليات المخزنية — Brandzo Hub</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<link rel="stylesheet" href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/lib/fontawesome/css/all.min.css`} />
 <!-- خط Cairo من global.css (مستضاف ذاتيًّا في fonts.css كاسمٍ بديل) — حُذف رابط Google Fonts للعمل دون اتصال (المحور ٥) -->
 <PwaHead />
 <style is:global>

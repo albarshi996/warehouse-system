@@ -4,7 +4,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
 <DashboardLayout title="خريطة التجزئة — بنغازي 2026" light>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/lib/leaflet/leaflet.css`} />
 
 <style>
   /* ── Page Root ─────────────────────────────────────────────────────── */
@@ -771,8 +771,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 <!-- ══ Toast ══ -->
 <div id="rh-toast"></div>
 
-<!-- Leaflet (UMD - loads synchronously before our script) -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Leaflet (UMD محلّي - يُحمّل قبل سكربتنا؛ استُضيف ذاتيًّا للعمل دون اتصال — المحور ٥) -->
+<script is:inline src={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/lib/leaflet/leaflet.js`}></script>
 
 <!-- 
 -->
@@ -2091,14 +2091,15 @@ import { trackOverlay } from '../../services/ui/overlayHistory.js';
   // ── Excel Export ──────────────────────────────────────────────────────
   function exportToExcel() {
     if (typeof XLSX === 'undefined') {
+      const libBase = import.meta.env.BASE_URL.replace(/\/$/, '') + '/lib';
       const script = document.createElement('script');
-      // Using xlsx-js-style for professional formatting (bold, colors)
-      script.src = 'https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js';
+      // xlsx-js-style للتنسيق الاحترافي (عريض، ألوان) — مستضاف ذاتيًّا (المحور ٥)
+      script.src = `${libBase}/xlsx-js-style.bundle.js`;
       script.onload = performExport;
       script.onerror = () => {
-        // Fallback to standard xlsx if style version fails
+        // احتياطي: xlsx القياسي المستضاف ذاتيًّا إن فشل نظير التنسيق
         const s2 = document.createElement('script');
-        s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        s2.src = `${libBase}/xlsx.full.min.js`;
         s2.onload = performExport;
         document.head.appendChild(s2);
       };

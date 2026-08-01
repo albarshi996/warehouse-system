@@ -114,9 +114,8 @@ function buildPrintDocument(task) {
 <head>
   <meta charset="utf-8" />
   <title>BZ-${escapeHtml(task.id)}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <!-- بطاقة الطباعة تسقط لخط النظام (Cairo/Tajawal/sans-serif) — حُذف رابط
+       Google Fonts للعمل دون اتصال (المحور ٥)؛ الطباعة نادرًا ما تكون أوفلاين. -->
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     @page { size: A4; margin: 10mm; }

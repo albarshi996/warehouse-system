@@ -3,7 +3,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 ---
 
 <DashboardLayout title="Brandzo — جرد الأصول" light>
-<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script is:inline src={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/lib/xlsx.full.min.js`}></script>
 
 <style is:inline>
 :root {
