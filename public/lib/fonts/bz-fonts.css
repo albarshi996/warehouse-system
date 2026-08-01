@@ -1,0 +1,20 @@
+/* خطوط Brandzo المستضافة ذاتيًّا لملفات public المستقلّة (النماذج والتقارير).
+   يُغني عن Google Fonts (Cairo/Tajawal) — الأسماء بديلة تشير للخط الرسمي
+   IBM Plex Sans Arabic. المسارات نسبية لهذا الملف (public/lib/fonts/). المحور ٥. */
+
+@font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 400; font-display: swap; src: url('plex-arabic-400-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E; }
+@font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 400; font-display: swap; src: url('plex-arabic-400-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+2000-206F, U+20AC, U+2122, U+2212; }
+@font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 500; font-display: swap; src: url('plex-arabic-500-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E; }
+@font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 600; font-display: swap; src: url('plex-arabic-600-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E; }
+@font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 700; font-display: swap; src: url('plex-arabic-700-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E; }
+@font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 700; font-display: swap; src: url('plex-arabic-700-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+2000-206F, U+20AC, U+2122, U+2212; }
+
+/* أسماء بديلة (نطاق عربي؛ اللاتيني يسقط لنظام آمن) */
+@font-face { font-family: 'Cairo'; font-weight: 400; font-display: swap; src: url('plex-arabic-400-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E; }
+@font-face { font-family: 'Cairo'; font-weight: 500; font-display: swap; src: url('plex-arabic-500-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E; }
+@font-face { font-family: 'Cairo'; font-weight: 600; font-display: swap; src: url('plex-arabic-600-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E; }
+@font-face { font-family: 'Cairo'; font-weight: 700; font-display: swap; src: url('plex-arabic-700-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E; }
+@font-face { font-family: 'Cairo'; font-weight: 800; font-display: swap; src: url('plex-arabic-700-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E; }
+@font-face { font-family: 'Tajawal'; font-weight: 400; font-display: swap; src: url('plex-arabic-400-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E; }
+@font-face { font-family: 'Tajawal'; font-weight: 500; font-display: swap; src: url('plex-arabic-500-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E; }
+@font-face { font-family: 'Tajawal'; font-weight: 700; font-display: swap; src: url('plex-arabic-700-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E; }

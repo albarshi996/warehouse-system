@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>قائمة التعبئة — Packing List — Brandzo Franchise Partners</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../lib/fonts/bz-fonts.css">
     <link rel="stylesheet" href="../forms/brandzo-forms.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+        
         :root {
             --deep-red: #2d0006; --crimson: #a0102a; --bright-crimson: #c41e3a;
             --gold: #DAAA3C; --gold-light: #FFD700; --orange: #E84820;
@@ -789,7 +789,7 @@
 <script>
 function exportToExcel() {
     var script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    script.src = '../lib/xlsx.full.min.js';
     script.onload = function () {
         var dateEl = document.querySelector('input[type="date"]');
         var date = dateEl ? dateEl.value || new Date().toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
