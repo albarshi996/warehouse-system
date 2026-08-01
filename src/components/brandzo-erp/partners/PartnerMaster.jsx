@@ -10,7 +10,11 @@ import { canImport, analyzePartnersFile, commitPartnersImport } from '../../../s
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
+import Pager from '../../odoo/Pager.jsx';
+import { pageSlice } from '../../../services/ui/pagination.js';
 import { int } from '../../odoo/format.js';
+
+const PAGE_SIZE = 50;
 
 /**
  * شاشة ماستر شركاء الأعمال — واحدة تخدم الموردين والعملاء (توأمان) بـ`kind`.
@@ -89,6 +93,11 @@ export default function PartnerMaster({ kind = 'supplier' }) {
 
   const totalBalance = useMemo(() => rows.reduce((s, r) => s + (Number(r.accountBalance) || 0), 0), [rows]);
 
+  // ترقيم من طرف العميل فوق القائمة المحمّلة — يكشف الذيل بدل قصّه صامتًا (المحور ٧).
+  const [page, setPage] = useState(0);
+  useEffect(() => setPage(0), [search, showArchived]);
+  const pageRows = useMemo(() => pageSlice(filtered, page, PAGE_SIZE), [filtered, page]);
+
   const handleArchive = async (row) => {
     if (!window.confirm(`أرشفة ${cfg.one} «${row.nameAr || row.code}»؟ (لا يُحذف — يُخفى من القوائم)`)) return;
     try {
@@ -108,7 +117,7 @@ export default function PartnerMaster({ kind = 'supplier' }) {
     }
   };
 
-  const listRows = filtered.map((r) => ({
+  const listRows = pageRows.map((r) => ({
     id: r.code,
     decoration: r.archived ? 'muted' : undefined,
     cells: {
@@ -232,7 +241,12 @@ export default function PartnerMaster({ kind = 'supplier' }) {
               {rows.length === 0 ? `لا ${cfg.title} بعد. ابدأ بالإضافة أو الاستيراد.` : 'لا نتائج مطابقة.'}
             </div>
           ) : (
-            <ListView selectable={false} columns={LIST_COLS} rows={listRows} />
+            <>
+              <ListView selectable={false} columns={LIST_COLS} rows={listRows} />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+                <Pager total={filtered.length} page={page} size={PAGE_SIZE} onPage={setPage} />
+              </div>
+            </>
           )}
         </div>
       </div>

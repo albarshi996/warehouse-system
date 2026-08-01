@@ -11,7 +11,7 @@
   "counts": {
     "modules": 47,
     "serviceDomains": 24,
-    "serviceFiles": 135,
+    "serviceFiles": 137,
     "collections": 38,
     "roles": 13,
     "odooModels": 12,
@@ -1401,12 +1401,15 @@
         "escape.test.js",
         "overlayHistory.js",
         "overlayHistory.test.js",
+        "pagination.js",
+        "pagination.test.js",
         "useOverlayBack.js"
       ],
-      "fileCount": 5,
-      "testCount": 2,
+      "fileCount": 7,
+      "testCount": 3,
       "exports": [
         "OVERLAY_KEY",
+        "clampPage",
         "closeOverlay",
         "createOverlayHistory",
         "esc",
@@ -1415,6 +1418,9 @@
         "escMultiline",
         "openOverlay",
         "overlayDepth",
+        "pageCount",
+        "pageInfo",
+        "pageSlice",
         "trackOverlay",
         "trackOverlays",
         "useOverlayBack"

@@ -11,6 +11,10 @@ import { totalQty, stockValue, fefoSort, expiryStatus } from '../../../services/
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
+import Pager from '../../odoo/Pager.jsx';
+import { pageSlice } from '../../../services/ui/pagination.js';
+
+const PAGE_SIZE = 50;
 import { int, num } from '../../odoo/format.js';
 import ItemForm from './ItemForm.jsx';
 import ItemsImport from './ItemsImport.jsx';
@@ -109,6 +113,11 @@ export default function ItemMaster() {
     );
   }, [items, search]);
 
+  // ترقيم من طرف العميل فوق القائمة المحمّلة — يكشف الذيل بدل قصّه صامتًا (المحور ٧).
+  const [page, setPage] = useState(0);
+  useEffect(() => setPage(0), [search, showArchived]);
+  const pageItems = useMemo(() => pageSlice(filtered, page, PAGE_SIZE), [filtered, page]);
+
   const handleArchive = async (item) => {
     const ok = window.confirm(`هل تريد بالتأكيد أرشفة الصنف ${item.sku}؟`);
     if (!ok) return;
@@ -130,7 +139,7 @@ export default function ItemMaster() {
   };
 
   // بناء صفوف ListView — نُبقي منطق الرصيد الحيّ حرفيًّا وننقل عرضه فقط لخلايا.
-  const listRows = filtered.map((it) => {
+  const listRows = pageItems.map((it) => {
     // الرصيد الحقيقي من مخزن الأرصدة إن وُجد، وإلا الحقل المستورد.
     const keys = [it.sku, ...(it.barcodes || [])].filter(Boolean).map((k) => String(k).toUpperCase());
     const itemBal = [];
@@ -374,7 +383,12 @@ export default function ItemMaster() {
                 : 'لا توجد نتائج مطابقة للبحث.'}
             </div>
           ) : (
-            <ListView selectable={false} columns={LIST_COLS} rows={listRows} />
+            <>
+              <ListView selectable={false} columns={LIST_COLS} rows={listRows} />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+                <Pager total={filtered.length} page={page} size={PAGE_SIZE} onPage={setPage} />
+              </div>
+            </>
           )}
         </div>
       </div>

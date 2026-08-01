@@ -6,6 +6,10 @@ import { availableQty } from '../../../services/ledger/reservations.js';
 import { stuckBalances } from '../../../services/ledger/locations.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
+import Pager from '../../odoo/Pager.jsx';
+import { pageSlice } from '../../../services/ui/pagination.js';
+
+const PAGE_SIZE = 60;
 import { num } from '../../odoo/format.js';
 
 /**
@@ -114,13 +118,18 @@ export default function StockLedger() {
     return [...byItem.values()].sort((a, b) => a.key.localeCompare(b.key, 'ar'));
   }, [balances]);
 
+  // القائمة الكاملة المفلترة — كان يُقصّ ذيلها عند 60 بصمت؛ الآن يُرقَّم فيُكشف كله (المحور ٧).
   const filtered = useMemo(() => {
     const q = term.trim().toUpperCase();
-    if (!q) return items.slice(0, 60);
-    return items
-      .filter((it) => it.key.includes(q) || it.nameAr.toUpperCase().includes(q) || it.barcode.toUpperCase().includes(q))
-      .slice(0, 60);
+    if (!q) return items;
+    return items.filter(
+      (it) => it.key.includes(q) || it.nameAr.toUpperCase().includes(q) || it.barcode.toUpperCase().includes(q)
+    );
   }, [items, term]);
+
+  const [page, setPage] = useState(0);
+  useEffect(() => setPage(0), [term]);
+  const pageItems = useMemo(() => pageSlice(filtered, page, PAGE_SIZE), [filtered, page]);
 
   const stuck = useMemo(() => stuckBalances(balances), [balances]);
 
@@ -175,7 +184,7 @@ export default function StockLedger() {
     );
   }
 
-  const itemRows = filtered.map((it) => ({
+  const itemRows = pageItems.map((it) => ({
     id: it.key,
     item: it,
     decoration: selected?.key === it.key ? 'bf' : undefined,
@@ -276,7 +285,12 @@ export default function StockLedger() {
                 {items.length ? 'لا نتيجة للبحث.' : 'لا أرصدة بعد — ابدأ بقيد مستند أو استيراد رصيد افتتاحي.'}
               </div>
             ) : (
-              <ListView selectable={false} columns={ITEM_COLS} rows={itemRows} onRowClick={(row) => openCard(row.item)} />
+              <>
+                <ListView selectable={false} columns={ITEM_COLS} rows={itemRows} onRowClick={(row) => openCard(row.item)} />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+                  <Pager total={filtered.length} page={page} size={PAGE_SIZE} onPage={setPage} />
+                </div>
+              </>
             )}
           </div>
 
