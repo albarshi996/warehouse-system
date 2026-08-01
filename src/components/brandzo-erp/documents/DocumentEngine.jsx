@@ -22,6 +22,7 @@ import {
   listenAudit,
 } from '../../../services/documents/documentsService.js';
 import { emptyDocument, emptyChecklist, missingRequired, isEmptyLine, applyItemToLine } from '../../../services/documents/schemaUtils.js';
+import { mergeParentLink } from '../../../services/documents/chain.js';
 import { lookupByBarcode } from '../../../services/itemService.js';
 import { isEditable } from '../../../services/documents/states.js';
 import FieldInput from './FieldInput.jsx';
@@ -145,6 +146,21 @@ export default function DocumentEngine() {
   function patchChecklist(next) {
     setDoc((d) => ({ ...d, header: { ...d.header, _checklist: next } }));
     setDirty(true);
+  }
+
+  /**
+   * تعرّف تلقائيّ على أبٍ برقمه (حقل docref): يثبّت الرقم الرسميّ في الحقل
+   * ويربط الأب تراكميًّا في `links` — فتعمل المطابقة الثلاثية وشريط السلسلة
+   * كأنّه اشتقاق. الأثر يُختم في التدقيق عند أوّل حفظ (saveDocument يكتب links).
+   */
+  function resolveParent(field, parentDoc) {
+    setDoc((d) => ({
+      ...d,
+      header: { ...d.header, [field.key]: parentDoc.number || '' },
+      links: mergeParentLink(d.links, parentDoc),
+    }));
+    setDirty(true);
+    flash(`🔗 رُبِط بـ${parentDoc.type} ${parentDoc.number || ''} — تعمل المطابقة والسلسلة الآن.`);
   }
 
   /** يحفظ ويُعيد معرّف المستند (يُنشئه إن كان جديدًا). */
@@ -286,6 +302,7 @@ export default function DocumentEngine() {
                       doc={doc}
                       disabled={!editable}
                       onChange={patchHeader}
+                      onResolveParent={resolveParent}
                       violation={violationFor(f, violations)}
                     />
                   ))}
@@ -293,7 +310,7 @@ export default function DocumentEngine() {
                 {section.extraFields?.length > 0 && (
                   <div className="grid gap-4 mt-4 md:grid-cols-2">
                     {section.extraFields.map((f) => (
-                      <FieldInput key={f.key} field={f} doc={doc} disabled={!editable} onChange={patchHeader} />
+                      <FieldInput key={f.key} field={f} doc={doc} disabled={!editable} onChange={patchHeader} onResolveParent={resolveParent} />
                     ))}
                   </div>
                 )}

@@ -5,6 +5,7 @@
  *          computed (محسوب — لا يُكتب) · identity (من الهوية — لا يُكتب)
  */
 import { fieldValue } from '../../../services/documents/schemaUtils.js';
+import DocRefField from './DocRefField.jsx';
 
 const BASE =
   'w-full bg-chip border border-line rounded-lg px-3 py-2 text-sm text-ink ' +
@@ -12,8 +13,22 @@ const BASE =
 
 const READONLY = 'w-full bg-accent/10 border border-accent/30 rounded-lg px-3 py-2 text-sm text-accent font-bold';
 
-export default function FieldInput({ field, doc, onChange, disabled, violation }) {
+export default function FieldInput({ field, doc, onChange, disabled, violation, onResolveParent }) {
   const value = fieldValue(field, doc);
+
+  // مرجع مستنديّ: تعرّفٌ تلقائيّ وربطٌ بالرقم (المحور ٦) — مكوّن مخصّص.
+  if (field.kind === 'docref') {
+    return (
+      <DocRefField
+        field={field}
+        doc={doc}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        onResolveParent={onResolveParent}
+      />
+    );
+  }
 
   // المحسوب والمشتقّ من الهوية: يُعرضان ولا يُكتبان — وهذا نصف قيمة المحرّك.
   if (field.kind === 'computed' || field.kind === 'identity') {
