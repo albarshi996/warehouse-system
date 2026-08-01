@@ -6,6 +6,40 @@ import { useAudioRecorder } from './useAudioRecorder.js';
 
 const ARCHIVE_KEY = 'BrandzoMeetings';
 
+/* أيقونات SVG خطّية محلّيّة (لمسة أودو، بلا إيموجي). مجموعة البوابة المشتركة
+   تفتقر لأيقونات التحكّم بالوسائط، فنعرّفها هنا بأسلوب Lucide نفسه. */
+const GLYPHS = {
+  mic: '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/>',
+  pause: '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
+  play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+  stop: '<rect x="5" y="5" width="14" height="14" rx="2"/>',
+  download: '<path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/>',
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  translate: '<path d="M4 5h7"/><path d="M9 3v2c0 4-3 7-7 7"/><path d="M5 9c0 3 3 5 6 5"/><path d="M13 21l4-9 4 9"/><path d="M14.5 17h5"/>',
+  sparkles: '<path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M19 15l.6 1.6L21 17l-1.4.6L19 19l-.6-1.4L17 17l1.4-.4z"/>',
+  save: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/>',
+  folder: '<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/>',
+  trash: '<path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>',
+  close: '<path d="M18 6L6 18"/><path d="M6 6l12 12"/>',
+  user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  doc: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+  check: '<path d="M20 6L9 17l-5-5"/>',
+  key: '<circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3L21 2"/><path d="M16 7l3 3"/>',
+  globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/>',
+  list: '<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>',
+  present: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4"/><path d="M8 20h8"/>',
+  clear: '<path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>',
+};
+function Glyph({ name, size = 16 }) {
+  const d = GLYPHS[name];
+  if (!d) return null;
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      dangerouslySetInnerHTML={{ __html: d }} />
+  );
+}
+
 const i18n = {
   ar: {
     app_title: 'مساعد الاجتماعات الذكي',
@@ -24,7 +58,7 @@ const i18n = {
     btn_clear: 'مسح الكل',
     btn_copy: 'نسخ الكل',
     transcript_title: 'تفريغ المحادثة',
-    transcript_placeholder: 'ابدأ التسجيل أو اكتب في الملاحظات اليدوية بالأسفل... ✍️',
+    transcript_placeholder: 'ابدأ التسجيل أو اكتب في الملاحظات اليدوية بالأسفل…',
     manual_notes: 'ملاحظات يدوية',
     manual_notes_placeholder: 'اكتب ملاحظاتك هنا... تُضاف إلى التفريغ في التلخيص والترجمة والتصدير',
     summary_title: 'الملخص الذكي',
@@ -35,7 +69,7 @@ const i18n = {
     translation_placeholder: 'الترجمة ستظهر هنا...',
     translation_note: 'مدعوم بخدمة ترجمة ذكاء اصطناعي مجانية',
     word_count: 'الكلمات:',
-    badge_live: '● مباشر',
+    badge_live: 'مباشر',
     mic_status: 'الميكروفون جاهز',
     unsupported_browser: 'المتصفح لا يدعم التعرف الصوتي — يمكنك الكتابة يدويًا',
     segment_edit_hint: 'انقر للتعديل',
@@ -50,17 +84,17 @@ const i18n = {
     btn_cancel: 'إلغاء',
     btn_close: 'إغلاق',
     meeting_title_placeholder: 'عنوان الجلسة (اختياري)',
-    toast_copied: '✅ تم النسخ',
-    toast_pdf_exported: '✅ تم تصدير PDF',
-    toast_translated: '✅ تمت الترجمة',
-    toast_summarized: '✅ تم التلخيص',
-    toast_cleared: '🗑️ تم المسح',
-    toast_saved: '💾 تم الحفظ',
-    toast_session_saved: '💾 تم حفظ الجلسة في الأرشيف',
-    toast_session_loaded: '📂 تم تحميل الجلسة',
-    toast_session_deleted: '🗑️ تم حذف الجلسة',
-    toast_no_content: '⚠️ لا يوجد محتوى',
-    toast_mic_error: '⚠️ تعذر الوصول للميكروفون',
+    toast_copied: 'تم النسخ',
+    toast_pdf_exported: 'تم تصدير PDF',
+    toast_translated: 'تمت الترجمة',
+    toast_summarized: 'تم التلخيص',
+    toast_cleared: 'تم المسح',
+    toast_saved: 'تم الحفظ',
+    toast_session_saved: 'تم حفظ الجلسة في الأرشيف',
+    toast_session_loaded: 'تم تحميل الجلسة',
+    toast_session_deleted: 'تم حذف الجلسة',
+    toast_no_content: 'لا يوجد محتوى',
+    toast_mic_error: 'تعذر الوصول للميكروفون',
     no_summary: 'لم يتم التلخيص بعد',
   },
   en: {
@@ -80,7 +114,7 @@ const i18n = {
     btn_clear: 'Clear All',
     btn_copy: 'Copy All',
     transcript_title: 'Transcript',
-    transcript_placeholder: 'Start recording or type in the manual notes below... ✍️',
+    transcript_placeholder: 'Start recording or type in the manual notes below…',
     manual_notes: 'Manual Notes',
     manual_notes_placeholder: 'Type your notes here... included with the transcript in summary, translation and export',
     summary_title: 'AI Summary',
@@ -91,7 +125,7 @@ const i18n = {
     translation_placeholder: 'English translation will appear here...',
     translation_note: 'Powered by free AI translation service',
     word_count: 'Words:',
-    badge_live: '● Live',
+    badge_live: 'Live',
     mic_status: 'Microphone ready',
     unsupported_browser: 'This browser does not support speech recognition — you can type notes manually',
     segment_edit_hint: 'Click to edit',
@@ -106,17 +140,17 @@ const i18n = {
     btn_cancel: 'Cancel',
     btn_close: 'Close',
     meeting_title_placeholder: 'Session title (optional)',
-    toast_copied: '✅ Copied to clipboard',
-    toast_pdf_exported: '✅ PDF exported successfully',
-    toast_translated: '✅ Translation complete',
-    toast_summarized: '✅ Summary generated',
-    toast_cleared: '🗑️ Content cleared',
-    toast_saved: '💾 Recording saved',
-    toast_session_saved: '💾 Session saved to archive',
-    toast_session_loaded: '📂 Session loaded',
-    toast_session_deleted: '🗑️ Session deleted',
-    toast_no_content: '⚠️ No content available',
-    toast_mic_error: '⚠️ Microphone access denied',
+    toast_copied: 'Copied to clipboard',
+    toast_pdf_exported: 'PDF exported successfully',
+    toast_translated: 'Translation complete',
+    toast_summarized: 'Summary generated',
+    toast_cleared: 'Content cleared',
+    toast_saved: 'Recording saved',
+    toast_session_saved: 'Session saved to archive',
+    toast_session_loaded: 'Session loaded',
+    toast_session_deleted: 'Session deleted',
+    toast_no_content: 'No content available',
+    toast_mic_error: 'Microphone access denied',
     no_summary: 'No summary yet. Record then tap Summarize.',
   },
 };
@@ -412,7 +446,7 @@ const MeetingAssistant = () => {
 
     audio.startAudio(); // تسجيل صوتيّ موازٍ (fire-and-forget؛ يفشل بصمتٍ إن رُفض الميكروفون)
 
-    showToast('🎙️ ' + (lang === 'ar' ? 'بدأ التسجيل...' : 'Recording started...'));
+    showToast(lang === 'ar' ? 'بدأ التسجيل…' : 'Recording started…');
   };
 
   const stopRecording = () => {
@@ -645,7 +679,7 @@ const MeetingAssistant = () => {
       showToast(t('toast_translated'), 3000);
     } catch {
       setEnglishTranslation('[Translation unavailable. Please try again.]');
-      showToast('⚠️ ' + (lang === 'ar' ? 'خدمة الترجمة غير متاحة' : 'Translation service unavailable'));
+      showToast(lang === 'ar' ? 'خدمة الترجمة غير متاحة' : 'Translation service unavailable');
     }
 
     setProcessingMsg('');
@@ -741,7 +775,7 @@ const MeetingAssistant = () => {
       showToast(t('toast_pdf_exported'), 3000);
     } catch (error) {
       console.error('PDF export failed', error);
-      showToast('⚠️ PDF export failed');
+      showToast('PDF export failed');
     }
   };
 
@@ -845,7 +879,7 @@ const MeetingAssistant = () => {
       .replace(/\s+/g, '-')
       .slice(0, 40);
     if (!audio.downloadAudio(base)) {
-      showToast('⚠️ ' + (lang === 'ar' ? 'لا يوجد تسجيل صوتي بعد' : 'No audio recorded yet'));
+      showToast(lang === 'ar' ? 'لا يوجد تسجيل صوتي بعد' : 'No audio recorded yet');
     }
   };
 
@@ -864,7 +898,7 @@ const MeetingAssistant = () => {
     navigator.clipboard
       .writeText(copy)
       .then(() => showToast(t('toast_copied'), 3000))
-      .catch(() => showToast('⚠️ ' + (lang === 'ar' ? 'فشل النسخ' : 'Copy failed')));
+      .catch(() => showToast(lang === 'ar' ? 'فشل النسخ' : 'Copy failed'));
   };
 
   const toggleLang = () => {
@@ -914,44 +948,41 @@ const MeetingAssistant = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [slideMode, agendaItems.length]);
 
-  const recordBtnText = isRecording && !isPaused ? '⏸️' : isRecording && isPaused ? '▶️' : '🎙️';
-  const statusDotClasses = {
-    ready: 'bg-gray-500',
-    recording: `${styles.dotBlink} bg-red-500`,
-    paused: `${styles.dotBlink} bg-amber-400`,
-    processing: `${styles.dotBlink} bg-blue-500`,
-  };
+  const recordGlyph = isRecording && !isPaused ? 'pause' : isRecording && isPaused ? 'play' : 'mic';
+  const statusDotColor = {
+    ready: 'var(--o-gray-500)',
+    recording: 'var(--o-danger)',
+    paused: 'var(--o-warning)',
+    processing: 'var(--o-info)',
+  }[statusDot];
+  const statusDotBlink = statusDot !== 'ready' ? styles.dotBlink : '';
 
   return (
-    <div className={`min-h-screen bg-slate-950 text-ink-2 flex flex-col ${lang === 'ar' ? 'dir-rtl' : 'dir-ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-      {/* Background mesh */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-gradient-radial from-blue-500/10 via-transparent to-transparent blur-3xl" />
-        <div className="absolute inset-0 bg-gradient-radial from-teal-500/5 via-transparent to-transparent blur-3xl" />
-      </div>
-
+    <div className={`o_theme o_ma ${lang === 'ar' ? 'dir-rtl' : 'dir-ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       {/* Slide Mode Overlay */}
       {slideMode && (
-        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-6" dir="rtl">
-          <div className="max-w-4xl w-full bg-white rounded-xl p-8 text-right" style={{direction:'rtl'}}>
-            <div className="flex flex-col gap-2">
-              <div className="text-xs uppercase tracking-[0.22em] text-brand-red">القالب المسبق</div>
+        <div className="o_ma_overlay" dir="rtl">
+          <div className="o_ma_drawer wide">
+            <div className="o_ma_card_body">
+              <div className="o_ma_slide_kicker">القالب المسبق</div>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-brand-navy">{slideTitle}</h2>
-                  <p className="mt-2 text-sm text-ink-2">عرض شرائح لتقديم خطة استغلال الرحبة لتخزين الكوزميتيك.</p>
+                  <h2 className="o_ma_slide_title">{slideTitle}</h2>
+                  <p className="o_ma_slide_sub">عرض شرائح لتقديم خطة استغلال الرحبة لتخزين الكوزميتيك.</p>
                 </div>
-                <button onClick={()=> setSlideMode(false)} className="px-3 py-1 rounded bg-gray-200">إغلاق</button>
+                <button onClick={() => setSlideMode(false)} className="o_ma_iconbtn" title={t('btn_close')}>
+                  <Glyph name="close" size={16} />
+                </button>
               </div>
-            </div>
-            <div className="mt-6 text-gray-700" style={{minHeight:180}}>
-              {agendaItems[slideIndex]?.content || <p className="text-ink-2">لا توجد تفاصيل محددة لهذه الشريحة حالياً.</p>}
-            </div>
-            <div className="mt-6 flex items-center justify-between">
-              <div className="text-sm text-ink-2">الشريحة {slideIndex + 1} من {agendaItems.length}</div>
-              <div className="flex gap-2">
-                <button onClick={()=> setSlideIndex(s => Math.max(0, s-1))} className="px-3 py-1 rounded bg-white border">السابق</button>
-                <button onClick={()=> setSlideIndex(s => Math.min(agendaItems.length-1, s+1))} className="px-3 py-1 rounded bg-brand-red text-white">التالي</button>
+              <div className="o_ma_slide_content">
+                {agendaItems[slideIndex]?.content || <p className="o_ma_muted">لا توجد تفاصيل محددة لهذه الشريحة حالياً.</p>}
+              </div>
+              <div className="o_ma_slide_nav">
+                <div className="o_ma_count">الشريحة {slideIndex + 1} من {agendaItems.length}</div>
+                <div className="flex gap-2">
+                  <button onClick={() => setSlideIndex((s) => Math.max(0, s - 1))} className="btn btn-secondary">السابق</button>
+                  <button onClick={() => setSlideIndex((s) => Math.min(agendaItems.length - 1, s + 1))} className="btn btn-primary">التالي</button>
+                </div>
               </div>
             </div>
           </div>
@@ -961,34 +992,31 @@ const MeetingAssistant = () => {
       {/* Archive Drawer */}
       {archiveOpen && (
         <div
-          className="fixed inset-0 z-[90] bg-black/70 flex items-end sm:items-center justify-center"
+          className="o_ma_overlay"
           onClick={() => { setArchiveOpen(false); setConfirmDeleteId(null); }}
         >
-          <div
-            className="w-full max-w-lg max-h-[75vh] bg-slate-900 border border-line rounded-t-xl sm:rounded-xl overflow-hidden flex flex-col shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-line">
-              <div className="flex items-center gap-2 text-sm font-bold">
-                📂 <span>{t('archive_title')}</span>
-                <span className="text-xs text-muted font-mono">({savedMeetings.length})</span>
+          <div className="o_ma_drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="o_ma_drawer_head">
+              <div className="ttl">
+                <Glyph name="folder" size={16} /> <span>{t('archive_title')}</span>
+                <span className="o_ma_count">({savedMeetings.length})</span>
               </div>
               <button
                 onClick={() => { setArchiveOpen(false); setConfirmDeleteId(null); }}
-                className="w-7 h-7 bg-chip border border-line rounded-lg hover:bg-surface-2 flex items-center justify-center text-xs transition"
+                className="o_ma_iconbtn"
                 title={t('btn_close')}
               >
-                ✕
+                <Glyph name="close" size={16} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            <div className="o_ma_drawer_body">
               {savedMeetings.length === 0 && (
-                <div className="text-muted italic text-sm text-center py-8">{t('archive_empty')}</div>
+                <div className="o_ma_muted" style={{ textAlign: 'center', padding: '28px 0' }}>{t('archive_empty')}</div>
               )}
               {savedMeetings.map((m) => (
-                <div key={m.id} className="bg-white/3 border border-line rounded-lg p-3">
-                  <div className="font-bold text-sm text-ink-2 truncate">{m.title}</div>
-                  <div className="text-xs text-muted font-mono mt-0.5" dir="ltr">
+                <div key={m.id} className="o_ma_arch_item">
+                  <div className="ttl">{m.title}</div>
+                  <div className="meta" dir="ltr">
                     {new Date(m.date).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US', {
                       year: 'numeric',
                       month: 'short',
@@ -999,40 +1027,25 @@ const MeetingAssistant = () => {
                     {' · '}
                     {t('word_count')} {meetingWordCount(m)}
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <button
-                      onClick={() => loadMeeting(m)}
-                      className="py-1 px-3 rounded-lg border border-teal-500/30 bg-teal-500/10 text-teal-400 font-semibold text-xs hover:bg-teal-500/20 transition"
-                    >
-                      📥 {t('btn_load')}
+                  <div className="o_ma_arch_actions">
+                    <button onClick={() => loadMeeting(m)} className="btn btn-secondary btn-sm">
+                      <Glyph name="download" size={14} /> {t('btn_load')}
                     </button>
-                    <button
-                      onClick={() => exportMeetingPDF(m)}
-                      className="py-1 px-3 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-400 font-semibold text-xs hover:bg-blue-500/20 transition"
-                    >
-                      📄 {t('btn_export_pdf')}
+                    <button onClick={() => exportMeetingPDF(m)} className="btn btn-secondary btn-sm">
+                      <Glyph name="doc" size={14} /> {t('btn_export_pdf')}
                     </button>
                     {confirmDeleteId === m.id ? (
                       <>
-                        <button
-                          onClick={() => deleteMeeting(m.id)}
-                          className="py-1 px-3 rounded-lg bg-red-500 text-white font-semibold text-xs hover:bg-red-600 transition"
-                        >
+                        <button onClick={() => deleteMeeting(m.id)} className="btn btn-primary btn-sm" style={{ background: 'var(--o-danger)', borderColor: 'var(--o-danger)' }}>
                           {t('btn_confirm_delete')}
                         </button>
-                        <button
-                          onClick={() => setConfirmDeleteId(null)}
-                          className="py-1 px-3 rounded-lg border border-line bg-chip text-ink-2 font-semibold text-xs hover:bg-surface-2 transition"
-                        >
+                        <button onClick={() => setConfirmDeleteId(null)} className="btn btn-secondary btn-sm">
                           {t('btn_cancel')}
                         </button>
                       </>
                     ) : (
-                      <button
-                        onClick={() => setConfirmDeleteId(m.id)}
-                        className="py-1 px-3 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 font-semibold text-xs hover:bg-red-500/20 transition"
-                      >
-                        🗑️ {t('btn_delete')}
+                      <button onClick={() => setConfirmDeleteId(m.id)} className="btn is-danger btn-sm">
+                        <Glyph name="trash" size={14} /> {t('btn_delete')}
                       </button>
                     )}
                   </div>
@@ -1044,19 +1057,17 @@ const MeetingAssistant = () => {
       )}
 
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 h-16 bg-black/80 border-b border-line backdrop-blur-xl z-40 flex items-center justify-between px-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
-            🎙️
-          </div>
-          <div className="flex flex-col">
-            <div className="text-sm font-bold leading-tight">{t('app_title')}</div>
-            <div className="text-xs text-ink-2 font-mono">AI Meeting Assistant</div>
+      <nav className="o_ma_nav">
+        <div className="o_ma_brand">
+          <div className="o_ma_logo"><Glyph name="mic" size={18} /></div>
+          <div>
+            <div className="t">{t('app_title')}</div>
+            <div className="s">AI Meeting Assistant</div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-chip border border-line rounded-full px-3 py-2 text-xs text-ink-2">
-            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDotClasses[statusDot]}`} />
+        <div className="o_ma_navactions">
+          <div className="o_ma_status">
+            <span className={`dot ${statusDotBlink}`} style={{ background: statusDotColor }} />
             <span>
               {statusDot === 'ready' && t('status_ready')}
               {statusDot === 'recording' && t('status_recording')}
@@ -1064,172 +1075,136 @@ const MeetingAssistant = () => {
               {statusDot === 'processing' && (processingMsg || t('status_processing'))}
             </span>
             {isRecording && (
-              <span className="font-mono text-ink-2 border-s border-line ps-2" dir="ltr">
-                {formatTime(elapsedSec)}
-              </span>
+              <span className="time" dir="ltr">{formatTime(elapsedSec)}</span>
             )}
           </div>
-          <button
-            onClick={clearAll}
-            className="w-8 h-8 bg-chip border border-line rounded-lg hover:bg-surface-2 flex items-center justify-center text-sm transition"
-            title={t('btn_clear')}
-          >
-            🗑️
+          <button onClick={clearAll} className="o_ma_iconbtn" title={t('btn_clear')}>
+            <Glyph name="clear" size={16} />
           </button>
           <button
             onClick={() => setSlideMode(true)}
-            className="ml-2 px-3 py-1 rounded-lg bg-accent text-brand-navy text-sm font-semibold hover:opacity-90 transition"
+            className="btn btn-secondary"
             title="تحميل القالب المسبق"
           >
-            📥 تحميل القالب
+            <Glyph name="download" size={15} /> <span className="hidden sm:inline">تحميل القالب</span>
           </button>
           <button
             onClick={() => {
               if (!slideMode) setSlideIndex(0);
               setSlideMode((prev) => !prev);
             }}
-            className={`ml-2 px-3 py-1 rounded-lg text-sm font-semibold transition ${slideMode ? 'bg-brand-red text-white' : 'bg-chip text-white hover:bg-surface-2'}`}
+            className={`btn ${slideMode ? 'btn-primary' : 'btn-secondary'}`}
             title={slideMode ? 'إيقاف وضع العرض' : 'تشغيل وضع العرض'}
           >
-            📽️ {slideMode ? 'إيقاف العرض' : 'عرض'}
+            <Glyph name="present" size={15} /> <span className="hidden sm:inline">{slideMode ? 'إيقاف العرض' : 'عرض'}</span>
           </button>
         </div>
       </nav>
 
       {/* Main Content */}
-      <div className="relative z-10 flex-1 flex flex-col pt-16 pb-20 px-4">
+      <div className="o_ma_main">
         {/* Unsupported browser banner */}
         {!speechSupported && (
-          <div className="mt-3 px-4 py-3 rounded-xl border border-amber-400/40 bg-amber-500/10 text-amber-300 text-sm flex items-center gap-2">
-            <span className="flex-shrink-0">⚠️</span>
+          <div className="o_ma_banner">
+            <Glyph name="mic" size={16} />
             <span>{t('unsupported_browser')}</span>
           </div>
         )}
 
         {/* Recording Ring */}
-        <div className="flex flex-col items-center gap-5 py-6">
-          <div className={`relative w-32 h-32 flex items-center justify-center ${isRecording && !isPaused ? styles.ringLive : ''}`}>
-            <div className={`absolute rounded-full border-2 border-red-500/20 inset-0 ${styles.ringOuter}`} />
-            <div className={`absolute rounded-full border-2 border-red-500/10 inset-0 -m-2.5 ${styles.ringMiddle}`} />
-            <div className={`absolute rounded-full border-2 border-red-500/5 inset-0 -m-5 ${styles.ringInner}`} />
+        <div className="o_ma_recwrap">
+          <div className={`o_ma_ring ${isRecording && !isPaused ? styles.ringLive : ''}`}>
+            <div className={`ring ${styles.ringOuter}`} />
+            <div className={`ring ${styles.ringMiddle}`} style={{ margin: '-10px' }} />
+            <div className={`ring ${styles.ringInner}`} style={{ margin: '-20px' }} />
 
             <button
               onClick={toggleRecord}
               disabled={!speechSupported}
-              className={`w-20 h-20 rounded-full border-2 border-transparent flex items-center justify-center text-2xl font-bold transition-all transform active:scale-95 z-10 relative disabled:opacity-40 disabled:cursor-not-allowed ${
-                isRecording
-                  ? 'bg-slate-800 border-red-500 shadow-lg shadow-red-500/30'
-                  : 'bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/40'
-              }`}
+              className={`o_ma_rec ${isRecording ? 'is-recording' : ''}`}
             >
-              {recordBtnText}
+              <Glyph name={recordGlyph} size={28} />
             </button>
           </div>
 
           {/* Waveform bars */}
-          <div className="flex items-center justify-center gap-1 h-8">
+          <div className={`o_ma_wave ${isRecording && !isPaused ? 'is-live' : ''}`}>
             {waveHeights.map((height, i) => (
-              <div
-                key={i}
-                className={`w-1 rounded-sm transition-all duration-100 ${isRecording && !isPaused ? 'bg-red-500' : 'bg-gray-700'}`}
-                style={{ height: `${height}px` }}
-              />
+              <i key={i} style={{ height: `${height}px` }} />
             ))}
           </div>
 
           {/* Control buttons */}
-          <div className="w-full flex gap-2 px-0">
-            <button
-              onClick={stopRecording}
-              disabled={!isRecording}
-              className="flex-1 py-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 disabled:opacity-30 disabled:cursor-not-allowed font-semibold text-sm hover:bg-red-500/20 transition"
-            >
-              ⏹️ {t('btn_stop')}
+          <div className="o_ma_row">
+            <button onClick={stopRecording} disabled={!isRecording} className="btn is-danger grow">
+              <Glyph name="stop" size={15} /> {t('btn_stop')}
             </button>
-            <button
-              onClick={togglePause}
-              disabled={!isRecording}
-              className="flex-1 py-2 rounded-lg border border-teal-500/30 bg-teal-500/10 text-teal-400 disabled:opacity-30 disabled:cursor-not-allowed font-semibold text-sm hover:bg-teal-500/20 transition"
-            >
-              {isPaused ? '▶️' : '⏸️'} {isPaused ? t('btn_resume') : t('btn_pause')}
+            <button onClick={togglePause} disabled={!isRecording} className="btn btn-secondary grow">
+              <Glyph name={isPaused ? 'play' : 'pause'} size={15} /> {isPaused ? t('btn_resume') : t('btn_pause')}
             </button>
             <select
               value={selectedLang}
               onChange={(e) => setSelectedLang(e.target.value)}
-              className="flex-1 py-2 rounded-lg border border-line bg-chip text-ink-2 font-semibold text-sm hover:bg-surface-2 transition appearance-none px-2"
+              className="o_input grow"
+              style={{ flexBasis: 0 }}
             >
-              <option value="ar-SA">🇸🇦 العربية</option>
-              <option value="ar-EG">🇪🇬 مصري</option>
-              <option value="en-US">🇺🇸 English</option>
-              <option value="en-GB">🇬🇧 English UK</option>
+              <option value="ar-SA">العربية</option>
+              <option value="ar-EG">العربية (مصري)</option>
+              <option value="en-US">English (US)</option>
+              <option value="en-GB">English (UK)</option>
             </select>
           </div>
 
           {/* Action buttons */}
-          <div className="w-full flex gap-2">
-            <button
-              onClick={toggleLang}
-              className="py-2 px-3 rounded-lg border border-line bg-chip text-ink-2 font-semibold text-sm hover:bg-surface-2 transition whitespace-nowrap"
-            >
-              🌐 {lang === 'ar' ? 'AR' : 'EN'}
+          <div className="o_ma_row">
+            <button onClick={toggleLang} className="btn btn-secondary">
+              <Glyph name="translate" size={15} /> {lang === 'ar' ? 'AR' : 'EN'}
             </button>
-            <button
-              onClick={doSummarize}
-              className="flex-1 py-2 rounded-lg border border-blue-500/30 bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition"
-            >
-              ✨ {t('btn_summarize')}
+            <button onClick={doSummarize} className="btn btn-primary grow">
+              <Glyph name="sparkles" size={15} /> {t('btn_summarize')}
             </button>
-            <button
-              onClick={copyAll}
-              className="py-2 px-3 rounded-lg border border-line bg-chip text-ink-2 font-semibold text-sm hover:bg-surface-2 transition"
-            >
-              📋
+            <button onClick={copyAll} className="btn btn-secondary" title={t('btn_copy')}>
+              <Glyph name="copy" size={15} />
             </button>
           </div>
 
           {/* Session save / archive bar */}
-          <div className="w-full flex gap-2">
+          <div className="o_ma_row">
             <input
               type="text"
               value={meetingTitle}
               onChange={(e) => setMeetingTitle(e.target.value)}
               placeholder={t('meeting_title_placeholder')}
-              className="flex-1 min-w-0 py-2 px-3 rounded-lg border border-line bg-chip text-sm text-ink-2 outline-none focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/10 transition"
+              className="o_input grow min0"
             />
-            <button
-              onClick={saveSession}
-              className="py-2 px-3 rounded-lg border border-amber-400/30 bg-amber-500/10 text-amber-300 font-semibold text-sm hover:bg-amber-500/20 transition whitespace-nowrap"
-            >
-              💾 {t('btn_save_session')}
+            <button onClick={saveSession} className="btn btn-secondary">
+              <Glyph name="save" size={15} /> {t('btn_save_session')}
             </button>
-            <button
-              onClick={() => setArchiveOpen(true)}
-              className="py-2 px-3 rounded-lg border border-line bg-chip text-ink-2 font-semibold text-sm hover:bg-surface-2 transition whitespace-nowrap"
-            >
-              📂 {t('btn_archive')}
-              <span className="text-xs text-muted font-mono ms-1">({savedMeetings.length})</span>
+            <button onClick={() => setArchiveOpen(true)} className="btn btn-secondary">
+              <Glyph name="folder" size={15} /> {t('btn_archive')}
+              <span className="o_ma_count">({savedMeetings.length})</span>
             </button>
           </div>
         </div>
 
         {/* Transcript Card */}
-        <div className="bg-white/3 border border-line rounded-xl overflow-hidden mb-3">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-line">
-            <div className="flex items-center gap-2 text-sm font-bold">
-              📝 <span>{t('transcript_title')}</span>
-            </div>
-            {isRecording && !isPaused && <div className="text-xs text-red-400 font-bold animate-pulse">● {t('badge_live')}</div>}
+        <div className="o_ma_card">
+          <div className="o_ma_card_head">
+            <div className="ttl"><Glyph name="doc" size={16} /> <span>{t('transcript_title')}</span></div>
+            {isRecording && !isPaused && (
+              <div className="o_ma_live"><span className="dot" /> {t('badge_live')}</div>
+            )}
           </div>
-          <div className="px-4 py-3">
-            {/* Segments list — click a segment to edit, ✕ to delete */}
-            <div className="w-full min-h-40 max-h-60 overflow-y-auto bg-surface border border-line rounded-lg p-3 text-sm leading-relaxed text-ink-2 space-y-2">
+          <div className="o_ma_card_body">
+            {/* Segments list — click a segment to edit, delete via trash icon */}
+            <div className="o_ma_panel o_ma_scroll o_ma_text">
               {transcriptSegments.length === 0 && (
-                <div className="text-muted italic">{t('transcript_placeholder')}</div>
+                <div className="o_ma_muted">{t('transcript_placeholder')}</div>
               )}
               {transcriptSegments.map((seg, i) => (
-                <div key={`${seg.ts}-${i}`} className="group flex items-start gap-2">
-                  <div className="flex-1 min-w-0">
-                    <span className="text-teal-400 text-xs font-bold">{seg.speaker}</span>{' '}
+                <div key={`${seg.ts}-${i}`} className="o_ma_seg">
+                  <div className="body">
+                    <span className="spk">{seg.speaker}</span>{' '}
                     {editingIndex === i ? (
                       <textarea
                         value={editingText}
@@ -1247,180 +1222,155 @@ const MeetingAssistant = () => {
                             e.target.blur();
                           }
                         }}
-                        className="w-full mt-1 bg-black/40 border border-blue-500/50 rounded-lg p-2 text-sm leading-relaxed text-ink-2 outline-none focus:ring-2 focus:ring-blue-500/10 resize-y"
+                        className="o_input"
+                        style={{ marginTop: 4 }}
                       />
                     ) : (
                       <span
                         onClick={() => beginEditSegment(i)}
                         title={t('segment_edit_hint')}
-                        className="text-ink-2 cursor-text hover:bg-surface-2 rounded px-0.5 transition"
+                        className="txt"
                       >
                         {seg.text}
                       </span>
                     )}
                   </div>
-                  <button
-                    onClick={() => deleteSegment(i)}
-                    title={t('segment_delete')}
-                    className="opacity-40 group-hover:opacity-100 hover:text-red-400 text-muted text-xs px-1 py-0.5 flex-shrink-0 transition"
-                  >
-                    ✕
+                  <button onClick={() => deleteSegment(i)} title={t('segment_delete')} className="del">
+                    <Glyph name="close" size={14} />
                   </button>
                 </div>
               ))}
             </div>
 
             {/* Manual notes — included in summary / translation / PDF / copy */}
-            <div className="mt-3">
-              <label className="block text-xs font-bold text-amber-400 mb-1.5">🖊️ {t('manual_notes')}</label>
+            <div style={{ marginTop: 12 }}>
+              <label className="o_ma_panel_label" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--o-font-size-xs)', fontWeight: 'var(--o-font-weight-bold)', color: 'var(--o-main-color-muted)', marginBottom: 6 }}>
+                <Glyph name="edit" size={14} /> {t('manual_notes')}
+              </label>
               <textarea
                 value={manualNotes}
                 onChange={(e) => setManualNotes(e.target.value)}
                 placeholder={t('manual_notes_placeholder')}
                 rows={3}
-                className="w-full bg-surface border border-line rounded-lg p-3 text-sm leading-relaxed text-ink-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 resize-y"
+                className="o_input"
               />
             </div>
 
-            <div className="mt-2 text-xs text-ink-2 font-mono">
-              {t('word_count')} <strong className="text-ink-2">{wordCount}</strong>
+            <div className="o_ma_count">
+              {t('word_count')} <strong>{wordCount}</strong>
             </div>
           </div>
         </div>
 
         {/* Summary Card */}
-        <div className="bg-white/3 border border-line rounded-xl overflow-hidden mb-3">
-          <div className="px-4 py-3 border-b border-line">
-            <div className="flex items-center gap-2 text-sm font-bold">
-              🧠 <span>{t('summary_title')}</span>
-            </div>
+        <div className="o_ma_card">
+          <div className="o_ma_card_head">
+            <div className="ttl"><Glyph name="sparkles" size={16} /> <span>{t('summary_title')}</span></div>
           </div>
-          <div className="px-4 py-3 space-y-2">
-            <div className="bg-surface border border-line rounded-lg p-3">
-              <div className="text-xs font-bold text-teal-400 mb-2">🔑 {t('key_points')}</div>
-              <div className="text-sm text-ink-2 space-y-1">
+          <div className="o_ma_card_body">
+            <div className="o_ma_panel">
+              <div className="lbl"><Glyph name="key" size={14} /> {t('key_points')}</div>
+              <div className="o_ma_text">
                 {summaryData?.keyPoints?.length > 0
                   ? summaryData.keyPoints.map((p, i) => <div key={i}>• {p}</div>)
-                  : <div className="text-ink-2 italic">{t('no_summary')}</div>}
+                  : <div className="o_ma_muted">{t('no_summary')}</div>}
               </div>
             </div>
-            <div className="bg-surface border border-line rounded-lg p-3">
-              <div className="text-xs font-bold text-blue-400 mb-2">✅ {t('decisions')}</div>
-              <div className="text-sm text-ink-2 space-y-1">
+            <div className="o_ma_panel">
+              <div className="lbl"><Glyph name="check" size={14} /> {t('decisions')}</div>
+              <div className="o_ma_text">
                 {summaryData?.decisions?.length > 0
-                  ? summaryData.decisions.map((d, i) => <div key={i}>✅ {d}</div>)
-                  : <div className="text-ink-2">—</div>}
+                  ? summaryData.decisions.map((d, i) => <div key={i}>• {d}</div>)
+                  : <div>—</div>}
               </div>
             </div>
-            <div className="bg-surface border border-line rounded-lg p-3">
-              <div className="text-xs font-bold text-amber-400 mb-2">📋 {t('action_items')}</div>
-              <div className="text-sm text-ink-2 space-y-1">
+            <div className="o_ma_panel">
+              <div className="lbl"><Glyph name="list" size={14} /> {t('action_items')}</div>
+              <div className="o_ma_text">
                 {summaryData?.actions?.length > 0
-                  ? summaryData.actions.map((a, i) => <div key={i}>📌 {a}</div>)
-                  : <div className="text-ink-2">—</div>}
+                  ? summaryData.actions.map((a, i) => <div key={i}>• {a}</div>)
+                  : <div>—</div>}
               </div>
             </div>
           </div>
         </div>
 
         {/* Translation & Export Card */}
-        <div className="bg-white/3 border border-line rounded-xl overflow-hidden mb-3">
-          <div className="px-4 py-3 border-b border-line">
-            <div className="flex items-center gap-2 text-sm font-bold">
-              🌍 <span>{t('translation_export')}</span>
-            </div>
+        <div className="o_ma_card">
+          <div className="o_ma_card_head">
+            <div className="ttl"><Glyph name="globe" size={16} /> <span>{t('translation_export')}</span></div>
           </div>
-          <div className="px-4 py-3 space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={doTranslate}
-                className="py-2 rounded-lg border border-teal-500/30 bg-teal-500/10 text-teal-400 font-semibold text-sm hover:bg-teal-500/20 transition"
-              >
-                🔄 {t('btn_translate')}
+          <div className="o_ma_card_body">
+            <div className="o_ma_row" style={{ marginTop: 0 }}>
+              <button onClick={doTranslate} className="btn btn-secondary grow">
+                <Glyph name="translate" size={15} /> {t('btn_translate')}
               </button>
-              <button
-                onClick={exportPDF}
-                className="py-2 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-400 font-semibold text-sm hover:bg-blue-500/20 transition"
-              >
-                📄 {t('btn_export_pdf')}
+              <button onClick={exportPDF} className="btn btn-secondary grow">
+                <Glyph name="doc" size={15} /> {t('btn_export_pdf')}
               </button>
             </div>
             {/* تنزيل التسجيل الصوتي محليًّا (webm) — يظهر مفعّلًا بعد إيقاف تسجيلٍ فيه صوت */}
             <button
               onClick={downloadMeetingAudio}
               disabled={!audio.audioBlob}
-              className="w-full py-2 rounded-lg border border-amber-400/30 bg-amber-500/10 text-amber-300 font-semibold text-sm hover:bg-amber-500/20 transition disabled:opacity-30 disabled:cursor-not-allowed"
+              className="btn btn-secondary"
+              style={{ width: '100%', marginTop: 10 }}
             >
-              ⬇️ {t('btn_download_audio')}
+              <Glyph name="download" size={15} /> {t('btn_download_audio')}
             </button>
             <div
-              className="w-full min-h-24 max-h-40 overflow-y-auto bg-surface border border-line rounded-lg p-3 text-sm leading-relaxed text-ink-2 font-sans"
+              className="o_ma_panel o_ma_scroll o_ma_text"
               dir="ltr"
-              style={{ textAlign: 'left' }}
+              style={{ textAlign: 'left', marginTop: 12 }}
             >
-              {englishTranslation || <span className="text-ink-2 italic">{t('translation_placeholder')}</span>}
+              {englishTranslation || <span className="o_ma_muted">{t('translation_placeholder')}</span>}
             </div>
-            <p className="text-xs text-ink-2 font-mono">{t('translation_note')}</p>
+            <p className="o_ma_count">{t('translation_note')}</p>
           </div>
         </div>
 
         {/* Signature Card */}
-        <div className="relative bg-white/3 border border-amber-400/20 rounded-xl overflow-hidden p-4 flex items-center gap-3">
-          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
-          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-lg flex-shrink-0">
-            👤
-          </div>
-          <div className="flex-1">
-            <div className="font-bold text-sm">AI Meeting Assistant</div>
-            <div className="text-xs text-amber-500 font-mono">Official Recorder</div>
-            <div className="text-xs text-ink-2 font-mono" dir="ltr">
-              {new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-              })}
+        <div className="o_ma_card">
+          <div className="o_ma_sig">
+            <div className="av"><Glyph name="user" size={20} /></div>
+            <div className="flex-1">
+              <div className="n">AI Meeting Assistant</div>
+              <div className="r">Official Recorder</div>
+              <div className="d" dir="ltr">
+                {new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                })}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 h-20 bg-black/80 border-t border-line backdrop-blur-xl z-40 flex items-center justify-between px-4 gap-2">
+      <div className="o_ma_bottom">
         <button
           onClick={toggleRecord}
           disabled={!speechSupported}
-          className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold transition-all transform active:scale-95 flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed ${
-            isRecording
-              ? 'bg-slate-800 border-2 border-red-500 shadow-lg shadow-red-500/30'
-              : 'bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/40'
-          }`}
+          className={`o_ma_rec ${isRecording ? 'is-recording' : ''}`}
         >
-          {recordBtnText}
+          <Glyph name={recordGlyph} size={20} />
         </button>
-        <button
-          onClick={stopRecording}
-          disabled={!isRecording}
-          className="flex-1 py-2 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 disabled:opacity-30 disabled:cursor-not-allowed font-semibold text-xs hover:bg-red-500/20 transition"
-        >
-          ⏹️ {t('btn_stop')}
+        <button onClick={stopRecording} disabled={!isRecording} className="btn is-danger grow">
+          <Glyph name="stop" size={14} /> {t('btn_stop')}
         </button>
-        <button
-          onClick={exportPDF}
-          className="flex-1 py-2 rounded-lg border border-teal-500/30 bg-teal-500/10 text-teal-400 font-semibold text-xs hover:bg-teal-500/20 transition"
-        >
-          📄 PDF
+        <button onClick={exportPDF} className="btn btn-secondary grow">
+          <Glyph name="doc" size={14} /> PDF
         </button>
-        <button
-          onClick={doSummarize}
-          className="flex-1 py-2 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-400 font-semibold text-xs hover:bg-blue-500/20 transition"
-        >
-          ✨ {t('btn_summarize')}
+        <button onClick={doSummarize} className="btn btn-primary grow">
+          <Glyph name="sparkles" size={14} /> {t('btn_summarize')}
         </button>
       </div>
 
       {/* Toast Notification */}
       {toast.show && (
-        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-slate-800 border border-line text-ink-2 px-5 py-2 rounded-full text-sm font-semibold z-50 shadow-lg max-w-xs text-center">
+        <div className="o_ma_toast">
           {toast.msg}
         </div>
       )}
