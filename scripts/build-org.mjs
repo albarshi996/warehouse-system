@@ -150,6 +150,9 @@ r1 = replaceRegion(
 );
 r1 = replaceJsLiteral(r1, 'const jobs = [', '[', ']', JSON.stringify(jobsForReport, null, 2));
 r1 = replaceJsLiteral(r1, 'const orgTable = [', '[', ']', JSON.stringify(orgTableForReport, null, 2));
+// مصفوفتا RACI وأدوار أودو كانتا نسختين يدويتين تنجرفان عن المصدر — صارتا مولَّدتين
+if (SOURCE.raci) r1 = replaceJsLiteral(r1, 'const raciMatrix', '{', '}', JSON.stringify(SOURCE.raci, null, 2));
+if (SOURCE.odooRoles) r1 = replaceJsLiteral(r1, 'const odooRoles = [', '[', ']', JSON.stringify(SOURCE.odooRoles, null, 2));
 writeFileSync(P1, r1, 'utf8');
 
 /* ═══════════════ 2) المرجع التشغيلي الرسمي ═══════════════ */
@@ -191,7 +194,7 @@ r2 = replaceRegion(
 r2 = replaceRegion(
   r2,
   'STAFFING',
-  '        <tr><td>🛡️ إدارة التوثيق والاعتماد</td>',
+  '        <tr><td>🛡️ قسم الحوكمة المستندية</td>',
   '      </tbody>',
   staffRowsRef
 );

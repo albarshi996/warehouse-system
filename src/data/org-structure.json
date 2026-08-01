@@ -175,10 +175,11 @@
       },
       {
         "id": "sec-doc",
-        "title": "قسم التوثيق والاعتماد",
+        "title": "قسم الحوكمة المستندية",
+        "formerTitle": "قسم التوثيق والاعتماد",
         "type": "section",
         "source": "report",
-        "titleEn": "Documentation & Accreditation",
+        "titleEn": "Document Governance",
         "icon": "🛡️",
         "pages": [
           "/dashboard/documents"
@@ -423,11 +424,11 @@
     {
       "id": "J01",
       "orgId": "sec-doc",
-      "title": "رئيس قسم التوثيق والاعتماد",
-      "formerTitle": "مدير إدارة التوثيق والاعتماد",
+      "title": "رئيس قسم الحوكمة المستندية",
+      "formerTitle": "رئيس قسم التوثيق والاعتماد (وقبله: مدير إدارة التوثيق والاعتماد)",
       "icon": "🛡️",
-      "layer": "قسم التوثيق والاعتماد",
-      "odooRole": "Documentation & Accreditation Manager",
+      "layer": "قسم الحوكمة المستندية",
+      "odooRole": "Document Governance Manager",
       "odooLevel": "Admin",
       "modules": "Inventory (Entry/Post), Audit Logs",
       "phase1": "مدير واحد",
@@ -755,10 +756,10 @@
     {
       "id": "J15",
       "orgId": "unit-doc-approve",
-      "title": "موظف التوثيق والاعتماد",
+      "title": "موظف الحوكمة المستندية",
       "icon": "⚖️",
-      "layer": "وحدة التوثيق والاعتماد",
-      "odooRole": "Documentation User",
+      "layer": "وحدة الحوكمة المستندية",
+      "odooRole": "Document Governance User",
       "odooLevel": "User",
       "modules": "Inventory (Entry/Post), Audit Logs",
       "phase1": "موظف واحد",
@@ -770,7 +771,7 @@
         "التأكد من توقيع كافة المستندات والاعتمادات حسب الأصول",
         "تحديث مسودات SOPs بناءً على المتطلبات التشغيلية"
       ],
-      "reportingTo": "إدارة التوثيق والاعتماد",
+      "reportingTo": "قسم الحوكمة المستندية",
       "directReporting": true,
       "kpis": "",
       "occupied": false
@@ -870,7 +871,7 @@
       "orgId": "unit-doc-sops",
       "title": "فريق صياغة المعايير والإجراءات (SOPs)",
       "icon": "📋",
-      "layer": "وحدة التوثيق والاعتماد",
+      "layer": "وحدة الحوكمة المستندية",
       "odooRole": "SOP Writer",
       "odooLevel": "User",
       "modules": "Documentation",
@@ -882,7 +883,7 @@
         "ضمان وضوح الإجراءات وسهولة فهمها من قبل جميع الموظفين",
         "توثيق أفضل الممارسات وتعميمها على جميع الفروع"
       ],
-      "reportingTo": "إدارة التوثيق والاعتماد",
+      "reportingTo": "قسم الحوكمة المستندية",
       "directReporting": true,
       "kpis": "نسبة اكتمال SOPs، درجة التطبيق الفعلي",
       "occupied": false
@@ -892,7 +893,7 @@
       "orgId": "unit-doc-posting",
       "title": "موظف إدخال وترحيل الحركات المخزنية",
       "icon": "📊",
-      "layer": "وحدة التوثيق والاعتماد",
+      "layer": "وحدة الحوكمة المستندية",
       "odooRole": "Inventory Posting User",
       "odooLevel": "User",
       "modules": "Inventory (Entry/Post), Audit Logs",
@@ -904,7 +905,7 @@
         "توثيق المستندات المرفوعة ومراجعة الأرصدة النهائية",
         "معالجة التعديلات والتصحيحات في الوقت المناسب"
       ],
-      "reportingTo": "إدارة التوثيق والاعتماد",
+      "reportingTo": "قسم الحوكمة المستندية",
       "directReporting": true,
       "kpis": "دقة الترحيل (100%)، سرعة المعالجة",
       "occupied": false
@@ -1254,7 +1255,7 @@
       "role": "النقل والحركة، الصيانة، السلامة، الخدمات المساندة"
     },
     {
-      "unit": "🛡️ قسم التوثيق والاعتماد",
+      "unit": "🛡️ قسم الحوكمة المستندية",
       "phase1": "1 رئيس قسم",
       "phase2": "رئيس + فريق توثيق",
       "role": "توثيق واعتماد المستندات، إدخال وترحيل الحركات المخزنية"
@@ -1320,7 +1321,7 @@
       "Returns — المرتجعات"
     ],
     "roles": [
-      "إدارة التوثيق والاعتماد",
+      "قسم الحوكمة المستندية",
       "إدارة الجودة",
       "إدارة س.الإمداد",
       "إدارة المستودعات",
@@ -1444,8 +1445,8 @@
       "level": "Admin"
     },
     {
-      "pos": "مدير إدارة التوثيق والاعتماد",
-      "role": "Documentation & Accreditation Manager",
+      "pos": "رئيس قسم الحوكمة المستندية",
+      "role": "Document Governance Manager",
       "modules": "Inventory (Entry/Post), Audit Logs",
       "level": "Admin"
     },

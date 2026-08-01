@@ -13,10 +13,10 @@ export const JOBS = [
   {
     "id": "J01",
     "orgId": "sec-doc",
-    "title": "رئيس قسم التوثيق والاعتماد",
+    "title": "رئيس قسم الحوكمة المستندية",
     "icon": "🛡️",
-    "layer": "قسم التوثيق والاعتماد",
-    "odooRole": "Documentation & Accreditation Manager",
+    "layer": "قسم الحوكمة المستندية",
+    "odooRole": "Document Governance Manager",
     "odooLevel": "Admin",
     "modules": "Inventory (Entry/Post), Audit Logs",
     "phase1": "مدير واحد",
@@ -319,10 +319,10 @@ export const JOBS = [
   {
     "id": "J15",
     "orgId": "unit-doc-approve",
-    "title": "موظف التوثيق والاعتماد",
+    "title": "موظف الحوكمة المستندية",
     "icon": "⚖️",
-    "layer": "وحدة التوثيق والاعتماد",
-    "odooRole": "Documentation User",
+    "layer": "وحدة الحوكمة المستندية",
+    "odooRole": "Document Governance User",
     "odooLevel": "User",
     "modules": "Inventory (Entry/Post), Audit Logs",
     "phase1": "موظف واحد",
@@ -334,7 +334,7 @@ export const JOBS = [
       "التأكد من توقيع كافة المستندات والاعتمادات حسب الأصول",
       "تحديث مسودات SOPs بناءً على المتطلبات التشغيلية"
     ],
-    "reportingTo": "إدارة التوثيق والاعتماد",
+    "reportingTo": "قسم الحوكمة المستندية",
     "kpis": "",
     "occupied": false
   },
@@ -427,7 +427,7 @@ export const JOBS = [
     "orgId": "unit-doc-sops",
     "title": "فريق صياغة المعايير والإجراءات (SOPs)",
     "icon": "📋",
-    "layer": "وحدة التوثيق والاعتماد",
+    "layer": "وحدة الحوكمة المستندية",
     "odooRole": "SOP Writer",
     "odooLevel": "User",
     "modules": "Documentation",
@@ -439,7 +439,7 @@ export const JOBS = [
       "ضمان وضوح الإجراءات وسهولة فهمها من قبل جميع الموظفين",
       "توثيق أفضل الممارسات وتعميمها على جميع الفروع"
     ],
-    "reportingTo": "إدارة التوثيق والاعتماد",
+    "reportingTo": "قسم الحوكمة المستندية",
     "kpis": "نسبة اكتمال SOPs، درجة التطبيق الفعلي",
     "occupied": false
   },
@@ -448,7 +448,7 @@ export const JOBS = [
     "orgId": "unit-doc-posting",
     "title": "موظف إدخال وترحيل الحركات المخزنية",
     "icon": "📊",
-    "layer": "وحدة التوثيق والاعتماد",
+    "layer": "وحدة الحوكمة المستندية",
     "odooRole": "Inventory Posting User",
     "odooLevel": "User",
     "modules": "Inventory (Entry/Post), Audit Logs",
@@ -460,7 +460,7 @@ export const JOBS = [
       "توثيق المستندات المرفوعة ومراجعة الأرصدة النهائية",
       "معالجة التعديلات والتصحيحات في الوقت المناسب"
     ],
-    "reportingTo": "إدارة التوثيق والاعتماد",
+    "reportingTo": "قسم الحوكمة المستندية",
     "kpis": "دقة الترحيل (100%)، سرعة المعالجة",
     "occupied": false
   },

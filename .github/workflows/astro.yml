@@ -96,6 +96,12 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
         working-directory: ${{ env.BUILD_PATH }}
 
+      - name: Generate derived artifacts (arch wiki + org reports)
+        run: |
+          node scripts/build-arch.mjs
+          node scripts/build-org.mjs
+        working-directory: ${{ env.BUILD_PATH }}
+
       - name: Build with Astro
         env:
           PUBLIC_FIREBASE_API_KEY: ${{ secrets.PUBLIC_FIREBASE_API_KEY }}
