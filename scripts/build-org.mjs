@@ -23,6 +23,10 @@ import { fileURLToPath } from 'node:url';
 
 import { chartHtml, supportBandHtml, esc } from '../src/services/org/orgView.js';
 import { validateTree, countByType, proposedCount } from '../src/services/org/orgModel.js';
+// فصل «أدوار البوابة الفعلية» في المرجع يُولَّد من كود التنفيذ نفسه — لا من وثيقة موازية:
+import { NAV_GROUPS } from '../src/services/auth/navCatalog.js';
+import { ROLES } from '../src/services/auth/roles.js';
+import { allowedPathsFor, canOpenPath } from '../src/services/auth/pageAccess.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SOURCE = JSON.parse(readFileSync(resolve(ROOT, 'src/data/org-structure.json'), 'utf8'));
@@ -198,6 +202,82 @@ r2 = replaceRegion(
   '      </tbody>',
   staffRowsRef
 );
+
+/* ── بطاقات الوصف الوظيفي (كانت 12 يدوية منجرفة — صارت الـ36 كلها من المصدر) ── */
+const CARD_COLORS = ['var(--navy)', 'var(--blue)', 'var(--orange)', 'var(--teal)'];
+const jobCardsRef = SOURCE.jobs
+  .map((j, i) => {
+    const color = CARD_COLORS[i % CARD_COLORS.length];
+    const duties = (j.duties || []).map((d) => `      <li>${esc(d)}</li>`).join('\n');
+    const sub = [j.layer, j.odooRole ? `${j.odooRole}${j.odooLevel ? ` (${j.odooLevel})` : ''}` : '']
+      .filter(Boolean)
+      .join(' | ');
+    const occ = j.occupied
+      ? `<span style="background:#e8f5ee;color:#1e7a46;font-size:10px;font-weight:700;padding:2px 8px;border:1px solid #bfe3cf;white-space:nowrap;">مشغول${j.holder ? ' — ' + esc(j.holder) : ''}</span>`
+      : '';
+    const foot = [
+      `<strong>أودو:</strong> ${esc(j.odooRole || '—')}${j.odooLevel ? ` (${esc(j.odooLevel)})` : ''}`,
+      j.modules ? `الوحدات: ${esc(j.modules)}` : '',
+      j.reportingTo ? `التبعية: ${esc(j.reportingTo)}` : '',
+      j.kpis ? `KPIs: ${esc(j.kpis)}` : '',
+    ]
+      .filter(Boolean)
+      .join(' | ');
+    return `  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid ${color};">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">${j.icon || '👤'}</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">${esc(j.title)}</div><div style="font-size:11px;color:#888;">${esc(sub)}</div></div>
+      ${occ}
+    </div>
+    <ul style="columns:2;gap:20px;">
+${duties}
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      ${foot}
+    </div>
+  </div>`;
+  })
+  .join('\n');
+r2 = replaceRegion(r2, 'JOBS', '  <!-- Job 1 -->', '</div>', jobCardsRef);
+
+/* ── أدوار البوابة الفعلية + فهرس الشاشات (من كود التنفيذ لا من وثيقة موازية) ── */
+const roleIds = Object.keys(ROLES);
+const prMap = new Map((SOURCE.portalRoles || []).map((r) => [r.id, r]));
+const portalRoleRows = roleIds
+  .map((id) => {
+    const meta = ROLES[id];
+    const m = prMap.get(id) || {};
+    const count = allowedPathsFor(id).length;
+    return `        <tr><td><strong>${esc(meta.label)}</strong> <span class="td-mono" style="font-size:10px;color:#888;">${esc(id)}</span></td><td>${esc(m.org || '—')}</td><td class="td-mono">${esc(m.odoo || '—')}</td><td class="td-center"><strong>${count}</strong> شاشة</td></tr>`;
+  })
+  .join('\n');
+r2 = replaceRegion(r2, 'PORTAL-ROLES', '<tbody>', '</tbody>', portalRoleRows);
+
+const gapsHtml = (SOURCE.portalRoleGaps || []).length
+  ? `  <div style="background:#fff8ec;border:1px solid #e8d9b8;padding:10px 14px;margin-top:10px;font-size:12px;">
+    <strong>فجوات تعيين قيد القرار:</strong>
+    <ul style="margin:6px 0 0;">
+${(SOURCE.portalRoleGaps || []).map((g) => `      <li>${esc(g)}</li>`).join('\n')}
+    </ul>
+  </div>`
+  : '';
+r2 = replaceRegion(r2, 'PORTAL-GAPS', '</table>', '<h3', gapsHtml);
+
+const pageRows = NAV_GROUPS.flatMap((g) => {
+  const head = `        <tr><td colspan="4" style="background:#f5f7fb;font-weight:800;color:var(--navy);">${esc(g.group)}</td></tr>`;
+  const rows = g.items.map((it) => {
+    const openers = roleIds.filter((r) => canOpenPath(r, it.path));
+    const who =
+      openers.length === roleIds.length
+        ? 'جميع الأدوار'
+        : openers.map((r) => esc(ROLES[r].label)).join(' · ');
+    const kind = it.external ? 'تقرير عام' : 'شاشة لوحة';
+    return `        <tr><td>${esc(it.label)}</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">${esc(it.path)}</td><td>${kind}</td><td style="font-size:11px;">${who}</td></tr>`;
+  });
+  return [head, ...rows];
+}).join('\n');
+r2 = replaceRegion(r2, 'PORTAL-PAGES', '<tbody>', '</tbody>', pageRows);
+
 writeFileSync(P2, r2, 'utf8');
 
 /* ═══════════════ 3) كتالوج الوظائف ═══════════════ */
@@ -248,6 +328,6 @@ console.info(
   `✅ الهيكل مولَّد من المصدر الواحد:\n` +
     `   • ${c.management} إدارة · ${c.section} قسم · ${c.unit} وحدة · ${c.subunit} فريق (${proposedCount(SOURCE.tree)} مقترح)\n` +
     `   • تقرير هيكل الوظائف والأدوار — الشجرة والمساندة و${jobsForReport.length} بطاقة و${orgTableForReport.length} صف كادر\n` +
-    `   • المرجع التشغيلي الرسمي — الشجرة والمساندة وجدول الكادر\n` +
+    `   • المرجع التشغيلي الرسمي — الشجرة والمساندة والكادر و36 بطاقة + فصل أدوار البوابة (12 دورًا · فهرس الشاشات)\n` +
     `   • jobsCatalog.js — ${catalog.length} وظيفة (${catalog.filter((j) => !j.occupied).length} شاغرة)`
 );

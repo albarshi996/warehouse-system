@@ -85,6 +85,30 @@ else {
   missingFiles.forEach((p) => info(`• ${p}`));
 }
 
+// (ج) روابط pages[] في مصدر الهيكل التنظيمي — كانت خارج كل فحص فبقي فيها
+// رابطان ميتان لصفحات محذوفة (warehouse-maps · cold-storage-plan) حتى 01.08.
+const ORG_SOURCE = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/data/org-structure.json'), 'utf8'));
+const orgPages = new Set();
+(function collectPages(node) {
+  if (Array.isArray(node)) return node.forEach(collectPages);
+  if (node && typeof node === 'object') {
+    if (Array.isArray(node.pages)) node.pages.forEach((p) => orgPages.add(p));
+    Object.values(node).forEach(collectPages);
+  }
+})(ORG_SOURCE);
+const deadOrgPages = [...orgPages].filter((p) => {
+  if (p.startsWith('/dashboard')) {
+    const rel = p === HOME_PATH ? 'index' : p.replace('/dashboard/', '');
+    return !fs.existsSync(path.join(PAGES_DIR, `${rel}.astro`));
+  }
+  return !fs.existsSync(path.join(PUBLIC_DIR, decodeURIComponent(p).replace(/^\//, '')));
+});
+if (deadOrgPages.length === 0) ok(`كل صفحات مصدر الهيكل org-structure.json (${orgPages.size}) موجودة`);
+else {
+  bad(`${deadOrgPages.length} رابط ميت في org-structure.json — صحّح pages[]:`);
+  deadOrgPages.forEach((p) => info(`• ${p}`));
+}
+
 /* ═══════════ 3. قواعد Firestore ═══════════ */
 section(3, 'مجموعات Firestore مقابل قواعد الأمان');
 const serviceFiles = walk(SERVICES_DIR, ['.js']).filter((f) => !f.endsWith('.test.js'));

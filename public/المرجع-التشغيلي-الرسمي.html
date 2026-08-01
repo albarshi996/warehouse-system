@@ -1075,6 +1075,7 @@ tr:hover td { background: #fff8f0; }
   <a href="#s-finance">المالية</a>
   <a href="#s-workflows">دورات ERP</a>
   <a href="#s-org">الهيكل الوظيفي</a>
+  <a href="#s-portal">أدوار البوابة</a>
   <a href="#s-jobs">بطاقات الوظائف</a>
   <a href="#s-raci">مصفوفة RACI</a>
   <a href="#s-odoo-perms">صلاحيات أودو</a>
@@ -1090,7 +1091,7 @@ tr:hover td { background: #fff8f0; }
   <a href="#s-annex4">م-٤</a>
   <a href="#s-annex5">م-٥</a>
   <a href="#s-annex6">م-٦</a>
-  <a href="#s-raci">م-٧</a>
+  <a href="#s-raci-annex">م-٧</a>
   <a href="#s-sig-annex">م-٨</a>
   <button class="print-btn" onclick="window.print()">🖨️ طباعة / PDF</button>
 </nav>
@@ -1146,6 +1147,7 @@ tr:hover td { background: #fff8f0; }
     <div class="toc-item"><span class="toc-num">12</span><a href="#s-workflows">دورات ERP — المالية / HR / المشتريات / المستودعات</a></div>
     <div class="toc-item"><span class="toc-num">13</span><a href="#s-raci">مصفوفة RACI الكاملة</a></div>
     <div class="toc-item"><span class="toc-num">14</span><a href="#s-org">الهيكل الوظيفي والتنظيمي الكامل</a></div>
+    <div class="toc-item"><span class="toc-num">+14</span><a href="#s-portal">أدوار البوابة الفعلية وفهرس الشاشات (مولَّد من الكود)</a></div>
     <div class="toc-item"><span class="toc-num">15</span><a href="#s-jobs">بطاقات الوصف الوظيفي</a></div>
     <div class="toc-item"><span class="toc-num">16</span><a href="#s-odoo-perms">صلاحيات أودو — الأدوار والمسارات</a></div>
     <div class="toc-item"><span class="toc-num">17</span><a href="#s-alerts">التنبيهات التلقائية في أودو</a></div>
@@ -2173,6 +2175,113 @@ tr:hover td { background: #fff8f0; }
 </div>
 
 <!-- ============================================================
+     14+ — PORTAL ROLES & SCREENS (generated from portal code)
+     ============================================================ -->
+<div class="chapter" id="s-portal">
+  <div class="chapter-head">
+    <span class="chapter-num">+14</span>
+    <h2>أدوار البوابة الفعلية وفهرس الشاشات</h2>
+  </div>
+  <p style="font-size:12.5px;color:#555;margin-bottom:14px;">هذا الفصل <strong>مولَّد آليًّا من كود البوابة نفسه</strong> (<span class="td-mono">roles.js · navCatalog.js · pageAccess.js</span>) عبر <span class="td-mono">scripts/build-org.mjs</span> — فهو يوثّق ما يُنفَّذ فعلًا لا ما يُخطَّط: الأدوار الاثني عشر المعتمدة في نظام دخول البوابة، وموقع كلٍّ منها في الهيكل التنظيمي، ومقابله في أودو، ثم كل شاشة في البوابة ومن يفتحها بالضبط.</p>
+
+  <h3>أ) أدوار البوابة الاثنا عشر</h3>
+  <table>
+    <thead><tr><th>الدور</th><th>الموقع التنظيمي</th><th>مقابل أودو</th><th>الشاشات المتاحة</th></tr></thead>
+    <tbody>
+<!-- ORG:PORTAL-ROLES:START — مولَّد من src/data/org-structure.json — لا تحرّره يدويًّا -->
+        <tr><td><strong>المدير العام</strong> <span class="td-mono" style="font-size:10px;color:#888;">admin</span></td><td>الإدارة العليا — فوق الهيكل التشغيلي (المدير العام)</td><td class="td-mono">Settings / Admin</td><td class="td-center"><strong>47</strong> شاشة</td></tr>
+        <tr><td><strong>مدير المستودع</strong> <span class="td-mono" style="font-size:10px;color:#888;">warehouse_manager</span></td><td>قسم عمليات المستودعات — رئيس القسم (J03)</td><td class="td-mono">Inventory Manager</td><td class="td-center"><strong>43</strong> شاشة</td></tr>
+        <tr><td><strong>أمين المخزن</strong> <span class="td-mono" style="font-size:10px;color:#888;">storekeeper</span></td><td>قسم عمليات المستودعات — وحدات الاستلام والتخزين</td><td class="td-mono">Inventory / Barcode User</td><td class="td-center"><strong>20</strong> شاشة</td></tr>
+        <tr><td><strong>مفتّش الجودة</strong> <span class="td-mono" style="font-size:10px;color:#888;">qc_inspector</span></td><td>إدارة الجودة (مساندة)</td><td class="td-mono">Quality User</td><td class="td-center"><strong>17</strong> شاشة</td></tr>
+        <tr><td><strong>ضابط البوابة</strong> <span class="td-mono" style="font-size:10px;color:#888;">gate_officer</span></td><td>وحدة تصاريح البوابة والرحلات (مقترحة)</td><td class="td-mono">Inventory User (Gate)</td><td class="td-center"><strong>13</strong> شاشة</td></tr>
+        <tr><td><strong>موظف المشتريات</strong> <span class="td-mono" style="font-size:10px;color:#888;">purchase_officer</span></td><td>المشتريات والإدارة التجارية (مساندة)</td><td class="td-mono">Purchase User</td><td class="td-center"><strong>17</strong> شاشة</td></tr>
+        <tr><td><strong>المدير المالي</strong> <span class="td-mono" style="font-size:10px;color:#888;">finance_manager</span></td><td>الإدارة المالية (مساندة)</td><td class="td-mono">Accounting Manager</td><td class="td-center"><strong>19</strong> شاشة</td></tr>
+        <tr><td><strong>مسؤول المرتجعات</strong> <span class="td-mono" style="font-size:10px;color:#888;">return_manager</span></td><td>وحدة إدارة المرتجعات — قسم عمليات المستودعات</td><td class="td-mono">Inventory User (Returns)</td><td class="td-center"><strong>20</strong> شاشة</td></tr>
+        <tr><td><strong>مدقّق الجرد</strong> <span class="td-mono" style="font-size:10px;color:#888;">inventory_auditor</span></td><td>الجرد الدوري — بإشراف إدارة الجودة</td><td class="td-mono">Inventory Auditor</td><td class="td-center"><strong>19</strong> شاشة</td></tr>
+        <tr><td><strong>مشاهد</strong> <span class="td-mono" style="font-size:10px;color:#888;">viewer</span></td><td>اطّلاع رقابي — بلا موقع تنفيذي</td><td class="td-mono">—</td><td class="td-center"><strong>7</strong> شاشة</td></tr>
+        <tr><td><strong>مستخدم إدارة</strong> <span class="td-mono" style="font-size:10px;color:#888;">department_user</span></td><td>الإدارات المساندة (طلبات التوظيف والتقييم)</td><td class="td-mono">—</td><td class="td-center"><strong>7</strong> شاشة</td></tr>
+        <tr><td><strong>الحركة</strong> <span class="td-mono" style="font-size:10px;color:#888;">fleet</span></td><td>قسم النقل والحركة</td><td class="td-mono">Fleet User</td><td class="td-center"><strong>6</strong> شاشة</td></tr>
+<!-- ORG:PORTAL-ROLES:END -->
+    </tbody>
+  </table>
+<!-- ORG:PORTAL-GAPS:START — مولَّد من src/data/org-structure.json — لا تحرّره يدويًّا -->
+  <div style="background:#fff8ec;border:1px solid #e8d9b8;padding:10px 14px;margin-top:10px;font-size:12px;">
+    <strong>فجوات تعيين قيد القرار:</strong>
+    <ul style="margin:6px 0 0;">
+      <li>قسم الحوكمة المستندية بلا دور بوابة مخصّص — المقترح: استحداث دور doc_controller «موظف الحوكمة المستندية» (قرار مالك معلّق)</li>
+      <li>المرجع يفرّق بين موظف المشتريات ومدير المشتريات بينما البوابة بدور واحد purchase_officer — يُقيَّم الفصل عند التوسّع</li>
+    </ul>
+  </div>
+<!-- ORG:PORTAL-GAPS:END -->
+
+  <h3 style="margin-top:22px;">ب) فهرس شاشات البوابة ومن يفتحها</h3>
+  <table>
+    <thead><tr><th>الشاشة</th><th>المسار</th><th>النوع</th><th>من يفتحها</th></tr></thead>
+    <tbody>
+<!-- ORG:PORTAL-PAGES:START — مولَّد من src/data/org-structure.json — لا تحرّره يدويًّا -->
+        <tr><td colspan="4" style="background:#f5f7fb;font-weight:800;color:var(--navy);">العمليات اليومية</td></tr>
+        <tr><td>المستندات</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/documents</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · مفتّش الجودة · ضابط البوابة · موظف المشتريات · مسؤول المرتجعات</td></tr>
+        <tr><td>اختار وظيفتك</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/forms</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · مفتّش الجودة · ضابط البوابة · موظف المشتريات · مسؤول المرتجعات</td></tr>
+        <tr><td>المهام</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/tasks</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · مفتّش الجودة · ضابط البوابة · موظف المشتريات · مسؤول المرتجعات · مستخدم إدارة</td></tr>
+        <tr><td>الأصناف</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/products</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · مفتّش الجودة · ضابط البوابة · موظف المشتريات · مسؤول المرتجعات</td></tr>
+        <tr><td>ماستر الموردين</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/suppliers</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td>ماستر العملاء</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/customers</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td>عمليات مخزنية</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/stock-operations</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · مفتّش الجودة · ضابط البوابة · موظف المشتريات · مسؤول المرتجعات</td></tr>
+        <tr><td>متابعة العمليات</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/operations</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td colspan="4" style="background:#f5f7fb;font-weight:800;color:var(--navy);">المستودعات والجرد</td></tr>
+        <tr><td>لوحة القيادة التشغيلية</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/command-center</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
+        <tr><td>المستودعات</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/warehouses</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
+        <tr><td>دفتر حركات المخزون</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/stock-ledger</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
+        <tr><td>النقل بين المستودعات</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/transfers</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
+        <tr><td>الرقابة على الطلبات</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/order-control</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
+        <tr><td>خريطة التجزئة</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/retail-hub</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
+        <tr><td>جرد الأصول</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/assets-inventory</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
+        <tr><td colspan="4" style="background:#f5f7fb;font-weight:800;color:var(--navy);">سلاسل الإمداد والحركة</td></tr>
+        <tr><td>جرد المركبات</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/vehicles-inventory</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · الحركة</td></tr>
+        <tr><td>عمليات الأسطول</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/fleet-operations</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · الحركة</td></tr>
+        <tr><td>مركز الصيانة</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/maintenance-center</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · الحركة</td></tr>
+        <tr><td>العُهد العينية</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/custody</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td>لوحة سلاسل الإمداد</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/supply-chain</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td colspan="4" style="background:#f5f7fb;font-weight:800;color:var(--navy);">دورات أودو والمحاكاة</td></tr>
+        <tr><td>تعلم أودو</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/learn-odoo</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · مفتّش الجودة · ضابط البوابة · موظف المشتريات · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
+        <tr><td>الهيكل والمسارات</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/workflows</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · مفتّش الجودة · ضابط البوابة · موظف المشتريات · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
+        <tr><td>دورات العمل ERP</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/erp-workflows</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · مفتّش الجودة · ضابط البوابة · موظف المشتريات · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
+        <tr><td>تدريب Odoo (محاكي)</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/training</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · مفتّش الجودة · ضابط البوابة · موظف المشتريات · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
+        <tr><td colspan="4" style="background:#f5f7fb;font-weight:800;color:var(--navy);">مركز التقارير</td></tr>
+        <tr><td>مركز التقارير</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/reports</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · مفتّش الجودة · موظف المشتريات · المدير المالي · مدقّق الجرد · مشاهد</td></tr>
+        <tr><td>لوحة اللوجستيات التنفيذيّة</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/logistics-dashboard</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td>مؤشرات المشتريات والأداء</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/kpis</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td>تحليل المخزون</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/inventory-analytics</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td>مركز الدراسات والمقارنات</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/studies</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · مفتّش الجودة · موظف المشتريات · المدير المالي · مدقّق الجرد · مشاهد</td></tr>
+        <tr><td>الدراسة المقارنة العالمية</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/comparative-study</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · مفتّش الجودة · موظف المشتريات · المدير المالي · مدقّق الجرد · مشاهد</td></tr>
+        <tr><td>الهيكل التشغيليّ المستهدف</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/target-operating-model</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td>حزمة الاستعداد — البروفة</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/interview-readiness</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td>الدورات المستندية العالمية</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/global-doc-cycles</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · مفتّش الجودة · موظف المشتريات · المدير المالي · مدقّق الجرد · مشاهد</td></tr>
+        <tr><td>الدورة المستندية والتنظيم</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/تقرير-الدورة-المستندية-الكامل-2026.html</td><td>تقرير عام</td><td style="font-size:11px;">المدير العام</td></tr>
+        <tr><td>المرجع التشغيلي الرسمي</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/المرجع-التشغيلي-الرسمي.html</td><td>تقرير عام</td><td style="font-size:11px;">المدير العام</td></tr>
+        <tr><td>هيكل الوظائف والأدوار</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/تقرير-هيكل-الوظائف-والادوار.html</td><td>تقرير عام</td><td style="font-size:11px;">المدير العام</td></tr>
+        <tr><td>تقرير الانجاز</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/تقرير-الانجاز.html</td><td>تقرير عام</td><td style="font-size:11px;">المدير العام</td></tr>
+        <tr><td>تقرير ERP</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/تقرير(ERP).html</td><td>تقرير عام</td><td style="font-size:11px;">المدير العام</td></tr>
+        <tr><td colspan="4" style="background:#f5f7fb;font-weight:800;color:var(--navy);">الأرشيف والمرجعية</td></tr>
+        <tr><td>الهيكل التنظيمي</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/org-structure</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td>الاجتماعات التحضيرية</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/meetings</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td>التوظيف</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/recruitment</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td>إدارة المستخدمين</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/users</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام</td></tr>
+        <tr><td>الصلاحيات والأدوار</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/access-control</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام</td></tr>
+        <tr><td>خريطة النظام</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/arch-wiki</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام</td></tr>
+        <tr><td>الأرشيف التأسيسي</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/archive</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td>مساعد الاجتماعات</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/meeting-assistant</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · مستخدم إدارة</td></tr>
+        <tr><td colspan="4" style="background:#f5f7fb;font-weight:800;color:var(--navy);">طلبات الإدارات</td></tr>
+        <tr><td>طلب توظيف</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/hiring-requests</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · مستخدم إدارة</td></tr>
+        <tr><td>تقييم مدير المستودعات</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/wh-manager-eval</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مستخدم إدارة</td></tr>
+        <tr><td>المهام</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/tasks</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · مفتّش الجودة · ضابط البوابة · موظف المشتريات · مسؤول المرتجعات · مستخدم إدارة</td></tr>
+        <tr><td>مساعد الاجتماعات</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/meeting-assistant</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · مستخدم إدارة</td></tr>
+<!-- ORG:PORTAL-PAGES:END -->
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================================================
      15 — JOB CARDS
      ============================================================ -->
 <div class="chapter" id="s-jobs">
@@ -2181,132 +2290,184 @@ tr:hover td { background: #fff8f0; }
     <h2>بطاقات الوصف الوظيفي التفصيلية</h2>
   </div>
 
-  <!-- Job 1 -->
+  <!-- ORG:JOBS:START — مولَّد من src/data/org-structure.json — لا تحرّره يدويًّا -->
   <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--navy);">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
-      <span style="font-size:24px;">🧭</span>
-      <div><div style="font-size:15px;font-weight:800;color:var(--navy);">مدير إدارة المستودعات التنفيذي</div><div style="font-size:11px;color:#888;">الطبقة الاستراتيجية | Inventory Manager (Admin)</div></div>
+      <span style="font-size:24px;">🛡️</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">رئيس قسم الحوكمة المستندية</div><div style="font-size:11px;color:#888;">قسم الحوكمة المستندية | Document Governance Manager (Admin)</div></div>
+      <span style="background:#e8f5ee;color:#1e7a46;font-size:10px;font-weight:700;padding:2px 8px;border:1px solid #bfe3cf;white-space:nowrap;">مشغول</span>
     </div>
     <ul style="columns:2;gap:20px;">
-      <li>الإشراف الكامل على عمليات الاستلام والتخزين والصرف والجرد</li>
-      <li>اعتماد التسويات الكبرى، تعديلات المخزون اليدوية، أوامر التخريد (Scrap)</li>
-      <li>الاعتماد النهائي لـ GRN والفروقات والتحويلات العاجلة وGate Pass</li>
-      <li>مراجعة جميع التقارير (Valuation, Audit Logs) وضمان دقة ≥ 98.5%</li>
-      <li>رفع تقارير الأداء الشهرية لمجلس الإدارة والإدارة التجارية</li>
-      <li>الإشراف على فريق الحوكمة المستندية وتقنية المعلومات</li>
+      <li>توثيق واعتماد أذونات الإضافة والصرف والتحويل، وإدراج وترحيل الحركات المخزنية اليومية في نظام ERP (أودو)</li>
+      <li>التحقق من مطابقة كل حركة مخزنية للدورة المستندية المعتمدة قبل الإدراج والترحيل النهائي</li>
+      <li>إصدار وتحديث أدلة السياسات والإجراءات (SOPs) واللوائح التنظيمية</li>
+      <li>تصميم مصفوفة الصلاحيات وضوابط الرقابة الداخلية (Internal Controls)</li>
+      <li>مراجعة سجلات الأنشطة (Audit Logs) يومياً والتحقق من الالتزام بمسارات الموافقة المعتمدة</li>
+      <li>تقديم تقارير دورية للإدارة العامة حول اكتمال ودقة التوثيق</li>
     </ul>
     <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
-      <strong>أودو:</strong> Inventory Manager (Admin) | الوحدات: Inventory, Barcode, Quality, Reporting | التبعية المباشرة: المدير العام / مجلس الإدارة
+      <strong>أودو:</strong> Document Governance Manager (Admin) | الوحدات: Inventory (Entry/Post), Audit Logs | التبعية: مدير إدارة السلاسل والإمداد والمخازن | KPIs: نسبة اكتمال التوثيق، دقة الترحيل، الالتزام بالدورة المستندية
     </div>
   </div>
-
-  <!-- Job 2 -->
   <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--blue);">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
       <span style="font-size:24px;">💻</span>
-      <div><div style="font-size:15px;font-weight:800;color:var(--navy);">مدير إدارة سلاسل الإمداد</div><div style="font-size:11px;color:#888;">الطبقة الاستراتيجية | Supply Chain Manager (Admin)</div></div>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">مدير إدارة الخدمات اللوجستية والخدمية</div><div style="font-size:11px;color:#888;">القيادة العليا — تبعية مباشرة | Supply Chain Manager (Admin)</div></div>
+      <span style="background:#e8f5ee;color:#1e7a46;font-size:10px;font-weight:700;padding:2px 8px;border:1px solid #bfe3cf;white-space:nowrap;">مشغول — رمزي الباش</span>
     </div>
     <ul style="columns:2;gap:20px;">
-      <li>تصميم وتطوير استراتيجية سلاسل الإمداد الكاملة لـ Brandzo Hub</li>
-      <li>الإشراف على العمليات اللوجستية والأسطول والعمالة الخارجية</li>
-      <li>تحليل بيانات KPI ورفع توصيات التحسين للإدارة التنفيذية</li>
-      <li>إدارة علاقات الموردين الاستراتيجيين وعقود التوريد الرئيسية</li>
+      <li>التنسيق الاستراتيجي للتدفقات اللوجستية وتخطيط الموارد</li>
+      <li>الإشراف على قسم العمليات اللوجستية (النقل، الحركة، العمالة)</li>
+      <li>إدارة توزيع الموارد والعمالة بين الأقسام التشغيلية</li>
+      <li>تخطيط التوريد وضمان استمرارية السلسلة دون تملك المخزون</li>
+      <li>تحليل كفاءة العمليات الميدانية وتقديم الدعم اللوجستي للمستودعات</li>
+      <li>المسؤول عن جاهزية الأسطول والمعدات والقوى العاملة</li>
     </ul>
     <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
-      <strong>أودو:</strong> Supply Chain Manager (Admin) | الوحدات: Purchase, Inventory, Fleet, Dashboard | التبعية: المدير العام
+      <strong>أودو:</strong> Supply Chain Manager (Admin) | الوحدات: Purchase, Inventory, Planning | التبعية: مدير إدارة السلاسل والإمداد والمخازن | KPIs: جاهزية الأسطول، كفاءة توزيع العمالة، تكلفة النقل
     </div>
   </div>
-
-  <!-- Job 3 -->
   <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--orange);">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
-      <span style="font-size:24px;">🛡️</span>
-      <div><div style="font-size:15px;font-weight:800;color:var(--navy);">رئيس قسم الحوكمة المستندية</div><div style="font-size:11px;color:#888;">وحدة توثيق واعتماد ضمن فريق المستودع | Document Governance Manager (Admin)</div></div>
+      <span style="font-size:24px;">🧭</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">رئيس قسم عمليات المستودعات</div><div style="font-size:11px;color:#888;">قسم عمليات المستودعات | Warehouse Manager (Admin)</div></div>
+      
     </div>
     <ul style="columns:2;gap:20px;">
-      <li>صياغة ومراجعة الإجراءات التشغيلية الموحدة (SOPs)</li>
-      <li>توثيق واعتماد أذونات الإضافة والصرف والتحويل، وإدراج وترحيل الحركات المخزنية اليومية في نظام ERP (أودو)</li>
-      <li>التحقق من مطابقة كل حركة مخزنية للدورة المستندية المعتمدة قبل الإدراج والترحيل النهائي</li>
-      <li>مراجعة سجلات الأنشطة (Audit Logs) يومياً والتحقق من الالتزام بمسارات الموافقة المعتمدة</li>
+      <li>المالك الرسمي للمخزون والمسؤول عن دقة وسلامة الأرصدة</li>
+      <li>الإشراف على قسم عمليات المستودع (استلام، تخزين، صرف، مرتجعات)</li>
+      <li>ضمان الالتزام الصارم بقواعد FEFO والباركود في كافة التحركات</li>
+      <li>إدارة المساحات التخزينية وتحسين كفاءة التنفيذ الميداني</li>
+      <li>المسؤول عن مطابقة الجرد الفعلي مع النظام (Stock Accountability)</li>
+      <li>سلطة اتخاذ القرار في تنفيذ الحركات المخزونية اليومية</li>
     </ul>
-    <div style="background:#fff5f5;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
-      <strong>أودو:</strong> Document Governance Manager (Admin) | الوحدات: Inventory (Entry/Post), Audit Logs | التبعية: مباشرة لمدير المستودع التنفيذي
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Warehouse Manager (Admin) | الوحدات: Inventory, Barcode, Quality | التبعية: مدير إدارة السلاسل والإمداد والمخازن | KPIs: دقة المخزون (98.5%+)، إنتاجية السحب، سرعة الاستلام
     </div>
   </div>
-
-  <!-- Job 4 -->
   <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--teal);">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
       <span style="font-size:24px;">🔬</span>
-      <div><div style="font-size:15px;font-weight:800;color:var(--navy);">مدير إدارة الجودة</div><div style="font-size:11px;color:#888;">إدارة مساندة مستقلة | Quality Manager (Admin)</div></div>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">مدير إدارة الجودة</div><div style="font-size:11px;color:#888;">وظيفة مساندة — Support Function | Quality Manager (Admin)</div></div>
+      
     </div>
     <ul style="columns:2;gap:20px;">
-      <li>الإشراف على نقاط التحكم الحرجة (CCPs) وبرنامج HACCP</li>
-      <li>قبول/رفض دفعات الاستلام (Quality Release) وإصدار تقارير الجودة</li>
-      <li>فتح وإدارة الإجراءات التصحيحية والوقائية (CAPA)</li>
-      <li>مراقبة درجات الحرارة وصلاحية المنتجات ونظافة المرافق</li>
+      <li>المسؤول عن التحقق التشغيلي من تطبيق قواعد الجودة السلامة</li>
+      <li>إجراء عمليات التدقيق والفحص الميداني (Audits &amp; Inspections)</li>
+      <li>إدارة برامج الإجراءات التصحيحية والوقائية (CAPA Programs)</li>
+      <li>الإشراف على جودة المنتجات في المستودعات والمطاعم والأسواق</li>
+      <li>التحقق من سلامة سلسلة التبريد ومعايير التخزين والتحضير</li>
+      <li>رفع تقارير عدم المطابقة ومتابعة فعاليتها التحسينية</li>
     </ul>
-    <div style="background:#f0fafa;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
-      <strong>أودو:</strong> Quality Manager (Admin) | الوحدات: Quality, Inventory (Read) | التبعية: إدارة الجودة (إدارة مساندة مستقلة) — ترفع تقاريرها مباشرة للمدير العام / مجلس الإدارة، دون ارتباط تشغيلي بإدارة المستودعات
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Quality Manager (Admin) | الوحدات: Quality, Inventory (Read) | التبعية: وظيفيًّا: الإدارة العامة · تشغيليًّا: إدارة الجودة (إدارة مساندة مستقلة) — دون ارتباط تشغيلي بإدارة المستودعات
     </div>
   </div>
-
-  <!-- Job 5 -->
-  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--green);">
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--navy);">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
-      <span style="font-size:24px;">📥</span>
-      <div><div style="font-size:15px;font-weight:800;color:var(--navy);">مشرف الاستلام</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Inventory User</div></div>
+      <span style="font-size:24px;">💼</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">مدير الإدارة التجارية</div><div style="font-size:11px;color:#888;">وظيفة مساندة — Support Function | Commercial Manager (Admin)</div></div>
+      
     </div>
     <ul style="columns:2;gap:20px;">
-      <li>الاستلام الفعلي للشحنات ومطابقة كميات PO مع الواقع الفعلي</li>
-      <li>إنشاء مسودة GRN وطلب فحص الجودة وتحديث تواريخ الصلاحية</li>
-      <li>التواصل مع الموردين لحل أي تباين في الكميات أو الجودة</li>
-      <li>تأكيد الاستلام فقط بعد توقيع الجودة — لا صلاحية لتعديل الرصيد</li>
+      <li>إدارة الأنشطة التجارية وعلاقات الموردين واتفاقيات الشراء</li>
+      <li>الإشراف المباشر على قسم المشتريات وضمان أفضل شروط توريد</li>
+      <li>تحليل السوق واختيار الموردين المعتمدين وتطوير الشراكات</li>
+      <li>المسؤول عن دورة الشراء من الطلب وحتى وصول البضاعة للمستودع</li>
+      <li>التنسيق مع المالية لضمان سداد مستحقات الموردين وتطبيق العقود</li>
     </ul>
-    <div style="background:#f0fff4;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
-      <strong>أودو:</strong> Inventory User | الوحدات: Inventory, Barcode | التبعية: إدارة المستودعات
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Commercial Manager (Admin) | الوحدات: Purchase, Sales | التبعية: وظيفيًّا: الإدارة العامة · تشغيليًّا: إدارة سلاسل الإمداد (دعم التوريد)
     </div>
   </div>
-
-  <!-- Job 6 -->
-  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--purple);">
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--blue);">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
-      <span style="font-size:24px;">📦</span>
-      <div><div style="font-size:15px;font-weight:800;color:var(--navy);">مشغل الصرف (Picker)</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Inventory User (Barcode)</div></div>
+      <span style="font-size:24px;">💰</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">مدير إدارة المالية</div><div style="font-size:11px;color:#888;">وظيفة مساندة — Support Function | Finance Manager (Admin)</div></div>
+      
     </div>
     <ul style="columns:2;gap:20px;">
-      <li>تنفيذ قوائم السحب (Picking Lists) وفق توجيهات FEFO من النظام</li>
-      <li>مسح الباركود لكل صنف وتأكيد الكميات الفعلية</li>
-      <li>تجهيز الطلبات وتسليمها لقسم التعبئة (Packing)</li>
-      <li>الإبلاغ الفوري عن أي اختلاف بين المخزون الفعلي والنظامي</li>
+      <li>الرقابة المالية الشاملة على التدفقات النقدية والأصول والمخزون</li>
+      <li>إدارة الميزانيات والتحليل المالي لنتائج التشغيل</li>
+      <li>التحقق المالي من فواتير الموردين ومطابقتها مع الاستلام (3-Way Match)</li>
+      <li>الإشراف على عمليات الجرد المالي السنوي والمطابقة الدفترية</li>
+      <li>إصدار التقارير المالية الدورية للإدارة العامة</li>
     </ul>
-    <div style="background:#f5f0ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
-      <strong>أودو:</strong> Inventory User (Barcode) | الوحدات: Barcode, Inventory | التبعية: قسم عمليات المستودع
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Finance Manager (Admin) | الوحدات: Accounting, Invoicing | التبعية: وظيفيًّا: الإدارة العامة · تشغيليًّا: إدارة المستودعات (رقابة الأصول)
     </div>
   </div>
-
-  <!-- Job 7 -->
-  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--gold);">
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--orange);">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
-      <span style="font-size:24px;">🚚</span>
-      <div><div style="font-size:15px;font-weight:800;color:var(--navy);">مشرف الشحن</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Inventory User</div></div>
+      <span style="font-size:24px;">💾</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">مدير الإدارة التقنية</div><div style="font-size:11px;color:#888;">وظيفة مساندة — Support Function | IT Manager (Admin)</div></div>
+      
     </div>
     <ul style="columns:2;gap:20px;">
-      <li>إصدار أذونات النقل الداخلي وتصاريح خروج البوابة (Gate Pass)</li>
-      <li>التأكد من مطابقة الشحنات مع أوامر التسليم قبل الخروج</li>
-      <li>تنسيق جداول السيارات مع مدير العمليات</li>
-      <li>اعتماد أوامر التسليم النهائية (Delivery Orders)</li>
+      <li>إدارة وتطوير البنية التحتية التقنية ونظام Odoo ERP</li>
+      <li>ضمان أمن البيانات واستمرارية عمل الأنظمة والشبكات</li>
+      <li>تقديم الدعم الفني لمستخدمي أجهزة الباركود والطابعات</li>
+      <li>إدارة صلاحيات الوصول بناءً على مصفوفة الحوكمة المعتمدة</li>
+      <li>مواكبة التطورات التقنية لتحسين كفاءة العمليات الرقمية</li>
     </ul>
-    <div style="background:#fffdf0;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
-      <strong>أودو:</strong> Inventory User | الوحدات: Inventory, Fleet | التبعية: قسم عمليات المستودع
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> IT Manager (Admin) | الوحدات: Settings, Technical Support | التبعية: وظيفيًّا: الإدارة العامة · تشغيليًّا: إدارة سلاسل الإمداد (دعم الأنظمة)
     </div>
   </div>
-
-  <!-- Job 8 -->
   <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--teal);">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
-      <span style="font-size:24px;">🔍</span>
-      <div><div style="font-size:15px;font-weight:800;color:var(--navy);">فاحص الجودة (QC Inspector)</div><div style="font-size:11px;color:#888;">وحدة جودة (إدارة مساندة مستقلة) | Quality User</div></div>
+      <span style="font-size:24px;">👥</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">مدير الموارد البشرية</div><div style="font-size:11px;color:#888;">وظيفة مساندة — Support Function | HR Manager (Admin)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>تخطيط القوى العاملة وإدارة عمليات التوظيف والتدريب</li>
+      <li>إدارة شؤون الموظفين والرواتب والتعويضات والامتثال العمالي</li>
+      <li>تطوير الأداء المؤسسي والثقافة التنظيمية للشركة</li>
+      <li>ضمان توفر الكوادر المؤهلة لكل الأقسام التشغيلية</li>
+      <li>إدارة علاقات الموظفين والبيئة العملية المحفزة</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> HR Manager (Admin) | الوحدات: Employees, Payroll, Recruitment | التبعية: وظيفيًّا: الإدارة العامة
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--navy);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">⚙️</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">قسم العمليات اللوجستية</div><div style="font-size:11px;color:#888;">وحدة تشغيلية (سلاسل الإمداد) | Operations User (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>إدارة حركة النقل وتوزيع الشحنات اليومية</li>
+      <li>الإشراف على العمالة اليدوية وتوزيع المهام الميدانية</li>
+      <li>متابعة صيانة المعدات والآليات وضمان جاهزيتها</li>
+      <li>تأمين المرافق وإدارة خدمات النظافة والأمن الصناعي</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Operations User (User) | الوحدات: Fleet, Maintenance, Labor | التبعية: إدارة سلاسل الإمداد
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--blue);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">📦</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">قسم عمليات المستودع</div><div style="font-size:11px;color:#888;">وحدة تشغيلية (المستودعات) | Inventory User (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>تنفيذ عمليات الاستلام والتفريغ وفحص الكميات</li>
+      <li>إدارة عمليات التخزين الموجه Putaway في المواقع</li>
+      <li>سحب وتعبئة الطلبات Picking &amp; Packing بدقة عالية</li>
+      <li>معالجة المرتجعات وتسويتها في النظام فوراً</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Inventory User (User) | الوحدات: Inventory, Barcode | التبعية: إدارة المستودعات
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--orange);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">🔬</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">موظف الجودة</div><div style="font-size:11px;color:#888;">وظيفة رقابية مساندة | Quality User (User)</div></div>
+      
     </div>
     <ul style="columns:2;gap:20px;">
       <li>التنفيذ الميداني لعمليات الفحص والتدقيق في كافة المواقع</li>
@@ -2314,16 +2475,15 @@ tr:hover td { background: #fff8f0; }
       <li>مراقبة درجات الحرارة وصلاحية المنتجات ونظافة المرافق</li>
       <li>التحقق من التزام العمالة بالمعايير الصحية والمهنية</li>
     </ul>
-    <div style="background:#f0fafa;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
-      <strong>أودو:</strong> Quality User | الوحدات: Quality, Inventory (Read) | التبعية: إدارة الجودة (إدارة مساندة مستقلة)، دون ارتباط تشغيلي بإدارة المستودعات
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Quality User (User) | الوحدات: Quality, Inventory (Read) | التبعية: وظيفيًّا: إدارة الجودة · تشغيليًّا: إدارة الجودة (إدارة مساندة مستقلة)
     </div>
   </div>
-
-  <!-- Job 9 -->
-  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--orange);">
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--teal);">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
       <span style="font-size:24px;">🛒</span>
-      <div><div style="font-size:15px;font-weight:800;color:var(--navy);">موظف التجارية / المشتريات</div><div style="font-size:11px;color:#888;">وظيفة دعم تجاري | Purchase User</div></div>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">موظف التجارية / المشتريات</div><div style="font-size:11px;color:#888;">وظيفة دعم تجاري | Purchase User (User)</div></div>
+      
     </div>
     <ul style="columns:2;gap:20px;">
       <li>تنفيذ طلبات الشراء والتفاوض مع الموردين على الأسعار</li>
@@ -2331,16 +2491,15 @@ tr:hover td { background: #fff8f0; }
       <li>تحديث بيانات الأصناف والموردين في نظام أودو</li>
       <li>التنسيق مع المستودع لجدولة الاستلامات الواردة</li>
     </ul>
-    <div style="background:#fff5f5;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
-      <strong>أودو:</strong> Purchase User | الوحدات: Purchase | التبعية الوظيفية: الإدارة التجارية | التبعية التشغيلية: إدارة سلاسل الإمداد
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Purchase User (User) | الوحدات: Purchase | التبعية: وظيفيًّا: الإدارة التجارية · تشغيليًّا: إدارة سلاسل الإمداد
     </div>
   </div>
-
-  <!-- Job 10 -->
-  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--green);">
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--navy);">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
       <span style="font-size:24px;">📊</span>
-      <div><div style="font-size:15px;font-weight:800;color:var(--navy);">موظف المالية / المحاسبة</div><div style="font-size:11px;color:#888;">وظيفة دعم مالي | Accountant (User)</div></div>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">موظف المالية / المحاسبة</div><div style="font-size:11px;color:#888;">وظيفة دعم مالي | Accountant (User)</div></div>
+      
     </div>
     <ul style="columns:2;gap:20px;">
       <li>تسجيل القيود المحاسبية وفواتير الموردين والعملاء</li>
@@ -2348,16 +2507,15 @@ tr:hover td { background: #fff8f0; }
       <li>المشاركة في عمليات الجرد الفعلي ومطابقته دفترياً</li>
       <li>إعداد مسودات التقارير المالية الشهرية</li>
     </ul>
-    <div style="background:#f0fff4;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
-      <strong>أودو:</strong> Accounting User | الوحدات: Accounting, Invoicing | التبعية الوظيفية: إدارة المالية | التبعية التشغيلية: إدارة المستودعات
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Accountant (User) | الوحدات: Accounting | التبعية: وظيفيًّا: إدارة المالية · تشغيليًّا: إدارة المستودعات
     </div>
   </div>
-
-  <!-- Job 11 -->
   <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--blue);">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
       <span style="font-size:24px;">💾</span>
-      <div><div style="font-size:15px;font-weight:800;color:var(--navy);">موظف تقنية المعلومات</div><div style="font-size:11px;color:#888;">وظيفة دعم تقني | System User</div></div>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">موظف تقنية المعلومات</div><div style="font-size:11px;color:#888;">وظيفة دعم تقني | System User (User)</div></div>
+      
     </div>
     <ul style="columns:2;gap:20px;">
       <li>تقديم الدعم التقني اليومي لمستخدمي نظام Odoo وحل المشكلات</li>
@@ -2366,15 +2524,31 @@ tr:hover td { background: #fff8f0; }
       <li>توفير التدريب المستمر للموظفين على الأدوات التقنية الجديدة</li>
     </ul>
     <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
-      <strong>أودو:</strong> System User | الوحدات: Technical Support, All Modules (Read) | التبعية الوظيفية: الإدارة التقنية | التبعية التشغيلية: إدارة سلاسل الإمداد
+      <strong>أودو:</strong> System User (User) | الوحدات: Technical Support | التبعية: وظيفيًّا: الإدارة التقنية · تشغيليًّا: إدارة سلاسل الإمداد
     </div>
   </div>
-
-  <!-- Job 12 -->
   <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--orange);">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">⚖️</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">موظف الحوكمة المستندية</div><div style="font-size:11px;color:#888;">وحدة الحوكمة المستندية | Document Governance User (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>توثيق واعتماد أذونات الإضافة والصرف والتحويل قبل إدراجها بالنظام</li>
+      <li>إدراج وترحيل الحركات المخزنية اليومية في نظام ERP (أودو) بعد التحقق من مطابقتها للدورة المستندية</li>
+      <li>مراجعة السجلات اليومية (Audit Logs) لضمان صحة العمليات</li>
+      <li>التأكد من توقيع كافة المستندات والاعتمادات حسب الأصول</li>
+      <li>تحديث مسودات SOPs بناءً على المتطلبات التشغيلية</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Document Governance User (User) | الوحدات: Inventory (Entry/Post), Audit Logs | التبعية: قسم الحوكمة المستندية
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--teal);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
       <span style="font-size:24px;">⚙️</span>
-      <div><div style="font-size:15px;font-weight:800;color:var(--navy);">مدير العمليات (Operations Manager)</div><div style="font-size:11px;color:#888;">قسم العمليات اللوجستية | Operations Admin (Manager)</div></div>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">مدير العمليات (Operations Manager)</div><div style="font-size:11px;color:#888;">قسم العمليات اللوجستية | Operations Admin (Manager)</div></div>
+      
     </div>
     <ul style="columns:2;gap:20px;">
       <li>إدارة حركة أسطول النقل بالكامل (Transport Management)</li>
@@ -2382,10 +2556,331 @@ tr:hover td { background: #fff8f0; }
       <li>الإشراف على صيانة المعدات (رافعة شوكية، ترولي) وجاهزيتها</li>
       <li>المسؤول عن الأمن والحراسة ونظافة المرافق اللوجستية</li>
     </ul>
-    <div style="background:#fff5f5;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
       <strong>أودو:</strong> Operations Admin (Manager) | الوحدات: Fleet, Labor, Maintenance | التبعية: إدارة سلاسل الإمداد
     </div>
   </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--navy);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">📦</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">رئيس قسم عمليات المستودع</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Inventory Admin (Manager)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>الإشراف الميداني المباشر على (استلام، تخزين، صرف، مرتجعات)</li>
+      <li>تحسين تدفق العمل الميداني وتقليل زمن الدورة التشغيلية</li>
+      <li>حل المعوقات الميدانية فوراً لضمان استمرارية العمل</li>
+      <li>التنسيق مع منسق العمليات لتوفير العمالة اللازمة لكل وردية</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Inventory Admin (Manager) | الوحدات: Inventory, Barcode | التبعية: إدارة المستودعات
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--blue);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">🚚</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">موظف النقل والحركة</div><div style="font-size:11px;color:#888;">العمليات اللوجستية | Fleet User (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>تنفيذ رحلات التوزيع اليومية للفروع والمطاعم</li>
+      <li>الالتزام بجدول المواعيد ومعايير سلامة الشحنة</li>
+      <li>تحديث حالة الشحنة في النظام فور الوصول والتسليم</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Fleet User (User) | الوحدات: Fleet, Dashboard | التبعية: قسم العمليات اللوجستية
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--orange);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">👔</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">مدير إدارة السلاسل والإمداد والمخازن</div><div style="font-size:11px;color:#888;">القيادة العليا — Executive Leadership | Executive Warehouse Manager (Admin)</div></div>
+      <span style="background:#e8f5ee;color:#1e7a46;font-size:10px;font-weight:700;padding:2px 8px;border:1px solid #bfe3cf;white-space:nowrap;">مشغول — محمد البرشي</span>
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>الإشراف التنفيذي الكامل على جميع عمليات المستودع والعمليات اللوجستية</li>
+      <li>ضمان تحقيق الأهداف الاستراتيجية ومعايير الأداء الشاملة</li>
+      <li>التنسيق بين جميع الأقسام التشغيلية وضمان التكامل بينها</li>
+      <li>اتخاذ القرارات الإدارية الحرجة بشأن توزيع الموارد والاستثمارات</li>
+      <li>تقديم التقارير الشهرية للإدارة العامة حول أداء المستودع</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Executive Warehouse Manager (Admin) | الوحدات: Inventory, Barcode, Quality, Fleet | التبعية: الإدارة العامة | KPIs: دقة المخزون، إنتاجية العمليات، رضا العملاء
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--teal);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">📋</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">فريق صياغة المعايير والإجراءات (SOPs)</div><div style="font-size:11px;color:#888;">وحدة الحوكمة المستندية | SOP Writer (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>صياغة وتوثيق معايير التشغيل الموحدة (SOPs) لجميع العمليات</li>
+      <li>تحديث الإجراءات بناءً على التطورات والدروس المستفادة</li>
+      <li>ضمان وضوح الإجراءات وسهولة فهمها من قبل جميع الموظفين</li>
+      <li>توثيق أفضل الممارسات وتعميمها على جميع الفروع</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> SOP Writer (User) | الوحدات: Documentation | التبعية: قسم الحوكمة المستندية | KPIs: نسبة اكتمال SOPs، درجة التطبيق الفعلي
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--navy);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">📊</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">موظف إدخال وترحيل الحركات المخزنية</div><div style="font-size:11px;color:#888;">وحدة الحوكمة المستندية | Inventory Posting User (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>إدراج وترحيل جميع الحركات المخزنية في نظام ERP (أودو) بدقة</li>
+      <li>التحقق من صحة البيانات المدخلة ومطابقتها للمستندات الأصلية</li>
+      <li>توثيق المستندات المرفوعة ومراجعة الأرصدة النهائية</li>
+      <li>معالجة التعديلات والتصحيحات في الوقت المناسب</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Inventory Posting User (User) | الوحدات: Inventory (Entry/Post), Audit Logs | التبعية: قسم الحوكمة المستندية | KPIs: دقة الترحيل (100%)، سرعة المعالجة
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--blue);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">🔧</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">مدير الصيانة والمعدات</div><div style="font-size:11px;color:#888;">وحدة صيانة الأسطول والمعدات | Maintenance Manager (Manager)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>الإشراف على صيانة جميع المعدات والآليات (رافعات شوكية، ترولي، أسطول النقل)</li>
+      <li>جدولة الصيانة الدورية والعاجلة وضمان إكمالها في الوقت المحدد</li>
+      <li>تقييم حالة المعدات وتوصية بالإصلاح أو الاستبدال</li>
+      <li>تسجيل سجلات الصيانة والنفقات في نظام الإدارة</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Maintenance Manager (Manager) | الوحدات: Maintenance, Fleet | التبعية: قسم العمليات اللوجستية | KPIs: نسبة جاهزية الأسطول، تكاليف الصيانة
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--orange);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">🛡️</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">فريق الأمن الصناعي والسلامة</div><div style="font-size:11px;color:#888;">وحدة الأمن والسلامة | Safety Officer (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>تنفيذ معايير الأمن والسلامة الصناعية في جميع المرافق</li>
+      <li>إجراء جولات تفتيشية دورية والتحقق من الالتزام بقواعس الأمان</li>
+      <li>توثيق الحوادث والإصابات وتقديم توصيات لمنع تكرارها</li>
+      <li>تدريب الموظفين على معايير السلامة والمخاطر</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Safety Officer (User) | الوحدات: Safety, Compliance | التبعية: قسم العمليات اللوجستية | KPIs: عدد الحوادث، درجة الالتزام بالمعايير
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--teal);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">👷</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">وحدة إدارة العمالة الخارجية</div><div style="font-size:11px;color:#888;">وحدة تشغيل العمالة | Labor Management (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>تنسيق وإدارة العمالة الخارجية المؤقتة والدائمة</li>
+      <li>ضمان توفر الأيدي العاملة المؤهلة حسب احتياجات العمليات اليومية</li>
+      <li>متابعة الأداء والحضور والالتزام بالسلوك المهني</li>
+      <li>التنسيق مع الموارد البشرية بشأن التعاقد والرواتب</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Labor Management (User) | الوحدات: Labor, Payroll | التبعية: إدارة الموارد البشرية / قسم العمليات اللوجستية | KPIs: معدل التوفر، نسبة الحضور، رضا الأداء
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--navy);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">🔍</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">وحدة الاستلام والرقابة</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Receiving Supervisor (Manager)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>الإشراف على تنفيذ عمليات الاستلام والتفريغ الكامل</li>
+      <li>التحقق من كميات وأنواع البضائع مقابل فواتير الشراء</li>
+      <li>إجراء الفحص الأولي وتسجيل أي نواقص أو أضرار</li>
+      <li>ضمان دقة المستندات وتسجيلها في النظام قبل نقل البضائع للتخزين</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Receiving Supervisor (Manager) | الوحدات: Inventory, Quality | التبعية: قسم عمليات المستودع | KPIs: دقة الاستقبال (99%+)، سرعة المعالجة
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--blue);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">📄</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">موظف قسم التحقق من المستندات</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Document Verification (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>التحقق من اكتمال ودقة جميع المستندات المرافقة للبضائع</li>
+      <li>مطابقة البيانات المستندية مع بيانات النظام</li>
+      <li>تسجيل أي تناقضات وإبلاغ الإدارة عنها فوراً</li>
+      <li>حفظ نسخ من المستندات ووضع علامات الموافقة عليها</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Document Verification (User) | الوحدات: Inventory, Documentation | التبعية: قسم عمليات المستودع | KPIs: دقة المطابقة، سرعة التحقق
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--orange);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">📍</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">وحدة التخزين وتحديد المواقع</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Putaway Supervisor (Manager)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>إدارة عمليات التخزين الموجه (Putaway) والتموضع المحسّن</li>
+      <li>تطبيق قواعس FEFO وتحديد المواقع المثلى للبضائع</li>
+      <li>الإشراف على تنظيم المستودع وضمان سهولة الوصول</li>
+      <li>تحديث خرائط التخزين والتنسيق مع عمليات الصرف</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Putaway Supervisor (Manager) | الوحدات: Inventory, Barcode | التبعية: قسم عمليات المستودع | KPIs: كفاءة الفراغ، سرعة التخزين
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--teal);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">📦</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">قسم التخزين الجاف</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Dry Storage Unit (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>تنفيذ عمليات التخزين والحفاظ على ظروف التخزين المناسبة</li>
+      <li>الامتثال لقواعس الترتيب والنظافة والسلامة في المخزن الجاف</li>
+      <li>التحقق الدوري من صلاحيات المنتجات وتطبيق FEFO</li>
+      <li>الإبلاغ عن أي تلف أو ضرر أثناء عمليات التخزين</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Dry Storage Unit (User) | الوحدات: Inventory, Barcode | التبعية: وحدة التخزين وتحديد المواقع | KPIs: دقة الأرصدة، سرعة الاستجابة
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--navy);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">❄️</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">قسم التخزين البارد</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Cold Storage Unit (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>إدارة عمليات التخزين البارد والتجميد والتبريد</li>
+      <li>مراقبة درجات الحرارة والرطوبة والحفاظ على معايير السلامة الغذائية</li>
+      <li>تطبيق معايير FEFO وضمان عدم انقطاع السلسلة الباردة</li>
+      <li>تسجيل قراءات درجات الحرارة يومياً وإبلاغ عن أي انحرافات</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Cold Storage Unit (User) | الوحدات: Inventory, Quality | التبعية: وحدة التخزين وتحديد المواقع | KPIs: ثبات درجات الحرارة، صفر انقطاعات سلسلة برد
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--blue);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">📲</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">قسم الباركود والتسمية</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Barcode &amp; Labeling (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>طباعة وتطبيق الباركودات على جميع البضائع الواردة</li>
+      <li>ضمان صحة الباركودات وتطابقها مع بيانات النظام</li>
+      <li>تحديث تسميات المنتجات وتصحيح البيانات عند الحاجة</li>
+      <li>صيانة أجهزة الطباعة والماسحات الضوئية</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Barcode &amp; Labeling (User) | الوحدات: Barcode, Inventory | التبعية: قسم عمليات المستودع | KPIs: دقة الباركودات (99.9%+)، سرعة التطبيق
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--orange);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">🎯</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">وحدة تحضير الطلبات والصرف</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Order Fulfillment Supervisor (Manager)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>الإشراف على تحضير الطلبات وفقاً لأوامر التوزيع</li>
+      <li>ضمان دقة تجميع البضائع وسرعة المعالجة</li>
+      <li>تنسيق بين عمليات الانتقاء والتعبئة والشحن</li>
+      <li>معالجة الطلبات الخاصة والعاجلة</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Order Fulfillment Supervisor (Manager) | الوحدات: Inventory, Barcode | التبعية: قسم عمليات المستودع | KPIs: دقة الطلبات (99%+)، زمن التحضير
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--teal);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">👆</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">قسم الانتقاء (Picking)</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Picking Operator (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>استلام أوامر الانتقاء من النظام وتنفيذها بدقة</li>
+      <li>استخدام أجهزة المسح الضوئي لقراءة الباركودات والتحقق</li>
+      <li>تجميع البضائع حسب الكميات المطلوبة والمواقع الصحيحة</li>
+      <li>الإبلاغ عن أي نقص أو بضائع غير متوفرة على الفور</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Picking Operator (User) | الوحدات: Inventory, Barcode | التبعية: وحدة تحضير الطلبات والصرف | KPIs: دقة الانتقاء (99.5%+)، إنتاجية الموظف
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--navy);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">📦</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">قسم التعبئة والتغليف</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Packing Operator (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>تعبئة البضائع المجمعة في صناديق ورزم مناسبة</li>
+      <li>ضمان سلامة المنتجات وعدم تعرضها للتلف أثناء التعبئة</li>
+      <li>إضافة ملصقات الشحن والمعلومات المطلوبة على كل رزمة</li>
+      <li>التحقق من وزن الرزم والامتثال لمعايير الشحن</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Packing Operator (User) | الوحدات: Inventory | التبعية: وحدة تحضير الطلبات والصرف | KPIs: سرعة التعبئة، نسبة الأخطاء
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--blue);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">🚚</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">قسم الشحن والتوزيع</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Shipping &amp; Dispatch (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>تنسيق عمليات تحميل البضائع على المركبات</li>
+      <li>إعداد وثائق الشحن والفواتير وبيانات التسليم</li>
+      <li>ضمان سلامة الحمولة وتأمينها بشكل صحيح</li>
+      <li>تتبع الشحنات وتحديث حالاتها في النظام</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Shipping &amp; Dispatch (User) | الوحدات: Fleet, Inventory | التبعية: وحدة تحضير الطلبات والصرف | KPIs: التزام الجداول الزمنية، نسبة الأضرار
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--orange);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">🔄</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">وحدة إدارة المرتجعات</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Returns Management (Manager)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>استقبال والتعامل مع البضائع المرتجعة من العملاء</li>
+      <li>فحص حالة المرتجعات وتصنيفها (صالح للبيع، تالف، انتهاء صلاحية)</li>
+      <li>معالجة المرتجعات في النظام وتحديث الأرصدة</li>
+      <li>التنسيق مع الموردين بشأن المرتجعات والمبالغ المستحقة</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Returns Management (Manager) | الوحدات: Inventory, Quality | التبعية: قسم عمليات المستودع | KPIs: سرعة المعالجة، دقة التصنيف
+    </div>
+  </div>
+  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--teal);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <span style="font-size:24px;">📥</span>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:800;color:var(--navy);">قسم استلام المرتجعات</div><div style="font-size:11px;color:#888;">قسم عمليات المستودع | Returns Receiving (User)</div></div>
+      
+    </div>
+    <ul style="columns:2;gap:20px;">
+      <li>استقبال البضائع المرتجعة وتسجيلها في النظام</li>
+      <li>الفحص الأولي للحالة والتحقق من الكميات</li>
+      <li>إصدار إشعارات الاستقبال والتقارير الأولية</li>
+      <li>توجيه المرتجعات إلى الفحص التفصيلي أو المعالجة</li>
+    </ul>
+    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+      <strong>أودو:</strong> Returns Receiving (User) | الوحدات: Inventory | التبعية: وحدة إدارة المرتجعات | KPIs: دقة التسجيل، سرعة الاستقبال
+    </div>
+  </div>
+<!-- ORG:JOBS:END -->
 </div>
 
 <!-- ============================================================
@@ -2791,7 +3286,7 @@ tr:hover td { background: #fff8f0; }
     <div class="toc-item"><span class="toc-num">م-٤</span><a href="#s-annex4">التقارير القياسية والتحليلية الكاملة</a></div>
     <div class="toc-item"><span class="toc-num">م-٥</span><a href="#s-annex5">الإضافات الاستراتيجية الشاملة (قيمة مضافة)</a></div>
     <div class="toc-item"><span class="toc-num">م-٦</span><a href="#s-annex6">إدارة الكوارث واستمرارية الأعمال — BCP</a></div>
-    <div class="toc-item"><span class="toc-num">م-٧</span><a href="#s-raci">مصفوفة RACI التكميلية للملاحق</a></div>
+    <div class="toc-item"><span class="toc-num">م-٧</span><a href="#s-raci-annex">مصفوفة RACI التكميلية للملاحق</a></div>
     <div class="toc-item"><span class="toc-num">م-٨</span><a href="#s-sig-annex">توقيعات الاعتماد الرسمية للملحق</a></div>
   </div>
 </div>
@@ -3553,7 +4048,7 @@ tr:hover td { background: #fff8f0; }
 <!-- ====================================================
      RACI SUPPLEMENT
      ==================================================== -->
-<div class="chapter navy-accent" id="s-raci">
+<div class="chapter navy-accent" id="s-raci-annex">
   <div class="chapter-head">
     <span class="chapter-num" style="background:var(--navy);">م-٧</span>
     <h2>مصفوفة RACI التكميلية — الملاحق م-١ إلى م-٦</h2>

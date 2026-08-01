@@ -1,6 +1,7 @@
 ---
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import FAQ from '../../components/brandzo-erp/FAQ.jsx';
+import org from '../../data/org-structure.json';
 
 const base = import.meta.env.BASE_URL.endsWith('/')
   ? import.meta.env.BASE_URL.slice(0, -1)
@@ -39,7 +40,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
         </div>
         
         <p class="mt-6 text-center text-xs text-ink-2">
-          ٨ إدارات رسمية تتفرّع إلى <strong class="text-brand-yellow">١٨ وظيفة معتمدة</strong> وفق تقرير هيكل الوظائف والأدوار.
+          ٨ إدارات رسمية تتفرّع إلى <strong class="text-brand-yellow">{org.jobs.length} وظيفة معتمدة</strong> وفق تقرير هيكل الوظائف والأدوار (العدّ من المصدر الواحد آليًّا).
         </p>
 
         <div class="mt-4 text-center flex flex-wrap justify-center gap-3">

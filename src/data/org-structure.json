@@ -296,7 +296,7 @@
             "type": "unit",
             "source": "report",
             "pages": [
-              "/dashboard/warehouse-maps"
+              "/dashboard/warehouses"
             ],
             "children": [
               {
@@ -312,7 +312,7 @@
                 "type": "subunit",
                 "source": "report",
                 "pages": [
-                  "/dashboard/cold-storage-plan"
+                  "/dashboard/warehouses"
                 ],
                 "children": []
               },
@@ -1308,6 +1308,24 @@
       "phase2": "~350 موظف",
       "role": "—"
     }
+  ],
+  "portalRoles": [
+    { "id": "admin", "org": "الإدارة العليا — فوق الهيكل التشغيلي (المدير العام)", "odoo": "Settings / Admin" },
+    { "id": "warehouse_manager", "org": "قسم عمليات المستودعات — رئيس القسم (J03)", "odoo": "Inventory Manager" },
+    { "id": "storekeeper", "org": "قسم عمليات المستودعات — وحدات الاستلام والتخزين", "odoo": "Inventory / Barcode User" },
+    { "id": "qc_inspector", "org": "إدارة الجودة (مساندة)", "odoo": "Quality User" },
+    { "id": "gate_officer", "org": "وحدة تصاريح البوابة والرحلات (مقترحة)", "odoo": "Inventory User (Gate)" },
+    { "id": "purchase_officer", "org": "المشتريات والإدارة التجارية (مساندة)", "odoo": "Purchase User" },
+    { "id": "finance_manager", "org": "الإدارة المالية (مساندة)", "odoo": "Accounting Manager" },
+    { "id": "return_manager", "org": "وحدة إدارة المرتجعات — قسم عمليات المستودعات", "odoo": "Inventory User (Returns)" },
+    { "id": "inventory_auditor", "org": "الجرد الدوري — بإشراف إدارة الجودة", "odoo": "Inventory Auditor" },
+    { "id": "viewer", "org": "اطّلاع رقابي — بلا موقع تنفيذي", "odoo": "—" },
+    { "id": "department_user", "org": "الإدارات المساندة (طلبات التوظيف والتقييم)", "odoo": "—" },
+    { "id": "fleet", "org": "قسم النقل والحركة", "odoo": "Fleet User" }
+  ],
+  "portalRoleGaps": [
+    "قسم الحوكمة المستندية بلا دور بوابة مخصّص — المقترح: استحداث دور doc_controller «موظف الحوكمة المستندية» (قرار مالك معلّق)",
+    "المرجع يفرّق بين موظف المشتريات ومدير المشتريات بينما البوابة بدور واحد purchase_officer — يُقيَّم الفصل عند التوسّع"
   ],
   "raci": {
     "stages": [
