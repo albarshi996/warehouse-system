@@ -25,7 +25,7 @@ const BASE =
   'w-full bg-chip border border-line rounded-lg px-3 py-2 text-sm text-ink ' +
   'placeholder:text-gray-500 focus:outline-none focus:border-accent/60 disabled:opacity-60';
 
-export default function DocRefField({ field, doc, value, onChange, disabled, onResolveParent }) {
+export default function DocRefField({ field, doc, value, onChange, disabled, onResolveParent, onRequestCreate }) {
   const [status, setStatus] = useState(null); // { kind, parent?, msg? }
   const parentType = field.docType;
   const linked = doc?.links?.[parentType]; // { id, number } إن رُبِط فعلًا
@@ -75,8 +75,17 @@ export default function DocRefField({ field, doc, value, onChange, disabled, onR
     chip = <span className="text-[11px] text-red-300">⚠️ {status.msg}</span>;
   } else if (status?.kind === 'notfound') {
     chip = (
-      <span className="text-[11px] text-amber-300">
-        ⚠️ لا مستند بهذا الرقم — تحقّق منه، أو أنشئ الأب أولًا ثم ارجع (الإنشاء المباشر لاحقًا).
+      <span className="inline-flex flex-wrap items-center gap-2 text-[11px] text-amber-300">
+        <span>⚠️ لا مستند بهذا الرقم.</span>
+        {onRequestCreate && !disabled && (
+          <button
+            type="button"
+            onClick={() => onRequestCreate(field, String(value || '').trim())}
+            className="rounded bg-accent/15 text-accent font-bold px-2 py-0.5 hover:bg-accent/25"
+          >
+            + أنشئ {parentType} الآن واربطه
+          </button>
+        )}
       </span>
     );
   } else if (status?.kind === 'error') {

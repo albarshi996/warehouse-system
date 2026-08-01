@@ -26,6 +26,7 @@ import { mergeParentLink } from '../../../services/documents/chain.js';
 import { lookupByBarcode } from '../../../services/itemService.js';
 import { isEditable } from '../../../services/documents/states.js';
 import FieldInput from './FieldInput.jsx';
+import InlineCreateModal from './InlineCreateModal.jsx';
 import LineItemsTable from './LineItemsTable.jsx';
 import Checklist from './Checklist.jsx';
 import StateBar from './StateBar.jsx';
@@ -50,6 +51,7 @@ export default function DocumentEngine() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [createFor, setCreateFor] = useState(null); // طلب إنشاء أبٍ مباشر (المرحلة ب٢)
 
   const schema = useMemo(() => getSchema(type), [type]);
 
@@ -161,6 +163,21 @@ export default function DocumentEngine() {
     }));
     setDirty(true);
     flash(`🔗 رُبِط بـ${parentDoc.type} ${parentDoc.number || ''} — تعمل المطابقة والسلسلة الآن.`);
+  }
+
+  /** طلب إنشاء الأب المفقود مباشرةً (المرحلة ب٢) — يفتح المعالج المصغّر. */
+  function requestCreateParent(field, typedNumber) {
+    setCreateFor({ field, parentType: field.docType, suggestedNumber: typedNumber });
+  }
+
+  /** نتيجة الإنشاء المباشر: إن أخذ الأب رقمًا شرعيًّا رُبِط فورًا. */
+  function onParentCreated(parentDoc, warnMsg) {
+    setCreateFor(null);
+    if (parentDoc?.number) {
+      resolveParent(createFor.field, parentDoc);
+    } else {
+      flash(warnMsg || `أُنشئ ${parentDoc?.type || ''} كمسودّة — يحتاج تقديمًا ثم ربطًا.`, 'err');
+    }
   }
 
   /** يحفظ ويُعيد معرّف المستند (يُنشئه إن كان جديدًا). */
@@ -303,6 +320,7 @@ export default function DocumentEngine() {
                       disabled={!editable}
                       onChange={patchHeader}
                       onResolveParent={resolveParent}
+                      onRequestCreate={requestCreateParent}
                       violation={violationFor(f, violations)}
                     />
                   ))}
@@ -310,7 +328,7 @@ export default function DocumentEngine() {
                 {section.extraFields?.length > 0 && (
                   <div className="grid gap-4 mt-4 md:grid-cols-2">
                     {section.extraFields.map((f) => (
-                      <FieldInput key={f.key} field={f} doc={doc} disabled={!editable} onChange={patchHeader} onResolveParent={resolveParent} />
+                      <FieldInput key={f.key} field={f} doc={doc} disabled={!editable} onChange={patchHeader} onResolveParent={resolveParent} onRequestCreate={requestCreateParent} />
                     ))}
                   </div>
                 )}
@@ -349,6 +367,16 @@ export default function DocumentEngine() {
       </div>
 
       <DocumentPrint schema={schema} doc={doc} basePath={getBasePath()} />
+
+      {createFor && (
+        <InlineCreateModal
+          parentType={createFor.parentType}
+          suggestedNumber={createFor.suggestedNumber}
+          profile={me}
+          onCreated={onParentCreated}
+          onClose={() => setCreateFor(null)}
+        />
+      )}
     </>
   );
 }

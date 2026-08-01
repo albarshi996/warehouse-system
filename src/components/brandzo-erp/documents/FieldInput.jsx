@@ -13,7 +13,7 @@ const BASE =
 
 const READONLY = 'w-full bg-accent/10 border border-accent/30 rounded-lg px-3 py-2 text-sm text-accent font-bold';
 
-export default function FieldInput({ field, doc, onChange, disabled, violation, onResolveParent }) {
+export default function FieldInput({ field, doc, onChange, disabled, violation, onResolveParent, onRequestCreate }) {
   const value = fieldValue(field, doc);
 
   // مرجع مستنديّ: تعرّفٌ تلقائيّ وربطٌ بالرقم (المحور ٦) — مكوّن مخصّص.
@@ -26,6 +26,7 @@ export default function FieldInput({ field, doc, onChange, disabled, violation, 
         onChange={onChange}
         disabled={disabled}
         onResolveParent={onResolveParent}
+        onRequestCreate={onRequestCreate}
       />
     );
   }
