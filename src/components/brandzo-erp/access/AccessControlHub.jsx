@@ -164,13 +164,22 @@ export default function AccessControlHub() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
-        <button className="o_btn o_btn-primary" onClick={save} disabled={saving || !dirty}>
+        <button
+          className="o_btn o_btn-primary"
+          onClick={save}
+          disabled={saving || !dirty}
+          title={dirty ? 'حفظ التعديلات سحابيًّا' : 'عدّل أي خلية في الشبكة أولًا ليتفعّل الحفظ'}
+        >
           {saving ? 'جارٍ الحفظ…' : 'حفظ المصفوفة'}
         </button>
         <button className="o_btn" onClick={revert} disabled={saving || !dirty}>
           تراجُع للنسخة المحفوظة
         </button>
-        {dirty ? <Badge variant="warn">تعديلات غير محفوظة</Badge> : <Badge variant="done">مطابقة للسحابة</Badge>}
+        {dirty ? (
+          <Badge variant="warn">تعديلات غير محفوظة</Badge>
+        ) : (
+          <Badge variant="done">مطابقة للسحابة — الزر يتفعّل عند أول تعديل</Badge>
+        )}
         <span style={{ fontSize: 12, color: '#6b7280' }}>
           التجاوزات المعرَّفة: <strong>{countOverrides(draft)}</strong>
         </span>
