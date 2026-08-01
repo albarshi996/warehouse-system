@@ -109,10 +109,14 @@ export default function AccessControlHub() {
       });
       setDirty(false);
       setMsg({ ok: true, text: 'حُفظت المصفوفة — تسري فورًا على فتح الشاشات والقائمة الجانبية.' });
-    } catch {
+    } catch (err) {
+      const code = err?.code || err?.message || String(err);
       setMsg({
         ok: false,
-        text: 'تعذّر الحفظ سحابيًّا — الأرجح أن قاعدة access_control لم تُنشر بعد (ضمن دفعة قواعد الأسبوع). تعديلاتك باقية في هذه الشاشة، فأعد المحاولة بعد النشر.',
+        text:
+          code === 'permission-denied'
+            ? 'رفض الخادم الكتابة (permission-denied): تأكد أن قواعد Firestore المنشورة تتضمن كتلة access_control وأنك داخل بحساب المدير العام، ثم أعد المحاولة بعد دقيقة (القواعد تحتاج لحظات لتسري).'
+            : `تعذّر الحفظ — رمز الخطأ: ${code}. تعديلاتك باقية في هذه الشاشة.`,
       });
     } finally {
       setSaving(false);

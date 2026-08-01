@@ -44,7 +44,10 @@ export async function fetchMatrixOnce() {
   }
 }
 
-/** حفظ (admin فقط بالقاعدة) + قيد نسخة في سجلّ ملحق-فقط. */
+/**
+ * حفظ (admin فقط بالقاعدة) + قيد نسخة في سجلّ ملحق-فقط.
+ * فشل قيد السجلّ وحده لا يُفشل الحفظ — المصفوفة نفسها هي الجوهر.
+ */
 export async function saveMatrix(matrix, meta = {}) {
   const clean = normalizeMatrix(matrix);
   await setDoc(matrixRef(), {
@@ -53,10 +56,14 @@ export async function saveMatrix(matrix, meta = {}) {
     updatedBy: meta.updatedBy || null,
     updatedByName: meta.updatedByName || null,
   });
-  await addDoc(collection(db, COL, DOC_ID, 'versions'), {
-    overrides: clean.overrides,
-    at: serverTimestamp(),
-    by: meta.updatedBy || null,
-  });
+  try {
+    await addDoc(collection(db, COL, DOC_ID, 'versions'), {
+      overrides: clean.overrides,
+      at: serverTimestamp(),
+      by: meta.updatedBy || null,
+    });
+  } catch (err) {
+    console.warn('حُفظت المصفوفة لكن قيد النسخة في السجلّ فشل:', err?.code || err);
+  }
   return clean;
 }
