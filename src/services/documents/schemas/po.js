@@ -73,8 +73,9 @@ const schema = {
         {
           key: 'prRef',
           label: 'رقم طلب الشراء المرجعي (PR Ref.)',
-          kind: 'text',
-          hint: 'يُملأ تلقائيًّا عند اشتقاق الأمر من طلب شراء',
+          kind: 'docref',
+          docType: 'PR',
+          hint: 'اكتب رقم طلب الشراء (PR-…) فيُتعرَّف عليه ويُربط — أو يُملأ عند الاشتقاق',
         },
         { key: 'warehouse', label: 'الفرع / المستودع (Branch/Warehouse)', kind: 'text' },
         { key: 'incoterms', label: 'شروط التسليم (Incoterms)', kind: 'text' },

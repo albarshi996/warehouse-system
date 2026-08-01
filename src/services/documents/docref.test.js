@@ -55,6 +55,15 @@ test('primaryParentType: null لنوعٍ بلا حقل docref (لا قيد عل�
   assert.equal(primaryParentType(getSchema('PR')), null);
 });
 
+test('التعميم: بقية أزواج السلسلة صارت docref بنوع الأب الصحيح', () => {
+  const has = (type, key, docType) =>
+    docrefFields(getSchema(type)).some((f) => f.key === key && f.docType === docType);
+  assert.ok(has('PO', 'prRef', 'PR'));
+  assert.ok(has('INV', 'deliveryRef', 'DN'));
+  assert.ok(has('TRN', 'transferReqRef', 'TR'));
+  assert.ok(has('TRC', 'transferNoteRef', 'TRN'));
+});
+
 test('docrefFields: يعلن نوع الأب الصحيح، ومتّسق مع خريطة العكس', () => {
   const grnRefs = docrefFields(getSchema('GRN'));
   const poRef = grnRefs.find((f) => f.key === 'poRef');

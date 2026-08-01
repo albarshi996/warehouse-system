@@ -70,8 +70,9 @@ const schema = {
         {
           key: 'transferNoteRef',
           label: 'رقم مستند النقل المرجعي (TRN Ref.)',
-          kind: 'text',
-          hint: 'يُملأ تلقائيًّا عند الاشتقاق من مستند النقل',
+          kind: 'docref',
+          docType: 'TRN',
+          hint: 'اكتب رقم مستند النقل (TRN-…) فيُتعرَّف عليه ويُربط — أو يُملأ عند الاشتقاق',
         },
         {
           key: 'fromWarehouse',

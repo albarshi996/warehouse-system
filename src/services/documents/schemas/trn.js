@@ -59,8 +59,9 @@ const schema = {
         {
           key: 'transferReqRef',
           label: 'رقم طلب النقل المرجعي (TR Ref.)',
-          kind: 'text',
-          hint: 'يُملأ تلقائيًّا عند الاشتقاق من طلب النقل',
+          kind: 'docref',
+          docType: 'TR',
+          hint: 'اكتب رقم طلب النقل (TR-…) فيُتعرَّف عليه ويُربط — أو يُملأ عند الاشتقاق',
         },
         {
           key: 'fromWarehouse',

@@ -85,8 +85,9 @@ const schema = {
         {
           key: 'deliveryRef',
           label: 'رقم إذن التسليم (Delivery Ref.)',
-          kind: 'text',
-          hint: 'يُملأ تلقائيًّا عند اشتقاق الفاتورة من إذن التسليم',
+          kind: 'docref',
+          docType: 'DN',
+          hint: 'اكتب رقم إذن التسليم (DN-…) فيُتعرَّف عليه ويُربط — أو يُملأ عند الاشتقاق',
         },
         {
           key: 'salesOrderRef',
