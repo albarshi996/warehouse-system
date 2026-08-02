@@ -18,6 +18,7 @@ export const ROLES = {
   viewer:            { id: 'viewer',            label: 'مشاهد',            emoji: '👁️', color: '#6b7280' },
   department_user:   { id: 'department_user',   label: 'مستخدم إدارة',     emoji: '🏬', color: '#14b8a6' },
   fleet:             { id: 'fleet',             label: 'الحركة',           emoji: '🚚', color: '#f97316' },
+  treasury:          { id: 'treasury',          label: 'أمين الخزينة',     emoji: '🏦', color: '#7c3aed' },
 };
 
 /** الدور الافتراضي الآمن لمن لا ملف دور له بعد (أقل صلاحية). */

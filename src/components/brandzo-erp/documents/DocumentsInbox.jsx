@@ -20,7 +20,7 @@ import {
 } from '../../../services/documents/documentsService.js';
 import { getSchema, GOVERNED_FORMS } from '../../../services/documents/schemas/index.js';
 import { getState, STATES } from '../../../services/documents/states.js';
-import { PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, TRANSFER_CHAIN } from '../../../services/documents/chain.js';
+import { PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, TRANSFER_CHAIN, INTERNAL_PROCUREMENT_CHAIN } from '../../../services/documents/chain.js';
 import {
   awaitingMyApproval,
   sortByUrgency,
@@ -160,6 +160,7 @@ export default function DocumentsInbox() {
     { title: 'المرتجعات', icon: 'arrowLeftRight', types: RETURN_CHAIN },
     { title: 'الجرد', icon: 'clipboardList', types: COUNT_CHAIN },
     { title: 'التالف', icon: 'alertTriangle', types: ['DMG'] },
+    { title: 'المشتريات الداخلية', icon: 'shoppingCart', types: INTERNAL_PROCUREMENT_CHAIN },
   ];
 
   const listRows = rows.map((d) => {

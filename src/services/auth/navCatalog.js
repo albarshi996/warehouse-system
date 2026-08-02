@@ -46,6 +46,17 @@ export const NAV_GROUPS = [
     ],
   },
   {
+    // دورة المشتريات الداخلية (طلبات الإدارات من المالية): طلب ← عروض ← أمر ←
+    // صرف ← تسليم. صفحة القيادة role-aware، والمستندات تُفتح وتُنشأ من محرّك
+    // المستندات (`/dashboard/document` ضمن ALWAYS_ALLOWED) عبر روابط الصفحة.
+    key: 'procurement',
+    group: 'المشتريات الداخلية',
+    emoji: '🧾', icon: 'shoppingCart',
+    items: [
+      { path: '/dashboard/procurement', label: 'دورة المشتريات الداخلية', icon: 'shoppingCart' },
+    ],
+  },
+  {
     key: 'warehouses',
     group: 'المستودعات والجرد',
     emoji: '📦', icon: 'warehouse',

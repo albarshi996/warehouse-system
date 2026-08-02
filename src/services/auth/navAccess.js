@@ -19,6 +19,7 @@ export const NAV_GROUP_LABELS = {
   reports: 'مركز التقارير',
   archive: 'الأرشيف والمرجعية',
   dept: 'طلبات الإدارات',
+  procurement: 'المشتريات الداخلية',
 };
 
 /**
@@ -26,21 +27,24 @@ export const NAV_GROUP_LABELS = {
  * الأدمن (المدير العام) يرى كل شيء دائمًا ولا يحتاج إدراجًا.
  */
 export const ROLE_NAV = {
-  admin: ['daily', 'warehouses', 'fleet', 'odoo', 'reports', 'archive', 'dept'],
-  warehouse_manager: ['daily', 'warehouses', 'fleet', 'odoo', 'reports', 'archive', 'dept'],
+  admin: ['daily', 'warehouses', 'fleet', 'odoo', 'reports', 'archive', 'dept', 'procurement'],
+  warehouse_manager: ['daily', 'warehouses', 'fleet', 'odoo', 'reports', 'archive', 'dept', 'procurement'],
   storekeeper: ['daily', 'warehouses', 'odoo'],
   qc_inspector: ['daily', 'odoo', 'reports'],
   gate_officer: ['daily', 'odoo'],
-  purchase_officer: ['daily', 'odoo', 'reports'],
-  finance_manager: ['warehouses', 'odoo', 'reports'],
+  // موظف المشتريات: يوفّر العروض ويصدر الأمر ويسلّم في دورة المشتريات الداخلية.
+  purchase_officer: ['daily', 'odoo', 'reports', 'procurement'],
+  // المدير المالي: يعتمد الطلب والترسية والأمر والصرف في الدورة.
+  finance_manager: ['warehouses', 'odoo', 'reports', 'procurement'],
   return_manager: ['daily', 'warehouses', 'odoo'],
   inventory_auditor: ['warehouses', 'odoo', 'reports'],
   viewer: ['reports'],
-  // دور مقيّد بالكامل — لا يرى أي مجموعة أخرى (الإلزام الحقيقي في AuthGate
-  // عبر pageAccess.js؛ هذا فقط يمنع تسريب روابط أخرى في القائمة الجانبية).
-  department_user: ['dept'],
+  // مستخدم الإدارة (الجهة الطالبة/المستفيد): طلبات الإدارات + إصدار طلب المشتريات.
+  department_user: ['dept', 'procurement'],
   // دور «الحركة»: مجموعة إدارة الحركة وحدها (مقيّد بصفحة جرد المركبات في pageAccess.js).
   fleet: ['fleet'],
+  // أمين الخزينة: دورٌ مركّز على صرف قيمة أوامر الشراء في الدورة وحدها.
+  treasury: ['procurement'],
 };
 
 /** هل يرى هذا الدور مجموعة القائمة؟ */

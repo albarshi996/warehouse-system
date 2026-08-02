@@ -4,9 +4,10 @@
  * النطاق المعتمد (قرار المالك 2026-07-15): **الدورة المحكومة**. النماذج
  * الإدارية (Report21 · DailyHuddle · WeeklyCheck) تبقى للطباعة كما هي.
  *
- * ⚠️ بلغت المجموعة **19** نموذجًا محكومًا في ست سلاسل: فصّلت F4 عنقودَ
+ * ⚠️ بلغت المجموعة **24** نموذجًا محكومًا في سبع سلاسل: فصّلت F4 عنقودَ
  * المرتجعات والمالية إلى مستندات مستقلّة (إرجاع · تالف · جرد · تسوية · إشعار
- * دائن)، ثم اكتملت سلاسل البيع والفوترة والنقل — والعدّ الحيّ من SCHEMAS أدناه
+ * دائن)، ثم اكتملت سلاسل البيع والفوترة والنقل، وأُضيفت سلسلة **المشتريات
+ * الداخلية** (طلب ← عروض ← أمر ← صرف ← تسليم) — والعدّ الحيّ من SCHEMAS أدناه
  * لا من رقمٍ مكتوب (تحقّق قبل الثقة).
  *
  * الجدول أدناه هو خطة F2→F4 مرئيةً في الكود: كل نموذج ومرحلته وحارسه.
@@ -30,6 +31,12 @@ import inv from './inv.js';
 import tr from './tr.js';
 import trn from './trn.js';
 import trc from './trc.js';
+// دورة المشتريات الداخلية (طلبات الإدارات من المالية): طلب ← عروض ← أمر ← صرف ← تسليم
+import ipr from './ipr.js';
+import rfq from './rfq.js';
+import ipo from './ipo.js';
+import pv from './pv.js';
+import dlv from './dlv.js';
 
 /** المخطّطات الجاهزة. */
 const SCHEMAS = {
@@ -52,10 +59,15 @@ const SCHEMAS = {
   CC: cc,
   ADJ: adj,
   CN: cn,
+  IPR: ipr,
+  RFQ: rfq,
+  IPO: ipo,
+  PV: pv,
+  DLV: dlv,
 };
 
 /**
- * خارطة النماذج الـ19 المحكومة — للعرض وللتخطيط. `ready` تُشتقّ من SCHEMAS أعلاه
+ * خارطة النماذج الـ24 المحكومة — للعرض وللتخطيط. `ready` تُشتقّ من SCHEMAS أعلاه
  * فلا يفترق الجدول عن الواقع (درس «تحقّق قبل الثقة»).
  */
 export const GOVERNED_FORMS = [
@@ -78,6 +90,12 @@ export const GOVERNED_FORMS = [
   { type: 'CC', stage: 9, titleAr: 'محضر الجرد الدوري', file: 'form_CycleCount.html', phase: 'F4' },
   { type: 'ADJ', stage: 10, titleAr: 'سند تسوية مخزون', file: 'form_Stock Adjustment Voucher.html', phase: 'F4' },
   { type: 'CN', stage: 11, titleAr: 'إشعار دائن', file: 'form_Credit Note.html', phase: 'F4' },
+  // سلسلة المشتريات الداخلية (S12): طلب ← عروض ← أمر ← صرف ← تسليم
+  { type: 'IPR', stage: 1, titleAr: 'طلب مشتريات داخلي', file: '', phase: 'IP' },
+  { type: 'RFQ', stage: 2, titleAr: 'كشف مقارنة العروض', file: '', phase: 'IP' },
+  { type: 'IPO', stage: 3, titleAr: 'أمر شراء داخلي', file: '', phase: 'IP' },
+  { type: 'PV', stage: 4, titleAr: 'سند صرف الخزينة', file: '', phase: 'IP' },
+  { type: 'DLV', stage: 5, titleAr: 'محضر تسليم للمستفيد', file: '', phase: 'IP' },
 ].map((f) => ({ ...f, ready: Boolean(SCHEMAS[f.type]) }));
 
 /** يُعيد مخطّط النوع، أو null إن لم يُبنَ بعد. */

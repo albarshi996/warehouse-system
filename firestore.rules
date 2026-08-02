@@ -78,12 +78,25 @@ service cloud.firestore {
              ]);
     }
 
+    // فاعلو دورة المشتريات الداخلية (طلبات الإدارات من المالية): من يُنشئ أو
+    // يعتمد حلقةً في سلسلة IPR→RFQ→IPO→PV→DLV. يضمّ **مستخدم الإدارة** (يُصدر
+    // الطلب) و**أمين الخزينة** (يصرف) — وهما خارج isStockActor فلا يحرّكان
+    // مخزونًا. البقيّة (المشتريات·المالي·المدير) مشمولون أصلًا، وذكرهم هنا
+    // يوضّح النطاق. مستندات هذه السلسلة لا تمسّ الأرصدة فلا أثر مخزنيّ لها.
+    function isProcurementActor() {
+      return isBootstrapAdmin() ||
+             (signedIn() && hasProfile() && isActive() && myRole() in [
+               'admin', 'warehouse_manager', 'department_user',
+               'purchase_officer', 'finance_manager', 'treasury'
+             ]);
+    }
+
     // من يحقّ له حجز رقمٍ رسميّ من عدّاد `counters`: كل من يُنشئ مستندًا
     // مرقّمًا فعلًا — الفاعل المخزني (مستندات·عُهد) أو كاتب الأسطول (رحلات·
-    // أوامر شغل·فحوصات) أو المدير (اجتماعات·تقارير). المشاهد ومستخدم الإدارة
-    // خارجها فلا يحرقان أرقامًا (كان أي مصادَق يحرقها — خرق أُغلق بالمحور ٤).
+    // أوامر شغل·فحوصات) أو فاعل المشتريات الداخلية (طلب·صرف) أو المدير. المشاهد
+    // وحده خارجها فلا يحرق أرقامًا (كان أي مصادَق يحرقها — خرق أُغلق بالمحور ٤).
     function canReserveNumber() {
-      return isStockActor() || isFleetWriter();
+      return isStockActor() || isFleetWriter() || isProcurementActor();
     }
 
     // ── المستخدمون والأدوار ──────────────────────────────────────
@@ -151,6 +164,13 @@ service cloud.firestore {
            : docType == 'CC'      ? ['inventory_auditor', 'warehouse_manager']
            : docType == 'ADJ'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'CN'      ? ['finance_manager', 'warehouse_manager']
+           // المشتريات الداخلية: المدير المالي يعتمد الطلب والترسية والأمر
+           // والصرف، والمستفيد (مستخدم الإدارة) يُقرّ استلام التسليم.
+           : docType == 'IPR'     ? ['finance_manager', 'warehouse_manager']
+           : docType == 'RFQ'     ? ['finance_manager', 'warehouse_manager']
+           : docType == 'IPO'     ? ['finance_manager', 'warehouse_manager']
+           : docType == 'PV'      ? ['finance_manager', 'warehouse_manager']
+           : docType == 'DLV'     ? ['department_user', 'warehouse_manager']
            : [];
     }
     function completeRoles(docType) {
@@ -173,6 +193,13 @@ service cloud.firestore {
            : docType == 'CC'      ? ['inventory_auditor', 'warehouse_manager']
            : docType == 'ADJ'     ? ['warehouse_manager', 'finance_manager']
            : docType == 'CN'      ? ['finance_manager', 'warehouse_manager']
+           // المشتريات الداخلية: المشتريات تُنهي الطلب والكشف والأمر والتسليم،
+           // وأمين الخزينة يُنهي سند الصرف (تنفيذ الصرف الفعليّ).
+           : docType == 'IPR'     ? ['purchase_officer', 'warehouse_manager']
+           : docType == 'RFQ'     ? ['purchase_officer', 'warehouse_manager']
+           : docType == 'IPO'     ? ['purchase_officer', 'warehouse_manager']
+           : docType == 'PV'      ? ['treasury', 'warehouse_manager']
+           : docType == 'DLV'     ? ['purchase_officer', 'warehouse_manager']
            : [];
     }
 
@@ -206,8 +233,9 @@ service cloud.firestore {
       allow read: if signedIn();
 
       // يولد مسودّةً باسم صاحبه وبلا رقم — لا أحد يُنشئ مستندًا معتمَدًا ابتداءً.
-      // فاعل مخزنيّ فقط (كان أي مصادَق يُنشئ مسودّات — بابُ إغراق أُغلق بالمحور ٤).
-      allow create: if isStockActor()
+      // فاعل مخزنيّ أو فاعل مشتريات داخلية فقط (كان أي مصادَق يُنشئ مسودّات —
+      // بابُ إغراق أُغلق بالمحور ٤؛ ومستخدم الإدارة/الخزينة أُضيفا لدورة المشتريات).
+      allow create: if (isStockActor() || isProcurementActor())
                     && request.resource.data.createdByUid == request.auth.uid
                     && request.resource.data.state == 'draft'
                     && request.resource.data.number == null;

@@ -9,11 +9,11 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 47,
+    "modules": 48,
     "serviceDomains": 24,
-    "serviceFiles": 137,
+    "serviceFiles": 142,
     "collections": 38,
-    "roles": 13,
+    "roles": 14,
     "odooModels": 12,
     "odooGuards": 51,
     "infraNodes": 6,
@@ -264,6 +264,14 @@
         "org",
         "ui"
       ]
+    },
+    {
+      "name": "procurement",
+      "route": "/dashboard/procurement",
+      "title": "دورة المشتريات الداخلية",
+      "summary": "",
+      "file": "src/pages/dashboard/procurement.astro",
+      "usesServices": []
     },
     {
       "name": "products",
@@ -598,6 +606,7 @@
         "chain.js",
         "chain.test.js",
         "cn.js",
+        "dlv.js",
         "dmg.js",
         "dn.js",
         "docref.test.js",
@@ -609,6 +618,8 @@
         "inbox.test.js",
         "index.js",
         "inv.js",
+        "ipo.js",
+        "ipr.js",
         "numberFormat.js",
         "numbering.js",
         "pack.js",
@@ -616,8 +627,10 @@
         "po.js",
         "pr.js",
         "putaway.js",
+        "pv.js",
         "qc.js",
         "ret.js",
+        "rfq.js",
         "sales.test.js",
         "schemaUtils.js",
         "so.js",
@@ -626,7 +639,7 @@
         "trc.js",
         "trn.js"
       ],
-      "fileCount": 32,
+      "fileCount": 37,
       "testCount": 5,
       "exports": [
         "BILLING_CHAIN",
@@ -638,6 +651,7 @@
         "EDITABLE_STATES",
         "GOVERNED_FORMS",
         "INITIAL_STATE",
+        "INTERNAL_PROCUREMENT_CHAIN",
         "MATCH_STATUS",
         "OUTBOUND_CHAIN",
         "PURCHASE_CHAIN",
@@ -675,8 +689,11 @@
         "cycleWarnings",
         "damageValue",
         "damageWarnings",
+        "deliveredCount",
         "derivationTargets",
         "deriveDocument",
+        "disbursedTotal",
+        "dlvWarnings",
         "dnWarnings",
         "docrefFields",
         "emptyChecklist",
@@ -699,6 +716,8 @@
         "inboxStats",
         "inventoryAccuracy",
         "invoiceWarnings",
+        "ipoWarnings",
+        "iprWarnings",
         "isEditable",
         "isEmptyLine",
         "isLegalTransition",
@@ -717,6 +736,7 @@
         "listenMyDocuments",
         "listenPendingApproval",
         "lookupByNumber",
+        "lowestOffer",
         "matchedCount",
         "mergeParentLink",
         "missingRequired",
@@ -724,6 +744,7 @@
         "netTotal",
         "nextInChain",
         "normalizeAr",
+        "offersCount",
         "orderValue",
         "packWarnings",
         "parentApprovalProblem",
@@ -733,11 +754,13 @@
         "previousInChain",
         "primaryParentType",
         "putawayWarnings",
+        "pvWarnings",
         "qcWarnings",
         "readyTypes",
         "rejectionRate",
         "reserveNumber",
         "returnWarnings",
+        "rfqWarnings",
         "salesOrderWarnings",
         "saveDocument",
         "shipmentValue",
@@ -1494,6 +1517,7 @@
       "isCreator",
       "isFleetWriter",
       "isManager",
+      "isProcurementActor",
       "isSideEffectStamp",
       "isStockActor",
       "myRole",
@@ -1512,6 +1536,7 @@
       "isCreator",
       "isFleetWriter",
       "isManager",
+      "isProcurementActor",
       "isSideEffectStamp",
       "isStockActor",
       "movingTo",
@@ -1856,9 +1881,10 @@
             "actions": [
               "create"
             ],
-            "condition": "isStockActor() && request.resource.data.createdByUid == request.auth.uid && request.resource.data.state == 'draft' && request.resource.data.number == null",
+            "condition": "(isStockActor() || isProcurementActor()) && request.resource.data.createdByUid == request.auth.uid && request.resource.data.state == 'draft' && request.resource",
             "roles": [
-              "isStockActor"
+              "isStockActor",
+              "isProcurementActor"
             ]
           },
           {

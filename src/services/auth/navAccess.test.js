@@ -80,20 +80,23 @@ test('canSeeItem: بلا أدوار = متاح لمن يرى المجموعة', 
 
 test('الأدوار المركّزة (مجموعة واحدة) لا ترى لوحة التحكم الرئيسية', () => {
   assert.equal(canSeeHome('fleet'), false);
-  assert.equal(canSeeHome('department_user'), false);
+  assert.equal(canSeeHome('treasury'), false);
   assert.equal(canSeeHome('viewer'), false);
 });
 
 test('الأدوار متعددة المجموعات ترى لوحة التحكم الرئيسية', () => {
-  for (const r of ['admin', 'warehouse_manager', 'storekeeper', 'qc_inspector', 'finance_manager']) {
+  // مستخدم الإدارة صار له منطقتان (dept + procurement) فصار يرى الرئيسية.
+  for (const r of ['admin', 'warehouse_manager', 'storekeeper', 'qc_inspector', 'finance_manager', 'department_user']) {
     assert.equal(canSeeHome(r), true, `الدور «${r}» يجب أن يرى الرئيسية`);
   }
 });
 
-test('«الحركة» و«مستخدم إدارة» محصوران بمجموعتهما وحدها', () => {
+test('«الحركة» و«أمين الخزينة» مركّزان، و«مستخدم إدارة» بمنطقتيه', () => {
   assert.deepEqual(groupsFor('fleet'), ['fleet']);
-  assert.deepEqual(groupsFor('department_user'), ['dept']);
+  assert.deepEqual(groupsFor('treasury'), ['procurement']);
+  assert.deepEqual(groupsFor('department_user'), ['dept', 'procurement']);
   assert.equal(canSeeGroup('fleet', 'daily'), false);
+  assert.equal(canSeeGroup('treasury', 'warehouses'), false);
   assert.equal(canSeeGroup('department_user', 'warehouses'), false);
 });
 

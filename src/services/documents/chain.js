@@ -43,9 +43,16 @@ export const BILLING_CHAIN = ['DN', 'INV'];
  * ثلاث حلقات لأن الرصيد يمرّ بموقعٍ وسيط (مخزن النقل) بين المغادرة والوصول.
  */
 export const TRANSFER_CHAIN = ['TR', 'TRN', 'TRC'];
+/**
+ * سلسلة المشتريات الداخلية (طلبات الإدارات من المالية) — دورةٌ مستقلّة عن
+ * الشراء المخزنيّ: طلبٌ ← كشفُ عروضٍ (ترسية) ← أمرُ شراء ← صرفٌ من الخزينة ←
+ * تسليمٌ للمستفيد. خمس حلقاتٍ خطّية، كلٌّ منها بمرجعٍ إلزاميّ لأبيه فلا تُنجَز
+ * حلقةٌ قبل اعتماد سابقتها (يُغلق هذا الترتيبَ حارسُ «لا إنجاز قبل اعتماد الأب»).
+ */
+export const INTERNAL_PROCUREMENT_CHAIN = ['IPR', 'RFQ', 'IPO', 'PV', 'DLV'];
 
 /** كل السلاسل — لتجول عليها الدوال بلا معرفة مسبقة بأيّها. */
-export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN, TRANSFER_CHAIN];
+export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN, TRANSFER_CHAIN, INTERNAL_PROCUREMENT_CHAIN];
 
 /**
  * وجهات الاشتقاق من نوعٍ ما — قد تكون أكثر من واحدة (التفرّع).
@@ -105,6 +112,11 @@ const LINE_MAP = {
   'RET>CN': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', unitPrice: 'unitPrice', reason: 'reason' },
   // التسوية: الفعلي المعدود يصير «الفعلي»، والدفتري يصير «الدفتري».
   'CC>ADJ': { sku: 'sku', barcode: 'barcode', description: 'description', bookQty: 'bookQty', count2: 'actualQty', unitPrice: 'unitPrice' },
+  // المشتريات الداخلية: العروض (RFQ) والأمر (IPO) يبدآن ببنودٍ خاصّة بهما
+  // (عروضٌ لا أصناف، وأصنافٌ بأسعارٍ نهائية) فلا يُنقلان بنودًا؛ لكنّ الأصناف
+  // تتدفّق من الأمر إلى الصرف إلى التسليم (ما يُدفَع ثمنه هو ما يُسلَّم).
+  'IPO>PV': { description: 'description', uom: 'uom', qty: 'qty', unitPrice: 'unitPrice' },
+  'PV>DLV': { description: 'description', uom: 'uom', qty: 'qty' },
 };
 
 /** خرائط نقل بيانات الرأس. */
@@ -126,6 +138,12 @@ const HEADER_MAP = {
   'TRN>TRC': { fromWarehouse: 'fromWarehouse', toWarehouse: 'toWarehouse', driverName: 'driverName', vehiclePlate: 'vehiclePlate' },
   'RET>CN': { returningBranch: 'beneficiary' },
   'CC>ADJ': { zone: 'zone' },
+  // المشتريات الداخلية: سياق الطلب (الإدارة والمستفيد) يُورَّث عبر السلسلة كلها،
+  // والمورّد الفائز من الكشف يصير مورّد الأمر، ومورّد الأمر يصير المستفيد بالصرف.
+  'IPR>RFQ': { department: 'department', beneficiary: 'beneficiary' },
+  'RFQ>IPO': { department: 'department', beneficiary: 'beneficiary', selectedSupplier: 'supplier' },
+  'IPO>PV': { department: 'department', supplier: 'payee' },
+  'PV>DLV': { department: 'department' },
 };
 
 /** هل البند فارغ فعليًّا؟ (لا نورّث صفوفًا بيضاء) */
@@ -185,6 +203,8 @@ export function deriveDocument(source, toType = null) {
     PACK: 'pickRef', DN: 'packRef', GP: 'dnRef', INV: 'deliveryRef',
     TRN: 'transferReqRef', TRC: 'transferNoteRef',
     CN: 'returnRef', ADJ: 'cycleCountRef',
+    // المشتريات الداخلية: كلّ حلقةٍ تحمل رقم أبيها المباشر.
+    RFQ: 'iprRef', IPO: 'rfqRef', PV: 'ipoRef', DLV: 'pvRef',
   }[to];
   if (refField && source.number) header[refField] = source.number;
   // أمر التخزين يحمل رقم الاستلام لا رقم تقرير الفحص (هكذا ينصّ الورق).
@@ -193,6 +213,10 @@ export function deriveDocument(source, toType = null) {
   if (to === 'QC' && source.header?.poRef) header.poRef = source.header.poRef;
   // الفاتورة تحمل رقم أمر البيع أيضًا (من سلسلة الروابط) لا رقم التسليم وحده.
   if (to === 'INV' && source.links?.SO?.number) header.salesOrderRef = source.links.SO.number;
+  // أمر الشراء الداخلي يحمل رقم الطلب الأصليّ أيضًا (من سلسلة الروابط).
+  if (to === 'IPO' && source.links?.IPR?.number) header.iprRef = source.links.IPR.number;
+  // محضر التسليم يحمل رقم أمر الشراء أيضًا (من سلسلة الروابط) لا رقم الصرف وحده.
+  if (to === 'DLV' && source.links?.IPO?.number) header.ipoRef = source.links.IPO.number;
 
   const links = { ...(source.links || {}), [source.type]: { id: source.id, number: source.number || null } };
 
@@ -238,6 +262,8 @@ export const DOCREF_PARENT_TYPE = {
   dnRef: 'DN', deliveryRef: 'DN', transferReqRef: 'TR', transferNoteRef: 'TRN',
   returnRef: 'RET', cycleCountRef: 'CC', salesOrderRef: 'SO', branchOrderRef: 'SO',
   dispatchRef: 'DN',
+  // المشتريات الداخلية
+  iprRef: 'IPR', rfqRef: 'RFQ', ipoRef: 'IPO', pvRef: 'PV',
 };
 
 /* ═══════════════ المطابقة الثلاثية ═══════════════ */

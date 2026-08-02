@@ -26,8 +26,11 @@ import {
   gateVerdict,
   adjustmentVerdict,
   creditNoteVerdict,
+  INTERNAL_PROCUREMENT_CHAIN,
+  DOCREF_PARENT_TYPE,
 } from './chain.js';
 import { getSchema, GOVERNED_FORMS, readyTypes } from './schemas/index.js';
+import { primaryParentType } from './schemaUtils.js';
 import { estimatedTotal, lineEstimate, budgetWarnings } from './schemas/pr.js';
 import { subtotal, netTotal, lineTotal, poWarnings } from './schemas/po.js';
 import { rejectionRate, qcWarnings } from './schemas/qc.js';
@@ -41,6 +44,12 @@ import { damageValue, totalDamage, damageWarnings } from './schemas/dmg.js';
 import { lineVariance, inventoryAccuracy, matchedCount, cycleWarnings } from './schemas/cc.js';
 import { adjVariance, totalIncrease, totalDecrease, netImpact, adjustmentWarnings } from './schemas/adj.js';
 import { creditTotal, creditWarnings } from './schemas/cn.js';
+// دورة المشتريات الداخلية — أسماء ذات تصادم تُستعار (subtotal/netTotal/lineTotal/…)
+import { lineEstimate as iprLineEstimate, estimatedTotal as iprEstimatedTotal, iprWarnings } from './schemas/ipr.js';
+import { lowestOffer, offersCount, rfqWarnings } from './schemas/rfq.js';
+import { subtotal as ipoSubtotal, netTotal as ipoNetTotal, ipoWarnings } from './schemas/ipo.js';
+import { disbursedTotal, pvWarnings } from './schemas/pv.js';
+import { deliveredCount, dlvWarnings } from './schemas/dlv.js';
 
 /** طلب شراء معتمَد ببندين. */
 function approvedPR() {
@@ -638,8 +647,8 @@ test('مخطّطات F4 الخمسة مسجّلة — والمجموعة صار�
     assert.equal(s.signatures.length, 3);
     assert.ok(typeof s.warnings === 'function');
   }
-  assert.equal(readyTypes().length, 19, 'تسعة عشر نموذجًا جاهزًا بعد المبيعات والفوترة والنقل');
-  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 19);
+  assert.equal(readyTypes().length, 24, 'أربعة وعشرون نموذجًا جاهزًا بعد إضافة سلسلة المشتريات الداخلية');
+  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 24);
 });
 
 test('🔒 اعتماد سند التسوية للمالية والمدير — لا لمن أدخله', () => {
@@ -687,4 +696,131 @@ test('CN: إجمالي الخصم محسوب والتحذيرات مسبَّبة
   assert.ok(w.some((x) => /مرجع إشعار إرجاع/.test(x)));
   assert.ok(w.some((x) => /المستفيد/.test(x)));
   assert.ok(w.some((x) => /بلا سعر/.test(x)));
+});
+
+// ═══════════ سلسلة المشتريات الداخلية (IPR→RFQ→IPO→PV→DLV) ═══════════
+
+test('المشتريات الداخلية: السلسلة معرّفة وحلقاتها مرتّبة', () => {
+  assert.deepEqual(INTERNAL_PROCUREMENT_CHAIN, ['IPR', 'RFQ', 'IPO', 'PV', 'DLV']);
+  assert.equal(chainFor('IPO'), INTERNAL_PROCUREMENT_CHAIN);
+  assert.equal(nextInChain('IPR'), 'RFQ');
+  assert.equal(nextInChain('IPO'), 'PV');
+  assert.equal(nextInChain('DLV'), null, 'التسليم آخر الحلقة');
+  assert.equal(previousInChain('PV'), 'IPO');
+});
+
+test('المشتريات الداخلية: المخطّطات الخمسة مسجّلة وكاملة البنية', () => {
+  for (const t of ['IPR', 'RFQ', 'IPO', 'PV', 'DLV']) {
+    const s = getSchema(t);
+    assert.ok(s, `مخطّط ${t} غير مسجّل`);
+    assert.equal(s.type, t);
+    assert.ok(s.roles.create.length && s.roles.approve.length && s.roles.complete.length, `${t}: أدوار ناقصة`);
+    assert.ok(s.sections.some((sec) => sec.kind === 'table'), `${t}: بلا جدول`);
+    assert.equal(s.signatures.length, 3, `${t}: خانات التوقيع ثلاث`);
+    assert.ok(typeof s.warnings === 'function', `${t}: بلا تحذيرات`);
+  }
+});
+
+test('المشتريات الداخلية: الأب المرجعيّ الأساسيّ يفرض التسلسل', () => {
+  // كلّ حلقةٍ أبوها الإلزاميّ هو سابقتها المباشرة — فلا تُنجَز قبل اعتماده.
+  assert.equal(primaryParentType(getSchema('RFQ')), 'IPR');
+  assert.equal(primaryParentType(getSchema('IPO')), 'RFQ');
+  assert.equal(primaryParentType(getSchema('PV')), 'IPO');
+  assert.equal(primaryParentType(getSchema('DLV')), 'PV');
+  assert.equal(primaryParentType(getSchema('IPR')), null, 'الطلب رأس السلسلة بلا أب');
+  // خريطة عكس المرجع النصّي ← نوع الأب
+  assert.equal(DOCREF_PARENT_TYPE.iprRef, 'IPR');
+  assert.equal(DOCREF_PARENT_TYPE.rfqRef, 'RFQ');
+  assert.equal(DOCREF_PARENT_TYPE.ipoRef, 'IPO');
+  assert.equal(DOCREF_PARENT_TYPE.pvRef, 'PV');
+});
+
+test('المشتريات الداخلية: الفصل بين الأدوار في كلّ حلقة', () => {
+  // المستفيد يطلب، والمالي يعتمد، والمشتريات تستلم.
+  assert.ok(getSchema('IPR').roles.create.includes('department_user'));
+  assert.ok(getSchema('IPR').roles.approve.includes('finance_manager'));
+  assert.ok(!getSchema('IPR').roles.approve.includes('department_user'), 'الطالب لا يعتمد طلبه');
+  // الخزينة تُنشئ الصرف وتُنهيه، والمالي يعتمده — لا يصرف من يعتمد.
+  assert.ok(getSchema('PV').roles.create.includes('treasury'));
+  assert.ok(getSchema('PV').roles.complete.includes('treasury'));
+  assert.ok(getSchema('PV').roles.approve.includes('finance_manager'));
+  assert.ok(!getSchema('PV').roles.approve.includes('treasury'), 'الصارف لا يعتمد صرفه');
+  // التسليم يُقرّه المستفيد (توقيع الاستلام).
+  assert.ok(getSchema('DLV').roles.approve.includes('department_user'));
+  assert.ok(getSchema('DLV').roles.create.includes('purchase_officer'));
+});
+
+test('المشتريات الداخلية: الاشتقاق يورّث السياق والمراجع والروابط', () => {
+  const ipr = {
+    id: 'ipr1', type: 'IPR', number: 'IPR-2026-0001', state: 'approved',
+    header: { department: 'تقنية المعلومات', beneficiary: 'أحمد', justification: 'حاسوب' },
+    lines: [{ description: 'حاسوب محمول', qty: 2, uom: 'قطعة', estPrice: 3000 }],
+  };
+  // IPR → RFQ: يرث السياق ويملأ مرجع الطلب، ويبدأ بجدول عروضٍ فارغ (لا أصناف).
+  const rfq = deriveDocument(ipr, 'RFQ');
+  assert.equal(rfq.type, 'RFQ');
+  assert.equal(rfq.header.iprRef, 'IPR-2026-0001');
+  assert.equal(rfq.header.department, 'تقنية المعلومات');
+  assert.equal(rfq.header.beneficiary, 'أحمد');
+  assert.ok(rfq.lines.every((l) => Object.keys(l).length === 0), 'جدول العروض يبدأ فارغًا — العروض تُدرَج يدويًّا لا تُشتقّ من الأصناف');
+  assert.ok(!rfq.lines.some((l) => l.description || l.supplierName), 'لا أصناف ولا عروض مشتقّة');
+  assert.equal(rfq.links.IPR.id, 'ipr1');
+
+  // RFQ → IPO: يرث المورّد الفائز ومرجعَي الكشف والطلب من سلسلة الروابط.
+  const rfqApproved = {
+    id: 'rfq1', type: 'RFQ', number: 'RFQ-2026-0001', state: 'approved',
+    header: { selectedSupplier: 'شركة النور', department: 'تقنية المعلومات' },
+    lines: [{ supplierName: 'شركة النور', offerTotal: 5800, selected: 'الفائز' }],
+    links: { IPR: { id: 'ipr1', number: 'IPR-2026-0001' } },
+  };
+  const ipo = deriveDocument(rfqApproved, 'IPO');
+  assert.equal(ipo.header.rfqRef, 'RFQ-2026-0001');
+  assert.equal(ipo.header.iprRef, 'IPR-2026-0001', 'مرجع الطلب الأصليّ من سلسلة الروابط');
+  assert.equal(ipo.header.supplier, 'شركة النور', 'الفائز يصير مورّد الأمر');
+
+  // IPO → PV → DLV: الأصناف تتدفّق من الأمر إلى الصرف إلى التسليم.
+  const ipoApproved = {
+    id: 'ipo1', type: 'IPO', number: 'IPO-2026-0001', state: 'approved',
+    header: { supplier: 'شركة النور', department: 'تقنية المعلومات' },
+    lines: [{ description: 'حاسوب محمول', qty: 2, uom: 'قطعة', unitPrice: 2900 }],
+    links: { IPR: { id: 'ipr1', number: 'IPR-2026-0001' }, RFQ: { id: 'rfq1', number: 'RFQ-2026-0001' } },
+  };
+  const pv = deriveDocument(ipoApproved, 'PV');
+  assert.equal(pv.header.ipoRef, 'IPO-2026-0001');
+  assert.equal(pv.header.payee, 'شركة النور', 'مورّد الأمر يصير المستفيد بالصرف');
+  assert.equal(pv.lines[0].description, 'حاسوب محمول');
+  assert.equal(pv.lines[0].unitPrice, 2900);
+
+  const pvApproved = { ...pv, id: 'pv1', number: 'PV-2026-0001', state: 'approved', links: { ...pv.links, IPO: { id: 'ipo1', number: 'IPO-2026-0001' } } };
+  const dlv = deriveDocument(pvApproved, 'DLV');
+  assert.equal(dlv.header.pvRef, 'PV-2026-0001');
+  assert.equal(dlv.header.ipoRef, 'IPO-2026-0001', 'محضر التسليم يحمل مرجع الأمر من الروابط');
+  assert.equal(dlv.lines[0].description, 'حاسوب محمول');
+  assert.equal(dlv.lines[0].qty, 2);
+});
+
+test('المشتريات الداخلية: الحسابات والتحذيرات مسبَّبة', () => {
+  // IPR
+  assert.equal(iprLineEstimate({ qty: 3, estPrice: 100 }), 300);
+  assert.equal(iprEstimatedTotal([{ qty: 3, estPrice: 100 }, { qty: 1, estPrice: 50 }]), 350);
+  assert.ok(iprWarnings({ header: { availableBudget: 200 }, lines: [{ qty: 3, estPrice: 100 }] }).some((x) => /يتجاوز الميزانية/.test(x)));
+  // RFQ
+  assert.equal(lowestOffer([{ offerTotal: 500 }, { offerTotal: 380 }, { offerTotal: 0 }]), 380);
+  assert.equal(offersCount([{ supplierName: 'أ' }, { supplierName: '' }, { supplierName: 'ب' }]), 2);
+  assert.ok(rfqWarnings({ header: {}, lines: [] }).some((x) => /لا عروض/.test(x)));
+  assert.ok(
+    rfqWarnings({ header: {}, lines: [{ supplierName: 'أ', offerTotal: 500, selected: 'الفائز' }, { supplierName: 'ب', offerTotal: 300 }] })
+      .some((x) => /ليس أقلّ العروض/.test(x)),
+    'يُنبَّه حين لا يكون الفائز الأرخص'
+  );
+  // IPO
+  assert.equal(ipoSubtotal([{ qty: 2, unitPrice: 2900 }]), 5800);
+  assert.equal(ipoNetTotal({ header: { discount: 800 }, lines: [{ qty: 2, unitPrice: 2900 }] }), 5000);
+  assert.ok(ipoWarnings({ header: {}, lines: [{ qty: 2, unitPrice: 0 }] }).some((x) => /بلا سعر وحدة/.test(x)));
+  // PV
+  assert.equal(disbursedTotal([{ qty: 2, unitPrice: 2900 }]), 5800);
+  assert.ok(pvWarnings({ header: { paymentMethod: 'شيك' }, lines: [{ qty: 1, unitPrice: 5 }] }).some((x) => /رقم مرجعي/.test(x)));
+  // DLV
+  assert.equal(deliveredCount([{ description: 'x', qty: 2 }, { description: '', qty: 1 }]), 1);
+  assert.ok(dlvWarnings({ lines: [{ description: 'x', qty: 1, condition: 'تالف جزئي' }] }).some((x) => /تالف/.test(x)));
 });

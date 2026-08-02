@@ -121,14 +121,26 @@ test('«الحركة»: صفحاته الثلاث فقط، ولا رئيسية',
   assert.equal(isPathAllowed('fleet', `${BASE}/dashboard`, BASE), false);
 });
 
-test('«مستخدم إدارة»: صفحاته الأربع فقط، ولا رئيسية', () => {
+test('«مستخدم إدارة»: طلبات الإدارات والمشتريات الداخلية، مع الرئيسية', () => {
   for (const p of ['/dashboard/hiring-requests', '/dashboard/tasks', '/dashboard/meeting-assistant', '/dashboard/wh-manager-eval']) {
     assert.equal(isPathAllowed('department_user', `${BASE}${p}`, BASE), true, `منع ${p}`);
     assert.equal(isPathAllowed('department_user', `${BASE}${p}/`, BASE), true, `الشرطة الختامية كسرت ${p}`);
   }
+  // اكتسب صفحة دورة المشتريات الداخلية (المستفيد يُصدر الطلب).
+  assert.equal(isPathAllowed('department_user', `${BASE}/dashboard/procurement`, BASE), true);
+  // صار له منطقتان فيرى الرئيسية (قاعدة «المركّز بمجموعةٍ واحدة» لم تعد تنطبق عليه).
+  assert.equal(isPathAllowed('department_user', `${BASE}/dashboard`, BASE), true);
+  // لكنّه ما يزال محجوبًا عمّا لا يخصّه.
   assert.equal(isPathAllowed('department_user', `${BASE}/dashboard/warehouses`, BASE), false);
   assert.equal(isPathAllowed('department_user', `${BASE}/dashboard/recruitment`, BASE), false);
-  assert.equal(isPathAllowed('department_user', `${BASE}/dashboard`, BASE), false);
+});
+
+test('«أمين الخزينة»: دورة المشتريات وحدها', () => {
+  assert.equal(isPathAllowed('treasury', `${BASE}/dashboard/procurement`, BASE), true);
+  // مركّز بمجموعة واحدة فلا يرى الرئيسية، ولا صفحات المستودعات أو التقارير.
+  assert.equal(isPathAllowed('treasury', `${BASE}/dashboard`, BASE), false);
+  assert.equal(isPathAllowed('treasury', `${BASE}/dashboard/warehouses`, BASE), false);
+  assert.equal(isPathAllowed('treasury', `${BASE}/dashboard/reports`, BASE), false);
 });
 
 test('صفحة في مجموعتين بأدوار مختلفة: يكفي موضع واحد مسموح', () => {
@@ -144,7 +156,10 @@ test('وجهة الهبوط: الرئيسية لمن يراها، وصفحة ع�
   assert.equal(landingPathFor('admin'), HOME_PATH);
   assert.equal(landingPathFor('storekeeper'), HOME_PATH);
   assert.equal(landingPathFor('fleet'), '/dashboard/vehicles-inventory');
-  assert.equal(landingPathFor('department_user'), '/dashboard/hiring-requests');
+  // مستخدم الإدارة صار له منطقتان (طلبات الإدارات + المشتريات الداخلية) فيرى الرئيسية.
+  assert.equal(landingPathFor('department_user'), HOME_PATH);
+  // أمين الخزينة دورٌ مركّز بمجموعة واحدة (المشتريات) فيهبط على صفحة عمله مباشرة.
+  assert.equal(landingPathFor('treasury'), '/dashboard/procurement');
 });
 
 test('وجهة الهبوط مسموحة دائمًا لصاحبها (لا حلقة تحويل لا نهائية)', () => {

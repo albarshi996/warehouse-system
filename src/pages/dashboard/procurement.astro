@@ -1,0 +1,23 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import ProcurementCycleHub from '../../components/brandzo-erp/procurement/ProcurementCycleHub.jsx';
+---
+
+<DashboardLayout title="دورة المشتريات الداخلية" showGuide={false} light>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">دورة المشتريات الداخلية</h1>
+      <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
+        طلبات الإدارات والأقسام الموجَّهة للإدارة المالية، مُدارةً من البداية إلى التسليم:
+        يُصدر المستفيد <b>طلب مشتريات</b> ← يوفّر فريق المشتريات <b>العروض</b> ← يعتمد <b>المدير المالي</b>
+        ← يصدر <b>أمر الشراء</b> ← تصرف <b>الخزينة</b> القيمة ← يُسلَّم للمستفيد بمحضرٍ موقَّع.
+        كلّ حلقةٍ مستندٌ رسميٌّ مرقَّم، لا تُنجَز قبل اعتماد سابقتها.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <ProcurementCycleHub client:load />
+  </div>
+</DashboardLayout>
