@@ -1,0 +1,323 @@
+---
+/**
+ * سجلّ حركة الأدوار — لوحة موحّدة تُبرز ميزة تتبّع الأدوار في البوابة.
+ * الصفحة عرضٌ خالص فوق `src/data/role-activity.json` (بيانات بذرة تمثيليّة).
+ * في التشغيل الحيّ يتجمّع السجلّ آليًّا من مصدرين إضافيّين-فقط على الخادم:
+ * قيود تدقيق المستندات (documents/{id}/audit · byRole) ودفتر حركات المخزون
+ * (stock_moves · postedByRole). ألوان الأدوار وأسماؤها من المصدر الواحد roles.js.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import data from '../../data/role-activity.json';
+import { getRole } from '../../services/auth/roles.js';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+
+// ترتيب القيود زمنيًّا تنازليًّا ("YYYY-MM-DD HH:MM" يترتّب معجميًّا = زمنيًّا).
+const entries = [...data.entries].sort((a, b) => b.at.localeCompare(a.at));
+
+// الأدوار الفاعلة فعلًا في البيانات، مرتّبة بعدد قيودها تنازليًّا.
+const roleCount = {};
+const roleOrder = [];
+for (const e of data.entries) {
+  roleCount[e.roleId] = (roleCount[e.roleId] || 0) + 1;
+  if (!roleOrder.includes(e.roleId)) roleOrder.push(e.roleId);
+}
+const activeRoles = roleOrder
+  .map((id) => ({ id, role: getRole(id), count: roleCount[id] }))
+  .sort((a, b) => b.count - a.count);
+
+// أنواع الحركة الموجودة فعلًا (بالترتيب المنطقي للدورة المستندية).
+const ACTION_ORDER = ['created', 'submitted', 'approved', 'rejected', 'completed', 'posted'];
+const ACTION_META = {
+  created:   { label: 'إنشاء',  color: '#6b7280' },
+  submitted: { label: 'تقديم',  color: '#e0a83c' },
+  approved:  { label: 'اعتماد', color: '#2e9e5b' },
+  rejected:  { label: 'رفض',    color: '#c41e3a' }, /* الأحمر للتحذير فقط */
+  completed: { label: 'إنجاز',  color: '#0ea5e9' },
+  posted:    { label: 'ترحيل',  color: '#DAAA3C' },
+};
+const actionCount = {};
+for (const e of data.entries) actionCount[e.action] = (actionCount[e.action] || 0) + 1;
+const usedActions = ACTION_ORDER.filter((a) => actionCount[a]);
+
+// أسماء أنواع المستندات العربية (للقراءة، والرمز يبقى للبحث والربط).
+const DOC_LABEL = {
+  GP: 'إذن بوابة', GRN: 'سند استلام', QC: 'فحص جودة', PO: 'أمر شراء',
+  PV: 'سند صرف', ADJ: 'تسوية جرد', RMA: 'مرتجع', CN: 'إشعار دائن',
+  DO: 'أمر تسليم', TRIP: 'رحلة نقل', WO: 'أمر صيانة', CUST: 'عهدة',
+  PR: 'طلب شراء', RFQ: 'طلب عروض',
+};
+const docLabel = (t) => DOC_LABEL[t] ?? t;
+
+const stats = {
+  total: data.entries.length,
+  roles: activeRoles.length,
+  approvals: data.entries.filter((e) => e.action === 'approved').length,
+  docs: new Set(data.entries.map((e) => e.docNumber)).size,
+};
+
+// لون الزرّ العامّ «الكل» = الكحليّ (لا الأحمر — الأحمر للتحذير فقط).
+const ALL_COLOR = '#1a1a2e';
+---
+
+<DashboardLayout title="سجلّ حركة الأدوار" light>
+  <div class="text-right doc-trail" dir="rtl">
+    {/* ترويسة */}
+    <div class="mb-8 rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-accent/30 p-6 sm:p-10">
+      <p class="text-[11px] text-muted mb-2">{data.meta.refNumber} · الإصدار {data.meta.version} · {data.meta.issued}</p>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-ink leading-snug mb-3">{data.meta.title}</h1>
+      <p class="text-sm text-ink-2 leading-relaxed max-w-4xl mb-4">{data.meta.purpose}</p>
+      <div class="rounded-xl border border-accent/30 bg-accent/5 p-4">
+        <p class="text-[11px] font-bold text-brand-yellow mb-1">مصدر البيانات الحيّ</p>
+        <p class="text-xs text-ink-2 leading-relaxed">{data.meta.note}</p>
+        <ul class="mt-2 flex flex-wrap gap-x-5 gap-y-1">
+          {data.meta.sources.map((s) => (
+            <li class="text-[11px] text-muted flex gap-1.5"><span class="text-brand-yellow shrink-0">•</span><span>{s}</span></li>
+          ))}
+        </ul>
+      </div>
+      <div class="mt-5 flex flex-wrap gap-3 no-print">
+        <a href={`${base}/dashboard/documents`} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all">المستندات (المصدر الأول)</a>
+        <a href={`${base}/dashboard/stock-ledger`} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all">دفتر حركات المخزون (المصدر الثاني)</a>
+        <button type="button" id="printTrail" class="px-4 py-2 bg-brand-navy text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all">طباعة السجلّ</button>
+      </div>
+    </div>
+
+    {/* بطاقات الإحصاء */}
+    <section class="mb-10">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { v: stats.total, l: 'إجمالي القيود' },
+          { v: stats.roles, l: 'دورًا فاعلًا' },
+          { v: stats.approvals, l: 'اعتمادًا' },
+          { v: stats.docs, l: 'مستندًا متأثّرًا' },
+        ].map((s) => (
+          <div class="bg-chip border border-line rounded-xl p-4 text-center">
+            <div class="text-2xl font-extrabold text-brand-yellow">{s.v}</div>
+            <div class="text-[11px] text-ink-2 mt-1">{s.l}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* المصفّيات */}
+    <section class="mb-8 rounded-2xl bg-chip border border-line p-5 no-print">
+      {/* بالدور */}
+      <div class="mb-4">
+        <p class="text-[11px] font-bold text-muted mb-2">تصفية بالدور</p>
+        <div class="flex flex-wrap gap-2" id="roleFilters">
+          <button
+            type="button"
+            data-role-filter="all"
+            data-color={ALL_COLOR}
+            class="role-filter px-3 py-2 rounded-xl border text-xs font-bold transition-all"
+            style={`background:${ALL_COLOR}14; color:${ALL_COLOR}; border-color:${ALL_COLOR}66;`}
+          >
+            كل الأدوار ({stats.total})
+          </button>
+          {activeRoles.map((r) => (
+            <button
+              type="button"
+              data-role-filter={r.id}
+              data-color={r.role.color}
+              class="role-filter px-3 py-2 rounded-xl border text-xs font-bold transition-all inline-flex items-center gap-1.5"
+              style={`background:${r.role.color}14; color:${r.role.color}; border-color:${r.role.color}66;`}
+            >
+              <span aria-hidden="true">{r.role.emoji}</span>
+              <span>{r.role.label} ({r.count})</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* بنوع الحركة */}
+      <div class="mb-4">
+        <p class="text-[11px] font-bold text-muted mb-2">تصفية بنوع الحركة</p>
+        <div class="flex flex-wrap gap-2" id="actionFilters">
+          <button
+            type="button"
+            data-action-filter="all"
+            data-color={ALL_COLOR}
+            class="action-filter px-3 py-2 rounded-xl border text-xs font-bold transition-all"
+            style={`background:${ALL_COLOR}14; color:${ALL_COLOR}; border-color:${ALL_COLOR}66;`}
+          >
+            كل الحركات ({stats.total})
+          </button>
+          {usedActions.map((a) => (
+            <button
+              type="button"
+              data-action-filter={a}
+              data-color={ACTION_META[a].color}
+              class="action-filter px-3 py-2 rounded-xl border text-xs font-bold transition-all"
+              style={`background:${ACTION_META[a].color}14; color:${ACTION_META[a].color}; border-color:${ACTION_META[a].color}66;`}
+            >
+              {ACTION_META[a].label} ({actionCount[a]})
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* بحث برقم المستند */}
+      <div>
+        <p class="text-[11px] font-bold text-muted mb-2">بحث برقم المستند</p>
+        <div class="relative max-w-md">
+          <input
+            type="text"
+            id="docSearch"
+            autocomplete="off"
+            placeholder="مثال: BFP-GRN-2026-0042"
+            class="w-full bg-surface-2 border border-line rounded-xl text-ink text-sm px-4 py-2.5 focus:outline-none focus:border-accent/60"
+          />
+        </div>
+      </div>
+    </section>
+
+    {/* الخطّ الزمنيّ للقيود */}
+    <section class="mb-10">
+      <div class="flex items-center justify-between gap-3 mb-4 flex-wrap">
+        <h2 class="text-xl font-bold text-ink">الخطّ الزمنيّ للحركة</h2>
+        <span id="trailCount" class="text-[11px] text-muted">{stats.total} قيدًا</span>
+      </div>
+
+      <div class="space-y-3" id="trailList">
+        {entries.map((e) => {
+          const role = getRole(e.roleId);
+          const act = ACTION_META[e.action] ?? { label: e.action, color: '#6b7280' };
+          return (
+            <div
+              data-entry
+              data-role={e.roleId}
+              data-action={e.action}
+              data-doc={e.docNumber.toLowerCase()}
+              class="entry-card rounded-2xl bg-chip border border-line p-4 sm:p-5"
+              style={`border-right:3px solid ${role.color};`}
+            >
+              <div class="flex items-start justify-between gap-3 flex-wrap">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-bold"
+                    style={`background:${role.color}14; color:${role.color}; border-color:${role.color}66;`}
+                  >
+                    <span aria-hidden="true">{role.emoji}</span>{role.label}
+                  </span>
+                  <span
+                    class="inline-flex items-center px-2.5 py-1 rounded-lg border text-[10px] font-bold"
+                    style={`background:${act.color}14; color:${act.color}; border-color:${act.color}66;`}
+                  >
+                    {act.label}
+                  </span>
+                </div>
+                <span class="text-[11px] text-muted shrink-0">{e.at}</span>
+              </div>
+
+              <p class="mt-2.5 text-sm font-bold text-ink">
+                {docLabel(e.docType)} <span class="text-ink-2 font-mono font-normal">· {e.docNumber}</span>
+              </p>
+              <p class="text-xs text-ink-2 leading-relaxed mt-1.5">{e.note}</p>
+              <p class="text-[11px] text-muted mt-2">الفاعل: <span class="text-ink-2 font-medium">{e.actorName}</span></p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div id="trailEmpty" class="hidden rounded-2xl bg-chip border border-line p-8 text-center text-sm text-muted">
+        لا توجد قيود مطابقة للمصفّيات المختارة.
+      </div>
+    </section>
+
+    {/* اعتماد السجلّ */}
+    <section class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-line p-6">
+      <h2 class="text-sm font-bold text-ink mb-6 text-center">اعتماد السجلّ</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto text-center">
+        <div>
+          <img src={`${base}/identity/signatures/signature-2.png`} alt="توقيع محمد البرشي" class="h-16 mx-auto mb-2 object-contain" />
+          <p class="font-bold text-ink text-sm">محمد البرشي</p>
+          <p class="text-[11px] text-muted">مدير إدارة السلاسل والإمداد والمخازن</p>
+        </div>
+        <div>
+          <img src={`${base}/identity/signatures/signature-1.png`} alt="توقيع رمزي الباش" class="h-16 mx-auto mb-2 object-contain" />
+          <p class="font-bold text-ink text-sm">رمزي الباش</p>
+          <p class="text-[11px] text-muted">مدير إدارة الخدمات اللوجستية والخدمية</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      .doc-trail { color: #111 !important; }
+    }
+  </style>
+
+  <script>
+    // ── حالة المصفّيات الثلاث المجتمعة ──
+    const state = { role: 'all', action: 'all', q: '' };
+
+    const roleBtns = Array.from(document.querySelectorAll('[data-role-filter]'));
+    const actionBtns = Array.from(document.querySelectorAll('[data-action-filter]'));
+    const rows = Array.from(document.querySelectorAll('[data-entry]'));
+    const searchInput = document.getElementById('docSearch');
+    const emptyBox = document.getElementById('trailEmpty');
+    const countEl = document.getElementById('trailCount');
+
+    // يرسم زرًّا بلونه: نشط = تعبئة، خامل = مخطَّط باهت.
+    function paint(btn, active) {
+      const c = btn.getAttribute('data-color') || '#1a1a2e';
+      if (active) {
+        btn.style.background = c;
+        btn.style.color = '#ffffff';
+        btn.style.borderColor = c;
+      } else {
+        btn.style.background = c + '14';
+        btn.style.color = c;
+        btn.style.borderColor = c + '66';
+      }
+    }
+
+    function apply() {
+      let visible = 0;
+      rows.forEach((r) => {
+        const okRole = state.role === 'all' || r.getAttribute('data-role') === state.role;
+        const okAction = state.action === 'all' || r.getAttribute('data-action') === state.action;
+        const okQ = state.q === '' || (r.getAttribute('data-doc') || '').indexOf(state.q) >= 0;
+        const show = okRole && okAction && okQ;
+        r.classList.toggle('hidden', !show);
+        if (show) visible++;
+      });
+      if (emptyBox) emptyBox.classList.toggle('hidden', visible !== 0);
+      if (countEl) countEl.textContent = visible + ' قيدًا';
+    }
+
+    roleBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.role = btn.getAttribute('data-role-filter');
+        roleBtns.forEach((b) => paint(b, b === btn));
+        apply();
+      });
+    });
+
+    actionBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.action = btn.getAttribute('data-action-filter');
+        actionBtns.forEach((b) => paint(b, b === btn));
+        apply();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        state.q = searchInput.value.trim().toLowerCase();
+        apply();
+      });
+    }
+
+    // الحالة الأولى: زرّا «الكل» نشطان.
+    roleBtns.forEach((b) => paint(b, b.getAttribute('data-role-filter') === 'all'));
+    actionBtns.forEach((b) => paint(b, b.getAttribute('data-action-filter') === 'all'));
+
+    document.getElementById('printTrail')?.addEventListener('click', () => window.print());
+  </script>
+</DashboardLayout>

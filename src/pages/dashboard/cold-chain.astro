@@ -1,0 +1,216 @@
+---
+/**
+ * تكامل إنترنت الأشياء لسلسلة التبريد — الملحق م-٥/٢.
+ * لوحة مراقبة حرارة/رطوبة المناطق المبرّدة، مربوطة بنقاط التحكم الحرجة
+ * HACCP/CCP للاستلام المبرّد. الصفحة عرضٌ خالص فوق `src/data/cold-chain.json`
+ * ببيانات بذرة تمثيليّة، والحالة تُحسب هنا آليًّا من حدود كل منطقة.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import data from '../../data/cold-chain.json';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+
+/** هامش التحذير قرب الحدّ (بالدرجات). */
+const WARN_MARGIN = 1.0;
+
+/** حساب الحالة من الحرارة مقابل حدَّي المنطقة. */
+function statusOf(temp, min, max) {
+  if (temp < min || temp > max) return 'تجاوز';
+  if (temp - min <= WARN_MARGIN || max - temp <= WARN_MARGIN) return 'تحذير';
+  return 'طبيعي';
+}
+
+const zones = data.zones.map((z) => ({ ...z, status: statusOf(z.currentTemp, z.minLimit, z.maxLimit) }));
+
+/** خريطة معرّف المنطقة → حدودها لحساب حالة سجلّ القراءات. */
+const zoneLimits = Object.fromEntries(data.zones.map((z) => [z.id, z]));
+const readingLog = data.readingLog.map((r) => {
+  const z = zoneLimits[r.zoneId];
+  return { ...r, status: z ? statusOf(r.temp, z.minLimit, z.maxLimit) : r.status };
+});
+
+const zonesCount = zones.length;
+const inRangeCount = zones.filter((z) => z.status === 'طبيعي').length;
+const alertsCount = zones.filter((z) => z.status !== 'طبيعي').length;
+
+/** أنماط الحالة — الأحمر للتجاوز فقط، الأصفر للتحذير، الأخضر للطبيعي. */
+const STATUS_STYLE = {
+  'طبيعي': 'bg-green-500/15 text-green-300 border-green-500/40',
+  'تحذير': 'bg-yellow-400/15 text-yellow-200 border-yellow-400/40',
+  'تجاوز': 'bg-red-500/15 text-red-300 border-red-500/40',
+};
+const STATUS_DOT = { 'طبيعي': 'bg-green-500', 'تحذير': 'bg-yellow-400', 'تجاوز': 'bg-red-500' };
+const TEMP_TEXT = { 'طبيعي': 'text-green-300', 'تحذير': 'text-yellow-200', 'تجاوز': 'text-red-300' };
+const CARD_RING = {
+  'طبيعي': 'border-line',
+  'تحذير': 'border-yellow-400/50',
+  'تجاوز': 'border-red-500/60 bg-red-500/[0.04]',
+};
+---
+
+<DashboardLayout title="سلسلة التبريد — IoT" light>
+  <div class="text-right doc-cold" dir="rtl">
+    {/* ترويسة */}
+    <div class="mb-8 rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-accent/30 p-6 sm:p-10">
+      <p class="text-[11px] text-muted mb-2">{data.meta.refNumber} · الإصدار {data.meta.version} · {data.meta.issued}</p>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-ink leading-snug mb-3">تكامل IoT لسلسلة التبريد</h1>
+      <p class="text-sm text-ink-2 leading-relaxed max-w-4xl">{data.meta.purpose}</p>
+      <div class="mt-4 rounded-xl border border-brand-yellow/40 bg-brand-yellow/5 p-3.5 max-w-4xl">
+        <p class="text-[11px] text-ink-2 leading-relaxed"><span class="font-bold text-brand-yellow">تنويه: </span>{data.meta.note}</p>
+      </div>
+      <div class="mt-5 flex flex-wrap gap-3 no-print">
+        <a href={`${base}/dashboard/warehouses`} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all">المستودعات والمواقع</a>
+        <button type="button" id="printCold" class="px-4 py-2 bg-brand-red text-white rounded-xl text-xs font-bold hover:bg-brand-red-dark transition-all">طباعة اللوحة</button>
+      </div>
+    </div>
+
+    {/* بطاقات الإحصاء */}
+    <section class="mb-10">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="rounded-2xl bg-chip border border-line p-5 text-center">
+          <div class="text-3xl font-extrabold text-brand-yellow">{zonesCount}</div>
+          <div class="text-xs text-ink-2 mt-1">منطقة تبريد مراقَبة</div>
+        </div>
+        <div class="rounded-2xl bg-chip border border-line p-5 text-center">
+          <div class="text-3xl font-extrabold text-green-400">{inRangeCount}</div>
+          <div class="text-xs text-ink-2 mt-1">مناطق ضمن النطاق</div>
+        </div>
+        <div class={`rounded-2xl border p-5 text-center ${alertsCount > 0 ? 'bg-red-500/[0.06] border-red-500/50' : 'bg-chip border-line'}`}>
+          <div class={`text-3xl font-extrabold ${alertsCount > 0 ? 'text-red-300' : 'text-ink-2'}`}>{alertsCount}</div>
+          <div class="text-xs text-ink-2 mt-1">إنذارات نشطة (تحذير/تجاوز)</div>
+        </div>
+      </div>
+    </section>
+
+    {/* شبكة بطاقات المناطق */}
+    <section class="mb-10">
+      <h2 class="text-xl font-bold text-ink mb-1">المناطق المبرّدة — القراءة اللحظيّة</h2>
+      <p class="text-xs text-muted mb-4">الحالة محسوبة آليًّا: طبيعي ضمن النطاق · تحذير عند الاقتراب من الحدّ (± {WARN_MARGIN}°C) · تجاوز خارج الحدَّين.</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {zones.map((z) => (
+          <div class={`rounded-2xl border p-5 ${CARD_RING[z.status]}`}>
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <h3 class="font-bold text-ink text-sm leading-snug">{z.name}</h3>
+              <span class={`px-2.5 py-1 rounded-lg border text-[10px] font-bold shrink-0 inline-flex items-center gap-1.5 ${STATUS_STYLE[z.status]}`}>
+                <span class={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[z.status]}`}></span>{z.status}
+              </span>
+            </div>
+            <div class="flex items-end gap-2 mb-3">
+              <span class={`text-4xl font-extrabold leading-none ${TEMP_TEXT[z.status]}`}>{z.currentTemp}</span>
+              <span class="text-sm text-muted mb-0.5">{z.unit}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-x-3 gap-y-2 text-[11px]">
+              <p class="text-ink-2"><span class="text-muted">النطاق المسموح: </span>{z.minLimit} إلى {z.maxLimit} {z.unit}</p>
+              <p class="text-ink-2"><span class="text-muted">الرطوبة: </span>{z.humidity}%</p>
+              <p class="text-ink-2"><span class="text-muted">المستشعر: </span>{z.sensorId}</p>
+              <p class="text-ink-2"><span class="text-muted">آخر قراءة: </span>{z.lastReading}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* قواعد نقاط التحكم الحرجة */}
+    <section class="mb-10">
+      <h2 class="text-xl font-bold text-ink mb-1">قواعد نقاط التحكم الحرجة (CCP)</h2>
+      <p class="text-xs text-muted mb-4">حدود الاستلام ومدة السماح خارج النطاق وإجراء التصعيد — مرتبطة بمبادئ HACCP لسلامة الأصناف المبرّدة.</p>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {data.ccpRules.map((c) => (
+          <div class="rounded-2xl bg-chip border border-line p-5">
+            <h3 class="font-bold text-ink text-sm leading-snug mb-3">{c.point}</h3>
+            <div class="space-y-2 text-xs">
+              <p class="text-ink-2 leading-relaxed"><span class="font-bold text-brand-yellow">الحدّ الحرج: </span>{c.limit}</p>
+              <p class="text-ink-2 leading-relaxed"><span class="font-bold text-muted">مدة السماح خارج النطاق: </span>{c.graceMinutes} دقيقة</p>
+              <p class="text-ink-2 leading-relaxed rounded-lg bg-chip border border-line p-2.5"><span class="font-bold text-brand-yellow">إجراء التصعيد: </span>{c.escalation}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* سجلّ القراءات */}
+    <section class="mb-10">
+      <h2 class="text-xl font-bold text-ink mb-1">سجلّ القراءات</h2>
+      <p class="text-xs text-muted mb-4">سلسلة زمنيّة تمثيليّة لِما سيُغذّيه منفذ المستشعرات مستقبليًّا؛ الصفوف المتجاوزة للحدّ مميَّزة بحدٍّ أحمر.</p>
+      <div class="rounded-2xl bg-chip border border-line p-4 sm:p-5">
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-right border-collapse min-w-[560px]">
+            <thead>
+              <tr class="text-ink-2 border-b border-line text-[10px]">
+                <th class="p-2.5 font-bold">المنطقة</th>
+                <th class="p-2.5 font-bold">الحرارة</th>
+                <th class="p-2.5 font-bold">الوقت</th>
+                <th class="p-2.5 font-bold">الحالة</th>
+              </tr>
+            </thead>
+            <tbody>
+              {readingLog.map((r) => (
+                <tr class={`border-b border-line align-middle ${r.status === 'تجاوز' ? 'bg-red-500/[0.06] border-r-2 border-r-red-500' : ''}`}>
+                  <td class="p-2.5 font-bold text-ink">{r.zoneName}</td>
+                  <td class={`p-2.5 font-bold ${TEMP_TEXT[r.status]}`}>{r.temp} °C</td>
+                  <td class="p-2.5 text-ink-2">{r.time}</td>
+                  <td class="p-2.5">
+                    <span class={`px-2 py-0.5 rounded border text-[10px] font-bold ${STATUS_STYLE[r.status]}`}>{r.status}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    {/* المنهجية والمراجع */}
+    <section class="mb-10 rounded-2xl bg-chip border border-line p-6">
+      <h2 class="text-lg font-bold text-ink mb-4">المنهجية والمراجع</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
+        <div>
+          <h3 class="font-bold text-brand-yellow mb-2">منهجية الحساب</h3>
+          <ul class="space-y-1.5">
+            {data.meta.methodology.map((m) => (
+              <li class="text-ink-2 leading-relaxed flex gap-2"><span class="text-brand-yellow shrink-0">•</span><span>{m}</span></li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h3 class="font-bold text-brand-yellow mb-2">المراجع</h3>
+          <ul class="space-y-1.5">
+            {data.meta.sources.map((s) => (
+              <li class="text-ink-2 leading-relaxed flex gap-2"><span class="text-brand-yellow shrink-0">•</span><span>{s}</span></li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    {/* الاعتماد */}
+    <section class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-line p-6">
+      <h2 class="text-sm font-bold text-ink mb-6 text-center">اعتماد اللوحة</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto text-center">
+        <div>
+          <img src={`${base}/identity/signatures/signature-2.png`} alt="توقيع محمد البرشي" class="h-16 mx-auto mb-2 object-contain" />
+          <p class="font-bold text-ink text-sm">محمد البرشي</p>
+          <p class="text-[11px] text-muted">مدير إدارة السلاسل والإمداد والمخازن</p>
+        </div>
+        <div>
+          <img src={`${base}/identity/signatures/signature-1.png`} alt="توقيع رمزي الباش" class="h-16 mx-auto mb-2 object-contain" />
+          <p class="font-bold text-ink text-sm">رمزي الباش</p>
+          <p class="text-[11px] text-muted">مدير إدارة الخدمات اللوجستية والخدمية</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      .doc-cold { color: #111 !important; }
+    }
+  </style>
+
+  <script>
+    document.getElementById('printCold')?.addEventListener('click', () => window.print());
+  </script>
+</DashboardLayout>

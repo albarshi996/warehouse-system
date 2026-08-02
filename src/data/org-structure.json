@@ -1321,7 +1321,8 @@
     { "id": "inventory_auditor", "org": "الجرد الدوري — بإشراف إدارة الجودة", "odoo": "Inventory Auditor" },
     { "id": "viewer", "org": "اطّلاع رقابي — بلا موقع تنفيذي", "odoo": "—" },
     { "id": "department_user", "org": "الإدارات المساندة (طلبات التوظيف والتقييم)", "odoo": "—" },
-    { "id": "fleet", "org": "قسم النقل والحركة", "odoo": "Fleet User" }
+    { "id": "fleet", "org": "قسم النقل والحركة", "odoo": "Fleet User" },
+    { "id": "treasury", "org": "الإدارة المالية — أمين الخزينة (دورة المشتريات الداخلية)", "odoo": "Accounting (Cashier / Payments)" }
   ],
   "portalRoleGaps": [
     "قسم الحوكمة المستندية بلا دور بوابة مخصّص — المقترح: استحداث دور doc_controller «موظف الحوكمة المستندية» (قرار مالك معلّق)",

@@ -68,6 +68,9 @@ export const NAV_GROUPS = [
       { path: '/dashboard/order-control', label: 'الرقابة على الطلبات', icon: 'clipboardList' },
       { path: '/dashboard/retail-hub', label: 'خريطة التجزئة', icon: 'mapPin' },
       { path: '/dashboard/assets-inventory', label: 'جرد الأصول', icon: 'clipboardList' },
+      // مراقبة سلسلة التبريد (IoT) وقوائم السلامة المهنية — ملحقا المرجع م-٥/٢ و م-٥/٣.
+      { path: '/dashboard/cold-chain', label: 'سلسلة التبريد (IoT)', icon: 'package' },
+      { path: '/dashboard/hse-checklists', label: 'قوائم السلامة (HSE)', icon: 'clipboardList' },
     ],
   },
   {
@@ -121,6 +124,14 @@ export const NAV_GROUPS = [
       // ديلويت، بأرقامٍ حيّة من الدراسة (استعداد ديلويت — اليوم 5).
       { path: '/dashboard/interview-readiness', label: 'حزمة الاستعداد — البروفة', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/global-doc-cycles', label: 'الدورات المستندية العالمية', icon: 'bookOpen' },
+      // حزمة المطابقة والتسليم لشركة الميزان (2026-08-02): شرح المرجع · قبول UAT ·
+      // قيمة البوابة · أداء الموردين · سجلّ حركة الأدوار · استمرارية الأعمال.
+      { path: '/dashboard/reference-guide', label: 'الشرح التفاعلي للمرجع', icon: 'bookOpen' },
+      { path: '/dashboard/acceptance-check', label: 'المطابقة والاستلام (UAT)', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
+      { path: '/dashboard/portal-value', label: 'لماذا البوابة تكامليّة لأودو', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
+      { path: '/dashboard/vendor-scorecard', label: 'بطاقة أداء الموردين', icon: 'users', roles: ['admin', 'warehouse_manager', 'purchase_officer', 'finance_manager'] },
+      { path: '/dashboard/role-activity', label: 'سجلّ حركة الأدوار', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
+      { path: '/dashboard/business-continuity', label: 'استمرارية الأعمال (BCP)', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
       // كانت صفحة يتيمة: مبنيّة وغير مربوطة بأي قائمة — كشفها تدقيق 23.07.
       { path: '/تقرير-الدورة-المستندية-الكامل-2026.html', label: 'الدورة المستندية والتنظيم', icon: 'clipboardList', external: true },
       { path: '/المرجع-التشغيلي-الرسمي.html', label: 'المرجع التشغيلي الرسمي', icon: 'bookOpen', external: true },

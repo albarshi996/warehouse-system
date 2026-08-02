@@ -1,0 +1,132 @@
+{
+  "meta": {
+    "refNumber": "BFP-SCM-XWALK-2026-001",
+    "version": "1.0",
+    "issued": "2026-08-02",
+    "title": "سجلّ المطابقة ثنائي الاتجاه — المرجع التشغيلي الرسمي ↔ البوابة التفاعليّة",
+    "purpose": "مطابقة دقيقة بين المرجع التشغيلي الرسمي (نطاق الهدف الذي ستبنيه شركة الميزان في أودو) والبوابة التفاعليّة (النموذج الحيّ المُنفَّذ) — لضمان أن كل خدمة في المرجع لها مقابل في البوابة، وكل خدمة في البوابة موثّقة في المرجع. مُنتَجٌ بجردٍ من الكود لا من الذاكرة (مبدأ «تحقّق قبل الثقة»).",
+    "methodology": [
+      "قراءة المرجع الرسمي فصلًا فصلًا: الدورة المستندية (١٢ مرحلة) · مصفوفة النماذج · الأدوار · الحرّاس · الملاحق الستة.",
+      "جرد البوابة من الكود: سجلّ المخطّطات (SCHEMAS) · السلاسل (chain.js) · الأدوار (roles.js) · الحرّاس (states.js/chain.js/firestore.rules) · كتالوج التنقّل.",
+      "لكل بند: تحديد الاتجاه (المرجع متأخّر عن البوابة / البوابة تنقصها خدمة) والإجراء والحالة.",
+      "الأرقام حيّة مشتقّة من الكود: ٢٤ نموذجًا محكومًا في ٧ سلاسل + سند تالف مفرد · ١٣ دورًا."
+    ],
+    "sources": [
+      "public/المرجع-التشغيلي-الرسمي.html — المرجع التشغيلي الرسمي (٢٢ فصلًا + ٦ ملاحق)",
+      "src/services/documents/schemas/index.js — سجلّ النماذج الـ٢٤ المحكومة",
+      "src/services/documents/chain.js — السلاسل السبع والمطابقة الثلاثية",
+      "src/services/auth/roles.js — الأدوار الثلاثة عشر",
+      "src/services/documents/states.js · firestore.rules — طبقات الحرّاس",
+      "src/data/org-structure.json — المصدر التنظيمي المولِّد لفصول المرجع"
+    ]
+  },
+  "legend": [
+    { "key": "match", "labelAr": "مطابق", "desc": "موجود في الطرفين ومتوائم — لا إجراء.", "tone": "green" },
+    { "key": "dev", "labelAr": "مطوَّر", "desc": "البوابة تنفّذه أعمق ممّا يصفه المرجع (توسعة/تعميق).", "tone": "blue" },
+    { "key": "add-ref", "labelAr": "يُضاف للمرجع", "desc": "البوابة سبقت المرجع — يجب توثيقه في المرجع لتسليمه لشركة الميزان.", "tone": "yellow" },
+    { "key": "building", "labelAr": "قيد البناء", "desc": "المرجع يصفه والبوابة تبنيه الآن ضمن التطوير الشامل.", "tone": "purple" },
+    { "key": "odoo-scope", "labelAr": "نطاق أودو", "desc": "خدمة تُنفَّذ آليًّا داخل أودو (لا كمستند محكوم مستقلّ في البوابة) — موثّقة لا مبنيّة.", "tone": "gray" }
+  ],
+  "forms": [
+    { "portalCode": "PR", "refNo": 1, "nameAr": "طلب شراء داخلي", "nameEn": "Purchase Requisition", "chain": "الوارد", "odoo": "Purchase › Requisitions", "status": "match", "note": "متوائم — الطلب يبدأ الدورة الوارِدة." },
+    { "portalCode": "PO", "refNo": 2, "nameAr": "أمر الشراء", "nameEn": "Purchase Order", "chain": "الوارد", "odoo": "Purchase › Orders", "status": "match", "note": "يُشتقّ من PR المعتمَد." },
+    { "portalCode": null, "refNo": 3, "nameAr": "إشعار الشحن المسبق", "nameEn": "Advanced Shipping Notice (ASN)", "chain": "الوارد", "odoo": "Inventory › Receipts", "status": "odoo-scope", "note": "في البوابة جزءٌ من تجهيز الاستلام لا مستندًا محكومًا مستقلًّا؛ يُنشأ في أودو عند جدولة الاستلام." },
+    { "portalCode": "GRN", "refNo": 4, "nameAr": "مذكرة استلام البضائع", "nameEn": "Goods Received Note", "chain": "الوارد", "odoo": "Inventory › Receipts", "status": "match", "note": "يعتمده مفتّش الجودة (فصل أدوار)." },
+    { "portalCode": "QC", "refNo": 5, "nameAr": "تقرير فحص الجودة", "nameEn": "QC Inspection Report", "chain": "الوارد", "odoo": "Quality › Quality Controls", "status": "match", "note": "حارس الجودة: لا إنجاز استلام بلا فحص." },
+    { "portalCode": "PUTAWAY", "refNo": 6, "nameAr": "أمر التخزين الموجّه", "nameEn": "Putaway List", "chain": "الوارد", "odoo": "Inventory › Putaway Rules", "status": "match", "note": "توجيه البضاعة لمواقعها بالباركود." },
+    { "portalCode": null, "refNo": 7, "nameAr": "بطاقة مراقبة الموقع", "nameEn": "Bin Card", "chain": "التخزين", "odoo": "Inventory › Lots / Moves", "status": "odoo-scope", "note": "سجلّ مستمرّ آليّ؛ يقابله في البوابة «دفتر حركات المخزون» (stock_moves)." },
+    { "portalCode": "TR", "refNo": 8, "nameAr": "طلب صرف/نقل داخلي", "nameEn": "Store Requisition / Stock Transfer Slip", "chain": "النقل", "odoo": "Inventory › Internal Transfers", "status": "dev", "note": "وسّعت البوابة «إذن النقل» الواحد في المرجع إلى سلسلة ثلاثية TR→TRN→TRC (رصيدٌ يمرّ بموقعٍ وسيط)." },
+    { "portalCode": "TRN", "refNo": null, "nameAr": "مستند النقل (الشحن)", "nameEn": "Transfer Dispatch", "chain": "النقل", "odoo": "Inventory › Internal Transfers", "status": "add-ref", "note": "حلقة الشحن — تُدخل الرصيد مخزن النقل الوسيط. غائبة عن مصفوفة المرجع." },
+    { "portalCode": "TRC", "refNo": null, "nameAr": "استلام النقل", "nameEn": "Transfer Receipt", "chain": "النقل", "odoo": "Inventory › Internal Transfers", "status": "add-ref", "note": "حلقة الاستلام — تُفرّغ مخزن النقل. غائبة عن مصفوفة المرجع." },
+    { "portalCode": "SO", "refNo": null, "nameAr": "أمر البيع", "nameEn": "Sales Order", "chain": "الصادر", "odoo": "Sales › Orders", "status": "add-ref", "note": "رأس السلسلة الصادرة — غائب عن مصفوفة المرجع الـ٢١." },
+    { "portalCode": "PICK", "refNo": 9, "nameAr": "قائمة السحب", "nameEn": "Picking List", "chain": "الصادر", "odoo": "Inventory › Transfers (Pick)", "status": "match", "note": "حارس FEFO يُعرض على السحب." },
+    { "portalCode": "PACK", "refNo": 10, "nameAr": "قائمة التعبئة", "nameEn": "Packing List", "chain": "الصادر", "odoo": "Inventory › Transfers (Pack)", "status": "match", "note": "متوائم." },
+    { "portalCode": "DN", "refNo": 11, "nameAr": "إذن التسليم", "nameEn": "Delivery Note", "chain": "الصادر", "odoo": "Inventory › Delivery Orders", "status": "match", "note": "يتفرّع إلى تصريح البوابة (GP) والفاتورة (INV)." },
+    { "portalCode": "GP", "refNo": 12, "nameAr": "تصريح خروج من البوابة", "nameEn": "Gate Pass", "chain": "الصادر", "odoo": "Inventory (Custom Form)", "status": "match", "note": "يعتمده ضابط البوابة (فصل أدوار) — حارس البوابة." },
+    { "portalCode": "INV", "refNo": null, "nameAr": "فاتورة العميل", "nameEn": "Customer Invoice", "chain": "الفوترة", "odoo": "Accounting › Invoices", "status": "add-ref", "note": "الأثر المالي المتفرّع من إذن التسليم — غائب عن مصفوفة المرجع (المرجع يوثّق فاتورة المورّد في الفصل المالي فقط)." },
+    { "portalCode": "RET", "refNo": 14, "nameAr": "إشعار الإرجاع", "nameEn": "Return Note", "chain": "المرتجعات", "odoo": "Inventory › Return Transfers", "status": "match", "note": "يعتمده مفتّش الجودة." },
+    { "portalCode": "CN", "refNo": 17, "nameAr": "إشعار دائن", "nameEn": "Credit Note", "chain": "المرتجعات", "odoo": "Accounting › Credit Notes", "status": "match", "note": "حارس الإشعار الدائن: لا خصم بلا مرتجعٍ معتمَد." },
+    { "portalCode": "DMG", "refNo": 15, "nameAr": "سند التالف", "nameEn": "Damaged Goods Report", "chain": "مفرد (بلا سلسلة)", "odoo": "Inventory (Custom) + Quality", "status": "match", "note": "مستندٌ مفردٌ — قد يُكتشف التالف بلا إرجاعٍ أصلًا." },
+    { "portalCode": "CC", "refNo": 18, "nameAr": "محضر الجرد الدوري", "nameEn": "Cycle Count Sheet", "chain": "الجرد", "odoo": "Inventory › Physical Inventory", "status": "match", "note": "أساس أيّ تسوية." },
+    { "portalCode": "ADJ", "refNo": 16, "nameAr": "سند تسوية مخزون", "nameEn": "Stock Adjustment Voucher", "chain": "الجرد", "odoo": "Inventory › Physical Inventory", "status": "match", "note": "يعتمده المالي — حارس التسوية: لا تسوية بلا محضر جردٍ مصادَق." },
+    { "portalCode": "IPR", "refNo": null, "nameAr": "طلب مشتريات داخلي", "nameEn": "Internal Purchase Requisition", "chain": "المشتريات الداخلية", "odoo": "Purchase › Requisitions", "status": "add-ref", "note": "دورة طلبات الإدارات من المالية — سلسلةٌ كاملة غائبة عن المرجع." },
+    { "portalCode": "RFQ", "refNo": null, "nameAr": "كشف مقارنة العروض", "nameEn": "RFQ Comparison", "chain": "المشتريات الداخلية", "odoo": "Purchase › RFQ", "status": "add-ref", "note": "الترسية بين العروض — غائب عن المرجع." },
+    { "portalCode": "IPO", "refNo": null, "nameAr": "أمر شراء داخلي", "nameEn": "Internal Purchase Order", "chain": "المشتريات الداخلية", "odoo": "Purchase › Orders", "status": "add-ref", "note": "غائب عن المرجع." },
+    { "portalCode": "PV", "refNo": null, "nameAr": "سند صرف الخزينة", "nameEn": "Payment Voucher", "chain": "المشتريات الداخلية", "odoo": "Accounting › Payments", "status": "add-ref", "note": "يُنشئه أمين الخزينة (دور treasury) — غائب عن المرجع، ومعه الدور." },
+    { "portalCode": "DLV", "refNo": null, "nameAr": "محضر تسليم للمستفيد", "nameEn": "Delivery to Beneficiary", "chain": "المشتريات الداخلية", "odoo": "Inventory (Custom Form)", "status": "add-ref", "note": "يعتمده مستخدم الإدارة (المستفيد) — غائب عن المرجع." },
+    { "portalCode": null, "refNo": 19, "nameAr": "بطاقة تعريف الصنف", "nameEn": "Item Creation Card", "chain": "تأسيسي", "odoo": "Inventory › Products", "status": "odoo-scope", "note": "تُدار في «ماستر الأصناف» بالبوابة لا كمستندٍ محكوم في الدورة." },
+    { "portalCode": null, "refNo": 20, "nameAr": "سجل الاجتماع اليومي", "nameEn": "Daily Huddle Log", "chain": "إداري", "odoo": "Discuss / Custom", "status": "odoo-scope", "note": "نموذجٌ إداريٌّ للطباعة (قرار النطاق: خارج الدورة المحكومة)؛ يقابله شاشة «المهام»." },
+    { "portalCode": null, "refNo": 21, "nameAr": "القائمة الأسبوعية / التقرير الحر", "nameEn": "Weekly Check / Free Report", "chain": "إداري", "odoo": "Quality › Quality Alerts", "status": "odoo-scope", "note": "نموذجٌ إداريٌّ للطباعة خارج الدورة المحكومة." }
+  ],
+  "chains": [
+    { "key": "purchase", "nameAr": "الوارد (الشراء)", "seq": "PR → PO → GRN → QC → PUTAWAY", "refCovered": true, "note": "مغطّاة في المرجع (دورة المشتريات والاستلام والتخزين)." },
+    { "key": "outbound", "nameAr": "الصادر (البيع/الصرف)", "seq": "SO → PICK → PACK → DN → GP", "refCovered": false, "note": "المرجع يغطّي PICK→GP لكن رأس السلسلة (SO) غائب." },
+    { "key": "billing", "nameAr": "الفوترة", "seq": "DN → INV", "refCovered": false, "note": "فاتورة العميل غير مذكورة في مصفوفة النماذج." },
+    { "key": "return", "nameAr": "المرتجعات", "seq": "RET → CN", "refCovered": true, "note": "مغطّاة (إشعار مرتجع + إشعار دائن + تالف)." },
+    { "key": "count", "nameAr": "الجرد والتسوية", "seq": "CC → ADJ", "refCovered": true, "note": "مغطّاة." },
+    { "key": "transfer", "nameAr": "النقل بين المستودعات", "seq": "TR → TRN → TRC", "refCovered": false, "note": "المرجع يذكر «إذن نقل» واحدًا؛ البوابة سلسلة ثلاثية." },
+    { "key": "internal-procurement", "nameAr": "المشتريات الداخلية", "seq": "IPR → RFQ → IPO → PV → DLV", "refCovered": false, "note": "سلسلةٌ كاملة (طلبات الإدارات من المالية) غائبة عن المرجع تمامًا." }
+  ],
+  "roles": [
+    { "id": "admin", "nameAr": "المدير العام", "refDocumented": true, "portalBuilt": true, "status": "match", "note": "يرى كل شيء." },
+    { "id": "warehouse_manager", "nameAr": "مدير المستودع", "refDocumented": true, "portalBuilt": true, "status": "match", "note": "مالك المخزون." },
+    { "id": "storekeeper", "nameAr": "أمين المخزن", "refDocumented": true, "portalBuilt": true, "status": "match", "note": "التنفيذ الميداني." },
+    { "id": "qc_inspector", "nameAr": "مفتّش الجودة", "refDocumented": true, "portalBuilt": true, "status": "match", "note": "حارس الجودة." },
+    { "id": "gate_officer", "nameAr": "ضابط البوابة", "refDocumented": true, "portalBuilt": true, "status": "match", "note": "اعتماد تصريح الخروج." },
+    { "id": "purchase_officer", "nameAr": "موظف المشتريات", "refDocumented": true, "portalBuilt": true, "status": "match", "note": "المرجع يقترح فصل موظف/مدير المشتريات عند التوسّع." },
+    { "id": "finance_manager", "nameAr": "المدير المالي", "refDocumented": true, "portalBuilt": true, "status": "match", "note": "المطابقة الثلاثية واعتماد التسوية." },
+    { "id": "return_manager", "nameAr": "مسؤول المرتجعات", "refDocumented": true, "portalBuilt": true, "status": "match", "note": "دورة المرتجعات." },
+    { "id": "inventory_auditor", "nameAr": "مدقّق الجرد", "refDocumented": true, "portalBuilt": true, "status": "match", "note": "الجرد الدوري." },
+    { "id": "viewer", "nameAr": "مشاهد", "refDocumented": true, "portalBuilt": true, "status": "match", "note": "اطّلاع رقابي." },
+    { "id": "department_user", "nameAr": "مستخدم إدارة", "refDocumented": true, "portalBuilt": true, "status": "match", "note": "طلبات الإدارات واستلام المشتريات الداخلية." },
+    { "id": "fleet", "nameAr": "الحركة", "refDocumented": true, "portalBuilt": true, "status": "match", "note": "النقل والأسطول." },
+    { "id": "treasury", "nameAr": "أمين الخزينة", "refDocumented": false, "portalBuilt": true, "status": "add-ref", "note": "الدور الثالث عشر — مبنيّ في الكود (يُنشئ سند صرف الخزينة PV) لكنه ناقص من org-structure.json فيظهر في المرجع المولَّد بلا بياناتٍ تنظيمية. الإجراء: إضافته للمصدر وإعادة التوليد." }
+  ],
+  "guards": [
+    { "key": "quality", "nameAr": "حارس الجودة", "refMentioned": true, "portalKind": "حَجب صارم (٣ طبقات)", "status": "match", "note": "لا طريق من «مُرسَل» إلى «منجَز» دون «معتمَد»؛ مفروض في الواجهة والخدمة والخادم (firestore.rules)." },
+    { "key": "fefo", "nameAr": "حارس FEFO", "refMentioned": true, "portalKind": "تحذير بصريّ (soft)", "status": "dev", "note": "يُحسب ويُعرض على قوائم السحب؛ لا يمنع النقلة برمجيًّا. توصية للميزان: ترقيته لقيد خادمٍ في أودو إن أُريد منعًا لا تنبيهًا." },
+    { "key": "gate", "nameAr": "حارس البوابة", "refMentioned": true, "portalKind": "فصل الأدوار: حَجب · الكمية: تحذير", "status": "dev", "note": "لا خروج بلا إذن تسليمٍ معتمَد (حَجب عبر اعتماد الأب + دور ضابط البوابة)؛ سقف الكمية تحذيرٌ بصريّ." },
+    { "key": "adjustment", "nameAr": "حارس التسوية", "refMentioned": true, "portalKind": "اعتماد الأب: حَجب · الفرق: تحذير", "status": "dev", "note": "لا تسوية بلا محضر جردٍ مصادَقٍ واعتماد المالي." },
+    { "key": "credit-note", "nameAr": "حارس الإشعار الدائن", "refMentioned": true, "portalKind": "اعتماد الأب: حَجب · الكمية: تحذير", "status": "dev", "note": "لا خصم بلا مرتجعٍ معتمَد ولا بما يتجاوز المُرجَع." },
+    { "key": "parent-approval", "nameAr": "حارس اعتماد الأب", "refMentioned": false, "portalKind": "حَجب صارم", "status": "add-ref", "note": "لا يُنجَز مستندٌ قبل اعتماد أبيه المرجعيّ (docref) — العمود الفقري لصرامة السلسلة. يجب توثيقه في المرجع." },
+    { "key": "negative-balance", "nameAr": "حارس الرصيد السالب", "refMentioned": false, "portalKind": "حَجب صارم (داخل معاملة)", "status": "add-ref", "note": "لا يُقيَّد سحبٌ/صرفٌ يفوق الموجود — داخل معاملة القيد الذرّية." },
+    { "key": "double-post", "nameAr": "منع القيد المزدوج", "refMentioned": false, "portalKind": "حَجب صارم", "status": "add-ref", "note": "ختم posted + معرّف حركةٍ حتميّ (docId__lineIndex) يمنع ترحيل المستند مرّتين." },
+    { "key": "anti-forgery", "nameAr": "حرّاس التزوير على الخادم", "refMentioned": false, "portalKind": "حَجب صارم (firestore.rules)", "status": "add-ref", "note": "الرقم يُكتب مرّة واحدة · الحقول الثابتة لا تتغيّر · البنود لا تُعدَّل أثناء الاعتماد (يمنع المعتمِد من إعادة التسعير)." }
+  ],
+  "cycle": [
+    { "stage": 1, "nameAr": "طلب شراء (PR)", "kind": "تشغيلي", "portal": "PR / IPR", "status": "match" },
+    { "stage": 2, "nameAr": "أمر شراء (PO)", "kind": "تشغيلي", "portal": "PO / IPO", "status": "match" },
+    { "stage": 3, "nameAr": "إشعار شحن (ASN)", "kind": "تشغيلي", "portal": "تجهيز الاستلام", "status": "odoo-scope" },
+    { "stage": 4, "nameAr": "استلام وفحص (GRN+QC)", "kind": "تشغيلي", "portal": "GRN → QC", "status": "match" },
+    { "stage": 5, "nameAr": "تخزين موجّه (Putaway)", "kind": "تشغيلي", "portal": "PUTAWAY", "status": "match" },
+    { "stage": 6, "nameAr": "تحضير (Pick & Pack)", "kind": "تشغيلي", "portal": "PICK → PACK", "status": "match" },
+    { "stage": 7, "nameAr": "شحن وتوزيع (Dispatch)", "kind": "تشغيلي", "portal": "DN → GP", "status": "match" },
+    { "stage": 8, "nameAr": "المرتجعات (Returns)", "kind": "تشغيلي", "portal": "RET → CN / DMG", "status": "match" },
+    { "stage": 9, "nameAr": "مطابقة ثلاثية (3-Way Match)", "kind": "مالي", "portal": "threeWayMatch (PO↔GRN↔QC)", "status": "match" },
+    { "stage": 10, "nameAr": "فاتورة المورّد (Bill)", "kind": "مالي", "portal": "الأثر المالي", "status": "odoo-scope" },
+    { "stage": 11, "nameAr": "قيد يومية (Journal Entry)", "kind": "مالي", "portal": "stock_moves + تقييم", "status": "dev" },
+    { "stage": 12, "nameAr": "الإغلاق المالي (Close)", "kind": "مالي", "portal": "نطاق أودو", "status": "odoo-scope" }
+  ],
+  "services": [
+    { "key": "returns", "nameAr": "توثيق المرتجعات وإعدام التالف", "refSection": "ملحق م-١", "portalPage": "المستندات (RET·CN·DMG) + دور مسؤول المرتجعات", "status": "match", "note": "مغطّى بالسلسلة والدور." },
+    { "key": "fleet", "nameAr": "إدارة الأسطول والتتبّع الميداني", "refSection": "ملحق م-٢", "portalPage": "/dashboard/fleet-operations · /dashboard/vehicles-inventory", "status": "match", "note": "دورة الرحلة Dispatch-to-POD + الوقود." },
+    { "key": "maintenance", "nameAr": "صيانة المركبات والمعدات والمرافق", "refSection": "ملحق م-٣", "portalPage": "/dashboard/maintenance-center", "status": "match", "note": "الأصول + أوامر الشغل (WO)." },
+    { "key": "reports", "nameAr": "التقارير القياسية والتحليلية", "refSection": "ملحق م-٤", "portalPage": "/dashboard/reports · kpis · inventory-analytics · logistics-dashboard", "status": "match", "note": "لوحات مؤشّرات محسوبة من البيانات القائمة." },
+    { "key": "custody", "nameAr": "إدارة العُهد العينية", "refSection": "ملحق م-٥/١", "portalPage": "/dashboard/custody", "status": "match", "note": "سندات العُهد (CUST)." },
+    { "key": "iot-cold-chain", "nameAr": "تكامل IoT مع سلسلة التبريد", "refSection": "ملحق م-٥/٢", "portalPage": "/dashboard/cold-chain (قيد البناء)", "status": "building", "note": "مراقبة حرارة + حدود CCP + إنذارات — يُبنى الآن." },
+    { "key": "hse", "nameAr": "قوائم تدقيق الأمن والسلامة المهنية (HSE)", "refSection": "ملحق م-٥/٣", "portalPage": "/dashboard/hse-checklists (قيد البناء)", "status": "building", "note": "قوائم فحص دوريّة قابلة للتعبئة — تُبنى الآن." },
+    { "key": "vendor-scorecard", "nameAr": "بطاقة أداء الموردين", "refSection": "ملحق م-٥/٤", "portalPage": "/dashboard/vendor-scorecard (قيد البناء)", "status": "building", "note": "OTD + الجودة + السعر محسوبة من طوابع المستندات — تُبنى الآن (تعالج فجوة «الموردون ١.٠»)." },
+    { "key": "training", "nameAr": "إدارة التدريب وتأهيل الكوادر", "refSection": "ملحق م-٥/٥", "portalPage": "/dashboard/training · /dashboard/learn-odoo", "status": "match", "note": "محاكي تدريب أودو." },
+    { "key": "bcp", "nameAr": "إدارة الكوارث واستمرارية الأعمال (BCP)", "refSection": "ملحق م-٦", "portalPage": "/dashboard/business-continuity (قيد البناء)", "status": "building", "note": "سيناريوهات الكوارث + النسخ الاحتياطي + جهات الطوارئ — تُبنى الآن." },
+    { "key": "role-trail", "nameAr": "سجلّ حركة الأدوار الموحّد", "refSection": "الفصل ١٤ (تتبّع)", "portalPage": "/dashboard/role-activity (قيد البناء)", "status": "building", "note": "البيانات قائمة (audit.byRole + stock_moves) بلا شاشة موحّدة تُبرزها — تُبنى الآن." },
+    { "key": "alerts", "nameAr": "التنبيهات التلقائية", "refSection": "الفصل ١٧", "portalPage": "استثناءات محسوبة في اللوحات (pull)", "status": "odoo-scope", "note": "البوابة تحسب الاستثناءات عند فتح الشاشة؛ الدفع التلقائي (Push/Cron) نطاق أودو." }
+  ],
+  "gaps": [
+    { "id": "G-01", "area": "النماذج", "direction": "ref-behind", "title": "المرجع يعلن ٢١ نموذجًا/٤ سلاسل والواقع ٢٤ نموذجًا/٧ سلاسل", "detail": "سلسلة المشتريات الداخلية (٥ نماذج) وسلسلة النقل الثلاثية وأمر البيع وفاتورة العميل غائبة عن مصفوفة المرجع.", "action": "تحديث مصفوفة النماذج والدورة في المرجع لتعكس ٢٤/٧.", "status": "planned" },
+    { "id": "G-02", "area": "الأدوار", "direction": "ref-behind", "title": "عنوان «الأدوار الاثنا عشر» والواقع ثلاثة عشر", "detail": "الدور treasury (أمين الخزينة) مبنيّ لكنه ناقص من org-structure.json فيظهر بلا بيانات تنظيمية.", "action": "إضافة treasury إلى org-structure.json + تصحيح العنوان + إعادة التوليد.", "status": "planned" },
+    { "id": "G-03", "area": "الحرّاس", "direction": "ref-behind", "title": "المرجع يذكر ٥ حرّاس والواقع تسعة", "detail": "حرّاس اعتماد الأب والرصيد السالب والقيد المزدوج والتزوير على الخادم غير موثّقة؛ وطبيعة FEFO/الكمية «تحذير لا حَجب» غير مُبيَّنة.", "action": "توثيق الحرّاس التسعة في المرجع مع تمييز «حَجب صارم» عن «تحذير بصريّ».", "status": "planned" },
+    { "id": "G-04", "area": "الخدمات", "direction": "portal-missing", "title": "أربع خدمات في ملاحق المرجع بلا شاشة في البوابة", "detail": "بطاقة أداء الموردين · قوائم HSE · استمرارية الأعمال BCP · تكامل IoT للتبريد.", "action": "بناء أربع صفحات لوحة جديدة.", "status": "planned" },
+    { "id": "G-05", "area": "التتبّع", "direction": "portal-missing", "title": "تتبّع الأدوار موجود كبيانات بلا شاشة موحّدة", "detail": "كل قيد تدقيق وحركة يحملان byRole لكن لا سجلّ نشاطٍ مركزيّ يُبرزها.", "action": "بناء شاشة «سجلّ حركة الأدوار».", "status": "planned" },
+    { "id": "G-06", "area": "الأرقام المعلنة", "direction": "ref-behind", "title": "أرقام معلنة قديمة (١٤ نموذجًا/٤ سلاسل) في وثائق متفرّقة", "detail": "الواقع ٢٤/٧ + DMG مفرد.", "action": "تصحيح الأرقام أينما وردت في المرجع.", "status": "planned" }
+  ]
+}

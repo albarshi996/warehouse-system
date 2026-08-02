@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 48,
-    "serviceDomains": 24,
-    "serviceFiles": 142,
+    "modules": 56,
+    "serviceDomains": 25,
+    "serviceFiles": 144,
     "collections": 38,
     "roles": 14,
     "odooModels": 12,
@@ -20,6 +20,14 @@
     "pipelines": 3
   },
   "modules": [
+    {
+      "name": "acceptance-check",
+      "route": "/dashboard/acceptance-check",
+      "title": "المطابقة والاستلام",
+      "summary": "صفحة المطابقة والاستلام (UAT) — أداة قبول تنفيذ شركة الميزان.",
+      "file": "src/pages/dashboard/acceptance-check.astro",
+      "usesServices": []
+    },
     {
       "name": "access-control",
       "route": "/dashboard/access-control",
@@ -53,6 +61,22 @@
       "usesServices": [
         "ui"
       ]
+    },
+    {
+      "name": "business-continuity",
+      "route": "/dashboard/business-continuity",
+      "title": "إدارة الكوارث واستمرارية الأعمال",
+      "summary": "إدارة الكوارث واستمرارية الأعمال (BCP) — الملحق م-٦ في المرجع التشغيلي.",
+      "file": "src/pages/dashboard/business-continuity.astro",
+      "usesServices": []
+    },
+    {
+      "name": "cold-chain",
+      "route": "/dashboard/cold-chain",
+      "title": "سلسلة التبريد — IoT",
+      "summary": "تكامل إنترنت الأشياء لسلسلة التبريد — الملحق م-٥/٢.",
+      "file": "src/pages/dashboard/cold-chain.astro",
+      "usesServices": []
     },
     {
       "name": "command-center",
@@ -154,6 +178,14 @@
       "usesServices": [
         "auth"
       ]
+    },
+    {
+      "name": "hse-checklists",
+      "route": "/dashboard/hse-checklists",
+      "title": "قوائم تدقيق الأمن والسلامة (HSE)",
+      "summary": "قوائم تدقيق الأمن والسلامة المهنية (HSE) — من ملحق المرجع التشغيلي (م-٥/٣).",
+      "file": "src/pages/dashboard/hse-checklists.astro",
+      "usesServices": []
     },
     {
       "name": "index",
@@ -266,6 +298,14 @@
       ]
     },
     {
+      "name": "portal-value",
+      "route": "/dashboard/portal-value",
+      "title": "لماذا البوابة تكامليّة لأودو",
+      "summary": "لماذا البوابة تكامليّة لأودو — صفحة شرح الإنجاز وموقع البوابة من أودو.",
+      "file": "src/pages/dashboard/portal-value.astro",
+      "usesServices": []
+    },
+    {
       "name": "procurement",
       "route": "/dashboard/procurement",
       "title": "دورة المشتريات الداخلية",
@@ -298,6 +338,14 @@
       "usesServices": []
     },
     {
+      "name": "reference-guide",
+      "route": "/dashboard/reference-guide",
+      "title": "الشرح التفاعلي للمرجع",
+      "summary": "الشرح التفاعلي للمرجع التشغيلي — دليلٌ إرشاديّ يشرح المرجع خطوةً بخطوة.",
+      "file": "src/pages/dashboard/reference-guide.astro",
+      "usesServices": []
+    },
+    {
       "name": "reports",
       "route": "/dashboard/reports",
       "title": "مركز التقارير",
@@ -313,6 +361,16 @@
       "file": "src/pages/dashboard/retail-hub.astro",
       "usesServices": [
         "ui"
+      ]
+    },
+    {
+      "name": "role-activity",
+      "route": "/dashboard/role-activity",
+      "title": "سجلّ حركة الأدوار",
+      "summary": "سجلّ حركة الأدوار — لوحة موحّدة تُبرز ميزة تتبّع الأدوار في البوابة.",
+      "file": "src/pages/dashboard/role-activity.astro",
+      "usesServices": [
+        "auth"
       ]
     },
     {
@@ -430,6 +488,16 @@
         "auth",
         "ui",
         "vehicles"
+      ]
+    },
+    {
+      "name": "vendor-scorecard",
+      "route": "/dashboard/vendor-scorecard",
+      "title": "بطاقة أداء الموردين",
+      "summary": "بطاقة أداء الموردين (Vendor Scorecard) — تعالج فجوة «الموردون 1.0» في الدراسة",
+      "file": "src/pages/dashboard/vendor-scorecard.astro",
+      "usesServices": [
+        "kpi"
       ]
     },
     {
@@ -1336,6 +1404,25 @@
       "collections": [
         "candidates"
       ]
+    },
+    {
+      "domain": "reference",
+      "dir": "src/services/reference",
+      "files": [
+        "crosswalkModel.js",
+        "crosswalkModel.test.js"
+      ],
+      "fileCount": 2,
+      "testCount": 1,
+      "exports": [
+        "STATUS_ORDER",
+        "countByStatus",
+        "crosswalkSummary",
+        "crosswalkVerdict",
+        "gapsByDirection",
+        "groupBy"
+      ],
+      "collections": []
     },
     {
       "domain": "stock",

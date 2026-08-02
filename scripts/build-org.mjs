@@ -328,6 +328,6 @@ console.info(
   `✅ الهيكل مولَّد من المصدر الواحد:\n` +
     `   • ${c.management} إدارة · ${c.section} قسم · ${c.unit} وحدة · ${c.subunit} فريق (${proposedCount(SOURCE.tree)} مقترح)\n` +
     `   • تقرير هيكل الوظائف والأدوار — الشجرة والمساندة و${jobsForReport.length} بطاقة و${orgTableForReport.length} صف كادر\n` +
-    `   • المرجع التشغيلي الرسمي — الشجرة والمساندة والكادر و36 بطاقة + فصل أدوار البوابة (12 دورًا · فهرس الشاشات)\n` +
+    `   • المرجع التشغيلي الرسمي — الشجرة والمساندة والكادر و36 بطاقة + فصل أدوار البوابة (${roleIds.length} دورًا · فهرس الشاشات)\n` +
     `   • jobsCatalog.js — ${catalog.length} وظيفة (${catalog.filter((j) => !j.occupied).length} شاغرة)`
 );

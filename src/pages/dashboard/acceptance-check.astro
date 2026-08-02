@@ -1,0 +1,342 @@
+---
+/**
+ * صفحة المطابقة والاستلام (UAT) — أداة قبول تنفيذ شركة الميزان.
+ *
+ * الغرض: عند تسليم أودو المُنفَّذ، نفحص كل مطلبٍ (أدوار · صلاحيات · نماذج ·
+ * سلاسل · حرّاس · خدمات · دورة) ونسِمه: مقبول / جزئي / مرفوض — فتُحسب نسبة
+ * القبول حيًّا وتُصدَّر. البيانات من المصدر الواحد `reference-crosswalk.json`،
+ * والحالة تُحفظ محليًّا في متصفّح الفاحص (خاصّة به). عرضٌ خالص + تفاعل vanilla.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import crosswalk from '../../data/reference-crosswalk.json';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+
+/** شارة حكمنا المرجعيّ (حالة المطابقة الداخلية) بجانب كل بند. */
+const STATUS_CHIP = {
+  match: { label: 'مطابق', cls: 'bg-green-500/15 text-green-300 border-green-500/40' },
+  dev: { label: 'مطوَّر', cls: 'bg-blue-500/15 text-blue-300 border-blue-500/40' },
+  'add-ref': { label: 'أُضيف للمرجع', cls: 'bg-brand-yellow/15 text-brand-yellow border-brand-yellow/40' },
+  building: { label: 'قيد البناء', cls: 'bg-purple-500/15 text-purple-300 border-purple-500/40' },
+  'odoo-scope': { label: 'نطاق أودو', cls: 'bg-gray-400/15 text-ink-2 border-gray-400/40' },
+};
+
+/** الأقسام السبعة كمعايير قبول موحّدة (كلٌّ ببند id ثابت للحفظ المحلّي). */
+const sections = [
+  {
+    key: 'roles',
+    title: 'الأدوار والصلاحيات',
+    hint: 'كل دور مُنشأ في أودو بصلاحياته الصحيحة ومقابله المعلن.',
+    items: crosswalk.roles.map((r) => ({
+      id: `role:${r.id}`,
+      label: r.nameAr,
+      code: r.id,
+      detail: r.note,
+      status: r.status,
+    })),
+  },
+  {
+    key: 'chains',
+    title: 'السلاسل المستنديّة السبع',
+    hint: 'كل سلسلة منفّذة بترتيبها وربطها الإلزاميّ بين المستندات.',
+    items: crosswalk.chains.map((c) => ({
+      id: `chain:${c.key}`,
+      label: c.nameAr,
+      code: c.seq,
+      detail: c.note,
+      status: c.refCovered ? 'match' : 'add-ref',
+    })),
+  },
+  {
+    key: 'forms',
+    title: 'النماذج المحكومة',
+    hint: 'كل نموذج يُنشأ ويُعتمد ويُنهى بالأدوار الصحيحة ويُربط بموديول أودو.',
+    items: crosswalk.forms.map((f) => ({
+      id: `form:${f.portalCode || 'ref' + f.refNo}`,
+      label: f.nameAr,
+      code: `${f.portalCode || '—'} · ${f.odoo}`,
+      detail: f.note,
+      status: f.status,
+    })),
+  },
+  {
+    key: 'guards',
+    title: 'الحرّاس (ضوابط الرقابة)',
+    hint: 'كل حارس مفعّل — مع تمييز الحَجب الصارم عن التحذير البصريّ.',
+    items: crosswalk.guards.map((g) => ({
+      id: `guard:${g.key}`,
+      label: g.nameAr,
+      code: g.portalKind,
+      detail: g.note,
+      status: g.status,
+    })),
+  },
+  {
+    key: 'services',
+    title: 'الخدمات والملاحق',
+    hint: 'كل خدمة في ملاحق المرجع لها مقابل مُنفَّذ.',
+    items: crosswalk.services.map((s) => ({
+      id: `svc:${s.key}`,
+      label: s.nameAr,
+      code: s.refSection,
+      detail: s.note,
+      status: s.status,
+    })),
+  },
+  {
+    key: 'cycle',
+    title: 'الدورة المستندية (١٢ مرحلة)',
+    hint: 'كل مرحلة من دورة الاثنتي عشرة مرحلةً لها أثرٌ منفَّذ.',
+    items: crosswalk.cycle.map((c) => ({
+      id: `cycle:${c.stage}`,
+      label: `${c.stage}. ${c.nameAr}`,
+      code: `${c.kind} · ${c.portal}`,
+      detail: '',
+      status: c.status,
+    })),
+  },
+];
+
+const totalCriteria = sections.reduce((n, s) => n + s.items.length, 0);
+---
+
+<DashboardLayout title="المطابقة والاستلام" light>
+  <div class="text-right" dir="rtl">
+    {/* ترويسة */}
+    <div class="mb-8 rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-accent/30 p-6 sm:p-10">
+      <p class="text-[11px] text-muted mb-2">{crosswalk.meta.refNumber} · الإصدار {crosswalk.meta.version} · {crosswalk.meta.issued}</p>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-ink leading-snug mb-3">صفحة المطابقة والاستلام — قبول تنفيذ أودو</h1>
+      <p class="text-sm text-ink-2 leading-relaxed max-w-4xl">
+        أداة الفحص عند استلام تنفيذ شركة الميزان: راجعْ كل معيار قبولٍ وسِمه <span class="text-green-300 font-bold">مقبولًا</span> أو
+        <span class="text-brand-yellow font-bold">جزئيًّا</span> أو <span class="text-red-300 font-bold">مرفوضًا</span> — فتُحسب نسبة القبول لحظيًّا.
+        حالتك محفوظة في متصفّحك، ويمكن تصديرها كملفّ CSV للمحضر الرسميّ.
+      </p>
+      <div class="mt-5 flex flex-wrap gap-3 no-print">
+        <a href={`${base}/dashboard/reference-guide`} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all">الشرح التفاعلي للمرجع</a>
+        <a href={`${base}/المرجع-التشغيلي-الرسمي.html`} target="_blank" rel="noopener" class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all">المرجع الرسمي (المصدر)</a>
+        <button type="button" id="exportCsv" class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all">تصدير CSV</button>
+        <button type="button" id="resetAcc" class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all">تصفير الفحص</button>
+        <button type="button" id="printAcc" class="px-4 py-2 bg-brand-red text-white rounded-xl text-xs font-bold hover:bg-brand-red-dark transition-all">طباعة المحضر</button>
+      </div>
+    </div>
+
+    {/* شريط نسبة القبول */}
+    <section class="mb-8">
+      <div class="rounded-2xl bg-chip border border-line p-6">
+        <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
+          <h2 class="text-lg font-bold text-ink">نسبة القبول الكلّية</h2>
+          <span class="text-2xl font-extrabold text-brand-yellow"><span id="accPct">0</span>%</span>
+        </div>
+        <div class="h-3 rounded-full bg-surface-2 overflow-hidden mb-3">
+          <div id="accBar" class="h-full rounded-full bg-green-500 transition-all" style="width:0%"></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+          <div class="bg-chip border border-line rounded-xl p-2.5"><div class="text-lg font-extrabold text-ink" id="cntTotal">{totalCriteria}</div><div class="text-[10px] text-ink-2 mt-1">معيار قبول</div></div>
+          <div class="bg-green-500/5 border border-green-500/20 rounded-xl p-2.5"><div class="text-lg font-extrabold text-green-300" id="cntPass">0</div><div class="text-[10px] text-ink-2 mt-1">مقبول</div></div>
+          <div class="bg-brand-yellow/5 border border-brand-yellow/20 rounded-xl p-2.5"><div class="text-lg font-extrabold text-brand-yellow" id="cntPartial">0</div><div class="text-[10px] text-ink-2 mt-1">جزئي</div></div>
+          <div class="bg-red-500/5 border border-red-500/20 rounded-xl p-2.5"><div class="text-lg font-extrabold text-red-300" id="cntFail">0</div><div class="text-[10px] text-ink-2 mt-1">مرفوض</div></div>
+          <div class="bg-chip border border-line rounded-xl p-2.5"><div class="text-lg font-extrabold text-ink-2" id="cntPending">{totalCriteria}</div><div class="text-[10px] text-ink-2 mt-1">لم يُفحص</div></div>
+        </div>
+      </div>
+    </section>
+
+    {/* تبويبات الأقسام */}
+    <div class="flex flex-wrap gap-2 mb-6 no-print" id="accTabs">
+      {sections.map((s, i) => (
+        <button type="button" data-acc-tab={s.key} class={`acc-tab px-4 py-2 rounded-xl border text-xs font-bold transition-all ${i === 0 ? 'bg-brand-red text-white border-brand-red' : 'bg-chip text-ink-2 border-line hover:bg-surface-2'}`}>
+          {s.title} <span class="opacity-70">({s.items.length})</span>
+        </button>
+      ))}
+    </div>
+
+    {sections.map((s, i) => (
+      <section data-acc-panel={s.key} class={`acc-panel mb-10 ${i === 0 ? '' : 'hidden'}`}>
+        <div class="flex items-center gap-3 mb-1 flex-wrap">
+          <h2 class="text-xl font-bold text-ink">{s.title}</h2>
+          <span class="text-xs text-muted">— <span data-sec-done={s.key}>0</span>/{s.items.length} مقبول</span>
+        </div>
+        <p class="text-xs text-muted mb-4">{s.hint}</p>
+        <div class="space-y-3">
+          {s.items.map((it) => (
+            <div class="acc-row rounded-2xl bg-chip border border-line p-4" data-acc-id={it.id} data-acc-section={s.key}>
+              <div class="flex items-start justify-between gap-3 flex-wrap">
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2 flex-wrap mb-1">
+                    <h3 class="font-bold text-ink text-sm leading-snug">{it.label}</h3>
+                    <span class={`px-2 py-0.5 rounded border text-[9px] font-bold ${STATUS_CHIP[it.status]?.cls || ''}`}>{STATUS_CHIP[it.status]?.label || it.status}</span>
+                  </div>
+                  {it.code && <p class="text-[11px] text-muted font-mono" dir="ltr" style="text-align:right;">{it.code}</p>}
+                  {it.detail && <p class="text-[11px] text-ink-2 leading-relaxed mt-1">{it.detail}</p>}
+                </div>
+                <div class="flex gap-1.5 shrink-0 no-print">
+                  <button type="button" data-acc-set="pass" title="مقبول" class="acc-btn w-9 h-9 rounded-lg border border-line bg-surface-2 text-ink-2 text-sm font-bold hover:border-green-500/60 transition-all">✓</button>
+                  <button type="button" data-acc-set="partial" title="جزئي" class="acc-btn w-9 h-9 rounded-lg border border-line bg-surface-2 text-ink-2 text-sm font-bold hover:border-brand-yellow/60 transition-all">~</button>
+                  <button type="button" data-acc-set="fail" title="مرفوض" class="acc-btn w-9 h-9 rounded-lg border border-line bg-surface-2 text-ink-2 text-sm font-bold hover:border-red-500/60 transition-all">✗</button>
+                </div>
+              </div>
+              <div class="acc-note mt-2 hidden">
+                <input type="text" data-acc-noteinput placeholder="ملاحظة الفحص (اختياري)…" class="w-full bg-surface-2 border border-line rounded-lg text-ink text-xs px-3 py-1.5 focus:outline-none focus:border-brand-yellow/50" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    {/* اعتماد المحضر */}
+    <section class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-line p-6">
+      <h2 class="text-sm font-bold text-ink mb-6 text-center">اعتماد محضر الاستلام</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto text-center">
+        <div>
+          <img src={`${base}/identity/signatures/signature-2.png`} alt="توقيع محمد البرشي" class="h-16 mx-auto mb-2 object-contain" />
+          <p class="font-bold text-ink text-sm">محمد البرشي</p>
+          <p class="text-[11px] text-muted">مدير إدارة السلاسل والإمداد والمخازن</p>
+        </div>
+        <div>
+          <img src={`${base}/identity/signatures/signature-1.png`} alt="توقيع رمزي الباش" class="h-16 mx-auto mb-2 object-contain" />
+          <p class="font-bold text-ink text-sm">رمزي الباش</p>
+          <p class="text-[11px] text-muted">مدير إدارة الخدمات اللوجستية والخدمية</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <style>
+    @media print { .no-print { display: none !important; } }
+    .acc-row[data-state="pass"] { border-color: rgba(34,197,94,0.5); background: rgba(34,197,94,0.06); }
+    .acc-row[data-state="partial"] { border-color: rgba(234,179,8,0.5); background: rgba(234,179,8,0.06); }
+    .acc-row[data-state="fail"] { border-color: rgba(239,68,68,0.5); background: rgba(239,68,68,0.06); }
+    .acc-btn[data-on="pass"] { background:#16a34a; color:#fff; border-color:#16a34a; }
+    .acc-btn[data-on="partial"] { background:#ca8a04; color:#fff; border-color:#ca8a04; }
+    .acc-btn[data-on="fail"] { background:#dc2626; color:#fff; border-color:#dc2626; }
+  </style>
+
+  <script>
+    (function () {
+      var KEY = 'bz-acceptance-v1';
+      var state = {};
+      try { state = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { state = {}; }
+
+      var rows = Array.prototype.slice.call(document.querySelectorAll('.acc-row'));
+      var total = rows.length;
+
+      function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* التخزين غير متاح */ } }
+
+      function paintRow(row) {
+        var id = row.getAttribute('data-acc-id');
+        var rec = state[id] || {};
+        var val = rec.status || '';
+        if (val) row.setAttribute('data-state', val); else row.removeAttribute('data-state');
+        row.querySelectorAll('.acc-btn').forEach(function (b) {
+          if (b.getAttribute('data-acc-set') === val) b.setAttribute('data-on', val);
+          else b.removeAttribute('data-on');
+        });
+        var noteWrap = row.querySelector('.acc-note');
+        var noteInput = row.querySelector('[data-acc-noteinput]');
+        if (noteWrap) noteWrap.classList.toggle('hidden', !val);
+        if (noteInput && rec.note != null) noteInput.value = rec.note;
+      }
+
+      function recompute() {
+        var pass = 0, partial = 0, fail = 0;
+        var perSec = {};
+        rows.forEach(function (row) {
+          var id = row.getAttribute('data-acc-id');
+          var sec = row.getAttribute('data-acc-section');
+          var v = (state[id] || {}).status || '';
+          perSec[sec] = perSec[sec] || 0;
+          if (v === 'pass') { pass++; perSec[sec]++; }
+          else if (v === 'partial') partial++;
+          else if (v === 'fail') fail++;
+        });
+        var pending = total - pass - partial - fail;
+        var pct = total ? Math.round(((pass + partial * 0.5) / total) * 100) : 0;
+        document.getElementById('accPct').textContent = String(pct);
+        var bar = document.getElementById('accBar');
+        bar.style.width = pct + '%';
+        bar.className = 'h-full rounded-full transition-all ' + (pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-yellow-400' : 'bg-red-500');
+        document.getElementById('cntPass').textContent = String(pass);
+        document.getElementById('cntPartial').textContent = String(partial);
+        document.getElementById('cntFail').textContent = String(fail);
+        document.getElementById('cntPending').textContent = String(pending);
+        Object.keys(perSec).forEach(function (sec) {
+          var el = document.querySelector('[data-sec-done="' + sec + '"]');
+          if (el) el.textContent = String(perSec[sec]);
+        });
+      }
+
+      rows.forEach(function (row) {
+        var id = row.getAttribute('data-acc-id');
+        row.querySelectorAll('.acc-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var val = btn.getAttribute('data-acc-set');
+            var cur = (state[id] || {}).status || '';
+            state[id] = state[id] || {};
+            state[id].status = (cur === val) ? '' : val; // نقرة ثانية تُلغي
+            save(); paintRow(row); recompute();
+          });
+        });
+        var noteInput = row.querySelector('[data-acc-noteinput]');
+        if (noteInput) noteInput.addEventListener('input', function () {
+          state[id] = state[id] || {};
+          state[id].note = noteInput.value;
+          save();
+        });
+        paintRow(row);
+      });
+      recompute();
+
+      // تبويبات
+      var ON = ['bg-brand-red', 'text-white', 'border-brand-red'];
+      var OFF = ['bg-chip', 'text-ink-2', 'border-line'];
+      var tabs = document.querySelectorAll('[data-acc-tab]');
+      var panels = document.querySelectorAll('[data-acc-panel]');
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          var id = tab.getAttribute('data-acc-tab');
+          panels.forEach(function (p) { p.classList.toggle('hidden', p.getAttribute('data-acc-panel') !== id); });
+          tabs.forEach(function (t) {
+            var on = t === tab;
+            ON.forEach(function (c) { t.classList.toggle(c, on); });
+            OFF.forEach(function (c) { t.classList.toggle(c, !on); });
+          });
+        });
+      });
+
+      // تصفير
+      document.getElementById('resetAcc').addEventListener('click', function () {
+        if (!confirm('تصفير كل حالات الفحص؟')) return;
+        state = {}; save();
+        rows.forEach(paintRow); recompute();
+      });
+
+      // طباعة
+      document.getElementById('printAcc').addEventListener('click', function () { window.print(); });
+
+      // تصدير CSV
+      document.getElementById('exportCsv').addEventListener('click', function () {
+        var lines = [String.fromCharCode(0xFEFF) + 'القسم,المعيار,الرمز,الحالة,ملاحظة'];
+        var labelOf = { pass: 'مقبول', partial: 'جزئي', fail: 'مرفوض', '': 'لم يُفحص' };
+        rows.forEach(function (row) {
+          var id = row.getAttribute('data-acc-id');
+          var sec = row.getAttribute('data-acc-section');
+          var rec = state[id] || {};
+          var label = (row.querySelector('h3') || {}).textContent || '';
+          var code = (row.querySelector('.font-mono') || {}).textContent || '';
+          var st = labelOf[rec.status || ''] || '';
+          var note = (rec.note || '').replace(/"/g, '""');
+          var esc = function (s) { return '"' + String(s).replace(/"/g, '""') + '"'; };
+          lines.push([esc(sec), esc(label), esc(code), esc(st), esc(note)].join(','));
+        });
+        var blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = 'brandzo-acceptance-check.csv';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    })();
+  </script>
+</DashboardLayout>

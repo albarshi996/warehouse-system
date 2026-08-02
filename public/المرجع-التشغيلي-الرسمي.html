@@ -1065,7 +1065,7 @@ tr:hover td { background: #fff8f0; }
   <a href="#s-overview">نظرة عامة</a>
   <a href="#s-golden">القواعد الذهبية</a>
   <a href="#s-doc-cycle">الدورة المستندية</a>
-  <a href="#s-forms21">الـ٢١ نموذج</a>
+  <a href="#s-forms21">النماذج الرسمية</a>
   <a href="#s-purchasing">المشتريات</a>
   <a href="#s-receiving">الاستلام والجودة</a>
   <a href="#s-storage">التخزين</a>
@@ -1109,12 +1109,12 @@ tr:hover td { background: #fff8f0; }
   <h1>المرجع التشغيلي الشامل<br><span>Brandzo Hub — أودو Enterprise</span></h1>
   <div class="cover-sub">الدورة المستندية الكاملة · الهيكل الوظيفي · دورات ERP المتكاملة</div>
   <div class="cover-stats">
-    <div class="cstat"><span class="cstat-num">21</span><span class="cstat-lbl">نموذج رسمي</span></div>
+    <div class="cstat"><span class="cstat-num">24</span><span class="cstat-lbl">نموذجاً محكوماً</span></div>
     <div class="cstat"><span class="cstat-num">18</span><span class="cstat-lbl">قسماً موثقاً</span></div>
     <div class="cstat"><span class="cstat-num">12</span><span class="cstat-lbl">مرحلة مستندية</span></div>
     <div class="cstat"><span class="cstat-num">12</span><span class="cstat-lbl">تنبيه تلقائي</span></div>
     <div class="cstat"><span class="cstat-num">8</span><span class="cstat-lbl">مؤشرات KPI</span></div>
-    <div class="cstat"><span class="cstat-num">9</span><span class="cstat-lbl">أدوار وصلاحيات</span></div>
+    <div class="cstat"><span class="cstat-num">13</span><span class="cstat-lbl">دوراً وصلاحيات</span></div>
     <div class="cstat"><span class="cstat-num">7</span><span class="cstat-lbl">مراحل تنفيذ</span></div>
     <div class="cstat"><span class="cstat-num">2026</span><span class="cstat-lbl">بنغازي — ليبيا</span></div>
   </div>
@@ -1136,7 +1136,7 @@ tr:hover td { background: #fff8f0; }
     <div class="toc-item"><span class="toc-num">01</span><a href="#s-overview">نظرة عامة على Brandzo Hub وسبب اختيار أودو</a></div>
     <div class="toc-item"><span class="toc-num">02</span><a href="#s-golden">القواعد الذهبية التشغيلية الإلزامية</a></div>
     <div class="toc-item"><span class="toc-num">03</span><a href="#s-doc-cycle">الدورة المستندية الكاملة (١٢ مرحلة)</a></div>
-    <div class="toc-item"><span class="toc-num">04</span><a href="#s-forms21">مصفوفة الـ٢١ نموذج رسمي مع ربط أودو</a></div>
+    <div class="toc-item"><span class="toc-num">04</span><a href="#s-forms21">مصفوفة النماذج الرسمية (٣٠) مع ربط أودو</a></div>
     <div class="toc-item"><span class="toc-num">05</span><a href="#s-purchasing">دورة المشتريات — PR / PO / ASN</a></div>
     <div class="toc-item"><span class="toc-num">06</span><a href="#s-receiving">دورة الاستلام وفحص الجودة — GRN / QC</a></div>
     <div class="toc-item"><span class="toc-num">07</span><a href="#s-storage">دورة التخزين الداخلي — Putaway / Bin Card</a></div>
@@ -1275,6 +1275,24 @@ tr:hover td { background: #fff8f0; }
   <div class="rule-item gold"><strong>🎯 هدف:</strong> شروط الدفع: Net 60 يوماً من تاريخ اعتماد GRN.</div>
   <div class="rule-item gold"><strong>🎯 هدف:</strong> نافذة التسليم المقبولة: الموعد المحدد ± يومان فقط.</div>
   <div class="rule-item gold"><strong>🎯 هدف:</strong> لا يقل عدد عروض الأسعار المقارنة عن ثلاثة قبل إصدار أي PO.</div>
+
+  <h3 style="margin-top:22px;">طبقات فرض القواعد في البوابة — «حَجب صارم» مقابل «تحذير بصريّ»</h3>
+  <p>القواعد أعلاه ليست شعاراتٍ بل تُفرَض عبر <strong>تسعة حرّاس برمجية</strong> في ثلاث طبقات (الواجهة · الخدمة · الخادم <span class="td-mono">firestore.rules</span>). وثمّة تمييزٌ جوهريّ لفريق التنفيذ في أودو: بعض الحرّاس <strong>يمنع</strong> الحركة فعليًّا، وبعضها <strong>ينبّه</strong> بصريًّا فقط — وهذا الأخير يجب ترقيته لقيد خادمٍ في أودو إن أُريد منعًا لا تنبيهًا.</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>الحارس</th><th>ماذا يمنع</th><th>نوع الفرض في البوابة</th></tr></thead>
+      <tbody>
+        <tr><td>حارس الجودة</td><td>لا «إنجاز» استلام قبل اعتماد فحص الجودة</td><td class="state-done">حَجب صارم (٣ طبقات)</td></tr>
+        <tr><td>حارس اعتماد الأب</td><td>لا يُنجَز مستند قبل اعتماد أبيه في السلسلة (docref)</td><td class="state-done">حَجب صارم</td></tr>
+        <tr><td>حارس الرصيد السالب</td><td>لا صرف/سحب يفوق الموجود</td><td class="state-done">حَجب صارم (داخل المعاملة)</td></tr>
+        <tr><td>منع القيد المزدوج</td><td>لا ترحيل للمستند مرّتين (معرّف حركة حتميّ)</td><td class="state-done">حَجب صارم</td></tr>
+        <tr><td>حرّاس التزوير (الخادم)</td><td>الرقم يُكتب مرّة واحدة · الحقول الثابتة والبنود لا تتغيّر أثناء الاعتماد</td><td class="state-done">حَجب صارم</td></tr>
+        <tr><td>حارس البوابة (فصل الأدوار)</td><td>لا خروج بلا إذن تسليم معتمَد ولا باعتماد غير ضابط البوابة</td><td class="state-done">حَجب صارم</td></tr>
+        <tr><td>حارس التسوية / الإشعار الدائن</td><td>لا تسوية/خصم بلا أصلٍ (جرد مصادَق / مرتجع معتمَد)</td><td class="state-done">حَجب صارم (اعتماد الأب)</td></tr>
+        <tr><td>FEFO + سقف الكميات</td><td>مخالفة ترتيب الصلاحية · خروج/خصم يتجاوز المأذون كمّيًّا</td><td class="state-pending">تحذير بصريّ — يُرقّى لقيد خادم في أودو</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <!-- ============================================================
@@ -1334,6 +1352,9 @@ tr:hover td { background: #fff8f0; }
              |<br>
  8. Financial Execution    ====>   [ Accounting &gt; Vendor Bills / Close ]
   </div>
+  <div class="highlight" style="margin-top:16px;">
+    <strong>من الدورة إلى السلاسل:</strong> هذه المراحل الاثنتا عشرة تتحقّق في البوابة عبر <strong>سبع سلاسل مستنديّة</strong> مترابطة بمرجعٍ إلزاميّ (docref) لا تُنجَز حلقةٌ فيها قبل اعتماد سابقتها — يُضاف إليها سلسلة <strong>المشتريات الداخلية</strong> (طلبات الإدارات من المالية) التي لا تظهر في الخريطة الخطّية أعلاه. التفصيل في الفصل ٤ (مصفوفة النماذج).
+  </div>
 </div>
 
 <!-- ============================================================
@@ -1342,7 +1363,7 @@ tr:hover td { background: #fff8f0; }
 <div class="chapter green-accent" id="s-forms21">
   <div class="chapter-head green">
     <span class="chapter-num green">04</span>
-    <h2>مصفوفة الـ٢١ نموذج رسمي — الربط الكامل مع أودو</h2>
+    <h2>مصفوفة النماذج الرسمية — الربط الكامل مع أودو</h2>
   </div>
   <p>قائمة حصرية بجميع النماذج اللوجستية في Brandzo Hub ومسارها داخل بيئة Odoo Enterprise.</p>
   <div class="tbl-wrap">
@@ -1373,6 +1394,41 @@ tr:hover td { background: #fff8f0; }
       </tbody>
     </table>
   </div>
+
+  <div class="highlight" style="margin-top:22px;">
+    <strong>تحديث المطابقة (٢٠٢٦-٠٨-٠٢):</strong> النماذج الـ٢١ أعلاه هي القائمة المرجعية التأسيسية. وقد نفّذتها البوابة التفاعليّة ووسّعتها إلى <strong>٢٤ نموذجاً محكوماً في سبع سلاسل مستنديّة</strong> (زائد سند التالف المفرد). الجدول التالي يوثّق النماذج التسعة الإضافية التي سبقت بها البوابةُ هذه المصفوفة — ليكون نطاق التنفيذ في أودو كاملاً ومطابقاً ١٠٠٪. المصدر الحيّ للأرقام: <span class="td-mono">src/services/documents/schemas</span> (٢٤ مخطّطاً) و<span class="td-mono">chain.js</span> (٧ سلاسل).
+  </div>
+
+  <h3 style="margin-top:20px;">السلاسل المستنديّة السبع في البوابة</h3>
+  <div class="box navy-box" style="font-family:'Courier New',monospace;font-size:11.5px;line-height:2.1;direction:ltr;text-align:left;overflow-x:auto;white-space:nowrap;">
+    1) INBOUND (الوارد):&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PR → PO → GRN → QC → PUTAWAY<br>
+    2) OUTBOUND (الصادر):&nbsp;&nbsp;&nbsp;&nbsp;SO → PICK → PACK → DN → GP<br>
+    3) BILLING (الفوترة):&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DN → INV<br>
+    4) RETURNS (المرتجعات):&nbsp;&nbsp;RET → CN<br>
+    5) COUNT (الجرد والتسوية):&nbsp;CC → ADJ<br>
+    6) TRANSFER (النقل):&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TR → TRN → TRC<br>
+    7) INTERNAL PROCUREMENT (المشتريات الداخلية):&nbsp;IPR → RFQ → IPO → PV → DLV<br>
+    &nbsp;&nbsp;&nbsp;+ DMG (سند التالف): مستند مفرد بلا سلسلة
+  </div>
+
+  <h3 style="margin-top:20px;">النماذج المحكومة الإضافية (٢٢–٣٠) — سبقت بها البوابة المصفوفة المرجعية</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>#</th><th>اسم النموذج (عربي)</th><th>الاسم الإنجليزي</th><th>الرمز</th><th>السلسلة</th><th>الموديول في أودو</th></tr></thead>
+      <tbody>
+        <tr><td class="td-center"><strong>٢٢</strong></td><td>أمر البيع</td><td>Sales Order</td><td class="td-mono">SO</td><td>الصادر</td><td class="td-mono">Sales &gt; Orders</td></tr>
+        <tr><td class="td-center"><strong>٢٣</strong></td><td>فاتورة العميل</td><td>Customer Invoice</td><td class="td-mono">INV</td><td>الفوترة</td><td class="td-mono">Accounting &gt; Invoices</td></tr>
+        <tr><td class="td-center"><strong>٢٤</strong></td><td>مستند النقل (الشحن)</td><td>Transfer Dispatch</td><td class="td-mono">TRN</td><td>النقل</td><td class="td-mono">Inventory &gt; Internal Transfers</td></tr>
+        <tr><td class="td-center"><strong>٢٥</strong></td><td>استلام النقل</td><td>Transfer Receipt</td><td class="td-mono">TRC</td><td>النقل</td><td class="td-mono">Inventory &gt; Internal Transfers</td></tr>
+        <tr><td class="td-center"><strong>٢٦</strong></td><td>طلب مشتريات داخلي</td><td>Internal Purchase Requisition</td><td class="td-mono">IPR</td><td>المشتريات الداخلية</td><td class="td-mono">Purchase &gt; Requisitions</td></tr>
+        <tr><td class="td-center"><strong>٢٧</strong></td><td>كشف مقارنة العروض</td><td>RFQ Comparison</td><td class="td-mono">RFQ</td><td>المشتريات الداخلية</td><td class="td-mono">Purchase &gt; RFQ</td></tr>
+        <tr><td class="td-center"><strong>٢٨</strong></td><td>أمر شراء داخلي</td><td>Internal Purchase Order</td><td class="td-mono">IPO</td><td>المشتريات الداخلية</td><td class="td-mono">Purchase &gt; Orders</td></tr>
+        <tr><td class="td-center"><strong>٢٩</strong></td><td>سند صرف الخزينة</td><td>Payment Voucher</td><td class="td-mono">PV</td><td>المشتريات الداخلية</td><td class="td-mono">Accounting &gt; Payments</td></tr>
+        <tr><td class="td-center"><strong>٣٠</strong></td><td>محضر تسليم للمستفيد</td><td>Delivery to Beneficiary</td><td class="td-mono">DLV</td><td>المشتريات الداخلية</td><td class="td-mono">Inventory (Custom Form)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:11.5px;color:#555;margin-top:8px;">التفصيل الحيّ لكل نموذج (المُنشئ · المعتمِد · المُنهي · الحارس) في «سجلّ المطابقة» بالبوابة: <span class="td-mono">/dashboard/acceptance-check</span> — وشرحه خطوة بخطوة في <span class="td-mono">/dashboard/reference-guide</span>.</p>
 </div>
 
 <!-- ============================================================
@@ -2182,26 +2238,26 @@ tr:hover td { background: #fff8f0; }
     <span class="chapter-num">+14</span>
     <h2>أدوار البوابة الفعلية وفهرس الشاشات</h2>
   </div>
-  <p style="font-size:12.5px;color:#555;margin-bottom:14px;">هذا الفصل <strong>مولَّد آليًّا من كود البوابة نفسه</strong> (<span class="td-mono">roles.js · navCatalog.js · pageAccess.js</span>) عبر <span class="td-mono">scripts/build-org.mjs</span> — فهو يوثّق ما يُنفَّذ فعلًا لا ما يُخطَّط: الأدوار الاثني عشر المعتمدة في نظام دخول البوابة، وموقع كلٍّ منها في الهيكل التنظيمي، ومقابله في أودو، ثم كل شاشة في البوابة ومن يفتحها بالضبط.</p>
+  <p style="font-size:12.5px;color:#555;margin-bottom:14px;">هذا الفصل <strong>مولَّد آليًّا من كود البوابة نفسه</strong> (<span class="td-mono">roles.js · navCatalog.js · pageAccess.js</span>) عبر <span class="td-mono">scripts/build-org.mjs</span> — فهو يوثّق ما يُنفَّذ فعلًا لا ما يُخطَّط: الأدوار الثلاثة عشر المعتمدة في نظام دخول البوابة، وموقع كلٍّ منها في الهيكل التنظيمي، ومقابله في أودو، ثم كل شاشة في البوابة ومن يفتحها بالضبط.</p>
 
-  <h3>أ) أدوار البوابة الاثنا عشر</h3>
+  <h3>أ) أدوار البوابة الثلاثة عشر</h3>
   <table>
     <thead><tr><th>الدور</th><th>الموقع التنظيمي</th><th>مقابل أودو</th><th>الشاشات المتاحة</th></tr></thead>
     <tbody>
 <!-- ORG:PORTAL-ROLES:START — مولَّد من src/data/org-structure.json — لا تحرّره يدويًّا -->
-        <tr><td><strong>المدير العام</strong> <span class="td-mono" style="font-size:10px;color:#888;">admin</span></td><td>الإدارة العليا — فوق الهيكل التشغيلي (المدير العام)</td><td class="td-mono">Settings / Admin</td><td class="td-center"><strong>48</strong> شاشة</td></tr>
-        <tr><td><strong>مدير المستودع</strong> <span class="td-mono" style="font-size:10px;color:#888;">warehouse_manager</span></td><td>قسم عمليات المستودعات — رئيس القسم (J03)</td><td class="td-mono">Inventory Manager</td><td class="td-center"><strong>44</strong> شاشة</td></tr>
-        <tr><td><strong>أمين المخزن</strong> <span class="td-mono" style="font-size:10px;color:#888;">storekeeper</span></td><td>قسم عمليات المستودعات — وحدات الاستلام والتخزين</td><td class="td-mono">Inventory / Barcode User</td><td class="td-center"><strong>20</strong> شاشة</td></tr>
-        <tr><td><strong>مفتّش الجودة</strong> <span class="td-mono" style="font-size:10px;color:#888;">qc_inspector</span></td><td>إدارة الجودة (مساندة)</td><td class="td-mono">Quality User</td><td class="td-center"><strong>17</strong> شاشة</td></tr>
+        <tr><td><strong>المدير العام</strong> <span class="td-mono" style="font-size:10px;color:#888;">admin</span></td><td>الإدارة العليا — فوق الهيكل التشغيلي (المدير العام)</td><td class="td-mono">Settings / Admin</td><td class="td-center"><strong>56</strong> شاشة</td></tr>
+        <tr><td><strong>مدير المستودع</strong> <span class="td-mono" style="font-size:10px;color:#888;">warehouse_manager</span></td><td>قسم عمليات المستودعات — رئيس القسم (J03)</td><td class="td-mono">Inventory Manager</td><td class="td-center"><strong>52</strong> شاشة</td></tr>
+        <tr><td><strong>أمين المخزن</strong> <span class="td-mono" style="font-size:10px;color:#888;">storekeeper</span></td><td>قسم عمليات المستودعات — وحدات الاستلام والتخزين</td><td class="td-mono">Inventory / Barcode User</td><td class="td-center"><strong>22</strong> شاشة</td></tr>
+        <tr><td><strong>مفتّش الجودة</strong> <span class="td-mono" style="font-size:10px;color:#888;">qc_inspector</span></td><td>إدارة الجودة (مساندة)</td><td class="td-mono">Quality User</td><td class="td-center"><strong>18</strong> شاشة</td></tr>
         <tr><td><strong>ضابط البوابة</strong> <span class="td-mono" style="font-size:10px;color:#888;">gate_officer</span></td><td>وحدة تصاريح البوابة والرحلات (مقترحة)</td><td class="td-mono">Inventory User (Gate)</td><td class="td-center"><strong>13</strong> شاشة</td></tr>
-        <tr><td><strong>موظف المشتريات</strong> <span class="td-mono" style="font-size:10px;color:#888;">purchase_officer</span></td><td>المشتريات والإدارة التجارية (مساندة)</td><td class="td-mono">Purchase User</td><td class="td-center"><strong>18</strong> شاشة</td></tr>
-        <tr><td><strong>المدير المالي</strong> <span class="td-mono" style="font-size:10px;color:#888;">finance_manager</span></td><td>الإدارة المالية (مساندة)</td><td class="td-mono">Accounting Manager</td><td class="td-center"><strong>20</strong> شاشة</td></tr>
-        <tr><td><strong>مسؤول المرتجعات</strong> <span class="td-mono" style="font-size:10px;color:#888;">return_manager</span></td><td>وحدة إدارة المرتجعات — قسم عمليات المستودعات</td><td class="td-mono">Inventory User (Returns)</td><td class="td-center"><strong>20</strong> شاشة</td></tr>
-        <tr><td><strong>مدقّق الجرد</strong> <span class="td-mono" style="font-size:10px;color:#888;">inventory_auditor</span></td><td>الجرد الدوري — بإشراف إدارة الجودة</td><td class="td-mono">Inventory Auditor</td><td class="td-center"><strong>19</strong> شاشة</td></tr>
-        <tr><td><strong>مشاهد</strong> <span class="td-mono" style="font-size:10px;color:#888;">viewer</span></td><td>اطّلاع رقابي — بلا موقع تنفيذي</td><td class="td-mono">—</td><td class="td-center"><strong>7</strong> شاشة</td></tr>
+        <tr><td><strong>موظف المشتريات</strong> <span class="td-mono" style="font-size:10px;color:#888;">purchase_officer</span></td><td>المشتريات والإدارة التجارية (مساندة)</td><td class="td-mono">Purchase User</td><td class="td-center"><strong>20</strong> شاشة</td></tr>
+        <tr><td><strong>المدير المالي</strong> <span class="td-mono" style="font-size:10px;color:#888;">finance_manager</span></td><td>الإدارة المالية (مساندة)</td><td class="td-mono">Accounting Manager</td><td class="td-center"><strong>24</strong> شاشة</td></tr>
+        <tr><td><strong>مسؤول المرتجعات</strong> <span class="td-mono" style="font-size:10px;color:#888;">return_manager</span></td><td>وحدة إدارة المرتجعات — قسم عمليات المستودعات</td><td class="td-mono">Inventory User (Returns)</td><td class="td-center"><strong>22</strong> شاشة</td></tr>
+        <tr><td><strong>مدقّق الجرد</strong> <span class="td-mono" style="font-size:10px;color:#888;">inventory_auditor</span></td><td>الجرد الدوري — بإشراف إدارة الجودة</td><td class="td-mono">Inventory Auditor</td><td class="td-center"><strong>22</strong> شاشة</td></tr>
+        <tr><td><strong>مشاهد</strong> <span class="td-mono" style="font-size:10px;color:#888;">viewer</span></td><td>اطّلاع رقابي — بلا موقع تنفيذي</td><td class="td-mono">—</td><td class="td-center"><strong>8</strong> شاشة</td></tr>
         <tr><td><strong>مستخدم إدارة</strong> <span class="td-mono" style="font-size:10px;color:#888;">department_user</span></td><td>الإدارات المساندة (طلبات التوظيف والتقييم)</td><td class="td-mono">—</td><td class="td-center"><strong>9</strong> شاشة</td></tr>
         <tr><td><strong>الحركة</strong> <span class="td-mono" style="font-size:10px;color:#888;">fleet</span></td><td>قسم النقل والحركة</td><td class="td-mono">Fleet User</td><td class="td-center"><strong>6</strong> شاشة</td></tr>
-        <tr><td><strong>أمين الخزينة</strong> <span class="td-mono" style="font-size:10px;color:#888;">treasury</span></td><td>—</td><td class="td-mono">—</td><td class="td-center"><strong>4</strong> شاشة</td></tr>
+        <tr><td><strong>أمين الخزينة</strong> <span class="td-mono" style="font-size:10px;color:#888;">treasury</span></td><td>الإدارة المالية — أمين الخزينة (دورة المشتريات الداخلية)</td><td class="td-mono">Accounting (Cashier / Payments)</td><td class="td-center"><strong>4</strong> شاشة</td></tr>
 <!-- ORG:PORTAL-ROLES:END -->
     </tbody>
   </table>
@@ -2239,6 +2295,8 @@ tr:hover td { background: #fff8f0; }
         <tr><td>الرقابة على الطلبات</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/order-control</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
         <tr><td>خريطة التجزئة</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/retail-hub</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
         <tr><td>جرد الأصول</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/assets-inventory</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
+        <tr><td>سلسلة التبريد (IoT)</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/cold-chain</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
+        <tr><td>قوائم السلامة (HSE)</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/hse-checklists</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · أمين المخزن · المدير المالي · مسؤول المرتجعات · مدقّق الجرد</td></tr>
         <tr><td colspan="4" style="background:#f5f7fb;font-weight:800;color:var(--navy);">سلاسل الإمداد والحركة</td></tr>
         <tr><td>جرد المركبات</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/vehicles-inventory</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · الحركة</td></tr>
         <tr><td>عمليات الأسطول</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/fleet-operations</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · الحركة</td></tr>
@@ -2260,6 +2318,12 @@ tr:hover td { background: #fff8f0; }
         <tr><td>الهيكل التشغيليّ المستهدف</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/target-operating-model</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
         <tr><td>حزمة الاستعداد — البروفة</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/interview-readiness</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
         <tr><td>الدورات المستندية العالمية</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/global-doc-cycles</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · مفتّش الجودة · موظف المشتريات · المدير المالي · مدقّق الجرد · مشاهد</td></tr>
+        <tr><td>الشرح التفاعلي للمرجع</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/reference-guide</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · مفتّش الجودة · موظف المشتريات · المدير المالي · مدقّق الجرد · مشاهد</td></tr>
+        <tr><td>المطابقة والاستلام (UAT)</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/acceptance-check</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td>لماذا البوابة تكامليّة لأودو</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/portal-value</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td>بطاقة أداء الموردين</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/vendor-scorecard</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع · موظف المشتريات · المدير المالي</td></tr>
+        <tr><td>سجلّ حركة الأدوار</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/role-activity</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
+        <tr><td>استمرارية الأعمال (BCP)</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/dashboard/business-continuity</td><td>شاشة لوحة</td><td style="font-size:11px;">المدير العام · مدير المستودع</td></tr>
         <tr><td>الدورة المستندية والتنظيم</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/تقرير-الدورة-المستندية-الكامل-2026.html</td><td>تقرير عام</td><td style="font-size:11px;">المدير العام</td></tr>
         <tr><td>المرجع التشغيلي الرسمي</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/المرجع-التشغيلي-الرسمي.html</td><td>تقرير عام</td><td style="font-size:11px;">المدير العام</td></tr>
         <tr><td>هيكل الوظائف والأدوار</td><td class="td-mono" style="font-size:10px;direction:ltr;text-align:left;">/تقرير-هيكل-الوظائف-والادوار.html</td><td>تقرير عام</td><td style="font-size:11px;">المدير العام</td></tr>
@@ -3199,7 +3263,7 @@ tr:hover td { background: #fff8f0; }
   <div class="box green-box">
     <strong>ملخص ما وثّقه هذا التقرير بالتفاصيل الكاملة:</strong>
     <ul style="margin-top:10px;">
-      <li>٢١ نموذجاً تشغيلياً مربوطاً بوحداته المقابلة في أودو Enterprise</li>
+      <li>٢٤ نموذجاً محكوماً في سبع سلاسل مستنديّة، مربوطاً بوحداته المقابلة في أودو Enterprise</li>
       <li>٩ مستويات من حالات سير العمل (Draft → Posted → Done) لكل وحدة</li>
       <li>١٢ نوعاً من التنبيهات التلقائية تحمي سير العمليات بدون تدخل بشري</li>
       <li>٨ مؤشرات أداء رئيسية مقيسة بمعادلات واضحة وأهداف محددة</li>

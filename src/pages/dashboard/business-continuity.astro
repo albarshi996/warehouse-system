@@ -1,0 +1,211 @@
+---
+/**
+ * إدارة الكوارث واستمرارية الأعمال (BCP) — الملحق م-٦ في المرجع التشغيلي.
+ * عرضٌ خالص قابل للطباعة فوق `src/data/business-continuity.json`:
+ * سيناريوهات كوارث مرتّبة بالخطورة بخطوات استجابة فورية وزمن تعافٍ (RTO)،
+ * وبروتوكول نسخ احتياطي (خطة Spark: يدوي حتى الترقية)، وجهات تواصل طارئة.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import bcp from '../../data/business-continuity.json';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+
+const SEV_ORDER = { 'حرجة': 0, 'عالية': 1, 'متوسطة': 2 };
+const scenarios = [...bcp.scenarios].sort((a, b) => SEV_ORDER[a.severity] - SEV_ORDER[b.severity]);
+
+const total = bcp.scenarios.length;
+const criticalCount = bcp.scenarios.filter((s) => s.severity === 'حرجة').length;
+const avgRtoHours = Math.round(bcp.scenarios.reduce((sum, s) => sum + s.rtoHours, 0) / total);
+const avgRtoLabel = avgRtoHours >= 48 ? `${(avgRtoHours / 24).toFixed(1)} يوم` : `${avgRtoHours} ساعة`;
+
+const severities = ['حرجة', 'عالية', 'متوسطة'];
+const severityCounts = Object.fromEntries(
+  severities.map((sev) => [sev, bcp.scenarios.filter((s) => s.severity === sev).length]),
+);
+
+/* الأحمر للتحذير فقط: يُحجز للخطورة الحرجة/الطارئة — والتمييز التفاعلي بلون الهوية (accent). */
+const SEVERITY_STYLE = {
+  'حرجة': { chip: 'bg-red-500/10 border-red-500/50 text-red-700', bar: 'bg-red-500' },
+  'عالية': { chip: 'bg-orange-400/10 border-orange-400/60 text-orange-700', bar: 'bg-orange-500' },
+  'متوسطة': { chip: 'bg-yellow-400/10 border-yellow-500/50 text-yellow-700', bar: 'bg-yellow-500' },
+};
+const PRIORITY_STYLE = {
+  'حرجة': 'bg-red-500/10 text-red-700 border-red-500/40',
+  'أولى': 'bg-accent/10 text-accent border-accent/40',
+  'ثانية': 'bg-chip text-ink-2 border-line',
+};
+---
+
+<DashboardLayout title="إدارة الكوارث واستمرارية الأعمال" light>
+  <div class="text-right doc-bcp" dir="rtl">
+    {/* ترويسة الوثيقة */}
+    <div class="mb-8 rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-accent/30 p-6 sm:p-10">
+      <p class="text-[11px] text-muted mb-2">{bcp.meta.refNumber} · الإصدار {bcp.meta.version} · {bcp.meta.issued}</p>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-ink leading-snug mb-3">🛡️ {bcp.meta.title}</h1>
+      <p class="text-sm text-ink-2 leading-relaxed max-w-4xl">{bcp.meta.purpose}</p>
+      <div class="mt-5 flex flex-wrap gap-3 no-print">
+        <button type="button" id="printBcp" class="px-4 py-2 bg-accent text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all">🖨️ طباعة الخطة</button>
+      </div>
+    </div>
+
+    {/* بطاقات الإحصاء */}
+    <section class="mb-10">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { v: total, l: 'سيناريو كارثي' },
+          { v: criticalCount, l: 'سيناريو حرج' },
+          { v: avgRtoLabel, l: 'متوسط زمن التعافي (RTO)' },
+          { v: bcp.backupProtocol.items.length, l: 'بند نسخ احتياطي' },
+        ].map((s) => (
+          <div class="bg-chip border border-line rounded-xl p-4 text-center">
+            <div class="text-2xl font-extrabold text-brand-yellow">{s.v}</div>
+            <div class="text-[11px] text-ink-2 mt-1">{s.l}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* سيناريوهات الكوارث */}
+    <section class="mb-10">
+      <h2 class="text-xl font-bold text-ink mb-1">⚠️ سيناريوهات الكوارث وخطط الاستجابة</h2>
+      <p class="text-xs text-muted mb-4">مرتّبة بالخطورة — لكل سيناريو خطوات استجابة فورية، وزمن تعافٍ مستهدف (RTO)، ومسؤول واضح.</p>
+      <div class="flex flex-wrap gap-2 mb-5 no-print" id="sevFilters">
+        <button type="button" data-sev-filter="all" class="sev-filter px-4 py-2 rounded-xl border text-xs font-bold bg-accent text-white border-accent transition-all">الكل ({total})</button>
+        {severities.map((sev) => (
+          <button type="button" data-sev-filter={sev} class="sev-filter px-4 py-2 rounded-xl border text-xs font-bold bg-chip text-ink-2 border-line hover:bg-surface-2 transition-all">
+            {sev} ({severityCounts[sev]})
+          </button>
+        ))}
+      </div>
+      <div class="space-y-4">
+        {scenarios.map((s) => (
+          <div data-sev={s.severity} class="scenario-card rounded-2xl bg-chip border border-line overflow-hidden">
+            <div class={`h-1 w-full ${SEVERITY_STYLE[s.severity].bar}`}></div>
+            <div class="p-5">
+              <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                <h3 class="font-bold text-ink text-base leading-snug">{s.title}</h3>
+                <div class="flex gap-2 shrink-0 flex-wrap">
+                  <span class={`px-2.5 py-1 rounded-lg border text-[10px] font-bold ${SEVERITY_STYLE[s.severity].chip}`}>الخطورة: {s.severity}</span>
+                  <span class="px-2.5 py-1 rounded-lg border border-line bg-chip text-[10px] font-bold text-ink-2">الاحتمال: {s.likelihood}</span>
+                  <span class="px-2.5 py-1 rounded-lg border border-line bg-chip text-[10px] font-bold text-ink-2">RTO: {s.recoveryTime}</span>
+                </div>
+              </div>
+              <p class="text-xs text-ink-2 leading-relaxed mb-4"><span class="font-bold text-brand-yellow">الأثر المتوقّع: </span>{s.impact}</p>
+              <div class="rounded-xl bg-surface-2 border border-line p-4">
+                <p class="text-[11px] font-bold text-ink mb-2">خطوات الاستجابة الفورية</p>
+                <ol class="space-y-1.5">
+                  {s.immediateResponse.map((step, i) => (
+                    <li class="text-xs text-ink-2 leading-relaxed flex gap-2">
+                      <span class="text-brand-yellow font-bold shrink-0">{i + 1}.</span><span>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              <p class="text-[11px] text-muted mt-3">👤 المسؤول: {s.owner}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* بروتوكول النسخ الاحتياطي */}
+    <section class="mb-10">
+      <h2 class="text-xl font-bold text-ink mb-1">🗄️ بروتوكول النسخ الاحتياطي واستعادة البيانات</h2>
+      <p class="text-xs text-muted mb-4">التكرار · المكان · الاختبار الدوري · المسؤول — مع بيان الإجراء الحالي تحت قيود خطة Firebase الحالية.</p>
+      <div class="rounded-xl border border-brand-yellow/40 bg-brand-yellow/5 p-4 mb-5">
+        <p class="text-xs text-ink-2 leading-relaxed"><span class="font-bold text-brand-yellow">حالة النسخ اليوم: </span>{bcp.backupProtocol.note}</p>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {bcp.backupProtocol.items.map((item) => (
+          <div class="rounded-2xl bg-chip border border-line p-5">
+            <div class="flex items-start justify-between gap-3 mb-2">
+              <h3 class="font-bold text-ink text-sm leading-snug">{item.title}</h3>
+              <span class="px-2.5 py-1 rounded-lg border border-line bg-chip text-[10px] font-bold text-ink-2 shrink-0">{item.frequency}</span>
+            </div>
+            <p class="text-xs text-ink-2 leading-relaxed mb-2">{item.detail}</p>
+            <p class="text-[10px] text-muted">👤 المسؤول: {item.owner}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* جهات التواصل الطارئة */}
+    <section class="mb-10">
+      <h2 class="text-xl font-bold text-ink mb-1">📇 جهات التواصل الطارئة</h2>
+      <p class="text-xs text-muted mb-4">سلسلة الاستدعاء عند الأزمة — تُحدَّث أرقام التواصل الفعلية عند اعتماد الخطة.</p>
+      <div class="rounded-2xl bg-chip border border-line p-5">
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-right border-collapse min-w-[560px]">
+            <thead>
+              <tr class="text-ink-2 border-b border-line text-[10px]">
+                <th class="p-2.5 font-bold">الدور</th>
+                <th class="p-2.5 font-bold">الجهة</th>
+                <th class="p-2.5 font-bold">الأولوية</th>
+                <th class="p-2.5 font-bold">جهة التواصل</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bcp.emergencyContacts.map((c) => (
+                <tr class="border-b border-line align-middle">
+                  <td class="p-2.5 font-bold text-ink">{c.role}</td>
+                  <td class="p-2.5 text-ink-2">{c.entity}</td>
+                  <td class="p-2.5">
+                    <span class={`px-2.5 py-1 rounded-lg border text-[10px] font-bold ${PRIORITY_STYLE[c.priority] ?? PRIORITY_STYLE['ثانية']}`}>{c.priority}</span>
+                  </td>
+                  <td class="p-2.5 text-muted">{c.contact}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    {/* اعتماد الخطة */}
+    <section class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-line p-6">
+      <h2 class="text-sm font-bold text-ink mb-6 text-center">اعتماد الخطة</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto text-center">
+        <div>
+          <img src={`${base}/identity/signatures/signature-2.png`} alt="توقيع محمد البرشي" class="h-16 mx-auto mb-2 object-contain" />
+          <p class="font-bold text-ink text-sm">محمد البرشي</p>
+          <p class="text-[11px] text-muted">مدير إدارة السلاسل والإمداد والمخازن</p>
+        </div>
+        <div>
+          <img src={`${base}/identity/signatures/signature-1.png`} alt="توقيع رمزي الباش" class="h-16 mx-auto mb-2 object-contain" />
+          <p class="font-bold text-ink text-sm">رمزي الباش</p>
+          <p class="text-[11px] text-muted">مدير إدارة الخدمات اللوجستية والخدمية</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      .doc-bcp { color: #111 !important; }
+    }
+  </style>
+
+  <script>
+    // تصفية السيناريوهات بالخطورة
+    const filters = document.querySelectorAll('[data-sev-filter]');
+    const cards = document.querySelectorAll('[data-sev]');
+    const ON = ['bg-accent', 'text-white', 'border-accent'];
+    const OFF = ['bg-chip', 'text-ink-2', 'border-line'];
+    filters.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const val = btn.getAttribute('data-sev-filter');
+        cards.forEach((c) => c.classList.toggle('hidden', val !== 'all' && c.getAttribute('data-sev') !== val));
+        filters.forEach((f) => {
+          const on = f === btn;
+          ON.forEach((cls) => f.classList.toggle(cls, on));
+          OFF.forEach((cls) => f.classList.toggle(cls, !on));
+        });
+      });
+    });
+
+    document.getElementById('printBcp')?.addEventListener('click', () => window.print());
+  </script>
+</DashboardLayout>

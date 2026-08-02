@@ -1,0 +1,213 @@
+---
+/**
+ * الشرح التفاعلي للمرجع التشغيلي — دليلٌ إرشاديّ يشرح المرجع خطوةً بخطوة.
+ * عرضٌ خالص فوق `src/data/reference-guide.json` + تفاعل vanilla (رحلة المستند
+ * كخطوات قابلة للتنقّل، وركائز المرجع كبطاقاتٍ قابلة للطيّ).
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import guide from '../../data/reference-guide.json';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+
+const KIND_STYLE = {
+  'تشغيلي': 'bg-blue-500/15 text-blue-300 border-blue-500/40',
+  'مالي': 'bg-brand-yellow/15 text-brand-yellow border-brand-yellow/40',
+};
+---
+
+<DashboardLayout title="الشرح التفاعلي للمرجع" light>
+  <div class="text-right" dir="rtl">
+    {/* ترويسة */}
+    <div class="mb-8 rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-accent/30 p-6 sm:p-10">
+      <p class="text-[11px] text-muted mb-2">{guide.meta.refNumber} · الإصدار {guide.meta.version} · {guide.meta.issued}</p>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-ink leading-snug mb-3">{guide.meta.title}</h1>
+      <p class="text-sm text-ink-2 leading-relaxed max-w-4xl">{guide.meta.purpose}</p>
+      <div class="mt-5 flex flex-wrap gap-3 no-print">
+        <a href={`${base}/المرجع-التشغيلي-الرسمي.html`} target="_blank" rel="noopener" class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all">المرجع الرسمي الكامل (المصدر)</a>
+        <a href={`${base}/dashboard/acceptance-check`} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all">صفحة المطابقة والاستلام</a>
+        <a href={`${base}/dashboard/portal-value`} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all">لماذا البوابة تكامليّة لأودو</a>
+        <button type="button" id="printGuide" class="px-4 py-2 bg-brand-red text-white rounded-xl text-xs font-bold hover:bg-brand-red-dark transition-all">طباعة</button>
+      </div>
+    </div>
+
+    {/* إحصاءات المرجع */}
+    <section class="mb-8">
+      <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
+        {guide.stats.map((s) => (
+          <div class="bg-chip border border-line rounded-xl p-3 text-center">
+            <div class="text-2xl font-extrabold text-brand-yellow">{s.value}</div>
+            <div class="text-[10px] text-ink-2 mt-1">{s.label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* القاعدة الذهبية */}
+    <section class="mb-10">
+      <div class="rounded-2xl border border-brand-yellow/40 bg-brand-yellow/5 p-6">
+        <h2 class="text-lg font-bold text-brand-yellow mb-2">{guide.goldenRule.title}</h2>
+        <p class="text-xl font-extrabold text-ink mb-3">{guide.goldenRule.statement}</p>
+        <p class="text-sm text-ink-2 leading-relaxed">{guide.goldenRule.explain}</p>
+      </div>
+    </section>
+
+    {/* رحلة المستند — خطوة بخطوة */}
+    <section class="mb-10">
+      <h2 class="text-xl font-bold text-ink mb-1">رحلة المستند — اثنتا عشرة مرحلة</h2>
+      <p class="text-xs text-muted mb-4">اضغط أيّ مرحلةٍ لقراءة تفصيلها، أو تنقّل بالسابق/التالي. المراحل ١–٨ تشغيليّة و٩–١٢ ماليّة.</p>
+
+      {/* شريط المراحل */}
+      <div class="flex flex-wrap gap-2 mb-5 no-print" id="stepBar">
+        {guide.journey.map((st, i) => (
+          <button type="button" data-step={st.stage} class={`step-chip w-10 h-10 rounded-xl border text-sm font-extrabold transition-all ${i === 0 ? 'bg-brand-red text-white border-brand-red' : 'bg-chip text-ink-2 border-line hover:bg-surface-2'}`}>
+            {st.stage}
+          </button>
+        ))}
+      </div>
+
+      {/* لوحات التفصيل */}
+      {guide.journey.map((st, i) => (
+        <div data-step-panel={st.stage} class={`step-panel rounded-2xl bg-chip border border-line p-6 ${i === 0 ? '' : 'hidden'}`}>
+          <div class="flex items-center justify-between gap-3 flex-wrap mb-4">
+            <div class="flex items-center gap-3">
+              <span class="w-10 h-10 rounded-xl bg-brand-navy text-brand-yellow flex items-center justify-center font-extrabold text-lg">{st.stage}</span>
+              <h3 class="text-lg font-bold text-ink">{st.title}</h3>
+            </div>
+            <span class={`px-3 py-1 rounded-lg border text-[11px] font-bold ${KIND_STYLE[st.kind] || ''}`}>{st.kind}</span>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="rounded-xl bg-surface-2 border border-line p-4">
+              <p class="text-[10px] font-bold text-muted mb-1">ما هي؟</p>
+              <p class="text-sm text-ink-2 leading-relaxed">{st.what}</p>
+            </div>
+            <div class="rounded-xl bg-surface-2 border border-line p-4">
+              <p class="text-[10px] font-bold text-muted mb-1">لماذا تهمّ؟</p>
+              <p class="text-sm text-ink-2 leading-relaxed">{st.why}</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 text-xs">
+            <p class="text-ink-2 rounded-lg bg-surface-2 border border-line p-3"><span class="font-bold text-brand-yellow block mb-0.5">مَن؟</span>{st.who}</p>
+            <p class="text-ink-2 rounded-lg bg-surface-2 border border-line p-3"><span class="font-bold text-brand-yellow block mb-0.5">في أودو</span><span class="font-mono" dir="ltr" style="unicode-bidi:plaintext;">{st.odoo}</span></p>
+            <p class="text-ink-2 rounded-lg bg-surface-2 border border-line p-3"><span class="font-bold text-brand-yellow block mb-0.5">الحارس</span>{st.guard}</p>
+            <p class="text-ink-2 rounded-lg bg-surface-2 border border-line p-3"><span class="font-bold text-brand-yellow block mb-0.5">في البوابة</span>{st.portal}</p>
+          </div>
+          <div class="flex items-center justify-between mt-5 no-print">
+            <button type="button" data-step-nav="prev" class="px-4 py-2 bg-surface-2 border border-line text-ink rounded-xl text-xs font-bold hover:bg-chip transition-all disabled:opacity-40" disabled={st.stage === 1}>◀ السابقة</button>
+            <span class="text-[11px] text-muted">{st.stage} / {guide.journey.length}</span>
+            <button type="button" data-step-nav="next" class="px-4 py-2 bg-surface-2 border border-line text-ink rounded-xl text-xs font-bold hover:bg-chip transition-all disabled:opacity-40" disabled={st.stage === guide.journey.length}>التالية ▶</button>
+          </div>
+        </div>
+      ))}
+    </section>
+
+    {/* السلاسل السبع */}
+    <section class="mb-10">
+      <h2 class="text-xl font-bold text-ink mb-1">السلاسل المستنديّة السبع</h2>
+      <p class="text-xs text-muted mb-4">كل سلسلةٍ رحلةٌ مستقلّة مترابطة بمرجعٍ إلزاميّ بين مستنداتها — لا تُنجَز حلقةٌ قبل اعتماد سابقتها.</p>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {guide.chains.map((c) => (
+          <div class="rounded-2xl bg-chip border border-line p-4">
+            <div class="flex items-center justify-between gap-3 mb-1.5 flex-wrap">
+              <h3 class="font-bold text-ink text-sm">{c.nameAr}</h3>
+              <span class="font-mono text-[11px] text-brand-yellow" dir="ltr">{c.seq}</span>
+            </div>
+            <p class="text-[11px] text-ink-2 leading-relaxed">{c.note}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* ركائز المرجع — بطاقات قابلة للطيّ */}
+    <section class="mb-10">
+      <h2 class="text-xl font-bold text-ink mb-4">ركائز المرجع الستّ</h2>
+      <div class="space-y-3" id="pillars">
+        {guide.pillars.map((p, i) => (
+          <div class="rounded-2xl bg-chip border border-line overflow-hidden">
+            <button type="button" data-pillar-head class="w-full flex items-center justify-between gap-3 p-4 text-right hover:bg-surface-2 transition-all">
+              <span class="font-bold text-ink text-sm">{p.title}</span>
+              <span class="pillar-caret text-brand-yellow text-lg shrink-0" style={i === 0 ? 'transform:rotate(90deg)' : ''}>‹</span>
+            </button>
+            <div data-pillar-body class={`px-4 pb-4 ${i === 0 ? '' : 'hidden'}`}>
+              <p class="text-xs text-ink-2 leading-relaxed mb-3">{p.summary}</p>
+              <ul class="space-y-2">
+                {p.points.map((pt) => (
+                  <li class="text-xs text-ink-2 leading-relaxed flex gap-2"><span class="text-brand-yellow shrink-0">◆</span><span>{pt}</span></li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* اعتماد */}
+    <section class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-line p-6">
+      <h2 class="text-sm font-bold text-ink mb-6 text-center">اعتماد الدليل</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto text-center">
+        <div>
+          <img src={`${base}/identity/signatures/signature-2.png`} alt="توقيع محمد البرشي" class="h-16 mx-auto mb-2 object-contain" />
+          <p class="font-bold text-ink text-sm">محمد البرشي</p>
+          <p class="text-[11px] text-muted">مدير إدارة السلاسل والإمداد والمخازن</p>
+        </div>
+        <div>
+          <img src={`${base}/identity/signatures/signature-1.png`} alt="توقيع رمزي الباش" class="h-16 mx-auto mb-2 object-contain" />
+          <p class="font-bold text-ink text-sm">رمزي الباش</p>
+          <p class="text-[11px] text-muted">مدير إدارة الخدمات اللوجستية والخدمية</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <style>
+    @media print { .no-print { display: none !important; } .step-panel.hidden, [data-pillar-body].hidden { display: block !important; } }
+  </style>
+
+  <script>
+    (function () {
+      var ON = ['bg-brand-red', 'text-white', 'border-brand-red'];
+      var OFF = ['bg-chip', 'text-ink-2', 'border-line'];
+      var chips = Array.prototype.slice.call(document.querySelectorAll('.step-chip'));
+      var panels = Array.prototype.slice.call(document.querySelectorAll('[data-step-panel]'));
+      var maxStep = chips.length;
+
+      function show(step) {
+        panels.forEach(function (p) { p.classList.toggle('hidden', p.getAttribute('data-step-panel') !== String(step)); });
+        chips.forEach(function (c) {
+          var on = c.getAttribute('data-step') === String(step);
+          ON.forEach(function (cl) { c.classList.toggle(cl, on); });
+          OFF.forEach(function (cl) { c.classList.toggle(cl, !on); });
+        });
+      }
+      chips.forEach(function (c) {
+        c.addEventListener('click', function () { show(c.getAttribute('data-step')); });
+      });
+      document.querySelectorAll('[data-step-nav]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var panel = btn.closest('[data-step-panel]');
+          var cur = parseInt(panel.getAttribute('data-step-panel'), 10);
+          var next = btn.getAttribute('data-step-nav') === 'next' ? cur + 1 : cur - 1;
+          if (next >= 1 && next <= maxStep) {
+            show(next);
+            var target = document.querySelector('[data-step-panel="' + next + '"]');
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+      });
+
+      // ركائز قابلة للطيّ
+      document.querySelectorAll('[data-pillar-head]').forEach(function (head) {
+        head.addEventListener('click', function () {
+          var body = head.parentElement.querySelector('[data-pillar-body]');
+          var caret = head.querySelector('.pillar-caret');
+          var open = !body.classList.contains('hidden');
+          body.classList.toggle('hidden', open);
+          if (caret) caret.style.transform = open ? '' : 'rotate(90deg)';
+        });
+      });
+
+      document.getElementById('printGuide').addEventListener('click', function () { window.print(); });
+    })();
+  </script>
+</DashboardLayout>

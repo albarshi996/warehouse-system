@@ -1,0 +1,264 @@
+---
+/**
+ * بطاقة أداء الموردين (Vendor Scorecard) — تعالج فجوة «الموردون 1.0» في الدراسة
+ * المقارنة العالمية (BFP-SCM-STD-2026-001)، وهي من ملاحق المرجع التشغيلي (م-5/4).
+ * الصفحة عرضٌ خالص فوق `src/data/vendor-scorecard.json`. الأرقام المعروضة بذرة
+ * تمثيليّة؛ القيم الحيّة تُحسب من طوابع المستندات عبر
+ * `src/services/kpi/procurementKpis.js` (PO → GRN → QC بالمعرّفات لا بالنصّ).
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import scorecard from '../../data/vendor-scorecard.json';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+
+const { meta, methodology, dimensions, vendors, tierLegend } = scorecard;
+
+/** إحصاءات علوية مشتقّة من البذرة. */
+const vendorsCount = vendors.length;
+const avgOtd = Math.round(vendors.reduce((a, v) => a + v.otd, 0) / vendorsCount);
+const avgQuality = Math.round(vendors.reduce((a, v) => a + v.quality, 0) / vendorsCount);
+const tierACount = vendors.filter((v) => v.tier === 'A').length;
+
+const tierCounts = { A: 0, B: 0, C: 0 };
+vendors.forEach((v) => { tierCounts[v.tier] = (tierCounts[v.tier] || 0) + 1; });
+
+/** شارة الفئة: أ أخضر · ب أصفر · ج أحمر (حالة، لا زينة). */
+const TIER_STYLE = {
+  A: 'bg-green-500/15 text-green-300 border-green-500/40',
+  B: 'bg-yellow-400/15 text-yellow-200 border-yellow-400/40',
+  C: 'bg-red-500/15 text-red-300 border-red-500/40',
+};
+const scoreBar = (v) => (v.tier === 'A' ? 'bg-green-500' : v.tier === 'B' ? 'bg-yellow-400' : 'bg-red-500');
+---
+
+<DashboardLayout title="بطاقة أداء الموردين" light>
+  <div class="text-right doc-scorecard" dir="rtl">
+    {/* ترويسة البطاقة */}
+    <div class="mb-8 rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-accent/30 p-6 sm:p-10">
+      <p class="text-[11px] text-muted mb-2">{meta.refNumber} · الإصدار {meta.version} · {meta.issued}</p>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-ink leading-snug mb-3">{meta.title}</h1>
+      <p class="text-sm text-ink-2 leading-relaxed max-w-4xl">{meta.purpose}</p>
+      <div class="mt-5 flex flex-wrap gap-3 no-print">
+        <a href={`${base}/dashboard/kpis`} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all">مؤشرات الأداء</a>
+        <a href={`${base}/dashboard/suppliers`} class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all">سجلّ الموردين</a>
+        <button type="button" id="printScorecard" class="px-4 py-2 bg-brand-navy text-white border border-accent/40 rounded-xl text-xs font-bold hover:bg-[#1a1a3e] transition-all">طباعة البطاقة</button>
+      </div>
+    </div>
+
+    {/* بطاقات إحصاء علوية */}
+    <section class="mb-10">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { v: vendorsCount, l: 'عدد الموردين' },
+          { v: `${avgOtd}٪`, l: 'متوسط التسليم في الموعد' },
+          { v: `${avgQuality}٪`, l: 'متوسط الجودة' },
+          { v: tierACount, l: 'موردو الفئة (أ)' },
+        ].map((s) => (
+          <div class="bg-chip border border-line rounded-xl p-4 text-center">
+            <div class="text-2xl font-extrabold text-brand-yellow">{s.v}</div>
+            <div class="text-[11px] text-ink-2 mt-1">{s.l}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* جدول الموردين */}
+    <section class="mb-10">
+      <h2 class="text-xl font-bold text-ink mb-1">جدول أداء الموردين</h2>
+      <p class="text-xs text-muted mb-4">كل مورّد مصنَّفٌ بدرجةٍ كلّية على سقف 100 نقطة وفئةٍ مشتقّة منها؛ الأرقام بيانات بذرة تمثيليّة.</p>
+
+      {/* تصفية بالفئة */}
+      <div class="flex flex-wrap gap-2 mb-5 no-print" id="tierFilters">
+        <button type="button" data-tier-filter="all" class="tier-filter px-4 py-2 rounded-xl border text-xs font-bold bg-brand-navy text-white border-brand-navy transition-all">الكل ({vendorsCount})</button>
+        {tierLegend.map((t) => (
+          <button type="button" data-tier-filter={t.tier} class="tier-filter px-4 py-2 rounded-xl border text-xs font-bold bg-chip text-ink-2 border-line hover:bg-surface-2 transition-all">
+            الفئة {t.tier} — {t.labelAr} ({tierCounts[t.tier] || 0})
+          </button>
+        ))}
+      </div>
+
+      <div class="rounded-2xl bg-chip border border-line p-4 sm:p-5">
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-right border-collapse min-w-[920px]">
+            <thead>
+              <tr class="text-ink-2 border-b border-line text-[10px]">
+                <th class="p-2 font-bold">المورّد</th>
+                <th class="p-2 font-bold">الفئة التوريديّة</th>
+                <th class="p-2 font-bold">التسليم في الموعد</th>
+                <th class="p-2 font-bold">الجودة</th>
+                <th class="p-2 font-bold">السعر (1-5)</th>
+                <th class="p-2 font-bold">الاستجابة</th>
+                <th class="p-2 font-bold">الأوامر</th>
+                <th class="p-2 font-bold min-w-[180px]">الدرجة الكلّية</th>
+                <th class="p-2 font-bold">الفئة</th>
+              </tr>
+            </thead>
+            <tbody>
+              {vendors.map((v) => (
+                <tr data-vendor-tier={v.tier} class="vendor-row border-b border-line align-top">
+                  <td class="p-2">
+                    <span class="font-bold text-ink block">{v.name}</span>
+                    <span class="text-[10px] text-muted">{v.id}</span>
+                  </td>
+                  <td class="p-2 text-ink-2">{v.category}</td>
+                  <td class="p-2 text-ink-2">{v.otd}٪</td>
+                  <td class="p-2 text-ink-2">{v.quality}٪</td>
+                  <td class="p-2 text-ink-2">{v.price}/5</td>
+                  <td class="p-2 text-ink-2">{v.responsiveness}٪</td>
+                  <td class="p-2 text-ink-2">{v.ordersCount}</td>
+                  <td class="p-2">
+                    <div class="flex items-center gap-2">
+                      <div class="flex-1 h-2.5 rounded-full bg-surface-2 overflow-hidden min-w-[90px]">
+                        <div class={`h-full rounded-full ${scoreBar(v)}`} style={`width:${v.overallScore}%`}></div>
+                      </div>
+                      <span class="text-brand-yellow font-extrabold shrink-0">{v.overallScore}</span>
+                    </div>
+                  </td>
+                  <td class="p-2">
+                    <span class={`px-2.5 py-1 rounded-lg border text-[10px] font-bold ${TIER_STYLE[v.tier]}`}>{v.tier}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ملاحظات الموردين */}
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-4">
+        {vendors.map((v) => (
+          <div data-vendor-tier={v.tier} class="vendor-note rounded-xl bg-chip border border-line p-3.5">
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <span class="font-bold text-ink text-xs">{v.name}</span>
+              <span class={`px-2 py-0.5 rounded-lg border text-[10px] font-bold shrink-0 ${TIER_STYLE[v.tier]}`}>الفئة {v.tier}</span>
+            </div>
+            <p class="text-[11px] text-ink-2 leading-relaxed">{v.note}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* منهجية التقييم — الأبعاد وأوزانها */}
+    <section class="mb-10">
+      <h2 class="text-xl font-bold text-ink mb-1">منهجية التقييم — الأبعاد الأربعة وأوزانها</h2>
+      <p class="text-xs text-muted mb-4">الدرجة الكلّية حاصلُ جمعٍ موزون للأبعاد الأربعة على سقف 100 نقطة؛ الوزن يعكس أثر البُعد على انسياب العمليّة والكلفة.</p>
+      <div class="rounded-2xl bg-chip border border-line p-6 space-y-5">
+        {dimensions.map((d) => (
+          <div>
+            <div class="flex items-center justify-between gap-3 mb-1.5 flex-wrap">
+              <h3 class="font-bold text-ink text-sm">{d.nameAr} <span class="text-[10px] text-muted font-normal">({d.nameEn} · {d.unit})</span></h3>
+              <span class="text-brand-yellow font-extrabold text-sm">{d.weight}٪</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-surface-2 overflow-hidden mb-2">
+              <div class="h-full rounded-full bg-brand-yellow" style={`width:${d.weight}%`}></div>
+            </div>
+            <p class="text-[11px] text-ink-2 leading-relaxed">{d.rationale}</p>
+          </div>
+        ))}
+        <div class="rounded-xl border border-brand-yellow/40 bg-brand-yellow/5 p-4">
+          <p class="text-xs text-ink-2 leading-relaxed">
+            <span class="font-bold text-brand-yellow">دليل الفئات: </span>
+            {tierLegend.map((t) => `الفئة ${t.tier} (${t.labelAr}) ${t.range}`).join(' · ')}.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    {/* دليل سياسات الفئات */}
+    <section class="mb-10">
+      <h2 class="text-xl font-bold text-ink mb-4">سياسة التعامل حسب الفئة</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {tierLegend.map((t) => (
+          <div class="rounded-2xl bg-chip border border-line p-5">
+            <div class="flex items-center gap-2 mb-2">
+              <span class={`px-2.5 py-1 rounded-lg border text-[11px] font-bold ${TIER_STYLE[t.tier]}`}>الفئة {t.tier}</span>
+              <span class="font-bold text-ink text-sm">{t.labelAr}</span>
+            </div>
+            <p class="text-[11px] text-muted mb-2">{t.range}</p>
+            <p class="text-xs text-ink-2 leading-relaxed">{t.policy}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* كيف تُحسب حيًّا من المستندات */}
+    <section class="mb-10">
+      <h2 class="text-xl font-bold text-ink mb-1">كيف تُحسب البطاقة حيًّا من المستندات</h2>
+      <p class="text-xs text-ink-2 leading-relaxed mb-4 max-w-4xl">{methodology.summary}</p>
+      <div class="rounded-2xl bg-chip border border-line p-6">
+        <p class="text-[11px] text-muted mb-4">محرّك الحساب: <span class="text-ink font-mono">{methodology.engine}</span></p>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {methodology.steps.map((s) => (
+            <div class="rounded-xl bg-surface-2 border border-line p-4">
+              <div class="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                <h3 class="font-bold text-ink text-sm">{s.dimension}</h3>
+                <span class="px-2 py-0.5 rounded border border-line text-[10px] font-mono text-ink-2 shrink-0">{s.source}</span>
+              </div>
+              <p class="text-[11px] text-ink-2 leading-relaxed">{s.detail}</p>
+            </div>
+          ))}
+        </div>
+        <div class="rounded-xl border border-brand-yellow/40 bg-brand-yellow/5 p-4 mt-4">
+          <p class="text-xs text-ink-2 leading-relaxed"><span class="font-bold text-brand-yellow">ملاحظة البذرة: </span>{methodology.seedNote}</p>
+        </div>
+      </div>
+    </section>
+
+    {/* ملاحظات عامّة */}
+    <section class="mb-10 rounded-2xl bg-chip border border-line p-6">
+      <h2 class="text-lg font-bold text-ink mb-4">ملاحظات حاكمة</h2>
+      <ul class="space-y-2">
+        {meta.notes.map((n) => (
+          <li class="text-xs text-ink-2 leading-relaxed flex gap-2"><span class="text-brand-yellow shrink-0">◆</span><span>{n}</span></li>
+        ))}
+      </ul>
+    </section>
+
+    {/* اعتماد البطاقة */}
+    <section class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-line p-6">
+      <h2 class="text-sm font-bold text-ink mb-6 text-center">اعتماد البطاقة</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto text-center">
+        <div>
+          <img src={`${base}/identity/signatures/signature-2.png`} alt="توقيع محمد البرشي" class="h-16 mx-auto mb-2 object-contain" />
+          <p class="font-bold text-ink text-sm">محمد البرشي</p>
+          <p class="text-[11px] text-muted">مدير إدارة السلاسل والإمداد والمخازن</p>
+        </div>
+        <div>
+          <img src={`${base}/identity/signatures/signature-1.png`} alt="توقيع رمزي الباش" class="h-16 mx-auto mb-2 object-contain" />
+          <p class="font-bold text-ink text-sm">رمزي الباش</p>
+          <p class="text-[11px] text-muted">مدير إدارة الخدمات اللوجستية والخدمية</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      .doc-scorecard { color: #111 !important; }
+    }
+  </style>
+
+  <script>
+    // تصفية الموردين بالفئة (نمط تصفية الفجوات في الدراسة المقارنة)
+    const filters = document.querySelectorAll('[data-tier-filter]');
+    const rows = document.querySelectorAll('[data-vendor-tier]');
+    const ON = ['bg-brand-navy', 'text-white', 'border-brand-navy'];
+    const OFF = ['bg-chip', 'text-ink-2', 'border-line'];
+    filters.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const val = btn.getAttribute('data-tier-filter');
+        rows.forEach((r) => r.classList.toggle('hidden', val !== 'all' && r.getAttribute('data-vendor-tier') !== val));
+        filters.forEach((f) => {
+          const on = f === btn;
+          ON.forEach((cls) => f.classList.toggle(cls, on));
+          OFF.forEach((cls) => f.classList.toggle(cls, !on));
+        });
+      });
+    });
+
+    document.getElementById('printScorecard')?.addEventListener('click', () => window.print());
+  </script>
+</DashboardLayout>

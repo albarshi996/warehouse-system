@@ -1,0 +1,328 @@
+---
+/**
+ * قوائم تدقيق الأمن والسلامة المهنية (HSE) — من ملحق المرجع التشغيلي (م-٥/٣).
+ * الصفحة عرضٌ خالص فوق `src/data/hse-checklists.json`: تبويبات لخمس قوائم فحص
+ * دوريّة، كل بند صندوق اختيار قابل للنقر، مع نسبة امتثال حيّة، حفظ محلي في
+ * localStorage بمفتاح لكل قائمة، وإبراز البنود الحرِجة غير المكتملة. كل التفاعل
+ * بـ vanilla JS بلا مكتبات. الأحمر مقصور على التحذير (بند حرِج غير مكتمل).
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import data from '../../data/hse-checklists.json';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+
+const { meta, checklists } = data;
+
+const itemsTotal = checklists.reduce((n, c) => n + c.items.length, 0);
+const criticalTotal = checklists.reduce(
+  (n, c) => n + c.items.filter((it) => it.severity === 'critical').length,
+  0,
+);
+
+/** أيقونات خطّية (بلا إيموجي) — inner SVG لكل اسم أيقونة في البيانات وواجهة الصفحة. */
+const ICONS = {
+  flame:
+    '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  snowflake:
+    '<line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/>',
+  forklift:
+    '<path d="M12 12H5a2 2 0 0 0-2 2v5"/><circle cx="13" cy="19" r="2"/><circle cx="5" cy="19" r="2"/><path d="M8 19h3m5-17v17h6M6 12V7c0-1.1.9-2 2-2h3l5 5"/>',
+  hardhat:
+    '<path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1z"/><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5"/><path d="M4 15v-3a6 6 0 0 1 6-6"/><path d="M14 6a6 6 0 0 1 6 6v3"/>',
+  sparkles:
+    '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/>',
+  shield:
+    '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+  printer:
+    '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/>',
+  reset:
+    '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+  alert:
+    '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+};
+---
+
+<DashboardLayout title="قوائم تدقيق الأمن والسلامة (HSE)" light>
+  <div class="text-right doc-hse" dir="rtl">
+    {/* الترويسة */}
+    <div class="mb-8 rounded-2xl bg-gradient-to-br from-brand-navy via-[#1a1a3e] to-[#0d0d2b] border border-accent/30 p-6 sm:p-10">
+      <p class="text-[11px] text-muted mb-2">{meta.refNumber} · الإصدار {meta.version} · {meta.issued}</p>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-ink leading-snug mb-3 flex items-center gap-3">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 text-brand-yellow shrink-0"><Fragment set:html={ICONS.shield} /></svg>
+        <span>{meta.title}</span>
+      </h1>
+      <p class="text-sm text-ink-2 leading-relaxed max-w-4xl">{meta.purpose}</p>
+      <div class="mt-5 flex flex-wrap gap-3 no-print">
+        <button type="button" id="printAll" class="px-4 py-2 bg-chip border border-line text-ink rounded-xl text-xs font-bold hover:bg-surface-2 transition-all flex items-center gap-2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><Fragment set:html={ICONS.printer} /></svg>
+          طباعة كل القوائم
+        </button>
+      </div>
+    </div>
+
+    {/* شريط ملخّص */}
+    <section class="mb-8">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { v: checklists.length, l: 'قائمة تدقيق' },
+          { v: itemsTotal, l: 'بند فحص' },
+          { v: criticalTotal, l: 'بند حرِج' },
+          { v: '5/3-م', l: 'مرجع الملحق' },
+        ].map((s) => (
+          <div class="bg-chip border border-line rounded-xl p-3 text-center">
+            <div class="text-xl font-extrabold text-brand-yellow">{s.v}</div>
+            <div class="text-[10px] text-ink-2 mt-1">{s.l}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* تبويبات القوائم */}
+    <div class="flex flex-wrap gap-2 mb-6 no-print" id="hseTabs">
+      {checklists.map((c, i) => (
+        <button
+          type="button"
+          data-hse-tab={c.id}
+          class={`hse-tab px-4 py-2 rounded-xl border text-xs font-bold transition-all flex items-center gap-2 ${i === 0 ? 'bg-brand-yellow text-brand-navy border-brand-yellow' : 'bg-chip text-ink-2 border-line hover:bg-surface-2'}`}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 shrink-0"><Fragment set:html={ICONS[c.icon] ?? ICONS.shield} /></svg>
+          {c.title}
+        </button>
+      ))}
+    </div>
+
+    {/* لوحات القوائم */}
+    {checklists.map((c, i) => (
+      <section data-hse-panel={c.id} class={`checklist-panel mb-10 ${i === 0 ? '' : 'hidden'}`}>
+        <div class="rounded-2xl bg-chip border border-line p-5 sm:p-6">
+          {/* رأس القائمة */}
+          <div class="flex items-start justify-between gap-4 flex-wrap mb-4">
+            <div class="flex items-center gap-3">
+              <span class="w-10 h-10 rounded-xl bg-brand-yellow/10 border border-brand-yellow/30 flex items-center justify-center shrink-0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-brand-yellow"><Fragment set:html={ICONS[c.icon] ?? ICONS.shield} /></svg>
+              </span>
+              <div>
+                <h2 class="text-lg font-bold text-ink leading-snug">{c.title}</h2>
+                <p class="text-[11px] text-muted mt-0.5">
+                  الدورية: <span class="text-ink-2 font-bold">{c.frequency}</span>
+                  <span class="mx-1.5">·</span>
+                  المسؤول: <span class="text-ink-2 font-bold">{c.owner}</span>
+                </p>
+              </div>
+            </div>
+            <div class="flex gap-2 no-print">
+              <button type="button" data-reset={c.id} class="px-3 py-1.5 bg-chip border border-line text-ink-2 rounded-lg text-[11px] font-bold hover:bg-surface-2 transition-all flex items-center gap-1.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><Fragment set:html={ICONS.reset} /></svg>
+                تصفير القائمة
+              </button>
+              <button type="button" data-print-list={c.id} class="px-3 py-1.5 bg-chip border border-line text-ink-2 rounded-lg text-[11px] font-bold hover:bg-surface-2 transition-all flex items-center gap-1.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><Fragment set:html={ICONS.printer} /></svg>
+                طباعة القائمة
+              </button>
+            </div>
+          </div>
+
+          {/* شريط نسبة الامتثال */}
+          <div class="mb-5 rounded-xl bg-surface-2/40 border border-line p-4">
+            <div class="flex items-center justify-between text-xs mb-1.5">
+              <span class="text-ink-2 font-bold">نسبة الامتثال</span>
+              <span data-count={c.id} class="text-brand-yellow font-extrabold tabular-nums">0/{c.items.length} · 0%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-chip overflow-hidden">
+              <div data-bar={c.id} class="h-full rounded-full bg-brand-yellow transition-all" style="width:0%"></div>
+            </div>
+            <p data-warn={c.id} class="hidden mt-2.5 text-[11px] font-bold text-red-300 items-center gap-1.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 shrink-0"><Fragment set:html={ICONS.alert} /></svg>
+              <span data-warn-text={c.id}></span>
+            </p>
+          </div>
+
+          {/* بنود الفحص */}
+          <div class="space-y-2.5">
+            {c.items.map((it, idx) => (
+              <label
+                class="item-row flex items-start gap-3 rounded-xl border border-line bg-chip p-3.5 cursor-pointer hover:bg-surface-2 transition-all"
+                data-item={`${c.id}-${idx}`}
+                data-severity={it.severity}
+              >
+                <input
+                  type="checkbox"
+                  data-cb
+                  data-checklist={c.id}
+                  data-index={idx}
+                  data-severity={it.severity}
+                  class="mt-0.5 w-5 h-5 shrink-0 accent-brand-yellow cursor-pointer"
+                />
+                <span class="text-sm text-ink-2 leading-relaxed flex-1">{it.text}</span>
+                {it.severity === 'critical' && (
+                  <span class="shrink-0 px-2 py-0.5 rounded-md border border-red-500/40 bg-red-500/10 text-red-300 text-[10px] font-bold">حرِج</span>
+                )}
+              </label>
+            ))}
+          </div>
+        </div>
+      </section>
+    ))}
+
+    {/* اعتماد الوثيقة */}
+    <section class="rounded-2xl bg-gradient-to-br from-brand-navy to-[#0d0d2b] border border-line p-6">
+      <h2 class="text-sm font-bold text-ink mb-6 text-center">اعتماد قوائم التدقيق</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto text-center">
+        <div>
+          <img src={`${base}/identity/signatures/signature-2.png`} alt="توقيع محمد البرشي" class="h-16 mx-auto mb-2 object-contain" />
+          <p class="font-bold text-ink text-sm">محمد البرشي</p>
+          <p class="text-[11px] text-muted">مدير إدارة السلاسل والإمداد والمخازن</p>
+        </div>
+        <div>
+          <img src={`${base}/identity/signatures/signature-1.png`} alt="توقيع رمزي الباش" class="h-16 mx-auto mb-2 object-contain" />
+          <p class="font-bold text-ink text-sm">رمزي الباش</p>
+          <p class="text-[11px] text-muted">مدير إدارة الخدمات اللوجستية والخدمية</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <style is:global>
+    /* بند حرِج غير مكتمل = تحذير (الأحمر للتحذير فقط) */
+    .doc-hse .item-row.critical-pending {
+      border-color: rgba(196, 30, 58, 0.6);
+      background: rgba(196, 30, 58, 0.07);
+    }
+    .doc-hse [data-warn]:not(.hidden) { display: flex; }
+
+    @media print {
+      .no-print { display: none !important; }
+      .doc-hse { color: #111 !important; }
+      /* طباعة الكل: أظهر كل اللوحات رغم إخفاء التبويب */
+      body.hse-print-all .doc-hse .checklist-panel { display: block !important; }
+      /* طباعة قائمة واحدة: أظهر الهدف فقط */
+      body.hse-print-single .doc-hse .checklist-panel:not(.print-target) { display: none !important; }
+      body.hse-print-single .doc-hse .checklist-panel.print-target { display: block !important; }
+    }
+  </style>
+
+  <script>
+    // ── حالة محفوظة محليًّا: مفتاح مستقل لكل قائمة ──
+    const storeKey = (id) => `hse:${id}`;
+    const loadState = (id) => {
+      try {
+        return JSON.parse(localStorage.getItem(storeKey(id))) || {};
+      } catch {
+        return {};
+      }
+    };
+    const saveState = (id, state) => localStorage.setItem(storeKey(id), JSON.stringify(state));
+
+    // تحديث شريط الامتثال + إبراز الحرِج غير المكتمل لقائمة بعينها
+    const refresh = (id) => {
+      const boxes = Array.from(document.querySelectorAll(`[data-cb][data-checklist="${id}"]`));
+      const total = boxes.length;
+      const done = boxes.filter((b) => b.checked).length;
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      let critPending = 0;
+
+      boxes.forEach((b) => {
+        const row = b.closest('.item-row');
+        const pending = b.getAttribute('data-severity') === 'critical' && !b.checked;
+        if (pending) critPending += 1;
+        row?.classList.toggle('critical-pending', pending);
+      });
+
+      const bar = document.querySelector(`[data-bar="${id}"]`);
+      if (bar) {
+        bar.style.width = `${pct}%`;
+        // أخضر عند الاكتمال، ذهبي أثناء التقدّم (الأحمر محجوز للتحذير)
+        bar.classList.toggle('bg-green-500', pct === 100);
+        bar.classList.toggle('bg-brand-yellow', pct !== 100);
+      }
+
+      const count = document.querySelector(`[data-count="${id}"]`);
+      if (count) count.textContent = `${done}/${total} · ${pct}%`;
+
+      const warn = document.querySelector(`[data-warn="${id}"]`);
+      const warnText = document.querySelector(`[data-warn-text="${id}"]`);
+      if (warn && warnText) {
+        if (critPending > 0) {
+          warnText.textContent = `يوجد ${critPending} بند حرِج غير مكتمل — لا يُعتمد الفحص قبل استيفائها.`;
+          warn.classList.remove('hidden');
+        } else {
+          warn.classList.add('hidden');
+        }
+      }
+    };
+
+    // استرجاع الحالة عند التحميل + ربط الحفظ عند التغيير
+    document.querySelectorAll('[data-hse-panel]').forEach((panel) => {
+      const id = panel.getAttribute('data-hse-panel');
+      const state = loadState(id);
+      panel.querySelectorAll('[data-cb]').forEach((box) => {
+        const idx = box.getAttribute('data-index');
+        if (state[idx]) box.checked = true;
+        box.addEventListener('change', () => {
+          const s = loadState(id);
+          if (box.checked) s[idx] = true;
+          else delete s[idx];
+          saveState(id, s);
+          refresh(id);
+        });
+      });
+      refresh(id);
+    });
+
+    // تصفير قائمة
+    document.querySelectorAll('[data-reset]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-reset');
+        localStorage.removeItem(storeKey(id));
+        document
+          .querySelectorAll(`[data-cb][data-checklist="${id}"]`)
+          .forEach((box) => {
+            box.checked = false;
+          });
+        refresh(id);
+      });
+    });
+
+    // تبويبات القوائم
+    const tabs = document.querySelectorAll('[data-hse-tab]');
+    const panels = document.querySelectorAll('[data-hse-panel]');
+    const ON = ['bg-brand-yellow', 'text-brand-navy', 'border-brand-yellow'];
+    const OFF = ['bg-chip', 'text-ink-2', 'border-line'];
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const id = tab.getAttribute('data-hse-tab');
+        panels.forEach((p) => p.classList.toggle('hidden', p.getAttribute('data-hse-panel') !== id));
+        tabs.forEach((t) => {
+          const on = t === tab;
+          ON.forEach((cls) => t.classList.toggle(cls, on));
+          OFF.forEach((cls) => t.classList.toggle(cls, !on));
+        });
+      });
+    });
+
+    // طباعة الكل
+    document.getElementById('printAll')?.addEventListener('click', () => {
+      document.body.classList.add('hse-print-all');
+      window.print();
+    });
+
+    // طباعة قائمة واحدة
+    document.querySelectorAll('[data-print-list]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-print-list');
+        const panel = document.querySelector(`[data-hse-panel="${id}"]`);
+        panel?.classList.add('print-target');
+        document.body.classList.add('hse-print-single');
+        window.print();
+      });
+    });
+
+    // تنظيف أوضاع الطباعة بعد انتهائها
+    window.addEventListener('afterprint', () => {
+      document.body.classList.remove('hse-print-all', 'hse-print-single');
+      document.querySelectorAll('.print-target').forEach((el) => el.classList.remove('print-target'));
+    });
+  </script>
+</DashboardLayout>
