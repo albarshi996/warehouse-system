@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 56,
+    "modules": 57,
     "serviceDomains": 25,
     "serviceFiles": 144,
     "collections": 38,
@@ -295,6 +295,16 @@
         "auth",
         "org",
         "ui"
+      ]
+    },
+    {
+      "name": "portal-operations",
+      "route": "/dashboard/portal-operations",
+      "title": "عمليات البوابة",
+      "summary": "",
+      "file": "src/pages/dashboard/portal-operations.astro",
+      "usesServices": [
+        "auth"
       ]
     },
     {

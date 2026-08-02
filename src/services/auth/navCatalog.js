@@ -34,6 +34,9 @@ export const NAV_GROUPS = [
     group: 'العمليات اليومية',
     emoji: '🗓️', icon: 'calendar',
     items: [
+      // الفهرس الجامع لكل مقاصد البوابة — يُولَّد من هذا الكتالوج نفسه، فأيّ
+      // عنصر يُضاف هنا مستقبلًا يظهر فيه تلقائيًّا بلا تعديل يدويّ.
+      { path: '/dashboard/portal-operations', label: 'عمليات البوابة', icon: 'globe' },
       { path: '/dashboard/documents', label: 'المستندات', icon: 'clipboardList' },
       { path: '/dashboard/forms', label: 'اختار وظيفتك', icon: 'clipboardList' },
       { path: '/dashboard/tasks', label: 'المهام', icon: 'clipboardList' },

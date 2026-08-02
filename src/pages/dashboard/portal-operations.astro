@@ -1,0 +1,240 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Icon from '../../components/ui/Icon.astro';
+import { NAV_GROUPS, PINNED_ITEM } from '../../services/auth/navCatalog.js';
+
+/*
+ * ─── عمليات البوابة — الفهرس الجامع لكل مقاصد البوابة التفاعليّة ──────────────
+ * صفحة واحدة تعرض **كل شيء** في البوابة مرتّبًا بنظام بطاقاتٍ حسب الأقسام
+ * الثمانية. القاعدة الحاكمة (المعيار الدافئ): مصدرٌ واحد، صفر تكرار —
+ * تُولَّد البطاقات من `navCatalog.js` (نفس منبع الشريط الجانبي وحارس
+ * الصلاحيات)، فلا تنحرف عنه أبدًا، وتُرشَّح **حسب دور المستخدم** تلقائيًّا:
+ * البطاقات تحمل نفس سمات الشريط الجانبي (`data-nav-group` · `data-group-key`
+ * · `data-item-roles`)، فيتكفّل مكوّن `RoleNav` المحقون في الإطار بإخفاء ما
+ * لا يخصّ الدور هنا كما يُخفيه هناك — بلا منطق صلاحيات مكرَّر.
+ * أيقونات خطّية · لون تمييز واحد · أرقام لاتينية · ثيم أودو الفاتح.
+ */
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+
+// المسار الذاتيّ يُستبعد من البطاقات كي لا تشير الصفحة إلى نفسها.
+const SELF = '/dashboard/portal-operations';
+
+// المجموعات كما هي من المصدر الواحد (مع إسقاط العنصر الذاتيّ من كل مجموعة).
+const groups = NAV_GROUPS
+  .map((g) => ({ ...g, items: g.items.filter((it) => it.path !== SELF) }))
+  .filter((g) => g.items.length > 0);
+
+const totalCount = groups.reduce((n, g) => n + g.items.length, 0);
+
+// العنصر المثبّت (الرئيسية) — يُعرض في «الوصول السريع»، ويُخفى للأدوار المركّزة
+// التي لا تصل للوحة التحكم (data-pinned-home يتكفّل به RoleNav).
+const pinned = PINNED_ITEM;
+---
+
+{/* light: الصفحة مرحَّلة لنظام أودو الفاتح أسوةً بلوحة التحكم. */}
+<DashboardLayout title="عمليات البوابة" showGuide={false} light>
+  <div id="po-root" class="text-right" dir="rtl">
+    {/* ─── الترويسة ──────────────────────────────────────────────────────── */}
+    <div class="mb-8">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="inline-grid place-items-center w-11 h-11 rounded-xl bg-accent/10 border border-accent/25 text-accent shrink-0">
+          <Icon name="globe" size={22} />
+        </span>
+        <h1 class="text-3xl font-bold text-ink leading-tight">
+          عمليات البوابة
+          <span class="block text-base font-normal text-ink-2 mt-1">كل مقاصد البوابة التفاعليّة في مكان واحد</span>
+        </h1>
+      </div>
+      <p class="text-muted text-sm leading-relaxed">
+        فهرسٌ جامعٌ لكل شاشات البوابة، مرتّبًا بالأقسام وبطاقاتٍ — يعرض ما يخصّ دورك فقط.
+      </p>
+      <div class="w-20 h-1 bg-accent rounded-chip mt-4"></div>
+    </div>
+
+    {/* ─── البحث ─────────────────────────────────────────────────────────── */}
+    <div class="mb-8 max-w-xl">
+      <div class="relative">
+        <span class="absolute inset-y-0 start-3 flex items-center text-muted pointer-events-none">
+          <Icon name="search" size={16} />
+        </span>
+        <input
+          type="text"
+          id="po-search"
+          placeholder="ابحث في مقاصد البوابة..."
+          autocomplete="off"
+          class="w-full bg-surface border border-line rounded-xl text-ink text-sm ps-10 pe-9 py-2.5 focus:outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/10 transition-all"
+        />
+        <button
+          id="po-search-clear"
+          type="button"
+          aria-label="مسح البحث"
+          class="hidden absolute end-2.5 top-1/2 -translate-y-1/2 w-6 h-6 items-center justify-center rounded-full bg-chip hover:bg-surface-2 text-muted text-xs transition-colors"
+        >✕</button>
+      </div>
+      <p id="po-count" class="text-xs text-muted mt-2 px-1">{totalCount} مقصدًا في {groups.length} أقسام</p>
+    </div>
+
+    {/* ─── الوصول السريع: الرئيسية ───────────────────────────────────────── */}
+    <section data-po-section class="mb-9" data-quick>
+      <div class="flex items-center gap-3 mb-4">
+        <span class="inline-grid place-items-center w-8 h-8 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name="rocket" size={17} /></span>
+        <h2 class="text-lg sm:text-xl font-bold text-ink">الوصول السريع</h2>
+        <div class="flex-1 h-px bg-line"></div>
+      </div>
+      <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 list-none p-0 m-0">
+        <li data-label={pinned.label} data-pinned-home class="po-card">
+          <a href={`${base}${pinned.path}`}
+            class="group flex items-center gap-3 h-full rounded-xl border border-line bg-surface hover:bg-surface-2 hover:border-accent/40 hover:-translate-y-0.5 px-4 py-3.5 shadow-card transition-all">
+            <span class="inline-grid place-items-center w-10 h-10 rounded-xl bg-accent/10 border border-accent/25 text-accent shrink-0"><Icon name={pinned.icon} size={19} /></span>
+            <span class="flex-1 min-w-0 font-bold text-ink truncate">{pinned.label}</span>
+            <span class="text-muted group-hover:text-accent transition-all group-hover:-translate-x-1">←</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    {/* ─── الأقسام الثمانية — من المصدر الواحد ────────────────────────────── */}
+    {groups.map((grp) => (
+      <section data-po-section data-nav-group data-group-key={grp.key} class="mb-9">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="inline-grid place-items-center w-8 h-8 rounded-lg bg-accent/10 border border-accent/25 text-accent">
+            <Icon name={grp.icon || 'grid'} size={17} />
+          </span>
+          <h2 class="text-lg sm:text-xl font-bold text-ink sb-group-head">{grp.group}</h2>
+          <span class="text-xs text-muted">{grp.items.length}</span>
+          <div class="flex-1 h-px bg-line"></div>
+        </div>
+        <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 list-none p-0 m-0">
+          {grp.items.map((it) => (
+            <li
+              data-label={it.label}
+              data-item-roles={it.roles ? it.roles.join(',') : null}
+              class="po-card"
+            >
+              <a
+                href={`${base}${it.path}`}
+                target={it.external ? '_blank' : null}
+                rel={it.external ? 'noopener noreferrer' : null}
+                class="group flex items-center gap-3 h-full rounded-xl border border-line bg-surface hover:bg-surface-2 hover:border-accent/40 hover:-translate-y-0.5 px-4 py-3.5 shadow-card transition-all"
+              >
+                <span class="inline-grid place-items-center w-10 h-10 rounded-xl bg-accent/10 border border-accent/25 text-accent shrink-0">
+                  <Icon name={it.icon || 'grid'} size={19} />
+                </span>
+                <span class="flex-1 min-w-0">
+                  <span class="po-label block font-bold text-ink-2 group-hover:text-ink transition-colors truncate">{it.label}</span>
+                  {it.external && (
+                    <span class="block text-[10px] text-muted mt-0.5">↗ ملف خارجيّ</span>
+                  )}
+                </span>
+                <span class="text-muted group-hover:text-accent transition-all group-hover:-translate-x-1">←</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+
+    {/* لا نتائج للبحث */}
+    <p id="po-no-results" class="hidden text-center text-muted text-sm py-10">
+      لا توجد مقاصد مطابقة لبحثك.
+    </p>
+
+    {/* التذييل */}
+    <div class="text-center text-sm text-muted mt-8">
+      إعداد: محمد البرشي — متخصص سلاسل الإمداد · بنغازي 2026 · غير تجاري
+    </div>
+  </div>
+
+  <script is:inline>
+    (function () {
+      'use strict';
+      var root = document.getElementById('po-root');
+      if (!root) return;
+
+      var input = document.getElementById('po-search');
+      var clearBtn = document.getElementById('po-search-clear');
+      var countEl = document.getElementById('po-count');
+      var noResults = document.getElementById('po-no-results');
+      var sections = Array.prototype.slice.call(root.querySelectorAll('[data-po-section]'));
+      var cards = Array.prototype.slice.call(root.querySelectorAll('.po-card'));
+
+      /* تطبيع عربي مطابق لبحث الشريط الجانبي (أ/إ/آ→ا · ة→ه · ى/ئ→ي · بلا تشكيل) */
+      function normChar(ch) {
+        if (/[ً-ْـ]/.test(ch)) return '';
+        if ('أإآٱ'.indexOf(ch) >= 0) return 'ا';
+        if (ch === 'ة') return 'ه';
+        if (ch === 'ى' || ch === 'ئ') return 'ي';
+        if (ch === 'ؤ') return 'و';
+        return ch.toLowerCase();
+      }
+      function bzNorm(s) {
+        var out = '';
+        Array.prototype.forEach.call(String(s || ''), function (ch) { out += normChar(ch); });
+        return out;
+      }
+
+      cards.forEach(function (c) {
+        c._label = bzNorm(c.getAttribute('data-label') || '');
+      });
+
+      function isRoleHidden(el) {
+        return el.hasAttribute('data-role-hidden');
+      }
+
+      function run() {
+        var q = bzNorm((input && input.value || '').trim());
+        var visible = 0;
+
+        cards.forEach(function (c) {
+          if (isRoleHidden(c)) { c.style.display = 'none'; return; }
+          var hit = q === '' || c._label.indexOf(q) >= 0;
+          c.style.display = hit ? '' : 'none';
+          if (hit) visible++;
+        });
+
+        /* إخفاء رأس أي قسم لا بطاقة ظاهرة فيه (مع احترام إخفاء الدور للقسم كلّه) */
+        sections.forEach(function (s) {
+          if (isRoleHidden(s)) { s.style.display = 'none'; return; }
+          var any = Array.prototype.some.call(
+            s.querySelectorAll('.po-card'),
+            function (c) { return c.style.display !== 'none'; }
+          );
+          s.style.display = any ? '' : 'none';
+        });
+
+        if (noResults) noResults.classList.toggle('hidden', !(visible === 0 && q !== ''));
+        if (countEl) {
+          countEl.textContent = q === ''
+            ? (cards.filter(function (c) { return !isRoleHidden(c); }).length + ' مقصدًا متاحًا لك')
+            : (visible + ' نتيجة');
+        }
+        if (clearBtn) {
+          var show = (input && input.value || '') !== '';
+          clearBtn.classList.toggle('hidden', !show);
+          clearBtn.classList.toggle('flex', show);
+        }
+      }
+
+      if (input) input.addEventListener('input', run);
+      if (clearBtn) clearBtn.addEventListener('click', function () {
+        if (input) { input.value = ''; input.focus(); }
+        run();
+      });
+      if (input) input.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && input.value !== '') { e.stopPropagation(); input.value = ''; run(); }
+      });
+
+      /* أعِد الحساب بعد أن يُطبّق RoleNav إخفاءه (عند تجهّز الدور) — علامته
+         data-role-nav-ready على body. نراقبها فنحدّث العدّاد والأقسام الفارغة. */
+      var mo = new MutationObserver(function () {
+        if (document.body.hasAttribute('data-role-nav-ready')) run();
+      });
+      mo.observe(document.body, { attributes: true, attributeFilter: ['data-role-nav-ready'] });
+
+      run();
+    })();
+  </script>
+</DashboardLayout>
