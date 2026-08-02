@@ -81,6 +81,7 @@ export async function createDraft({ type, stage = null, profile, header = {}, li
     links: {},
     createdByUid: currentUid(),
     createdByName: currentName(profile),
+    createdByRole: profile?.role || '', // دور المُنشئ — يغذّي «سجلّ حركة الأدوار» الحيّ
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -171,6 +172,7 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
   if (to === 'approved') {
     patch.approvedByUid = currentUid();
     patch.approvedByName = currentName(profile);
+    patch.approvedByRole = profile?.role || ''; // دور المُعتمِد — يغذّي «سجلّ حركة الأدوار» الحيّ
     patch.approvedAt = serverTimestamp();
   }
 
@@ -299,6 +301,7 @@ export async function createNextInChain(sourceDoc, profile, toType = null) {
     links: draft.links,
     createdByUid: currentUid(),
     createdByName: currentName(profile),
+    createdByRole: profile?.role || '', // دور المُنشئ — يغذّي «سجلّ حركة الأدوار» الحيّ
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   }).then((r) => r.id);

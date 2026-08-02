@@ -11,7 +11,7 @@
   "counts": {
     "modules": 57,
     "serviceDomains": 25,
-    "serviceFiles": 144,
+    "serviceFiles": 146,
     "collections": 38,
     "roles": 14,
     "odooModels": 12,
@@ -377,11 +377,9 @@
       "name": "role-activity",
       "route": "/dashboard/role-activity",
       "title": "سجلّ حركة الأدوار",
-      "summary": "سجلّ حركة الأدوار — لوحة موحّدة تُبرز ميزة تتبّع الأدوار في البوابة.",
+      "summary": "سجلّ حركة الأدوار — رصدٌ حيٌّ فعليّ للحركة في البوابة.",
       "file": "src/pages/dashboard/role-activity.astro",
-      "usesServices": [
-        "auth"
-      ]
+      "usesServices": []
     },
     {
       "name": "stock-ledger",
@@ -1420,17 +1418,25 @@
       "dir": "src/services/reference",
       "files": [
         "crosswalkModel.js",
-        "crosswalkModel.test.js"
+        "crosswalkModel.test.js",
+        "roleActivityModel.js",
+        "roleActivityModel.test.js"
       ],
-      "fileCount": 2,
-      "testCount": 1,
+      "fileCount": 4,
+      "testCount": 2,
       "exports": [
         "STATUS_ORDER",
+        "activeRoles",
+        "activitySummary",
+        "buildActivity",
         "countByStatus",
         "crosswalkSummary",
         "crosswalkVerdict",
+        "fmtWhen",
         "gapsByDirection",
-        "groupBy"
+        "groupBy",
+        "toMillis",
+        "usedActions"
       ],
       "collections": []
     },
