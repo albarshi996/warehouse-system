@@ -2,7 +2,6 @@
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import Icon from '../../components/ui/Icon.astro';
 import { NAV_GROUPS, PINNED_ITEM } from '../../services/auth/navCatalog.js';
-import RoleActivity from '../../components/brandzo-erp/reference/RoleActivity.jsx';
 
 /*
  * ─── عمليات البوابة — الفهرس الجامع لكل مقاصد البوابة التفاعليّة ──────────────
@@ -77,9 +76,6 @@ const pinned = PINNED_ITEM;
       </div>
       <p id="po-count" class="text-xs text-muted mt-2 px-1">{totalCount} مقصدًا في {groups.length} أقسام</p>
     </div>
-
-    {/* ─── نبض حركة الأدوار — رصدٌ حيّ (للمديرين؛ يختفي لغيرهم) ────────────── */}
-    <RoleActivity client:load compact />
 
     {/* ─── الوصول السريع: الرئيسية ───────────────────────────────────────── */}
     <section data-po-section class="mb-9" data-quick>

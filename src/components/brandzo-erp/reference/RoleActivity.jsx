@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import { listenAllDocuments } from '../../../services/documents/documentsService.js';
 import { listenRecentMoves } from '../../../services/ledger/ledgerService.js';
-import { getRole, MANAGER_ROLES } from '../../../services/auth/roles.js';
+import { getRole } from '../../../services/auth/roles.js';
 import {
   buildActivity,
   activitySummary,
@@ -17,12 +17,6 @@ import {
  * يشترك في مصدرين حقيقيّين إضافة-فقط: رؤوس المستندات (إنشاء/اعتماد بالدور) ودفتر
  * الحركات (ترحيل/حركة مخزون بالدور)، فيبني `roleActivityModel` منهما سجلًّا موحّدًا
  * يمتلئ تلقائيًّا مع كل حركة في البوابة. القراءة فقط — لا يكتب شيئًا.
- *
- * وضعان:
- *   - كامل (الصفحة المخصّصة): إحصاء + مصفّيات + خطّ زمنيّ كامل.
- *   - مُدمَج (`compact`): نبض الحركة الأخير داخل «عمليات البوابة» مع رابطٍ للسجلّ
- *     الكامل. يحصر نفسه بالمديرين (قراءة كل المستندات صلاحيةُ مديرٍ)، فيختفي
- *     تمامًا لغيرهم بلا خطأ.
  */
 
 const ACTION_META = {
@@ -44,13 +38,6 @@ const docLabel = (t) => DOC_LABEL[t] || t || 'مستند';
 
 const ALL_COLOR = '#1a1a2e';
 
-const base = (() => {
-  const b = import.meta.env.BASE_URL || '/';
-  return b.endsWith('/') ? b.slice(0, -1) : b;
-})();
-
-const isManagerRole = (role) => MANAGER_ROLES.includes(role);
-
 /** عرض الدور: الفارغ (مستندٌ قديمٌ قبل تسجيل الدور) يُعلَّم بصدقٍ لا يُنسب زورًا. */
 function roleView(id) {
   if (!id || id === 'unknown') return { label: 'دور غير مُسجَّل', color: '#9ca3af' };
@@ -64,46 +51,7 @@ function chipStyle(color, active) {
     : { background: color + '14', color, borderColor: color + '66' };
 }
 
-/** بطاقة قيدٍ واحد — تُستعمل في الوضعين. */
-function EntryCard({ e }) {
-  const rv = roleView(e.roleId);
-  const act = ACTION_META[e.action] || { label: e.action, color: '#6b7280' };
-  return (
-    <div
-      className="rounded-2xl bg-chip border border-line p-4 sm:p-5"
-      style={{ borderRight: `3px solid ${rv.color}` }}
-    >
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-bold"
-            style={chipStyle(rv.color, false)}
-          >
-            <span className="w-2 h-2 rounded-full" style={{ background: 'currentColor' }} aria-hidden="true"></span>
-            {rv.label}
-          </span>
-          <span
-            className="inline-flex items-center px-2.5 py-1 rounded-lg border text-[10px] font-bold"
-            style={chipStyle(act.color, false)}
-          >
-            {act.label}
-          </span>
-        </div>
-        <span className="text-[11px] text-muted shrink-0">{fmtWhen(e.atMs)}</span>
-      </div>
-      <p className="mt-2.5 text-sm font-bold text-ink">
-        {docLabel(e.docType)}{' '}
-        <span className="text-ink-2 font-mono font-normal">· {e.docNumber || '—'}</span>
-      </p>
-      {e.note ? <p className="text-xs text-ink-2 leading-relaxed mt-1.5">{e.note}</p> : null}
-      <p className="text-[11px] text-muted mt-2">
-        الفاعل: <span className="text-ink-2 font-medium">{e.actorName || '—'}</span>
-      </p>
-    </div>
-  );
-}
-
-export default function RoleActivity({ compact = false, limit = 8 } = {}) {
+export default function RoleActivity() {
   const [me, setMe] = useState(null);
   const [ready, setReady] = useState(false);
   const [docs, setDocs] = useState([]);
@@ -127,11 +75,8 @@ export default function RoleActivity({ compact = false, limit = 8 } = {}) {
     return () => unsub?.();
   }, []);
 
-  const canRead = Boolean(me) && isManagerRole(me?.role);
-
   useEffect(() => {
-    // قراءة كل المستندات صلاحيةُ مديرٍ — لا نشترك لغيره كي لا يرتدّ الاستماع.
-    if (!canRead) return undefined;
+    if (!me) return undefined;
     const u1 = listenAllDocuments((rows) => {
       setDocs(rows);
       setLoaded((s) => ({ ...s, docs: true }));
@@ -141,7 +86,7 @@ export default function RoleActivity({ compact = false, limit = 8 } = {}) {
       setLoaded((s) => ({ ...s, moves: true }));
     }, 150);
     return () => { u1?.(); u2?.(); };
-  }, [canRead]);
+  }, [me]);
 
   const entries = useMemo(() => buildActivity({ docs, moves, limit: 300 }), [docs, moves]);
   const summary = useMemo(() => activitySummary(entries), [entries]);
@@ -158,47 +103,6 @@ export default function RoleActivity({ compact = false, limit = 8 } = {}) {
     [entries, roleF, actionF, q]
   );
 
-  const dataLoading = !loaded.docs || !loaded.moves;
-
-  // ─── الوضع المُدمَج داخل «عمليات البوابة» ───────────────────────────────
-  if (compact) {
-    // لغير المدير (أو قبل معرفة الدور): اختفاءٌ تامّ بلا فراغ.
-    if (!ready || !canRead) return null;
-    const rows = entries.slice(0, limit);
-    return (
-      <section className="mb-9" data-po-section>
-        <div className="flex items-center gap-3 mb-4">
-          <span className="inline-grid place-items-center w-8 h-8 rounded-lg bg-green-500/10 border border-green-500/25 text-green-500">
-            <span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" aria-hidden="true"></span>
-          </span>
-          <h2 className="text-lg sm:text-xl font-bold text-ink">نبض حركة الأدوار — مباشر</h2>
-          <span className="text-xs text-muted">{summary.total}</span>
-          <div className="flex-1 h-px bg-line"></div>
-          <a
-            href={`${base}/dashboard/role-activity`}
-            className="text-xs font-bold text-accent hover:underline shrink-0"
-          >
-            السجلّ الكامل ←
-          </a>
-        </div>
-        {dataLoading ? (
-          <div className="rounded-2xl bg-chip border border-line p-8 text-center text-sm text-muted">
-            جارٍ تحميل الحركة الحيّة…
-          </div>
-        ) : rows.length === 0 ? (
-          <div className="rounded-2xl bg-chip border border-line p-6 text-center text-sm text-muted">
-            لا حركة مسجّلة بعد — سيمتلئ النبض تلقائيًّا مع كل إنشاءٍ أو اعتمادٍ أو حركة مخزون.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {rows.map((e) => <EntryCard key={e.id} e={e} />)}
-          </div>
-        )}
-      </section>
-    );
-  }
-
-  // ─── الوضع الكامل (الصفحة المخصّصة) ─────────────────────────────────────
   if (!ready) {
     return (
       <div className="rounded-2xl bg-chip border border-line p-10 text-center text-sm text-muted">
@@ -213,13 +117,8 @@ export default function RoleActivity({ compact = false, limit = 8 } = {}) {
       </div>
     );
   }
-  if (!canRead) {
-    return (
-      <div className="rounded-2xl bg-chip border border-line p-10 text-center text-sm text-muted">
-        سجلّ حركة الأدوار متاحٌ للمديرين — قراءة أثر كل الأدوار صلاحيةٌ إشرافيّة.
-      </div>
-    );
-  }
+
+  const dataLoading = !loaded.docs || !loaded.moves;
 
   return (
     <div>
@@ -333,7 +232,45 @@ export default function RoleActivity({ compact = false, limit = 8 } = {}) {
           </div>
         ) : (
           <div className="space-y-3">
-            {filtered.map((e) => <EntryCard key={e.id} e={e} />)}
+            {filtered.map((e) => {
+              const rv = roleView(e.roleId);
+              const act = ACTION_META[e.action] || { label: e.action, color: '#6b7280' };
+              return (
+                <div
+                  key={e.id}
+                  className="rounded-2xl bg-chip border border-line p-4 sm:p-5"
+                  style={{ borderRight: `3px solid ${rv.color}` }}
+                >
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-bold"
+                        style={chipStyle(rv.color, false)}
+                      >
+                        <span className="w-2 h-2 rounded-full" style={{ background: 'currentColor' }} aria-hidden="true"></span>
+                        {rv.label}
+                      </span>
+                      <span
+                        className="inline-flex items-center px-2.5 py-1 rounded-lg border text-[10px] font-bold"
+                        style={chipStyle(act.color, false)}
+                      >
+                        {act.label}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-muted shrink-0">{fmtWhen(e.atMs)}</span>
+                  </div>
+
+                  <p className="mt-2.5 text-sm font-bold text-ink">
+                    {docLabel(e.docType)}{' '}
+                    <span className="text-ink-2 font-mono font-normal">· {e.docNumber || '—'}</span>
+                  </p>
+                  {e.note ? <p className="text-xs text-ink-2 leading-relaxed mt-1.5">{e.note}</p> : null}
+                  <p className="text-[11px] text-muted mt-2">
+                    الفاعل: <span className="text-ink-2 font-medium">{e.actorName || '—'}</span>
+                  </p>
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
