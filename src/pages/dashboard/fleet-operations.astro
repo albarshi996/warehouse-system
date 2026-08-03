@@ -376,6 +376,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   const $ = (id) => document.getElementById(id);
   window.$ = $;
   const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  // تهريب لقيمة داخل مُعالِج JS مضمّن onclick="fn('${escJs(x)}')": تهريب JS ثم HTML.
+  const escJs = (s) => { const j = String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\r?\n/g, '\\n'); return j.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); };
 
   function showToast(msg) {
     const t = document.createElement('div');
@@ -457,7 +459,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         <td>${esc(t.doRef || '—')}</td>
         <td>${stateBadge(t.state)}</td>
         <td>${anomaly ? '<span class="fbadge" style="background:#fef2f2;color:#b91c1c;">⚠️ انحراف</span>' : (t.fuelSummary?.entries || 0) + ' قيد'}</td>
-        <td><button class="mini-f" onclick="openTrip('${t.id}')">📂 فتح</button></td>
+        <td><button class="mini-f" onclick="openTrip('${escJs(t.id)}')">📂 فتح</button></td>
       </tr>`;
     }).join('');
   }

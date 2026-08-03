@@ -255,6 +255,10 @@ service cloud.firestore {
       // المخزن (وهو الغالب) يرتدّ من الخادم.
       function isSideEffectStamp() {
         return isStockActor()
+               // الختم لا يقع إلا على مستندٍ قابلٍ للقيد: soAllocation على «معتمَد»
+               // و posted على «منجَز». يمنع ختم مسودّة/مُرسَل/مرفوض عشوائيًّا
+               // (كان أيّ فاعلٍ مخزنيّ يختم أيّ مستندٍ بأيّ حالة).
+               && resource.data.state in ['approved', 'done']
                && request.resource.data.state == resource.data.state
                && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
                     'posted', 'postedAt', 'postedByUid', 'postedMoves',
@@ -285,9 +289,11 @@ service cloud.firestore {
       allow delete: if false;
 
       // سجلّ التدقيق: إضافة فقط باسم فاعلها — لا تعديل ولا حذف (نمط scans).
+      // الكاتب فاعلُ مستنداتٍ (مخزنيّ أو مشتريات داخلية) لا أيّ مصادَق — يمنع
+      // تلويث سجلّ تدقيق أيّ مستندٍ من غير المعنيّين به.
       match /audit/{entryId} {
         allow read: if signedIn();
-        allow create: if signedIn()
+        allow create: if (isStockActor() || isProcurementActor())
                       && request.resource.data.byUid == request.auth.uid;
         allow update, delete: if false;
       }
@@ -343,8 +349,9 @@ service cloud.firestore {
       // للمديرَين). كان أي مصادَق يُنشئ — حُصر بالمحور ٤.
       allow create: if isStockActor() && request.resource.data.state == 'pending';
       allow update: if isManager()
-                    || (signedIn()
-                        // تكرار مشاهدة: الحالة لا تتغيّر، والبتّ لا يُنتحل.
+                    || (isStockActor()
+                        // تكرار مشاهدة من الماسح (فاعل مخزنيّ): الحالة لا تتغيّر
+                        // والبتّ لا يُنتحل. كان أيّ مصادَقٍ يُحدّث — حُصر بالفاعل المخزنيّ.
                         && request.resource.data.state == resource.data.state
                         && request.resource.data.state == 'pending');
       allow delete: if false;
@@ -379,7 +386,14 @@ service cloud.firestore {
     // لا حذف — الرصيد الصفري يُكتب لا يُمحى (نفاد مخزن حقيقة).
     match /balances/{balId} {
       allow read: if signedIn();
-      allow write: if isStockActor();
+      // الفاعل المخزنيّ (القيد الذرّي) والمديران (الاستيراد). حارسٌ يمنع كتابة
+      // كميّةٍ سالبة أو غير رقميّة مباشرةً. ⚠️ التحقّق الكامل (الرصيد = مجموع
+      // stock_moves) يستحيل في القواعد (لا تجميع) ويحتاج مسارًا موثوقًا
+      // (Cloud Function على Blaze) — موثّق في خطة التطوير، البند ٢.
+      allow write: if isStockActor()
+                   && (!('qty' in request.resource.data)
+                       || (request.resource.data.qty is number
+                           && request.resource.data.qty >= 0));
       allow delete: if false;
     }
 
@@ -396,8 +410,12 @@ service cloud.firestore {
       // شرط بقاء الهوية والمستند والكمية كما هي — لا تحوير لحركةٍ قُيّدت.
       allow update: if isStockActor()
                     && request.resource.data.docId == resource.data.docId
+                    && request.resource.data.lineIndex == resource.data.lineIndex
                     && request.resource.data.qty == resource.data.qty
-                    && request.resource.data.sku == resource.data.sku;
+                    && request.resource.data.sku == resource.data.sku
+                    && request.resource.data.barcode == resource.data.barcode
+                    && request.resource.data.from == resource.data.from
+                    && request.resource.data.to == resource.data.to;
       allow delete: if false;
     }
 
@@ -406,13 +424,13 @@ service cloud.firestore {
     match /Inbound_Log/{docId} {
       allow read: if signedIn();
       allow create: if isStockActor();
-      allow update, delete: if isAdmin();
+      allow update, delete: if false; // ملحق-فقط: لا محو للتاريخ (الكود لا يُحدّثها/يحذفها).
     }
 
     match /Outbound_Log/{docId} {
       allow read: if signedIn();
       allow create: if isStockActor();
-      allow update, delete: if isAdmin();
+      allow update, delete: if false; // ملحق-فقط: لا محو للتاريخ (الكود لا يُحدّثها/يحذفها).
     }
 
     // ── جرد المركبات (سجلّ الأسطول الحيّ — إدارة الحركة) ─────────────────

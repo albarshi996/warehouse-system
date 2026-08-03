@@ -656,6 +656,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     setTimeout(() => t.remove(), 4200);
   }
   const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  // تهريب لقيمة داخل مُعالِج JS مضمّن onclick="fn('${escJs(x)}')": تهريب JS ثم HTML.
+  const escJs = (s) => { const j = String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\r?\n/g, '\\n'); return j.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); };
 
   // ─── حالة السحابة ───────────────────────────────────────────────────
   function setCloud(state, text) {
@@ -742,9 +744,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
           <td>${verdictBadge(li.overallStatus)}</td>
           <td>${follow}</td>
           <td><div class="row-actions">
-            <button class="mini-btn" onclick="openVehicleFile('${esc(v.id)}')">🗂 الملف</button>
-            <button class="mini-btn" onclick="openLastInspection('${esc(v.id)}')">📋 آخر فحص</button>
-            <button class="mini-btn writer-only" ${canWrite ? '' : 'hidden'} onclick="newInspectionFor('${esc(v.id)}')">＋ فحص</button>
+            <button class="mini-btn" onclick="openVehicleFile('${escJs(v.id)}')">🗂 الملف</button>
+            <button class="mini-btn" onclick="openLastInspection('${escJs(v.id)}')">📋 آخر فحص</button>
+            <button class="mini-btn writer-only" ${canWrite ? '' : 'hidden'} onclick="newInspectionFor('${escJs(v.id)}')">＋ فحص</button>
           </div></td>
         </tr>`;
       })
@@ -795,7 +797,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
               <div class="main">📋 ${esc(i.info?.formNo || i.id)} — ${esc(i.info?.inspDate || '')}</div>
               <div class="meta">${verdictBadge(i.overallStatus)} · بنود: ${i.summary?.done ?? '—'}/${i.summary?.total ?? '—'} · بواسطة: ${esc(i.byName || '—')} ${i.source === 'seed' ? '· (أرشيف)' : ''}</div>
             </div>
-            <button class="mini-btn" onclick="openInspectionDoc('${esc(vehicleId)}','${esc(i.id)}')">فتح النموذج</button>
+            <button class="mini-btn" onclick="openInspectionDoc('${escJs(vehicleId)}','${escJs(i.id)}')">فتح النموذج</button>
           </div>`).join('')
         : '<div class="reg-empty">لا فحوصات محفوظة</div>';
     } catch (err) {
@@ -813,7 +815,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
                 <div class="main">${m.status === 'done' ? '✅' : '🔧'} ${esc(m.title)} <span class="badge ${m.priority === 'طارئة' ? 'rej' : m.priority === 'عاجلة' ? 'cond' : 'na'}">${esc(m.priority || 'عادية')}</span></div>
                 <div class="meta">${esc(m.details || '')}<br>طلبها: ${esc(m.byName || '—')}${m.status === 'done' ? ` · أُنجزت (${esc(m.closedBy || '')})${m.closeNote ? ' — ' + esc(m.closeNote) : ''}` : ''}</div>
               </div>
-              ${m.status !== 'done' && canWrite ? `<button class="mini-btn" onclick="finishMaintenance('${esc(m.id)}')">✔ إنجاز</button>` : ''}
+              ${m.status !== 'done' && canWrite ? `<button class="mini-btn" onclick="finishMaintenance('${escJs(m.id)}')">✔ إنجاز</button>` : ''}
             </div>`).join('')
           : '<div class="reg-empty">لا طلبات صيانة</div>';
       }),

@@ -236,6 +236,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   const $ = (id) => document.getElementById(id);
   window.$ = $;
   const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  // تهريب لقيمة داخل مُعالِج JS مضمّن onclick="fn('${escJs(x)}')": تهريب JS ثم HTML.
+  const escJs = (s) => { const j = String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\r?\n/g, '\\n'); return j.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); };
 
   function showToast(msg) {
     const t = document.createElement('div');
@@ -301,8 +303,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       <td>${esc(r.issueDate)}</td>
       <td>${stateBadge(r.state)}</td>
       <td style="white-space:nowrap;">
-        <button class="mini-c" onclick="printVoucher('${r.id}')">🖨 سند</button>
-        ${canWrite && r.state === 'active' ? `<button class="mini-c" onclick="openClose('${r.id}')">🔚 إغلاق</button>` : ''}
+        <button class="mini-c" onclick="printVoucher('${escJs(r.id)}')">🖨 سند</button>
+        ${canWrite && r.state === 'active' ? `<button class="mini-c" onclick="openClose('${escJs(r.id)}')">🔚 إغلاق</button>` : ''}
       </td>
     </tr>`).join('');
 

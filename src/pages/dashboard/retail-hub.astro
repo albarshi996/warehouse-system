@@ -1538,7 +1538,7 @@ import { trackOverlay } from '../../services/ui/overlayHistory.js';
   // تستورد الوحدة المشتركة — نسخة صغيرة موضعية بنفس السلوك.
   const esc = (s) => String(s ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
   // ── localStorage ──────────────────────────────────────────────────────
   const LS_KEY = 'benghazi_hub_v3';

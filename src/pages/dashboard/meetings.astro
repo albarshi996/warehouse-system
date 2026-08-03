@@ -481,6 +481,8 @@ import GroupMeetings from '../../components/brandzo-erp/meetings/GroupMeetings.j
     meetingCardHtml,
     systemReportHtml,
   } from '../../services/meetings/meetingsView.js';
+  // مُهرِّب موحّد لقيمة تُحقن داخل مُعالِج JS مضمّن (onclick="fn('${escJsAttr(id)}')").
+  import { escJsAttr } from '../../services/ui/escape.js';
   import {
     listenMeetings,
     saveMeeting,
@@ -610,7 +612,7 @@ import GroupMeetings from '../../components/brandzo-erp/meetings/GroupMeetings.j
             ? `<h5>${label}</h5><p>${esc(text).replace(/\n/g, '<br>')}</p>`
             : '';
         return `<div class="item st-${it.state}">
-          <div class="it-head" onclick="toggleItem('${esc(it.id)}')">
+          <div class="it-head" onclick="toggleItem('${escJsAttr(it.id)}')">
             <span class="it-n">${i + 1}</span>
             <span class="it-t">${esc(it.title)}</span>
             ${it.custom ? '<span class="tag-custom">مُضاف</span>' : ''}
@@ -618,9 +620,9 @@ import GroupMeetings from '../../components/brandzo-erp/meetings/GroupMeetings.j
             ${stateBadge(it.state)}
             <span class="it-acts writer-only">
               <button class="iact" title="تعديل البند"
-                      onclick="event.stopPropagation();editItem('${esc(it.id)}')">✎</button>
+                      onclick="event.stopPropagation();editItem('${escJsAttr(it.id)}')">✎</button>
               <button class="iact del" title="حذف البند"
-                      onclick="event.stopPropagation();deleteItem('${esc(it.id)}')">🗑</button>
+                      onclick="event.stopPropagation();deleteItem('${escJsAttr(it.id)}')">🗑</button>
             </span>
             <span style="color:#94a3b8;">${open ? '▲' : '▼'}</span>
           </div>
@@ -635,28 +637,28 @@ import GroupMeetings from '../../components/brandzo-erp/meetings/GroupMeetings.j
                 .map(
                   (s) => `<button class="chip ${it.state === s.id ? 'on' : ''}"
                     style="${it.state === s.id ? `background:${s.color};` : ''}"
-                    onclick="setItemState('${esc(it.id)}','${s.id}')" ${ro}>${s.emoji} ${s.label}</button>`
+                    onclick="setItemState('${escJsAttr(it.id)}','${s.id}')" ${ro}>${s.emoji} ${s.label}</button>`
                 )
                 .join('')}
             </div>
             <div class="fld" style="margin-bottom:9px;"><label>ما نوقش</label>
-              <textarea ${ro} data-f="${esc(it.id)}:discussion"
-                oninput="setItem('${esc(it.id)}','discussion',this.value)">${esc(it.discussion)}</textarea></div>
+              <textarea ${ro} data-f="${escJsAttr(it.id)}:discussion"
+                oninput="setItem('${escJsAttr(it.id)}','discussion',this.value)">${esc(it.discussion)}</textarea></div>
             <div class="fld" style="margin-bottom:9px;"><label>✅ القرار المتفق عليه (يُكتب في المحضر)</label>
-              <textarea ${ro} data-f="${esc(it.id)}:decision"
-                oninput="setItem('${esc(it.id)}','decision',this.value)">${esc(it.decision)}</textarea></div>
+              <textarea ${ro} data-f="${escJsAttr(it.id)}:decision"
+                oninput="setItem('${escJsAttr(it.id)}','decision',this.value)">${esc(it.decision)}</textarea></div>
             <div class="frow">
               <div class="fld"><label>المسؤول من إدارتنا</label>
-                <input type="text" value="${esc(it.ownerUs)}" ${ro} data-f="${esc(it.id)}:ownerUs"
-                  oninput="setItem('${esc(it.id)}','ownerUs',this.value)"></div>
+                <input type="text" value="${esc(it.ownerUs)}" ${ro} data-f="${escJsAttr(it.id)}:ownerUs"
+                  oninput="setItem('${escJsAttr(it.id)}','ownerUs',this.value)"></div>
               <div class="fld"><label>المسؤول من ${esc(m.dept)}</label>
-                <input type="text" value="${esc(it.ownerThem)}" ${ro} data-f="${esc(it.id)}:ownerThem"
-                  oninput="setItem('${esc(it.id)}','ownerThem',this.value)"></div>
+                <input type="text" value="${esc(it.ownerThem)}" ${ro} data-f="${escJsAttr(it.id)}:ownerThem"
+                  oninput="setItem('${escJsAttr(it.id)}','ownerThem',this.value)"></div>
               <div class="fld"><label>الموعد</label>
-                <input type="date" value="${esc(it.due)}" ${ro} data-f="${esc(it.id)}:due"
-                  onchange="setItem('${esc(it.id)}','due',this.value)"></div>
+                <input type="date" value="${esc(it.due)}" ${ro} data-f="${escJsAttr(it.id)}:due"
+                  onchange="setItem('${escJsAttr(it.id)}','due',this.value)"></div>
               <div class="fld"><label>&nbsp;</label>
-                <button class="mini writer-only" onclick="editItem('${esc(it.id)}')" ${ro}>✎ عدّل نصّ البند</button></div>
+                <button class="mini writer-only" onclick="editItem('${escJsAttr(it.id)}')" ${ro}>✎ عدّل نصّ البند</button></div>
             </div>
           </div>
         </div>`;
@@ -677,7 +679,7 @@ import GroupMeetings from '../../components/brandzo-erp/meetings/GroupMeetings.j
       gone
         .map(
           (it) => `<div class="trashrow"><b>${esc(it.title)}</b>
-            <button class="iact" onclick="restoreItem('${esc(it.id)}')">↩ استرجاع</button></div>`
+            <button class="iact" onclick="restoreItem('${escJsAttr(it.id)}')">↩ استرجاع</button></div>`
         )
         .join('') +
       `</div>`

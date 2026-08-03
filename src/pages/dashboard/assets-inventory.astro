@@ -465,6 +465,15 @@ function escHtml(s) {
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+// تهريب لقيمة تُحقن داخل مُعالِج JS مضمّن: onclick="fn('${escJs(x)}')".
+// أولًا تهريب سلسلة JS (\\ و' و" والسطر) ثم تهريب HTML — لأن المتصفّح يفكّ HTML
+// قبل تشغيل JS، فتهريب ' كـ&#39; وحده لا يمنع كسر السلسلة والحقن.
+function escJs(s) {
+  const j = String(s == null ? '' : s)
+    .replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/\r?\n/g,'\\n');
+  return j.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 const BADGE = {
   'ممتاز':'badge-excellent','جيد':'badge-good','متوسط':'badge-medium',
   'يحتاج صيانة':'badge-needs','معطل':'badge-broken'
@@ -558,8 +567,8 @@ function renderTable() {
       <td class="mono">${escHtml(a.receivedDate||'—')}</td>
       <td>
         <div style="display:flex;gap:6px">
-          <button class="btn btn-ghost btn-sm" onclick="startEdit('${escHtml(a.id)}')">✎</button>
-          <button class="btn btn-danger btn-sm" onclick="openDelModal('${escHtml(a.id)}')">✕</button>
+          <button class="btn btn-ghost btn-sm" onclick="startEdit('${escJs(a.id)}')">✎</button>
+          <button class="btn btn-danger btn-sm" onclick="openDelModal('${escJs(a.id)}')">✕</button>
         </div>
       </td>
     </tr>`).join('');
@@ -577,8 +586,8 @@ function renderTable() {
       <div class="card-detail">👤 ${escHtml(a.responsible||'—')}</div>
       <div class="card-detail">🏢 ${escHtml(a.department||'—')}${a.location?' · '+escHtml(a.location):''}</div>
       <div class="card-actions">
-        <button class="btn btn-ghost btn-sm" onclick="startEdit('${escHtml(a.id)}')">✎ تعديل</button>
-        <button class="btn btn-danger btn-sm" onclick="openDelModal('${escHtml(a.id)}')">✕ حذف</button>
+        <button class="btn btn-ghost btn-sm" onclick="startEdit('${escJs(a.id)}')">✎ تعديل</button>
+        <button class="btn btn-danger btn-sm" onclick="openDelModal('${escJs(a.id)}')">✕ حذف</button>
       </div>
     </div>`).join('');
   if (currentView === 'list') {
