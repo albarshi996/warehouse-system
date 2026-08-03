@@ -31,6 +31,10 @@ async function walk(dir) {
 function includeInPrecache(rel) {
   if (rel === 'sw.js') return false;
   if (rel.endsWith('.map')) return false;
+  // ملفّات WASM ضخمة (محرّك Whisper/ONNX ~23م.ب) — لا تُخزَّن مسبقًا كي لا يُثقَل
+  // تثبيت PWA لكل النظام؛ تُخزَّن عند أوّل استخدام فعليّ (cacheFirst، نفس النطاق)
+  // فتعمل دون اتصال بعدها.
+  if (rel.endsWith('.wasm')) return false;
   if (rel.startsWith('_astro/')) return true;
   if (rel === 'index.html' || rel.endsWith('/index.html')) return true;
   if (rel.startsWith('icons/')) return true;

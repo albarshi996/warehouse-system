@@ -3,6 +3,7 @@ import styles from './MeetingAssistant.module.css';
 import { useOverlayBack } from '../../../services/ui/useOverlayBack.js';
 import { esc } from '../../../services/ui/escape.js';
 import { useAudioRecorder } from './useAudioRecorder.js';
+import AudioFileTranscriber from './AudioFileTranscriber.jsx';
 
 const ARCHIVE_KEY = 'BrandzoMeetings';
 
@@ -280,6 +281,19 @@ const MeetingAssistant = () => {
       appendSegment(pending);
       interimTranscriptRef.current = '';
     }
+  };
+
+  // نتيجة تفريغ ملف صوتي مرفوع (Whisper داخل المتصفّح) — تُضاف مقطعًا بعنوان الملف،
+  // فتدخل تلقائيًّا في التلخيص والترجمة وتصدير PDF والحفظ كبقيّة التفريغ.
+  const addUploadedTranscript = (text, fileName) => {
+    const clean = (text || '').trim();
+    if (!clean) return;
+    finalTranscriptRef.current += clean + ' ';
+    const label = (langRef.current === 'ar' ? 'ملف: ' : 'File: ') + (fileName || (langRef.current === 'ar' ? 'تسجيل' : 'audio'));
+    setTranscriptSegments((prev) => [
+      ...prev,
+      { speaker: label, text: clean, ts: new Date().toISOString() },
+    ]);
   };
 
   // Initialize Speech Recognition ONCE — all mutable state is read via refs
@@ -1186,6 +1200,9 @@ const MeetingAssistant = () => {
             </button>
           </div>
         </div>
+
+        {/* Audio File Transcriber — رفع ملف صوتي وتفريغه كاملًا داخل المتصفّح (Whisper) */}
+        <AudioFileTranscriber lang={lang} onAppendTranscript={addUploadedTranscript} />
 
         {/* Transcript Card */}
         <div className="o_ma_card">

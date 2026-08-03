@@ -117,3 +117,48 @@
 
 .o_ma_banner { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 10px 14px; border-radius: var(--o-border-radius); background: var(--o-badge-warning-bg); border: 1px solid #f4e1b6; color: var(--o-text-warning); font-size: var(--o-font-size-sm); }
 .o_ma_banner svg { flex: none; }
+
+/* =========================================================================
+   تفريغ ملف صوتي مرفوع (Whisper داخل المتصفّح) — AudioFileTranscriber.
+   ========================================================================= */
+.o_ma_up_sub { font-size: var(--o-font-size-sm); color: var(--o-main-color-muted); margin: 0 0 12px; }
+
+.o_ma_up_controls { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.o_ma_up_field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 150px; }
+.o_ma_up_field > span { font-size: var(--o-font-size-xs); font-weight: var(--o-font-weight-bold); color: var(--o-main-color-muted); }
+
+/* منطقة الإفلات */
+.o_ma_drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 26px 16px; text-align: center; cursor: pointer; border: 2px dashed var(--o-gray-400); border-radius: var(--o-border-radius-lg); background: var(--o-gray-100); color: var(--o-main-color-muted); transition: border-color .15s ease, background .15s ease, color .15s ease; }
+.o_ma_drop:hover, .o_ma_drop:focus-visible { border-color: var(--o-action); color: var(--o-action); outline: none; }
+.o_ma_drop.is-over { border-color: var(--o-action); background: var(--o-view-background); color: var(--o-action); }
+.o_ma_drop svg { color: var(--o-action); }
+.o_ma_drop_main { font-size: var(--o-font-size-sm); font-weight: var(--o-font-weight-bold); color: var(--o-main-text-color); }
+.o_ma_drop_hint { font-size: var(--o-font-size-xs); }
+
+/* ملاحظات المحرّك */
+.o_ma_up_notes { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+.o_ma_up_note { display: flex; align-items: center; gap: 6px; font-size: var(--o-font-size-xs); color: var(--o-main-color-muted); }
+.o_ma_up_note svg { flex: none; color: var(--o-action); }
+
+/* طابور الملفات */
+.o_ma_up_list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.o_ma_up_item { border: 1px solid var(--o-border-color); border-radius: var(--o-border-radius); padding: 10px 12px; background: var(--o-view-background); }
+.o_ma_up_item.is-done { border-color: #cfe8d6; background: var(--o-badge-success-bg); }
+.o_ma_up_item.is-error { border-color: #f2cccc; background: var(--o-badge-danger-bg); }
+.o_ma_up_item_head { display: flex; align-items: center; gap: 8px; }
+.o_ma_up_item_head .ic { display: inline-flex; color: var(--o-action); flex: none; }
+.o_ma_up_item.is-done .ic { color: var(--o-text-success); }
+.o_ma_up_item_head .nm { flex: 1; min-width: 0; font-size: var(--o-font-size-sm); font-weight: var(--o-font-weight-bold); color: var(--o-main-text-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.o_ma_up_item_head .sz { font-size: var(--o-font-size-xs); color: var(--o-main-color-muted); font-variant-numeric: tabular-nums; flex: none; }
+.o_ma_up_mini { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--o-border-color); border-radius: var(--o-border-radius); background: var(--o-view-background); color: var(--o-main-color-muted); cursor: pointer; padding: 3px 7px; font-size: var(--o-font-size-xs); font-weight: var(--o-font-weight-bold); flex: none; }
+.o_ma_up_mini:hover { background: var(--o-gray-100); color: var(--o-main-text-color); }
+
+.o_ma_up_bar { height: 6px; border-radius: 4px; background: var(--o-gray-200); overflow: hidden; margin-top: 8px; }
+.o_ma_up_bar > span { display: block; height: 100%; background: var(--o-action); border-radius: 4px; transition: width .25s ease; }
+.o_ma_up_bar.is-error > span { background: var(--o-danger); }
+
+.o_ma_up_status { font-size: var(--o-font-size-xs); color: var(--o-main-color-muted); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.o_ma_up_status.is-error { color: var(--o-text-danger); }
+
+.o_ma_up_stream { margin-top: 8px; max-height: 96px; overflow-y: auto; font-size: var(--o-font-size-xs); line-height: 1.7; color: var(--o-main-color-muted); background: var(--o-gray-100); border-radius: var(--o-border-radius); padding: 8px 10px; }
+.o_ma_up_result { margin-top: 8px; max-height: 160px; overflow-y: auto; font-size: var(--o-font-size-sm); line-height: 1.7; color: var(--o-main-text-color); background: var(--o-view-background); border: 1px solid var(--o-border-color); border-radius: var(--o-border-radius); padding: 10px 12px; white-space: pre-wrap; }
