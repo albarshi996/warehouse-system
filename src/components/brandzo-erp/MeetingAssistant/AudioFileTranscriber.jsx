@@ -33,13 +33,14 @@ const STR = {
     lang_en: 'الإنجليزية',
     drop: 'أفلِت الملفات هنا أو انقر للاختيار',
     drop_hint: 'صيغ مدعومة: mp3, m4a, wav, ogg, webm, flac — عدّة ملفات معًا',
-    note_download: 'يُنزَّل النموذج مرّة واحدة أوّل تفريغ (~{mb} م.ب) ثمّ يُحفَظ في المتصفّح.',
+    note_download: 'يُنزَّل النموذج مرّة واحدة (~{mb} م.ب) ثمّ يُحفَظ في المتصفّح — قد يستغرق دقائق أوّل مرّة حسب سرعة النت، وبعدها فوريّ.',
     note_gpu_on: 'تسريع WebGPU مُفعَّل — تفريغ سريع.',
     note_gpu_off: 'بلا WebGPU — سيعمل على المعالج (أبطأ). استخدم Chrome/Edge للسرعة القصوى.',
     unsupported: 'متصفّحك لا يدعم التفريغ داخل الجهاز. استخدم Chrome أو Edge حديثًا.',
     st_queued: 'في الانتظار',
     st_decoding: 'تجهيز الصوت…',
     st_loading: 'تحميل النموذج',
+    st_preparing: 'تهيئة النموذج… (لحظات، أوّل مرّة فقط)',
     st_transcribing: 'جاري التفريغ',
     st_done: 'تمّ — أُضيف للتفريغ أدناه',
     st_error: 'خطأ',
@@ -58,13 +59,14 @@ const STR = {
     lang_en: 'English',
     drop: 'Drop files here or click to choose',
     drop_hint: 'Supported: mp3, m4a, wav, ogg, webm, flac — multiple files at once',
-    note_download: 'Model downloads once on first run (~{mb} MB), then cached in the browser.',
+    note_download: 'Model downloads once (~{mb} MB), then cached — may take a few minutes the first time depending on your connection, instant afterwards.',
     note_gpu_on: 'WebGPU acceleration on — fast transcription.',
     note_gpu_off: 'No WebGPU — runs on CPU (slower). Use Chrome/Edge for best speed.',
     unsupported: 'Your browser does not support on-device transcription. Use a recent Chrome or Edge.',
     st_queued: 'Queued',
     st_decoding: 'Preparing audio…',
     st_loading: 'Loading model',
+    st_preparing: 'Preparing model… (a moment, first time only)',
     st_transcribing: 'Transcribing',
     st_done: 'Done — added to the transcript below',
     st_error: 'Error',
@@ -128,7 +130,10 @@ const AudioFileTranscriber = ({ lang = 'ar', onAppendTranscript }) => {
       case 'decoding':
         return t('st_decoding');
       case 'loading':
-        return `${t('st_loading')}… ${item.modelPct || 0}%`;
+        // بين 1٪ و99٪ = تنزيل فعليّ؛ عند 0٪ أو 100٪ = تهيئة النموذج (تجميعه على المعالج/الرسوميّات، بلا تنزيل)
+        return item.modelPct > 0 && item.modelPct < 100
+          ? `${t('st_loading')}… ${item.modelPct}%`
+          : t('st_preparing');
       case 'transcribing':
         return `${t('st_transcribing')}… ${Math.round((item.progress || 0) * 100)}%`;
       case 'done':

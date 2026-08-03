@@ -45,12 +45,16 @@ async function getTranscriber({ model, device, dtype }, onProgress) {
 }
 
 /**
- * مُبلّغ تقدّم إجماليّ لتحميل النموذج: يجمع تقدّم كل ملفّات النموذج (مُشفّر/مُفكّك/
- * مُرمِّز) في نسبة واحدة تصاعديّة لا ترجع للخلف — بدل قفز نسبة الملفّ الواحد.
+ * مُبلّغ تقدّم تحميل النموذج: نسبة إجماليّة صادقة عبر كل ملفّات النموذج المعروفة.
+ *
+ * ⚠️ **لا نُثبّت النسبة عند سقفٍ سابق** (كان خطأً خطيرًا): لو ملفٌّ صغير اكتمل
+ * قبل بدء ملفٍّ ضخم، فتثبيت السقف كان يُظهر 100% بينما الملفّ الضخم لا يزال
+ * يُنزَّل — فيبدو معلّقًا. النسبة الصادقة قد تتراجع قليلًا عند ظهور ملفٍّ جديد،
+ * لكنها تُظهر أن العمل جارٍ فعلًا بدل الوقوف الكاذب. الرقم يبلغ 100% فقط حين
+ * تكتمل كل الملفّات — وبعده تبدأ «تهيئة النموذج» (بلا تنزيل).
  */
 function makeProgressReporter(id) {
   const dl = new Map();
-  let maxPct = 0;
   return (p) => {
     if (!p || p.status !== 'progress' || !p.file) return;
     dl.set(p.file, { loaded: p.loaded || 0, total: p.total || 0 });
@@ -61,9 +65,8 @@ function makeProgressReporter(id) {
       total += v.total;
     }
     if (total <= 0) return;
-    const pct = Math.round((loaded / total) * 100);
-    if (pct > maxPct) maxPct = pct; // تصاعديّ فقط (ظهور ملفّ جديد لا يُرجِع الشريط)
-    self.postMessage({ type: 'model-progress', id, pct: maxPct });
+    const pct = Math.min(100, Math.round((loaded / total) * 100));
+    self.postMessage({ type: 'model-progress', id, pct });
   };
 }
 

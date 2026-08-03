@@ -13,8 +13,11 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 const hasWebGPU = typeof navigator !== 'undefined' && 'gpu' in navigator;
 
 /**
- * أنماط الجودة. لكلٍّ نموذجٌ وإعدادٌ لـWebGPU (سريع/دقيق) وبديلٌ لـWASM (أبطأ، للمتصفّحات دون WebGPU).
- * dtype لـturbo على WebGPU من إعداد demo الرسميّ (مُشفّر fp32 + مُفكّك q4): يوازن الحجم والدقّة.
+ * أنماط الجودة. لكلٍّ نموذجٌ وإعدادٌ لـWebGPU وبديلٌ لـWASM (للمتصفّحات دون WebGPU).
+ *
+ * ⚠️ الأحجام حقيقيّة (من مستودع HuggingFace): تُستعمل صيغٌ مضغوطة (q4/q4f16)
+ * لأن الصيغ الكاملة ضخمة جدًّا للمتصفّح — مُشفّر turbo بدقّة fp32 وحده 2.5غ.ب!
+ * q4f16 لـturbo: مُشفّر 370م.ب + مُفكّك 193م.ب ≈ 560م.ب، بدقّة عالية تظلّ ممتازة للعربية.
  */
 export const QUALITY_PRESETS = {
   turbo: {
@@ -22,31 +25,33 @@ export const QUALITY_PRESETS = {
     labelAr: 'دقّة قصوى (large-v3-turbo)',
     labelEn: 'Best (large-v3-turbo)',
     model: 'onnx-community/whisper-large-v3-turbo',
-    webgpu: { device: 'webgpu', dtype: { encoder_model: 'fp32', decoder_model_merged: 'q4' } },
+    webgpu: { device: 'webgpu', dtype: 'q4f16' },
     wasm: { device: 'wasm', dtype: 'q4' },
-    approxMB: 200,
+    approxMB: 560,
   },
   balanced: {
     key: 'balanced',
     labelAr: 'متوازن (small)',
     labelEn: 'Balanced (small)',
     model: 'onnx-community/whisper-small',
-    webgpu: { device: 'webgpu', dtype: { encoder_model: 'fp32', decoder_model_merged: 'q4' } },
-    wasm: { device: 'wasm', dtype: 'q8' },
-    approxMB: 120,
+    webgpu: { device: 'webgpu', dtype: 'q4' },
+    wasm: { device: 'wasm', dtype: 'q4' },
+    approxMB: 300,
   },
   fast: {
     key: 'fast',
     labelAr: 'سريع/خفيف (base)',
     labelEn: 'Fast/light (base)',
     model: 'onnx-community/whisper-base',
-    webgpu: { device: 'webgpu', dtype: 'fp32' },
-    wasm: { device: 'wasm', dtype: 'q8' },
-    approxMB: 45,
+    webgpu: { device: 'webgpu', dtype: 'q4' },
+    wasm: { device: 'wasm', dtype: 'q4' },
+    approxMB: 140,
   },
 };
 
-export const DEFAULT_PRESET = hasWebGPU ? 'turbo' : 'fast';
+// الافتراضيّ «متوازن»: تجربة أوّل استخدام موثوقة (~300م.ب، عربيّة جيّدة) — والمالك
+// يرقّي بنقرة إلى «دقّة قصوى» للأفضل. (كان turbo افتراضيًّا فتعثّر أوّل مستخدم بتنزيلٍ ثقيل.)
+export const DEFAULT_PRESET = 'balanced';
 export { hasWebGPU };
 
 /** يحوّل مفتاح النمط + قدرة الجهاز إلى إعداد ملموس يُمرَّر للعامل. */
