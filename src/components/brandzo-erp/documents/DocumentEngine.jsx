@@ -211,6 +211,19 @@ export default function DocumentEngine() {
     return docId;
   }
 
+  /**
+   * يضمن وجود مستندٍ محفوظ ليُرفق عليه دليلٌ أو تُسجَّل مطابقة. المستند الجديد
+   * يولد عند أوّل فعلٍ حقيقيّ (إرفاق دليل فعلٌ حقيقيّ لا فتحةُ صفحة) — فتظهر
+   * أزرار الإرفاق دائمًا وتحفظ المسودّة تلقائيًّا عند أوّل استخدام. يُعيد المعرّف.
+   */
+  async function ensureSaved() {
+    if (docId) return docId;
+    const id = await persist();
+    setDirty(false);
+    flash('حُفظت المسودّة تلقائيًّا.');
+    return id;
+  }
+
   async function handleSave() {
     setSaving(true);
     try {
@@ -369,7 +382,7 @@ export default function DocumentEngine() {
           </section>
         ))}
 
-        <AttachmentsPanel docId={docId} schema={schema} me={me} attachments={attachments} />
+        <AttachmentsPanel docId={docId} schema={schema} me={me} attachments={attachments} onEnsureDoc={ensureSaved} />
 
         {schema.control && (
           <ControlPanel
@@ -379,6 +392,7 @@ export default function DocumentEngine() {
             doc={doc}
             attachments={attachments}
             reconciliations={reconciliations}
+            onEnsureDoc={ensureSaved}
           />
         )}
 

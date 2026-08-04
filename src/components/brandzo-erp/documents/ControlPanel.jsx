@@ -39,7 +39,7 @@ function VerdictBadge({ result }) {
   );
 }
 
-export default function ControlPanel({ docId, schema, me, doc, attachments = [], reconciliations = [] }) {
+export default function ControlPanel({ docId, schema, me, doc, attachments = [], reconciliations = [], onEnsureDoc }) {
   const control = schema?.control;
   const rows = useMemo(() => controlCompareRows(schema, doc), [schema, doc]);
   const items = controlChecklist(schema);
@@ -73,7 +73,13 @@ export default function ControlPanel({ docId, schema, me, doc, attachments = [],
     setBusy(true);
     setMsg(null);
     try {
-      await addReconciliation(docId, {
+      let id = docId;
+      if (!id && onEnsureDoc) id = await onEnsureDoc();
+      if (!id) {
+        setMsg({ tone: 'err', text: 'تعذّر حفظ المستند لتسجيل المطابقة.' });
+        return;
+      }
+      await addReconciliation(id, {
         result,
         checklist: checks,
         note,
@@ -102,12 +108,12 @@ export default function ControlPanel({ docId, schema, me, doc, attachments = [],
         قارِن المستند الصادر بالنسخة الماديّة الموقّعة المرفقة، وسجّل النتيجة باسمك. القيود دائمة لا تُحذف.
       </p>
 
-      {!docId ? (
-        <p className="text-xs text-accent/80 bg-accent/10 border border-accent/30 rounded-lg px-3 py-2">
-          احفظ المستند أولًا لتبدأ المطابقة.
+      {!docId && (
+        <p className="text-[11px] text-accent/80 bg-accent/10 border border-accent/30 rounded-lg px-3 py-2 mb-3">
+          يُحفظ المستند تلقائيًّا عند تأكيد التحقّق.
         </p>
-      ) : (
-        <>
+      )}
+      <div>
           {/* دليل: هل أُرفق ما يُطابَق عليه؟ */}
           {control.requireSignedCopy && !signed && (
             <p className="text-xs text-red-300 bg-brand-red/10 border border-brand-red/40 rounded-lg px-3 py-2 mb-3">
@@ -220,8 +226,7 @@ export default function ControlPanel({ docId, schema, me, doc, attachments = [],
               </ul>
             </div>
           )}
-        </>
-      )}
+      </div>
     </section>
   );
 }

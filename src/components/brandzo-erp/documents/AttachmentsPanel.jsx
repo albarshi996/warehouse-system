@@ -106,7 +106,7 @@ function AttachmentCard({ att }) {
  * @param {object} props.me       الملف الشخصي (للهوية على كل مرفق)
  * @param {Array}  props.attachments قائمة المرفقات الحيّة (يشترك بها الأب)
  */
-export default function AttachmentsPanel({ docId, schema, me, attachments = [] }) {
+export default function AttachmentsPanel({ docId, schema, me, attachments = [], onEnsureDoc }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
   const fileRef = useRef(null);
@@ -149,6 +149,13 @@ export default function AttachmentsPanel({ docId, schema, me, attachments = [] }
     setBusy(true);
     setMsg(null);
     try {
+      // المستند الجديد يولد عند أوّل إرفاق (فعلٌ حقيقيّ) فلا مسودّة فارغة تُخلَّف.
+      let id = docId;
+      if (!id && onEnsureDoc) id = await onEnsureDoc();
+      if (!id) {
+        setMsg({ tone: 'err', text: 'تعذّر حفظ المستند لإرفاق الدليل.' });
+        return;
+      }
       const image = isImageType(file.type);
       const dataUrl = image ? await compressImage(file) : await readAsDataUrl(file);
       const post = validateEncoded(dataUrlBytes(dataUrl), { isImage: image });
@@ -157,7 +164,7 @@ export default function AttachmentsPanel({ docId, schema, me, attachments = [] }
         return;
       }
       const { kind, label } = slotRef.current;
-      await addAttachment(docId, {
+      await addAttachment(id, {
         kind,
         label,
         name: file.name,
@@ -181,12 +188,12 @@ export default function AttachmentsPanel({ docId, schema, me, attachments = [] }
         الدليل الماديّ الذي يُطابَق عليه المستند — صورة تُضغط تلقائيًّا، أو PDF. ملحق-فقط: يُضاف ولا يُحذف.
       </p>
 
-      {!docId ? (
-        <p className="text-xs text-accent/80 bg-accent/10 border border-accent/30 rounded-lg px-3 py-2">
-          احفظ المستند أولًا ليصير له مكانٌ تُرفق فيه الأدلّة.
+      {!docId && (
+        <p className="text-[11px] text-accent/80 bg-accent/10 border border-accent/30 rounded-lg px-3 py-2 mb-3">
+          يُحفظ المستند تلقائيًّا عند أوّل إرفاق.
         </p>
-      ) : (
-        <>
+      )}
+      <div>
           <input
             ref={fileRef}
             type="file"
@@ -232,8 +239,7 @@ export default function AttachmentsPanel({ docId, schema, me, attachments = [] }
               ))}
             </div>
           )}
-        </>
-      )}
+      </div>
     </section>
   );
 }
