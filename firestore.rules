@@ -710,6 +710,22 @@ service cloud.firestore {
       }
     }
 
+    // ── الأرشيف الدوريّ: التقارير ومحاضر الاجتماعات (رفعٌ حيّ) ──────────
+    // المصدر الأوّل المعتمد للتقارير الدورية — يرفعه المديران في أيّ وقت.
+    // القراءة لكلّ مصادَق (الوثائق مرجعٌ تنظيميّ)، والكتابة للمديرَين. لا حذف
+    // (أرشفة لا محو — الأثر التنظيميّ يبقى). والرقم الإشاريّ `refNumber` **لا
+    // يتغيّر بعد كتابته**: يُسمح بضبطه مرّةً وهو فارغ ثمّ يثبت (كنمط الرقم في
+    // المستندات) — وإلّا فقد الترقيم معناه. حمولة الملفّ base64 داخل الوثيقة،
+    // وحجمها محكومٌ في الواجهة (< 900KB) وسقف مستند Firestore حارسٌ أخير.
+    match /archive_documents/{docId} {
+      allow read: if signedIn();
+      allow create: if isManager();
+      allow update: if isManager()
+                    && (request.resource.data.refNumber == resource.data.refNumber
+                        || resource.data.refNumber == '');
+      allow delete: if false;
+    }
+
     // ── الافتراضي: امنع كل ما لم يُذكر صراحةً ────────────────────
     match /{document=**} {
       allow read, write: if false;

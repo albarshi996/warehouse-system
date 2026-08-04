@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 57,
-    "serviceDomains": 26,
-    "serviceFiles": 160,
-    "collections": 42,
+    "modules": 58,
+    "serviceDomains": 27,
+    "serviceFiles": 165,
+    "collections": 43,
     "roles": 14,
     "odooModels": 12,
     "odooGuards": 51,
@@ -260,14 +260,10 @@
     {
       "name": "meetings",
       "route": "/dashboard/meetings",
-      "title": "Brandzo | الاجتماعات التحضيرية",
-      "summary": "الاجتماعات التحضيرية مع الإدارات السبع — أداة تُشغَّل داخل الغرفة.",
+      "title": "Brandzo | الاجتماعات ومحاضرها",
+      "summary": "الاجتماعات ومحاضرها — أداةُ محاضر موحّدة، يدويّةٌ بالكامل.",
       "file": "src/pages/dashboard/meetings.astro",
-      "usesServices": [
-        "auth",
-        "meetings",
-        "ui"
-      ]
+      "usesServices": []
     },
     {
       "name": "operations",
@@ -296,6 +292,14 @@
         "org",
         "ui"
       ]
+    },
+    {
+      "name": "periodic-archive",
+      "route": "/dashboard/periodic-archive",
+      "title": "الأرشيف الدوريّ",
+      "summary": "الأرشيف الدوريّ — التقارير ومحاضر الاجتماعات.",
+      "file": "src/pages/dashboard/periodic-archive.astro",
+      "usesServices": []
     },
     {
       "name": "portal-operations",
@@ -534,6 +538,45 @@
     }
   ],
   "services": [
+    {
+      "domain": "archive",
+      "dir": "src/services/archive",
+      "files": [
+        "archive.test.js",
+        "archiveFile.js",
+        "archiveModel.js",
+        "archiveSeed.js",
+        "archiveService.js"
+      ],
+      "fileCount": 5,
+      "testCount": 1,
+      "exports": [
+        "ACCEPTED_ARCHIVE_TYPES",
+        "ARCHIVE_CATEGORIES",
+        "ARCHIVE_SEED",
+        "MAX_BINARY_BYTES",
+        "MAX_HTML_BYTES",
+        "MAX_SOURCE_BYTES",
+        "REF_NUMBER_RE",
+        "addArchiveDoc",
+        "archiveSummary",
+        "base64Size",
+        "byCategory",
+        "byDateDesc",
+        "categoryLabel",
+        "formatOf",
+        "isValidRefNumber",
+        "listenArchive",
+        "mergeArchive",
+        "normalizeLive",
+        "normalizeSeed",
+        "updateArchiveDoc",
+        "validateArchiveFile"
+      ],
+      "collections": [
+        "archive_documents"
+      ]
+    },
     {
       "domain": "auth",
       "dir": "src/services/auth",
@@ -1239,6 +1282,7 @@
         "MEETING_STATES",
         "MEETING_TRANSITIONS",
         "MINUTES_NUMBER_TYPE",
+        "ORGANIZING_DEPARTMENT",
         "ORG_DEPARTMENTS",
         "SETTLED",
         "SYSTEM_REPORT_ID",
@@ -1251,6 +1295,7 @@
         "commitments",
         "consolidate",
         "createGroupMeeting",
+        "createGroupMeetingFrom",
         "createItem",
         "deferrals",
         "esc",
@@ -1272,6 +1317,7 @@
         "listenGroupMeetings",
         "listenMeetings",
         "meetingCardHtml",
+        "meetingFromTemplate",
         "meetingProgress",
         "mergeAll",
         "mergeGroupAll",
@@ -1794,6 +1840,46 @@
           {
             "actions": [
               "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "archive_documents",
+        "path": "archive_documents",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isManager()",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "isManager() && (request.resource.data.refNumber == resource.data.refNumber || resource.data.refNumber == '')",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
               "delete"
             ],
             "condition": "false",

@@ -1,0 +1,98 @@
+---
+/**
+ * الأرشيف الدوريّ — التقارير ومحاضر الاجتماعات.
+ *
+ * المصدر الأوّل المعتمد للتقارير الدورية والمحاضر (بدل تناثرها على سطح المكتب):
+ * بذرةٌ ثابتة من `public/archive/` تُفتح حيًّا + رفعٌ حيّ يخزّنه المالك في أيّ
+ * وقت. هوية bz-light عبر توكِنز `var(--color-*)`، بلا إيموجي، الأحمر للتحذير وحده.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import PeriodicArchive from '../../components/brandzo-erp/archive/PeriodicArchive.jsx';
+---
+
+<DashboardLayout title="الأرشيف الدوريّ" showGuide={false} light>
+
+<style is:inline>
+  .ar-wrap { direction: rtl; color: var(--color-ink); }
+
+  /* رأس */
+  .ar-hero { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 14px; box-shadow: var(--shadow-card); padding: 22px 26px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+  .ar-hero-main { flex: 1; min-width: 280px; }
+  .ar-hero h2 { font-size: 1.4rem; font-weight: 800; color: var(--color-ink); }
+  .ar-hero p { color: var(--color-ink-2); font-size: .86rem; margin-top: 6px; max-width: 680px; line-height: 1.85; }
+  .ar-primary-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; font-size: .84rem; font-weight: 700; color: var(--color-ink); }
+  .ar-hero-side { display: flex; flex-direction: column; gap: 12px; align-items: flex-end; }
+  .ar-kpis { display: flex; gap: 9px; }
+  .ar-kpi { background: var(--color-chip); border: 1px solid var(--color-line); border-radius: 12px; padding: 9px 16px; text-align: center; min-width: 82px; }
+  .ar-kpi .n { display: block; font-size: 1.5rem; font-weight: 800; color: var(--color-accent); line-height: 1.1; }
+  .ar-kpi .l { font-size: .7rem; color: var(--color-ink-2); margin-top: 2px; }
+
+  .ar-badge { background: var(--color-accent); color: #fff; border-radius: 20px; padding: 3px 12px; font-size: .72rem; font-weight: 800; }
+  .ar-badge.sm { padding: 1px 9px; font-size: .64rem; }
+  .ar-num { background: var(--color-chip); color: var(--color-accent); border: 1px solid rgba(113,75,103,.2); border-radius: 7px; padding: 2px 9px; font-size: .72rem; font-weight: 800; font-family: 'Cairo',sans-serif; white-space: nowrap; }
+
+  /* تبويبان */
+  .ar-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .ar-tab { display: inline-flex; align-items: center; gap: 8px; background: var(--color-surface); border: 1.5px solid var(--color-line-strong); border-radius: 10px; padding: 9px 18px; font-family: inherit; font-size: .9rem; font-weight: 700; color: var(--color-ink-2); cursor: pointer; transition: all .15s; }
+  .ar-tab:hover { border-color: var(--color-accent); color: var(--color-accent); }
+  .ar-tab.on { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+  .ar-tab-n { background: rgba(0,0,0,.08); border-radius: 20px; padding: 1px 9px; font-size: .74rem; }
+  .ar-tab.on .ar-tab-n { background: rgba(255,255,255,.25); }
+
+  /* البطاقات */
+  .ar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 13px; }
+  .ar-card { background: var(--color-surface); border: 1.5px solid var(--color-line-strong); border-radius: 14px; box-shadow: var(--shadow-card); padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; transition: all .18s; }
+  .ar-card:hover { border-color: var(--color-accent); transform: translateY(-2px); box-shadow: var(--shadow-card-hover); }
+  .ar-card.primary { border-color: var(--color-accent); box-shadow: 0 0 0 1px var(--color-accent), var(--shadow-card); }
+  .ar-card-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ar-fmt { margin-inline-start: auto; font-size: .68rem; font-weight: 800; color: var(--color-ink-2); border: 1px solid var(--color-line-strong); border-radius: 6px; padding: 1px 8px; }
+  .ar-title { font-size: .98rem; font-weight: 800; color: var(--color-ink); line-height: 1.5; }
+  .ar-meta { font-size: .74rem; color: var(--color-ink-2); }
+  .ar-note { font-size: .8rem; color: var(--color-ink-2); line-height: 1.7; margin-top: 2px; }
+  .ar-card-foot { display: flex; gap: 8px; margin-top: auto; padding-top: 6px; }
+
+  .ar-file-ok { background: rgba(30,124,71,.1); color: #17663a; border: 1px solid rgba(30,124,71,.3); border-radius: 9px; padding: 8px 12px; font-size: .82rem; font-weight: 700; }
+  .ar-hint { font-size: .76rem; color: var(--color-ink-2); line-height: 1.7; background: var(--color-surface-2); border-radius: 9px; padding: 8px 12px; }
+  .ar-frame { width: 100%; height: 70vh; border: none; border-top: 1px solid var(--color-line-strong); background: #fff; }
+
+  /* ── عناصر مشتركة (أزرار · رقائق · حقول · نوافذ · توست) بهوية bz-light ── */
+  .kbtn { padding: 8px 15px; border-radius: 9px; border: 1px solid transparent; cursor: pointer; font-family: inherit; font-size: .83rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; transition: all .18s; white-space: nowrap; text-decoration: none; }
+  .kbtn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(20,20,40,.10); }
+  .kbtn:disabled { opacity: .45; cursor: not-allowed; }
+  .kbtn.sm { padding: 6px 12px; font-size: .78rem; }
+  .b-accent { background: var(--color-accent); color: #fff; }
+  .b-accent:hover:not(:disabled) { background: #5d3e55; }
+  .b-ghost { background: var(--color-surface-2); color: var(--color-ink-2); border-color: var(--color-line-strong); }
+  .b-ghost:hover:not(:disabled) { border-color: var(--color-accent); color: var(--color-accent); }
+
+  .chips { display: flex; gap: 7px; flex-wrap: wrap; }
+  .chip { border: 1.5px solid var(--color-line-strong); background: var(--color-surface); border-radius: 18px; padding: 5px 13px; font-family: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; color: var(--color-ink-2); transition: all .15s; }
+  .chip:hover { border-color: var(--color-accent); color: var(--color-accent); }
+  .chip.on { color: #fff; border-color: var(--color-accent); background: var(--color-accent); }
+
+  .fld { display: flex; flex-direction: column; gap: 4px; }
+  .fld label { font-size: .74rem; font-weight: 800; color: var(--color-ink-2); }
+  .fld input, .fld textarea { border: 1.5px solid var(--color-line-strong); border-radius: 9px; padding: 8px 11px; font-family: inherit; font-size: .88rem; background: var(--color-surface); color: var(--color-ink); width: 100%; }
+  .fld input:focus, .fld textarea:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(113,75,103,.12); }
+  .fld input.bad { border-color: #b02a37; }
+  .fld textarea { resize: vertical; min-height: 56px; }
+  .frow { display: grid; gap: 10px; }
+
+  .kempty { text-align: center; padding: 30px 16px; color: var(--color-ink-2); font-size: .9rem; background: var(--color-surface); border: 1px dashed var(--color-line-strong); border-radius: 12px; }
+
+  .dlg { position: fixed; inset: 0; z-index: 400; background: rgba(31,36,48,.42); display: none; align-items: center; justify-content: center; padding: 16px; }
+  .dlg.on { display: flex; }
+  .dlgbox { background: var(--color-surface); border-radius: 16px; width: min(640px,100%); max-height: 92vh; overflow: auto; box-shadow: 0 26px 70px rgba(0,0,0,.3); }
+  .dlgbox.viewer { width: min(1000px,100%); overflow: hidden; display: flex; flex-direction: column; }
+  .dlghead { position: sticky; top: 0; background: var(--color-surface); border-bottom: 1px solid var(--color-line-strong); color: var(--color-ink); padding: 13px 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px; z-index: 2; }
+  .dlghead h3 { font-size: .98rem; font-weight: 800; }
+  .dlgbody { padding: 15px 18px; display: flex; flex-direction: column; gap: 12px; }
+  .dlgfoot { padding: 0 18px 16px; display: flex; gap: 8px; }
+
+  .toastw { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .toast { background: var(--color-ink); color: #fff; padding: 11px 22px; border-radius: 12px; font-size: .88rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.25); border-right: 4px solid var(--color-accent); max-width: min(600px,92vw); }
+</style>
+
+<PeriodicArchive client:only="react" />
+
+</DashboardLayout>

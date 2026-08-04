@@ -122,11 +122,15 @@ test('الانتقالات المسموحة فقط، ولا خروج من «مو
   assert.equal(canTransitionMeeting('مجهول', 'held'), false);
 });
 
-test('كل حالة تحمل تسميتها ولونها للعرض', () => {
+test('كل حالة تحمل تسميتها ولونها للعرض (المعيار الدافئ: بلا إيموجي)', () => {
   for (const map of [MEETING_STATES, ITEM_STATES]) {
     for (const [id, s] of Object.entries(map)) {
       assert.equal(s.id, id);
-      assert.ok(s.label && s.emoji && s.color);
+      // اللون والتسمية هما ما يُعرَض؛ الإيموجي أُزيل من الهوية المعتمدة فيبقى
+      // الحقل فارغًا للتوافق (المعيار الدافئ: أيقونات خطّية/ألوان لا إيموجي).
+      assert.ok(s.label && s.color, `الحالة «${id}» تحتاج تسمية ولونًا`);
+      assert.ok(/^#[0-9a-fA-F]{6}$/.test(s.color), `لون «${id}» يجب أن يكون hex سداسيًّا`);
+      assert.equal(s.emoji, '', `الحالة «${id}» يجب ألّا تحمل إيموجي`);
     }
   }
 });

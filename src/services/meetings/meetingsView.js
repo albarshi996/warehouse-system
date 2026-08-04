@@ -29,10 +29,10 @@ function multiline(s) {
     .join('');
 }
 
-/** شارة حالة البند. */
+/** شارة حالة البند — لونٌ دلاليّ لا إيموجي (المعيار الدافئ). */
 export function stateBadge(state) {
   const s = ITEM_STATES[state] || ITEM_STATES.pending;
-  return `<span class="mb" style="background:${s.color}1f;color:${s.color};">${s.emoji} ${esc(s.label)}</span>`;
+  return `<span class="mb" style="background:${s.color}1f;color:${s.color};">${esc(s.label)}</span>`;
 }
 
 /* ═══════════════ 1) وضع العرض ═══════════════ */
@@ -44,9 +44,9 @@ export function stateBadge(state) {
  */
 export function slideHtml(item, opts = {}) {
   const { index = 0, total = 0, dept = '' } = opts;
-  const block = (icon, label, text, cls) =>
+  const block = (label, text, cls) =>
     text && String(text).trim()
-      ? `<div class="sl-box ${cls}"><h4>${icon} ${esc(label)}</h4>${multiline(text)}</div>`
+      ? `<div class="sl-box ${cls}"><h4>${esc(label)}</h4>${multiline(text)}</div>`
       : '';
 
   return (
@@ -56,11 +56,11 @@ export function slideHtml(item, opts = {}) {
     (item.draft ? `<span class="sl-draft">مسودّة — عدّلها قبل العرض</span>` : '') +
     `</div>` +
     `<h2 class="sl-title">${esc(item.title)}</h2>` +
-    block('🎯', 'ما نطلبه', item.ask, 'ask') +
-    block('❓', 'لماذا', item.why, 'why') +
-    block('🤝', `ما يخصّ ${dept || 'الطرف الآخر'}`, item.theirSide, 'them') +
+    block('ما نطلبه', item.ask, 'ask') +
+    block('لماذا', item.why, 'why') +
+    block(`ما يخصّ ${dept || 'الطرف الآخر'}`, item.theirSide, 'them') +
     (item.decision && String(item.decision).trim()
-      ? `<div class="sl-box decided"><h4>✅ القرار المتفق عليه</h4>${multiline(item.decision)}</div>`
+      ? `<div class="sl-box decided"><h4>القرار المتفق عليه</h4>${multiline(item.decision)}</div>`
       : '') +
     `</div>`
   );
@@ -369,7 +369,7 @@ function decisionsByDept(byDept) {
         .join('');
       return (
         `<div class="r-dept">` +
-        `<h4 class="r-dept-h">${esc(d.icon || '')} ${esc(d.dept)}` +
+        `<h4 class="r-dept-h">${esc(d.dept)}` +
         `<span class="r-dept-ref">${d.number ? esc(d.number) : 'بلا رقم'}${d.date ? ' · ' + esc(d.date) : ''}</span></h4>` +
         `<table class="d-tbl"><thead><tr><th>#</th><th>البند</th><th>القرار المعتمد</th>` +
         `<th>المسؤول</th><th>الموعد</th></tr></thead><tbody>${rows}</tbody></table>` +
@@ -487,9 +487,8 @@ export function meetingCardHtml(meeting, opts = {}) {
   return (
     `<button class="mcard${opts.selectedId === meeting.id ? ' sel' : ''}" onclick="selectMeeting('${esc(meeting.id)}')">` +
     `<div class="mc-top"><span class="mc-no">${esc(meeting.no)}</span>` +
-    `<span class="mc-ico">${esc(meeting.icon || '')}</span>` +
     `<span class="mc-dept">${esc(meeting.dept)}</span></div>` +
-    `<div class="mc-state" style="color:${st.color};">${st.emoji} ${esc(st.label)}</div>` +
+    `<div class="mc-state" style="color:${st.color};">${esc(st.label)}</div>` +
     `<div class="mc-bar"><span style="width:${p.percent}%"></span></div>` +
     `<div class="mc-meta">${p.settled}/${p.total} بندًا محسومًا` +
     (meeting.number ? ` · ${esc(meeting.number)}` : '') +

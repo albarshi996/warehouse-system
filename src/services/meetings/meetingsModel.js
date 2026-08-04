@@ -11,12 +11,17 @@
  * على محضر ناقص أسوأ من محضر بلا رقم.
  */
 
-/** حالات الاجتماع — لا قفز بينها إلا وفق `MEETING_TRANSITIONS`. */
+/**
+ * حالات الاجتماع — لا قفز بينها إلا وفق `MEETING_TRANSITIONS`.
+ * الألوان من لوحة الهوية الفاتحة (bz-light): بنفسجيّ الهوية للصادر، أخضر
+ * للمعتمد، كهرمانيّ للمسودّة، رماديّ للمجدول — **الأحمر للتحذير وحده** فلا
+ * يظهر هنا. حقل `emoji` باقٍ للتوافق لكنه لا يُعرَض (المعيار الدافئ: بلا إيموجي).
+ */
 export const MEETING_STATES = {
-  scheduled: { id: 'scheduled', label: 'مجدول', emoji: '📅', color: '#64748b' },
-  held: { id: 'held', label: 'انعقد — محضر مسودّة', emoji: '📝', color: '#f59e0b' },
-  issued: { id: 'issued', label: 'محضر رسمي صادر', emoji: '📜', color: '#3b82f6' },
-  signed: { id: 'signed', label: 'موقّع ومعتمد', emoji: '✅', color: '#00b87a' },
+  scheduled: { id: 'scheduled', label: 'مجدول', emoji: '', color: '#6b7280' },
+  held: { id: 'held', label: 'انعقد — محضر مسودّة', emoji: '', color: '#9a6b01' },
+  issued: { id: 'issued', label: 'محضر رسمي صادر', emoji: '', color: '#714B67' },
+  signed: { id: 'signed', label: 'موقّع ومعتمد', emoji: '', color: '#1e7c47' },
 };
 
 export const MEETING_TRANSITIONS = {
@@ -26,13 +31,17 @@ export const MEETING_TRANSITIONS = {
   signed: [],
 };
 
-/** حال كل بند بعد مناقشته. */
+/**
+ * حال كل بند بعد مناقشته. الألوان دلاليّة على لوحة الهوية الفاتحة: أخضر
+ * للمتفق، كهرمانيّ للمؤجَّل، **أحمر للتصعيد وحده** (تحذيرٌ يستحقّ الأحمر)،
+ * رماديّ لِما لم يُناقَش/غير المنطبق. `emoji` باقٍ للتوافق ولا يُعرَض.
+ */
 export const ITEM_STATES = {
-  pending: { id: 'pending', label: 'لم يُناقَش', emoji: '⚪', color: '#94a3b8' },
-  agreed: { id: 'agreed', label: 'متفق عليه', emoji: '✅', color: '#00b87a' },
-  deferred: { id: 'deferred', label: 'مؤجَّل', emoji: '⏸️', color: '#f59e0b' },
-  escalate: { id: 'escalate', label: 'يحتاج تصعيدًا', emoji: '⬆️', color: '#ef4444' },
-  na: { id: 'na', label: 'غير منطبق', emoji: '➖', color: '#64748b' },
+  pending: { id: 'pending', label: 'لم يُناقَش', emoji: '', color: '#6b7280' },
+  agreed: { id: 'agreed', label: 'متفق عليه', emoji: '', color: '#1e7c47' },
+  deferred: { id: 'deferred', label: 'مؤجَّل', emoji: '', color: '#9a6b01' },
+  escalate: { id: 'escalate', label: 'يحتاج تصعيدًا', emoji: '', color: '#b02a37' },
+  na: { id: 'na', label: 'غير منطبق', emoji: '', color: '#6b7280' },
 };
 
 /** البنود التي تُعدّ «محسومة» عند حساب اكتمال المحضر. */

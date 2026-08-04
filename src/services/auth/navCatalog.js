@@ -149,7 +149,9 @@ export const NAV_GROUPS = [
     emoji: '🗄️', icon: 'archive',
     items: [
       { path: '/dashboard/org-structure', label: 'الهيكل التنظيمي', icon: 'users', roles: ['admin', 'warehouse_manager'] },
-      { path: '/dashboard/meetings', label: 'الاجتماعات التحضيرية', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
+      { path: '/dashboard/meetings', label: 'الاجتماعات ومحاضرها', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
+      // الأرشيف الدوريّ — المصدر الأوّل المعتمد للتقارير والمحاضر (رفعٌ حيّ + بذرة ثابتة).
+      { path: '/dashboard/periodic-archive', label: 'الأرشيف الدوريّ', icon: 'archive', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/recruitment', label: 'التوظيف', icon: 'users', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/users', label: 'إدارة المستخدمين', icon: 'users', roles: ['admin'] },
       { path: '/dashboard/access-control', label: 'الصلاحيات والأدوار', icon: 'users', roles: ['admin'] },

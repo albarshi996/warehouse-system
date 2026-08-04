@@ -156,6 +156,40 @@ export function newGroupItem(meeting, fields = {}) {
   return createItem(meeting, fields);
 }
 
+/** إدارتنا المنظِّمة — الطرف الثابت الذي يُدعى إليه كلّ اجتماعٍ تحضيريّ. */
+export const ORGANIZING_DEPARTMENT = 'إدارة السلاسل والإمداد والمخازن';
+
+/**
+ * يبني اجتماعًا يدويًّا جديدًا **من قالب** (أحد الاجتماعات السبعة المبذورة في
+ * `meetings-seed.json`): يملأ العنوان والهدف والإدارتين وبنودَ الخطاب كنقطة
+ * بداية **قابلة للتحرير الكامل** — بلا دمجٍ آليٍّ ببذرةٍ بعدها. فالقالب بذرةٌ
+ * تُنسَخ مرّةً واحدة، ثمّ يملك الاجتماع حياته الخاصّة كأيّ اجتماعٍ أُنشئ يدويًّا.
+ * يُبقي الصفحةَ حرّةً (المالك يكتب ويحذف) دون أن يُهدر صياغةَ خطابه الرسميّ.
+ *
+ * @param {object} seed اجتماعٌ من بذرة `meetings-seed.json`
+ * @param {object} fields تجاوزات اختيارية { id?, idSeed?, date?, place? }
+ */
+export function meetingFromTemplate(seed = {}, fields = {}) {
+  const dept = String(seed.dept || '').trim();
+  const meeting = blankGroupMeeting({
+    ...fields,
+    title: dept ? `اجتماع تحضيري — ${dept}` : 'اجتماع تحضيري',
+    goal: seed.goal || '',
+    departments: [ORGANIZING_DEPARTMENT, dept].filter(Boolean),
+  });
+  for (const it of seed.items || []) {
+    meeting.items.push(
+      newGroupItem(meeting, {
+        title: it.title || '',
+        ask: it.ask || '',
+        why: it.why || '',
+        theirSide: it.theirSide || '',
+      })
+    );
+  }
+  return meeting;
+}
+
 /** كل ما يُحفظ من البنود — بنود الجماعي كلّها مُضافة فتُحفظ كاملة. */
 export function groupItemsPatch(meeting) {
   return (meeting.items || []).map(itemPatch);

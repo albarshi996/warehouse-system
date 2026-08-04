@@ -91,6 +91,23 @@ export async function createGroupMeeting(fields, profile) {
 }
 
 /**
+ * ينشئ اجتماعًا من كائنٍ **مبنيٍّ مسبقًا ببنوده** (مثلًا مخرَج
+ * `meetingFromTemplate`) — بخلاف `createGroupMeeting` الذي يبدأ فارغًا، هذا
+ * يحفظ البنود المنسوخة من القالب فورًا. يُسنَد له معرّف Firestore جديد.
+ */
+export async function createGroupMeetingFrom(meeting, profile) {
+  const refNew = doc(collection(db, COL));
+  const draft = { ...meeting, id: refNew.id, kind: GROUP_KIND };
+  await setDoc(refNew, {
+    ...bodyOf(draft),
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    ...whoami(profile),
+  });
+  return draft;
+}
+
+/**
  * يحفظ ما جرى في الاجتماع. `merge:true` فلا يمحو حقلًا لم يُرسَل — الغرفة
  * تحفظ لحظيًّا أثناء الكتابة والتسجيل، والحفظ الجزئيّ هو القاعدة.
  */

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تقرير موقف — تأخّر رد الفريق الهندسي (مستودعات 155) — Brandzo</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{
+  --red-900:#6E070A; --red-800:#9E0B0E; --red-700:#C41017; --red-600:#E11B22;
+  --red-500:#F5333A; --red-400:#FF5A5F;
+  --ink:#1a1c1f; --ink-soft:#4a4f57; --muted:#8a919b;
+  --line:#e8e8ec; --paper:#ffffff; --bg:#eceef1; --gold:#c8a44e;
+  --amber:#f4a63a; --amber-ink:#7a4506;
+  --shadow:0 30px 80px -30px rgba(110,7,10,.35);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Cairo',sans-serif;
+  background:
+     radial-gradient(900px 450px at 20% -10%,rgba(225,27,34,.08),transparent 60%),
+     radial-gradient(800px 450px at 110% 110%,rgba(110,7,10,.07),transparent 55%),
+     var(--bg);
+  color:var(--ink);line-height:1.8;padding:26px 14px;
+}
+.page{max-width:820px;margin:0 auto;background:var(--paper);border-radius:18px;
+  box-shadow:var(--shadow);overflow:hidden}
+
+/* ترويسة الهوية */
+.brandbar{position:relative;display:flex;align-items:center;justify-content:center;padding:16px 24px 13px;background:#fff}
+.brandbar .side-bars{position:absolute;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px}
+.brandbar .side-bars.right{right:24px}
+.brandbar .side-bars.left{left:24px;flex-direction:row-reverse}
+.bar-block{height:20px;border-radius:2px}
+.bar-lg{width:78px;background:linear-gradient(90deg,var(--red-900),var(--red-600))}
+.tick{width:7px;height:20px;border-radius:2px;background:var(--red-500)}
+.tick:nth-child(2){opacity:.8}.tick:nth-child(3){opacity:.6}
+.logo{display:flex;align-items:center;gap:11px;z-index:2}
+.logo-mark{position:relative;width:52px;height:41px}
+.logo-mark .c{position:absolute;top:0;width:41px;height:41px;border-radius:50%}
+.logo-mark .c1{right:0;background:radial-gradient(circle at 35% 30%,#F5333A,#9E0B0E)}
+.logo-mark .c2{left:0;background:radial-gradient(circle at 35% 30%,#E11B22,#6E070A);mix-blend-mode:multiply}
+.logo-mark .bfp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;
+  font-family:'Poppins';font-weight:800;font-size:15px;letter-spacing:.5px;z-index:3;padding-left:5px}
+.logo-txt{display:flex;flex-direction:column;line-height:1}
+.logo-txt .b{font-family:'Poppins';font-weight:800;font-size:24px;color:var(--red-600);letter-spacing:.5px}
+.logo-txt .s{font-family:'Poppins';font-weight:500;font-size:9.5px;color:var(--ink-soft);letter-spacing:2px;margin-top:3px}
+.brand-underline{height:4px;background:linear-gradient(90deg,var(--red-900),var(--red-600) 45%,var(--red-400))}
+
+/* الغلاف */
+.cover{position:relative;padding:30px 34px 28px;overflow:hidden;
+  background:linear-gradient(150deg,#7c090c 0%,var(--red-800) 40%,var(--red-600) 100%);color:#fff}
+.cover::before{content:"";position:absolute;inset:0;opacity:.13;
+  background-image:radial-gradient(circle at 1px 1px,#fff 1px,transparent 0);background-size:22px 22px;
+  -webkit-mask-image:radial-gradient(circle at 80% 20%,#000,transparent 75%);
+          mask-image:radial-gradient(circle at 80% 20%,#000,transparent 75%);}
+.cover-top{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px}
+.doc-kind{display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.22);
+  border:1px solid rgba(255,255,255,.26);border-radius:100px;padding:6px 15px;font-size:12px;font-weight:800;letter-spacing:.5px}
+.conf-chip{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,#ffe08a,var(--gold));
+  color:#6E070A;border-radius:100px;padding:6px 14px;font-size:11.5px;font-weight:800}
+.cov-title{position:relative;z-index:2}
+.cov-title .en{font-family:'Poppins';font-weight:800;font-size:30px;line-height:1.05}
+.cov-title .en .accent{color:#ffe08a}
+.cov-title .ar{font-weight:800;font-size:17px;color:#ffe6e6;margin-top:7px;line-height:1.5}
+
+/* شبكة البيانات */
+.meta-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:22px 34px 4px}
+.meta-card{border:1px solid var(--line);border-radius:14px;padding:13px 14px;position:relative;overflow:hidden;background:#fff}
+.meta-card::before{content:"";position:absolute;top:0;right:0;width:4px;height:100%;background:linear-gradient(180deg,var(--red-600),var(--red-400))}
+.meta-card .mi{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  font-size:13px;color:#fff;background:linear-gradient(135deg,var(--red-700),var(--red-500));margin-bottom:9px}
+.meta-card .ml{font-size:10.5px;font-weight:700;color:var(--muted)}
+.meta-card .mv{font-size:13px;font-weight:800;color:var(--ink);margin-top:2px;font-family:'Poppins','Cairo',sans-serif}
+.meta-card .mv.ar{font-family:'Cairo',sans-serif}
+
+/* الأقسام */
+.shell{padding:20px 34px 8px}
+.sec-tag{display:flex;align-items:center;gap:11px;margin:22px 0 15px}
+.sec-tag .sic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:14px;background:linear-gradient(135deg,var(--red-700),var(--red-500));
+  box-shadow:0 8px 18px -9px rgba(196,16,23,.6)}
+.sec-tag h2{font-size:17px;font-weight:800;color:var(--ink)}
+.sec-tag .num{font-family:'Poppins';font-size:12px;font-weight:800;color:#fff;background:var(--red-700);
+  border-radius:7px;padding:2px 8px}
+.sec-tag .line{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+.lead{font-size:14px;font-weight:600;color:var(--ink-soft);line-height:1.95;margin-bottom:4px}
+.lead b{color:var(--ink);font-weight:800}
+
+/* الخط الزمني */
+.timeline{list-style:none;position:relative;margin:6px 6px 6px 0;padding-right:26px}
+.timeline::before{content:"";position:absolute;top:6px;bottom:6px;right:9px;width:2px;
+  background:linear-gradient(180deg,var(--red-600),rgba(225,27,34,.15))}
+.tl{position:relative;padding:0 0 16px 0}
+.tl:last-child{padding-bottom:2px}
+.tl .dot{position:absolute;right:-22px;top:2px;width:16px;height:16px;border-radius:50%;
+  background:#fff;border:3px solid var(--red-600);box-shadow:0 0 0 3px rgba(225,27,34,.12)}
+.tl.warn .dot{border-color:var(--amber)}
+.tl .when{font-family:'Poppins','Cairo',sans-serif;font-size:11.5px;font-weight:800;color:var(--red-700);margin-bottom:2px}
+.tl.warn .when{color:var(--amber-ink)}
+.tl .what{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.7}
+.tl .what small{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:2px;line-height:1.6}
+
+/* بطاقات التحليل */
+.callout{border-radius:15px;padding:16px 18px;position:relative;overflow:hidden;margin:4px 0}
+.callout .ct{display:flex;align-items:center;gap:10px;font-weight:800;font-size:14.5px;margin-bottom:8px}
+.callout .cic{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;flex-shrink:0}
+.callout p{font-size:13.5px;font-weight:600;line-height:1.85}
+.callout.cause{background:linear-gradient(135deg,#fff4f4,#ffeaea);border:1px solid #f6c9cb}
+.callout.cause .ct{color:var(--red-800)} .callout.cause .cic{background:linear-gradient(135deg,var(--red-700),var(--red-500))}
+.callout.cause p{color:#6b2b2d}
+.impact-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.impact{background:linear-gradient(135deg,#fff8ec,#fff1d8);border:1px solid #f2d9a6;border-radius:13px;padding:13px 15px;display:flex;gap:11px;align-items:flex-start}
+.impact .iic{width:30px;height:30px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:13px;background:linear-gradient(135deg,var(--amber),#e08a1e)}
+.impact .itx{font-size:13px;font-weight:700;color:var(--amber-ink);line-height:1.65}
+
+/* الإجراء التصحيحي */
+.fix-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.fix{display:flex;align-items:center;gap:13px;background:#fff;border:1px solid var(--line);border-radius:13px;
+  padding:12px 15px;position:relative;overflow:hidden}
+.fix::before{content:"";position:absolute;top:0;right:0;width:4px;height:100%;background:linear-gradient(180deg,#1f9d55,#57c98a)}
+.fix .fic{flex-shrink:0;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:15px;color:#1f9d55;background:linear-gradient(135deg,rgba(31,157,85,.14),rgba(31,157,85,.04))}
+.fix .ftx{flex:1;font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.65}
+.fix .ftx small{display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin-top:1px}
+
+/* توصية */
+.reco{margin-top:6px;background:linear-gradient(150deg,#0f1626,#131c30);border-radius:15px;padding:17px 20px;color:#e8ecf4;position:relative;overflow:hidden}
+.reco::before{content:"";position:absolute;top:0;right:0;width:5px;height:100%;background:linear-gradient(180deg,var(--gold),#b98d34)}
+.reco .rt{display:flex;align-items:center;gap:9px;font-weight:800;font-size:14px;color:#ffe08a;margin-bottom:7px}
+.reco p{font-size:13.5px;font-weight:600;line-height:1.85;color:#d4dae6}
+
+/* التوقيع */
+.signature{margin:22px 34px 0;border-top:1px solid var(--line);padding:16px 0 4px;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.sig-names{display:flex;gap:26px;align-items:baseline}
+.sig-person .name{font-size:14px;font-weight:800;color:var(--ink)}
+.sig-person .role{font-size:10.5px;color:var(--muted);font-weight:600;margin-right:6px}
+.sig-title{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--red-700);margin-bottom:5px}
+.sig-seal{position:relative;width:60px;height:60px;border-radius:50%;flex-shrink:0;border:2px solid var(--red-600);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--red-700);
+  background:radial-gradient(circle at 50% 40%,#fff,#fff7f7);transform:rotate(-8deg)}
+.sig-seal::before{content:"";position:absolute;width:48px;height:48px;border:1px dashed rgba(196,16,23,.5);border-radius:50%}
+.sig-seal .bfp{font-family:'Poppins';font-weight:800;font-size:13px}
+.sig-seal .tx{font-size:6px;font-weight:700;letter-spacing:1px;margin-top:1px}
+
+/* التذييل */
+.footer{margin-top:16px;background:linear-gradient(90deg,var(--red-900),var(--red-700) 55%,var(--red-500));
+  color:#fff;padding:13px 24px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:18px}
+.footer .f-item{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;direction:ltr}
+.footer .f-item i{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.18);
+  display:flex;align-items:center;justify-content:center;font-size:9px}
+.footer .f-item.ar{direction:rtl}
+
+@media (max-width:640px){
+  .meta-grid{grid-template-columns:1fr 1fr}
+  .impact-grid{grid-template-columns:1fr}
+  .cov-title .en{font-size:24px}
+}
+@media print{
+  body{background:#fff;padding:0}
+  .page{box-shadow:none;border-radius:0;max-width:100%}
+  .reco,.callout.cause,.impact,.fix{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{size:A4;margin:0}
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ترويسة الهوية -->
+  <div class="brandbar">
+    <div class="side-bars right">
+      <span class="tick"></span><span class="tick"></span><span class="tick"></span>
+      <span class="bar-block bar-lg"></span>
+    </div>
+    <div class="logo">
+      <div class="logo-mark">
+        <span class="c c2"></span><span class="c c1"></span><span class="bfp">BFP</span>
+      </div>
+      <div class="logo-txt">
+        <span class="b">Brandzo</span>
+        <span class="s">FRANCHISE PARTNERS</span>
+      </div>
+    </div>
+    <div class="side-bars left">
+      <span class="tick"></span><span class="tick"></span><span class="tick"></span>
+      <span class="bar-block bar-lg"></span>
+    </div>
+  </div>
+  <div class="brand-underline"></div>
+
+  <!-- الغلاف -->
+  <div class="cover">
+    <div class="cover-top">
+      <span class="doc-kind"><i class="fa-solid fa-triangle-exclamation"></i> تقرير موقف — مرفوع للإدارة</span>
+      <span class="conf-chip"><i class="fa-solid fa-lock"></i> داخلي</span>
+    </div>
+    <div class="cov-title">
+      <div class="en">Situation <span class="accent">Report</span></div>
+      <div class="ar">تأخّر ردّ الفريق الهندسي على العرض الفني والمالي — مشروع تحوير مستودعات 155</div>
+    </div>
+  </div>
+
+  <!-- شبكة البيانات -->
+  <div class="meta-grid">
+    <div class="meta-card">
+      <div class="mi"><i class="fa-solid fa-hashtag"></i></div>
+      <div class="ml">المشروع</div>
+      <div class="mv ar">مستودعات 155 — تحوير</div>
+    </div>
+    <div class="meta-card">
+      <div class="mi"><i class="fa-solid fa-file-lines"></i></div>
+      <div class="ml">المستند المرجعي</div>
+      <div class="mv">BRZ-WH-155-2026</div>
+    </div>
+    <div class="meta-card">
+      <div class="mi"><i class="fa-solid fa-people-group"></i></div>
+      <div class="ml">الجهة المقابلة</div>
+      <div class="mv ar">عبر العالم — الفريق الهندسي</div>
+    </div>
+    <div class="meta-card">
+      <div class="mi"><i class="fa-solid fa-calendar-day"></i></div>
+      <div class="ml">تاريخ التقرير</div>
+      <div class="mv">الثلاثاء 21/07/2026</div>
+    </div>
+  </div>
+
+  <div class="shell">
+
+    <!-- الخلفية -->
+    <div class="sec-tag">
+      <span class="num">01</span>
+      <h2>الخلفية</h2>
+      <span class="line"></span>
+    </div>
+    <p class="lead">
+      عقب اجتماع مشروع مستودعات 155 المنعقد يوم <b>الثلاثاء 14/07/2026</b> مع الفريق الهندسي بشركة <b>عبر العالم</b>،
+      وثّقت إدارة المستودعات مخرجات الاجتماع في محضر رسمي (المرجع <b>BRZ-WH-155-2026</b>)، على أن يتولّى الفريق الهندسي
+      ترجمة المتطلبات وتسليم المقترحات التصميمية و<b>العرض الفني والمالي خلال مدة لا تتجاوز أسبوعًا واحدًا</b> —
+      أي بحلول اليوم <b>الثلاثاء 21/07/2026</b>.
+    </p>
+
+    <!-- تسلسل الأحداث -->
+    <div class="sec-tag">
+      <span class="num">02</span>
+      <h2>تسلسل الأحداث</h2>
+      <span class="line"></span>
+    </div>
+    <ul class="timeline">
+      <li class="tl">
+        <span class="dot"></span>
+        <div class="when">14/07/2026 — الثلاثاء</div>
+        <div class="what">عقد الاجتماع وتوثيق المخرجات
+          <small>اعتماد المقترحات والمتطلبات التصميمية والتشغيلية للمستودعات في المحضر الرسمي.</small>
+        </div>
+      </li>
+      <li class="tl">
+        <span class="dot"></span>
+        <div class="when">بعد الاجتماع</div>
+        <div class="what">إرسال محضر الاجتماع إلى م. أبوبكر بن علي
+          <small>تسليم المحضر كتابيًا للفريق الهندسي لبدء ترجمة المتطلبات وإعداد العرض.</small>
+        </div>
+      </li>
+      <li class="tl">
+        <span class="dot"></span>
+        <div class="when">إبلاغ شفهي — تعزيزي</div>
+        <div class="what">إبلاغ صوتي بالتعديلات المحورية
+          <small>تأكيد النقاط الجوهرية صوتيًا إلى جانب المحضر المكتوب لضمان الوضوح.</small>
+        </div>
+      </li>
+      <li class="tl">
+        <span class="dot"></span>
+        <div class="when">21/07/2026 — الموعد المتفق</div>
+        <div class="what">موعد استلام الرد والعرض الفني والمالي
+          <small>حسب مدة «الأسبوع كحد أقصى» المعتمدة في المحضر (البند 09 — الإجراءات المطلوبة).</small>
+        </div>
+      </li>
+      <li class="tl warn">
+        <span class="dot"></span>
+        <div class="when">اليوم — عند التواصل مع م. نبيل زدم</div>
+        <div class="what">اتّضاح عدم اتساق في التواصل
+          <small>تبيّن أن المحضر والمهمة المكلّف بها الفريق الهندسي <b>لم تُستكمل</b> — ما يعني تأخّر الرد عن الموعد.</small>
+        </div>
+      </li>
+    </ul>
+
+    <!-- سبب التأخير -->
+    <div class="sec-tag">
+      <span class="num">03</span>
+      <h2>سبب التأخير</h2>
+      <span class="line"></span>
+    </div>
+    <div class="callout cause">
+      <div class="ct"><span class="cic"><i class="fa-solid fa-link-slash"></i></span> عدم اتساق في التواصل داخل الفريق الهندسي</div>
+      <p>
+        لم يكتمل استلام/تنفيذ ما ورد في المحضر والمهمة المكلّف بها الفريق الهندسي؛ فالمحضر أُرسل إلى م. أبوبكر بن علي وأُبلغ صوتيًا بالتعديلات المحورية،
+        إلا أنه عند التواصل اليوم مع م. نبيل زدم تبيّن أن المهمة لم تُستكمل من جانبهم. أدّى هذا الانقطاع في حلقة التواصل إلى
+        <b>تأخّر الرد على العرض الفني والمالي لتحوير مستودعات 155</b> عن الموعد المتفق عليه.
+      </p>
+    </div>
+
+    <!-- الأثر -->
+    <div class="sec-tag">
+      <span class="num">04</span>
+      <h2>الأثر على المشروع</h2>
+      <span class="line"></span>
+    </div>
+    <div class="impact-grid">
+      <div class="impact">
+        <span class="iic"><i class="fa-solid fa-clock-rotate-left"></i></span>
+        <span class="itx">تأخّر تسليم المقترحات التصميمية والعرض الفني والمالي عن المدة المتفق عليها.</span>
+      </div>
+      <div class="impact">
+        <span class="iic"><i class="fa-solid fa-hourglass-half"></i></span>
+        <span class="itx">خطر مماطلة أو انزلاق في جدول تسليم المشروع إن استمر انقطاع التواصل.</span>
+      </div>
+    </div>
+
+    <!-- الإجراء التصحيحي -->
+    <div class="sec-tag">
+      <span class="num">05</span>
+      <h2>الإجراء التصحيحي المعتمد</h2>
+      <span class="line"></span>
+    </div>
+    <p class="lead">لتفادي تكرار ذلك ومنع أي تأخّر أو مماطلة في التسليم، تم الاتفاق مع الفريق الهندسي على:</p>
+    <ul class="fix-list">
+      <li class="fix">
+        <span class="fic"><i class="fa-solid fa-headset"></i></span>
+        <span class="ftx">حلقة تواصل على مدار الساعة لأي استفسار
+          <small>قناة مباشرة ومستمرة تُغلق فجوة التواصل التي تسبّبت في التأخير.</small>
+        </span>
+      </li>
+      <li class="fix">
+        <span class="fic"><i class="fa-solid fa-arrows-rotate"></i></span>
+        <span class="ftx">تحديث دوري لكل عملية تُنجز في العرض الفني والمالي
+          <small>متابعة كل بند فور إنجازه بدل انتظار التسليم النهائي دفعة واحدة.</small>
+        </span>
+      </li>
+      <li class="fix">
+        <span class="fic"><i class="fa-solid fa-database"></i></span>
+        <span class="ftx">قاعدة مشتركة تُحدَّث دوريًا تُحلّ فيها الاستفسارات والنقاشات أول بأول
+          <small>مرجعية واحدة للطرفين تمنع أي تضارب أو انقطاع في المعلومة.</small>
+        </span>
+      </li>
+    </ul>
+
+    <!-- التوصية -->
+    <div class="sec-tag">
+      <span class="num">06</span>
+      <h2>التوصية</h2>
+      <span class="line"></span>
+    </div>
+    <div class="reco">
+      <div class="rt"><i class="fa-solid fa-flag-checkered"></i> رفع للإدارة</div>
+      <p>
+        اعتماد آلية <b>التواصل المستمر (على مدار الساعة) والتحديث الدوري</b> كقناة رسمية للمتابعة مع الفريق الهندسي بشركة عبر العالم،
+        وتثبيت نقاط تماس واضحة من الطرفين، ومتابعة إنجاز بنود العرض الفني والمالي وفق المحضر (BRZ-WH-155-2026) لضمان التسليم في الوقت المحدد.
+        <br>— أُرفقت آلية التواصل تفصيلًا في مستند منفصل موجّه للفريق الهندسي.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- التوقيع -->
+  <div class="signature">
+    <div>
+      <div class="sig-title">إعداد إدارة المستودعات</div>
+      <div class="sig-names">
+        <span class="sig-person"><span class="name">محمد البرشي</span><span class="role">إدارة المستودعات</span></span>
+        <span class="sig-person"><span class="name">رمزي الباش</span><span class="role">إدارة المستودعات</span></span>
+      </div>
+    </div>
+    <div class="sig-seal">
+      <span class="bfp">BFP</span>
+      <span class="tx">WAREHOUSE</span>
+    </div>
+  </div>
+
+  <!-- التذييل -->
+  <div class="footer">
+    <span class="f-item"><i class="fa-solid fa-phone"></i> 0912203770</span>
+    <span class="f-item"><i class="fa-solid fa-globe"></i> www.brandzo.com</span>
+    <span class="f-item"><i class="fa-solid fa-envelope"></i> Info@brandzo.com</span>
+    <span class="f-item ar"><i class="fa-solid fa-location-dot"></i> نادي الأهلي - بنغازي، ليبيا</span>
+  </div>
+
+</div>
+</body>
+</html>
