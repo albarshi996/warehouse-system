@@ -617,6 +617,65 @@ service cloud.firestore {
       }
     }
 
+    // ── المهام المُسنَدة (إرسال مهمّة لمستخدم + توثيق ومتابعة) ────────────
+    // نموذج «المديران يُسنِدان للجميع»: المدير يُنشئ مهمّةً ويُسنِدها لمستخدمٍ
+    // فعليّ، والمُسنَد إليه ينفّذ ويردّ. القراءة للمدير أو المُنشئ أو المُسنَد
+    // إليه فقط — لا يرى الموظّف مهامّ غيره. لا حذف: الإلغاء حالةٌ (canceled)
+    // لا محو، والتوثيق في `events` ملحق-فقط. أسماء الحالات تُطابق taskShape.js.
+    match /tasks/{taskId} {
+      function amCreator() {
+        return signedIn() && resource.data.createdByUid == request.auth.uid;
+      }
+      function amAssignee() {
+        return signedIn() && resource.data.assigneeUid == request.auth.uid;
+      }
+      // الأصل والتاريخ ثابتان بعد الإنشاء — لا تزوير مُنشئٍ ولا لحظة إنشاء.
+      function originKept() {
+        return request.resource.data.createdByUid == resource.data.createdByUid
+               && request.resource.data.createdAt == resource.data.createdAt;
+      }
+
+      allow read: if isManager() || amCreator() || amAssignee();
+
+      // الإنشاء للمدير فقط، باسمه، بحالة «مُسندة»، ولمُسنَدٍ إليه غير فارغ.
+      allow create: if isManager()
+                    && request.resource.data.createdByUid == request.auth.uid
+                    && request.resource.data.status == 'assigned'
+                    && request.resource.data.assigneeUid is string
+                    && request.resource.data.assigneeUid.size() > 0;
+
+      // تحديثان لا ثالث لهما:
+      //  (أ) المدير: تحكّم كامل (حالة · إعادة إسناد · إلغاء) مع ثبات الأصل.
+      //  (ب) المُسنَد إليه: ينفّذ فقط — لا يمسّ إلا حقول التنفيذ المعدودة، فلا
+      //      يُعيد إسناد نفسه ولا يعدّل العنوان/الأولويّة/الاستحقاق.
+      allow update: if originKept() && (
+                      isManager()
+                      || (amAssignee()
+                          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                               'status', 'acknowledgedAt', 'startedAt', 'doneAt',
+                               'checklist', 'updatedAt'
+                             ]))
+                    );
+
+      allow delete: if false;
+
+      // سجلّ التوثيق: إضافة فقط باسم فاعلها — لا تعديل ولا حذف (نمط audit/scans).
+      // الكاتب مديرٌ أو طرفٌ في المهمّة (مُنشئ أو مُسنَد إليه) لا أيّ مصادَق.
+      match /events/{eventId} {
+        function taskDoc() {
+          return get(/databases/$(database)/documents/tasks/$(taskId)).data;
+        }
+        allow read: if isManager()
+                    || (signedIn() && (taskDoc().createdByUid == request.auth.uid
+                                       || taskDoc().assigneeUid == request.auth.uid));
+        allow create: if request.resource.data.byUid == request.auth.uid
+                      && (isManager()
+                          || taskDoc().createdByUid == request.auth.uid
+                          || taskDoc().assigneeUid == request.auth.uid);
+        allow update, delete: if false;
+      }
+    }
+
     // ── الافتراضي: امنع كل ما لم يُذكر صراحةً ────────────────────
     match /{document=**} {
       allow read, write: if false;

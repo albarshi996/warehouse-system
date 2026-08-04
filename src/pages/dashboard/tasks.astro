@@ -1,8 +1,8 @@
 ---
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
-import TaskManager from '../../components/brandzo-erp/tasks/TaskManager.jsx';
+import CloudTaskManager from '../../components/brandzo-erp/tasks/CloudTaskManager.jsx';
 ---
 
 <DashboardLayout title="المهام التشغيلية" showGuide={false} light>
-  <TaskManager client:load />
+  <CloudTaskManager client:only="react" />
 </DashboardLayout>

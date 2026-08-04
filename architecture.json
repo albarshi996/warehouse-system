@@ -10,9 +10,9 @@
   },
   "counts": {
     "modules": 57,
-    "serviceDomains": 25,
-    "serviceFiles": 146,
-    "collections": 38,
+    "serviceDomains": 26,
+    "serviceFiles": 150,
+    "collections": 40,
     "roles": 14,
     "odooModels": 12,
     "odooGuards": 51,
@@ -1500,6 +1500,47 @@
       "collections": []
     },
     {
+      "domain": "tasks",
+      "dir": "src/services/tasks",
+      "files": [
+        "taskMetrics.js",
+        "taskMetrics.test.js",
+        "taskShape.js",
+        "tasksCloudService.js"
+      ],
+      "fileCount": 4,
+      "testCount": 1,
+      "exports": [
+        "EVENT_TYPE",
+        "PRIORITY_LABELS",
+        "STATUS_LABELS",
+        "STATUS_ORDER",
+        "TASK_STATUS",
+        "addReply",
+        "assignableUsers",
+        "assigneeNextActions",
+        "canAssignTasks",
+        "canAssigneeMove",
+        "canManagerMove",
+        "computeResponseMetrics",
+        "createTask",
+        "dueMillis",
+        "isOverdue",
+        "listenAllTasks",
+        "listenAssignedToMe",
+        "listenCreatedByMe",
+        "listenEvents",
+        "normalizeForMetrics",
+        "reassignTask",
+        "setStatus",
+        "toMillis",
+        "updateChecklist"
+      ],
+      "collections": [
+        "tasks"
+      ]
+    },
+    {
       "domain": "tom",
       "dir": "src/services/tom",
       "files": [
@@ -1627,6 +1668,8 @@
       "signedIn"
     ],
     "functions": [
+      "amAssignee",
+      "amCreator",
       "approveRoles",
       "canReserveNumber",
       "completeRoles",
@@ -1645,7 +1688,9 @@
       "movingTo",
       "myRole",
       "numberWriteOnce",
-      "signedIn"
+      "originKept",
+      "signedIn",
+      "taskDoc"
     ],
     "collections": [
       {
@@ -2496,6 +2541,85 @@
           },
           {
             "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "tasks",
+        "path": "tasks",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "isManager() || amCreator() || amAssignee()",
+            "roles": [
+              "isManager",
+              "amCreator",
+              "amAssignee"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isManager() && request.resource.data.createdByUid == request.auth.uid && request.resource.data.status == 'assigned' && request.resource.data.assigneeUid is stri",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "originKept() && ( isManager() || (amAssignee() && request.resource.data.diff(resource.data).affectedKeys().hasOnly([ 'status', 'acknowledgedAt', 'startedAt', 'd",
+            "roles": [
+              "originKept",
+              "isManager",
+              "amAssignee"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "events",
+        "path": "tasks/events",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "isManager() || (signedIn() && (taskDoc().createdByUid == request.auth.uid || taskDoc().assigneeUid == request.auth.uid))",
+            "roles": [
+              "isManager",
+              "signedIn",
+              "taskDoc"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "request.resource.data.byUid == request.auth.uid && (isManager() || taskDoc().createdByUid == request.auth.uid || taskDoc().assigneeUid == request.auth.uid)",
+            "roles": [
+              "isManager",
+              "taskDoc"
+            ]
+          },
+          {
+            "actions": [
+              "update",
               "delete"
             ],
             "condition": "false",
