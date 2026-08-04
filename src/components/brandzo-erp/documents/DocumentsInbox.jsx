@@ -153,8 +153,8 @@ export default function DocumentsInbox() {
   /** أزرار البدء مجمّعة بسلسلتها — تسعة أزرار مسطّحة تُربك لا تُيسّر. */
   const readyForms = GOVERNED_FORMS.filter((f) => f.ready);
   const groups = [
-    { title: 'الوارد', icon: 'arrowDownTray', types: PURCHASE_CHAIN },
-    { title: 'المبيعات والصرف', icon: 'shoppingCart', types: OUTBOUND_CHAIN },
+    { title: 'الوارد', icon: 'arrowDownTray', types: [...PURCHASE_CHAIN, 'SRN'] },
+    { title: 'المبيعات والصرف', icon: 'shoppingCart', types: [...OUTBOUND_CHAIN, 'POD'] },
     { title: 'الفوترة', icon: 'fileText', types: ['INV'] },
     { title: 'النقل بين المستودعات', icon: 'truck', types: TRANSFER_CHAIN },
     { title: 'المرتجعات', icon: 'arrowLeftRight', types: RETURN_CHAIN },

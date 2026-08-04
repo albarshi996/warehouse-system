@@ -137,6 +137,26 @@ const schema = {
     { key: 'whManager', label: 'مدير المستودع (WH Manager)', source: null },
   ],
 
+  /** محضر التالف يستوجب صورًا للبضاعة — دليلٌ يصاحب تواقيع المعنيين. */
+  attachments: [
+    { key: 'goods', kind: 'goods', label: 'صورة التالف' },
+    { key: 'disposal', kind: 'signedCopy', label: 'محضر الإتلاف الموقّع' },
+  ],
+
+  /**
+   * 🔍 الرقابة: التالف دليله الصور لا نسخةٌ موقّعة (يُكتشف داخل المستودع)، فيُطلب
+   * دليلٌ مصوَّر لا نسخةٌ موقّعة — ويؤكّد المدقّق اكتمال تواقيع المعنيين.
+   */
+  control: {
+    requirePhotos: true,
+    compareFields: ['discoveryDate', 'warehouse', 'cause', 'totalDamage'],
+    checklist: [
+      { key: 'photos', label: 'صور التالف مرفقة وواضحة' },
+      { key: 'qty', label: 'الكميات التالفة موثّقة' },
+      { key: 'signatures', label: 'تواقيع المعنيين مكتملة' },
+    ],
+  },
+
   warnings: damageWarnings,
 };
 

@@ -67,14 +67,16 @@ service cloud.firestore {
 
     // الفاعلون المخزنيون: من يملكون إنجاز مستندٍ يُحرّك المخزون، فيحتاجون
     // قيد الحركة وتعديل الرصيد. المجموعة = كل من يظهر `complete` في مخطّطات
-    // الدورة (GRN·QC·PUTAWAY·PICK·DN·RET·DMG·ADJ) + المديرَان. المشاهد ومستخدم
-    // الإدارة ودور الحركة خارجها — لا يُنجزون مستندًا مخزنيًّا أصلًا.
+    // الدورة (GRN·QC·PUTAWAY·PICK·DN·RET·DMG·ADJ) + المديرَان. **ودور الحركة
+    // (fleet) أُضيف** لأنه يُنجز **تأكيد التسليم (POD)** فيخصم رصيد المركبة
+    // (قرار المالك 2026-08-04). بوّابة `completeRoles` تحصر ما يُنجزه كلّ دور،
+    // فالحركة لا تُنجز إلا POD. المشاهد ومستخدم الإدارة وحدهما خارجها.
     function isStockActor() {
       return isBootstrapAdmin() ||
              (signedIn() && hasProfile() && isActive() && myRole() in [
                'admin', 'warehouse_manager', 'storekeeper', 'qc_inspector',
                'gate_officer', 'purchase_officer', 'return_manager',
-               'inventory_auditor', 'finance_manager'
+               'inventory_auditor', 'finance_manager', 'fleet'
              ]);
     }
 
@@ -154,6 +156,8 @@ service cloud.firestore {
            : docType == 'PICK'    ? ['warehouse_manager']
            : docType == 'PACK'    ? ['qc_inspector', 'warehouse_manager']
            : docType == 'DN'      ? ['warehouse_manager']
+           : docType == 'POD'     ? ['warehouse_manager', 'fleet']
+           : docType == 'SRN'     ? ['qc_inspector', 'warehouse_manager']
            : docType == 'GP'      ? ['gate_officer', 'warehouse_manager']
            : docType == 'INV'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'TR'      ? ['warehouse_manager']
@@ -183,6 +187,8 @@ service cloud.firestore {
            : docType == 'PICK'    ? ['storekeeper', 'warehouse_manager']
            : docType == 'PACK'    ? ['storekeeper', 'warehouse_manager']
            : docType == 'DN'      ? ['storekeeper', 'warehouse_manager']
+           : docType == 'POD'     ? ['fleet', 'warehouse_manager']
+           : docType == 'SRN'     ? ['storekeeper', 'warehouse_manager']
            : docType == 'GP'      ? ['gate_officer', 'warehouse_manager']
            : docType == 'INV'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'TR'      ? ['storekeeper', 'warehouse_manager']
@@ -295,6 +301,34 @@ service cloud.firestore {
         allow read: if signedIn();
         allow create: if (isStockActor() || isProcurementActor())
                       && request.resource.data.byUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+
+      // المرفقات: الأدلّة الماديّة (فاتورة مورّد · توقيع مندوب · صورة بضاعة).
+      // ملحق-فقط باسم رافعها — لا تعديل ولا حذف (الدليل الذي يُمحى ليس دليلًا).
+      // أوسع من سجلّ التدقيق: أيّ مصادَقٍ يرى المستند يُرفق دليلًا عليه — لأن
+      // مندوب المورّد أو سائق التسليم قد يوقّع، وليس فاعلًا مخزنيًّا بالضرورة.
+      // الحجم محكوم في الواجهة (ضغط < 700KB)، وسقف مستند Firestore حارسٌ أخير.
+      match /attachments/{attId} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.resource.data.byUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+
+      // الرقابة/المطابقة: قيود «أداة المقارنة» — طابق المستند الصادر بالنسخة
+      // الموقّعة. ملحق-فقط باسم من طابق — لا تعديل ولا حذف (إعادة المطابقة قيدٌ
+      // جديد، والأحدث يحكم). بخلاف المرفقات (يُرفقها أيّ مصادَق لأن مندوب المورّد
+      // قد يوقّع)، **المطابقة حكمُ رقابةٍ** فتُحصر بالفاعل المخزنيّ/المشترياتيّ
+      // النشط (يُدخل isActive تلقائيًّا) — فلا يزوّر مشاهدٌ أو موقوفٌ «مطابق» على
+      // فاتورة. والاختلاف يُلزِم بسببٍ مكتوب **على الخادم** لا في الواجهة وحدها.
+      match /control/{recId} {
+        allow read: if signedIn();
+        allow create: if (isStockActor() || isProcurementActor())
+                      && request.resource.data.byUid == request.auth.uid
+                      && request.resource.data.result in ['matched', 'mismatch']
+                      && (request.resource.data.result == 'matched'
+                          || (request.resource.data.note is string
+                              && request.resource.data.note.size() > 0));
         allow update, delete: if false;
       }
     }

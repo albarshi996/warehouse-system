@@ -224,6 +224,27 @@ const schema = {
     { key: 'qcInspector', label: 'فاحص الجودة (QC Inspector)', source: 'approver' },
   ],
 
+  /**
+   * الأدلّة المُقترَحة: فاتورة المورّد (كانت تُدبَّس بالورق فتضيع بالرقمنة) وصورة
+   * توقيع مندوبه على التسليم. عليهما تُبنى مطابقة «طبقة الرقابة» لاحقًا.
+   */
+  attachments: [
+    { key: 'invoice', kind: 'invoice', label: 'فاتورة المورّد' },
+    { key: 'supplierSignature', kind: 'signature', label: 'توقيع مندوب المورّد بالتسليم' },
+  ],
+
+  /** 🔍 الرقابة: طابِق المستلَم بفاتورة المورّد وأمر الشراء، وأكّد توقيع مندوبه. */
+  control: {
+    requireSignedCopy: true,
+    compareFields: ['receivedAt', 'poRef', 'supplier', 'totalReceived'],
+    checklist: [
+      { key: 'invoice', label: 'فاتورة المورّد مطابقة للمستلَم فعلًا' },
+      { key: 'qty', label: 'الكميات المستلمة مطابقة للفاتورة' },
+      { key: 'po', label: 'مطابقة لأمر الشراء المرجعيّ' },
+      { key: 'signature', label: 'توقيع مندوب المورّد حاضر' },
+    ],
+  },
+
   /** تحذيرات تُعرض قبل الإرسال (لا تمنعه — الحجب الحقيقي في الحرّاس). */
   warnings: (d) => ccp1Violations(d.header),
 };

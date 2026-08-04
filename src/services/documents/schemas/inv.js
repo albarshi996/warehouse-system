@@ -153,6 +153,31 @@ const schema = {
     { key: 'customer', label: 'استلام العميل (Customer)', source: null },
   ],
 
+  /**
+   * أدلّة الفوترة: النسخة الموقّعة من المستند الأصلي (إذن التسليم) التي تُطابَق
+   * عليها الفاتورة في «طبقة الرقابة» — وهي جوهر أداة المقارنة.
+   */
+  attachments: [
+    { key: 'signedDelivery', kind: 'signedCopy', label: 'إذن التسليم الموقّع' },
+    { key: 'other', kind: 'other', label: 'مستند مرجعيّ آخر' },
+  ],
+
+  /**
+   * 🔍 طبقة الرقابة — هنا تصير الفوترة **أداة مقارنة**: يطابق المدقّق الفاتورة
+   * الصادرة بالنسخة الموقّعة من إذن التسليم، ويؤكّد توقيع العميل.
+   */
+  control: {
+    requireSignedCopy: true,
+    compareFields: ['invoiceDate', 'customer', 'deliveryRef', 'grandTotal'],
+    checklist: [
+      { key: 'date', label: 'تاريخ الفاتورة مطابق للنسخة الموقّعة' },
+      { key: 'party', label: 'اسم العميل مطابق' },
+      { key: 'items', label: 'الأصناف والكميات مطابقة لِما سُلّم' },
+      { key: 'total', label: 'الإجمالي المستحق مطابق' },
+      { key: 'signature', label: 'توقيع العميل حاضر على النسخة' },
+    ],
+  },
+
   warnings: invoiceWarnings,
 };
 

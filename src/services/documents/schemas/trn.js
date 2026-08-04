@@ -105,6 +105,22 @@ const schema = {
     },
 
     {
+      key: 'packing',
+      title: '📦 تعبئة الشحنة — Packing Checklist',
+      kind: 'checklist',
+      note: 'تُملأ قبل مغادرة الشحنة — دليلُ أن ما يُشحن مُعبَّأ ومختوم وموسوم لوجهته.',
+      items: [
+        { key: 'count-ok', label: 'عدد الطرود مطابق للبنود المشحونة' },
+        { key: 'sealed', label: 'الطرود مغلقة ومختومة' },
+        { key: 'labels', label: 'بطاقة الوجهة/الفرع ملصقة على كل طرد' },
+        { key: 'no-damage', label: 'لا تلف ظاهر على التعبئة' },
+        { key: 'cold-chain', label: 'شروط النقل (تبريد/تجميد) مهيّأة إن لزمت' },
+        { key: 'seal-logged', label: 'رقم الختم مسجَّل في رأس المستند' },
+        { key: 'docs-attached', label: 'نسخة مستند النقل مرافقة للشحنة' },
+      ],
+    },
+
+    {
       key: 'summary',
       title: '📊 ملخّص الشحنة — Shipment Summary',
       kind: 'fields',
@@ -128,6 +144,24 @@ const schema = {
     { key: 'approvedBy', label: 'المعتمِد (Approved By)', source: 'approver' },
     { key: 'driver', label: 'السائق (Driver)', source: null },
   ],
+
+  /** أدلّة الشحنة: صورة التعبئة/التحميل، والنسخة الموقّعة من مستلم الفرع. */
+  attachments: [
+    { key: 'packing', kind: 'packing', label: 'صورة التعبئة/التحميل' },
+    { key: 'signedCopy', kind: 'signedCopy', label: 'نسخة موقّعة من المستلم' },
+  ],
+
+  /** 🔍 الرقابة: طابِق الشحنة بصورة التعبئة والنسخة الموقّعة من مستلم الفرع. */
+  control: {
+    requireSignedCopy: true,
+    compareFields: ['shipmentDate', 'fromWarehouse', 'toWarehouse', 'totalShipped'],
+    checklist: [
+      { key: 'qty', label: 'الكميات المشحونة مطابقة لصورة التعبئة' },
+      { key: 'dest', label: 'مستودع الوجهة صحيح' },
+      { key: 'seal', label: 'رقم الختم مطابق' },
+      { key: 'signature', label: 'توقيع مستلم الفرع حاضر' },
+    ],
+  },
 
   warnings: transferNoteWarnings,
 };

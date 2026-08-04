@@ -71,7 +71,8 @@ const schema = {
           key: 'returnType',
           label: 'نوع المرتجع (Type)',
           kind: 'select',
-          options: ['مرتجع مبيعات', 'مرتجع تحويل فرع', 'مرتجع مورّد', 'تالف'],
+          options: ['مرتجع عميل', 'مرتجع فرع', 'مرتجع مورّد', 'تالف'],
+          hint: 'عميل: بضاعة خرجت بإذن تسليم وعادت · فرع: مرتجع تحويل بين مستودعات · مورّد: يُعاد للمورّد.',
         },
         { key: 'dispatchRef', label: 'رقم أمر الصرف المرجعي (Dispatch Ref.)', kind: 'text' },
         {
@@ -148,6 +149,24 @@ const schema = {
     { key: 'qcInspector', label: 'فاحص الجودة (QC Inspector)', source: 'approver' },
     { key: 'whManager', label: 'مدير المستودع (WH Manager)', source: null },
   ],
+
+  /** أدلّة المرتجع: صورة البضاعة العائدة، والنسخة الموقّعة من المُرجِع. */
+  attachments: [
+    { key: 'goods', kind: 'goods', label: 'صورة البضاعة المُرجعة' },
+    { key: 'signedCopy', kind: 'signedCopy', label: 'نسخة موقّعة من المُرجِع' },
+  ],
+
+  /** 🔍 الرقابة: طابِق المرتجع بالنسخة الموقّعة من جهة الإرجاع (عميل/فرع/مورّد). */
+  control: {
+    requireSignedCopy: true,
+    compareFields: ['returnDate', 'returningBranch', 'returnType', 'grandTotal'],
+    checklist: [
+      { key: 'party', label: 'جهة الإرجاع مطابقة للنسخة الموقّعة' },
+      { key: 'qty', label: 'الكميات المُرجعة مطابقة' },
+      { key: 'condition', label: 'حالة الأصناف موثّقة بالصور' },
+      { key: 'signature', label: 'توقيع المُرجِع حاضر' },
+    ],
+  },
 
   warnings: returnWarnings,
 };

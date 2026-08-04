@@ -34,8 +34,8 @@ test('أمر البيع يرأس الصادر، والفوترة سلسلةٌ م
   assert.equal(nextInChain('INV'), null, 'الفاتورة تنهي الفوترة');
 });
 
-test('إذن التسليم يتفرّع: تصريح خروج وفاتورة', () => {
-  assert.deepEqual(derivationTargets('DN'), ['GP', 'INV']);
+test('إذن التسليم يتفرّع: تصريح خروج وفاتورة وتأكيد تسليم', () => {
+  assert.deepEqual(derivationTargets('DN'), ['GP', 'INV', 'POD']);
   assert.deepEqual(derivationTargets('SO'), ['PICK'], 'أمر البيع خطّيّ إلى السحب');
   assert.deepEqual(derivationTargets('GP'), [], 'التصريح ينهي مساره');
 });

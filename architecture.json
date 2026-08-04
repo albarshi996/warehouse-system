@@ -11,8 +11,8 @@
   "counts": {
     "modules": 57,
     "serviceDomains": 26,
-    "serviceFiles": 150,
-    "collections": 40,
+    "serviceFiles": 160,
+    "collections": 42,
     "roles": 14,
     "odooModels": 12,
     "odooGuards": 51,
@@ -678,10 +678,16 @@
       "dir": "src/services/documents",
       "files": [
         "adj.js",
+        "attachmentFile.js",
+        "attachmentFile.test.js",
+        "attachmentsService.js",
         "cc.js",
         "chain.js",
         "chain.test.js",
         "cn.js",
+        "control.js",
+        "control.test.js",
+        "controlService.js",
         "dlv.js",
         "dmg.js",
         "dn.js",
@@ -701,6 +707,7 @@
         "pack.js",
         "pick.js",
         "po.js",
+        "pod.js",
         "pr.js",
         "putaway.js",
         "pv.js",
@@ -710,43 +717,55 @@
         "sales.test.js",
         "schemaUtils.js",
         "so.js",
+        "srn.js",
         "states.js",
+        "surgical.test.js",
         "tr.js",
         "trc.js",
         "trn.js"
       ],
-      "fileCount": 37,
-      "testCount": 5,
+      "fileCount": 46,
+      "testCount": 8,
       "exports": [
+        "ACCEPTED_ATTACHMENT_TYPES",
+        "ATTACHMENT_KINDS",
         "BILLING_CHAIN",
         "CCP1_LIMITS",
         "CHAINS",
         "COUNT_CHAIN",
         "DEFAULT_TOLERANCE",
+        "DELIVERY_CHAIN",
         "DOCREF_PARENT_TYPE",
         "EDITABLE_STATES",
         "GOVERNED_FORMS",
         "INITIAL_STATE",
         "INTERNAL_PROCUREMENT_CHAIN",
         "MATCH_STATUS",
+        "MAX_ATTACHMENT_BYTES",
+        "MAX_SOURCE_BYTES",
         "OUTBOUND_CHAIN",
         "PURCHASE_CHAIN",
+        "REJECTION_CHAIN",
         "RETURN_CHAIN",
         "SEQ_PAD",
         "STALE_DAYS",
         "STATES",
         "TRANSFER_CHAIN",
         "TRANSITIONS",
+        "addAttachment",
+        "addReconciliation",
         "adjValue",
         "adjVariance",
         "adjustmentVerdict",
         "adjustmentWarnings",
         "ageInState",
+        "allChecked",
         "allFields",
         "appendAudit",
         "applyItemToLine",
         "availableTransitions",
         "awaitingMyApproval",
+        "base64Size",
         "budgetWarnings",
         "canDo",
         "cartonCount",
@@ -754,6 +773,9 @@
         "chainFor",
         "chainOf",
         "checklistCount",
+        "controlChecklist",
+        "controlCompareRows",
+        "controlWarnings",
         "counterId",
         "createDraft",
         "createNextInChain",
@@ -765,6 +787,7 @@
         "cycleWarnings",
         "damageValue",
         "damageWarnings",
+        "dataUrlBytes",
         "deliveredCount",
         "derivationTargets",
         "deriveDocument",
@@ -789,6 +812,9 @@
         "getSchema",
         "getState",
         "grandTotal",
+        "hasControl",
+        "hasPhoto",
+        "hasSignedCopy",
         "inboxStats",
         "inventoryAccuracy",
         "invoiceWarnings",
@@ -796,8 +822,11 @@
         "iprWarnings",
         "isEditable",
         "isEmptyLine",
+        "isImageType",
         "isLegalTransition",
         "isStale",
+        "kindLabel",
+        "latestReconciliation",
         "lineEstimate",
         "lineKey",
         "lineReturnValue",
@@ -806,11 +835,13 @@
         "lineValue",
         "lineVariance",
         "listenAllDocuments",
+        "listenAttachments",
         "listenAudit",
         "listenDocument",
         "listenDocumentsByTypes",
         "listenMyDocuments",
         "listenPendingApproval",
+        "listenReconciliations",
         "lookupByNumber",
         "lowestOffer",
         "matchedCount",
@@ -827,13 +858,16 @@
         "parseNumber",
         "pickWarnings",
         "poWarnings",
+        "podWarnings",
         "previousInChain",
         "primaryParentType",
         "putawayWarnings",
         "pvWarnings",
         "qcWarnings",
         "readyTypes",
+        "reconciliationVerdict",
         "rejectionRate",
+        "rejectionWarnings",
         "reserveNumber",
         "returnWarnings",
         "rfqWarnings",
@@ -858,6 +892,8 @@
         "transferReceiptWarnings",
         "transferReqWarnings",
         "transitionDocument",
+        "validateEncoded",
+        "validateSource",
         "varianceValue"
       ],
       "collections": [
@@ -1068,10 +1104,11 @@
         "salesReports.test.js",
         "salesService.js",
         "transferReports.js",
-        "transferReports.test.js"
+        "transferReports.test.js",
+        "vehicle.test.js"
       ],
-      "fileCount": 14,
-      "testCount": 4,
+      "fileCount": 15,
+      "testCount": 5,
       "exports": [
         "EXTERNAL",
         "EXTERNAL_LABEL",
@@ -1080,6 +1117,8 @@
         "POSTING_STATE",
         "SHIPMENT_STATUS",
         "SYSTEM_LOCATIONS",
+        "VEHICLE",
+        "VEHICLE_PREFIX",
         "WAREHOUSE",
         "WAREHOUSE_FROM",
         "WAREHOUSE_TO",
@@ -1100,6 +1139,8 @@
         "isPosted",
         "isReservedCode",
         "isSystemLocation",
+        "isVehicleLocation",
+        "isVehicleToken",
         "isWarehouseToken",
         "listenRecentMoves",
         "locationLabel",
@@ -1110,6 +1151,7 @@
         "movesIntoLocation",
         "movesStock",
         "needsWarehouse",
+        "onVehicleBalances",
         "operationExceptions",
         "operationsSnapshot",
         "outOfStockItems",
@@ -1128,6 +1170,8 @@
         "totalAvailable",
         "totalReserved",
         "transferVariances",
+        "vehicleLocationCode",
+        "vehiclePlateFromCode",
         "warehouseFieldsFor",
         "warehouseRequiringTypes",
         "zeroingLocations"
@@ -2065,6 +2109,38 @@
         ]
       },
       {
+        "name": "attachments",
+        "path": "documents/attachments",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "signedIn() && request.resource.data.byUid == request.auth.uid",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
         "name": "audit",
         "path": "documents/audit",
         "rules": [
@@ -2082,6 +2158,39 @@
               "create"
             ],
             "condition": "(isStockActor() || isProcurementActor()) && request.resource.data.byUid == request.auth.uid",
+            "roles": [
+              "isStockActor",
+              "isProcurementActor"
+            ]
+          },
+          {
+            "actions": [
+              "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "control",
+        "path": "documents/control",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "(isStockActor() || isProcurementActor()) && request.resource.data.byUid == request.auth.uid && request.resource.data.result in ['matched', 'mismatch'] && (reque",
             "roles": [
               "isStockActor",
               "isProcurementActor"

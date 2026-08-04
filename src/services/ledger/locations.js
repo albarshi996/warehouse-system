@@ -81,6 +81,45 @@ export const EXTERNAL = null;
 /** تسمية «خارج المنشأة» حين تُعرض في كشف الحركة. */
 export const EXTERNAL_LABEL = 'خارج المنشأة';
 
+/**
+ * ═══ مواقع المركبات المتنقّلة — رصيدٌ لكل مركبة على حدة ═══
+ *
+ * قرار المالك (2026-08-04): إذن التسليم يُحمّل الطلب في مركبةٍ بعينها، ويبقى
+ * الرصيد **على تلك المركبة المتنقّلة** حتى يؤكّد فريق الحركة تسليمه للعميل
+ * فيُخصم. فلكل مركبةٍ موقعُها: `VAN:‹لوحة›`. رصيدٌ باقٍ في أيّ موقع مركبة =
+ * بضاعةٌ حُمِّلت ولم تُسلَّم بعد — وهو تقرير «ما على المركبات الآن».
+ *
+ * تُخزَّن كأيّ مستودعٍ في `balances/{صنف__VAN:لوحة__تشغيلة}` — لا مجموعة جديدة.
+ * والبادئة **محجوزة** فلا يحملها مستودعٌ حقيقيّ (يحرسها `isReservedCode`).
+ */
+export const VEHICLE_PREFIX = 'VAN:';
+
+/** كود موقع مركبةٍ من لوحتها — موحّد الحالة كما يوحّدها مفتاح الرصيد. */
+export function vehicleLocationCode(plate) {
+  const p = String(plate || '').trim().toUpperCase();
+  return p ? `${VEHICLE_PREFIX}${p}` : '';
+}
+
+/** هل هذا الكود موقعُ مركبةٍ متنقّلة؟ */
+export function isVehicleLocation(code) {
+  return String(code || '').toUpperCase().startsWith(VEHICLE_PREFIX);
+}
+
+/** لوحة المركبة من كود موقعها (فارغ إن لم يكن موقع مركبة). */
+export function vehiclePlateFromCode(code) {
+  return isVehicleLocation(code) ? String(code).slice(VEHICLE_PREFIX.length) : '';
+}
+
+/**
+ * أرصدة «ما على المركبات الآن»: صفوفٌ في موقع مركبةٍ برصيدٍ غير صفريّ = بضاعة
+ * حُمِّلت ولم تُسلَّم. منطق خالص كـ`stuckBalances`.
+ */
+export function onVehicleBalances(balances) {
+  return (balances || [])
+    .filter((b) => isVehicleLocation(b?.warehouse) && Math.abs(Number(b?.qty) || 0) > 0.0001)
+    .map((b) => ({ ...b, plate: vehiclePlateFromCode(b.warehouse), locationLabel: locationLabel(b.warehouse) }));
+}
+
 /** هل هذا الرمز موقع نظام؟ */
 export function isSystemLocation(code) {
   return Boolean(code) && Object.hasOwn(SYSTEM_LOCATIONS, String(code).toUpperCase());
@@ -91,14 +130,16 @@ export function isSystemLocation(code) {
  * يُستدعى قبل إنشاء مستودع جديد — الاصطدام هنا يُفسد الأرصدة بلا صوت.
  */
 export function isReservedCode(code) {
-  return isSystemLocation(code);
+  return isSystemLocation(code) || isVehicleLocation(code);
 }
 
-/** تسمية الموقع للعرض: موقع نظام، أو كود مستودع حقيقي، أو الخارج. */
+/** تسمية الموقع للعرض: موقع نظام، أو مركبة، أو كود مستودع حقيقي، أو الخارج. */
 export function locationLabel(code) {
   if (code === null || code === undefined || code === '') return EXTERNAL_LABEL;
   const sys = SYSTEM_LOCATIONS[String(code).toUpperCase()];
-  return sys ? `${sys.emoji} ${sys.labelAr}` : String(code);
+  if (sys) return `${sys.emoji} ${sys.labelAr}`;
+  if (isVehicleLocation(code)) return `🚚 مركبة ${vehiclePlateFromCode(code)}`;
+  return String(code);
 }
 
 /** المواقع التي يجب أن تعود إلى الصفر — مصدر لوحة الاستثناءات. */

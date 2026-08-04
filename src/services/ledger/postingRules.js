@@ -21,7 +21,8 @@
  *   `QC`  يُخرج المرفوض منه إلى `QUARANTINE`
  *   `PUTAWAY` يُخرج المقبول إلى المستودع
  *   ⇒ ويبقى `RECEIVING` صفرًا. أيّ بقيّة فيه = بضاعةٌ وصلت ولم تُخزَّن.
- * والمنطق نفسه يحكم `STAGING` (سُحب ↔ سُلّم) و`TRANSIT` (شُحن ↔ استُلم).
+ * والمنطق نفسه يحكم `STAGING` (سُحب ↔ حُمِّل بالمركبة) و`TRANSIT` (شُحن ↔ استُلم)
+ * و**موقع المركبة** `VAN:‹لوحة›` (حُمِّل ↔ سُلِّم للعميل — بقيّةٌ = بضاعة على مركبة).
  * فالتقارير الرقابية ليست استعلامات نكتبها، بل نتيجةٌ حسابية لبنية القيد.
  */
 import { SYSTEM_LOCATIONS, EXTERNAL } from './locations.js';
@@ -40,6 +41,12 @@ const { RECEIVING, QUARANTINE, STAGING, TRANSIT, SCRAP, ADJUSTMENT } = SYSTEM_LO
 export const WAREHOUSE = '@warehouse';
 export const WAREHOUSE_FROM = '@warehouseFrom';
 export const WAREHOUSE_TO = '@warehouseTo';
+/**
+ * موقع المركبة المتنقّلة: يُقرأ من `header.vehiclePlate` ويُصاغ `VAN:‹لوحة›` وقت
+ * القيد (انظر `resolveLocation` في movements.js). ليس مستودعًا ثابتًا بل موقعٌ
+ * لكل مركبةٍ على حدة — رصيدٌ باقٍ فيه = بضاعةٌ حُمِّلت ولم تُسلَّم بعد.
+ */
+export const VEHICLE = '@vehicle';
 
 /** خريطة الرمز ← حقل رأس المستند الذي يُقرأ منه. */
 export const WAREHOUSE_TOKENS = {
@@ -51,6 +58,11 @@ export const WAREHOUSE_TOKENS = {
 /** هل هذا الموقع رمزُ مستودعٍ يُقرأ من الرأس (لا موقع نظامٍ ثابت)؟ */
 export function isWarehouseToken(slot) {
   return Object.hasOwn(WAREHOUSE_TOKENS, slot);
+}
+
+/** هل هذا الموقع رمزُ مركبةٍ يُقرأ من لوحتها في الرأس؟ */
+export function isVehicleToken(slot) {
+  return slot === VEHICLE;
 }
 
 /**
@@ -68,6 +80,7 @@ export function isWarehouseToken(slot) {
  *   `GP`      — رقابة بوابة على ما حرّكه `DN` أصلًا؛ القيد هنا ازدواجٌ.
  *   `CC`      — عَدٌّ لا يُغيّر شيئًا؛ الذي يُغيّر هو `ADJ` المشتقّ منه.
  *   `CN`      — أثرٌ مالي بحت على ذمّة العميل، لا على الرفّ.
+ *   `SRN`     — إشعار رفضٍ توثيقيّ؛ فحص الجودة نقل المرفوض للحجر أصلًا (لا قيد ثانٍ).
  */
 export const POSTING_RULES = {
   GRN: {
@@ -106,8 +119,22 @@ export const POSTING_RULES = {
     reason: 'pick',
     labelAr: 'سحب للتجهيز',
   },
+  // ═══ الصرف عبر المركبة (قرار المالك 2026-08-04) ═══
+  // إذن التسليم **يُحمّل** الطلب في مركبةٍ بعينها (ساحة التجهيز ← موقع المركبة)،
+  // ولا يُخصم الرصيد نهائيًّا بل يبقى «على المركبة المتنقّلة» حتى يؤكّد فريق
+  // الحركة تسليمه للعميل بمستند POD (موقع المركبة ← خارج المنشأة). فبين
+  // التحميل والتسليم يظهر ما على كل مركبةٍ — وهو تقرير «ما على المركبات الآن».
   DN: {
     from: STAGING.code,
+    to: VEHICLE,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitPrice',
+    reason: 'load-van',
+    labelAr: 'تحميل بالمركبة',
+  },
+  POD: {
+    from: VEHICLE,
     to: EXTERNAL,
     qtyField: 'qty',
     expiryField: 'expiry',

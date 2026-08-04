@@ -120,6 +120,12 @@ const schema = {
     { key: 'receiver', label: 'العميل / المُستلم (Customer / Receiver)', source: null },
   ],
 
+  /** أدلّة التسليم: توقيع العميل بالاستلام، ونسخة الإذن الموقّعة. */
+  attachments: [
+    { key: 'customerSignature', kind: 'signature', label: 'توقيع العميل بالاستلام' },
+    { key: 'signedCopy', kind: 'signedCopy', label: 'نسخة الإذن الموقّعة' },
+  ],
+
   warnings: dnWarnings,
 };
 

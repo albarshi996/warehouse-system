@@ -12,7 +12,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getBasePath } from '../../../services/auth/authService.js';
 import { fetchChainDocuments, createNextInChain } from '../../../services/documents/documentsService.js';
-import { chainOf, threeWayMatch, derivationTargets, MATCH_STATUS, PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN, TRANSFER_CHAIN, INTERNAL_PROCUREMENT_CHAIN, fefoViolations, gateVerdict, adjustmentVerdict, creditNoteVerdict } from '../../../services/documents/chain.js';
+import { chainOf, threeWayMatch, derivationTargets, MATCH_STATUS, PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN, TRANSFER_CHAIN, INTERNAL_PROCUREMENT_CHAIN, DELIVERY_CHAIN, REJECTION_CHAIN, fefoViolations, gateVerdict, adjustmentVerdict, creditNoteVerdict } from '../../../services/documents/chain.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { getSchema } from '../../../services/documents/schemas/index.js';
 import { getState } from '../../../services/documents/states.js';
@@ -139,14 +139,14 @@ export default function ChainBar({ doc, me, onFlash }) {
     }
   }
 
-  if (!doc?.id || ![...PURCHASE_CHAIN, ...OUTBOUND_CHAIN, ...RETURN_CHAIN, ...COUNT_CHAIN, ...BILLING_CHAIN, ...TRANSFER_CHAIN, ...INTERNAL_PROCUREMENT_CHAIN].includes(doc.type)) return null;
+  if (!doc?.id || ![...PURCHASE_CHAIN, ...OUTBOUND_CHAIN, ...RETURN_CHAIN, ...COUNT_CHAIN, ...BILLING_CHAIN, ...TRANSFER_CHAIN, ...INTERNAL_PROCUREMENT_CHAIN, ...DELIVERY_CHAIN, ...REJECTION_CHAIN].includes(doc.type)) return null;
 
   return (
     <div className="bg-chip border border-line rounded-2xl p-4 space-y-3">
       {/* ── مسار السلسلة ── */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs font-bold text-accent/80 ml-1">
-          🔗 {doc.type === 'INV' ? 'سلسلة الفوترة' : INTERNAL_PROCUREMENT_CHAIN.includes(doc.type) ? 'دورة المشتريات الداخلية' : TRANSFER_CHAIN.includes(doc.type) ? 'سلسلة النقل بين المستودعات' : RETURN_CHAIN.includes(doc.type) ? 'سلسلة المرتجعات' : COUNT_CHAIN.includes(doc.type) ? 'سلسلة الجرد والتسوية' : OUTBOUND_CHAIN.includes(doc.type) ? 'سلسلة المبيعات والصرف' : 'سلسلة الشراء'}
+          🔗 {doc.type === 'INV' ? 'سلسلة الفوترة' : doc.type === 'POD' ? 'سلسلة تأكيد التسليم' : doc.type === 'SRN' ? 'سلسلة رفض الاستلام' : INTERNAL_PROCUREMENT_CHAIN.includes(doc.type) ? 'دورة المشتريات الداخلية' : TRANSFER_CHAIN.includes(doc.type) ? 'سلسلة النقل بين المستودعات' : RETURN_CHAIN.includes(doc.type) ? 'سلسلة المرتجعات' : COUNT_CHAIN.includes(doc.type) ? 'سلسلة الجرد والتسوية' : OUTBOUND_CHAIN.includes(doc.type) ? 'سلسلة المبيعات والصرف' : 'سلسلة الشراء'}
         </span>
         {chain.before.map((n) => (
           <span key={n.id} className="flex items-center gap-2">

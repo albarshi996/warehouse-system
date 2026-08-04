@@ -4,11 +4,10 @@
  * النطاق المعتمد (قرار المالك 2026-07-15): **الدورة المحكومة**. النماذج
  * الإدارية (Report21 · DailyHuddle · WeeklyCheck) تبقى للطباعة كما هي.
  *
- * ⚠️ بلغت المجموعة **24** نموذجًا محكومًا في سبع سلاسل: فصّلت F4 عنقودَ
- * المرتجعات والمالية إلى مستندات مستقلّة (إرجاع · تالف · جرد · تسوية · إشعار
- * دائن)، ثم اكتملت سلاسل البيع والفوترة والنقل، وأُضيفت سلسلة **المشتريات
- * الداخلية** (طلب ← عروض ← أمر ← صرف ← تسليم) — والعدّ الحيّ من SCHEMAS أدناه
- * لا من رقمٍ مكتوب (تحقّق قبل الثقة).
+ * ⚠️ بلغت المجموعة **26** نموذجًا محكومًا: بعد الأربعة والعشرين أُضيف في
+ * «التحسينات الجراحية» (2026-08-04) **تأكيد التسليم (POD)** الذي يُفرّغ رصيد
+ * المركبة، و**إشعار رفض الاستلام (SRN)** التوثيقيّ للبنود المرفوضة — والعدّ
+ * الحيّ من SCHEMAS أدناه لا من رقمٍ مكتوب (تحقّق قبل الثقة).
  *
  * الجدول أدناه هو خطة F2→F4 مرئيةً في الكود: كل نموذج ومرحلته وحارسه.
  */
@@ -20,8 +19,10 @@ import putaway from './putaway.js';
 import pick from './pick.js';
 import pack from './pack.js';
 import dn from './dn.js';
+import pod from './pod.js';
 import gp from './gp.js';
 import ret from './ret.js';
+import srn from './srn.js';
 import dmg from './dmg.js';
 import cc from './cc.js';
 import adj from './adj.js';
@@ -49,12 +50,14 @@ const SCHEMAS = {
   PICK: pick,
   PACK: pack,
   DN: dn,
+  POD: pod,
   GP: gp,
   INV: inv,
   TR: tr,
   TRN: trn,
   TRC: trc,
   RET: ret,
+  SRN: srn,
   DMG: dmg,
   CC: cc,
   ADJ: adj,
@@ -67,7 +70,7 @@ const SCHEMAS = {
 };
 
 /**
- * خارطة النماذج الـ24 المحكومة — للعرض وللتخطيط. `ready` تُشتقّ من SCHEMAS أعلاه
+ * خارطة النماذج المحكومة (26) — للعرض وللتخطيط. `ready` تُشتقّ من SCHEMAS أعلاه
  * فلا يفترق الجدول عن الواقع (درس «تحقّق قبل الثقة»).
  */
 export const GOVERNED_FORMS = [
@@ -80,12 +83,14 @@ export const GOVERNED_FORMS = [
   { type: 'PICK', stage: 6, titleAr: 'قائمة السحب', file: 'form_Picking.html', phase: 'F3' },
   { type: 'PACK', stage: 6, titleAr: 'قائمة التعبئة', file: 'form_PackingList.html', phase: 'F3' },
   { type: 'DN', stage: 7, titleAr: 'إذن تسليم', file: 'form_DeliveryNote.html', phase: 'F3' },
+  { type: 'POD', stage: 8, titleAr: 'تأكيد التسليم', file: '', phase: 'SI' },
   { type: 'GP', stage: 7, titleAr: 'تصريح خروج من البوابة', file: 'form_GatePass.html', phase: 'F3' },
   { type: 'INV', stage: 12, titleAr: 'فاتورة العميل', file: '', phase: 'F6' },
   { type: 'TR', stage: 6, titleAr: 'طلب نقل', file: '', phase: 'F7' },
   { type: 'TRN', stage: 7, titleAr: 'مستند النقل', file: '', phase: 'F7' },
   { type: 'TRC', stage: 8, titleAr: 'استلام النقل', file: '', phase: 'F7' },
   { type: 'RET', stage: 8, titleAr: 'إشعار الإرجاع', file: 'form_ReturnNote.html', phase: 'F4' },
+  { type: 'SRN', stage: 4, titleAr: 'إشعار رفض الاستلام', file: '', phase: 'SI' },
   { type: 'DMG', stage: 8, titleAr: 'سند التالف', file: 'form_Damaged Goods Report.html', phase: 'F4' },
   { type: 'CC', stage: 9, titleAr: 'محضر الجرد الدوري', file: 'form_CycleCount.html', phase: 'F4' },
   { type: 'ADJ', stage: 10, titleAr: 'سند تسوية مخزون', file: 'form_Stock Adjustment Voucher.html', phase: 'F4' },

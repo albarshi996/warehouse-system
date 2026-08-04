@@ -14,7 +14,8 @@
  *      مكتوب، لا يُقيَّد بصمتٍ ثم يُكتشف في الجرد بعد شهر.
  */
 import { balanceId } from '../balances/balanceKey.js';
-import { postingRuleFor, WAREHOUSE_TOKENS, isWarehouseToken, POSTING_STATE } from './postingRules.js';
+import { postingRuleFor, WAREHOUSE_TOKENS, isWarehouseToken, isVehicleToken, POSTING_STATE } from './postingRules.js';
+import { vehicleLocationCode } from './locations.js';
 
 /** فاصل المعرّف الحتمي — نفس نمط `balanceId`. */
 const SEP = '__';
@@ -37,6 +38,11 @@ export function moveId(docId, lineIndex) {
  * `null` تعني «خارج المنشأة» وهي قيمة صالحة لا غياب.
  */
 function resolveLocation(slot, header) {
+  // موقع المركبة: يُقرأ من اللوحة ويُصاغ `VAN:‹لوحة›` — رصيدٌ لكل مركبةٍ على حدة.
+  if (isVehicleToken(slot)) {
+    const plate = String(header?.vehiclePlate ?? '').trim();
+    return plate ? vehicleLocationCode(plate) : undefined; // undefined = لوحة ناقصة
+  }
   if (isWarehouseToken(slot)) {
     const field = WAREHOUSE_TOKENS[slot];
     const wh = String(header?.[field] ?? '').trim().toUpperCase();

@@ -21,6 +21,8 @@ import {
   listenDocument,
   listenAudit,
 } from '../../../services/documents/documentsService.js';
+import { listenAttachments } from '../../../services/documents/attachmentsService.js';
+import { listenReconciliations } from '../../../services/documents/controlService.js';
 import { emptyDocument, emptyChecklist, missingRequired, isEmptyLine, applyItemToLine } from '../../../services/documents/schemaUtils.js';
 import { mergeParentLink } from '../../../services/documents/chain.js';
 import { lookupByBarcode } from '../../../services/itemService.js';
@@ -33,6 +35,8 @@ import StateBar from './StateBar.jsx';
 import AuditTrail from './AuditTrail.jsx';
 import DocumentPrint from './DocumentPrint.jsx';
 import ChainBar from './ChainBar.jsx';
+import AttachmentsPanel from './AttachmentsPanel.jsx';
+import ControlPanel from './ControlPanel.jsx';
 
 /** يقرأ معاملات الرابط (الموقع ثابت — لا توجيه من الخادم). */
 function readParams() {
@@ -48,6 +52,8 @@ export default function DocumentEngine() {
   const [docId, setDocId] = useState(id);
   const [doc, setDoc] = useState(null);
   const [audit, setAudit] = useState([]);
+  const [attachments, setAttachments] = useState([]);
+  const [reconciliations, setReconciliations] = useState([]);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
@@ -79,6 +85,8 @@ export default function DocumentEngine() {
     if (!schema) return;
     if (!docId) {
       setDoc({ type: schema.type, state: 'draft', ...emptyDocument(schema) });
+      setAttachments([]);
+      setReconciliations([]);
       return;
     }
     const unsubDoc = listenDocument(docId, (d) => {
@@ -91,9 +99,13 @@ export default function DocumentEngine() {
       });
     });
     const unsubAudit = listenAudit(docId, setAudit);
+    const unsubAtt = listenAttachments(docId, setAttachments);
+    const unsubCtrl = schema.control ? listenReconciliations(docId, setReconciliations) : null;
     return () => {
       unsubDoc();
       unsubAudit();
+      unsubAtt();
+      if (unsubCtrl) unsubCtrl();
     };
   }, [docId, schema]);
 
@@ -236,7 +248,7 @@ export default function DocumentEngine() {
   if (!schema) {
     return (
       <Notice tone="err" title="نوع مستند غير معروف">
-        لا يوجد مخطّط للنوع «{type}». الأنواع المحكومة اليوم أربعة وعشرون: الوارد (PR · PO · GRN · QC · PUTAWAY) · المبيعات والصرف (SO · PICK · PACK · DN · GP) · الفوترة (INV) · النقل (TR · TRN · TRC) · المرتجعات (RET · CN) · الجرد (CC · ADJ) · التالف (DMG) · والمشتريات الداخلية (IPR · RFQ · IPO · PV · DLV).
+        لا يوجد مخطّط للنوع «{type}». الأنواع المحكومة اليوم ستة وعشرون: الوارد (PR · PO · GRN · QC · PUTAWAY · SRN) · المبيعات والصرف (SO · PICK · PACK · DN · POD · GP) · الفوترة (INV) · النقل (TR · TRN · TRC) · المرتجعات (RET · CN) · الجرد (CC · ADJ) · التالف (DMG) · والمشتريات الداخلية (IPR · RFQ · IPO · PV · DLV).
       </Notice>
     );
   }
@@ -357,6 +369,19 @@ export default function DocumentEngine() {
           </section>
         ))}
 
+        <AttachmentsPanel docId={docId} schema={schema} me={me} attachments={attachments} />
+
+        {schema.control && (
+          <ControlPanel
+            docId={docId}
+            schema={schema}
+            me={me}
+            doc={doc}
+            attachments={attachments}
+            reconciliations={reconciliations}
+          />
+        )}
+
         {docId && (
           <section className="bg-chip border border-line rounded-2xl p-4 sm:p-5">
             <h2 className="text-base font-bold text-ink mb-1">🔏 سجلّ التدقيق</h2>
@@ -366,7 +391,7 @@ export default function DocumentEngine() {
         )}
       </div>
 
-      <DocumentPrint schema={schema} doc={doc} basePath={getBasePath()} />
+      <DocumentPrint schema={schema} doc={doc} attachments={attachments} reconciliations={reconciliations} basePath={getBasePath()} />
 
       {createFor && (
         <InlineCreateModal

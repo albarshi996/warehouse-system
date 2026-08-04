@@ -12,6 +12,7 @@
 import { useEffect, useRef } from 'react';
 import { fieldValue, tableSection } from '../../../services/documents/schemaUtils.js';
 import { getState } from '../../../services/documents/states.js';
+import { reconciliationVerdict } from '../../../services/documents/control.js';
 
 /** يرسم باركود CODE128 للرقم الرسمي — كما في الورق الأصلي. */
 function useBarcode(number, basePath) {
@@ -58,11 +59,14 @@ function show(v) {
   return v === '' || v == null ? '—' : String(v);
 }
 
-export default function DocumentPrint({ schema, doc, basePath }) {
+export default function DocumentPrint({ schema, doc, attachments = [], reconciliations = [], basePath }) {
   const barcodeRef = useBarcode(doc?.number, basePath);
   const table = tableSection(schema);
   const state = getState(doc?.state);
   const checklist = doc?.header?._checklist || {};
+  const images = (attachments || []).filter((a) => String(a?.mime || '').startsWith('image/'));
+  const files = (attachments || []).filter((a) => !String(a?.mime || '').startsWith('image/'));
+  const control = schema?.control ? reconciliationVerdict(reconciliations) : null;
 
   return (
     <div className="doc-print" dir="rtl">
@@ -105,6 +109,28 @@ export default function DocumentPrint({ schema, doc, basePath }) {
           اعتمده: <strong>{show(doc?.approvedByName)}</strong>
         </span>
       </div>
+
+      {/* ختم الرقابة/المطابقة — للأنواع الخاضعة لطبقة الرقابة */}
+      {control && (
+        <div
+          className={`dp-control ${
+            control.result === 'matched' ? 'matched' : control.result === 'mismatch' ? 'mismatch' : 'pending'
+          }`}
+        >
+          <span>
+            الرقابة والمطابقة:{' '}
+            <strong>
+              {control.result === 'matched'
+                ? '✔ مطابق للنسخة الموقّعة'
+                : control.result === 'mismatch'
+                  ? '⚠ يوجد اختلاف'
+                  : 'لم يُطابَق بعد'}
+            </strong>
+          </span>
+          {control.by && <span>دقّقه: <strong>{control.by}</strong></span>}
+          {control.result === 'mismatch' && control.note && <span>({control.note})</span>}
+        </div>
+      )}
 
       {(schema.sections || []).map((section) => {
         if (section.kind === 'fields') {
@@ -183,6 +209,29 @@ export default function DocumentPrint({ schema, doc, basePath }) {
         return null;
       })}
 
+      {(images.length > 0 || files.length > 0) && (
+        <section className="dp-attachments">
+          <h2 className="dp-section">📎 المرفقات والأدلّة — Attachments</h2>
+          {images.length > 0 && (
+            <div className="dp-att-grid">
+              {images.map((a) => (
+                <figure key={a.id} className="dp-att">
+                  <img src={a.dataUrl} alt={a.label} />
+                  <figcaption>{a.label}{a.byName ? ` — ${a.byName}` : ''}</figcaption>
+                </figure>
+              ))}
+            </div>
+          )}
+          {files.length > 0 && (
+            <ul className="dp-att-files">
+              {files.map((a) => (
+                <li key={a.id}>📄 {a.label} (مرفق PDF غير مطبوع){a.byName ? ` — ${a.byName}` : ''}</li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
       <div className="dp-signs">
         {(schema.signatures || []).map((s) => (
           <div key={s.key} className="dp-sign">
@@ -243,6 +292,12 @@ const PRINT_CSS = `
   .dp-status { display: flex; gap: 6mm; background: #f5f5f5; border: 1px solid #ddd;
     padding: 1.5mm 3mm; border-radius: 1.5mm; font-size: 8pt; margin-bottom: 3mm; }
 
+  .dp-control { display: flex; gap: 6mm; flex-wrap: wrap; padding: 1.5mm 3mm; border-radius: 1.5mm;
+    font-size: 8pt; margin-bottom: 3mm; background: #f5f5f5; border: 1px solid #ddd; }
+  .dp-control.matched { background: #eef6f0; border-color: #cfe6d6; }
+  .dp-control.mismatch { background: #fdecec; border-color: #f5c6c6; }
+  .dp-control.pending { background: #f5f5f5; border-color: #ddd; }
+
   .dp-section { font-size: 9.5pt; font-weight: 800; background: #1e3a5f; color: #fff;
     padding: 1.5mm 3mm; border-radius: 1.5mm; margin: 3mm 0 2mm; break-after: avoid; }
   .dp-note { font-size: 7.5pt; color: #c41e3a; margin: 0 0 2mm; font-weight: 600; }
@@ -261,6 +316,18 @@ const PRINT_CSS = `
     font-size: 7.5pt; text-align: right; }
   .dp-table th { background: #eee; font-weight: 800; font-size: 7pt; }
   .dp-table tr { break-inside: avoid; }
+
+  /* لا break-inside على الحاوية: عدد المرفقات غير محدود، فمنعُ كسرها يترك فجوةً
+     بيضاء أو يُتجاهَل عند تجاوز الصفحة. الحماية على البطاقة المفردة تكفي. */
+  .dp-attachments { margin-top: 3mm; }
+  .dp-att-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; }
+  .dp-att { border: 1px solid #ccc; border-radius: 1.5mm; overflow: hidden; break-inside: avoid; }
+  /* contain لا cover: الدليل الموقّع (فاتورة/إذن) يُرى كاملًا بلا قصّ توقيعه. */
+  .dp-att img { width: 100%; height: 55mm; object-fit: contain; background: #fff; display: block; }
+  .dp-att figcaption { font-size: 7pt; color: #555; padding: 1mm 1.5mm; text-align: center;
+    border-top: 1px solid #eee; }
+  .dp-att-files { margin-top: 2mm; font-size: 7.5pt; color: #444; }
+  .dp-att-files li { margin: 0.5mm 0; }
 
   .dp-signs { display: flex; gap: 8mm; margin-top: 6mm; break-inside: avoid; }
   .dp-sign { flex: 1; text-align: center; }

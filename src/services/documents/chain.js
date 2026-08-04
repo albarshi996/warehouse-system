@@ -50,9 +50,21 @@ export const TRANSFER_CHAIN = ['TR', 'TRN', 'TRC'];
  * حلقةٌ قبل اعتماد سابقتها (يُغلق هذا الترتيبَ حارسُ «لا إنجاز قبل اعتماد الأب»).
  */
 export const INTERNAL_PROCUREMENT_CHAIN = ['IPR', 'RFQ', 'IPO', 'PV', 'DLV'];
+/**
+ * سلسلة تأكيد التسليم: إذن التسليم يُحمّل بالمركبة، ثم **تأكيد التسليم (POD)**
+ * يُفرّغ المركبة للعميل فيُخصم الرصيد. مثل الفوترة، فرعٌ مستقلٌّ عن الصادر لأن
+ * إذن التسليم يتفرّع (تصريح بوابة · فاتورة · تأكيد تسليم) والخطّية لا تحتمل التفرّع.
+ */
+export const DELIVERY_CHAIN = ['DN', 'POD'];
+/**
+ * سلسلة رفض الاستلام: مذكرة الاستلام قد تُخرِج **إشعار رفضٍ للمورّد (SRN)**
+ * بالبنود المرفوضة وأسبابها، يوقّعه مندوب المورّد. فرعٌ توثيقيّ من الوارد بلا
+ * أثرٍ مخزنيّ (فحص الجودة نقل المرفوض للحجر أصلًا).
+ */
+export const REJECTION_CHAIN = ['GRN', 'SRN'];
 
 /** كل السلاسل — لتجول عليها الدوال بلا معرفة مسبقة بأيّها. */
-export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN, TRANSFER_CHAIN, INTERNAL_PROCUREMENT_CHAIN];
+export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN, TRANSFER_CHAIN, INTERNAL_PROCUREMENT_CHAIN, DELIVERY_CHAIN, REJECTION_CHAIN];
 
 /**
  * وجهات الاشتقاق من نوعٍ ما — قد تكون أكثر من واحدة (التفرّع).
@@ -60,7 +72,9 @@ export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN
  * البقيّة خطّية: وجهةٌ واحدة هي التالي في سلسلتها.
  */
 export function derivationTargets(type) {
-  const branches = { DN: ['GP', 'INV'] };
+  // إذن التسليم يتفرّع ثلاثًا (تصريح · فاتورة · تأكيد تسليم)، ومذكرة الاستلام
+  // تتفرّع اثنتين (فحص الجودة الخطّيّ · إشعار رفضٍ للمورّد بالبنود المرفوضة).
+  const branches = { DN: ['GP', 'INV', 'POD'], GRN: ['QC', 'SRN'] };
   if (branches[type]) return branches[type];
   const n = nextInChain(type);
   return n ? [n] : [];
@@ -96,6 +110,9 @@ const LINE_MAP = {
   'PR>PO': { sku: 'sku', barcode: 'barcode', description: 'description', uom: 'uom', qty: 'qty', estPrice: 'unitPrice' },
   'PO>GRN': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qtyOrdered' },
   'GRN>QC': { sku: 'sku', barcode: 'barcode', description: 'description', qtyReceived: 'qtyInspected' },
+  // إشعار الرفض يأخذ **البنود المرفوضة وحدها** (المرشّحة بـ LINE_FILTER): الكمية
+  // المرفوضة تصير كمية الإرجاع، وسبب الرفض يُنقل معها ليوقّع عليه مندوب المورّد.
+  'GRN>SRN': { sku: 'sku', barcode: 'barcode', description: 'description', qtyRejected: 'qty', rejectReason: 'reason', expiryDate: 'expiry' },
   // المقبول جودةً وحده هو ما يُخزَّن — لا المستلَم كلّه.
   'QC>PUTAWAY': { sku: 'sku', barcode: 'barcode', description: 'description', qtyAccepted: 'qty' },
   // الصادر — السعر يركب مع البنود من أمر البيع حتى الفاتورة (لا يُعاد إدخاله).
@@ -105,6 +122,10 @@ const LINE_MAP = {
   'DN>GP': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty' },
   // الفوترة: الكمية من التسليم (ما خرج فعلًا)، والسعر مورَّثٌ عبر السلسلة.
   'DN>INV': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', uom: 'uom', unitPrice: 'unitPrice' },
+  // تأكيد التسليم: نفس بنود الإذن (ما حُمّل بالمركبة) — عند إنجازه يُخصم من المركبة.
+  // ⚠️ `unitPrice` يُمرَّر (كـ`DN>INV`): بدونه تُقيَّد حركة التسليم بقيمة صفر،
+  // وتُصفَّر تكلفة رصيد المركبة عند التسليم الجزئيّ (درس المراجعة العدائية).
+  'DN>POD': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', uom: 'uom', batch: 'batch', expiry: 'expiry', unitPrice: 'unitPrice' },
   // النقل: المطلوب يصير المشحون، والمشحون يُورَّث للاستلام مرجعًا (والمستلَم يُملأ).
   'TR>TRN': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qtyShipped', uom: 'uom' },
   'TRN>TRC': { sku: 'sku', barcode: 'barcode', description: 'description', qtyShipped: 'qtyShipped', uom: 'uom', batch: 'batch', expiry: 'expiry', unitCost: 'unitCost' },
@@ -124,6 +145,8 @@ const HEADER_MAP = {
   'PR>PO': { warehouse: 'warehouse' },
   'PO>GRN': { supplier: 'supplier' },
   'GRN>QC': { supplier: 'supplier' },
+  // إشعار الرفض يرث المورّد (المُرجَع إليه) ورقم أمر الشراء المرجعيّ.
+  'GRN>SRN': { supplier: 'supplier', poRef: 'poRef' },
   'QC>PUTAWAY': { supplier: 'supplier' },
   // أمر البيع يورّث عميله ومستودعه: المستودع يصير مصدر السحب، والعميل وجهته.
   'SO>PICK': { warehouse: 'warehouse', customer: 'destination', customerCode: 'branchOrderRef' },
@@ -133,6 +156,8 @@ const HEADER_MAP = {
   'DN>GP': { driverName: 'driverName', vehiclePlate: 'vehiclePlate', customer: 'destination' },
   // الفاتورة ترث عميل التسليم؛ ومراجعها (تسليم·أمر بيع) من الأرقام لا بالقلم.
   'DN>INV': { customer: 'customer', customerCode: 'customerCode' },
+  // تأكيد التسليم يرث العميل والسائق و**لوحة المركبة** — منها يُخصم رصيد المركبة.
+  'DN>POD': { customer: 'customer', customerCode: 'customerCode', driverName: 'driverName', vehiclePlate: 'vehiclePlate' },
   // النقل: المستودعان يُورَّثان عبر السلسلة كلها — لا يُعاد كتابتهما.
   'TR>TRN': { fromWarehouse: 'fromWarehouse', toWarehouse: 'toWarehouse' },
   'TRN>TRC': { fromWarehouse: 'fromWarehouse', toWarehouse: 'toWarehouse', driverName: 'driverName', vehiclePlate: 'vehiclePlate' },
@@ -144,6 +169,15 @@ const HEADER_MAP = {
   'RFQ>IPO': { department: 'department', beneficiary: 'beneficiary', selectedSupplier: 'supplier' },
   'IPO>PV': { department: 'department', supplier: 'payee' },
   'PV>DLV': { department: 'department' },
+};
+
+/**
+ * مرشّحات البنود قبل الاشتقاق: يُشتقّ الابنُ من بنودٍ بعينها لا من الكلّ.
+ * إشعار الرفض (SRN) لا يأخذ إلا البنود التي رُفض منها شيءٌ فعلًا — فلا يظهر
+ * صنفٌ مقبولٌ في إشعار رفض.
+ */
+const LINE_FILTER = {
+  'GRN>SRN': (line) => (Number(line?.qtyRejected) || 0) > 0,
 };
 
 /** هل البند فارغ فعليًّا؟ (لا نورّث صفوفًا بيضاء) */
@@ -182,14 +216,18 @@ export function deriveDocument(source, toType = null) {
   const key = `${source.type}>${to}`;
   const lineMap = LINE_MAP[key] || {};
   const headerMap = HEADER_MAP[key] || {};
+  const lineFilter = LINE_FILTER[key];
 
-  const lines = (source.lines || []).filter(hasContent).map((line) => {
-    const out = {};
-    for (const [from, into] of Object.entries(lineMap)) {
-      if (line[from] !== undefined && line[from] !== '') out[into] = line[from];
-    }
-    return out;
-  });
+  const lines = (source.lines || [])
+    .filter(hasContent)
+    .filter((line) => (lineFilter ? lineFilter(line) : true))
+    .map((line) => {
+      const out = {};
+      for (const [from, into] of Object.entries(lineMap)) {
+        if (line[from] !== undefined && line[from] !== '') out[into] = line[from];
+      }
+      return out;
+    });
 
   const header = {};
   for (const [from, into] of Object.entries(headerMap)) {
@@ -201,6 +239,7 @@ export function deriveDocument(source, toType = null) {
   const refField = {
     PO: 'prRef', GRN: 'poRef', QC: 'grnRef', PUTAWAY: 'grnRef',
     PACK: 'pickRef', DN: 'packRef', GP: 'dnRef', INV: 'deliveryRef',
+    POD: 'dnRef', SRN: 'grnRef',
     TRN: 'transferReqRef', TRC: 'transferNoteRef',
     CN: 'returnRef', ADJ: 'cycleCountRef',
     // المشتريات الداخلية: كلّ حلقةٍ تحمل رقم أبيها المباشر.

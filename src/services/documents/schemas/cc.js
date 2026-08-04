@@ -92,6 +92,14 @@ const schema = {
       columns: 3,
       fields: [
         { key: 'countDate', label: 'تاريخ الجرد (Count Date)', kind: 'date', required: true },
+        {
+          key: 'countType',
+          label: 'نوع الجرد (Count Type)',
+          kind: 'select',
+          options: ['يومي', 'أسبوعي', 'مفاجئ'],
+          required: true,
+          hint: 'اليومي روتين رقابيّ خفيف · الأسبوعي دورة أوسع · المفاجئ بلا سابق إنذار لكشف الفروق الحقيقية.',
+        },
         { key: 'shift', label: 'فترة الجرد (Shift/Period)', kind: 'text' },
         { key: 'zone', label: 'المنطقة / الرف (Zone / Rack)', kind: 'text', required: true },
         {
