@@ -4,10 +4,10 @@
  * النطاق المعتمد (قرار المالك 2026-07-15): **الدورة المحكومة**. النماذج
  * الإدارية (Report21 · DailyHuddle · WeeklyCheck) تبقى للطباعة كما هي.
  *
- * ⚠️ بلغت المجموعة **26** نموذجًا محكومًا: بعد الأربعة والعشرين أُضيف في
- * «التحسينات الجراحية» (2026-08-04) **تأكيد التسليم (POD)** الذي يُفرّغ رصيد
- * المركبة، و**إشعار رفض الاستلام (SRN)** التوثيقيّ للبنود المرفوضة — والعدّ
- * الحيّ من SCHEMAS أدناه لا من رقمٍ مكتوب (تحقّق قبل الثقة).
+ * ⚠️ بلغت المجموعة **27** نموذجًا محكومًا: بعد الأربعة والعشرين أُضيف في
+ * «التحسينات الجراحية» (2026-08-04) **تأكيد التسليم (POD)** و**إشعار رفض
+ * الاستلام (SRN)**، ثمّ **مستند مناولة الحاوية (CTR)** التوثيقيّ (المحور
+ * الثاني، 2026-08-05) — والعدّ الحيّ من SCHEMAS أدناه لا من رقمٍ مكتوب.
  *
  * الجدول أدناه هو خطة F2→F4 مرئيةً في الكود: كل نموذج ومرحلته وحارسه.
  */
@@ -32,6 +32,7 @@ import inv from './inv.js';
 import tr from './tr.js';
 import trn from './trn.js';
 import trc from './trc.js';
+import ctr from './ctr.js';
 // دورة المشتريات الداخلية (طلبات الإدارات من المالية): طلب ← عروض ← أمر ← صرف ← تسليم
 import ipr from './ipr.js';
 import rfq from './rfq.js';
@@ -56,6 +57,7 @@ const SCHEMAS = {
   TR: tr,
   TRN: trn,
   TRC: trc,
+  CTR: ctr,
   RET: ret,
   SRN: srn,
   DMG: dmg,
@@ -89,6 +91,7 @@ export const GOVERNED_FORMS = [
   { type: 'TR', stage: 6, titleAr: 'طلب نقل', file: '', phase: 'F7' },
   { type: 'TRN', stage: 7, titleAr: 'مستند النقل', file: '', phase: 'F7' },
   { type: 'TRC', stage: 8, titleAr: 'استلام النقل', file: '', phase: 'F7' },
+  { type: 'CTR', stage: 4, titleAr: 'مستند مناولة حاوية', file: '', phase: 'SI' },
   { type: 'RET', stage: 8, titleAr: 'إشعار الإرجاع', file: 'form_ReturnNote.html', phase: 'F4' },
   { type: 'SRN', stage: 4, titleAr: 'إشعار رفض الاستلام', file: '', phase: 'SI' },
   { type: 'DMG', stage: 8, titleAr: 'سند التالف', file: 'form_Damaged Goods Report.html', phase: 'F4' },

@@ -647,8 +647,8 @@ test('مخطّطات F4 الخمسة مسجّلة — والمجموعة صار�
     assert.equal(s.signatures.length, 3);
     assert.ok(typeof s.warnings === 'function');
   }
-  assert.equal(readyTypes().length, 26, 'ستة وعشرون نموذجًا بعد إضافة تأكيد التسليم POD وإشعار رفض الاستلام SRN');
-  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 26);
+  assert.equal(readyTypes().length, 27, 'سبعة وعشرون نموذجًا بعد إضافة CTR (مناولة الحاوية) للمحور الثاني');
+  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 27);
 });
 
 test('🔒 اعتماد سند التسوية للمالية والمدير — لا لمن أدخله', () => {

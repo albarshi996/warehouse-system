@@ -88,6 +88,7 @@ export const NAV_GROUPS = [
       { path: '/dashboard/maintenance-center', label: 'مركز الصيانة', icon: 'grid' },
       { path: '/dashboard/custody', label: 'العُهد العينية', icon: 'users', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/supply-chain', label: 'لوحة سلاسل الإمداد', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
+      { path: '/dashboard/labor-operations', label: 'عمالة الشحن والتفريغ', icon: 'users', roles: ['admin', 'warehouse_manager', 'labor_supervisor'] },
     ],
   },
   {

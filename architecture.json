@@ -9,11 +9,11 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 59,
-    "serviceDomains": 27,
-    "serviceFiles": 171,
-    "collections": 44,
-    "roles": 14,
+    "modules": 60,
+    "serviceDomains": 28,
+    "serviceFiles": 176,
+    "collections": 47,
+    "roles": 15,
     "odooModels": 12,
     "odooGuards": 51,
     "infraNodes": 6,
@@ -219,6 +219,14 @@
       "title": "مؤشرات المشتريات والأداء",
       "summary": "لوحة مؤشرات المشتريات والأداء — الأرقام التي يسأل عنها مُقيّم السلاسل أوّلًا.",
       "file": "src/pages/dashboard/kpis.astro",
+      "usesServices": []
+    },
+    {
+      "name": "labor-operations",
+      "route": "/dashboard/labor-operations",
+      "title": "عمالة الشحن والتفريغ",
+      "summary": "",
+      "file": "src/pages/dashboard/labor-operations.astro",
       "usesServices": []
     },
     {
@@ -743,6 +751,7 @@
         "control.js",
         "control.test.js",
         "controlService.js",
+        "ctr.js",
         "dlv.js",
         "dmg.js",
         "dn.js",
@@ -779,7 +788,7 @@
         "trc.js",
         "trn.js"
       ],
-      "fileCount": 46,
+      "fileCount": 47,
       "testCount": 8,
       "exports": [
         "ACCEPTED_ATTACHMENT_TYPES",
@@ -828,6 +837,7 @@
         "chainFor",
         "chainOf",
         "checklistCount",
+        "containerWarnings",
         "controlChecklist",
         "controlCompareRows",
         "controlWarnings",
@@ -839,6 +849,7 @@
         "creditTotal",
         "creditWarnings",
         "csvFileName",
+        "ctrTotalQty",
         "cycleWarnings",
         "damageValue",
         "damageWarnings",
@@ -1141,6 +1152,46 @@
         "supplierSpend"
       ],
       "collections": []
+    },
+    {
+      "domain": "labor",
+      "dir": "src/services/labor",
+      "files": [
+        "crewsService.js",
+        "laborModel.js",
+        "laborModel.test.js",
+        "laborTasksService.js"
+      ],
+      "fileCount": 4,
+      "testCount": 1,
+      "exports": [
+        "LABOR_SHIFTS",
+        "ORDER_TYPES",
+        "TASK_STATES",
+        "addCrew",
+        "canTransitionTask",
+        "cancelTask",
+        "createTask",
+        "crewSize",
+        "crewsNeeded",
+        "finishTask",
+        "listenCrews",
+        "listenLaborTasks",
+        "orderType",
+        "pauseTask",
+        "resumeTask",
+        "setCrewActive",
+        "startTask",
+        "summarizeTasks",
+        "taskDurationMinutes",
+        "taskState",
+        "throughputPerWorkerHour",
+        "updateCrew"
+      ],
+      "collections": [
+        "crews",
+        "labor_tasks"
+      ]
     },
     {
       "domain": "ledger",
@@ -1785,6 +1836,7 @@
       "isBootstrapAdmin",
       "isCreator",
       "isFleetWriter",
+      "isLaborWriter",
       "isManager",
       "isProcurementActor",
       "isSideEffectStamp",
@@ -1806,6 +1858,7 @@
       "isBootstrapAdmin",
       "isCreator",
       "isFleetWriter",
+      "isLaborWriter",
       "isManager",
       "isProcurementActor",
       "isSideEffectStamp",
@@ -2146,6 +2199,38 @@
         ]
       },
       {
+        "name": "crews",
+        "path": "crews",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isLaborWriter()",
+            "roles": [
+              "isLaborWriter"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
         "name": "custodies",
         "path": "custodies",
         "rules": [
@@ -2234,10 +2319,11 @@
             "actions": [
               "create"
             ],
-            "condition": "(isStockActor() || isProcurementActor()) && request.resource.data.createdByUid == request.auth.uid && request.resource.data.state == 'draft' && request.resource",
+            "condition": "(isStockActor() || isProcurementActor() || isLaborWriter()) && request.resource.data.createdByUid == request.auth.uid && request.resource.data.state == 'draft' ",
             "roles": [
               "isStockActor",
-              "isProcurementActor"
+              "isProcurementActor",
+              "isLaborWriter"
             ]
           },
           {
@@ -2531,6 +2617,70 @@
           },
           {
             "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "labor_tasks",
+        "path": "labor_tasks",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isLaborWriter()",
+            "roles": [
+              "isLaborWriter"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "events",
+        "path": "labor_tasks/events",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isLaborWriter() && request.resource.data.byUid == request.auth.uid",
+            "roles": [
+              "isLaborWriter"
+            ]
+          },
+          {
+            "actions": [
+              "update",
               "delete"
             ],
             "condition": "false",

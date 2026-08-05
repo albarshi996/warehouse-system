@@ -1,0 +1,15 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import LaborDashboard from '../../components/brandzo-erp/labor/LaborDashboard.jsx';
+---
+
+<DashboardLayout title="عمالة الشحن والتفريغ" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">لوحة عمالة الشحن والتفريغ</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      توثيق وقياس كلّ حركة مناولةٍ ميدانيّة — فرق العمل والورديات وسائقو الرافعات،
+      وربطها بالأوامر التشغيليّة، مع تتبّعٍ زمنيّ فعليّ ومؤشّرات إنتاجيّة وتخطيطٍ للموارد.
+    </p>
+    <LaborDashboard client:load />
+  </div>
+</DashboardLayout>
