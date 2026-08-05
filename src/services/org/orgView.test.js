@@ -19,6 +19,8 @@ import {
   staffingRowsHtml,
   diffListHtml,
   jobCardsHtml,
+  jobRequirementsHtml,
+  allJobsGridHtml,
 } from './orgView.js';
 
 const SOURCE = JSON.parse(
@@ -212,4 +214,60 @@ test('بطاقات وظائف عقدة حقيقية تُبنى بمهامها و
   assert.ok(html.includes('التبعية:'));
   assert.ok(html.includes('كان: مدير إدارة سلاسل الإمداد'), 'يظهر المسمّى السابق للشفافية');
   assertClean(html, 'jobCardsHtml');
+});
+
+// ═══════════ المتطلبات الوظيفية وشبكة كل الأدوار ═══════════
+
+test('كتلة المتطلبات تعرض المؤهل والخبرة والمهارات، وتفرغ بلا متطلبات', () => {
+  assert.equal(jobRequirementsHtml(null), '');
+  assert.equal(jobRequirementsHtml(undefined), '');
+  const html = jobRequirementsHtml({
+    education: 'بكالوريوس إدارة',
+    experienceYears: 5,
+    skills: ['مهارة أ', 'مهارة ب'],
+    certifications: ['شهادة معتمدة'],
+    notes: 'ملاحظة ختامية',
+  });
+  assert.ok(html.includes('المتطلبات الوظيفية'));
+  assert.ok(html.includes('بكالوريوس إدارة'));
+  assert.ok(html.includes('5+ سنوات'));
+  assert.ok(html.includes('مهارة أ · مهارة ب'));
+  assert.ok(html.includes('شهادة معتمدة'));
+  assert.ok(html.includes('ملاحظة ختامية'));
+  assertClean(html, 'jobRequirementsHtml');
+});
+
+test('كتلة المتطلبات تهرّب الحقن في المهارات والمؤهل', () => {
+  const html = jobRequirementsHtml({ education: '<b>x</b>', skills: ['<script>bad()</script>'] });
+  assert.ok(!html.includes('<script>bad()'));
+  assert.ok(html.includes('&lt;script&gt;'));
+});
+
+test('شبكة كل الأدوار تعرض الوظائف الـ36 بما فيها وظائف المساندة وموقعها', () => {
+  const titles = {};
+  for (const { node } of flatten(SOURCE.tree)) titles[node.id] = node.title;
+  for (const s of SOURCE.supportFunctions) titles[s.id] = s.title;
+  const html = allJobsGridHtml(SOURCE.jobs, { orgTitles: titles });
+  assert.equal((html.match(/data-job-id="/g) || []).length, SOURCE.jobs.length, 'بطاقة لكل وظيفة');
+  assert.ok(html.includes('مدير إدارة الجودة'), 'وظيفة مساندة (J04) ظاهرة');
+  assert.ok(html.includes('إدارة الجودة'), 'موقعها في الهيكل من orgTitles');
+  assert.ok(html.includes('المتطلبات الوظيفية'), 'المتطلبات تظهر داخل البطاقة');
+  assert.ok(html.includes('jobtag'), 'شارة الإشغال/الشغور');
+  assertClean(html, 'allJobsGridHtml');
+});
+
+test('شبكة الأدوار: البحث يبرز المطابق، والقائمة الفارغة لا تنهار', () => {
+  assert.ok(allJobsGridHtml([]).includes('jobsgrid'));
+  assert.equal(allJobsGridHtml(null), '<div class="jobsgrid"></div>');
+  const html = allJobsGridHtml(SOURCE.jobs, { term: 'الجودة' });
+  assert.ok(html.includes('ohit'), 'يبرز المطابق للبحث');
+});
+
+test('زرّ «توظيف» يظهر فقط عند تمرير hireHandler ويحمل معرّف الوظيفة', () => {
+  const plain = allJobsGridHtml(SOURCE.jobs, {});
+  assert.ok(!plain.includes('jobhire'), 'بلا مُعالج لا يظهر الزرّ');
+  const withHire = allJobsGridHtml(SOURCE.jobs, { hireHandler: 'hireForJob' });
+  assert.equal((withHire.match(/class="jobhire"/g) || []).length, SOURCE.jobs.length, 'زرّ لكل وظيفة');
+  assert.ok(withHire.includes("hireForJob('J01')"), 'الزرّ يمرّر معرّف الوظيفة للمُعالج');
+  assertClean(withHire, 'allJobsGridHtml+hire');
 });

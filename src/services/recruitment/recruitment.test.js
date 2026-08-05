@@ -75,6 +75,23 @@ test('كل وظيفة كاملة الحقول: معرّف فريد · مسمّى
   }
 });
 
+test('المصدر: كل بطاقة وظيفة في org-structure.json تحمل requirements', () => {
+  const missing = ORG.jobs.filter((j) => !j.requirements).map((j) => j.id);
+  assert.deepEqual(missing, [], 'وظائف بلا «متطلبات وظيفية» في المصدر الواحد');
+});
+
+test('المتطلبات الوظيفية صالحة البنية لكل وظيفة (مؤهل · خبرة · مهارات · شهادات · ملاحظة)', () => {
+  for (const j of JOBS) {
+    const r = j.requirements;
+    assert.ok(r && typeof r === 'object', `متطلبات ${j.id} كائن`);
+    assert.ok(typeof r.education === 'string' && r.education.length > 3, `مؤهل ${j.id}`);
+    assert.ok(Number.isFinite(r.experienceYears) && r.experienceYears >= 0, `خبرة ${j.id} رقم`);
+    assert.ok(Array.isArray(r.skills) && r.skills.length > 0, `مهارات ${j.id} غير فارغة`);
+    assert.ok(Array.isArray(r.certifications), `شهادات ${j.id} مصفوفة`);
+    assert.ok(typeof r.notes === 'string', `ملاحظة ${j.id} نصّ`);
+  }
+});
+
 test('علامة «📌 مشغول» استُخرجت حالةً ولم تبقَ داخل المهام', () => {
   const occupied = JOBS.filter((j) => j.occupied);
   assert.ok(occupied.length >= 1, 'الهيكل فيه مناصب مشغولة');

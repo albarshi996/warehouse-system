@@ -152,7 +152,30 @@ export function diffListHtml(diff) {
   ].join('');
 }
 
-/** بطاقات الوصف الوظيفي المرتبطة بعقدة. */
+/**
+ * كتلة «المتطلبات الوظيفية» — مشتركة بين بطاقة تفاصيل العقدة وشبكة كل الأدوار.
+ * تُعيد '' إن لم تكن هناك متطلبات (الحقل اختياريّ فلا تنكسر البطاقات القديمة).
+ */
+export function jobRequirementsHtml(req) {
+  if (!req) return '';
+  const rows = [
+    `<div class="jobreq-row"><b>المؤهل:</b> ${esc(req.education || '—')}` +
+      (req.experienceYears ? ` · <b>الخبرة:</b> ${esc(req.experienceYears)}+ سنوات` : '') +
+      `</div>`,
+    req.skills && req.skills.length
+      ? `<div class="jobreq-row"><b>المهارات:</b> ${req.skills.map(esc).join(' · ')}</div>`
+      : '',
+    req.certifications && req.certifications.length
+      ? `<div class="jobreq-row"><b>الشهادات:</b> ${req.certifications.map(esc).join(' · ')}</div>`
+      : '',
+    req.notes ? `<div class="jobreq-note">${esc(req.notes)}</div>` : '',
+  ]
+    .filter(Boolean)
+    .join('');
+  return `<div class="jobreq"><div class="jobreq-h">المتطلبات الوظيفية</div>${rows}</div>`;
+}
+
+/** بطاقات الوصف الوظيفي المرتبطة بعقدة (تُظهر المهام + المتطلبات). */
 export function jobCardsHtml(jobs, opts = {}) {
   const max = opts.maxDuties || 4;
   return (jobs || [])
@@ -165,7 +188,52 @@ export function jobCardsHtml(jobs, opts = {}) {
         `</div><div class="meta">التبعية: ${esc(j.reportingTo)}</div>` +
         `<ul>${j.duties.slice(0, max).map((d) => `<li>${esc(d)}</li>`).join('')}</ul>` +
         (j.duties.length > max ? `<div class="meta">+ ${j.duties.length - max} مهام أخرى</div>` : '') +
+        jobRequirementsHtml(j.requirements) +
         `</div>`
     )
     .join('');
+}
+
+/**
+ * شبكة **كل الأدوار** (الكتالوج كاملًا — 36 دورًا) بتفاصيلها، بما فيها وظائف
+ * الوظائف المساندة التي لا تظهر عند النقر على شجرة التبعية.
+ *
+ * @param {Array}  jobs   الكتالوج (JOBS)
+ * @param {object} opts   { orgTitles: { [orgId]: عنوان العقدة }, term }
+ *   `orgTitles` تُبنى في الصفحة من الشجرة + الوظائف المساندة لعرض «الموقع في الهيكل».
+ */
+export function allJobsGridHtml(jobs, opts = {}) {
+  const titles = opts.orgTitles || {};
+  const term = opts.term || '';
+  const hire = opts.hireHandler || ''; // اسم دالّة عالميّة لزرّ «توظيف» (اختياريّ)
+  const cards = (jobs || [])
+    .map((j) => {
+      const where = titles[j.orgId] || j.layer || '';
+      const occ = j.occupied
+        ? `<span class="jobtag occ">مشغول${j.holder ? ' — ' + esc(j.holder) : ''}</span>`
+        : `<span class="jobtag vac">شاغرة</span>`;
+      const duties = (j.duties || []).map((d) => `<li>${esc(d)}</li>`).join('');
+      const hit =
+        term &&
+        [j.title, j.layer, where, j.holder, ...(j.requirements?.skills || [])].some((x) =>
+          String(x || '').includes(term)
+        );
+      const hireBtn = hire
+        ? `<button type="button" class="jobhire" onclick="${esc(hire)}('${esc(j.id)}')">توظيف لهذا المنصب ←</button>`
+        : '';
+      return (
+        `<div class="jobfull${hit ? ' ohit' : ''}" data-job-id="${esc(j.id)}" data-org-id="${esc(j.orgId || '')}">` +
+        `<div class="jobfull-head"><span class="jobfull-ico">${esc(j.icon || '👤')}</span>` +
+        `<div class="jobfull-t"><div class="jobfull-title">${esc(j.title)} <span class="jobfull-id">${esc(j.id)}</span></div>` +
+        `<div class="jobfull-sub">${esc(where)}</div></div>${occ}</div>` +
+        `<div class="jobfull-body">` +
+        `<div class="jobfull-sec-h">الوصف الوظيفي / المهام</div>` +
+        `<ul class="jobfull-duties">${duties}</ul>` +
+        jobRequirementsHtml(j.requirements) +
+        hireBtn +
+        `</div></div>`
+      );
+    })
+    .join('');
+  return `<div class="jobsgrid">${cards}</div>`;
 }

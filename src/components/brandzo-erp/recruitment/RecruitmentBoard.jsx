@@ -7,7 +7,8 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
-import { JOBS, getJob, jobOptions } from '../../../services/recruitment/jobsCatalog.js';
+import { resolveJobs, findJob, sortedJobOptions } from '../../../services/recruitment/jobsResolver.js';
+import { listenOrgStructure } from '../../../services/org/orgService.js';
 import {
   canRecruit,
   CANDIDATE_STATES,
@@ -32,6 +33,8 @@ export default function RecruitmentBoard() {
   const [printing, setPrinting] = useState(null); // المرشح المراد طباعته
   const [filter, setFilter] = useState('all');
   const [msg, setMsg] = useState(null);
+  const [orgDoc, setOrgDoc] = useState(null);
+  const [prefillJob, setPrefillJob] = useState('');
 
   useEffect(() => {
     const unsub = subscribeAuth(async (u) => {
@@ -46,6 +49,23 @@ export default function RecruitmentBoard() {
     const unsub = listenCandidates(setRows, (e) => setErr(e?.message || 'تعذّر الاتصال'));
     return () => unsub();
   }, [me]);
+
+  // الأدوار من المصدر الحيّ (org_structure/current) — تنعكس تعديلات الهيكل فورًا.
+  useEffect(() => {
+    if (!me || !canRecruit(me.role)) return;
+    const unsub = listenOrgStructure((cloud) => setOrgDoc(cloud));
+    return () => unsub();
+  }, [me]);
+
+  // رابط عميق من الهيكل «توظيف لهذا المنصب»: #job=Jxx يفتح النموذج والمنصب مُختار.
+  useEffect(() => {
+    if (!ready || !me || !canRecruit(me.role)) return;
+    const m = (window.location.hash || '').match(/^#job=([A-Za-z0-9_-]+)/);
+    if (!m) return;
+    setPrefillJob(m[1]);
+    setEditing('new');
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+  }, [ready, me]);
 
   const flash = (text, tone = 'ok') => {
     setMsg({ text, tone });
@@ -62,6 +82,9 @@ export default function RecruitmentBoard() {
     for (const r of rows) c[r.state] = (c[r.state] || 0) + 1;
     return c;
   }, [rows]);
+
+  // الأدوار الحيّة، وإلّا الكتالوج المولَّد (fallback أوفلاين).
+  const jobs = useMemo(() => resolveJobs(orgDoc), [orgDoc]);
 
   async function changeState(row, state) {
     if (state === row.state) return;
@@ -121,7 +144,7 @@ export default function RecruitmentBoard() {
         ))}
       </div>
       <p className="text-xs text-gray-500">
-        الوظائف الشاغرة في الهيكل الرسمي: <b className="text-accent">{JOBS.filter((j) => !j.occupied).length}</b> من {JOBS.length}
+        الوظائف الشاغرة في الهيكل الرسمي: <b className="text-accent">{jobs.filter((j) => !j.occupied).length}</b> من {jobs.length}
       </p>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -155,11 +178,14 @@ export default function RecruitmentBoard() {
           key={editing === 'new' ? 'new' : editing.id}
           profile={me}
           candidate={editing === 'new' ? null : editing}
+          jobs={jobs}
+          prefillJobId={prefillJob}
           onSaved={(name, isEdit) => {
             setEditing(null);
+            setPrefillJob('');
             flash(isEdit ? `حُفظت تعديلات ${name}.` : `أُضيف المرشح ${name} وحُفظ في السحابة.`);
           }}
-          onCancel={() => setEditing(null)}
+          onCancel={() => { setEditing(null); setPrefillJob(''); }}
           onError={(t) => flash(t, 'err')}
         />
       )}
@@ -262,12 +288,12 @@ export default function RecruitmentBoard() {
     </div>
 
     {/* بطاقة الطباعة — شقيقة للشاشة (لا داخلها) كي لا يُخفيها إخفاء الشاشة */}
-    {printing && <CandidatePrint candidate={printing} job={getJob(printing.jobId)} />}
+    {printing && <CandidatePrint candidate={printing} job={findJob(jobs, printing.jobId)} />}
     </>
   );
 }
 
-function CandidateForm({ profile, candidate, onSaved, onCancel, onError }) {
+function CandidateForm({ profile, candidate, jobs, prefillJobId, onSaved, onCancel, onError }) {
   const isEdit = Boolean(candidate);
   const [name, setName] = useState(candidate?.name || '');
   const [phone, setPhone] = useState(candidate?.phone || '');
@@ -276,7 +302,7 @@ function CandidateForm({ profile, candidate, onSaved, onCancel, onError }) {
   const [experienceYears, setExperienceYears] = useState(
     candidate?.experienceYears ? String(candidate.experienceYears) : ''
   );
-  const [jobId, setJobId] = useState(candidate?.jobId || '');
+  const [jobId, setJobId] = useState(candidate?.jobId || prefillJobId || '');
   const [salary, setSalary] = useState(candidate?.expectedSalary ? String(candidate.expectedSalary) : '');
   const [notes, setNotes] = useState(candidate?.notes || '');
   const [cv, setCv] = useState(null);
@@ -285,7 +311,7 @@ function CandidateForm({ profile, candidate, onSaved, onCancel, onError }) {
   // في التحرير: التفاصيل مفتوحة (المستخدم جاء ليعدّلها)؛ في الإضافة: مطويّة.
   const [showDetails, setShowDetails] = useState(isEdit);
 
-  const job = jobId ? getJob(jobId) : null;
+  const job = jobId ? findJob(jobs, jobId) : null;
   // كم تفصيلًا اختياريًّا مُلئ — يظهر على زرّ الطيّ فيُعرَف أن تحته بيانات.
   const filledDetails = [phone, email, qualification, experienceYears, salary, notes, cv].filter(Boolean).length;
 
@@ -343,7 +369,7 @@ function CandidateForm({ profile, candidate, onSaved, onCancel, onError }) {
         <L label="الوظيفة (من الهيكل الرسمي)" required>
           <select className={input} value={jobId} onChange={(e) => setJobId(e.target.value)} required>
             <option value="">— اختر المسمّى —</option>
-            {jobOptions().map((j) => (
+            {sortedJobOptions(jobs).map((j) => (
               <option key={j.id} value={j.id} className="bg-brand-navy">
                 {j.icon} {j.title}{j.occupied ? ' (مشغولة حاليًا)' : ''}
               </option>
@@ -366,7 +392,29 @@ function CandidateForm({ profile, candidate, onSaved, onCancel, onError }) {
               ))}
               {job.duties.length > 4 && <li className="text-gray-500">… و{job.duties.length - 4} مهام أخرى</li>}
             </ul>
+            {job.requirements && (
+              <div className="mt-2 pt-2 border-t border-accent/15">
+                <p className="font-bold text-accent mb-0.5">المتطلبات الوظيفية</p>
+                <p className="text-ink-2">
+                  <b>المؤهل:</b> {job.requirements.education}
+                  {job.requirements.experienceYears ? ` · الخبرة: ${job.requirements.experienceYears}+ سنوات` : ''}
+                </p>
+                {job.requirements.skills?.length > 0 && (
+                  <p className="text-ink-2"><b>المهارات:</b> {job.requirements.skills.join(' · ')}</p>
+                )}
+                {job.requirements.certifications?.length > 0 && (
+                  <p className="text-ink-2"><b>الشهادات:</b> {job.requirements.certifications.join(' · ')}</p>
+                )}
+                {job.requirements.notes && <p className="text-muted mt-0.5">{job.requirements.notes}</p>}
+              </div>
+            )}
             {job.occupied && <p className="text-brand-red mt-1.5 font-bold">⚠️ هذا المنصب مشغول حاليًا حسب الهيكل — الترشيح له للتعاقب أو التوسّع.</p>}
+            <a
+              href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/dashboard/org-structure#job=${job.id}`}
+              className="inline-block mt-2 text-xs font-bold text-accent hover:underline"
+            >
+              📍 عرض الموقع في الهيكل التنظيمي
+            </a>
           </div>
         )}
       </Reveal>

@@ -202,6 +202,33 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     #orgPrint { position: absolute !important; left: 0 !important; top: 0 !important; }
     .sheet { print-color-adjust: exact; -webkit-print-color-adjust: exact; margin: 0 auto; page-break-after: always; }
   }
+
+  /* كل الأدوار (36) — شبكة الوصف والمتطلبات */
+  .ojobsearch { width: 100%; border: 1.5px solid var(--o-line); border-radius: 9px; padding: 9px 13px; font-family: 'Tajawal', sans-serif; font-size: .88rem; background: #f8fafc; margin-bottom: 12px; }
+  .ojobsearch:focus { outline: none; border-color: var(--o-gold); box-shadow: 0 0 0 4px rgba(200,157,59,.13); background: #fff; }
+  .jobsgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
+  .jobfull { border: 1.5px solid #e8edf4; border-radius: 12px; background: #fff; display: flex; flex-direction: column; overflow: hidden; }
+  .jobfull.ohit { box-shadow: 0 0 0 3px #fde68a; border-color: #f4d67a; }
+  .jobfull-head { display: flex; align-items: center; gap: 10px; padding: 10px 13px; background: #fbfcfe; border-bottom: 1.5px solid #eef2f7; }
+  .jobfull-ico { font-size: 1.4rem; line-height: 1; }
+  .jobfull-t { flex: 1; min-width: 0; }
+  .jobfull-title { font-size: .88rem; font-weight: 800; color: var(--o-navy); }
+  .jobfull-id { font-size: .64rem; color: #b0bacc; font-weight: 700; letter-spacing: .3px; }
+  .jobfull-sub { font-size: .71rem; color: #94a3b8; margin-top: 2px; }
+  .jobfull-body { padding: 10px 13px; }
+  .jobfull-sec-h { font-size: .71rem; font-weight: 800; color: #64748b; margin-bottom: 4px; }
+  .jobfull-duties { margin: 0; padding-right: 16px; }
+  .jobfull-duties li { font-size: .76rem; color: #475569; line-height: 1.65; margin-bottom: 2px; }
+  .jobtag { border-radius: 12px; padding: 2px 9px; font-size: .64rem; font-weight: 800; white-space: nowrap; align-self: flex-start; }
+  .jobtag.occ { background: #e7f7f0; color: #067a52; }
+  .jobtag.vac { background: #fff4e0; color: #b45309; }
+  .jobreq { background: #faf7ef; border: 1px solid #ece0c4; border-radius: 9px; padding: 8px 11px; margin-top: 9px; }
+  .jobreq-h { font-size: .71rem; font-weight: 800; color: #a06e12; margin-bottom: 3px; }
+  .jobreq-row { font-size: .76rem; color: #475569; line-height: 1.7; }
+  .jobreq-row b { color: #334155; }
+  .jobreq-note { font-size: .73rem; color: #78716c; margin-top: 3px; }
+  .jobhire { margin-top: 10px; width: 100%; background: var(--o-navy); color: #fff; border: none; border-radius: 8px; padding: 7px 12px; font-family: 'Tajawal', sans-serif; font-size: .78rem; font-weight: 700; cursor: pointer; transition: background .15s; }
+  .jobhire:hover { background: var(--o-blue); }
 </style>
 
 <div class="org-wrap" dir="rtl" id="orgWrap">
@@ -300,6 +327,17 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       </div>
     </div>
   </div>
+
+  <div class="ocard no-present" id="allJobsCard">
+    <div class="ochead">
+      <h3>🗂️ كل الأدوار الوظيفية (<span id="jobsCount">0</span>)</h3>
+      <span style="color:rgba(255,255,255,.6);font-size:.76rem;">الوصف والمتطلّبات لكل دور — تشمل الوظائف المساندة</span>
+    </div>
+    <div class="ocbody">
+      <input type="search" id="jobsSearch" class="ojobsearch" placeholder="🔎 ابحث في الأدوار والمهارات والشواغل…" oninput="renderAllJobs()">
+      <div id="allJobsBox"></div>
+    </div>
+  </div>
 </div>
 
 <!-- نافذة الحفظ -->
@@ -373,6 +411,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     staffingRowsHtml,
     diffListHtml,
     jobCardsHtml,
+    allJobsGridHtml,
   } from '../../services/org/orgView.js';
   import {
     listenOrgStructure,
@@ -498,10 +537,57 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     $('diffBox').innerHTML = diffListHtml(d);
   }
 
+  /** خريطة معرّف العقدة → عنوانها (من الشجرة + الوظائف المساندة) لعرض «الموقع في الهيكل». */
+  function buildOrgTitles() {
+    const map = {};
+    for (const { node } of flatten(doc.tree)) map[node.id] = node.title;
+    for (const s of doc.supportFunctions || []) map[s.id] = s.title;
+    return map;
+  }
+
+  /** شبكة كل الأدوار الـ36 — من المصدر الحيّ doc.jobs (يشمل وظائف المساندة). */
+  function renderAllJobs() {
+    const jobs = doc.jobs || [];
+    $('jobsCount').textContent = jobs.length;
+    const search = $('jobsSearch');
+    $('allJobsBox').innerHTML = allJobsGridHtml(jobs, {
+      orgTitles: buildOrgTitles(),
+      term: ((search && search.value) || '').trim(),
+      hireHandler: 'hireForJob',
+    });
+  }
+  window.renderAllJobs = renderAllJobs;
+
+  /** «توظيف لهذا المنصب» — ينقل لصفحة التوظيف مع المعرّف عبر hash. */
+  window.hireForJob = (jobId) => {
+    window.location.href = `${base}/dashboard/recruitment#job=${encodeURIComponent(jobId)}`;
+  };
+
+  /** رابط عميق من التوظيف: `#job=Jxx` يحدّد العقدة الأمّ في الشجرة ويبرز بطاقة الدور. */
+  function applyJobDeepLink() {
+    const m = (window.location.hash || '').match(/^#job=([\w-]+)/);
+    if (!m) return;
+    const jobId = decodeURIComponent(m[1]);
+    const job = (doc.jobs || []).find((j) => j.id === jobId);
+    if (!job) return;
+    if (job.orgId && findNode(doc.tree, job.orgId)) {
+      selectedId = job.orgId;
+      render();
+    }
+    requestAnimationFrame(() => {
+      const card = document.querySelector(`.jobfull[data-job-id="${jobId}"]`);
+      if (!card) return;
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.classList.add('ohit');
+      setTimeout(() => card.classList.remove('ohit'), 2800);
+    });
+  }
+
   function renderStatic() {
     $('suppBox').innerHTML = supportBandHtml(doc.supportFunctions);
     $('staffBody').innerHTML = staffingRowsHtml(doc.staffing);
     $('heroTitle').textContent = `${doc.tree.icon || '🏛️'} ${doc.tree.title}`;
+    renderAllJobs();
   }
 
   function render() {
@@ -802,5 +888,6 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   });
 
   render();
+  applyJobDeepLink();
 </script>
 </DashboardLayout>

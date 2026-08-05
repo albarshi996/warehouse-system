@@ -71,6 +71,25 @@ export default function CandidatePrint({ candidate: c, job }) {
         </section>
       )}
 
+      {job?.requirements && (
+        <section>
+          <h3 className="cp-section">المتطلبات الوظيفية</h3>
+          <div className="cp-reqs">
+            <p>
+              <b>المؤهل العلمي:</b> {show(job.requirements.education)}
+              {job.requirements.experienceYears ? ` · الخبرة المطلوبة: ${job.requirements.experienceYears}+ سنوات` : ''}
+            </p>
+            {job.requirements.skills?.length > 0 && (
+              <p><b>المهارات:</b> {job.requirements.skills.join(' · ')}</p>
+            )}
+            {job.requirements.certifications?.length > 0 && (
+              <p><b>الشهادات:</b> {job.requirements.certifications.join(' · ')}</p>
+            )}
+            {job.requirements.notes && <p className="cp-req-note">{job.requirements.notes}</p>}
+          </div>
+        </section>
+      )}
+
       {c.notes && (
         <section>
           <h3 className="cp-section">ملاحظات</h3>
@@ -156,6 +175,9 @@ const PRINT_CSS = `
   .cp-sub { font-size: 8pt; color: #555; margin: 0 0 2mm; }
   .cp-duties { margin: 0; padding-right: 6mm; }
   .cp-duties li { font-size: 8.5pt; margin-bottom: 1mm; }
+  .cp-reqs { font-size: 9pt; }
+  .cp-reqs p { margin: 0 0 1mm; line-height: 1.55; }
+  .cp-req-note { color: #555; font-style: italic; }
   .cp-notes { font-size: 9pt; white-space: pre-wrap; }
 
   .cp-signs { display: flex; gap: 10mm; margin-top: 12mm; break-inside: avoid; }

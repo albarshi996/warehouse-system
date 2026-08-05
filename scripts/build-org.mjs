@@ -223,6 +223,21 @@ const jobCardsRef = SOURCE.jobs
     ]
       .filter(Boolean)
       .join(' | ');
+    const req = j.requirements;
+    const reqRows = req
+      ? [
+          `<div><strong style="color:var(--navy);">المتطلبات الوظيفية:</strong></div>`,
+          `<div><b>المؤهل:</b> ${esc(req.education || '—')}${req.experienceYears ? `  ·  <b>الخبرة:</b> ${esc(req.experienceYears)}+ سنوات` : ''}</div>`,
+          req.skills && req.skills.length ? `<div><b>المهارات:</b> ${req.skills.map(esc).join(' · ')}</div>` : '',
+          req.certifications && req.certifications.length ? `<div><b>الشهادات:</b> ${req.certifications.map(esc).join(' · ')}</div>` : '',
+          req.notes ? `<div style="color:#666;">${esc(req.notes)}</div>` : '',
+        ]
+          .filter(Boolean)
+          .join('')
+      : '';
+    const reqHtml = reqRows
+      ? `    <div style="background:#faf6ee;border:1px solid #e8dcc0;padding:8px 12px;margin-top:10px;font-size:12px;line-height:1.8;">${reqRows}</div>\n`
+      : '';
     return `  <div style="border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;border-right:4px solid ${color};">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
       <span style="font-size:24px;">${j.icon || '👤'}</span>
@@ -232,7 +247,7 @@ const jobCardsRef = SOURCE.jobs
     <ul style="columns:2;gap:20px;">
 ${duties}
     </ul>
-    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
+${reqHtml}    <div style="background:#f0f5ff;border:1px solid var(--border);padding:8px 12px;margin-top:10px;font-size:12px;">
       ${foot}
     </div>
   </div>`;
@@ -297,6 +312,8 @@ const catalog = SOURCE.jobs.map((j) => ({
   reportingTo: j.reportingTo || '',
   kpis: j.kpis || '',
   occupied: Boolean(j.occupied),
+  holder: j.holder || '',
+  requirements: j.requirements || null,
 }));
 
 const catalogFile = `/**
