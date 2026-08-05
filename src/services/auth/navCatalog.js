@@ -97,6 +97,9 @@ export const NAV_GROUPS = [
     emoji: '🔄', icon: 'graduationCap',
     items: [
       { path: '/dashboard/learn-odoo', label: 'تعلم أودو', icon: 'bookOpen' },
+      // جسر المزامنة الحيّ: يقرأ أوامر الشراء والماستر الحقيقيّة من البوابة ويُظهر
+      // دفعها إلى أودو مسوّدةً حتى الاعتماد (مرآةٌ على نفس مسار عميل الإنتاج).
+      { path: '/dashboard/odoo-sync', label: 'جسر المزامنة مع أودو', icon: 'arrowLeftRight', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/workflows', label: 'الهيكل والمسارات', icon: 'workflows' },
       { path: '/dashboard/erp-workflows', label: 'دورات العمل ERP', icon: 'dollarSign' },
       { path: '/dashboard/training', label: 'تدريب Odoo (محاكي)', icon: 'grid' },

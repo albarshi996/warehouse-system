@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 60,
+    "modules": 61,
     "serviceDomains": 28,
-    "serviceFiles": 176,
-    "collections": 47,
+    "serviceFiles": 179,
+    "collections": 49,
     "roles": 15,
     "odooModels": 12,
     "odooGuards": 51,
@@ -283,6 +283,14 @@
         "db",
         "odoo"
       ]
+    },
+    {
+      "name": "odoo-sync",
+      "route": "/dashboard/odoo-sync",
+      "title": "جسر المزامنة مع أودو",
+      "summary": "",
+      "file": "src/pages/dashboard/odoo-sync.astro",
+      "usesServices": []
     },
     {
       "name": "operations",
@@ -1417,24 +1425,38 @@
         "mockOdooClient.js",
         "odooClient.js",
         "odooConfig.js",
-        "odooMapper.js"
+        "odooMapper.js",
+        "odooSyncService.js",
+        "poMapper.js",
+        "poMapper.test.js"
       ],
-      "fileCount": 5,
-      "testCount": 0,
+      "fileCount": 8,
+      "testCount": 1,
       "exports": [
         "ODOO_MODE",
         "ODOO_PROXY_URL",
+        "approveInOdoo",
         "authenticate",
         "create",
         "describeOdooConfig",
+        "indexSyncBySource",
         "isProduction",
         "isTraining",
         "itemToProductValues",
+        "listenSyncEvents",
+        "listenSyncState",
         "m2oId",
         "m2oLabel",
         "mockOdooClient",
         "odoo",
+        "odooStateLabel",
+        "poDocToPurchaseOrder",
+        "poLineToOrderLine",
         "productToItem",
+        "pullProducts",
+        "purchaseOrderToPoSummary",
+        "pushItem",
+        "pushPurchaseOrder",
         "realOdooClient",
         "resetMock",
         "searchRead",
@@ -1442,7 +1464,10 @@
         "unlink",
         "write"
       ],
-      "collections": []
+      "collections": [
+        "odoo_sync",
+        "odoo_sync_events"
+      ]
     },
     {
       "domain": "org",
@@ -2676,6 +2701,70 @@
             "condition": "isLaborWriter() && request.resource.data.byUid == request.auth.uid",
             "roles": [
               "isLaborWriter"
+            ]
+          },
+          {
+            "actions": [
+              "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "odoo_sync",
+        "path": "odoo_sync",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager()",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "odoo_sync_events",
+        "path": "odoo_sync_events",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isManager() && request.resource.data.actorUid == request.auth.uid",
+            "roles": [
+              "isManager"
             ]
           },
           {

@@ -769,6 +769,21 @@ service cloud.firestore {
       }
     }
 
+    // جسر المزامنة مع أودو — المرآة الدائمة. الحالة الحاليّة لكلّ عنصرٍ مصدر
+    // (PO_<docId> / ITEM_<sku>): يقرؤها كلّ مصادَقٍ عليه، ويكتبها المديران فقط.
+    match /odoo_sync/{syncId} {
+      allow read:           if signedIn();
+      allow create, update: if isManager();
+      allow delete:         if false;
+    }
+
+    // سجلّ أحداث المزامنة — ملحق-فقط (لا تعديل/حذف): يغذّي الجرس وخلاصة النشاط.
+    match /odoo_sync_events/{eventId} {
+      allow read:   if signedIn();
+      allow create: if isManager() && request.resource.data.actorUid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
     // ── الافتراضي: امنع كل ما لم يُذكر صراحةً ────────────────────
     match /{document=**} {
       allow read, write: if false;

@@ -40,12 +40,16 @@ function seedMoves() {
 const store = {
   'product.product': seedProducts(),
   'stock.move': seedMoves(),
+  // أوامر الشراء تبدأ فارغة: جسر المزامنة يملؤها بدفع مستندات البوابة الحقيقيّة
+  // (create('purchase.order', …)) — فالمرآة تعكس واقعك لا بيانات وهميّة.
+  'purchase.order': [],
 };
 
 /** Next id per model, seeded above the highest existing id. */
 const nextId = {
   'product.product': 1000,
   'stock.move': 2000,
+  'purchase.order': 3000,
 };
 
 function allocId(model) {
@@ -157,8 +161,10 @@ export const unlink = async (model, ids) => {
 export const resetMock = () => {
   store['product.product'] = seedProducts();
   store['stock.move'] = seedMoves();
+  store['purchase.order'] = [];
   nextId['product.product'] = 1000;
   nextId['stock.move'] = 2000;
+  nextId['purchase.order'] = 3000;
 };
 
 export const mockOdooClient = {
