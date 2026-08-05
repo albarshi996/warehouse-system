@@ -418,6 +418,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     saveOrgStructure,
     listVersions,
   } from '../../services/org/orgService.js';
+  import { listenAssignments } from '../../services/org/assignmentsService.js';
+  import { withLiveHolders } from '../../services/org/assignmentsModel.js';
   import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
   import { MANAGER_ROLES as WRITER_ROLES } from '../../services/auth/roles.js';
   import { trackOverlay, trackOverlays } from '../../services/ui/overlayHistory.js';
@@ -433,6 +435,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   let profile = null;
   let canWrite = false;
   let moveId = null;
+  let assignments = []; // سجلّات التسكين الحيّة — الشاغل الحاليّ لكل وظيفة
 
   const $ = (id) => document.getElementById(id);
   const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -486,7 +489,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     const node = findNode(doc.tree, selectedId);
     if (!node) { $('panelBody').innerHTML = '<div class="oempty">اختر صندوقًا من الشجرة.</div>'; return; }
     const crumb = pathTo(doc.tree, node.id).join(' ← ');
-    const jobs = jobsOfNode(doc.jobs, node.id);
+    const jobs = jobsOfNode(withLiveHolders(doc.jobs, assignments), node.id);
     const isRoot = node.id === doc.tree.id;
     const ro = canWrite ? '' : 'disabled';
 
@@ -547,7 +550,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
   /** شبكة كل الأدوار الـ36 — من المصدر الحيّ doc.jobs (يشمل وظائف المساندة). */
   function renderAllJobs() {
-    const jobs = doc.jobs || [];
+    const jobs = withLiveHolders(doc.jobs || [], assignments);
     $('jobsCount').textContent = jobs.length;
     const search = $('jobsSearch');
     $('allJobsBox').innerHTML = allJobsGridHtml(jobs, {
@@ -885,6 +888,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       setCloud(pending ? 'pending' : 'online', pending ? 'بانتظار مزامنة…' : `متصل — v${cloudVersion}`);
       render();
     });
+    listenAssignments((rows) => { assignments = rows; render(); }, () => {});
   });
 
   render();

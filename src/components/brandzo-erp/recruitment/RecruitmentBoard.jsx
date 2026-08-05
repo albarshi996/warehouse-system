@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import { resolveJobs, findJob, sortedJobOptions } from '../../../services/recruitment/jobsResolver.js';
 import { listenOrgStructure } from '../../../services/org/orgService.js';
+import { assignToJob } from '../../../services/org/assignmentsService.js';
 import {
   canRecruit,
   CANDIDATE_STATES,
@@ -108,6 +109,22 @@ export default function RecruitmentBoard() {
       window.print();
       setTimeout(() => setPrinting(null), 400);
     }, 60);
+  }
+
+  // تسكين المرشح المقبول في منصبه — خطوةٌ صريحة تجعله الشاغل الحاليّ في الهيكل.
+  async function placeCandidate(row) {
+    const job = findJob(jobs, row.jobId);
+    const title = row.jobTitle || job?.title || 'المنصب';
+    if (!window.confirm(`تسكين «${row.name}» في «${title}»؟\nسيظهر شاغلًا لهذا المنصب في الهيكل التنظيميّ.`)) return;
+    try {
+      await assignToJob(
+        { jobId: row.jobId, jobTitle: title, orgNodeId: job?.orgId, candidateId: row.id, personName: row.name },
+        me
+      );
+      flash(`تمّ تسكين ${row.name} في «${title}» — يظهر الآن شاغلًا في الهيكل.`);
+    } catch (e) {
+      flash(e.message || 'تعذّر التسكين.', 'err');
+    }
   }
 
   if (!ready) return <p className="text-ink-2 text-sm py-10 text-center">جارٍ التحقّق…</p>;
@@ -276,6 +293,16 @@ export default function RecruitmentBoard() {
                         >
                           🖨️ طباعة
                         </button>
+                        {r.state === 'accepted' && r.jobId && (
+                          <button
+                            type="button"
+                            onClick={() => placeCandidate(r)}
+                            className="text-xs font-bold text-green-700 hover:underline"
+                            title="تسكين المرشح في منصبه — يظهر شاغلًا في الهيكل"
+                          >
+                            ＋ تسكين
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

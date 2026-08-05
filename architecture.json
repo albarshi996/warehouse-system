@@ -11,8 +11,8 @@
   "counts": {
     "modules": 58,
     "serviceDomains": 27,
-    "serviceFiles": 167,
-    "collections": 43,
+    "serviceFiles": 170,
+    "collections": 44,
     "roles": 14,
     "odooModels": 12,
     "odooGuards": 51,
@@ -1385,27 +1385,33 @@
       "domain": "org",
       "dir": "src/services/org",
       "files": [
+        "assignmentsModel.js",
+        "assignmentsModel.test.js",
+        "assignmentsService.js",
         "orgModel.js",
         "orgModel.test.js",
         "orgService.js",
         "orgView.js",
         "orgView.test.js"
       ],
-      "fileCount": 5,
-      "testCount": 2,
+      "fileCount": 8,
+      "testCount": 3,
       "exports": [
         "CHART_SKINS",
         "NODE_TYPES",
         "SOURCE_LABELS",
         "TYPE_LABELS",
+        "activeAssignmentsByJob",
         "addChild",
         "allJobsGridHtml",
         "approveOrgStructure",
+        "assignToJob",
         "chartHtml",
         "countByType",
         "descendantIds",
         "diffListHtml",
         "diffTrees",
+        "endAssignment",
         "esc",
         "findNode",
         "flatten",
@@ -1416,6 +1422,7 @@
         "jobRequirementsHtml",
         "jobsOfNode",
         "listVersions",
+        "listenAssignments",
         "listenOrgStructure",
         "moveNode",
         "pagesOfBranch",
@@ -1428,9 +1435,11 @@
         "supportBandHtml",
         "treeRowsHtml",
         "updateNode",
-        "validateTree"
+        "validateTree",
+        "withLiveHolders"
       ],
       "collections": [
+        "assignments",
         "org_structure"
       ]
     },
@@ -1915,6 +1924,46 @@
             "condition": "isFleetWriter()",
             "roles": [
               "isFleetWriter"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "assignments",
+        "path": "assignments",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isManager() && request.resource.data.active == true",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "isManager() && request.resource.data.jobId == resource.data.jobId && request.resource.data.candidateId == resource.data.candidateId && request.resource.data.sta",
+            "roles": [
+              "isManager"
             ]
           },
           {

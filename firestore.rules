@@ -726,6 +726,19 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // تسكين الأشخاص في المناصب — سجلٌّ ملحق-فقط (لا حذف). الشاغل الحاليّ لوظيفةٍ
+    // = أحدث سجلٍّ نشط. الإنشاء والإنهاء للمديرَين؛ ولا يتغيّر منصبُ السجلّ ولا
+    // مرشّحه ولا تاريخ بدئه بعد الكتابة (ثبات الأثر) — يُسمح فقط بضبط active/endedAt.
+    match /assignments/{assignmentId} {
+      allow read: if signedIn();
+      allow create: if isManager() && request.resource.data.active == true;
+      allow update: if isManager()
+                    && request.resource.data.jobId == resource.data.jobId
+                    && request.resource.data.candidateId == resource.data.candidateId
+                    && request.resource.data.startedAt == resource.data.startedAt;
+      allow delete: if false;
+    }
+
     // ── الافتراضي: امنع كل ما لم يُذكر صراحةً ────────────────────
     match /{document=**} {
       allow read, write: if false;
