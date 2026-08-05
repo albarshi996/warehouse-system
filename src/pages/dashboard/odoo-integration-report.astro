@@ -1,0 +1,716 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Icon from '../../components/ui/Icon.astro';
+
+/*
+ * ─── تقرير آلية الربط بأودو والمزامنة الحيّة ─────────────────────────────────
+ * تقريرٌ مرجعيّ احترافيّ **مبنيّ على الكود** (لا تخمين): يشرح كيف تتكامل البوابة
+ * التفاعليّة مع أودو عبر الـAPI، والمزامنة الدوريّة واللحظيّة، ومزامنة أودو↔فايربيز،
+ * والنسخ الاحتياطي، وآليّة الانتقال لقاعدة محليّة، وحوكمة تغيّر النموذج (الإصدار ١٩)
+ * وطلب التحديث من المطوّرين، وسيناريوهات العوائق وكفاءة الربط.
+ *
+ * المصادر المؤكَّدة من الشجرة (كلّها في هذا المستودع):
+ *   src/services/odoo/{index,odooConfig,odooClient,mockOdooClient,odooMapper}.js
+ *   odoo-proxy/{cloudflare-worker/worker.js, firebase-function/index.js, README.md}
+ *   brandzo-addons/brandzo_warehouse/__manifest__.py   (إصدار 19.0.1.2.0 · 12/12 · 52 اختبارًا)
+ *   src/config/firebase.js  ·  docs/عقد-التكامل-مع-أودو.md
+ *   docs/خطة-التطوير-الشاملة-الكاشير-وأودو-والقاعدة-المحلية.md
+ *
+ * الهوية: ثيم أودو الفاتح (bz-light) · أيقونات خطّية بلا إيموجي · الأحمر للتحذير فقط
+ * (الأخضر = منفَّذ · الكهرمانيّ = مصمَّم/بانتظار خطوة) · أرقام لاتينية · مصدرٌ واحد.
+ */
+
+// فهرس المحاور (طبقة «الفهرس الكامل» — تنقّلٌ داخليّ سريع).
+const toc = [
+  { id: 'verdict', label: 'الحُكم الصادق والجاهزية', icon: 'gauge' },
+  { id: 'api', label: '١ · آلية الربط عبر الـAPI', icon: 'puzzle' },
+  { id: 'periodic', label: '٢ · المزامنة الدوريّة', icon: 'calendar' },
+  { id: 'entities', label: '٣ · ربط الكيانات بأودو', icon: 'layers' },
+  { id: 'firebase', label: '٤ · مزامنة أودو ↔ فايربيز', icon: 'arrowLeftRight' },
+  { id: 'backup', label: '٥ · النسخ الاحتياطي', icon: 'archive' },
+  { id: 'localdb', label: '٦ · الانتقال لقاعدة محليّة', icon: 'package' },
+  { id: 'governance', label: '٧ · تغيّر النموذج وطلب التحديث', icon: 'settings' },
+  { id: 'obstacles', label: '٨ · سيناريوهات العوائق والكفاءة', icon: 'alertTriangle' },
+];
+
+// مؤشّرات الجاهزية (أرقام لاتينية — محسوبة من المصدر).
+const kpis = [
+  { value: '~70%', label: 'جاهزية بنية التكامل', tone: 'accent' },
+  { value: '5', label: 'بدائيّات API قياسيّة', tone: 'accent' },
+  { value: '6', label: 'نماذج بقائمة سماح الوسيط', tone: 'accent' },
+  { value: '19', label: 'إصدار أودو الحاليّ', tone: 'accent' },
+  { value: '12/12', label: 'مرحلة الدورة المستندية', tone: 'accent' },
+  { value: '52', label: 'اختبارًا خضراء (الموديول)', tone: 'success' },
+];
+
+// الخمس بدائيّات في عميل أودو (src/services/odoo/odooClient.js).
+const primitives = [
+  { fn: 'authenticate()', odoo: 'common.authenticate', desc: 'التحقّق من الاتصال وإرجاع معرّف المستخدم (uid) — يغذّي زرّ «اختبار الاتصال».' },
+  { fn: 'searchRead(model, domain, fields)', odoo: 'search_read', desc: 'قراءة سجلّات مطابقة لنطاق — الأساس لجلب الأصناف/الموردين/الأوامر.' },
+  { fn: 'create(model, values)', odoo: 'create', desc: 'إنشاء سجلّ جديد — به تُرسَل مستندات البوابة إلى أودو كمسوّدات.' },
+  { fn: 'write(model, ids, values)', odoo: 'write', desc: 'تعديل سجلّات قائمة — لتحديث حقول مطابِقة عند اللزوم.' },
+  { fn: 'unlink(model, ids)', odoo: 'unlink', desc: 'حذف سجلّات — محصور بقائمة السماح ونادر الاستعمال.' },
+];
+
+// مستند البوابة ← نموذج أودو ← حالة المسوّدة (من عقد التكامل §4/§5-ب).
+const docMap = [
+  { doc: 'PO — أمر شراء', model: 'purchase.order', state: 'مسوّدة / طلب عرض أسعار' },
+  { doc: 'PR — طلب شراء', model: 'purchase.requisition', state: 'مسوّدة' },
+  { doc: 'GRN — الاستلام', model: 'stock.picking (وارد)', state: 'مسوّدة (Draft)' },
+  { doc: 'DN — إذن تسليم', model: 'stock.picking (صادر)', state: 'مسوّدة (Draft)' },
+  { doc: 'SO / POS — بيع', model: 'sale.order / pos.order', state: 'مسوّدة' },
+  { doc: 'INV — فاتورة', model: 'account.move', state: 'مسوّدة (Draft)' },
+];
+
+// ربط الكيانات (من odooMapper.js + عقد التكامل). الاتجاه: ⇄ ثنائيّ · → سحب فقط.
+const entityMap = [
+  {
+    entity: 'الأصناف — Items_Master',
+    model: 'product.product',
+    fields: 'default_code⇄sku · name⇄nameAr · x_name_en⇄nameEn · categ_id→category · uom_id→unit · qty_available→balance (محسوب، قراءة فقط) · x_min_stock⇄minStock',
+    dir: '⇄ ثنائيّ (عدا الرصيد: سحب)',
+    status: 'مُطابِق منفَّذ',
+    tone: 'success',
+  },
+  {
+    entity: 'الموردون / العملاء',
+    model: 'res.partner',
+    fields: 'name · ref · vat · phone · email · علم مورّد/عميل — مرآة قراءة في odoo_mirror، ودفع اختياريّ لشريكٍ جديد',
+    dir: '→ سحب (+ دفع اختياريّ)',
+    status: 'مصمَّم',
+    tone: 'warning',
+  },
+  {
+    entity: 'الحركات المخزنيّة',
+    model: 'stock.move',
+    fields: 'product_id→sku (يُستخرج الرمز من «[CODE] Name») · product_uom_qty→qty · date→timestamp',
+    dir: '→ سحب (اتّجاه واحد للسجلّ)',
+    status: 'مُطابِق منفَّذ',
+    tone: 'success',
+  },
+  {
+    entity: 'الاستلام/التسليم/النقل',
+    model: 'stock.picking (in/out/internal)',
+    fields: 'دفع المستندات كمسوّدات + سحب الحالة (draft→done) للمرآة',
+    dir: '⇄ دفع مسوّدة + سحب حالة',
+    status: 'مصمَّم',
+    tone: 'warning',
+  },
+  {
+    entity: 'المشتريات',
+    model: 'purchase.order / purchase.requisition',
+    fields: 'دفع أمر/طلب الشراء كمسوّدة + سحب حالة الاعتماد والاستلام أوّلًا بأوّل',
+    dir: '⇄ دفع + سحب',
+    status: 'مصمَّم',
+    tone: 'warning',
+  },
+  {
+    entity: 'المبيعات / الفواتير',
+    model: 'sale.order · pos.order · account.move',
+    fields: 'دفع أمر البيع/الفاتورة كمسوّدة إلى أودو للمرآة المحاسبيّة',
+    dir: '→ دفع (مرآة محاسبيّة)',
+    status: 'مصمَّم',
+    tone: 'warning',
+  },
+];
+
+// سيناريوهات العوائق (من معالجة الأخطاء في العميل + قيود العقد).
+const obstacles = [
+  {
+    scenario: 'الوسيط غير منشور بعد',
+    cause: 'لم يُنشَر Cloudflare Worker ولم يُضبط PUBLIC_ODOO_PROXY_URL',
+    fix: 'نشر الوسيط على حساب Cloudflare مجانيّ (خطوة المالك) — بلا تغيير كود',
+    level: 'warning',
+  },
+  {
+    scenario: 'أودو على localhost:8069 فقط',
+    cause: 'الوسيط السحابيّ لا يرى عنوانًا محلّيًّا — المزامنة اللحظيّة مشروطة',
+    fix: 'قرار المالك: استضافة أودو على عنوان عامّ — يفتح المرحلة الفوريّة',
+    level: 'danger',
+  },
+  {
+    scenario: 'خطّة Spark بلا Cloud Functions',
+    cause: 'لا مشغّل خادميّ دائم للسحب الدوريّ',
+    fix: 'Cloudflare Cron Trigger كمشغّل مجانيّ؛ أو ترقية Blaze لاحقًا',
+    level: 'warning',
+  },
+  {
+    scenario: 'تعذّر الوصول للوسيط (شبكة)',
+    cause: 'انقطاع شبكة/DNS/CORS — بلا استجابة HTTP',
+    fix: 'العميل يرمي رسالة واضحة، والبوابة تبقى عاملة كاملةً (صفر تبعيّة تشغيليّة)',
+    level: 'success',
+  },
+  {
+    scenario: 'فشل مصادقة أودو',
+    cause: 'مفتاح API/مستخدم خاطئ — uid فارغ',
+    fix: 'رسالة «فشلت مصادقة أودو» + زرّ «اختبار الاتصال» يكشفها مبكرًا',
+    level: 'success',
+  },
+  {
+    scenario: 'استدعاء خارج قائمة السماح',
+    cause: 'نموذج/دالّة غير مُدرَجَين في allowlist الوسيط',
+    fix: 'الوسيط يردّ 403 Blocked — أي توسعة تُضاف صراحةً بمراجعة',
+    level: 'success',
+  },
+  {
+    scenario: 'تعارض بيانات (عُدِّل الجانبان)',
+    cause: 'نفس السجلّ تغيّر في البوابة وأودو',
+    fix: 'سياسة «الأحدث يكسب + سجلّ تعارض» يُعرض في شاشة «مراقبة المزامنة»',
+    level: 'warning',
+  },
+  {
+    scenario: 'انقطاع الإنترنت أثناء العمل',
+    cause: 'الموظّف يعمل في موقعٍ ضعيف/بلا شبكة',
+    fix: 'كاش Firestore الدائم + طابور كتابة يُدفع تلقائيًّا عند العودة (قيد: أوّل دخول أونلاين)',
+    level: 'success',
+  },
+  {
+    scenario: 'تغيّر إصدار أودو أو أسماء الحقول',
+    cause: 'ترقية أودو تُغيّر بنية النموذج (سابقة: product_uom→product_uom_id)',
+    fix: 'مسار ترقية إلزاميّ: فرع منفصل + جدول توافق + 52 اختبارًا قبل الإنتاج',
+    level: 'warning',
+  },
+];
+
+const toneClass = {
+  success: 'text-success bg-success/10 border-success/30',
+  warning: 'text-warning bg-warning/10 border-warning/30',
+  danger: 'text-danger bg-danger/10 border-danger/30',
+  accent: 'text-accent bg-accent/10 border-accent/25',
+};
+// أصناف ثابتة للنقطة الملوّنة (Tailwind يمسح النصوص الحرفية فقط — لا الديناميكيّة).
+const dotClass = {
+  success: 'bg-success',
+  warning: 'bg-warning',
+  danger: 'bg-danger',
+};
+const REF = 'BFP-SCM-PR-2026-ODOO-01';
+---
+
+<DashboardLayout title="تقرير الربط بأودو" showGuide={false} light>
+  <div id="oir-root" class="text-right" dir="rtl">
+
+    {/* ─── الترويسة ──────────────────────────────────────────────────────── */}
+    <header class="mb-8">
+      <div class="flex items-start justify-between gap-4 flex-wrap">
+        <div class="flex items-center gap-3">
+          <span class="inline-grid place-items-center w-12 h-12 rounded-xl bg-accent/10 border border-accent/25 text-accent shrink-0">
+            <Icon name="arrowLeftRight" size={24} />
+          </span>
+          <div>
+            <h1 class="text-3xl font-bold text-ink leading-tight">تقرير آلية الربط بأودو والمزامنة الحيّة</h1>
+            <p class="text-ink-2 text-base mt-1">كفاءة التكامل عبر الـAPI · المزامنة الدوريّة واللحظيّة · سيناريوهات العوائق</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-muted font-mono px-2.5 py-1 rounded-chip bg-chip border border-line">{REF}</span>
+          <button id="oir-print" type="button"
+            class="inline-flex items-center gap-2 text-xs font-bold text-accent bg-accent/10 border border-accent/25 hover:bg-accent/15 rounded-xl px-3 py-1.5 transition-colors">
+            <Icon name="printer" size={15} /> طباعة / PDF
+          </button>
+        </div>
+      </div>
+      <p class="text-muted text-sm leading-relaxed mt-4 max-w-3xl">
+        هذا التقرير <strong class="text-ink-2">مبنيٌّ على الكود مصدرًا رئيسيًّا</strong> — كل آليّة موصوفة هنا مؤكَّدة من ملفّ ومسار
+        في المستودع (طبقة <span class="font-mono text-xs">src/services/odoo</span>، الوسيط <span class="font-mono text-xs">odoo-proxy</span>،
+        الموديول <span class="font-mono text-xs">brandzo_warehouse</span>، إعداد فايربيز، وعقد التكامل). يميّز التقرير بأمانة بين
+        <span class="text-success font-semibold">ما هو منفَّذ</span> و<span class="text-warning font-semibold">ما هو مصمَّم بانتظار التنفيذ</span>.
+      </p>
+      <div class="w-20 h-1 bg-accent rounded-chip mt-4"></div>
+    </header>
+
+    {/* ─── مفتاح الحالات ─────────────────────────────────────────────────── */}
+    <div class="flex flex-wrap items-center gap-3 mb-8 text-xs">
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-chip border text-success bg-success/10 border-success/30"><span class="w-2 h-2 rounded-full bg-success"></span> منفَّذ وقائم</span>
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-chip border text-warning bg-warning/10 border-warning/30"><span class="w-2 h-2 rounded-full bg-warning"></span> مصمَّم — بانتظار خطوة</span>
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-chip border text-danger bg-danger/10 border-danger/30"><span class="w-2 h-2 rounded-full bg-danger"></span> عائقٌ يشترط قرار المالك</span>
+    </div>
+
+    <div class="lg:grid lg:grid-cols-[220px_1fr] lg:gap-8 items-start">
+
+      {/* ─── فهرس جانبيّ لاصق ─────────────────────────────────────────────── */}
+      <nav aria-label="فهرس التقرير" class="hidden lg:block sticky top-6 self-start">
+        <p class="text-xs font-bold text-muted mb-3 px-2">محتويات التقرير</p>
+        <ul class="list-none p-0 m-0 space-y-1">
+          {toc.map((s) => (
+            <li>
+              <a href={`#${s.id}`} data-toc={s.id}
+                class="oir-toc-link flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-ink-2 hover:bg-surface-2 hover:text-ink transition-colors">
+                <Icon name={s.icon} size={15} class="text-muted shrink-0" />
+                <span class="truncate">{s.label}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div class="min-w-0 space-y-12">
+
+        {/* ═══ الحُكم الصادق + مؤشّرات الجاهزية ═══════════════════════════════ */}
+        <section id="verdict" class="scroll-mt-6">
+          <div class="rounded-2xl border border-accent/25 bg-accent/5 p-6">
+            <div class="flex items-center gap-2.5 mb-3">
+              <Icon name="gauge" size={20} class="text-accent" />
+              <h2 class="text-xl font-bold text-ink">الحُكم الصادق — أين نحن اليوم؟</h2>
+            </div>
+            <p class="text-ink-2 text-sm leading-loose">
+              القرار المعماريّ الحاكم: <strong class="text-ink">فايربيز (Firestore) مصدر الحقيقة التشغيليّ، وأودو مرآة محاسبيّة/رقابيّة</strong>.
+              البوابة تعمل كاملةً حتى لو سقط أودو — <strong class="text-ink">صفر تبعيّة تشغيليّة</strong>. التكامل «Integration» لا «Migration»:
+              نغذّي أودو من البوابة ونقرأ منه ما يلزم، ولا ننقل قلب العمليّات إليه. عمليًّا: <strong class="text-ink">~70% من بنية التكامل
+              مبنيّة ومعزولة</strong> (عميل + وسيط + موديول جاهزون)، والوضع الافتراضيّ <span class="font-mono text-xs">training</span> (محاكٍ)،
+              ومنطق المزامنة نفسه <span class="text-warning font-semibold">مصمَّمٌ في عقد التكامل بانتظار التوصيل</span>. هذه الشفافيّة هي جوهر
+              الاحترافيّة: لا نَعِد بما ليس موصولًا.
+            </p>
+          </div>
+
+          <ul class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 list-none p-0 m-0 mt-5">
+            {kpis.map((k) => (
+              <li class={`rounded-xl border p-3.5 text-center ${toneClass[k.tone]}`}>
+                <div class="text-2xl font-bold leading-none">{k.value}</div>
+                <div class="text-[11px] text-ink-2 mt-1.5 leading-tight">{k.label}</div>
+              </li>
+            ))}
+          </ul>
+
+          <div class="grid sm:grid-cols-2 gap-4 mt-5">
+            <div class="rounded-xl border border-line bg-surface shadow-card p-4">
+              <div class="flex items-center gap-2 mb-2 text-success"><Icon name="checkCircle" size={17} /><span class="font-bold text-sm">منفَّذٌ اليوم في الكود</span></div>
+              <ul class="text-xs text-ink-2 space-y-1.5 list-none p-0 m-0 leading-relaxed">
+                <li>· عميل أودو بخمس بدائيّات (<span class="font-mono">authenticate/searchRead/create/write/unlink</span>).</li>
+                <li>· مُبدِّل الوضع (تدريب/إنتاج) بمتغيّر بيئة واحد بلا تغيير كود.</li>
+                <li>· مُطابِق الحقول (product.product ⇄ الأصناف · stock.move → السجلّ).</li>
+                <li>· محاكي أودو أوفلاين (نفس الواجهة، بلا شبكة) للتدريب.</li>
+                <li>· وسيطان مرجعيّان (Cloudflare Worker + Firebase Function) بقائمة سماح.</li>
+                <li>· الموديول <span class="font-mono">brandzo_warehouse</span> (إصدار 19، ‏12/12 مرحلة، ‏52 اختبارًا خضراء).</li>
+              </ul>
+            </div>
+            <div class="rounded-xl border border-line bg-surface shadow-card p-4">
+              <div class="flex items-center gap-2 mb-2 text-warning"><Icon name="workflows" size={17} /><span class="font-bold text-sm">مصمَّمٌ بانتظار التنفيذ</span></div>
+              <ul class="text-xs text-ink-2 space-y-1.5 list-none p-0 m-0 leading-relaxed">
+                <li>· توصيل العميل بشاشة مزامنة + اختبار تكامل يحرسه من التعفّن.</li>
+                <li>· السحب الدوريّ (polling) للموردين/الأصناف/الأوامر/الأرصدة.</li>
+                <li>· طابور الدفع (outbox) لإرسال المستندات كمسوّدات لأودو.</li>
+                <li>· المرايا <span class="font-mono">odoo_mirror_*</span> ووثيقة <span class="font-mono">sync_state</span> وقواعد أمانها.</li>
+                <li>· اللحظيّ الحقيقيّ (Webhooks) — مشروطٌ باستضافة أودو عامّة.</li>
+                <li>· طبقة Repository لتبديل القاعدة (القسم ٦).</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ ١ · آلية الربط عبر الـAPI ═════════════════════════════════════ */}
+        <section id="api" class="scroll-mt-6">
+          <div class="flex items-center gap-2.5 mb-4">
+            <span class="inline-grid place-items-center w-9 h-9 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name="puzzle" size={18} /></span>
+            <h2 class="text-2xl font-bold text-ink">١ · آلية الربط عبر الـAPI وإرسال المستندات كمسوّدات</h2>
+          </div>
+          <p class="text-ink-2 text-sm leading-loose mb-5">
+            المتصفّح <strong class="text-ink">لا يحمل سرّ أودو أبدًا</strong> (سرّه سرقةٌ لو شُحن في الحزمة)، ونقطة أودو
+            <span class="font-mono text-xs">/jsonrpc</span> لا تُصدر ترويسات CORS. لذا يمرّ كل استدعاء عبر <strong class="text-ink">وسيطٍ خادميّ رقيق</strong>
+            يحقن الأسرار، ويصادق، وينادي <span class="font-mono text-xs">execute_kw</span>، ويفرض قائمة سماح، ويضيف ترويسات CORS لأصل البوابة.
+          </p>
+
+          {/* مخطّط القناة */}
+          <div class="rounded-2xl border border-line bg-surface shadow-card p-5 mb-6">
+            <div class="flex flex-col md:flex-row-reverse items-stretch gap-3 text-center">
+              <div class="flex-1 rounded-xl border border-accent/25 bg-accent/5 p-4">
+                <div class="text-accent font-bold text-sm mb-1">البوابة (متصفّح)</div>
+                <div class="text-[11px] text-muted leading-relaxed">لا سرّ إطلاقًا<br/><span class="font-mono">odooConfig.js</span></div>
+              </div>
+              <div class="flex items-center justify-center text-muted md:rotate-0 rotate-90 font-bold text-lg" aria-hidden="true">←</div>
+              <div class="flex-1 rounded-xl border border-accent/25 bg-accent/5 p-4">
+                <div class="text-accent font-bold text-sm mb-1">الوسيط (Cloudflare Worker)</div>
+                <div class="text-[11px] text-muted leading-relaxed">يحمل الأسرار + قائمة السماح + CORS<br/><span class="font-mono">odoo-proxy/</span></div>
+              </div>
+              <div class="flex items-center justify-center text-muted md:rotate-0 rotate-90 font-bold text-lg" aria-hidden="true">←</div>
+              <div class="flex-1 rounded-xl border border-line bg-surface-2 p-4">
+                <div class="text-ink font-bold text-sm mb-1">أودو (Odoo 19)</div>
+                <div class="text-[11px] text-muted leading-relaxed"><span class="font-mono">execute_kw</span> · مستخدم تكامل<br/><span class="font-mono">bz_integration</span></div>
+              </div>
+            </div>
+            <p class="text-[11px] text-muted mt-4 leading-relaxed border-t border-line pt-3">
+              <strong class="text-ink-2">عقد السلك:</strong> <span class="font-mono">{'POST { model, method, args, kwargs }'}</span> →
+              <span class="font-mono">{'{ result }'}</span> أو <span class="font-mono">{'{ error }'}</span> — مرآةٌ شبه مباشرة لـ<span class="font-mono">{'execute_kw(db, uid, pwd, model, method, args, kwargs)'}</span>.
+              استدعاءٌ خاصّ <span class="font-mono">{'{ method: "authenticate" }'}</span> يفحص الاتصال ويرجع uid.
+            </p>
+          </div>
+
+          {/* البدائيّات */}
+          <h3 class="text-base font-bold text-ink mb-3 flex items-center gap-2"><Icon name="layers" size={16} class="text-accent" /> البدائيّات الخمس (واجهة موحّدة تُنسخ عليها الصفحات)</h3>
+          <div class="overflow-x-auto rounded-xl border border-line mb-6">
+            <table class="w-full text-sm border-collapse min-w-[560px]">
+              <thead>
+                <tr class="bg-surface-2 text-ink text-xs">
+                  <th class="text-right font-bold px-4 py-2.5 border-b border-line">الدالّة</th>
+                  <th class="text-right font-bold px-4 py-2.5 border-b border-line">نظير أودو</th>
+                  <th class="text-right font-bold px-4 py-2.5 border-b border-line">الغرض</th>
+                </tr>
+              </thead>
+              <tbody>
+                {primitives.map((p, i) => (
+                  <tr class={i % 2 ? 'bg-surface' : 'bg-surface-2/30'}>
+                    <td class="px-4 py-2.5 border-b border-line font-mono text-xs text-accent align-top whitespace-nowrap">{p.fn}</td>
+                    <td class="px-4 py-2.5 border-b border-line font-mono text-xs text-ink-2 align-top whitespace-nowrap">{p.odoo}</td>
+                    <td class="px-4 py-2.5 border-b border-line text-ink-2 text-xs leading-relaxed align-top">{p.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* الأمان */}
+          <div class="grid sm:grid-cols-3 gap-4 mb-6">
+            <div class="rounded-xl border border-line bg-surface shadow-card p-4">
+              <div class="flex items-center gap-2 mb-1.5 text-accent"><Icon name="shieldCheck" size={16} /><span class="font-bold text-sm text-ink">أسرار في الوسيط فقط</span></div>
+              <p class="text-xs text-muted leading-relaxed"><span class="font-mono">ODOO_URL/DB/USER/API_KEY</span> تعيش حصرًا في خزانة أسرار الوسيط — لا في الحزمة ولا في git.</p>
+            </div>
+            <div class="rounded-xl border border-line bg-surface shadow-card p-4">
+              <div class="flex items-center gap-2 mb-1.5 text-accent"><Icon name="checkSquare" size={16} /><span class="font-bold text-sm text-ink">قائمة سماح صريحة</span></div>
+              <p class="text-xs text-muted leading-relaxed">الوسيط يقبل أزواج (نموذج+دالّة) محدّدة فقط ويردّ <span class="font-mono">403 Blocked</span> لأي استدعاء عشوائيّ.</p>
+            </div>
+            <div class="rounded-xl border border-line bg-surface shadow-card p-4">
+              <div class="flex items-center gap-2 mb-1.5 text-accent"><Icon name="shield" size={16} /><span class="font-bold text-sm text-ink">CORS + مستخدم مقيَّد</span></div>
+              <p class="text-xs text-muted leading-relaxed">CORS محصورٌ بأصل البوابة، ومستخدم التكامل <span class="font-mono">bz_integration</span> بدورٍ مقيَّد لا Admin.</p>
+            </div>
+          </div>
+
+          {/* إرسال المستندات كمسوّدات */}
+          <h3 class="text-base font-bold text-ink mb-3 flex items-center gap-2"><Icon name="fileUp" size={16} class="text-accent" /> إرسال مستندات البوابة إلى أودو كمسوّدات (Drafts)</h3>
+          <p class="text-ink-2 text-sm leading-loose mb-4">
+            عند بلوغ مستندٍ حاكمٍ حالة <strong class="text-ink">«منجَز»</strong> في البوابة، يُقيَّد في طابور الدفع
+            <span class="font-mono text-xs">sync_outbox</span>، ثم يدفعه <span class="font-mono text-xs">syncService</span> عبر الوسيط بـ
+            <span class="font-mono text-xs">create(model, mapper(doc))</span> فيُنشأ في أودو <strong class="text-ink">كمسوّدة</strong> بانتظار الاعتماد المحاسبيّ.
+            <strong class="text-ink">مفتاح منع التكرار = معرّف مستند Firestore</strong>، فلا ازدواج عند إعادة المحاولة.
+          </p>
+          <div class="overflow-x-auto rounded-xl border border-line mb-3">
+            <table class="w-full text-sm border-collapse min-w-[480px]">
+              <thead>
+                <tr class="bg-surface-2 text-ink text-xs">
+                  <th class="text-right font-bold px-4 py-2.5 border-b border-line">مستند البوابة</th>
+                  <th class="text-right font-bold px-4 py-2.5 border-b border-line">نموذج أودو</th>
+                  <th class="text-right font-bold px-4 py-2.5 border-b border-line">الحالة عند الإنشاء</th>
+                </tr>
+              </thead>
+              <tbody>
+                {docMap.map((d, i) => (
+                  <tr class={i % 2 ? 'bg-surface' : 'bg-surface-2/30'}>
+                    <td class="px-4 py-2.5 border-b border-line text-ink-2 text-xs font-semibold align-top">{d.doc}</td>
+                    <td class="px-4 py-2.5 border-b border-line font-mono text-xs text-accent align-top whitespace-nowrap">{d.model}</td>
+                    <td class="px-4 py-2.5 border-b border-line text-ink-2 text-xs align-top">{d.state}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p class="text-[11px] text-warning bg-warning/10 border border-warning/30 rounded-lg px-3 py-2 leading-relaxed">
+            الحالة: القناة والوسيط <strong>مكتوبان وجاهزان</strong> (غير منشورَين)، ودفع المستندات <strong>مصمَّمٌ</strong> ويحتاج توسعة المُطابِق للنماذج الحاكمة أوّلًا.
+          </p>
+        </section>
+
+        {/* ═══ ٢ · المزامنة الدوريّة ═════════════════════════════════════════ */}
+        <section id="periodic" class="scroll-mt-6">
+          <div class="flex items-center gap-2.5 mb-4">
+            <span class="inline-grid place-items-center w-9 h-9 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name="calendar" size={18} /></span>
+            <h2 class="text-2xl font-bold text-ink">٢ · المزامنة الدوريّة — جلب الأصناف والموردين والأوامر أوّلًا بأوّل</h2>
+          </div>
+          <p class="text-ink-2 text-sm leading-loose mb-5">
+            آليّة «السحب التزايديّ» (Incremental Polling): يسأل <span class="font-mono text-xs">syncService</span> أودو كل فترة عن السجلّات التي
+            <span class="font-mono text-xs">write_date &gt; lastSync</span> فقط (لا سحب كامل مكلف)، فيجلب <strong class="text-ink">الجديد والمتغيّر فحسب</strong>.
+            المؤشّر <span class="font-mono text-xs">lastSync</span> محفوظ في وثيقة <span class="font-mono text-xs">sync_state</span> بفايربيز، وتُحدَّث
+            <strong class="text-ink">مرايا القراءة</strong> <span class="font-mono text-xs">odoo_mirror_*</span>. المُشغِّل: <strong class="text-ink">Cloudflare Cron Trigger</strong>
+            (الأنظف، يعمل على Spark المجانيّة)، أو مؤقّت في متصفّح مديرٍ كبديلٍ بلا بنية.
+          </p>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+            {[
+              { i: 'package', t: 'الأصناف', m: 'product.product', d: 'أصناف جديدة/معدّلة + الفئات والوحدات' },
+              { i: 'users', t: 'الموردون والعملاء', m: 'res.partner', d: 'بيانات الشركاء أوّلًا بأوّل للمرآة' },
+              { i: 'shoppingCart', t: 'أوامر الشراء', m: 'purchase.order', d: 'حالة الاعتماد والاستلام تِباعًا' },
+              { i: 'dollarSign', t: 'أوامر البيع', m: 'sale.order', d: 'أوامر البيع وحالتها للمرآة المحاسبيّة' },
+              { i: 'truck', t: 'النقل', m: 'stock.picking', d: 'التحويلات الداخليّة وحالاتها' },
+              { i: 'gauge', t: 'تحديث الرصيد', m: 'qty_available', d: 'الرصيد المحسوب (قراءة فقط) من stock.quant' },
+            ].map((x) => (
+              <div class="rounded-xl border border-line bg-surface shadow-card p-4">
+                <div class="flex items-center gap-2 mb-1.5"><Icon name={x.i} size={16} class="text-accent" /><span class="font-bold text-sm text-ink">{x.t}</span></div>
+                <div class="font-mono text-[11px] text-accent mb-1">{x.m}</div>
+                <p class="text-xs text-muted leading-relaxed">{x.d}</p>
+              </div>
+            ))}
+          </div>
+          <p class="text-[11px] text-warning bg-warning/10 border border-warning/30 rounded-lg px-3 py-2 leading-relaxed">
+            الحالة: مصمَّمة في عقد التكامل (المرحلة ١) — <strong>تعمل على Spark</strong> عبر Cloudflare Cron، ولم تُبنَ خدمة <span class="font-mono">syncService</span> بعد.
+            الرصيد يبقى <strong>محسوبًا في أودو</strong> (مدفوعًا بـ<span class="font-mono">stock.quant</span>) فيُسحَب للمرآة فقط، وتبقى أرصدة البوابة التشغيليّة مرجعها فايربيز.
+          </p>
+        </section>
+
+        {/* ═══ ٣ · ربط الكيانات ══════════════════════════════════════════════ */}
+        <section id="entities" class="scroll-mt-6">
+          <div class="flex items-center gap-2.5 mb-4">
+            <span class="inline-grid place-items-center w-9 h-9 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name="layers" size={18} /></span>
+            <h2 class="text-2xl font-bold text-ink">٣ · ربط كيانات البوابة بأودو (أصناف · موردون · عملاء · عمليّات)</h2>
+          </div>
+          <p class="text-ink-2 text-sm leading-loose mb-5">
+            المبدأ الحاكم: <strong class="text-ink">المعرفة الأودووّية محصورة في طبقتين فقط</strong> — المُطابِق <span class="font-mono text-xs">odooMapper.js</span>
+            (أسماء الحقول وشكل السجلّ) والموديول <span class="font-mono text-xs">brandzo_warehouse</span> (المنطق). لا يعرف أيّ مكوّن آخر شيئًا عن أودو،
+            والمُطابِق <strong class="text-ink">يتدهور بأمان</strong> عند غياب أي حقلٍ مخصّص. حيث لا مطابقة نظيفة نستعمل حقولًا مخصّصة <span class="font-mono text-xs">x_*</span>
+            أو نماذج الموديول الخاصّة <span class="font-mono text-xs">bz.*</span> (<span class="font-mono text-xs">bz.gate.pass · bz.cycle.count · bz.period.close</span>).
+          </p>
+          <div class="space-y-3">
+            {entityMap.map((e) => (
+              <div class="rounded-xl border border-line bg-surface shadow-card p-4">
+                <div class="flex items-center justify-between gap-3 flex-wrap mb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-sm text-ink">{e.entity}</span>
+                    <span class="font-mono text-[11px] text-accent bg-accent/10 border border-accent/25 rounded-chip px-2 py-0.5">{e.model}</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[11px] text-ink-2">{e.dir}</span>
+                    <span class={`text-[11px] px-2 py-0.5 rounded-chip border ${toneClass[e.tone]}`}>{e.status}</span>
+                  </div>
+                </div>
+                <p class="text-xs text-muted leading-relaxed font-mono break-words">{e.fields}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ═══ ٤ · مزامنة أودو ↔ فايربيز ══════════════════════════════════════ */}
+        <section id="firebase" class="scroll-mt-6">
+          <div class="flex items-center gap-2.5 mb-4">
+            <span class="inline-grid place-items-center w-9 h-9 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name="arrowLeftRight" size={18} /></span>
+            <h2 class="text-2xl font-bold text-ink">٤ · آلية المزامنة بين أودو وفايربيز</h2>
+          </div>
+          <div class="rounded-xl border border-accent/25 bg-accent/5 p-4 mb-5">
+            <p class="text-ink-2 text-sm leading-loose">
+              <strong class="text-ink">القاعدة المعماريّة:</strong> فايربيز مصدر الحقيقة التشغيليّ · أودو مرآة محاسبيّة/رقابيّة (امتداد لقرار §19-5 المحسوم).
+              لماذا لا العكس؟ لأن البوابة تعمل أوفلاين بكاش Firestore الدائم، وحرّاسها الخمسة والدورة المستندية مبنيّة على Firestore،
+              وخطّة Spark لا تتحمّل ربطًا حيًّا ثقيلًا بأودو.
+            </p>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4 mb-4">
+            <div class="rounded-xl border border-line bg-surface shadow-card p-4">
+              <div class="flex items-center gap-2 mb-2 text-accent"><Icon name="arrowUpTray" size={16} /><span class="font-bold text-sm text-ink">فايربيز ← أودو (دفع)</span></div>
+              <p class="text-xs text-muted leading-relaxed">المستندات المنجَزة تُدفع عبر الوسيط بـ<span class="font-mono">create()</span> فتُنشأ في أودو كمسوّدات — طابور <span class="font-mono">sync_outbox</span> بمفتاح idempotency.</p>
+            </div>
+            <div class="rounded-xl border border-line bg-surface shadow-card p-4">
+              <div class="flex items-center gap-2 mb-2 text-accent"><Icon name="arrowDownTray" size={16} /><span class="font-bold text-sm text-ink">أودو ← فايربيز (سحب)</span></div>
+              <p class="text-xs text-muted leading-relaxed">السحب الدوريّ يكتب المرايا <span class="font-mono">odoo_mirror_*</span> (قراءة فقط)؛ لاحقًا Webhooks تكتب مباشرةً عبر REST فتُلغي الـpolling.</p>
+            </div>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="rounded-xl border border-line bg-surface shadow-card p-4">
+              <div class="flex items-center gap-2 mb-1.5 text-ink"><Icon name="alertTriangle" size={15} class="text-warning" /><span class="font-bold text-sm">سياسة التعارض</span></div>
+              <p class="text-xs text-muted leading-relaxed">«الأحدث يكسب + سجلّ تعارض» يُعرض في شاشة «مراقبة المزامنة» (بنمط أودو ListView) — تُبنى لاحقًا.</p>
+            </div>
+            <div class="rounded-xl border border-line bg-surface shadow-card p-4">
+              <div class="flex items-center gap-2 mb-1.5 text-ink"><Icon name="checkCircle" size={15} class="text-success" /><span class="font-bold text-sm">صمود أوفلاين</span></div>
+              <p class="text-xs text-muted leading-relaxed"><span class="font-mono">persistentLocalCache</span> + مدير تبويبات → قراءة أوفلاين وطابور كتابة يُدفع تلقائيًّا عند العودة. القيد الوحيد: أوّل دخول أونلاين.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ ٥ · النسخ الاحتياطي ═══════════════════════════════════════════ */}
+        <section id="backup" class="scroll-mt-6">
+          <div class="flex items-center gap-2.5 mb-4">
+            <span class="inline-grid place-items-center w-9 h-9 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name="archive" size={18} /></span>
+            <h2 class="text-2xl font-bold text-ink">٥ · آلية النسخ الاحتياطي</h2>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-xl border border-line bg-surface shadow-card p-5">
+              <div class="flex items-center gap-2 mb-3"><Icon name="package" size={17} class="text-accent" /><span class="font-bold text-ink">مستوى فايربيز (مصدر الحقيقة)</span></div>
+              <ul class="text-xs text-ink-2 space-y-2 list-none p-0 m-0 leading-relaxed">
+                <li>· <strong class="text-ink">كاش محلّيّ دائم على القرص</strong> (<span class="font-mono">persistentLocalCache</span>) + طابور كتابة — صمودٌ أمام انقطاع الشبكة بلا فقد قيد.</li>
+                <li>· متانة مُدارة من Google لبنية Firestore نفسها.</li>
+                <li class="text-warning">· قيد Spark: لا نسخ مجدول ولا Cloud Functions — ترقية <strong>Blaze</strong> تفتح التصدير المجدول (معلّقة على تجديد بطاقة المالك).</li>
+              </ul>
+            </div>
+            <div class="rounded-xl border border-line bg-surface shadow-card p-5">
+              <div class="flex items-center gap-2 mb-3"><Icon name="folders" size={17} class="text-accent" /><span class="font-bold text-ink">مستوى أودو (PostgreSQL)</span></div>
+              <ul class="text-xs text-ink-2 space-y-2 list-none p-0 m-0 leading-relaxed">
+                <li>· <strong class="text-ink"><span class="font-mono">pg_dump</span> يوميّ مجدول</strong> + لقطة إلزاميّة قبل أي ترقية أو تهجير.</li>
+                <li>· <strong class="text-ink">التغيير بالهجرة لا بالمسح</strong> (Odoo/OpenUpgrade في المكان) — ممنوع إعادة إنشاء قاعدة من الصفر على بيانات حيّة.</li>
+                <li>· <strong class="text-ink">تمرين استعادة شهريّ</strong> على قاعدة جانبيّة — «النسخة التي لم تُجرَّب استعادتها ليست نسخة».</li>
+                <li>· التحقّق من فصل <span class="font-mono">volume</span> القاعدة عن حاوية أودو في <span class="font-mono">docker-compose</span>.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ ٦ · الانتقال لقاعدة محليّة ══════════════════════════════════════ */}
+        <section id="localdb" class="scroll-mt-6">
+          <div class="flex items-center gap-2.5 mb-4">
+            <span class="inline-grid place-items-center w-9 h-9 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name="package" size={18} /></span>
+            <h2 class="text-2xl font-bold text-ink">٦ · آلية الانتقال إلى قاعدة بيانات محليّة خاصّة بالشركة</h2>
+          </div>
+          <div class="rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 mb-5">
+            <p class="text-danger text-sm leading-relaxed">
+              <strong>العائق الحقيقيّ:</strong> لا توجد طبقة عزل اليوم — Firestore خام في ~151 موضعًا عبر 25 ملفًّا، و59 مستمع <span class="font-mono">onSnapshot</span> حيّ،
+              والأهمّ أن <strong>منطق العمل نفسه يعيش في <span class="font-mono">firestore.rules</span></strong> (اعتماد · لا-تعديل · «الرقم مرّة واحدة») لا في JS.
+            </p>
+          </div>
+          <p class="text-ink-2 text-sm leading-loose mb-4">
+            <strong class="text-ink">القالب الصحيح موجودٌ بالفعل داخل المشروع</strong> — وهو نفس نمط أودو: واجهةٌ واحدة تُختار بمتغيّر بيئة.
+          </p>
+          <pre class="rounded-xl border border-line bg-surface-2 p-4 overflow-x-auto text-xs font-mono text-ink-2 mb-5 leading-relaxed"><code>// النمط القائم (odoo/index.js)
+export const odoo = isProduction ? realOdooClient : mockOdooClient;
+
+// المستهدف بنفس النمط (src/services/db/index.js)
+export const store = PROVIDER === 'firestore' ? firestoreStore : localStore;  // PUBLIC_DB_PROVIDER</code></pre>
+          <div class="grid sm:grid-cols-2 gap-4 mb-4">
+            <div class="rounded-xl border border-line bg-surface shadow-card p-4">
+              <div class="flex items-center gap-2 mb-1.5 text-accent"><span class="font-mono text-xs font-bold">١</span><span class="font-bold text-sm text-ink">طبقة Repository (شرط مسبق)</span></div>
+              <p class="text-xs text-muted leading-relaxed">إنشاء <span class="font-mono">src/services/db/</span> بمستودعات لكل مجموعة تُخفي بدائيّات Firestore — تنتقل الـ151 موضعًا خلف ~15 وحدة، تدريجيًّا، بدءًا بمجموعات الكاشير.</p>
+            </div>
+            <div class="rounded-xl border border-line bg-surface shadow-card p-4">
+              <div class="flex items-center gap-2 mb-1.5 text-accent"><span class="font-mono text-xs font-bold">٢</span><span class="font-bold text-sm text-ink">مُبدِّل المزوّد</span></div>
+              <p class="text-xs text-muted leading-relaxed">مبدّل <span class="font-mono">PUBLIC_DB_PROVIDER</span> يختار Firestore أو مزوّدًا محلّيًّا (SQLite عبر Tauri · IndexedDB) بلا لمس الصفحات.</p>
+            </div>
+          </div>
+          <p class="text-[11px] text-ink-2 bg-surface-2 border border-line rounded-lg px-3 py-2.5 leading-relaxed">
+            <strong class="text-ink">العوائق التي يجب أن يحلّها أيّ مزوّد بديل:</strong> الاشتراك الحيّ (وإلّا استقصاء)، والذرّية (<span class="font-mono">runTransaction/increment</span> شرط صحّة لا رفاهية)،
+            وطبقة إلزامٍ تكافئ <span class="font-mono">firestore.rules</span> (وإلّا هبطت الضمانات إلى عميلٍ يُتجاوَز). المصادقة يمكن إبقاؤها Firebase Auth، أو هويّة محلّية للمحطّة المنعزلة.
+          </p>
+        </section>
+
+        {/* ═══ ٧ · تغيّر النموذج وطلب التحديث ═════════════════════════════════ */}
+        <section id="governance" class="scroll-mt-6">
+          <div class="flex items-center gap-2.5 mb-4">
+            <span class="inline-grid place-items-center w-9 h-9 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name="settings" size={18} /></span>
+            <h2 class="text-2xl font-bold text-ink">٧ · حوكمة تغيّر النموذج (الإصدار ١٩) وطلب التحديث من المطوّرين</h2>
+          </div>
+          <p class="text-ink-2 text-sm leading-loose mb-5">
+            الخطّة الحاليّة مبنيّة على <strong class="text-ink">أودو ١٩</strong> (الموديول إصدار <span class="font-mono text-xs">19.0.1.2.0</span>). ولأن
+            <strong class="text-ink">المعرفة الأودووّية محصورة في طبقتين فقط</strong>، فإن تغيّر النموذج أو الإصدار يُمتَصّ في موضعٍ واحد لا في كل المشروع —
+            وسطح <span class="font-mono text-xs">execute_kw</span> مستقرٌّ عبر الإصدارات منذ سنوات، فالقناة نفسها لا تتأثّر بالترقية.
+          </p>
+          <div class="grid md:grid-cols-2 gap-4 mb-5">
+            <div class="rounded-xl border border-line bg-surface shadow-card p-4">
+              <div class="font-mono text-xs text-accent mb-1">src/services/odoo/odooMapper.js</div>
+              <p class="text-xs text-muted leading-relaxed">يحمل أسماء الحقول وشكل السجلّ — <strong class="text-ink-2">يُحدَّث وحده</strong> إن تغيّرت أسماء الحقول أو بنيتها.</p>
+            </div>
+            <div class="rounded-xl border border-line bg-surface shadow-card p-4">
+              <div class="font-mono text-xs text-accent mb-1">brandzo-addons/brandzo_warehouse</div>
+              <p class="text-xs text-muted leading-relaxed">يحمل المنطق الأودو-جانبيّ (4 نماذج خاصّة <span class="font-mono">bz.*</span> + توسعة 7 نماذج قياسيّة) — <strong class="text-ink-2">يُرقَّى ويُختبر</strong> بالإصدار الجديد.</p>
+            </div>
+          </div>
+
+          <h3 class="text-base font-bold text-ink mb-3 flex items-center gap-2"><Icon name="workflows" size={16} class="text-accent" /> مسار الترقية الإلزاميّ (لا إنتاج قبل خُضرة المختبر)</h3>
+          <ol class="space-y-2 mb-5 list-none p-0 m-0">
+            {[
+              'تثبيت الإصدار الجديد في صورة Docker على فرع ترقية منفصل.',
+              'مختبر بالإصدار الجديد ثم odoo -u brandzo_warehouse.',
+              'تشغيل الاختبارات الـ52 كلّها والتأكّد من خضرتها.',
+              'جدول توافق الحقول — سابقة موثّقة: ترقية 19 كشفت product_uom→product_uom_id وحذف category_id.',
+              'لا نشر للإنتاج قبل خضرة المختبر بالكامل.',
+            ].map((step, i) => (
+              <li class="flex items-start gap-3 rounded-lg border border-line bg-surface px-3.5 py-2.5">
+                <span class="inline-grid place-items-center w-6 h-6 rounded-full bg-accent/10 border border-accent/25 text-accent text-xs font-bold shrink-0 mt-0.5">{i + 1}</span>
+                <span class="text-xs text-ink-2 leading-relaxed">{step}</span>
+              </li>
+            ))}
+          </ol>
+
+          <h3 class="text-base font-bold text-ink mb-3 flex items-center gap-2"><Icon name="userPlus" size={16} class="text-accent" /> آليّة طلب التحديث من إدارة التقنية مستقبلًا</h3>
+          <div class="rounded-xl border border-line bg-surface shadow-card p-5">
+            <ul class="text-xs text-ink-2 space-y-2.5 list-none p-0 m-0 leading-relaxed">
+              <li>· <strong class="text-ink">مصدر تغيير واحد:</strong> تغيّر حقلٍ ← تعديل <span class="font-mono">odooMapper.js</span> وحده · تغيّر منطقٍ ← الموديول + اختباراته. لا انحراف.</li>
+              <li>· <strong class="text-ink">مسار الطلب:</strong> فرع ترقية ← تعديل المُطابِق/الموديول ← تشغيل <span class="font-mono">52</span> اختبار الموديول + حواجز البوابة (<span class="font-mono">npm test</span> ‏657 اختبارًا · <span class="font-mono">npm run audit</span> · <span class="font-mono">npm run lint</span>) ← توثيق جدول توافق الحقول ← لا دمج/نشر قبل الخُضرة.</li>
+              <li>· <strong class="text-ink">حرّاس صلبة:</strong> قائمة سماح الوسيط تمنع أي نموذج غير مُدرَج، وحاجزا النشر يمنعان صفحة يتيمة أو مجموعة بلا قاعدة أمان.</li>
+              <li>· <strong class="text-ink">توثيق حاكم:</strong> عقد التكامل <span class="font-mono">docs/عقد-التكامل-مع-أودو.md</span> + خطة التطوير الشاملة + <span class="font-mono">ODOO_BACKEND_DEVELOPMENT_PLAN.md</span> — أي مطوّر جديد يبدأ منها.</li>
+            </ul>
+          </div>
+        </section>
+
+        {/* ═══ ٨ · سيناريوهات العوائق والكفاءة ════════════════════════════════ */}
+        <section id="obstacles" class="scroll-mt-6">
+          <div class="flex items-center gap-2.5 mb-4">
+            <span class="inline-grid place-items-center w-9 h-9 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name="alertTriangle" size={18} /></span>
+            <h2 class="text-2xl font-bold text-ink">٨ · سيناريوهات العوائق وكفاءة الربط</h2>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-line mb-6">
+            <table class="w-full text-sm border-collapse min-w-[620px]">
+              <thead>
+                <tr class="bg-surface-2 text-ink text-xs">
+                  <th class="text-right font-bold px-4 py-2.5 border-b border-line">السيناريو</th>
+                  <th class="text-right font-bold px-4 py-2.5 border-b border-line">السبب</th>
+                  <th class="text-right font-bold px-4 py-2.5 border-b border-line">المعالجة</th>
+                </tr>
+              </thead>
+              <tbody>
+                {obstacles.map((o, i) => (
+                  <tr class={i % 2 ? 'bg-surface' : 'bg-surface-2/30'}>
+                    <td class="px-4 py-2.5 border-b border-line align-top">
+                      <span class={`inline-block w-2 h-2 rounded-full ms-1 align-middle ${dotClass[o.level]}`}></span>
+                      <span class="text-xs font-semibold text-ink-2 align-middle">{o.scenario}</span>
+                    </td>
+                    <td class="px-4 py-2.5 border-b border-line text-xs text-muted leading-relaxed align-top">{o.cause}</td>
+                    <td class="px-4 py-2.5 border-b border-line text-xs text-ink-2 leading-relaxed align-top">{o.fix}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rounded-2xl border border-accent/25 bg-accent/5 p-6">
+            <div class="flex items-center gap-2.5 mb-3"><Icon name="trendingUp" size={20} class="text-accent" /><h3 class="text-lg font-bold text-ink">خلاصة الكفاءة</h3></div>
+            <p class="text-ink-2 text-sm leading-loose">
+              أقوى خصائص الكفاءة هنا هي <strong class="text-ink">صفر تبعيّة تشغيليّة</strong>: البوابة تسلّم عملها كاملًا سواء أكان أودو موصولًا أم لا،
+              فالتكامل قيمةٌ مضافة لا نقطة انهيار. البنية <strong class="text-ink">جاهزة بنسبة ~70%</strong> ومعزولة بنظافة (تُوصَل بلا إعادة تصميم)،
+              والمزامنة الدوريّة <strong class="text-ink">تعمل على الخطّة المجانيّة</strong> عبر Cloudflare Cron. ما تبقّى خطوتان بيد المالك:
+              <strong class="text-ink"> نشر الوسيط</strong> (يفتح السحب الدوريّ ودفع المستندات)، و<strong class="text-ink">استضافة أودو على عنوان عامّ</strong>
+              (يفتح المزامنة اللحظيّة الحقيقيّة). حتى ذلك الحين: «شبه لحظيّ» عبر سحبٍ قصير ودفعٍ فور «منجَز».
+            </p>
+          </div>
+        </section>
+
+        {/* ─── التذييل ────────────────────────────────────────────────────── */}
+        <footer class="border-t border-line pt-6 mt-4">
+          <div class="flex items-center justify-between gap-4 flex-wrap text-xs text-muted">
+            <div>
+              <div class="font-bold text-ink-2">إعداد: محمد البرشي — متخصص سلاسل الإمداد والمخازن</div>
+              <div class="mt-0.5">بنغازي · 2026 · تقريرٌ داخليٌّ غير تجاريّ — مبنيٌّ على مراجعة الكود</div>
+            </div>
+            <div class="text-left">
+              <div class="font-mono">{REF}</div>
+              <div class="mt-0.5">آخر تحديث: 2026-08-05</div>
+            </div>
+          </div>
+        </footer>
+
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+    (function () {
+      'use strict';
+      var root = document.getElementById('oir-root');
+      if (!root) return;
+
+      // طباعة/PDF — طباعة المتصفّح (بلا تبعيّات).
+      var printBtn = document.getElementById('oir-print');
+      if (printBtn) printBtn.addEventListener('click', function () { window.print(); });
+
+      // تمييز عنصر الفهرس النشط أثناء التمرير (scroll-spy).
+      var links = Array.prototype.slice.call(root.querySelectorAll('.oir-toc-link'));
+      var byId = {};
+      links.forEach(function (a) { byId[a.getAttribute('data-toc')] = a; });
+      var sections = links
+        .map(function (a) { return document.getElementById(a.getAttribute('data-toc')); })
+        .filter(Boolean);
+
+      var activeCls = ['bg-accent/10', 'text-accent', 'font-bold'];
+      function setActive(id) {
+        links.forEach(function (a) { activeCls.forEach(function (c) { a.classList.remove(c); }); });
+        var el = byId[id];
+        if (el) activeCls.forEach(function (c) { el.classList.add(c); });
+      }
+
+      if ('IntersectionObserver' in window && sections.length) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) { if (e.isIntersecting) setActive(e.target.id); });
+        }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+        sections.forEach(function (s) { io.observe(s); });
+      }
+    })();
+  </script>
+</DashboardLayout>

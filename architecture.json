@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 58,
+    "modules": 59,
     "serviceDomains": 27,
     "serviceFiles": 171,
     "collections": 44,
@@ -264,6 +264,17 @@
       "summary": "الاجتماعات ومحاضرها — أداةُ محاضر موحّدة، يدويّةٌ بالكامل.",
       "file": "src/pages/dashboard/meetings.astro",
       "usesServices": []
+    },
+    {
+      "name": "odoo-integration-report",
+      "route": "/dashboard/odoo-integration-report",
+      "title": "تقرير الربط بأودو",
+      "summary": "",
+      "file": "src/pages/dashboard/odoo-integration-report.astro",
+      "usesServices": [
+        "db",
+        "odoo"
+      ]
     },
     {
       "name": "operations",

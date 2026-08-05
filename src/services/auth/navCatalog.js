@@ -107,6 +107,10 @@ export const NAV_GROUPS = [
     emoji: '📊', icon: 'barChart3',
     items: [
       { path: '/dashboard/reports', label: 'مركز التقارير', icon: 'clipboardList', pinned: true },
+      // تقرير آليّة الربط بأودو والمزامنة الحيّة — مرجعٌ فنّيّ/إداريّ مبنيّ على الكود
+      // (طبقة odoo · الوسيط · الموديول · فايربيز · عقد التكامل). يظهر تلقائيًّا في
+      // «عمليات البوابة» لأنه يُولَّد من هذا الكتالوج نفسه.
+      { path: '/dashboard/odoo-integration-report', label: 'تقرير الربط بأودو والمزامنة', icon: 'arrowLeftRight' },
       // لوحة اللوجستيات التنفيذيّة (المرحلة ٤) — قمرةٌ جامعةٌ بمكوّنات أودو تجمّع
       // مؤشّرات المخزون والعمليّات والسلاسل في نظرةٍ واحدة. للمديرَين كلوحةٍ إدارية.
       { path: '/dashboard/logistics-dashboard', label: 'لوحة اللوجستيات التنفيذيّة', icon: 'gauge', roles: ['admin', 'warehouse_manager'] },

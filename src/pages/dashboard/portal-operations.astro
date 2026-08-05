@@ -54,6 +54,28 @@ const pinned = PINNED_ITEM;
       <div class="w-20 h-1 bg-accent rounded-chip mt-4"></div>
     </div>
 
+    {/* ─── تقريرٌ مميّز: آليّة الربط بأودو ──────────────────────────────────
+         بطاقةٌ بارزة تقود لتقرير التكامل المبنيّ على الكود (مسجّل في المصدر الواحد
+         navCatalog، فيظهر أيضًا كبطاقةٍ ضمن «مركز التقارير» أدناه). */}
+    <a
+      href={`${base}/dashboard/odoo-integration-report`}
+      class="group flex items-center gap-4 rounded-2xl border border-accent/30 bg-accent/5 hover:bg-accent/10 hover:border-accent/50 px-5 py-4 mb-8 shadow-card transition-all"
+    >
+      <span class="inline-grid place-items-center w-12 h-12 rounded-xl bg-accent/10 border border-accent/25 text-accent shrink-0">
+        <Icon name="arrowLeftRight" size={24} />
+      </span>
+      <span class="flex-1 min-w-0">
+        <span class="flex items-center gap-2">
+          <span class="block font-bold text-ink truncate">تقرير الربط بأودو والمزامنة الحيّة</span>
+          <span class="text-[10px] text-accent bg-accent/10 border border-accent/25 rounded-chip px-2 py-0.5 shrink-0">تقرير مرجعيّ</span>
+        </span>
+        <span class="block text-sm text-ink-2 mt-0.5 leading-relaxed">
+          كفاءة التكامل عبر الـAPI · المزامنة الدوريّة واللحظيّة · النسخ الاحتياطي والقاعدة المحليّة · سيناريوهات العوائق — مبنيٌّ على الكود.
+        </span>
+      </span>
+      <span class="text-accent transition-all group-hover:-translate-x-1 shrink-0">←</span>
+    </a>
+
     {/* ─── البحث ─────────────────────────────────────────────────────────── */}
     <div class="mb-8 max-w-xl">
       <div class="relative">
