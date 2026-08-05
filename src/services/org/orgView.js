@@ -195,6 +195,45 @@ export function jobCardsHtml(jobs, opts = {}) {
 }
 
 /**
+ * الملف التعريفيّ للموظف المُسكَّن — بطاقةٌ احترافيّة تجمع الشخص + الوصف
+ * الوظيفيّ + المتطلبات + التبعيّة. `candidate` اختياريّ (يُجلب من التوظيف
+ * عند الطلب؛ إن غاب نعرض ما في الوظيفة فقط). لا يكشف السيرة — رابطٌ للتوظيف.
+ */
+export function employeeProfileHtml(job, candidate, base = '') {
+  if (!job) return '<div class="oempty">لا بيانات.</div>';
+  const initial = esc((job.holder || '؟').trim().slice(0, 1) || '؟');
+  const duties = (job.duties || []).map((d) => `<li>${esc(d)}</li>`).join('');
+  const person = candidate
+    ? `<div class="empprof-facts">
+        ${candidate.qualification ? `<div><span>المؤهل</span><b>${esc(candidate.qualification)}</b></div>` : ''}
+        ${candidate.experienceYears ? `<div><span>الخبرة</span><b>${esc(candidate.experienceYears)} سنوات</b></div>` : ''}
+        ${candidate.phone ? `<div><span>الهاتف</span><b style="direction:ltr;display:inline-block;">${esc(candidate.phone)}</b></div>` : ''}
+        ${candidate.email ? `<div><span>البريد</span><b style="direction:ltr;display:inline-block;">${esc(candidate.email)}</b></div>` : ''}
+      </div>`
+    : job.holder
+      ? '<div class="empprof-note">لا بطاقة مرشّحٍ مربوطة (تسكين يدويّ أو من مصدر الهيكل).</div>'
+      : '<div class="empprof-note">المنصب شاغرٌ حاليًّا.</div>';
+  return `
+    <div class="empprof">
+      <div class="empprof-head">
+        <div class="empprof-avatar">${initial}</div>
+        <div>
+          <div class="empprof-name">${esc(job.holder || 'شاغر')}</div>
+          <div class="empprof-role">${esc(job.icon || '')} ${esc(job.title)}${job.layer ? ' — ' + esc(job.layer) : ''}</div>
+        </div>
+      </div>
+      ${person}
+      <div class="empprof-sec"><h4>الوصف الوظيفيّ / المهام</h4><ul>${duties || '<li>—</li>'}</ul></div>
+      ${jobRequirementsHtml(job.requirements)}
+      <div class="empprof-sec"><h4>التبعيّة والمؤشّرات</h4>
+        <div class="jobreq-row"><b>التبعيّة:</b> ${esc(job.reportingTo || '—')}</div>
+        <div class="jobreq-row"><b>المؤشّرات:</b> ${esc(job.kpis || '—')}</div>
+      </div>
+      ${candidate ? `<a class="pglink" href="${base}/dashboard/recruitment#job=${esc(job.id)}">بطاقة المرشّح الكاملة في التوظيف ←</a>` : ''}
+    </div>`;
+}
+
+/**
  * شبكة **كل الأدوار** (الكتالوج كاملًا — 36 دورًا) بتفاصيلها، بما فيها وظائف
  * الوظائف المساندة التي لا تظهر عند النقر على شجرة التبعية.
  *
@@ -206,6 +245,9 @@ export function allJobsGridHtml(jobs, opts = {}) {
   const titles = opts.orgTitles || {};
   const term = opts.term || '';
   const hire = opts.hireHandler || ''; // اسم دالّة عالميّة لزرّ «توظيف» (اختياريّ)
+  const profileH = opts.profileHandler || ''; // زرّ «الملف التعريفيّ» للمُسكّنة
+  const editH = opts.editHandler || ''; // زرّ «تعديل» (للمديرين)
+  const deleteH = opts.deleteHandler || ''; // زرّ «حذف» (للمديرين)
   const cards = (jobs || [])
     .map((j) => {
       const where = titles[j.orgId] || j.layer || '';
@@ -218,9 +260,13 @@ export function allJobsGridHtml(jobs, opts = {}) {
         [j.title, j.layer, where, j.holder, ...(j.requirements?.skills || [])].some((x) =>
           String(x || '').includes(term)
         );
-      const hireBtn = hire
-        ? `<button type="button" class="jobhire" onclick="${esc(hire)}('${esc(j.id)}')">توظيف لهذا المنصب ←</button>`
-        : '';
+      const actions = [
+        hire ? `<button type="button" class="jobhire" onclick="${esc(hire)}('${esc(j.id)}')">توظيف لهذا المنصب ←</button>` : '',
+        profileH && j.occupied ? `<button type="button" class="jobmini" onclick="${esc(profileH)}('${esc(j.id)}')">الملف التعريفيّ</button>` : '',
+        editH ? `<button type="button" class="jobmini" onclick="${esc(editH)}('${esc(j.id)}')">تعديل</button>` : '',
+        deleteH ? `<button type="button" class="jobmini danger" onclick="${esc(deleteH)}('${esc(j.id)}')">حذف</button>` : '',
+      ].filter(Boolean).join('');
+      const actionsBar = actions ? `<div class="jobacts">${actions}</div>` : '';
       return (
         `<div class="jobfull${hit ? ' ohit' : ''}" data-job-id="${esc(j.id)}" data-org-id="${esc(j.orgId || '')}">` +
         `<div class="jobfull-head"><span class="jobfull-ico">${esc(j.icon || '👤')}</span>` +
@@ -230,7 +276,7 @@ export function allJobsGridHtml(jobs, opts = {}) {
         `<div class="jobfull-sec-h">الوصف الوظيفي / المهام</div>` +
         `<ul class="jobfull-duties">${duties}</ul>` +
         jobRequirementsHtml(j.requirements) +
-        hireBtn +
+        actionsBar +
         `</div></div>`
       );
     })

@@ -229,6 +229,22 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   .jobreq-note { font-size: .73rem; color: #78716c; margin-top: 3px; }
   .jobhire { margin-top: 10px; width: 100%; background: var(--o-navy); color: #fff; border: none; border-radius: 8px; padding: 7px 12px; font-family: 'Tajawal', sans-serif; font-size: .78rem; font-weight: 700; cursor: pointer; transition: background .15s; }
   .jobhire:hover { background: var(--o-blue); }
+  .jobacts { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .jobacts .jobhire { flex:1 1 100%; margin-top:0; }
+  .jobmini { background:#eef2f7; color:var(--o-navy); border:1px solid #d8e0ea; border-radius:7px; padding:5px 10px; font-family:'Tajawal',sans-serif; font-size:.74rem; font-weight:700; cursor:pointer; transition:background .15s; }
+  .jobmini:hover { background:#e2e8f0; }
+  .jobmini.danger { color:#b91c1c; border-color:#fecaca; background:#fef2f2; }
+  .empprof { font-family:'Tajawal', sans-serif; }
+  .empprof-head { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .empprof-avatar { width:52px; height:52px; border-radius:50%; background:var(--o-navy); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem; font-weight:800; flex-shrink:0; }
+  .empprof-name { font-size:1.05rem; font-weight:800; color:var(--o-navy); }
+  .empprof-role { font-size:.82rem; color:#64748b; }
+  .empprof-facts { display:grid; grid-template-columns:1fr 1fr; gap:8px; background:#f8fafc; border:1px solid #e8edf3; border-radius:9px; padding:10px 12px; margin-bottom:12px; font-size:.84rem; }
+  .empprof-facts span { color:#94a3b8; display:block; font-size:.72rem; }
+  .empprof-note { font-size:.8rem; color:#94a3b8; background:#f8fafc; border-radius:8px; padding:8px 10px; margin-bottom:12px; }
+  .empprof-sec { margin-bottom:12px; }
+  .empprof-sec h4 { font-size:.82rem; font-weight:800; color:var(--o-navy); margin:0 0 5px; }
+  .empprof-sec ul { margin:0; padding-inline-start:18px; font-size:.82rem; line-height:1.8; color:#334155; }
 </style>
 
 <div class="org-wrap" dir="rtl" id="orgWrap">
@@ -379,6 +395,46 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   </div>
 </div>
 
+<!-- نافذة الملف التعريفيّ للموظف المُسكَّن -->
+<div class="ov" id="profileOv">
+  <div class="omodal">
+    <div class="omhead"><h3>الملف التعريفيّ للموظف</h3><button class="omclose" onclick="closeOv('profileOv')">✕</button></div>
+    <div class="ombody" id="profileBody"><div class="oempty">جارٍ التحميل…</div></div>
+  </div>
+</div>
+
+<!-- نافذة إضافة/تعديل دور -->
+<div class="ov" id="jobOv">
+  <div class="omodal">
+    <div class="omhead"><h3 id="jobOvTitle">دور</h3><button class="omclose" onclick="closeOv('jobOv')">✕</button></div>
+    <div class="ombody">
+      <input type="hidden" id="jobFid">
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:9px;">
+        <div class="fld"><label>المعرّف</label><input type="text" id="jobFidShow" disabled></div>
+        <div class="fld"><label>الرمز</label><input type="text" id="jobFicon" placeholder="👤"></div>
+      </div>
+      <div class="fld"><label>المسمّى الوظيفيّ *</label><input type="text" id="jobFtitle"></div>
+      <div class="fld"><label>الوحدة/القسم في الهيكل</label><select id="jobForgId"></select></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+        <div class="fld"><label>الطبقة/المستوى</label><input type="text" id="jobFlayer"></div>
+        <div class="fld"><label>التبعيّة</label><input type="text" id="jobFreporting"></div>
+      </div>
+      <div class="fld"><label>المؤشّرات (KPIs)</label><input type="text" id="jobFkpis"></div>
+      <div class="fld"><label>المهام (سطرٌ لكل مهمّة)</label><textarea id="jobFduties" rows="4"></textarea></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:9px;">
+        <div class="fld"><label>المتطلبات — المؤهل</label><input type="text" id="jobRedu"></div>
+        <div class="fld"><label>سنوات الخبرة</label><input type="number" id="jobRexp" min="0"></div>
+      </div>
+      <div class="fld"><label>المهارات (تفصلها ·)</label><input type="text" id="jobRskills"></div>
+      <div class="pbtns">
+        <button class="obtn b-ok" onclick="saveJobForm()">✔ حفظ الدور</button>
+        <button class="obtn b-ghost" onclick="closeOv('jobOv')">إلغاء</button>
+      </div>
+      <p style="font-size:.74rem;color:#94a3b8;margin-top:6px;">يُطبَّق محليًّا ثم احفظ النسخة من زرّ «حفظ» أعلى الصفحة ليُثبَّت في السحابة.</p>
+    </div>
+  </div>
+</div>
+
 <div id="orgPrint" aria-hidden="true"></div>
 </div>
 
@@ -402,6 +458,10 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     diffTrees,
     hasChanges,
     jobsOfNode,
+    addJob,
+    updateJob,
+    removeJob,
+    nextJobId,
   } from '../../services/org/orgModel.js';
   import {
     esc,
@@ -412,6 +472,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     diffListHtml,
     jobCardsHtml,
     allJobsGridHtml,
+    employeeProfileHtml,
   } from '../../services/org/orgView.js';
   import {
     listenOrgStructure,
@@ -420,6 +481,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   } from '../../services/org/orgService.js';
   import { listenAssignments } from '../../services/org/assignmentsService.js';
   import { withLiveHolders } from '../../services/org/assignmentsModel.js';
+  import { getCandidate } from '../../services/recruitment/candidatesService.js';
   import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
   import { MANAGER_ROLES as WRITER_ROLES } from '../../services/auth/roles.js';
   import { trackOverlay, trackOverlays } from '../../services/ui/overlayHistory.js';
@@ -527,6 +589,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         <label style="font-size:.74rem;font-weight:800;color:#64748b;">📇 بطاقات الوصف الوظيفي (${jobs.length})</label>
         ${jobCardsHtml(jobs)}
       </div>` : ''}
+      ${canWrite ? `<button class="obtn b-navy" style="margin-top:12px;width:100%;" onclick="addJobUi('${node.id}')">＋ أضف دورًا لهذه الوحدة</button>` : ''}
     `;
   }
 
@@ -557,6 +620,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       orgTitles: buildOrgTitles(),
       term: ((search && search.value) || '').trim(),
       hireHandler: 'hireForJob',
+      profileHandler: 'openProfile',
+      editHandler: canWrite ? 'editJobUi' : '',
+      deleteHandler: canWrite ? 'deleteJobUi' : '',
     });
   }
   window.renderAllJobs = renderAllJobs;
@@ -585,6 +651,85 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       setTimeout(() => card.classList.remove('ohit'), 2800);
     });
   }
+
+  /* ═══════════ الملف التعريفيّ + إدارة الأدوار (أ‑٤) ═══════════ */
+
+  /** يفتح الملف التعريفيّ للموظف المُسكَّن (يجلب بطاقة المرشح عند الطلب). */
+  window.openProfile = async (jobId) => {
+    const job = withLiveHolders(doc.jobs || [], assignments).find((j) => j.id === jobId);
+    if (!job) return;
+    $('profileBody').innerHTML = '<div class="oempty">جارٍ التحميل…</div>';
+    $('profileOv').classList.add('active');
+    let candidate = null;
+    if (job.candidateId) {
+      try { candidate = await getCandidate(job.candidateId); } catch { /* نعرض الوظيفة وحدها دون بيانات المرشح */ }
+    }
+    $('profileBody').innerHTML = employeeProfileHtml(job, candidate, base);
+  };
+
+  /** يملأ نموذج الدور (تعديلًا أو إضافةً) ويفتحه. */
+  function fillJobForm(job, orgId) {
+    const titles = buildOrgTitles();
+    $('jobFid').value = job ? job.id : '';
+    $('jobFidShow').value = job ? job.id : nextJobId(doc.jobs);
+    $('jobFicon').value = job?.icon || '';
+    $('jobFtitle').value = job?.title || '';
+    $('jobForgId').innerHTML = Object.entries(titles).map(([id, t]) => `<option value="${id}">${esc(t)}</option>`).join('');
+    $('jobForgId').value = job?.orgId || orgId || doc.tree.id;
+    $('jobFlayer').value = job?.layer || '';
+    $('jobFreporting').value = job?.reportingTo || '';
+    $('jobFkpis').value = job?.kpis || '';
+    $('jobFduties').value = (job?.duties || []).join('\n');
+    $('jobRedu').value = job?.requirements?.education || '';
+    $('jobRexp').value = job?.requirements?.experienceYears || '';
+    $('jobRskills').value = (job?.requirements?.skills || []).join(' · ');
+    $('jobOvTitle').textContent = job ? `تعديل الدور ${job.id}` : 'إضافة دور جديد';
+    $('jobOv').classList.add('active');
+  }
+
+  window.editJobUi = (jobId) => {
+    const job = (doc.jobs || []).find((j) => j.id === jobId);
+    if (job) fillJobForm(job, null);
+  };
+
+  window.addJobUi = (orgId) => fillJobForm(null, orgId);
+
+  window.deleteJobUi = (jobId) => {
+    const job = (doc.jobs || []).find((j) => j.id === jobId);
+    if (!job || !canWrite) return;
+    if (!confirm(`حذف الدور «${job.title}» (${job.id})؟\nيبقى محليًّا حتى تحفظ النسخة.`)) return;
+    doc.jobs = removeJob(doc.jobs, jobId);
+    markDirty();
+    render();
+  };
+
+  window.saveJobForm = () => {
+    if (!canWrite) return;
+    const id = $('jobFid').value || $('jobFidShow').value;
+    const title = $('jobFtitle').value.trim();
+    if (!title) { alert('المسمّى الوظيفيّ إلزاميّ.'); return; }
+    const edu = $('jobRedu').value.trim();
+    const exp = Number($('jobRexp').value) || 0;
+    const skills = $('jobRskills').value.split(/[·,\n]/).map((s) => s.trim()).filter(Boolean);
+    const requirements = edu || exp || skills.length ? { education: edu, experienceYears: exp, skills } : null;
+    const patch = {
+      icon: $('jobFicon').value.trim(),
+      title,
+      orgId: $('jobForgId').value,
+      layer: $('jobFlayer').value.trim(),
+      reportingTo: $('jobFreporting').value.trim(),
+      kpis: $('jobFkpis').value.trim(),
+      duties: $('jobFduties').value.split('\n').map((s) => s.trim()).filter(Boolean),
+      requirements,
+    };
+    const exists = (doc.jobs || []).some((j) => j.id === id);
+    try {
+      doc.jobs = exists ? updateJob(doc.jobs, id, patch) : addJob(doc.jobs, { id, ...patch });
+    } catch (e) { alert(e.message); return; }
+    markDirty();
+    closeOv('jobOv');
+    render();
+  };
 
   function renderStatic() {
     $('suppBox').innerHTML = supportBandHtml(doc.supportFunctions);
@@ -851,7 +996,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     isOpen: (el) => el.classList.contains('present'),
     close: () => togglePresent(false), // ليخرج من ملء الشاشة أيضًا لا أن يُزال الصنف وحده
   });
-  trackOverlays(['#moveOv', '#saveOv', '#verOv'], { close: (el) => closeOv(el.id) });
+  trackOverlays(['#moveOv', '#saveOv', '#verOv', '#profileOv', '#jobOv'], { close: (el) => closeOv(el.id) });
 
   /* ═══════════ الإقلاع ═══════════ */
 

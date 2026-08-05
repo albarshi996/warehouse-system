@@ -218,6 +218,38 @@ export function jobsOfNode(jobs, nodeId) {
   return (jobs || []).filter((j) => j.orgId === nodeId);
 }
 
+/**
+ * إضافة بطاقة دورٍ جديدة — المعرّف يجب أن يكون فريدًا وله مسمّى. لا يُعدّل
+ * المدخل (يُعيد قائمةً جديدة) كسائر عمليات الهيكل.
+ */
+export function addJob(jobs, job) {
+  const list = jobs || [];
+  if (!job || !job.id) throw new Error('الدور يحتاج معرّفًا');
+  if (list.some((j) => j.id === job.id)) throw new Error(`المعرّف «${job.id}» مستخدم بالفعل`);
+  if (!job.title || !String(job.title).trim()) throw new Error('الدور يحتاج مسمّى');
+  return [...list, { duties: [], occupied: false, ...job }];
+}
+
+/** تعديل حقول دورٍ بمعرّفه. لا يُعدّل المدخل. */
+export function updateJob(jobs, id, patch) {
+  return (jobs || []).map((j) => (j.id === id ? { ...j, ...patch } : j));
+}
+
+/** حذف دورٍ بمعرّفه. لا يُعدّل المدخل. */
+export function removeJob(jobs, id) {
+  return (jobs || []).filter((j) => j.id !== id);
+}
+
+/** معرّف دورٍ جديد غير مستخدم بنمط Jxx (أعلى رقم قائم + 1). */
+export function nextJobId(jobs) {
+  let max = 0;
+  for (const j of jobs || []) {
+    const m = /^J(\d+)$/.exec(j.id || '');
+    if (m) max = Math.max(max, Number(m[1]));
+  }
+  return `J${String(max + 1).padStart(2, '0')}`;
+}
+
 /** صفحات النظام الحيّ التي تخدم عقدة وكل ما تحتها (بلا تكرار). */
 export function pagesOfBranch(tree, nodeId) {
   const node = nodeId ? findNode(tree, nodeId) : tree;

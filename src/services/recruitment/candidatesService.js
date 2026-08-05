@@ -167,6 +167,12 @@ export function listenCandidates(callback, onError) {
   );
 }
 
+/** يجلب بطاقة مرشحٍ واحدة عند الطلب — للملف التعريفيّ للموظف المُسكَّن في الهيكل. */
+export async function getCandidate(candidateId) {
+  const snap = await getDoc(doc(db, COL, candidateId));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
 /** يجلب السيرة عند الطلب ويفتحها في تبويب (لا تُحمَّل مع القائمة أبدًا). */
 export async function openCv(candidateId) {
   const snap = await getDoc(doc(db, COL, candidateId, 'files', 'cv'));
