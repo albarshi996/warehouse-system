@@ -13,10 +13,13 @@ import { listenDocumentsByTypes } from '../../../services/documents/documentsSer
 import { subscribeItems } from '../../../services/itemService.js';
 import { odoo } from '../../../services/odoo/index.js';
 import { odooStateLabel } from '../../../services/odoo/poMapper.js';
+import { pickingStateLabel } from '../../../services/odoo/grnMapper.js';
 import {
   pushPurchaseOrder,
   pushItem,
   approveInOdoo,
+  pushGoodsReceipt,
+  validateReceiptInOdoo,
   pullProducts,
   listenSyncState,
   listenSyncEvents,
@@ -60,6 +63,12 @@ function OdooStateBadge({ state }) {
   return <Badge tone={tone}>{text}</Badge>;
 }
 
+/** شارة حالة الاستلام (مسوّدة/جاهز كهرمانيّ · منجَز أخضر). */
+function PickingStateBadge({ state }) {
+  const { text, tone } = pickingStateLabel(state);
+  return <Badge tone={tone}>{text}</Badge>;
+}
+
 /** رأس عمودٍ في الجسر. */
 function ColumnHead({ icon, title, sub, tone }) {
   return (
@@ -92,8 +101,9 @@ const primaryStyle = { background: 'var(--accent, #714B67)' };
 export default function OdooSyncBridge() {
   const [me, setMe] = useState(null);
   const [ready, setReady] = useState(false);
-  const [track, setTrack] = useState('PO'); // 'PO' | 'item'
+  const [track, setTrack] = useState('PO'); // 'PO' | 'GRN' | 'item'
   const [pos, setPos] = useState([]);
+  const [grns, setGrns] = useState([]);
   const [items, setItems] = useState([]);
   const [odooProducts, setOdooProducts] = useState([]);
   const [syncState, setSyncState] = useState([]);
@@ -117,7 +127,10 @@ export default function OdooSyncBridge() {
 
   useEffect(() => {
     if (!allowed) return undefined;
-    const u1 = listenDocumentsByTypes(['PO'], setPos, 100);
+    const u1 = listenDocumentsByTypes(['PO', 'GRN'], (docs) => {
+      setPos(docs.filter((d) => d.type === 'PO'));
+      setGrns(docs.filter((d) => d.type === 'GRN'));
+    }, 200);
     const u2 = subscribeItems(setItems, () => {}, { includeArchived: false });
     const u3 = listenSyncState(setSyncState, () => {});
     const u4 = listenSyncEvents(setEvents, 40, () => {});
@@ -178,6 +191,18 @@ export default function OdooSyncBridge() {
       flash(`اعتُمد ${rec.sourceNumber || 'الأمر'} في أودو — أصبح مؤكّدًا`, 'success');
     });
 
+  const onPushGrn = (docObj) =>
+    run(`grn-${docObj.id}`, async () => {
+      await pushGoodsReceipt(docObj, me);
+      flash(`دُفعت مذكرة الاستلام ${docObj.number || ''} إلى أودو مسوّدةً`, 'success');
+    });
+
+  const onValidateReceipt = (rec) =>
+    run(`vr-${rec.id}`, async () => {
+      await validateReceiptInOdoo(rec, me);
+      flash(`صُدّق الاستلام ${rec.sourceNumber || rec.title || ''} في أودو — منجَز`, 'success');
+    });
+
   const onPushItem = (item) =>
     run(`it-${item.sku}`, async () => {
       await pushItem(item, me);
@@ -200,7 +225,9 @@ export default function OdooSyncBridge() {
     );
 
   const poMirror = syncState.filter((r) => r.sourceType === 'PO');
+  const grnMirror = syncState.filter((r) => r.sourceType === 'GRN');
   const pushedPO = new Set(poMirror.map((r) => r.sourceId));
+  const pushedGRN = new Set(grnMirror.map((r) => r.sourceId).filter(Boolean));
   const linkedItems = new Set(syncState.filter((r) => r.sourceType === 'item').map((r) => r.sourceId));
 
   return (
@@ -245,6 +272,9 @@ export default function OdooSyncBridge() {
           <span className="text-ink-2">
             أودو: <b>مسوّدة (draft)</b> ← <span style={{ color: '#1e7e34' }}><b>اعتماد ⇒ مؤكّد (purchase)</b></span>
           </span>
+          <span className="text-ink-2">
+            · تأكيد الأمر <b>يجدول استلامًا واردًا تلقائيًّا</b> (WH/IN) يبقى حتى «تصديق» ⇒ <b>منجَز</b>
+          </span>
           <span className="text-ink-2">— لا شيء يصبح مؤكّدًا في أودو إلّا باعتمادٍ صريح.</span>
         </div>
       </div>
@@ -253,6 +283,7 @@ export default function OdooSyncBridge() {
       <div className="flex gap-2 mb-4">
         {[
           { id: 'PO', label: 'أوامر الشراء', icon: <IconDoc width={15} height={15} /> },
+          { id: 'GRN', label: 'الاستلام (GRN)', icon: <IconDoc width={15} height={15} /> },
           { id: 'item', label: 'ماستر الأصناف', icon: <IconBox width={15} height={15} /> },
         ].map((t) => (
           <button
@@ -324,6 +355,52 @@ export default function OdooSyncBridge() {
                 );
               })}
             </>
+          ) : track === 'GRN' ? (
+            <>
+              <ColumnHead
+                icon={<IconDoc />}
+                title="البوابة — مذكرات الاستلام"
+                sub={`${grns.length} مذكرة استلام حقيقيّة`}
+                tone={TONE.muted}
+              />
+              {grns.length === 0 && <p className="text-xs text-ink-2">لا توجد مذكرات استلام بعد. أنشئ واحدة من صفحة المستندات.</p>}
+              {grns.map((d) => {
+                const pushed = pushedGRN.has(d.id);
+                return (
+                  <Card key={d.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-bold text-ink text-sm truncate">{d.number || 'مسودة'}</div>
+                        <div className="text-[11px] text-ink-2 truncate">
+                          {d.header?.supplier || '—'}{d.header?.poRef ? ` · مرجع ${d.header.poRef}` : ''}
+                        </div>
+                      </div>
+                      <Badge tone={d.state === 'approved' || d.state === 'done' ? 'success' : 'muted'}>
+                        {PORTAL_STATE[d.state] || d.state}
+                      </Badge>
+                    </div>
+                    <div className="mt-2">
+                      {pushed ? (
+                        <Badge tone="success">
+                          <IconCheck width={12} height={12} /> مرتبط بأودو
+                        </Badge>
+                      ) : (
+                        <button
+                          type="button"
+                          className={btnPrimary}
+                          style={primaryStyle}
+                          disabled={busy === `grn-${d.id}`}
+                          onClick={() => onPushGrn(d)}
+                        >
+                          <IconArrow width={14} height={14} />
+                          {busy === `grn-${d.id}` ? '…' : 'ادفع إلى أودو'}
+                        </button>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
+            </>
           ) : (
             <>
               <ColumnHead icon={<IconBox />} title="البوابة — ماستر الأصناف" sub={`${items.length} صنف`} tone={TONE.muted} />
@@ -374,7 +451,11 @@ export default function OdooSyncBridge() {
             </button>
           )}
           <div className="text-center text-[11px] text-ink-2">
-            {track === 'PO' ? `${poMirror.length} مدفوع` : `${odooProducts.length} صنف في أودو`}
+            {track === 'PO'
+              ? `${poMirror.length} مدفوع`
+              : track === 'GRN'
+                ? `${grnMirror.length} استلام في أودو`
+                : `${odooProducts.length} صنف في أودو`}
           </div>
         </section>
 
@@ -407,6 +488,49 @@ export default function OdooSyncBridge() {
                       >
                         <IconCheck width={14} height={14} />
                         {busy === `ap-${r.id}` ? '…' : 'اعتمد في أودو'}
+                      </button>
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </>
+          ) : track === 'GRN' ? (
+            <>
+              <ColumnHead icon={<IconDoc />} title="أودو — الاستلامات الواردة" sub={`${grnMirror.length} مسجَّل`} tone={TONE.success} />
+              {grnMirror.length === 0 && (
+                <p className="text-xs text-ink-2">
+                  لا شيء بعد — اعتمد أمر شراءٍ (يجدول أودو استلامًا تلقائيًّا) أو ادفع مذكرة استلامٍ من البوابة.
+                </p>
+              )}
+              {grnMirror.map((r) => (
+                <Card key={r.id}>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-bold text-ink text-sm truncate">{r.sourceNumber || r.title || `#${r.odooId}`}</div>
+                      <div className="text-[11px] text-ink-2 truncate">
+                        {r.supplier || '—'}{r.poNumber ? ` · أمر ${r.poNumber}` : ''}
+                      </div>
+                    </div>
+                    <PickingStateBadge state={r.odooState} />
+                  </div>
+                  <div className="flex items-center gap-2 mt-1 text-[11px] text-ink-2">
+                    {r.autoCreated ? (
+                      <Badge tone="muted">أنشأه أودو تلقائيًّا عند تأكيد الأمر</Badge>
+                    ) : (
+                      <span>{r.lineCount || 0} بند · {(r.totalReceived || 0).toLocaleString('ar-LY')} وحدة مستلمة</span>
+                    )}
+                  </div>
+                  {r.odooState !== 'done' && (
+                    <div className="mt-2">
+                      <button
+                        type="button"
+                        className={btnPrimary}
+                        style={primaryStyle}
+                        disabled={busy === `vr-${r.id}`}
+                        onClick={() => onValidateReceipt(r)}
+                      >
+                        <IconCheck width={14} height={14} />
+                        {busy === `vr-${r.id}` ? '…' : 'صدّق الاستلام'}
                       </button>
                     </div>
                   )}

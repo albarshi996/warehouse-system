@@ -29,6 +29,7 @@ import { db, auth } from '../../config/firebase.js';
 import { odoo, describeOdooConfig } from './index.js';
 import { itemToProductValues, productToItem } from './odooMapper.js';
 import { poDocToPurchaseOrder } from './poMapper.js';
+import { grnDocToStockPicking, autoReceiptFromPo } from './grnMapper.js';
 import { getItem, createItem, updateItem } from '../itemService.js';
 
 const COL_SYNC = 'odoo_sync';
@@ -149,7 +150,9 @@ export async function pushItem(item, profile) {
 /* ═══════════════ الاعتماد في أودو: draft → purchase ═══════════════ */
 
 /**
- * يعتمد أمر شراءٍ مدفوعًا (مسوّدة) فيتحوّل إلى `purchase` (مؤكّد) في أودو.
+ * يعتمد أمر شراءٍ مدفوعًا (مسوّدة) فيتحوّل إلى `purchase` (مؤكّد) في أودو —
+ * **ويُنشئ أودو استلامًا مجدولًا تلقائيًّا** (WH/IN، حالة `assigned`)، محاكاةً
+ * حرفيّة لسلوك أودو الحقيقيّ عند تأكيد أمر شراء.
  * @param {object} rec  سجلّ مرآةٍ من `listenSyncState` { id, odooId, sourceNumber }
  */
 export async function approveInOdoo(rec, profile) {
@@ -163,6 +166,103 @@ export async function approveInOdoo(rec, profile) {
   await logEvent(
     'approve',
     { sourceType: 'PO', sourceId: rec.sourceId, message: `اعتُمد أمر الشراء ${rec.sourceNumber || ''} في أودو (مؤكّد)` },
+    profile
+  );
+
+  // سلوك أودو الحقيقيّ: تأكيد الأمر يجدول استلامًا واردًا تلقائيًّا.
+  const who = whoami(profile);
+  const receiptValues = autoReceiptFromPo(rec);
+  const pickingId = await odoo.create('stock.picking', {
+    ...receiptValues,
+    name: `WH/IN/${String(rec.odooId).padStart(5, '0')}`,
+  });
+  await setDoc(
+    doc(db, COL_SYNC, `PICK_PO_${rec.sourceId}`),
+    {
+      sourceType: 'GRN',
+      sourceId: null, // وُلد في أودو — لا مستند بوابة مصدرًا
+      sourceNumber: '',
+      poNumber: rec.sourceNumber || '',
+      odooModel: 'stock.picking',
+      odooId: pickingId,
+      odooState: 'assigned',
+      direction: 'auto',
+      autoCreated: true,
+      title: `استلام مجدول — ${rec.sourceNumber || ''}`,
+      supplier: rec.supplier || '',
+      lineCount: 0,
+      syncedAt: serverTimestamp(),
+      byUid: who.byUid,
+      byName: who.byName,
+    },
+    { merge: true }
+  );
+  await logEvent(
+    'push',
+    { sourceType: 'GRN', sourceId: null, message: `أنشأ أودو استلامًا مجدولًا تلقائيًّا لأمر ${rec.sourceNumber || ''} (سلوك تأكيد الأمر)` },
+    profile
+  );
+}
+
+/* ═══════════════ الاستلام: البوابة → أودو (stock.picking) ═══════════════ */
+
+/**
+ * يدفع مذكرة استلام (GRN) إلى أودو بحالة `draft`، مربوطةً بأمر الشراء (origin).
+ * @param {object} grnDoc  مستند البوابة { id, number, header, lines }
+ */
+export async function pushGoodsReceipt(grnDoc, profile) {
+  if (!grnDoc?.id) throw new Error('مستند الاستلام بلا معرّف.');
+  const values = grnDocToStockPicking(grnDoc);
+  const odooId = await odoo.create('stock.picking', {
+    ...values,
+    name: grnDoc.number || `WH/IN/${grnDoc.id}`,
+  });
+  const who = whoami(profile);
+  await setDoc(
+    doc(db, COL_SYNC, `GRN_${grnDoc.id}`),
+    {
+      sourceType: 'GRN',
+      sourceId: grnDoc.id,
+      sourceNumber: grnDoc.number || '',
+      poNumber: values.origin || '',
+      odooModel: 'stock.picking',
+      odooId,
+      odooState: 'draft',
+      direction: 'push',
+      autoCreated: false,
+      title: values.x_supplier || grnDoc.number || 'استلام',
+      supplier: values.x_supplier || '',
+      totalReceived: values.x_total_received || 0,
+      lineCount: (values.move_lines || []).length,
+      syncedAt: serverTimestamp(),
+      byUid: who.byUid,
+      byName: who.byName,
+    },
+    { merge: true }
+  );
+  await logEvent(
+    'push',
+    { sourceType: 'GRN', sourceId: grnDoc.id, message: `دُفعت مذكرة الاستلام ${grnDoc.number || ''} إلى أودو مسوّدةً` },
+    profile
+  );
+  return odooId;
+}
+
+/**
+ * يصدّق استلامًا في أودو (draft/assigned → done) — «تصديق» أودو الحقيقيّ.
+ * @param {object} rec  سجلّ مرآةٍ { id, odooId, sourceNumber }
+ */
+export async function validateReceiptInOdoo(rec, profile) {
+  if (!rec?.odooId) throw new Error('لا يوجد معرّف أودو لهذا السجلّ.');
+  await odoo.write('stock.picking', rec.odooId, { state: 'done' });
+  await setDoc(
+    doc(db, COL_SYNC, rec.id),
+    { odooState: 'done', approvedAt: serverTimestamp() },
+    { merge: true }
+  );
+  await logEvent(
+    'approve',
+    { sourceType: 'GRN', sourceId: rec.sourceId, message: `صُدّق الاستلام ${rec.sourceNumber || rec.title || ''} في أودو (منجَز)` },
     profile
   );
 }
