@@ -27,9 +27,10 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
 import { odoo, describeOdooConfig } from './index.js';
-import { itemToProductValues, productToItem } from './odooMapper.js';
+import { itemToProductValues, productToItem, ledgerMoveToStockMove } from './odooMapper.js';
 import { poDocToPurchaseOrder } from './poMapper.js';
 import { grnDocToStockPicking, autoReceiptFromPo } from './grnMapper.js';
+import { odooTargetFor, docToOdooValues } from './docCrosswalk.js';
 import { getItem, createItem, updateItem } from '../itemService.js';
 
 const COL_SYNC = 'odoo_sync';
@@ -265,6 +266,137 @@ export async function validateReceiptInOdoo(rec, profile) {
     { sourceType: 'GRN', sourceId: rec.sourceId, message: `صُدّق الاستلام ${rec.sourceNumber || rec.title || ''} في أودو (منجَز)` },
     profile
   );
+}
+
+/* ═══════════════ الدفع العامّ: أيّ مستندٍ محكوم → أودو ═══════════════ */
+
+/**
+ * يدفع **أيّ** مستندٍ من الأنواع الـ27 المحكومة إلى نموذج أودو المقابل له
+ * (جدول العبور `docCrosswalk`)، مسوّدةً حتى الاعتماد. أمر الشراء والاستلام
+ * يمرّان بمخطِّطيهما المخصوصَين الأغنى؛ والبقيّة بالمخطِّط العامّ.
+ *
+ * @param {object} docObj  مستند البوابة { id, type, number, header, lines, links }
+ */
+export async function pushAnyDocument(docObj, profile) {
+  if (!docObj?.id) throw new Error('المستند بلا معرّف.');
+  if (docObj.type === 'PO') return pushPurchaseOrder(docObj, profile);
+  if (docObj.type === 'GRN') return pushGoodsReceipt(docObj, profile);
+
+  const target = odooTargetFor(docObj.type);
+  if (!target) throw new Error(`النوع ${docObj.type} خارج جدول العبور — أضفه في docCrosswalk.js.`);
+
+  const values = docToOdooValues(docObj);
+  const odooId = await odoo.create(target.model, {
+    ...values,
+    name: docObj.number || `${docObj.type}/${docObj.id}`,
+  });
+  const who = whoami(profile);
+  await setDoc(
+    doc(db, COL_SYNC, `DOC_${docObj.type}_${docObj.id}`),
+    {
+      sourceType: docObj.type,
+      sourceId: docObj.id,
+      sourceNumber: docObj.number || '',
+      odooModel: target.model,
+      odooId,
+      odooState: 'draft',
+      confirmState: target.confirmState,
+      confirmLabel: target.confirmLabel,
+      verb: target.verb,
+      direction: 'push',
+      title: values.x_supplier || values.x_customer || docObj.number || docObj.type,
+      origin: values.origin || '',
+      lineCount: (values.line_ids || []).length,
+      syncedAt: serverTimestamp(),
+      byUid: who.byUid,
+      byName: who.byName,
+    },
+    { merge: true }
+  );
+  await logEvent(
+    'push',
+    { sourceType: docObj.type, sourceId: docObj.id, message: `دُفع ${docObj.number || docObj.type} إلى أودو (${target.model}) مسوّدةً` },
+    profile
+  );
+  return odooId;
+}
+
+/**
+ * يعتمد **أيّ** سجلّ مرآةٍ عامّ: ينقله من `draft` إلى حالة الاعتماد الخاصّة
+ * بنموذجه (purchase/posted/done…) المخزّنة في السجلّ نفسه.
+ * (أمر الشراء له `approveInOdoo` المخصوص لأنه يولّد استلامًا تلقائيًّا.)
+ *
+ * @param {object} rec  سجلّ مرآةٍ { id, odooModel, odooId, confirmState }
+ */
+export async function approveAnyInOdoo(rec, profile) {
+  if (!rec?.odooId) throw new Error('لا يوجد معرّف أودو لهذا السجلّ.');
+  const nextState = rec.confirmState || 'done';
+  await odoo.write(rec.odooModel, rec.odooId, { state: nextState });
+  await setDoc(
+    doc(db, COL_SYNC, rec.id),
+    { odooState: nextState, approvedAt: serverTimestamp() },
+    { merge: true }
+  );
+  await logEvent(
+    'approve',
+    { sourceType: rec.sourceType, sourceId: rec.sourceId, message: `اعتُمد ${rec.sourceNumber || rec.title || ''} في أودو (${rec.confirmLabel || nextState})` },
+    profile
+  );
+}
+
+/* ═══════════════ العمليات: دفتر الحركات → stock.move ═══════════════ */
+
+/**
+ * يزامن حركات دفتر المخزون (`stock_moves` — وقائع مقيّدة ملحق-فقط) إلى
+ * `stock.move` في أودو. تصل `done` مباشرةً: قاعدة «درفت حتى الاعتماد» تخصّ
+ * المستندات المنتظرة قرارًا؛ أمّا القيود التاريخيّة فتنعكس كما وقعت.
+ *
+ * يتخطّى ما زومن سابقًا (مرآة `MOVE_<id>`) فيصلح للنداء المتكرّر.
+ *
+ * @param {object[]} moves  حركات الدفتر
+ * @param {Map<string, object>} mirrorById  فهرس المرآة الحاليّ (لتخطّي المُزامَن)
+ * @returns {Promise<{ pushed:number, skipped:number }>}
+ */
+export async function syncLedgerMoves(moves, mirrorById, profile) {
+  const who = whoami(profile);
+  let pushed = 0;
+  let skipped = 0;
+  for (const mv of moves || []) {
+    const mirrorKey = `MOVE_${mv.id}`;
+    if (mirrorById?.has?.(mirrorKey)) {
+      skipped++;
+      continue;
+    }
+    const values = ledgerMoveToStockMove(mv);
+    const odooId = await odoo.create('stock.move', values);
+    await setDoc(
+      doc(db, COL_SYNC, mirrorKey),
+      {
+        sourceType: 'move',
+        sourceId: mv.id,
+        sourceNumber: values.origin || '',
+        odooModel: 'stock.move',
+        odooId,
+        odooState: 'done',
+        direction: 'push',
+        title: `${mv.sku || ''} · ${values.x_from || '؟'} ← ${values.x_to || '؟'}`,
+        qty: Number(mv.qty) || 0,
+        syncedAt: serverTimestamp(),
+        byUid: who.byUid,
+        byName: who.byName,
+      },
+      { merge: true }
+    );
+    pushed++;
+  }
+  if (pushed > 0) {
+    await logEvent(
+      'push',
+      { sourceType: 'move', sourceId: null, message: `زومنت ${pushed} حركة مخزنيّة إلى أودو (stock.move) — قيودٌ منجزة` },
+      profile
+    );
+  }
+  return { pushed, skipped };
 }
 
 /* ═══════════════ السحب: أودو → البوابة (upsert في الماستر) ═══════════════ */

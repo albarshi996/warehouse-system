@@ -73,6 +73,28 @@ export function itemToProductValues(item = {}, { allowBalance = false } = {}) {
 }
 
 /**
+ * الاتجاه المعاكس: حركة دفتر المخزون (`stock_moves`) → قِيَم `stock.move` في أودو.
+ *
+ * حركات الدفتر وقائع مقيّدة أصلًا (ملحق-فقط، تُكتب عند «منجَز») — فتنعكس في
+ * أودو بحالة `done` مباشرةً: قاعدة «درفت حتى الاعتماد» للمستندات التي تنتظر
+ * قرارًا، أمّا الوقائع التاريخيّة فتصل كما هي.
+ *
+ * @param {object} move  حركة دفترٍ { sku, qty, from, to, docType, docNumber, postedAt }
+ */
+export function ledgerMoveToStockMove(move = {}) {
+  const sku = String(move.sku ?? '').trim().toUpperCase();
+  return {
+    product_id: [null, sku ? `[${sku}]` : ''],
+    product_uom_qty: Number(move.qty) || 0,
+    x_from: String(move.from ?? '').trim(),
+    x_to: String(move.to ?? '').trim(),
+    x_doc_type: String(move.docType ?? '').trim(),
+    origin: String(move.docNumber ?? '').trim(),
+    state: 'done',
+  };
+}
+
+/**
  * Map an Odoo `stock.move` record → the app's log shape (Inbound/Outbound).
  *
  * @param {object} rec  stock.move record
