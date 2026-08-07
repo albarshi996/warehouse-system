@@ -16,7 +16,10 @@ import { GOVERNANCE_PRINCIPLE, OFFICE_RULES, OFFICES, EXCLUDED_OFFICES, GOVERNAN
 import { DIGITAL_CAPABILITIES } from '../../data/executive-review/digitalCapabilities.js';
 import MeetingDecisionBoard from './MeetingDecisionBoard.jsx';
 
-const { view = 'overview', section = '' } = Astro.props;
+const { section = '' } = Astro.props;
+// العرض الكامل يطلب قسمًا واحدًا في كل محطة. إبقاء `overview` افتراضيًا مع
+// وجود `section` كان يحقن أقسام المنظور التنفيذي في كل محطة (110 شرائح).
+const view = Astro.props.view ?? (section ? '' : 'overview');
 // `amber` هي حالة البيانات الفعلية في board.js — تُبقى `yellow` احتياطًا.
 const stateLabel = { green: 'مستقر', amber: 'يحتاج متابعة', yellow: 'يحتاج متابعة', red: 'يتطلب تدخلًا', 'on-track': 'تقدم مستمر', 'at-risk': 'معرض للخطر', blocked: 'متوقف' };
 
