@@ -81,7 +81,16 @@ export function canOpenPath(roleId, catalogPath, matrix = null) {
 
   const spots = placementsFor(path);
   // صفحة لا يعرفها الكتالوج ⇒ منع افتراضي (لا «مسموح لأنه غير مذكور»).
-  if (spots.length === 0) return false;
+  // استثناء واحد محكوم: الصفحة الفرعية (مثل شاشات «غرفة قرار سلاسل الإمداد»
+  // التسع تحت `/dashboard/executive-review/*`) **ترث صلاحية أبيها** إن كان
+  // الأب نفسه معروفًا للكتالوج — فلا تُحشى القائمة بتسعة روابط، ولا تُفتح
+  // الفرعيات لغير أصحاب الأب. ما لا أب مُدرجًا له يبقى ممنوعًا كما كان.
+  if (spots.length === 0) {
+    const cut = path.lastIndexOf('/');
+    const parent = cut > 0 ? path.slice(0, cut) : '';
+    if (parent && placementsFor(parent).length > 0) return canOpenPath(roleId, parent, matrix);
+    return false;
+  }
 
   // موضعٌ واحد يكفي — الصفحة قد تتكرّر في مجموعتين بأدوار مختلفة
   // (المهام ومساعد الاجتماعات يظهران في «اليومية/الأرشيف» وفي «طلبات الإدارات»).

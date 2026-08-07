@@ -71,6 +71,31 @@ test('🔒 لا دور خارج المديرَين يفتح التوظيف أو 
   }
 });
 
+test('🔒 وراثة الأب: فرعيات غرفة القرار للمديرَين فقط، والمجهول يبقى ممنوعًا', () => {
+  const subpages = [
+    '/dashboard/executive-review/status',
+    '/dashboard/executive-review/model',
+    '/dashboard/executive-review/sites',
+    '/dashboard/executive-review/catalog',
+    '/dashboard/executive-review/sectors',
+    '/dashboard/executive-review/governance',
+    '/dashboard/executive-review/digital-capabilities',
+    '/dashboard/executive-review/decisions',
+  ];
+  for (const p of subpages) {
+    assert.equal(canOpenPath('admin', p), true, `الأدمن مُنع من ${p}`);
+    assert.equal(canOpenPath('warehouse_manager', p), true, `مدير المستودعات مُنع من ${p}`);
+  }
+  for (const role of Object.keys(ROLES)) {
+    if (role === 'admin' || role === 'warehouse_manager') continue;
+    for (const p of subpages) {
+      assert.equal(canOpenPath(role, p), false, `الدور «${role}» فتح ${p}`);
+    }
+  }
+  // الوراثة لا توسّع المجهول: فرعية تحت أبٍ لا يعرفه الكتالوج تبقى ممنوعة.
+  assert.equal(canOpenPath('warehouse_manager', '/dashboard/unknown-parent/child'), false);
+});
+
 test('🔒 تقييم مدير المستودعات السرّي: الأدمن ومستخدم الإدارة فقط', () => {
   const p = '/dashboard/wh-manager-eval';
   assert.equal(canOpenPath('admin', p), true);

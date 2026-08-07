@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 62,
+    "modules": 71,
     "serviceDomains": 28,
     "serviceFiles": 183,
     "collections": 49,
@@ -71,6 +71,14 @@
       "usesServices": []
     },
     {
+      "name": "catalog",
+      "route": "/dashboard/catalog",
+      "title": "",
+      "summary": "",
+      "file": "src/pages/dashboard/executive-review/catalog.astro",
+      "usesServices": []
+    },
+    {
       "name": "cold-chain",
       "route": "/dashboard/cold-chain",
       "title": "سلسلة التبريد — IoT",
@@ -117,6 +125,22 @@
       "usesServices": []
     },
     {
+      "name": "decisions",
+      "route": "/dashboard/decisions",
+      "title": "",
+      "summary": "",
+      "file": "src/pages/dashboard/executive-review/decisions.astro",
+      "usesServices": []
+    },
+    {
+      "name": "digital-capabilities",
+      "route": "/dashboard/digital-capabilities",
+      "title": "",
+      "summary": "",
+      "file": "src/pages/dashboard/executive-review/digital-capabilities.astro",
+      "usesServices": []
+    },
+    {
       "name": "document",
       "route": "/dashboard/document",
       "title": "مستند",
@@ -138,6 +162,14 @@
       "title": "دورات العمل ERP",
       "summary": "",
       "file": "src/pages/dashboard/erp-workflows.astro",
+      "usesServices": []
+    },
+    {
+      "name": "executive-review",
+      "route": "/dashboard/executive-review",
+      "title": "",
+      "summary": "",
+      "file": "src/pages/dashboard/executive-review.astro",
       "usesServices": []
     },
     {
@@ -167,6 +199,14 @@
       "title": "الدورات المستندية العالمية",
       "summary": "مكتبة الدورات المستندية العالمية — ثمانية نماذج تشغيلية كاملة",
       "file": "src/pages/dashboard/global-doc-cycles.astro",
+      "usesServices": []
+    },
+    {
+      "name": "governance",
+      "route": "/dashboard/governance",
+      "title": "",
+      "summary": "",
+      "file": "src/pages/dashboard/executive-review/governance.astro",
       "usesServices": []
     },
     {
@@ -271,6 +311,14 @@
       "title": "Brandzo | الاجتماعات ومحاضرها",
       "summary": "الاجتماعات ومحاضرها — أداةُ محاضر موحّدة، يدويّةٌ بالكامل.",
       "file": "src/pages/dashboard/meetings.astro",
+      "usesServices": []
+    },
+    {
+      "name": "model",
+      "route": "/dashboard/model",
+      "title": "",
+      "summary": "",
+      "file": "src/pages/dashboard/executive-review/model.astro",
       "usesServices": []
     },
     {
@@ -421,6 +469,30 @@
       "title": "سجلّ حركة الأدوار",
       "summary": "سجلّ حركة الأدوار — رصدٌ حيٌّ فعليّ للحركة في البوابة.",
       "file": "src/pages/dashboard/role-activity.astro",
+      "usesServices": []
+    },
+    {
+      "name": "sectors",
+      "route": "/dashboard/sectors",
+      "title": "",
+      "summary": "",
+      "file": "src/pages/dashboard/executive-review/sectors.astro",
+      "usesServices": []
+    },
+    {
+      "name": "sites",
+      "route": "/dashboard/sites",
+      "title": "",
+      "summary": "",
+      "file": "src/pages/dashboard/executive-review/sites.astro",
+      "usesServices": []
+    },
+    {
+      "name": "status",
+      "route": "/dashboard/status",
+      "title": "",
+      "summary": "",
+      "file": "src/pages/dashboard/executive-review/status.astro",
       "usesServices": []
     },
     {
@@ -1688,6 +1760,7 @@
         "closeOperation",
         "createOperation",
         "findMasterFor",
+        "getOperation",
         "getScans",
         "indexMaster",
         "listOpenOperations",
@@ -2863,7 +2936,7 @@
             "actions": [
               "create"
             ],
-            "condition": "isStockActor() && request.resource.data.byUid == request.auth.uid",
+            "condition": "isStockActor() && request.resource.data.byUid == request.auth.uid && get(/databases/$(database)/documents/operations/$(opId)).data.status == 'open'",
             "roles": [
               "isStockActor"
             ]

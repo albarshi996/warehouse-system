@@ -1,0 +1,51 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+
+const { title, active } = Astro.props;
+
+// روابط داخلية تسبقها `base` — البوابة تُنشر تحت `/warehouse-system` فلا
+// يصح رابط مطلق من الجذر (إصلاح مراجعة الدمج على حزمة كوديكس).
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+
+const views = [
+  ['overview', 'المنظور التنفيذي', `${base}/dashboard/executive-review`],
+  ['status', 'الحالة والإنجاز', `${base}/dashboard/executive-review/status`],
+  ['model', 'النموذج التشغيلي', `${base}/dashboard/executive-review/model`],
+  ['sites', 'المواقع والمخازن', `${base}/dashboard/executive-review/sites`],
+  ['catalog', 'كتالوج الاحتياجات', `${base}/dashboard/executive-review/catalog`],
+  ['sectors', 'القطاعات والمبيعات', `${base}/dashboard/executive-review/sectors`],
+  ['governance', 'الحوكمة والمكاتب', `${base}/dashboard/executive-review/governance`],
+  ['digital', 'القدرات الرقمية', `${base}/dashboard/executive-review/digital-capabilities`],
+  ['decisions', 'القرارات والمتابعة', `${base}/dashboard/executive-review/decisions`],
+];
+---
+
+<DashboardLayout title={title} light>
+  <main class="review" dir="rtl">
+    <header class="review-head">
+      <div>
+        <p>إدارة سلاسل الإمداد · غرفة قرار الإدارة العامة</p>
+        <h1>{title}</h1>
+      </div>
+      <span class="source">BFP-SCM · عرض تنفيذي</span>
+    </header>
+
+    <nav class="review-nav" aria-label="أقسام العرض التنفيذي">
+      {views.map(([key, label, href]) => (
+        <a class:list={{ active: key === active }} href={href}>{label}</a>
+      ))}
+    </nav>
+
+    <slot />
+  </main>
+</DashboardLayout>
+
+<style>
+  .review{max-width:1480px;margin:0 auto;padding:28px clamp(16px,3vw,46px) 64px;color:#17223b}
+  .review-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:24px 28px;border-radius:20px;background:linear-gradient(125deg,#17223b,#263759);color:#fff}
+  .review-head p{margin:0 0 9px;color:#d8b56b;font-size:13px;font-weight:800}.review-head h1{margin:0;font-size:clamp(24px,3vw,40px);line-height:1.25}.source{border:1px solid #ffffff40;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:800;white-space:nowrap}
+  .review-nav{display:flex;gap:8px;overflow-x:auto;padding:16px 0 6px;scrollbar-width:thin}.review-nav a{white-space:nowrap;text-decoration:none;color:#536074;background:#fff;border:1px solid #dfe4ec;border-radius:999px;padding:9px 13px;font-size:12px;font-weight:800}.review-nav a:hover,.review-nav a.active{color:#fff;background:#17223b;border-color:#17223b}
+  @media(max-width:700px){.review{padding:16px 12px 44px}.review-head{align-items:flex-start;flex-direction:column;padding:20px}.source{font-size:11px}}
+</style>
