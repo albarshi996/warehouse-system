@@ -10,24 +10,37 @@
 import ExecutiveReviewShell from '../../../components/executive-review/ExecutiveReviewShell.astro';
 import ReviewSections from '../../../components/executive-review/ReviewSections.astro';
 
-const stations = [
-  ['overview', 'المنظور التنفيذي'],
-  ['status', 'الحالة والإنجاز'],
-  ['model', 'النموذج التشغيلي'],
-  ['sites', 'المواقع والمخازن'],
-  ['catalog', 'كتالوج الاحتياجات'],
-  ['sectors', 'القطاعات والمبيعات'],
-  ['governance', 'الحوكمة والمكاتب'],
-  ['digital', 'القدرات الرقمية'],
-  ['decisions', 'القرارات والمتابعة'],
+const presentationSections = [
+  ['model-policies', 'خمس سياسات تشغيلية'],
+  ['governance-principle', 'المبدأ الحاكم'],
+  ['governance-offices', 'حدود الاختصاص والتوجيه'],
+  ['governance-matrix', 'من يطلب، من ينفذ، ومن يغلق'],
+  ['governance-rules', 'ضوابط العمل داخل المواقع'],
+  ['digital-hero', 'اعتماد القدرات الرقمية'],
+  ['digital-outcomes', 'أين تعمل القدرات الرقمية'],
+  ['digital-controls', 'استمرارية دون تجاوز للصلاحيات'],
+  ['digital-decision', 'قرار اعتماد القدرات الرقمية'],
+  ['catalog', 'كتالوج الاحتياجات التشغيلي'],
+  ['sites-requirements', 'الأولويات التشغيلية للمخازن'],
+  ['sites-masterplan', 'المخطط التنفيذي للتحوير والتجهيز'],
+  ['sites-gallery', 'الموقع كما صممه المهندسون وكما هو اليوم'],
+  ['sectors-sales', 'توصية استثمارية معتمدة من الجلسة'],
+  ['model-template', 'أي وظيفة تُبنى كدورة مكتملة'],
+  ['model-chain', 'الدورة الموحدة'],
+  ['status', 'الحالة الحالية والإنجازات'],
+  ['achievements', 'ما تم بناؤه وتشغيله'],
+  ['open-files', 'الحالة والخطوة التالية'],
+  ['model-operating', 'النموذج التشغيلي الموحد'],
+  ['decisions-board', 'قرارات الاجتماع'],
+  ['decisions-after', 'التنفيذ والمتابعة والإغلاق'],
 ];
 ---
 
 <ExecutiveReviewShell title="العرض التنفيذي الكامل — من المتابعة إلى القرار" active="present">
-  {stations.map(([key, label]) => (
+  {presentationSections.map(([key, label]) => (
     <div class="er-station" data-key={key} data-station={label}>
       <h2 class="er-station-title">{label}</h2>
-      <ReviewSections view={key} />
+      <ReviewSections section={key} />
     </div>
   ))}
 </ExecutiveReviewShell>

@@ -54,6 +54,7 @@ const views = [
         >
           وضع العرض
         </button>
+        <button type="button" id="restartPresentBtn" class="present-btn" data-present-url={`${base}/dashboard/executive-review/present`} title="ابدأ العرض من الشريحة الأولى وأعد ضبط خط التقدم">إعادة بدء العرض</button>
       </div>
     </header>
 
@@ -77,6 +78,7 @@ const views = [
     <div class="present-bar" id="presentBar" aria-hidden="true">
       <span class="present-right">
         <button type="button" id="presentExit">إنهاء العرض</button>
+        <button type="button" id="presentRestart">إعادة بدء العرض</button>
         <button type="button" id="tocBtn" class="portal-open-btn" title="فهرس كل شرائح العرض — اقفز لأي محطة أو شريحة">فهرس العرض</button>
         <button type="button" id="portalOpenBtn" class="portal-open-btn" title="افتح أي صفحة من البوابة فوق العرض — دون الخروج منه">فتح من البوابة</button>
       </span>
@@ -199,7 +201,10 @@ const views = [
   /** أول شريحة تنتمي لمحطة بعينها (للبدء من محطة الشاشة الحالية). */
   function firstSlideOfStation(key) {
     if (!key) return 0;
-    const at = slides.findIndex((s) => s.closest('.er-station')?.dataset.key === key);
+    const at = slides.findIndex((s) => {
+      const slideKey = s.closest('.er-station')?.dataset.key || '';
+      return slideKey === key || slideKey.startsWith(`${key}-`);
+    });
     return at === -1 ? 0 : at;
   }
 
@@ -215,6 +220,13 @@ const views = [
     }
   });
   document.getElementById('presentExit')?.addEventListener('click', exit);
+  function restartPresentation() {
+    localStorage.removeItem('brandzo:executive-review:visited:v1');
+    if (stationEls.length) enterAt(0);
+    else window.location.href = `${document.getElementById('restartPresentBtn')?.dataset.presentUrl || ''}?play=1&restart=1`;
+  }
+  document.getElementById('presentRestart')?.addEventListener('click', restartPresentation);
+  document.getElementById('restartPresentBtn')?.addEventListener('click', restartPresentation);
   // بالعربية (RTL) التقدم بصريًّا نحو اليسار: يسار = التالي، يمين = السابق.
   document.getElementById('presentNext')?.addEventListener('click', () => step(1));
   document.getElementById('presentPrev')?.addEventListener('click', () => step(-1));

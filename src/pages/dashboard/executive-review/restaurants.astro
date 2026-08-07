@@ -1,0 +1,43 @@
+---
+import ExecutiveReviewShell from '../../../components/executive-review/ExecutiveReviewShell.astro';
+
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL.slice(0, -1) : import.meta.env.BASE_URL;
+const kpis = [
+  ['Food Cost %', 'كلفة المواد إلى المبيعات لكل فرع وعلامة'],
+  ['Waste %', 'الهدر الموثق إلى إجمالي الاستهلاك'],
+  ['OTIF', 'التزام موردي الطازج بالموعد والكمية'],
+  ['Fill Rate', 'تلبية طلبات الفروع كاملة من أول مرة'],
+  ['دقة المخزون', 'مطابقة الرصيد الفعلي للرصيد الدفتري'],
+  ['سلسلة التبريد', 'عدد التجاوزات الحرارية المسجلة'],
+];
+const cycle = [
+  'توقعات المبيعات وخطة الافتتاحات وبيانات POS',
+  'تخطيط الطلب والشراء والتعاقد مع موردين معتمدين',
+  'استلام GRN وفحص الجودة ودرجة الحرارة CCP1',
+  'تخزين جاف ومبرد ومجمد مع FEFO وسجلات حرارة',
+  'طلب الفرع وتحضير الطلب والنقل الموثق',
+  'استلام الفرع وتصفير رصيد النقل وتوثيق الفروق',
+  'جرد دوري وهدر وتالف وتسويات ثم إغلاق مالي',
+];
+---
+
+<ExecutiveReviewShell title="خطة سلاسل الإمداد لقطاع المطاعم والمقاهي" active="sectors">
+  <section class="restaurant-hero">
+    <div><p>BFP-SCM-REQ-2026-006 · خطة تشغيلية قيد التنفيذ والدراسة</p><h2>المطاعم والمقاهي</h2><b>مشاريع Playtime · District · Business District</b><span>سلاسل الإمداد تتولى المشتريات والمخازن والإمداد كاملًا، والقطاع يسلّم التوقعات وخطة الافتتاحات.</span></div>
+    <aside><strong>~30</strong><span>مطعمًا ومقهى</span><strong>~500</strong><span>عامل في ذروة التشغيل</span></aside>
+  </section>
+
+  <section><div class="section-head"><p>نموذج التوريد</p><h2>مساران بمعيار رقابي واحد</h2></div><div class="two"><article><h3>المستودعات المركزية</h3><p>الجاف والمبرد والمجمد في مناطق مصنفة حراريًا، مع FEFO وسجلات درجات الحرارة ودورة مستندية كاملة.</p></article><article><h3>الطازج اليومي</h3><p>موردان معتمدان على الأقل لكل فئة حرجة، ونافذة استلام محددة، وفحص جودة وحرارة قبل القبول.</p></article></div></section>
+
+  <section><div class="section-head"><p>الدورة المستندية</p><h2>من التوقع حتى الإغلاق المالي</h2></div><ol class="cycle">{cycle.map((item, index) => <li><b>{index + 1}</b><span>{item}</span></li>)}</ol></section>
+
+  <section><div class="section-head"><p>القرار 12</p><h2>دراستان مترابطتان قبل أي التزام إنشائي</h2></div><div class="two"><article><h3>المطبخ المركزي</h3><p>تحديد المكونات المرشحة للمركزة والموقع والسعة والتجهيزات وسلامة الغذاء والأثر على شبكة التوزيع. معيار القرار: جدوى مالية موثقة وقدرة توزيعية وسلسلة تبريد مثبتة.</p></article><article><h3>منصة التوصيل الداخلية</h3><p>مقارنة عمولات المنصات الخارجية بتكلفة الأسطول الداخلي، وحجم الطلب، والتكامل مع POS، وملكية بيانات العملاء. تُدرس مع المطبخ المركزي حتى لا يُبنى أسطولان منفصلان.</p></article></div></section>
+
+  <section><div class="section-head"><p>القياس</p><h2>مؤشرات الأداء التنفيذية</h2></div><div class="kpis">{kpis.map(([name, detail]) => <article><b>{name}</b><span>{detail}</span></article>)}</div></section>
+
+  <section><div class="section-head"><p>الجاهزية والالتزامات</p><h2>ما يلزم قبل الافتتاح الأول</h2></div><div class="two"><article><h3>التزامات الإدارات الشريكة</h3><ul><li>اختيار POS قابل للتكامل — تقنية المعلومات</li><li>تعيين مراقب تكاليف F&amp;B — المالية</li><li>تسليم التوقعات وخطة الافتتاحات — التشغيل</li><li>تثبيت مواصفات سلامة الغذاء — الجودة</li></ul></article><article><h3>قرار الجلسة</h3><p>التكليف الأول «لا مستند = لا حركة» جارٍ. تُرفع دراستا المطبخ المركزي ومنصة التوصيل للقرار قبل الافتتاح الأول بشهرين.</p><a href={`${base}/dashboard/executive-review/sectors`}>العودة إلى القطاعات والمبيعات</a></article></div></section>
+</ExecutiveReviewShell>
+
+<style>
+  section{margin-top:26px}.restaurant-hero{display:grid;grid-template-columns:1.7fr .8fr;gap:14px;margin-top:0}.restaurant-hero>div,.restaurant-hero aside,.two article,.kpis article{background:var(--color-surface);border:1px solid var(--color-line);border-radius:var(--radius-card);padding:22px;box-shadow:var(--shadow-card)}.restaurant-hero>div{background:var(--color-chip);border-color:var(--color-accent)}.restaurant-hero p,.section-head p{color:var(--color-accent);font-weight:900;font-size:12px}.restaurant-hero h2{font-size:clamp(30px,5vw,58px);margin:5px 0;color:var(--color-ink)}.restaurant-hero b,.restaurant-hero span{display:block;color:var(--color-ink-2);line-height:1.9}.restaurant-hero aside{display:grid;place-content:center}.restaurant-hero aside strong{font-size:44px;color:var(--color-accent)}.section-head h2{margin:0;color:var(--color-ink)}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.two h3{margin-top:0;color:var(--color-ink)}.two p,.two li{color:var(--color-ink-2);line-height:1.9}.two a{color:var(--color-accent);font-weight:900}.cycle{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;list-style:none;padding:0}.cycle li,.kpis article{display:grid;gap:8px}.cycle li{background:var(--color-surface);border:1px solid var(--color-line);border-radius:var(--radius-card);padding:16px}.cycle b,.kpis b{color:var(--color-accent)}.cycle span,.kpis span{color:var(--color-ink-2);line-height:1.7;font-size:13px}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}@media(max-width:760px){.restaurant-hero,.two,.kpis{grid-template-columns:1fr}.cycle{grid-template-columns:repeat(2,1fr)}}
+</style>
