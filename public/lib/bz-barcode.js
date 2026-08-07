@@ -17,7 +17,6 @@
   // الصفحة المستدعية، فيصحّ سواءٌ نُودي من /dashboard/… أو من /forms/….
   const SELF = document.currentScript && document.currentScript.src;
   const LOCAL = SELF ? SELF.replace(/bz-barcode\.js.*$/, 'html5-qrcode.min.js') : '../lib/html5-qrcode.min.js';
-  const CDN = 'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js';
 
   function loadScript(src) {
     return new Promise((resolve, reject) => {
@@ -29,14 +28,12 @@
     });
   }
 
+  // الأصل المحلي فقط — لا رجوع لأي CDN (قاعدة الأوفلاين 100%: شبكة المستودع
+  // غير مضمونة، والاعتماد الصامت على الإنترنت يُخفي نقص ملفٍّ يجب إصلاحه).
   async function ensureHtml5Qrcode() {
     if (window.Html5Qrcode) return;
-    try {
-      await loadScript(LOCAL);
-    } catch {
-      await loadScript(CDN); // احتياط لو نقص الملف المحلي
-    }
-    if (!window.Html5Qrcode) throw new Error('html5-qrcode unavailable');
+    await loadScript(LOCAL);
+    if (!window.Html5Qrcode) throw new Error('html5-qrcode unavailable — تحقق من وجود public/lib/html5-qrcode.min.js');
   }
 
   /** كاشف أصلي — يغلّف BarcodeDetector في نفس الواجهة. */
@@ -75,17 +72,27 @@
       engine: 'html5-qrcode',
       async detect(video) {
         const now = Date.now();
-        if (busy || now - lastAt < 350) return [];
+        if (busy || now - lastAt < 250) return [];
         if (!video.videoWidth) return [];
         busy = true;
         lastAt = now;
         try {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const blob = await new Promise((r) => canvas.toBlob(r, 'image/png'));
+          /* كانت التجربة على آيفون «سيئة جدًا» لسببين قتلناهما هنا:
+             ١) الإطار كان يُرمَّز كاملًا بدقته الخام و**PNG** (أبطأ ترميز) —
+                صار قصًّا للمنطقة المركزية (80%×60% حيث يوجّه الموظف الباركود
+                طبيعيًّا) بسقف عرض 1000px و**JPEG** — أسرع بمرات وأدقّ فكًّا
+                لباركود 1D لأن الضجيج المحيطي خرج من الصورة.
+             ٢) الخمود نزل 350→250ملّي لأن كلفة المحاولة انخفضت. */
+          const vw = video.videoWidth, vh = video.videoHeight;
+          const cw = Math.round(vw * 0.8), ch = Math.round(vh * 0.6);
+          const cx = Math.round((vw - cw) / 2), cy = Math.round((vh - ch) / 2);
+          const scale = Math.min(1, 1000 / cw);
+          canvas.width = Math.round(cw * scale);
+          canvas.height = Math.round(ch * scale);
+          ctx.drawImage(video, cx, cy, cw, ch, 0, 0, canvas.width, canvas.height);
+          const blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', 0.72));
           if (!blob) return [];
-          const file = new File([blob], 'frame.png', { type: 'image/png' });
+          const file = new File([blob], 'frame.jpg', { type: 'image/jpeg' });
           const text = await h5.scanFile(file, false); // يرمي إن لم يُفكّ
           return text ? [{ rawValue: String(text) }] : [];
         } catch {

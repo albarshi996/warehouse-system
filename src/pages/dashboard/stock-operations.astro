@@ -2522,16 +2522,40 @@ async function populateSingleCameraDevices() {
   } catch (e) {}
 }
 
+/* دقة عالية مطلوبة صراحةً: بلا width/height كثير من الهواتف يعطي 640×480
+   مشوّشة يستحيل معها فكّ EAN-13 — كانت سبب «التجربة السيئة» الميدانية.
+   ideal (لا exact) فتسقط بسلام لأفضل ما يدعمه الجهاز. */
+function bzScanVideoConstraints(deviceId) {
+  const base = deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'environment' };
+  base.width = { ideal: 1920 };
+  base.height = { ideal: 1080 };
+  return base;
+}
+
+/* التركيز المستمر حيث يدعمه الجهاز (أندرويد/كروم غالبًا) — بدونه تبقى العدسة
+   على تركيزٍ ثابت فيتشوّش الباركود القريب. آيفون يتجاهله بسلام (تركيزه
+   المستمر مفعَّل أصلًا في AVCapture). لا يرمي أبدًا — تحسين لا شرط. */
+function bzRequestContinuousFocus(stream) {
+  try {
+    const track = stream && stream.getVideoTracks && stream.getVideoTracks()[0];
+    const caps = track && track.getCapabilities && track.getCapabilities();
+    if (caps && Array.isArray(caps.focusMode) && caps.focusMode.includes('continuous')) {
+      track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+    }
+  } catch (e) { /* تحسين اختياري — نتجاهل أي فشل */ }
+}
+
 async function startSingleCamera() {
   stopSingleCameraStream();
   const sel = document.getElementById('cameraSelect');
   const deviceId = sel.value;
-  const constraints = { video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'environment' } };
+  const constraints = { video: bzScanVideoConstraints(deviceId) };
   try {
     singleCameraStream = await navigator.mediaDevices.getUserMedia(constraints);
     const video = document.getElementById('cameraVideo');
     video.srcObject = singleCameraStream;
     await video.play();
+    bzRequestContinuousFocus(singleCameraStream);
     singleCameraScanning = true;
     document.getElementById('cameraStatusBadge').textContent = 'جارٍ المسح...';
     beginSingleScanLoop();
@@ -2689,12 +2713,13 @@ async function startBulkCamera() {
   stopBulkCamera();
   const sel = document.getElementById('bulkCameraSelect');
   const deviceId = sel.value;
-  const constraints = { video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'environment' } };
+  const constraints = { video: bzScanVideoConstraints(deviceId) };
   try {
     bulkCameraStream = await navigator.mediaDevices.getUserMedia(constraints);
     const video = document.getElementById('bulkCameraVideo');
     video.srcObject = bulkCameraStream;
     await video.play();
+    bzRequestContinuousFocus(bulkCameraStream);
     bulkCameraScanning = true;
     document.getElementById('bulkCameraStatus').textContent = 'جارٍ المسح المستمر...';
     document.getElementById('bulkStartBtn').disabled = true;
