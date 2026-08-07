@@ -7,9 +7,14 @@ import astro from 'eslint-plugin-astro';
 export default [
   {
     ignores: [
-      'dist/',
-      '.astro/',
-      'node_modules/',
+      '**/dist/',
+      '**/.astro/',
+      '**/node_modules/',
+      '.claude/',
+      '.codex/',
+      '.obsidian/',
+      'tmp/',
+      'output/',
       'public/forms/',
       'public/lib/',
       'public/Brandzo_Operational_Guide.html',
