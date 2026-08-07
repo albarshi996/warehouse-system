@@ -29,6 +29,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
   : import.meta.env.BASE_URL;
 const img155 = (src) => `${base}/executive-review/155/${src}`;
 const drawing133 = (src) => `${base}/executive-review/133/${src}`;
+const restaurants = SECTORS.find((item) => item.key === 'restaurants');
 ---
 
 {view === 'overview' && <>
@@ -73,7 +74,9 @@ const drawing133 = (src) => `${base}/executive-review/133/${src}`;
     <section class="section"><div class="section-head"><p>الاحتياجات</p><h2>كتالوج الاحتياجات التشغيلي</h2></div><p class="lead">{CATALOG_NOTE}</p>{CATALOG.map((group) => <article class="catalog"><header><h3>{group.section}</h3><p>{group.intro}</p></header><div class="table-wrap"><table><thead><tr><th>الاحتياج</th><th>الأولوية</th><th>الغرض التشغيلي</th><th>الكمية والموقع</th><th>الحالة</th></tr></thead><tbody>{group.items.map((item) => <tr><td><b>{item.need}</b><br /><small>{item.role}</small></td><td><span class:list={['priority', item.priority?.toLowerCase()]}>{item.priority}</span></td><td>{item.purpose}<br /><small>{item.reason}</small></td><td>{item.qty}<br /><small>{item.site}</small></td><td>{item.status}<br /><small>الاعتماد: {item.approval}</small><br /><small>التوفير: {item.supply}</small></td></tr>)}</tbody></table></div></article>)}</section>
   </>}
 
-  {(view === 'sectors' || section === 'sectors-sales') && <>
+  {(view === 'sectors' || ['sectors-sales', 'restaurants-report'].includes(section)) && <>
+    {section === 'restaurants-report' && <section class="section"><div class="section-head"><p>BFP-SCM-REQ-2026-006</p><h2>خطة المطاعم والمقاهي</h2></div><div class="restaurant-slide"><article class="panel accent"><span class:list={['pill', restaurants.status]}>{restaurants.statusLabel}</span><h3>{restaurants.name}</h3><p class="statement">{restaurants.model}</p><ul>{restaurants.facts.map((fact) => <li>{fact}</li>)}</ul></article><article class="panel"><p class="eyebrow">الدورة التشغيلية</p><ol class="mini-cycle">{restaurants.cycle.map((step) => <li>{step}</li>)}</ol><p><b>المؤشرات:</b> {restaurants.kpis}</p><small class="foot">{restaurants.pending}</small><a class="sector-link" href={`${base}/dashboard/executive-review/restaurants`}>فتح التقرير التفصيلي للمطاعم والمقاهي ←</a></article></div></section>}
+    {(view === 'sectors' || section === 'sectors-sales') && <>
     <section class="section"><div class="section-head"><p>إدارة المبيعات · قطاع التوزيع · تنسيق العمليات</p><h2>{SALES_CYCLE.status}</h2></div><p class="lead">{SALES_CYCLE.goal}</p><ol class="chain">{SALES_CYCLE.chain.map((item) => <li title={item.role}><span>{item.code}</span>{item.name}</li>)}</ol><div class="table-wrap"><table><thead><tr><th>المستند</th><th>دوره في الدورة</th><th>مقابله في أودو</th></tr></thead><tbody>{SALES_CYCLE.chain.map((item) => <tr><td><b>{item.code}</b> · {item.name}</td><td>{item.role}</td><td>{item.odoo}</td></tr>)}</tbody></table></div></section>
     {view === 'sectors' && <>
     <section class="section"><div class="section-head"><p>العلاقة بين الأطراف</p><h2>من المبيعات حتى أودو — Workflow واحد</h2></div><div class="template-grid">{SALES_CYCLE.parties.map((item) => <article><b>{item.party}</b><span>{item.link}</span></article>)}</div></section>
@@ -81,6 +84,7 @@ const drawing133 = (src) => `${base}/executive-review/133/${src}`;
     <section class="section"><div class="section-head"><p>مراحل التنفيذ</p><h2>أربع مراحل بعد اعتماد الجدولة</h2></div><div class="card-grid four">{SALES_CYCLE.phases.map((item) => <article class="detail-card"><h3>{item.phase}</h3><p>{item.scope}</p><small>{item.out}</small></article>)}</div></section>
     <section class="section"><div class="section-head"><p>القطاعات</p><h2>خمسة قطاعات متصلة بسلاسل الإمداد</h2></div><div class="card-grid">{SECTORS.map((item) => <article class="detail-card"><span class:list={['pill', item.status]}>{item.statusLabel}</span><h3>{item.name}</h3><p>{item.model}</p><ul>{item.facts.map((fact) => <li>{fact}</li>)}</ul>{item.cycle.length > 0 && <ol class="mini-cycle">{item.cycle.map((step) => <li>{step}</li>)}</ol>}{item.kpis && <p><b>المؤشرات:</b> {item.kpis}</p>}<small>{item.pending}</small>{item.key === 'restaurants' && <a class="sector-link" href={`${base}/dashboard/executive-review/restaurants`}>فتح الخطة التفصيلية للمطاعم والمقاهي ←</a>}</article>)}</div></section>
     <section class="section"><div class="section-head"><p>أسئلة القرار</p><h2>قبل بناء أي دورة قطاعية</h2></div><div class="template-grid">{SECTOR_QUESTIONS.map((question, index) => <article><b>{index + 1}</b><span>{question}</span></article>)}</div></section></>}
+    </>}
   </>}
 
   {(view === 'governance' || section.startsWith('governance-')) && <>
@@ -271,11 +275,12 @@ const drawing133 = (src) => `${base}/executive-review/133/${src}`;
   .drawing-grid span{width:max-content;padding:4px 9px;border-radius:var(--radius-chip);background:var(--color-chip);color:var(--color-accent);font-weight:900;font-size:11px}
   .drawing-grid b{color:var(--color-ink)}.drawing-grid small{color:var(--color-muted)}.drawing-grid em{color:var(--color-accent);font-style:normal;font-size:12px;font-weight:900}
   .sector-link{display:block;margin-top:12px;color:var(--color-accent);font-size:12px;font-weight:900;text-decoration:none}
+  .restaurant-slide{display:grid;grid-template-columns:1fr 1.2fr;gap:14px}
   .rooms{display:grid;gap:7px;margin-top:12px}
   .rooms div{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--color-line-strong);padding-top:7px;font-size:12px}
   .rooms b{color:var(--color-ink);white-space:nowrap}.rooms span{color:var(--color-ink-2);text-align:left}
   .mini-cycle{padding-right:18px;margin:9px 0}.mini-cycle li{font-size:12px;color:var(--color-ink-2);line-height:1.8}
   .panel .table-wrap{margin-top:10px}.panel table{min-width:0;font-size:11px}
   @media(max-width:1000px){.status-grid,.card-grid,.decision-grid,.card-grid.four{grid-template-columns:repeat(2,1fr)}.occupancy,.gallery{grid-template-columns:repeat(3,1fr)}}
-  @media(max-width:680px){.hero-grid,.two,.status-grid,.kpi-grid,.card-grid,.card-grid.four,.template-grid,.decision-grid,.decision-card>div,.gallery,.drawing-grid{grid-template-columns:1fr}.kpi-grid{gap:8px}.occupancy{grid-template-columns:repeat(2,1fr)}.identity div{grid-template-columns:1fr}.section-head{align-items:start;flex-direction:column;gap:5px}}
+  @media(max-width:680px){.hero-grid,.two,.status-grid,.kpi-grid,.card-grid,.card-grid.four,.template-grid,.decision-grid,.decision-card>div,.gallery,.drawing-grid,.restaurant-slide{grid-template-columns:1fr}.kpi-grid{gap:8px}.occupancy{grid-template-columns:repeat(2,1fr)}.identity div{grid-template-columns:1fr}.section-head{align-items:start;flex-direction:column;gap:5px}}
 </style>
