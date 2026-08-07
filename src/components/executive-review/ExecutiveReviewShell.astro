@@ -1,6 +1,7 @@
 ---
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import MeetingRecorderDock from './MeetingRecorderDock.jsx';
+import { NAV_GROUPS, PINNED_ITEM } from '../../services/auth/navCatalog.js';
 
 /**
  * غلاف «غرفة قرار سلاسل الإمداد» — التبويبات التسعة + شريط أدوات الاجتماع.
@@ -56,13 +57,54 @@ const views = [
 
     {/* شريط تحكم وضع العرض — يظهر فقط أثناء التقديم */}
     <div class="present-bar" id="presentBar" aria-hidden="true">
-      <button type="button" id="presentExit">إنهاء العرض</button>
+      <span class="present-right">
+        <button type="button" id="presentExit">إنهاء العرض</button>
+        <button type="button" id="portalOpenBtn" class="portal-open-btn" title="افتح أي صفحة من البوابة فوق العرض — دون الخروج منه">فتح من البوابة</button>
+      </span>
       <span class="present-title">{title}</span>
       <span class="present-ctl">
         <button type="button" id="presentPrev" title="الشريحة السابقة">السابق</button>
         <b id="presentCounter">1 / 1</b>
         <button type="button" id="presentNext" title="الشريحة التالية">التالي</button>
       </span>
+    </div>
+
+    {/* لوحة الانتقال السريع — كل صفحات البوابة من كتالوج القائمة الواحد */}
+    <div class="portal-palette" id="portalPalette" aria-hidden="true">
+      <div class="pp-box" role="dialog" aria-label="فتح صفحة من البوابة">
+        <header>
+          <input id="ppSearch" type="search" placeholder="ابحث في صفحات البوابة…" autocomplete="off" />
+          <button type="button" id="ppClose">إغلاق</button>
+        </header>
+        <div class="pp-list" id="ppList">
+          <div class="pp-group">
+            <p>عام</p>
+            <div class="pp-items">
+              <button type="button" class="pp-item" data-path={`${base}${PINNED_ITEM.path}`} data-label={PINNED_ITEM.label}>{PINNED_ITEM.label}</button>
+            </div>
+          </div>
+          {NAV_GROUPS.map((group) => (
+            <div class="pp-group">
+              <p>{group.group}</p>
+              <div class="pp-items">
+                {group.items.map((item) => (
+                  <button type="button" class="pp-item" data-path={`${base}${item.path}`} data-label={item.label}>{item.label}</button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    {/* طبقة التصفح الحي — الصفحة المختارة تفتح فوق العرض ولا تُغادره */}
+    <div class="portal-layer" id="portalLayer" aria-hidden="true">
+      <header>
+        <button type="button" id="plClose">رجوع للعرض</button>
+        <span id="plTitle"></span>
+        <a id="plNewTab" href="#" target="_blank" rel="noopener">فتح في تبويب مستقل</a>
+      </header>
+      <iframe id="portalFrame" title="صفحة من البوابة" src="about:blank"></iframe>
     </div>
   </main>
 </DashboardLayout>
@@ -109,15 +151,85 @@ const views = [
   document.getElementById('presentNext')?.addEventListener('click', () => step(1));
   document.getElementById('presentPrev')?.addEventListener('click', () => step(-1));
 
+  /* ─── الوصول لكافة البوابة دون الخروج من العرض ───
+     لوحة انتقال (كتالوج القائمة الواحد) ← الصفحة تفتح حية في طبقة iframe
+     فوق الشرائح؛ إغلاقها يعيدك لنفس الشريحة والتسجيل الصوتي لا ينقطع. */
+  const palette = document.getElementById('portalPalette');
+  const ppSearch = document.getElementById('ppSearch');
+  const layer = document.getElementById('portalLayer');
+  const frame = document.getElementById('portalFrame');
+  const plTitle = document.getElementById('plTitle');
+  const plNewTab = document.getElementById('plNewTab');
+
+  function openPalette() {
+    palette?.classList.add('open');
+    palette?.setAttribute('aria-hidden', 'false');
+    setTimeout(() => ppSearch?.focus(), 60);
+  }
+  function closePalette() {
+    palette?.classList.remove('open');
+    palette?.setAttribute('aria-hidden', 'true');
+  }
+  function openPortalPage(path, label) {
+    if (!frame) return;
+    frame.src = path;
+    if (plTitle) plTitle.textContent = label;
+    if (plNewTab) plNewTab.href = path;
+    closePalette();
+    layer?.classList.add('open');
+    layer?.setAttribute('aria-hidden', 'false');
+  }
+  function closeLayer() {
+    layer?.classList.remove('open');
+    layer?.setAttribute('aria-hidden', 'true');
+    // تفريغ الإطار يوقف أي صوت/تحديث حي في الصفحة المفتوحة خلفيًّا.
+    if (frame) frame.src = 'about:blank';
+  }
+
+  document.getElementById('portalOpenBtn')?.addEventListener('click', openPalette);
+  document.getElementById('ppClose')?.addEventListener('click', closePalette);
+  palette?.addEventListener('click', (ev) => { if (ev.target === palette) closePalette(); });
+  document.getElementById('plClose')?.addEventListener('click', closeLayer);
+
+  document.querySelectorAll('.pp-item').forEach((btn) => {
+    btn.addEventListener('click', () => openPortalPage(btn.dataset.path, btn.dataset.label));
+  });
+
+  // بحث اللوحة: يخفي ما لا يطابق، ويطوي المجموعات الفارغة.
+  ppSearch?.addEventListener('input', () => {
+    const q = ppSearch.value.trim();
+    document.querySelectorAll('#ppList .pp-group').forEach((groupEl) => {
+      let visible = 0;
+      groupEl.querySelectorAll('.pp-item').forEach((item) => {
+        const hit = !q || item.dataset.label.includes(q);
+        item.style.display = hit ? '' : 'none';
+        if (hit) visible += 1;
+      });
+      groupEl.style.display = visible ? '' : 'none';
+    });
+  });
+
   document.addEventListener('keydown', (ev) => {
+    // أولوية الإغلاق من الأعلى للأسفل: طبقة التصفح ← اللوحة ← العرض نفسه.
+    if (layer?.classList.contains('open')) {
+      if (ev.key === 'Escape') closeLayer();
+      return;
+    }
+    if (palette?.classList.contains('open')) {
+      if (ev.key === 'Escape') closePalette();
+      return;
+    }
     if (!root?.classList.contains('presenting')) return;
     if (ev.key === 'ArrowLeft' || ev.key === 'PageDown' || ev.key === ' ') { ev.preventDefault(); step(1); }
     else if (ev.key === 'ArrowRight' || ev.key === 'PageUp') { ev.preventDefault(); step(-1); }
     else if (ev.key === 'Escape') exit();
   });
 
-  // قاعدة الطبقات الدائمة: أي طبقة تملأ الشاشة يُغلقها زر الرجوع.
+  // قاعدة الطبقات الدائمة: أي طبقة تملأ الشاشة يُغلقها زر الرجوع —
+  // وتتراكم: رجوعٌ يغلق التصفح، فرجوعٌ يغلق اللوحة، فرجوعٌ يُنهي العرض.
   if (root) trackOverlay(root, { className: 'presenting', name: 'executive-presentation' });
+  if (palette) trackOverlay(palette, { className: 'open', name: 'portal-palette' });
+  if (layer) trackOverlay(layer, { className: 'open', name: 'portal-browse', close: () => closeLayer() });
 </script>
 
 <style is:global>
@@ -163,11 +275,39 @@ const views = [
   .present-ctl{display:inline-flex;align-items:center;gap:10px}
   .present-ctl b{font-variant-numeric:tabular-nums;color:var(--color-ink);font-size:13px;min-width:52px;text-align:center}
 
+  .present-right{display:inline-flex;align-items:center;gap:8px}
+  .portal-open-btn{border-color:var(--color-accent) !important;color:var(--color-accent) !important}
+
+  /* ═══ لوحة الانتقال السريع ═══ */
+  .portal-palette{display:none;position:fixed;inset:0;z-index:70;background:rgba(20,20,40,.45);padding:6vh 16px}
+  .portal-palette.open{display:flex;justify-content:center;align-items:flex-start}
+  .pp-box{width:min(680px,100%);max-height:82vh;display:flex;flex-direction:column;background:var(--color-surface);border-radius:var(--radius-card);box-shadow:var(--shadow-card-hover);overflow:hidden}
+  .pp-box header{display:flex;gap:10px;padding:12px;border-bottom:1px solid var(--color-line-strong)}
+  .pp-box input{flex:1;border:1px solid var(--color-line-strong);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--color-ink);background:var(--color-surface)}
+  .pp-box input:focus{outline:2px solid var(--color-accent);outline-offset:0;border-color:var(--color-accent)}
+  .pp-box header button{border:1px solid var(--color-line-strong);background:var(--color-surface);color:var(--color-ink);border-radius:var(--radius-chip);padding:8px 14px;font-size:12px;font-weight:800;cursor:pointer}
+  .pp-list{overflow-y:auto;padding:6px 14px 16px}
+  .pp-group p{margin:12px 0 6px;font-size:11px;font-weight:900;color:var(--color-accent)}
+  .pp-items{display:flex;flex-wrap:wrap;gap:7px}
+  .pp-item{border:1px solid var(--color-line-strong);background:var(--color-surface);color:var(--color-ink);border-radius:var(--radius-chip);padding:7px 12px;font-size:12px;font-weight:800;cursor:pointer;transition:all .12s}
+  .pp-item:hover{border-color:var(--color-accent);color:var(--color-accent)}
+
+  /* ═══ طبقة التصفح الحي فوق العرض ═══ */
+  .portal-layer{display:none;position:fixed;inset:0;z-index:80;background:var(--color-surface);flex-direction:column}
+  .portal-layer.open{display:flex}
+  .portal-layer header{display:flex;align-items:center;gap:12px;height:50px;padding:0 14px;border-bottom:1px solid var(--color-line-strong);background:var(--color-surface)}
+  .portal-layer header button{border:1px solid var(--color-accent);background:var(--color-accent);color:#fff;border-radius:var(--radius-chip);padding:8px 14px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
+  #plTitle{flex:1;font-size:13px;font-weight:800;color:var(--color-ink);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  #plNewTab{font-size:12px;font-weight:800;color:var(--color-accent);text-decoration:none;white-space:nowrap}
+  #portalFrame{flex:1;border:0;width:100%;background:var(--color-surface-2)}
+
   @media(max-width:700px){
     .review{padding:14px 12px 44px}
     .review-head{flex-direction:column;align-items:flex-start;padding:16px}
     .review.presenting > section.er-current{inset:0 0 54px 0;padding:16px 14px}
     .review.presenting .present-bar{height:54px;padding:0 10px}
     .present-title{display:none}
+    .portal-palette{padding:3vh 8px}
+    #plNewTab{display:none}
   }
 </style>
