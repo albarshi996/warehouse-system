@@ -1120,6 +1120,9 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
     const profile = await fetchUserProfile(user);
     window.__bzProfile = profile;
     if (typeof window.applyBzRole === 'function') window.applyBzRole(profile);
+    // بعد اكتمال الهوية: استئناف العملية السحابية المحفوظة (إن وُجدت وما زالت
+    // مفتوحة) — آمن للتكرار، فالدالة تنسحب إن كانت عملية قائمة فعلًا.
+    window.__bzCloud?.resumeOperation?.();
   });
 
   /* ─────────────────────────────────────────────────────────────
@@ -1130,6 +1133,7 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
     createOperation,
     appendScan,
     closeOperation,
+    getOperation,
     updateOperationSummary,
     listenScans,
     listOpenOperations,
@@ -1238,6 +1242,28 @@ textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
       this.opId = opId;
       localStorage.setItem('bzCloudOpId', opId);
       return this.startLive();
+    },
+
+    /* استئناف العملية السحابية المحفوظة بعد إعادة فتح الصفحة. `bzCloudOpId`
+       كان يُحفظ ولا يُقرأ أبدًا، فأوّل مسح بعد الاستئناف كان ينشئ عملية
+       سحابية جديدة ويقسم الجرد الواحد بين عمليتين. لا نستأنف إلا عملية
+       ما زالت مفتوحة؛ المعرّف اليتيم (عملية أُقفلت أو حُذف مستندها) يُمحى. */
+    async resumeOperation() {
+      if (this.opId) return;
+      const saved = localStorage.getItem('bzCloudOpId');
+      if (!saved) return;
+      try {
+        const op = await getOperation(saved);
+        if (op && op.status === 'open') {
+          this.opId = saved;
+          window.__bzSetCloudStatus?.('synced', `استُؤنفت العملية: ${saved.slice(0, 6)}…`);
+        } else {
+          localStorage.removeItem('bzCloudOpId');
+        }
+      } catch (e) {
+        // تعذّر التحقق (شبكة/صلاحية) — نُبقي المعرّف لمحاولة قادمة ولا ننشئ عملية بديلة.
+        console.error('[cloud] resume failed', e);
+      }
     },
   };
 
@@ -2828,6 +2854,8 @@ function applyBulkScans() {
   clearBulkList();
   updateStats();
   renderCurrentTable();
+  // الدفعة تُحفظ محليًّا فورًا — إغلاق سريع قبل الحفظ المؤجَّل كان يُضيعها.
+  saveSessionDebounced();
 }
 
 function escapeHtml(str) {

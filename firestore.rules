@@ -129,10 +129,14 @@ service cloud.firestore {
       allow delete: if false;
 
       // سجلّ المسح: إضافة فقط — لا تعديل ولا حذف (سجلّ تدقيق دائم).
+      // وشرط ثالث (تدقيق كوديكس 2026-08-07): **العملية الأم ما زالت مفتوحة** —
+      // كان بالإمكان إلحاق مسح بعملية مُقفلة، فيتغيّر جردٌ اعتُمد ملخّصه.
+      // كلفة get() قراءة واحدة لكل مسح — ثمن مقبول لتجميد التاريخ.
       match /scans/{scanId} {
         allow read: if signedIn();
         allow create: if isStockActor()
-                      && request.resource.data.byUid == request.auth.uid;
+                      && request.resource.data.byUid == request.auth.uid
+                      && get(/databases/$(database)/documents/operations/$(opId)).data.status == 'open';
         allow update, delete: if false;
       }
     }

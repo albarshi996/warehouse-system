@@ -19,6 +19,7 @@ import {
   addDoc,
   setDoc,
   updateDoc,
+  getDoc,
   getDocs,
   onSnapshot,
   query,
@@ -83,6 +84,15 @@ export function listenScans(opId, callback) {
 export async function getScans(opId) {
   const snap = await getDocs(query(collection(db, OPS, opId, 'scans'), orderBy('at', 'asc')));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * يقرأ رأس عملية واحدة (أو null إن لم توجد) — يخدم استئناف الجلسة:
+ * قبل إعادة استعمال معرّف محفوظ محليًّا يجب التأكد أن العملية ما زالت مفتوحة.
+ */
+export async function getOperation(opId) {
+  const snap = await getDoc(doc(db, OPS, opId));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
 /** العمليات المفتوحة (للانضمام إليها أو متابعتها). */
