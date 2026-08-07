@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 61,
+    "modules": 62,
     "serviceDomains": 28,
     "serviceFiles": 183,
     "collections": 49,
@@ -394,6 +394,16 @@
       "summary": "",
       "file": "src/pages/dashboard/reports.astro",
       "usesServices": []
+    },
+    {
+      "name": "requirements-command",
+      "route": "/dashboard/requirements-command",
+      "title": "مركز متطلبات التكامل",
+      "summary": "مركز متطلبات التكامل BFP-SCM-REQ-2026.",
+      "file": "src/pages/dashboard/requirements-command.astro",
+      "usesServices": [
+        "odoo"
+      ]
     },
     {
       "name": "retail-hub",

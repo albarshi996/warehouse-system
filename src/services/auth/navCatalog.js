@@ -138,6 +138,9 @@ export const NAV_GROUPS = [
       // حزمة المطابقة والتسليم لشركة الميزان (2026-08-02): شرح المرجع · قبول UAT ·
       // قيمة البوابة · أداء الموردين · سجلّ حركة الأدوار · استمرارية الأعمال.
       { path: '/dashboard/reference-guide', label: 'الشرح التفاعلي للمرجع', icon: 'bookOpen' },
+      // مركز متطلبات شركة الميزان: قراءة تنفيذية للحزمة BFP-SCM-REQ-2026،
+      // ومصفوفة القرار بين البوابة وأودو وسجلّ المسائل التي تنتظر الحسم.
+      { path: '/dashboard/requirements-command', label: 'مركز متطلبات التكامل', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/acceptance-check', label: 'المطابقة والاستلام (UAT)', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/portal-value', label: 'لماذا البوابة تكامليّة لأودو', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/vendor-scorecard', label: 'بطاقة أداء الموردين', icon: 'users', roles: ['admin', 'warehouse_manager', 'purchase_officer', 'finance_manager'] },

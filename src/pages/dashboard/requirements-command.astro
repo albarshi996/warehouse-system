@@ -1,0 +1,163 @@
+---
+/**
+ * مركز متطلبات التكامل BFP-SCM-REQ-2026.
+ *
+ * شاشة قرار مرجعية: تلخّص حزمة متطلبات شركة الميزان وتعرضها فوق خريطة
+ * المستندات الفعلية في الكود. لا تكتب في Firestore ولا تدفع إلى Odoo؛ حفظ
+ * موقف المراجعة محلي على الجهاز إلى أن يعتمد أصحاب القرار النتيجة.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { DOC_ODOO_MAP } from '../../services/odoo/docCrosswalk.js';
+
+const requirements = [
+  { id: '001', title: 'التحليل التفصيلي للدورة المستندية', source: 'REQ-2026-001', priority: 'عاجل', state: 'قيد الإعداد', summary: 'بطاقات موحّدة للـ27 مستندًا: الغرض والملكية والحقول والاعتماد والربط بأودو.', focus: 'التسليم التحليلي لشركة الميزان' },
+  { id: '002', title: 'حسم الازدواجية بين البوابة وأودو', source: 'REQ-2026-002', priority: 'قرار حاكم', state: 'ينتظر الحسم', summary: 'تحديد النظام المصدر لكل عملية ومنع إدخال الحقيقة نفسها في نظامين.', focus: 'PR · PO · RFQ · GRN · QC' },
+  { id: '003', title: 'رفع دقة التكامل مع أودو', source: 'REQ-2026-003', priority: 'تنفيذي', state: 'يتطلب إثبات', summary: 'اختبار الجسر والحراس والاستثناءات والعبور الحقلي قبل ادعاء التغطية الكاملة.', focus: 'UAT · خريطة الحقول · الحالات' },
+  { id: '004', title: 'تطوير دورة المبيعات', source: 'REQ-2026-004', priority: 'تطوير', state: 'مخطط', summary: 'تسلسل البيع من SO حتى INV والمرتجع والإشعار الدائن، مع فصل الحجز والتنفيذ.', focus: 'SO · PICK · PACK · DN · GP · POD · INV' },
+  { id: '005', title: 'المسائل المعلقة المطلوب حسمها', source: 'REQ-2026-005', priority: 'قرار حاكم', state: 'ينتظر الحسم', summary: 'سياسات التالف والنقص والحاويات وإصدار أودو؛ لا تُغلق برأي تقني منفرد.', focus: '4 قرارات تشغيلية ومالية' },
+  { id: '006', title: 'خطة قطاع المطاعم والمقاهي', source: 'REQ-2026-006', priority: 'توسّع', state: 'خطة تشغيلية', summary: 'نموذج توريد غذائي ومطبخ مركزي ومنصة توصيل ومؤشرات سلامة وتبريد.', focus: 'Playtime · District · Business District' },
+];
+
+const decisionItems = [
+  { id: 'source', title: 'النظام المصدر للعمليات الخمس', area: 'تكامل', owner: 'الإدارة العليا والمالية', recommendation: 'البوابة للالتقاط الميداني والرقابة؛ أودو للقيود المالية والاعتماد المحاسبي.', consequence: 'يبني حدود مسؤولية لا تقبل ازدواج الإدخال.' },
+  { id: 'damage', title: 'التالف والتأمين والقائمة السوداء للموردين', area: 'حوكمة', owner: 'المشتريات والمالية والإدارة', recommendation: 'اعتماد سياسة تصرف وتصعيد موحّدة قبل بناء سجل القائمة السوداء.', consequence: 'يحدد متى يُتلف المخزون ومتى يطالب المورد أو شركة التأمين.' },
+  { id: 'short-po', title: 'إغلاق أمر الشراء عند الاستلام الناقص', area: 'مالية', owner: 'الإدارة المالية', recommendation: 'تحديد سياسة Back Order صريحة: إغلاق، أو إبقاء الرصيد مفتحًا، أو تسوية معتمدة.', consequence: 'تؤثر في الاستلام والفاتورة والمطابقة الثلاثية.' },
+  { id: 'container', title: 'نظام الحاويات وأوامر شرائها', area: 'تشغيل', owner: 'المستودعات والمشتريات', recommendation: 'تثبيت دورة الحاوية وملكية الرصيد قبل اعتماد أوامر الشراء المرتبطة بها.', consequence: 'يحسم العلاقة بين CTR والمخزون والمورد.' },
+  { id: 'odoo-version', title: 'إصدار Odoo المعتمد', area: 'تقني', owner: 'الإدارة ومزوّد Odoo', recommendation: 'تثبيت إصدار الإنتاج ونطاق الموديول قبل أي إعدادات أو حقول مخصصة.', consequence: 'يحمي التوافق والاختبارات وعقد التكامل.' },
+];
+
+const familyFor = (type) => {
+  if (['PR', 'PO', 'GRN', 'QC', 'SRN', 'CTR', 'PUTAWAY'].includes(type)) return 'الشراء والاستلام';
+  if (['SO', 'PICK', 'PACK', 'DN', 'POD', 'GP', 'INV'].includes(type)) return 'المبيعات والتسليم';
+  if (['TR', 'TRN', 'TRC'].includes(type)) return 'النقل الداخلي';
+  if (['RET', 'DMG', 'CC', 'ADJ', 'CN'].includes(type)) return 'المرتجعات والجرد';
+  return 'المشتريات الداخلية';
+};
+
+const documents = Object.entries(DOC_ODOO_MAP).map(([type, target]) => ({ type, ...target, family: familyFor(type) }));
+const families = [...new Set(documents.map((item) => item.family))];
+---
+
+<DashboardLayout title="مركز متطلبات التكامل" light>
+  <main class="req-page text-right" dir="rtl">
+    <section class="req-hero">
+      <div>
+        <p class="req-kicker">BFP-SCM-REQ-2026 · مركز قرار مرجعي</p>
+        <h1>مركز متطلبات التكامل مع أودو</h1>
+        <p>قراءة تنفيذية موحّدة لحزمة المتطلبات: ما يجب تسليمه، ما يحتاج قرارًا، وما يغطيه الكود الآن. هذه الشاشة للمتابعة والتحكيم ولا تدفع بيانات إلى أودو أو Firestore.</p>
+      </div>
+      <div class="req-hero-meta">
+        <span>6 متطلبات</span>
+        <span>{documents.length} مستندًا محكومًا</span>
+        <span>{decisionItems.length} قرارات معلقة</span>
+      </div>
+    </section>
+
+    <section class="req-stats" aria-label="ملخص المتطلبات">
+      <div><b>1</b><span>تسليم عاجل</span><small>تحليل الدورة</small></div>
+      <div><b>2</b><span>قرارات حاكمة</span><small>المصدر والسياسات</small></div>
+      <div><b>{families.length}</b><span>سلاسل مستندية</span><small>تغطي الدورة</small></div>
+      <div><b>3</b><span>مسارات تفعيل</span><small>تحليل · UAT · إنتاج</small></div>
+    </section>
+
+    <nav class="req-tabs no-print" aria-label="أقسام مركز المتطلبات">
+      <button class="is-active" data-tab="overview">المشهد التنفيذي</button>
+      <button data-tab="documents">خريطة المستندات</button>
+      <button data-tab="decisions">سجل القرارات</button>
+      <button data-tab="delivery">مسار التسليم</button>
+    </nav>
+
+    <section data-panel="overview" class="req-panel">
+      <div class="req-section-head">
+        <div><p>الحزمة في شاشة واحدة</p><h2>متطلبات موزعة بحسب طبيعتها</h2></div>
+        <span class="req-note">المصدر: حزمة BFP-SCM-REQ-2026</span>
+      </div>
+      <div class="req-cards">
+        {requirements.map((item) => (
+          <article class="req-card">
+            <div class="req-card-top"><span class={`req-priority ${item.priority === 'عاجل' ? 'urgent' : ''}`}>{item.priority}</span><code>{item.source}</code></div>
+            <h3>{item.title}</h3>
+            <p>{item.summary}</p>
+            <footer><span>{item.state}</span><b>{item.focus}</b></footer>
+          </article>
+        ))}
+      </div>
+      <div class="req-principle">
+        <b>المبدأ المقترح للتكامل</b>
+        <p>تلتقط البوابة الحدث التشغيلي والدليل والرقابة الميدانية؛ ويكون أودو مرجع القيد المالي والاعتماد المحاسبي والتقارير المالية. لا تُنشأ حقيقة تشغيلية مرتين.</p>
+      </div>
+    </section>
+
+    <section data-panel="documents" class="req-panel hidden">
+      <div class="req-section-head">
+        <div><p>من الكود الفعلي</p><h2>خريطة عبور المستندات إلى أودو</h2></div>
+        <span class="req-note">يُستمد الجدول من DOC_ODOO_MAP</span>
+      </div>
+      <div class="req-controls no-print">
+        <input id="docSearch" type="search" placeholder="ابحث بالنوع أو النموذج أو السلسلة…" />
+        <select id="familyFilter"><option value="">كل السلاسل</option>{families.map((family) => <option value={family}>{family}</option>)}</select>
+      </div>
+      <div class="req-doc-summary" id="docSummary">عرض {documents.length} مستندًا محكومًا</div>
+      <div class="req-table-wrap">
+        <table class="req-table"><thead><tr><th>النوع</th><th>السلسلة</th><th>نموذج أودو</th><th>حالة الاعتماد</th><th>فعل العمل</th></tr></thead>
+          <tbody id="docRows">{documents.map((item) => <tr data-doc-row data-search={`${item.type} ${item.family} ${item.model} ${item.confirmLabel} ${item.verb}`} data-family={item.family}><td><b>{item.type}</b></td><td>{item.family}</td><td dir="ltr"><code>{item.model}</code></td><td>{item.confirmLabel}</td><td>{item.verb}</td></tr>)}</tbody>
+        </table>
+      </div>
+      <p class="req-footnote">الخريطة تشرح قصد التكامل ولا تثبت وحدها أن وسيط الإنتاج مفعل أو أن عملية أودو الحية نجحت؛ الإثبات يكون باختبارات قبول موثقة.</p>
+    </section>
+
+    <section data-panel="decisions" class="req-panel hidden">
+      <div class="req-section-head"><div><p>لا يُحسم تقنيًا منفردًا</p><h2>سجل القرارات المطلوبة</h2></div><span class="req-note">الحفظ محلي في هذا الجهاز</span></div>
+      <div class="req-decision-list">
+        {decisionItems.map((item) => (
+          <article class="req-decision" data-decision={item.id}>
+            <header><div><span>{item.area}</span><h3>{item.title}</h3></div><select class="decision-state" aria-label={`حالة قرار ${item.title}`}><option value="pending">بانتظار القرار</option><option value="review">قيد مراجعة الإدارة</option><option value="approved">حُسم محليًا</option></select></header>
+            <dl><div><dt>صاحب الحسم</dt><dd>{item.owner}</dd></div><div><dt>التوصية</dt><dd>{item.recommendation}</dd></div><div><dt>أثر القرار</dt><dd>{item.consequence}</dd></div></dl>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section data-panel="delivery" class="req-panel hidden">
+      <div class="req-section-head"><div><p>ترتيب لا يخلط القرار بالتنفيذ</p><h2>مسار التسليم والاعتماد</h2></div></div>
+      <ol class="req-roadmap">
+        <li><b>التحليل</b><span>تثبيت بطاقات الـ27 مستندًا والحقول والملكية والاعتمادات ومقابل أودو.</span></li>
+        <li><b>الحسم</b><span>اعتماد النظام المصدر وسياسات التالف والنقص والحاويات وإصدار أودو.</span></li>
+        <li><b>العقد</b><span>توحيد خريطة الحقول وعمليات الجسر والحالات والاستثناءات بين البوابة ومزوّد أودو.</span></li>
+        <li><b>الإثبات</b><span>تشغيل UAT على بيئة Odoo تجريبية وتوثيق نتيجة كل مستند وحارس.</span></li>
+        <li><b>الإغلاق</b><span>تجميع النتائج ورفعها لمدير الإطلاق لاعتماد الدمج والدفع ومراقبة النشر.</span></li>
+      </ol>
+      <div class="req-warning"><b>بوابة الإغلاق</b><p>لا يعد أي مسار مكتملًا قبل تحقق الاختبارات، مراجعة الأثر التشغيلي، وموافقة مدير الإطلاق على الدفع.</p></div>
+    </section>
+
+    <div class="req-actions no-print"><button id="printRequirements">طباعة التقرير</button><button id="resetReview" class="secondary">تصفير مواقف المراجعة المحلية</button></div>
+  </main>
+
+  <style>
+    .req-page{max-width:1280px;margin:auto;color:var(--o-main-text,#242124)}
+    .req-hero{display:flex;justify-content:space-between;gap:28px;align-items:end;padding:30px;border-radius:20px;background:linear-gradient(135deg,#714b67,#4f3249);color:#fff;margin-bottom:18px}.req-hero h1{font-size:clamp(1.65rem,4vw,2.5rem);font-weight:800;margin:5px 0 12px}.req-hero p{max-width:790px;line-height:1.9;margin:0;color:#f2e9ef}.req-kicker{font-size:.75rem;font-weight:700;letter-spacing:.04em;color:#ead9e5}.req-hero-meta{display:grid;grid-template-columns:repeat(3,auto);gap:8px}.req-hero-meta span{white-space:nowrap;border:1px solid #ffffff55;border-radius:999px;padding:8px 11px;font-size:.72rem}
+    .req-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}.req-stats>div{background:var(--o-view-background-color,#fff);border:1px solid var(--o-border-color,#ddd);border-radius:14px;padding:15px}.req-stats b{display:block;color:#714b67;font-size:1.55rem}.req-stats span,.req-stats small{display:block}.req-stats span{font-weight:800;font-size:.84rem;margin-top:3px}.req-stats small{font-size:.72rem;color:#777;margin-top:4px}
+    .req-tabs{display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--o-border-color,#ddd);padding-bottom:14px;margin-bottom:24px}.req-tabs button,.req-actions button{border:1px solid #cbb8c5;background:#fff;color:#51434d;border-radius:9px;padding:9px 13px;font:inherit;font-weight:700;font-size:.8rem;cursor:pointer}.req-tabs button.is-active,.req-actions button{background:#714b67;border-color:#714b67;color:#fff}.req-tabs button:hover,.req-actions .secondary:hover{border-color:#714b67}.req-panel.hidden{display:none}.req-section-head{display:flex;justify-content:space-between;gap:16px;align-items:end;margin:0 0 16px}.req-section-head p{font-size:.74rem;color:#714b67;font-weight:800;margin:0 0 3px}.req-section-head h2{font-size:1.35rem;margin:0}.req-note{font-size:.73rem;color:#777}
+    .req-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.req-card{border:1px solid var(--o-border-color,#ddd);border-radius:14px;padding:17px;background:#fff;display:flex;flex-direction:column;gap:11px}.req-card-top,.req-card footer{display:flex;justify-content:space-between;gap:8px;align-items:center}.req-card code{font-size:.7rem;color:#777}.req-priority{font-size:.68rem;background:#f0ebee;color:#714b67;border-radius:999px;padding:4px 8px;font-weight:800}.req-priority.urgent{background:#fff1f1;color:#b42318}.req-card h3{font-size:1rem;margin:0}.req-card p{font-size:.8rem;line-height:1.7;color:#5e5860;margin:0;flex:1}.req-card footer{font-size:.7rem;border-top:1px solid #eee;padding-top:10px;color:#714b67}.req-card footer b{color:#555;font-weight:600}.req-principle,.req-warning{margin-top:18px;border-right:4px solid #714b67;background:#f8f4f7;padding:16px 18px;border-radius:10px}.req-principle p,.req-warning p{margin:6px 0 0;line-height:1.8;font-size:.85rem}
+    .req-controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.req-controls input,.req-controls select,.decision-state{border:1px solid #cfc6cc;border-radius:8px;background:#fff;padding:9px 10px;font:inherit;font-size:.8rem}.req-controls input{min-width:min(100%,320px);flex:1}.req-doc-summary{font-size:.76rem;color:#714b67;margin-bottom:10px;font-weight:700}.req-table-wrap{border:1px solid var(--o-border-color,#ddd);border-radius:12px;overflow:auto}.req-table{width:100%;border-collapse:collapse;min-width:720px;font-size:.8rem}.req-table th{background:#f5f1f4;color:#51434d;text-align:right}.req-table th,.req-table td{padding:11px 13px;border-bottom:1px solid #eee}.req-table tbody tr:last-child td{border-bottom:0}.req-table code{font-size:.73rem;color:#714b67}.req-footnote{font-size:.73rem;color:#777;line-height:1.7;margin:12px 0}
+    .req-decision-list{display:grid;gap:12px}.req-decision{background:#fff;border:1px solid var(--o-border-color,#ddd);border-radius:13px;padding:16px}.req-decision header{display:flex;align-items:start;justify-content:space-between;gap:12px}.req-decision header span{font-size:.7rem;color:#714b67;font-weight:800}.req-decision h3{margin:4px 0 0;font-size:1rem}.req-decision dl{display:grid;grid-template-columns:1fr 2fr 2fr;gap:14px;margin:15px 0 0}.req-decision dl div{border-top:1px solid #eee;padding-top:9px}.req-decision dt{font-size:.68rem;font-weight:800;color:#714b67;margin-bottom:4px}.req-decision dd{font-size:.77rem;line-height:1.7;color:#59515a;margin:0}.req-decision[data-review='approved']{border-color:#714b67;background:#fbf8fa}.req-decision[data-review='review']{border-color:#c7a568}
+    .req-roadmap{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;counter-reset:step}.req-roadmap li{position:relative;border:1px solid var(--o-border-color,#ddd);border-radius:12px;padding:14px;min-height:150px;background:#fff}.req-roadmap li::before{counter-increment:step;content:counter(step);display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#714b67;color:#fff;font-size:.72rem;font-weight:800;margin-bottom:10px}.req-roadmap b{display:block;margin-bottom:7px}.req-roadmap span{font-size:.76rem;line-height:1.7;color:#605860}.req-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:24px}.req-actions .secondary{background:#fff;color:#51434d;border-color:#cbb8c5}
+    @media (max-width:900px){.req-cards{grid-template-columns:repeat(2,1fr)}.req-roadmap{grid-template-columns:repeat(2,1fr)}.req-decision dl{grid-template-columns:1fr 1fr}.req-decision dl div:first-child{grid-column:span 2}}@media (max-width:640px){.req-hero{display:block;padding:22px}.req-hero-meta{margin-top:18px;grid-template-columns:1fr}.req-stats{grid-template-columns:repeat(2,1fr)}.req-cards,.req-roadmap{grid-template-columns:1fr}.req-section-head,.req-decision header{align-items:start;flex-direction:column}.req-decision dl{grid-template-columns:1fr}.req-decision dl div:first-child{grid-column:auto}.req-actions{justify-content:stretch;flex-direction:column}.req-actions button{width:100%}}@media print{.no-print,.req-actions{display:none!important}.req-page{max-width:none}.req-panel.hidden{display:block!important}.req-panel{page-break-inside:avoid;margin:22px 0}.req-hero{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+  </style>
+
+  <script>
+    (function () {
+      var tabs = Array.prototype.slice.call(document.querySelectorAll('[data-tab]'));
+      var panels = Array.prototype.slice.call(document.querySelectorAll('[data-panel]'));
+      tabs.forEach(function (tab) { tab.addEventListener('click', function () { var id = tab.getAttribute('data-tab'); tabs.forEach(function (x) { x.classList.toggle('is-active', x === tab); }); panels.forEach(function (panel) { panel.classList.toggle('hidden', panel.getAttribute('data-panel') !== id); }); }); });
+      var search = document.getElementById('docSearch'); var family = document.getElementById('familyFilter'); var rows = Array.prototype.slice.call(document.querySelectorAll('[data-doc-row]')); var summary = document.getElementById('docSummary');
+      function filterRows() { var term = (search.value || '').toLowerCase().trim(); var selected = family.value; var count = 0; rows.forEach(function (row) { var show = (!term || row.getAttribute('data-search').toLowerCase().indexOf(term) >= 0) && (!selected || row.getAttribute('data-family') === selected); row.hidden = !show; if (show) count++; }); summary.textContent = 'عرض ' + count + ' من ' + rows.length + ' مستندًا محكومًا'; }
+      search.addEventListener('input', filterRows); family.addEventListener('change', filterRows);
+      var key = 'bz-req-2026-review-v1'; var review = {}; try { review = JSON.parse(localStorage.getItem(key) || '{}'); } catch { review = {}; }
+      function paint(decision) { var id = decision.getAttribute('data-decision'); var select = decision.querySelector('.decision-state'); var value = review[id] || 'pending'; select.value = value; decision.setAttribute('data-review', value); }
+      document.querySelectorAll('[data-decision]').forEach(function (decision) { paint(decision); decision.querySelector('.decision-state').addEventListener('change', function (event) { review[decision.getAttribute('data-decision')] = event.target.value; localStorage.setItem(key, JSON.stringify(review)); paint(decision); }); });
+      document.getElementById('resetReview').addEventListener('click', function () { if (!confirm('تصفير مواقف المراجعة المحفوظة على هذا الجهاز؟')) return; review = {}; localStorage.removeItem(key); document.querySelectorAll('[data-decision]').forEach(paint); });
+      document.getElementById('printRequirements').addEventListener('click', function () { window.print(); });
+    })();
+  </script>
+</DashboardLayout>
