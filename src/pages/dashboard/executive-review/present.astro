@@ -1,0 +1,41 @@
+---
+/**
+ * «العرض الكامل» — محتويات غرفة القرار كلها في مسار واحد.
+ *
+ * كل محطة من التسع تُحاط بـ`.er-station` فيجمع الغلاف شرائح العرض من
+ * المحطات كلها (~40 شريحة) ويبني «فهرس العرض» منها — فتصل لأي شريحة
+ * من أي محطة أثناء التقديم دون خروج ولا إعادة تحميل. بلا وضع العرض،
+ * الصفحة نفسها مستند شامل واحد قابل للتمرير والطباعة.
+ */
+import ExecutiveReviewShell from '../../../components/executive-review/ExecutiveReviewShell.astro';
+import ReviewSections from '../../../components/executive-review/ReviewSections.astro';
+
+const stations = [
+  ['overview', 'المنظور التنفيذي'],
+  ['status', 'الحالة والإنجاز'],
+  ['model', 'النموذج التشغيلي'],
+  ['sites', 'المواقع والمخازن'],
+  ['catalog', 'كتالوج الاحتياجات'],
+  ['sectors', 'القطاعات والمبيعات'],
+  ['governance', 'الحوكمة والمكاتب'],
+  ['digital', 'القدرات الرقمية'],
+  ['decisions', 'القرارات والمتابعة'],
+];
+---
+
+<ExecutiveReviewShell title="العرض التنفيذي الكامل — من المتابعة إلى القرار" active="present">
+  {stations.map(([key, label]) => (
+    <div class="er-station" data-key={key} data-station={label}>
+      <h2 class="er-station-title">{label}</h2>
+      <ReviewSections view={key} />
+    </div>
+  ))}
+</ExecutiveReviewShell>
+
+<style is:global>
+  .er-station{margin-top:34px;padding-top:10px;border-top:2px solid var(--color-line-strong)}
+  .er-station:first-of-type{margin-top:0;border-top:0}
+  .er-station-title{margin:0;font-size:13px;font-weight:900;color:var(--color-accent);letter-spacing:.02em}
+  .review.presenting .er-station{margin:0;padding:0;border:0}
+  .review.presenting .er-station-title{display:none}
+</style>

@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 71,
+    "modules": 72,
     "serviceDomains": 28,
     "serviceFiles": 183,
     "collections": 49,
@@ -393,6 +393,14 @@
       "title": "لماذا البوابة تكامليّة لأودو",
       "summary": "لماذا البوابة تكامليّة لأودو — صفحة شرح الإنجاز وموقع البوابة من أودو.",
       "file": "src/pages/dashboard/portal-value.astro",
+      "usesServices": []
+    },
+    {
+      "name": "present",
+      "route": "/dashboard/present",
+      "title": "العرض التنفيذي الكامل — من المتابعة إلى القرار",
+      "summary": "«العرض الكامل» — محتويات غرفة القرار كلها في مسار واحد.",
+      "file": "src/pages/dashboard/executive-review/present.astro",
       "usesServices": []
     },
     {
