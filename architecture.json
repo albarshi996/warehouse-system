@@ -10,8 +10,8 @@
   },
   "counts": {
     "modules": 72,
-    "serviceDomains": 28,
-    "serviceFiles": 183,
+    "serviceDomains": 29,
+    "serviceFiles": 185,
     "collections": 49,
     "roles": 15,
     "odooModels": 12,
@@ -1092,6 +1092,25 @@
         "resolveHeaderCell",
         "splitMulti",
         "toNumber"
+      ],
+      "collections": []
+    },
+    {
+      "domain": "executiveReview",
+      "dir": "src/services/executiveReview",
+      "files": [
+        "decisionSession.js",
+        "decisionSession.test.js"
+      ],
+      "fileCount": 2,
+      "testCount": 1,
+      "exports": [
+        "DECISION_STATES",
+        "EMPTY_DECISION",
+        "createDecisionSession",
+        "normalizeDecisionSession",
+        "summarizeDecisionSession",
+        "updateDecision"
       ],
       "collections": []
     },

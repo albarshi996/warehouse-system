@@ -14,6 +14,7 @@ import { CATALOG, CATALOG_NOTE } from '../../data/executive-review/catalog.js';
 import { SALES_CYCLE, SECTORS, SECTOR_QUESTIONS } from '../../data/executive-review/sectors.js';
 import { GOVERNANCE_PRINCIPLE, OFFICE_RULES, OFFICES, EXCLUDED_OFFICES, GOVERNANCE_MATRIX_COLUMNS, GOVERNANCE_MATRIX } from '../../data/executive-review/governance.js';
 import { DIGITAL_CAPABILITIES } from '../../data/executive-review/digitalCapabilities.js';
+import MeetingDecisionBoard from './MeetingDecisionBoard.jsx';
 
 const { view = 'overview' } = Astro.props;
 // `amber` هي حالة البيانات الفعلية في board.js — تُبقى `yellow` احتياطًا.
@@ -31,7 +32,7 @@ const img155 = (src) => `${base}/executive-review/155/${src}`;
       <article class="hero-copy"><p class="eyebrow">قرار الإدارة العامة</p><h2>سلاسل الإمداد منظومة تخطيط وتحكم وتنفيذ وقياس، وليست مجرد إدارة مخازن.</h2><p>يعرض هذا المسار ما أُنجز، ما يحتاج قرارًا، ومن يملك التنفيذ والمتابعة والإغلاق.</p></article>
       <article class="decision-summary"><span>القرارات المطلوب اعتمادها</span><strong>{DECISIONS.length}</strong><p>قرارًا محددًا بمالك الاعتماد والأثر عند التأجيل.</p><a href={`${base}/dashboard/executive-review/decisions`}>فتح سجل القرارات ←</a></article>
     </section>
-    <section class="section"><div class="section-head"><p>لوحة الحالة</p><h2>الصورة الفورية</h2></div><div class="status-grid">{STATUS_BOARD.map((item) => <article class:list={['status-card', item.status]}><i></i><h3>{item.label}</h3><p>{item.note}</p><small>{stateLabel[item.status]}</small></article>)}</div></section>
+    <section class="section"><div class="section-head"><div><p>لوحة الحالة</p><h2>الصورة الفورية</h2></div><button type="button" class="focus-toggle no-print" data-focus-toggle="overview-status">عرض بطاقة واحدة</button></div><div class="status-grid" data-focus-grid="overview-status">{STATUS_BOARD.map((item) => <article class:list={['status-card', item.status]}><i></i><h3>{item.label}</h3><p>{item.note}</p><small>{stateLabel[item.status]}</small></article>)}</div><div class="focus-controls no-print" data-focus-controls="overview-status" hidden><button type="button" data-focus-prev>السابق</button><b data-focus-counter>1 / {STATUS_BOARD.length}</b><button type="button" data-focus-next>التالي</button></div></section>
     <section class="kpi-grid">{KPI_CARDS.map((item) => <article><strong>{item.value}</strong><span>{item.label}</span><small>{item.hint}</small></article>)}</section>
     <section class="section two"><article class="panel"><p class="eyebrow">القاعدة الحاكمة</p><h2>لا مستند = لا حركة</h2><p>كل احتياج يمر بطلب ومراجعة واعتماد وتخطيط وتنفيذ وتوثيق ومطابقة وإغلاق قابل للقياس.</p><a href={`${base}/dashboard/executive-review/model`}>عرض النموذج التشغيلي ←</a></article><article class="panel accent"><p class="eyebrow">المواقع</p><h2>تحوير وتجهيز تشغيلي للمخازن</h2><p>ملف 155 يعرض السعة المتاحة وخطة التحوير والأولويات التنفيذية؛ لا يتضمن طلب ميزانية صيانة.</p><a href={`${base}/dashboard/executive-review/sites`}>عرض المواقع والمخازن ←</a></article></section>
   </>}
@@ -90,15 +91,51 @@ const img155 = (src) => `${base}/executive-review/155/${src}`;
   </>}
 
   {view === 'decisions' && <>
-    <section class="section"><div class="section-head"><p>القرارات المطلوبة من المدير العام</p><h2>{DECISIONS.length} قرارات لحسم المسار</h2></div><div class="decision-grid">{DECISIONS.map((item, index) => <article><span>{index + 1}</span><h3>{item.title}</h3><p><b>المطلوب:</b> {item.ask}</p><p class="yes"><b>عند الاعتماد:</b> {item.ifYes}</p><p class="no"><b>عند التأجيل:</b> {item.ifNo}</p><small>{item.owner}<br />{item.parties}<br />{item.due}</small></article>)}</div></section>
+    <section class="section decision-session-slide"><MeetingDecisionBoard decisions={DECISIONS} client:load /></section>
     <section class="section"><div class="section-head"><p>ما بعد الاجتماع</p><h2>التنفيذ والمتابعة والإغلاق</h2></div><div class="table-wrap"><table><thead><tr><th>المالك</th><th>الإجراء</th><th>الجهات</th><th>الموعد</th><th>المتابعة</th><th>مخرج الإغلاق</th></tr></thead><tbody>{AFTER_MEETING.map((item) => <tr><td>{item.owner}</td><td>{item.action}</td><td>{item.party}</td><td>{item.due}</td><td>{item.follow}</td><td>{item.close}</td></tr>)}</tbody></table></div></section>
   </>}
+
+<script>
+  document.querySelectorAll('[data-focus-toggle]').forEach((toggle) => {
+    const key = toggle.dataset.focusToggle;
+    const grid = document.querySelector(`[data-focus-grid="${key}"]`);
+    const controls = document.querySelector(`[data-focus-controls="${key}"]`);
+    const cards = Array.from(grid?.children || []);
+    let current = 0;
+
+    function paint() {
+      cards.forEach((card, index) => card.classList.toggle('focus-current', index === current));
+      const counter = controls?.querySelector('[data-focus-counter]');
+      if (counter) counter.textContent = `${current + 1} / ${cards.length}`;
+    }
+
+    function closeFocus() {
+      grid?.classList.remove('focus-mode');
+      controls?.setAttribute('hidden', '');
+      toggle.textContent = 'عرض بطاقة واحدة';
+      cards.forEach((card) => card.classList.remove('focus-current'));
+    }
+
+    toggle.addEventListener('click', () => {
+      const opening = !grid?.classList.contains('focus-mode');
+      if (!opening) return closeFocus();
+      grid?.classList.add('focus-mode');
+      controls?.removeAttribute('hidden');
+      toggle.textContent = 'عرض كل البطاقات';
+      current = 0;
+      paint();
+    });
+    controls?.querySelector('[data-focus-prev]')?.addEventListener('click', () => { current = Math.max(0, current - 1); paint(); });
+    controls?.querySelector('[data-focus-next]')?.addEventListener('click', () => { current = Math.min(cards.length - 1, current + 1); paint(); });
+  });
+</script>
 
 <style>
   /* ═══ هوية البوابة الفاتحة حصرًا (ملاحظة المالك 2026-08-07): كل الألوان من
      توكِنز global.css — سطح ورقي + تمييز بنفسجي الهوية + دلالات الحالة فقط ═══ */
   .section{margin-top:26px}
-  .section-head{display:flex;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+  .section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+  .section-head>div>p{margin-bottom:4px}
   .section-head p,.eyebrow{margin:0;color:var(--color-accent);font-size:12px;font-weight:900;letter-spacing:.02em}
   .section-head h2{margin:0;font-size:clamp(20px,2.2vw,30px);color:var(--color-ink)}
   .section-head .note{font-size:12px;color:var(--color-muted)}
@@ -113,6 +150,17 @@ const img155 = (src) => `${base}/executive-review/155/${src}`;
   .decision-summary p{color:var(--color-ink-2);line-height:1.8}
   .decision-summary a,.panel a{color:var(--color-accent);font-weight:900;text-decoration:none}
   .status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .focus-toggle,.focus-controls button{border:1px solid var(--color-accent);background:var(--color-surface);color:var(--color-accent);border-radius:var(--radius-chip);padding:8px 13px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+  .focus-grid{min-height:0}
+  [data-focus-grid].focus-mode{display:block}
+  [data-focus-grid].focus-mode>article{display:none;min-height:260px;padding:clamp(22px,4vw,46px)}
+  [data-focus-grid].focus-mode>article.focus-current{display:block;animation:focus-in .18s ease-out}
+  [data-focus-grid].focus-mode>article h3{font-size:clamp(22px,3vw,34px)}
+  [data-focus-grid].focus-mode>article p{font-size:clamp(15px,1.8vw,20px);line-height:2}
+  .focus-controls{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:12px}
+  .focus-controls[hidden]{display:none}
+  .focus-controls b{min-width:72px;text-align:center;color:var(--color-ink)}
+  @keyframes focus-in{from{opacity:.35;transform:translateY(5px)}to{opacity:1;transform:none}}
   .status-card{position:relative;padding-top:17px}
   .status-card i{position:absolute;top:0;right:20px;width:48px;height:4px;border-radius:0 0 6px 6px;background:var(--color-muted)}
   .status-card.green i{background:var(--color-success)}
