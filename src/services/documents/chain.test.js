@@ -346,6 +346,27 @@ test('الاشتقاق QC ← PUTAWAY ينقل المقبول جودةً وحد�
   assert.equal(put.header.supplier, 'مورّد الشمال');
 });
 
+test('BZ-SCN-003: التشغيلة والصلاحية تُورَّثان من الاستلام للفحص فالتخزين', () => {
+  const grn = {
+    id: 'g1', type: 'GRN', number: 'GRN-2026-0009', state: 'approved',
+    header: { supplier: 'مورّد المشارق' },
+    lines: [{ sku: 'A1', description: 'صنف', qtyReceived: 500, batch: 'BATCH-260808-01', expiryDate: '2027-01-01' }],
+    links: {},
+  };
+  const qc = deriveDocument(grn, 'QC');
+  assert.equal(qc.lines[0].batch, 'BATCH-260808-01', 'الفحص يرث التشغيلة');
+  assert.equal(qc.lines[0].expiry, '2027-01-01', 'والصلاحية');
+
+  const qcApproved = {
+    ...qc, id: 'qc1', number: 'QC-2026-0009', state: 'approved',
+    lines: [{ ...qc.lines[0], qtyInspected: 500, qtyAccepted: 480, qtyRejected: 20 }],
+  };
+  const put = deriveDocument(qcApproved, 'PUTAWAY');
+  assert.equal(put.lines[0].qty, 480, 'يُخزَّن المقبول');
+  assert.equal(put.lines[0].batch, 'BATCH-260808-01', 'التخزين يرث التشغيلة نفسها — فيجد ما خزّنه الاستلام');
+  assert.equal(put.lines[0].expiry, '2027-01-01');
+});
+
 test('سلسلة الصرف كاملة: سحب ← تعبئة ← إذن ← تصريح', () => {
   const pickDoc = {
     id: 'pk1', type: 'PICK', number: 'PICK-2026-0001', state: 'approved',

@@ -268,9 +268,10 @@ service cloud.firestore {
       //    من أراد إنهاء استلام فعليه المرور باعتماد مفتّش الجودة — ولو زوّر
       //    الواجهة كلّها، فهذه القاعدة على الخادم لا تُتجاوَز.
       // ختمُ أثرٍ جانبيّ لا يغيّر الحالة: القيد المخزني يضع `posted` على مستندٍ
-      // منجَز، وحجز أمر البيع يضع `soAllocation` على معتمَد. كلاهما يكتبه فاعلٌ
-      // مخزنيّ، وكلاهما **لا يمسّ الحالة ولا الحقول الثابتة ولا الرقم** — فنسمح
-      // به بشرط ألّا يتغيّر إلا من هذه الحقول المعدودة. بدون هذا كان قيد أمين
+      // منجَز، وحجز أمر البيع يضع `soAllocation` على معتمَد، وتحرير الحجز عند السحب
+      // يضع `soReleasedByKey`/`soReleaseLog` على معتمَد (BZ-SCN-004). كلّها يكتبها
+      // فاعلٌ مخزنيّ، وكلّها **لا تمسّ الحالة ولا الحقول الثابتة ولا الرقم** — فنسمح
+      // بها بشرط ألّا يتغيّر إلا من هذه الحقول المعدودة. بدون هذا كان قيد أمين
       // المخزن (وهو الغالب) يرتدّ من الخادم.
       function isSideEffectStamp() {
         return isStockActor()
@@ -282,6 +283,7 @@ service cloud.firestore {
                && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
                     'posted', 'postedAt', 'postedByUid', 'postedMoves',
                     'soAllocation', 'soShortfall', 'soReserved', 'soReleased',
+                    'soReleasedByKey', 'soReleaseLog',
                     'updatedAt'
                   ]);
       }

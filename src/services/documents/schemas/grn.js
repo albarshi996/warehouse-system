@@ -138,11 +138,13 @@ const schema = {
         // lookup: 'item' — كتابة/مسح الباركود يستدعي الصنف من الماستر فيملأ
         // الكود والوصف تلقائيًّا (I-ب/2). المحرّك يتولّى التنفيذ لكل الأنواع.
         { key: 'barcode', label: 'باركود', kind: 'text', scannable: true, ltr: true, lookup: 'item', width: '11%' },
-        { key: 'description', label: 'الوصف', kind: 'text', width: '18%' },
+        { key: 'description', label: 'الوصف', kind: 'text', width: '13%' },
         { key: 'qtyOrdered', label: 'الكمية المطلوبة', kind: 'number', width: '8%' },
         { key: 'qtyReceived', label: 'الكمية المستلمة', kind: 'number', width: '8%' },
         { key: 'qtyRejected', label: 'الكمية المرفوضة', kind: 'number', width: '8%' },
-        { key: 'rejectReason', label: 'سبب الرفض', kind: 'text', width: '12%' },
+        { key: 'rejectReason', label: 'سبب الرفض', kind: 'text', width: '9%' },
+        // التشغيلة تُلتقط هنا وتُورَّث للفحص فالتخزين — عليها يُبنى مفتاح الرصيد وحارس FEFO.
+        { key: 'batch', label: 'الدفعة (Batch)', kind: 'text', width: '8%' },
         { key: 'expiryDate', label: 'تاريخ الصلاحية', kind: 'date', width: '10%' },
         { key: 'shelfLifePct', label: '% العمر المتبقي', kind: 'number', width: '8%' },
         {

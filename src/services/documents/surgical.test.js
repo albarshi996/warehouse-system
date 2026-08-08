@@ -12,49 +12,52 @@ import { getSchema, readyTypes } from './schemas/index.js';
 import { primaryParentType } from './schemaUtils.js';
 import { movesStock } from '../ledger/postingRules.js';
 
-// ── إشعار رفض الاستلام (SRN) ────────────────────────────────────────
-const GRN_WITH_REJECTS = {
-  id: 'grn1',
-  type: 'GRN',
-  number: 'GRN-2026-0001',
+// ── إشعار رفض الاستلام (SRN) — يُشتقّ من الفحص (BZ-SCN-005) ──────────
+const QC_WITH_REJECTS = {
+  id: 'qc1',
+  type: 'QC',
+  number: 'QC-2026-0001',
   state: 'approved',
-  header: { supplier: 'مورّد المشارق', poRef: 'PO-2026-0007' },
-  links: { PO: { id: 'po1', number: 'PO-2026-0007' } },
+  header: { supplier: 'مورّد المشارق', poRef: 'PO-2026-0007', grnRef: 'GRN-2026-0001' },
+  links: { PO: { id: 'po1', number: 'PO-2026-0007' }, GRN: { id: 'grn1', number: 'GRN-2026-0001' } },
   lines: [
-    { sku: 'A', description: 'صنف أ', qtyReceived: 10, qtyRejected: 3, rejectReason: 'تالف', expiryDate: '2026-12-01' },
-    { sku: 'B', description: 'صنف ب', qtyReceived: 5, qtyRejected: 0, rejectReason: '' },
-    { sku: 'C', description: 'صنف ج', qtyReceived: 8, qtyRejected: 2, rejectReason: 'مخالف للمواصفات' },
+    { sku: 'A', description: 'صنف أ', qtyInspected: 10, qtyAccepted: 7, qtyRejected: 3, reason: 'تالف', batch: 'L1', expiry: '2026-12-01' },
+    { sku: 'B', description: 'صنف ب', qtyInspected: 5, qtyAccepted: 5, qtyRejected: 0, reason: '' },
+    { sku: 'C', description: 'صنف ج', qtyInspected: 8, qtyAccepted: 6, qtyRejected: 2, reason: 'مخالف للمواصفات' },
   ],
 };
 
-test('مذكرة الاستلام تتفرّع: فحص جودة وإشعار رفض', () => {
-  assert.deepEqual(derivationTargets('GRN'), ['QC', 'SRN']);
+test('الاستلام صار خطّيًّا نحو الفحص، والفحص يتفرّع: تخزينٌ وإشعار رفض', () => {
+  assert.deepEqual(derivationTargets('GRN'), ['QC']);
+  assert.deepEqual(derivationTargets('QC'), ['PUTAWAY', 'SRN']);
 });
 
-test('SRN يأخذ البنود المرفوضة وحدها، وكمية الرفض تصير كمية الإرجاع', () => {
-  const srn = deriveDocument(GRN_WITH_REJECTS, 'SRN');
+test('BZ-SCN-005: SRN يُشتقّ من الفحص فيأخذ مرفوضاته وحدها، وكمية الرفض تصير كمية الإرجاع', () => {
+  const srn = deriveDocument(QC_WITH_REJECTS, 'SRN');
   assert.equal(srn.type, 'SRN');
   assert.equal(srn.lines.length, 2, 'المرفوضان فقط (A وC)، لا المقبول B');
   const a = srn.lines.find((l) => l.sku === 'A');
-  assert.equal(a.qty, 3, 'الكمية المرفوضة تصير كمية الإشعار');
+  assert.equal(a.qty, 3, 'الكمية المرفوضة جودةً تصير كمية الإشعار');
   assert.equal(a.reason, 'تالف');
+  assert.equal(a.batch, 'L1', 'التشغيلة تُنقل مع المرفوض');
   assert.equal(a.expiry, '2026-12-01');
   assert.ok(!srn.lines.some((l) => l.sku === 'B'), 'الصنف المقبول لا يظهر في إشعار الرفض');
 });
 
-test('SRN يرث المورّد ومرجعَي الاستلام وأمر الشراء', () => {
-  const srn = deriveDocument(GRN_WITH_REJECTS, 'SRN');
+test('SRN يرث المورّد ورقمَي الاستلام وأمر الشراء (رقم الاستلام لا رقم الفحص)', () => {
+  const srn = deriveDocument(QC_WITH_REJECTS, 'SRN');
   assert.equal(srn.header.supplier, 'مورّد المشارق');
   assert.equal(srn.header.poRef, 'PO-2026-0007');
-  assert.equal(srn.header.grnRef, 'GRN-2026-0001', 'رقم الاستلام مرجعًا');
-  assert.equal(srn.links.GRN.id, 'grn1');
+  assert.equal(srn.header.grnRef, 'GRN-2026-0001', 'رقم الاستلام (من الروابط الموروثة) لا رقم الفحص');
+  assert.equal(srn.links.QC.id, 'qc1', 'رابط الفحص محفوظ للتتبّع');
+  assert.equal(srn.links.GRN.id, 'grn1', 'ورابط الاستلام موروث عبر الفحص');
 });
 
 test('SRN توثيقيّ فقط — لا أثر مخزنيّ (فحص الجودة عزل المرفوض أصلًا)', () => {
   assert.equal(movesStock('SRN'), false);
 });
 
-test('أب SRN المرجعيّ هو مذكرة الاستلام', () => {
+test('أب SRN المرجعيّ في المخطّط يبقى مذكرة الاستلام (حقل grnRef)', () => {
   assert.equal(primaryParentType(getSchema('SRN')), 'GRN');
 });
 
@@ -106,7 +109,7 @@ test('المخطّطان مسجّلان بأقسامٍ وأدوارٍ وتواق
 
 test('السلسلتان المصغّرتان معرّفتان', () => {
   assert.deepEqual(DELIVERY_CHAIN, ['DN', 'POD']);
-  assert.deepEqual(REJECTION_CHAIN, ['GRN', 'SRN']);
+  assert.deepEqual(REJECTION_CHAIN, ['QC', 'SRN'], 'الرفض صار مشتقًّا من الفحص');
 });
 
 test('POD يُنجزه فريق الحركة (fleet) — لخصم رصيد المركبة', () => {

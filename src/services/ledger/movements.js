@@ -15,7 +15,7 @@
  */
 import { balanceId } from '../balances/balanceKey.js';
 import { postingRuleFor, WAREHOUSE_TOKENS, isWarehouseToken, isVehicleToken, POSTING_STATE } from './postingRules.js';
-import { vehicleLocationCode } from './locations.js';
+import { vehicleLocationCode, isAccountLocation } from './locations.js';
 
 /** فاصل المعرّف الحتمي — نفس نمط `balanceId`. */
 const SEP = '__';
@@ -172,11 +172,15 @@ export function balanceDeltas(moves) {
  *
  * `posted` هو الختم الذي يمنع القيد المزدوج. نفحصه هنا وفي المعاملة معًا:
  * هنا لتجربة المستخدم، وهناك للحقيقة.
+ *
+ * `allowApproved`: حين يقع القيدُ وانتقالُ الحالة إلى «منجَز» فعلًا ذرّيًّا واحدًا
+ * (BZ-SCN-001)، نقبل المستند وهو ما يزال «معتمَدًا» — فالمعاملة نفسها تختمه منجَزًا.
  */
-export function canPost(docData) {
+export function canPost(docData, { allowApproved = false } = {}) {
   if (!docData?.id) return { ok: false, reason: 'لا مستند.' };
   if (!postingRuleFor(docData.type)) return { ok: false, reason: 'هذا النوع لا يُحرّك مخزونًا.' };
-  if (docData.state !== POSTING_STATE) {
+  const okState = docData.state === POSTING_STATE || (allowApproved && docData.state === 'approved');
+  if (!okState) {
     return { ok: false, reason: 'لا يُقيَّد أثرٌ قبل إنجاز المستند — الإنجاز هو إقرار الوقوع.' };
   }
   if (docData.posted) return { ok: false, reason: 'قُيّد هذا المستند من قبل.' };
@@ -191,11 +195,15 @@ export function canPost(docData) {
  * الحركات المُزيدة (`delta >= 0`) لا تُفحص — لا تنقص شيئًا. رصيدٌ غائب = 0،
  * فأيّ إنقاصٍ منه خرقٌ (يمنع خلق صفٍّ وهميّ سالب عبر `merge:true`).
  *
+ * **استثناء المواقع الحسابيّة** (`ADJUSTMENT`): طرفٌ مقابلٌ لا رفٌّ ماديّ، يُسمح
+ * لرصيده بالسالب — فلا يُفحص. بدونه تعجز التسوية الموجبة عن القيد (BZ-SCN-002).
+ *
  * تُستدعى داخل معاملة القيد بأرصدةٍ قُرئت لحظتها، وفي الاختبار بخريطةٍ ثابتة.
  */
 export function findNegativeBalance(deltas, currentById = {}) {
   for (const d of deltas || []) {
     if (!(d.delta < 0)) continue;
+    if (isAccountLocation(d.warehouse)) continue; // حساب افتراضيّ يُسمح له بالسالب
     const current = Number(currentById[d.id]) || 0;
     if (current + d.delta < 0) {
       return {

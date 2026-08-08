@@ -162,6 +162,95 @@ export function reservationDeltas(allocations, sign = 1) {
   return [...byKey.values()];
 }
 
+/* ═══════════════ التحرير الجزئيّ عند السحب (BZ-SCN-004) ═══════════════ */
+
+/**
+ * يجمع خطّة الحجز في «مخطَّطٍ لكل مفتاح رصيد»: كم حُجز على كل صفّ، وأيّ صنفٍ
+ * وموقعٍ يخصّه. المتكرّر على نفس المفتاح يُجمع (كـ`reservationDeltas`).
+ */
+function planByKey(allocation) {
+  const plan = new Map();
+  for (const a of allocation || []) {
+    const id = a?.balanceId;
+    if (!id) continue;
+    const itemKey = String(a.sku || a.barcode || '').trim().toUpperCase();
+    const prev = plan.get(id);
+    if (prev) prev.planned += Number(a.qty) || 0;
+    else {
+      plan.set(id, {
+        id,
+        sku: a.sku || '',
+        barcode: a.barcode || '',
+        warehouse: a.warehouse || '',
+        batch: a.batch || '',
+        itemKey,
+        planned: Number(a.qty) || 0,
+      });
+    }
+  }
+  return plan;
+}
+
+/**
+ * خطّة تحريرٍ جزئيّ: لكل صنفٍ كميةٌ مطلوب تحريرها (`wantByItem`)، تُوزَّع على
+ * مفاتيح حجزه بحدّ **(المخطَّط − المُحرَّر سابقًا)** — فلا يُفكّ أكثر ممّا حُجز.
+ *
+ * نقيّة وحتميّة: تُستدعى عند إنجاز السحب (PICK) لتحرير ما خرج من الرفّ فعلًا،
+ * فلا يبقى محجوزًا عليه (BZ-SCN-004). تُعيد دلتاوات الفكّ والمُحرَّر المُحدَّث.
+ *
+ * @param {Array} allocation خطة الحجز المثبّتة على أمر البيع (`soAllocation`)
+ * @param {Object} releasedByKey ما حُرِّر سابقًا لكل مفتاح `{balanceId: qty}`
+ * @param {Object} wantByItem الكمية المطلوب تحريرها لكل صنف `{ITEMKEY: qty}`
+ * @returns {{deltas: Array<{id,sku,barcode,warehouse,batch,delta}>, releasedByKey: Object}}
+ */
+export function planItemRelease(allocation, releasedByKey, wantByItem) {
+  const released = { ...(releasedByKey || {}) };
+  const want = {};
+  for (const [k, v] of Object.entries(wantByItem || {})) {
+    const n = Number(v) || 0;
+    if (n > 0) want[k] = n;
+  }
+  const deltas = [];
+  for (const p of planByKey(allocation).values()) {
+    if (!(want[p.itemKey] > 0)) continue;
+    const already = Number(released[p.id]) || 0;
+    const releasable = Math.max(0, p.planned - already);
+    if (releasable <= 0) continue;
+    const take = Math.min(releasable, want[p.itemKey]);
+    if (take <= 0) continue;
+    released[p.id] = already + take;
+    want[p.itemKey] -= take;
+    deltas.push({ id: p.id, sku: p.sku, barcode: p.barcode, warehouse: p.warehouse, batch: p.batch, delta: -take });
+  }
+  return { deltas, releasedByKey: released };
+}
+
+/**
+ * خطّة تحريرٍ كامل لما تبقّى محجوزًا — تُستدعى عند إنجاز أمر البيع أو إغلاقه،
+ * فتفكّ **(المخطَّط − المُحرَّر سابقًا)** لكل مفتاح دون أن تُكرّر ما فكّه السحب.
+ */
+export function planFullRelease(allocation, releasedByKey) {
+  const released = { ...(releasedByKey || {}) };
+  const deltas = [];
+  for (const p of planByKey(allocation).values()) {
+    const already = Number(released[p.id]) || 0;
+    const remaining = Math.max(0, p.planned - already);
+    if (remaining <= 0) continue;
+    released[p.id] = already + remaining;
+    deltas.push({ id: p.id, sku: p.sku, barcode: p.barcode, warehouse: p.warehouse, batch: p.batch, delta: -remaining });
+  }
+  return { deltas, releasedByKey: released };
+}
+
+/** هل تحرّرت كامل خطّة الحجز؟ (كل مفتاحٍ حُرِّر بمقدار ما حُجز أو أكثر). */
+export function isFullyReleased(allocation, releasedByKey) {
+  const released = releasedByKey || {};
+  for (const p of planByKey(allocation).values()) {
+    if ((Number(released[p.id]) || 0) < p.planned) return false;
+  }
+  return true;
+}
+
 /**
  * نسبة تلبية الطلب (Fill Rate) — أوّل مؤشّرات الأداء وأصدقها.
  * المقياس بالكمية لا بعدد الأسطر: بندٌ من ألف قطعة لا يساوي بندًا من قطعة.

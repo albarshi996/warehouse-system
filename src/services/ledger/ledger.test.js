@@ -11,6 +11,7 @@ import assert from 'node:assert/strict';
 import {
   isSystemLocation,
   isReservedCode,
+  isAccountLocation,
   locationLabel,
   zeroingLocations,
   stuckBalances,
@@ -36,6 +37,9 @@ import {
   allocateFefo,
   allocateDocument,
   reservationDeltas,
+  planItemRelease,
+  planFullRelease,
+  isFullyReleased,
   fillRate,
 } from './reservations.js';
 import { buildLedgerCard, summarizeMovement } from './ledgerCard.js';
@@ -189,6 +193,36 @@ test('ADJ الموجب والسالب: الكمية موجبة والاتجاه 
   assert.equal(dec.to, 'ADJUSTMENT');
 });
 
+test('BZ-SCN-002: تسوية موجبة تُقيَّد رغم أن رصيد «مقابل التسوية» صفر', () => {
+  // +500 على مستودعٍ لا رصيد سابق له في «مقابل التسوية» (رصيده غائب = 0).
+  const doc = {
+    id: 'ADJ+', type: 'ADJ', state: 'done', header: { warehouse: 'E5' },
+    lines: [{ sku: 'A', description: 'زيادة', bookQty: 0, actualQty: 500, unitPrice: 2 }],
+  };
+  const { deltas } = balanceDeltas(buildMoves(doc).moves);
+  const adj = deltas.find((d) => d.warehouse === 'ADJUSTMENT');
+  const shelf = deltas.find((d) => d.warehouse === 'E5');
+  assert.equal(adj.delta, -500, 'المقابل الحسابيّ يُسحب منه (يصير سالبًا وهو مسموح)');
+  assert.equal(shelf.delta, +500, 'الرفّ يزيد 500');
+  // الحارس يُعفي «مقابل التسوية» رغم غياب رصيده، فلا يمنع القيد (قبل الإصلاح كان يرفضه).
+  assert.equal(findNegativeBalance(deltas, {}), null, 'التسوية الموجبة تمرّ');
+});
+
+test('BZ-SCN-002: الإعفاء لا يمسّ الأرفف الحقيقية — سالبُ المستودع يبقى مرفوضًا', () => {
+  assert.equal(isAccountLocation('ADJUSTMENT'), true);
+  assert.equal(isAccountLocation('E5'), false);
+  assert.equal(isAccountLocation('RECEIVING'), false, 'الاستلام موقعٌ انتقاليّ لا حسابيّ');
+  // تسوية سالبة −25 على رفٍّ رصيده صفر: تُرفض (الرفّ محروس رغم إعفاء المقابل).
+  const doc = {
+    id: 'ADJ-', type: 'ADJ', state: 'done', header: { warehouse: 'E5' },
+    lines: [{ sku: 'B', description: 'عجز', bookQty: 30, actualQty: 5, unitPrice: 1 }],
+  };
+  const { deltas } = balanceDeltas(buildMoves(doc).moves);
+  const v = findNegativeBalance(deltas, {});
+  assert.ok(v, 'سحب 25 من رفٍّ رصيده صفر يُرفض');
+  assert.equal(v.warehouse, 'E5');
+});
+
 /* ───────────────── التوازن ───────────────── */
 
 test('التوازن: GRN ثم QC ثم PUTAWAY يُفرّغ ساحة الاستلام', () => {
@@ -223,6 +257,27 @@ test('التوازن: GRN ثم QC ثم PUTAWAY يُفرّغ ساحة الاست�
   assert.equal(10 - 3 - 7, 0);
 });
 
+test('BZ-SCN-003: مفتاح رصيد الاستلام يطابق مفتاح سحب التخزين حين تُورَّث التشغيلة', () => {
+  const batch = 'BATCH-260808-01';
+  const grnRecv = balanceDeltas(
+    buildMoves({
+      id: 'GRN9', type: 'GRN', state: 'done', header: { warehouse: 'E5' },
+      lines: [{ sku: 'A1', description: 'صنف', qtyReceived: 500, batch, expiryDate: '2027-01-01', unitPrice: 1 }],
+    }).moves
+  ).deltas.find((d) => d.warehouse === 'RECEIVING');
+  const putRecv = balanceDeltas(
+    buildMoves({
+      id: 'PUT9', type: 'PUTAWAY', state: 'done', header: { warehouse: 'E5' },
+      lines: [{ sku: 'A1', description: 'صنف', qty: 480, batch, expiry: '2027-01-01', unitPrice: 1 }],
+    }).moves
+  ).deltas.find((d) => d.warehouse === 'RECEIVING');
+
+  assert.equal(grnRecv.batch, batch, 'الاستلام يقيّد بالتشغيلة لا فارغًا');
+  assert.equal(grnRecv.id, putRecv.id, 'مفتاح الرصيد واحد — فالتخزين يجد ما خزّنه الاستلام (قبل الإصلاح كانا يختلفان)');
+  assert.equal(grnRecv.delta, +500);
+  assert.equal(putRecv.delta, -480);
+});
+
 test('balanceDeltas يتجاهل الخارج ويجمع المتكرّر', () => {
   const moves = [
     { sku: 'A', barcode: '', nameAr: 'أ', batch: 'B1', expiry: '', unitCost: 1, from: null, to: 'RECEIVING', qty: 4 },
@@ -240,6 +295,17 @@ test('canPost يمنع القيد قبل الإنجاز وبعد القيد', ()
   assert.equal(canPost({ id: 'D', type: 'GRN', state: 'done' }).ok, true);
   assert.equal(canPost({ id: 'D', type: 'GRN', state: 'done', posted: true }).ok, false);
   assert.equal(canPost({ id: 'D', type: 'PR', state: 'done' }).ok, false, 'نوع بلا أثر');
+});
+
+test('BZ-SCN-001: canPost مع allowApproved يقبل «معتمَدًا» (للقيد الذرّيّ مع الإنجاز)', () => {
+  assert.equal(canPost({ id: 'D', type: 'GRN', state: 'approved' }, { allowApproved: true }).ok, true);
+  assert.equal(canPost({ id: 'D', type: 'GRN', state: 'done' }, { allowApproved: true }).ok, true, 'والمنجَز يبقى مقبولًا');
+  assert.equal(
+    canPost({ id: 'D', type: 'GRN', state: 'approved', posted: true }, { allowApproved: true }).ok,
+    false,
+    'المقيَّد لا يُقيَّد ثانيةً ولو كان معتمَدًا'
+  );
+  assert.equal(canPost({ id: 'D', type: 'GRN', state: 'draft' }, { allowApproved: true }).ok, false, 'المسودّة لا تُقيَّد');
 });
 
 test('previewImpact يجمع الحركات والقيمة والمشاكل', () => {
@@ -299,6 +365,47 @@ test('reservationDeltas يعكس الإشارة للفكّ', () => {
   const allocs = [{ balanceId: 'A__E5__B1', sku: 'A', warehouse: 'E5', batch: 'B1', qty: 4 }];
   assert.equal(reservationDeltas(allocs, 1)[0].delta, 4);
   assert.equal(reservationDeltas(allocs, -1)[0].delta, -4);
+});
+
+/* ───────── التحرير الجزئيّ عند السحب (BZ-SCN-004) ───────── */
+
+const SO_ALLOC = [
+  { balanceId: 'A__E5__L1', sku: 'A', warehouse: 'E5', batch: 'L1', qty: 10 },
+  { balanceId: 'A__E5__L2', sku: 'A', warehouse: 'E5', batch: 'L2', qty: 15 },
+  { balanceId: 'B__E5__M1', sku: 'B', warehouse: 'E5', batch: 'M1', qty: 5 },
+];
+
+test('planItemRelease يفكّ بمقدار المسحوب موزّعًا على مفاتيح الحجز', () => {
+  const { deltas, releasedByKey } = planItemRelease(SO_ALLOC, {}, { A: 12 });
+  const l1 = deltas.find((d) => d.id === 'A__E5__L1');
+  const l2 = deltas.find((d) => d.id === 'A__E5__L2');
+  assert.equal(l1.delta, -10, 'L1 يُستنفد أولًا');
+  assert.equal(l2.delta, -2, 'والباقي 2 من L2');
+  assert.ok(!deltas.some((d) => d.id === 'B__E5__M1'), 'صنفٌ لم يُسحب لا يُفكّ حجزه');
+  assert.equal(releasedByKey['A__E5__L1'], 10);
+  assert.equal(releasedByKey['A__E5__L2'], 2);
+});
+
+test('planItemRelease لا يفكّ أكثر من المحجوز مهما زاد المسحوب', () => {
+  const { deltas } = planItemRelease(SO_ALLOC, {}, { A: 999 });
+  const total = deltas.reduce((s, d) => s - d.delta, 0);
+  assert.equal(total, 25, 'إجمالي حجز A هو 25 — لا يُفكّ أكثر');
+});
+
+test('planItemRelease إيديمبوتنت عبر «المُحرَّر سابقًا»: لا فكّ مزدوج', () => {
+  const first = planItemRelease(SO_ALLOC, {}, { A: 10 });
+  const second = planItemRelease(SO_ALLOC, first.releasedByKey, { A: 10 });
+  assert.ok(!second.deltas.some((d) => d.id === 'A__E5__L1'), 'L1 استُنفد فلا يُفكّ ثانيةً');
+  assert.equal(second.deltas.find((d) => d.id === 'A__E5__L2').delta, -10, 'العشرة الثانية من L2');
+});
+
+test('planFullRelease يفكّ ما تبقّى فقط بعد تحريرٍ جزئيّ، وisFullyReleased يميّز الاكتمال', () => {
+  const partial = planItemRelease(SO_ALLOC, {}, { A: 10 });
+  assert.equal(isFullyReleased(SO_ALLOC, partial.releasedByKey), false, 'لم يكتمل بعد');
+  const { deltas, releasedByKey } = planFullRelease(SO_ALLOC, partial.releasedByKey);
+  const total = deltas.reduce((s, d) => s - d.delta, 0);
+  assert.equal(total, 20, 'الكلّ 30 ناقص 10 مُحرَّرة = 20');
+  assert.equal(isFullyReleased(SO_ALLOC, releasedByKey), true, 'اكتمل التحرير');
 });
 
 test('fillRate يقيس بالكمية لا بعدد الأسطر', () => {

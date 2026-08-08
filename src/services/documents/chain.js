@@ -57,11 +57,13 @@ export const INTERNAL_PROCUREMENT_CHAIN = ['IPR', 'RFQ', 'IPO', 'PV', 'DLV'];
  */
 export const DELIVERY_CHAIN = ['DN', 'POD'];
 /**
- * سلسلة رفض الاستلام: مذكرة الاستلام قد تُخرِج **إشعار رفضٍ للمورّد (SRN)**
- * بالبنود المرفوضة وأسبابها، يوقّعه مندوب المورّد. فرعٌ توثيقيّ من الوارد بلا
- * أثرٍ مخزنيّ (فحص الجودة نقل المرفوض للحجر أصلًا).
+ * سلسلة رفض الاستلام: **تقرير الجودة (QC)** — لا مذكرة الاستلام — يُخرِج إشعار
+ * رفضٍ للمورّد (SRN) بالبنود المرفوضة وأسبابها، يوقّعه مندوب المورّد. لماذا من
+ * QC لا GRN؟ لأن قرار الرفض ذا الأثر المخزنيّ يعيش في الفحص (يعزل المرفوض للحجر)،
+ * بينما `GRN.qtyRejected` بلا أثرٍ مخزنيّ — فاشتقاق SRN من GRN كان يُخرجه فارغًا
+ * حين يقع الرفض في الفحص (BZ-SCN-005). فرعٌ توثيقيّ بلا حركةٍ جديدة (الفحص عزل المرفوض أصلًا).
  */
-export const REJECTION_CHAIN = ['GRN', 'SRN'];
+export const REJECTION_CHAIN = ['QC', 'SRN'];
 
 /** كل السلاسل — لتجول عليها الدوال بلا معرفة مسبقة بأيّها. */
 export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN, TRANSFER_CHAIN, INTERNAL_PROCUREMENT_CHAIN, DELIVERY_CHAIN, REJECTION_CHAIN];
@@ -72,9 +74,9 @@ export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN
  * البقيّة خطّية: وجهةٌ واحدة هي التالي في سلسلتها.
  */
 export function derivationTargets(type) {
-  // إذن التسليم يتفرّع ثلاثًا (تصريح · فاتورة · تأكيد تسليم)، ومذكرة الاستلام
-  // تتفرّع اثنتين (فحص الجودة الخطّيّ · إشعار رفضٍ للمورّد بالبنود المرفوضة).
-  const branches = { DN: ['GP', 'INV', 'POD'], GRN: ['QC', 'SRN'] };
+  // إذن التسليم يتفرّع ثلاثًا (تصريح · فاتورة · تأكيد تسليم)، وتقرير الجودة
+  // يتفرّع اثنتين (تخزينُ المقبول · إشعارُ رفضٍ للمورّد بالبنود المرفوضة).
+  const branches = { DN: ['GP', 'INV', 'POD'], QC: ['PUTAWAY', 'SRN'] };
   if (branches[type]) return branches[type];
   const n = nextInChain(type);
   return n ? [n] : [];
@@ -109,12 +111,15 @@ const LINE_MAP = {
   // الوارد
   'PR>PO': { sku: 'sku', barcode: 'barcode', description: 'description', uom: 'uom', qty: 'qty', estPrice: 'unitPrice' },
   'PO>GRN': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qtyOrdered' },
-  'GRN>QC': { sku: 'sku', barcode: 'barcode', description: 'description', qtyReceived: 'qtyInspected' },
-  // إشعار الرفض يأخذ **البنود المرفوضة وحدها** (المرشّحة بـ LINE_FILTER): الكمية
-  // المرفوضة تصير كمية الإرجاع، وسبب الرفض يُنقل معها ليوقّع عليه مندوب المورّد.
-  'GRN>SRN': { sku: 'sku', barcode: 'barcode', description: 'description', qtyRejected: 'qty', rejectReason: 'reason', expiryDate: 'expiry' },
-  // المقبول جودةً وحده هو ما يُخزَّن — لا المستلَم كلّه.
-  'QC>PUTAWAY': { sku: 'sku', barcode: 'barcode', description: 'description', qtyAccepted: 'qty' },
+  // التشغيلة والصلاحية تُلتقطان عند الاستلام وتُورَّثان عبر الوارد كلّه (BZ-SCN-003):
+  // فمفتاح رصيد الاستلام (يضمّ التشغيلة) يطابق مفتاح ما يُسحب منه لاحقًا فحصًا وتخزينًا.
+  'GRN>QC': { sku: 'sku', barcode: 'barcode', description: 'description', qtyReceived: 'qtyInspected', batch: 'batch', expiryDate: 'expiry' },
+  // المقبول جودةً وحده هو ما يُخزَّن — لا المستلَم كلّه — بتشغيلته وصلاحيته الموروثتين.
+  'QC>PUTAWAY': { sku: 'sku', barcode: 'barcode', description: 'description', qtyAccepted: 'qty', batch: 'batch', expiry: 'expiry' },
+  // إشعار الرفض يُشتقّ من **تقرير الجودة** (حيث يعيش قرار الرفض) لا من الاستلام
+  // (BZ-SCN-005): يأخذ البنود المرفوضة وحدها (المرشّحة بـ LINE_FILTER)، فالكمية
+  // المرفوضة تصير كمية الإرجاع، وسببها وتشغيلتها وصلاحيتها تُنقل ليوقّع المورّد.
+  'QC>SRN': { sku: 'sku', barcode: 'barcode', description: 'description', qtyRejected: 'qty', reason: 'reason', batch: 'batch', expiry: 'expiry' },
   // الصادر — السعر يركب مع البنود من أمر البيع حتى الفاتورة (لا يُعاد إدخاله).
   'SO>PICK': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qtyRequested', uom: 'uom', unitPrice: 'unitPrice' },
   'PICK>PACK': { sku: 'sku', barcode: 'barcode', description: 'description', qtyPicked: 'qty', uom: 'uom', unitPrice: 'unitPrice' },
@@ -145,9 +150,9 @@ const HEADER_MAP = {
   'PR>PO': { warehouse: 'warehouse' },
   'PO>GRN': { supplier: 'supplier' },
   'GRN>QC': { supplier: 'supplier' },
-  // إشعار الرفض يرث المورّد (المُرجَع إليه) ورقم أمر الشراء المرجعيّ.
-  'GRN>SRN': { supplier: 'supplier', poRef: 'poRef' },
   'QC>PUTAWAY': { supplier: 'supplier' },
+  // إشعار الرفض يرث المورّد (المُرجَع إليه) ورقم أمر الشراء المرجعيّ من الفحص.
+  'QC>SRN': { supplier: 'supplier', poRef: 'poRef' },
   // أمر البيع يورّث عميله ومستودعه: المستودع يصير مصدر السحب، والعميل وجهته.
   'SO>PICK': { warehouse: 'warehouse', customer: 'destination', customerCode: 'branchOrderRef' },
   'PICK>PACK': { destination: 'destination' },
@@ -177,7 +182,7 @@ const HEADER_MAP = {
  * صنفٌ مقبولٌ في إشعار رفض.
  */
 const LINE_FILTER = {
-  'GRN>SRN': (line) => (Number(line?.qtyRejected) || 0) > 0,
+  'QC>SRN': (line) => (Number(line?.qtyRejected) || 0) > 0,
 };
 
 /** هل البند فارغ فعليًّا؟ (لا نورّث صفوفًا بيضاء) */
@@ -239,7 +244,7 @@ export function deriveDocument(source, toType = null) {
   const refField = {
     PO: 'prRef', GRN: 'poRef', QC: 'grnRef', PUTAWAY: 'grnRef',
     PACK: 'pickRef', DN: 'packRef', GP: 'dnRef', INV: 'deliveryRef',
-    POD: 'dnRef', SRN: 'grnRef',
+    POD: 'dnRef',
     TRN: 'transferReqRef', TRC: 'transferNoteRef',
     CN: 'returnRef', ADJ: 'cycleCountRef',
     // المشتريات الداخلية: كلّ حلقةٍ تحمل رقم أبيها المباشر.
@@ -248,6 +253,9 @@ export function deriveDocument(source, toType = null) {
   if (refField && source.number) header[refField] = source.number;
   // أمر التخزين يحمل رقم الاستلام لا رقم تقرير الفحص (هكذا ينصّ الورق).
   if (to === 'PUTAWAY' && source.links?.GRN?.number) header.grnRef = source.links.GRN.number;
+  // إشعار الرفض يُشتقّ من الفحص لكنّه يحمل رقم **الاستلام** مرجعًا (لا رقم الفحص) —
+  // فأبوه المرجعيّ في المخطّط هو GRN، ورقمه يأتي من سلسلة الروابط الموروثة (BZ-SCN-005).
+  if (to === 'SRN' && source.links?.GRN?.number) header.grnRef = source.links.GRN.number;
   // QC يحمل مرجع أمر الشراء أيضًا (الورق يطلبه) — نأخذه من سلسلة الروابط.
   if (to === 'QC' && source.header?.poRef) header.poRef = source.header.poRef;
   // الفاتورة تحمل رقم أمر البيع أيضًا (من سلسلة الروابط) لا رقم التسليم وحده.

@@ -106,13 +106,17 @@ const schema = {
       minRows: 1,
       columns: [
         { key: 'sku', label: 'رمز SKU', kind: 'text', scannable: true, width: '10%' },
-        { key: 'barcode', label: 'باركود', kind: 'text', scannable: true, ltr: true, lookup: 'item', width: '12%' },
-        { key: 'description', label: 'اسم الصنف', kind: 'text', width: '22%' },
-        { key: 'qtyInspected', label: 'الكمية المفحوصة', kind: 'number', width: '10%' },
-        { key: 'sampleSize', label: 'حجم العينة', kind: 'number', width: '8%' },
+        { key: 'barcode', label: 'باركود', kind: 'text', scannable: true, ltr: true, lookup: 'item', width: '11%' },
+        { key: 'description', label: 'اسم الصنف', kind: 'text', width: '12%' },
+        // التشغيلة والصلاحية موروثتان من الاستلام (BZ-SCN-003) — تُبقيان قرار الرفض
+        // منسوبًا إلى تشغيلته، وتنتقلان مع المقبول إلى التخزين ومع المرفوض إلى الإشعار.
+        { key: 'batch', label: 'الدفعة (Batch)', kind: 'text', width: '8%' },
+        { key: 'expiry', label: 'تاريخ الصلاحية', kind: 'date', width: '9%' },
+        { key: 'qtyInspected', label: 'الكمية المفحوصة', kind: 'number', width: '9%' },
+        { key: 'sampleSize', label: 'حجم العينة', kind: 'number', width: '6%' },
         { key: 'qtyAccepted', label: 'مقبول', kind: 'number', width: '9%' },
         { key: 'qtyRejected', label: 'مرفوض', kind: 'number', width: '9%' },
-        { key: 'reason', label: 'السبب', kind: 'text', width: '12%' },
+        { key: 'reason', label: 'السبب', kind: 'text', width: '9%' },
         {
           key: 'result',
           label: 'النتيجة',

@@ -24,11 +24,16 @@
  * ولأن المعاملة **لا تشغّل استعلامًا** (تقرأ مستندات بعينها)، نكتشف معرّفات
  * الصفوف المرشّحة أوّلًا خارجها، ثم نقرؤها بعينها داخلها.
  *
- * ═══ حدٌّ معروف موثَّق ═══
- * الحجز يبقى قائمًا حتى **إنجاز** أمر البيع لا حتى سحبه. فبين الاعتماد والإنجاز
- * — حين تخرج البضاعة بقائمة السحب — يبقى «المتاح» متحفّظًا (أقلّ من الحقيقي
- * بمقدار المحجوز الجاري). هذا **آمنٌ لا خطِر**: يُنقص المتاح فلا يُبيع ما لا
- * يوجد، ولا يزيده فيُبيع مرّتين. وعند الإنجاز يعود المتاح دقيقًا.
+ * ═══ متى يُفكّ الحجز؟ (BZ-SCN-004) ═══
+ * يُفكّ عند **إنجاز السحب (PICK)** بمقدار ما سُحب فعلًا — لأنّ البضاعة غادرت الرفّ
+ * حينها فلا تبقى محجوزةً عليه — وكذلك عند إنجاز أمر البيع أو إغلاقه (لتحرير أيّ
+ * بقيّة). قبل هذا كان الحجز لا يُفكّ إلا بانتقال أمر البيع نفسه إلى «منجَز»، وهو
+ * ما لا يقع في الدورة (تُنجزها المستندات التابعة PICK/DN/POD وأمر البيع يبقى
+ * معتمَدًا) — فيتراكم حجزٌ ميّت يُخفي بضاعةً خرجت، ويرفض طلباتٍ سليمة.
+ *
+ * التحرير الجزئيّ محكومٌ ببصمتين تمنعان الازدواج: `soReleaseLog` (أيّ مستند سحبٍ
+ * طُبّق) و`soReleasedByKey` (كم فُكّ من كل مفتاح حجز) — فلا يُفكّ أكثر ممّا حُجز
+ * ولو تكرّر الحدث أو أُنجز أمر البيع بعد سحبه.
  */
 import {
   doc,
@@ -38,7 +43,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../config/firebase.js';
 import { fetchBalancesOnce } from '../balances/balancesService.js';
-import { allocateDocument, reservationDeltas } from './reservations.js';
+import { allocateDocument, reservationDeltas, planItemRelease, planFullRelease, isFullyReleased } from './reservations.js';
 
 const DOCS = 'documents';
 const BALANCES = 'balances';
@@ -146,9 +151,10 @@ export async function allocateAndReserve(soDoc) {
 }
 
 /**
- * يفكّ حجز أمر البيع من الخطّة المثبّتة عليه. يُستدعى عند إنجاز الأمر.
- * ذرّيّ وإيديمبوتنت: يُقرأ `soReleased` **داخل المعاملة**، فنقرتان متزامنتان
- * لا تفكّان مرّتين — وإلّا صار المحجوز سالبًا (مخزونٌ وهميّ يُباع مرّتين).
+ * يفكّ **ما تبقّى** محجوزًا من أمر البيع. يُستدعى عند إنجاز الأمر أو إغلاقه —
+ * فيحرّر البقيّة التي لم يفكّها السحب الجزئيّ، ولا يُكرّر ما فُكّ (يقرأ
+ * `soReleasedByKey`). ذرّيّ وإيديمبوتنت: `soReleased` يُقرأ **داخل المعاملة**،
+ * فنقرتان متزامنتان لا تفكّان مرّتين — وإلّا صار المحجوز سالبًا (بيعٌ مزدوج).
  */
 export async function releaseReservation(soDoc) {
   return runTransaction(db, async (tx) => {
@@ -158,8 +164,8 @@ export async function releaseReservation(soDoc) {
     const fresh = soSnap.data();
     if (fresh.soReleased) return { released: 0, already: true };
 
-    const allocations = fresh.soAllocation || [];
-    reservationDeltas(allocations, -1).forEach((d) => {
+    const { deltas, releasedByKey } = planFullRelease(fresh.soAllocation || [], fresh.soReleasedByKey || {});
+    deltas.forEach((d) => {
       tx.set(
         doc(db, BALANCES, d.id),
         { qtyReserved: increment(d.delta), updatedAt: serverTimestamp() },
@@ -167,7 +173,62 @@ export async function releaseReservation(soDoc) {
       );
     });
 
-    tx.update(soRef, { soReleased: true, updatedAt: serverTimestamp() });
-    return { released: allocations.length, already: false };
+    tx.update(soRef, { soReleased: true, soReleasedByKey: releasedByKey, updatedAt: serverTimestamp() });
+    return { released: deltas.length, already: false };
+  });
+}
+
+/**
+ * يفكّ حجز أمر البيع بمقدار ما سُحب فعلًا في مستند سحبٍ (PICK) منجَز — البضاعة
+ * غادرت الرفّ فلا تبقى محجوزةً عليه (BZ-SCN-004). يقرأ أمر البيع الأصل من
+ * `pickDoc.links.SO` (لا بحثًا نصّيًّا)، ويوزّع المسحوب على مفاتيح الحجز.
+ *
+ * ذرّيّ وإيديمبوتنت: كلٌّ من `soReleaseLog` (بصمة مستند السحب) و`soReleasedByKey`
+ * (المُحرَّر لكل مفتاح) يُقرأ داخل المعاملة، فإعادة إنجاز السحب لا تفكّ مرّتين.
+ */
+export async function releaseForPick(pickDoc) {
+  const soLink = pickDoc?.links?.SO;
+  if (!soLink?.id) return { released: 0, skipped: 'no-so' };
+
+  const wantByItem = {};
+  for (const l of pickDoc?.lines || []) {
+    const k = String(l?.sku || l?.barcode || '').trim().toUpperCase();
+    const q = Number(l?.qtyPicked) || 0;
+    if (!k || q <= 0) continue;
+    wantByItem[k] = (wantByItem[k] || 0) + q;
+  }
+  if (!Object.keys(wantByItem).length) return { released: 0, skipped: 'no-picked' };
+
+  return runTransaction(db, async (tx) => {
+    const soRef = doc(db, DOCS, soLink.id);
+    const soSnap = await tx.get(soRef);
+    if (!soSnap.exists()) throw new Error('أمر البيع المرتبط غير موجود.');
+    const fresh = soSnap.data();
+    if (!fresh.soReserved) return { released: 0, skipped: 'not-reserved' };
+
+    const log = Array.isArray(fresh.soReleaseLog) ? fresh.soReleaseLog : [];
+    if (log.includes(pickDoc.id)) return { released: 0, already: true };
+
+    const { deltas, releasedByKey } = planItemRelease(
+      fresh.soAllocation || [],
+      fresh.soReleasedByKey || {},
+      wantByItem
+    );
+    deltas.forEach((d) => {
+      tx.set(
+        doc(db, BALANCES, d.id),
+        { qtyReserved: increment(d.delta), updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+    });
+
+    const released = deltas.reduce((s, d) => s - d.delta, 0);
+    tx.update(soRef, {
+      soReleasedByKey: releasedByKey,
+      soReleaseLog: [...log, pickDoc.id],
+      soReleased: isFullyReleased(fresh.soAllocation || [], releasedByKey),
+      updatedAt: serverTimestamp(),
+    });
+    return { released, already: false };
   });
 }

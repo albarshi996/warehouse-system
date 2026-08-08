@@ -62,10 +62,15 @@ function currentName(profile) {
  *   3. قواعد الأمان تمنع تعديل حركةٍ قُيّدت (انظر firestore.rules).
  * فلو ضغط موظّفان «إنهاء» في اللحظة نفسها، فازت معاملةٌ واحدة وأُعيدت الأخرى.
  *
+ * `markDone` (BZ-SCN-001): حين يُطلب، يُختم المستند **منجَزًا داخل معاملة القيد
+ * نفسها** — فبلوغُ «منجَز» وقيدُ الأثر فعلٌ ذرّيٌّ واحد لا فعلان. وإن فشل القيد
+ * (رصيدٌ غير كافٍ مثلًا) لم تُكتب الحالة، فيبقى المستند «معتمَدًا» قابلًا للإعادة —
+ * لا «منجَزًا بلا أثر» يكذب على الرصيد بصمت. يُقبل عندئذٍ المستند معتمَدًا (لا منجَزًا).
+ *
  * @returns {Promise<{moves:number, deltas:number, totalQty:number}>}
  */
-export async function postDocument(docData, profile) {
-  const gate = canPost(docData);
+export async function postDocument(docData, profile, { markDone = false } = {}) {
+  const gate = canPost(docData, { allowApproved: markDone });
   if (!gate.ok) throw new Error(gate.reason);
 
   const { moves, problems: buildProblems } = buildMoves(docData);
@@ -89,7 +94,11 @@ export async function postDocument(docData, profile) {
     if (!snap.exists()) throw new Error('المستند غير موجود.');
     const fresh = snap.data();
     if (fresh.posted) throw new Error('قُيّد هذا المستند من قبل — لا يُقيَّد مرّتين.');
-    if (fresh.state !== 'done') throw new Error('حالة المستند تغيّرت — لم يعد منجَزًا.');
+    // مع `markDone`: نقبل «معتمَدًا» (المعاملة ستختمه منجَزًا)؛ بدونه نشترط «منجَزًا».
+    const stateOk = markDone
+      ? fresh.state === 'approved' || fresh.state === 'done'
+      : fresh.state === 'done';
+    if (!stateOk) throw new Error('حالة المستند غير مناسبة للقيد — يلزم أن يكون معتمَدًا أو منجَزًا.');
 
     // ── حارس الرصيد السالب (يُقرأ داخل المعاملة قبل أي كتابة) ──────────
     // كلّ حركةٍ تُنقص رصيدًا (delta<0) نتحقّق أنّ الناتج ≥ 0: لا يُقيَّد سحبٌ
@@ -144,6 +153,8 @@ export async function postDocument(docData, profile) {
     });
 
     tx.update(docRef, {
+      // ختم «منجَز» يقع **داخل** معاملة القيد لا قبلها — فلا مستند منجَز بلا أثر.
+      ...(markDone ? { state: 'done', updatedAt: serverTimestamp() } : {}),
       posted: true,
       postedAt: serverTimestamp(),
       postedByUid: uid,

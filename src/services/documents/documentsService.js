@@ -35,7 +35,7 @@ import { primaryParentType } from './schemaUtils.js';
 import { movesStock, POSTING_STATE } from '../ledger/postingRules.js';
 import { buildMoves } from '../ledger/movements.js';
 import { postDocument } from '../ledger/ledgerService.js';
-import { allocateAndReserve, releaseReservation } from '../ledger/salesService.js';
+import { allocateAndReserve, releaseReservation, releaseForPick } from '../ledger/salesService.js';
 
 const DOCS = 'documents';
 const AUDIT = 'audit';
@@ -176,15 +176,16 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
     patch.approvedAt = serverTimestamp();
   }
 
-  await updateDoc(ref, patch);
-  await appendAudit(docId, { action: to, note, from, to, profile });
-
-  // الأثر المخزني يقع بعد الحالة لا قبلها: الدفتر يوثّق ما وقع، ولم يقع بعد
-  // إلا الآن. وقد فُحص أعلاه فلا يُتوقّع فشلٌ — وإن وقع كُتب في سجلّ التدقيق
-  // كي لا يُخفيه النظام: مستندٌ منجَز بلا قيد استثناءٌ يُلاحَق، لا صمتٌ يُحتمل.
-  if (to === POSTING_STATE && movesStock(data.type)) {
+  // 🥇 الذرّية (BZ-SCN-001): للمستند المخزنيّ، بلوغُ «منجَز» وقيدُ الأثر معاملةٌ
+  // واحدة داخل postDocument — إمّا أن يُنجَز ويُقيَّد معًا، أو يبقى **معتمَدًا** إن
+  // فشل القيد (رصيدٌ غير كافٍ مثلًا). فلا تُكتب «منجَز» ثم يفشل الأثر فيبقى المستند
+  // يكذب على الرصيد بصمت. الفحص المسبق أعلاه (buildMoves) يمسك أخطاء البناء مبكّرًا؛
+  // وحارس الرصيد داخل المعاملة يمسك العجز — وكلاهما يُبقي المستند معتمَدًا لا منجَزًا.
+  const atomicPost = to === POSTING_STATE && movesStock(data.type);
+  if (atomicPost) {
     try {
-      const result = await postDocument({ ...data, id: docId, state: to }, profile);
+      const result = await postDocument({ ...data, id: docId }, profile, { markDone: true });
+      await appendAudit(docId, { action: to, note, from, to, profile });
       await appendAudit(docId, {
         action: 'post',
         note: `قُيّد الأثر المخزني: ${result.moves} حركة، إجمالي ${result.totalQty}`,
@@ -193,15 +194,18 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
     } catch (err) {
       await appendAudit(docId, {
         action: 'post-failed',
-        note: `تعذّر قيد الأثر المخزني: ${err?.message || err}`,
+        note: `تعذّر القيد، والمستند باقٍ في «${from}»: ${err?.message || err}`,
         profile,
       });
-      throw new Error(`أُنجز المستند لكن تعذّر قيد أثره المخزني: ${err?.message || err}`);
+      throw new Error(`لم يُنجَز المستند: تعذّر قيد أثره المخزني — ${err?.message || err}`);
     }
+  } else {
+    await updateDoc(ref, patch);
+    await appendAudit(docId, { action: to, note, from, to, profile });
   }
 
-  // 🛒 حجز أمر البيع: يُحجز عند الاعتماد، ويُفكّ عند الإنجاز. أفضلُ جهدٍ لا
-  // شرطُ اعتماد — فشلُ الحجز يُثبَّت في التدقيق ولا يُبطل قرار المدير.
+  // 🛒 حجز أمر البيع: يُحجز عند الاعتماد، ويُفكّ ما تبقّى عند الإنجاز/الإغلاق.
+  // أفضلُ جهدٍ لا شرطُ اعتماد — فشلُ الحجز يُثبَّت في التدقيق ولا يُبطل قرار المدير.
   if (data.type === 'SO' && (to === 'approved' || to === POSTING_STATE)) {
     try {
       if (to === 'approved') {
@@ -216,6 +220,23 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
       await appendAudit(docId, {
         action: to === 'approved' ? 'reserve-failed' : 'release-failed',
         note: `تعذّر ${to === 'approved' ? 'حجز' : 'فكّ حجز'} الرصيد: ${err?.message || err}`,
+        profile,
+      });
+    }
+  }
+
+  // 🛒 تحرير حجز أمر البيع عند سحب بنوده فعليًّا (PICK منجَز): البضاعة غادرت الرفّ
+  // فلا تبقى محجوزةً عليه (BZ-SCN-004). أفضلُ جهدٍ — يُثبَّت فشلُه ولا يُبطل السحب.
+  if (data.type === 'PICK' && to === POSTING_STATE) {
+    try {
+      const r = await releaseForPick({ ...data, id: docId });
+      if (r.released > 0) {
+        await appendAudit(docId, { action: 'release', note: `فُكّ حجز ${r.released} من أمر البيع بعد السحب`, profile });
+      }
+    } catch (err) {
+      await appendAudit(docId, {
+        action: 'release-failed',
+        note: `تعذّر فكّ حجز أمر البيع بعد السحب: ${err?.message || err}`,
         profile,
       });
     }
