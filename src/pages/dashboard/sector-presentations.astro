@@ -1,0 +1,73 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { sectorPresentations } from '../../data/sector-presentations.js';
+
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL.slice(0, -1) : import.meta.env.BASE_URL;
+---
+
+<DashboardLayout title="عروض القطاعات التشغيلية" light>
+  <main class="hub" dir="rtl">
+    <header class="hub-head">
+      <div>
+        <p>منظومة المستودعات والتوزيع</p>
+        <h1>عرض مستقل لكل قطاع</h1>
+        <span>اختر القطاع لفتح عرض قصير يوضح الدورة، الأنظمة المطلوبة، الضوابط، والمؤشرات دون خلط النماذج التشغيلية.</span>
+      </div>
+      <aside><b>6</b><span>قطاعات</span><i></i><b>تفصيلي</b><span>بعدد شرائح المصدر</span></aside>
+    </header>
+
+    <section class="principle" aria-label="القاعدة التشغيلية">
+      <span>القاعدة الموحدة</span>
+      <strong>ملكية الموقع تحدد نوع العملية</strong>
+      <p>موقع مملوك: TR → TRN → TRC &nbsp;·&nbsp; عميل خارجي: SO → PICK → PACK → DN → GP → POD → INV</p>
+    </section>
+
+    <section class="sector-list" aria-label="قائمة عروض القطاعات">
+      {sectorPresentations.map((sector, index) => (
+        <a href={`${base}/dashboard/sector-presentations/${sector.slug}`} data-tone={sector.statusTone}>
+          <span class="number">{String(index + 1).padStart(2, '0')}</span>
+          <div><p>{sector.short}</p><h2>{sector.name}</h2><span>{sector.subtitle}</span></div>
+          <aside><b>{sector.status} · {sector.slides.length + 1} شريحة</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></aside>
+        </a>
+      ))}
+    </section>
+  </main>
+</DashboardLayout>
+
+<style>
+  :global(body) { background: #f5f4f2; }
+  .hub { min-height: 100vh; color: #24202a; padding: clamp(1.5rem, 4vw, 4.5rem); }
+  .hub-head { max-width: 1180px; margin: 0 auto 2.5rem; display: flex; justify-content: space-between; gap: 2rem; align-items: end; }
+  .hub-head p { color: #714b67; font-weight: 800; letter-spacing: .08em; margin: 0 0 .65rem; }
+  .hub-head h1 { font-size: clamp(2.2rem, 5vw, 4.8rem); line-height: 1; margin: 0 0 1rem; letter-spacing: -.05em; }
+  .hub-head div > span { color: #6d6872; max-width: 700px; display: block; font-size: 1.05rem; line-height: 1.8; }
+  .hub-head > aside { display: grid; grid-template-columns: auto auto; gap: .1rem .7rem; min-width: 190px; }
+  .hub-head aside b { font-size: 2rem; color: #714b67; }
+  .hub-head aside span { align-self: center; color: #6d6872; }
+  .hub-head aside i { grid-column: 1 / -1; height: 1px; background: #d9d4d7; margin: .45rem 0; }
+  .principle { max-width: 1180px; margin: 0 auto 3rem; border-top: 1px solid #d9d4d7; border-bottom: 1px solid #d9d4d7; padding: 1.4rem 0; display: grid; grid-template-columns: 150px 1fr; gap: .4rem 2rem; }
+  .principle span { color: #714b67; font-weight: 800; grid-row: span 2; }
+  .principle strong { font-size: 1.4rem; }
+  .principle p { margin: 0; color: #6d6872; direction: ltr; text-align: right; }
+  .sector-list { max-width: 1180px; margin: auto; border-top: 1px solid #d9d4d7; }
+  .sector-list > a { color: inherit; text-decoration: none; display: grid; grid-template-columns: 80px 1fr auto; gap: 1.4rem; align-items: center; padding: 1.55rem .35rem; border-bottom: 1px solid #d9d4d7; transition: padding .2s, background .2s; }
+  .sector-list > a:hover, .sector-list > a:focus-visible { padding-inline: 1rem; background: #fff; outline: none; }
+  .number { font-size: 1.8rem; color: #aaa4ab; font-variant-numeric: tabular-nums; }
+  .sector-list p { margin: 0 0 .2rem; color: #714b67; font-size: .75rem; letter-spacing: .12em; font-weight: 800; }
+  .sector-list h2 { margin: 0 0 .3rem; font-size: clamp(1.3rem, 2.2vw, 2rem); }
+  .sector-list div > span { color: #77717a; }
+  .sector-list aside { display: flex; gap: 1.25rem; align-items: center; }
+  .sector-list aside b { font-size: .8rem; color: #6f6871; font-weight: 700; }
+  .sector-list [data-tone='ready'] aside b { color: #39735a; }
+  .sector-list svg { width: 24px; height: 24px; color: #714b67; }
+  @media (max-width: 760px) {
+    .hub { padding: 1.3rem; }
+    .hub-head { display: block; }
+    .hub-head > aside { margin-top: 1.5rem; width: max-content; }
+    .principle { grid-template-columns: 1fr; }
+    .principle span { grid-row: auto; }
+    .principle p { direction: rtl; }
+    .sector-list > a { grid-template-columns: 48px 1fr; gap: .8rem; }
+    .sector-list aside { grid-column: 2; justify-content: space-between; }
+  }
+</style>
