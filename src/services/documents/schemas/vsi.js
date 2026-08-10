@@ -40,6 +40,18 @@ export function vsiWarnings(doc) {
   if (!String(h.vehiclePlate || '').trim()) out.push('لوحة المركبة تُحدّد من أين خرجت البضاعة — لا بيع بلا لوحة');
   if (!String(h.customerCode || '').trim()) out.push('رمز العميل يربط البيع بحسابه وبموقعه — لا يُترك فارغًا');
 
+  // السياج الجغرافيّ: الفاتورة تُربط بزيارةٍ موثّقة الموقع. الحالة تُكتب على
+  // الرأس وقت الإنشاء من `invoiceGuard` في طبقة الميدان — وهذه مرآتها للمراجع.
+  if (!String(h.visitRef || '').trim()) {
+    out.push('فاتورة بلا زيارة مرجعيّة — لا يُعرف أين وقع البيع ولا متى');
+  }
+  const fence = String(h.fenceStatus || '').trim();
+  if (fence === 'outside') {
+    out.push(`صدرت خارج نطاق المتجر (${h.fenceDistanceM || '؟'}م) — تحتاج مراجعة المشرف`);
+  } else if (fence === 'unverified') {
+    out.push('صدرت وموقعها غير مُتحقَّق — وثّق السبب (ضعف إرسال / موقع المتجر غير مسجّل)');
+  }
+
   const total = grandTotal(lines);
   const collected = Number(h.amountCollected) || 0;
   const mode = String(h.paymentMode || '').trim();
@@ -82,6 +94,14 @@ const schema = {
         { key: 'customerCode', label: 'رمز العميل (Customer Code)', kind: 'text', required: true },
         { key: 'customer', label: 'اسم العميل (Customer Name)', kind: 'text', required: true },
         { key: 'visitRef', label: 'رقم الزيارة (Visit Ref.)', kind: 'text', hint: 'يربط البيع بزيارةٍ موثّقة بموقعها ووقتها' },
+        {
+          key: 'fenceStatus',
+          label: 'التحقّق من الموقع (Geo-fence)',
+          kind: 'select',
+          options: ['inside', 'outside', 'unverified'],
+          hint: 'داخل النطاق · خارجه · غير مُتحقَّق. يُملأ آليًّا من الزيارة ولا يُحرَّر يدويًّا إلا بمبرّر.',
+        },
+        { key: 'fenceDistanceM', label: 'البعد عن المتجر (م)', kind: 'number' },
         { key: 'tripRef', label: 'رقم الرحلة (Trip Ref.)', kind: 'text' },
         {
           key: 'rep',

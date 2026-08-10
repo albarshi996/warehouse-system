@@ -124,7 +124,10 @@ service cloud.firestore {
     // تسرد الكلّ). كان أي مصادَق يقرأ دليل المستخدمين كاملًا — دور وبريد كلّ
     // زميل؛ حُصر بالمحور ٤. الكتابة للمدير العام فقط — وإلا رقّى كلٌّ نفسه.
     match /users/{uid} {
-      allow read: if isManager() || (signedIn() && request.auth.uid == uid);
+      // مشرف المبيعات يقرأ الدليل أيضًا: لا يضع خطّة زياراتٍ لمندوبٍ لا يعرف
+      // معرّفه. توسعةٌ مقصودة ومحدودة بالقراءة — الكتابة تبقى للمدير العام وحده.
+      allow read: if isManager() || myRole() == 'sales_supervisor'
+                  || (signedIn() && request.auth.uid == uid);
       allow write: if isAdmin();
     }
 
@@ -443,9 +446,20 @@ service cloud.firestore {
       allow create, update: if isManager();
       allow delete: if false;
     }
+    // ماستر العملاء. المديران يكتبونه كاملًا.
+    //
+    // 🔒 استثناءٌ ضيّق للميدان: المندوب ومشرفه يلتقطان **موقع المتجر وبياناته
+    //    الميدانيّة فقط** (`geo`/`field`) — لا الأسعار ولا شروط الدفع ولا الاسم
+    //    ولا الأرشفة. يُنفَّذ بـ`affectedKeys().hasOnly` فلا يكفي أن يُرسل
+    //    المندوب حقلًا مسموحًا وحقلًا ممنوعًا في الطلب نفسه: يُرفض الطلب كلّه.
+    //    (نفس درس `isSideEffectStamp` — تحديد الحقول لا تحديد الدور وحده.)
     match /Customers_Master/{docId} {
       allow read: if signedIn();
-      allow create, update: if isManager();
+      allow create: if isManager();
+      allow update: if isManager()
+                    || (isVanSalesWriter()
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['geo', 'field', 'byUid', 'byName', 'byRole', 'updatedAt']));
       allow delete: if false;
     }
 
@@ -799,6 +813,38 @@ service cloud.firestore {
       match /events/{eventId} {
         allow read:   if signedIn();
         allow create: if isLaborWriter() && request.resource.data.byUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+
+    // خطط الزيارات الدائمة (PJP) — يضعها المشرف والمديران، ويقرؤها المندوب
+    // ليحمّل يومه. **المندوب لا يكتبها**: خطّةٌ يعدّلها من ينفّذها ليست خطّة،
+    // بل تبريرٌ لاحقٌ لما فعل. لا حذف — تُعطَّل بـactive:false فيبقى أثرها.
+    match /journey_plans/{planId} {
+      allow read:           if signedIn();
+      allow create, update: if isManager() || myRole() == 'sales_supervisor';
+      allow delete:         if false;
+    }
+
+    // الزيارات الميدانيّة — واقعةٌ بمكانٍ وزمان. المعرّف حتميّ
+    // (‹يوم›__‹مندوب›__‹عميل›) فلا تُسجَّل زيارتان للمتجر نفسه في اليوم نفسه.
+    //
+    // 🔒 المندوب يكتب زياراته وحدها (`repUid == uid`) — وإلّا سجّل زيارةً باسم
+    //    زميلٍ فاختلّت تغطيته وأداؤه. والمشرف والمديران يكتبون كلّ الزيارات
+    //    لأنّهم يراجعون ويصحّحون. ولا حذف: زيارةٌ لم تقع تُوسَم `skipped`
+    //    بسببٍ مكتوب — ومحوُها يجعل تقرير التغطية جميلًا وكاذبًا.
+    match /visits/{visitId} {
+      allow read: if signedIn();
+      allow create, update: if isManager() || myRole() == 'sales_supervisor'
+                            || (myRole() == 'sales_rep' && isActive()
+                                && request.resource.data.repUid == request.auth.uid);
+      allow delete: if false;
+
+      // سجلّ أحداث الزيارة — ملحق-فقط، والفاعل يُوثَّق بهويّته لا باسمٍ يُكتب.
+      match /events/{eventId} {
+        allow read:   if signedIn();
+        allow create: if signedIn() && isActive()
+                      && request.resource.data.byUid == request.auth.uid;
         allow update, delete: if false;
       }
     }

@@ -100,6 +100,7 @@ export const NAV_GROUPS = [
     group: 'الميدان والبيع من المركبة',
     emoji: '🛵', icon: 'truck',
     items: [
+      { path: '/dashboard/field-operations', label: 'يوم المندوب', icon: 'mapPin', roles: ['admin', 'warehouse_manager', 'sales_rep', 'sales_supervisor'] },
       { path: '/dashboard/van-operations', label: 'المستودع المتنقّل', icon: 'truck', roles: ['admin', 'warehouse_manager', 'sales_rep', 'sales_supervisor'] },
     ],
   },

@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 77,
-    "serviceDomains": 30,
-    "serviceFiles": 193,
-    "collections": 49,
+    "modules": 78,
+    "serviceDomains": 31,
+    "serviceFiles": 199,
+    "collections": 52,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -186,6 +186,14 @@
       "title": "",
       "summary": "",
       "file": "src/pages/dashboard/executive-review.astro",
+      "usesServices": []
+    },
+    {
+      "name": "field-operations",
+      "route": "/dashboard/field-operations",
+      "title": "يوم المندوب",
+      "summary": "",
+      "file": "src/pages/dashboard/field-operations.astro",
       "usesServices": []
     },
     {
@@ -1163,6 +1171,75 @@
         "updateDecision"
       ],
       "collections": []
+    },
+    {
+      "domain": "field",
+      "dir": "src/services/field",
+      "files": [
+        "field.test.js",
+        "fieldService.js",
+        "geo.js",
+        "journeyPlan.js",
+        "locationCapture.js",
+        "visitModel.js"
+      ],
+      "fileCount": 6,
+      "testCount": 1,
+      "exports": [
+        "ACCURACY_TOLERANCE_RATIO",
+        "DEFAULT_FENCE_RADIUS_M",
+        "FREQUENCIES",
+        "MIN_VISIT_MINUTES",
+        "SKIP_REASONS",
+        "VISIT_OUTCOMES",
+        "VISIT_STATES",
+        "VISIT_TRANSITIONS",
+        "WEEKDAYS",
+        "attachInvoice",
+        "canTransitionVisit",
+        "captureLocation",
+        "centroid",
+        "checkIn",
+        "checkOut",
+        "coverageGaps",
+        "createAdHocVisit",
+        "dayKey",
+        "fenceVerdict",
+        "geolocationSupported",
+        "haversineMeters",
+        "invoiceGuard",
+        "isDueOn",
+        "isValidCoords",
+        "listenJourneyPlans",
+        "listenRecentVisits",
+        "listenRepPlans",
+        "listenVisitsOfDay",
+        "locationPermissionState",
+        "normalizeCoords",
+        "parseDay",
+        "planCompliance",
+        "routeDistanceMeters",
+        "saveJourneyPlan",
+        "seedVisitsForDay",
+        "setCustomerFieldData",
+        "setCustomerLocation",
+        "setPlanActive",
+        "skipVisit",
+        "stampMs",
+        "summarizeVisits",
+        "toKm",
+        "visitDurationMinutes",
+        "visitId",
+        "visitVerdict",
+        "visitsDueOn",
+        "weekdayOf",
+        "weeksBetween",
+        "withinFence"
+      ],
+      "collections": [
+        "journey_plans",
+        "visits"
+      ]
     },
     {
       "domain": "fleet",
@@ -2526,12 +2603,21 @@
           },
           {
             "actions": [
-              "create",
-              "update"
+              "create"
             ],
             "condition": "isManager()",
             "roles": [
               "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "isManager() || (isVanSalesWriter() && request.resource.data.diff(resource.data).affectedKeys() .hasOnly(['geo', 'field', 'byUid', 'byName', 'byRole', 'updatedAt",
+            "roles": [
+              "isManager",
+              "isVanSalesWriter"
             ]
           },
           {
@@ -2855,6 +2941,39 @@
             "roles": [
               "isManager",
               "isStockActor"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "journey_plans",
+        "path": "journey_plans",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager() || myRole() == 'sales_supervisor'",
+            "roles": [
+              "isManager",
+              "myRole"
             ]
           },
           {
@@ -3467,9 +3586,10 @@
             "actions": [
               "read"
             ],
-            "condition": "isManager() || (signedIn() && request.auth.uid == uid)",
+            "condition": "isManager() || myRole() == 'sales_supervisor' || (signedIn() && request.auth.uid == uid)",
             "roles": [
               "isManager",
+              "myRole",
               "signedIn"
             ]
           },
@@ -3669,6 +3789,73 @@
           },
           {
             "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "visits",
+        "path": "visits",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager() || myRole() == 'sales_supervisor' || (myRole() == 'sales_rep' && isActive() && request.resource.data.repUid == request.auth.uid)",
+            "roles": [
+              "isManager",
+              "myRole",
+              "isActive"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "events",
+        "path": "visits/events",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "signedIn() && isActive() && request.resource.data.byUid == request.auth.uid",
+            "roles": [
+              "signedIn",
+              "isActive"
+            ]
+          },
+          {
+            "actions": [
+              "update",
               "delete"
             ],
             "condition": "false",

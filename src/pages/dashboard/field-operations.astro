@@ -1,0 +1,19 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import FieldOperations from '../../components/brandzo-erp/field/FieldOperations.jsx';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<DashboardLayout title="يوم المندوب" light>
+  <link rel="stylesheet" href={`${base}/lib/leaflet/leaflet.css`} />
+  <script is:inline src={`${base}/lib/leaflet/leaflet.js`}></script>
+
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">يوم المندوب</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      خطّة الزيارات · الحضور والانصراف بموقعٍ موثّق · نتيجة كلّ زيارة · خريطة اليوم.
+    </p>
+    <FieldOperations client:load />
+  </div>
+</DashboardLayout>
