@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تقرير متطلبات ومقترحات تطوير مستودعات برندزو – موقع أبوهادي 155</title>
+<link rel="stylesheet" href="../lib/fonts/bz-fonts.css">
+<link rel="stylesheet" href="../lib/fontawesome/css/all.min.css">
+<style>
+  :root{--primary:#0B2545;--primary-light:#134074;--accent:#C65D3E;--accent-light:#E8845A;--gold:#B8860B;--gold-light:#DAA520;--bg:#FFF;--bg-alt:#F5F6F8;--bg-table:#FAFBFC;--text:#1A1A2E;--text-secondary:#4A4A5A;--text-muted:#6B7280;--border:#D1D5DB;--border-light:#E5E7EB;--success:#059669;--warning-bg:#FEF3C7;--warning-border:#F59E0B;--warning-text:#92400E;--info-bg:#EFF6FF;--info-border:#3B82F6;--info-text:#1E40AF;--shadow-lg:0 8px 30px rgba(0,0,0,.12)}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{font-size:11pt;scroll-behavior:smooth}
+  body{font-family:'IBM Plex Sans Arabic',sans-serif;color:var(--text);background:#E8EAED;line-height:1.8;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .report-container{width:210mm;min-height:297mm;margin:20px auto;background:var(--bg);box-shadow:var(--shadow-lg)}
+  .cover-page{width:210mm;height:297mm;position:relative;overflow:hidden;background:linear-gradient(160deg,var(--primary) 0%,var(--primary-light) 40%,#1B4F8A 100%);display:flex;flex-direction:column;justify-content:center;align-items:center;page-break-after:always}
+  .cover-page::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 80%,rgba(198,93,62,.15) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(184,134,11,.1) 0%,transparent 50%);pointer-events:none}
+  .cover-page::after{content:'';position:absolute;top:30px;left:30px;right:30px;bottom:30px;border:2px solid rgba(218,165,32,.3);pointer-events:none}
+  .cover-inner-border{position:absolute;top:40px;left:40px;right:40px;bottom:40px;border:1px solid rgba(255,255,255,.1);pointer-events:none}
+  .cover-top-bar{position:absolute;top:50px;left:50px;right:50px;display:flex;justify-content:space-between;align-items:center;z-index:2}
+  .cover-top-bar span{color:rgba(255,255,255,.6);font-size:9pt;letter-spacing:1px}
+  .cover-logo-area{text-align:center;z-index:2;margin-bottom:30px}
+  .cover-logo-icon{width:80px;height:80px;border:3px solid var(--gold-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;background:rgba(184,134,11,.1)}
+  .cover-logo-icon i{font-size:32px;color:var(--gold-light)}
+  .cover-brand{font-family:'IBM Plex Sans Arabic',serif;font-size:28pt;font-weight:700;color:#FFF;letter-spacing:2px;text-shadow:0 2px 10px rgba(0,0,0,.3)}
+  .cover-subtitle-en{font-size:10pt;color:rgba(255,255,255,.5);letter-spacing:3px;text-transform:uppercase;margin-top:5px}
+  .cover-divider{width:120px;height:3px;background:linear-gradient(90deg,transparent,var(--gold-light),transparent);margin:25px auto;z-index:2;position:relative}
+  .cover-title{font-size:18pt;font-weight:800;color:#FFF;text-align:center;z-index:2;position:relative;line-height:1.6;max-width:500px}
+  .cover-title-en{font-size:9pt;color:rgba(255,255,255,.4);text-align:center;z-index:2;position:relative;margin-top:10px;letter-spacing:1px}
+  .cover-location{z-index:2;position:relative;margin-top:30px;background:rgba(184,134,11,.15);border:1px solid rgba(218,165,32,.3);padding:10px 30px;border-radius:8px}
+  .cover-location p{color:var(--gold-light);font-size:11pt;font-weight:600}
+  .cover-meta{position:absolute;bottom:60px;left:50px;right:50px;display:flex;justify-content:space-between;z-index:2}
+  .cover-meta-item{text-align:center}
+  .cover-meta-item .label{font-size:8pt;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+  .cover-meta-item .value{font-size:10pt;color:rgba(255,255,255,.85);font-weight:600}
+  .cover-bottom-bar{position:absolute;bottom:30px;left:50px;right:50px;display:flex;justify-content:center;z-index:2}
+  .cover-bottom-bar span{color:rgba(255,255,255,.3);font-size:7pt;letter-spacing:2px}
+  .page{width:210mm;min-height:297mm;padding:20mm 22mm 25mm 22mm;position:relative;page-break-after:always;background:var(--bg)}
+  .page:last-child{page-break-after:avoid}
+  .page-header{position:absolute;top:0;left:0;right:0;height:12mm;background:var(--primary);display:flex;align-items:center;justify-content:space-between;padding:0 22mm}
+  .page-header span{font-size:7pt;color:rgba(255,255,255,.7);letter-spacing:.5px}
+  .page-header .header-accent{width:40px;height:3px;background:var(--gold-light);position:absolute;bottom:0;right:22mm}
+  .page-footer{position:absolute;bottom:0;left:0;right:0;height:12mm;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 22mm;font-size:7pt;color:var(--text-muted)}
+  .page-footer .page-num{background:var(--primary);color:#FFF;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:8pt}
+  .section-header{margin-bottom:20px;padding-bottom:12px;border-bottom:3px solid var(--primary);position:relative}
+  .section-header::after{content:'';position:absolute;bottom:-3px;right:0;width:80px;height:3px;background:var(--accent)}
+  .section-number{display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:36px;background:var(--primary);color:#FFF;font-size:13pt;font-weight:800;border-radius:6px;margin-left:12px;vertical-align:middle;padding:0 6px}
+  .section-title{font-size:15pt;font-weight:800;color:var(--primary);display:inline;vertical-align:middle}
+  .section-title-en{display:block;font-size:8pt;color:var(--text-muted);letter-spacing:1px;margin-top:4px}
+  .sub-title{font-size:12pt;font-weight:700;color:var(--primary-light);margin:18px 0 10px;padding-right:14px;border-right:4px solid var(--accent)}
+  .sub-title-sm{font-size:10.5pt;font-weight:600;color:var(--text);margin:14px 0 8px}
+  p{margin-bottom:8px;text-align:justify;color:var(--text-secondary);font-size:10pt;line-height:1.9}
+  .table-wrapper{margin:12px 0 16px;overflow:hidden;border-radius:8px;border:1px solid var(--border)}
+  table{width:100%;border-collapse:collapse;font-size:9pt}
+  table thead th{background:var(--primary);color:#FFF;padding:10px 12px;text-align:right;font-weight:600;font-size:8.5pt;letter-spacing:.3px;white-space:nowrap}
+  table tbody td{padding:8px 12px;border-bottom:1px solid var(--border-light);background:var(--bg-table);color:var(--text-secondary);vertical-align:top;line-height:1.6}
+  table tbody tr:last-child td{border-bottom:none}
+  table tbody tr:nth-child(even) td{background:#F0F2F5}
+  table tbody td:first-child{font-weight:600;color:var(--text);white-space:nowrap}
+  .warning-box{background:var(--warning-bg);border:1px solid var(--warning-border);border-right:5px solid var(--warning-border);border-radius:6px;padding:12px 16px;margin:14px 0;font-size:9.5pt;color:var(--warning-text);display:flex;align-items:flex-start;gap:10px}
+  .warning-box i{font-size:14pt;margin-top:2px;flex-shrink:0}
+  .info-box{background:var(--info-bg);border:1px solid var(--info-border);border-right:5px solid var(--info-border);border-radius:6px;padding:12px 16px;margin:14px 0;font-size:9.5pt;color:var(--info-text);display:flex;align-items:flex-start;gap:10px}
+  .info-box i{font-size:14pt;margin-top:2px;flex-shrink:0}
+  .recommendation-box{background:linear-gradient(135deg,#F0FDF4,#ECFDF5);border:1px solid #86EFAC;border-right:5px solid var(--success);border-radius:8px;padding:14px 18px;margin:14px 0}
+  .recommendation-box .rec-title{font-size:9.5pt;font-weight:700;color:#065F46;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .recommendation-box p{color:#047857;font-size:9.5pt;margin-bottom:0}
+  .disclaimer-box{background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:14px 18px;margin:16px 0}
+  .disclaimer-box p{color:#991B1B;font-size:9pt;margin-bottom:0}
+  ul,ol{margin:8px 0 12px 20px;color:var(--text-secondary);font-size:10pt}
+  li{margin-bottom:4px;line-height:1.7}
+  .axis-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0}
+  .axis-card{display:flex;align-items:center;gap:8px;background:var(--bg-alt);border:1px solid var(--border-light);border-radius:5px;padding:6px 10px}
+  .axis-card .num{width:26px;height:26px;background:var(--primary);color:#FFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8pt;font-weight:700;flex-shrink:0}
+  .axis-card .label{font-size:8pt;font-weight:600;color:var(--text);line-height:1.3}
+  .warehouse-images{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+  .warehouse-images .img-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#F9FAFB}
+  .warehouse-images .img-card img{width:100%;height:160px;object-fit:cover;display:block}
+  .warehouse-images .img-card .img-caption{padding:8px 12px;font-size:8pt;color:var(--text-muted);text-align:center;border-top:1px solid var(--border-light);background:#FFF}
+  .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:16px 0}
+  .meta-grid .meta-item{display:flex;border-bottom:1px solid var(--border-light);border-left:1px solid var(--border-light)}
+  .meta-grid .meta-item:nth-child(even){border-left:none}
+  .meta-grid .meta-item:nth-last-child(-n+2){border-bottom:none}
+  .meta-grid .meta-label{background:var(--primary);color:#FFF;padding:10px 14px;font-size:8.5pt;font-weight:600;width:120px;flex-shrink:0;display:flex;align-items:center}
+  .meta-grid .meta-value{padding:10px 14px;font-size:9.5pt;color:var(--text);font-weight:500;display:flex;align-items:center;background:var(--bg-table)}
+  .toc-item{display:flex;align-items:baseline;padding:5px 0;border-bottom:1px dotted var(--border);font-size:10pt}
+  .toc-item:last-child{border-bottom:none}
+  .toc-num{font-weight:800;color:var(--accent);margin-left:10px;min-width:30px}
+  .toc-label{flex:1;color:var(--text);font-weight:500}
+  .toc-page{color:var(--text-muted);font-weight:600}
+  .ref-tag{display:inline-block;background:#EFF6FF;color:var(--info-text);font-size:7.5pt;padding:1px 6px;border-radius:3px;font-weight:600;margin-right:4px;direction:ltr}
+  .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:7.5pt;font-weight:700}
+  .badge-green{background:#D1FAE5;color:#065F46}
+  .badge-yellow{background:#FEF3C7;color:#92400E}
+  .badge-red{background:#FEE2E2;color:#991B1B}
+  .badge-blue{background:#DBEAFE;color:#1E40AF}
+  .sep{height:1px;background:var(--border-light);margin:16px 0}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .stat-card{background:var(--bg-alt);border:1px solid var(--border-light);border-radius:8px;padding:14px;text-align:center}
+  .stat-card .stat-value{font-size:20pt;font-weight:800;color:var(--primary);line-height:1.2}
+  .stat-card .stat-label{font-size:8pt;color:var(--text-muted);margin-top:4px}
+  .example-box{background:#F8FAFC;border:2px dashed var(--primary-light);border-radius:8px;padding:14px 18px;margin:12px 0;text-align:center}
+  .example-box .example-label{font-size:8pt;color:var(--text-muted);margin-bottom:6px}
+  .example-box .example-code{font-size:16pt;font-weight:800;color:var(--primary);letter-spacing:2px;direction:ltr;display:inline-block}
+  .example-box .example-desc{font-size:8.5pt;color:var(--text-secondary);margin-top:8px;line-height:1.6}
+  .table-compact td,.table-compact th{padding:6px 8px!important;font-size:8.5pt!important}
+  .layer-diagram{background:#F8FAFC;border:1px solid var(--border-light);border-radius:8px;padding:16px 20px;margin:14px 0;direction:ltr;text-align:center}
+  .layer-row{display:flex;align-items:center;justify-content:center;margin:4px 0;gap:8px}
+  .layer-block{padding:6px 16px;border-radius:4px;font-size:8pt;font-weight:600;color:#FFF;min-width:280px;text-align:center}
+  .layer-arrow{font-size:10pt;color:var(--text-muted)}
+  @media print{
+    @page{size:A4;margin:0}
+    body{background:#FFF;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .report-container{box-shadow:none;margin:0;width:210mm}
+    .page{page-break-after:always;padding:18mm 20mm 22mm 20mm}
+    .page:last-child{page-break-after:avoid}
+    .warning-box,.info-box,.recommendation-box,.disclaimer-box,.meta-grid .meta-label,.section-number,.axis-card .num,.page-footer .page-num,.example-box,table thead th,table tbody tr:nth-child(even) td,.page-header,.layer-block,.badge,.badge-green,.badge-yellow,.badge-red,.badge-blue{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .no-print{display:none!important}
+    a{text-decoration:none;color:inherit}
+  }
+</style>
+</head>
+<body>
+<div class="report-container">
+
+<!-- ==================== الغلاف ==================== -->
+<div class="cover-page">
+  <div class="cover-inner-border"></div>
+  <div class="cover-top-bar"><span>DOCUMENT NO. BRZ-WH-155-2026</span><span>REV. 01</span></div>
+  <div class="cover-logo-area">
+    <div class="cover-logo-icon"><i class="fas fa-warehouse"></i></div>
+    <div class="cover-brand">برندزو</div>
+    <div class="cover-subtitle-en">BRANDZO COMMERCIAL LOGISTICS</div>
+  </div>
+  <div class="cover-divider"></div>
+  <div class="cover-title">تقرير متطلبات ومقترحات<br>تحسين وتطوير المستودعات</div>
+  <div class="cover-title-en">Commercial Logistics Warehouse Development Report</div>
+  <div class="cover-divider"></div>
+  <div class="cover-location"><p><i class="fas fa-map-marker-alt" style="margin-left:8px;"></i>موقع أبوهادي 155</p></div>
+  <div class="cover-meta">
+    <div class="cover-meta-item"><div class="label">الجهة المعدة</div><div class="value">إدارة المستودعات</div></div>
+    <div class="cover-meta-item"><div class="label">الإعداد</div><div class="value">محمد البرشي – رمزي باش</div></div>
+    <div class="cover-meta-item"><div class="label">عدد الأقسام</div><div class="value">22 قسماً</div></div>
+  </div>
+  <div class="cover-bottom-bar"><span>CONFIDENTIAL – FOR INTERNAL USE ONLY</span></div>
+</div>
+
+<!-- ==================== بيانات التقرير ==================== -->
+<div class="page">
+  <div class="page-header"><span>تقرير تطوير مستودعات برندزو – أبوهادي 155</span><span>BRANDZO WAREHOUSE DEVELOPMENT REPORT</span><div class="header-accent"></div></div>
+  <div class="page-footer"><span>إدارة المستودعات – برندزو</span><span>سري – للاستخدام الداخلي فقط</span><div class="page-num">2</div></div>
+  <div class="section-header">
+    <span class="section-number"><i class="fas fa-file-alt" style="font-size:14pt;"></i></span>
+    <span class="section-title">بيانات التقرير ومعلومات الوثيقة</span>
+    <span class="section-title-en">Report Identification & Document Data</span>
+  </div>
+  <div class="meta-grid">
+    <div class="meta-item"><div class="meta-label"><i class="fas fa-warehouse" style="margin-left:6px;"></i>المستودعات</div><div class="meta-value">مستودعات برندزو – موقع أبوهادي 155</div></div>
+    <div class="meta-item"><div class="meta-label"><i class="fas fa-layer-group" style="margin-left:6px;"></i>مستوى التقرير</div><div class="meta-value">احتياجات ومتطلبات – مواصفات فنية تفصيلية</div></div>
+    <div class="meta-item"><div class="meta-label"><i class="fas fa-list-ol" style="margin-left:6px;"></i>عدد الأقسام</div><div class="meta-value">22 قسماً هندسياً</div></div>
+    <div class="meta-item"><div class="meta-label"><i class="fas fa-building" style="margin-left:6px;"></i>الجهة المعدة</div><div class="meta-value">إدارة المستودعات</div></div>
+    <div class="meta-item"><div class="meta-label"><i class="fas fa-user-edit" style="margin-left:6px;"></i>الإعداد</div><div class="meta-value">محمد البرشي – رمزي باش</div></div>
+    <div class="meta-item"><div class="meta-label"><i class="fas fa-calendar-alt" style="margin-left:6px;"></i>التاريخ</div><div class="meta-value">2026</div></div>
+  </div>
+  <div class="sub-title">المشاهدات الميدانية والمخططات المعمارية</div>
+  <div class="warehouse-images">
+    <div class="img-card">
+      <img src="./source-images/requirements-01.jpeg" alt="منظر جوي">
+      <div class="img-caption">المنظر الجوي للمستودعات – موقع أبوهادي 155</div>
+    </div>
+    <div class="img-card">
+      <img src="./source-images/requirements-02.jpeg" alt="المخطط المعماري">
+      <div class="img-caption">المخطط المعماري للتوزيع الداخلي للمستودعات</div>
+    </div>
+  </div>
+  <p>يتضح من المشهد الجوي أن المنشأة تضم مجموعة من المستودعات الكبيرة ذات الأسقف المعدنية المائلة موزعة بنظام منتظم داخل محيط واحد، مع وجود مساحات مفتوحة تصلح كمناطق مناورة للشاحنات ومواقف. يظهر المخطط المعماري التوزيع الداخلي للمساحات والمناطق الوظيفية.</p>
+  <div class="info-box"><i class="fas fa-info-circle"></i><div>هذا التقرير قابل للمراجعة والتعديل بعد إجراء مسح ميداني تفصيلي وأخذ القياسات الدقيقة من قِبل فريق هندسي متخصص. جميع المواصفات تعتمد على أفضل الممارسات الدولية وقد تستلزم تكييفاً وفق اللوائح المحلية.</div></div>
+</div>
+
+<!-- ==================== الفهرس ==================== -->
+<div class="page">
+  <div class="page-header"><span>تقرير تطوير مستودعات برندزو – أبوهادي 155</span><span>BRANDZO WAREHOUSE DEVELOPMENT REPORT</span><div class="header-accent"></div></div>
+  <div class="page-footer"><span>إدارة المستودعات – برندزو</span><span>سري – للاستخدام الداخلي فقط</span><div class="page-num">3</div></div>
+  <div class="section-header">
+    <span class="section-number"><i class="fas fa-list" style="font-size:14pt;"></i></span>
+    <span class="section-title">فهرس المحتويات</span>
+    <span class="section-title-en">Table of Contents</span>
+  </div>
+  <div class="toc-item"><span class="toc-num">01</span><span class="toc-label">الملخص التنفيذي</span><span class="toc-page">4</span></div>
+  <div class="toc-item"><span class="toc-num">02</span><span class="toc-label">منظومة الحماية من الحرائق</span><span class="toc-page">5</span></div>
+  <div class="toc-item"><span class="toc-num">03</span><span class="toc-label">الغرف الكهربائية في كل مستودع</span><span class="toc-page">6</span></div>
+  <div class="toc-item"><span class="toc-num">04</span><span class="toc-label">الرامب الخارجي ومناطق التحميل</span><span class="toc-page">7</span></div>
+  <div class="toc-item"><span class="toc-num">05</span><span class="toc-label">منظومة المراقبة بالكاميرات CCTV</span><span class="toc-page">8</span></div>
+  <div class="toc-item"><span class="toc-num">06</span><span class="toc-label">المبنى الإداري</span><span class="toc-page">9</span></div>
+  <div class="toc-item"><span class="toc-num">07</span><span class="toc-label">مبنى سكن الموظفين</span><span class="toc-page">9</span></div>
+  <div class="toc-item"><span class="toc-num">08</span><span class="toc-label">بوابة الأمن والتحكم بالدخول</span><span class="toc-page">10</span></div>
+  <div class="toc-item"><span class="toc-num">09</span><span class="toc-label">تخطيط حركة المرور والدوران</span><span class="toc-page">10</span></div>
+  <div class="toc-item"><span class="toc-num">10</span><span class="toc-label">نظام الرفوف البالية (Pallet Racking System)</span><span class="toc-page">11</span></div>
+  <div class="toc-item"><span class="toc-num">11</span><span class="toc-label">مناطق الاستلام والفرز</span><span class="toc-page">13</span></div>
+  <div class="toc-item"><span class="toc-num">12</span><span class="toc-label">منطقة الصرف والشحن</span><span class="toc-page">13</span></div>
+  <div class="toc-item"><span class="toc-num">13</span><span class="toc-label">توزيع العائلات والمناطق</span><span class="toc-page">14</span></div>
+  <div class="toc-item"><span class="toc-num">14</span><span class="toc-label">ورشة الصيانة الداخلية</span><span class="toc-page">15</span></div>
+  <div class="toc-item"><span class="toc-num">15</span><span class="toc-label">محطة شحن الرافعات الكهربائية</span><span class="toc-page">15</span></div>
+  <div class="toc-item"><span class="toc-num">16</span><span class="toc-label">إدارة النفايات وأرضية نظيفة</span><span class="toc-page">16</span></div>
+  <div class="toc-item"><span class="toc-num">17</span><span class="toc-label">طلاء أرضيات الإيبوكسي الصناعي</span><span class="toc-page">17</span></div>
+  <div class="toc-item"><span class="toc-num">18</span><span class="toc-label">الصحة والسلامة المهنية (HSE)</span><span class="toc-page">18</span></div>
+  <div class="toc-item"><span class="toc-num">19</span><span class="toc-label">محطة الوقود الداخلية</span><span class="toc-page">19</span></div>
+  <div class="toc-item"><span class="toc-num">20</span><span class="toc-label">منطقة انتظار السائقين المبردة</span><span class="toc-page">19</span></div>
+  <div class="toc-item"><span class="toc-num">21</span><span class="toc-label">مولدات الطاقة الاحتياطية</span><span class="toc-page">20</span></div>
+  <div class="toc-item"><span class="toc-num">22</span><span class="toc-label">منظومة التكييف والمكيفات في المخازن</span><span class="toc-page">21</span></div>
+  <div class="sep"></div>
+  <div class="sub-title">المراجع والمعايير الدولية المعتمدة</div>
+  <div class="table-wrapper">
+    <table>
+      <thead><tr><th>الرمز</th><th>المعيار الدولي</th><th>المجال</th></tr></thead>
+      <tbody>
+        <tr><td>NFPA 13/20/25/72/101</td><td>أنظمة الحريق والإنذار والسلامة</td><td>الحماية من الحرائق</td></tr>
+        <tr><td>BS EN 12845</td><td>الرشاشات المائية – أوروبي</td><td>الحماية من الحرائق</td></tr>
+        <tr><td>IEC 61439 / 60364 / 62040</td><td>اللوحات والتمديدات وUPS</td><td>الكهرباء</td></tr>
+        <tr><td>EN 15512 / FEM 10.2.07 / EN 15635</td><td>الرفوف والتثبيت والفحص</td><td>الرفوف</td></tr>
+        <tr><td>EN ISO 3691</td><td>الرافعات الشوكية – السلامة</td><td>المعدات</td></tr>
+        <tr><td>OSHA 1910.178</td><td>الرافعات الصناعية</td><td>السلامة المهنية</td></tr>
+        <tr><td>ISO 45001 / 50001 / 7010</td><td>السلامة / الطاقة / اللافتات</td><td>إدارة شاملة</td></tr>
+        <tr><td>EN 62676</td><td>أنظمة المراقبة بالفيديو</td><td>الأمن</td></tr>
+        <tr><td>ASTM D3359 / BS 8204-2</td><td>اختبارات الإيبوكسي</td><td>الأرضيات الصناعية</td></tr>
+        <tr><td>ISO 8528</td><td>مولدات الاحتياط الكهربائية</td><td>الطاقة الاحتياطية</td></tr>
+        <tr><td>AHRI 1100 / ASHRAE 15</td><td>معدات التبريد والتكييف</td><td>التبريد والتكييف</td></tr>
+        <tr><td>EN 442 / ISO 23953</td><td>غرف التبريد والتجمد – التصميم والأداء</td><td>التبريد والتكييف</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== 01: الملخص ==================== -->
+<div class="page">
+  <div class="page-header"><span>تقرير تطوير مستودعات برندزو – أبوهادي 155</span><span>BRANDZO WAREHOUSE DEVELOPMENT REPORT</span><div class="header-accent"></div></div>
+  <div class="page-footer"><span>إدارة المستودعات – برندزو</span><span>سري – للاستخدام الداخلي فقط</span><div class="page-num">4</div></div>
+  <div class="section-header"><span class="section-number">01</span><span class="section-title">الملخص التنفيذي</span><span class="section-title-en">Executive Summary</span></div>
+  <p>يتناول هذا التقرير الهندسي التخصصي تقييماً شاملاً للمنشأة اللوجستية التجارية الحالية في موقع أبوهادي 155، ويقدم توصيات تقنية مفصّلة بهدف الارتقاء بمستوى الأداء التشغيلي وتعزيز معايير السلامة وتحسين الكفاءة اللوجستية وفق أحدث المعايير الدولية.</p>
+  <p>تضم المنشأة مجموعة من المستودعات الكبيرة الموزعة بنظام منتظم ضمن محيط أمني موحّد. يتناول التقرير اثنين وعشرين محوراً هندسياً رئيسياً.</p>
+  <div class="sub-title">المحاور الهندسية الرئيسية</div>
+  <div class="axis-grid">
+    <div class="axis-card"><div class="num">01</div><div class="label">الملخص التنفيذي</div></div>
+    <div class="axis-card"><div class="num">02</div><div class="label">الحماية من الحرائق</div></div>
+    <div class="axis-card"><div class="num">03</div><div class="label">الغرف الكهربائية</div></div>
+    <div class="axis-card"><div class="num">04</div><div class="label">الرامب والتحميل</div></div>
+    <div class="axis-card"><div class="num">05</div><div class="label">CCTV</div></div>
+    <div class="axis-card"><div class="num">06</div><div class="label">المبنى الإداري</div></div>
+    <div class="axis-card"><div class="num">07</div><div class="label">سكن الموظفين</div></div>
+    <div class="axis-card"><div class="num">08</div><div class="label">بوابة الأمن</div></div>
+    <div class="axis-card"><div class="num">09</div><div class="label">حركة المرور</div></div>
+    <div class="axis-card"><div class="num">10</div><div class="label">الرفوف البالية</div></div>
+    <div class="axis-card"><div class="num">11</div><div class="label">الاستلام والفرز</div></div>
+    <div class="axis-card"><div class="num">12</div><div class="label">الصرف والشحن</div></div>
+    <div class="axis-card"><div class="num">13</div><div class="label">توزيع العائلات</div></div>
+    <div class="axis-card"><div class="num">14</div><div class="label">ورشة الصيانة</div></div>
+    <div class="axis-card"><div class="num">15</div><div class="label">شحن الرافعات</div></div>
+    <div class="axis-card"><div class="num">16</div><div class="label">إدارة النفايات</div></div>
+    <div class="axis-card"><div class="num">17</div><div class="label">إيبوكسي الأرضيات</div></div>
+    <div class="axis-card"><div class="num">18</div><div class="label">HSE</div></div>
+    <div class="axis-card"><div class="num">19</div><div class="label">محطة الوقود</div></div>
+    <div class="axis-card"><div class="num">20</div><div class="label">انتظار السائقين</div></div>
+    <div class="axis-card"><div class="num">21</div><div class="label">مولدات الاحتياط</div></div>
+    <div class="axis-card"><div class="num">22</div><div class="label">التكييف والمكيفات</div></div>
+  </div>
+  <div class="sep"></div>
+  <div class="sub-title">أبرز المؤشرات المقترحة</div>
+  <div class="two-col">
+    <div class="stat-card"><div class="stat-value">500m³</div><div class="stat-label">خزان مياه الحريق</div></div>
+    <div class="stat-card"><div class="stat-value">144TB</div><div class="stat-label">تخزين كاميرات المراقبة</div></div>
+    <div class="stat-card"><div class="stat-value">3mm</div><div class="stat-label">سماكة إيبوكسي الأرضيات</div></div>
+    <div class="stat-card"><div class="stat-value">10m</div><div class="stat-label">أقصى ارتفاع للرفوف</div></div>
+  </div>
+</div>
+
+<!-- ==================== 02: الحرائق ==================== -->
+<div class="page">
+  <div class="page-header"><span>تقرير تطوير مستودعات برندزو – أبوهادي 155</span><span>BRANDZO WAREHOUSE DEVELOPMENT REPORT</span><div class="header-accent"></div></div>
+  <div class="page-footer"><span>إدارة المستودعات – برندزو</span><span>سري – للاستخدام الداخلي فقط</span><div class="page-num">5</div></div>
+  <div class="section-header"><span class="section-number">02</span><span class="section-title">منظومة الحماية من الحرائق</span><span class="section-title-en">Fire Protection System</span></div>
+  <p>الركيزة الأساسية في أي منشأة لوجستية. الامتثال لـ NFPA 13 وNFPA 72 وNFPA 25 وBS EN 12845.</p>
+  <div class="sub-title">أولاً: نظام الرشاشات التلقائية</div>
+  <p>رشاشات ESFR (K-25 أو K-33) للرفوف > 3.5 م + In-Rack Sprinklers داخل الصفوف + Upright/Pendant بحسب السقف.</p>
+  <div class="table-wrapper">
+    <table><thead><tr><th>المعيار</th><th>القيمة</th><th>المرجع</th></tr></thead>
+    <tbody>
+      <tr><td>كثافة التدفق</td><td>≥ 12.2 mm/min</td><td><span class="ref-tag">NFPA 13 §19</span></td></tr>
+      <tr><td>مساحة التصميم</td><td>≥ 139 م²</td><td><span class="ref-tag">NFPA 13 §19.3</span></td></tr>
+      <tr><td>ضغط التشغيل</td><td>≥ 1.2 bar</td><td><span class="ref-tag">EN 12845</span></td></tr>
+      <tr><td>التباعد</td><td>≤ 3.7 م</td><td><span class="ref-tag">NFPA 13 §8.6</span></td></tr>
+      <tr><td>حرارة الانصهار</td><td>68°C – 93°C</td><td><span class="ref-tag">ISO 6182</span></td></tr>
+      <tr><td>معامل K</td><td>K-25 = 360 L/min @ 1 bar</td><td><span class="ref-tag">NFPA 13</span></td></tr>
+      <tr><td>ارتفاع التغطية</td><td>حتى 12 م (ESFR)</td><td><span class="ref-tag">NFPA 13 §20</span></td></tr>
+    </tbody></table>
+  </div>
+  <div class="sub-title">ثانياً: خزان المياه ومحطة الضخ</div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>المكوّن</th><th>المواصفة</th><th>المرجع</th></tr></thead>
+    <tbody>
+      <tr><td>خزان الحريق</td><td>≥ 500 م³ | خرسانة أو FRP</td><td><span class="ref-tag">NFPA 22</span></td></tr>
+      <tr><td>المضخة الرئيسية</td><td>750 GPM @ 100 PSI | ديزل + كهربائي</td><td><span class="ref-tag">NFPA 20</span></td></tr>
+      <tr><td>الاحتياطية</td><td>100% طاقة الرئيسية</td><td><span class="ref-tag">NFPA 20</span></td></tr>
+      <tr><td>مضخة Jockey</td><td>25 GPM | تلقائي</td><td><span class="ref-tag">NFPA 20</span></td></tr>
+      <tr><td>مدة الإطفاء</td><td>≥ 60 دقيقة</td><td><span class="ref-tag">NFPA 13</span></td></tr>
+      <tr><td>خط المياه</td><td>≥ 150 mm | حديد مطيل</td><td><span class="ref-tag">NFPA 24</span></td></tr>
+    </tbody></table>
+  </div>
+  <div class="sub-title">ثالثاً: الإنذار والكشف المبكر</div>
+  <ul><li>VESDA في المناطق الحساسة | كاشفات حرارية مزدوجة ≤ 50 م²/كاشف</li>
+    <li>صفارات 85 dB @ 3م + Strobes كل 30 م | FACP متوافقة EN 54 | ربط CCTV | Voice Evacuation</li></ul>
+  <div class="sub-title">رابعاً: معدات الإطفاء الثانوية</div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>المعدة</th><th>المواصفة</th><th>التوزيع</th></tr></thead>
+    <tbody>
+      <tr><td>طفاية CO₂</td><td>5 كغ</td><td>1/غرفة كهربائية</td></tr>
+      <tr><td>طفاية ABC</td><td>12 كغ | EN 3</td><td>كل 200 م²</td></tr>
+      <tr><td>Hose Reel</td><td>19 mm | 30 م</td><td>كل 30 م</td></tr>
+      <tr><td>Hydrant Cabinet</td><td>DN65 + 20م</td><td>خارج كل مستودع</td></tr>
+      <tr><td>هيدرانت خارجي</td><td>DN100 | ≥ 7 bar</td><td>كل 60 م</td></tr>
+    </tbody></table>
+  </div>
+  <div class="sub-title">خامساً: ممرات الإخلاء</div>
+  <ul><li>عرض ≥ 1.2 م | Exit Signs ≥ 50 lux | أبواب بـ Panic Bar | مسافة ≤ 45 م (<span class="ref-tag">NFPA 101</span>)</li></ul>
+  <div class="warning-box"><i class="fas fa-exclamation-triangle"></i><div>اختبار سنوي وفق NFPA 25 مع توثيق معتمد. تدريب العاملين كل 6 أشهر.</div></div>
+</div>
+
+<!-- ==================== 03: كهرباء + 04: رامب ==================== -->
+<div class="page">
+  <div class="page-header"><span>تقرير تطوير مستودعات برندزو – أبوهادي 155</span><span>BRANDZO WAREHOUSE DEVELOPMENT REPORT</span><div class="header-accent"></div></div>
+  <div class="page-footer"><span>إدارة المستودعات – برندزو</span><span>سري – للاستخدام الداخلي فقط</span><div class="page-num">6</div></div>
+  <div class="section-header"><span class="section-number">03</span><span class="section-title">الغرف الكهربائية في كل مستودع</span><span class="section-title-en">Electrical Rooms</span></div>
+  <ul><li>غرفة مستقلة ≥ 5.0×4.0 م (20 م²) | ارتفاع ≥ 3.0 م | ممر ≥ 1.0 م (<span class="ref-tag">NFPA 70</span>) | باب EI120 يفتح للخارج | تهوية ≥ 8 مرات/ساعة لـ ≤ 35°C</li></ul>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>المعدة</th><th>المواصفة</th><th>المعيار</th></tr></thead>
+    <tbody>
+      <tr><td>MDB</td><td>4000A / 415V / IP54 / IK10</td><td><span class="ref-tag">IEC 61439-1</span></td></tr>
+      <tr><td>SDB</td><td>800-1600A | MCB/MCCB</td><td><span class="ref-tag">IEC 61439-2</span></td></tr>
+      <tr><td>Transformer</td><td>11kV/0.415kV | ≥ 1000 kVA | Dyn11</td><td><span class="ref-tag">IEC 60076</span></td></tr>
+      <tr><td>UPS</td><td>20 kVA/phase | ≥ 2 ساعة</td><td><span class="ref-tag">IEC 62040</span></td></tr>
+      <tr><td>BMS</td><td>مراقبة لحظية | Modbus RTU</td><td><span class="ref-tag">ISO 50001</span></td></tr>
+      <tr><td>Earthing</td><td>TN-S | ≤ 1 أوم</td><td><span class="ref-tag">IEC 60364-5</span></td></tr>
+      <tr><td>RCCB</td><td>30 mA</td><td><span class="ref-tag">IEC 61008</span></td></tr>
+    </tbody></table>
+  </div>
+  <div class="sub-title-sm">الإنارة الصناعية</div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>المنطقة</th><th>الإضاءة</th><th>النوع</th></tr></thead>
+    <tbody>
+      <tr><td>منطقة الرفوف</td><td>≥ 300 lux</td><td>LED High Bay 150W IP65 | PIR</td></tr>
+      <tr><td>الاستلام والفرز</td><td>≥ 500 lux</td><td>LED High Bay 200W IP65 | مستمر</td></tr>
+      <tr><td>الممرات</td><td>≥ 150 lux</td><td>LED Linear 40W IP44 | PIR</td></tr>
+      <tr><td>الطوارئ</td><td>≥ 10 lux</td><td>Emergency LED | ≥ 3 ساعات</td></tr>
+      <tr><td>الرامب</td><td>≥ 200 lux</td><td>LED Flood 100W IP66</td></tr>
+    </tbody></table>
+  </div>
+  <div class="warning-box"><i class="fas fa-exclamation-triangle"></i><div>يُمنع تخزين أي مواد داخل الغرفة الكهربائية. لافتة "خطر – كهرباء عالية الجهد" وفق ISO 7010.</div></div>
+  <div class="sep"></div>
+  <div class="section-header"><span class="section-number">04</span><span class="section-title">الرامب الخارجي ومناطق التحميل</span><span class="section-title-en">External Ramp & Dock Loading</span></div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>العنصر</th><th>المواصفة</th></tr></thead>
+    <tbody>
+      <tr><td>ارتفاع المنصة</td><td>1.20 م ± 50 مم</td></tr>
+      <tr><td>ميلان الرامب</td><td>≤ 10% | ≤ 8% للرافعات (<span class="ref-tag">OSHA</span>)</td></tr>
+      <tr><td>نصف قطر الانحناء</td><td>≥ 15 م</td></tr>
+      <tr><td>العرض</td><td>≥ 4.5 م / مسار</td></tr>
+      <tr><td>منطقة مستوية</td><td>≥ 20 م قبل الرامب</td></tr>
+      <tr><td>تحمّل الأرضية</td><td>≥ 8,000 كغ/م² | خرسانة 300 مم</td></tr>
+      <tr><td>Non-Slip</td><td>R12 وفق DIN 51130 | مجاري كل 3 م</td></tr>
+    </tbody></table>
+  </div>
+  <ul>
+    <li><strong>Dock Leveler:</strong> ±300 mm | ≥ 6,000 كغ | <span class="ref-tag">EN 1398</span> + CE</li>
+    <li><strong>High-Speed Door:</strong> ≥ 4.0×4.5 م | ≥ 1.5 م/ث | <span class="ref-tag">EN 13241</span></li>
+    <li><strong>Dock Bumpers</strong> (4/بوابة) | <strong>Dock Shelter</strong> | <strong>Wheel Chocks</strong> | <strong>Traffic Light</strong></li>
+    <li><strong>كانوبي:</strong> ≥ 3.0×4.0 م | بوليكربونات | ميلان ≥ 5° | مجاري تصريف</li>
+  </ul>
+</div>
+
+<!-- ==================== 05+06+07 ==================== -->
+<div class="page">
+  <div class="page-header"><span>تقرير تطوير مستودعات برندزو – أبوهادي 155</span><span>BRANDZO WAREHOUSE DEVELOPMENT REPORT</span><div class="header-accent"></div></div>
+  <div class="page-footer"><span>إدارة المستودعات – برندزو</span><span>سري – للاستخدام الداخلي فقط</span><div class="page-num">7</div></div>
+  <div class="section-header"><span class="section-number">05</span><span class="section-title">منظومة المراقبة CCTV</span><span class="section-title-en">CCTV System</span></div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>النوع</th><th>الدقة</th><th>IR</th><th>الحماية</th></tr></thead>
+    <tbody>
+      <tr><td>Dome</td><td>4MP</td><td>≥ 20 م</td><td>IP67/IK10</td></tr>
+      <tr><td>Bullet</td><td>4MP</td><td>≥ 40 م</td><td>IP67/IK10</td></tr>
+      <tr><td>PTZ</td><td>4K</td><td>≥ 100 م</td><td>IP67/IK10</td></tr>
+      <tr><td>Fisheye</td><td>8MP</td><td>≥ 15 م</td><td>IP66/IK10</td></tr>
+      <tr><td>ANPR</td><td>2MP</td><td>≥ 25 م</td><td>IP67/IK10</td></tr>
+    </tbody></table>
+  </div>
+  <ul>
+    <li>البوابة: PTZ + ANPR | محيط السور: Bullet كل 40 م | داخل المستودع: Fisheye 4/مستودع</li>
+    <li>NVR ≥ 32 قناة | H.265+ | ≥ 144 TB | RAID-5 | UPS ≥ 4 ساعات | VLAN مستقلة</li>
+    <li>غرفة مراقبة: ≥ 12 م² | Video Wall | ربط بإنذار الحريق</li>
+  </ul>
+  <div class="warning-box"><i class="fas fa-exclamation-triangle"></i><div>جميع الكاميرات عبر Cat6e FTP في مجاري معدنية. يُحظر الواي فاي.</div></div>
+  <div class="sep"></div>
+  <div class="section-header"><span class="section-number">06</span><span class="section-title">المبنى الإداري</span><span class="section-title-en">Administrative Building</span></div>
+  <p>≥ 400 م² على طابقين | ISO 45001</p>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>الطابق</th><th>المساحة</th><th>المكونات</th></tr></thead>
+    <tbody>
+      <tr><td>أرضي – استقبال</td><td>180 م²</td><td>استقبال | أمن | مراقبة | أرشيف</td></tr>
+      <tr><td>أرضي – عمليات</td><td>120 م²</td><td>مشرفين ×4 | عمليات | WMS</td></tr>
+      <tr><td>أول – إدارة</td><td>160 م²</td><td>مدير + اجتماعات 20 | HR | مالية | تدريب</td></tr>
+      <tr><td>أول – راحة</td><td>40 م²</td><td>استراحة | مطبخ | شرفة</td></tr>
+    </tbody></table>
+  </div>
+  <ul><li>Cat6e (≥ 4/مكتب) | VRF + HRV | Face Recognition | UPS ≥ 10 kVA | LED ≥ 500 lux | مصعد ≥ 8 أشخاص</li></ul>
+  <div class="sep"></div>
+  <div class="section-header"><span class="section-number">07</span><span class="section-title">مبنى سكن الموظفين</span><span class="section-title-en">Employee Housing</span></div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>الوحدة</th><th>المواصفة</th><th>العدد</th></tr></thead>
+    <tbody>
+      <tr><td>غرف مفردة</td><td>12 م² + حمام</td><td>10</td></tr>
+      <tr><td>غرف ثنائية</td><td>18 م² + حمام</td><td>6</td></tr>
+      <tr><td>دورات مياه مشتركة</td><td>1/6 موظفين</td><td>3</td></tr>
+      <tr><td>مطبخ + غسيل + تلفزيون</td><td>30 + 10 + 20 م²</td><td>1+1+1</td></tr>
+    </tbody></table>
+  </div>
+  <ul><li>مدخل مستقل ≥ 50 م عن العمليات | سياج فاصل | إنارة PIR | واي فاي ≥ 50 Mbps | مولد احتياطي</li></ul>
+</div>
+
+<!-- ==================== 08+09 ==================== -->
+<div class="page">
+  <div class="page-header"><span>تقرير تطوير مستودعات برندزو – أبوهادي 155</span><span>BRANDZO WAREHOUSE DEVELOPMENT REPORT</span><div class="header-accent"></div></div>
+  <div class="page-footer"><span>إدارة المستودعات – برندزو</span><span>سري – للاستخدام الداخلي فقط</span><div class="page-num">8</div></div>
+  <div class="section-header"><span class="section-number">08</span><span class="section-title">بوابة الأمن والتحكم بالدخول</span><span class="section-title-en">Security Gate & Access Control</span></div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>العنصر</th><th>المواصفة</th></tr></thead>
+    <tbody>
+      <tr><td>عرض البوابة</td><td>≥ 8 م | مسربان 4م + 4م</td></tr>
+      <tr><td>Boom Barrier</td><td>≥ 6 م | ≤ 4 ثوانٍ | ≥ 140 km/h</td></tr>
+      <tr><td>Truck Scale</td><td>≥ 60 طن | ±20 كغ | تقرير آلي</td></tr>
+      <tr><td>ANPR</td><td>≥ 95% نهاراً / 85% ليلاً</td></tr>
+      <tr><td>TMS</td><td>ربط WMS | رقم الشاحنة + السائق + الحمولة</td></tr>
+      <tr><td>دشمة الأمن</td><td>4×3 م | مكيفة | زجاج بانورامي | UPS</td></tr>
+    </tbody></table>
+  </div>
+  <ul>
+    <li><strong>بوابة الموظفين:</strong> Turnstiles | RFID + PIN/بصمة | ربط رواتب | بوابة ذوي احتياجات ≥ 900 مم</li>
+    <li><strong>التفتيش:</strong> سجل إلكتروني | مسح جوازات | مرآة أسفل السيارة | انتظار ≥ 5 شاحنات</li>
+  </ul>
+  <div class="warning-box"><i class="fas fa-exclamation-triangle"></i><div>المشغّل الأمني على علم بقائمة المركبات قبل 24 ساعة.</div></div>
+  <div class="sep"></div>
+  <div class="section-header"><span class="section-number">09</span><span class="section-title">تخطيط حركة المرور والدوران</span><span class="section-title-en">Traffic Flow & Circulation</span></div>
+  <ul><li><strong>خارجي:</strong> One-Way Loop | عرض ≥ 12 م | منحنيات ≥ 15 م | خرسانة ≥ 250 مم / ≥ 30 طن/محور</li></ul>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>الممر</th><th>العرض</th><th>المعيار</th></tr></thead>
+    <tbody>
+      <tr><td>رافعة شوكية</td><td>≥ 3.5 م</td><td><span class="ref-tag">EN ISO 3691</span></td></tr>
+      <tr><td>VNA</td><td>≥ 1.7 م</td><td><span class="ref-tag">EN ISO 3691</span></td></tr>
+      <tr><td>مشاة</td><td>≥ 1.0 م + حاجز</td><td><span class="ref-tag">ISO 45001</span></td></tr>
+      <tr><td>طوارئ</td><td>≥ 2.4 م</td><td><span class="ref-tag">NFPA 101</span></td></tr>
+      <tr><td>مناورة رافعة</td><td>≥ 5.0 م أمام الرامب</td><td><span class="ref-tag">OSHA</span></td></tr>
+    </tbody></table>
+  </div>
+  <ul><li>Safety Bollards ≥ 100 مم | تقاطعات بارزة | إشارات أخضر/أحمر | لافتات عربية/إنجليزية</li></ul>
+  <div class="warning-box"><i class="fas fa-exclamation-triangle"></i><div>ممنوع تشغيل الرافعات في مناطق المشاة. تدريب إلزامي + رخصة تشغيل داخلية.</div></div>
+</div>
+
+<!-- ==================== 10: الرفوف ==================== -->
+<div class="page">
+  <div class="page-header"><span>تقرير تطوير مستودعات برندزو – أبوهادي 155</span><span>BRANDZO WAREHOUSE DEVELOPMENT REPORT</span><div class="header-accent"></div></div>
+  <div class="page-footer"><span>إدارة المستودعات – برندزو</span><span>سري – للاستخدام الداخلي فقط</span><div class="page-num">9</div></div>
+  <div class="section-header"><span class="section-number">10</span><span class="section-title">نظام الرفوف البالية (Pallet Racking System)</span><span class="section-title-en">Pallet Racking System</span></div>
+  <p>نظام تخزين الباليه الركيزة الأساسية. يعتمد على تخزين البضائع على منصات قياسية ثم رفعها على أرفف معدنية متعددة المستويات. التصميم وفق EN 15512:2020 وFEM 10.2.07.</p>
+  <div class="sub-title">أنواع الرفوف المقترحة</div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>النوع</th><th>مبدأ التشغيل</th><th>الملاءمة</th></tr></thead>
+    <tbody>
+      <tr><td>Selective</td><td>وصول مباشر 100% – FIFO/LIFO</td><td><span class="badge badge-green">ممتاز – الأساس</span></td></tr>
+      <tr><td>Drive-In</td><td>داخل الرفوف – LIFO</td><td><span class="badge badge-yellow">موسمي فقط</span></td></tr>
+      <tr><td>Push-Back</td><td>دفع بالية – LIFO</td><td><span class="badge badge-yellow">تدوير بطيء</span></td></tr>
+      <tr><td>Flow Racking</td><td>جاذبية – FIFO تلقائي</td><td><span class="badge badge-blue">غذاء/دواء</span></td></tr>
+      <tr><td>Double Deep</td><td>باليه خلف بالية</td><td><span class="badge badge-yellow">مع Reach Truck</span></td></tr>
+    </tbody></table>
+  </div>
+  <div class="recommendation-box"><div class="rec-title"><i class="fas fa-check-circle"></i> التوصية</div><p>Selective كأساس (100% وصول) + Drive-In للموسمي.</p></div>
+  <div class="sub-title">المواصفات الفنية</div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>العنصر</th><th>المواصفة</th><th>المعيار</th></tr></thead>
+    <tbody>
+      <tr><td>ارتفاع العمود</td><td>8.0 – 10.0 م | ≥ 1.5 مم</td><td><span class="ref-tag">EN 15512</span></td></tr>
+      <tr><td>تحمّل العمود</td><td>≥ 15,000 كغ</td><td><span class="ref-tag">EN 15512</span></td></tr>
+      <tr><td>الشريط (Beam)</td><td>2.7 م / 3 باليهات | ≥ 1.8 مم</td><td><span class="ref-tag">EN 15512</span></td></tr>
+      <tr><td>تحمّل الشريط</td><td>≥ 2,500 كغ</td><td><span class="ref-tag">EN 15512</span></td></tr>
+      <tr><td>عمق الرف</td><td>1.10 م (باليه 800×1200 أو 1000×1200)</td><td><span class="ref-tag">FEM</span></td></tr>
+      <tr><td>أول مستوى</td><td>≥ 200 مم من الأرض</td><td><span class="ref-tag">EN 15512</span></td></tr>
+      <tr><td>المستويات</td><td>4-5 | الأخير طائر</td><td>حسب الارتفاع</td></tr>
+      <tr><td>وزن باليه</td><td>≤ 1,200 كغ</td><td><span class="ref-tag">EN 15512</span></td></tr>
+      <tr><td>Base Plate</td><td>M16×150 مم | خرسانة ≥ C25</td><td><span class="ref-tag">FEM 10.2.07</span></td></tr>
+    </tbody></table>
+  </div>
+  <div class="sub-title-sm">حماية وفحص الرفوف</div>
+  <ul>
+    <li>Column Guards ≥ 400 مم | End-of-Aisle Barriers ≥ 60 مم | Row Spacers | Safety Net</li>
+    <li>فحص كل 6 أشهر (<span class="ref-tag">EN 15635</span>) | لوحة حمولة | <span class="badge badge-green">أبيض=آمن</span> <span class="badge badge-yellow">أصفر=مراقبة</span> <span class="badge badge-red">أحمر=خارج الخدمة فوراً</span></li>
+  </ul>
+  <div class="warning-box"><i class="fas fa-exclamation-triangle"></i><div>لا تجاوز الحمولة. انحراف ≥ 3 مم = إخلاء فوري + فحص كامل.</div></div>
+</div>
+
+<!-- ==================== 11+12+13 ==================== -->
+<div class="page">
+  <div class="page-header"><span>تقرير تطوير مستودعات برندزو – أبوهادي 155</span><span>BRANDZO WAREHOUSE DEVELOPMENT REPORT</span><div class="header-accent"></div></div>
+  <div class="page-footer"><span>إدارة المستودعات – برندزو</span><span>سري – للاستخدام الداخلي فقط</span><div class="page-num">10</div></div>
+  <div class="section-header"><span class="section-number">11</span><span class="section-title">مناطق الاستلام والفرز</span><span class="section-title-en">Receiving & Sorting</span></div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>العنصر</th><th>المواصفة</th></tr></thead>
+    <tbody>
+      <tr><td>المساحة</td><td>≥ 200 م² أمام الرامب | 4 شاحنات</td></tr>
+      <tr><td>الارتفاع</td><td>خالية رفوف | ≥ 6 م</td></tr>
+      <tr><td>الأرضية</td><td>خرسانة + إيبوكسي | ≥ 8,000 كغ/م²</td></tr>
+      <tr><td>ميزان</td><td>2.0×2.0 م | ±500 غ</td></tr>
+      <tr><td>مسح باركود</td><td>Scanner + Printer | ربط WMS</td></tr>
+      <tr><td>عزل (Quarantine)</td><td>30 م² | مسيجة</td></tr>
+      <tr><td>إضاءة</td><td>≥ 500 lux | CRI ≥ 80</td></tr>
+    </tbody></table>
+  </div>
+  <ul><li>طاولات تعديل ارتفاع | Gravity Conveyors ≥ 3 م | Picking Trolleys ≥ 100 كغ | شاشة أوامر ≥ 32 بوصة | طابعة حرارية ≥ 150 ملصق/د | Stretch Wrap</li></ul>
+  <div class="sep"></div>
+  <div class="section-header"><span class="section-number">12</span><span class="section-title">منطقة الصرف والشحن</span><span class="section-title-en">Dispatch & Shipping</span></div>
+  <ul>
+    <li>≥ 200 م² مفصولة عن الاستلام بـ 15 م أو حاجز</li>
+    <li>تجميع مؤشّر صفراء | شاشة مهام FIFO/LIFO | فحص جودة | محطة تغليف: طاولات + سرنفة + سيل</li>
+  </ul>
+  <div class="sep"></div>
+  <div class="section-header"><span class="section-number">13</span><span class="section-title">توزيع العائلات والمناطق</span><span class="section-title-en">Product Family & Zone Distribution</span></div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>الفئة</th><th>المعيار</th><th>الموقع</th><th>الرف</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-green">Fast A</span></td><td>> 3/شهر</td><td>قرب الرامب – سفلية</td><td>Selective أسفل 3</td></tr>
+      <tr><td><span class="badge badge-blue">Medium B</span></td><td>1-3/شهر</td><td>وسط المستودع</td><td>Selective وسط</td></tr>
+      <tr><td><span class="badge badge-yellow">Slow C</span></td><td>< 1/شهر</td><td>بعيد – علوية</td><td>Drive-In / علوي</td></tr>
+      <tr><td><span class="badge badge-red">Seasonal D</span></td><td>موسمي</td><td>احتياطية</td><td>Drive-In</td></tr>
+    </tbody></table>
+  </div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>العائلة</th><th>المنطقة</th><th>اشتراطات</th></tr></thead>
+    <tbody>
+      <tr><td>غذائية جافة</td><td>A – شمالي</td><td>رطوبة ≤ 65% | ≤ 25°C | FIFO</td></tr>
+      <tr><td>مبردة</td><td>Cold Room</td><td>2-8°C | عزل 150 مم</td></tr>
+      <tr><td>مجمدة</td><td>Freezer</td><td>≤ -18°C | مونيتور 24/7</td></tr>
+      <tr><td>كيماويات</td><td>B – مستقلة</td><td>تهوية + حوض احتجاز</td></tr>
+      <tr><td>قابلة للاشتعال</td><td>سور مستقل</td><td>Flammable Store | CO₂</td></tr>
+      <tr><td>إلكترونيات</td><td>C – مكيف</td><td>≤ 50% رطوبة | ESD</td></tr>
+      <tr><td>مواد بناء</td><td>D – أرضية</td><td>≥ 10,000 كغ/م²</td></tr>
+      <tr><td>HVG</td><td>Cage + CCTV</td><td>قفل مزدوج | إذن مسبق</td></tr>
+    </tbody></table>
+  </div>
+  <div class="example-box"><div class="example-label">نظام ترقيم المواقع</div><div class="example-code">A-05-R-02</div><div class="example-desc">المستودع A | صف 05 | يمين | مستوى 2</div></div>
+</div>
+
+<!-- ==================== 14+15 ==================== -->
+<div class="page">
+  <div class="page-header"><span>تقرير تطوير مستودعات برندزو – أبوهادي 155</span><span>BRANDZO WAREHOUSE DEVELOPMENT REPORT</span><div class="header-accent"></div></div>
+  <div class="page-footer"><span>إدارة المستودعات – برندزو</span><span>سري – للاستخدام الداخلي فقط</span><div class="page-num">11</div></div>
+  <div class="section-header"><span class="section-number">14</span><span class="section-title">ورشة الصيانة الداخلية</span><span class="section-title-en">Internal Maintenance Workshop</span></div>
+  <p>عنصر حيوي لضمان استمرارية التشغيل وتقليل أوقات التوقف.</p>
+  <ul><li>مساحة ≥ 60 م² | قريبة من تشغيل الرافعات | أرضية ≥ 10,000 كغ/م² | ارتفاع ≥ 5 م | بوابة ≥ 4.0 م</li></ul>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>التجهيز</th><th>المواصفة</th><th>الكمية</th></tr></thead>
+    <tbody>
+      <tr><td>Overhead Crane</td><td>≥ 3 طن</td><td>1</td></tr>
+      <tr><td>Floor Jack</td><td>≥ 10 طن</td><td>2</td></tr>
+      <tr><td>طقم مفاتيح شامل</td><td>معدات ثقيلة</td><td>2</td></tr>
+      <tr><td>لحام كهربائي + غازي</td><td>إصلاح هياكل</td><td>1</td></tr>
+      <tr><td>Torque Wrench</td><td>ربط مسامير الرفوف</td><td>2</td></tr>
+    </tbody></table>
+  </div>
+  <ul>
+    <li><strong>مخزن قطع غيار (≥ 20 م²):</strong> بطاريات | أحزمة | مرشحات | تايرات | seals | جرد دوري مرتبط WMS</li>
+    <li><strong>إدارة الصيانة:</strong> سجل إلكتروني | خطة PPM | عقد مع المورّد | مؤشرات MTBF/MTTR</li>
+  </ul>
+  <div class="warning-box"><i class="fas fa-exclamation-triangle"></i><div>يُمنع إصلاح الرافعات خارج الورشة. عزل المعطلة بلوحة صفراء + حواجز.</div></div>
+  <div class="sep"></div>
+  <div class="section-header"><span class="section-number">15</span><span class="section-title">محطة شحن الرافعات الكهربائية</span><span class="section-title-en">Forklift Charging Station</span></div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>العنصر</th><th>المواصفة</th></tr></thead>
+    <tbody>
+      <tr><td>المساحة</td><td>≥ 50 م² | جدار حريق ≥ 1 ساعة</td></tr>
+      <tr><td>الأرضية</td><td>مقاومة أحماض + تصريف</td></tr>
+      <tr><td>التهوية</td><td>≥ 12 م³/ساعة/م² | طرد H₂ من الأعلى</td></tr>
+      <tr><td>الإضاءة</td><td>≥ 200 lux | مقاومة انفجار Zone 2</td></tr>
+    </tbody></table>
+  </div>
+  <ul>
+    <li><strong>الشواحن:</strong> 24V/48V/80V ذكية | 8-10 ساعات (رصاص-حمض) | 2 ساعة (ليثيوم)</li>
+    <li><strong>Li-Ion:</strong> ≥ 3,000 دورة | صفر صيانة | كفاءة ≥ 95% | BMS مدمج</li>
+    <li><strong>السلامة:</strong> كاشف H₂ ≥ 1% | طفاية CO₂ | Eye Wash | قفازات + واقي عيون</li>
+  </ul>
+  <div class="warning-box"><i class="fas fa-exclamation-triangle"></i><div>ممنوع تخزين مواد قابلة للاشتعال قرب المحطة. Air Flow Switch مرتبط بإنذار عطل.</div></div>
+</div>
+
+<!-- ==================== 16+17 ==================== -->
+<div class="page">
+  <div class="page-header"><span>تقرير تطوير مستودعات برندزو – أبوهادي 155</span><span>BRANDZO WAREHOUSE DEVELOPMENT REPORT</span><div class="header-accent"></div></div>
+  <div class="page-footer"><span>إدارة المستودعات – برندزو</span><span>سري – للاستخدام الداخلي فقط</span><div class="page-num">12</div></div>
+  <div class="section-header"><span class="section-number">16</span><span class="section-title">إدارة النفايات وأرضية نظيفة</span><span class="section-title-en">Waste Management</span></div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>المعدة</th><th>المواصفة</th><th>الغرض</th></tr></thead>
+    <tbody>
+      <tr><td>Baler Machine</td><td>هيدروليكي | 10:1</td><td>ضغط كراتين</td></tr>
+      <tr><td>تقطيع بلاستيك</td><td>≥ 7.5 kW</td><td>سرنفة وأغلفة</td></tr>
+      <tr><td>Ride-On Sweeper</td><td>≥ 1.0 م | ليثيوم</td><td>تنظيف يومي</td></tr>
+      <tr><td>Scrubber Dryer</td><td>شطف + تجفيف</td><td>نظافة عالية</td></tr>
+      <tr><td>Compactor</td><td>≥ 10 م³</td><td>نفايات عامة</td></tr>
+    </tbody></table>
+  </div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>النوع</th><th>اللون</th><th>التخلص</th></tr></thead>
+    <tbody>
+      <tr><td>كراتين/خشب</td><td>أزرق</td><td>بالبالر – إعادة تدوير</td></tr>
+      <tr><td>بلاستيك/سرنفة</td><td>أصفر</td><td>تقطيع ثم بيع</td></tr>
+      <tr><td>عامة</td><td>رمادي</td><td>شركة مدفن</td></tr>
+      <tr><td>خطرة</td><td>أحمر</td><td>شركة متخصصة</td></tr>
+      <tr><td>بطاريات</td><td>أخضر</td><td>إرجاع للمورّد</td></tr>
+    </tbody></table>
+  </div>
+  <div class="sep"></div>
+  <div class="section-header"><span class="section-number">17</span><span class="section-title">طلاء أرضيات الإيبوكسي الصناعي</span><span class="section-title-en">Industrial Epoxy Floor Coating</span></div>
+  <p>طبقة حماية أساسية تُقلّل الغبار وتُسهّل التنظيف وتُطيل عمر الخرسانة. وفق BS 8204-2 وASTM D3359.</p>
+  <div class="sub-title">نظام الطبقات (3-Coat System)</div>
+  <div class="layer-diagram">
+    <div class="layer-row"><div class="layer-block" style="background:#8B5CF6;">Topcoat – إيبوكسي ذاتي التسوية (0.5-1.0 مم)</div></div>
+    <div class="layer-row"><div class="layer-arrow"><i class="fas fa-arrow-up"></i></div></div>
+    <div class="layer-row"><div class="layer-block" style="background:#3B82F6;">Intermediate – إيبوكسي + رمل كوارتزي (1.5-2.5 مم)</div></div>
+    <div class="layer-row"><div class="layer-arrow"><i class="fas fa-arrow-up"></i></div></div>
+    <div class="layer-row"><div class="layer-block" style="background:#1D4ED8;">Primer – إيبوكسي اختراقي (0.1-0.15 مم)</div></div>
+    <div class="layer-row"><div class="layer-arrow"><i class="fas fa-arrow-up"></i></div></div>
+    <div class="layer-row"><div class="layer-block" style="background:#6B7280;">Concrete Substrate – خرسانة C30</div></div>
+  </div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>الخاصية</th><th>القيمة</th><th>الاختبار</th></tr></thead>
+    <tbody>
+      <tr><td>صلابة Shore D</td><td>≥ 80</td><td><span class="ref-tag">ASTM D2240</span></td></tr>
+      <tr><td>ضغط</td><td>≥ 80 MPa</td><td><span class="ref-tag">ASTM D695</span></td></tr>
+      <tr><td>التصاق</td><td>≥ 3.5 MPa (5B)</td><td><span class="ref-tag">ASTM D3359</span></td></tr>
+      <tr><td>Anti-Slip</td><td>≥ R10 (R12 للرامب)</td><td><span class="ref-tag">DIN 51130</span></td></tr>
+      <tr><td>مقاومة كيماوية</td><td>زيوت وشحوم وقلويات</td><td><span class="ref-tag">ASTM D1308</span></td></tr>
+      <tr><td>السماكة الكلية</td><td>2.0 – 3.0 مم</td><td><span class="ref-tag">ASTM D6132</span></td></tr>
+    </tbody></table>
+  </div>
+  <div class="sub-title-sm">متطلبات الخرسانة قبل الطلاء</div>
+  <ul>
+    <li>قوة ≥ C30 | رطوبة ≤ 4% (<span class="ref-tag">ASTM D4263</span>) | استواء ≤ 3 مم | لا تشققات > 0.3 مم</li>
+    <li><strong>تحضير السطح:</strong> تنظيف → Shot Blasting (عمق ≥ 0.5 مم) → شفط → تصليح تشققات → حشو وصلات</li>
+  </ul>
+  <div class="sub-title-sm">خطوط الممرات على الإيبوكسي</div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>النوع</th><th>اللون</th><th>العرض</th></tr></thead>
+    <tbody>
+      <tr><td>رافعات شوكية</td><td>أصفر RAL 1023</td><td>100 مم</td></tr>
+      <tr><td>مشاة</td><td>أخضر RAL 6018</td><td>80 مم</td></tr>
+      <tr><td>ممنوعة</td><td>أحمر RAL 3020</td><td>مليء</td></tr>
+      <tr><td>طوارئ</td><td>أخضر + أبيض</td><td>100 مم متقطع</td></tr>
+    </tbody></table>
+  </div>
+  <ul>
+    <li><strong>تبريد/تجمد:</strong> Polyurethane/Polyurea (مقاومة -30°C)</li>
+    <li><strong>كيماويات:</strong> Novolac Epoxy طبقة إضافية</li>
+    <li><strong>عمر الافتراضي:</strong> 7-10 سنوات | ضمان ≥ 5 سنوات</li>
+  </ul>
+  <div class="warning-box"><i class="fas fa-exclamation-triangle"></i><div>يُمنع الطلاء على خرسانة رطوبة > 4%. اختبار الرطوبة إلزامي. لا حركة رافعات قبل 7 أيام.</div></div>
+</div>
+
+<!-- ==================== 18+19+20 ==================== -->
+<div class="page">
+  <div class="page-header"><span>تقرير تطوير مستودعات برندزو – أبوهادي 155</span><span>BRANDZO WAREHOUSE DEVELOPMENT REPORT</span><div class="header-accent"></div></div>
+  <div class="page-footer"><span>إدارة المستودعات – برندزو</span><span>سري – للاستخدام الداخلي فقط</span><div class="page-num">13</div></div>
+  <div class="section-header"><span class="section-number">18</span><span class="section-title">الصحة والسلامة المهنية (HSE)</span><span class="section-title-en">Health, Safety & Environment</span></div>
+  <ul>
+    <li>إسعاف أولي وفق ISO 8317 في كل مستودع ومبنى</li>
+    <li>دش سلامة + Eye Wash في مناطق الكيماويات خلال 10 ثوانٍ</li>
+    <li>لافتات ISO 7010 | تدريب نصف سنوي | سجل حوادث + تحليل جذري</li>
+    <li>Toolbox Talk أسبوعية قبل كل وردية</li>
+  </ul>
+  <div class="sep"></div>
+  <div class="section-header"><span class="section-number">19</span><span class="section-title">محطة الوقود الداخلية</span><span class="section-title-en">Internal Fuel Station</span></div>
+  <ul>
+    <li>خزان ديزل مدفون 10,000 لتر – فولاذ مزدوج مقاوم للتآكل</li>
+    <li>نظام قياس إلكتروني + Fleet Card System</li>
+    <li>حوض احتجاز خرساني ≥ 1.5× حجم الخزان</li>
+    <li>مضخة ذاتية الخدمة + تسجيل آلي</li>
+  </ul>
+  <div class="sep"></div>
+  <div class="section-header"><span class="section-number">20</span><span class="section-title">منطقة انتظار السائقين المبردة</span><span class="section-title-en">Driver Waiting Area</span></div>
+  <p>تخصيص منطقة انتظار مظللة ومكيفة جزئياً للسائقين أثناء التفريغ لتحسين بيئة العمل وتقليل الشكاوى.</p>
+  <ul>
+    <li>مساحة ≥ 200 م² مظللة بكانوبي معزول | مكيفة جزئياً</li>
+    <li>مقاعد كافية | شاشات تلفزيون | نقاط مياه شرب</li>
+    <li>دورات مياه نظيفة + غسل وضوء | منطقة صلاة</li>
+    <li>واي فاي مجاني | ماكينة مشروبات ساخنة/باردة</li>
+    <li>لوحة إلكترونية تعرض رقم الشاحنة وترتيب التفريغ</li>
+    <li>مظللات تريلات منفصلة (≥ 8 مواقع) مع ظل ومياه</li>
+  </ul>
+</div>
+
+<!-- ==================== 21: مولدات الاحتياط ==================== -->
+<div class="page">
+  <div class="page-header"><span>تقرير تطوير مستودعات برندزو – أبوهادي 155</span><span>BRANDZO WAREHOUSE DEVELOPMENT REPORT</span><div class="header-accent"></div></div>
+  <div class="page-footer"><span>إدارة المستودعات – برندزو</span><span>سري – للاستخدام الداخلي فقط</span><div class="page-num">14</div></div>
+  <div class="section-header"><span class="section-number">21</span><span class="section-title">مولدات الطاقة الاحتياطية عند انقطاع الكهرباء</span><span class="section-title-en">Emergency Backup Power Generators</span></div>
+  <p>عنصر حاسم لضمان استمرارية العمليات عند انقطاع الكهرباء. وفق ISO 8528.</p>
+  <div class="sub-title">أولاً: تصنيف الأحمال حسب الأولوية</div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>أولوية</th><th>الأحمال</th><th>زمن التحويل</th><th>المصدر</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-red">حرجة</span></td><td>إنذار حريق | إضاءة طوارئ | CCTV | أمن | بوابات</td><td>0 ثانية</td><td>UPS مدمج</td></tr>
+      <tr><td><span class="badge badge-yellow">عالية</span></td><td>رافعات كهربائية | WMS | ميزان | TMS</td><td>≤ 30 ثانية</td><td>مولد ATS</td></tr>
+      <tr><td><span class="badge badge-blue">متوسطة</span></td><td>تكييف إداري | سكن | انتظار سائقين | ورشة</td><td>≤ 5 دقائق</td><td>مولد رئيسي</td></tr>
+      <tr><td><span class="badge badge-green">منخفضة</span></td><td>إنارة جزئية | شحن رافعات | مكبس | كنّاسة</td><td>يدوي</td><td>مولد أو تأجيل</td></tr>
+    </tbody></table>
+  </div>
+  <div class="sub-title">ثانياً: مواصفات المولد الرئيسي</div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>العنصر</th><th>المواصفة</th><th>المعيار</th></tr></thead>
+    <tbody>
+      <tr><td>النوع</td><td>ديزل – تبريد ماء/هواء</td><td><span class="ref-tag">ISO 8528-1</span></td></tr>
+      <tr><td>الطاقة</td><td>≥ 500 kVA (حسب الحمل المحسوب)</td><td><span class="ref-tag">ISO 8528-12</span></td></tr>
+      <tr><td>جهد الخرج</td><td>415V/3Ph + 240V/1Ph | 50 Hz</td><td><span class="ref-tag">IEC 60034</span></td></tr>
+      <tr><td>التشغيل</td><td>أوتوماتيكي (AMF) مع ATS</td><td><span class="ref-tag">ISO 8528-5</span></td></tr>
+      <tr><td>زمن التشغيل</td><td>≤ 15 ثانية</td><td><span class="ref-tag">ISO 8528-5</span></td></tr>
+      <tr><td>خزان الوقود</td><td>≥ 500 لتر (استقلالية ≥ 8 ساعات)</td><td><span class="ref-tag">ISO 8528-4</span></td></tr>
+      <tr><td>الضوضاء</td><td>≤ 100 dBA @ 7 م</td><td><span class="ref-tag">ISO 8528-10</span></td></tr>
+      <tr><td>استهلاك</td><td>≤ 110 لتر/ساعة حمل كامل</td><td>بيان المورّد</td></tr>
+    </tbody></table>
+  </div>
+  <div class="sub-title">ثالثاً: لوحة ATS وغرفة المولد</div>
+  <ul>
+    <li>Motorized ATS مع Anti-Backfeed | تقسيم أحمال حرجة (UPS) + عادية</li>
+    <li>زمن نقل ≤ 15 ثانية عادية | 0 ثانية حرجة | منع التشغيل المتوازي</li>
+    <li>إعادة تلقائية للشبكة بعد استقرار ≥ 3 دقائق</li>
+  </ul>
+  <ul>
+    <li>غرفة المولد: ≥ 40 م² | ارتفاع ≥ 4.0 م | Anti-Vibration</li>
+    <li>تهوية ≥ 15 م³/دقيقة لكل 100 kVA | عادم للأعلى | بعد ≥ 10 م عن المباني</li>
+    <li>خزان وقود يومي مدمج + موصل من خزان الوقود الرئيسي</li>
+    <li>إضاءة طوارئ مستقلة | طفاية CO₂ | باب عزل صوتي</li>
+  </ul>
+  <div class="sub-title">خامساً: برنامج الصيانة</div>
+  <div class="table-wrapper">
+    <table class="table-compact"><thead><tr><th>النشاط</th><th>التكرار</th></tr></thead>
+    <tbody>
+      <tr><td>Load Bank Test (≥ 50% حمل)</td><td>شهرياً – 30 دقيقة</td></tr>
+      <tr><td>فحص وقود/ماء/زيت</td><td>أسبوعياً</td></tr>
+      <tr><td>تغيير زيت وفلاتر</td><td>كل 250 ساعة</td></tr>
+      <tr><td>فحص بطارية وبادئ</td><td>أسبوعياً</td></tr>
+      <tr><td>صيانة شاملة</td><td>كل 1,000 ساعة</td></tr>
+      <tr><td>فحص ATS وAMF (محاكاة انقطاع)</td><td>ربع سنوي</td></tr>
+      <tr><td>تنظيف خزان الوقود</td><td>سنوياً</td></tr>
+    </tbody></table>
+  </div>
+  <div class="warning-box"><i class="fas fa-exclamation-triangle"></i><div>يُمنع تشغيل المولد بدون تهوية عادم. الاختبار الشهري تحت حمل فعلي وليس فارغاً. أي عطل يُصلح فوراً ويُوثق في سجل الأعطال.</div></div>
+</div>
+
+<!-- ==================== 22: التكييف والمكيفات (القسم الجديد) ==================== -->
+<div class="page">
+  <div class="page-header"><span>تقرير تطوير مستودعات برندزو – أبوهادي 155</span><span>BRANDZO WAREHOUSE DEVELOPMENT REPORT</span><div class="header-accent"></div></div>
+  <div class="page-footer"><span>إدارة المستودعات – برندزو</span><span>سري – للاستخدام الداخلي فقط</span><div class="page-num">15</div></div>
+
+  <div class="section-header">
+    <span class="section-number">22</span>
+    <span class="section-title">منظومة التكييف والمكيفات في المخازن</span>
+    <span class="section-title-en">HVAC & Refrigeration Systems in Warehouses</span>
+  </div>
+
+    <p>تُعدّ منظومة التكييف والمكيفات من الاحتياجات الأساسية الحيوية لضمان جودة البضائع المخزنة ومنع تلفها. تشمل المنظومة ثلاثة بيئات رئيسية: تكييف المخازن العادية، وغرف التبريد، وغرف التجمد، إضافة إلى تهوية العادم في المناطق الحارة ووحدة التبريد المركزية. التصميم وفق معايير AHRI 1100 وASHRAE 15 وEN 442.</p>
+
+    <div class="sub-title">أولاً: التحديد الاحتياجات الحرارية لكل نوع مخزن</div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>نوع المخزن</th><th>درجة الحرارة المطلوبة</th>الرطوبة المطلوبة</th>نوع التكييف</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-blue">غذائية جافة</span></td>
+            <td>≤ 25°C</td>
+            <td>≤ 65% RH</td>
+            <td>VRF Split System | وحدات داخلية</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-blue">إلكترونيات وأجهزة</span></td>
+            <td>18°C – 24°C</td>
+            <td>≤ 50% RH</td>
+            <td>VRF Split System | ESD Flooring</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">غرف التبريد</span></td>
+            <td>+2°C – +8°C</td>
+           >≤ 75% RH</td>
+            <td>مبردات وحدات منفصلة</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">غرف التجمد</span></td>
+            ≤ -18°C
+            <td>—
+            <td>نظام تجميد Cascade | غرف عزل كامل
+          </tr>
+          <tr>
+            <span class="badge badge-yellow">كيماويات</span>
+            ≤ 28°C
+            —
+            <td>تهوية مستمرة + نظام CO₂ | مجال طارد مغلف
+          </tr>
+          <span class="toc-item" style="border-bottom:none;"><span class="toc-num" style="color:var(--text-muted);">ملاحظة:</span><span class="toc-label" style="font-weight:400;color:var(--text-muted);">جميع الأنظمة يجب أن تكون متوافقة مع متطلبات التخزين المحددة في القسم 13 (توزيع العائلات والمناطق). درجة الحرارة المذكورة أعلاه هي الأشد قساً ويجب الالتزام بها كحد أدنى وليس حدّاً أعلاه.</span></span></div>
+    </div>
+
+    <div class="sub-title">ثانياً: غرف التبريد (Cold Rooms)</div>
+    <p>غرف التبريد وحدات منفصلة مبنية من الهيكل الإنشائي بعزل حراري كامل لمنع تسرب الحرارة من باقي المستودع والحفاظ على سلسلة التبريد المستمرة. التصميم وفق EN 442 وISO 23953.</p>
+
+    <div class="table-wrapper">
+      <table class="table-compact">
+        <thead><tr><th>العنصر</th><th>المواصفة</th><th>المعيار</th></tr></thead>
+        <tbody>
+          <tr><td>درجة التشغيل العادي</td><td>+2°C ~ +8°C</td><td><span class="ref-tag">EN 442-1</span></td></tr>
+          <td>التحمل الحراري الإجمالي</td><td>45 – 65 kW لكل 100 م²</td><td><span class="ref-tag>ASHRAE 15</span></td></tr>
+          <td>التبريد على الباليه</td><td>مباش عبر تيار الهواء البارد</td>—<td><span class="ref-tag>EN 442-6</span></td></tr>
+          <ع><th colspan="3" style="عادي;background:#E8F5E9;">مواصفات العزل الحراري</th></tr>
+          <tr><td>سماكة العزل</td><td>≥ 150 مم (بولي يوريثان / PIR</td><td><span class="ref-tag">EN 442-4</span></td></tr>
+          <tr><td>مقاومة الحريق</td>K-factor ≥ 0.27 W/m·K</td><td><span class="ref-tag">EN 14509</span></td></tr>
+          <td>باب العزل</td>Hinged Sectional Door | سلالم من الرفوف | مؤمن إغلاق تلقائي</td><td><span class="ref-tag">EN 12625</span></td></tr>
+          <tr><td>حاشي باب العزل</td>≥ 0.5 م على كل جانب | لون أصفر+أسود مخطط</td><td>ISO 7010</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sub-title-sm">معدات التبريد المقترحة</div>
+    <div class="table-wrapper">
+      <table class="table-14px">
+        <thead><tr><th>المعدة</th><th>النوع المقترح</th><th>السعة</th><th>العدد</th></tr></thead>
+        <tbody>
+          <td>مكيفات التبريد (Condensing Units)</td><td>Scroll Compressor أو Split</td><td>40 – 80 HP لكل وحدة</td><td>حسب الحمل المحسوب</td></tr>
+          <td>مكيفات الوحدات (Evaporators)</td><td>Ceiling Suspended أو Floor Mounted</td><td>الملائمة لكل غرفة</td><td>حسب الغرف</td></tr>
+          <td>مبادل التبخير (Expansion Valve)</td><td>Thermostatic Expansion | TXV</td><td>حسب النظام</td><td>2-3 لكل دائرة</td></tr>
+          <td>أنابيب التحميل</td>Hinged Sectional | مع حاجز هوائي</td><td>2.0 × 2.4 م</td><td>1/غرفة</td></tr>
+          <td>موزان بضائع (Refrigeration Scale)</td><td>منصة رقمية | دقة ± 0.5 كغ</td><td>1 في كل منطقة استلام</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sub-title-sm">مصادر الطاقة للغرف</td>
+    <ul>
+      <li>مصدر الطاقة: كهرباء شبكة عادية 380V/3Ph مع مولد احتياطي عند الانقطاع</li>
+      <li>نوع المبرّد: R410A أو R407C – أكثر كفاءة بنسبة 15-20% من R22</li>
+      <li>نظام التحكم: وحدة تحكم رقمي (Digital Controller) مع بروتوكول BACnet أو Modbus RTU</li>
+      <li>مراقبة درجة الحرارة والرطوبة: مستشعرات رقمية في كل غرفة مع إنذار عند تجاوز الحدود</li>
+    </ul>
+
+    <div class="warning-box">
+      <i class="fas fa-exclamation-triangle"></i>
+      <div>يُمنع تخزين مواد حارة خارج غرف التبريد. يجب تبريد البضائع قبل دخول الغرفة تدريجياً. فتح باب الغرفة لمدة لا تزيد عن 30 ثانية لتقليل الفقد الحراري. أي عطل في منظومة التبريد يتطلب إخلاء فوري للبضائع وتفريغها لغرفة بديلة.</div>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- تابع القسم 22: غرف التجمد + التكييف العام + الصيانة -->
+    <div class="section-header">
+      <span class="section-number"><i class="fas fa-snowflake" style="font-size:12pt;"></i></span>
+      <span class="section-title">غرف التجمد (Freezer Rooms) والتكييف العام للمخازن</span>
+      <span class="section-title-en">Freezer Rooms & General Warehouse HVAC</span>
+    </div>
+
+    <div class="sub-title">أولاً: غرف التجمد (Freezer Rooms)</div>
+    <p>غرف التجمد ذات عزل كامل مبني بالكامل من الهيكل الإنشائي ومجهزة بمكيفات تجميد متعددة لضمان بقاء درجة الحرارة عند -18°C وتجانب التقلبات بشكل دائم. التصميم وفق EN 442-2 وISO 23953.</p>
+
+    <div class="table-wrapper">
+      <table class="table-compact">
+        <thead><tr><th>العنصر</th><th>المواصفة</th><th>المعيار</th></tr></thead>
+        <tbody>
+          <tr><td>درجة التشغيل العادي</td><td>≤ -18°C</td><td><span class="ref-tag">EN 442-2</span></td></tr>
+          <tr><td>التحمل الحراري الإجمالي</td>60 – 100 kW لكل 100 م²<td><span class="ref-tag">ASHRAE 15</span></td></tr>
+          <tr><td>التبريد بالتجميع</td>مباش عبر تيار هواء بارد</td>—<td><span class="ref-tag>EN 442-6</span></td></tr>
+          <ع><th colspan="3" style="background:#E8F5E9;">مواصفات العزل الحراري</th></tr>
+          <tr><td>سماكة العزل</td>≥ 200 مم (PIR / PIR)</td><td><span class="ref-tag">EN 442-4</span></td></tr>
+          <tr><td>مقاومة الحريق</td>K-factor ≥ 0.23 W/m·K</td><td><span class="ref-tag">EN 14509</span></td></tr>
+          <td>باب العزل</td>Hinged Sectional | مؤمن إغلاق تلقائي</td><td><span class="ref-tag">EN 12625</span></td></tr>
+          <td>حاشي باب العزل</td>≥ 0.5 م على كل جانب | أصفر+أسود</td><td>ISO 7010</td></tr>
+          <td>لوحة تحذير خارجية</td>مؤشر رقمي + إنذار بصري وملوني</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sub-title-sm">معدات التجمد المقترحة</div>
+    <div class="table-wrapper">
+      <table class="table-compact">
+        <thead><tr><th>المعدة</th><th>النوع المقترح</th><th>العدد</th></tr></thead>
+        <tbody>
+          <tr><td>مكيفات التجمد</td><td>Cascade | Scroll Compressor | Split</td><td>حسب الحمل</td></tr>
+          <td>مكيفات الوحدات</td><td>Ceiling Suspended أو Floor Mounted</td><td>الملائمة لكل غرفة</td></tr>
+          <td>Expansion Valve</td>Thermostatic Expansion | TXV</td><td>2-3 لكل دائرة</td></tr>
+          <td>أنابيب التحميل</td>Hinged Sectional | حاجز هوائي</td>1/غرفة</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sub-title">ثانياً: التكييف العام للمخازن (HVAC General)</div>
+    <p>التكييف العام يُعنى السيطرة على درجة حرارة ورطوبة هواء محددة في المخازن العادية لضمان بيئة عمل مريحة للعاملين وحماية البضائع. يتضمن تبريد الهواء المبرود والمكيف بالرشاشات وتهوية العادم.</p>
+
+    <div class="table-wrapper">
+      <table class="table-compact">
+        <thead><tr><th>المنطقة</th>درجة الحرارة المستهدفة</th>الرطوبة المطلوبة</th>النظام المقترح</th></tr></thead>
+        <tbody>
+          <tr><td>ممرات الرفوف</td><td>≤ 30°C</td><td>≤ 60% RH</td><td>VRF Split | وحدات داخلية في السقف</td></tr>
+          <tr><td>منطقة الاستلام والفرز</td><td>≤ 26°C</td><td>≤ 60% RH</td><td>VRF Split | أنابيب هوائية مدمجة في السقف</td></tr>
+          <td>ممرات الحركة</td><td>≤ 30°C</td>—<td>تكييف هواء مركزي + فتحات هواء من خلال الفتحات العلوية</td></tr>
+          <td>غرفة الكهربائية</td><td>≤ 25°C</td><td>≤ 50% RH</td>>مكيف مركزي للغرفة فقط</td></tr>
+          <td>مبنى إداري</td><td>22°C – 24°C</td>50-60% RH<td>VRF + جهاز استرداد حرارة HRV</td></tr>
+          <td>سكن الموظفين</td><td>22°C – 24°C</td>50-60%<td>وحدات داخل كل غرفة</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sub-title-sm">نظام التكييف المركزي المقترح (VRF + HRV System)</div>
+    <div class="table-wrapper">
+      <table class="table-14px">
+        <thead><tr><th>العنصر</th><th>المواصفة</th></tr></thead>
+        <tbody>
+          <tr><td>نظام VRF</td><td>VRF Multi-Split System | سعة ≥ 1 طن لكل 25 م²</td></tr>
+          <td>وحدات داخلية</td><td>Ceiling Cassette أو Ducted Split</td><td>في كل مساحة رئيسية</td></tr>
+          <td>جهاز استرداد حرارة HRV</td>مبادل حراري من الهواء الخارجي لاسترداد الطاقة الحرارية من هواء العودة</td><td>للمبنى الإداري</td></tr>
+          <td>نظام التحكم</td>بروتوكول BACnet MS/KNX لكل وحدة</td><td>تحكم منطقة لكل وحدة</td></tr>
+          <td>فلات تكييف هواء بارد</td>أشرطة تنفث هواء بارد على فتحات علوية لتوزيع الهواء البارد المُعاد من السقف</td><td>للمناطق ذات الحمل الحراري العالية</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sub-title">ثالثاً: شبكة التوزيع الهواء البارد (Chilled Water Network)</div>
+    <ul>
+      <li>أنابيب نحاسية عازلة من النحاس على مسافات لا تقل عن 150 مم عميقاً داخل الخرسانة (Chilled Water Piping)</li>
+      <li>عزل حراري كامل بكامل خامس البوليستر مع إضافة طبقة عاكس طبقة هواء مقاوم للتكثيف</li>
+      <li>محطة ضخم مياه مبردة واحدة (Chilled Water Pump Station) لكل مجموعة مستودعات</li>
+      <li>صمام عودة (Chilled Water Header Tank) بسعة ≥ 10 م³ لكل مجموعة لتغطية ذروة استهلاك تكيف الهواء البارد</li>
+      <li>نظام تبريد الهواء البارد يعمل بالتوازي مع نظام VRF لاسترداد الحرارة المهدرة</li>
+    </ul>
+
+    <div class="sub-title">رابعاً: نظام المراقبة والتحكم</div>
+    <ul>
+      <li>مستشعرات رقمية لدرجة الحرارة والرطوبة في كل منطقة تخزين</li>
+      <li>لوحة عرض رقمي مركزية في غرفة الأمن تعرض حالة كل مستودع بالألوان</td>
+      <li>إنذار تلقائي: صوت + ضوء عند تجاوز الحدود المحدودة لكل منطقة</li>
+      <li>سجل يومي إلكتروني لدرجات الحرارة مع رسم بياني لتحليل الاتجاهات</li>
+      <li>ربط مع نظام WMS لمنع استلام وتخزين بضائع حساسة للحرارة</li>
+    </ul>
+
+    <div class="recommendation-box">
+      <div class="rec-title"><i class="fas fa-check-circle"></i> توصية التكييف</div>
+      <p>اعتماد نظام VRF Split مع وحدات داخلية في كل مستودع لتوفير تحكم حرارة ورطوبة منفصلة لكل منطقة تخزين. إضافة جهاز HRV للمبنى الإداري لاسترداد الحرارة من الهواء الخارجي وتقليل استهلاك الطاقة.</p>
+    </div>
+
+    <div class="sub-title">خامساً: الصيانة الدورية</div>
+    <div class="table-wrapper">
+      <table class="table-compact">
+        <thead><tr><th>النشاط</th><th>التكرار</th></tr></thead>
+        <tbody>
+          <tr><td>فحص شامل للوحدات والمواسير والتحكم</td><td>ربع سنوي بواسطة متخصصة</td></tr>
+          <tr><td>تنظيف واختبار الأداء</td><td>نصف سنوي</td></tr></tr>
+          <tr><td>تنظيف فلاتر وشباب التحميل</td><td>ربع سنوي</td></tr></tr>
+          <tr><td>التحقق من العزل الحراري</td>كل 6 أشهر</td></tr></tr>
+          <tr><td>تنظيف واختبار صمامات الهواء البارد</td>سنوياً</td></tr></tr>
+          <tr><td>تنظيف واختبار مجاري التصريف</td>سنوياً</td></tr></tr>
+          <tr><td>تنظيف واختبار ATS والمولد</td>ربع سنوي</td></tr></tr>
+          <tr><td>إعادة ملء غاز التبريد بالغاز</td>سنوياً</td></tr></tr>
+          <tr><td>تنظيف واختبار نظام VRF</td>سنوياً</td></tr></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="warning-box">
+      <i class="fas fa-exclamation-triangle"></i>
+      <div>أي عطل في منظومة التبريد يجب إخلاء البضائع فوراً وإبلاغها لغرفة بديلة. يجب أن يكون هناك غرفة بديلة جاهزة ومجهزة على مدخل كل غرفة. لا يُسمح بوضع من البضائع الدافئة في ممرات المستودع.</div>
+    </div>
+  </div>
+
+<!-- ==================== إخلاء المسؤولية ==================== -->
+<div class="page" style="display:flex;flex-direction:column;justify-content:center;">
+  <div class="page-header"><span>تقرير تطوير مستودعات برندزو – أبوهادي 155</span><span>BRANDZO WAREHOUSE DEVELOPMENT REPORT</span><div class="header-accent"></div></div>
+  <div class="page-footer"><span>إدارة المستودعات – برندزو</span><span>سري – للاستخدام الداخلي فقط</span><div class="page-num">16</div></div>
+  <div style="text-align:center;margin-bottom:40px;">
+    <div style="width:60px;height:3px;background:var(--accent);margin:0 auto 20px;"></div>
+    <div style="font-size:18pt;font-weight:800;color:var(--primary);">إخلاء مسؤولية وشروط التقرير</div>
+    <div style="font-size:8pt;color:var(--text-muted);letter-spacing:1px;margin-top:5px;">DISCLAIMER & REPORT CONDITIONS</div>
+  </div>
+  <div class="disclaimer-box" style="margin-bottom:12px;"><p><strong>1.</strong> تقييم هندسي أولي مبني على التحليل البصري. لا يُغني عن المسح الميداني والدراسات الجيوتقنية والإنشائية.</p></div>
+  <div class="disclaimer-box" style="margin-bottom:12px;"><p><strong>2.</strong> المواصفات تعتمد على أفضل الممارسات الدولية وقد تستلزم تكييفاً وفق اللوائح المحلية عبر استشاري معتمد.</p></div>
+  <div class="disclaimer-box" style="margin-bottom:12px;"><p><strong>3.</strong> الأبعاد والمساحات تقريبية استرشادية. يجب أخذ القياسات الدقيقة من فريق هندسي متخصص.</p></div>
+  <div class="disclaimer-box" style="margin-bottom:12px;"><p><strong>4.</strong> وثيقة سرية – لا يجوز نسخها أو توزيعها دون موافقة كتابية من إدارة المستودعات.</p></div>
+  <div class="disclaimer-box" style="margin-bottom:30px;"><p><strong>5.</strong> صالح لمدة 6 أشهر من تاريخ الإعداد. بعدها يجب التحديث.</p></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:auto;padding-top:30px;border-top:2px solid var(--border);">
+    <div style="text-align:center;">
+      <div style="font-size:9pt;font-weight:700;color:var(--primary);margin-bottom:40px;">الإعداد</div>
+      <div style="width:150px;height:1px;background:var(--border);margin:0 auto 8px;"></div>
+      <div style="font-size:9pt;color:var(--text-secondary);">محمد البرشي</div>
+      <div style="font-size:8pt;color:var(--text-muted);">التوقيع: ....................</div>
+      <div style="font-size:9pt;color:var(--text-secondary);margin-top:20px;">رمزي باش</div>
+      <div style="font-size:8pt;color:var(--text-muted);">التوقيع: ....................</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="font-size:9pt;font-weight:700;color:var(--primary);margin-bottom:40px;">الاعتماد</div>
+      <div style="width:150px;height:1px;background:var(--border);margin:0 auto 8px;"></div>
+      <div style="font-size:8pt;color:var(--text-muted);">الاسم: ....................</div>
+      <div style="font-size:8pt;color:var(--text-muted);">المسمى الوظيفي: ....................</div>
+      <div style="font-size:8pt;color:var(--text-muted);margin-top:20px;">التوقيع: ....................</div>
+      <div style="font-size:8pt;color:var(--text-muted);margin-top:8px;">التاريخ: ___/___/2026</div>
+      <div style="font-size:8pt;color:var(--text-muted);margin-top:8px;">الختم الرسمي:</div>
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brandzo - التقرير التنفيذي لمشروع تطوير مستودعات 155</title>
+<link rel="stylesheet" href="../lib/fonts/bz-fonts.css">
+    <!-- Google Fonts -->
+<!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="../lib/fontawesome/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #0f2b46;
+            --secondary-color: #c62828;
+            --accent-color: #f4a261;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+            --light-text: #555;
+            --white: #ffffff;
+            --border-radius: 10px;
+            --box-shadow: 0 8px 25px rgba(0,0,0,0.07);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        @media print {
+            body { background: white; }
+            .container { box-shadow: none; padding: 0; }
+            .no-print { display: none !important; }
+            .section, .header, .meta-info, .recommendation-box { break-inside: avoid; }
+            .detail-grid { grid-template-columns: 1fr 1fr 1fr; }
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1a3c5e 100%);
+            color: var(--white);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo-text {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--secondary-color);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header-content h1 {
+            font-size: 1.6rem;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .header-content p {
+            opacity: 0.85;
+            font-size: 0.95rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary { background: var(--secondary-color); color: white; }
+        .btn-primary:hover { background: #a12020; transform: translateY(-2px); }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); }
+        .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+
+        /* Meta Info */
+        .meta-info {
+            background: var(--white);
+            padding: 20px 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            border-right: 5px solid var(--secondary-color);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .meta-item i { color: var(--primary-color); font-size: 1.1rem; width: 25px; text-align: center; }
+        .meta-item strong { color: var(--primary-color); font-size: 0.95rem; }
+
+        /* Sections General */
+        .section {
+            background: var(--white);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 25px;
+            border-top: 4px solid var(--primary-color);
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .section-title i { color: var(--secondary-color); }
+
+        /* Summary */
+        .summary-text {
+            font-size: 1rem;
+            color: var(--light-text);
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-right: 4px solid var(--accent-color);
+            text-align: justify;
+        }
+
+        /* Images Gallery */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 6px;
+            height: 180px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .gallery-item:hover img { transform: scale(1.1); }
+
+        /* Breakdown List (PMO Style) */
+        .breakdown-item {
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .breakdown-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .breakdown-number {
+            background: var(--secondary-color);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+
+        @media (min-width: 900px) {
+            .detail-grid {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
+        .detail-box {
+            padding: 15px;
+            background: #ffffff;
+            border-bottom: 1px solid #eee;
+        }
+
+        @media (min-width: 900px) {
+            .detail-box { border-bottom: none; border-left: 1px solid #eee; }
+            .detail-box:first-child { border-left: none; }
+        }
+
+        .detail-label {
+            font-weight: 800;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .detail-box.current .detail-label { color: #c62828; }
+        .detail-box.discussion .detail-label { color: #e65100; }
+        .detail-box.action .detail-label { color: #1565c0; }
+
+        .detail-content {
+            font-size: 0.92rem;
+            color: #444;
+            line-height: 1.6;
+        }
+
+        /* Recommendations */
+        .recommendation-box {
+            background: linear-gradient(to left, #0f2b46, #1a3c5e);
+            color: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .recommendation-list { list-style: none; }
+        .recommendation-list li {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            background: rgba(255,255,255,0.08);
+            padding: 15px;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        .recommendation-list li:hover { background: rgba(255,255,255,0.15); }
+        .recommendation-list li i { color: var(--accent-color); margin-top: 5px; font-size: 1.1rem; }
+
+        /* Footer & Signature */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: var(--light-text);
+            border-top: 1px solid #ddd;
+            font-size: 0.9rem;
+        }
+
+        .signature {
+            margin-top: 50px;
+            padding: 20px;
+            border-top: 3px solid var(--primary-color);
+            max-width: 300px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        /* Image Modal */
+        #imageModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        #imageModal img { max-width: 90%; max-height: 90%; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <div id="imageModal" onclick="this.style.display='none'">
+        <img id="modalImage" src="">
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="brand-title">
+                <div class="logo-text">Brandzo</div>
+                <div class="header-content">
+                    <h1>التقرير التنفيذي للزيارة الميدانية</h1>
+                    <p>مشروع تطوير مستودعات (155) – بنغازي</p>
+                </div>
+            </div>
+            <div class="actions no-print">
+                <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-file-pdf"></i> تحميل PDF</button>
+                <button class="btn btn-secondary" onclick="downloadHTML()"><i class="fas fa-download"></i> HTML</button>
+            </div>
+        </header>
+
+        <!-- Meta Info -->
+        <div class="meta-info">
+            <div class="meta-item"><i class="fas fa-file-alt"></i> <span><strong>وثيقة رقم:</strong> BRZ-WH-155-2026-REV.01</span></div>
+            <div class="meta-item"><i class="fas fa-calendar-alt"></i> <span><strong>التاريخ:</strong> الأحد، 28 يونيو 2026</span></div>
+            <div class="meta-item"><i class="fas fa-map-marker-alt"></i> <span><strong>الموقع:</strong> مستودعات (155) – بنغازي</span></div>
+            <div class="meta-item"><i class="fas fa-building"></i> <span><strong>الجهة المُعِدَّة:</strong> إدارة المستودعات</span></div>
+            <div class="meta-item"><i class="fas fa-users"></i> <span><strong>الحضور:</strong> م. مختار | أ. محمد البرشي | أ. رمزي باش</span></div>
+        </div>
+
+        <!-- Executive Summary -->
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-clipboard-list"></i> الملخص التنفيذي (Executive Summary)</h2>
+            <div class="summary-text">
+                بناءً على التقرير الهندسي المرجعي لتطوير مستودعات الموقع (155)، تم تنفيذ زيارة ميدانية وتقييم شامل للموقع بحضور المهندس المشرف وإدارة المستودعات. هدفت الزيارة إلى مطابقة المقترحات الهندسية مع الواقع التشغيلي، وتحديد الفجوات الحالية، ووضع خارطة طريق واضحة لكل محور. تم الاتفاق على انتقال المشروع من مرحلة "التشخيص" إلى مرحلة "الدراسة التنفيذية"، حيث سيعمل المهندس المشرف على إعداد التصاميم، وجداول الكميات (BOQ)، والتكلفة التقديرية لكل بند تمهيداً للاعتماد النهائي.
+            </div>
+        </div>
+
+        <!-- Site Photos -->
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-camera"></i> صور الزيارة الميدانية</h2>
+            <div class="gallery-grid">
+                <div class="gallery-item" onclick="showImage(this)"><img src="./source-images/field-visit-01.jpg" alt="موقع المستودع"></div>
+                <div class="gallery-item" onclick="showImage(this)"><img src="./source-images/field-visit-02.jpg" alt="المباني الخارجية"></div>
+                <div class="gallery-item" onclick="showImage(this)"><img src="./source-images/field-visit-03.jpg" alt="مساحات المستودع"></div>
+                <div class="gallery-item" onclick="showImage(this)"><img src="./source-images/field-visit-04.jpg" alt="المبنى الرئيسي"></div>
+                <div class="gallery-item" onclick="showImage(this)"><img src="./source-images/field-visit-05.jpg" alt="مدخل المباني"></div>
+                <div class="gallery-item" onclick="showImage(this)"><img src="./source-images/field-visit-06.jpg" alt="داخل المستودع"></div>
+                <div class="gallery-item" onclick="showImage(this)"><img src="./source-images/field-visit-07.jpg" alt="فحص أنظمة الحريق"></div>
+                <div class="gallery-item" onclick="showImage(this)"><img src="./source-images/field-visit-08.jpg" alt="التجهيزات الداخلية"></div>
+                <div class="gallery-item" onclick="showImage(this)"><img src="./source-images/field-visit-09.jpg" alt="أبواب المستودع"></div>
+            </div>
+        </div>
+
+        <!-- Detailed Breakdown (Full Text - No Summarization) -->
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-hard-hat"></i> المحاور التفصيلية (Detailed Breakdown)</h2>
+
+            <!-- 1 -->
+            <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-number">1</span> منظومة الحماية من الحرائق</div>
+                <div class="detail-grid">
+                    <div class="detail-box current">
+                        <div class="detail-label"><i class="fas fa-exclamation-circle"></i> الوضع الحالي</div>
+                        <div class="detail-content">المنظومة قديمة ومتهالكة ولا تتطابق مع كود السلامة الحديث للمستودعات.</div>
+                    </div>
+                    <div class="detail-box discussion">
+                        <div class="detail-label"><i class="fas fa-comments"></i> ما تمت مناقشته</div>
+                        <div class="detail-content">ضرورة إحلال المنظومة بالكامل وتصميم شبكة إطفاء وإنذار ذكية تغطي كافة المساحات.</div>
+                    </div>
+                    <div class="detail-box action">
+                        <div class="detail-label"><i class="fas fa-clipboard-check"></i> الإجراء المتفق عليه</div>
+                        <div class="detail-content">إعداد تصميم هندسي متكامل لمنظومة الحريق متوافق مع معايير (NFPA)، يشمل المضخات، وشبكة الرشاشات، وحساسات الدخان.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2 -->
+            <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-number">2</span> الغرف الكهربائية والبنية التحتية</div>
+                <div class="detail-grid">
+                    <div class="detail-box current">
+                        <div class="detail-label"><i class="fas fa-exclamation-circle"></i> الوضع الحالي</div>
+                        <div class="detail-content">البنية الكهربائية الحالية غير مهيأة لاستيعاب الأحمال المستقبلية (التكييف، الشواحن، المعدات).</div>
+                    </div>
+                    <div class="detail-box discussion">
+                        <div class="detail-label"><i class="fas fa-comments"></i> ما تمت مناقشته</div>
+                        <div class="detail-content">حاجة الغرف لإعادة تأهيل جذري، وتحديث اللوحات والقواطع.</div>
+                    </div>
+                    <div class="detail-box action">
+                        <div class="detail-label"><i class="fas fa-clipboard-check"></i> الإجراء المتفق عليه</div>
+                        <div class="detail-content">حصر الأحمال الحالية والمستقبلية، وتقديم مقترح فني لتطوير الغرف الكهربائية وتأمينها.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3 -->
+            <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-number">3</span> رامبات التحميل والتفريغ (Loading Docks)</div>
+                <div class="detail-grid">
+                    <div class="detail-box current">
+                        <div class="detail-label"><i class="fas fa-exclamation-circle"></i> الوضع الحالي</div>
+                        <div class="detail-content">الرامبات الحالية تسبب بطء في حركة الشاحنات وعمليات المناولة.</div>
+                    </div>
+                    <div class="detail-box discussion">
+                        <div class="detail-label"><i class="fas fa-comments"></i> ما تمت مناقشته</div>
+                        <div class="detail-content">إعادة التصميم لضمان مرونة اصطفاف الشاحنات وتقليل زمن التحميل والتفريغ.</div>
+                    </div>
+                    <div class="detail-box action">
+                        <div class="detail-label"><i class="fas fa-clipboard-check"></i> الإجراء المتفق عليه</div>
+                        <div class="detail-content">تقديم رفع مساحي ومقترح هندسي لتوسعة وتطوير الرامبات وإضافة حواجز حماية (Dock Bumpers).</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4 -->
+            <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-number">4</span> منظومة المراقبة (CCTV)</div>
+                <div class="detail-grid">
+                    <div class="detail-box current">
+                        <div class="detail-label"><i class="fas fa-exclamation-circle"></i> الوضع الحالي</div>
+                        <div class="detail-content">وجود نقاط عمياء كثيرة، وتوزيع الكاميرات لا يخدم العمليات التشغيلية أو الأمنية بالشكل المطلوب.</div>
+                    </div>
+                    <div class="detail-box discussion">
+                        <div class="detail-label"><i class="fas fa-comments"></i> ما تمت مناقشته</div>
+                        <div class="detail-content">الحاجة لتغطية 100% للمناطق الحساسة (الاستلام، الصرف، الممرات، البوابات).</div>
+                    </div>
+                    <div class="detail-box action">
+                        <div class="detail-label"><i class="fas fa-clipboard-check"></i> الإجراء المتفق عليه</div>
+                        <div class="detail-content">تصميم مخطط جديد (Layout) لنقاط المراقبة وتحديد المواصفات الفنية للكاميرات والسيرفرات.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5 -->
+            <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-number">5</span> المبنى الإداري ومبنى سكن الموظفين (المحاور 5 و 6)</div>
+                <div class="detail-grid">
+                    <div class="detail-box current">
+                        <div class="detail-label"><i class="fas fa-exclamation-circle"></i> الوضع الحالي</div>
+                        <div class="detail-content">المباني تحتاج إلى صيانة مدنية ومعمارية لرفع بيئة العمل ومستوى المعيشة.</div>
+                    </div>
+                    <div class="detail-box discussion">
+                        <div class="detail-label"><i class="fas fa-comments"></i> ما تمت مناقشته</div>
+                        <div class="detail-content">المتطلبات اليومية للموظفين لضمان كفاءة العمليات وراحة فرق التشغيل.</div>
+                    </div>
+                    <div class="detail-box action">
+                        <div class="detail-label"><i class="fas fa-clipboard-check"></i> الإجراء المتفق عليه</div>
+                        <div class="detail-content">إعداد مقايسة هندسية لأعمال الصيانة (دهانات، سباكة، إضاءة، أثاث) لكلا المبنيين.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6 -->
+            <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-number">6</span> التحكم بالدخول وحركة المرور (المحاور 7 و 8)</div>
+                <div class="detail-grid">
+                    <div class="detail-box current">
+                        <div class="detail-label"><i class="fas fa-exclamation-circle"></i> الوضع الحالي</div>
+                        <div class="detail-content">عشوائية في مسارات الشاحنات والرافعات، وافتقار البوابة لأنظمة التحكم الآلي.</div>
+                    </div>
+                    <div class="detail-box discussion">
+                        <div class="detail-label"><i class="fas fa-comments"></i> ما تمت مناقشته</div>
+                        <div class="detail-content">فصل حركة المشاة عن المعدات، وتنظيم مسارات الدخول والخروج بنظام (Access Control).</div>
+                    </div>
+                    <div class="detail-box action">
+                        <div class="detail-label"><i class="fas fa-clipboard-check"></i> الإجراء المتفق عليه</div>
+                        <div class="detail-content">رسم خريطة مرورية للموقع (Traffic Management Plan) وتصميم منظومة البوابة الذكية.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7 -->
+            <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-number">7</span> أنظمة التخزين والرفوف (Pallet Racking) (المحور 9)</div>
+                <div class="detail-grid">
+                    <div class="detail-box current">
+                        <div class="detail-label"><i class="fas fa-exclamation-circle"></i> الوضع الحالي</div>
+                        <div class="detail-content">استغلال غير أمثل للمساحات العمودية والأفقية.</div>
+                    </div>
+                    <div class="detail-box discussion">
+                        <div class="detail-label"><i class="fas fa-comments"></i> ما تمت مناقشته</div>
+                        <div class="detail-content">رفع السعة التخزينية وتسهيل حركة الرافعات الشوكية بين الممرات (Aisles).</div>
+                    </div>
+                    <div class="detail-box action">
+                        <div class="detail-label"><i class="fas fa-clipboard-check"></i> الإجراء المتفق عليه</div>
+                        <div class="detail-content">إعداد تصميم هندسي (Racking Layout) يوضح التوزيع الجديد، السعة التخزينية المتوقعة، ومواصفات التحمل.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8 -->
+            <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-number">8</span> هندسة العمليات: الاستلام، الصرف، وتوزيع العائلات (المحاور 10، 11، 12)</div>
+                <div class="detail-grid">
+                    <div class="detail-box current">
+                        <div class="detail-label"><i class="fas fa-exclamation-circle"></i> الوضع الحالي</div>
+                        <div class="detail-content">تداخل في مناطق الاستلام (Inbound) والشحن (Outbound)، وتوزيع الأصناف لا يدعم سرعة التجهيز.</div>
+                    </div>
+                    <div class="detail-box discussion">
+                        <div class="detail-label"><i class="fas fa-comments"></i> ما تمت مناقشته</div>
+                        <div class="detail-content">خلق انسيابية في الحركة (Workflow) وتطبيق نظام المناطق (Zoning) حسب سرعة دوران الصنف.</div>
+                    </div>
+                    <div class="detail-box action">
+                        <div class="detail-label"><i class="fas fa-clipboard-check"></i> الإجراء المتفق عليه</div>
+                        <div class="detail-content">رسم مخطط تنظيمي للمساحات الأرضية يحدد بوضوح مناطق الفرز، التجهيز، والتخزين النهائي.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 9 -->
+            <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-number">9</span> المرافق الداعمة: الورشة ومحطة الشحن (المحاور 13 و 14)</div>
+                <div class="detail-grid">
+                    <div class="detail-box current">
+                        <div class="detail-label"><i class="fas fa-exclamation-circle"></i> الوضع الحالي</div>
+                        <div class="detail-content">لا توجد مناطق مجهزة فنياً وآمنة لصيانة المعدات أو شحن بطاريات الرافعات.</div>
+                    </div>
+                    <div class="detail-box discussion">
+                        <div class="detail-label"><i class="fas fa-comments"></i> ما تمت مناقشته</div>
+                        <div class="detail-content">خطورة الوضع الحالي، وضرورة تخصيص مناطق معزولة ومجهزة بأنظمة تهوية وسلامة.</div>
+                    </div>
+                    <div class="detail-box action">
+                        <div class="detail-label"><i class="fas fa-clipboard-check"></i> الإجراء المتفق عليه</div>
+                        <div class="detail-content">تحديد مواقع الورشة ومحطة الشحن في المخطط العام، وتحديد مواصفاتها الهندسية والوقائية.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10 -->
+            <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-number">10</span> أرضيات الإيبوكسي الصناعية (المحور 16)</div>
+                <div class="detail-grid">
+                    <div class="detail-box current">
+                        <div class="detail-label"><i class="fas fa-exclamation-circle"></i> الوضع الحالي</div>
+                        <div class="detail-content">الأرضيات خرسانية عادية، مما يسبب تصاعد للغبار وتآكل لعجلات الرافعات.</div>
+                    </div>
+                    <div class="detail-box discussion">
+                        <div class="detail-label"><i class="fas fa-comments"></i> ما تمت مناقشته</div>
+                        <div class="detail-content">أهمية الإيبوكسي للحفاظ على جودة المخزون وسلامة المعدات وتسهيل التنظيف.</div>
+                    </div>
+                    <div class="detail-box action">
+                        <div class="detail-label"><i class="fas fa-clipboard-check"></i> الإجراء المتفق عليه</div>
+                        <div class="detail-content">فحص حالة الخرسانة الحالية وتحديد نوعية وسمك طلاء الإيبوكسي الصناعي المطلوب.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 11 -->
+            <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-number">11</span> الخدمات الإضافية: النفايات، محطة الوقود، استراحة السائقين (المحاور 15، 18، 19)</div>
+                <div class="detail-grid">
+                    <div class="detail-box current">
+                        <div class="detail-label"><i class="fas fa-exclamation-circle"></i> الوضع الحالي</div>
+                        <div class="detail-content">غياب منظومة حديثة لإدارة النفايات، عدم وجود مضخة وقود للأسطول، وافتقار الموقع لاستراحة للسائقين.</div>
+                    </div>
+                    <div class="detail-box discussion">
+                        <div class="detail-label"><i class="fas fa-comments"></i> ما تمت مناقشته</div>
+                        <div class="detail-content">ضرورة توفير هذه الخدمات خارجياً أو في مناطق معزولة لدعم العمليات دون التأثير على المستودع.</div>
+                    </div>
+                    <div class="detail-box action">
+                        <div class="detail-label"><i class="fas fa-clipboard-check"></i> الإجراء المتفق عليه</div>
+                        <div class="detail-content">إدراج هذه المرافق ضمن التخطيط العام (Master Plan) وتحديد تكلفة إنشائها وتجهيزها.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 12 -->
+            <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-number">12</span> الطاقة الاحتياطية والتكييف (المحاور 20 و 21)</div>
+                <div class="detail-grid">
+                    <div class="detail-box current">
+                        <div class="detail-label"><i class="fas fa-exclamation-circle"></i> الوضع الحالي</div>
+                        <div class="detail-content">مخازن الجاف تعتمد على المراوح فقط، وقدرة المولدات الحالية غير معروفة مقابل الأحمال الجديدة.</div>
+                    </div>
+                    <div class="detail-box discussion">
+                        <div class="detail-label"><i class="fas fa-comments"></i> ما تمت مناقشته</div>
+                        <div class="detail-content">الحفاظ على جودة التخزين يتطلب ضبط الحرارة والرطوبة، مما يعني أحمالاً كهربائية ضخمة.</div>
+                    </div>
+                    <div class="detail-box action">
+                        <div class="detail-label"><i class="fas fa-clipboard-check"></i> الإجراء المتفق عليه</div>
+                        <div class="detail-content">تكليف مهندس إلكتروميكانيك (MEP) بحساب الأحمال الحرارية (Cooling Loads) واختيار منظومة التكييف الأنسب، وبناءً عليه يتم تحديد قدرة المولدات الاحتياطية المطلوبة.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 13 -->
+            <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-number">13</span> الصحة والسلامة المهنية (HSE) (المحور 17)</div>
+                <div class="detail-grid">
+                    <div class="detail-box current">
+                        <div class="detail-label"><i class="fas fa-exclamation-circle"></i> الوضع الحالي</div>
+                        <div class="detail-content">افتقار الموقع لعلامات السلامة ومسارات الطوارئ الواضحة.</div>
+                    </div>
+                    <div class="detail-box discussion">
+                        <div class="detail-label"><i class="fas fa-comments"></i> ما تمت مناقشته</div>
+                        <div class="detail-content">جعل السلامة معياراً أساسياً في كل أعمال التطوير المذكورة أعلاه.</div>
+                    </div>
+                    <div class="detail-box action">
+                        <div class="detail-label"><i class="fas fa-clipboard-check"></i> الإجراء المتفق عليه</div>
+                        <div class="detail-content">دمج متطلبات HSE (لوحات إرشادية، خطوط أرضية، مخارج طوارئ) ضمن جداول كميات المشروع.</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Recommendations -->
+        <div class="recommendation-box">
+            <h2 class="section-title" style="color: white; border-bottom: 2px solid rgba(255,255,255,0.2);"><i class="fas fa-bullseye"></i> التوصيات وخطة العمل (Action Plan & Next Steps)</h2>
+            <p style="margin-bottom: 20px; opacity: 0.9;">بناءً على المعطيات أعلاه، نوصي الإدارة العليا بما يلي:</p>
+            <ul class="recommendation-list">
+                <li>
+                    <i class="fas fa-check-circle fa-lg"></i>
+                    <div><strong>اعتماد المخرجات:</strong> اعتماد هذا التقرير كوثيقة أساسية (Baseline) لتطوير موقع (155).</div>
+                </li>
+                <li>
+                    <i class="fas fa-check-circle fa-lg"></i>
+                    <div><strong>تكليف الإشراف الهندسي:</strong> توجيه المهندس المشرف بالبدء فوراً في إعداد التقرير التنفيذي النهائي (التصاميم، المخططات، جداول الكميات BOQ).</div>
+                </li>
+                <li>
+                    <i class="fas fa-check-circle fa-lg"></i>
+                    <div><strong>الجدولة الزمنية:</strong> إلزام الفريق الهندسي بتقديم خطة المشروع الشاملة (Project Schedule) موضحاً بها التسلسل الزمني للتنفيذ بحيث لا تتعطل العمليات التشغيلية اليومية للمستودعات.</div>
+                </li>
+                <li>
+                    <i class="fas fa-check-circle fa-lg"></i>
+                    <div><strong>الاعتماد المالي:</strong> بعد استلام التكلفة التقديرية (Estimated Budget) لكل محور، سيتم عرض الملف بالكامل على الإدارة العليا لاتخاذ قرار الترسية والبدء في التنفيذ وفق الأولويات.</div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Signature -->
+        <div class="signature">
+            <strong>مُقَدِّم التقرير</strong><br>
+            إدارة المستودعات<br>
+            <span style="font-size: 0.9rem; color: var(--secondary-color); font-weight: 900;">Brandzo</span>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>&copy; 2026 Brandzo. جميع الحقوق محفوظة | وثيقة رقم: BRZ-WH-155-2026-REV.01</p>
+        </div>
+    </div>
+
+    <script>
+        function showImage(element) {
+            const imgSrc = element.querySelector('img').src;
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modalImg.src = imgSrc;
+            modal.style.display = 'flex';
+        }
+
+        function downloadHTML() {
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Brandzo_WH_155_Executive_Report.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if(event.key === 'Escape') {
+                document.getElementById('imageModal').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
