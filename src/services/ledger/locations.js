@@ -120,6 +120,64 @@ export function onVehicleBalances(balances) {
     .map((b) => ({ ...b, plate: vehiclePlateFromCode(b.warehouse), locationLabel: locationLabel(b.warehouse) }));
 }
 
+/**
+ * ═══ مواقع العملاء — البضاعة المحمية والأمانة ═══
+ *
+ * قرار المالك (2026-08-09): بعض ما يخرج إلى العميل **لا تخرج ملكيّته**. مستحضرات
+ * التجميل والأدوية تُودَع لدى التاجر بحقّ إرجاعٍ كامل أو مشروط: «حماية ٩٠ يومًا»،
+ * «حماية حتى انتهاء الصلاحية»، «المنتهي فقط». هذه بضاعتنا وإن كانت على رفّ غيرنا.
+ *
+ * المشكلة قبل هذا: `EXTERNAL = null` يبتلع كلّ ما يغادر. فما إن يُسلَّم صنفٌ حتى
+ * تنقطع عنه الرؤية — لا نعرف تشغيلته ولا صلاحيته عند العميل، ولا نُطابق مرتجعه
+ * برصيدٍ لأنّه بلا رصيد. وهي بعينها المشكلة التي بُني عليها هذا النظام: البيع
+ * الأوّلي رقمٌ أعمى.
+ *
+ * الحلّ: موقعٌ لكل عميل `CUST:‹رمزه›` — يُخزَّن كأيّ مستودع في
+ * `balances/{صنف__CUST:رمز__تشغيلة}`، فيرث مجّانًا كلّ ما بناه الدفتر: التشغيلة
+ * والصلاحية، وحارس الرصيد السالب (فلا يُرجَع ما لم يُسلَّم)، وFEFO، وكشف الحركة.
+ *
+ * والقاعدة الحاكمة تبقى كما هي: **ما له رصيدٌ في دفترنا فهو ملكنا**. فلا حاجة
+ * لبُعد ملكيّةٍ ثالث — الموقع نفسه يحملها:
+ *   `VAN:لوحة → EXTERNAL`   بيعٌ قاطع، خرجت الملكية.
+ *   `VAN:لوحة → CUST:رمز`   إيداع أمانةٍ محميّة، الملكية باقية.
+ *   `CUST:رمز → EXTERNAL`   تحقّق البيع، الآن خرجت الملكية.
+ *   `CUST:رمز → VAN:لوحة`   مرتجعٌ محميّ عاد إلى المركبة.
+ *
+ * `mustZero` لا تنطبق: رصيدٌ عند العميل وضعٌ مشروع مستمرّ لا استثناء يُلاحَق —
+ * الاستثناء هو ما **تجاوز مدّة حمايته** أو **قارب صلاحيته**، وذاك تقريرٌ آخر.
+ */
+export const CUSTOMER_PREFIX = 'CUST:';
+
+/** كود موقع عميلٍ من رمزه (BP Code) — موحّد الحالة كما يوحّدها مفتاح الرصيد. */
+export function customerLocationCode(customerCode) {
+  const c = String(customerCode || '').trim().toUpperCase();
+  return c ? `${CUSTOMER_PREFIX}${c}` : '';
+}
+
+/** هل هذا الكود موقعُ عميل؟ */
+export function isCustomerLocation(code) {
+  return String(code || '').toUpperCase().startsWith(CUSTOMER_PREFIX);
+}
+
+/** رمز العميل من كود موقعه (فارغ إن لم يكن موقع عميل). */
+export function customerCodeFromLocation(code) {
+  return isCustomerLocation(code) ? String(code).toUpperCase().slice(CUSTOMER_PREFIX.length) : '';
+}
+
+/**
+ * أرصدة «ما لدى العملاء الآن»: بضاعةٌ سُلّمت وما تزال ملكنا — الأمانة والمحميّة.
+ * منطق خالص كـ`onVehicleBalances`.
+ */
+export function atCustomerBalances(balances) {
+  return (balances || [])
+    .filter((b) => isCustomerLocation(b?.warehouse) && Math.abs(Number(b?.qty) || 0) > 0.0001)
+    .map((b) => ({
+      ...b,
+      customerCode: customerCodeFromLocation(b.warehouse),
+      locationLabel: locationLabel(b.warehouse),
+    }));
+}
+
 /** هل هذا الرمز موقع نظام؟ */
 export function isSystemLocation(code) {
   return Boolean(code) && Object.hasOwn(SYSTEM_LOCATIONS, String(code).toUpperCase());
@@ -147,15 +205,16 @@ export function isAccountLocation(code) {
  * يُستدعى قبل إنشاء مستودع جديد — الاصطدام هنا يُفسد الأرصدة بلا صوت.
  */
 export function isReservedCode(code) {
-  return isSystemLocation(code) || isVehicleLocation(code);
+  return isSystemLocation(code) || isVehicleLocation(code) || isCustomerLocation(code);
 }
 
-/** تسمية الموقع للعرض: موقع نظام، أو مركبة، أو كود مستودع حقيقي، أو الخارج. */
+/** تسمية الموقع للعرض: موقع نظام، أو مركبة، أو عميل، أو كود مستودع حقيقي، أو الخارج. */
 export function locationLabel(code) {
   if (code === null || code === undefined || code === '') return EXTERNAL_LABEL;
   const sys = SYSTEM_LOCATIONS[String(code).toUpperCase()];
   if (sys) return `${sys.emoji} ${sys.labelAr}`;
   if (isVehicleLocation(code)) return `🚚 مركبة ${vehiclePlateFromCode(code)}`;
+  if (isCustomerLocation(code)) return `🏪 لدى العميل ${customerCodeFromLocation(code)}`;
   return String(code);
 }
 

@@ -1,0 +1,14 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import VanOperations from '../../components/brandzo-erp/vanSales/VanOperations.jsx';
+---
+
+<DashboardLayout title="المستودع المتنقّل" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">المستودع المتنقّل</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      مخزون كلّ مركبةٍ بدفعاته وصلاحياته، وتسوية نهاية الرحلة التي تُقفل العهدة.
+    </p>
+    <VanOperations client:load />
+  </div>
+</DashboardLayout>

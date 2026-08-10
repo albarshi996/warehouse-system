@@ -47,6 +47,16 @@ export const DOC_ODOO_MAP = {
   TRN: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   TRC: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
 
+  /* ── البيع من المركبة (المستودع المتنقّل) ──
+     أودو يمثّل حركة المركبة بمناقلات مخزون (`stock.picking`) بين موقع المستودع
+     وموقع المركبة، والبيع الميدانيّ بأمر بيعٍ يُفوتَر فورًا. أمّا التسوية فلا
+     مقابل أصليّ لها — فهي محضر إقفالٍ لا حركة، ولذلك نموذجٌ مخصّص. */
+  VLD: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  VSI: { model: 'sale.order', confirmState: 'sale', confirmLabel: 'مؤكّد', verb: 'اعتمد' },
+  CRN: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  VRT: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  VSR: { model: 'x_van.settlement', confirmState: 'done', confirmLabel: 'مُقفَلة', verb: 'اعتمد التسوية' },
+
   /* ── المرتجعات والتالف والجرد ── */
   RET: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   DMG: { model: 'stock.scrap', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },

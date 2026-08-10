@@ -668,8 +668,30 @@ test('مخطّطات F4 الخمسة مسجّلة — والمجموعة صار�
     assert.equal(s.signatures.length, 3);
     assert.ok(typeof s.warnings === 'function');
   }
-  assert.equal(readyTypes().length, 27, 'سبعة وعشرون نموذجًا بعد إضافة CTR (مناولة الحاوية) للمحور الثاني');
-  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 27);
+  assert.equal(readyTypes().length, 32, 'اثنان وثلاثون نموذجًا بعد دورة البيع من المركبة (VLD·VSI·CRN·VRT·VSR)');
+  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 32);
+});
+
+test('دورة البيع من المركبة: المخطّطات الخمسة مسجّلة وكاملة البنية', () => {
+  for (const t of ['VLD', 'VSI', 'CRN', 'VRT', 'VSR']) {
+    const s = getSchema(t);
+    assert.ok(s, `مخطّط ${t} غير مسجّل`);
+    assert.equal(s.type, t);
+    assert.ok(s.roles.create.length && s.roles.approve.length && s.roles.complete.length);
+    assert.ok(s.sections.some((sec) => sec.kind === 'table'), `${t} بلا جدول بنود`);
+    assert.ok(s.signatures.length >= 2, `${t} بأقلّ من توقيعَين`);
+    assert.ok(typeof s.warnings === 'function', `${t} بلا دالّة تحذيرات`);
+  }
+});
+
+test('البيع من المركبة: المندوب يعتمد فاتورته ولا يعتمد مرتجعه', () => {
+  // الفاتورة يعتمدها المندوب لأنّ منعها يوقف البيع؛ والمرتجع لا يوقف منعُه شيئًا،
+  // وهو الباب الذي يُخفى منه العجز — فيخرج اعتماده من يده.
+  assert.ok(getSchema('VSI').roles.approve.includes('sales_rep'));
+  assert.ok(!getSchema('CRN').roles.approve.includes('sales_rep'));
+  assert.ok(!getSchema('VSR').roles.approve.includes('sales_rep'), 'لا يعتمد المندوب تسوية نفسه');
+  // إرجاع المتبقّي يُنجزه المستودع: من يُقرّ الاستلام غير من يُقرّ التسليم.
+  assert.deepEqual(getSchema('VRT').roles.complete, ['storekeeper', 'warehouse_manager']);
 });
 
 test('🔒 اعتماد سند التسوية للمالية والمدير — لا لمن أدخله', () => {

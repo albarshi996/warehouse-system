@@ -33,6 +33,12 @@ import tr from './tr.js';
 import trn from './trn.js';
 import trc from './trc.js';
 import ctr from './ctr.js';
+// دورة البيع من المركبة (المستودع المتنقّل): تحميل ← بيع ← مرتجع ← إرجاع ← تسوية
+import vld from './vld.js';
+import vsi from './vsi.js';
+import crn from './crn.js';
+import vrt from './vrt.js';
+import vsr from './vsr.js';
 // دورة المشتريات الداخلية (طلبات الإدارات من المالية): طلب ← عروض ← أمر ← صرف ← تسليم
 import ipr from './ipr.js';
 import rfq from './rfq.js';
@@ -58,6 +64,11 @@ const SCHEMAS = {
   TRN: trn,
   TRC: trc,
   CTR: ctr,
+  VLD: vld,
+  VSI: vsi,
+  CRN: crn,
+  VRT: vrt,
+  VSR: vsr,
   RET: ret,
   SRN: srn,
   DMG: dmg,
@@ -92,6 +103,12 @@ export const GOVERNED_FORMS = [
   { type: 'TRN', stage: 7, titleAr: 'مستند النقل', file: '', phase: 'F7' },
   { type: 'TRC', stage: 8, titleAr: 'استلام النقل', file: '', phase: 'F7' },
   { type: 'CTR', stage: 4, titleAr: 'مستند مناولة حاوية', file: '', phase: 'SI' },
+  // البيع من المركبة (VS): المستودع المتنقّل — تحميلٌ فبيعٌ فمرتجعٌ فإرجاعٌ فتسوية
+  { type: 'VLD', stage: 6, titleAr: 'أمر تحميل المركبة', file: '', phase: 'VS' },
+  { type: 'VSI', stage: 7, titleAr: 'فاتورة بيع من المركبة', file: '', phase: 'VS' },
+  { type: 'CRN', stage: 8, titleAr: 'مرتجع ميدانيّ من العميل', file: '', phase: 'VS' },
+  { type: 'VRT', stage: 9, titleAr: 'إرجاع متبقّي المركبة', file: '', phase: 'VS' },
+  { type: 'VSR', stage: 10, titleAr: 'تسوية نهاية الرحلة', file: '', phase: 'VS' },
   { type: 'RET', stage: 8, titleAr: 'إشعار الإرجاع', file: 'form_ReturnNote.html', phase: 'F4' },
   { type: 'SRN', stage: 4, titleAr: 'إشعار رفض الاستلام', file: '', phase: 'SI' },
   { type: 'DMG', stage: 8, titleAr: 'سند التالف', file: 'form_Damaged Goods Report.html', phase: 'F4' },

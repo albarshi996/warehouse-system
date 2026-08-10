@@ -20,6 +20,11 @@ export const ROLES = {
   fleet:             { id: 'fleet',             label: 'الحركة',           emoji: '🚚', color: '#f97316' },
   treasury:          { id: 'treasury',          label: 'أمين الخزينة',     emoji: '🏦', color: '#7c3aed' },
   labor_supervisor:  { id: 'labor_supervisor',  label: 'مشرف المناولة',    emoji: '📋', color: '#0d9488' },
+  // ═══ الميدان (2026-08-09) ═══
+  // المندوب ليس «أمين مخزنٍ بلا مبنى»: يبيع ويحصّل ويُرجع، وعهدته مركبةٌ تتحرّك.
+  // ومشرفه هو من يعتمد فروقات التسوية — فلا يعتمد المندوب فرق نفسه.
+  sales_rep:         { id: 'sales_rep',         label: 'مندوب المبيعات',   emoji: '🛵', color: '#0891b2' },
+  sales_supervisor:  { id: 'sales_supervisor',  label: 'مشرف المبيعات',    emoji: '🗺️', color: '#4f46e5' },
 };
 
 /** الدور الافتراضي الآمن لمن لا ملف دور له بعد (أقل صلاحية). */

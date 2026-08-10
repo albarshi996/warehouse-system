@@ -9,11 +9,11 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 72,
-    "serviceDomains": 29,
-    "serviceFiles": 185,
+    "modules": 74,
+    "serviceDomains": 30,
+    "serviceFiles": 193,
     "collections": 49,
-    "roles": 15,
+    "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
     "infraNodes": 6,
@@ -462,6 +462,14 @@
       ]
     },
     {
+      "name": "restaurants",
+      "route": "/dashboard/restaurants",
+      "title": "خطة سلاسل الإمداد لقطاع المطاعم والمقاهي",
+      "summary": "",
+      "file": "src/pages/dashboard/executive-review/restaurants.astro",
+      "usesServices": []
+    },
+    {
       "name": "retail-hub",
       "route": "/dashboard/retail-hub",
       "title": "خريطة التجزئة — بنغازي 2026",
@@ -606,6 +614,14 @@
       "title": "إدارة المستخدمين",
       "summary": "إدارة المستخدمين — للمدير العام فقط. إسناد الأدوار عبر Firestore.",
       "file": "src/pages/dashboard/users.astro",
+      "usesServices": []
+    },
+    {
+      "name": "van-operations",
+      "route": "/dashboard/van-operations",
+      "title": "المستودع المتنقّل",
+      "summary": "",
+      "file": "src/pages/dashboard/van-operations.astro",
       "usesServices": []
     },
     {
@@ -849,6 +865,7 @@
         "control.js",
         "control.test.js",
         "controlService.js",
+        "crn.js",
         "ctr.js",
         "dlv.js",
         "dmg.js",
@@ -884,9 +901,13 @@
         "surgical.test.js",
         "tr.js",
         "trc.js",
-        "trn.js"
+        "trn.js",
+        "vld.js",
+        "vrt.js",
+        "vsi.js",
+        "vsr.js"
       ],
-      "fileCount": 47,
+      "fileCount": 52,
       "testCount": 8,
       "exports": [
         "ACCEPTED_ATTACHMENT_TYPES",
@@ -946,6 +967,7 @@
         "creditNoteVerdict",
         "creditTotal",
         "creditWarnings",
+        "crnWarnings",
         "csvFileName",
         "ctrTotalQty",
         "cycleWarnings",
@@ -1058,7 +1080,11 @@
         "transitionDocument",
         "validateEncoded",
         "validateSource",
-        "varianceValue"
+        "varianceValue",
+        "vldWarnings",
+        "vrtWarnings",
+        "vsiWarnings",
+        "vsrWarnings"
       ],
       "collections": [
         "documents"
@@ -1333,6 +1359,8 @@
       "fileCount": 15,
       "testCount": 5,
       "exports": [
+        "ACCOUNT_LOCATIONS",
+        "CUSTOMER_PREFIX",
         "EXTERNAL",
         "EXTERNAL_LABEL",
         "ORDER_STATUS",
@@ -1350,6 +1378,7 @@
         "allocateDocument",
         "allocateFefo",
         "applyReservation",
+        "atCustomerBalances",
         "availableQty",
         "balanceDeltas",
         "buildLedgerCard",
@@ -1357,8 +1386,13 @@
         "canPost",
         "classifyOrder",
         "computeKpis",
+        "customerCodeFromLocation",
+        "customerLocationCode",
         "fillRate",
         "findNegativeBalance",
+        "isAccountLocation",
+        "isCustomerLocation",
+        "isFullyReleased",
         "isPosted",
         "isReservedCode",
         "isSystemLocation",
@@ -1380,11 +1414,14 @@
         "outOfStockItems",
         "pendingOrders",
         "pendingShipments",
+        "planFullRelease",
+        "planItemRelease",
         "postDocument",
         "postingRuleFor",
         "postingTypes",
         "previewImpact",
         "release",
+        "releaseForPick",
         "releaseReservation",
         "reservationDeltas",
         "reserve",
@@ -1925,6 +1962,29 @@
       "collections": []
     },
     {
+      "domain": "vanSales",
+      "dir": "src/services/vanSales",
+      "files": [
+        "settlement.js",
+        "settlement.test.js",
+        "vanSalesService.js"
+      ],
+      "fileCount": 3,
+      "testCount": 1,
+      "exports": [
+        "VAN_FLOWS",
+        "classifyVanMove",
+        "listenVanMoves",
+        "settlementKey",
+        "settlementVerdict",
+        "vanRemaining",
+        "vanSettlement"
+      ],
+      "collections": [
+        "stock_moves"
+      ]
+    },
+    {
       "domain": "vehicles",
       "dir": "src/services/vehicles",
       "files": [
@@ -1995,6 +2055,7 @@
       "isProcurementActor",
       "isSideEffectStamp",
       "isStockActor",
+      "isVanSalesWriter",
       "myRole",
       "signedIn"
     ],
@@ -2017,6 +2078,7 @@
       "isProcurementActor",
       "isSideEffectStamp",
       "isStockActor",
+      "isVanSalesWriter",
       "movingTo",
       "myRole",
       "numberWriteOnce",
@@ -2218,9 +2280,10 @@
             "actions": [
               "write"
             ],
-            "condition": "isStockActor() && (!('qty' in request.resource.data) || (request.resource.data.qty is number && request.resource.data.qty >= 0))",
+            "condition": "(isStockActor() || isVanSalesWriter()) && (!('qty' in request.resource.data) || (request.resource.data.qty is number && request.resource.data.qty >= 0))",
             "roles": [
-              "isStockActor"
+              "isStockActor",
+              "isVanSalesWriter"
             ]
           },
           {
@@ -2473,11 +2536,12 @@
             "actions": [
               "create"
             ],
-            "condition": "(isStockActor() || isProcurementActor() || isLaborWriter()) && request.resource.data.createdByUid == request.auth.uid && request.resource.data.state == 'draft' ",
+            "condition": "(isStockActor() || isProcurementActor() || isLaborWriter() || isVanSalesWriter()) && request.resource.data.createdByUid == request.auth.uid && request.resource.",
             "roles": [
               "isStockActor",
               "isProcurementActor",
-              "isLaborWriter"
+              "isLaborWriter",
+              "isVanSalesWriter"
             ]
           },
           {
@@ -3131,18 +3195,20 @@
             "actions": [
               "create"
             ],
-            "condition": "isStockActor() && request.resource.data.postedByUid == request.auth.uid",
+            "condition": "(isStockActor() || isVanSalesWriter()) && request.resource.data.postedByUid == request.auth.uid",
             "roles": [
-              "isStockActor"
+              "isStockActor",
+              "isVanSalesWriter"
             ]
           },
           {
             "actions": [
               "update"
             ],
-            "condition": "isStockActor() && request.resource.data.docId == resource.data.docId && request.resource.data.lineIndex == resource.data.lineIndex && request.resource.data.qty ",
+            "condition": "(isStockActor() || isVanSalesWriter()) && request.resource.data.docId == resource.data.docId && request.resource.data.lineIndex == resource.data.lineIndex && re",
             "roles": [
-              "isStockActor"
+              "isStockActor",
+              "isVanSalesWriter"
             ]
           },
           {

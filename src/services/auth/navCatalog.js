@@ -92,6 +92,18 @@ export const NAV_GROUPS = [
     ],
   },
   {
+    // مجموعة الميدان — مستقلّة عن «سلاسل الإمداد والحركة» عمدًا: المندوب لا شأن
+    // له بمركز الصيانة ولا بعمالة الشحن ولا بجرد المركبات. ولو أُدرج بندُه في
+    // مجموعتها لرآها كلَّها، لأنّ البنود بلا `roles` مرئيّةٌ لكلّ من يرى مجموعتها.
+    // وهنا موضع ما سيأتي: خطّة الزيارات · الخريطة الحيّة · المستهدفات.
+    key: 'field',
+    group: 'الميدان والبيع من المركبة',
+    emoji: '🛵', icon: 'truck',
+    items: [
+      { path: '/dashboard/van-operations', label: 'المستودع المتنقّل', icon: 'truck', roles: ['admin', 'warehouse_manager', 'sales_rep', 'sales_supervisor'] },
+    ],
+  },
+  {
     key: 'odoo',
     group: 'دورات أودو والمحاكاة',
     emoji: '🔄', icon: 'graduationCap',

@@ -15,6 +15,7 @@ export const NAV_GROUP_LABELS = {
   daily: 'العمليات اليومية',
   warehouses: 'المستودعات والجرد',
   fleet: 'إدارة الحركة',
+  field: 'الميدان والبيع من المركبة',
   odoo: 'دورات أودو والمحاكاة',
   reports: 'مركز التقارير',
   archive: 'الأرشيف والمرجعية',
@@ -27,8 +28,8 @@ export const NAV_GROUP_LABELS = {
  * الأدمن (المدير العام) يرى كل شيء دائمًا ولا يحتاج إدراجًا.
  */
 export const ROLE_NAV = {
-  admin: ['daily', 'warehouses', 'fleet', 'odoo', 'reports', 'archive', 'dept', 'procurement'],
-  warehouse_manager: ['daily', 'warehouses', 'fleet', 'odoo', 'reports', 'archive', 'dept', 'procurement'],
+  admin: ['daily', 'warehouses', 'fleet', 'field', 'odoo', 'reports', 'archive', 'dept', 'procurement'],
+  warehouse_manager: ['daily', 'warehouses', 'fleet', 'field', 'odoo', 'reports', 'archive', 'dept', 'procurement'],
   storekeeper: ['daily', 'warehouses', 'odoo'],
   qc_inspector: ['daily', 'odoo', 'reports'],
   gate_officer: ['daily', 'odoo'],
@@ -47,6 +48,13 @@ export const ROLE_NAV = {
   treasury: ['procurement'],
   // مشرف المناولة: لوحة عمالة الشحن/التفريغ ضمن إدارة الحركة.
   labor_supervisor: ['fleet'],
+  // مندوب المبيعات: مجموعة الميدان وحدها. **لا `fleet`** — وإلّا رأى مركز
+  // الصيانة وعمالة الشحن وجرد المركبات، ولا شأن له بها. مجموعةٌ مستقلّة أنظف
+  // من تقييد كلّ بندٍ في «إدارة الحركة» على حدة، وهي موضع ما سيأتي من الميدان
+  // (خطّة الزيارات · الخريطة · المستهدفات).
+  sales_rep: ['field'],
+  // مشرف المبيعات: الميدان + التقارير، فهو من يعتمد فروقات التسوية ويقرأ الأداء.
+  sales_supervisor: ['field', 'reports'],
 };
 
 /** هل يرى هذا الدور مجموعة القائمة؟ */

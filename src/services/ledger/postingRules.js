@@ -81,6 +81,9 @@ export function isVehicleToken(slot) {
  *   `CC`      — عَدٌّ لا يُغيّر شيئًا؛ الذي يُغيّر هو `ADJ` المشتقّ منه.
  *   `CN`      — أثرٌ مالي بحت على ذمّة العميل، لا على الرفّ.
  *   `SRN`     — إشعار رفضٍ توثيقيّ؛ فحص الجودة نقل المرفوض للحجر أصلًا (لا قيد ثانٍ).
+ *   `VSR`     — تسوية الرحلة **تقرأ** ما قيّدته مستندات الرحلة ولا تقيّد شيئًا.
+ *               ولو قيّدت لضاعفت الأثر: البضاعة تحرّكت مرّةً واحدة لا مرّتين.
+ *               هي محضر إقفالٍ يُوثّق الميزان ويحمل اعتماد المشرف على فرقه.
  */
 export const POSTING_RULES = {
   GRN: {
@@ -194,6 +197,53 @@ export const POSTING_RULES = {
     costField: 'unitCost',
     reason: 'transfer-in',
     labelAr: 'استلام نقل (وصول)',
+  },
+  // ═══ البيع من المركبة — المستودع المتنقّل (2026-08-09) ═══
+  // الفرق بين هذه الدورة ودورة الصادر: هناك تُحمَّل المركبة بطلبِ عميلٍ معلوم
+  // (`SO → PICK → DN → POD`)، وهنا تُحمَّل **بمخزونٍ للبيع** لا يعرف مشتريه بعد.
+  // فالمندوب يخرج ببضاعةٍ في عهدته، ويقرّر السوقُ أين تذهب. ولذلك يلزم:
+  //   `VLD` — تحميلٌ مباشر من الرفّ إلى المركبة، بلا ساحة تجهيزٍ ولا أمر بيع.
+  //   `VSI` — بيعٌ يقع في الميدان: الفاتورة والخصم يقعان في اللحظة نفسها.
+  //   `CRN` — مرتجعٌ يعود **إلى المركبة** لا إلى المستودع؛ فالمندوب ما يزال في
+  //           الطريق، والبضاعة في عهدته حتى يُرجعها مساءً.
+  //   `VRT` — إرجاع المتبقّي: هو الذي يُصفّر موقع المركبة فتُقفل الرحلة.
+  // ولولا `VRT` لبقي رصيدٌ على مركبةٍ أُقفلت رحلتها — بضاعةٌ بلا عهدة، وهي
+  // بعينها كيف يُولد العجز الذي لا صاحب له.
+  VLD: {
+    from: WAREHOUSE,
+    to: VEHICLE,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitCost',
+    reason: 'van-load',
+    labelAr: 'تحميل المركبة',
+  },
+  VSI: {
+    from: VEHICLE,
+    to: EXTERNAL,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitPrice',
+    reason: 'van-sale',
+    labelAr: 'بيع من المركبة',
+  },
+  CRN: {
+    from: EXTERNAL,
+    to: VEHICLE,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitPrice',
+    reason: 'van-return-in',
+    labelAr: 'مرتجع ميدانيّ',
+  },
+  VRT: {
+    from: VEHICLE,
+    to: WAREHOUSE,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitCost',
+    reason: 'van-return-out',
+    labelAr: 'إرجاع المتبقّي للمستودع',
   },
 };
 

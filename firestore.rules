@@ -92,6 +92,17 @@ service cloud.firestore {
     // الطلب) و**أمين الخزينة** (يصرف) — وهما خارج isStockActor فلا يحرّكان
     // مخزونًا. البقيّة (المشتريات·المالي·المدير) مشمولون أصلًا، وذكرهم هنا
     // يوضّح النطاق. مستندات هذه السلسلة لا تمسّ الأرصدة فلا أثر مخزنيّ لها.
+    // فاعلو البيع من المركبة. **لم يُضافوا إلى `isStockActor`** عمدًا: ذاك
+    // يفتح الجرد وسجلّ المسح وطابور الأصناف المجهولة، والمندوب لا شأن له بها.
+    // نطاقه أضيق: مستندات مركبته وأثرها على الأرصدة وحدها. ولذلك يُذكر صراحةً
+    // حيث يلزم — والصراحة هنا أرخص من صلاحيةٍ زائدة لا يُنتبَه لها.
+    function isVanSalesWriter() {
+      return isBootstrapAdmin() ||
+             (signedIn() && hasProfile() && isActive() && myRole() in [
+               'admin', 'warehouse_manager', 'sales_rep', 'sales_supervisor'
+             ]);
+    }
+
     function isProcurementActor() {
       return isBootstrapAdmin() ||
              (signedIn() && hasProfile() && isActive() && myRole() in [
@@ -105,7 +116,7 @@ service cloud.firestore {
     // أوامر شغل·فحوصات) أو فاعل المشتريات الداخلية (طلب·صرف) أو المدير. المشاهد
     // وحده خارجها فلا يحرق أرقامًا (كان أي مصادَق يحرقها — خرق أُغلق بالمحور ٤).
     function canReserveNumber() {
-      return isStockActor() || isFleetWriter() || isProcurementActor();
+      return isStockActor() || isFleetWriter() || isProcurementActor() || isVanSalesWriter();
     }
 
     // ── المستخدمون والأدوار ──────────────────────────────────────
@@ -180,6 +191,15 @@ service cloud.firestore {
            : docType == 'ADJ'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'CN'      ? ['finance_manager', 'warehouse_manager']
            : docType == 'CTR'     ? ['warehouse_manager', 'labor_supervisor']
+           // البيع من المركبة: المندوب يعتمد فاتورته وحدها — لأنّ منعها يوقف
+           // البيع في وجه تاجرٍ واقف، فيُسجَّل خارج النظام. أمّا المرتجع فيخرج
+           // اعتماده من يده (هو الباب الذي يُخفى منه العجز)، وكذلك التسوية
+           // فلا يعتمد أحدٌ فرق نفسه. والرقابة لاحقةٌ مركّبة لا سابقة.
+           : docType == 'VLD'     ? ['warehouse_manager', 'sales_supervisor']
+           : docType == 'VSI'     ? ['sales_rep', 'sales_supervisor']
+           : docType == 'CRN'     ? ['sales_supervisor', 'warehouse_manager', 'return_manager']
+           : docType == 'VRT'     ? ['warehouse_manager', 'sales_supervisor']
+           : docType == 'VSR'     ? ['sales_supervisor', 'warehouse_manager']
            // المشتريات الداخلية: المدير المالي يعتمد الطلب والترسية والأمر
            // والصرف، والمستفيد (مستخدم الإدارة) يُقرّ استلام التسليم.
            : docType == 'IPR'     ? ['finance_manager', 'warehouse_manager']
@@ -212,6 +232,14 @@ service cloud.firestore {
            : docType == 'ADJ'     ? ['warehouse_manager', 'finance_manager']
            : docType == 'CN'      ? ['finance_manager', 'warehouse_manager']
            : docType == 'CTR'     ? ['labor_supervisor', 'warehouse_manager']
+           // البيع من المركبة: إرجاع المتبقّي يُنجزه **المستودع** لا المندوب —
+           // من يُقرّ الاستلام غير من يُقرّ التسليم، فالفرق بينهما يظهر رقمًا
+           // في التسوية بدل أن يُبتلع في توقيعٍ واحد.
+           : docType == 'VLD'     ? ['storekeeper', 'warehouse_manager']
+           : docType == 'VSI'     ? ['sales_rep', 'sales_supervisor']
+           : docType == 'CRN'     ? ['sales_rep', 'sales_supervisor']
+           : docType == 'VRT'     ? ['storekeeper', 'warehouse_manager']
+           : docType == 'VSR'     ? ['sales_supervisor', 'warehouse_manager']
            // المشتريات الداخلية: المشتريات تُنهي الطلب والكشف والأمر والتسليم،
            // وأمين الخزينة يُنهي سند الصرف (تنفيذ الصرف الفعليّ).
            : docType == 'IPR'     ? ['purchase_officer', 'warehouse_manager']
@@ -254,7 +282,7 @@ service cloud.firestore {
       // يولد مسودّةً باسم صاحبه وبلا رقم — لا أحد يُنشئ مستندًا معتمَدًا ابتداءً.
       // فاعل مخزنيّ أو فاعل مشتريات داخلية فقط (كان أي مصادَق يُنشئ مسودّات —
       // بابُ إغراق أُغلق بالمحور ٤؛ ومستخدم الإدارة/الخزينة أُضيفا لدورة المشتريات).
-      allow create: if (isStockActor() || isProcurementActor() || isLaborWriter())
+      allow create: if (isStockActor() || isProcurementActor() || isLaborWriter() || isVanSalesWriter())
                     && request.resource.data.createdByUid == request.auth.uid
                     && request.resource.data.state == 'draft'
                     && request.resource.data.number == null;
@@ -439,7 +467,7 @@ service cloud.firestore {
       // كميّةٍ سالبة أو غير رقميّة مباشرةً. ⚠️ التحقّق الكامل (الرصيد = مجموع
       // stock_moves) يستحيل في القواعد (لا تجميع) ويحتاج مسارًا موثوقًا
       // (Cloud Function على Blaze) — موثّق في خطة التطوير، البند ٢.
-      allow write: if isStockActor()
+      allow write: if (isStockActor() || isVanSalesWriter())
                    && (!('qty' in request.resource.data)
                        || (request.resource.data.qty is number
                            && request.resource.data.qty >= 0));
@@ -453,11 +481,11 @@ service cloud.firestore {
     // تُضاعف؛ ومنع التعديل يمنع العبث بتاريخٍ صار مرجعًا.
     match /stock_moves/{moveId} {
       allow read: if signedIn();
-      allow create: if isStockActor()
+      allow create: if (isStockActor() || isVanSalesWriter())
                     && request.resource.data.postedByUid == request.auth.uid;
       // السماح بالكتابة على نفس المعرّف الحتمي (إعادة محاولة القيد الذرّي)
       // شرط بقاء الهوية والمستند والكمية كما هي — لا تحوير لحركةٍ قُيّدت.
-      allow update: if isStockActor()
+      allow update: if (isStockActor() || isVanSalesWriter())
                     && request.resource.data.docId == resource.data.docId
                     && request.resource.data.lineIndex == resource.data.lineIndex
                     && request.resource.data.qty == resource.data.qty
