@@ -164,7 +164,7 @@
     {
       "id": "و-١",
       "milestone": "م-٠",
-      "title": "نشر firestore.rules (٩١٧ سطرًا) من Firebase Console",
+      "title": "نشر firestore.rules من Firebase Console (٩١٧ سطرًا + قاعدة settings الجديدة)",
       "owner": "المالك",
       "state": "todo",
       "gaps": [],
@@ -271,7 +271,7 @@
       "milestone": "م-١",
       "title": "مستند الإعدادات settings/current وخدمة قراءته",
       "owner": "Claude",
-      "state": "doing",
+      "state": "done",
       "gaps": [],
       "dependsOn": [],
       "estimate": "نصف جلسة",
@@ -286,8 +286,12 @@
       "guardTest": "src/services/settings/settingsModel.test.js",
       "notes": "سببُ وضعه في م‑١: م‑٢ يقرأ dating.backdateDays، وم‑٣ يقرأ items وpricing، وم‑٤ يقرأ credit. بناؤه متأخّرًا يعني حرّاسًا بقيم مخبوزة تُعاد كتابتها ثلاث مرّات — وهذا بالضبط ما يخالف المبدأ ٨.",
       "branch": "claude/phase-one-repairs-plan-07f596",
-      "progress": "بدأت. القرار: تُنفَّذ الآن قبل م‑٢/م‑٣/م‑٤ لأنّ الثلاثة تقرأ منها (المالك فوّض القرار).",
-      "nextStep": "ابنِ settingsModel.js (منطق خالص: DEFAULTS + تطبيع + تحقّق من الشكل)، ثمّ settingsService.js (قراءة/كتابة/اشتراك حيّ على settings/current)، ثمّ اختبار حارس، ثمّ قاعدة firestore.rules (قراءة للمصادَق · كتابة للمدير)، ثمّ شاشة الإعدادات موصولةً بـnavCatalog وpageAccess."
+      "progress": "أُنجزت. المنطق الخالص + الخدمة + القاعدة + الشاشة بمعاينة الأثر.",
+      "evidence": {
+        "commit": "a5fd42a",
+        "note": "٩٣٤ اختبارًا (+٢٣) · تدقيق نظيف (٧١ صفحة · ٥٠ قاعدة) · بناء ٨٩ صفحة · لينت نظيف · الجزيرة تُصيَّر والحارس يوجّه غير المصادَق."
+      },
+      "pendingOwner": "قاعدة settings/{docId} الجديدة تحتاج نشرًا من المالك قبل أن تعمل الشاشة حيًّا (تُضاف إلى و‑١)."
     },
     {
       "id": "م١-أ",
@@ -774,6 +778,11 @@
       "date": "2026-08-10",
       "by": "Claude",
       "entry": "م١-ب منجزة (32f0b37): حدّ المال بأنماطٍ لا بقائمة، وحارسٌ في نقطة الاختناق pushOnce. ثلاثة مخطِّطات كانت ملوَّثة لا اثنان — docCrosswalk كان يدفع price_unit في المسار العامّ. ٩١١ اختبارًا."
+    },
+    {
+      "date": "2026-08-10",
+      "by": "Claude",
+      "entry": "م١-ج منجزة (a5fd42a): settings/current بمنطقٍ خالص وأربع قارئاتٍ يسألها الحارس سؤالًا لا يقرأ حقلًا. الكتابة للأدمن وحده لأنّ مدير المستودع نفسه overrideRole في قرارين. الشاشة تعرض أثر المسوّدة قبل الحفظ. ٩٣٤ اختبارًا."
     }
   ]
 }
