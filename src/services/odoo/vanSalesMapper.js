@@ -73,7 +73,7 @@ export function pickingRouteFor(type, h) {
   }
 }
 
-/** بند مستندٍ ← سطر `stock.move`. */
+/** بند مستندٍ ← سطر `stock.move`. كمّيّةٌ ودفعةٌ وصلاحية — بلا كلفة (حدّ المال). */
 export function lineToStockMove(line = {}) {
   return {
     product_code: up(line.sku),
@@ -82,28 +82,23 @@ export function lineToStockMove(line = {}) {
     product_uom: str(line.uom),
     x_batch: str(line.batch),
     x_expiry: str(line.expiry),
-    price_unit: num(line.unitCost ?? line.unitPrice),
   };
 }
 
-/** بند مستندٍ ← سطر `sale.order.line`. */
+/**
+ * بند مستندٍ ← سطر `sale.order.line`.
+ * بلا `price_unit` ولا `discount` ولا `price_subtotal` — أودو يسعّر من قوائمه
+ * ويولّد القيد. و`x_is_free` يبقى: هو **واقعةٌ تشغيليّة** (بندُ عرضٍ مجّانيّ
+ * يُحرّك مخزونًا) لا مبلغ، وأودو يحتاجها ليفرّق بين البيع والهديّة.
+ */
 export function lineToSaleLine(line = {}) {
-  const qty = num(line.qty);
-  const price = num(line.unitPrice);
-  const discount = num(line.discount);
-  const gross = qty * price;
   return {
     product_code: up(line.sku),
     name: str(line.description || line.sku),
-    product_uom_qty: qty,
-    price_unit: price,
-    // أودو يقرأ الخصم نسبةً لا مبلغًا — فنحوّله، ونصفّره حين لا قيمة للبند
-    // (المجّانيّ سعره صفر أصلًا، ونسبة خصمٍ عليه قسمةٌ على صفر).
-    discount: gross > 0 ? money((discount / gross) * 100) : 0,
+    product_uom_qty: num(line.qty),
     x_promo_code: str(line.promoCode),
     x_is_free: Number(line.unitPrice) === 0,
     x_batch: str(line.batch),
-    price_subtotal: money(Math.max(0, gross - discount)),
   };
 }
 
@@ -121,15 +116,23 @@ export function vanDocToSaleOrder(doc = {}) {
     x_vehicle: up(h.vehiclePlate),
     x_visit_ref: str(h.visitRef),
     x_trip_ref: str(h.tripRef),
+    // طريقة السداد واقعةٌ تشغيليّة (نقدًا أم أجلًا) لا مبلغًا — فتمرّ.
     x_payment_mode: str(h.paymentMode),
-    x_amount_collected: num(h.amountCollected),
     // موقع السحب: المركبة للبيع المباشر، ورفّ العميل لتحقّق بيع الأمانة.
     x_source_location: doc.type === 'VCS' ? customerLocationName(h.customerCode) : vanLocationName(h.vehiclePlate),
     currency_id: 'LYD',
-    amount_total: money(lines.reduce((s, l) => s + Math.max(0, num(l.qty) * num(l.unitPrice) - num(l.discount)), 0)),
     state: 'draft',
     order_line: lines.map(lineToSaleLine),
   };
+}
+
+/**
+ * إجماليّ مستند البيع **للعرض المحلّيّ وحده** (بطاقة الجسر ومرآتنا).
+ * كان يُحسب داخل قِيَم الدفع باسم `amount_total`؛ فُصل كي لا يغادر.
+ */
+export function vanDocTotal(doc = {}) {
+  const lines = (doc?.lines || []).filter((l) => num(l?.qty) > 0);
+  return money(lines.reduce((s, l) => s + Math.max(0, num(l.qty) * num(l.unitPrice) - num(l.discount)), 0));
 }
 
 /** مستند حركةٍ ← قِيَم `stock.picking`. */
@@ -154,7 +157,16 @@ export function vanDocToPicking(doc = {}) {
   };
 }
 
-/** محضر التسوية ← نموذج studio مخصّص (لا يُحرّك مخزونًا). */
+/**
+ * محضر التسوية ← نموذج studio مخصّص (لا يُحرّك مخزونًا).
+ *
+ * ⚠️ **أثرٌ مقصود لحدّ المال:** كان يدفع أربعة حقول نقدٍ (`x_total_sales`
+ * و`x_cash_sales` و`x_cash_deposited` و`x_cash_variance`). أُخرجت، فصار المحضر
+ * في أودو **واقعةَ إقفالٍ تشغيليّة**: أيّ رحلةٍ أُقفلت، وبأيّ فرق عدٍّ، وكم
+ * زيارةً من كم. أمّا الفرق النقديّ فيبقى عندنا حتّى تُبنى الذمم (م‑٤) وسند
+ * التحصيل الميدانيّ (م‑٥)، ويُقرّر اتّجاهه من لوحة التكامل (م٧-ب).
+ * وللعرض المحلّيّ: `settlementCashVariance`.
+ */
 export function settlementToOdoo(doc = {}) {
   const h = header(doc);
   const lines = doc.lines || [];
@@ -164,15 +176,18 @@ export function settlementToOdoo(doc = {}) {
     x_vehicle: up(h.vehiclePlate),
     x_rep: str(h.repName),
     x_settlement_date: str(h.settlementDate),
-    x_total_sales: num(h.totalSales),
-    x_cash_sales: num(h.cashSales),
-    x_cash_deposited: num(h.cashDeposited),
-    x_cash_variance: money(num(h.cashSales) - num(h.cashDeposited)),
+    // فرق العدّ كمّيّةٌ لا مبلغ — وهو جوهر الواقعة التشغيليّة، فيبقى.
     x_stock_variance: money(lines.reduce((s, l) => s + (num(l.counted) - num(l.ledgerQty)), 0)),
     x_visits_done: num(h.visitsDone),
     x_visits_planned: num(h.visitsPlanned),
     state: 'draft',
   };
+}
+
+/** الفرق النقديّ في التسوية **للعرض المحلّيّ وحده** — لا يُرسَل. */
+export function settlementCashVariance(doc = {}) {
+  const h = header(doc);
+  return money(num(h.cashSales) - num(h.cashDeposited));
 }
 
 /** الأنواع التي يغطّيها هذا المخطِّط. */
@@ -195,10 +210,14 @@ export function mapVanDocument(doc = {}) {
   return { model: 'stock.picking', values: vanDocToPicking(doc) };
 }
 
-/** ملخّصٌ للعرض في بطاقة الجسر. */
+/**
+ * ملخّصٌ للعرض في بطاقة الجسر.
+ * `amountTotal` يُحسب من مستندنا لا من قِيَم الدفع — فقِيَم الدفع لم تعد تحمل مبلغًا.
+ */
 export function vanDocSummary(doc = {}) {
   const h = header(doc);
   const mapped = mapVanDocument(doc);
+  const sells = doc?.type === 'VSI' || doc?.type === 'VCS';
   return {
     type: doc?.type || '',
     number: str(doc?.number),
@@ -206,6 +225,6 @@ export function vanDocSummary(doc = {}) {
     customer: str(h.customer || h.customerCode),
     vehicle: up(h.vehiclePlate),
     lineCount: (doc?.lines || []).filter((l) => num(l?.qty) > 0).length,
-    amountTotal: mapped?.values?.amount_total ?? 0,
+    amountTotal: sells ? vanDocTotal(doc) : 0,
   };
 }

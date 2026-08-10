@@ -121,11 +121,11 @@ export function docToOdooValues(docObj = {}) {
     state: 'draft',
     line_ids: lines
       .filter((l) => qtyOf(l) > 0 || l.sku || l.description)
+      // بلا `price_unit` — حدّ المال (م١-ب): الكمّيّات والمراجع وحدها تُدفع.
       .map((l) => ({
         product_code: String(l.sku ?? '').trim().toUpperCase(),
         name: String(l.description ?? l.sku ?? '').trim(),
         quantity: qtyOf(l),
-        price_unit: Number(l.unitPrice) || 0,
       })),
   };
 }

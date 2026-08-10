@@ -29,11 +29,12 @@ import {
 import { db, auth } from '../../config/firebase.js';
 import { odoo, describeOdooConfig } from './index.js';
 import { itemToProductValues, productToItem, ledgerMoveToStockMove } from './odooMapper.js';
-import { poDocToPurchaseOrder } from './poMapper.js';
+import { poDocToPurchaseOrder, poDocTotal } from './poMapper.js';
 import { grnDocToStockPicking, autoReceiptFromPo } from './grnMapper.js';
 import { odooTargetFor, docToOdooValues } from './docCrosswalk.js';
 import { mapVanDocument, isVanSalesType, vanDocSummary } from './vanSalesMapper.js';
 import { mirrorIdFor, resolveSyncAction, duplicateIds, sourceDomain, canPush } from './idempotency.js';
+import { assertNoMoneyFields } from './moneyFields.js';
 import { getItem, createItem, updateItem } from '../itemService.js';
 
 const COL_SYNC = 'odoo_sync';
@@ -99,7 +100,8 @@ export async function pushPurchaseOrder(poDoc, profile) {
       direction: 'push',
       title: values.x_supplier || poDoc.number || 'أمر شراء',
       supplier: values.x_supplier || '',
-      amountTotal: values.amount_total || 0,
+      // يُحسب من مستندنا لا من قِيَم الدفع — تلك لم تعد تحمل مبلغًا (حدّ المال).
+      amountTotal: poDocTotal(poDoc),
       lineCount: (values.order_line || []).length,
       syncedAt: serverTimestamp(),
       byUid: who.byUid,
@@ -345,6 +347,12 @@ export async function pushOnce({ mirrorId, model, values, sourceNumber, name, do
 
   const decision = resolveSyncAction({ mirror, existing, sourceNumber });
   const payload = { ...values, name: name || sourceNumber };
+
+  // ═══ حدّ المال (م١-ب) ═══
+  // نقطة الاختناق الواحدة: كلّ ما يُدفع يمرّ من هنا، فالحارس هنا يغطّي
+  // المخطِّطات القائمة **وما يُضاف بعدها**. حارسٌ في المخطِّط وحده يسقط أوّل
+  // ما يكتب أحدهم مخطِّطًا جديدًا وينسى القاعدة.
+  assertNoMoneyFields(payload, `${model} · ${sourceNumber || mirrorId}`);
 
   let odooId = decision.odooId;
   if (decision.action === 'create') {

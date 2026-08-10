@@ -9,6 +9,8 @@ import {
   vanDocToSaleOrder,
   vanDocToPicking,
   settlementToOdoo,
+  settlementCashVariance,
+  vanDocTotal,
   mapVanDocument,
   isVanSalesType,
   VAN_SALES_TYPES,
@@ -54,24 +56,36 @@ test('★ مسارات المناقلة تطابق قواعد القيد اتج�
 
 /* ═══════════ البنود ═══════════ */
 
-test('★ الخصم يُحوَّل نسبةً لأودو، والمجّانيّ لا يُقسَم على صفر', () => {
+test('★ حدّ المال: سطر البيع بلا سعرٍ ولا خصم، ويبقى المجّانيّ والعرض', () => {
   const line = lineToSaleLine({ sku: 'A', qty: 10, unitPrice: 50, discount: 100 });
-  assert.equal(line.discount, 20, '١٠٠ من ٥٠٠ = ٢٠٪');
-  assert.equal(line.price_subtotal, 400);
+  assert.equal(line.product_uom_qty, 10, 'الكمّيّة تُدفع');
+  assert.equal(line.price_unit, undefined, 'السعر لا يُدفع — أودو يسعّر من قوائمه');
+  assert.equal(line.discount, undefined, 'ونسبة الخصم معه');
+  assert.equal(line.price_subtotal, undefined);
 
+  // `x_is_free` واقعةٌ تشغيليّة لا مبلغ: بندُ هديّةٍ يُحرّك مخزونًا، وأودو
+  // يحتاجها ليفرّق بين البيع والهديّة. فتبقى.
   const free = lineToSaleLine({ sku: 'A', qty: 2, unitPrice: 0, promoCode: 'PR-1' });
-  assert.equal(free.discount, 0, 'لا قسمة على صفر');
   assert.equal(free.x_is_free, true);
   assert.equal(free.x_promo_code, 'PR-1');
-  assert.equal(free.price_subtotal, 0);
 });
 
-test('سطر الحركة يحمل التشغيلة والصلاحية', () => {
+test('سطر الحركة يحمل التشغيلة والصلاحية — بلا كلفة', () => {
   const m = lineToStockMove({ sku: 'a', qty: 5, batch: 'B1', expiry: '2027-01-01', unitCost: 6 });
   assert.equal(m.product_code, 'A');
   assert.equal(m.product_uom_qty, 5);
   assert.equal(m.x_batch, 'B1');
   assert.equal(m.x_expiry, '2027-01-01');
+  assert.equal(m.price_unit, undefined, 'الكلفة لا تغادر البوابة');
+});
+
+test('★ حساب الخصم لم يضع — انتقل إلى `vanDocTotal` للعرض المحلّيّ', () => {
+  const d = doc('VSI', { customerCode: 'C-01' }, [
+    { sku: 'A', qty: 10, unitPrice: 50, discount: 100 },
+    { sku: 'B', qty: 2, unitPrice: 0, promoCode: 'PR-1' }, // مجّانيّ
+    { sku: 'C', qty: 0, unitPrice: 99 }, // صفريّ يُستبعد
+  ]);
+  assert.equal(vanDocTotal(d), 400, '٥٠٠ ناقص خصم ١٠٠، والمجّانيّ صفر');
 });
 
 /* ═══════════ المستندات ═══════════ */
@@ -81,7 +95,9 @@ test('فاتورة المركبة تُسحب من موقع المركبة، وت
   const vsi = vanDocToSaleOrder(doc('VSI', h, [{ sku: 'A', qty: 10, unitPrice: 50 }]));
   assert.equal(vsi.x_source_location, 'VAN/12-3456');
   assert.equal(vsi.state, 'draft', 'كلّ ما يُدفع يصل مسوّدةً');
-  assert.equal(vsi.amount_total, 500);
+  assert.equal(vsi.amount_total, undefined, 'حدّ المال: الإجماليّ لا يُرفع');
+  assert.equal(vsi.x_amount_collected, undefined, 'ولا المحصَّل نقدًا');
+  assert.equal(vsi.x_payment_mode, '', 'أمّا طريقة السداد فواقعةٌ تشغيليّة تمرّ');
   assert.equal(vsi.x_source_number, 'VSI-2026-0001');
 
   const vcs = vanDocToSaleOrder(doc('VCS', h, [{ sku: 'A', qty: 4, unitPrice: 12 }]));
@@ -107,14 +123,18 @@ test('المناقلة تحمل مسارها وبنودها ورقم مصدره�
   assert.equal(p.state, 'draft');
 });
 
-test('التسوية تحمل فرق النقد وفرق المخزون محسوبَين', () => {
-  const s = settlementToOdoo(
-    doc('VSR', { tripRef: 'TRIP-1', vehiclePlate: '12-3456', cashSales: 1000, cashDeposited: 940 }, [
-      { counted: 8, ledgerQty: 10 },
-    ])
-  );
-  assert.equal(s.x_cash_variance, 60);
-  assert.equal(s.x_stock_variance, -2);
+test('★ التسوية تُدفع بفرق المخزون وحده — وفرق النقد يبقى عندنا', () => {
+  const d = doc('VSR', { tripRef: 'TRIP-1', vehiclePlate: '12-3456', cashSales: 1000, cashDeposited: 940 }, [
+    { counted: 8, ledgerQty: 10 },
+  ]);
+  const s = settlementToOdoo(d);
+  assert.equal(s.x_stock_variance, -2, 'فرق العدّ كمّيّةٌ لا مبلغ — واقعةٌ تشغيليّة تُدفع');
+  assert.equal(s.x_cash_variance, undefined, 'أمّا الفرق النقديّ فلا');
+  assert.equal(s.x_cash_sales, undefined);
+  assert.equal(s.x_cash_deposited, undefined);
+  assert.equal(s.x_total_sales, undefined);
+  // الحساب لم يضع — ينتقل إلى الذمم (م‑٤) والتحصيل الميدانيّ (م‑٥).
+  assert.equal(settlementCashVariance(d), 60);
 });
 
 test('الموزّع يُرجع النموذج الصحيح لكلّ نوع', () => {

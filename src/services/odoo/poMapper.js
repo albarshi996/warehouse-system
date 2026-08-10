@@ -14,12 +14,18 @@
  *     - date_planned    ← header.requiredDelivery
  *     - x_pr_ref        ← header.prRef            (رقم طلب الشراء المرجعيّ)
  *     - x_source_number ← doc.number             (رقم مستند البوابة — أثر الربط)
- *     - currency_id     ← 'LYD' (ثابت)
- *     - amount_total    ← الصافي بعد الخصم (محسوب)
+ *     - currency_id     ← 'LYD' (ثابت — تسميةُ عملةٍ لا مبلغ)
  *     - state           ← 'draft' دائمًا عند الدفع (مسوّدة حتى الاعتماد)
- *     - order_line[]    ← بنود المستند (product.qty.price)
+ *     - order_line[]    ← بنود المستند (الصنف والكمّيّة والوحدة — بلا سعر)
+ *
+ * ⚠️ **حدّ المال (م١-ب):** كان هذا المخطِّط يدفع `amount_total` و`amount_untaxed`
+ * و`price_unit` و`price_subtotal` — عكس السياسة المعتمدة «اسحب المالي ولا ترفعه».
+ * أُخرجت كلّها؛ ويحرسها `assertNoMoneyFields` في `pushOnce`. أمّا **السحب**
+ * (`purchaseOrderToPoSummary` أدناه) فيقرأ `amount_total` من أودو ويجب أن يبقى:
+ * تلك هي المرآة المقصودة. وللعرض المحلّيّ استعمل `poDocTotal` — يحسب من مستندنا
+ * ولا يُرسَل.
  */
-import { subtotal, netTotal, lineTotal } from '../documents/schemas/po.js';
+import { netTotal } from '../documents/schemas/po.js';
 
 /** يقرأ حقلًا من رأس المستند بأمان (يقبل doc.header أو doc مباشرةً). */
 function header(doc) {
@@ -28,7 +34,8 @@ function header(doc) {
 
 /**
  * حوّل سطر مستندٍ واحدًا إلى سطر `purchase.order.line` بأسماء حقول أودو.
- * @param {object} line  { sku, description, uom, qty, unitPrice, notes }
+ * الكمّيّة والوحدة والصنف وحدها — السعر يبقى عندنا (حدّ المال).
+ * @param {object} line  { sku, description, uom, qty, notes }
  */
 export function poLineToOrderLine(line = {}) {
   return {
@@ -36,8 +43,6 @@ export function poLineToOrderLine(line = {}) {
     name: String(line.description ?? line.sku ?? '').trim(),
     product_qty: Number(line.qty) || 0,
     product_uom: String(line.uom ?? '').trim(),
-    price_unit: Number(line.unitPrice) || 0,
-    price_subtotal: lineTotal(line),
   };
 }
 
@@ -60,11 +65,21 @@ export function poDocToPurchaseOrder(doc = {}) {
     x_source_number: String(doc.number ?? '').trim(),
     x_warehouse: String(h.warehouse ?? '').trim(),
     currency_id: 'LYD',
-    amount_untaxed: subtotal(lines),
-    amount_total: netTotal({ ...doc, header: h }),
     state: 'draft',
     order_line: lines.filter((l) => Number(l?.qty) > 0).map(poLineToOrderLine),
   };
+}
+
+/**
+ * إجماليّ أمر الشراء **للعرض المحلّيّ وحده** — بطاقة الجسر ومرآتنا في Firestore.
+ * منفصلٌ عن `poDocToPurchaseOrder` عمدًا: ما نعرضه عندنا شيء، وما نرسله شيءٌ آخر.
+ * لا يُدرَج في قِيَم الدفع أبدًا.
+ *
+ * @param {object} doc مستند البوابة
+ * @returns {number} الصافي بعد الخصم
+ */
+export function poDocTotal(doc = {}) {
+  return netTotal({ ...doc, header: header(doc) });
 }
 
 /**

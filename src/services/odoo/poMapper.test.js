@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import {
   poDocToPurchaseOrder,
   poLineToOrderLine,
+  poDocTotal,
   purchaseOrderToPoSummary,
   odooStateLabel,
 } from './poMapper.js';
@@ -29,18 +30,18 @@ const SAMPLE_DOC = {
   ],
 };
 
-test('poLineToOrderLine: يرفع SKU ويحسب إجمالي السطر', () => {
+test('poLineToOrderLine: يرفع SKU والكمّيّة — بلا سعر (حدّ المال)', () => {
   const line = poLineToOrderLine({ sku: 'bz-vcs-30', qty: 3, unitPrice: 10, description: 'x' });
   assert.equal(line.product_code, 'BZ-VCS-30');
   assert.equal(line.product_qty, 3);
-  assert.equal(line.price_subtotal, 30);
+  assert.equal(line.price_unit, undefined, 'السعر لا يغادر البوابة');
+  assert.equal(line.price_subtotal, undefined);
 });
 
 test('poLineToOrderLine: يتحمّل القيم الناقصة بأمان', () => {
   const line = poLineToOrderLine({});
   assert.equal(line.product_code, '');
   assert.equal(line.product_qty, 0);
-  assert.equal(line.price_subtotal, 0);
 });
 
 test('poDocToPurchaseOrder: يصل مسوّدةً دائمًا (درفت حتى الاعتماد)', () => {
@@ -64,10 +65,12 @@ test('poDocToPurchaseOrder: يستبعد البنود ذات الكمية صفر
   assert.equal(values.order_line[0].product_code, 'BZ-VCS-30');
 });
 
-test('poDocToPurchaseOrder: يحسب الإجماليات (الصافي = الفرعيّ − الخصم)', () => {
+test('★ حدّ المال: قِيَم الدفع بلا مبالغ، والإجماليّ يبقى للعرض المحلّيّ', () => {
   const values = poDocToPurchaseOrder(SAMPLE_DOC);
-  assert.equal(values.amount_untaxed, 200 * 123.5); // 24700
-  assert.equal(values.amount_total, 200 * 123.5 - 100); // 24600 بعد خصم 100
+  assert.equal(values.amount_untaxed, undefined, 'الفرعيّ لا يُرفع');
+  assert.equal(values.amount_total, undefined, 'الصافي لا يُرفع — أودو يحسبه من قوائمه');
+  // والحساب لم يضع: `poDocTotal` يخدم بطاقة الجسر ومرآتنا، ولا يُرسَل.
+  assert.equal(poDocTotal(SAMPLE_DOC), 200 * 123.5 - 100); // 24600 بعد خصم 100
 });
 
 test('purchaseOrderToPoSummary: يلخّص سجلّ أودو للعرض العكسيّ', () => {
