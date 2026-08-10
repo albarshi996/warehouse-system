@@ -6,47 +6,160 @@
   "track": "المسار الأساسي (١٢–١٨ جلسة)",
   "lastUpdated": "2026-08-10",
   "lastUpdatedBy": "Claude",
-
   "settingsContract": {
     "doc": "settings/current",
     "note": "القرارات ٤–٧ إعدادات لا شيفرة. كل حارس يقرأ منها، ولا قيمة مخبوزة في الكود.",
     "shape": {
-      "items": { "internalInSales": "block", "overrideRole": "warehouse_manager" },
-      "pricing": { "manualOverride": "tagged", "overrideRole": "sales_supervisor" },
-      "credit": { "enforce": "block", "warnAtPct": 90, "unlockRole": "finance_manager" },
-      "dating": { "backdateDays": 7, "requireReason": true, "approveRole": "warehouse_manager" }
+      "items": {
+        "internalInSales": "block",
+        "overrideRole": "warehouse_manager"
+      },
+      "pricing": {
+        "manualOverride": "tagged",
+        "overrideRole": "sales_supervisor"
+      },
+      "credit": {
+        "enforce": "block",
+        "warnAtPct": 90,
+        "unlockRole": "finance_manager"
+      },
+      "dating": {
+        "backdateDays": 7,
+        "requireReason": true,
+        "approveRole": "warehouse_manager"
+      }
     }
   },
-
   "gaps": {
-    "ف-١": { "title": "لا وحدة ذمم", "verified": "2026-08-10 — صفر نتيجة لـRCP في src/", "milestone": "م-٤" },
-    "ف-٢": { "title": "حد الائتمان لا يُطبّق", "verified": "2026-08-10 — creditLimit في partnerShape/partnerService/UI فقط، لا في منطق البيع", "milestone": "م-٤" },
-    "ف-٣": { "title": "لا قوائم أسعار", "verified": "2026-08-10 — صفر نتيجة لـpriceList في src/", "milestone": "م-٣" },
-    "ف-٤": { "title": "لا معاملات تحويل للوحدات", "verified": "2026-08-10 — uomGroup في itemShape/excelSchema نصًّا فقط، لا toBase ولا uom_master", "milestone": "م-٣" },
-    "ف-٤ب": { "title": "لا نوع للصنف", "verified": "2026-08-10 — صفر نتيجة لـitemType في src/", "milestone": "م-٣" },
-    "ف-٥": { "title": "مركز التكلفة نص حر", "verified": "من الخطة", "milestone": "م-٦" },
-    "ف-٦": { "title": "لا سيد مواقع تنظيمية", "verified": "من الخطة", "milestone": "م-٦" },
-    "ف-٧": { "title": "لا مركز تقارير", "verified": "من الخطة", "milestone": "م-٨" },
-    "ف-٨": { "title": "تواريخ الرأس قابلة للتلاعب", "verified": "من الخطة", "milestone": "م-٢" },
-    "ف-٩": { "title": "الجسر يخالف السياسة (يرفع حقول مال)", "verified": "2026-08-10 — amount_total/price_unit في poMapper.js وvanSalesMapper.js", "milestone": "م-١" },
-    "ف-١٠": { "title": "الميدان بلا بُعد مالي", "verified": "من الخطة", "milestone": "م-٥" },
-    "ف-١١": { "title": "لا تصنيف لنوع الزيارة", "verified": "من الخطة", "milestone": "م-٥" }
+    "ف-١": {
+      "title": "لا وحدة ذمم",
+      "verified": "2026-08-10 — صفر نتيجة لـRCP في src/",
+      "milestone": "م-٤"
+    },
+    "ف-٢": {
+      "title": "حد الائتمان لا يُطبّق",
+      "verified": "2026-08-10 — creditLimit في partnerShape/partnerService/UI فقط، لا في منطق البيع",
+      "milestone": "م-٤"
+    },
+    "ف-٣": {
+      "title": "لا قوائم أسعار",
+      "verified": "2026-08-10 — صفر نتيجة لـpriceList في src/",
+      "milestone": "م-٣"
+    },
+    "ف-٤": {
+      "title": "لا معاملات تحويل للوحدات",
+      "verified": "2026-08-10 — uomGroup في itemShape/excelSchema نصًّا فقط، لا toBase ولا uom_master",
+      "milestone": "م-٣"
+    },
+    "ف-٤ب": {
+      "title": "لا نوع للصنف",
+      "verified": "2026-08-10 — صفر نتيجة لـitemType في src/",
+      "milestone": "م-٣"
+    },
+    "ف-٥": {
+      "title": "مركز التكلفة نص حر",
+      "verified": "من الخطة",
+      "milestone": "م-٦"
+    },
+    "ف-٦": {
+      "title": "لا سيد مواقع تنظيمية",
+      "verified": "من الخطة",
+      "milestone": "م-٦"
+    },
+    "ف-٧": {
+      "title": "لا مركز تقارير",
+      "verified": "من الخطة",
+      "milestone": "م-٨"
+    },
+    "ف-٨": {
+      "title": "تواريخ الرأس قابلة للتلاعب",
+      "verified": "من الخطة",
+      "milestone": "م-٢"
+    },
+    "ف-٩": {
+      "title": "الجسر يخالف السياسة (يرفع حقول مال)",
+      "verified": "2026-08-10 — amount_total/price_unit في poMapper.js وvanSalesMapper.js",
+      "milestone": "م-١"
+    },
+    "ف-١٠": {
+      "title": "الميدان بلا بُعد مالي",
+      "verified": "من الخطة",
+      "milestone": "م-٥"
+    },
+    "ف-١١": {
+      "title": "لا تصنيف لنوع الزيارة",
+      "verified": "من الخطة",
+      "milestone": "م-٥"
+    }
   },
-
   "milestones": [
-    { "id": "م-٠", "title": "الشروط السابقة", "estimate": "—", "inTrack": true },
-    { "id": "م-١", "title": "التصليحات الجراحية", "estimate": "١–٣ جلسات", "inTrack": true },
-    { "id": "م-٢", "title": "نزاهة التاريخ", "estimate": "جلسة واحدة", "inTrack": true },
-    { "id": "م-٣", "title": "هوية الصنف", "estimate": "٣–٤ جلسات", "inTrack": true },
-    { "id": "م-٤", "title": "وحدة الذمم", "estimate": "٣–٤ جلسات", "inTrack": true },
-    { "id": "م-٨أ", "title": "مركز التقارير — الدفعات الثلاث الأولى", "estimate": "٣–٤ جلسات", "inTrack": true },
-    { "id": "م-٥", "title": "الميدان المالي والبيع من المركبة", "estimate": "جلستان", "inTrack": false },
-    { "id": "م-٦", "title": "الهيكل التنظيمي", "estimate": "٢–٣ جلسات", "inTrack": false },
-    { "id": "م-٧", "title": "حوكمة التكامل والجانب المالي", "estimate": "٣–٤ جلسات", "inTrack": false },
-    { "id": "م-٨", "title": "استكمال مركز التقارير", "estimate": "٢–٣ جلسات", "inTrack": false },
-    { "id": "م-٩", "title": "الذكاء التشغيلي", "estimate": "٣–٤ جلسات", "inTrack": false }
+    {
+      "id": "م-٠",
+      "title": "الشروط السابقة",
+      "estimate": "—",
+      "inTrack": true
+    },
+    {
+      "id": "م-١",
+      "title": "التصليحات الجراحية",
+      "estimate": "١–٣ جلسات",
+      "inTrack": true
+    },
+    {
+      "id": "م-٢",
+      "title": "نزاهة التاريخ",
+      "estimate": "جلسة واحدة",
+      "inTrack": true
+    },
+    {
+      "id": "م-٣",
+      "title": "هوية الصنف",
+      "estimate": "٣–٤ جلسات",
+      "inTrack": true
+    },
+    {
+      "id": "م-٤",
+      "title": "وحدة الذمم",
+      "estimate": "٣–٤ جلسات",
+      "inTrack": true
+    },
+    {
+      "id": "م-٨أ",
+      "title": "مركز التقارير — الدفعات الثلاث الأولى",
+      "estimate": "٣–٤ جلسات",
+      "inTrack": true
+    },
+    {
+      "id": "م-٥",
+      "title": "الميدان المالي والبيع من المركبة",
+      "estimate": "جلستان",
+      "inTrack": false
+    },
+    {
+      "id": "م-٦",
+      "title": "الهيكل التنظيمي",
+      "estimate": "٢–٣ جلسات",
+      "inTrack": false
+    },
+    {
+      "id": "م-٧",
+      "title": "حوكمة التكامل والجانب المالي",
+      "estimate": "٣–٤ جلسات",
+      "inTrack": false
+    },
+    {
+      "id": "م-٨",
+      "title": "استكمال مركز التقارير",
+      "estimate": "٢–٣ جلسات",
+      "inTrack": false
+    },
+    {
+      "id": "م-٩",
+      "title": "الذكاء التشغيلي",
+      "estimate": "٣–٤ جلسات",
+      "inTrack": false
+    }
   ],
-
   "tasks": [
     {
       "id": "و-١",
@@ -56,7 +169,9 @@
       "state": "todo",
       "gaps": [],
       "dependsOn": [],
-      "acceptance": ["مطابقة حرفيّة: يُلصق نصّ القاعدة المنشورة ويُقارن بالملف في المستودع"],
+      "acceptance": [
+        "مطابقة حرفيّة: يُلصق نصّ القاعدة المنشورة ويُقارن بالملف في المستودع"
+      ],
       "notes": "الوكلاء يعدّلون القواعد في المستودع؛ المالك وحده ينشرها. درس سابق: «نشرت» تُطابَق باللصق لا بالثقة."
     },
     {
@@ -67,7 +182,9 @@
       "state": "todo",
       "gaps": [],
       "dependsOn": [],
-      "acceptance": ["٦ حسابات تعمل فعليًّا بأدوارها على النشر الخاص"]
+      "acceptance": [
+        "٦ حسابات تعمل فعليًّا بأدوارها على النشر الخاص"
+      ]
     },
     {
       "id": "و-٣",
@@ -78,7 +195,9 @@
       "blockedBy": "الوثيقة محال إليها في القسم ٩ من الخطة ولا وجود لها في المستودع؛ لا يمكن لـCodex تنفيذ سيناريو غير مكتوب",
       "gaps": [],
       "dependsOn": [],
-      "acceptance": ["الملف موجود في docs/ ومدفوع"],
+      "acceptance": [
+        "الملف موجود في docs/ ومدفوع"
+      ],
       "notes": "بديل إن فُقدت: يكتبها Claude من المستندات الـ٣٥ والسلاسل الـ٩ ثمّ يعتمدها المالك."
     },
     {
@@ -88,9 +207,13 @@
       "owner": "المالك",
       "state": "blocked",
       "blockedBy": "محال إليها في القسمين ٣ و٩ ولا وجود لها في المستودع؛ م‑٨أ تعتمد عليها",
-      "gaps": ["ف-٧"],
+      "gaps": [
+        "ف-٧"
+      ],
       "dependsOn": [],
-      "acceptance": ["الملف موجود في docs/ ومدفوع"]
+      "acceptance": [
+        "الملف موجود في docs/ ومدفوع"
+      ]
     },
     {
       "id": "ك-١",
@@ -100,20 +223,26 @@
       "state": "blocked",
       "blockedBy": "و-١ و و-٢ و و-٣",
       "gaps": [],
-      "dependsOn": ["و-١", "و-٢", "و-٣"],
-      "acceptance": ["تقرير عوائق مرتّب: ثغرات أمنية ← ما يمنع العمل ← ما يبطئه ← تجميلي"]
+      "dependsOn": [
+        "و-١",
+        "و-٢",
+        "و-٣"
+      ],
+      "acceptance": [
+        "تقرير عوائق مرتّب: ثغرات أمنية ← ما يمنع العمل ← ما يبطئه ← تجميلي"
+      ]
     },
-
     {
       "id": "م١-ب",
       "milestone": "م-١",
       "title": "إخراج حقول المال من مخططات أودو",
       "owner": "Claude",
-      "state": "doing",
+      "state": "done",
       "branch": "claude/phase-one-repairs-plan-07f596",
-      "progress": "فُحصت المخطِّطات الخمسة: grnMapper وodooMapper نظيفان أصلًا (كمّيّات ومراجع فقط). الملوَّثان: poMapper (amount_untaxed·amount_total·price_unit·price_subtotal) وvanSalesMapper (price_unit في الحركة · price_unit·discount·price_subtotal في سطر البيع · amount_total·x_amount_collected في الرأس · وأربعة حقول نقدٍ في التسوية). واتّجاه السحب (purchaseOrderToPoSummary·stockPickingToSummary·productToItem) يبقى كما هو — السحب مسموحٌ بل مطلوب.",
-      "nextStep": "أنشئ src/services/odoo/moneyFields.js (سجلّ أسماء حقول المال + assertNoMoneyFields يفحص الرأس والبنود معًا)، ثمّ نظّف poMapper وvanSalesMapper، ثمّ اربط الحارس في مسار الدفع pushOnce داخل odooSyncService، ثمّ حدّث المرآة والملخّصات لتحسب المبلغ محلّيًّا بدل قراءته من قِيَم الدفع.",
-      "gaps": ["ف-٩"],
+      "progress": "أُنجزت. الملوَّثة كانت ثلاثة مخطِّطات لا اثنين: poMapper وvanSalesMapper وdocCrosswalk (price_unit في المسار العامّ). وgrnMapper وodooMapper نظيفان أصلًا.",
+      "gaps": [
+        "ف-٩"
+      ],
       "dependsOn": [],
       "estimate": "نصف جلسة",
       "acceptance": [
@@ -123,9 +252,19 @@
         "لا حقل مالي يغادر البوابة إلى أودو"
       ],
       "guardTest": "src/services/odoo/moneyFieldsGuard.test.js",
-      "touches": ["src/services/odoo/poMapper.js", "src/services/odoo/vanSalesMapper.js", "src/services/odoo/grnMapper.js", "src/services/odoo/odooMapper.js", "src/services/odoo/odooSyncService.js"],
-      "evidence": { "commit": null, "note": null },
-      "notes": "أوّل مهمّة قابلة للبدء الآن — لا تعتمد على تقرير Codex ولا على المالك. تحويل الاستبعاد إلى إعداد قابل للتحكّم مؤجَّل لـم‑٧ (م٧-ب)."
+      "touches": [
+        "src/services/odoo/poMapper.js",
+        "src/services/odoo/vanSalesMapper.js",
+        "src/services/odoo/grnMapper.js",
+        "src/services/odoo/odooMapper.js",
+        "src/services/odoo/odooSyncService.js"
+      ],
+      "evidence": {
+        "commit": "32f0b37",
+        "note": "٩١١ اختبارًا (+١١) · اختُبر الحارس عدائيًّا بحقلٍ ماليٍّ جديد لم يُذكر في أيّ قائمة (amount_tax) فأسقط الاختبار · تدقيق نظيف · بناء ٨٨ صفحة · لينت نظيف."
+      },
+      "consequence": "محضر التسوية VSR صار في أودو واقعةَ إقفالٍ تشغيليّة (فرق عدٍّ وزيارات) بلا الفرق النقديّ، لأنّ البوابة لا تدفع مالًا ولا تدفع سندات تحصيلٍ بعد. يعود الفرق النقديّ إلى أودو عبر م‑٤ (الذمم) وم‑٥ (RCV)، ويُقرَّر اتّجاهه من لوحة التكامل في م٧-ب. يحتاج إقرار المالك.",
+      "notes": "أوّل مهمّة قابلة للبدء — لم تعتمد على تقرير Codex ولا على المالك. الحارس وُضع في نقطة الاختناق pushOnce لا في المخطِّطات وحدها، فيغطّي ما يُضاف بعده. تحويل الاستبعاد إلى إعداد قابل للتحكّم مؤجَّل لـم٧-ب."
     },
     {
       "id": "م١-ج",
@@ -155,7 +294,9 @@
       "state": "blocked",
       "blockedBy": "ك-١",
       "gaps": [],
-      "dependsOn": ["ك-١"],
+      "dependsOn": [
+        "ك-١"
+      ],
       "estimate": "١–٣ جلسات",
       "acceptance": [
         "صفر ثغرة أمنية",
@@ -164,14 +305,15 @@
       ],
       "notes": "الترتيب: ثغرات أمنية ← ما يمنع العمل ← ما يبطئه ← التجميلي. تُفكَّك إلى مهامّ فرعية عند وصول التقرير."
     },
-
     {
       "id": "م٢-أ",
       "milestone": "م-٢",
       "title": "جرد وتصنيف كل حقل زمني في المستندات الـ٣٥",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-٨"],
+      "gaps": [
+        "ف-٨"
+      ],
       "dependsOn": [],
       "acceptance": [
         "جدول: المستند × الحقل × الصنف (ختم واقعة / تاريخ مخطط / تاريخ مبرر)",
@@ -185,8 +327,13 @@
       "title": "ختم الخادم غير القابل للتحرير وحرّاس التأريخ",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-٨"],
-      "dependsOn": ["م٢-أ", "م١-ج"],
+      "gaps": [
+        "ف-٨"
+      ],
+      "dependsOn": [
+        "م٢-أ",
+        "م١-ج"
+      ],
       "acceptance": [
         "ختم الواقعة من الخادم (serverTimestamp) وغير قابل للتحرير — محروسًا في firestore.rules لا في الواجهة وحدها",
         "لا واقعة في المستقبل: تاريخ استلام بعد اليوم يُرفض",
@@ -202,9 +349,16 @@
       "title": "تقرير التواريخ المعدّلة",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-٨"],
-      "dependsOn": ["م٢-ب"],
-      "acceptance": ["من غيّر، وماذا غيّر، ومتى، ولماذا", "وسم backdated ظاهر في كل تقرير يتضمّن المستند"]
+      "gaps": [
+        "ف-٨"
+      ],
+      "dependsOn": [
+        "م٢-ب"
+      ],
+      "acceptance": [
+        "من غيّر، وماذا غيّر، ومتى، ولماذا",
+        "وسم backdated ظاهر في كل تقرير يتضمّن المستند"
+      ]
     },
     {
       "id": "م٢-د",
@@ -214,18 +368,23 @@
       "state": "todo",
       "gaps": [],
       "dependsOn": [],
-      "acceptance": ["إبلاغ صادر قبل تفعيل الحارس"],
+      "acceptance": [
+        "إبلاغ صادر قبل تفعيل الحارس"
+      ],
       "notes": "من اعتاد كتابة التاريخ بحرّية سيشعر بالتقييد — التفعيل بلا إبلاغ يولّد مقاومة تُنسب للنظام."
     },
-
     {
       "id": "م٣-أ",
       "milestone": "م-٣",
       "title": "نوع الصنف: بيع / داخلي / خدمة",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-٤ب"],
-      "dependsOn": ["م١-ج"],
+      "gaps": [
+        "ف-٤ب"
+      ],
+      "dependsOn": [
+        "م١-ج"
+      ],
       "acceptance": [
         "itemType بثلاث قيم على سيد الأصناف + شاشة إعادة التصنيف",
         "الخدمة لا تُقيَّد مخزنيًّا — لا رصيد وهميّ، قيمة فقط",
@@ -244,8 +403,12 @@
       "title": "وحدات القياس ومعاملات التحويل",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-٤"],
-      "dependsOn": ["م٣-أ"],
+      "gaps": [
+        "ف-٤"
+      ],
+      "dependsOn": [
+        "م٣-أ"
+      ],
       "acceptance": [
         "uom_master: الوحدات وعائلاتها الأربع ومعاملات العائلة وallowFraction",
         "معاملات الصنف: وحدة أساس + وحدات بديلة بمعاملاتها",
@@ -264,8 +427,12 @@
       "title": "قوائم الأسعار وتقرير انحراف الأسعار",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-٣"],
-      "dependsOn": ["م٣-ب"],
+      "gaps": [
+        "ف-٣"
+      ],
+      "dependsOn": [
+        "م٣-ب"
+      ],
       "acceptance": [
         "price_lists: قائمة لكل شريحة بمدّة سريان وعملة",
         "بنود القائمة: صنف × وحدة × سعر × حدّ أدنى للكمية",
@@ -278,16 +445,23 @@
       "guardTest": "src/services/pricing/priceListModel.test.js",
       "safety": "القوائم اختيارية في البداية؛ من لا قائمة له تبقى الكتابة اليدوية متاحة، ثمّ تُشدَّد القاعدة بعد اكتمال البيانات"
     },
-
     {
       "id": "م٤-أ",
       "milestone": "م-٤",
       "title": "سند القبض RCP",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-١"],
-      "dependsOn": ["م٣-ج"],
-      "acceptance": ["نقدًا أو شيك أو تحويل", "يُقاصّ فاتورة أو أكثر", "مخطّط + ترقيم + حالات + قاعدة أمان + صندوق اعتماد"],
+      "gaps": [
+        "ف-١"
+      ],
+      "dependsOn": [
+        "م٣-ج"
+      ],
+      "acceptance": [
+        "نقدًا أو شيك أو تحويل",
+        "يُقاصّ فاتورة أو أكثر",
+        "مخطّط + ترقيم + حالات + قاعدة أمان + صندوق اعتماد"
+      ],
       "guardTest": "src/services/ledger/receiptVoucher.test.js"
     },
     {
@@ -296,9 +470,16 @@
       "title": "سند سداد المورد SPV",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-١"],
-      "dependsOn": ["م٤-أ"],
-      "acceptance": ["النظير الصادر", "يُقاصّ أوامر شراء وفواتير"],
+      "gaps": [
+        "ف-١"
+      ],
+      "dependsOn": [
+        "م٤-أ"
+      ],
+      "acceptance": [
+        "النظير الصادر",
+        "يُقاصّ أوامر شراء وفواتير"
+      ],
       "guardTest": "src/services/ledger/supplierPayment.test.js"
     },
     {
@@ -307,8 +488,12 @@
       "title": "دفتر الذمم partner_ledger وledgerModel",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-١"],
-      "dependsOn": ["م٤-ب"],
+      "gaps": [
+        "ف-١"
+      ],
+      "dependsOn": [
+        "م٤-ب"
+      ],
       "acceptance": [
         "دفتر ملحق فقط: كل مستند ذي أثر ماليّ يُقيَّد سطرًا",
         "الرصيد المتراكم والمقاصّة وأعمار الديون بخمس شرائح",
@@ -323,8 +508,13 @@
       "title": "تطبيق حدّ الائتمان",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-٢"],
-      "dependsOn": ["م٤-ج", "م١-ج"],
+      "gaps": [
+        "ف-٢"
+      ],
+      "dependsOn": [
+        "م٤-ج",
+        "م١-ج"
+      ],
       "acceptance": [
         "إنذار عند settings.credit.warnAtPct ومنع عند التجاوز",
         "يفكّه settings.credit.unlockRole بأثر موثّق",
@@ -338,15 +528,18 @@
       "title": "كشوف الحساب والأعمار",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-١"],
-      "dependsOn": ["م٤-ج"],
+      "gaps": [
+        "ف-١"
+      ],
+      "dependsOn": [
+        "م٤-ج"
+      ],
       "acceptance": [
         "كشف العميل: الرصيد الافتتاحيّ والمبيعات والمرتجعات والمحصَّل والمتبقّي",
         "المتبقّي يطابق مجموع السطور",
         "فلترة وطباعة وتصدير"
       ]
     },
-
     {
       "id": "ر-٠",
       "milestone": "م-٨أ",
@@ -354,8 +547,12 @@
       "owner": "Claude",
       "state": "blocked",
       "blockedBy": "و-٤",
-      "gaps": ["ف-٧"],
-      "dependsOn": ["و-٤"],
+      "gaps": [
+        "ف-٧"
+      ],
+      "dependsOn": [
+        "و-٤"
+      ],
       "acceptance": [
         "محرّك واحد يقرأ تعريفًا لكل تقرير كما فعل SCHEMAS مع المستندات",
         "فلترة + طباعة بالهوية والتوقيعين والرقم الإشاريّ وترقيم الصفحات",
@@ -373,8 +570,13 @@
       "owner": "Claude",
       "state": "blocked",
       "blockedBy": "ر-٠",
-      "gaps": ["ف-٧"],
-      "dependsOn": ["ر-٠", "م٣-ب"],
+      "gaps": [
+        "ف-٧"
+      ],
+      "dependsOn": [
+        "ر-٠",
+        "م٣-ب"
+      ],
       "acceptance": [
         "كشف حركة الصنف · أرصدة المواقع والدفعات · الجرد والفروقات · التالف والعجوزات · الراكد وإعادة الطلب · الصلاحيات والدفعات",
         "الفلاتر تعمل مجتمعة والمجاميع تطابق الصفوف المعروضة",
@@ -388,21 +590,29 @@
       "owner": "Claude",
       "state": "blocked",
       "blockedBy": "ر-٠ و م-٤",
-      "gaps": ["ف-٧"],
-      "dependsOn": ["ر-٠", "م٤-هـ"],
+      "gaps": [
+        "ف-٧"
+      ],
+      "dependsOn": [
+        "ر-٠",
+        "م٤-هـ"
+      ],
       "acceptance": [
         "مورد دائن · عميل مدين · أعمار بخمس شرائح · المشتريات بالمورد والصنف · المبيعات بالعميل والصنف والمندوب · المرتجعات والإشعارات"
       ]
     },
-
     {
       "id": "م٥-أ",
       "milestone": "م-٥",
       "title": "الميدان المالي: RCV ومديونية العميل وحساب المندوب",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-١٠"],
-      "dependsOn": ["م٤-ج"],
+      "gaps": [
+        "ف-١٠"
+      ],
+      "dependsOn": [
+        "م٤-ج"
+      ],
       "acceptance": [
         "مستند RCV مستقلّ للتحصيل الميدانيّ",
         "إظهار مديونية العميل قبل البيع",
@@ -417,9 +627,14 @@
       "title": "أنواع الزيارة الأربعة",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-١١"],
+      "gaps": [
+        "ف-١١"
+      ],
       "dependsOn": [],
-      "acceptance": ["بيع وتحصيل · بيع فقط · زيارة · (الرابع يُحدَّد)", "زيارة الخدمة لا تُحتسب فاشلة"]
+      "acceptance": [
+        "بيع وتحصيل · بيع فقط · زيارة · (الرابع يُحدَّد)",
+        "زيارة الخدمة لا تُحتسب فاشلة"
+      ]
     },
     {
       "id": "م٦-أ",
@@ -427,9 +642,16 @@
       "title": "org_locations ومحرّك التوجيه بالملكية",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-٥", "ف-٦"],
+      "gaps": [
+        "ف-٥",
+        "ف-٦"
+      ],
       "dependsOn": [],
-      "acceptance": ["تمثيل القطاع والبراند والفرع ومركز التكلفة", "توجيه بالملكية لا بالاسم", "تحميل التكلفة على الموقع التنظيميّ الصحيح"]
+      "acceptance": [
+        "تمثيل القطاع والبراند والفرع ومركز التكلفة",
+        "توجيه بالملكية لا بالاسم",
+        "تحميل التكلفة على الموقع التنظيميّ الصحيح"
+      ]
     },
     {
       "id": "م٧-أ",
@@ -437,8 +659,12 @@
       "title": "لوحة التحكّم بالتكامل /integration-control",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-٩"],
-      "dependsOn": ["م١-ب"],
+      "gaps": [
+        "ف-٩"
+      ],
+      "dependsOn": [
+        "م١-ب"
+      ],
       "acceptance": [
         "تحكّم لكل مستند أو شاشة أو نوع بيانات: مزامنة أو استيراد",
         "تحديد اتجاه انتقال البيانات وفق سياسة الشركة",
@@ -454,8 +680,12 @@
       "title": "تحويل استبعاد حقول المال إلى إعداد قابل للتحكّم",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ف-٩"],
-      "dependsOn": ["م٧-أ"],
+      "gaps": [
+        "ف-٩"
+      ],
+      "dependsOn": [
+        "م٧-أ"
+      ],
       "acceptance": [
         "الافتراض يبقى: لا تُرسل حقول المال",
         "لا تتحوّل البوابة إلى محرّك قيود مزدوج موازٍ لأودو",
@@ -469,9 +699,15 @@
       "owner": "Claude",
       "state": "blocked",
       "blockedBy": "ر-٢",
-      "gaps": ["ف-٧"],
-      "dependsOn": ["ر-٢"],
-      "acceptance": ["النقل والقطاعات ٥ · اللوجستيات ٦ · الميدان ٥ · المستندات ٢ · الإداريّ ٣"]
+      "gaps": [
+        "ف-٧"
+      ],
+      "dependsOn": [
+        "ر-٢"
+      ],
+      "acceptance": [
+        "النقل والقطاعات ٥ · اللوجستيات ٦ · الميدان ٥ · المستندات ٢ · الإداريّ ٣"
+      ]
     },
     {
       "id": "م٩-أ",
@@ -480,24 +716,61 @@
       "owner": "Claude",
       "state": "todo",
       "gaps": [],
-      "dependsOn": ["ر-١"],
-      "acceptance": ["التزويد التلقائيّ · الطلب المقترح · تحسين خطّ السير · رفيق المندوب · اكتشاف المتاجر المكرّرة"]
+      "dependsOn": [
+        "ر-١"
+      ],
+      "acceptance": [
+        "التزويد التلقائيّ · الطلب المقترح · تحسين خطّ السير · رفيق المندوب · اكتشاف المتاجر المكرّرة"
+      ]
     }
   ],
-
   "ownerInputs": [
-    { "id": "ب-١", "need": "تصنيف الأصناف: بيع / نقل / خدمة", "milestone": "م-٣", "ifMissing": "يبدأ الكلّ sale ويُصحَّح لاحقًا", "state": "todo" },
-    { "id": "ب-٢", "need": "معاملات الوحدات: الصندوق يساوي كم قطعة؟", "milestone": "م-٣", "ifMissing": "يبدأ المعامل ١ ويعمل بلا تحويل", "state": "todo" },
-    { "id": "ب-٣", "need": "قوائم الأسعار", "milestone": "م-٣", "ifMissing": "تبقى الكتابة اليدوية متاحة", "state": "todo" },
-    { "id": "ب-٤", "need": "الأرصدة الافتتاحية للشركاء", "milestone": "م-٤", "ifMissing": "يبدأ الدفتر من صفر", "state": "todo" },
-    { "id": "ب-٥", "need": "سقوف الائتمان", "milestone": "م-٤", "ifMissing": "لا يُطبَّق المنع حتى إدخالها", "state": "todo" }
+    {
+      "id": "ب-١",
+      "need": "تصنيف الأصناف: بيع / نقل / خدمة",
+      "milestone": "م-٣",
+      "ifMissing": "يبدأ الكلّ sale ويُصحَّح لاحقًا",
+      "state": "todo"
+    },
+    {
+      "id": "ب-٢",
+      "need": "معاملات الوحدات: الصندوق يساوي كم قطعة؟",
+      "milestone": "م-٣",
+      "ifMissing": "يبدأ المعامل ١ ويعمل بلا تحويل",
+      "state": "todo"
+    },
+    {
+      "id": "ب-٣",
+      "need": "قوائم الأسعار",
+      "milestone": "م-٣",
+      "ifMissing": "تبقى الكتابة اليدوية متاحة",
+      "state": "todo"
+    },
+    {
+      "id": "ب-٤",
+      "need": "الأرصدة الافتتاحية للشركاء",
+      "milestone": "م-٤",
+      "ifMissing": "يبدأ الدفتر من صفر",
+      "state": "todo"
+    },
+    {
+      "id": "ب-٥",
+      "need": "سقوف الائتمان",
+      "milestone": "م-٤",
+      "ifMissing": "لا يُطبَّق المنع حتى إدخالها",
+      "state": "todo"
+    }
   ],
-
   "log": [
     {
       "date": "2026-08-10",
       "by": "Claude",
       "entry": "نُقلت الخطة إلى المستودع، وأُنشئ المتتبّع والحارس وبطاقة الاستئناف. تُحقّق من ف‑١ وف‑٢ وف‑٣ وف‑٤ وف‑٤ب وف‑٩ على الكود الفعليّ — كلّها قائمة. رُصدت وثيقتان محال إليهما ومفقودتان (و‑٣ و و‑٤)."
+    },
+    {
+      "date": "2026-08-10",
+      "by": "Claude",
+      "entry": "م١-ب منجزة (32f0b37): حدّ المال بأنماطٍ لا بقائمة، وحارسٌ في نقطة الاختناق pushOnce. ثلاثة مخطِّطات كانت ملوَّثة لا اثنان — docCrosswalk كان يدفع price_unit في المسار العامّ. ٩١١ اختبارًا."
     }
   ]
 }
