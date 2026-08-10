@@ -164,7 +164,7 @@
     {
       "id": "و-١",
       "milestone": "م-٠",
-      "title": "نشر firestore.rules من Firebase Console (٩١٧ سطرًا + قاعدة settings الجديدة)",
+      "title": "نشر firestore.rules من Firebase Console (٩١٧ سطرًا + قاعدة settings + حارس التاريخ على documents)",
       "owner": "المالك",
       "state": "todo",
       "gaps": [],
@@ -340,7 +340,7 @@
       "milestone": "م-٢",
       "title": "ختم الخادم غير القابل للتحرير وحرّاس التأريخ",
       "owner": "Claude",
-      "state": "doing",
+      "state": "done",
       "gaps": [
         "ف-٨"
       ],
@@ -357,8 +357,12 @@
       ],
       "guardTest": "src/services/documents/datingGuard.test.js",
       "branch": "claude/phase-one-repairs-plan-07f596",
-      "progress": "بدأت — فحص مسار حفظ المستندات لتحديد نقطة الاختناق.",
-      "nextStep": "ابنِ datingGuard.js خالصًا (يقرأ صنف الحقل من timeFields وسياسة المدى من settingsModel)، ثمّ اربطه بنقطة اختناق حفظ المستند، ثمّ احرس الختم في firestore.rules، ثمّ وسم backdated دائمًا."
+      "progress": "أُنجزت بثلاث طبقات: منطق خالص + خدمة + قاعدة firestore بـrequest.time.",
+      "evidence": {
+        "commit": "a010da4",
+        "note": "٩٧٠ اختبارًا (+٢٢) · تدقيق نظيف · بناء ٨٩ صفحة · لينت نظيف · الحزمة تحمل الحارس والطرفيّة نظيفة."
+      },
+      "pendingOwner": "قواعد documents تغيّرت وتحتاج نشرًا · وم٢-د (إبلاغ المستخدمين) يسبق التفعيل الحيّ."
     },
     {
       "id": "م٢-ج",
@@ -798,6 +802,11 @@
       "date": "2026-08-11",
       "by": "Claude",
       "entry": "م٢-أ منجزة (b085e5b): ٦٢ حقلًا مصنَّفًا وحارسٌ ثنائيّ الاتّجاه. الحارس أمسك عطبًا في تصنيفي نفسه — PICK بلا ختم واقعة — فسُجّل استثناءً مُعلَنًا ولم تُضعَّف القاعدة."
+    },
+    {
+      "date": "2026-08-11",
+      "by": "Claude",
+      "entry": "م٢-ب منجزة (a010da4): الحكم على الخادم بـrequest.time لا بساعة الجهاز. ونصف الشغل كان فيما لا يُحرَس: الصلاحيّة وموعد السداد تقبل المستقبل، وحارسٌ يمنعها يرفض كلّ استلامٍ لبضاعةٍ صالحة."
     }
   ]
 }
