@@ -19,6 +19,7 @@
     "test": "node --test \"src/**/*.test.js\"",
     "test:rules": "firebase emulators:exec --only firestore \"node --test test/firestore-rules.test.mjs\"",
     "audit": "node scripts/audit-portal.mjs",
+    "plan": "node scripts/plan-check.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
