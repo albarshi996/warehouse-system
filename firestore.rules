@@ -331,7 +331,33 @@ service cloud.firestore {
                   ]);
       }
 
-      allow update: if signedIn() && immutableKept() && numberWriteOnce() && (
+      // ═══ نزاهة التاريخ (م٢-ب · يسدّ ف‑٨) ═══
+      // الحكم هنا لا في المتصفّح: `request.time` ساعةُ الخادم، فمن قدّم ساعة
+      // حاسوبه ليؤرّخ في المستقبل يجتاز فحص الواجهة ويرتدّ من هنا.
+      //
+      // نحرس ما يعرفه الخادم بلا خريطة ٣٥ نوعًا في القواعد: **وسم التأريخ
+      // للماضي**. الواجهة تحسب أيّ حقلٍ ختمُ واقعة (من `timeFields.js`) وتكتب
+      // الوسم؛ والخادم يفرض ألّا يُكتب وسمٌ كاذبٌ ولا يُمحى وسمٌ صادق.
+      //
+      // ثلاثة شروط لا رابع لها:
+      //  (أ) الوسم لا يُمحى ولا يُقلَب إلى `false` — أثرُه دائم.
+      //  (ب) الوسم الجديد يحمل ختم الخادم لا وقتًا يختاره المتصفّح.
+      //  (ج) الوسم الجديد يُنسب إلى كاتبه لا إلى غيره.
+      function datingTagKept() {
+        return !('dating' in resource.data)
+               || ('dating' in request.resource.data
+                   && request.resource.data.dating.backdated == true);
+      }
+      function datingTagHonest() {
+        return !('dating' in request.resource.data)
+               || (('dating' in resource.data
+                    && request.resource.data.dating == resource.data.dating)
+                   || (request.resource.data.dating.at == request.time
+                       && request.resource.data.dating.byUid == request.auth.uid));
+      }
+
+      allow update: if signedIn() && immutableKept() && numberWriteOnce()
+                    && datingTagKept() && datingTagHonest() && (
                       isAdmin()
                       || isSideEffectStamp()
                       || (isCreator()

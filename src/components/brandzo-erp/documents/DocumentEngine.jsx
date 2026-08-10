@@ -28,6 +28,8 @@ import { mergeParentLink } from '../../../services/documents/chain.js';
 import { lookupByBarcode } from '../../../services/itemService.js';
 import { isEditable } from '../../../services/documents/states.js';
 import FieldInput from './FieldInput.jsx';
+import { listenSettings } from '../../../services/settings/settingsService.js';
+import { evaluateHeaderDates } from '../../../services/documents/datingGuard.js';
 import InlineCreateModal from './InlineCreateModal.jsx';
 import LineItemsTable from './LineItemsTable.jsx';
 import Checklist from './Checklist.jsx';
@@ -59,6 +61,8 @@ export default function DocumentEngine() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
   const [createFor, setCreateFor] = useState(null); // طلب إنشاء أبٍ مباشر (المرحلة ب٢)
+  const [settings, setSettings] = useState(null); // سياسات التشغيل (م١-ج) — تحكم حارس التاريخ
+  const [backdateReason, setBackdateReason] = useState(''); // سبب التأريخ للماضي (م٢-ب)
 
   const schema = useMemo(() => getSchema(type), [type]);
 
@@ -110,6 +114,9 @@ export default function DocumentEngine() {
     };
   }, [docId, schema]);
 
+  // سياسات التشغيل حيّةً: تغييرُ المالك للمدى يسري هنا بلا إعادة تحميل.
+  useEffect(() => listenSettings(setSettings), []);
+
   const flash = useCallback((text, tone = 'ok') => {
     setMsg({ text, tone });
     setTimeout(() => setMsg(null), 4000);
@@ -118,6 +125,22 @@ export default function DocumentEngine() {
   const editable = isEditable(doc?.state) && (!docId || doc?.createdByUid === me?.uid || me?.role === 'admin');
   const canCreate = me && (me.role === 'admin' || (schema?.roles?.create || []).includes(me.role));
   const violations = useMemo(() => (schema?.warnings && doc ? schema.warnings(doc) : []), [schema, doc]);
+
+  // حكم التاريخ يُحسب مع كلّ ضغطة — فيُرى القيد وهو يقع لا عند الحفظ.
+  const dating = useMemo(
+    () =>
+      schema && doc
+        ? evaluateHeaderDates({
+            docType: schema.type,
+            header: doc.header || {},
+            schema,
+            settings,
+            today: new Date().toISOString().slice(0, 10),
+            role: me?.role || '',
+          })
+        : null,
+    [schema, doc, settings, me]
+  );
 
   function patchHeader(key, value) {
     setDoc((d) => ({ ...d, header: { ...d.header, [key]: value } }));
@@ -208,7 +231,7 @@ export default function DocumentEngine() {
       window.history.replaceState({}, '', url);
       return newId;
     }
-    await saveDocument(docId, payload);
+    await saveDocument(docId, { ...payload, settings, reason: backdateReason, profile: me });
     return docId;
   }
 
@@ -325,11 +348,50 @@ export default function DocumentEngine() {
           </p>
         )}
 
+        {/* الوسم دائم (م٢-ب): يرافق المستند ولا يُمحى، فيراه كلّ من يقرؤه. */}
+        {doc.dating?.backdated && (
+          <p className="text-xs text-ink bg-chip border border-line rounded-lg px-3 py-2">
+            <span className="font-bold">مؤرَّخ للماضي</span> — {doc.dating.daysBack} يومًا
+            {doc.dating.reason ? ` · السبب: ${doc.dating.reason}` : ''}
+            {doc.dating.byName ? ` · بيد: ${doc.dating.byName}` : ''}
+          </p>
+        )}
+
         {schema.sections.map((section) => (
           <section key={section.key} className="bg-chip border border-line rounded-2xl p-4 sm:p-5">
             <h2 className="text-base font-bold text-ink mb-3">{section.title}</h2>
             {section.note && section.kind !== 'table' && (
               <p className="text-[11px] text-accent/80 mb-3 leading-relaxed">{section.note}</p>
+            )}
+
+            {/* ═══ نزاهة التاريخ (م٢-ب): القيد يُرى وهو يقع لا عند الحفظ ═══ */}
+            {section.kind === 'fields' && editable && dating && !dating.ok && (
+              <div className="mb-4 rounded-lg border border-line bg-chip p-3">
+                {dating.blocked.length > 0 && (
+                  <p className="text-sm text-brand-red mb-2">
+                    {dating.blocked.map((f) => f.label).join('، ')}: لا واقعة في المستقبل — التاريخ بعد اليوم يُرفض.
+                  </p>
+                )}
+                {dating.needsApproval.length > 0 && (
+                  <>
+                    <p className="text-sm text-ink mb-1">
+                      {dating.needsApproval.map((f) => f.label).join('، ')}: تأريخٌ لما قبل {dating.backdateDays} يومًا.
+                      {dating.canApprove ? ' لك اعتماده.' : ` يعتمده ${dating.approver} وحده.`}
+                    </p>
+                    {dating.requireReason && (
+                      <label className="block mt-2">
+                        <span className="block text-xs font-bold text-ink-2 mb-1.5">سبب التأريخ للماضي (إلزاميّ — يُوسَم به المستند دائمًا)</span>
+                        <input
+                          className="w-full bg-surface border border-line rounded-lg px-3 py-2 text-sm text-ink"
+                          value={backdateReason}
+                          onChange={(e) => setBackdateReason(e.target.value)}
+                          placeholder="مثال: وصلت الفاتورة متأخّرة من المورّد"
+                        />
+                      </label>
+                    )}
+                  </>
+                )}
+              </div>
             )}
 
             {section.kind === 'fields' && (

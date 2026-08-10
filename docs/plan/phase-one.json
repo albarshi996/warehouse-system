@@ -340,7 +340,7 @@
       "milestone": "م-٢",
       "title": "ختم الخادم غير القابل للتحرير وحرّاس التأريخ",
       "owner": "Claude",
-      "state": "todo",
+      "state": "doing",
       "gaps": [
         "ف-٨"
       ],
@@ -355,7 +355,10 @@
         "ما وراء المدى: صلاحية + سبب مكتوب + وسم backdated دائم",
         "createdAt يبقى المرجع الثابت لإنشاء المستند"
       ],
-      "guardTest": "src/services/documents/datingGuard.test.js"
+      "guardTest": "src/services/documents/datingGuard.test.js",
+      "branch": "claude/phase-one-repairs-plan-07f596",
+      "progress": "بدأت — فحص مسار حفظ المستندات لتحديد نقطة الاختناق.",
+      "nextStep": "ابنِ datingGuard.js خالصًا (يقرأ صنف الحقل من timeFields وسياسة المدى من settingsModel)، ثمّ اربطه بنقطة اختناق حفظ المستند، ثمّ احرس الختم في firestore.rules، ثمّ وسم backdated دائمًا."
     },
     {
       "id": "م٢-ج",

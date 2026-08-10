@@ -32,6 +32,7 @@ import { INITIAL_STATE, isEditable, isLegalTransition, canDo, TRANSITIONS } from
 import { deriveDocument, parentApprovalProblem } from './chain.js';
 import { getSchema } from './schemas/index.js';
 import { primaryParentType } from './schemaUtils.js';
+import { dateSaveVerdict, defaultValueFor, eventFieldsOf } from './datingGuard.js';
 import { movesStock, POSTING_STATE } from '../ledger/postingRules.js';
 import { buildMoves } from '../ledger/movements.js';
 import { postDocument } from '../ledger/ledgerService.js';
@@ -50,6 +51,17 @@ function currentUid() {
 
 function currentName(profile) {
   return profile?.name || auth?.currentUser?.email || 'غير معروف';
+}
+
+/**
+ * «اليوم» للفحص المسبق (م٢-ب).
+ *
+ * ⚠️ **ساعة الجهاز، وهي ليست الحكم.** الحكم `request.time` في `firestore.rules`
+ * — فمن قدّم ساعة حاسوبه ليؤرّخ في المستقبل يجتاز هذا الفحص ويرتدّ عند الخادم.
+ * وجودُه هنا للرسالة المفهومة لا للحماية: الحماية عند الخادم وحده.
+ */
+function clientToday() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 /** يُضيف قيد تدقيق دائم. لا يُحدَّث ولا يُحذف أبدًا. */
@@ -71,12 +83,18 @@ export function appendAudit(docId, { action, note = '', from = '', to = '', prof
  * بلا رقم رسمي — الرقم يُمنح عند الإرسال (انظر numbering.js).
  */
 export async function createDraft({ type, stage = null, profile, header = {}, lines = [] }) {
+  // ختم الواقعة يُفتح على **اليوم** لا على فراغ: القيمة الافتراضيّة هي الصحيحة
+  // في تسعةٍ من كلّ عشرة، ومن أراد غيرها مرّ بمسار السبب والاعتماد.
+  const stamped = { ...header };
+  for (const key of eventFieldsOf(type, getSchema(type))) {
+    if (!String(stamped[key] ?? '').trim()) stamped[key] = defaultValueFor(type, key, clientToday());
+  }
   const ref = await addDoc(collection(db, DOCS), {
     type,
     stage,
     number: null,
     state: INITIAL_STATE,
-    header,
+    header: stamped,
     lines,
     links: {},
     createdByUid: currentUid(),
@@ -92,15 +110,53 @@ export async function createDraft({ type, stage = null, profile, header = {}, li
 /**
  * يحفظ حقول المسودّة. يرفض الكتابة على مستند غير قابل للتعديل —
  * فالمستند المُرسَل أو المعتمَد لا تتغيّر بياناته من تحت من اعتمده.
+ *
+ * ويحرس نزاهة التاريخ (م٢-ب): لا واقعة في المستقبل، وما وراء المدى يحتاج
+ * اعتمادًا وسببًا مكتوبًا ويُوسَم وسمًا دائمًا.
+ *
+ * @param {object} opts
+ * @param {object} [opts.settings] سياسات التشغيل — غيابها يعني الافتراضات
+ * @param {string} [opts.reason] سبب التأريخ للماضي
+ * @param {object} [opts.profile] ملفّ الفاعل (دورُه يقرّر الاعتماد)
  */
-export async function saveDocument(docId, { header, lines, links }) {
+export async function saveDocument(docId, { header, lines, links, settings, reason = '', profile } = {}) {
   const snap = await getDoc(doc(db, DOCS, docId));
   if (!snap.exists()) throw new Error('المستند غير موجود.');
-  if (!isEditable(snap.data().state)) {
+  const data = snap.data();
+  if (!isEditable(data.state)) {
     throw new Error('لا يمكن التعديل بعد الإرسال — المستند خرج من يدك.');
   }
+
   const patch = { updatedAt: serverTimestamp() };
-  if (header !== undefined) patch.header = header;
+  if (header !== undefined) {
+    const verdict = dateSaveVerdict({
+      docType: data.type,
+      schema: getSchema(data.type),
+      header,
+      settings,
+      today: clientToday(),
+      role: profile?.role || '',
+      reason,
+    });
+    if (!verdict.ok) throw new Error(verdict.problems.join(' · '));
+    patch.header = header;
+    // الوسم دائم: يُكتب حين يوجد، ولا يُمحى حين لا يوجد — مستندٌ أُرّخ للماضي
+    // ثمّ صُحّح تاريخه يبقى أثرُه. والهويّة والوقت من هنا لا من المتصفّح.
+    if (verdict.tag) {
+      patch.dating = {
+        ...verdict.tag,
+        byUid: currentUid(),
+        byName: currentName(profile),
+        byRole: profile?.role || '',
+        at: serverTimestamp(),
+      };
+      await appendAudit(docId, {
+        action: 'backdate',
+        note: `تأريخٌ للماضي ${verdict.tag.daysBack} يومًا (${verdict.tag.fields.join('، ')}): ${verdict.tag.reason || 'بلا سبب مطلوب'}`,
+        profile,
+      });
+    }
+  }
   if (lines !== undefined) patch.lines = lines;
   if (links !== undefined) patch.links = links;
   return updateDoc(doc(db, DOCS, docId), patch);
