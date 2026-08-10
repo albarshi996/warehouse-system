@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 74,
+    "modules": 77,
     "serviceDomains": 30,
     "serviceFiles": 193,
     "collections": 49,
@@ -20,6 +20,14 @@
     "pipelines": 3
   },
   "modules": [
+    {
+      "name": "[sector]",
+      "route": "/dashboard/[sector]",
+      "title": "",
+      "summary": "",
+      "file": "src/pages/dashboard/sector-presentations/[sector].astro",
+      "usesServices": []
+    },
     {
       "name": "acceptance-check",
       "route": "/dashboard/acceptance-check",
@@ -154,6 +162,14 @@
       "title": "المستندات",
       "summary": "صندوق المستندات — مستنداتي · بانتظار اعتمادي · الكل (للمدير).",
       "file": "src/pages/dashboard/documents.astro",
+      "usesServices": []
+    },
+    {
+      "name": "engineering-office-meeting",
+      "route": "/dashboard/engineering-office-meeting",
+      "title": "اجتماع توحيد المتابعة الهندسية",
+      "summary": "",
+      "file": "src/pages/dashboard/engineering-office-meeting.astro",
       "usesServices": []
     },
     {
@@ -485,6 +501,14 @@
       "title": "سجلّ حركة الأدوار",
       "summary": "سجلّ حركة الأدوار — رصدٌ حيٌّ فعليّ للحركة في البوابة.",
       "file": "src/pages/dashboard/role-activity.astro",
+      "usesServices": []
+    },
+    {
+      "name": "sector-presentations",
+      "route": "/dashboard/sector-presentations",
+      "title": "عروض القطاعات التشغيلية",
+      "summary": "",
+      "file": "src/pages/dashboard/sector-presentations.astro",
       "usesServices": []
     },
     {
