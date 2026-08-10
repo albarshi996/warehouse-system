@@ -57,6 +57,13 @@ export const DOC_ODOO_MAP = {
   VRT: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   VSR: { model: 'x_van.settlement', confirmState: 'done', confirmLabel: 'مُقفَلة', verb: 'اعتمد التسوية' },
 
+  /* ── البضاعة المحميّة والأمانة ──
+     أودو يمثّل الأمانة بموقعٍ من نوع `consignment` تحت العميل، فحركاتها
+     مناقلات مخزون. أمّا تحقّق البيع فأمر بيعٍ حقيقيّ — عنده تخرج الملكيّة. */
+  VCD: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  VCS: { model: 'sale.order', confirmState: 'sale', confirmLabel: 'مؤكّد', verb: 'اعتمد' },
+  VCR: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+
   /* ── المرتجعات والتالف والجرد ── */
   RET: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   DMG: { model: 'stock.scrap', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },

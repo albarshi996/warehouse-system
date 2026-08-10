@@ -14,8 +14,15 @@
  *      مكتوب، لا يُقيَّد بصمتٍ ثم يُكتشف في الجرد بعد شهر.
  */
 import { balanceId } from '../balances/balanceKey.js';
-import { postingRuleFor, WAREHOUSE_TOKENS, isWarehouseToken, isVehicleToken, POSTING_STATE } from './postingRules.js';
-import { vehicleLocationCode, isAccountLocation } from './locations.js';
+import {
+  postingRuleFor,
+  WAREHOUSE_TOKENS,
+  isWarehouseToken,
+  isVehicleToken,
+  isCustomerToken,
+  POSTING_STATE,
+} from './postingRules.js';
+import { vehicleLocationCode, customerLocationCode, isAccountLocation } from './locations.js';
 
 /** فاصل المعرّف الحتمي — نفس نمط `balanceId`. */
 const SEP = '__';
@@ -42,6 +49,11 @@ function resolveLocation(slot, header) {
   if (isVehicleToken(slot)) {
     const plate = String(header?.vehiclePlate ?? '').trim();
     return plate ? vehicleLocationCode(plate) : undefined; // undefined = لوحة ناقصة
+  }
+  // موقع العميل: يُقرأ من رمزه ويُصاغ `CUST:‹رمز›` — رصيد الأمانة والمحميّة.
+  if (isCustomerToken(slot)) {
+    const code = String(header?.customerCode ?? '').trim();
+    return code ? customerLocationCode(code) : undefined; // undefined = رمز ناقص
   }
   if (isWarehouseToken(slot)) {
     const field = WAREHOUSE_TOKENS[slot];

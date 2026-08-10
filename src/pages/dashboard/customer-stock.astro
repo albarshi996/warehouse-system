@@ -1,0 +1,14 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import CustomerStock from '../../components/brandzo-erp/protection/CustomerStock.jsx';
+---
+
+<DashboardLayout title="بضاعة العملاء" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">بضاعة العملاء</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      الأمانة والبضاعة المحميّة لدى كلّ تاجر — بتشغيلتها وصلاحيتها ومدّة حمايتها المتبقّية.
+    </p>
+    <CustomerStock client:load />
+  </div>
+</DashboardLayout>

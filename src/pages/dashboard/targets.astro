@@ -1,0 +1,14 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import TargetsBoard from '../../components/brandzo-erp/targets/TargetsBoard.jsx';
+---
+
+<DashboardLayout title="المستهدفات" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">المستهدفات والإنجاز</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      الرقم مقابل مرجعه — والإيقاع لا النسبة وحدها: أربعون بالمئة في اليوم الثالث تفوّق، وفي الثامن والعشرين تأخّر.
+    </p>
+    <TargetsBoard client:load />
+  </div>
+</DashboardLayout>

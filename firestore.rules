@@ -203,6 +203,13 @@ service cloud.firestore {
            : docType == 'CRN'     ? ['sales_supervisor', 'warehouse_manager', 'return_manager']
            : docType == 'VRT'     ? ['warehouse_manager', 'sales_supervisor']
            : docType == 'VSR'     ? ['sales_supervisor', 'warehouse_manager']
+           // البضاعة المحميّة: الإيداع **التزامٌ ائتمانيّ لا بيع** — المندوب
+           // يمنح بضاعةً بلا مقابلٍ فوريّ ويعِد بحقّ إرجاعٍ يُكلّف لاحقًا، فيخرج
+           // اعتماده من يده. والاسترداد هو الباب الذي يُخفى منه العجز. أمّا
+           // تحقّق البيع فإثباتُ واقعةٍ وقعت — كالفاتورة، لا يوقفه انتظار.
+           : docType == 'VCD'     ? ['sales_supervisor', 'warehouse_manager']
+           : docType == 'VCS'     ? ['sales_rep', 'sales_supervisor']
+           : docType == 'VCR'     ? ['sales_supervisor', 'warehouse_manager', 'return_manager']
            // المشتريات الداخلية: المدير المالي يعتمد الطلب والترسية والأمر
            // والصرف، والمستفيد (مستخدم الإدارة) يُقرّ استلام التسليم.
            : docType == 'IPR'     ? ['finance_manager', 'warehouse_manager']
@@ -243,6 +250,11 @@ service cloud.firestore {
            : docType == 'CRN'     ? ['sales_rep', 'sales_supervisor']
            : docType == 'VRT'     ? ['storekeeper', 'warehouse_manager']
            : docType == 'VSR'     ? ['sales_supervisor', 'warehouse_manager']
+           // البضاعة المحميّة: الثلاثة يُنجزها الميدان — فالبضاعة تتحرّك بين
+           // المركبة ورفّ التاجر، ولا يمرّ شيءٌ منها بالمستودع حتى `VRT`.
+           : docType == 'VCD'     ? ['sales_rep', 'sales_supervisor']
+           : docType == 'VCS'     ? ['sales_rep', 'sales_supervisor']
+           : docType == 'VCR'     ? ['sales_rep', 'sales_supervisor']
            // المشتريات الداخلية: المشتريات تُنهي الطلب والكشف والأمر والتسليم،
            // وأمين الخزينة يُنهي سند الصرف (تنفيذ الصرف الفعليّ).
            : docType == 'IPR'     ? ['purchase_officer', 'warehouse_manager']
@@ -815,6 +827,23 @@ service cloud.firestore {
         allow create: if isLaborWriter() && request.resource.data.byUid == request.auth.uid;
         allow update, delete: if false;
       }
+    }
+
+    // المستهدفات — يضعها المشرف والمديران، ويقرؤها الجميع (المندوب يحتاج أن
+    // يرى ما كُلِّف به). **لا حقل إنجازٍ فيها**: الإنجاز يُشتقّ من المستندات
+    // المنجَزة والزيارات لحظة القراءة، فلا يستطيع أحدٌ تحسين رقمه بتعديل صفّ.
+    match /targets/{targetId} {
+      allow read: if signedIn();
+      allow create, update: if isManager() || myRole() == 'sales_supervisor';
+      allow delete: if false;
+    }
+
+    // سياسات الحماية وحقّ الإرجاع — مستندٌ واحد يقرؤه الجميع (المندوب يحتاجه
+    // ليعرف ما يجوز إيداعه وما يُقبل استرداده) ويكتبه المشرف والمديران وحدهم.
+    // **المندوب لا يكتبها**: سياسةٌ يعدّلها من يُحتجّ بها عليه ليست سياسة.
+    match /protection_policies/{docId} {
+      allow read: if signedIn();
+      allow write: if isManager() || myRole() == 'sales_supervisor';
     }
 
     // العروض الترويجيّة — يعرّفها المشرف والمديران، ويقرؤها الجميع (المندوب

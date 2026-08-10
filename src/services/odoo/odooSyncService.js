@@ -17,6 +17,7 @@
 import {
   collection,
   doc,
+  getDoc,
   setDoc,
   addDoc,
   onSnapshot,
@@ -31,6 +32,8 @@ import { itemToProductValues, productToItem, ledgerMoveToStockMove } from './odo
 import { poDocToPurchaseOrder } from './poMapper.js';
 import { grnDocToStockPicking, autoReceiptFromPo } from './grnMapper.js';
 import { odooTargetFor, docToOdooValues } from './docCrosswalk.js';
+import { mapVanDocument, isVanSalesType, vanDocSummary } from './vanSalesMapper.js';
+import { mirrorIdFor, resolveSyncAction, duplicateIds, sourceDomain, canPush } from './idempotency.js';
 import { getItem, createItem, updateItem } from '../itemService.js';
 
 const COL_SYNC = 'odoo_sync';
@@ -75,8 +78,12 @@ async function logEvent(kind, { sourceType, sourceId = null, message = '' }, pro
 export async function pushPurchaseOrder(poDoc, profile) {
   if (!poDoc?.id) throw new Error('مستند أمر الشراء بلا معرّف.');
   const values = poDocToPurchaseOrder(poDoc);
-  const odooId = await odoo.create('purchase.order', {
-    ...values,
+  // محصَّن ضدّ الازدواج: يُنشأ مرّةً واحدة ثمّ يُحدَّث (كان `create` مباشرًا).
+  const { odooId, reason, duplicates } = await pushOnce({
+    mirrorId: `PO_${poDoc.id}`,
+    model: 'purchase.order',
+    values,
+    sourceNumber: poDoc.number,
     name: poDoc.number || `P${poDoc.id}`,
   });
   const who = whoami(profile);
@@ -101,8 +108,14 @@ export async function pushPurchaseOrder(poDoc, profile) {
     { merge: true }
   );
   await logEvent(
-    'push',
-    { sourceType: 'PO', sourceId: poDoc.id, message: `دُفع أمر الشراء ${poDoc.number || ''} إلى أودو مسوّدةً` },
+    duplicates.length ? 'error' : 'push',
+    {
+      sourceType: 'PO',
+      sourceId: poDoc.id,
+      message: duplicates.length
+        ? `${poDoc.number}: ${reason} النسخ الزائدة: ${duplicates.join('، ')} — تحتاج حذفًا يدويًّا.`
+        : `أمر الشراء ${poDoc.number || ''}: ${reason}`,
+    },
     profile
   );
   return odooId;
@@ -115,7 +128,16 @@ export async function pushPurchaseOrder(poDoc, profile) {
 export async function pushItem(item, profile) {
   if (!item?.sku) throw new Error('الصنف بلا كود (SKU).');
   const values = itemToProductValues(item);
-  const odooId = await odoo.create('product.product', values);
+  // محصَّن ضدّ الازدواج: الصنف يُعرَّف في أودو بـ`default_code` لا بأثرٍ راجع،
+  // فالبحث به. وصنفٌ مكرَّرٌ في الماستر يعني رصيدًا منقسمًا بين نسختين.
+  const { odooId } = await pushOnce({
+    mirrorId: `ITEM_${item.sku}`,
+    model: 'product.product',
+    values,
+    sourceNumber: item.sku,
+    name: values.name || item.sku,
+    domain: [['default_code', '=', String(item.sku).trim().toUpperCase()]],
+  });
   const who = whoami(profile);
   await setDoc(
     doc(db, COL_SYNC, `ITEM_${item.sku}`),
@@ -173,9 +195,15 @@ export async function approveInOdoo(rec, profile) {
   // سلوك أودو الحقيقيّ: تأكيد الأمر يجدول استلامًا واردًا تلقائيًّا.
   const who = whoami(profile);
   const receiptValues = autoReceiptFromPo(rec);
-  const pickingId = await odoo.create('stock.picking', {
-    ...receiptValues,
-    name: `WH/IN/${String(rec.odooId).padStart(5, '0')}`,
+  // محصَّن ضدّ الازدواج: اعتمادُ الأمر مرّتين لا يجدول استلامَين.
+  const receiptName = `WH/IN/${String(rec.odooId).padStart(5, '0')}`;
+  const { odooId: pickingId } = await pushOnce({
+    mirrorId: `PICK_PO_${rec.sourceId}`,
+    model: 'stock.picking',
+    values: receiptValues,
+    sourceNumber: receiptName,
+    name: receiptName,
+    domain: [['name', '=', receiptName]],
   });
   await setDoc(
     doc(db, COL_SYNC, `PICK_PO_${rec.sourceId}`),
@@ -214,8 +242,12 @@ export async function approveInOdoo(rec, profile) {
 export async function pushGoodsReceipt(grnDoc, profile) {
   if (!grnDoc?.id) throw new Error('مستند الاستلام بلا معرّف.');
   const values = grnDocToStockPicking(grnDoc);
-  const odooId = await odoo.create('stock.picking', {
-    ...values,
+  // محصَّن ضدّ الازدواج كسائر المسارات (كان `create` مباشرًا).
+  const { odooId } = await pushOnce({
+    mirrorId: `GRN_${grnDoc.id}`,
+    model: 'stock.picking',
+    values,
+    sourceNumber: grnDoc.number,
     name: grnDoc.number || `WH/IN/${grnDoc.id}`,
   });
   const who = whoami(profile);
@@ -277,17 +309,134 @@ export async function validateReceiptInOdoo(rec, profile) {
  *
  * @param {object} docObj  مستند البوابة { id, type, number, header, lines, links }
  */
+/**
+ * ═══ الدفع المحصَّن: إنشاءٌ مرّةً واحدة لا غير ═══
+ *
+ * كان الجسر يستدعي `odoo.create` بلا فحص، فالدفع مرّتين يُنشئ سجلَّين في أودو
+ * ومرآةً واحدة — ازدواجٌ صامتٌ لا يُكتشف إلّا في تقريرٍ ماليٍّ بعد شهور. وليست
+ * الحالة نادرة: شبكةٌ تنقطع بعد الإنشاء وقبل كتابة المرآة، أو ضغطةٌ مزدوجة، أو
+ * إعادة مزامنةٍ بعد فشلٍ ظاهر.
+ *
+ * ثلاث طبقاتٍ للحماية (القرار في `idempotency.js` الخالص، والتنفيذ هنا):
+ *   ① المرآة تحمل `odooId` ⇒ تحديث.
+ *   ② لا مرآة، لكنّ أودو يحمل سجلًّا بالأثر الراجع ⇒ تبنٍّ (تعافٍ من ضياع المرآة).
+ *   ③ وإلّا ⇒ إنشاء.
+ *
+ * @returns {Promise<{odooId:number, action:string, reason:string, duplicates:number[]}>}
+ */
+export async function pushOnce({ mirrorId, model, values, sourceNumber, name, domain: domainOverride }) {
+  const ref = doc(db, COL_SYNC, mirrorId);
+  const snap = await getDoc(ref);
+  const mirror = snap.exists() ? snap.data() : null;
+
+  // الطبقة ②: نسأل أودو عن الأثر الراجع — الحقيقة عنده لا عند مرآتنا.
+  // `domainOverride` لما لا يحمل `x_source_number` (الأصناف تُعرَّف بـ`default_code`).
+  let existing = [];
+  if (!mirror?.odooId) {
+    const domain = domainOverride || sourceDomain(sourceNumber);
+    if (domain) {
+      try {
+        existing = (await odoo.searchRead(model, domain, ['id'])) || [];
+      } catch {
+        existing = []; // بحثٌ فاشل لا يمنع الدفع — لكنّه لا يُدّعى نجاحًا
+      }
+    }
+  }
+
+  const decision = resolveSyncAction({ mirror, existing, sourceNumber });
+  const payload = { ...values, name: name || sourceNumber };
+
+  let odooId = decision.odooId;
+  if (decision.action === 'create') {
+    odooId = await odoo.create(model, payload);
+  } else {
+    // التبنّي والتحديث كلاهما كتابةٌ على القائم — لا إنشاء.
+    await odoo.write(model, [odooId], payload);
+  }
+
+  return { odooId, action: decision.action, reason: decision.reason, duplicates: duplicateIds(existing, odooId) };
+}
+
+/**
+ * يدفع مستند دورة البيع من المركبة أو البضاعة المحميّة إلى أودو.
+ * ثمانية أنواعٍ إلى نموذجَين: `sale.order` لما يُخرج الملكيّة، و`stock.picking`
+ * لما يُحرّك بضاعةً بين مواقعنا، و`x_van.settlement` للتسوية.
+ */
+export async function pushVanSalesDocument(docObj, profile) {
+  const guard = canPush(docObj);
+  if (!guard.ok) throw new Error(guard.reason);
+
+  const mapped = mapVanDocument(docObj);
+  if (!mapped) throw new Error(`النوع ${docObj.type} خارج تغطية مخطِّط البيع من المركبة.`);
+
+  const summary = vanDocSummary(docObj);
+  const result = await pushOnce({
+    mirrorId: mirrorIdFor(docObj.type, docObj.id),
+    model: mapped.model,
+    values: mapped.values,
+    sourceNumber: docObj.number,
+    name: docObj.number,
+  });
+
+  const target = odooTargetFor(docObj.type);
+  const who = whoami(profile);
+  await setDoc(
+    doc(db, COL_SYNC, mirrorIdFor(docObj.type, docObj.id)),
+    {
+      sourceType: docObj.type,
+      sourceId: docObj.id,
+      sourceNumber: docObj.number || '',
+      odooModel: mapped.model,
+      odooId: result.odooId,
+      odooState: 'draft',
+      confirmState: target?.confirmState || 'done',
+      confirmLabel: target?.confirmLabel || 'منجَز',
+      verb: target?.verb || 'اعتمد',
+      direction: 'push',
+      title: summary.customer || docObj.number || docObj.type,
+      vehicle: summary.vehicle,
+      amountTotal: summary.amountTotal,
+      lineCount: summary.lineCount,
+      lastAction: result.action,
+      duplicatesFound: result.duplicates,
+      syncedAt: serverTimestamp(),
+      byUid: who.byUid,
+      byName: who.byName,
+    },
+    { merge: true }
+  );
+
+  await logEvent(
+    result.duplicates.length ? 'error' : 'push',
+    {
+      sourceType: docObj.type,
+      sourceId: docObj.id,
+      message: result.duplicates.length
+        ? `${docObj.number}: ${result.reason} النسخ الزائدة: ${result.duplicates.join('، ')} — تحتاج حذفًا يدويًّا.`
+        : `${docObj.number} → ${mapped.model}: ${result.reason}`,
+    },
+    profile
+  );
+
+  return result.odooId;
+}
+
 export async function pushAnyDocument(docObj, profile) {
   if (!docObj?.id) throw new Error('المستند بلا معرّف.');
   if (docObj.type === 'PO') return pushPurchaseOrder(docObj, profile);
   if (docObj.type === 'GRN') return pushGoodsReceipt(docObj, profile);
+  if (isVanSalesType(docObj.type)) return pushVanSalesDocument(docObj, profile);
 
   const target = odooTargetFor(docObj.type);
   if (!target) throw new Error(`النوع ${docObj.type} خارج جدول العبور — أضفه في docCrosswalk.js.`);
 
   const values = docToOdooValues(docObj);
-  const odooId = await odoo.create(target.model, {
-    ...values,
+  // محصَّن ضدّ الازدواج كسائر المسارات (كان `create` مباشرًا).
+  const { odooId } = await pushOnce({
+    mirrorId: `DOC_${docObj.type}_${docObj.id}`,
+    model: target.model,
+    values,
+    sourceNumber: docObj.number,
     name: docObj.number || `${docObj.type}/${docObj.id}`,
   });
   const who = whoami(profile);

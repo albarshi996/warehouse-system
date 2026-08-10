@@ -668,8 +668,28 @@ test('مخطّطات F4 الخمسة مسجّلة — والمجموعة صار�
     assert.equal(s.signatures.length, 3);
     assert.ok(typeof s.warnings === 'function');
   }
-  assert.equal(readyTypes().length, 32, 'اثنان وثلاثون نموذجًا بعد دورة البيع من المركبة (VLD·VSI·CRN·VRT·VSR)');
-  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 32);
+  assert.equal(readyTypes().length, 35, 'خمسة وثلاثون نموذجًا بعد البضاعة المحميّة (VCD·VCS·VCR)');
+  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 35);
+});
+
+test('البضاعة المحميّة: المخطّطات الثلاثة مسجّلة وكاملة البنية', () => {
+  for (const t of ['VCD', 'VCS', 'VCR']) {
+    const s = getSchema(t);
+    assert.ok(s, `مخطّط ${t} غير مسجّل`);
+    assert.equal(s.type, t);
+    assert.ok(s.roles.create.length && s.roles.approve.length && s.roles.complete.length);
+    assert.ok(s.sections.some((sec) => sec.kind === 'table'), `${t} بلا جدول بنود`);
+    assert.ok(typeof s.warnings === 'function', `${t} بلا دالّة تحذيرات`);
+  }
+});
+
+test('البضاعة المحميّة: الالتزام يعتمده المشرف، وتحقّق البيع لا', () => {
+  // الإيداع التزامٌ ائتمانيّ لا بيع — يخرج اعتماده من يد من يمنحه.
+  assert.ok(!getSchema('VCD').roles.approve.includes('sales_rep'));
+  // والاسترداد هو الباب الذي يُخفى منه العجز.
+  assert.ok(!getSchema('VCR').roles.approve.includes('sales_rep'));
+  // أمّا تحقّق البيع فإثباتُ واقعةٍ وقعت — كالفاتورة، لا يوقفه انتظار.
+  assert.ok(getSchema('VCS').roles.approve.includes('sales_rep'));
 });
 
 test('دورة البيع من المركبة: المخطّطات الخمسة مسجّلة وكاملة البنية', () => {

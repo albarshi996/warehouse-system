@@ -39,6 +39,10 @@ import vsi from './vsi.js';
 import crn from './crn.js';
 import vrt from './vrt.js';
 import vsr from './vsr.js';
+// البضاعة المحميّة والأمانة: إيداعٌ فتحقّق بيعٍ أو استرداد
+import vcd from './vcd.js';
+import vcs from './vcs.js';
+import vcr from './vcr.js';
 // دورة المشتريات الداخلية (طلبات الإدارات من المالية): طلب ← عروض ← أمر ← صرف ← تسليم
 import ipr from './ipr.js';
 import rfq from './rfq.js';
@@ -69,6 +73,9 @@ const SCHEMAS = {
   CRN: crn,
   VRT: vrt,
   VSR: vsr,
+  VCD: vcd,
+  VCS: vcs,
+  VCR: vcr,
   RET: ret,
   SRN: srn,
   DMG: dmg,
@@ -109,6 +116,10 @@ export const GOVERNED_FORMS = [
   { type: 'CRN', stage: 8, titleAr: 'مرتجع ميدانيّ من العميل', file: '', phase: 'VS' },
   { type: 'VRT', stage: 9, titleAr: 'إرجاع متبقّي المركبة', file: '', phase: 'VS' },
   { type: 'VSR', stage: 10, titleAr: 'تسوية نهاية الرحلة', file: '', phase: 'VS' },
+  // البضاعة المحميّة (PR): إيداعٌ ← تحقّق بيعٍ أو استرداد
+  { type: 'VCD', stage: 7, titleAr: 'إيداع بضاعة محميّة', file: '', phase: 'PR' },
+  { type: 'VCS', stage: 8, titleAr: 'تحقّق بيع الأمانة', file: '', phase: 'PR' },
+  { type: 'VCR', stage: 9, titleAr: 'استرداد بضاعة محميّة', file: '', phase: 'PR' },
   { type: 'RET', stage: 8, titleAr: 'إشعار الإرجاع', file: 'form_ReturnNote.html', phase: 'F4' },
   { type: 'SRN', stage: 4, titleAr: 'إشعار رفض الاستلام', file: '', phase: 'SI' },
   { type: 'DMG', stage: 8, titleAr: 'سند التالف', file: 'form_Damaged Goods Report.html', phase: 'F4' },

@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 79,
-    "serviceDomains": 32,
-    "serviceFiles": 205,
-    "collections": 53,
+    "modules": 81,
+    "serviceDomains": 34,
+    "serviceFiles": 219,
+    "collections": 55,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -123,6 +123,14 @@
         "custody",
         "ui"
       ]
+    },
+    {
+      "name": "customer-stock",
+      "route": "/dashboard/customer-stock",
+      "title": "بضاعة العملاء",
+      "summary": "",
+      "file": "src/pages/dashboard/customer-stock.astro",
+      "usesServices": []
     },
     {
       "name": "customers",
@@ -625,6 +633,14 @@
       ]
     },
     {
+      "name": "targets",
+      "route": "/dashboard/targets",
+      "title": "المستهدفات",
+      "summary": "",
+      "file": "src/pages/dashboard/targets.astro",
+      "usesServices": []
+    },
+    {
       "name": "tasks",
       "route": "/dashboard/tasks",
       "title": "المهام التشغيلية",
@@ -942,12 +958,15 @@
         "tr.js",
         "trc.js",
         "trn.js",
+        "vcd.js",
+        "vcr.js",
+        "vcs.js",
         "vld.js",
         "vrt.js",
         "vsi.js",
         "vsr.js"
       ],
-      "fileCount": 52,
+      "fileCount": 55,
       "testCount": 8,
       "exports": [
         "ACCEPTED_ATTACHMENT_TYPES",
@@ -1121,6 +1140,9 @@
         "validateEncoded",
         "validateSource",
         "varianceValue",
+        "vcdWarnings",
+        "vcrWarnings",
+        "vcsWarnings",
         "vldWarnings",
         "vrtWarnings",
         "vsiWarnings",
@@ -1449,6 +1471,7 @@
       "domain": "ledger",
       "dir": "src/services/ledger",
       "files": [
+        "customerLocation.test.js",
         "ledger.test.js",
         "ledgerCard.js",
         "ledgerService.js",
@@ -1465,10 +1488,11 @@
         "transferReports.test.js",
         "vehicle.test.js"
       ],
-      "fileCount": 15,
-      "testCount": 5,
+      "fileCount": 16,
+      "testCount": 6,
       "exports": [
         "ACCOUNT_LOCATIONS",
+        "CUSTOMER",
         "CUSTOMER_PREFIX",
         "EXTERNAL",
         "EXTERNAL_LABEL",
@@ -1501,6 +1525,7 @@
         "findNegativeBalance",
         "isAccountLocation",
         "isCustomerLocation",
+        "isCustomerToken",
         "isFullyReleased",
         "isPosted",
         "isReservedCode",
@@ -1680,6 +1705,7 @@
         "docCrosswalk.test.js",
         "grnMapper.js",
         "grnMapper.test.js",
+        "idempotency.js",
         "index.js",
         "mockOdooClient.js",
         "odooClient.js",
@@ -1687,37 +1713,50 @@
         "odooMapper.js",
         "odooSyncService.js",
         "poMapper.js",
-        "poMapper.test.js"
+        "poMapper.test.js",
+        "vanSalesMapper.js",
+        "vanSalesOdoo.test.js"
       ],
-      "fileCount": 12,
-      "testCount": 3,
+      "fileCount": 15,
+      "testCount": 4,
       "exports": [
         "DOC_ODOO_MAP",
         "ODOO_MODE",
         "ODOO_PROXY_URL",
+        "PARTNER_LOCATION",
+        "VAN_SALES_TYPES",
         "approveAnyInOdoo",
         "approveInOdoo",
         "authenticate",
         "autoReceiptFromPo",
+        "canPush",
         "coveredTypes",
         "create",
+        "customerLocationName",
         "describeOdooConfig",
         "docToOdooValues",
+        "duplicateIds",
         "grnDocToStockPicking",
         "grnLineToMoveLine",
         "indexSyncBySource",
         "isProduction",
         "isTraining",
+        "isVanSalesType",
         "itemToProductValues",
         "ledgerMoveToStockMove",
+        "lineToSaleLine",
+        "lineToStockMove",
         "listenSyncEvents",
         "listenSyncState",
         "m2oId",
         "m2oLabel",
+        "mapVanDocument",
+        "mirrorIdFor",
         "mockOdooClient",
         "odoo",
         "odooStateLabel",
         "odooTargetFor",
+        "pickingRouteFor",
         "pickingStateLabel",
         "poDocToPurchaseOrder",
         "poLineToOrderLine",
@@ -1727,15 +1766,24 @@
         "pushAnyDocument",
         "pushGoodsReceipt",
         "pushItem",
+        "pushOnce",
         "pushPurchaseOrder",
+        "pushVanSalesDocument",
         "realOdooClient",
         "resetMock",
+        "resolveSyncAction",
         "searchRead",
+        "settlementToOdoo",
+        "sourceDomain",
         "stockMoveToLog",
         "stockPickingToSummary",
         "syncLedgerMoves",
         "unlink",
         "validateReceiptInOdoo",
+        "vanDocSummary",
+        "vanDocToPicking",
+        "vanDocToSaleOrder",
+        "vanLocationName",
         "write"
       ],
       "collections": [
@@ -1867,6 +1915,38 @@
       "collections": [
         "promotions"
       ]
+    },
+    {
+      "domain": "protection",
+      "dir": "src/services/protection",
+      "files": [
+        "protection.test.js",
+        "protectionModel.js",
+        "protectionService.js"
+      ],
+      "fileCount": 3,
+      "testCount": 1,
+      "exports": [
+        "DEFAULT_GRACE_DAYS",
+        "DISPOSITIONS",
+        "PROTECTION_POLICIES",
+        "RETURN_CONDITIONS",
+        "customerStockAlerts",
+        "customerStockSummary",
+        "daysBetween",
+        "dispositionFor",
+        "emptyPolicies",
+        "expiryStatus",
+        "fetchPolicies",
+        "isConsignable",
+        "listenPolicies",
+        "parseDay",
+        "policyFor",
+        "policyVerdict",
+        "returnVerdict",
+        "savePolicies"
+      ],
+      "collections": []
     },
     {
       "domain": "readiness",
@@ -2011,6 +2091,48 @@
         "studyVerdict"
       ],
       "collections": []
+    },
+    {
+      "domain": "targets",
+      "dir": "src/services/targets",
+      "files": [
+        "achievement.js",
+        "targetModel.js",
+        "targets.test.js",
+        "targetsService.js"
+      ],
+      "fileCount": 4,
+      "testCount": 1,
+      "exports": [
+        "DIMENSIONS",
+        "METRICS",
+        "PERIODS",
+        "SALES_DOC_TYPES",
+        "STATUS_LABELS",
+        "blankTarget",
+        "computeAchievement",
+        "computeAll",
+        "docDay",
+        "docMatchesDimension",
+        "inclusiveDays",
+        "isWithinPeriod",
+        "leaderboard",
+        "lineInScope",
+        "lineValue",
+        "listenTargets",
+        "parseDay",
+        "periodPace",
+        "salesRollup",
+        "saveTarget",
+        "setTargetActive",
+        "summarize",
+        "targetVerdict",
+        "visitMatchesDimension",
+        "visitsRollup"
+      ],
+      "collections": [
+        "targets"
+      ]
     },
     {
       "domain": "tasks",
@@ -3410,6 +3532,31 @@
         ]
       },
       {
+        "name": "protection_policies",
+        "path": "protection_policies",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "write"
+            ],
+            "condition": "isManager() || myRole() == 'sales_supervisor'",
+            "roles": [
+              "isManager",
+              "myRole"
+            ]
+          }
+        ]
+      },
+      {
         "name": "stock_moves",
         "path": "stock_moves",
         "rules": [
@@ -3472,6 +3619,39 @@
             "condition": "isManager()",
             "roles": [
               "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "targets",
+        "path": "targets",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager() || myRole() == 'sales_supervisor'",
+            "roles": [
+              "isManager",
+              "myRole"
             ]
           },
           {

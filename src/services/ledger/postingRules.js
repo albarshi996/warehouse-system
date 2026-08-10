@@ -48,6 +48,16 @@ export const WAREHOUSE_TO = '@warehouseTo';
  */
 export const VEHICLE = '@vehicle';
 
+/**
+ * موقع العميل: يُقرأ من `header.customerCode` ويُصاغ `CUST:‹رمز›` وقت القيد.
+ *
+ * لماذا للعميل رصيدٌ أصلًا؟ لأنّ بعض ما يخرج إليه **لا تخرج ملكيّته**: الأمانة
+ * والبضاعة المحميّة. فما دام لنا حقّ استردادها فهي مخزونُنا وإن كانت على رفّه،
+ * وتتبّع تشغيلتها وصلاحيتها عنده واجبٌ لا ترف. والقاعدة تبقى كما هي: **ما له
+ * رصيدٌ في دفترنا فهو ملكنا** — فالموقع نفسه يحمل الملكيّة بلا بُعدٍ ثالث.
+ */
+export const CUSTOMER = '@customer';
+
 /** خريطة الرمز ← حقل رأس المستند الذي يُقرأ منه. */
 export const WAREHOUSE_TOKENS = {
   [WAREHOUSE]: 'warehouse',
@@ -63,6 +73,11 @@ export function isWarehouseToken(slot) {
 /** هل هذا الموقع رمزُ مركبةٍ يُقرأ من لوحتها في الرأس؟ */
 export function isVehicleToken(slot) {
   return slot === VEHICLE;
+}
+
+/** هل هذا الموقع رمزُ عميلٍ يُقرأ من رمزه في الرأس؟ */
+export function isCustomerToken(slot) {
+  return slot === CUSTOMER;
 }
 
 /**
@@ -244,6 +259,40 @@ export const POSTING_RULES = {
     costField: 'unitCost',
     reason: 'van-return-out',
     labelAr: 'إرجاع المتبقّي للمستودع',
+  },
+  // ═══ البضاعة المحميّة والأمانة (2026-08-10) ═══
+  // ثلاث حركاتٍ تُكمل دورة ما خرج ولم تخرج ملكيّته:
+  //   `VCD` — إيداعٌ لدى العميل: يغادر المركبة ويبقى **رصيدًا لنا** عنده.
+  //   `VCS` — تحقّق البيع: باعه التاجر للمستهلك، فالآن فقط تخرج الملكيّة.
+  //   `VCR` — استردادٌ إلى المركبة: بحقّ الإرجاع، أو لانتهاء مدّة الحماية.
+  // ولاحظ أنّ حارس الرصيد السالب يخدمنا هنا مجّانًا: لا يُسترَدّ ولا يُحتسب
+  // مبيعًا إلّا ما أُودع فعلًا — فلا مرتجعَ لبضاعةٍ لم تُسلَّم.
+  VCD: {
+    from: VEHICLE,
+    to: CUSTOMER,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitCost',
+    reason: 'consign-out',
+    labelAr: 'إيداع بضاعة محميّة',
+  },
+  VCS: {
+    from: CUSTOMER,
+    to: EXTERNAL,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitPrice',
+    reason: 'consign-sold',
+    labelAr: 'تحقّق بيع الأمانة',
+  },
+  VCR: {
+    from: CUSTOMER,
+    to: VEHICLE,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitCost',
+    reason: 'consign-return',
+    labelAr: 'استرداد بضاعة محميّة',
   },
 };
 
