@@ -817,6 +817,22 @@ service cloud.firestore {
       }
     }
 
+    // العروض الترويجيّة — يعرّفها المشرف والمديران، ويقرؤها الجميع (المندوب
+    // يحتاجها ليطبّقها محرّكُه لحظة إدخال الطلب). **المندوب لا يكتبها**: عرضٌ
+    // يعرّفه من يمنحه ليس عرضًا بل بابًا للتسريب.
+    //
+    // 🔒 `usage` (استهلاك الميزانيّة) يكتبه المندوب أيضًا — بـincrement بعد
+    //    اعتماد الفاتورة — لكن **حقولَه وحدها**، فلا يمدّد سقفًا ولا يُبدّل شرطًا.
+    match /promotions/{promoId} {
+      allow read: if signedIn();
+      allow create: if isManager() || myRole() == 'sales_supervisor';
+      allow update: if isManager() || myRole() == 'sales_supervisor'
+                    || (isVanSalesWriter()
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['usage', 'updatedAt']));
+      allow delete: if false;
+    }
+
     // خطط الزيارات الدائمة (PJP) — يضعها المشرف والمديران، ويقرؤها المندوب
     // ليحمّل يومه. **المندوب لا يكتبها**: خطّةٌ يعدّلها من ينفّذها ليست خطّة،
     // بل تبريرٌ لاحقٌ لما فعل. لا حذف — تُعطَّل بـactive:false فيبقى أثرها.

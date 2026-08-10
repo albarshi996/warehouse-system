@@ -37,6 +37,7 @@ import DocumentPrint from './DocumentPrint.jsx';
 import ChainBar from './ChainBar.jsx';
 import AttachmentsPanel from './AttachmentsPanel.jsx';
 import ControlPanel from './ControlPanel.jsx';
+import PromotionsPanel from './PromotionsPanel.jsx';
 
 /** يقرأ معاملات الرابط (الموقع ثابت — لا توجيه من الخادم). */
 function readParams() {
@@ -381,6 +382,9 @@ export default function DocumentEngine() {
             )}
           </section>
         ))}
+
+        {/* العروض تُطبَّق قبل المرفقات: البنود تُبنى أوّلًا ثمّ يُوثَّق عليها. */}
+        <PromotionsPanel schema={schema} doc={doc} disabled={!editable} onApplyLines={patchLines} />
 
         <AttachmentsPanel docId={docId} schema={schema} me={me} attachments={attachments} onEnsureDoc={ensureSaved} />
 

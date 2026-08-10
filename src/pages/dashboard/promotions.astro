@@ -1,0 +1,14 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import PromotionsBoard from '../../components/brandzo-erp/promotions/PromotionsBoard.jsx';
+---
+
+<DashboardLayout title="العروض الترويجية" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">العروض الترويجية</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      تُطبَّق آليًّا لحظة إدخال الطلب فلا تُنسى ولا تُضاعف — والمجّانيّ يخرج بندًا يُقيَّد في الدفتر لا خصمًا في ورقة.
+    </p>
+    <PromotionsBoard client:load />
+  </div>
+</DashboardLayout>

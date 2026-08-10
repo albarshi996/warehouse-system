@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 78,
-    "serviceDomains": 31,
-    "serviceFiles": 199,
-    "collections": 52,
+    "modules": 79,
+    "serviceDomains": 32,
+    "serviceFiles": 205,
+    "collections": 53,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -441,6 +441,14 @@
       "title": "إدارة الأصناف",
       "summary": "",
       "file": "src/pages/dashboard/products.astro",
+      "usesServices": []
+    },
+    {
+      "name": "promotions",
+      "route": "/dashboard/promotions",
+      "title": "العروض الترويجية",
+      "summary": "",
+      "file": "src/pages/dashboard/promotions.astro",
       "usesServices": []
     },
     {
@@ -1822,6 +1830,43 @@
         "shapeImportedPartner"
       ],
       "collections": []
+    },
+    {
+      "domain": "promotions",
+      "dir": "src/services/promotions",
+      "files": [
+        "applyToInvoice.test.js",
+        "invoiceApply.js",
+        "promotionEngine.js",
+        "promotionModel.js",
+        "promotions.test.js",
+        "promotionsService.js"
+      ],
+      "fileCount": 6,
+      "testCount": 2,
+      "exports": [
+        "PROMO_TYPES",
+        "applyPromoResult",
+        "blankPromotion",
+        "budgetConsumption",
+        "consumeBudget",
+        "evaluateOrder",
+        "isBudgetExhausted",
+        "isInSync",
+        "isPromoLive",
+        "listenPromotions",
+        "matchesCustomer",
+        "matchesLine",
+        "mergeFreeLines",
+        "paidLines",
+        "promotionVerdict",
+        "savePromotion",
+        "setPromotionActive",
+        "sortedTiers"
+      ],
+      "collections": [
+        "promotions"
+      ]
     },
     {
       "domain": "readiness",
@@ -3310,6 +3355,49 @@
             "condition": "isManager() && (!('number' in resource.data) || request.resource.data.number == resource.data.number) && (!('letterNumber' in resource.data) || request.resource",
             "roles": [
               "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "promotions",
+        "path": "promotions",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isManager() || myRole() == 'sales_supervisor'",
+            "roles": [
+              "isManager",
+              "myRole"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "isManager() || myRole() == 'sales_supervisor' || (isVanSalesWriter() && request.resource.data.diff(resource.data).affectedKeys() .hasOnly(['usage', 'updatedAt']",
+            "roles": [
+              "isManager",
+              "myRole",
+              "isVanSalesWriter"
             ]
           },
           {

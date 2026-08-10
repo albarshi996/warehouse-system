@@ -66,6 +66,20 @@ export function vsiWarnings(doc) {
   const noBatch = lines.filter((l) => !String(l?.batch || '').trim());
   if (noBatch.length) out.push(`${noBatch.length} بندًا بلا تشغيلة — يتعذّر تتبّع صلاحيته عند العميل`);
 
+  // ═══ حارس تسريب الترويجات ═══
+  // بندٌ بصفرٍ سعرًا بلا رمز عرض هو المجّانيّ الذي مُنح بلا سند — وهو أشيع
+  // أبواب التسريب. لا نمنعه (قد يكون عيّنةً معتمدة)، لكن لا يمرّ بلا أثر.
+  const freeNoPromo = lines.filter((l) => Number(l?.unitPrice) === 0 && !String(l?.promoCode || '').trim());
+  if (freeNoPromo.length) {
+    out.push(`${freeNoPromo.length} بندًا مجّانيًّا بلا رمز عرض — وثّق سنده أو أزِله`);
+  }
+  const discountNoPromo = lines.filter(
+    (l) => Number(l?.discount) > 0 && !String(l?.promoCode || '').trim()
+  );
+  if (discountNoPromo.length) {
+    out.push(`${discountNoPromo.length} بندًا بخصمٍ يدويّ بلا رمز عرض — الخصم بلا سند يُراجَع`);
+  }
+
   return out;
 }
 
@@ -139,8 +153,15 @@ const schema = {
         { key: 'batch', label: 'الدفعة', kind: 'text', width: '9%' },
         { key: 'expiry', label: 'الصلاحية', kind: 'date', width: '10%' },
         { key: 'unitPrice', label: 'سعر الوحدة', kind: 'number', width: '9%' },
-        { key: 'discount', label: 'الخصم', kind: 'number', width: '7%' },
-        { key: 'lineTotal', label: 'الإجمالي', kind: 'computed', compute: lineTotal, width: '7%' },
+        { key: 'discount', label: 'الخصم', kind: 'number', width: '6%' },
+        {
+          key: 'promoCode',
+          label: 'العرض',
+          kind: 'text',
+          width: '7%',
+          hint: 'رمز العرض الذي منح المجّانيّ أو الخصم — به يُنسب أثره ولا يضيع.',
+        },
+        { key: 'lineTotal', label: 'الإجمالي', kind: 'computed', compute: lineTotal, width: '6%' },
       ],
     },
 
