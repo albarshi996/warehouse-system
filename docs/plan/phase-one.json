@@ -317,7 +317,7 @@
       "milestone": "م-٢",
       "title": "جرد وتصنيف كل حقل زمني في المستندات الـ٣٥",
       "owner": "Claude",
-      "state": "todo",
+      "state": "doing",
       "gaps": [
         "ف-٨"
       ],
@@ -326,7 +326,10 @@
         "جدول: المستند × الحقل × الصنف (ختم واقعة / تاريخ مخطط / تاريخ مبرر)",
         "لا حقل زمني بلا تصنيف — حارس يفشل إن أُضيف حقل زمني جديد بلا صنف"
       ],
-      "guardTest": "src/services/documents/timeFields.test.js"
+      "guardTest": "src/services/documents/timeFields.test.js",
+      "branch": "claude/phase-one-repairs-plan-07f596",
+      "progress": "بدأت — مسح المخطّطات لحصر الحقول الزمنيّة.",
+      "nextStep": "احصر كلّ حقل زمنيّ في المستندات الـ٣٥ من SCHEMAS، ثمّ ابنِ سجلّ تصنيفٍ واحدًا (ختم واقعة / تاريخ مخطّط / تاريخ مبرّر)، ثمّ حارسًا يفشل إن ظهر حقلٌ زمنيّ بلا تصنيف."
     },
     {
       "id": "م٢-ب",

@@ -20,6 +20,7 @@
     "test:rules": "firebase emulators:exec --only firestore \"node --test test/firestore-rules.test.mjs\"",
     "audit": "node scripts/audit-portal.mjs",
     "plan": "node scripts/plan-check.mjs",
+    "timefields": "node scripts/build-time-fields-doc.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
