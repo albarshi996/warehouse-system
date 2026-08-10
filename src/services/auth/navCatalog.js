@@ -197,6 +197,9 @@ export const NAV_GROUPS = [
       { path: '/dashboard/recruitment', label: 'التوظيف', icon: 'users', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/users', label: 'إدارة المستخدمين', icon: 'users', roles: ['admin'] },
       { path: '/dashboard/access-control', label: 'الصلاحيات والأدوار', icon: 'users', roles: ['admin'] },
+      // سياسات التشغيل (م١-ج): القرارات ٤–٧ إعداداتٌ لا شيفرة. للأدمن وحده —
+      // مدير المستودع نفسه `overrideRole` في قرارين، فلو كتبها لوسّع صلاحيته.
+      { path: '/dashboard/policy-settings', label: 'سياسات التشغيل', icon: 'clipboardList', roles: ['admin'] },
       { path: '/dashboard/arch-wiki', label: 'خريطة النظام', icon: 'grid', roles: ['admin'] },
       { path: '/dashboard/archive', label: 'الأرشيف التأسيسي', icon: 'package' },
       { path: '/dashboard/meeting-assistant', label: 'مساعد الاجتماعات', icon: 'grid' },

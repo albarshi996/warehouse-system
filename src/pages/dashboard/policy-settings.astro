@@ -1,0 +1,15 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import PolicySettings from '../../components/brandzo-erp/settings/PolicySettings.jsx';
+---
+
+<DashboardLayout title="سياسات التشغيل" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">سياسات التشغيل</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      أربعة قراراتٍ إداريّة لا برمجيّة: الصنف الداخليّ في البيع · السعر اليدويّ · حدّ الائتمان · مدى التأريخ.
+      تُغيَّر من هنا فتسري لحظيًّا على كلّ جهازٍ مفتوح — بلا نشرٍ ولا إعادة تحميل.
+    </p>
+    <PolicySettings client:load />
+  </div>
+</DashboardLayout>

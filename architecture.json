@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 81,
-    "serviceDomains": 34,
-    "serviceFiles": 221,
-    "collections": 55,
+    "modules": 82,
+    "serviceDomains": 35,
+    "serviceFiles": 224,
+    "collections": 56,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -407,6 +407,14 @@
       "title": "الأرشيف الدوريّ",
       "summary": "الأرشيف الدوريّ — التقارير ومحاضر الاجتماعات.",
       "file": "src/pages/dashboard/periodic-archive.astro",
+      "usesServices": []
+    },
+    {
+      "name": "policy-settings",
+      "route": "/dashboard/policy-settings",
+      "title": "سياسات التشغيل",
+      "summary": "",
+      "file": "src/pages/dashboard/policy-settings.astro",
       "usesServices": []
     },
     {
@@ -2043,6 +2051,35 @@
       "collections": []
     },
     {
+      "domain": "settings",
+      "dir": "src/services/settings",
+      "files": [
+        "settingsModel.js",
+        "settingsModel.test.js",
+        "settingsService.js"
+      ],
+      "fileCount": 3,
+      "testCount": 1,
+      "exports": [
+        "DEFAULT_SETTINGS",
+        "SETTINGS_COLLECTION",
+        "SETTINGS_DOC",
+        "SETTING_CHOICES",
+        "SETTING_LIMITS",
+        "backdateVerdict",
+        "canOverride",
+        "creditVerdict",
+        "getSettings",
+        "internalItemInSaleVerdict",
+        "listenSettings",
+        "manualPriceVerdict",
+        "normalizeSettings",
+        "saveSettings",
+        "settingsIssues"
+      ],
+      "collections": []
+    },
+    {
       "domain": "stock",
       "dir": "src/services/stock",
       "files": [
@@ -3563,6 +3600,38 @@
               "isManager",
               "myRole"
             ]
+          }
+        ]
+      },
+      {
+        "name": "settings",
+        "path": "settings",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isAdmin()",
+            "roles": [
+              "isAdmin"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
           }
         ]
       },

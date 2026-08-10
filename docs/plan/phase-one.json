@@ -271,7 +271,7 @@
       "milestone": "م-١",
       "title": "مستند الإعدادات settings/current وخدمة قراءته",
       "owner": "Claude",
-      "state": "todo",
+      "state": "doing",
       "gaps": [],
       "dependsOn": [],
       "estimate": "نصف جلسة",
@@ -284,7 +284,10 @@
         "لا قيمة من هذه الأربع مكتوبة داخل أي حارس"
       ],
       "guardTest": "src/services/settings/settingsModel.test.js",
-      "notes": "سببُ وضعه في م‑١: م‑٢ يقرأ dating.backdateDays، وم‑٣ يقرأ items وpricing، وم‑٤ يقرأ credit. بناؤه متأخّرًا يعني حرّاسًا بقيم مخبوزة تُعاد كتابتها ثلاث مرّات — وهذا بالضبط ما يخالف المبدأ ٨."
+      "notes": "سببُ وضعه في م‑١: م‑٢ يقرأ dating.backdateDays، وم‑٣ يقرأ items وpricing، وم‑٤ يقرأ credit. بناؤه متأخّرًا يعني حرّاسًا بقيم مخبوزة تُعاد كتابتها ثلاث مرّات — وهذا بالضبط ما يخالف المبدأ ٨.",
+      "branch": "claude/phase-one-repairs-plan-07f596",
+      "progress": "بدأت. القرار: تُنفَّذ الآن قبل م‑٢/م‑٣/م‑٤ لأنّ الثلاثة تقرأ منها (المالك فوّض القرار).",
+      "nextStep": "ابنِ settingsModel.js (منطق خالص: DEFAULTS + تطبيع + تحقّق من الشكل)، ثمّ settingsService.js (قراءة/كتابة/اشتراك حيّ على settings/current)، ثمّ اختبار حارس، ثمّ قاعدة firestore.rules (قراءة للمصادَق · كتابة للمدير)، ثمّ شاشة الإعدادات موصولةً بـnavCatalog وpageAccess."
     },
     {
       "id": "م١-أ",
