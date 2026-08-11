@@ -36,6 +36,8 @@ import { dateSaveVerdict, defaultValueFor, eventFieldsOf } from './datingGuard.j
 import { movesStock, POSTING_STATE } from '../ledger/postingRules.js';
 import { buildMoves } from '../ledger/movements.js';
 import { postDocument } from '../ledger/ledgerService.js';
+import { ledgerRuleFor } from '../ledger/partnerLedger.js';
+import { postToPartnerLedger } from '../ledger/partnerLedgerService.js';
 import { allocateAndReserve, releaseReservation, releaseForPick } from '../ledger/salesService.js';
 
 const DOCS = 'documents';
@@ -258,6 +260,25 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
   } else {
     await updateDoc(ref, patch);
     await appendAudit(docId, { action: to, note, from, to, profile });
+  }
+
+  // 💰 دفتر الذمم (م٤-ج): المستند الواحد قد يُحرّك رفًّا **وذمّة** — فالفاتورة
+  // تُنشئ دَينًا وسند القبض يُقفله. يُقيَّد عند الإنجاز، **أفضلَ جهدٍ لا شرطَ
+  // اعتماد**: فشلُ قيد الذمّة يُثبَّت في التدقيق ولا يُبطل إنجاز المستند، لأنّ
+  // البضاعة تحرّكت فعلًا ولا يصحّ إنكارها لأنّ سطرًا ماليًّا تعذّرت كتابته.
+  if (to === POSTING_STATE && ledgerRuleFor(data.type)) {
+    try {
+      const entryId = await postToPartnerLedger({ ...data, id: docId }, profile);
+      if (entryId) {
+        await appendAudit(docId, { action: 'ledger', note: `قُيّد الأثر على الذمم: ${entryId}`, profile });
+      }
+    } catch (err) {
+      await appendAudit(docId, {
+        action: 'ledger-failed',
+        note: `تعذّر قيد الأثر على الذمم (المستند منجَزٌ والبضاعة تحرّكت): ${err?.message || err}`,
+        profile,
+      });
+    }
   }
 
   // 🛒 حجز أمر البيع: يُحجز عند الاعتماد، ويُفكّ ما تبقّى عند الإنجاز/الإغلاق.

@@ -547,7 +547,7 @@
       "milestone": "م-٤",
       "title": "دفتر الذمم partner_ledger وledgerModel",
       "owner": "Claude",
-      "state": "todo",
+      "state": "doing",
       "gaps": [
         "ف-١"
       ],
@@ -560,7 +560,10 @@
         "التصفير بمقاصّة موثّقة بلا حذف ولا تعديل للتاريخ",
         "النطاق: ذمم شركاء لا محرّك قيود مزدوج"
       ],
-      "guardTest": "src/services/ledger/partnerLedger.test.js"
+      "guardTest": "src/services/ledger/partnerLedger.test.js",
+      "branch": "claude/phase-one-repairs-plan-07f596",
+      "progress": "بدأت. دفتر ذمم ملحق-فقط بجدول قواعدٍ على نسق POSTING_RULES: أيّ مستندٍ يُنشئ ذمّةً ومن أيّ طرف وبأيّ اتّجاه.",
+      "nextStep": "ابنِ partnerLedger.js خالصًا: LEDGER_RULES + بناء السطور من المستندات + الرصيد المتراكم + المقاصّة + أعمار الديون بخمس شرائح. ثمّ الخدمة الملحقة-فقط وقاعدة الأمان."
     },
     {
       "id": "م٤-د",
