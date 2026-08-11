@@ -574,7 +574,7 @@
       "milestone": "م-٤",
       "title": "تطبيق حدّ الائتمان",
       "owner": "Claude",
-      "state": "todo",
+      "state": "doing",
       "gaps": [
         "ف-٢"
       ],
@@ -587,7 +587,10 @@
         "يفكّه settings.credit.unlockRole بأثر موثّق",
         "البيع لعميل تجاوز سقفه يُمنع فعليًّا — لا في الواجهة وحدها"
       ],
-      "guardTest": "src/services/ledger/creditLimit.test.js"
+      "guardTest": "src/services/ledger/creditLimit.test.js",
+      "branch": "claude/phase-one-repairs-plan-07f596",
+      "progress": "بدأت. creditVerdict جاهز من م١-ج، وما ينقص وصلُه برصيد الدفتر الحقيقيّ وسقف الشريك ثمّ بمسار الإرسال.",
+      "nextStep": "ابنِ creditGuard.js يجمع: رصيد الطرف من partnerLedger + سقفه من ماستر الشركاء + سياسة settings.credit، ثمّ اربطه بالمحرّك ليمنع الإرسال."
     },
     {
       "id": "م٤-هـ",

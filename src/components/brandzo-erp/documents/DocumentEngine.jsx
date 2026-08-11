@@ -34,6 +34,8 @@ import { itemTypeMap, documentItemProblems, OWNERSHIP_DOC_TYPES } from '../../..
 import { listenPriceLists } from '../../../services/pricing/priceListService.js';
 import { listForCustomer, priceDocument } from '../../../services/pricing/priceListModel.js';
 import { subscribePartners } from '../../../services/partnerService.js';
+import { listenPartnerLedger } from '../../../services/ledger/partnerLedgerService.js';
+import { creditCheck } from '../../../services/ledger/creditGuard.js';
 import InlineCreateModal from './InlineCreateModal.jsx';
 import LineItemsTable from './LineItemsTable.jsx';
 import Checklist from './Checklist.jsx';
@@ -70,6 +72,7 @@ export default function DocumentEngine() {
   const [items, setItems] = useState([]); // ماستر الأصناف — لأنواعها (م٣-أ)
   const [priceLists, setPriceLists] = useState([]); // قوائم الأسعار (م٣-ج)
   const [customers, setCustomers] = useState([]); // لربط العميل بقائمته
+  const [ledger, setLedger] = useState([]); // سطور دفتر الذمم (م٤-د)
 
   const schema = useMemo(() => getSchema(type), [type]);
 
@@ -133,6 +136,10 @@ export default function DocumentEngine() {
   useEffect(() => listenPriceLists(setPriceLists), []);
   useEffect(() => subscribePartners('customer', setCustomers, () => setCustomers([])), []);
 
+  // دفتر الذمم (م٤-د): منه الرصيد الحقيقيّ. والفشل ⇒ سطورٌ فارغة ⇒ رصيدُ صفرٍ
+  // ⇒ **لا منع** — نظامٌ يمنع بيعًا لأنّه يجهل رصيدًا يوقف تجارةً بلا سبب.
+  useEffect(() => listenPartnerLedger('', setLedger, () => setLedger([])), []);
+
   const flash = useCallback((text, tone = 'ok') => {
     setMsg({ text, tone });
     setTimeout(() => setMsg(null), 4000);
@@ -181,6 +188,16 @@ export default function DocumentEngine() {
     const r = priceDocument({ list, lines: doc.lines || [], settings, role: me?.role || '' });
     return { ...r, list };
   }, [schema, doc, priceLists, customers, settings, me]);
+
+  /**
+   * حدّ الائتمان (م٤-د): رصيدٌ حقيقيّ من الدفتر + سقف العميل + سياسة الإعدادات.
+   * يُحسب مع كلّ ضغطة فيُرى الحاجز وهو يقترب، لا عند الإرسال فجأةً.
+   */
+  const credit = useMemo(() => {
+    const code = String(doc?.header?.customerCode || doc?.header?.customer || '').trim().toUpperCase();
+    const partner = customers.find((c) => String(c.code || '').toUpperCase() === code) || null;
+    return creditCheck({ doc, entries: ledger, partner, settings, role: me?.role || '' });
+  }, [doc, ledger, customers, settings, me]);
 
   /** يطبّق أسعار القائمة على البنود — بضغطةٍ لا تلقائيًّا، فلا يُدهس ما كُتب. */
   function applyListPrices() {
@@ -329,6 +346,11 @@ export default function DocumentEngine() {
           flash(pricing.problems.join(' · '), 'err');
           return;
         }
+        // حدّ الائتمان (م٤-د): المنع قبل الإرسال — فبعده تصير الذمّة أمرًا واقعًا.
+        if (!credit.ok) {
+          flash(credit.message, 'err');
+          return;
+        }
       }
       const targetId = dirty || !docId ? await persist() : docId;
       setDirty(false);
@@ -405,6 +427,17 @@ export default function DocumentEngine() {
           <p className="text-xs text-muted bg-chip border border-line rounded-lg px-3 py-2">
             🔒 المستند خرج من طور التحرير — الحقول للقراءة فقط.
           </p>
+        )}
+
+        {/* حدّ الائتمان (م٤-د): مديونيّة العميل تُرى قبل البيع لا بعده. */}
+        {editable && credit.verdict !== 'ok' && (
+          <div className="rounded-lg border border-line bg-chip px-3 py-2">
+            <p className={credit.verdict === 'block' ? 'text-sm text-brand-red' : 'text-sm text-ink'}>
+              {credit.message}
+              {credit.verdict === 'block' && !credit.canUnlock ? ` — يفكّه ${credit.unlockRole}.` : ''}
+              {credit.verdict === 'block' && credit.canUnlock ? ' — لك فكّه، ويُسجَّل باسمك.' : ''}
+            </p>
+          </div>
         )}
 
         {/* التسعير (م٣-ج): القائمة السارية وأثرها — والملء بضغطةٍ لا تلقائيًّا. */}
