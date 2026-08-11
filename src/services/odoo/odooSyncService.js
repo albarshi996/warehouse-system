@@ -35,6 +35,8 @@ import { odooTargetFor, docToOdooValues } from './docCrosswalk.js';
 import { mapVanDocument, isVanSalesType, vanDocSummary } from './vanSalesMapper.js';
 import { mirrorIdFor, resolveSyncAction, duplicateIds, sourceDomain, canPush } from './idempotency.js';
 import { assertNoMoneyFields } from './moneyFields.js';
+import { getIntegrationPolicy } from '../integration/integrationPolicyService.js';
+import { pushDecision, fieldGate } from '../integration/integrationPolicy.js';
 import { getItem, createItem, updateItem } from '../itemService.js';
 
 const COL_SYNC = 'odoo_sync';
@@ -84,6 +86,10 @@ export async function pushPurchaseOrder(poDoc, profile) {
     mirrorId: `PO_${poDoc.id}`,
     model: 'purchase.order',
     values,
+    // نوع المستند وحالته (م٧-ب): بهما تسأل `pushOnce` سياسةَ التكامل عن
+    // الاتّجاه والتوقيت — بدل أن يكون الدفع قرارًا مخبوزًا في هذا السطر.
+    docType: 'PO',
+    state: poDoc.state,
     sourceNumber: poDoc.number,
     name: poDoc.number || `P${poDoc.id}`,
   });
@@ -136,6 +142,9 @@ export async function pushItem(item, profile) {
     mirrorId: `ITEM_${item.sku}`,
     model: 'product.product',
     values,
+    // فئة بياناتٍ لا نوع مستند — والسياسة تحكمها كما تحكم المستندات.
+    docType: 'items',
+    state: 'manual', // دفع الصنف فعلٌ يدويٌّ بضغطة، لا أثرٌ لإنجاز مستند
     sourceNumber: item.sku,
     name: values.name || item.sku,
     domain: [['default_code', '=', String(item.sku).trim().toUpperCase()]],
@@ -326,7 +335,22 @@ export async function validateReceiptInOdoo(rec, profile) {
  *
  * @returns {Promise<{odooId:number, action:string, reason:string, duplicates:number[]}>}
  */
-export async function pushOnce({ mirrorId, model, values, sourceNumber, name, domain: domainOverride }) {
+export async function pushOnce({ mirrorId, model, values, sourceNumber, name, domain: domainOverride, docType, state, manual = false }) {
+  // ═══ سياسة التكامل (م٧-ب) ═══
+  // الجسر يسأل السياسة بدل الثوابت المخبوزة. وفشلُ القراءة يعطي الافتراض —
+  // أي **سلوك اليوم**: يُدفع بلا مال. فسياسةٌ لا تُقرأ لا تفتح ما كان مغلقًا.
+  const policy = await getIntegrationPolicy();
+  const key = docType || model;
+
+  // حارس الاتّجاه والتوقيت يحكم **الدفع التلقائيّ** وحده. أمّا ضغطةٌ صريحة من
+  // مسؤولٍ على زرّ «ادفع هذا» فقرارٌ بشريٌّ لا تنقضه سياسةُ الاتّجاه — وإلّا
+  // منعت السياسةُ (التي تجعل الأصناف «تُسحب») دفعَ صنفٍ يدويًّا يعمل اليوم.
+  // وحدّ المال يبقى قائمًا على الاثنين: ذاك حدُّ سياسةٍ لا حدُّ أتمتة.
+  if (docType && !manual) {
+    const gateDecision = pushDecision(policy, docType, { state: state || 'done' });
+    if (!gateDecision.allowed) throw new Error(`الدفع متوقّف بقرارٍ من لوحة التكامل: ${gateDecision.reason}`);
+  }
+
   const ref = doc(db, COL_SYNC, mirrorId);
   const snap = await getDoc(ref);
   const mirror = snap.exists() ? snap.data() : null;
@@ -348,11 +372,15 @@ export async function pushOnce({ mirrorId, model, values, sourceNumber, name, do
   const decision = resolveSyncAction({ mirror, existing, sourceNumber });
   const payload = { ...values, name: name || sourceNumber };
 
-  // ═══ حدّ المال (م١-ب) ═══
+  // ═══ حدّ المال (م١-ب) — والآن **من السياسة** (م٧-ب) ═══
   // نقطة الاختناق الواحدة: كلّ ما يُدفع يمرّ من هنا، فالحارس هنا يغطّي
   // المخطِّطات القائمة **وما يُضاف بعدها**. حارسٌ في المخطِّط وحده يسقط أوّل
   // ما يكتب أحدهم مخطِّطًا جديدًا وينسى القاعدة.
-  assertNoMoneyFields(payload, `${model} · ${sourceNumber || mirrorId}`);
+  //
+  // والفرق عن م١-ب: كان الحجب ثابتًا، وصار **قرارًا**. لكنّ الافتراض لم يتغيّر:
+  // `money: 'pull'` مغلقٌ حتّى يفتحه المالك صراحةً من اللوحة ويرى تحذير المحاكاة.
+  const gate = fieldGate(policy, key);
+  if (!gate.money) assertNoMoneyFields(payload, `${model} · ${sourceNumber || mirrorId}`);
 
   let odooId = decision.odooId;
   if (decision.action === 'create') {

@@ -174,3 +174,21 @@ test('كلّ اتّجاهٍ معلَنٌ في القائمة موجودٌ في �
   for (const d of DIRECTIONS) assert.ok(DIRECTION_IDS.includes(d.id));
   for (const m of MONEY_MODES) assert.ok(m.id && m.labelAr);
 });
+
+/* ═══════════ ٧. ربط الجسر (م٧-ب) ═══════════ */
+
+test('★★ الافتراض يُبقي الدفع التلقائيّ عاملًا لكلّ مستند — لا شيء يتوقّف بتفعيل اللوحة', () => {
+  const policy = fullPolicy({});
+  for (const type of policyTypes()) {
+    const r = pushDecision(policy, type, { state: 'done' });
+    assert.equal(r.allowed, true, `${type} توقّف دفعُه بالافتراض`);
+  }
+});
+
+test('★★ وفئة «الأصناف» افتراضها سحب — ولذلك يمرّ دفعُها اليدويّ خارج حارس الاتّجاه', () => {
+  // العطب الذي كاد يقع: تمريرُ `items` إلى حارس الاتّجاه كان سيمنع زرّ «ادفع
+  // هذا الصنف» العامل اليوم. فالحارس للأتمتة، والضغطةُ الصريحة قرارٌ بشريّ.
+  const policy = fullPolicy({});
+  assert.equal(pushDecision(policy, 'items').allowed, false, 'تلقائيًّا: ممنوع');
+  assert.equal(fieldGate(policy, 'items').money, false, 'وحدّ المال قائمٌ عليه في الحالين');
+});
