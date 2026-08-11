@@ -57,6 +57,9 @@ export const LEDGER_RULES = Object.freeze({
   },
   VCS: { party: 'customer', direction: 'debit', labelAr: 'تحقّق بيع أمانة', amount: (d) => sumSales(d) },
   RCP: { party: 'customer', direction: 'credit', labelAr: 'سند قبض', amount: (d) => sumLines(d, ['amount']) },
+  // التحصيل الميدانيّ (م٥-أ): ينقص ذمّة العميل كالقبض — والفرق أنّ المال يبقى
+  // في عهدة المندوب حتّى الإيداع، وذاك أثرٌ على حسابه لا على ذمّة العميل.
+  RCV: { party: 'customer', direction: 'credit', labelAr: 'تحصيل ميدانيّ', amount: (d) => sumLines(d, ['amount']) },
   CN: { party: 'customer', direction: 'credit', labelAr: 'إشعار دائن', amount: (d) => sumLines(d, ['lineTotal', 'amount', 'total'], true) },
   RET: { party: 'customer', direction: 'credit', labelAr: 'مرتجع مبيعات', amount: (d) => sumSales(d) },
   CRN: { party: 'customer', direction: 'credit', labelAr: 'مرتجع ميدانيّ', amount: (d) => sumSales(d) },

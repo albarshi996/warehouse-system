@@ -50,6 +50,7 @@ import ipo from './ipo.js';
 import pv from './pv.js';
 import rcp from './rcp.js';
 import spv from './spv.js';
+import rcv from './rcv.js';
 import dlv from './dlv.js';
 
 /** المخطّطات الجاهزة. */
@@ -91,6 +92,7 @@ const SCHEMAS = {
   // وحدة الذمم (م٤): سند القبض — أوّل مستندٍ ماليٍّ للعملاء لا للمشتريات.
   RCP: rcp,
   SPV: spv,
+  RCV: rcv,
   DLV: dlv,
 };
 
@@ -140,6 +142,7 @@ export const GOVERNED_FORMS = [
   // وحدة الذمم (م٤): سند القبض — يُقفل ما فتحته الفاتورة.
   { type: 'RCP', stage: 7, titleAr: 'سند قبض', file: '', phase: 'AR' },
   { type: 'SPV', stage: 7, titleAr: 'سند سداد مورّد', file: '', phase: 'AP' },
+  { type: 'RCV', stage: 8, titleAr: 'سند تحصيل ميدانيّ', file: '', phase: 'VS' },
 ].map((f) => ({ ...f, ready: Boolean(SCHEMAS[f.type]) }));
 
 /** يُعيد مخطّط النوع، أو null إن لم يُبنَ بعد. */

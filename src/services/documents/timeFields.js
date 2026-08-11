@@ -134,6 +134,7 @@ export const TIME_FIELD_MAP = Object.freeze({
   // يخصّ مستندًا آخر — وختمُه بزمن القبض يعرض رقمًا كاذبًا.
   RCP: { receiptDate: E, invoiceDate: R },
   SPV: { paymentDate: E, docDate: R },
+  RCV: { collectionDate: E, invoiceDate: R },
   DLV: { deliveryDate: E },
 });
 

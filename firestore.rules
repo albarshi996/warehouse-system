@@ -216,6 +216,9 @@ service cloud.firestore {
            // **من قبض المال لا يعتمد قبضه** — وإلّا فالسند إقرارٌ ذاتيّ لا مستند.
            : docType == 'RCP'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'SPV'     ? ['finance_manager', 'warehouse_manager']
+           // التحصيل الميدانيّ (م٥-أ): يقبضه المندوب ويعتمده المشرف — من قبض
+           // المال لا يعتمد قبضه. والإصدار له لأنّ منعه يوقف التحصيل في الشارع.
+           : docType == 'RCV'     ? ['sales_supervisor', 'finance_manager', 'warehouse_manager']
            : docType == 'IPR'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'RFQ'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'IPO'     ? ['finance_manager', 'warehouse_manager']
@@ -266,6 +269,7 @@ service cloud.firestore {
            : docType == 'IPO'     ? ['purchase_officer', 'warehouse_manager']
            : docType == 'RCP'     ? ['treasury', 'finance_manager', 'warehouse_manager']
            : docType == 'SPV'     ? ['treasury', 'finance_manager', 'warehouse_manager']
+           : docType == 'RCV'     ? ['sales_supervisor', 'finance_manager', 'warehouse_manager']
            : docType == 'PV'      ? ['treasury', 'warehouse_manager']
            : docType == 'DLV'     ? ['purchase_officer', 'warehouse_manager']
            : [];
