@@ -212,6 +212,9 @@ service cloud.firestore {
            : docType == 'VCR'     ? ['sales_supervisor', 'warehouse_manager', 'return_manager']
            // المشتريات الداخلية: المدير المالي يعتمد الطلب والترسية والأمر
            // والصرف، والمستفيد (مستخدم الإدارة) يُقرّ استلام التسليم.
+           // سند القبض (م٤-أ): يقبضه أمين الخزينة أو المندوب، ويعتمده المالي.
+           // **من قبض المال لا يعتمد قبضه** — وإلّا فالسند إقرارٌ ذاتيّ لا مستند.
+           : docType == 'RCP'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'IPR'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'RFQ'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'IPO'     ? ['finance_manager', 'warehouse_manager']
@@ -260,6 +263,7 @@ service cloud.firestore {
            : docType == 'IPR'     ? ['purchase_officer', 'warehouse_manager']
            : docType == 'RFQ'     ? ['purchase_officer', 'warehouse_manager']
            : docType == 'IPO'     ? ['purchase_officer', 'warehouse_manager']
+           : docType == 'RCP'     ? ['treasury', 'finance_manager', 'warehouse_manager']
            : docType == 'PV'      ? ['treasury', 'warehouse_manager']
            : docType == 'DLV'     ? ['purchase_officer', 'warehouse_manager']
            : [];

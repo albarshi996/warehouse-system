@@ -11,7 +11,7 @@
   "counts": {
     "modules": 84,
     "serviceDomains": 36,
-    "serviceFiles": 238,
+    "serviceFiles": 240,
     "collections": 57,
     "roles": 16,
     "odooModels": 12,
@@ -975,6 +975,7 @@
         "putaway.js",
         "pv.js",
         "qc.js",
+        "rcp.js",
         "ret.js",
         "rfq.js",
         "sales.test.js",
@@ -996,7 +997,7 @@
         "vsi.js",
         "vsr.js"
       ],
-      "fileCount": 61,
+      "fileCount": 62,
       "testCount": 11,
       "exports": [
         "ACCEPTED_ATTACHMENT_TYPES",
@@ -1123,6 +1124,7 @@
         "isStale",
         "kindLabel",
         "latestReconciliation",
+        "lineAmount",
         "lineEstimate",
         "lineKey",
         "lineReturnValue",
@@ -1160,7 +1162,9 @@
         "putawayWarnings",
         "pvWarnings",
         "qcWarnings",
+        "rcpWarnings",
         "readyTypes",
+        "receiptTotal",
         "reconciliationVerdict",
         "rejectionRate",
         "rejectionWarnings",
@@ -1574,6 +1578,7 @@
         "operationsDashboard.js",
         "operationsDashboard.test.js",
         "postingRules.js",
+        "receiptVoucher.test.js",
         "reservations.js",
         "salesReports.js",
         "salesReports.test.js",
@@ -1582,8 +1587,8 @@
         "transferReports.test.js",
         "vehicle.test.js"
       ],
-      "fileCount": 17,
-      "testCount": 7,
+      "fileCount": 18,
+      "testCount": 8,
       "exports": [
         "ACCOUNT_LOCATIONS",
         "CUSTOMER",

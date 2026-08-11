@@ -48,6 +48,7 @@ import ipr from './ipr.js';
 import rfq from './rfq.js';
 import ipo from './ipo.js';
 import pv from './pv.js';
+import rcp from './rcp.js';
 import dlv from './dlv.js';
 
 /** المخطّطات الجاهزة. */
@@ -86,6 +87,8 @@ const SCHEMAS = {
   RFQ: rfq,
   IPO: ipo,
   PV: pv,
+  // وحدة الذمم (م٤): سند القبض — أوّل مستندٍ ماليٍّ للعملاء لا للمشتريات.
+  RCP: rcp,
   DLV: dlv,
 };
 
@@ -132,6 +135,8 @@ export const GOVERNED_FORMS = [
   { type: 'IPO', stage: 3, titleAr: 'أمر شراء داخلي', file: '', phase: 'IP' },
   { type: 'PV', stage: 4, titleAr: 'سند صرف الخزينة', file: '', phase: 'IP' },
   { type: 'DLV', stage: 5, titleAr: 'محضر تسليم للمستفيد', file: '', phase: 'IP' },
+  // وحدة الذمم (م٤): سند القبض — يُقفل ما فتحته الفاتورة.
+  { type: 'RCP', stage: 7, titleAr: 'سند قبض', file: '', phase: 'AR' },
 ].map((f) => ({ ...f, ready: Boolean(SCHEMAS[f.type]) }));
 
 /** يُعيد مخطّط النوع، أو null إن لم يُبنَ بعد. */

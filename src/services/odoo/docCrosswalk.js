@@ -76,6 +76,9 @@ export const DOC_ODOO_MAP = {
   RFQ: { model: 'purchase.order', confirmState: 'sent', confirmLabel: 'مُرسَل', verb: 'اعتمد المقارنة' },
   IPO: { model: 'purchase.order', confirmState: 'purchase', confirmLabel: 'مؤكّد', verb: 'اعتمد' },
   PV: { model: 'account.payment', confirmState: 'posted', confirmLabel: 'مُرحّل', verb: 'رحّل' },
+  // سند القبض (م٤-أ): نظير الصرف في أودو — `account.payment` وارِدًا.
+  // ولا حقول مالٍ تُدفع (حدّ المال م١-ب): أودو يولّد القيد ونحن نُنتج الواقعة.
+  RCP: { model: 'account.payment', confirmState: 'posted', confirmLabel: 'مُرحّل', verb: 'رحّل' },
   DLV: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'مُسلَّم', verb: 'وثّق التسليم' },
 };
 

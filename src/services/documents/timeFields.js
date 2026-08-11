@@ -130,6 +130,9 @@ export const TIME_FIELD_MAP = Object.freeze({
   RFQ: { rfqDate: E },
   IPO: { issueDate: E, requiredDelivery: P },
   PV: { voucherDate: E },
+  // سند القبض (م٤-أ): تاريخ القبض ختمُ واقعة، وتاريخ الفاتورة المقاصّة منقولٌ
+  // يخصّ مستندًا آخر — وختمُه بزمن القبض يعرض رقمًا كاذبًا.
+  RCP: { receiptDate: E, invoiceDate: R },
   DLV: { deliveryDate: E },
 });
 

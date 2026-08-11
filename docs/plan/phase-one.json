@@ -498,7 +498,7 @@
       "milestone": "م-٤",
       "title": "سند القبض RCP",
       "owner": "Claude",
-      "state": "todo",
+      "state": "doing",
       "gaps": [
         "ف-١"
       ],
@@ -510,7 +510,10 @@
         "يُقاصّ فاتورة أو أكثر",
         "مخطّط + ترقيم + حالات + قاعدة أمان + صندوق اعتماد"
       ],
-      "guardTest": "src/services/ledger/receiptVoucher.test.js"
+      "guardTest": "src/services/ledger/receiptVoucher.test.js",
+      "branch": "claude/phase-one-repairs-plan-07f596",
+      "progress": "بدأت. RCP سند قبض: نقدًا/شيك/تحويل، ويُقاصّ فاتورةً أو أكثر. لا يُحرّك مخزونًا — أثره على الذمم لا الدفتر.",
+      "nextStep": "ابنِ مخطّط rcp.js على نسق pv.js (بنود المقاصّة: مرجع الفاتورة × المبلغ) + سجّله في schemas/index + أضف تصنيف حقوله الزمنيّة في timeFields + قاعدة الأمان + اختبار."
     },
     {
       "id": "م٤-ب",
