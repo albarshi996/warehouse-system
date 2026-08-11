@@ -36,23 +36,22 @@ import { db, auth } from '../../config/firebase.js';
 import { buildMoves, balanceDeltas, canPost, findNegativeBalance } from './movements.js';
 import { reservationDeltas } from './reservations.js';
 import { getItem } from '../itemService.js';
-import { typeOf } from '../items/itemType.js';
 
 /**
- * أنواع أصناف بنود المستند من الماستر (م٣-أ).
+ * أصناف بنود المستند من الماستر (م٣-أ ونوعُها · م٣-ب ووحداتها).
  *
  * يقرأ أصناف هذا المستند وحدها لا الماستر كلّه — مستندٌ بعشرة بنود يكلّف عشر
  * قراءات لا ألفًا. و**العجز عن القراءة ليس منعًا**: يُعاد `null` فيسلك القيد
  * سلوك اليوم، لأنّ شبكةً متذبذبة يجب ألّا توقف قيد استلامٍ صحيح.
  */
-async function loadItemTypes(lines) {
+async function loadLineItems(lines) {
   const skus = [...new Set((lines || []).map((l) => String(l?.sku ?? '').trim().toUpperCase()).filter(Boolean))];
   if (!skus.length) return null;
   try {
     const map = new Map();
     const found = await Promise.all(skus.map((sku) => getItem(sku).catch(() => null)));
     found.forEach((item, i) => {
-      if (item) map.set(skus[i], typeOf(item));
+      if (item) map.set(skus[i], item);
     });
     return map.size ? map : null;
   } catch {
@@ -100,9 +99,9 @@ export async function postDocument(docData, profile, { markDone = false } = {}) 
   // أنواع الأصناف (م٣-أ): تُقرأ من الماستر لتُستبعد الخدمات من القيد. فشلُ
   // القراءة يعني `null` — أي **سلوك اليوم**: لا نمنع قيدًا لأنّنا عجزنا عن
   // معرفة نوع صنف، ولا نبني رصيدًا وهميًّا إن عرفنا.
-  const itemTypes = await loadItemTypes(docData?.lines);
+  const lineItems = await loadLineItems(docData?.lines);
 
-  const { moves, problems: buildProblems, skipped } = buildMoves(docData, { itemTypes });
+  const { moves, problems: buildProblems, skipped } = buildMoves(docData, { items: lineItems });
   if (buildProblems.length) throw new Error(buildProblems.join(' · '));
   if (!moves.length) {
     throw new Error(

@@ -23,7 +23,8 @@ import {
   POSTING_STATE,
 } from './postingRules.js';
 import { vehicleLocationCode, customerLocationCode, isAccountLocation } from './locations.js';
-import { isStocked, lineType } from '../items/itemType.js';
+import { isStocked, typeOf } from '../items/itemType.js';
+import { toBase, baseUomOf, hasUomDefinition } from '../items/uomModel.js';
 
 /** فاصل المعرّف الحتمي — نفس نمط `balanceId`. */
 const SEP = '__';
@@ -72,11 +73,21 @@ function resolveLocation(slot, header) {
  * وهميًّا يعدّه أمين المخزن فلا يجده. و`typeMap` اختياريّة عمدًا: غيابها يعني
  * سلوك اليوم حرفيًّا — فالميزة تُفعَّل بالبيانات لا بالنشر.
  *
+ * **الوحدات (م٣-ب):** كلّ حركة تُقيَّد بوحدة الأساس وتُعرض بوحدة الإدخال —
+ * لكن **لصنفٍ عرّف المالك وحداته وحده**. وما لم يُعرَّف يمرّ رقمه كما هو، فتدخل
+ * الميزة صنفًا صنفًا لا دفعةً واحدةً على النظام كلّه.
+ *
  * @param {object} docData المستند (id · type · number · header · lines)
- * @param {{itemTypes?: Map<string,string>|object}} [opts] خريطة `sku → نوع`
+ * @param {{items?: Map<string,object>|object}} [opts] خريطة `sku → سجلّ الصنف`
  * @returns {{moves: Array, problems: string[], skipped: Array}} الحركات والمشاكل وما استُبعد
  */
-export function buildMoves(docData, { itemTypes = null } = {}) {
+export function buildMoves(docData, { items = null } = {}) {
+  const itemOf = (line) => {
+    if (!items) return null;
+    const sku = String(line?.sku ?? line?.itemCode ?? '').trim().toUpperCase();
+    if (!sku) return null;
+    return (items instanceof Map ? items.get(sku) : items[sku]) || null;
+  };
   const problems = [];
   const rule = postingRuleFor(docData?.type);
   if (!rule) return { moves: [], problems, skipped: [] };
@@ -93,16 +104,32 @@ export function buildMoves(docData, { itemTypes = null } = {}) {
   const moves = [];
   const skipped = [];
   (docData?.lines || []).forEach((line, index) => {
+    const item = itemOf(line);
+
     // الخدمة تُحتسب قيمةً ولا تُقيَّد مخزنيًّا (م٣-أ). تُسجَّل في `skipped`
     // ولا تُبتلع صامتةً — فاستبعادٌ لا يُرى يصير عطبًا لا يُشخَّص.
-    if (itemTypes && !isStocked(lineType(line, itemTypes))) {
+    if (item && !isStocked(typeOf(item))) {
       skipped.push({ index, sku: String(line?.sku ?? '').trim(), reason: 'خدمة — لا تُقيَّد مخزنيًّا' });
       return;
     }
 
     const raw = rule.computeQty ? rule.computeQty(line) : Number(line?.[rule.qtyField]) || 0;
-    const qty = Number(raw) || 0;
-    if (qty === 0) return; // بندٌ بلا كمية ليس خطأً — لا يُقيَّد فحسب
+    const entryQty = Number(raw) || 0;
+    if (entryQty === 0) return; // بندٌ بلا كمية ليس خطأً — لا يُقيَّد فحسب
+
+    // التحويل إلى وحدة الأساس — لصنفٍ عُرّفت وحداته وحده (م٣-ب).
+    const entryUom = String(line?.uom ?? '').trim();
+    let qty = entryQty;
+    let baseUom = entryUom;
+    if (item && hasUomDefinition(item)) {
+      const conv = toBase(item, entryQty, entryUom || baseUomOf(item));
+      if (!conv.ok) {
+        problems.push(`البند ${index + 1}: ${conv.problem}`);
+        return;
+      }
+      qty = conv.qty;
+      baseUom = conv.base;
+    }
 
     const { sku, barcode, has } = itemIdentity(line);
     if (!has) {
@@ -137,6 +164,11 @@ export function buildMoves(docData, { itemTypes = null } = {}) {
       from,
       to,
       qty: absQty,
+      // الدفتر بوحدة الأساس، والعرض بوحدة الإدخال (م٣-ب). ولولا حفظ الأصل
+      // لصار «٢٠ صندوقًا» في التقرير «٢٤٠» بلا أن يعرف أحدٌ أنّه هو نفسه.
+      entryQty: Math.abs(entryQty),
+      entryUom,
+      baseUom,
       unitCost,
       value: absQty * unitCost,
       reason: rule.reason,

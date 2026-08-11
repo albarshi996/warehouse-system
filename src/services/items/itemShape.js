@@ -30,6 +30,7 @@ export function normalizeUnit(raw) {
 }
 
 import { normalizeItemType } from './itemType.js';
+import { normalizeUom } from './uomModel.js';
 
 const str = (v) => String(v).trim();
 const num = (v) => Number(v) || 0;
@@ -51,6 +52,9 @@ const FIELD_CASTS = {
   sellPrice: { cast: num },
   // نوع الصنف (م٣-أ): بيع · داخليّ · خدمة. الفاسد يسقط إلى sale في typeOf.
   itemType: { cast: (v) => normalizeItemType(v) },
+  // وحدة أساس الصنف (م٣-ب): وجودها يعني أنّ المالك عرّف وحداته، فيبدأ التحويل
+  // لهذا الصنف وحده. وغيابها يعني سلوك اليوم حرفيًّا.
+  baseUom: { cast: (v) => normalizeUom(v) },
   uomGroupCode: { cast: str },
   uomGroupName: { cast: str, also: { unit: (v) => normalizeUnit(v) } },
   department: { cast: str },
