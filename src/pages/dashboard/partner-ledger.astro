@@ -1,0 +1,15 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import PartnerLedger from '../../components/brandzo-erp/ledger/PartnerLedger.jsx';
+---
+
+<DashboardLayout title="دفتر الذمم" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">دفتر الذمم وكشوف الحساب</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      كم لك وكم عليك — بسطورٍ لا بلقطة. كلّ سطرٍ يحمل مستنده وتاريخه ورصيده المتراكم،
+      فإن اختلفتَ مع عميلٍ على مئة دينار فهذا ما تفتحه أمامه.
+    </p>
+    <PartnerLedger client:load />
+  </div>
+</DashboardLayout>

@@ -57,6 +57,9 @@ export const NAV_GROUPS = [
     emoji: '🧾', icon: 'shoppingCart',
     items: [
       { path: '/dashboard/procurement', label: 'دورة المشتريات الداخلية', icon: 'shoppingCart' },
+      // دفتر الذمم — موضعٌ ثانٍ لأمين الخزينة وحده: هو من يقبض ويصرف، ولا يرى
+      // مجموعة التقارير. والصلاحية اتحاد المواضع لا أوّلها (`placementsFor`).
+      { path: '/dashboard/partner-ledger', label: 'دفتر الذمم وكشوف الحساب', icon: 'dollarSign', roles: ['treasury'] },
     ],
   },
   {
@@ -132,6 +135,9 @@ export const NAV_GROUPS = [
     emoji: '📊', icon: 'barChart3',
     items: [
       { path: '/dashboard/reports', label: 'مركز التقارير', icon: 'clipboardList', pinned: true },
+      // دفتر الذمم وكشوف الحساب (م٤-هـ): للمديرَين والمالي والخزينة.
+      // موضعه «التقارير» لأنّ المالي والخزينة يريانها — ولا يريان «العمليات».
+      { path: '/dashboard/partner-ledger', label: 'دفتر الذمم وكشوف الحساب', icon: 'dollarSign', roles: ['admin', 'warehouse_manager', 'finance_manager', 'treasury'] },
       // التواريخ المعدّلة (م٢-ج): موضعه «التقارير» لا «العمليات اليوميّة» —
       // فمدقّق الجرد والمالي لا يريان مجموعة العمليات أصلًا، وإدراجه هناك كان
       // يمنحهما اسمًا بلا باب. (أمسكه اختبار انحراف الصلاحيات.)

@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 84,
+    "modules": 85,
     "serviceDomains": 36,
     "serviceFiles": 247,
     "collections": 58,
@@ -408,6 +408,14 @@
         "recruitment",
         "ui"
       ]
+    },
+    {
+      "name": "partner-ledger",
+      "route": "/dashboard/partner-ledger",
+      "title": "دفتر الذمم",
+      "summary": "",
+      "file": "src/pages/dashboard/partner-ledger.astro",
+      "usesServices": []
     },
     {
       "name": "periodic-archive",
