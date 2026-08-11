@@ -11,8 +11,8 @@
   "counts": {
     "modules": 86,
     "serviceDomains": 37,
-    "serviceFiles": 256,
-    "collections": 58,
+    "serviceFiles": 259,
+    "collections": 59,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -1971,26 +1971,34 @@
         "assignmentsModel.test.js",
         "assignmentsService.js",
         "orgJobs.test.js",
+        "orgLocations.js",
+        "orgLocations.test.js",
+        "orgLocationsService.js",
         "orgModel.js",
         "orgModel.test.js",
         "orgService.js",
         "orgView.js",
         "orgView.test.js"
       ],
-      "fileCount": 9,
-      "testCount": 4,
+      "fileCount": 12,
+      "testCount": 5,
       "exports": [
         "CHART_SKINS",
+        "LEVEL_IDS",
         "NODE_TYPES",
+        "ORG_FIELDS",
+        "ORG_LEVELS",
         "SOURCE_LABELS",
         "TYPE_LABELS",
         "activeAssignmentsByJob",
         "addChild",
         "addJob",
         "allJobsGridHtml",
+        "ancestryOf",
         "approveOrgStructure",
         "assignToJob",
         "chartHtml",
+        "costByLocation",
         "countByType",
         "descendantIds",
         "diffListHtml",
@@ -2003,24 +2011,34 @@
         "getOrgStructure",
         "getVersion",
         "hasChanges",
+        "indexLocations",
         "jobCardsHtml",
         "jobRequirementsHtml",
         "jobsOfNode",
+        "levelOf",
         "listVersions",
         "listenAssignments",
+        "listenOrgLocations",
         "listenOrgStructure",
+        "locationOptions",
+        "locationProblems",
         "moveNode",
         "nextJobId",
+        "orgCodeOf",
         "pagesOfBranch",
         "pathTo",
         "proposedCount",
         "removeJob",
         "removeNode",
         "reorderNode",
+        "resolveLocation",
+        "saveOrgLocation",
         "saveOrgStructure",
+        "setOrgLocationActive",
         "staffingRowsHtml",
         "supportBandHtml",
         "treeRowsHtml",
+        "unlinkedCost",
         "updateJob",
         "updateNode",
         "validateTree",
@@ -2028,6 +2046,7 @@
       ],
       "collections": [
         "assignments",
+        "org_locations",
         "org_structure"
       ]
     },
@@ -3613,6 +3632,38 @@
           {
             "actions": [
               "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "org_locations",
+        "path": "org_locations",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager()",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
               "delete"
             ],
             "condition": "false",
