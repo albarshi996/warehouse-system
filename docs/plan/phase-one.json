@@ -773,7 +773,7 @@
       "milestone": "م-٧",
       "title": "لوحة التحكّم بالتكامل /integration-control",
       "owner": "Claude",
-      "state": "todo",
+      "state": "doing",
       "gaps": [
         "ف-٩"
       ],
@@ -787,7 +787,10 @@
         "مصفوفة أثر ٣٥ مستندًا × ٦ أعمدة",
         "integration_policy بيانات وإعدادات لا شيفرة ثابتة",
         "واجهة ErpAdapter محايدة"
-      ]
+      ],
+      "branch": "claude/phase-one-repairs-plan-07f596",
+      "progress": "بدأت. الجوهر: integration_policy بياناتٍ لا شيفرة + مصفوفة أثر لكلّ نوع + ErpAdapter محايدة + محاكاة قبل التفعيل.",
+      "nextStep": "ابنِ integrationPolicy.js خالصًا (الاتّجاهات + المصفوفة + المحاكاة + الافتراض الآمن) ثمّ erpAdapter.js المحايدة ثمّ الشاشة والقاعدة."
     },
     {
       "id": "م٧-ب",

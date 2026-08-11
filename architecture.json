@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 86,
-    "serviceDomains": 37,
-    "serviceFiles": 259,
-    "collections": 59,
+    "modules": 87,
+    "serviceDomains": 38,
+    "serviceFiles": 262,
+    "collections": 60,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -281,6 +281,14 @@
       "title": "لوحة التحكم",
       "summary": "",
       "file": "src/pages/dashboard/index.astro",
+      "usesServices": []
+    },
+    {
+      "name": "integration-control",
+      "route": "/dashboard/integration-control",
+      "title": "التحكّم بالتكامل",
+      "summary": "",
+      "file": "src/pages/dashboard/integration-control.astro",
       "usesServices": []
     },
     {
@@ -1436,6 +1444,39 @@
       "collections": [
         "hiring_requests"
       ]
+    },
+    {
+      "domain": "integration",
+      "dir": "src/services/integration",
+      "files": [
+        "integrationPolicy.js",
+        "integrationPolicy.test.js",
+        "integrationPolicyService.js"
+      ],
+      "fileCount": 3,
+      "testCount": 1,
+      "exports": [
+        "CONFLICT_MODES",
+        "DATA_SCOPES",
+        "DIRECTIONS",
+        "DIRECTION_IDS",
+        "MATRIX_COLUMNS",
+        "MONEY_MODES",
+        "TIMINGS",
+        "defaultPolicyFor",
+        "fieldGate",
+        "fullPolicy",
+        "getIntegrationPolicy",
+        "listenIntegrationPolicy",
+        "normalizePolicy",
+        "policyProblems",
+        "policySummary",
+        "policyTypes",
+        "pushDecision",
+        "saveIntegrationPolicy",
+        "simulate"
+      ],
+      "collections": []
     },
     {
       "domain": "inventory",
@@ -3334,6 +3375,38 @@
           {
             "actions": [
               "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "integration_policy",
+        "path": "integration_policy",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isAdmin()",
+            "roles": [
+              "isAdmin"
+            ]
+          },
+          {
+            "actions": [
               "delete"
             ],
             "condition": "false",

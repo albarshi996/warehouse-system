@@ -1,0 +1,15 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import IntegrationControl from '../../components/brandzo-erp/integration/IntegrationControl.jsx';
+---
+
+<DashboardLayout title="التحكّم بالتكامل" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">التحكّم بالتكامل</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      لكلّ نوع مستندٍ ونوع بياناتٍ قرارٌ مستقلّ: أيُدفع أم يُسحب أم يُستورَد مرّةً
+      أم يُعزل؟ وأيّ حقولٍ تعبر، ومتى، وماذا يحدث عند التعارض. والأثر يُرى قبل الحفظ.
+    </p>
+    <IntegrationControl client:load />
+  </div>
+</DashboardLayout>

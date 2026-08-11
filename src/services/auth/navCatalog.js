@@ -127,6 +127,9 @@ export const NAV_GROUPS = [
       // جسر المزامنة الحيّ: يقرأ أوامر الشراء والماستر الحقيقيّة من البوابة ويُظهر
       // دفعها إلى أودو مسوّدةً حتى الاعتماد (مرآةٌ على نفس مسار عميل الإنتاج).
       { path: '/dashboard/odoo-sync', label: 'جسر المزامنة مع أودو', icon: 'arrowLeftRight', roles: ['admin', 'warehouse_manager'] },
+      // لوحة التحكّم بالتكامل (م٧-أ): للمدير العام وحده — من يقلب اتّجاهها
+      // يغيّر مصدر الحقيقة في الشركة كلّها.
+      { path: '/dashboard/integration-control', label: 'التحكّم بالتكامل', icon: 'arrowLeftRight', roles: ['admin'] },
       { path: '/dashboard/workflows', label: 'الهيكل والمسارات', icon: 'workflows' },
       { path: '/dashboard/erp-workflows', label: 'دورات العمل ERP', icon: 'dollarSign' },
       { path: '/dashboard/training', label: 'تدريب Odoo (محاكي)', icon: 'grid' },
