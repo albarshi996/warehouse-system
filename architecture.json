@@ -10,8 +10,8 @@
   },
   "counts": {
     "modules": 87,
-    "serviceDomains": 38,
-    "serviceFiles": 262,
+    "serviceDomains": 39,
+    "serviceFiles": 264,
     "collections": 60,
     "roles": 16,
     "odooModels": 12,
@@ -1475,6 +1475,28 @@
         "pushDecision",
         "saveIntegrationPolicy",
         "simulate"
+      ],
+      "collections": []
+    },
+    {
+      "domain": "intelligence",
+      "dir": "src/services/intelligence",
+      "files": [
+        "operationalIntelligence.js",
+        "operationalIntelligence.test.js"
+      ],
+      "fileCount": 2,
+      "testCount": 1,
+      "exports": [
+        "DUPLICATE_RADIUS_M",
+        "MIN_HISTORY_DAYS",
+        "consumptionRate",
+        "findDuplicateStores",
+        "optimizeRoute",
+        "repCompanion",
+        "replenishmentFor",
+        "replenishmentPlan",
+        "suggestedOrder"
       ],
       "collections": []
     },

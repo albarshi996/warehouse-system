@@ -846,14 +846,17 @@
       "milestone": "م-٩",
       "title": "الذكاء التشغيليّ",
       "owner": "Claude",
-      "state": "todo",
+      "state": "doing",
       "gaps": [],
       "dependsOn": [
         "ر-١"
       ],
       "acceptance": [
         "التزويد التلقائيّ · الطلب المقترح · تحسين خطّ السير · رفيق المندوب · اكتشاف المتاجر المكرّرة"
-      ]
+      ],
+      "branch": "claude/phase-one-repairs-plan-07f596",
+      "progress": "بدأت. الخمسة: التزويد التلقائيّ · الطلب المقترح · خطّ السير · رفيق المندوب · المتاجر المكرّرة.",
+      "nextStep": "ابنِ operationalIntelligence.js خالصًا للخمسة، كلٌّ برقمه ومرجعه — واقتراحٌ بلا سببٍ لا يُتَّبع."
     }
   ],
   "ownerInputs": [
