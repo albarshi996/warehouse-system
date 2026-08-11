@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 83,
-    "serviceDomains": 35,
-    "serviceFiles": 235,
-    "collections": 56,
+    "modules": 84,
+    "serviceDomains": 36,
+    "serviceFiles": 238,
+    "collections": 57,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -449,6 +449,14 @@
       "title": "العرض التنفيذي الكامل — من المتابعة إلى القرار",
       "summary": "«العرض الكامل» — محتويات غرفة القرار كلها في مسار واحد.",
       "file": "src/pages/dashboard/executive-review/present.astro",
+      "usesServices": []
+    },
+    {
+      "name": "price-lists",
+      "route": "/dashboard/price-lists",
+      "title": "قوائم الأسعار",
+      "summary": "",
+      "file": "src/pages/dashboard/price-lists.astro",
       "usesServices": []
     },
     {
@@ -1974,6 +1982,36 @@
         "shapeImportedPartner"
       ],
       "collections": []
+    },
+    {
+      "domain": "pricing",
+      "dir": "src/services/pricing",
+      "files": [
+        "priceListModel.js",
+        "priceListModel.test.js",
+        "priceListService.js"
+      ],
+      "fileCount": 3,
+      "testCount": 1,
+      "exports": [
+        "DEVIATION_COLUMNS",
+        "PRICE_SEGMENTS",
+        "deviationRows",
+        "deviationSummary",
+        "isActiveOn",
+        "lineKey",
+        "listForCustomer",
+        "listProblems",
+        "listenPriceLists",
+        "priceDocument",
+        "priceFor",
+        "priceVerdict",
+        "savePriceList",
+        "setPriceListActive"
+      ],
+      "collections": [
+        "price_lists"
+      ]
     },
     {
       "domain": "promotions",
@@ -3606,6 +3644,39 @@
             "condition": "isManager() && (!('number' in resource.data) || request.resource.data.number == resource.data.number) && (!('letterNumber' in resource.data) || request.resource",
             "roles": [
               "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "price_lists",
+        "path": "price_lists",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager() || myRole() == 'sales_supervisor'",
+            "roles": [
+              "isManager",
+              "myRole"
             ]
           },
           {

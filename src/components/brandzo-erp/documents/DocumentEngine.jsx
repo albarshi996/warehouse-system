@@ -30,7 +30,10 @@ import { isEditable } from '../../../services/documents/states.js';
 import FieldInput from './FieldInput.jsx';
 import { listenSettings } from '../../../services/settings/settingsService.js';
 import { evaluateHeaderDates } from '../../../services/documents/datingGuard.js';
-import { itemTypeMap, documentItemProblems } from '../../../services/items/itemType.js';
+import { itemTypeMap, documentItemProblems, OWNERSHIP_DOC_TYPES } from '../../../services/items/itemType.js';
+import { listenPriceLists } from '../../../services/pricing/priceListService.js';
+import { listForCustomer, priceDocument } from '../../../services/pricing/priceListModel.js';
+import { subscribePartners } from '../../../services/partnerService.js';
 import InlineCreateModal from './InlineCreateModal.jsx';
 import LineItemsTable from './LineItemsTable.jsx';
 import Checklist from './Checklist.jsx';
@@ -65,6 +68,8 @@ export default function DocumentEngine() {
   const [settings, setSettings] = useState(null); // سياسات التشغيل (م١-ج) — تحكم حارس التاريخ
   const [backdateReason, setBackdateReason] = useState(''); // سبب التأريخ للماضي (م٢-ب)
   const [items, setItems] = useState([]); // ماستر الأصناف — لأنواعها (م٣-أ)
+  const [priceLists, setPriceLists] = useState([]); // قوائم الأسعار (م٣-ج)
+  const [customers, setCustomers] = useState([]); // لربط العميل بقائمته
 
   const schema = useMemo(() => getSchema(type), [type]);
 
@@ -123,6 +128,11 @@ export default function DocumentEngine() {
   // ⇒ خريطةً معدومة ⇒ **سلوك اليوم**: لا نمنع بندًا لأنّنا عجزنا عن معرفة نوعه.
   useEffect(() => subscribeItems(setItems, () => setItems([])), []);
 
+  // قوائم الأسعار والعملاء (م٣-ج). الفشل ⇒ قائمةٌ فارغة ⇒ **لا قائمة** ⇒
+  // الكتابة اليدوية كما كانت. التدرّج نفسه: لا تعطيل بسبب غياب بيانات.
+  useEffect(() => listenPriceLists(setPriceLists), []);
+  useEffect(() => subscribePartners('customer', setCustomers, () => setCustomers([])), []);
+
   const flash = useCallback((text, tone = 'ok') => {
     setMsg({ text, tone });
     setTimeout(() => setMsg(null), 4000);
@@ -155,6 +165,30 @@ export default function DocumentEngine() {
       ? documentItemProblems(schema.type, doc.lines || [], map, settings, me?.role || '')
       : { ok: true, problems: [], warnings: [] };
   }, [schema, doc, items, settings, me]);
+
+  /**
+   * التسعير (م٣-ج): يملأ الأسعار الغائبة من قائمة العميل، ويحكم على المكتوبة.
+   * لا يعمل إلّا في مستندٍ يُخرج الملكيّة ولعميلٍ له قائمة — وإلّا فالكتابة
+   * اليدوية كما كانت. وهذا هو التدرّج الذي يمنع التعطيل.
+   */
+  const pricing = useMemo(() => {
+    const idle = { ok: true, problems: [], warnings: [], lines: null, list: null };
+    if (!schema || !doc || !OWNERSHIP_DOC_TYPES.includes(schema.type)) return idle;
+    const code = String(doc.header?.customerCode || '').trim().toUpperCase();
+    const customer = customers.find((c) => String(c.code || '').toUpperCase() === code) || null;
+    const list = listForCustomer(priceLists, customer, doc.header?.saleDate || doc.header?.orderDate || '');
+    if (!list) return idle;
+    const r = priceDocument({ list, lines: doc.lines || [], settings, role: me?.role || '' });
+    return { ...r, list };
+  }, [schema, doc, priceLists, customers, settings, me]);
+
+  /** يطبّق أسعار القائمة على البنود — بضغطةٍ لا تلقائيًّا، فلا يُدهس ما كُتب. */
+  function applyListPrices() {
+    if (!pricing.lines) return;
+    setDoc((d) => ({ ...d, lines: pricing.lines }));
+    setDirty(true);
+    flash(`مُلئت الأسعار من قائمة «${pricing.list.name || pricing.list.id}».`);
+  }
 
   function patchHeader(key, value) {
     setDoc((d) => ({ ...d, header: { ...d.header, [key]: value } }));
@@ -290,6 +324,11 @@ export default function DocumentEngine() {
           flash(itemGuard.problems.join(' · '), 'err');
           return;
         }
+        // سعرٌ يدويٌّ ممنوع لا يُرسَل — والوسم يُكتب حين يُسمح به.
+        if (!pricing.ok) {
+          flash(pricing.problems.join(' · '), 'err');
+          return;
+        }
       }
       const targetId = dirty || !docId ? await persist() : docId;
       setDirty(false);
@@ -366,6 +405,25 @@ export default function DocumentEngine() {
           <p className="text-xs text-muted bg-chip border border-line rounded-lg px-3 py-2">
             🔒 المستند خرج من طور التحرير — الحقول للقراءة فقط.
           </p>
+        )}
+
+        {/* التسعير (م٣-ج): القائمة السارية وأثرها — والملء بضغطةٍ لا تلقائيًّا. */}
+        {editable && pricing.list && (
+          <div className="rounded-lg border border-line bg-chip px-3 py-2 space-y-1">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-sm text-ink">
+                قائمة الأسعار السارية: <span className="font-bold">{pricing.list.name || pricing.list.id}</span>
+              </span>
+              <button
+                className="rounded-lg px-3 py-1.5 text-xs border border-line text-ink bg-surface"
+                onClick={applyListPrices}
+              >
+                املأ الأسعار من القائمة
+              </button>
+            </div>
+            {pricing.problems.map((p) => <p key={p} className="text-sm text-brand-red">{p}</p>)}
+            {pricing.warnings.map((w) => <p key={w} className="text-sm text-ink-2">{w}</p>)}
+          </div>
         )}
 
         {/* حارس أنواع الأصناف (م٣-أ): يُرى قبل الإرسال لا بعد القيد. */}

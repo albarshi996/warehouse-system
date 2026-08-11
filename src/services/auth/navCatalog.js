@@ -100,6 +100,9 @@ export const NAV_GROUPS = [
     group: 'الميدان والبيع من المركبة',
     emoji: '🛵', icon: 'truck',
     items: [
+      // قوائم الأسعار (م٣-ج): موضعها «الميدان» لا «العمليات اليوميّة» — فمشرف
+      // المبيعات لا يرى مجموعة العمليات، وإدراجه هناك كان يمنحه اسمًا بلا باب.
+      { path: '/dashboard/price-lists', label: 'قوائم الأسعار', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'sales_supervisor'] },
       { path: '/dashboard/field-operations', label: 'يوم المندوب', icon: 'mapPin', roles: ['admin', 'warehouse_manager', 'sales_rep', 'sales_supervisor'] },
       { path: '/dashboard/van-operations', label: 'المستودع المتنقّل', icon: 'truck', roles: ['admin', 'warehouse_manager', 'sales_rep', 'sales_supervisor'] },
       { path: '/dashboard/customer-stock', label: 'بضاعة العملاء', icon: 'package', roles: ['admin', 'warehouse_manager', 'sales_rep', 'sales_supervisor'] },

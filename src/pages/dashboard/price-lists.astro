@@ -1,0 +1,15 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import PriceLists from '../../components/brandzo-erp/pricing/PriceLists.jsx';
+---
+
+<DashboardLayout title="قوائم الأسعار" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">قوائم الأسعار</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      سعرٌ لكلّ شريحة، وسعرٌ لكلّ وحدة، وحدٌّ أدنى للكمّيّة. والقوائم اختيارية:
+      من لا قائمة له تبقى الكتابة اليدوية متاحة حتّى تكتمل البيانات.
+    </p>
+    <PriceLists client:load />
+  </div>
+</DashboardLayout>
