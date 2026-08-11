@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 85,
-    "serviceDomains": 36,
-    "serviceFiles": 247,
+    "modules": 86,
+    "serviceDomains": 37,
+    "serviceFiles": 253,
     "collections": 58,
     "roles": 16,
     "odooModels": 12,
@@ -138,6 +138,14 @@
       "title": "ماستر العملاء",
       "summary": "ماستر العملاء (§15.3) — توأم ماستر الموردين بنفس المحرّك (kind='customer').",
       "file": "src/pages/dashboard/customers.astro",
+      "usesServices": []
+    },
+    {
+      "name": "data-reports",
+      "route": "/dashboard/data-reports",
+      "title": "تقارير البيانات",
+      "summary": "",
+      "file": "src/pages/dashboard/data-reports.astro",
       "usesServices": []
     },
     {
@@ -2207,6 +2215,39 @@
         "groupBy",
         "toMillis",
         "usedActions"
+      ],
+      "collections": []
+    },
+    {
+      "domain": "reports",
+      "dir": "src/services/reports",
+      "files": [
+        "accountReports.js",
+        "index.js",
+        "reportDefs.test.js",
+        "reportEngine.js",
+        "reportEngine.test.js",
+        "stockReports.js"
+      ],
+      "fileCount": 6,
+      "testCount": 2,
+      "exports": [
+        "ACCOUNT_REPORTS",
+        "COLUMN_KINDS",
+        "FILTER_KINDS",
+        "REPORTS",
+        "STOCK_REPORTS",
+        "applyFilters",
+        "buildRegistry",
+        "canOpen",
+        "definitionProblems",
+        "exportRows",
+        "formatCell",
+        "getReport",
+        "reportIds",
+        "reportsForRole",
+        "runReport",
+        "totalsOf"
       ],
       "collections": []
     },

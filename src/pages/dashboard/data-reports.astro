@@ -1,0 +1,15 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import DataReports from '../../components/brandzo-erp/reports/DataReports.jsx';
+---
+
+<DashboardLayout title="تقارير البيانات" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">تقارير البيانات</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      اثنا عشر تقريرًا على محرّكٍ واحد: المخزون والحسابات. فلترةٌ مجتمعة، ومجاميعُ
+      من المعروض لا من الكلّ، وطباعةٌ وتصديرٌ بأعمدةٍ حقيقيّة.
+    </p>
+    <DataReports client:load />
+  </div>
+</DashboardLayout>
