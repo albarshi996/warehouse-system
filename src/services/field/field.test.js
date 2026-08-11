@@ -28,6 +28,11 @@ import {
   invoiceGuard,
   stampMs,
   VISIT_TRANSITIONS,
+  VISIT_OUTCOMES,
+  VISIT_TYPES,
+  DEFAULT_VISIT_TYPE,
+  visitTypeOf,
+  isVisitProductive,
 } from './visitModel.js';
 
 /* ═══════════════════ الجغرافيا ═══════════════════ */
@@ -280,4 +285,61 @@ test('حارس الفاتورة يمنع المؤكَّد خارجًا ويسم�
   const inside = invoiceGuard({ visit: open, position: { lat: 32.1168, lng: 20.0668, accuracy: 8 } });
   assert.equal(inside.ok, true);
   assert.equal(DEFAULT_FENCE_RADIUS_M, 150);
+});
+
+/* ═══════════ أنواع الزيارة (م٥-ب · تسدّ ف‑١١) ═══════════ */
+
+test('★★ الترحيل: زيارةٌ بلا نوعٍ تُعامَل «بيع وتحصيل» — سلوك اليوم حرفيًّا', () => {
+  assert.equal(visitTypeOf({}), 'sell_collect');
+  assert.equal(visitTypeOf({ visitType: '' }), 'sell_collect');
+  assert.equal(visitTypeOf({ visitType: 'نوع مخترع' }), 'sell_collect');
+  assert.equal(DEFAULT_VISIT_TYPE, 'sell_collect');
+
+  // والاحتساب لم يتغيّر لها: البيع والتحصيل منتجان وما عداهما لا.
+  assert.equal(isVisitProductive({ outcome: 'sale' }), true);
+  assert.equal(isVisitProductive({ outcome: 'collection' }), true);
+  assert.equal(isVisitProductive({ outcome: 'no_order' }), false);
+  assert.equal(isVisitProductive({ outcome: 'closed' }), false);
+});
+
+test('★★ زيارة الخدمة لم تعد تُحتسب فاشلة — وهي الفجوة ف‑١١ بعينها', () => {
+  const service = { visitType: 'service', outcome: 'no_order' };
+  assert.equal(isVisitProductive(service), true, 'أدّت غرضها');
+  assert.equal(isVisitProductive({ visitType: 'service', outcome: 'service_done' }), true);
+
+  // ونفس النتيجة في زيارة بيعٍ تعني فشلًا — فالمقياس بالغرض لا بالنتيجة وحدها.
+  assert.equal(isVisitProductive({ visitType: 'sell', outcome: 'no_order' }), false);
+});
+
+test('★ ولكلّ نوعٍ نتائجه: التحصيل لا يُرضي زيارة بيعٍ فقط، والعكس', () => {
+  assert.equal(isVisitProductive({ visitType: 'sell', outcome: 'collection' }), false);
+  assert.equal(isVisitProductive({ visitType: 'collect', outcome: 'sale' }), false);
+  assert.equal(isVisitProductive({ visitType: 'collect', outcome: 'collection' }), true);
+  assert.equal(isVisitProductive({ visitType: 'sell_collect', outcome: 'collection' }), true, 'والأوسع يقبل الاثنين');
+});
+
+test('★ الأنواع أربعةٌ كما في الخطة، وكلٌّ بنتائجه المعرَّفة', () => {
+  assert.equal(VISIT_TYPES.length, 4);
+  const outcomeIds = new Set(VISIT_OUTCOMES.map((o) => o.id));
+  for (const t of VISIT_TYPES) {
+    assert.ok(t.labelAr && t.hint, `${t.id} بلا تسميةٍ أو تلميح`);
+    assert.ok(t.satisfies.length > 0, `${t.id} بلا نتيجةٍ تُرضيه — نوعٌ لا يُنجَح فيه أبدًا`);
+    for (const o of t.satisfies) {
+      assert.ok(outcomeIds.has(o), `${t.id} يشير إلى نتيجةٍ غير معرَّفة «${o}»`);
+    }
+  }
+});
+
+test('★★ الملخّص يقيس كلّ زيارةٍ بغرضها، ويُظهر التوزيع بالنوع', () => {
+  const visits = [
+    { state: 'checked_out', visitType: 'service', outcome: 'no_order' },
+    { state: 'checked_out', visitType: 'sell', outcome: 'no_order' },
+    { state: 'checked_out', visitType: 'sell', outcome: 'sale' },
+  ];
+  const s = summarizeVisits(visits);
+  assert.equal(s.productive, 2, 'الخدمة نجحت والبيع نجح مرّةً وفشل مرّة');
+  assert.equal(s.strikeRate, 67);
+  assert.equal(s.byType.service, 1);
+  assert.equal(s.byType.sell, 2);
+  assert.equal(s.byType.collect, 0);
 });

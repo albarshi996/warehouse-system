@@ -246,8 +246,13 @@ export async function checkIn(id, position, profile) {
   );
 }
 
-/** تسجيل الانصراف بنتيجةٍ مُلزِمة — زيارةٌ بلا نتيجة معلومةٌ ناقصة. */
-export async function checkOut(id, { position, outcome, notes } = {}, profile) {
+/**
+ * تسجيل الانصراف بنتيجةٍ مُلزِمة — زيارةٌ بلا نتيجة معلومةٌ ناقصة.
+ *
+ * و`visitType` (م٥-ب) يُكتب هنا إن لم يكن على الزيارة المخطّطة: النجاح يُقاس
+ * بغرض الزيارة، وغيابُه يعني «بيع وتحصيل» — أوسع الأنواع وسلوك اليوم.
+ */
+export async function checkOut(id, { position, outcome, notes, visitType } = {}, profile) {
   if (!String(outcome || '').trim()) throw new Error('نتيجة الزيارة مطلوبة');
   await transition(
     id,
@@ -256,6 +261,7 @@ export async function checkOut(id, { position, outcome, notes } = {}, profile) {
       checkOutAt: serverTimestamp(),
       checkOutPosition: position || null,
       outcome: String(outcome),
+      ...(String(visitType || '').trim() ? { visitType: String(visitType).trim() } : {}),
       notes: String(notes || '').trim(),
     },
     profile

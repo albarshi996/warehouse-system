@@ -46,7 +46,60 @@ export const VISIT_OUTCOMES = [
   { id: 'closed', labelAr: 'المتجر مغلق', productive: false },
   { id: 'refused', labelAr: 'رفض الاستقبال', productive: false },
   { id: 'collection', labelAr: 'تحصيل فقط', productive: true },
+  // نتيجة زيارة الخدمة (م٥-ب): عرضٌ أو ترتيب رفٍّ أو متابعة شكوى — أُنجزت.
+  { id: 'service_done', labelAr: 'خدمة منجَزة', productive: true },
 ];
+
+/**
+ * أنواع الزيارة الأربعة (م٥-ب · تسدّ ف‑١١).
+ *
+ * ═══ العطب ═══
+ * كانت النتائج بلا أنواع، فيُقاس نجاح كلّ زيارةٍ بمقياسٍ واحد: «هل بعتَ؟».
+ * فزيارةُ خدمةٍ نجحت في غرضها — رتّبت رفًّا أو أنهت شكوى — تُحتسب **فاشلة**،
+ * ويُظلم مندوبٌ فعل ما طُلب منه بالضبط. والمقياس الظالم يُعلِّم الالتفاف عليه:
+ * يتوقّف المندوب عن زيارات الخدمة أصلًا.
+ *
+ * ═══ العلاج ═══
+ * لكلّ نوعٍ **نتائجه المُرضية**. والنجاح يُقاس بغرض الزيارة لا بغرضٍ واحدٍ للكلّ.
+ *
+ * ═══ الترحيل ═══
+ * زيارةٌ بلا نوعٍ تُعامَل `sell_collect` — أوسع الأنواع، وهو **سلوك اليوم
+ * حرفيًّا**: البيع والتحصيل منتجان وما عداهما لا.
+ */
+export const VISIT_TYPES = [
+  {
+    id: 'sell_collect',
+    labelAr: 'بيع وتحصيل',
+    hint: 'الزيارة المعتادة',
+    satisfies: ['sale', 'collection'],
+  },
+  { id: 'sell', labelAr: 'بيع فقط', hint: 'عميلٌ لا مديونيّة عليه', satisfies: ['sale'] },
+  { id: 'collect', labelAr: 'تحصيل فقط', hint: 'زيارة تحصيلٍ لا عرض بضاعة', satisfies: ['collection'] },
+  {
+    id: 'service',
+    labelAr: 'زيارة خدمة',
+    hint: 'عرضٌ · ترتيب رفّ · متابعة شكوى · جرد رفّ',
+    satisfies: ['service_done', 'no_order'],
+  },
+];
+
+/** النوع الافتراضيّ — أوسع الأنواع، وهو سلوك اليوم. */
+export const DEFAULT_VISIT_TYPE = 'sell_collect';
+
+/** نوع زيارةٍ من سجلّها. المجهول والفارغ يسقطان إلى الافتراض. */
+export function visitTypeOf(visit) {
+  const raw = String(visit?.visitType ?? '').trim();
+  return VISIT_TYPES.some((t) => t.id === raw) ? raw : DEFAULT_VISIT_TYPE;
+}
+
+/**
+ * هل أدّت الزيارة غرضها؟ **يُقاس بنوعها لا بمقياسٍ واحدٍ للكلّ.**
+ * زيارةُ خدمةٍ انتهت بـ«بلا طلب» أدّت غرضها؛ وزيارةُ بيعٍ انتهت به لم تؤدِّه.
+ */
+export function isVisitProductive(visit) {
+  const type = VISIT_TYPES.find((t) => t.id === visitTypeOf(visit));
+  return (type?.satisfies || []).includes(String(visit?.outcome ?? ''));
+}
 
 /** أسباب عدم التنفيذ — تُلزَم عند `skipped` فلا زيارةٌ تسقط بلا سبب. */
 export const SKIP_REASONS = [
@@ -137,7 +190,9 @@ export function visitVerdict(visit, { radiusM = DEFAULT_FENCE_RADIUS_M, minMinut
 export function summarizeVisits(visits, opts = {}) {
   const rows = visits || [];
   const closed = rows.filter((v) => v?.state === 'checked_out');
-  const productiveIds = new Set(VISIT_OUTCOMES.filter((o) => o.productive).map((o) => o.id));
+  // النجاح يُقاس بغرض الزيارة (م٥-ب) لا بمقياسٍ واحدٍ للكلّ — فزيارة الخدمة
+  // التي أدّت غرضها لم تعد تُحتسب فاشلة.
+  const productiveCount = closed.filter(isVisitProductive).length;
 
   const durations = closed
     .map((v) => visitDurationMinutes(v?.checkInAt, v?.checkOutAt))
@@ -151,14 +206,16 @@ export function summarizeVisits(visits, opts = {}) {
     inProgress: rows.filter((v) => v?.state === 'checked_in').length,
     done: closed.length,
     skipped: rows.filter((v) => v?.state === 'skipped').length,
-    productive: closed.filter((v) => productiveIds.has(v?.outcome)).length,
+    productive: productiveCount,
     flagged: flagged.length,
     avgMinutes: durations.length
       ? Math.round((durations.reduce((s, d) => s + d, 0) / durations.length) * 10) / 10
       : 0,
-    strikeRate: closed.length
-      ? Math.round((closed.filter((v) => productiveIds.has(v?.outcome)).length / closed.length) * 100)
-      : 0,
+    strikeRate: closed.length ? Math.round((productiveCount / closed.length) * 100) : 0,
+    // توزيعٌ بالنوع — فيُرى أنّ المندوب زار خدمةً لا أنّه فشل في البيع.
+    byType: Object.fromEntries(
+      VISIT_TYPES.map((t) => [t.id, closed.filter((v) => visitTypeOf(v) === t.id).length])
+    ),
   };
 }
 
