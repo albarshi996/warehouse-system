@@ -158,6 +158,7 @@ export const createItem = async ({
   minStock = 0,
   notes = '',
   barcodes = [],
+  itemType = 'sale', // م٣-أ — الافتراض هو سلوك اليوم: بضاعةٌ مخزنيّة تُباع
 }) => {
   const id = normalizeSku(sku);
   if (!id) throw new Error('SKU is required');
@@ -182,6 +183,7 @@ export const createItem = async ({
     balance: Number(balance) || 0,
     minStock: Number(minStock) || 0,
     notes: String(notes).trim(),
+    itemType,
     archived: false,
     odooId: null,
     createdAt: serverTimestamp(),

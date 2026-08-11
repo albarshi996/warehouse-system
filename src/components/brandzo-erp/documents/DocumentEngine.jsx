@@ -25,11 +25,12 @@ import { listenAttachments } from '../../../services/documents/attachmentsServic
 import { listenReconciliations } from '../../../services/documents/controlService.js';
 import { emptyDocument, emptyChecklist, missingRequired, isEmptyLine, applyItemToLine } from '../../../services/documents/schemaUtils.js';
 import { mergeParentLink } from '../../../services/documents/chain.js';
-import { lookupByBarcode } from '../../../services/itemService.js';
+import { lookupByBarcode, subscribeItems } from '../../../services/itemService.js';
 import { isEditable } from '../../../services/documents/states.js';
 import FieldInput from './FieldInput.jsx';
 import { listenSettings } from '../../../services/settings/settingsService.js';
 import { evaluateHeaderDates } from '../../../services/documents/datingGuard.js';
+import { itemTypeMap, documentItemProblems } from '../../../services/items/itemType.js';
 import InlineCreateModal from './InlineCreateModal.jsx';
 import LineItemsTable from './LineItemsTable.jsx';
 import Checklist from './Checklist.jsx';
@@ -63,6 +64,7 @@ export default function DocumentEngine() {
   const [createFor, setCreateFor] = useState(null); // طلب إنشاء أبٍ مباشر (المرحلة ب٢)
   const [settings, setSettings] = useState(null); // سياسات التشغيل (م١-ج) — تحكم حارس التاريخ
   const [backdateReason, setBackdateReason] = useState(''); // سبب التأريخ للماضي (م٢-ب)
+  const [items, setItems] = useState([]); // ماستر الأصناف — لأنواعها (م٣-أ)
 
   const schema = useMemo(() => getSchema(type), [type]);
 
@@ -117,6 +119,10 @@ export default function DocumentEngine() {
   // سياسات التشغيل حيّةً: تغييرُ المالك للمدى يسري هنا بلا إعادة تحميل.
   useEffect(() => listenSettings(setSettings), []);
 
+  // ماستر الأصناف: منه تُقرأ الأنواع (م٣-أ). وفشلُ القراءة يعني قائمةً فارغة
+  // ⇒ خريطةً معدومة ⇒ **سلوك اليوم**: لا نمنع بندًا لأنّنا عجزنا عن معرفة نوعه.
+  useEffect(() => subscribeItems(setItems, () => setItems([])), []);
+
   const flash = useCallback((text, tone = 'ok') => {
     setMsg({ text, tone });
     setTimeout(() => setMsg(null), 4000);
@@ -141,6 +147,14 @@ export default function DocumentEngine() {
         : null,
     [schema, doc, settings, me]
   );
+
+  // حارس أنواع الأصناف (م٣-أ): الداخليّ لا يُباع، والخدمة لا تُحمَّل.
+  const itemGuard = useMemo(() => {
+    const map = items.length ? itemTypeMap(items) : null;
+    return schema && doc
+      ? documentItemProblems(schema.type, doc.lines || [], map, settings, me?.role || '')
+      : { ok: true, problems: [], warnings: [] };
+  }, [schema, doc, items, settings, me]);
 
   function patchHeader(key, value) {
     setDoc((d) => ({ ...d, header: { ...d.header, [key]: value } }));
@@ -270,6 +284,12 @@ export default function DocumentEngine() {
           flash(`أكمل الحقول الإلزامية: ${missing.join(' · ')}`, 'err');
           return;
         }
+        // نوع الصنف يُفحص عند الإرسال لا عند القيد: المنعُ بعد أن تتحرّك
+        // البضاعة تصحيحٌ متأخّر، والمنعُ قبلها حراسة.
+        if (!itemGuard.ok) {
+          flash(itemGuard.problems.join(' · '), 'err');
+          return;
+        }
       }
       const targetId = dirty || !docId ? await persist() : docId;
       setDirty(false);
@@ -346,6 +366,18 @@ export default function DocumentEngine() {
           <p className="text-xs text-muted bg-chip border border-line rounded-lg px-3 py-2">
             🔒 المستند خرج من طور التحرير — الحقول للقراءة فقط.
           </p>
+        )}
+
+        {/* حارس أنواع الأصناف (م٣-أ): يُرى قبل الإرسال لا بعد القيد. */}
+        {editable && (itemGuard.problems.length > 0 || itemGuard.warnings.length > 0) && (
+          <div className="rounded-lg border border-line bg-chip px-3 py-2">
+            {itemGuard.problems.map((p) => (
+              <p key={p} className="text-sm text-brand-red">{p}</p>
+            ))}
+            {itemGuard.warnings.map((w) => (
+              <p key={w} className="text-sm text-ink">{w}</p>
+            ))}
+          </div>
         )}
 
         {/* الوسم دائم (م٢-ب): يرافق المستند ولا يُمحى، فيراه كلّ من يقرؤه. */}

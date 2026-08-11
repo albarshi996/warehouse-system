@@ -29,6 +29,8 @@ export function normalizeUnit(raw) {
   return String(raw).trim();
 }
 
+import { normalizeItemType } from './itemType.js';
+
 const str = (v) => String(v).trim();
 const num = (v) => Number(v) || 0;
 
@@ -47,6 +49,8 @@ const FIELD_CASTS = {
   minStock: { cast: num },
   costPrice: { cast: num, also: { unitPrice: num } },
   sellPrice: { cast: num },
+  // نوع الصنف (م٣-أ): بيع · داخليّ · خدمة. الفاسد يسقط إلى sale في typeOf.
+  itemType: { cast: (v) => normalizeItemType(v) },
   uomGroupCode: { cast: str },
   uomGroupName: { cast: str, also: { unit: (v) => normalizeUnit(v) } },
   department: { cast: str },

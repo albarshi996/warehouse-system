@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ITEM_TYPE_OPTIONS, typeOf } from '../../../services/items/itemType.js';
 import { createItem, updateItem, UNIT_OPTIONS } from '../../../services/itemService.js';
 
 /**
@@ -22,6 +23,7 @@ function emptyDraft() {
     barcodesText: '',
     category: '',
     unit: 'piece',
+    itemType: 'sale', // م٣-أ — الافتراض هو سلوك اليوم
     balance: '0',
     minStock: '0',
   };
@@ -43,6 +45,7 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
         barcodesText: (item.barcodes || []).join(', '),
         category: item.category ?? '',
         unit: item.unit ?? 'piece',
+        itemType: typeOf(item),
         balance: String(item.balance ?? 0),
         minStock: String(item.minStock ?? 0),
       });
@@ -85,6 +88,7 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
           barcodes,
           category: draft.category,
           unit: draft.unit,
+          itemType: draft.itemType,
           balance: draft.balance,
           minStock: draft.minStock,
         });
@@ -161,6 +165,18 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
             value={draft.category}
             onChange={update('category')}
           />
+        </Field>
+
+        {/* نوع الصنف (م٣-أ): الخدمة لا تُقيَّد مخزنيًّا، والداخليّ لا يُباع.
+            الافتراض «بيع» — أي سلوك اليوم، فالترحيل بلا أثر. */}
+        <Field label="نوع الصنف">
+          <select className="o_input" value={draft.itemType} onChange={update('itemType')}>
+            {ITEM_TYPE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label} — {opt.hint}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <Field label="الوحدة">

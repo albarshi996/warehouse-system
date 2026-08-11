@@ -124,6 +124,10 @@ export const DATASETS = {
 
       // ── اختيارية: يقبلها المستورد ولا يحملها القالب القياسي ──────────
       // (أعادها حارس الانحراف 2026-07-16 — سقطت سهوًا أثناء اعتماد أعمدة المالك)
+      // نوع الصنف (م٣-أ): بيع · داخليّ · خدمة. عمودٌ لا شاشةٌ وحدها — تصنيفُ
+      // مئات الأصناف صنفًا صنفًا بيدٍ عملٌ لا يُنجَز، فيبقى الكلّ `sale` إلى
+      // الأبد وتبقى الفجوة. والفراغ والمجهول يسقطان إلى `sale` في `typeOf`.
+      { field: 'itemType', labelAr: 'Item Type (نوع الصنف)', type: 'string', required: false, aliases: ['itemtype', 'item type', 'نوع الصنف', 'النوع', 'type', 'نوع'] },
       { field: 'nameEn', labelAr: 'الاسم (إنجليزي)', type: 'string', required: false, aliases: ['nameen', 'name en', 'english name', 'الاسم بالانجليزي', 'الاسم الانجليزي'] },
       { field: 'shade', labelAr: 'الظل/اللون', type: 'string', required: false, aliases: ['shade', 'الظل', 'اللون', 'الظل/اللون', 'color', 'colour', 'درجة اللون'] },
       { field: 'balance', labelAr: 'الكمية الدفترية', type: 'number', required: false, nonNegative: true, aliases: ['balance', 'الرصيد', 'الكمية', 'الكمية الدفترية', 'المتوفر', 'qty', 'quantity', 'on hand', 'qty_available'] },

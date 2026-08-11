@@ -23,6 +23,7 @@ import {
   POSTING_STATE,
 } from './postingRules.js';
 import { vehicleLocationCode, customerLocationCode, isAccountLocation } from './locations.js';
+import { isStocked, lineType } from '../items/itemType.js';
 
 /** فاصل المعرّف الحتمي — نفس نمط `balanceId`. */
 const SEP = '__';
@@ -67,13 +68,18 @@ function resolveLocation(slot, header) {
  * يبني حركات مستند. لا يقرأ حالة المستند — الاستدعاء مسؤول عن ذلك
  * (انظر `canPost`) — كي يمكن معاينة الأثر قبل الإنجاز.
  *
+ * **الخدمة لا تُقيَّد (م٣-أ):** بندُ «رسوم نقل» بكمّيّة ١ كان يبني رصيدًا
+ * وهميًّا يعدّه أمين المخزن فلا يجده. و`typeMap` اختياريّة عمدًا: غيابها يعني
+ * سلوك اليوم حرفيًّا — فالميزة تُفعَّل بالبيانات لا بالنشر.
+ *
  * @param {object} docData المستند (id · type · number · header · lines)
- * @returns {{moves: Array, problems: string[]}} الحركات ومشاكل المنع
+ * @param {{itemTypes?: Map<string,string>|object}} [opts] خريطة `sku → نوع`
+ * @returns {{moves: Array, problems: string[], skipped: Array}} الحركات والمشاكل وما استُبعد
  */
-export function buildMoves(docData) {
+export function buildMoves(docData, { itemTypes = null } = {}) {
   const problems = [];
   const rule = postingRuleFor(docData?.type);
-  if (!rule) return { moves: [], problems };
+  if (!rule) return { moves: [], problems, skipped: [] };
 
   const header = docData?.header || {};
   const fromSlot = resolveLocation(rule.from, header);
@@ -81,11 +87,19 @@ export function buildMoves(docData) {
 
   if (fromSlot === undefined || toSlot === undefined) {
     problems.push('المستودع غير محدَّد في رأس المستند — لا يُقيَّد أثرٌ بلا موقع.');
-    return { moves: [], problems };
+    return { moves: [], problems, skipped: [] };
   }
 
   const moves = [];
+  const skipped = [];
   (docData?.lines || []).forEach((line, index) => {
+    // الخدمة تُحتسب قيمةً ولا تُقيَّد مخزنيًّا (م٣-أ). تُسجَّل في `skipped`
+    // ولا تُبتلع صامتةً — فاستبعادٌ لا يُرى يصير عطبًا لا يُشخَّص.
+    if (itemTypes && !isStocked(lineType(line, itemTypes))) {
+      skipped.push({ index, sku: String(line?.sku ?? '').trim(), reason: 'خدمة — لا تُقيَّد مخزنيًّا' });
+      return;
+    }
+
     const raw = rule.computeQty ? rule.computeQty(line) : Number(line?.[rule.qtyField]) || 0;
     const qty = Number(raw) || 0;
     if (qty === 0) return; // بندٌ بلا كمية ليس خطأً — لا يُقيَّد فحسب
@@ -130,7 +144,7 @@ export function buildMoves(docData) {
     });
   });
 
-  return { moves, problems };
+  return { moves, problems, skipped };
 }
 
 /**
