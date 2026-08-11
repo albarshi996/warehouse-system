@@ -369,7 +369,7 @@
       "milestone": "م-٢",
       "title": "تقرير التواريخ المعدّلة",
       "owner": "Claude",
-      "state": "todo",
+      "state": "doing",
       "gaps": [
         "ف-٨"
       ],
@@ -379,7 +379,10 @@
       "acceptance": [
         "من غيّر، وماذا غيّر، ومتى، ولماذا",
         "وسم backdated ظاهر في كل تقرير يتضمّن المستند"
-      ]
+      ],
+      "branch": "claude/phase-one-repairs-plan-07f596",
+      "progress": "بدأت. مصدر البيانات جاهز: كتلة doc.dating التي كتبتها م٢-ب (الحقول · الأيّام · السبب · الهويّة · ختم الخادم) + قيد التدقيق backdate.",
+      "nextStep": "ابنِ backdateReport.js خالصًا (صفوف + ملخّص + فلاتر)، ثمّ شاشة /dashboard/date-integrity بثلاث طبقات، ثمّ اربطها بـnavCatalog، ثمّ اختبار."
     },
     {
       "id": "م٢-د",

@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 82,
+    "modules": 83,
     "serviceDomains": 35,
-    "serviceFiles": 228,
+    "serviceFiles": 230,
     "collections": 56,
     "roles": 16,
     "odooModels": 12,
@@ -138,6 +138,14 @@
       "title": "ماستر العملاء",
       "summary": "ماستر العملاء (§15.3) — توأم ماستر الموردين بنفس المحرّك (kind='customer').",
       "file": "src/pages/dashboard/customers.astro",
+      "usesServices": []
+    },
+    {
+      "name": "date-integrity",
+      "route": "/dashboard/date-integrity",
+      "title": "التواريخ المعدّلة",
+      "summary": "",
+      "file": "src/pages/dashboard/date-integrity.astro",
       "usesServices": []
     },
     {
@@ -922,6 +930,8 @@
         "attachmentFile.js",
         "attachmentFile.test.js",
         "attachmentsService.js",
+        "backdateReport.js",
+        "backdateReport.test.js",
         "cc.js",
         "chain.js",
         "chain.test.js",
@@ -978,11 +988,12 @@
         "vsi.js",
         "vsr.js"
       ],
-      "fileCount": 59,
-      "testCount": 10,
+      "fileCount": 61,
+      "testCount": 11,
       "exports": [
         "ACCEPTED_ATTACHMENT_TYPES",
         "ATTACHMENT_KINDS",
+        "BACKDATE_COLUMNS",
         "BILLING_CHAIN",
         "CCP1_LIMITS",
         "CHAINS",
@@ -1021,8 +1032,11 @@
         "allFields",
         "appendAudit",
         "applyItemToLine",
+        "attentionItems",
         "availableTransitions",
         "awaitingMyApproval",
+        "backdateRows",
+        "backdateSummary",
         "backdateTag",
         "base64Size",
         "behaviorOf",
@@ -1076,6 +1090,7 @@
         "fieldVerdict",
         "fieldsByClass",
         "filterDocs",
+        "filterRows",
         "formatNumber",
         "gateVerdict",
         "gateWarnings",
@@ -1148,6 +1163,7 @@
         "saveDocument",
         "shipmentValue",
         "sortByUrgency",
+        "stampDay",
         "subtotal",
         "tableSection",
         "taxAmount",

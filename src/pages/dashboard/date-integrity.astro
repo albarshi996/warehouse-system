@@ -1,0 +1,15 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import DateIntegrityReport from '../../components/brandzo-erp/documents/DateIntegrityReport.jsx';
+---
+
+<DashboardLayout title="التواريخ المعدّلة" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">التواريخ المعدّلة</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      من أرّخ للماضي، وفي أيّ مستند، وكم يومًا، ولماذا. التأريخ المبرَّر مسموح —
+      والمسموح المتكرّر هو ما يستحقّ النظر.
+    </p>
+    <DateIntegrityReport client:load />
+  </div>
+</DashboardLayout>

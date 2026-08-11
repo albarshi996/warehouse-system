@@ -129,6 +129,10 @@ export const NAV_GROUPS = [
     emoji: '📊', icon: 'barChart3',
     items: [
       { path: '/dashboard/reports', label: 'مركز التقارير', icon: 'clipboardList', pinned: true },
+      // التواريخ المعدّلة (م٢-ج): موضعه «التقارير» لا «العمليات اليوميّة» —
+      // فمدقّق الجرد والمالي لا يريان مجموعة العمليات أصلًا، وإدراجه هناك كان
+      // يمنحهما اسمًا بلا باب. (أمسكه اختبار انحراف الصلاحيات.)
+      { path: '/dashboard/date-integrity', label: 'التواريخ المعدّلة', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'inventory_auditor', 'finance_manager'] },
       // غرفة قرار سلاسل الإمداد — المراجعة التنفيذية أمام المدير العام (عرض
       // من 9 شاشات؛ الفرعيات الثمان ترث صلاحية هذا العنصر عبر وراثة الأب في
       // pageAccess). حزمة ربط كوديكس 2026-08-07 — رابط واحد لا قائمة موازية.
