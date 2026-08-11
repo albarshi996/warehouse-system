@@ -79,6 +79,7 @@ export const DOC_ODOO_MAP = {
   // سند القبض (م٤-أ): نظير الصرف في أودو — `account.payment` وارِدًا.
   // ولا حقول مالٍ تُدفع (حدّ المال م١-ب): أودو يولّد القيد ونحن نُنتج الواقعة.
   RCP: { model: 'account.payment', confirmState: 'posted', confirmLabel: 'مُرحّل', verb: 'رحّل' },
+  SPV: { model: 'account.payment', confirmState: 'posted', confirmLabel: 'مُرحّل', verb: 'رحّل' },
   DLV: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'مُسلَّم', verb: 'وثّق التسليم' },
 };
 

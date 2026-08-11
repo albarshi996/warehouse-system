@@ -215,6 +215,7 @@ service cloud.firestore {
            // سند القبض (م٤-أ): يقبضه أمين الخزينة أو المندوب، ويعتمده المالي.
            // **من قبض المال لا يعتمد قبضه** — وإلّا فالسند إقرارٌ ذاتيّ لا مستند.
            : docType == 'RCP'     ? ['finance_manager', 'warehouse_manager']
+           : docType == 'SPV'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'IPR'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'RFQ'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'IPO'     ? ['finance_manager', 'warehouse_manager']
@@ -264,6 +265,7 @@ service cloud.firestore {
            : docType == 'RFQ'     ? ['purchase_officer', 'warehouse_manager']
            : docType == 'IPO'     ? ['purchase_officer', 'warehouse_manager']
            : docType == 'RCP'     ? ['treasury', 'finance_manager', 'warehouse_manager']
+           : docType == 'SPV'     ? ['treasury', 'finance_manager', 'warehouse_manager']
            : docType == 'PV'      ? ['treasury', 'warehouse_manager']
            : docType == 'DLV'     ? ['purchase_officer', 'warehouse_manager']
            : [];

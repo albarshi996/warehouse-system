@@ -11,7 +11,7 @@
   "counts": {
     "modules": 84,
     "serviceDomains": 36,
-    "serviceFiles": 240,
+    "serviceFiles": 242,
     "collections": 57,
     "roles": 16,
     "odooModels": 12,
@@ -981,6 +981,7 @@
         "sales.test.js",
         "schemaUtils.js",
         "so.js",
+        "spv.js",
         "srn.js",
         "states.js",
         "surgical.test.js",
@@ -997,7 +998,7 @@
         "vsi.js",
         "vsr.js"
       ],
-      "fileCount": 62,
+      "fileCount": 63,
       "testCount": 11,
       "exports": [
         "ACCEPTED_ATTACHMENT_TYPES",
@@ -1154,6 +1155,7 @@
         "packWarnings",
         "parentApprovalProblem",
         "parseNumber",
+        "paymentTotal",
         "pickWarnings",
         "poWarnings",
         "podWarnings",
@@ -1175,6 +1177,7 @@
         "saveDocument",
         "shipmentValue",
         "sortByUrgency",
+        "spvWarnings",
         "stampDay",
         "subtotal",
         "tableSection",
@@ -1583,12 +1586,13 @@
         "salesReports.js",
         "salesReports.test.js",
         "salesService.js",
+        "supplierPayment.test.js",
         "transferReports.js",
         "transferReports.test.js",
         "vehicle.test.js"
       ],
-      "fileCount": 18,
-      "testCount": 8,
+      "fileCount": 19,
+      "testCount": 9,
       "exports": [
         "ACCOUNT_LOCATIONS",
         "CUSTOMER",

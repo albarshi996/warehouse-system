@@ -523,7 +523,7 @@
       "milestone": "م-٤",
       "title": "سند سداد المورد SPV",
       "owner": "Claude",
-      "state": "todo",
+      "state": "doing",
       "gaps": [
         "ف-١"
       ],
@@ -534,7 +534,10 @@
         "النظير الصادر",
         "يُقاصّ أوامر شراء وفواتير"
       ],
-      "guardTest": "src/services/ledger/supplierPayment.test.js"
+      "guardTest": "src/services/ledger/supplierPayment.test.js",
+      "branch": "claude/phase-one-repairs-plan-07f596",
+      "progress": "بدأت. SPV نظير RCP: يُقاصّ أوامر شراء وفواتير مورّد. والسجلّات الخمسة معروفة الآن.",
+      "nextStep": "مخطّط spv.js + التسجيل في السجلّات الخمسة (SCHEMAS · GOVERNED_FORMS · timeFields · approveRoles+completeRoles · docCrosswalk) + اختبار."
     },
     {
       "id": "م٤-ج",
