@@ -116,6 +116,10 @@ export const NAV_GROUPS = [
       { path: '/dashboard/targets', label: 'المستهدفات', icon: 'barChart3', roles: ['admin', 'warehouse_manager', 'sales_rep', 'sales_supervisor'] },
       // العروض يضعها المشرف والمديران؛ المندوب لا يُعرّفها — يُطبّقها النظام عليه.
       { path: '/dashboard/promotions', label: 'العروض الترويجية', icon: 'dollarSign', roles: ['admin', 'warehouse_manager', 'sales_supervisor'] },
+      // دفتر الذمم (CC-302): المندوب محصِّلٌ يُحاسَب على ذمم عملائه — يراها من
+      // مجموعته هو («الميدان») لا من «التقارير» التي لا يراها أصلًا: نفس المسار
+      // في مجموعتين نمطٌ قائم (الخزينة والتقارير)، والبديل اسمٌ بلا باب.
+      { path: '/dashboard/partner-ledger', label: 'ذمم عملائي وكشوفهم', icon: 'dollarSign', roles: ['sales_rep'] },
     ],
   },
   {
@@ -144,9 +148,11 @@ export const NAV_GROUPS = [
       // تقارير البيانات (ر‑٠): اثنا عشر تقريرًا على محرّكٍ واحد. صفحةٌ جديدة
       // بجانب المركز القائم لا بدلًا منه — لا حذف ولا تغيير لأيّ URL.
       { path: '/dashboard/data-reports', label: 'تقارير البيانات', icon: 'barChart3', roles: ['admin', 'warehouse_manager', 'storekeeper', 'inventory_auditor', 'finance_manager', 'purchase_officer', 'return_manager'] },
-      // دفتر الذمم وكشوف الحساب (م٤-هـ): للمديرَين والمالي والخزينة.
+      // دفتر الذمم وكشوف الحساب (م٤-هـ): للمديرَين والمالي والخزينة —
+      // وللمندوب (CC-302): المحصِّلُ يُحاسَب على ذمم عملائه فيجب أن يراها قبل
+      // أن يبيع (وهو نصّ فلسفة قاعدة partner_ledger نفسها: القراءة لكلّ مصادَق).
       // موضعه «التقارير» لأنّ المالي والخزينة يريانها — ولا يريان «العمليات».
-      { path: '/dashboard/partner-ledger', label: 'دفتر الذمم وكشوف الحساب', icon: 'dollarSign', roles: ['admin', 'warehouse_manager', 'finance_manager', 'treasury'] },
+      { path: '/dashboard/partner-ledger', label: 'دفتر الذمم وكشوف الحساب', icon: 'dollarSign', roles: ['admin', 'warehouse_manager', 'finance_manager', 'treasury', 'sales_rep'] },
       // التواريخ المعدّلة (م٢-ج): موضعه «التقارير» لا «العمليات اليوميّة» —
       // فمدقّق الجرد والمالي لا يريان مجموعة العمليات أصلًا، وإدراجه هناك كان
       // يمنحهما اسمًا بلا باب. (أمسكه اختبار انحراف الصلاحيات.)

@@ -12,10 +12,11 @@ import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authServ
 import { listenPartnerLedger } from '../../../services/ledger/partnerLedgerService.js';
 import { subscribePartners } from '../../../services/partnerService.js';
 import { listenSettings } from '../../../services/settings/settingsService.js';
-import { statement, balances, aging, AGING_BUCKETS, PARTIES } from '../../../services/ledger/partnerLedger.js';
+import { statement, balances, aging, AGING_BUCKETS, PARTIES, invoiceOutstanding } from '../../../services/ledger/partnerLedger.js';
 import { customerExposure } from '../../../services/ledger/creditGuard.js';
 
-const VIEWER_ROLES = ['admin', 'warehouse_manager', 'finance_manager', 'treasury'];
+// المندوب محصِّلٌ — من يُحاسَب على ذمم عملائه يجب أن يراها قبل أن يبيع.
+const VIEWER_ROLES = ['admin', 'warehouse_manager', 'finance_manager', 'treasury', 'sales_rep'];
 
 const input = 'bg-surface border border-line rounded-lg px-3 py-2 text-sm text-ink';
 const btn = 'rounded-lg px-3 py-2 text-sm border border-line text-ink bg-chip';
@@ -27,12 +28,17 @@ const STATEMENT_COLUMNS = [
   { key: 'labelAr', label: 'البيان' },
   { key: 'debit', label: 'مدين' },
   { key: 'credit', label: 'دائن' },
+  // ما قاصّه السند من فواتير مسمّاة — كانت تُكتب ولا تُعرض لأحد.
+  { key: 'allocations', label: 'قاصَّ' },
   { key: 'balance', label: 'الرصيد' },
 ];
 
 const cellOf = (r, key) => {
   if (key === 'debit') return r.direction === 'debit' ? r.amount : '';
   if (key === 'credit') return r.direction === 'credit' ? r.amount : '';
+  if (key === 'allocations') {
+    return (r.allocations || []).map((a) => `${a.ref} (${a.amount})`).join(' · ');
+  }
   return String(r[key] ?? '');
 };
 
@@ -95,6 +101,11 @@ export default function PartnerLedger() {
     [master, selected]
   );
   const view = useMemo(() => statement(scoped, { partyCode: selected }), [scoped, selected]);
+  /** المفتوح فاتورةً فاتورة (CC-302) — قارئ allocations الأوّل. */
+  const openInvoices = useMemo(
+    () => (selected ? invoiceOutstanding(scoped, selected).filter((r) => Math.abs(r.remaining) > 0.009) : []),
+    [scoped, selected]
+  );
   const exposure = useMemo(
     () => (party === 'customer' && selected ? customerExposure({ entries: scoped, partner, partyCode: selected, settings }) : null),
     [party, selected, scoped, partner, settings]
@@ -203,6 +214,37 @@ export default function PartnerLedger() {
           </table>
         </div>
       </section>
+
+      {/* ═══ المفتوح لكلّ فاتورة — قبل الكشف: هذا ما يوزَّع عليه التحصيل ═══ */}
+      {selected && openInvoices.length ? (
+        <section className={card}>
+          <h2 className="text-base font-bold text-ink mb-1">الفواتير المفتوحة — {selected}</h2>
+          <p className="text-xs text-ink-2 mb-3">
+            المقاصّات المسمّاة تُطرح من فاتورتها لا من الأقدم — وسالبُ المتبقّي تحصيلٌ زائد يُراجَع.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-ink-2 text-xs border-b border-line">
+                  {['الفاتورة', 'الإجمالي', 'المسدَّد', 'المتبقّي'].map((h) => (
+                    <th key={h} className="text-right font-bold py-2 px-2 whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {openInvoices.map((r) => (
+                  <tr key={r.ref} className="border-b border-line/60">
+                    <td className="py-2 px-2 text-ink">{r.ref}</td>
+                    <td className="py-2 px-2 text-ink">{r.total}</td>
+                    <td className="py-2 px-2 text-ink">{r.paid}</td>
+                    <td className={`py-2 px-2 ${r.remaining < 0 ? 'text-brand-red' : 'text-ink'}`}>{r.remaining}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
 
       {/* ═══ الطبقة ٣: كشف الطرف ═══ */}
       <section className={card}>
