@@ -5,8 +5,8 @@
 الإحاطة الكاملة: [`docs/إحاطة-كوديكس.md`](docs/إحاطة-كوديكس.md) · الذاكرة الحيّة: [`SESSION_HANDOFF.md`](SESSION_HANDOFF.md) · الخطة الأم: [`ROADMAP.md`](ROADMAP.md)
 
 ## طقس الجلسة
-1. **قبل أي عمل:** `git pull` ثم **`npm run plan`** واقرأ [`docs/plan/الاستئناف.md`](docs/plan/الاستئناف.md) — أين توقّفنا وما الجاهز وما المحجوب. ثمّ رأس `SESSION_HANDOFF.md` عند الحاجة للسياق التاريخيّ فقط (الملفّ ضخم — لا تقرأه كلّه).
-2. **بعد كل مهمة:** حدّث حالة المهمّة و`evidence.commit` في [`docs/plan/phase-one.json`](docs/plan/phase-one.json)، ثمّ `npm run plan`، ثمّ سطر في رأس `SESSION_HANDOFF.md` موسوم `[Codex]` أو `[Claude]` + التاريخ + معرّف المهمّة + المنجز والمتبقّي.
+1. **قبل أي عمل:** `git pull` ثم **`npm run plan`** واقرأ [`docs/plan/استئناف-نسخة-العميل.md`](docs/plan/استئناف-نسخة-العميل.md) — هذه هي الجبهة الحالية. ثمّ راجع [`docs/plan/الاستئناف.md`](docs/plan/الاستئناف.md) لعوائق المرحلة الأولى المعلّقة على المالك، ورأس `SESSION_HANDOFF.md` عند الحاجة للسياق التاريخيّ فقط.
+2. **بعد كل مهمة:** حدّث حالة المهمّة و`evidence.commit` في [`docs/plan/client-completion.json`](docs/plan/client-completion.json) (وفي `phase-one.json` أيضًا إن كانت المهمّة القديمة نفسها)، ثمّ `npm run plan`، ثمّ سطر في رأس `SESSION_HANDOFF.md` موسوم `[Codex]` أو `[Claude]` + التاريخ + معرّف المهمّة + المنجز والمتبقّي.
 3. **الدفع لـ`main` بأمر المالك فقط** («ارفع»). عمل Codex في فروع `codex/*` وClaude في `claude/*`.
 4. إن وجدت مدخلًا حديثًا لوكيل آخر عن عمل غير مرفوع — لا تلمس نطاقه.
 

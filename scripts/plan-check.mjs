@@ -27,8 +27,24 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PLAN_JSON = path.join(ROOT, 'docs/plan/phase-one.json');
-const RESUME_MD = path.join(ROOT, 'docs/plan/الاستئناف.md');
+
+function argValue(name, fallback) {
+  const i = process.argv.indexOf(name);
+  if (i < 0) return fallback;
+  const value = process.argv[i + 1];
+  if (!value || value.startsWith('--')) {
+    console.info(`\x1b[31m✘\x1b[0m الوسيط ${name} يحتاج مسارًا بعده.`);
+    process.exit(1);
+  }
+  return value;
+}
+
+// يبقى متتبّع المرحلة الأولى هو الافتراضي، ويستطيع المسار اللاحق إعادة استعمال
+// الحارس نفسه بدل نسخ منطق التحقق وتباعده بين خطتين.
+const PLAN_REL = argValue('--plan', 'docs/plan/phase-one.json');
+const RESUME_REL = argValue('--resume', 'docs/plan/الاستئناف.md');
+const PLAN_JSON = path.resolve(ROOT, PLAN_REL);
+const RESUME_MD = path.resolve(ROOT, RESUME_REL);
 
 const STATES = ['todo', 'doing', 'done', 'blocked', 'deferred'];
 const OWNERS = ['Claude', 'Codex', 'المالك'];
@@ -170,9 +186,12 @@ const detail = (t) => [
   t.guardTest ? `\n**الاختبار الحارس المطلوب:** \`${t.guardTest}\`` : '',
   t.acceptance?.length ? `\n**معيار الإتمام:**\n${t.acceptance.map((a) => `- [ ] ${a}`).join('\n')}` : '',
 ].filter(Boolean).join('\n');
-const card = `# بطاقة الاستئناف — المرحلة الأولى
+const planCommand = plan.command ?? 'npm run plan';
+const planFile = path.basename(PLAN_JSON);
+const cardTitle = plan.resumeTitle ?? plan.plan ?? 'الخطة';
+const card = `# بطاقة الاستئناف — ${cardTitle}
 
-> **ملفّ مولَّد آليًّا — لا يُحرَّر بيد.** مصدره [\`phase-one.json\`](phase-one.json)؛ يُعاد توليده بـ\`npm run plan\`.
+> **ملفّ مولَّد آليًّا — لا يُحرَّر بيد.** مصدره [\`${planFile}\`](${planFile})؛ يُعاد توليده بـ\`${planCommand}\`.
 > **اقرأني أوّلًا في كلّ جلسة جديدة.** لا تقرأ \`SESSION_HANDOFF.md\` كلّه — هذه الصفحة تكفي للاستئناف.
 
 **الخطة:** [${plan.plan}](../${path.basename(plan.planDoc ?? '')}) · **المسار:** ${plan.track ?? '—'}
@@ -192,8 +211,8 @@ ${blocked.length ? blocked.map((t) => `- **${t.id}** — ${t.title} — _محج�
 ${pendingOwner.length ? pendingOwner.map((t) => `- **${t.id}** — ${t.title}${t.ifMissing ? ` _(إن لم يتوفّر: ${t.ifMissing})_` : ''}`).join('\n') : '_لا شيء معلّق على المالك._'}
 
 ## القاعدة عند كلّ إغلاق مهمّة
-١. حدّث حالة المهمّة و\`evidence.commit\` في \`phase-one.json\`.
-٢. \`npm run plan\` — يُعيد توليد هذه البطاقة ويرفض الإغلاق بلا بيّنة.
+١. حدّث حالة المهمّة و\`evidence.commit\` في \`${planFile}\`.
+٢. \`${planCommand}\` — يُعيد توليد هذه البطاقة ويرفض الإغلاق بلا بيّنة.
 ٣. سطر في \`SESSION_HANDOFF.md\` بمعرّف المهمّة.
 
 ---
