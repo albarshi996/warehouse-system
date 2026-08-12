@@ -277,6 +277,44 @@ export function compatibleDocumentRelations(document, storedRelations = [], opti
   return [...byId.values()];
 }
 
+function documentPairKey(relation) {
+  return [
+    relation?.source?.documentType,
+    relation?.source?.documentId,
+    relation?.target?.documentType,
+    relation?.target?.documentId,
+  ].map(text).join(':');
+}
+
+/**
+ * يبني جوار المستند من المصدر الجديد ومن `links` القديمة في الاتجاهين.
+ *
+ * يكفي وجود علاقة جديدة بين مستندين لإسقاط fallback الرأسي القديم بينهما؛
+ * فالعلاقات السطرية الجديدة أغنى، وإظهار رأس قديم بجانبها يوحي بعلاقة زائدة.
+ */
+export function compatibleRelationshipNeighborhood(
+  document,
+  storedRelations = [],
+  relatedDocuments = [],
+  { baseTypeFor = () => null } = {},
+) {
+  const stored = relationsTouchingDocument(storedRelations, document);
+  const storedPairs = new Set(stored.map(documentPairKey));
+  const legacy = [];
+
+  for (const candidate of [document, ...(relatedDocuments || [])]) {
+    for (const relation of legacyRelationsFromDocument(candidate, {
+      baseType: baseTypeFor(candidate?.type),
+    })) {
+      if (!relationsTouchingDocument([relation], document).length) continue;
+      if (storedPairs.has(documentPairKey(relation))) continue;
+      legacy.push(relation);
+    }
+  }
+
+  return mergeRelationResults(stored, legacy);
+}
+
 /** علاقات مستند بعينه في الاتجاهين، دون افتراض نوع طفل واحد. */
 export function relationsTouchingDocument(relations, document) {
   const id = text(document?.id);

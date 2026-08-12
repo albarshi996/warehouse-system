@@ -8,6 +8,7 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   query,
   runTransaction,
@@ -17,12 +18,17 @@ import {
 
 import { auth, db } from '../../config/firebase.js';
 import {
+  compatibleRelationshipNeighborhood,
   createDocumentRelation,
   DOCUMENT_RELATIONS_COLLECTION,
   idempotentRelationDecision,
   mergeRelationResults,
   relationStorageRecord,
 } from './documentRelations.js';
+import { getSchema } from './schemas/index.js';
+import { primaryParentType } from './schemaUtils.js';
+
+const DOCUMENTS_COLLECTION = 'documents';
 
 export {
   DOCUMENT_RELATIONS_COLLECTION,
@@ -82,4 +88,49 @@ export async function fetchDocumentRelations(document) {
     (relation.source?.documentId === documentId && relation.source?.documentType === documentType)
     || (relation.target?.documentId === documentId && relation.target?.documentType === documentType)
   ));
+}
+
+/**
+ * يجلب جوار الخريطة مع fallback قديم صريح عند عدم نشر قواعد المجموعة بعد.
+ * لا تُخفي النتيجة هذا الحدّ: `storedAvailable=false` يتيح للواجهة إبلاغ
+ * المستخدم أن المعروض مبني على روابط الرأس القديمة وحدها في هذه الجلسة.
+ */
+export async function fetchDocumentRelationshipNeighborhood(document, legacyDocuments = []) {
+  let storedRelations = [];
+  let storedAvailable = true;
+  try {
+    storedRelations = await fetchDocumentRelations(document);
+  } catch {
+    storedAvailable = false;
+  }
+
+  const baseTypeFor = (type) => primaryParentType(getSchema(type));
+  const relations = compatibleRelationshipNeighborhood(
+    document,
+    storedRelations,
+    legacyDocuments,
+    { baseTypeFor },
+  );
+
+  const documents = new Map(
+    [document, ...(legacyDocuments || [])]
+      .filter((item) => item?.id)
+      .map((item) => [item.id, item]),
+  );
+  const endpointIds = new Set(relations.flatMap((relation) => [
+    relation.source?.documentId,
+    relation.target?.documentId,
+  ]).filter(Boolean));
+  const missingIds = [...endpointIds].filter((id) => !documents.has(id));
+
+  await Promise.all(missingIds.map(async (id) => {
+    try {
+      const snapshot = await getDoc(doc(db, DOCUMENTS_COLLECTION, id));
+      if (snapshot.exists()) documents.set(id, { id: snapshot.id, ...snapshot.data() });
+    } catch {
+      // بيانات طرف العلاقة المخزنة تكفي لبطاقة قابلة للفتح حتى لو تعذرت قراءة الرأس.
+    }
+  }));
+
+  return { relations, documents: [...documents.values()], storedAvailable };
 }

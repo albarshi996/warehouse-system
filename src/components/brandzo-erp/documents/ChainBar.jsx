@@ -12,37 +12,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getBasePath } from '../../../services/auth/authService.js';
 import { fetchChainDocuments, createNextInChain } from '../../../services/documents/documentsService.js';
-import { chainOf, threeWayMatch, derivationTargets, MATCH_STATUS, PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN, TRANSFER_CHAIN, INTERNAL_PROCUREMENT_CHAIN, DELIVERY_CHAIN, REJECTION_CHAIN, fefoViolations, gateVerdict, adjustmentVerdict, creditNoteVerdict } from '../../../services/documents/chain.js';
+import { fetchDocumentRelationshipNeighborhood } from '../../../services/documents/documentRelationsService.js';
+import { chainOf, threeWayMatch, derivationTargets, MATCH_STATUS, fefoViolations, gateVerdict, adjustmentVerdict, creditNoteVerdict } from '../../../services/documents/chain.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { getSchema } from '../../../services/documents/schemas/index.js';
-import { getState } from '../../../services/documents/states.js';
-
-/** بطاقة مستند واحد في الشريط. */
-function DocChip({ node, current = false }) {
-  const schema = getSchema(node.type);
-  const st = node.state ? getState(node.state) : null;
-  const href = `${getBasePath()}/dashboard/document?type=${node.type}${node.id ? `&id=${node.id}` : ''}`;
-  const body = (
-    <>
-      <span className="text-[10px] font-bold opacity-70">{schema?.titleAr || node.type}</span>
-      <span className="text-xs font-bold">{node.number || 'مسودّة'}</span>
-      {st && (
-        <span className="text-[10px]" style={{ color: st.color }}>
-          {st.emoji} {st.label}
-        </span>
-      )}
-    </>
-  );
-  const cls = `flex flex-col gap-0.5 rounded-xl px-3 py-2 border min-w-[8.5rem] transition-colors ${
-    current
-      ? 'bg-accent/15 border-accent/50 text-accent'
-      : 'bg-chip border-line text-ink-2 hover:bg-surface-2'
-  }`;
-  return current ? <div className={cls}>{body}</div> : <a href={href} className={cls}>{body}</a>;
-}
+import DocumentRelationshipMap from './DocumentRelationshipMap.jsx';
 
 export default function ChainBar({ doc, me, onFlash }) {
   const [related, setRelated] = useState([]);
+  const [relationshipData, setRelationshipData] = useState({ relations: [], documents: [], storedAvailable: true });
   const [busy, setBusy] = useState(false);
   const [showMatch, setShowMatch] = useState(false);
   /** أرصدة المخزن — تُجلب لقوائم السحب وحدها (حارس FEFO يحتاجها). */
@@ -58,11 +36,26 @@ export default function ChainBar({ doc, me, onFlash }) {
     let alive = true;
     if (!doc?.id) {
       setRelated([]);
+      setRelationshipData({ relations: [], documents: [], storedAvailable: true });
       return undefined;
     }
-    fetchChainDocuments(doc)
-      .then((list) => alive && setRelated(list))
-      .catch(() => alive && setRelated([]));
+    setRelationshipData({ relations: [], documents: [doc], storedAvailable: true });
+    (async () => {
+      let list = [];
+      try {
+        list = await fetchChainDocuments(doc);
+      } catch {
+        list = [];
+      }
+      if (!alive) return;
+      setRelated(list);
+      try {
+        const relationshipMap = await fetchDocumentRelationshipNeighborhood(doc, list);
+        if (alive) setRelationshipData(relationshipMap);
+      } catch {
+        if (alive) setRelationshipData({ relations: [], documents: [doc, ...list], storedAvailable: false });
+      }
+    })();
     return () => {
       alive = false;
     };
@@ -139,45 +132,33 @@ export default function ChainBar({ doc, me, onFlash }) {
     }
   }
 
-  if (!doc?.id || ![...PURCHASE_CHAIN, ...OUTBOUND_CHAIN, ...RETURN_CHAIN, ...COUNT_CHAIN, ...BILLING_CHAIN, ...TRANSFER_CHAIN, ...INTERNAL_PROCUREMENT_CHAIN, ...DELIVERY_CHAIN, ...REJECTION_CHAIN].includes(doc.type)) return null;
+  if (!doc?.id) return null;
 
   return (
     <div className="bg-chip border border-line rounded-2xl p-4 space-y-3">
-      {/* ── مسار السلسلة ── */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs font-bold text-accent/80 ml-1">
-          🔗 {doc.type === 'INV' ? 'سلسلة الفوترة' : doc.type === 'POD' ? 'سلسلة تأكيد التسليم' : doc.type === 'SRN' ? 'سلسلة رفض الاستلام' : INTERNAL_PROCUREMENT_CHAIN.includes(doc.type) ? 'دورة المشتريات الداخلية' : TRANSFER_CHAIN.includes(doc.type) ? 'سلسلة النقل بين المستودعات' : RETURN_CHAIN.includes(doc.type) ? 'سلسلة المرتجعات' : COUNT_CHAIN.includes(doc.type) ? 'سلسلة الجرد والتسوية' : OUTBOUND_CHAIN.includes(doc.type) ? 'سلسلة المبيعات والصرف' : 'سلسلة الشراء'}
-        </span>
-        {chain.before.map((n) => (
-          <span key={n.id} className="flex items-center gap-2">
-            <DocChip node={n} />
-            <span className="text-gray-500">←</span>
-          </span>
-        ))}
-        <DocChip node={chain.current} current />
-        {chain.after.map((n) => (
-          <span key={n.id} className="flex items-center gap-2">
-            <span className="text-gray-500">←</span>
-            <DocChip node={n} />
-          </span>
-        ))}
+      <DocumentRelationshipMap
+        current={doc}
+        relations={relationshipData.relations}
+        documents={relationshipData.documents}
+        storedAvailable={relationshipData.storedAvailable}
+        basePath={`${getBasePath()}/dashboard/document`}
+      />
 
-        {derivable.length > 0 && (
-          <div className="mr-auto flex flex-wrap gap-2">
-            {derivable.map((t) => (
-              <button
-                key={t.type}
-                type="button"
-                onClick={() => handleDerive(t.type)}
-                disabled={busy}
-                className="rounded-xl bg-brand-red hover:bg-brand-red-dark disabled:opacity-50 px-4 py-2 text-xs font-bold text-white transition-colors"
-              >
-                {busy ? '…' : `＋ أنشئ ${t.schema.titleAr}`}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {derivable.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {derivable.map((t) => (
+            <button
+              key={t.type}
+              type="button"
+              onClick={() => handleDerive(t.type)}
+              disabled={busy}
+              className="rounded-xl bg-accent hover:opacity-90 disabled:opacity-50 px-4 py-2 text-xs font-bold text-white transition-colors"
+            >
+              {busy ? 'جارٍ الإنشاء…' : `أنشئ ${t.schema.titleAr}`}
+            </button>
+          ))}
+        </div>
+      )}
 
       {pending.length > 0 && (
         <p className="text-[11px] text-muted">
