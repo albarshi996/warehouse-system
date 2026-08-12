@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  combinedLinePairs,
   combinePartialSources,
   derivePartialDocument,
   flowAllocationDecision,
@@ -119,6 +120,34 @@ test('الدمج يجمع أرقام المصادر في حقل المرجع و�
   ], 'GRN');
   assert.equal(draft.header.poRef, 'PO-1 + PO-2');
   assert.equal(draft.header.supplier, 'S');
+});
+
+test('أزواج المسودة المدموجة تنسب كلّ سطرٍ لمصدره وبموضعه في الابن', () => {
+  const po2 = { ...po, id: 'po-2', number: 'PO-2', lines: [{ lineId: 'po2-c', sku: 'C', qty: 7 }] };
+  const plans = [
+    { source: po, plan: partialDerivationPlan(po, 'GRN', [], [], { 'po-a': 10, 'po-b': 4 }) },
+    { source: po2, plan: partialDerivationPlan(po2, 'GRN') },
+  ];
+  const draft = combinePartialSources(plans, 'GRN');
+  const pairs = combinedLinePairs(plans, draft);
+  assert.equal(pairs.length, 3, 'سطران من الأوّل وسطر من الثاني');
+  assert.deepEqual(
+    pairs.map((pair) => [pair.sourceDocument.id, pair.sourceLineId, pair.targetLineIndex, pair.quantity]),
+    [['po-1', 'po-a', 0, 10], ['po-1', 'po-b', 1, 4], ['po-2', 'po2-c', 2, 7]],
+  );
+  // هوية سطر الابن تُحسب من موضعه في المسودة النهائية لا في مسودة مصدره وحده.
+  assert.equal(new Set(pairs.map((pair) => pair.targetLineId)).size, 3);
+});
+
+test('لمصدرٍ واحد تطابق أزواجُ الدمج أزواجَ المسار المفرد حرفًا بحرف', () => {
+  const plan = partialDerivationPlan(po, 'GRN', [], [], { 'po-a': 60, 'po-b': 5 });
+  const draft = derivePartialDocument(po, 'GRN', plan);
+  const single = partialLinePairs(po, draft, plan);
+  const combined = combinedLinePairs([{ source: po, plan }], draft);
+  assert.deepEqual(
+    combined.map((pair) => [pair.sourceLineId, pair.targetLineId, pair.quantity]),
+    single.map((pair) => [pair.sourceLineId, pair.targetLineId, pair.quantity]),
+  );
 });
 
 test('السياسة تمنع الدمج حيث يكون الابن مرآةً لمستندٍ واحد', () => {

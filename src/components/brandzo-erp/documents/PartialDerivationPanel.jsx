@@ -9,8 +9,9 @@
  * النهائيّ هو قفل التخصيص داخل المعاملة — فما يظهر هنا لقطةٌ قد تسبقها معاملة
  * أخرى، وعندها تردّ المعاملة بالخطأ الصحيح بدل أن تتجاوز.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { partialDerivationPlan } from '../../../services/documentFlow.js';
+import { fetchCombinableSources } from '../../../services/documents/documentsService.js';
 
 /** رقمٌ للعرض: بلا أصفار زائدة، وبالأرقام اللاتينية. */
 function show(value) {
@@ -42,6 +43,27 @@ export default function PartialDerivationPanel({
     if (!plan?.supported) return {};
     return Object.fromEntries(plan.lines.map((line) => [line.lineId, String(line.open)]));
   });
+
+  /**
+   * مصادر أخرى يصحّ دمجها في هذا الابن. تُجلب بمحاولة دمجٍ حقيقيّة لا بتشابه
+   * حقول، فما يظهر هنا هو ما ستقبله المعاملة فعلًا. المصدر الإضافيّ يدخل
+   * **بكامل رصيده المفتوح** — والتجزئة تبقى للمصدر الحاليّ وحده في هذه الدفعة.
+   */
+  const [extras, setExtras] = useState([]);
+  const [picked, setPicked] = useState([]);
+  useEffect(() => {
+    let alive = true;
+    if (!plan?.supported) return undefined;
+    (async () => {
+      try {
+        const found = await fetchCombinableSources(source, targetType);
+        if (alive) setExtras(found);
+      } catch {
+        if (alive) setExtras([]);
+      }
+    })();
+    return () => { alive = false; };
+  }, [source?.id, targetType, plan?.supported]);
 
   const rows = useMemo(() => {
     if (!plan?.supported) return [];
@@ -150,14 +172,41 @@ export default function PartialDerivationPanel({
         </table>
       </div>
 
+      {extras.length > 0 && (
+        <div className="rounded-lg border border-line p-2 space-y-1">
+          <p className="text-[11px] text-muted">
+            مصادر أخرى يصحّ ضمّها إلى «{title}» نفسه (بكامل رصيدها المفتوح):
+          </p>
+          {extras.map((item) => (
+            <label key={item.document.id} className="flex items-center gap-2 text-[11px]">
+              <input
+                type="checkbox"
+                disabled={busy}
+                checked={picked.includes(item.document.id)}
+                onChange={(event) => setPicked((prev) => (
+                  event.target.checked
+                    ? [...prev, item.document.id]
+                    : prev.filter((id) => id !== item.document.id)
+                ))}
+              />
+              <span>{item.document.number || item.document.id}</span>
+              <span className="text-muted">— مفتوح {show(item.totalOpen)}</span>
+            </label>
+          ))}
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
           disabled={blocked}
-          onClick={() => onConfirm?.(Object.fromEntries(rows.filter((row) => row.value > 0).map((row) => [row.lineId, row.value])))}
+          onClick={() => onConfirm?.(
+            Object.fromEntries(rows.filter((row) => row.value > 0).map((row) => [row.lineId, row.value])),
+            extras.filter((item) => picked.includes(item.document.id)).map((item) => item.document),
+          )}
           className="rounded-xl bg-accent hover:opacity-90 disabled:opacity-50 px-4 py-2 text-xs font-bold text-white transition-colors"
         >
-          {busy ? 'جارٍ الإنشاء…' : `أنشئ ${title} بـ ${show(totalChosen)}`}
+          {busy ? 'جارٍ الإنشاء…' : `أنشئ ${title} بـ ${show(totalChosen)}${picked.length ? ` + ${picked.length} مصدرًا` : ''}`}
         </button>
         <button
           type="button"

@@ -11,7 +11,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { getBasePath } from '../../../services/auth/authService.js';
-import { fetchChainDocuments, createNextInChain } from '../../../services/documents/documentsService.js';
+import { fetchChainDocuments, createNextInChain, createCombinedInChain } from '../../../services/documents/documentsService.js';
 import { fetchDocumentRelationshipNeighborhood } from '../../../services/documents/documentRelationsService.js';
 import { chainOf, threeWayMatch, derivationTargets, MATCH_STATUS, fefoViolations, gateVerdict, adjustmentVerdict, creditNoteVerdict } from '../../../services/documents/chain.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
@@ -144,10 +144,15 @@ export default function ChainBar({ doc, me, onFlash }) {
   const pending = targets.filter((t) => !t.exhausted && !approvedOrDone);
   const openPanel = derivable.find((t) => t.type === partialFor) || null;
 
-  async function handleDerive(toType, requestedByLine = null) {
+  async function handleDerive(toType, requestedByLine = null, extraSources = []) {
     setBusy(true);
     try {
-      const newId = await createNextInChain(doc, me, toType, { requestedByLine });
+      // المصدر الحاليّ وحده يُجزَّأ سطرًا سطرًا؛ المضمومون يدخلون بكامل المفتوح.
+      const newId = extraSources.length
+        ? await createCombinedInChain([doc, ...extraSources], me, toType, {
+          requestedByLineBySource: requestedByLine ? { [doc.id]: requestedByLine } : null,
+        })
+        : await createNextInChain(doc, me, toType, { requestedByLine });
       window.location.href = `${getBasePath()}/dashboard/document?type=${toType}&id=${newId}`;
     } catch (e) {
       onFlash?.(e.message || 'تعذّر إنشاء المستند التالي.', 'err');
@@ -195,7 +200,7 @@ export default function ChainBar({ doc, me, onFlash }) {
           relations={relationshipData.relations}
           documents={relationshipData.documents}
           busy={busy}
-          onConfirm={(requestedByLine) => handleDerive(openPanel.type, requestedByLine)}
+          onConfirm={(requestedByLine, extraSources) => handleDerive(openPanel.type, requestedByLine, extraSources || [])}
           onCancel={() => setPartialFor(null)}
         />
       )}

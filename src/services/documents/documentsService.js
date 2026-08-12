@@ -47,11 +47,13 @@ import {
   relationStorageRecord,
 } from './documentRelations.js';
 import {
+  combinedLinePairs,
+  combinePartialSources,
   derivePartialDocument,
   flowAllocationDecision,
   flowAllocationId,
+  multiSourceAllowed,
   partialDerivationPlan,
-  partialLinePairs,
 } from '../documentFlow.js';
 
 const DOCS = 'documents';
@@ -401,60 +403,155 @@ export function listenDocumentsByTypes(types, callback, max = 200) {
  * كل المنطق في `chain.js` الخالص (يُختبَر بلا شبكة)؛ هنا الكتابة وحدها
  * وقيد التدقيق الذي يربط المولود بأصله — فيبقى الأثر في المستندين معًا.
  */
+/**
+ * المصادر التي يصحّ دمجها مع هذا المصدر في ابنٍ واحد (CC-204).
+ *
+ * الاختبار الحاسم ليس تشابه الحقول بالعين، بل **محاولة الدمج نفسها**: مرشّحٌ
+ * يجتاز `combinePartialSources` بلا اعتراض هو مرشّحٌ صالح. فمصدرُ الحقيقة واحد،
+ * ولا تُكتب قاعدةُ توافقٍ ثانيةٌ هنا تفترق عن قاعدة الكتابة يومًا.
+ */
+export async function fetchCombinableSources(sourceDoc, targetType, max = 12) {
+  if (!sourceDoc?.id || !sourceDoc?.type || !targetType) return [];
+  if (!multiSourceAllowed(sourceDoc.type, targetType)) return [];
+
+  const openPlanOf = async (document) => {
+    let relations = [];
+    let related = [];
+    try {
+      const snapshot = await getDocs(query(
+        collection(db, DOCUMENT_RELATIONS_COLLECTION),
+        where('source.documentId', '==', document.id),
+      ));
+      relations = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+    } catch { relations = []; }
+    try { related = await fetchChainDocuments(document); } catch { related = []; }
+    try { return partialDerivationPlan(document, targetType, relations, related); } catch { return null; }
+  };
+
+  const basePlan = await openPlanOf(sourceDoc);
+  if (!basePlan?.supported) return [];
+
+  let candidates = [];
+  try {
+    const snapshot = await getDocs(query(
+      collection(db, DOCS),
+      where('type', '==', sourceDoc.type),
+      where('state', 'in', ['approved', 'done']),
+      limit(max + 1),
+    ));
+    candidates = snapshot.docs
+      .map((item) => ({ id: item.id, ...item.data() }))
+      .filter((item) => item.id !== sourceDoc.id);
+  } catch {
+    return [];
+  }
+
+  const checked = await Promise.all(candidates.map(async (candidate) => {
+    const plan = await openPlanOf(candidate);
+    if (!plan?.supported || plan.totalOpen <= 0) return null;
+    try {
+      combinePartialSources([
+        { source: sourceDoc, plan: basePlan },
+        { source: candidate, plan },
+      ], targetType);
+    } catch {
+      return null; // رأسٌ مختلف أو سياسةٌ مانعة — يُستبعد بصمت لا بخطأ للمستخدم
+    }
+    return { document: candidate, totalOpen: plan.totalOpen };
+  }));
+  return checked.filter(Boolean);
+}
+
 export async function createNextInChain(sourceDoc, profile, toType = null, { requestedByLine = null } = {}) {
-  if (!sourceDoc?.id) throw new Error('معرّف المستند المصدر مطلوب.');
+  return createCombinedInChain([sourceDoc], profile, toType, {
+    requestedByLineBySource: requestedByLine && sourceDoc?.id ? { [sourceDoc.id]: requestedByLine } : null,
+  });
+}
+
+/**
+ * ينشئ ابنًا واحدًا من مصدرٍ **واحد أو أكثر** — حيث تسمح السياسة (CC-204).
+ *
+ * لماذا مسارٌ واحد للحالتين؟ لأنّ مسارين يفترقان يومًا: يُصلَح القفل في أحدهما
+ * ويُنسى في الآخر. ولمصدرٍ واحد يعطي هذا المسار النتيجة نفسها حرفًا بحرف —
+ * `combinePartialSources` لمصدرٍ واحد يردّ مسودةَ `derivePartialDocument` نفسها.
+ *
+ * القفل: وثيقة تخصيصٍ **لكلّ مصدر** تُقرأ وتُكتب داخل المعاملة نفسها، فلا
+ * تتجاوز معاملتان متزامنتان الرصيد المفتوح ولو دخلتا من مصادر مختلفة.
+ */
+export async function createCombinedInChain(sourceDocs, profile, toType = null, { requestedByLineBySource = null } = {}) {
+  const sources = (Array.isArray(sourceDocs) ? sourceDocs : [sourceDocs]).filter((item) => item?.id);
+  if (!sources.length) throw new Error('معرّف المستند المصدر مطلوب.');
   const uid = currentUid();
   if (!uid) throw new Error('يجب تسجيل الدخول قبل اشتقاق مستند.');
+  if (new Set(sources.map((item) => item.id)).size !== sources.length) {
+    throw new Error('لا يُدمج المصدر نفسه مرّتين.');
+  }
+  const targetType = toType || derivationTargets(sources[0].type)[0] || null;
+  // السياسة تُرفض قبل أيّ قراءة — فلا تُفتح معاملةٌ لعملٍ ممنوعٍ أصلًا.
+  if (sources.length > 1 && !multiSourceAllowed(sources[0].type, targetType)) {
+    throw new Error(`السياسة لا تسمح بدمج أكثر من «${sources[0].type}» في «${targetType}» واحد.`);
+  }
 
-  const sourceRef = doc(db, DOCS, sourceDoc.id);
   // تخصيص المعرّف لا يكتب شيئًا. يصبح المستند مرئيًّا فقط داخل المعاملة الكاملة.
   const childRef = doc(collection(db, DOCS));
 
   // لقطة توافقية لتهيئة القفل أول مرة. لو سبقتنا معاملة أخرى فوثيقة القفل
   // نفسها تُقرأ داخل المعاملة وتُعيد Firestore المحاولة على أحدث revision.
-  let relatedDocuments = [];
-  let storedRelations = [];
-  try { relatedDocuments = await fetchChainDocuments(sourceDoc); } catch { relatedDocuments = []; }
-  try {
-    const relationSnapshot = await getDocs(query(
-      collection(db, DOCUMENT_RELATIONS_COLLECTION),
-      where('source.documentId', '==', sourceDoc.id),
-    ));
-    storedRelations = relationSnapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
-  } catch {
-    storedRelations = [];
-  }
+  const context = await Promise.all(sources.map(async (source) => {
+    let relatedDocuments = [];
+    let storedRelations = [];
+    try { relatedDocuments = await fetchChainDocuments(source); } catch { relatedDocuments = []; }
+    try {
+      const relationSnapshot = await getDocs(query(
+        collection(db, DOCUMENT_RELATIONS_COLLECTION),
+        where('source.documentId', '==', source.id),
+      ));
+      storedRelations = relationSnapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+    } catch {
+      storedRelations = [];
+    }
+    return { ref: doc(db, DOCS, source.id), relatedDocuments, storedRelations };
+  }));
 
   await runTransaction(db, async (transaction) => {
+    // ── كل القراءات قبل كل الكتابات (عقد معاملات Firestore) ──
     // نشتق من النسخة الحية لا من نسخة واجهة قديمة أو قابلة للتلاعب.
-    const sourceSnapshot = await transaction.get(sourceRef);
-    if (!sourceSnapshot.exists()) throw new Error('المستند المصدر غير موجود.');
-    const liveSource = { id: sourceSnapshot.id, ...sourceSnapshot.data() };
-    const targetType = toType || derivationTargets(liveSource.type)[0] || null;
-    const baselinePlan = partialDerivationPlan(
-      liveSource,
-      targetType,
-      storedRelations,
-      relatedDocuments,
-    );
-    const allocationRef = baselinePlan.supported
-      ? doc(db, FLOW_ALLOCATIONS, flowAllocationId(liveSource.id, targetType))
-      : null;
-    const allocationSnapshot = allocationRef ? await transaction.get(allocationRef) : null;
-    const allocation = flowAllocationDecision(
-      baselinePlan,
-      allocationSnapshot?.exists() ? allocationSnapshot.data().allocatedByLine : {},
-      requestedByLine,
-    );
-    const selectedPlan = baselinePlan.supported
-      ? partialDerivationPlan(liveSource, targetType, storedRelations, relatedDocuments, allocation.selectedByLine)
-      : baselinePlan;
-    const draft = derivePartialDocument(liveSource, targetType, selectedPlan);
+    const prepared = [];
+    for (const item of context) {
+      const snapshot = await transaction.get(item.ref);
+      if (!snapshot.exists()) throw new Error('المستند المصدر غير موجود.');
+      prepared.push({ ...item, live: { id: snapshot.id, ...snapshot.data() } });
+    }
+    for (const item of prepared) {
+      const baselinePlan = partialDerivationPlan(
+        item.live,
+        targetType,
+        item.storedRelations,
+        item.relatedDocuments,
+      );
+      item.allocationRef = baselinePlan.supported
+        ? doc(db, FLOW_ALLOCATIONS, flowAllocationId(item.live.id, targetType))
+        : null;
+      item.allocationSnapshot = item.allocationRef ? await transaction.get(item.allocationRef) : null;
+      item.allocation = flowAllocationDecision(
+        baselinePlan,
+        item.allocationSnapshot?.exists() ? item.allocationSnapshot.data().allocatedByLine : {},
+        requestedByLineBySource?.[item.live.id] ?? null,
+      );
+      item.plan = baselinePlan.supported
+        ? partialDerivationPlan(item.live, targetType, item.storedRelations, item.relatedDocuments, item.allocation.selectedByLine)
+        : baselinePlan;
+    }
+
+    const sourcePlans = prepared.map((item) => ({ source: item.live, plan: item.plan }));
+    const draft = prepared.length > 1
+      ? combinePartialSources(sourcePlans, targetType)
+      : derivePartialDocument(prepared[0].live, targetType, prepared[0].plan);
     const schema = getSchema(draft.type);
-    const linePairs = partialLinePairs(liveSource, draft, selectedPlan);
+    const linePairs = combinedLinePairs(sourcePlans, draft);
     const relations = linePairs.length
       ? linePairs.map((pair) => createDocumentRelation({
-        source: { document: liveSource, line: pair.sourceLine, lineIndex: pair.sourceLineIndex },
+        source: { document: pair.sourceDocument, line: pair.sourceLine, lineIndex: pair.sourceLineIndex },
         target: {
           documentId: childRef.id,
           documentType: draft.type,
@@ -465,16 +562,16 @@ export async function createNextInChain(sourceDoc, profile, toType = null, { req
         linkType: 'BASE',
         linkedQuantity: pair.quantity,
         uom: pair.uom,
-        operationId: `derive:${liveSource.id}:${childRef.id}`,
-        correlationId: liveSource.id,
+        operationId: `derive:${pair.sourceDocument.id}:${childRef.id}`,
+        correlationId: pair.sourceDocument.id,
       }))
-      : [createDocumentRelation({
-        source: { document: liveSource },
+      : prepared.map((item) => createDocumentRelation({
+        source: { document: item.live },
         target: { documentId: childRef.id, documentType: draft.type, documentNumber: null },
         linkType: 'BASE',
-        operationId: `derive:${liveSource.id}:${childRef.id}`,
-        correlationId: liveSource.id,
-      })];
+        operationId: `derive:${item.live.id}:${childRef.id}`,
+        correlationId: item.live.id,
+      }));
     const relationRefs = relations.map((relation) => doc(db, DOCUMENT_RELATIONS_COLLECTION, relation.id));
 
     // القراءة تسبق كل الكتابات حسب عقد معاملات Firestore.
@@ -494,7 +591,6 @@ export async function createNextInChain(sourceDoc, profile, toType = null, { req
       role: profile?.role || '',
     };
     const childAuditRef = doc(collection(db, DOCS, childRef.id, AUDIT));
-    const sourceAuditRef = doc(collection(db, DOCS, liveSource.id, AUDIT));
 
     transaction.set(childRef, {
       type: draft.type,
@@ -510,13 +606,14 @@ export async function createNextInChain(sourceDoc, profile, toType = null, { req
       createdAt: timestamp,
       updatedAt: timestamp,
     });
-    if (allocationRef) {
-      transaction.set(allocationRef, {
-        sourceDocumentId: liveSource.id,
-        sourceDocumentType: liveSource.type,
+    for (const item of prepared) {
+      if (!item.allocationRef) continue;
+      transaction.set(item.allocationRef, {
+        sourceDocumentId: item.live.id,
+        sourceDocumentType: item.live.type,
         targetDocumentType: draft.type,
-        allocatedByLine: allocation.allocatedByLine,
-        revision: (allocationSnapshot?.exists() ? Number(allocationSnapshot.data().revision) || 0 : 0) + 1,
+        allocatedByLine: item.allocation.allocatedByLine,
+        revision: (item.allocationSnapshot?.exists() ? Number(item.allocationSnapshot.data().revision) || 0 : 0) + 1,
         updatedByUid: uid,
         updatedAt: timestamp,
       });
@@ -528,7 +625,7 @@ export async function createNextInChain(sourceDoc, profile, toType = null, { req
     }
     transaction.set(childAuditRef, {
       action: 'create',
-      note: `مشتقّ من ${liveSource.type} ${liveSource.number || ''}`.trim(),
+      note: `مشتقّ من ${prepared.map((item) => `${item.live.type} ${item.live.number || ''}`.trim()).join(' + ')}`,
       from: '',
       to: INITIAL_STATE,
       byUid: uid,
@@ -536,17 +633,19 @@ export async function createNextInChain(sourceDoc, profile, toType = null, { req
       byRole: actor.role,
       at: timestamp,
     });
-    // أثرٌ في الأصل أيضًا: من فتح الحلقة التالية ومتى.
-    transaction.set(sourceAuditRef, {
-      action: 'derive',
-      note: `أُنشئ منه ${draft.type}`,
-      from: '',
-      to: draft.type,
-      byUid: uid,
-      byName: actor.name,
-      byRole: actor.role,
-      at: timestamp,
-    });
+    // أثرٌ في كلّ أصلٍ أيضًا: من فتح الحلقة التالية ومتى.
+    for (const item of prepared) {
+      transaction.set(doc(collection(db, DOCS, item.live.id, AUDIT)), {
+        action: 'derive',
+        note: prepared.length > 1 ? `أُنشئ منه ${draft.type} مدموجًا مع ${prepared.length - 1} مصدرًا آخر` : `أُنشئ منه ${draft.type}`,
+        from: '',
+        to: draft.type,
+        byUid: uid,
+        byName: actor.name,
+        byRole: actor.role,
+        at: timestamp,
+      });
+    }
   });
 
   return childRef.id;

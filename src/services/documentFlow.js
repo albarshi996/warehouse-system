@@ -152,6 +152,40 @@ export function partialLinePairs(source, draft, plan) {
 }
 
 /**
+ * أزواج الأسطر لمسودةٍ مدموجة: كلّ مصدر يأخذ نصيبه من أسطر الابن **بالترتيب**.
+ * لا يصحّ استعمال `partialLinePairs` لكلّ مصدرٍ على حدة، لأنّ هوية سطر الابن
+ * تُحسب من موضعه في المسودة النهائية — لا من موضعه في مسودة مصدره وحده.
+ */
+export function combinedLinePairs(sourcePlans, combinedDraft) {
+  const targetLines = combinedDraft?.lines || [];
+  const pairs = [];
+  let cursor = 0;
+  for (const { source, plan } of sourcePlans) {
+    if (!plan?.supported) continue;
+    for (const line of plan.lines.filter((item) => item.selected > 0)) {
+      const targetLine = targetLines[cursor];
+      if (!targetLine) throw new Error('تعذّرت مطابقة أسطر الاشتقاق المدموج.');
+      pairs.push({
+        sourceDocument: source,
+        sourceLine: source.lines[line.lineIndex],
+        sourceLineIndex: line.lineIndex,
+        sourceLineId: line.lineId,
+        targetLine,
+        targetLineIndex: cursor,
+        targetLineId: stableLineId(targetLine, cursor),
+        quantity: line.selected,
+        uom: line.uom,
+      });
+      cursor += 1;
+    }
+  }
+  if (pairs.length && cursor !== targetLines.length) {
+    throw new Error('تعذّرت مطابقة أسطر الاشتقاق المدموج.');
+  }
+  return pairs;
+}
+
+/**
  * سياسة تعدّد المصادر — **صريحة لا مستنتَجة**. الدمج مسموح حيث يكون الابن حاويةً
  * تشغيليّة واحدة تغطّي أكثر من التزام (شحنةٌ واحدة من المورّد نفسه تغلق أمرَي شراء)،
  * وممنوع حيث يكون الابن مرآةً قانونيّة لمستندٍ واحد (فاتورة · تصريح خروج · إشعار
