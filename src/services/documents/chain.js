@@ -218,31 +218,35 @@ export function derivationRefField(targetType) {
 
 /** خرائط نقل بيانات الرأس. */
 const HEADER_MAP = {
-  'PR>PO': { warehouse: 'warehouse' },
-  'PO>GRN': { supplier: 'supplier' },
-  'GRN>QC': { supplier: 'supplier' },
-  'QC>PUTAWAY': { supplier: 'supplier' },
+  // مركز التكلفة (CC-401) يُورَّث عبر السلاسل كلّها: يُدخل مرّةً في أوّل
+  // الدورة (طلبٌ أو أمرٌ) ويسري إلى آخرها — فالتقرير يجمع الدورة كاملةً
+  // على موقعها التنظيميّ بلا إعادة إدخالٍ تُخطئ في المنتصف. الغائب يبقى
+  // غائبًا (لا اختراع)، وحقل PR القديم اسمه `budgetCode` فيُوحَّد هنا.
+  'PR>PO': { warehouse: 'warehouse', budgetCode: 'costCenter', costCenter: 'costCenter' },
+  'PO>GRN': { supplier: 'supplier', costCenter: 'costCenter' },
+  'GRN>QC': { supplier: 'supplier', costCenter: 'costCenter' },
+  'QC>PUTAWAY': { supplier: 'supplier', costCenter: 'costCenter' },
   // إشعار الرفض يرث المورّد (المُرجَع إليه) ورقم أمر الشراء المرجعيّ من الفحص.
-  'QC>SRN': { supplier: 'supplier', poRef: 'poRef' },
+  'QC>SRN': { supplier: 'supplier', poRef: 'poRef', costCenter: 'costCenter' },
   // أمر البيع يورّث عميله ومستودعه: المستودع يصير مصدر السحب، والعميل وجهته.
-  'SO>PICK': { warehouse: 'warehouse', customer: 'destination', customerCode: 'branchOrderRef' },
-  'PICK>PACK': { destination: 'destination' },
-  'PACK>DN': { customer: 'customer', destination: 'deliveryAddress' },
+  'SO>PICK': { warehouse: 'warehouse', customer: 'destination', customerCode: 'branchOrderRef', costCenter: 'costCenter' },
+  'PICK>PACK': { destination: 'destination', costCenter: 'costCenter' },
+  'PACK>DN': { customer: 'customer', destination: 'deliveryAddress', costCenter: 'costCenter' },
   // البيع من المركبة: اللوحة والمندوب والرحلة هويّةٌ واحدة تسري في السلسلة
   // كلّها — تُورَّث ولا تُعاد كتابتها (وحارس الهويّة يمنع مخالفتها). حقل
   // المندوب في VSI اسمه `rep` (هويّة المنشئ) توافقًا مع المستندات القديمة.
-  'VLD>VSI': { vehiclePlate: 'vehiclePlate', repName: 'rep', tripRef: 'tripRef' },
-  'VLD>VRT': { vehiclePlate: 'vehiclePlate', repName: 'repName', tripRef: 'tripRef', warehouse: 'warehouse' },
-  'VRT>VSR': { vehiclePlate: 'vehiclePlate', repName: 'repName', tripRef: 'tripRef', route: 'route' },
+  'VLD>VSI': { vehiclePlate: 'vehiclePlate', repName: 'rep', tripRef: 'tripRef', costCenter: 'costCenter' },
+  'VLD>VRT': { vehiclePlate: 'vehiclePlate', repName: 'repName', tripRef: 'tripRef', warehouse: 'warehouse', costCenter: 'costCenter' },
+  'VRT>VSR': { vehiclePlate: 'vehiclePlate', repName: 'repName', tripRef: 'tripRef', route: 'route', costCenter: 'costCenter' },
   // بيانات النقل تُورَّث للتصريح فلا تُعاد كتابتها على البوابة.
-  'DN>GP': { driverName: 'driverName', vehiclePlate: 'vehiclePlate', customer: 'destination' },
+  'DN>GP': { driverName: 'driverName', vehiclePlate: 'vehiclePlate', customer: 'destination', costCenter: 'costCenter' },
   // الفاتورة ترث عميل التسليم؛ ومراجعها (تسليم·أمر بيع) من الأرقام لا بالقلم.
-  'DN>INV': { customer: 'customer', customerCode: 'customerCode' },
+  'DN>INV': { customer: 'customer', customerCode: 'customerCode', costCenter: 'costCenter' },
   // تأكيد التسليم يرث العميل والسائق و**لوحة المركبة** — منها يُخصم رصيد المركبة.
-  'DN>POD': { customer: 'customer', customerCode: 'customerCode', driverName: 'driverName', vehiclePlate: 'vehiclePlate' },
+  'DN>POD': { customer: 'customer', customerCode: 'customerCode', driverName: 'driverName', vehiclePlate: 'vehiclePlate', costCenter: 'costCenter' },
   // النقل: المستودعان يُورَّثان عبر السلسلة كلها — لا يُعاد كتابتهما.
-  'TR>TRN': { fromWarehouse: 'fromWarehouse', toWarehouse: 'toWarehouse' },
-  'TRN>TRC': { fromWarehouse: 'fromWarehouse', toWarehouse: 'toWarehouse', driverName: 'driverName', vehiclePlate: 'vehiclePlate' },
+  'TR>TRN': { fromWarehouse: 'fromWarehouse', toWarehouse: 'toWarehouse', costCenter: 'costCenter' },
+  'TRN>TRC': { fromWarehouse: 'fromWarehouse', toWarehouse: 'toWarehouse', driverName: 'driverName', vehiclePlate: 'vehiclePlate', costCenter: 'costCenter' },
   'RET>CN': { returningBranch: 'beneficiary' },
   'CC>ADJ': { zone: 'zone' },
   // المشتريات الداخلية: سياق الطلب (الإدارة والمستفيد) يُورَّث عبر السلسلة كلها،

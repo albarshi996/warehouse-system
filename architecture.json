@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 88,
+    "modules": 89,
     "serviceDomains": 40,
     "serviceFiles": 271,
     "collections": 64,
@@ -420,6 +420,14 @@
       "title": "الرقابة على الطلبات",
       "summary": "الرقابة على الطلبات — التقريران الرقابيان لدورة المبيعات.",
       "file": "src/pages/dashboard/order-control.astro",
+      "usesServices": []
+    },
+    {
+      "name": "org-dimensions",
+      "route": "/dashboard/org-dimensions",
+      "title": "الأبعاد التنظيمية",
+      "summary": "",
+      "file": "src/pages/dashboard/org-dimensions.astro",
       "usesServices": []
     },
     {
@@ -2128,6 +2136,8 @@
         "descendantIds",
         "diffListHtml",
         "diffTrees",
+        "dimensionsOf",
+        "docAmountOf",
         "employeeProfileHtml",
         "endAssignment",
         "esc",
@@ -2137,6 +2147,7 @@
         "getVersion",
         "hasChanges",
         "indexLocations",
+        "internalBranchProblems",
         "jobCardsHtml",
         "jobRequirementsHtml",
         "jobsOfNode",

@@ -211,3 +211,69 @@ export function locationOptions(locations = [], { level = '' } = {}) {
     }))
     .sort((a, b) => (levelOf(a.level)?.order || 9) - (levelOf(b.level)?.order || 9) || a.label.localeCompare(b.label));
 }
+
+/**
+ * حارس «الفرع الداخليّ موقعُ مخزونٍ لا عميل» (CC-401).
+ *
+ * فرعٌ داخليّ سُجّل عميلًا يجعل النقل إليه **بيعًا**: تنشأ ذمّةٌ على أنفسنا
+ * وإيرادٌ لا وجود له، ويغيب الرصيد عن مخزوننا وهو في مخازننا. النقل الداخليّ
+ * طريقه `TR → TRN → TRC` عبر `TRANSIT` — لا فاتورة.
+ *
+ * دالّة خالصة تُغذّى بسيّد المواقع وسيّد العملاء وتعيد التداخل بالاسم —
+ * تحذيرٌ يُعرض حيث تُدار المواقع، لا مانعُ حفظٍ (البيانات تُنظَّف على مهل).
+ */
+export function internalBranchProblems(locations = [], customers = []) {
+  const customerCodes = new Map(
+    (Array.isArray(customers) ? customers : [])
+      .map((c) => [up(c?.code), c])
+      .filter(([code]) => code)
+  );
+  const out = [];
+  for (const loc of Array.isArray(locations) ? locations : []) {
+    if (loc?.level !== 'branch') continue;
+    const code = up(loc?.code);
+    const hit = code ? customerCodes.get(code) : null;
+    if (hit) {
+      out.push(
+        `الفرع «${str(loc.nameAr) || code}» (${code}) مسجَّلٌ عميلًا باسم «${str(hit.nameAr) || code}» — ` +
+          'النقل الداخليّ TR→TRN→TRC عبر TRANSIT، لا بيعٌ يفتح ذمّةً على أنفسنا.'
+      );
+    }
+  }
+  return out;
+}
+
+/**
+ * أبعاد مستندٍ كاملةً من رمز موقعه: مركز التكلفة وفرعه وبرانده وقطاعه.
+ * للفلاتر والتقارير — الرمز الواحد في الرأس يكفي، والشجرة تُكمل الباقي.
+ */
+export function dimensionsOf(index, doc) {
+  const chain = ancestryOf(index, orgCodeOf(doc));
+  const at = (level) => chain.find((l) => l.level === level) || null;
+  return {
+    orgCode: up(orgCodeOf(doc)),
+    matched: chain.length > 0,
+    costCenter: at('cost_center'),
+    branch: at('branch'),
+    brand: at('brand'),
+    sector: at('sector'),
+  };
+}
+
+/**
+ * مبلغ مستندٍ لتحميل التكلفة — أوّل عمودٍ ماليٍّ موجود يفوز، ثمّ (كمية × سعر)
+ * ثمّ (كمية × تكلفة). صفرٌ ليس عطبًا: مستندٌ بلا مال يُحصى صفرًا لا يُخمَّن.
+ */
+export function docAmountOf(doc) {
+  return money(
+    (doc?.lines || []).reduce((total, l) => {
+      for (const k of ['lineTotal', 'amount', 'total']) {
+        if (l?.[k] != null && l[k] !== '') return total + num(l[k]);
+      }
+      const qty = num(l?.qty);
+      if (qty && num(l?.unitPrice)) return total + qty * num(l?.unitPrice);
+      if (qty && num(l?.unitCost)) return total + qty * num(l?.unitCost);
+      return total;
+    }, 0)
+  );
+}

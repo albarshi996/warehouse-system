@@ -51,6 +51,7 @@ const schema = {
       columns: 3,
       fields: [
         { key: 'requestDate', label: 'تاريخ الطلب (Request Date)', kind: 'date', required: true },
+        { key: 'costCenter', label: 'مركز التكلفة (Cost Center)', kind: 'text', ltr: true, hint: 'رمزٌ من سيّد المواقع التنظيميّة — به تُحمَّل التكلفة على الفرع والبراند والقطاع' },
         {
           key: 'fromWarehouse',
           label: 'مستودع المصدر (From Warehouse)',

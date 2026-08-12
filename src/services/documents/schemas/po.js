@@ -69,6 +69,7 @@ const schema = {
       columns: 3,
       fields: [
         { key: 'issueDate', label: 'تاريخ الإصدار (Issue Date)', kind: 'date', required: true },
+        { key: 'costCenter', label: 'مركز التكلفة (Cost Center)', kind: 'text', ltr: true, hint: 'رمزٌ من سيّد المواقع التنظيميّة — به تُحمَّل التكلفة على الفرع والبراند والقطاع' },
         { key: 'requiredDelivery', label: 'تاريخ التسليم المطلوب (Required Delivery)', kind: 'date', required: true },
         {
           key: 'prRef',

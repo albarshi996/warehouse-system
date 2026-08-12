@@ -1,0 +1,15 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import OrgDimensions from '../../components/brandzo-erp/org/OrgDimensions.jsx';
+---
+
+<DashboardLayout title="الأبعاد التنظيمية" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">الأبعاد التنظيمية</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      قطاع › براند › فرع › مركز تكلفة — مصدرٌ واحد تُحمَّل عليه التكلفة صعودًا،
+      وما لم يُربط يُحصى ولا يذوب في المجموع بصمت.
+    </p>
+    <OrgDimensions client:load />
+  </div>
+</DashboardLayout>

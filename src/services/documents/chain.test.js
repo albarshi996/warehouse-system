@@ -956,3 +956,23 @@ test('★★ حارس هويّة الرحلة يمسك المخالفة الصر
   // خارج سلسلة المركبة لا حكم
   assert.equal(vanIdentityProblem({ type: 'GRN', header: { vehiclePlate: 'X' } }, parent), null);
 });
+
+test('★★ مركز التكلفة يُورَّث عبر السلسلة كلّها — يُدخل مرّةً ويسري', () => {
+  // من الطلب (بحقله القديم budgetCode) إلى الأمر — التوحيد على costCenter.
+  const pr = {
+    id: 'pr-1', type: 'PR', number: 'PR-1', state: 'approved',
+    header: { warehouse: 'MAIN', budgetCode: 'CC-BEN-OPS' },
+    lines: [{ sku: 'A', qty: 5 }],
+  };
+  const po = deriveDocument(pr, 'PO');
+  assert.equal(po.header.costCenter, 'CC-BEN-OPS');
+
+  // ومن الأمر إلى الاستلام حرفيًّا.
+  const poDoc = { ...po, id: 'po-1', number: 'PO-1', state: 'approved' };
+  const grn = deriveDocument(poDoc, 'GRN');
+  assert.equal(grn.header.costCenter, 'CC-BEN-OPS');
+
+  // والغائب يبقى غائبًا — لا اختراع بُعدٍ لمستندٍ لم يُدخله أحد.
+  const bare = deriveDocument({ ...pr, header: { warehouse: 'MAIN' } }, 'PO');
+  assert.equal(bare.header.costCenter, undefined);
+});

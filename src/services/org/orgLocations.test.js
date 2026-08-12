@@ -20,6 +20,9 @@ import {
   unlinkedCost,
   locationProblems,
   locationOptions,
+  internalBranchProblems,
+  dimensionsOf,
+  docAmountOf,
 } from './orgLocations.js';
 
 const TREE = [
@@ -173,4 +176,45 @@ test('الخيارات مرتّبةٌ بالمستوى ثمّ بالاسم، و�
   assert.equal(locationOptions(TREE, { level: 'branch' }).length, 2);
   assert.match(all[0].label, /قطاع/);
   assert.deepEqual(locationOptions([]), []);
+});
+
+// ═══ CC-401 — الفرع ليس عميلًا · أبعاد المستند · مبلغ التحميل ═══
+
+const CC401_TREE = [
+  { code: 'SEC-F', nameAr: 'قطاع الغذاء', level: 'sector' },
+  { code: 'BR-WNW', nameAr: 'وت ن وايلد', level: 'brand', parentCode: 'SEC-F' },
+  { code: 'BN-BEN', nameAr: 'فرع بنغازي', level: 'branch', parentCode: 'BR-WNW' },
+  { code: 'CC-BEN-OPS', nameAr: 'تشغيل بنغازي', level: 'cost_center', parentCode: 'BN-BEN' },
+];
+
+test('★★ الفرع الداخليّ المسجَّل عميلًا يُكشف — والنقل طريقه TRANSIT لا فاتورة', () => {
+  const problems = internalBranchProblems(CC401_TREE, [
+    { code: 'BN-BEN', nameAr: 'فرع بنغازي (عميل!)' },
+    { code: 'C-100', nameAr: 'عميل حقيقيّ' },
+  ]);
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /TR→TRN→TRC/);
+  // عميلٌ لا يطابق فرعًا لا يُتَّهم — والقطاع المطابق ليس فرعًا فلا يُحاكَم هنا.
+  assert.deepEqual(internalBranchProblems(CC401_TREE, [{ code: 'C-100' }, { code: 'SEC-F' }]), []);
+});
+
+test('أبعاد المستند تُستكمل من رمزٍ واحد في الرأس — صعودًا حتى القطاع', () => {
+  const index = indexLocations(CC401_TREE);
+  const dims = dimensionsOf(index, { header: { costCenter: 'cc-ben-ops' } });
+  assert.equal(dims.matched, true);
+  assert.equal(dims.costCenter.code, 'CC-BEN-OPS');
+  assert.equal(dims.branch.code, 'BN-BEN');
+  assert.equal(dims.brand.code, 'BR-WNW');
+  assert.equal(dims.sector.code, 'SEC-F');
+  // رمزٌ لا يطابق ⇒ غير مربوط، بلا اختراع أبعاد.
+  const loose = dimensionsOf(index, { header: { costCenter: 'مجهول' } });
+  assert.equal(loose.matched, false);
+  assert.equal(loose.sector, null);
+});
+
+test('مبلغ المستند: أوّل عمودٍ ماليّ يفوز ثمّ كمية×سعر ثمّ كمية×تكلفة', () => {
+  assert.equal(docAmountOf({ lines: [{ lineTotal: 120 }, { amount: 30 }] }), 150);
+  assert.equal(docAmountOf({ lines: [{ qty: 5, unitPrice: 4 }] }), 20);
+  assert.equal(docAmountOf({ lines: [{ qty: 5, unitCost: 3 }] }), 15);
+  assert.equal(docAmountOf({ lines: [{ qty: 5 }] }), 0, 'بلا مالٍ صفرٌ لا تخمين');
 });

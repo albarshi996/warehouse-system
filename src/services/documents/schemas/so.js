@@ -69,6 +69,7 @@ const schema = {
       columns: 3,
       fields: [
         { key: 'orderDate', label: 'تاريخ الطلب (Order Date)', kind: 'date', required: true },
+        { key: 'costCenter', label: 'مركز التكلفة (Cost Center)', kind: 'text', ltr: true, hint: 'رمزٌ من سيّد المواقع التنظيميّة — به تُحمَّل التكلفة على الفرع والبراند والقطاع' },
         { key: 'requiredDate', label: 'تاريخ التسليم المطلوب (Required Date)', kind: 'date' },
         {
           key: 'warehouse',
