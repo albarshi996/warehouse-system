@@ -116,7 +116,7 @@ const schema = {
           hint: 'داخل النطاق · خارجه · غير مُتحقَّق. يُملأ آليًّا من الزيارة ولا يُحرَّر يدويًّا إلا بمبرّر.',
         },
         { key: 'fenceDistanceM', label: 'البعد عن المتجر (م)', kind: 'number' },
-        { key: 'tripRef', label: 'رقم الرحلة (Trip Ref.)', kind: 'text' },
+        { key: 'tripRef', label: 'رقم الرحلة (Trip Ref.)', kind: 'text', required: true, hint: 'البيع يُحسب على رحلته — بلا رحلةٍ لا يدخل تسويتها ولا ميزان نقدها' },
         {
           key: 'rep',
           label: 'المندوب (Sales Rep)',

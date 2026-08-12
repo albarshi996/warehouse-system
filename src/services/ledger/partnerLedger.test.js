@@ -20,6 +20,8 @@ import {
   bucketOf,
   aging,
   closeoutEntry,
+  invoiceOutstanding,
+  overCollectionProblems,
 } from './partnerLedger.js';
 import SCHEMAS from '../documents/schemas/index.js';
 
@@ -243,4 +245,50 @@ test('★ والتصفير يدخل الكشف كسطرٍ عاديّ فيبقى 
   assert.equal(s.closing, 0);
   assert.equal(s.balanced, true);
   assert.equal(s.rows.length, 2, 'والسطر الأصليّ باقٍ — لم يُمحَ');
+});
+
+// ═══ CC-302 — تاريخ التحصيل الميدانيّ والمفتوح لكلّ فاتورة ═══
+
+test('★★ قيد RCV يحمل تاريخ التحصيل لا فراغًا — فلا يسبق السدادُ فاتورتَه', () => {
+  const rcv = {
+    id: 'rcv-1', type: 'RCV', number: 'RCV-5', state: 'done',
+    header: { customerCode: 'C-1', customer: 'عميل', collectionDate: '2026-08-10' },
+    lines: [{ invoiceRef: 'INV-7', amount: 300 }],
+  };
+  const entry = entryFor(rcv);
+  assert.equal(entry.date, '2026-08-10', 'كان يُكتب فارغًا فيتقدّم كلُّ تحصيلٍ على فاتورته في الكشف');
+  assert.equal(entry.delta, -300);
+  assert.deepEqual(entry.allocations, [{ ref: 'INV-7', amount: 300 }]);
+});
+
+test('المفتوح لكلّ فاتورة: المقاصّات المسمّاة تُطرح من فاتورتها لا من الأقدم', () => {
+  const entries = [
+    { partyCode: 'C-1', direction: 'debit', docNumber: 'INV-7', docId: 'a', amount: 300, allocations: [] },
+    { partyCode: 'C-1', direction: 'debit', docNumber: 'INV-9', docId: 'b', amount: 500, allocations: [] },
+    { partyCode: 'C-1', direction: 'credit', docNumber: 'RCV-1', docId: 'c', amount: 400, allocations: [{ ref: 'INV-9', amount: 400 }] },
+    // طرفٌ آخر لا يختلط
+    { partyCode: 'C-2', direction: 'debit', docNumber: 'INV-8', docId: 'd', amount: 900, allocations: [] },
+  ];
+  const rows = invoiceOutstanding(entries, 'C-1');
+  assert.deepEqual(rows, [
+    { ref: 'INV-7', total: 300, paid: 0, remaining: 300 },
+    { ref: 'INV-9', total: 500, paid: 400, remaining: 100 },
+  ]);
+});
+
+test('★★ حارس التجاوز يمسك تحصيلًا فوق المفتوح وفاتورةً لا وجود لها', () => {
+  const outstanding = [{ ref: 'INV-7', total: 300, paid: 200, remaining: 100 }];
+  const doc = {
+    lines: [
+      { invoiceRef: 'INV-7', amount: 150 },   // يتجاوز المفتوح 100
+      { invoiceRef: 'INV-404', amount: 50 },  // فاتورة مجهولة
+      { invoiceRef: '', amount: 999 },        // بلا مرجع — له تحذير المخطّط لا هذا الحارس
+    ],
+  };
+  const problems = overCollectionProblems(doc, outstanding);
+  assert.equal(problems.length, 2);
+  assert.match(problems[0], /يتجاوز المفتوح 100/);
+  assert.match(problems[1], /لا مدينَ مفتوحًا/);
+  // تحصيلٌ داخل المفتوح يمرّ بلا كلمة.
+  assert.deepEqual(overCollectionProblems({ lines: [{ invoiceRef: 'INV-7', amount: 100 }] }, outstanding), []);
 });

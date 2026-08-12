@@ -173,6 +173,11 @@ export function buildMoves(docData, { items = null } = {}) {
       value: absQty * unitCost,
       reason: rule.reason,
       reasonLabel: rule.labelAr,
+      // بُعد الرحلة والمندوب (CC-301): الحركة واقعةٌ تُنسب لرحلةٍ ولصاحب عهدة،
+      // لا لضاغط الزرّ وحده (postedBy هو أمين المخزن لا المندوب). بدونهما يستحيل
+      // الجواب من الدفتر عن «أيّ رحلةٍ حمّلت هذا الرصيد؟» — والفارغ يبقى فارغًا.
+      tripRef: String(header?.tripRef ?? '').trim(),
+      repName: String(header?.repName ?? header?.rep ?? '').trim(),
     });
   });
 

@@ -47,9 +47,10 @@ function sumSales(doc) {
   );
 }
 
-/** رمز المندوب من المستند — الاسم يكفي هويّةً حتّى يُربط بمستخدم. */
+/** رمز المندوب من المستند — الاسم يكفي هويّةً حتّى يُربط بمستخدم.
+ *  `rep` هو اسم الحقل في VSI (هويّة المنشئ) — يُقرأ توافقًا لا يُعاد تسميته. */
 export function repOf(doc) {
-  return str(doc?.header?.repName || doc?.createdByName);
+  return str(doc?.header?.repName || doc?.header?.rep || doc?.createdByName);
 }
 
 /**

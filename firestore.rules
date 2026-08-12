@@ -1037,6 +1037,17 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ═══ حساب المندوب النقديّ (CC-302) — `rep_cash_moves` ═══
+    // نظير `partner_ledger` حرفًا بحرف: التحصيل يزيد جيب المندوب والإيداع
+    // في التسوية يُفرغه، والرصيد الباقي بعد الإقفال عجزٌ يُسأل عنه لا سهوٌ
+    // يُنسى. ملحقٌ فقط — والتصحيح قيدٌ مضادّ لا محو.
+    match /rep_cash_moves/{moveId} {
+      allow read: if signedIn();
+      allow create: if isStockActor() || isVanSalesWriter()
+                    || myRole() in ['finance_manager', 'treasury'];
+      allow update, delete: if false;
+    }
+
     // ═══ قوائم الأسعار (م٣-ج) — `price_lists` ═══
     // القراءة للجميع: المندوب يحتاج السعر ليبيع، ومن يُمنع من سعرٍ يدويّ يجب
     // أن يرى السعر الذي كان عليه أن يبيع به.

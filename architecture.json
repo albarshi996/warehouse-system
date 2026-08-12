@@ -11,8 +11,8 @@
   "counts": {
     "modules": 88,
     "serviceDomains": 40,
-    "serviceFiles": 270,
-    "collections": 63,
+    "serviceFiles": 271,
+    "collections": 64,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -1088,6 +1088,7 @@
         "TRANSFER_CHAIN",
         "TRANSITIONS",
         "TYPES_WITHOUT_EVENT_STAMP",
+        "VAN_CHAIN",
         "addAttachment",
         "addReconciliation",
         "adjValue",
@@ -1280,6 +1281,7 @@
         "transitionDocument",
         "validateEncoded",
         "validateSource",
+        "vanIdentityProblem",
         "varianceValue",
         "vcdWarnings",
         "vcrWarnings",
@@ -1355,9 +1357,10 @@
         "locationCapture.js",
         "repAccount.js",
         "repAccount.test.js",
+        "repAccountService.js",
         "visitModel.js"
       ],
-      "fileCount": 8,
+      "fileCount": 9,
       "testCount": 2,
       "exports": [
         "ACCURACY_TOLERANCE_RATIO",
@@ -1384,6 +1387,7 @@
         "createAdHocVisit",
         "dayKey",
         "fenceVerdict",
+        "fetchRepCashMoves",
         "geolocationSupported",
         "haversineMeters",
         "invoiceGuard",
@@ -1392,12 +1396,14 @@
         "isVisitProductive",
         "listenJourneyPlans",
         "listenRecentVisits",
+        "listenRepCashMoves",
         "listenRepPlans",
         "listenVisitsOfDay",
         "locationPermissionState",
         "normalizeCoords",
         "parseDay",
         "planCompliance",
+        "postToRepCash",
         "repBalances",
         "repDashboard",
         "repOf",
@@ -1423,6 +1429,7 @@
       ],
       "collections": [
         "journey_plans",
+        "rep_cash_moves",
         "visits"
       ]
     },
@@ -1794,6 +1801,7 @@
         "fetchPartnerLedger",
         "fillRate",
         "findNegativeBalance",
+        "invoiceOutstanding",
         "isAccountLocation",
         "isCustomerLocation",
         "isCustomerToken",
@@ -1820,6 +1828,7 @@
         "operationExceptions",
         "operationsSnapshot",
         "outOfStockItems",
+        "overCollectionProblems",
         "partyCodeOf",
         "pendingOrders",
         "pendingShipments",
@@ -2645,7 +2654,8 @@
         "settlementKey",
         "settlementVerdict",
         "vanRemaining",
-        "vanSettlement"
+        "vanSettlement",
+        "vsrPostProblem"
       ],
       "collections": [
         "stock_moves"
@@ -4211,6 +4221,40 @@
               "isManager",
               "myRole"
             ]
+          }
+        ]
+      },
+      {
+        "name": "rep_cash_moves",
+        "path": "rep_cash_moves",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isStockActor() || isVanSalesWriter() || myRole() in ['finance_manager', 'treasury']",
+            "roles": [
+              "isStockActor",
+              "isVanSalesWriter",
+              "myRole"
+            ]
+          },
+          {
+            "actions": [
+              "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
           }
         ]
       },

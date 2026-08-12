@@ -109,3 +109,45 @@ test('DN/POD بلا لوحة مركبة يُرفض قيده بسبب مكتوب'
   assert.equal(moves.length, 0);
   assert.ok(problems.length > 0, 'لا قيد بلا موقع مركبة');
 });
+
+// ── قيد تحميل المركبة المباشر (VLD) — جوهر CC-301 ────────────────────
+// كان الأثر المزدوج مُثبَتًا لـDN وPOD وغيرَ مُثبَتٍ لـVLD نفسه: القاعدة
+// صحيحةٌ بالقراءة لا بالبرهان، وأيّ تعديلٍ عليها كان يمرّ بلا أن يسقط اختبار.
+test('★★ VLD ينقص المستودع ويزيد المركبة — بالباتش والرحلة والمندوب', () => {
+  const vld = {
+    id: 'vld1',
+    type: 'VLD',
+    header: { warehouse: 'MAIN', vehiclePlate: '12-3456', repName: 'أحمد', tripRef: 'T-1' },
+    lines: [{ sku: 'A', qty: 40, batch: 'B1', expiry: '2027-01-01', unitCost: 2 }],
+  };
+  const { moves, problems } = buildMoves(vld);
+  assert.equal(problems.length, 0);
+  assert.equal(moves.length, 1);
+  assert.equal(moves[0].from, 'MAIN');
+  assert.equal(moves[0].to, 'VAN:12-3456');
+  assert.equal(moves[0].qty, 40);
+  assert.equal(moves[0].batch, 'B1');
+  assert.equal(moves[0].expiry, '2027-01-01');
+  // بُعد الرحلة والمندوب: الحركة تُنسب لرحلةٍ ولصاحب عهدة لا لضاغط الزرّ وحده.
+  assert.equal(moves[0].tripRef, 'T-1');
+  assert.equal(moves[0].repName, 'أحمد');
+
+  const { deltas } = balanceDeltas(moves);
+  const van = deltas.find((d) => d.warehouse === 'VAN:12-3456');
+  const main = deltas.find((d) => d.warehouse === 'MAIN');
+  assert.equal(van.delta, 40, 'يزيد رصيد المركبة');
+  assert.equal(main.delta, -40, 'ينقص المستودع المصدر');
+  assert.equal(van.batch, 'B1', 'رصيد المركبة مفصولٌ تشغيلةً تشغيلة');
+});
+
+test('حركة بلا رحلةٍ أو مندوب تُقيَّد بحقلين فارغين — الفارغ لا يُخترع', () => {
+  const vld = {
+    id: 'vld2',
+    type: 'VLD',
+    header: { warehouse: 'MAIN', vehiclePlate: '12-3456' },
+    lines: [{ sku: 'A', qty: 1 }],
+  };
+  const { moves } = buildMoves(vld);
+  assert.equal(moves[0].tripRef, '');
+  assert.equal(moves[0].repName, '');
+});

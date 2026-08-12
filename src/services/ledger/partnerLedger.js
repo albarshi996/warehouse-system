@@ -138,7 +138,9 @@ export function entryFor(doc) {
     docType: doc.type,
     docId: str(doc.id),
     docNumber: str(doc.number),
-    date: str(doc.header?.invoiceDate || doc.header?.receiptDate || doc.header?.paymentDate || doc.header?.saleDate || doc.header?.receivedAt || doc.header?.returnDate || doc.header?.issueDate).slice(0, 10),
+    // `collectionDate` تاريخ التحصيل الميدانيّ (RCV) — غيابه هنا كان يكتب قيد
+    // التحصيل بتاريخٍ فارغ فيتقدّم كلُّ سدادٍ على فاتورته في ترتيب الكشف.
+    date: str(doc.header?.invoiceDate || doc.header?.receiptDate || doc.header?.paymentDate || doc.header?.collectionDate || doc.header?.saleDate || doc.header?.receivedAt || doc.header?.returnDate || doc.header?.issueDate).slice(0, 10),
     dueDate: str(doc.header?.dueDate).slice(0, 10),
     direction: rule.direction,
     labelAr: rule.labelAr,
@@ -295,4 +297,73 @@ export function closeoutEntry({ partyCode, party, partyName, balance, reason, da
     reason: str(reason),
     byName: str(byName),
   };
+}
+
+/**
+ * الرصيد المفتوح لكلّ فاتورةٍ على حدة (CC-302).
+ *
+ * `aging` يقاصّ على مستوى الطرف بالأقدم أوّلًا — وهذا صحيحٌ للأعمار، لكنّ
+ * التحصيل الميدانيّ يوزَّع على فواتير بعينها (`allocations`)، وكانت تُكتب
+ * ولا يقرؤها أحد. هنا القارئ: المدين يُجمع برقم مستنده، وكلّ مقاصّةٍ
+ * دائنة تُطرح من فاتورتها المسمّاة — فيُعرف المفتوح فاتورةً فاتورة،
+ * ويُمسك التحصيل الزائد قبل أن تُسمّيه الأعمار «دفعةً مقدَّمة».
+ *
+ * @param {Array}  entries سطور الدفتر (من `entriesFrom`)
+ * @param {string} partyCode رمز الطرف — تُحسب فواتيره وحده
+ * @returns {Array<{ref:string, total:number, paid:number, remaining:number}>}
+ */
+export function invoiceOutstanding(entries = [], partyCode = '') {
+  const code = up(partyCode);
+  if (!code) return [];
+  const byRef = new Map();
+
+  for (const e of entries) {
+    if (up(e?.partyCode) !== code) continue;
+    if (e.direction === 'debit') {
+      const ref = str(e.docNumber) || str(e.docId);
+      if (!ref) continue;
+      const row = byRef.get(ref) || { ref, total: 0, paid: 0 };
+      row.total = money(row.total + e.amount);
+      byRef.set(ref, row);
+    } else {
+      for (const a of e.allocations || []) {
+        const ref = str(a?.ref);
+        if (!ref) continue;
+        const row = byRef.get(ref) || { ref, total: 0, paid: 0 };
+        row.paid = money(row.paid + (Number(a?.amount) || 0));
+        byRef.set(ref, row);
+      }
+    }
+  }
+
+  return [...byRef.values()]
+    .map((row) => ({ ...row, remaining: money(row.total - row.paid) }))
+    .sort((a, b) => a.ref.localeCompare(b.ref, 'ar'));
+}
+
+/**
+ * حارس تجاوز التحصيل: بنود سندٍ (RCV/RCP) تتجاوز المفتوحَ لفواتيرها المسمّاة.
+ * دالّة خالصة تُغذّى بالمفتوح المحسوب أعلاه وتعيد مشاكل بصيغة نصّية —
+ * فارغُ المرجع لا يُحاكَم هنا (له تحذيره في المخطّط)، والفاتورة المجهولة
+ * تُسمّى مشكلةً لأنّ توزيعًا على ما لا وجود له مالٌ بلا وجهة.
+ */
+export function overCollectionProblems(doc, outstanding = []) {
+  const open = new Map((outstanding || []).map((row) => [str(row.ref), row]));
+  const problems = [];
+  for (const [i, line] of (doc?.lines || []).entries()) {
+    const ref = str(line?.invoiceRef || line?.docRef);
+    const amount = num(line?.amount);
+    if (!ref || amount <= 0) continue;
+    const row = open.get(ref);
+    if (!row) {
+      problems.push(`البند ${i + 1}: الفاتورة «${ref}» لا مدينَ مفتوحًا لها في دفتر هذا العميل`);
+      continue;
+    }
+    if (amount - row.remaining > 0.009) {
+      problems.push(
+        `البند ${i + 1}: التحصيل ${amount} يتجاوز المفتوح ${row.remaining} للفاتورة «${ref}»`
+      );
+    }
+  }
+  return problems;
 }

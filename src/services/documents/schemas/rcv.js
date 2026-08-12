@@ -57,6 +57,12 @@ export function rcvWarnings(doc) {
 
   for (const [i, line] of (doc?.lines || []).entries()) {
     if (lineAmount(line) < 0) out.push(`البند ${i + 1}: مبلغٌ سالب — المرتجع إشعارٌ دائن لا تحصيل`);
+    // تحذيرٌ مبكّر من التجاوز بما يحمله البند نفسه (إجماليّ الفاتورة المُدخل).
+    // الحكم النهائيّ عند الإنجاز على الدفتر الحيّ — هذا إنذارٌ وقتَ الكتابة.
+    const invoiceTotal = Number(line?.invoiceTotal) || 0;
+    if (invoiceTotal > 0 && lineAmount(line) - invoiceTotal > 0.009) {
+      out.push(`البند ${i + 1}: التحصيل ${lineAmount(line)} أكبر من إجماليّ الفاتورة ${invoiceTotal} — راجع أو وثّق السبب`);
+    }
   }
 
   return out;
@@ -102,6 +108,9 @@ const schema = {
         },
         { key: 'referenceNo', label: 'رقم الشيك (Cheque No.)', kind: 'text', ltr: true },
         { key: 'amountCollected', label: 'المبلغ المحصَّل (د.ل)', kind: 'number', required: true },
+        // تجاوزُ المفتوح لفاتورةٍ مسمّاة يُمنع عند الإنجاز إلا بسببٍ هنا —
+        // فالدفعة المقدَّمة قرارٌ يُكتب لا خطأٌ يمرّ صامتًا.
+        { key: 'overCollectionReason', label: 'سبب تجاوز التحصيل (إن وُجد)', kind: 'text', hint: 'يُملأ فقط إن تعمّدت تحصيل أكثر من المفتوح — دفعة مقدَّمة مثلًا' },
       ],
     },
 

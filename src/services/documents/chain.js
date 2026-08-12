@@ -71,9 +71,17 @@ export const DELIVERY_CHAIN = ['DN', 'POD'];
  * حين يقع الرفض في الفحص (BZ-SCN-005). فرعٌ توثيقيّ بلا حركةٍ جديدة (الفحص عزل المرفوض أصلًا).
  */
 export const REJECTION_CHAIN = ['QC', 'SRN'];
+/**
+ * سلسلة البيع من المركبة (CC-301): تحميلٌ ← بيعٌ ميدانيّ ← إرجاعٌ ← تسوية.
+ * التحميل يتفرّع (بيعٌ وإرجاع)، والتسوية تُقفل الرحلة. الرحلةُ واللوحةُ والمندوب
+ * هويّةٌ واحدة تسري في السلسلة كلّها — تُورَّث ولا تُعاد كتابتها، وحارسُ الهويّة
+ * في documentsService يمنع ابنًا يخالف أباه فيها. RCV خارج السلسلة عمدًا
+ * (كسند القبض): يُقاصّ فاتورةً أو أكثر فربطه بأبٍ واحدٍ يكذب على الواقع.
+ */
+export const VAN_CHAIN = ['VLD', 'VSI', 'VRT', 'VSR'];
 
 /** كل السلاسل — لتجول عليها الدوال بلا معرفة مسبقة بأيّها. */
-export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN, TRANSFER_CHAIN, INTERNAL_PROCUREMENT_CHAIN, DELIVERY_CHAIN, REJECTION_CHAIN];
+export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN, TRANSFER_CHAIN, INTERNAL_PROCUREMENT_CHAIN, DELIVERY_CHAIN, REJECTION_CHAIN, VAN_CHAIN];
 
 /**
  * وجهات الاشتقاق من نوعٍ ما — قد تكون أكثر من واحدة (التفرّع).
@@ -82,8 +90,10 @@ export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN
  */
 export function derivationTargets(type) {
   // إذن التسليم يتفرّع ثلاثًا (تصريح · فاتورة · تأكيد تسليم)، وتقرير الجودة
-  // يتفرّع اثنتين (تخزينُ المقبول · إشعارُ رفضٍ للمورّد بالبنود المرفوضة).
-  const branches = { DN: ['GP', 'INV', 'POD'], QC: ['PUTAWAY', 'SRN'] };
+  // يتفرّع اثنتين (تخزينُ المقبول · إشعارُ رفضٍ للمورّد بالبنود المرفوضة)،
+  // وتحميل المركبة اثنتين (بيعٌ ميدانيّ · إرجاعُ ما لم يُبَع). البيع الميدانيّ
+  // نهائيّ ([] عمدًا): الإرجاع يُشتقّ من التحميل لا من البيع — يُرجَع ما لم يُبَع.
+  const branches = { DN: ['GP', 'INV', 'POD'], QC: ['PUTAWAY', 'SRN'], VLD: ['VSI', 'VRT'], VSI: [] };
   if (branches[type]) return branches[type];
   const n = nextInChain(type);
   return n ? [n] : [];
@@ -150,6 +160,12 @@ const LINE_MAP = {
   // تتدفّق من الأمر إلى الصرف إلى التسليم (ما يُدفَع ثمنه هو ما يُسلَّم).
   'IPO>PV': { description: 'description', uom: 'uom', qty: 'qty', unitPrice: 'unitPrice' },
   'PV>DLV': { description: 'description', uom: 'uom', qty: 'qty' },
+  // البيع من المركبة (CC-301): البيع يرث هويّة الصنف والتشغيلة — **لا السعر**:
+  // `unitCost` تكلفةٌ داخلية و`unitPrice` سعرُ بيعٍ للعميل، وخلطهما يكشف
+  // التكلفة للعميل ويغلط الفاتورة. السعر من قوائم الأسعار أو بيد المندوب.
+  'VLD>VSI': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', uom: 'uom', batch: 'batch', expiry: 'expiry' },
+  // الإرجاع يرث التكلفة (يرجع للمخزن بقيمته) والتشغيلة والصلاحية.
+  'VLD>VRT': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', batch: 'batch', expiry: 'expiry', unitCost: 'unitCost' },
 };
 
 /** حقل الكمية الذي يُستهلك من المصدر ويُكتب في الابن عند الاشتقاق الجزئي. */
@@ -171,6 +187,12 @@ const DERIVATION_QUANTITY_FIELDS = Object.freeze({
   'CC>ADJ': ['count2', 'actualQty'],
   'IPO>PV': ['qty', 'qty'],
   'PV>DLV': ['qty', 'qty'],
+  // البيع من المركبة: الفرعان (بيعٌ وإرجاع) يستهلكان `qty` المُحمَّل كلٌّ على
+  // حدته في التخطيط، **والحَكَم الفعليّ رصيدُ موقع المركبة**: كلّ بيعٍ وإرجاعٍ
+  // منجَزٍ يُنقص `VAN:<لوحة>`، وحارس الرصيد السالب في المعاملة يمنع أن يتجاوز
+  // مجموعُهما المُحمَّلَ — فلا يكذب الفرعان معًا ولو خطّط كلٌّ بمعزلٍ عن أخيه.
+  'VLD>VSI': ['qty', 'qty'],
+  'VLD>VRT': ['qty', 'qty'],
 });
 
 export function derivationQuantityFields(sourceType, targetType) {
@@ -206,6 +228,12 @@ const HEADER_MAP = {
   'SO>PICK': { warehouse: 'warehouse', customer: 'destination', customerCode: 'branchOrderRef' },
   'PICK>PACK': { destination: 'destination' },
   'PACK>DN': { customer: 'customer', destination: 'deliveryAddress' },
+  // البيع من المركبة: اللوحة والمندوب والرحلة هويّةٌ واحدة تسري في السلسلة
+  // كلّها — تُورَّث ولا تُعاد كتابتها (وحارس الهويّة يمنع مخالفتها). حقل
+  // المندوب في VSI اسمه `rep` (هويّة المنشئ) توافقًا مع المستندات القديمة.
+  'VLD>VSI': { vehiclePlate: 'vehiclePlate', repName: 'rep', tripRef: 'tripRef' },
+  'VLD>VRT': { vehiclePlate: 'vehiclePlate', repName: 'repName', tripRef: 'tripRef', warehouse: 'warehouse' },
+  'VRT>VSR': { vehiclePlate: 'vehiclePlate', repName: 'repName', tripRef: 'tripRef', route: 'route' },
   // بيانات النقل تُورَّث للتصريح فلا تُعاد كتابتها على البوابة.
   'DN>GP': { driverName: 'driverName', vehiclePlate: 'vehiclePlate', customer: 'destination' },
   // الفاتورة ترث عميل التسليم؛ ومراجعها (تسليم·أمر بيع) من الأرقام لا بالقلم.
@@ -343,6 +371,29 @@ export function parentApprovalProblem(parentType, parentDoc) {
   if (!parentDoc) return `الأب المرجعيّ (${parentType}) غير موجود في النظام — لا إنجاز بلا سلسلة`;
   if (!['approved', 'done'].includes(parentDoc.state)) {
     return `الأب ${parentDoc.number || parentType} غير معتمَد بعد — اعتماده أولًا قبل إنجاز هذا المستند`;
+  }
+  return null;
+}
+
+/**
+ * حارس هويّة الرحلة (CC-301): ابنٌ في سلسلة المركبة لا يخالف أباه في اللوحة
+ * أو الرحلة — الهويّة لا تنقطع في منتصف الرحلة. دالّة خالصة تُستدعى عند
+ * الإنجاز بعد جلب الأب. **الفارغ لا يحجب** (توافق المستندات القديمة التي
+ * لم تُلزَم بالحقلين): الحارس يمسك المخالفة الصريحة لا النقص.
+ */
+export function vanIdentityProblem(childDoc, parentDoc) {
+  if (!childDoc || !parentDoc) return null;
+  if (!VAN_CHAIN.includes(childDoc.type) || !VAN_CHAIN.includes(parentDoc.type)) return null;
+  const norm = (v) => String(v ?? '').trim().toUpperCase();
+  const childPlate = norm(childDoc.header?.vehiclePlate);
+  const parentPlate = norm(parentDoc.header?.vehiclePlate);
+  if (childPlate && parentPlate && childPlate !== parentPlate) {
+    return `لوحة هذا المستند «${childDoc.header?.vehiclePlate}» تخالف أباه ${parentDoc.number || parentDoc.type} «${parentDoc.header?.vehiclePlate}» — العهدة لا تنتقل بين مركبتين في منتصف رحلة.`;
+  }
+  const childTrip = norm(childDoc.header?.tripRef);
+  const parentTrip = norm(parentDoc.header?.tripRef);
+  if (childTrip && parentTrip && childTrip !== parentTrip) {
+    return `رحلة هذا المستند «${childDoc.header?.tripRef}» تخالف أباه ${parentDoc.number || parentDoc.type} «${parentDoc.header?.tripRef}» — لا تُقفل رحلةٌ بمستندات رحلةٍ أخرى.`;
   }
   return null;
 }

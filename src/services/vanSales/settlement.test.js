@@ -6,6 +6,7 @@ import {
   classifyVanMove,
   settlementKey,
   vanRemaining,
+  vsrPostProblem,
   VAN_FLOWS,
 } from './settlement.js';
 
@@ -184,4 +185,99 @@ test('المتبقّي على المركبة يُقرأ من الأرصدة وح
   );
   assert.equal(rows.length, 1);
   assert.equal(rows[0].sku, 'A');
+});
+
+// ═══ CC-301/302 — الأمانة الحيّة · نافذة الرحلة · حرّاس الإقفال ═══
+
+test('★★ أسباب الأمانة كما يكتبها الدفتر تُبوَّب أمانةً لا «صادرًا آخر»', () => {
+  // المفتاح القديم `van-consign` لم يكتبه الدفتر قطّ — القيد الفعليّ
+  // `consign-out`/`consign-return`، فكان تبويب الأمانة ميّتًا ومجموعه صفرًا أبدًا.
+  const out = classifyVanMove({ reason: 'consign-out', from: 'VAN:12-3456', to: 'CUST:C-1', qty: 5 }, 'VAN:12-3456');
+  assert.equal(out.flow, 'consign');
+  const back = classifyVanMove({ reason: 'consign-return', from: 'CUST:C-1', to: 'VAN:12-3456', qty: 2 }, 'VAN:12-3456');
+  assert.equal(back.flow, 'consignBack', 'استرجاع الأمانة تبويبٌ مستقلّ عن مرتجع المبيعات');
+});
+
+test('صافي الأمانة لدى العملاء يُحسب ويُعلَن تحذيرًا لا مانعًا', () => {
+  const s = vanSettlement({
+    plate: '12-3456',
+    moves: [
+      { id: 'm1', reason: 'van-load', from: 'MAIN', to: 'VAN:12-3456', sku: 'A', batch: '', qty: 10 },
+      { id: 'm2', reason: 'consign-out', from: 'VAN:12-3456', to: 'CUST:C-1', sku: 'A', batch: '', qty: 7 },
+      { id: 'm3', reason: 'consign-return', from: 'CUST:C-1', to: 'VAN:12-3456', sku: 'A', batch: '', qty: 3 },
+      { id: 'm4', reason: 'van-return-out', from: 'VAN:12-3456', to: 'MAIN', sku: 'A', batch: '', qty: 6 },
+    ],
+    balances: [],
+  });
+  assert.equal(s.totals.consign, 7);
+  assert.equal(s.totals.consignBack, 3);
+  assert.equal(s.totals.consignOutstanding, 4, 'إيداع − استرجاع');
+  // المركبة صفرٌ والدفتر صفر ⇒ لا مانع؛ لكنّ الأمانة تُعلَن كي لا يُقرأ
+  // الصفر اكتمالًا وبضاعتنا عند الغير. (الأمانة تعيش عبر الرحلات بتصميمها —
+  // فهي تحذيرٌ صريح لا مانع إقفال.)
+  const v = settlementVerdict({ settlement: s });
+  assert.equal(v.ok, true);
+  assert.ok(v.warnings.some((w) => /محميّة|أمانة/.test(w)), 'الأمانة الباقية تُعلَن');
+});
+
+test('معادلة العرض تستقيم: المتوقّع = بداية + كلّ الوارد − كلّ الصادر', () => {
+  const s = vanSettlement({
+    plate: '12-3456',
+    moves: [
+      { id: 'm1', reason: 'van-load', from: 'MAIN', to: 'VAN:12-3456', sku: 'A', batch: '', qty: 10 },
+      { id: 'm2', reason: 'consign-out', from: 'VAN:12-3456', to: 'CUST:C-1', sku: 'A', batch: '', qty: 4 },
+      { id: 'm3', reason: 'van-sale', from: 'VAN:12-3456', to: null, sku: 'A', batch: '', qty: 5 },
+    ],
+    balances: [],
+  });
+  const inFlows = Object.values(VAN_FLOWS).filter((f) => f.dir === 'in').map((f) => f.key);
+  const outFlows = Object.values(VAN_FLOWS).filter((f) => f.dir === 'out').map((f) => f.key);
+  const totalIn = inFlows.reduce((x, k) => x + s.totals[k], 0);
+  const totalOut = outFlows.reduce((x, k) => x + s.totals[k], 0);
+  assert.equal(s.totals.totalIn, totalIn, 'الوارد مجموع تدفّقاته كلّها');
+  assert.equal(s.totals.totalOut, totalOut, 'الصادر مجموع تدفّقاته كلّها');
+  assert.equal(s.totals.expected, s.totals.opening + totalIn - totalOut);
+});
+
+test('★★ صنفٌ هويّتُه باركودٌ وحده يدخل الجرد المعدود ولا يسقط صامتًا', () => {
+  const s = vanSettlement({
+    plate: '12-3456',
+    moves: [{ id: 'm1', reason: 'van-load', from: 'MAIN', to: 'VAN:12-3456', barcode: '629000111', batch: '', qty: 8 }],
+    balances: [{ warehouse: 'VAN:12-3456', barcode: '629000111', batch: '', qty: 8 }],
+    counted: [{ barcode: '629000111', batch: '', qty: 5 }],
+  });
+  assert.equal(s.rows.length, 1);
+  assert.equal(s.rows[0].counted, 5);
+  assert.equal(s.rows[0].variance, -3, 'العجز يُحسب — الصفر الصامت كان يقرؤه «مطابقًا»');
+});
+
+test('مستندُ رحلةٍ غير منجَز يمنع الإقفال — التسوية لا تُبنى على دفترٍ ناقص', () => {
+  const s = vanSettlement({ plate: '12-3456', moves: [], balances: [] });
+  const v = settlementVerdict({
+    settlement: s,
+    openDocuments: [{ id: 'd1', type: 'VSI', number: 'VSI-3', state: 'approved' }],
+  });
+  assert.equal(v.ok, false);
+  assert.ok(v.blockers.some((b) => /لم يُنجَز/.test(b)));
+});
+
+test('ميزان النقد مانعٌ حين يُمرَّر حكمه: تحصيلٌ لم يُودَع يمنع الإقفال', () => {
+  const s = vanSettlement({ plate: '12-3456', moves: [], balances: [] });
+  const v = settlementVerdict({
+    settlement: s,
+    cashVerdict: { ok: false, blockers: ['نقدٌ لم يُودَع بمقدار 300 — لا تُقفَل الرحلة بلا سببٍ مكتوب.'] },
+  });
+  assert.equal(v.ok, false);
+  assert.ok(v.blockers.some((b) => /نقدٌ لم يُودَع/.test(b)));
+});
+
+test('★★ حارس إنجاز التسوية: لا يُنجَز VSR ومركبتُه تحمل رصيدًا', () => {
+  const balances = [{ warehouse: 'VAN:12-3456', sku: 'A', batch: '', qty: 4 }];
+  assert.match(
+    vsrPostProblem({ type: 'VSR', header: { vehiclePlate: '12-3456' } }, balances),
+    /ما تزال تحمل 4/
+  );
+  // مركبةٌ مصفَّرة تمرّ — والحارس لا يحكم على غير VSR.
+  assert.equal(vsrPostProblem({ type: 'VSR', header: { vehiclePlate: '99-9999' } }, balances), null);
+  assert.equal(vsrPostProblem({ type: 'VSI', header: { vehiclePlate: '12-3456' } }, balances), null);
 });

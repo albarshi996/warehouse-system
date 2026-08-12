@@ -41,6 +41,9 @@ const SEP = '__';
 export const VAN_FLOWS = {
   load: { key: 'load', dir: 'in', labelAr: 'تحميل من المستودع' },
   returnIn: { key: 'returnIn', dir: 'in', labelAr: 'مرتجع من العميل' },
+  // استرجاع الأمانة تبويبٌ مستقلّ عن مرتجع المبيعات: به يُحسب صافي المحميّة
+  // الباقية لدى العملاء (إيداع − استرجاع) فلا تُقفل رحلةٌ وفارقها بلا تفسير.
+  consignBack: { key: 'consignBack', dir: 'in', labelAr: 'استرجاع أمانة' },
   otherIn: { key: 'otherIn', dir: 'in', labelAr: 'وارد آخر' },
   sale: { key: 'sale', dir: 'out', labelAr: 'مبيعات' },
   consign: { key: 'consign', dir: 'out', labelAr: 'إيداع أمانة' },
@@ -55,7 +58,11 @@ const REASON_FLOW = {
   'van-return-in': 'returnIn', // CRN — مرتجع ميدانيّ عاد إلى المركبة
   delivery: 'sale',          // POD — تسليم للعميل (الدورة القائمة)
   'van-sale': 'sale',        // VSI — بيع من المركبة
-  'van-consign': 'consign',  // إيداع بضاعةٍ محميّة لدى العميل
+  // أسباب الأمانة كما يكتبها الدفتر فعلًا (postingRules): الإيداع يخرج من
+  // المركبة إلى `CUST:`، واسترجاعُه يعود منها إليها. المفتاح القديم
+  // `van-consign` لم يكتبه الدفتر قطّ فكانت الأمانة تسقط في «صادر آخر».
+  'consign-out': 'consign',      // VCD — إيداع بضاعةٍ محميّة لدى العميل
+  'consign-return': 'consignBack', // VCR — استرجاع المحميّة إلى المركبة
   'van-return-out': 'returnOut', // VRT — إرجاع المتبقّي للمستودع
 };
 
@@ -200,6 +207,10 @@ export function vanSettlement({ plate, moves = [], opening = [], balances = [], 
     totals.counted = sum('counted');
     totals.variance = sum('variance');
   }
+  // صافي الأمانة الباقية لدى العملاء من حركات هذه النافذة: إيداعٌ − استرجاع.
+  // بضاعتنا خارج المركبة — لا تمنع الإقفال (الأمانة تعيش عبر الرحلات بتصميمها)
+  // لكنّها تُعلَن كي لا يُقرأ فارق المركبة الصفريّ اكتمالًا وبضاعتنا عند الغير.
+  totals.consignOutstanding = round(totals.consign - totals.consignBack);
 
   return {
     plate: String(plate || '').trim().toUpperCase(),
@@ -240,9 +251,17 @@ export function vanRemaining(balances, plate) {
  * والفرق المعدود ليس مانعًا بذاته — بل **يلزمه اعتماد المشرف**: العجز حقيقةٌ
  * تُوثَّق وتُنسب، لا خطأٌ يُمنع وقوعه. فمنعُ تسجيله يعني إخفاءه.
  *
+ * @param {object}   args
+ * @param {object}   args.settlement ناتج `vanSettlement`
+ * @param {boolean}  [args.supervisorApproved] اعتماد المشرف للفرق المعدود
+ * @param {Array}    [args.openDocuments] مستندات سلسلة المركبة لهذه الرحلة التي
+ *   لم تبلغ «منجَز» — مستندٌ عالق يعني حركةً وقعت في الواقع ولم تُقيَّد بعد،
+ *   فالتسوية المحسوبة ناقصةٌ بقدره ولا يُبنى إقفالٌ على دفترٍ ناقص.
+ * @param {object}   [args.cashVerdict] حكم النقد من `tripCloseVerdict` — يُمرَّر
+ *   ليصير ميزان النقد مانعًا لا نصيحة: تحصيلٌ لم يُودَع يمنع الإقفال.
  * @returns {{ok:boolean, blockers:string[], warnings:string[]}}
  */
-export function settlementVerdict({ settlement, supervisorApproved = false } = {}) {
+export function settlementVerdict({ settlement, supervisorApproved = false, openDocuments = [], cashVerdict = null } = {}) {
   const blockers = [];
   const warnings = [];
 
@@ -259,11 +278,36 @@ export function settlementVerdict({ settlement, supervisorApproved = false } = {
     );
   }
 
+  const openDocs = (openDocuments || []).filter((d) => d && d.state !== 'done');
+  if (openDocs.length) {
+    const names = openDocs.slice(0, 3).map((d) => `${d.type} ${d.number || ''}`.trim()).join(' · ');
+    blockers.push(
+      `${openDocs.length} مستندًا في الرحلة لم يُنجَز بعد (${names}${openDocs.length > 3 ? ' …' : ''}) — ` +
+        'أثره لم يبلغ الدفتر، والتسوية ناقصةٌ بقدره.'
+    );
+  }
+
+  if (cashVerdict && cashVerdict.ok === false) {
+    for (const reason of cashVerdict.blockers || []) blockers.push(reason);
+  }
+
   if (settlement.hasDrift) {
     const drifted = settlement.rows.filter((r) => Math.abs(r.drift) > 0.0001).length;
     warnings.push(
       `${drifted} بندًا يختلف فيه رصيد الدفتر عن معادلة الرحلة — ` +
         'غالبًا حركةٌ وقعت خارج نافذة الرحلة، تُراجَع قبل الاعتماد.'
+    );
+  }
+
+  // الأمانة لدى العملاء **إعلانٌ لا مانع** — عمدًا: البضاعة المحميّة تعيش عبر
+  // الرحلات بتصميمها (لذلك وُجدت مواقع `CUST:`)، ومنعُ الإقفال بها يكسر
+  // نموذج الأمانة كلّه. لكنّ إخفاءها يجعل صفرَ المركبة يُقرأ اكتمالًا
+  // وبضاعتنا عند الغير — فتُعلَن بعددها وتُتابَع في أرصدة `CUST:`.
+  const consignOut = Number(settlement.totals?.consignOutstanding) || 0;
+  if (consignOut > 0.0001) {
+    warnings.push(
+      `بضاعة محميّة لدى العملاء من هذه النافذة: ${consignOut} وحدة — ` +
+        'عهدةٌ خارج المركبة تُتابَع في أرصدة مواقع العملاء.'
     );
   }
 
@@ -275,4 +319,22 @@ export function settlementVerdict({ settlement, supervisorApproved = false } = {
   }
 
   return { ok: blockers.length === 0, blockers, warnings };
+}
+
+/**
+ * حارس إنجاز التسوية (VSR): لا يُنجَز محضرُ تسويةٍ ومركبتُه ما تزال تحمل
+ * رصيدًا — الإنجاز توثيقُ خلوّ العهدة لا تمنّيه. دالّة خالصة تُغذّى بأرصدة
+ * الدفتر الحيّة وتُستدعى من حارس الإنجاز العامّ قبل تغيير الحالة.
+ */
+export function vsrPostProblem(docData, balances) {
+  if (docData?.type !== 'VSR') return null;
+  const plate = docData?.header?.vehiclePlate;
+  if (!String(plate ?? '').trim()) return null; // مخطّط VSR يُلزم اللوحة أصلًا
+  const remaining = vanRemaining(balances, plate);
+  if (!remaining.length) return null;
+  const qty = round(remaining.reduce((s, b) => s + (Number(b?.qty) || 0), 0));
+  return (
+    `لا تُنجَز التسوية والمركبة «${plate}» ما تزال تحمل ${qty} وحدة في ${remaining.length} بندًا — ` +
+    'أرجِع المتبقّي للمستودع (VRT) أو وثّق مصيره أوّلًا.'
+  );
 }

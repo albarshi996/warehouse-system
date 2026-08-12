@@ -30,15 +30,19 @@ import {
 import { db, auth } from '../../config/firebase.js';
 import { reserveNumber } from './numbering.js';
 import { INITIAL_STATE, isEditable, isLegalTransition, canDo, TRANSITIONS } from './states.js';
-import { derivationTargets, parentApprovalProblem } from './chain.js';
+import { derivationTargets, parentApprovalProblem, vanIdentityProblem, VAN_CHAIN } from './chain.js';
 import { getSchema } from './schemas/index.js';
 import { primaryParentType } from './schemaUtils.js';
 import { dateSaveVerdict, defaultValueFor, eventFieldsOf } from './datingGuard.js';
 import { movesStock, POSTING_STATE } from '../ledger/postingRules.js';
 import { buildMoves } from '../ledger/movements.js';
 import { postDocument } from '../ledger/ledgerService.js';
-import { ledgerRuleFor } from '../ledger/partnerLedger.js';
-import { postToPartnerLedger } from '../ledger/partnerLedgerService.js';
+import { ledgerRuleFor, partyCodeOf, invoiceOutstanding, overCollectionProblems } from '../ledger/partnerLedger.js';
+import { postToPartnerLedger, fetchPartnerLedger } from '../ledger/partnerLedgerService.js';
+import { CASH_RULES } from '../field/repAccount.js';
+import { postToRepCash } from '../field/repAccountService.js';
+import { vsrPostProblem } from '../vanSales/settlement.js';
+import { fetchBalancesOnce } from '../balances/balancesService.js';
 import { allocateAndReserve, releaseReservation, releaseForPick } from '../ledger/salesService.js';
 import {
   createDocumentRelation,
@@ -235,6 +239,50 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
       const problem = parentApprovalProblem(parentType, parentDoc);
       if (problem) throw new Error(problem);
     }
+
+    // 🚚 حارس هويّة الرحلة (CC-301): مستندات سلسلة المركبة لا تخالف أباها
+    //    في اللوحة أو الرحلة — يُفحص عند الإنجاز (لحظةُ الأثر) بعد جلب الأب
+    //    من روابط السلسلة، والفارغ لا يحجب (توافق المستندات القديمة).
+    if (VAN_CHAIN.includes(data.type)) {
+      const vanParentType = VAN_CHAIN.find((t) => t !== data.type && data.links?.[t]?.id);
+      if (vanParentType) {
+        const vanParent = await getDocument(data.links[vanParentType].id);
+        const identityProblem = vanIdentityProblem({ ...data, id: docId }, vanParent);
+        if (identityProblem) throw new Error(identityProblem);
+      }
+    }
+
+    // 🧾 حارس إنجاز التسوية (CC-302): لا يُنجَز محضرُ تسوية (VSR) ومركبتُه ما
+    //    تزال تحمل رصيدًا — الإنجاز توثيقُ خلوّ العهدة لا تمنّيه. يُفحص على
+    //    أرصدة الدفتر الحيّة، وتعذُّرُ قراءتها لا يمنع (كحارس التحصيل أدناه).
+    if (data.type === 'VSR') {
+      let liveBalances = null;
+      try { liveBalances = await fetchBalancesOnce(); } catch { liveBalances = null; }
+      if (liveBalances) {
+        const vsrProblem = vsrPostProblem(data, liveBalances);
+        if (vsrProblem) throw new Error(vsrProblem);
+      }
+    }
+
+    // 💰 حارس تجاوز التحصيل (CC-302): بندُ تحصيلٍ يتجاوز المفتوحَ لفاتورته
+    //    المسمّاة لا يُنجَز إلا بسببٍ مكتوب في `overCollectionReason` (دفعة
+    //    مقدَّمة مقصودة مثلًا). يُفحص عند الإنجاز — لحظةَ قيد الذمّة — على
+    //    الدفتر المخزَّن الحيّ. تعذُّرُ القراءة لا يمنع (النظام لا يُغلق بابه
+    //    بعطل شبكة) — القاعدة النهائية تبقى للمراجعة لا للتعمية.
+    if (['RCV', 'RCP'].includes(data.type)) {
+      const partyCode = partyCodeOf(data, 'customer');
+      const named = (data.lines || []).some((l) => String(l?.invoiceRef || l?.docRef || '').trim());
+      if (partyCode && named && !String(data.header?.overCollectionReason || '').trim()) {
+        let stored = null;
+        try { stored = await fetchPartnerLedger(partyCode); } catch { stored = null; }
+        if (stored && stored.length) {
+          const problems = overCollectionProblems(data, invoiceOutstanding(stored, partyCode));
+          if (problems.length) {
+            throw new Error(`${problems.join(' · ')} — إن كان قصدًا (دفعة مقدَّمة) فاكتب السبب في حقل تجاوز التحصيل.`);
+          }
+        }
+      }
+    }
   }
 
   const patch = { state: to, updatedAt: serverTimestamp() };
@@ -293,6 +341,24 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
       await appendAudit(docId, {
         action: 'ledger-failed',
         note: `تعذّر قيد الأثر على الذمم (المستند منجَزٌ والبضاعة تحرّكت): ${err?.message || err}`,
+        profile,
+      });
+    }
+  }
+
+  // 💵 حساب المندوب النقديّ (CC-302): التحصيل يزيد جيب المندوب، والإيداع في
+  // التسوية يُفرغه — بجانب قيد الذمم لا بدلًا منه (RCV يمسّ الحسابين معًا).
+  // أفضلُ جهدٍ كالذمم: فشلُ سطر النقد يُثبَّت في التدقيق ولا يُبطل الإنجاز.
+  if (to === POSTING_STATE && CASH_RULES[data.type]) {
+    try {
+      const cashId = await postToRepCash({ ...data, id: docId, state: to }, profile);
+      if (cashId) {
+        await appendAudit(docId, { action: 'rep-cash', note: `قُيّد الأثر على نقد المندوب: ${cashId}`, profile });
+      }
+    } catch (err) {
+      await appendAudit(docId, {
+        action: 'rep-cash-failed',
+        note: `تعذّر قيد الأثر على نقد المندوب: ${err?.message || err}`,
         profile,
       });
     }

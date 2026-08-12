@@ -29,6 +29,9 @@ export function vldWarnings(doc) {
 
   if (!String(h.vehiclePlate || '').trim()) out.push('لوحة المركبة تُحدّد موقع العهدة — لا تحميل بلا لوحة');
   if (!String(h.repName || '').trim()) out.push('اسم المندوب يُحدّد المسؤول عن العهدة حتى التسوية');
+  // الرحلة مفتاح الإقفال: تحميلٌ بلا رقم رحلةٍ عهدةٌ تُفتح ولا مرجعَ يُقفلها —
+  // VRT وVSR يُلزمانه، فيُطلب هنا حيث تبدأ الدورة لا حيث يفوت أوانها.
+  if (!String(h.tripRef || '').trim()) out.push('رقم الرحلة يربط التحميل بتسويته — بلا رحلةٍ لا إقفال');
 
   const today = new Date().toISOString().slice(0, 10);
   const expired = lines.filter((l) => {
@@ -63,7 +66,7 @@ const schema = {
       fields: [
         { key: 'loadDate', label: 'تاريخ التحميل (Load Date)', kind: 'date', required: true },
         { key: 'warehouse', label: 'المستودع المصدر (Source Warehouse)', kind: 'text', required: true },
-        { key: 'tripRef', label: 'رقم الرحلة (Trip Ref.)', kind: 'text', hint: 'يربط التحميل برحلة المركبة فتُحسب تسويتها' },
+        { key: 'tripRef', label: 'رقم الرحلة (Trip Ref.)', kind: 'text', required: true, hint: 'يربط التحميل برحلة المركبة فتُحسب تسويتها — بلا رحلةٍ لا إقفال' },
         {
           key: 'whOfficer',
           label: 'أمين المخزن (WH Officer)',

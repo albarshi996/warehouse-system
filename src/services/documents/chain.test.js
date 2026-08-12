@@ -28,6 +28,9 @@ import {
   creditNoteVerdict,
   INTERNAL_PROCUREMENT_CHAIN,
   DOCREF_PARENT_TYPE,
+  VAN_CHAIN,
+  derivationTargets,
+  vanIdentityProblem,
 } from './chain.js';
 import { getSchema, GOVERNED_FORMS, readyTypes } from './schemas/index.js';
 import { primaryParentType } from './schemaUtils.js';
@@ -886,4 +889,70 @@ test('المشتريات الداخلية: الحسابات والتحذيرات
   // DLV
   assert.equal(deliveredCount([{ description: 'x', qty: 2 }, { description: '', qty: 1 }]), 1);
   assert.ok(dlvWarnings({ lines: [{ description: 'x', qty: 1, condition: 'تالف جزئي' }] }).some((x) => /تالف/.test(x)));
+});
+
+// ═══ سلسلة البيع من المركبة (CC-301) — الاشتقاق ووراثة الهويّة وحارسها ═══
+
+test('سلسلة VAN مسجّلة: التحميل يتفرّع بيعًا وإرجاعًا، والبيع نهائيّ', () => {
+  assert.deepEqual(VAN_CHAIN, ['VLD', 'VSI', 'VRT', 'VSR']);
+  assert.equal(chainFor('VLD'), VAN_CHAIN);
+  assert.deepEqual(derivationTargets('VLD'), ['VSI', 'VRT']);
+  // البيع الميدانيّ لا يُشتقّ منه شيء: الإرجاع يُشتقّ من التحميل — يُرجَع ما لم يُبَع.
+  assert.deepEqual(derivationTargets('VSI'), []);
+  assert.deepEqual(derivationTargets('VRT'), ['VSR']);
+});
+
+test('★★ اشتقاق VRT من VLD يورّث الهويّة كاملةً واللوحة لا تُعاد كتابتها', () => {
+  const vld = {
+    id: 'vld-1', type: 'VLD', number: 'VLD-7', state: 'approved',
+    header: { warehouse: 'MAIN', vehiclePlate: '12-3456', repName: 'أحمد', tripRef: 'T-9' },
+    lines: [{ sku: 'A', qty: 40, batch: 'B1', expiry: '2027-01-01', unitCost: 2 }],
+  };
+  const child = deriveDocument(vld, 'VRT');
+  assert.equal(child.type, 'VRT');
+  assert.equal(child.header.vehiclePlate, '12-3456');
+  assert.equal(child.header.repName, 'أحمد');
+  assert.equal(child.header.tripRef, 'T-9');
+  assert.equal(child.header.warehouse, 'MAIN', 'يعود إلى مستودع التحميل افتراضًا');
+  assert.equal(child.lines[0].batch, 'B1', 'التشغيلة تُورَّث فيُتتبَّع المرتجع');
+  assert.equal(child.lines[0].unitCost, 2, 'يرجع للمخزن بقيمته');
+});
+
+test('اشتقاق VSI من VLD يورّث الهويّة ولا يورّث التكلفة سعرًا', () => {
+  const vld = {
+    id: 'vld-2', type: 'VLD', number: 'VLD-8', state: 'approved',
+    header: { warehouse: 'MAIN', vehiclePlate: '12-3456', repName: 'أحمد', tripRef: 'T-9' },
+    lines: [{ sku: 'A', qty: 10, uom: 'EA', batch: 'B1', unitCost: 2 }],
+  };
+  const child = deriveDocument(vld, 'VSI');
+  assert.equal(child.header.vehiclePlate, '12-3456');
+  assert.equal(child.header.rep, 'أحمد', 'حقل VSI اسمه rep توافقًا مع القديم');
+  assert.equal(child.header.tripRef, 'T-9');
+  // `unitCost` تكلفةٌ داخلية — تسريبها سعرًا يكشفها للعميل ويغلط الفاتورة.
+  assert.equal(child.lines[0].unitPrice, undefined);
+  assert.equal(child.lines[0].unitCost, undefined);
+});
+
+test('★★ حارس هويّة الرحلة يمسك المخالفة الصريحة ولا يحجب الفارغ', () => {
+  const parent = { type: 'VLD', number: 'VLD-1', header: { vehiclePlate: '12-3456', tripRef: 'T-1' } };
+  // مخالفة لوحة
+  assert.match(
+    vanIdentityProblem({ type: 'VSI', header: { vehiclePlate: '99-9999', tripRef: 'T-1' } }, parent),
+    /لوحة/
+  );
+  // مخالفة رحلة
+  assert.match(
+    vanIdentityProblem({ type: 'VRT', header: { vehiclePlate: '12-3456', tripRef: 'T-2' } }, parent),
+    /رحلة/
+  );
+  // مطابقة (وبفارق حالة أحرف) تمرّ
+  assert.equal(
+    vanIdentityProblem({ type: 'VSI', header: { vehiclePlate: '12-3456', tripRef: 't-1' } }, parent),
+    null
+  );
+  // ★★ الفارغ لا يحجب — مستندات قديمة بلا الحقلين تمرّ، فالحارس يمسك
+  // المخالفة لا النقص. حارسٌ يمنع ما يجب أن يمرّ أسوأ من الفجوة التي يسدّها.
+  assert.equal(vanIdentityProblem({ type: 'VSI', header: {} }, parent), null);
+  // خارج سلسلة المركبة لا حكم
+  assert.equal(vanIdentityProblem({ type: 'GRN', header: { vehiclePlate: 'X' } }, parent), null);
 });
