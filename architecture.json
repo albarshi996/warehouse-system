@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 87,
-    "serviceDomains": 39,
-    "serviceFiles": 269,
-    "collections": 61,
+    "modules": 88,
+    "serviceDomains": 40,
+    "serviceFiles": 270,
+    "collections": 62,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -240,6 +240,16 @@
       "summary": "The 13 operational forms shipped under public/forms/. They are static HTML",
       "file": "src/pages/dashboard/forms.astro",
       "usesServices": []
+    },
+    {
+      "name": "general-manager-operations-briefing",
+      "route": "/dashboard/general-manager-operations-briefing",
+      "title": "المراجعة التنفيذية لسلاسل الإمداد",
+      "summary": "Supply Chain Executive Review — عرض شرائح تنفيذي كامل الشاشة.",
+      "file": "src/pages/dashboard/general-manager-operations-briefing.astro",
+      "usesServices": [
+        "briefing"
+      ]
     },
     {
       "name": "global-doc-cycles",
@@ -911,6 +921,20 @@
       "collections": [
         "balances"
       ]
+    },
+    {
+      "domain": "briefing",
+      "dir": "src/services/briefing",
+      "files": [
+        "gmReviewService.js"
+      ],
+      "fileCount": 1,
+      "testCount": 0,
+      "exports": [
+        "saveReview",
+        "subscribeReview"
+      ],
+      "collections": []
     },
     {
       "domain": "custody",
@@ -3357,6 +3381,38 @@
           {
             "actions": [
               "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "gm_review",
+        "path": "gm_review",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager()",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
               "delete"
             ],
             "condition": "false",

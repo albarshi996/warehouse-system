@@ -1,0 +1,773 @@
+---
+/**
+ * Supply Chain Executive Review — عرض شرائح تنفيذي كامل الشاشة.
+ *
+ * الشكل: 17 شريحة «من المتابعة إلى القرار» + ملاحق تفصيلية كاملة.
+ * التحرير: زر «تحرير الشروح» يجعل نصوص الشرح قابلة للتعديل من الشاشة،
+ * والتعديلات **تُزامَن مع Firestore** (`gm_review/current`) فتظهر على كل
+ * الأجهزة وتبقى بعد الاجتماع — مع نسخة محلية احتياطية للعمل بلا شبكة.
+ * الكتابة للمديرَين فقط (قاعدة gm_review) والقراءة لكل مصادَق.
+ *
+ * المصادر: BFP-SCM-PR-2026-010 · جرد 155 المصوَّر · NAS-8155-ARC ·
+ * PROJET LYBIE (الرحبة) · REQ-004/006 · الهيكل الرسمي · شاشات البوابة
+ * القائمة (كل سطر «في البوابة» يشير لدورة تعمل فعلًا).
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+
+const board = [
+  { label: 'التشغيل اليومي', state: 'green', word: 'مستقر' },
+  { label: 'البوابة التفاعلية', state: 'green', word: 'متقدمة' },
+  { label: 'مستودعات أبوهادي 155', state: 'yellow', word: 'يحتاج متابعة' },
+  { label: 'الرحبة + عقد نوفا', state: 'yellow', word: 'يحتاج متابعة' },
+  { label: 'الهيكل والتنظيم', state: 'yellow', word: 'قرارات معلقة' },
+  { label: 'ميزانية سلاسل الإمداد وسياساتها', state: 'red', word: 'يحتاج تدخل الإدارة العامة' },
+];
+const threes = {
+  wins: ['حزمة مطابقة الميزان 100% — والتحليل يُسلَّم غدًا السبت في موعده', 'جسر أودو الحي: 27 مستندًا بلا إدخال مزدوج', 'أول جرد ميداني بالهواتف ينطلق السبت'],
+  risks: ['كل شراء يمشي استثناءً — لا ميزانية معتمدة', 'الطلب الشفهي بين الإدارات ما زال يعمل', 'حدود البوابة/أودو غير محسومة'],
+  asks: ['اعتماد الميزانية والسياسات المالية الأربع', 'اعتماد نموذج مكاتب الإدارات', 'حسم النظام المصدر: البوابة أم أودو'],
+};
+const wins = [
+  { t: 'حزمة الميزان', d: 'خارطة عبور + UAT + 3 تقارير موقعة — التسليم غدًا في الموعد', tag: 'التزام خارجي' },
+  { t: 'جسر أودو الحي', d: 'كل المستندات تنعكس درفت حتى الاعتماد — عرض حي جاهز', tag: 'تكامل' },
+  { t: 'جاهزية الجرد الأول', d: 'الشاشة والقواعد والكاميرات جُهّزت هذا الأسبوع — الانطلاق السبت', tag: 'تشغيل' },
+  { t: 'منظومة القوى العاملة', d: 'لوحة العمالة + إسناد المهام + التوظيف الذكي', tag: 'تنظيم' },
+  { t: 'منظومة الحركة', d: '23 مركبة مرقمنة + رحلات Dispatch-to-POD', tag: 'أسطول' },
+  { t: 'الحوكمة المستندية', d: 'ترقيم إشاري موحد + أرشيف معتمد — لا مراسلة بلا رقم', tag: 'حوكمة' },
+];
+const projects = [
+  { name: 'البوابة التفاعلية', state: 'green', line: '65 شاشة حية تغطي الدورة كاملة', next: 'عرض حي + UAT الميزان' },
+  { name: 'التكامل مع أودو', state: 'yellow', line: 'الجسر يعمل — ينتظر حسم المصدر وإصدار الإنتاج', next: 'التحليل غدًا ثم UAT' },
+  { name: 'مستودعات 155', state: 'yellow', line: '18,500 م² · الإشغال 48% لأطراف خارجية', next: 'قرار تخصيص الفارغ' },
+  { name: 'الرحبة + نوفا', state: 'yellow', line: 'الغرف 1–19 مخصصة للكوزمتيك بلا عقد', next: 'مسودة عقد التخزين' },
+  { name: 'الجرد الميداني الأول', state: 'green', line: 'منظومة جماعية بسجل لا يُمحى — جاهزة', next: 'التنفيذ السبت' },
+  { name: 'الهيكل والتنظيم', state: 'yellow', line: '36 وظيفة و14 دورًا جاهزة على الورق والبوابة', next: 'قرار التسكين' },
+  { name: 'قطاع المطاعم', state: 'yellow', line: 'نعمل كمورد خارجي — الخطة معتمدة المنهج', next: 'دراستا المطبخ والتوصيل' },
+];
+const blockers = [
+  { t: 'لا ميزانية معتمدة', d: 'كل بند يمشي استثناءً فرديًّا — بطء وضياع قوة تفاوضية', o: 'المدير العام + المالية' },
+  { t: 'الطلب الشفهي', d: 'التزامات بلا توثيق ولا مركز تكلفة — واللوم علينا بلا دليل', o: 'الإدارة العليا' },
+  { t: 'ازدواجية البوابة/أودو', d: 'خطر إدخال الحقيقة مرتين واختلاف الأرصدة', o: 'المدير العام + المالية + IT' },
+  { t: 'المستأجرون في 155', d: 'جليانة وأركاديا وزلفة والمصرف يشغلون 52% بلا أطر عهدة', o: 'الإدارة العليا + القانونية' },
+  { t: 'أرقام 155 استرشادية', d: 'المسح الميداني عند الفريق الهندسي — تكليف قائم', o: 'الفريق الهندسي' },
+  { t: 'نوفا بلا عقد', d: 'بضاعة الغير في عهدتنا بلا تسعير ولا حدود مسؤولية', o: 'الإدارة العليا + القانونية' },
+];
+
+/* التعامل مع الإدارات — نص المالك حرفيًا + الاستناد لدورات البوابة القائمة */
+const officeRule = 'آلية العمل والطلب والتوجيه والمتابعة اليومية عند سلاسل الإمداد — والاعتماد والرفع والتدقيق عند التبعية المباشرة لكل إدارة';
+const offices = [
+  { dept: 'الإدارة المالية — مكتب المشتريات', tasks: 'تكويد الأصناف · أوامر الشراء · المتابعة مع الموردين · التخطيط التنبؤي',
+    portal: 'شاشة الأصناف (الماستر السحابي + المعلقة للمراجعة) · دورة المشتريات الداخلية IPR ← RFQ ← IPO ← PV ← DLV · بطاقة أداء الموردين الحية',
+    ours: 'أولويات الشراء اليومية ومواعيد التوريد ومتابعة التنفيذ من مدير السلاسل', theirs: 'اعتماد أوامر الشراء والصرف والتدقيق المالي من الإدارة المالية' },
+  { dept: 'إدارة الموارد البشرية — مكتب المستودعات', tasks: 'التوظيف · الترقية · العقاب · الفصل · الإجراءات والسياسات',
+    portal: 'مركز التوظيف الذكي + طلبات التوظيف من الإدارات · كتالوج 36 وظيفة بملفات تعريفية · سجل تسكين المناصب',
+    ours: 'الاحتياج والورديات وتقييم الأداء الميداني من مدير السلاسل', theirs: 'قرارات التعيين والترقية والجزاءات والسياسات من الموارد البشرية' },
+  { dept: 'إدارة تقنية المعلومات — مكتب المستودعات', tasks: 'تطوير البوابة التفاعلية · الشبكات · أودو · تسليم العهد التقنية · الهاردوير والسوفتوير',
+    portal: 'البوابة ذاتها (65 شاشة) · جسر المزامنة مع أودو · سجل العهد العينية للأجهزة · مصفوفة الصلاحيات والأدوار',
+    ours: 'أولويات التطوير والدعم الميداني وأعطال التشغيل من مدير السلاسل', theirs: 'المعايير التقنية والأمن السيبراني والاعتماد النهائي من تقنية المعلومات' },
+  { dept: 'إدارة التسويق — مكتب المستودعات', tasks: 'تنظيم الفعاليات وتوثيقها في الموقع · لوق الزي للهيكل الوظيفي · التخطيط وشكل الستيكرات داخل المستودعات',
+    portal: 'نظام إسناد المهام السحابي (تكليف موثق بمرفقات لكل فعالية) · الأرشيف الدوري لحفظ التوثيق مرقّمًا',
+    ours: 'جدولة الفعاليات بالموقع ومواصفات التنفيذ الميداني من مدير السلاسل', theirs: 'الهوية البصرية واعتماد التصاميم من إدارة التسويق' },
+  { dept: 'إدارة الاتصالات والعلاقات — مكتب المستودعات', tasks: 'حلقة الوصل المباشرة مع الإدارة العليا · توثيق التقارير · رفع الملخصات · تحديد الاجتماعات الداخلية والخارجية · CC أساسي في كل مراسلة داخلية',
+    portal: 'الترقيم الإشاري BFP-SCM (لا يُعتد بمراسلة غير مرقمة) · محاضر الاجتماعات الرسمية · الأرشيف الدوري كمصدر أول معتمد',
+    ours: 'أجندة الاجتماعات والمراسلات التشغيلية اليومية من مدير السلاسل', theirs: 'قناة الرفع الرسمي وبروتوكول المراسلات من الاتصالات والعلاقات' },
+  { dept: 'إدارة المبيعات — قطاع التوزيع وتنسيق العمليات', tasks: 'نظام مبيعات كامل بالبوابة وفق اقتراح شركة الميزان (REQ-004)',
+    portal: 'دورة 9 مستندات: SO ← PICK ← PACK ← DN ← GP ← POD ← INV ← RET ← CN — بحجز المخزون (المتاح = الرصيد − المحجوز) وحراس الاعتماد',
+    ours: 'التجهيز والشحن والتسليم وحجز المخزون عند سلاسل الإمداد', theirs: 'أمر البيع والتسعير والائتمان والفوترة من المبيعات والمالية' },
+];
+
+const decisions = [
+  ['budget', 'اعتماد إطار ميزانية سلاسل الإمداد', 'ميزانية بسقوف تفويض + السياسات الأربع: تحميل تكلفة النقل (بيع/نقل/صرف أصول) · مصاريف التشغيل (إعاشة/مكافآت/طوارئ/استثنائي) · مراقبة تكاليف الوارد · مراقبة تكاليف الصادر', 'المدير العام + المالية', 'المشتريات تتحول من استثناءات إلى دورة محكومة بانحراف مقاس شهريًا', 'يستمر الشراء الفردي — وتبقى تكلفة التشغيل الحقيقية مجهولة'],
+  ['offices', 'اعتماد نموذج مكاتب الإدارات', officeRule + ' (التفصيل بالشريحة 9 والملحق)', 'الإدارة العليا', 'وضوح مساءلة كامل — وينتهي تعارض الولاءات', 'موظف بتوجيهين — وقرارات تتعطل بين إدارتين'],
+  ['source', 'حسم النظام المصدر (REQ-002)', 'البوابة للالتقاط الميداني والرقابة والدليل — أودو للقيد المالي والرصيد النهائي', 'المدير العام + المالية + IT', 'UAT الميزان ينطلق على أساس ثابت — ولا إدخال مزدوج', 'كل يوم تأخير يراكم بيانات في نظامين — والتسوية لاحقًا أغلى'],
+  ['s155', 'اعتماد نطاق تشغيل 155', 'تخصيص الفارغ E2/E3/E5/E6 (7,700 م²) + حصر التزامات المستأجرين وخطة الإخلاء/التقنين', 'المدير العام', '42% من الموقع يدخل الخدمة بخطة — والمشغول يصير عهدة تُحاسب', 'أكبر أصل تخزيني: نصفه معطل ونصفه مشغول بلا عوائد'],
+  ['nova', 'اعتماد إطار عقد نوفا — الرحبة', 'عقد تخزين للغرف 1–19 (كوزمتيك) بتسعير وتأمين وحدود مسؤولية وفوترة شهرية عبر البوابة', 'الإدارة العليا + القانونية', 'أول إيراد تخزين للغير بدورة موثقة — نموذج يتكرر', 'بضاعة الغير في عهدتنا بلا عقد = مخاطرة قانونية بلا مقابل'],
+  ['sectors', 'اعتماد أدوار سلاسل الإمداد مع القطاعات', 'المطاعم: مورد خارجي بتوريد مزدوج (REQ-006) · الترفيه: «لا مستند — لا حركة» · برندات/مولات/تجزئة: جلسات نطاق تُجدول', 'المدير العام + مديرو القطاعات', 'كل قطاع يعرف ماذا يطلب وكيف — والتوسع على قضبان موحدة', 'كل قطاع يخترع طريقته — والطلب الشفهي يعود من الباب الخلفي'],
+];
+const followups = [
+  ['تسليم التحليل التفصيلي لشركة الميزان', 'مدير السلاسل والإمداد', '2026-08-08'],
+  ['تنفيذ الجرد الميداني الأول وتقرير الفروقات', 'مشرف المخازن + الفريق', '2026-08-08'],
+  ['تعميم سياسة مكاتب الإدارات المعتمدة', 'الاتصالات والعلاقات', ''],
+  ['مسودة عقد تخزين نوفا للمراجعة', 'القانونية + السلاسل', ''],
+  ['ورشة حسم البوابة/أودو مع المالية وIT', 'مدير السلاسل + IT', ''],
+  ['صيغة اعتماد الميزانية والسياسات الأربع', 'المالية', ''],
+];
+const warehouses = [
+  { code: 'E1', area: 2200, used: 100, stock: 'آلات ومعدات مناولة', party: 'المنطقة الحرة جليانة', state: 'مشغول' },
+  { code: 'E2', area: 1000, used: 0, stock: 'فارغ', party: '—', state: 'جاهز للتخصيص' },
+  { code: 'E3', area: 1000, used: 0, stock: 'فارغ', party: '—', state: 'جاهز للتخصيص' },
+  { code: 'E4', area: 1000, used: 90, stock: 'منظومة التبريد', party: 'شركة أركاديا', state: 'مشغول جزئيًا' },
+  { code: 'E5', area: 3500, used: 0, stock: 'فارغ — قيد التجهيز', party: 'شركة عبر العالم (تجهيز)', state: 'قيد التجهيز' },
+  { code: 'E6', area: 2200, used: 0, stock: 'فارغ', party: '—', state: 'جاهز للتخصيص' },
+  { code: 'E7', area: 2200, used: 90, stock: 'غلايات وآلات تعبئة', party: 'شركة زلفة', state: 'مشغول جزئيًا' },
+  { code: 'E8', area: 2200, used: 100, stock: 'آلات ومعدات مناولة', party: 'المنطقة الحرة جليانة', state: 'مشغول' },
+  { code: 'E9', area: 2200, used: 80, stock: 'يوريا + آلات مناولة', party: 'المنطقة الحرة جليانة', state: 'مشغول جزئيًا' },
+  { code: 'E10', area: 1000, used: 70, stock: 'أرشيف ورقي + آلات ATM', party: 'مصرف المتوسط', state: 'مشغول جزئيًا' },
+];
+const totalArea = warehouses.reduce((s, w) => s + w.area, 0);
+const weightedUsed = Math.round(warehouses.reduce((s, w) => s + w.area * w.used, 0) / totalArea);
+const emptyArea = warehouses.filter((w) => w.used === 0).reduce((s, w) => s + w.area, 0);
+const rahbaRooms = Array.from({ length: 19 }, (_, i) => i + 1);
+
+/* وظائف سلاسل الإمداد في الشركة القابضة — دورنا ودورة كل وظيفة (ملحق) */
+const functions_ = [
+  { fn: 'سياسة ميزانية سلاسل الإمداد', role: 'إعداد الموازنة التشغيلية والرأسمالية ومراقبة تنفيذها', cycle: 'مشروع موازنة ← اعتماد المالية والمدير العام ← صرف بمركز تكلفة ← تقرير انحراف شهري', state: 'red', label: 'تحتاج اعتمادًا اليوم' },
+  { fn: 'مراقبة تكاليف المنتجات الواردة', role: 'تكلفة الوصول الفعلية: سعر + شحن + جمارك + مناولة (Landed Cost)', cycle: 'PO ← GRN ← فاتورة المورد ← مطابقة ثلاثية ← قيد التكلفة', state: 'yellow', label: 'المطابقة قائمة — الLanded Cost يُبنى مع أودو' },
+  { fn: 'مراقبة تكاليف المنتجات الصادرة', role: 'كلفة تجهيز وشحن كل أمر حتى إثبات التسليم', cycle: 'SO ← PICK ← PACK ← DN ← POD ← INV (دورة REQ-004)', state: 'yellow', label: 'الدورة مصممة — تفعيلها بالقرار 6' },
+  { fn: 'سياسة تحميل تكلفة النقل', role: 'توزيع كلفة كل رحلة على وجهتها: بيع أو نقل داخلي أو صرف أصول', cycle: 'رحلة TRIP ← قيود وقود وصيانة ← تحميل على المستند ← تقرير كلفة', state: 'red', label: 'سياسة تحتاج اعتمادًا' },
+  { fn: 'سياسة مصاريف التشغيل', role: 'إعاشة · مكافآت · طوارئ · احتياجات استثنائية — بسقوف وتفويضات', cycle: 'طلب موثق ← اعتماد حسب السقف ← صرف خزينة ← تسوية بمستند', state: 'red', label: 'تحتاج اعتمادًا' },
+  { fn: 'إدارة الموردين وعمليات الشراء', role: 'تسجيل الموردين وتقييمهم وإدارة دورة الشراء كاملة', cycle: 'PR ← RFQ (3 عروض) ← PO ← GRN/QC ← تقييم أداء', state: 'green', label: 'قائمة وتعمل بالبوابة' },
+  { fn: 'تقليل التكاليف وزيادة الكفاءة', role: 'مؤشرات الدوران والإشغال وكلفة الأمر — ومبادرات مقاسة', cycle: 'لوحة KPIs ← مراجعة شهرية ← مبادرة بمالك وموعد ← قياس الأثر', state: 'yellow', label: 'لوحة KPIs قائمة — المنهجية تحتاج تثبيتًا' },
+  { fn: 'التخطيط التنبؤي وإدارة الطلب', role: 'توقعات التوريد مع المبيعات والقطاعات لكل صنف وفرع', cycle: 'توقع أسبوعي ← خطة توريد ← أوامر مجدولة ← قياس دقة التوقع', state: 'yellow', label: 'يبدأ مع مكتب المشتريات المعتمد' },
+];
+
+const catalog = [
+  { id: 'vehicles', title: 'المركبات', hint: 'تُدار عبر منظومة الحركة القائمة (23 مركبة مجرودة)', items: [
+    { name: 'شاحنة توزيع 3.5 طن بصندوق مغلق', qty: 2, unit: 'مركبة', priority: 'عال', note: 'خط التوزيع اليومي — تدخل دورة الرحلات فور الاستلام' },
+    { name: 'فان مبرد للتوريد الغذائي', qty: 2, unit: 'مركبة', priority: 'حرج', note: 'شرط خدمة قطاع المطاعم كمورد خارجي — بتسجيل حرارة أثناء النقل' },
+    { name: 'رافعة شوكية كهربائية 2.5 طن', qty: 3, unit: 'رافعة', priority: 'عال', note: 'واحدة لكل موقع نشط — بعد اعتماد تخصيص 155' },
+    { name: 'Pallet Jack يدوي 2.5 طن', qty: 6, unit: 'وحدة', priority: 'متوسط', note: 'مناولة داخلية للاستلام والفرز والصرف' },
+    { name: 'سيارة إشراف وتفتيش مواقع', qty: 1, unit: 'مركبة', priority: 'متوسط', note: 'جولات المشرف بين 155 والرحبة' },
+  ]},
+  { id: 'equipment', title: 'المعدات التشغيلية', hint: 'كل جهاز يدخل سجل الأصول والعهد فور الاستلام', items: [
+    { name: 'هواتف/ماسحات ميدانية مقواة', qty: 8, unit: 'جهاز', priority: 'حرج', note: 'تشغيل شاشات الجرد والاستلام والصرف — أندرويد أولوية بحافظات صدمات' },
+    { name: 'طابعات ملصقات حرارية', qty: 4, unit: 'طابعة', priority: 'عال', note: 'ملصقات مواقع A-05-R-02 وباليهات ودفعات وصلاحية' },
+    { name: 'ميزان أرضي 2×2 م', qty: 2, unit: 'ميزان', priority: 'عال', note: 'الاستلام والصرف بدقة ±500 غ وربط القراءة بالمستند' },
+    { name: 'ميزان منصة محمول', qty: 3, unit: 'ميزان', priority: 'متوسط', note: 'وزن العينات والطرود في الفرز' },
+    { name: 'شاشات متابعة للمشرفين', qty: 3, unit: 'شاشة', priority: 'متوسط', note: 'عرض لوحات البوابة الحية في صالة العمليات والبوابة' },
+    { name: 'عربات نقل وسلالم آمنة', qty: 1, unit: 'حزمة', priority: 'متوسط', note: 'عربات درج + سلالم منصة بحواجز للمستويات العلوية' },
+  ]},
+  { id: 'storage', title: 'احتياجات التخزين', hint: 'مستهلكات دورية — تُطلب بدورة الشراء الداخلية', items: [
+    { name: 'باليتات بلاستيكية 1200×1000', qty: 500, unit: 'باليتة', priority: 'عال', note: 'قابلة للغسيل — شرط مناطق الغذاء والكوزمتيك (نوفا)' },
+    { name: 'باليتات خشبية معالجة ISPM-15', qty: 300, unit: 'باليتة', priority: 'متوسط', note: 'للمخزون الجاف العام' },
+    { name: 'صناديق تعشيش مقسمة', qty: 200, unit: 'صندوق', priority: 'متوسط', note: 'الأصناف الصغيرة وقطع الغيار' },
+    { name: 'ملصقات مواقع + بطاقات Bin Card', qty: 1, unit: 'حزمة سنوية', priority: 'عال', note: 'ترقيم المواقع كاملًا قبل الجرد القادم' },
+    { name: 'أفلام Stretch وأربطة', qty: 1, unit: 'حزمة شهرية', priority: 'عال', note: 'تثبيت الباليهات — استهلاك يُراقب بمؤشر' },
+    { name: 'أقفال وأختام ترقيم للغرف', qty: 40, unit: 'قفل/ختم', priority: 'عال', note: 'غرف الرحبة 1–19 (عهدة نوفا) + أبواب 155' },
+  ]},
+  { id: 'dispatch', title: 'احتياجات الصرف والتسليم', hint: 'كل صرف يمر بالدورة: PICK ← PACK ← DN ← GP ← POD', items: [
+    { name: 'كراتين شحن بمقاسات معتمدة', qty: 1, unit: 'حزمة شهرية', priority: 'عال', note: '3 مقاسات موحدة بشعار الشركة (تنسيق التسويق)' },
+    { name: 'أشرطة معلمة + أكياس', qty: 1, unit: 'حزمة شهرية', priority: 'متوسط', note: 'شريط بشعار يكشف العبث' },
+    { name: 'أختام تشغيلية (استُلم/فُحص/خرج)', qty: 12, unit: 'ختم', priority: 'متوسط', note: 'لكل نقطة عمل — بسجل عهدة أختام' },
+    { name: 'حافظات مستندات للسائقين', qty: 10, unit: 'حافظة', priority: 'منخفض', note: 'نسخ DN/GP الاحتياطية حتى اكتمال POD الرقمي' },
+  ]},
+  { id: 'roles', title: 'احتياجات الأدوار الوظيفية', hint: 'لكل دور عدة قياسية تُسلَّم عهدةً — الزي بلوق موحد (تنسيق التسويق)', items: [
+    { name: 'عدة أمين المخزن', qty: 4, unit: 'عدة/موظف', priority: 'عال', note: 'زي + حذاء سلامة + سترة عاكسة + قفازات + جهاز ماسح + دفتر عهدة' },
+    { name: 'عدة مفتش الجودة', qty: 2, unit: 'عدة/موظف', priority: 'عال', note: 'زي + جهاز + حرارة IR + مجس اختراق + أختام QC + كاميرا توثيق' },
+    { name: 'عدة ضابط البوابة', qty: 2, unit: 'عدة/موظف', priority: 'عال', note: 'زي + جهاز + كشاف + مرآة فحص أسفل المركبة + سجل بوابة' },
+    { name: 'عدة مشرف المناولة والفرق', qty: 1, unit: 'حزمة فريق', priority: 'عال', note: 'سترات مرقمة + قفازات وأحزمة ظهر + خوذ لمناطق الرفوف' },
+    { name: 'عدة دور الحركة (السائقين)', qty: 6, unit: 'عدة/سائق', priority: 'متوسط', note: 'زي + حافظة + Fleet Card + هاتف بتطبيق POD' },
+    { name: 'عدة مراقب المخزون', qty: 2, unit: 'عدة/موظف', priority: 'متوسط', note: 'جهاز جرد + شارة دخول شامل + دفاتر عد أعمى' },
+  ]},
+];
+const catalogItems = catalog.flatMap((section) => section.items.map((item) => ({ ...item, section: section.title })));
+
+const sectors = [
+  { name: 'المطاعم والمقاهي', state: 'green', role: 'نعمل كمورد خارجي — توريد مزدوج ودورة غذائية كاملة (REQ-006) لمشاريع Playtime وDistrict وBusiness District' },
+  { name: 'مدينة الترفيه', state: 'green', role: 'مبدأ البوابة نفسه: لا مستند — لا حركة (وفق الاجتماع مع مدير القطاع)' },
+  { name: 'البرندات', state: 'gray', role: 'لم يُناقش — يُجدول اجتماع نطاق' },
+  { name: 'المولات', state: 'gray', role: 'لم يُناقش — يُجدول اجتماع نطاق' },
+  { name: 'البيع بالتجزئة', state: 'gray', role: 'لم يُناقش — وسيعتمد على دورة REQ-004' },
+];
+const slideCount = 11 + decisions.length; // 17 شريحة
+---
+
+<DashboardLayout title="المراجعة التنفيذية لسلاسل الإمداد" light>
+  <main class="deck-root" dir="rtl">
+
+    <section id="deckMode">
+      <!-- 1: الغلاف -->
+      <article class="slide s-cover is-current" data-slide>
+        <p class="eyebrow">إدارة السلاسل والإمداد والمخازن · BFP-SCM-PR-2026-010</p>
+        <h1>Supply Chain<br/>Executive Review</h1>
+        <h2>المراجعة التنفيذية لسلاسل الإمداد</h2>
+        <div class="thread"><span>الواقع الحالي</span><i></i><span>ما تم إنجازه</span><i></i><span>التحديات</span><i></i><span>القرارات المطلوبة</span><i></i><span>الخطوة القادمة</span></div>
+        <p class="motto" data-edit="motto">«من المتابعة إلى القرار»</p>
+      </article>
+
+      <!-- 2: لوحة المدير العام -->
+      <article class="slide" data-slide>
+        <header class="slide-head"><span>لوحة المدير العام</span><h2>الحالة العامة لإدارة سلاسل الإمداد</h2></header>
+        <div class="board">
+          {board.map((row, i) => (
+            <div class={`board-row st-${row.state}`}><i class="dot"></i><b>{row.label}</b><span data-edit={`board-${i}`}>{row.word}</span></div>
+          ))}
+        </div>
+        <p class="talk" data-edit="talk-board">شرح المتحدث: افتتح بدقيقة واحدة — أخضران يعملان، ثلاثة صفراء تنتظر قراركم، وأحمر واحد هو موضوع اليوم.</p>
+      </article>
+
+      <!-- 3: 3×3 -->
+      <article class="slide" data-slide>
+        <header class="slide-head"><span>في ثلاث جمل لكل عمود</span><h2>إنجازات · تحديات · قرارات</h2></header>
+        <div class="threes">
+          <div class="col c-green"><h3>3 إنجازات</h3><ol>{threes.wins.map((x, i) => <li data-edit={`t-win-${i}`}>{x}</li>)}</ol></div>
+          <div class="col c-yellow"><h3>3 تحديات</h3><ol>{threes.risks.map((x, i) => <li data-edit={`t-risk-${i}`}>{x}</li>)}</ol></div>
+          <div class="col c-red"><h3>3 قرارات مطلوبة</h3><ol>{threes.asks.map((x, i) => <li data-edit={`t-ask-${i}`}>{x}</li>)}</ol></div>
+        </div>
+        <p class="talk" data-edit="talk-threes">شرح المتحدث: هذه الشريحة تختصر الاجتماع كله — إن ضاق الوقت فهي وشرائح القرارات تكفي.</p>
+      </article>
+
+      <!-- 4: ماذا أنجزنا -->
+      <article class="slide" data-slide>
+        <header class="slide-head"><span>المحطة 2 · منذ اجتماع المالية 02.08</span><h2>ماذا أنجزنا؟</h2></header>
+        <div class="wins">
+          {wins.map((w, i) => (<div class="win"><b>{String(i + 1).padStart(2, '0')}</b><div><h3>{w.t}</h3><p data-edit={`win-${i}`}>{w.d}</p></div><span>{w.tag}</span></div>))}
+        </div>
+        <p class="talk" data-edit="talk-wins">شرح المتحدث: كل إنجاز له دليل حي بالبوابة — يمكن فتح أي شاشة أثناء العرض.</p>
+      </article>
+
+      <!-- 5: المشاريع المفتوحة -->
+      <article class="slide" data-slide>
+        <header class="slide-head"><span>المحطة 3 · حالة كل ملف</span><h2>المشاريع المفتوحة</h2></header>
+        <div class="projects">
+          {projects.map((p, i) => (<div class={`proj st-${p.state}`}><i class="dot"></i><b>{p.name}</b><p data-edit={`proj-${i}`}>{p.line}</p><span>التالي: {p.next}</span></div>))}
+        </div>
+      </article>
+
+      <!-- 6: موقع 155 -->
+      <article class="slide" data-slide>
+        <header class="slide-head"><span>المواقع · جرد مصوَّر رسمي</span><h2>موقع أبوهادي 155</h2></header>
+        <div class="site-slide">
+          <svg viewBox="0 0 640 258" role="img" aria-label="مخطط توضيحي لمخازن 155">
+            <text x="632" y="16" font-size="10" fill="#8a93a6" text-anchor="end">مخطط توضيحي — المرجع NAS-8155-ARC</text>
+            {warehouses.slice(0, 5).map((wh, i) => { const w = 24 + wh.area / 34; const xs = [8, 112, 172, 252, 372]; return (
+              <g><rect x={xs[i]} y="24" width={w} height="92" rx="6" fill={wh.used === 0 ? '#1e3a2f' : wh.used === 100 ? '#3a1e24' : '#3a321e'} stroke={wh.used === 0 ? '#48b184' : wh.used === 100 ? '#d06a7c' : '#cfa14e'} stroke-width="1.6"/>
+              <text x={xs[i] + w / 2} y="60" font-size="17" font-weight="800" text-anchor="middle" fill="#fff">{wh.code}</text>
+              <text x={xs[i] + w / 2} y="82" font-size="10" text-anchor="middle" fill="#aeb6c6">{wh.area.toLocaleString('en-US')} م² · {wh.used}%</text></g>
+            ); })}
+            {warehouses.slice(5).map((wh, i) => { const w = 24 + wh.area / 34; const xs = [8, 106, 204, 302, 400]; return (
+              <g><rect x={xs[i]} y="130" width={w} height="92" rx="6" fill={wh.used === 0 ? '#1e3a2f' : wh.used === 100 ? '#3a1e24' : '#3a321e'} stroke={wh.used === 0 ? '#48b184' : wh.used === 100 ? '#d06a7c' : '#cfa14e'} stroke-width="1.6"/>
+              <text x={xs[i] + w / 2} y="166" font-size="17" font-weight="800" text-anchor="middle" fill="#fff">{wh.code}</text>
+              <text x={xs[i] + w / 2} y="188" font-size="10" text-anchor="middle" fill="#aeb6c6">{wh.area.toLocaleString('en-US')} م² · {wh.used}%</text></g>
+            ); })}
+            <rect x="480" y="130" width="152" height="92" rx="6" fill="#1e2f3a" stroke="#5f9cb4" stroke-width="1.6"/>
+            <text x="556" y="166" font-size="13" font-weight="800" text-anchor="middle" fill="#fff">كتلة التبريد</text>
+            <text x="556" y="188" font-size="10" text-anchor="middle" fill="#aeb6c6">12 غرفة · تُثبَّت بالمسح</text>
+            <text x="8" y="248" font-size="10" fill="#8a93a6">أخضر: فارغ جاهز · ذهبي: مشغول جزئيًا · أحمر: مشغول بالكامل</text>
+          </svg>
+          <div class="big-facts">
+            <div><b>{totalArea.toLocaleString('en-US')}</b><span>م² مخازن جافة (10 مخازن)</span></div>
+            <div><b>{weightedUsed}%</b><span data-edit="f155-used">إشغال مرجّح — كله لأطراف خارجية</span></div>
+            <div><b>{emptyArea.toLocaleString('en-US')}</b><span data-edit="f155-empty">م² فارغة تنتظر قرار التخصيص</span></div>
+          </div>
+        </div>
+        <p class="talk" data-edit="talk-155">شرح المتحدث: تفاصيل كل مخزن (المخزون والجهة الشاغلة) في الملحق — والصور المعمارية الكاملة مرفقة بملف الاجتماع.</p>
+      </article>
+
+      <!-- 7: الرحبة -->
+      <article class="slide" data-slide>
+        <header class="slide-head"><span>المواقع · المرجع PROJET LYBIE</span><h2>مستودعات الرحبة — عقد نوفا</h2></header>
+        <div class="site-slide">
+          <svg viewBox="0 0 640 258" role="img" aria-label="مخطط توضيحي للرحبة">
+            <rect x="8" y="20" width="624" height="86" rx="6" fill="#232f45" stroke="#7f8ba5" stroke-width="1.6"/>
+            <text x="320" y="56" font-size="16" font-weight="800" text-anchor="middle" fill="#fff">الهنقر الرئيسي 24 × 80 م (≈ 1,920 م²)</text>
+            <text x="320" y="80" font-size="11" text-anchor="middle" fill="#aeb6c6">تشوين عام ومناولة — مخطط الأساسات 24×80m Hangar</text>
+            <text x="12" y="132" font-size="12" font-weight="800" fill="#e7d5ae">غرف التخزين 1–19 — عهدة شركة نوفا (كوزمتيك)</text>
+            {rahbaRooms.map((n, i) => (
+              <g><rect x={8 + (i % 10) * 63} y={142 + Math.floor(i / 10) * 54} width="55" height="46" rx="5" fill="#33273b" stroke="#a98cb8" stroke-width="1.4"/>
+              <text x={8 + (i % 10) * 63 + 27.5} y={142 + Math.floor(i / 10) * 54 + 29} font-size="14" font-weight="800" text-anchor="middle" fill="#fff">{n}</text></g>
+            ))}
+          </svg>
+          <div class="big-facts">
+            <div><b>19</b><span data-edit="frb-1">غرفة مخصصة لنوفا — منتجات الكوزمتيك</span></div>
+            <div><b>0</b><span data-edit="frb-2">عقد موقّع حتى الآن — موضوع القرار 5</span></div>
+            <div><b>شهرية</b><span data-edit="frb-3">دورة فوترة مقترحة عبر البوابة + أقفال وأختام لكل غرفة</span></div>
+          </div>
+        </div>
+        <p class="talk" data-edit="talk-rahba">شرح المتحدث: الكوزمتيك يحتاج ضبط حرارة ورطوبة وتهوية — تدخل في اشتراطات العقد الفنية.</p>
+      </article>
+
+      <!-- 8: أين المشكلة -->
+      <article class="slide" data-slide>
+        <header class="slide-head"><span>المحطة 4 · بلا تجميل</span><h2>أين المشكلة؟</h2></header>
+        <div class="blockers">
+          {blockers.map((b, i) => (<div class="blocker"><b>{String(i + 1).padStart(2, '0')}</b><div><h3>{b.t}</h3><p data-edit={`blk-${i}`}>{b.d}</p></div><span>{b.o}</span></div>))}
+        </div>
+      </article>
+
+      <!-- 9: التعامل مع الإدارات -->
+      <article class="slide" data-slide>
+        <header class="slide-head"><span>المحطة 5-أ · نموذج المكاتب داخل المستودعات</span><h2>التعامل مع الإدارات</h2></header>
+        <p class="rule-line" data-edit="office-rule">{officeRule}</p>
+        <div class="offices">
+          {offices.map((o, i) => (
+            <div class="office-row"><b>{o.dept}</b><p data-edit={`off-${i}`}>{o.tasks}</p><span data-edit={`offp-${i}`}>في البوابة: {o.portal}</span></div>
+          ))}
+        </div>
+        <p class="talk" data-edit="talk-offices">شرح المتحدث: كل سطر «في البوابة» دورة تعمل فعلًا اليوم — لسنا نقترح نظريًا. تفصيل عندنا/عند التبعية في الملحق.</p>
+      </article>
+
+      <!-- 10-15: شرائح القرارات -->
+      {decisions.map(([id, title, scope, owner, ifYes, ifLate], index) => (
+        <article class="slide s-decision" data-slide data-decision={id}>
+          <header class="slide-head"><span>قرار المدير العام · {String(index + 1)} من {decisions.length}</span><h2>{title}</h2></header>
+          <p class="d-scope" data-edit={`d-scope-${id}`}>{scope}</p>
+          <div class="impact-pair">
+            <div class="if-yes"><b>الأثر عند الاعتماد</b><p data-edit={`d-yes-${id}`}>{ifYes}</p></div>
+            <div class="if-late"><b>الأثر عند التأخير</b><p data-edit={`d-late-${id}`}>{ifLate}</p></div>
+          </div>
+          <footer class="d-foot"><small>جهة الحسم: {owner}</small>
+            <label class="no-print">موقف الاجتماع
+              <select data-decision-state={id}><option value="pending">ينتظر القرار</option><option value="approved">معتمد</option><option value="conditional">معتمد بشروط</option><option value="deferred">مؤجل</option></select>
+            </label>
+          </footer>
+        </article>
+      ))}
+
+      <!-- 16: ما بعد الاجتماع -->
+      <article class="slide" data-slide>
+        <header class="slide-head"><span>المحطة 6 · ضمان التنفيذ</span><h2>ماذا سيحدث بعد الاجتماع؟</h2></header>
+        <table class="after"><thead><tr><th>#</th><th>الإجراء</th><th>المسؤول</th><th>التاريخ</th></tr></thead><tbody>
+          {followups.map(([action, owner, due], i) => (
+            <tr><td>{String(i + 1).padStart(2, '0')}</td>
+            <td><input data-fu-action={i} type="text" value={action}></td>
+            <td><input data-fu-owner={i} type="text" value={owner}></td>
+            <td><input data-fu-due={i} type="date" value={due}></td></tr>
+          ))}
+        </tbody></table>
+      </article>
+
+      <!-- 17: الخاتمة -->
+      <article class="slide s-cover" data-slide>
+        <p class="eyebrow">الخلاصة</p>
+        <h2 class="closing-line">هذا وضعنا. هذه نتائجنا.<br/>هذه معوقاتنا — <b id="decidedCount">و0 من 6</b> قرارات حُسمت.</h2>
+        <p class="motto" data-edit="closing">الخطوة القادمة تبدأ بتوقيعكم — والتفاصيل كاملة في الملاحق والطباعة.</p>
+        <div class="thread"><span>شكرًا لوقتكم</span></div>
+      </article>
+
+      <div class="deck-chrome no-print">
+        <div class="progress"><i id="progressBar"></i></div>
+        <div class="controls">
+          <button type="button" id="prevBtn" aria-label="الشريحة السابقة">‹ السابقة</button>
+          <span id="counter">1 / {slideCount}</span>
+          <button type="button" id="nextBtn" aria-label="الشريحة التالية">التالية ›</button>
+          <span class="sep"></span>
+          <span id="syncChip" class="sync-chip">جارٍ الاتصال…</span>
+          <button type="button" id="editBtn">تحرير الشروح</button>
+          <button type="button" id="annexBtn">الملاحق التفصيلية</button>
+          <button type="button" id="printBtn">طباعة</button>
+          <button type="button" id="exportBtn">تصدير المحضر</button>
+          <button type="button" id="fsBtn">ملء الشاشة</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ الملاحق التفصيلية ═══ -->
+    <section id="annexMode" hidden>
+      <div class="annex-bar no-print"><button type="button" id="backToDeck">‹ العودة للعرض</button><h2>الملاحق التفصيلية</h2><b id="grandTotal">0 د.ل</b></div>
+
+      <div class="annex-block">
+        <h3>ملحق أ — كتالوج الاحتياجات التشغيلي</h3>
+        <p class="annex-note">البنود المعمارية والهندسية خارج الكتالوج عمدًا — مطلوبة من الفريق الهندسي بتكليف قائم. الأسعار حقول قرار تُملأ في الاجتماع <b>وتُزامَن مع قاعدة البيانات</b> فتبقى بعد الاجتماع.</p>
+        {catalog.map((section) => (
+          <details class="proc-section" open>
+            <summary><h4>{section.title}</h4><small>{section.hint}</small><i data-sec-total={section.id}>0 د.ل</i></summary>
+            <div class="table-wrap"><table class="purchase-table"><thead><tr><th>البند</th><th>البيان التشغيلي</th><th>الكمية</th><th>الأولوية</th><th>تقدير الوحدة</th><th>الإجمالي</th><th>الموقف</th></tr></thead><tbody>
+              {section.items.map((item) => { const index = catalogItems.findIndex((x) => x.section === section.title && x.name === item.name); return (
+                <tr>
+                  <td class="item-cell"><b>{item.name}</b></td>
+                  <td class="note-cell">{item.note}</td>
+                  <td><b>{Number(item.qty).toLocaleString('en-US')}</b><small>{item.unit}</small></td>
+                  <td><span class={`priority ${item.priority === 'حرج' ? 'critical' : ''}`}>{item.priority}</span></td>
+                  <td><input class="cost-input no-print" data-cost={index} type="number" min="0" step="0.01" placeholder="0"><span class="print-only" data-cost-print={index}>0</span></td>
+                  <td><strong data-line-total={index}>0</strong></td>
+                  <td><select class="status-input no-print" data-status={index}><option value="unpriced">غير مسعّر</option><option value="rfq">طلب عروض</option><option value="quoted">عروض مستلمة</option><option value="approved">معتمد</option><option value="ordered">تم الطلب</option></select><span class="print-only" data-status-print={index}>غير مسعّر</span></td>
+                </tr>
+              ); })}
+            </tbody></table></div>
+          </details>
+        ))}
+      </div>
+
+      <div class="annex-block">
+        <h3>ملحق ب — التعامل مع الإدارات: النموذج كاملًا مستندًا إلى البوابة (موضوع القرار 2)</h3>
+        <p class="annex-note"><b>القاعدة الحاكمة:</b> {officeRule}. كل بطاقة تبين مهام المكتب، وأين تعيش دورته <b>في البوابة فعلًا اليوم</b>، وما الذي عندنا وما الذي عند التبعية.</p>
+        <div class="office-cards">
+          {offices.map((o) => (
+            <article>
+              <h4>{o.dept}</h4>
+              <dl>
+                <div><dt>مهام المكتب</dt><dd>{o.tasks}</dd></div>
+                <div><dt>في البوابة اليوم</dt><dd class="portal-ref">{o.portal}</dd></div>
+                <div><dt>عندنا (يوميًا)</dt><dd>{o.ours}</dd></div>
+                <div><dt>عند التبعية</dt><dd>{o.theirs}</dd></div>
+              </dl>
+            </article>
+          ))}
+        </div>
+      </div>
+
+      <div class="annex-block">
+        <h3>ملحق ج — وظائف سلاسل الإمداد في الشركة القابضة والسياسات المالية (موضوع القرار 1)</h3>
+        <p class="annex-note">برندزو شركة قابضة متعددة القطاعات — لكل وظيفة دورنا فيها ودورة معتمدة تبدأ وتنتهي. الأحمر هو ما ينتظر اعتماد اليوم.</p>
+        <div class="fn-grid">
+          {functions_.map((f) => (
+            <article class={`st-${f.state}`}><header><i class="dot"></i><h4>{f.fn}</h4></header>
+            <dl><div><dt>دورنا</dt><dd>{f.role}</dd></div><div><dt>الدورة</dt><dd class="cycle">{f.cycle}</dd></div></dl>
+            <footer>{f.label}</footer></article>
+          ))}
+        </div>
+      </div>
+
+      <div class="annex-block">
+        <h3>ملحق د — تفاصيل المواقع مخزنًا مخزنًا</h3>
+        <div class="table-wrap"><table class="purchase-table wh-table"><thead><tr><th>المخزن</th><th>المساحة م²</th><th>الإشغال</th><th>المخزون الحالي</th><th>الجهة الشاغلة</th><th>الحالة</th></tr></thead><tbody>
+          {warehouses.map((wh) => (
+            <tr><td><b>{wh.code}</b></td><td>{wh.area.toLocaleString('en-US')}</td><td>{wh.used}%</td><td>{wh.stock}</td><td>{wh.party}</td><td>{wh.state}</td></tr>
+          ))}
+          <tr><td><b>الرحبة</b></td><td>≈ 1,920 + غرف</td><td>—</td><td>هنقر 24×80 م + غرف 1–19 كوزمتيك</td><td>شركة نوفا (بانتظار العقد)</td><td>موضوع القرار 5</td></tr>
+        </tbody></table></div>
+      </div>
+
+      <div class="annex-block">
+        <h3>ملحق هـ — القطاعات الخمسة ودور سلاسل الإمداد (موضوع القرار 6)</h3>
+        <div class="sectors-grid">
+          {sectors.map((s) => (<article class={`st-${s.state}`}><i class="dot"></i><h4>{s.name}</h4><p>{s.role}</p></article>))}
+        </div>
+      </div>
+    </section>
+  </main>
+</DashboardLayout>
+
+<script>
+  /* جسر المزامنة: وحدة ES تستورد Firebase وتعرّضها للسكربت المضمّن. */
+  import { subscribeReview, saveReview } from '../../services/briefing/gmReviewService.js';
+  window.__gmSync = { subscribeReview, saveReview };
+  window.dispatchEvent(new Event('gm-sync-ready'));
+</script>
+
+<script define:vars={{ catalogItems, catalog: catalog.map((s) => ({ id: s.id, title: s.title })), slideCount }}>
+  /* global catalogItems, catalog, slideCount */
+  const STORAGE_KEY = 'brandzo-gm-review-v3';
+  let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  let lastSyncedJson = '';
+  let saveTimer = null;
+
+  const chip = document.getElementById('syncChip');
+  function setChip(mode, text) { chip.textContent = text; chip.className = `sync-chip sc-${mode}`; }
+
+  /* الحفظ: محليًا فورًا + سحابيًا (مدموجًا) بعد مهلة قصيرة. */
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (!window.__gmSync) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      setChip('saving', 'جارٍ الحفظ…');
+      const payload = JSON.parse(JSON.stringify(state));
+      lastSyncedJson = JSON.stringify(payload);
+      window.__gmSync.saveReview(payload)
+        .then(() => setChip('ok', 'متزامن مع قاعدة البيانات'))
+        .catch((e) => { console.error('[gm-review] save failed', e); setChip('err', 'تعذر الحفظ السحابي — محفوظ محليًا'); });
+    }, 600);
+  }
+  const money = (value) => `${Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })} د.ل`;
+
+  /* ── محرك الشرائح ── */
+  const slides = [...document.querySelectorAll('[data-slide]')];
+  let current = 0;
+  function goTo(index) {
+    current = Math.max(0, Math.min(slides.length - 1, index));
+    slides.forEach((slide, i) => slide.classList.toggle('is-current', i === current));
+    document.getElementById('counter').textContent = `${current + 1} / ${slideCount}`;
+    document.getElementById('progressBar').style.width = `${((current + 1) / slides.length) * 100}%`;
+  }
+  document.getElementById('nextBtn').addEventListener('click', () => goTo(current + 1));
+  document.getElementById('prevBtn').addEventListener('click', () => goTo(current - 1));
+  document.addEventListener('keydown', (event) => {
+    if (!document.getElementById('annexMode').hidden) return;
+    if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+    if (document.activeElement?.isContentEditable) return;
+    if (event.key === 'ArrowLeft' || event.key === ' ' || event.key === 'PageDown') { event.preventDefault(); goTo(current + 1); }
+    if (event.key === 'ArrowRight' || event.key === 'PageUp') { event.preventDefault(); goTo(current - 1); }
+    if (event.key === 'Home') goTo(0);
+    if (event.key === 'End') goTo(slides.length - 1);
+  });
+  goTo(0);
+
+  const deckEl = document.getElementById('deckMode');
+  const annexEl = document.getElementById('annexMode');
+  document.getElementById('annexBtn').addEventListener('click', () => { deckEl.hidden = true; annexEl.hidden = false; window.scrollTo(0, 0); });
+  document.getElementById('backToDeck').addEventListener('click', () => { annexEl.hidden = true; deckEl.hidden = false; });
+
+  /* ── الشروح القابلة للتحرير (تُزامَن سحابيًا) ── */
+  const editables = [...document.querySelectorAll('[data-edit]')];
+  function applyTexts() {
+    editables.forEach((el) => { const saved = state.texts?.[el.dataset.edit]; if (saved !== undefined && saved !== el.innerText) el.innerText = saved; });
+  }
+  let editing = false;
+  const editBtn = document.getElementById('editBtn');
+  editBtn.addEventListener('click', () => {
+    editing = !editing;
+    document.body.classList.toggle('gm-edit', editing);
+    editBtn.textContent = editing ? 'إنهاء التحرير' : 'تحرير الشروح';
+    editables.forEach((el) => el.setAttribute('contenteditable', editing ? 'true' : 'false'));
+  });
+  editables.forEach((el) => el.addEventListener('blur', () => {
+    if (!editing) return;
+    state.texts ||= {}; state.texts[el.dataset.edit] = el.innerText; save();
+  }));
+
+  /* ── مواقف القرارات ── */
+  function updateDecided() {
+    const values = [...document.querySelectorAll('[data-decision-state]')].map((s) => s.value);
+    const done = values.filter((v) => v !== 'pending').length;
+    const el = document.getElementById('decidedCount'); if (el) el.textContent = `و${done} من ${values.length}`;
+    document.querySelectorAll('[data-decision]').forEach((card) => card.classList.toggle('is-decided', card.querySelector('select').value !== 'pending'));
+  }
+  document.querySelectorAll('[data-decision-state]').forEach((select) => {
+    select.addEventListener('change', () => { state.decisions ||= {}; state.decisions[select.dataset.decisionState] = select.value; save(); updateDecided(); });
+  });
+
+  /* ── الكتالوج ── */
+  const lineTotal = (index) => Number(catalogItems[index].qty) * Number(state.costs?.[index] || 0);
+  function renderBudget() {
+    let grand = 0;
+    catalog.forEach((section) => {
+      const total = catalogItems.reduce((sum, item, index) => item.section === section.title ? sum + lineTotal(index) : sum, 0);
+      grand += total;
+      const el = document.querySelector(`[data-sec-total="${section.id}"]`); if (el) el.textContent = money(total);
+    });
+    document.getElementById('grandTotal').textContent = money(grand);
+  }
+  function paintCost(index) {
+    document.querySelector(`[data-line-total="${index}"]`).textContent = money(lineTotal(index));
+    document.querySelector(`[data-cost-print="${index}"]`).textContent = money(state.costs?.[index] || 0);
+  }
+  document.querySelectorAll('[data-cost]').forEach((input) => {
+    const index = input.dataset.cost;
+    input.addEventListener('input', () => {
+      state.costs ||= {}; state.costs[index] = Number(input.value || 0); save(); paintCost(index); renderBudget();
+    });
+  });
+  const statusLabels = { unpriced: 'غير مسعّر', rfq: 'طلب عروض', quoted: 'عروض مستلمة', approved: 'معتمد', ordered: 'تم الطلب' };
+  document.querySelectorAll('[data-status]').forEach((select) => {
+    const index = select.dataset.status;
+    select.addEventListener('change', () => { state.statuses ||= {}; state.statuses[index] = select.value; save(); document.querySelector(`[data-status-print="${index}"]`).textContent = statusLabels[select.value]; });
+  });
+
+  /* ── جدول المتابعة ── */
+  document.querySelectorAll('[data-fu-action], [data-fu-owner], [data-fu-due]').forEach((input) => {
+    const group = input.dataset.fuAction !== undefined ? 'fuA' : input.dataset.fuOwner !== undefined ? 'fuO' : 'fuD';
+    const key = input.dataset.fuAction ?? input.dataset.fuOwner ?? input.dataset.fuDue;
+    input.addEventListener('input', () => { state[group] ||= {}; state[group][key] = input.value; save(); });
+  });
+
+  /* ── تطبيق الحالة كاملة على الواجهة (محلية أو قادمة من السحابة) ── */
+  function applyState() {
+    applyTexts();
+    document.querySelectorAll('[data-decision-state]').forEach((select) => { select.value = state.decisions?.[select.dataset.decisionState] || 'pending'; });
+    updateDecided();
+    document.querySelectorAll('[data-cost]').forEach((input) => { const i = input.dataset.cost; input.value = state.costs?.[i] || ''; paintCost(i); });
+    document.querySelectorAll('[data-status]').forEach((select) => { const i = select.dataset.status; select.value = state.statuses?.[i] || 'unpriced'; document.querySelector(`[data-status-print="${i}"]`).textContent = statusLabels[select.value]; });
+    document.querySelectorAll('[data-fu-action], [data-fu-owner], [data-fu-due]').forEach((input) => {
+      const group = input.dataset.fuAction !== undefined ? 'fuA' : input.dataset.fuOwner !== undefined ? 'fuO' : 'fuD';
+      const key = input.dataset.fuAction ?? input.dataset.fuOwner ?? input.dataset.fuDue;
+      if (state[group]?.[key] !== undefined) input.value = state[group][key];
+    });
+    renderBudget();
+  }
+  applyState();
+
+  /* ── الاشتراك السحابي: أحدث نسخة تُطبق فورًا على كل الأجهزة ── */
+  function startSync() {
+    if (!window.__gmSync) return;
+    setChip('saving', 'جارٍ الاتصال…');
+    window.__gmSync.subscribeReview((remote, pending) => {
+      if (remote === null) { setChip('ok', 'متزامن — لا بيانات محفوظة بعد'); return; }
+      const { updatedAt: _updatedAt, updatedByUid: _updatedByUid, ...data } = remote;
+      const json = JSON.stringify(data);
+      if (json === lastSyncedJson) { setChip('ok', 'متزامن مع قاعدة البيانات'); return; }
+      lastSyncedJson = json;
+      state = { ...state, ...data };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      applyState();
+      setChip('ok', pending ? 'جارٍ الحفظ…' : 'متزامن مع قاعدة البيانات');
+    });
+  }
+  if (window.__gmSync) startSync(); else window.addEventListener('gm-sync-ready', startSync, { once: true });
+
+  /* ── أدوات ── */
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+  document.getElementById('fsBtn').addEventListener('click', () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.();
+  });
+  window.addEventListener('beforeprint', () => { annexEl.hidden = false; deckEl.hidden = false; document.querySelectorAll('details').forEach((d) => { d.dataset.wasOpen = d.open ? '1' : ''; d.open = true; }); });
+  window.addEventListener('afterprint', () => { annexEl.hidden = true; document.querySelectorAll('details').forEach((d) => { d.open = d.dataset.wasOpen === '1'; }); });
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const payload = { exportedAt: new Date().toISOString(), document: 'BFP-SCM-PR-2026-010', ...state };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' }));
+    const link = document.createElement('a'); link.href = url; link.download = `Brandzo-SC-Executive-Review-${new Date().toISOString().slice(0, 10)}.json`; link.click(); URL.revokeObjectURL(url);
+  });
+</script>
+
+<style>
+  .deck-root{font-family:'IBM Plex Sans Arabic','Cairo',sans-serif;background:radial-gradient(1200px 700px at 80% -10%,#233150 0%,#151d31 55%,#0f1524 100%);color:#f2f4f8;min-height:100vh}
+  #deckMode{position:relative;min-height:100vh;overflow:hidden}
+  .slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:min(6vh,54px) min(7vw,96px) 118px;opacity:0;transform:translateX(-3%) scale(.985);transition:opacity .45s ease,transform .45s ease;pointer-events:none}
+  .slide.is-current{opacity:1;transform:none;pointer-events:auto}
+  .slide-head{margin-bottom:min(3.4vh,28px)}
+  .slide-head span{display:inline-block;color:#d8b56b;font-size:clamp(12px,1.2vw,16px);font-weight:800;letter-spacing:.05em;border:1px solid #d8b56b44;border-radius:999px;padding:7px 14px;margin-bottom:14px}
+  .slide-head h2{margin:0;font-size:clamp(28px,4vw,54px);line-height:1.2;font-weight:800}
+  .s-cover{align-items:flex-start;text-align:right}
+  .eyebrow{color:#d8b56b;font-size:clamp(12px,1.2vw,16px);font-weight:800;letter-spacing:.06em;margin:0 0 18px}
+  .s-cover h1{margin:0;font-size:clamp(44px,7vw,104px);line-height:1.02;font-weight:900;color:#fff}
+  .s-cover h2{margin:14px 0 0;font-size:clamp(22px,2.8vw,40px);font-weight:700;color:#cdd6e6}
+  .closing-line{font-size:clamp(28px,3.6vw,52px)!important;line-height:1.5!important}
+  .closing-line b{color:#d8b56b}
+  .thread{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:min(5vh,42px)}
+  .thread span{font-size:clamp(13px,1.4vw,19px);font-weight:800;color:#e7d5ae;white-space:nowrap}
+  .thread i{height:2px;width:clamp(20px,3vw,44px);background:#b78a3c;border-radius:2px}
+  .motto{margin-top:min(4vh,30px);font-size:clamp(18px,2.2vw,30px);font-weight:800;color:#fff}
+  .talk{margin:min(2.6vh,20px) 0 0;font-size:clamp(11px,1.1vw,14px);color:#8a93a6;border-right:3px solid #d8b56b55;padding-right:12px;line-height:1.8}
+  .board{display:grid;gap:clamp(8px,1.3vh,13px)}
+  .board-row{display:flex;align-items:center;gap:18px;background:#ffffff08;border:1px solid #ffffff14;border-radius:14px;padding:clamp(11px,1.8vh,18px) clamp(16px,2vw,26px)}
+  .board-row b{flex:1;font-size:clamp(16px,2vw,27px);font-weight:800}
+  .board-row span{font-size:clamp(12px,1.4vw,17px);font-weight:800;border-radius:999px;padding:8px 16px;white-space:nowrap}
+  .dot{width:clamp(12px,1.4vw,18px);height:clamp(12px,1.4vw,18px);border-radius:50%;flex:none}
+  .st-green .dot{background:#48b184;box-shadow:0 0 18px #48b18488}.st-yellow .dot{background:#d9a83e;box-shadow:0 0 18px #d9a83e88}.st-red .dot{background:#e05a70;box-shadow:0 0 18px #e05a7088}.st-gray .dot{background:#8a93a6}
+  .st-green>span{background:#48b18422;color:#7dd6b0}.st-yellow>span{background:#d9a83e22;color:#ecc370}.st-red>span{background:#e05a7022;color:#f090a0}
+  .threes{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,1.6vw,18px)}
+  .col{background:#ffffff08;border:1px solid #ffffff14;border-radius:16px;overflow:hidden}
+  .col h3{margin:0;padding:clamp(12px,1.8vh,18px) 20px;font-size:clamp(15px,1.7vw,22px);color:#fff}
+  .c-green h3{background:#2e7a5c}.c-yellow h3{background:#a3801f}.c-red h3{background:#a83a4c}
+  .col ol{margin:0;padding:clamp(14px,2vh,22px) 38px clamp(14px,2vh,22px) 18px}
+  .col li{font-size:clamp(13px,1.5vw,19px);line-height:1.9;margin-bottom:12px;color:#dbe2ee}
+  .wins{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(8px,1.4vh,14px)}
+  .win{display:flex;gap:16px;align-items:flex-start;background:#ffffff08;border:1px solid #ffffff14;border-radius:14px;padding:clamp(11px,1.7vh,17px) 20px;position:relative}
+  .win b{color:#d8b56b;font-size:clamp(15px,1.7vw,22px)}
+  .win h3{margin:0 0 4px;font-size:clamp(15px,1.7vw,21px)}
+  .win p{margin:0;font-size:clamp(12px,1.3vw,16px);color:#b9c2d4;line-height:1.7}
+  .win span{position:absolute;top:12px;left:14px;font-size:clamp(10px,1vw,12px);color:#8a93a6;border:1px solid #ffffff1c;border-radius:999px;padding:4px 10px}
+  .projects{display:grid;gap:clamp(6px,1.1vh,11px)}
+  .proj{display:flex;align-items:center;gap:16px;background:#ffffff08;border:1px solid #ffffff14;border-radius:12px;padding:clamp(10px,1.5vh,15px) 20px}
+  .proj b{min-width:200px;font-size:clamp(14px,1.6vw,20px)}
+  .proj p{flex:1;margin:0;font-size:clamp(12px,1.3vw,16px);color:#b9c2d4}
+  .proj span{font-size:clamp(11px,1.1vw,14px);color:#e7d5ae;white-space:nowrap}
+  .site-slide{display:grid;grid-template-columns:1.5fr 1fr;gap:clamp(14px,2.4vw,32px);align-items:center}
+  .site-slide svg{width:100%;height:auto;background:#ffffff06;border:1px solid #ffffff12;border-radius:16px;padding:8px}
+  .big-facts{display:grid;gap:clamp(10px,1.6vh,16px)}
+  .big-facts div{background:#ffffff08;border:1px solid #ffffff14;border-radius:14px;padding:clamp(11px,1.8vh,18px) 22px}
+  .big-facts b{display:block;font-size:clamp(28px,3.4vw,50px);font-weight:900;color:#fff;line-height:1.1}
+  .big-facts span{font-size:clamp(12px,1.3vw,16px);color:#b9c2d4;line-height:1.6;display:block;margin-top:4px}
+  .blockers{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(8px,1.4vh,14px)}
+  .blocker{display:flex;gap:14px;align-items:flex-start;background:#ffffff08;border:1px solid #ffffff14;border-right:4px solid #e05a70;border-radius:12px;padding:clamp(11px,1.6vh,16px) 18px;position:relative}
+  .blocker b{color:#e05a70;font-size:clamp(14px,1.6vw,20px)}
+  .blocker h3{margin:0 0 3px;font-size:clamp(14px,1.6vw,19px)}
+  .blocker p{margin:0;font-size:clamp(11.5px,1.25vw,15px);color:#b9c2d4;line-height:1.7}
+  .blocker span{position:absolute;bottom:10px;left:14px;font-size:clamp(10px,1vw,12px);color:#8a93a6}
+  .rule-line{margin:0 0 min(3vh,22px);font-size:clamp(15px,1.9vw,26px);font-weight:800;color:#e7d5ae;line-height:1.8;border-right:4px solid #b78a3c;padding-right:16px}
+  .offices{display:grid;gap:clamp(6px,1vh,10px)}
+  .office-row{background:#ffffff08;border:1px solid #ffffff14;border-radius:12px;padding:clamp(9px,1.4vh,14px) 18px;display:grid;grid-template-columns:minmax(180px,.9fr) 1.1fr 1.4fr;gap:14px;align-items:center}
+  .office-row b{font-size:clamp(12.5px,1.35vw,17px)}
+  .office-row p{margin:0;font-size:clamp(11.5px,1.2vw,15px);color:#dbe2ee;line-height:1.6}
+  .office-row span{font-size:clamp(10.5px,1.05vw,13px);color:#9fc3d8;line-height:1.6}
+  .s-decision .slide-head h2{color:#fff}
+  .s-decision.is-decided .slide-head span{background:#48b18422;border-color:#48b18466;color:#7dd6b0}
+  .d-scope{margin:0 0 min(3vh,24px);font-size:clamp(15px,1.8vw,23px);line-height:1.9;color:#cdd6e6;max-width:1100px}
+  .impact-pair{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,1.8vw,22px)}
+  .impact-pair>div{border-radius:16px;padding:clamp(15px,2.4vh,24px) clamp(18px,2vw,28px)}
+  .impact-pair b{display:block;font-size:clamp(13px,1.4vw,18px);margin-bottom:8px}
+  .impact-pair p{margin:0;font-size:clamp(14px,1.6vw,20px);line-height:1.8;color:#eef1f7}
+  .if-yes{background:#1d3a2e;border:1px solid #48b18455}.if-yes b{color:#7dd6b0}
+  .if-late{background:#3a2026;border:1px solid #e05a7055}.if-late b{color:#f090a0}
+  .d-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-top:min(3vh,24px)}
+  .d-foot small{color:#8a93a6;font-size:clamp(12px,1.2vw,15px)}
+  .d-foot label{display:flex;flex-direction:column;gap:6px;font-size:clamp(11px,1.1vw,13px);color:#b9c2d4;font-weight:700}
+  .d-foot select{font:inherit;font-size:clamp(13px,1.3vw,16px);background:#ffffff10;border:1px solid #ffffff2a;color:#fff;border-radius:10px;padding:10px 14px}
+  .d-foot select option{color:#17223b}
+  .after{width:100%;border-collapse:collapse}
+  .after th{text-align:right;font-size:clamp(12px,1.3vw,16px);color:#d8b56b;padding:12px 14px;border-bottom:1px solid #ffffff22}
+  .after td{padding:8px 10px;border-bottom:1px solid #ffffff12}
+  .after td:first-child{color:#8a93a6;font-size:clamp(12px,1.3vw,16px);width:52px}
+  .after input{width:100%;font:inherit;font-size:clamp(13px,1.4vw,18px);background:transparent;border:1px solid transparent;border-radius:8px;padding:9px 10px;color:#f2f4f8}
+  .after input:hover,.after input:focus{border-color:#ffffff2a;background:#ffffff0a;outline:none}
+  .after input[type='date']{color-scheme:dark}
+  .deck-chrome{position:fixed;bottom:0;right:0;left:0;z-index:30;padding:0 min(7vw,96px) 18px}
+  .progress{height:3px;background:#ffffff14;border-radius:2px;margin-bottom:12px}.progress i{display:block;height:100%;width:0;background:#d8b56b;border-radius:2px;transition:width .3s}
+  .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .controls button{font:inherit;font-weight:800;font-size:13px;background:#ffffff10;border:1px solid #ffffff24;color:#f2f4f8;border-radius:10px;padding:9px 15px;cursor:pointer}
+  .controls button:hover{background:#fff;color:#17223b}
+  .controls #counter{font-size:13px;color:#b9c2d4;min-width:56px;text-align:center}
+  .controls .sep{flex:1}
+  .sync-chip{font-size:11.5px;font-weight:800;border-radius:999px;padding:7px 12px;background:#ffffff10;color:#b9c2d4;border:1px solid #ffffff1c}
+  .sync-chip.sc-ok{background:#48b18422;color:#7dd6b0;border-color:#48b18455}
+  .sync-chip.sc-saving{background:#d9a83e22;color:#ecc370;border-color:#d9a83e55}
+  .sync-chip.sc-err{background:#e05a7022;color:#f090a0;border-color:#e05a7055}
+  :global(body.gm-edit) [data-edit]{outline:1.5px dashed #d8b56b88;outline-offset:3px;border-radius:6px;cursor:text;min-height:1em}
+  :global(body.gm-edit) [data-edit]:focus{outline-color:#d8b56b;background:#ffffff0d}
+  #annexMode{background:#f4f5f7;color:#17223b;min-height:100vh;padding:22px min(4vw,44px) 60px}
+  .annex-bar{display:flex;align-items:center;gap:16px;position:sticky;top:10px;z-index:20;background:#fff;border:1px solid #dfe3e8;border-radius:14px;padding:12px 16px;margin-bottom:18px;box-shadow:0 6px 18px #17223b0d}
+  .annex-bar h2{margin:0;font-size:18px;flex:1}
+  .annex-bar b{color:#277a61;font-size:15px}
+  .annex-bar button{font:inherit;font-weight:800;background:#17223b;color:#fff;border:0;border-radius:10px;padding:10px 16px;cursor:pointer}
+  .annex-block{background:#fff;border:1px solid #dfe3e8;border-radius:16px;padding:20px;margin-bottom:16px}
+  .annex-block>h3{margin:0 0 12px;font-size:18px}
+  .annex-note{font-size:12px;color:#566174;line-height:1.9;background:#f6f7f9;border-radius:10px;padding:12px 14px;margin:0 0 14px}.annex-note b{color:#9f2334}
+  .proc-section{border:1px solid #dfe3e8;border-radius:14px;margin-bottom:12px;overflow:hidden}
+  .proc-section>summary{display:flex;gap:12px;align-items:center;padding:13px 16px;cursor:pointer;background:#f8f9fb;list-style:none}
+  .proc-section>summary::-webkit-details-marker{display:none}
+  .proc-section[open]>summary{border-bottom:1px solid #dfe3e8}
+  .proc-section summary h4{margin:0;font-size:15px}
+  .proc-section summary small{color:#657083;font-size:11px;flex:1}
+  .proc-section summary i{font-style:normal;font-weight:800;font-size:12px;color:#277a61;white-space:nowrap}
+  .table-wrap{overflow:auto}
+  .purchase-table{width:100%;border-collapse:collapse;min-width:1000px;font-size:12px}
+  .purchase-table th{position:sticky;top:0;background:#eef1f5;text-align:right;padding:11px;border-bottom:1px solid #dfe3e8}
+  .purchase-table td{padding:10px;border-bottom:1px solid #edf0f3;vertical-align:top}
+  .purchase-table td small{display:block;color:#657083;margin-top:4px}
+  .purchase-table input,.purchase-table select{font:inherit;border:1px solid #dfe3e8;border-radius:8px;background:#fff;padding:8px;color:#17223b}
+  .purchase-table input{width:110px}
+  .item-cell{min-width:200px}.note-cell{min-width:260px;line-height:1.7;color:#4f5b6d}
+  .wh-table{min-width:820px}
+  .priority{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef1f5;white-space:nowrap;font-size:11px}.priority.critical{background:#f7e9eb;color:#9f2334}
+  .office-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .office-cards article{border:1px solid #dfe3e8;border-radius:14px;padding:16px}
+  .office-cards h4{margin:0 0 10px;font-size:14px}
+  .office-cards dl{margin:0}
+  .office-cards dl div{display:grid;grid-template-columns:118px 1fr;gap:10px;border-top:1px solid #edf0f3;padding:8px 0}
+  .office-cards dt{font-size:11px;color:#657083;font-weight:800}
+  .office-cards dd{margin:0;font-size:12px;line-height:1.8;color:#3e4a5c}
+  .portal-ref{color:#17223b;font-weight:600}
+  .fn-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .fn-grid article{border:1px solid #dfe3e8;border-radius:14px;padding:16px}
+  .fn-grid header{display:flex;align-items:center;gap:10px}
+  .fn-grid h4{margin:0;font-size:13.5px}
+  .fn-grid dl{margin:10px 0 0}
+  .fn-grid dl div{display:grid;grid-template-columns:70px 1fr;gap:10px;border-top:1px solid #edf0f3;padding:7px 0}
+  .fn-grid dt{font-size:11px;color:#657083;font-weight:800}
+  .fn-grid dd{margin:0;font-size:12px;line-height:1.7;color:#3e4a5c}
+  .fn-grid .cycle{font-weight:600;color:#17223b}
+  .fn-grid footer{margin-top:8px;font-size:11px;font-weight:800;border-radius:8px;padding:6px 10px;display:inline-block}
+  .fn-grid .st-green footer,.fn-grid article.st-green footer{background:#e9f4f0;color:#277a61}
+  .fn-grid article.st-yellow footer{background:#f8f1de;color:#8a6914}
+  .fn-grid article.st-red footer{background:#f7e9eb;color:#9f2334}
+  .fn-grid .dot,.sectors-grid .dot{width:11px;height:11px}
+  .sectors-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .sectors-grid article{display:flex;gap:12px;align-items:flex-start;border:1px solid #dfe3e8;border-radius:12px;padding:14px}
+  .sectors-grid .dot{margin-top:4px}
+  .sectors-grid h4{margin:0 0 4px;font-size:13px}
+  .sectors-grid p{margin:0;font-size:12px;line-height:1.7;color:#4f5b6d}
+  .print-only{display:none}
+  @media(max-width:900px){.threes,.wins,.blockers,.site-slide,.impact-pair{grid-template-columns:1fr}.slide{padding:24px 20px 140px;overflow:auto;justify-content:flex-start}.proj b{min-width:0}.proj{flex-wrap:wrap}.office-row{grid-template-columns:1fr}.deck-chrome{padding:0 16px 12px}.office-cards,.fn-grid,.sectors-grid{grid-template-columns:1fr}.d-foot{flex-direction:column;align-items:flex-start}}
+  @media print{
+    .no-print{display:none!important}.print-only{display:inline}
+    .deck-root{background:#fff;color:#17223b}
+    #deckMode{overflow:visible;min-height:0}
+    .slide{position:static;opacity:1;transform:none;pointer-events:auto;page-break-after:always;min-height:0;padding:24px;color:#17223b}
+    .slide-head span{color:#9f2334;border-color:#9f233444}
+    .s-cover h1,.s-cover h2,.slide-head h2,.motto,.board-row b,.win h3,.proj b,.blocker h3,.big-facts b,.closing-line,.office-row b{color:#17223b}
+    .board-row,.win,.proj,.blocker,.col,.big-facts div,.impact-pair>div,.office-row{background:#fff;border-color:#c9cfd8}
+    .col li,.win p,.proj p,.blocker p,.d-scope,.impact-pair p,.big-facts span,.office-row p{color:#3e4a5c}
+    .office-row span{color:#4a6b7d}
+    .rule-line{color:#8a6914;border-color:#b78a3c}
+    .talk{color:#657083;border-color:#b78a3c66}
+    .if-yes{background:#eef6f2}.if-yes b{color:#277a61}.if-late{background:#faeef0}.if-late b{color:#9f2334}
+    .thread span{color:#9f2334}.eyebrow{color:#9f2334}
+    .after th{color:#17223b}.after td{border-color:#c9cfd8}.after input{color:#17223b;border:0}
+    .site-slide svg{background:#f6f7f9;border-color:#c9cfd8}
+    #annexMode{display:block!important;background:#fff;padding:0}
+    #annexMode[hidden]{display:block!important}
+    .annex-bar{display:none}
+    .proc-section,.purchase-table,.office-cards article,.fn-grid article{break-inside:avoid}
+  }
+</style>
