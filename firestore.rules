@@ -393,7 +393,7 @@ service cloud.firestore {
       // تلويث سجلّ تدقيق أيّ مستندٍ من غير المعنيّين به.
       match /audit/{entryId} {
         allow read: if signedIn();
-        allow create: if (isStockActor() || isProcurementActor())
+        allow create: if (isStockActor() || isProcurementActor() || isLaborWriter() || isVanSalesWriter())
                       && request.resource.data.byUid == request.auth.uid;
         allow update, delete: if false;
       }
@@ -425,6 +425,83 @@ service cloud.firestore {
                               && request.resource.data.note.size() > 0));
         allow update, delete: if false;
       }
+    }
+
+    // ── علاقات المستندات والسطر بالسطر ───────────────────────────
+    // مجموعة مستقلة ملحقة-فقط بدل المفتاح الأحادي `links.<type>` الذي لا
+    // يستطيع تمثيل طفلين من النوع نفسه أو أكثر من مصدر لسطر واحد. إعادة
+    // المحاولة المتطابقة تحمل المعرّف الحتمي نفسه وتصبح noop في الخدمة؛ أما
+    // الخادم فلا يسمح بتعديل العلاقة بعد نشرها أو حذفها تحت أي دور.
+    match /document_links/{linkId} {
+      function validEndpoint(endpoint) {
+        return endpoint is map
+               && endpoint.keys().hasAll([
+                    'documentId', 'documentType', 'documentNumber', 'lineId', 'lineNumber'
+                  ])
+               && endpoint.keys().hasOnly([
+                    'documentId', 'documentType', 'documentNumber', 'lineId', 'lineNumber'
+                  ])
+               && endpoint.documentId is string
+               && endpoint.documentId.size() > 0
+               && endpoint.documentType is string
+               && endpoint.documentType.size() > 0
+               && (endpoint.documentNumber == null || endpoint.documentNumber is string)
+               && (endpoint.lineId == null || endpoint.lineId is string)
+               && (endpoint.lineNumber == null
+                   || (endpoint.lineNumber is int && endpoint.lineNumber > 0));
+      }
+
+      function endpointDocumentMatches(endpoint) {
+        return existsAfter(/databases/$(database)/documents/documents/$(endpoint.documentId))
+               && getAfter(/databases/$(database)/documents/documents/$(endpoint.documentId)).data.type
+                  == endpoint.documentType;
+      }
+
+      function validRelation() {
+        return request.resource.data.keys().hasAll([
+                 'id', 'version', 'source', 'target', 'linkType',
+                 'linkedQuantity', 'linkedValue', 'uom', 'operationId',
+                 'correlationId', 'byUid', 'byName', 'byRole', 'createdAt'
+               ])
+               && request.resource.data.keys().hasOnly([
+                 'id', 'version', 'source', 'target', 'linkType',
+                 'linkedQuantity', 'linkedValue', 'uom', 'operationId',
+                 'correlationId', 'byUid', 'byName', 'byRole', 'createdAt'
+               ])
+               && request.resource.data.id == linkId
+               && request.resource.data.version == 1
+               && validEndpoint(request.resource.data.source)
+               && validEndpoint(request.resource.data.target)
+               && request.resource.data.linkType in [
+                    'BASE', 'TARGET', 'REFERENCE', 'RETURN', 'REVERSAL', 'CORRECTION'
+                  ]
+               && !(request.resource.data.source.documentId == request.resource.data.target.documentId
+                    && request.resource.data.source.documentType == request.resource.data.target.documentType)
+               && (request.resource.data.linkedQuantity == null
+                   || (request.resource.data.linkedQuantity is number
+                       && request.resource.data.linkedQuantity > 0
+                       && request.resource.data.source.lineId is string
+                       && request.resource.data.source.lineId.size() > 0
+                       && request.resource.data.target.lineId is string
+                       && request.resource.data.target.lineId.size() > 0))
+               && (request.resource.data.linkedValue == null
+                   || (request.resource.data.linkedValue is number
+                       && request.resource.data.linkedValue > 0))
+               && (request.resource.data.uom == null || request.resource.data.uom is string)
+               && (request.resource.data.operationId == null || request.resource.data.operationId is string)
+               && (request.resource.data.correlationId == null || request.resource.data.correlationId is string)
+               && request.resource.data.byUid == request.auth.uid
+               && request.resource.data.byName is string
+               && request.resource.data.byRole is string
+               && request.resource.data.createdAt == request.time
+               && endpointDocumentMatches(request.resource.data.source)
+               && endpointDocumentMatches(request.resource.data.target);
+      }
+
+      allow read: if signedIn();
+      allow create: if (isStockActor() || isProcurementActor() || isLaborWriter() || isVanSalesWriter())
+                    && validRelation();
+      allow update, delete: if false;
     }
 
     // ── عدّادات الترقيم التسلسلي ──────────────────────────────────

@@ -11,8 +11,8 @@
   "counts": {
     "modules": 87,
     "serviceDomains": 39,
-    "serviceFiles": 264,
-    "collections": 60,
+    "serviceFiles": 268,
+    "collections": 61,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -979,6 +979,10 @@
         "dmg.js",
         "dn.js",
         "docref.test.js",
+        "documentRelations.js",
+        "documentRelations.test.js",
+        "documentRelationsService.js",
+        "documentRelationsService.test.js",
         "documents.test.js",
         "documentsService.js",
         "gp.js",
@@ -1023,8 +1027,8 @@
         "vsi.js",
         "vsr.js"
       ],
-      "fileCount": 64,
-      "testCount": 11,
+      "fileCount": 68,
+      "testCount": 13,
       "exports": [
         "ACCEPTED_ATTACHMENT_TYPES",
         "ATTACHMENT_KINDS",
@@ -1036,6 +1040,8 @@
         "DEFAULT_TOLERANCE",
         "DELIVERY_CHAIN",
         "DOCREF_PARENT_TYPE",
+        "DOCUMENT_LINK_TYPES",
+        "DOCUMENT_RELATIONS_COLLECTION",
         "EDITABLE_STATES",
         "GOVERNED_FORMS",
         "INITIAL_STATE",
@@ -1066,6 +1072,7 @@
         "allChecked",
         "allFields",
         "appendAudit",
+        "appendDocumentRelation",
         "applyItemToLine",
         "attentionItems",
         "availableTransitions",
@@ -1084,11 +1091,13 @@
         "checklistCount",
         "classOf",
         "collectedTotal",
+        "compatibleDocumentRelations",
         "containerWarnings",
         "controlChecklist",
         "controlCompareRows",
         "controlWarnings",
         "counterId",
+        "createDocumentRelation",
         "createDraft",
         "createNextInChain",
         "creditLineValue",
@@ -1112,6 +1121,7 @@
         "dlvWarnings",
         "dnWarnings",
         "docrefFields",
+        "documentRelationId",
         "emptyChecklist",
         "emptyDocument",
         "emptyHeader",
@@ -1121,6 +1131,7 @@
         "eventFieldsOf",
         "fefoViolations",
         "fetchChainDocuments",
+        "fetchDocumentRelations",
         "fieldSections",
         "fieldValue",
         "fieldVerdict",
@@ -1137,6 +1148,7 @@
         "hasControl",
         "hasPhoto",
         "hasSignedCopy",
+        "idempotentRelationDecision",
         "inboxStats",
         "inventoryAccuracy",
         "invoiceWarnings",
@@ -1151,6 +1163,7 @@
         "isStale",
         "kindLabel",
         "latestReconciliation",
+        "legacyRelationsFromDocument",
         "lineAmount",
         "lineEstimate",
         "lineKey",
@@ -1171,11 +1184,13 @@
         "lowestOffer",
         "matchedCount",
         "mergeParentLink",
+        "mergeRelationResults",
         "missingRequired",
         "netImpact",
         "netTotal",
         "nextInChain",
         "normalizeAr",
+        "normalizeRelationEndpoint",
         "offersCount",
         "orderValue",
         "packWarnings",
@@ -1197,6 +1212,8 @@
         "reconciliationVerdict",
         "rejectionRate",
         "rejectionWarnings",
+        "relationStorageRecord",
+        "relationsTouchingDocument",
         "reserveNumber",
         "returnWarnings",
         "rfqWarnings",
@@ -1205,6 +1222,7 @@
         "shipmentValue",
         "sortByUrgency",
         "spvWarnings",
+        "stableLineId",
         "stampDay",
         "subtotal",
         "tableSection",
@@ -1235,7 +1253,8 @@
         "vldWarnings",
         "vrtWarnings",
         "vsiWarnings",
-        "vsrWarnings"
+        "vsrWarnings",
+        "withStableLineIds"
       ],
       "collections": [
         "documents"
@@ -2682,6 +2701,7 @@
       "contentUnchanged",
       "datingTagHonest",
       "datingTagKept",
+      "endpointDocumentMatches",
       "hasProfile",
       "immutableKept",
       "isActive",
@@ -2700,7 +2720,9 @@
       "numberWriteOnce",
       "originKept",
       "signedIn",
-      "taskDoc"
+      "taskDoc",
+      "validEndpoint",
+      "validRelation"
     ],
     "collections": [
       {
@@ -3145,6 +3167,42 @@
         ]
       },
       {
+        "name": "document_links",
+        "path": "document_links",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "(isStockActor() || isProcurementActor() || isLaborWriter() || isVanSalesWriter()) && validRelation()",
+            "roles": [
+              "isStockActor",
+              "isProcurementActor",
+              "isLaborWriter",
+              "isVanSalesWriter",
+              "validRelation"
+            ]
+          },
+          {
+            "actions": [
+              "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
         "name": "documents",
         "path": "documents",
         "rules": [
@@ -3249,10 +3307,12 @@
             "actions": [
               "create"
             ],
-            "condition": "(isStockActor() || isProcurementActor()) && request.resource.data.byUid == request.auth.uid",
+            "condition": "(isStockActor() || isProcurementActor() || isLaborWriter() || isVanSalesWriter()) && request.resource.data.byUid == request.auth.uid",
             "roles": [
               "isStockActor",
-              "isProcurementActor"
+              "isProcurementActor",
+              "isLaborWriter",
+              "isVanSalesWriter"
             ]
           },
           {
@@ -5638,7 +5698,9 @@
       "test": "node --test \"src/**/*.test.js\"",
       "test:rules": "firebase emulators:exec --only firestore \"node --test test/firestore-rules.test.mjs\"",
       "audit": "node scripts/audit-portal.mjs",
-      "plan": "node scripts/plan-check.mjs",
+      "plan": "npm run plan:phase-one && npm run plan:client",
+      "plan:phase-one": "node scripts/plan-check.mjs",
+      "plan:client": "node scripts/plan-check.mjs --plan docs/plan/client-completion.json --resume docs/plan/استئناف-نسخة-العميل.md",
       "timefields": "node scripts/build-time-fields-doc.mjs",
       "lint": "eslint .",
       "format": "prettier --write .",

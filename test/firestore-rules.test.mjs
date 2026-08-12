@@ -16,6 +16,8 @@
  */
 import { test, before, after } from 'node:test';
 import { readFileSync } from 'node:fs';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
 
 const HOST = process.env.FIRESTORE_EMULATOR_HOST;
 
@@ -55,6 +57,47 @@ const guard = (fn) => async (t) => {
   await testEnv.clearFirestore();
   await fn({ assertFails, assertSucceeds });
 };
+
+async function seedDocuments(...documents) {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const batch = ctx.firestore().batch();
+    for (const document of documents) {
+      batch.set(ctx.firestore().doc(`documents/${document.id}`), {
+        type: document.type,
+        state: document.state || 'approved',
+        number: document.number || null,
+        createdByUid: document.createdByUid || 'seed',
+      });
+    }
+    await batch.commit();
+  });
+}
+
+function validDocumentLink(id, uid, overrides = {}) {
+  return {
+    id,
+    version: 1,
+    source: {
+      documentId: 'po-link-source', documentType: 'PO', documentNumber: 'PO-1',
+      lineId: null, lineNumber: null,
+    },
+    target: {
+      documentId: 'grn-link-target', documentType: 'GRN', documentNumber: null,
+      lineId: null, lineNumber: null,
+    },
+    linkType: 'BASE',
+    linkedQuantity: null,
+    linkedValue: null,
+    uom: null,
+    operationId: 'derive-1',
+    correlationId: 'po-link-source',
+    byUid: uid,
+    byName: 'مختبر',
+    byRole: 'storekeeper',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    ...overrides,
+  };
+}
 
 test('المشاهد لا يُنشئ مستندًا', guard(async ({ assertFails }) => {
   const db = await asUser('v1', 'viewer');
@@ -121,4 +164,63 @@ test('العدّاد لا يقفز أكثر من واحد', guard(async ({ asser
   await assertSucceeds(db.doc('counters/PO-2026').set({ type: 'PO', year: 2026, seq: 1 }));
   await assertFails(db.doc('counters/PO-2026').set({ type: 'PO', year: 2026, seq: 5 }));
   await assertSucceeds(db.doc('counters/PO-2026').set({ type: 'PO', year: 2026, seq: 2 }));
+}));
+
+test('الفاعل يضيف علاقة صحيحة والسجل يبقى ملحقًا فقط', guard(async ({ assertFails, assertSucceeds }) => {
+  await seedDocuments(
+    { id: 'po-link-source', type: 'PO' },
+    { id: 'grn-link-target', type: 'GRN' },
+  );
+  const db = await asUser('link-writer', 'storekeeper');
+  const ref = db.doc('document_links/link-1');
+  await assertSucceeds(ref.set(validDocumentLink('link-1', 'link-writer')));
+  await assertFails(ref.update({ correlationId: 'changed' }));
+  await assertFails(ref.delete());
+}));
+
+test('علاقة المستند ترفض المشاهد وانتحال الكاتب والطرف غير الموجود', guard(async ({ assertFails }) => {
+  await seedDocuments(
+    { id: 'po-link-source', type: 'PO' },
+    { id: 'grn-link-target', type: 'GRN' },
+  );
+  const viewer = await asUser('link-viewer', 'viewer');
+  await assertFails(
+    viewer.doc('document_links/viewer-link').set(validDocumentLink('viewer-link', 'link-viewer')),
+  );
+
+  const writer = await asUser('link-writer-2', 'storekeeper');
+  await assertFails(
+    writer.doc('document_links/forged-link').set(validDocumentLink('forged-link', 'another-user')),
+  );
+  await assertFails(
+    writer.doc('document_links/missing-link').set(validDocumentLink('missing-link', 'link-writer-2', {
+      target: {
+        documentId: 'missing-document', documentType: 'GRN', documentNumber: null,
+        lineId: null, lineNumber: null,
+      },
+    })),
+  );
+}));
+
+test('إنشاء الطفل وعلاقته وقيدي التدقيق ينجح في دفعة ذرّية واحدة', guard(async ({ assertSucceeds }) => {
+  await seedDocuments({ id: 'po-link-source', type: 'PO' });
+  const db = await asUser('atomic-writer', 'storekeeper');
+  const batch = db.batch();
+  batch.set(db.doc('documents/grn-link-target'), {
+    type: 'GRN',
+    state: 'draft',
+    number: null,
+    createdByUid: 'atomic-writer',
+  });
+  batch.set(
+    db.doc('document_links/atomic-link'),
+    validDocumentLink('atomic-link', 'atomic-writer'),
+  );
+  batch.set(db.doc('documents/grn-link-target/audit/create-1'), {
+    action: 'create', byUid: 'atomic-writer', at: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+  batch.set(db.doc('documents/po-link-source/audit/derive-1'), {
+    action: 'derive', byUid: 'atomic-writer', at: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+  await assertSucceeds(batch.commit());
 }));

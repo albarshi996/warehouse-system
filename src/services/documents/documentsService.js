@@ -25,6 +25,7 @@ import {
   serverTimestamp,
   limit,
   getDocs,
+  runTransaction,
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
 import { reserveNumber } from './numbering.js';
@@ -39,6 +40,12 @@ import { postDocument } from '../ledger/ledgerService.js';
 import { ledgerRuleFor } from '../ledger/partnerLedger.js';
 import { postToPartnerLedger } from '../ledger/partnerLedgerService.js';
 import { allocateAndReserve, releaseReservation, releaseForPick } from '../ledger/salesService.js';
+import {
+  createDocumentRelation,
+  DOCUMENT_RELATIONS_COLLECTION,
+  idempotentRelationDecision,
+  relationStorageRecord,
+} from './documentRelations.js';
 
 const DOCS = 'documents';
 const AUDIT = 'audit';
@@ -387,37 +394,87 @@ export function listenDocumentsByTypes(types, callback, max = 200) {
  * وقيد التدقيق الذي يربط المولود بأصله — فيبقى الأثر في المستندين معًا.
  */
 export async function createNextInChain(sourceDoc, profile, toType = null) {
-  const draft = deriveDocument(sourceDoc, toType);
-  const schema = getSchema(draft.type);
-  const newId = await addDoc(collection(db, DOCS), {
-    type: draft.type,
-    stage: schema?.stage ?? null,
-    number: null,
-    state: INITIAL_STATE,
-    header: draft.header,
-    lines: draft.lines,
-    links: draft.links,
-    createdByUid: currentUid(),
-    createdByName: currentName(profile),
-    createdByRole: profile?.role || '', // دور المُنشئ — يغذّي «سجلّ حركة الأدوار» الحيّ
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  }).then((r) => r.id);
+  if (!sourceDoc?.id) throw new Error('معرّف المستند المصدر مطلوب.');
+  const uid = currentUid();
+  if (!uid) throw new Error('يجب تسجيل الدخول قبل اشتقاق مستند.');
 
-  await appendAudit(newId, {
-    action: 'create',
-    to: INITIAL_STATE,
-    note: `مشتقّ من ${sourceDoc.type} ${sourceDoc.number || ''}`.trim(),
-    profile,
+  const sourceRef = doc(db, DOCS, sourceDoc.id);
+  // تخصيص المعرّف لا يكتب شيئًا. يصبح المستند مرئيًّا فقط داخل المعاملة الكاملة.
+  const childRef = doc(collection(db, DOCS));
+
+  await runTransaction(db, async (transaction) => {
+    // نشتق من النسخة الحية لا من نسخة واجهة قديمة أو قابلة للتلاعب.
+    const sourceSnapshot = await transaction.get(sourceRef);
+    if (!sourceSnapshot.exists()) throw new Error('المستند المصدر غير موجود.');
+    const liveSource = { id: sourceSnapshot.id, ...sourceSnapshot.data() };
+    const draft = deriveDocument(liveSource, toType);
+    const schema = getSchema(draft.type);
+    const relation = createDocumentRelation({
+      source: { document: liveSource },
+      target: { documentId: childRef.id, documentType: draft.type, documentNumber: null },
+      linkType: 'BASE',
+      operationId: `derive:${liveSource.id}:${childRef.id}`,
+      correlationId: liveSource.id,
+    });
+    const relationRef = doc(db, DOCUMENT_RELATIONS_COLLECTION, relation.id);
+
+    // القراءة تسبق كل الكتابات حسب عقد معاملات Firestore.
+    const relationSnapshot = await transaction.get(relationRef);
+    const decision = idempotentRelationDecision(
+      relationSnapshot.exists() ? { id: relationSnapshot.id, ...relationSnapshot.data() } : null,
+      relation,
+    );
+
+    const timestamp = serverTimestamp();
+    const actor = {
+      uid,
+      name: currentName(profile),
+      role: profile?.role || '',
+    };
+    const childAuditRef = doc(collection(db, DOCS, childRef.id, AUDIT));
+    const sourceAuditRef = doc(collection(db, DOCS, liveSource.id, AUDIT));
+
+    transaction.set(childRef, {
+      type: draft.type,
+      stage: schema?.stage ?? null,
+      number: null,
+      state: INITIAL_STATE,
+      header: draft.header,
+      lines: draft.lines,
+      links: draft.links,
+      createdByUid: uid,
+      createdByName: actor.name,
+      createdByRole: actor.role, // دور المُنشئ — يغذّي «سجلّ حركة الأدوار» الحيّ
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+    if (decision.action === 'create') {
+      transaction.set(relationRef, relationStorageRecord(relation, actor, timestamp));
+    }
+    transaction.set(childAuditRef, {
+      action: 'create',
+      note: `مشتقّ من ${liveSource.type} ${liveSource.number || ''}`.trim(),
+      from: '',
+      to: INITIAL_STATE,
+      byUid: uid,
+      byName: actor.name,
+      byRole: actor.role,
+      at: timestamp,
+    });
+    // أثرٌ في الأصل أيضًا: من فتح الحلقة التالية ومتى.
+    transaction.set(sourceAuditRef, {
+      action: 'derive',
+      note: `أُنشئ منه ${draft.type}`,
+      from: '',
+      to: draft.type,
+      byUid: uid,
+      byName: actor.name,
+      byRole: actor.role,
+      at: timestamp,
+    });
   });
-  // أثرٌ في الأصل أيضًا: من فتح الحلقة التالية ومتى.
-  await appendAudit(sourceDoc.id, {
-    action: 'derive',
-    to: draft.type,
-    note: `أُنشئ منه ${draft.type}`,
-    profile,
-  });
-  return newId;
+
+  return childRef.id;
 }
 
 /**

@@ -15,6 +15,8 @@ export const DOCUMENT_LINK_TYPES = Object.freeze([
   'CORRECTION',
 ]);
 
+export const DOCUMENT_RELATIONS_COLLECTION = 'document_links';
+
 const LINK_TYPES = new Set(DOCUMENT_LINK_TYPES);
 
 function text(value) {
@@ -144,6 +146,35 @@ export function createDocumentRelation(input) {
     createdBy,
     createdAt,
   };
+}
+
+/**
+ * يحوّل النموذج الخالص إلى سجل التخزين المحكوم بالقواعد.
+ * هوية الفاعل ووقت الخادم لا يؤخذان من مدخل العلاقة كي لا يقبل المسار تزويرهما.
+ */
+export function relationStorageRecord(relation, actor, createdAt) {
+  const normalized = createDocumentRelation(relation);
+  const uid = text(actor?.uid);
+  if (!uid) throw new Error('هوية كاتب العلاقة مطلوبة.');
+  const { createdBy: _createdBy, createdAt: _clientCreatedAt, ...facts } = normalized;
+  return {
+    ...facts,
+    byUid: uid,
+    byName: text(actor?.name) || 'غير معروف',
+    byRole: text(actor?.role),
+    createdAt,
+  };
+}
+
+/** يزيل تكرار نتيجتي استعلام الاتجاهين مع ترتيب حتمي يصلح للاختبارات والواجهة. */
+export function mergeRelationResults(...groups) {
+  const byId = new Map();
+  for (const group of groups) {
+    for (const relation of group || []) {
+      if (relation?.id) byId.set(relation.id, relation);
+    }
+  }
+  return [...byId.values()].sort((a, b) => String(a.id).localeCompare(String(b.id), 'en'));
 }
 
 function semanticFacts(relation) {
