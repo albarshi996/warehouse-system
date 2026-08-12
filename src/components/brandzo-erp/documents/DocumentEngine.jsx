@@ -36,6 +36,8 @@ import { listForCustomer, priceDocument } from '../../../services/pricing/priceL
 import { subscribePartners } from '../../../services/partnerService.js';
 import { listenPartnerLedger } from '../../../services/ledger/partnerLedgerService.js';
 import { creditCheck } from '../../../services/ledger/creditGuard.js';
+import { documentScreenUrl } from '../../../services/documentNavigator.js';
+import { approvalAuditCount } from '../../DocumentNavigatorModel.js';
 import InlineCreateModal from './InlineCreateModal.jsx';
 import LineItemsTable from './LineItemsTable.jsx';
 import Checklist from './Checklist.jsx';
@@ -46,6 +48,7 @@ import ChainBar from './ChainBar.jsx';
 import AttachmentsPanel from './AttachmentsPanel.jsx';
 import ControlPanel from './ControlPanel.jsx';
 import PromotionsPanel from './PromotionsPanel.jsx';
+import DocumentNavigator from './DocumentNavigator.jsx';
 
 /** يقرأ معاملات الرابط (الموقع ثابت — لا توجيه من الخادم). */
 function readParams() {
@@ -198,6 +201,15 @@ export default function DocumentEngine() {
     const partner = customers.find((c) => String(c.code || '').toUpperCase() === code) || null;
     return creditCheck({ doc, entries: ledger, partner, settings, role: me?.role || '' });
   }, [doc, ledger, customers, settings, me]);
+
+  const navigatorActionCounts = useMemo(() => ({
+    relationCount: Object.values(doc?.links || {}).filter((link) => link?.id).length,
+    attachmentCount: attachments.length,
+    auditCount: audit.length,
+    approvalCount: approvalAuditCount(audit),
+    stockMoveCount: Number(doc?.postedMoves) || 0,
+    financialEntryCount: ledger.filter((entry) => entry.docId === docId).length,
+  }), [doc, attachments, audit, ledger, docId]);
 
   /** يطبّق أسعار القائمة على البنود — بضغطةٍ لا تلقائيًّا، فلا يُدهس ما كُتب. */
   function applyListPrices() {
@@ -363,6 +375,16 @@ export default function DocumentEngine() {
     }
   }
 
+  function navigateToDocument(target = null) {
+    if (dirty && !window.confirm('لديك تغييرات غير محفوظة. هل تريد مغادرة المستند دون حفظها؟')) return;
+    const url = documentScreenUrl({
+      type: schema.type,
+      id: target?.id || null,
+      base: `${getBasePath()}/dashboard/document`,
+    });
+    if (url) window.location.assign(url);
+  }
+
   if (!schema) {
     return (
       <Notice tone="err" title="نوع مستند غير معروف">
@@ -395,19 +417,32 @@ export default function DocumentEngine() {
           </div>
         )}
 
-        <StateBar
-          doc={doc}
-          schema={schema}
-          me={me}
-          saving={saving}
-          dirty={dirty}
-          onSave={editable ? handleSave : null}
-          onTransition={handleTransition}
-          onPrint={() => window.print()}
+        <DocumentNavigator
+          type={schema.type}
+          currentId={docId}
+          canCreate={Boolean(canCreate)}
+          actionCounts={navigatorActionCounts}
+          onNavigate={navigateToDocument}
+          onNew={() => navigateToDocument(null)}
         />
 
+        <div id="document-approvals">
+          <StateBar
+            doc={doc}
+            schema={schema}
+            me={me}
+            saving={saving}
+            dirty={dirty}
+            onSave={editable ? handleSave : null}
+            onTransition={handleTransition}
+            onPrint={() => window.print()}
+          />
+        </div>
+
         {/* سلسلة الشراء والمطابقة الثلاثية (F2) — تظهر للأنواع المترابطة فقط */}
-        <ChainBar doc={doc} me={me} onFlash={flash} />
+        <div id="document-relations">
+          <ChainBar doc={doc} me={me} onFlash={flash} />
+        </div>
 
         {violations.length > 0 && (
           <div className="bg-brand-red/10 border border-brand-red/40 rounded-xl px-4 py-3">
@@ -571,7 +606,9 @@ export default function DocumentEngine() {
         {/* العروض تُطبَّق قبل المرفقات: البنود تُبنى أوّلًا ثمّ يُوثَّق عليها. */}
         <PromotionsPanel schema={schema} doc={doc} disabled={!editable} onApplyLines={patchLines} />
 
-        <AttachmentsPanel docId={docId} schema={schema} me={me} attachments={attachments} onEnsureDoc={ensureSaved} />
+        <div id="document-attachments">
+          <AttachmentsPanel docId={docId} schema={schema} me={me} attachments={attachments} onEnsureDoc={ensureSaved} />
+        </div>
 
         {schema.control && (
           <ControlPanel
@@ -586,7 +623,7 @@ export default function DocumentEngine() {
         )}
 
         {docId && (
-          <section className="bg-chip border border-line rounded-2xl p-4 sm:p-5">
+          <section id="document-audit" className="bg-chip border border-line rounded-2xl p-4 sm:p-5">
             <h2 className="text-base font-bold text-ink mb-1">🔏 سجلّ التدقيق</h2>
             <p className="text-[11px] text-gray-500 mb-3">قيود دائمة — لا تُعدَّل ولا تُحذف.</p>
             <AuditTrail entries={audit} />
