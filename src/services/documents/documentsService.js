@@ -30,7 +30,7 @@ import {
 import { db, auth } from '../../config/firebase.js';
 import { reserveNumber } from './numbering.js';
 import { INITIAL_STATE, isEditable, isLegalTransition, canDo, TRANSITIONS } from './states.js';
-import { deriveDocument, parentApprovalProblem } from './chain.js';
+import { derivationTargets, parentApprovalProblem } from './chain.js';
 import { getSchema } from './schemas/index.js';
 import { primaryParentType } from './schemaUtils.js';
 import { dateSaveVerdict, defaultValueFor, eventFieldsOf } from './datingGuard.js';
@@ -46,9 +46,17 @@ import {
   idempotentRelationDecision,
   relationStorageRecord,
 } from './documentRelations.js';
+import {
+  derivePartialDocument,
+  flowAllocationDecision,
+  flowAllocationId,
+  partialDerivationPlan,
+  partialLinePairs,
+} from '../documentFlow.js';
 
 const DOCS = 'documents';
 const AUDIT = 'audit';
+const FLOW_ALLOCATIONS = 'document_flow_allocations';
 
 /**
  * هوية الكاتب من Firebase Auth مباشرة (لا من الملف الشخصي) — لأن قواعد
@@ -393,7 +401,7 @@ export function listenDocumentsByTypes(types, callback, max = 200) {
  * كل المنطق في `chain.js` الخالص (يُختبَر بلا شبكة)؛ هنا الكتابة وحدها
  * وقيد التدقيق الذي يربط المولود بأصله — فيبقى الأثر في المستندين معًا.
  */
-export async function createNextInChain(sourceDoc, profile, toType = null) {
+export async function createNextInChain(sourceDoc, profile, toType = null, { requestedByLine = null } = {}) {
   if (!sourceDoc?.id) throw new Error('معرّف المستند المصدر مطلوب.');
   const uid = currentUid();
   if (!uid) throw new Error('يجب تسجيل الدخول قبل اشتقاق مستند.');
@@ -402,28 +410,82 @@ export async function createNextInChain(sourceDoc, profile, toType = null) {
   // تخصيص المعرّف لا يكتب شيئًا. يصبح المستند مرئيًّا فقط داخل المعاملة الكاملة.
   const childRef = doc(collection(db, DOCS));
 
+  // لقطة توافقية لتهيئة القفل أول مرة. لو سبقتنا معاملة أخرى فوثيقة القفل
+  // نفسها تُقرأ داخل المعاملة وتُعيد Firestore المحاولة على أحدث revision.
+  let relatedDocuments = [];
+  let storedRelations = [];
+  try { relatedDocuments = await fetchChainDocuments(sourceDoc); } catch { relatedDocuments = []; }
+  try {
+    const relationSnapshot = await getDocs(query(
+      collection(db, DOCUMENT_RELATIONS_COLLECTION),
+      where('source.documentId', '==', sourceDoc.id),
+    ));
+    storedRelations = relationSnapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+  } catch {
+    storedRelations = [];
+  }
+
   await runTransaction(db, async (transaction) => {
     // نشتق من النسخة الحية لا من نسخة واجهة قديمة أو قابلة للتلاعب.
     const sourceSnapshot = await transaction.get(sourceRef);
     if (!sourceSnapshot.exists()) throw new Error('المستند المصدر غير موجود.');
     const liveSource = { id: sourceSnapshot.id, ...sourceSnapshot.data() };
-    const draft = deriveDocument(liveSource, toType);
+    const targetType = toType || derivationTargets(liveSource.type)[0] || null;
+    const baselinePlan = partialDerivationPlan(
+      liveSource,
+      targetType,
+      storedRelations,
+      relatedDocuments,
+    );
+    const allocationRef = baselinePlan.supported
+      ? doc(db, FLOW_ALLOCATIONS, flowAllocationId(liveSource.id, targetType))
+      : null;
+    const allocationSnapshot = allocationRef ? await transaction.get(allocationRef) : null;
+    const allocation = flowAllocationDecision(
+      baselinePlan,
+      allocationSnapshot?.exists() ? allocationSnapshot.data().allocatedByLine : {},
+      requestedByLine,
+    );
+    const selectedPlan = baselinePlan.supported
+      ? partialDerivationPlan(liveSource, targetType, storedRelations, relatedDocuments, allocation.selectedByLine)
+      : baselinePlan;
+    const draft = derivePartialDocument(liveSource, targetType, selectedPlan);
     const schema = getSchema(draft.type);
-    const relation = createDocumentRelation({
-      source: { document: liveSource },
-      target: { documentId: childRef.id, documentType: draft.type, documentNumber: null },
-      linkType: 'BASE',
-      operationId: `derive:${liveSource.id}:${childRef.id}`,
-      correlationId: liveSource.id,
-    });
-    const relationRef = doc(db, DOCUMENT_RELATIONS_COLLECTION, relation.id);
+    const linePairs = partialLinePairs(liveSource, draft, selectedPlan);
+    const relations = linePairs.length
+      ? linePairs.map((pair) => createDocumentRelation({
+        source: { document: liveSource, line: pair.sourceLine, lineIndex: pair.sourceLineIndex },
+        target: {
+          documentId: childRef.id,
+          documentType: draft.type,
+          documentNumber: null,
+          line: pair.targetLine,
+          lineIndex: pair.targetLineIndex,
+        },
+        linkType: 'BASE',
+        linkedQuantity: pair.quantity,
+        uom: pair.uom,
+        operationId: `derive:${liveSource.id}:${childRef.id}`,
+        correlationId: liveSource.id,
+      }))
+      : [createDocumentRelation({
+        source: { document: liveSource },
+        target: { documentId: childRef.id, documentType: draft.type, documentNumber: null },
+        linkType: 'BASE',
+        operationId: `derive:${liveSource.id}:${childRef.id}`,
+        correlationId: liveSource.id,
+      })];
+    const relationRefs = relations.map((relation) => doc(db, DOCUMENT_RELATIONS_COLLECTION, relation.id));
 
     // القراءة تسبق كل الكتابات حسب عقد معاملات Firestore.
-    const relationSnapshot = await transaction.get(relationRef);
-    const decision = idempotentRelationDecision(
-      relationSnapshot.exists() ? { id: relationSnapshot.id, ...relationSnapshot.data() } : null,
+    const relationSnapshots = [];
+    for (const relationRef of relationRefs) relationSnapshots.push(await transaction.get(relationRef));
+    const decisions = relations.map((relation, index) => idempotentRelationDecision(
+      relationSnapshots[index].exists()
+        ? { id: relationSnapshots[index].id, ...relationSnapshots[index].data() }
+        : null,
       relation,
-    );
+    ));
 
     const timestamp = serverTimestamp();
     const actor = {
@@ -448,8 +510,21 @@ export async function createNextInChain(sourceDoc, profile, toType = null) {
       createdAt: timestamp,
       updatedAt: timestamp,
     });
-    if (decision.action === 'create') {
-      transaction.set(relationRef, relationStorageRecord(relation, actor, timestamp));
+    if (allocationRef) {
+      transaction.set(allocationRef, {
+        sourceDocumentId: liveSource.id,
+        sourceDocumentType: liveSource.type,
+        targetDocumentType: draft.type,
+        allocatedByLine: allocation.allocatedByLine,
+        revision: (allocationSnapshot?.exists() ? Number(allocationSnapshot.data().revision) || 0 : 0) + 1,
+        updatedByUid: uid,
+        updatedAt: timestamp,
+      });
+    }
+    for (let index = 0; index < relations.length; index += 1) {
+      if (decisions[index].action === 'create') {
+        transaction.set(relationRefs[index], relationStorageRecord(relations[index], actor, timestamp));
+      }
     }
     transaction.set(childAuditRef, {
       action: 'create',

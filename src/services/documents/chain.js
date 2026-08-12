@@ -152,6 +152,32 @@ const LINE_MAP = {
   'PV>DLV': { description: 'description', uom: 'uom', qty: 'qty' },
 };
 
+/** حقل الكمية الذي يُستهلك من المصدر ويُكتب في الابن عند الاشتقاق الجزئي. */
+const DERIVATION_QUANTITY_FIELDS = Object.freeze({
+  'PR>PO': ['qty', 'qty'],
+  'PO>GRN': ['qty', 'qtyOrdered'],
+  'GRN>QC': ['qtyReceived', 'qtyInspected'],
+  'QC>PUTAWAY': ['qtyAccepted', 'qty'],
+  'QC>SRN': ['qtyRejected', 'qty'],
+  'SO>PICK': ['qty', 'qtyRequested'],
+  'PICK>PACK': ['qtyPicked', 'qty'],
+  'PACK>DN': ['qty', 'qty'],
+  'DN>GP': ['qty', 'qty'],
+  'DN>INV': ['qty', 'qty'],
+  'DN>POD': ['qty', 'qty'],
+  'TR>TRN': ['qty', 'qtyShipped'],
+  'TRN>TRC': ['qtyShipped', 'qtyShipped'],
+  'RET>CN': ['qty', 'qty'],
+  'CC>ADJ': ['count2', 'actualQty'],
+  'IPO>PV': ['qty', 'qty'],
+  'PV>DLV': ['qty', 'qty'],
+});
+
+export function derivationQuantityFields(sourceType, targetType) {
+  const pair = DERIVATION_QUANTITY_FIELDS[`${sourceType}>${targetType}`];
+  return pair ? { source: pair[0], target: pair[1] } : null;
+}
+
 /** خرائط نقل بيانات الرأس. */
 const HEADER_MAP = {
   'PR>PO': { warehouse: 'warehouse' },
@@ -213,7 +239,7 @@ function hasContent(line) {
  *   (إذن التسليم إلى تصريح أو فاتورة). بلا تمرير: التالي الخطّي.
  * @returns {{type, header, lines, links}} مسودّة جاهزة للإنشاء
  */
-export function deriveDocument(source, toType = null) {
+export function deriveDocument(source, toType = null, { lineQuantities = null } = {}) {
   if (!source) throw new Error('لا مستند مصدر');
   const targets = derivationTargets(source.type);
   const to = toType || targets[0] || null;
@@ -229,15 +255,19 @@ export function deriveDocument(source, toType = null) {
   const lineMap = LINE_MAP[key] || {};
   const headerMap = HEADER_MAP[key] || {};
   const lineFilter = LINE_FILTER[key];
+  const quantityFields = derivationQuantityFields(source.type, to);
 
   const lines = (source.lines || [])
-    .filter(hasContent)
-    .filter((line) => (lineFilter ? lineFilter(line) : true))
-    .map((line) => {
+    .map((line, index) => ({ line, index }))
+    .filter(({ line }) => hasContent(line))
+    .filter(({ line }) => (lineFilter ? lineFilter(line) : true))
+    .filter(({ index }) => !lineQuantities || Number(lineQuantities[index]) > 0)
+    .map(({ line, index }) => {
       const out = {};
       for (const [from, into] of Object.entries(lineMap)) {
         if (line[from] !== undefined && line[from] !== '') out[into] = line[from];
       }
+      if (lineQuantities && quantityFields) out[quantityFields.target] = Number(lineQuantities[index]);
       return out;
     });
 

@@ -427,6 +427,48 @@ service cloud.firestore {
       }
     }
 
+    // ── قفل تخصيص التنفيذ الجزئي ──────────────────────────────────
+    // وثيقة تشغيلية قابلة للتحديث، منفصلة تمامًا عن المستند المرحّل: تمنع
+    // معاملتين متزامنتين من حجز الكمية المفتوحة نفسها، ولا تعيد كتابة الأصل.
+    match /document_flow_allocations/{allocationId} {
+      function validFlowAllocation() {
+        return request.resource.data.keys().hasAll([
+                 'sourceDocumentId', 'sourceDocumentType', 'targetDocumentType',
+                 'allocatedByLine', 'revision', 'updatedByUid', 'updatedAt'
+               ])
+               && request.resource.data.keys().hasOnly([
+                 'sourceDocumentId', 'sourceDocumentType', 'targetDocumentType',
+                 'allocatedByLine', 'revision', 'updatedByUid', 'updatedAt'
+               ])
+               && request.resource.data.sourceDocumentId is string
+               && request.resource.data.sourceDocumentId.size() > 0
+               && request.resource.data.sourceDocumentType is string
+               && request.resource.data.targetDocumentType is string
+               && request.resource.data.allocatedByLine is map
+               && request.resource.data.revision is int
+               && request.resource.data.revision > 0
+               && request.resource.data.updatedByUid == request.auth.uid
+               && request.resource.data.updatedAt == request.time
+               && exists(/databases/$(database)/documents/documents/$(request.resource.data.sourceDocumentId))
+               && get(/databases/$(database)/documents/documents/$(request.resource.data.sourceDocumentId)).data.type
+                  == request.resource.data.sourceDocumentType;
+      }
+      function identityKept() {
+        return request.resource.data.sourceDocumentId == resource.data.sourceDocumentId
+               && request.resource.data.sourceDocumentType == resource.data.sourceDocumentType
+               && request.resource.data.targetDocumentType == resource.data.targetDocumentType;
+      }
+
+      allow read: if signedIn();
+      allow create: if (isStockActor() || isProcurementActor() || isLaborWriter() || isVanSalesWriter())
+                    && validFlowAllocation();
+      allow update: if (isStockActor() || isProcurementActor() || isLaborWriter() || isVanSalesWriter())
+                    && validFlowAllocation()
+                    && identityKept()
+                    && request.resource.data.revision == resource.data.revision + 1;
+      allow delete: if false;
+    }
+
     // ── علاقات المستندات والسطر بالسطر ───────────────────────────
     // مجموعة مستقلة ملحقة-فقط بدل المفتاح الأحادي `links.<type>` الذي لا
     // يستطيع تمثيل طفلين من النوع نفسه أو أكثر من مصدر لسطر واحد. إعادة
