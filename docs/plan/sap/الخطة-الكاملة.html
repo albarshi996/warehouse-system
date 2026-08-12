@@ -1,0 +1,707 @@
+<title>خطة المواءمة الجراحية — البوابة ومنطق المستندات المترابطة</title>
+<style>
+  :root{
+    --ground:#FBFAFC; --surface:#FFFFFF; --surface-2:#F6F3F8;
+    --ink:#1C1620; --ink-soft:#5F5668; --ink-faint:#8C8394;
+    --rule:#E7E2EC; --rule-strong:#D6CEDD;
+    --accent:#714B67; --accent-ink:#5A3B53; --accent-soft:#F3EEF2;
+    --done:#2F6F52; --done-soft:#EAF2ED;
+    --wait:#8A6A1F; --wait-soft:#F7F1E3;
+    --danger:#A8322A; --danger-soft:#FAEDEC;
+    --shadow:0 1px 2px rgba(28,22,32,.05), 0 8px 24px -16px rgba(28,22,32,.22);
+    --mono:"Cascadia Mono","Consolas","SF Mono",ui-monospace,monospace;
+    --sans:"IBM Plex Sans Arabic","Dubai","Segoe UI",Tahoma,"Noto Naskh Arabic",sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#141118; --surface:#1C1822; --surface-2:#231E2B;
+      --ink:#EDE8F0; --ink-soft:#A79FAF; --ink-faint:#7D7488;
+      --rule:#2E2836; --rule-strong:#3D3547;
+      --accent:#C89BBC; --accent-ink:#DDBAD3; --accent-soft:#2A2130;
+      --done:#7FBF9C; --done-soft:#1B2A22;
+      --wait:#D6B267; --wait-soft:#2A2419;
+      --danger:#E08A81; --danger-soft:#2E1D1B;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#141118; --surface:#1C1822; --surface-2:#231E2B;
+    --ink:#EDE8F0; --ink-soft:#A79FAF; --ink-faint:#7D7488;
+    --rule:#2E2836; --rule-strong:#3D3547;
+    --accent:#C89BBC; --accent-ink:#DDBAD3; --accent-soft:#2A2130;
+    --done:#7FBF9C; --done-soft:#1B2A22;
+    --wait:#D6B267; --wait-soft:#2A2419;
+    --danger:#E08A81; --danger-soft:#2E1D1B;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:var(--sans); font-size:16.5px; line-height:1.85;
+    direction:rtl; text-align:right;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1240px; margin:0 auto; padding:0 24px 96px}
+  .cols{display:grid; grid-template-columns:1fr; gap:40px}
+  @media (min-width:1100px){ .cols{grid-template-columns:minmax(0,1fr) 250px} }
+
+  /* ── masthead ── */
+  .masthead{padding:56px 0 28px; border-bottom:1px solid var(--rule)}
+  .eyebrow{
+    font-size:12.5px; font-weight:700; color:var(--accent);
+    letter-spacing:.04em; margin:0 0 14px;
+  }
+  h1{
+    font-size:clamp(28px,4.2vw,42px); line-height:1.28; font-weight:700;
+    margin:0 0 14px; text-wrap:balance; letter-spacing:-.01em;
+  }
+  .lede{font-size:18px; color:var(--ink-soft); margin:0; max-width:64ch; text-wrap:pretty}
+  .meta{
+    display:flex; flex-wrap:wrap; gap:8px 22px; margin-top:24px;
+    font-size:13.5px; color:var(--ink-faint);
+  }
+  .meta b{color:var(--ink-soft); font-weight:600}
+
+  /* ── status strip ── */
+  .strip{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr));
+    gap:1px; background:var(--rule); border:1px solid var(--rule);
+    border-radius:10px; overflow:hidden; margin:32px 0 0;
+  }
+  .stat{background:var(--surface); padding:16px 18px}
+  .stat .n{
+    font-size:26px; font-weight:700; line-height:1.2;
+    font-variant-numeric:tabular-nums; display:block;
+  }
+  .stat .l{font-size:12.5px; color:var(--ink-faint); margin-top:2px; display:block}
+  .stat.is-accent .n{color:var(--accent)}
+  .stat.is-wait .n{color:var(--wait)}
+  .stat.is-done .n{color:var(--done)}
+
+  /* ── toc ── */
+  .toc{font-size:14px}
+  @media (min-width:1100px){
+    .toc{position:sticky; top:28px; align-self:start; max-height:calc(100vh - 56px); overflow:auto}
+  }
+  .toc h2{
+    font-size:12px; font-weight:700; color:var(--ink-faint);
+    letter-spacing:.06em; margin:0 0 12px; padding-bottom:10px;
+    border-bottom:1px solid var(--rule);
+  }
+  .toc ol{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px}
+  .toc a{
+    display:block; padding:6px 10px; border-radius:7px;
+    color:var(--ink-soft); text-decoration:none; line-height:1.5;
+    border-right:2px solid transparent;
+  }
+  .toc a:hover{background:var(--accent-soft); color:var(--accent-ink); border-right-color:var(--accent)}
+  .toc a:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .toc .num{
+    font-family:var(--mono); font-size:11.5px; color:var(--ink-faint);
+    margin-left:8px; font-variant-numeric:tabular-nums;
+  }
+
+  /* ── sections ── */
+  section{padding-top:52px}
+  h2.sec{
+    font-size:clamp(21px,2.6vw,27px); font-weight:700; margin:0 0 6px;
+    text-wrap:balance; letter-spacing:-.005em;
+  }
+  h2.sec .idx{
+    font-family:var(--mono); font-size:14px; color:var(--accent);
+    font-weight:600; margin-left:10px; font-variant-numeric:tabular-nums;
+  }
+  .sec-note{color:var(--ink-faint); font-size:14.5px; margin:0 0 24px; max-width:70ch}
+  h3{font-size:17.5px; font-weight:700; margin:32px 0 10px; text-wrap:balance}
+  p{margin:0 0 16px; max-width:74ch; text-wrap:pretty}
+  a{color:var(--accent-ink); text-decoration-thickness:1px; text-underline-offset:3px}
+
+  code, .id{
+    font-family:var(--mono); font-size:.87em; direction:ltr; display:inline-block;
+    background:var(--surface-2); border:1px solid var(--rule);
+    border-radius:5px; padding:.05em .4em; color:var(--ink-soft);
+  }
+
+  /* ── rulings & callouts ── */
+  .card{
+    background:var(--surface); border:1px solid var(--rule);
+    border-radius:12px; padding:22px 24px; box-shadow:var(--shadow);
+  }
+  .stack{display:flex; flex-direction:column; gap:14px}
+  .grid2{display:grid; grid-template-columns:1fr; gap:14px}
+  @media (min-width:760px){ .grid2{grid-template-columns:1fr 1fr} }
+
+  .rule-card{
+    background:var(--surface); border:1px solid var(--rule);
+    border-right:3px solid var(--accent); border-radius:10px; padding:18px 20px;
+  }
+  .rule-card .k{
+    font-size:12.5px; font-weight:700; color:var(--accent);
+    display:block; margin-bottom:6px;
+  }
+  .rule-card p{margin:0; font-size:15.5px}
+
+  .quote{
+    background:var(--accent-soft); border:1px solid var(--rule);
+    border-radius:10px; padding:18px 22px; margin:0 0 24px;
+    font-size:16.5px; color:var(--accent-ink); max-width:none;
+  }
+  .quote cite{display:block; margin-top:8px; font-size:13px; font-style:normal; color:var(--ink-faint)}
+
+  .note{
+    border-radius:10px; padding:16px 20px; font-size:15px;
+    border:1px solid var(--rule); background:var(--surface-2);
+  }
+  .note.warn{background:var(--wait-soft); border-color:color-mix(in srgb,var(--wait) 30%,transparent)}
+  .note.stop{background:var(--danger-soft); border-color:color-mix(in srgb,var(--danger) 32%,transparent)}
+  .note b{color:var(--ink)}
+  .note p:last-child{margin-bottom:0}
+
+  /* ── tables ── */
+  .tbl-wrap{overflow-x:auto; border:1px solid var(--rule); border-radius:10px; background:var(--surface)}
+  table{border-collapse:collapse; width:100%; font-size:14.5px; min-width:520px}
+  th,td{padding:11px 14px; text-align:right; border-bottom:1px solid var(--rule); vertical-align:top}
+  thead th{
+    background:var(--surface-2); font-size:12.5px; font-weight:700;
+    color:var(--ink-soft); letter-spacing:.02em; white-space:nowrap;
+  }
+  tbody tr:last-child td{border-bottom:0}
+  td.num{font-variant-numeric:tabular-nums; white-space:nowrap}
+
+  /* ── chips ── */
+  .chip{
+    display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+    font-size:12px; font-weight:700; padding:3px 9px; border-radius:999px;
+    border:1px solid transparent;
+  }
+  .chip::before{content:""; width:6px; height:6px; border-radius:50%; background:currentColor}
+  .chip.now{color:var(--accent); background:var(--accent-soft); border-color:color-mix(in srgb,var(--accent) 26%,transparent)}
+  .chip.ready{color:var(--done); background:var(--done-soft); border-color:color-mix(in srgb,var(--done) 26%,transparent)}
+  .chip.hold{color:var(--wait); background:var(--wait-soft); border-color:color-mix(in srgb,var(--wait) 30%,transparent)}
+  .chip.wait{color:var(--ink-faint); background:var(--surface-2); border-color:var(--rule)}
+
+  /* ── task list ── */
+  .tasks{display:flex; flex-direction:column; gap:12px; counter-reset:t}
+  .task{
+    background:var(--surface); border:1px solid var(--rule); border-radius:12px;
+    padding:18px 20px 18px 20px; position:relative;
+    border-right:3px solid var(--rule-strong);
+  }
+  .task.is-now{border-right-color:var(--accent)}
+  .task.is-hold{border-right-color:var(--wait)}
+  .task-head{display:flex; flex-wrap:wrap; align-items:baseline; gap:10px; margin-bottom:8px}
+  .task-ord{
+    counter-increment:t; font-family:var(--mono); font-size:12px;
+    color:var(--ink-faint); font-variant-numeric:tabular-nums;
+  }
+  .task-ord::before{content:counter(t,decimal-leading-zero)}
+  .task-id{
+    font-family:var(--mono); font-size:12.5px; font-weight:700;
+    color:var(--accent); direction:ltr;
+  }
+  .task-title{font-size:16.5px; font-weight:700; margin:0; flex:1 1 240px}
+  .task p{font-size:15px; margin:0 0 10px; max-width:none; color:var(--ink-soft)}
+  .task dl{display:grid; grid-template-columns:auto 1fr; gap:4px 12px; margin:0; font-size:13.5px}
+  .task dt{color:var(--ink-faint); font-weight:600; white-space:nowrap}
+  .task dd{margin:0; color:var(--ink-soft)}
+  .task dd code{font-size:.85em}
+
+  ul.tight{margin:0 0 16px; padding-right:20px; max-width:74ch}
+  ul.tight li{margin-bottom:7px}
+  ul.tight li::marker{color:var(--accent)}
+  ol.steps{margin:0 0 16px; padding-right:22px; max-width:74ch}
+  ol.steps li{margin-bottom:8px}
+  ol.steps li::marker{color:var(--accent); font-weight:700}
+
+  .cmd{
+    font-family:var(--mono); direction:ltr; text-align:left;
+    background:var(--ink); color:var(--ground);
+    padding:14px 18px; border-radius:9px; font-size:14.5px; margin:0 0 16px;
+  }
+  :root[data-theme="dark"] .cmd, :root:not([data-theme="light"]) .cmd{}
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]) .cmd{background:var(--surface-2); color:var(--ink); border:1px solid var(--rule)}
+  }
+  :root[data-theme="dark"] .cmd{background:var(--surface-2); color:var(--ink); border:1px solid var(--rule)}
+
+  footer{
+    margin-top:64px; padding-top:24px; border-top:1px solid var(--rule);
+    font-size:13.5px; color:var(--ink-faint);
+  }
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">خطة تنفيذ حاكمة · مسار جراحيّ</p>
+    <h1>مواءمة البوابة مع منطق المستندات المترابطة</h1>
+    <p class="lede">تحويل بوابة براندزو إلى نظامٍ يفهم المستند كائنًا تشغيليًّا له هويّة وأثر وسلسلة — لا صفحةً تُملأ. مبنيّة على قراءة حرفيّة لخطة٤ كاملةً، وعلى فحصٍ فعليّ للكود لا على افتراض.</p>
+    <div class="meta">
+      <span><b>المصدر:</b> خطة٤ — ٤٢٠٣ أسطر، قُرئت كاملةً</span>
+      <span><b>التاريخ:</b> ٢٠٢٦-٠٨-١٢</span>
+      <span><b>الفرع:</b> <code>claude/gateway-understanding-implementation-7aa71b</code></span>
+      <span><b>الاستئناف:</b> <code>npm run plan:sap</code></span>
+    </div>
+
+    <div class="strip">
+      <div class="stat is-accent"><span class="n">١٩</span><span class="l">مهمّة</span></div>
+      <div class="stat"><span class="n">١٢</span><span class="l">حزمة</span></div>
+      <div class="stat"><span class="n">٤١</span><span class="l">فجوة مرصودة</span></div>
+      <div class="stat is-done"><span class="n">٣</span><span class="l">قرار محسوم</span></div>
+      <div class="stat is-wait"><span class="n">٥</span><span class="l">قرار على المالك</span></div>
+      <div class="stat is-wait"><span class="n">٢</span><span class="l">مهمّة محجوبة</span></div>
+    </div>
+  </header>
+
+  <div class="cols">
+    <main>
+
+      <!-- ══════════ 1 ══════════ -->
+      <section id="s1">
+        <h2 class="sec"><span class="idx">01</span>القرار الحاكم</h2>
+        <p class="sec-note">كلّ ما بعده مبنيٌّ عليه. حُسم في ٢٠٢٦-٠٨-١٢ وأغلق بوّابة التوقّف المالي في الخطة.</p>
+
+        <blockquote class="quote">
+          «نحن المصدر المالي أودو، لكن المنطق يكون موجودًا في النظام… ونريد أن نلغي أي منطق لدفعٍ للأودو — البوابة تستورد وتحدّث البيانات من أودو فقط.»
+          <cite>قرار المالك · ٢٠٢٦-٠٨-١٢</cite>
+        </blockquote>
+
+        <div class="stack">
+          <div class="rule-card">
+            <span class="k">الحكم أ — السلطة</span>
+            <p>أودو هو مصدر الحقيقة المالي. لا شجرة حساباتٍ محلّيّة، ولا قيدٌ يُولَّد في البوابة، ولا دفترٌ محاسبيّ ثانٍ.</p>
+          </div>
+          <div class="rule-card">
+            <span class="k">الحكم ب — المعرفة</span>
+            <p>المنطق يبقى في البوابة. تعرف أثر كلّ مستند، وتعرض المستند الماليّ والقيد والحساب، وتسمح بالحفر في الاتّجاهين — بأرقامٍ مستوردة لا محسوبة محلّيًّا. البوابة تفهم ولا تُقرّر.</p>
+          </div>
+          <div class="rule-card">
+            <span class="k">الحكم ج — الاتّجاه</span>
+            <p>اتّجاهٌ واحد: أودو ← البوابة. يُختم كلّ منطق دفع. البوابة تستورد وتُحدّث فقط.</p>
+          </div>
+        </div>
+
+        <h3>الحدّ الفاصل الذي يحسم كلّ خلافٍ لاحق</h3>
+        <p><b>الكمّيّة للبوابة، والقيمة لأودو.</b> كلّ محورٍ يبدو «مختلطًا» في المصفوفات يعني هذا بالضبط، لا أكثر.</p>
+
+        <div class="note warn">
+          <p><b>الختم لا الحذف.</b> الخطة تمنع حذف أيّ مسارٍ قائم أو إزالةً غير قابلة للعكس. فالدفع يُغلق بحارسٍ مغلقٍ افتراضًا، ويبقى الفكّ ممكنًا بقرارٍ صريح منك. شاشة المزامنة تبقى بمسارها وتصير استيرادًا.</p>
+        </div>
+      </section>
+
+      <!-- ══════════ 2 ══════════ -->
+      <section id="s2">
+        <h2 class="sec"><span class="idx">02</span>ما لا نفعله</h2>
+        <p class="sec-note">اثنا عشر قيدًا إلزاميًّا وستّة محرّمات. هذه ليست توصيات — أيّ خرقٍ لها يُبطل العمل مهما بدا ناجحًا.</p>
+
+        <div class="grid2">
+          <div class="card">
+            <h3 style="margin-top:0">القيود الإلزاميّة</h3>
+            <ul class="tight">
+              <li>لا حذف ولا تغيير لأيّ رابط قائم، ومصدر التنقّل يبقى واحدًا.</li>
+              <li>لا تعديل ولا حذف في السجلّات الملحقة-فقط السبعة: التدقيق · المسح · الأحداث · حركات المخزون · التسكين · الرقابة · المرفقات.</li>
+              <li>لا إيموجي في الواجهات — أيقونات خطّيّة محلّيّة، والأحمر للخطر وحده.</li>
+              <li>لا مصدر خارجيّ ولا مكتبة بعيدة — كلّ الأصول مستضافة ذاتيًّا.</li>
+              <li>لا حدود ماليّة ولا صلاحيات ولا حسابات مخترَعة.</li>
+              <li>لا نشرٍ لقواعد Firestore — تبقى في المستودع حتى تنشرها بنفسك.</li>
+              <li>لا دفعٍ إلى الفرع الرئيس إلا بأمرك.</li>
+              <li>حدود Spark محفوظة: لا وظائف سحابيّة ولا تخزين، والمرفقات ضمن الآليّة الحاليّة.</li>
+              <li>الهويّة البصريّة والبنية ذات الطبقات الثلاث تبقى كما هي.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">خارج النطاق دون قرارك</h3>
+            <ul class="tight">
+              <li>نسخ واجهة SAP حرفيًّا أو استيراد تصميمه.</li>
+              <li>تغيير شامل لهويّة البوابة.</li>
+              <li>إنشاء محاسبة جديدة أو افتراض قيودٍ ماليّة.</li>
+              <li>استبدال سلسلة تشغيلٍ قائمة قبل إثبات الفجوة.</li>
+              <li>حذف بياناتٍ أو ترحيلها بطريقةٍ لا تُعكس.</li>
+              <li>النشر الإنتاجيّ أو الدفع للفرع الرئيس بلا إذن.</li>
+            </ul>
+            <div class="note" style="margin-top:6px">
+              <p>القاعدة الحاكمة قبل أيّ إضافة: <b>لا مكوّن ولا خدمة جديدة بلا بيانٍ يثبت أنّ البديل غير موجود أو غير كافٍ.</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════ 3 ══════════ -->
+      <section id="s3">
+        <h2 class="sec"><span class="idx">03</span>أين البوابة اليوم</h2>
+        <p class="sec-note">نتيجة فحصٍ فعليّ: ١٧٨ خدمة · ٧٨ صفحة لوحة · ٣٨ مخطّط مستند · ٥٦ مجموعة محكومة بالقواعد · ٩٠ ملفّ اختبار. الخلاصة: نبدأ من نقطةٍ أعلى ممّا تفترضه الخطة.</p>
+
+        <h3>ما هو مبنيٌّ فعلًا وقويّ</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>المحور</th><th>الحالة</th><th>الدليل في الكود</th></tr></thead>
+            <tbody>
+              <tr><td>دفتر المخزون والذرّية</td><td><span class="chip ready">الأقوى</span></td><td>حركات ملحقة-فقط · معرّف حركةٍ حتميّ يمنع الازدواج · القيد عند الإنجاز حصرًا · مواقع نظامٍ تُصفّر بذاتها</td></tr>
+              <tr><td>روابط المستندات</td><td><span class="chip ready">مبنيّ</span></td><td>ستّة أنواع علاقة · روابط على مستوى السطر · رصيدٌ مفتوح محسوب · قفل تخصيصٍ ذرّيّ</td></tr>
+              <tr><td>التنفيذ الجزئي المتعدّد</td><td><span class="chip ready">مثبت</span></td><td>سيناريو ١٠٠ ← ٦٠ ← ٤٠ منجَزٌ ومختبَر، وهو مثال القبول الحاكم في الخطة</td></tr>
+              <tr><td>خريطة العلاقات</td><td><span class="chip ready">مبنيّ</span></td><td>خريطة متعدّدة الاتّجاهات، كلّ عقدة تفتح المستند نفسه</td></tr>
+              <tr><td>التنقّل الأفقي</td><td><span class="chip ready">مبنيّ</span></td><td>الأول/السابق/التالي/الأخير داخل النوع نفسه، بلا التفاف عند الحدود</td></tr>
+              <tr><td>وحدات القياس</td><td><span class="chip ready">أدقّ من المقترح</span></td><td>أربع عائلات · معاملٌ خاصّ بكلّ صنف للوحدات المشتقّة · حارس كسر</td></tr>
+              <tr><td>الدليل والتدقيق</td><td><span class="chip ready">مبنيّ</span></td><td>سجلّاتٌ ملحقة-فقط محكومة بقواعد منشورة — وهو أقوى ما في البوابة</td></tr>
+              <tr><td>طبقة التكامل</td><td><span class="chip ready">مبنيّة</span></td><td>سياسة اتّجاهٍ لكلّ نوع (دفع · سحب · استيراد مرّة · عزل) وحقول المال مقفلة افتراضًا</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note" style="margin-top:20px">
+          <p><b>أهمّ نتيجة في الفحص كلّه:</b> المبدأ المعماريّ في الخطة يعدّد ثلاث عشرة خاصّيّة للمستند — <b>اثنتا عشرة منها موجودة</b>، والغائب الوحيد هو الأثر المالي. ومن الجداول التسعة التي يقترحها المرجع، <b>ثمانية لها نظيرٌ قائم وواحدٌ فقط يحتاج بناءً.</b></p>
+        </div>
+      </section>
+
+      <!-- ══════════ 4 ══════════ -->
+      <section id="s4">
+        <h2 class="sec"><span class="idx">04</span>الفجوات الأربع والأربعون… أربعون وواحدة</h2>
+        <p class="sec-note">كلّ فجوةٍ مرقّمة ومربوطة بمهمّةٍ تسدّها وبسندها في نصّ الخطة. هذه أهمّ ستّ منها.</p>
+
+        <div class="stack">
+          <div class="card">
+            <h3 style="margin-top:0">١ — لا كتالوج يربط الطرف بالصنف <span class="chip hold" style="margin-right:8px">الأكبر</span></h3>
+            <p style="margin-bottom:0">بحثٌ نصّيّ في الشجرة كلّها عن كود المورد للصنف رجع <b>فارغًا</b>. هذه الفجوة وحدها تحجب: البحث بكود مورد · ترتيب النتائج الثمانيّ · باركود الوحدة · سيناريوهين من الخمسة عشر. وهي الجدول الوحيد من التسعة الذي يحتاج بناءً حقيقيًّا.</p>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">٢ — حالات المستند خمسٌ لا تكفي</h3>
+            <p style="margin-bottom:0">النظام يعرف: مسودّة · بانتظار الاعتماد · معتمَد · مرفوض · منجَز. ولا يعرف <b>المفتوح ولا المنفَّذ جزئيًّا ولا المغلق ولا الملغى</b> — والخطة تمنع صراحةً المساواة بين «مغلق» و«ملغى». المقترح: حالتان مخزَّنتان فقط، وثلاثٌ محسوبة من الرصيد المفتوح.</p>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">٣ — ثلاثة تسريبات تمنع نفاذ قرارك المالي</h3>
+            <p style="margin-bottom:0">الافتراض عند غياب السياسة هو <b>الدفع</b> لا السحب · أربعة مسارات تكتب إلى أودو متجاوزةً الحارس · حدّ النقل مفتوح بلا حارس اتّجاه. العلاج: <b>حارسٌ واحد عند حدّ النقل</b> يغلق الثلاثة ويمنع أيّ تسريبٍ مستقبليّ.</p>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">٤ — «المطلوب من المورد» مفقود من معادلة المتاح</h3>
+            <p style="margin-bottom:0">المتاح = الموجود − المحجوز + <b>المطلوب</b>. والمحجوز مبنيّ، والمطلوب لا. مصدره موجود (الرصيد المفتوح لأوامر الشراء) لكنه غير موصولٍ بالأرصدة. يظهر ثلاث مرّات في الخطة والمرجع — دليل مركزيّته.</p>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">٥ — نصف مسار النسخ مفقود</h3>
+            <p style="margin-bottom:0">«إنشاء مستند لاحق» مبنيٌّ ومختبَر. «جلب من مستند سابق» غير موجود — لكنه <b>ليس ميزةً جديدة</b>: هو عكس خريطةٍ قائمة، وبيانات معالج الجلب كلّها موجودة. الناقص شاشةٌ ودالّة معكوسة.</p>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">٦ — كلّ رقمٍ في اللوحات ينتهي بصفحةٍ عامّة</h3>
+            <p style="margin-bottom:0">الخطة تشترط أن يفتح الرقمُ <b>القائمة المفلترة التي تكوّنه</b>، ثمّ المستند، ثمّ السطر، ثمّ الحركة. هذا يُدين معظم لوحاتنا اليوم — عملٌ واسع لكنه ميكانيكيّ ومتكرّر.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════ 5 ══════════ -->
+      <section id="s5">
+        <h2 class="sec"><span class="idx">05</span>المهامّ التسع عشرة بترتيب التنفيذ</h2>
+        <p class="sec-note">جبهةٌ واحدة في المرّة. لا تُفتح مهمّةٌ قبل إغلاق سابقتها ببيّنةٍ رقميّة. الترتيب أدناه هو ترتيب الاعتماديّة الفعليّ، والحارس يرفض أيّ خرقٍ له.</p>
+
+        <div class="tasks">
+
+          <article class="task is-now">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-0</span>
+              <h3 class="task-title" style="margin:0">الجرد وتثبيت العقود</h3>
+              <span class="chip now">جارية الآن</span>
+            </div>
+            <p>الحاجز الصلب: الخطة تمنع أيّ كودٍ قبل اكتمال مصفوفة الجرد وربط كلّ فجوةٍ بمصدرٍ فعليّ في الكود. أُنجز منها الفهم الحرفيّ والمصفوفات الثلاث؛ يتبقّى فتح ستّ خلايا لم تُفحص بعد.</p>
+            <dl>
+              <dt>المتبقّي</dt><dd>لقطة اسم الصنف والمعامل في السطر · لقطة بيانات الطرف · حقل التكلفة في الحركة · نسخة المرفق وبصمته · وجود إشعار الشحن · تتبّع المواقع التخزينيّة</dd>
+              <dt>يُغلق بـ</dt><dd>لا خليّة غير مفحوصة · جدول تغطية ٣٨ نوعًا × ٥ تمثيلات · قائمة قرارات إعادة استخدام/توسيع/ربط/إضافة</dd>
+            </dl>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-15</span>
+              <h3 class="task-title" style="margin:0">ختم اتّجاه التكامل — سحبٌ فقط</h3>
+              <span class="chip ready">أوّل مهمّة ماليّة</span>
+            </div>
+            <p>تنفيذ الحكم (ج). حارسٌ واحد عند حدّ النقل يرفض الكتابة إلى أودو مغلقًا افتراضًا، فيغلق المسارات الأربعة المتجاوزة دفعةً واحدة ويمنع أيّ مسارٍ جديد من التسرّب. ويُقلب الافتراض من الدفع إلى السحب.</p>
+            <dl>
+              <dt>يمسّ</dt><dd><code>odooClient</code> · <code>odooSyncService</code> · <code>integrationPolicy</code></dd>
+              <dt>يُغلق بـ</dt><dd>اختبارٌ حارس على عميلٍ وهميّ يثبت أنّ المسارات الأربعة لا تكتب · لا حقل مالٍ يعبر · الشاشة والمسار باقيان</dd>
+            </dl>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-1</span>
+              <h3 class="task-title" style="margin:0">هويّة الصنف وبطاقته</h3>
+            </div>
+            <p>الكود هو الهويّة، والباركود والاسم وسيلتا بحثٍ وعرض. حارسٌ يمنع صنفًا جديدًا بلا كود، مع بقاء القديم عاملًا توافقيًّا — لا نكسر ما يعمل.</p>
+            <dl><dt>يُغلق بـ</dt><dd>تغيير اسم الصنف لا يقطع تاريخه · البطاقة تعرض الكميات الأربع</dd></dl>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-2</span>
+              <h3 class="task-title" style="margin:0">كتالوج الطرف بالصنف</h3>
+              <span class="chip ready">أعلى عائد</span>
+            </div>
+            <p>الفجوة الأكبر. مجموعةٌ واحدة تجمع المورد والعميل، بثلاثة حقولٍ إلزاميّة فقط والباقي اختياريّ يُملأ حين يوجد مصدره — لأنّ الخطة تمنع جعل الحقول المقترحة شرطًا بلا حوكمة.</p>
+            <dl>
+              <dt>يفتح</dt><dd>البحث بكود مورد · ترتيب النتائج · باركود الوحدة · سيناريوهي القبول ٤ و٥</dd>
+              <dt>ينتظرك</dt><dd>نشر قاعدة الوصول بعد كتابتها — بلا نشرٍ يبقى الإثبات آليًّا لا حيًّا</dd>
+            </dl>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-3</span>
+              <h3 class="task-title" style="margin:0">وحدات القياس — شراءً وبيعًا وباركودًا</h3>
+            </div>
+            <p>نموذجنا الحاليّ يبقى ولا يُستبدل. يُضاف فوقه: دور الوحدة (شراء/بيع)، وباركودٌ لكلّ وحدة، وحفظ المعامل والكميّة الأصليّة في السطر.</p>
+            <dl><dt>يُغلق بـ</dt><dd>ثلاث كراتين من أربعٍ وعشرين تُنتج اثنتين وسبعين وحدة أساسيّة · موردان بتعبئتين مختلفتين لا يختلط تحويلهما</dd></dl>
+          </article>
+
+          <article class="task is-hold">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-4</span>
+              <h3 class="task-title" style="margin:0">حالات المستند</h3>
+              <span class="chip hold">محجوبة على قرارك</span>
+            </div>
+            <p>حالتان مخزَّنتان جديدتان فقط: مغلق (يوقف تنفيذ المتبقّي) وملغى (يُبقي الأثر الرقابيّ). والمفتوح والجزئيّ والمكتمل تُحسب من الرصيد المفتوح ولا تُخزَّن — المحسوب لا يتقادم ولا يتعارض. ومعها تُزال الإيموجي من الحالات.</p>
+            <dl><dt>محجوبة بـ</dt><dd>موافقتك على نموذج الحالتين مقابل الثلاث المحسوبة</dd></dl>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-5</span>
+              <h3 class="task-title" style="margin:0">جلب من مستند سابق ومعالج الاختيار</h3>
+            </div>
+            <p>دالّة معكوسة عن الخريطة القائمة — لا خريطة ثانية. ثمّ شاشة: اختيار الطرف، فالمستندات المؤهّلة له وحدها، فالأسطر والكميّات، مع «غير متاح» للسطر المستنفَد.</p>
+            <dl><dt>يُغلق بـ</dt><dd>المساران ينتجان العلاقة نفسها · لا أثر لنموذجٍ غير محفوظ · رسالة التعارض تُظهر المسودة الحاجزة</dd></dl>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-6</span>
+              <h3 class="task-title" style="margin:0">الخريطة — فصل المرجع عن المصدر</h3>
+            </div>
+            <p>مفتاح تبديلٍ يُظهر ويُخفي العقد المرجعيّة، فلا توحي بطاقةٌ مرجعيّة بأنّها رحّلت كمّيّة. أبسط وأصدق من التلوين وحده.</p>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-7</span>
+              <h3 class="task-title" style="margin:0">دفتر المخزون — المطلوب والموقع والتكلفة</h3>
+            </div>
+            <p>وصل «المطلوب من المورد» بمعادلة المتاح، وإدخال الموقع التخزينيّ في مستويات التتبّع، وتثبيت التكلفة في الحركة.</p>
+            <dl><dt>يُغلق بـ</dt><dd>طلب النقل يؤثّر في المحجوز والمطلوب ولا يغيّر الموجود · كلّ رقمٍ يصل إلى حركته ومستنده وسطره</dd></dl>
+          </article>
+
+          <article class="task is-hold">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-8</span>
+              <h3 class="task-title" style="margin:0">التتبّع التسلسليّ</h3>
+              <span class="chip hold">محجوبة على قرارك</span>
+            </div>
+            <p>تمثيل الرقم التسلسليّ كدفعةٍ كمّيّتها واحد — يبلغ تسعين بالمئة من القيمة بلا تغيير مفتاح الرصيد ولا جراحةٍ في الأرصدة.</p>
+            <dl><dt>محجوبة بـ</dt><dd>موافقتك على هذا التمثيل</dd></dl>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-9</span>
+              <h3 class="task-title" style="margin:0">الجودة — الأرقام القابلة للنقر</h3>
+              <span class="chip ready">أوّل أثرٍ مرئيّ</span>
+            </div>
+            <p>داخل أمر الشراء: المطلوبة والمستلمة والمقبولة والمرفوضة والمفتوحة. النقر على المستلم يفتح الاستلامات، وعلى المقبول أمر التخزين، وعلى المرفوض محضر الرفض. <b>خمسة أعمدة مشتقّة بالكامل — بلا حقلٍ جديد واحد.</b></p>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-10</span>
+              <h3 class="task-title" style="margin:0">المرتجعات والنقل العكسيّ</h3>
+            </div>
+            <p>الشروط الستّة للمرتجع، ومسار فحص المرتجع ثلاثيّ الوجهة (صالح · صيانة · تالف). والنقل العكسيّ حركةٌ جديدة مرتبطة بالأصل لا تعديلٌ له. والصفوف الماليّة الأربعة تُسجَّل فجوةً موصوفة ولا يُلفَّق لها أثر.</p>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-11</span>
+              <h3 class="task-title" style="margin:0">المرفقات — النسخة والبصمة</h3>
+            </div>
+            <p>إنشاء إصدارٍ جديد لا يمحو السابق. وبصمة الملفّ تُحفظ. والمرفقات تظهر على بطاقات الصنف والطرف لا على المستندات وحدها — ضمن حدود Spark الحاليّة.</p>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-12</span>
+              <h3 class="task-title" style="margin:0">صندوق المستندات المفتوحة</h3>
+              <span class="chip ready">أعلى قيمة يوميّة</span>
+            </div>
+            <p>كلّ ما لم يكتمل، لكلّ نوع، في مكانٍ واحد يُعمل منه. البيانات موجودة والشاشة واحدة والأثر اليوميّ مباشر على كلّ موظّف. مسارٌ منفصل عن صندوق الاعتماد القائم، بلا حذف أيّ رابط.</p>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-13</span>
+              <h3 class="task-title" style="margin:0">الحفر التحليليّ</h3>
+            </div>
+            <p>الرقم يفتح القائمة المفلترة التي تكوّنه، ثمّ المستند، ثمّ السطر، ثمّ الحركة، ثمّ الدفعة والموقع. ومجموع التفاصيل يطابق المؤشّر — أو يُفسَّر الفرق صراحةً.</p>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-14</span>
+              <h3 class="task-title" style="margin:0">تقارير الصنف والمورد وتتبّع الدفعة</h3>
+            </div>
+            <p>الصنف بأقسامه الأربعة عشر، والمورد بزمن توريده ونسبة رفضه والتزامه، وتتبّع الدفعة أمامًا وخلفًا. الأسئلة الثمانية للتتبّع كلّها قابلة للإجابة من بياناتنا اليوم — استعلامٌ لا بناء.</p>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-16</span>
+              <h3 class="task-title" style="margin:0">مرآة أودو الماليّة</h3>
+            </div>
+            <p>استيراد شجرة الحسابات والقيود والفواتير والمدفوعات — قراءةً فقط. كلّ سجلٍّ يحمل هويّة الربط والحالة ووقت المزامنة والنتيجة. ولا يُعاد توليد قيدٍ محلّيّ. وفشل السحب يظهر حالةً غير مكتملة لا ترحيلًا ناجحًا.</p>
+            <dl><dt>ينتظرك</dt><dd>تأكيد أنّ الذمم المحلّيّة تصير مرآةً مطابَقة لا مصدرًا مستقلًّا</dd></dl>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-17</span>
+              <h3 class="task-title" style="margin:0">منطق الأثر المالي وواجهته</h3>
+              <span class="chip ready">شقّ الحكم ب</span>
+            </div>
+            <p>عقدٌ ماليّ مركزيّ يُقرأ في دقيقة — لا شروطٌ مبعثرة في عشر شاشات — على نمط عقد القيد المخزنيّ القائم. ومصفوفة أثر المستندات الواحد والعشرون تُنقل إليه وتُطابَق آليًّا، وأيّ فرقٍ يُسجَّل ولا يمرّ بصمت. ثمّ واجهة «الأثر المالي» بعناصرها الثمانية، والحفر في الاتّجاهين.</p>
+          </article>
+
+          <article class="task">
+            <div class="task-head">
+              <span class="task-ord"></span><span class="task-id">SAP-18</span>
+              <h3 class="task-title" style="margin:0">التحقّق الشامل</h3>
+            </div>
+            <p>السيناريوهات الخمسة عشر بنتائجها الحقيقيّة، والبوّابات الأربع خضراء، واختبار متصفّحٍ حقيقيّ بلقطاتٍ قبل وبعد، وإثبات ظهور الخريطة بصريًّا لا وجود بياناتها فحسب.</p>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- ══════════ 6 ══════════ -->
+      <section id="s6">
+        <h2 class="sec"><span class="idx">06</span>القرارات</h2>
+        <p class="sec-note">ثلاثة حُسمت، وخمسة تنتظرك. الاثنان الأوّلان منها يحجبان مهمّتين فعليًّا؛ والباقي لا يوقف العمل.</p>
+
+        <h3>محسومة</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>القرار</th><th>الحسم</th><th>الأثر</th></tr></thead>
+            <tbody>
+              <tr><td>مصدر الحقيقة المالي</td><td>أودو</td><td>يُغلق نحو ستّين بالمئة من الحزمة الماليّة بلا بناء</td></tr>
+              <tr><td>سلطة القيد والترحيل والإلغاء</td><td>أودو وحده</td><td>البوابة لا تكتب إلى أودو بحال</td></tr>
+              <tr><td>اتّجاه التكامل</td><td>سحبٌ فقط: أودو ← البوابة</td><td>يُختم الدفع بحارسٍ ولا يُحذف كودُه</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>تنتظرك</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>ما المطلوب</th><th>إن لم يُحسم</th><th>الحالة</th></tr></thead>
+            <tbody>
+              <tr><td>نموذج الحالتين المخزَّنتين مقابل الثلاث المحسوبة</td><td>تتعطّل ثلاث حزمٍ جزئيًّا</td><td><span class="chip hold">يحجب SAP-4</span></td></tr>
+              <tr><td>تمثيل الرقم التسلسليّ كدفعةٍ كمّيّتها واحد</td><td>يتعذّر سيناريو التتبّع التسلسليّ</td><td><span class="chip hold">يحجب SAP-8</span></td></tr>
+              <tr><td>نشر قواعد الوصول بعد إضافة الكتالوج</td><td>يبقى الإثبات آليًّا لا حيًّا</td><td><span class="chip wait">لا يحجب</span></td></tr>
+              <tr><td>إقرار توقّف جسر الدفع الحيّ القائم</td><td>يبقى مصدران محتملان لرقمٍ واحد</td><td><span class="chip wait">إقرار</span></td></tr>
+              <tr><td>هل الفروع مستودعاتٌ في كيانٍ واحد أم كيانات مستقلّة؟</td><td>لا يجوز افتراض أيٍّ منهما — والخطة تأمرني بالتوقّف</td><td><span class="chip wait">يؤثّر في النقل الداخليّ</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note warn" style="margin-top:20px">
+          <p><b>اقتراحٌ عمليّ بشأن النشر:</b> تجميع كلّ تعديلات قواعد الوصول في <b>نشرةٍ واحدة لكلّ حزمة</b> بدل نشرةٍ لكلّ مهمّة. النشر متكرّرٌ في تاريخنا كسبب تعثّر، وتجميعه يقلّل عدد المرّات التي تنتظرني فيها أو أنتظرك.</p>
+        </div>
+      </section>
+
+      <!-- ══════════ 7 ══════════ -->
+      <section id="s7">
+        <h2 class="sec"><span class="idx">07</span>كيف تُغلق كلّ مهمّة</h2>
+        <p class="sec-note">الإنجاز يُثبَت ولا يُدَّعى. الحارس يرفض إغلاق أيّ مهمّةٍ بلا بيّنة، ويرفض فتح جبهتين.</p>
+
+        <h3>البوّابات الأربع الآليّة</h3>
+        <div class="cmd">npm run build &nbsp;·&nbsp; npm test &nbsp;·&nbsp; npm run audit &nbsp;·&nbsp; npm run lint</div>
+        <p>خطّ أساس التدقيق أحمر أصلًا، ولا يعني ذلك تجاهله. تُصنَّف نتائجه إلى قديمٍ وجديد، ويُمنع أيّ مشكلةٍ جديدة ناتجة عن العمل. خطّ الأساس المعلَن: مئةٌ وستّة وعشرون.</p>
+
+        <h3>وما لا يكفي فيه الآليّ</h3>
+        <ul class="tight">
+          <li>اختبارٌ حقيقيّ في متصفّح للواجهات المتغيّرة، ولقطاتٌ قبل وبعد.</li>
+          <li>اتّجاه الكتابة من اليمين، والعرض الضيّق، ولوحة المفاتيح، وحالات التحميل والفراغ والخطأ.</li>
+          <li>إثبات أنّ الخريطة والوصلات <b>ظاهرة</b> — لا أنّ بياناتها في الصفحة.</li>
+          <li>ولا يُقال إنّ النشر أو القواعد أو القبول الحيّ ثبتت من نجاح البناء والاختبارات وحدها.</li>
+        </ul>
+
+        <h3>تقرير ثابت البنية بعد كلّ حزمة</h3>
+        <p>الحزمة · المنجَز · الملفّات المتغيّرة · العقود المضافة أو المعاد استخدامها · السيناريوهات ونتائجها · الاستثناء البصريّ وسببه · المتبقّي · المخاطر وقراراتك · حالة البوّابات الأربع · <b>وحدود ما لم يثبت حيًّا</b>.</p>
+      </section>
+
+      <!-- ══════════ 8 ══════════ -->
+      <section id="s8">
+        <h2 class="sec"><span class="idx">08</span>الحفظ والاستئناف</h2>
+        <p class="sec-note">لا تُبنى الذاكرة على المحادثة. تُبنى على ملفٍّ محروس، وأمرٍ واحد يعيدنا إلى موضع التوقّف في ثوانٍ.</p>
+
+        <div class="cmd">npm run plan:sap</div>
+
+        <ol class="steps">
+          <li><b>يطبع:</b> أين توقّفنا · ما أُنجز من المهمّة الجارية · الخطوة التالية حرفيًّا · المحجوب · وما ينتظرك.</li>
+          <li><b>يُعيد توليد</b> بطاقة استئنافٍ من صفحةٍ واحدة — تُقرأ بدل ملفّ الجلسة الضخم.</li>
+          <li><b>يرفض:</b> إغلاق مهمّةٍ بلا كوميت في بيّنتها · فتح جبهتين · مهمّةً بلا معيار إتمام · فجوةً بلا مهمّةٍ تسدّها · حلقة اعتماديّة دوريّة.</li>
+        </ol>
+
+        <h3>عند إغلاق كلّ مهمّة</h3>
+        <ol class="steps">
+          <li>تحديث حالة المهمّة وبيّنتها في المتتبّع.</li>
+          <li>تشغيل الحارس — يُعيد توليد البطاقة ويرفض الادّعاء.</li>
+          <li>سطرٌ في ملفّ الجلسة بمعرّف المهمّة.</li>
+        </ol>
+
+        <div class="note">
+          <p><b>أين يعيش كلّ شيء:</b> الفهم الحرفيّ للخطة والمرجع، ومصفوفات الجرد والتوافق المالي وسجلّ التكيّف، والمتتبّع، وبطاقة الاستئناف — كلّها ملفّاتٌ في المستودع تحت مجلّد الخطة. هذه الصفحة نسخةُ دراسةٍ لها، والمتتبّع يبقى مصدر الحقيقة للتنفيذ.</p>
+        </div>
+      </section>
+
+      <!-- ══════════ 9 ══════════ -->
+      <section id="s9">
+        <h2 class="sec"><span class="idx">09</span>المخاطر التي أراها</h2>
+        <p class="sec-note">أقولها الآن لا بعد وقوعها.</p>
+
+        <div class="stack">
+          <div class="note stop">
+            <p><b>ختم الدفع يوقف عملًا حيًّا.</b> جسر المزامنة اليوم يدفع أوامر الشراء والبيانات الأساسيّة إلى أودو مسوّدةً حتى الاعتماد. بعد الختم يتوقّف هذا، وتصير الشاشة استيرادًا. القرار قرارك، لكن لا يصحّ أن يُفاجئك.</p>
+          </div>
+          <div class="note warn">
+            <p><b>قواعد الوصول تنتظرك دائمًا.</b> لا أنشرها بنصّ الخطة. فكلّ مجموعةٍ جديدة تبقى بلا قاعدةٍ منشورة، وكلّ تحقّقٍ حيّ عليها يفشل حتى تنشرها. هذا أكثر سببٍ تعثّرنا به سابقًا.</p>
+          </div>
+          <div class="note warn">
+            <p><b>سعة الخطة أوسع من «عمليّة جراحيّة واحدة».</b> النطاق المعلَن خمسة عشر محورًا وأربع وأربعون فجوة. علاجي: التسلسل الصارم وجبهةٌ واحدة، وأن تكون أوّل المخرجات المرئيّة رخيصةً وعالية الأثر — الأرقام القابلة للنقر، وصندوق المستندات المفتوحة.</p>
+          </div>
+          <div class="note warn">
+            <p><b>الذمم المحلّيّة تتعارض مع «لا دفتر ثانٍ».</b> عندنا اليوم ذممٌ محلّيّة تُحسب في البوابة. بحكم قرارك تصير مرآةً مطابَقة لأودو. هذا يمسّ شاشةً وحارسًا قائمين، وأثبتُّه في سجلّ التكيّف بانتظار تأكيدك.</p>
+          </div>
+          <div class="note">
+            <p><b>الخطة نفسها ليست معصومة.</b> كتبت مسار ملفٍّ لا وجود له في مستودعنا. لذلك القاعدة التي أعمل بها — وهي من الخطة ذاتها — <b>نتبع الكود لا الخطة</b>، وكلّ فرقٍ يُسجَّل في سجلّ التكيّف ولا يمرّ بصمت.</p>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <p style="margin:0">أُعدّت بعد قراءة الخطة الحاكمة كاملةً وفحص الكود الفعليّ. لم يُلمس سطرٌ واحد من كود البوابة، ولم يُثبَّت كوميت، ولم يُدفع شيء. المهمّة الجارية: إكمال الجرد.</p>
+      </footer>
+
+    </main>
+
+    <nav class="toc" aria-label="فهرس الخطة">
+      <h2>الفهرس</h2>
+      <ol>
+        <li><a href="#s1"><span class="num">01</span>القرار الحاكم</a></li>
+        <li><a href="#s2"><span class="num">02</span>ما لا نفعله</a></li>
+        <li><a href="#s3"><span class="num">03</span>أين البوابة اليوم</a></li>
+        <li><a href="#s4"><span class="num">04</span>الفجوات</a></li>
+        <li><a href="#s5"><span class="num">05</span>المهامّ ١٩</a></li>
+        <li><a href="#s6"><span class="num">06</span>القرارات</a></li>
+        <li><a href="#s7"><span class="num">07</span>بوّابة الإغلاق</a></li>
+        <li><a href="#s8"><span class="num">08</span>الحفظ والاستئناف</a></li>
+        <li><a href="#s9"><span class="num">09</span>المخاطر</a></li>
+      </ol>
+    </nav>
+  </div>
+</div>
