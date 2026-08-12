@@ -12,7 +12,7 @@
     "modules": 88,
     "serviceDomains": 40,
     "serviceFiles": 270,
-    "collections": 62,
+    "collections": 63,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -1143,6 +1143,8 @@
         "dayOf",
         "defaultValueFor",
         "deliveredCount",
+        "derivationQuantityFields",
+        "derivationRefField",
         "derivationTargets",
         "deriveDocument",
         "disbursedTotal",
@@ -2733,6 +2735,7 @@
       "datingTagKept",
       "endpointDocumentMatches",
       "hasProfile",
+      "identityKept",
       "immutableKept",
       "isActive",
       "isAdmin",
@@ -2752,6 +2755,7 @@
       "signedIn",
       "taskDoc",
       "validEndpoint",
+      "validFlowAllocation",
       "validRelation"
     ],
     "collections": [
@@ -3185,6 +3189,55 @@
             "roles": [
               "isManager",
               "isVanSalesWriter"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "document_flow_allocations",
+        "path": "document_flow_allocations",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "(isStockActor() || isProcurementActor() || isLaborWriter() || isVanSalesWriter()) && validFlowAllocation()",
+            "roles": [
+              "isStockActor",
+              "isProcurementActor",
+              "isLaborWriter",
+              "isVanSalesWriter",
+              "validFlowAllocation"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "(isStockActor() || isProcurementActor() || isLaborWriter() || isVanSalesWriter()) && validFlowAllocation() && identityKept() && request.resource.data.revision =",
+            "roles": [
+              "isStockActor",
+              "isProcurementActor",
+              "isLaborWriter",
+              "isVanSalesWriter",
+              "validFlowAllocation",
+              "identityKept"
             ]
           },
           {
