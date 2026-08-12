@@ -1,465 +1,720 @@
 {
-  "plan": "خطة اكتمال نسخة العميل المشتركة",
-  "planDoc": "docs/خطة-اكتمال-نسخة-العميل-المشتركة.md",
-  "resumeTitle": "اكتمال نسخة العميل",
-  "command": "npm run plan:client",
-  "approvedOn": "2026-08-12",
-  "track": "التنفيذ المكمل للمرحلة الأولى",
-  "lastUpdated": "2026-08-12",
-  "lastUpdatedBy": "Codex",
-  "baseline": {
-    "originMain": "47017aab8c3ba25a4d9b125b89ea486166f75e8c",
-    "pages": 94,
-    "tests": 1234,
-    "audit": "clean",
-    "lintProblems": 126,
-    "note": "اللينت أحمر في الخط الأساسي؛ معيارنا صفر مشاكل جديدة مقارنة بهذا الالتقاط."
+ "plan": "خطة اكتمال نسخة العميل المشتركة",
+ "planDoc": "docs/خطة-اكتمال-نسخة-العميل-المشتركة.md",
+ "resumeTitle": "اكتمال نسخة العميل",
+ "command": "npm run plan:client",
+ "approvedOn": "2026-08-12",
+ "track": "التنفيذ المكمل للمرحلة الأولى",
+ "lastUpdated": "2026-08-12",
+ "lastUpdatedBy": "Claude",
+ "baseline": {
+  "originMain": "47017aab8c3ba25a4d9b125b89ea486166f75e8c",
+  "pages": 94,
+  "tests": 1234,
+  "audit": "clean",
+  "lintProblems": 126,
+  "note": "اللينت أحمر في الخط الأساسي؛ معيارنا صفر مشاكل جديدة مقارنة بهذا الالتقاط."
+ },
+ "compatibility": {
+  "legacyLinks": "read-only-compatible",
+  "newRelationCollection": "document_links",
+  "newRelationPolicy": "append-only-idempotent",
+  "postedDocuments": "no-in-place-rewrite",
+  "financialSource": "Odoo",
+  "rulesPublisher": "المالك"
+ },
+ "gaps": {
+  "CC-G01": {
+   "title": "الشجرة الأصلية متسخة والمرجع الداخلي المشترك معطوب؛ يلزم جرد وتنظيف عكسي بلا فقد",
+   "milestone": "CC-M0"
   },
-  "compatibility": {
-    "legacyLinks": "read-only-compatible",
-    "newRelationCollection": "document_links",
-    "newRelationPolicy": "append-only-idempotent",
-    "postedDocuments": "no-in-place-rewrite",
-    "financialSource": "Odoo",
-    "rulesPublisher": "المالك"
+  "CC-G02": {
+   "title": "وثيقتا سيناريو الاختبار وخطة مركز التقارير غير موجودتين على main",
+   "milestone": "CC-M0"
   },
-  "gaps": {
-    "CC-G01": { "title": "الشجرة الأصلية متسخة والمرجع الداخلي المشترك معطوب؛ يلزم جرد وتنظيف عكسي بلا فقد", "milestone": "CC-M0" },
-    "CC-G02": { "title": "وثيقتا سيناريو الاختبار وخطة مركز التقارير غير موجودتين على main", "milestone": "CC-M0" },
-    "CC-G03": { "title": "لا يوجد متصفح موحد للأول والسابق والتالي والأخير والبحث والجديد داخل نوع المستند", "milestone": "CC-M2" },
-    "CC-G04": { "title": "روابط الرأس القديمة لا تمثل علاقات متعددة وعلى مستوى السطر والكمية", "milestone": "CC-M1" },
-    "CC-G05": { "title": "الخريطة الحالية خطية وقد تمنع دفعات جزئية لاحقة من النوع نفسه", "milestone": "CC-M2" },
-    "CC-G06": { "title": "لا يوجد تقدم سطري موحد للمطلوب والمنفذ والمقبول والمرفوض والمتبقي مع drilldown", "milestone": "CC-M1" },
-    "CC-G07": { "title": "التحصيل الميداني ولوحة المندوب موجودان منطقيًا لكن الربط الحي والقبول غير مثبتين", "milestone": "CC-M3" },
-    "CC-G08": { "title": "تحميل البضاعة من المخزن إلى عهدة المركبة والمندوب غير مثبت حيًا من طرف إلى طرف", "milestone": "CC-M3" },
-    "CC-G09": { "title": "الأبعاد قطاع وبراند وفرع ومركز تكلفة غير مثبت انتشارها الكامل في المستندات والتقارير", "milestone": "CC-M4" },
-    "CC-G10": { "title": "لوحة أودو تحتاج إكمال المراقبة والمراجع الخارجية وidempotency وإثبات المسار", "milestone": "CC-M4" },
-    "CC-G11": { "title": "مركز التقارير يملك 12 تقريرًا وتتبقى 21 للوصول إلى 33", "milestone": "CC-M5" },
-    "CC-G12": { "title": "الذكاء التشغيلي غير مثبت الربط الكامل بالدليل والإجراء والصلاحية", "milestone": "CC-M5" },
-    "CC-G13": { "title": "القبول الحي محجوب حتى نشر القواعد وتوفير حسابات الأدوار والبيانات المرجعية", "milestone": "CC-M6" }
+  "CC-G03": {
+   "title": "لا يوجد متصفح موحد للأول والسابق والتالي والأخير والبحث والجديد داخل نوع المستند",
+   "milestone": "CC-M2"
   },
-  "milestones": [
-    { "id": "CC-M0", "title": "الحوكمة ومساحة العمل والمصادر", "estimate": "1 جلسة", "inTrack": true },
-    { "id": "CC-M1", "title": "نموذج العلاقات المتعددة على مستوى السطر", "estimate": "2–3 جلسات", "inTrack": true },
-    { "id": "CC-M2", "title": "متصفح المستند وخريطة العلاقات والتنفيذ الجزئي", "estimate": "2–3 جلسات", "inTrack": true },
-    { "id": "CC-M3", "title": "تحميل المركبة والتحصيل ولوحة المندوب", "estimate": "2 جلسات", "inTrack": true },
-    { "id": "CC-M4", "title": "الأبعاد التنظيمية وأودو", "estimate": "2–3 جلسات", "inTrack": true },
-    { "id": "CC-M5", "title": "التقارير والذكاء التشغيلي", "estimate": "3–4 جلسات", "inTrack": true },
-    { "id": "CC-M6", "title": "القبول الحي والتنظيف والتسليم", "estimate": "1–2 جلسة", "inTrack": true }
-  ],
-  "tasks": [
-    {
-      "id": "CC-001",
-      "milestone": "CC-M0",
-      "title": "تثبيت الخطة المشتركة والمتتبّع وبطاقة الاستئناف الثنائية",
-      "owner": "Codex",
-      "state": "done",
-      "gaps": [],
-      "dependsOn": [],
-      "touches": ["AGENTS.md", "package.json", "scripts/plan-check.mjs", "docs/خطة-اكتمال-نسخة-العميل-المشتركة.md", "docs/plan/client-completion.json", "docs/plan/استئناف-نسخة-العميل.md"],
-      "guardTest": "scripts/plan-check.mjs",
-      "evidence": {
-        "commit": "6d152fa",
-        "checks": ["npm run plan", "npx eslint scripts/plan-check.mjs", "git diff --cached --check"]
-      },
-      "acceptance": [
-        "npm run plan يتحقق من خطتي المرحلة الأولى ونسخة العميل ويولد بطاقتي الاستئناف",
-        "كل متطلبات مرفق 2026-08-12 ممثلة في الخطة والفجوات والمهام",
-        "لا تتغير نسبة المرحلة الأولى التاريخية ولا يلمس main"
-      ]
-    },
-    {
-      "id": "CC-002",
-      "milestone": "CC-M0",
-      "title": "استعادة وثيقتي سيناريو الاختبار الشامل وخطة مركز التقارير من عمل Claude غير المرفوع",
-      "owner": "Codex",
-      "state": "done",
-      "gaps": ["CC-G02", "CC-G11"],
-      "dependsOn": ["CC-001"],
-      "touches": ["docs/سيناريو-الاختبار-الشامل-للبوابة.md", "docs/خطة-مركز-التقارير.md", "docs/plan/client-completion.json", "docs/plan/phase-one.json", "SESSION_HANDOFF.md"],
-      "guardTest": "scripts/plan-check.mjs",
-      "evidence": {
-        "commit": "e955a0d",
-        "sha256": {
-          "docs/سيناريو-الاختبار-الشامل-للبوابة.md": "0435209453CC8A5ADCF4D80AE53E8711DD5869C270F02D6AB751AFECBD155763",
-          "docs/خطة-مركز-التقارير.md": "C316DF722210720949360A722E58899A5208647F13C2E0F58A67D256184B7395"
-        }
-      },
-      "acceptance": [
-        "الملفان موجودان تحت docs ومطابقان هاشيًا لمصدري Claude",
-        "تحديث المهمة التاريخية المقابلة دون تغيير محتوى المصدر"
-      ]
-    },
-    {
-      "id": "CC-003",
-      "milestone": "CC-M0",
-      "title": "جرد الشجرة المتسخة والمرجع Git المعطوب ووضع تنظيف عكسي آمن",
-      "owner": "Codex",
-      "state": "done",
-      "gaps": ["CC-G01"],
-      "dependsOn": ["CC-001"],
-      "touches": ["docs/تقرير-جرد-الشجرة-المتسخة-2026-08-12.md", "docs/plan/client-completion.json", "SESSION_HANDOFF.md"],
-      "guardTest": "scripts/plan-check.mjs",
-      "evidence": {
-        "commit": "b703143",
-        "checks": ["git status/diff/hash read-only audit", "git worktree prune --dry-run --verbose", "git show-ref and git fsck diagnostic"]
-      },
-      "acceptance": [
-        "تقرير يصنف كل تغيير إلى عمل مستخدم أو مولد أو غير متتبع أو تالف دون حذف",
-        "خطة نقل أو أرشفة قابلة للعكس مع hashes ومسارات دقيقة",
-        "لا reset ولا clean ولا حذف مرجع قبل موافقة المالك على الهدف الدقيق"
-      ]
-    },
-    {
-      "id": "CC-101",
-      "milestone": "CC-M1",
-      "title": "بناء النموذج الخالص لعلاقات المستندات المتعددة على مستوى السطر",
-      "owner": "Codex",
-      "state": "done",
-      "gaps": ["CC-G04"],
-      "dependsOn": ["CC-002"],
-      "touches": ["src/services/documents/documentRelations.js", "src/services/documents/documentRelations.test.js", "docs/plan/client-completion.json", "SESSION_HANDOFF.md"],
-      "guardTest": "src/services/documents/documentRelations.test.js",
-      "evidence": {
-        "commit": "ef22d89",
-        "checks": ["10/10 targeted tests", "1244/1244 full tests", "94-page build", "audit clean", "targeted ESLint clean", "global lint 126 baseline unchanged"]
-      },
-      "acceptance": [
-        "يدعم BASE/TARGET/REFERENCE/RETURN/REVERSAL/CORRECTION ومصادر ونتائج متعددة",
-        "معرف علاقة حتمي يمنع التكرار ويحفظ توافق قراءة links القديمة",
-        "اختبارات وحدات للكمية والسطر والوحدة والهوية المرجعية"
-      ]
-    },
-    {
-      "id": "CC-102",
-      "milestone": "CC-M1",
-      "title": "إضافة خدمة Firestore وقواعد append-only للعلاقات دون ترحيل المستندات القديمة",
-      "owner": "Codex",
-      "state": "done",
-      "gaps": ["CC-G04"],
-      "dependsOn": ["CC-101"],
-      "touches": ["src/services/documents/documentRelationsService.js", "src/services/documents/documentRelationsService.test.js", "src/services/documents/documentsService.js", "firestore.rules", "test/firestore-rules.test.mjs", "docs/plan/client-completion.json", "SESSION_HANDOFF.md"],
-      "guardTest": "test/firestore-rules.test.mjs",
-      "evidence": {
-        "commit": "095cef6",
-        "checks": [
-          "13/13 relation targeted tests",
-          "1247/1247 full tests",
-          "94-page build",
-          "audit clean with 55 ruled collections",
-          "targeted ESLint clean",
-          "global lint 126 baseline unchanged",
-          "rules emulator tests authored; local execution blocked before compilation because Java is absent"
-        ]
-      },
-      "acceptance": [
-        "إنشاء العلاقة مسموح وفق الدور والحقول ولا تعديل أو حذف بعدها",
-        "فشل الكتابة الجزئية لا يترك مستندًا مرحّلًا بلا رابطه المطلوب",
-        "لا نشر للقواعد؛ يسلّم النص للمالك فقط"
-      ]
-    },
-    {
-      "id": "CC-103",
-      "milestone": "CC-M1",
-      "title": "حساب تقدم السطر والكميات المنفذة والمقبولة والمرفوضة والمفتوحة مع التفصيل",
-      "owner": "Codex",
-      "state": "done",
-      "gaps": ["CC-G06"],
-      "dependsOn": ["CC-101"],
-      "guardTest": "src/services/documentLineProgress.test.js",
-      "evidence": {
-        "commit": "2f0e766",
-        "checks": [
-          "10/10 targeted line-progress tests",
-          "1257/1257 full tests",
-          "94-page build",
-          "audit clean",
-          "targeted ESLint clean",
-          "global lint 126 baseline unchanged"
-        ]
-      },
-      "acceptance": [
-        "100 ثم 60 ثم 40 ينتج جزئيًا ثم مكتملًا بلا تجاوز",
-        "الضغط على الإجمالي يعيد المستندات والأسطر التي كونته",
-        "المستندات القديمة تُقرأ دون إعادة كتابة"
-      ]
-    },
-    {
-      "id": "CC-201",
-      "milestone": "CC-M2",
-      "title": "إنشاء خدمة تنقل موحدة داخل نوع المستند",
-      "owner": "Codex",
-      "state": "done",
-      "gaps": ["CC-G03"],
-      "dependsOn": ["CC-001"],
-      "guardTest": "src/services/documentNavigator.test.js",
-      "evidence": {
-        "commit": "2fc5bac",
-        "checks": [
-          "9/9 targeted navigator tests",
-          "1266/1266 full tests",
-          "94-page build",
-          "audit clean",
-          "targeted ESLint clean",
-          "global lint 126 baseline unchanged"
-        ]
-      },
-      "acceptance": [
-        "الأول والسابق والتالي والأخير والبحث تعيد نتائج النوع نفسه فقط بترتيب حتمي",
-        "تحترم الصلاحية وحالات الفراغ والحدود ولا تخلطها بخريطة العلاقات"
-      ]
-    },
-    {
-      "id": "CC-202",
-      "milestone": "CC-M2",
-      "title": "تركيب شريط التنقل والإجراءات الموحد في شاشات المستندات",
-      "owner": "Codex",
-      "state": "done",
-      "gaps": ["CC-G03"],
-      "dependsOn": ["CC-201"],
-      "guardTest": "src/components/DocumentNavigator.test.js",
-      "evidence": {
-        "commit": "f88121e",
-        "checks": [
-          "13/13 targeted navigator and toolbar tests",
-          "1270/1270 full tests",
-          "94-page build",
-          "audit clean",
-          "targeted ESLint clean",
-          "global lint 126 baseline unchanged",
-          "signed-in Chrome on localhost: PO search returned 10 documents; first=1/10, next=2/10, last=10/10 with correct boundary disables",
-          "attachments scroll action and stock summary action verified independently; browser console had no errors"
-        ],
-        "boundary": "Desktop visual and interaction evidence exists. Phone was not tested. The dirty-navigation confirmation caused a native blocking dialog that the browser-control channel could not capture or cleanly dismiss; the local field was never saved and no server mutation was performed."
-      },
-      "acceptance": [
-        "شريط واضح للأول والسابق والتالي والأخير والبحث والجديد",
-        "أزرار مستقلة للخريطة والمرفقات والسجل والموافقات والأثرين المخزني والمالي",
-        "لا URL محذوف ولا إيموجي ولا أحمر إلا للتحذير"
-      ]
-    },
-    {
-      "id": "CC-203",
-      "milestone": "CC-M2",
-      "title": "تحويل ChainBar إلى خريطة علاقات شجرية قابلة للفتح",
-      "owner": "Codex",
-      "state": "done",
-      "gaps": ["CC-G05"],
-      "dependsOn": ["CC-102", "CC-103"],
-      "guardTest": "src/components/DocumentRelationshipMap.test.js",
-      "evidence": {
-        "commit": "bce28d7",
-        "checks": [
-          "19/19 targeted relationship tests",
-          "1276/1276 full tests",
-          "94-page build",
-          "audit clean",
-          "targeted ESLint clean",
-          "global lint 126 baseline unchanged",
-          "signed-in Chrome on localhost: PR → PO → GRN map rendered; GRN node opened its existing URL; no console errors",
-          "phone viewport 390×844: cards stacked vertically with no horizontal overflow and no emoji inside the new map"
-        ],
-        "boundary": "Live document_links rules are not published, so browser evidence verified the explicit read-only fallback from legacy links. New stored multi-line and multi-source relationships are covered by automated tests; live acceptance remains pending until owner rule publication and test data."
-      },
-      "acceptance": [
-        "تعرض المصادر والنتائج والمراجع والتصحيحات والمرتجعات المتعددة",
-        "تميز الرابط المرجعي وتفتح كل عقدة في URL القائم",
-        "تظهر الحالة والكمية أو القيمة والتاريخ وهوية المستخدم"
-      ]
-    },
-    {
-      "id": "CC-204",
-      "milestone": "CC-M2",
-      "title": "تصحيح إنشاء المستند اللاحق لدعم التنفيذ الجزئي والمتعدد",
-      "owner": "Codex",
-      "state": "doing",
-      "gaps": ["CC-G05", "CC-G06"],
-      "dependsOn": ["CC-102", "CC-103"],
-      "progress": "مسودة غير مثبتة في Git: documentFlow الخالص ينجح في 100→60→40 والتجاوز والفروع والقديم ومصدرين، ومسار createNextInChain يملك قفل تخصيص ومعاملات علاقات سطرية. الاختبارات الكاملة 1286/1286 والتدقيق نظيف، لكن بوابة Astro تدور في Building static entrypoints وتستهلك المعالج حتى المهلة؛ لذلك لم تُغلق المهمة ولم يُعمل commit للكود. واجهة اختيار الكميات عُزلت مؤقتًا ولم تكن سبب الدوران.",
-      "nextStep": "اعزل استيرادات documentsService الجديدة تدريجيًا حتى يعود build=94، ثم أعد توصيل واجهة اختيار كميات السطر، وأوصل combinePartialSources بمسار كتابة حي وسياسة صريحة، وأضف اختبار قواعد للقفل؛ لا commit نهائي قبل رجوع البناء الأخضر.",
-      "branch": "codex/client-completion-20260812",
-      "guardTest": "src/services/documentFlow.test.js",
-      "acceptance": [
-        "وجود طفل واحد من النوع نفسه لا يمنع طفلا ثانيًا ما دام هناك رصيد مفتوح",
-        "يمنع تجاوز الكمية والتكرار المتزامن ويغلق السطر عند الصفر فقط",
-        "يدعم مستندًا واحدًا من أكثر من مصدر حيث تسمح السياسة"
-      ]
-    },
-    {
-      "id": "CC-301",
-      "milestone": "CC-M3",
-      "title": "إكمال وإثبات تحميل المخزن إلى المركبة والمندوب VLD من طرف إلى طرف",
-      "owner": "Codex",
-      "state": "todo",
-      "gaps": ["CC-G08"],
-      "dependsOn": ["CC-204"],
-      "guardTest": "src/services/vanLoad.test.js",
-      "acceptance": [
-        "VLD مرحّل ينقص المخزن ويزيد VAN ذريًا ويحفظ الباتش والرحلة والمندوب",
-        "VSI وVRT وVSR تحفظ الهوية وتمنع إغلاق رحلة بفارق غير مفسر",
-        "اختبار واجهة فعلي على سطح المكتب والهاتف أو تسجيل not tested لمانع حرفي"
-      ]
-    },
-    {
-      "id": "CC-302",
-      "milestone": "CC-M3",
-      "title": "إكمال وإثبات RCV ولوحة المندوب والتسوية",
-      "owner": "Codex",
-      "state": "todo",
-      "gaps": ["CC-G07"],
-      "dependsOn": ["CC-204"],
-      "guardTest": "src/services/repAccount.test.js",
-      "acceptance": [
-        "RCV يخفض ذمة العميل ويزيد نقدية المندوب ويوزع على الفواتير دون تجاوز",
-        "اللوحة تطابق VLD/VSI/VRT/RCV/VSR وتعرض الفرق والتنبيه وحالة الإغلاق",
-        "لا إغلاق مع عهدة أو مستند أو فرق غير مسوى"
-      ]
-    },
-    {
-      "id": "CC-401",
-      "milestone": "CC-M4",
-      "title": "نشر أبعاد القطاع والبراند والفرع ومركز التكلفة في الدورة والتقارير",
-      "owner": "Codex",
-      "state": "todo",
-      "gaps": ["CC-G09"],
-      "dependsOn": ["CC-103"],
-      "guardTest": "src/services/orgLocations.test.js",
-      "acceptance": [
-        "مصدر تنظيمي واحد وتحقق من صحة العلاقات في الرؤوس والأسطر والفلاتر",
-        "الفروع الداخلية تستخدم TR ثم TRN ثم TRC وTRANSIT ولا تتحول إلى عميل"
-      ]
-    },
-    {
-      "id": "CC-402",
-      "milestone": "CC-M4",
-      "title": "إكمال لوحة تحكم أودو والمراجع الخارجية والاعتمادية",
-      "owner": "Codex",
-      "state": "todo",
-      "gaps": ["CC-G10"],
-      "dependsOn": ["CC-102", "CC-401"],
-      "guardTest": "src/services/odooSyncControl.test.js",
-      "acceptance": [
-        "idempotency وcorrelation وإعادة المحاولة وdead-letter مرئية وقابلة للتدقيق",
-        "مرجع أودو يظهر ويفتح دون كشف بيانات الاعتماد للمتصفح",
-        "لا دفتر مالي محلي مواز ولا ادعاء مزامنة حية بلا دليل"
-      ]
-    },
-    {
-      "id": "CC-501",
-      "milestone": "CC-M5",
-      "title": "مطابقة كتالوج مركز التقارير الحاكم وتثبيت قائمة 33 تقريرًا",
-      "owner": "Codex",
-      "state": "todo",
-      "gaps": ["CC-G11"],
-      "dependsOn": ["CC-002"],
-      "guardTest": "src/services/reportRegistry.test.js",
-      "acceptance": [
-        "قائمة أسماء ومصادر وصلاحيات 12 تقريرًا الموجودة و21 المتبقية مطابقة للوثيقة",
-        "لا تقرير مكرر ولا اسم مخترع ولا خلط بين مخزني ومالي"
-      ]
-    },
-    {
-      "id": "CC-502",
-      "milestone": "CC-M5",
-      "title": "تنفيذ التقارير الـ21 المتبقية مع الفلاتر والتصدير والمصدر",
-      "owner": "Codex",
-      "state": "todo",
-      "gaps": ["CC-G11"],
-      "dependsOn": ["CC-401", "CC-501"],
-      "guardTest": "src/services/reportRegistry.test.js",
-      "acceptance": [
-        "33 تقريرًا تفتح من المركز وفق الصلاحيات وتعرض حالات الفراغ والخطأ",
-        "كل تقرير يملك فلاتر وطباعة وXLSX ذاتي الاستضافة وفتح المستند المصدر",
-        "الحسابات المجمعّة لها اختبارات تطابق عينات المصدر"
-      ]
-    },
-    {
-      "id": "CC-503",
-      "milestone": "CC-M5",
-      "title": "ربط الذكاء التشغيلي بالدليل والإجراء والصلاحية",
-      "owner": "Codex",
-      "state": "todo",
-      "gaps": ["CC-G12"],
-      "dependsOn": ["CC-203", "CC-502"],
-      "guardTest": "src/services/operationalIntelligence.test.js",
-      "acceptance": [
-        "كل تنبيه يشرح السبب والمصدر والتوقيت والثقة ويفتح السجلات المؤيدة",
-        "الإجراء المقترح يحترم الصلاحية ولا يرحل أثرًا بلا مستند",
-        "الحالات غير المؤكدة معلّمة ولا تعرض كحقيقة"
-      ]
-    },
-    {
-      "id": "CC-601",
-      "milestone": "CC-M6",
-      "title": "نشر firestore.rules المطابقة للإصدار المختبر",
-      "owner": "المالك",
-      "state": "todo",
-      "gaps": ["CC-G13"],
-      "dependsOn": ["CC-102", "CC-301", "CC-302", "CC-402"],
-      "acceptance": [
-        "يلصق المالك النص المنشور ويطابق حرفيًا هاش ملف القواعد في الكومِت المختبر"
-      ]
-    },
-    {
-      "id": "CC-602",
-      "milestone": "CC-M6",
-      "title": "توفير حسابات الأدوار الستة وبيانات اختبار غير مصطنعة",
-      "owner": "المالك",
-      "state": "todo",
-      "gaps": ["CC-G13"],
-      "dependsOn": [],
-      "acceptance": [
-        "ستة حسابات تعمل فعليًا على النشر الخاص مع بيانات مرجعية معتمدة"
-      ]
-    },
-    {
-      "id": "CC-603",
-      "milestone": "CC-M6",
-      "title": "تنفيذ سيناريو القبول الحي الشامل وتسجيل الأدلة الحرفية",
-      "owner": "Codex",
-      "state": "todo",
-      "gaps": ["CC-G13"],
-      "dependsOn": ["CC-503", "CC-601", "CC-602"],
-      "guardTest": "docs/سيناريو-الاختبار-الشامل-للبوابة.md",
-      "acceptance": [
-        "تنفيذ سيناريوهات التنقل والعلاقات والجزئي والمندوب والتحصيل والأبعاد وأودو والتقارير",
-        "أدلة سطح مكتب وهاتف، وكل مانع يسجل not tested حرفيًا بلا تلفيق"
-      ]
-    },
-    {
-      "id": "CC-604",
-      "milestone": "CC-M6",
-      "title": "إصلاح الأسباب الجذرية المكتشفة في القبول وإعادة البوابات",
-      "owner": "Codex",
-      "state": "todo",
-      "gaps": ["CC-G13"],
-      "dependsOn": ["CC-603"],
-      "guardTest": "scripts/audit-portal.mjs",
-      "acceptance": [
-        "كل فشل مكتشف له اختبار ارتداد وإصلاح سبب جذري",
-        "build وtest وaudit خضراء وصفر lint جديد مقارنة بخط الأساس"
-      ]
-    },
-    {
-      "id": "CC-605",
-      "milestone": "CC-M6",
-      "title": "التسليم النهائي المشترك والتنظيف الآمن وتقرير Claude/Codex",
-      "owner": "Codex",
-      "state": "todo",
-      "gaps": ["CC-G01", "CC-G13"],
-      "dependsOn": ["CC-003", "CC-604"],
-      "guardTest": "scripts/plan-check.mjs",
-      "acceptance": [
-        "SESSION_HANDOFF وبطاقة الاستئناف يذكران الكومِتات والاختبارات والمتبقي وحدود الإثبات",
-        "تنظيف الشجرة ينفذ فقط على العناصر المصنفة وبعد موافقة المالك ولا يفقد عملا",
-        "لا دفع إلى main إلا بأمر المالك"
-      ]
+  "CC-G04": {
+   "title": "روابط الرأس القديمة لا تمثل علاقات متعددة وعلى مستوى السطر والكمية",
+   "milestone": "CC-M1"
+  },
+  "CC-G05": {
+   "title": "الخريطة الحالية خطية وقد تمنع دفعات جزئية لاحقة من النوع نفسه",
+   "milestone": "CC-M2"
+  },
+  "CC-G06": {
+   "title": "لا يوجد تقدم سطري موحد للمطلوب والمنفذ والمقبول والمرفوض والمتبقي مع drilldown",
+   "milestone": "CC-M1"
+  },
+  "CC-G07": {
+   "title": "التحصيل الميداني ولوحة المندوب موجودان منطقيًا لكن الربط الحي والقبول غير مثبتين",
+   "milestone": "CC-M3"
+  },
+  "CC-G08": {
+   "title": "تحميل البضاعة من المخزن إلى عهدة المركبة والمندوب غير مثبت حيًا من طرف إلى طرف",
+   "milestone": "CC-M3"
+  },
+  "CC-G09": {
+   "title": "الأبعاد قطاع وبراند وفرع ومركز تكلفة غير مثبت انتشارها الكامل في المستندات والتقارير",
+   "milestone": "CC-M4"
+  },
+  "CC-G10": {
+   "title": "لوحة أودو تحتاج إكمال المراقبة والمراجع الخارجية وidempotency وإثبات المسار",
+   "milestone": "CC-M4"
+  },
+  "CC-G11": {
+   "title": "مركز التقارير يملك 12 تقريرًا وتتبقى 21 للوصول إلى 33",
+   "milestone": "CC-M5"
+  },
+  "CC-G12": {
+   "title": "الذكاء التشغيلي غير مثبت الربط الكامل بالدليل والإجراء والصلاحية",
+   "milestone": "CC-M5"
+  },
+  "CC-G13": {
+   "title": "القبول الحي محجوب حتى نشر القواعد وتوفير حسابات الأدوار والبيانات المرجعية",
+   "milestone": "CC-M6"
+  }
+ },
+ "milestones": [
+  {
+   "id": "CC-M0",
+   "title": "الحوكمة ومساحة العمل والمصادر",
+   "estimate": "1 جلسة",
+   "inTrack": true
+  },
+  {
+   "id": "CC-M1",
+   "title": "نموذج العلاقات المتعددة على مستوى السطر",
+   "estimate": "2–3 جلسات",
+   "inTrack": true
+  },
+  {
+   "id": "CC-M2",
+   "title": "متصفح المستند وخريطة العلاقات والتنفيذ الجزئي",
+   "estimate": "2–3 جلسات",
+   "inTrack": true
+  },
+  {
+   "id": "CC-M3",
+   "title": "تحميل المركبة والتحصيل ولوحة المندوب",
+   "estimate": "2 جلسات",
+   "inTrack": true
+  },
+  {
+   "id": "CC-M4",
+   "title": "الأبعاد التنظيمية وأودو",
+   "estimate": "2–3 جلسات",
+   "inTrack": true
+  },
+  {
+   "id": "CC-M5",
+   "title": "التقارير والذكاء التشغيلي",
+   "estimate": "3–4 جلسات",
+   "inTrack": true
+  },
+  {
+   "id": "CC-M6",
+   "title": "القبول الحي والتنظيف والتسليم",
+   "estimate": "1–2 جلسة",
+   "inTrack": true
+  }
+ ],
+ "tasks": [
+  {
+   "id": "CC-001",
+   "milestone": "CC-M0",
+   "title": "تثبيت الخطة المشتركة والمتتبّع وبطاقة الاستئناف الثنائية",
+   "owner": "Codex",
+   "state": "done",
+   "gaps": [],
+   "dependsOn": [],
+   "touches": [
+    "AGENTS.md",
+    "package.json",
+    "scripts/plan-check.mjs",
+    "docs/خطة-اكتمال-نسخة-العميل-المشتركة.md",
+    "docs/plan/client-completion.json",
+    "docs/plan/استئناف-نسخة-العميل.md"
+   ],
+   "guardTest": "scripts/plan-check.mjs",
+   "evidence": {
+    "commit": "6d152fa",
+    "checks": [
+     "npm run plan",
+     "npx eslint scripts/plan-check.mjs",
+     "git diff --cached --check"
+    ]
+   },
+   "acceptance": [
+    "npm run plan يتحقق من خطتي المرحلة الأولى ونسخة العميل ويولد بطاقتي الاستئناف",
+    "كل متطلبات مرفق 2026-08-12 ممثلة في الخطة والفجوات والمهام",
+    "لا تتغير نسبة المرحلة الأولى التاريخية ولا يلمس main"
+   ]
+  },
+  {
+   "id": "CC-002",
+   "milestone": "CC-M0",
+   "title": "استعادة وثيقتي سيناريو الاختبار الشامل وخطة مركز التقارير من عمل Claude غير المرفوع",
+   "owner": "Codex",
+   "state": "done",
+   "gaps": [
+    "CC-G02",
+    "CC-G11"
+   ],
+   "dependsOn": [
+    "CC-001"
+   ],
+   "touches": [
+    "docs/سيناريو-الاختبار-الشامل-للبوابة.md",
+    "docs/خطة-مركز-التقارير.md",
+    "docs/plan/client-completion.json",
+    "docs/plan/phase-one.json",
+    "SESSION_HANDOFF.md"
+   ],
+   "guardTest": "scripts/plan-check.mjs",
+   "evidence": {
+    "commit": "e955a0d",
+    "sha256": {
+     "docs/سيناريو-الاختبار-الشامل-للبوابة.md": "0435209453CC8A5ADCF4D80AE53E8711DD5869C270F02D6AB751AFECBD155763",
+     "docs/خطة-مركز-التقارير.md": "C316DF722210720949360A722E58899A5208647F13C2E0F58A67D256184B7395"
     }
-  ],
-  "ownerInputs": [
-    { "id": "CC-O01", "milestone": "CC-M3", "need": "اعتماد بيانات المندوبين والمركبات والمخازن والعملاء والأرصدة المفتوحة", "state": "todo", "ifMissing": "تختبر المنطق بعينات محلية معلّمة بوضوح ولا يعلن قبول حي" },
-    { "id": "CC-O02", "milestone": "CC-M4", "need": "اعتماد أكواد القطاعات والبراندات والفروع ومراكز التكلفة ومطابقتها مع أودو", "state": "todo", "ifMissing": "يبقى الربط المرجعي غير مثبت حيًا" },
-    { "id": "CC-O03", "milestone": "CC-M1", "need": "اعتماد قواعد أنواع الأصناف والوحدات والتحويل والأسعار والائتمان إن لم تكن المصادر الحالية نهائية", "state": "todo", "ifMissing": "لا تخترع عتبات أو تحويلات أو أسعار" },
-    { "id": "CC-O04", "milestone": "CC-M6", "need": "تأكيد توفر الصورة المشار إليها في المرفق إن كانت مرجعًا بصريًا ملزمًا", "state": "todo", "ifMissing": "ينفذ النص الكامل؛ الصورة نفسها تبقى غير مفحوصة" }
-  ]
+   },
+   "acceptance": [
+    "الملفان موجودان تحت docs ومطابقان هاشيًا لمصدري Claude",
+    "تحديث المهمة التاريخية المقابلة دون تغيير محتوى المصدر"
+   ]
+  },
+  {
+   "id": "CC-003",
+   "milestone": "CC-M0",
+   "title": "جرد الشجرة المتسخة والمرجع Git المعطوب ووضع تنظيف عكسي آمن",
+   "owner": "Codex",
+   "state": "done",
+   "gaps": [
+    "CC-G01"
+   ],
+   "dependsOn": [
+    "CC-001"
+   ],
+   "touches": [
+    "docs/تقرير-جرد-الشجرة-المتسخة-2026-08-12.md",
+    "docs/plan/client-completion.json",
+    "SESSION_HANDOFF.md"
+   ],
+   "guardTest": "scripts/plan-check.mjs",
+   "evidence": {
+    "commit": "b703143",
+    "checks": [
+     "git status/diff/hash read-only audit",
+     "git worktree prune --dry-run --verbose",
+     "git show-ref and git fsck diagnostic"
+    ]
+   },
+   "acceptance": [
+    "تقرير يصنف كل تغيير إلى عمل مستخدم أو مولد أو غير متتبع أو تالف دون حذف",
+    "خطة نقل أو أرشفة قابلة للعكس مع hashes ومسارات دقيقة",
+    "لا reset ولا clean ولا حذف مرجع قبل موافقة المالك على الهدف الدقيق"
+   ]
+  },
+  {
+   "id": "CC-101",
+   "milestone": "CC-M1",
+   "title": "بناء النموذج الخالص لعلاقات المستندات المتعددة على مستوى السطر",
+   "owner": "Codex",
+   "state": "done",
+   "gaps": [
+    "CC-G04"
+   ],
+   "dependsOn": [
+    "CC-002"
+   ],
+   "touches": [
+    "src/services/documents/documentRelations.js",
+    "src/services/documents/documentRelations.test.js",
+    "docs/plan/client-completion.json",
+    "SESSION_HANDOFF.md"
+   ],
+   "guardTest": "src/services/documents/documentRelations.test.js",
+   "evidence": {
+    "commit": "ef22d89",
+    "checks": [
+     "10/10 targeted tests",
+     "1244/1244 full tests",
+     "94-page build",
+     "audit clean",
+     "targeted ESLint clean",
+     "global lint 126 baseline unchanged"
+    ]
+   },
+   "acceptance": [
+    "يدعم BASE/TARGET/REFERENCE/RETURN/REVERSAL/CORRECTION ومصادر ونتائج متعددة",
+    "معرف علاقة حتمي يمنع التكرار ويحفظ توافق قراءة links القديمة",
+    "اختبارات وحدات للكمية والسطر والوحدة والهوية المرجعية"
+   ]
+  },
+  {
+   "id": "CC-102",
+   "milestone": "CC-M1",
+   "title": "إضافة خدمة Firestore وقواعد append-only للعلاقات دون ترحيل المستندات القديمة",
+   "owner": "Codex",
+   "state": "done",
+   "gaps": [
+    "CC-G04"
+   ],
+   "dependsOn": [
+    "CC-101"
+   ],
+   "touches": [
+    "src/services/documents/documentRelationsService.js",
+    "src/services/documents/documentRelationsService.test.js",
+    "src/services/documents/documentsService.js",
+    "firestore.rules",
+    "test/firestore-rules.test.mjs",
+    "docs/plan/client-completion.json",
+    "SESSION_HANDOFF.md"
+   ],
+   "guardTest": "test/firestore-rules.test.mjs",
+   "evidence": {
+    "commit": "095cef6",
+    "checks": [
+     "13/13 relation targeted tests",
+     "1247/1247 full tests",
+     "94-page build",
+     "audit clean with 55 ruled collections",
+     "targeted ESLint clean",
+     "global lint 126 baseline unchanged",
+     "rules emulator tests authored; local execution blocked before compilation because Java is absent"
+    ]
+   },
+   "acceptance": [
+    "إنشاء العلاقة مسموح وفق الدور والحقول ولا تعديل أو حذف بعدها",
+    "فشل الكتابة الجزئية لا يترك مستندًا مرحّلًا بلا رابطه المطلوب",
+    "لا نشر للقواعد؛ يسلّم النص للمالك فقط"
+   ]
+  },
+  {
+   "id": "CC-103",
+   "milestone": "CC-M1",
+   "title": "حساب تقدم السطر والكميات المنفذة والمقبولة والمرفوضة والمفتوحة مع التفصيل",
+   "owner": "Codex",
+   "state": "done",
+   "gaps": [
+    "CC-G06"
+   ],
+   "dependsOn": [
+    "CC-101"
+   ],
+   "guardTest": "src/services/documentLineProgress.test.js",
+   "evidence": {
+    "commit": "2f0e766",
+    "checks": [
+     "10/10 targeted line-progress tests",
+     "1257/1257 full tests",
+     "94-page build",
+     "audit clean",
+     "targeted ESLint clean",
+     "global lint 126 baseline unchanged"
+    ]
+   },
+   "acceptance": [
+    "100 ثم 60 ثم 40 ينتج جزئيًا ثم مكتملًا بلا تجاوز",
+    "الضغط على الإجمالي يعيد المستندات والأسطر التي كونته",
+    "المستندات القديمة تُقرأ دون إعادة كتابة"
+   ]
+  },
+  {
+   "id": "CC-201",
+   "milestone": "CC-M2",
+   "title": "إنشاء خدمة تنقل موحدة داخل نوع المستند",
+   "owner": "Codex",
+   "state": "done",
+   "gaps": [
+    "CC-G03"
+   ],
+   "dependsOn": [
+    "CC-001"
+   ],
+   "guardTest": "src/services/documentNavigator.test.js",
+   "evidence": {
+    "commit": "2fc5bac",
+    "checks": [
+     "9/9 targeted navigator tests",
+     "1266/1266 full tests",
+     "94-page build",
+     "audit clean",
+     "targeted ESLint clean",
+     "global lint 126 baseline unchanged"
+    ]
+   },
+   "acceptance": [
+    "الأول والسابق والتالي والأخير والبحث تعيد نتائج النوع نفسه فقط بترتيب حتمي",
+    "تحترم الصلاحية وحالات الفراغ والحدود ولا تخلطها بخريطة العلاقات"
+   ]
+  },
+  {
+   "id": "CC-202",
+   "milestone": "CC-M2",
+   "title": "تركيب شريط التنقل والإجراءات الموحد في شاشات المستندات",
+   "owner": "Codex",
+   "state": "done",
+   "gaps": [
+    "CC-G03"
+   ],
+   "dependsOn": [
+    "CC-201"
+   ],
+   "guardTest": "src/components/DocumentNavigator.test.js",
+   "evidence": {
+    "commit": "f88121e",
+    "checks": [
+     "13/13 targeted navigator and toolbar tests",
+     "1270/1270 full tests",
+     "94-page build",
+     "audit clean",
+     "targeted ESLint clean",
+     "global lint 126 baseline unchanged",
+     "signed-in Chrome on localhost: PO search returned 10 documents; first=1/10, next=2/10, last=10/10 with correct boundary disables",
+     "attachments scroll action and stock summary action verified independently; browser console had no errors"
+    ],
+    "boundary": "Desktop visual and interaction evidence exists. Phone was not tested. The dirty-navigation confirmation caused a native blocking dialog that the browser-control channel could not capture or cleanly dismiss; the local field was never saved and no server mutation was performed."
+   },
+   "acceptance": [
+    "شريط واضح للأول والسابق والتالي والأخير والبحث والجديد",
+    "أزرار مستقلة للخريطة والمرفقات والسجل والموافقات والأثرين المخزني والمالي",
+    "لا URL محذوف ولا إيموجي ولا أحمر إلا للتحذير"
+   ]
+  },
+  {
+   "id": "CC-203",
+   "milestone": "CC-M2",
+   "title": "تحويل ChainBar إلى خريطة علاقات شجرية قابلة للفتح",
+   "owner": "Codex",
+   "state": "done",
+   "gaps": [
+    "CC-G05"
+   ],
+   "dependsOn": [
+    "CC-102",
+    "CC-103"
+   ],
+   "guardTest": "src/components/DocumentRelationshipMap.test.js",
+   "evidence": {
+    "commit": "bce28d7",
+    "checks": [
+     "19/19 targeted relationship tests",
+     "1276/1276 full tests",
+     "94-page build",
+     "audit clean",
+     "targeted ESLint clean",
+     "global lint 126 baseline unchanged",
+     "signed-in Chrome on localhost: PR → PO → GRN map rendered; GRN node opened its existing URL; no console errors",
+     "phone viewport 390×844: cards stacked vertically with no horizontal overflow and no emoji inside the new map"
+    ],
+    "boundary": "Live document_links rules are not published, so browser evidence verified the explicit read-only fallback from legacy links. New stored multi-line and multi-source relationships are covered by automated tests; live acceptance remains pending until owner rule publication and test data."
+   },
+   "acceptance": [
+    "تعرض المصادر والنتائج والمراجع والتصحيحات والمرتجعات المتعددة",
+    "تميز الرابط المرجعي وتفتح كل عقدة في URL القائم",
+    "تظهر الحالة والكمية أو القيمة والتاريخ وهوية المستخدم"
+   ]
+  },
+  {
+   "id": "CC-204",
+   "milestone": "CC-M2",
+   "title": "تصحيح إنشاء المستند اللاحق لدعم التنفيذ الجزئي والمتعدد",
+   "owner": "Claude",
+   "state": "doing",
+   "gaps": [
+    "CC-G05",
+    "CC-G06"
+   ],
+   "dependsOn": [
+    "CC-102",
+    "CC-103"
+   ],
+   "progress": "المسودة أُنقذت وثُبّتت (d765360) بعد أن كانت خارج Git. **عائق البناء غير قابل لإعادة الإنتاج**: البناء نجح ٩٤ صفحة في ٥٢ ثانية على النسخة النظيفة بعد إصلاح core.longpaths — فلم يكن العائق في الكود. ثمّ نُفّذ (92ea617): كسر قاعدة alreadyDerived فصار الرصيد المفتوح هو الحَكَم، ولوحة PartialDerivationPanel لاختيار كمية كلّ سطر (المطلوب/المنفَّذ/المفتوح)، وتمرير requestedByLine إلى المعاملة، وسياسة تعدّد المصادر الصريحة multiSourceAllowed مع حارسَي تطابق الرؤوس وجمع أرقام المراجع. البوابات: 1289/1289 · بناء ٩٤ · تدقيق نظيف · ESLint نظيف على المتغيّر.",
+   "nextStep": "المعياران الأوّل والثاني منجزان حيًّا في الكود. المتبقّي للمعيار الثالث: واجهة اختيار أكثر من مصدر ومسار كتابةٍ يحجز قفل تخصيص لكلّ مصدر داخل معاملةٍ واحدة (المنطق والسياسة جاهزان ومختبران، ولا مستهلك حيًّا لهما بعد). ثمّ اختبار قواعد للقفل — يحتاج تثبيت Java لمحاكي Firebase. ولا إغلاق قبل تجربة حيّة تحتاج حسابات الأدوار (CC-602).",
+   "branch": "claude/cc-204-rescue",
+   "guardTest": "src/services/documentFlow.test.js",
+   "acceptance": [
+    "وجود طفل واحد من النوع نفسه لا يمنع طفلا ثانيًا ما دام هناك رصيد مفتوح",
+    "يمنع تجاوز الكمية والتكرار المتزامن ويغلق السطر عند الصفر فقط",
+    "يدعم مستندًا واحدًا من أكثر من مصدر حيث تسمح السياسة"
+   ],
+   "evidence": {
+    "commits": [
+     "d765360",
+     "92ea617"
+    ],
+    "gates": "tests 1289/1289 · build 94 pages · audit clean · eslint clean on changed",
+    "notTested": [
+     "تجربة حيّة على النشر (تحتاج CC-602)",
+     "اختبار قواعد القفل (Java غير مثبّتة)"
+    ]
+   },
+   "acceptanceState": [
+    "done",
+    "done",
+    "partial"
+   ]
+  },
+  {
+   "id": "CC-301",
+   "milestone": "CC-M3",
+   "title": "إكمال وإثبات تحميل المخزن إلى المركبة والمندوب VLD من طرف إلى طرف",
+   "owner": "Codex",
+   "state": "todo",
+   "gaps": [
+    "CC-G08"
+   ],
+   "dependsOn": [
+    "CC-204"
+   ],
+   "guardTest": "src/services/vanLoad.test.js",
+   "acceptance": [
+    "VLD مرحّل ينقص المخزن ويزيد VAN ذريًا ويحفظ الباتش والرحلة والمندوب",
+    "VSI وVRT وVSR تحفظ الهوية وتمنع إغلاق رحلة بفارق غير مفسر",
+    "اختبار واجهة فعلي على سطح المكتب والهاتف أو تسجيل not tested لمانع حرفي"
+   ]
+  },
+  {
+   "id": "CC-302",
+   "milestone": "CC-M3",
+   "title": "إكمال وإثبات RCV ولوحة المندوب والتسوية",
+   "owner": "Codex",
+   "state": "todo",
+   "gaps": [
+    "CC-G07"
+   ],
+   "dependsOn": [
+    "CC-204"
+   ],
+   "guardTest": "src/services/repAccount.test.js",
+   "acceptance": [
+    "RCV يخفض ذمة العميل ويزيد نقدية المندوب ويوزع على الفواتير دون تجاوز",
+    "اللوحة تطابق VLD/VSI/VRT/RCV/VSR وتعرض الفرق والتنبيه وحالة الإغلاق",
+    "لا إغلاق مع عهدة أو مستند أو فرق غير مسوى"
+   ]
+  },
+  {
+   "id": "CC-401",
+   "milestone": "CC-M4",
+   "title": "نشر أبعاد القطاع والبراند والفرع ومركز التكلفة في الدورة والتقارير",
+   "owner": "Codex",
+   "state": "todo",
+   "gaps": [
+    "CC-G09"
+   ],
+   "dependsOn": [
+    "CC-103"
+   ],
+   "guardTest": "src/services/orgLocations.test.js",
+   "acceptance": [
+    "مصدر تنظيمي واحد وتحقق من صحة العلاقات في الرؤوس والأسطر والفلاتر",
+    "الفروع الداخلية تستخدم TR ثم TRN ثم TRC وTRANSIT ولا تتحول إلى عميل"
+   ]
+  },
+  {
+   "id": "CC-402",
+   "milestone": "CC-M4",
+   "title": "إكمال لوحة تحكم أودو والمراجع الخارجية والاعتمادية",
+   "owner": "Codex",
+   "state": "todo",
+   "gaps": [
+    "CC-G10"
+   ],
+   "dependsOn": [
+    "CC-102",
+    "CC-401"
+   ],
+   "guardTest": "src/services/odooSyncControl.test.js",
+   "acceptance": [
+    "idempotency وcorrelation وإعادة المحاولة وdead-letter مرئية وقابلة للتدقيق",
+    "مرجع أودو يظهر ويفتح دون كشف بيانات الاعتماد للمتصفح",
+    "لا دفتر مالي محلي مواز ولا ادعاء مزامنة حية بلا دليل"
+   ]
+  },
+  {
+   "id": "CC-501",
+   "milestone": "CC-M5",
+   "title": "مطابقة كتالوج مركز التقارير الحاكم وتثبيت قائمة 33 تقريرًا",
+   "owner": "Codex",
+   "state": "todo",
+   "gaps": [
+    "CC-G11"
+   ],
+   "dependsOn": [
+    "CC-002"
+   ],
+   "guardTest": "src/services/reportRegistry.test.js",
+   "acceptance": [
+    "قائمة أسماء ومصادر وصلاحيات 12 تقريرًا الموجودة و21 المتبقية مطابقة للوثيقة",
+    "لا تقرير مكرر ولا اسم مخترع ولا خلط بين مخزني ومالي"
+   ]
+  },
+  {
+   "id": "CC-502",
+   "milestone": "CC-M5",
+   "title": "تنفيذ التقارير الـ21 المتبقية مع الفلاتر والتصدير والمصدر",
+   "owner": "Codex",
+   "state": "todo",
+   "gaps": [
+    "CC-G11"
+   ],
+   "dependsOn": [
+    "CC-401",
+    "CC-501"
+   ],
+   "guardTest": "src/services/reportRegistry.test.js",
+   "acceptance": [
+    "33 تقريرًا تفتح من المركز وفق الصلاحيات وتعرض حالات الفراغ والخطأ",
+    "كل تقرير يملك فلاتر وطباعة وXLSX ذاتي الاستضافة وفتح المستند المصدر",
+    "الحسابات المجمعّة لها اختبارات تطابق عينات المصدر"
+   ]
+  },
+  {
+   "id": "CC-503",
+   "milestone": "CC-M5",
+   "title": "ربط الذكاء التشغيلي بالدليل والإجراء والصلاحية",
+   "owner": "Codex",
+   "state": "todo",
+   "gaps": [
+    "CC-G12"
+   ],
+   "dependsOn": [
+    "CC-203",
+    "CC-502"
+   ],
+   "guardTest": "src/services/operationalIntelligence.test.js",
+   "acceptance": [
+    "كل تنبيه يشرح السبب والمصدر والتوقيت والثقة ويفتح السجلات المؤيدة",
+    "الإجراء المقترح يحترم الصلاحية ولا يرحل أثرًا بلا مستند",
+    "الحالات غير المؤكدة معلّمة ولا تعرض كحقيقة"
+   ]
+  },
+  {
+   "id": "CC-601",
+   "milestone": "CC-M6",
+   "title": "نشر firestore.rules المطابقة للإصدار المختبر",
+   "owner": "المالك",
+   "state": "todo",
+   "gaps": [
+    "CC-G13"
+   ],
+   "dependsOn": [
+    "CC-102",
+    "CC-301",
+    "CC-302",
+    "CC-402"
+   ],
+   "acceptance": [
+    "يلصق المالك النص المنشور ويطابق حرفيًا هاش ملف القواعد في الكومِت المختبر"
+   ]
+  },
+  {
+   "id": "CC-602",
+   "milestone": "CC-M6",
+   "title": "توفير حسابات الأدوار الستة وبيانات اختبار غير مصطنعة",
+   "owner": "المالك",
+   "state": "todo",
+   "gaps": [
+    "CC-G13"
+   ],
+   "dependsOn": [],
+   "acceptance": [
+    "ستة حسابات تعمل فعليًا على النشر الخاص مع بيانات مرجعية معتمدة"
+   ]
+  },
+  {
+   "id": "CC-603",
+   "milestone": "CC-M6",
+   "title": "تنفيذ سيناريو القبول الحي الشامل وتسجيل الأدلة الحرفية",
+   "owner": "Codex",
+   "state": "todo",
+   "gaps": [
+    "CC-G13"
+   ],
+   "dependsOn": [
+    "CC-503",
+    "CC-601",
+    "CC-602"
+   ],
+   "guardTest": "docs/سيناريو-الاختبار-الشامل-للبوابة.md",
+   "acceptance": [
+    "تنفيذ سيناريوهات التنقل والعلاقات والجزئي والمندوب والتحصيل والأبعاد وأودو والتقارير",
+    "أدلة سطح مكتب وهاتف، وكل مانع يسجل not tested حرفيًا بلا تلفيق"
+   ]
+  },
+  {
+   "id": "CC-604",
+   "milestone": "CC-M6",
+   "title": "إصلاح الأسباب الجذرية المكتشفة في القبول وإعادة البوابات",
+   "owner": "Codex",
+   "state": "todo",
+   "gaps": [
+    "CC-G13"
+   ],
+   "dependsOn": [
+    "CC-603"
+   ],
+   "guardTest": "scripts/audit-portal.mjs",
+   "acceptance": [
+    "كل فشل مكتشف له اختبار ارتداد وإصلاح سبب جذري",
+    "build وtest وaudit خضراء وصفر lint جديد مقارنة بخط الأساس"
+   ]
+  },
+  {
+   "id": "CC-605",
+   "milestone": "CC-M6",
+   "title": "التسليم النهائي المشترك والتنظيف الآمن وتقرير Claude/Codex",
+   "owner": "Codex",
+   "state": "todo",
+   "gaps": [
+    "CC-G01",
+    "CC-G13"
+   ],
+   "dependsOn": [
+    "CC-003",
+    "CC-604"
+   ],
+   "guardTest": "scripts/plan-check.mjs",
+   "acceptance": [
+    "SESSION_HANDOFF وبطاقة الاستئناف يذكران الكومِتات والاختبارات والمتبقي وحدود الإثبات",
+    "تنظيف الشجرة ينفذ فقط على العناصر المصنفة وبعد موافقة المالك ولا يفقد عملا",
+    "لا دفع إلى main إلا بأمر المالك"
+   ]
+  }
+ ],
+ "ownerInputs": [
+  {
+   "id": "CC-O01",
+   "milestone": "CC-M3",
+   "need": "اعتماد بيانات المندوبين والمركبات والمخازن والعملاء والأرصدة المفتوحة",
+   "state": "todo",
+   "ifMissing": "تختبر المنطق بعينات محلية معلّمة بوضوح ولا يعلن قبول حي"
+  },
+  {
+   "id": "CC-O02",
+   "milestone": "CC-M4",
+   "need": "اعتماد أكواد القطاعات والبراندات والفروع ومراكز التكلفة ومطابقتها مع أودو",
+   "state": "todo",
+   "ifMissing": "يبقى الربط المرجعي غير مثبت حيًا"
+  },
+  {
+   "id": "CC-O03",
+   "milestone": "CC-M1",
+   "need": "اعتماد قواعد أنواع الأصناف والوحدات والتحويل والأسعار والائتمان إن لم تكن المصادر الحالية نهائية",
+   "state": "todo",
+   "ifMissing": "لا تخترع عتبات أو تحويلات أو أسعار"
+  },
+  {
+   "id": "CC-O04",
+   "milestone": "CC-M6",
+   "need": "تأكيد توفر الصورة المشار إليها في المرفق إن كانت مرجعًا بصريًا ملزمًا",
+   "state": "todo",
+   "ifMissing": "ينفذ النص الكامل؛ الصورة نفسها تبقى غير مفحوصة"
+  }
+ ]
 }
