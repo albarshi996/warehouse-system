@@ -6,6 +6,7 @@ import {
   derivePartialDocument,
   flowAllocationDecision,
   flowAllocationId,
+  multiSourceAllowed,
   partialLinePairs,
   partialDerivationPlan,
 } from './documentFlow.js';
@@ -108,6 +109,42 @@ test('قفل التدفق يمنع طلبين متزامنين من حجز ال�
     () => flowAllocationDecision(plan, second.allocatedByLine, { 'po-a': 1 }),
     /تتجاوز المتبقي/,
   );
+});
+
+test('الدمج يجمع أرقام المصادر في حقل المرجع ولا يطمس بقيّتها بأوّلها', () => {
+  const po2 = { ...po, id: 'po-2', number: 'PO-2', lines: [{ lineId: 'po2-c', sku: 'C', qty: 7 }] };
+  const draft = combinePartialSources([
+    { source: po, plan: partialDerivationPlan(po, 'GRN') },
+    { source: po2, plan: partialDerivationPlan(po2, 'GRN') },
+  ], 'GRN');
+  assert.equal(draft.header.poRef, 'PO-1 + PO-2');
+  assert.equal(draft.header.supplier, 'S');
+});
+
+test('السياسة تمنع الدمج حيث يكون الابن مرآةً لمستندٍ واحد', () => {
+  assert.equal(multiSourceAllowed('PO', 'GRN'), true);
+  assert.equal(multiSourceAllowed('DN', 'INV'), false);
+  const dn = {
+    id: 'dn-1', type: 'DN', number: 'DN-1', state: 'approved',
+    header: { customer: 'C' }, lines: [{ lineId: 'dn-a', sku: 'A', qty: 5 }],
+  };
+  const dn2 = { ...dn, id: 'dn-2', number: 'DN-2' };
+  assert.throws(() => combinePartialSources([
+    { source: dn, plan: partialDerivationPlan(dn, 'INV') },
+    { source: dn2, plan: partialDerivationPlan(dn2, 'INV') },
+  ], 'INV'), /السياسة لا تسمح/);
+});
+
+test('لا يُدمج مصدران يختلف مورّدهما ولا المصدر نفسه مرّتين', () => {
+  const other = { ...po, id: 'po-9', number: 'PO-9', header: { supplier: 'X' } };
+  assert.throws(() => combinePartialSources([
+    { source: po, plan: partialDerivationPlan(po, 'GRN') },
+    { source: other, plan: partialDerivationPlan(other, 'GRN') },
+  ], 'GRN'), /تختلف رؤوسها/);
+  assert.throws(() => combinePartialSources([
+    { source: po, plan: partialDerivationPlan(po, 'GRN') },
+    { source: po, plan: partialDerivationPlan(po, 'GRN') },
+  ], 'GRN'), /المصدر نفسه مرّتين/);
 });
 
 test('أزواج الأسطر تحفظ المصدر والهدف والكمية لكتابة علاقات سطرية', () => {

@@ -178,6 +178,22 @@ export function derivationQuantityFields(sourceType, targetType) {
   return pair ? { source: pair[0], target: pair[1] } : null;
 }
 
+/** المراجع النصّية المطبوعة على الورق — تُشتقّ ولا تُكتب. */
+const DERIVATION_REF_FIELD = Object.freeze({
+  PO: 'prRef', GRN: 'poRef', QC: 'grnRef', PUTAWAY: 'grnRef',
+  PACK: 'pickRef', DN: 'packRef', GP: 'dnRef', INV: 'deliveryRef',
+  POD: 'dnRef',
+  TRN: 'transferReqRef', TRC: 'transferNoteRef',
+  CN: 'returnRef', ADJ: 'cycleCountRef',
+  // المشتريات الداخلية: كلّ حلقةٍ تحمل رقم أبيها المباشر.
+  RFQ: 'iprRef', IPO: 'rfqRef', PV: 'ipoRef', DLV: 'pvRef',
+});
+
+/** حقل رقم المصدر في رأس الابن — يحتاجه دمج المصادر ليجمع الأرقام لا يطمسها. */
+export function derivationRefField(targetType) {
+  return DERIVATION_REF_FIELD[targetType] || null;
+}
+
 /** خرائط نقل بيانات الرأس. */
 const HEADER_MAP = {
   'PR>PO': { warehouse: 'warehouse' },
@@ -277,16 +293,7 @@ export function deriveDocument(source, toType = null, { lineQuantities = null } 
     if (v !== undefined && v !== '') header[into] = v;
   }
 
-  // المراجع النصّية المطبوعة على الورق — تُشتقّ ولا تُكتب.
-  const refField = {
-    PO: 'prRef', GRN: 'poRef', QC: 'grnRef', PUTAWAY: 'grnRef',
-    PACK: 'pickRef', DN: 'packRef', GP: 'dnRef', INV: 'deliveryRef',
-    POD: 'dnRef',
-    TRN: 'transferReqRef', TRC: 'transferNoteRef',
-    CN: 'returnRef', ADJ: 'cycleCountRef',
-    // المشتريات الداخلية: كلّ حلقةٍ تحمل رقم أبيها المباشر.
-    RFQ: 'iprRef', IPO: 'rfqRef', PV: 'ipoRef', DLV: 'pvRef',
-  }[to];
+  const refField = derivationRefField(to);
   if (refField && source.number) header[refField] = source.number;
   // أمر التخزين يحمل رقم الاستلام لا رقم تقرير الفحص (هكذا ينصّ الورق).
   if (to === 'PUTAWAY' && source.links?.GRN?.number) header.grnRef = source.links.GRN.number;

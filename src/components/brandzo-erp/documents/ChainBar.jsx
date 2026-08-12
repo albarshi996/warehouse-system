@@ -17,11 +17,15 @@ import { chainOf, threeWayMatch, derivationTargets, MATCH_STATUS, fefoViolations
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { getSchema } from '../../../services/documents/schemas/index.js';
 import DocumentRelationshipMap from './DocumentRelationshipMap.jsx';
+import PartialDerivationPanel from './PartialDerivationPanel.jsx';
+import { partialDerivationPlan } from '../../../services/documentFlow.js';
 
 export default function ChainBar({ doc, me, onFlash }) {
   const [related, setRelated] = useState([]);
   const [relationshipData, setRelationshipData] = useState({ relations: [], documents: [], storedAvailable: true });
   const [busy, setBusy] = useState(false);
+  /** نوع الوجهة التي فُتحت لها لوحة الكميات — واحدة في كل مرّة. */
+  const [partialFor, setPartialFor] = useState(null);
   const [showMatch, setShowMatch] = useState(false);
   /** أرصدة المخزن — تُجلب لقوائم السحب وحدها (حارس FEFO يحتاجها). */
   const [balances, setBalances] = useState([]);
@@ -110,25 +114,45 @@ export default function ChainBar({ doc, me, onFlash }) {
     return derivationTargets(doc.type)
       .map((t) => ({ type: t, schema: getSchema(t) }))
       .filter((t) => t.schema)
-      .map((t) => ({
-        ...t,
-        alreadyDerived: (chain?.after || []).some((a) => a.type === t.type),
-        canCreate: me?.role === 'admin' || (t.schema.roles?.create || []).includes(me?.role),
-      }));
-  }, [doc?.type, chain, me]);
+      .map((t) => {
+        const alreadyDerived = (chain?.after || []).some((a) => a.type === t.type);
+        /**
+         * CC-204: حيث تُعرف خريطة الكميات، **الرصيد المفتوح هو الحَكَم** لا وجود
+         * طفلٍ سابق — أمر شراء بمئة يقبل استلامًا بستّين ثمّ آخر بأربعين، ويُغلق
+         * عند الصفر وحده. وحيث لا تُعرف الخريطة تبقى قاعدة الطفل الواحد كما كانت.
+         */
+        let plan = null;
+        try {
+          plan = partialDerivationPlan(doc, t.type, relationshipData.relations, relationshipData.documents);
+        } catch {
+          plan = null;
+        }
+        const partial = Boolean(plan?.supported);
+        return {
+          ...t,
+          alreadyDerived,
+          partial,
+          openQty: partial ? plan.totalOpen : null,
+          exhausted: partial ? plan.totalOpen <= 0 : alreadyDerived,
+          canCreate: me?.role === 'admin' || (t.schema.roles?.create || []).includes(me?.role),
+        };
+      });
+  }, [doc, chain, me, relationshipData]);
 
   const approvedOrDone = ['approved', 'done'].includes(doc?.state);
-  const derivable = targets.filter((t) => !t.alreadyDerived && t.canCreate && approvedOrDone);
-  const pending = targets.filter((t) => !t.alreadyDerived && !approvedOrDone);
+  const derivable = targets.filter((t) => !t.exhausted && t.canCreate && approvedOrDone);
+  const pending = targets.filter((t) => !t.exhausted && !approvedOrDone);
+  const openPanel = derivable.find((t) => t.type === partialFor) || null;
 
-  async function handleDerive(toType) {
+  async function handleDerive(toType, requestedByLine = null) {
     setBusy(true);
     try {
-      const newId = await createNextInChain(doc, me, toType);
+      const newId = await createNextInChain(doc, me, toType, { requestedByLine });
       window.location.href = `${getBasePath()}/dashboard/document?type=${toType}&id=${newId}`;
     } catch (e) {
       onFlash?.(e.message || 'تعذّر إنشاء المستند التالي.', 'err');
       setBusy(false);
+      setPartialFor(null);
     }
   }
 
@@ -150,14 +174,30 @@ export default function ChainBar({ doc, me, onFlash }) {
             <button
               key={t.type}
               type="button"
-              onClick={() => handleDerive(t.type)}
+              onClick={() => setPartialFor(partialFor === t.type ? null : t.type)}
               disabled={busy}
+              aria-expanded={partialFor === t.type}
               className="rounded-xl bg-accent hover:opacity-90 disabled:opacity-50 px-4 py-2 text-xs font-bold text-white transition-colors"
             >
-              {busy ? 'جارٍ الإنشاء…' : `أنشئ ${t.schema.titleAr}`}
+              {busy && partialFor === t.type ? 'جارٍ الإنشاء…' : `أنشئ ${t.schema.titleAr}`}
+              {/* المتبقّي يظهر متى صار الاشتقاق جزئيًّا فعلًا — لا على أوّل مرّة. */}
+              {t.partial && t.alreadyDerived ? ` — متبقٍّ ${t.openQty}` : ''}
             </button>
           ))}
         </div>
+      )}
+
+      {openPanel && (
+        <PartialDerivationPanel
+          source={doc}
+          targetType={openPanel.type}
+          title={openPanel.schema.titleAr}
+          relations={relationshipData.relations}
+          documents={relationshipData.documents}
+          busy={busy}
+          onConfirm={(requestedByLine) => handleDerive(openPanel.type, requestedByLine)}
+          onCancel={() => setPartialFor(null)}
+        />
       )}
 
       {pending.length > 0 && (

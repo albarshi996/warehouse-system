@@ -2,6 +2,7 @@
 
 import {
   derivationQuantityFields,
+  derivationRefField,
   deriveDocument,
   derivationTargets,
 } from './documents/chain.js';
@@ -151,13 +152,63 @@ export function partialLinePairs(source, draft, plan) {
 }
 
 /**
+ * سياسة تعدّد المصادر — **صريحة لا مستنتَجة**. الدمج مسموح حيث يكون الابن حاويةً
+ * تشغيليّة واحدة تغطّي أكثر من التزام (شحنةٌ واحدة من المورّد نفسه تغلق أمرَي شراء)،
+ * وممنوع حيث يكون الابن مرآةً قانونيّة لمستندٍ واحد (فاتورة · تصريح خروج · إشعار
+ * دائن · تأكيد تسليم) — فدمجها يخلط ذممًا وأثرًا ماليًّا لا يقبلان الخلط.
+ */
+const MULTI_SOURCE_ALLOWED = Object.freeze({
+  'PR>PO': true,     // أمر شراء واحد يجمع أكثر من طلب شراء
+  'PO>GRN': true,    // شحنةٌ واحدة تغلق أكثر من أمر شراء للمورّد نفسه
+  'PICK>PACK': true, // طردٌ واحد يجمع أكثر من قائمة سحب
+  'TR>TRN': true,    // شحنة نقلٍ واحدة تجمع أكثر من أمر نقل
+});
+
+export function multiSourceAllowed(sourceType, targetType) {
+  return MULTI_SOURCE_ALLOWED[`${sourceType}>${targetType}`] === true;
+}
+
+/**
  * يدمج أكثر من مصدر في مسودة واحدة حين تسمح السياسة بذلك. العلاقات الجديدة
  * هي المصدر الحقيقي للتعدد؛ `links` القديمة تحتفظ بأول مصدر من كل نوع للتوافق.
  */
 export function combinePartialSources(sourcePlans, targetType) {
   if (!Array.isArray(sourcePlans) || !sourcePlans.length) throw new Error('يلزم مصدر واحد على الأقل.');
+  const sources = sourcePlans.map(({ source }) => source);
+  const sourceType = sources[0]?.type;
+  if (sources.some((source) => source?.type !== sourceType)) {
+    throw new Error('لا تُدمج مصادر من أنواعٍ مختلفة في مستندٍ واحد.');
+  }
+  if (sourcePlans.length > 1 && !multiSourceAllowed(sourceType, targetType)) {
+    throw new Error(`السياسة لا تسمح بدمج أكثر من «${sourceType}» في «${targetType}» واحد.`);
+  }
+  if (new Set(sources.map((source) => source?.id)).size !== sources.length) {
+    throw new Error('لا يُدمج المصدر نفسه مرّتين.');
+  }
+
   const derived = sourcePlans.map(({ source, plan }) => derivePartialDocument(source, targetType, plan));
   const first = derived[0];
+
+  /**
+   * الرأس المدموج: كلّ ما وُرِّث يجب أن يتطابق (المورّد/المستودع/الوجهة) — وإلّا
+   * لضاع رأسُ مصدرٍ خلف رأس أوّلِهم صامتًا. ويُستثنى حقل المرجع وحده: أرقام
+   * المصادر **تُجمع** ولا يطمس أوّلُها بقيّتها.
+   */
+  const refField = derivationRefField(targetType);
+  const identityOf = (draft) => {
+    const { [refField]: _ref, ...rest } = draft.header || {};
+    return JSON.stringify(Object.entries(rest).sort());
+  };
+  if (derived.some((draft) => identityOf(draft) !== identityOf(first))) {
+    throw new Error('لا تُدمج مصادر تختلف رؤوسها (المورّد/المستودع/الوجهة) في مستندٍ واحد.');
+  }
+
+  const header = { ...first.header };
+  if (refField) {
+    const refs = [...new Set(sources.map((source) => source?.number).filter(Boolean))];
+    if (refs.length) header[refField] = refs.join(' + ');
+  }
+
   const links = {};
   for (const draft of derived) {
     for (const [type, link] of Object.entries(draft.links || {})) {
@@ -166,7 +217,7 @@ export function combinePartialSources(sourcePlans, targetType) {
   }
   return {
     ...first,
-    header: { ...first.header },
+    header,
     lines: derived.flatMap((draft) => draft.lines || []),
     links,
     sourceCount: sourcePlans.length,
