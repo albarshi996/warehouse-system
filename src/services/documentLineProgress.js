@@ -311,3 +311,66 @@ export function documentLineProgress(document, relations = [], relatedDocuments 
   };
 }
 
+
+/**
+ * **نتائج السطر مجموعةً بمصادرها** — لتصير الأرقام قابلة للنقر (SAP-9 · يسدّ ف‑٢١).
+ *
+ * ═══ ما تحلّه ═══
+ * `documentLineProgress` يحسب الأرقام ويحمل `contributions` مفصّلةً بالعلاقة.
+ * لكنّ الواجهة تحتاج السؤال بالمقلوب: **الرقم ٩٧ — من أين جاء؟** فهذه الدالّة
+ * تقلب التفصيل إلى مجموعاتٍ بالنتيجة: المنفَّذ ومصادره، والمقبول ومصادره،
+ * والمرفوض ومصادره.
+ *
+ * ═══ ولماذا لا تُحسب في الواجهة؟ ═══
+ * لأنّها ستُحسب في ثلاثة مواضع ثمّ تتباعد. والقاعدة نفسها التي حكمت
+ * `derivationSources`: سؤالان، وحقيقةٌ واحدة، ومكانٌ واحد يُجيب.
+ *
+ * ═══ ولا رقمَ بلا مصدر ═══
+ * كلّ مجموعةٍ تحمل مستنداتها بأرقامها ومعرّفاتها. فرقمٌ لا يُعرف ممّ تكوّن
+ * لا يصلح للعرض أصلًا — والموظّف الذي لا يستطيع فتح ما وراء الرقم يعود
+ * ليسأل بالهاتف.
+ *
+ * @param {object} line سطرٌ من مخرج `documentLineProgress`
+ * @returns {{requested:number, executed:object, accepted:object, rejected:object, open:number, classified:boolean}}
+ */
+export function lineOutcomes(line) {
+  const contributions = Array.isArray(line?.contributions) ? line.contributions : [];
+
+  const group = (pick) => {
+    const docs = new Map();
+    let qty = 0;
+    for (const c of contributions) {
+      const value = Number(pick(c)) || 0;
+      if (value <= 0) continue;
+      qty = round(qty + value);
+      const id = c.target?.documentId;
+      if (!id) continue;
+      const prev = docs.get(id);
+      if (prev) prev.qty = round(prev.qty + value);
+      else {
+        docs.set(id, {
+          documentId: id,
+          documentType: c.target?.documentType || null,
+          documentNumber: c.target?.documentNumber || null,
+          qty: round(value),
+          legacy: Boolean(c.legacy),
+        });
+      }
+    }
+    return { qty, documents: [...docs.values()] };
+  };
+
+  return {
+    requested: Number(line?.requested) || 0,
+    executed: group((c) => c.executed),
+    accepted: group((c) => c.accepted),
+    rejected: group((c) => c.rejected),
+    open: Number(line?.open) || 0,
+    classified: Boolean(line?.classified),
+  };
+}
+
+/** نتائج كلّ الأسطر — بالترتيب نفسه. */
+export function progressOutcomes(progress) {
+  return (progress?.lines ?? []).map((line) => ({ line, outcomes: lineOutcomes(line) }));
+}

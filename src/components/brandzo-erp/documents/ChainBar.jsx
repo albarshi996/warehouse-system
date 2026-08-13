@@ -19,6 +19,35 @@ import { getSchema } from '../../../services/documents/schemas/index.js';
 import DocumentRelationshipMap from './DocumentRelationshipMap.jsx';
 import PartialDerivationPanel from './PartialDerivationPanel.jsx';
 import { partialDerivationPlan } from '../../../services/documentFlow.js';
+import { documentLineProgress, lineOutcomes } from '../../../services/documentLineProgress.js';
+
+/**
+ * رقمٌ يُفتح ما وراءه (SAP-9 · يسدّ ف‑٢١).
+ *
+ * §15.1 ‹400›: من أمر الشراء يفتح المستخدم تفاصيل «١٠٠» والاستلامات، و«٩٧»
+ * والتخزين، و«٣» ومحضر الرفض. فالرقم الذي لا يُفتح ما وراءه يترك الموظّف
+ * يسأل بالهاتف — ويُنشئ مستندًا من جديد حين لا يجد جوابًا.
+ *
+ * وما لا مصدر له يبقى نصًّا لا زرًّا: زرٌّ لا يفعل شيئًا أسوأ من لا زرّ.
+ */
+function DrillNumber({ value, group, basePath, tone }) {
+  const docs = group?.documents ?? [];
+  if (!value) return <span className="text-ink-2">—</span>;
+  if (!docs.length) return <span style={{ color: tone }}>{value}</span>;
+  const title = docs.map((d) => `${d.documentNumber || d.documentId}: ${d.qty}`).join(' · ');
+  return (
+    <span className="inline-flex items-center gap-1" title={title}>
+      <a
+        href={`${basePath}?type=${docs[0].documentType}&id=${docs[0].documentId}`}
+        className="font-bold underline decoration-dotted underline-offset-4"
+        style={{ color: tone || 'var(--accent, #714B67)' }}
+      >
+        {value}
+      </a>
+      {docs.length > 1 && <span className="text-[10px] text-ink-2">({docs.length})</span>}
+    </span>
+  );
+}
 
 export default function ChainBar({ doc, me, onFlash }) {
   const [related, setRelated] = useState([]);
@@ -139,6 +168,33 @@ export default function ChainBar({ doc, me, onFlash }) {
       });
   }, [doc, chain, me, relationshipData]);
 
+  /**
+   * تقدّم الأسطر ونتائجها — **مصدرٌ واحد للحفر** (SAP-9).
+   * الجدول الثلاثيّ يُجمّع بالصنف عبر ثلاثة مستندات، وهذا يُفصّل ما صار
+   * لكلّ سطر ومن أيّ مستند. فلا يُنشأ جدولٌ ثانٍ: الأرقام تبقى مكانها
+   * وتُغنى بالحفر من هنا.
+   */
+  const outcomesBySku = useMemo(() => {
+    const progress = documentLineProgress(doc, relationshipData.relations, relationshipData.documents);
+    const map = new Map();
+    for (const line of progress.lines) {
+      const key = line.sku || line.barcode || line.description;
+      if (!key) continue;
+      const out = lineOutcomes(line);
+      const prev = map.get(key);
+      // سطران بالصنف نفسه: تُضمّ مصادرهما ولا يُسقَط أحدهما.
+      if (!prev) map.set(key, out);
+      else {
+        prev.executed.documents.push(...out.executed.documents);
+        prev.accepted.documents.push(...out.accepted.documents);
+        prev.rejected.documents.push(...out.rejected.documents);
+        prev.open += out.open;
+      }
+    }
+    return map;
+  }, [doc, relationshipData]);
+
+  const docBase = `${getBasePath()}/dashboard/document`;
   const approvedOrDone = ['approved', 'done'].includes(doc?.state);
   const derivable = targets.filter((t) => !t.exhausted && t.canCreate && approvedOrDone);
   const pending = targets.filter((t) => !t.exhausted && !approvedOrDone);
@@ -324,6 +380,8 @@ export default function ChainBar({ doc, me, onFlash }) {
                     <th className="py-1.5 px-2">مطلوب (PO)</th>
                     <th className="py-1.5 px-2">مستلَم (GRN)</th>
                     <th className="py-1.5 px-2">مقبول (QC)</th>
+                    <th className="py-1.5 px-2">مرفوض</th>
+                    <th className="py-1.5 px-2">مفتوح</th>
                     <th className="py-1.5 px-2">الفرق</th>
                     <th className="py-1.5 px-2">الحالة</th>
                   </tr>
@@ -331,12 +389,24 @@ export default function ChainBar({ doc, me, onFlash }) {
                 <tbody>
                   {match.rows.map((r) => {
                     const s = MATCH_STATUS[r.status];
+                    const out = outcomesBySku.get(r.key) || outcomesBySku.get(r.description);
                     return (
                       <tr key={r.key} className="border-b border-line">
                         <td className="py-1.5 px-2 text-ink-2">{r.description}</td>
                         <td className="py-1.5 px-2 text-center text-ink-2">{r.qtyOrdered}</td>
-                        <td className="py-1.5 px-2 text-center text-ink-2">{r.qtyReceived}</td>
-                        <td className="py-1.5 px-2 text-center text-ink-2">{r.qtyAccepted}</td>
+                        {/* الأرقام تُفتح على مستنداتها (SAP-9 · §15.1 ‹400›) */}
+                        <td className="py-1.5 px-2 text-center">
+                          <DrillNumber value={r.qtyReceived} group={out?.executed} basePath={docBase} />
+                        </td>
+                        <td className="py-1.5 px-2 text-center">
+                          <DrillNumber value={r.qtyAccepted} group={out?.accepted} basePath={docBase} />
+                        </td>
+                        <td className="py-1.5 px-2 text-center">
+                          <DrillNumber value={out?.rejected?.qty || 0} group={out?.rejected} basePath={docBase} tone="#b02a37" />
+                        </td>
+                        <td className="py-1.5 px-2 text-center text-ink-2" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                          {out?.open || '—'}
+                        </td>
                         <td className="py-1.5 px-2 text-center" style={{ color: r.varianceReceived ? s.color : undefined }}>
                           {r.varianceReceived > 0 ? `+${r.varianceReceived}` : r.varianceReceived || '—'}
                         </td>

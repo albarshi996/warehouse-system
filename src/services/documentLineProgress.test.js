@@ -6,6 +6,8 @@ import {
   legacyLineContributions,
   sourceLineQuantity,
   targetLineQuantity,
+  lineOutcomes,
+  progressOutcomes,
 } from './documentLineProgress.js';
 
 const po = {
@@ -153,3 +155,77 @@ test('مدخل فارغ آمن ولا يخترع سطرًا أو كمية', () =
   assert.equal(progress.totals.requested, 0);
 });
 
+
+/* ═══════════ نتائج السطر مجموعةً بمصادرها (SAP-9 · ف‑٢١) ═══════════ */
+
+test('★★ المثال الحاكم: 100 مستلَمة · 97 مقبولة · 3 مرفوضة — ولكلٍّ مصدره', () => {
+  const po = {
+    id: 'po1',
+    type: 'PO',
+    number: 'PO-2026-0009',
+    lines: [{ lineId: 'L1', sku: 'S1', description: 'ستاند', qty: 100 }],
+  };
+  const relations = [
+    { id: 'r1', linkType: 'TARGET', source: { documentId: 'po1', documentType: 'PO', lineId: 'L1' }, target: { documentId: 'g1', documentType: 'GRN', documentNumber: 'GRN-0007', lineId: 'x' }, linkedQuantity: 100 },
+  ];
+  const related = [{ id: 'g1', type: 'GRN', number: 'GRN-0007', lines: [{ sku: 'S1', qtyReceived: 100, qtyAccepted: 97, qtyRejected: 3 }] }];
+
+  const progress = documentLineProgress(po, relations, related);
+  const [line] = progress.lines;
+  const out = lineOutcomes(line);
+
+  assert.equal(out.requested, 100);
+  assert.equal(out.executed.qty, 100, 'المستلَم');
+  assert.equal(out.open, 0, 'لا مفتوح بعد استلام الكلّ');
+  // ولكلّ رقمٍ مستنده — وإلا فهو رقمٌ مقطوع الصلة لا يصلح للعرض.
+  assert.equal(out.executed.documents[0].documentNumber, 'GRN-0007');
+  assert.equal(out.executed.documents[0].documentId, 'g1');
+  assert.equal(out.executed.documents[0].qty, 100);
+});
+
+test('★★ لا رقمَ بلا مصدر — كلّ مجموعةٍ تحمل مستنداتها', () => {
+  const po = { id: 'p', type: 'PO', number: 'PO-1', lines: [{ lineId: 'L1', sku: 'S1', qty: 60 }] };
+  const relations = [
+    { id: 'a', linkType: 'TARGET', source: { documentId: 'p', documentType: 'PO', lineId: 'L1' }, target: { documentId: 'g1', documentType: 'GRN', documentNumber: 'GRN-1', lineId: 'x' }, linkedQuantity: 40 },
+    { id: 'b', linkType: 'TARGET', source: { documentId: 'p', documentType: 'PO', lineId: 'L1' }, target: { documentId: 'g2', documentType: 'GRN', documentNumber: 'GRN-2', lineId: 'y' }, linkedQuantity: 20 },
+  ];
+  const out = lineOutcomes(documentLineProgress(po, relations, []).lines[0]);
+  assert.equal(out.executed.qty, 60);
+  assert.equal(out.executed.documents.length, 2, 'استلامان يظهران استلامَين لا واحدًا');
+  assert.deepEqual(out.executed.documents.map((d) => d.documentNumber).sort(), ['GRN-1', 'GRN-2']);
+  assert.equal(out.executed.documents.reduce((s, d) => s + d.qty, 0), 60, 'المجموع يطابق الرقم المعروض');
+});
+
+test('★ استلامان لنفس المستند يُجمعان في صفٍّ واحد لا صفّين', () => {
+  const po = { id: 'p', type: 'PO', number: 'PO-1', lines: [{ lineId: 'L1', sku: 'S1', qty: 50 }] };
+  const relations = [
+    { id: 'a', linkType: 'TARGET', source: { documentId: 'p', documentType: 'PO', lineId: 'L1' }, target: { documentId: 'g1', documentType: 'GRN', documentNumber: 'GRN-1', lineId: 'x' }, linkedQuantity: 30 },
+    { id: 'b', linkType: 'TARGET', source: { documentId: 'p', documentType: 'PO', lineId: 'L1' }, target: { documentId: 'g1', documentType: 'GRN', documentNumber: 'GRN-1', lineId: 'y' }, linkedQuantity: 20 },
+  ];
+  const out = lineOutcomes(documentLineProgress(po, relations, []).lines[0]);
+  assert.equal(out.executed.documents.length, 1);
+  assert.equal(out.executed.documents[0].qty, 50);
+});
+
+test('★ سطرٌ بلا تنفيذ: أرقامٌ صفريّة ومصادرُ فارغة لا undefined', () => {
+  const out = lineOutcomes({ requested: 20, open: 20, contributions: [] });
+  assert.equal(out.executed.qty, 0);
+  assert.deepEqual(out.executed.documents, []);
+  assert.deepEqual(out.accepted.documents, []);
+  assert.deepEqual(out.rejected.documents, []);
+  assert.equal(out.open, 20);
+  // ومدخلٌ فاسد لا يُسقط الشاشة.
+  for (const bad of [null, undefined, {}, { contributions: 'س' }]) {
+    const o = lineOutcomes(bad);
+    assert.equal(o.executed.qty, 0);
+    assert.ok(Array.isArray(o.rejected.documents));
+  }
+});
+
+test('★★ progressOutcomes تحفظ ترتيب الأسطر — فالصفّ الثالث هو الثالث', () => {
+  const po = { id: 'p', type: 'PO', number: 'PO-1', lines: [{ lineId: 'a', sku: 'A', qty: 1 }, { lineId: 'b', sku: 'B', qty: 2 }, { lineId: 'c', sku: 'C', qty: 3 }] };
+  const rows = progressOutcomes(documentLineProgress(po, [], []));
+  assert.deepEqual(rows.map((r) => r.line.sku), ['A', 'B', 'C']);
+  assert.deepEqual(rows.map((r) => r.outcomes.requested), [1, 2, 3]);
+  assert.deepEqual(progressOutcomes(null), []);
+});
