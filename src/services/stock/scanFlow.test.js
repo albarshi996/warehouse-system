@@ -17,6 +17,10 @@ import {
   aggregateSession,
   correctionEntry,
   exportRows,
+  buildSessionRows,
+  sessionProgress,
+  filterRows,
+  parseBulkBarcodes,
 } from './scanFlow.js';
 
 const ITEM = { sku: 'ITM-1', nameAr: 'كريم يدين', shade: 'وردي', unit: 'piece' };
@@ -150,6 +154,71 @@ test('صفوف التصدير بأعمدةٍ عربيّة ثابتة والمج�
   assert.equal(rows[0]['الفرق'], -2);
   assert.equal(rows[1]['الحالة'], 'غير معرّف — بانتظار الاعتماد');
   assert.equal(rows[1]['الكمية الدفترية'], '—');
+});
+
+/* ═══════════════ قاعدة الجرد من الماستر — تكامل الأداة القديمة ═══════════════ */
+
+const MASTER = [
+  { sku: 'ITM-1', nameAr: 'كريم', barcodes: ['111'], balance: 10 },
+  { sku: 'ITM-2', nameAr: 'شامبو', barcodes: ['222', '333'], balance: 4 },
+  { sku: 'OLD-X', nameAr: 'مؤرشف', barcodes: ['444'], balance: 9, archived: true },
+];
+const BY_BARCODE = new Map([
+  ['111', MASTER[0]],
+  ['222', MASTER[1]],
+  ['333', MASTER[1]],
+  ['444', MASTER[2]],
+]);
+
+test('★★ الجرد بقاعدة الماستر: غير الممسوح يظهر صفًّا — جوهر الجرد ما لم يُعدّ بعد', () => {
+  const rows = buildSessionRows([{ barcode: '111', qty: 8 }], MASTER, BY_BARCODE, { withBaseline: true });
+  assert.equal(rows.length, 2); // المؤرشف لا يدخل القاعدة
+  const counted = rows.find((r) => r.sku === 'ITM-1');
+  assert.equal(counted.scanned, true);
+  assert.equal(counted.diff, -2);
+  const pending = rows.find((r) => r.sku === 'ITM-2');
+  assert.equal(pending.scanned, false);
+  assert.equal(pending.diff, null); // «لم يُمسح» عملٌ متبقٍّ لا فرق
+});
+
+test('★★ باركودان لصنفٍ واحد يُجمعان على هويّته لا على باركودَيهما', () => {
+  const rows = buildSessionRows(
+    [{ barcode: '222', qty: 1 }, { barcode: '333', qty: 2 }],
+    MASTER, BY_BARCODE, { withBaseline: true }
+  );
+  const shampoo = rows.find((r) => r.sku === 'ITM-2');
+  assert.equal(shampoo.countedQty, 3);
+  assert.equal(rows.filter((r) => r.sku === 'ITM-2').length, 1);
+});
+
+test('استلام/صرف بلا قاعدة: الممسوح وحده يظهر', () => {
+  const rows = buildSessionRows([{ barcode: '111', qty: 5 }], MASTER, BY_BARCODE, { withBaseline: false });
+  assert.equal(rows.length, 1);
+});
+
+test('★ عدّادات الإنجاز — نفس أرقام رأس الأداة القديمة', () => {
+  const rows = buildSessionRows(
+    [{ barcode: '111', qty: 8 }, { barcode: '999', qty: 1, name: 'مجهول' }],
+    MASTER, BY_BARCODE, { withBaseline: true }
+  );
+  assert.deepEqual(sessionProgress(rows), {
+    total: 2, scanned: 1, remaining: 1, diffs: 1, unknown: 1, pct: 50,
+  });
+});
+
+test('★ الترشيح: تبويب «لم يُمسح» + بحثٌ بالاسم أو الكود أو الباركود', () => {
+  const rows = buildSessionRows([{ barcode: '111', qty: 8 }], MASTER, BY_BARCODE, { withBaseline: true });
+  assert.equal(filterRows(rows, { tab: 'unscanned' })[0].sku, 'ITM-2');
+  assert.equal(filterRows(rows, { term: 'شامبو' })[0].sku, 'ITM-2');
+  assert.equal(filterRows(rows, { term: '111' })[0].sku, 'ITM-1');
+  assert.equal(filterRows(rows, { tab: 'diff', term: 'شامبو' }).length, 0);
+});
+
+test('لصق باركودات: أسطرٌ وفواصل ومسافات — والتكرار يبقى (كلّ ظهورٍ قيدُ ١)', () => {
+  const { codes, count } = parseBulkBarcodes('111\n222، 333 111;');
+  assert.deepEqual(codes, ['111', '222', '333', '111']);
+  assert.equal(count, 4);
+  assert.equal(parseBulkBarcodes('').count, 0);
 });
 
 test('ملخّص الجلسة: قيود وأصناف وإجمالي ومجهولون', () => {
