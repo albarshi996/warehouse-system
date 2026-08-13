@@ -1,35 +1,23 @@
 ---
 /**
- * العمليات المخزنية — امسح فتُعبَّأ (SAP-19 · طلب المالك 2026-08-13).
+ * العمليات المخزنية — شاشةٌ واحدة: امسح فتُعبَّأ (SAP-19 · طلب المالك).
  *
- * المسار الأساسيّ ثلاث خطوات: اختر الوضع ⇒ امسح ⇒ خانة التعبئة ⇒ حفظ.
+ * تصحيح 2026-08-13: كانت هنا صفحتان (سريعة + كلاسيكيّة) — رفضه المالك:
+ * «صفحة فوق صفحة خطأ كارثيّ، نريد منطقًا في التنفيذ». فدُمجتا في شاشةٍ
+ * واحدة بمصدر حقيقةٍ واحد: المسح ثلاث خطوات، والجدول يُشتقّ من دفتر
+ * العملية الملحق-فقط (فالعمل الجماعيّ حيٌّ بطبيعته)، والكمّيّة الدفتريّة
+ * من ماستر الأصناف لا من استيراد شيتٍ ثانٍ، والتصدير من الجدول نفسه.
  * كلّ الحكم في `services/stock/scanFlow.js` الخالص المُختبَر.
- *
- * **لا حذف (§3-٣):** الأداة الكاملة القديمة بكلّ قدراتها (استيراد الشيت ·
- * العمل الجماعيّ · التصدير · الفروقات) بقيت حرفيًّا على
- * `/dashboard/stock-operations-classic` — والرابط أدناه. ومسار البيانات
- * واحد: نفس عمليات `stock_operations` وقيودها، فما يُمسح هنا تراه هناك.
  */
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import ScanFlow from '../../components/brandzo-erp/stock/ScanFlow.jsx';
 import '../../styles/tokens.css';
 import '../../styles/odoo.css';
-
-const base = import.meta.env.BASE_URL.endsWith('/')
-  ? import.meta.env.BASE_URL.slice(0, -1)
-  : import.meta.env.BASE_URL;
 ---
 
 <DashboardLayout title="العمليات المخزنية" showGuide={false} light>
   <div class="text-right" dir="rtl">
-    <div class="mb-4 flex items-center justify-between flex-wrap gap-2">
-      <h1 class="text-lg font-bold text-ink m-0">العمليات المخزنية</h1>
-      <a
-        href={`${base}/dashboard/stock-operations-classic`}
-        class="text-sm text-muted hover:text-accent transition-colors underline decoration-dotted underline-offset-4"
-        >الأداة الكاملة (استيراد الشيت · العمل الجماعيّ · التصدير) ←</a
-      >
-    </div>
+    <h1 class="text-lg font-bold text-ink m-0 mb-4">العمليات المخزنية</h1>
     <ScanFlow client:load />
   </div>
 </DashboardLayout>

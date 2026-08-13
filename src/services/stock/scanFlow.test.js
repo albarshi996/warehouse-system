@@ -14,6 +14,9 @@ import {
   panelForScan,
   scanEntryVerdict,
   sessionSummary,
+  aggregateSession,
+  correctionEntry,
+  exportRows,
 } from './scanFlow.js';
 
 const ITEM = { sku: 'ITM-1', nameAr: 'كريم يدين', shade: 'وردي', unit: 'piece' };
@@ -90,6 +93,64 @@ test('وضعٌ مجهول أو باركود فارغ يُرفضان بالاسم
 });
 
 /* ═══════════════ ملخّص الجلسة ═══════════════ */
+
+/* ═══════════════ جدول الجلسة — دفترٌ ملحق-فقط مصدرًا واحدًا ═══════════════ */
+
+test('★★ التجميع: مجموع قيود الباركود = كمّيّته، والدفتريّة من الماستر لا من شيتٍ ثانٍ', () => {
+  const byBarcode = new Map([['111', { sku: 'ITM-1', nameAr: 'كريم', balance: 10 }]]);
+  const scans = [
+    { barcode: '111', qty: 5 },
+    { barcode: '111', qty: 3 },
+    { barcode: '999', qty: 2, name: 'مجهولٌ سمّاه الموظّف' },
+  ];
+  const rows = aggregateSession(scans, byBarcode);
+  assert.equal(rows.length, 2);
+  const known = rows.find((r) => r.barcode === '111');
+  assert.equal(known.countedQty, 8);
+  assert.equal(known.bookQty, 10);
+  assert.equal(known.diff, -2);
+  assert.equal(known.name, 'كريم');
+  const unknown = rows.find((r) => r.barcode === '999');
+  assert.equal(unknown.known, false);
+  assert.equal(unknown.bookQty, null);
+  assert.equal(unknown.diff, null);
+  assert.equal(unknown.name, 'مجهولٌ سمّاه الموظّف');
+});
+
+test('★ قيد تصحيحٍ سالب (من جدول الجلسة نفسه) ينزل بالمجموع — لا حالة محلّيّة توفَّق', () => {
+  const rows = aggregateSession([
+    { barcode: '111', qty: 10 },
+    { barcode: '111', qty: -3 },
+  ]);
+  assert.equal(rows[0].countedQty, 7);
+});
+
+test('★★ التصحيح قيدُ فرقٍ لا تعديل: 10 ⇒ 7 يُنتج −3، والحذف يعكس الكلّ', () => {
+  const row = { barcode: '111', name: 'كريم', countedQty: 10 };
+  const fix = correctionEntry(row, 7, 'جرد');
+  assert.equal(fix.ok, true);
+  assert.deepEqual(fix.entry, { barcode: '111', name: 'كريم', qty: -3, opType: 'جرد' });
+
+  const wipe = correctionEntry(row, 0, 'جرد');
+  assert.equal(wipe.entry.qty, -10);
+});
+
+test('التصحيح يُرفض بالاسم: كمّيّة سالبة أو لا تغيير أو وضعٌ مجهول', () => {
+  const row = { barcode: '111', name: 'كريم', countedQty: 10 };
+  assert.match(correctionEntry(row, -1, 'جرد').problems.join(' '), /صفرٌ فأكبر/);
+  assert.match(correctionEntry(row, 10, 'جرد').problems.join(' '), /لا تغيير/);
+  assert.equal(correctionEntry(row, 7, 'x').ok, false);
+});
+
+test('صفوف التصدير بأعمدةٍ عربيّة ثابتة والمجهول موسومٌ بانتظار الاعتماد', () => {
+  const rows = exportRows([
+    { barcode: '111', sku: 'ITM-1', name: 'كريم', known: true, bookQty: 10, countedQty: 8, diff: -2 },
+    { barcode: '999', sku: '', name: 'جديد', known: false, bookQty: null, countedQty: 2, diff: null },
+  ]);
+  assert.equal(rows[0]['الفرق'], -2);
+  assert.equal(rows[1]['الحالة'], 'غير معرّف — بانتظار الاعتماد');
+  assert.equal(rows[1]['الكمية الدفترية'], '—');
+});
 
 test('ملخّص الجلسة: قيود وأصناف وإجمالي ومجهولون', () => {
   const scans = [

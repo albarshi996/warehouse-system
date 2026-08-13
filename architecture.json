@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 90,
+    "modules": 89,
     "serviceDomains": 40,
     "serviceFiles": 292,
     "collections": 70,
@@ -637,24 +637,10 @@
       "name": "stock-operations",
       "route": "/dashboard/stock-operations",
       "title": "العمليات المخزنية",
-      "summary": "العمليات المخزنية — امسح فتُعبَّأ (SAP-19 · طلب المالك 2026-08-13).",
+      "summary": "العمليات المخزنية — شاشةٌ واحدة: امسح فتُعبَّأ (SAP-19 · طلب المالك).",
       "file": "src/pages/dashboard/stock-operations.astro",
       "usesServices": [
         "stock"
-      ]
-    },
-    {
-      "name": "stock-operations-classic",
-      "route": "/dashboard/stock-operations-classic",
-      "title": "العودة إلى لوحة التحكم",
-      "summary": "العمليات المخزنية — الجرد الذكي Pro. **النسخة الوحيدة المعتمدة.**",
-      "file": "src/pages/dashboard/stock-operations-classic.astro",
-      "usesServices": [
-        "auth",
-        "itemService",
-        "items",
-        "stock",
-        "ui"
       ]
     },
     {
@@ -2600,10 +2586,13 @@
       "testCount": 3,
       "exports": [
         "SCAN_MODES",
+        "aggregateSession",
         "appendScan",
         "applyLedgerToItems",
         "closeOperation",
+        "correctionEntry",
         "createOperation",
+        "exportRows",
         "findMasterFor",
         "getOperation",
         "getScans",

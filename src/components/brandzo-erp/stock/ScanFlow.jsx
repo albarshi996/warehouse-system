@@ -1,24 +1,28 @@
 /**
- * شاشة العمليات المخزنية على الهاتف — امسح فتُعبَّأ (SAP-19).
+ * العمليات المخزنية — شاشةٌ واحدة: امسح فتُعبَّأ، وجدولك تحت يدك (SAP-19).
  *
- * ═══ ثلاث خطوات لا أكثر ═══
- * اختر الوضع ⇒ امسح ⇒ خانة التعبئة (الاسم من الماستر أو سمِّه + الكمّيّة)
- * ⇒ حفظ. كلّ الحكم في `scanFlow.js` الخالص المُختبَر؛ هذه الشاشة عرضٌ له.
+ * ═══ منطق التنفيذ (تصحيح 2026-08-13 بعد ملاحظة المالك) ═══
+ * لا صفحةَ فوق صفحة: **شاشةٌ واحدة ومصدرُ حقيقةٍ واحد.**
+ *   · المسح ثلاث خطوات: الوضع ⇒ المسح ⇒ خانة التعبئة ⇒ حفظ.
+ *   · الجدول يُشتقّ من قيود العملية السحابيّة الملحقة-فقط مباشرةً — فجهازان
+ *     على العمليّة نفسها يريان جدولًا واحدًا حيًّا بلا منطق توفيقٍ خاصّ
+ *     (هذا ما احتاج في الأداة القديمة مئات الأسطر).
+ *   · الكمّيّة الدفتريّة من **الماستر السحابيّ** لا من استيراد شيتٍ ثانٍ:
+ *     الشيت يُستورد مرّةً في شاشة الأصناف، والجرد يقارن بالماستر.
+ *   · التصحيح والحذف **قيودُ فرقٍ** لا تعديل — التاريخ كامل: من عدّ ومن
+ *     صحّح وبكم (نفس مبدأ دفتر الحركات).
  *
  * ═══ ولماذا لا تتجمّد؟ ═══
- * الصفحة القديمة كانت تفكّ الباركود على المعالج إطارًا إطارًا («الوضع
- * المتوافق») فيغلي هاتف الموظّف ويتجمّد. هنا: الكاميرا عبر `BarcodeDetector`
- * **العتاديّ** حيث يتوفّر (فحصٌ كلّ ٣٠٠م.ث لا كلّ إطار)، ولا فكّ برمجيّ
- * إطلاقًا — ومن لا كاميرا مدعومة عنده (آيفون) يمسح بلوحة المفاتيح أو يكتب.
+ * القديم فكّ الباركود على المعالج إطارًا إطارًا. هنا `BarcodeDetector`
+ * العتاديّ (فحصٌ كلّ ٣٠٠م.ث) ولا فكّ برمجيّ — ومن لا دعم عنده (آيفون)
+ * يمسح بلوحة المفاتيح أو يكتب.
  *
- * ═══ ومسار البيانات القائم لا يُمسّ ═══
- * نفس عمليات `stock_operations` وقيود `appendScan` الملحقة-فقط، ونفس مفتاح
- * الاستئناف — فالأداة الكاملة القديمة تقرأ ما نكتب والعكس. والمجهول يدخل
- * `Items_Pending` القائمة بعد تسميته (I-د) فيبتّ فيه المدير.
+ * كلّ الحكم في `scanFlow.js` الخالص المُختبَر؛ هذه الشاشة عرضٌ له.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { lookupByBarcode } from '../../../services/itemService.js';
+import { lookupByBarcode, subscribeItems } from '../../../services/itemService.js';
 import { registerPending } from '../../../services/items/pendingService.js';
+import { buildItemIndexes } from '../../../services/items/uomWiring.js';
 import {
   createOperation,
   appendScan,
@@ -32,18 +36,22 @@ import {
   panelForScan,
   scanEntryVerdict,
   sessionSummary,
+  aggregateSession,
+  correctionEntry,
+  exportRows,
 } from '../../../services/stock/scanFlow.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Icon from '../../ui/Icon.jsx';
 import { int, num } from '../../odoo/format.js';
 
-const OP_KEY = 'bzCloudOpId'; // نفس مفتاح الأداة الكاملة — عمليةٌ واحدة للجهاز
+const OP_KEY = 'bzCloudOpId'; // مفتاح استئنافٍ واحد للجهاز — عمليةٌ واحدة لا تنقسم
 
 export default function ScanFlow() {
   const [me, setMe] = useState(null);
   const [mode, setMode] = useState('');
   const [opId, setOpId] = useState(null);
   const [scans, setScans] = useState([]);
+  const [items, setItems] = useState([]);
   const [panel, setPanel] = useState(null); // خانة التعبئة بعد المسح
   const [panelItem, setPanelItem] = useState(null);
   const [qty, setQty] = useState('');
@@ -52,6 +60,8 @@ export default function ScanFlow() {
   const [note, setNote] = useState(null); // { kind: 'ok'|'err', text }
   const [cameraOn, setCameraOn] = useState(false);
   const [cameraErr, setCameraErr] = useState('');
+  const [tableFilter, setTableFilter] = useState('all'); // all | diff | unknown
+  const [joinCode, setJoinCode] = useState('');
 
   const scanInputRef = useRef(null);
   const qtyInputRef = useRef(null);
@@ -68,7 +78,11 @@ export default function ScanFlow() {
     return () => unsub();
   }, []);
 
-  // استئناف عمليةٍ مفتوحة محفوظة — نفس سلوك الأداة الكاملة، فلا يُقسم عملٌ واحد.
+  // الماستر السحابيّ — مصدر الاسم والكمّيّة الدفتريّة (لا استيراد شيتٍ ثانٍ).
+  useEffect(() => subscribeItems(setItems, () => setItems([])), []);
+  const itemIndexes = useMemo(() => buildItemIndexes(items), [items]);
+
+  // استئناف عمليةٍ مفتوحة محفوظة — العمل الواحد لا ينقسم بين عمليتين.
   useEffect(() => {
     const saved = typeof localStorage !== 'undefined' ? localStorage.getItem(OP_KEY) : null;
     if (!saved) return;
@@ -84,7 +98,7 @@ export default function ScanFlow() {
       .catch(() => {});
   }, []);
 
-  // قيود العملية الحيّة — القائمة أسفل الشاشة تتحدّث فور كلّ حفظ.
+  // قيود العملية الحيّة — الجدول كلّه يُشتقّ منها، فكلّ جهازٍ يرى عمل البقيّة.
   useEffect(() => {
     if (!opId) {
       setScans([]);
@@ -97,7 +111,10 @@ export default function ScanFlow() {
   useEffect(() => () => cameraStopRef.current?.(), []);
 
   const summary = useMemo(() => sessionSummary(scans), [scans]);
-  const recent = useMemo(() => [...scans].slice(-12).reverse(), [scans]);
+  const rows = useMemo(() => aggregateSession(scans, itemIndexes.byBarcode), [scans, itemIndexes]);
+  const diffRows = useMemo(() => rows.filter((r) => r.diff !== null && r.diff !== 0), [rows]);
+  const unknownRows = useMemo(() => rows.filter((r) => !r.known), [rows]);
+  const shownRows = tableFilter === 'diff' ? diffRows : tableFilter === 'unknown' ? unknownRows : rows;
 
   function flash(kind, text) {
     setNote({ kind, text });
@@ -175,6 +192,64 @@ export default function ScanFlow() {
     }
   }
 
+  /** تصحيح كمّيّة صفّ (أو حذفه بكمّيّة ٠): قيدُ فرقٍ في الدفتر لا تعديل. */
+  async function correctRow(row, targetQty) {
+    const verdict = correctionEntry(row, targetQty, mode || 'جرد');
+    if (!verdict.ok) {
+      flash('err', verdict.problems.join(' · '));
+      return;
+    }
+    try {
+      const id = await ensureOperation(mode || 'جرد');
+      await appendScan(id, { ...verdict.entry, profile: me });
+      flash('ok', `صُحّح ${row.name || row.barcode}: قيد فرق ${num(verdict.entry.qty)}`);
+    } catch (e) {
+      flash('err', e?.message ?? 'تعذّر التصحيح');
+    }
+  }
+
+  function askCorrection(row) {
+    const raw = window.prompt(`الكمّيّة الصحيحة لـ«${row.name || row.barcode}»؟ (المعدود الآن ${num(row.countedQty)})`, String(row.countedQty));
+    if (raw === null) return;
+    correctRow(row, raw);
+  }
+
+  function askRemoval(row) {
+    if (!window.confirm(`حذف «${row.name || row.barcode}» من الجلسة؟ يُكتب قيدُ عكسٍ (−${num(row.countedQty)}) ويبقى الأثر.`)) return;
+    correctRow(row, 0);
+  }
+
+  /** تصدير إكسل — نفس قدرة الأداة القديمة، من نفس الجدول الظاهر. */
+  async function exportExcel() {
+    if (!rows.length) return;
+    const XLSX = await import('xlsx');
+    const ws = XLSX.utils.json_to_sheet(exportRows(shownRows));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'الجلسة');
+    const stamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `Stock_${mode || 'Session'}_${stamp}.xlsx`);
+  }
+
+  /** الانضمام لعمليةٍ قائمة برمزها — العمل الجماعيّ: دفترٌ واحد لكلّ الأجهزة. */
+  async function joinByCode() {
+    const code = joinCode.trim();
+    if (!code) return;
+    try {
+      const op = await getOperation(code);
+      if (!op || op.status !== 'open') {
+        flash('err', 'لا عملية مفتوحة بهذا الرمز.');
+        return;
+      }
+      localStorage.setItem(OP_KEY, code);
+      setOpId(code);
+      if (op.type) setMode(op.type);
+      setJoinCode('');
+      flash('ok', 'انضممت — الجدول أدناه دفتر العملية المشترك.');
+    } catch (e) {
+      flash('err', e?.message ?? 'تعذّر الانضمام');
+    }
+  }
+
   async function finishOperation() {
     if (!opId) return;
     const ok = window.confirm(`إنهاء العملية؟ (${int(summary.scanCount)} قيدًا · ${int(summary.itemCount)} صنفًا)`);
@@ -199,7 +274,6 @@ export default function ScanFlow() {
         audio: false,
       });
       setCameraOn(true);
-      // ننتظر ظهور عنصر الفيديو بعد إعادة الرسم.
       await new Promise((r) => setTimeout(r, 60));
       const video = videoRef.current;
       if (!video) throw new Error('تعذّر فتح العرض');
@@ -238,8 +312,7 @@ export default function ScanFlow() {
   }
 
   return (
-    <div className="o_theme" dir="rtl" style={{ maxWidth: '560px', margin: '0 auto' }}>
-      {/* الحالة */}
+    <div className="o_theme" dir="rtl" style={{ maxWidth: '760px', margin: '0 auto' }}>
       {note && <div className={`o_alert ${note.kind === 'err' ? 'danger' : 'success'}`}>{note.text}</div>}
 
       {/* ١ — الوضع */}
@@ -389,32 +462,123 @@ export default function ScanFlow() {
         </div>
       )}
 
-      {/* الجلسة الجارية */}
-      {opId && (
+      {/* جدول الجلسة — مشتقٌّ من دفتر العملية الملحق-فقط، حيًّا لكلّ الأجهزة */}
+      {opId ? (
         <div className="o_ds_card o_ds_pad" style={{ marginBottom: '14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
             <p style={{ margin: 0, fontSize: 'var(--o-font-size-sm)', fontWeight: 'var(--o-font-weight-bold)' }}>
-              الجلسة الجارية — {int(summary.scanCount)} قيدًا · {int(summary.itemCount)} صنفًا · إجمالي {num(summary.totalQty)}
+              الجلسة الجارية — {int(summary.scanCount)} قيدًا · {int(rows.length)} صنفًا · إجمالي {num(summary.totalQty)}
             </p>
-            <button type="button" className="btn btn-secondary btn-sm" onClick={finishOperation}>
-              <Icon name="checkCircle" size={14} /> إنهاء العملية
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={exportExcel} disabled={!rows.length}>
+                <Icon name="fileUp" size={14} /> تصدير إكسل
+              </button>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={finishOperation}>
+                <Icon name="checkCircle" size={14} /> إنهاء العملية
+              </button>
+            </div>
+          </div>
+
+          {/* مرشّحات الجدول — الكلّ / الفروقات / غير المعرّف */}
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
+            {[
+              { id: 'all', label: `الكلّ (${int(rows.length)})` },
+              { id: 'diff', label: `الفروقات (${int(diffRows.length)})` },
+              { id: 'unknown', label: `غير معرّف (${int(unknownRows.length)})` },
+            ].map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                className={tableFilter === f.id ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm'}
+                onClick={() => setTableFilter(f.id)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {shownRows.length === 0 ? (
+            <p style={{ margin: 0, fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+              لا صفوف بعد — امسح أوّل باركود.
+            </p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--o-font-size-xs)' }}>
+                <thead>
+                  <tr style={{ textAlign: 'right', color: 'var(--o-main-color-muted)' }}>
+                    <th style={{ padding: '4px 6px' }}>الصنف</th>
+                    <th style={{ padding: '4px 6px' }}>الدفتريّ</th>
+                    <th style={{ padding: '4px 6px' }}>المعدود</th>
+                    <th style={{ padding: '4px 6px' }}>الفرق</th>
+                    <th style={{ padding: '4px 6px' }} aria-label="إجراءات" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {shownRows.map((r) => (
+                    <tr key={r.barcode} style={{ borderTop: '1px solid var(--o-border-color, #e5e5ea)' }}>
+                      <td style={{ padding: '6px' }}>
+                        <div style={{ fontWeight: 'var(--o-font-weight-bold)' }}>
+                          {r.name || '—'}
+                          {!r.known && (
+                            <span style={{ marginInlineStart: '6px', fontSize: '10px', color: 'var(--o-text-warning, #8a6d1b)' }}>
+                              بانتظار الاعتماد
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontFamily: 'monospace', direction: 'ltr', textAlign: 'right', color: 'var(--o-main-color-muted)', fontSize: '10px' }}>
+                          {r.barcode}
+                        </div>
+                      </td>
+                      <td style={{ padding: '6px', fontVariantNumeric: 'tabular-nums' }}>{r.bookQty === null ? '—' : num(r.bookQty)}</td>
+                      <td style={{ padding: '6px', fontVariantNumeric: 'tabular-nums', fontWeight: 'var(--o-font-weight-bold)' }}>{num(r.countedQty)}</td>
+                      <td
+                        style={{
+                          padding: '6px',
+                          fontVariantNumeric: 'tabular-nums',
+                          color: r.diff === null || r.diff === 0 ? 'var(--o-main-color-muted)' : 'var(--o-text-danger, #b3261e)',
+                          fontWeight: r.diff ? 'var(--o-font-weight-bold)' : undefined,
+                        }}
+                      >
+                        {r.diff === null ? '—' : num(r.diff)}
+                      </td>
+                      <td style={{ padding: '6px', whiteSpace: 'nowrap' }}>
+                        <button type="button" className="btn btn-link btn-sm" style={{ padding: '2px 6px' }} onClick={() => askCorrection(r)}>
+                          تصحيح
+                        </button>
+                        <button type="button" className="btn btn-link btn-sm" style={{ padding: '2px 6px' }} onClick={() => askRemoval(r)}>
+                          حذف
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <p style={{ margin: '8px 0 0', fontSize: '10px', color: 'var(--o-main-color-muted)' }}>
+            الدفتريّ من ماستر الأصناف · التصحيح والحذف قيودُ فرقٍ تبقى في السجلّ · رمز العملية للعمل الجماعيّ:
+            <span style={{ fontFamily: 'monospace', direction: 'ltr', display: 'inline-block', marginInlineStart: '4px' }}>{opId}</span>
+          </p>
+        </div>
+      ) : (
+        <div className="o_ds_card o_ds_pad" style={{ marginBottom: '14px' }}>
+          <p style={{ margin: '0 0 6px', fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+            لا عملية جارية — أوّل حفظٍ يفتح عمليةً جديدة. وللعمل الجماعيّ على عمليةِ زميلٍ مفتوحة، ألصق رمزها:
+          </p>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <input
+              type="text"
+              className="o_input"
+              placeholder="رمز العملية…"
+              aria-label="رمز العملية"
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value)}
+              style={{ flex: 1, direction: 'ltr', textAlign: 'center', fontFamily: 'monospace' }}
+            />
+            <button type="button" className="btn btn-secondary btn-sm" onClick={joinByCode} disabled={!joinCode.trim()}>
+              انضمام
             </button>
           </div>
-          {recent.length > 0 && (
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--o-font-size-xs)', marginTop: '8px' }}>
-              <tbody>
-                {recent.map((s, i) => (
-                  <tr key={s.id || i} style={{ borderTop: '1px solid var(--o-border-color, #e5e5ea)' }}>
-                    <td style={{ padding: '5px 4px' }}>{s.name || '—'}</td>
-                    <td style={{ padding: '5px 4px', fontFamily: 'monospace', direction: 'ltr', color: 'var(--o-main-color-muted)' }}>{s.barcode}</td>
-                    <td style={{ padding: '5px 4px', textAlign: 'left', fontVariantNumeric: 'tabular-nums', fontWeight: 'var(--o-font-weight-bold)' }}>
-                      {num(s.qty ?? 0)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
         </div>
       )}
     </div>

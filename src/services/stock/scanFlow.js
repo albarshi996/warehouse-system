@@ -121,3 +121,87 @@ export function sessionSummary(scans, knownBarcodes = new Set()) {
     unknownCount: unknown,
   };
 }
+
+const round6 = (n) => Math.round((Number(n) || 0) * 1e6) / 1e6;
+
+/**
+ * جدول الجلسة: القيود مجمَّعةً صنفًا صنفًا — **الدفتر الملحق-فقط هو
+ * المصدر** (مجموع قيود الباركود = كمّيّته)، فجهازان يمسحان العمليةَ نفسها
+ * يريان جدولًا واحدًا بلا منطق توفيقٍ خاصّ.
+ *
+ * والكمّيّة الدفتريّة من **الماستر السحابيّ** (`item.balance`) لا من
+ * استيراد شيتٍ ثانٍ — الشيت يُستورد مرّةً في شاشة الأصناف، والجرد يقارن
+ * بالماستر: مصدرُ حقيقةٍ واحد (منطق التنفيذ الذي طلبه المالك).
+ *
+ * @param {Array} scans قيود العملية بترتيبها الزمنيّ
+ * @param {Map<string,object>} [byBarcode] فهرس الماستر: باركود ⇐ صنف
+ * @returns {Array<{barcode,name,sku,known,bookQty,countedQty,diff,scanCount}>}
+ */
+export function aggregateSession(scans, byBarcode = new Map()) {
+  const rows = new Map();
+  for (const s of scans || []) {
+    const code = normalizeBarcode(s?.barcode);
+    if (!code) continue;
+    let row = rows.get(code);
+    if (!row) {
+      const item = byBarcode.get(code) || null;
+      row = {
+        barcode: code,
+        name: item ? [item.nameAr, item.shade].filter(Boolean).join(' — ') : String(s?.name ?? '').trim(),
+        sku: item ? String(item.sku ?? '').trim() : '',
+        known: Boolean(item),
+        bookQty: item ? Number(item.balance) || 0 : null,
+        countedQty: 0,
+        scanCount: 0,
+      };
+      rows.set(code, row);
+    }
+    // اسمٌ سمّاه الموظّف لاحقًا لمجهولٍ مرّ بلا اسم — يُلتقط لا يُهمل.
+    if (!row.name && s?.name) row.name = String(s.name).trim();
+    row.countedQty = round6(row.countedQty + (Number(s?.qty) || 0));
+    row.scanCount += 1;
+  }
+  const out = [...rows.values()];
+  for (const row of out) {
+    row.diff = row.bookQty === null ? null : round6(row.countedQty - row.bookQty);
+  }
+  return out;
+}
+
+/**
+ * تصحيح كمّيّة صفٍّ في دفترٍ ملحق-فقط: **قيدُ فرقٍ لا تعديل** — نفس مبدأ
+ * دفتر الحركات. الكمّيّة الجديدة ٧ والمعدود ١٠ ⇒ قيدٌ بـ−٣، والحذف قيدٌ
+ * يعكس المعدود كلّه. فالتاريخ كامل: من عدّ، ومن صحّح، وبكم.
+ *
+ * @returns {{ok:boolean, problems:string[], entry:object|null}}
+ */
+export function correctionEntry(row, newQty, mode) {
+  const problems = [];
+  if (!isScanMode(mode)) problems.push('اختر الوضع أوّلًا.');
+  const code = normalizeBarcode(row?.barcode);
+  if (!code) problems.push('صفٌّ بلا باركود.');
+  const target = Number(newQty);
+  if (!Number.isFinite(target) || target < 0) problems.push('الكمّيّة الجديدة رقمٌ صفرٌ فأكبر.');
+  if (problems.length) return { ok: false, problems, entry: null };
+
+  const delta = round6(target - (Number(row?.countedQty) || 0));
+  if (delta === 0) return { ok: false, problems: ['لا تغيير — الكمّيّة هي نفسها.'], entry: null };
+  return {
+    ok: true,
+    problems: [],
+    entry: { barcode: code, name: String(row?.name ?? '').trim(), qty: delta, opType: mode },
+  };
+}
+
+/** صفوف التصدير — أعمدةٌ عربيّة ثابتة تفتح في إكسل كما هي. */
+export function exportRows(rows) {
+  return (rows || []).map((r) => ({
+    'الباركود': r.barcode,
+    'كود الصنف': r.sku || '—',
+    'اسم الصنف': r.name || '—',
+    'الكمية الدفترية': r.bookQty ?? '—',
+    'المعدود/المنفَّذ': r.countedQty,
+    'الفرق': r.diff ?? '—',
+    'الحالة': r.known ? 'معروف' : 'غير معرّف — بانتظار الاعتماد',
+  }));
+}
