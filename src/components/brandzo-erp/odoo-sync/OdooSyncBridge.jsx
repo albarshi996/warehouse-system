@@ -160,7 +160,22 @@ export default function OdooSyncBridge() {
       .filter((v) => v !== null);
     return stamps.length === financeScopes().length ? Math.min(...stamps) : null;
   }, [pullState]);
-  const pullErrors = useMemo(() => pullRows.filter((r) => r?.lastError), [pullRows]);
+  /**
+   * نتيجة آخر جولة سحبٍ **في الذاكرة**.
+   *
+   * لماذا لا نكتفي بحالة Firestore؟ لأنّ تسجيل الفشل نفسه كتابةٌ إلى
+   * `odoo_pull_state` — فإن كان المنع في الصلاحيات فشل التسجيل أيضًا، وظهر
+   * النطاق «لم يُسحب» كأنّه لم يُحاوَل. وهذا أسوأ من الخطأ: عطبٌ يتنكّر في
+   * ثوب السكون. فما لا تستطيع القاعدة حفظه تحفظه الذاكرة وتعرضه.
+   */
+  const [runResults, setRunResults] = useState({});
+  const pullErrors = useMemo(
+    () => [
+      ...pullRows.filter((r) => r?.lastError),
+      ...Object.values(runResults).filter((r) => r && !r.ok && !pullRows.some((p) => p.scope === r.scope && p.lastError)),
+    ],
+    [pullRows, runResults]
+  );
   // مراجع لا حالة: النبضة تحتاج القيمة الطازجة بلا إعادة تركيب المؤقّت كلّ تغيير.
   const busyRef = useRef('');
   const lastPullMsRef = useRef(null);
@@ -297,9 +312,12 @@ export default function OdooSyncBridge() {
     try {
       await pullProducts(me);
       await refreshOdooProducts();
+      results.push({ ok: true, scope: 'items', written: 0 });
     } catch (e) {
       results.push({ ok: false, scope: 'items', error: String(e?.message ?? e) });
     }
+    // تُحفظ في الذاكرة أوّلًا: لو عجزت القاعدة عن حفظ الفشل، بقي الفشل مرئيًّا.
+    setRunResults(Object.fromEntries(results.filter((r) => r?.scope).map((r) => [r.scope, r])));
     return results;
   }, [me, refreshOdooProducts]);
 
@@ -322,8 +340,9 @@ export default function OdooSyncBridge() {
       if (!isPullDue(lastPullMsRef.current, Date.now(), AUTO_PULL_MS)) return;
       try {
         await runPullAll();
-      } catch {
-        /* الفشل مسجَّلٌ في حالة النطاق — لا نُزعج المستخدم بنافذةٍ كلّ دورة */
+      } catch (e) {
+        // لا نافذةَ كلّ دورة، لكنّ الفشل لا يُبتلع: يُحفظ ليظهر في الشارات.
+        setRunResults((prev) => ({ ...prev, __run: { ok: false, scope: '__run', error: String(e?.message ?? e) } }));
       }
     };
     const id = setInterval(tick, 30_000);
@@ -437,17 +456,31 @@ export default function OdooSyncBridge() {
         <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-line">
           {financeScopes().map((s) => {
             const st = pullState[s.id];
+            const run = runResults[s.id];
             const ms = stampMs(st?.lastPulledAt);
+            // الخطأ من القاعدة أو من الذاكرة — أيّهما وُجد. فالفشل الذي عجزت
+            // القاعدة عن حفظه يبقى مرئيًّا في الجلسة.
+            const error = st?.lastError || (run && !run.ok ? run.error : '');
+            const label = error
+              ? 'تعذّر'
+              : ms
+                ? `${st?.lastCount ?? 0} · ${lastPullLabel(ms, nowMs)}`
+                : run?.ok
+                  ? `${run.written ?? 0} · الآن`
+                  : 'لم يُسحب';
             return (
               <span
                 key={s.id}
-                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-chip px-2.5 py-1 text-[11px]"
-                title={st?.lastError || `${s.odooModel} → ${s.mirror}`}
+                className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px]"
+                style={
+                  error
+                    ? { background: TONE.error.bg, color: TONE.error.color, borderColor: TONE.error.border }
+                    : { background: 'var(--chip, #f4f4f6)', borderColor: 'var(--line, #e5e5ea)' }
+                }
+                title={error || `${s.odooModel} → ${s.mirror}`}
               >
-                <span className="text-ink font-bold">{s.labelAr}</span>
-                <span className="text-ink-2">
-                  {st?.lastError ? 'تعذّر' : ms ? `${st?.lastCount ?? 0} · ${lastPullLabel(ms, nowMs)}` : 'لم يُسحب'}
-                </span>
+                <span className={error ? 'font-bold' : 'text-ink font-bold'}>{s.labelAr}</span>
+                <span className={error ? '' : 'text-ink-2'}>{label}</span>
               </span>
             );
           })}
