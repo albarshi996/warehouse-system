@@ -45,6 +45,7 @@ import StateBar from './StateBar.jsx';
 import AuditTrail from './AuditTrail.jsx';
 import DocumentPrint from './DocumentPrint.jsx';
 import ChainBar from './ChainBar.jsx';
+import CopyFromPanel from './CopyFromPanel.jsx';
 import AttachmentsPanel from './AttachmentsPanel.jsx';
 import ControlPanel from './ControlPanel.jsx';
 import PromotionsPanel from './PromotionsPanel.jsx';
@@ -438,6 +439,15 @@ export default function DocumentEngine() {
             onPrint={() => window.print()}
           />
         </div>
+
+        {/* «جلب من مستند سابق» (SAP-5) — على المستند الجديد وحده.
+            بعد الحفظ يصير المسار «إنشاء مستند لاحق» من `ChainBar`، فلا
+            يُعرض الاثنان معًا ولا يختلط على الموظّف أيّهما يستعمل. */}
+        {!docId && (
+          <div id="document-copy-from">
+            <CopyFromPanel targetType={type} me={me} onFlash={flash} />
+          </div>
+        )}
 
         {/* سلسلة الشراء والمطابقة الثلاثية (F2) — تظهر للأنواع المترابطة فقط */}
         <div id="document-relations">
