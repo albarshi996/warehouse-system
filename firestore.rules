@@ -1140,6 +1140,44 @@ service cloud.firestore {
       allow delete:         if false;
     }
 
+    // ── المرآة المالية (SAP-16) — أودو مصدر الحقيقة، والبوابة تقرأ منه ────────
+    //
+    // خمس مجموعاتٍ تُملأ **بالسحب وحده**. الاتّجاه مختومٌ في الكود
+    // (`directionGuard`)، وهذه القواعد تحرس الجانب الآخر: لا حذف أبدًا —
+    // السجلّ الذي يختفي من أودو يُوسم `missingInOdoo` ولا يُمحى، فالأثر يبقى.
+    //
+    // ولماذا يكتبها المتصفّح أصلًا؟ لأنّ خطّة Spark بلا وظائف سحابيّة، فلا سحب
+    // على الخادم. ولذلك الكتابة محصورةٌ بالمديرَين، والحقيقة تبقى في أودو:
+    // أيّ عبثٍ بالمرآة يصحّحه السحب التالي، ولا يُبنى عليه قرارٌ محاسبيّ.
+    match /odoo_accounts/{accountId} {
+      allow read:           if signedIn();
+      allow create, update: if isManager();
+      allow delete:         if false;
+    }
+    match /odoo_moves/{moveId} {
+      allow read:           if signedIn();
+      allow create, update: if isManager();
+      allow delete:         if false;
+    }
+    match /odoo_move_lines/{lineId} {
+      allow read:           if signedIn();
+      allow create, update: if isManager();
+      allow delete:         if false;
+    }
+    match /odoo_payments/{paymentId} {
+      allow read:           if signedIn();
+      allow create, update: if isManager();
+      allow delete:         if false;
+    }
+
+    // حالة السحب لكلّ نطاق: آخر سحبٍ وعدده وخطؤه. تُقرأ لتُعرض «آخر سحب»،
+    // فمرآةٌ لا تُعلن قِدَمها تكذب بصمت.
+    match /odoo_pull_state/{scopeId} {
+      allow read:           if signedIn();
+      allow create, update: if isManager();
+      allow delete:         if false;
+    }
+
     // سجلّ أحداث المزامنة — ملحق-فقط (لا تعديل/حذف): يغذّي الجرس وخلاصة النشاط.
     match /odoo_sync_events/{eventId} {
       allow read:   if signedIn();

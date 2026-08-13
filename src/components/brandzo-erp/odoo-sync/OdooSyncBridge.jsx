@@ -14,7 +14,7 @@
  *
  * الوصول: المديران (الإلزام الحقيقيّ في firestore.rules).
  */
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import { listenAllDocuments } from '../../../services/documents/documentsService.js';
 import { GOVERNED_FORMS } from '../../../services/documents/schemas/index.js';
@@ -25,6 +25,8 @@ import { odooStateLabel } from '../../../services/odoo/poMapper.js';
 import { pickingStateLabel } from '../../../services/odoo/grnMapper.js';
 import { odooTargetFor, refText } from '../../../services/odoo/docCrosswalk.js';
 import { isPushSealed } from '../../../services/odoo/directionGuard.js';
+import { pullFinance, listenPullState, pullStateByScope, stampMs } from '../../../services/odoo/pullService.js';
+import { financeScopes, isPullDue, lastPullLabel, AUTO_PULL_MS } from '../../../services/odoo/pullRegistry.js';
 import {
   pushAnyDocument,
   pushItem,
@@ -145,6 +147,25 @@ export default function OdooSyncBridge() {
   const [busy, setBusy] = useState('');
   // ختم الاتّجاه (SAP-15): ثابتٌ في الكود لا في السياسة، فلا يُقرأ من الشبكة.
   const sealed = isPushSealed();
+
+  /* ── السحب: الحالة والدوريّة (SAP-16) ── */
+  const [pullRows, setPullRows] = useState([]);
+  const [autoPull, setAutoPull] = useState(true);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const pullState = useMemo(() => pullStateByScope(pullRows), [pullRows]);
+  // أقدم سحبٍ بين النطاقات هو ما يُعرض: المرآة قديمةٌ بقِدَم أقدم أجزائها.
+  const lastPullMs = useMemo(() => {
+    const stamps = financeScopes()
+      .map((s) => stampMs(pullState[s.id]?.lastPulledAt))
+      .filter((v) => v !== null);
+    return stamps.length === financeScopes().length ? Math.min(...stamps) : null;
+  }, [pullState]);
+  const pullErrors = useMemo(() => pullRows.filter((r) => r?.lastError), [pullRows]);
+  // مراجع لا حالة: النبضة تحتاج القيمة الطازجة بلا إعادة تركيب المؤقّت كلّ تغيير.
+  const busyRef = useRef('');
+  const lastPullMsRef = useRef(null);
+  busyRef.current = busy;
+  lastPullMsRef.current = lastPullMs;
   const [msg, setMsg] = useState(null);
   const [feedOpen, setFeedOpen] = useState(false);
   const [seenCount, setSeenCount] = useState(0);
@@ -267,6 +288,61 @@ export default function OdooSyncBridge() {
       flash(`سُحب ${r.total} صنفًا (${r.created} جديد · ${r.updated} محدَّث) إلى الماستر`, 'success');
     });
 
+  /**
+   * السحب الموحَّد: الأصناف عبر مسارها القائم، والمالية عبر المرايا.
+   * يُكمل رغم فشل نطاق — فلا يحجب حسابٌ مفقود سحبَ القيود.
+   */
+  const runPullAll = useCallback(async () => {
+    const results = await pullFinance();
+    try {
+      await pullProducts(me);
+      await refreshOdooProducts();
+    } catch (e) {
+      results.push({ ok: false, scope: 'items', error: String(e?.message ?? e) });
+    }
+    return results;
+  }, [me, refreshOdooProducts]);
+
+  // اشتراكٌ حيّ على حالة السحب — «آخر سحب» يجب أن يكون واقعًا لا تخمينًا.
+  useEffect(() => {
+    if (!allowed) return undefined;
+    return listenPullState(setPullRows, () => setPullRows([]));
+  }, [allowed]);
+
+  /**
+   * الدوريّة — في المتصفّح لا على الخادم (لا وظائف سحابيّة على Spark).
+   * نبضةٌ كلّ نصف دقيقة: تُحدّث نصّ «آخر سحب»، وتسحب إن حان الوقت.
+   * فإن أُغلقت الصفحة توقّف كلّ شيء — وهذا مُعلَنٌ في الواجهة لا مخفيّ.
+   */
+  useEffect(() => {
+    if (!allowed) return undefined;
+    const tick = async () => {
+      setNowMs(Date.now());
+      if (!autoPull || busyRef.current) return;
+      if (!isPullDue(lastPullMsRef.current, Date.now(), AUTO_PULL_MS)) return;
+      try {
+        await runPullAll();
+      } catch {
+        /* الفشل مسجَّلٌ في حالة النطاق — لا نُزعج المستخدم بنافذةٍ كلّ دورة */
+      }
+    };
+    const id = setInterval(tick, 30_000);
+    return () => clearInterval(id);
+  }, [allowed, autoPull, runPullAll]);
+
+  const onPullAll = () =>
+    run('pullAll', async () => {
+      const results = await runPullAll();
+      const failed = results.filter((r) => !r.ok);
+      const rows = results.filter((r) => r.ok).reduce((s, r) => s + (r.written ?? 0), 0);
+      flash(
+        failed.length
+          ? `سُحب ${rows} سجلًّا · وتعذّر ${failed.length}: ${failed.map((f) => f.scope).join(' · ')}`
+          : `سُحب ${rows} سجلًّا من أودو`,
+        failed.length ? 'error' : 'success'
+      );
+    });
+
   const onSyncMoves = () =>
     run('mv', async () => {
       const r = await syncLedgerMoves(moves, mirrorById, me);
@@ -315,6 +391,66 @@ export default function OdooSyncBridge() {
             )}
           </button>
           {feedOpen && <ActivityFeed events={events} onClose={() => setFeedOpen(false)} />}
+        </div>
+      </div>
+
+      {/* شريط السحب — ظاهرٌ في كلّ التبويبات لا في الأصناف وحدها (SAP-16) */}
+      <div className="rounded-lg border border-line bg-surface p-3 mb-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <button
+            type="button"
+            className={btnPrimary}
+            style={primaryStyle}
+            disabled={busy === 'pullAll'}
+            onClick={onPullAll}
+          >
+            <IconDown width={14} height={14} />
+            {busy === 'pullAll' ? 'يسحب…' : 'اسحب من أودو'}
+          </button>
+
+          <label className="inline-flex items-center gap-2 text-xs text-ink cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={autoPull}
+              onChange={(e) => setAutoPull(e.target.checked)}
+              className="w-4 h-4 accent-[var(--accent,#714B67)]"
+            />
+            <span>سحبٌ تلقائيّ كلّ ٥ دقائق</span>
+          </label>
+
+          <span className="text-xs text-ink-2">
+            آخر سحب: <b className="text-ink">{lastPullLabel(lastPullMs, nowMs)}</b>
+          </span>
+
+          {pullErrors.length > 0 && (
+            <Badge tone="error" title={pullErrors.map((e) => `${e.labelAr}: ${e.lastError}`).join(' · ')}>
+              تعذّر {pullErrors.length}
+            </Badge>
+          )}
+
+          <span className="text-[11px] text-ink-2 mr-auto">
+            الدوريّة تعمل ما دامت الصفحة مفتوحة — لا جدولة على الخادم في الخطّة الحاليّة.
+          </span>
+        </div>
+
+        {/* حالة كلّ نطاقٍ ماليّ على حدة — فلا يُخفي إجماليٌّ نطاقًا لم يُسحب */}
+        <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-line">
+          {financeScopes().map((s) => {
+            const st = pullState[s.id];
+            const ms = stampMs(st?.lastPulledAt);
+            return (
+              <span
+                key={s.id}
+                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-chip px-2.5 py-1 text-[11px]"
+                title={st?.lastError || `${s.odooModel} → ${s.mirror}`}
+              >
+                <span className="text-ink font-bold">{s.labelAr}</span>
+                <span className="text-ink-2">
+                  {st?.lastError ? 'تعذّر' : ms ? `${st?.lastCount ?? 0} · ${lastPullLabel(ms, nowMs)}` : 'لم يُسحب'}
+                </span>
+              </span>
+            );
+          })}
         </div>
       </div>
 
@@ -510,9 +646,19 @@ export default function OdooSyncBridge() {
             <IconSync width={24} height={24} />
           </span>
           <div className="text-center text-[12px] text-ink-2 leading-relaxed">
-            التحويل عبر <b className="text-ink">جدول العبور</b>
-            <br />
-            ثمّ <b className="text-ink">odoo.create</b> / <b className="text-ink">write</b>
+            {sealed ? (
+              <>
+                القراءة عبر <b className="text-ink">search_read</b>
+                <br />
+                ثمّ <b className="text-ink">جدول العبور</b> إلى المرآة
+              </>
+            ) : (
+              <>
+                التحويل عبر <b className="text-ink">جدول العبور</b>
+                <br />
+                ثمّ <b className="text-ink">odoo.create</b> / <b className="text-ink">write</b>
+              </>
+            )}
           </div>
           <div className="w-full border-t border-line my-1" />
           {track === 'item' && (

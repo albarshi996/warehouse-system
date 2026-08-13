@@ -40,6 +40,7 @@ import {
   accountTree,
 } from './financeMapper.js';
 import { READ_METHODS } from './directionGuard.js';
+import { mockOdooClient } from './mockOdooClient.js';
 
 /* ═══════════════════ 1. سجلّ السحب ═══════════════════ */
 
@@ -270,4 +271,57 @@ test('شجرة الحسابات تُبنى من هرميّة الكود لا م�
   assert.equal(tree.find((a) => a.code === '1').parentCode, null);
   assert.equal(tree.find((a) => a.code === '2').parentCode, null);
   assert.equal(tree.length, 4, 'حسابٌ بلا كود يسقط — لا هويّة له');
+});
+
+/* ═══════════════════ 6. تكامل حقيقيّ مع المحاكي ═══════════════════ */
+
+test('★★ كلّ نطاقٍ ماليّ يجد نموذجه في المحاكي ويُهضَم بلا حشو', async () => {
+  // ليس اختبار شكلٍ بل رحلةٌ كاملة: النطاق → نموذج أودو → السحب → المطابق.
+  // ما ينكسر بين السجلّ والمحاكي يظهر هنا لا في المتصفّح.
+  const MAP = { accounts: accountFromOdoo, moves: moveFromOdoo, moveLines: moveLineFromOdoo, payments: paymentFromOdoo };
+  for (const scope of financeScopes()) {
+    const rows = await mockOdooClient.searchRead(scope.odooModel, scope.domain ?? [], scope.fields);
+    assert.ok(Array.isArray(rows) && rows.length > 0, `${scope.labelAr}: المحاكي لا يعطي شيئًا من ${scope.odooModel}`);
+    for (const rec of rows) {
+      assert.ok(mirrorDocId(scope.id, rec), `${scope.labelAr}: سجلٌّ بلا مفتاحٍ صالح`);
+      const mapped = MAP[scope.id](rec);
+      for (const [key, value] of Object.entries(mapped)) {
+        if (typeof value === 'string') {
+          assert.doesNotMatch(value, /\[object|undefined|NaN/, `${scope.labelAr}.${key} يحمل حشوًا`);
+        }
+        if (typeof value === 'number') {
+          assert.ok(Number.isFinite(value), `${scope.labelAr}.${key} ليس رقمًا محدودًا`);
+        }
+      }
+    }
+  }
+});
+
+test('★★ قيود المحاكي متوازنة — والمرآة تُظهر الرصيد المفتوح كما هو', async () => {
+  const lineRows = await mockOdooClient.searchRead('account.move.line', [], PULL_SCOPES.moveLines.fields);
+  const lines = lineRows.map(moveLineFromOdoo);
+  for (const [number, group] of linesByMove(lines)) {
+    const b = moveBalance(group);
+    assert.equal(b.balanced, true, `القيد ${number} غير متوازن بفارق ${b.diff}`);
+  }
+
+  const moveRows = await mockOdooClient.searchRead('account.move', [], PULL_SCOPES.moves.fields);
+  const moves = moveRows.map(moveFromOdoo);
+  const bill = moves.find((m) => m.number === 'BILL/2026/0001');
+  assert.equal(bill.side, 'vendor');
+  assert.equal(bill.residual, 4000, 'الرصيد المفتوح مستوردٌ لا محسوب');
+  assert.equal(bill.origin, 'PO-2026-0009', 'أصل السلسلة يربط الفاتورة بأمر الشراء');
+
+  // المسوّدة لا تُنشئ التزامًا على الطرف.
+  const balances = partnerOpenBalances(moves);
+  const golden = balances.find((r) => r.partner === 'شركة الريشة الذهبية');
+  assert.equal(golden.open, 4000, 'إشعار الدائن المسوّدة يجب ألّا يُحتسب');
+});
+
+test('★ شجرة حسابات المحاكي تتشجّر بكودها', async () => {
+  const rows = await mockOdooClient.searchRead('account.account', [], PULL_SCOPES.accounts.fields);
+  const tree = accountTree(rows.map(accountFromOdoo));
+  assert.ok(tree.length >= 10);
+  assert.ok(tree.every((a) => a.code), 'كلّ حسابٍ بكود');
+  assert.ok(tree.some((a) => a.accountType === 'liability_payable'), 'الموردون موجودون');
 });

@@ -11,8 +11,8 @@
   "counts": {
     "modules": 89,
     "serviceDomains": 40,
-    "serviceFiles": 273,
-    "collections": 64,
+    "serviceFiles": 277,
+    "collections": 69,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -2000,6 +2000,7 @@
         "directionGuard.test.js",
         "docCrosswalk.js",
         "docCrosswalk.test.js",
+        "financeMapper.js",
         "grnMapper.js",
         "grnMapper.test.js",
         "idempotency.js",
@@ -2013,21 +2014,35 @@
         "odooSyncService.js",
         "poMapper.js",
         "poMapper.test.js",
+        "pullContract.test.js",
+        "pullRegistry.js",
+        "pullService.js",
         "vanSalesMapper.js",
         "vanSalesOdoo.test.js"
       ],
-      "fileCount": 19,
-      "testCount": 6,
+      "fileCount": 23,
+      "testCount": 7,
       "exports": [
+        "AUTO_PULL_MS",
+        "COL_PULL_STATE",
         "DOC_ODOO_MAP",
         "INTEGRATION_DIRECTION",
+        "MIN_PULL_MS",
         "MONEY_FIELD_NAMES",
         "MONEY_FIELD_PATTERNS",
+        "MOVE_KINDS",
+        "MOVE_STATES",
         "ODOO_MODE",
         "ODOO_PROXY_URL",
         "PARTNER_LOCATION",
+        "PAYMENT_TYPES",
+        "PULL_FAMILIES",
+        "PULL_SCOPES",
+        "PULL_SCOPE_IDS",
         "READ_METHODS",
         "VAN_SALES_TYPES",
+        "accountFromOdoo",
+        "accountTree",
         "approveAnyInOdoo",
         "approveInOdoo",
         "assertNoMoneyFields",
@@ -2042,37 +2057,58 @@
         "directionDecision",
         "docToOdooValues",
         "duplicateIds",
+        "financeScopes",
         "findMoneyFields",
         "grnDocToStockPicking",
         "grnLineToMoveLine",
         "indexSyncBySource",
         "isMoneyField",
         "isProduction",
+        "isPullDue",
         "isPushSealed",
         "isReadMethod",
         "isTraining",
         "isVanSalesType",
         "itemToProductValues",
+        "lastPullLabel",
         "ledgerMoveToStockMove",
         "lineToSaleLine",
         "lineToStockMove",
+        "linesByMove",
+        "listenMirror",
+        "listenPullState",
         "listenSyncEvents",
         "listenSyncState",
         "m2oId",
         "m2oLabel",
         "mapVanDocument",
+        "mirrorCollections",
+        "mirrorDocId",
         "mirrorIdFor",
         "mockOdooClient",
+        "moveBalance",
+        "moveFromOdoo",
+        "moveKind",
+        "moveLineFromOdoo",
+        "moveState",
+        "num",
         "odoo",
         "odooStateLabel",
         "odooTargetFor",
+        "partnerOpenBalances",
+        "paymentFromOdoo",
         "pickingRouteFor",
         "pickingStateLabel",
         "poDocToPurchaseOrder",
         "poDocTotal",
         "poLineToOrderLine",
         "productToItem",
+        "pullAllMirrors",
+        "pullFinance",
         "pullProducts",
+        "pullScope",
+        "pullScopes",
+        "pullStateByScope",
         "purchaseOrderToPoSummary",
         "pushAnyDocument",
         "pushGoodsReceipt",
@@ -2082,14 +2118,20 @@
         "pushVanSalesDocument",
         "realOdooClient",
         "refText",
+        "relId",
+        "relName",
         "resetMock",
         "resolveSyncAction",
+        "scopeOf",
+        "scopesOfFamily",
         "searchRead",
         "settlementCashVariance",
         "settlementToOdoo",
         "sourceDomain",
+        "stampMs",
         "stockMoveToLog",
         "stockPickingToSummary",
+        "str",
         "syncLedgerMoves",
         "unlink",
         "validateReceiptInOdoo",
@@ -2101,6 +2143,7 @@
         "write"
       ],
       "collections": [
+        "odoo_pull_state",
         "odoo_sync",
         "odoo_sync_events"
       ]
@@ -3798,6 +3841,166 @@
           {
             "actions": [
               "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "odoo_accounts",
+        "path": "odoo_accounts",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager()",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "odoo_move_lines",
+        "path": "odoo_move_lines",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager()",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "odoo_moves",
+        "path": "odoo_moves",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager()",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "odoo_payments",
+        "path": "odoo_payments",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager()",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "odoo_pull_state",
+        "path": "odoo_pull_state",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager()",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
               "delete"
             ],
             "condition": "false",

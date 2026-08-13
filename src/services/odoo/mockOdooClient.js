@@ -36,10 +36,67 @@ function seedMoves() {
   ];
 }
 
+/**
+ * بذرة الطبقة المالية (SAP-16) — شجرة حسابات وقيود وأسطر ومدفوعات.
+ *
+ * لماذا بذرةٌ أصلًا وقد كانت أوامر الشراء تبدأ فارغة عمدًا؟ لأنّ تلك تُملأ
+ * بالدفع من البوابة — والدفع **مختوم** الآن. فالمالية لا تصل إلا سحبًا، ولو
+ * تُركت فارغة لظهرت شاشة المرآة خاوية ولم يُعرف أهي فارغةٌ أم معطوبة.
+ *
+ * الأرقام **تدريبيّة صرفة**: أسماء الحسابات تصنيفيّة لا أرقام حساباتٍ معتمدة
+ * (§16.4 ‹549›)، والمبالغ تتّسق مع مثال القبول في الخطة (١٤٬٠٠٠ · ٤٬٠٠٠).
+ * لا تُقرأ بوصفها بيانات إنتاج.
+ */
+function seedAccounts() {
+  return [
+    { id: 11, code: '1101', name: 'الصندوق', account_type: 'asset_cash', reconcile: false, deprecated: false, company_id: [1, 'براندزو'], currency_id: [1, 'LYD'] },
+    { id: 12, code: '1102', name: 'البنك', account_type: 'asset_cash', reconcile: false, deprecated: false, company_id: [1, 'براندزو'], currency_id: [1, 'LYD'] },
+    { id: 13, code: '1201', name: 'العملاء', account_type: 'asset_receivable', reconcile: true, deprecated: false, company_id: [1, 'براندزو'], currency_id: [1, 'LYD'] },
+    { id: 14, code: '1301', name: 'المخزون — متاح', account_type: 'asset_current', reconcile: false, deprecated: false, company_id: [1, 'براندزو'], currency_id: [1, 'LYD'] },
+    { id: 15, code: '1302', name: 'المخزون — تحت الفحص', account_type: 'asset_current', reconcile: false, deprecated: false, company_id: [1, 'براندزو'], currency_id: [1, 'LYD'] },
+    { id: 16, code: '2101', name: 'الموردون', account_type: 'liability_payable', reconcile: true, deprecated: false, company_id: [1, 'براندزو'], currency_id: [1, 'LYD'] },
+    { id: 17, code: '2102', name: 'استلامات غير مفوترة', account_type: 'liability_current', reconcile: false, deprecated: false, company_id: [1, 'براندزو'], currency_id: [1, 'LYD'] },
+    { id: 18, code: '4101', name: 'المبيعات', account_type: 'income', reconcile: false, deprecated: false, company_id: [1, 'براندزو'], currency_id: [1, 'LYD'] },
+    { id: 19, code: '5101', name: 'تكلفة المبيعات', account_type: 'expense_direct_cost', reconcile: false, deprecated: false, company_id: [1, 'براندزو'], currency_id: [1, 'LYD'] },
+    { id: 20, code: '5201', name: 'فروقات وتسويات المخزون', account_type: 'expense', reconcile: false, deprecated: false, company_id: [1, 'براندزو'], currency_id: [1, 'LYD'] },
+  ];
+}
+
+function seedMovesFinance() {
+  return [
+    { id: 901, name: 'BILL/2026/0001', ref: false, move_type: 'in_invoice', state: 'posted', date: '2026-08-10', invoice_date: '2026-08-10', invoice_date_due: '2026-09-09', partner_id: [4, 'شركة الريشة الذهبية'], journal_id: [2, 'المشتريات'], currency_id: [1, 'LYD'], amount_total: 14000, amount_residual: 4000, company_id: [1, 'براندزو'], reversed_entry_id: false, invoice_origin: 'PO-2026-0009' },
+    { id: 902, name: 'INV/2026/0001', ref: false, move_type: 'out_invoice', state: 'posted', date: '2026-08-11', invoice_date: '2026-08-11', invoice_date_due: '2026-09-10', partner_id: [7, 'متجر فينسيا'], journal_id: [3, 'المبيعات'], currency_id: [1, 'LYD'], amount_total: 8500, amount_residual: 8500, company_id: [1, 'براندزو'], reversed_entry_id: false, invoice_origin: 'DN-2026-0004' },
+    { id: 903, name: 'MISC/2026/0007', ref: 'تسوية جرد', move_type: 'entry', state: 'posted', date: '2026-08-12', invoice_date: false, invoice_date_due: false, partner_id: false, journal_id: [5, 'قيود متنوّعة'], currency_id: [1, 'LYD'], amount_total: 320, amount_residual: 0, company_id: [1, 'براندزو'], reversed_entry_id: false, invoice_origin: 'ADJ-2026-0002' },
+    { id: 904, name: 'RBILL/2026/0001', ref: false, move_type: 'in_refund', state: 'draft', date: '2026-08-13', invoice_date: '2026-08-13', invoice_date_due: false, partner_id: [4, 'شركة الريشة الذهبية'], journal_id: [2, 'المشتريات'], currency_id: [1, 'LYD'], amount_total: 450, amount_residual: 450, company_id: [1, 'براندزو'], reversed_entry_id: false, invoice_origin: 'SRN-2026-0003' },
+  ];
+}
+
+function seedMoveLines() {
+  return [
+    { id: 9011, move_id: [901, 'BILL/2026/0001'], account_id: [14, 'المخزون — متاح'], partner_id: [4, 'شركة الريشة الذهبية'], name: 'بضاعة مستلمة', debit: 14000, credit: 0, balance: 14000, date: '2026-08-10', currency_id: [1, 'LYD'] },
+    { id: 9012, move_id: [901, 'BILL/2026/0001'], account_id: [16, 'الموردون'], partner_id: [4, 'شركة الريشة الذهبية'], name: 'التزام المورّد', debit: 0, credit: 14000, balance: -14000, date: '2026-08-10', currency_id: [1, 'LYD'] },
+    { id: 9021, move_id: [902, 'INV/2026/0001'], account_id: [13, 'العملاء'], partner_id: [7, 'متجر فينسيا'], name: 'مديونيّة العميل', debit: 8500, credit: 0, balance: 8500, date: '2026-08-11', currency_id: [1, 'LYD'] },
+    { id: 9022, move_id: [902, 'INV/2026/0001'], account_id: [18, 'المبيعات'], partner_id: [7, 'متجر فينسيا'], name: 'إيراد مبيعات', debit: 0, credit: 8500, balance: -8500, date: '2026-08-11', currency_id: [1, 'LYD'] },
+    { id: 9031, move_id: [903, 'MISC/2026/0007'], account_id: [20, 'فروقات وتسويات المخزون'], partner_id: false, name: 'عجز جرد', debit: 320, credit: 0, balance: 320, date: '2026-08-12', currency_id: [1, 'LYD'] },
+    { id: 9032, move_id: [903, 'MISC/2026/0007'], account_id: [14, 'المخزون — متاح'], partner_id: false, name: 'تخفيض المخزون', debit: 0, credit: 320, balance: -320, date: '2026-08-12', currency_id: [1, 'LYD'] },
+  ];
+}
+
+function seedPayments() {
+  return [
+    { id: 701, name: 'PAY/2026/0001', payment_type: 'outbound', partner_type: 'supplier', partner_id: [4, 'شركة الريشة الذهبية'], amount: 10000, currency_id: [1, 'LYD'], date: '2026-08-12', state: 'posted', journal_id: [4, 'البنك'] },
+    { id: 702, name: 'PAY/2026/0002', payment_type: 'inbound', partner_type: 'customer', partner_id: [7, 'متجر فينسيا'], amount: 2500, currency_id: [1, 'LYD'], date: '2026-08-13', state: 'draft', journal_id: [1, 'الصندوق'] },
+  ];
+}
+
 /** Per-model in-memory tables. Rebuilt on module init (page load). */
 const store = {
   'product.product': seedProducts(),
   'stock.move': seedMoves(),
+  'account.account': seedAccounts(),
+  'account.move': seedMovesFinance(),
+  'account.move.line': seedMoveLines(),
+  'account.payment': seedPayments(),
   // أوامر الشراء والاستلامات تبدأ فارغة: جسر المزامنة يملؤها بدفع مستندات البوابة
   // الحقيقيّة (create('purchase.order'/'stock.picking', …)) — فالمرآة تعكس واقعك
   // لا بيانات وهميّة.
@@ -53,6 +110,10 @@ const nextId = {
   'stock.move': 2000,
   'purchase.order': 3000,
   'stock.picking': 4000,
+  'account.account': 5000,
+  'account.move': 6000,
+  'account.move.line': 7000,
+  'account.payment': 8000,
 };
 
 function allocId(model) {
