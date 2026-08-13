@@ -9,7 +9,7 @@
     "docs/plan/sap/الفهم-الحرفي-المرجع.md",
     "docs/plan/sap/مصفوفة-الجرد.md"
   ],
-  "lastUpdated": "2026-08-12",
+  "lastUpdated": "2026-08-13",
   "lastUpdatedBy": "Claude",
   "milestones": [
     {
@@ -507,7 +507,7 @@
       "title": "صندوق المستندات المفتوحة والعروض المحفوظة",
       "milestone": "ح9",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ف‑٣٠",
         "ف‑٣٤",
@@ -520,7 +520,20 @@
         "قائمة بالمستندات غير المكتملة لكلّ نوع، تُفتح منها إجراءات — المرجع ‹1942-1976›",
         "عروض محفوظة باسمٍ لكلّ مستخدم — المرجع ‹1925-1934›",
         "لا خلط مع صندوق الاعتماد القائم DocumentsInbox — مسارٌ منفصل بلا حذف URL قائم — §3-٣ ‹42›"
-      ]
+      ],
+      "evidence": {
+        "commit": "34622bc",
+        "closedOn": "2026-08-13"
+      },
+      "branch": "main",
+      "guardTest": "src/services/documents/openBox.test.js",
+      "touches": [
+        "src/services/documents/openBox.js",
+        "src/components/brandzo-erp/documents/OpenDocumentsBox.jsx",
+        "src/pages/dashboard/documents.astro",
+        "src/components/brandzo-erp/documents/ChainBar.jsx"
+      ],
+      "limits": "لم تُفحص الشاشة حيًّا (خلف تسجيل دخول). والمتبقّي في الصندوق **تقريبٌ معلَن**: يُحسب من الروابط المعروفة للمستند بلا جلبٍ لعلاقات كلٍّ على حدة (يمنع ٣٠٠ نداء)، والدقيق يُقرأ عند فتح المستند — وهذا مكتوبٌ تحت الجدول للمستخدم لا في التوثيق وحده."
     },
     {
       "id": "SAP-13",
