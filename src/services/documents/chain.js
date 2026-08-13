@@ -99,6 +99,30 @@ export function derivationTargets(type) {
   return n ? [n] : [];
 }
 
+/**
+ * **مصادر الاشتقاق** إلى نوعٍ ما — عكسُ `derivationTargets` (SAP-5 · يسدّ ف‑١٢).
+ *
+ * ═══ لماذا معكوسةٌ لا خريطةٌ ثانية؟ ═══
+ * «إنشاء مستند لاحق» يبدأ من المصدر ويسأل: إلى أين أمضي؟ و«جلب من مستند
+ * سابق» يبدأ من الهدف ويسأل: من أين جئت؟ سؤالان، **وحقيقةٌ واحدة**.
+ *
+ * فمن كتب لهما جدولين فتح باب التناقض: يُضاف تفرّعٌ إلى أحدهما ويُنسى في
+ * الآخر، فيصير النظام يسمح بالمضيّ ولا يسمح بالرجوع — أو أسوأ: يجلب من
+ * مستندٍ لا يُنتجه. والاشتقاق هنا يجري **من الجدول نفسه** كلّ مرّة، فلا
+ * يتقادم ولا يحتاج مزامنة.
+ *
+ * @param {string} targetType نوع المستند الهدف (الذي نُنشئه)
+ * @returns {string[]} أنواع المستندات التي يجوز الجلب منها
+ */
+export function derivationSources(targetType) {
+  const target = String(targetType ?? '').trim();
+  if (!target) return [];
+  return ALL_TYPES.filter((source) => derivationTargets(source).includes(target));
+}
+
+/** كلّ الأنواع المعروفة في السلاسل — مصدرُ الجولان للعكس. */
+const ALL_TYPES = [...new Set(CHAINS.flat())];
+
 /** السلسلة التي ينتمي إليها النوع، أو null. */
 export function chainFor(type) {
   return CHAINS.find((c) => c.includes(type)) || null;
