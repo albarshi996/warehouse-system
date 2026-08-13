@@ -6,13 +6,24 @@
  */
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import DocumentEngine from '../../components/brandzo-erp/documents/DocumentEngine.jsx';
+// شريط التنقّل وخريطة العلاقات مبنيّان على أصناف `.o_theme` ومتغيّرات `--o-*`
+// — بلا هذين الملفّين تسقط الحدود والألوان وتتكدّس الأزرار نصًّا عاريًا
+// (لوحظ حيًّا 2026-08-13 على Pages).
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+
+// الرابط مطلق لا نسبيّ: Pages يقدّم الصفحة بشرطة ختامية (document/)،
+// و`href="documents"` النسبيّ كان يتحوّل عندها إلى document/documents ⇒ 404.
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
 ---
 
 <DashboardLayout title="مستند" showGuide={false} light>
   <div class="text-right" dir="rtl">
     <div class="mb-5 doc-screen">
       <a
-        href="documents"
+        href={`${base}/dashboard/documents`}
         class="text-sm text-muted hover:text-accent transition-colors">← صندوق المستندات</a
       >
     </div>
