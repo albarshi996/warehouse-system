@@ -28,9 +28,12 @@ import { MONEY_FIELD_NAMES } from '../odoo/moneyFields.js';
 
 /* ═══════════ ١. الافتراض = اليوم ═══════════ */
 
-test('★★ الافتراض هو السياسة المعتمدة: كمّيّاتٌ ومراجعُ تُدفع، ومالٌ يُسحب ولا يُرفع', () => {
+// ⚠️ قُلب الافتراض 2026-08-13 (SAP-15 · قرار المالك): كان «كمّيّاتٌ ومراجعُ
+// تُدفع»، فصار **سحبًا للجميع**. لم تُحذف هذه الاختبارات بل حُوّلت لتحرس
+// الضمانة الجديدة: لا يُدفع شيءٌ لأنّ أحدًا نسي أن يقرّر.
+test('★★ الافتراض هو السياسة المعتمدة: لا يُدفع شيءٌ افتراضًا، ومالٌ يُسحب ولا يُرفع', () => {
   const d = defaultPolicyFor('PO');
-  assert.equal(d.direction, 'push');
+  assert.equal(d.direction, 'pull', 'الاتّجاه أودو ← البوابة');
   assert.equal(d.quantities, true);
   assert.equal(d.references, true);
   assert.equal(d.money, 'pull', 'م١-ب: اسحب المالي ولا ترفعه');
@@ -53,7 +56,7 @@ test('★★ غياب السياسة كلّها = سلوك اليوم لكلّ �
 
 test('★ القيمة الفاسدة تسقط إلى الافتراض ولا تُعطّل', () => {
   const p = normalizePolicy({ direction: 'مخترع', money: 'مخترع', timing: 'مخترع' }, 'PO');
-  assert.equal(p.direction, 'push');
+  assert.equal(p.direction, 'pull');
   assert.equal(p.money, 'pull');
   assert.equal(p.timing, 'on_done');
   assert.deepEqual(normalizePolicy(null, 'PO'), defaultPolicyFor('PO'));
@@ -77,8 +80,10 @@ test('المصفوفة ستّة أعمدة، والفئات الستّ حاضر�
 /* ═══════════ ٣. قرار الدفع ═══════════ */
 
 test('★★ الجسر يسأل السياسة بدل الثوابت المخبوزة', () => {
-  const policy = fullPolicy({});
-  assert.equal(pushDecision(policy, 'PO', { state: 'done' }).allowed, true);
+  // الافتراض لا يدفع، فالإذن يأتي من قرارٍ صريح — وهذا معنى «يسأل السياسة».
+  assert.equal(pushDecision(fullPolicy({}), 'PO', { state: 'done' }).allowed, false);
+  const declared = fullPolicy({ PO: { direction: 'push' } });
+  assert.equal(pushDecision(declared, 'PO', { state: 'done' }).allowed, true);
 
   const isolated = fullPolicy({ PO: { direction: 'isolated', quantities: false, references: false } });
   const r = pushDecision(isolated, 'PO', { state: 'done' });
@@ -92,13 +97,15 @@ test('★ والاتّجاه سحبًا يمنع الدفع', () => {
 });
 
 test('★ والتوقيت يُحترم: «عند الإنجاز» لا يُدفع عند الاعتماد', () => {
-  const policy = fullPolicy({});
-  assert.equal(pushDecision(policy, 'PO', { state: 'approved' }).allowed, false);
+  // التوقيت شرطٌ **بعد** الاتّجاه، فيُختبر على نوعٍ أُعلن دفعُه صراحةً.
+  const onDone = fullPolicy({ PO: { direction: 'push', timing: 'on_done' } });
+  assert.equal(pushDecision(onDone, 'PO', { state: 'approved' }).allowed, false);
+  assert.equal(pushDecision(onDone, 'PO', { state: 'done' }).allowed, true);
 
-  const onApprove = fullPolicy({ PO: { timing: 'on_approve' } });
+  const onApprove = fullPolicy({ PO: { direction: 'push', timing: 'on_approve' } });
   assert.equal(pushDecision(onApprove, 'PO', { state: 'approved' }).allowed, true);
 
-  const manual = fullPolicy({ PO: { timing: 'manual' } });
+  const manual = fullPolicy({ PO: { direction: 'push', timing: 'manual' } });
   assert.equal(pushDecision(manual, 'PO', { state: 'done' }).allowed, false);
   assert.equal(pushDecision(manual, 'PO', { state: 'manual' }).allowed, true, 'والدفع اليدويّ يمرّ');
 });
@@ -126,7 +133,7 @@ test('★★ المحاكاة تُخرج ما سيتغيّر — فالسياس�
   const next = fullPolicy({ PO: { direction: 'isolated', quantities: false, references: false } });
   const { changes } = simulate(current, next);
   const poChanges = changes.filter((c) => c.type === 'PO');
-  assert.ok(poChanges.some((c) => c.field === 'direction' && c.from === 'push' && c.to === 'isolated'));
+  assert.ok(poChanges.some((c) => c.field === 'direction' && c.from === 'pull' && c.to === 'isolated'));
   assert.equal(changes.filter((c) => c.type === 'GRN').length, 0, 'وما لم يتغيّر لا يُذكر');
 });
 
@@ -138,7 +145,11 @@ test('★★ ورفعُ المال يحمل تحذيره: مصدران لرقم�
 
 test('★ والكتابة فوق الموجود وقلبُ الاتّجاه والعزل — كلّها تُحذَّر', () => {
   assert.ok(simulate(fullPolicy({}), fullPolicy({ PO: { onConflict: 'overwrite' } })).warnings.some((w) => /تُفقد/.test(w)));
-  assert.ok(simulate(fullPolicy({}), fullPolicy({ PO: { direction: 'pull' } })).warnings.some((w) => /مرآةً تُدهَس/.test(w)));
+  // قلبُ الاتّجاه يُحذَّر — ويُختبر من دفعٍ معلَنٍ إلى سحب، لأنّ السحب صار الافتراض.
+  assert.ok(
+    simulate(fullPolicy({ PO: { direction: 'push' } }), fullPolicy({ PO: { direction: 'pull' } }))
+      .warnings.some((w) => /مرآةً تُدهَس/.test(w))
+  );
   assert.ok(
     simulate(fullPolicy({}), fullPolicy({ PO: { direction: 'isolated', quantities: false, references: false } }))
       .warnings.some((w) => /العزل يوقف التبادل/.test(w))
@@ -177,11 +188,15 @@ test('كلّ اتّجاهٍ معلَنٌ في القائمة موجودٌ في �
 
 /* ═══════════ ٧. ربط الجسر (م٧-ب) ═══════════ */
 
-test('★★ الافتراض يُبقي الدفع التلقائيّ عاملًا لكلّ مستند — لا شيء يتوقّف بتفعيل اللوحة', () => {
+// انقلب هذا البند بقرار المالك 2026-08-13: كان يحرس أنّ **لا شيء يتوقّف**،
+// فصار يحرس أنّ **لا شيء يعبر**. والغاية واحدة في الحالين: ألّا يتغيّر السلوك
+// صامتًا. ومن أعاد نوعًا إلى الدفع بعد اليوم يُسقط هذا الاختبار عمدًا.
+test('★★ لا نوعَ واحد يُدفع بالافتراض — الاتّجاه أودو ← البوابة (SAP-15)', () => {
   const policy = fullPolicy({});
   for (const type of policyTypes()) {
     const r = pushDecision(policy, type, { state: 'done' });
-    assert.equal(r.allowed, true, `${type} توقّف دفعُه بالافتراض`);
+    assert.equal(r.allowed, false, `${type} ما زال يُدفع بالافتراض`);
+    assert.match(r.reason, /سحبٌ لا دفع/);
   }
 });
 

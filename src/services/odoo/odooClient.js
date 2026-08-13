@@ -1,4 +1,5 @@
 import { ODOO_PROXY_URL } from './odooConfig.js';
+import { assertPullOnly } from './directionGuard.js';
 
 /**
  * Real Odoo client (proxy-agnostic).
@@ -36,6 +37,12 @@ import { ODOO_PROXY_URL } from './odooConfig.js';
  * @returns {Promise<any>} the `result` field returned by Odoo via the proxy
  */
 async function callProxy(payload) {
+  // ── ختم الاتّجاه (SAP-15) ────────────────────────────────────────────────
+  // بابٌ واحد على المخرج: كلّ نداءٍ إلى أودو يمرّ من هنا، فالسؤال يُطرح مرّةً
+  // لا في كلّ مسار. يسبق فحصَ الإعداد عمدًا — الختم يُعلَن حتى لو كان الوسيط
+  // غير مضبوط، فلا يُخفي خطأُ إعدادٍ سببَ المنع الحقيقيّ.
+  assertPullOnly(payload?.method, payload?.model);
+
   if (!ODOO_PROXY_URL) {
     throw new Error(
       'Odoo proxy URL is not configured. Set PUBLIC_ODOO_PROXY_URL (production mode) ' +

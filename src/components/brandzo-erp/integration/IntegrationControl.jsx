@@ -24,6 +24,7 @@ import {
   policySummary,
   policyProblems,
 } from '../../../services/integration/integrationPolicy.js';
+import { isPushSealed } from '../../../services/odoo/directionGuard.js';
 
 const EDITOR_ROLES = ['admin'];
 const input = 'bg-surface border border-line rounded-lg px-2 py-1 text-xs text-ink';
@@ -66,6 +67,8 @@ export default function IntegrationControl() {
 
   const sim = useMemo(() => simulate(saved, draft), [saved, draft]);
   const summary = useMemo(() => policySummary(draft), [draft]);
+  // ختمُ الاتّجاه ثابتٌ في الكود لا في السياسة — فلا يُقرأ من Firestore ولا يتغيّر بحفظ.
+  const sealed = isPushSealed();
   const problems = useMemo(() => policyProblems(draft), [draft]);
   const rows = useMemo(() => [...DATA_SCOPES.map((s) => s.id), ...policyTypes()], []);
 
@@ -98,6 +101,38 @@ export default function IntegrationControl() {
 
   return (
     <div className="space-y-5">
+      {/* ═══ ختم الاتّجاه (SAP-15) ═══
+          يُعلن الحقيقة الحاكمة قبل أيّ رقمٍ في اللوحة: مهما قال الجدول أدناه،
+          لا تعبر كتابةٌ إلى أودو. فلا يظنّ المدير أنّ قلب صفٍّ إلى «دفع» يكفي. */}
+      {sealed && (
+        <section className={card}>
+          <div className="flex items-start gap-3">
+            <svg
+              viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"
+              fill="none" stroke="currentColor" strokeWidth="1.6"
+              strokeLinecap="round" strokeLinejoin="round"
+              className="text-ink-2 shrink-0 mt-0.5"
+            >
+              <rect x="4" y="10" width="16" height="10" rx="2" />
+              <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+            </svg>
+            <div>
+              <h2 className="text-base font-bold text-ink mb-1">الدفع إلى أودو مختوم</h2>
+              <p className="text-sm text-ink-2">
+                الاتّجاه المعتمد <span className="font-bold text-ink">سحبٌ فقط: أودو ← البوابة</span>.
+                أودو هو مصدر الحقيقة المالي، والبوابة تستورد وتُحدّث ولا تكتب.
+              </p>
+              <p className="text-xs text-ink-2 mt-2">
+                الختم عند حدّ النقل نفسه، فلا يُفكّه قلبُ صفٍّ في الجدول أدناه.
+                وما من مسارٍ يتجاوزه. لفكّه: قرارُ مالكٍ صريح ثمّ تغيير
+                {' '}<span className="font-mono text-ink">INTEGRATION_DIRECTION</span>{' '}
+                في <span className="font-mono text-ink">odoo/directionGuard.js</span> — ولم يُحذف سطرُ دفعٍ واحد.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ═══ الطبقة ١: ما يسري الآن ═══ */}
       <section className={card}>
         <h2 className="text-base font-bold text-ink mb-3">ما يسري الآن</h2>
@@ -114,7 +149,9 @@ export default function IntegrationControl() {
           </div>
         </div>
         <p className="text-xs text-ink-2 mt-3">
-          الافتراض هو السياسة المعتمدة: كمّيّاتٌ ومراجعُ تُدفع، والمال يُسحب ولا يُرفع — أودو يولّد القيد والبوابة تُنتج الواقعة.
+          الافتراض هو السياسة المعتمدة: <span className="font-bold text-ink">لا يُدفع شيءٌ افتراضًا</span> —
+          فما من نوعٍ يعبر لأنّ أحدًا نسي أن يقرّر. والمال يُسحب ولا يُرفع في كلّ الأحوال:
+          أودو يولّد القيد والبوابة تُنتج الواقعة.
         </p>
       </section>
 
