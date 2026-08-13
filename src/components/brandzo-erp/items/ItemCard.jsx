@@ -20,6 +20,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { unitLabel } from '../../../services/itemService.js';
 import { ITEM_TYPES, typeOf } from '../../../services/items/itemType.js';
+import { uomLabel } from '../../../services/items/uomModel.js';
 import {
   balancesForItem,
   orderedForItem,
@@ -130,6 +131,13 @@ export default function ItemCard({ item, items, balances, me, onEdit, onClose })
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', margin: '12px 0' }}>
         <Chip label={`النوع: ${type.label}`} />
         <Chip label={`الوحدة: ${unitLabel(item.unit)}`} />
+        {/* SAP-3: تعريفات الوحدات — ما يجعل التحويل يعمل لهذا الصنف */}
+        {item.baseUom && <Chip label={`الأساس: ${uomLabel(item.baseUom)}`} title="وحدة دفتر المخزون" />}
+        {Object.entries(item.uomFactors || {}).map(([u, f]) => (
+          <Chip key={u} label={`${uomLabel(u)} × ${num(f)}`} title="معامل التحويل إلى الأساس" />
+        ))}
+        {item.buyUom && <Chip label={`شراء: ${uomLabel(item.buyUom)}`} title="الوحدة المقترحة في مستندات الشراء" />}
+        {item.sellUom && <Chip label={`بيع: ${uomLabel(item.sellUom)}`} title="الوحدة المقترحة في مستندات البيع" />}
         {item.category && <Chip label={`الفئة: ${item.category}`} />}
         {(item.barcodes || []).map((b) => (
           <Chip key={b} label={b} mono title="باركود — وسيلة بحث لا هويّة" />

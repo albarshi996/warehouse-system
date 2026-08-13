@@ -24,7 +24,7 @@ import {
 } from './postingRules.js';
 import { vehicleLocationCode, customerLocationCode, isAccountLocation } from './locations.js';
 import { isStocked, typeOf } from '../items/itemType.js';
-import { toBase, baseUomOf, hasUomDefinition } from '../items/uomModel.js';
+import { toBase, baseUomOf, hasUomDefinition, normalizeUom, checkFraction } from '../items/uomModel.js';
 
 /** فاصل المعرّف الحتمي — نفس نمط `balanceId`. */
 const SEP = '__';
@@ -121,7 +121,24 @@ export function buildMoves(docData, { items = null } = {}) {
     const entryUom = String(line?.uom ?? '').trim();
     let qty = entryQty;
     let baseUom = entryUom;
-    if (item && hasUomDefinition(item)) {
+    // معاملٌ مختومٌ على السطر لوحدته الحاليّة (معامل الطرف من كتالوج SAP-2/3)
+    // يتقدّم على معامل الصنف: موردان بتعبئة 24 و20 لا يختلط تحويلهما —
+    // §10 ‹256›. والختم من `uomWiring.refreshLineBase` وقت الإدخال.
+    const stampedFactor = Number(line?.uomFactor);
+    const stampedFor = String(line?.uomFactorFor ?? '').trim();
+    if (
+      line?.uomFactorSource === 'partner'
+      && Number.isFinite(stampedFactor) && stampedFactor > 0
+      && entryUom && stampedFor === (normalizeUom(entryUom) || entryUom)
+    ) {
+      const fraction = checkFraction(entryQty, entryUom);
+      if (!fraction.ok) {
+        problems.push(`البند ${index + 1}: ${fraction.problem}`);
+        return;
+      }
+      qty = Math.round(entryQty * stampedFactor * 1e6) / 1e6;
+      baseUom = item ? baseUomOf(item) : entryUom;
+    } else if (item && hasUomDefinition(item)) {
       const conv = toBase(item, entryQty, entryUom || baseUomOf(item));
       if (!conv.ok) {
         problems.push(`البند ${index + 1}: ${conv.problem}`);

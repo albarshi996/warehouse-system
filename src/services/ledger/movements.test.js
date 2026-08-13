@@ -50,6 +50,38 @@ test('★★ صنفٌ معرَّف: يُقيَّد بوحدة الأساس وي�
   assert.equal(r.moves[0].baseUom, 'piece');
 });
 
+test('★★ SAP-3 §10 ‹256›: معامل الطرف المختوم على السطر يتقدّم على معامل الصنف', () => {
+  // الصنف كرتونه 24، لكن مورّد هذا المستند تعبئته 20 — خُتم من كتالوجه.
+  const items = new Map([['A', { sku: 'A', baseUom: 'piece', uomFactors: { carton: 24 } }]]);
+  const doc = {
+    id: 'D3P', type: 'GRN', number: 'GRN-3P',
+    header: { warehouse: 'MAIN' },
+    lines: [{
+      sku: 'A', qtyReceived: 3, uom: 'carton',
+      uomFactor: 20, uomFactorFor: 'carton', uomFactorSource: 'partner',
+    }],
+  };
+  const r = buildMoves(doc, { items });
+  assert.deepEqual(r.problems, []);
+  assert.equal(r.moves[0].qty, 60, 'تعبئة المورّد 20 لا كرتون الصنف 24');
+  assert.equal(r.moves[0].entryQty, 3);
+  assert.equal(r.moves[0].baseUom, 'piece');
+});
+
+test('★ SAP-3: ختمٌ لوحدةٍ غير وحدة السطر لا يُعتدّ به — يسقط لمعامل الصنف', () => {
+  const items = new Map([['A', { sku: 'A', baseUom: 'piece', uomFactors: { carton: 24 } }]]);
+  const doc = {
+    id: 'D3Q', type: 'GRN', number: 'GRN-3Q',
+    header: { warehouse: 'MAIN' },
+    lines: [{
+      sku: 'A', qtyReceived: 3, uom: 'carton',
+      uomFactor: 20, uomFactorFor: 'piece', uomFactorSource: 'partner', // ختمٌ قديم لوحدةٍ أخرى
+    }],
+  };
+  const r = buildMoves(doc, { items });
+  assert.equal(r.moves[0].qty, 72, 'معامل الصنف 24 — الختم البائت لا يلتصق');
+});
+
 test('★ الخدمة تخرج من القيد وتُسجَّل في skipped — لا تُبتلع صامتة', () => {
   const items = new Map([
     ['A', { sku: 'A', itemType: 'sale' }],

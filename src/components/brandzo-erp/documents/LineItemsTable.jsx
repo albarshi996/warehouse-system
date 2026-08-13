@@ -11,7 +11,7 @@ const CELL =
   'w-full bg-transparent border-0 px-2 py-1.5 text-sm text-ink focus:outline-none ' +
   'focus:bg-surface-2 rounded disabled:opacity-60';
 
-export default function LineItemsTable({ schema, section, lines, onChange, onLookup, disabled }) {
+export default function LineItemsTable({ schema, section, lines, onChange, onLookup, disabled, uomOptions }) {
   const columns = section.columns || [];
 
   function setCell(index, key, value) {
@@ -70,6 +70,9 @@ export default function LineItemsTable({ schema, section, lines, onChange, onLoo
                       disabled={disabled}
                       onChange={(v) => setCell(i, c.key, v)}
                       onCommit={(v) => triggerLookup(c, i, v)}
+                      // SAP-3 (ف‑٤٢): عمود الوحدة اختيارٌ من سيّد الوحدات لا نصٌّ
+                      // حرّ — مركزيًّا هنا لا في ٣٨ مخطّطًا، والنصّ القديم يبقى خيارًا.
+                      uomChoices={c.key === 'uom' && uomOptions ? uomOptions(line) : null}
                     />
                   </td>
                 ))}
@@ -104,7 +107,22 @@ export default function LineItemsTable({ schema, section, lines, onChange, onLoo
   );
 }
 
-function Cell({ column, value, onChange, onCommit, disabled }) {
+function Cell({ column, value, onChange, onCommit, disabled, uomChoices }) {
+  // وحدة السطر: اختيارٌ من قائمة الصنف (أو السيّد كلّه) — القيمة القديمة
+  // غير المعروفة تظهر خيارًا كما كُتبت، فلا يُكسر مستندٌ قائم.
+  if (uomChoices) {
+    return (
+      <select className={CELL} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
+        <option value="">—</option>
+        {uomChoices.map((o) => (
+          <option key={o.value} value={o.value} className="bg-surface">
+            {o.label}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
   if (column.kind === 'select') {
     return (
       <select className={CELL} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)}>

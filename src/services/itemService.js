@@ -162,6 +162,12 @@ export const createItem = async ({
   barcodes = [],
   itemType = 'sale', // م٣-أ — الافتراض هو سلوك اليوم: بضاعةٌ مخزنيّة تُباع
   substitutes = [], // SAP-1 (ف‑٣) — أكواد أصنافٍ بديلة، تُطبَّع في itemIdentity
+  // SAP-3 (وصل محرّك الوحدات): كلّها اختياريّة — الفارغ = سلوك اليوم حرفيًّا.
+  baseUom = '', // وحدة الأساس (م٣-ب) — وجودها يُفعّل التحويل لهذا الصنف وحده
+  buyUom = '', // وحدة الشراء الافتراضيّة (ف‑٩)
+  sellUom = '', // وحدة البيع الافتراضيّة (ف‑٩)
+  uomFactors = {}, // معاملات الوحدات المشتقّة { carton: 24 } (ف‑٤٢)
+  uomBarcodes = {}, // باركود ⇐ وحدة { '8059…': 'carton' } (ف‑١٠)
 }) => {
   // حارس الهويّة (SAP-1 · ف‑١): الكود هو الهويّة — لا صنفَ جديدًا بلا كود.
   const id = assertNewItemIdentity({ sku });
@@ -188,6 +194,11 @@ export const createItem = async ({
     notes: String(notes).trim(),
     itemType,
     substitutes: normalizeSubstitutes(substitutes, id),
+    baseUom: String(baseUom ?? '').trim(),
+    buyUom: String(buyUom ?? '').trim(),
+    sellUom: String(sellUom ?? '').trim(),
+    uomFactors: uomFactors && typeof uomFactors === 'object' ? uomFactors : {},
+    uomBarcodes: uomBarcodes && typeof uomBarcodes === 'object' ? uomBarcodes : {},
     archived: false,
     odooId: null,
     createdAt: serverTimestamp(),

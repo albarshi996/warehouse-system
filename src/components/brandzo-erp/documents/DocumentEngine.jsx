@@ -28,6 +28,16 @@ import { mergeParentLink } from '../../../services/documents/chain.js';
 import { lookupByBarcode, getItem, subscribeItems } from '../../../services/itemService.js';
 import { canonicalLineSku } from '../../../services/items/itemIdentity.js';
 import { lookupItemByPartnerCode } from '../../../services/partners/itemPartnerCatalogService.js';
+import {
+  buildItemIndexes,
+  itemForLine,
+  refreshLineBase,
+  stampPartnerUom,
+  unitForBarcode,
+  defaultUomFor,
+  uomOptionsForLine,
+} from '../../../services/items/uomWiring.js';
+import { uomLabel } from '../../../services/items/uomModel.js';
 import { isEditable } from '../../../services/documents/states.js';
 import FieldInput from './FieldInput.jsx';
 import { listenSettings } from '../../../services/settings/settingsService.js';
@@ -227,8 +237,16 @@ export default function DocumentEngine() {
     setDirty(true);
   }
 
+  /**
+   * SAP-3 (ف‑١١ · §10.1 ‹234›): كلّ تعديل بندٍ يُثري السطر بالمعامل
+   * والكمّيّة الأساسيّة من `uomWiring` — فالسطر يحفظ الأربعة (كمّيّة ·
+   * وحدة · معامل · أساس) ولا يُعاد حسابها يوم الترحيل من تقدير.
+   */
+  const itemIndexes = useMemo(() => buildItemIndexes(items), [items]);
+
   function patchLines(lines) {
-    setDoc((d) => ({ ...d, lines }));
+    const enriched = lines.map((line) => refreshLineBase(line, itemForLine(line, itemIndexes)));
+    setDoc((d) => ({ ...d, lines: enriched }));
     setDirty(true);
   }
 
@@ -277,22 +295,31 @@ export default function DocumentEngine() {
         );
         return;
       }
+      // SAP-3: باركود الوحدة يحدّد الصنف **والوحدة والمعامل** معًا (§10.1 ‹238›).
+      const unitFromBarcode = columnKey === 'sku' ? '' : unitForBarcode(item, value);
       setDoc((d) => {
         const current = d.lines?.[index];
         if (!current) return d;
-        const { line, filled } = applyItemToLine(current, item);
-        const sku = canonicalLineSku(line, item);
-        if (filled.length === 0 && sku === String(line.sku ?? '') && !viaPartner) return d;
-        const next = { ...line, sku };
+        const { line } = applyItemToLine(current, item);
+        let next = { ...line, sku: canonicalLineSku(line, item) };
         // كود الطرف يظهر في مستنده بينما يبقى التخزين على الهويّة الداخليّة.
-        if (viaPartner) next.partnerItemCode = viaPartner.partnerItemCode;
+        if (viaPartner) {
+          next.partnerItemCode = viaPartner.partnerItemCode;
+          next = stampPartnerUom(next, viaPartner); // تعبئة هذا المورّد لا غيره (§10 ‹256›)
+        }
+        if (unitFromBarcode) next.uom = unitFromBarcode;
+        // وحدةٌ فارغة تأخذ افتراض عائلة المستند: شراءً بوحدة الشراء وبيعًا بوحدة البيع (ف‑٩).
+        if (!String(next.uom ?? '').trim()) next.uom = defaultUomFor(item, type);
+        next = refreshLineBase(next, item); // السطر يحفظ المعامل والأساس (§10.1 ‹234›)
         const lines = d.lines.map((l, i) => (i === index ? next : l));
         return { ...d, lines };
       });
       setDirty(true);
       flash(viaPartner
         ? `☁️ ${item.nameAr} — استُبين من كود الطرف ${viaPartner.partnerItemCode} (التخزين على ${item.sku}).`
-        : `☁️ ${item.nameAr} — استُدعي من الماستر.`);
+        : unitFromBarcode
+          ? `☁️ ${item.nameAr} — باركود وحدة: ${uomLabel(unitFromBarcode)}.`
+          : `☁️ ${item.nameAr} — استُدعي من الماستر.`);
     } catch {
       // شبكة/صلاحية — لا نعطّل الإدخال اليدوي.
       flash('تعذّر سؤال الماستر — أكمل يدويًّا.', 'err');
@@ -639,6 +666,7 @@ export default function DocumentEngine() {
                 disabled={!editable}
                 onChange={patchLines}
                 onLookup={handleLineLookup}
+                uomOptions={(line) => uomOptionsForLine(line, itemForLine(line, itemIndexes))}
               />
             )}
 

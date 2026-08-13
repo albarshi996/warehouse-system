@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ITEM_TYPE_OPTIONS, typeOf } from '../../../services/items/itemType.js';
 import { createItem, updateItem, UNIT_OPTIONS } from '../../../services/itemService.js';
+import { UOM_MASTER, uomLabel, factorProblems } from '../../../services/items/uomModel.js';
+import {
+  parseUomFactors,
+  formatUomFactors,
+  parseUomBarcodes,
+  formatUomBarcodes,
+} from '../../../services/items/uomWiring.js';
 
 /**
  * Inline create / edit form for a single item.
@@ -27,6 +34,12 @@ function emptyDraft() {
     balance: '0',
     minStock: '0',
     substitutesText: '', // SAP-1 (ف‑٣) — أكواد أصنافٍ بديلة بفواصل
+    // SAP-3 — تعريفات الوحدات (اختياريّة كلّها؛ الفارغ = سلوك اليوم)
+    baseUom: '',
+    buyUom: '',
+    sellUom: '',
+    uomFactorsText: '', // «carton=24, box=12»
+    uomBarcodesText: '', // «8059692040599=carton»
   };
 }
 
@@ -50,6 +63,11 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
         balance: String(item.balance ?? 0),
         minStock: String(item.minStock ?? 0),
         substitutesText: (item.substitutes || []).join(', '),
+        baseUom: item.baseUom ?? '',
+        buyUom: item.buyUom ?? '',
+        sellUom: item.sellUom ?? '',
+        uomFactorsText: formatUomFactors(item.uomFactors),
+        uomBarcodesText: formatUomBarcodes(item.uomBarcodes),
       });
     } else {
       setDraft(emptyDraft());
@@ -85,6 +103,30 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
       const barcodes = draft.barcodesText.split(/[,،/|;\n]+/).map((s) => s.trim()).filter(Boolean);
       // البدائل (ف‑٣) بنفس القاعدة — الخدمة تطبّع وتُسقط الصنف نفسه والتكرار.
       const substitutes = draft.substitutesText.split(/[,،/|;\n]+/).map((s) => s.trim()).filter(Boolean);
+
+      // SAP-3: تعريفات الوحدات — تُفحص قبل الحفظ ويُقال الفاسد بالاسم.
+      const factorsParsed = parseUomFactors(draft.uomFactorsText);
+      const barcodesParsed = parseUomBarcodes(draft.uomBarcodesText);
+      const uomProblems = [
+        ...factorsParsed.problems,
+        ...barcodesParsed.problems,
+        ...factorProblems({ baseUom: draft.baseUom, unit: draft.unit, uomFactors: factorsParsed.factors }),
+      ];
+      if (uomProblems.length) {
+        setError('تعريفات الوحدات:\n• ' + uomProblems.join('\n• '));
+        setSubmitting(false);
+        return;
+      }
+      const uomFields = {
+        baseUom: draft.baseUom,
+        buyUom: draft.buyUom,
+        sellUom: draft.sellUom,
+        uomFactors: factorsParsed.factors,
+        uomBarcodes: barcodesParsed.map,
+      };
+      // باركودات الوحدات تدخل باركودات الصنف — فمسحها يجد الصنف أصلًا.
+      barcodes.push(...Object.keys(barcodesParsed.map));
+
       if (isEdit) {
         await updateItem(draft.sku, {
           nameAr: draft.nameAr,
@@ -96,10 +138,11 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
           balance: draft.balance,
           minStock: draft.minStock,
           substitutes,
+          ...uomFields,
         });
         onSaved?.(draft.sku);
       } else {
-        const sku = await createItem({ ...draft, barcodes, substitutes });
+        const sku = await createItem({ ...draft, barcodes, substitutes, ...uomFields });
         onSaved?.(sku);
       }
       setHasUnsavedChanges(false);
@@ -233,6 +276,42 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
             onChange={update('substitutesText')}
           />
         </Field>
+
+        {/* SAP-3 — وصل محرّك الوحدات: تعريفها هنا يُفعّل التحويل لهذا الصنف
+            وحده (م٣-ب)؛ والفارغ = سلوك اليوم حرفيًّا، فلا يتغيّر رقم. */}
+        <Field label="وحدة الأساس (تفعيل التحويل)" hint="بها يُمسك دفتر المخزون — الفارغ يُبقي الصنف بلا تحويل">
+          <UomSelect value={draft.baseUom} onChange={update('baseUom')} />
+        </Field>
+
+        <Field label="معاملات الوحدات" hint="مثال: carton=24 تعني الكرتون ٢٤ وحدة أساس — افصل بفاصلة">
+          <input
+            type="text"
+            placeholder="carton=24, box=12"
+            className="o_input"
+            style={{ direction: 'ltr', textAlign: 'right' }}
+            value={draft.uomFactorsText}
+            onChange={update('uomFactorsText')}
+          />
+        </Field>
+
+        <Field label="وحدة الشراء الافتراضيّة" hint="تُقترح تلقائيًّا في مستندات الشراء (ف‑٩)">
+          <UomSelect value={draft.buyUom} onChange={update('buyUom')} />
+        </Field>
+
+        <Field label="وحدة البيع الافتراضيّة" hint="تُقترح تلقائيًّا في مستندات البيع (ف‑٩)">
+          <UomSelect value={draft.sellUom} onChange={update('sellUom')} />
+        </Field>
+
+        <Field label="باركودات الوحدات" hint="باركود=وحدة — مسحُه يحدّد الصنف والوحدة والمعامل معًا (ف‑١٠)">
+          <input
+            type="text"
+            placeholder="8059692040599=carton"
+            className="o_input"
+            style={{ direction: 'ltr', textAlign: 'right' }}
+            value={draft.uomBarcodesText}
+            onChange={update('uomBarcodesText')}
+          />
+        </Field>
       </div>
 
       <div className="o_form_actions">
@@ -244,6 +323,20 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
         </button>
       </div>
     </form>
+  );
+}
+
+/** قائمة وحدات سيّد الوحدات — والفارغ خيارٌ صريح (لا تعريف = سلوك اليوم). */
+function UomSelect({ value, onChange }) {
+  return (
+    <select className="o_input" value={value} onChange={onChange}>
+      <option value="">— بلا تعريف —</option>
+      {Object.keys(UOM_MASTER).map((id) => (
+        <option key={id} value={id}>
+          {uomLabel(id)} ({id})
+        </option>
+      ))}
+    </select>
   );
 }
 
