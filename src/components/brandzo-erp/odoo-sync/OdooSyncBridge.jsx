@@ -24,6 +24,7 @@ import { odoo } from '../../../services/odoo/index.js';
 import { odooStateLabel } from '../../../services/odoo/poMapper.js';
 import { pickingStateLabel } from '../../../services/odoo/grnMapper.js';
 import { odooTargetFor } from '../../../services/odoo/docCrosswalk.js';
+import { isPushSealed } from '../../../services/odoo/directionGuard.js';
 import {
   pushAnyDocument,
   pushItem,
@@ -59,10 +60,26 @@ const TONE = {
   muted: { bg: 'var(--chip, #f4f4f6)', color: 'var(--ink-2, #555)', border: 'var(--line, #e5e5ea)' },
 };
 
-function Badge({ tone = 'muted', children }) {
+/**
+ * مرجع أودو نصًّا آمنًا.
+ *
+ * أودو يعيد الحقول العلاقيّة على هيئة `[id, "الاسم"]`، ويعيد `false` عند
+ * الفراغ. فرسمُ الحقل مباشرةً يطبع `[object Object]` — وهو ما ظهر حيًّا في
+ * لقطة المالك 2026-08-13 على سجلّ `TRN`.
+ */
+function originLabel(origin) {
+  if (!origin) return '';
+  if (typeof origin === 'string') return origin;
+  if (Array.isArray(origin)) return String(origin[1] ?? origin[0] ?? '');
+  if (typeof origin === 'object') return String(origin.name ?? origin.display_name ?? '');
+  return String(origin);
+}
+
+function Badge({ tone = 'muted', title, children }) {
   const t = TONE[tone] || TONE.muted;
   return (
     <span
+      title={title}
       className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold"
       style={{ background: t.bg, color: t.color, border: `1px solid ${t.border}` }}
     >
@@ -126,6 +143,8 @@ export default function OdooSyncBridge() {
   const [syncState, setSyncState] = useState([]);
   const [events, setEvents] = useState([]);
   const [busy, setBusy] = useState('');
+  // ختم الاتّجاه (SAP-15): ثابتٌ في الكود لا في السياسة، فلا يُقرأ من الشبكة.
+  const sealed = isPushSealed();
   const [msg, setMsg] = useState(null);
   const [feedOpen, setFeedOpen] = useState(false);
   const [seenCount, setSeenCount] = useState(0);
@@ -394,6 +413,12 @@ export default function OdooSyncBridge() {
                         <Badge tone="success">
                           <IconCheck width={12} height={12} /> مرتبط بأودو
                         </Badge>
+                      ) : target && sealed ? (
+                        // ختم الاتّجاه (SAP-15): لا تُعرض دعوةٌ إلى فعلٍ مختوم.
+                        // الزرّ لم يُحذف — يعود بفكّ الختم وحده.
+                        <Badge tone="muted" title="الاتّجاه المعتمد: أودو ← البوابة. البوابة تقرأ ولا تكتب.">
+                          الدفع مختوم
+                        </Badge>
                       ) : target ? (
                         <button
                           type="button"
@@ -428,6 +453,8 @@ export default function OdooSyncBridge() {
                       <Badge tone="success">
                         <IconCheck width={12} height={12} /> مرتبط
                       </Badge>
+                    ) : sealed ? (
+                      <Badge tone="muted" title="الاتّجاه المعتمد: أودو ← البوابة.">الدفع مختوم</Badge>
                     ) : (
                       <button
                         type="button"
@@ -514,7 +541,13 @@ export default function OdooSyncBridge() {
           {track === 'docs' ? (
             <>
               <ColumnHead icon={<IconDoc />} title="أودو — المستندات" sub={`${docMirror.length} مسجَّل`} tone={TONE.success} />
-              {docMirror.length === 0 && <p className="text-xs text-ink-2">لا شيء بعد — ادفع مستندًا من البوابة ليظهر هنا مسوّدةً.</p>}
+              {docMirror.length === 0 && (
+                <p className="text-xs text-ink-2">
+                  {sealed
+                    ? 'لا شيء بعد — المرآة تمتلئ بالسحب من أودو، والدفع مختوم.'
+                    : 'لا شيء بعد — ادفع مستندًا من البوابة ليظهر هنا مسوّدةً.'}
+                </p>
+              )}
               {docMirror.map((r) => {
                 const isPending = r.sourceType === 'PO' ? r.odooState === 'draft' : r.sourceType === 'GRN' ? r.odooState !== 'done' : r.odooState === 'draft';
                 const verb = r.sourceType === 'PO' ? 'اعتمد في أودو' : r.sourceType === 'GRN' ? 'صدّق الاستلام' : r.verb || 'اعتمد';
@@ -526,7 +559,7 @@ export default function OdooSyncBridge() {
                         <div className="text-[11px] text-ink-2 truncate">
                           {TYPE_TITLE[r.sourceType] || r.sourceType}
                           {r.supplier ? ` · ${r.supplier}` : ''}
-                          {r.poNumber ? ` · أمر ${r.poNumber}` : r.origin ? ` · مرجع ${r.origin}` : ''}
+                          {r.poNumber ? ` · أمر ${r.poNumber}` : originLabel(r.origin) ? ` · مرجع ${originLabel(r.origin)}` : ''}
                         </div>
                       </div>
                       <MirrorStateBadge rec={r} />
@@ -559,7 +592,11 @@ export default function OdooSyncBridge() {
           ) : track === 'item' ? (
             <>
               <ColumnHead icon={<IconBox />} title="أودو — الأصناف" sub={`${odooProducts.length} صنف`} tone={TONE.success} />
-              {odooProducts.length === 0 && <p className="text-xs text-ink-2">لا أصناف — استخدم «اسحب» أو «ادفع».</p>}
+              {odooProducts.length === 0 && (
+                <p className="text-xs text-ink-2">
+                  {sealed ? 'لا أصناف — استخدم «اسحب» من أودو.' : 'لا أصناف — استخدم «اسحب» أو «ادفع».'}
+                </p>
+              )}
               {odooProducts.map((p) => (
                 <Card key={p.id}>
                   <div className="flex items-center justify-between gap-2">

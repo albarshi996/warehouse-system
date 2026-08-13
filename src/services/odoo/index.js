@@ -19,9 +19,35 @@
 import { ODOO_MODE, isProduction, describeOdooConfig } from './odooConfig.js';
 import { mockOdooClient } from './mockOdooClient.js';
 import { realOdooClient } from './odooClient.js';
+import { assertPullOnly } from './directionGuard.js';
 
-/** The active client for the rest of the app. */
-export const odoo = isProduction ? realOdooClient : mockOdooClient;
+/**
+ * ختم الاتّجاه على **المسار التشغيليّ** (SAP-15 · يكمل سدّ ف‑٣٥ وف‑٣٦).
+ *
+ * وضع الختم في `odooClient` وحده كان ناقصًا: البوابة تعمل اليوم في وضع
+ * **التدريب**، فالعميل الفعّال هو المحاكي، والمحاكي لم يكن مختومًا. فكان زرّ
+ * «ادفع إلى أودو» يعمل حيًّا على المرآة رغم ختم الحقيقيّ.
+ *
+ * الختم هنا يغطّي الوضعين معًا، لأنّ هذا هو الباب الذي تستورد منه الخدمات.
+ * أمّا `mockOdooClient` المستورد **مباشرةً** فيبقى صندوقًا رمليًّا للتدريب —
+ * صريحًا لا مصادفةً.
+ */
+function sealedClient(client) {
+  const seal = (method) => async (...args) => {
+    assertPullOnly(method, typeof args[0] === 'string' ? args[0] : '');
+    return client[method](...args);
+  };
+  return {
+    ...client,
+    kind: `${client.kind}+sealed`,
+    create: seal('create'),
+    write: seal('write'),
+    unlink: seal('unlink'),
+  };
+}
+
+/** The active client for the rest of the app — مختومًا في الاتّجاه. */
+export const odoo = sealedClient(isProduction ? realOdooClient : mockOdooClient);
 
 export { ODOO_MODE, isProduction, describeOdooConfig };
 export { mockOdooClient } from './mockOdooClient.js';

@@ -26,6 +26,7 @@ import {
   assertPullOnly,
 } from './directionGuard.js';
 import { create, write, unlink, searchRead, authenticate } from './odooClient.js';
+import { odoo, mockOdooClient } from './index.js';
 import { defaultPolicyFor, pushDecision, fullPolicy } from '../integration/integrationPolicy.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -120,6 +121,27 @@ test('السحب يعبر الحارس ويسقط عند الإعداد لا ع�
     assert.doesNotMatch(error.message, /مختوم/);
     return true;
   });
+});
+
+test('★★ المسار التشغيليّ مختومٌ في الوضعين — والتدريب هو الوضع الحيّ اليوم', async () => {
+  // العطب الذي كشفته لقطة المالك 2026-08-13: الختم كان على العميل الحقيقيّ
+  // وحده، والبوابة تعمل في وضع التدريب، فكان المحاكي يقبل الدفع حيًّا.
+  // `odoo` هو ما تستورده الخدمات، فالختم عليه يغطّي الوضعين.
+  assert.match(odoo.kind, /\+sealed$/, 'العميل الفعّال يجب أن يكون مختومًا');
+  await assert.rejects(() => odoo.create('purchase.order', { name: 'x' }), /مختوم/);
+  await assert.rejects(() => odoo.write('stock.picking', [1], { state: 'done' }), /مختوم/);
+  await assert.rejects(() => odoo.unlink('product.product', [1]), /مختوم/);
+});
+
+test('★ والقراءة تمرّ من المسار التشغيليّ بلا عائق', async () => {
+  const rows = await odoo.searchRead('product.product', [], []);
+  assert.ok(Array.isArray(rows), 'السحب يجب أن يعمل — الختم على الكتابة وحدها');
+});
+
+test('★ والمحاكي المستورد مباشرةً يبقى صندوقًا رمليًّا للتدريب', async () => {
+  // صريحٌ لا مصادفة: من يستورد المحاكي بذاته يعلن أنّه خارج المسار التشغيليّ.
+  assert.equal(mockOdooClient.kind, 'mock');
+  assert.equal(typeof mockOdooClient.create, 'function');
 });
 
 // ── 3. لا بابَ ثانٍ ─────────────────────────────────────────────────────────
