@@ -23,7 +23,7 @@ import { listenRecentMoves } from '../../../services/ledger/ledgerService.js';
 import { odoo } from '../../../services/odoo/index.js';
 import { odooStateLabel } from '../../../services/odoo/poMapper.js';
 import { pickingStateLabel } from '../../../services/odoo/grnMapper.js';
-import { odooTargetFor } from '../../../services/odoo/docCrosswalk.js';
+import { odooTargetFor, refText } from '../../../services/odoo/docCrosswalk.js';
 import { isPushSealed } from '../../../services/odoo/directionGuard.js';
 import {
   pushAnyDocument,
@@ -68,11 +68,11 @@ const TONE = {
  * لقطة المالك 2026-08-13 على سجلّ `TRN`.
  */
 function originLabel(origin) {
-  if (!origin) return '';
-  if (typeof origin === 'string') return origin;
-  if (Array.isArray(origin)) return String(origin[1] ?? origin[0] ?? '');
-  if (typeof origin === 'object') return String(origin.name ?? origin.display_name ?? '');
-  return String(origin);
+  const text = refText(origin);
+  // السجلّات التي دُفعت قبل إصلاح `docCrosswalk` تحمل النصّ الحرفيّ
+  // «[object Object]» مخزَّنًا. لا نستطيع إصلاحها في أودو — الكتابة مختومة —
+  // فنُخفيها بدل عرض حشوٍ لا يدلّ على شيء. وتُصحَّح ذاتيًّا عند أوّل سحب.
+  return /^\[object /.test(text) ? '' : text;
 }
 
 function Badge({ tone = 'muted', title, children }) {

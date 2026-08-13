@@ -2081,6 +2081,7 @@
         "pushPurchaseOrder",
         "pushVanSalesDocument",
         "realOdooClient",
+        "refText",
         "resetMock",
         "resolveSyncAction",
         "searchRead",

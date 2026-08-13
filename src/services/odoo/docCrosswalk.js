@@ -103,15 +103,36 @@ export function coveredTypes() {
  *
  * @param {object} docObj  مستند البوابة { type, number, header, lines, links }
  */
+/**
+ * مرجعٌ نصّيّ من قيمةٍ قد تكون نصًّا أو رابطًا `{ id, number }`.
+ *
+ * لا يُعيد أبدًا «[object Object]»: ما لا يُفكَّك يُعاد فارغًا. ومرجعٌ فارغ
+ * أصدقُ من نصٍّ لا يدلّ على شيء ويُخزَّن في نظامٍ حاكم.
+ */
+export function refText(value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'number') return String(value);
+  if (Array.isArray(value)) return refText(value[1] ?? value[0]);
+  if (typeof value === 'object') return refText(value.number ?? value.name ?? value.id);
+  return '';
+}
+
 export function docToOdooValues(docObj = {}) {
   const h = docObj.header ?? {};
   const links = docObj.links ?? {};
   const lines = Array.isArray(docObj.lines) ? docObj.lines : [];
 
   // أصل السلسلة: أوّل مرجعٍ مربوط (links) أو أيّ حقل *Ref في الرأس.
-  const linkedRef = Object.values(links).find(Boolean);
+  //
+  // ⚠️ رابط المستند **كائن** `{ id, number }` لا نصّ (انظر `chainOf` في chain.js).
+  // وكان السطر يمرّره إلى `String()` مباشرةً، فيُخزَّن في أودو النصُّ الحرفيّ
+  // «[object Object]». ظهر حيًّا على سجلّ TRN في لقطة المالك 2026-08-13، ونجا
+  // من تشديد العرض لأنّ المخزَّن **نصٌّ فاسد** لا كائنٌ يُفكَّك.
+  // الرقم أولى من المعرّف: هو ما يقرؤه الإنسان في أودو.
+  const linkedRef = Object.values(links).map(refText).find(Boolean);
   const headerRef = Object.entries(h).find(([k, v]) => /Ref$/.test(k) && v);
-  const origin = String(linkedRef ?? headerRef?.[1] ?? '').trim();
+  const origin = String(linkedRef || refText(headerRef?.[1]) || '').trim();
 
   const qtyOf = (l) => Number(l.qty ?? l.qtyReceived ?? l.qtyOrdered ?? l.qtyPicked ?? l.qtyDelivered ?? 0) || 0;
 
