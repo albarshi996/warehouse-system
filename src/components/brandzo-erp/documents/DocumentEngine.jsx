@@ -25,7 +25,8 @@ import { listenAttachments } from '../../../services/documents/attachmentsServic
 import { listenReconciliations } from '../../../services/documents/controlService.js';
 import { emptyDocument, emptyChecklist, missingRequired, isEmptyLine, applyItemToLine } from '../../../services/documents/schemaUtils.js';
 import { mergeParentLink } from '../../../services/documents/chain.js';
-import { lookupByBarcode, subscribeItems } from '../../../services/itemService.js';
+import { lookupByBarcode, getItem, subscribeItems } from '../../../services/itemService.js';
+import { canonicalLineSku } from '../../../services/items/itemIdentity.js';
 import { isEditable } from '../../../services/documents/states.js';
 import FieldInput from './FieldInput.jsx';
 import { listenSettings } from '../../../services/settings/settingsService.js';
@@ -234,21 +235,33 @@ export default function DocumentEngine() {
    * استدعاء الماستر من بند (I-ب/2): باركود مكتمل ⇒ يتعبّأ الكود والوصف.
    * الفارغ فقط يُملأ — ما كتبه الموظّف بيده لا يُدهس. والمجهول لا يوقف
    * العمل (قرار المالك): تنبيه، ويُكمل البند يدويًّا.
+   *
+   * SAP-1 (ف‑٤٣): عمود الكود مرجعيٌّ أيضًا — يسأل بالهويّة أولًا (الكود هو
+   * الهويّة §9.1) ثم بالباركود احتياطًا، وما استُبين يُثبَّت كوده بصيغة
+   * الماستر القانونيّة (itm-1 ⇒ ITM-1) — فهويّة السطر مرجعٌ لا نصّ.
    */
-  async function handleLineLookup(kind, value, index) {
+  async function handleLineLookup(kind, value, index, columnKey = 'barcode') {
     if (kind !== 'item') return;
     try {
-      const item = await lookupByBarcode(value);
+      const item = columnKey === 'sku'
+        ? (await getItem(value)) || (await lookupByBarcode(value))
+        : await lookupByBarcode(value);
       if (!item) {
-        flash(`⚠️ الباركود ${value} غير معرّف في الماستر — أكمل البند يدويًّا وسجِّل الصنف لاحقًا.`, 'err');
+        flash(
+          columnKey === 'sku'
+            ? `⚠️ الكود ${value} غير معرّف في الماستر — أكمل البند يدويًّا وسجِّل الصنف لاحقًا.`
+            : `⚠️ الباركود ${value} غير معرّف في الماستر — أكمل البند يدويًّا وسجِّل الصنف لاحقًا.`,
+          'err'
+        );
         return;
       }
       setDoc((d) => {
         const current = d.lines?.[index];
         if (!current) return d;
         const { line, filled } = applyItemToLine(current, item);
-        if (filled.length === 0) return d;
-        const lines = d.lines.map((l, i) => (i === index ? line : l));
+        const sku = canonicalLineSku(line, item);
+        if (filled.length === 0 && sku === String(line.sku ?? '')) return d;
+        const lines = d.lines.map((l, i) => (i === index ? { ...line, sku } : l));
         return { ...d, lines };
       });
       setDirty(true);

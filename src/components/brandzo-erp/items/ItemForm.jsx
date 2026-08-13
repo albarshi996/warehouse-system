@@ -26,6 +26,7 @@ function emptyDraft() {
     itemType: 'sale', // م٣-أ — الافتراض هو سلوك اليوم
     balance: '0',
     minStock: '0',
+    substitutesText: '', // SAP-1 (ف‑٣) — أكواد أصنافٍ بديلة بفواصل
   };
 }
 
@@ -48,6 +49,7 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
         itemType: typeOf(item),
         balance: String(item.balance ?? 0),
         minStock: String(item.minStock ?? 0),
+        substitutesText: (item.substitutes || []).join(', '),
       });
     } else {
       setDraft(emptyDraft());
@@ -81,6 +83,8 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
     try {
       // «8059…, 8059…» ⇒ ['8059…','8059…'] — الخدمة تطبّعها وتزيل التكرار.
       const barcodes = draft.barcodesText.split(/[,،/|;\n]+/).map((s) => s.trim()).filter(Boolean);
+      // البدائل (ف‑٣) بنفس القاعدة — الخدمة تطبّع وتُسقط الصنف نفسه والتكرار.
+      const substitutes = draft.substitutesText.split(/[,،/|;\n]+/).map((s) => s.trim()).filter(Boolean);
       if (isEdit) {
         await updateItem(draft.sku, {
           nameAr: draft.nameAr,
@@ -91,10 +95,11 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
           itemType: draft.itemType,
           balance: draft.balance,
           minStock: draft.minStock,
+          substitutes,
         });
         onSaved?.(draft.sku);
       } else {
-        const sku = await createItem({ ...draft, barcodes });
+        const sku = await createItem({ ...draft, barcodes, substitutes });
         onSaved?.(sku);
       }
       setHasUnsavedChanges(false);
@@ -214,6 +219,18 @@ export default function ItemForm({ mode, item, onSaved, onCancel }) {
             className="o_input"
             value={draft.minStock}
             onChange={update('minStock')}
+          />
+        </Field>
+
+        {/* SAP-1 (ف‑٣): بدائل الصنف — أكوادٌ من الماستر، تُعرض في بطاقة الصنف */}
+        <Field label="الأصناف البديلة" hint="أكواد أصنافٍ تصلح بديلًا — افصلها بفاصلة، وتظهر في بطاقة الصنف">
+          <input
+            type="text"
+            placeholder="ITM-002, ITM-003"
+            className="o_input"
+            style={{ direction: 'ltr', textAlign: 'right' }}
+            value={draft.substitutesText}
+            onChange={update('substitutesText')}
           />
         </Field>
       </div>

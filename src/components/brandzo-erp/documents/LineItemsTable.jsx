@@ -19,11 +19,17 @@ export default function LineItemsTable({ schema, section, lines, onChange, onLoo
     onChange(next);
   }
 
-  /** عمود عليه lookup: اكتمال القيمة (Enter/مغادرة الحقل) يستدعي الماستر. */
+  /**
+   * عمود عليه lookup: اكتمال القيمة (Enter/مغادرة الحقل) يستدعي الماستر.
+   * وعمود `sku` مرجعيّ **دائمًا** بلا إعلانٍ في المخطّط (SAP-1 · ف‑٤٣):
+   * الكود هو هويّة الصنف، فكتابته تسأل الماستر وتثبّته بصيغته القانونيّة —
+   * في هذا المكان الواحد لا في ٣٨ مخطّطًا.
+   */
   function triggerLookup(column, index, value) {
-    if (!column.lookup || !onLookup) return;
+    const kind = column.lookup || (column.key === 'sku' ? 'item' : null);
+    if (!kind || !onLookup) return;
     const v = String(value ?? '').trim();
-    if (v) onLookup(column.lookup, v, index);
+    if (v) onLookup(kind, v, index, column.key);
   }
 
   function addRow() {

@@ -17,6 +17,7 @@ import { pageSlice } from '../../../services/ui/pagination.js';
 const PAGE_SIZE = 50;
 import { int, num } from '../../odoo/format.js';
 import ItemForm from './ItemForm.jsx';
+import ItemCard from './ItemCard.jsx';
 import ItemsImport from './ItemsImport.jsx';
 import BalancesImport from './BalancesImport.jsx';
 import PendingItems from './PendingItems.jsx';
@@ -50,6 +51,7 @@ export default function ItemMaster() {
   const [search, setSearch] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [editor, setEditor] = useState(null); // null | { mode, item? }
+  const [cardSku, setCardSku] = useState(null); // بطاقة الصنف (SAP-1) — كود الصنف المعروض
   const [importing, setImporting] = useState(false);
   const [importingBalances, setImportingBalances] = useState(false);
   const [balances, setBalances] = useState([]);
@@ -160,7 +162,28 @@ export default function ItemMaster() {
       id: it.sku,
       decoration: it.archived ? 'muted' : undefined,
       cells: {
-        sku: <span className="decoration-bf" style={{ fontFamily: 'monospace' }}>{it.sku}</span>,
+        // الكود يفتح بطاقة الصنف (SAP-1 · §9.2) — الهويّة بوّابة كلّ شيء.
+        sku: (
+          <button
+            type="button"
+            onClick={() => setCardSku(it.sku)}
+            title="فتح بطاقة الصنف"
+            style={{
+              fontFamily: 'monospace',
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              color: 'var(--o-action)',
+              fontWeight: 'var(--o-font-weight-bold)',
+              textDecoration: 'underline',
+              textDecorationStyle: 'dotted',
+              textUnderlineOffset: '3px',
+            }}
+          >
+            {it.sku}
+          </button>
+        ),
         barcode: (
           <span
             style={{ direction: 'ltr', display: 'inline-block', fontFamily: 'monospace', fontSize: 'var(--o-font-size-xs)' }}
@@ -334,6 +357,28 @@ export default function ItemMaster() {
             </div>
           </div>
         )}
+
+        {/* بطاقة الصنف (SAP-1 · §9.2): الكمّيّات الأربع والبدائل والموردون — تُفتح من كود الصنف */}
+        {cardSku && (() => {
+          const cardItem = items.find((it) => it.sku === cardSku);
+          if (!cardItem) return null;
+          return (
+            <div style={{ marginBottom: '18px' }}>
+              <ItemCard
+                item={cardItem}
+                items={items}
+                balances={balances}
+                onEdit={(it) => {
+                  setCardSku(null);
+                  setEditor({ mode: 'edit', item: it });
+                  setImporting(false);
+                  setImportingBalances(false);
+                }}
+                onClose={() => setCardSku(null)}
+              />
+            </div>
+          );
+        })()}
 
         {editor && (
           <div style={{ marginBottom: '18px' }}>

@@ -17,6 +17,7 @@ import { db } from '../config/firebase.js';
 import { normalizeBarcode, barcodeLookupVariants } from './excel/excelSchema.js';
 import { normalizeStatus } from './items/itemStatus.js';
 import { shapeImportedItem, normalizeUnit } from './items/itemShape.js';
+import { assertNewItemIdentity, normalizeSubstitutes } from './items/itemIdentity.js';
 
 export { normalizeStatus, normalizeUnit };
 
@@ -53,6 +54,7 @@ export { normalizeStatus, normalizeUnit };
  *   balance:     number    // الكمية الدفترية — مصدرها الشيت
  *   minStock:    number
  *   notes:       string
+ *   substitutes: string[]  // SAP-1 (ف‑٣) — أكواد أصنافٍ بديلة مطبَّعة
  *   archived:    boolean
  *   odooId:      number|null
  *   createdAt / updatedAt: Timestamp
@@ -159,9 +161,10 @@ export const createItem = async ({
   notes = '',
   barcodes = [],
   itemType = 'sale', // م٣-أ — الافتراض هو سلوك اليوم: بضاعةٌ مخزنيّة تُباع
+  substitutes = [], // SAP-1 (ف‑٣) — أكواد أصنافٍ بديلة، تُطبَّع في itemIdentity
 }) => {
-  const id = normalizeSku(sku);
-  if (!id) throw new Error('SKU is required');
+  // حارس الهويّة (SAP-1 · ف‑١): الكود هو الهويّة — لا صنفَ جديدًا بلا كود.
+  const id = assertNewItemIdentity({ sku });
   if (!nameAr || !nameAr.trim()) throw new Error('Arabic name is required');
 
   const ref = doc(db, COLLECTION, id);
@@ -184,6 +187,7 @@ export const createItem = async ({
     minStock: Number(minStock) || 0,
     notes: String(notes).trim(),
     itemType,
+    substitutes: normalizeSubstitutes(substitutes, id),
     archived: false,
     odooId: null,
     createdAt: serverTimestamp(),
@@ -276,6 +280,7 @@ export const updateItem = async (sku, patch) => {
   if ('notes' in next) next.notes = String(next.notes).trim();
   if ('unit' in next) next.unit = normalizeUnit(next.unit);
   if ('barcodes' in next) next.barcodes = normalizeBarcodes(next.barcodes);
+  if ('substitutes' in next) next.substitutes = normalizeSubstitutes(next.substitutes, id);
 
   const ref = doc(db, COLLECTION, id);
   await updateDoc(ref, { ...next, updatedAt: serverTimestamp() });
