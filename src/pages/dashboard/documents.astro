@@ -8,6 +8,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import '../../styles/tokens.css';
 import '../../styles/odoo.css';
 import DocumentsInbox from '../../components/brandzo-erp/documents/DocumentsInbox.jsx';
+import OpenDocumentsBox from '../../components/brandzo-erp/documents/OpenDocumentsBox.jsx';
 ---
 
 <DashboardLayout title="المستندات" showGuide={false} light>
@@ -23,5 +24,22 @@ import DocumentsInbox from '../../components/brandzo-erp/documents/DocumentsInbo
     </div>
 
     <DocumentsInbox client:load />
+
+    {/*
+      صندوق العمل المفتوح (SAP-12) — قسمٌ ثانٍ على الصفحة نفسها لا مسارٌ جديد:
+      الموظّف يأتي إلى «المستندات» أصلًا، فيجد ما ينتظر توقيعه **وما لم يكتمل**
+      في مكانٍ واحد. ولا يُحذف ولا يُغيَّر رابطٌ قائم (§3-٣ ‹42›).
+    */}
+    <section class="mt-10 pt-8 border-t border-line">
+      <div class="mb-4">
+        <h2 class="text-xl font-bold text-ink mb-1">العمل المفتوح</h2>
+        <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
+          ليس ما ينتظر توقيعك، بل <span class="font-bold text-ink">ما لم يكتمل بعد</span>:
+          أمرُ شراءٍ وصل نصفه، وتسليمٌ لم يُؤكَّد، وطلبُ نقلٍ لم يُنفَّذ — معتمَدةٌ
+          وموقَّعة ولا تنتظر أحدًا، وعملُها لم يتمّ. والمغلق والملغى يخرجان منها.
+        </p>
+      </div>
+      <OpenDocumentsBox client:load />
+    </section>
   </div>
 </DashboardLayout>

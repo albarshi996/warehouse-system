@@ -107,13 +107,13 @@ export default function ChainBar({ doc, me, onFlash }) {
     return threeWayMatch({ po, grn, qc: pick('QC') });
   }, [doc, related]);
 
-  /** 🥇 حارس FEFO — قوائم السحب وحدها. */
+  /** حارس FEFO — قوائم السحب وحدها. */
   const fefo = useMemo(
     () => (doc?.type === 'PICK' && balances.length ? fefoViolations(doc, balances) : []),
     [doc, balances]
   );
 
-  /** 🏅 حارس البوابة — تصاريح الخروج وحدها، مقيسةً بإذن التسليم المرتبط. */
+  /** حارس البوابة — تصاريح الخروج وحدها، مقيسةً بإذن التسليم المرتبط. */
   const gate = useMemo(() => {
     if (doc?.type !== 'GP') return null;
     const dn = related.find((d) => d.type === 'DN') || null;
@@ -262,7 +262,7 @@ export default function ChainBar({ doc, me, onFlash }) {
       )}
 
       {pending.length > 0 && (
-        <p className="text-[11px] text-muted">
+        <p className="text-[11px] text-ink-2">
           يُنشأ {pending.map((t) => `«${t.schema.titleAr}»`).join(' و')} بعد اعتماد هذا المستند — لا يُبنى التزامٌ على ما لم يُعتمد.
         </p>
       )}
@@ -270,14 +270,14 @@ export default function ChainBar({ doc, me, onFlash }) {
       {/* ── 🥇 حارس FEFO ── */}
       {fefo.length > 0 && (
         <div className="border-t border-line pt-3">
-          <p className="text-xs font-bold text-amber-300 mb-1.5">
+          <p className="text-xs font-bold mb-1.5" style={{ color: '#8a6d1b' }}>
             🥇 مخالفة FEFO — {fefo.length} بندًا سُحب من تشغيلةٍ أبعدَ انتهاءً
           </p>
           <ul className="space-y-1">
             {fefo.map((v) => (
-              <li key={v.key} className="text-[11px] text-amber-200/90">
+              <li key={v.key} className="text-[11px]" style={{ color: '#8a6d1b' }}>
                 · <b>{v.description}</b>: {v.message}
-                {v.earliestBatch && <span className="text-muted"> (تشغيلة {v.earliestBatch})</span>}
+                {v.earliestBatch && <span className="text-ink-2"> (تشغيلة {v.earliestBatch})</span>}
               </li>
             ))}
           </ul>
@@ -291,15 +291,15 @@ export default function ChainBar({ doc, me, onFlash }) {
       {gate && (
         <div className="border-t border-line pt-3">
           {gate.ok ? (
-            <p className="text-xs font-bold text-emerald-300">
+            <p className="text-xs font-bold" style={{ color: '#1e7e34' }}>
               🏅 مطابق لإذن التسليم — الخروج مأذون به
             </p>
           ) : (
             <>
-              <p className="text-xs font-bold text-red-300 mb-1.5">🏅 حارس البوابة يمنع: لا خروج بلا إذن مطابق</p>
+              <p className="text-xs font-bold mb-1.5" style={{ color: '#b02a37' }}>حارس البوابة يمنع: لا خروج بلا إذن مطابق</p>
               <ul className="space-y-1">
                 {gate.problems.map((p) => (
-                  <li key={p} className="text-[11px] text-red-200/90">· {p}</li>
+                  <li key={p} className="text-[11px]" style={{ color: '#b02a37' }}>· {p}</li>
                 ))}
               </ul>
             </>
@@ -307,28 +307,28 @@ export default function ChainBar({ doc, me, onFlash }) {
           {gate.warnings.length > 0 && (
             <ul className="space-y-1 mt-1.5">
               {gate.warnings.map((w) => (
-                <li key={w} className="text-[11px] text-amber-200/80">⚠️ {w}</li>
+                <li key={w} className="text-[11px]" style={{ color: '#8a6d1b' }}>· {w}</li>
               ))}
             </ul>
           )}
         </div>
       )}
 
-      {/* ── 🔒 حارس التسوية / ⚖️ حارس الإشعار الدائن ── */}
+      {/* ── حارس التسوية / حارس الإشعار الدائن — بلا إيموجي (§3-٧ ‹46›) ── */}
       {[
-        { v: adj, okMsg: '🔒 مطابق لمحضر الجرد — التسوية مسنَدة', badMsg: '🔒 حارس التسوية يمنع: لا تسوية بلا جردٍ مصادَق' },
-        { v: credit, okMsg: '⚖️ مطابق لإشعار الإرجاع — الخصم مسنَد', badMsg: '⚖️ حارس الإشعار الدائن يمنع: لا خصم بلا مرتجعٍ معتمَد' },
+        { v: adj, okMsg: 'مطابق لمحضر الجرد — التسوية مسنَدة', badMsg: 'حارس التسوية يمنع: لا تسوية بلا جردٍ مصادَق' },
+        { v: credit, okMsg: 'مطابق لإشعار الإرجاع — الخصم مسنَد', badMsg: 'حارس الإشعار الدائن يمنع: لا خصم بلا مرتجعٍ معتمَد' },
       ].map(({ v, okMsg, badMsg }, i) =>
         v ? (
           <div key={i} className="border-t border-line pt-3">
             {v.ok ? (
-              <p className="text-xs font-bold text-emerald-300">{okMsg}</p>
+              <p className="text-xs font-bold" style={{ color: '#1e7e34' }}>{okMsg}</p>
             ) : (
               <>
-                <p className="text-xs font-bold text-red-300 mb-1.5">{badMsg}</p>
+                <p className="text-xs font-bold mb-1.5" style={{ color: '#b02a37' }}>{badMsg}</p>
                 <ul className="space-y-1">
                   {v.problems.map((p) => (
-                    <li key={p} className="text-[11px] text-red-200/90">· {p}</li>
+                    <li key={p} className="text-[11px]" style={{ color: '#b02a37' }}>· {p}</li>
                   ))}
                 </ul>
               </>
@@ -336,7 +336,7 @@ export default function ChainBar({ doc, me, onFlash }) {
             {v.warnings.length > 0 && (
               <ul className="space-y-1 mt-1.5">
                 {v.warnings.map((w) => (
-                  <li key={w} className="text-[11px] text-amber-200/80">⚠️ {w}</li>
+                  <li key={w} className="text-[11px]" style={{ color: '#8a6d1b' }}>· {w}</li>
                 ))}
               </ul>
             )}
@@ -352,38 +352,46 @@ export default function ChainBar({ doc, me, onFlash }) {
             onClick={() => setShowMatch((v) => !v)}
             className="w-full flex items-center justify-between gap-3 text-right"
           >
-            <span className="text-xs font-bold text-ink-2">
-              ⚖️ المطابقة الثلاثية — المطلوب ↔ المستلَم ↔ المقبول
+            <span className="text-xs font-bold text-ink">
+              المطابقة الثلاثية — المطلوب ↔ المستلَم ↔ المقبول
             </span>
             <span className="flex items-center gap-2">
               {match.ok ? (
-                <span className="text-[11px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-3 py-0.5">
-                  ✅ مطابقة تامّة
+                <span
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold rounded-full px-3 py-1 border"
+                  style={{ color: '#1e7e34', background: '#e9f7ef', borderColor: '#bfe3c9' }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'currentColor' }} />
+                  مطابقة تامّة
                 </span>
               ) : (
-                <span className="text-[11px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-full px-3 py-0.5">
+                <span
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold rounded-full px-3 py-1 border"
+                  style={{ color: '#8a6d1b', background: '#fdf6e3', borderColor: '#e6d08a' }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'currentColor' }} />
                   {match.missingDocs.length
                     ? `ناقص: ${match.missingDocs.join(' · ')}`
                     : `${match.problems.length} فرقًا يحتاج قرارًا`}
                 </span>
               )}
-              <span className="text-muted text-xs">{showMatch ? '▲' : '▼'}</span>
+              <span className="text-ink-2 text-xs">{showMatch ? '▲' : '▼'}</span>
             </span>
           </button>
 
           {showMatch && (
-            <div className="mt-3 overflow-x-auto">
-              <table className="w-full text-xs">
+            <div className="mt-3 overflow-x-auto rounded-lg border border-line" style={{ background: 'var(--surface, #fff)' }}>
+              <table className="w-full text-xs" style={{ borderCollapse: 'collapse', minWidth: 560 }}>
                 <thead>
-                  <tr className="text-muted border-b border-line">
-                    <th className="text-right py-1.5 px-2">الصنف</th>
-                    <th className="py-1.5 px-2">مطلوب (PO)</th>
-                    <th className="py-1.5 px-2">مستلَم (GRN)</th>
-                    <th className="py-1.5 px-2">مقبول (QC)</th>
-                    <th className="py-1.5 px-2">مرفوض</th>
-                    <th className="py-1.5 px-2">مفتوح</th>
-                    <th className="py-1.5 px-2">الفرق</th>
-                    <th className="py-1.5 px-2">الحالة</th>
+                  <tr className="text-ink-2 border-b border-line" style={{ background: 'var(--chip, #f4f4f6)' }}>
+                    <th className="text-right py-2 px-3 font-bold">الصنف</th>
+                    <th className="py-2 px-2 font-bold whitespace-nowrap">مطلوب (PO)</th>
+                    <th className="py-2 px-2 font-bold whitespace-nowrap">مستلَم (GRN)</th>
+                    <th className="py-2 px-2 font-bold whitespace-nowrap">مقبول (QC)</th>
+                    <th className="py-2 px-2 font-bold whitespace-nowrap">مرفوض</th>
+                    <th className="py-2 px-2 font-bold whitespace-nowrap">مفتوح</th>
+                    <th className="py-2 px-2 font-bold whitespace-nowrap">الفرق</th>
+                    <th className="py-2 px-2 font-bold whitespace-nowrap">الحالة</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -391,17 +399,17 @@ export default function ChainBar({ doc, me, onFlash }) {
                     const s = MATCH_STATUS[r.status];
                     const out = outcomesBySku.get(r.key) || outcomesBySku.get(r.description);
                     return (
-                      <tr key={r.key} className="border-b border-line">
-                        <td className="py-1.5 px-2 text-ink-2">{r.description}</td>
-                        <td className="py-1.5 px-2 text-center text-ink-2">{r.qtyOrdered}</td>
+                      <tr key={r.key} className="border-b border-line hover:bg-chip transition-colors">
+                        <td className="py-2 px-3 text-ink font-medium">{r.description}</td>
+                        <td className="py-2 px-2 text-center text-ink" style={{ fontVariantNumeric: 'tabular-nums' }}>{r.qtyOrdered}</td>
                         {/* الأرقام تُفتح على مستنداتها (SAP-9 · §15.1 ‹400›) */}
-                        <td className="py-1.5 px-2 text-center">
+                        <td className="py-2 px-2 text-center" style={{ fontVariantNumeric: 'tabular-nums' }}>
                           <DrillNumber value={r.qtyReceived} group={out?.executed} basePath={docBase} />
                         </td>
-                        <td className="py-1.5 px-2 text-center">
+                        <td className="py-2 px-2 text-center" style={{ fontVariantNumeric: 'tabular-nums' }}>
                           <DrillNumber value={r.qtyAccepted} group={out?.accepted} basePath={docBase} />
                         </td>
-                        <td className="py-1.5 px-2 text-center">
+                        <td className="py-2 px-2 text-center" style={{ fontVariantNumeric: 'tabular-nums' }}>
                           <DrillNumber value={out?.rejected?.qty || 0} group={out?.rejected} basePath={docBase} tone="#b02a37" />
                         </td>
                         <td className="py-1.5 px-2 text-center text-ink-2" style={{ fontVariantNumeric: 'tabular-nums' }}>
