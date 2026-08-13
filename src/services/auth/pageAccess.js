@@ -36,6 +36,10 @@ export const ALWAYS_ALLOWED = [
   // لا يعدّهما التدقيق «صفحة يتيمة».
   '/dashboard/styleguide',
   '/dashboard/receipts',
+  // SAP-19 (طلب المالك 2026-08-13): الرابط الأصليّ /dashboard/stock-operations
+  // صار الشاشة السريعة للهاتف (امسح فتُعبَّأ)، والأداة الكاملة القديمة بقيت
+  // حرفيًّا هنا — يُوصل إليها من رابطٍ في الشاشة السريعة. لا حذف (§3-٣).
+  '/dashboard/stock-operations-classic',
 ];
 
 /** يُزيل الشرطة الختامية كي يتطابق `/dashboard/` مع `/dashboard`. */

@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 89,
+    "modules": 90,
     "serviceDomains": 40,
-    "serviceFiles": 290,
+    "serviceFiles": 292,
     "collections": 70,
     "roles": 16,
     "odooModels": 12,
@@ -636,9 +636,19 @@
     {
       "name": "stock-operations",
       "route": "/dashboard/stock-operations",
+      "title": "العمليات المخزنية",
+      "summary": "العمليات المخزنية — امسح فتُعبَّأ (SAP-19 · طلب المالك 2026-08-13).",
+      "file": "src/pages/dashboard/stock-operations.astro",
+      "usesServices": [
+        "stock"
+      ]
+    },
+    {
+      "name": "stock-operations-classic",
+      "route": "/dashboard/stock-operations-classic",
       "title": "العودة إلى لوحة التحكم",
       "summary": "العمليات المخزنية — الجرد الذكي Pro. **النسخة الوحيدة المعتمدة.**",
-      "file": "src/pages/dashboard/stock-operations.astro",
+      "file": "src/pages/dashboard/stock-operations-classic.astro",
       "usesServices": [
         "auth",
         "itemService",
@@ -2581,12 +2591,15 @@
         "masterSync.js",
         "masterSync.test.js",
         "operationsService.js",
+        "scanFlow.js",
+        "scanFlow.test.js",
         "scanMerge.js",
         "scanMerge.test.js"
       ],
-      "fileCount": 5,
-      "testCount": 2,
+      "fileCount": 7,
+      "testCount": 3,
       "exports": [
+        "SCAN_MODES",
         "appendScan",
         "applyLedgerToItems",
         "closeOperation",
@@ -2595,12 +2608,16 @@
         "getOperation",
         "getScans",
         "indexMaster",
+        "isScanMode",
         "listOpenOperations",
         "listenOperations",
         "listenScans",
         "masterFieldsOf",
+        "panelForScan",
         "refreshMasterFields",
+        "scanEntryVerdict",
         "scanKey",
+        "sessionSummary",
         "summarizeScans",
         "updateOperationSummary"
       ],
