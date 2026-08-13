@@ -27,11 +27,14 @@ export default function StateBar({ doc, schema, me, onTransition, onSave, onPrin
     <div className="bg-chip border border-line rounded-2xl p-4 space-y-3 no-print">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
+          {/* نقطةٌ ملوّنة بدل الإيموجي — §3-٧ ‹46›: أيقونات خطّيّة لا رموز تصويريّة */}
           <span
-            className="px-3 py-1 rounded-full text-xs font-bold border"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border"
             style={{ color: state.color, borderColor: `${state.color}66`, background: `${state.color}1a` }}
+            title={state.hint || state.label}
           >
-            {state.emoji} {state.label}
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'currentColor' }} />
+            {state.label}
           </span>
           {doc?.number ? (
             <span className="font-mono text-lg font-bold text-accent tracking-wide">{doc.number}</span>

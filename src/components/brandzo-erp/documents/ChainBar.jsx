@@ -341,7 +341,9 @@ export default function ChainBar({ doc, me, onFlash }) {
                           {r.varianceReceived > 0 ? `+${r.varianceReceived}` : r.varianceReceived || '—'}
                         </td>
                         <td className="py-1.5 px-2 text-center whitespace-nowrap" style={{ color: s.color }}>
-                          {s.emoji} {s.label}
+                          {/* نقطةٌ ملوّنة لا إيموجي — §3-٧ ‹46› */}
+                          <span className="inline-block w-1.5 h-1.5 rounded-full align-middle ml-1" style={{ background: 'currentColor' }} />
+                          {s.label}
                         </td>
                       </tr>
                     );

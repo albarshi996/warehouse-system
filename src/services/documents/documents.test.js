@@ -54,8 +54,14 @@ test('🥇 حارس الجودة: لا طريق من «مُرسَل» إلى «�
   assert.equal(isLegalTransition('approved', 'done'), true);
 });
 
-test('المنجَز نهاية الطريق — لا نقلة بعده', () => {
-  assert.deepEqual(TRANSITIONS.done, []);
+test('المنجَز لا يُلغى ولا يُعاد — والإغلاق وحده بعده (SAP-4)', () => {
+  // تغيّر بقرار المالك 2026-08-13: كان المنجَز نهاية الطريق مطلقًا، فلم يكن
+  // لأمر شراءٍ وصل 95 من 100 قولٌ في النظام. صار له «إغلاق» — ولا شيء غيره:
+  // المنجَز رحّل حركاتٍ في دفترٍ ملحق-فقط، فالتصحيح بمستندٍ عكسيّ لا بحالة.
+  assert.deepEqual(TRANSITIONS.done.map((t) => t.to), ['closed']);
+  assert.equal(isLegalTransition('done', 'canceled'), false);
+  assert.deepEqual(TRANSITIONS.closed, []);
+  assert.deepEqual(TRANSITIONS.canceled, []);
 });
 
 test('المرفوض يعود مسودّةً قابلة للتصحيح', () => {

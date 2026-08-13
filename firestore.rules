@@ -381,7 +381,26 @@ service cloud.firestore {
                       || (hasProfile()
                           && resource.data.state == 'approved'
                           && myRole() in completeRoles(resource.data.type)
-                          && movingTo(['done'])
+                          && movingTo(['done', 'closed', 'canceled'])
+                          && contentUnchanged())
+                      // ── الحالتان الجديدتان (SAP-4 · قرار المالك 2026-08-13) ──
+                      // «مغلق» يوقف تنفيذ المتبقّي، و«ملغى» يُبطل عمليّةً لم
+                      // تُرحَّل بعد. والفرق بينهما محفوظٌ هنا لا في الواجهة وحدها.
+                      //
+                      // ⚠️ **لا إلغاء بعد الإنجاز.** المنجَز رحّل حركاتٍ في دفترٍ
+                      // ملحق-فقط، فقلبُ حالته يترك أثرًا بلا مستندٍ يبرّره.
+                      // التصحيح بمستندٍ عكسيّ لا بحالة — ولذلك `done` لا تُتيح
+                      // إلا `closed`.
+                      || (hasProfile()
+                          && resource.data.state == 'done'
+                          && myRole() in completeRoles(resource.data.type)
+                          && movingTo(['closed'])
+                          && contentUnchanged())
+                      // صاحب المستند يُلغي ما لم يخرج من يده بعد. وما دخل
+                      // المراجعة لا يُسحب من تحت المراجع — فلا `submitted` هنا.
+                      || (isCreator()
+                          && resource.data.state in ['draft', 'rejected']
+                          && movingTo(['canceled'])
                           && contentUnchanged())
                     );
 
