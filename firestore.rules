@@ -623,6 +623,26 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── كتالوج الطرف‑الصنف (SAP-2 · ف‑٦ · SR-48 ‹3077›) ─────────
+    // علاقة الطرف بالصنف في جدولٍ مستقلّ: كود المورّد/العميل للصنف.
+    // المعرّف حتميّ (نوع__رمز__صنف) فالإعادة تحديثٌ لا تكرار.
+    // الإلزاميّ ثلاثة فقط + كود الطرف (§10.2 ‹251›) — والباقي اختياريّ.
+    // القراءة لأيّ مصادَق (البحث بكود الطرف في بنود المستندات)، والكتابة
+    // للمديرَين، ولا حذف — سجلُّ علاقةٍ استُعمل في مستندٍ يبقى أثره.
+    // ⚠️ تُنشر بقرار المالك (قرار‑٥) — §3-١٠ ‹49› يمنع Claude من النشر.
+    match /item_partner_catalog/{entryId} {
+      allow read: if signedIn();
+      allow create, update: if isManager()
+                    && request.resource.data.partnerType in ['supplier', 'customer']
+                    && request.resource.data.partnerCode is string
+                    && request.resource.data.partnerCode != ''
+                    && request.resource.data.sku is string
+                    && request.resource.data.sku != ''
+                    && request.resource.data.partnerItemCode is string
+                    && request.resource.data.partnerItemCode != '';
+      allow delete: if false;
+    }
+
     // ── شركاء الأعمال: الموردون والعملاء (§15.2/15.3) ────────────
     // القراءة لأي مصادَق (أوامر الشراء والبيع والتقارير تحتاج الشريك).
     // الكتابة للمديرَين. **لا حذف** — أرشفة لا محو (archived=true)، فشريكٌ

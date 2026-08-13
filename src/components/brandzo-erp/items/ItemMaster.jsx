@@ -368,6 +368,7 @@ export default function ItemMaster() {
                 item={cardItem}
                 items={items}
                 balances={balances}
+                me={me}
                 onEdit={(it) => {
                   setCardSku(null);
                   setEditor({ mode: 'edit', item: it });

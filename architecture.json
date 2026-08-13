@@ -11,8 +11,8 @@
   "counts": {
     "modules": 89,
     "serviceDomains": 40,
-    "serviceFiles": 284,
-    "collections": 69,
+    "serviceFiles": 288,
+    "collections": 70,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -2278,19 +2278,38 @@
       "domain": "partners",
       "dir": "src/services/partners",
       "files": [
+        "connectedPartner.js",
+        "itemPartnerCatalog.js",
+        "itemPartnerCatalog.test.js",
+        "itemPartnerCatalogService.js",
         "partnerShape.js",
         "partnerShape.test.js",
         "partnersImportService.js"
       ],
-      "fileCount": 3,
-      "testCount": 1,
+      "fileCount": 7,
+      "testCount": 2,
       "exports": [
+        "CATALOG_COLLECTION",
+        "CATALOG_EDIT_ROLES",
+        "CONNECTED_FIELD",
         "IMPORT_ROLES",
+        "PARTNER_TYPES",
         "SHAPED_PARTNER_FIELDS",
         "analyzePartnersFile",
+        "canEditCatalog",
         "canImport",
+        "catalogEntryId",
+        "catalogEntryVerdict",
         "commitPartnersImport",
-        "shapeImportedPartner"
+        "connectedPartnerPlan",
+        "entriesForItem",
+        "entriesForPartner",
+        "fiveStepItemSearch",
+        "lookupItemByPartnerCode",
+        "setConnectedPartner",
+        "shapeImportedPartner",
+        "subscribeCatalogForItem",
+        "upsertCatalogEntry"
       ],
       "collections": []
     },
@@ -3711,6 +3730,38 @@
             "condition": "isAdmin()",
             "roles": [
               "isAdmin"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "item_partner_catalog",
+        "path": "item_partner_catalog",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager() && request.resource.data.partnerType in ['supplier', 'customer'] && request.resource.data.partnerCode is string && request.resource.data.partnerCode",
+            "roles": [
+              "isManager"
             ]
           },
           {

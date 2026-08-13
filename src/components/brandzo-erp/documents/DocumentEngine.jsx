@@ -27,6 +27,7 @@ import { emptyDocument, emptyChecklist, missingRequired, isEmptyLine, applyItemT
 import { mergeParentLink } from '../../../services/documents/chain.js';
 import { lookupByBarcode, getItem, subscribeItems } from '../../../services/itemService.js';
 import { canonicalLineSku } from '../../../services/items/itemIdentity.js';
+import { lookupItemByPartnerCode } from '../../../services/partners/itemPartnerCatalogService.js';
 import { isEditable } from '../../../services/documents/states.js';
 import FieldInput from './FieldInput.jsx';
 import { listenSettings } from '../../../services/settings/settingsService.js';
@@ -239,17 +240,38 @@ export default function DocumentEngine() {
    * SAP-1 (ف‑٤٣): عمود الكود مرجعيٌّ أيضًا — يسأل بالهويّة أولًا (الكود هو
    * الهويّة §9.1) ثم بالباركود احتياطًا، وما استُبين يُثبَّت كوده بصيغة
    * الماستر القانونيّة (itm-1 ⇒ ITM-1) — فهويّة السطر مرجعٌ لا نصّ.
+   *
+   * SAP-2 (§21-٤): وإن لم يُجب الكود ولا الباركود، يُسأل **كتالوج
+   * الطرف‑الصنف** بطرف المستند نفسه — فكود المورّد يعيد الصنف الداخليّ
+   * الصحيح ولا يُنشئ صنفًا مكرّرًا (SR-50)، وكود الطرف يبقى على السطر
+   * (`partnerItemCode`) عرضًا في مستنده (§10 ‹257›).
    */
   async function handleLineLookup(kind, value, index, columnKey = 'barcode') {
     if (kind !== 'item') return;
     try {
-      const item = columnKey === 'sku'
+      let item = columnKey === 'sku'
         ? (await getItem(value)) || (await lookupByBarcode(value))
         : await lookupByBarcode(value);
+      let viaPartner = null;
+      if (!item) {
+        const header = doc?.header || {};
+        const partner = header.supplierCode
+          ? { partnerType: 'supplier', partnerCode: header.supplierCode }
+          : header.customerCode
+            ? { partnerType: 'customer', partnerCode: header.customerCode }
+            : null;
+        if (partner) {
+          const hit = await lookupItemByPartnerCode({ ...partner, code: value }).catch(() => null);
+          if (hit) {
+            item = hit.item;
+            viaPartner = hit.entry;
+          }
+        }
+      }
       if (!item) {
         flash(
           columnKey === 'sku'
-            ? `⚠️ الكود ${value} غير معرّف في الماستر — أكمل البند يدويًّا وسجِّل الصنف لاحقًا.`
+            ? `⚠️ الكود ${value} غير معرّف في الماستر ولا في كتالوج الطرف — أكمل البند يدويًّا وسجِّل الصنف لاحقًا.`
             : `⚠️ الباركود ${value} غير معرّف في الماستر — أكمل البند يدويًّا وسجِّل الصنف لاحقًا.`,
           'err'
         );
@@ -260,12 +282,17 @@ export default function DocumentEngine() {
         if (!current) return d;
         const { line, filled } = applyItemToLine(current, item);
         const sku = canonicalLineSku(line, item);
-        if (filled.length === 0 && sku === String(line.sku ?? '')) return d;
-        const lines = d.lines.map((l, i) => (i === index ? { ...line, sku } : l));
+        if (filled.length === 0 && sku === String(line.sku ?? '') && !viaPartner) return d;
+        const next = { ...line, sku };
+        // كود الطرف يظهر في مستنده بينما يبقى التخزين على الهويّة الداخليّة.
+        if (viaPartner) next.partnerItemCode = viaPartner.partnerItemCode;
+        const lines = d.lines.map((l, i) => (i === index ? next : l));
         return { ...d, lines };
       });
       setDirty(true);
-      flash(`☁️ ${item.nameAr} — استُدعي من الماستر.`);
+      flash(viaPartner
+        ? `☁️ ${item.nameAr} — استُبين من كود الطرف ${viaPartner.partnerItemCode} (التخزين على ${item.sku}).`
+        : `☁️ ${item.nameAr} — استُدعي من الماستر.`);
     } catch {
       // شبكة/صلاحية — لا نعطّل الإدخال اليدوي.
       flash('تعذّر سؤال الماستر — أكمل يدويًّا.', 'err');

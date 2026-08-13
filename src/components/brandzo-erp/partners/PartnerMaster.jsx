@@ -7,6 +7,7 @@ import {
   unarchivePartner,
 } from '../../../services/partnerService.js';
 import { canImport, analyzePartnersFile, commitPartnersImport } from '../../../services/partners/partnersImportService.js';
+import { setConnectedPartner } from '../../../services/partners/itemPartnerCatalogService.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
@@ -273,6 +274,7 @@ function PartnerForm({ kind, cfg, mode, row, onSaved, onCancel }) {
   const [form, setForm] = useState(() => ({
     code: row?.code || '',
     nameAr: row?.nameAr || '',
+    connectedPartnerCode: row?.connectedPartnerCode || '',
     ...Object.fromEntries(FORM_FIELDS.map((f) => [f.key, row?.[f.key] ?? ''])),
   }));
   const [busy, setBusy] = useState(false);
@@ -287,15 +289,22 @@ function PartnerForm({ kind, cfg, mode, row, onSaved, onCancel }) {
     if (!form.nameAr.trim()) return setErr('الاسم مطلوب');
     setBusy(true);
     try {
+      const savedCode = form.code.trim().toUpperCase();
       if (mode === 'create') {
         await createPartner(kind, form);
-        onSaved?.(form.code.trim().toUpperCase());
       } else {
         const patch = { ...form };
         delete patch.code;
+        delete patch.connectedPartnerCode; // يمرّ بمسار المرآتين لا بالتعديل العامّ
         await updatePartner(kind, form.code, patch);
-        onSaved?.(form.code);
       }
+      // الربط المتبادل (SAP-2 · ف‑٧): يُكتب في البطاقتين معًا أو لا يُكتب.
+      const prevLink = String(row?.connectedPartnerCode ?? '').trim().toUpperCase();
+      const nextLink = String(form.connectedPartnerCode ?? '').trim().toUpperCase();
+      if (prevLink !== nextLink) {
+        await setConnectedPartner(kind, savedCode, nextLink);
+      }
+      onSaved?.(savedCode);
     } catch (e2) {
       setErr(e2?.message ?? 'تعذّر الحفظ');
     } finally {
@@ -325,6 +334,16 @@ function PartnerForm({ kind, cfg, mode, row, onSaved, onCancel }) {
             />
           </FieldWrap>
         ))}
+        {/* SAP-2 (ف‑٧): الكيان الواحد مورّدًا وعميلًا — بطاقتان مترابطتان لا بطاقة مخلوطة */}
+        <FieldWrap label={kind === 'supplier' ? 'بطاقة العميل المرتبطة (الكيان نفسه)' : 'بطاقة المورّد المرتبطة (الكيان نفسه)'}>
+          <input
+            className="o_input"
+            placeholder={kind === 'supplier' ? 'رمز العميل — إن كان الكيان عميلًا أيضًا' : 'رمز المورّد — إن كان الكيان مورّدًا أيضًا'}
+            value={form.connectedPartnerCode}
+            onChange={(e) => set('connectedPartnerCode', e.target.value)}
+            style={{ direction: 'ltr', textAlign: 'right' }}
+          />
+        </FieldWrap>
       </div>
       <div className="o_form_actions">
         <button type="button" className="btn btn-secondary" onClick={onCancel}>إلغاء</button>

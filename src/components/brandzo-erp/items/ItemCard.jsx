@@ -30,11 +30,29 @@ import {
 import { listenDocumentsByTypes } from '../../../services/documents/documentsService.js';
 import { measureDocument } from '../../../services/documents/openBox.js';
 import { fefoSort, expiryStatus } from '../../../services/balances/balanceKey.js';
+import { PARTNER_TYPES } from '../../../services/partners/itemPartnerCatalog.js';
+import {
+  subscribeCatalogForItem,
+  upsertCatalogEntry,
+  canEditCatalog,
+} from '../../../services/partners/itemPartnerCatalogService.js';
 import Icon from '../../ui/Icon.jsx';
 import { int, num } from '../../odoo/format.js';
 
-export default function ItemCard({ item, items, balances, onEdit, onClose }) {
+export default function ItemCard({ item, items, balances, me, onEdit, onClose }) {
   const [poDocs, setPoDocs] = useState([]);
+  // كتالوج الطرف‑الصنف (SAP-2 · ف‑٦): أكواد الموردين والعملاء لهذا الصنف.
+  const [catalogEntries, setCatalogEntries] = useState([]);
+  const [catalogNote, setCatalogNote] = useState('');
+
+  useEffect(() => {
+    return subscribeCatalogForItem(
+      item?.sku,
+      setCatalogEntries,
+      // قاعدة المجموعة قد لا تكون منشورة بعد (قرار‑٥) — يُقال ذلك ولا يُخفى.
+      () => setCatalogNote('تعذّرت قراءة الكتالوج — القاعدة لم تُنشر بعد (قرار‑٥).')
+    );
+  }, [item?.sku]);
 
   // أوامر الشراء وحدها — مصدر «المطلوب». الاشتراك حيّ كبقيّة الشاشة.
   useEffect(() => {
@@ -170,19 +188,49 @@ export default function ItemCard({ item, items, balances, onEdit, onClose }) {
         )}
       </Section>
 
-      {/* ═══ الموردون والعملاء (ف‑٥ — يكتمل بكتالوج SAP-2) ═══ */}
-      <Section title="الموردون والعملاء">
-        {item.supplier ? (
-          <p style={{ margin: 0, fontSize: 'var(--o-font-size-sm)' }}>
-            المورّد (من شيت الأصناف): <strong>{item.supplier}</strong>
+      {/* ═══ الموردون والعملاء (ف‑٥ · كتالوج SAP-2) ═══ */}
+      <Section title="الموردون والعملاء وأكوادهم للصنف">
+        {catalogNote && (
+          <p style={{ margin: '0 0 8px', fontSize: '11px', color: 'var(--o-text-warning, #8a6d1b)' }}>{catalogNote}</p>
+        )}
+        {catalogEntries.length === 0 ? (
+          <p style={{ margin: 0, fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+            لا كود طرفٍ مسجّلًا لهذا الصنف بعد.
+            {item.supplier ? ` (مورّد الشيت: ${item.supplier})` : ''}
           </p>
         ) : (
-          <p style={{ margin: 0, fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
-            لا مورّد مسجّل في شيت الأصناف.
-          </p>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--o-font-size-xs)' }}>
+              <thead>
+                <tr style={{ textAlign: 'right', color: 'var(--o-main-color-muted)' }}>
+                  <th style={{ padding: '4px 8px' }}>الطرف</th>
+                  <th style={{ padding: '4px 8px' }}>النوع</th>
+                  <th style={{ padding: '4px 8px' }}>كوده للصنف</th>
+                  <th style={{ padding: '4px 8px' }}>وحدته</th>
+                </tr>
+              </thead>
+              <tbody>
+                {catalogEntries.map((e) => (
+                  <tr key={e.id} style={{ borderTop: '1px solid var(--o-border-color, #e5e5ea)' }}>
+                    <td style={{ padding: '4px 8px' }}>
+                      <span style={{ fontFamily: 'monospace', direction: 'ltr', display: 'inline-block' }}>{e.partnerCode}</span>
+                      {e.partnerName && <span style={{ marginInlineStart: '6px', color: 'var(--o-main-color-muted)' }}>{e.partnerName}</span>}
+                    </td>
+                    <td style={{ padding: '4px 8px' }}>{PARTNER_TYPES[e.partnerType] || e.partnerType}</td>
+                    <td style={{ padding: '4px 8px', fontFamily: 'monospace', direction: 'ltr' }}>{e.partnerItemCode}</td>
+                    <td style={{ padding: '4px 8px' }}>
+                      {e.uom || '—'}
+                      {e.conversionFactor ? ` × ${num(e.conversionFactor)}` : ''}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
+        {canEditCatalog(me?.role) && <CatalogEntryForm sku={item.sku} />}
         <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
-          أكواد الطرف للصنف (كود المورّد/العميل) تأتي مع كتالوج الطرف‑الصنف — لا يُخترع كودٌ قبله.
+          التخزين على الهويّة الداخليّة دائمًا — كود الطرف عرضٌ في مستنده ووسيلة بحثٍ في بنوده.
         </p>
       </Section>
 
@@ -220,6 +268,72 @@ export default function ItemCard({ item, items, balances, onEdit, onClose }) {
         )}
       </Section>
     </div>
+  );
+}
+
+/**
+ * إدخال كود طرفٍ للصنف — للمديرَين (تطابق قاعدة المجموعة).
+ * الإلزاميّ ثلاثة فقط (§10.2 ‹251›): النوع والرمز وكوده للصنف.
+ * الخدمة ترفض طرفًا أو صنفًا لا وجود له — الكتالوج يربط ولا يُنشئ.
+ */
+function CatalogEntryForm({ sku }) {
+  const [form, setForm] = useState({ partnerType: 'supplier', partnerCode: '', partnerItemCode: '' });
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState(null); // { kind: 'ok'|'err', text }
+
+  async function submit(e) {
+    e.preventDefault();
+    setMsg(null);
+    setBusy(true);
+    try {
+      await upsertCatalogEntry({ ...form, sku });
+      setMsg({ kind: 'ok', text: `سُجّل كود ${form.partnerCode} للصنف.` });
+      setForm((f) => ({ ...f, partnerCode: '', partnerItemCode: '' }));
+    } catch (err) {
+      setMsg({ kind: 'err', text: err?.message ?? 'تعذّر الحفظ' });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', marginTop: '10px' }}>
+      <select
+        className="o_input"
+        style={{ width: 'auto' }}
+        value={form.partnerType}
+        onChange={(e) => setForm((f) => ({ ...f, partnerType: e.target.value }))}
+        aria-label="نوع الطرف"
+      >
+        {Object.entries(PARTNER_TYPES).map(([value, label]) => (
+          <option key={value} value={value}>{label}</option>
+        ))}
+      </select>
+      <input
+        className="o_input"
+        style={{ width: '150px', direction: 'ltr', textAlign: 'right' }}
+        placeholder="رمز الطرف (BP)"
+        value={form.partnerCode}
+        onChange={(e) => setForm((f) => ({ ...f, partnerCode: e.target.value }))}
+        aria-label="رمز الطرف"
+      />
+      <input
+        className="o_input"
+        style={{ width: '170px', direction: 'ltr', textAlign: 'right' }}
+        placeholder="كوده لهذا الصنف"
+        value={form.partnerItemCode}
+        onChange={(e) => setForm((f) => ({ ...f, partnerItemCode: e.target.value }))}
+        aria-label="كود الطرف للصنف"
+      />
+      <button type="submit" className="btn btn-secondary btn-sm" disabled={busy}>
+        {busy ? 'جارٍ الحفظ…' : 'تسجيل الكود'}
+      </button>
+      {msg && (
+        <span style={{ fontSize: '11px', color: msg.kind === 'err' ? 'var(--o-text-danger, #b3261e)' : 'var(--o-text-success, #1a7f37)' }}>
+          {msg.text}
+        </span>
+      )}
+    </form>
   );
 }
 
