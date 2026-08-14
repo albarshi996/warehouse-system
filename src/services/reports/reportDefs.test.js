@@ -31,13 +31,13 @@ test('★★ وكلٌّ منها يعمل على بياناتٍ فارغة ول�
   }
 });
 
-test('★ الدفعات الثلاث: ٦ مخزون + ٦ حسابات + ٥ تشغيليّة', () => {
+test('★ الدفعات الثلاث: ٦ مخزون + ٦ حسابات + ٧ تشغيليّة', () => {
   assert.equal(STOCK_REPORTS.length, 6, 'ر‑١: تقارير المخزون الستّة');
   assert.equal(ACCOUNT_REPORTS.length, 6, 'ر‑٢: تقارير الحسابات الستّة');
   // SAP-14 (طلب المالك 2026-08-14): دفعةٌ ثالثة تُغلق ف‑٤٧ — البيع والفروع
   // والنقل والمندوبون وسجلّ المستندات الجامع، ويحرسها `reportCoverage`.
-  assert.equal(OPERATIONS_REPORTS.length, 5, 'ر‑٣: التقارير التشغيليّة الخمسة');
-  assert.equal(reportIds().length, 17);
+  assert.equal(OPERATIONS_REPORTS.length, 7, 'ر‑٣: التقارير التشغيليّة السبعة');
+  assert.equal(reportIds().length, 19);
 });
 
 test('★ وأوّل تقارير المخزون كشف حركة الصنف (نصّ الخطة)', () => {

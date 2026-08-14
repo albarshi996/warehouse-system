@@ -15,6 +15,7 @@
  * منطق خالص: بلا Firestore وبلا DOM.
  */
 import { SALES_DOC_TYPES } from '../items/uomWiring.js';
+import { forwardTrace, reverseTrace, supplier360 } from './traceReports.js';
 
 const str = (v) => String(v ?? '').trim();
 const num = (v) => Number(v) || 0;
@@ -241,10 +242,92 @@ const documentsRegister = {
     }),
 };
 
+/* ═══════════ ٦. تتبّع الدفعة أمامًا وخلفًا (SR-66/67 · ف‑٣٣) ═══════════ */
+
+/**
+ * التتبّع تقريرٌ لا شاشةٌ مستقلّة: يُدخل المستخدم الصنف والدفعة والاتّجاه،
+ * فيرى الرحلة خطوةً خطوة بمستنداتها. والحكم كلّه في `traceReports.js`
+ * الخالص المُختبَر — هنا عرضُه في مركز التقارير مع بقيّة إخوته.
+ */
+const batchTrace = {
+  id: 'batch-trace',
+  titleAr: 'تتبّع الدفعة (أمامًا وخلفًا)',
+  group: 'العمليات',
+  roles: OPS_ROLES,
+  note: 'اكتب الصنف (والدفعة إن شئت) واختر الاتّجاه: أمامًا من الاستلام إلى العميل، وخلفًا من العميل إلى المورّد.',
+  filters: [
+    { key: 'sku', label: 'الصنف', kind: 'text' },
+    { key: 'batch', label: 'الدفعة', kind: 'text' },
+    { key: 'direction', label: 'الاتّجاه', kind: 'select', options: ['أمامًا', 'خلفًا'] },
+  ],
+  columns: [
+    { key: 'step', label: '#', kind: 'number' },
+    { key: 'date', label: 'التاريخ', kind: 'date' },
+    { key: 'docNumber', label: 'المستند', kind: 'text' },
+    { key: 'docType', label: 'النوع', kind: 'text' },
+    { key: 'qty', label: 'الكمّيّة', kind: 'qty' },
+    { key: 'from', label: 'من', kind: 'text' },
+    { key: 'to', label: 'إلى', kind: 'text' },
+    { key: 'party', label: 'الطرف', kind: 'text' },
+    { key: 'batch', label: 'الدفعة', kind: 'text' },
+  ],
+  rows: (data, values = {}) => {
+    const key = { sku: str(values.sku), batch: str(values.batch) };
+    if (!key.sku && !key.batch) return []; // بلا صنفٍ ولا دفعة: لا رحلة تُتبَّع
+    const trace = str(values.direction) === 'خلفًا'
+      ? reverseTrace(data?.moves || [], key)
+      : forwardTrace(data?.moves || [], key);
+    return trace.steps.map((s, i) => ({ ...s, step: i + 1 }));
+  },
+};
+
+/* ═══════════ ٧. المورّد 360° (SR-65 · ف‑٣٢) ═══════════ */
+
+const supplierScore = {
+  id: 'supplier-360',
+  titleAr: 'المورّدون 360° (زمن التوريد والرفض والالتزام)',
+  group: 'العمليات',
+  roles: ['warehouse_manager', 'purchase_officer', 'finance_manager'],
+  note: 'المؤشّرات الثلاثة محسوبةٌ من المستندات — ومورّدٌ بلا مستندات مؤشّراته «—» لا أصفارٌ كاذبة.',
+  filters: [
+    { key: 'partnerCode', label: 'المورّد', kind: 'text' },
+  ],
+  columns: [
+    { key: 'partnerCode', label: 'المورّد', kind: 'text' },
+    { key: 'orderCount', label: 'أوامر الشراء', kind: 'number', sum: true },
+    { key: 'receiptCount', label: 'الاستلامات', kind: 'number', sum: true },
+    { key: 'avgLeadDays', label: 'متوسّط زمن التوريد (يوم)', kind: 'number' },
+    { key: 'rejectionRate', label: 'نسبة الرفض ٪', kind: 'number' },
+    { key: 'fulfilmentRate', label: 'نسبة الالتزام ٪', kind: 'number' },
+    { key: 'returnCount', label: 'المرتجعات', kind: 'number', sum: true },
+  ],
+  rows: (data) => {
+    // كلّ مورّدٍ ورد في المستندات — لا قائمةٌ اسميّة تُستورد (§16.6 ‹597›).
+    const codes = new Set();
+    for (const d of data?.documents || []) {
+      const code = str(head(d).supplierCode || head(d).supplier).toUpperCase();
+      if (code) codes.add(code);
+    }
+    return [...codes].map((code) => {
+      const s = supplier360(code, data);
+      return {
+        partnerCode: code,
+        ...s.metrics,
+        avgLeadDays: s.metrics.avgLeadDays ?? '—',
+        rejectionRate: s.metrics.rejectionRate ?? '—',
+        fulfilmentRate: s.metrics.fulfilmentRate ?? '—',
+        returnCount: s.returns.length,
+      };
+    });
+  },
+};
+
 export const OPERATIONS_REPORTS = [
   salesReport,
   branchReport,
   transferReport,
   repReport,
   documentsRegister,
+  batchTrace,
+  supplierScore,
 ];

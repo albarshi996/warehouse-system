@@ -71,12 +71,12 @@ test('★★ سجلّ المستندات يغطّي كلّ نوعٍ جاهزٍ �
   assert.deepEqual(missing, [], `أنواعٌ غائبة عن سجلّ المستندات: ${missing.join(' · ')}`);
 });
 
-test('★ التقارير التشغيليّة الخمسة مسجَّلةٌ في السجلّ العامّ بلا تكرار معرّف', () => {
+test('★ التقارير التشغيليّة السبعة مسجَّلةٌ في السجلّ العامّ بلا تكرار معرّف', () => {
   for (const def of OPERATIONS_REPORTS) {
     assert.equal(REPORTS[def.id], def, `${def.id} مسجَّل`);
     assert.ok(def.titleAr && def.group && def.roles?.length, `${def.id} مكتمل الوصف`);
   }
-  assert.equal(OPERATIONS_REPORTS.length, 5);
+  assert.equal(OPERATIONS_REPORTS.length, 7);
 });
 
 test('★ تقرير المندوبين يحسب العهدة: المحمَّل − المُباع − المُرجَع', () => {
