@@ -2,13 +2,18 @@
 
 import { documentScreenUrl, documentTimestamp } from '../documentNavigator.js';
 
+/**
+ * `carriesQuantity` (SAP-6 · §13 ‹348›): «لا توحي بطاقة مرجعية بأنها رحّلت
+ * كمية» — المرجع علاقةُ عِلمٍ لا ترحيل، فلا يُعرض له رقمُ كمّيّةٍ أبدًا
+ * ولو سُجّل في الرابط، وبطاقته تُرسم متقطّعةً مميَّزة.
+ */
 export const RELATION_PRESENTATION = Object.freeze({
-  BASE: { label: 'أساس مباشر', color: 'var(--o-brand-primary)', lineStyle: 'solid' },
-  TARGET: { label: 'نتيجة مباشرة', color: 'var(--o-action)', lineStyle: 'solid' },
-  REFERENCE: { label: 'مرجع', color: 'var(--o-text-info)', lineStyle: 'dashed' },
-  RETURN: { label: 'مرتجع', color: 'var(--o-text-warning)', lineStyle: 'dashed' },
-  REVERSAL: { label: 'عكس أثر', color: 'var(--o-gray-700)', lineStyle: 'dotted' },
-  CORRECTION: { label: 'تصحيح', color: 'var(--o-community-primary)', lineStyle: 'dotted' },
+  BASE: { label: 'أساس مباشر', color: 'var(--o-brand-primary)', lineStyle: 'solid', carriesQuantity: true },
+  TARGET: { label: 'نتيجة مباشرة', color: 'var(--o-action)', lineStyle: 'solid', carriesQuantity: true },
+  REFERENCE: { label: 'مرجع', color: 'var(--o-text-info)', lineStyle: 'dashed', carriesQuantity: false },
+  RETURN: { label: 'مرتجع', color: 'var(--o-text-warning)', lineStyle: 'dashed', carriesQuantity: true },
+  REVERSAL: { label: 'عكس أثر', color: 'var(--o-gray-700)', lineStyle: 'dotted', carriesQuantity: true },
+  CORRECTION: { label: 'تصحيح', color: 'var(--o-community-primary)', lineStyle: 'dotted', carriesQuantity: true },
 });
 
 function text(value) {
@@ -103,6 +108,7 @@ function finalizeEdge(group, direction, documentsById, currentKey, basePath) {
     label: presentation.label,
     color: presentation.color,
     lineStyle: presentation.lineStyle,
+    carriesQuantity: presentation.carriesQuantity !== false,
     node: graphNode(otherEndpoint, documentsById, currentKey, basePath),
     relationCount: group.relations.length,
     linkedQuantity: group.linkedQuantity || null,
@@ -177,6 +183,9 @@ export function buildDocumentRelationshipGraph({
 }
 
 export function relationshipMetric(edge) {
+  // §13 ‹348› (SAP-6): البطاقة المرجعيّة لا توحي بأنّها رحّلت كمّيّة —
+  // ولو حمل الرابط رقمًا مسجَّلًا، فهو لا يُعرض هنا.
+  if (edge?.carriesQuantity === false) return 'مرجع — لا ترحيل كمّيّة';
   const parts = [];
   if (edge?.linkedQuantity) {
     parts.push(`${edge.linkedQuantity}${edge.mixedUom ? ' بوحدات متعددة' : edge.uom ? ` ${edge.uom}` : ''}`);
@@ -184,4 +193,23 @@ export function relationshipMetric(edge) {
   if (edge?.linkedValue) parts.push(`${edge.linkedValue} د.ل`);
   if (edge?.lineCount) parts.push(`${edge.lineCount} سطر`);
   return parts.join(' · ') || 'على مستوى المستند';
+}
+
+/**
+ * عرضُ الخريطة تحت مفتاح «إظهار المراجع» (SAP-6 · المرجع ‹1735›):
+ * المفتاح مُطفأً يُخفي حوافّ REFERENCE من الاتّجاهين ويُحصي المخفيّ —
+ * فالمستخدم يعرف أنّ هناك مراجعَ مطويّةً ولا يظنّها غير موجودة.
+ */
+export function graphView(graph, { showReferences = true } = {}) {
+  const incoming = graph?.incoming ?? [];
+  const outgoing = graph?.outgoing ?? [];
+  if (showReferences) return { incoming, outgoing, hiddenReferences: 0 };
+  const keep = (edge) => edge.linkType !== 'REFERENCE';
+  const shownIn = incoming.filter(keep);
+  const shownOut = outgoing.filter(keep);
+  return {
+    incoming: shownIn,
+    outgoing: shownOut,
+    hiddenReferences: incoming.length - shownIn.length + (outgoing.length - shownOut.length),
+  };
 }

@@ -5,6 +5,7 @@ import {
   RELATION_PRESENTATION,
   buildDocumentRelationshipGraph,
   relationshipMetric,
+  graphView,
 } from '../services/documents/documentRelationshipGraph.js';
 import {
   compatibleRelationshipNeighborhood,
@@ -102,4 +103,53 @@ test('المدخل الفارغ آمن ولا يخترع عقدًا أو علا�
   assert.deepEqual(buildDocumentRelationshipGraph(), {
     current: null, incoming: [], outgoing: [], relationCount: 0, nodeCount: 0,
   });
+});
+
+/* ═══════════ SAP-6: المرجع لا يرحّل كمّيّة، والمفتاح يطويه ولا يُخفيه صامتًا ═══════════ */
+
+test('★★ §13 ‹348›: البطاقة المرجعيّة لا توحي بكمّيّة — ولو حمل رابطها رقمًا مسجَّلًا', () => {
+  const relations = [
+    link(
+      { document: pr, lineId: 'pr-line-1' },
+      { document: po, lineId: 'po-line-1' },
+      'REFERENCE', 55, { uom: 'قطعة' },
+    ),
+  ];
+  const graph = buildDocumentRelationshipGraph({ current: po, relations, documents: [pr] });
+  const ref = graph.incoming[0];
+  assert.equal(ref.linkedQuantity, 55); // الرقم مسجَّل في الرابط فعلًا…
+  assert.equal(ref.carriesQuantity, false);
+  assert.equal(relationshipMetric(ref), 'مرجع — لا ترحيل كمّيّة'); // …ولا يُعرض
+  // والأساس المباشر يبقى يعرض كمّيّته — التمييز للمرجع وحده.
+  const base = buildDocumentRelationshipGraph({
+    current: po,
+    relations: [link(
+      { document: pr, lineId: 'pr-line-1' },
+      { document: po, lineId: 'po-line-1' },
+      'BASE', 55, { uom: 'قطعة' },
+    )],
+    documents: [pr],
+  }).incoming[0];
+  assert.equal(base.carriesQuantity, true);
+  assert.match(relationshipMetric(base), /55/);
+});
+
+test('★ المرجع ‹1735›: مفتاح «إظهار المراجع» يطوي حوافّ REFERENCE ويُحصي المطويّ', () => {
+  const otherPr = { id: 'pr-2', type: 'PR', number: 'PR-2', state: 'approved' };
+  const relations = [
+    link({ document: pr }, { document: po }, 'BASE'),
+    link({ document: otherPr }, { document: po }, 'REFERENCE'),
+    link({ document: po }, { document: grn1 }, 'TARGET'),
+  ];
+  const graph = buildDocumentRelationshipGraph({ current: po, relations, documents: [pr, otherPr, grn1] });
+
+  const shown = graphView(graph, { showReferences: true });
+  assert.equal(shown.incoming.length, 2);
+  assert.equal(shown.hiddenReferences, 0);
+
+  const folded = graphView(graph, { showReferences: false });
+  assert.equal(folded.incoming.length, 1);
+  assert.equal(folded.incoming[0].linkType, 'BASE');
+  assert.equal(folded.outgoing.length, 1); // TARGET لا يُمسّ
+  assert.equal(folded.hiddenReferences, 1); // المطويّ يُحصى ولا يختفي صامتًا
 });

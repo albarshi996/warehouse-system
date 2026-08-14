@@ -32,6 +32,7 @@ import {
   derivationTargets,
   vanIdentityProblem,
 } from './chain.js';
+import { CHAINS, STANDALONE_TYPES } from './chain.js'; // SAP-6: حارس التغطية
 import { getSchema, GOVERNED_FORMS, readyTypes } from './schemas/index.js';
 import { primaryParentType } from './schemaUtils.js';
 import { estimatedTotal, lineEstimate, budgetWarnings } from './schemas/pr.js';
@@ -975,4 +976,36 @@ test('★★ مركز التكلفة يُورَّث عبر السلسلة كلّ
   // والغائب يبقى غائبًا — لا اختراع بُعدٍ لمستندٍ لم يُدخله أحد.
   const bare = deriveDocument({ ...pr, header: { warehouse: 'MAIN' } }, 'PO');
   assert.equal(bare.header.costCenter, undefined);
+});
+
+/* ═══════════ SAP-6: لا نوعَ خارج الخريطة بلا سببٍ مكتوب (§11.4 ‹282›) ═══════════ */
+
+test('★★ SAP-6: كلّ نوع مستند إمّا في سلسلةٍ وإمّا في سجلّ المستقلّات بسببٍ مكتوب', () => {
+  const chained = new Set(CHAINS.flat());
+  for (const type of readyTypes()) {
+    const inChain = chained.has(type);
+    const standalone = Object.prototype.hasOwnProperty.call(STANDALONE_TYPES, type);
+    assert.ok(
+      inChain || standalone,
+      `«${type}» خارج خريطة العلاقات بلا سببٍ مكتوب — أضِفه لسلسلةٍ أو لسجلّ STANDALONE_TYPES بسببه`
+    );
+    if (standalone) {
+      assert.ok(
+        String(STANDALONE_TYPES[type]).trim().length >= 20,
+        `سبب استقلال «${type}» قصيرٌ حدّ الفراغ — السبب المكتوب جوهر القاعدة`
+      );
+      assert.ok(!inChain, `«${type}» في سلسلةٍ وفي سجلّ المستقلّات معًا — تناقض`);
+    }
+  }
+});
+
+test('SAP-6: عائلة البيع من المركبة داخل الخريطة بسلسلةٍ معرَّفة — ف‑٤٦', () => {
+  const chained = new Set(CHAINS.flat());
+  for (const type of ['VLD', 'VSI', 'VRT', 'VSR']) {
+    assert.ok(chained.has(type), `${type} يجب أن يكون في VAN_CHAIN`);
+  }
+  // وعائلة الأمانة مستقلّة بسببها المكتوب — تدفّق التسوية القائم لا اشتقاق موازٍ.
+  for (const type of ['VCD', 'VCS', 'VCR', 'CRN']) {
+    assert.ok(STANDALONE_TYPES[type], `${type} يحتاج سببًا مكتوبًا`);
+  }
 });

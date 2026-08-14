@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import Icon from '../../ui/Icon.jsx';
 import { getSchema } from '../../../services/documents/schemas/index.js';
@@ -6,6 +6,7 @@ import { getState } from '../../../services/documents/states.js';
 import {
   buildDocumentRelationshipGraph,
   relationshipMetric,
+  graphView,
 } from '../../../services/documents/documentRelationshipGraph.js';
 
 function formatDate(value) {
@@ -16,13 +17,19 @@ function formatDate(value) {
   });
 }
 
-function RelationshipNode({ node, current = false }) {
+function RelationshipNode({ node, current = false, reference = false }) {
   const schema = getSchema(node.type);
   const state = node.state ? getState(node.state) : null;
   const content = (
     <>
-      <span style={{ fontSize: '10px', color: 'var(--o-gray-500)', fontWeight: 700 }}>
+      <span style={{ display: 'flex', gap: '6px', alignItems: 'center', fontSize: '10px', color: 'var(--o-gray-500)', fontWeight: 700 }}>
         {schema?.titleAr || node.type}
+        {/* §13 ‹348› (SAP-6): البطاقة المرجعيّة موسومةٌ بعينها — علاقةُ عِلمٍ لا ترحيل */}
+        {reference && (
+          <span style={{ padding: '0 6px', borderRadius: '999px', border: '1px dashed var(--o-text-info)', color: 'var(--o-text-info)' }}>
+            مرجع
+          </span>
+        )}
       </span>
       <strong style={{ fontSize: '13px', color: 'var(--o-main-text-color)' }}>
         {node.number || 'مسودّة بلا رقم'}
@@ -37,7 +44,11 @@ function RelationshipNode({ node, current = false }) {
   const style = {
     display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0,
     padding: '10px 12px', borderRadius: 'var(--o-border-radius-lg)',
-    border: current ? '2px solid var(--o-brand-primary)' : '1px solid var(--o-border-color)',
+    border: current
+      ? '2px solid var(--o-brand-primary)'
+      : reference
+        ? '1px dashed var(--o-text-info)'
+        : '1px solid var(--o-border-color)',
     background: current ? 'var(--o-gray-100)' : 'var(--o-white)',
     textDecoration: 'none', boxShadow: '0 2px 8px rgba(31, 41, 55, 0.06)',
   };
@@ -72,7 +83,7 @@ function IncomingBranch({ edge }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(145px, 1fr) minmax(50px, 0.42fr)', alignItems: 'center' }}>
       <div style={{ minWidth: 0 }}>
-        <RelationshipNode node={edge.node} />
+        <RelationshipNode node={edge.node} reference={!edge.carriesQuantity} />
         <EdgeFacts edge={edge} />
       </div>
       <Connector edge={edge} />
@@ -85,7 +96,7 @@ function OutgoingBranch({ edge }) {
     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(50px, 0.42fr) minmax(145px, 1fr)', alignItems: 'center' }}>
       <Connector edge={edge} />
       <div style={{ minWidth: 0 }}>
-        <RelationshipNode node={edge.node} />
+        <RelationshipNode node={edge.node} reference={!edge.carriesQuantity} />
         <EdgeFacts edge={edge} />
       </div>
     </div>
@@ -96,7 +107,7 @@ function MobileBranch({ edge, title }) {
   return (
     <div style={{ borderInlineStart: `2px ${edge.lineStyle} ${edge.color}`, paddingInlineStart: '10px' }}>
       <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--o-gray-500)', marginBottom: '5px' }}>{title}</div>
-      <RelationshipNode node={edge.node} />
+      <RelationshipNode node={edge.node} reference={!edge.carriesQuantity} />
       <EdgeFacts edge={edge} />
     </div>
   );
@@ -113,6 +124,14 @@ export default function DocumentRelationshipMap({
     current, relations, documents, basePath,
   }), [current, relations, documents, basePath]);
 
+  // مفتاح «إظهار المراجع» (SAP-6 · المرجع ‹1735›): يطوي عقد REFERENCE ويُحصيها.
+  const [showReferences, setShowReferences] = useState(true);
+  const view = useMemo(() => graphView(graph, { showReferences }), [graph, showReferences]);
+  const hasReferences = useMemo(
+    () => [...(graph.incoming ?? []), ...(graph.outgoing ?? [])].some((e) => e.linkType === 'REFERENCE'),
+    [graph]
+  );
+
   if (!graph.current) return null;
 
   return (
@@ -127,9 +146,24 @@ export default function DocumentRelationshipMap({
             المصادر والنتائج والمراجع والمرتجعات والتصحيحات والعكس، منفصلة عن تنقّل النوع.
           </p>
         </div>
-        <span style={{ fontSize: '11px', color: 'var(--o-gray-500)' }}>
-          {graph.nodeCount} مستند · {graph.relationCount} علاقة
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          {hasReferences && (
+            <label className="o_toggle" style={{ fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={showReferences}
+                onChange={(e) => setShowReferences(e.target.checked)}
+              />
+              إظهار المراجع
+              {!showReferences && view.hiddenReferences > 0 && (
+                <span style={{ color: 'var(--o-text-info)' }}>({view.hiddenReferences} مطويّ)</span>
+              )}
+            </label>
+          )}
+          <span style={{ fontSize: '11px', color: 'var(--o-gray-500)' }}>
+            {graph.nodeCount} مستند · {graph.relationCount} علاقة
+          </span>
+        </div>
       </div>
 
       {!storedAvailable && (
@@ -150,23 +184,23 @@ export default function DocumentRelationshipMap({
           <div className="hidden lg:grid" dir="ltr" style={{ gridTemplateColumns: 'minmax(220px, 1fr) minmax(170px, 0.65fr) minmax(220px, 1fr)', alignItems: 'center' }}>
             <div style={{ display: 'grid', gap: '12px' }}>
               <div dir="rtl" style={{ fontSize: '11px', fontWeight: 700, color: 'var(--o-gray-500)' }}>المصادر والمراجع الواردة</div>
-              {graph.incoming.length
-                ? graph.incoming.map((edge) => <IncomingBranch key={edge.key} edge={edge} />)
+              {view.incoming.length
+                ? view.incoming.map((edge) => <IncomingBranch key={edge.key} edge={edge} />)
                 : <span dir="rtl" style={{ fontSize: '11px', color: 'var(--o-gray-500)' }}>لا مصدر وارد</span>}
             </div>
             <RelationshipNode node={graph.current} current />
             <div style={{ display: 'grid', gap: '12px' }}>
               <div dir="rtl" style={{ fontSize: '11px', fontWeight: 700, color: 'var(--o-gray-500)' }}>النتائج والعلاقات الصادرة</div>
-              {graph.outgoing.length
-                ? graph.outgoing.map((edge) => <OutgoingBranch key={edge.key} edge={edge} />)
+              {view.outgoing.length
+                ? view.outgoing.map((edge) => <OutgoingBranch key={edge.key} edge={edge} />)
                 : <span dir="rtl" style={{ fontSize: '11px', color: 'var(--o-gray-500)' }}>لا نتيجة صادرة</span>}
             </div>
           </div>
 
           <div className="grid gap-3 lg:hidden">
-            {graph.incoming.map((edge) => <MobileBranch key={edge.key} edge={edge} title="مصدر أو مرجع وارد" />)}
+            {view.incoming.map((edge) => <MobileBranch key={edge.key} edge={edge} title="مصدر أو مرجع وارد" />)}
             <RelationshipNode node={graph.current} current />
-            {graph.outgoing.map((edge) => <MobileBranch key={edge.key} edge={edge} title="نتيجة أو علاقة صادرة" />)}
+            {view.outgoing.map((edge) => <MobileBranch key={edge.key} edge={edge} title="نتيجة أو علاقة صادرة" />)}
           </div>
         </>
       )}
