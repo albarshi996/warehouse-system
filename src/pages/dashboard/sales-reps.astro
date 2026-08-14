@@ -1,0 +1,16 @@
+---
+/**
+ * إدارة المندوبين (SAP-21 · طلب المالك 2026-08-14).
+ * الماستر الذي تنبثق منه قوائم «المندوب» في المستندات (SAP-20) وتُنسب
+ * إليه الرحلات والعُهد. أمّا الفروع/المستودعات فشاشتها القائمة:
+ * /dashboard/warehouses — لا ازدواج.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import RepsManager from '../../components/brandzo-erp/field/RepsManager.jsx';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+---
+
+<DashboardLayout title="إدارة المندوبين" showGuide={false} light>
+  <RepsManager client:load />
+</DashboardLayout>

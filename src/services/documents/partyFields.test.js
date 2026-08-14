@@ -43,6 +43,9 @@ test('★ الخيارات من الماسترات — والمؤرشف لا ي�
   assert.deepEqual(partyOptions('customer', lists), [{ code: 'C1', name: 'عميل ليبيا' }]);
   assert.deepEqual(partyOptions('warehouse', lists), [{ code: 'E5', name: 'المستودع الرئيسي' }]);
   assert.deepEqual(partyOptions('rep', lists), [{ code: 'سالم', name: 'سالم' }], 'المندوب النشط وحده');
+  // صفوف ماستر المندوبين (SAP-21): بلا حقل role — النشط غير المؤرشف يظهر.
+  const master = { reps: [{ name: 'خالد', active: true }, { name: 'قديم', archived: true }] };
+  assert.deepEqual(partyOptions('rep', master), [{ code: 'خالد', name: 'خالد' }]);
   assert.deepEqual(partyOptions('vehicle', lists), [{ code: '12-3456', name: 'هايس' }]);
   assert.deepEqual(partyOptions('bogus', lists), []);
 });

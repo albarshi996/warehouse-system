@@ -48,7 +48,7 @@ import { listForCustomer, priceDocument } from '../../../services/pricing/priceL
 import { subscribePartners } from '../../../services/partnerService.js';
 import { subscribeWarehouses } from '../../../services/warehouseService.js';
 import { listenVehicles } from '../../../services/vehicles/vehiclesService.js';
-import { listUsers } from '../../../services/auth/usersService.js';
+import { subscribeReps } from '../../../services/field/repsService.js';
 import { listenPartnerLedger } from '../../../services/ledger/partnerLedgerService.js';
 import { creditCheck } from '../../../services/ledger/creditGuard.js';
 import { documentScreenUrl } from '../../../services/documentNavigator.js';
@@ -156,8 +156,9 @@ export default function DocumentEngine() {
   useEffect(() => subscribePartners('customer', setCustomers, () => setCustomers([])), []);
 
   // قوائم حقول الطرف (SAP-20 · طلب المالك): المورد والمخزن والمركبة والمندوب
-  // تُختار من قوائم النظام لا كتابةً حرّة. الفشل (كقارئ المندوبين المحصور
-  // بالمديرَين) ⇒ قائمةٌ فارغة ⇒ الحقل نصٌّ حرّ كسلوك اليوم — لا تعطيل.
+  // تُختار من قوائم النظام لا كتابةً حرّة. الفشل ⇒ قائمةٌ فارغة ⇒ الحقل
+  // نصٌّ حرّ كسلوك اليوم — لا تعطيل. والمندوبون من ماسترهم (SAP-21)
+  // المقروء لكلّ مصادَق — لا من دليل المستخدمين المحصور بالمديرَين.
   const [suppliers, setSuppliers] = useState([]);
   const [warehousesList, setWarehousesList] = useState([]);
   const [vehiclesList, setVehiclesList] = useState([]);
@@ -165,9 +166,7 @@ export default function DocumentEngine() {
   useEffect(() => subscribePartners('supplier', setSuppliers, () => setSuppliers([])), []);
   useEffect(() => subscribeWarehouses(setWarehousesList, () => setWarehousesList([])), []);
   useEffect(() => listenVehicles(setVehiclesList), []);
-  useEffect(() => {
-    listUsers().then(setRepsList).catch(() => setRepsList([]));
-  }, []);
+  useEffect(() => subscribeReps(setRepsList, () => setRepsList([])), []);
   const partyLists = useMemo(
     () => ({ suppliers, customers, warehouses: warehousesList, reps: repsList, vehicles: vehiclesList }),
     [suppliers, customers, warehousesList, repsList, vehiclesList]

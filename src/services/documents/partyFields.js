@@ -61,8 +61,10 @@ export function partyOptions(source, { suppliers = [], customers = [], warehouse
     case 'warehouse':
       return alive(warehouses).map((w) => ({ code: text(w.code || w.id), name: text(w.nameAr || w.name) }));
     case 'rep':
-      return reps
-        .filter((u) => u?.role === 'sales_rep' && u?.active !== false)
+      // المصدر ماستر المندوبين (SAP-21): صفوفه {name, active, archived} —
+      // ويقبل توافقًا صفوف دليل المستخدمين القديمة (فيها role).
+      return alive(reps)
+        .filter((u) => u?.active !== false && (u?.role ? u.role === 'sales_rep' : true))
         .map((u) => ({ code: text(u.name || u.email), name: text(u.name || u.email) }));
     case 'vehicle':
       return alive(vehicles).map((v) => ({ code: text(v.plate || v.plateNo || v.id), name: text(v.nameAr || v.model || '') }));
