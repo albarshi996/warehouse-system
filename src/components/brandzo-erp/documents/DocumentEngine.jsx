@@ -46,6 +46,9 @@ import { itemTypeMap, documentItemProblems, OWNERSHIP_DOC_TYPES } from '../../..
 import { listenPriceLists } from '../../../services/pricing/priceListService.js';
 import { listForCustomer, priceDocument } from '../../../services/pricing/priceListModel.js';
 import { subscribePartners } from '../../../services/partnerService.js';
+import { subscribeWarehouses } from '../../../services/warehouseService.js';
+import { listenVehicles } from '../../../services/vehicles/vehiclesService.js';
+import { listUsers } from '../../../services/auth/usersService.js';
 import { listenPartnerLedger } from '../../../services/ledger/partnerLedgerService.js';
 import { creditCheck } from '../../../services/ledger/creditGuard.js';
 import { documentScreenUrl } from '../../../services/documentNavigator.js';
@@ -151,6 +154,24 @@ export default function DocumentEngine() {
   // الكتابة اليدوية كما كانت. التدرّج نفسه: لا تعطيل بسبب غياب بيانات.
   useEffect(() => listenPriceLists(setPriceLists), []);
   useEffect(() => subscribePartners('customer', setCustomers, () => setCustomers([])), []);
+
+  // قوائم حقول الطرف (SAP-20 · طلب المالك): المورد والمخزن والمركبة والمندوب
+  // تُختار من قوائم النظام لا كتابةً حرّة. الفشل (كقارئ المندوبين المحصور
+  // بالمديرَين) ⇒ قائمةٌ فارغة ⇒ الحقل نصٌّ حرّ كسلوك اليوم — لا تعطيل.
+  const [suppliers, setSuppliers] = useState([]);
+  const [warehousesList, setWarehousesList] = useState([]);
+  const [vehiclesList, setVehiclesList] = useState([]);
+  const [repsList, setRepsList] = useState([]);
+  useEffect(() => subscribePartners('supplier', setSuppliers, () => setSuppliers([])), []);
+  useEffect(() => subscribeWarehouses(setWarehousesList, () => setWarehousesList([])), []);
+  useEffect(() => listenVehicles(setVehiclesList), []);
+  useEffect(() => {
+    listUsers().then(setRepsList).catch(() => setRepsList([]));
+  }, []);
+  const partyLists = useMemo(
+    () => ({ suppliers, customers, warehouses: warehousesList, reps: repsList, vehicles: vehiclesList }),
+    [suppliers, customers, warehousesList, repsList, vehiclesList]
+  );
 
   // دفتر الذمم (م٤-د): منه الرصيد الحقيقيّ. والفشل ⇒ سطورٌ فارغة ⇒ رصيدُ صفرٍ
   // ⇒ **لا منع** — نظامٌ يمنع بيعًا لأنّه يجهل رصيدًا يوقف تجارةً بلا سبب.
@@ -645,13 +666,14 @@ export default function DocumentEngine() {
                       onResolveParent={resolveParent}
                       onRequestCreate={requestCreateParent}
                       violation={violationFor(f, violations)}
+                      partyLists={partyLists}
                     />
                   ))}
                 </div>
                 {section.extraFields?.length > 0 && (
                   <div className="grid gap-4 mt-4 md:grid-cols-2">
                     {section.extraFields.map((f) => (
-                      <FieldInput key={f.key} field={f} doc={doc} disabled={!editable} onChange={patchHeader} onResolveParent={resolveParent} onRequestCreate={requestCreateParent} />
+                      <FieldInput key={f.key} field={f} doc={doc} disabled={!editable} onChange={patchHeader} onResolveParent={resolveParent} onRequestCreate={requestCreateParent} partyLists={partyLists} />
                     ))}
                   </div>
                 )}

@@ -5,7 +5,9 @@
  *          computed (محسوب — لا يُكتب) · identity (من الهوية — لا يُكتب)
  */
 import { fieldValue } from '../../../services/documents/schemaUtils.js';
+import { partyFieldFor, partyOptions, applyPartySelection } from '../../../services/documents/partyFields.js';
 import DocRefField from './DocRefField.jsx';
+import PartyField from './PartyField.jsx';
 
 const BASE =
   'w-full bg-chip border border-line rounded-lg px-3 py-2 text-sm text-ink ' +
@@ -13,8 +15,34 @@ const BASE =
 
 const READONLY = 'w-full bg-accent/10 border border-accent/30 rounded-lg px-3 py-2 text-sm text-accent font-bold';
 
-export default function FieldInput({ field, doc, onChange, disabled, violation, onResolveParent, onRequestCreate }) {
+export default function FieldInput({ field, doc, onChange, disabled, violation, onResolveParent, onRequestCreate, partyLists }) {
   const value = fieldValue(field, doc);
+
+  // حقل طرفٍ (SAP-20): مورد/عميل/مخزن/مندوب/مركبة يُختار من قوائم النظام
+  // — مركزيًّا بمفتاح الحقل لا بتعديل ٣٨ مخطّطًا. الاختيار يملأ الرمز
+  // والاسم معًا (ف‑٤٤)، والكتابة الحرّة تبقى توافقًا لطرفٍ لم يُسجَّل.
+  const party = field.kind === 'text' && partyLists ? partyFieldFor(field.key) : null;
+  if (party) {
+    const options = partyOptions(party.source, partyLists);
+    if (options.length) {
+      return (
+        <Wrap field={field} violation={violation}>
+          <PartyField
+            value={value}
+            options={options}
+            disabled={disabled}
+            violation={violation}
+            onType={(v) => onChange(field.key, v)}
+            onSelect={(option) => {
+              for (const patch of applyPartySelection(field.key, option)) {
+                onChange(patch.key, patch.value);
+              }
+            }}
+          />
+        </Wrap>
+      );
+    }
+  }
 
   // مرجع مستنديّ: تعرّفٌ تلقائيّ وربطٌ بالرقم (المحور ٦) — مكوّن مخصّص.
   if (field.kind === 'docref') {

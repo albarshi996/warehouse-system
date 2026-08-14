@@ -20,7 +20,7 @@ import {
 } from '../../../services/documents/documentsService.js';
 import { getSchema, GOVERNED_FORMS } from '../../../services/documents/schemas/index.js';
 import { getState, STATES } from '../../../services/documents/states.js';
-import { PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, TRANSFER_CHAIN, INTERNAL_PROCUREMENT_CHAIN } from '../../../services/documents/chain.js';
+import { PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, TRANSFER_CHAIN, INTERNAL_PROCUREMENT_CHAIN, VAN_CHAIN } from '../../../services/documents/chain.js';
 import {
   awaitingMyApproval,
   sortByUrgency,
@@ -157,6 +157,10 @@ export default function DocumentsInbox() {
     { title: 'المبيعات والصرف', icon: 'shoppingCart', types: [...OUTBOUND_CHAIN, 'POD'] },
     { title: 'الفوترة', icon: 'fileText', types: ['INV'] },
     { title: 'النقل بين المستودعات', icon: 'truck', types: TRANSFER_CHAIN },
+    // البيع من المركبة (SAP-20 · طلب المالك): كانت العائلة كلّها غائبةً عن
+    // «بدء مستند جديد» — فبدا كأنّ «لا مستند يعبّئ البضاعة من المخزن إلى
+    // المندوب» والمستند موجود: **أمر تحميل المركبة** (مخزن ← عهدة مندوب).
+    { title: 'البيع من المركبة', icon: 'car', types: [...VAN_CHAIN, 'CRN', 'VCD', 'VCS', 'VCR'] },
     { title: 'المرتجعات', icon: 'arrowLeftRight', types: RETURN_CHAIN },
     { title: 'الجرد', icon: 'clipboardList', types: COUNT_CHAIN },
     { title: 'التالف', icon: 'alertTriangle', types: ['DMG'] },
