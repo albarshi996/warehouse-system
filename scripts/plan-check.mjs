@@ -209,7 +209,12 @@ ${blocked.length ? blocked.map((t) => `- **${t.id}** — ${t.title} — _محج�
 
 ## على المالك
 ${pendingOwner.length ? pendingOwner.map((t) => `- **${t.id}** — ${t.title}${t.ifMissing ? ` _(إن لم يتوفّر: ${t.ifMissing})_` : ''}`).join('\n') : '_لا شيء معلّق على المالك._'}
-
+${plan.whereToFind?.length ? `
+## أين أجد ما بنيناه؟ (روابط البوابة)
+| الميزة | مكانها |
+|---|---|
+${plan.whereToFind.map((w) => `| ${w.what} | \`${w.path}\`${w.nav ? ` — ${w.nav}` : ''} |`).join('\n')}
+` : ''}
 ## القاعدة عند كلّ إغلاق مهمّة
 ١. حدّث حالة المهمّة و\`evidence.commit\` في \`${planFile}\`.
 ٢. \`${planCommand}\` — يُعيد توليد هذه البطاقة ويرفض الإغلاق بلا بيّنة.

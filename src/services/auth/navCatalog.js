@@ -70,9 +70,9 @@ export const NAV_GROUPS = [
       { path: '/dashboard/command-center', label: 'لوحة القيادة التشغيلية', icon: 'grid' },
       { path: '/dashboard/warehouses', label: 'المستودعات', icon: 'package' },
       { path: '/dashboard/stock-ledger', label: 'دفتر حركات المخزون', icon: 'clipboardList' },
-      // تقارير البيانات — موضعٌ ثانٍ لأمين المخزن ومسؤول المرتجعات: تقارير
+      // التقارير التفصيليّة — موضعٌ ثانٍ لأمين المخزن ومسؤول المرتجعات: تقارير
       // المخزون تخصّهما، وهما لا يريان مجموعة «التقارير». والصلاحية اتحادُ المواضع.
-      { path: '/dashboard/data-reports', label: 'تقارير البيانات', icon: 'barChart3', roles: ['storekeeper', 'return_manager'] },
+      { path: '/dashboard/data-reports', label: 'التقارير التفصيليّة', icon: 'barChart3', roles: ['storekeeper', 'return_manager'] },
       { path: '/dashboard/transfers', label: 'النقل بين المستودعات', icon: 'truck' },
       { path: '/dashboard/order-control', label: 'الرقابة على الطلبات', icon: 'clipboardList' },
       { path: '/dashboard/retail-hub', label: 'خريطة التجزئة', icon: 'mapPin' },
@@ -147,9 +147,10 @@ export const NAV_GROUPS = [
     emoji: '📊', icon: 'barChart3',
     items: [
       { path: '/dashboard/reports', label: 'مركز التقارير', icon: 'clipboardList', pinned: true },
-      // تقارير البيانات (ر‑٠): اثنا عشر تقريرًا على محرّكٍ واحد. صفحةٌ جديدة
-      // بجانب المركز القائم لا بدلًا منه — لا حذف ولا تغيير لأيّ URL.
-      { path: '/dashboard/data-reports', label: 'تقارير البيانات', icon: 'barChart3', roles: ['admin', 'warehouse_manager', 'storekeeper', 'inventory_auditor', 'finance_manager', 'purchase_officer', 'return_manager'] },
+      // تقارير البيانات: **تسعة عشر تقريرًا** على محرّكٍ واحد (٦ مخزون +
+      // ٦ حسابات + ٧ تشغيليّة بعد SAP-14). صفحةٌ بجانب المركز القائم لا
+      // بدلًا منه. ومشرف المبيعات أُضيف (تقريرا المندوبين والمبيعات له).
+      { path: '/dashboard/data-reports', label: 'التقارير التفصيليّة (19)', icon: 'barChart3', roles: ['admin', 'warehouse_manager', 'storekeeper', 'inventory_auditor', 'finance_manager', 'purchase_officer', 'return_manager', 'sales_supervisor'] },
       // دفتر الذمم وكشوف الحساب (م٤-هـ): للمديرَين والمالي والخزينة —
       // وللمندوب (CC-302): المحصِّلُ يُحاسَب على ذمم عملائه فيجب أن يراها قبل
       // أن يبيع (وهو نصّ فلسفة قاعدة partner_ledger نفسها: القراءة لكلّ مصادَق).
