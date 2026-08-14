@@ -17,7 +17,7 @@
  * منطق خالص: بلا Firestore وبلا DOM — يُختبر وحده (§22 ‹995›).
  */
 import { totalQty } from '../balances/balanceKey.js';
-import { totalReserved, totalAvailable } from '../ledger/reservations.js';
+import { totalReserved } from '../ledger/reservations.js';
 
 /** تطبيع كود الصنف — الصيغة القانونيّة الواحدة (نفس قاعدة معرّف الماستر). */
 export function normalizeItemCode(raw) {
@@ -123,19 +123,23 @@ export function orderedForItem(item, openRows) {
 }
 
 /**
- * الكمّيّات الأربع لبطاقة الصنف (§9.2 ‹191›): الموجود · المحجوز · المطلوب · المتاح.
- *
- * **المتاح هنا = الموجود − المحجوز** (معادلة النظام القائمة في
- * `reservations.js`). ضمّ «المطلوب» إلى المعادلة (§14 ‹356›) عملُ دفتر
- * المخزون في SAP-7 (ف‑١٧) — فلا يُستبق هنا برقمٍ لا مصدرَ دفتريّ له،
- * ويُعرض «المطلوب» رقمًا رابعًا مستقلًّا بمصدره.
+ * الكمّيّات الأربع لبطاقة الصنف (§9.2 ‹191›) بمعادلة §14 ‹356› حرفيًّا:
+ *   **المتاح = الموجود − المحجوز + المطلوب**
+ * اكتملت في SAP-7 بعد أن صار لـ«المطلوب» مصدرٌ حقيقيّ (`ledger/openDemand`:
+ * الرصيد المفتوح لأوامر الشراء ووجهات النقل). و`committedInTransit` نصيبُ
+ * طلبات النقل المفتوحة من المحجوز (§14 ‹368›: النقل المفتوح يحجز في مصدره
+ * ويطلب في وجهته ولا يمسّ الموجود). والمتاح السالب يُعلَن لا يُقصّ —
+ * فهو إنذارُ التزامٍ فوق الطاقة.
  */
-export function itemQuantities({ balances = [], ordered = 0 } = {}) {
+export function itemQuantities({ balances = [], ordered = 0, committedInTransit = 0 } = {}) {
+  const inStock = round(totalQty(balances));
+  const committed = round(totalReserved(balances) + (Number(committedInTransit) || 0));
+  const orderedQty = round(Number(ordered) || 0);
   return {
-    inStock: round(totalQty(balances)),
-    committed: round(totalReserved(balances)),
-    ordered: round(Number(ordered) || 0),
-    available: round(totalAvailable(balances)),
+    inStock,
+    committed,
+    ordered: orderedQty,
+    available: round(inStock - committed + orderedQty),
   };
 }
 

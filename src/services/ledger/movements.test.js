@@ -7,7 +7,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildMoves } from './movements.js';
+import { buildMoves, balanceDeltas } from './movements.js';
 
 
 /* ═══════════ نوع الصنف والوحدات في الدفتر (م٣-أ · م٣-ب) ═══════════ */
@@ -80,6 +80,23 @@ test('★ SAP-3: ختمٌ لوحدةٍ غير وحدة السطر لا يُعت�
   };
   const r = buildMoves(doc, { items });
   assert.equal(r.moves[0].qty, 72, 'معامل الصنف 24 — الختم البائت لا يلتصق');
+});
+
+test('★ SAP-7 ف‑١٨: موقع التخزين ينتقل من البند إلى الحركة إلى وجهة الرصيد — عرضًا لا مفتاحًا', () => {
+  const doc = {
+    id: 'PW1', type: 'PUTAWAY', number: 'PW-1',
+    header: { warehouse: 'E5' },
+    lines: [{ sku: 'A', qty: 12, batch: 'B1', bin: 'a-01-03' }],
+  };
+  const r = buildMoves(doc);
+  assert.equal(r.moves[0].bin, 'A-01-03', 'الحركة تعرف موقعها');
+  const { deltas } = balanceDeltas(r.moves);
+  const dest = deltas.find((d) => d.delta > 0);
+  const source = deltas.find((d) => d.delta < 0);
+  assert.equal(dest.bin, 'A-01-03', 'وجهة الرصيد تحمل الموقع');
+  assert.equal(source.bin, '', 'ومصدر النظام لا موقع له');
+  // المفتاح لم يتغيّر بنيويًّا: (صنف × مستودع × تشغيلة) بلا موقع — عمدًا.
+  assert.ok(!dest.id.includes('A-01-03'), 'الموقع ليس في مفتاح الرصيد');
 });
 
 test('★ الخدمة تخرج من القيد وتُسجَّل في skipped — لا تُبتلع صامتة', () => {

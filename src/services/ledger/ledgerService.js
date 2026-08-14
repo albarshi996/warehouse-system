@@ -179,6 +179,9 @@ export async function postDocument(docData, profile, { markDone = false } = {}) 
           batch: d.batch,
           expiry: d.expiry,
           unitCost: d.unitCost,
+          // الموقع التخزينيّ (SAP-7 · ف‑١٨): يُكتب حين يحمله التخزين — آخرُ
+          // موضعٍ معلوم للرصيد، عرضًا؛ الفارغ لا يمحو موقعًا معلومًا سابقًا.
+          ...(d.bin ? { bin: d.bin } : {}),
           qty: increment(d.delta),
           updatedAt: serverTimestamp(),
         },

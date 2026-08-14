@@ -180,6 +180,10 @@ export function buildMoves(docData, { items = null } = {}) {
       expiry: String(line?.[rule.expiryField] ?? '').trim(),
       from,
       to,
+      // الموقع التخزينيّ داخل المستودع (SAP-7 · ف‑١٨ · §14 ‹364›): يحمله بند
+      // التخزين (PUTAWAY) فيعرفه الدفتر — «حسب الموقع التخزينيّ» مستوى عرضٍ
+      // من الحركات، ومفتاح الرصيد لم يُمسّ عمدًا (تغييره يقلب FEFO والسحب).
+      bin: String(line?.bin ?? '').trim().toUpperCase(),
       qty: absQty,
       // الدفتر بوحدة الأساس، والعرض بوحدة الإدخال (م٣-ب). ولولا حفظ الأصل
       // لصار «٢٠ صندوقًا» في التقرير «٢٤٠» بلا أن يعرف أحدٌ أنّه هو نفسه.
@@ -235,6 +239,9 @@ export function balanceDeltas(moves) {
       batch: move.batch,
       expiry: move.expiry,
       unitCost: move.unitCost,
+      // موقع الوجهة (ف‑١٨): الداخل إلى مستودعٍ بموقعٍ معلوم يُذكر موقعه على
+      // الرصيد — آخرُ تخزينٍ يكسب، عرضًا لا مفتاحًا.
+      bin: sign > 0 ? move.bin || '' : '',
       delta: sign * move.qty,
     });
   };

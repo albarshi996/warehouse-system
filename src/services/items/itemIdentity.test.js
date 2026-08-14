@@ -119,7 +119,7 @@ test('lineMatchesItem يقبل Set أو مصفوفة', () => {
   assert.equal(lineMatchesItem({ sku: 'x' }, ['ITM-1']), false);
 });
 
-test('★★ §9.2 ‹191›: الكمّيّات الأربع — والمتاح = الموجود − المحجوز', () => {
+test('★★ §14 ‹356› (اكتملت في SAP-7): المتاح = الموجود − المحجوز + المطلوب', () => {
   const balances = [
     { qty: 100, qtyReserved: 30 },
     { qty: 20, qtyReserved: 0 },
@@ -128,13 +128,21 @@ test('★★ §9.2 ‹191›: الكمّيّات الأربع — والمتاح
     inStock: 120,
     committed: 30,
     ordered: 50,
-    available: 90,
+    available: 140,
   });
 });
 
-test('المتاح لا يهبط تحت الصفر لصفٍّ محجوزٍ فوق رصيده', () => {
+test('★ §14 ‹368›: نصيب النقل المفتوح يدخل المحجوز — وعلى مستوى الصنف يتوازن مع مطلوبه', () => {
+  const balances = [{ qty: 100, qtyReserved: 10 }];
+  const q = itemQuantities({ balances, ordered: 40, committedInTransit: 40 });
+  assert.equal(q.committed, 50);
+  assert.equal(q.ordered, 40);
+  assert.equal(q.available, 90); // كما لو لا نقلَ — النقل الداخليّ لا يخلق بضاعة
+});
+
+test('المتاح السالب يُعلَن لا يُقصّ — إنذارُ التزامٍ فوق الطاقة', () => {
   const q = itemQuantities({ balances: [{ qty: 5, qtyReserved: 9 }] });
-  assert.equal(q.available, 0);
+  assert.equal(q.available, -4);
   assert.equal(q.committed, 9);
 });
 

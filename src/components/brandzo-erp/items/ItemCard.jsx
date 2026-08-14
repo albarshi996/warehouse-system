@@ -23,11 +23,12 @@ import { ITEM_TYPES, typeOf } from '../../../services/items/itemType.js';
 import { uomLabel } from '../../../services/items/uomModel.js';
 import {
   balancesForItem,
-  orderedForItem,
+  itemSearchKeys,
   itemQuantities,
   resolveSubstitutes,
   normalizeItemCode,
 } from '../../../services/items/itemIdentity.js';
+import { itemOpenDemand } from '../../../services/ledger/openDemand.js';
 import { listenDocumentsByTypes } from '../../../services/documents/documentsService.js';
 import { measureDocument } from '../../../services/documents/openBox.js';
 import { fefoSort, expiryStatus } from '../../../services/balances/balanceKey.js';
@@ -41,7 +42,7 @@ import Icon from '../../ui/Icon.jsx';
 import { int, num } from '../../odoo/format.js';
 
 export default function ItemCard({ item, items, balances, me, onEdit, onClose }) {
-  const [poDocs, setPoDocs] = useState([]);
+  const [demandDocs, setDemandDocs] = useState([]);
   // كتالوج الطرف‑الصنف (SAP-2 · ف‑٦): أكواد الموردين والعملاء لهذا الصنف.
   const [catalogEntries, setCatalogEntries] = useState([]);
   const [catalogNote, setCatalogNote] = useState('');
@@ -55,21 +56,29 @@ export default function ItemCard({ item, items, balances, me, onEdit, onClose })
     );
   }, [item?.sku]);
 
-  // أوامر الشراء وحدها — مصدر «المطلوب». الاشتراك حيّ كبقيّة الشاشة.
+  // مصدرا الطلب المفتوح (SAP-7): أوامر الشراء (مطلوبٌ قادم) وطلبات النقل
+  // (محجوزٌ في المصدر ومطلوبٌ في الوجهة — §14 ‹368›). الاشتراك حيّ.
   useEffect(() => {
-    return listenDocumentsByTypes(['PO'], setPoDocs, 300);
+    return listenDocumentsByTypes(['PO', 'TR'], setDemandDocs, 300);
   }, []);
 
   const mine = useMemo(() => balancesForItem(item, balances), [item, balances]);
 
-  const openPoRows = useMemo(
-    () => poDocs.map((d) => measureDocument(d)).filter((r) => r.open),
-    [poDocs]
-  );
+  const demand = useMemo(() => {
+    const openRows = demandDocs.map((d) => measureDocument(d)).filter((r) => r.open);
+    return itemOpenDemand(itemSearchKeys(item), {
+      poRows: openRows.filter((r) => r.document.type === 'PO'),
+      trRows: openRows.filter((r) => r.document.type === 'TR'),
+    });
+  }, [item, demandDocs]);
 
   const quantities = useMemo(
-    () => itemQuantities({ balances: mine, ordered: orderedForItem(item, openPoRows) }),
-    [item, mine, openPoRows]
+    () => itemQuantities({
+      balances: mine,
+      ordered: demand.ordered,
+      committedInTransit: demand.committedInTransit,
+    }),
+    [mine, demand]
   );
 
   const itemsBySku = useMemo(() => {
@@ -158,21 +167,23 @@ export default function ItemCard({ item, items, balances, me, onEdit, onClose })
           </span>
           <span className="o_kpi_label">الموجود</span>
         </div>
-        <div className="o_kpi" title="ما وُعد به ولم يُسحب بعد — يُفكّ بالسحب أو بسقوط الأمر">
+        <div className="o_kpi" title="وعودات البيع (المحجوز الفعليّ) + ما سيخرج بطلبات نقلٍ مفتوحة — §14 ‹368›">
           <span className="o_kpi_value">{num(quantities.committed)}</span>
           <span className="o_kpi_label">المحجوز</span>
         </div>
-        <div className="o_kpi" title="تقريبٌ من أوامر الشراء المفتوحة المعروفة الروابط — الدقيق داخل المستند">
+        <div className="o_kpi" title="من أوامر الشراء المفتوحة ووجهات النقل — تقريبٌ من الروابط المعروفة، والدقيق داخل المستند">
           <span className="o_kpi_value">{num(quantities.ordered)}</span>
           <span className="o_kpi_label">المطلوب (قادم)</span>
         </div>
-        <div className="o_kpi" title="المتاح = الموجود − المحجوز. ضمّ «المطلوب» إلى المعادلة يأتي مع دفتر المخزون (SAP-7)">
-          <span className="o_kpi_value">{num(quantities.available)}</span>
+        <div className="o_kpi" title="المتاح = الموجود − المحجوز + المطلوب — معادلة §14 ‹356› بمصدرها الحقيقيّ (SAP-7)">
+          <span className="o_kpi_value" style={quantities.available < 0 ? { color: 'var(--o-text-danger)' } : undefined}>
+            {num(quantities.available)}
+          </span>
           <span className="o_kpi_label">المتاح</span>
         </div>
       </div>
       <p style={{ margin: '0 0 14px', fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
-        «المطلوب» محسوبٌ من الروابط المعروفة لأوامر الشراء المفتوحة — افتح المستند لترى الرقم الدقيق.
+        «المطلوب» من أوامر الشراء المفتوحة ووجهات النقل، و«المحجوز» يشمل ما سيخرج بنقلٍ مفتوح — والنقل المفتوح لا يمسّ الموجود.
       </p>
 
       {/* ═══ الأصناف البديلة (ف‑٣) ═══ */}

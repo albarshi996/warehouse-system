@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
+import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { movesForSku, movesForBarcode } from '../../../services/ledger/ledgerService.js';
-import { availableQty } from '../../../services/ledger/reservations.js';
 import { stuckBalances } from '../../../services/ledger/locations.js';
+import { itemOpenDemand, availableEquation } from '../../../services/ledger/openDemand.js';
+import { listenDocumentsByTypes } from '../../../services/documents/documentsService.js';
+import { measureDocument } from '../../../services/documents/openBox.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
 import Pager from '../../odoo/Pager.jsx';
@@ -48,6 +50,7 @@ const ITEM_COLS = [
   { key: 'item', label: 'الصنف' },
   { key: 'qty', label: 'الموجود', numeric: true },
   { key: 'reserved', label: 'المحجوز', numeric: true },
+  { key: 'ordered', label: 'المطلوب', numeric: true },
   { key: 'available', label: 'المتاح', numeric: true },
 ];
 
@@ -92,7 +95,23 @@ export default function StockLedger() {
     return () => unsub?.();
   }, [me]);
 
-  // الأرصدة مجمّعة بالصنف — سطرٌ لكل صنف، بمجموع الموجود والمحجوز والمتاح.
+  // الطلب المفتوح (SAP-7 · ف‑١٧): أوامر الشراء المفتوحة تُطلب، وطلبات النقل
+  // المفتوحة تحجز في مصدرها وتطلب في وجهتها — ولا تمسّ الموجود (§14 ‹368›).
+  const [demandDocs, setDemandDocs] = useState([]);
+  useEffect(() => {
+    if (!me) return undefined;
+    return listenDocumentsByTypes(['PO', 'TR'], setDemandDocs, 300);
+  }, [me]);
+  const openDemandRows = useMemo(() => {
+    const rows = demandDocs.map((d) => measureDocument(d)).filter((r) => r.open);
+    return {
+      poRows: rows.filter((r) => r.document.type === 'PO'),
+      trRows: rows.filter((r) => r.document.type === 'TR'),
+    };
+  }, [demandDocs]);
+
+  // الأرصدة مجمّعة بالصنف — سطرٌ لكل صنف، بالمعادلة الحاكمة §14 ‹356›:
+  // المتاح = الموجود − المحجوز + المطلوب.
   const items = useMemo(() => {
     const byItem = new Map();
     balances.forEach((b) => {
@@ -105,18 +124,23 @@ export default function StockLedger() {
         nameAr: b.nameAr || '',
         qty: 0,
         reserved: 0,
-        available: 0,
         locations: new Set(),
       };
       prev.qty += Number(b.qty) || 0;
       prev.reserved += Number(b.qtyReserved) || 0;
-      prev.available += availableQty(b);
       if (b.warehouse) prev.locations.add(String(b.warehouse).toUpperCase());
       if (!prev.nameAr && b.nameAr) prev.nameAr = b.nameAr;
       byItem.set(key, prev);
     });
+    for (const it of byItem.values()) {
+      const keys = [it.sku, it.barcode].map((k) => String(k).trim().toUpperCase()).filter(Boolean);
+      const demand = itemOpenDemand(keys, openDemandRows);
+      it.ordered = demand.ordered;
+      it.reserved += demand.committedInTransit; // نصيب النقل المفتوح من المحجوز
+      it.available = availableEquation({ inStock: it.qty, committed: it.reserved, ordered: it.ordered });
+    }
     return [...byItem.values()].sort((a, b) => a.key.localeCompare(b.key, 'ar'));
-  }, [balances]);
+  }, [balances, openDemandRows]);
 
   // القائمة الكاملة المفلترة — كان يُقصّ ذيلها عند 60 بصمت؛ الآن يُرقَّم فيُكشف كله (المحور ٧).
   const filtered = useMemo(() => {
@@ -197,7 +221,20 @@ export default function StockLedger() {
       ),
       qty: num(it.qty),
       reserved: <span style={{ color: 'var(--o-text-warning)' }}>{num(it.reserved)}</span>,
-      available: <span className="decoration-bf" style={{ color: 'var(--o-text-success)' }}>{num(it.available)}</span>,
+      ordered: (
+        <span title="من أوامر الشراء المفتوحة ووجهات النقل" style={{ color: 'var(--o-action)' }}>
+          {num(it.ordered || 0)}
+        </span>
+      ),
+      available: (
+        <span
+          className="decoration-bf"
+          title="المتاح = الموجود − المحجوز + المطلوب (§14)"
+          style={{ color: it.available < 0 ? 'var(--o-text-danger)' : 'var(--o-text-success)' }}
+        >
+          {num(it.available)}
+        </span>
+      ),
     },
   }));
 
@@ -218,9 +255,28 @@ export default function StockLedger() {
           }}
         >
           {r.reasonLabel || r.reason}
+          {/* الموقع التخزينيّ (ف‑١٨ · §14 ‹364›) — الحركة تعرف موقعها حين يُعرف */}
+          {r.bin && <span style={{ marginInlineStart: '5px', fontFamily: 'monospace' }}>{r.bin}</span>}
         </span>
       ),
-      doc: r.docNumber || r.docType,
+      // §14 ‹377› (SAP-7): كلّ رقم مخزونٍ يصل إلى مستنده وسطره — الحفر رابطٌ لا نصّ.
+      doc: r.docId ? (
+        <a
+          href={`${getBasePath()}/dashboard/document?type=${encodeURIComponent(r.docType)}&id=${encodeURIComponent(r.docId)}`}
+          className="decoration-bf"
+          style={{ color: 'var(--o-action)', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
+          title={`فتح المستند — البند ${Number.isInteger(r.lineIndex) ? r.lineIndex + 1 : '؟'}`}
+        >
+          {r.docNumber || r.docType}
+          {Number.isInteger(r.lineIndex) && (
+            <span style={{ marginInlineStart: '4px', fontSize: '10px', color: 'var(--o-main-color-muted)' }}>
+              بند {r.lineIndex + 1}
+            </span>
+          )}
+        </a>
+      ) : (
+        r.docNumber || r.docType
+      ),
       inQty: r.signed > 0 ? <span style={{ color: 'var(--o-text-success)' }}>{num(r.qty)}</span> : '',
       outQty: r.signed < 0 ? <span style={{ color: 'var(--o-text-warning)' }}>{num(r.qty)}</span> : '',
       balance: <span className="decoration-bf">{num(r.balance)}</span>,
