@@ -49,8 +49,9 @@ test('★★ §21-٧: نقلٌ مفتوح 40 من E5 إلى E2 ⇒ محجوزٌ 
     row({ fromWarehouse: 'E5', toWarehouse: 'E2' }, [{ sku: 'ITM-1', open: 40 }]),
   ];
   const impact = transferImpactEntries(trRows);
-  assert.deepEqual(impact.committed, [{ keys: ['ITM-1'], warehouse: 'E5', qty: 40 }]);
-  assert.deepEqual(impact.ordered, [{ keys: ['ITM-1'], warehouse: 'E2', qty: 40 }]);
+  const noRef = { docId: null, docType: null, docNumber: null };
+  assert.deepEqual(impact.committed, [{ keys: ['ITM-1'], warehouse: 'E5', qty: 40, ...noRef }]);
+  assert.deepEqual(impact.ordered, [{ keys: ['ITM-1'], warehouse: 'E2', qty: 40, ...noRef }]);
 
   // في المصدر: يرتفع المحجوز لا المطلوب — وفي الوجهة العكس.
   const atSource = itemOpenDemand(['ITM-1'], { trRows, warehouse: 'E5' });
@@ -62,9 +63,13 @@ test('★★ §21-٧: نقلٌ مفتوح 40 من E5 إلى E2 ⇒ محجوزٌ 
 test('★★ «لا يغيّر In Stock»: الوحدة لا تُخرج أيّ دلتا موجودٍ بحال — بنيويًّا', () => {
   const trRows = [row({ fromWarehouse: 'E5', toWarehouse: 'E2' }, [{ sku: 'ITM-1', open: 40 }])];
   const impact = transferImpactEntries(trRows);
-  // كلّ ما يخرج قيودُ ordered/committed — لا حقلَ inStock ولا delta في أيّ قيد.
+  // كلّ ما يخرج قيودُ ordered/committed بهويّة مستندها (للحفر — SAP-13)
+  // — ولا حقلَ inStock ولا delta في أيّ قيد.
   for (const entry of [...impact.ordered, ...impact.committed]) {
-    assert.deepEqual(Object.keys(entry).sort(), ['keys', 'qty', 'warehouse']);
+    assert.deepEqual(
+      Object.keys(entry).sort(),
+      ['docId', 'docNumber', 'docType', 'keys', 'qty', 'warehouse']
+    );
   }
 });
 

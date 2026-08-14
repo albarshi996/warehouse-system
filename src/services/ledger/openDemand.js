@@ -45,14 +45,21 @@ export function poOrderedEntries(poRows) {
   const out = [];
   for (const row of poRows || []) {
     const warehouse = wh(row?.document?.header?.warehouse);
+    const docRef = documentRef(row);
     for (const line of row?.lines || []) {
       const qty = Number(line?.open) || 0;
       const keys = lineKeys(line);
       if (qty <= 0 || !keys.length) continue;
-      out.push({ keys, warehouse, qty: round6(qty) });
+      out.push({ keys, warehouse, qty: round6(qty), ...docRef });
     }
   }
   return out;
+}
+
+/** هويّة مستند القيد — للحفر (SAP-13): الرقم يعرف من أين جاء. */
+function documentRef(row) {
+  const d = row?.document || {};
+  return { docId: d.id || null, docType: d.type || null, docNumber: d.number || null };
 }
 
 /**
@@ -68,12 +75,13 @@ export function transferImpactEntries(trRows) {
     const header = row?.document?.header || {};
     const from = wh(header.fromWarehouse);
     const to = wh(header.toWarehouse);
+    const docRef = documentRef(row);
     for (const line of row?.lines || []) {
       const qty = Number(line?.open) || 0;
       const keys = lineKeys(line);
       if (qty <= 0 || !keys.length) continue;
-      if (from) committed.push({ keys, warehouse: from, qty: round6(qty) });
-      if (to) ordered.push({ keys, warehouse: to, qty: round6(qty) });
+      if (from) committed.push({ keys, warehouse: from, qty: round6(qty), ...docRef });
+      if (to) ordered.push({ keys, warehouse: to, qty: round6(qty), ...docRef });
     }
   }
   return { ordered, committed };

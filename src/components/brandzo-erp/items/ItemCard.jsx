@@ -29,6 +29,8 @@ import {
   normalizeItemCode,
 } from '../../../services/items/itemIdentity.js';
 import { itemOpenDemand } from '../../../services/ledger/openDemand.js';
+import { orderedBreakdown, committedBreakdown, inStockBreakdown } from '../../../services/ledger/drill.js';
+import { getBasePath } from '../../../services/auth/authService.js';
 import { listenDocumentsByTypes } from '../../../services/documents/documentsService.js';
 import { measureDocument } from '../../../services/documents/openBox.js';
 import { fefoSort, expiryStatus } from '../../../services/balances/balanceKey.js';
@@ -47,6 +49,8 @@ export default function ItemCard({ item, items, balances, me, onEdit, onClose })
   // كتالوج الطرف‑الصنف (SAP-2 · ف‑٦): أكواد الموردين والعملاء لهذا الصنف.
   const [catalogEntries, setCatalogEntries] = useState([]);
   const [catalogNote, setCatalogNote] = useState('');
+  // الحفر التحليليّ (SAP-13): الرقم المضغوط يفتح قائمته المكوِّنة لا صفحة عامّة.
+  const [drill, setDrill] = useState(null); // null | 'inStock' | 'committed' | 'ordered'
 
   useEffect(() => {
     return subscribeCatalogForItem(
@@ -65,13 +69,18 @@ export default function ItemCard({ item, items, balances, me, onEdit, onClose })
 
   const mine = useMemo(() => balancesForItem(item, balances), [item, balances]);
 
-  const demand = useMemo(() => {
-    const openRows = demandDocs.map((d) => measureDocument(d)).filter((r) => r.open);
-    return itemOpenDemand(itemSearchKeys(item), {
-      poRows: openRows.filter((r) => r.document.type === 'PO'),
-      trRows: openRows.filter((r) => r.document.type === 'TR'),
-    });
-  }, [item, demandDocs]);
+  const openRows = useMemo(() => {
+    const rows = demandDocs.map((d) => measureDocument(d)).filter((r) => r.open);
+    return {
+      poRows: rows.filter((r) => r.document.type === 'PO'),
+      trRows: rows.filter((r) => r.document.type === 'TR'),
+    };
+  }, [demandDocs]);
+
+  const demand = useMemo(
+    () => itemOpenDemand(itemSearchKeys(item), openRows),
+    [item, openRows]
+  );
 
   const quantities = useMemo(
     () => itemQuantities({
@@ -81,6 +90,16 @@ export default function ItemCard({ item, items, balances, me, onEdit, onClose })
     }),
     [mine, demand]
   );
+
+  // قوائم الحفر (SAP-13): تُحسب عند الطلب — ومجموع كلٍّ يطابق رقم بطاقته
+  // (يحرسه drill.test). المتاح معادلةٌ من الثلاثة فليس له قائمة رابعة.
+  const drillData = useMemo(() => {
+    if (!drill) return null;
+    const keys = itemSearchKeys(item);
+    if (drill === 'inStock') return { title: 'الموجود — أرصدةٌ بمواقعها وتشغيلاتها', ...inStockBreakdown(mine) };
+    if (drill === 'committed') return { title: 'المحجوز — وعودات البيع والنقل الصادر', ...committedBreakdown(keys, { balances: mine, trRows: openRows.trRows }) };
+    return { title: 'المطلوب — المستندات المفتوحة المكوِّنة', ...orderedBreakdown(keys, openRows) };
+  }, [drill, item, mine, openRows]);
 
   const itemsBySku = useMemo(() => {
     const map = new Map();
@@ -154,9 +173,15 @@ export default function ItemCard({ item, items, balances, me, onEdit, onClose })
         ))}
       </div>
 
-      {/* ═══ الكمّيّات الأربع (§9.2 ‹191›) ═══ */}
-      <div className="o_dashboard_kpis" style={{ marginBottom: '14px' }}>
-        <div className="o_kpi" title={fefoNext ? `FEFO: أقرب تشغيلة ${fefoNext.batch || '—'} تنتهي ${fefoNext.expiry || '—'}` : 'من الأرصدة الحيّة'}>
+      {/* ═══ الكمّيّات الأربع (§9.2 ‹191›) — كلّ رقمٍ يفتح قائمته المكوِّنة (SAP-13) ═══ */}
+      <div className="o_dashboard_kpis" style={{ marginBottom: '8px' }}>
+        <button
+          type="button"
+          className="o_kpi"
+          onClick={() => setDrill(drill === 'inStock' ? null : 'inStock')}
+          style={{ cursor: 'pointer', textAlign: 'inherit', border: drill === 'inStock' ? '1px solid var(--o-brand-primary)' : undefined }}
+          title={fefoNext ? `FEFO: أقرب تشغيلة ${fefoNext.batch || '—'} تنتهي ${fefoNext.expiry || '—'} — اضغط للتفصيل` : 'اضغط لأرصدته موقعًا موقعًا'}
+        >
           <span className="o_kpi_icon"><Icon name="package" size={20} /></span>
           <span className="o_kpi_value">
             {num(quantities.inStock)}
@@ -167,24 +192,86 @@ export default function ItemCard({ item, items, balances, me, onEdit, onClose })
             )}
           </span>
           <span className="o_kpi_label">الموجود</span>
-        </div>
-        <div className="o_kpi" title="وعودات البيع (المحجوز الفعليّ) + ما سيخرج بطلبات نقلٍ مفتوحة — §14 ‹368›">
+        </button>
+        <button
+          type="button"
+          className="o_kpi"
+          onClick={() => setDrill(drill === 'committed' ? null : 'committed')}
+          style={{ cursor: 'pointer', textAlign: 'inherit', border: drill === 'committed' ? '1px solid var(--o-brand-primary)' : undefined }}
+          title="وعودات البيع + ما سيخرج بنقلٍ مفتوح (§14 ‹368›) — اضغط للتفصيل"
+        >
           <span className="o_kpi_value">{num(quantities.committed)}</span>
           <span className="o_kpi_label">المحجوز</span>
-        </div>
-        <div className="o_kpi" title="من أوامر الشراء المفتوحة ووجهات النقل — تقريبٌ من الروابط المعروفة، والدقيق داخل المستند">
+        </button>
+        <button
+          type="button"
+          className="o_kpi"
+          onClick={() => setDrill(drill === 'ordered' ? null : 'ordered')}
+          style={{ cursor: 'pointer', textAlign: 'inherit', border: drill === 'ordered' ? '1px solid var(--o-brand-primary)' : undefined }}
+          title="من أوامر الشراء المفتوحة ووجهات النقل — اضغط لمستنداته"
+        >
           <span className="o_kpi_value">{num(quantities.ordered)}</span>
           <span className="o_kpi_label">المطلوب (قادم)</span>
-        </div>
-        <div className="o_kpi" title="المتاح = الموجود − المحجوز + المطلوب — معادلة §14 ‹356› بمصدرها الحقيقيّ (SAP-7)">
+        </button>
+        <div className="o_kpi" title="المتاح = الموجود − المحجوز + المطلوب — معادلةٌ من الثلاثة، فافتح أيًّا منها">
           <span className="o_kpi_value" style={quantities.available < 0 ? { color: 'var(--o-text-danger)' } : undefined}>
             {num(quantities.available)}
           </span>
           <span className="o_kpi_label">المتاح</span>
         </div>
       </div>
+
+      {/* قائمة الحفر — الرقم يتفكّك إلى مكوِّناته بمجموعٍ مطابق (§18 ‹921-922›) */}
+      {drillData && (
+        <div className="o_ds_card o_ds_pad" style={{ marginBottom: '10px', borderInlineStart: '3px solid var(--o-brand-primary, #714B67)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <p style={{ margin: 0, fontSize: 'var(--o-font-size-xs)', fontWeight: 'var(--o-font-weight-bold)' }}>{drillData.title}</p>
+            <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+              المجموع {num(drillData.total)} — يطابق الرقم
+            </span>
+          </div>
+          {drillData.rows.length === 0 ? (
+            <p style={{ margin: 0, fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>لا مكوّنات — الرقم صفر.</p>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--o-font-size-xs)' }}>
+              <tbody>
+                {drillData.rows.map((r, i) => (
+                  <tr key={r.docId || r.balanceId || i} style={{ borderTop: '1px solid var(--o-border-color, #e5e5ea)' }}>
+                    <td style={{ padding: '5px 4px' }}>
+                      {r.docId ? (
+                        <a
+                          href={`${getBasePath()}/dashboard/document?type=${encodeURIComponent(r.docType)}&id=${encodeURIComponent(r.docId)}`}
+                          style={{ color: 'var(--o-action)', fontWeight: 'var(--o-font-weight-bold)', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
+                          title="فتح المستند — ومنه السطر والحركة"
+                        >
+                          {r.docNumber || r.docType}
+                        </a>
+                      ) : (
+                        <a
+                          href={`${getBasePath()}/dashboard/stock-ledger`}
+                          style={{ color: 'var(--o-action)', fontWeight: 'var(--o-font-weight-bold)', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
+                          title="دفتر الحركات — ومنه المستند والبند والدفعة"
+                        >
+                          {r.warehouse || '—'}{r.batch ? ` · ${r.batch}` : ''}{r.bin ? ` · ${r.bin}` : ''}
+                        </a>
+                      )}
+                      <span style={{ marginInlineStart: '6px', fontSize: '10px', color: 'var(--o-main-color-muted)' }}>
+                        {r.why || (r.expiry ? `صلاحية ${r.expiry}` : '')}
+                        {r.docId && r.warehouse ? ` · ${r.warehouse}` : ''}
+                      </span>
+                    </td>
+                    <td style={{ padding: '5px 4px', textAlign: 'left', fontVariantNumeric: 'tabular-nums', fontWeight: 'var(--o-font-weight-bold)', whiteSpace: 'nowrap' }}>
+                      {num(r.qty)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
       <p style={{ margin: '0 0 14px', fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
-        «المطلوب» من أوامر الشراء المفتوحة ووجهات النقل، و«المحجوز» يشمل ما سيخرج بنقلٍ مفتوح — والنقل المفتوح لا يمسّ الموجود.
+        اضغط أيّ رقمٍ لقائمته المكوِّنة — ومنها المستند فالسطر فالحركة فالدفعة والموقع.
       </p>
 
       {/* ═══ الأصناف البديلة (ف‑٣) ═══ */}
