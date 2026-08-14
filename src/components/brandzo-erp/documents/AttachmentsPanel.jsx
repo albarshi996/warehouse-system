@@ -17,85 +17,94 @@ import {
   isImageType,
   kindLabel,
   ATTACHMENT_KINDS,
-  MAX_ATTACHMENT_BYTES,
+  versionChains,
+  newVersionPayload,
 } from '../../../services/documents/attachmentFile.js';
 import { addAttachment } from '../../../services/documents/attachmentsService.js';
-
-/** يقرأ ملفًا كسلسلة dataURL (لِـPDF أو كمصدرٍ للضغط). */
-function readAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result);
-    r.onerror = () => reject(new Error('تعذّرت قراءة الملف.'));
-    r.readAsDataURL(file);
-  });
-}
+import { readAsDataUrl, compressImage } from './attachmentCapture.js';
 
 /**
- * يضغط صورةً إلى JPEG داخل حدّ الحجم: يُصغّر أبعادها إلى سقفٍ ثم يُنقّص الجودة
- * تنازليًّا حتى تدخل `MAX_ATTACHMENT_BYTES`. يُعيد dataURL أو يرمي إن استحال.
+ * بطاقة **سلسلة** مرفق (SAP-11 · ف‑٢٦): تعرض الإصدار الأحدث، وتحته
+ * التاريخ كاملًا — الإصدار الجديد لا يمحو السابق (§17 ‹882›)، وزرّ
+ * «إصدار جديد» يفتح المنتقي وارثًا التصنيف والسلسلة.
  */
-async function compressImage(file, maxDim = 1600) {
-  const dataUrl = await readAsDataUrl(file);
-  const img = await new Promise((resolve, reject) => {
-    const el = new Image();
-    el.onload = () => resolve(el);
-    el.onerror = () => reject(new Error('تعذّر فتح الصورة.'));
-    el.src = dataUrl;
-  });
-
-  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-  const w = Math.max(1, Math.round(img.width * scale));
-  const h = Math.max(1, Math.round(img.height * scale));
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#fff'; // خلفية بيضاء بدل شفافية PNG السوداء عند التحويل لـJPEG
-  ctx.fillRect(0, 0, w, h);
-  ctx.drawImage(img, 0, 0, w, h);
-
-  for (const quality of [0.72, 0.6, 0.5, 0.4, 0.32]) {
-    const out = canvas.toDataURL('image/jpeg', quality);
-    if (dataUrlBytes(out) <= MAX_ATTACHMENT_BYTES) return out;
-  }
-  // ما زالت أكبر من الحدّ: نُنصّف البُعد ونعيد الكرّة — والبُعد يتناقص فعلًا
-  // (١٦٠٠ ← ٨٠٠) فيبلغ الحدّ ويتوقّف، ثمّ يُسلَّم بأدنى جودة كملاذٍ أخير.
-  // (لو مرّرنا رقمًا ثابتًا لَدار التكرار أبدًا — درس المراجعة العدائية.)
-  if (maxDim > 900) return compressImage(file, Math.round(maxDim / 2));
-  return canvas.toDataURL('image/jpeg', 0.3);
-}
-
-/** بطاقة مرفقٍ واحد — مصغّرة تفتح الأصل في تبويب، مع من رفعها ووقتها. */
-function AttachmentCard({ att }) {
+function AttachmentCard({ chain, onNewVersion, busy }) {
+  const att = chain.latest;
   const image = isImageType(att.mime);
   const when = att.at?.toDate?.();
   const stamp = when
     ? when.toLocaleString('ar-LY-u-nu-latn', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
     : '';
+  const sizeKb = att.size ? `${Math.round(att.size / 1024)}KB` : '';
   return (
-    <a
-      href={att.dataUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block bg-surface border border-line rounded-xl overflow-hidden hover:border-accent/50 transition-colors"
-      title={`${att.label} — ${att.byName}`}
-    >
-      <div className="aspect-square bg-chip flex items-center justify-center overflow-hidden">
-        {image ? (
-          <img src={att.dataUrl} alt={att.label} className="w-full h-full object-cover" loading="lazy" />
-        ) : (
-          <span className="text-4xl text-accent/70" aria-hidden="true">📄</span>
+    <div className="bg-surface border border-line rounded-xl overflow-hidden">
+      <a
+        href={att.dataUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block hover:opacity-90 transition-opacity"
+        title={`${att.label} — ${att.byName}${att.sha256 ? `\nالبصمة: ${att.sha256}` : ''}`}
+      >
+        <div className="aspect-square bg-chip flex items-center justify-center overflow-hidden">
+          {image ? (
+            <img src={att.dataUrl} alt={att.label} className="w-full h-full object-cover" loading="lazy" />
+          ) : (
+            <span className="text-4xl text-accent/70" aria-hidden="true">📄</span>
+          )}
+        </div>
+        <div className="p-2">
+          <p className="text-[11px] font-bold text-ink truncate">
+            {att.label}
+            {chain.count > 1 && (
+              <span className="ms-1 text-[10px] text-accent font-normal">إصدار {att.version || chain.count}</span>
+            )}
+          </p>
+          <p className="text-[10px] text-gray-500 truncate">
+            {att.byName}
+            {stamp ? ` · ${stamp}` : ''}
+            {sizeKb ? ` · ${sizeKb}` : ''}
+          </p>
+          {att.sha256 && (
+            <p className="text-[9px] text-gray-400 truncate" style={{ direction: 'ltr', textAlign: 'right', fontFamily: 'monospace' }} title="بصمة SHA-256 — تُثبت أنّ الدليل لم يُبدَّل">
+              {att.sha256.slice(0, 12)}…
+            </p>
+          )}
+        </div>
+      </a>
+      <div className="px-2 pb-2 flex items-center justify-between gap-1">
+        {onNewVersion && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onNewVersion(att)}
+            className="text-[10px] font-bold text-accent hover:underline disabled:opacity-50"
+            title="يرفع ملفًّا جديدًا في السلسلة نفسها — والسابق يبقى في التاريخ"
+          >
+            + إصدار جديد
+          </button>
+        )}
+        {chain.history.length > 0 && (
+          <span className="text-[9px] text-gray-500" title="الإصدارات السابقة محفوظة — افتحها من القائمة أدناه">
+            {chain.history.length} سابق
+          </span>
         )}
       </div>
-      <div className="p-2">
-        <p className="text-[11px] font-bold text-ink truncate">{att.label}</p>
-        <p className="text-[10px] text-gray-500 truncate">
-          {att.byName}
-          {stamp ? ` · ${stamp}` : ''}
-        </p>
-      </div>
-    </a>
+      {chain.history.length > 0 && (
+        <div className="px-2 pb-2 border-t border-line pt-1">
+          {chain.history.map((old) => (
+            <a
+              key={old.id}
+              href={old.dataUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-[9px] text-gray-500 hover:text-accent truncate"
+            >
+              إصدار {old.version || '؟'} — {old.byName}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -110,7 +119,7 @@ export default function AttachmentsPanel({ docId, schema, me, attachments = [], 
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
   const fileRef = useRef(null);
-  const slotRef = useRef({ kind: 'other', label: 'مرفق آخر' });
+  const slotRef = useRef({ kind: 'other', label: 'مرفق آخر', version: 1, supersedes: null });
 
   /** خانات المخطّط المقترحة + «مرفق آخر» دومًا. */
   const slots = [
@@ -124,7 +133,12 @@ export default function AttachmentsPanel({ docId, schema, me, attachments = [], 
 
   function pick(slot) {
     const kind = slot.kind || 'other';
-    slotRef.current = { kind, label: slot.label || kindLabel(kind) };
+    slotRef.current = {
+      kind,
+      label: slot.label || kindLabel(kind),
+      version: Number(slot.version) || 1,
+      supersedes: slot.supersedes || null,
+    };
     const input = fileRef.current;
     if (input) {
       // نضبط capture لحظة الاختيار: كاميرا لخانات الصور، ومنتقي ملفّات لغيرها —
@@ -133,6 +147,11 @@ export default function AttachmentsPanel({ docId, schema, me, attachments = [], 
       else input.removeAttribute('capture');
       input.click();
     }
+  }
+
+  /** «إصدار جديد» (ف‑٢٦): يفتح المنتقي وارثًا التصنيف والسلسلة من السابق. */
+  function pickNewVersion(att) {
+    pick(newVersionPayload(att));
   }
 
   async function onFile(e) {
@@ -163,16 +182,18 @@ export default function AttachmentsPanel({ docId, schema, me, attachments = [], 
         setMsg({ tone: 'err', text: post.error });
         return;
       }
-      const { kind, label } = slotRef.current;
+      const { kind, label, version, supersedes } = slotRef.current;
       await addAttachment(id, {
         kind,
         label,
         name: file.name,
         mime: image ? 'image/jpeg' : file.type,
         dataUrl,
+        version,
+        supersedes,
         profile: me,
       });
-      setMsg({ tone: 'ok', text: `أُرفق: ${label}` });
+      setMsg({ tone: 'ok', text: version > 1 ? `أُرفق إصدار ${version} من: ${label}` : `أُرفق: ${label}` });
       setTimeout(() => setMsg(null), 3000);
     } catch (err) {
       setMsg({ tone: 'err', text: err.message || 'تعذّر الرفع.' });
@@ -234,8 +255,9 @@ export default function AttachmentsPanel({ docId, schema, me, attachments = [], 
             <p className="text-xs text-gray-500">لا مرفقات بعد.</p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {attachments.map((att) => (
-                <AttachmentCard key={att.id} att={att} />
+              {/* السلاسل لا القائمة المسطّحة (ف‑٢٦): الأحدث يتصدّر وتاريخه تحته */}
+              {versionChains(attachments).map((chain) => (
+                <AttachmentCard key={chain.latest.id} chain={chain} onNewVersion={pickNewVersion} busy={busy} />
               ))}
             </div>
           )}

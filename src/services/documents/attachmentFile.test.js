@@ -15,6 +15,9 @@ import {
   kindLabel,
   MAX_ATTACHMENT_BYTES,
   MAX_SOURCE_BYTES,
+  sha256Hex,
+  newVersionPayload,
+  versionChains,
 } from './attachmentFile.js';
 
 // ── قبول الصيغة ────────────────────────────────────────────────────
@@ -76,4 +79,53 @@ test('kindLabel يترجم المعروف ويُبقي المجهول', () => {
   assert.equal(kindLabel('invoice'), 'فاتورة المورّد');
   assert.equal(kindLabel('signature'), 'توقيع المندوب/المستلم');
   assert.equal(kindLabel('zzz'), 'zzz');
+});
+
+/* ═══════════ SAP-11: البصمة والإصدارات (ف‑٢٦ · ف‑٢٧ · §17 ‹881-883›) ═══════════ */
+
+test('★★ ف‑٢٧: البصمة حتميّة — المحتوى نفسه بصمته نفسها، والمختلف مختلفة', async () => {
+  const a = await sha256Hex('data:image/jpeg;base64,AAAA');
+  const b = await sha256Hex('data:image/jpeg;base64,AAAA');
+  const c = await sha256Hex('data:image/jpeg;base64,BBBB');
+  assert.equal(a, b, 'التطابق يكشف النسخة المكرّرة');
+  assert.notEqual(a, c);
+  assert.match(a, /^[0-9a-f]{64}$/, 'ستّون خانة سداسيّة — SHA-256');
+  assert.equal(await sha256Hex(''), '', 'ولا بصمة لفراغ');
+});
+
+test('★★ ف‑٢٦: الإصدار الجديد يشير لسابقه ويرث تصنيفه — والسابق لا يُمسّ', () => {
+  const prev = { id: 'att-1', kind: 'invoice', label: 'فاتورة المورّد', version: 1 };
+  const next = newVersionPayload(prev);
+  assert.deepEqual(next, { kind: 'invoice', label: 'فاتورة المورّد', version: 2, supersedes: 'att-1' });
+  // مرفقٌ قديم بلا version يُحسب أوّلًا فيليه الثاني.
+  assert.equal(newVersionPayload({ id: 'x', kind: 'other' }).version, 2);
+});
+
+test('★★ §17 ‹882›: سلسلة الإصدارات تعرض الأحدث وتحفظ التاريخ كاملًا', () => {
+  const attachments = [
+    { id: 'a1', label: 'فاتورة', version: 1 },
+    { id: 'b1', label: 'توقيع', version: 1 },
+    { id: 'a2', label: 'فاتورة', version: 2, supersedes: 'a1' },
+    { id: 'a3', label: 'فاتورة', version: 3, supersedes: 'a2' },
+  ];
+  const chains = versionChains(attachments);
+  assert.equal(chains.length, 2, 'سلسلتان: الفاتورة والتوقيع');
+  const invoice = chains.find((c) => c.latest.id === 'a3');
+  assert.equal(invoice.count, 3);
+  assert.deepEqual(invoice.history.map((h) => h.id), ['a2', 'a1'], 'التاريخ من الأحدث للأقدم');
+  const sig = chains.find((c) => c.latest.id === 'b1');
+  assert.equal(sig.count, 1);
+  assert.deepEqual(sig.history, []);
+});
+
+test('حلقة supersedes مكسورة أو دائريّة لا تُسقط العرض', () => {
+  const broken = versionChains([{ id: 'x1', supersedes: 'ghost' }]);
+  assert.equal(broken.length, 1);
+  assert.equal(broken[0].count, 1);
+  // دائرة (لا تقع من الخدمة — لكنّ العرض لا ينهار لو وقعت من بياناتٍ يدويّة).
+  const cyclic = versionChains([
+    { id: 'c1', supersedes: 'c2' },
+    { id: 'c2', supersedes: 'c1' },
+  ]);
+  assert.ok(Array.isArray(cyclic));
 });

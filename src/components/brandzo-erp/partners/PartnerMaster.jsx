@@ -8,6 +8,7 @@ import {
 } from '../../../services/partnerService.js';
 import { canImport, analyzePartnersFile, commitPartnersImport } from '../../../services/partners/partnersImportService.js';
 import { setConnectedPartner } from '../../../services/partners/itemPartnerCatalogService.js';
+import EntityAttachments from '../documents/EntityAttachments.jsx';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
@@ -188,6 +189,7 @@ export default function PartnerMaster({ kind = 'supplier' }) {
               cfg={cfg}
               mode={editor.mode}
               row={editor.row}
+              me={me}
               onSaved={(code) => {
                 setEditor(null);
                 flashToast('success', editor.mode === 'create' ? `تمت إضافة ${code}` : `حُفظت تعديلات ${code}`);
@@ -270,7 +272,7 @@ const FORM_FIELDS = [
   { key: 'address', label: 'العنوان' },
 ];
 
-function PartnerForm({ kind, cfg, mode, row, onSaved, onCancel }) {
+function PartnerForm({ kind, cfg, mode, row, me, onSaved, onCancel }) {
   const [form, setForm] = useState(() => ({
     code: row?.code || '',
     nameAr: row?.nameAr || '',
@@ -345,6 +347,16 @@ function PartnerForm({ kind, cfg, mode, row, onSaved, onCancel }) {
           />
         </FieldWrap>
       </div>
+      {/* SAP-11 (ف‑٢٨): مرفقات البطاقة — عقد المورّد وسجلّ العميل على البطاقة لا في ملاحظة */}
+      {mode === 'edit' && row?.code && (
+        <div style={{ marginTop: '14px' }}>
+          <h4 style={{ margin: '0 0 8px', fontSize: 'var(--o-font-size-sm)', fontWeight: 'var(--o-font-weight-bold)' }}>
+            مرفقات البطاقة
+          </h4>
+          <EntityAttachments entityKind={kind} entityId={row.code} me={me} />
+        </div>
+      )}
+
       <div className="o_form_actions">
         <button type="button" className="btn btn-secondary" onClick={onCancel}>إلغاء</button>
         <button type="submit" className="btn btn-primary" disabled={busy}>

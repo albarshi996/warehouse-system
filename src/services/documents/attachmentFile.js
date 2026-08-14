@@ -102,3 +102,62 @@ export function dataUrlBytes(dataUrl) {
   const padding = b64.endsWith('==') ? 2 : b64.endsWith('=') ? 1 : 0;
   return Math.max(0, Math.floor((b64.length * 3) / 4) - padding);
 }
+
+/* ═══════════ SAP-11: البصمة والإصدارات (ف‑٢٦ · ف‑٢٧ · §17 ‹881-883›) ═══════════ */
+
+/**
+ * بصمة SHA-256 لمحتوى المرفق (ف‑٢٧ · SR-57) — تُحسب من نصّ dataURL نفسه:
+ * المحتوى المتطابق يعطي البصمة نفسها، فتنكشف النسخة المكرّرة ويُثبَت أنّ
+ * الدليل لم يُبدَّل. تعمل في المتصفّح وNode معًا (WebCrypto).
+ * @returns {Promise<string>} البصمة ستّون خانةً سداسيّة، أو '' إن غاب المحتوى.
+ */
+export async function sha256Hex(content) {
+  const s = String(content ?? '');
+  if (!s) return '';
+  const bytes = new TextEncoder().encode(s);
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * عقد «إنشاء إصدار جديد» (ف‑٢٦ · §17 ‹882›): الإصدار الجديد **مستندٌ جديد**
+ * يشير إلى سابقه (`supersedes`) ويرث تصنيفه — والسابق لا يُمحى ولا يُعدَّل
+ * (نموذج الإلحاق-فقط نفسه: التاريخ كامل، والأحدث يتصدّر العرض).
+ */
+export function newVersionPayload(previous) {
+  return {
+    kind: previous?.kind || 'other',
+    label: previous?.label || kindLabel(previous?.kind),
+    version: (Number(previous?.version) || 1) + 1,
+    supersedes: previous?.id || null,
+  };
+}
+
+/**
+ * سلاسل الإصدارات للعرض: يُجمَع كلّ مرفقٍ مع أسلافه (عبر `supersedes`)
+ * فيُعرض **الأحدث** وتحته تاريخه — لا قائمةٌ مسطّحة تُظهر القديم والجديد
+ * ندَّين. الحلقة المكسورة (سلفٌ محذوفٌ نظريًّا) لا تُسقط السلسلة.
+ *
+ * @param {Array} attachments بترتيب الإرفاق (الأقدم أوّلًا كما تعيده الخدمة)
+ * @returns {Array<{latest:object, history:object[], count:number}>}
+ */
+export function versionChains(attachments) {
+  const list = attachments || [];
+  const superseded = new Set(list.map((a) => a?.supersedes).filter(Boolean));
+  const byId = new Map(list.filter((a) => a?.id).map((a) => [a.id, a]));
+
+  // رؤوس السلاسل: ما لم يُشِر إليه أحدٌ بـ`supersedes` — أي أحدث إصدار.
+  return list
+    .filter((a) => a?.id && !superseded.has(a.id))
+    .map((latest) => {
+      const history = [];
+      let cursor = latest;
+      const seen = new Set([latest.id]);
+      while (cursor?.supersedes && byId.has(cursor.supersedes) && !seen.has(cursor.supersedes)) {
+        cursor = byId.get(cursor.supersedes);
+        seen.add(cursor.id);
+        history.push(cursor);
+      }
+      return { latest, history, count: history.length + 1 };
+    });
+}

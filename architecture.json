@@ -12,7 +12,7 @@
     "modules": 89,
     "serviceDomains": 40,
     "serviceFiles": 296,
-    "collections": 70,
+    "collections": 71,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -1067,6 +1067,7 @@
       "testCount": 17,
       "exports": [
         "ACCEPTED_ATTACHMENT_TYPES",
+        "ATTACHMENT_ENTITY_KINDS",
         "ATTACHMENT_KINDS",
         "BACKDATE_COLUMNS",
         "BILLING_CHAIN",
@@ -1109,6 +1110,7 @@
         "VAN_CHAIN",
         "acceptsCopyFrom",
         "addAttachment",
+        "addEntityAttachment",
         "addReconciliation",
         "adjValue",
         "adjVariance",
@@ -1243,6 +1245,7 @@
         "listenAudit",
         "listenDocument",
         "listenDocumentsByTypes",
+        "listenEntityAttachments",
         "listenMyDocuments",
         "listenPendingApproval",
         "listenReconciliations",
@@ -1256,6 +1259,7 @@
         "missingRequired",
         "netImpact",
         "netTotal",
+        "newVersionPayload",
         "nextInChain",
         "normalizeAr",
         "normalizeRelationEndpoint",
@@ -1294,6 +1298,7 @@
         "rfqWarnings",
         "salesOrderWarnings",
         "saveDocument",
+        "sha256Hex",
         "shipmentValue",
         "sortByUrgency",
         "sourceTypesFor",
@@ -1329,6 +1334,7 @@
         "vcdWarnings",
         "vcrWarnings",
         "vcsWarnings",
+        "versionChains",
         "vldWarnings",
         "vrtWarnings",
         "vsiWarnings",
@@ -1336,7 +1342,8 @@
         "withStableLineIds"
       ],
       "collections": [
-        "documents"
+        "documents",
+        "entity_attachments"
       ]
     },
     {
@@ -3607,6 +3614,38 @@
             "roles": [
               "isStockActor",
               "isProcurementActor"
+            ]
+          },
+          {
+            "actions": [
+              "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "entity_attachments",
+        "path": "entity_attachments",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "signedIn() && request.resource.data.byUid == request.auth.uid && request.resource.data.entityKind in ['item', 'supplier', 'customer'] && request.resource.data.e",
+            "roles": [
+              "signedIn"
             ]
           },
           {

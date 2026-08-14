@@ -38,6 +38,7 @@ import {
   upsertCatalogEntry,
   canEditCatalog,
 } from '../../../services/partners/itemPartnerCatalogService.js';
+import EntityAttachments from '../documents/EntityAttachments.jsx';
 import Icon from '../../ui/Icon.jsx';
 import { int, num } from '../../odoo/format.js';
 
@@ -251,6 +252,11 @@ export default function ItemCard({ item, items, balances, me, onEdit, onClose })
         <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
           التخزين على الهويّة الداخليّة دائمًا — كود الطرف عرضٌ في مستنده ووسيلة بحثٍ في بنوده.
         </p>
+      </Section>
+
+      {/* ═══ مرفقات الصنف (SAP-11 · ف‑٢٨): شهادة · صورة · نشرة — على البطاقة لا في ملاحظة ═══ */}
+      <Section title="المرفقات">
+        <EntityAttachments entityKind="item" entityId={item.sku} me={me} />
       </Section>
 
       {/* ═══ الأرصدة التفصيليّة — كلّ رقمٍ يقف على صفوفه ═══ */}

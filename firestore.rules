@@ -623,6 +623,22 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── مرفقات البطاقات (SAP-11 · ف‑٢٨ · SR-55 ‹3446›) ──────────
+    // شهادة صنفٍ · عقد مورّدٍ · سجلّ عميل — على البطاقة لا داخل ملاحظة.
+    // نفس نموذج مرفقات المستندات حرفيًّا: ملحق-فقط باسم رافعها، لا تعديل
+    // ولا حذف (الدليل الذي يُمحى ليس دليلًا)، والحجم محكومٌ في الواجهة
+    // (ضغط < 700KB) وسقف مستند Firestore حارسٌ أخير.
+    // ⚠️ تُنشر بقرار المالك — §3-١٠ ‹49› يمنع Claude من النشر.
+    match /entity_attachments/{attId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+                    && request.resource.data.byUid == request.auth.uid
+                    && request.resource.data.entityKind in ['item', 'supplier', 'customer']
+                    && request.resource.data.entityId is string
+                    && request.resource.data.entityId != '';
+      allow update, delete: if false;
+    }
+
     // ── كتالوج الطرف‑الصنف (SAP-2 · ف‑٦ · SR-48 ‹3077›) ─────────
     // علاقة الطرف بالصنف في جدولٍ مستقلّ: كود المورّد/العميل للصنف.
     // المعرّف حتميّ (نوع__رمز__صنف) فالإعادة تحديثٌ لا تكرار.
