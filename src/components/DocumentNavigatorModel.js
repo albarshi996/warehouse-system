@@ -57,11 +57,13 @@ export function documentActionItems({
         : 'لا أثر مخزني مثبت على المستند حتى الآن.',
     },
     {
+      // SAP-17: صار للزرّ وجهةٌ حقيقيّة — لوحة الأثر المالي بالثمانية
+      // (§16.18 ‹774-783›). وكان `targetId: null` فيُعرض ملخّصٌ بلا مقصد.
       key: 'financial', label: 'الأثر المالي', icon: 'dollarSign', count: count(financialEntryCount),
-      targetId: null, disabled,
+      targetId: 'doc-financial', disabled,
       summary: financialEntryCount > 0
         ? `قُيّد للمستند ${count(financialEntryCount)} أثر مالي.`
-        : 'لا أثر مالي مثبت على المستند حتى الآن.',
+        : 'الأثر المالي مستوردٌ من النظام المالي — افتح اللوحة لحالته.',
     },
   ];
 }

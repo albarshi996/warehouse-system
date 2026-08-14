@@ -55,6 +55,7 @@ import { documentScreenUrl } from '../../../services/documentNavigator.js';
 import { approvalAuditCount } from '../../DocumentNavigatorModel.js';
 import InlineCreateModal from './InlineCreateModal.jsx';
 import LineItemsTable from './LineItemsTable.jsx';
+import FinancialImpactPanel from './FinancialImpactPanel.jsx';
 import Checklist from './Checklist.jsx';
 import StateBar from './StateBar.jsx';
 import AuditTrail from './AuditTrail.jsx';
@@ -720,6 +721,10 @@ export default function DocumentEngine() {
             onEnsureDoc={ensureSaved}
           />
         )}
+
+        {/* الأثر المالي (SAP-17): الثمانية مستوردةً من مرآة أودو — والبوابة
+            لا تُنشئ قيدًا (قرار المالك). يُعرض للمستند المحفوظ وحده. */}
+        {docId && <FinancialImpactPanel doc={doc} />}
 
         {docId && (
           <section id="document-audit" className="bg-chip border border-line rounded-2xl p-4 sm:p-5">
