@@ -11,7 +11,7 @@
   "counts": {
     "modules": 90,
     "serviceDomains": 40,
-    "serviceFiles": 305,
+    "serviceFiles": 307,
     "collections": 72,
     "roles": 16,
     "odooModels": 12,
@@ -2580,10 +2580,12 @@
         "reportDefs.test.js",
         "reportEngine.js",
         "reportEngine.test.js",
-        "stockReports.js"
+        "stockReports.js",
+        "traceReports.js",
+        "traceReports.test.js"
       ],
-      "fileCount": 8,
-      "testCount": 3,
+      "fileCount": 10,
+      "testCount": 4,
       "exports": [
         "ACCOUNT_REPORTS",
         "COLUMN_KINDS",
@@ -2597,11 +2599,17 @@
         "definitionProblems",
         "exportRows",
         "formatCell",
+        "forwardTrace",
         "getReport",
+        "item360",
         "reportIds",
         "reportsForRole",
+        "reverseTrace",
         "runReport",
-        "totalsOf"
+        "supplier360",
+        "totalsOf",
+        "traceAnswers",
+        "traceMoves"
       ],
       "collections": []
     },
