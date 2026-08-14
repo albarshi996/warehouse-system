@@ -27,8 +27,11 @@ const QC_WITH_REJECTS = {
   ],
 };
 
-test('الاستلام صار خطّيًّا نحو الفحص، والفحص يتفرّع: تخزينٌ وإشعار رفض', () => {
-  assert.deepEqual(derivationTargets('GRN'), ['QC']);
+test('الاستلام يتفرّع: فحصٌ وإرجاعٌ للمورّد، والفحص يتفرّع: تخزينٌ وإشعار رفض', () => {
+  // SAP-10 (ف‑٤٨): أُضيف `VRT` — فصار للإرجاع للمورّد مسارٌ كمّيّ من
+  // الاستلام تُحسب منه الكمّيّة المؤهلة، وعلاقته `RETURN` لا `BASE`
+  // (المرتجع عكسُ جزءٍ من الاستلام لا إتمامٌ له).
+  assert.deepEqual(derivationTargets('GRN'), ['QC', 'VRT']);
   assert.deepEqual(derivationTargets('QC'), ['PUTAWAY', 'SRN']);
 });
 

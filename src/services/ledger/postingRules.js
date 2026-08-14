@@ -27,7 +27,7 @@
  */
 import { SYSTEM_LOCATIONS, EXTERNAL } from './locations.js';
 
-const { RECEIVING, QUARANTINE, STAGING, TRANSIT, SCRAP, ADJUSTMENT } = SYSTEM_LOCATIONS;
+const { RECEIVING, QUARANTINE, STAGING, TRANSIT, SCRAP, ADJUSTMENT, RETURNS } = SYSTEM_LOCATIONS;
 
 /**
  * رموز المستودعات المقروءة من رأس المستند وقت التنفيذ (لا مواقع نظامٍ ثابتة).
@@ -160,14 +160,22 @@ export const POSTING_RULES = {
     reason: 'delivery',
     labelAr: 'تسليم للعميل',
   },
+  /**
+   * مرتجع العميل يهبط في **منطقة فحص المرتجعات** لا في المخزون الصالح
+   * (SAP-10 · §15 ‹430› · المرجع ‹3636›): البضاعة العائدة مجهولة الحال حتى
+   * تُفحص، فتُفرز بعدها ثلاثًا — صالحٌ للمستودع · إصلاحٌ للصيانة · تالفٌ
+   * للإتلاف. وكانت تهبط في `RECEIVING` (ساحة استلام المورّد) فتختلط
+   * بالوارد الجديد ويظهر كلاهما «وصل ولم يُخزَّن» بلا تمييز.
+   * والقديم لا يُمسّ: حركاتٌ قُيّدت تبقى كما قُيّدت (دفترٌ ملحق-فقط).
+   */
   RET: {
     from: EXTERNAL,
-    to: RECEIVING.code,
+    to: RETURNS.code,
     qtyField: 'qty',
     expiryField: 'expiry',
     costField: 'unitPrice',
     reason: 'return-in',
-    labelAr: 'إرجاع وارد',
+    labelAr: 'إرجاع وارد — إلى الفحص',
   },
   DMG: {
     from: WAREHOUSE,

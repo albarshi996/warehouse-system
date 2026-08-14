@@ -114,7 +114,15 @@ export function derivationTargets(type) {
   // يتفرّع اثنتين (تخزينُ المقبول · إشعارُ رفضٍ للمورّد بالبنود المرفوضة)،
   // وتحميل المركبة اثنتين (بيعٌ ميدانيّ · إرجاعُ ما لم يُبَع). البيع الميدانيّ
   // نهائيّ ([] عمدًا): الإرجاع يُشتقّ من التحميل لا من البيع — يُرجَع ما لم يُبَع.
-  const branches = { DN: ['GP', 'INV', 'POD'], QC: ['PUTAWAY', 'SRN'], VLD: ['VSI', 'VRT'], VSI: [] };
+  // ومسارا الإرجاع (SAP-10 · ف‑٤٨): من الاستلام يُرجَع للمورّد، ومن التسليم
+  // يُرجِع العميل — بعلاقة `RETURN` لا `BASE` (انظر derivationLinkType).
+  const branches = {
+    DN: ['GP', 'INV', 'POD', 'RET'],
+    GRN: ['QC', 'VRT'],
+    QC: ['PUTAWAY', 'SRN'],
+    VLD: ['VSI', 'VRT'],
+    VSI: [],
+  };
   if (branches[type]) return branches[type];
   const n = nextInChain(type);
   return n ? [n] : [];
@@ -211,6 +219,11 @@ const LINE_MAP = {
   'VLD>VSI': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', uom: 'uom', batch: 'batch', expiry: 'expiry' },
   // الإرجاع يرث التكلفة (يرجع للمخزن بقيمته) والتشغيلة والصلاحية.
   'VLD>VRT': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', batch: 'batch', expiry: 'expiry', unitCost: 'unitCost' },
+  // مسارا الإرجاع الكمّيّان (SAP-10 · يسدّان ف‑٤٨): كانا غائبَين فكانت
+  // «الكمّيّة المؤهلة للإرجاع» غير معرَّفة في النظام. المرتجع يرث الهويّة
+  // والتشغيلة والصلاحية والسعر — والكمّيّة يحكمها المؤهَّل لا المستند كلّه.
+  'GRN>VRT': { sku: 'sku', barcode: 'barcode', description: 'description', qtyReceived: 'qty', batch: 'batch', expiry: 'expiry', unitPrice: 'unitPrice' },
+  'DN>RET': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', batch: 'batch', expiry: 'expiry', unitPrice: 'unitPrice' },
 };
 
 /** حقل الكمية الذي يُستهلك من المصدر ويُكتب في الابن عند الاشتقاق الجزئي. */
@@ -238,11 +251,31 @@ const DERIVATION_QUANTITY_FIELDS = Object.freeze({
   // مجموعُهما المُحمَّلَ — فلا يكذب الفرعان معًا ولو خطّط كلٌّ بمعزلٍ عن أخيه.
   'VLD>VSI': ['qty', 'qty'],
   'VLD>VRT': ['qty', 'qty'],
+  // الإرجاع (SAP-10 · ف‑٤٨): المستهلَك هو **المنفَّذ فعلًا** — المستلَم من
+  // الاستلام والمسلَّم من التسليم؛ فالرصيد المفتوح يصير «المؤهَّل للإرجاع»
+  // ولا يُرجع ما لم يقع ولا يُرجع مرّتين (returnsFlow.returnableQuantity).
+  'GRN>VRT': ['qtyReceived', 'qty'],
+  'DN>RET': ['qty', 'qty'],
 });
 
 export function derivationQuantityFields(sourceType, targetType) {
   const pair = DERIVATION_QUANTITY_FIELDS[`${sourceType}>${targetType}`];
   return pair ? { source: pair[0], target: pair[1] } : null;
+}
+
+/**
+ * أزواج **الإرجاع** — علاقتها `RETURN` لا `BASE` (SAP-10).
+ *
+ * ولماذا يهمّ؟ لأنّ `documentLineProgress` يحسب «المنفَّذ» من روابط
+ * BASE/TARGET وحدها. فلو كُتب المرتجع أساسًا لصار استلامُ مئةٍ وإرجاعُ
+ * عشرةٍ «تنفيذًا لمئةٍ وعشر» — وهو كذبٌ يقلب المطابقة الثلاثية.
+ * الإرجاع ليس إتمامًا للاستلام، بل عكسٌ لجزءٍ منه.
+ */
+const RETURN_PAIRS = new Set(['GRN>VRT', 'DN>RET']);
+
+/** نوع الرابط الذي يُنشئه اشتقاقُ زوجٍ ما — الافتراض `BASE`. */
+export function derivationLinkType(sourceType, targetType) {
+  return RETURN_PAIRS.has(`${sourceType}>${targetType}`) ? 'RETURN' : 'BASE';
 }
 
 /** المراجع النصّية المطبوعة على الورق — تُشتقّ ولا تُكتب. */

@@ -34,8 +34,11 @@ test('أمر البيع يرأس الصادر، والفوترة سلسلةٌ م
   assert.equal(nextInChain('INV'), null, 'الفاتورة تنهي الفوترة');
 });
 
-test('إذن التسليم يتفرّع: تصريح خروج وفاتورة وتأكيد تسليم', () => {
-  assert.deepEqual(derivationTargets('DN'), ['GP', 'INV', 'POD']);
+test('إذن التسليم يتفرّع: تصريح خروج وفاتورة وتأكيد تسليم ومرتجع عميل', () => {
+  // SAP-10 (ف‑٤٨): أُضيف `RET` فرعًا رابعًا — به صار للمرتجع مسارٌ كمّيّ
+  // تُحسب منه «الكمّيّة المؤهلة للإرجاع»، وعلاقته `RETURN` لا `BASE` فلا
+  // يُحسب المرتجع تنفيذًا للتسليم.
+  assert.deepEqual(derivationTargets('DN'), ['GP', 'INV', 'POD', 'RET']);
   assert.deepEqual(derivationTargets('SO'), ['PICK'], 'أمر البيع خطّيّ إلى السحب');
   assert.deepEqual(derivationTargets('GP'), [], 'التصريح ينهي مساره');
 });

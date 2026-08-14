@@ -30,7 +30,7 @@ import {
 import { db, auth } from '../../config/firebase.js';
 import { reserveNumber } from './numbering.js';
 import { INITIAL_STATE, isEditable, isLegalTransition, canDo, TRANSITIONS } from './states.js';
-import { derivationTargets, parentApprovalProblem, vanIdentityProblem, VAN_CHAIN } from './chain.js';
+import { derivationTargets, derivationLinkType, parentApprovalProblem, vanIdentityProblem, VAN_CHAIN } from './chain.js';
 import { getSchema } from './schemas/index.js';
 import { primaryParentType } from './schemaUtils.js';
 import { dateSaveVerdict, defaultValueFor, eventFieldsOf } from './datingGuard.js';
@@ -615,6 +615,8 @@ export async function createCombinedInChain(sourceDocs, profile, toType = null, 
       : derivePartialDocument(prepared[0].live, targetType, prepared[0].plan);
     const schema = getSchema(draft.type);
     const linePairs = combinedLinePairs(sourcePlans, draft);
+    // نوع الرابط من الزوج نفسه (SAP-10): الإرجاع علاقةُ `RETURN` لا `BASE` —
+    // فلا يُحسب المرتجع تنفيذًا لأصله في المطابقة والرصيد المفتوح.
     const relations = linePairs.length
       ? linePairs.map((pair) => createDocumentRelation({
         source: { document: pair.sourceDocument, line: pair.sourceLine, lineIndex: pair.sourceLineIndex },
@@ -625,7 +627,7 @@ export async function createCombinedInChain(sourceDocs, profile, toType = null, 
           line: pair.targetLine,
           lineIndex: pair.targetLineIndex,
         },
-        linkType: 'BASE',
+        linkType: derivationLinkType(pair.sourceDocument.type, draft.type),
         linkedQuantity: pair.quantity,
         uom: pair.uom,
         operationId: `derive:${pair.sourceDocument.id}:${childRef.id}`,
@@ -634,7 +636,7 @@ export async function createCombinedInChain(sourceDocs, profile, toType = null, 
       : prepared.map((item) => createDocumentRelation({
         source: { document: item.live },
         target: { documentId: childRef.id, documentType: draft.type, documentNumber: null },
-        linkType: 'BASE',
+        linkType: derivationLinkType(item.live.type, draft.type),
         operationId: `derive:${item.live.id}:${childRef.id}`,
         correlationId: item.live.id,
       }));
