@@ -7,9 +7,10 @@
 import { buildRegistry } from './reportEngine.js';
 import { STOCK_REPORTS } from './stockReports.js';
 import { ACCOUNT_REPORTS } from './accountReports.js';
+import { OPERATIONS_REPORTS } from './operationsReports.js';
 
 /** المعرّف → التعريف. `buildRegistry` يرمي عند التكرار. */
-export const REPORTS = buildRegistry(STOCK_REPORTS, ACCOUNT_REPORTS);
+export const REPORTS = buildRegistry(STOCK_REPORTS, ACCOUNT_REPORTS, OPERATIONS_REPORTS);
 
 /** تعريف تقريرٍ بعينه، أو `null`. */
 export function getReport(id) {
@@ -21,4 +22,4 @@ export function reportIds() {
   return Object.keys(REPORTS);
 }
 
-export { STOCK_REPORTS, ACCOUNT_REPORTS };
+export { STOCK_REPORTS, ACCOUNT_REPORTS, OPERATIONS_REPORTS };

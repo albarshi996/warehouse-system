@@ -11,7 +11,7 @@
   "counts": {
     "modules": 90,
     "serviceDomains": 40,
-    "serviceFiles": 303,
+    "serviceFiles": 305,
     "collections": 72,
     "roles": 16,
     "odooModels": 12,
@@ -2575,17 +2575,20 @@
       "files": [
         "accountReports.js",
         "index.js",
+        "operationsReports.js",
+        "reportCoverage.test.js",
         "reportDefs.test.js",
         "reportEngine.js",
         "reportEngine.test.js",
         "stockReports.js"
       ],
-      "fileCount": 6,
-      "testCount": 2,
+      "fileCount": 8,
+      "testCount": 3,
       "exports": [
         "ACCOUNT_REPORTS",
         "COLUMN_KINDS",
         "FILTER_KINDS",
+        "OPERATIONS_REPORTS",
         "REPORTS",
         "STOCK_REPORTS",
         "applyFilters",

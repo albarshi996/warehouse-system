@@ -7,7 +7,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { REPORTS, getReport, reportIds, STOCK_REPORTS, ACCOUNT_REPORTS } from './index.js';
+import { REPORTS, getReport, reportIds, STOCK_REPORTS, ACCOUNT_REPORTS, OPERATIONS_REPORTS } from './index.js';
 import { definitionProblems, runReport, canOpen } from './reportEngine.js';
 import { AGING_BUCKETS } from '../ledger/partnerLedger.js';
 
@@ -31,10 +31,13 @@ test('★★ وكلٌّ منها يعمل على بياناتٍ فارغة ول�
   }
 });
 
-test('★ الدفعتان ستٌّ وستٌّ كما في الخطة', () => {
+test('★ الدفعات الثلاث: ٦ مخزون + ٦ حسابات + ٥ تشغيليّة', () => {
   assert.equal(STOCK_REPORTS.length, 6, 'ر‑١: تقارير المخزون الستّة');
   assert.equal(ACCOUNT_REPORTS.length, 6, 'ر‑٢: تقارير الحسابات الستّة');
-  assert.equal(reportIds().length, 12);
+  // SAP-14 (طلب المالك 2026-08-14): دفعةٌ ثالثة تُغلق ف‑٤٧ — البيع والفروع
+  // والنقل والمندوبون وسجلّ المستندات الجامع، ويحرسها `reportCoverage`.
+  assert.equal(OPERATIONS_REPORTS.length, 5, 'ر‑٣: التقارير التشغيليّة الخمسة');
+  assert.equal(reportIds().length, 17);
 });
 
 test('★ وأوّل تقارير المخزون كشف حركة الصنف (نصّ الخطة)', () => {
