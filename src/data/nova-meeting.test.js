@@ -14,9 +14,14 @@ import {
   documentCycles,
   documentShortcutGrid,
   executionSteps,
+  masterData,
+  operationDoors,
   portalShortcuts,
+  reportFamilies,
   slideIndex,
+  unificationLayers,
 } from './nova-meeting.js';
+import { REPORTS as DETAILED_REPORTS } from '../services/reports/index.js';
 import { internalPaths } from '../services/auth/navCatalog.js';
 import { ALWAYS_ALLOWED } from '../services/auth/pageAccess.js';
 import { getSchema } from '../services/documents/schemas/index.js';
@@ -87,10 +92,55 @@ test('شبكة إنشاء المستندات: كل زرٍّ يفتح نوعًا 
 
 test('فهرس الشرائح: بلا تكرار (التسمية مفتاح React) وبعدد الشرائح المرسومة', () => {
   assert.equal(new Set(slideIndex).size, slideIndex.length);
-  // ٩ شرائح تمهيدية + خطوةٌ لكل خطوةٍ تنفيذية + ١١ شريحة إقفال ومراجع.
-  assert.equal(slideIndex.length, 9 + executionSteps.length + 11);
+  // الفصل الأول: ٩ تمهيدية + خطوةٌ لكل خطوةٍ تنفيذية + ١٠ إقفالٍ ومراجع.
+  // الفصل الثاني: ١٣ شريحة (فاصل + غرض + طبقات + ٩ شاشات + الطلب). ثم الإقفال.
+  assert.equal(slideIndex.length, 9 + executionSteps.length + 10 + 13 + 1);
   for (const step of executionSteps) {
     assert.ok(slideIndex.includes(`خطوة ${step.n} — ${step.title}`), `الخطوة ${step.n} بلا شريحةٍ في الفهرس`);
+  }
+  // الفاصل يسبق شرائح الفصل الثاني ويلي الوثيقة المصدر — وإلا انقلب المعنى.
+  const divider = slideIndex.indexOf('الفصل الثاني — توحيد المفاهيم');
+  assert.ok(divider > slideIndex.indexOf('الوثيقة المصدر كاملةً'));
+  assert.ok(divider < slideIndex.indexOf('الطلب الموثّق لمنفّذ أودو'));
+  assert.equal(slideIndex.at(-1), 'إقفال الاجتماع');
+});
+
+test('الفصل الثاني: مرجعيّاته موصولةٌ باختصاراتٍ قائمة، وطبقاته أربع', () => {
+  assert.equal(unificationLayers.length, 4);
+  for (const item of masterData) {
+    assert.ok(portalShortcuts[item.key], `المرجعيّة «${item.title}» تشير إلى اختصارٍ غير معرّف: ${item.key}`);
+    assert.ok(item.body?.trim(), `المرجعيّة «${item.title}» بلا شرح`);
+  }
+  // شاشات الفصل الثاني التي يَعِد بها العرض — كلّها في كتالوج القائمة.
+  for (const key of ['warehouses', 'suppliers', 'customers', 'orderControl', 'analytics', 'fieldOps', 'vanOps', 'ledger', 'reports', 'documents', 'transfers', 'items']) {
+    assert.ok(portalShortcuts[key], `اختصار الفصل الثاني «${key}» غير معرّف`);
+    assert.ok(knownPaths.has(portalShortcuts[key].path), `اختصار «${key}» يشير إلى مسارٍ مجهول`);
+  }
+});
+
+test('أبواب العمليات الخمسة: كل رمزٍ في سلسلتها مخطّطٌ مبنيّ', () => {
+  assert.equal(operationDoors.length, 5);
+  for (const door of operationDoors) {
+    const codes = door.chain.split('→').map((part) => part.trim()).filter(Boolean);
+    assert.ok(codes.length >= 1, `الباب «${door.title}» بلا سلسلة`);
+    for (const code of codes) {
+      assert.ok(getSchema(code), `الباب «${door.title}» يعد بمستند ${code} ولا مخطّط له`);
+    }
+  }
+});
+
+test('عائلات التقارير تطابق سجلّ التقارير الحقيقيّ عددًا وعنوانًا', () => {
+  const live = Object.values(DETAILED_REPORTS);
+  assert.equal(reportFamilies.reduce((sum, family) => sum + family.count, 0), live.length);
+
+  for (const family of reportFamilies) {
+    const titles = live.filter((report) => report.group === family.group).map((report) => report.titleAr);
+    assert.equal(titles.length, family.count, `عدد تقارير «${family.group}» انحرف عن السجلّ`);
+    assert.equal(family.items.length, family.count, `قائمة «${family.group}» لا تطابق عدّها المعلن`);
+    for (const item of family.items) {
+      // العنوان المعروض إمّا حرفيّ أو مختصرٌ يبدأ به عنوان السجلّ (المورّدون 360°).
+      assert.ok(titles.some((title) => title === item || title.startsWith(item)), `«${item}» ليس تقريرًا في مجموعة ${family.group}`);
+    }
   }
 });
 

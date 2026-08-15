@@ -18,20 +18,31 @@ import {
   escalation,
   executionSteps,
   executiveSummary,
+  fieldLayer,
   governanceGate,
+  implementerAsk,
   keyboardHelp,
   kpis,
+  ledgerConcept,
+  masterData,
   meetingMeta,
   objectives,
+  operationDoors,
   outOfScope,
   portalShortcuts,
   raciColumns,
   raciLegend,
   raciRows,
+  reportFamilies,
   responsibilities,
   risks,
   slideIndex,
   timeline,
+  transferJourney,
+  transferQuestions,
+  unificationLayers,
+  unificationPurpose,
+  uomConcept,
   varianceRules,
 } from '../../data/nova-meeting.js';
 
@@ -173,7 +184,7 @@ function HowToSlide() {
       <SlideHead
         kicker="قبل أن نبدأ"
         title="هذا ليس ملفًّا يُقرأ — هو الخطة موصولةً بالشاشات التي تُنفَّذ فيها"
-        intro="كل خطوة في الخطة تحمل بطاقة اختصار: اسم الشاشة، ومسارها، والنقرات داخلها، والدليل الذي تُخرجه. تُفتح الشاشة في تبويبٍ مستقل فلا ينقطع العرض."
+        intro="فصلان: خطةُ جرد نوفا، ثم توحيدُ المفاهيم — التصوّر التشغيليّ الموحَّد شاشةً شاشة، طلبًا موثّقًا للشركة المنفّذة لأودو. وكل خطوةٍ في الفصلين تحمل بطاقة اختصارٍ تفتح شاشتها."
       />
       <div className="nv-howto">
         <section>
@@ -188,8 +199,8 @@ function HowToSlide() {
         </section>
         <section>
           <b>03</b>
-          <h3>المصدر حاضر</h3>
-          <p>الوثيقة الرسمية {meetingMeta.docNumber} معروضةٌ كاملةً داخل العرض قبل شريحة الإقفال — للرجوع إليها عند أي خلاف.</p>
+          <h3>فصلان وجمهوران</h3>
+          <p>الأوّل لفريق نوفا وينتهي بالوثيقة {meetingMeta.docNumber} كاملةً؛ والثاني يخاطب معه الشركة المنفّذة لأودو.</p>
         </section>
       </div>
       <div className="nv-keys">
@@ -203,10 +214,14 @@ function HowToSlide() {
 function AgendaSlide() {
   return (
     <>
-      <SlideHead kicker="مسار الاجتماع" title="من المرجعية إلى قراراتٍ مسجَّلة" />
+      <SlideHead kicker="مسار الاجتماع · الفصل الأول" title="من المرجعية إلى قراراتٍ مسجَّلة" />
       <div className="nv-agenda">
         {agenda.map(([n, title, detail]) => <div key={n}><b>{n}</b><h3>{title}</h3><p>{detail}</p></div>)}
       </div>
+      <p className="nv-agenda-foot">
+        <b>ثم الفصل الثاني — توحيد المفاهيم:</b> التصوّر التشغيليّ الموحَّد شاشةً شاشة
+        (مرجعيّات · حركة · رقابة · تحليل)، ينتهي بالطلب الموثّق للشركة المنفّذة لأودو.
+      </p>
     </>
   );
 }
@@ -643,9 +658,279 @@ function OutcomeSlide() {
         <section><b>01</b><h3>محضر تنسيق موقّع</h3><p>يثبّت المواعيد ورمزي العمليتين والممثلين والمخوّلين بالاعتماد.</p></section>
         <section><b>02</b><h3>عشر نقاط محسومة</h3><p>لكلٍّ نتيجةٌ ومسؤولٌ وموعد — منسوخةً من لوحة الحسم في هذا العرض.</p></section>
         <section><b>03</b><h3>ضوءٌ أخضر خطي</h3><p>لكل فرعٍ على حدة، مع نافذة إيقاف الحركة أو سجل الحركة الطارئة.</p></section>
-        <section><b>04</b><h3>دوراتٌ مُفعَّلة</h3><p>النقل والبيع وتحميل المندوبين تعمل بسلاسلها الكاملة بعد الإقفال.</p></section>
+        <section><b>04</b><h3>مرجعُ مفاهيمٍ واحد</h3><p>الفصل الثاني يُسلَّم كما هو للشركة المنفّذة لأودو: تصوّرٌ مبنيٌّ يعمل، لا وصفٌ يحتمل التأويل.</p></section>
       </div>
-      <p className="nv-outcome-foot">النتيجة المستهدفة: <b>رصيدٌ موثوق لكل فرع · فصلٌ كامل بين الفرعين · وكل حركةٍ بعد الجرد لها سلسلةٌ مستنديّة تُقفلها.</b></p>
+      <p className="nv-outcome-foot">النتيجة المستهدفة: <b>رصيدٌ موثوق لكل فرع · فصلٌ كامل بين الفرعين · كل حركةٍ لها سلسلةٌ مستنديّة تُقفلها · ومصطلحٌ واحد لا يختلف عليه اثنان.</b></p>
+    </>
+  );
+}
+
+/*
+  ═══════════════════════════════════════════════════════════════════
+  الفصل الثاني — توحيد المفاهيم (الطلب الموثّق لمنفّذ أودو)
+  ═══════════════════════════════════════════════════════════════════
+  ترتيب الشرائح هنا **دورة حياة البيانات**: مرجعيّاتٌ تُعرَّف مرّة ← حركةٌ
+  تُقيَّد كل يوم ← رقابةٌ تمسك المتعثّر ← تحليلٌ يقرأ الأثر. وليس ترتيب
+  الشاشات في القائمة الجانبية — فشرح التقرير قبل الماستر يقلب المعنى.
+*/
+function ChapterTwoDivider() {
+  return (
+    <div className="nv-chapter">
+      <span>الفصل الثاني</span>
+      <h1>توحيد المفاهيم</h1>
+      <h2>التصوّر التشغيليّ الموحَّد — شاشةً شاشة</h2>
+      <p>
+        ما سبق خطةُ جردٍ لفرعَي نوفا. وما يلي أوسع منها وأبقى: <b>المعنى الذي نعمل به</b> —
+        مطروحًا مبنيًّا في شاشاتٍ تعمل، ليكون طلبنا من الشركة المنفّذة لأودو موثّقًا
+        بتصوّرٍ قابلٍ للتنفيذ لا بوصفٍ يحتمل التأويل.
+      </p>
+      <footer><b>الجمهور الثاني:</b> الشركة المنفّذة لأودو — إلى جانب فريق نوفا</footer>
+    </div>
+  );
+}
+
+function UnificationPurposeSlide() {
+  return (
+    <>
+      <SlideHead kicker="لماذا هذا الفصل" title="الطلب الموصوف يُنفَّذ غير ما نريد" />
+      <div className="nv-purpose">
+        <section className="is-problem">
+          <b>العطب</b>
+          <p>{unificationPurpose.problem}</p>
+        </section>
+        <section className="is-answer">
+          <b>ما نفعله بدلًا منه</b>
+          <p>{unificationPurpose.answer}</p>
+        </section>
+      </div>
+      <p className="nv-purpose-rule">{unificationPurpose.rule}</p>
+    </>
+  );
+}
+
+function LayersSlide() {
+  return (
+    <>
+      <SlideHead kicker="طبقات التصوّر" title="أربع طبقات بترتيبٍ لا يُقلب" intro="الشرائح التالية تسير على هذا الترتيب: ما يُعرَّف مرّةً قبل ما يُقيَّد يوميًّا، وما يُقيَّد قبل ما يُقرأ." />
+      <div className="nv-layers">
+        {unificationLayers.map(([n, title, screens, why]) => (
+          <section key={n}>
+            <b>{n}</b>
+            <div>
+              <h3>{title}</h3>
+              <span>{screens}</span>
+            </div>
+            <p>{why}</p>
+          </section>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function MasterDataSlide({ base }) {
+  return (
+    <>
+      <SlideHead kicker="الطبقة ١ · المرجعيّات" title="ثلاثة ماسترات تُعرَّف مرّةً فيُبنى عليها كل رقم" intro="الموردون والعملاء شاشةٌ واحدة بتوأمين — لأن المفهوم واحد: شريك أعمالٍ له كِيانٌ ودفتر." />
+      <div className="nv-master">
+        {masterData.map((item) => (
+          <section key={item.key}>
+            <h3>{item.title}</h3>
+            <p>{item.body}</p>
+            <a href={shortcutHref(base, item.key)} target="_blank" rel="noreferrer"><LaunchIcon /> {portalShortcuts[item.key].label}</a>
+            <ol>
+              {portalShortcuts[item.key].clicks.map((click, index) => <li key={click}><i>{index + 1}</i>{click}</li>)}
+            </ol>
+          </section>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function UomSlide({ base }) {
+  return (
+    <>
+      <SlideHead kicker="الطبقة ١ · الصنف ووحدته" title="«صندوق» و«قطعة» نصّان بلا معنًى حسابيّ حتى يُعرَّف المعامل" intro={uomConcept.problem} />
+      <div className="nv-uom">
+        <div>
+          <div className="nv-uom-families">
+            {uomConcept.families.map(([label, base_, fraction]) => (
+              <span key={label}><b>{label}</b><i>{base_}</i><em>{fraction}</em></span>
+            ))}
+          </div>
+          <div className="nv-uom-rules">
+            {uomConcept.rules.map(([rule, detail]) => (
+              <p key={rule}><b>{rule}</b>{detail}</p>
+            ))}
+          </div>
+        </div>
+        <aside>
+          <ShortcutCard base={base} shortcutKey="items" compact />
+          <div className="nv-uom-fields">
+            <b>حقول الصنف في الشاشة</b>
+            <div>{uomConcept.fields.map((field) => <span key={field}>{field}</span>)}</div>
+          </div>
+        </aside>
+      </div>
+    </>
+  );
+}
+
+function OperationDoorsSlide({ base }) {
+  return (
+    <>
+      <SlideHead
+        kicker="الطبقة ٢ · الحركة"
+        title="خمسة أبواب في شاشة المستندات — لا خمسة أنظمة"
+        intro="هذه أسماء المجموعات كما هي في «بدء مستند جديد»: ما تراه هنا تجده هناك بالحرف."
+      />
+      <div className="nv-doors">
+        {operationDoors.map((door) => (
+          <section key={door.title}>
+            <h3>{door.title}</h3>
+            <b dir="ltr">{door.chain}</b>
+            <span>{door.extra}</span>
+            <p>{door.note}</p>
+          </section>
+        ))}
+      </div>
+      <div className="nv-doors-foot">
+        <a href={shortcutHref(base, 'documents')} target="_blank" rel="noreferrer"><LaunchIcon /> فتح شاشة المستندات</a>
+        <p>الشاشة نفسها تحمل «بانتظار اعتمادي» و«مستنداتي» و«العمل المفتوح» — فما لم يكتمل لا يختفي.</p>
+      </div>
+    </>
+  );
+}
+
+function TransferJourneySlide({ base }) {
+  return (
+    <>
+      <SlideHead kicker="الطبقة ٢ · النقل بين المستودعات" title="من الخروج إلى الاستلام — والفرق له سببٌ وتسوية" />
+      <div className="nv-journey">
+        {transferJourney.map(([stage, code, body], index) => (
+          <section key={stage}>
+            <header><b>{String(index + 1).padStart(2, '0')}</b><h3>{stage}</h3><span dir="ltr">{code}</span></header>
+            <p>{body}</p>
+          </section>
+        ))}
+      </div>
+      <div className="nv-journey-foot">
+        <div>
+          <b>ثلاثة أسئلة تجيب عنها اللوحة</b>
+          <ul>{transferQuestions.map((q) => <li key={q}>{q}</li>)}</ul>
+        </div>
+        <ShortcutCard base={base} shortcutKey="transfers" compact />
+      </div>
+    </>
+  );
+}
+
+function FieldLayerSlide({ base }) {
+  return (
+    <>
+      <SlideHead kicker="الطبقة ٢ · الميدان والبيع من المركبة" title="المركبة مستودعٌ متنقّل — لا استثناءٌ من المستندات" intro="البضاعة تخرج بعهدةٍ موثّقة، وتعود الرحلة بتسويةٍ تُقفل المتبقّي." />
+      <div className="nv-field">
+        {fieldLayer.map(([code, title, body]) => (
+          <section key={code}>
+            <b dir="ltr">{code}</b>
+            <h3>{title}</h3>
+            <p>{body}</p>
+          </section>
+        ))}
+      </div>
+      <div className="nv-field-links">
+        <ShortcutCard base={base} shortcutKey="vanOps" compact />
+        <ShortcutCard base={base} shortcutKey="fieldOps" compact />
+      </div>
+    </>
+  );
+}
+
+function OrderControlSlide({ base }) {
+  return (
+    <>
+      <SlideHead kicker="الطبقة ٣ · الرقابة" title="الطلب المتعثّر يُرى قبل أن يشتكي العميل" intro="تقريران يحوّلان أوامر البيع إلى قرار: أين توقّف الطلب، وأيّ صنفٍ أعجزه." />
+      <div className="nv-control">
+        <div className="nv-control-cards">
+          <section><b>الطلبات المعلّقة</b><p>كل أمرٍ لم يُسلَّم، مصنَّفًا بالرصيد وسبب التعثّر — فيرى المدير أين توقّف كل طلب بدل مطاردته بالهاتف.</p></section>
+          <section><b>الأصناف غير المتوفّرة</b><p>العجز مجمَّعًا صنفًا صنفًا بقيمته المفقودة ومتوسط طلبه — إشارةُ شراءٍ مسبَّبة تُغذّي التنبؤ وحدّ المخزون الأدنى.</p></section>
+        </div>
+        <ShortcutCard base={base} shortcutKey="orderControl" compact />
+      </div>
+    </>
+  );
+}
+
+function LedgerSlide({ base }) {
+  return (
+    <>
+      <SlideHead kicker="الطبقة ٣ · دفتر حركات المخزون" title="الرصيد نتيجةٌ تُشتقّ، لا حقلٌ يُكتب" intro={ledgerConcept.lead} />
+      <div className="nv-ledger">
+        <div>
+          <div className="nv-ledger-cols">
+            <b>أعمدة الحركة</b>
+            <div>{ledgerConcept.columns.map((c) => <span key={c}>{c}</span>)}</div>
+          </div>
+          <div className="nv-ledger-cols">
+            <b>أرصدة الصنف</b>
+            <div>{ledgerConcept.balances.map((c) => <span key={c}>{c}</span>)}</div>
+          </div>
+          <p className="nv-ledger-rule">{ledgerConcept.rule}</p>
+          <p className="nv-ledger-link">{ledgerConcept.link}</p>
+        </div>
+        <ShortcutCard base={base} shortcutKey="ledger" compact />
+      </div>
+    </>
+  );
+}
+
+function ReportsSlide({ base }) {
+  return (
+    <>
+      <SlideHead kicker="الطبقة ٤ · التحليل" title="تسعة عشر تقريرًا على محرّكٍ واحد" intro="التقرير عندنا ملفُّ تعريفٍ لا شاشة — فإضافة تقريرٍ لا تعني بناء صفحة. وهذه التقارير معيار الاستلام لا وثيقة وعد." />
+      <div className="nv-reports">
+        {reportFamilies.map((family) => (
+          <section key={family.group}>
+            <header><h3>{family.group}</h3><b>{family.count}</b></header>
+            <ul>{family.items.map((item) => <li key={item}>{item}</li>)}</ul>
+          </section>
+        ))}
+      </div>
+      <div className="nv-reports-foot">
+        <a href={shortcutHref(base, 'reports')} target="_blank" rel="noreferrer"><LaunchIcon /> فتح التقارير التفصيليّة</a>
+        <span>كل تقريرٍ بمرشّحاته وأعمدته، ويُصدَّر ويُطبع — ويُرشَّح بدور من يفتحه.</span>
+      </div>
+    </>
+  );
+}
+
+function AnalyticsSlide({ base }) {
+  return (
+    <>
+      <SlideHead kicker="الطبقة ٤ · تحليل المخزون" title="أين يرقد مالك على الرفّ" intro="ثلاث نظراتٍ محسوبةٍ من ماستر الأصناف ودفتر الحركات القائمَين — لا من إدخالٍ يدويّ." />
+      <div className="nv-analytics">
+        <div className="nv-analytics-cards">
+          <section><b>تقييم المخزون بالفئات</b><span>الفئة · عدد الأصناف · القيمة · الحصّة</span><p>أين قيمتك محبوسة، وأيّ فئةٍ تبتلع رأس المال.</p></section>
+          <section><b>المخزون الراكد</b><span>بلا صرفٍ منذ…</span><p>الصنف الذي توقّف عن الحركة — قرار تصفيةٍ أو ترويج.</p></section>
+          <section><b>مقترحات إعادة الطلب</b><span>الرصيد · الحدّ الأدنى · النقص · قيمة التجديد</span><p>ماذا تشتري الآن وبكم — مشتقًّا من الحدّ الأدنى لا من الذاكرة.</p></section>
+        </div>
+        <ShortcutCard base={base} shortcutKey="analytics" compact />
+      </div>
+    </>
+  );
+}
+
+function ImplementerAskSlide() {
+  return (
+    <>
+      <SlideHead kicker="مخرَج الفصل الثاني" title="ما نطلبه من الشركة المنفّذة — أربعة بنود لا أكثر" intro="ما سبق عرضُه مبنيّ ويعمل. والمطلوب نقل معناه إلى أودو، لا إعادة اختراعه." />
+      <div className="nv-ask">
+        {implementerAsk.map(([n, title, body]) => (
+          <section key={n}><b>{n}</b><h3>{title}</h3><p>{body}</p></section>
+        ))}
+      </div>
+      <p className="nv-ask-foot">{unificationPurpose.rule}</p>
     </>
   );
 }
@@ -708,6 +993,20 @@ export default function NovaMeetingDeck({ base }) {
       <DecisionsSlide key="decisions" />,
       <ClosingCriteriaSlide key="closing" base={base} />,
       null, // موضع شريحة المصدر — تُبنى أدناه لأنها تعتمد على `seen`
+      // ── الفصل الثاني: توحيد المفاهيم ──
+      <ChapterTwoDivider key="chapter-two" />,
+      <UnificationPurposeSlide key="purpose" />,
+      <LayersSlide key="layers" />,
+      <MasterDataSlide key="master" base={base} />,
+      <UomSlide key="uom" base={base} />,
+      <OperationDoorsSlide key="doors" base={base} />,
+      <TransferJourneySlide key="journey" base={base} />,
+      <FieldLayerSlide key="field" base={base} />,
+      <OrderControlSlide key="control" base={base} />,
+      <LedgerSlide key="ledger" base={base} />,
+      <ReportsSlide key="reports" base={base} />,
+      <AnalyticsSlide key="analytics" base={base} />,
+      <ImplementerAskSlide key="ask" />,
       <OutcomeSlide key="outcome" />,
     ];
     const sourceIndex = list.indexOf(null);
