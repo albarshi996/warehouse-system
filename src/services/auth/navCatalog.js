@@ -212,6 +212,10 @@ export const NAV_GROUPS = [
       // اجتماع المكتب الهندسي: مراجعة المتطلبات والزيارة الميدانية والمخططات
       // ومشروعات الرحبة وفينسيا، مع مسار متابعة وقرارات إقفال.
       { path: '/dashboard/engineering-office-meeting', label: 'اجتماع المكتب الهندسي', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
+      // اجتماع شركة نوفا (NOV-OPS-001): خطة جرد فرعي بنغازي وطرابلس وتفعيل
+      // دورات النقل والبيع وتحميل المندوبين — عرضٌ حيٌّ تُدار به الجلسة، وفي كل
+      // خطوةٍ بطاقةُ اختصارٍ تفتح الشاشة التي تُنفَّذ فيها داخل البوابة.
+      { path: '/dashboard/nova-inventory-meeting', label: 'اجتماع شركة نوفا — الجرد والنقل', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/acceptance-check', label: 'المطابقة والاستلام (UAT)', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/portal-value', label: 'لماذا البوابة تكامليّة لأودو', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/vendor-scorecard', label: 'بطاقة أداء الموردين', icon: 'users', roles: ['admin', 'warehouse_manager', 'purchase_officer', 'finance_manager'] },

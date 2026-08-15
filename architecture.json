@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 90,
-    "serviceDomains": 40,
-    "serviceFiles": 309,
+    "modules": 91,
+    "serviceDomains": 41,
+    "serviceFiles": 311,
     "collections": 72,
     "roles": 16,
     "odooModels": 12,
@@ -385,6 +385,14 @@
       "title": "",
       "summary": "",
       "file": "src/pages/dashboard/executive-review/model.astro",
+      "usesServices": []
+    },
+    {
+      "name": "nova-inventory-meeting",
+      "route": "/dashboard/nova-inventory-meeting",
+      "title": "اجتماع شركة نوفا — خطة الجرد والنقل",
+      "summary": "اجتماع شركة نوفا الحيّ — خطة تشغيل جرد ونقل المخزون (NOV-OPS-001).",
+      "file": "src/pages/dashboard/nova-inventory-meeting.astro",
       "usesServices": []
     },
     {
@@ -2100,6 +2108,20 @@
       "collections": [
         "preparatory_meetings"
       ]
+    },
+    {
+      "domain": "nova",
+      "dir": "src/services/nova",
+      "files": [
+        "decisionMinutes.js",
+        "decisionMinutes.test.js"
+      ],
+      "fileCount": 2,
+      "testCount": 1,
+      "exports": [
+        "buildDecisionMinutes"
+      ],
+      "collections": []
     },
     {
       "domain": "odoo",

@@ -1,0 +1,27 @@
+---
+/**
+ * اجتماع شركة نوفا الحيّ — خطة تشغيل جرد ونقل المخزون (NOV-OPS-001).
+ *
+ * عرضٌ يُدار به الاجتماع مباشرةً: لوحةٌ ثابتة 1280×720 بوضع عرضٍ وملء شاشة،
+ * ٢٧ شريحة، وبطاقةُ اختصارٍ في كل خطوة تفتح الشاشة التي تُنفَّذ فيها داخل
+ * البوابة. الوثيقة المصدر معروضةٌ كاملةً في الشريحة قبل الأخيرة.
+ *
+ * الهوية هنا هويّة الوثيقة نفسها (أحمر برند زو) لا الثيم الفاتح للشاشات —
+ * لأنّ هذه ورقةٌ رسميّة تُعرَض على عميل، لا شاشةَ بياناتٍ تشغيلية.
+ *
+ * الأنماط في ملفٍّ مستقلّ لا في `<style is:global>`: الصفحة محميّةٌ بحارس
+ * الدخول، فالتحقّق البصريّ منها يحتاج صفحةً غير محميّة تستورد **نفس** الملف
+ * — لا نسخةً ثانية تنحرف عنه.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import NovaMeetingDeck from '../../components/nova-meeting/NovaMeetingDeck.jsx';
+import '../../styles/nova-meeting.css';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+---
+
+<DashboardLayout title="اجتماع شركة نوفا — خطة الجرد والنقل" light>
+  <NovaMeetingDeck base={base} client:load />
+</DashboardLayout>

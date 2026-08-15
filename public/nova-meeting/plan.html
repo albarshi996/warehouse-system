@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>خطة تشغيل جرد ونقل شركة نوفا</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* ===== هوية Brandzo الأساسية ===== */
+  --red-900:#6E070A;
+  --red-800:#9E0B0E;
+  --red-700:#C41017;
+  --red-600:#E11B22;
+  --red-500:#F5333A;
+  --red-400:#FF5A5F;
+  --ink:#1a1c1f;
+  --ink-soft:#4a4f57;
+  --muted:#8a919b;
+  --line:#e8e8ec;
+  --paper:#ffffff;
+  --bg:#eceef1;
+  --gold:#c8a44e;
+  --shadow:0 30px 80px -30px rgba(110,7,10,.35);
+
+  /* ===== امتدادات دلالية مشتقة من الهوية ===== */
+  --tint:#fdf6f6;          /* خلفية ناعمة بميل أحمر */
+  --tint-2:#fbeeee;
+  --sev-high:#C41017;      /* أثر عالٍ */
+  --sev-med:#B8860B;       /* أثر متوسط */
+  --sev-low:#5b6472;       /* أثر منخفض */
+  --ok:#1f7a4d;            /* مطابق / مكتمل */
+  --stage:#6E070A;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+
+body{
+  font-family:'Cairo','Segoe UI','Tahoma',sans-serif;
+  background:
+     radial-gradient(1200px 600px at 80% -10%,rgba(225,27,34,.08),transparent 60%),
+     radial-gradient(1000px 600px at -10% 110%,rgba(110,7,10,.07),transparent 55%),
+     var(--bg);
+  color:var(--ink);
+  line-height:1.85;
+  padding:40px 18px;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* الوثيقة ورقة مطبوعة: في الوضع الداكن يعتم محيط العارض وتبقى الورقة بيضاء */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171a;
+    --shadow:0 30px 80px -30px rgba(0,0,0,.75);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171a;
+  --shadow:0 30px 80px -30px rgba(0,0,0,.75);
+}
+
+.sprite{position:absolute;width:0;height:0;overflow:hidden}
+.ic-svg{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+/* ===== الصفحة / الحاوية ===== */
+.page{
+  max-width:900px;
+  margin:0 auto;
+  background:var(--paper);
+  color:var(--ink);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  position:relative;
+  isolation:isolate;
+}
+
+/* ===== شريط الترويسة (هوية Brandzo) ===== */
+.brandbar{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:26px 30px 22px;
+  background:#fff;
+}
+.brandbar .side-bars{position:absolute;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:7px}
+.brandbar .side-bars.right{right:34px}
+.brandbar .side-bars.left{left:34px;flex-direction:row-reverse}
+.bar-block{height:26px;border-radius:2px}
+.bar-lg{width:120px;background:linear-gradient(90deg,var(--red-900),var(--red-600))}
+.tick{width:9px;height:26px;border-radius:2px;background:var(--red-500)}
+.tick:nth-child(2){opacity:.8}.tick:nth-child(3){opacity:.6}
+
+.logo{display:flex;align-items:center;gap:14px;z-index:2}
+.logo-mark{position:relative;width:66px;height:52px}
+.logo-mark .c{position:absolute;top:0;width:52px;height:52px;border-radius:50%}
+.logo-mark .c1{right:0;background:radial-gradient(circle at 35% 30%,#F5333A,#9E0B0E)}
+.logo-mark .c2{left:0;background:radial-gradient(circle at 35% 30%,#E11B22,#6E070A);mix-blend-mode:multiply}
+.logo-mark .bfp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;
+  font-family:'Poppins','Segoe UI',sans-serif;font-weight:800;font-size:19px;letter-spacing:.5px;z-index:3;padding-left:6px}
+.logo-txt{display:flex;flex-direction:column;line-height:1}
+.logo-txt .b{font-family:'Poppins','Segoe UI',sans-serif;font-weight:800;font-size:32px;color:var(--red-600);letter-spacing:.5px}
+.logo-txt .s{font-family:'Poppins','Segoe UI',sans-serif;font-weight:500;font-size:12px;color:var(--ink-soft);letter-spacing:2px;margin-top:3px}
+
+.brand-underline{height:5px;background:linear-gradient(90deg,var(--red-900),var(--red-600) 45%,var(--red-400))}
+
+/* ===== الغلاف ===== */
+.cover{
+  position:relative;
+  padding:54px 46px 46px;
+  background:linear-gradient(160deg,#fff 0%,#fff 55%,#fdf3f3 100%);
+  overflow:hidden;
+}
+.cover::before{
+  content:"";position:absolute;inset:0;z-index:0;opacity:.5;
+  background-image:
+    linear-gradient(rgba(225,27,34,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(225,27,34,.05) 1px,transparent 1px);
+  background-size:38px 38px;
+  -webkit-mask-image:radial-gradient(circle at 75% 25%,#000,transparent 70%);
+          mask-image:radial-gradient(circle at 75% 25%,#000,transparent 70%);
+}
+.cover-inner{position:relative;z-index:2}
+
+.eyebrow{
+  display:inline-flex;align-items:center;gap:10px;
+  background:linear-gradient(90deg,var(--red-800),var(--red-600));
+  color:#fff;font-weight:700;font-size:13px;letter-spacing:1px;
+  padding:8px 18px;border-radius:100px;
+  box-shadow:0 10px 25px -8px rgba(196,16,23,.6);
+}
+
+.title-en{
+  font-family:'Poppins','Segoe UI',sans-serif;font-weight:800;
+  font-size:clamp(28px,5vw,48px);
+  line-height:1.08;letter-spacing:-.5px;
+  color:var(--ink);margin-top:22px;text-wrap:balance;
+  direction:ltr;text-align:left;
+}
+.title-en .accent{
+  background:linear-gradient(90deg,var(--red-700),var(--red-500));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.title-ar{
+  font-weight:800;font-size:clamp(21px,3.3vw,30px);
+  color:var(--red-700);margin-top:8px;text-wrap:balance;
+}
+.subtitle{
+  color:var(--ink-soft);font-size:16px;font-weight:500;
+  margin-top:14px;max-width:640px;
+}
+.divider{height:3px;width:110px;margin:26px 0;border-radius:3px;
+  background:linear-gradient(90deg,var(--red-600),transparent)}
+
+.meta-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px}
+.meta-card{
+  background:#fff;border:1px solid var(--line);border-radius:14px;
+  padding:16px;position:relative;overflow:hidden;transition:.3s;
+}
+.meta-card::before{content:"";position:absolute;top:0;right:0;width:3px;height:100%;
+  background:linear-gradient(180deg,var(--red-600),var(--red-400))}
+.meta-card:hover{transform:translateY(-3px);box-shadow:0 16px 30px -18px rgba(196,16,23,.45)}
+.meta-card .ic{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,rgba(225,27,34,.12),rgba(225,27,34,.04));color:var(--red-600);font-size:17px;margin-bottom:10px}
+.meta-card .lbl{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.5px}
+.meta-card .val{font-size:15px;color:var(--ink);font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+
+.control-strip{margin-top:30px;display:flex;flex-wrap:wrap;gap:12px}
+.chip{
+  display:inline-flex;align-items:center;gap:9px;
+  background:#fff;border:1px solid var(--line);
+  padding:9px 16px;border-radius:100px;font-size:13px;font-weight:600;color:var(--ink-soft);
+}
+.chip .ic-svg{color:var(--red-600);font-size:15px}
+
+.prepared{
+  margin-top:26px;padding:14px 18px;border-radius:12px;
+  background:rgba(110,7,10,.04);border:1px solid rgba(196,16,23,.14);
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;
+  font-size:13.5px;color:var(--ink-soft);font-weight:600;
+}
+.prepared b{color:var(--ink);font-weight:800}
+.prepared .sep{width:1px;height:16px;background:var(--line)}
+
+/* ===== فهرس المحتويات ===== */
+.toc{
+  margin:0 46px;padding:26px 28px;border-radius:16px;
+  background:linear-gradient(180deg,var(--tint),#fff);
+  border:1px solid rgba(196,16,23,.13);
+}
+.toc h3{
+  font-size:13px;font-weight:800;letter-spacing:1.4px;color:var(--red-700);
+  display:flex;align-items:center;gap:9px;margin-bottom:16px;
+}
+.toc-list{display:grid;grid-template-columns:repeat(2,1fr);gap:7px 26px;list-style:none}
+.toc-list a{
+  display:flex;align-items:baseline;gap:10px;text-decoration:none;
+  color:var(--ink-soft);font-size:14px;font-weight:600;
+  padding:5px 8px;border-radius:8px;transition:.2s;
+}
+.toc-list a:hover,.toc-list a:focus-visible{background:#fff;color:var(--red-700);box-shadow:0 4px 14px -8px rgba(196,16,23,.5)}
+.toc-list .n{
+  font-family:'Poppins','Segoe UI',sans-serif;font-weight:800;font-size:11.5px;
+  color:var(--red-600);min-width:20px;font-variant-numeric:tabular-nums;
+}
+
+/* ===== المحتوى ===== */
+.content-shell{padding:34px 46px 10px}
+.sec{padding-top:20px;margin-bottom:14px}
+.sec:first-child{padding-top:6px}
+
+.section-tag{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.section-tag .num{
+  font-family:'Poppins','Segoe UI',sans-serif;font-weight:800;font-size:14px;color:#fff;
+  background:linear-gradient(135deg,var(--red-700),var(--red-500));
+  width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.section-tag .num.apx{background:linear-gradient(135deg,#4a4f57,#7a828d);font-size:13px}
+.section-tag h2{font-size:20px;font-weight:800;color:var(--ink);text-wrap:balance}
+.section-tag .line{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+.lead{color:var(--ink-soft);font-size:15.5px;margin-bottom:14px}
+.lead + .lead{margin-top:-4px}
+.note{font-size:13px;color:var(--muted);margin-top:10px}
+
+/* قوائم */
+.ul{list-style:none;display:flex;flex-direction:column;gap:10px;margin:6px 0 4px}
+.ul li{position:relative;padding-right:26px;color:var(--ink-soft);font-size:15px}
+.ul li::before{
+  content:"";position:absolute;right:6px;top:12px;width:7px;height:7px;border-radius:2px;
+  background:linear-gradient(135deg,var(--red-600),var(--red-400));transform:rotate(45deg);
+}
+.ul li b{color:var(--ink);font-weight:800}
+
+/* صندوق قرار / تنبيه */
+.callout{
+  border-radius:16px;padding:20px 22px;margin:18px 0;
+  border:1px solid rgba(196,16,23,.22);
+  background:linear-gradient(180deg,var(--tint-2),#fff);
+  display:flex;gap:16px;align-items:flex-start;
+}
+.callout .ci{
+  width:38px;height:38px;border-radius:11px;flex-shrink:0;font-size:19px;
+  display:flex;align-items:center;justify-content:center;color:#fff;
+  background:linear-gradient(135deg,var(--red-800),var(--red-600));
+}
+.callout h4{font-size:14px;font-weight:800;color:var(--red-800);letter-spacing:.3px;margin-bottom:5px}
+.callout p{font-size:14.5px;color:var(--ink-soft)}
+.callout.neutral{border-color:var(--line);background:linear-gradient(180deg,#f7f8fa,#fff)}
+.callout.neutral .ci{background:linear-gradient(135deg,#4a4f57,#7a828d)}
+.callout.neutral h4{color:var(--ink)}
+
+/* ===== الجداول ===== */
+.tbl-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--line);margin:14px 0 6px;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:520px}
+thead th{
+  background:linear-gradient(90deg,var(--red-800),var(--red-600));
+  color:#fff;font-weight:700;font-size:12.5px;letter-spacing:.3px;
+  padding:12px 14px;text-align:right;white-space:nowrap;
+}
+tbody td{padding:12px 14px;border-top:1px solid var(--line);color:var(--ink-soft);vertical-align:top}
+tbody tr:nth-child(even) td{background:#fafbfc}
+tbody td b,tbody td strong{color:var(--ink);font-weight:800}
+td.num-c,th.num-c{text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.idx{font-family:'Poppins','Segoe UI',sans-serif;font-weight:800;color:var(--red-600);
+  text-align:center;width:44px;font-variant-numeric:tabular-nums}
+table.compact tbody td{padding:10px 12px;font-size:13.5px}
+
+/* شارات */
+.badge{
+  display:inline-block;padding:3px 11px;border-radius:100px;
+  font-size:11.5px;font-weight:800;letter-spacing:.2px;white-space:nowrap;color:#fff;
+}
+.b-high{background:var(--sev-high)}
+.b-med{background:var(--sev-med)}
+.b-low{background:var(--sev-low)}
+.b-ok{background:var(--ok)}
+.b-open{background:#fff;color:var(--red-700);border:1.5px dashed rgba(196,16,23,.45)}
+.pill-prop{
+  display:inline-block;margin-inline-start:6px;padding:2px 9px;border-radius:100px;
+  font-size:10.5px;font-weight:800;color:#7a5c10;
+  background:rgba(200,164,78,.18);border:1px solid rgba(200,164,78,.5);white-space:nowrap;
+}
+
+/* رموز RACI */
+.raci{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;border-radius:8px;font-size:12px;font-weight:800;
+  font-style:normal;flex-shrink:0;
+}
+.r-t{background:rgba(225,27,34,.12);color:var(--red-700)}
+.r-a{background:var(--red-700);color:#fff}
+.r-c{background:rgba(200,164,78,.2);color:#7a5c10}
+.r-i{background:#eef0f3;color:var(--sev-low)}
+.r-none{color:var(--muted);font-weight:600}
+.raci-legend{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:12px;font-size:12.5px;color:var(--ink-soft)}
+.raci-legend span{display:inline-flex;align-items:center;gap:8px;font-weight:600}
+
+/* ===== خطوات التنفيذ ===== */
+.steps{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+.step{
+  display:flex;gap:16px;align-items:flex-start;
+  border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:#fff;
+  transition:.25s;
+}
+.step:hover{border-color:rgba(196,16,23,.3);box-shadow:0 14px 30px -22px rgba(196,16,23,.6)}
+.step .sn{
+  font-family:'Poppins','Segoe UI',sans-serif;font-weight:800;font-size:15px;color:#fff;flex-shrink:0;
+  width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--red-900),var(--red-600));
+}
+.step h4{font-size:15px;font-weight:800;color:var(--ink);margin-bottom:3px}
+.step p{font-size:14px;color:var(--ink-soft)}
+
+/* ===== سلاسل المستندات ===== */
+.cycle{border:1px solid var(--line);border-radius:16px;padding:20px;background:#fff;margin-bottom:14px}
+.cycle-head{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.cycle-head .ci{
+  width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,rgba(225,27,34,.14),rgba(225,27,34,.05));color:var(--red-700);font-size:17px;
+}
+.cycle-head h4{font-size:16px;font-weight:800;color:var(--ink)}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.node{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  border:1px solid rgba(196,16,23,.22);border-radius:11px;
+  background:linear-gradient(180deg,#fff,var(--tint));
+  padding:8px 13px;min-width:76px;
+}
+.node .code{font-family:'Poppins','Segoe UI',sans-serif;font-weight:800;font-size:12.5px;color:var(--red-700);letter-spacing:.4px}
+.node .ar{font-size:11px;color:var(--ink-soft);font-weight:600;white-space:nowrap}
+.arrow{color:var(--red-400);font-weight:800;font-size:15px;line-height:1}
+.cycle-foot{
+  margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);
+  font-size:13.5px;color:var(--ink-soft);display:flex;gap:9px;align-items:flex-start;
+}
+.cycle-foot b{color:var(--red-700);font-weight:800}
+
+/* ===== قائمة تحقق ===== */
+.check{display:flex;flex-direction:column;gap:9px;margin-top:8px}
+.check-item{
+  display:flex;gap:12px;align-items:flex-start;
+  border:1px solid var(--line);border-radius:11px;padding:12px 15px;background:#fff;
+}
+.check-item .box{
+  width:19px;height:19px;border-radius:5px;border:1.8px solid var(--red-400);
+  flex-shrink:0;margin-top:3px;background:#fff;
+}
+.check-item span{font-size:14.5px;color:var(--ink-soft)}
+.check-item span b{color:var(--ink);font-weight:800}
+.check-group{margin-top:16px}
+.check-group > h4{
+  font-size:12.5px;font-weight:800;letter-spacing:1px;color:var(--red-700);
+  margin-bottom:9px;display:flex;align-items:center;gap:8px;
+}
+.check-group > h4::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+/* ===== الروابط ===== */
+.links{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:6px}
+.link-card{
+  display:flex;align-items:center;gap:13px;text-decoration:none;
+  border:1px solid var(--line);border-radius:13px;padding:15px 17px;background:#fff;transition:.25s;
+  min-width:0;overflow:hidden;
+}
+.link-card:hover,.link-card:focus-visible{border-color:rgba(196,16,23,.35);transform:translateY(-2px);
+  box-shadow:0 14px 30px -20px rgba(196,16,23,.6)}
+.link-card .ci{
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;font-size:17px;
+  display:flex;align-items:center;justify-content:center;color:#fff;
+  background:linear-gradient(135deg,var(--red-800),var(--red-600));
+}
+.link-card .tx{display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.link-card .tx b{font-size:14.5px;color:var(--ink);font-weight:800}
+.link-card .tx span{font-size:11.5px;color:var(--muted);direction:ltr;text-align:left;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Poppins','Segoe UI',sans-serif}
+
+/* ===== الاعتمادات ===== */
+.approvals{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:8px}
+.appr{border:1px solid var(--line);border-radius:14px;padding:17px;background:#fff}
+.appr .role{
+  font-size:11px;font-weight:800;letter-spacing:1px;color:var(--red-700);
+  padding-bottom:9px;border-bottom:1px solid var(--line);margin-bottom:12px;
+}
+.appr .fld{font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:16px}
+.appr .fld::after{content:"";display:block;height:1px;background:var(--line);margin-top:20px}
+.appr .fld:last-child{margin-bottom:2px}
+
+/* ===== التوقيع ===== */
+.signature{
+  margin:34px 46px 0;border-top:1px solid var(--line);padding-top:30px;
+  display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:24px;
+}
+.sig-block .sig-title{
+  font-size:12px;font-weight:700;letter-spacing:1px;color:var(--red-700);
+  display:flex;align-items:center;gap:8px;margin-bottom:14px;
+}
+.sig-title::before{content:"";width:22px;height:2px;background:var(--red-600)}
+.sig-names{display:flex;gap:34px;flex-wrap:wrap}
+.sig-person{display:flex;flex-direction:column}
+.sig-person .name{font-size:17px;font-weight:800;color:var(--ink);position:relative;padding-bottom:8px}
+.sig-person .name::after{content:"";position:absolute;bottom:0;right:0;width:46px;height:2px;
+  background:linear-gradient(90deg,var(--red-600),transparent)}
+.sig-person .role{font-size:12px;color:var(--muted);font-weight:600;margin-top:8px}
+.sig-seal{
+  width:96px;height:96px;border-radius:50%;flex-shrink:0;
+  border:2px solid var(--red-600);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  color:var(--red-700);position:relative;
+  background:radial-gradient(circle at 50% 40%,#fff,#fff7f7);
+  box-shadow:0 10px 30px -14px rgba(196,16,23,.5);
+  transform:rotate(-8deg);
+}
+.sig-seal::before{content:"";position:absolute;inset:6px;border:1px dashed rgba(196,16,23,.5);border-radius:50%}
+.sig-seal .bfp{font-family:'Poppins','Segoe UI',sans-serif;font-weight:800;font-size:20px}
+.sig-seal .tx{font-size:8px;font-weight:700;letter-spacing:1px;margin-top:2px}
+
+/* ===== التذييل ===== */
+.footer{
+  margin-top:36px;
+  background:linear-gradient(90deg,var(--red-900),var(--red-700) 55%,var(--red-500));
+  color:#fff;padding:20px 40px;
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:26px;
+}
+.footer .f-item{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;direction:ltr}
+.footer .f-item .ci{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.18);
+  display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.footer .f-item.ar{direction:rtl}
+
+a:focus-visible,.toc-list a:focus-visible{outline:2px solid var(--red-600);outline-offset:3px}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}
+
+/* ===== الطباعة ===== */
+@media print{
+  body{background:#fff;padding:0}
+  .page{box-shadow:none;border-radius:0;max-width:100%}
+  .meta-card:hover,.step:hover,.link-card:hover{transform:none;box-shadow:none}
+  .sec{break-inside:avoid}
+  .tbl-wrap,.cycle,.callout,.step,.check-item,.appr{break-inside:avoid}
+  .section-tag{break-after:avoid}
+  thead{display:table-header-group}
+  .toc{break-after:page}
+  a{text-decoration:none;color:inherit}
+}
+
+@media (max-width:760px){
+  .meta-grid{grid-template-columns:repeat(2,1fr)}
+  .toc-list,.links,.approvals{grid-template-columns:1fr}
+  .cover,.content-shell,.toc{padding-left:24px;padding-right:24px}
+  .toc{margin-left:24px;margin-right:24px}
+  .signature{margin-left:24px;margin-right:24px}
+  .brandbar .side-bars{display:none}
+  .footer{padding:20px 24px;gap:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== مكتبة الأيقونات (SVG مضمّنة — تعمل دون اتصال وعند الطباعة) ===== -->
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <symbol id="i-warehouse" viewBox="0 0 24 24"><path d="M3 21V9l9-5 9 5v12"/><path d="M8 21v-7h8v7"/><path d="M2 21h20"/></symbol>
+    <symbol id="i-hash" viewBox="0 0 24 24"><path d="M5 9h14M5 15h14M10 3 8 21M16 3l-2 18"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 3.5L16 11H5"/></symbol>
+    <symbol id="i-boxes" viewBox="0 0 24 24"><path d="m3 8 9-4 9 4v8l-9 4-9-4z"/><path d="m3 8 9 4 9-4M12 12v8"/></symbol>
+    <symbol id="i-truck" viewBox="0 0 24 24"><path d="M2 16V6h12v10"/><path d="M14 9h4l4 4v3h-8z"/><circle cx="7" cy="18" r="2"/><circle cx="17.5" cy="18" r="2"/></symbol>
+    <symbol id="i-cart" viewBox="0 0 24 24"><path d="M2 4h3l2.5 11h10L20 7H6"/><circle cx="9" cy="19" r="1.7"/><circle cx="17" cy="19" r="1.7"/></symbol>
+    <symbol id="i-van" viewBox="0 0 24 24"><path d="M2 17V7h14v10"/><path d="M16 10h3l3 4v3h-6z"/><circle cx="7" cy="18.5" r="1.8"/><circle cx="18" cy="18.5" r="1.8"/><path d="M5 11h6"/></symbol>
+    <symbol id="i-clipboard" viewBox="0 0 24 24"><path d="M9 4h6v3H9z"/><path d="M15 5h3v16H6V5h3"/><path d="m9 13 2 2 4-4"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.3 7.8-8 9-4.7-1.2-8-4.5-8-9V6z"/><path d="m8.5 12 2.5 2.5 4.5-4.5"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.3l3.6 2"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 2.6 20.5h18.8z"/><path d="M12 10v4.4M12 17.7v.1"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.4"/><path d="M2.8 20c0-3.4 2.8-5.2 6.2-5.2s6.2 1.8 6.2 5.2"/><path d="M16.2 5.3a3.4 3.4 0 0 1 0 5.4M17.4 15.2c2.4.5 3.8 2.1 3.8 4.8"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10.5 13.5a4.2 4.2 0 0 0 6 0l2.6-2.6a4.2 4.2 0 1 0-6-6L11.6 6.3"/><path d="M13.5 10.5a4.2 4.2 0 0 0-6 0l-2.6 2.6a4.2 4.2 0 1 0 6 6l1.5-1.5"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></symbol>
+    <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 4v16M6 20h12"/><path d="m4 9 8-3 8 3"/><path d="M4 9 1.5 15h5zM20 9l-2.5 6h5z"/></symbol>
+    <symbol id="i-stairs" viewBox="0 0 24 24"><path d="M3 20h4v-4h5v-4h5V8h4"/><path d="M3 20v-4"/></symbol>
+    <symbol id="i-gate" viewBox="0 0 24 24"><path d="M4 21V6.5L12 3l8 3.5V21"/><path d="M4 21h16M9 21v-6h6v6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 13 4.5 4.5L19 7"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.5 3h3l1.8 4.4-2.3 1.5a12.5 12.5 0 0 0 5.8 5.8l1.5-2.3L20.7 14v3.2a2 2 0 0 1-2.2 2A16.6 16.6 0 0 1 2.6 5.2 2 2 0 0 1 4.6 3z"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6 8.5-6"/></symbol>
+  </defs>
+</svg>
+
+<div class="page">
+
+  <!-- ترويسة الهوية -->
+  <div class="brandbar">
+    <div class="side-bars right">
+      <span class="tick"></span><span class="tick"></span><span class="tick"></span>
+      <span class="bar-block bar-lg"></span>
+    </div>
+    <div class="logo">
+      <div class="logo-mark">
+        <span class="c c2"></span>
+        <span class="c c1"></span>
+        <span class="bfp">BFP</span>
+      </div>
+      <div class="logo-txt">
+        <span class="b">Brandzo</span>
+        <span class="s">FRANCHISE PARTNERS</span>
+      </div>
+    </div>
+    <div class="side-bars left">
+      <span class="tick"></span><span class="tick"></span><span class="tick"></span>
+      <span class="bar-block bar-lg"></span>
+    </div>
+  </div>
+  <div class="brand-underline"></div>
+
+  <!-- ===== الغلاف ===== -->
+  <div class="cover">
+    <div class="cover-inner">
+      <span class="eyebrow"><svg class="ic-svg" aria-hidden="true"><use href="#i-warehouse"></use></svg> إدارة السلاسل والإمداد — Brandzo Hub</span>
+
+      <h1 class="title-en">Nova Inventory &amp; <span class="accent">Transfer<br>Operations</span> Plan</h1>
+      <div class="title-ar">خطة تشغيل جرد ونقل مخزون شركة نوفا</div>
+      <p class="subtitle">خطة تنفيذية لجرد فرعي بنغازي وطرابلس بالباركود، واعتماد الدورات المستندية للنقل بين الفرعين والبيع وتحميل المندوبين، مبنية على واجهتي العمليات المخزنية والمستندات في Brandzo Hub.</p>
+
+      <div class="divider"></div>
+
+      <div class="meta-grid">
+        <div class="meta-card">
+          <div class="ic"><svg class="ic-svg" aria-hidden="true"><use href="#i-hash"></use></svg></div>
+          <div class="lbl">رقم الوثيقة</div>
+          <div class="val">NOV-OPS-001</div>
+        </div>
+        <div class="meta-card">
+          <div class="ic"><svg class="ic-svg" aria-hidden="true"><use href="#i-calendar"></use></svg></div>
+          <div class="lbl">التاريخ</div>
+          <div class="val">15 أغسطس 2026</div>
+        </div>
+        <div class="meta-card">
+          <div class="ic"><svg class="ic-svg" aria-hidden="true"><use href="#i-pin"></use></svg></div>
+          <div class="lbl">النطاق</div>
+          <div class="val">بنغازي وطرابلس</div>
+        </div>
+        <div class="meta-card">
+          <div class="ic"><svg class="ic-svg" aria-hidden="true"><use href="#i-flag"></use></svg></div>
+          <div class="lbl">الحالة</div>
+          <div class="val">مسودة للاعتماد</div>
+        </div>
+      </div>
+
+      <div class="control-strip">
+        <span class="chip"><svg class="ic-svg" aria-hidden="true"><use href="#i-boxes"></use></svg> الجرد بالباركود</span>
+        <span class="chip"><svg class="ic-svg" aria-hidden="true"><use href="#i-truck"></use></svg> النقل بين الفرعين</span>
+        <span class="chip"><svg class="ic-svg" aria-hidden="true"><use href="#i-cart"></use></svg> دورة البيع</span>
+        <span class="chip"><svg class="ic-svg" aria-hidden="true"><use href="#i-van"></use></svg> تحميل المندوبين</span>
+        <span class="chip"><svg class="ic-svg" aria-hidden="true"><use href="#i-shield"></use></svg> الرقابة والحوكمة</span>
+      </div>
+
+      <div class="prepared">
+        <span>إعداد: <b>محمد البرشي</b> — مدير إدارة السلاسل والإمداد، برند زو</span>
+        <span class="sep"></span>
+        <span>الجهة المستفيدة: <b>شركة نوفا</b></span>
+        <span class="sep"></span>
+        <span>الإصدار: <b>1.0</b> — مسودة تنسيقية</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== فهرس المحتويات ===== -->
+  <nav class="toc" aria-label="فهرس المحتويات">
+    <h3><svg class="ic-svg" aria-hidden="true" style="font-size:15px"><use href="#i-list"></use></svg> فهرس المحتويات</h3>
+    <ol class="toc-list">
+      <li><a href="#s01"><span class="n">01</span> الملخص التنفيذي</a></li>
+      <li><a href="#s02"><span class="n">02</span> الأهداف ومؤشرات الأداء</a></li>
+      <li><a href="#s03"><span class="n">03</span> نطاق الأصناف المرجعي</a></li>
+      <li><a href="#s04"><span class="n">04</span> بوابة الحوكمة قبل البدء</a></li>
+      <li><a href="#s05"><span class="n">05</span> مسار التنفيذ داخل الأداة</a></li>
+      <li><a href="#s06"><span class="n">06</span> الجدول الزمني ونوافذ التنفيذ</a></li>
+      <li><a href="#s07"><span class="n">07</span> الدورات المستندية المعتمدة</a></li>
+      <li><a href="#s08"><span class="n">08</span> المسؤوليات ومصفوفة الاعتماد</a></li>
+      <li><a href="#s09"><span class="n">09</span> ضبط الفروقات وغير المعرّف</a></li>
+      <li><a href="#s10"><span class="n">10</span> سجل المخاطر وخطط الاحتواء</a></li>
+      <li><a href="#s11"><span class="n">11</span> مصفوفة التصعيد</a></li>
+      <li><a href="#s12"><span class="n">12</span> نقاط قرار اجتماع التنسيق</a></li>
+      <li><a href="#s13"><span class="n">13</span> معايير الإقفال وحزمة التسليم</a></li>
+      <li><a href="#s14"><span class="n">14</span> الروابط التشغيلية</a></li>
+      <li><a href="#sA"><span class="n">أ</span> ملحق: مرجع الواجهات التشغيلية</a></li>
+      <li><a href="#sB"><span class="n">ب</span> ملحق: قائمة التحقق الميدانية</a></li>
+    </ol>
+  </nav>
+
+  <div class="content-shell">
+
+    <!-- ===== 01 الملخص التنفيذي ===== -->
+    <section class="sec" id="s01">
+      <div class="section-tag"><span class="num">01</span><h2>الملخص التنفيذي</h2><span class="line"></span></div>
+
+      <p class="lead">تنظّم هذه الخطة تنفيذ جرد مخزون شركة نوفا في فرعي بنغازي وطرابلس، وتفعيل الدورات المستندية للنقل بين الفرعين والبيع وتحميل المندوبين. وهي مبنية على ما هو متاح فعليًا في منصة <b>Brandzo Hub</b> دون افتراض إمكانات غير موجودة: أداة جرد بالباركود تفتح عملية عند أول حفظ وتسمح بانضمام الفريق عبر رمز العملية، وتعرض مؤشرات المسح والفروقات والأصناف غير المعرّفة مع تصدير Excel؛ ثم تنتقل بعد المطابقة إلى دورة مستندية رسمية ذات رقم تسلسلي ومنشئ ومعتمد وسجل تدقيق.</p>
+
+      <p class="lead">عند المعاينة المباشرة بتاريخ 15 أغسطس 2026 ظهرت قائمة ماستر تضم <b>1,041 صنفًا</b>، وهي أوسع من نطاق شركة نوفا. لذلك اعتُمدت ملفات البرندات الخمسة الواردة في البند 03 كمرجع حاكم للنطاق، ولا يُعدّ أي صنف لمجرد ظهوره في قائمة الماستر.</p>
+
+      <div class="callout">
+        <div class="ci"><svg class="ic-svg" aria-hidden="true"><use href="#i-alert"></use></svg></div>
+        <div>
+          <h4>قرار ما قبل التنفيذ</h4>
+          <p>لا يبدأ الجرد قبل الحصول على الضوء الأخضر الخطي من شركة نوفا. وتُفتح <b>عملية جرد مستقلة لكل فرع</b>، ويُثبَّت رمز كل عملية أمام اسم فرعها في محضر التنسيق؛ لأن واجهة البدء الحالية لا تعرض حقلًا مستقلًا لاختيار الفرع، ومشاركة الرمز بين الفرعين تُفقد الفصل بين نتيجتيهما.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 02 الأهداف والمؤشرات ===== -->
+    <section class="sec" id="s02">
+      <div class="section-tag"><span class="num">02</span><h2>الأهداف التشغيلية ومؤشرات الأداء</h2><span class="line"></span></div>
+
+      <ul class="ul">
+        <li><b>رصيد موثوق لكل فرع:</b> الوصول إلى رصيد فعلي معدود ومطابَق ومعتمد لكل فرع على حدة، قابل للتتبع مستنديًا.</li>
+        <li><b>فصل كامل بين الفرعين:</b> ضمان عدم اختلاط بيانات بنغازي وطرابلس في أي مرحلة من العد حتى الإقفال.</li>
+        <li><b>انضباط النطاق:</b> حصر العد في أصناف البرندات الخمسة المعتمدة، ومعالجة كل صنف خارجها كحالة موثّقة لا كصنف معدود.</li>
+        <li><b>حوكمة التسويات:</b> منع أي تعديل على الأرصدة قبل إعادة العد وإصدار محضر معتمد من المخوّل.</li>
+        <li><b>تفعيل الدورات المستندية:</b> تشغيل النقل والبيع وتحميل المندوبين عبر سلاسل مستندية كاملة بدل الحركة الشفوية أو المستند المنفرد.</li>
+      </ul>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="num-c">م</th>
+              <th>المؤشر</th>
+              <th>طريقة الاحتساب</th>
+              <th class="num-c">المستهدف</th>
+              <th>توقيت القياس</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="idx">1</td>
+              <td><b>تغطية المسح</b></td>
+              <td>الأصناف الممسوحة ÷ أصناف الملفات المرجعية</td>
+              <td class="num-c"><span class="badge b-ok">100%</span></td>
+              <td>قبل الإقفال</td>
+            </tr>
+            <tr>
+              <td class="idx">2</td>
+              <td><b>دقة الجرد</b></td>
+              <td>١ − (مجموع الفروقات المطلقة ÷ إجمالي الكمية الدفترية)</td>
+              <td class="num-c">≥ 98%<span class="pill-prop">مقترح</span></td>
+              <td>بعد إعادة العد</td>
+            </tr>
+            <tr>
+              <td class="idx">3</td>
+              <td><b>إقفال الأصناف غير المعرّفة</b></td>
+              <td>الحالات المصنّفة والمقرَّرة ÷ إجمالي غير المعرّف</td>
+              <td class="num-c"><span class="badge b-ok">100%</span></td>
+              <td>قبل إصدار محضر CC</td>
+            </tr>
+            <tr>
+              <td class="idx">4</td>
+              <td><b>زمن الإقفال المستندي</b></td>
+              <td>من انتهاء العد حتى اعتماد محضر الجرد</td>
+              <td class="num-c">≤ 48 ساعة<span class="pill-prop">مقترح</span></td>
+              <td>لكل فرع</td>
+            </tr>
+            <tr>
+              <td class="idx">5</td>
+              <td><b>اكتمال السلسلة المستندية</b></td>
+              <td>العمليات المنفذة بسلسلتها الكاملة ÷ إجمالي العمليات</td>
+              <td class="num-c"><span class="badge b-ok">100%</span></td>
+              <td>خلال فترة التشغيل</td>
+            </tr>
+            <tr>
+              <td class="idx">6</td>
+              <td><b>سلامة عزل الفرعين</b></td>
+              <td>عمليات مسجلة تحت الرمز الصحيح ÷ إجمالي العمليات</td>
+              <td class="num-c"><span class="badge b-ok">100%</span></td>
+              <td>متابعة لحظية</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">المستهدفات المؤشَّر عليها بـ«مقترح» قيم مبدئية من إدارة السلاسل والإمداد، تُعرض للاعتماد في اجتماع التنسيق (البند 12) وتصبح ملزمة بعد إقرارها.</p>
+    </section>
+
+    <!-- ===== 03 نطاق الأصناف ===== -->
+    <section class="sec" id="s03">
+      <div class="section-tag"><span class="num">03</span><h2>نطاق الأصناف المرجعي</h2><span class="line"></span></div>
+
+      <p class="lead">ملفات البرندات التالية هي <b>المرجع الحاكم</b> لنطاق العد. أي صنف لا يرد في هذه الملفات لا يُعدّ، ويُسجَّل ضمن قائمة الأصناف غير المعرّفة وفق قواعد البند 09.</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="num-c">م</th>
+              <th>البرند / المجموعة</th>
+              <th>ملف الأصناف الحاكم</th>
+              <th>حالة الجاهزية</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="idx">1</td><td><b>Wet n Wild</b></td><td>أصناف ويت ان وايلد.xlsx</td><td><span class="badge b-open">يؤكَّد قبل البدء</span></td></tr>
+            <tr><td class="idx">2</td><td><b>MIA Skin Care</b></td><td>سكن كير MIA.xls</td><td><span class="badge b-open">يؤكَّد قبل البدء</span></td></tr>
+            <tr><td class="idx">3</td><td><b>GUESS / قيس</b></td><td>قيس.xls</td><td><span class="badge b-open">يؤكَّد قبل البدء</span></td></tr>
+            <tr><td class="idx">4</td><td><b>MAUBOUSSIN / ميبسون</b></td><td>ميبسون.xls</td><td><span class="badge b-open">يؤكَّد قبل البدء</span></td></tr>
+            <tr><td class="idx">5</td><td><b>MIA Makeup</b></td><td>ميكب MIA.xls</td><td><span class="badge b-open">يؤكَّد قبل البدء</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout neutral">
+        <div class="ci"><svg class="ic-svg" aria-hidden="true"><use href="#i-scale"></use></svg></div>
+        <div>
+          <h4>خارج النطاق</h4>
+          <p>قائمة الماستر (1,041 صنفًا) ليست مرجع النطاق. وتُعامل الحالات التالية خارج العد وتُوثَّق في سجل مستقل يُعرض عند المطابقة: الأصناف التالفة أو منتهية الصلاحية، والبضاعة بالطريق أو غير المستلمة فعليًا، والأصناف التابعة لبرندات أخرى. <b>تُعتمد هذه القاعدة نهائيًا في اجتماع التنسيق.</b></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 04 بوابة الحوكمة ===== -->
+    <section class="sec" id="s04">
+      <div class="section-tag"><span class="num">04</span><h2>بوابة الحوكمة قبل البدء</h2><span class="line"></span></div>
+
+      <p class="lead">تمثل البنود التالية <b>شرط بدء</b> لا توصية. لا يُفتح العد في أي فرع ما لم تُستوفَ جميعها ويُثبَّت استيفاؤها في محضر التنسيق.</p>
+
+      <div class="check">
+        <div class="check-item"><span class="box"></span><span><b>الضوء الأخضر الخطي</b> من شركة نوفا بموعد كل فرع على حدة، مع تأكيد بدء التنفيذ.</span></div>
+        <div class="check-item"><span class="box"></span><span><b>تسمية المسؤولين:</b> منسق وممثل اعتماد لكل فرع من شركة نوفا، ومنسق تنفيذ من برند زو.</span></div>
+        <div class="check-item"><span class="box"></span><span><b>فصل رموز العمليات:</b> رمز عملية منفصل لبنغازي وآخر لطرابلس، مع منع مشاركة الرمز بين الفرعين.</span></div>
+        <div class="check-item"><span class="box"></span><span><b>ضبط الحركة:</b> إيقاف حركة المخزون خلال نافذة الجرد، أو تسجيل أي حركة طارئة في سجل مستقل يُدخل في المطابقة.</span></div>
+        <div class="check-item"><span class="box"></span><span><b>جاهزية البيانات:</b> تجهيز ملفات البرندات الخمسة والباركودات، واعتماد قاعدة واضحة لمعالجة الأصناف غير المعرّفة.</span></div>
+        <div class="check-item"><span class="box"></span><span><b>تجميد التسويات:</b> منع أي تعديل أو تسوية قبل إعادة العد وإصدار المحضر واعتماد المخوّل.</span></div>
+      </div>
+    </section>
+
+    <!-- ===== 05 مسار التنفيذ ===== -->
+    <section class="sec" id="s05">
+      <div class="section-tag"><span class="num">05</span><h2>مسار التنفيذ داخل الأداة</h2><span class="line"></span></div>
+
+      <p class="lead">تُنفَّذ الخطوات بالتسلسل، ولا يُنتقل إلى خطوة لاحقة قبل إغلاق سابقتها. يسري التسلسل نفسه على كل فرع داخل نافذته المستقلة.</p>
+
+      <div class="steps">
+        <div class="step"><span class="sn">1</span><div>
+          <h4>اعتماد النطاق</h4>
+          <p>تأكيد الفرعين وملفات البرندات وممثلي الطرفين، وتحديد نافذة إيقاف الحركة أو توثيقها.</p>
+        </div></div>
+        <div class="step"><span class="sn">2</span><div>
+          <h4>فتح عمليتين منفصلتين</h4>
+          <p>اختيار وضع «جرد» وفتح عملية مستقلة لبنغازي وأخرى لطرابلس، مع تثبيت رمز كل عملية أمام اسم فرعها في محضر التنسيق.</p>
+        </div></div>
+        <div class="step"><span class="sn">3</span><div>
+          <h4>المسح حسب البرند</h4>
+          <p>استخدام البحث لتحديد نطاق البرند، ثم مسح الباركود أو كتابته والضغط على Enter. لا يُعدّ أي صنف خارج الملفات المرجعية.</p>
+        </div></div>
+        <div class="step"><span class="sn">4</span><div>
+          <h4>العمل الجماعي عبر الرمز</h4>
+          <p>أول حفظ يفتح العملية؛ وينضم بقية أعضاء الفريق إلى العملية الصحيحة عبر رمزها، بدل إنشاء عمليات متفرقة تُشتّت النتيجة.</p>
+        </div></div>
+        <div class="step"><span class="sn">5</span><div>
+          <h4>المتابعة وإعادة العد</h4>
+          <p>مراقبة مؤشرات: الكل، تم المسح، لم يُمسح، الفروقات، وغير معرّف. تُعاد الفروقات ويُعزل غير المعرّف قبل الإقفال.</p>
+        </div></div>
+        <div class="step"><span class="sn">6</span><div>
+          <h4>التصدير والمطابقة</h4>
+          <p>تصدير Excel لكل عملية على حدة، ومطابقة النتيجة مع السجل الدفتري وملفات الأصناف، دون أي تسوية تلقائية.</p>
+        </div></div>
+        <div class="step"><span class="sn">7</span><div>
+          <h4>الإقفال المستندي</h4>
+          <p>إنشاء «محضر الجرد الدوري (CC)»، ثم «سند تسوية مخزون (ADJ)» فقط عند وجود فرق وبعد الاعتماد.</p>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ===== 06 الجدول الزمني ===== -->
+    <section class="sec" id="s06">
+      <div class="section-tag"><span class="num">06</span><h2>الجدول الزمني ونوافذ التنفيذ</h2><span class="line"></span></div>
+
+      <p class="lead">التوقيتات معبَّر عنها نسبيًا حيث <b>«ت»</b> هو يوم بدء العد في الفرع المعني، لأن التواريخ الفعلية تُحدَّد في اجتماع التنسيق. ويُنفَّذ الجدول نفسه لكل فرع ضمن نافذته المستقلة.</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="num-c">التوقيت</th>
+              <th>المرحلة</th>
+              <th>المخرج المطلوب</th>
+              <th>الجهة المسؤولة</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="num-c"><b>ت − 7</b></td><td>اجتماع التنسيق واعتماد الخطة والدورات المستندية</td><td>محضر تنسيق موقّع</td><td>نوفا + السلاسل والإمداد</td></tr>
+            <tr><td class="num-c"><b>ت − 3</b></td><td>تجهيز ملفات البرندات والباركودات والأجهزة وتشكيل الفرق</td><td>قائمة جاهزية معتمدة</td><td>السلاسل والإمداد</td></tr>
+            <tr><td class="num-c"><b>ت − 1</b></td><td>فتح العمليتين وتثبيت الرمزين وتعميم تعليمات وقف الحركة</td><td>تعميم تشغيلي + رمزا العمليتين</td><td>السلاسل والإمداد + ممثلو الفروع</td></tr>
+            <tr><td class="num-c"><b>ت</b></td><td>تنفيذ العد بالباركود حسب البرند داخل العملية الصحيحة</td><td>تصدير Excel للعملية</td><td>فريق الجرد</td></tr>
+            <tr><td class="num-c"><b>ت + 1</b></td><td>إعادة عد الفروقات وتصنيف الأصناف غير المعرّفة</td><td>قائمة فروقات نهائية + قائمة غير معرّف مصنّفة</td><td>فريق الجرد + ممثلو الفروع</td></tr>
+            <tr><td class="num-c"><b>ت + 2</b></td><td>المطابقة مع السجل الدفتري وسجل الحركة الطارئة</td><td>تقرير مطابقة</td><td>السلاسل والإمداد</td></tr>
+            <tr><td class="num-c"><b>ت + 3</b></td><td>إصدار محضر الجرد CC واعتماده، وسند ADJ عند وجود فرق معتمد</td><td>محضر معتمد + سند تسوية عند اللزوم</td><td>المخوّلون بالاعتماد</td></tr>
+            <tr><td class="num-c"><b>ت + 5</b></td><td>تفعيل دورات النقل والبيع وتحميل المندوبين وتسليم حزمة الإقفال</td><td>تقرير إقفال + ملف التسليم</td><td>السلاسل والإمداد</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">الجدول مقترح من إدارة السلاسل والإمداد ويُثبَّت بتواريخ فعلية عند اعتماد مواعيد الفرعين في اجتماع التنسيق.</p>
+    </section>
+
+    <!-- ===== 07 الدورات المستندية ===== -->
+    <section class="sec" id="s07">
+      <div class="section-tag"><span class="num">07</span><h2>الدورات المستندية المعتمدة</h2><span class="line"></span></div>
+
+      <div class="callout">
+        <div class="ci"><svg class="ic-svg" aria-hidden="true"><use href="#i-shield"></use></svg></div>
+        <div>
+          <h4>القاعدة الحاكمة</h4>
+          <p>لا تُختصر الدورة إلى رابط واحد أو مستند منفرد. كل عملية تُنشأ كسلسلة مستندات مترابطة من الطلب حتى الاستلام أو التسوية، بأرقام تسلسلية ومنشئ ومعتمد وسجل تدقيق.</p>
+        </div>
+      </div>
+
+      <div class="cycle">
+        <div class="cycle-head">
+          <span class="ci"><svg class="ic-svg" aria-hidden="true"><use href="#i-truck"></use></svg></span>
+          <h4>النقل بين الفرعين</h4>
+        </div>
+        <div class="flow">
+          <span class="node"><span class="code">TR</span><span class="ar">طلب نقل</span></span>
+          <span class="arrow">←</span>
+          <span class="node"><span class="code">TRN</span><span class="ar">مستند النقل</span></span>
+          <span class="arrow">←</span>
+          <span class="node"><span class="code">TRC</span><span class="ar">استلام النقل</span></span>
+        </div>
+        <div class="cycle-foot">
+          <svg class="ic-svg" aria-hidden="true" style="margin-top:5px"><use href="#i-check"></use></svg>
+          <span><b>دليل الإقفال:</b> إثبات الاستلام وإقفال الكمية المنقولة.</span>
+        </div>
+      </div>
+
+      <div class="cycle">
+        <div class="cycle-head">
+          <span class="ci"><svg class="ic-svg" aria-hidden="true"><use href="#i-cart"></use></svg></span>
+          <h4>البيع</h4>
+        </div>
+        <div class="flow">
+          <span class="node"><span class="code">SO</span><span class="ar">أمر البيع</span></span>
+          <span class="arrow">←</span>
+          <span class="node"><span class="code">PICK</span><span class="ar">قائمة السحب</span></span>
+          <span class="arrow">←</span>
+          <span class="node"><span class="code">PACK</span><span class="ar">قائمة التعبئة</span></span>
+          <span class="arrow">←</span>
+          <span class="node"><span class="code">DN</span><span class="ar">إذن تسليم</span></span>
+          <span class="arrow">←</span>
+          <span class="node"><span class="code">POD</span><span class="ar">تأكيد التسليم</span></span>
+          <span class="arrow">←</span>
+          <span class="node"><span class="code">GP</span><span class="ar">تصريح خروج</span></span>
+          <span class="arrow">←</span>
+          <span class="node"><span class="code">INV</span><span class="ar">فاتورة العميل</span></span>
+        </div>
+        <div class="cycle-foot">
+          <svg class="ic-svg" aria-hidden="true" style="margin-top:5px"><use href="#i-check"></use></svg>
+          <span><b>دليل الإقفال:</b> تأكيد التسليم والفاتورة.</span>
+        </div>
+      </div>
+
+      <div class="cycle">
+        <div class="cycle-head">
+          <span class="ci"><svg class="ic-svg" aria-hidden="true"><use href="#i-van"></use></svg></span>
+          <h4>تحميل المندوبين / البيع من المركبة</h4>
+        </div>
+        <div class="flow">
+          <span class="node"><span class="code">VLD</span><span class="ar">أمر تحميل المركبة</span></span>
+          <span class="arrow">←</span>
+          <span class="node"><span class="code">VSI</span><span class="ar">فاتورة بيع من المركبة</span></span>
+          <span class="arrow">←</span>
+          <span class="node"><span class="code">CRN / VRT</span><span class="ar">مرتجع ميداني أو إرجاع متبقٍ</span></span>
+          <span class="arrow">←</span>
+          <span class="node"><span class="code">VSR</span><span class="ar">تسوية نهاية الرحلة</span></span>
+        </div>
+        <div class="cycle-foot">
+          <svg class="ic-svg" aria-hidden="true" style="margin-top:5px"><use href="#i-check"></use></svg>
+          <span><b>دليل الإقفال:</b> تسوية الرحلة وإقفال المتبقي.</span>
+        </div>
+      </div>
+
+      <div class="cycle">
+        <div class="cycle-head">
+          <span class="ci"><svg class="ic-svg" aria-hidden="true"><use href="#i-clipboard"></use></svg></span>
+          <h4>إقفال الجرد</h4>
+        </div>
+        <div class="flow">
+          <span class="node"><span class="code">CC</span><span class="ar">محضر الجرد الدوري</span></span>
+          <span class="arrow">←</span>
+          <span class="node"><span class="code">ADJ</span><span class="ar">سند تسوية مخزون</span></span>
+        </div>
+        <div class="cycle-foot">
+          <svg class="ic-svg" aria-hidden="true" style="margin-top:5px"><use href="#i-alert"></use></svg>
+          <span><b>شرط:</b> لا يصدر سند ADJ إلا عند وجود فرق فعلي وبعد اعتماد محضر CC من المخوّل.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 08 المسؤوليات ===== -->
+    <section class="sec" id="s08">
+      <div class="section-tag"><span class="num">08</span><h2>توزيع المسؤوليات ومصفوفة الاعتماد</h2><span class="line"></span></div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>الطرف</th><th>المسؤولية</th><th>المخرج / الاعتماد</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><b>شركة نوفا</b></td><td>اعتماد النطاق والمواعيد، توفير ممثلي الفرعين، واعتماد الفروقات والنتيجة النهائية.</td><td>ضوء أخضر ومحضر معتمد</td></tr>
+            <tr><td><b>إدارة السلاسل والإمداد — برند زو</b></td><td>إدارة الخطة، تثبيت رموز العمليات، متابعة المؤشرات والاستثناءات، والتنسيق المستندي.</td><td>سجل تنفيذ وتقرير إقفال</td></tr>
+            <tr><td><b>فريق الجرد</b></td><td>المسح داخل العملية الصحيحة، الالتزام بملفات البرندات، ورفع الأصناف غير المعرّفة والفروقات.</td><td>بيانات جرد قابلة للتتبع</td></tr>
+            <tr><td><b>ممثلو الفروع</b></td><td>تأمين الوصول للمخزون، توثيق الحركة أثناء النافذة، وتأكيد شمول جميع مواقع التخزين.</td><td>تأكيد اكتمال نطاق الفرع</td></tr>
+            <tr><td><b>المخوّلون بالاعتماد</b></td><td>مراجعة نتائج إعادة العد واعتماد محضر CC، ثم سند ADJ عند الحاجة فقط.</td><td>محضر وتسوية معتمدان</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4 style="font-size:13px;font-weight:800;letter-spacing:1px;color:var(--red-700);margin:22px 0 4px">مصفوفة الاعتماد (RACI)</h4>
+
+      <div class="tbl-wrap">
+        <table class="compact">
+          <thead>
+            <tr>
+              <th>النشاط</th>
+              <th class="num-c">نوفا</th>
+              <th class="num-c">السلاسل والإمداد</th>
+              <th class="num-c">فريق الجرد</th>
+              <th class="num-c">ممثلو الفروع</th>
+              <th class="num-c">المخوّلون</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>اعتماد النطاق والمواعيد والضوء الأخضر</td>
+              <td class="num-c"><span class="raci r-a">ع</span></td><td class="num-c"><span class="raci r-t">ت</span></td><td class="num-c"><span class="raci r-i">خ</span></td><td class="num-c"><span class="raci r-c">ش</span></td><td class="num-c"><span class="raci r-c">ش</span></td></tr>
+            <tr><td>فتح رموز العمليات وتثبيتها في المحضر</td>
+              <td class="num-c"><span class="raci r-i">خ</span></td><td class="num-c"><span class="raci r-a">ع</span></td><td class="num-c"><span class="raci r-i">خ</span></td><td class="num-c"><span class="raci r-i">خ</span></td><td class="num-c"><span class="raci r-none">—</span></td></tr>
+            <tr><td>إيقاف حركة المخزون أو توثيقها في النافذة</td>
+              <td class="num-c"><span class="raci r-a">ع</span></td><td class="num-c"><span class="raci r-c">ش</span></td><td class="num-c"><span class="raci r-i">خ</span></td><td class="num-c"><span class="raci r-t">ت</span></td><td class="num-c"><span class="raci r-i">خ</span></td></tr>
+            <tr><td>تنفيذ المسح داخل العملية الصحيحة</td>
+              <td class="num-c"><span class="raci r-i">خ</span></td><td class="num-c"><span class="raci r-a">ع</span></td><td class="num-c"><span class="raci r-t">ت</span></td><td class="num-c"><span class="raci r-c">ش</span></td><td class="num-c"><span class="raci r-none">—</span></td></tr>
+            <tr><td>عزل الأصناف غير المعرّفة وتصنيفها</td>
+              <td class="num-c"><span class="raci r-i">خ</span></td><td class="num-c"><span class="raci r-a">ع</span></td><td class="num-c"><span class="raci r-t">ت</span></td><td class="num-c"><span class="raci r-c">ش</span></td><td class="num-c"><span class="raci r-i">خ</span></td></tr>
+            <tr><td>إعادة عد الفروقات</td>
+              <td class="num-c"><span class="raci r-i">خ</span></td><td class="num-c"><span class="raci r-a">ع</span></td><td class="num-c"><span class="raci r-t">ت</span></td><td class="num-c"><span class="raci r-c">ش</span></td><td class="num-c"><span class="raci r-i">خ</span></td></tr>
+            <tr><td>المطابقة مع السجل الدفتري وملفات البرندات</td>
+              <td class="num-c"><span class="raci r-c">ش</span></td><td class="num-c"><span class="raci r-a">ع</span></td><td class="num-c"><span class="raci r-c">ش</span></td><td class="num-c"><span class="raci r-i">خ</span></td><td class="num-c"><span class="raci r-i">خ</span></td></tr>
+            <tr><td>اعتماد محضر الجرد الدوري (CC)</td>
+              <td class="num-c"><span class="raci r-c">ش</span></td><td class="num-c"><span class="raci r-t">ت</span></td><td class="num-c"><span class="raci r-i">خ</span></td><td class="num-c"><span class="raci r-i">خ</span></td><td class="num-c"><span class="raci r-a">ع</span></td></tr>
+            <tr><td>إصدار سند تسوية المخزون (ADJ)</td>
+              <td class="num-c"><span class="raci r-c">ش</span></td><td class="num-c"><span class="raci r-t">ت</span></td><td class="num-c"><span class="raci r-none">—</span></td><td class="num-c"><span class="raci r-i">خ</span></td><td class="num-c"><span class="raci r-a">ع</span></td></tr>
+            <tr><td>تنفيذ دورات النقل والبيع وتحميل المندوبين</td>
+              <td class="num-c"><span class="raci r-c">ش</span></td><td class="num-c"><span class="raci r-a">ع</span></td><td class="num-c"><span class="raci r-none">—</span></td><td class="num-c"><span class="raci r-t">ت</span></td><td class="num-c"><span class="raci r-i">خ</span></td></tr>
+            <tr><td>تقرير الإقفال وحزمة التسليم</td>
+              <td class="num-c"><span class="raci r-c">ش</span></td><td class="num-c"><span class="raci r-a">ع</span></td><td class="num-c"><span class="raci r-i">خ</span></td><td class="num-c"><span class="raci r-i">خ</span></td><td class="num-c"><span class="raci r-i">خ</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="raci-legend">
+        <span><i class="raci r-a">ع</i> المعتمِد — صاحب القرار النهائي</span>
+        <span><i class="raci r-t">ت</i> منفّذ العمل</span>
+        <span><i class="raci r-c">ش</i> يُستشار قبل التنفيذ</span>
+        <span><i class="raci r-i">خ</i> يُخطر بالنتيجة</span>
+      </div>
+    </section>
+
+    <!-- ===== 09 ضبط الفروقات ===== -->
+    <section class="sec" id="s09">
+      <div class="section-tag"><span class="num">09</span><h2>قواعد ضبط الفروقات والأصناف غير المعرّفة</h2><span class="line"></span></div>
+
+      <p class="lead">تحكم هذه القواعد كل حالة تخرج عن المطابقة التامة، وتمنع تحويل الفرق إلى تسوية دون مسار موثّق.</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>الحالة</th><th>الإجراء الإلزامي</th><th>الدليل المطلوب</th><th>جهة القرار</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>فرق موجب (زيادة فعلية)</b></td>
+              <td>إعادة العد بفريق مختلف عن فريق العد الأول، ومراجعة سجل الحركة الطارئة قبل احتساب الفرق.</td>
+              <td>ورقة إعادة عد موقّعة</td>
+              <td>السلاسل والإمداد</td>
+            </tr>
+            <tr>
+              <td><b>فرق سالب (عجز)</b></td>
+              <td>إعادة العد، ثم التحقق من مواقع التخزين الفرعية والمرتجعات والبضاعة قيد النقل قبل تثبيت العجز.</td>
+              <td>تقرير تحقق من المواقع</td>
+              <td>السلاسل والإمداد + ممثل الفرع</td>
+            </tr>
+            <tr>
+              <td><b>فرق يتجاوز عتبة التصعيد</b><span class="pill-prop">عتبة مقترحة</span></td>
+              <td>رفع الحالة فورًا إلى المخوّل بالاعتماد قبل الإقفال، مع مذكرة تفسيرية للسبب المرجّح.</td>
+              <td>مذكرة تصعيد + قرار مكتوب</td>
+              <td>المخوّلون بالاعتماد</td>
+            </tr>
+            <tr>
+              <td><b>صنف غير معرّف</b></td>
+              <td>عزله في قائمة مستقلة وتصويره وتصنيفه: خارج النطاق / باركود غير مسجل / تابع لبرند آخر. لا يُدرج في العد إلا بقرار مكتوب.</td>
+              <td>قائمة غير معرّف مصنّفة + صور</td>
+              <td>نوفا + السلاسل والإمداد</td>
+            </tr>
+            <tr>
+              <td><b>حركة طارئة أثناء النافذة</b></td>
+              <td>تسجيلها في السجل المستقل لحظة حدوثها، وإدخالها في المطابقة قبل احتساب أي فرق.</td>
+              <td>سجل الحركة الطارئة</td>
+              <td>ممثل الفرع</td>
+            </tr>
+            <tr>
+              <td><b>فرق معتمد نهائيًا</b></td>
+              <td>إصدار سند تسوية ADJ بعد اعتماد محضر CC حصرًا. يُمنع أي تعديل تلقائي على الرصيد.</td>
+              <td>سند ADJ مرتبط برقم المحضر</td>
+              <td>المخوّلون بالاعتماد</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout neutral">
+        <div class="ci"><svg class="ic-svg" aria-hidden="true"><use href="#i-target"></use></svg></div>
+        <div>
+          <h4>مبدأ فصل العد</h4>
+          <p>يُعاد عدّ كل صنف ذي فرق مرة واحدة على الأقل بواسطة فريق مختلف عن الفريق الذي نفّذ العد الأول. هذا المبدأ يحمي النتيجة من الخطأ المتكرر ويجعل الفرق المثبَّت قابلًا للدفاع عنه أمام الاعتماد.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 10 المخاطر ===== -->
+    <section class="sec" id="s10">
+      <div class="section-tag"><span class="num">10</span><h2>سجل المخاطر وخطط الاحتواء</h2><span class="line"></span></div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th class="num-c">م</th><th>المخاطرة</th><th class="num-c">الأثر</th><th>إجراء الاحتواء</th><th>المسؤول</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="idx">1</td>
+              <td><b>اختلاط بيانات الفرعين</b> في عملية واحدة نتيجة غياب حقل اختيار الفرع.</td>
+              <td class="num-c"><span class="badge b-high">عالٍ</span></td>
+              <td>فتح رمز مستقل لكل فرع وتثبيته في المحضر، ومنع مشاركة الرمز، والتحقق من الرمز قبل أول مسح.</td>
+              <td>السلاسل والإمداد</td>
+            </tr>
+            <tr>
+              <td class="idx">2</td>
+              <td><b>حركة مخزون غير موثّقة</b> أثناء نافذة الجرد.</td>
+              <td class="num-c"><span class="badge b-high">عالٍ</span></td>
+              <td>إيقاف الحركة رسميًا، أو إلزام سجل الحركة الطارئة وإدخاله في المطابقة قبل احتساب الفروقات.</td>
+              <td>ممثلو الفروع</td>
+            </tr>
+            <tr>
+              <td class="idx">3</td>
+              <td><b>اعتماد قائمة الماستر</b> (1,041 صنفًا) بدل ملفات البرندات المرجعية.</td>
+              <td class="num-c"><span class="badge b-high">عالٍ</span></td>
+              <td>حصر النطاق بالملفات الخمسة، ومراجعة تغطية النطاق قبل الإقفال ورفض أي صنف خارجها.</td>
+              <td>السلاسل والإمداد</td>
+            </tr>
+            <tr>
+              <td class="idx">4</td>
+              <td><b>تعارض النتيجة مع السجل الدفتري</b> واللجوء إلى تسوية سريعة.</td>
+              <td class="num-c"><span class="badge b-high">عالٍ</span></td>
+              <td>إلزام المطابقة قبل الإقفال، ومنع التسوية التلقائية، وربط كل سند ADJ برقم محضر CC معتمد.</td>
+              <td>المخوّلون بالاعتماد</td>
+            </tr>
+            <tr>
+              <td class="idx">5</td>
+              <td><b>إنشاء عمليات متفرقة</b> بدل الانضمام إلى العملية عبر رمزها.</td>
+              <td class="num-c"><span class="badge b-med">متوسط</span></td>
+              <td>تعميم رمز العملية على الفريق قبل البدء، والتحقق من عدد المنضمين وتطابق العدادات في أول ساعة.</td>
+              <td>منسق التنفيذ</td>
+            </tr>
+            <tr>
+              <td class="idx">6</td>
+              <td><b>باركودات غير مقروءة أو غير مسجلة.</b></td>
+              <td class="num-c"><span class="badge b-med">متوسط</span></td>
+              <td>الإدخال اليدوي مع تحقق مزدوج، وإدراج الحالة في قائمة غير المعرّف بدل تخمين الصنف.</td>
+              <td>فريق الجرد</td>
+            </tr>
+            <tr>
+              <td class="idx">7</td>
+              <td><b>تأخر الضوء الأخضر</b> أو تغيّر مواعيد الفروع.</td>
+              <td class="num-c"><span class="badge b-med">متوسط</span></td>
+              <td>تثبيت المواعيد في محضر التنسيق مع تحديد موعد بديل لكل فرع، وإخطار مسبق بأي تعديل.</td>
+              <td>نوفا + السلاسل والإمداد</td>
+            </tr>
+            <tr>
+              <td class="idx">8</td>
+              <td><b>انقطاع الاتصال أو تعطل الأجهزة</b> أثناء العد.</td>
+              <td class="num-c"><span class="badge b-med">متوسط</span></td>
+              <td>توفير أجهزة احتياطية، والحفظ الدوري أثناء العد، والتصدير الفوري عند انتهاء كل نطاق برند.</td>
+              <td>منسق التنفيذ</td>
+            </tr>
+            <tr>
+              <td class="idx">9</td>
+              <td><b>إغفال مواقع تخزين فرعية</b> داخل الفرع.</td>
+              <td class="num-c"><span class="badge b-med">متوسط</span></td>
+              <td>حصر مواقع التخزين كتابيًا قبل البدء، وتأكيد ممثل الفرع شمول جميع المواقع قبل الإقفال.</td>
+              <td>ممثلو الفروع</td>
+            </tr>
+            <tr>
+              <td class="idx">10</td>
+              <td><b>تفاوت جاهزية الفريق</b> في استخدام الأداة.</td>
+              <td class="num-c"><span class="badge b-low">منخفض</span></td>
+              <td>جلسة تعريف قصيرة قبل البدء على وضع «جرد» والمسح والانضمام بالرمز وقراءة المؤشرات.</td>
+              <td>السلاسل والإمداد</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== 11 التصعيد ===== -->
+    <section class="sec" id="s11">
+      <div class="section-tag"><span class="num">11</span><h2>مصفوفة التصعيد</h2><span class="line"></span></div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th class="num-c">المستوى</th><th>نوع الحالة</th><th>جهة المعالجة</th><th class="num-c">زمن الاستجابة</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="num-c"><span class="badge b-low">1</span></td>
+              <td>استفسار تشغيلي أثناء العد، أو التباس في نطاق برند أو موقع تخزين.</td>
+              <td>منسق التنفيذ — برند زو</td>
+              <td class="num-c">خلال ساعة<span class="pill-prop">مقترح</span></td>
+            </tr>
+            <tr>
+              <td class="num-c"><span class="badge b-med">2</span></td>
+              <td>فرق يتجاوز العتبة المعتمدة، أو صنف غير معرّف بكمية مؤثرة، أو تعطل يوقف العد جزئيًا.</td>
+              <td>مدير إدارة السلاسل والإمداد + ممثل الفرع</td>
+              <td class="num-c">خلال 4 ساعات<span class="pill-prop">مقترح</span></td>
+            </tr>
+            <tr>
+              <td class="num-c"><span class="badge b-high">3</span></td>
+              <td>توقف العد كليًا، أو تعارض جوهري مع السجل الدفتري، أو طلب تسوية قبل الاعتماد.</td>
+              <td>المخوّلون بالاعتماد لدى شركة نوفا</td>
+              <td class="num-c">خلال 24 ساعة<span class="pill-prop">مقترح</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">تُستكمل أسماء جهات المعالجة وبيانات التواصل عند تسمية الممثلين في اجتماع التنسيق.</p>
+    </section>
+
+    <!-- ===== 12 نقاط القرار ===== -->
+    <section class="sec" id="s12">
+      <div class="section-tag"><span class="num">12</span><h2>نقاط قرار اجتماع التنسيق</h2><span class="line"></span></div>
+
+      <p class="lead">تُعبَّأ الجدول أدناه أثناء الاجتماع، ويُعتمد بالتوقيع ليصبح مرجع التنفيذ الملزم. البنود المفتوحة هي شرط بدء، ولا يُفتح العد قبل إغلاقها جميعًا.</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th class="num-c">م</th><th>البند</th><th>القرار</th><th>مسؤول التأكيد</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="idx">1</td><td>موعد اجتماع التنسيق</td><td><span class="badge b-open">مفتوح</span></td><td>—</td></tr>
+            <tr><td class="idx">2</td><td>موعد جرد فرع بنغازي ورمز عمليته</td><td><span class="badge b-open">مفتوح</span></td><td>—</td></tr>
+            <tr><td class="idx">3</td><td>موعد جرد فرع طرابلس ورمز عمليته</td><td><span class="badge b-open">مفتوح</span></td><td>—</td></tr>
+            <tr><td class="idx">4</td><td>ممثلو شركة نوفا وبرند زو والمخوّلون بالاعتماد</td><td><span class="badge b-open">مفتوح</span></td><td>—</td></tr>
+            <tr><td class="idx">5</td><td>نافذة إيقاف أو توثيق حركة المخزون</td><td><span class="badge b-open">مفتوح</span></td><td>—</td></tr>
+            <tr><td class="idx">6</td><td>قاعدة معالجة الأصناف غير المعرّفة والفروقات وعتبات التصعيد</td><td><span class="badge b-open">مفتوح</span></td><td>—</td></tr>
+            <tr><td class="idx">7</td><td>اعتماد مستهدفات المؤشرات الواردة في البند 02</td><td><span class="badge b-open">مفتوح</span></td><td>—</td></tr>
+            <tr><td class="idx">8</td><td>اعتماد دورة النقل &nbsp;<b>TR → TRN → TRC</b></td><td><span class="badge b-open">مفتوح</span></td><td>—</td></tr>
+            <tr><td class="idx">9</td><td>اعتماد دورة البيع &nbsp;<b>SO → PICK → PACK → DN → POD → GP → INV</b></td><td><span class="badge b-open">مفتوح</span></td><td>—</td></tr>
+            <tr><td class="idx">10</td><td>اعتماد دورة تحميل المندوبين &nbsp;<b>VLD → VSI → CRN/VRT → VSR</b></td><td><span class="badge b-open">مفتوح</span></td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== 13 معايير الإقفال ===== -->
+    <section class="sec" id="s13">
+      <div class="section-tag"><span class="num">13</span><h2>معايير الإقفال وحزمة التسليم</h2><span class="line"></span></div>
+
+      <p class="lead">لا تُعتبر العملية مغلقة إلا باستيفاء المعايير التالية كاملة لكل فرع على حدة.</p>
+
+      <div class="check">
+        <div class="check-item"><span class="box"></span><span>تقرير <b>Excel مستقل</b> لكل رمز عملية ولكل فرع.</span></div>
+        <div class="check-item"><span class="box"></span><span><b>تغطية كاملة</b> لجميع أصناف ملفات البرندات، أو تسجيل سبب واضح لكل صنف غير معدود.</span></div>
+        <div class="check-item"><span class="box"></span><span><b>إقفال قائمتي</b> غير المعرّف والفروقات، أو تحويل ما تبقّى إلى إجراء مفتوح بمسؤول وموعد محددين.</span></div>
+        <div class="check-item"><span class="box"></span><span><b>محضر جرد دوري (CC) معتمد</b> لكل فرع، وسند تسوية (ADJ) للفروق المعتمدة فقط.</span></div>
+        <div class="check-item"><span class="box"></span><span>تنفيذ <b>التحويل والبيع وتحميل المندوبين</b> عبر سلاسل المستندات المحددة، لا عبر حركة شفوية أو مستند منفرد.</span></div>
+        <div class="check-item"><span class="box"></span><span>حفظ <b>أرقام المستندات</b> وأسماء المنشئ والمعتمد وسجل التدقيق ضمن ملف الإقفال.</span></div>
+      </div>
+
+      <div class="callout neutral">
+        <div class="ci"><svg class="ic-svg" aria-hidden="true"><use href="#i-doc"></use></svg></div>
+        <div>
+          <h4>حزمة التسليم النهائية</h4>
+          <p>ملف Excel لكل عملية · تقرير المطابقة مع السجل الدفتري · قائمة الفروقات النهائية · قائمة غير المعرّف مصنّفة ومقفلة · محضر CC معتمد لكل فرع · سند ADJ عند وجود فرق معتمد · تقرير الإقفال متضمنًا أرقام المستندات وسجل التدقيق.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 14 الروابط ===== -->
+    <section class="sec" id="s14">
+      <div class="section-tag"><span class="num">14</span><h2>الروابط التشغيلية</h2><span class="line"></span></div>
+
+      <div class="links">
+        <a class="link-card" href="https://albarshi996.github.io/warehouse-system/dashboard/stock-operations/" target="_blank" rel="noopener">
+          <span class="ci"><svg class="ic-svg" aria-hidden="true"><use href="#i-boxes"></use></svg></span>
+          <span class="tx">
+            <b>العمليات المخزنية</b>
+            <span>albarshi996.github.io/warehouse-system/dashboard/stock-operations/</span>
+          </span>
+        </a>
+        <a class="link-card" href="https://albarshi996.github.io/warehouse-system/dashboard/documents/" target="_blank" rel="noopener">
+          <span class="ci"><svg class="ic-svg" aria-hidden="true"><use href="#i-doc"></use></svg></span>
+          <span class="tx">
+            <b>المستندات</b>
+            <span>albarshi996.github.io/warehouse-system/dashboard/documents/</span>
+          </span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ===== ملحق أ ===== -->
+    <section class="sec" id="sA">
+      <div class="section-tag"><span class="num apx">أ</span><h2>ملحق أ — مرجع الواجهات التشغيلية</h2><span class="line"></span></div>
+
+      <p class="lead">يلخص هذا الملحق ما ظهر في المعاينة المباشرة لواجهتي العمليات المخزنية والمستندات بتاريخ 15 أغسطس 2026، وهو الأساس الذي صيغت عليه هذه الخطة.</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>الواجهة</th><th>التحكم الظاهر</th><th>استخدامه في الخطة</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><b>العمليات المخزنية</b></td><td>أوضاع جرد / استلام / صرف، ثم المسح أو الكتابة وEnter</td><td>اختيار وضع «جرد» وتسجيل العد حسب الباركود</td></tr>
+            <tr><td><b>العمليات المخزنية</b></td><td>لصق دفعة والبحث في الجدول</td><td>خيار مساعد ضمن قائمة مراجعة معتمدة</td></tr>
+            <tr><td><b>العمليات المخزنية</b></td><td>الكل، تم المسح، لم يُمسح، الفروقات، غير معرّف</td><td>متابعة التغطية والاستثناءات قبل الإقفال</td></tr>
+            <tr><td><b>العمليات المخزنية</b></td><td>رمز العملية والانضمام وتصدير Excel</td><td>جمع فريق الفرع وحفظ نتيجته المستقلة</td></tr>
+            <tr><td><b>المستندات</b></td><td>رقم تسلسلي، منشئ، معتمد، سجل تدقيق</td><td>إثبات الحوكمة والتتبع</td></tr>
+            <tr><td><b>المستندات</b></td><td>سلاسل CC/ADJ وTR/TRN/TRC وSO… وVLD…</td><td>إقفال الجرد والنقل والبيع والرحلة مستنديًا</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== ملحق ب ===== -->
+    <section class="sec" id="sB">
+      <div class="section-tag"><span class="num apx">ب</span><h2>ملحق ب — قائمة التحقق الميدانية</h2><span class="line"></span></div>
+
+      <p class="lead">قائمة تشغيلية تُطبع وتُستخدم في الموقع، وتُرفق موقّعة ضمن ملف الإقفال لكل فرع.</p>
+
+      <div class="check-group">
+        <h4>قبل البدء</h4>
+        <div class="check">
+          <div class="check-item"><span class="box"></span><span>استلام الضوء الأخضر الخطي وتأكيد موعد الفرع.</span></div>
+          <div class="check-item"><span class="box"></span><span>فتح عملية الفرع وتدوين رمزها أمام اسم الفرع في المحضر.</span></div>
+          <div class="check-item"><span class="box"></span><span>تعميم الرمز على الفريق والتأكد من انضمام الجميع للعملية نفسها.</span></div>
+          <div class="check-item"><span class="box"></span><span>حصر مواقع التخزين كتابيًا وتأكيد شمولها من ممثل الفرع.</span></div>
+          <div class="check-item"><span class="box"></span><span>تجهيز ملفات البرندات الخمسة والأجهزة والأجهزة الاحتياطية.</span></div>
+          <div class="check-item"><span class="box"></span><span>تفعيل وقف الحركة أو فتح سجل الحركة الطارئة.</span></div>
+        </div>
+      </div>
+
+      <div class="check-group">
+        <h4>أثناء التنفيذ</h4>
+        <div class="check">
+          <div class="check-item"><span class="box"></span><span>التحقق من رمز العملية قبل أول مسح، وعند كل تبديل مناوبة.</span></div>
+          <div class="check-item"><span class="box"></span><span>المسح ضمن نطاق برند واحد في كل جولة، والتصدير عند إنهاء النطاق.</span></div>
+          <div class="check-item"><span class="box"></span><span>إحالة كل باركود غير مقروء أو غير مسجل إلى قائمة غير المعرّف فورًا.</span></div>
+          <div class="check-item"><span class="box"></span><span>مراقبة مؤشرات: لم يُمسح / الفروقات / غير معرّف بشكل دوري.</span></div>
+          <div class="check-item"><span class="box"></span><span>تسجيل أي حركة طارئة لحظة حدوثها في السجل المستقل.</span></div>
+        </div>
+      </div>
+
+      <div class="check-group">
+        <h4>قبل الإقفال</h4>
+        <div class="check">
+          <div class="check-item"><span class="box"></span><span>إعادة عد كل صنف ذي فرق بفريق مختلف عن فريق العد الأول.</span></div>
+          <div class="check-item"><span class="box"></span><span>تصنيف قائمة غير المعرّف بالكامل وتصويرها واستصدار قرار مكتوب.</span></div>
+          <div class="check-item"><span class="box"></span><span>تصدير Excel النهائي لكل رمز عملية على حدة.</span></div>
+          <div class="check-item"><span class="box"></span><span>المطابقة مع السجل الدفتري وسجل الحركة الطارئة قبل احتساب الفروقات.</span></div>
+          <div class="check-item"><span class="box"></span><span>تأكيد تغطية جميع أصناف الملفات المرجعية أو تسجيل سبب لكل صنف غير معدود.</span></div>
+          <div class="check-item"><span class="box"></span><span>رفع النتيجة للاعتماد قبل إنشاء أي سند تسوية.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== الاعتمادات ===== -->
+    <section class="sec">
+      <div class="section-tag"><span class="num apx"><svg class="ic-svg" aria-hidden="true" style="font-size:16px"><use href="#i-users"></use></svg></span><h2>الإعداد والمراجعة والاعتماد</h2><span class="line"></span></div>
+
+      <div class="approvals">
+        <div class="appr">
+          <div class="role">إعداد — برند زو</div>
+          <div class="fld">الاسم: محمد البرشي</div>
+          <div class="fld">الصفة: مدير إدارة السلاسل والإمداد</div>
+          <div class="fld">التوقيع والتاريخ</div>
+        </div>
+
+        <div class="appr">
+          <div class="role">اعتماد — شركة نوفا</div>
+          <div class="fld">الاسم</div>
+          <div class="fld">الصفة</div>
+          <div class="fld">التوقيع والتاريخ</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ===== التوقيع ===== -->
+  <div class="signature">
+    <div class="sig-block">
+      <div class="sig-title">إعداد إدارة السلاسل والإمداد والمستودعات</div>
+      <div class="sig-names">
+        <div class="sig-person">
+          <span class="name">محمد البرشي</span>
+          <span class="role">مدير إدارة السلاسل والإمداد</span>
+        </div>
+        <div class="sig-person">
+          <span class="name">رمزي الباش</span>
+          <span class="role">إدارة المستودعات</span>
+        </div>
+      </div>
+    </div>
+    <div class="sig-seal">
+      <span class="bfp">BFP</span>
+      <span class="tx">WAREHOUSE</span>
+    </div>
+  </div>
+
+  <!-- ===== التذييل ===== -->
+  <div class="footer">
+    <span class="f-item"><span class="ci"><svg class="ic-svg" aria-hidden="true"><use href="#i-phone"></use></svg></span> 0912203770</span>
+    <span class="f-item"><span class="ci"><svg class="ic-svg" aria-hidden="true"><use href="#i-globe"></use></svg></span> www.brandzo.com</span>
+    <span class="f-item"><span class="ci"><svg class="ic-svg" aria-hidden="true"><use href="#i-mail"></use></svg></span> Info@brandzo.com</span>
+    <span class="f-item ar"><span class="ci"><svg class="ic-svg" aria-hidden="true"><use href="#i-pin"></use></svg></span> نادي الأهلي - بنغازي، ليبيا</span>
+  </div>
+
+</div>
+</body>
+</html>
