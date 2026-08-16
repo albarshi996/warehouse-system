@@ -57,14 +57,26 @@ test('ترتيب الحركات: الختم أوّلًا ثمّ المعرّف �
   assert.equal(moveTime({ seconds: 5 }), 5000);
 });
 
-test('«آخر واردٍ يكسب» في الموقع والتكلفة — والترتيب يجعلها حتميّة', () => {
+test('★★ LOC-108: دفعةٌ واحدة على رفّين = صفّان مستقلّان لا صفٌّ يبتلع الآخر', () => {
+  // قبل قلب المفتاح كان الرفّان ينهاران في صفٍّ واحد و«آخر تخزينٍ يكسب»،
+  // فلا يُعرف كم في هذا الرفّ. الآن لكلّ رفٍّ رصيده، ومجموعهما هو الإجمالي.
   const rows = rebuildFromMoves([
-    mv('m1', null, 'E5', 10, { bin: 'MAIN-A01-R01', unitCost: 3 }),
-    mv('m2', null, 'E5', 10, { bin: 'MAIN-A01-R09', unitCost: 5 }),
+    mv('m1', null, 'E5', 10, { toBin: 'MAIN-A01-R01', unitCost: 3 }),
+    mv('m2', null, 'E5', 10, { toBin: 'MAIN-A01-R09', unitCost: 5 }),
   ]);
+  assert.equal(rows.length, 2, 'رفّان ⇒ صفّان');
+  assert.deepEqual(rows.map((r) => r.bin).sort(), ['MAIN-A01-R01', 'MAIN-A01-R09']);
+  assert.equal(rows.reduce((s, r) => s + r.qty, 0), 20, 'والمجموع محفوظ');
+});
+
+test('«آخر واردٍ يكسب» داخل الرفّ الواحد — والترتيب يجعلها حتميّة', () => {
+  const rows = rebuildFromMoves([
+    mv('m1', null, 'E5', 10, { toBin: 'MAIN-A01-R01', unitCost: 3 }),
+    mv('m2', null, 'E5', 10, { toBin: 'MAIN-A01-R01', unitCost: 5 }),
+  ]);
+  assert.equal(rows.length, 1, 'الرفّ نفسه ⇒ صفٌّ واحد');
   assert.equal(rows[0].qty, 20);
-  assert.equal(rows[0].bin, 'MAIN-A01-R09', 'آخر تخزينٍ هو المعروض');
-  assert.equal(rows[0].unitCost, 5);
+  assert.equal(rows[0].unitCost, 5, 'آخر تكلفةٍ واردة هي المعروضة');
 });
 
 test('المطابقة: تطابقٌ تامّ يُخرج ok وفرقًا صفرًا', () => {
