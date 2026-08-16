@@ -168,6 +168,14 @@ export function buildMoves(docData, { items = null } = {}) {
     const unitCost = Number(line?.[rule.costField]) || 0;
     const absQty = Math.abs(qty);
 
+    // ‹LOC-105› الموقع طرفٌ لا صفة: تنسبه القاعدة إلى المصدر أو الوجهة، ويُقلب
+    // مع الطرفين عند التسوية السالبة. وبلا هذا التمييز يستحيل قلبُ مفتاح الرصيد.
+    const binValue = String(line?.bin ?? '').trim().toUpperCase();
+    const ruleFromBin = rule.binSide === 'from' ? binValue : '';
+    const ruleToBin = rule.binSide === 'to' ? binValue : '';
+    const fromBin = negative ? ruleToBin : ruleFromBin;
+    const toBin = negative ? ruleFromBin : ruleToBin;
+
     moves.push({
       id: moveId(docData.id, index),
       docId: docData.id,
@@ -184,7 +192,11 @@ export function buildMoves(docData, { items = null } = {}) {
       // الموقع التخزينيّ داخل المستودع (SAP-7 · ف‑١٨ · §14 ‹364›): يحمله بند
       // التخزين (PUTAWAY) فيعرفه الدفتر — «حسب الموقع التخزينيّ» مستوى عرضٍ
       // من الحركات، ومفتاح الرصيد لم يُمسّ عمدًا (تغييره يقلب FEFO والسحب).
-      bin: String(line?.bin ?? '').trim().toUpperCase(),
+      bin: binValue,
+      // ‹LOC-105› طرفا الموقع صريحان: من أيّ رفٍّ خرجت وإلى أيّ رفٍّ دخلت.
+      // `bin` يبقى للتوافق الرجعيّ (حركاتٌ قُيّدت قبل اليوم تحمله وحده).
+      fromBin,
+      toBin,
       // حالة المخزون (LOC-107): بُعدٌ يصف ما يتعايش في الرفّ الواحد (سليم/تالف)
       // ولا يُميّزه موقع. الغياب ⇒ `OK` ⇒ سلوك اليوم حرفيًّا. ولا يدخل مفتاح
       // الرصيد بعد — قيمُه تنتظر اعتماد المالك (LOC-O02).
@@ -225,7 +237,18 @@ export function balanceDeltas(moves) {
 
   const touch = (move, location, sign) => {
     if (location === null || location === undefined) return; // الخارج لا رصيد له
-    const id = balanceId({ sku: move.sku, barcode: move.barcode, warehouse: location, batch: move.batch });
+    // ‹LOC-105› لكلّ طرفٍ موقعُه: الداخل يدخل رفّ الوجهة، والخارج يخرج من رفّ
+    // المصدر. و`bin` القديم يُقرأ توافقًا لحركاتٍ قُيّدت قبل اليوم بلا طرفين.
+    const sideBin = sign > 0 ? move.toBin ?? move.bin ?? '' : move.fromBin ?? '';
+    const id = balanceId({
+      sku: move.sku,
+      barcode: move.barcode,
+      warehouse: location,
+      batch: move.batch,
+      bin: sideBin,
+      expiry: move.expiry,
+      status: move.stockStatus,
+    });
     if (!id) {
       problems.push(`تعذّر بناء مفتاح رصيد للصنف «${move.sku || move.barcode}» في «${location}».`);
       return;
@@ -246,7 +269,7 @@ export function balanceDeltas(moves) {
       unitCost: move.unitCost,
       // موقع الوجهة (ف‑١٨): الداخل إلى مستودعٍ بموقعٍ معلوم يُذكر موقعه على
       // الرصيد — آخرُ تخزينٍ يكسب، عرضًا لا مفتاحًا.
-      bin: sign > 0 ? move.bin || '' : '',
+      bin: sideBin || '',
       // حالة المخزون تُحمَل على الرصيد (LOC-107) — حقلًا لا مفتاحًا بعد.
       stockStatus: move.stockStatus || 'OK',
       delta: sign * move.qty,

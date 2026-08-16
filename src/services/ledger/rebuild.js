@@ -64,12 +64,15 @@ export function rebuildFromMoves(moves) {
 
   const touch = (move, location, sign) => {
     if (location === null || location === undefined || location === '') return;
+    // ‹LOC-105› نفس دلالة `balanceDeltas` حرفًا بحرف: لكلّ طرفٍ موقعُه،
+    // و`bin` القديم يُقرأ توافقًا. اختلافُ الدالّتين هنا يجعل التقرير يكذب.
+    const sideBin = sign > 0 ? move.toBin ?? move.bin ?? '' : move.fromBin ?? '';
     const id = balanceId({
       sku: move.sku,
       barcode: move.barcode,
       warehouse: location,
       batch: move.batch,
-      bin: move.bin,
+      bin: sideBin,
       expiry: move.expiry,
       status: move.stockStatus,
     });
@@ -96,7 +99,7 @@ export function rebuildFromMoves(moves) {
     row.moves += 1;
     // «آخرُ واردٍ يكسب» — نفس دلالة `balanceDeltas`، والترتيب الزمنيّ يجعلها حتميّة.
     if (sign > 0) {
-      if (move.bin) row.bin = String(move.bin).toUpperCase();
+      if (sideBin) row.bin = String(sideBin).toUpperCase();
       if (move.expiry) row.expiry = str(move.expiry);
       if (num(move.unitCost)) row.unitCost = num(move.unitCost);
       if (move.nameAr) row.nameAr = str(move.nameAr);

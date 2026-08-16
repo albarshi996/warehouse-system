@@ -99,6 +99,72 @@ test('★ SAP-7 ف‑١٨: موقع التخزين ينتقل من البند إ
   assert.ok(!dest.id.includes('A-01-03'), 'الموقع ليس في مفتاح الرصيد');
 });
 
+test('★★ LOC-105: الموقع طرفٌ لا صفة — التخزين وجهةٌ والسحب مصدر', () => {
+  // بلا هذا التمييز يستحيل قلبُ مفتاح الرصيد: يقيّد التخزين على مفتاحٍ بموقع
+  // ويخصم السحب من مفتاحٍ بلا موقع، فتتباعد الأرصدة ويرفض حارس السالب سحبًا صحيحًا.
+  const put = buildMoves({
+    id: 'PW9', type: 'PUTAWAY', number: 'PW-9',
+    header: { warehouse: 'E5' },
+    lines: [{ sku: 'A', qty: 10, batch: 'B1', bin: 'MAIN-A01-R01' }],
+  });
+  assert.equal(put.moves[0].toBin, 'MAIN-A01-R01', 'التخزين يضع البضاعة على رفّ ⇒ الموقع وجهة');
+  assert.equal(put.moves[0].fromBin, '', 'وساحة الاستلام بلا رفّ');
+
+  const pick = buildMoves({
+    id: 'PK9', type: 'PICK', number: 'PK-9',
+    header: { warehouse: 'E5' },
+    lines: [{ sku: 'A', qtyPicked: 4, batch: 'B1', bin: 'MAIN-A01-R01' }],
+  });
+  assert.equal(pick.moves[0].fromBin, 'MAIN-A01-R01', 'السحب يأخذها من رفّ ⇒ الموقع مصدر');
+  assert.equal(pick.moves[0].toBin, '', 'وساحة التجهيز بلا رفّ');
+});
+
+test('★★ LOC-105: دورة تخزينٍ ثمّ سحبٍ من الرفّ نفسه تلتقي على مفتاحٍ واحد', () => {
+  const put = buildMoves({
+    id: 'PW8', type: 'PUTAWAY', header: { warehouse: 'E5' },
+    lines: [{ sku: 'A', qty: 10, batch: 'B1', bin: 'MAIN-A01-R01' }],
+  });
+  const pick = buildMoves({
+    id: 'PK8', type: 'PICK', header: { warehouse: 'E5' },
+    lines: [{ sku: 'A', qtyPicked: 4, batch: 'B1', bin: 'MAIN-A01-R01' }],
+  });
+  const inKey = balanceDeltas(put.moves).deltas.find((d) => d.warehouse === 'E5').id;
+  const outKey = balanceDeltas(pick.moves).deltas.find((d) => d.warehouse === 'E5').id;
+  assert.equal(inKey, outKey, 'ما دخل الرفّ يخرج منه بالمفتاح نفسه — وإلّا رفض الحارس سحبًا صحيحًا');
+});
+
+test('★★ LOC-105: التسوية السالبة تقلب الطرفين ويبقى الرفّ هو هو', () => {
+  const surplus = buildMoves({
+    id: 'AJ1', type: 'ADJ', header: { warehouse: 'E5' },
+    lines: [{ sku: 'A', bookQty: 10, actualQty: 12, bin: 'MAIN-A01-R01' }],
+  });
+  const shortage = buildMoves({
+    id: 'AJ2', type: 'ADJ', header: { warehouse: 'E5' },
+    lines: [{ sku: 'A', bookQty: 10, actualQty: 8, bin: 'MAIN-A01-R01' }],
+  });
+  assert.equal(surplus.moves[0].toBin, 'MAIN-A01-R01', 'الفائض يدخل الرفّ');
+  assert.equal(shortage.moves[0].fromBin, 'MAIN-A01-R01', 'والعجز يخرج منه');
+  const inKey = balanceDeltas(surplus.moves).deltas.find((d) => d.warehouse === 'E5').id;
+  const outKey = balanceDeltas(shortage.moves).deltas.find((d) => d.warehouse === 'E5').id;
+  assert.equal(inKey, outKey, 'والرفّ هو هو في الحالين');
+});
+
+test('★★ LOC-105: الدورات الأخرى لم تتأثّر — لا موقعَ يُقحَم على TR/TRN/TRC ولا DN/POD', () => {
+  // القاعدة بلا `binSide` ⇒ طرفاها بلا موقع ⇒ سلوك اليوم حرفيًّا.
+  const trn = buildMoves({
+    id: 'TRN1', type: 'TRN', header: { fromWarehouse: 'E5', toWarehouse: 'E2' },
+    lines: [{ sku: 'A', qtyShipped: 5, bin: 'MAIN-A01-R01' }],
+  });
+  assert.equal(trn.moves[0].fromBin, '', 'النقل لا يعرف رفوفًا — ولا يُخترع له');
+  assert.equal(trn.moves[0].toBin, '');
+  const dn = buildMoves({
+    id: 'DN1', type: 'DN', header: { warehouse: 'E5', vehiclePlate: 'ABC-1' },
+    lines: [{ sku: 'A', qty: 3, bin: 'MAIN-A01-R01' }],
+  });
+  assert.equal(dn.moves[0].fromBin, '');
+  assert.equal(dn.moves[0].toBin, '', 'ولا يُنسب رفٌّ إلى مركبة');
+});
+
 test('★ الخدمة تخرج من القيد وتُسجَّل في skipped — لا تُبتلع صامتة', () => {
   const items = new Map([
     ['A', { sku: 'A', itemType: 'sale' }],
