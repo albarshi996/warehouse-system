@@ -732,10 +732,22 @@ service cloud.firestore {
       // كميّةٍ سالبة أو غير رقميّة مباشرةً. ⚠️ التحقّق الكامل (الرصيد = مجموع
       // stock_moves) يستحيل في القواعد (لا تجميع) ويحتاج مسارًا موثوقًا
       // (Cloud Function على Blaze) — موثّق في خطة التطوير، البند ٢.
+      // ⚠️ **حدٌّ غير مُتحقَّق منه:** سلوك هذا الحارس مع `increment()` لم
+      // يُختبر — هل يرى `request.resource.data.qty` نتيجةَ الزيادة رقمًا
+      // (فيُفرض عدم السالب على الرصيد الناتج) أم السنتينل (فيسقط الشرط)؟
+      // الحسم يحتاج محاكي القواعد، وJava غير مثبَّتة على هذا الجهاز. لا
+      // يُدَّعى أنّه يعمل ولا أنّه معطَّل حتى يُختبر. والحارس الفعليّ اليوم
+      // هو `findNegativeBalance` داخل معاملة القيد (movements.js) وهو مُختبَر.
+      // ‹LOC-109 · ل‑١٧› و`qtyReserved` كان **بلا أيّ حارس**: يستطيع فاعلٌ
+      // مخزنيّ كتابة محجوزٍ سالب فيصير المتاح (qty − qtyReserved) أكبر من
+      // الموجود، فيُباع ما لا يوجد. الآن يُحرَس كما تُحرَس الكمية.
       allow write: if (isStockActor() || isVanSalesWriter())
                    && (!('qty' in request.resource.data)
                        || (request.resource.data.qty is number
-                           && request.resource.data.qty >= 0));
+                           && request.resource.data.qty >= 0))
+                   && (!('qtyReserved' in request.resource.data)
+                       || (request.resource.data.qtyReserved is number
+                           && request.resource.data.qtyReserved >= 0));
       allow delete: if false;
     }
 
@@ -750,6 +762,11 @@ service cloud.firestore {
                     && request.resource.data.postedByUid == request.auth.uid;
       // السماح بالكتابة على نفس المعرّف الحتمي (إعادة محاولة القيد الذرّي)
       // شرط بقاء الهوية والمستند والكمية كما هي — لا تحوير لحركةٍ قُيّدت.
+      // ‹LOC-109 · ل‑١٧› الدفعة والصلاحية والموقع كانت **غير محميّة**: يستطيع
+      // فاعلٌ مخزنيّ إعادة كتابة حركةٍ قُيّدت بتغيير تشغيلتها أو صلاحيتها أو
+      // رفّها مع بقاء الكمية والاتجاه، فينتقل الرصيد من مفتاحٍ إلى مفتاح بلا
+      // أثرٍ في التدقيق. وهي اليوم أبعادٌ في مفتاح الرصيد (LOC-108) فصار
+      // تحويرها تحويرًا للرصيد نفسه.
       allow update: if (isStockActor() || isVanSalesWriter())
                     && request.resource.data.docId == resource.data.docId
                     && request.resource.data.lineIndex == resource.data.lineIndex
@@ -757,7 +774,27 @@ service cloud.firestore {
                     && request.resource.data.sku == resource.data.sku
                     && request.resource.data.barcode == resource.data.barcode
                     && request.resource.data.from == resource.data.from
-                    && request.resource.data.to == resource.data.to;
+                    && request.resource.data.to == resource.data.to
+                    && request.resource.data.batch == resource.data.batch
+                    && request.resource.data.expiry == resource.data.expiry
+                    && request.resource.data.get('bin', '') == resource.data.get('bin', '')
+                    && request.resource.data.get('fromBin', '') == resource.data.get('fromBin', '')
+                    && request.resource.data.get('toBin', '') == resource.data.get('toBin', '')
+                    && request.resource.data.get('stockStatus', 'OK') == resource.data.get('stockStatus', 'OK');
+      allow delete: if false;
+    }
+
+    // ── سجلّ استيراد مستندات أودو (LOC-202 · إكسل) ────────────────
+    // المعرّف حتميّ من بصمة (مرجع أودو × معرّف السطر × write_date)، فاستيراد
+    // الملفّ نفسه مرّتين يكتب فوق نفسه ولا يضاعف مخزونًا. ملحقة-فقط بنمط
+    // `stock_moves`: لا حذف، والتعديل مقصورٌ على ما لا يغيّر الهويّة.
+    match /odoo_imports/{importId} {
+      allow read: if signedIn();
+      allow create: if isStockActor()
+                    && request.resource.data.byUid == request.auth.uid;
+      allow update: if isStockActor()
+                    && request.resource.data.fingerprint == resource.data.fingerprint
+                    && request.resource.data.odooRef == resource.data.odooRef;
       allow delete: if false;
     }
 
