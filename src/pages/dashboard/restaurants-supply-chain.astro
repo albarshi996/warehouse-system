@@ -1,0 +1,27 @@
+---
+/**
+ * «سلاسل الإمداد — المطاعم» — تقريرٌ مستقلّ في مركز التقارير.
+ *
+ * أُخرج عرض المطاعم من «عروض أنظمة القطاعات» ليقف وحده كتقريرٍ يُدار به
+ * اجتماع القطاع: ٣٥ شريحة تشرح دورة العمل والدورة المستندية بين إدارة
+ * السلاسل والإمداد والقطاع، وفي كل عمليةٍ بطاقةُ اختصارٍ تفتح **الشاشة
+ * التي تُنفَّذ فيها** داخل البوابة — وينتهي بطلبٍ موحَّد لشركة تنفيذ أودو.
+ *
+ * لا نسخَ ولا حذف: محتوى دورة التزويد يُستدعى من `sector-presentations.js`
+ * نفسه بتسميات شرائحه، فيبقى عرض القطاع القائم كما هو ولا يفترق النصّان.
+ *
+ * الهوية هنا هويّة الوثيقة الرسميّة (أحمر برند زو) لا الثيم الفاتح للشاشات —
+ * لأنّها ورقةٌ تُعرَض على قطاعٍ ويُوقَّع على مخرجها.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import RestaurantsSupplyDeck from '../../components/restaurants-meeting/RestaurantsSupplyDeck.jsx';
+import '../../styles/restaurants-meeting.css';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+---
+
+<DashboardLayout title="سلاسل الإمداد — المطاعم" light>
+  <RestaurantsSupplyDeck base={base} client:load />
+</DashboardLayout>

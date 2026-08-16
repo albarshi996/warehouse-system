@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 91,
+    "modules": 92,
     "serviceDomains": 41,
     "serviceFiles": 311,
     "collections": 72,
@@ -581,6 +581,14 @@
       "title": "خطة سلاسل الإمداد لقطاع المطاعم والمقاهي",
       "summary": "",
       "file": "src/pages/dashboard/executive-review/restaurants.astro",
+      "usesServices": []
+    },
+    {
+      "name": "restaurants-supply-chain",
+      "route": "/dashboard/restaurants-supply-chain",
+      "title": "سلاسل الإمداد — المطاعم",
+      "summary": "«سلاسل الإمداد — المطاعم» — تقريرٌ مستقلّ في مركز التقارير.",
+      "file": "src/pages/dashboard/restaurants-supply-chain.astro",
       "usesServices": []
     },
     {
