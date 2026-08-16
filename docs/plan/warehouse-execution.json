@@ -5,7 +5,7 @@
   "command": "npm run plan:exec",
   "track": "جراحيّ · **النواة تكبر ولا يُبنى بجانبها** · لا مجلّد خدمةٍ جديد ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح · ولا شاشة ثانية لمنطقٍ قائم",
   "source": "نقد المالك 2026-08-16 («نظام تخزين جامد بارد» ثمّ «تطوير جراحيّ لا نتوءات») + ملفّ «تطوير.md» (قراءة Manhattan Active WM وInfor WMS) + جرد النوى على الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-17 (EXE-204 — ت٢ مكتملة)",
+  "lastUpdated": "2026-08-17 (EXE-301 — مهلة الشحن)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "e8898ef",
@@ -525,7 +525,7 @@
       "title": "موعد الشحن على أمر الصرف — لا على البطاقة الإداريّة",
       "milestone": "ت٣",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ت‑٤"
       ],
@@ -533,10 +533,13 @@
         "EXE-101"
       ],
       "nucleus": "`documents/timeFields.js` — حارسٌ يمنع مرور حقلٍ زمنيّ بلا قرارِ صنف، و`tasks/taskShape.js:99` `dueMillis` تُعاد استعمالًا لا نسخًا",
-      "guardTest": "src/services/documents/timeFields.test.js",
+      "guardTest": "src/services/tasks/dueTime.test.js",
       "touches": [
+        "src/services/tasks/dueTime.js",
         "src/services/documents/timeFields.js",
-        "src/services/documents/schemas"
+        "src/services/documents/schemas/so.js",
+        "src/services/documents/schemas/pick.js",
+        "src/services/ledger/exceptions.js"
       ],
       "note": "موعدٌ **متّفق عليه** لا ختمُ واقعة — فلا يُرفض لكونه في المستقبل. وهذا عين ما يحرسه `timeFields`.",
       "acceptance": [
@@ -544,7 +547,11 @@
         "الوقت المتبقّي يُحسب بـ`nowMs` ممرَّرًا — لا `Date.now()` داخل المنطق",
         "التأخّر درجاتٌ لا نعم/لا: على الوقت · قارب · تأخّر",
         "مستندٌ بلا موعدٍ لا يُعطَّل — «بلا موعدٍ معلن» ويُعلَن"
-      ]
+      ],
+      "evidence": {
+        "commit": "63f25f5",
+        "closedOn": "2026-08-17"
+      }
     },
     {
       "id": "EXE-302",
