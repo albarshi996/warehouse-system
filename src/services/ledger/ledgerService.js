@@ -182,6 +182,8 @@ export async function postDocument(docData, profile, { markDone = false } = {}) 
           // الموقع التخزينيّ (SAP-7 · ف‑١٨): يُكتب حين يحمله التخزين — آخرُ
           // موضعٍ معلوم للرصيد، عرضًا؛ الفارغ لا يمحو موقعًا معلومًا سابقًا.
           ...(d.bin ? { bin: d.bin } : {}),
+          // حالة المخزون (LOC-107) — حقلٌ وصفيّ لا مفتاح؛ الافتراضيّ `OK`.
+          stockStatus: d.stockStatus || 'OK',
           qty: increment(d.delta),
           updatedAt: serverTimestamp(),
         },

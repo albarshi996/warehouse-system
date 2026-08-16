@@ -23,6 +23,7 @@ import {
   POSTING_STATE,
 } from './postingRules.js';
 import { vehicleLocationCode, customerLocationCode, isAccountLocation } from './locations.js';
+import { normalizeStockStatus } from './stockStatus.js';
 import { isStocked, typeOf } from '../items/itemType.js';
 import { toBase, baseUomOf, hasUomDefinition, normalizeUom, checkFraction } from '../items/uomModel.js';
 
@@ -184,6 +185,10 @@ export function buildMoves(docData, { items = null } = {}) {
       // التخزين (PUTAWAY) فيعرفه الدفتر — «حسب الموقع التخزينيّ» مستوى عرضٍ
       // من الحركات، ومفتاح الرصيد لم يُمسّ عمدًا (تغييره يقلب FEFO والسحب).
       bin: String(line?.bin ?? '').trim().toUpperCase(),
+      // حالة المخزون (LOC-107): بُعدٌ يصف ما يتعايش في الرفّ الواحد (سليم/تالف)
+      // ولا يُميّزه موقع. الغياب ⇒ `OK` ⇒ سلوك اليوم حرفيًّا. ولا يدخل مفتاح
+      // الرصيد بعد — قيمُه تنتظر اعتماد المالك (LOC-O02).
+      stockStatus: normalizeStockStatus(line?.stockStatus),
       qty: absQty,
       // الدفتر بوحدة الأساس، والعرض بوحدة الإدخال (م٣-ب). ولولا حفظ الأصل
       // لصار «٢٠ صندوقًا» في التقرير «٢٤٠» بلا أن يعرف أحدٌ أنّه هو نفسه.
@@ -242,6 +247,8 @@ export function balanceDeltas(moves) {
       // موقع الوجهة (ف‑١٨): الداخل إلى مستودعٍ بموقعٍ معلوم يُذكر موقعه على
       // الرصيد — آخرُ تخزينٍ يكسب، عرضًا لا مفتاحًا.
       bin: sign > 0 ? move.bin || '' : '',
+      // حالة المخزون تُحمَل على الرصيد (LOC-107) — حقلًا لا مفتاحًا بعد.
+      stockStatus: move.stockStatus || 'OK',
       delta: sign * move.qty,
     });
   };
