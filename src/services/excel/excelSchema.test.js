@@ -7,6 +7,8 @@ import assert from 'node:assert/strict';
 
 import {
   DATASETS,
+  IMPORT_TEMPLATE_DATASETS,
+  importFingerprint,
   normalizeBarcode,
   barcodeLookupVariants,
   splitMulti,
@@ -273,6 +275,95 @@ test('★★ ل‑٦: حقلٌ واحد للموقع اسمه bin — والعن
     'ولا يبقى حقلٌ ثانٍ للموقع في المخطّط'
   );
   assert.ok(DATASETS.balances.templateFields.includes('bin'));
+});
+
+// ── قالب الاستيراد القياسيّ (LOC-201) ──────────────────────────────
+test('★★ القالب محايدٌ عن النظام المصدر — ولا اسم لأودو في أيّ حقل', () => {
+  // البوابة عقدُها واحد وأيّ نظام يُكيَّف إليه؛ فحقلٌ اسمه «أودو» يربط العقد
+  // بمورّدٍ بعينه ويكسره يوم يتغيّر النظام.
+  for (const key of IMPORT_TEMPLATE_DATASETS) {
+    for (const col of DATASETS[key].columns) {
+      assert.ok(!/odoo/i.test(col.field), `الحقل «${col.field}» في ${key} يحمل اسم نظامٍ بعينه`);
+      assert.ok(!/odoo/i.test(col.labelAr), `العنوان «${col.labelAr}» في ${key} يحمل اسم نظامٍ بعينه`);
+    }
+  }
+});
+
+test('عناوين القالب المولَّد تصل كلّها إلى حقولها — القالب والمستورد مصدرٌ واحد', () => {
+  for (const key of IMPORT_TEMPLATE_DATASETS) {
+    const ds = DATASETS[key];
+    const index = buildHeaderIndex(key);
+    for (const field of ds.templateFields) {
+      const col = ds.columns.find((c) => c.field === field);
+      assert.ok(col, `${key}: حقل القالب «${field}» ليس في الأعمدة`);
+      assert.equal(
+        resolveHeaderCell(col.labelAr, index)?.field,
+        field,
+        `${key}: العنوان «${col.labelAr}» لا يعود إلى حقله`
+      );
+    }
+  }
+});
+
+test('مرادفات أودو والعربية والخطأ الإملائيّ مقبولة — فلا ينكسر شيتٌ قائم', () => {
+  const index = buildHeaderIndex('receipt');
+  const expect = {
+    'Odoo Reference': 'docRef',
+    'Odoo Line ID': 'lineId',
+    write_date: 'sourceUpdatedAt',
+    DISCREPTION: 'description',
+    SKU: 'sku',
+    'الكمية': 'qty',
+    'رقم الدفعة': 'batch',
+    'المستودع': 'warehouse',
+  };
+  for (const [header, field] of Object.entries(expect)) {
+    assert.equal(resolveHeaderCell(header, index)?.field, field, `«${header}» يجب أن تصل إلى ${field}`);
+  }
+});
+
+test('★★ البصمة: نفس السطر ⇒ نفس البصمة، واختلاف أيّ جزءٍ يغيّرها', () => {
+  const base = { docRef: 'IN-42', lineId: '55871', sourceUpdatedAt: '2026-08-16' };
+  assert.equal(importFingerprint(base), importFingerprint({ ...base }), 'إعادة الاستيراد تحديثٌ لا تكرار');
+  assert.notEqual(importFingerprint(base), importFingerprint({ ...base, lineId: '55872' }));
+  assert.notEqual(importFingerprint(base), importFingerprint({ ...base, sourceUpdatedAt: '2026-08-17' }));
+  assert.equal(importFingerprint({ ...base, docRef: ' in-42 ' }), importFingerprint(base), 'الفراغ والحالة لا يُنتجان بصمتين');
+});
+
+test('★★ البصمة تسقط إلى محتوى الصفّ بلا معرّف سطر — ولا تسقط كلّها', () => {
+  // نظامٌ لا يُصدّر معرّف سطر يجب ألّا يفقد منع التكرار تمامًا.
+  const a = importFingerprint({ docRef: 'IN-42', sku: 'WNW-001', batch: 'B2408', qty: 120 });
+  const b = importFingerprint({ docRef: 'IN-42', sku: 'WNW-001', batch: 'B2411', qty: 120 });
+  assert.ok(a.includes('C_'), 'يُعلَن أنّها بصمة محتوى');
+  assert.notEqual(a, b, 'دفعتان مختلفتان ⇒ بصمتان');
+  assert.equal(a, importFingerprint({ docRef: 'IN-42', sku: 'WNW-001', batch: 'B2408', qty: 120 }));
+});
+
+test('★★ هويّة السطر الثلاثيّة موجودة في الوارد والصادر — وهي ما لا يُحرَّر', () => {
+  for (const key of ['receipt', 'delivery']) {
+    const fields = DATASETS[key].columns.map((c) => c.field);
+    for (const id of ['docRef', 'lineId', 'sourceUpdatedAt']) {
+      assert.ok(fields.includes(id), `${key} بلا ${id} — تنكسر بصمة منع التكرار`);
+    }
+  }
+});
+
+test('لقطة المخزون: رصيد الصفر مشروع، وموقع النظام اختياريّ', () => {
+  const cols = DATASETS.stockSnapshot.columns;
+  const qty = cols.find((c) => c.field === 'systemQty');
+  assert.equal(qty.required, true, 'الرصيد مطلوب');
+  assert.equal(qty.nonNegative, true, 'ولا يكون سالبًا');
+  assert.equal(cols.find((c) => c.field === 'systemLocation').required, false, 'موقع النظام يُترك فارغًا فيُحسب الفرق بالمستودع');
+});
+
+test('⚠️ حقول البوابة الثلاثة ليست أعمدةً في الشيت — تُكتب من هويّة المستخدم', () => {
+  // وضعُها في الشيت يجعلها قابلةً للتزوير بيد من يملأ الملفّ (قرار المالك).
+  for (const key of IMPORT_TEMPLATE_DATASETS) {
+    const fields = DATASETS[key].columns.map((c) => c.field);
+    for (const forbidden of ['importedBy', 'importedAt', 'importFileName']) {
+      assert.ok(!fields.includes(forbidden), `${key}: «${forbidden}» يجب ألّا يكون عمودًا في الشيت`);
+    }
+  }
 });
 
 test('الأرقام تتحمّل الفواصل والأرقام العربية', () => {

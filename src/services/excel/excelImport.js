@@ -7,6 +7,7 @@ import {
   resolveHeaderCell,
   splitMulti,
   normalizeBarcode,
+  importFingerprint,
 } from './excelSchema.js';
 
 /**
@@ -231,6 +232,41 @@ export async function importSheet(input, datasetKey, opts = {}) {
       // ملاحظة: **لا نشترط qty > 0** هنا خلافًا للسجلّات — رصيد الصفر رقم
       // مشروع ومهمّ (يعني «الصنف نفد من هذا المخزن»)، وحذفه يُبقي رصيدًا
       // قديمًا كاذبًا في النظام.
+    } else if (datasetKey === 'receipt' || datasetKey === 'delivery' || datasetKey === 'stockSnapshot') {
+      // ═══ قالب الاستيراد القياسيّ (LOC-201) ═══
+      shaped.sku = String(shaped.sku ?? '').trim().toUpperCase();
+      shaped.barcode = normalizeBarcode(shaped.barcode);
+      if (!shaped.sku && !shaped.barcode) {
+        errors.push({
+          row: rowNum,
+          column: 'sku',
+          message: 'الصفّ بلا كود صنف وبلا باركود — لا سبيل للتعرّف على الصنف. | Row has no item identity.',
+        });
+        rowHasError = true;
+      }
+
+      if (datasetKey === 'stockSnapshot') {
+        // رصيد الصفر مشروع ومهمّ: يعني «نفد من هذا المخزن»، وحذفه يُبقي رصيدًا
+        // قديمًا كاذبًا في المطابقة. فلا يُشترط أكبر من صفر.
+        shaped.systemQty = Number(shaped.systemQty) || 0;
+      } else {
+        if (!(Number(shaped.qty) > 0)) {
+          errors.push({ row: rowNum, column: 'qty', message: 'الكمية يجب أن تكون أكبر من صفر. | Quantity must be greater than zero.' });
+          rowHasError = true;
+        }
+        // بصمة منع التكرار تُحسب هنا مرّةً واحدة فيحملها الصفّ إلى الحفظ.
+        shaped.fingerprint = importFingerprint(shaped);
+        // تنبيهٌ لا يمنع: بلا معرّف سطرٍ تسقط البصمة إلى محتوى الصفّ، فدقّة
+        // منع التكرار تقلّ — ويجب أن يعرف المستورِد ذلك لا أن يُفاجأ به.
+        if (!String(shaped.lineId ?? '').trim()) {
+          errors.push({
+            row: rowNum,
+            column: 'lineId',
+            severity: 'warning',
+            message: 'لا معرّف سطر — تُستعمل بصمة محتوى الصفّ لمنع التكرار (أقلّ دقّة). | No line id; falling back to content fingerprint.',
+          });
+        }
+      }
     } else {
       // logs: normalize itemCode + require qty > 0
       shaped.itemCode = String(shaped.itemCode ?? '').trim().toUpperCase();

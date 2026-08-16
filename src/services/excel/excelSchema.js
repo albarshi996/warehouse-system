@@ -56,6 +56,62 @@ function partnerColumns(kind) {
   ];
 }
 
+/**
+ * أعمدة هويّة السطر القادم من نظامٍ خارجيّ (LOC-201).
+ *
+ * الثلاثة الأولى هي **بصمة منع التكرار**: مرجع المستند × معرّف السطر × تاريخ
+ * آخر تعديل بالمصدر. استيراد الملفّ نفسه مرّتين يُحدّث السجلّ ولا يضاعف
+ * المخزون. ولذلك **لا تُحرَّر داخل البوابة** (قرار المالك 2026-08-16): تحريرها
+ * يكسر منع التكرار فيصير الاستيراد الثاني مخزونًا ثانيًا.
+ */
+function sourceIdentityColumns() {
+  return [
+    { field: 'docRef', labelAr: 'Document Reference (مرجع المستند)', type: 'string', required: true, aliases: ['document reference', 'doc reference', 'odoo reference', 'reference', 'ref', 'picking', 'مرجع المستند', 'المرجع', 'رقم المستند'] },
+    { field: 'docId', labelAr: 'Document ID (معرّف المستند)', type: 'string', required: false, aliases: ['document id', 'doc id', 'odoo record id', 'record id', 'معرف المستند', 'معرّف المستند'] },
+    { field: 'lineId', labelAr: 'Line ID (معرّف السطر)', type: 'string', required: false, aliases: ['line id', 'odoo line id', 'move line id', 'line', 'معرف السطر', 'معرّف السطر', 'رقم السطر'] },
+    { field: 'sourceUpdatedAt', labelAr: 'Source Updated At (تاريخ آخر تعديل بالمصدر)', type: 'string', required: false, aliases: ['source updated at', 'odoo write date', 'write date', 'write_date', 'last modified', 'updated at', 'تاريخ آخر تعديل', 'تاريخ التعديل'] },
+    { field: 'sourceSystem', labelAr: 'Source System (النظام المصدر)', type: 'string', required: false, aliases: ['source system', 'system', 'source', 'erp', 'النظام المصدر', 'النظام', 'المصدر'] },
+  ];
+}
+
+/**
+ * أعمدة بند الصنف المشتركة بين أمر الاستلام وأمر التسليم.
+ * `qtyLabel` و`batchLabel` يختلفان بالمعنى (كمّيّة واردة ↔ كمّيّة مطلوبة).
+ */
+function itemLineColumns(qtyLabel, batchLabel = 'Batch / Lot (الدفعة)') {
+  return [
+    { field: 'sku', labelAr: 'Item Code (كود الصنف)', type: 'string', required: true, aliases: ['item code', 'itemcode', 'sku', 'code', 'default_code', 'product code', 'part no', 'كود الصنف', 'الكود', 'رقم الصنف'] },
+    { field: 'barcode', labelAr: 'Barcode (الباركود)', type: 'string', required: false, aliases: ['barcode', 'bar code', 'ean', 'ean13', 'upc', 'product id', 'الباركود', 'باركود'] },
+    // «DISCREPTION» خطأٌ إملائيّ شائع في شيتات المستودعات — يُقبل عمدًا.
+    { field: 'description', labelAr: 'Description (اسم الصنف)', type: 'string', required: false, aliases: ['description', 'discreption', 'item description', 'product name', 'name', 'اسم الصنف', 'الصنف', 'الوصف'] },
+    { field: 'uom', labelAr: 'UOM (وحدة القياس)', type: 'string', required: false, aliases: ['uom', 'unit', 'unit of measure', 'وحدة القياس', 'الوحدة'] },
+    { field: 'qty', labelAr: qtyLabel, type: 'number', required: true, nonNegative: true, aliases: ['quantity', 'qty', 'demand', 'done', 'الكمية', 'الكميه', 'العدد', 'الكمية المطلوبة'] },
+    { field: 'batch', labelAr: batchLabel, type: 'string', required: false, aliases: ['batch', 'lot', 'batch no', 'lot no', 'lot/serial', 'الدفعة', 'التشغيلة', 'رقم الدفعة'] },
+    { field: 'expiry', labelAr: 'Expiry Date (تاريخ الصلاحية)', type: 'string', required: false, aliases: ['expiry date', 'expiry', 'expiration', 'exp', 'تاريخ الصلاحية', 'الصلاحية', 'انتهاء الصلاحية'] },
+  ];
+}
+
+/** مجموعات قالب الاستيراد القياسيّ — منها يُولَّد الملفّ ومنها يقرأ المستورد. */
+export const IMPORT_TEMPLATE_DATASETS = ['receipt', 'delivery', 'stockSnapshot'];
+
+/**
+ * بصمة السطر المستورد — تمنع أن يضاعف الاستيرادُ الثاني المخزون.
+ *
+ * الأصل: مرجع المستند + معرّف السطر + تاريخ آخر تعديل بالمصدر. وإن عجز النظام
+ * المصدر عن توفير معرّف سطر، نسقط إلى **بصمة محتوى الصفّ** (الصنف والدفعة
+ * والكمّيّة) — فيبقى المنع قائمًا ولو بدقّةٍ أقلّ، بدل أن يسقط كلّه.
+ */
+export function importFingerprint(row) {
+  const part = (v) => String(v ?? '').trim().toUpperCase().replace(/\s+/g, '_');
+  const ref = part(row?.docRef);
+  const line = part(row?.lineId);
+  const stamp = part(row?.sourceUpdatedAt);
+  if (ref && line) return `${ref}__${line}__${stamp || 'NOSTAMP'}`;
+  // لا معرّف سطر ⇒ بصمة المحتوى، ومعها المرجع إن وُجد.
+  const body = [part(row?.sku) || part(row?.barcode), part(row?.batch) || 'NOBATCH', part(row?.qty)].join('_');
+  return `${ref || 'NOREF'}__C_${body}__${stamp || 'NOSTAMP'}`;
+}
+
 /** أعمدة القالب القياسيّ للشركاء بالترتيب — ما يُصدَّر ويُسلَّم. */
 const PARTNER_TEMPLATE_FIELDS = [
   'code', 'nameAr', 'contactPerson', 'phone', 'email',
@@ -199,6 +255,104 @@ export const DATASETS = {
     ],
     templateFields: ['barcode', 'sku', 'nameAr', 'warehouse', 'bin', 'batch', 'expiry', 'qty', 'unitCost', 'countDate'],
   },
+  /**
+   * ═══ قالب الاستيراد القياسيّ (LOC-201) — عقدُ البوابة مع أيّ نظام ═══
+   *
+   * البوابة **لا تتّصل بأيّ نظامٍ خارجيّ** ولا تكتب فيه. هذه الأوراق الثلاث هي
+   * المدخل الوحيد، والمنشأة تُكيّف مخرجات نظامها (أودو أو غيره) لتطابقها.
+   * ولذلك الأعمدة **محايدة الاسم** (`Document Reference` لا `Odoo Reference`)،
+   * وأسماء أودو تبقى مرادفاتٍ مقبولة فلا ينكسر شيتٌ صُدّر منه مباشرةً.
+   *
+   * وهذا المخطّط هو **المصدر الواحد**: منه يُولَّد القالب القابل للتنزيل ومنه
+   * يقرأ المستورد — فيستحيل أن يفترق ما يُصدَّر عمّا يُقرأ.
+   *
+   * ⚠️ «اسم الملفّ» و«من استورد» و«وقت الاستيراد» **ليست أعمدةً هنا** عمدًا:
+   * تكتبها البوابة من هويّة المستخدم المسجَّل (قرار المالك 2026-08-16)، ووضعُها
+   * في الشيت يجعلها قابلةً للتزوير بيد من يملأ الملفّ.
+   */
+  receipt: {
+    key: 'receipt',
+    labelAr: 'أمر الاستلام (Receipt)',
+    sheetName: 'Receipt',
+    columns: [
+      ...sourceIdentityColumns(),
+      { field: 'docStatus', labelAr: 'Document Status (حالة المستند)', type: 'string', required: false, aliases: ['document status', 'status', 'odoo status', 'state', 'حالة المستند', 'الحالة'] },
+      { field: 'receiptDate', labelAr: 'Receipt Date (تاريخ الاستلام)', type: 'string', required: false, aliases: ['receipt date', 'date', 'scheduled date', 'تاريخ الاستلام', 'التاريخ', 'تاريخ'] },
+      { field: 'warehouse', labelAr: 'Warehouse (المستودع)', type: 'string', required: true, aliases: ['warehouse', 'المستودع', 'المخزن', 'whs', 'wh', 'store'] },
+      { field: 'sourceLocation', labelAr: 'Source Location (الموقع المصدر)', type: 'string', required: false, aliases: ['source location', 'from location', 'الموقع المصدر', 'من موقع'] },
+      { field: 'destinationLocation', labelAr: 'Destination Location (الموقع الوجهة)', type: 'string', required: false, aliases: ['destination location', 'to location', 'dest location', 'الموقع الوجهة', 'إلى موقع', 'الى موقع'] },
+      { field: 'supplierCode', labelAr: 'Supplier Code (رمز المورّد)', type: 'string', required: false, aliases: ['supplier code', 'vendor code', 'partner code', 'رمز المورد', 'رمز المورّد', 'كود المورد'] },
+      { field: 'supplier', labelAr: 'Supplier (اسم المورّد)', type: 'string', required: false, aliases: ['supplier', 'vendor', 'partner', 'المورد', 'المورّد', 'اسم المورد'] },
+      ...itemLineColumns('Quantity (الكمية)'),
+      { field: 'unitWeight', labelAr: 'Unit Weight (وزن الوحدة)', type: 'number', required: false, nonNegative: true, aliases: ['unit weight', 'weight', 'وزن الوحدة', 'الوزن'] },
+      { field: 'unitVolume', labelAr: 'Unit Volume (حجم الوحدة)', type: 'number', required: false, nonNegative: true, aliases: ['unit volume', 'volume', 'حجم الوحدة', 'الحجم'] },
+      { field: 'notes', labelAr: 'Notes (ملاحظات)', type: 'string', required: false, aliases: ['notes', 'note', 'remarks', 'ملاحظات', 'ملاحظة', 'البيان'] },
+    ],
+    templateFields: [
+      'docRef', 'docId', 'lineId', 'sourceUpdatedAt', 'sourceSystem', 'docStatus', 'receiptDate',
+      'warehouse', 'sourceLocation', 'destinationLocation', 'supplierCode', 'supplier',
+      'sku', 'barcode', 'description', 'uom', 'qty', 'batch', 'expiry',
+      'unitWeight', 'unitVolume', 'notes',
+    ],
+  },
+
+  delivery: {
+    key: 'delivery',
+    labelAr: 'أمر التسليم (Delivery)',
+    sheetName: 'Delivery',
+    columns: [
+      ...sourceIdentityColumns(),
+      { field: 'docStatus', labelAr: 'Document Status (حالة المستند)', type: 'string', required: false, aliases: ['document status', 'status', 'odoo status', 'state', 'حالة المستند', 'الحالة'] },
+      { field: 'deliveryDate', labelAr: 'Delivery Date (تاريخ التسليم)', type: 'string', required: false, aliases: ['delivery date', 'date', 'scheduled date', 'تاريخ التسليم', 'التاريخ', 'تاريخ'] },
+      { field: 'warehouse', labelAr: 'Warehouse (المستودع)', type: 'string', required: true, aliases: ['warehouse', 'المستودع', 'المخزن', 'whs', 'wh', 'store'] },
+      { field: 'customerCode', labelAr: 'Customer Code (رمز العميل)', type: 'string', required: false, aliases: ['customer code', 'client code', 'partner code', 'رمز العميل', 'كود العميل'] },
+      { field: 'customer', labelAr: 'Customer (اسم العميل)', type: 'string', required: false, aliases: ['customer', 'client', 'partner', 'العميل', 'اسم العميل', 'الزبون'] },
+      // أمر البيع **مرجعٌ فقط**: التنفيذ يقوم على أمر التسليم لأنّ أمر البيع
+      // قد يحمل كمّيّةً غير متاحة أو غير محجوزة بعد (تنبيه المالك، معتمَد).
+      { field: 'orderRef', labelAr: 'Order Reference (مرجع الطلب)', type: 'string', required: false, aliases: ['order reference', 'sales order ref', 'sale order', 'so ref', 'مرجع الطلب', 'أمر البيع', 'امر البيع'] },
+      ...itemLineColumns('Quantity (الكمية المطلوبة)', 'Batch / Lot (الدفعة المحجوزة)'),
+      { field: 'notes', labelAr: 'Notes (ملاحظات)', type: 'string', required: false, aliases: ['notes', 'note', 'remarks', 'ملاحظات', 'ملاحظة', 'البيان'] },
+    ],
+    templateFields: [
+      'docRef', 'docId', 'lineId', 'sourceUpdatedAt', 'sourceSystem', 'docStatus', 'deliveryDate',
+      'warehouse', 'customerCode', 'customer', 'orderRef',
+      'sku', 'barcode', 'description', 'uom', 'qty', 'batch', 'expiry', 'notes',
+    ],
+  },
+
+  /**
+   * لقطة مخزون النظام — تُرفَق يوميًّا لمقارنة الفعليّ بالنظام.
+   *
+   * ⚠️ `systemLocation` هو موقع **النظام المصدر** لا رفوف البوابة. رفوف البوابة
+   * تُعرَّف داخلها (`bin_locations`) ولا يعرفها أيّ نظامٍ خارجيّ. فإن جاء فارغًا
+   * حُسب الفرق على «الصنف × المستودع»، وإن جاء مملوءًا صار أدقّ. والخلط بين
+   * المرجعين يُنتج مطابقةً كاذبة.
+   */
+  stockSnapshot: {
+    key: 'stockSnapshot',
+    labelAr: 'لقطة مخزون النظام (StockSnapshot)',
+    sheetName: 'StockSnapshot',
+    columns: [
+      { field: 'snapshotDate', labelAr: 'Snapshot Date (تاريخ اللقطة)', type: 'string', required: true, aliases: ['snapshot date', 'date', 'as of', 'as of date', 'تاريخ اللقطة', 'التاريخ', 'تاريخ الرصيد'] },
+      { field: 'sourceSystem', labelAr: 'Source System (النظام المصدر)', type: 'string', required: false, aliases: ['source system', 'system', 'source', 'النظام المصدر', 'النظام', 'المصدر'] },
+      { field: 'warehouse', labelAr: 'Warehouse (المستودع)', type: 'string', required: true, aliases: ['warehouse', 'المستودع', 'المخزن', 'whs', 'wh', 'store'] },
+      { field: 'systemLocation', labelAr: 'System Location (موقع النظام)', type: 'string', required: false, aliases: ['system location', 'odoo location', 'location', 'موقع النظام', 'الموقع'] },
+      { field: 'sku', labelAr: 'Item Code (كود الصنف)', type: 'string', required: true, aliases: ['item code', 'itemcode', 'sku', 'code', 'default_code', 'product code', 'كود الصنف', 'الكود', 'رقم الصنف'] },
+      { field: 'barcode', labelAr: 'Barcode (الباركود)', type: 'string', required: false, aliases: ['barcode', 'bar code', 'ean', 'ean13', 'upc', 'الباركود', 'باركود'] },
+      { field: 'description', labelAr: 'Description (اسم الصنف)', type: 'string', required: false, aliases: ['description', 'discreption', 'item description', 'product name', 'name', 'اسم الصنف', 'الصنف', 'الوصف'] },
+      { field: 'uom', labelAr: 'UOM (وحدة القياس)', type: 'string', required: false, aliases: ['uom', 'unit', 'unit of measure', 'وحدة القياس', 'الوحدة'] },
+      { field: 'batch', labelAr: 'Batch / Lot (الدفعة)', type: 'string', required: false, aliases: ['batch', 'lot', 'batch no', 'lot no', 'الدفعة', 'التشغيلة', 'رقم الدفعة'] },
+      { field: 'expiry', labelAr: 'Expiry Date (تاريخ الصلاحية)', type: 'string', required: false, aliases: ['expiry date', 'expiry', 'expiration', 'exp', 'تاريخ الصلاحية', 'الصلاحية', 'انتهاء الصلاحية'] },
+      // الصفر رصيدٌ مشروع («نفد من هذا المخزن») فلا يُشترط أكبر من صفر.
+      { field: 'systemQty', labelAr: 'System Quantity (رصيد النظام)', type: 'number', required: true, nonNegative: true, aliases: ['system quantity', 'system qty', 'odoo quantity', 'odoo qty', 'quantity', 'qty', 'on hand', 'رصيد النظام', 'الرصيد', 'الكمية', 'الكمية الدفترية'] },
+      { field: 'unitCost', labelAr: 'Unit Cost (تكلفة الوحدة)', type: 'number', required: false, nonNegative: true, aliases: ['unit cost', 'cost', 'تكلفة الوحدة', 'التكلفة'] },
+    ],
+    templateFields: [
+      'snapshotDate', 'sourceSystem', 'warehouse', 'systemLocation',
+      'sku', 'barcode', 'description', 'uom', 'batch', 'expiry', 'systemQty', 'unitCost',
+    ],
+  },
+
   inbound: {
     key: 'inbound',
     labelAr: 'الوارد (Inbound_Log)',
