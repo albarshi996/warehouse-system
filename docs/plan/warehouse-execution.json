@@ -5,7 +5,7 @@
   "command": "npm run plan:exec",
   "track": "جراحيّ · **النواة تكبر ولا يُبنى بجانبها** · لا مجلّد خدمةٍ جديد ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح · ولا شاشة ثانية لمنطقٍ قائم",
   "source": "نقد المالك 2026-08-16 («نظام تخزين جامد بارد» ثمّ «تطوير جراحيّ لا نتوءات») + ملفّ «تطوير.md» (قراءة Manhattan Active WM وInfor WMS) + جرد النوى على الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-17 (EXE-301 — مهلة الشحن)",
+  "lastUpdated": "2026-08-17 (EXE-302 — محرّك الأولويّة)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "e8898ef",
@@ -558,7 +558,7 @@
       "title": "الأولويّة تُحسب — درجةٌ بعواملها المعلَنة",
       "milestone": "ت٣",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ت‑٣"
       ],
@@ -569,7 +569,7 @@
       "guardTest": "src/services/tasks/priority.test.js",
       "touches": [
         "src/services/tasks/priority.js",
-        "src/services/documents/inbox.js"
+        "src/services/tasks/priority.test.js"
       ],
       "acceptance": [
         "الدرجة تُعيد **العوامل التي كوّنتها** لا الرقم وحده — «الرقم بلا مرجعٍ لا يُعرض»",
@@ -577,7 +577,11 @@
         "قابليّة التنفيذ الآن عاملٌ حاكم: مهمّةٌ بلا رصيدٍ لا تتصدّر مهما قرب موعدها",
         "الأولويّة اليدويّة تبقى وتظهر «تجاوزٌ يدويّ من فلان» — لا تُدهس صامتةً",
         "المشرف يرى السبب · والعامل يرى المهمّة وحدها"
-      ]
+      ],
+      "evidence": {
+        "commit": "f6fb5dc",
+        "closedOn": "2026-08-17"
+      }
     },
     {
       "id": "EXE-303",
