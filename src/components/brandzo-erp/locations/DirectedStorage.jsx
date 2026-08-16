@@ -24,6 +24,9 @@ import {
   removeManualLine,
 } from '../../../services/locations/sourceImport.js';
 import { normalizeBarcode } from '../../../services/excel/excelSchema.js';
+import { listenLocations } from '../../../services/locations/locationsService.js';
+import { listenBalances } from '../../../services/balances/balancesService.js';
+import { suggestLocations } from '../../../services/locations/putawaySuggest.js';
 import { exportTemplate } from '../../../services/excel/excelExport.js';
 
 const KINDS = [
@@ -41,6 +44,8 @@ export default function DirectedStorage() {
   const [dragging, setDragging] = useState(false);
   const [fileName, setFileName] = useState('');
   const [term, setTerm] = useState('');
+  const [locations, setLocations] = useState([]);
+  const [balances, setBalances] = useState([]);
   const fileRef = useRef(null);
 
   useEffect(
@@ -51,6 +56,12 @@ export default function DirectedStorage() {
       }),
     []
   );
+
+  // ‹2026-08-17› اقتراح موقع التخزين ظاهرٌ في المعاينة **للاطّلاع لا للتثبيت**:
+  // قرار المالك قائم — العامل يختار الرفّ، والمحرّك يقترح ويُعلّل. فمن يعتمد
+  // الاستلام يرى إلى أين ستذهب البضاعة قبل أن تصل، ولا يُسلَب العاملُ قراره.
+  useEffect(() => listenLocations(setLocations, () => setLocations([])), []);
+  useEffect(() => listenBalances(setBalances, () => setBalances([])), []);
 
   const canImport = canImportSource(profile?.role);
   const deviations = useMemo(() => deviationReport(preview?.documents), [preview]);
@@ -298,6 +309,8 @@ export default function DirectedStorage() {
             onAddLine={addLine}
             onAddDoc={addDocument}
             onDropLine={dropLine}
+            locations={locations}
+            balances={balances}
             onCommit={commit}
             busy={busy}
             canImport={canImport}
@@ -330,6 +343,44 @@ function ScanBox({ onScan }) {
       placeholder="امسح الباركود ثمّ Enter"
       style={{ width: '190px', direction: 'ltr' }}
     />
+  );
+}
+
+/**
+ * الوجهة المقترحة — **للاطّلاع لا للتثبيت**.
+ *
+ * الحساب من `putawaySuggest` القائم بلا نسخ سطر. وتُعرض الأولى ومعها عددُ
+ * البدائل وسببُ ترشيحها؛ فإن تعذّر الاقتراح **قيل السبب** ولم تُترك الخانة
+ * فارغةً يفسّرها القارئ بما شاء.
+ */
+function SuggestedBin({ line, warehouse, locations, balances }) {
+  const advice = useMemo(
+    () =>
+      suggestLocations({
+        line: { sku: line.sku, barcode: line.barcode, batch: line.batch, expiry: line.expiry, qty: Number(line.qty) || 0, warehouse },
+        locations,
+        balances,
+        warehouse,
+      }),
+    [line.sku, line.barcode, line.batch, line.expiry, line.qty, warehouse, locations, balances]
+  );
+
+  const best = advice.candidates[0];
+  return (
+    <td style={{ padding: '4px 8px', fontSize: '12px' }}>
+      {best ? (
+        <span title={`${best.reason}${advice.candidates.length > 1 ? ` · و${advice.candidates.length - 1} بديلًا` : ''}`}>
+          <strong style={{ direction: 'ltr', display: 'inline-block' }}>{best.shortLabel || best.code}</strong>
+          {advice.candidates.length > 1 && (
+            <span style={{ color: 'var(--o-main-color-muted)' }}> +{advice.candidates.length - 1}</span>
+          )}
+        </span>
+      ) : (
+        <span style={{ color: 'var(--o-main-color-muted)' }} title={advice.problem}>
+          {advice.problem ? 'تعذّر — مرّر للسبب' : '—'}
+        </span>
+      )}
+    </td>
   );
 }
 
@@ -366,7 +417,7 @@ function filterDocuments(documents, term) {
     .filter(({ lines }) => lines.length > 0);
 }
 
-function Preview({ preview, deviations, onEdit, onHeader, onScan, onAddLine, onAddDoc, onDropLine, onCommit, busy, canImport, term, onTerm }) {
+function Preview({ preview, deviations, onEdit, onHeader, onScan, onAddLine, onAddDoc, onDropLine, onCommit, busy, canImport, term, onTerm, locations, balances }) {
   const s = preview.summary;
   const shown = filterDocuments(preview.documents, term);
   const shownLines = shown.reduce((n, d) => n + d.lines.length, 0);
@@ -491,7 +542,11 @@ function Preview({ preview, deviations, onEdit, onHeader, onScan, onAddLine, onA
             <table className="w-full" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'right' }}>
               <thead>
                 <tr style={{ background: 'var(--o-chip, #f4f4f5)' }}>
-                  {['الصنف', 'الباركود', 'الاسم', 'الوحدة', 'الكمية', 'الدفعة', 'الصلاحية', 'ملاحظات', ''].map((h) => (
+                  {[
+                    'الصنف', 'الباركود', 'الاسم', 'الوحدة', 'الكمية', 'الدفعة', 'الصلاحية',
+                    ...(preview.type === 'receipt' ? ['الوجهة المقترحة'] : []),
+                    'ملاحظات', '',
+                  ].map((h) => (
                     <th key={h} style={{ padding: '6px 8px', fontWeight: 700 }}>{h}</th>
                   ))}
                 </tr>
@@ -524,6 +579,9 @@ function Preview({ preview, deviations, onEdit, onHeader, onScan, onAddLine, onA
                       />
                       <Editable value={line.batch} onChange={(v) => onEdit(di, li, 'batch', v)} width="90px" />
                       <Editable value={line.expiry} type="date" onChange={(v) => onEdit(di, li, 'expiry', v)} width="130px" />
+                      {preview.type === 'receipt' && (
+                        <SuggestedBin line={line} warehouse={doc.warehouse} locations={locations} balances={balances} />
+                      )}
                       <Editable value={line.notes} onChange={(v) => onEdit(di, li, 'notes', v)} />
                       <td style={{ padding: '4px 8px' }}>
                         {line.manual && (
