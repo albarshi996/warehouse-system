@@ -25,6 +25,7 @@
     "plan:client": "node scripts/plan-check.mjs --plan docs/plan/client-completion.json --resume docs/plan/استئناف-نسخة-العميل.md",
     "plan:sap": "node scripts/plan-check.mjs --plan docs/plan/sap-alignment.json --resume docs/plan/استئناف-المواءمة.md",
     "plan:locations": "node scripts/plan-check.mjs --plan docs/plan/warehouse-locations.json --resume docs/plan/استئناف-التخزين-الموجّه.md",
+    "plan:exec": "node scripts/plan-check.mjs --plan docs/plan/warehouse-execution.json --resume docs/plan/استئناف-التنفيذ-الميداني.md",
     "timefields": "node scripts/build-time-fields-doc.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
