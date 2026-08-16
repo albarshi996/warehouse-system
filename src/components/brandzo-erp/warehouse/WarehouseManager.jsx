@@ -14,6 +14,8 @@ import {
 import { db } from '../../../config/firebase.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
+import LocationTree from './LocationTree.jsx';
+import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Badge from '../../odoo/Badge.jsx';
 import { int } from '../../odoo/format.js';
 
@@ -38,6 +40,10 @@ const LIST_COLS = [
 ];
 
 const WarehouseManager = () => {
+  // ‹LOC-102› تبويبان على الرابط نفسه: المنشآت ومواقع التخزين داخلها.
+  // لا صفحة فوق صفحة — المواقع تخصّ ماستر المستودعات.
+  const [tab, setTab] = useState('warehouses');
+  const [role, setRole] = useState('');
   const [warehouses, setWarehouses] = useState([]);
   const [formData, setFormData] = useState({ code: '', name: '', manager: '' });
   const [editingId, setEditingId] = useState(null);
@@ -45,6 +51,17 @@ const WarehouseManager = () => {
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
   const [offlineMode, setOfflineMode] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // الدور يحكم تحرير المواقع (المديران) — والقراءة لأيّ مصادَق.
+  useEffect(
+    () =>
+      subscribeAuth(async (user) => {
+        if (!user) return setRole('');
+        const profile = await fetchUserProfile(user.uid).catch(() => null);
+        setRole(profile?.role || '');
+      }),
+    []
+  );
 
   // Dispatch connection status
   const dispatchStatus = (isOnline) => {
@@ -260,6 +277,33 @@ const WarehouseManager = () => {
       </div>
 
       <div className="o_ds">
+        <div role="tablist" aria-label="أقسام المستودعات" style={{ display: 'flex', gap: '6px', marginBottom: '14px', borderBottom: '1px solid var(--o-border-color)' }}>
+          {[
+            { id: 'warehouses', label: 'المستودعات', icon: 'package' },
+            { id: 'locations', label: 'مواقع التخزين', icon: 'mapPin' },
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => setTab(t.id)}
+              className="btn btn-link"
+              style={{
+                borderBottom: tab === t.id ? '2px solid var(--o-brand-primary)' : '2px solid transparent',
+                fontWeight: tab === t.id ? 700 : 500,
+                borderRadius: 0,
+              }}
+            >
+              <Icon name={t.icon} size={15} /> {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'locations' && <LocationTree role={role} />}
+
+        {tab === 'warehouses' && (
+        <>
         <p style={{ fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)', margin: '0 0 14px', lineHeight: 1.6 }}>
           كود المستودع (WH Code) هو المعرّف الفريد. عند انقطاع السحابة يعمل النظام محلّيًّا ثم يزامن لاحقًا.
         </p>
@@ -357,6 +401,8 @@ const WarehouseManager = () => {
             <ListView selectable={false} columns={LIST_COLS} rows={listRows} />
           )}
         </div>
+        </>
+        )}
       </div>
     </div>
   );
