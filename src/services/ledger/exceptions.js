@@ -28,6 +28,7 @@
  */
 
 import { formatNumber, nextSeq } from '../documents/numberFormat.js';
+import { remainingFrom, toMillis as dueMillis } from '../tasks/dueTime.js';
 
 /** بادئة ترقيم الاستثناءات — تمرّ بمولّد الترقيم القائم لا بمولّدٍ ثانٍ. */
 export const EXCEPTION_PREFIX = 'EXC';
@@ -166,14 +167,9 @@ export function exceptionProblems(input) {
  * @returns {{ms:number|null, hours:number|null, overdue:boolean, label:string}}
  */
 export function remainingTime(exception, nowMs) {
-  const due = Date.parse(s(exception?.dueAt));
-  if (!Number.isFinite(due) || !Number.isFinite(nowMs)) {
-    return { ms: null, hours: null, overdue: false, label: 'بلا موعدٍ معلن' };
-  }
-  const ms = due - nowMs;
-  const hours = Math.round(ms / 3600000);
-  if (ms < 0) return { ms, hours, overdue: true, label: `تأخّر ${Math.abs(hours)} ساعة` };
-  return { ms, hours, overdue: false, label: `يبقى ${hours} ساعة` };
+  // ‹EXE-301› الحساب انتقل إلى `tasks/dueTime.js` لمّا احتاجته المهامّ
+  // والطلبات أيضًا — وهذه إحالةٌ لا نسخة، فلا يفترق الوقتان.
+  return remainingFrom(dueMillis(exception?.dueAt), nowMs);
 }
 
 /**

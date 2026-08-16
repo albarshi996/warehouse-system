@@ -71,6 +71,8 @@ const schema = {
         { key: 'orderDate', label: 'تاريخ الطلب (Order Date)', kind: 'date', required: true },
         { key: 'costCenter', label: 'مركز التكلفة (Cost Center)', kind: 'text', ltr: true, hint: 'رمزٌ من سيّد المواقع التنظيميّة — به تُحمَّل التكلفة على الفرع والبراند والقطاع' },
         { key: 'requiredDate', label: 'تاريخ التسليم المطلوب (Required Date)', kind: 'date' },
+        // ‹EXE-301› مهلة الشحن التشغيليّة — تُقرأ في ترتيب المهامّ ومحرّك الأولويّة.
+        { key: 'mustShipBy', label: 'مهلة الشحن (Must Ship By)', kind: 'date', hint: 'قيدُ الناقل: متى يُقفل استلامُ الشحنة — يقود ترتيب العمل الميدانيّ. وهو غير «تاريخ التسليم المطلوب» الذي هو وعدٌ للعميل.' },
         {
           key: 'warehouse',
           label: 'المستودع المصدر (Source Warehouse)',

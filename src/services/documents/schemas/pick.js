@@ -76,6 +76,8 @@ const schema = {
       fields: [
         { key: 'orderDate', label: 'تاريخ الطلب (Order Date)', kind: 'date', required: true },
         { key: 'branchOrderRef', label: 'رقم طلب الفرع (Branch Order Ref.)', kind: 'text' },
+        // ‹EXE-301› المهلة تنتقل من أمر البيع أو تُكتب هنا — وبها يُرتَّب السحب.
+        { key: 'mustShipBy', label: 'مهلة الشحن (Must Ship By)', kind: 'date', hint: 'قيدُ الناقل: متى يُقفل استلامُ الشحنة — يقود ترتيب العمل الميدانيّ. وهو غير «تاريخ التسليم المطلوب» الذي هو وعدٌ للعميل.' },
         {
           key: 'warehouse',
           label: 'المستودع المصدر (Source Warehouse)',

@@ -87,12 +87,16 @@ export const TIME_FIELD_MAP = Object.freeze({
   PUTAWAY: { putawayDate: E, expiry: A },
 
   /* ═══ الصادر ═══ */
-  SO: { orderDate: E, requiredDate: P },
+  // ‹EXE-301› `mustShipBy` **قيدٌ تشغيليّ** (متى يُقفل استلام الناقل) لا وعدٌ
+  // للعميل — و`requiredDate` هو الوعد. وقد يبعد بينهما ساعات، والذي يقود عمل
+  // المخزن هو الأوّل. «مخطّط» لأنّه **موعدٌ متّفق عليه** لا ختمُ واقعة، فلا
+  // يُرفض لكونه في المستقبل.
+  SO: { orderDate: E, requiredDate: P, mustShipBy: P },
   // ⚠️ `orderDate` في أمر السحب تسميتُه «تاريخ الطلب» — أي تاريخ أمر البيع لا
   // تاريخ السحب. وجدول الاشتقاق `SO>PICK` لا ينقله، فيُكتب بيدٍ اليوم. صُنّف
   // «منقولًا» كي لا يُختم بزمن السحب فيعرض رقمًا كاذبًا. القرار الصحيح لاحقًا:
   // إمّا نقله آليًّا عند الاشتقاق أو تسميتُه باسم واقعته. (ينتظر إقرار المالك)
-  PICK: { orderDate: R, expiry: A },
+  PICK: { orderDate: R, expiry: A, mustShipBy: P },
   PACK: { issueDate: E },
   DN: { deliveryDate: E, expiry: A },
   POD: { deliveryDate: E, expiry: A },

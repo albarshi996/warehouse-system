@@ -78,16 +78,17 @@ test('كلّ المستندات ممثَّلة — لا نوع بلا زمن', (
   // الأعداد تُحدَّث **بقصد** عند إضافة نوعٍ جديد — فتغيّرها إعلانٌ لا مفاجأة.
   assert.equal(stats.types, Object.keys(SCHEMAS).length, 'كلّ نوعٍ ممثَّل');
   assert.equal(stats.types, 38, 'الـ٣٥ الأصليّة + RCP وSPV وRCV');
-  assert.equal(stats.total, 68, 'مجموع الحقول الزمنيّة المصنَّفة');
+  // ‹EXE-301› +2: `mustShipBy` في SO وPICK — مهلة الشحن التشغيليّة.
+  assert.equal(stats.total, 70, 'مجموع الحقول الزمنيّة المصنَّفة');
 });
 
 test('التوزيع: ختم الواقعة هو الغالب، والسمة تليه', () => {
   const { counts } = timeFieldStats();
   assert.equal(counts.event, 37);
   assert.equal(counts.attribute, 18);
-  assert.equal(counts.planned, 9);
+  assert.equal(counts.planned, 11, 'ومنها mustShipBy في SO وPICK ‹EXE-301›');
   assert.equal(counts.reference, 4);
-  assert.equal(counts.event + counts.attribute + counts.planned + counts.reference, 68);
+  assert.equal(counts.event + counts.attribute + counts.planned + counts.reference, 70);
 });
 
 /* ═══════════ ٣. القواعد التي لا تُخرق ═══════════ */
