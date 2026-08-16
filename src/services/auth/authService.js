@@ -49,8 +49,18 @@ export function sendPasswordReset(email) {
  * يقرأ ملف المستخدم من Firestore `users/{uid}` ويحدّد الدور والاسم والحالة.
  * يتحمّل غياب الملف أو تعذّر القراءة بالرجوع للدور الافتراضي الآمن.
  */
-export async function fetchUserProfile(user) {
-  if (!user) return null;
+export async function fetchUserProfile(userOrUid) {
+  if (!userOrUid) return null;
+
+  // ⚠️ يقبل كائن المستخدم **أو** معرّفه نصًّا.
+  //
+  // ليس تساهلًا في الشكل بل حارسٌ ضدّ عطبٍ وقع فعلًا (2026-08-17): شاشتان
+  // مرّرتا `user.uid`، فقُرئ `.uid` من نصٍّ ⟵ `undefined` ⟵ فشلت القراءة ⟵
+  // ابتلعها `catch` أدناه ⟵ عاد الدور `viewer`. فظهر المنع للمدير العام نفسه
+  // **بلا رسالة خطأ**. وأخطر ما في العطب أنّه صامت: الشاشة تقول «لا صلاحيّة»
+  // وهي في الحقيقة لم تعرف من أنت.
+  const user = typeof userOrUid === 'string' ? { uid: userOrUid, email: null, displayName: null } : userOrUid;
+  if (!user.uid) return null;
   let role = DEFAULT_ROLE;
   let name = user.displayName || (user.email ? user.email.split('@')[0] : 'مستخدم');
   let active = true;

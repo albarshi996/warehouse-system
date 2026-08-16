@@ -27,13 +27,16 @@ export default function DirectedStorage() {
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState({ type: '', text: '' });
   const [result, setResult] = useState(null);
+  const [dragging, setDragging] = useState(false);
+  const [fileName, setFileName] = useState('');
+  const [term, setTerm] = useState('');
   const fileRef = useRef(null);
 
   useEffect(
     () =>
       subscribeAuth(async (user) => {
         if (!user) return setProfile(null);
-        setProfile(await fetchUserProfile(user.uid).catch(() => null));
+        setProfile(await fetchUserProfile(user).catch(() => null));
       }),
     []
   );
@@ -41,13 +44,15 @@ export default function DirectedStorage() {
   const canImport = canImportSource(profile?.role);
   const deviations = useMemo(() => deviationReport(preview?.documents), [preview]);
 
-  const onPick = useCallback(
-    async (e) => {
-      const file = e.target.files?.[0];
+  /** قراءةٌ واحدة للملفّ — يستدعيها النقر والإفلات معًا فلا يتفرّع المسار. */
+  const readFile = useCallback(
+    async (file) => {
       if (!file) return;
       setBusy('يقرأ الملفّ…');
       setMsg({ type: '', text: '' });
       setResult(null);
+      setFileName(file.name || '');
+      setTerm('');
       try {
         setPreview(await analyzeSourceFile(file, kind));
       } catch (err) {
@@ -59,6 +64,23 @@ export default function DirectedStorage() {
       }
     },
     [kind]
+  );
+
+  const onDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      setDragging(false);
+      if (!canImport || busy) return;
+      readFile(e.dataTransfer?.files?.[0]);
+    },
+    [canImport, busy, readFile]
+  );
+
+  const onPick = useCallback(
+    async (e) => {
+      await readFile(e.target.files?.[0]);
+    },
+    [readFile]
   );
 
   function editLine(docIdx, lineIdx, field, value) {
@@ -141,19 +163,42 @@ export default function DirectedStorage() {
         {!canImport && profile && (
           <div className="o_alert warning" style={{ marginBottom: '14px' }}>
             <div className="o_alert_title">
-              <Icon name="alertTriangle" size={16} /> الاستيراد مقصورٌ على مدير المستودع ومدقّق الجرد والأدمن
+              <Icon name="alertTriangle" size={16} /> الاستيراد مقصورٌ على المدير العام ومدير المستودع ومدقّق الجرد — ودورك الحاليّ لا يملكه
             </div>
           </div>
         )}
 
-        <div className="o_ds_card o_ds_pad" style={{ marginBottom: '18px' }}>
+        {/* منطقة الإفلات: الشيت يُسحب من المجلّد إلى الصفحة مباشرةً — خطوتان
+            تُختصران إلى واحدة. والزرّ باقٍ لمن يفضّل النقر. */}
+        <div
+          className="o_ds_card o_ds_pad"
+          style={{
+            marginBottom: '18px',
+            border: dragging ? '2px dashed var(--o-brand-primary)' : '2px dashed transparent',
+            background: dragging ? 'var(--o-badge-draft-bg)' : undefined,
+            transition: 'background .15s',
+          }}
+          onDragOver={(e) => {
+            if (!canImport || busy) return;
+            e.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={onDrop}
+        >
           <label className="btn btn-primary" style={{ cursor: canImport ? 'pointer' : 'not-allowed', opacity: canImport ? 1 : 0.5 }}>
             <Icon name="fileUp" size={15} /> {busy || 'اختر ملفّ الشيت'}
             <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" disabled={!canImport || Boolean(busy)} onChange={onPick} style={{ display: 'none' }} />
           </label>
           <span style={{ fontSize: '12px', color: 'var(--o-main-color-muted)', marginRight: '12px' }}>
-            الورقة المقروءة: <strong>{kind === 'receipt' ? 'Receipt' : 'Delivery'}</strong>
+            {dragging ? 'أفلِت الملفّ هنا' : 'أو اسحب الملفّ وأفلِته هنا'} · الورقة المقروءة:{' '}
+            <strong>{kind === 'receipt' ? 'Receipt' : 'Delivery'}</strong>
           </span>
+          {fileName && (
+            <div style={{ fontSize: '12px', color: 'var(--o-main-color-muted)', marginTop: '8px' }}>
+              الملفّ المقروء: <strong style={{ direction: 'ltr', display: 'inline-block' }}>{fileName}</strong>
+            </div>
+          )}
         </div>
 
         {result && (
@@ -170,7 +215,18 @@ export default function DirectedStorage() {
           </div>
         )}
 
-        {preview && <Preview preview={preview} deviations={deviations} onEdit={editLine} onCommit={commit} busy={busy} canImport={canImport} />}
+        {preview && (
+          <Preview
+            preview={preview}
+            deviations={deviations}
+            onEdit={editLine}
+            onCommit={commit}
+            busy={busy}
+            canImport={canImport}
+            term={term}
+            onTerm={setTerm}
+          />
+        )}
       </div>
     </div>
   );
@@ -185,8 +241,34 @@ function Stat({ label, value, tone }) {
   );
 }
 
-function Preview({ preview, deviations, onEdit, onCommit, busy, canImport }) {
+/**
+ * ترشيحُ المعاينة بكلمة — على الرقم أو الصنف أو الاسم أو الدفعة.
+ *
+ * والمهمّ فيه أنّه **يحفظ فهرس المستند والبند الأصليَّين**: التحرير يكتب
+ * بالفهرس (`onEdit(docIdx, lineIdx, …)`)، فترشيحٌ يُعيد الترقيم يجعل العامل
+ * يصحّح بندًا ويُكتب التصحيح في بندٍ آخر — وهو عطبٌ صامت.
+ */
+function filterDocuments(documents, term) {
+  const t = String(term || '').trim().toUpperCase();
+  const indexed = (documents || []).map((doc, di) => ({ doc, di }));
+  if (!t) return indexed.map(({ doc, di }) => ({ doc, di, lines: doc.lines.map((line, li) => ({ line, li })) }));
+
+  const hit = (v) => String(v ?? '').toUpperCase().includes(t);
+  return indexed
+    .map(({ doc, di }) => {
+      const docHit = hit(doc.docRef) || hit(doc.warehouse) || hit(doc.supplier) || hit(doc.customer);
+      const lines = doc.lines
+        .map((line, li) => ({ line, li }))
+        .filter(({ line }) => docHit || hit(line.sku) || hit(line.barcode) || hit(line.nameAr) || hit(line.batch));
+      return { doc, di, lines };
+    })
+    .filter(({ lines }) => lines.length > 0);
+}
+
+function Preview({ preview, deviations, onEdit, onCommit, busy, canImport, term, onTerm }) {
   const s = preview.summary;
+  const shown = filterDocuments(preview.documents, term);
+  const shownLines = shown.reduce((n, d) => n + d.lines.length, 0);
   return (
     <>
       <div className="o_dashboard_kpis" style={{ marginBottom: '18px' }}>
@@ -239,14 +321,42 @@ function Preview({ preview, deviations, onEdit, onCommit, busy, canImport }) {
         </div>
       )}
 
-      {preview.documents.map((doc, di) => (
+      {/* بحثٌ حيّ — شيتٌ بمئتي بندٍ لا يُراجَع بالتمرير. */}
+      <div className="o_ds_card o_ds_pad" style={{ marginBottom: '14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
+        <Icon name="search" size={15} />
+        <input
+          className="o_input"
+          value={term}
+          onChange={(e) => onTerm(e.target.value)}
+          placeholder="ابحث في رقم المستند أو الصنف أو الباركود أو الدفعة"
+          style={{ flex: '1 1 260px' }}
+        />
+        {term && (
+          <>
+            <span style={{ fontSize: '12px', color: 'var(--o-main-color-muted)' }}>
+              {shown.length} مستندًا · {shownLines} بندًا من {s.lines}
+            </span>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => onTerm('')}>
+              أزِل البحث
+            </button>
+          </>
+        )}
+      </div>
+
+      {term && shown.length === 0 && (
+        <div className="o_alert" style={{ marginBottom: '14px' }}>لا بندَ يطابق «{term}».</div>
+      )}
+
+      {shown.map(({ doc, di, lines: shownRows }) => (
         <div key={doc.docRef} className="o_ds_card o_ds_pad" style={{ marginBottom: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
             <strong style={{ direction: 'ltr' }}>{doc.docRef}</strong>
             <Badge tone="muted">{doc.warehouse}</Badge>
             {doc.supplier && <span style={{ fontSize: '12px' }}>{doc.supplier}</span>}
             {doc.customer && <span style={{ fontSize: '12px' }}>{doc.customer}</span>}
-            <span style={{ fontSize: '12px', color: 'var(--o-main-color-muted)' }}>{doc.lines.length} بندًا</span>
+            <span style={{ fontSize: '12px', color: 'var(--o-main-color-muted)' }}>
+              {shownRows.length === doc.lines.length ? `${doc.lines.length} بندًا` : `${shownRows.length} من ${doc.lines.length} بندًا`}
+            </span>
           </div>
 
           <div style={{ overflowX: 'auto' }}>
@@ -259,7 +369,7 @@ function Preview({ preview, deviations, onEdit, onCommit, busy, canImport }) {
                 </tr>
               </thead>
               <tbody>
-                {doc.lines.map((line, li) => {
+                {shownRows.map(({ line, li }) => {
                   const dev = qtyDeviation(line);
                   return (
                     <tr key={li} style={{ borderTop: '1px solid var(--o-border-color)' }}>

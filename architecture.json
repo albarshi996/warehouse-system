@@ -11,8 +11,8 @@
   "counts": {
     "modules": 93,
     "serviceDomains": 42,
-    "serviceFiles": 337,
-    "collections": 74,
+    "serviceFiles": 340,
+    "collections": 76,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -1872,6 +1872,9 @@
         "customerLocation.test.js",
         "drill.js",
         "drill.test.js",
+        "exceptions.js",
+        "exceptions.test.js",
+        "exceptionsService.js",
         "ledger.test.js",
         "ledgerCard.js",
         "ledgerService.js",
@@ -1901,8 +1904,8 @@
         "transferReports.test.js",
         "vehicle.test.js"
       ],
-      "fileCount": 33,
-      "testCount": 15,
+      "fileCount": 36,
+      "testCount": 16,
       "exports": [
         "ACCOUNT_LOCATIONS",
         "AGING_BUCKETS",
@@ -1910,6 +1913,9 @@
         "CUSTOMER_PREFIX",
         "DEFAULT_STOCK_STATUS",
         "EPSILON",
+        "EXCEPTION_PREFIX",
+        "EXCEPTION_STATUS",
+        "EXCEPTION_TYPES",
         "EXTERNAL",
         "EXTERNAL_LABEL",
         "LEDGER_RULES",
@@ -1918,7 +1924,10 @@
         "POSTING_RULES",
         "POSTING_STATE",
         "REBUILD_ROLES",
+        "SEVERITY",
+        "SEVERITY_LABELS",
         "SHIPMENT_STATUS",
+        "STATUS_LABELS",
         "STOCK_STATUSES",
         "SYSTEM_LOCATIONS",
         "VEHICLE",
@@ -1946,12 +1955,16 @@
         "buildMoves",
         "canPost",
         "canRebuildBalances",
+        "canTransition",
         "classifyOrder",
+        "closeException",
+        "closeVerdict",
         "closeoutBalance",
         "closeoutEntry",
         "committedBreakdown",
         "compareMoves",
         "computeKpis",
+        "correctionDraft",
         "creditCheck",
         "customerCodeFromLocation",
         "customerExposure",
@@ -1959,12 +1972,17 @@
         "documentExposure",
         "entriesFrom",
         "entryFor",
+        "exceptionNumber",
+        "exceptionProblems",
+        "exceptionType",
         "fetchAllBalances",
         "fetchAllMoves",
         "fetchPartnerLedger",
         "fetchReconciliation",
         "fillRate",
+        "findByFingerprint",
         "findNegativeBalance",
+        "fingerprint",
         "inStockBreakdown",
         "invoiceOutstanding",
         "isAccountLocation",
@@ -1972,6 +1990,7 @@
         "isCustomerToken",
         "isDefaultStatus",
         "isFullyReleased",
+        "isOpenStatus",
         "isPosted",
         "isReservedCode",
         "isSellableStatus",
@@ -1982,10 +2001,12 @@
         "itemOpenDemand",
         "ledgerRuleFor",
         "limitOf",
+        "listenExceptions",
         "listenPartnerLedger",
         "listenRecentMoves",
         "locationLabel",
         "migrationVerdict",
+        "moveException",
         "moveId",
         "moveTime",
         "movesForBarcode",
@@ -1996,6 +2017,8 @@
         "needsWarehouse",
         "normalizeStockStatus",
         "onVehicleBalances",
+        "openCorrection",
+        "openException",
         "operationExceptions",
         "operationsSnapshot",
         "orderedBreakdown",
@@ -2018,12 +2041,16 @@
         "release",
         "releaseForPick",
         "releaseReservation",
+        "remainingTime",
         "reservationDeltas",
         "reserve",
+        "shapeException",
+        "sortForBoard",
         "statement",
         "statusLocationCollisions",
         "stockStatusLabel",
         "stuckBalances",
+        "summarize",
         "summarizeMovement",
         "totalAvailable",
         "totalReserved",
@@ -2037,6 +2064,7 @@
       ],
       "collections": [
         "balances",
+        "exceptions",
         "partner_ledger",
         "stock_moves"
       ]
@@ -3953,6 +3981,72 @@
             "condition": "signedIn() && request.resource.data.byUid == request.auth.uid && request.resource.data.entityKind in ['item', 'supplier', 'customer'] && request.resource.data.e",
             "roles": [
               "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "exceptions",
+        "path": "exceptions",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isStockActor() || isManager()",
+            "roles": [
+              "isStockActor",
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "events",
+        "path": "exceptions/events",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "(isStockActor() || isManager()) && request.resource.data.byUid == request.auth.uid",
+            "roles": [
+              "isStockActor",
+              "isManager"
             ]
           },
           {

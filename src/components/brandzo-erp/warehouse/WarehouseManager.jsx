@@ -58,7 +58,7 @@ const WarehouseManager = () => {
     () =>
       subscribeAuth(async (user) => {
         if (!user) return setRole('');
-        const profile = await fetchUserProfile(user.uid).catch(() => null);
+        const profile = await fetchUserProfile(user).catch(() => null);
         setRole(profile?.role || '');
       }),
     []
