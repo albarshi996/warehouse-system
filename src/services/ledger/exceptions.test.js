@@ -11,6 +11,8 @@ import {
   EXCEPTION_STATUS,
   EXCEPTION_TYPES,
   VANISHED_NOTE,
+  boardRows,
+  filterRows,
   detectionsToDrafts,
   reconcileDetections,
   SEVERITY,
@@ -273,4 +275,43 @@ test('★ المُغلق لا يُعدّ زائلًا ولا يمنع فتح ك�
 test('كشفٌ فارغ وسجلٌّ فارغ لا يُنتجان شيئًا', () => {
   const r = reconcileDetections(null, null);
   assert.deepEqual([r.toOpen, r.active, r.vanished], [[], [], []]);
+});
+
+/* ═══ صندوق القرار ‹EXE-204› ═══ */
+
+test('★★ المكشوف غير المسجَّل لا يختفي — يظهر موسومًا مع زرّ تسجيله', () => {
+  const rows = boardRows([detection()], [], NOW);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].registered, false);
+  assert.equal(rows[0].id, null);
+});
+
+test('★★ لكلّ صفٍّ إجراؤه ومسؤوله — قراءةٌ بلا «افعل كذا» تُترك', () => {
+  const saved = { ...detectionsToDrafts([detection()])[0], id: 'x1', status: EXCEPTION_STATUS.OPEN, number: 'EXC-2026-0001' };
+  const [row] = boardRows([detection()], [saved], NOW);
+  assert.equal(row.registered, true);
+  assert.equal(row.action, EXCEPTION_TYPES.stuck_balance.action);
+  assert.equal(row.ownerRole, EXCEPTION_TYPES.stuck_balance.owner);
+  assert.equal(row.typeLabel, EXCEPTION_TYPES.stuck_balance.label);
+  assert.equal(row.stillDetected, true, 'وما زال المحرّك يكشفه');
+});
+
+test('★ المسجَّل الذي زال سببه يبقى في الصندوق موسومًا أنّه لم يُكشف الآن', () => {
+  const saved = { ...detectionsToDrafts([detection()])[0], id: 'x1', status: EXCEPTION_STATUS.OPEN };
+  const [row] = boardRows([], [saved], NOW);
+  assert.equal(row.registered, true);
+  assert.equal(row.stillDetected, false);
+});
+
+test('المُغلق خارج الصندوق', () => {
+  const closed = { ...detectionsToDrafts([detection()])[0], id: 'x', status: EXCEPTION_STATUS.CLOSED };
+  assert.equal(boardRows([], [closed], NOW).length, 0);
+});
+
+test('الترشيح بالخطورة والنوع وغير المسجَّل والمتأخّر', () => {
+  const rows = boardRows([detection(), detection({ severity: 'med', identity: { type: 'expired', qty: 2, reason: 'منتهٍ' } })], [], NOW);
+  assert.equal(filterRows(rows, { severity: SEVERITY.HIGH }).length, 1);
+  assert.equal(filterRows(rows, { type: 'expired' }).length, 1);
+  assert.equal(filterRows(rows, { onlyUnregistered: true }).length, 2);
+  assert.equal(filterRows(rows, {}).length, 2, 'وبلا مرشّحٍ يظهر الكلّ');
 });

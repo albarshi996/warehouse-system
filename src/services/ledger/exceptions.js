@@ -281,6 +281,55 @@ export function reconcileDetections(drafts, existing) {
   return { toOpen, active, vanished };
 }
 
+/**
+ * ‹EXE-204› صفوف صندوق القرار — المسجَّل والمكشوف في قائمةٍ واحدة.
+ *
+ * لماذا معًا؟ لأنّ المشرف لا يعنيه أيّهما «مسجَّل»: يعنيه **ما يحتاج تدخّلًا
+ * الآن**. فالمسجَّل يظهر برقمه وحالته، والمكشوف الذي لم يُسجَّل بعد يظهر
+ * موسومًا `unregistered` مع زرّ تسجيله — ولا يختفي بحجّة أنّه ليس في السجلّ.
+ *
+ * ولكلّ صفٍّ **إجراؤه ومسؤوله** من تعريف نوعه: قراءةٌ بلا «افعل كذا» تُترك.
+ */
+export function boardRows(detections, registry, nowMs) {
+  const drafts = detectionsToDrafts(detections);
+  const { toOpen, active } = reconcileDetections(drafts, registry);
+
+  const rows = [
+    ...(registry || [])
+      .filter((e) => isOpenStatus(e?.status))
+      .map((e) => ({
+        ...e,
+        registered: true,
+        stillDetected: active.some((a) => a.existing?.id === e.id),
+        typeLabel: exceptionType(e.type)?.label || e.type,
+        action: e.action || exceptionType(e.type)?.action || '',
+        ownerRole: e.ownerRole || exceptionType(e.type)?.owner || '',
+        remaining: remainingTime(e, nowMs),
+      })),
+    ...toOpen.map((d) => ({
+      ...d,
+      id: null,
+      registered: false,
+      stillDetected: true,
+      typeLabel: exceptionType(d.type)?.label || d.type,
+      remaining: remainingTime(d, nowMs),
+    })),
+  ];
+
+  return sortForBoard(rows, nowMs);
+}
+
+/** ترشيحٌ للصندوق — بالخطورة والنوع والحالة، وكلٌّ اختياريّ. */
+export function filterRows(rows, { severity, type, onlyUnregistered, onlyOverdue } = {}) {
+  return (rows || []).filter((r) => {
+    if (severity && r.severity !== severity) return false;
+    if (type && r.type !== type) return false;
+    if (onlyUnregistered && r.registered) return false;
+    if (onlyOverdue && !r.remaining?.overdue) return false;
+    return true;
+  });
+}
+
 /** نصُّ ما يقوله السجلّ حين يزول السبب — تعليمٌ لا إغلاق. */
 export const VANISHED_NOTE = 'زال سببه في آخر فحص — يبقى مفتوحًا حتى يُبتّ فيه بقرار.';
 

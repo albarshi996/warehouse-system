@@ -4,6 +4,8 @@ import { listenAllDocuments } from '../../../services/documents/documentsService
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { subscribeItems } from '../../../services/itemService.js';
 import { computeKpis, operationsSnapshot, operationExceptions } from '../../../services/ledger/operationsDashboard.js';
+import ExceptionsBox from './ExceptionsBox.jsx';
+import { listenExceptions, syncDetections } from '../../../services/ledger/exceptionsService.js';
 import { toMillis } from '../../../services/documents/inbox.js';
 
 /**
@@ -72,6 +74,22 @@ export default function OperationsCommand() {
   const snap = useMemo(() => operationsSnapshot(docs, balances, items), [docs, balances, items]);
   const exceptions = useMemo(() => operationExceptions(docs, balances, nowMs, items), [docs, balances, items, nowMs]);
 
+  // ‹EXE-204› السجلّ يُقرأ حيًّا، والتسجيل بيد المشرف (ت-O01) لا صامتًا.
+  const [registry, setRegistry] = useState([]);
+  const [registering, setRegistering] = useState('');
+  useEffect(() => listenExceptions(setRegistry, () => setRegistry([])), []);
+
+  async function registerDetected() {
+    setRegistering('يسجّل…');
+    try {
+      await syncDetections(exceptions, registry, new Date(nowMs).getFullYear(), null);
+    } catch (err) {
+      console.error('تعذّر تسجيل الاستثناءات:', err);
+    } finally {
+      setRegistering('');
+    }
+  }
+
   // صدقُ البتر: إن بلغ عدد المستندات حدّ العرض فثمّة أقدمُ منها لم يُقرأ.
   // وإن كان أقدم مستندٍ مقروء أحدثَ من بداية نافذة المؤشرات، فالنافذة نفسها
   // ناقصة ⇒ المؤشرات قد لا تعكس كل الـ90 يومًا. نقولها صراحةً لا نُخفيها.
@@ -122,36 +140,14 @@ export default function OperationsCommand() {
       </div>
       </div>
 
-      {/* ── لوحة الاستثناءات ── */}
-      <div className="rounded-2xl border border-line bg-surface p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-lg">🚨</span>
-          <h2 className="text-sm font-bold text-ink">لوحة الاستثناءات — ما يحتاج تدخّلًا</h2>
-          <span className="text-xs text-gray-500">({num(exceptions.length)})</span>
-        </div>
-        {exceptions.length === 0 ? (
-          <p className="text-emerald-300 text-sm py-6 text-center font-bold">✓ لا استثناءات — كل العمليات ضمن الطبيعي.</p>
-        ) : (
-          <div className="grid gap-2 sm:grid-cols-2">
-            {exceptions.slice(0, 16).map((e, i) => {
-              const sev = e.severity === 'high' ? '#ef4444' : e.severity === 'med' ? '#f59e0b' : '#6b7280';
-              return (
-                <a
-                  key={i}
-                  href={`${base}${e.href}`}
-                  className="flex items-start gap-3 rounded-xl bg-surface border border-line hover:border-line p-3 transition-colors"
-                >
-                  <span className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ background: sev }} />
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-ink">{e.title}</div>
-                    <div className="text-[11px] text-muted leading-snug">{e.detail}</div>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      {/* ‹EXE-204› صندوق قرارٍ لا قائمة عرض — الإجراء ومسؤوله في كلّ صفّ. */}
+      <ExceptionsBox
+        detections={exceptions}
+        registry={registry}
+        nowMs={nowMs}
+        onRegister={registerDetected}
+        busy={registering}
+      />
 
       {/* ── اللقطة الموزَّعة ── */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
