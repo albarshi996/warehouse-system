@@ -10,9 +10,9 @@
   },
   "counts": {
     "modules": 92,
-    "serviceDomains": 41,
-    "serviceFiles": 311,
-    "collections": 72,
+    "serviceDomains": 42,
+    "serviceFiles": 321,
+    "collections": 74,
     "roles": 16,
     "odooModels": 12,
     "odooGuards": 51,
@@ -937,6 +937,7 @@
         "balanceId",
         "balancesForBarcode",
         "balancesForSku",
+        "batchExpiryConflicts",
         "canEditBalances",
         "commitBalancesImport",
         "expiryStatus",
@@ -1867,23 +1868,30 @@
         "partnerLedger.test.js",
         "partnerLedgerService.js",
         "postingRules.js",
+        "rebuild.js",
+        "rebuild.test.js",
+        "rebuildService.js",
         "receiptVoucher.test.js",
         "reservations.js",
         "salesReports.js",
         "salesReports.test.js",
         "salesService.js",
+        "stockStatus.js",
+        "stockStatus.test.js",
         "supplierPayment.test.js",
         "transferReports.js",
         "transferReports.test.js",
         "vehicle.test.js"
       ],
-      "fileCount": 28,
-      "testCount": 13,
+      "fileCount": 33,
+      "testCount": 15,
       "exports": [
         "ACCOUNT_LOCATIONS",
         "AGING_BUCKETS",
         "CUSTOMER",
         "CUSTOMER_PREFIX",
+        "DEFAULT_STOCK_STATUS",
+        "EPSILON",
         "EXTERNAL",
         "EXTERNAL_LABEL",
         "LEDGER_RULES",
@@ -1891,7 +1899,9 @@
         "PARTIES",
         "POSTING_RULES",
         "POSTING_STATE",
+        "REBUILD_ROLES",
         "SHIPMENT_STATUS",
+        "STOCK_STATUSES",
         "SYSTEM_LOCATIONS",
         "VEHICLE",
         "VEHICLE_PREFIX",
@@ -1899,10 +1909,13 @@
         "WAREHOUSE_FROM",
         "WAREHOUSE_TO",
         "WAREHOUSE_TOKENS",
+        "activeStatuses",
+        "aggregateKey",
         "aging",
         "allocateAndReserve",
         "allocateDocument",
         "allocateFefo",
+        "applyRebuild",
         "applyReservation",
         "atCustomerBalances",
         "availableEquation",
@@ -1914,10 +1927,12 @@
         "buildLedgerCard",
         "buildMoves",
         "canPost",
+        "canRebuildBalances",
         "classifyOrder",
         "closeoutBalance",
         "closeoutEntry",
         "committedBreakdown",
+        "compareMoves",
         "computeKpis",
         "creditCheck",
         "customerCodeFromLocation",
@@ -1926,7 +1941,10 @@
         "documentExposure",
         "entriesFrom",
         "entryFor",
+        "fetchAllBalances",
+        "fetchAllMoves",
         "fetchPartnerLedger",
+        "fetchReconciliation",
         "fillRate",
         "findNegativeBalance",
         "inStockBreakdown",
@@ -1934,9 +1952,11 @@
         "isAccountLocation",
         "isCustomerLocation",
         "isCustomerToken",
+        "isDefaultStatus",
         "isFullyReleased",
         "isPosted",
         "isReservedCode",
+        "isSellableStatus",
         "isSystemLocation",
         "isVehicleLocation",
         "isVehicleToken",
@@ -1947,13 +1967,16 @@
         "listenPartnerLedger",
         "listenRecentMoves",
         "locationLabel",
+        "migrationVerdict",
         "moveId",
+        "moveTime",
         "movesForBarcode",
         "movesForDocument",
         "movesForSku",
         "movesIntoLocation",
         "movesStock",
         "needsWarehouse",
+        "normalizeStockStatus",
         "onVehicleBalances",
         "operationExceptions",
         "operationsSnapshot",
@@ -1971,12 +1994,17 @@
         "postingRuleFor",
         "postingTypes",
         "previewImpact",
+        "rebuildFromMoves",
+        "rebuiltRowsForWrite",
+        "reconcileBalances",
         "release",
         "releaseForPick",
         "releaseReservation",
         "reservationDeltas",
         "reserve",
         "statement",
+        "statusLocationCollisions",
+        "stockStatusLabel",
         "stuckBalances",
         "summarizeMovement",
         "totalAvailable",
@@ -1990,8 +2018,63 @@
         "zeroingLocations"
       ],
       "collections": [
+        "balances",
         "partner_ledger",
         "stock_moves"
+      ]
+    },
+    {
+      "domain": "locations",
+      "dir": "src/services/locations",
+      "files": [
+        "locationCode.js",
+        "locationCode.test.js",
+        "locationsModel.js",
+        "locationsModel.test.js",
+        "locationsService.js"
+      ],
+      "fileCount": 5,
+      "testCount": 2,
+      "exports": [
+        "CAPACITY_MEASURES",
+        "CODE_SEGMENTS",
+        "DEFAULT_STATUS",
+        "DEFAULT_STORAGE_TYPE",
+        "LOCATIONS_ROLES",
+        "LOCATION_STATUSES",
+        "MIN_SEGMENTS",
+        "SEGMENT_SEPARATOR",
+        "STORAGE_TYPES",
+        "allowsItem",
+        "archiveLocation",
+        "balanceLocationCode",
+        "binCellVerdict",
+        "buildLocationTree",
+        "canEditLocations",
+        "canReceive",
+        "fetchLocationsOnce",
+        "formatLocationCode",
+        "getLocation",
+        "isDescendantOf",
+        "isValidLocationCode",
+        "listenLocations",
+        "locationCodeProblem",
+        "locationLabelOf",
+        "locationOptions",
+        "locationProblems",
+        "mixingProblem",
+        "normalizeLocationCode",
+        "occupancyOf",
+        "parentCodeOf",
+        "parseLocationCode",
+        "saveLocation",
+        "saveLocationsBulk",
+        "setLocationStatus",
+        "shapeLocation",
+        "shortLabelOf"
+      ],
+      "collections": [
+        "bin_locations"
       ]
     },
     {
@@ -3218,10 +3301,42 @@
             "actions": [
               "write"
             ],
-            "condition": "(isStockActor() || isVanSalesWriter()) && (!('qty' in request.resource.data) || (request.resource.data.qty is number && request.resource.data.qty >= 0))",
+            "condition": "(isStockActor() || isVanSalesWriter()) && (!('qty' in request.resource.data) || (request.resource.data.qty is number && request.resource.data.qty >= 0)) && (!('",
             "roles": [
               "isStockActor",
               "isVanSalesWriter"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "bin_locations",
+        "path": "bin_locations",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager()",
+            "roles": [
+              "isManager"
             ]
           },
           {
@@ -4124,6 +4239,46 @@
             "condition": "isManager()",
             "roles": [
               "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "odoo_imports",
+        "path": "odoo_imports",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isStockActor() && request.resource.data.byUid == request.auth.uid",
+            "roles": [
+              "isStockActor"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "isStockActor() && request.resource.data.fingerprint == resource.data.fingerprint && request.resource.data.odooRef == resource.data.odooRef",
+            "roles": [
+              "isStockActor"
             ]
           },
           {

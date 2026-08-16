@@ -5,24 +5,50 @@
   "command": "npm run plan:locations",
   "track": "جراحيّ · الأساس الحاكم أوّلًا · قلب مفتاح الرصيد آخر خطوة في الدفعة ومحجوب بصفريّة فرق إعادة البناء",
   "source": "طلب المالك 2026-08-16 (نصّ «نريد تنفيذ منظومة التخزين والسحب الموجّه») + فحص الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-16",
+  "lastUpdated": "2026-08-16 (اكتملت الدفعة الأولى م١ — ٩ مهامّ)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "6fc3193",
     "branch": "claude/warehouse-location-system-cd4c55",
     "note": "الأرقام تُقاس عند بدء التنفيذ لا تُفترض — AGENTS.md يقول ~728 اختبارًا وSESSION_HANDOFF يقول 1587 والقرص يحمل ~1590 في 110 ملفّات؛ الوثائق متقادمة."
   },
-
   "milestones": [
-    { "id": "م٠", "title": "الحوكمة — تثبيت الخطة والمتتبّع", "estimate": "جلسة واحدة" },
-    { "id": "م١", "title": "الأساس الحاكم — كيان الموقع وهويّة الرصيد", "estimate": "5–7 جلسات" },
-    { "id": "م٢", "title": "صندوق استيراد أودو (إكسيل)", "estimate": "2–3 جلسات" },
-    { "id": "م٣", "title": "محرّك التخزين الموجّه", "estimate": "2 جلسات" },
-    { "id": "م٤", "title": "مهامّ العامل والمسح الميدانيّ", "estimate": "2 جلسات" },
-    { "id": "م٥", "title": "السحب الموجّه والصادر", "estimate": "2 جلسات" },
-    { "id": "م٦", "title": "المطابقة والخريطة البصريّة", "estimate": "2 جلسات" }
+    {
+      "id": "م٠",
+      "title": "الحوكمة — تثبيت الخطة والمتتبّع",
+      "estimate": "جلسة واحدة"
+    },
+    {
+      "id": "م١",
+      "title": "الأساس الحاكم — كيان الموقع وهويّة الرصيد",
+      "estimate": "5–7 جلسات"
+    },
+    {
+      "id": "م٢",
+      "title": "صندوق استيراد أودو (إكسيل)",
+      "estimate": "2–3 جلسات"
+    },
+    {
+      "id": "م٣",
+      "title": "محرّك التخزين الموجّه",
+      "estimate": "2 جلسات"
+    },
+    {
+      "id": "م٤",
+      "title": "مهامّ العامل والمسح الميدانيّ",
+      "estimate": "2 جلسات"
+    },
+    {
+      "id": "م٥",
+      "title": "السحب الموجّه والصادر",
+      "estimate": "2 جلسات"
+    },
+    {
+      "id": "م٦",
+      "title": "المطابقة والخريطة البصريّة",
+      "estimate": "2 جلسات"
+    }
   ],
-
   "gaps": {
     "ل‑١": "لا كيان «موقع تخزين» أصلًا — مجموعة `warehouses` مسطّحة `{code,name,manager,status}` بلا هرميّة ولا سعة ولا نوع (src/services/warehouseService.js)",
     "ل‑٢": "`bin` حقل نصٍّ حرٍّ بلا قائمة ولا تحقّق — في ثلاثة مخطّطات فقط: putaway.js:102 · pick.js:112 · cc.js:131",
@@ -30,7 +56,7 @@
     "ل‑٤": "الصلاحية خارج المفتاح — دفعةٌ واحدة بصلاحيتين تنهار في صفٍّ واحد وتُدهس السابقة بلا إنذار (ledgerService.js:180)",
     "ل‑٥": "حقلان لمعنًى واحد بلا توحيد — `location` يُكتب من استيراد إكسل و`bin` يُكتب من القيد",
     "ل‑٦": "لا دالّة `rebuildBalances()` — دعوى «الدفتر هو الحقيقة والأرصدة ذاكرةٌ مسرَّعة» مكتوبة في ledgerService.js:9 بلا تنفيذ، فلا أداة ترحيلٍ ولا تحقّق",
-    "ل‑٧": "`bin` لا ينتقل في `LINE_MAP` لزوج الاشتقاق `QC>PUTAWAY` — الموقع يضيع بين الفحص والتخزين",
+    "ل‑٧": "✅ صُحّحت وسُدّت 2026-08-16 (LOC-104): الوصف الأصليّ («bin لا ينتقل في QC>PUTAWAY») صحيحٌ وصفًا لا علاجًا — QC **لا يحمل موقعًا على مستوى السطر** أصلًا (حقل location في رأسه فقط) فلا شيء يُنقل هناك. الفقدُ الفعليّ كان في CC>ADJ: الجردُ يعرف الرفّ والتسويةُ بلا عمود موقعٍ أصلًا، فيُقيَّد الفرق على المستودع كلّه ولا يُعرف أين وقع. أُضيف العمود ونُقل.",
     "ل‑٨": "سطر PICK بلا موقع مصدر — وهو الشرط الحرفيّ الذي عُلّقت عليه ف‑١٨ في sap-alignment.json",
     "ل‑٩": "لا بُعد `Status` للمخزون — الحالة مشفَّرة اليوم في الموقع وحده (QUARANTINE · RETURNS · MAINTENANCE)",
     "ل‑١٠": "لا مستورد لمستندات أودو (استلام/تسليم) ولا بصمة تمنع الاستيراد المكرّر من مضاعفة المخزون",
@@ -40,12 +66,11 @@
     "ل‑١٤": "لا مقارنة بين رصيد أودو المستورد والرصيد الفعليّ والفرق، ولا مسار معالجةٍ للفرق",
     "ل‑١٥": "`WarehouseMaps.jsx` (2853 سطرًا) و`ColdStoragePlan.jsx` (819) يتيمان — غير مستورَدَين من أيّ صفحة وصفحتاهما محذوفتان، وعرضٌ ثابت بلا بيانات",
     "ل‑١٦": "`bin` غير قابل للمسح — `scannable:true` على `sku` و`barcode` وحدهما في كلّ المخطّطات",
-    "ل‑١٧": "ثغرات قواعد: `batch`/`expiry`/`bin` غير محميّة من التعديل في `stock_moves`، و`qtyReserved` بلا حارس، وحارس `qty>=0` على `balances` معطَّلٌ عمليًّا مع `increment()`",
-    "ل‑١٨": "تناقض صلاحيات الأرصدة — `BALANCES_ROLES` دوران في balancesService.js:32 مقابل `isStockActor()||isVanSalesWriter()` (12 دورًا) في firestore.rules:719",
+    "ل‑١٧": "◐ سُدّت ثغرتان مؤكَّدتان 2026-08-16 (LOC-109): batch/expiry/bin (+fromBin/toBin/stockStatus) صارت محميّةً من التعديل في stock_moves، وqtyReserved صار له حارسٌ صريح. ⚠️ **والثالثة سُحبت**: قولي إنّ حارس qty>=0 «معطَّلٌ عمليًّا مع increment()» كان **استنتاجًا لا يمكن إثباته** — الحسم يحتاج محاكي القواعد وJava غير مثبَّتة على الجهاز. فلم يُغيَّر الحارس (تغييرُ حارسٍ أمنيّ على ظنٍّ أسوأ من إبقائه)، وكُتب الحدّ نصًّا في القاعدة. والحارس الفعليّ المُختبَر هو findNegativeBalance داخل معاملة القيد.",
+    "ل‑١٨": "✅ حُسمت وصفًا 2026-08-16 (LOC-109): **ليست تناقضًا** — فعلان مختلفان. القاعدة تحرس **القيد** فتسمح لاثني عشر دورًا (من يُنجز قائمة سحبٍ قد يكون أمين مخزنٍ لا مديرًا)، وBALANCES_ROLES تحرس **الاستيراد اليدويّ** الذي يدهس أرصدةً بملفٍّ محفوظ فلا يجوز إلا للمديرَين. والتعليق الذي كان يدّعي التطابق صُحّح في balancesService.js.",
     "ل‑١٩": "لا ملصق باركود للموقع ولا طباعة — والمكتبة المستضافة ذاتيًّا `public/lib/JsBarcode.all.min.js` موجودة وغير مستثمَرة إلا لرقم المستند",
     "ل‑٢٠": "لا حماية من تصادم أكواد المواقع الجديدة مع مواقع النظام الثمانية وبادئتَي `VAN:`/`CUST:` — و`balances.warehouse` يحمل هذه الرموز نفسها"
   },
-
   "ownerInputs": [
     {
       "id": "LOC-O01",
@@ -97,7 +122,6 @@
       "state": "todo"
     }
   ],
-
   "tasks": [
     {
       "id": "LOC-000",
@@ -105,7 +129,10 @@
       "milestone": "م٠",
       "owner": "Claude",
       "state": "done",
-      "evidence": { "commit": "310234a", "closedOn": "2026-08-16" },
+      "evidence": {
+        "commit": "310234a",
+        "closedOn": "2026-08-16"
+      },
       "gaps": [],
       "dependsOn": [],
       "branch": "claude/warehouse-location-system-cd4c55",
@@ -119,7 +146,7 @@
         "SESSION_HANDOFF.md"
       ],
       "progress": "فُحص الكود الفعليّ في ثلاثة محاور (محرّك المستندات · الأرصدة والدفتر ومزامنة أودو · الواجهة والتنقّل والحوكمة). أُثبتت 20 فجوة كلّها بمسار ملفٍّ حقيقيّ. حُسمت أربعة قرارات مالك: خطةٌ موثّقة الآن والتنفيذ لاحقًا · الأساس الحاكم دفعةً أولى · إكسيل يدويّ مصدرًا وحيدًا · CODE128 بالمكتبة القائمة. واكتُشف أنّ هذه المنظومة هي بعينها شرط فتح ف‑١٨ المؤجَّلة في متتبّع مواءمة SAP.",
-      "nextStep": "أُغلقت في 310234a. التالي LOC-101 (كيان الموقع ونحو الكود) — **ولا تُبدأ قبل إغلاق CC-402/CC-501 بأمر المالك**، فهذه جبهةٌ ثالثة والقاعدة جبهةٌ واحدة في المرّة.",
+      "nextStep": "أُغلقت في 310234a. وبأمر المالك «نفذ · اعتمدت الخطة» (2026-08-16) رُفع قيد «بعد إغلاق CC-402/CC-501» ونُفّذت الدفعة الأولى م١ كاملةً (LOC-101…LOC-109). التالي: م٢ صندوق استيراد أودو (LOC-201).",
       "acceptance": [
         "كلّ فجوة من ل‑١ إلى ل‑٢٠ مربوطة بمسار ملفٍّ حقيقيّ على القرص لا بوصفٍ عامّ",
         "`npm run plan` يقبل المتتبّع الرابع ويولّد بطاقة الاستئناف بلا خرق",
@@ -128,15 +155,19 @@
         "مدخل `[Claude]` في رأس `SESSION_HANDOFF.md` بمعرّف المهمّة والمنجز والمتبقّي"
       ]
     },
-
     {
       "id": "LOC-101",
       "title": "كيان الموقع `bin_locations` ونحو الكود الخالص",
       "milestone": "م١",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["ل‑١", "ل‑٢٠"],
-      "dependsOn": ["LOC-000"],
+      "state": "done",
+      "gaps": [
+        "ل‑١",
+        "ل‑٢٠"
+      ],
+      "dependsOn": [
+        "LOC-000"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/locations/locationCode.test.js",
       "touches": [
@@ -151,16 +182,24 @@
         "الكود لا يُغيَّر بعد أوّل حركة على الموقع — يُؤرشَف ويُنشأ بديل، و`delete:false` في القاعدة",
         "الوصف والسعة والقواعد قابلة للتعديل بلا مساسٍ بالهويّة التاريخيّة",
         "`shortLabel` المعروض للعامل مشتقٌّ من الكود لا حقلًا يدويًّا يتباعد عنه"
-      ]
+      ],
+      "evidence": {
+        "commit": "1e24a93",
+        "closedOn": "2026-08-16"
+      }
     },
     {
       "id": "LOC-102",
       "title": "شاشة شجرة المواقع تبويبًا في `/dashboard/warehouses` + ملصق CODE128",
       "milestone": "م١",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["ل‑١٩"],
-      "dependsOn": ["LOC-101"],
+      "state": "done",
+      "gaps": [
+        "ل‑١٩"
+      ],
+      "dependsOn": [
+        "LOC-101"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/locations/locationsModel.test.js",
       "touches": [
@@ -173,35 +212,56 @@
         "الملصق يُطبع بـCODE128 من `public/lib/JsBarcode.all.min.js` المستضاف ذاتيًّا — بلا CDN وبلا اعتماد جديد",
         "بلا إيموجي في الواجهة · أيقونات SVG خطّية · الأحمر للتحذير فقط · أرقام لاتينية",
         "الشجرة تعرض السعة المستهلكة والمتاحة لكلّ موقع من الأرصدة الحيّة لا من حقلٍ يدويّ"
-      ]
+      ],
+      "evidence": {
+        "commit": "57f2594",
+        "closedOn": "2026-08-16"
+      }
     },
     {
       "id": "LOC-103",
       "title": "`rebuildBalances()` — إعادة بناء الرصيد من الدفتر وتقرير المطابقة",
       "milestone": "م١",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["ل‑٦"],
-      "dependsOn": ["LOC-000"],
+      "state": "done",
+      "gaps": [
+        "ل‑٦"
+      ],
+      "dependsOn": [
+        "LOC-000"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/ledger/rebuild.test.js",
-      "touches": ["src/services/ledger/rebuild.js", "src/services/ledger/ledgerService.js"],
+      "touches": [
+        "src/services/ledger/rebuild.js",
+        "src/services/ledger/ledgerService.js"
+      ],
       "note": "تُبنى قبل أيّ مساسٍ بالمفتاح — هي أداة الترحيل وأداة التحقّق معًا. بدونها يترك قلبُ المفتاح أرصدةً يتيمة بلا سبيلٍ لكشفها.",
       "acceptance": [
         "دالّة خالصة تُعيد بناء كلّ الأرصدة من `stock_moves` وحدها وتُقارنها بالمخزَّن",
         "تقرير المطابقة يُظهر كلّ فرقٍ بصنفه وموقعه ودفعته — والصفر يعني تطابقًا تامًّا",
         "لا تكتب شيئًا افتراضيًّا — إعادة الكتابة فعلٌ صريح منفصل عن الفحص",
         "تعمل على دفعاتٍ فلا تتجاوز حدّ 500 كتابة لكلّ معاملة في Firestore"
-      ]
+      ],
+      "evidence": {
+        "commit": "2f7b21d",
+        "closedOn": "2026-08-16"
+      }
     },
     {
       "id": "LOC-104",
       "title": "`bin` مرجعًا قابلًا للمسح في `LineItemsTable` وانتقاله في `LINE_MAP`",
       "milestone": "م١",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["ل‑٢", "ل‑٧", "ل‑١٦"],
-      "dependsOn": ["LOC-101"],
+      "state": "done",
+      "gaps": [
+        "ل‑٢",
+        "ل‑٧",
+        "ل‑١٦"
+      ],
+      "dependsOn": [
+        "LOC-101"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/documents/chain.test.js",
       "touches": [
@@ -214,16 +274,24 @@
         "موقعٌ غير موجود أو موقوف أو ممتلئ يُرفض برسالة عربية واضحة تقول السبب",
         "`bin` ينتقل في `LINE_MAP` لزوج `QC>PUTAWAY` فلا يضيع بين الفحص والتخزين",
         "لا تغيير في سلوك أيّ مستند لا يحمل موقعًا — الفارغ يمرّ كما اليوم"
-      ]
+      ],
+      "evidence": {
+        "commit": "73e2c8b",
+        "closedOn": "2026-08-16"
+      }
     },
     {
       "id": "LOC-105",
       "title": "سطر السحب يحمل موقع المصدر — شرط فتح ف‑١٨",
       "milestone": "م١",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["ل‑٨"],
-      "dependsOn": ["LOC-104"],
+      "state": "done",
+      "gaps": [
+        "ل‑٨"
+      ],
+      "dependsOn": [
+        "LOC-104"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/ledger/movements.test.js",
       "touches": [
@@ -237,16 +305,24 @@
         "قاعدة القيد `@warehouse → STAGING` تصير من الموقع المحدَّد إلى STAGING دون كسر أيّ نوعٍ آخر",
         "PICK بلا موقع يبقى عاملًا بسلوك اليوم — الترحيل صفرُ الأثر",
         "اختبارٌ يثبت أنّ دورات TR/TRN/TRC وPACK/DN/GP/POD لم تتأثّر"
-      ]
+      ],
+      "evidence": {
+        "commit": "dc77e1d",
+        "closedOn": "2026-08-16"
+      }
     },
     {
       "id": "LOC-106",
       "title": "توحيد `location` و`bin` في حقلٍ واحد بمصدرٍ واحد",
       "milestone": "م١",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["ل‑٥"],
-      "dependsOn": ["LOC-104"],
+      "state": "done",
+      "gaps": [
+        "ل‑٥"
+      ],
+      "dependsOn": [
+        "LOC-104"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/balances/balances.test.js",
       "touches": [
@@ -258,34 +334,58 @@
         "حقلٌ واحد للموقع على مستند الرصيد، والقديم يُقرأ توافقيًّا ولا يُمحى",
         "استيراد إكسل والقيد المخزنيّ يكتبان الحقل نفسه بالتطبيع نفسه",
         "أرصدةٌ كُتبت بالحقلين تُقرأ صحيحةً بلا ترحيلٍ إجباريّ"
-      ]
+      ],
+      "evidence": {
+        "commit": "1a46f22",
+        "closedOn": "2026-08-16"
+      }
     },
     {
       "id": "LOC-107",
       "title": "بُعد `Status` حقلًا على الحركة والرصيد (لا مفتاحًا بعد)",
       "milestone": "م١",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["ل‑٩"],
-      "dependsOn": ["LOC-000"],
+      "state": "done",
+      "gaps": [
+        "ل‑٩"
+      ],
+      "dependsOn": [
+        "LOC-000"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
-      "guardTest": "src/services/ledger/movements.test.js",
-      "touches": ["src/services/ledger/movements.js", "src/services/balances/balanceKey.js"],
+      "guardTest": "src/services/ledger/stockStatus.test.js",
+      "touches": [
+        "src/services/ledger/movements.js",
+        "src/services/balances/balanceKey.js"
+      ],
       "note": "الحالة اليوم مشفَّرة في الموقع. إدخالها بُعدًا مستقلًّا بلا قيمٍ منفصلة صراحةً يخلق مصدرين للحقيقة — لذلك القيم قرار مالك (LOC-O02) والافتراضيّ `OK`.",
       "acceptance": [
         "قيم `Status` منفصلة صراحةً عمّا يُشفَّر بالموقع، والتداخل مرفوضٌ باختبار",
         "الافتراضيّ `OK`، وغيابه يعني سلوك اليوم حرفيًّا",
         "الحقل يُقيَّد على الحركة والرصيد ولا يدخل المفتاح في هذه المهمّة"
-      ]
+      ],
+      "evidence": {
+        "commit": "fb3045a",
+        "closedOn": "2026-08-16"
+      }
     },
     {
       "id": "LOC-108",
       "title": "قلب مفتاح الرصيد إلى `Item × Location × Batch × Expiry × Status` وحكم تعارض الصلاحية",
       "milestone": "م١",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["ل‑٣", "ل‑٤"],
-      "dependsOn": ["LOC-103", "LOC-104", "LOC-105", "LOC-106", "LOC-107"],
+      "state": "done",
+      "gaps": [
+        "ل‑٣",
+        "ل‑٤"
+      ],
+      "dependsOn": [
+        "LOC-103",
+        "LOC-104",
+        "LOC-105",
+        "LOC-106",
+        "LOC-107"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/balances/balances.test.js",
       "touches": [
@@ -303,19 +403,31 @@
         "دفعةٌ واحدة بصلاحيتين ترفع تنبيه تعارض بيانات — لا دمجٌ صامت ولا مفتاحان يتباعدان",
         "تقرير `rebuildBalances` بعد القلب يُخرج فرقًا صفرًا مقابل ما قبله",
         "حارس الرصيد السالب لا يرفض سحبًا صحيحًا — باختبارٍ يثبت دورة تخزينٍ ثمّ سحبٍ كاملة"
-      ]
+      ],
+      "evidence": {
+        "commit": "7fe60b9",
+        "closedOn": "2026-08-16"
+      }
     },
     {
       "id": "LOC-109",
       "title": "قواعد المجموعتين الجديدتين وسدّ ثغرات `stock_moves`/`balances` وحسم تناقض الصلاحيات",
       "milestone": "م١",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["ل‑١٧", "ل‑١٨"],
-      "dependsOn": ["LOC-101"],
+      "state": "done",
+      "gaps": [
+        "ل‑١٧",
+        "ل‑١٨"
+      ],
+      "dependsOn": [
+        "LOC-101"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "test/firestore-rules.test.mjs",
-      "touches": ["firestore.rules", "src/services/balances/balancesService.js"],
+      "touches": [
+        "firestore.rules",
+        "src/services/balances/balancesService.js"
+      ],
       "note": "تُكتب في الريبو فقط — المالك وحده ينشرها (LOC-O06). و`npm run audit` يسقط إن استُعملت مجموعة في الكود بلا قاعدة.",
       "acceptance": [
         "`bin_locations` كتابةً لـ`isManager()` و`delete:false` — أرشفةٌ لا محو",
@@ -323,20 +435,29 @@
         "`batch` و`expiry` و`bin` محميّة من التعديل في `stock_moves` كما `qty` و`from` و`to`",
         "`qtyReserved` عليه حارسٌ صريح، وحارس `qty>=0` يُصلَح ليعمل مع `increment()` أو يُعلَن حدُّه صراحةً",
         "`BALANCES_ROLES` والقواعد يتطابقان — أو يُوثَّق سببُ الاختلاف نصًّا في الملفّين معًا"
-      ]
+      ],
+      "evidence": {
+        "commit": "f3aa051",
+        "closedOn": "2026-08-16"
+      }
     },
-
     {
       "id": "LOC-201",
       "title": "مجموعتا بيانات `odooReceipts` و`odooDeliveries` في محرّك إكسل القائم",
       "milestone": "م٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ل‑١٠"],
-      "dependsOn": ["LOC-101"],
+      "gaps": [
+        "ل‑١٠"
+      ],
+      "dependsOn": [
+        "LOC-101"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/excel/excelSchema.test.js",
-      "touches": ["src/services/excel/excelSchema.js"],
+      "touches": [
+        "src/services/excel/excelSchema.js"
+      ],
       "note": "يُعاد استخدام `buildHeaderIndex` و`detectHeaderRow` و`resolveHeaderCell` و`normalizeBarcode` و`toNumber` — لا محرّك ثانٍ يتباعد.",
       "acceptance": [
         "الحقول التسعة عشر التي حدّدها المالك مسمّاةً معياريًّا داخليًّا مهما اختلفت عناوين الشيت",
@@ -350,8 +471,12 @@
       "milestone": "م٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ل‑١٠"],
-      "dependsOn": ["LOC-201"],
+      "gaps": [
+        "ل‑١٠"
+      ],
+      "dependsOn": [
+        "LOC-201"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/locations/odooImport.test.js",
       "touches": [
@@ -371,18 +496,23 @@
         "بند في `navCatalog` وقاعدة في `firestore.rules` — وإلّا سقط `npm run audit`"
       ]
     },
-
     {
       "id": "LOC-301",
       "title": "محرّك اقتراح المواقع `putawaySuggest.js`",
       "milestone": "م٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ل‑١١"],
-      "dependsOn": ["LOC-108"],
+      "gaps": [
+        "ل‑١١"
+      ],
+      "dependsOn": [
+        "LOC-108"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/locations/putawaySuggest.test.js",
-      "touches": ["src/services/locations/putawaySuggest.js"],
+      "touches": [
+        "src/services/locations/putawaySuggest.js"
+      ],
       "acceptance": [
         "دالّة خالصة تُعيد مرشّحين مرتّبين، لكلٍّ سببٌ مكتوب و«السعة قبل/بعد»",
         "الموقع الممتلئ أو الموقوف أو تحت الصيانة لا يُقترح أبدًا — ويظهر في قائمة المرفوضين بسببه",
@@ -397,29 +527,42 @@
       "milestone": "م٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ل‑١١"],
-      "dependsOn": ["LOC-301", "LOC-202"],
+      "gaps": [
+        "ل‑١١"
+      ],
+      "dependsOn": [
+        "LOC-301",
+        "LOC-202"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/locations/putawaySuggest.test.js",
-      "touches": ["src/components/brandzo-erp/locations/DirectedStorage.jsx"],
+      "touches": [
+        "src/components/brandzo-erp/locations/DirectedStorage.jsx"
+      ],
       "acceptance": [
         "الاقتراح والسعة قبل/بعد والسبب ظاهرةٌ لكلّ بندٍ قبل الاعتماد",
         "تجاوز المدير مسموحٌ بسببٍ إلزاميّ يُقيَّد في `audit` الملحقة-فقط",
         "الاعتماد يسمح بالحركة ولا يحرّك رصيدًا — الرصيد يتحرّك عند إتمام المسح والتنفيذ"
       ]
     },
-
     {
       "id": "LOC-401",
       "title": "توسعة `laborModel` بأمرَي التخزين والسحب وتقدّم السطر",
       "milestone": "م٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ل‑١٢"],
-      "dependsOn": ["LOC-302"],
+      "gaps": [
+        "ل‑١٢"
+      ],
+      "dependsOn": [
+        "LOC-302"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/labor/laborModel.test.js",
-      "touches": ["src/services/labor/laborModel.js", "src/services/labor/laborTasksService.js"],
+      "touches": [
+        "src/services/labor/laborModel.js",
+        "src/services/labor/laborTasksService.js"
+      ],
       "note": "توسعةٌ لا نظام موازٍ — آلة الحالة والتتبّع الزمنيّ مبنيّان ومُختبَران.",
       "acceptance": [
         "`putaway→PUTAWAY` و`pick→PICK` مضافان إلى `ORDER_TYPES` بلا كسر الأربعة القائمة",
@@ -433,11 +576,18 @@
       "milestone": "م٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ل‑١٢", "ل‑١٦"],
-      "dependsOn": ["LOC-401"],
+      "gaps": [
+        "ل‑١٢",
+        "ل‑١٦"
+      ],
+      "dependsOn": [
+        "LOC-401"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/locations/laborScan.test.js",
-      "touches": ["src/components/brandzo-erp/labor/LaborDashboard.jsx"],
+      "touches": [
+        "src/components/brandzo-erp/labor/LaborDashboard.jsx"
+      ],
       "note": "داخل `/dashboard/labor-operations` القائمة. ويُفحص استعمال `public/lib/bz-barcode.js` بدل `BarcodeDetector` وحده — الشاشة الحيّة لا تستفيد منه اليوم فينكسر مسار الآيفون.",
       "acceptance": [
         "المهمّة الحالية والموقع التالي والكمية والزمن ظاهرةٌ للعامل بلا تنقّل",
@@ -445,18 +595,24 @@
         "يعمل على الهاتف بـRTL — وبمسار الآيفون لا بـ`BarcodeDetector` وحده"
       ]
     },
-
     {
       "id": "LOC-501",
       "title": "FEFO يعرف الموقع ويصير مانعَ إنجازٍ لا تحذيرًا",
       "milestone": "م٥",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ل‑١٣"],
-      "dependsOn": ["LOC-108"],
+      "gaps": [
+        "ل‑١٣"
+      ],
+      "dependsOn": [
+        "LOC-108"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/documents/chain.test.js",
-      "touches": ["src/services/documents/chain.js", "src/services/documents/documentsService.js"],
+      "touches": [
+        "src/services/documents/chain.js",
+        "src/services/documents/documentsService.js"
+      ],
       "note": "`fefoViolations` اليوم تقارن الأرصدة عالميًّا بلا تصفيةٍ بالمستودع — فتُنتج مخالفاتٍ كاذبة عبر المخازن.",
       "acceptance": [
         "التصفية بالمستودع والموقع قبل المقارنة — فلا مخالفةٌ كاذبة عبر مخزنين",
@@ -471,29 +627,44 @@
       "milestone": "م٥",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ل‑١٣"],
-      "dependsOn": ["LOC-501", "LOC-202"],
+      "gaps": [
+        "ل‑١٣"
+      ],
+      "dependsOn": [
+        "LOC-501",
+        "LOC-202"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/locations/pickPath.test.js",
-      "touches": ["src/services/locations/pickPath.js", "src/components/brandzo-erp/locations/DirectedStorage.jsx"],
+      "touches": [
+        "src/services/locations/pickPath.js",
+        "src/components/brandzo-erp/locations/DirectedStorage.jsx"
+      ],
       "acceptance": [
         "المطلوب مقابل رصيد أودو مقابل الرصيد الفعليّ مقابل الفرق — أعمدةٌ منفصلة لا رقمٌ واحد",
         "الترتيب بالموقع يقصّر المسار ولا يكسر ترتيب FEFO",
         "النقص أو الخطأ أو اختلاف الرصيد يُسجَّل ولا يُبتلع صامتًا"
       ]
     },
-
     {
       "id": "LOC-601",
       "title": "مطابقة المخزون — أودو والفعليّ والفرق ومسار المعالجة",
       "milestone": "م٦",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ل‑١٤"],
-      "dependsOn": ["LOC-202", "LOC-108"],
+      "gaps": [
+        "ل‑١٤"
+      ],
+      "dependsOn": [
+        "LOC-202",
+        "LOC-108"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/locations/reconcile.test.js",
-      "touches": ["src/services/locations/reconcile.js", "src/components/brandzo-erp/locations/DirectedStorage.jsx"],
+      "touches": [
+        "src/services/locations/reconcile.js",
+        "src/components/brandzo-erp/locations/DirectedStorage.jsx"
+      ],
       "note": "الفرق يصير `CC` ثمّ `ADJ` — وحارس `adjustmentVerdict` القائم يشترط أصلًا محضر جردٍ معتمَدًا وسببًا مكتوبًا لكلّ بند.",
       "acceptance": [
         "الأعمدة الثلاثة منفصلة، ولقطة أودو مؤرَّخةٌ بمصدرها وملفّها",
@@ -507,11 +678,17 @@
       "milestone": "م٦",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ل‑١٥"],
-      "dependsOn": ["LOC-102"],
+      "gaps": [
+        "ل‑١٥"
+      ],
+      "dependsOn": [
+        "LOC-102"
+      ],
       "branch": "claude/warehouse-location-system-cd4c55",
       "guardTest": "src/services/locations/locationsModel.test.js",
-      "touches": ["src/components/brandzo-erp/warehouse/WarehouseMaps.jsx"],
+      "touches": [
+        "src/components/brandzo-erp/warehouse/WarehouseMaps.jsx"
+      ],
       "note": "مكوّنٌ يتيم بـ2853 سطرًا وصفحته محذوفة — «الربط قبل الإضافة» و«لا حذف» يقدّمان إحياءه على بناء خريطةٍ ثالثة. القرار للمالك (LOC-O04).",
       "acceptance": [
         "الفارغ والمشغول والمحجوز والموقوف مميَّزةٌ بلا الاعتماد على اللون وحده (نمطٌ أو رمزٌ أو نصّ)",
