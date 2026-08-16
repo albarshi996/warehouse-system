@@ -1107,6 +1107,27 @@ service cloud.firestore {
 
     // مهام المناولة — سجلٌّ زمنيٌّ ملحق-فقط (لا حذف). البدء/الإيقاف/الإنهاء
     // يختم الأوقات على الخادم (serverTimestamp). الأحداث مجموعةٌ فرعيّة ملحق-فقط.
+    // ‹EXE-201› سجلّ الاستثناءات — الاختلاف يصير حالةً تُتتبَّع وتُغلق بدليل.
+    //
+    // ★ هذه القاعدة **حارسُ صلاحيّةٍ لا حارسُ قاعدة عمل**: تمنع *من لا يملك*،
+    // ولا تحكم *ما لا يصحّ*. فمسار الحالات وحكم الإغلاق واشتراط القرار المكتوب
+    // كلّها في `services/ledger/exceptions.js` الخالص — القاعدة مخزنٌ لا حاكم
+    // (قرار المالك 2026-08-16).
+    //
+    // يقرأ كلّ مصادَق: الاستثناء عملٌ مشترك، ومن لا يراه لا يعالجه.
+    // ويكتب الفاعلون المخزنيون والمديرون. ولا حذف — سجلٌّ يُمحى لا قيمة له،
+    // والتصحيح استثناءٌ جديد يشير إلى الأوّل (`correctsRef`).
+    match /exceptions/{exceptionId} {
+      allow read:           if signedIn();
+      allow create, update: if isStockActor() || isManager();
+      allow delete:         if false;
+      match /events/{eventId} {
+        allow read:   if signedIn();
+        allow create: if (isStockActor() || isManager()) && request.resource.data.byUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+
     match /labor_tasks/{taskId} {
       allow read:          if signedIn();
       allow create, update: if isLaborWriter();
