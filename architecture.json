@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 92,
+    "modules": 93,
     "serviceDomains": 42,
-    "serviceFiles": 321,
+    "serviceFiles": 326,
     "collections": 74,
     "roles": 16,
     "odooModels": 12,
@@ -170,6 +170,14 @@
       "title": "",
       "summary": "",
       "file": "src/pages/dashboard/executive-review/digital-capabilities.astro",
+      "usesServices": []
+    },
+    {
+      "name": "directed-storage",
+      "route": "/dashboard/directed-storage",
+      "title": "التخزين والسحب الموجّه",
+      "summary": "",
+      "file": "src/pages/dashboard/directed-storage.astro",
       "usesServices": []
     },
     {
@@ -1391,6 +1399,7 @@
       "testCount": 1,
       "exports": [
         "DATASETS",
+        "IMPORT_TEMPLATE_DATASETS",
         "barcodeLookupVariants",
         "buildHeaderIndex",
         "buildWorkbook",
@@ -1400,6 +1409,7 @@
         "exportItemsMaster",
         "exportOutboundLog",
         "exportTemplate",
+        "importFingerprint",
         "importSheet",
         "normalizeBarcode",
         "normalizeHeader",
@@ -2031,31 +2041,50 @@
         "locationCode.test.js",
         "locationsModel.js",
         "locationsModel.test.js",
-        "locationsService.js"
+        "locationsService.js",
+        "putawaySuggest.js",
+        "putawaySuggest.test.js",
+        "sourceImport.js",
+        "sourceImport.test.js",
+        "sourceImportService.js"
       ],
-      "fileCount": 5,
-      "testCount": 2,
+      "fileCount": 10,
+      "testCount": 4,
       "exports": [
         "CAPACITY_MEASURES",
         "CODE_SEGMENTS",
         "DEFAULT_STATUS",
         "DEFAULT_STORAGE_TYPE",
+        "IDENTITY_FIELDS",
+        "IMPORT_ROLES",
         "LOCATIONS_ROLES",
         "LOCATION_STATUSES",
         "MIN_SEGMENTS",
         "SEGMENT_SEPARATOR",
         "STORAGE_TYPES",
+        "WEIGHTS",
         "allowsItem",
+        "analyzeSourceFile",
+        "applyEdit",
         "archiveLocation",
         "balanceLocationCode",
         "binCellVerdict",
         "buildLocationTree",
+        "buildPreview",
         "canEditLocations",
+        "canImportSource",
         "canReceive",
+        "chooseVerdict",
+        "classifyRows",
+        "commitSourceImport",
+        "deviationReport",
+        "fetchKnownFingerprints",
         "fetchLocationsOnce",
         "formatLocationCode",
         "getLocation",
+        "groupIntoDocuments",
         "isDescendantOf",
+        "isEditable",
         "isValidLocationCode",
         "listenLocations",
         "locationCodeProblem",
@@ -2065,16 +2094,23 @@
         "mixingProblem",
         "normalizeLocationCode",
         "occupancyOf",
+        "overrideEntry",
         "parentCodeOf",
         "parseLocationCode",
+        "qtyDeviation",
         "saveLocation",
         "saveLocationsBulk",
+        "scoreLocation",
         "setLocationStatus",
         "shapeLocation",
-        "shortLabelOf"
+        "shortLabelOf",
+        "statusLabel",
+        "suggestLocations",
+        "toDocumentDraft"
       ],
       "collections": [
-        "bin_locations"
+        "bin_locations",
+        "source_imports"
       ]
     },
     {
@@ -4251,46 +4287,6 @@
         ]
       },
       {
-        "name": "odoo_imports",
-        "path": "odoo_imports",
-        "rules": [
-          {
-            "actions": [
-              "read"
-            ],
-            "condition": "signedIn()",
-            "roles": [
-              "signedIn"
-            ]
-          },
-          {
-            "actions": [
-              "create"
-            ],
-            "condition": "isStockActor() && request.resource.data.byUid == request.auth.uid",
-            "roles": [
-              "isStockActor"
-            ]
-          },
-          {
-            "actions": [
-              "update"
-            ],
-            "condition": "isStockActor() && request.resource.data.fingerprint == resource.data.fingerprint && request.resource.data.odooRef == resource.data.odooRef",
-            "roles": [
-              "isStockActor"
-            ]
-          },
-          {
-            "actions": [
-              "delete"
-            ],
-            "condition": "false",
-            "roles": []
-          }
-        ]
-      },
-      {
         "name": "odoo_move_lines",
         "path": "odoo_move_lines",
         "rules": [
@@ -4948,6 +4944,46 @@
             "condition": "isAdmin()",
             "roles": [
               "isAdmin"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "source_imports",
+        "path": "source_imports",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isStockActor() && request.resource.data.importedByUid == request.auth.uid",
+            "roles": [
+              "isStockActor"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "isStockActor() && request.resource.data.fingerprint == resource.data.fingerprint && request.resource.data.docRef == resource.data.docRef && request.resource.dat",
+            "roles": [
+              "isStockActor"
             ]
           },
           {
