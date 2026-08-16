@@ -25,6 +25,7 @@ import { db } from '../../config/firebase.js';
 import { importSheet } from '../excel/excelImport.js';
 import { balanceId } from './balanceKey.js';
 import { normalizeSku, normalizeBarcode } from '../itemService.js';
+import { normalizeLocationCode } from '../locations/locationCode.js';
 
 const COL = 'balances';
 const BATCH_LIMIT = 500;
@@ -143,7 +144,10 @@ export async function commitBalancesImport(analysis) {
           barcode: normalizeBarcode(data.barcode),
           nameAr: String(data.nameAr || '').trim(),
           warehouse: String(data.warehouse || '').trim(),
-          location: String(data.location || '').trim(),
+          // ‹LOC-106› حقلٌ واحد للموقع: `bin` — نفس ما يكتبه القيد المخزنيّ،
+          // بالصيغة القياسية نفسها. و`location` القديم **لا يُمحى** من صفوفٍ
+          // كُتبت قبل التوحيد؛ يقرؤه `balanceLocationCode` توافقًا رجعيًّا.
+          bin: normalizeLocationCode(data.bin ?? data.location),
           batch: String(data.batch || '').trim(),
           expiry: String(data.expiry || '').trim(),
           qty: Number(data.qty) || 0,

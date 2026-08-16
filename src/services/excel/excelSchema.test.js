@@ -261,6 +261,20 @@ test('اسم الصنف وحده إلزامي — والهوية يحرسها ا
   assert.deepEqual(required, ['nameAr']);
 });
 
+test('★★ ل‑٦: حقلٌ واحد للموقع اسمه bin — والعناوين القديمة كلّها تصل إليه', () => {
+  // كان للموقع حقلان: يكتب الشيتُ `location` ويكتب القيدُ `bin` ولا يوحّدهما
+  // أحد، فيتنازعان على معنًى واحد. الآن الوجهة واحدة والعنوان المعروض لم يتغيّر.
+  const index = buildHeaderIndex('balances');
+  for (const header of ['location', 'الموقع', 'الرف', 'bin', 'rack', 'shelf', 'بوكس', 'Location (الموقع/الرف)']) {
+    assert.equal(resolveHeaderCell(header, index)?.field, 'bin', `«${header}» يجب أن تصل إلى bin`);
+  }
+  assert.ok(
+    !DATASETS.balances.columns.some((c) => c.field === 'location'),
+    'ولا يبقى حقلٌ ثانٍ للموقع في المخطّط'
+  );
+  assert.ok(DATASETS.balances.templateFields.includes('bin'));
+});
+
 test('الأرقام تتحمّل الفواصل والأرقام العربية', () => {
   assert.equal(toNumber('1,250'), 1250);
   assert.equal(toNumber('١٠'), 10);

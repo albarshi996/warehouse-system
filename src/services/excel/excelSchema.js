@@ -182,7 +182,11 @@ export const DATASETS = {
       { field: 'sku', labelAr: 'Item Code (كود الصنف)', type: 'string', required: false, aliases: ['sku', 'item code', 'itemcode', 'كود الصنف', 'الكود', 'code', 'default_code'] },
       { field: 'nameAr', labelAr: 'Item Description (اسم الصنف)', type: 'string', required: false, aliases: ['item description', 'اسم الصنف', 'الصنف', 'name', 'description', 'الوصف'] },
       { field: 'warehouse', labelAr: 'Warehouse (المخزن)', type: 'string', required: true, aliases: ['warehouse', 'المخزن', 'المستودع', 'whs', 'wh', 'الموقع العام', 'store'] },
-      { field: 'location', labelAr: 'Location (الموقع/الرف)', type: 'string', required: false, aliases: ['location', 'الموقع', 'الرف', 'الرفّ', 'bin', 'rack', 'shelf', 'بوكس'] },
+      // ‹LOC-106› الحقل القياسيّ اسمه `bin` — نفس ما يكتبه القيد المخزنيّ.
+      // كان `location` فصار للموقع حقلان: يكتب الشيتُ أحدَهما والقيدُ الآخر
+      // ولا يوحّدهما أحد. العنوان المعروض لم يتغيّر، و`location` تبقى مرادفًا
+      // مقبولًا عند الاستيراد فلا ينكسر شيتٌ قائم.
+      { field: 'bin', labelAr: 'Location (الموقع/الرف)', type: 'string', required: false, aliases: ['location', 'الموقع', 'الرف', 'الرفّ', 'bin', 'rack', 'shelf', 'بوكس'] },
       { field: 'batch', labelAr: 'Batch / Lot (التشغيلة)', type: 'string', required: false, aliases: ['batch', 'lot', 'التشغيلة', 'رقم التشغيلة', 'lot no', 'batch no', 'التشغيله'] },
       { field: 'expiry', labelAr: 'Expiry (تاريخ الصلاحية)', type: 'string', required: false, aliases: ['expiry', 'expiry date', 'تاريخ الصلاحية', 'الصلاحية', 'exp', 'expiration', 'انتهاء الصلاحية'] },
       { field: 'qty', labelAr: 'Qty (الكمية)', type: 'number', required: true, nonNegative: true, aliases: ['qty', 'quantity', 'الكمية', 'الرصيد', 'الكمية الدفترية', 'on hand', 'العدد', 'stock'] },
@@ -193,7 +197,7 @@ export const DATASETS = {
       { field: 'countDate', labelAr: 'Count Date (تاريخ الرصيد)', type: 'string', required: false, aliases: ['count date', 'تاريخ الرصيد', 'تاريخ الجرد', 'date', 'التاريخ', 'as of'] },
       { field: 'notes', labelAr: 'ملاحظات', type: 'string', required: false, aliases: ['notes', 'ملاحظات', 'ملاحظة', 'remarks'] },
     ],
-    templateFields: ['barcode', 'sku', 'nameAr', 'warehouse', 'location', 'batch', 'expiry', 'qty', 'unitCost', 'countDate'],
+    templateFields: ['barcode', 'sku', 'nameAr', 'warehouse', 'bin', 'batch', 'expiry', 'qty', 'unitCost', 'countDate'],
   },
   inbound: {
     key: 'inbound',
