@@ -10,6 +10,9 @@
  *      في وجه الموظّف بلا سبب ظاهر.
  *   4. **صفحة حسّاسة يفتحها من لا يخصّه:** بوّابة تراجُع لو عاد أحدهم
  *      لقائمة صلاحيات يدوية موازية للكتالوج.
+ *   5. **منطقٌ يهرب إلى طبقة التخزين** (‹EXE-002›، قرار المالك 2026-08-16):
+ *      القاعدة مخزنٌ وبوّابةُ مستخدمين لا حاكم. فالحكم يبقى في الكود الخالص،
+ *      وما يستورد Firebase يُعلن نفسه باسمه (`*Service.js`).
  *
  * لا يعتمد على شبكة ولا على Firebase — يقرأ الملفات فقط، فيصلح للـCI.
  * يُنهي بـ0 عند السلامة، وبـ1 عند أي فشل.
@@ -191,8 +194,114 @@ for (const item of sensitive) {
 }
 if (leaks === 0) ok(`الصفحات الحسّاسة الـ${sensitive.length} محصورة بأصحابها عبر الأدوار الـ${Object.keys(ROLES).length}`);
 
-/* ═══════════ 5. لقطة عامة ═══════════ */
-section(5, 'لقطة');
+/* ═══════════ 5. نقاء المنطق ═══════════
+ *
+ * قرار المالك 2026-08-16: **المنطق في الكود، وقاعدة البيانات مخزنٌ وبوّابةُ
+ * مستخدمين لا حاكم.** فبعد إكمال خطة التنفيذ الميدانيّ يُقصَر دور القاعدة على
+ * التخزين والمصادقة — ومنطقٌ مبثوثٌ في طبقة الخدمات يجعل تبديل المخزن (سيرفرٌ
+ * محلّيّ · Odoo · غيرهما) **إعادةَ بناءٍ لا ترحيلًا**، ويجعل الاختبار مستحيلًا
+ * بلا شبكة.
+ *
+ * والعُرف قائمٌ وممارَس أصلًا (78٪ نقاء يوم كتابة هذا الفحص) — الناقص كان
+ * **حارسًا** يمنع الانحدار. فهذا القسم يثبّت السقف ولا يدّعي بلوغه: يفشل عند
+ * كلّ خرقٍ جديد، ويحمل خطَّي أساسٍ للقديم يُنقصان ولا يزيدان.
+ */
+section(5, 'نقاء المنطق — القاعدة مخزنٌ لا حاكم');
+
+/** يستورد Firebase؟ (الاستيراد وحده لا ذكر الاسم في تعليق) */
+const IMPORTS_FIREBASE = /^\s*import[\s\S]*?from\s+'[^']*(firebase|config\/firebase)[^']*'/m;
+
+/**
+ * ملفّ تخزين: اسمه ينتهي بـService.js. وهذا هو العقد كلّه — من رآه عرف أنّ
+ * فيه شبكةً، ومن لم يره عرف أنّ ما بيده يعمل في Node بلا اتّصال.
+ */
+const isStorageName = (f) => /(Service|service)\.js$/.test(path.basename(f));
+
+/**
+ * ⚠️ خطّا أساسٍ للقديم — **يُنقصان ولا يزيدان** (نمط خطّ أساس اللينت المعتمَد).
+ * كلّ ما زاد عنهما خرقٌ جديد يُوقف التدقيق.
+ */
+const IMPURE_NAME_BASELINE = 0; // سُدّ في EXE-002: numbering.js ⇐ numberingService.js
+const UNTESTED_PURE_BASELINE = 26;
+
+const logicFiles = walk(SERVICES_DIR, ['.js']).filter((f) => !f.endsWith('.test.js'));
+const impure = [];
+const pure = [];
+for (const f of logicFiles) {
+  (IMPORTS_FIREBASE.test(fs.readFileSync(f, 'utf8')) ? impure : pure).push(f);
+}
+
+// (أ) منطقٌ اختبأ في طبقة التخزين: يستورد Firebase واسمه لا يقول ذلك.
+const misnamed = impure.filter((f) => !isStorageName(f));
+if (misnamed.length <= IMPURE_NAME_BASELINE) {
+  ok(
+    `كلّ ما يستورد Firebase (${impure.length}) ينتهي اسمه بـService — عدا ${misnamed.length} على خطّ الأساس (${IMPURE_NAME_BASELINE})`
+  );
+  misnamed.forEach((f) => info(`⚠ على خطّ الأساس: ${path.relative(ROOT, f)}`));
+} else {
+  bad(`${misnamed.length} ملفًّا يستورد Firebase واسمه لا ينتهي بـService (خطّ الأساس ${IMPURE_NAME_BASELINE}):`);
+  misnamed.forEach((f) => info(`• ${path.relative(ROOT, f)}`));
+}
+
+/*
+ * (ب) الوقت يُمرَّر لا يُقرأ: ساعةٌ تُقرأ داخل منطقٍ خالص تجعل نتيجته تتغيّر بين
+ *     تشغيلين، فلا يُختبر أصلًا.
+ *
+ * ⚠️ والوسيط الافتراضيّ `nowMs = Date.now()` **ليس خرقًا بل هو النمط المطلوب**:
+ * الاختبار يمرّر وقته فيثبت الحساب، والشاشة تستدعي بلا وسيطٍ فتقرأ ساعتها.
+ * حارسٌ لا يميّزهما يعاقب الصواب — فيُسقَط شكل الوسيط الافتراضيّ قبل الفحص.
+ */
+const DEFAULT_NOW_PARAM = /\b\w*(?:now|Now)\w*\s*=\s*(?:Date\.now\(\)|new Date\(\))/g;
+const KNOWN_CLOCK_DEBT = new Set([
+  'src/services/documents/schemas/vld.js', // «اليوم» يُقرأ داخل المخطّط
+  'src/services/executiveReview/decisionSession.js', // ختم updatedAt داخل نموذجٍ خالص
+  'src/services/meetings/groupMeetingsModel.js', // مولّد معرّف — لا قاعدة عمل
+]);
+
+const readsClock = pure.filter((f) => {
+  const src = stripComments(fs.readFileSync(f, 'utf8')).replace(DEFAULT_NOW_PARAM, '');
+  return /\bDate\.now\(\)|\bnew Date\(\)/.test(src);
+});
+const relOf = (f) => path.relative(ROOT, f).split(path.sep).join('/');
+const newClockDebt = readsClock.filter((f) => !KNOWN_CLOCK_DEBT.has(relOf(f)));
+
+if (newClockDebt.length === 0) {
+  ok(`لا منطقَ خالصًا يقرأ الساعة — عدا ${readsClock.length} على قائمة الدَّين المعلومة (${pure.length} ملفًّا خالصًا)`);
+  readsClock.forEach((f) => info(`⚠ دَينٌ معلوم: ${relOf(f)}`));
+} else {
+  bad(`${newClockDebt.length} ملفَّ منطقٍ خالص يقرأ الساعة بنفسه — مرّر nowMs بدلها:`);
+  newClockDebt.forEach((f) => info(`• ${relOf(f)}`));
+}
+// قائمةٌ بالأسماء لا بعدد: لا يُستبدَل دَينٌ بدَين.
+const settled = [...KNOWN_CLOCK_DEBT].filter((f) => !readsClock.some((x) => relOf(x) === f));
+if (settled.length) notes.push(`سُدّ دَين الساعة في: ${settled.join('، ')} — احذفه من KNOWN_CLOCK_DEBT`);
+
+/*
+ * (ج) اختبارٌ لكلّ منطق. والعبرة **بالتغطية لا بالتسمية**: `numberFormat.js`
+ * مُختبَرٌ في `documents.test.js` المشترك، فقاعدةُ «ملفٌّ مجاور» تُنذر عليه
+ * كاذبًا. فالمقياس هنا: اختبارٌ مجاور **أو** ملفُّ اختبارٍ يستورده.
+ */
+const testedModules = new Set();
+for (const t of walk(SERVICES_DIR, ['.js']).filter((f) => f.endsWith('.test.js'))) {
+  const dir = path.dirname(t);
+  for (const [, spec] of fs.readFileSync(t, 'utf8').matchAll(/from\s+'(\.[^']+\.js)'/g)) {
+    testedModules.add(path.resolve(dir, spec));
+  }
+}
+const untested = pure.filter((f) => !fs.existsSync(f.replace(/\.js$/, '.test.js')) && !testedModules.has(path.resolve(f)));
+if (untested.length <= UNTESTED_PURE_BASELINE) {
+  ok(`المنطق الخالص ${pure.length} ملفًّا · بلا اختبارٍ مجاور ${untested.length} (خطّ الأساس ${UNTESTED_PURE_BASELINE})`);
+} else {
+  bad(
+    `${untested.length} ملفَّ منطقٍ خالص بلا اختبارٍ مجاور — تجاوز خطّ الأساس (${UNTESTED_PURE_BASELINE}) بـ${untested.length - UNTESTED_PURE_BASELINE}`
+  );
+}
+if (untested.length < UNTESTED_PURE_BASELINE) {
+  notes.push(`خطّ أساس «بلا اختبار» صار ${untested.length} — أنزِله في audit-portal.mjs كي لا يعود يرتفع`);
+}
+
+/* ═══════════ 6. لقطة عامة ═══════════ */
+section(6, 'لقطة');
 info(`مجموعات القائمة: ${NAV_GROUPS.length} · روابط داخلية: ${internalPaths().length} · ملفات public: ${externalPaths().length}`);
 info(`صفحات لوحة التحكم على القرص: ${pagesOnDisk.length} · أدوار: ${Object.keys(ROLES).length}`);
 const noAccess = Object.keys(ROLES).filter((r) => internalPaths().every((p) => !canOpenPath(r, p)));

@@ -5,7 +5,7 @@
   "command": "npm run plan:exec",
   "track": "جراحيّ · **النواة تكبر ولا يُبنى بجانبها** · لا مجلّد خدمةٍ جديد ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح · ولا شاشة ثانية لمنطقٍ قائم",
   "source": "نقد المالك 2026-08-16 («نظام تخزين جامد بارد» ثمّ «تطوير جراحيّ لا نتوءات») + ملفّ «تطوير.md» (قراءة Manhattan Active WM وInfor WMS) + جرد النوى على الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-16 (ت٠ — تثبيت الخطة بعد جرد النوى)",
+  "lastUpdated": "2026-08-16 (EXE-001 — الخريطة مربوطة · وبدء حارس النقاء)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "e8898ef",
@@ -44,16 +44,56 @@
     "الأدوار": "16 دورًا في `auth/roles.js` ومنها `gate_officer` (ضابط البوابة) و`labor_supervisor` — موجودان، والأوّل **بلا نظامٍ يخدمه**."
   },
   "milestones": [
-    { "id": "ت٠", "title": "الحوكمة — تثبيت الخطة وجرد النوى وإغلاق ما عَلِق", "estimate": "جلسة واحدة" },
-    { "id": "ت١", "title": "جسر المهمّة — وصل النصف الإداريّ بالنصف الميدانيّ", "estimate": "4–5 جلسات" },
-    { "id": "ت٢", "title": "الاستثناء يُسجَّل ويُغلَق بدليل", "estimate": "3–4 جلسات" },
-    { "id": "ت٣", "title": "الأولويّة تُحسب لا تُكتب · والموعد على الشحنة لا على البطاقة", "estimate": "2–3 جلسات" },
-    { "id": "ت٤", "title": "المورد التشغيليّ — حالةٌ موحّدة تُقرأ من الثلاثة", "estimate": "2 جلسات" },
-    { "id": "ت٥", "title": "غرفة القيادة — من التنبيه إلى الإجراء", "estimate": "3 جلسات" },
-    { "id": "ت٦", "title": "الساحة والأبواب — المنطقة المفقودة بين النقل والمخزن", "estimate": "2–3 جلسات" },
-    { "id": "ت٧", "title": "القياس بعدل — زمنٌ معياريّ وسببُ تأخير", "estimate": "2–3 جلسات" },
-    { "id": "ت٨", "title": "الخريطة التشغيليّة — إحداثيّات ومسار وتقدّم العمل", "estimate": "3 جلسات" },
-    { "id": "ت٩", "title": "التحسين — ABC وتوصية الموقع وتعبئة موقع الالتقاط", "estimate": "2–3 جلسات" }
+    {
+      "id": "ت٠",
+      "title": "الحوكمة — تثبيت الخطة وجرد النوى وإغلاق ما عَلِق",
+      "estimate": "جلسة واحدة"
+    },
+    {
+      "id": "ت١",
+      "title": "جسر المهمّة — وصل النصف الإداريّ بالنصف الميدانيّ",
+      "estimate": "4–5 جلسات"
+    },
+    {
+      "id": "ت٢",
+      "title": "الاستثناء يُسجَّل ويُغلَق بدليل",
+      "estimate": "3–4 جلسات"
+    },
+    {
+      "id": "ت٣",
+      "title": "الأولويّة تُحسب لا تُكتب · والموعد على الشحنة لا على البطاقة",
+      "estimate": "2–3 جلسات"
+    },
+    {
+      "id": "ت٤",
+      "title": "المورد التشغيليّ — حالةٌ موحّدة تُقرأ من الثلاثة",
+      "estimate": "2 جلسات"
+    },
+    {
+      "id": "ت٥",
+      "title": "غرفة القيادة — من التنبيه إلى الإجراء",
+      "estimate": "3 جلسات"
+    },
+    {
+      "id": "ت٦",
+      "title": "الساحة والأبواب — المنطقة المفقودة بين النقل والمخزن",
+      "estimate": "2–3 جلسات"
+    },
+    {
+      "id": "ت٧",
+      "title": "القياس بعدل — زمنٌ معياريّ وسببُ تأخير",
+      "estimate": "2–3 جلسات"
+    },
+    {
+      "id": "ت٨",
+      "title": "الخريطة التشغيليّة — إحداثيّات ومسار وتقدّم العمل",
+      "estimate": "3 جلسات"
+    },
+    {
+      "id": "ت٩",
+      "title": "التحسين — ABC وتوصية الموقع وتعبئة موقع الالتقاط",
+      "estimate": "2–3 جلسات"
+    }
   ],
   "gaps": {
     "ت‑١": "المهمّة **نصفان لا يعرف أحدهما الآخر**: `tasks` تعرف «من ومتى وبأيّ أولويّة» ولا تعرف «من أيّ رفٍّ إلى أيّ رفّ»؛ و`labor_tasks` تعرف الميدان والزمن ولا تحمل أولويّةً ولا موعدًا ولا تدخل مقاييس الاستجابة. ولا جسر بينهما — فالعمل الواحد له سجلّان أو لا سجلّ.",
@@ -144,7 +184,11 @@
       "title": "تثبيت الخطة الحاكمة وجرد النوى — وقاعدة «النواة تكبر»",
       "milestone": "ت٠",
       "owner": "Claude",
-      "state": "doing",
+      "state": "done",
+      "evidence": {
+        "commit": "b279533",
+        "closedOn": "2026-08-16"
+      },
       "gaps": [],
       "dependsOn": [],
       "nucleus": "متتبّعات الخطط الأربعة القائمة و`scripts/plan-check.mjs` — نفس الحارس ونفس الصيغة، لا أداة خامسة",
@@ -171,9 +215,11 @@
       "title": "إغلاق LOC-602 — الخريطة تبويبًا في «المستودعات» لا صفحةً ثانية",
       "milestone": "ت٠",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [],
-      "dependsOn": ["EXE-000"],
+      "dependsOn": [
+        "EXE-000"
+      ],
       "nucleus": "`WarehouseManager.jsx` (تبويبا المستودعات ومواقع التخزين) — التبويب الثالث يدخل فيه، و`mapGrid.js`+`LocationMap.jsx` مبنيّان ومختبَران (27 اختبارًا) وينتظران الربط",
       "branch": "claude/plan-locations-script-0a4965",
       "guardTest": "src/services/locations/mapGrid.test.js",
@@ -187,19 +233,28 @@
         "`WarehouseMaps.jsx` لا يُحيا ولا يُربط ولا يُحذف (قرار المالك: تقريرٌ ملغى)",
         "`npm test` و`npm run lint` و`npm run audit` بلا مشكلةٍ جديدة",
         "`warehouse-locations.json` يُغلق LOC-602 ببيّنة كوميت، ويُسجَّل قرار LOC-O04"
-      ]
+      ],
+      "evidence": {
+        "commit": "c589c2b",
+        "closedOn": "2026-08-16"
+      }
     },
     {
       "id": "EXE-002",
       "title": "حارس نقاء المنطق — قاعدةٌ تُفحص لا تُوصى",
       "milestone": "ت٠",
       "owner": "Claude",
-      "state": "todo",
+      "state": "doing",
       "gaps": [],
-      "dependsOn": ["EXE-000"],
+      "dependsOn": [
+        "EXE-000"
+      ],
       "nucleus": "`scripts/audit-portal.mjs` — يحرس اليوم الصفحات اليتيمة والروابط المكسورة ومجموعات Firestore وحصر الأدوار (٥ أقسام). يكبر بقسمٍ سادس، ولا يُكتب سكربت تدقيقٍ ثانٍ.",
       "guardTest": "scripts/audit-portal.mjs",
-      "touches": ["scripts/audit-portal.mjs", "src/services/documents/numbering.js"],
+      "touches": [
+        "scripts/audit-portal.mjs",
+        "src/services/documents/numbering.js"
+      ],
       "note": "قرار المالك 2026-08-16: القاعدة مخزنٌ وبوّابةُ مستخدمين لا حاكم. والقياس اليوم 78٪ نقاء — فالمطلوب **تثبيتُ السقف** لا بلوغه: حارسٌ يمنع الانحدار، والباقي يُصحَّح بالتدرّج.",
       "acceptance": [
         "قسمٌ سادس في `audit-portal.mjs`: كلّ ملفٍّ يستورد `firebase` ينتهي اسمه بـ`Service.js` — ويفشل التدقيق إن خُرق",
@@ -207,7 +262,9 @@
         "خطّ أساسٍ معلَن للملفّات الخالصة بلا اختبار (91) **لا يزيد** — كنمط خطّ أساس اللينت",
         "`documents/numbering.js` يُشقّ: منطق الترقيم خالصًا و`numberingService.js` رقيقةً — والمستهلكون لا ينكسرون",
         "`npm run audit` يبقى ينتهي بصفرٍ عند السلامة وبواحدٍ عند الخرق — يصلح للـCI"
-      ]
+      ],
+      "progress": "قِيس النقاء: 229 ملفّ خدمة — 178 خالصة (78٪) و51 تلمس Firebase، وكلّها ‏*Service.js إلّا documents/numbering.js. و91 ملفًّا خالصًا بلا اختبارٍ مجاور.",
+      "nextStep": "إضافة القسم السادس «نقاء المنطق» إلى scripts/audit-portal.mjs، ثمّ شقّ numbering.js إلى منطقٍ خالص وخدمةٍ رقيقة بلا كسر المستهلكين."
     },
     {
       "id": "EXE-101",
@@ -215,11 +272,17 @@
       "milestone": "ت١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑١"],
-      "dependsOn": ["EXE-000"],
+      "gaps": [
+        "ت‑١"
+      ],
+      "dependsOn": [
+        "EXE-000"
+      ],
       "nucleus": "`src/services/tasks/taskShape.js` — الحالات والانتقالات والأولويّة والاستحقاق والأحداث كلّها قائمة؛ تكبر بحقول الميدان ولا يُنشأ كيانٌ ثالث",
       "guardTest": "src/services/tasks/taskShape.test.js",
-      "touches": ["src/services/tasks/taskShape.js"],
+      "touches": [
+        "src/services/tasks/taskShape.js"
+      ],
       "note": "الكمّيّات ثلاث لا واحدة (مطلوب · منفَّذ · متبقٍّ) — درس LOC-601 نفسه: رقمٌ واحد اسمه «الكمّيّة» يُخفي الفرق.",
       "acceptance": [
         "نوع العمل يُقرأ من `labor/laborModel.js` `ORDER_TYPES` القائمة — لا قائمةَ أنواعٍ ثانية",
@@ -235,11 +298,18 @@
       "milestone": "ت١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑١"],
-      "dependsOn": ["EXE-101"],
+      "gaps": [
+        "ت‑١"
+      ],
+      "dependsOn": [
+        "EXE-101"
+      ],
       "nucleus": "`documents/chain.js` (سلسلة المستندات) + `locations/putawaySuggest.js` + `locations/pickPlan.js` — الاقتراح والترتيب مبنيّان ومختبَران؛ الناقص أن يصيرا **مهمّةً مسنَدة** لا شاشةَ عرض",
       "guardTest": "src/services/tasks/taskFactory.test.js",
-      "touches": ["src/services/tasks/taskFactory.js", "src/services/documents/chain.js"],
+      "touches": [
+        "src/services/tasks/taskFactory.js",
+        "src/services/documents/chain.js"
+      ],
       "acceptance": [
         "اعتماد مستند استلام يولّد مهامّ تخزين مشتقّة من `putawaySuggest` **بلا نسخ منطقه**",
         "اعتماد أمر صرفٍ يولّد مهامّ سحب مشتقّة من `pickPlan` بترتيبه نفسه",
@@ -254,8 +324,12 @@
       "milestone": "ت١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑١"],
-      "dependsOn": ["EXE-101"],
+      "gaps": [
+        "ت‑١"
+      ],
+      "dependsOn": [
+        "EXE-101"
+      ],
       "nucleus": "`labor/laborTasksService.js` (`labor_tasks` بأختام الخادم) + `tasks/tasksCloudService.js` (`tasks` بأحداثها) — الاثنان قائمان ويعملان؛ المطلوب جسرٌ لا مجموعةٌ ثالثة",
       "guardTest": "src/services/tasks/taskShape.test.js",
       "touches": [
@@ -279,8 +353,13 @@
       "milestone": "ت١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑١"],
-      "dependsOn": ["EXE-102", "EXE-103"],
+      "gaps": [
+        "ت‑١"
+      ],
+      "dependsOn": [
+        "EXE-102",
+        "EXE-103"
+      ],
       "nucleus": "`labor/WorkerTaskPanel.jsx` **قائمة وتعمل**: بندٌ واحد أمام العين · أربع خانات مسح · اقتراح `putawaySuggest` · حكم `scanGate` · سببٌ إلزاميّ للرفّ المرفوض. لا شاشة عاملٍ ثانية.",
       "guardTest": "src/services/tasks/taskFactory.test.js",
       "touches": [
@@ -300,11 +379,18 @@
       "milestone": "ت٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑٢"],
-      "dependsOn": ["EXE-000"],
+      "gaps": [
+        "ت‑٢"
+      ],
+      "dependsOn": [
+        "EXE-000"
+      ],
       "nucleus": "`documents/control.js` — نمط القيود الملحقة-فقط المعتمَد (أحدث قيدٍ هو الحالة والتاريخ كلّه يبقى) + `documents/numbering.js` للترقيم. السجلّ يُبنى بالنمط نفسه بجانب كاشفه في `ledger/`.",
       "guardTest": "src/services/ledger/exceptions.test.js",
-      "touches": ["src/services/ledger/exceptions.js", "src/services/ledger/exceptionsService.js"],
+      "touches": [
+        "src/services/ledger/exceptions.js",
+        "src/services/ledger/exceptionsService.js"
+      ],
       "note": "الجدول الحرفيّ في تطوير.md: رقم · نوع · خطورة · مستند مرجعيّ · صنف · كمّيّة متأثّرة · سبب · موقع حاليّ · مسؤول · وقت متبقٍّ · إجراء مطلوب · حالة قرار · دليل إغلاق.",
       "acceptance": [
         "**الشقّ صريح**: `exceptions.js` منطقٌ خالص (الشكل · الانتقالات · حكم الإغلاق) و`exceptionsService.js` رقيقةٌ تقرأ وتكتب فقط",
@@ -322,11 +408,18 @@
       "milestone": "ت٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑٢"],
-      "dependsOn": ["EXE-201"],
+      "gaps": [
+        "ت‑٢"
+      ],
+      "dependsOn": [
+        "EXE-201"
+      ],
       "nucleus": "`ledger/operationsDashboard.js:189` `operationExceptions()` — ستّة كاشفاتٍ تعمل اليوم وتُغذّي لوحة القيادة. تُحوَّل **في مكانها** إلى فاتحِ سجلّ، ولا يُكتب كاشفٌ ثانٍ بجانبها.",
       "guardTest": "src/services/ledger/exceptions.test.js",
-      "touches": ["src/services/ledger/operationsDashboard.js", "src/services/ledger/exceptions.js"],
+      "touches": [
+        "src/services/ledger/operationsDashboard.js",
+        "src/services/ledger/exceptions.js"
+      ],
       "note": "★ خطر التكرار: كاشفٌ يعمل عند كلّ رسمٍ يفتح الاستثناء نفسه مئة مرّة. المفتاح بصمة تفرّد (نوع + مرجع + صنف) تجعل الفتح مرّةً واحدة والتكرار تحديثًا.",
       "acceptance": [
         "بصمة تفرّد مختبَرة: الكشف المتكرّر لا يفتح سجلًّا ثانيًا",
@@ -342,11 +435,18 @@
       "milestone": "ت٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑٧", "ت‑١٣"],
-      "dependsOn": ["EXE-201"],
+      "gaps": [
+        "ت‑٧",
+        "ت‑١٣"
+      ],
+      "dependsOn": [
+        "EXE-201"
+      ],
       "nucleus": "الأسباب القائمة في `documents/schemas/grn.js` و`srn.js` و`field/visitModel.js` و`locations/putawaySuggest.js` — تُجمَع بالإحالة ويبقى كلّ مستهلكٍ يعمل",
       "guardTest": "src/services/documents/reasonCodes.test.js",
-      "touches": ["src/services/documents/reasonCodes.js"],
+      "touches": [
+        "src/services/documents/reasonCodes.js"
+      ],
       "acceptance": [
         "سجلٌّ واحد مقسَّم بالسياق: نقص سحب · فرق استلام · رفض جودة · تعذّر تخزين · تأخّر تنفيذ",
         "الأسباب القائمة تُستوعَب كلّها — لا سببٌ يختفي من شاشةٍ تعمل اليوم",
@@ -360,11 +460,18 @@
       "milestone": "ت٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑٢"],
-      "dependsOn": ["EXE-202", "EXE-203"],
+      "gaps": [
+        "ت‑٢"
+      ],
+      "dependsOn": [
+        "EXE-202",
+        "EXE-203"
+      ],
       "nucleus": "`ledger/OperationsCommand.jsx` على `/dashboard/command-center` — تعرض الاستثناءات اليوم عرضًا؛ تكبر لتصير صندوق قرار",
       "guardTest": "src/services/ledger/exceptions.test.js",
-      "touches": ["src/components/brandzo-erp/ledger/OperationsCommand.jsx"],
+      "touches": [
+        "src/components/brandzo-erp/ledger/OperationsCommand.jsx"
+      ],
       "acceptance": [
         "كلّ سطرٍ يحمل الإجراء المطلوب وزرّه — لا قراءةٌ ثمّ بحثٌ عن الشاشة",
         "تصفيةٌ بالخطورة والنوع والمسؤول والوقت المتبقّي",
@@ -378,11 +485,18 @@
       "milestone": "ت٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑٤"],
-      "dependsOn": ["EXE-101"],
+      "gaps": [
+        "ت‑٤"
+      ],
+      "dependsOn": [
+        "EXE-101"
+      ],
       "nucleus": "`documents/timeFields.js` — حارسٌ يمنع مرور حقلٍ زمنيّ بلا قرارِ صنف، و`tasks/taskShape.js:99` `dueMillis` تُعاد استعمالًا لا نسخًا",
       "guardTest": "src/services/documents/timeFields.test.js",
-      "touches": ["src/services/documents/timeFields.js", "src/services/documents/schemas"],
+      "touches": [
+        "src/services/documents/timeFields.js",
+        "src/services/documents/schemas"
+      ],
       "note": "موعدٌ **متّفق عليه** لا ختمُ واقعة — فلا يُرفض لكونه في المستقبل. وهذا عين ما يحرسه `timeFields`.",
       "acceptance": [
         "`mustShipBy` مصنَّفٌ في `timeFields` بقرارٍ صريح ويمرّ بحارسه",
@@ -397,11 +511,18 @@
       "milestone": "ت٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑٣"],
-      "dependsOn": ["EXE-301"],
+      "gaps": [
+        "ت‑٣"
+      ],
+      "dependsOn": [
+        "EXE-301"
+      ],
       "nucleus": "`tasks/taskShape.js:36` `PRIORITY_LABELS` (اليدويّة) + `documents/inbox.js:78` `sortByUrgency` (ترتيبٌ بالتقادم قائم) — تكبران إلى درجةٍ محسوبة، ولا تُلغى اليدويّة بل تصير **تجاوزًا معلَنًا**",
       "guardTest": "src/services/tasks/priority.test.js",
-      "touches": ["src/services/tasks/priority.js", "src/services/documents/inbox.js"],
+      "touches": [
+        "src/services/tasks/priority.js",
+        "src/services/documents/inbox.js"
+      ],
       "acceptance": [
         "الدرجة تُعيد **العوامل التي كوّنتها** لا الرقم وحده — «الرقم بلا مرجعٍ لا يُعرض»",
         "الأوزان في مصدرٍ واحد قابلٍ للتعديل بلا لمس المنطق (ت-O03)",
@@ -416,11 +537,18 @@
       "milestone": "ت٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑٣"],
-      "dependsOn": ["EXE-302", "EXE-103"],
+      "gaps": [
+        "ت‑٣"
+      ],
+      "dependsOn": [
+        "EXE-302",
+        "EXE-103"
+      ],
       "nucleus": "`tasks/tasksCloudService.js` `reassignTask()` قائمةٌ وتسجّل حدث `REASSIGNED` — تكبر بالإطلاق ولا يُكتب مسارٌ ثانٍ",
       "guardTest": "src/services/tasks/priority.test.js",
-      "touches": ["src/services/tasks/tasksCloudService.js"],
+      "touches": [
+        "src/services/tasks/tasksCloudService.js"
+      ],
       "acceptance": [
         "النظام يرتّب ويقترح · والمشرف يُطلق (ت-O01)",
         "إعادة التعيين تُسجَّل حدثًا بمن ومتى ولماذا — بالمسار القائم لا بمسارٍ جديد",
@@ -433,11 +561,17 @@
       "milestone": "ت٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑٥"],
-      "dependsOn": ["EXE-103"],
+      "gaps": [
+        "ت‑٥"
+      ],
+      "dependsOn": [
+        "EXE-103"
+      ],
       "nucleus": "`labor/crewsService.js` + `fleet/fleetModel.js`+`vehicles` + `maintenance/workOrderModel.js` `ASSET_CATEGORIES` (وفيها الرافعات بدورة صيانة). السابقة المعتمَدة: `jobsResolver` في خطة الهيكل — قراءةٌ حيّة من المصادر لا نسخٌ إليها.",
       "guardTest": "src/services/labor/resourcesResolver.test.js",
-      "touches": ["src/services/labor/resourcesResolver.js"],
+      "touches": [
+        "src/services/labor/resourcesResolver.js"
+      ],
       "acceptance": [
         "الأنواع تُشتقّ من المصادر القائمة: فرقة (crews) · مركبة (vehicles) · معدّة مناولة (ASSET_CATEGORIES.handling) — والباب نوعٌ جديد يضيفه ت٦",
         "الحالة محسوبة لا مخزَّنة: متاح · مشغول (بمهمّة كذا) · متوقّف · صيانة — من `labor_tasks` و`work_orders` القائمة",
@@ -451,11 +585,17 @@
       "milestone": "ت٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑٥"],
-      "dependsOn": ["EXE-401"],
+      "gaps": [
+        "ت‑٥"
+      ],
+      "dependsOn": [
+        "EXE-401"
+      ],
       "nucleus": "`labor/LaborDashboard.jsx` على `/dashboard/labor-operations` — قائمةٌ وتعرض الفرق والمهامّ؛ تكبر بطبقة الموارد",
       "guardTest": "src/services/labor/resourcesResolver.test.js",
-      "touches": ["src/components/brandzo-erp/labor/LaborDashboard.jsx"],
+      "touches": [
+        "src/components/brandzo-erp/labor/LaborDashboard.jsx"
+      ],
       "acceptance": [
         "المورد المتوقّف يظهر بسببه ومدّة توقّفه",
         "إعادة توجيه مهمّة من موردٍ إلى آخر بضغطةٍ واحدة تُسجَّل حدثًا",
@@ -468,11 +608,19 @@
       "milestone": "ت٥",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑١٠"],
-      "dependsOn": ["EXE-204", "EXE-303"],
+      "gaps": [
+        "ت‑١٠"
+      ],
+      "dependsOn": [
+        "EXE-204",
+        "EXE-303"
+      ],
       "nucleus": "`ledger/drill.js` و`documents/documentNavigator.js` و`documents/documentRelations.js` — أدوات النزول مبنيّةٌ ومختبَرة؛ الناقص أن يستعملها التنبيه",
       "guardTest": "src/services/ledger/drill.test.js",
-      "touches": ["src/services/ledger/drill.js", "src/services/ledger/exceptions.js"],
+      "touches": [
+        "src/services/ledger/drill.js",
+        "src/services/ledger/exceptions.js"
+      ],
       "acceptance": [
         "لكلّ استثناء سلسلةٌ محسوبة: التنبيه ← المستند ← المهمّة ← أثر المسح ← الإجراء",
         "الحلقة المفقودة تُعلَن ولا تُختلق (استثناءٌ بلا مهمّة يقول ذلك صراحةً)",
@@ -485,11 +633,18 @@
       "milestone": "ت٥",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑١١"],
-      "dependsOn": ["EXE-102", "EXE-301"],
+      "gaps": [
+        "ت‑١١"
+      ],
+      "dependsOn": [
+        "EXE-102",
+        "EXE-301"
+      ],
       "nucleus": "`documents/documentLineProgress.js` (تقدّم البند كمّيًّا) + `documents/chain.js` (سلسلة المستندات) + `documents/states.js` — الثلاثة قائمة؛ المطلوب جمعها في سلسلةٍ زمنيّة",
       "guardTest": "src/services/documents/documentLineProgress.test.js",
-      "touches": ["src/services/documents/documentLineProgress.js"],
+      "touches": [
+        "src/services/documents/documentLineProgress.js"
+      ],
       "acceptance": [
         "المراحل: جديد · خُصّص · يحتاج تعبئة · أُطلقت المهامّ · سحب · تعبئة · تجهيز · تحميل · شُحن",
         "لكلّ مرحلة: بداية · متوقّع · فعليّ · مسؤول · مطلوب · منجَز · متبقٍّ · سبب توقّف",
@@ -502,11 +657,19 @@
       "milestone": "ت٥",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑١٠", "ت‑١٢"],
-      "dependsOn": ["EXE-501", "EXE-502"],
+      "gaps": [
+        "ت‑١٠",
+        "ت‑١٢"
+      ],
+      "dependsOn": [
+        "EXE-501",
+        "EXE-502"
+      ],
       "nucleus": "`ledger/OperationsCommand.jsx` + `ledger/operationsDashboard.js` (المؤشّرات واللقطة قائمتان) — دمجٌ على `/dashboard/command-center` نفسها",
       "guardTest": "src/services/ledger/operationsDashboard.test.js",
-      "touches": ["src/components/brandzo-erp/ledger/OperationsCommand.jsx"],
+      "touches": [
+        "src/components/brandzo-erp/ledger/OperationsCommand.jsx"
+      ],
       "acceptance": [
         "الطبيعيّ في مؤشّراتٍ مختصرة · والاستثناء في وسط الشاشة بزرّ إجراء",
         "**آخر تحديث مرجعيّ من أودو معلَنٌ بنصّه** بجانب كلّ رقمٍ مرجعيّ (ت‑١٢)",
@@ -520,11 +683,17 @@
       "milestone": "ت٦",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑٦"],
-      "dependsOn": ["EXE-401"],
+      "gaps": [
+        "ت‑٦"
+      ],
+      "dependsOn": [
+        "EXE-401"
+      ],
       "nucleus": "`fleet/fleetModel.js` (حالات الرحلة قائمة) + دور `gate_officer` القائم بلا نظام + `resourcesResolver` (الباب نوع مورد) — الساحة امتدادُ دورة المركبة لا كيانٌ منفصل",
       "guardTest": "src/services/fleet/yardModel.test.js",
-      "touches": ["src/services/fleet/yardModel.js"],
+      "touches": [
+        "src/services/fleet/yardModel.js"
+      ],
       "acceptance": [
         "الدورة العشر: حجز ← وصول ← تسجيل بوابة ← تحقّق ← موقف ← باب ← تنزيل/تحميل ← إخلاء ← تصريح ← خروج",
         "الباب مورد يقرؤه `resourcesResolver` (EXE-401) لا كيانٌ ثالث",
@@ -539,11 +708,18 @@
       "milestone": "ت٦",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑٦"],
-      "dependsOn": ["EXE-601"],
+      "gaps": [
+        "ت‑٦"
+      ],
+      "dependsOn": [
+        "EXE-601"
+      ],
       "nucleus": "`/dashboard/fleet-operations` القائمة — تكبر بتبويب الساحة، ودور `gate_officer` يُسنَد إليها",
       "guardTest": "src/services/fleet/yardModel.test.js",
-      "touches": ["src/pages/dashboard/fleet-operations.astro", "src/services/auth/navCatalog.js"],
+      "touches": [
+        "src/pages/dashboard/fleet-operations.astro",
+        "src/services/auth/navCatalog.js"
+      ],
       "acceptance": [
         "ضابط البوابة يسجّل الوصول بحقولٍ قليلة — الميدان لا يحتمل نموذجًا طويلًا",
         "حالة كلّ باب ظاهرةٌ بلا اعتمادٍ على اللون وحده",
@@ -557,11 +733,17 @@
       "milestone": "ت٧",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑٨"],
-      "dependsOn": ["EXE-103"],
+      "gaps": [
+        "ت‑٨"
+      ],
+      "dependsOn": [
+        "EXE-103"
+      ],
       "nucleus": "`labor/laborModel.js` — يقيس الفعليّ (المدّة والإنتاجيّة) بأختام الخادم؛ يكبر بالمعياريّ ليصير للرقم مرجع",
       "guardTest": "src/services/labor/laborStandard.test.js",
-      "touches": ["src/services/labor/laborStandard.js"],
+      "touches": [
+        "src/services/labor/laborStandard.js"
+      ],
       "acceptance": [
         "المعياريّ مجموعُ عناصرَ معلنة (استلام · انتقال · مسح · مناولة · سماح) — كلّ عنصرٍ ظاهرٌ للمشرف",
         "بلا مسافةٍ محسوبة يُعلَن أنّ عنصر الانتقال **تقديريّ** (ت٨ لم تُبنَ بعد)",
@@ -575,11 +757,20 @@
       "milestone": "ت٧",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑٨", "ت‑١٣"],
-      "dependsOn": ["EXE-701", "EXE-203"],
+      "gaps": [
+        "ت‑٨",
+        "ت‑١٣"
+      ],
+      "dependsOn": [
+        "EXE-701",
+        "EXE-203"
+      ],
       "nucleus": "`labor/laborModel.js` (الإنتاجيّة) + `LaborDashboard.jsx` + `tasks/taskMetrics.js` (معدّل الاستجابة والالتزام بالموعد — قائمةٌ ومختبَرة)",
       "guardTest": "src/services/labor/laborStandard.test.js",
-      "touches": ["src/services/labor/laborModel.js", "src/components/brandzo-erp/labor/LaborDashboard.jsx"],
+      "touches": [
+        "src/services/labor/laborModel.js",
+        "src/components/brandzo-erp/labor/LaborDashboard.jsx"
+      ],
       "note": "★ حوكمة: «المعيار أداة لاكتشاف المشكلة لا حكمٌ آليّ على الموظف» — نصّ تطوير.md.",
       "acceptance": [
         "مهمّةٌ تجاوزت المعياريّ ولها سبب تأخير مسجَّل **لا تُحتسب** انحرافًا على العامل",
@@ -593,11 +784,18 @@
       "milestone": "ت٨",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑٩"],
-      "dependsOn": ["EXE-001"],
+      "gaps": [
+        "ت‑٩"
+      ],
+      "dependsOn": [
+        "EXE-001"
+      ],
       "nucleus": "`locations/locationsModel.js` (كيان الموقع بسعته ونوعه) + `locationCode.js` (الهرميّة من الكود) — تكبر بحقولٍ **اختياريّة** فلا يُكسر موقعٌ قائم",
       "guardTest": "src/services/locations/travelGrid.test.js",
-      "touches": ["src/services/locations/travelGrid.js", "src/services/locations/locationsModel.js"],
+      "touches": [
+        "src/services/locations/travelGrid.js",
+        "src/services/locations/locationsModel.js"
+      ],
       "acceptance": [
         "x · y · z · اتجاه الوصول · الممرّ · نقطة الدخول — كلّها اختياريّة",
         "المسافة الواقعيّة عبر الشبكة لا الخطّ المستقيم",
@@ -611,11 +809,18 @@
       "milestone": "ت٨",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑٩"],
-      "dependsOn": ["EXE-801", "EXE-102"],
+      "gaps": [
+        "ت‑٩"
+      ],
+      "dependsOn": [
+        "EXE-801",
+        "EXE-102"
+      ],
       "nucleus": "`locations/pickPlan.js` — يرتّب اليوم بالكود ومختبَر؛ يصير الترتيب بالمسافة حين تتوفّر الشبكة وبالكود حين لا تتوفّر",
       "guardTest": "src/services/locations/travelGrid.test.js",
-      "touches": ["src/services/locations/pickPlan.js"],
+      "touches": [
+        "src/services/locations/pickPlan.js"
+      ],
       "acceptance": [
         "ترتيب مواقع المهمّة بأقصر مسارٍ عبر الشبكة",
         "إجمالي المسافة وعدد التوقّفات معروضان للمشرف",
@@ -628,11 +833,19 @@
       "milestone": "ت٨",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑١٦"],
-      "dependsOn": ["EXE-802", "EXE-502"],
+      "gaps": [
+        "ت‑١٦"
+      ],
+      "dependsOn": [
+        "EXE-802",
+        "EXE-502"
+      ],
       "nucleus": "`locations/mapGrid.js` + `warehouse/LocationMap.jsx` المبنيّان في LOC-602 — تكبر الخريطة طبقةً ولا يُبنى مكوّن خريطةٍ ثانٍ",
       "guardTest": "src/services/locations/mapGrid.test.js",
-      "touches": ["src/services/locations/mapGrid.js", "src/components/brandzo-erp/warehouse/LocationMap.jsx"],
+      "touches": [
+        "src/services/locations/mapGrid.js",
+        "src/components/brandzo-erp/warehouse/LocationMap.jsx"
+      ],
       "acceptance": [
         "طبقةٌ ثانية على الشبكة نفسها: تقدّم العمل لا الإشغال (ما التُقط · ما لم يبدأ · أين تعثّر)",
         "التمييز بلا لونٍ وحده كما في الطبقة الأولى",
@@ -646,11 +859,17 @@
       "milestone": "ت٩",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑١٥"],
-      "dependsOn": ["EXE-102"],
+      "gaps": [
+        "ت‑١٥"
+      ],
+      "dependsOn": [
+        "EXE-102"
+      ],
       "nucleus": "`ledger/movements.js` (دفتر الحركات ملحق-فقط) + `reports/stockReports.js` + قاعدة `intelligence/operationalIntelligence.js`: «صنفٌ بلا تاريخٍ كافٍ لا يُقترح له شيء»",
       "guardTest": "src/services/locations/slotting.test.js",
-      "touches": ["src/services/locations/slotting.js"],
+      "touches": [
+        "src/services/locations/slotting.js"
+      ],
       "acceptance": [
         "عدد السحبات ومتوسّط الكمّيّة خلال 30 و90 يومًا من دفتر الحركات القائم",
         "صنفٌ بلا تاريخٍ كافٍ **لا يُصنَّف** — والحدّ الأدنى معلَن",
@@ -663,11 +882,18 @@
       "milestone": "ت٩",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑١٥"],
-      "dependsOn": ["EXE-901", "EXE-802"],
+      "gaps": [
+        "ت‑١٥"
+      ],
+      "dependsOn": [
+        "EXE-901",
+        "EXE-802"
+      ],
       "nucleus": "`locations/putawaySuggest.js` (يجيب «أين نضع الآن») — تكبر الوحدة لتجيب «أين ينبغي أن يعيش»، و`tasks/taskFactory.js` يحوّل الاعتماد إلى مهمّة نقل",
       "guardTest": "src/services/locations/slotting.test.js",
-      "touches": ["src/services/locations/slotting.js"],
+      "touches": [
+        "src/services/locations/slotting.js"
+      ],
       "note": "«لا تجعل النظام ينقل الأصناف تلقائيًّا في البداية» — نصّ تطوير.md.",
       "acceptance": [
         "لكلّ توصية: الموقع الحاليّ · المقترح · السبب · التوفير المتوقّع في المسافة أو الرحلات",
@@ -681,11 +907,17 @@
       "milestone": "ت٩",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ت‑١٤"],
-      "dependsOn": ["EXE-102"],
+      "gaps": [
+        "ت‑١٤"
+      ],
+      "dependsOn": [
+        "EXE-102"
+      ],
       "nucleus": "`locations/pickPlan.js` (يعرف النقص عند التخطيط) + `ledger/reservations.js` (المتاح = الرصيد − المحجوز) — الاثنان قائمان ومختبَران",
       "guardTest": "src/services/locations/replenish.test.js",
-      "touches": ["src/services/locations/replenish.js"],
+      "touches": [
+        "src/services/locations/replenish.js"
+      ],
       "note": "يُفصَل صراحةً عن التزويد الشرائيّ في `intelligence/operationalIntelligence.js` — اسمان متقاربان ومعنيان مختلفان، وخلطهما يُنتج أمر شراءٍ حيث المطلوب نقلُ رفّ.",
       "acceptance": [
         "نقصٌ في موقع السحب يولّد **مهمّة تعبئة** من الاحتياطيّ لا اقتراح شراء",

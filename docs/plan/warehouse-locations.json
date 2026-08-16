@@ -5,7 +5,7 @@
   "command": "npm run plan:locations",
   "track": "جراحيّ · الأساس الحاكم أوّلًا · قلب مفتاح الرصيد آخر خطوة في الدفعة ومحجوب بصفريّة فرق إعادة البناء",
   "source": "طلب المالك 2026-08-16 (نصّ «نريد تنفيذ منظومة التخزين والسحب الموجّه») + فحص الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-16 (م٦ — المطابقة · والقواعد نُشرت وطُوبقت)",
+  "lastUpdated": "2026-08-16 (LOC-602 — الخريطة البصريّة · واكتملت الخطة 20/20)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "6fc3193",
@@ -98,7 +98,8 @@
       "milestone": "م٦",
       "need": "قرار الخريطة البصريّة — إحياء `WarehouseMaps.jsx` القائم (2853 سطرًا) أم بناء خريطة جديدة مبنيّة على بيانات `bin_locations`",
       "ifMissing": "يُقدَّم الإحياء افتراضًا عملًا بقاعدة «الربط قبل الإضافة» و«لا حذف»",
-      "state": "todo"
+      "state": "done",
+      "decision": "الخريطة تبويبٌ داخل «المستودعات» · و`WarehouseMaps.jsx` تقريرٌ ملغى لا يُحيا ولا يُربط ولا يُحذف (المالك، 2026-08-16)"
     },
     {
       "id": "LOC-O05",
@@ -780,7 +781,7 @@
       "title": "الخريطة البصريّة — إحياء `WarehouseMaps.jsx` مبنيّةً على بيانات المواقع",
       "milestone": "م٦",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ل‑١٥"
       ],
@@ -788,17 +789,24 @@
         "LOC-102"
       ],
       "branch": "claude/warehouse-location-system-cd4c55",
-      "guardTest": "src/services/locations/locationsModel.test.js",
+      "guardTest": "src/services/locations/mapGrid.test.js",
       "touches": [
-        "src/components/brandzo-erp/warehouse/WarehouseMaps.jsx"
+        "src/services/locations/mapGrid.js",
+        "src/services/locations/mapGrid.test.js",
+        "src/components/brandzo-erp/warehouse/LocationMap.jsx",
+        "src/components/brandzo-erp/warehouse/WarehouseManager.jsx"
       ],
-      "note": "مكوّنٌ يتيم بـ2853 سطرًا وصفحته محذوفة — «الربط قبل الإضافة» و«لا حذف» يقدّمان إحياءه على بناء خريطةٍ ثالثة. القرار للمالك (LOC-O04).",
+      "note": "قرار المالك LOC-O04 (2026-08-16): الخريطة **تبويبٌ ثالث** في /dashboard/warehouses بجانب الشجرة — و`WarehouseMaps.jsx` **تقريرٌ ملغى** فلا يُحيا ولا يُربط ولا يُحذف. فبُني نموذجٌ خالص `mapGrid.js` (27 اختبارًا) وشاشة `LocationMap.jsx` ورُبطت تبويبًا. ⚠️ not tested حيًّا — الصفحة محروسةٌ بتسجيل الدخول وحسابات الأدوار عائقٌ قائم (LOC-O07).",
       "acceptance": [
         "الفارغ والمشغول والمحجوز والموقوف مميَّزةٌ بلا الاعتماد على اللون وحده (نمطٌ أو رمزٌ أو نصّ)",
         "المعروض مشتقٌّ من `bin_locations` والأرصدة الحيّة لا من JSX ثابت",
         "الأحمر للتحذير فقط، ولا إيموجي في الواجهة",
         "لا حذف لأيّ URL قائم — والرابط الميت الذي يحرسه `audit-portal.mjs` يُحسم إمّا بإحياء الصفحة أو بإزالة الإشارة"
-      ]
+      ],
+      "evidence": {
+        "commit": "c589c2b",
+        "closedOn": "2026-08-16"
+      }
     }
   ]
 }

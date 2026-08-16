@@ -32,7 +32,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
-import { reserveNumber } from '../documents/numbering.js';
+import { reserveNumber } from '../documents/numberingService.js';
 import { vehicleIdFor, vehicleHeadFrom, summarize } from './inspectionModel.js';
 
 const VEHICLES = 'vehicles';

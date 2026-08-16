@@ -6,7 +6,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { formatNumber, counterId, parseNumber } from './numberFormat.js';
+import { formatNumber, counterId, parseNumber, nextSeq } from './numberFormat.js';
 import { isEditable, isLegalTransition, canDo, availableTransitions, TRANSITIONS } from './states.js';
 import grn, { ccp1Violations } from './schemas/grn.js';
 import { getSchema, readyTypes } from './schemas/index.js';
@@ -34,6 +34,22 @@ test('الرقم يُفكّ إلى أجزائه ذهابًا وإيابًا', ()
   assert.deepEqual(parseNumber('GRN-2026-0007'), { type: 'GRN', year: 2026, seq: 7 });
   assert.equal(parseNumber('BFP-GRN-002'), null, 'الرقم الورقي القديم ليس صيغة صالحة');
   assert.equal(parseNumber(''), null);
+});
+
+// ‹EXE-002› قاعدة الزيادة نُقلت من طبقة التخزين إلى المنطق الخالص — فصارت
+// تُختبر بلا سحابة. وكانت `(Number(seq) || 0) + 1` داخل معاملة Firestore.
+test('★ التسلسل التالي: عدّادٌ مفقود أو تالف يبدأ من 1 ولا يتوقّف', () => {
+  assert.equal(nextSeq(0), 1, 'عدّادٌ جديد');
+  assert.equal(nextSeq(undefined), 1, 'مستند العدّاد غير موجود');
+  assert.equal(nextSeq(null), 1);
+  assert.equal(nextSeq('تالف'), 1, 'قيمةٌ نصّيّة لا تُوقف الترقيم');
+  assert.equal(nextSeq(41), 42);
+});
+
+test('★ لا رقمٌ سالبٌ ولا كسريّ يكسر صيغة التدقيق', () => {
+  assert.equal(nextSeq(-5), 1, 'العدّاد السالب يُعامَل كمفقود لا يُزاد');
+  assert.equal(nextSeq(7.9), 8, 'الكسر يُقصّ لا يُقرَّب صعودًا فيقفز رقمًا');
+  assert.equal(formatNumber('GRN', 2026, nextSeq(9999)), 'GRN-2026-10000');
 });
 
 // ── آلة الحالات ────────────────────────────────────────────────────

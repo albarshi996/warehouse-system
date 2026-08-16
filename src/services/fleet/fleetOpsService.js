@@ -26,7 +26,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
-import { reserveNumber } from '../documents/numbering.js';
+import { reserveNumber } from '../documents/numberingService.js';
 import {
   canTransitionTrip,
   handoverVerdict,

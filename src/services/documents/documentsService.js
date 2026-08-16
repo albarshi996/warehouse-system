@@ -28,7 +28,7 @@ import {
   runTransaction,
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
-import { reserveNumber } from './numbering.js';
+import { reserveNumber } from './numberingService.js';
 import { INITIAL_STATE, isEditable, isLegalTransition, canDo, TRANSITIONS } from './states.js';
 import { derivationTargets, derivationLinkType, parentApprovalProblem, vanIdentityProblem, VAN_CHAIN } from './chain.js';
 import { getSchema } from './schemas/index.js';
@@ -104,7 +104,7 @@ export function appendAudit(docId, { action, note = '', from = '', to = '', prof
 
 /**
  * ينشئ مسودّة جديدة ويُعيد معرّفها.
- * بلا رقم رسمي — الرقم يُمنح عند الإرسال (انظر numbering.js).
+ * بلا رقم رسمي — الرقم يُمنح عند الإرسال (انظر numberingService.js).
  */
 export async function createDraft({ type, stage = null, profile, header = {}, lines = [] }) {
   // ختم الواقعة يُفتح على **اليوم** لا على فراغ: القيمة الافتراضيّة هي الصحيحة

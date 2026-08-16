@@ -25,7 +25,7 @@ import {
   increment,
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
-import { reserveNumber } from '../documents/numbering.js';
+import { reserveNumber } from '../documents/numberingService.js';
 import { canTransitionWO, WO_PRIORITIES } from './workOrderModel.js';
 
 const ASSETS = 'assets';

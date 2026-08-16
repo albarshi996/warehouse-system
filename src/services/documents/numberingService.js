@@ -10,11 +10,15 @@
  *
  * البنية:  counters/{TYPE}-{YEAR}  ←  { type, year, seq }
  *
- * صيغة الرقم نفسها في `numberFormat.js` (منطق خالص قابل للاختبار وحده).
+ * ═══ الحدّ بين هذا الملفّ ومنطقه (EXE-002) ═══
+ * **القاعدة في الكود، والقاعدة مخزنٌ لا حاكم.** فصيغةُ الرقم وقاعدةُ الزيادة
+ * كلتاهما في `numberFormat.js` الخالص (تُختبران بلا سحابة)، ولا يبقى هنا إلّا
+ * ما لا يُنجَز إلّا على الخادم: **الذرّيّة**. وهذا الملفّ يُنفّذ ولا يقرّر —
+ * ولذلك سُمّي `Service` (كان `numbering.js` فكان منطقًا مختبئًا في التخزين).
  */
 import { doc, runTransaction } from 'firebase/firestore';
 import { db } from '../../config/firebase.js';
-import { counterId, formatNumber } from './numberFormat.js';
+import { counterId, formatNumber, nextSeq } from './numberFormat.js';
 
 const COUNTERS = 'counters';
 
@@ -34,7 +38,7 @@ export async function reserveNumber(type, now = new Date()) {
 
   const seq = await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
-    const next = (snap.exists() ? Number(snap.data().seq) || 0 : 0) + 1;
+    const next = nextSeq(snap.exists() ? snap.data().seq : 0);
     tx.set(ref, { type, year, seq: next }, { merge: true });
     return next;
   });
