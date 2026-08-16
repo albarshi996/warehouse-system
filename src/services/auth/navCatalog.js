@@ -69,6 +69,9 @@ export const NAV_GROUPS = [
     items: [
       { path: '/dashboard/command-center', label: 'لوحة القيادة التشغيلية', icon: 'grid' },
       { path: '/dashboard/warehouses', label: 'المستودعات', icon: 'package' },
+      // التخزين والسحب الموجّه (LOC-202): استيراد أوامر المصدر ← معاينة ←
+      // مستند. مقصورٌ على من يملك اعتماد الاستيراد — لا يراه أمين المخزن.
+      { path: '/dashboard/directed-storage', label: 'التخزين والسحب الموجّه', icon: 'mapPin', roles: ['admin', 'warehouse_manager', 'inventory_auditor'] },
       { path: '/dashboard/stock-ledger', label: 'دفتر حركات المخزون', icon: 'clipboardList' },
       // التقارير التفصيليّة — موضعٌ ثانٍ لأمين المخزن ومسؤول المرتجعات: تقارير
       // المخزون تخصّهما، وهما لا يريان مجموعة «التقارير». والصلاحية اتحادُ المواضع.

@@ -784,17 +784,21 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ── سجلّ استيراد مستندات أودو (LOC-202 · إكسل) ────────────────
-    // المعرّف حتميّ من بصمة (مرجع أودو × معرّف السطر × write_date)، فاستيراد
-    // الملفّ نفسه مرّتين يكتب فوق نفسه ولا يضاعف مخزونًا. ملحقة-فقط بنمط
-    // `stock_moves`: لا حذف، والتعديل مقصورٌ على ما لا يغيّر الهويّة.
-    match /odoo_imports/{importId} {
+    // ── سجلّ الاستيراد من نظامٍ خارجيّ (LOC-202 · إكسل) ───────────
+    // البوابة لا تتّصل بأيّ نظام؛ الشيت هو المدخل الوحيد. والاسم **محايد**
+    // (`source_imports` لا `odoo_imports`) لأنّ العقد لا يُربط بمورّدٍ بعينه.
+    // المعرّف حتميّ من بصمة (مرجع المستند × معرّف السطر × تاريخ المصدر)، فاستيراد
+    // الملفّ نفسه مرّتين يكتب فوق نفسه ولا يضاعف مخزونًا — منعٌ **بنيويّ** لا فحصٌ
+    // يُنسى. ملحقة-فقط بنمط `stock_moves`: لا حذف، والتعديل لا يغيّر الهويّة.
+    // وهويّة المستورِد من الحساب المسجَّل لا من الشيت (قرار المالك 2026-08-16).
+    match /source_imports/{importId} {
       allow read: if signedIn();
       allow create: if isStockActor()
-                    && request.resource.data.byUid == request.auth.uid;
+                    && request.resource.data.importedByUid == request.auth.uid;
       allow update: if isStockActor()
                     && request.resource.data.fingerprint == resource.data.fingerprint
-                    && request.resource.data.odooRef == resource.data.odooRef;
+                    && request.resource.data.docRef == resource.data.docRef
+                    && request.resource.data.kind == resource.data.kind;
       allow delete: if false;
     }
 

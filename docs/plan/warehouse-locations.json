@@ -523,7 +523,7 @@
       "title": "صندوق الاستيراد بالمعاينة ومنع التكرار + صفحة `/dashboard/directed-storage`",
       "milestone": "م٢",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ل‑١٠"
       ],
@@ -531,9 +531,10 @@
         "LOC-201"
       ],
       "branch": "claude/warehouse-location-system-cd4c55",
-      "guardTest": "src/services/locations/odooImport.test.js",
+      "guardTest": "src/services/locations/sourceImport.test.js",
       "touches": [
-        "src/services/locations/odooImport.js",
+        "src/services/locations/sourceImport.js",
+        "src/services/locations/sourceImportService.js",
         "src/pages/dashboard/directed-storage.astro",
         "src/components/brandzo-erp/locations/DirectedStorage.jsx",
         "src/services/auth/navCatalog.js",
@@ -547,7 +548,14 @@
         "اسم الملفّ ومن استورده ووقته محفوظةٌ ضمن حدود Firestore (Spark · بلا Storage)",
         "التنفيذ يقوم على أمر التسليم لا أمر البيع؛ و`SO` يُربط مرجعًا فقط",
         "بند في `navCatalog` وقاعدة في `firestore.rules` — وإلّا سقط `npm run audit`"
-      ]
+      ],
+      "evidence": {
+        "commit": "PENDING",
+        "closedOn": "2026-08-16"
+      },
+      "progress": "صندوق الاستيراد يعمل من طرفٍ لطرف: رفع الشيت ← معاينة كاملة قبل أيّ كتابة (مستندات · بنود · كميات · مكرّر · أخطاء صفًّا بصفّ) ← تحرير البنود داخل البوابة ← اعتماد ينشئ مستند PUTAWAY/PICK مرتبطًا بمرجع المصدر. ومجموعة source_imports بمعرّفٍ حتميّ هو البصمة فمنع التكرار **بنيويّ لا فحصٌ يُنسى**. وأُعيدت تسمية odoo_imports إلى source_imports وهي فارغة، عملًا بقرار الحياد.",
+      "nextStep": "التالي LOC-301/LOC-302: محرّك اقتراح المواقع وشاشة العامل — العامل يختار الرفّ باقتراح، ويتجاوز بسببٍ مقيَّد في audit.",
+      "limits": "لم يُجرَّب بحسابٍ حقيقيّ خلف حارس الدخول (LOC-O07)، والقواعد تحتاج نشرةً واحدة (source_imports)."
     },
     {
       "id": "LOC-301",
