@@ -53,7 +53,7 @@ export function listenLaborTasks(cb, onError) {
 }
 
 /** إنشاء مهمّة مناولة مربوطةٍ بأمرٍ تشغيليّ وفريق. */
-export async function createTask({ orderType, docRef, containerRef, crewId, note }, profile) {
+export async function createTask({ orderType, docRef, containerRef, crewId, note, lines, taskId }, profile) {
   const actor = whoami(profile);
   if (!orderType || !crewId) throw new Error('نوع الأمر والفريق مطلوبان.');
   const ref = await addDoc(collection(db, COL), {
@@ -62,6 +62,11 @@ export async function createTask({ orderType, docRef, containerRef, crewId, note
     containerRef: String(containerRef || '').trim(),
     crewId,
     note: String(note || '').trim(),
+    // ‹EXE-103› البنود تُولد هنا لا في البطاقة — هذا سجلّ التنفيذ، و
+    // `WorkerTaskPanel` يكتب `qtyDone` فيه منذ LOC-401. و`taskId` رابطٌ
+    // معاكس للبطاقة (معرّفٌ لا نسخة) يبقى فارغًا للمهامّ التي تُنشأ يدويًّا.
+    lines: Array.isArray(lines) ? lines : [],
+    taskId: String(taskId || '').trim(),
     state: 'pending',
     unitsHandled: 0,
     startedAt: null,

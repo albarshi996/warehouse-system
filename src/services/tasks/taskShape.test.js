@@ -13,13 +13,19 @@ import {
   PRIORITY_LABELS,
   WORK_TYPES,
   WORK_ENDPOINTS,
+  BRIDGE_FIELDS,
+  LABOR_TO_TASK_STATUS,
+  bridgeVerdict,
   canAssigneeMove,
   canManagerMove,
+  duplicatedFields,
   dueMillis,
+  impliedStatus,
   isWorkTask,
   lineGaps,
   shapeWorkLine,
   shapeWorkPayload,
+  splitGenerated,
   unpolicedWorkTypes,
   workPayloadProblems,
   workProgress,
@@ -151,4 +157,110 @@ test('المهمّة الإداريّة لا تُنتج تقدّمًا كاذب�
   const p = workProgress({ title: 'مهمّة إداريّة' });
   assert.equal(p.lines, 0);
   assert.equal(p.complete, false, 'صفرُ بنودٍ ليس اكتمالًا');
+});
+
+/* ═══ الجسر ‹EXE-103› ═══ */
+
+const laborStates = ['pending', 'in_progress', 'paused', 'done', 'cancelled'];
+
+test('★★ فخّ الإملاء: `cancelled` بلامين تُقابل `canceled` بلامٍ واحدة', () => {
+  // مقارنةٌ مباشرة بينهما تفشل صامتةً، فيبقى الملغى «مُسندًا» إلى الأبد.
+  assert.notEqual('cancelled', TASK_STATUS.CANCELED);
+  assert.equal(LABOR_TO_TASK_STATUS.cancelled, TASK_STATUS.CANCELED);
+});
+
+test('★★ كلّ حالة ميدانٍ لها مقابلٌ — ولا حالةَ تسقط صامتة', () => {
+  for (const st of laborStates) assert.ok(LABOR_TO_TASK_STATUS[st], `الحالة «${st}» بلا مقابل`);
+  assert.deepEqual(Object.keys(LABOR_TO_TASK_STATUS).sort(), laborStates.slice().sort());
+  assert.equal(impliedStatus('طائر', null), '', 'وحالةٌ مجهولة لا تُستنبَط');
+});
+
+test('★★ التوقّف ليس إنجازًا — `paused` تبقى «قيد التنفيذ»', () => {
+  assert.equal(impliedStatus('paused', null), TASK_STATUS.IN_PROGRESS);
+});
+
+test('★★ الإنجاز الجزئيّ لا يُغلق البطاقة', () => {
+  // ميدانٌ يقول «منجزة» وفيه بندٌ ناقص: من انتهى دوامه وقد خزّن نصف الشحنة
+  // لا يُغلق عليه الباب — وهو حكم `finishVerdict` نفسه.
+  assert.equal(impliedStatus('done', { complete: false }), TASK_STATUS.IN_PROGRESS);
+  assert.equal(impliedStatus('done', { complete: true }), TASK_STATUS.DONE);
+});
+
+test('★★ الجسر لا يرجع بالحالة للخلف — يُعلن الخلاف ليبتّه المدير', () => {
+  const v = bridgeVerdict({
+    task: { status: TASK_STATUS.DONE },
+    laborTask: { state: 'in_progress' },
+    progress: { complete: false },
+  });
+  assert.equal(v.changed, false, 'لا تُدهس');
+  assert.equal(v.conflict, true);
+  assert.match(v.message, /يبتّه المدير/);
+});
+
+test('التقدّم للأمام يمرّ بلا خلاف', () => {
+  const v = bridgeVerdict({
+    task: { status: TASK_STATUS.ASSIGNED },
+    laborTask: { state: 'in_progress' },
+    progress: { complete: false },
+  });
+  assert.deepEqual({ status: v.status, changed: v.changed, forward: v.forward }, {
+    status: TASK_STATUS.IN_PROGRESS,
+    changed: true,
+    forward: true,
+  });
+});
+
+test('★ الإلغاء قرارُ المدير لا أثرٌ تلقائيّ', () => {
+  const v = bridgeVerdict({ task: { status: TASK_STATUS.IN_PROGRESS }, laborTask: { state: 'cancelled' } });
+  assert.equal(v.changed, false);
+  assert.equal(v.conflict, true);
+  assert.match(v.message, /قرارُ المدير/);
+});
+
+test('الاتّفاق لا يُنتج تغييرًا ولا خلافًا', () => {
+  const v = bridgeVerdict({
+    task: { status: TASK_STATUS.IN_PROGRESS },
+    laborTask: { state: 'paused' },
+    progress: { complete: false },
+  });
+  assert.deepEqual({ changed: v.changed, conflict: v.conflict }, { changed: false, conflict: false });
+});
+
+test('بطاقةٌ بلا مهمّة مناولة لا يُستنبَط لها شيء', () => {
+  const v = bridgeVerdict({ task: { status: TASK_STATUS.ASSIGNED } });
+  assert.equal(v.implied, '');
+  assert.equal(v.changed, false);
+});
+
+/* ── القسمة: لا حقل مكرّر ولا زمنَ في البطاقة ──────────────────── */
+
+const generated = {
+  key: 'PICK::PICK-2026-0007::MAIN-A01',
+  title: 'سحب PICK-2026-0007',
+  group: 'MAIN-A01',
+  work: payload(),
+};
+
+test('★★ البنود لا تُخزَّن في البطاقة — نسختان منها رقمان للمنجَز', () => {
+  const { assignment, execution } = splitGenerated(generated);
+  assert.equal('lines' in assignment, false, 'WorkerTaskPanel يكتب qtyDone في labor_tasks منذ LOC-401');
+  assert.equal(assignment.lineCount, 1, 'والبطاقة تحمل عددها لا محتواها');
+  assert.equal(execution.lines.length, 1);
+});
+
+test('★★ لا حقلَ زمنٍ في حقول الجسر — الزمن يبقى في `labor_tasks`', () => {
+  assert.deepEqual(BRIDGE_FIELDS, ['status', 'laborTaskId']);
+  const timeish = BRIDGE_FIELDS.filter((f) => /at$|At$|time|Time|ms$|Ms$|duration/i.test(f));
+  assert.deepEqual(timeish, []);
+});
+
+test('★★ لا حقل مكرّر بين السجلَّين إلّا المشترك بالتصميم', () => {
+  const { assignment, execution } = splitGenerated(generated);
+  assert.deepEqual(duplicatedFields(assignment, execution), []);
+});
+
+test('الرابط معرّفٌ واحد — ويبقى فارغًا حين يُنفَّذ العمل فرديًّا', () => {
+  assert.equal(splitGenerated(generated).assignment.laborTaskId, '');
+  const withCrew = splitGenerated({ ...generated, work: { ...payload(), laborTaskId: 'lt-9' } });
+  assert.equal(withCrew.assignment.laborTaskId, 'lt-9');
 });

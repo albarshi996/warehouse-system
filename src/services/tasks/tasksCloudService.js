@@ -91,6 +91,14 @@ export async function createTask(input, profile) {
     dueDate: input.dueDate || '',
     dueTime: input.dueTime || '',
 
+    // ‹EXE-103› رأس العمل الميدانيّ — **بلا بنودٍ وبلا زمن**: البنود يكتبها
+    // `WorkerTaskPanel` في `labor_tasks` منذ LOC-401، ونسخةٌ ثانية منها هنا
+    // تصير رقمًا ثانيًا للمنجَز. والقسمة كلّها في `taskShape.splitGenerated`.
+    workKey: String(input.workKey ?? '').trim(),
+    workType: String(input.workType ?? '').trim(),
+    docRef: input.docRef || null,
+    laborTaskId: String(input.laborTaskId ?? '').trim(),
+
     createdByUid: actor.uid,
     createdByName: actor.name,
     assigneeUid: assignee.uid,
@@ -178,6 +186,21 @@ export async function reassignTask(taskId, assignee, profile) {
   await logEvent(taskId, actor, EVENT_TYPE.REASSIGNED, {
     text: `أُعيد الإسناد إلى ${assignee.name || ''}`.trim(),
   });
+}
+
+/**
+ * ‹EXE-103› يربط البطاقة بسجلّ تنفيذها في `labor_tasks` — **معرّفٌ لا نسخة**.
+ *
+ * ولا تُكتب هنا حالةٌ ولا زمن: الحالة المستنبَطة من الميدان **تُحسب عند
+ * القراءة** بـ`bridgeVerdict`، والزمن يبقى في `labor_tasks` وحدها. فالخدمة
+ * تنفّذ ولا تقرّر.
+ */
+export async function linkLaborTask(taskId, laborTaskId, profile) {
+  const actor = currentActor(profile);
+  const id = String(laborTaskId ?? '').trim();
+  if (!id) throw new Error('معرّف مهمّة المناولة مطلوب.');
+  await updateDoc(doc(db, COL, taskId), { laborTaskId: id, updatedAt: serverTimestamp() });
+  await logEvent(taskId, actor, EVENT_TYPE.STATUS, { text: `رُبطت بسجلّ التنفيذ ${id}` });
 }
 
 /** يرتّب لقطة المهام بالأحدث أولًا (بلا ختم وقتٍ = الأحدث). */

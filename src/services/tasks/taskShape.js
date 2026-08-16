@@ -248,3 +248,141 @@ export function workProgress(task) {
 
 /** حال سطرٍ بعينه — إحالةٌ مباشرة كي لا يستورد المستهلك طبقتين. */
 export { lineProgress };
+
+/* ═════════════════ الجسر ‹EXE-103› ═════════════════
+ *
+ * العمل الواحد له سجلّان قائمان: `tasks` (إسنادٌ وحالةٌ وأولويّةٌ وموعد) و
+ * `labor_tasks` (بنودٌ وزمنٌ بأختام الخادم). ولو بقيا منفصلين صار للعمل
+ * حقيقتان، ولو دُمجا بالنسخ صار للزمن مصدران.
+ *
+ * ═══ القسمة الحاكمة ═══
+ *   `tasks`        ← **من ومتى وبأيّ أولويّة** · ولا بنودَ فيها ولا زمنَ تنفيذ
+ *   `labor_tasks`  ← **أين وكم ومتى بدأ وانتهى** · ولا أولويّةَ فيها ولا موعد
+ *   والرابط معرّفٌ واحد: `laborTaskId`.
+ *
+ * ═══ ولماذا الحالة تُشتقّ ولا تُكتب ═══
+ * كان يمكن أن يكتب الميدانُ حالةَ البطاقة عند كلّ تغيّر. ولانفتح بابان: بابٌ
+ * أمنيّ (مشرف المناولة ليس `isManager` فلا يملك تعديل `tasks`، فكان الحلّ
+ * توسيعَ صلاحيّةٍ لأجل الكتابة وحدها)، وبابُ تباعدٍ (كتابتان لحقيقةٍ واحدة
+ * تفترقان أوّل فشلِ شبكة). فالحالة المستنبَطة **تُحسب عند القراءة**، والخلاف
+ * يُعلَن ولا يُدهس. ولذلك **لم تُغيَّر `firestore.rules`** في هذه المهمّة.
+ */
+
+/**
+ * خريطة حالة التنفيذ الميدانيّ إلى حالة الإسناد.
+ *
+ * ⚠️ ولا تُكتب بيدٍ في مكانٍ آخر: `TASK_STATUS.CANCELED` بلامٍ واحدة
+ * (`canceled`) و`TASK_STATES.cancelled` بلامين — اختلافٌ حرفيٌّ صامت يُسقط
+ * أيّ مقارنةٍ مباشرة بلا خطأ، فيبقى الملغى «مُسندًا» إلى الأبد.
+ */
+export const LABOR_TO_TASK_STATUS = Object.freeze({
+  pending: TASK_STATUS.ASSIGNED,
+  in_progress: TASK_STATUS.IN_PROGRESS,
+  paused: TASK_STATUS.IN_PROGRESS, // ★ التوقّف ليس إنجازًا
+  done: TASK_STATUS.DONE,
+  cancelled: TASK_STATUS.CANCELED, // ★ لامان ⟵ لامٌ واحدة
+});
+
+/**
+ * الحقول التي يملك الجسر كتابتها على البطاقة.
+ * **ليس فيها حقلُ زمنٍ واحد** — الزمن يبقى في `labor_tasks` وحدها.
+ */
+export const BRIDGE_FIELDS = Object.freeze(['status', 'laborTaskId']);
+
+/**
+ * الحالة التي يقولها الميدان.
+ *
+ * ★★ الإنجاز الجزئيّ لا يُغلق المهمّة (معيار المالك، وهو حكم `finishVerdict`
+ * نفسه): مهمّةٌ ميدانيّة «منجزة» وفيها بندٌ ناقص تبقى **قيد التنفيذ** — فمن
+ * انتهى دوامه وقد خزّن نصف الشحنة لا يُغلق عليها الباب.
+ */
+export function impliedStatus(laborState, progress) {
+  const mapped = LABOR_TO_TASK_STATUS[laborState];
+  if (!mapped) return '';
+  if (mapped === TASK_STATUS.DONE && progress && progress.complete === false) {
+    return TASK_STATUS.IN_PROGRESS;
+  }
+  return mapped;
+}
+
+/**
+ * حكم الجسر — يُحسب عند القراءة ولا يُخزَّن.
+ *
+ * والرجوع للخلف **لا يقع تلقائيًّا**: بطاقةٌ أُغلقت وميدانٌ يقول «جارية»
+ * خلافٌ يُعلَن للمشرف ليبتّه، لا حالةٌ تُدهس — فالمدير وحده يُرجع
+ * (`canManagerMove`).
+ *
+ * @returns {{implied:string, status:string, changed:boolean, forward:boolean, conflict:boolean, message:string}}
+ */
+export function bridgeVerdict({ task, laborTask, progress } = {}) {
+  const current = task?.status || TASK_STATUS.ASSIGNED;
+  const implied = impliedStatus(laborTask?.state, progress);
+  const none = { implied: '', status: current, changed: false, forward: false, conflict: false, message: '' };
+
+  if (!implied) return none;
+  if (implied === current) return { ...none, implied };
+
+  // الإلغاء إنهاءٌ إداريّ خارج المسار — يُعلَن ولا يُطبَّق تلقائيًّا.
+  if (implied === TASK_STATUS.CANCELED || current === TASK_STATUS.CANCELED) {
+    return {
+      implied,
+      status: current,
+      changed: false,
+      forward: false,
+      conflict: true,
+      message: `الميدان «${STATUS_LABELS[implied]}» والبطاقة «${STATUS_LABELS[current]}» — الإلغاء قرارُ المدير لا أثرٌ تلقائيّ.`,
+    };
+  }
+
+  if (canAssigneeMove(current, implied)) {
+    return { implied, status: implied, changed: true, forward: true, conflict: false, message: '' };
+  }
+
+  return {
+    implied,
+    status: current,
+    changed: false,
+    forward: false,
+    conflict: true,
+    message: `الميدان يقول «${STATUS_LABELS[implied]}» والبطاقة «${STATUS_LABELS[current]}» — رجوعٌ للخلف يبتّه المدير.`,
+  };
+}
+
+/**
+ * يقسم مخرَج المصنع إلى سجلَّيه.
+ *
+ * ★★ الحارس الحقيقيّ ضدّ الازدواج: **البنود لا تُخزَّن في البطاقة** —
+ * `WorkerTaskPanel` يكتب `qtyDone` في `labor_tasks` منذ LOC-401، ونسخةٌ ثانية
+ * منها في `tasks` تصير رقمًا ثانيًا للمنجَز يفترق أوّل حفظ.
+ *
+ * @returns {{assignment:object, execution:object}}
+ */
+export function splitGenerated(generated) {
+  const work = shapeWorkPayload(generated?.work || generated);
+  return {
+    assignment: {
+      key: s(generated?.key),
+      title: s(generated?.title),
+      workType: work.workType,
+      docRef: work.docRef,
+      warehouse: work.warehouse,
+      group: s(generated?.group),
+      lineCount: work.lines.length,
+      laborTaskId: work.laborTaskId,
+    },
+    execution: {
+      orderType: work.workType,
+      docRef: work.docRef,
+      lines: work.lines,
+    },
+  };
+}
+
+/**
+ * أحقلٌ مكرّرٌ بين السجلَّين؟ يُعيد أسماء ما تكرّر — والفراغ هو السلامة.
+ * (يُستدعى في الاختبار حارسًا، وفي المراجعة دليلًا.)
+ */
+export function duplicatedFields(assignment, execution) {
+  const SHARED_BY_DESIGN = new Set(['docRef', 'workType', 'orderType']);
+  return Object.keys(assignment || {}).filter((k) => k in (execution || {}) && !SHARED_BY_DESIGN.has(k));
+}
