@@ -5,7 +5,7 @@
   "command": "npm run plan:locations",
   "track": "جراحيّ · الأساس الحاكم أوّلًا · قلب مفتاح الرصيد آخر خطوة في الدفعة ومحجوب بصفريّة فرق إعادة البناء",
   "source": "طلب المالك 2026-08-16 (نصّ «نريد تنفيذ منظومة التخزين والسحب الموجّه») + فحص الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-16 (اكتملت الدفعة الأولى م١ — ٩ مهامّ)",
+  "lastUpdated": "2026-08-16 (م١ منفَّذة ومرفوعة ومنشورة · القواعد نُشرت)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "6fc3193",
@@ -112,7 +112,9 @@
       "milestone": "م١",
       "need": "نشر `firestore.rules` المعدَّلة (مجموعتا `bin_locations` و`odoo_imports` وسدّ ثغرات `stock_moves`/`balances`) — المالك وحده ينشر",
       "ifMissing": "الشاشات تعمل والقواعد لا تحمي — لا يُعلَن قبولٌ حيّ قبل النشر والتأكيد بالبصمة",
-      "state": "todo"
+      "state": "done",
+      "decidedOn": "2026-08-16",
+      "decision": "نشر المالك القواعد من Firebase Console. الملفّ في المستودع عند النشر: 1315 سطرًا · SHA-256 (بنهايات LF) = 92D251A6B376D3C2DE74092DA7D1ED7550C64B5276BE35199A8324BF712D8A0D — ويتضمّن match /bin_locations/ وmatch /odoo_imports/ وحماية batch/expiry/bin/fromBin/toBin/stockStatus في stock_moves وحارس qtyReserved. ⚠️ المطابقة الحرفيّة مع **المنشور فعلًا** لم يتحقّق منها الوكيل (لا وصول لـConsole)، وnpm run test:rules لم يُشغَّل قطّ (Java غير مثبَّتة) — فالقبول الحيّ يبقى معلّقًا على LOC-O07."
     },
     {
       "id": "LOC-O07",
