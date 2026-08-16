@@ -5,7 +5,7 @@
   "command": "npm run plan:exec",
   "track": "جراحيّ · **النواة تكبر ولا يُبنى بجانبها** · لا مجلّد خدمةٍ جديد ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح · ولا شاشة ثانية لمنطقٍ قائم",
   "source": "نقد المالك 2026-08-16 («نظام تخزين جامد بارد» ثمّ «تطوير جراحيّ لا نتوءات») + ملفّ «تطوير.md» (قراءة Manhattan Active WM وInfor WMS) + جرد النوى على الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-16 (EXE-103 — الجسر · والحالة تُشتقّ ولا تُكتب)",
+  "lastUpdated": "2026-08-16 (EXE-104 — ت١ مكتملة)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "e8898ef",
@@ -367,7 +367,7 @@
       "title": "«مهامي» تكبر — `WorkerTaskPanel` تستقبل المهامّ المولَّدة",
       "milestone": "ت١",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ت‑١"
       ],
@@ -378,15 +378,21 @@
       "nucleus": "`labor/WorkerTaskPanel.jsx` **قائمة وتعمل**: بندٌ واحد أمام العين · أربع خانات مسح · اقتراح `putawaySuggest` · حكم `scanGate` · سببٌ إلزاميّ للرفّ المرفوض. لا شاشة عاملٍ ثانية.",
       "guardTest": "src/services/tasks/taskFactory.test.js",
       "touches": [
-        "src/components/brandzo-erp/labor/WorkerTaskPanel.jsx",
-        "src/components/brandzo-erp/labor/LaborDashboard.jsx"
+        "src/components/brandzo-erp/labor/LaborDashboard.jsx",
+        "src/services/tasks/taskShape.js",
+        "src/services/labor/laborTasksService.js"
       ],
       "acceptance": [
         "المهمّة المولَّدة من مستندٍ تظهر للعامل في اللوحة نفسها بلا شاشةٍ جديدة",
         "«المهمّة التالية» واحدةٌ في الصدارة — لا قائمةٌ طويلة يختار منها (تطوير.md: العامل لا يرى المعادلة)",
         "المسح يمرّ بـ`scanGate` القائمة بلا نسخ منطقها · والرفض يقول **الصواب** لا كلمة «خطأ»",
         "بلا إيموجي · والأحمر للتحذير وحده · وزرّ الرجوع يُغلق أيّ طبقةٍ ملء الشاشة"
-      ]
+      ],
+      "evidence": {
+        "commit": "cfc5b2c",
+        "closedOn": "2026-08-16"
+      },
+      "note": " — نُفِّذ: workQueue في المنطق الخالص (ما بدأتَه يُنهى أوّلًا ثمّ FIFO) والشاشة تعرض ولا ترتّب، والرتبة تُعيد سببها فيحلّ محرّك ت٣ محلّه بلا تغيير الشاشة. وسُدّت فجوةٌ بين ما ادّعته EXE-102 وما وُجد: المصنع كان خالصًا ومختبَرًا ولا أحد يستدعيه — فأُضيفت releaseDocumentTasks خدمةً رقيقة يُطلقها المشرف (السلوك المعلَن لـت-O01)."
     },
     {
       "id": "EXE-201",
