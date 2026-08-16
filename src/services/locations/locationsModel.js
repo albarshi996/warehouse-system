@@ -238,3 +238,56 @@ export function buildLocationTree(locations) {
 export function locationLabelOf(location) {
   return str(location?.nameAr) || normalizeLocationCode(location?.code) || '—';
 }
+
+/**
+ * خيارات خانة الموقع في جدول البنود — قائمةٌ مقترَحة لا حاصرة.
+ *
+ * لماذا `datalist` لا `select`؟ مستودعٌ واحد قد يحمل آلاف المواقع، والقائمة
+ * المنسدلة تصير غير قابلة للاستعمال — والعامل يمسح الملصق أصلًا ولا يتصفّح.
+ * فالاقتراح يُعين من يكتب، والمسحُ يمرّ بلا احتكاك.
+ *
+ * المؤرشَف يُستبعد من الاقتراح **ولا يُرفض** إن كُتب: مستندٌ قديم يشير إليه
+ * يجب أن يبقى مقروءًا.
+ */
+export function locationOptions(locations, { warehouse } = {}) {
+  const wh = normalizeLocationCode(warehouse);
+  return (locations || [])
+    .filter((l) => l?.status !== 'archived')
+    .filter((l) => !wh || String(l?.warehouse || '').toUpperCase() === wh)
+    .map((l) => ({
+      value: normalizeLocationCode(l.code),
+      label: str(l.nameAr) ? `${normalizeLocationCode(l.code)} — ${l.nameAr}` : normalizeLocationCode(l.code),
+    }))
+    .filter((o) => o.value)
+    .sort((a, b) => a.value.localeCompare(b.value));
+}
+
+/**
+ * حكم خانة الموقع المكتوبة في بند مستند.
+ *
+ * ★★ الفراغ **ليس خطأً**: مستندات اليوم كلّها بلا موقع، وحقلٌ يمنع الحفظ
+ * لفراغه يوقف الدورة القائمة كلّها في لحظة — وهو فشلٌ أسوأ من الفجوة.
+ * وكذلك **لا يُرفض** كودٌ غير مسجَّل حين لا يكون سيّد المواقع مبنيًّا بعد
+ * (`locations` فارغة): تُنبَّه ولا تُمنَع.
+ *
+ * @returns {{level:'ok'|'warn', message:string}}
+ */
+export function binCellVerdict(raw, locations) {
+  const code = normalizeLocationCode(raw);
+  if (!code) return { level: 'ok', message: '' };
+
+  const problem = locationCodeProblem(code);
+  if (problem) return { level: 'warn', message: problem };
+
+  const list = locations || [];
+  if (!list.length) return { level: 'ok', message: '' }; // لا سيّد بعد ⇒ لا حكم
+
+  const found = list.find((l) => normalizeLocationCode(l?.code) === code);
+  if (!found) return { level: 'warn', message: `«${code}» غير مسجَّل في سيّد المواقع.` };
+
+  const status = LOCATION_STATUSES[found.status];
+  if (status && !status.accepts) {
+    return { level: 'warn', message: `«${code}» ${status.labelAr} — ${status.hint}` };
+  }
+  return { level: 'ok', message: '' };
+}

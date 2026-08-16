@@ -99,7 +99,7 @@ const schema = {
         { key: 'uom', label: 'وحدة القياس', kind: 'text', width: '9%' },
         { key: 'batch', label: 'الدفعة (Batch)', kind: 'text', width: '10%' },
         { key: 'expiry', label: 'تاريخ الصلاحية', kind: 'date', width: '11%' },
-        { key: 'bin', label: 'الموقع المستهدف (Bin)', kind: 'text', width: '9%' },
+        { key: 'bin', label: 'الموقع المستهدف (Bin)', kind: 'text', scannable: true, ltr: true, width: '9%' },
         { key: 'notes', label: 'ملاحظات', kind: 'text', width: '6%' },
       ],
     },

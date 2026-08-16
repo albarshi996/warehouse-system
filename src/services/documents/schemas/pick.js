@@ -109,7 +109,7 @@ const schema = {
         { key: 'sku', label: 'رمز SKU', kind: 'text', scannable: true, width: '9%' },
         { key: 'barcode', label: 'باركود', kind: 'text', scannable: true, ltr: true, lookup: 'item', width: '11%' },
         { key: 'description', label: 'اسم الصنف', kind: 'text', width: '17%' },
-        { key: 'bin', label: 'الموقع', kind: 'text', width: '7%' },
+        { key: 'bin', label: 'الموقع', kind: 'text', scannable: true, ltr: true, width: '7%' },
         { key: 'qtyRequested', label: 'الكمية المطلوبة', kind: 'number', width: '8%' },
         { key: 'qtyPicked', label: 'الكمية المجمعة', kind: 'number', width: '8%' },
         { key: 'diff', label: 'الفرق', kind: 'computed', compute: lineShortage, width: '6%' },

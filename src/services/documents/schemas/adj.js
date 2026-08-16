@@ -120,7 +120,10 @@ const schema = {
       columns: [
         { key: 'sku', label: 'رمز SKU', kind: 'text', scannable: true, width: '10%' },
         { key: 'barcode', label: 'باركود', kind: 'text', scannable: true, ltr: true, lookup: 'item', width: '12%' },
-        { key: 'description', label: 'اسم الصنف', kind: 'text', width: '22%' },
+        { key: 'description', label: 'اسم الصنف', kind: 'text', width: '20%' },
+        // الموقع (LOC-104): الجردُ يعرف الرفّ الذي وقع فيه الفرق، والتسوية كانت
+        // تنساه — فيُقيَّد الفرق على المستودع كلّه ولا يُعرف أين وقع.
+        { key: 'bin', label: 'الموقع', kind: 'text', scannable: true, ltr: true, width: '8%' },
         { key: 'bookQty', label: 'الرصيد الدفتري', kind: 'number', width: '10%' },
         { key: 'actualQty', label: 'الرصيد الفعلي', kind: 'number', width: '10%' },
         { key: 'variance', label: 'الفرق (+/-)', kind: 'computed', compute: adjVariance, width: '8%' },

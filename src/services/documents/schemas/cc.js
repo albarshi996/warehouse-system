@@ -128,7 +128,7 @@ const schema = {
         { key: 'sku', label: 'رمز SKU', kind: 'text', scannable: true, width: '9%' },
         { key: 'barcode', label: 'باركود', kind: 'text', scannable: true, ltr: true, lookup: 'item', width: '11%' },
         { key: 'description', label: 'اسم الصنف', kind: 'text', width: '16%' },
-        { key: 'bin', label: 'الموقع', kind: 'text', width: '7%' },
+        { key: 'bin', label: 'الموقع', kind: 'text', scannable: true, ltr: true, width: '7%' },
         { key: 'abc', label: 'ABC', kind: 'text', width: '5%' },
         { key: 'bookQty', label: 'الرصيد الدفتري', kind: 'number', width: '9%' },
         { key: 'count1', label: 'العدّ الأول', kind: 'number', width: '8%' },

@@ -207,7 +207,9 @@ const LINE_MAP = {
   // المرتجعات: الإشعار الدائن يأخذ الكمية المُرجعة وسعرها لحساب مبلغ الخصم.
   'RET>CN': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qty', unitPrice: 'unitPrice', reason: 'reason' },
   // التسوية: الفعلي المعدود يصير «الفعلي»، والدفتري يصير «الدفتري».
-  'CC>ADJ': { sku: 'sku', barcode: 'barcode', description: 'description', bookQty: 'bookQty', count2: 'actualQty', unitPrice: 'unitPrice' },
+  // ‹LOC-104› والموقع يُورَّث: الجرد يعرف الرفّ الذي وقع فيه الفرق، وبدونه
+  // تُقيَّد التسوية على المستودع كلّه ولا يُعرف أين وقع الفرق ولا يُلاحَق.
+  'CC>ADJ': { sku: 'sku', barcode: 'barcode', description: 'description', bin: 'bin', bookQty: 'bookQty', count2: 'actualQty', unitPrice: 'unitPrice' },
   // المشتريات الداخلية: العروض (RFQ) والأمر (IPO) يبدآن ببنودٍ خاصّة بهما
   // (عروضٌ لا أصناف، وأصنافٌ بأسعارٍ نهائية) فلا يُنقلان بنودًا؛ لكنّ الأصناف
   // تتدفّق من الأمر إلى الصرف إلى التسليم (ما يُدفَع ثمنه هو ما يُسلَّم).

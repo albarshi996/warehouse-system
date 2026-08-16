@@ -11,8 +11,20 @@ const CELL =
   'w-full bg-transparent border-0 px-2 py-1.5 text-sm text-ink focus:outline-none ' +
   'focus:bg-surface-2 rounded disabled:opacity-60';
 
-export default function LineItemsTable({ schema, section, lines, onChange, onLookup, disabled, uomOptions }) {
+export default function LineItemsTable({
+  schema,
+  section,
+  lines,
+  onChange,
+  onLookup,
+  disabled,
+  uomOptions,
+  binOptions,
+  binVerdict,
+}) {
   const columns = section.columns || [];
+  // معرّف قائمة الاقتراح — واحدٌ للجدول كلّه، فلا تتكرّر آلاف الخيارات لكل صفّ.
+  const binListId = `bin-options-${schema?.type || 'doc'}`;
 
   function setCell(index, key, value) {
     const next = lines.map((line, i) => (i === index ? { ...line, [key]: value } : line));
@@ -73,6 +85,10 @@ export default function LineItemsTable({ schema, section, lines, onChange, onLoo
                       // SAP-3 (ف‑٤٢): عمود الوحدة اختيارٌ من سيّد الوحدات لا نصٌّ
                       // حرّ — مركزيًّا هنا لا في ٣٨ مخطّطًا، والنصّ القديم يبقى خيارًا.
                       uomChoices={c.key === 'uom' && uomOptions ? uomOptions(line) : null}
+                      // LOC-104: خانة الموقع مرجعيّة **مركزيًّا هنا** لا في كل
+                      // مخطّط — اقتراحٌ يُعين من يكتب، وحكمٌ يُنبّه ولا يمنع.
+                      listId={c.key === 'bin' && binOptions?.length ? binListId : null}
+                      verdict={c.key === 'bin' && binVerdict ? binVerdict(line[c.key]) : null}
                     />
                   </td>
                 ))}
@@ -94,6 +110,17 @@ export default function LineItemsTable({ schema, section, lines, onChange, onLoo
         </table>
       </div>
 
+      {/* قائمة اقتراح المواقع — مرّةً واحدة للجدول كلّه */}
+      {binOptions?.length > 0 && (
+        <datalist id={binListId}>
+          {binOptions.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </datalist>
+      )}
+
       {!disabled && (
         <button
           type="button"
@@ -107,7 +134,7 @@ export default function LineItemsTable({ schema, section, lines, onChange, onLoo
   );
 }
 
-function Cell({ column, value, onChange, onCommit, disabled, uomChoices }) {
+function Cell({ column, value, onChange, onCommit, disabled, uomChoices, listId, verdict }) {
   // وحدة السطر: اختيارٌ من قائمة الصنف (أو السيّد كلّه) — القيمة القديمة
   // غير المعروفة تظهر خيارًا كما كُتبت، فلا يُكسر مستندٌ قائم.
   if (uomChoices) {
@@ -137,14 +164,20 @@ function Cell({ column, value, onChange, onCommit, disabled, uomChoices }) {
   }
 
   const type = column.kind === 'number' ? 'number' : column.kind === 'date' ? 'date' : 'text';
+  // التنبيه لا يمنع الكتابة ولا الحفظ — يُعلَن ويبقى القرار للمستخدم.
+  // (الأصفر تنبيه؛ والأحمر محجوزٌ للتحذير وحده في هذه البوابة.)
+  const warn = verdict?.level === 'warn';
 
   return (
     <input
       type={type}
-      className={CELL}
+      className={`${CELL}${warn ? ' ring-1 ring-amber-400/70' : ''}`}
       style={column.ltr ? { direction: 'ltr', textAlign: 'right' } : undefined}
       value={value}
       disabled={disabled}
+      list={listId || undefined}
+      title={verdict?.message || undefined}
+      aria-invalid={warn ? 'true' : undefined}
       placeholder={column.scannable ? 'امسح أو اكتب' : ''}
       onChange={(e) => onChange(e.target.value)}
       onBlur={(e) => onCommit?.(e.target.value)}

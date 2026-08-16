@@ -7,8 +7,10 @@ import assert from 'node:assert/strict';
 import {
   allowsItem,
   balanceLocationCode,
+  binCellVerdict,
   buildLocationTree,
   canReceive,
+  locationOptions,
   locationProblems,
   mixingProblem,
   occupancyOf,
@@ -110,6 +112,43 @@ test('القوائم المسموحة: الفارغة تعني «الكلّ مس
   const denied = allowsItem({ code: 'MAIN-A01', allowedItems: ['A'] }, { sku: 'Z' });
   assert.equal(denied.ok, false);
   assert.match(denied.reason, /محصورٌ بأصناف/);
+});
+
+test('خيارات الخانة: تُحصر بمستودع المستند، والمؤرشَف يُستبعد من الاقتراح', () => {
+  const locs = [
+    { code: 'MAIN-A01', warehouse: 'MAIN', nameAr: 'ممرّ ألف' },
+    { code: 'MAIN-A02', warehouse: 'MAIN' },
+    { code: 'WH2-C01', warehouse: 'WH2' },
+    { code: 'MAIN-Z99', warehouse: 'MAIN', status: 'archived' },
+  ];
+  const all = locationOptions(locs);
+  assert.equal(all.length, 3, 'المؤرشَف لا يُقترح');
+  assert.equal(all[0].label, 'MAIN-A01 — ممرّ ألف', 'الاسم يُعرض مع الكود حين يوجد');
+
+  const main = locationOptions(locs, { warehouse: 'MAIN' });
+  assert.deepEqual(main.map((o) => o.value), ['MAIN-A01', 'MAIN-A02'], 'رفٌّ في مستودعٍ آخر لا يُقترح');
+});
+
+test('★★ حكم الخانة: الفراغ ليس خطأً — مستندات اليوم كلّها بلا موقع', () => {
+  // حقلٌ يمنع الحفظ لفراغه يوقف الدورة القائمة كلّها في لحظة.
+  assert.deepEqual(binCellVerdict('', [{ code: 'MAIN-A01' }]), { level: 'ok', message: '' });
+  assert.deepEqual(binCellVerdict(null, []), { level: 'ok', message: '' });
+});
+
+test('★★ حكم الخانة: بلا سيّدٍ مبنيّ لا حكم — تُنبَّه حين تعرف لا حين تجهل', () => {
+  assert.equal(binCellVerdict('MAIN-A01', []).level, 'ok', 'قائمةٌ فارغة ⇒ لا معرفة ⇒ لا اتّهام');
+  assert.equal(binCellVerdict('MAIN-A01', null).level, 'ok');
+});
+
+test('حكم الخانة: غير المسجَّل والموقوف يُنبَّه عليهما بسببٍ مكتوب', () => {
+  const locs = [
+    { code: 'MAIN-A01', status: 'active' },
+    { code: 'MAIN-A02', status: 'stopped' },
+  ];
+  assert.equal(binCellVerdict('MAIN-A01', locs).level, 'ok');
+  assert.match(binCellVerdict('MAIN-A09', locs).message, /غير مسجَّل/);
+  assert.match(binCellVerdict('MAIN-A02', locs).message, /متوقّف/);
+  assert.match(binCellVerdict('RECEIVING', locs).message, /رمزٌ محجوز/, 'والكود الفاسد يُنبَّه عليه بسببه');
 });
 
 test('الشجرة تُبنى من الكود لا من حقل أب، والآباء الغائبون يُستنبطون', () => {

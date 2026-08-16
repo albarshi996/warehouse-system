@@ -47,6 +47,8 @@ import { listenPriceLists } from '../../../services/pricing/priceListService.js'
 import { listForCustomer, priceDocument } from '../../../services/pricing/priceListModel.js';
 import { subscribePartners } from '../../../services/partnerService.js';
 import { subscribeWarehouses } from '../../../services/warehouseService.js';
+import { listenLocations } from '../../../services/locations/locationsService.js';
+import { binCellVerdict, locationOptions } from '../../../services/locations/locationsModel.js';
 import { listenVehicles } from '../../../services/vehicles/vehiclesService.js';
 import { subscribeReps } from '../../../services/field/repsService.js';
 import { listenPartnerLedger } from '../../../services/ledger/partnerLedgerService.js';
@@ -166,6 +168,10 @@ export default function DocumentEngine() {
   const [repsList, setRepsList] = useState([]);
   useEffect(() => subscribePartners('supplier', setSuppliers, () => setSuppliers([])), []);
   useEffect(() => subscribeWarehouses(setWarehousesList, () => setWarehousesList([])), []);
+  // سيّد مواقع التخزين (LOC-104): الفشل ⇒ قائمةٌ فارغة ⇒ خانة الموقع نصٌّ حرّ
+  // كسلوك اليوم بلا حكمٍ ولا منع — لا تعطيل لمستودعٍ لم يُبنَ سيّده بعد.
+  const [locationsList, setLocationsList] = useState([]);
+  useEffect(() => listenLocations(setLocationsList, () => setLocationsList([])), []);
   useEffect(() => listenVehicles(setVehiclesList), []);
   useEffect(() => subscribeReps(setRepsList, () => setRepsList([])), []);
   const partyLists = useMemo(
@@ -264,6 +270,12 @@ export default function DocumentEngine() {
    * وحدة · معامل · أساس) ولا يُعاد حسابها يوم الترحيل من تقدير.
    */
   const itemIndexes = useMemo(() => buildItemIndexes(items), [items]);
+  // اقتراح المواقع محصورٌ بمستودع المستند — عاملُ التخزين في E5 لا يُقترح عليه
+  // رفٌّ في E2. وبلا مستودعٍ في الرأس تُعرض المواقع كلّها (لا حجب).
+  const binChoices = useMemo(
+    () => locationOptions(locationsList, { warehouse: doc?.header?.warehouse }),
+    [locationsList, doc?.header?.warehouse]
+  );
 
   function patchLines(lines) {
     const enriched = lines.map((line) => refreshLineBase(line, itemForLine(line, itemIndexes)));
@@ -689,6 +701,8 @@ export default function DocumentEngine() {
                 onChange={patchLines}
                 onLookup={handleLineLookup}
                 uomOptions={(line) => uomOptionsForLine(line, itemForLine(line, itemIndexes))}
+                binOptions={binChoices}
+                binVerdict={(value) => binCellVerdict(value, locationsList)}
               />
             )}
 
