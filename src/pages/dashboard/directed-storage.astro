@@ -1,14 +1,13 @@
 ---
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
+// ⚠️ لا تُحذف: مكوّن الشاشة يرسم داخل `.o_theme`، وبلا هذين الملفّين تسقط
+// الأنماط كلّها فتُعرض الصفحة نصًّا مرصوصًا بلا بطاقاتٍ ولا أزرار (وقع 2026-08-17).
+// وحارسٌ في `scripts/audit-portal.mjs` يمنع تكرارها.
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
 import DirectedStorage from '../../components/brandzo-erp/locations/DirectedStorage.jsx';
 ---
 
 <DashboardLayout title="التخزين والسحب الموجّه" light>
-  <div class="text-right" dir="rtl">
-    <h1 class="text-2xl font-bold text-ink mb-1">التخزين والسحب الموجّه</h1>
-    <p class="text-sm text-ink-2 mb-5">
-      استيراد أوامر الاستلام والتسليم من الشيت، ومعاينتها قبل الحفظ، وتحويلها إلى مستندات تخزينٍ وسحب.
-    </p>
-    <DirectedStorage client:load />
-  </div>
+  <DirectedStorage client:load />
 </DashboardLayout>

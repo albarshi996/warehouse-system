@@ -5,6 +5,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  addManualDocument,
+  addManualLine,
+  contentFingerprint,
+  manualPreview,
+  recomputePreview,
+  removeManualLine,
+  sealManualFingerprints,
+} from './sourceImport.js';
+import {
   IDENTITY_FIELDS,
   applyEdit,
   buildPreview,
@@ -163,4 +172,74 @@ test('أخطاء الملفّ تمنع الاستيراد، والتنبيهات
   const withWarning = buildPreview({ rows, errors: [{ row: 2, column: 'lineId', severity: 'warning', message: 'تنبيه' }] }, new Set(), 'receipt');
   assert.equal(withWarning.ok, true, 'التنبيه يُعلَن ولا يمنع');
   assert.equal(withWarning.warnings.length, 1);
+});
+
+/* ═══ الإدخال اليدويّ والمسح ‹2026-08-17› ═══ */
+
+test('★★ الصفحة تعمل بلا ملفّ — مسودّةٌ يدويّة بمستندٍ وسطرٍ جاهزَين', () => {
+  const p = manualPreview('receipt');
+  assert.equal(p.documents.length, 1);
+  assert.equal(p.documents[0].lines.length, 1);
+  assert.equal(p.ok, false, 'ولا تُعتمد وهي فارغة');
+  assert.ok(p.errors.some((e) => /مرجع المستند مطلوب/.test(e.message)));
+});
+
+test('★★ اليدويّ يمرّ بنفس التحقّق — لا بابَ خلفيّ', () => {
+  const filled = manualPreview('receipt', { docRef: 'REC-1', warehouse: 'MAIN' });
+  assert.ok(filled.errors.some((e) => /بلا كودٍ ولا باركود/.test(e.message)));
+  assert.ok(filled.errors.some((e) => /أكبر من صفر/.test(e.message)));
+});
+
+test('مسودّةٌ مكتملة تُعتمد', () => {
+  let p = manualPreview('receipt', { docRef: 'REC-1', warehouse: 'MAIN' });
+  p.documents[0].lines[0] = { ...p.documents[0].lines[0], sku: 'WNW-001', qty: 12 };
+  p = recomputePreview(p);
+  assert.deepEqual(p.errors, []);
+  assert.equal(p.ok, true);
+  assert.equal(p.summary.qty, 12);
+});
+
+test('★ الباركود وحده يكفي — والمسح يبني سطرًا', () => {
+  let p = manualPreview('receipt', { docRef: 'REC-1', warehouse: 'MAIN' });
+  p = addManualLine(p, 0, { barcode: '6291234567890', qty: 4 });
+  assert.equal(p.documents[0].lines.length, 2);
+  assert.equal(p.documents[0].lines[1].barcode, '6291234567890');
+  assert.equal(p.summary.lines, 2);
+});
+
+test('★★ مرجعان متطابقان خطأٌ — الرقم هو الهويّة', () => {
+  let p = manualPreview('receipt', { docRef: 'REC-1', warehouse: 'MAIN' });
+  p = addManualDocument(p, { docRef: 'REC-1', warehouse: 'MAIN' });
+  assert.ok(p.errors.some((e) => /مكرّرٌ في 2 مستندات/.test(e.message)));
+});
+
+test('★★ سطرُ الشيت لا يُحذف — يُصفَّر فيبقى الأثر', () => {
+  const sheetLine = { sku: 'A', qty: 5, lineId: 'L1' };
+  const preview = { type: 'receipt', documents: [{ docRef: 'R', warehouse: 'MAIN', lines: [sheetLine] }], conflicts: [], errors: [] };
+  const after = removeManualLine(preview, 0, 0);
+  assert.equal(after.documents[0].lines.length, 1, 'لم يُحذف');
+  assert.match(after.problem, /صفِّر كمّيّته/);
+});
+
+test('السطر اليدويّ يُحذف', () => {
+  let p = manualPreview('receipt', { docRef: 'REC-1', warehouse: 'MAIN' });
+  p = addManualLine(p, 0, { sku: 'B', qty: 1 });
+  p = removeManualLine(p, 0, 1);
+  assert.equal(p.documents[0].lines.length, 1);
+});
+
+test('★★ البصمة تُختم قبل الاعتماد — فلا يُستورد اليدويّ مرّتين', () => {
+  let p = manualPreview('receipt', { docRef: 'REC-1', warehouse: 'MAIN' });
+  p.documents[0].lines[0] = { ...p.documents[0].lines[0], sku: 'WNW-001', batch: 'B1', qty: 12 };
+  const sealed = sealManualFingerprints(recomputePreview(p));
+  const fp = sealed.documents[0].lines[0].fingerprint;
+  assert.ok(fp.startsWith('MANUAL|REC-1|WNW-001'), fp);
+  // نفس البصمة تُصنَّف مكرّرةً في استيرادٍ لاحق
+  const { duplicate } = classifyRows([{ fingerprint: fp }], new Set([fp]));
+  assert.equal(duplicate.length, 1);
+});
+
+test('الختم لا يدهس بصمة الشيت', () => {
+  const preview = { type: 'receipt', documents: [{ docRef: 'R', lines: [{ sku: 'A', qty: 1, fingerprint: 'SHEET-FP' }] }] };
+  assert.equal(sealManualFingerprints(preview).documents[0].lines[0].fingerprint, 'SHEET-FP');
 });

@@ -12,7 +12,18 @@ import Icon from '../../ui/Icon.jsx';
 import Badge from '../../odoo/Badge.jsx';
 import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
 import { analyzeSourceFile, commitSourceImport, canImportSource } from '../../../services/locations/sourceImportService.js';
-import { applyEdit, deviationReport, isEditable, qtyDeviation } from '../../../services/locations/sourceImport.js';
+import {
+  addManualDocument,
+  addManualLine,
+  applyEdit,
+  deviationReport,
+  isEditable,
+  manualPreview,
+  qtyDeviation,
+  recomputePreview,
+  removeManualLine,
+} from '../../../services/locations/sourceImport.js';
+import { normalizeBarcode } from '../../../services/excel/excelSchema.js';
 import { exportTemplate } from '../../../services/excel/excelExport.js';
 
 const KINDS = [
@@ -94,7 +105,58 @@ export default function DirectedStorage() {
       const documents = prev.documents.map((d, i) =>
         i !== docIdx ? d : { ...d, lines: d.lines.map((l, j) => (j === lineIdx ? verdict.line : l)) }
       );
-      return { ...prev, documents };
+      // إعادة الحساب تُبقي الأخطاء والملخّص مطابقَين لما يُرى الآن.
+      return recomputePreview({ ...prev, documents });
+    });
+  }
+
+  /** تحرير رأس المستند — للمسودّة اليدويّة (المرجع · المستودع · المورّد…). */
+  function editHeader(docIdx, field, value) {
+    setPreview((prev) => {
+      if (!prev) return prev;
+      if (!isEditable(field) && !prev.documents[docIdx]?.manual) {
+        setMsg({ type: 'error', text: `«${field}» جزءٌ من هويّة المستند المستورَد ولا يُحرَّر.` });
+        return prev;
+      }
+      const documents = prev.documents.map((d, i) => (i !== docIdx ? d : { ...d, [field]: value }));
+      return recomputePreview({ ...prev, documents });
+    });
+  }
+
+  /** يبدأ مسودّةً بلا ملفّ — البضاعة تصل الرصيف ولو تأخّر الشيت. */
+  function startManual() {
+    setMsg({ type: '', text: '' });
+    setResult(null);
+    setFileName('');
+    setTerm('');
+    setPreview(manualPreview(kind));
+  }
+
+  /**
+   * المسح يبني سطرًا. والباركود يُطبَّع بالدالّة نفسها التي يطبّع بها الشيت
+   * (`normalizeBarcode`) — وإلّا صار الممسوح صنفًا ثانيًا للمكتوب.
+   */
+  function scanInto(docIdx, raw) {
+    const code = normalizeBarcode(raw);
+    if (!code) return;
+    setPreview((prev) => (prev ? addManualLine(prev, docIdx, { barcode: code, qty: 1 }) : prev));
+    setMsg({ type: 'success', text: `أُضيف سطرٌ للباركود ${code} — اضبط الكمّيّة.` });
+  }
+
+  function addLine(docIdx) {
+    setPreview((prev) => (prev ? addManualLine(prev, docIdx) : prev));
+  }
+
+  function addDocument() {
+    setPreview((prev) => (prev ? addManualDocument(prev, {}) : manualPreview(kind)));
+  }
+
+  function dropLine(docIdx, lineIdx) {
+    setPreview((prev) => {
+      if (!prev) return prev;
+      const next = removeManualLine(prev, docIdx, lineIdx);
+      if (next.problem) setMsg({ type: 'error', text: next.problem });
+      return next;
     });
   }
 
@@ -194,6 +256,17 @@ export default function DirectedStorage() {
             {dragging ? 'أفلِت الملفّ هنا' : 'أو اسحب الملفّ وأفلِته هنا'} · الورقة المقروءة:{' '}
             <strong>{kind === 'receipt' ? 'Receipt' : 'Delivery'}</strong>
           </span>
+          {/* الشيت مصدرٌ خارجيّ قد يتأخّر أو يصل ناقصًا، والبضاعة تصل الرصيف
+              في موعدها. فالمسودّة اليدويّة ليست تسهيلًا بل استمرارُ عمل. */}
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ marginInlineStart: '8px' }}
+            disabled={!canImport || Boolean(busy)}
+            onClick={startManual}
+          >
+            <Icon name="plus" size={15} /> ابدأ مستندًا يدويًّا
+          </button>
           {fileName && (
             <div style={{ fontSize: '12px', color: 'var(--o-main-color-muted)', marginTop: '8px' }}>
               الملفّ المقروء: <strong style={{ direction: 'ltr', display: 'inline-block' }}>{fileName}</strong>
@@ -220,6 +293,11 @@ export default function DirectedStorage() {
             preview={preview}
             deviations={deviations}
             onEdit={editLine}
+            onHeader={editHeader}
+            onScan={scanInto}
+            onAddLine={addLine}
+            onAddDoc={addDocument}
+            onDropLine={dropLine}
             onCommit={commit}
             busy={busy}
             canImport={canImport}
@@ -229,6 +307,29 @@ export default function DirectedStorage() {
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * خانة المسح — تُفرَّغ بعد كلّ قراءة فيتوالى المسح بلا نقر.
+ * وقارئ الباركود يُرسل Enter في آخر القراءة، فالإرسال على المفتاح لا على زرّ.
+ */
+function ScanBox({ onScan }) {
+  const [code, setCode] = useState('');
+  return (
+    <input
+      className="o_input"
+      value={code}
+      onChange={(e) => setCode(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        onScan(code);
+        setCode('');
+      }}
+      placeholder="امسح الباركود ثمّ Enter"
+      style={{ width: '190px', direction: 'ltr' }}
+    />
   );
 }
 
@@ -265,7 +366,7 @@ function filterDocuments(documents, term) {
     .filter(({ lines }) => lines.length > 0);
 }
 
-function Preview({ preview, deviations, onEdit, onCommit, busy, canImport, term, onTerm }) {
+function Preview({ preview, deviations, onEdit, onHeader, onScan, onAddLine, onAddDoc, onDropLine, onCommit, busy, canImport, term, onTerm }) {
   const s = preview.summary;
   const shown = filterDocuments(preview.documents, term);
   const shownLines = shown.reduce((n, d) => n + d.lines.length, 0);
@@ -350,20 +451,47 @@ function Preview({ preview, deviations, onEdit, onCommit, busy, canImport, term,
       {shown.map(({ doc, di, lines: shownRows }) => (
         <div key={doc.docRef} className="o_ds_card o_ds_pad" style={{ marginBottom: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
-            <strong style={{ direction: 'ltr' }}>{doc.docRef}</strong>
-            <Badge tone="muted">{doc.warehouse}</Badge>
+            {doc.manual ? (
+              <>
+                <input
+                  className="o_input"
+                  value={doc.docRef}
+                  onChange={(e) => onHeader(di, 'docRef', e.target.value)}
+                  placeholder="مرجع المستند"
+                  style={{ width: '150px', direction: 'ltr' }}
+                />
+                <input
+                  className="o_input"
+                  value={doc.warehouse}
+                  onChange={(e) => onHeader(di, 'warehouse', e.target.value)}
+                  placeholder="المستودع"
+                  style={{ width: '110px' }}
+                />
+              </>
+            ) : (
+              <>
+                <strong style={{ direction: 'ltr' }}>{doc.docRef}</strong>
+                <Badge tone="muted">{doc.warehouse}</Badge>
+              </>
+            )}
             {doc.supplier && <span style={{ fontSize: '12px' }}>{doc.supplier}</span>}
             {doc.customer && <span style={{ fontSize: '12px' }}>{doc.customer}</span>}
             <span style={{ fontSize: '12px', color: 'var(--o-main-color-muted)' }}>
               {shownRows.length === doc.lines.length ? `${doc.lines.length} بندًا` : `${shownRows.length} من ${doc.lines.length} بندًا`}
             </span>
+            <div style={{ flex: 1 }} />
+            {/* المسح يبني سطرًا: العامل يقرأ الملصق ولا يكتب ثلاثة عشر محرفًا. */}
+            <ScanBox onScan={(code) => onScan(di, code)} />
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => onAddLine(di)}>
+              <Icon name="plus" size={14} /> سطر
+            </button>
           </div>
 
           <div style={{ overflowX: 'auto' }}>
             <table className="w-full" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'right' }}>
               <thead>
                 <tr style={{ background: 'var(--o-chip, #f4f4f5)' }}>
-                  {['الصنف', 'الباركود', 'الاسم', 'الوحدة', 'الكمية', 'الدفعة', 'الصلاحية', 'ملاحظات'].map((h) => (
+                  {['الصنف', 'الباركود', 'الاسم', 'الوحدة', 'الكمية', 'الدفعة', 'الصلاحية', 'ملاحظات', ''].map((h) => (
                     <th key={h} style={{ padding: '6px 8px', fontWeight: 700 }}>{h}</th>
                   ))}
                 </tr>
@@ -373,8 +501,17 @@ function Preview({ preview, deviations, onEdit, onCommit, busy, canImport, term,
                   const dev = qtyDeviation(line);
                   return (
                     <tr key={li} style={{ borderTop: '1px solid var(--o-border-color)' }}>
-                      <td style={{ padding: '4px 8px', direction: 'ltr' }}>{line.sku}</td>
-                      <td style={{ padding: '4px 8px', direction: 'ltr' }}>{line.barcode}</td>
+                      {line.manual ? (
+                        <>
+                          <Editable value={line.sku} onChange={(v) => onEdit(di, li, 'sku', v)} width="120px" />
+                          <Editable value={line.barcode} onChange={(v) => onEdit(di, li, 'barcode', v)} width="130px" />
+                        </>
+                      ) : (
+                        <>
+                          <td style={{ padding: '4px 8px', direction: 'ltr' }}>{line.sku}</td>
+                          <td style={{ padding: '4px 8px', direction: 'ltr' }}>{line.barcode}</td>
+                        </>
+                      )}
                       <Editable value={line.description} onChange={(v) => onEdit(di, li, 'description', v)} />
                       <Editable value={line.uom} onChange={(v) => onEdit(di, li, 'uom', v)} width="70px" />
                       <Editable
@@ -388,6 +525,18 @@ function Preview({ preview, deviations, onEdit, onCommit, busy, canImport, term,
                       <Editable value={line.batch} onChange={(v) => onEdit(di, li, 'batch', v)} width="90px" />
                       <Editable value={line.expiry} type="date" onChange={(v) => onEdit(di, li, 'expiry', v)} width="130px" />
                       <Editable value={line.notes} onChange={(v) => onEdit(di, li, 'notes', v)} />
+                      <td style={{ padding: '4px 8px' }}>
+                        {line.manual && (
+                          <button
+                            type="button"
+                            className="btn btn-link btn-sm"
+                            title="احذف هذا السطر اليدويّ"
+                            onClick={() => onDropLine(di, li)}
+                          >
+                            <Icon name="close" size={14} />
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -403,6 +552,9 @@ function Preview({ preview, deviations, onEdit, onCommit, busy, canImport, term,
       ))}
 
       <div className="o_form_actions">
+        <button type="button" className="btn btn-secondary" onClick={onAddDoc} style={{ marginInlineEnd: '8px' }}>
+          <Icon name="plus" size={15} /> مستند آخر
+        </button>
         <button type="button" className="btn btn-primary" disabled={!preview.ok || !canImport || Boolean(busy)} onClick={onCommit}>
           <Icon name="checkCircle" size={15} /> اعتمد وأنشئ {preview.documents.length} مستندًا
         </button>

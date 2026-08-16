@@ -185,6 +185,166 @@ export function buildPreview(importResult, knownFingerprints, type) {
   };
 }
 
+/* ═══════════════ الإدخال اليدويّ والمسح ‹2026-08-17› ═══════════════
+ *
+ * طلب المالك: «حتى لو كان الملفّ فارغًا يجب أن تتفعّل الصفحة — يُكتب يدويًّا
+ * أو يُقرأ بالباركود».
+ *
+ * ولماذا هذا صحيحٌ لا تسهيل: الشيت مصدرٌ **خارجيّ** قد يتأخّر أو يصل ناقصًا،
+ * والبضاعة تصل الرصيف في موعدها. فشاشةٌ لا تعمل إلّا بملفٍّ سليم توقف
+ * الاستلام لعطبٍ في ملفّ — وهو فشلٌ أسوأ من الفجوة التي يسدّها التحقّق.
+ *
+ * والمسار **واحد** لا مساران: اليدويّ يبني **نفس شكل المعاينة** فيمرّ بنفس
+ * التحقّق ونفس الاعتماد ونفس منع التكرار. ولو بُني له مسارٌ ثانٍ لَافترق
+ * الحكمان أوّل تعديل.
+ */
+
+/** بصمة محتوى السطر — هويّته حين لا يأتي من شيتٍ يحمل `lineId`. */
+export function contentFingerprint(docRef, line) {
+  return [
+    'MANUAL',
+    str(docRef).toUpperCase(),
+    str(line?.sku).toUpperCase() || str(line?.barcode),
+    str(line?.batch).toUpperCase(),
+    str(line?.qty),
+  ].join('|');
+}
+
+/** سطرٌ فارغ بحقول نوعه — لا حقلَ يُخترع ولا حقلَ يسقط. */
+export function emptyLine(type, seed = {}) {
+  const fields = LINE_FIELDS[type];
+  if (!fields) throw new Error(`نوع استيراد غير معروف: ${type}`);
+  const line = {};
+  for (const f of fields) line[f] = seed[f] ?? '';
+  line.manual = true;
+  return line;
+}
+
+/** مستندٌ فارغ بحقول رأسه. */
+export function emptyDocument(type, seed = {}) {
+  const fields = HEADER_FIELDS[type];
+  if (!fields) throw new Error(`نوع استيراد غير معروف: ${type}`);
+  const doc = { type, lines: [] };
+  for (const f of fields) doc[f] = seed[f] ?? '';
+  doc.docRef = str(seed.docRef);
+  doc.manual = true;
+  return doc;
+}
+
+/**
+ * يُعيد حساب ما تحته حسابٌ في المعاينة بعد أيّ تعديلٍ يدويّ.
+ *
+ * الأخطاء المولَّدة هنا **تخصّ الإدخال اليدويّ وحده** وتُدمج مع أخطاء الشيت
+ * إن وُجدت: مستندٌ بلا مرجع، أو بلا مستودع، أو سطرٌ بلا صنف، أو كمّيّةٌ صفر.
+ * وهي الشروط نفسها التي يفرضها الشيت — فلا يصير اليدويّ بابًا خلفيًّا.
+ */
+export function recomputePreview(preview) {
+  const documents = preview?.documents || [];
+  const manualErrors = [];
+
+  documents.forEach((doc, di) => {
+    if (!doc.manual && !doc.lines.some((l) => l.manual)) return;
+    if (!str(doc.docRef)) manualErrors.push({ row: di + 1, column: 'docRef', message: 'مرجع المستند مطلوب — لا حركة بلا مستند.' });
+    if (!str(doc.warehouse)) manualErrors.push({ row: di + 1, column: 'warehouse', message: 'المستودع مطلوب.' });
+    doc.lines.forEach((line, li) => {
+      if (!line.manual) return;
+      if (!str(line.sku) && !str(line.barcode)) {
+        manualErrors.push({ row: li + 1, column: 'sku', message: `${doc.docRef || 'مستند'} — سطرٌ بلا كودٍ ولا باركود.` });
+      }
+      if (!(Number(line.qty) > 0)) {
+        manualErrors.push({ row: li + 1, column: 'qty', message: `${doc.docRef || 'مستند'} — الكمّيّة يجب أن تكون أكبر من صفر.` });
+      }
+    });
+  });
+
+  // مرجعان متطابقان لمستندين خطأٌ حقيقيّ — الرقم هو الهويّة.
+  const refs = new Map();
+  for (const doc of documents) {
+    const ref = str(doc.docRef).toUpperCase();
+    if (!ref) continue;
+    refs.set(ref, (refs.get(ref) || 0) + 1);
+  }
+  for (const [ref, n] of refs) {
+    if (n > 1) manualErrors.push({ row: 0, column: 'docRef', message: `المرجع «${ref}» مكرّرٌ في ${n} مستندات — الرقم هو الهويّة.` });
+  }
+
+  const sheetErrors = (preview?.sheetErrors || preview?.errors || []).filter((e) => !e.manual);
+  const errors = [...sheetErrors, ...manualErrors.map((e) => ({ ...e, manual: true }))];
+  const lines = documents.reduce((s, d) => s + d.lines.length, 0);
+
+  return {
+    ...preview,
+    sheetErrors,
+    documents,
+    errors,
+    ok: errors.length === 0 && (preview?.conflicts?.length || 0) === 0 && documents.length > 0 && lines > 0,
+    summary: {
+      ...(preview?.summary || {}),
+      documents: documents.length,
+      lines,
+      qty: documents.reduce((s, d) => s + d.lines.reduce((n, l) => n + (Number(l.qty) || 0), 0), 0),
+    },
+  };
+}
+
+/** معاينةٌ يدويّة من الصفر — بمستندٍ واحدٍ وسطرٍ واحد جاهزَين للملء. */
+export function manualPreview(type, seed = {}) {
+  const doc = emptyDocument(type, seed);
+  doc.lines.push(emptyLine(type));
+  return recomputePreview({
+    type,
+    documents: [doc],
+    conflicts: [],
+    duplicate: [],
+    errors: [],
+    warnings: [],
+    sheetErrors: [],
+    ok: false,
+    summary: { rows: 0, fresh: 0, duplicate: 0, documents: 1, lines: 1, qty: 0 },
+  });
+}
+
+/** يضيف سطرًا إلى مستند — والبذرة تأتي من المسح أو من الفراغ. */
+export function addManualLine(preview, docIndex, seed = {}) {
+  const documents = (preview?.documents || []).map((doc, i) =>
+    i !== docIndex ? doc : { ...doc, lines: [...doc.lines, emptyLine(preview.type, seed)] }
+  );
+  return recomputePreview({ ...preview, documents });
+}
+
+/** يضيف مستندًا فارغًا — شيتٌ واحد قد يحمل استلامَين. */
+export function addManualDocument(preview, seed = {}) {
+  const doc = emptyDocument(preview.type, seed);
+  doc.lines.push(emptyLine(preview.type));
+  return recomputePreview({ ...preview, documents: [...(preview.documents || []), doc] });
+}
+
+/**
+ * يحذف سطرًا **يدويًّا فقط**.
+ *
+ * سطرُ الشيت لا يُحذف: حذفُه يجعل المعروض يخالف المصدر بلا أثر، فتُصفَّر
+ * كمّيّته بدل ذلك ويبقى ظاهرًا — والفرق يُعلَن في تقرير الانحراف.
+ */
+export function removeManualLine(preview, docIndex, lineIndex) {
+  const target = preview?.documents?.[docIndex]?.lines?.[lineIndex];
+  if (!target) return preview;
+  if (!target.manual) return { ...preview, problem: 'سطرُ الشيت لا يُحذف — صفِّر كمّيّته فيبقى الأثر ظاهرًا.' };
+
+  const documents = preview.documents.map((doc, i) =>
+    i !== docIndex ? doc : { ...doc, lines: doc.lines.filter((_, j) => j !== lineIndex) }
+  );
+  return recomputePreview({ ...preview, documents, problem: '' });
+}
+
+/** يُختم كلّ سطرٍ يدويٍّ ببصمة محتواه قبل الاعتماد — فيمنع تكراره لاحقًا. */
+export function sealManualFingerprints(preview) {
+  const documents = (preview?.documents || []).map((doc) => ({
+    ...doc,
+    lines: doc.lines.map((line) => (line.manual && !str(line.fingerprint) ? { ...line, fingerprint: contentFingerprint(doc.docRef, line) } : line)),
+  }));
+  return { ...preview, documents };
+}
+
 /**
  * يحوّل مستندًا من المعاينة إلى مسودّة `PUTAWAY` أو `PICK` بشكل محرّك المستندات.
  *

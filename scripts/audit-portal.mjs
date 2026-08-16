@@ -300,8 +300,37 @@ if (untested.length < UNTESTED_PURE_BASELINE) {
   notes.push(`خطّ أساس «بلا اختبار» صار ${untested.length} — أنزِله في audit-portal.mjs كي لا يعود يرتفع`);
 }
 
-/* ═══════════ 6. لقطة عامة ═══════════ */
-section(6, 'لقطة');
+/* ═══════════ 6. أنماط الثيم ═══════════
+ *
+ * صفحةٌ ترسم مكوّنًا داخل `.o_theme` ولا تستورد `odoo.css` تُعرض **نصًّا
+ * مرصوصًا بلا بطاقاتٍ ولا أزرار** — ولا يكشفه اختبارٌ ولا لينت، لأنّ الكود
+ * سليمٌ تمامًا. وقع على `directed-storage` (2026-08-17) وبقي حتى رآه المالك.
+ */
+section(6, 'أنماط الثيم — كلّ صفحةٍ تستعمل o_theme تستورد ملفّيه');
+const COMPONENTS_DIR = path.join(ROOT, 'src/components');
+const themedComponents = new Set(
+  walk(COMPONENTS_DIR, ['.jsx'])
+    .filter((f) => /\bo_theme\b/.test(fs.readFileSync(f, 'utf8')))
+    .map((f) => path.basename(f))
+);
+
+const missingTheme = [];
+for (const file of fs.readdirSync(PAGES_DIR).filter((f) => f.endsWith('.astro'))) {
+  const src = fs.readFileSync(path.join(PAGES_DIR, file), 'utf8');
+  const used = [...src.matchAll(/import\s+\w+\s+from\s+'[^']*\/([A-Za-z0-9_]+\.jsx)'/g)]
+    .map((m) => m[1])
+    .filter((c) => themedComponents.has(c));
+  if (used.length && !/odoo\.css/.test(src)) missingTheme.push({ file, used });
+}
+if (missingTheme.length === 0) {
+  ok(`كل صفحة تستعمل مكوّنات الثيم (${themedComponents.size} مكوّنًا) تستورد odoo.css`);
+} else {
+  bad(`${missingTheme.length} صفحة ترسم داخل o_theme بلا استيراد odoo.css — ستُعرض نصًّا مرصوصًا:`);
+  missingTheme.forEach((m) => info(`• ${m.file} ← ${m.used.join('، ')}`));
+}
+
+/* ═══════════ 7. لقطة عامة ═══════════ */
+section(7, 'لقطة');
 info(`مجموعات القائمة: ${NAV_GROUPS.length} · روابط داخلية: ${internalPaths().length} · ملفات public: ${externalPaths().length}`);
 info(`صفحات لوحة التحكم على القرص: ${pagesOnDisk.length} · أدوار: ${Object.keys(ROLES).length}`);
 const noAccess = Object.keys(ROLES).filter((r) => internalPaths().every((p) => !canOpenPath(r, p)));
