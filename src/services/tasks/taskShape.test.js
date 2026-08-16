@@ -15,6 +15,7 @@ import {
   WORK_ENDPOINTS,
   BRIDGE_FIELDS,
   LABOR_TO_TASK_STATUS,
+  QUEUE_REASONS,
   bridgeVerdict,
   canAssigneeMove,
   canManagerMove,
@@ -29,6 +30,7 @@ import {
   unpolicedWorkTypes,
   workPayloadProblems,
   workProgress,
+  workQueue,
 } from './taskShape.js';
 import { ORDER_TYPES, lineProgress } from '../labor/laborModel.js';
 
@@ -257,6 +259,39 @@ test('★★ لا حقلَ زمنٍ في حقول الجسر — الزمن يب
 test('★★ لا حقل مكرّر بين السجلَّين إلّا المشترك بالتصميم', () => {
   const { assignment, execution } = splitGenerated(generated);
   assert.deepEqual(duplicatedFields(assignment, execution), []);
+});
+
+/* ═══ طابور العامل ‹EXE-104› ═══ */
+
+const lt = (id, state, createdAt) => ({ id, state, createdAt });
+
+test('★★ ما بدأتَه يُنهى أوّلًا — تركُ عملٍ نصفَ منجزٍ يضاعف المشي', () => {
+  const { queue, next } = workQueue([lt('a', 'pending', 1000), lt('b', 'in_progress', 5000), lt('c', 'paused', 3000)]);
+  assert.deepEqual(queue.map((q) => q.task.id), ['b', 'c', 'a']);
+  assert.equal(next.id, 'b');
+  assert.equal(queue[0].reason, QUEUE_REASONS.resume);
+  assert.equal(queue[2].reason, QUEUE_REASONS.next);
+});
+
+test('المنتظِرات بالدور — الأقدم إنشاءً أوّلًا', () => {
+  const { queue } = workQueue([lt('new', 'pending', 9000), lt('old', 'pending', 1000)]);
+  assert.deepEqual(queue.map((q) => q.task.id), ['old', 'new']);
+});
+
+test('★ المنجَز والملغى خارج الطابور', () => {
+  const { queue, next } = workQueue([lt('d', 'done', 1), lt('x', 'cancelled', 2)]);
+  assert.deepEqual(queue, []);
+  assert.equal(next, null, 'وطابورٌ فارغ لا يُخرج مهمّةً وهميّة');
+});
+
+test('★ لكلّ صدارةٍ سببها المعلَن — «الرقم بلا مرجعٍ لا يُعرض»', () => {
+  const { queue } = workQueue([lt('a', 'pending', 1)]);
+  assert.ok(queue[0].reason.length > 0);
+});
+
+test('بلا ختم إنشاءٍ لا ينكسر الترتيب — يُؤخَّر ولا يتصدّر', () => {
+  const { queue } = workQueue([lt('noStamp', 'pending', null), lt('stamped', 'pending', 100)]);
+  assert.deepEqual(queue.map((q) => q.task.id), ['stamped', 'noStamp']);
 });
 
 test('الرابط معرّفٌ واحد — ويبقى فارغًا حين يُنفَّذ العمل فرديًّا', () => {

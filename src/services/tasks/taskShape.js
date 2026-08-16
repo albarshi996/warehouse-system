@@ -386,3 +386,48 @@ export function duplicatedFields(assignment, execution) {
   const SHARED_BY_DESIGN = new Set(['docRef', 'workType', 'orderType']);
   return Object.keys(assignment || {}).filter((k) => k in (execution || {}) && !SHARED_BY_DESIGN.has(k));
 }
+
+/* ═════════════════ «المهمّة التالية» ‹EXE-104› ═════════════════ */
+
+/**
+ * ترتيب طابور العامل.
+ *
+ * ═══ لماذا واحدةٌ في الصدارة لا قائمةٌ طويلة ═══
+ * عاملٌ يحمل طردًا بيدٍ وهاتفًا بالأخرى لا يوازن بين اثنتي عشرة مهمّة. فالشاشة
+ * تقول **ما التالي** وتُخفي الباقي خلف عدّاد. وهذا نصّ `تطوير.md`: «العامل يرى
+ * فقط: المهمّة التالية… أمّا المشرف فيرى سبب منح المهمّة هذه الأولويّة».
+ *
+ * ═══ وما هذا الترتيب وما ليس هو ═══
+ * ليس محرّك الأولويّة — ذاك يأتي في ت٣ بعوامله المعلنة (قرب الشحن · توفّر
+ * الرصيد · قابليّة التنفيذ الآن). وحتى يأتي، القاعدة **معلَنة وبسيطة ولا
+ * تدّعي ذكاءً**:
+ *   ١. ما بدأتَه يُنهى أوّلًا — تركُ عملٍ نصفَ منجزٍ يضاعف المشي.
+ *   ٢. ثمّ الأقدم إنشاءً (FIFO) — أعدلُ ما يُقال قبل وجود مقياس.
+ * والرتبة تُعيد **سببها** لا رقمها وحده، فما إن يحلّ محرّك الأولويّة حتى
+ * يحلّ محلّ السبب سببٌ أغنى بلا تغيير الشاشة.
+ */
+export const QUEUE_REASONS = Object.freeze({
+  resume: 'بدأتَها ولم تنتهِ — إنهاؤها قبل فتح غيرها يُقصّر المشي',
+  next: 'التالية بالدور — الأقدم إنشاءً',
+});
+
+const QUEUE_RANK = { in_progress: 0, paused: 1, pending: 2 };
+
+/**
+ * يرتّب المهامّ الميدانيّة ويُعلّل صدارة الأولى.
+ * @returns {{queue:Array<{task:object, reason:string}>, next:object|null}}
+ */
+export function workQueue(tasks, { createdMillis = (t) => toMillis(t?.createdAt) } = {}) {
+  const open = (tasks || []).filter((t) => t && t.state !== 'done' && t.state !== 'cancelled');
+  const sorted = open.slice().sort((a, b) => {
+    const ra = QUEUE_RANK[a.state] ?? 9;
+    const rb = QUEUE_RANK[b.state] ?? 9;
+    if (ra !== rb) return ra - rb;
+    return (createdMillis(a) ?? Infinity) - (createdMillis(b) ?? Infinity);
+  });
+  const queue = sorted.map((task) => ({
+    task,
+    reason: task.state === 'in_progress' || task.state === 'paused' ? QUEUE_REASONS.resume : QUEUE_REASONS.next,
+  }));
+  return { queue, next: queue.length ? queue[0].task : null };
+}

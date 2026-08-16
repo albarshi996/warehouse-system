@@ -23,6 +23,8 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
 import { canTransitionTask } from './laborModel.js';
+import { generateTasks } from '../tasks/taskFactory.js';
+import { splitGenerated } from '../tasks/taskShape.js';
 
 const COL = 'labor_tasks';
 
@@ -78,6 +80,56 @@ export async function createTask({ orderType, docRef, containerRef, crewId, note
   });
   await logEvent(ref.id, actor, 'created', { crewId, orderType });
   return ref.id;
+}
+
+/**
+ * ‹EXE-104› يُطلق مهامّ مستندٍ معتمَد إلى الميدان.
+ *
+ * **خدمةٌ تنفّذ ولا تقرّر**: القرار كلّه في `taskFactory.generateTasks` الخالص
+ * (أيّ رفٍّ يُقترح · كيف تُقسَّم على المناطق · ما النقص · ما المكرّر)، وهذه
+ * تكتب ما قرّره فقط.
+ *
+ * والمشرف هو من يُطلق لا النظام — وهو السلوك المعلَن لقرار المالك ت-O01 حتى
+ * يُحسم: «النظام يقترح والمشرف يُطلق».
+ *
+ * والتكرار محسومٌ بالمفتاح: المهامّ المولَّدة من هذا المستند تُقرأ أوّلًا
+ * وتُمرَّر `existingKeys`، فإعادة الإطلاق لا تُنتج نسخةً ثانية.
+ *
+ * @returns {{created:string[], skipped:string[], shortages:Array, problem:string}}
+ */
+export async function releaseDocumentTasks(doc, { crewId, existing = [], ...options } = {}, profile) {
+  const actor = whoami(profile);
+  if (!crewId) throw new Error('اختر الفريق المنفّذ أوّلًا.');
+
+  const existingKeys = (existing || []).map((t) => t?.workKey).filter(Boolean);
+  const { tasks, shortages, skipped, problem } = generateTasks(doc, { ...options, existingKeys });
+  if (problem) throw new Error(problem);
+
+  const created = [];
+  for (const t of tasks) {
+    const { execution } = splitGenerated(t);
+    const ref = await addDoc(collection(db, COL), {
+      orderType: execution.orderType,
+      docRef: execution.docRef,
+      containerRef: '',
+      crewId,
+      note: t.title,
+      lines: execution.lines,
+      taskId: '',
+      workKey: t.key,
+      state: 'pending',
+      unitsHandled: 0,
+      startedAt: null,
+      finishedAt: null,
+      pauseStartedAt: null,
+      pausedMs: 0,
+      createdAt: serverTimestamp(),
+      ...actor,
+    });
+    await logEvent(ref.id, actor, 'created', { crewId, orderType: execution.orderType, workKey: t.key });
+    created.push(ref.id);
+  }
+  return { created, skipped, shortages, problem: '' };
 }
 
 /** بدء المهمّة — يختم وقت البدء على الخادم. */

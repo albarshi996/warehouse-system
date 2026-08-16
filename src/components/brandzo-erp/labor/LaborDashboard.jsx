@@ -32,6 +32,7 @@ import {
   crewsNeeded,
 } from '../../../services/labor/laborModel.js';
 import WorkerTaskPanel from './WorkerTaskPanel.jsx';
+import { workQueue } from '../../../services/tasks/taskShape.js';
 
 const LABOR_ROLES = ['admin', 'warehouse_manager', 'labor_supervisor'];
 const input =
@@ -47,6 +48,7 @@ export default function LaborDashboard() {
   const [tab, setTab] = useState('board');
   const [crewForm, setCrewForm] = useState(false);
   const [taskForm, setTaskForm] = useState(false);
+  const [queueIndex, setQueueIndex] = useState(0);
 
   useEffect(() => {
     const unsub = subscribeAuth(async (u) => {
@@ -81,6 +83,10 @@ export default function LaborDashboard() {
     () => tasks.filter((t) => isLineLevel(t.orderType) && t.state !== 'done' && t.state !== 'cancelled'),
     [tasks]
   );
+  // ‹EXE-104› الطابور ورتبته من المنطق الخالص — الشاشة تعرض ولا ترتّب.
+  const { queue } = useMemo(() => workQueue(lineTasks), [lineTasks]);
+  const current = queue[Math.min(queueIndex, Math.max(0, queue.length - 1))] || null;
+
   const busyCrewIds = useMemo(() => new Set(running.map((t) => t.crewId)), [running]);
   const idleCrews = useMemo(() => activeCrews.filter((c) => !busyCrewIds.has(c.id)), [activeCrews, busyCrewIds]);
 
@@ -184,7 +190,7 @@ export default function LaborDashboard() {
                   {pending.map((t) => (
                     <li key={t.id} className="flex items-center justify-between gap-2 py-1.5 border-b border-line last:border-0">
                       <span className="text-sm text-ink">{ORDER_TYPES[t.orderType]?.label || t.orderType} · {crewsById[t.crewId]?.crewNo || '—'}{t.docRef?.number ? ` · ${t.docRef.number}` : ''}</span>
-                      <button type="button" onClick={() => act(() => startTask(t, me))} className="text-xs font-bold text-green-700 hover:underline whitespace-nowrap">بدء ▶</button>
+                      <button type="button" onClick={() => act(() => startTask(t, me))} className="text-xs font-bold text-green-700 hover:underline whitespace-nowrap">بدء</button>
                     </li>
                   ))}
                 </MiniList>
@@ -245,31 +251,64 @@ export default function LaborDashboard() {
 
       {/* ‹LOC-402› «مهامي» — تنفيذ التخزين والسحب بندًا بندًا على جهاز العامل.
           تظهر مهامّ line-level وحدها؛ وبقيّة الأنواع تبقى في «المهام» كما هي. */}
+      {/* ‹EXE-104› مهمّةٌ واحدة في الصدارة لا قائمةٌ يوازن بينها: عاملٌ يحمل
+          طردًا بيدٍ وهاتفًا بالأخرى لا يختار من اثنتي عشرة. والباقي خلف عدّاد،
+          وسببُ الصدارة معلَنٌ فوقها. */}
       {tab === 'mine' && (
         <Section title="مهامي" hint="التخزين والسحب — اختر الرفّ وامسح">
-          {lineTasks.length === 0 ? (
+          {queue.length === 0 ? (
             <Empty>لا مهامّ تخزينٍ أو سحبٍ مُسندة الآن.</Empty>
           ) : (
-            <div className="space-y-4">
-              {lineTasks.map((t) => (
-                <div key={t.id} className="rounded-xl border border-line p-3">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <strong className="text-sm text-ink">{ORDER_TYPES[t.orderType]?.label}</strong>
-                    {t.docRef?.number && <span className="text-xs text-ink-2">{t.docRef.number}</span>}
-                    <span className="text-xs text-ink-2">فريق {crewsById[t.crewId]?.crewNo || '—'}</span>
-                    {t.state === 'pending' && (
-                      <button type="button" onClick={() => act(() => startTask(t, me))} className="text-xs font-bold text-green-700 hover:underline">
-                        بدء ▶
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="text-ink-2">المهمّة</span>
+                <strong className="text-ink">{queueIndex + 1}</strong>
+                <span className="text-ink-2">من {queue.length}</span>
+                <button
+                  type="button"
+                  disabled={queueIndex === 0}
+                  onClick={() => setQueueIndex((i) => Math.max(0, i - 1))}
+                  className="px-2 py-1 rounded border border-line text-ink-2 disabled:opacity-40"
+                >
+                  السابقة
+                </button>
+                <button
+                  type="button"
+                  disabled={queueIndex >= queue.length - 1}
+                  onClick={() => setQueueIndex((i) => Math.min(queue.length - 1, i + 1))}
+                  className="px-2 py-1 rounded border border-line text-ink-2 disabled:opacity-40"
+                >
+                  التالية
+                </button>
+              </div>
+
+              {current && (
+                <div className="rounded-xl border border-line p-3">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <strong className="text-sm text-ink">{ORDER_TYPES[current.task.orderType]?.label}</strong>
+                    {current.task.docRef?.number && (
+                      <span className="text-xs text-ink-2 font-mono">{current.task.docRef.number}</span>
+                    )}
+                    <span className="text-xs text-ink-2">فريق {crewsById[current.task.crewId]?.crewNo || '—'}</span>
+                    {current.task.state === 'pending' && (
+                      <button
+                        type="button"
+                        onClick={() => act(() => startTask(current.task, me))}
+                        className="text-xs font-bold text-green-700 hover:underline"
+                      >
+                        بدء
                       </button>
                     )}
                   </div>
+                  {/* سببُ الصدارة — «الرقم بلا مرجعٍ لا يُعرض» */}
+                  <p className="text-xs text-ink-2 mb-2">{current.reason}</p>
                   <WorkerTaskPanel
-                    task={t}
-                    onSaveLines={(lines, entry) => act(() => saveTaskLines(t, lines, me, entry))}
-                    onFinish={(verdict, lines) => act(() => finishLineTask(t, verdict, lines, me))}
+                    task={current.task}
+                    onSaveLines={(lines, entry) => act(() => saveTaskLines(current.task, lines, me, entry))}
+                    onFinish={(verdict, lines) => act(() => finishLineTask(current.task, verdict, lines, me))}
                   />
                 </div>
-              ))}
+              )}
             </div>
           )}
         </Section>
