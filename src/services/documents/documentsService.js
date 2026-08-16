@@ -35,6 +35,7 @@ import { getSchema } from './schemas/index.js';
 import { primaryParentType } from './schemaUtils.js';
 import { dateSaveVerdict, defaultValueFor, eventFieldsOf } from './datingGuard.js';
 import { movesStock, POSTING_STATE } from '../ledger/postingRules.js';
+import { pickPostingProblems } from '../locations/pickPlan.js';
 import { buildMoves } from '../ledger/movements.js';
 import { postDocument } from '../ledger/ledgerService.js';
 import { ledgerRuleFor, partyCodeOf, invoiceOutstanding, overCollectionProblems } from '../ledger/partnerLedger.js';
@@ -223,6 +224,21 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
     }
     if (!moves.length) {
       throw new Error('لا بند بكمية — مستندٌ بلا أثر مخزني لا يُنجَز.');
+    }
+  }
+
+  // 🥇 حارس FEFO بالموقع (LOC-501): كان **تحذيرًا لا يُستدعى عند الإنجاز**،
+  //    فالمخالفة تُسجَّل ولا تُمنع، والقديم يبقى حتى ينتهي فيُتلف — خسارةٌ
+  //    صامتة لا يكشفها جردٌ ولا تقرير. صار مانعًا هنا.
+  //
+  //    ★★ وحدوده مُعلَنة: بندٌ بلا صلاحية، أو مخزونٌ بلا صلاحية، أو أرصدةٌ
+  //    لم تُقرأ ⇒ **يمرّ كما اليوم**. وسببٌ مكتوب في الرأس يحوّل المنع إلى
+  //    تحذيرٍ مقيَّد — نفس عقد التجاوز المعتمَد في التخزين.
+  if (to === POSTING_STATE && data.type === 'PICK') {
+    const balances = await fetchBalancesOnce().catch(() => []);
+    if (balances.length) {
+      const { problems } = pickPostingProblems({ ...data, id: docId }, balances, { nowMs: Date.now() });
+      if (problems.length) throw new Error(`مخالفة FEFO: ${problems.join(' · ')}`);
     }
   }
 

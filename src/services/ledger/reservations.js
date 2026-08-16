@@ -74,6 +74,9 @@ export function allocateFefo(request, balances) {
     const take = Math.min(remaining, availableQty(balance));
     if (take <= 0) continue;
     allocations.push({
+      // ‹LOC-501› الهويّة الكاملة في الاحتياط أيضًا: بعد قلب المفتاح (LOC-108)
+      // صار الموقع والصلاحية والحالة أبعادًا فيه، وبناؤه بثلاثة أجزاء وحدها
+      // يُنتج معرّفًا **لا يطابق** المستند المخزَّن فيُحجز على صفٍّ لا وجود له.
       balanceId:
         balance.id ||
         balanceId({
@@ -81,11 +84,16 @@ export function allocateFefo(request, balances) {
           barcode: balance.barcode,
           warehouse: balance.warehouse,
           batch: balance.batch,
+          bin: balance.bin,
+          expiry: balance.expiry,
+          status: balance.stockStatus,
         }),
       sku: balance.sku || '',
       barcode: balance.barcode || '',
       nameAr: balance.nameAr || '',
       warehouse: String(balance.warehouse || '').toUpperCase(),
+      // موقع السحب — من أيّ رفٍّ يأخذها العامل (LOC-501).
+      bin: String(balance.bin || '').toUpperCase(),
       batch: balance.batch || '',
       expiry: balance.expiry || '',
       unitCost: Number(balance.unitCost) || 0,
