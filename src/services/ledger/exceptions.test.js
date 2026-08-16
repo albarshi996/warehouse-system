@@ -10,6 +10,9 @@ import assert from 'node:assert/strict';
 import {
   EXCEPTION_STATUS,
   EXCEPTION_TYPES,
+  VANISHED_NOTE,
+  detectionsToDrafts,
+  reconcileDetections,
   SEVERITY,
   canTransition,
   closeVerdict,
@@ -213,4 +216,61 @@ test('الملخّص يعدّ المفتوح والمتأخّر والمرتفع
 test('قائمةٌ فارغة لا تُسقط الملخّص', () => {
   assert.equal(summarize(null, NOW).open, 0);
   assert.deepEqual(sortForBoard(null, NOW), []);
+});
+
+/* ═══ مصالحة الكشف مع السجلّ ‹EXE-202› ═══ */
+
+const detection = (over = {}) => ({
+  severity: 'high',
+  category: 'inventory',
+  title: 'رصيدٌ عالق',
+  detail: 'في ساحة الاستلام منذ أيام',
+  href: '/dashboard/stock-ledger',
+  identity: { type: 'stuck_balance', sku: 'WNW-001', qty: 12, location: 'RECEIVING', reason: 'عالقٌ في ساحة الاستلام' },
+  ...over,
+});
+
+test('★ الكشف يصير مسودّةً بمسؤولها وإجرائها من نوعه', () => {
+  const [d] = detectionsToDrafts([detection()]);
+  assert.equal(d.type, 'stuck_balance');
+  assert.equal(d.severity, SEVERITY.HIGH);
+  assert.equal(d.ownerRole, EXCEPTION_TYPES.stuck_balance.owner);
+  assert.equal(d.action, EXCEPTION_TYPES.stuck_balance.action);
+});
+
+test('كشفٌ بلا هويّة لا يصير سجلًّا — العرض شيءٌ والسجلّ شيءٌ آخر', () => {
+  assert.deepEqual(detectionsToDrafts([{ severity: 'med', title: 'شيء', identity: null }]), []);
+  assert.deepEqual(detectionsToDrafts([detection({ identity: { type: 'مجهول' } })]), []);
+});
+
+test('★★ الكشف المتكرّر لا يفتح سجلًّا ثانيًا', () => {
+  const drafts = detectionsToDrafts([detection()]);
+  const first = reconcileDetections(drafts, []);
+  assert.equal(first.toOpen.length, 1);
+
+  const saved = { ...first.toOpen[0], id: 'x1', status: EXCEPTION_STATUS.OPEN };
+  const second = reconcileDetections(drafts, [saved]);
+  assert.equal(second.toOpen.length, 0, 'لا يُفتح ثانيةً');
+  assert.equal(second.active.length, 1);
+});
+
+test('★★ زوال السبب لا يُغلق — يُعلَّم وينتظر قرارًا', () => {
+  const saved = { ...detectionsToDrafts([detection()])[0], id: 'x1', status: EXCEPTION_STATUS.IN_PROGRESS };
+  const r = reconcileDetections([], [saved]);
+  assert.equal(r.vanished.length, 1, 'يُعلَّم');
+  assert.equal(r.vanished[0].status, EXCEPTION_STATUS.IN_PROGRESS, 'ولا تتغيّر حالته');
+  assert.match(VANISHED_NOTE, /يبقى مفتوحًا/);
+});
+
+test('★ المُغلق لا يُعدّ زائلًا ولا يمنع فتح كشفٍ جديد بالبصمة نفسها', () => {
+  const draft = detectionsToDrafts([detection()])[0];
+  const closed = { ...draft, id: 'old', status: EXCEPTION_STATUS.CLOSED };
+  const r = reconcileDetections([draft], [closed]);
+  assert.equal(r.vanished.length, 0, 'المُغلق خارج الحساب');
+  assert.equal(r.toOpen.length, 1, 'وتكرار الحادثة بعد إغلاقها حادثةٌ جديدة تُسجَّل');
+});
+
+test('كشفٌ فارغ وسجلٌّ فارغ لا يُنتجان شيئًا', () => {
+  const r = reconcileDetections(null, null);
+  assert.deepEqual([r.toOpen, r.active, r.vanished], [[], [], []]);
 });

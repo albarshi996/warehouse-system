@@ -186,36 +186,49 @@ const SEV = { high: 3, med: 2, low: 1 };
 /**
  * الاستثناءات — ما يحتاج تدخّلًا فقط، مرتّبًا بالخطورة. كلٌّ برابطٍ يقود إلى
  * موضع المعالجة. `nowMs` يُمرَّر (لا يُقرأ) فيبقى الحساب ثابتًا للاختبار.
+ *
+ * ═══ ‹EXE-202› ما تغيّر هنا وما لم يتغيّر ═══
+ * لم يُكتب كاشفٌ ثانٍ بجانب هذا: الكاشفات الستّة كما هي، وما أُضيف حقلُ
+ * **هويّة** لكلّ كشفٍ (`identity`) يحمل نوعه ومرجعه وصنفه وكمّيّته وسببه.
+ * فمن أراد العرض قرأ ما كان يقرأ، ومن أراد **فتح سجلٍّ** وجد ما يكفيه —
+ * والبصمة تُشتقّ من الهويّة في `exceptions.js` لا هنا، فيبقى هذا حسابًا خالصًا.
  */
 export function operationExceptions(docs, balances, nowMs, items) {
   const ex = [];
-  const add = (severity, category, title, detail, href) => ex.push({ severity, category, title, detail, href });
+  const add = (severity, category, title, detail, href, identity) =>
+    ex.push({ severity, category, title, detail, href, identity: identity || null });
 
   // 1) مستندات بانتظار الاعتماد تأخّرت عن مهلتها.
   for (const d of (docs || []).filter((x) => x.state === 'submitted')) {
     if (isStale(d, nowMs)) {
       const age = ageInState(d, nowMs);
-      add('high', 'approval', `${d.number || d.type} بانتظار الاعتماد`, `مضى ${age ?? '؟'} يومًا بلا بتّ`, `/dashboard/document?type=${d.type}&id=${d.id}`);
+      add('high', 'approval', `${d.number || d.type} بانتظار الاعتماد`, `مضى ${age ?? '؟'} يومًا بلا بتّ`, `/dashboard/document?type=${d.type}&id=${d.id}`,
+        { type: 'approval_stale', docRef: { type: d.type, number: d.number, id: d.id }, reason: `مضى ${age ?? '؟'} يومًا بلا بتّ` });
     }
   }
 
   // 2) شحنات نقلٍ في الطريق (غادرت ولم تُستلم) وفروقٌ غير مسوّاة.
   const ship = pendingShipments(docs);
   for (const r of ship.rows.filter((x) => x.status === 'in-transit')) {
-    add('med', 'transit', `شحنة ${r.number || ''} في الطريق`, `${r.fromWarehouse} ← ${r.toWarehouse} · ${r.remaining} وحدة لم تُستلم`, `/dashboard/transfers`);
+    add('med', 'transit', `شحنة ${r.number || ''} في الطريق`, `${r.fromWarehouse} ← ${r.toWarehouse} · ${r.remaining} وحدة لم تُستلم`, `/dashboard/transfers`,
+      { type: 'transit_variance', docRef: { type: 'TRN', number: r.number }, qty: r.remaining, location: r.toWarehouse, reason: `${r.remaining} وحدة لم تُستلم` });
   }
   const varr = transferVariances(docs);
-  if (varr.unresolved > 0) add('high', 'transit', `${varr.unresolved} فرق نقلٍ غير مسوّى`, `نقصٌ إجماليّ ${varr.totalShortage} وحدة عالقة في مخزن النقل`, `/dashboard/transfers`);
+  if (varr.unresolved > 0)
+    add('high', 'transit', `${varr.unresolved} فرق نقلٍ غير مسوّى`, `نقصٌ إجماليّ ${varr.totalShortage} وحدة عالقة في مخزن النقل`, `/dashboard/transfers`,
+      { type: 'transit_variance', docRef: { type: 'TRN', number: 'ALL' }, qty: varr.totalShortage, reason: 'فروق نقلٍ غير مسوّاة' });
 
   // 3) طلبات بيعٍ بلا رصيد.
   const pend = pendingOrders(docs);
   for (const r of pend.rows.filter((x) => x.status === 'no-stock')) {
-    add('high', 'sales', `أمر بيع ${r.number || ''} بلا رصيد`, `${r.customer || ''} · ${r.shortfallCount} صنفًا غير متوفّر`, `/dashboard/order-control`);
+    add('high', 'sales', `أمر بيع ${r.number || ''} بلا رصيد`, `${r.customer || ''} · ${r.shortfallCount} صنفًا غير متوفّر`, `/dashboard/order-control`,
+      { type: 'no_stock', docRef: { type: 'SO', number: r.number }, qty: r.shortfallCount, reason: `${r.shortfallCount} صنفًا غير متوفّر` });
   }
 
   // 4) رصيدٌ عالقٌ في مواقع النظام التي يجب أن تفرغ.
   for (const s of stuckBalances(balances)) {
-    add('med', 'inventory', `${s.sku || s.barcode} عالقٌ في ${locationLabel(s.warehouse)}`, s.hint, `/dashboard/stock-ledger`);
+    add('med', 'inventory', `${s.sku || s.barcode} عالقٌ في ${locationLabel(s.warehouse)}`, s.hint, `/dashboard/stock-ledger`,
+      { type: 'stuck_balance', sku: s.sku, barcode: s.barcode, qty: s.qty, location: s.warehouse, reason: s.hint });
   }
 
   // 5) أصنافٌ منتهية أو قريبة الانتهاء (على رصيدٍ موجب).
@@ -227,8 +240,12 @@ export function operationExceptions(docs, balances, nowMs, items) {
     if (st === 'expired') expired += 1;
     else if (st === 'near') near += 1;
   }
-  if (expired > 0) add('high', 'inventory', `${expired} رصيدًا منتهي الصلاحية`, 'يجب سحبه وإتلافه — لا يُباع ولا يُنقل', `/dashboard/stock-ledger`);
-  if (near > 0) add('med', 'inventory', `${near} رصيدًا قريب الانتهاء`, 'خلال 30 يومًا — قدّمه في الصرف (FEFO)', `/dashboard/stock-ledger`);
+  if (expired > 0)
+    add('high', 'inventory', `${expired} رصيدًا منتهي الصلاحية`, 'يجب سحبه وإتلافه — لا يُباع ولا يُنقل', `/dashboard/stock-ledger`,
+      { type: 'expired', qty: expired, reason: 'رصيدٌ منتهي الصلاحية على رصيدٍ موجب' });
+  if (near > 0)
+    add('med', 'inventory', `${near} رصيدًا قريب الانتهاء`, 'خلال 30 يومًا — قدّمه في الصرف (FEFO)', `/dashboard/stock-ledger`,
+      { type: 'near_expiry', qty: near, reason: 'صلاحيةٌ تنتهي خلال 30 يومًا' });
 
   // 6) أصنافٌ تحت الحدّ الأدنى (يحتاج ماستر الأصناف).
   if (items?.length) {
@@ -237,7 +254,9 @@ export function operationExceptions(docs, balances, nowMs, items) {
       const min = Number(it?.minStock) || 0;
       return min > 0 && (avail.get(String(it.sku || '').trim().toUpperCase()) || 0) < min;
     });
-    if (below.length) add('med', 'inventory', `${below.length} صنفًا تحت الحدّ الأدنى`, 'راجع تقرير الأصناف المطلوب شراؤها', `/dashboard/order-control`);
+    if (below.length)
+      add('med', 'inventory', `${below.length} صنفًا تحت الحدّ الأدنى`, 'راجع تقرير الأصناف المطلوب شراؤها', `/dashboard/order-control`,
+        { type: 'below_min', qty: below.length, reason: `${below.length} صنفًا تحت الحدّ الأدنى` });
   }
 
   ex.sort((a, b) => SEV[b.severity] - SEV[a.severity]);

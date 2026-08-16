@@ -233,6 +233,57 @@ export function sortForBoard(list, nowMs) {
   });
 }
 
+/* ═══════════════ مصالحة الكشف مع السجلّ ‹EXE-202› ═══════════════ */
+
+/** يحوّل هويّات الكشف من `operationExceptions` إلى مسودّات استثناءات. */
+export function detectionsToDrafts(detections) {
+  return (detections || [])
+    .filter((d) => d?.identity?.type && EXCEPTION_TYPES[d.identity.type])
+    .map((d) =>
+      shapeException({
+        ...d.identity,
+        severity: d.severity === 'high' ? SEVERITY.HIGH : d.severity === 'med' ? SEVERITY.MED : SEVERITY.LOW,
+        reason: d.identity.reason || d.detail || d.title,
+        ownerRole: exceptionType(d.identity.type)?.owner || '',
+      })
+    );
+}
+
+/**
+ * ★★ مصالحة ما يكشفه المحرّك الآن مع ما هو مسجَّلٌ سلفًا.
+ *
+ * ═══ الخطران اللذان تدفعهما ═══
+ *
+ * ١. **التكرار.** الكاشف يعمل عند كلّ رسم، فبلا مصالحةٍ يفتح الاستثناء نفسه
+ *    مئة مرّة. فالبصمة تُقارَن بالمفتوح، والموجود يُترك.
+ *
+ * ٢. **الاختفاء الصامت — وهو الأخطر.** لو أُغلق الاستثناء تلقائيًّا حين يزول
+ *    سببه لَمُحي الأثر: بضاعةٌ عالقة نُقلت، ورصيدٌ منتهٍ بِيع، ومستندٌ اعتُمد
+ *    بعد تأخّرٍ طويل — كلّها تختفي كأنّها لم تقع، فلا يُعرف كم مرّة تكرّرت
+ *    ولا من عالجها. **فالزوال يُعلَّم ولا يُغلق**، وينتظر قرارًا.
+ *
+ * @returns {{toOpen:Array, active:Array, vanished:Array}}
+ */
+export function reconcileDetections(drafts, existing) {
+  const open = (existing || []).filter((e) => isOpenStatus(e?.status));
+  const openByPrint = new Map(open.map((e) => [String(e.fingerprint || ''), e]));
+  const detectedPrints = new Set((drafts || []).map((d) => d.fingerprint));
+
+  const toOpen = [];
+  const active = [];
+  for (const draft of drafts || []) {
+    const found = openByPrint.get(draft.fingerprint);
+    if (found) active.push({ existing: found, draft });
+    else toOpen.push(draft);
+  }
+
+  const vanished = open.filter((e) => !detectedPrints.has(String(e.fingerprint || '')));
+  return { toOpen, active, vanished };
+}
+
+/** نصُّ ما يقوله السجلّ حين يزول السبب — تعليمٌ لا إغلاق. */
+export const VANISHED_NOTE = 'زال سببه في آخر فحص — يبقى مفتوحًا حتى يُبتّ فيه بقرار.';
+
 /** ملخّصٌ للوحة — المفتوح وما تأخّر وما هو مرتفع الخطورة. */
 export function summarize(list, nowMs) {
   const rows = list || [];

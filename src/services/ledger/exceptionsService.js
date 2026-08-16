@@ -29,6 +29,9 @@ import { counterId, formatNumber, nextSeq } from '../documents/numberFormat.js';
 import {
   EXCEPTION_PREFIX,
   EXCEPTION_STATUS,
+  VANISHED_NOTE,
+  detectionsToDrafts,
+  reconcileDetections,
   canTransition,
   closeVerdict,
   correctionDraft,
@@ -129,6 +132,34 @@ export async function closeException(exception, { decision, evidenceRef } = {}, 
   });
   await logEvent(exception.id, actor, 'closed', { text: String(decision).trim(), gaps: verdict.gaps });
   return verdict.gaps;
+}
+
+/**
+ * ‹EXE-202› يُزامن ما يكشفه المحرّك الآن مع السجلّ.
+ *
+ * **يفتح الجديد ولا يُغلق شيئًا.** الزوال يُعلَّم بملاحظةٍ في سجلّ الأحداث
+ * وينتظر قرارًا — وإغلاقٌ تلقائيّ يمحو الأثر فلا يُعرف كم مرّة تكرّرت الحادثة
+ * ولا من عالجها.
+ *
+ * والقرار كلّه في `reconcileDetections` الخالص؛ هذه تكتب ما قرّره.
+ *
+ * @returns {{opened:Array, active:number, vanished:number}}
+ */
+export async function syncDetections(detections, existing, year, profile) {
+  const drafts = detectionsToDrafts(detections);
+  const { toOpen, active, vanished } = reconcileDetections(drafts, existing);
+  const actor = whoami(profile);
+
+  const opened = [];
+  for (const draft of toOpen) {
+    opened.push(await openException(draft, year, profile));
+  }
+  for (const e of vanished) {
+    if (e.vanishedFlagged) continue; // لا يُكرَّر التعليم عند كلّ فحص
+    await updateDoc(doc(db, COL, e.id), { vanishedFlagged: true, updatedAt: serverTimestamp(), ...actor });
+    await logEvent(e.id, actor, 'vanished', { text: VANISHED_NOTE });
+  }
+  return { opened, active: active.length, vanished: vanished.length };
 }
 
 /** يفتح استثناء تصحيحٍ لمغلَق — جديدٌ يشير إلى الأوّل ولا يمسّه. */
