@@ -15,6 +15,7 @@ import { db } from '../../../config/firebase.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
 import LocationTree from './LocationTree.jsx';
+import LocationMap from './LocationMap.jsx';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Badge from '../../odoo/Badge.jsx';
 import { int } from '../../odoo/format.js';
@@ -281,6 +282,10 @@ const WarehouseManager = () => {
           {[
             { id: 'warehouses', label: 'المستودعات', icon: 'package' },
             { id: 'locations', label: 'مواقع التخزين', icon: 'mapPin' },
+            // ‹LOC-602› الخريطة تبويبٌ ثالث لا صفحةٌ ثانية: هي والشجرة عينان على
+            // البيانات نفسها — الشجرة تقول «ما تركيب المستودع؟» والخريطة تقول
+            // «أيّ رفٍّ يقبل الآن؟». ولو سكنتا رابطين لَافترق منطقاهما.
+            { id: 'map', label: 'خريطة المواقع', icon: 'map' },
           ].map((t) => (
             <button
               key={t.id}
@@ -301,6 +306,8 @@ const WarehouseManager = () => {
         </div>
 
         {tab === 'locations' && <LocationTree role={role} />}
+
+        {tab === 'map' && <LocationMap />}
 
         {tab === 'warehouses' && (
         <>
