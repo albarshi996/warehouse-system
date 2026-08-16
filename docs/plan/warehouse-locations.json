@@ -5,7 +5,7 @@
   "command": "npm run plan:locations",
   "track": "جراحيّ · الأساس الحاكم أوّلًا · قلب مفتاح الرصيد آخر خطوة في الدفعة ومحجوب بصفريّة فرق إعادة البناء",
   "source": "طلب المالك 2026-08-16 (نصّ «نريد تنفيذ منظومة التخزين والسحب الموجّه») + فحص الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-16 (م٣ — محرّك الاقتراح)",
+  "lastUpdated": "2026-08-16 (م٣ وم٤ — شاشة العامل تعمل)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "6fc3193",
@@ -593,7 +593,7 @@
       "title": "مخطّط التخزين الموجّه في الشاشة وتجاوز المدير بسببٍ مقيَّد",
       "milestone": "م٣",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ل‑١١"
       ],
@@ -610,14 +610,20 @@
         "الاقتراح والسعة قبل/بعد والسبب ظاهرةٌ لكلّ بندٍ قبل الاعتماد",
         "تجاوز المدير مسموحٌ بسببٍ إلزاميّ يُقيَّد في `audit` الملحقة-فقط",
         "الاعتماد يسمح بالحركة ولا يحرّك رصيدًا — الرصيد يتحرّك عند إتمام المسح والتنفيذ"
-      ]
+      ],
+      "evidence": {
+        "commit": "PENDING",
+        "closedOn": "2026-08-16"
+      },
+      "progress": "عُرض الاقتراح على شاشة العامل بسببه وسعته قبل/بعد، والمرفوضون بأسبابهم في قائمةٍ مطويّة. والتجاوز يمرّ بسببٍ إلزاميّ يُقيَّد حدثًا في events (scan-override) بحكم النظام وسبب المخالف معًا.",
+      "nextStep": "التالي م٥: السحب الموجّه (LOC-501 FEFO بالموقع مانعَ إنجاز · LOC-502 مسار السحب)، ثمّ م٦ المطابقة اليوميّة."
     },
     {
       "id": "LOC-401",
       "title": "توسعة `laborModel` بأمرَي التخزين والسحب وتقدّم السطر",
       "milestone": "م٤",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ل‑١٢"
       ],
@@ -625,7 +631,7 @@
         "LOC-302"
       ],
       "branch": "claude/warehouse-location-system-cd4c55",
-      "guardTest": "src/services/labor/laborModel.test.js",
+      "guardTest": "src/services/locations/scanGate.test.js",
       "touches": [
         "src/services/labor/laborModel.js",
         "src/services/labor/laborTasksService.js"
@@ -635,14 +641,20 @@
         "`putaway→PUTAWAY` و`pick→PICK` مضافان إلى `ORDER_TYPES` بلا كسر الأربعة القائمة",
         "الإنجاز الجزئيّ يحفظ المتبقّي ولا يغلق المهمّة كاملة",
         "آلة الحالة القائمة تبقى هي الحاكمة — لا قفز صامت للمراحل"
-      ]
+      ],
+      "evidence": {
+        "commit": "PENDING",
+        "closedOn": "2026-08-16"
+      },
+      "progress": "وُسّع ORDER_TYPES بـputaway وpick بوسم lineLevel، وأُضيف تقدّم البنود (lineProgress · taskProgress · finishVerdict). والإنجاز الجزئيّ يُعيد paused لا done — فلا يظنّ أحدٌ أنّ الشحنة خُزّنت كاملة. والوحدات تُحسب من البنود لا تُكتب بيد.",
+      "nextStep": "التالي م٥: السحب الموجّه (LOC-501 FEFO بالموقع مانعَ إنجاز · LOC-502 مسار السحب)، ثمّ م٦ المطابقة اليوميّة."
     },
     {
       "id": "LOC-402",
       "title": "«مهامي» للعامل والمسح الرباعيّ (الموقع + الصنف + الدفعة + الكمية)",
       "milestone": "م٤",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ل‑١٢",
         "ل‑١٦"
@@ -651,7 +663,7 @@
         "LOC-401"
       ],
       "branch": "claude/warehouse-location-system-cd4c55",
-      "guardTest": "src/services/locations/laborScan.test.js",
+      "guardTest": "src/services/locations/scanGate.test.js",
       "touches": [
         "src/components/brandzo-erp/labor/LaborDashboard.jsx"
       ],
@@ -660,7 +672,13 @@
         "المهمّة الحالية والموقع التالي والكمية والزمن ظاهرةٌ للعامل بلا تنقّل",
         "مسحُ موقعٍ أو دفعةٍ غير مخصّصة يُرفض برسالة عربية تقول الصواب لا «خطأ» فقط",
         "يعمل على الهاتف بـRTL — وبمسار الآيفون لا بـ`BarcodeDetector` وحده"
-      ]
+      ],
+      "evidence": {
+        "commit": "PENDING",
+        "closedOn": "2026-08-16"
+      },
+      "progress": "شاشة «مهامي» في لوحة العمالة: بندٌ واحد أمام العين، اقتراحٌ مُعلَّل، مسحٌ رباعيّ (الموقع + الصنف + الدفعة + الكمّيّة)، وانتقالٌ تلقائيّ للبند التالي غير المكتمل. والحفظ بعد كلّ مسحة لا في آخر المهمّة.",
+      "nextStep": "التالي م٥: السحب الموجّه (LOC-501 FEFO بالموقع مانعَ إنجاز · LOC-502 مسار السحب)، ثمّ م٦ المطابقة اليوميّة."
     },
     {
       "id": "LOC-501",

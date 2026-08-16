@@ -18,16 +18,20 @@ import {
   resumeTask,
   finishTask,
   cancelTask,
+  saveTaskLines,
+  finishLineTask,
 } from '../../../services/labor/laborTasksService.js';
 import {
   LABOR_SHIFTS,
   ORDER_TYPES,
+  isLineLevel,
   taskState,
   taskDurationMinutes,
   crewSize,
   summarizeTasks,
   crewsNeeded,
 } from '../../../services/labor/laborModel.js';
+import WorkerTaskPanel from './WorkerTaskPanel.jsx';
 
 const LABOR_ROLES = ['admin', 'warehouse_manager', 'labor_supervisor'];
 const input =
@@ -72,6 +76,11 @@ export default function LaborDashboard() {
   const activeCrews = useMemo(() => crews.filter((c) => c.active !== false), [crews]);
   const running = useMemo(() => tasks.filter((t) => t.state === 'in_progress' || t.state === 'paused'), [tasks]);
   const pending = useMemo(() => tasks.filter((t) => t.state === 'pending'), [tasks]);
+  // ‹LOC-402› مهامّ تُنفَّذ بندًا بندًا (تخزين/سحب) — لها شاشة تنفيذٍ خاصّة.
+  const lineTasks = useMemo(
+    () => tasks.filter((t) => isLineLevel(t.orderType) && t.state !== 'done' && t.state !== 'cancelled'),
+    [tasks]
+  );
   const busyCrewIds = useMemo(() => new Set(running.map((t) => t.crewId)), [running]);
   const idleCrews = useMemo(() => activeCrews.filter((c) => !busyCrewIds.has(c.id)), [activeCrews, busyCrewIds]);
 
@@ -125,14 +134,14 @@ export default function LaborDashboard() {
           ＋ تشكيل فريق
         </button>
         <div className="flex-1" />
-        {['board', 'crews', 'tasks', 'plan'].map((k) => (
+        {['board', 'mine', 'crews', 'tasks', 'plan'].map((k) => (
           <button
             key={k}
             type="button"
             onClick={() => setTab(k)}
             className={`px-3 py-1.5 rounded-full text-xs font-bold border ${tab === k ? 'bg-accent text-brand-navy border-accent' : 'bg-chip text-ink-2 border-line hover:border-accent/50'}`}
           >
-            {{ board: 'اللوحة', crews: 'الفرق', tasks: 'المهام', plan: 'تخطيط الموارد' }[k]}
+            {{ board: 'اللوحة', mine: 'مهامي', crews: 'الفرق', tasks: 'المهام', plan: 'تخطيط الموارد' }[k]}
           </button>
         ))}
       </div>
@@ -231,6 +240,38 @@ export default function LaborDashboard() {
       {tab === 'tasks' && (
         <Section title={`كل مهام المناولة (${tasks.length})`}>
           {tasks.length === 0 ? <Empty>لا مهام بعد.</Empty> : <TaskTable rows={tasks} crewsById={crewsById} onAct={act} me={me} showAll />}
+        </Section>
+      )}
+
+      {/* ‹LOC-402› «مهامي» — تنفيذ التخزين والسحب بندًا بندًا على جهاز العامل.
+          تظهر مهامّ line-level وحدها؛ وبقيّة الأنواع تبقى في «المهام» كما هي. */}
+      {tab === 'mine' && (
+        <Section title="مهامي" hint="التخزين والسحب — اختر الرفّ وامسح">
+          {lineTasks.length === 0 ? (
+            <Empty>لا مهامّ تخزينٍ أو سحبٍ مُسندة الآن.</Empty>
+          ) : (
+            <div className="space-y-4">
+              {lineTasks.map((t) => (
+                <div key={t.id} className="rounded-xl border border-line p-3">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <strong className="text-sm text-ink">{ORDER_TYPES[t.orderType]?.label}</strong>
+                    {t.docRef?.number && <span className="text-xs text-ink-2">{t.docRef.number}</span>}
+                    <span className="text-xs text-ink-2">فريق {crewsById[t.crewId]?.crewNo || '—'}</span>
+                    {t.state === 'pending' && (
+                      <button type="button" onClick={() => act(() => startTask(t, me))} className="text-xs font-bold text-green-700 hover:underline">
+                        بدء ▶
+                      </button>
+                    )}
+                  </div>
+                  <WorkerTaskPanel
+                    task={t}
+                    onSaveLines={(lines, entry) => act(() => saveTaskLines(t, lines, me, entry))}
+                    onFinish={(verdict, lines) => act(() => finishLineTask(t, verdict, lines, me))}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </Section>
       )}
 

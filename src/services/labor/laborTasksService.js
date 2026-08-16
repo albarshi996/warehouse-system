@@ -112,3 +112,58 @@ export async function cancelTask(task, profile) {
   await updateDoc(doc(db, COL, task.id), { state: 'cancelled' });
   await logEvent(task.id, whoami(profile), 'cancelled');
 }
+
+/**
+ * ═══ مهامّ التخزين والسحب — تُنفَّذ بندًا بندًا (LOC-402) ═══
+ */
+
+/**
+ * يحفظ بنود المهمّة بعد كلّ مسح، ويُقيّد المسح **حدثًا ملحقًا** في `events`.
+ *
+ * الحفظ بعد كلّ مسحة لا في آخر المهمّة: العامل قد ينقطع اتصاله أو ينتهي دوامه
+ * أو يسقط هاتفه — وما مُسح فعلًا لا يجوز أن يضيع لأنّ المهمّة لم تُغلق.
+ *
+ * والتجاوز يُقيَّد بحكم النظام وسبب المخالف معًا (قرار المالك LOC-O12)، فيقرأ
+ * المدير لاحقًا **لماذا** لا **ماذا** فقط.
+ */
+export async function saveTaskLines(task, lines, profile, entry = null) {
+  await updateDoc(doc(db, COL, task.id), {
+    lines,
+    updatedAt: serverTimestamp(),
+    ...(task.state === 'pending' ? { state: 'in_progress', startedAt: serverTimestamp() } : {}),
+  });
+  if (entry) {
+    await logEvent(task.id, whoami(profile), entry.override ? 'scan-override' : 'scan', {
+      locationCode: entry.locationCode,
+      sku: entry.sku,
+      batch: entry.batch,
+      qty: entry.qty,
+      ...(entry.override ? { systemVerdict: entry.overrideReason, note: entry.overrideNote } : {}),
+    });
+  }
+}
+
+/**
+ * إنهاء مهمّةٍ بندِيّة بحكم `finishVerdict`.
+ *
+ * ★★ **الإنجاز الجزئيّ لا يُغلقها**: الحكم يُعيد `paused` ما بقي متبقٍّ، فلا
+ * يظنّ أحدٌ أنّ الشحنة خُزّنت كاملة. والوحدات المناوَلة تُحسب من البنود لا
+ * تُكتب بيد.
+ */
+export async function finishLineTask(task, verdict, lines, profile) {
+  const units = (lines || []).reduce((s, l) => s + (Number(l.qtyDone) || 0), 0);
+  const patch = { lines, unitsHandled: units, updatedAt: serverTimestamp() };
+
+  if (verdict.nextState === 'done') {
+    if (!canTransitionTask(task.state, 'done')) throw new Error('لا يمكن إنهاء المهمّة من حالتها الحاليّة.');
+    Object.assign(patch, { state: 'done', finishedAt: serverTimestamp() });
+  } else if (task.state === 'in_progress') {
+    Object.assign(patch, { state: 'paused', pauseStartedAt: Date.now() });
+  }
+
+  await updateDoc(doc(db, COL, task.id), patch);
+  await logEvent(task.id, whoami(profile), verdict.partial ? 'partial-finish' : 'finished', {
+    unitsHandled: units,
+    remaining: (lines || []).reduce((s, l) => s + Math.max(0, (Number(l.qtyRequired) || 0) - (Number(l.qtyDone) || 0)), 0),
+  });
+}

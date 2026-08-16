@@ -15,7 +15,17 @@ export const ORDER_TYPES = {
   transfer: { id: 'transfer', label: 'أمر نقل', docType: 'TRN' },
   delivery: { id: 'delivery', label: 'أمر تسليم', docType: 'DN' },
   container: { id: 'container', label: 'مناولة حاوية', docType: 'CTR' },
+  // ‹LOC-401› مهمّتان تُنفَّذان **على مستوى السطر** لا الشحنة كلّها: العامل
+  // يخزّن بندًا بندًا ويمسح موقعه، أو يسحب بندًا بندًا من موقعه. وتحملان
+  // `lineLevel` كي تعرف الشاشة أنّها تعرض بنودًا لا عدّادَ وحداتٍ واحدًا.
+  putaway: { id: 'putaway', label: 'تخزين على الرفوف', docType: 'PUTAWAY', lineLevel: true },
+  pick: { id: 'pick', label: 'سحب من الرفوف', docType: 'PICK', lineLevel: true },
 };
+
+/** أمهمّةٌ تُنفَّذ بنودًا بندًا بند؟ */
+export function isLineLevel(orderTypeId) {
+  return Boolean(ORDER_TYPES[orderTypeId]?.lineLevel);
+}
 
 export function orderType(id) {
   return ORDER_TYPES[id] || null;
@@ -67,6 +77,75 @@ export function taskDurationMinutes(startedAt, finishedAt, pausedMs = 0) {
   if (!start || !end || end < start) return 0;
   const paused = Number(pausedMs) || 0;
   return Math.max(0, Math.round((end - start - paused) / 60000));
+}
+
+/**
+ * ═══ تقدّم البنود (LOC-401) ═══
+ *
+ * المهمّة القديمة كانت عدّادَ وحداتٍ واحدًا (`unitsHandled`). ومهمّة التخزين
+ * والسحب تُنفَّذ **بندًا بندًا**: صنفٌ يُخزَّن ثمّ آخر، وقد ينتهي الدوام في
+ * المنتصف. فالتقدّم يُقاس على السطر.
+ */
+
+/**
+ * حال بندٍ واحد: المطلوب والمنجَز والمتبقّي.
+ * `over` تعني تخزينًا/سحبًا يتجاوز المطلوب — يُعلَن ولا يُبتلع.
+ */
+export function lineProgress(line) {
+  const required = Math.max(0, Number(line?.qtyRequired) || 0);
+  const done = Math.max(0, Number(line?.qtyDone) || 0);
+  const remaining = Math.max(0, required - done);
+  let state = 'pending';
+  if (done > required) state = 'over';
+  else if (remaining === 0 && required > 0) state = 'done';
+  else if (done > 0) state = 'partial';
+  return { required, done, remaining, state };
+}
+
+/**
+ * تقدّم المهمّة كلّها.
+ *
+ * ★★ **الإنجاز الجزئيّ لا يُغلق المهمّة** (معيار المالك): `complete` لا تصير
+ * صحيحة إلّا حين لا يبقى بندٌ ناقص. فمن انتهى دوامه وقد خزّن نصف الشحنة
+ * يحفظ ما أنجز، وتبقى المهمّة مفتوحةً بمتبقّيها ظاهرًا لمن يُكملها.
+ */
+export function taskProgress(lines) {
+  const rows = (lines || []).map(lineProgress);
+  const totalRequired = rows.reduce((s, r) => s + r.required, 0);
+  const totalDone = rows.reduce((s, r) => s + r.done, 0);
+  const doneLines = rows.filter((r) => r.state === 'done' || r.state === 'over').length;
+  const remaining = rows.reduce((s, r) => s + r.remaining, 0);
+  return {
+    lines: rows.length,
+    doneLines,
+    openLines: rows.length - doneLines,
+    totalRequired,
+    totalDone,
+    remaining,
+    pct: totalRequired ? Math.min(100, Math.round((totalDone / totalRequired) * 100)) : 0,
+    complete: rows.length > 0 && remaining === 0,
+    hasOver: rows.some((r) => r.state === 'over'),
+  };
+}
+
+/**
+ * حكم إنهاء المهمّة.
+ *
+ * الإنهاء **مسموحٌ ولو بقي متبقٍّ** — العامل قد ينتهي دوامه — لكنّ الشاشة
+ * تُعلن ما يبقى صراحةً، والمهمّة تُحفظ بحالة `paused` لا `done` كي لا يظنّ
+ * أحدٌ أنّ الشحنة خُزّنت كاملة.
+ */
+export function finishVerdict(lines) {
+  const p = taskProgress(lines);
+  if (p.complete) return { nextState: 'done', partial: false, message: '' };
+  if (p.totalDone === 0) {
+    return { nextState: 'paused', partial: true, message: 'لم يُنجَز شيءٌ بعد — تبقى المهمّة معلّقة كما هي.' };
+  }
+  return {
+    nextState: 'paused',
+    partial: true,
+    message: `أُنجز ${p.totalDone} من ${p.totalRequired}. يبقى ${p.remaining} في ${p.openLines} بندًا — المهمّة تبقى مفتوحة.`,
+  };
 }
 
 /** حجم الفريق الفعّال (الأعضاء + سائق الفرك إن وُجد). */
