@@ -145,6 +145,52 @@ export function rankTasks(items, nowMs) {
     .sort((a, b) => rankValue(b.verdict) - rankValue(a.verdict));
 }
 
+/* ═══════════════ الإطلاق وإعادة التعيين ‹EXE-303› ═══════════════ */
+
+/**
+ * حالات العمل قبل الميدان: **مقترحة ← مُطلقة**.
+ *
+ * ولماذا مرحلتان؟ لأنّ المحرّك يرتّب ولا يأمر (ت-O01: النظام يقترح والمشرف
+ * يُطلق). ومهمّةٌ تصل جهاز العامل بمجرّد حسابها تجعل المحرّك حاكمًا قبل أن
+ * يُجرَّب — وأوّلُ ترتيبٍ خاطئ يُفقده الثقة كلّها.
+ */
+export const RELEASE_STATE = Object.freeze({ SUGGESTED: 'suggested', RELEASED: 'released' });
+
+/**
+ * حكم إطلاق مهمّة إلى الميدان.
+ *
+ * @returns {{ok:boolean, problem:string, warning:string}}
+ *          `problem` يمنع · و`warning` يُعلَن ويُترك للمشرف.
+ */
+export function releaseVerdict(task, verdict, ctx = {}) {
+  if (task?.releaseState === RELEASE_STATE.RELEASED) {
+    return { ok: false, problem: 'مُطلقةٌ سلفًا — لا تُطلق مرّتين فتصير مهمّتين.', warning: '' };
+  }
+  if (!ctx.crewId && !ctx.assigneeUid) {
+    return { ok: false, problem: 'اختر المنفّذ أوّلًا — مهمّةٌ بلا منفّذٍ لا تصل أحدًا.', warning: '' };
+  }
+  if (verdict?.blocked) {
+    // ★ لا تُمنع: المشرف قد يعلم أنّ الرصيد في الطريق. لكنّه يُطلقها **عالِمًا**.
+    return { ok: true, problem: '', warning: `تُطلَق وهي مؤجَّلة: ${verdict.reason}` };
+  }
+  return { ok: true, problem: '', warning: '' };
+}
+
+/**
+ * حكم إعادة التعيين — والسبب **مطلوب**.
+ *
+ * نقلُ عملٍ من عاملٍ إلى آخر بلا سبب يجعل تقرير الإنتاجيّة يظلم الأوّل: يظهر
+ * أنّه بدأ ولم يُنهِ، ولا يُعرف أنّ المشرف سحبها منه لأمرٍ أعجل.
+ */
+export function reassignVerdict(task, { toUid, reason } = {}) {
+  if (!toUid) return { ok: false, problem: 'اختر المُسنَد إليه الجديد.' };
+  if (toUid === (task?.assigneeUid || task?.crewId)) return { ok: false, problem: 'هو المنفّذ نفسه — لا تغيير.' };
+  if (!String(reason || '').trim()) {
+    return { ok: false, problem: 'سبب إعادة التعيين مطلوب — بلاه يظلم التقريرُ من سُحبت منه.' };
+  }
+  return { ok: true, problem: '' };
+}
+
 /** شرحٌ للمشرف — العوامل الأكبر أثرًا أوّلًا، والصفرُ لا يُعرض. */
 export function explain(verdict, limit = 3) {
   const top = (verdict?.factors || [])

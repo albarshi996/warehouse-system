@@ -7,6 +7,9 @@ import assert from 'node:assert/strict';
 
 import {
   IMPORTANCE,
+  RELEASE_STATE,
+  reassignVerdict,
+  releaseVerdict,
   WEIGHTS,
   explain,
   manualScore,
@@ -137,4 +140,37 @@ test('★ الشرح يعرض الأكبر أثرًا · ولا يعرض عام�
 
 test('قائمةٌ فارغة لا تُسقط الترتيب', () => {
   assert.deepEqual(rankTasks(null, NOW), []);
+});
+
+/* ═══ الإطلاق وإعادة التعيين ‹EXE-303› ═══ */
+
+test('★★ لا تُطلق مرّتين فتصير مهمّتين', () => {
+  const v = releaseVerdict({ releaseState: RELEASE_STATE.RELEASED }, {}, { crewId: 'c1' });
+  assert.equal(v.ok, false);
+  assert.match(v.problem, /مُطلقةٌ سلفًا/);
+});
+
+test('★ مهمّةٌ بلا منفّذٍ لا تصل أحدًا', () => {
+  assert.match(releaseVerdict({}, {}, {}).problem, /اختر المنفّذ/);
+});
+
+test('★★ المؤجَّلة تُطلَق **وهي مُعلَنة** — المشرف قد يعلم أنّ الرصيد في الطريق', () => {
+  const v = releaseVerdict({}, { blocked: true, reason: 'لا رصيد' }, { crewId: 'c1' });
+  assert.equal(v.ok, true, 'لا تُمنع');
+  assert.match(v.warning, /تُطلَق وهي مؤجَّلة/, 'لكنّه يُطلقها عالِمًا');
+});
+
+test('المهمّة السليمة تُطلَق بلا تحذير', () => {
+  const v = releaseVerdict({}, { blocked: false }, { crewId: 'c1' });
+  assert.deepEqual({ ok: v.ok, warning: v.warning }, { ok: true, warning: '' });
+});
+
+test('★★ سبب إعادة التعيين مطلوب — بلاه يظلم التقريرُ من سُحبت منه', () => {
+  // بلا سببٍ يظهر الأوّل أنّه بدأ ولم يُنهِ، ولا يُعرف أنّ المشرف سحبها لأعجل.
+  assert.match(reassignVerdict({ assigneeUid: 'a' }, { toUid: 'b' }).problem, /سبب إعادة التعيين مطلوب/);
+  assert.equal(reassignVerdict({ assigneeUid: 'a' }, { toUid: 'b', reason: 'شحنة أعجل' }).ok, true);
+});
+
+test('إعادةُ تعيينٍ لنفس المنفّذ ليست تغييرًا', () => {
+  assert.match(reassignVerdict({ assigneeUid: 'a' }, { toUid: 'a', reason: 'x' }).problem, /المنفّذ نفسه/);
 });
