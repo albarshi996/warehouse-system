@@ -5,7 +5,7 @@
   "command": "npm run plan:exec",
   "track": "جراحيّ · **النواة تكبر ولا يُبنى بجانبها** · لا مجلّد خدمةٍ جديد ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح · ولا شاشة ثانية لمنطقٍ قائم",
   "source": "نقد المالك 2026-08-16 («نظام تخزين جامد بارد» ثمّ «تطوير جراحيّ لا نتوءات») + ملفّ «تطوير.md» (قراءة Manhattan Active WM وInfor WMS) + جرد النوى على الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-17 (EXE-801 — الشبكة التقريبيّة · ت-O07 محسوم)",
+  "lastUpdated": "2026-08-17 (EXE-802 — المسار بالمشي)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "e8898ef",
@@ -933,7 +933,7 @@
       "title": "مسار المهمّة — الترتيب بالمشي لا بالكود",
       "milestone": "ت٨",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ت‑٩"
       ],
@@ -944,13 +944,20 @@
       "nucleus": "`locations/pickPlan.js` — يرتّب اليوم بالكود ومختبَر؛ يصير الترتيب بالمسافة حين تتوفّر الشبكة وبالكود حين لا تتوفّر",
       "guardTest": "src/services/locations/travelGrid.test.js",
       "touches": [
-        "src/services/locations/pickPlan.js"
+        "src/services/locations/pickPlan.js",
+        "src/services/locations/travelGrid.test.js",
+        "src/services/tasks/taskFactory.js"
       ],
       "acceptance": [
         "ترتيب مواقع المهمّة بأقصر مسارٍ عبر الشبكة",
         "إجمالي المسافة وعدد التوقّفات معروضان للمشرف",
         "بلا شبكةٍ يعود الترتيب للكود بلا انكسار — اختبارٌ يثبت المسارين"
-      ]
+      ],
+      "evidence": {
+        "commit": "dea1246",
+        "closedOn": "2026-08-17",
+        "tests": "src/services/locations/travelGrid.test.js — 27 اختبارًا (8 للمسار)"
+      }
     },
     {
       "id": "EXE-803",
