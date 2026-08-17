@@ -32,8 +32,52 @@ test('★★ لا مجموعة Firestore جديدة — كلّ نوعٍ يُسم
   assert.equal(RESOURCE_KINDS.handling.assetCategory, ASSET_CATEGORIES.handling.id);
 });
 
-test('★ نقطة التوسعة معلَنة — نوعٌ بلا مصدرٍ بعد يُعلَن ولا يُخفى', () => {
-  assert.deepEqual(pendingKinds(), ['door'], 'الباب يضيفه ت٦');
+test('★ نقطة التوسعة معلَنة — ووصلُ مصدرٍ يُسقط وسمَه بلا لمس المنطق', () => {
+  // كان الباب هو المعلَّق الوحيد، ووصله ‹EXE-601› بمصدرٍ حقيقيّ (سجلّ الأبواب
+  // وإشغالٌ محسوبٌ من زيارات الساحة) فسقط الوسم — وهذا هو معنى «نقطة معلَنة».
+  assert.deepEqual(pendingKinds(), [], 'لا نوعَ بلا مصدر بعد ت٦');
+  assert.equal(RESOURCE_KINDS.door.source, 'doors');
+});
+
+/* ── الباب موردًا ‹EXE-601› ───────────────────────────────────── */
+
+test('★★ الباب مورد يقرؤه المُحلِّل نفسه — لا سجلَّ حالةٍ رابع', () => {
+  const doors = [{ code: 'D1', label: 'باب ١' }, { code: 'D2' }];
+  const yardVisits = [{ plate: 'BN-7', doorCode: 'D1', stage: 'working', stamps: { atDoorAt: 0 } }];
+  const rows = resolveResources({ doors, yardVisits, nowMs: 60000 });
+  assert.equal(rows.length, 2);
+  const [d1, d2] = rows;
+  assert.equal(d1.kind, 'door');
+  assert.equal(d1.state, 'busy');
+  assert.match(d1.reason, /BN-7/, 'والسبب يقول من يشغله');
+  assert.equal(d1.plate, 'BN-7');
+  assert.equal(d2.state, 'available');
+});
+
+test('صيانة الباب من أوامر الشغل نفسها — بابٌ معطوبٌ أصلٌ كالرافعة', () => {
+  const doors = [{ code: 'D1' }];
+  const workOrders = [{ id: 'w1', state: 'confirmed', assetCode: 'D1', number: 'WO-9' }];
+  const [d1] = resolveResources({ doors, workOrders });
+  assert.equal(d1.state, 'maintenance');
+  assert.match(d1.reason, /WO-9/);
+});
+
+test('الباب المخرَج من الخدمة متوقّفٌ ولا يُسنَد إليه عمل', () => {
+  const [d1] = resolveResources({ doors: [{ code: 'D1', active: false }] });
+  assert.equal(d1.state, 'stopped');
+  assert.equal(isAssignable(d1), false);
+});
+
+test('لقطة الموارد تعدّ الأبواب نوعًا كغيره بلا فرعٍ خاصّ', () => {
+  const rows = resolveResources({
+    crews: [crews[0]],
+    doors: [{ code: 'D1' }, { code: 'D2', active: false }],
+  });
+  const snap = resourcesSnapshot(rows);
+  assert.equal(snap.byKind.door.total, 2);
+  assert.equal(snap.byKind.door.available, 1);
+  assert.equal(snap.byKind.door.out, 1);
+  assert.equal(filterResources(rows, { kind: 'door', assignableOnly: true }).length, 1);
 });
 
 /* ── الحالة تُحسب ─────────────────────────────────────────────── */

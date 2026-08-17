@@ -19,18 +19,21 @@
  * توصية `تطوير.md`: «جهّز الهيكل ولا تبنِ نظام روبوتاتٍ قبل وجود روبوت».
  */
 
+import { doorOccupancy } from '../fleet/yardModel.js';
 import { ASSET_CATEGORIES, OPEN_WO_STATES } from '../maintenance/workOrderModel.js';
 import { crewSize } from './laborModel.js';
 
 /**
  * أنواع الموارد — كلٌّ باسم مصدره القائم. **لا مجموعة Firestore جديدة.**
- * `door` يضيفه ت٦ (الساحة) ومصدره سيكون سجلّ الأبواب هناك.
+ * و`door` وصل مصدره في ت٦ ‹EXE-601›: سجلّ الأبواب `doors` وإشغالُه محسوبٌ من
+ * زيارات الساحة عبر `doorOccupancy` — فسقط وسمُ `pending` بلا لمس المنطق،
+ * وهذا هو معنى «نقطة التوسعة معلَنة».
  */
 export const RESOURCE_KINDS = Object.freeze({
   crew: { id: 'crew', label: 'فرقة عمل', source: 'crews' },
   vehicle: { id: 'vehicle', label: 'مركبة', source: 'vehicles' },
   handling: { id: 'handling', label: 'معدّة مناولة', source: 'assets', assetCategory: 'handling' },
-  door: { id: 'door', label: 'باب تحميل', source: 'doors', pending: true },
+  door: { id: 'door', label: 'باب تحميل', source: 'doors' },
 });
 
 /**
@@ -84,11 +87,21 @@ function runningTrips(trips) {
 /**
  * يحلّ الموارد من مصادرها.
  *
- * @param {object} sources `{ crews, vehicles, assets, laborTasks, workOrders, trips }`
+ * @param {object} sources `{ crews, vehicles, assets, laborTasks, workOrders, trips, doors, yardVisits, nowMs }`
  * @returns {Array} موردًا لكلّ صفٍّ في المصادر، بحالته وسببها ومهمّته الحاليّة
  */
 export function resolveResources(sources = {}) {
-  const { crews = [], vehicles = [], assets = [], laborTasks = [], workOrders = [], trips = [] } = sources;
+  const {
+    crews = [],
+    vehicles = [],
+    assets = [],
+    laborTasks = [],
+    workOrders = [],
+    trips = [],
+    doors = [],
+    yardVisits = [],
+    nowMs,
+  } = sources;
   const busyCrews = busyCrewTasks(laborTasks);
   const openWO = openWorkOrders(workOrders);
   const onTrip = runningTrips(trips);
@@ -144,6 +157,30 @@ export function resolveResources(sources = {}) {
       reason: wo ? `أمر شغل مفتوح ${s(wo.number) || ''}`.trim() : a.active === false ? 'خارج الخدمة' : '',
       currentTaskId: '',
       code: key,
+    });
+  }
+
+  // ④ أبواب التحميل ‹EXE-601› — إشغالها **محسوبٌ** من زيارات الساحة، وصيانتها
+  //    من أوامر الشغل نفسها (بابٌ معطوبٌ أصلٌ كالرافعة). ولا حقلَ حالةٍ عليها.
+  for (const door of doorOccupancy(doors, yardVisits, nowMs)) {
+    const wo = openWO.get(door.code);
+    const state = !door.active ? 'stopped' : wo ? 'maintenance' : door.occupied ? 'busy' : 'available';
+    out.push({
+      id: `door:${door.code}`,
+      sourceId: door.code,
+      kind: 'door',
+      label: door.label || `باب ${door.code}`,
+      state,
+      reason: wo
+        ? `أمر شغل مفتوح ${s(wo.number) || ''}`.trim()
+        : !door.active
+          ? 'خارج الخدمة'
+          : door.occupied
+            ? door.status
+            : '',
+      currentTaskId: '',
+      code: door.code,
+      plate: door.plate,
     });
   }
 
