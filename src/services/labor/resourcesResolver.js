@@ -75,7 +75,7 @@ function runningTrips(trips) {
   const map = new Map();
   for (const t of trips || []) {
     if (t?.state !== 'enroute' && t?.state !== 'gatepass') continue;
-    const key = s(t.plate || t.vehicleId);
+    const key = s(t.plateNo || t.plate || t.vehicleId);
     if (key && !map.has(key)) map.set(key, t);
   }
   return map;
@@ -113,7 +113,8 @@ export function resolveResources(sources = {}) {
 
   // ② المركبات — الصيانة تسبق الرحلة: مركبةٌ في الورشة لا تُرسَل ولو كانت رحلتها مفتوحة.
   for (const v of vehicles) {
-    const key = s(v.plate || v.id);
+    // ⚠️ حقل اللوحة اسمه `plateNo` في سجلّ الأسطول — و`plate` في الرحلات.
+    const key = s(v.plateNo || v.plate || v.id);
     const wo = openWO.get(key);
     const trip = onTrip.get(key);
     const state = wo ? 'maintenance' : trip ? 'busy' : v.status === 'stopped' ? 'stopped' : 'available';

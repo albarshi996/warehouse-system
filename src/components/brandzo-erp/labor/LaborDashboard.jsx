@@ -33,6 +33,8 @@ import {
 } from '../../../services/labor/laborModel.js';
 import WorkerTaskPanel from './WorkerTaskPanel.jsx';
 import { workQueue } from '../../../services/tasks/taskShape.js';
+import { listenVehicles } from '../../../services/vehicles/vehiclesService.js';
+import { RESOURCE_KINDS, RESOURCE_STATE, resolveResources, resourcesSnapshot } from '../../../services/labor/resourcesResolver.js';
 
 const LABOR_ROLES = ['admin', 'warehouse_manager', 'labor_supervisor'];
 const input =
@@ -49,6 +51,7 @@ export default function LaborDashboard() {
   const [crewForm, setCrewForm] = useState(false);
   const [taskForm, setTaskForm] = useState(false);
   const [queueIndex, setQueueIndex] = useState(0);
+  const [vehicles, setVehicles] = useState([]);
 
   useEffect(() => {
     const unsub = subscribeAuth(async (u) => {
@@ -62,9 +65,12 @@ export default function LaborDashboard() {
     if (!me || !LABOR_ROLES.includes(me.role)) return undefined;
     const u1 = listenCrews(setCrews, (e) => setErr(e?.message || 'تعذّر الاتصال'));
     const u2 = listenLaborTasks(setTasks, (e) => setErr(e?.message || 'تعذّر الاتصال'));
+    // ‹EXE-402› المركبات مصدرٌ ثانٍ للموارد — تُقرأ ولا تُنسخ.
+    const u3 = listenVehicles(setVehicles);
     return () => {
       u1();
       u2();
+      u3();
     };
   }, [me]);
 
@@ -86,6 +92,13 @@ export default function LaborDashboard() {
   // ‹EXE-104› الطابور ورتبته من المنطق الخالص — الشاشة تعرض ولا ترتّب.
   const { queue } = useMemo(() => workQueue(lineTasks), [lineTasks]);
   const current = queue[Math.min(queueIndex, Math.max(0, queue.length - 1))] || null;
+
+  // ‹EXE-402› الموارد تُحلّ من مصادرها الثلاثة — الشاشة تعرض ولا تحسب.
+  const resources = useMemo(
+    () => resolveResources({ crews, vehicles, laborTasks: tasks }),
+    [crews, vehicles, tasks]
+  );
+  const resourceSnap = useMemo(() => resourcesSnapshot(resources), [resources]);
 
   const busyCrewIds = useMemo(() => new Set(running.map((t) => t.crewId)), [running]);
   const idleCrews = useMemo(() => activeCrews.filter((c) => !busyCrewIds.has(c.id)), [activeCrews, busyCrewIds]);
@@ -140,14 +153,14 @@ export default function LaborDashboard() {
           ＋ تشكيل فريق
         </button>
         <div className="flex-1" />
-        {['board', 'mine', 'crews', 'tasks', 'plan'].map((k) => (
+        {['board', 'mine', 'resources', 'crews', 'tasks', 'plan'].map((k) => (
           <button
             key={k}
             type="button"
             onClick={() => setTab(k)}
             className={`px-3 py-1.5 rounded-full text-xs font-bold border ${tab === k ? 'bg-accent text-brand-navy border-accent' : 'bg-chip text-ink-2 border-line hover:border-accent/50'}`}
           >
-            {{ board: 'اللوحة', mine: 'مهامي', crews: 'الفرق', tasks: 'المهام', plan: 'تخطيط الموارد' }[k]}
+            {{ board: 'اللوحة', mine: 'مهامي', resources: 'الموارد', crews: 'الفرق', tasks: 'المهام', plan: 'تخطيط الموارد' }[k]}
           </button>
         ))}
       </div>
@@ -309,6 +322,38 @@ export default function LaborDashboard() {
                   />
                 </div>
               )}
+            </div>
+          )}
+        </Section>
+      )}
+
+      {/* ‹EXE-402› الموارد: من متاحٌ الآن ومن متعثّر — بلا سجلٍّ رابع. */}
+      {tab === 'resources' && (
+        <Section title="الموارد التشغيليّة" hint="محسوبةٌ من الفرق والمركبات وأوامر الشغل — لا سجلّ مستقلّ">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            <Kpi label="موارد" value={resourceSnap.total} />
+            <Kpi label="متاحة الآن" value={resourceSnap.assignable} />
+            <Kpi label="مشغولة" value={resourceSnap.byState.busy || 0} />
+            <Kpi label="خارج الخدمة" value={(resourceSnap.byState.maintenance || 0) + (resourceSnap.byState.stopped || 0)} alert={(resourceSnap.byState.maintenance || 0) + (resourceSnap.byState.stopped || 0) > 0} />
+          </div>
+
+          {resources.length === 0 ? (
+            <Empty>لا موارد معرَّفة — أضِف فرقًا أو مركبات.</Empty>
+          ) : (
+            <div className="space-y-2">
+              {resources.map((r) => (
+                <div key={r.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-line p-3">
+                  <span className="text-xs text-ink-2">{RESOURCE_KINDS[r.kind]?.label}</span>
+                  <strong className="text-sm text-ink">{r.label}</strong>
+                  <span className={`text-xs ${RESOURCE_STATE[r.state]?.assignable ? 'text-green-700' : r.state === 'maintenance' || r.state === 'stopped' ? 'text-brand-red' : 'text-ink-2'}`}>
+                    {RESOURCE_STATE[r.state]?.label || r.state}
+                  </span>
+                  {/* السبب ومدّته — موردٌ متوقّفٌ بلا سببٍ شكوى لا معلومة. */}
+                  {r.reason && <span className="text-xs text-ink-2">— {r.reason}</span>}
+                  {r.shift && <span className="text-xs text-muted">وردية {r.shift}</span>}
+                  {r.size > 0 && <span className="text-xs text-muted">{r.size} عاملًا</span>}
+                </div>
+              ))}
             </div>
           )}
         </Section>

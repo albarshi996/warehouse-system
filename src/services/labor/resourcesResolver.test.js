@@ -19,7 +19,8 @@ const crews = [
   { id: 'c1', crewNo: '1', shift: 'صباحية', members: ['أ', 'ب'], active: true },
   { id: 'c2', crewNo: '2', shift: 'مسائية', members: ['ج'], active: false },
 ];
-const vehicles = [{ id: 'v1', plate: '12345' }, { id: 'v2', plate: '67890' }];
+// سجلّ الأسطول يسمّي اللوحة `plateNo` — والبذرة تطابق المخزَّن لا تخترع شكلًا.
+const vehicles = [{ id: 'v1', plateNo: '12345' }, { id: 'v2', plateNo: '67890' }];
 const assets = [
   { id: 'a1', code: 'FK-01', name: 'رافعة شوكية 1', category: 'handling' },
   { id: 'a2', code: 'CH-01', name: 'غرفة تبريد', category: 'cooling' },
