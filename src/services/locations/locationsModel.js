@@ -89,6 +89,25 @@ export function shapeLocation(input) {
     mixBatches: input?.mixBatches !== false,
     priority: num(input?.priority),
     distance: num(input?.distance),
+    // ═══ شبكة الممرّات ‹EXE-801› — **كلّها اختياريّة** ═══
+    // موقعٌ قائمٌ بلا واحدٍ منها يبقى صالحًا كما هو، ومفتاح الرصيد لا يمسّه
+    // شيءٌ من هذا (الكود وحده يصنعه). وقرار المالك ت-O07 أن تُشتقّ الشبكة من
+    // ترتيب الأكواد، فهذه الحقول **تجاوزٌ يدويّ** لمن قاس فعلًا لا شرطُ عمل.
+    // و`null` هنا تعني «لم يُدخَل» — وهي غير الصفر الذي يعني «عند نقطة الصفر».
+    ...gridFields(input),
+  };
+}
+
+/** الحقول الستّة الاختياريّة للشبكة — الفارغ يبقى `null` ولا يُصفَّر. */
+function gridFields(input) {
+  const coord = (v) => (v === undefined || v === null || v === '' ? null : num(v));
+  return {
+    x: coord(input?.x),
+    y: coord(input?.y),
+    z: coord(input?.z),
+    approach: str(input?.approach),
+    aisle: str(input?.aisle).toUpperCase(),
+    entryPoint: normalizeLocationCode(input?.entryPoint),
   };
 }
 
