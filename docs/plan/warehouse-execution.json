@@ -5,7 +5,7 @@
   "command": "npm run plan:exec",
   "track": "جراحيّ · **النواة تكبر ولا يُبنى بجانبها** · لا مجلّد خدمةٍ جديد ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح · ولا شاشة ثانية لمنطقٍ قائم",
   "source": "نقد المالك 2026-08-16 («نظام تخزين جامد بارد» ثمّ «تطوير جراحيّ لا نتوءات») + ملفّ «تطوير.md» (قراءة Manhattan Active WM وInfor WMS) + جرد النوى على الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-17 (EXE-502 — سلسلة مراحل الطلب)",
+  "lastUpdated": "2026-08-17 (EXE-503 — ت٥ مكتملة)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "e8898ef",
@@ -731,7 +731,7 @@
       "title": "غرفة القيادة — الاستثناء في القلب والمرجعيّ معلَنُ التاريخ",
       "milestone": "ت٥",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ت‑١٠",
         "ت‑١٢"
@@ -743,6 +743,8 @@
       "nucleus": "`ledger/OperationsCommand.jsx` + `ledger/operationsDashboard.js` (المؤشّرات واللقطة قائمتان) — دمجٌ على `/dashboard/command-center` نفسها",
       "guardTest": "src/services/ledger/operationsDashboard.test.js",
       "touches": [
+        "src/services/ledger/operationsDashboard.js",
+        "src/services/ledger/operationsDashboard.test.js",
         "src/components/brandzo-erp/ledger/OperationsCommand.jsx"
       ],
       "acceptance": [
@@ -750,7 +752,13 @@
         "**آخر تحديث مرجعيّ من أودو معلَنٌ بنصّه** بجانب كلّ رقمٍ مرجعيّ (ت‑١٢)",
         "الرصيد التشغيليّ والمرجعيّ مفصولان بصريًّا ولا يُخلطان في رقمٍ واحد",
         "ثلاث طبقات (تدخّل الآن · إجراءات سريعة · فهرس كامل) · بلا إيموجي · والأحمر للتحذير"
-      ]
+      ],
+      "evidence": {
+        "commit": "0b2f5cc",
+        "closedOn": "2026-08-17",
+        "tests": "src/services/ledger/operationsDashboard.test.js — 19 اختبارًا (٧ جديدة)",
+        "note": "الشاشة محميّة بالدخول — البناء والحزمة 200 OK والتحقّق البصريّ محجوب بـت-O08"
+      }
     },
     {
       "id": "EXE-601",
