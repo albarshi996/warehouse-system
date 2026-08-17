@@ -202,3 +202,89 @@ test('الحقول المُدخَلة تُسوّى ولا تُخترع: المم
   assert.equal(l.entryPoint, 'MAIN-A01');
   assert.equal(l.x, 4);
 });
+
+/* ═══════ مسار المهمّة ‹EXE-802› — الترتيب بالمشي لا بالكود ═══════ */
+
+import { pickPathOrder, pickPlan, pathBasisOf } from './pickPlan.js';
+
+/** بنودٌ مخطَّطة بمواقعها — كما يُخرجها `planLine`. */
+const planned = [
+  { index: 0, sku: 'A', picks: [{ bin: 'MAIN-A01-R02-B01', qty: 1 }] },
+  { index: 1, sku: 'B', picks: [{ bin: 'MAIN-B01-R01-B01', qty: 1 }] },
+  { index: 2, sku: 'C', picks: [{ bin: 'MAIN-A01-R01-B01', qty: 1 }] },
+];
+
+test('★★ بلا شبكةٍ يبقى الترتيب بالكود حرفيًّا — لا انكسار', () => {
+  const byCode = pickPathOrder(planned);
+  assert.deepEqual(byCode.map((s) => s.bin), [
+    'MAIN-A01-R01-B01',
+    'MAIN-A01-R02-B01',
+    'MAIN-B01-R01-B01',
+  ]);
+  assert.deepEqual(pickPathOrder(planned, null).map((s) => s.bin), byCode.map((s) => s.bin));
+  assert.deepEqual(pickPathOrder(planned, { points: new Map() }).map((s) => s.bin), byCode.map((s) => s.bin));
+});
+
+test('★★ ومع الشبكة يُرتَّب بأقرب تالٍ فعلًا', () => {
+  // الشبكة: A01 ممرّ ٠ · B01 ممرّ ١. الانطلاق من أوّل الممرّ الأوّل.
+  const ordered = pickPathOrder(planned, grid).map((s) => s.bin);
+  assert.equal(ordered[0], 'MAIN-A01-R01-B01', 'البداية أوّل موقعٍ بالكود — مسارٌ ثابت');
+  assert.equal(ordered[1], 'MAIN-A01-R02-B01', 'ثمّ الأقرب: بقيّة الممرّ نفسه');
+  assert.equal(ordered[2], 'MAIN-B01-R01-B01', 'والعبور آخرًا');
+});
+
+test('★★ المسار عبر الشبكة لا يطول عن المسار بالكود', () => {
+  const byCode = routeDistance(pickPathOrder(planned).map((s) => s.bin), grid).meters;
+  const byGrid = routeDistance(pickPathOrder(planned, grid).map((s) => s.bin), grid).meters;
+  assert.ok(byGrid <= byCode, `${byGrid} ≤ ${byCode}`);
+});
+
+test('بنودٌ على الرفّ نفسه تُجمَع ولا يُعاد إليه', () => {
+  const twice = [
+    { index: 0, sku: 'A', picks: [{ bin: 'MAIN-A01-R01-B01', qty: 1 }] },
+    { index: 1, sku: 'B', picks: [{ bin: 'MAIN-B01-R01-B01', qty: 1 }] },
+    { index: 2, sku: 'C', picks: [{ bin: 'MAIN-A01-R01-B01', qty: 1 }] },
+  ];
+  const bins = pickPathOrder(twice, grid).map((s) => s.bin);
+  assert.deepEqual(bins, ['MAIN-A01-R01-B01', 'MAIN-A01-R01-B01', 'MAIN-B01-R01-B01']);
+});
+
+test('موقعٌ خارج الشبكة يبقى آخرًا ولا يُخمَّن قربه', () => {
+  const withAlien = [
+    { index: 0, sku: 'A', picks: [{ bin: 'MAIN-A01-R01-B01', qty: 1 }] },
+    { index: 1, sku: 'X', picks: [{ bin: 'MAIN-Z99-R09-B09', qty: 1 }] },
+    { index: 2, sku: 'C', picks: [{ bin: 'MAIN-A01-R02-B01', qty: 1 }] },
+  ];
+  const bins = pickPathOrder(withAlien, grid).map((s) => s.bin);
+  assert.equal(bins[bins.length - 1], 'MAIN-Z99-R09-B09');
+});
+
+test('★★ أساس الترتيب يُعلَن — ولا يُخمَّن من الشاشة', () => {
+  assert.equal(pathBasisOf([], null).id, 'code');
+  assert.match(pathBasisOf([], null).label, /لا شبكةَ ممرّات/);
+  const basis = pathBasisOf(pickPathOrder(planned, grid), grid);
+  assert.equal(basis.id, 'grid');
+  assert.match(basis.label, /تقريبيّ/, 'وشبكةٌ مشتقّة تقول ذلك في أساسها');
+  assert.equal(basis.covered, 3);
+});
+
+test('★★ خطّة السحب تحمل المسافة وعدد التوقّفات للمشرف', () => {
+  const doc = {
+    header: { warehouse: 'MAIN' },
+    lines: [{ sku: 'A', qtyRequested: 1 }],
+  };
+  const balances = [{ sku: 'A', warehouse: 'MAIN', bin: 'MAIN-A01-R01-B01', qty: 5 }];
+  const plan = pickPlan(doc, balances, { grid });
+  assert.ok(plan.route, 'المسافة جزءٌ من الخطّة لا حسابٌ في الشاشة');
+  assert.equal(plan.route.stops, plan.path.length);
+  assert.ok(plan.pathBasis.label);
+});
+
+test('وخطّةٌ بلا شبكة تبقى صالحةً بمسافةٍ فارغة معلنة', () => {
+  const doc = { header: { warehouse: 'MAIN' }, lines: [{ sku: 'A', qtyRequested: 1 }] };
+  const balances = [{ sku: 'A', warehouse: 'MAIN', bin: 'MAIN-A01-R01-B01', qty: 5 }];
+  const plan = pickPlan(doc, balances);
+  assert.equal(plan.pathBasis.id, 'code');
+  assert.equal(plan.route.meters, 0);
+  assert.equal(plan.route.unknown, 0, 'ساقٌ واحدة لا مسافةَ فيها أصلًا');
+});

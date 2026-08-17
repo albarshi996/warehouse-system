@@ -16,6 +16,7 @@
 import { allocateFefo } from '../ledger/reservations.js';
 import { expiryStatus } from '../balances/balanceKey.js';
 import { normalizeLocationCode, shortLabelOf } from './locationCode.js';
+import { routeDistance, travelDistance } from './travelGrid.js';
 
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 const up = (v) => String(v ?? '').trim().toUpperCase();
@@ -78,7 +79,7 @@ export function planLine({ line, balances, warehouse, nowMs } = {}) {
  * ومسار السحب مرتَّبٌ **بالموقع** لا بترتيب البنود: العامل يمشي الممرّ مرّةً
  * واحدة بدل أن يذهب ويعود.
  */
-export function pickPlan(pickDoc, balances, { nowMs } = {}) {
+export function pickPlan(pickDoc, balances, { nowMs, grid = null } = {}) {
   const warehouse = up(pickDoc?.header?.warehouse);
   const lines = (pickDoc?.lines || []).map((line, index) => ({
     index,
@@ -90,20 +91,38 @@ export function pickPlan(pickDoc, balances, { nowMs } = {}) {
   }));
 
   const shortages = lines.filter((l) => l.shortfall > 0);
+  const path = pickPathOrder(lines, grid);
   return {
     warehouse,
     lines,
-    path: pickPathOrder(lines),
+    path,
+    /** ★ مقياس المسار — يُعرض للمشرف مع أساسه لا رقمًا عاريًا (EXE-802). */
+    route: routeDistance(path.map((s) => s.bin), grid),
+    /** بأيّ شيءٍ رُتّب المسار — يُعلَن ولا يُخمَّن. */
+    pathBasis: pathBasisOf(path, grid),
     shortages,
     ok: shortages.length === 0,
   };
 }
 
 /**
- * مسار السحب: صفٌّ لكلّ (موقع × بند) مرتَّبًا بكود الموقع.
- * الترتيب بالكود يُقصّر المشي لأنّ الكود نفسه هرميّ (مستودع ← ممرّ ← رفّ).
+ * مسار السحب: صفٌّ لكلّ (موقع × بند).
+ *
+ * ═══ الترتيب بالمشي حين تتوفّر الشبكة، وبالكود حين لا تتوفّر ‹EXE-802› ═══
+ * الترتيب بالكود يُقصّر المشي **غالبًا** لأنّ الكود هرميّ — لكنّه يجهل أنّ
+ * ممرَّين متجاورين في الترتيب قد يكونا متباعدَين في المبنى، وأنّ العودة إلى
+ * أوّل الممرّ بعد بلوغ آخره مشيٌ مضاعف. فمتى مُرّرت الشبكة رُتّب المسار
+ * **بأقرب تالٍ فعلًا** (nearest-neighbour من أوّل موقعٍ بالكود).
+ *
+ * ★★ **وبلا شبكةٍ لا انكسار**: يعود الترتيب إلى الكود حرفيًّا كما كان — لا
+ * ترتيبَ عشوائيّ ولا خطأ. فالشبكة تحسّن ولا تُشترط، ومستودعٌ لم تُعرَّف
+ * مواقعه بعد يبقى يعمل كما عمل أمس.
+ *
+ * ولماذا «أقرب تالٍ» لا المسار الأمثل؟ لأنّ الأمثل مسألةُ بائعٍ متجوّل: كلفتها
+ * أُسّيّة، وربحُها على عشرين موقعًا لا يُذكر أمام تقريبٍ يخطئ بخطوات. والصدق
+ * أن يُقال إنّه تقريب — وهو مقالٌ في `pathBasis`.
  */
-export function pickPathOrder(plannedLines) {
+export function pickPathOrder(plannedLines, grid = null) {
   const steps = [];
   for (const line of plannedLines || []) {
     for (const p of line.picks || []) {
@@ -119,7 +138,59 @@ export function pickPathOrder(plannedLines) {
       });
     }
   }
-  return steps.sort((a, b) => String(a.bin).localeCompare(String(b.bin)) || String(a.sku).localeCompare(String(b.sku)));
+
+  const byCode = steps.sort(
+    (a, b) => String(a.bin).localeCompare(String(b.bin)) || String(a.sku).localeCompare(String(b.sku))
+  );
+  if (!grid?.points?.size) return byCode;
+
+  // أقرب تالٍ — والبداية أوّل موقعٍ بالكود كي يبقى المسار ثابتًا للاختبار
+  // ولا يتغيّر بتغيّر ترتيب البنود في المستند.
+  const remaining = byCode.slice();
+  const ordered = [];
+  let current = remaining.shift();
+  if (!current) return byCode;
+  ordered.push(current);
+
+  while (remaining.length) {
+    let bestIndex = 0;
+    let bestMeters = Infinity;
+    for (let i = 0; i < remaining.length; i += 1) {
+      // الصفّ نفسه موقعًا: صفرٌ لا مسافة — بنودٌ عدّة على رفٍّ واحد تُجمَع.
+      if (remaining[i].bin === current.bin) {
+        bestIndex = i;
+        bestMeters = 0;
+        break;
+      }
+      const leg = travelDistance(current.bin, remaining[i].bin, grid);
+      // ما لا يُحسب لا يتصدّر: يبقى إلى آخر المسار بدل أن يُخمَّن قربه.
+      const meters = leg.meters === null ? Infinity : leg.meters;
+      if (meters < bestMeters) {
+        bestMeters = meters;
+        bestIndex = i;
+      }
+    }
+    current = remaining.splice(bestIndex, 1)[0];
+    ordered.push(current);
+  }
+  return ordered;
+}
+
+/** بأيّ شيءٍ رُتّب المسار — نصٌّ يُعرض مع الرقم لا يُخمَّن. */
+export function pathBasisOf(path, grid) {
+  if (!grid?.points?.size) {
+    return { id: 'code', label: 'مرتَّبٌ بكود الموقع — لا شبكةَ ممرّاتٍ معرَّفة بعد' };
+  }
+  const known = (path || []).filter((s) => grid.points.has(String(s.bin || ''))).length;
+  if (!known) return { id: 'code', label: 'مرتَّبٌ بكود الموقع — لا موقعَ من هذه المهمّة في الشبكة' };
+  return {
+    id: 'grid',
+    label: grid.approximate
+      ? 'مرتَّبٌ بأقصر مشيٍ تقريبيّ عبر الشبكة (من ترتيب الأكواد)'
+      : 'مرتَّبٌ بأقصر مشيٍ عبر الشبكة المُدخَلة',
+    covered: known,
+    total: (path || []).length,
+  };
 }
 
 /**

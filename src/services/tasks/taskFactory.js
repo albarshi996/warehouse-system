@@ -34,6 +34,7 @@
 import { lineKey } from '../documents/chain.js';
 import { normalizeLocationCode, parseLocationCode, shortLabelOf } from '../locations/locationCode.js';
 import { pickPlan } from '../locations/pickPlan.js';
+import { buildGrid } from '../locations/travelGrid.js';
 import { suggestLocations } from '../locations/putawaySuggest.js';
 import { shapeWorkPayload, workPayloadProblems, WORK_TYPES } from './taskShape.js';
 
@@ -121,8 +122,11 @@ function putawayLines(doc, { locations, balances, items }) {
  * أسطر مهامّ السحب من مستند `PICK` — بترتيب `pickPathOrder` نفسه لا بترتيبٍ
  * جديد: ترتيبه **هو** مسار المشي، وإعادة ترتيبه تُطيل الطريق.
  */
-function pickLines(doc, { balances, nowMs }) {
-  const plan = pickPlan(doc, balances, { nowMs });
+function pickLines(doc, { balances, nowMs, locations }) {
+  // ‹EXE-802› المسار يُرتَّب **بالمشي** حين تتوفّر الشبكة وبالكود حين لا
+  // تتوفّر — والشبكة تُبنى من سيّد المواقع نفسه لا من مصدرٍ ثانٍ.
+  const grid = (locations || []).length ? buildGrid(locations) : null;
+  const plan = pickPlan(doc, balances, { nowMs, grid });
   const lines = plan.path.map((step) => ({
     sku: s(step.sku),
     barcode: '',
@@ -206,7 +210,7 @@ export function generateTasks(doc, options = {}) {
   let lines = [];
   let shortages = [];
   if (workType === 'putaway') lines = putawayLines(doc, { locations, balances, items });
-  else if (workType === 'pick') ({ lines, shortages } = pickLines(doc, { balances, nowMs }));
+  else if (workType === 'pick') ({ lines, shortages } = pickLines(doc, { balances, nowMs, locations }));
   else lines = transferLines(doc);
 
   if (!lines.length) return { ...empty, problem: 'لا بندَ قابلًا للتنفيذ في هذا المستند.' };
