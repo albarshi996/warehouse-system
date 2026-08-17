@@ -5,7 +5,7 @@
   "command": "npm run plan:exec",
   "track": "جراحيّ · **النواة تكبر ولا يُبنى بجانبها** · لا مجلّد خدمةٍ جديد ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح · ولا شاشة ثانية لمنطقٍ قائم",
   "source": "نقد المالك 2026-08-16 («نظام تخزين جامد بارد» ثمّ «تطوير جراحيّ لا نتوءات») + ملفّ «تطوير.md» (قراءة Manhattan Active WM وInfor WMS) + جرد النوى على الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-17 (EXE-601 — الساحة · ت-O04 محسوم)",
+  "lastUpdated": "2026-08-17 (EXE-602 — مرحلة ت٦ مكتملة)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "e8898ef",
@@ -799,7 +799,7 @@
       "title": "شاشة البوابة والأبواب داخل عمليات الأسطول",
       "milestone": "ت٦",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ت‑٦"
       ],
@@ -810,14 +810,23 @@
       "guardTest": "src/services/fleet/yardModel.test.js",
       "touches": [
         "src/pages/dashboard/fleet-operations.astro",
-        "src/services/auth/navCatalog.js"
+        "src/services/fleet/yardService.js",
+        "src/services/auth/navAccess.js",
+        "firestore.rules",
+        "src/components/brandzo-erp/labor/LaborDashboard.jsx"
       ],
       "acceptance": [
         "ضابط البوابة يسجّل الوصول بحقولٍ قليلة — الميدان لا يحتمل نموذجًا طويلًا",
         "حالة كلّ باب ظاهرةٌ بلا اعتمادٍ على اللون وحده",
         "ربط المركبة بمستندها المرجعيّ إن وُجد، وإلّا تُسجَّل ويُعلَن نقصه",
         "`npm run audit` يبقى نظيفًا — الصفحة مربوطةٌ والدور محصور"
-      ]
+      ],
+      "evidence": {
+        "commit": "2044574",
+        "closedOn": "2026-08-17",
+        "tests": "المنطق محروسٌ بـsrc/services/fleet/yardModel.test.js (27) · التدقيق نظيف بـ71 قاعدة",
+        "note": "⚠️ قواعد doors وyard_visits لم تُنشر بعد · والتحقّق البصريّ محجوب بـت-O08"
+      }
     },
     {
       "id": "EXE-701",
