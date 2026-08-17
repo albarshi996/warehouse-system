@@ -5,7 +5,7 @@
   "command": "npm run plan:exec",
   "track": "جراحيّ · **النواة تكبر ولا يُبنى بجانبها** · لا مجلّد خدمةٍ جديد ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح · ولا شاشة ثانية لمنطقٍ قائم",
   "source": "نقد المالك 2026-08-16 («نظام تخزين جامد بارد» ثمّ «تطوير جراحيّ لا نتوءات») + ملفّ «تطوير.md» (قراءة Manhattan Active WM وInfor WMS) + جرد النوى على الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-17 (EXE-602 — مرحلة ت٦ مكتملة)",
+  "lastUpdated": "2026-08-17 (EXE-701 — الزمن المعياريّ)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "e8898ef",
@@ -833,7 +833,7 @@
       "title": "الزمن المعياريّ — عناصرُ تُجمَع لا رقمٌ يُفترض",
       "milestone": "ت٧",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ت‑٨"
       ],
@@ -843,14 +843,20 @@
       "nucleus": "`labor/laborModel.js` — يقيس الفعليّ (المدّة والإنتاجيّة) بأختام الخادم؛ يكبر بالمعياريّ ليصير للرقم مرجع",
       "guardTest": "src/services/labor/laborStandard.test.js",
       "touches": [
-        "src/services/labor/laborStandard.js"
+        "src/services/labor/laborStandard.js",
+        "src/services/labor/laborStandard.test.js"
       ],
       "acceptance": [
         "المعياريّ مجموعُ عناصرَ معلنة (استلام · انتقال · مسح · مناولة · سماح) — كلّ عنصرٍ ظاهرٌ للمشرف",
         "بلا مسافةٍ محسوبة يُعلَن أنّ عنصر الانتقال **تقديريّ** (ت٨ لم تُبنَ بعد)",
         "تغيير الإعداد يُعيد الاحتساب ويُسجَّل تاريخه — لا تُدهس القراءات القديمة",
         "الملفّ داخل `labor/` القائم"
-      ]
+      ],
+      "evidence": {
+        "commit": "c20d2e8",
+        "closedOn": "2026-08-17",
+        "tests": "src/services/labor/laborStandard.test.js — 18 اختبارًا"
+      }
     },
     {
       "id": "EXE-702",
