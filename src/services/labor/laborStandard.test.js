@@ -178,3 +178,113 @@ test('تسمية العنصر تُقرأ من القائمة لا من نصٍّ 
   assert.equal(elementLabel('travel'), 'انتقال');
   assert.equal(elementLabel('zzz'), 'zzz', 'والمجهول يُعاد كما هو لا يُخترع له اسم');
 });
+
+/* ═══════ الأداء بعدل ‹EXE-702› ═══════ */
+
+import {
+  DELAY_CONTEXT,
+  PERFORMANCE,
+  VARIANCE_TOLERANCE_PCT,
+  delayReasonProblem,
+  performanceOf,
+  performanceSummary,
+} from './laborStandard.js';
+import { REASONS, blamesWorker } from '../documents/reasonCodes.js';
+
+const MIN = 60000;
+/** مهمّةٌ منتهية بمدّةٍ معلومة بالدقائق. */
+const ran = (minutes, extra = {}) => ({
+  ...task,
+  startedAt: T,
+  finishedAt: T + minutes * MIN,
+  ...extra,
+});
+
+test('★★ لا حكمَ على عملٍ لم ينتهِ — الجارية غير مقيسة لا متأخّرة', () => {
+  const v = performanceOf({ ...task, finishedAt: null }, { atMs: T });
+  assert.equal(v.status.id, PERFORMANCE.unmeasured.id);
+  assert.equal(v.varianceMinutes, null);
+  assert.equal(v.countedVariance, false);
+  assert.match(v.message, /لا يُقاس ما لم يتمّ/);
+});
+
+test('ضمن التسامح المعلَن لا يُعدّ تجاوزًا — والمعياريّ لم يُقس بعد', () => {
+  const std = standardFor(task, { atMs: T }).minutes;
+  const within = std + Math.floor((std * VARIANCE_TOLERANCE_PCT) / 100);
+  const v = performanceOf(ran(within), { atMs: T });
+  assert.equal(v.status.id, PERFORMANCE.ontime.id);
+  assert.equal(v.countedVariance, false);
+  assert.match(v.message, new RegExp(`${VARIANCE_TOLERANCE_PCT}`));
+  // وفوق التسامح مباشرةً يتغيّر الحكم — فالحدّ حقيقيّ لا زينة.
+  assert.equal(performanceOf(ran(std * 2), { atMs: T }).status.id, PERFORMANCE.over.id);
+});
+
+test('★★ تجاوزَ بسببٍ خارج إرادته — **لا يُحتسب** انحرافًا عليه', () => {
+  const v = performanceOf(ran(60, { delayReason: { id: 'equipment', note: 'انتظار رافعة' } }), { atMs: T });
+  assert.equal(v.status.id, PERFORMANCE.excused.id);
+  assert.equal(v.countedVariance, false, 'هذا هو الحارس كلّه');
+  assert.match(v.message, /انتظار رافعة/);
+  assert.match(v.message, /لا يُحتسب على المنفّذ/);
+});
+
+test('★★ ولا رقمٌ عارٍ: بلا سببٍ مسجَّل يُدعى للسؤال لا يُدان', () => {
+  const v = performanceOf(ran(60), { atMs: T });
+  assert.equal(v.status.id, PERFORMANCE.over.id);
+  assert.match(v.message, /اسأل قبل أن تحكم/);
+  assert.ok(v.varianceMinutes > 0);
+});
+
+test('★★ ولا مهمّةٌ واحدة تُعلَّق وسمًا على عامل', () => {
+  for (const st of Object.values(PERFORMANCE)) {
+    assert.equal(st.counted, false, `${st.id} لا يُحتسب حكمًا بذاته`);
+  }
+});
+
+test('★★ المعروف وحده يُعفي — وإلّا صار الإعفاء بابًا يفتحه أيّ نصّ', () => {
+  const v = performanceOf(ran(60, { delayReason: { id: 'not_a_delay_reason' } }), { atMs: T });
+  assert.equal(v.status.id, PERFORMANCE.over.id, 'سببٌ خارج السجلّ لا يُعفي');
+  assert.equal(v.reason.known, false);
+  assert.match(v.message, /لا يُعفي ولا يُدين/, 'وهو ثغرة بياناتٍ لا اتّهام');
+  assert.match(v.message, /صحّح التسجيل/);
+});
+
+test('حقل `blamesWorker` ليس زينة — في السجلّ سببٌ يُحمَّل فعلًا', () => {
+  assert.ok(REASONS.receipt_variance.some((r) => r.blamesWorker), 'العدل في الاتجاهين');
+  assert.equal(blamesWorker(DELAY_CONTEXT, 'zzz'), false, 'والمجهول لا يُحمَّل');
+});
+
+test('السبب يُقرأ من السجلّ الموحَّد لا من قائمةٍ جديدة', () => {
+  assert.ok(REASONS[DELAY_CONTEXT].length > 0);
+  assert.equal(blamesWorker(DELAY_CONTEXT, 'device'), false, 'عطل الجهاز ليس على العامل');
+  assert.match(delayReasonProblem({ id: 'zzz' }).problem, /اختر سببًا/);
+  assert.match(delayReasonProblem({ id: 'other' }).problem, /بيانًا مكتوبًا/);
+  assert.equal(delayReasonProblem({ id: 'device' }).ok, true);
+});
+
+test('★★ التجميع يجيب «أين المشكلة» لا «من المشكلة» — ولا صفَّ عاملٍ فيه', () => {
+  const sum = performanceSummary(
+    [
+      ran(5),
+      ran(60, { delayReason: { id: 'equipment' } }),
+      ran(60, { delayReason: { id: 'congestion' } }),
+      ran(90),
+      { ...task, finishedAt: null },
+    ],
+    { atMs: T }
+  );
+  assert.equal(sum.measured, 4);
+  assert.equal(sum.excused, 2);
+  assert.equal(sum.over, 1);
+  assert.equal(sum.unmeasured, 1);
+  assert.equal(sum.unexplained, 1);
+  assert.ok(sum.excusedMinutes > 0, 'والدقائق الضائعة بأسبابٍ خارج الإرادة معدودة');
+  assert.ok(sum.reasons.length === 2 && sum.reasons[0].label, 'الأسباب مرتّبةٌ بأثرها');
+  const keys = Object.keys(sum);
+  assert.equal(keys.some((k) => /worker|crew|assignee|rank|top/i.test(k)), false, 'لا ترتيب بشر');
+});
+
+test('نسبة الالتزام تُحسب من المقيس وحده — لا من مهامَّ لم تنتهِ', () => {
+  const sum = performanceSummary([ran(5), { ...task, finishedAt: null }], { atMs: T });
+  assert.equal(sum.onTimePct, 100, 'واحدةٌ مقيسةٌ ملتزمة');
+  assert.equal(performanceSummary([], {}).onTimePct, null, 'وبلا قياسٍ لا نسبة');
+});

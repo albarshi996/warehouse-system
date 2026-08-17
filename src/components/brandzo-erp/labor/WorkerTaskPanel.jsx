@@ -15,10 +15,13 @@ import { listenBalances } from '../../../services/balances/balancesService.js';
 import { suggestLocations } from '../../../services/locations/putawaySuggest.js';
 import { applyScan, scanVerdict } from '../../../services/locations/scanGate.js';
 import { finishVerdict, lineProgress, taskProgress } from '../../../services/labor/laborModel.js';
+// ‹EXE-702 · ف ت‑١٣› أسباب التأخير من السجلّ الموحَّد — قائمةٌ مقيَّدة لا نصٌّ حرّ.
+import { DELAY_CONTEXT } from '../../../services/labor/laborStandard.js';
+import { reasonsFor } from '../../../services/documents/reasonCodes.js';
 
 const EMPTY_SCAN = { item: '', batch: '', bin: '', qty: '', note: '' };
 
-export default function WorkerTaskPanel({ task, onSaveLines, onFinish }) {
+export default function WorkerTaskPanel({ task, onSaveLines, onFinish, onDelayReason }) {
   const [lines, setLines] = useState(() => task?.lines || []);
   const [active, setActive] = useState(0);
   const [scan, setScan] = useState(EMPTY_SCAN);
@@ -205,6 +208,27 @@ export default function WorkerTaskPanel({ task, onSaveLines, onFinish }) {
             إنهاء المهمّة
           </button>
         </div>
+
+        {/* ★ سبب التعثّر ‹ف ت‑١٣› — **يسجّله من رآه**. وبلاه يُحمَّل العامل
+            عطلَ جهازٍ أو انتظارَ رافعة في أيّ قياسٍ لاحق. اختياريّ دائمًا:
+            إلزامُه يجعله يُملأ عشوائيًّا فيفسد التقرير الذي بُني لأجله. */}
+        {onDelayReason && (
+          <div className="mt-3 border-t border-line pt-2">
+            <label className="block">
+              <span className="block text-[11px] text-ink-2 mb-1">تعثّر شيءٌ؟ سجّله — لا يُحتسب عليك</span>
+              <select
+                className="w-full bg-chip border border-line rounded-lg px-3 py-2 text-sm text-ink"
+                value={task?.delayReason?.id || ''}
+                onChange={(e) => onDelayReason?.(e.target.value)}
+              >
+                <option value="">— لا تعثّر —</option>
+                {reasonsFor(DELAY_CONTEXT).map((r) => (
+                  <option key={r.id} value={r.id}>{r.label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
         <p className="text-[11px] text-ink-2 mt-2">
           الرصيد لا يتحرّك إلّا عند إنجاز المستند — والمسح هنا يُسجّل ما وُضع فعلًا وأين.
         </p>

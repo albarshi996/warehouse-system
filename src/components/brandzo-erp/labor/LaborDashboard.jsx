@@ -20,6 +20,7 @@ import {
   cancelTask,
   saveTaskLines,
   finishLineTask,
+  recordDelayReason,
 } from '../../../services/labor/laborTasksService.js';
 import {
   LABOR_SHIFTS,
@@ -36,6 +37,8 @@ import { workQueue } from '../../../services/tasks/taskShape.js';
 import { listenVehicles } from '../../../services/vehicles/vehiclesService.js';
 import { RESOURCE_KINDS, RESOURCE_STATE, resolveResources, resourcesSnapshot } from '../../../services/labor/resourcesResolver.js';
 import { listenDoors, listenYardVisits } from '../../../services/fleet/yardService.js';
+// ‹EXE-702› الأداء بعدل — الحكم من المنطق الخالص، والشاشة تعرض سببه معه.
+import { explainStandard, performanceOf, performanceSummary, standardFor } from '../../../services/labor/laborStandard.js';
 
 const LABOR_ROLES = ['admin', 'warehouse_manager', 'labor_supervisor'];
 const input =
@@ -162,14 +165,14 @@ export default function LaborDashboard() {
           ＋ تشكيل فريق
         </button>
         <div className="flex-1" />
-        {['board', 'mine', 'resources', 'crews', 'tasks', 'plan'].map((k) => (
+        {['board', 'mine', 'resources', 'standard', 'crews', 'tasks', 'plan'].map((k) => (
           <button
             key={k}
             type="button"
             onClick={() => setTab(k)}
             className={`px-3 py-1.5 rounded-full text-xs font-bold border ${tab === k ? 'bg-accent text-brand-navy border-accent' : 'bg-chip text-ink-2 border-line hover:border-accent/50'}`}
           >
-            {{ board: 'اللوحة', mine: 'مهامي', resources: 'الموارد', crews: 'الفرق', tasks: 'المهام', plan: 'تخطيط الموارد' }[k]}
+            {{ board: 'اللوحة', mine: 'مهامي', resources: 'الموارد', standard: 'الأداء والمعياريّ', crews: 'الفرق', tasks: 'المهام', plan: 'تخطيط الموارد' }[k]}
           </button>
         ))}
       </div>
@@ -328,6 +331,7 @@ export default function LaborDashboard() {
                     task={current.task}
                     onSaveLines={(lines, entry) => act(() => saveTaskLines(current.task, lines, me, entry))}
                     onFinish={(verdict, lines) => act(() => finishLineTask(current.task, verdict, lines, me))}
+                    onDelayReason={(id) => id && act(() => recordDelayReason(current.task, { id }, me))}
                   />
                 </div>
               )}
@@ -368,8 +372,100 @@ export default function LaborDashboard() {
         </Section>
       )}
 
+      {tab === 'standard' && <StandardPanel tasks={tasks} nowMs={Date.now()} />}
+
       {tab === 'plan' && <PlanPanel summary={summary} activeCrews={activeCrews} />}
     </div>
+  );
+}
+
+/**
+ * الأداء بعدل ‹EXE-702› — للمشرف وحده (ت-O05).
+ *
+ * ★★ **ولا ترتيبَ عمّالٍ تنازليًّا هنا ولا في غيرها.** لوحةٌ ترتّب البشر
+ * تُنتج سباقًا يُخفي التعثّر بدل أن يكشفه: من تأخّر لعطلِ جهازٍ يتعلّم ألّا
+ * يُبلّغ كي لا ينزل في القائمة — فتفقد الإدارة الإشارةَ التي تحتاجها. فما
+ * يُعرض هنا **أين يضيع الوقت** لا **من أضاعه**، والأسباب مرتّبةٌ بأثرها.
+ */
+function StandardPanel({ tasks, nowMs }) {
+  const done = useMemo(() => (tasks || []).filter((t) => t.state === 'done' || t.state === 'paused'), [tasks]);
+  const perf = useMemo(() => performanceSummary(done, { nowMs }), [done, nowMs]);
+  const sample = useMemo(() => done.slice(0, 12).map((t) => ({ task: t, verdict: performanceOf(t, { nowMs }) })), [done, nowMs]);
+  const std = useMemo(() => standardFor({ lines: [{ qtyRequired: 1 }] }, { atMs: nowMs }), [nowMs]);
+
+  return (
+    <Section
+      title="الأداء مقابل المعياريّ"
+      hint="للمشرف — والمعيار أداةُ اكتشافِ مشكلةٍ لا حكمٌ آليّ على موظف"
+    >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        <Kpi label="مقيسة" value={perf.measured} />
+        <Kpi label="ضمن المعياريّ" value={perf.ontime} />
+        <Kpi label="تجاوزَ بعذر" value={perf.excused} />
+        <Kpi label="بلا سببٍ مسجَّل" value={perf.unexplained} alert={perf.unexplained > 0} />
+      </div>
+
+      {/* عناصر المعياريّ — يراها المشرف كي يعرف ممّ تكوّن الرقم. */}
+      <div className="rounded-xl border border-line p-3 mb-4">
+        <p className="text-xs font-bold text-ink-2 mb-2">
+          المعياريّ إصدار {std.version} — {std.versionLabel}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {std.elements.map((e) => (
+            <span key={e.id} className="text-[11px] px-2 py-1 rounded-lg border border-line text-ink-2" title={e.note || e.hint}>
+              {e.label}: {e.unitSeconds || e.count}
+              {e.per === 'percent' ? '٪' : ' ث'}
+              {e.basis === 'estimated' && e.id !== 'allowance' ? ' · تقديريّ' : ''}
+            </span>
+          ))}
+        </div>
+        {std.notes.length > 0 && <p className="text-[11px] text-ink-2 mt-2">{std.notes.join(' · ')}</p>}
+      </div>
+
+      {/* أين يضيع الوقت — لا من أضاعه. */}
+      {perf.reasons.length > 0 && (
+        <div className="rounded-xl border border-line p-3 mb-4">
+          <p className="text-xs font-bold text-ink-2 mb-2">أسباب التأخّر — مرتّبةً بأثرها</p>
+          {perf.reasons.map((r) => (
+            <div key={r.id} className="flex items-center justify-between text-xs border-t border-line py-1.5 first:border-t-0">
+              <span className="text-ink-2">
+                {r.label}
+                {!r.blames && <span className="text-muted"> · خارج إرادة المنفّذ</span>}
+              </span>
+              <span className="text-ink font-bold">{r.count} مهمّة · {r.minutes}د</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {done.length === 0 ? (
+        <Empty>لا مهامَّ منتهية بعد — ولا يُقاس ما لم يتمّ.</Empty>
+      ) : (
+        <div className="space-y-2">
+          {sample.map(({ task: t, verdict }) => (
+            <div key={t.id} className="rounded-xl border border-line p-3">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <strong className="text-ink">{ORDER_TYPES[t.orderType]?.label || t.orderType}</strong>
+                <span className="text-ink-2">{t.docRef?.number || '—'}</span>
+                <span
+                  className={`text-[11px] px-2 py-0.5 rounded-full border ${
+                    verdict.countedVariance ? 'border-brand-red/40 text-brand-red' : 'border-line text-ink-2'
+                  }`}
+                >
+                  {verdict.status.label}
+                </span>
+              </div>
+              {/* ★ الفارق مع سببه دائمًا — لا رقمٌ عارٍ. */}
+              <p className="text-[11px] text-ink-2 mt-1">{verdict.message}</p>
+              <p className="text-[11px] text-muted mt-0.5">{explainStandard(verdict.standard)}</p>
+            </div>
+          ))}
+          {done.length > sample.length && (
+            <p className="text-[11px] text-muted text-center">…و{done.length - sample.length} مهمّةً أخرى.</p>
+          )}
+        </div>
+      )}
+    </Section>
   );
 }
 

@@ -35,7 +35,8 @@
  */
 
 import { toMillis } from '../documents/inbox.js';
-import { taskProgress } from './laborModel.js';
+import { blamesWorker, reasonLabel, reasonProblem, reasonsFor } from '../documents/reasonCodes.js';
+import { taskDurationMinutes, taskProgress } from './laborModel.js';
 
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 const s = (v) => String(v ?? '').trim();
@@ -251,4 +252,179 @@ export function explainStandard(result, limit = 3) {
     .slice(0, limit)
     .map((e) => `${e.label} ${Math.round(e.seconds / 60)}د${e.basis === BASIS.estimated.id ? ' (تقديريّ)' : ''}`);
   return top.join(' · ') || 'لا عنصر مؤثّر';
+}
+
+/* ═════════════ الأداء بعدل ‹EXE-702› — يسدّ ف ت‑٨ وف ت‑١٣ ═════════════
+ *
+ * ═══ ★★ القاعدة الحاكمة قبل أيّ حساب ═══
+ * **«المعيار أداةُ اكتشافِ مشكلةٍ لا حكمٌ آليّ على موظف»** — نصّ `تطوير.md`.
+ * ونظامٌ يقيس بلا أن يسأل «لماذا» يصير أداةَ ظلم: عاملٌ انتظر رافعةً نصف
+ * ساعة يظهر أبطأ من زميلٍ لم ينتظر، فيُحاسَب على عطلٍ ليس منه — ثمّ يتعلّم
+ * أن يُخفي التعثّر بدل أن يُبلّغ عنه، فتفقد الإدارة الإشارة التي تحتاجها.
+ *
+ * فالحكم هنا **ثلاثيّ لا ثنائيّ**: على الوقت · تجاوزَ بعذرٍ · تجاوزَ بلا
+ * سببٍ مسجَّل. والثالثة **ليست إدانة** بل سؤالٌ مفتوح: «لم يُسجَّل سببٌ —
+ * اسأل قبل أن تحكم».
+ *
+ * ═══ والسبب من السجلّ الموحَّد لا من قائمةٍ جديدة ═══
+ * `reasonCodes.js` بنى سياق `task_delay` في EXE-203 **وفيه `blamesWorker`
+ * لكلّ سبب**، مكتوبًا يومَها لأجل هذه اللحظة. فيُقرأ منه ولا يُنسخ، ويبقى
+ * تقريرُ الأسباب واحدًا يُسأل: «لماذا تأخّر العمل هذا الشهر؟».
+ */
+
+/** سياق سبب التأخير في السجلّ الموحَّد — إحالةٌ لا نصٌّ مكرَّر. */
+export const DELAY_CONTEXT = 'task_delay';
+
+/**
+ * تسامحٌ فوق المعياريّ لا يُعدّ تجاوزًا — **معلَنٌ ويُضبط بالتجربة**.
+ * والسبب مبدئيّ: معيارٌ لم يُقس بعد (أرقامه مبدئيّة) لا يجوز أن يُحاسِب على
+ * دقيقةٍ واحدة. ومن ضيّق التسامح قبل أن يضبط الأرقام أنتج تجاوزاتٍ كاذبة.
+ */
+export const VARIANCE_TOLERANCE_PCT = 15;
+
+/** أحكام الأداء الأربعة. */
+export const PERFORMANCE = Object.freeze({
+  unmeasured: { id: 'unmeasured', label: 'لم تُقس بعد', counted: false },
+  ontime: { id: 'ontime', label: 'ضمن المعياريّ', counted: false },
+  excused: { id: 'excused', label: 'تجاوزَ بسببٍ خارج إرادته', counted: false },
+  over: { id: 'over', label: 'تجاوزَ بلا سببٍ مسجَّل', counted: false },
+});
+
+/**
+ * حكم أداء مهمّةٍ واحدة.
+ *
+ * ★ لاحظ أنّ `over.counted === false` أيضًا: **لا مهمّةَ واحدة تُحتسب حكمًا
+ * على عامل.** ما يُحتسب هو `countedVariance` — رقمٌ يدخل تجميعَ المشرف
+ * ليكتشف نمطًا، لا وسمٌ يُعلَّق على منفّذٍ بعينه من مهمّةٍ واحدة.
+ *
+ * @param {object} task مهمّة المناولة (بأختامها وسبب تأخيرها إن سُجّل)
+ * @param {object} [ctx] `{ versions, atMs, distanceMeters, nowMs }`
+ * @returns {{status:object, actualMinutes:number|null, standardMinutes:number, varianceMinutes:number|null,
+ *            variancePct:number|null, reason:object|null, countedVariance:boolean, message:string, standard:object}}
+ */
+export function performanceOf(task, ctx = {}) {
+  const standard = standardFor(task, ctx);
+  const startedMs = toMillis(task?.startedAt);
+  const finishedMs = toMillis(task?.finishedAt);
+  const actualMinutes = startedMs && finishedMs ? taskDurationMinutes(startedMs, finishedMs, task?.pausedMs) : null;
+
+  const reasonId = s(task?.delayReason?.id || task?.delayReasonId);
+  // ★ **المعروف وحده يُعفي.** سببٌ خارج القائمة لا يُجمَع منه تقريرٌ ولا
+  //   يُتحقَّق منه — ولو أعفى لصار الإعفاء بابًا يفتحه أيّ نصٍّ يُكتب. وهو
+  //   ليس اتّهامًا للمنفّذ بل **ثغرة بياناتٍ تُسدّ**، ورسالتُه تقول ذلك.
+  const known = Boolean(reasonId) && reasonsFor(DELAY_CONTEXT).some((r) => r.id === reasonId);
+  const reason = reasonId
+    ? {
+        id: reasonId,
+        label: reasonLabel(DELAY_CONTEXT, reasonId) || reasonId,
+        note: s(task?.delayReason?.note),
+        known,
+        blames: known && blamesWorker(DELAY_CONTEXT, reasonId),
+      }
+    : null;
+
+  const base = {
+    standard,
+    standardMinutes: standard.minutes,
+    actualMinutes,
+    reason,
+  };
+
+  // ★ لا حكمَ على عملٍ لم ينتهِ: مهمّةٌ جاريةٌ ليست متأخّرة، هي **غير مقيسة**.
+  if (actualMinutes === null) {
+    return {
+      ...base,
+      status: PERFORMANCE.unmeasured,
+      varianceMinutes: null,
+      variancePct: null,
+      countedVariance: false,
+      message: 'لم تنتهِ بعد — ولا يُقاس ما لم يتمّ.',
+    };
+  }
+
+  const varianceMinutes = actualMinutes - standard.minutes;
+  const variancePct = standard.minutes > 0 ? Math.round((varianceMinutes / standard.minutes) * 100) : null;
+  const overTolerance = variancePct !== null && variancePct > VARIANCE_TOLERANCE_PCT;
+
+  if (!overTolerance) {
+    return {
+      ...base,
+      status: PERFORMANCE.ontime,
+      varianceMinutes,
+      variancePct,
+      countedVariance: false,
+      message: `${actualMinutes}د مقابل معياريٍّ ${standard.minutes}د — ضمن التسامح (${VARIANCE_TOLERANCE_PCT}٪).`,
+    };
+  }
+
+  // ★★ سببٌ مسجَّلٌ خارج إرادة المنفّذ ⇒ **لا يُحتسب انحرافًا عليه**، ويبقى
+  //    مرئيًّا في تقرير الأسباب لأنّه هو المشكلة التي تُحلّ.
+  if (reason && reason.known && !reason.blames) {
+    return {
+      ...base,
+      status: PERFORMANCE.excused,
+      varianceMinutes,
+      variancePct,
+      countedVariance: false,
+      message: `تجاوزَ ${varianceMinutes}د — والسبب: ${reason.label}${reason.note ? ` (${reason.note})` : ''}. لا يُحتسب على المنفّذ.`,
+    };
+  }
+
+  return {
+    ...base,
+    status: PERFORMANCE.over,
+    varianceMinutes,
+    variancePct,
+    countedVariance: true,
+    // ★ لا رقمٌ عارٍ: إمّا السبب المسجَّل، وإمّا **دعوةٌ للسؤال** لا حكم.
+    message: !reason
+      ? `تجاوزَ ${varianceMinutes}د (${variancePct}٪) ولم يُسجَّل سببٌ — اسأل قبل أن تحكم.`
+      : reason.known
+        ? `تجاوزَ ${varianceMinutes}د — والسبب المسجَّل: ${reason.label}.`
+        : `تجاوزَ ${varianceMinutes}د — وسببٌ مسجَّلٌ غير معروف في السجلّ («${reason.id}») فلا يُعفي ولا يُدين: صحّح التسجيل.`,
+  };
+}
+
+/** ما يمنع تسجيل سبب تأخير — بالإحالة إلى حارس السجلّ الموحَّد. */
+export function delayReasonProblem(input) {
+  return reasonProblem(DELAY_CONTEXT, { id: input?.id, note: input?.note });
+}
+
+/**
+ * تجميعٌ **للمشرف** — يجيب «أين المشكلة» لا «من المشكلة».
+ *
+ * ★★ ولذلك **لا صفوفَ لعمّالٍ ولا ترتيبَ تنازليّ**: المخرَج أعدادٌ وأسبابٌ
+ * مرتّبةٌ بأثرها. ومن أراد فتح مهمّةٍ بعينها فتحها من سجلّها — أمّا لوحةٌ
+ * تُرتّب البشر تنازليًّا فتُنتج سباقًا يُخفي التعثّر بدل أن يكشفه (ت-O05).
+ */
+export function performanceSummary(tasks, ctx = {}) {
+  const rows = (tasks || []).map((t) => performanceOf(t, ctx));
+  const counted = rows.filter((r) => r.status.id !== PERFORMANCE.unmeasured.id);
+  const byStatus = {};
+  for (const r of rows) byStatus[r.status.id] = (byStatus[r.status.id] || 0) + 1;
+
+  const reasons = new Map();
+  for (const r of rows) {
+    if (!r.reason) continue;
+    const row = reasons.get(r.reason.id) || { id: r.reason.id, label: r.reason.label, blames: r.reason.blames, count: 0, minutes: 0 };
+    row.count += 1;
+    row.minutes += Math.max(0, r.varianceMinutes || 0);
+    reasons.set(r.reason.id, row);
+  }
+
+  const overRows = rows.filter((r) => r.countedVariance);
+  return {
+    measured: counted.length,
+    ontime: byStatus[PERFORMANCE.ontime.id] || 0,
+    excused: byStatus[PERFORMANCE.excused.id] || 0,
+    over: overRows.length,
+    unmeasured: byStatus[PERFORMANCE.unmeasured.id] || 0,
+    /** نسبة الالتزام — من المقيس وحده، ولا تُحسب من مهامَّ لم تنتهِ. */
+    onTimePct: counted.length ? Math.round(((byStatus[PERFORMANCE.ontime.id] || 0) / counted.length) * 100) : null,
+    /** الدقائق الضائعة بأسبابٍ خارج الإرادة — الرقم الذي **يوجّه الإدارة**. */
+    excusedMinutes: rows.filter((r) => r.status.id === PERFORMANCE.excused.id).reduce((a, r) => a + Math.max(0, r.varianceMinutes || 0), 0),
+    /** بلا سببٍ مسجَّل — لا تُقرأ إدانةً بل ثغرةَ توثيقٍ تُسدّ بالسؤال. */
+    unexplained: overRows.filter((r) => !r.reason).length,
+    reasons: [...reasons.values()].sort((a, b) => b.minutes - a.minutes || b.count - a.count),
+  };
 }

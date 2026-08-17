@@ -22,6 +22,7 @@ import {
   increment,
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
+import { delayReasonProblem } from './laborStandard.js';
 import { canTransitionTask } from './laborModel.js';
 import { generateTasks } from '../tasks/taskFactory.js';
 import { splitGenerated } from '../tasks/taskShape.js';
@@ -161,6 +162,25 @@ export async function finishTask(task, unitsHandled, profile) {
   const units = Number(unitsHandled) || 0;
   await updateDoc(doc(db, COL, task.id), { state: 'done', finishedAt: serverTimestamp(), unitsHandled: units });
   await logEvent(task.id, whoami(profile), 'finished', { unitsHandled: units });
+}
+
+/**
+ * يسجّل **سبب تأخير** المهمّة ‹EXE-702 · يسدّ ف ت‑١٣›.
+ *
+ * ★ ولماذا يسجّله العامل لا المشرف؟ لأنّه هو من رأى العطل. وبلا هذا الحقل
+ * يحمّل أيّ قياسٍ لاحق العاملَ عطلَ جهازٍ أو ازدحامَ ممرٍّ أو انتظارَ رافعة —
+ * فيتعلّم أن يُخفي التعثّر بدل أن يُبلّغ عنه، وتفقد الإدارة الإشارة نفسها.
+ *
+ * والسبب **مقيَّدٌ** بالسجلّ الموحَّد (`reasonCodes.task_delay`): نصٌّ حرٌّ لا
+ * يُجمَع منه تقرير. والحارس هنا استدعاءٌ لا نسخة.
+ */
+export async function recordDelayReason(task, { id, note = '' }, profile) {
+  const verdict = delayReasonProblem({ id, note });
+  if (!verdict.ok) throw new Error(verdict.problem);
+  await updateDoc(doc(db, COL, task.id), {
+    delayReason: { id, note: String(note || '').trim(), atMs: Date.now() },
+  });
+  await logEvent(task.id, whoami(profile), 'delay_reason', { reasonId: id });
 }
 
 /** إلغاء مهمّةٍ لم تبدأ بعد. */
