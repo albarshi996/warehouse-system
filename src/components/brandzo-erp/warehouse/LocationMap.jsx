@@ -17,7 +17,15 @@ import Icon from '../../ui/Icon.jsx';
 import { listenLocations } from '../../../services/locations/locationsService.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { STORAGE_TYPES } from '../../../services/locations/locationsModel.js';
-import { MAP_LEGEND, buildLocationGrid, warehouseCodesOf } from '../../../services/locations/mapGrid.js';
+import {
+  MAP_LEGEND,
+  WORK_LEGEND,
+  applyWorkLayer,
+  buildLocationGrid,
+  summarizeWork,
+  warehouseCodesOf,
+} from '../../../services/locations/mapGrid.js';
+import { listenLaborTasks } from '../../../services/labor/laborTasksService.js';
 
 const n = (v) => new Intl.NumberFormat('en-US').format(Number(v) || 0);
 
@@ -29,15 +37,25 @@ export default function LocationMap() {
   const [term, setTerm] = useState('');
   const [includeArchived, setIncludeArchived] = useState(false);
   const [selected, setSelected] = useState(null);
+  // ‹EXE-803› طبقةٌ ثانية على الشبكة نفسها — لا خريطةٌ ثانية ولا رابطٌ جديد.
+  const [layer, setLayer] = useState('capacity');
+  const [tasks, setTasks] = useState([]);
 
   useEffect(() => listenLocations(setLocations, () => setLocations([])), []);
   useEffect(() => listenBalances(setBalances, () => setBalances([])), []);
+  useEffect(() => listenLaborTasks(setTasks, () => setTasks([])), []);
 
   const warehouseCodes = useMemo(() => warehouseCodesOf(locations), [locations]);
   const grid = useMemo(
-    () => buildLocationGrid(locations, balances, { warehouse, storageType, term, includeArchived }),
-    [locations, balances, warehouse, storageType, term, includeArchived]
+    // الشبكة تُبنى مرّةً ثمّ **تُلحق** بها طبقة العمل — لا بناءٌ ثانٍ.
+    () => applyWorkLayer(
+      buildLocationGrid(locations, balances, { warehouse, storageType, term, includeArchived }),
+      tasks
+    ),
+    [locations, balances, warehouse, storageType, term, includeArchived, tasks]
   );
+  const work = useMemo(() => summarizeWork(grid.cells), [grid]);
+  const showWork = layer === 'work';
 
   const { summary } = grid;
   const cell = useMemo(() => grid.cells.find((c) => c.code === selected) || null, [grid.cells, selected]);
@@ -105,9 +123,35 @@ export default function LocationMap() {
         <Kpi label="تنبيهات" value={n(summary.alerts)} warn={summary.alerts > 0} />
       </div>
 
+      {/* ── مبدّل الطبقة ‹EXE-803› — شبكةٌ واحدة، وما يُلوَّن به يتبدّل ── */}
+      <div className="bz-locmap__legend o_no_print" aria-label="طبقة العرض">
+        {[
+          ['capacity', 'السعة والإشغال'],
+          ['work', 'تقدّم العمل'],
+        ].map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            className="btn btn-secondary"
+            aria-pressed={layer === id}
+            style={layer === id ? { fontWeight: 800, borderColor: 'var(--o-brand-primary)' } : undefined}
+            onClick={() => setLayer(id)}
+          >
+            {label}
+          </button>
+        ))}
+        {showWork && (
+          <span className="bz-locmap__note" style={{ margin: 0 }}>
+            {work.locations} موقعًا فيه عمل · أُنجز {n(work.done)} من {n(work.required)}
+            {work.pct === null ? '' : ` (${work.pct}%)`}
+            {work.stalled.length ? ` · متعثّر في ${work.stalled.length} موقعًا` : ''}
+          </span>
+        )}
+      </div>
+
       {/* ── المفتاح ───────────────────────────────────────────────── */}
       <div className="bz-locmap__legend" aria-label="مفتاح الخريطة">
-        {MAP_LEGEND.map((s) => (
+        {(showWork ? WORK_LEGEND : MAP_LEGEND).map((s) => (
           <span key={s.id} className="bz-locmap__legend-item" title={s.hint}>
             <span className="bz-locmap__swatch" data-state={s.id} aria-hidden="true">
               {s.symbol}
@@ -154,19 +198,23 @@ export default function LocationMap() {
                           key={c.code}
                           type="button"
                           className="bz-locmap__cell"
-                          data-state={c.state}
-                          data-alert={c.alerts.length ? 'yes' : undefined}
+                          data-state={showWork ? `work-${c.work.state}` : c.state}
+                          data-alert={(showWork ? c.work.warn : c.alerts.length > 0) ? 'yes' : undefined}
                           aria-pressed={selected === c.code}
-                          aria-label={c.summaryText}
-                          title={c.summaryText}
+                          aria-label={showWork ? `${c.code} · ${c.work.summaryText}` : c.summaryText}
+                          title={showWork ? `${c.code} · ${c.work.summaryText}` : c.summaryText}
                           onClick={() => setSelected(selected === c.code ? null : c.code)}
                         >
-                          <span className="bz-locmap__cell-sym" aria-hidden="true">{c.symbol}</span>
+                          <span className="bz-locmap__cell-sym" aria-hidden="true">
+                            {showWork ? c.work.symbol : c.symbol}
+                          </span>
                           <span className="bz-locmap__cell-code">{c.shortLabel}</span>
                           <span className="bz-locmap__cell-qty">
-                            {c.occupancy.capacityQty === null
-                              ? n(c.occupancy.usedQty)
-                              : `${n(c.occupancy.usedQty)}/${n(c.occupancy.capacityQty)}`}
+                            {showWork
+                              ? (c.work.required ? `${n(c.work.done)}/${n(c.work.required)}` : '—')
+                              : c.occupancy.capacityQty === null
+                                ? n(c.occupancy.usedQty)
+                                : `${n(c.occupancy.usedQty)}/${n(c.occupancy.capacityQty)}`}
                           </span>
                         </button>
                       ))}
@@ -309,6 +357,22 @@ const MAP_CSS = `
                    repeating-linear-gradient(90deg, transparent 0 5px, rgba(154,107,1,.20) 5px 10px); }
 .bz-locmap__cell[data-state="archived"], .bz-locmap__swatch[data-state="archived"] {
   background-color:var(--o-gray-100); border-style:dashed; border-color:var(--o-gray-500); color:var(--o-gray-600); }
+
+/* ‹EXE-803› طبقة العمل — النمط نفسه: لونٌ + نمطٌ + رمزٌ في الترميز. */
+.bz-locmap__cell[data-state="work-idle"], .bz-locmap__swatch[data-state="idle"] {
+  background-color:var(--o-gray-100); border-color:var(--o-gray-400); color:var(--o-gray-600); }
+.bz-locmap__cell[data-state="work-waiting"], .bz-locmap__swatch[data-state="waiting"] {
+  background-color:var(--o-badge-draft-bg); border-color:var(--o-brand-primary); color:var(--o-brand-primary);
+  background-image:repeating-linear-gradient(45deg, transparent 0 5px, rgba(113,75,103,.22) 5px 10px); }
+.bz-locmap__cell[data-state="work-active"], .bz-locmap__swatch[data-state="active"] {
+  background-color:var(--o-badge-info-bg); border-color:var(--o-text-info); color:var(--o-text-info);
+  background-image:radial-gradient(var(--o-text-info) 1px, transparent 1px); background-size:7px 7px; }
+.bz-locmap__cell[data-state="work-done"], .bz-locmap__swatch[data-state="done"] {
+  background-color:var(--o-badge-success-bg); border-color:var(--o-text-success); color:var(--o-text-success); }
+.bz-locmap__cell[data-state="work-stalled"], .bz-locmap__swatch[data-state="stalled"] {
+  background-color:var(--o-badge-danger-bg); border-color:var(--o-text-danger); color:var(--o-text-danger);
+  background-image:repeating-linear-gradient(45deg, transparent 0 5px, rgba(210,63,58,.20) 5px 10px),
+                   repeating-linear-gradient(-45deg, transparent 0 5px, rgba(210,63,58,.20) 5px 10px); }
 
 /* التنبيه وحده يستحقّ إطارًا أحمر عريضًا — لا حالةٌ عاديّة. */
 .bz-locmap__cell[data-alert="yes"] { box-shadow:inset 0 0 0 2px var(--o-text-danger); }

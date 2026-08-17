@@ -239,3 +239,111 @@ test('المدخلات الفارغة لا تُسقط الخريطة', () => {
   assert.equal(grid.summary.cells, 0);
   assert.deepEqual(grid.orphans, []);
 });
+
+/* ═══════ طبقة العمل ‹EXE-803› — ف ت‑١٦ ═══════ */
+
+import {
+  WORK_LEGEND,
+  WORK_STATES,
+  WORK_STATE_ORDER,
+  applyWorkLayer,
+  indexWorkByLocation,
+  summarizeWork,
+  workOf,
+} from './mapGrid.js';
+
+const LOCS = [
+  { code: 'MAIN-A01-R01-B01', capacity: { qty: 100 } },
+  { code: 'MAIN-A01-R01-B02', capacity: { qty: 100 } },
+  { code: 'MAIN-A01-R01-B03', capacity: { qty: 100 } },
+];
+
+const workTask = (id, state, lines) => ({ id, state, lines });
+
+test('★★ طبقةٌ ثانية على الشبكة نفسها — لا خريطةٌ ثانية', () => {
+  const before = buildLocationGrid(LOCS, []);
+  const after = applyWorkLayer(buildLocationGrid(LOCS, []), []);
+  assert.equal(after.cells.length, before.cells.length, 'الخانات نفسها');
+  assert.deepEqual(after.cells.map((c) => c.code), before.cells.map((c) => c.code), 'والفرز نفسه');
+  assert.deepEqual(after.summary, before.summary, 'وملخّص الإشغال لم يُمسّ');
+  assert.ok('work' in after.cells[0], 'ويُضاف حقلُ العمل وحده');
+});
+
+test('★★ لكلّ حالة عملٍ رمزٌ ونمطٌ ونصّ — لا لونٌ وحده', () => {
+  assert.equal(WORK_LEGEND.length, WORK_STATE_ORDER.length);
+  for (const s of WORK_LEGEND) {
+    assert.ok(s.symbol && s.pattern && s.labelAr && s.hint, `${s.id} ناقص`);
+    assert.equal(/\p{Extended_Pictographic}/u.test(s.symbol), false, 'ولا إيموجي');
+  }
+});
+
+test('الحالات الأربع تُشتقّ من الكمّيّات لا من حقلٍ مكتوب', () => {
+  assert.equal(workOf([]).state, 'idle');
+  assert.equal(workOf([{ task: { id: 't', state: 'pending' }, line: { qtyRequired: 5, qtyDone: 0 } }]).state, 'waiting');
+  assert.equal(workOf([{ task: { id: 't', state: 'in_progress' }, line: { qtyRequired: 5, qtyDone: 2 } }]).state, 'active');
+  assert.equal(workOf([{ task: { id: 't', state: 'in_progress' }, line: { qtyRequired: 5, qtyDone: 5 } }]).state, 'done');
+});
+
+test('★★ المتعثّر يظهر **بسببه** — لا لونٌ أحمر بلا بيان', () => {
+  const short = workOf([{ task: { id: 't1', state: 'in_progress' }, line: { qtyRequired: 9, qtyDone: 0, shortfall: true } }]);
+  assert.equal(short.state, 'stalled');
+  assert.match(short.reasons.join(' '), /نقص رصيد/);
+  assert.match(short.summaryText, /نقص رصيد/);
+
+  const paused = workOf([{ task: { id: 't2', state: 'paused' }, line: { qtyRequired: 5, qtyDone: 1 } }]);
+  assert.match(paused.reasons.join(' '), /متوقّفة/);
+
+  const delayed = workOf([
+    { task: { id: 't3', state: 'in_progress', delayReason: { id: 'equipment', label: 'انتظار رافعة' } }, line: { qtyRequired: 5, qtyDone: 1 } },
+  ]);
+  assert.equal(delayed.state, 'stalled');
+  assert.match(delayed.reasons.join(' '), /انتظار رافعة/);
+});
+
+test('السبب الواحد يُقال مرّةً ولو تكرّر في خمسة أسطر', () => {
+  const many = workOf([
+    { task: { id: 't', state: 'paused' }, line: { qtyRequired: 1, qtyDone: 0 } },
+    { task: { id: 't', state: 'paused' }, line: { qtyRequired: 1, qtyDone: 0 } },
+  ]);
+  assert.equal(many.reasons.length, 1);
+  assert.deepEqual(many.tasks, ['t'], 'والمهمّة تُعدّ مرّة');
+});
+
+test('الموقع يُقرأ من طرفَي السطر — السحب يُفرغ والتخزين يملأ', () => {
+  const idx = indexWorkByLocation([
+    workTask('t1', 'in_progress', [{ fromBin: 'MAIN-A01-R01-B01', toBin: 'MAIN-A01-R01-B02', qtyRequired: 3, qtyDone: 1 }]),
+  ]);
+  assert.equal(idx.get('MAIN-A01-R01-B01').length, 1);
+  assert.equal(idx.get('MAIN-A01-R01-B02').length, 1);
+});
+
+test('مهمّةٌ منتهيةٌ بلا أثرٍ لا تُلوّن موقعًا · والمنتهية بأثرٍ تبقى مرئيّة', () => {
+  const empty = indexWorkByLocation([workTask('t', 'done', [{ fromBin: 'MAIN-A01-R01-B01', qtyRequired: 2, qtyDone: 0 }])]);
+  assert.equal(empty.size, 0);
+  const withWork = indexWorkByLocation([workTask('t', 'done', [{ fromBin: 'MAIN-A01-R01-B01', qtyRequired: 2, qtyDone: 2 }])]);
+  assert.equal(withWork.size, 1, 'فما أُنجز اليوم يُرى على الخريطة');
+});
+
+test('★★ ملخّص العمل يقول أين تعثّر لا كم تعثّر', () => {
+  const grid = applyWorkLayer(buildLocationGrid(LOCS, []), [
+    workTask('t1', 'in_progress', [{ fromBin: 'MAIN-A01-R01-B01', qtyRequired: 10, qtyDone: 10 }]),
+    workTask('t2', 'in_progress', [{ fromBin: 'MAIN-A01-R01-B02', qtyRequired: 10, qtyDone: 0, shortfall: true }]),
+  ]);
+  const s = summarizeWork(grid.cells);
+  assert.equal(s.byState.done, 1);
+  assert.equal(s.byState.stalled, 1);
+  assert.equal(s.byState.idle, 1);
+  assert.equal(s.locations, 2, 'والخالي لا يُحتسب عملًا');
+  assert.equal(s.required, 20);
+  assert.equal(s.done, 10);
+  assert.equal(s.pct, 50);
+  assert.equal(s.stalled[0].code, 'MAIN-A01-R01-B02');
+  assert.ok(s.stalled[0].reasons.length > 0, 'ومع الكود سببه');
+});
+
+test('بلا مهامَّ تبقى الخريطة كما هي وكلّ خانةٍ «لا عمل»', () => {
+  const grid = applyWorkLayer(buildLocationGrid(LOCS, []), []);
+  assert.equal(summarizeWork(grid.cells).locations, 0);
+  assert.equal(summarizeWork(grid.cells).pct, null, 'ولا نسبةَ من لا شيء');
+  assert.equal(grid.cells[0].work.state, WORK_STATES.idle.id);
+});

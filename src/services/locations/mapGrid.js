@@ -379,6 +379,209 @@ function groupBy(items, keyOf) {
   return map;
 }
 
+/* ═════════ طبقة العمل ‹EXE-803› — يسدّ ف ت‑١٦ ═════════
+ *
+ * ═══ العطب ═══
+ * الخريطة المبنيّة في LOC-602 تُظهر **السعة والإشغال**: أين المكان الفارغ.
+ * ولا تُظهر **العمل**: ما التُقط اليوم · ما لم يبدأ · أين تعثّرت المهامّ.
+ * فالمشرف الذي يسأل «أين وقف الشغل الآن؟» يقرأ جدولَ مهامٍّ ويتخيّل المكان.
+ *
+ * ═══ ★★ وطبقةٌ ثانية لا خريطةٌ ثانية ═══
+ * الشبكة نفسها والخانات نفسها والفرز نفسه — يتبدّل **ما يُلوَّن به** فقط.
+ * ومكوّن خريطةٍ ثانٍ كان سيُنتج «نتوءًا»: خريطتان تفترقان أوّل تعديلٍ في
+ * إحداهما، ورابطين في القائمة لشيءٍ واحد.
+ *
+ * ═══ والتمييز بلا لونٍ وحده — كالطبقة الأولى ═══
+ * لكلّ حالةٍ **رمزٌ ونمطٌ ونصّ**، فتُقرأ على طابعةٍ بالأبيض والأسود وعلى
+ * شاشةٍ في الشمس ومن لا يميّز الألوان.
+ */
+
+/** حالات العمل على الموقع — طبقةٌ موازيةٌ لـ`CELL_STATES` بالعقد نفسه. */
+export const WORK_STATES = {
+  idle: {
+    id: 'idle',
+    labelAr: 'لا عمل',
+    symbol: '·',
+    pattern: 'none',
+    tone: 'muted',
+    warn: false,
+    hint: 'لا مهمّةَ مفتوحةٌ تمسّ هذا الموقع.',
+  },
+  waiting: {
+    id: 'waiting',
+    labelAr: 'لم يبدأ',
+    symbol: '◇',
+    pattern: 'diagonal',
+    tone: 'neutral',
+    warn: false,
+    hint: 'مهمّةٌ أُسندت ولم يُمسح منها بندٌ بعد.',
+  },
+  active: {
+    id: 'active',
+    labelAr: 'جارٍ',
+    symbol: '◐',
+    pattern: 'dots',
+    tone: 'info',
+    warn: false,
+    hint: 'التُقط بعضُ المطلوب ولم يكتمل.',
+  },
+  done: {
+    id: 'done',
+    labelAr: 'تمّ',
+    symbol: '●',
+    pattern: 'solid',
+    tone: 'ok',
+    warn: false,
+    hint: 'التُقط المطلوب كلّه من هذا الموقع.',
+  },
+  stalled: {
+    id: 'stalled',
+    labelAr: 'متعثّر',
+    symbol: '×',
+    pattern: 'cross',
+    tone: 'warn',
+    warn: true,
+    hint: 'العمل عليه متوقّف — والسبب مكتوبٌ في الخانة.',
+  },
+};
+
+export const WORK_STATE_ORDER = ['idle', 'waiting', 'active', 'done', 'stalled'];
+/** مفتاح طبقة العمل — مصدره الحالات نفسها فلا يفترق عنها. */
+export const WORK_LEGEND = WORK_STATE_ORDER.map((id) => WORK_STATES[id]);
+
+/** مهمّةٌ خرجت من دائرة العمل — لا تُلوّن موقعًا ولا تُحتسب. */
+const CLOSED_TASK_STATES = ['done', 'cancelled'];
+
+/**
+ * يجمع أسطر المهامّ على مواقعها.
+ *
+ * الموقع يُقرأ من `fromBin` **أو** `toBin`: السحب يُفرغ من موقعٍ والتخزين
+ * يملأ موقعًا، وكلاهما «عملٌ يجري هنا» في عين المشرف.
+ */
+export function indexWorkByLocation(tasks) {
+  const map = new Map();
+  for (const task of tasks || []) {
+    if (CLOSED_TASK_STATES.includes(str(task?.state)) && !(task?.lines || []).some((l) => Number(l?.qtyDone) > 0)) continue;
+    for (const line of task?.lines || []) {
+      for (const raw of [line?.fromBin, line?.toBin]) {
+        const code = normalizeLocationCode(raw);
+        if (!code) continue;
+        const bucket = map.get(code) || [];
+        bucket.push({ task, line });
+        map.set(code, bucket);
+      }
+    }
+  }
+  return map;
+}
+
+/**
+ * حال العمل على موقعٍ واحد — بكمّيّاته وسببِ تعثّره.
+ *
+ * ★ وسبب التعثّر **يُقال ولا يُترك للتخمين**: نقصُ رصيدٍ في السطر، أو سببُ
+ * تأخيرٍ سجّله العامل، أو توقّفُ المهمّة نفسها. وموقعٌ أحمرُ بلا سببٍ يجعل
+ * المشرف يفتح خمس شاشاتٍ ليعرف ما جرى.
+ */
+export function workOf(entries = []) {
+  let required = 0;
+  let done = 0;
+  const reasons = [];
+  const taskIds = new Set();
+  let anyStarted = false;
+  let anyStalled = false;
+
+  for (const { task, line } of entries) {
+    required += Math.max(0, Number(line?.qtyRequired) || 0);
+    const did = Math.max(0, Number(line?.qtyDone) || 0);
+    done += did;
+    if (did > 0) anyStarted = true;
+    if (task?.id) taskIds.add(task.id);
+
+    if (line?.shortfall) {
+      anyStalled = true;
+      reasons.push(`نقص رصيد: ${Math.max(0, Number(line?.qtyRequired) || 0)} وحدة`);
+    }
+    if (str(task?.state) === 'paused') {
+      anyStalled = true;
+      reasons.push('المهمّة متوقّفة مؤقّتًا');
+    }
+    const delay = str(task?.delayReason?.id);
+    if (delay) {
+      anyStalled = true;
+      reasons.push(`سبب مسجَّل: ${str(task?.delayReason?.label) || delay}`);
+    }
+  }
+
+  const remaining = Math.max(0, required - done);
+  let state = 'idle';
+  if (entries.length) {
+    if (anyStalled) state = 'stalled';
+    else if (required > 0 && remaining === 0) state = 'done';
+    else if (anyStarted) state = 'active';
+    else state = 'waiting';
+  }
+
+  const meta = WORK_STATES[state];
+  return {
+    state,
+    stateLabel: meta.labelAr,
+    symbol: meta.symbol,
+    pattern: meta.pattern,
+    tone: meta.tone,
+    warn: meta.warn,
+    required,
+    done,
+    remaining,
+    tasks: [...taskIds],
+    /** أسبابٌ بلا تكرار — سببٌ واحدٌ يتكرّر في خمسة أسطر يُقال مرّة. */
+    reasons: [...new Set(reasons)],
+    summaryText: [meta.labelAr, required ? `${done} من ${required}` : '', ...new Set(reasons)]
+      .filter(Boolean)
+      .join(' · '),
+  };
+}
+
+/**
+ * يُلحق طبقة العمل بخانات شبكةٍ مبنيّة — **لا يعيد بناءها**.
+ * فالفرز والتجميع والملخّصات تبقى كما هي، ويُضاف حقلُ `work` وحده.
+ */
+export function applyWorkLayer(grid, tasks) {
+  const byLocation = indexWorkByLocation(tasks);
+  for (const cell of grid?.cells || []) {
+    cell.work = workOf(byLocation.get(cell.code) || []);
+  }
+  return grid;
+}
+
+/** إحصاء طبقة العمل — الأرقام التي تُكتب فوق الخريطة حين تُعرض بالعمل. */
+export function summarizeWork(cells) {
+  const byState = {};
+  for (const id of WORK_STATE_ORDER) byState[id] = 0;
+  let required = 0;
+  let done = 0;
+  const stalled = [];
+
+  for (const c of cells || []) {
+    const w = c?.work;
+    if (!w) continue;
+    byState[w.state] = (byState[w.state] || 0) + 1;
+    required += w.required;
+    done += w.done;
+    if (w.state === 'stalled') stalled.push({ code: c.code, reasons: w.reasons });
+  }
+
+  return {
+    byState,
+    locations: (cells || []).filter((c) => c?.work && c.work.state !== 'idle').length,
+    required,
+    done,
+    remaining: Math.max(0, required - done),
+    pct: required > 0 ? Math.round((done / required) * 100) : null,
+    /** المواقع المتعثّرة بأسبابها — لا عددٌ وحده. */
+    stalled,
+  };
+}
+
 /** أكواد المستودعات الموجودة فعلًا في سيّد المواقع — لملء قائمة الحصر. */
 export function warehouseCodesOf(locations) {
   const set = new Set();
