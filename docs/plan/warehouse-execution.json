@@ -5,7 +5,7 @@
   "command": "npm run plan:exec",
   "track": "جراحيّ · **النواة تكبر ولا يُبنى بجانبها** · لا مجلّد خدمةٍ جديد ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح · ولا شاشة ثانية لمنطقٍ قائم",
   "source": "نقد المالك 2026-08-16 («نظام تخزين جامد بارد» ثمّ «تطوير جراحيّ لا نتوءات») + ملفّ «تطوير.md» (قراءة Manhattan Active WM وInfor WMS) + جرد النوى على الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-17 (EXE-402 — ت٤ مكتملة)",
+  "lastUpdated": "2026-08-17 (EXE-501 — سلسلة النزول)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "e8898ef",
@@ -671,7 +671,7 @@
       "title": "النزول من التنبيه إلى الإجراء — سلسلةٌ لا رابطُ صفحة",
       "milestone": "ت٥",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ت‑١٠"
       ],
@@ -680,16 +680,21 @@
         "EXE-303"
       ],
       "nucleus": "`ledger/drill.js` و`documents/documentNavigator.js` و`documents/documentRelations.js` — أدوات النزول مبنيّةٌ ومختبَرة؛ الناقص أن يستعملها التنبيه",
-      "guardTest": "src/services/ledger/drill.test.js",
+      "guardTest": "src/services/ledger/exceptionDrill.test.js",
       "touches": [
-        "src/services/ledger/drill.js",
-        "src/services/ledger/exceptions.js"
+        "src/services/ledger/exceptionDrill.js",
+        "src/components/brandzo-erp/ledger/ExceptionsBox.jsx",
+        "src/components/brandzo-erp/ledger/OperationsCommand.jsx"
       ],
       "acceptance": [
         "لكلّ استثناء سلسلةٌ محسوبة: التنبيه ← المستند ← المهمّة ← أثر المسح ← الإجراء",
         "الحلقة المفقودة تُعلَن ولا تُختلق (استثناءٌ بلا مهمّة يقول ذلك صراحةً)",
         "يُعاد استعمال `documentNavigator` و`drill.js` — لا يُنسخان"
-      ]
+      ],
+      "evidence": {
+        "commit": "a1b155e",
+        "closedOn": "2026-08-17"
+      }
     },
     {
       "id": "EXE-502",
