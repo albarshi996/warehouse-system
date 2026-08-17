@@ -11,9 +11,9 @@
   "counts": {
     "modules": 93,
     "serviceDomains": 42,
-    "serviceFiles": 352,
-    "collections": 76,
-    "roles": 16,
+    "serviceFiles": 355,
+    "collections": 79,
+    "roles": 17,
     "odooModels": 12,
     "odooGuards": 51,
     "infraNodes": 6,
@@ -1566,48 +1566,88 @@
       "files": [
         "fleet.test.js",
         "fleetModel.js",
-        "fleetOpsService.js"
+        "fleetOpsService.js",
+        "yardModel.js",
+        "yardModel.test.js",
+        "yardService.js"
       ],
-      "fileCount": 3,
-      "testCount": 1,
+      "fileCount": 6,
+      "testCount": 2,
       "exports": [
         "ACTIVE_TRIP_STATES",
+        "AT_DOOR_STAGES",
+        "DOOR_FLOWS",
+        "EXIT_STAGE",
         "FUEL_ANOMALY_TOLERANCE",
         "FUEL_LEVELS",
         "HANDOVER_ITEMS",
+        "PERMIT_STAGE",
         "SHIFTS",
         "TRIP_NUMBER_TYPE",
         "TRIP_STATES",
         "TRIP_TRANSITIONS",
+        "VISITS_CAP",
+        "VISIT_PURPOSE",
+        "YARD_CANCELED",
+        "YARD_CYCLE",
+        "YARD_LIMITS",
         "ZONES",
         "addFuelEntry",
+        "advanceVisit",
+        "assignDoor",
+        "assignDoorVerdict",
         "canTransitionTrip",
+        "canTransitionVisit",
         "cancelTrip",
+        "cancelVisit",
         "closeTrip",
         "createTrip",
         "departTrip",
+        "doorAccepts",
+        "doorOccupancy",
+        "doorProblems",
         "emptyHandover",
+        "exitVerdict",
         "fuelAnomaly",
         "fuelStats",
         "fuelTotals",
         "handoverDocId",
         "handoverVerdict",
+        "holdVisit",
         "issueGatePass",
+        "listenDoors",
         "listenHandovers",
         "listenTripEvents",
         "listenTripFuel",
         "listenTrips",
+        "listenVisitEvents",
+        "listenYardVisits",
+        "openVisit",
         "otifRate",
         "podRate",
         "recordPod",
+        "saveDoor",
         "saveHandover",
+        "setDoorActive",
+        "shapeDoor",
+        "shapeVisit",
+        "stageIndex",
+        "stampAt",
         "todaysHandover",
         "tripSnapshot",
+        "visitAlerts",
+        "visitGaps",
+        "visitProblems",
+        "visitTimers",
+        "yardSnapshot",
+        "yardStage",
         "zoneById"
       ],
       "collections": [
+        "doors",
         "trips",
-        "vehicles"
+        "vehicles",
+        "yard_visits"
       ]
     },
     {
@@ -3292,6 +3332,7 @@
       "isSideEffectStamp",
       "isStockActor",
       "isVanSalesWriter",
+      "isYardWriter",
       "myRole",
       "signedIn"
     ],
@@ -3319,6 +3360,7 @@
       "isSideEffectStamp",
       "isStockActor",
       "isVanSalesWriter",
+      "isYardWriter",
       "movingTo",
       "myRole",
       "numberWriteOnce",
@@ -4037,6 +4079,38 @@
           {
             "actions": [
               "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "doors",
+        "path": "doors",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager()",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
               "delete"
             ],
             "condition": "false",
@@ -5906,6 +5980,78 @@
             "condition": "isFleetWriter() && request.resource.data.byUid == request.auth.uid",
             "roles": [
               "isFleetWriter"
+            ]
+          },
+          {
+            "actions": [
+              "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "yard_visits",
+        "path": "yard_visits",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isYardWriter() && request.resource.data.createdByUid == request.auth.uid",
+            "roles": [
+              "isYardWriter"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "isYardWriter() // الأصل لا يُزوَّر بعد الفتح — نمط `originKept` في المهامّ. && request.resource.data.createdByUid == resource.data.createdByUid",
+            "roles": [
+              "isYardWriter"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "events",
+        "path": "yard_visits/events",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isYardWriter() && request.resource.data.byUid == request.auth.uid",
+            "roles": [
+              "isYardWriter"
             ]
           },
           {

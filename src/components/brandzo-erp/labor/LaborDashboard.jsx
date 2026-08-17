@@ -35,6 +35,7 @@ import WorkerTaskPanel from './WorkerTaskPanel.jsx';
 import { workQueue } from '../../../services/tasks/taskShape.js';
 import { listenVehicles } from '../../../services/vehicles/vehiclesService.js';
 import { RESOURCE_KINDS, RESOURCE_STATE, resolveResources, resourcesSnapshot } from '../../../services/labor/resourcesResolver.js';
+import { listenDoors, listenYardVisits } from '../../../services/fleet/yardService.js';
 
 const LABOR_ROLES = ['admin', 'warehouse_manager', 'labor_supervisor'];
 const input =
@@ -52,6 +53,8 @@ export default function LaborDashboard() {
   const [taskForm, setTaskForm] = useState(false);
   const [queueIndex, setQueueIndex] = useState(0);
   const [vehicles, setVehicles] = useState([]);
+  const [doors, setDoors] = useState([]);
+  const [yardVisits, setYardVisits] = useState([]);
 
   useEffect(() => {
     const unsub = subscribeAuth(async (u) => {
@@ -67,10 +70,16 @@ export default function LaborDashboard() {
     const u2 = listenLaborTasks(setTasks, (e) => setErr(e?.message || 'تعذّر الاتصال'));
     // ‹EXE-402› المركبات مصدرٌ ثانٍ للموارد — تُقرأ ولا تُنسخ.
     const u3 = listenVehicles(setVehicles);
+    // ‹EXE-601› والأبواب مصدرٌ رابع: أُعلن نوعُها منذ EXE-401 ووصل مصدره الآن.
+    // وبلا هذين المستمعين يبقى النوع معرَّفًا وصفُّه فارغًا — إعلانٌ بلا وفاء.
+    const u4 = listenDoors(setDoors, () => setDoors([]));
+    const u5 = listenYardVisits((list) => setYardVisits(list), () => setYardVisits([]));
     return () => {
       u1();
       u2();
       u3();
+      u4();
+      u5();
     };
   }, [me]);
 
@@ -93,10 +102,10 @@ export default function LaborDashboard() {
   const { queue } = useMemo(() => workQueue(lineTasks), [lineTasks]);
   const current = queue[Math.min(queueIndex, Math.max(0, queue.length - 1))] || null;
 
-  // ‹EXE-402› الموارد تُحلّ من مصادرها الثلاثة — الشاشة تعرض ولا تحسب.
+  // ‹EXE-402› الموارد تُحلّ من مصادرها — والأبواب رابعُها منذ ‹EXE-601›.
   const resources = useMemo(
-    () => resolveResources({ crews, vehicles, laborTasks: tasks }),
-    [crews, vehicles, tasks]
+    () => resolveResources({ crews, vehicles, laborTasks: tasks, doors, yardVisits, nowMs: Date.now() }),
+    [crews, vehicles, tasks, doors, yardVisits]
   );
   const resourceSnap = useMemo(() => resourcesSnapshot(resources), [resources]);
 

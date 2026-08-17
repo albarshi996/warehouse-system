@@ -32,7 +32,11 @@ export const ROLE_NAV = {
   warehouse_manager: ['daily', 'warehouses', 'fleet', 'field', 'odoo', 'reports', 'archive', 'dept', 'procurement'],
   storekeeper: ['daily', 'warehouses', 'odoo'],
   qc_inspector: ['daily', 'odoo', 'reports'],
-  gate_officer: ['daily', 'odoo'],
+  // ‹EXE-602› ضابط البوابة يدخل «إدارة الحركة» — فيها تبويب الساحة والأبواب.
+  // كان الدور قائمًا منذ البداية **بلا نظامٍ يخدمه**: يوقّع تصاريح الخروج ولا
+  // يملك شاشةً يسجّل فيها وصولًا ولا بابًا ولا انتظارًا. وهو نفس نمط
+  // `labor_supervisor` أدناه: مجموعةٌ كاملة، والحسّاس فيها محصورٌ ببنوده.
+  gate_officer: ['daily', 'odoo', 'fleet'],
   // موظف المشتريات: يوفّر العروض ويصدر الأمر ويسلّم في دورة المشتريات الداخلية.
   purchase_officer: ['daily', 'odoo', 'reports', 'procurement'],
   // المدير المالي: يعتمد الطلب والترسية والأمر والصرف في الدورة.

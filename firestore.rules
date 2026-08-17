@@ -888,6 +888,46 @@ service cloud.firestore {
       }
     }
 
+    // ── الساحة والأبواب ‹EXE-601/602› — المنطقة بين النقل والمخزن ───────
+    //
+    // ★★ الأبواب **بياناتٌ يضيفها المدير** (قرار المالك ت-O04 · 2026-08-17):
+    // لا بابَ مرسومٌ في الكود، والكتابة للمديرَين وحدهما لأنّها بياناتٌ سيّدة
+    // كماستر الأصناف. والإخراج من الخدمة `active:false` **حالةٌ لا حذف** —
+    // بابٌ محذوفٌ يجعل زياراتٍ قديمة تُشير إلى رمزٍ لا وجود له.
+    match /doors/{doorCode} {
+      allow read:           if signedIn();
+      allow create, update: if isManager();
+      allow delete:         if false;
+    }
+
+    // زيارات الساحة: ضابط البوابة يفتحها ويُخرجها، ومشرف المناولة يُسنِد
+    // البابَ ويُنهي المناولة. والقاعدة **بوّابةُ مستخدمين لا حاكم**: الدورة
+    // العشر وحرّاسها (لا خروج بلا تصريح · لا قفز بين المراحل · لا بابَ
+    // لاثنتين) كلّها في `fleet/yardModel.js` المختبَر لا هنا.
+    function isYardWriter() {
+      return isBootstrapAdmin() ||
+             (signedIn() && hasProfile() && isActive() &&
+              myRole() in ['admin', 'warehouse_manager', 'gate_officer', 'labor_supervisor', 'fleet']);
+    }
+
+    match /yard_visits/{visitId} {
+      allow read:   if signedIn();
+      allow create: if isYardWriter()
+                    && request.resource.data.createdByUid == request.auth.uid;
+      allow update: if isYardWriter()
+                    // الأصل لا يُزوَّر بعد الفتح — نمط `originKept` في المهامّ.
+                    && request.resource.data.createdByUid == resource.data.createdByUid;
+      allow delete: if false; // الزيارة الخاطئة تُلغى بسببٍ وتبقى أثرًا.
+
+      // سجلّ التدقيق: إضافة فقط باسم فاعلها (نمط trips/events).
+      match /events/{eventId} {
+        allow read:   if signedIn();
+        allow create: if isYardWriter()
+                      && request.resource.data.byUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+
     // ── الصيانة: الأصول وأوامر الشغل (سلاسل الإمداد م-٣) ────────────────
     match /assets/{assetId} {
       allow read: if signedIn();

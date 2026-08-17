@@ -79,7 +79,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   .fempty { text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 0.95rem; line-height: 2; }
   .mini-f { border: 1.5px solid var(--border-f); background: white; border-radius: 8px; padding: 5px 12px; font-family: 'Tajawal', sans-serif; font-size: 0.78rem; font-weight: 700; cursor: pointer; color: var(--primary-f); }
   .mini-f:hover { border-color: var(--accent-f); background: #fffbeb; }
-  .writer-only[hidden] { display: none !important; }
+  .writer-only[hidden], .yard-writer-only[hidden], .door-writer-only[hidden] { display: none !important; }
   /* نوافذ */
   .fov { display: none; position: fixed; inset: 0; background: rgba(13,27,42,0.72); z-index: 500; align-items: flex-start; justify-content: center; backdrop-filter: blur(6px); padding: 30px 16px; overflow-y: auto; }
   .fov.active { display: flex; }
@@ -157,6 +157,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     <button class="ftab active" data-tab="trips" onclick="switchTab('trips')">🚚 الرحلات</button>
     <button class="ftab" data-tab="handover" onclick="switchTab('handover')">📝 التسليم اليومي</button>
     <button class="ftab" data-tab="zones" onclick="switchTab('zones')">🗺️ مناطق التوزيع</button>
+    <button class="ftab" data-tab="yard" onclick="switchTab('yard')">🚧 الساحة والأبواب</button>
   </div>
 
   <!-- ═══ الرحلات ═══ -->
@@ -232,6 +233,120 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     <div class="scard">
       <div class="shead"><h3>🗺️ مناطق التوزيع الديموغرافية وأولويات الجدولة (بنغازي)</h3></div>
       <div class="sbody"><div class="zones" id="zonesGrid"></div></div>
+    </div>
+  </div>
+
+  <!-- ═══ الساحة والأبواب ‹EXE-602› ═══
+       ضابط البوابة يسجّل الوصول بحقولٍ قليلة، ومشرف المناولة يُسنِد الباب.
+       والحالة **نصٌّ لا لونٌ وحده** — في الشمس على البوّابة لا يُقرأ اللون. -->
+  <div id="tab-yard" style="display:none">
+    <div class="hkpis" style="margin-bottom:14px;">
+      <div class="kbadge"><div class="num" id="yOnSite">0</div><div class="lbl">داخل الموقع</div></div>
+      <div class="kbadge"><div class="num" id="yWaiting">0</div><div class="lbl">تنتظر بابًا</div></div>
+      <div class="kbadge"><div class="num" id="yDoors">—</div><div class="lbl">أبواب مشغولة</div></div>
+      <div class="kbadge alert"><div class="num" id="yBreaches">0</div><div class="lbl">تجاوزَ حدَّه</div></div>
+      <div class="kbadge"><div class="num" id="yTurnaround">—</div><div class="lbl">متوسّط البقاء (دقيقة)</div></div>
+    </div>
+
+    <div class="scard" style="margin-bottom:14px;">
+      <div class="shead">
+        <h3>🚪 الأبواب</h3>
+        <button class="mini-f door-writer-only" hidden onclick="openDoorForm()">＋ باب جديد</button>
+      </div>
+      <div class="sbody">
+        <div class="zones" id="doorsGrid"></div>
+        <p id="doorsEmpty" class="fempty" style="display:none">
+          لا أبوابَ مسجّلة بعد. <strong>الأبواب بيانات</strong> يضيفها المدير — ولا بابَ مرسومٌ في النظام.
+        </p>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="shead">
+        <h3>📋 زيارات الساحة</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="yardFilter" onchange="renderYard()" style="border-radius:8px;border:none;padding:6px 12px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:0.8rem;">
+            <option value="open">داخل الموقع الآن</option>
+            <option value="">الكلّ</option>
+            <option value="exited">خرجت</option>
+          </select>
+          <button class="mini-f yard-writer-only" hidden onclick="openVisitForm()">＋ تسجيل وصول</button>
+        </div>
+      </div>
+      <div class="sbody" style="overflow-x:auto;">
+        <table class="ftable">
+          <thead><tr>
+            <th>اللوحة</th><th>الغرض</th><th>المستند</th><th>المرحلة</th>
+            <th>الباب</th><th>الانتظار</th><th>المناولة</th><th>الحال</th><th></th>
+          </tr></thead>
+          <tbody id="yardBody"></tbody>
+        </table>
+        <p id="yardEmpty" class="fempty" style="display:none">لا زيارات مطابقة.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ نافذة باب جديد ═══ -->
+<div class="fov" id="doorOv">
+  <div class="fmodal" style="max-width:520px;">
+    <div class="fmhead"><div><h3>＋ باب</h3><div class="sub">الأبواب بيانات — أضِف ما لديك فعلًا ولا تلتزم بعددٍ مفروض</div></div>
+      <button class="fmclose" onclick="closeOv('doorOv')">✕</button></div>
+    <div class="fmbody">
+      <div class="fgrid c2">
+        <div class="fg"><label>رمز الباب *</label><input type="text" id="dCode" placeholder="مثال: D1"></div>
+        <div class="fg"><label>الاسم المعروض</label><input type="text" id="dLabel" placeholder="اختياري"></div>
+        <div class="fg"><label>يقبل</label><select id="dFlow">
+          <option value="both">استلام وتحميل</option>
+          <option value="inbound">استلام فقط</option>
+          <option value="outbound">تحميل فقط</option>
+        </select></div>
+        <div class="fg"><label>المستودع</label><input type="text" id="dWarehouse" placeholder="اختياري"></div>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:10px;">
+        <button class="btn-f btn-gold" onclick="submitDoor()">حفظ الباب</button>
+        <button class="btn-f btn-ghost" onclick="closeOv('doorOv')">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ نافذة تسجيل وصول — حقولٌ قليلة: الميدان لا يحتمل نموذجًا طويلًا ═══ -->
+<div class="fov" id="visitOv">
+  <div class="fmodal" style="max-width:560px;">
+    <div class="fmhead"><div><h3>＋ تسجيل وصول مركبة</h3><div class="sub">اللوحة وحدها ملزِمة — وما نقص يُعلَن ولا يمنع دخولها السجلّ</div></div>
+      <button class="fmclose" onclick="closeOv('visitOv')">✕</button></div>
+    <div class="fmbody">
+      <div class="fgrid c2">
+        <div class="fg"><label>لوحة المركبة *</label><input type="text" id="vPlate" placeholder="مثال: 5-12345"></div>
+        <div class="fg"><label>الغرض</label><select id="vPurpose">
+          <option value="inbound">توريد (تنزيل)</option>
+          <option value="outbound">شحن (تحميل)</option>
+        </select></div>
+        <div class="fg"><label>اسم السائق</label><input type="text" id="vDriver" placeholder="اختياري"></div>
+        <div class="fg"><label>رقم بطاقة السائق</label><input type="text" id="vDriverId" placeholder="اختياري"></div>
+        <div class="fg"><label>الناقل / المورّد</label><input type="text" id="vCarrier" placeholder="اختياري"></div>
+        <div class="fg"><label>المستند المرجعيّ</label><input type="text" id="vDocRef" placeholder="مثال: PO-2026-0012"></div>
+      </div>
+      <p id="vGaps" style="margin-top:10px;font-size:0.78rem;color:#92400e;"></p>
+      <div style="margin-top:14px;display:flex;gap:10px;">
+        <button class="btn-f btn-gold" onclick="submitVisit()">تسجيل الوصول</button>
+        <button class="btn-f btn-ghost" onclick="closeOv('visitOv')">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ملفّ الزيارة ═══ -->
+<div class="fov" id="yvOv">
+  <div class="fmodal">
+    <div class="fmhead"><div><h3 id="yvTitle">ملفّ الزيارة</h3><div class="sub" id="yvSub"></div></div>
+      <button class="fmclose" onclick="closeOv('yvOv')">✕</button></div>
+    <div class="fmbody">
+      <div class="pipe" id="yvPipe"></div>
+      <div id="yvDetails" class="fgrid c4" style="margin-bottom:14px;"></div>
+      <div id="yvAlerts" style="margin-bottom:14px;"></div>
+      <div id="yvActions" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
     </div>
   </div>
 </div>
@@ -363,10 +478,41 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   import { listenVehicles } from '../../services/vehicles/vehiclesService.js';
   import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
   import { trackOverlays } from '../../services/ui/overlayHistory.js';
+  // ‹EXE-602› الساحة والأبواب — كلّ حكمٍ من النموذج الخالص، والشاشة تعرض.
+  import {
+    EXIT_STAGE,
+    VISIT_PURPOSE,
+    YARD_CANCELED,
+    YARD_CYCLE,
+    doorOccupancy,
+    stageIndex,
+    visitAlerts,
+    visitGaps,
+    visitTimers,
+    yardSnapshot,
+    yardStage,
+  } from '../../services/fleet/yardModel.js';
+  import {
+    advanceVisit,
+    assignDoor,
+    cancelVisit,
+    holdVisit,
+    listenDoors,
+    listenYardVisits,
+    openVisit as createVisit,
+    saveDoor,
+  } from '../../services/fleet/yardService.js';
 
   const WRITER_ROLES = ['admin', 'warehouse_manager', 'fleet'];
+  /** الساحة يكتبها ضابط البوابة ومشرف المناولة أيضًا — لا الأسطول وحده. */
+  const YARD_WRITER_ROLES = ['admin', 'warehouse_manager', 'fleet', 'gate_officer', 'labor_supervisor'];
+  /** الأبواب **بيانات سيّدة**: المدير وحده يضيفها (ت-O04) — كماستر الأصناف. */
+  const DOOR_WRITER_ROLES = ['admin', 'warehouse_manager'];
   let trips = [];
   let vehicles = [];
+  let doors = [];
+  let yardVisits = [];
+  let currentVisit = null;
   let profile = null;
   let canWrite = false;
   let currentTrip = null;
@@ -403,6 +549,10 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     profile = await fetchUserProfile(user);
     canWrite = WRITER_ROLES.includes(profile?.role);
     document.querySelectorAll('.writer-only').forEach((el) => { el.hidden = !canWrite; });
+    const canYard = YARD_WRITER_ROLES.includes(profile?.role);
+    const canDoors = DOOR_WRITER_ROLES.includes(profile?.role);
+    document.querySelectorAll('.yard-writer-only').forEach((el) => { el.hidden = !canYard; });
+    document.querySelectorAll('.door-writer-only').forEach((el) => { el.hidden = !canDoors; });
     if (!started) {
       started = true;
       listenTrips((list, pending) => {
@@ -415,13 +565,23 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         }
       });
       listenVehicles((list) => { vehicles = list; fillVehicleSelects(); });
+      // ‹EXE-602› الساحة: الأبواب وزياراتها — قراءتهما لكلّ مصادَق، والكتابة بالدور.
+      listenDoors((list) => { doors = list; renderYard(); }, () => { doors = []; renderYard(); });
+      listenYardVisits((list) => {
+        yardVisits = list;
+        renderYard();
+        if (currentVisit) {
+          const fresh = yardVisits.find((v) => v.id === currentVisit.id);
+          if (fresh) { currentVisit = fresh; renderVisitFile(); }
+        }
+      }, () => { yardVisits = []; renderYard(); });
     }
   });
 
   /* ─── تبويبات ─── */
   window.switchTab = (tab) => {
     document.querySelectorAll('.ftab').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
-    for (const t of ['trips', 'handover', 'zones']) $(`tab-${t}`).style.display = t === tab ? '' : 'none';
+    for (const t of ['trips', 'handover', 'zones', 'yard']) $(`tab-${t}`).style.display = t === tab ? '' : 'none';
   };
 
   /* ─── الرحلات ─── */
@@ -766,6 +926,240 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
      المتابعة. نمرّ عبر `closeOv` نفسها كي يُفكّ اشتراك الوقود والأحداث
      ولا تبقى مستمعات معلّقة. راجع `overlayHistory.js`. */
   trackOverlays(['#newTripOv', '#tripOv'], { close: (el) => closeOv(el.id) });
+
+  /* ═══════════ الساحة والأبواب ‹EXE-602› ═══════════
+   *
+   * ★★ **الحالة نصٌّ لا لونٌ وحده.** الشاشة تُقرأ على البوّابة في الشمس وعلى
+   * هاتفٍ رخيص، ومن يميّز الأخضر من الأحمر ليس كلّ الناس. فكلّ باب يحمل حالته
+   * مكتوبة (`status` من `doorOccupancy`) واللون زينةٌ فوقها لا بديلٌ عنها.
+   *
+   * ولا حسابَ هنا: `yardSnapshot` و`visitTimers` و`visitAlerts` في النموذج
+   * الخالص المختبَر، وكلّ فعلٍ يمرّ بحارسه في `yardService`. */
+
+  const stageLabel = (id) => yardStage(id)?.label || id || '—';
+
+  function renderYard() {
+    if (!$('yardBody')) return;
+    const now = Date.now();
+    const snap = yardSnapshot(doors, yardVisits, now);
+    $('yOnSite').textContent = snap.onSite;
+    $('yWaiting').textContent = snap.waiting;
+    $('yDoors').textContent = `${snap.doors.occupied}/${snap.doors.total}`;
+    $('yBreaches').textContent = snap.breaches;
+    $('yTurnaround').textContent = snap.avgTurnaroundMinutes == null ? '—' : snap.avgTurnaroundMinutes;
+
+    // الأبواب — بطاقةٌ لكلٍّ بحالته المكتوبة.
+    const rows = doorOccupancy(doors, yardVisits, now);
+    $('doorsEmpty').style.display = rows.length ? 'none' : '';
+    $('doorsGrid').innerHTML = rows.map((d) => {
+      const color = !d.active ? '#94a3b8' : d.occupied ? '#f59e0b' : '#00b87a';
+      return `<div class="zone" style="--zc:${color};">
+        <h4>${esc(d.label)} <span style="font-weight:600;opacity:.6;">· ${esc(d.code)}</span></h4>
+        <div class="zl">
+          <b>الحال:</b> ${esc(d.status)}<br>
+          <b>يقبل:</b> ${esc(d.flow === 'inbound' ? 'استلام' : d.flow === 'outbound' ? 'تحميل' : 'استلام وتحميل')}
+          ${d.warehouse ? `<br><b>المستودع:</b> ${esc(d.warehouse)}` : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+    // الزيارات.
+    const filter = $('yardFilter').value;
+    const list = yardVisits.filter((v) => {
+      if (filter === 'open') return v.stage !== EXIT_STAGE && v.stage !== YARD_CANCELED.id;
+      if (filter === 'exited') return v.stage === EXIT_STAGE;
+      return true;
+    });
+    $('yardEmpty').style.display = list.length ? 'none' : '';
+    $('yardBody').innerHTML = list.map((v) => {
+      const t = visitTimers(v, now);
+      const alerts = visitAlerts(v, now);
+      const gaps = visitGaps(v);
+      const badge = v.stage === YARD_CANCELED.id
+        ? `<span class="fbadge" style="background:#f1f5f9;color:#64748b;">${esc(YARD_CANCELED.label)}</span>`
+        : `<span class="fbadge" style="background:#eef2ff;color:#4338ca;">${esc(stageLabel(v.stage))}</span>`;
+      return `<tr>
+        <td class="fnum">${esc(v.plate || '—')}</td>
+        <td>${esc(VISIT_PURPOSE[v.purpose]?.label || '—')}</td>
+        <td>${v.docRef?.number
+          ? esc(v.docRef.number)
+          : '<span style="color:#92400e;font-size:0.78rem;">بلا مستند — يُعلَن ولا يمنع</span>'}</td>
+        <td>${badge}</td>
+        <td>${esc(v.doorCode || '—')}</td>
+        <td${t.wait.breached ? ' style="color:#b91c1c;font-weight:800;"' : ''}>${esc(t.wait.label)}</td>
+        <td${t.handling.breached ? ' style="color:#b91c1c;font-weight:800;"' : ''}>${esc(t.handling.label)}</td>
+        <td>${alerts.length
+          ? `<span class="fbadge" style="background:#fef2f2;color:#b91c1c;">${alerts.length} تجاوز</span>`
+          : gaps.length
+            ? `<span class="fbadge" style="background:#fffbeb;color:#92400e;">${gaps.length} ناقص</span>`
+            : '<span style="color:#94a3b8;">—</span>'}</td>
+        <td><button class="mini-f" onclick="openVisitFile('${escJs(v.id)}')">📂 فتح</button></td>
+      </tr>`;
+    }).join('');
+  }
+  window.renderYard = renderYard;
+
+  /* ─── الأبواب: بياناتٌ يضيفها المدير (ت-O04) ─── */
+  window.openDoorForm = () => {
+    for (const id of ['dCode', 'dLabel', 'dWarehouse']) $(id).value = '';
+    $('dFlow').value = 'both';
+    $('doorOv').classList.add('active');
+  };
+  window.submitDoor = async () => {
+    try {
+      const code = await saveDoor(
+        { code: $('dCode').value, label: $('dLabel').value, flow: $('dFlow').value, warehouse: $('dWarehouse').value },
+        doors,
+        profile
+      );
+      closeOv('doorOv');
+      showToast(`حُفظ الباب ${code}`);
+    } catch (e) { showToast(e.message || 'تعذّر حفظ الباب'); }
+  };
+
+  /* ─── تسجيل الوصول: حقولٌ قليلة ─── */
+  window.openVisitForm = () => {
+    for (const id of ['vPlate', 'vDriver', 'vDriverId', 'vCarrier', 'vDocRef']) $(id).value = '';
+    $('vPurpose').value = 'inbound';
+    $('vGaps').textContent = '';
+    $('visitOv').classList.add('active');
+  };
+  window.submitVisit = async () => {
+    const input = {
+      plate: $('vPlate').value,
+      purpose: $('vPurpose').value,
+      driverName: $('vDriver').value,
+      driverId: $('vDriverId').value,
+      carrier: $('vCarrier').value,
+      docRef: { number: $('vDocRef').value },
+    };
+    try {
+      await createVisit(input, profile, 'arrived');
+      // ★ النقص يُقال بعد التسجيل لا قبله: الشاحنة دخلت السجلّ، وما نقص يُستكمَل.
+      const gaps = visitGaps(input);
+      closeOv('visitOv');
+      showToast(gaps.length ? `سُجّل الوصول · ينقصها: ${gaps.join(' · ')}` : 'سُجّل الوصول');
+    } catch (e) { showToast(e.message || 'تعذّر تسجيل الوصول'); }
+  };
+
+  /* ─── ملفّ الزيارة ─── */
+  window.openVisitFile = (id) => {
+    currentVisit = yardVisits.find((v) => v.id === id) || null;
+    if (!currentVisit) return;
+    renderVisitFile();
+    $('yvOv').classList.add('active');
+  };
+
+  function renderVisitFile() {
+    const v = currentVisit;
+    if (!v) return;
+    const now = Date.now();
+    const t = visitTimers(v, now);
+    $('yvTitle').textContent = `زيارة ${v.plate || ''}`.trim();
+    $('yvSub').textContent = `${VISIT_PURPOSE[v.purpose]?.label || ''} · ${stageLabel(v.stage)}`;
+
+    // شريط المراحل — الموضع يُقرأ نصًّا لا بلونٍ وحده.
+    const at = stageIndex(v.stage);
+    $('yvPipe').innerHTML = YARD_CYCLE.map((st, i) => {
+      const state = v.stage === YARD_CANCELED.id ? 'off' : i < at ? 'done' : i === at ? 'now' : 'off';
+      const bg = state === 'done' ? '#00b87a' : state === 'now' ? '#f0a500' : '#e2e8f0';
+      const fg = state === 'off' ? '#64748b' : state === 'now' ? '#0d1b2a' : 'white';
+      return `<span class="fbadge" style="background:${bg};color:${fg};">${i + 1}. ${esc(st.label)}</span>`;
+    }).join(' ');
+
+    const gaps = visitGaps(v);
+    $('yvDetails').innerHTML = [
+      ['السائق', v.driverName || '—'],
+      ['بطاقة السائق', v.driverId || '—'],
+      ['الناقل', v.carrier || '—'],
+      ['المستند المرجعيّ', v.docRef?.number || 'بلا مستند'],
+      ['الباب', v.doorCode || '—'],
+      ['الموقف', v.spot || 'ساحة مفتوحة'],
+      ['الانتظار', t.wait.label],
+      ['المناولة', t.handling.label],
+      ['البقاء الكامل', t.turnaround.label],
+      ['الموعد', t.appointment.label],
+      ['تصريح الخروج', v.permitRef || 'لم يُسجَّل'],
+    ].map(([k, val]) => `<div class="fg"><label>${esc(k)}</label><div style="font-weight:700;">${esc(val)}</div></div>`).join('');
+
+    const alerts = [...visitAlerts(v, now), ...gaps];
+    $('yvAlerts').innerHTML = alerts.length
+      ? `<div style="border:1.5px solid #fcd34d;background:#fffbeb;border-radius:12px;padding:10px 14px;font-size:0.82rem;color:#92400e;">
+           ${alerts.map((a) => `• ${esc(a)}`).join('<br>')}
+         </div>`
+      : '';
+
+    const canYard = YARD_WRITER_ROLES.includes(profile?.role);
+    const next = at >= 0 && at < YARD_CYCLE.length - 1 ? YARD_CYCLE[at + 1] : null;
+    const actions = [];
+    if (canYard && v.stage !== YARD_CANCELED.id && next) {
+      if (next.id === 'atDoor') {
+        const free = doorOccupancy(doors, yardVisits, now).filter((d) => d.active && !d.occupied);
+        actions.push(free.length
+          ? `<select id="yvDoor" style="border:1.5px solid var(--border-f);border-radius:9px;padding:8px 12px;font-family:'Tajawal',sans-serif;">
+               ${free.map((d) => `<option value="${esc(d.code)}">${esc(d.label)}</option>`).join('')}
+             </select>
+             <button class="btn-f btn-gold" onclick="doAssignDoor()">إسناد الباب</button>`
+          : '<span style="color:#92400e;font-size:0.82rem;align-self:center;">لا بابَ فارغًا الآن — المركبة تنتظر ويُحتسب انتظارها.</span>');
+      } else if (next.id === EXIT_STAGE) {
+        actions.push(`<input type="text" id="yvPermit" placeholder="رقم تصريح الخروج (GP)" value="${esc(v.permitRef || '')}"
+                        style="border:1.5px solid var(--border-f);border-radius:9px;padding:8px 12px;font-family:'Tajawal',sans-serif;">
+                      <button class="btn-f btn-green" onclick="doExit()">🚦 السماح بالخروج</button>`);
+      } else {
+        actions.push(`<button class="btn-f btn-blue" onclick="doAdvance('${escJs(next.id)}')">${esc(next.label)} ✓</button>`);
+      }
+      if (stageIndex(v.stage) < stageIndex('atDoor')) {
+        actions.push('<button class="btn-f btn-red" onclick="doCancelVisit()">إلغاء الزيارة</button>');
+      }
+      actions.push(v.holdReason
+        ? '<button class="btn-f btn-ghost" onclick="doHold(false)">رفع الوقف</button>'
+        : '<button class="btn-f btn-ghost" onclick="doHold(true)">إيقاف بسبب</button>');
+    }
+    $('yvActions').innerHTML = actions.join(' ');
+  }
+
+  window.doAdvance = async (to) => {
+    try {
+      await advanceVisit(currentVisit.id, to, {}, profile);
+      showToast(`انتقلت إلى «${stageLabel(to)}»`);
+    } catch (e) { showToast(e.message || 'تعذّر الانتقال'); }
+  };
+  window.doAssignDoor = async () => {
+    try {
+      const code = $('yvDoor').value;
+      const verdict = await assignDoor(currentVisit.id, code, profile);
+      showToast(verdict.warnings.length ? `أُسند الباب ${code} · ${verdict.warnings.join(' · ')}` : `أُسند الباب ${code}`);
+    } catch (e) { showToast(e.message || 'تعذّر إسناد الباب'); }
+  };
+  window.doExit = async () => {
+    // ★★ الحارس في `yardService/exitVerdict` لا هنا: الشاشة تمرّر ما أُدخل،
+    // والرفض يأتي بسببه مكتوبًا فيُعرض كما هو.
+    try {
+      await advanceVisit(currentVisit.id, EXIT_STAGE, { permitRef: ($('yvPermit')?.value || '').trim() }, profile);
+      showToast('سُمح بالخروج — وسُجّل تصريحه');
+      closeOv('yvOv');
+    } catch (e) { showToast(e.message || 'تعذّر السماح بالخروج'); }
+  };
+  window.doCancelVisit = async () => {
+    const reason = prompt('سبب إلغاء الزيارة (مطلوب):');
+    if (reason === null) return;
+    try {
+      await cancelVisit(currentVisit.id, reason, profile);
+      showToast('أُلغيت الزيارة — وتبقى في السجلّ');
+      closeOv('yvOv');
+    } catch (e) { showToast(e.message || 'تعذّر الإلغاء'); }
+  };
+  window.doHold = async (on) => {
+    const reason = on ? prompt('سبب الإيقاف:') : '';
+    if (on && reason === null) return;
+    try {
+      await holdVisit(currentVisit.id, reason, profile);
+      showToast(on ? 'أُوقفت الزيارة' : 'رُفع الوقف');
+    } catch (e) { showToast(e.message || 'تعذّر التنفيذ'); }
+  };
+
+  /* نوافذ الساحة يُغلقها زرّ الرجوع كغيرها — الهاتف جهاز ضابط البوابة. */
+  trackOverlays(['#doorOv', '#visitOv', '#yvOv'], { close: (el) => closeOv(el.id) });
 
   /* ─── مناطق التوزيع ─── */
   $('zonesGrid').innerHTML = ZONES.map((z) => `
