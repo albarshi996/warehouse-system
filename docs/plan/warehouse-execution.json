@@ -5,7 +5,7 @@
   "command": "npm run plan:exec",
   "track": "جراحيّ · **النواة تكبر ولا يُبنى بجانبها** · لا مجلّد خدمةٍ جديد ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح · ولا شاشة ثانية لمنطقٍ قائم",
   "source": "نقد المالك 2026-08-16 («نظام تخزين جامد بارد» ثمّ «تطوير جراحيّ لا نتوءات») + ملفّ «تطوير.md» (قراءة Manhattan Active WM وInfor WMS) + جرد النوى على الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-17 (EXE-701 — الزمن المعياريّ)",
+  "lastUpdated": "2026-08-17 (EXE-702 — مرحلة ت٧ مكتملة)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "e8898ef",
@@ -155,7 +155,8 @@
       "milestone": "ت٧",
       "need": "هل يُعرض أداء العامل مقابل المعياريّ للعامل نفسه، أم للمشرف وحده؟ (سؤال حوكمةٍ لا تقنيّة)",
       "ifMissing": "للمشرف وحده أوّلًا، ويُسجَّل سبب التأخير دائمًا — فالمعيار أداة اكتشافِ مشكلةٍ لا حكمٌ آليّ على موظف",
-      "state": "todo"
+      "state": "done",
+      "decision": "بُني على الافتراض المعلَن: للمشرف وحده (تبويب داخل لوحة المناولة المحصورة بمشرف المناولة والمديرَين)، وسبب التأخير يسجّله العامل ولا يُحتسب عليه. ولا ترتيب عمّالٍ تنازليًّا في أيّ شاشة — يحرسه اختبار. يبقى للمالك نقضُه إن أراد عرضًا للعامل نفسه."
     },
     {
       "id": "ت-O06",
@@ -863,7 +864,7 @@
       "title": "الأداء بعدل — الفعليّ مقابل المعياريّ مع سبب التأخير",
       "milestone": "ت٧",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ت‑٨",
         "ت‑١٣"
@@ -875,15 +876,24 @@
       "nucleus": "`labor/laborModel.js` (الإنتاجيّة) + `LaborDashboard.jsx` + `tasks/taskMetrics.js` (معدّل الاستجابة والالتزام بالموعد — قائمةٌ ومختبَرة)",
       "guardTest": "src/services/labor/laborStandard.test.js",
       "touches": [
-        "src/services/labor/laborModel.js",
-        "src/components/brandzo-erp/labor/LaborDashboard.jsx"
+        "src/services/labor/laborStandard.js",
+        "src/services/labor/laborStandard.test.js",
+        "src/services/labor/laborTasksService.js",
+        "src/components/brandzo-erp/labor/LaborDashboard.jsx",
+        "src/components/brandzo-erp/labor/WorkerTaskPanel.jsx"
       ],
       "note": "★ حوكمة: «المعيار أداة لاكتشاف المشكلة لا حكمٌ آليّ على الموظف» — نصّ تطوير.md.",
       "acceptance": [
         "مهمّةٌ تجاوزت المعياريّ ولها سبب تأخير مسجَّل **لا تُحتسب** انحرافًا على العامل",
         "الفارق يُعرض مع سببه دائمًا — لا رقمٌ عارٍ",
         "العرض للمشرف أوّلًا (ت-O05) · ولا ترتيب عمّالٍ تنازليًّا في شاشةٍ عامّة"
-      ]
+      ],
+      "evidence": {
+        "commit": "409b983",
+        "closedOn": "2026-08-17",
+        "tests": "src/services/labor/laborStandard.test.js — 28 اختبارًا (10 للأداء)",
+        "note": "الحكم في `laborStandard.js` لا `laborModel.js` كما قالت الخطة: laborStandard يستورد laborModel، فوضعُه هناك يُنشئ دورةَ استيراد. والملفّ داخل labor/ والحارس هو نفسه."
+      }
     },
     {
       "id": "EXE-801",
