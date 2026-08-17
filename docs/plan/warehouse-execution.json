@@ -5,7 +5,7 @@
   "command": "npm run plan:exec",
   "track": "جراحيّ · **النواة تكبر ولا يُبنى بجانبها** · لا مجلّد خدمةٍ جديد ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح · ولا شاشة ثانية لمنطقٍ قائم",
   "source": "نقد المالك 2026-08-16 («نظام تخزين جامد بارد» ثمّ «تطوير جراحيّ لا نتوءات») + ملفّ «تطوير.md» (قراءة Manhattan Active WM وInfor WMS) + جرد النوى على الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-17 (EXE-503 — ت٥ مكتملة)",
+  "lastUpdated": "2026-08-17 (EXE-601 — الساحة · ت-O04 محسوم)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "e8898ef",
@@ -147,7 +147,8 @@
       "milestone": "ت٦",
       "need": "أبواب موقع 155 وساحته — كم بابًا؟ وما أرقامها؟ وهل الانتظار مواقفُ مرقّمة أم ساحةٌ مفتوحة؟",
       "ifMissing": "يُبنى النموذج بأبوابٍ **بيانات** يضيفها المدير لا مرسومةً في الكود، ويُختبر ببذرةٍ معلَّمة بوضوح",
-      "state": "todo"
+      "state": "done",
+      "decision": "الأبواب **بيانات مرنة يضيفها المدير** — لا مرسومةً في الكود (قرار المالك 2026-08-17). ولم يُحدَّد عدد أبواب 155 ولا أرقامها ولا شكل الانتظار: كلّها إدخالٌ لا كود، وحقل `spot` يجوز فراغه فتكون الساحة مفتوحة."
     },
     {
       "id": "ت-O05",
@@ -765,7 +766,7 @@
       "title": "نموذج الساحة — الموعد والمركبة والباب ومؤقّتاته",
       "milestone": "ت٦",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ت‑٦"
       ],
@@ -775,7 +776,10 @@
       "nucleus": "`fleet/fleetModel.js` (حالات الرحلة قائمة) + دور `gate_officer` القائم بلا نظام + `resourcesResolver` (الباب نوع مورد) — الساحة امتدادُ دورة المركبة لا كيانٌ منفصل",
       "guardTest": "src/services/fleet/yardModel.test.js",
       "touches": [
-        "src/services/fleet/yardModel.js"
+        "src/services/fleet/yardModel.js",
+        "src/services/fleet/yardModel.test.js",
+        "src/services/labor/resourcesResolver.js",
+        "src/services/labor/resourcesResolver.test.js"
       ],
       "acceptance": [
         "الدورة العشر: حجز ← وصول ← تسجيل بوابة ← تحقّق ← موقف ← باب ← تنزيل/تحميل ← إخلاء ← تصريح ← خروج",
@@ -783,7 +787,12 @@
         "مؤقّتا الانتظار والتنزيل بأختام الخادم كنمط `labor_tasks`",
         "لا تخرج مركبةٌ بلا تصريح — حارسٌ مختبَر لا تعليمة",
         "الملفّ داخل `fleet/` القائم — لا مجلّد خدمةٍ جديد"
-      ]
+      ],
+      "evidence": {
+        "commit": "883ad46",
+        "closedOn": "2026-08-17",
+        "tests": "src/services/fleet/yardModel.test.js — 27 اختبارًا · و4 للباب موردًا في resourcesResolver.test.js"
+      }
     },
     {
       "id": "EXE-602",
