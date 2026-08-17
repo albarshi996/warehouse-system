@@ -3,7 +3,19 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { computeKpis, operationsSnapshot, operationExceptions } from './operationsDashboard.js';
+import {
+  ORIGIN,
+  REFERENCE_FRESH_MS,
+  REFERENCE_STALE_MS,
+  computeKpis,
+  freshnessLevel,
+  operationExceptions,
+  operationsSnapshot,
+  originOf,
+  referenceFreshness,
+  unmarkedCounters,
+} from './operationsDashboard.js';
+import { PULL_SCOPE_IDS } from '../odoo/pullRegistry.js';
 
 const NOW = Date.parse('2026-07-27T00:00:00Z');
 const ms = (iso) => ({ seconds: Math.floor(Date.parse(iso) / 1000) });
@@ -122,4 +134,74 @@ test('نافذة المؤشرات: مستندٌ بلا تاريخ يُحتسب (
   ];
   const k = computeKpis(docs, { nowMs: NOW, windowDays: 90 });
   assert.equal(k.fillRate, 0.5, 'بلا createdAt يبقى داخل الحساب');
+});
+
+/* ───── التشغيليّ والمرجعيّ ‹EXE-503› · ف ت‑١٢ ───── */
+
+test('★★ لا عدّادَ في اللقطة بلا أصلٍ معلَن — لا لحظيًّا افتراضًا', () => {
+  // عدّادٌ يُضاف بلا قرارِ أصلٍ يُعرض كأنّه لحظيّ وقد يكون مستورَدًا قبل أسبوع.
+  const snap = operationsSnapshot(
+    [{ id: '1', type: 'SO', state: 'approved', lines: [{ sku: 'A', qty: 5 }] }],
+    [{ sku: 'A', warehouse: 'MAIN', qty: 2 }],
+    [{ sku: 'A', minStock: 10 }]
+  );
+  assert.deepEqual(unmarkedCounters(snap), [], 'كلّ عدّادٍ يقول من أين جاء');
+});
+
+test('★★ الحدّ الأدنى مرجعيّ فالعدّاد مركَّب لا لحظيّ', () => {
+  assert.equal(originOf('inventory.belowMin').id, ORIGIN.mixed.id);
+  assert.equal(originOf('inventory.toBuy').id, ORIGIN.mixed.id);
+  assert.equal(originOf('sales.pending').id, ORIGIN.live.id, 'وما بُني على مستنداتنا لحظيّ');
+  assert.equal(originOf('inventory.zzz'), null, 'وغير المعلَن يُعاد فراغًا لا يُخمَّن');
+});
+
+test('★★ «لم يُسحب قطّ» تُعلَن ولا تُحذَّر — الأحمر الدائم يُهمَل فيسقط الصادق', () => {
+  const never = referenceFreshness({}, NOW);
+  assert.equal(never.level.id, 'never');
+  assert.equal(never.warn, false, 'منشأةٌ لم تربط أودو لا تستحقّ شريطًا أحمر دائمًا');
+  assert.match(never.level.label, /المرجع محلّيّ/, 'ويُقال السبب: الحدود من إدخالٍ محلّيّ');
+  assert.match(never.master.ageLabel, /لم يُسحب/);
+});
+
+test('★★ المتقادم وحده يُحذَّر — لأنّه يُعرف أنّه يزحف', () => {
+  const stale = referenceFreshness({ events: [{ kind: 'pull', sourceType: 'item', ts: NOW - REFERENCE_STALE_MS - 1 }] }, NOW);
+  assert.equal(stale.level.id, 'stale');
+  assert.equal(stale.warn, true);
+});
+
+test('قِدَم المرجعيّ ثلاث درجات بحدودٍ معلنة', () => {
+  const at = (ms) => referenceFreshness({ events: [{ kind: 'pull', sourceType: 'item', ts: NOW - ms }] }, NOW).level.id;
+  assert.equal(at(60000), 'fresh', 'قبل دقيقة');
+  assert.equal(at(REFERENCE_FRESH_MS + 1000), 'aging');
+  assert.equal(at(REFERENCE_STALE_MS + 1000), 'stale');
+  assert.equal(freshnessLevel(null, NOW).id, 'never');
+});
+
+test('★★ زمن ماستر الأصناف من سجلّ الأحداث — لا سطرَ له في حالة السحب', () => {
+  const f = referenceFreshness({
+    events: [
+      { kind: 'pull', sourceType: 'item', ts: NOW - 3 * 3600000 },
+      { kind: 'push', sourceType: 'item', ts: NOW - 60000 },
+    ],
+  }, NOW);
+  assert.equal(f.master.ms, NOW - 3 * 3600000, 'والدفع ليس سحبًا فلا يُحدِّث المرجع');
+  assert.match(f.label, /ماستر الأصناف/);
+  assert.match(f.label, /قبل 3 ساعات/);
+});
+
+test('مرايا السحب تُقرأ من حالتها ويُعلَن خطؤها', () => {
+  const f = referenceFreshness({
+    pullState: [{ scope: 'accounts', lastPulledAt: ms('2026-07-26T22:00:00Z'), lastCount: 40, lastError: 'انقطع الاتصال' }],
+  }, NOW);
+  const accounts = f.scopes.find((s) => s.id === 'accounts');
+  assert.equal(accounts.count, 40);
+  assert.equal(accounts.error, 'انقطع الاتصال');
+  assert.equal(accounts.level, 'aging', 'قبل ساعتين');
+  assert.equal(f.oldest.id, 'accounts', 'وهو الأقدم لأنّ غيره لم يُسحب');
+});
+
+test('كلّ نطاقات السحب معروضةٌ بأسمائها من سجلّها لا بجدولٍ ثانٍ', () => {
+  const f = referenceFreshness({}, NOW);
+  assert.equal(f.scopes.length, PULL_SCOPE_IDS.length);
+  for (const s of f.scopes) assert.ok(s.label && s.label !== s.id, `${s.id} بلا تسميةٍ عربيّة`);
 });

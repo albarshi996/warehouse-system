@@ -19,6 +19,7 @@ import { stuckBalances, locationLabel } from './locations.js';
 import { availableQty } from './reservations.js';
 import { toMillis, ageInState, isStale } from '../documents/inbox.js';
 import { expiryStatus } from '../balances/balanceKey.js';
+import { AUTO_PULL_MS, PULL_SCOPE_IDS, lastPullLabel, scopeOf } from '../odoo/pullRegistry.js';
 
 const DAY = 86400000;
 
@@ -176,6 +177,188 @@ export function operationsSnapshot(docs, balances, items) {
     transit: { inTransit: ship.inTransit, variances: varr.unresolved, value: ship.transitValue },
     inventory: { shortItems: short.itemCount, belowMin, toBuy, stuck: stuck.length, lostValue: short.totalLostValue },
     finance: { invoices: ofType(docs, 'INV').length, creditNotes: ofType(docs, 'CN').length, awaitingClose: ofType(docs, 'INV').filter(isOpen).length },
+  };
+}
+
+/* ══════ التشغيليّ والمرجعيّ ‹EXE-503› — يسدّ ف ت‑١٢ ══════
+ *
+ * ═══ العطب ═══
+ * اللوحة تعرض «١٢ صنفًا تحت الحدّ الأدنى» بلا أن تقول إنّ **الحدّ نفسه**
+ * مستورَدٌ من أودو قبل أسبوع. فيُقرأ رقمٌ نصفُه لحظيٌّ ونصفُه قديمٌ كأنّه
+ * لحظيٌّ كلّه — وهو أخطر من رقمٍ قديمٍ صريح، لأنّ صراحته تُفقده الثقة
+ * فيُراجَع، وصمتَه يجعله يُصدَّق.
+ *
+ * ═══ فلا يُخلط طرفان في رقم ═══
+ * كلّ عدّادٍ في اللقطة يُعلن أصله: **لحظيّ** من دفترنا · **مرجعيّ** مستورَد ·
+ * أو **مركَّب** منهما. والمركَّب يحكمه أقدمُ طرفيه.
+ *
+ * وعدّادٌ يُضاف بلا أصلٍ معلَن **يكشفه الحارس** (`unmarkedCounters`) ولا
+ * يُعرض صامتًا — نمط `unpolicedWorkTypes` وحارس `timeFields` نفسه.
+ */
+
+export const ORIGIN = Object.freeze({
+  live: {
+    id: 'live',
+    label: 'لحظيّ',
+    hint: 'من دفترنا — يتغيّر لحظةَ يُنجَز مستند',
+  },
+  reference: {
+    id: 'reference',
+    label: 'مرجعيّ',
+    hint: 'مستورَدٌ من أودو — لا يتغيّر إلّا بسحبٍ جديد',
+  },
+  mixed: {
+    id: 'mixed',
+    label: 'مركَّب',
+    hint: 'يقارن رصيدَنا اللحظيّ بحدٍّ مرجعيّ — وأقدمُ طرفيه يحكم صدقه',
+  },
+});
+
+/**
+ * أصل كلّ عدّادٍ في اللقطة، بمفاتيح `القسم.الحقل` نفسها التي يُخرجها
+ * `operationsSnapshot` — فلا خريطةَ أسماءٍ ثانية تتباعد عنه.
+ *
+ * والمركَّبان هما الوحيدان: `belowMin` و`toBuy` يقارنان المتاح (من أرصدتنا)
+ * بـ`minStock` (من ماستر الأصناف المستورَد). وما عداهما مبنيٌّ على مستنداتنا
+ * وأرصدتنا وحدها.
+ */
+export const SNAPSHOT_ORIGIN = Object.freeze({
+  'sales.orders': ORIGIN.live.id,
+  'sales.pending': ORIGIN.live.id,
+  'sales.noStock': ORIGIN.live.id,
+  'sales.pendingValue': ORIGIN.live.id,
+  'warehouse.picking': ORIGIN.live.id,
+  'warehouse.putaway': ORIGIN.live.id,
+  'warehouse.transfers': ORIGIN.live.id,
+  'warehouse.returns': ORIGIN.live.id,
+  'warehouse.adjustments': ORIGIN.live.id,
+  'transit.inTransit': ORIGIN.live.id,
+  'transit.variances': ORIGIN.live.id,
+  'transit.value': ORIGIN.live.id,
+  'inventory.shortItems': ORIGIN.live.id,
+  'inventory.belowMin': ORIGIN.mixed.id,
+  'inventory.toBuy': ORIGIN.mixed.id,
+  'inventory.stuck': ORIGIN.live.id,
+  'inventory.lostValue': ORIGIN.live.id,
+  'finance.invoices': ORIGIN.live.id,
+  'finance.creditNotes': ORIGIN.live.id,
+  'finance.awaitingClose': ORIGIN.live.id,
+});
+
+/** أصل عدّادٍ بمساره، أو `null` — والفراغ يعني «غير معلَن» لا «لحظيّ». */
+export function originOf(path) {
+  return ORIGIN[SNAPSHOT_ORIGIN[path]] || null;
+}
+
+/** عدّاداتٌ في اللقطة بلا أصلٍ معلَن — الفراغُ هو السلامة (يحرسه الاختبار). */
+export function unmarkedCounters(snapshot) {
+  const out = [];
+  for (const [section, group] of Object.entries(snapshot || {})) {
+    if (!group || typeof group !== 'object') continue;
+    for (const field of Object.keys(group)) {
+      if (!SNAPSHOT_ORIGIN[`${section}.${field}`]) out.push(`${section}.${field}`);
+    }
+  }
+  return out;
+}
+
+/** ثلاث دورات سحبٍ — تحتها المرجعيّ حديثٌ عمليًّا. */
+export const REFERENCE_FRESH_MS = 3 * AUTO_PULL_MS;
+/** يومٌ كامل — فوقه لا يُعرض المرجعيّ إلّا بتحذير. */
+export const REFERENCE_STALE_MS = DAY;
+
+/**
+ * درجات قِدَم المرجعيّ. و«لم يُسحب قطّ» ليست «قديمًا»: الأولى تقول إنّ المرجع
+ * **ليس أودو** (حدودٌ من استيراد Excel أو إدخالٍ محلّيّ)، والثانية تقول إنّه
+ * أودو وقد تقادم.
+ *
+ * ★ ولذلك `never.warn === false`: منشأةٌ لم تربط أودو قطّ لا تستحقّ شريطًا
+ * أحمر دائمًا. والأحمر الذي لا يزول يُهمَل، فيسقط معه الأحمر الصادق.
+ * التحذير للمتقادم **الذي يُعرف أنّه يزحف**.
+ */
+export const FRESHNESS = Object.freeze({
+  never: { id: 'never', label: 'لم يُسحب من أودو — المرجع محلّيّ', warn: false },
+  fresh: { id: 'fresh', label: 'حديث', warn: false },
+  aging: { id: 'aging', label: 'يتقادم', warn: false },
+  stale: { id: 'stale', label: 'قديم — يحتاج سحبًا', warn: true },
+});
+
+export function freshnessLevel(ms, nowMs) {
+  if (!Number.isFinite(ms) || !Number.isFinite(nowMs)) return FRESHNESS.never;
+  const age = nowMs - ms;
+  if (age <= REFERENCE_FRESH_MS) return FRESHNESS.fresh;
+  if (age < REFERENCE_STALE_MS) return FRESHNESS.aging;
+  return FRESHNESS.stale;
+}
+
+/**
+ * ⚠️ الأصناف تهبط في **نموذجٍ قائم** (`Items_Master`) لا في مرآة — فلا سطرَ
+ * لها في `odoo_pull_state`، وزمنُ سحبها في سجلّ أحداث المزامنة. خريطةٌ
+ * صغيرةٌ معلنة أهونُ من قراءةٍ صامتة تُعيد «لم يُسحب قطّ» وقد سُحب.
+ */
+const EVENT_SOURCE_OF = Object.freeze({ items: 'item' });
+
+/** أحدث زمن سحبٍ لنوع مصدرٍ في سجلّ الأحداث. */
+function lastPullEventMs(events, sourceType) {
+  let best = null;
+  for (const e of events || []) {
+    if (String(e?.kind) !== 'pull' || String(e?.sourceType) !== sourceType) continue;
+    const ms = toMillis(e?.ts);
+    if (ms != null && (best == null || ms > best)) best = ms;
+  }
+  return best;
+}
+
+/**
+ * قِدَم كلّ مرجعٍ مستورَد — **بنصّه** لا بختمٍ خامّ.
+ *
+ * التسميات من `PULL_SCOPES` ونصُّ العمر من `lastPullLabel` — الاثنان مبنيّان
+ * في `pullRegistry`؛ فمن كتب صيغة «قبل ٣ دقائق» ثانيةً هنا فتح باب صيغتين
+ * لعمرٍ واحد.
+ *
+ * @param {object} sources `{ events, pullState }` — سجلّ أحداث المزامنة وحالة السحب
+ * @param {number} nowMs   الوقت يُمرَّر ولا يُقرأ
+ * @returns {{scopes:Array, master:object|null, level:object, label:string, warn:boolean, oldest:object|null}}
+ */
+export function referenceFreshness(sources = {}, nowMs) {
+  const { events = [], pullState = [] } = sources;
+  const byScope = new Map();
+  for (const row of pullState || []) if (row?.scope) byScope.set(String(row.scope), row);
+
+  const scopes = PULL_SCOPE_IDS.map((id) => {
+    const scope = scopeOf(id);
+    const row = byScope.get(id);
+    const stateMs = toMillis(row?.lastPulledAt);
+    const eventMs = EVENT_SOURCE_OF[id] ? lastPullEventMs(events, EVENT_SOURCE_OF[id]) : null;
+    const ms = stateMs ?? eventMs ?? null;
+    const level = freshnessLevel(ms, nowMs);
+    return {
+      id,
+      label: scope?.labelAr || id,
+      family: scope?.family || '',
+      ms,
+      ageLabel: lastPullLabel(ms, nowMs),
+      level: level.id,
+      warn: level.warn,
+      count: Number(row?.lastCount) || 0,
+      error: String(row?.lastError || '').trim(),
+    };
+  });
+
+  // ماستر الأصناف هو المرجع الذي تعتمد عليه أرقام **هذه** اللوحة (المركَّبان).
+  const master = scopes.find((s) => s.id === 'items') || null;
+  const pulled = scopes.filter((s) => s.ms != null);
+  const oldest = pulled.length ? pulled.reduce((a, b) => (a.ms <= b.ms ? a : b)) : null;
+  const level = FRESHNESS[master?.level] || FRESHNESS.never;
+
+  return {
+    scopes,
+    master,
+    oldest,
+    level,
+    /** نصٌّ واحد يوضع بجانب الرقم المرجعيّ — لا ختمَ خامًّا يفكّه القارئ. */
+    label: master ? `${master.label}: ${master.ageLabel}` : 'لا مرجعَ معلَن',
+    warn: level.warn,
   };
 }
 
