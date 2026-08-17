@@ -701,7 +701,7 @@
       "title": "سلسلة حالات الطلب — مرحلةٌ بزمنٍ متوقّع وفعليّ",
       "milestone": "ت٥",
       "owner": "Claude",
-      "state": "todo",
+      "state": "doing",
       "gaps": [
         "ت‑١١"
       ],
@@ -709,10 +709,11 @@
         "EXE-102",
         "EXE-301"
       ],
-      "nucleus": "`documents/documentLineProgress.js` (تقدّم البند كمّيًّا) + `documents/chain.js` (سلسلة المستندات) + `documents/states.js` — الثلاثة قائمة؛ المطلوب جمعها في سلسلةٍ زمنيّة",
-      "guardTest": "src/services/documents/documentLineProgress.test.js",
+      "nucleus": "`documentLineProgress.js` (تقدّم البند كمّيًّا · موضعه `src/services/` لا `src/services/documents/`) + `documents/chain.js` (سلسلة المستندات) + `documents/states.js` (`executionStatus` و`canDeriveFrom`) — الثلاثة قائمة؛ المطلوب جمعها في سلسلةٍ زمنيّة",
+      "guardTest": "src/services/documents/orderStages.test.js",
       "touches": [
-        "src/services/documents/documentLineProgress.js"
+        "src/services/documents/orderStages.js",
+        "src/services/documents/orderStages.test.js"
       ],
       "acceptance": [
         "المراحل: جديد · خُصّص · يحتاج تعبئة · أُطلقت المهامّ · سحب · تعبئة · تجهيز · تحميل · شُحن",
