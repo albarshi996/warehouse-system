@@ -12,6 +12,7 @@
 import { useMemo, useState } from 'react';
 import Icon from '../../ui/Icon.jsx';
 import { getBasePath } from '../../../services/auth/authService.js';
+import { LINK_STATE, drillChain } from '../../../services/ledger/exceptionDrill.js';
 import {
   EXCEPTION_TYPES,
   SEVERITY,
@@ -23,7 +24,7 @@ import {
 
 const n = (v) => new Intl.NumberFormat('en-US').format(Number(v) || 0);
 
-export default function ExceptionsBox({ detections, registry, nowMs, onRegister, busy }) {
+export default function ExceptionsBox({ detections, registry, nowMs, onRegister, busy, tasks = [], laborTasks = [] }) {
   const [severity, setSeverity] = useState('');
   const [type, setType] = useState('');
   const [onlyOverdue, setOnlyOverdue] = useState(false);
@@ -71,7 +72,7 @@ export default function ExceptionsBox({ detections, registry, nowMs, onRegister,
       ) : (
         <div className="grid gap-2">
           {shown.slice(0, 24).map((e, i) => (
-            <Row key={e.id || `d${i}`} e={e} base={base} />
+            <Row key={e.id || `d${i}`} e={e} base={base} tasks={tasks} laborTasks={laborTasks} />
           ))}
           {shown.length > 24 && <p className="text-xs text-muted text-center">…و{n(shown.length - 24)} استثناءً آخر.</p>}
         </div>
@@ -80,7 +81,9 @@ export default function ExceptionsBox({ detections, registry, nowMs, onRegister,
   );
 }
 
-function Row({ e, base }) {
+function Row({ e, base, tasks, laborTasks }) {
+  const [open, setOpen] = useState(false);
+  const drill = useMemo(() => drillChain(e, { tasks, laborTasks, base }), [e, tasks, laborTasks, base]);
   // الأحمر للخطورة المرتفعة وحدها — وما دونها بلا لونِ إنذار.
   const high = e.severity === SEVERITY.HIGH;
   return (
@@ -114,12 +117,29 @@ function Row({ e, base }) {
         <strong className="text-ink">الإجراء:</strong>
         <span className="text-ink-2">{e.action || '—'}</span>
         {e.ownerRole && <span className="text-muted">· المسؤول: {e.ownerRole}</span>}
-        {e.href && (
-          <a className="text-accent font-bold hover:underline" href={`${base}${e.href}`}>
-            افتح الموضع
-          </a>
-        )}
+        <div className="flex-1" />
+        {/* ‹EXE-501› النزول سلسلةٌ لا رابطُ صفحة — وأوّل فجوةٍ تُقال قبل الفتح. */}
+        <button type="button" className="text-accent font-bold hover:underline" onClick={() => setOpen((v) => !v)}>
+          {open ? 'أخفِ المسار' : 'المسار إلى الإجراء'}
+        </button>
       </div>
+
+      {open && (
+        <ol className="mt-2 space-y-1 text-[11px] border-t border-line pt-2">
+          {drill.chain.map((c, i) => (
+            <li key={c.id} className="flex flex-wrap items-center gap-2">
+              <span className="text-muted">{i + 1}.</span>
+              {c.href ? (
+                <a className="text-accent hover:underline font-bold" href={c.href}>{c.label}</a>
+              ) : (
+                <span className={c.state === LINK_STATE.missing ? 'text-muted' : 'text-ink font-bold'}>{c.label}</span>
+              )}
+              {c.hint && <span className="text-muted">— {c.hint}</span>}
+              {c.state === LINK_STATE.missing && <span className="text-muted">(حلقةٌ مفقودة)</span>}
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }

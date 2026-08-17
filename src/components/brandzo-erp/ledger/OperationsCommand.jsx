@@ -6,6 +6,7 @@ import { subscribeItems } from '../../../services/itemService.js';
 import { computeKpis, operationsSnapshot, operationExceptions } from '../../../services/ledger/operationsDashboard.js';
 import ExceptionsBox from './ExceptionsBox.jsx';
 import { listenExceptions, syncDetections } from '../../../services/ledger/exceptionsService.js';
+import { listenLaborTasks } from '../../../services/labor/laborTasksService.js';
 import { toMillis } from '../../../services/documents/inbox.js';
 
 /**
@@ -77,7 +78,9 @@ export default function OperationsCommand() {
   // ‹EXE-204› السجلّ يُقرأ حيًّا، والتسجيل بيد المشرف (ت-O01) لا صامتًا.
   const [registry, setRegistry] = useState([]);
   const [registering, setRegistering] = useState('');
+  const [laborTasks, setLaborTasks] = useState([]);
   useEffect(() => listenExceptions(setRegistry, () => setRegistry([])), []);
+  useEffect(() => listenLaborTasks(setLaborTasks, () => setLaborTasks([])), []);
 
   async function registerDetected() {
     setRegistering('يسجّل…');
@@ -146,6 +149,7 @@ export default function OperationsCommand() {
         registry={registry}
         nowMs={nowMs}
         onRegister={registerDetected}
+        laborTasks={laborTasks}
         busy={registering}
       />
 
