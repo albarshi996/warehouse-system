@@ -5,7 +5,7 @@
   "command": "npm run plan:exec",
   "track": "جراحيّ · **النواة تكبر ولا يُبنى بجانبها** · لا مجلّد خدمةٍ جديد ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح · ولا شاشة ثانية لمنطقٍ قائم",
   "source": "نقد المالك 2026-08-16 («نظام تخزين جامد بارد» ثمّ «تطوير جراحيّ لا نتوءات») + ملفّ «تطوير.md» (قراءة Manhattan Active WM وInfor WMS) + جرد النوى على الكود الفعليّ في هذه الجلسة",
-  "lastUpdated": "2026-08-17 (EXE-802 — المسار بالمشي)",
+  "lastUpdated": "2026-08-17 (EXE-803 — مرحلة ت٨ مكتملة)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "e8898ef",
@@ -964,7 +964,7 @@
       "title": "الخريطة تعرض العمل — طبقةٌ ثانية على الشبكة نفسها",
       "milestone": "ت٨",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ت‑١٦"
       ],
@@ -976,6 +976,7 @@
       "guardTest": "src/services/locations/mapGrid.test.js",
       "touches": [
         "src/services/locations/mapGrid.js",
+        "src/services/locations/mapGrid.test.js",
         "src/components/brandzo-erp/warehouse/LocationMap.jsx"
       ],
       "acceptance": [
@@ -983,7 +984,12 @@
         "التمييز بلا لونٍ وحده كما في الطبقة الأولى",
         "المواقع التي تتعثّر فيها المهامّ تظهر بسببها",
         "لا مكوّن خريطةٍ ثانٍ ولا رابط جديد"
-      ]
+      ],
+      "evidence": {
+        "commit": "e68c0ee",
+        "closedOn": "2026-08-17",
+        "tests": "src/services/locations/mapGrid.test.js — 36 اختبارًا (9 لطبقة العمل)"
+      }
     },
     {
       "id": "EXE-901",
