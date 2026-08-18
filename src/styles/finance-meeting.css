@@ -107,8 +107,111 @@
 .fin-asks h3 { margin: 0 0 .2rem; color: var(--ink); font-size: .9rem; }
 .fin-asks p { margin: 0; color: var(--ink-soft); font-size: .75rem; line-height: 1.55; }
 
+/* ═══════════════════════════════════════════════════════════════════
+   المحور 07 — السياسات العشر
+   ═══════════════════════════════════════════════════════════════════
+   لغةُ لونٍ واحدةٌ تسري على كلّ شرائح هذا المحور: الأخضر لما هو مبنيٌّ
+   يعمل، والذهبيّ لما بُني بعضه، والأحمر للفجوة وحدها — تحذيرًا لا زينة.
+   فيقرأ الحاضر الحالة قبل أن يقرأ النصّ.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── شارتا الحالة والأولويّة ───────────────────────────────────── */
+.fin-state { padding: .1rem .5rem; border-radius: 100px; font-size: .62rem; font-style: normal; font-weight: 800; white-space: nowrap; }
+.fin-state.is-built { background: rgba(31, 122, 77, .13); color: var(--ok); }
+.fin-state.is-partial { background: rgba(200, 164, 78, .22); color: #7a5c10; }
+.fin-state.is-gap { background: rgba(196, 16, 23, .12); color: var(--red-700); }
+
+.fin-prio { padding: .08rem .45rem; border-radius: 100px; font-size: .6rem; font-weight: 800; white-space: nowrap; }
+.fin-prio.is-top { background: var(--red-700); color: #fff; }
+.fin-prio.is-high { background: #eef0f3; color: #5b6472; }
+
+/* ── الأولوية القصوى: ستّ بطاقات ──────────────────────────────── */
+.fin-priority { margin: auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem .8rem; }
+.fin-priority > article { display: flex; flex-direction: column; gap: .3rem; min-height: 196px; padding: .85rem .95rem; border: 1px solid var(--line); border-top-width: 4px; border-radius: 12px; background: linear-gradient(180deg, #fff, var(--tint)); }
+.fin-priority > article.state-built { border-top-color: var(--ok); }
+.fin-priority > article.state-partial { border-top-color: var(--gold); }
+.fin-priority > article.state-gap { border-top-color: var(--red-700); }
+.fin-priority header { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.fin-priority header b { color: var(--muted); font-size: .68rem; font-weight: 800; direction: ltr; }
+.fin-priority h3 { margin: 0; color: var(--ink); font-size: .93rem; line-height: 1.35; }
+.fin-priority-ask { margin: 0; color: var(--ink); font-size: .73rem; line-height: 1.5; font-weight: 650; }
+.fin-priority-why { margin: 0; color: var(--ink-soft); font-size: .69rem; line-height: 1.5; }
+.fin-priority a { margin-top: auto; display: inline-flex; align-items: center; gap: .3rem; align-self: flex-start; padding-top: .4rem; color: var(--red-700); font-size: .66rem; font-weight: 800; text-decoration: none; }
+.fin-priority a:hover { color: var(--red-900); text-decoration: underline; }
+.fin-priority a svg { width: 12px; height: 12px; }
+
+/* ── خريطة السياسات العشر ─────────────────────────────────────── */
+.fin-policy-map { margin: auto 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: .55rem; }
+.fin-policy-map > div { display: flex; flex-direction: column; gap: .35rem; min-height: 132px; padding: .7rem .75rem; border: 1px solid var(--line); border-inline-end-width: 4px; border-radius: 11px; background: #fff; }
+.fin-policy-map > div.state-built { border-inline-end-color: var(--ok); }
+.fin-policy-map > div.state-partial { border-inline-end-color: var(--gold); }
+.fin-policy-map > div.state-gap { border-inline-end-color: var(--red-700); }
+.fin-policy-map header { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
+.fin-policy-map header > b { color: var(--muted); font-size: .64rem; font-weight: 800; direction: ltr; }
+.fin-policy-map h3 { margin: 0; color: var(--ink); font-size: .78rem; line-height: 1.4; }
+.fin-policy-map .fin-state { margin-top: auto; align-self: flex-start; }
+
+/* ── أعمدة السياسة: بندٌ بندًا ودليلٌ من البوابة ────────────────── */
+.fin-policy-cols { min-height: 0; flex: 1; display: grid; gap: .9rem; align-items: stretch; }
+.fin-policy-cols.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.fin-policy-cols.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.fin-policy { display: flex; flex-direction: column; gap: .4rem; padding: 1rem 1.05rem; border: 1px solid var(--line); border-top-width: 4px; border-radius: 13px; background: linear-gradient(180deg, #fff, var(--tint)); }
+.fin-policy.state-built { border-top-color: var(--ok); }
+.fin-policy.state-partial { border-top-color: var(--gold); }
+.fin-policy.state-gap { border-top-color: var(--red-700); }
+.fin-policy > header { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.fin-policy > header > b { color: var(--muted); font-size: .68rem; font-weight: 800; direction: ltr; }
+.fin-policy h3 { margin: 0; color: var(--ink); font-size: 1rem; line-height: 1.3; }
+.fin-policy-goal { margin: 0; color: var(--red-800); font-size: .72rem; line-height: 1.5; font-weight: 650; }
+.fin-policy-clauses { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .3rem; }
+.fin-policy-clauses li { position: relative; padding-inline-start: .7rem; color: var(--ink-soft); font-size: .715rem; line-height: 1.5; }
+.fin-policy-clauses li::before { content: ''; position: absolute; inset-inline-start: 0; top: .5rem; width: 4px; height: 4px; border-radius: 50%; background: var(--red-400); }
+.fin-policy > footer { margin-top: auto; padding-top: .5rem; border-top: 1px dashed var(--line); color: var(--ink-soft); font-size: .68rem; line-height: 1.5; }
+.fin-policy > footer b { color: var(--ok); font-weight: 800; }
+.fin-policy.state-gap > footer b { color: var(--red-700); }
+
+/* ── التحويل الداخليّ ─────────────────────────────────────────── */
+.fin-transfer { display: flex; flex-direction: column; gap: .7rem; }
+.fin-transfer-rule { margin: 0; padding: .7rem .85rem; border-inline-start: 3px solid var(--red-700); border-radius: 0 9px 9px 0; background: var(--tint-2); color: var(--ink); font-size: .77rem; line-height: 1.6; font-weight: 650; }
+.fin-transfer-docs { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+.fin-transfer-docs a { display: flex; flex-direction: column; gap: .22rem; padding: .55rem .65rem; border: 1px solid var(--line); border-radius: 10px; background: #fff; text-decoration: none; }
+.fin-transfer-docs a:hover { border-color: rgba(196, 16, 23, .35); }
+.fin-transfer-docs b { color: var(--red-700); font-size: .72rem; font-weight: 800; }
+.fin-transfer-docs span { color: var(--ink-soft); font-size: .64rem; line-height: 1.45; }
+.fin-policy-gap { margin: 0; padding: .7rem .85rem; border: 1px solid rgba(200, 164, 78, .45); border-radius: 11px; background: rgba(200, 164, 78, .1); color: var(--ink-soft); font-size: .7rem; line-height: 1.55; }
+.fin-policy-gap b { color: #7a5c10; font-weight: 800; }
+
+/* ── أربع شاشاتٍ تُنفّذ السياسة ─────────────────────────────────── */
+.fin-portal4 { min-height: 0; flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; align-items: start; }
+.fin-portal4 > div { display: flex; flex-direction: column; gap: .45rem; }
+.fin-portal-role { margin: 0; color: var(--ink-soft); font-size: .68rem; line-height: 1.5; }
+.fin-portal-role b { display: block; margin-bottom: .12rem; color: var(--red-700); font-size: .78rem; font-weight: 800; }
+
+/* ── الفجوات الأربع ───────────────────────────────────────────── */
+.fin-gaps { margin: auto 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: .6rem .9rem; }
+.fin-gaps > article { display: flex; flex-direction: column; gap: .3rem; padding: .8rem .95rem; border: 1px solid var(--line); border-inline-end-width: 4px; border-inline-end-color: var(--red-700); border-radius: 12px; background: #fff; }
+.fin-gaps header { display: flex; align-items: baseline; gap: .45rem; }
+.fin-gaps header b { color: var(--red-700); font-size: .68rem; font-weight: 800; direction: ltr; }
+.fin-gaps h3 { margin: 0; flex: 1; color: var(--ink); font-size: .93rem; }
+.fin-gaps header span { color: var(--muted); font-size: .64rem; font-weight: 800; direction: ltr; }
+.fin-gap-today, .fin-gap-missing { margin: 0; color: var(--ink-soft); font-size: .7rem; line-height: 1.5; }
+.fin-gap-today b { color: var(--muted); font-weight: 800; }
+.fin-gap-missing b { color: var(--ink); font-weight: 800; }
+.fin-gaps > article > footer { margin-top: .15rem; padding-top: .4rem; border-top: 1px dashed var(--line); color: var(--ink); font-size: .71rem; line-height: 1.5; font-weight: 650; }
+.fin-gaps > article > footer b { color: var(--red-700); font-weight: 800; }
+
+/* ── ما يحتاج بناءً — ذيل شريحة الطلب ─────────────────────────── */
+.fin-build-asks { margin-top: .7rem; padding-top: .6rem; border-top: 2px solid var(--gold); display: grid; grid-template-columns: auto repeat(4, 1fr); gap: .5rem .8rem; align-items: start; }
+.fin-build-asks > span { align-self: center; color: #7a5c10; font-size: .72rem; font-weight: 800; }
+.fin-build-asks > div { display: flex; flex-direction: column; gap: .12rem; }
+.fin-build-asks b { color: var(--ink); font-size: .74rem; font-weight: 800; }
+.fin-build-asks p { margin: 0; color: var(--ink-soft); font-size: .66rem; line-height: 1.45; }
+
 @media (max-width: 767px) {
   .mtg-stages.fin-five, .fin-handoff, .fin-verdicts, .fin-scn-map, .fin-anatomy,
-  .fin-kpis, .fin-asks { grid-template-columns: 1fr; }
-  .fin-handoff section, .fin-kpis > div, .fin-scn-map > div, .mtg-stages.fin-five > div { min-height: auto; }
+  .fin-kpis, .fin-asks, .fin-priority, .fin-policy-map, .fin-policy-cols.cols-2,
+  .fin-policy-cols.cols-3, .fin-portal4, .fin-gaps, .fin-transfer-docs { grid-template-columns: 1fr; }
+  .fin-build-asks { grid-template-columns: 1fr; }
+  .fin-handoff section, .fin-kpis > div, .fin-scn-map > div, .mtg-stages.fin-five > div,
+  .fin-priority > article, .fin-policy-map > div { min-height: auto; }
 }

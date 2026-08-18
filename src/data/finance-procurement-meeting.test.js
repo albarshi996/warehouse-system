@@ -16,8 +16,12 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import {
+  POLICY_PRIORITIES,
+  POLICY_STATES,
   asks,
+  buildAsks,
   closingOutcome,
+  coldChain,
   decisionPoints,
   financialImpact,
   handoffs,
@@ -26,12 +30,18 @@ import {
   masters,
   matchVerdicts,
   ownership,
+  policies,
+  policyGaps,
+  policyPortal,
+  policyReports,
   portalShortcuts,
   purchaseStages,
   scenarios,
   sharedReports,
   slideIndex,
   tolerance,
+  topPriority,
+  transferCycle,
   vendorDimensions,
   vendorTiers,
 } from './finance-procurement-meeting.js';
@@ -39,10 +49,13 @@ import * as MODULE from './finance-procurement-meeting.js';
 import { internalPaths } from '../services/auth/navCatalog.js';
 import { ALWAYS_ALLOWED } from '../services/auth/pageAccess.js';
 import { getSchema } from '../services/documents/schemas/index.js';
+import { CCP1_LIMITS } from '../services/documents/schemas/grn.js';
 import {
+  CHAINS,
   DEFAULT_TOLERANCE,
   INTERNAL_PROCUREMENT_CHAIN,
   PURCHASE_CHAIN,
+  TRANSFER_CHAIN,
   threeWayMatch,
 } from '../services/documents/chain.js';
 import * as procurementKpis from '../services/kpi/procurementKpis.js';
@@ -231,7 +244,8 @@ test('المطالب والقرارات ومخرج الجلسة مكتملة', (
   assert.equal(asks.length, 8);
   for (const [title, detail] of asks) assert.ok(title?.trim() && detail?.trim());
 
-  assert.equal(decisionPoints.length, 8);
+  // ثمانٍ في الدورة المستنديّة وأربعٌ في السياسات — والعنوان في الشريحة يقول اثنتي عشرة.
+  assert.equal(decisionPoints.length, 12);
   for (const point of decisionPoints) {
     assert.ok(point.title?.trim() && point.ask?.trim() && point.owner?.trim());
   }
@@ -239,10 +253,138 @@ test('المطالب والقرارات ومخرج الجلسة مكتملة', (
   assert.equal(closingOutcome.length, 4);
 });
 
+/* ═══════════════════════════════════════════════════════════════════
+   المحور 07 — حرّاس السياسات العشر
+   ═══════════════════════════════════════════════════════════════════ */
+
+test('السياسات العشر: لكلٍّ حالةٌ وأولويّةٌ معروفتان وبنودٌ ودليلٌ وشاشة', () => {
+  assert.equal(policies.length, 10);
+  const codes = new Set();
+  for (const policy of policies) {
+    assert.ok(!codes.has(policy.code), `رمز السياسة ${policy.code} مكرّر`);
+    codes.add(policy.code);
+    assert.ok(POLICY_STATES[policy.state], `${policy.code} بحالةٍ غير معروفة: ${policy.state}`);
+    assert.ok(POLICY_PRIORITIES[policy.priority], `${policy.code} بأولويّةٍ غير معروفة: ${policy.priority}`);
+    assert.ok(policy.title?.trim() && policy.goal?.trim() && policy.scope?.trim(), `${policy.code} ناقص العنوان أو الهدف أو النطاق`);
+    assert.ok(policy.clauses?.length >= 3, `${policy.code} بأقلّ من ثلاثة بنود`);
+    assert.ok(policy.owns?.trim(), `${policy.code} بلا ملكيّةٍ مذكورة`);
+    assert.ok(policy.proof?.trim(), `${policy.code} بلا دليلٍ يشرح حالته في البوابة`);
+    assert.ok(portalShortcuts[policy.shortcut], `${policy.code} يشير إلى اختصارٍ غير معرّف: ${policy.shortcut}`);
+  }
+  // شريحة الإقفال تقول: خمسٌ تعمل وثلاثٌ بعضها واثنتان لم تُبنَ.
+  const count = (state) => policies.filter((policy) => policy.state === state).length;
+  assert.equal(count('built'), 5, 'عدد السياسات المبنيّة يخالف ما تقوله شريحة الإقفال');
+  assert.equal(count('partial'), 3);
+  assert.equal(count('gap'), 2);
+});
+
+test('الأولوية القصوى: ستّ نقاطٍ بحالاتٍ معروفةٍ وشاشاتٍ مبنيّة', () => {
+  assert.equal(topPriority.length, 6);
+  for (const point of topPriority) {
+    assert.ok(POLICY_STATES[point.state], `النقطة ${point.n} بحالةٍ غير معروفة`);
+    assert.ok(point.title?.trim() && point.ask?.trim() && point.why?.trim(), `النقطة ${point.n} ناقصة`);
+    assert.ok(portalShortcuts[point.shortcut], `النقطة ${point.n} تشير إلى اختصارٍ غير معرّف`);
+  }
+});
+
+test('دورة التحويل الداخليّ هي سلسلتها المعتمَدة نفسها', () => {
+  assert.deepEqual(transferCycle.nodes.map(([code]) => code), TRANSFER_CHAIN);
+  for (const [code] of transferCycle.nodes) {
+    assert.ok(getSchema(code), `دورة التحويل تعد بمستند ${code} ولا مخطّط له`);
+  }
+  assert.equal(transferCycle.stages.length, TRANSFER_CHAIN.length);
+  for (const key of transferCycle.stages) assert.ok(portalShortcuts[key], `مرحلةٌ تشير إلى اختصارٍ غير معرّف: ${key}`);
+  assert.ok(transferCycle.rule?.trim() && transferCycle.points.length >= 3);
+  assert.ok(portalShortcuts[transferCycle.shortcut]);
+});
+
+test('حدود سلسلة التبريد المعروضة هي حدود المحرّك نفسها لا رقمٌ منقول', () => {
+  assert.deepEqual(coldChain, CCP1_LIMITS);
+});
+
+test('تقارير إثبات السياسات موجودةٌ في السجلّ وتشير إلى سياساتٍ معروفة', () => {
+  const titles = new Set(Object.values(REPORTS).map((report) => report.titleAr));
+  const codes = new Set(policies.map((policy) => policy.code));
+  assert.equal(policyReports.length, 6);
+  for (const [title, code, detail] of policyReports) {
+    assert.ok(titles.has(title), `التقرير «${title}» غير موجودٍ في سجلّ التقارير`);
+    assert.ok(codes.has(code), `التقرير «${title}» يشير إلى سياسةٍ غير معروفة: ${code}`);
+    assert.ok(detail?.trim(), `التقرير «${title}» بلا شرحٍ لما يُثبته`);
+  }
+});
+
+test('شاشات تنفيذ السياسة الأربع مبنيّةٌ ومعرّفة', () => {
+  assert.equal(policyPortal.length, 4);
+  for (const [key, role, why] of policyPortal) {
+    assert.ok(portalShortcuts[key], `شاشة السياسة «${role}» تشير إلى اختصارٍ غير معرّف: ${key}`);
+    assert.ok(role?.trim() && why?.trim());
+  }
+  // طلب المالك الصريح: النقل الداخليّ والصنف والمورّد والتقارير.
+  assert.deepEqual(policyPortal.map(([key]) => key), ['transfers', 'items', 'suppliers', 'reports']);
+});
+
+test('الفجوات الأربع: لكلٍّ سياستُها وما ينقصها وما نطلبه — ولكلّ طلبِ بناءٍ فجوته', () => {
+  assert.equal(policyGaps.length, 4);
+  assert.equal(buildAsks.length, policyGaps.length, 'كلّ فجوةٍ يقابلها طلبُ بناءٍ واحد');
+  const codes = new Set(policies.map((policy) => policy.code));
+  for (const gap of policyGaps) {
+    assert.ok(codes.has(gap.policy), `الفجوة ${gap.n} تشير إلى سياسةٍ غير معروفة: ${gap.policy}`);
+    assert.ok(gap.title?.trim() && gap.today?.trim() && gap.missing?.trim() && gap.ask?.trim(), `الفجوة ${gap.n} ناقصة`);
+  }
+  // كلّ سياسةٍ حالتها «فجوة» لا بدّ أن تُذكر في لوحة الفجوات — فلا فجوةٌ تُخفى.
+  for (const policy of policies.filter((item) => item.state === 'gap')) {
+    assert.ok(
+      policyGaps.some((gap) => gap.policy === policy.code),
+      `السياسة ${policy.code} فجوةٌ ولا تظهر في لوحة الفجوات`,
+    );
+  }
+});
+
+/**
+ * ★ أقوى حرّاس هذا المحور: الفجوة المعروضة لا بدّ أن تبقى فجوةً حقيقيّة.
+ * إن بُنيت غدًا ولم يُحدَّث العرض، صار العرض يشكو من نقصٍ سُدّ — فيسقط
+ * الاختبار ويُجبِر على تحديث الشريحة قبل أن تُقرأ على المالية.
+ */
+test('فجوة «غرض التحويل»: سبب النقل ما زال حقلًا حرًّا لا قائمةً مقيَّدة', () => {
+  const reason = getSchema('TR').sections
+    .flatMap((section) => section.fields || [])
+    .find((field) => field.key === 'reason');
+  assert.ok(reason, 'حقل سبب النقل اختفى من مخطّط طلب النقل — راجع الشريحة');
+  assert.notEqual(reason.kind, 'select', 'صار غرض التحويل قائمةً مقيَّدة — سُدّت الفجوة، فحدّث السياسة P05 ولوحة الفجوات');
+});
+
+test('فجوة «تكلفة الرحلة»: مستند النقل لا يحمل حقل كلفةٍ للرحلة بعد', () => {
+  // في مقاطع الحقول `columns` عددُ أعمدة التخطيط لا قائمةَ حقول — فيؤخذ المصفوف وحده.
+  const list = (value) => (Array.isArray(value) ? value : []);
+  const keys = new Set(
+    getSchema('TRN').sections
+      .flatMap((section) => [...list(section.fields), ...list(section.columns), ...list(section.extraFields)])
+      .map((field) => field.key),
+  );
+  assert.ok(keys.has('unitCost'), 'تكلفة الوحدة أساس القيمة الدفتريّة — اختفاؤها يعني تغيّر المخطّط');
+  for (const built of ['freightCost', 'tripCost', 'shippingCost']) {
+    assert.ok(!keys.has(built), `صار مستند النقل يحمل «${built}» — سُدّت فجوة تحميل تكلفة النقل، فحدّث السياسة P06`);
+  }
+});
+
+test('ادّعاءات السياستين P01 و P02 مقروءةٌ من المحرّك: عشر سلاسل و٢٩ نوعًا وسبعة مستنداتٍ ماليّة', () => {
+  assert.equal(CHAINS.length, 10, 'عدد السلاسل تغيّر — والسياسة P01 تقول عشرًا');
+  assert.equal(new Set(CHAINS.flat()).size, 29, 'عدد أنواع المستندات تغيّر — والسياسة P01 تقول تسعةً وعشرين');
+
+  const financialDocs = ['PO', 'INV', 'SPV', 'IPR', 'RFQ', 'IPO', 'PV'];
+  for (const type of financialDocs) {
+    assert.ok(
+      getSchema(type).roles?.approve?.includes('finance_manager'),
+      `المستند ${type} ذو أثرٍ ماليّ ولا يمرّ باعتماد المدير المالي — والسياسة P02 تعد بذلك`,
+    );
+  }
+  assert.equal(financialDocs.length, 7, 'السياسة P02 تقول سبعة مستنداتٍ ذات أثرٍ ماليّ');
+});
+
 test('فهرس الشرائح: بلا تكرار (التسمية مفتاح React) وبعدد الشرائح المرسومة', () => {
   assert.equal(new Set(slideIndex).size, slideIndex.length);
-  // ٨ شرائح تمهيدية + مرحلةٌ لكلّ حلقةٍ من الوارد + ١٦ شريحة تفصيلٍ وإقفال.
-  assert.equal(slideIndex.length, 8 + purchaseStages.length + 16);
+  // ٩ شرائح تمهيدية + مرحلةٌ لكلّ حلقةٍ من الوارد + ٢٤ شريحة تفصيلٍ وسياساتٍ وإقفال.
+  assert.equal(slideIndex.length, 9 + purchaseStages.length + 24);
   for (const stage of purchaseStages) {
     assert.ok(
       slideIndex.includes(`المرحلة ${stage.code} — ${stage.title}`),

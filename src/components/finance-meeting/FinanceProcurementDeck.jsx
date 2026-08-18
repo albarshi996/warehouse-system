@@ -8,10 +8,14 @@ import {
 } from '../../services/executiveReview/decisionSession.js';
 import { buildDecisionMinutes } from '../../services/nova/decisionMinutes.js';
 import {
+  POLICY_PRIORITIES,
+  POLICY_STATES,
   agenda,
   asks,
+  buildAsks,
   closingLine,
   closingOutcome,
+  coldChain,
   decisionPoints,
   financialImpact,
   handoffs,
@@ -25,6 +29,12 @@ import {
   matchVerdicts,
   meetingMeta,
   ownership,
+  policies,
+  policiesRule,
+  policyGaps,
+  policyGapsRule,
+  policyPortal,
+  policyReports,
   portalShortcuts,
   purchaseBranches,
   purchaseStages,
@@ -33,6 +43,9 @@ import {
   sharedReports,
   slideIndex,
   tolerance,
+  topPriority,
+  topPriorityRule,
+  transferCycle,
   vendorDimensions,
   vendorTiers,
 } from '../../data/finance-procurement-meeting.js';
@@ -629,13 +642,211 @@ function ReportsSlide({ base }) {
   );
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   المحور 07 — السياسات العشر
+   ═══════════════════════════════════════════════════════════════════
+   شارةُ الحالة هي عمود هذا المحور: لا تُقرأ سياسةٌ في القاعة دون أن
+   يُرى بجانبها هل هي مبنيّةٌ أم فجوة. فالشارة ليست زينةً — هي الفرق
+   بين «اعتمدوا ما يعمل» و«ائذنوا لنا أن نبني».
+   ═══════════════════════════════════════════════════════════════════ */
+
+const StateBadge = ({ state }) => <i className={`fin-state is-${state}`}>{POLICY_STATES[state]}</i>;
+
+function PolicyColumn({ policy, base, withShortcut = false }) {
+  return (
+    <section className={`fin-policy state-${policy.state}`}>
+      <header>
+        <b>{policy.code}</b>
+        <StateBadge state={policy.state} />
+      </header>
+      <h3>{policy.title}</h3>
+      <p className="fin-policy-goal">{policy.goal}</p>
+      <ul className="fin-policy-clauses">
+        {policy.clauses.map((clause) => <li key={clause}>{clause}</li>)}
+      </ul>
+      <footer><b>في البوابة:</b> {policy.proof}</footer>
+      {withShortcut && <ShortcutCard base={base} shortcutKey={policy.shortcut} compact />}
+    </section>
+  );
+}
+
+function PolicySlide({ base, codes, kicker, title, intro }) {
+  // الترتيب ترتيبُ `codes` لا ترتيبُ المصفوفة — فشريحة التكاليف تبدأ بالفجوة الكبرى.
+  const picked = codes.map((code) => policies.find((policy) => policy.code === code));
+  return (
+    <>
+      <SlideHead kicker={kicker} title={title} intro={intro} />
+      <div className={`fin-policy-cols cols-${picked.length}`}>
+        {picked.map((policy) => <PolicyColumn key={policy.code} policy={policy} base={base} />)}
+      </div>
+    </>
+  );
+}
+
+function PrioritySlide({ base }) {
+  return (
+    <>
+      <SlideHead
+        kicker="قبل جدول الأعمال"
+        title="ستّ نقاطٍ نضعها في الأولوية القصوى — لو لم يخرج غيرُها لكفت الجلسة"
+        intro="ثلاثٌ مبنيّةٌ تنتظر قرارًا يجعل الاختياريّ إلزاميًّا، واثنتان مبنيٌّ بعضهما، وواحدةٌ فجوةٌ نطلب إذنًا ببنائها. والحالة مكتوبةٌ على كلّ بطاقةٍ كي لا يُخلط الجاهز بالموعود."
+      />
+      <div className="fin-priority">
+        {topPriority.map((point) => (
+          <article key={point.n} className={`state-${point.state}`}>
+            <header>
+              <b>{point.n}</b>
+              <StateBadge state={point.state} />
+            </header>
+            <h3>{point.title}</h3>
+            <p className="fin-priority-ask">{point.ask}</p>
+            <p className="fin-priority-why">{point.why}</p>
+            <a href={shortcutHref(base, point.shortcut)} target="_blank" rel="noreferrer">
+              <LaunchIcon /> {portalShortcuts[point.shortcut].label}
+            </a>
+          </article>
+        ))}
+      </div>
+      <p className="mtg-table-note"><b>{topPriorityRule}</b></p>
+    </>
+  );
+}
+
+function PolicyMapSlide() {
+  return (
+    <>
+      <SlideHead
+        kicker="المحور 07 · خريطة السياسات"
+        title="عشر سياساتٍ حاكمة — ولكلٍّ حالتها كما هي في النظام اليوم"
+        intro="من القسم الرابع في دليل إدارة السلاسل والإمداد والمخازن. الترتيب هنا بالأولوية لا بالرقم، والحالة مقروءةٌ من الكود لا مقدَّرةً في شريحة."
+      />
+      <div className="fin-policy-map">
+        {policies.map((policy) => (
+          <div key={policy.code} className={`state-${policy.state}`}>
+            <header>
+              <b>{policy.code}</b>
+              <span className={`fin-prio is-${policy.priority}`}>{POLICY_PRIORITIES[policy.priority]}</span>
+            </header>
+            <h3>{policy.title}</h3>
+            <StateBadge state={policy.state} />
+          </div>
+        ))}
+      </div>
+      <p className="mtg-table-note">{policiesRule}</p>
+    </>
+  );
+}
+
+function TransferPolicySlide({ base }) {
+  const policy = policies.find((item) => item.code === 'P05');
+  return (
+    <>
+      <SlideHead
+        kicker="المحور 07 · السياسة P05"
+        title="التحويل الداخليّ إلى المطاعم والكافيهات — مخزنُ نقلٍ يجب أن يعود صفرًا"
+        intro={policy.goal}
+      />
+      <div className="mtg-split is-wide-start">
+        <div className="fin-transfer">
+          <Flow nodes={transferCycle.nodes} />
+          <p className="fin-transfer-rule">{transferCycle.rule}</p>
+          <ul className="fin-policy-clauses">
+            {transferCycle.points.map((point) => <li key={point}>{point}</li>)}
+          </ul>
+          <div className="fin-transfer-docs">
+            {transferCycle.stages.map((key) => (
+              <a key={key} href={shortcutHref(base, key)} target="_blank" rel="noreferrer">
+                <b>{portalShortcuts[key].label}</b>
+                <span>{portalShortcuts[key].evidence}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+        <div className="mtg-side">
+          <ShortcutCard base={base} shortcutKey="transfers" />
+          <p className="fin-policy-gap"><b>ما ينقص هذه السياسة:</b> {policy.proof}</p>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function PortalPolicySlide({ base }) {
+  return (
+    <>
+      <SlideHead
+        kicker="المحور 07 · أين تُنفَّذ السياسة"
+        title="أربع شاشاتٍ تحمل هذه السياسات في البوابة — تُفتح الآن لا تُوصف"
+        intro="النقل الداخليّ وهويّة الصنف ورمز المورّد ودليل الالتزام. ثلاثٌ منها مصادرُ بياناتٍ لا تُصحَّح لاحقًا، والرابعة هي ما يُرفق بالمحضر."
+      />
+      <div className="fin-portal4">
+        {policyPortal.map(([key, role, why]) => (
+          <div key={key}>
+            <p className="fin-portal-role"><b>{role}</b>{why}</p>
+            <ShortcutCard base={base} shortcutKey={key} compact />
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function PolicyReportsSlide({ base }) {
+  return (
+    <>
+      <SlideHead
+        kicker="المحور 07 · دليل الالتزام"
+        title="ستّة تقاريرَ تُثبت أنّ السياسة طُبِّقت — لا أنّها اعتُمدت فحسب"
+        intro="السياسة بلا تقريرٍ يقيسها نصٌّ في دليل. هذه الستّة من سجلّ التقارير نفسه، تُصدَّر بنطاقها وتاريخها وتُرفق بمحضر المراجعة الشهريّة."
+      />
+      <div className="mtg-split">
+        <div className="mtg-masters" style={{ gridTemplateColumns: '1fr' }}>
+          {policyReports.map(([title, code, detail]) => (
+            <div key={title}>
+              <b>{code}</b>
+              <div><h3>{title}</h3><p>{detail}</p></div>
+            </div>
+          ))}
+        </div>
+        <div className="mtg-side">
+          <ShortcutCard base={base} shortcutKey="reports" compact />
+          <ShortcutCard base={base} shortcutKey="coldChain" compact />
+        </div>
+      </div>
+    </>
+  );
+}
+
+function GapsSlide() {
+  return (
+    <>
+      <SlideHead
+        kicker="المحور 07 · الفجوات"
+        title="أربع فجواتٍ نقولها بأسمائها — وثلاثٌ منها تنتظر قرارَكم لا كودَنا"
+        intro="لا نعرض عشر سياساتٍ كأنّها كلّها جاهزة. هذه هي التي لم تُبنَ بعد: ما يجري اليوم، وما ينقص، وما نطلبه في هذه الجلسة بالضبط."
+      />
+      <div className="fin-gaps">
+        {policyGaps.map((gap) => (
+          <article key={gap.n}>
+            <header><b>{gap.n}</b><h3>{gap.title}</h3><span>{gap.policy}</span></header>
+            <p className="fin-gap-today"><b>اليوم:</b> {gap.today}</p>
+            <p className="fin-gap-missing"><b>ينقص:</b> {gap.missing}</p>
+            <footer><b>نطلب:</b> {gap.ask}</footer>
+          </article>
+        ))}
+      </div>
+      <p className="mtg-table-note"><b>{policyGapsRule}</b></p>
+    </>
+  );
+}
+
 function AsksSlide() {
   return (
     <>
       <SlideHead
-        kicker="المحور 06 · الطلب"
-        title="ثمانية بنودٍ نطلب اعتمادها — كلّها مبنيّةٌ وتعمل اليوم"
-        intro="لا يطلب أيٌّ منها نظامًا جديدًا ولا موظّفًا إضافيًّا: المطلوب أن يصير ما هو اختياريّ إلزاميًّا، وأن يُوثَّق الاستثناء حين يقع."
+        kicker="المحور 07 · الطلب"
+        title="ثمانيةٌ نطلب إلزامها — وأربعةٌ نطلب إذنًا ببنائها"
+        intro="الثمانية الأولى لا تطلب نظامًا جديدًا ولا موظّفًا إضافيًّا: المطلوب أن يصير ما هو اختياريّ إلزاميًّا، وأن يُوثَّق الاستثناء حين يقع. والأربعة الأخيرة تحتاج بناءً — ولذلك فُصلت."
       />
       <div className="fin-asks">
         {asks.map(([title, detail], index) => (
@@ -643,6 +854,12 @@ function AsksSlide() {
             <b>{pad(index + 1)}</b>
             <div><h3>{title}</h3><p>{detail}</p></div>
           </div>
+        ))}
+      </div>
+      <div className="fin-build-asks">
+        <span>وأربعةٌ تحتاج بناءً</span>
+        {buildAsks.map(([title, detail]) => (
+          <div key={title}><b>{title}</b><p>{detail}</p></div>
         ))}
       </div>
     </>
@@ -689,9 +906,9 @@ function DecisionsSlide() {
   return (
     <>
       <SlideHead
-        kicker="المحور 06 · نقاط القرار"
-        title="ثماني نقاطٍ تُحسم في هذه الجلسة لا بعدها"
-        intro="تُسجَّل النتيجة والمسؤول والموعد هنا مباشرةً، وتُنسخ محضرًا جاهزًا بضغطة. والبند غير المحسوم يبقى في المحضر بحالته."
+        kicker="المحور 07 · نقاط القرار"
+        title="اثنتا عشرة نقطةً تُحسم في هذه الجلسة لا بعدها"
+        intro="ثمانٍ في الدورة المستنديّة وأربعٌ في السياسات. تُسجَّل النتيجة والمسؤول والموعد هنا مباشرةً، وتُنسخ محضرًا جاهزًا بضغطة. والبند غير المحسوم يبقى في المحضر بحالته."
       />
       <div className="mtg-decisions">
         <ul className="mtg-decision-list">
@@ -800,6 +1017,7 @@ export default function FinanceProcurementDeck({ base }) {
   const slides = useMemo(() => [
     <Cover key="cover" />,
     <HowToSlide key="howto" />,
+    <PrioritySlide key="priority" base={base} />,
     <AgendaSlide key="agenda" />,
     <RuleSlide key="rule" base={base} />,
     <OwnershipSlide key="ownership" />,
@@ -834,6 +1052,35 @@ export default function FinanceProcurementDeck({ base }) {
     <KpiSlide key="kpis" base={base} />,
     <VendorSlide key="vendor" base={base} />,
     <ReportsSlide key="reports" base={base} />,
+    <PolicyMapSlide key="policy-map" />,
+    <PolicySlide
+      key="policy-governance"
+      base={base}
+      codes={['P01', 'P02']}
+      kicker="المحور 07 · السياستان P01 و P02"
+      title="الحوكمة المستنديّة والفصل بين المهامّ — أساس ما بعدهما"
+      intro="لا تقوم سياسةٌ من العشر إن سقطت هاتان: الأولى تمنع الحركة بلا سند، والثانية تمنع أن يُجيز أحدٌ لعمله. وكلتاهما مفروضةٌ في المحرّك لا موصوفةٌ في تعليمات."
+    />,
+    <TransferPolicySlide key="policy-transfer" base={base} />,
+    <PolicySlide
+      key="policy-costs"
+      base={base}
+      codes={['P07', 'P08', 'P06']}
+      kicker="المحور 07 · السياسات P06 و P07 و P08"
+      title="التكلفة الحقيقيّة: وارد وصادرٌ ونقل — وهنا أكبر فجواتنا"
+      intro="ثلاث سياساتٍ تحكم رقمًا واحدًا: هامش الربح. واثنتان منها غير مبنيّتين — نقولها هنا لا بعد الاعتماد."
+    />,
+    <PolicySlide
+      key="policy-safety"
+      base={base}
+      codes={['P04', 'P09', 'P10']}
+      kicker="المحور 07 · السياسات P04 و P09 و P10"
+      title="سلامة المخزون والميزانيّة ومصاريف التشغيل"
+      intro={`حدود التبريد مفحوصةٌ في المحرّك: المبرّدات ${coldChain.chilled}°م فأقلّ والمجمّدات ${coldChain.frozen}°م فأقلّ. ومصاريف التشغيل تجري في دورةٍ خماسيّةٍ قائمة. أمّا الميزانيّة السنويّة فتحذيرٌ اليوم لا لوحة.`}
+    />,
+    <PortalPolicySlide key="policy-portal" base={base} />,
+    <PolicyReportsSlide key="policy-reports" base={base} />,
+    <GapsSlide key="policy-gaps" />,
     <AsksSlide key="asks" />,
     <DecisionsSlide key="decisions" />,
     <OutcomeSlide key="outcome" />,
