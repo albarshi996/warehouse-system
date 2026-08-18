@@ -31,6 +31,7 @@ export function normalizeUnit(raw) {
 
 import { normalizeItemType } from './itemType.js';
 import { normalizeUom } from './uomModel.js';
+import { normalizeRoute } from './supplyRoute.js';
 
 const str = (v) => String(v).trim();
 const num = (v) => Number(v) || 0;
@@ -55,6 +56,9 @@ const FIELD_CASTS = {
   // وحدة أساس الصنف (م٣-ب): وجودها يعني أنّ المالك عرّف وحداته، فيبدأ التحويل
   // لهذا الصنف وحده. وغيابها يعني سلوك اليوم حرفيًّا.
   baseUom: { cast: (v) => normalizeUom(v) },
+  // ‹FNB-203› مسار توريد الصنف: خمسةٌ نصّ عليها المستند. غيابه يعني المسار
+  // الافتراضيّ (مورّد ← مخزن مركزيّ ← فرع) — سلوك اليوم حرفيًّا.
+  supplyRoute: { cast: (v) => normalizeRoute(v) },
   uomGroupCode: { cast: str },
   uomGroupName: { cast: str, also: { unit: (v) => normalizeUnit(v) } },
   department: { cast: str },

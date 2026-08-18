@@ -186,6 +186,8 @@ export const DATASETS = {
       { field: 'itemType', labelAr: 'Item Type (نوع الصنف)', type: 'string', required: false, aliases: ['itemtype', 'item type', 'نوع الصنف', 'النوع', 'type', 'نوع'] },
       // وحدة أساس الصنف (م٣-ب): بها يبدأ التحويل لهذا الصنف وحده.
       { field: 'baseUom', labelAr: 'Base UoM (وحدة الأساس)', type: 'string', required: false, aliases: ['baseuom', 'base uom', 'وحدة الأساس', 'وحدة الاساس', 'الوحدة الأساسية'] },
+      // ‹FNB-203› مسار التوريد: مخزن · مطبخ · مباشر — والفارغ يسلك الافتراضيّ.
+      { field: 'supplyRoute', labelAr: 'Supply Route (مسار التوريد)', type: 'string', required: false, aliases: ['supply route', 'supplyroute', 'route', 'مسار التوريد', 'المسار', 'مسار'] },
       { field: 'nameEn', labelAr: 'الاسم (إنجليزي)', type: 'string', required: false, aliases: ['nameen', 'name en', 'english name', 'الاسم بالانجليزي', 'الاسم الانجليزي'] },
       { field: 'shade', labelAr: 'الظل/اللون', type: 'string', required: false, aliases: ['shade', 'الظل', 'اللون', 'الظل/اللون', 'color', 'colour', 'درجة اللون'] },
       { field: 'balance', labelAr: 'الكمية الدفترية', type: 'number', required: false, nonNegative: true, aliases: ['balance', 'الرصيد', 'الكمية', 'الكمية الدفترية', 'المتوفر', 'qty', 'quantity', 'on hand', 'qty_available'] },
