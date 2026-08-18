@@ -116,16 +116,41 @@ export function derivationTargets(type) {
   // نهائيّ ([] عمدًا): الإرجاع يُشتقّ من التحميل لا من البيع — يُرجَع ما لم يُبَع.
   // ومسارا الإرجاع (SAP-10 · ف‑٤٨): من الاستلام يُرجَع للمورّد، ومن التسليم
   // يُرجِع العميل — بعلاقة `RETURN` لا `BASE` (انظر derivationLinkType).
+  // ‹FNB-401› والسحب يتفرّع اثنتين: تعبئةٌ مباشرة (سلوك اليوم) **وفحصٌ قبلها**
+  // — دورة طلب الفرع تنصّ على «فحص» بين السحب والتعبئة (سطر 636).
   const branches = {
     DN: ['GP', 'INV', 'POD', 'RET'],
     GRN: ['QC', 'VRT'],
-    QC: ['PUTAWAY', 'SRN'],
+    QC: ['PUTAWAY', 'SRN', 'PACK'],
+    PICK: ['PACK', 'QC'],
     VLD: ['VSI', 'VRT'],
     VSI: [],
   };
   if (branches[type]) return branches[type];
   const n = nextInChain(type);
   return n ? [n] : [];
+}
+
+/**
+ * وجهات الاشتقاق **بحسب سياق المستند** ‹FNB-401› — لا بنوعه وحده.
+ *
+ * تقرير الجودة نوعٌ واحد يخدم رحلتين: فحصُ **الوارد** (من GRN) وجهته التخزين
+ * أو إشعارُ الرفض؛ وفحصُ **الصادر** (من PICK) وجهته التعبئة. وعرضُ الوجهات
+ * الثلاث معًا يُغري بمسارٍ لا معنى له — تخزينُ بضاعةٍ سُحبت للشحن، أو تعبئةُ
+ * بضاعةٍ وردت من مورّد.
+ *
+ * والمجهولُ **لا يُقصّ**: مستندٌ بلا أبٍ معروف يرى الوجهات كلّها كما اليوم —
+ * فلا يُغلق بابٌ بجهلنا بسياقه.
+ */
+export function derivationTargetsFor(doc) {
+  const type = String(doc?.type || '').toUpperCase();
+  const all = derivationTargets(type);
+  if (type !== 'QC') return all;
+
+  const parents = (doc?.links || []).map((l) => String(l?.type || '').toUpperCase());
+  if (parents.includes('PICK')) return all.filter((t) => t === 'PACK');
+  if (parents.includes('GRN')) return all.filter((t) => t !== 'PACK');
+  return all;
 }
 
 /**

@@ -13,7 +13,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { getBasePath } from '../../../services/auth/authService.js';
 import { fetchChainDocuments, createNextInChain, createCombinedInChain } from '../../../services/documents/documentsService.js';
 import { fetchDocumentRelationshipNeighborhood } from '../../../services/documents/documentRelationsService.js';
-import { chainOf, threeWayMatch, derivationTargets, MATCH_STATUS, fefoViolations, gateVerdict, adjustmentVerdict, creditNoteVerdict } from '../../../services/documents/chain.js';
+import { chainOf, threeWayMatch, derivationTargetsFor, MATCH_STATUS, fefoViolations, gateVerdict, adjustmentVerdict, creditNoteVerdict } from '../../../services/documents/chain.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { getSchema } from '../../../services/documents/schemas/index.js';
 import DocumentRelationshipMap from './DocumentRelationshipMap.jsx';
@@ -140,7 +140,9 @@ export default function ChainBar({ doc, me, onFlash }) {
    */
   const targets = useMemo(() => {
     if (!doc?.type) return [];
-    return derivationTargets(doc.type)
+    // ‹FNB-401› بسياق المستند لا بنوعه وحده: فحصُ الوارد يُخزَّن، وفحصُ
+    // الصادر يُعبَّأ — فلا يُعرَض مسارٌ لا معنى له.
+    return derivationTargetsFor(doc)
       .map((t) => ({ type: t, schema: getSchema(t) }))
       .filter((t) => t.schema)
       .map((t) => {

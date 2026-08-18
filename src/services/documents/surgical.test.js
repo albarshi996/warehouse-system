@@ -7,7 +7,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { deriveDocument, derivationTargets, DELIVERY_CHAIN, REJECTION_CHAIN } from './chain.js';
+import { deriveDocument, derivationTargets, derivationTargetsFor, DELIVERY_CHAIN, REJECTION_CHAIN } from './chain.js';
 import { getSchema, readyTypes } from './schemas/index.js';
 import { primaryParentType } from './schemaUtils.js';
 import { movesStock } from '../ledger/postingRules.js';
@@ -32,7 +32,16 @@ test('الاستلام يتفرّع: فحصٌ وإرجاعٌ للمورّد، و
   // الاستلام تُحسب منه الكمّيّة المؤهلة، وعلاقته `RETURN` لا `BASE`
   // (المرتجع عكسُ جزءٍ من الاستلام لا إتمامٌ له).
   assert.deepEqual(derivationTargets('GRN'), ['QC', 'VRT']);
-  assert.deepEqual(derivationTargets('QC'), ['PUTAWAY', 'SRN']);
+  // ‹FNB-401› وأُضيف `PACK` وجهةً ثالثة للجودة: دورة طلب الفرع تنصّ على
+  // **فحصٍ بين السحب والتعبئة** (سطر 636)، فصار تقرير الجودة يخدم رحلتين.
+  // والوجهات هنا **اتّحادُ الممكن** لا الصالح في كلّ سياق.
+  assert.deepEqual(derivationTargets('QC'), ['PUTAWAY', 'SRN', 'PACK']);
+  // ★ ومسارُ الوارد **لم يُمسّ**: فحصٌ مشتقٌّ من استلامٍ وجهتاه كما كانتا،
+  // فلا تُعرَض «تعبئة» على بضاعةٍ وردت من مورّد.
+  assert.deepEqual(
+    derivationTargetsFor({ type: 'QC', links: [{ type: 'GRN', number: 'GRN-1' }] }),
+    ['PUTAWAY', 'SRN']
+  );
 });
 
 test('BZ-SCN-005: SRN يُشتقّ من الفحص فيأخذ مرفوضاته وحدها، وكمية الرفض تصير كمية الإرجاع', () => {
