@@ -86,6 +86,9 @@ const schema = {
           hint: 'كود المستودع الذي يخرج منه الرصيد فعلًا — عليه يقع القيد المخزني.',
         },
         { key: 'destination', label: 'الفرع المستفيد (Destination Branch)', kind: 'text', required: true },
+        // ‹FNB-403› مركز التكلفة موروثٌ من أمر البيع/الطلب (chain.js) — يُعلَن
+        // هنا فيُرى ويُختم على الحركة (FNB-104)، ولا يُكتب مرّتين.
+        { key: 'costCenter', label: 'مركز التكلفة (Cost Center)', kind: 'text', ltr: true, hint: 'الفرع المستفيد من سيّد المواقع — به تُنسب الحركة إلى فرعها' },
         { key: 'priority', label: 'أولوية الطلب (Priority)', kind: 'select', options: ['عاجل', 'عادي', 'منخفض'] },
         { key: 'wave', label: 'الموجة (Wave No.)', kind: 'text' },
         { key: 'zone', label: 'منطقة التجميع (Picking Zone)', kind: 'text' },

@@ -9,9 +9,13 @@ import assert from 'node:assert/strict';
 import {
   BRANCH_CYCLE_STAGES, CYCLE_CLOSED, stageOf, cycleProgress,
   receiptVariance, closureVerdict, releaseOnClose, varianceReasonContextExists,
+  receivingExceptions, varianceEntries, RECEIPT_GRACE_DAYS, VARIANCE_TOLERANCE_PCT,
 } from './branchCycle.js';
 import { derivationTargets, derivationTargetsFor } from './chain.js';
 import { getSchema } from './schemas/index.js';
+import { EXCEPTION_TYPES, shapeException } from '../ledger/exceptions.js';
+import { partyFieldFor } from './partyFields.js';
+import { ORG_FIELDS, indexLocations, rollupBy } from '../org/orgLocations.js';
 
 const doc = (type, state, lines = []) => ({ type, state, lines });
 
@@ -121,4 +125,73 @@ test('★ الإغلاق يحرّر الحجز — لا رصيدَ محجوزٌ 
 
 test('سبب الفرق من سجلّ الأسباب القائم — لا قائمةٌ ثانية', () => {
   assert.equal(varianceReasonContextExists(), true);
+});
+
+/* ═══════════ ‹FNB-402› فرق استلام الفرع ═══════════ */
+
+const SHIPMENT = {
+  number: 'TRN-77', id: 'd77', branch: 'BR01', shippedAtDay: '2026-08-10',
+  lines: [{ sku: 'A', qtyShipped: 100 }, { sku: 'B', qtyShipped: 50 }],
+};
+
+test('★ الفرق يستعمل النوع القائم `transit_variance` — لا نوعَ ثانٍ لمعنًى واحد', () => {
+  const receipt = { state: 'done', lines: [{ sku: 'A', qtyReceived: 90 }, { sku: 'B', qtyReceived: 50 }] };
+  const exc = receivingExceptions(SHIPMENT, receipt, { today: '2026-08-11' });
+  assert.equal(exc.length, 1);
+  assert.equal(exc[0].type, 'transit_variance');
+  assert.ok(EXCEPTION_TYPES.transit_variance, 'النوع مبنيٌّ من قبل');
+  assert.equal(exc[0].sku, 'A');
+  assert.equal(exc[0].location, 'BR01');
+  assert.match(exc[0].reason, /شُحن 100 واستُلم 90/);
+  // ويصبّ في السجلّ بالحقول الثلاثة عشر.
+  assert.equal(shapeException(exc[0]).type, 'transit_variance');
+});
+
+test('فرقٌ دون التسامح يُسجَّل ويمرّ — التنبيه للاستثناء لا للروتين', () => {
+  const receipt = { state: 'done', lines: [{ sku: 'A', qtyReceived: 99 }, { sku: 'B', qtyReceived: 50 }] };
+  assert.deepEqual(receivingExceptions(SHIPMENT, receipt, { today: '2026-08-11' }), []); // ٪١ < ٪٢
+  assert.equal(VARIANCE_TOLERANCE_PCT, 2);
+});
+
+test('★ «نقلٌ لم يستلمه الفرع» بعد مهلته — والرصيد عالقٌ في مخزن النقل', () => {
+  const late = receivingExceptions(SHIPMENT, null, { today: '2026-08-20' });
+  assert.equal(late.length, 1);
+  assert.equal(late[0].type, 'transfer_unreceived');
+  assert.ok(EXCEPTION_TYPES.transfer_unreceived);
+  assert.equal(late[0].qty, 150, 'الكمّيّة كلّها عالقة');
+  assert.match(late[0].reason, /عالقٌ في مخزن النقل/);
+  // وداخل المهلة لا يُنبَّه.
+  assert.deepEqual(receivingExceptions(SHIPMENT, null, { today: '2026-08-11' }), []);
+  assert.equal(RECEIPT_GRACE_DAYS, 3);
+});
+
+test('وبلا تاريخٍ مقروء لا يُحكم — لا حكمَ بجهل', () => {
+  assert.deepEqual(receivingExceptions({ ...SHIPMENT, shippedAtDay: '' }, null, { today: '2026-08-20' }), []);
+});
+
+test('فروق الفروع تصعد الشجرة بمحرّك rollupBy — لا محرّكَ ثانٍ', () => {
+  const tree = indexLocations([
+    { code: 'FNB', nameAr: 'قطاع', level: 'sector' },
+    { code: 'BRD1', nameAr: 'براند', level: 'brand', parentCode: 'FNB' },
+    { code: 'BR01', nameAr: 'فرع', level: 'branch', parentCode: 'BRD1' },
+  ]);
+  const entries = varianceEntries([{ branch: 'BR01', variance: -10 }, { branch: 'BR01', variance: 4 }]);
+  const { byLocation } = rollupBy(tree, entries);
+  assert.equal(byLocation.get('FNB').rollup.receiptVariance, 14, 'المطلق يصعد');
+});
+
+/* ═══════════ ‹FNB-403› وجهة المطعم ═══════════ */
+
+test('★ الوجهة تُختار من الشجرة — ولا اسمَ حقلٍ سادس في ORG_FIELDS', () => {
+  const decl = partyFieldFor('destination');
+  assert.equal(decl.source, 'orgLocation');
+  assert.equal(decl.codeKey, 'destination');
+  // ★★ حارس FNB-102 قائمٌ: البُعد يُختم من costCenter الموروث لا من اسمٍ سادس.
+  assert.deepEqual(ORG_FIELDS, ['costCenter', 'budgetCode', 'orgCode', 'branch', 'sector']);
+});
+
+test('مركز التكلفة مُعلَنٌ على السحب — فيُرى ويُختم على الحركة', () => {
+  const keys = (getSchema('PICK').sections || []).flatMap((sec) => (sec.fields || []).map((f) => f.key));
+  assert.ok(keys.includes('destination'), 'الوجهة قائمةٌ من قبل');
+  assert.ok(keys.includes('costCenter'), 'ومركز التكلفة صار معلَنًا');
 });

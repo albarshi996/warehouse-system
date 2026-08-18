@@ -46,6 +46,10 @@ export const PARTY_FIELDS = Object.freeze({
   // مركز تكلفة) — به يتحقّق توجيه المدير العام «الصرف على الفرع المستفيد
   // لا على القطاع عامّةً». القيمة الرمز وحده؛ والاسم والمستوى للعرض.
   costCenter: { source: 'orgLocation', codeKey: 'costCenter', nameKey: null },
+  // ‹FNB-403› وجهة المطعم على السحب: نفس المصدر — فالوجهة فرعٌ في الشجرة
+  // لا نصٌّ حرّ. ولا يُضاف اسمٌ سادس إلى ORG_FIELDS (حارس FNB-102): البُعد
+  // يُختم من `costCenter` الموروث بالسلسلة، و`destination` يُعرض ويُختار.
+  destination: { source: 'orgLocation', codeKey: 'destination', nameKey: null },
 });
 
 /** إعلان حقلٍ ما، أو null لغير حقول الطرف. */

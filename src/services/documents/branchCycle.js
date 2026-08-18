@@ -188,3 +188,79 @@ export const VARIANCE_REASON_CONTEXT = 'receipt_variance';
 export function varianceReasonContextExists() {
   return Boolean(REASON_CONTEXTS[VARIANCE_REASON_CONTEXT]);
 }
+
+/* ═══════════════ ‹FNB-402› فرق استلام الفرع ═══════════════ */
+
+/** مهلة إثبات الاستلام قبل أن يُفتح استثناء — أيّامًا. */
+export const RECEIPT_GRACE_DAYS = 3;
+
+/** عتبة الفرق المقبول — دونها يُسجَّل ولا يُنبَّه (التنبيه للاستثناء لا للروتين). */
+export const VARIANCE_TOLERANCE_PCT = 2;
+
+/**
+ * استثناءات استلام الفرع ‹FNB-402› — من **الأنواع القائمة**:
+ *   · الفرق يستعمل `transit_variance` المبنيّ (فرق نقلٍ غير مسوّى) — لا نوعَ
+ *     ثانٍ لمعنًى واحد.
+ *   · وعدمُ الاستلام بعد المهلة يستعمل `transfer_unreceived` المضاف.
+ *
+ * @param {object} shipment `{number, id, branch, shippedAtDay, lines}`
+ * @param {object|null} receipt مستند الاستلام أو `null` إن لم يقع
+ * @param {{today?:string, graceDays?:number, tolerancePct?:number}} [opts]
+ * @returns {object[]} مدخلاتٌ جاهزة لـ`shapeException`
+ */
+export function receivingExceptions(shipment, receipt, opts = {}) {
+  const out = [];
+  const branch = up(shipment?.branch);
+  const graceDays = num(opts.graceDays) > 0 ? num(opts.graceDays) : RECEIPT_GRACE_DAYS;
+  const tolerance = num(opts.tolerancePct) > 0 ? num(opts.tolerancePct) : VARIANCE_TOLERANCE_PCT;
+  const docRef = { type: 'TRN', number: str(shipment?.number), id: str(shipment?.id) };
+
+  // ① لم يُستلم بعد مهلته — والرصيد عالقٌ في مخزن النقل حتّى يُثبَت.
+  if (!receipt || str(receipt?.state) !== 'done') {
+    const elapsed = daysBetween(opts.today, shipment?.shippedAtDay);
+    if (elapsed !== null && elapsed > graceDays) {
+      out.push({
+        type: 'transfer_unreceived',
+        docRef,
+        location: branch,
+        qty: (shipment?.lines || []).reduce((s2, l) => s2 + num(l?.qtyShipped ?? l?.qty), 0),
+        reason: `شُحنت قبل ${elapsed} يومًا ولم يُثبت «${branch || 'الفرع'}» استلامها — الرصيد عالقٌ في مخزن النقل.`,
+      });
+    }
+    return out;
+  }
+
+  // ② فرقٌ بين ما شُحن وما استُلم — فوق التسامح وحده يُنبَّه عليه.
+  for (const v of receiptVariance(shipment?.lines, receipt?.lines)) {
+    const pct = v.shipped > 0 ? Math.abs(Math.round((v.variance / v.shipped) * 1000) / 10) : 100;
+    if (pct < tolerance) continue;
+    out.push({
+      type: 'transit_variance',
+      docRef,
+      sku: v.sku,
+      qty: Math.abs(v.variance),
+      location: branch,
+      reason:
+        `شُحن ${v.shipped} واستُلم ${v.received} (${v.variance > 0 ? '+' : '−'}${Math.abs(v.variance)} · ٪${pct})` +
+        ' — سوِّه بمستندٍ أو بيّن سببه قبل إغلاق الطلب.',
+    });
+  }
+  return out;
+}
+
+/** فرقُ أيّامٍ بين تاريخين — و`null` حين يتعذّر القياس (لا حكمَ بجهل). */
+function daysBetween(a, b) {
+  const x = Date.parse(`${str(a).slice(0, 10)}T00:00:00Z`);
+  const y = Date.parse(`${str(b).slice(0, 10)}T00:00:00Z`);
+  return Number.isFinite(x) && Number.isFinite(y) ? Math.round((x - y) / 86400000) : null;
+}
+
+/**
+ * فروق الفروع مجمَّعةً ‹FNB-402› — تصعد الشجرة بمحرّك `rollupBy` (FNB-105)
+ * حين تُغذّى به، وهنا تُهيَّأ سطورًا بمقياس `receiptVariance`.
+ */
+export function varianceEntries(rows = []) {
+  return (Array.isArray(rows) ? rows : [])
+    .filter((r) => up(r?.branch) && num(r?.variance) !== 0)
+    .map((r) => ({ orgCode: up(r.branch), measures: { receiptVariance: Math.abs(num(r.variance)) } }));
+}

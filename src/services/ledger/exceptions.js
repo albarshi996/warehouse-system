@@ -110,6 +110,10 @@ export const EXCEPTION_TYPES = Object.freeze({
   // ‹FNB-303› الفرع تجاوز المقترح فوق العتبة — يمرّ ويُسجَّل (السلوك المعلَن
   // لق-O04)، ويفتح استثناءً حين يشتدّ. والمتكرّر إشارةُ مراجعةِ Par Level.
   order_deviation: { id: 'order_deviation', label: 'تجاوز الكمّيّة المقترحة', action: 'راجع السبب: حدثٌ عارض أم Par Level يحتاج ضبطًا', owner: 'مدير المستودع' },
+  // ‹FNB-402› شحنةٌ غادرت ولم يُثبت الفرعُ استلامها بعد مهلتها — والرصيد
+  // عالقٌ في مخزن النقل حتّى تُثبَت. (وفرقُ الاستلام نفسه يستعمل
+  // `transit_variance` القائم — لا نوعَ ثانٍ لمعنًى واحد.)
+  transfer_unreceived: { id: 'transfer_unreceived', label: 'نقلٌ لم يستلمه الفرع', action: 'أثبِت الاستلام أو بيّن سبب التأخّر', owner: 'مدير الفرع' },
 });
 
 export function exceptionType(id) {
