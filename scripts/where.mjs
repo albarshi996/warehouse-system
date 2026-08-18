@@ -13,7 +13,12 @@ import { dirname, join } from 'node:path';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const ESC = String.fromCharCode(27);
-const COLORS = { cyan: `${ESC}[36m`, gold: `${ESC}[33m`, red: `${ESC}[31m` };
+const COLORS = {
+  cyan: `${ESC}[36m`,
+  gold: `${ESC}[33m`,
+  red: `${ESC}[31m`,
+  green: `${ESC}[32m`,
+};
 const DIM = `${ESC}[2m`;
 const BOLD = `${ESC}[1m`;
 const OFF = `${ESC}[0m`;
@@ -51,6 +56,52 @@ if (originUrl && toSlug(originUrl) !== toSlug(ws.repo)) {
   process.exit(1);
 }
 
+/** مثل `git` لكنّه يميّز الفشل من المخرَج الفارغ — العدّ يحتاج هذا التمييز. */
+function count(...args) {
+  const out = git(...args);
+  const n = Number(out);
+  return out !== '' && Number.isFinite(n) ? n : null;
+}
+
+/**
+ * الفارق مع الشقيق — جلبٌ قصيرٌ لطرفه ثمّ عدٌّ في الاتّجاهين.
+ * يُتجاوَز بصمتٍ إن تعذّرت الشبكة: بطاقةُ المكان لا يجوز أن تحبس الجلسة
+ * لأنّ الاتّصال بطيء، فالغياب هنا سكوتٌ لا خطأ.
+ */
+function siblingGap() {
+  try {
+    execFileSync('git', ['fetch', '--quiet', ws.sibling.remote, 'main'], {
+      cwd: root,
+      timeout: 6000,
+      stdio: 'ignore',
+    });
+  } catch {
+    return null;
+  }
+  const theirs = count('rev-list', '--count', 'HEAD..FETCH_HEAD');
+  const ours = count('rev-list', '--count', 'FETCH_HEAD..HEAD');
+  return theirs === null || ours === null ? null : { theirs, ours };
+}
+
+/**
+ * سطرُ الفارق — ومعناه يختلف باختلاف الدور:
+ * المستقبِل يسأل «هل عنده ما ليس عندي؟»، والمصدرُ يسأل «هل بلغه ما عندي؟».
+ * وسؤالُ المصدر لا يعنيه تقدّمُ الشقيق بكوميتات دمجٍ وهويّة، فلا يُنبَّه بها.
+ */
+function gapLine() {
+  const gap = siblingGap();
+  if (!gap) return `  ${DIM}◆ تعذّر قياس الفارق مع الشقيق (لا اتّصال؟)${OFF}`;
+  if (ws.autoSync) {
+    return gap.theirs > 0
+      ? `  ${COLORS.gold}◆ عند الشقيق ${gap.theirs} كوميتًا ليست هنا — تصل تلقائيًّا، أو الآن بـ npm run sync${OFF}`
+      : `  ${COLORS.green}◆ ملحوقٌ بالشقيق — لا جديد عنده${OFF}`;
+  }
+  if (gap.ours === 0) return `  ${COLORS.green}◆ الشقيق ملحوقٌ بك — وصله كلّ عملك${OFF}`;
+  return ws.sibling.autoSync
+    ? `  ${DIM}◆ الشقيق متأخّر ${gap.ours} كوميتًا — ومزامنتُه التلقائيّة تلحقه خلال ساعة${OFF}`
+    : `  ${COLORS.gold}◆ الشقيق متأخّر ${gap.ours} كوميتًا — زامِنه من مجلّده: npm run sync${OFF}`;
+}
+
 const c = COLORS[ws.color] ?? COLORS.cyan;
 const push = originUrl ? `origin ← ${toSlug(originUrl)}` : '(لا ريموت origin)';
 
@@ -61,6 +112,7 @@ console.info(
     `  · تدفع إلى: ${push}\n` +
     `  · الفرع الحاليّ: ${branch}\n` +
     `  · النشر: ${ws.pages}\n\n` +
+    `${gapLine()}\n\n` +
     `  ${DIM}المستودع الآخر — ${ws.sibling.name} (${ws.sibling.repo}): ${ws.sibling.purpose}\n` +
     `  لجلب ما بُني هناك كلّه — بهويّة هذا المكان، وبلا دفع:\n` +
     `    npm run sync\n` +

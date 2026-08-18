@@ -17,7 +17,7 @@
     "odooModels": 12,
     "odooGuards": 51,
     "infraNodes": 6,
-    "pipelines": 3
+    "pipelines": 4
   },
   "modules": [
     {
@@ -7292,6 +7292,14 @@
           "issues"
         ],
         "file": ".github/workflows/gemini-developer.yml"
+      },
+      {
+        "name": "Sync from sibling repo",
+        "triggers": [
+          "schedule",
+          "workflow_dispatch"
+        ],
+        "file": ".github/workflows/sync-from-sibling.yml"
       }
     ],
     "dependencies": {

@@ -1,0 +1,114 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# مزامنةٌ تلقائيّة من المستودع الشقيق — كي لا يتأخّر أحدهما عن الآخر.
+#
+# الملفّ واحدٌ في المستودعَين (فهو يُزامَن معهما)، لكنّه **لا يعمل إلّا حيث
+# تأذن بطاقةُ المكان**: `workspace.json.autoSync`. فالشركة تسحب من الشخصيّ،
+# والشخصيّ لا يسحب من أحد — وبهذا يستحيل أن يتقاذفا المزامنة بلا نهاية.
+#
+# ولا يدفع شيئًا إلّا بعد بوّابةٍ خضراء كاملة (اختبارات · تدقيق · بناء).
+# وأيّ خلل — تعارضٌ لا يُحلّ، أو عملٌ محلّيٌّ سيُمحى، أو اختبارٌ ساقط — يُسقط
+# التشغيل ويصلك إشعارُ فشلٍ من GitHub، ولا يُنشر شيء.
+# ═══════════════════════════════════════════════════════════════════════════
+name: Sync from sibling repo
+
+on:
+  schedule:
+    # كلّ ساعة عند الدقيقة ١٧ — بعيدًا عن ذروة الساعة الكاملة فيبدأ أسرع.
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write # لدفع كوميت المزامنة
+  actions: write # لإطلاق نشر الصفحات بعده
+
+# تشغيلٌ واحدٌ في كلّ لحظة — ولا يُلغى الجاري، فالدمج لا يُقطع في منتصفه.
+concurrency:
+  group: sync-from-sibling
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    name: هل يزامن هذا المستودع تلقائيًّا؟
+    runs-on: ubuntu-latest
+    outputs:
+      auto: ${{ steps.card.outputs.auto }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: قراءة بطاقة المكان
+        id: card
+        run: |
+          auto=$(node -p "String(require('./workspace.json').autoSync === true)")
+          repo=$(node -p "require('./workspace.json').repo")
+          sibling=$(node -p "require('./workspace.json').sibling.repo")
+          echo "auto=$auto" >> "$GITHUB_OUTPUT"
+          echo "المستودع: $repo · الشقيق: $sibling · المزامنة التلقائيّة: $auto"
+          if [ "$auto" != "true" ]; then
+            echo "::notice::هذا المستودع لا يسحب من شقيقه — لا شيء يُفعل."
+          fi
+
+  sync:
+    name: مزامنة · بوّابة خضراء · دفع
+    needs: gate
+    if: needs.gate.outputs.auto == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # التاريخ كاملًا — الدمج يحتاج الأصل المشترك
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: هويّة الملتزِم
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: مزامنة (جلب · دمج · ختم الهويّة · توليد · بيّنة)
+        run: node scripts/sync-sibling.mjs
+
+      - name: هل جدَّ جديد؟
+        id: delta
+        run: |
+          count=$(git rev-list --count origin/main..HEAD)
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          if [ "$count" = "0" ]; then echo "::notice::متزامنان — لا دفع."; fi
+
+      - name: البوّابة الخضراء — لا يُدفع ما لا يمرّ
+        if: steps.delta.outputs.count != '0'
+        run: |
+          npm test
+          npm run audit
+          npm run build
+
+      - name: دفع
+        if: steps.delta.outputs.count != '0'
+        run: git push origin main
+
+      # الدفع بـGITHUB_TOKEN لا يُطلق خطوط العمل الأخرى (حمايةً من التسلسل
+      # اللانهائي)، فالنشر يُطلق صراحةً — وإلّا زُومن الكود وبقي الموقع قديمًا.
+      - name: إطلاق نشر الصفحات
+        if: steps.delta.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run astro.yml --ref main
+
+      - name: الخلاصة
+        if: always()
+        run: |
+          if [ "${{ steps.delta.outputs.count }}" = "0" ]; then
+            echo "### متزامنان — لا جديد عند الشقيق" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### وصلت ${{ steps.delta.outputs.count }} دفعة مزامنة" >> "$GITHUB_STEP_SUMMARY"
+            git log --oneline -1 >> "$GITHUB_STEP_SUMMARY"
+          fi

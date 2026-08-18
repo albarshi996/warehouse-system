@@ -269,3 +269,27 @@ test('البطاقة تحمل ما يلزم المزامنة: عنوان الش�
   assert.match(card.sibling.remote, /^https:\/\/github\.com\//, 'ريموت الشقيق للجلب لمرّةٍ واحدة');
   assert.notEqual(card.repo, card.sibling.repo, 'البطاقة تشير إلى نفسها شقيقًا');
 });
+
+test('★ إذنُ المزامنة التلقائيّة صريحٌ في الطرفين، وواحدٌ لا اثنان', () => {
+  assert.equal(typeof card.autoSync, 'boolean', 'autoSync يُعلَن ولا يُترك ضمنيًّا');
+  assert.equal(typeof card.sibling.autoSync, 'boolean', 'وكذلك في كتلة الشقيق');
+  assert.notEqual(
+    card.autoSync,
+    card.sibling.autoSync,
+    'لو سحب الطرفان تلقائيًّا لتقاذفا المزامنة بلا نهاية — واحدٌ يسحب والآخر مصدر'
+  );
+});
+
+test('ورك-فلو المزامنة التلقائيّة موجودٌ ومحكومٌ بالبطاقة لا بعنوانٍ مثبَّت', () => {
+  const file = path.join(root, '.github', 'workflows', 'sync-from-sibling.yml');
+  assert.ok(fs.existsSync(file), 'ملفّ المزامنة التلقائيّة');
+  const yml = fs.readFileSync(file, 'utf8');
+  assert.match(yml, /workspace\.json/, 'الإذن يُقرأ من البطاقة');
+  assert.match(yml, /autoSync/, 'وبمفتاح autoSync تحديدًا');
+  assert.ok(
+    !yml.includes(card.repo) && !yml.includes(card.sibling.repo),
+    'لا عنوان مستودعٍ مثبَّتٌ في الورك-فلو — وإلّا عمل في المستودع الخطأ بعد المزامنة'
+  );
+  assert.match(yml, /npm test/, 'البوّابة الخضراء قبل الدفع');
+  assert.match(yml, /gh workflow run astro\.yml/, 'إطلاق النشر — فالدفع بالتوكن لا يُطلقه');
+});
