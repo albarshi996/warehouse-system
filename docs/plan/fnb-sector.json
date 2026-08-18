@@ -5,7 +5,7 @@
   "command": "npm run plan:fnb",
   "track": "توسيعيّ · **الفرع بُعدٌ لا نظام** · لا نظام مطاعم موازٍ يُبنى بجانب البوابة — يُبنى بُعدٌ تنظيميّ على النوى القائمة · ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح",
   "source": "المستند الحاكم محفوظٌ حرفيًّا في `docs/plan/fnb/المصدر-توجيه-المدير-العام-وخطة-القطاع.md` (724 سطرًا): توجيه السيد المدير العام (المرجع الأساسيّ) + خطة مسؤول قطاع F&B (تحديد الاحتياج التشغيليّ والتوسّع والمطبخ المركزيّ) — ومعهما جردٌ متعدّد الوكلاء على الكود الفعليّ في جلسة 2026-08-18 (١٣ وكيلًا · ٦٠٦ استدعاء أداة · ١٤٣ فحصًا + ٥٨ بندًا استدركها ناقد الاكتمال) — مفصَّلًا في `docs/plan/fnb/مصفوفة-التغطية.md`",
-  "lastUpdated": "2026-08-18 (FNB-703 مغلقة — حدّ البوابة محروسٌ بالكود)",
+  "lastUpdated": "2026-08-18 (FNB-801/802 مغلقتان — البرج ينزل خماسيًّا ويتوازن)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "016f523",
@@ -1330,7 +1330,7 @@
       "title": "برج مراقبة القطاع — نزولٌ خماسيّ من F&B إلى المستند",
       "milestone": "ق٧",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ق‑٢١"
       ],
@@ -1339,7 +1339,7 @@
         "FNB-402"
       ],
       "nucleus": "`/dashboard/command-center` (غرفة القيادة القائمة) + `src/services/ledger/exceptionDrill.js` و`drill.js` (محرّكا النزول) + `operationsDashboard.js:189` (الكاشف) — **البرج طبقةُ نزولٍ على غرفة القيادة القائمة، لا غرفةٌ ثانية**",
-      "guardTest": "src/services/ledger/exceptionDrill.test.js",
+      "guardTest": "src/services/ledger/sectorTower.test.js",
       "touches": [
         "src/services/ledger/drill.js",
         "src/services/ledger/operationsDashboard.js"
@@ -1351,14 +1351,18 @@
         "لا شاشة ثانية: غرفة القيادة القائمة تُوسَّع ببُعد القطاع",
         "الصعود والنزول من محرّكٍ واحد (FNB-105) لا من حسابين",
         "اختبارٌ يثبت أنّ الرقم في المستوى الأعلى = مجموع ما تحته حرفيًّا"
-      ]
+      ],
+      "evidence": {
+        "commit": "a30d02f",
+        "closedOn": "2026-08-18"
+      }
     },
     {
       "id": "FNB-802",
       "title": "استثناءات القطاع — التسعة والعشرة على السجلّ القائم",
       "milestone": "ق٧",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ق‑٢١"
       ],
@@ -1366,7 +1370,7 @@
         "FNB-801"
       ],
       "nucleus": "`src/services/ledger/exceptions.js` `EXCEPTION_TYPES` — **عشرة أنواع قائمة بحقولها الثلاثة عشر وبصمة تفرّدها وترقيمها وقاعدة «لا حذف ولا تعديلَ أثر»**؛ تكبر بالأنواع الناقصة ولا يُبنى سجلٌّ ثانٍ",
-      "guardTest": "src/services/ledger/exceptions.test.js",
+      "guardTest": "src/services/ledger/sectorTower.test.js",
       "touches": [
         "src/services/ledger/exceptions.js",
         "src/services/ledger/operationsDashboard.js"
@@ -1378,7 +1382,11 @@
         "كلّ استثناء يُغلق بقرارٍ مكتوب، والدليل يُعلَن نقصه ولا يمنع (الحكم المعتمَد في ت-O02)",
         "لا استثناء يُفتح مرّتين لنفس الحادثة (بصمة التفرّد القائمة)",
         "اختبارٌ لكلّ نوعٍ جديد يثبت كشفه وإغلاقه وعدم تكراره"
-      ]
+      ],
+      "evidence": {
+        "commit": "a30d02f",
+        "closedOn": "2026-08-18"
+      }
     },
     {
       "id": "FNB-803",
