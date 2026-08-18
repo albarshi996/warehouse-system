@@ -114,6 +114,9 @@ export const EXCEPTION_TYPES = Object.freeze({
   // عالقٌ في مخزن النقل حتّى تُثبَت. (وفرقُ الاستلام نفسه يستعمل
   // `transit_variance` القائم — لا نوعَ ثانٍ لمعنًى واحد.)
   transfer_unreceived: { id: 'transfer_unreceived', label: 'نقلٌ لم يستلمه الفرع', action: 'أثبِت الاستلام أو بيّن سبب التأخّر', owner: 'مدير الفرع' },
+  // ‹FNB-503› مردودٌ دون العتبة — ويُقاس بما كانت الموادّ المصروفة تكفيه
+  // لا بالمخطَّط، فلا يُلام التحضير على صرفٍ ناقص.
+  low_yield: { id: 'low_yield', label: 'مردود إنتاجٍ منخفض', action: 'راجع الوصفة والتحضير: هدرٌ أم معيارٌ يحتاج ضبطًا', owner: 'الشيف التنفيذيّ' },
 });
 
 export function exceptionType(id) {
