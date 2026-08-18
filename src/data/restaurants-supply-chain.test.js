@@ -194,3 +194,36 @@ test('لا نصَّ معروضًا يحمل علامات ترميزٍ نصّيّ
   };
   walk(MODULE, 'module');
 });
+
+/* ═══════════ ‹FNB-805› العرض يُحدَّث بالمبنيّ ولا يَعِد بما لم يُبنَ ═══════════ */
+
+test('★★ كلّ قدرةٍ معروضةٍ تشير إلى وحدةٍ **موجودةٍ على القرص**', () => {
+  const root = fileURLToPath(new URL('../services/', import.meta.url));
+  for (const [name, , modulePath] of MODULE.fnbCapabilities) {
+    const full = root + modulePath;
+    assert.doesNotThrow(
+      () => readFileSync(full, 'utf8'),
+      `القدرة «${name}» تَعِد بوحدة «${modulePath}» غير موجودة — وعدٌ ينكسر أمام القطاع في القاعة`
+    );
+  }
+});
+
+test('★★ وكلّ شاشةٍ مذكورةٍ في كتالوج التنقّل — أو معلَنةٌ «بلا شاشة بعد»', () => {
+  const paths = new Set([...internalPaths(), ...ALWAYS_ALLOWED]);
+  for (const [name, , , ui] of MODULE.fnbCapabilities) {
+    if (ui === 'منطقٌ بلا شاشة بعد') continue;
+    assert.ok(paths.has(ui), `القدرة «${name}» تشير إلى شاشة «${ui}» غير مسجّلة في الكتالوج`);
+  }
+});
+
+test('★ وما لم يُبنَ **يُعلَن بقراره** لا يُوعَد به', () => {
+  assert.ok(MODULE.fnbPending.length > 0);
+  for (const [name, , decision] of MODULE.fnbPending) {
+    assert.match(decision, /^ق-O\d+$/, `المعلَّق «${name}» بلا قرارِ مالكٍ مرجعيّ`);
+  }
+  // والمعلَّق لا يظهر في القدرات — فلا يُعرض شيءٌ مرّتين بحالتين.
+  const built = new Set(MODULE.fnbCapabilities.map((c) => c[0]));
+  for (const [name] of MODULE.fnbPending) {
+    assert.ok(!built.has(name), `«${name}» معروضٌ مبنيًّا ومعلَّقًا معًا`);
+  }
+});

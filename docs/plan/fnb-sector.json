@@ -5,7 +5,7 @@
   "command": "npm run plan:fnb",
   "track": "توسيعيّ · **الفرع بُعدٌ لا نظام** · لا نظام مطاعم موازٍ يُبنى بجانب البوابة — يُبنى بُعدٌ تنظيميّ على النوى القائمة · ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح",
   "source": "المستند الحاكم محفوظٌ حرفيًّا في `docs/plan/fnb/المصدر-توجيه-المدير-العام-وخطة-القطاع.md` (724 سطرًا): توجيه السيد المدير العام (المرجع الأساسيّ) + خطة مسؤول قطاع F&B (تحديد الاحتياج التشغيليّ والتوسّع والمطبخ المركزيّ) — ومعهما جردٌ متعدّد الوكلاء على الكود الفعليّ في جلسة 2026-08-18 (١٣ وكيلًا · ٦٠٦ استدعاء أداة · ١٤٣ فحصًا + ٥٨ بندًا استدركها ناقد الاكتمال) — مفصَّلًا في `docs/plan/fnb/مصفوفة-التغطية.md`",
-  "lastUpdated": "2026-08-18 (FNB-801/802 مغلقتان — البرج ينزل خماسيًّا ويتوازن)",
+  "lastUpdated": "2026-08-18 (FNB-803/804 مغلقتان — الإغلاق اليوميّ وإعادة التوازن)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "016f523",
@@ -1393,7 +1393,7 @@
       "title": "الإغلاق اليوميّ للفرع — سجلٌّ موحَّد بعشرة عناصر",
       "milestone": "ق٧",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ق‑٢٢"
       ],
@@ -1402,7 +1402,7 @@
         "FNB-702"
       ],
       "nucleus": "`src/services/documents/schemas/vsr.js` (تسوية نهاية الرحلة — **نمطُ إغلاقٍ يوميٍّ مطابقٌ مبنيٌّ ويعمل**: ما حُمّل وما بيع وما رجع وما تبقّى وما فُقد، بفروقاته وأسبابها) — يُحتذى للفرع ولا يُبتكر نمطٌ ثانٍ",
-      "guardTest": "src/services/documents/documents.test.js",
+      "guardTest": "src/services/intelligence/dailyClose.test.js",
       "touches": [
         "src/services/documents/schemas/index.js",
         "src/services/labor/laborTasksService.js"
@@ -1415,14 +1415,18 @@
         "ساعات العمالة من `labor_tasks` — لا إدخالَ ساعاتٍ يدويّ",
         "الإغلاق ملحق-فقط: المغلَق لا يُعدَّل، والتصحيح قيدٌ جديد يشير إلى الأوّل",
         "اختبارٌ يثبت أنّ يومًا بلا إغلاقٍ يظهر استثناءً بعد مهلته"
-      ]
+      ],
+      "evidence": {
+        "commit": "727b4b7",
+        "closedOn": "2026-08-18"
+      }
     },
     {
       "id": "FNB-804",
       "title": "التنبّؤ — نفادٌ وصلاحيّةٌ وإعادة توازن",
       "milestone": "ق٧",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ق‑١١",
         "ق‑٢١"
@@ -1432,7 +1436,7 @@
         "FNB-801"
       ],
       "nucleus": "`src/services/intelligence/operationalIntelligence.js` (`daysLeft` و`urgency` — **تنبّؤ النفاد مبنيٌّ بالفعل**) + `balances/balanceKey.js` `expiryStatus` (تنبّؤ الصلاحيّة) — الناقص إعادةُ التوازن بين الفروع",
-      "guardTest": "src/services/intelligence/operationalIntelligence.test.js",
+      "guardTest": "src/services/intelligence/rebalance.test.js",
       "touches": [
         "src/services/intelligence/operationalIntelligence.js",
         "src/services/inventory/inventoryAnalytics.js"
@@ -1444,7 +1448,11 @@
         "توقّع المبيعات الذي يُدخله القطاع يُقبل مدخلًا ويُقارَن بالمحسوب من الدفتر",
         "التنبّؤ يصمت حين لا يكفي التاريخ (حارس `MIN_HISTORY_DAYS` القائم)",
         "اختبارٌ يثبت أنّ اقتراح إعادة التوازن لا يخالف FEFO ولا يفرّغ فرعًا تحت حدّه"
-      ]
+      ],
+      "evidence": {
+        "commit": "727b4b7",
+        "closedOn": "2026-08-18"
+      }
     },
     {
       "id": "FNB-805",
