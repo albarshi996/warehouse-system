@@ -62,6 +62,8 @@ console.info(
     `  · الفرع الحاليّ: ${branch}\n` +
     `  · النشر: ${ws.pages}\n\n` +
     `  ${DIM}المستودع الآخر — ${ws.sibling.name} (${ws.sibling.repo}): ${ws.sibling.purpose}\n` +
-    `  لنقل تصليحٍ منه دون ربط ريموتٍ دائم:\n` +
+    `  لجلب ما بُني هناك كلّه — بهويّة هذا المكان، وبلا دفع:\n` +
+    `    npm run sync\n` +
+    `  ولنقل تصليحٍ مفردٍ دون ربط ريموتٍ دائم:\n` +
     `    git fetch ${ws.sibling.remote} main && git cherry-pick <sha>${OFF}\n`
 );

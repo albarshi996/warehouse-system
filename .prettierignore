@@ -5,3 +5,6 @@ package-lock.json
 public/forms/
 public/lib/
 public/Brandzo_Operational_Guide.html
+
+# مولَّدان من workspace.json — تنسيق prettier للجداول يخالف المولِّد فيفشل الفحص
+WORKSPACE.md
