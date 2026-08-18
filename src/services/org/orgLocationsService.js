@@ -6,9 +6,10 @@
  * **لا حذف:** موقعٌ حُمِّلت عليه تكلفةٌ تاريخيّة لا يُمحى — يُعطَّل بـ`active:false`
  * فتبقى تقارير الأمس مقروءة. ومن حذف موقعًا حوّل تكلفةً حقيقيّةً إلى «غير مربوط».
  */
-import { collection, doc, setDoc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, onSnapshot, query, orderBy, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { db } from '../../config/firebase.js';
 import { locationProblems } from './orgLocations.js';
+import { planOrgImport, sectorSeed } from './orgImport.js';
 
 const COL = 'org_locations';
 
@@ -61,4 +62,42 @@ export function setOrgLocationActive(code, active, profile) {
     },
     { merge: true }
   );
+}
+
+/**
+ * غرس الشجرة بالجملة ‹FNB-101› — يكتب ما أجازته خطّة الاستيراد **كاملًا أو لا شيء**.
+ *
+ * الحكم كلّه في `planOrgImport` الخالص (يُستدعى هنا مرّةً أخيرة على حال القاعدة
+ * الراهنة — فالشاشة قد عاينت شجرةَ قبل ثوانٍ وتغيّرت). والكتابة `writeBatch`
+ * ذرّيّة: فلا يقطع انقطاعُ شبكةٍ الشجرةَ نصفين.
+ *
+ * @returns {{written:number, counts:object}}
+ */
+export async function importOrgLocations(rows, existing = [], profile) {
+  const plan = planOrgImport(rows, existing);
+  if (!plan.ok) throw new Error(plan.problems.join(' · ') || 'لا صفوف صالحة للغرس.');
+
+  const batch = writeBatch(db);
+  for (const location of plan.toWrite) {
+    batch.set(
+      doc(db, COL, location.code),
+      {
+        ...location,
+        updatedAt: serverTimestamp(),
+        byUid: profile?.uid || null,
+        byName: profile?.displayName || profile?.email || 'مستخدم',
+      },
+      { merge: true }
+    );
+  }
+  await batch.commit();
+  return { written: plan.toWrite.length, counts: plan.counts };
+}
+
+/**
+ * غرس البذرة التجريبيّة (حتّى يصل قرار المالك ق-O01) — تمرّ بنفس بوّابة
+ * الاستيراد فلا طريقَ خلفيًّا يتجاوز الحارس.
+ */
+export function seedOrgLocations(existing = [], profile) {
+  return importOrgLocations(sectorSeed(), existing, profile);
 }

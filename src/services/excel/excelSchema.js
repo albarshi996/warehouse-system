@@ -202,6 +202,28 @@ export const DATASETS = {
    * الموردون — ماستر الموردين (§15.2). المعرّف رمز المورّد (BP Code)، وينبع
    * الاستيراد من نموذج «موردين v.xlsx». لا حذف — أرشفة (`status`) لا محو.
    */
+  /**
+   * الشجرة التنظيميّة ‹FNB-101› — قطاع › براند › فرع › مركز تكلفة.
+   *
+   * وعاء `org_locations` (م٦-أ) قائمٌ ومحروسٌ وفارغ؛ وهذه بوّابة ملئه بالجملة:
+   * صفٌّ لكلّ موقع. **صحّة الأبوّة لا تُفحص هنا** — الشيت يُقرأ شكلًا، والشجرة
+   * تُحكم كاملةً في `org/orgImport.js` (`planOrgImport`) فتُقبل كاملةً أو تُرفض
+   * كاملةً — لا حفظَ جزئيّ صامت.
+   */
+  orgLocations: {
+    key: 'orgLocations',
+    labelAr: 'الشجرة التنظيميّة (Org_Locations)',
+    columns: [
+      { field: 'code', labelAr: 'Code (الرمز)', type: 'string', required: true, aliases: ['code', 'الرمز', 'الكود', 'رمز الموقع', 'location code', 'org code'] },
+      { field: 'nameAr', labelAr: 'الاسم العربيّ', type: 'string', required: true, aliases: ['name', 'الاسم', 'الاسم العربي', 'الاسم العربيّ', 'اسم الموقع', 'name ar'] },
+      { field: 'level', labelAr: 'المستوى (قطاع/براند/فرع/مركز تكلفة)', type: 'string', required: true, aliases: ['level', 'المستوى', 'النوع', 'type'] },
+      { field: 'parentCode', labelAr: 'Parent (رمز الأب)', type: 'string', required: false, aliases: ['parent', 'parent code', 'parentcode', 'الأب', 'الاب', 'رمز الأب', 'رمز الاب', 'التبعية', 'يتبع'] },
+      { field: 'nameEn', labelAr: 'الاسم (إنجليزي)', type: 'string', required: false, aliases: ['name en', 'nameen', 'english name', 'الاسم بالانجليزي', 'الاسم الانجليزي'] },
+      { field: 'city', labelAr: 'المدينة', type: 'string', required: false, aliases: ['city', 'المدينة', 'مدينة'] },
+      { field: 'active', labelAr: 'الحالة (نشط/معطّل)', type: 'string', required: false, aliases: ['active', 'الحالة', 'status', 'نشط'] },
+      { field: 'notes', labelAr: 'ملاحظات', type: 'string', required: false, aliases: ['notes', 'ملاحظات', 'ملاحظة', 'remarks'] },
+    ],
+  },
   suppliers: {
     key: 'suppliers',
     labelAr: 'الموردون (Suppliers_Master)',

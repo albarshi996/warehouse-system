@@ -11,8 +11,8 @@
   "counts": {
     "modules": 94,
     "serviceDomains": 42,
-    "serviceFiles": 359,
-    "collections": 79,
+    "serviceFiles": 364,
+    "collections": 80,
     "roles": 17,
     "odooModels": 12,
     "odooGuards": 51,
@@ -1771,13 +1771,16 @@
         "pendingModel.js",
         "pendingModel.test.js",
         "pendingService.js",
+        "recipe.js",
+        "recipe.test.js",
+        "recipesService.js",
         "uomModel.js",
         "uomModel.test.js",
         "uomWiring.js",
         "uomWiring.test.js"
       ],
-      "fileCount": 16,
-      "testCount": 7,
+      "fileCount": 19,
+      "testCount": 8,
       "exports": [
         "DEFAULT_ITEM_TYPE",
         "IMPORT_ROLES",
@@ -1809,6 +1812,7 @@
         "defaultUomFor",
         "displayQty",
         "documentItemProblems",
+        "explodeRecipe",
         "factorProblems",
         "factorToBase",
         "familyOf",
@@ -1818,6 +1822,8 @@
         "getPending",
         "hasUomDefinition",
         "identityOf",
+        "impactOfShortage",
+        "indexRecipes",
         "isMovable",
         "isSellable",
         "isStocked",
@@ -1830,6 +1836,7 @@
         "lineMatchesItem",
         "lineType",
         "listenPending",
+        "listenRecipes",
         "loadableProblems",
         "newSighting",
         "normalizeItemCode",
@@ -1843,26 +1850,34 @@
         "parseUomFactors",
         "pendingId",
         "pendingSummary",
+        "recipeAsOf",
+        "recipeId",
+        "recipeProblems",
         "refreshLineBase",
         "registerPending",
         "rejectPending",
         "rejectionVerdict",
         "repeatPatch",
         "resolveSubstitutes",
+        "saveRecipeVersion",
         "sellableProblems",
         "serviceLines",
+        "setRecipeActive",
         "shapeImportedItem",
+        "shapeRecipe",
         "stampPartnerUom",
         "stockableLines",
         "toBase",
         "toMasterItem",
         "typeOf",
         "unitForBarcode",
+        "unlinkedSaleItems",
         "uomLabel",
         "uomOptionsForLine"
       ],
       "collections": [
-        "Items_Pending"
+        "Items_Pending",
+        "recipes"
       ]
     },
     {
@@ -2645,6 +2660,8 @@
         "assignmentsModel.js",
         "assignmentsModel.test.js",
         "assignmentsService.js",
+        "orgImport.js",
+        "orgImport.test.js",
         "orgJobs.test.js",
         "orgLocations.js",
         "orgLocations.test.js",
@@ -2655,14 +2672,16 @@
         "orgView.js",
         "orgView.test.js"
       ],
-      "fileCount": 12,
-      "testCount": 5,
+      "fileCount": 14,
+      "testCount": 6,
       "exports": [
         "CHART_SKINS",
+        "LEVEL_ALIASES",
         "LEVEL_IDS",
         "NODE_TYPES",
         "ORG_FIELDS",
         "ORG_LEVELS",
+        "SEED_PREFIX",
         "SOURCE_LABELS",
         "TYPE_LABELS",
         "activeAssignmentsByJob",
@@ -2688,8 +2707,10 @@
         "getOrgStructure",
         "getVersion",
         "hasChanges",
+        "importOrgLocations",
         "indexLocations",
         "internalBranchProblems",
+        "isSeedLocation",
         "jobCardsHtml",
         "jobRequirementsHtml",
         "jobsOfNode",
@@ -2705,13 +2726,19 @@
         "orgCodeOf",
         "pagesOfBranch",
         "pathTo",
+        "planOrgImport",
         "proposedCount",
+        "readOrgRow",
         "removeJob",
         "removeNode",
         "reorderNode",
+        "resolveLevel",
         "resolveLocation",
         "saveOrgLocation",
         "saveOrgStructure",
+        "sectorSeed",
+        "seedOrgLocations",
+        "seedWarnings",
         "setOrgLocationActive",
         "staffingRowsHtml",
         "supportBandHtml",
@@ -5224,6 +5251,38 @@
               "isManager",
               "myRole"
             ]
+          }
+        ]
+      },
+      {
+        "name": "recipes",
+        "path": "recipes",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager()",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
           }
         ]
       },
