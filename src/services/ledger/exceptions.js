@@ -99,6 +99,10 @@ export const EXCEPTION_TYPES = Object.freeze({
   pick_shortfall: { id: 'pick_shortfall', label: 'نقصٌ في السحب', action: 'أعِد التعبئة من الاحتياطيّ أو عدّل الكمّيّة', owner: 'مشرف المناولة' },
   putaway_blocked: { id: 'putaway_blocked', label: 'تعذّر التخزين — لا موقعَ يقبل', action: 'حرّر موقعًا أو خزّن بتجاوزٍ معلَّل', owner: 'مدير المستودع' },
   qc_reject: { id: 'qc_reject', label: 'رفض جودة', action: 'أرجِع للمورّد أو اقبل استثناءً بقرار', owner: 'مسؤول الجودة' },
+  // ‹FNB-701› قطاع المطاعم: صنفُ منيو يُباع ولا وصفةَ له ⇒ استهلاكه النظريّ
+  // صفرٌ كاذبٌ وتكلفته مجهولة. الكاشف `recipe.unlinkedSaleItems` — وبقيّة
+  // أنواع القطاع العشرة تُضاف في FNB-802 لا هنا.
+  recipe_unlinked: { id: 'recipe_unlinked', label: 'صنف منيو غير مربوط بوصفة', action: 'اربطه بوصفةٍ ساريةً أو أخرجه من المنيو', owner: 'مدير المستودع' },
 });
 
 export function exceptionType(id) {

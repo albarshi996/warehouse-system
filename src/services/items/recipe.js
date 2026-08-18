@@ -273,13 +273,76 @@ export function impactOfShortage(index, sku, { branchMenus = null, orgIndex = nu
 }
 
 /**
- * «صنف بيعٍ غير مربوطٍ بوصفة» — مادّة الاستثناء في لوحة القطاع (FNB-802):
+ * «صنف منيو غير مربوطٍ بوصفة» — مادّة الاستثناء في لوحة القطاع (FNB-802):
  * يُباع ولا يُعرف ما يستهلك، فتكلفته النظريّة صفرٌ كاذب.
+ * المطالَب بالوصفة نوعُ `menu` (‹FNB-701›) — ويُقبل الوسم القديم `isMenuItem`
+ * توافقًا حتى يكتمل الترحيل.
  */
 export function unlinkedSaleItems(index, items = []) {
   return (Array.isArray(items) ? items : [])
-    .filter((it) => (it?.itemType || 'sale') === 'sale' && it?.isMenuItem === true)
+    .filter((it) => it?.itemType === 'menu' || it?.isMenuItem === true)
     .map((it) => normalizeItemCode(it.sku))
     .filter((sku) => sku && !index.has(sku))
     .sort();
+}
+
+/**
+ * المنيو المعتمَد للفرع — قائمةُ أصناف بيعٍ لا نصٌّ حرّ ‹FNB-701›.
+ *
+ * يقرؤها ملفّ الفرع (FNB-201): كلّ مدخلٍ يجب أن يكون صنفًا في الماستر،
+ * ومن نوع `menu`، وذا وصفةٍ سارية. كلّ خرقٍ جملةٌ تسمّي الصنف وتقول الصواب.
+ */
+export function approvedMenuProblems(menuSkus = [], itemsBySku = new Map(), index = new Map()) {
+  const problems = [];
+  const seen = new Set();
+  for (const raw of Array.isArray(menuSkus) ? menuSkus : []) {
+    const sku = normalizeItemCode(raw);
+    if (!sku) continue;
+    if (seen.has(sku)) problems.push(`«${sku}» مكرّرٌ في المنيو — القائمة أسماءٌ لا تتكرّر.`);
+    seen.add(sku);
+    const item = itemsBySku.get(sku);
+    if (!item) {
+      problems.push(`«${sku}» ليس في ماستر الأصناف — المنيو يشير ولا يخترع.`);
+      continue;
+    }
+    if (item.itemType !== 'menu' && item.isMenuItem !== true) {
+      problems.push(`«${sku}» ليس صنف منيو (نوعه «${item.itemType || 'sale'}») — المنيو أصنافُ بيعٍ من النوع الرابع.`);
+    }
+    if (!index.has(sku)) {
+      problems.push(`«${sku}» بلا وصفة — يُباع ولا يُعرف ما يستهلك.`);
+    }
+  }
+  return problems;
+}
+
+/**
+ * السلسلة الستّة من طرفٍ إلى طرف ‹FNB-701›:
+ * **مورّد → صنف → وصفة → صنف بيع → براند → فرع** — والعميل طرفًا في قنوات
+ * البيع الخارجيّ (Catering · Corporate) من كتالوج الأطراف نفسه.
+ *
+ * تركيبٌ خالص فوق النوى القائمة: كتالوج الأطراف (المورّدون والعملاء) +
+ * فهرس الوصفات (أين يدخل الصنف) + قوائم الفروع + الشجرة (البراند فالقطاع).
+ * وكلّ ساقٍ غائبةٍ تُعاد فارغةً معلَنةً — جوابٌ ناقصٌ خيرٌ من مخترَع.
+ */
+export function itemChain(sku, { catalogEntries = [], recipes = null, branchMenus = null, orgIndex = null, onDate } = {}) {
+  const code = normalizeItemCode(sku);
+  const index = recipes instanceof Map ? recipes : indexRecipes(recipes || []);
+
+  const partners = (Array.isArray(catalogEntries) ? catalogEntries : []).filter(
+    (e) => normalizeItemCode(e?.sku) === code
+  );
+  const suppliers = [...new Set(partners.filter((e) => e?.partnerType === 'supplier').map((e) => String(e.partnerCode)))].sort();
+  const customers = [...new Set(partners.filter((e) => e?.partnerType === 'customer').map((e) => String(e.partnerCode)))].sort();
+
+  const impact = impactOfShortage(index, code, { branchMenus, orgIndex, onDate });
+
+  return {
+    sku: code,
+    suppliers,
+    customers,
+    recipes: [...impact.intermediates, ...impact.menuItems].sort(),
+    menuItems: impact.menuItems,
+    branches: impact.branches,
+    brands: impact.brands,
+  };
 }

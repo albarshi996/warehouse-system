@@ -143,7 +143,9 @@ test('★ خيارات الشاشة تطابق المنطق — لا خيارٌ 
 });
 
 test('★ لكلّ نوعٍ سلوكٌ مميّز — نوعان متطابقان يعنيان نوعًا زائدًا', () => {
-  const shape = (t) => `${t.stocked}|${t.sellable}|${t.movable}`;
+  // المحاور أربعة منذ ‹FNB-701›: صنف المنيو يطابق الخدمة مخزنيًّا ويفارقها
+  // في `explodes` — بيعُه يستهلك مكوّناتِه عبر الوصفة، والخدمة لا مكوّنات لها.
+  const shape = (t) => `${t.stocked}|${t.sellable}|${t.movable}|${t.explodes}`;
   const shapes = Object.values(ITEM_TYPES).map(shape);
   assert.equal(new Set(shapes).size, shapes.length);
 });
@@ -155,7 +157,7 @@ test('itemTypeStats: يكشف كم صنفًا ينتظر تصنيف المالك
   assert.equal(s.counts.internal, 1);
   assert.equal(s.counts.service, 1);
   assert.equal(s.untyped, 1, 'صنفٌ واحد بلا تصنيفٍ صريح');
-  assert.deepEqual(itemTypeStats([]).counts, { sale: 0, internal: 0, service: 0 });
+  assert.deepEqual(itemTypeStats([]).counts, { sale: 0, internal: 0, service: 0, menu: 0 });
 });
 
 /* ═══════════ ٦. الحارس الجامع للمستند ═══════════ */

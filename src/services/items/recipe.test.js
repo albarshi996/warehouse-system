@@ -9,8 +9,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   shapeRecipe, recipeId, recipeProblems, indexRecipes, recipeAsOf,
-  explodeRecipe, impactOfShortage, unlinkedSaleItems,
+  explodeRecipe, impactOfShortage, unlinkedSaleItems, approvedMenuProblems, itemChain,
 } from './recipe.js';
+import { ITEM_TYPES, isExplodable, isStocked, isSellable, normalizeItemType, itemTypeStats } from './itemType.js';
 
 /** ماستر مصغّر: دجاجٌ بالكيلو وخبزٌ بالحبّة وصوصٌ بالكيلو وبرجرٌ بالحبّة. */
 const ITEMS = new Map([
@@ -149,4 +150,83 @@ test('صنف بيعٍ غير مربوطٍ بوصفة يُسمّى — مادّة
     { sku: 'CHICKEN', itemType: 'sale' }, // مادّةٌ لا صنفَ منيو — لا يُطالَب بوصفة.
   ];
   assert.deepEqual(unlinkedSaleItems(index, items), ['PIZZA']);
+});
+
+/* ═══════════ ‹FNB-701› صنف المنيو — الطبقة الرابعة ═══════════ */
+
+test('صنف المنيو نوعٌ في السيّد القائم: يُباع ولا يُخزَّن — وينفجر وحده', () => {
+  assert.ok(ITEM_TYPES.menu, 'النوع الرابع في السيّد نفسه لا في سيّدٍ ثانٍ');
+  assert.equal(isSellable('menu'), true);
+  assert.equal(isStocked('menu'), false); // مخزونه مكوّناته لا رصيده.
+  assert.equal(isExplodable('menu'), true);
+  assert.equal(isExplodable('service'), false); // ما يفرقه عن الخدمة سلوكًا.
+  // المرادفات: أمين البيانات يكتب «منيو» فلا يسقط صامتًا إلى «بيع».
+  assert.equal(normalizeItemType('منيو'), 'menu');
+  assert.equal(normalizeItemType('menu item'), 'menu');
+});
+
+test('itemTypeStats يُحصي النوع الرابع كما يُحصي الثلاثة', () => {
+  const s = itemTypeStats([
+    { sku: 'BURGER', itemType: 'menu' },
+    { sku: 'CHICKEN', itemType: 'sale' },
+  ]);
+  assert.equal(s.counts.menu, 1);
+  assert.equal(s.counts.sale, 1);
+});
+
+test('المنيو المعتمَد للفرع قائمةٌ محكومة لا نصٌّ حرّ — وكلّ خرقٍ يسمّي صنفه', () => {
+  const index = indexRecipes([BURGER_V1]);
+  const master = new Map([
+    ['BURGER', { sku: 'BURGER', itemType: 'menu' }],
+    ['PIZZA', { sku: 'PIZZA', itemType: 'menu' }],
+    ['CHICKEN', { sku: 'CHICKEN', itemType: 'sale' }],
+  ]);
+  // سليم: صنف منيو له وصفة.
+  assert.deepEqual(approvedMenuProblems(['BURGER'], master, index), []);
+  // الخروق الثلاثة: ليس في الماستر · ليس نوع منيو · بلا وصفة.
+  const problems = approvedMenuProblems(['GHOST', 'CHICKEN', 'PIZZA', 'pizza'], master, index);
+  assert.ok(problems.some((p) => p.includes('GHOST') && p.includes('ليس في ماستر')));
+  assert.ok(problems.some((p) => p.includes('CHICKEN') && p.includes('ليس صنف منيو')));
+  assert.ok(problems.some((p) => p.includes('PIZZA') && p.includes('بلا وصفة')));
+  assert.ok(problems.some((p) => p.includes('مكرّر')));
+});
+
+test('★ السلسلة الستّة من طرفٍ إلى طرف: مورّد → صنف → وصفة → صنف بيع → براند → فرع — والعميل طرفٌ', () => {
+  const orgIndex = new Map([
+    ['BRD1', { code: 'BRD1', level: 'brand', parentCode: 'FNB' }],
+    ['BR01', { code: 'BR01', level: 'branch', parentCode: 'BRD1' }],
+  ]);
+  const chain = itemChain('chicken', {
+    catalogEntries: [
+      { partnerType: 'supplier', partnerCode: 'SUP-9', sku: 'CHICKEN' },
+      { partnerType: 'customer', partnerCode: 'CATER-1', sku: 'CHICKEN' }, // قناة Catering
+      { partnerType: 'supplier', partnerCode: 'SUP-2', sku: 'OIL' }, // صنفٌ آخر — لا يتسرّب
+    ],
+    recipes: [BURGER_V1, SAUCE_V1],
+    branchMenus: { BR01: ['BURGER'] },
+    orgIndex,
+  });
+  assert.deepEqual(chain.suppliers, ['SUP-9']);
+  assert.deepEqual(chain.customers, ['CATER-1']);
+  assert.deepEqual(chain.menuItems, ['BURGER']);
+  assert.deepEqual(chain.branches, ['BR01']);
+  assert.deepEqual(chain.brands, ['BRD1']);
+  // وساقٌ غائبة تُعاد فارغةً معلَنة — لا مخترَعة.
+  const bare = itemChain('CHICKEN', { recipes: [BURGER_V1] });
+  assert.deepEqual(bare.suppliers, []);
+  assert.deepEqual(bare.branches, []);
+});
+
+test('صنف منيو بلا وصفة يفتح استثناءً معرَّفًا في السجلّ القائم — لا سجلَّ ثانٍ', async () => {
+  const { EXCEPTION_TYPES, shapeException, fingerprint } = await import('../ledger/exceptions.js');
+  assert.ok(EXCEPTION_TYPES.recipe_unlinked, 'النوع في سجلّ الاستثناءات القائم');
+
+  const index = indexRecipes([BURGER_V1]);
+  const [sku] = unlinkedSaleItems(index, [{ sku: 'PIZZA', itemType: 'menu' }]);
+  const exc = shapeException({ type: 'recipe_unlinked', sku, reason: 'يُباع ولا يُعرف ما يستهلك' });
+  assert.equal(exc.type, 'recipe_unlinked');
+  assert.equal(exc.sku, 'PIZZA');
+  assert.equal(exc.action, EXCEPTION_TYPES.recipe_unlinked.action); // الإجراء من السجلّ لا من الكاشف.
+  // وبصمة التفرّد تمنع فتحه مئة مرّة عند كلّ رسم.
+  assert.equal(fingerprint(exc), fingerprint({ type: 'recipe_unlinked', sku: 'PIZZA' }));
 });

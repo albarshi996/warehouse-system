@@ -24,7 +24,7 @@ import { internalItemInSaleVerdict } from '../settings/settingsModel.js';
  * `stocked` هو الحقل الحاسم: ما لا يُخزَّن لا يُقيَّد في الدفتر ولا يظهر في جرد.
  */
 export const ITEM_TYPES = Object.freeze({
-  sale: { id: 'sale', label: 'بيع', hint: 'البضاعة المعتادة', stocked: true, sellable: true, movable: true },
+  sale: { id: 'sale', label: 'بيع', hint: 'البضاعة المعتادة', stocked: true, sellable: true, movable: true, explodes: false },
   internal: {
     id: 'internal',
     label: 'نقل أو داخليّ',
@@ -32,6 +32,7 @@ export const ITEM_TYPES = Object.freeze({
     stocked: true,
     sellable: false,
     movable: true,
+    explodes: false,
   },
   service: {
     id: 'service',
@@ -40,6 +41,21 @@ export const ITEM_TYPES = Object.freeze({
     stocked: false,
     sellable: true,
     movable: false,
+    explodes: false,
+  },
+  /**
+   * صنف المنيو ‹FNB-701› — الطبقة الرابعة من نموذج الأصناف (خطة القطاع).
+   * يُباع ولا يُخزَّن ولا يُنقل: **مخزونه مكوّناته** — بيعُه يستهلك الخامَ
+   * عبر وصفته (recipe.js) لا رصيدَه هو، فبرجرٌ لا يقبع على رفّ.
+   */
+  menu: {
+    id: 'menu',
+    label: 'صنف منيو',
+    hint: 'يُباع ويُفجَّر لمكوّناته بالوصفة',
+    stocked: false,
+    sellable: true,
+    movable: false,
+    explodes: true, // ما يميّزه سلوكًا عن الخدمة: بيعُه يستهلك مكوّناتِه عبر recipe.js
   },
 });
 
@@ -62,6 +78,7 @@ const TYPE_ALIASES = {
   sale: ['sale', 'sales', 'goods', 'stock', 'بيع', 'مبيعات', 'بضاعة', 'بضاعه', 'صنف بيع'],
   internal: ['internal', 'transfer', 'consumable', 'داخلي', 'داخليّ', 'نقل', 'تشغيل', 'مواد تشغيل', 'تغليف', 'قطع غيار'],
   service: ['service', 'services', 'fee', 'charge', 'خدمة', 'خدمه', 'خدمات', 'رسوم', 'رسم', 'أجرة'],
+  menu: ['menu', 'menu item', 'menuitem', 'منيو', 'صنف منيو', 'طبق', 'وجبة', 'مشروب محضر'],
 };
 
 /** يحوّل قيمةً مكتوبة بأيّ صيغة إلى نوعٍ معروف، أو `''` إن لم تُعرف. */
@@ -89,6 +106,8 @@ export const isStocked = (type) => flag(type, 'stocked');
 export const isSellable = (type) => flag(type, 'sellable');
 /** أيُنقل بين المواقع؟ الخدمة لا — ولا تُحمَّل على مركبة. */
 export const isMovable = (type) => flag(type, 'movable');
+/** أيَنفجر بوصفة؟ صنف المنيو وحده ‹FNB-701› — بيعُه يستهلك مكوّناتِه لا رصيدَه. */
+export const isExplodable = (type) => flag(type, 'explodes');
 
 /**
  * خريطة `sku → نوع` من ماستر الأصناف.
@@ -193,7 +212,8 @@ export function documentItemProblems(docType, lines, typeMap, settings, role) {
 
 /** إحصاءٌ للشاشة: كم صنفًا من كلّ نوع، وكم بلا تصنيفٍ صريح. */
 export function itemTypeStats(items = []) {
-  const counts = { sale: 0, internal: 0, service: 0 };
+  // الأنواع من السيّد نفسه — نوعٌ خامسٌ غدًا يُحصى بلا لمس هذه الدالّة.
+  const counts = Object.fromEntries(Object.keys(ITEM_TYPES).map((t) => [t, 0]));
   let untyped = 0;
   for (const it of Array.isArray(items) ? items : []) {
     counts[typeOf(it)] += 1;
