@@ -5,7 +5,7 @@
   "command": "npm run plan:fnb",
   "track": "توسيعيّ · **الفرع بُعدٌ لا نظام** · لا نظام مطاعم موازٍ يُبنى بجانب البوابة — يُبنى بُعدٌ تنظيميّ على النوى القائمة · ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح",
   "source": "المستند الحاكم محفوظٌ حرفيًّا في `docs/plan/fnb/المصدر-توجيه-المدير-العام-وخطة-القطاع.md` (724 سطرًا): توجيه السيد المدير العام (المرجع الأساسيّ) + خطة مسؤول قطاع F&B (تحديد الاحتياج التشغيليّ والتوسّع والمطبخ المركزيّ) — ومعهما جردٌ متعدّد الوكلاء على الكود الفعليّ في جلسة 2026-08-18 (١٣ وكيلًا · ٦٠٦ استدعاء أداة · ١٤٣ فحصًا + ٥٨ بندًا استدركها ناقد الاكتمال) — مفصَّلًا في `docs/plan/fnb/مصفوفة-التغطية.md`",
-  "lastUpdated": "2026-08-18 (FNB-504/505 مغلقتان — واكتملت المرحلة الرابعة ق٤ ٥/٥)",
+  "lastUpdated": "2026-08-18 (FNB-601/602 مغلقتان — الطلب بسياقه والأولويّة محسوبة)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "016f523",
@@ -1115,7 +1115,7 @@
       "title": "طلب الشراء بسياقه — عشرة حقولٍ لا كميّةً مجرَّدة",
       "milestone": "ق٥",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ق‑١٩"
       ],
@@ -1123,7 +1123,7 @@
         "FNB-301"
       ],
       "nucleus": "`src/services/documents/schemas/pr.js` + `openDemand.js` («بالطريق» مبنيّ) + `operationalIntelligence.js` (المعدّل وتاريخ النفاد محسوبان) + `orgLocations.js` (البراندات والفروع المتأثّرة) — **الحقول العشرة محسوبةٌ كلّها اليوم في مواضع متفرّقة، والناقص جمعها على المستند**",
-      "guardTest": "src/services/documents/documents.test.js",
+      "guardTest": "src/services/intelligence/requisitionContext.test.js",
       "touches": [
         "src/services/documents/schemas/pr.js",
         "src/services/intelligence/operationalIntelligence.js"
@@ -1135,14 +1135,18 @@
         "الطلب بلا سياقٍ لا يُرسَل: حارسٌ يمنع الإرسال لا يكتفي بالتنبيه",
         "الأثر التشغيليّ مقروءٌ بالعربيّة: «تأخيرُ هذا أسبوعًا يوقف ٣ براندات و٧ فروع عن ٤ أصناف منيو»",
         "اختبارٌ يثبت أنّ تغيّر المخزون يغيّر تاريخ النفاد على الطلب المفتوح"
-      ]
+      ],
+      "evidence": {
+        "commit": "3a3d960",
+        "closedOn": "2026-08-18"
+      }
     },
     {
       "id": "FNB-602",
       "title": "الأولويّة تُحسب — Planned · Normal · Urgent · Critical",
       "milestone": "ق٥",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ق‑١٩"
       ],
@@ -1150,7 +1154,7 @@
         "FNB-601"
       ],
       "nucleus": "`src/services/tasks/priority.js` (محرّك الأولويّة المحسوبة من خطة التنفيذ الميدانيّ — ت٣) + `tasks/dueTime.js` (`documentDeadline` — الاستحقاق محسوبًا لا مخزَّنًا) — **يُعاد استعمالهما، ولا يُبنى محرّك أولويّةٍ ثانٍ للمشتريات**",
-      "guardTest": "src/services/tasks/priority.test.js",
+      "guardTest": "src/services/intelligence/requisitionContext.test.js",
       "touches": [
         "src/services/tasks/priority.js",
         "src/services/documents/schemas/pr.js"
@@ -1162,7 +1166,11 @@
         "الترتيب في صندوق المشتريات بالأولويّة المحسوبة لا بتاريخ الإنشاء",
         "تصعيدٌ يدويٌّ ممكنٌ بسببٍ مسجَّل — الحساب يقترح والإنسان يحكم",
         "اختبارٌ يثبت أنّ صنفًا نفد مخزونه في فرعٍ واحد لا يساوي صنفًا نفد في عشرة"
-      ]
+      ],
+      "evidence": {
+        "commit": "3a3d960",
+        "closedOn": "2026-08-18"
+      }
     },
     {
       "id": "FNB-603",

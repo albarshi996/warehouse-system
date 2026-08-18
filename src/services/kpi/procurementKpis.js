@@ -22,6 +22,7 @@
  * (PO يحمل `links.PR`، وGRN يحمل `links.PO`) لا بالنصّ.
  */
 import { toMillis } from '../documents/inbox.js';
+import { dimensionsOf } from '../org/orgLocations.js';
 
 const DAY = 86400000;
 
@@ -173,5 +174,106 @@ export function computeProcurementKpis(docs, opts = {}) {
     otd: supplierOtd(scoped),
     stockout: stockoutRate(scoped),
     basis: { windowDays: opts.windowDays || null, scopedDocs: scoped.length },
+  };
+}
+
+/* ═══════════════ ‹FNB-603› البُعد التنظيميّ ورؤية الحالة ═══════════════ */
+
+/**
+ * ‹FNB-603› المقاييس **ببُعد الفرع أو البراند أو القطاع** — لا مقياسَ جديد.
+ *
+ * التحقّق العدائيّ أثبت أنّ متابعة SLA مبنيّةٌ وحيّةٌ على شاشتين، فالمهمّة
+ * **وصلٌ لا بناء**: نفس الدوال الأربع تُشغَّل على مستنداتٍ مُرشَّحة بالبُعد.
+ * ومن بناها ثانيةً صنع مقياسين لشيءٍ واحد يتباعدان أوّل تعديل.
+ *
+ * والترشيح بالرمز المختوم على المستند (`costCenter`) أو بأبعاده المشتقّة —
+ * ومستندٌ بلا رمزٍ يدخل «غير مربوط» ولا يذوب في المجموع بصمت.
+ *
+ * @param {object[]} docs المستندات
+ * @param {Map} orgIndex فهرس الشجرة
+ * @param {{level?:'branch'|'brand'|'sector', nowMs?:number, windowDays?:number}} [opts]
+ * @returns {{byCode:Map<string,object>, unlinked:object|null}}
+ */
+export function procurementKpisByOrg(docs, orgIndex, opts = {}) {
+  const level = opts.level || 'branch';
+  const groups = new Map();
+  const unlinkedDocs = [];
+
+  for (const doc of Array.isArray(docs) ? docs : []) {
+    const code = orgIndex ? dimensionsOf(orgIndex, doc)?.[level]?.code : '';
+    if (!code) {
+      unlinkedDocs.push(doc);
+      continue;
+    }
+    const list = groups.get(code) || [];
+    list.push(doc);
+    groups.set(code, list);
+  }
+
+  const byCode = new Map();
+  for (const [code, list] of groups) {
+    byCode.set(code, { code, docs: list.length, ...computeProcurementKpis(list, opts) });
+  }
+  return {
+    byCode,
+    unlinked: unlinkedDocs.length ? { docs: unlinkedDocs.length, ...computeProcurementKpis(unlinkedDocs, opts) } : null,
+  };
+}
+
+/** مراحل رحلة الشراء — من الطلب حتّى وصول المادّة، بمستنداتها المبنيّة. */
+export const PROCUREMENT_TRAIL = Object.freeze([
+  { id: 'requested', labelAr: 'طُلب', docType: 'PR', state: 'submitted' },
+  { id: 'approved', labelAr: 'اعتُمد', docType: 'PR', state: 'approved' },
+  { id: 'quoted', labelAr: 'قُورنت العروض', docType: 'RFQ', state: 'approved', optional: true },
+  { id: 'ordered', labelAr: 'صدر أمر الشراء', docType: 'PO', state: 'approved' },
+  { id: 'received', labelAr: 'وصلت المادّة', docType: 'GRN', state: 'done' },
+  { id: 'inspected', labelAr: 'فُحصت', docType: 'QC', state: 'done', optional: true },
+]);
+
+const RANK = { draft: 0, submitted: 1, approved: 2, done: 3, cancelled: -1, rejected: -1 };
+const reached = (actual, wanted) => (RANK[String(actual)] ?? -1) >= (RANK[String(wanted)] ?? 0) && (RANK[String(actual)] ?? -1) >= 0;
+
+/**
+ * ‹FNB-603› **رؤية الحالة من PR حتّى الوصول في سطرٍ واحد** — والتأخّر
+ * يُنسب إلى **مرحلته** لا إلى الطلب جملةً: «تأخّر» بلا موضعٍ لا يُعالَج.
+ *
+ * @param {object[]} docs مستندات الرحلة الواحدة (PR وأحفاده)
+ * @param {{nowMs?:number, stageDays?:number}} [opts]
+ * @returns {{stage, label, reached:string[], stalledAt:string, stalledDays:number, done:boolean}}
+ */
+export function procurementStatus(docs = [], opts = {}) {
+  const byType = new Map();
+  for (const d of Array.isArray(docs) ? docs : []) {
+    const t = String(d?.type || '').toUpperCase();
+    if (t) byType.set(t, [...(byType.get(t) || []), d]);
+  }
+
+  const hit = [];
+  let lastAt = null;
+  for (const step of PROCUREMENT_TRAIL) {
+    const match = (byType.get(step.docType) || []).find((d) => reached(d?.state, step.state));
+    if (!match) continue;
+    hit.push(step.id);
+    const ms = toMillis(match?.updatedAt ?? match?.header?.requestDate ?? match?.header?.issueDate);
+    if (ms != null) lastAt = ms;
+  }
+
+  const last = PROCUREMENT_TRAIL.filter((s) => hit.includes(s.id)).pop() || null;
+  const done = hit.includes('received');
+  // ما المرحلة التالية المنتظَرة؟ عندها يقف التأخّر لا عند الطلب كلّه.
+  const next = PROCUREMENT_TRAIL.find((s) => !hit.includes(s.id) && !s.optional);
+  const nowMs = Number(opts.nowMs);
+  const stalledDays = !done && lastAt != null && Number.isFinite(nowMs)
+    ? Math.max(0, Math.round((nowMs - lastAt) / DAY))
+    : 0;
+
+  return {
+    stage: last?.id || '',
+    label: last?.labelAr || 'لم يبدأ',
+    reached: hit,
+    stalledAt: done ? '' : next?.id || '',
+    stalledLabel: done ? '' : next?.labelAr || '',
+    stalledDays,
+    done,
   };
 }
