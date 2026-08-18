@@ -1,15 +1,17 @@
 /**
  * تغذية نقطة البيع ‹FNB-704› — منطق خالص بلا Firebase وبلا DOM.
  *
- * ═══ ما هو محجوبٌ وما ليس ═══
- * قرار **مصدر** البيانات (Foodics مباشرةً · أودو · ملفّ يوميّ) لم يُحسم
- * بعد (ق-O06). لكنّ ثلاثةً من معايير المهمّة الأربعة **لا تتوقّف عليه**:
- *   · **الاتّجاه** محسومٌ بنصّ الخطة: تُسحب ولا تُدفع — البوابة لا تكتب في
- *     نقطة البيع، فهي ليست مصدر مبيعاتٍ بل قارئتها.
- *   · **POS Accuracy** يُقاس بعد الوصول، أيًّا كان الطريق.
+ * ═══ المصدر المعتمَد: **ملفٌّ يوميّ** (قرار المالك ق-O06 · 2026-08-18) ═══
+ * يمرّ بمسار الاستيراد القائم (`excel/`) بمجموعة `posSales` — لا مسارَ
+ * رفعٍ ثانٍ. وأربعة أعمدةٍ لا أكثر: اليوم والفرع وصنف البيع والكمّيّة،
+ * لأنّ ملفًّا بعشرين عمودًا لا يُملأ يوميًّا وملفًّا بأربعةٍ يُملأ.
+ * والمصدران الآخران (أودو · Foodics) يبقيان **معلَنَين غير مفعَّلَين**:
+ * قد يُختار أحدهما لاحقًا بلا هدم شيء — فالمُطبِّع والمقاييس مصدر-محايدة.
+ *
+ * ═══ وثلاثةٌ لا تتوقّف على المصدر أصلًا ═══
+ *   · **الاتّجاه**: تُسحب ولا تُدفع — البوابة قارئةُ مبيعاتٍ لا مصدرُها.
+ *   · **POS Accuracy** يُقاس بعد الوصول أيًّا كان الطريق.
  *   · **انقطاع المصدر** يُكشف بغياب البيانات لا بنوع الموصِّل.
- * فتُبنى الثلاثة الآن، ويبقى **الموصِّل بعينه** وحده معلَّقًا — لا يُبنى
- * موصِّلٌ لمصدرٍ قد لا يُختار، ولا تتعطّل الطبقة بانتظار قرار.
  */
 import { normalizeItemCode } from '../items/itemIdentity.js';
 
@@ -24,10 +26,14 @@ const day = (v) => str(v).slice(0, 10);
  * المتاح دائمًا مهما كان القرار — ولا ينتظر ربطًا تقنيًّا.
  */
 export const POS_SOURCES = Object.freeze({
-  file: { id: 'file', labelAr: 'ملفّ يوميّ يُرفع', ready: true, note: 'متاحٌ دائمًا — لا ينتظر ربطًا تقنيًّا' },
-  odoo: { id: 'odoo', labelAr: 'عبر أودو بعد استيعابه', ready: false, note: 'ينتظر ق-O06' },
-  foodics: { id: 'foodics', labelAr: 'Foodics مباشرةً', ready: false, note: 'ينتظر ق-O06' },
+  file: { id: 'file', labelAr: 'ملفّ يوميّ يُرفع', ready: true, note: 'المصدر المعتمَد (ق-O06 · 2026-08-18)' },
+  odoo: { id: 'odoo', labelAr: 'عبر أودو بعد استيعابه', ready: false, note: 'معلَنٌ غير مفعَّل — بديلٌ لاحق' },
+  foodics: { id: 'foodics', labelAr: 'Foodics مباشرةً', ready: false, note: 'معلَنٌ غير مفعَّل — بديلٌ لاحق' },
 });
+
+/** المصدر المعتمَد بقرار المالك — ومجموعة استيراده في مسار `excel/` القائم. */
+export const DECIDED_SOURCE = 'file';
+export const POS_DATASET = 'posSales';
 
 /**
  * ★ سياسة التغذية — **الاتّجاه محسومٌ لا ينتظر ق-O06**.
@@ -170,4 +176,89 @@ export function measurableWindow({ branch, from, to, feedDays = [] } = {}) {
       `${missing.length} يومًا بلا تغذيةٍ في «${up(branch)}» (${missing.slice(0, 3).join(' · ')}` +
       `${missing.length > 3 ? ' …' : ''}) — لا يُقاس انحرافُ استهلاكٍ على مدّةٍ ناقصة.`,
   };
+}
+
+/* ═══════════════ دفعة اليوم الواحد ‹FNB-704› ═══════════════ */
+
+/**
+ * ★★ **رفعُ اليوم نفسه مرّتين استبدالٌ لا إضافة.**
+ *
+ * أخطر ما في الملفّ اليوميّ: يُرفع ملفٌّ ناقص صباحًا ثمّ يُعاد كاملًا مساءً.
+ * فلو أُضيف الثاني إلى الأوّل تضاعفت المبيعات، وصار الاستهلاك النظريّ ضعف
+ * الحقيقة، **واتُّهم كلّ فرعٍ بأنّه يُخفي**. فالدفعة تُعرَّف بـ(الفرع × اليوم)
+ * ورفعُها ثانيةً **يحلّ محلّ** الأولى — وهو ما يفعله الناس فعلًا لا ما نتمنّاه.
+ *
+ * @param {object[]} rows صفوفٌ مطبَّعة من `normalizeSales`
+ * @returns {{batches:object[], problems:string[]}}
+ *   كلّ دفعة: `{branch, date, id, rows, qty}` — و`id` حتميٌّ فالإعادة تستبدل.
+ */
+export function groupIntoBatches(rows = []) {
+  const map = new Map();
+  const problems = [];
+  for (const r of Array.isArray(rows) ? rows : []) {
+    const branch = up(r?.branch);
+    const date = day(r?.date);
+    if (!branch) {
+      problems.push(`صفٌّ بلا فرعٍ في ${date || 'تاريخٍ مجهول'} — البيع يُنسب لفرعٍ لا للقطاع عامّةً.`);
+      continue;
+    }
+    const id = `${branch}__${date}`;
+    const at = map.get(id) || { id, branch, date, rows: [], qty: 0 };
+    at.rows.push(r);
+    at.qty = Math.round((at.qty + num(r?.qty)) * 1000) / 1000;
+    map.set(id, at);
+  }
+  return { batches: [...map.values()].sort((a, b) => a.date.localeCompare(b.date) || a.branch.localeCompare(b.branch)), problems };
+}
+
+/**
+ * حكم رفع دفعةٍ ‹FNB-704› — يُعرض **قبل** الحفظ لا بعده.
+ *
+ * @param {object} batch دفعةٌ من `groupIntoBatches`
+ * @param {{existing?:object, today?:string, branches?:Set|string[]}} [ctx]
+ * @returns {{ok, mode:'new'|'replace', warnings:string[], problems:string[]}}
+ */
+export function batchVerdict(batch, ctx = {}) {
+  const problems = [];
+  const warnings = [];
+  const branch = up(batch?.branch);
+  const date = day(batch?.date);
+
+  if (!branch || !date) problems.push('دفعةٌ بلا فرعٍ أو تاريخ.');
+
+  // فرعٌ خارج الشجرة: يُمنع — فمبيعاتٌ لفرعٍ لا نعرفه لا تُنسب إلى أحد.
+  const known = ctx.branches instanceof Set ? ctx.branches : new Set([...(ctx.branches || [])].map(up));
+  if (known.size && branch && !known.has(branch)) {
+    problems.push(`«${branch}» ليس فرعًا في الشجرة — تحقّق من رمزه، فمبيعاتٌ لفرعٍ مجهول لا تُنسب إلى أحد.`);
+  }
+
+  // تاريخٌ في المستقبل: خطأ إدخالٍ شائع في الملفّات اليدويّة.
+  if (ctx.today && date > day(ctx.today)) {
+    problems.push(`تاريخ الدفعة ${date} بعد اليوم — مبيعاتٌ لم تقع بعد.`);
+  }
+
+  const existing = ctx.existing;
+  const mode = existing ? 'replace' : 'new';
+  if (existing) {
+    warnings.push(
+      `رُفعت مبيعات ${date} لـ«${branch}» من قبل (${num(existing.qty)} وحدة) — ` +
+        `هذا الرفع **يحلّ محلّها** بـ${num(batch?.qty)} وحدة، ولا يُضاف إليها.`
+    );
+  }
+
+  return { ok: problems.length === 0, mode, warnings, problems };
+}
+
+/**
+ * أيّام الفرع التي وصلت لها دفعات — مدخل `measurableWindow` أعلاه.
+ * فتُعرف المدّة الصالحة للقياس من الدفعات نفسها لا من ظنّ.
+ */
+export function feedDaysOf(batches = [], branch) {
+  const b = up(branch);
+  return [...new Set(
+    (Array.isArray(batches) ? batches : [])
+      .filter((x) => !b || up(x?.branch) === b)
+      .map((x) => day(x?.date))
+      .filter(Boolean)
+  )].sort();
 }

@@ -92,7 +92,7 @@ function itemLineColumns(qtyLabel, batchLabel = 'Batch / Lot (الدفعة)') {
 }
 
 /** مجموعات قالب الاستيراد القياسيّ — منها يُولَّد الملفّ ومنها يقرأ المستورد. */
-export const IMPORT_TEMPLATE_DATASETS = ['receipt', 'delivery', 'stockSnapshot'];
+export const IMPORT_TEMPLATE_DATASETS = ['receipt', 'delivery', 'stockSnapshot', 'posSales'];
 
 /**
  * بصمة السطر المستورد — تمنع أن يضاعف الاستيرادُ الثاني المخزون.
@@ -254,6 +254,27 @@ export const DATASETS = {
    * كل مخزن، ولكل تشغيلة صلاحيتها. بدون الصلاحية لا يملك حارس **FEFO**
    * (القاعدة الذهبية الثالثة) ما يحكم به، ولا تنبيه لقرب الانتهاء.
    */
+  /**
+   * مبيعات نقطة البيع اليوميّة ‹FNB-704 · قرار المالك ق-O06: **ملفٌّ يوميّ**›.
+   *
+   * أربعة أعمدة لا أكثر: اليوم والفرع وصنف البيع والكمّيّة. وكلّ ما عداها
+   * يُقرأ من الماستر — فملفٌّ بعشرين عمودًا لا يُملأ يوميًّا، وملفٌّ بأربعة
+   * يُملأ. والسعر **لا يُطلب**: التكلفة تُقرأ من دفترنا، والإيراد من أودو
+   * (حدّ ق‑ت١)، فطلبُه هنا يفتح مصدرًا ثانيًا للمال.
+   *
+   * والمرادفات تقبل ما تُخرجه أنظمة نقاط البيع الشائعة بلا إعادة تسمية.
+   */
+  posSales: {
+    key: 'posSales',
+    labelAr: 'مبيعات نقطة البيع (يوميّ)',
+    columns: [
+      { field: 'date', labelAr: 'التاريخ', type: 'string', required: true, aliases: ['date', 'day', 'business date', 'businessdate', 'order date', 'التاريخ', 'اليوم', 'تاريخ البيع'] },
+      { field: 'branch', labelAr: 'الفرع', type: 'string', required: true, aliases: ['branch', 'branch code', 'branchcode', 'outlet', 'store', 'location', 'الفرع', 'رمز الفرع', 'المطعم', 'الفروع'] },
+      { field: 'sku', labelAr: 'صنف البيع (Menu Item)', type: 'string', required: true, aliases: ['sku', 'item', 'item code', 'itemcode', 'product', 'product code', 'menu item', 'menuitem', 'default_code', 'الصنف', 'كود الصنف', 'الكود', 'صنف البيع'] },
+      { field: 'qty', labelAr: 'الكمّيّة المباعة', type: 'number', required: true, nonNegative: true, aliases: ['qty', 'quantity', 'count', 'sold', 'units', 'الكمية', 'العدد', 'المباع', 'الكميه'] },
+    ],
+    templateFields: ['date', 'branch', 'sku', 'qty'],
+  },
   balances: {
     key: 'balances',
     labelAr: 'الأرصدة (Balances)',
