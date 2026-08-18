@@ -82,7 +82,9 @@ const schema = {
         },
         { key: 'priority', label: 'الأولوية (Priority)', kind: 'select', options: ['عاجل', 'عادي', 'منخفض'] },
         { key: 'paymentTerms', label: 'شروط الدفع (Payment Terms)', kind: 'text' },
-        { key: 'channel', label: 'قناة الطلب (Channel)', kind: 'select', options: ['فرع', 'جملة', 'تجزئة', 'مشروع'] },
+        // ‹FNB-305› قنوات القطاع مضافةٌ إلى القائمة القائمة لا بدلًا منها —
+        // فلا ينكسر مستندٌ قديم قناتُه «جملة» أو «تجزئة».
+        { key: 'channel', label: 'قناة الطلب (Channel)', kind: 'select', options: ['فرع', 'جملة', 'تجزئة', 'مشروع', 'ضيافة', 'عقود شركات', 'تطبيقات توصيل'] },
         {
           key: 'holdReason',
           label: 'سبب الإيقاف (Hold Reason)',
