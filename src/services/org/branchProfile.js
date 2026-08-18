@@ -103,9 +103,10 @@ export const WEEK_DAY_LABELS = Object.freeze({
 /**
  * يُسوّي ملفّ فرعٍ خامًا إلى شكله المخزَّن **على صفّ الفرع**.
  *
- * الحقول الثلاثة الأخيرة من الخمسة عشر (Par Level · الأصناف المعتمَدة ·
- * مسار التوريد) **ليست هنا عمدًا**: هي سياسةُ صنفٍ لا صفةَ فرع — تُبنى في
- * FNB-202 وFNB-203 ويقرؤها الملفّ ولا يخزّنها.
+ * حقلا Par Level ومسار التوريد **ليسا هنا عمدًا**: سياسةُ صنفٍ لا صفةَ
+ * فرع (`intelligence/stockPolicy.js` و`items/supplyRoute.js`). أمّا الأصناف
+ * المعتمَدة فقائمةٌ على الفرع نفسه — لأنّ الفرع لا يُسجَّل طرفًا في كتالوج
+ * الأطراف (تسجيله عميلًا ممنوعٌ بحارسٍ صريح).
  */
 export function shapeBranchProfile(raw) {
   const supplyDays = WEEK_DAYS.filter((d) => Boolean(raw?.supplyDays?.[d] ?? raw?.supplyDays?.includes?.(d)));
@@ -121,17 +122,20 @@ export function shapeBranchProfile(raw) {
     state: BRANCH_STATES[raw?.state] ? raw.state : DEFAULT_BRANCH_STATE,
     // ④ المنيو المعتمد — أكواد أصناف بيعٍ يحرسها `approvedMenuProblems`.
     menuSkus: [...new Set((Array.isArray(raw?.menuSkus) ? raw.menuSkus : []).map(up).filter(Boolean))],
-    // ⑤ الطاقة التشغيليّة وحجم المبيعات المتوقّع — مدخلا القطاع (سطرا 83 و85).
+    // ⑤ الأصناف المعتمَدة للفرع ‹FNB-203› — قائمةٌ على صفّ الفرع بلا تسجيله
+    // عميلًا. والفارغة تعني «الكلّ مسموح» لا «لا شيء» (عقد `isItemAllowed`).
+    allowedSkus: [...new Set((Array.isArray(raw?.allowedSkus) ? raw.allowedSkus : []).map(up).filter(Boolean))],
+    // ⑥ الطاقة التشغيليّة وحجم المبيعات المتوقّع — مدخلا القطاع (سطرا 83 و85).
     seats: num(raw?.seats),
     coversPerDay: num(raw?.coversPerDay),
     expectedDailySales: num(raw?.expectedDailySales),
-    // ⑥ السعة التخزينيّة — مقاييس سيّد المواقع نفسها، لا مقياسٌ مخترَع.
+    // ⑦ السعة التخزينيّة — مقاييس سيّد المواقع نفسها، لا مقياسٌ مخترَع.
     storageCapacity: {
       cartons: num(raw?.storageCapacity?.cartons),
       weightKg: num(raw?.storageCapacity?.weightKg),
       volumeM3: num(raw?.storageCapacity?.volumeM3),
     },
-    // ⑦ أيّام التوريد — تقويمٌ أسبوعيّ يقرؤه المقترح (FNB-301).
+    // ⑧ أيّام التوريد — تقويمٌ أسبوعيّ يقرؤه المقترح (FNB-301).
     supplyDays,
     leadDays: num(raw?.leadDays),
     notes: str(raw?.notes),
