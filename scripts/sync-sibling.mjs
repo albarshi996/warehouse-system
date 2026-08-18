@@ -21,7 +21,7 @@ import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { SPOTS } from '../src/services/workspace/identity.js';
+import { identityOnly, tokensOf } from '../src/services/workspace/identity.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -75,6 +75,8 @@ function toSlug(url) {
 
 const card = JSON.parse(readFileSync(join(root, 'workspace.json'), 'utf8'));
 const sibling = card.sibling;
+const me = tokensOf(card);
+const you = tokensOf(sibling);
 
 console.info(
   `\n${BOLD}  مزامنة: ${sibling.name} ${DIM}(${sibling.repo})${OFF}${BOLD} ← إلى → ${card.name} ${DIM}(${card.repo})${OFF}\n`
@@ -123,21 +125,55 @@ if (behind === 0) {
 // ═══ ٣. حارس المحو ════════════════════════════════════════════════════════
 step(3, 'حارس المحو — هل هنا عملٌ خارج الهويّة؟');
 
-/** ما يُسمح أن يختلف هنا عن الشقيق: مواضع الهويّة والوثيقتان المولَّدتان والمولَّد آليًّا. */
-const OWNED = new Set([
-  ...SPOTS.map((s) => s.file),
+/**
+ * مولَّداتٌ يُعاد بناؤها بعد الدمج، فلا معنى لقياس فرقها قبله:
+ * البطاقة نفسها، والوثيقة المولَّدة منها، وخريطتا المعمار.
+ */
+const GENERATED = new Set([
   'workspace.json',
   'WORKSPACE.md',
-  'AGENTS.md',
   'architecture.json',
   'src/generated/arch-wiki.html',
 ]);
 
+/** نصُّ ملفٍّ عند مرجعٍ ما، أو `null` إن لم يكن موجودًا هناك. */
+function blob(ref, file) {
+  try {
+    return execFileSync('git', ['show', `${ref}:${file}`], { cwd: root, encoding: 'utf8' });
+  } catch {
+    return null;
+  }
+}
+
+/** نصُّ ملفٍّ كما هو على القرص الآن (بعد الدمج والختم). */
+function disk(file) {
+  try {
+    return readFileSync(join(root, file), 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * الملفّات التي تختلف عن الشقيق بما **لا يفسّره الختم** — أي عملٌ سيُمحى بالترجيح.
+ *
+ * السؤال عن المضمون لا عن الاسم: لا يكفي أن يكون الملفّ في جدول الهويّة، إذ قد
+ * تكون فيه سطورُ عملٍ إلى جانب سطور الهويّة (سكربتٌ أُضيف في `package.json` مثلًا)
+ * فتُمحى صامتةً. فنختم نسخة الشقيق بهويّتنا: إن طابقت نسختَنا فالفرق هويّةٌ خالصة.
+ */
+function atRisk(files, readOurs) {
+  return files.filter((f) => {
+    if (GENERATED.has(f)) return false;
+    const ours = readOurs(f);
+    const theirs = blob('FETCH_HEAD', f);
+    return !identityOnly({ file: f, ours, theirs, me, you });
+  });
+}
+
 const oursOnly = ahead
-  ? git('diff', '--name-only', base, 'HEAD')
-      .split('\n')
-      .filter(Boolean)
-      .filter((f) => !OWNED.has(f))
+  ? atRisk(git('diff', '--name-only', base, 'HEAD').split('\n').filter(Boolean), (f) =>
+      blob('HEAD', f)
+    )
   : [];
 
 if (oursOnly.length && !force) {
@@ -186,14 +222,14 @@ run('node', ['scripts/identity.mjs']);
 
 git('add', '-A');
 const delta = git('diff', '--name-only', 'FETCH_HEAD').split('\n').filter(Boolean);
-const stray = delta.filter((f) => !OWNED.has(f));
+const stray = atRisk(delta, disk);
 
 console.info(`${DIM}      الفرق عن الشقيق: ${delta.length} ملفًّا${OFF}`);
 console.info(delta.map((f) => `${DIM}        · ${f}${OFF}`).join('\n'));
 
 if (stray.length && !force) {
   stop(
-    `${stray.length} ملفًّا يفرّقنا عن الشقيق خارج جدول الهويّة`,
+    `${stray.length} ملفًّا يفرّقنا عن الشقيق بما لا يفسّره الختم`,
     `${stray.map((f) => `    · ${f}`).join('\n')}\n\n  ${DIM}راجعها: git diff FETCH_HEAD -- <ملفّ> · ثمّ git merge --abort للتراجع.${OFF}`
   );
 }

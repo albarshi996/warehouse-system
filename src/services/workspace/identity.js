@@ -91,7 +91,106 @@ export const SPOTS = [
     severity: 'text',
     what: 'رابط المقترح في بريد الدعوة',
   },
+  {
+    file: 'odoo-proxy/cloudflare-worker/wrangler.toml.example',
+    kinds: ['host'],
+    severity: 'break',
+    what: 'الأصل المسموح في القالب الذي يُنسخ عند النشر',
+  },
+  { file: 'README.md', kinds: ['slug', 'host', 'base'], severity: 'text', what: 'واجهة المستودع' },
+  {
+    file: 'DEVELOPER_GUIDE.md',
+    kinds: ['slug', 'host', 'base'],
+    severity: 'text',
+    what: 'جدول الروابط ومسار التطوير',
+  },
+  { file: 'ROADMAP.md', kinds: ['slug', 'host', 'base'], severity: 'text', what: 'بطاقة المستودع' },
+  {
+    file: 'brandzo-addons/brandzo_warehouse/README.md',
+    kinds: ['slug', 'host', 'base'],
+    severity: 'text',
+    what: 'روابط وحدة أودو',
+  },
+  {
+    file: 'brandzo-addons/brandzo_warehouse/__manifest__.py',
+    kinds: ['slug'],
+    severity: 'text',
+    what: 'موقع الوحدة في بيان أودو',
+  },
+  {
+    file: 'docs/ODOO_INTEGRATION_HANDOFF.md',
+    kinds: ['host'],
+    severity: 'text',
+    what: 'الأصل الذي يضبطه الناشر',
+  },
+  {
+    file: 'docs/عقد-التكامل-مع-أودو.md',
+    kinds: ['host'],
+    severity: 'text',
+    what: 'الأصل المقيَّد في عقد التكامل',
+  },
+  {
+    file: 'public/تقرير-النظام-التفصيلي.html',
+    kinds: ['slug', 'host', 'base'],
+    severity: 'text',
+    what: 'بطاقة الموقع الحيّ في التقرير المنشور',
+  },
+  {
+    file: 'public/nova-meeting/plan.html',
+    kinds: ['host', 'base'],
+    severity: 'text',
+    what: 'روابط البوابة في وثيقة اجتماع نوفا الحاكمة',
+  },
+  {
+    file: 'src/components/pwa/PwaHead.astro',
+    kinds: ['base'],
+    severity: 'text',
+    what: 'تعليقات مسار النشر',
+  },
+  {
+    file: 'src/services/auth/authService.js',
+    kinds: ['base'],
+    severity: 'text',
+    what: 'تعليق المسار الأساسيّ',
+  },
 ];
+
+/**
+ * ما يُعفى من المسح الشامل — وهو **قرارٌ مكتوب لا صمت**.
+ *
+ * المسح في `identity.test.js` يجوب كلّ ملفٍّ متعقَّبٍ بحثًا عن رمز الشقيق، فيلزمه
+ * إعفاءٌ لصنفَين لا ثالث لهما:
+ * - **سجلٌّ تاريخيّ**: أرشيفٌ ومحاضرُ وتقاريرُ صدرت بروابطها يومها؛ ختمُها تزويرٌ.
+ * - **ما يذكر المستودعَين بطبعه**: البطاقة والدستور وآلة الهويّة نفسها، وثوابتُ الاختبارات.
+ *
+ * وكلّ ملفٍّ جديدٍ يذكر الشقيق يسقط خارج هذه القائمة، فيُسقط الاختبار ويُجبر على
+ * قرار: إمّا موضعُ هويّةٍ يُختم، وإمّا إعفاءٌ يُكتب هنا بسببه.
+ */
+export const SWEEP_EXEMPT = [
+  // البطاقة والدستور وآلة الهويّة — تذكر الشقيق عمدًا.
+  'workspace.json',
+  'WORKSPACE.md',
+  'AGENTS.md',
+  'src/services/workspace/identity.js',
+  'src/services/workspace/identity.test.js',
+  // سجلٌّ تاريخيّ لا يُعاد كتابته.
+  'SESSION_HANDOFF.md',
+  'docs/archive/',
+  'docs/إحاطة-كوديكس.md',
+  'public/archive/',
+  // رابطٌ بائتٌ لمستودعٍ ثالثٍ لم يعد قائمًا في المستودعَين معًا.
+  '.agents/skills/testing-brandzo/SKILL.md',
+];
+
+/** الاختبارات تستعمل مسار النشر ثابتًا صريحًا لا إعدادًا مقروءًا، فلا يُختم. */
+const TEST_FILE = /\.test\.(js|mjs)$/;
+
+/** هل هذا المسار معفًى من المسح الشامل؟ (تطابقٌ تامّ أو بادئةُ مجلّد). */
+export function isSweepExempt(path) {
+  const p = String(path).replace(/\\/g, '/');
+  if (TEST_FILE.test(p)) return true;
+  return SWEEP_EXEMPT.some((e) => (e.endsWith('/') ? p.startsWith(e) : p === e));
+}
 
 /** علامتا كتلة الهويّة في `AGENTS.md` — ما بينهما مولَّد، وما حولهما دستورٌ يُحرَّر يدويًّا. */
 export const BLOCK_START = '<!-- identity:start -->';
@@ -165,6 +264,42 @@ export function replaceBlock(text, block) {
     throw new Error(`لم أجد علامتَي ${BLOCK_START} … ${BLOCK_END} — أضِفهما حول كتلة الهويّة.`);
   }
   return `${src.slice(0, i) + BLOCK_START}\n${block}\n${src.slice(j)}`;
+}
+
+/** يستبدل كتلة الهويّة بعلامةٍ محايدة، ليُقارَن ما حولها — أي الدستور — وحده. */
+export function withoutBlock(text) {
+  const src = String(text);
+  const i = src.indexOf(BLOCK_START);
+  const j = src.indexOf(BLOCK_END);
+  if (i === -1 || j === -1 || j < i) return src;
+  return `${src.slice(0, i)}«هويّة»${src.slice(j + BLOCK_END.length)}`;
+}
+
+/** يوحّد نهايات الأسطر قبل المقارنة — المستودع يُطوَّر على ويندوز ويُبنى على لينكس. */
+function lf(text) {
+  return String(text).replace(/\r\n/g, '\n');
+}
+
+/**
+ * **هل يفسّر الختمُ وحدَه اختلافَ نسختَي ملفّ؟**
+ *
+ * هذا حارس المزامنة الحقيقيّ. الدمج يرجّح الشقيق، فكلّ ما هنا وليس عنده يُمحى.
+ * والاكتفاء بقائمة أسماءٍ مسموحٍ لها أن تختلف خطأٌ خفيّ: `package.json` مثلًا في
+ * جدول الهويّة، فلو أضافت إدارة تقنية المعلومات سكربتًا فيه لمُحي صامتًا ومرّ
+ * الحارس مطمئنًّا. ولهذا نسأل عن المضمون لا عن الاسم: نختم نسخة الشقيق بهويّتنا،
+ * فإن طابقت نسختَنا حرفًا بحرف فالفرق هويّةٌ خالصة ولا شيء يُفقد. وإلّا فهنا عملٌ
+ * ليس عنده — يُعرض ويُوقف.
+ *
+ * @param {{file:string, ours:string, theirs:string, me:object, you:object}} args
+ * @returns {boolean}
+ */
+export function identityOnly({ file, ours, theirs, me, you }) {
+  if (ours == null || theirs == null) return false;
+  // الدستور: كتلته مولَّدة، وما حولها يجب أن يكون واحدًا في المستودعَين.
+  if (file === 'AGENTS.md') return lf(withoutBlock(ours)) === lf(withoutBlock(theirs));
+  const spot = SPOTS.find((s) => s.file === file);
+  if (!spot) return false;
+  return lf(stamp(theirs, you, me, spot.kinds)) === lf(ours);
 }
 
 /** كتلة الهويّة في رأس `AGENTS.md` — أوّل ما يقرؤه الوكيل قبل أيّ عمل. */

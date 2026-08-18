@@ -11,6 +11,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
   KINDS,
@@ -23,6 +24,8 @@ import {
   replaceBlock,
   agentsBlock,
   workspaceDoc,
+  isSweepExempt,
+  identityOnly,
 } from './identity.js';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
@@ -169,6 +172,93 @@ test('البطاقة وكتلة الدستور مطابقتان للمولَّد
 
   const agents = fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8');
   assert.equal(agents, replaceBlock(agents, agentsBlock(card)), 'كتلة الهويّة في AGENTS.md');
+});
+
+/** امتداداتٌ لا نصَّ فيها — تُتجاوَز في المسح الشامل توفيرًا للوقت لا تسامحًا. */
+const BINARY = /\.(png|jpe?g|gif|ico|webp|pdf|zip|woff2?|ttf|eot|mp[34]|xlsx?|docx?|pptx?)$/i;
+
+test('لا رمزَ للشقيق في ملفٍّ متعقَّبٍ خارج جدول المواضع والمستثنيات المعلنة', () => {
+  const sibling = tokensOf(card.sibling);
+  const spots = new Set(SPOTS.map((s) => s.file));
+  const tracked = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' })
+    .split('\0')
+    .filter(Boolean);
+
+  const leaked = [];
+  for (const file of tracked) {
+    if (spots.has(file) || isSweepExempt(file) || BINARY.test(file)) continue;
+    let text;
+    try {
+      text = fs.readFileSync(path.join(root, file), 'utf8');
+    } catch {
+      continue; // ملفٌّ متعقَّبٌ غير موجودٍ على القرص (checkout جزئيّ) — ليس شأن هذا الاختبار
+    }
+    const found = leaks(text, sibling, KINDS);
+    if (found.length) leaked.push(`${file} ← ${found.join(' · ')}`);
+  }
+
+  assert.deepEqual(
+    leaked,
+    [],
+    'رمزُ الشقيق في ملفٍّ لا يحرسه أحد. القرار: إمّا يُضاف إلى SPOTS فيُختم، وإمّا إلى SWEEP_EXEMPT بسببٍ مكتوب'
+  );
+});
+
+test('الاستثناء يطابق الاسم التامّ وبادئةَ المجلّد وملفّات الاختبار، لا ما سواها', () => {
+  assert.ok(isSweepExempt('workspace.json'));
+  assert.ok(isSweepExempt('docs/archive/PROJECT_MEMORY.md'), 'بادئة مجلّد');
+  assert.ok(isSweepExempt('src/services/auth/pageAccess.test.js'), 'ثوابت الاختبارات');
+  assert.ok(!isSweepExempt('docs/archive.md'), 'بادئة المجلّد لا تبتلع ملفًّا مجاورًا');
+  assert.ok(!isSweepExempt('src/pages/dashboard/archive.astro'));
+});
+
+// ═══ حارس المحو: هل يفسّر الختمُ وحدَه الفرق؟ ═════════════════════════════
+
+test('فرقٌ يفسّره الختم وحدَه ⇒ لا شيء يُمحى', () => {
+  const theirs = "site: 'https://warehouse-art.github.io', base: '/brand-zo-hub'";
+  const ours = "site: 'https://albarshi996.github.io', base: '/warehouse-system'";
+  assert.equal(identityOnly({ file: 'astro.config.mjs', ours, theirs, me, you }), true);
+});
+
+test('★ سطرُ عملٍ داخل ملفّ هويّة يُكشف — وهو الخطأ الذي تمرّ به قائمةُ الأسماء', () => {
+  const theirs = '{\n  "name": "brand-zo-hub",\n  "scripts": { "a": "x" }\n}';
+  const ours = '{\n  "name": "warehouse-system",\n  "scripts": { "a": "x", "b": "y" }\n}';
+  assert.equal(
+    identityOnly({ file: 'package.json', ours, theirs, me, you }),
+    false,
+    'سكربتٌ أضافته إدارة تقنية المعلومات كان سيُمحى صامتًا'
+  );
+});
+
+test('الدستور يُقاس خارج كتلة الهويّة وحدها', () => {
+  const wrap = (who, body) => `# دستور\n${BLOCK_START}\n> أنت في ${who}\n${BLOCK_END}\n${body}`;
+  assert.equal(
+    identityOnly({
+      file: 'AGENTS.md',
+      ours: wrap('أ', 'قواعد'),
+      theirs: wrap('ب', 'قواعد'),
+      me,
+      you,
+    }),
+    true,
+    'اختلاف الكتلة وحده مقبول — فهي مولَّدة'
+  );
+  assert.equal(
+    identityOnly({
+      file: 'AGENTS.md',
+      ours: wrap('أ', 'قواعدنا'),
+      theirs: wrap('ب', 'قواعد'),
+      me,
+      you,
+    }),
+    false,
+    'قاعدةٌ خارج الكتلة تُكشف'
+  );
+});
+
+test('ملفٌّ لا يعرفه الجدول، أو غائبٌ عند أحدهما، يُعدّ في خطر', () => {
+  assert.equal(identityOnly({ file: 'docs/it-note.md', ours: 'x', theirs: 'x', me, you }), false);
+  assert.equal(identityOnly({ file: 'package.json', ours: 'x', theirs: null, me, you }), false);
 });
 
 test('البطاقة تحمل ما يلزم المزامنة: عنوان الشقيق ومجلّده وريموته', () => {

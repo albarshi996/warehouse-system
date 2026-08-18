@@ -121,7 +121,7 @@
 ```bash
 # التثبيت النظيف (ضع المجلد الحاوي في addons_path)
 ./odoo-bin -c odoo.conf \
-    --addons-path=/path/to/odoo/addons,/path/to/warehouse-system-main/brandzo-addons \
+    --addons-path=/path/to/odoo/addons,/path/to/repo-clone/brandzo-addons \
     -d brandzo_test -i brandzo_warehouse --stop-after-init
 
 # تشغيل اختبارات القبول (حُرّاس القواعد الذهبية)

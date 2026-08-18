@@ -3636,11 +3636,15 @@
         "GENERATED_NOTE",
         "KINDS",
         "SPOTS",
+        "SWEEP_EXEMPT",
         "agentsBlock",
+        "identityOnly",
+        "isSweepExempt",
         "leaks",
         "replaceBlock",
         "stamp",
         "tokensOf",
+        "withoutBlock",
         "workspaceDoc"
       ],
       "collections": []

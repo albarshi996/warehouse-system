@@ -4,9 +4,9 @@ import pwaServiceWorker from './src/integrations/pwa-sw.mjs';
 
 // https://astro.build/config
 export default defineConfig({
-  // الرابط الأساسي لموقعك على جيتهاب
+  // أصل النشر ومساره — مختومان من workspace.json (npm run identity)
   site: 'https://albarshi996.github.io',
-  // اسم المستودع لكي تعمل الروابط الداخلية بشكل صحيح
+  // مسار المستودع تحت الأصل، لتعمل الروابط الداخلية
   base: '/warehouse-system',
 
   // pwaServiceWorker يولّد sw.js بعد البناء (تثبيت + عمل دون اتصال + تحديث ذاتي).

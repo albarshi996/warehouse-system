@@ -52,12 +52,24 @@ git cherry-pick <sha>
 | `astro.config.mjs` | **رابط النشر ومساره** — يكسر شيئًا حيًّا إن أخطأ |
 | `src-tauri/tauri.conf.json` | **واجهة تطبيق سطح المكتب** — يكسر شيئًا حيًّا إن أخطأ |
 | `odoo-proxy/firebase-function/index.js` | **الأصل المسموح لوكيل أودو** — يكسر شيئًا حيًّا إن أخطأ |
+| `odoo-proxy/cloudflare-worker/wrangler.toml.example` | **الأصل المسموح في القالب الذي يُنسخ عند النشر** — يكسر شيئًا حيًّا إن أخطأ |
 | `package.json` | اسم الحزمة وعناوينها |
 | `package-lock.json` | اسم الحزمة |
 | `odoo-proxy/cloudflare-worker/worker.js` | مثال الأصل في التوثيق |
 | `src/components/executive-review/ExecutiveReviewShell.astro` | تعليق مسار النشر |
 | `src/components/executive-review/ReviewSections.astro` | تعليق مسار النشر |
 | `src/pages/dashboard/archive.astro` | رابط المقترح في بريد الدعوة |
+| `README.md` | واجهة المستودع |
+| `DEVELOPER_GUIDE.md` | جدول الروابط ومسار التطوير |
+| `ROADMAP.md` | بطاقة المستودع |
+| `brandzo-addons/brandzo_warehouse/README.md` | روابط وحدة أودو |
+| `brandzo-addons/brandzo_warehouse/__manifest__.py` | موقع الوحدة في بيان أودو |
+| `docs/ODOO_INTEGRATION_HANDOFF.md` | الأصل الذي يضبطه الناشر |
+| `docs/عقد-التكامل-مع-أودو.md` | الأصل المقيَّد في عقد التكامل |
+| `public/تقرير-النظام-التفصيلي.html` | بطاقة الموقع الحيّ في التقرير المنشور |
+| `public/nova-meeting/plan.html` | روابط البوابة في وثيقة اجتماع نوفا الحاكمة |
+| `src/components/pwa/PwaHead.astro` | تعليقات مسار النشر |
+| `src/services/auth/authService.js` | تعليق المسار الأساسيّ |
 | `AGENTS.md` · `WORKSPACE.md` | كتلة الهويّة والبطاقة — مولَّدتان |
 
 ```bash
