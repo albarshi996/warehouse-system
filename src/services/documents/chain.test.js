@@ -672,8 +672,8 @@ test('مخطّطات F4 الخمسة مسجّلة — والمجموعة صار�
     assert.equal(s.signatures.length, 3);
     assert.ok(typeof s.warnings === 'function');
   }
-  assert.equal(readyTypes().length, 38, 'ثمانية وثلاثون نموذجًا بعد التحصيل الميدانيّ (م٥-أ)');
-  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 38);
+  assert.equal(readyTypes().length, 41, 'واحدٌ وأربعون نموذجًا بعد دورة الإنتاج ‹FNB-502›');
+  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 41);
 });
 
 test('البضاعة المحميّة: المخطّطات الثلاثة مسجّلة وكاملة البنية', () => {

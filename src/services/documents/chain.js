@@ -32,6 +32,12 @@ export const OUTBOUND_CHAIN = ['SO', 'PICK', 'PACK', 'DN', 'GP'];
 export const RETURN_CHAIN = ['RET', 'CN'];
 export const COUNT_CHAIN = ['CC', 'ADJ'];
 /**
+ * ‹FNB-502› سلسلة الإنتاج: أمرٌ ← صرفُ موادّ ← استلامُ منتَج. ثلاث حلقاتٍ
+ * لأنّ الرصيد يمرّ بموقعٍ وسيط (`PRODUCTION`) بين خروج الموادّ ودخول
+ * المنتَج — كما يمرّ النقلُ بمخزن النقل. والأمرُ نفسه لا يقيّد شيئًا.
+ */
+export const PRODUCTION_CHAIN = ['PRO', 'MIS', 'PRC'];
+/**
  * سلسلة الفوترة: الفاتورة تُشتقّ من إذن التسليم. لماذا سلسلةٌ مستقلّة لا حلقة
  * في الصادر؟ لأن إذن التسليم **يتفرّع**: منه يخرج تصريحُ البوابة (رقابة الخروج)
  * ومنه تخرج الفاتورة (الأثر المالي) — مساران لا مسارٌ واحد. الخطّية لا تحتمل
@@ -81,7 +87,7 @@ export const REJECTION_CHAIN = ['QC', 'SRN'];
 export const VAN_CHAIN = ['VLD', 'VSI', 'VRT', 'VSR'];
 
 /** كل السلاسل — لتجول عليها الدوال بلا معرفة مسبقة بأيّها. */
-export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN, TRANSFER_CHAIN, INTERNAL_PROCUREMENT_CHAIN, DELIVERY_CHAIN, REJECTION_CHAIN, VAN_CHAIN];
+export const CHAINS = [PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, BILLING_CHAIN, TRANSFER_CHAIN, INTERNAL_PROCUREMENT_CHAIN, DELIVERY_CHAIN, REJECTION_CHAIN, VAN_CHAIN, PRODUCTION_CHAIN];
 
 /**
  * الأنواع المستقلّة عن سلاسل الاشتقاق — **بسببٍ مكتوب لكلٍّ منها**
@@ -123,6 +129,11 @@ export function derivationTargets(type) {
     GRN: ['QC', 'VRT'],
     QC: ['PUTAWAY', 'SRN', 'PACK'],
     PICK: ['PACK', 'QC'],
+    // ‹FNB-502› أمر الإنتاج يتفرّع: صرفُ الموادّ واستلامُ المنتَج — كلاهما
+    // ابنٌ له مباشرةً، فالاستلام لا ينتظر الصرف مستندًا بل واقعًا.
+    PRO: ['MIS', 'PRC'],
+    MIS: [],
+    PRC: [],
     VLD: ['VSI', 'VRT'],
     VSI: [],
   };
@@ -210,6 +221,10 @@ const LINE_MAP = {
   // فمفتاح رصيد الاستلام (يضمّ التشغيلة) يطابق مفتاح ما يُسحب منه لاحقًا فحصًا وتخزينًا.
   // ‹FNB-405› ودفعةُ المورّد وتاريخُ الإنتاج يُورَّثان مع الدفعة والصلاحيّة —
   // فالتتبّع يتّصل من إرساليّة المورّد إلى الرفّ (سطر 375) ولا ينقطع عند الفحص.
+  // ‹FNB-502› الإنتاج: بنود الصرف **لا تُنسخ** من الأمر — تُملأ بانفجار
+  // الوصفة (موادُّ خامّ لا منتَجات). وبنود الاستلام تحمل المخطَّط ليُقاس
+  // عليه الـYield.
+  'PRO>PRC': { sku: 'sku', barcode: 'barcode', description: 'description', qtyPlanned: 'qtyPlanned', uom: 'uom' },
   'GRN>QC': { sku: 'sku', barcode: 'barcode', description: 'description', qtyReceived: 'qtyInspected', batch: 'batch', expiryDate: 'expiry', supplierBatch: 'supplierBatch', mfgDate: 'mfgDate' },
   // المقبول جودةً وحده هو ما يُخزَّن — لا المستلَم كلّه — بتشغيلته وصلاحيته الموروثتين.
   'QC>PUTAWAY': { sku: 'sku', barcode: 'barcode', description: 'description', qtyAccepted: 'qty', batch: 'batch', expiry: 'expiry', supplierBatch: 'supplierBatch', mfgDate: 'mfgDate' },
@@ -330,6 +345,9 @@ const HEADER_MAP = {
   // على موقعها التنظيميّ بلا إعادة إدخالٍ تُخطئ في المنتصف. الغائب يبقى
   // غائبًا (لا اختراع)، وحقل PR القديم اسمه `budgetCode` فيُوحَّد هنا.
   'PR>PO': { warehouse: 'warehouse', budgetCode: 'costCenter', costCenter: 'costCenter' },
+  // ‹FNB-502› وحدة الإنتاج ومركز تكلفتها يعبران إلى الصرف والاستلام.
+  'PRO>MIS': { warehouse: 'warehouse', costCenter: 'costCenter' },
+  'PRO>PRC': { warehouse: 'warehouse', costCenter: 'costCenter' },
   'PO>GRN': { supplier: 'supplier', costCenter: 'costCenter' },
   'GRN>QC': { supplier: 'supplier', costCenter: 'costCenter' },
   'QC>PUTAWAY': { supplier: 'supplier', costCenter: 'costCenter' },

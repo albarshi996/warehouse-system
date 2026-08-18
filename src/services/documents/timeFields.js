@@ -89,6 +89,14 @@ export const TIME_FIELD_MAP = Object.freeze({
   QC: { inspectionDate: E, expiry: A, mfgDate: A },
   PUTAWAY: { putawayDate: E, expiry: A, mfgDate: A },
 
+  /* ═══ الإنتاج ‹FNB-502› ═══ */
+  // `productionDate` **موعدٌ مخطَّط** (متى يُنتَج) فيُقبل في المستقبل؛
+  // و`orderDate` و`issueDate` و`receivedAt` ختومُ وقائع؛ و`mfgDate`/`expiry`
+  // سمتا دفعةٍ كما في الوارد.
+  PRO: { orderDate: E, productionDate: P },
+  MIS: { issueDate: E, expiry: A },
+  PRC: { receivedAt: E, mfgDate: A, expiry: A },
+
   /* ═══ الصادر ═══ */
   // ‹EXE-301› `mustShipBy` **قيدٌ تشغيليّ** (متى يُقفل استلام الناقل) لا وعدٌ
   // للعميل — و`requiredDate` هو الوعد. وقد يبعد بينهما ساعات، والذي يقود عمل

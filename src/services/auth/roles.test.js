@@ -29,11 +29,13 @@ test('★★ لا دورٌ يُفقد: الستّة عشر السابقة كلّ
     assert.equal(ROLES[id].id, id);
     assert.ok(ROLES[id].label, `الدور «${id}» بلا اسمٍ عربيّ`);
   }
-  assert.equal(Object.keys(ROLES).length, PRE_FNB_ROLES.length + 2, 'دوران اثنان فقط أُضيفا');
+  // ‹FNB-107› دورا القطاع، ثمّ ‹FNB-502 · ق-O05› الشيف التنفيذيّ.
+  assert.equal(Object.keys(ROLES).length, PRE_FNB_ROLES.length + 3, 'ثلاثة أدوارٍ أُضيفت لا أكثر');
 });
 
-test('دورا القطاع معرَّفان: صاحبُ المدخل ومصدرُ البيانات', () => {
-  assert.deepEqual(FNB_ROLES, ['fnb_manager', 'branch_manager']);
+test('أدوار القطاع معرَّفة: صاحبُ المدخل ومصدرُ البيانات وصاحبُ الوصفة', () => {
+  // ‹FNB-502› الشيف التنفيذيّ يملك «الوصفات ومعايير الإنتاج» (سطر 525).
+  assert.deepEqual(FNB_ROLES, ['fnb_manager', 'branch_manager', 'executive_chef']);
   for (const id of FNB_ROLES) {
     assert.ok(ROLES[id], `دور القطاع «${id}» غير معرَّف`);
     assert.equal(getRole(id).id, id);

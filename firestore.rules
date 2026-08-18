@@ -180,7 +180,11 @@ service cloud.firestore {
     //    المخزون الذي أدخلها. و⚖️ الإشعار الدائن CN للمالية كذلك. الفصل
     //    بين مَن يُدخل ومَن يعتمد هو الحارس، وهذه الطبقة على الخادم.
     function approveRoles(docType) {
-      return docType == 'GRN'     ? ['qc_inspector', 'warehouse_manager']
+      // ‹FNB-502› دورة الإنتاج: الشيف التنفيذيّ يعتمد، والمدير معتمِدٌ أعلى.
+      return docType == 'PRO'     ? ['executive_chef', 'warehouse_manager']
+           : docType == 'MIS'     ? ['executive_chef', 'warehouse_manager']
+           : docType == 'PRC'     ? ['executive_chef', 'warehouse_manager']
+           : docType == 'GRN'     ? ['qc_inspector', 'warehouse_manager']
            : docType == 'PR'      ? ['warehouse_manager', 'purchase_officer']
            : docType == 'PO'      ? ['warehouse_manager', 'finance_manager']
            : docType == 'QC'      ? ['qc_inspector', 'warehouse_manager']
@@ -235,7 +239,10 @@ service cloud.firestore {
            : [];
     }
     function completeRoles(docType) {
-      return docType == 'GRN'     ? ['storekeeper', 'warehouse_manager']
+      return docType == 'PRO'     ? ['executive_chef', 'warehouse_manager']
+           : docType == 'MIS'     ? ['storekeeper', 'warehouse_manager']
+           : docType == 'PRC'     ? ['storekeeper', 'warehouse_manager']
+           : docType == 'GRN'     ? ['storekeeper', 'warehouse_manager']
            : docType == 'PR'      ? ['purchase_officer', 'warehouse_manager']
            : docType == 'PO'      ? ['purchase_officer', 'warehouse_manager']
            : docType == 'QC'      ? ['qc_inspector', 'warehouse_manager']
@@ -1225,7 +1232,7 @@ service cloud.firestore {
     // **نسخٌ لا تعديل:** المعرّف `SKU@vN` والحفظ نسخةٌ جديدة تشير لسابقتها —
     // فتاريخ الاستهلاك يُفسَّر بوصفة يومه لا بوصفة اليوم. القراءة لكلّ مسجَّل
     // (الانفجار والاستهلاك النظريّ يحتاجانها)، والكتابة للمديرَين — وملكيّة
-    // `executive_chef` قرارُ المالك ق-O05 تُضاف حين يُحسم، لا ضمنًا.
+    // ‹FNB-502› `executive_chef` أُضيف بالسلوك الافتراضيّ المعلَن لق-O05.
     // القاعدة حارسُ صلاحيّةٍ لا قاعدة عمل: التحقّق والترقيم في recipe.js.
     match /recipes/{versionId} {
       allow read: if signedIn();

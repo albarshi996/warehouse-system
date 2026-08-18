@@ -33,6 +33,9 @@ export const ROLES = {
   // **مصدر بيانات** لا متلقٍّ فقط (الاستلام والاستهلاك والهدر والجرد المختصر).
   fnb_manager:       { id: 'fnb_manager',       label: 'مدير قطاع الأغذية', emoji: '🍽️', color: '#714B67' },
   branch_manager:    { id: 'branch_manager',    label: 'مدير الفرع',        emoji: '🏪', color: '#0e7490' },
+  // ‹FNB-502 · ق-O05› الشيف التنفيذيّ يملك «الوصفات ومعايير الإنتاج» (سطر 525)
+  // — أُضيف بالسلوك الافتراضيّ المعلَن في الخطة، والمدير معتمِدٌ أعلى.
+  executive_chef:    { id: 'executive_chef',    label: 'الشيف التنفيذيّ',   emoji: '👨‍🍳', color: '#b45309' },
 };
 
 /**
@@ -46,7 +49,7 @@ export const FNB_OWNED_INPUTS = Object.freeze([
 ]);
 
 /** أدوار القطاع — من يقرأ شجرته وطلباته. */
-export const FNB_ROLES = ['fnb_manager', 'branch_manager'];
+export const FNB_ROLES = ['fnb_manager', 'branch_manager', 'executive_chef'];
 
 /** الدور الافتراضي الآمن لمن لا ملف دور له بعد (أقل صلاحية). */
 export const DEFAULT_ROLE = 'viewer';

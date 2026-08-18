@@ -77,20 +77,22 @@ test('كلّ المستندات ممثَّلة — لا نوع بلا زمن', (
   const stats = timeFieldStats();
   // الأعداد تُحدَّث **بقصد** عند إضافة نوعٍ جديد — فتغيّرها إعلانٌ لا مفاجأة.
   assert.equal(stats.types, Object.keys(SCHEMAS).length, 'كلّ نوعٍ ممثَّل');
-  assert.equal(stats.types, 38, 'الـ٣٥ الأصليّة + RCP وSPV وRCV');
+  assert.equal(stats.types, 41, 'الـ٣٨ + دورة الإنتاج PRO وMIS وPRC ‹FNB-502›');
   // ‹EXE-301› +2: `mustShipBy` في SO وPICK — مهلة الشحن التشغيليّة.
   // ‹FNB-405› +3: `mfgDate` في GRN وQC وPUTAWAY — سمةُ دفعةٍ تعبر السلسلة.
-  assert.equal(stats.total, 73, 'مجموع الحقول الزمنيّة المصنَّفة');
+  // ‹FNB-502› +7: دورة الإنتاج الثلاثة بحقولها.
+  assert.equal(stats.total, 80, 'مجموع الحقول الزمنيّة المصنَّفة');
 });
 
 test('التوزيع: ختم الواقعة هو الغالب، والسمة تليه', () => {
   const { counts } = timeFieldStats();
-  assert.equal(counts.event, 37);
-  // ‹FNB-405› +3: تاريخ الإنتاج سمةٌ كالصلاحيّة — وقع في مصنع المورّد لا عندنا.
-  assert.equal(counts.attribute, 21);
-  assert.equal(counts.planned, 11, 'ومنها mustShipBy في SO وPICK ‹EXE-301›');
+  assert.equal(counts.event, 40);
+  // ‹FNB-405› تاريخ الإنتاج سمةٌ كالصلاحيّة — وقع في مصنع المورّد لا عندنا.
+  assert.equal(counts.attribute, 24);
+  // ‹FNB-502› +1: `productionDate` موعدٌ مخطَّط يُقبل في المستقبل.
+  assert.equal(counts.planned, 12, 'ومنها mustShipBy ‹EXE-301› وproductionDate ‹FNB-502›');
   assert.equal(counts.reference, 4);
-  assert.equal(counts.event + counts.attribute + counts.planned + counts.reference, 73);
+  assert.equal(counts.event + counts.attribute + counts.planned + counts.reference, 80);
 });
 
 /* ═══════════ ٣. القواعد التي لا تُخرق ═══════════ */

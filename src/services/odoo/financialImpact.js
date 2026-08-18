@@ -39,6 +39,13 @@ export const FINANCIAL_IMPACT = Object.freeze({
   GRN: { financial: true, stockEffect: true, odooDoc: 'account.move', note: 'الاستلام يُنشئ التزامًا على المنشأة (بضاعةٌ مستلمة لم تُفوتر) — والقيد في أودو.' },
   QC: { financial: false, stockEffect: true, odooDoc: null, note: 'عزلٌ داخليّ: البضاعة تنتقل للحجر ولا تتغيّر قيمتها ولا مالكها.' },
   PUTAWAY: { financial: false, stockEffect: true, odooDoc: null, note: 'نقلٌ داخليّ من الرصيف إلى الرفّ — لا أثر ماليّ.' },
+  // ‹FNB-502› الإنتاج **تحويلُ قيمةٍ لا خلقُها**: موادُّ بقيمةٍ تصير منتَجًا
+  // بقيمةٍ، والملكيّة لم تخرج من المنشأة. فلا قيدَ ماليّ عندنا ولا في أودو —
+  // والتكلفة تُقرأ من الحركة (استهلاكٌ داخليّ). ومن جعله ماليًّا ضاعف
+  // تكلفة المخزون: خصمها مادّةً وأثبتها منتَجًا.
+  PRO: { financial: false, stockEffect: false, odooDoc: 'mrp.production', note: 'أمر إنتاج: خطّةٌ لا حركة — يظهر في أودو أمرَ تصنيعٍ ولا قيدَ له.' },
+  MIS: { financial: false, stockEffect: true, odooDoc: null, note: 'صرفُ موادٍّ للإنتاج: نقلٌ داخليّ إلى موقع الإنتاج — القيمة تتحوّل ولا تخرج.' },
+  PRC: { financial: false, stockEffect: true, odooDoc: null, note: 'استلامُ المنتَج: نقلٌ داخليّ من موقع الإنتاج إلى الرفّ — لا مالكَ تغيّر.' },
   SRN: { financial: false, stockEffect: false, odooDoc: null, note: 'إشعار رفضٍ توثيقيّ — الفحص عزل المرفوض أصلًا، والأثر الماليّ عند إرجاعه فعلًا.' },
   VRT: { financial: true, stockEffect: true, odooDoc: 'account.move', note: 'إرجاعٌ للمورّد: يُنقص الالتزام — إشعارٌ دائن في أودو.' },
   SO: { financial: false, stockEffect: false, odooDoc: 'sale.order', note: 'أمر بيع: التزامٌ تجاريّ يظهر في أودو، ولا قيدَ حتى التسليم/الفاتورة.' },

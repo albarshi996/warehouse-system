@@ -98,7 +98,9 @@ test('الأنواع المحرّكة للمخزون وحدها لها قواع�
 
 test('الأنواع التي تحتاج حقل مستودع (بما فيها النقل بمستودعَيه)', () => {
   const need = warehouseRequiringTypes().sort();
-  assert.deepEqual(need, ['ADJ', 'DMG', 'PICK', 'PUTAWAY', 'TRC', 'TRN', 'VLD', 'VRT']);
+  // ‹FNB-502› +2: صرف الموادّ يخرج من مخزنٍ بعينه، واستلام الإنتاج يدخله —
+  // كلاهما طرفُه الآخر موقعُ الإنتاج الوسيط، فالمستودع لازمٌ لا مستنتَج.
+  assert.deepEqual(need, ['ADJ', 'DMG', 'MIS', 'PICK', 'PRC', 'PUTAWAY', 'TRC', 'TRN', 'VLD', 'VRT']);
   assert.equal(needsWarehouse('GRN'), false, 'GRN يدخل ساحة الاستلام النظامية');
   assert.equal(needsWarehouse('DN'), false, 'DN يخرج من التجهيز النظامي');
   assert.equal(needsWarehouse('TRN'), true, 'مستند النقل يخرج من مستودع المصدر');

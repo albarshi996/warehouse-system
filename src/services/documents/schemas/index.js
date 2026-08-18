@@ -33,6 +33,10 @@ import tr from './tr.js';
 import trn from './trn.js';
 import trc from './trc.js';
 import ctr from './ctr.js';
+// ‹FNB-502› دورة الإنتاج في المطبخ المركزيّ: أمرٌ ← صرف موادّ ← استلام منتَج
+import pro from './pro.js';
+import mis from './mis.js';
+import prc from './prc.js';
 // دورة البيع من المركبة (المستودع المتنقّل): تحميل ← بيع ← مرتجع ← إرجاع ← تسوية
 import vld from './vld.js';
 import vsi from './vsi.js';
@@ -71,6 +75,9 @@ const SCHEMAS = {
   TRN: trn,
   TRC: trc,
   CTR: ctr,
+  PRO: pro,
+  MIS: mis,
+  PRC: prc,
   VLD: vld,
   VSI: vsi,
   CRN: crn,
@@ -117,6 +124,10 @@ export const GOVERNED_FORMS = [
   { type: 'TRN', stage: 7, titleAr: 'مستند النقل', file: '', phase: 'F7' },
   { type: 'TRC', stage: 8, titleAr: 'استلام النقل', file: '', phase: 'F7' },
   { type: 'CTR', stage: 4, titleAr: 'مستند مناولة حاوية', file: '', phase: 'SI' },
+  // دورة الإنتاج (FNB): أمر الإنتاج لا يقيّد، والصرف والاستلام يقيّدان.
+  { type: 'PRO', stage: 5, titleAr: 'أمر الإنتاج', file: '', phase: 'FNB' },
+  { type: 'MIS', stage: 6, titleAr: 'صرف موادّ للإنتاج', file: '', phase: 'FNB' },
+  { type: 'PRC', stage: 7, titleAr: 'استلام إنتاج', file: '', phase: 'FNB' },
   // البيع من المركبة (VS): المستودع المتنقّل — تحميلٌ فبيعٌ فمرتجعٌ فإرجاعٌ فتسوية
   { type: 'VLD', stage: 6, titleAr: 'أمر تحميل المركبة', file: '', phase: 'VS' },
   { type: 'VSI', stage: 7, titleAr: 'فاتورة بيع من المركبة', file: '', phase: 'VS' },

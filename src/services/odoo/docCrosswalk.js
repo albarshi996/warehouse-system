@@ -31,6 +31,12 @@ export const DOC_ODOO_MAP = {
 
   /* ── التخزين والحركة الداخلية ── */
   PUTAWAY: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  // ‹FNB-502› دورة الإنتاج: أودو يمثّلها بـ`mrp.production` (أمر التصنيع)
+  // وحركاتِ مخزونٍ لصرف الموادّ واستلام المنتَج. والأمرُ نفسه لا يقيّد عندنا
+  // فحالتُه المؤكَّدة `confirmed` لا `done` — يُصدَّق حين يُعتمد لا حين يُنتَج.
+  PRO: { model: 'mrp.production', confirmState: 'confirmed', confirmLabel: 'مؤكَّد', verb: 'أكّد' },
+  MIS: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  PRC: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   PICK: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   PACK: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   CTR: { model: 'x_container.handling', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
