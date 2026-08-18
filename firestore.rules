@@ -78,6 +78,14 @@ service cloud.firestore {
     // (fleet) أُضيف** لأنه يُنجز **تأكيد التسليم (POD)** فيخصم رصيد المركبة
     // (قرار المالك 2026-08-04). بوّابة `completeRoles` تحصر ما يُنجزه كلّ دور،
     // فالحركة لا تُنجز إلا POD. المشاهد ومستخدم الإدارة وحدهما خارجها.
+    // ‹FNB-107› مدير قطاع الأغذية — صاحب المدخل التشغيليّ (البراندات والفروع
+    // والمنيو). **ليس فاعلًا مخزنيًّا**: لا يقيّد حركةً ولا يعتمد صرفًا —
+    // ولذلك هو خارج `isStockActor` عمدًا، كما المندوب.
+    function isFnbManager() {
+      return isBootstrapAdmin() ||
+             (signedIn() && hasProfile() && isActive() && myRole() == 'fnb_manager');
+    }
+
     function isStockActor() {
       return isBootstrapAdmin() ||
              (signedIn() && hasProfile() && isActive() && myRole() in [
@@ -1203,9 +1211,12 @@ service cloud.firestore {
     // في طلبٍ يحتاج قائمتها. والكتابة للمديرَين — الهيكل قرارٌ إداريّ لا تشغيليّ.
     // **لا حذف:** موقعٌ حُمِّلت عليه تكلفةٌ تاريخيّة يُعطَّل ولا يُمحى، وإلّا
     // تحوّلت تكلفةٌ حقيقيّة إلى «غير مربوط» في تقارير الأمس.
+    // ‹FNB-107› مدير القطاع صاحبُ المدخل: يكتب شجرته (البراندات والفروع)
+    // كما تكتبها الشاشة — مطابقةٌ حرفيّة لأدوارها (درس ل‑١٨: قاعدةٌ أضيق
+    // من الشاشة تعني زرًّا يعمل ثمّ يُرفض حيًّا).
     match /org_locations/{code} {
       allow read: if signedIn();
-      allow create, update: if isManager();
+      allow create, update: if isManager() || isFnbManager();
       allow delete: if false;
     }
 

@@ -21,7 +21,8 @@ import {
 import { planOrgImport, seedWarnings } from '../../../services/org/orgImport.js';
 import { importSheet } from '../../../services/excel/excelImport.js';
 
-const VIEWER_ROLES = ['admin', 'warehouse_manager', 'finance_manager'];
+// ‹FNB-107› مدير القطاع صاحبُ المدخل (البراندات والفروع) — يرى الشجرة ويُدخلها.
+const VIEWER_ROLES = ['admin', 'warehouse_manager', 'finance_manager', 'fnb_manager'];
 
 const input =
   'w-full bg-chip border border-line rounded-lg px-3 py-2 text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:border-accent/60';
@@ -170,7 +171,7 @@ export default function OrgDimensions() {
 
   if (!ready) return <Muted>جارٍ التحقّق من الصلاحية…</Muted>;
   if (!me) return <Muted>سجّل الدخول لعرض هذه الشاشة.</Muted>;
-  if (!VIEWER_ROLES.includes(me.role)) return <Muted>هذه الشاشة للمديرَين والماليّ.</Muted>;
+  if (!VIEWER_ROLES.includes(me.role)) return <Muted>هذه الشاشة للمديرَين والماليّ ومدير القطاع.</Muted>;
 
   const counts = Object.fromEntries(ORG_LEVELS.map((l) => [l.id, locations.filter((x) => x.level === l.id).length]));
 
