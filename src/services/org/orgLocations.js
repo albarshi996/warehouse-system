@@ -244,6 +244,61 @@ export function internalBranchProblems(locations = [], customers = []) {
 }
 
 /**
+ * حكم وجهة الصرف ‹FNB-103› — **توجيه المدير العام حرفيًّا**: «لا يتم صرف أي
+ * مادة من المخزن بصورة عامة على حساب F&B فقط، وإنما يتم توثيق الحركة على
+ * الفرع الفعلي المستفيد».
+ *
+ * فرمزٌ مستواه `sector` أو `brand` على حركة خروجٍ **وعاءٌ لا مستفيد** — يُرفض
+ * بسببٍ مقروء، **ويُقترح البديل**: فروعُ الوعاء المختار نفسِه — رفضٌ يهدي
+ * لا يصدّ. أمّا غير المربوط فيمرّ ويُوسَم (عقد السيّد الاختياريّ): لا منعَ
+ * بجهلنا، والبيانات تُنظَّف على مهل.
+ *
+ * @returns {{ok:boolean, level:string, problem:string, suggestions:{code,nameAr}[]}}
+ */
+export function dispatchTargetVerdict(index, raw) {
+  const res = resolveLocation(index, raw);
+  if (res.status !== 'matched') return { ok: true, level: '', problem: '', suggestions: [] };
+
+  const loc = res.location;
+  if (loc.level !== 'sector' && loc.level !== 'brand') {
+    return { ok: true, level: loc.level, problem: '', suggestions: [] };
+  }
+
+  // البديل: فروع هذا الوعاء بعينه — النازلة عنه في الشجرة، النشطة وحدها.
+  const suggestions = [...(index?.values?.() || [])]
+    .filter((l) => l.level === 'branch' && l.active !== false)
+    .filter((l) => ancestryOf(index, l.code).some((a) => a.code === loc.code))
+    .map((l) => ({ code: l.code, nameAr: str(l.nameAr) || l.code }))
+    .sort((a, b) => a.code.localeCompare(b.code));
+
+  const label = levelOf(loc.level)?.labelAr || loc.level;
+  return {
+    ok: false,
+    level: loc.level,
+    problem:
+      `«${str(loc.nameAr) || loc.code}» ${label}ٌ — وعاءُ تجميعٍ لا مستفيد. الصرف يُوثَّق على الفرع الفعليّ` +
+      (suggestions.length ? `: ${suggestions.slice(0, 6).map((s2) => s2.code).join(' · ')}` : ' — ولا فروعَ نشطة تحته بعد.'),
+    suggestions,
+  };
+}
+
+/** أنواع مستندات الخروج إلى الفروع — عليها يسري حكم الوجهة. */
+export const DISPATCH_DOC_TYPES = Object.freeze(['DN', 'TRN']);
+
+/**
+ * خروقات الوجهة لمستندٍ — تُدمج مع تحذيرات المخطّط في الشاشة.
+ * الحكم **عند الإنشاء لا عند القراءة**: تُحسب للمستند المفتوح للتحرير،
+ * والمحفوظ قبل القاعدة لا يُعاد حكمُه.
+ */
+export function dispatchViolations(docType, doc, index) {
+  if (!DISPATCH_DOC_TYPES.includes(up(docType))) return [];
+  const code = orgCodeOf(doc);
+  if (!code) return [];
+  const verdict = dispatchTargetVerdict(index, code);
+  return verdict.ok ? [] : [verdict.problem];
+}
+
+/**
  * أبعاد مستندٍ كاملةً من رمز موقعه: مركز التكلفة وفرعه وبرانده وقطاعه.
  * للفلاتر والتقارير — الرمز الواحد في الرأس يكفي، والشجرة تُكمل الباقي.
  */

@@ -51,6 +51,7 @@ import { listenLocations } from '../../../services/locations/locationsService.js
 import { binCellVerdict, locationOptions } from '../../../services/locations/locationsModel.js';
 import { listenVehicles } from '../../../services/vehicles/vehiclesService.js';
 import { listenOrgLocations } from '../../../services/org/orgLocationsService.js';
+import { indexLocations, dispatchViolations } from '../../../services/org/orgLocations.js';
 import { subscribeReps } from '../../../services/field/repsService.js';
 import { listenPartnerLedger } from '../../../services/ledger/partnerLedgerService.js';
 import { creditCheck } from '../../../services/ledger/creditGuard.js';
@@ -195,7 +196,13 @@ export default function DocumentEngine() {
 
   const editable = isEditable(doc?.state) && (!docId || doc?.createdByUid === me?.uid || me?.role === 'admin');
   const canCreate = me && (me.role === 'admin' || (schema?.roles?.create || []).includes(me.role));
-  const violations = useMemo(() => (schema?.warnings && doc ? schema.warnings(doc) : []), [schema, doc]);
+  // تحذيرات المخطّط + حكم وجهة الصرف (FNB-103): قطاعٌ أو براند على مستند
+  // خروجٍ وعاءٌ لا مستفيد — يُنبَّه بالبديل. الحكم عند الإنشاء لا عند القراءة.
+  const violations = useMemo(() => {
+    const base = schema?.warnings && doc ? schema.warnings(doc) : [];
+    if (!doc || !orgLocationsList.length) return base;
+    return [...base, ...dispatchViolations(schema?.type, doc, indexLocations(orgLocationsList))];
+  }, [schema, doc, orgLocationsList]);
 
   // حكم التاريخ يُحسب مع كلّ ضغطة — فيُرى القيد وهو يقع لا عند الحفظ.
   const dating = useMemo(

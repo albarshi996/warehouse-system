@@ -8,6 +8,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  dispatchTargetVerdict, dispatchViolations, DISPATCH_DOC_TYPES,
   ORG_LEVELS,
   LEVEL_IDS,
   ORG_FIELDS,
@@ -217,4 +218,44 @@ test('مبلغ المستند: أوّل عمودٍ ماليّ يفوز ثمّ ك
   assert.equal(docAmountOf({ lines: [{ qty: 5, unitPrice: 4 }] }), 20);
   assert.equal(docAmountOf({ lines: [{ qty: 5, unitCost: 3 }] }), 15);
   assert.equal(docAmountOf({ lines: [{ qty: 5 }] }), 0, 'بلا مالٍ صفرٌ لا تخمين');
+});
+
+/* ═══════════ ‹FNB-103› لا يُصرف على وعاء ═══════════ */
+
+test('★ حكم الوجهة بالمستويات الأربعة: قطاعٌ وبراند يُرفضان · فرعٌ ومركز تكلفةٍ يمرّان', () => {
+  const index = indexLocations([
+    { code: 'FNB', nameAr: 'قطاع الأغذية', level: 'sector' },
+    { code: 'BRD1', nameAr: 'براند أول', level: 'brand', parentCode: 'FNB' },
+    { code: 'BR01', nameAr: 'فرع أول', level: 'branch', parentCode: 'BRD1' },
+    { code: 'BR02', nameAr: 'فرع مقفل', level: 'branch', parentCode: 'BRD1', active: false },
+    { code: 'CC01', nameAr: 'مطبخ الفرع', level: 'cost_center', parentCode: 'BR01' },
+  ]);
+  assert.equal(dispatchTargetVerdict(index, 'FNB').ok, false);
+  assert.equal(dispatchTargetVerdict(index, 'BRD1').ok, false);
+  assert.equal(dispatchTargetVerdict(index, 'BR01').ok, true);
+  assert.equal(dispatchTargetVerdict(index, 'CC01').ok, true);
+
+  // الرفض يقول الصواب ويقترح البديل — فروع الوعاء النشطة وحدها.
+  const v = dispatchTargetVerdict(index, 'BRD1');
+  assert.match(v.problem, /وعاء/);
+  assert.deepEqual(v.suggestions.map((s2) => s2.code), ['BR01']); // المقفل لا يُقترح.
+
+  // وغير المربوط يمرّ ويُوسَم — لا منعَ بجهلنا (عقد السيّد الاختياريّ).
+  assert.equal(dispatchTargetVerdict(index, 'GHOST-99').ok, true);
+});
+
+test('الحكم على مستندات الخروج وحدها: TRN وDN يُحكمان — وPO لا يُمسّ', () => {
+  const index = indexLocations([
+    { code: 'FNB', nameAr: 'قطاع', level: 'sector' },
+    { code: 'BRD1', nameAr: 'براند', level: 'brand', parentCode: 'FNB' },
+    { code: 'BR01', nameAr: 'فرع', level: 'branch', parentCode: 'BRD1' },
+  ]);
+  const doc = { header: { costCenter: 'FNB' } };
+  assert.deepEqual(DISPATCH_DOC_TYPES, ['DN', 'TRN']);
+  assert.equal(dispatchViolations('TRN', doc, index).length, 1);
+  assert.equal(dispatchViolations('DN', doc, index).length, 1);
+  assert.deepEqual(dispatchViolations('PO', doc, index), []); // الشراء ليس خروجًا لفرع.
+  // فرعٌ سليم يمرّ صامتًا، والفارغ لا يُحكم (الإلزام شأن المخطّط لا الحكم).
+  assert.deepEqual(dispatchViolations('TRN', { header: { costCenter: 'BR01' } }, index), []);
+  assert.deepEqual(dispatchViolations('TRN', { header: {} }, index), []);
 });
