@@ -58,7 +58,7 @@ export function consumptionRate(moves = [], sku, today) {
  *
  * @returns {{sku, onHand, rate, leadDays, reorderPoint, suggestQty, daysLeft, urgency, why}|null}
  */
-export function replenishmentFor({ item, moves = [], onHand = 0, today, leadDays = 14, safetyDays = 7 }) {
+export function replenishmentFor({ item, moves = [], onHand = 0, today, leadDays = 14, safetyDays = 7, policy = null, inTransit = 0 }) {
   const sku = up(item?.sku);
   if (!sku) return null;
 
@@ -68,23 +68,54 @@ export function replenishmentFor({ item, moves = [], onHand = 0, today, leadDays
   const rate = c.rate;
   if (rate <= 0) return null;
 
-  const safety = round(rate * safetyDays);
-  const reorderPoint = round(rate * num(leadDays) + safety);
+  // ‹FNB-202› السياسة السارية (صنف×فرع بالوراثة الثلاثيّة) تتقدّم على
+  // الوسيطَين العامَّين — وغيابها يُبقي سلوك اليوم حرفيًّا.
+  const lead = num(policy?.leadDays) > 0 ? num(policy.leadDays) : num(leadDays);
+  const safe = policy?.safetyDays != null ? num(policy.safetyDays) : num(safetyDays);
+  const coverDays = num(policy?.coverDays);
+  const parLevel = num(policy?.parLevel);
+  const minQty = num(policy?.minQty);
+
+  const safety = round(rate * safe);
+  // الحدّ الأدنى المصرَّح يرفع نقطة إعادة الطلب ولا يخفضها: من كتب «لا تنزل
+  // عن ٤٠» يريد أرضيّةً لا سقفًا محسوبًا أقلّ منها.
+  const reorderPoint = Math.max(round(rate * lead + safety), minQty);
   const daysLeft = round(num(onHand) / rate, 1);
-  const suggestQty = num(onHand) < reorderPoint ? round(reorderPoint + rate * num(leadDays) - num(onHand)) : 0;
+
+  // ‹FNB-301› «الكمّيّات بالطريق» تُطرح: ما هو قادمٌ لا يُطلب ثانيةً.
+  const available = num(onHand) + num(inTransit);
+
+  // أيّام التغطية بندٌ مستقلّ: اطلب ما يكفي (المهلة + التغطية) لا المهلة وحدها.
+  const targetQty = round(reorderPoint + rate * (coverDays > 0 ? coverDays : lead));
+  // وPar Level سقفٌ يُحترم — لا يُطلب فوق ما يسع الفرع.
+  const ceiling = parLevel > 0 ? parLevel : targetQty;
+  const suggestRaw = available < reorderPoint ? round(Math.min(targetQty, ceiling) - available) : 0;
+  const suggestQty = suggestRaw > 0 ? suggestRaw : 0;
+
+  const parts = [
+    `تبيع ${rate} يوميًّا (${c.total} خلال ${c.days} يومًا)`,
+    `والتوريد ${lead} يومًا${policy?.sources?.leadDays && policy.sources.leadDays !== 'default' ? ` (سياسة ${policy.sources.leadDays})` : ''}`,
+    `والأمان ${safe} أيّام`,
+  ];
+  if (coverDays > 0) parts.push(`والتغطية المطلوبة ${coverDays} يومًا`);
+  if (num(inTransit) > 0) parts.push(`وبالطريق ${round(inTransit)}`);
+  if (parLevel > 0) parts.push(`وسقف الفرع ${parLevel}`);
+  parts.push(`المتبقّي يكفي ${daysLeft} يومًا`);
 
   return {
     sku,
     nameAr: str(item?.nameAr),
     onHand: round(onHand),
+    inTransit: round(inTransit),
     rate,
-    leadDays: num(leadDays),
+    leadDays: lead,
     reorderPoint,
+    parLevel,
     suggestQty,
     daysLeft,
-    urgency: daysLeft <= num(leadDays) ? 'now' : daysLeft <= num(leadDays) + safetyDays ? 'soon' : 'ok',
+    urgency: daysLeft <= lead ? 'now' : daysLeft <= lead + safe ? 'soon' : 'ok',
     // المرجع: لماذا هذا الرقم بالضبط.
-    why: `تبيع ${rate} يوميًّا (${c.total} خلال ${c.days} يومًا)، والتوريد ${leadDays} يومًا، والأمان ${safetyDays} أيّام. المتبقّي يكفي ${daysLeft} يومًا.`,
+    why: `${parts.join('، ')}.`,
   };
 }
 

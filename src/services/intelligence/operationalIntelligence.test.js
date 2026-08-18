@@ -224,3 +224,69 @@ test('لا مكرّرَ لا بلاغ، والقائمة الفارغة لا ت�
 test('★ وعميلٌ بلا رمزٍ لا يدخل المقارنة', () => {
   assert.deepEqual(findDuplicateStores([{ nameAr: 'أ' }, { nameAr: 'أ' }]), []);
 });
+
+/* ═══════════ ‹FNB-202› السياسة تقود المقترح ═══════════ */
+
+test('★★ الترحيل صفر الأثر: بلا سياسةٍ الرقم كما كان حرفيًّا', () => {
+  const moves = outMoves('A', 10, 30, '2026-07-12');
+  const args = { item: { sku: 'A' }, moves, onHand: 50, today: '2026-08-11', leadDays: 10, safetyDays: 5 };
+  const before = replenishmentFor(args);
+  const after = replenishmentFor({ ...args, policy: null });
+  assert.equal(after.suggestQty, before.suggestQty);
+  assert.equal(after.reorderPoint, before.reorderPoint);
+});
+
+test('★ السياسة تتقدّم على الوسيطَين العامَّين — والسبب يسمّي مصدرها', () => {
+  const moves = outMoves('A', 10, 30, '2026-07-12');
+  const r = replenishmentFor({
+    item: { sku: 'A' }, moves, onHand: 50, today: '2026-08-11',
+    leadDays: 10, safetyDays: 5,
+    policy: { leadDays: 20, safetyDays: 5, sources: { leadDays: 'brand' } },
+  });
+  assert.equal(r.leadDays, 20, 'مهلة السياسة لا الوسيط العامّ');
+  assert.match(r.why, /التوريد 20/);
+  assert.match(r.why, /سياسة brand/);
+});
+
+test('★ Par Level سقفٌ يُحترم — لا يُطلب فوق ما يسع الفرع', () => {
+  const moves = outMoves('A', 10, 30, '2026-07-12');
+  const base = { item: { sku: 'A' }, moves, onHand: 0, today: '2026-08-11', leadDays: 10, safetyDays: 5 };
+  const free = replenishmentFor(base);
+  const capped = replenishmentFor({ ...base, policy: { parLevel: 60, safetyDays: 5, leadDays: 10 } });
+  assert.ok(capped.suggestQty < free.suggestQty, 'السقف خفّض المقترح');
+  assert.ok(capped.suggestQty <= 60);
+  assert.match(capped.why, /سقف الفرع 60/);
+});
+
+test('★ الحدّ الأدنى أرضيّةٌ ترفع نقطة إعادة الطلب ولا تخفضها', () => {
+  const moves = outMoves('A', 1, 30, '2026-07-12'); // معدّلٌ منخفض ⇒ نقطةٌ صغيرة
+  const bare = replenishmentFor({ item: { sku: 'A' }, moves, onHand: 100, today: '2026-08-11', leadDays: 5, safetyDays: 2 });
+  const floored = replenishmentFor({
+    item: { sku: 'A' }, moves, onHand: 100, today: '2026-08-11', leadDays: 5, safetyDays: 2,
+    policy: { minQty: 200, safetyDays: 2, leadDays: 5 },
+  });
+  assert.ok(floored.reorderPoint >= 200);
+  assert.ok(floored.reorderPoint > bare.reorderPoint);
+  assert.ok(floored.suggestQty > 0, 'رصيدٌ تحت الأرضيّة يُقترح له');
+});
+
+test('★ «بالطريق» تُطرح: ما هو قادمٌ لا يُطلب ثانيةً', () => {
+  const moves = outMoves('A', 10, 30, '2026-07-12');
+  const base = { item: { sku: 'A' }, moves, onHand: 20, today: '2026-08-11', leadDays: 10, safetyDays: 5 };
+  const without = replenishmentFor(base);
+  const withTransit = replenishmentFor({ ...base, inTransit: 100 });
+  assert.ok(withTransit.suggestQty < without.suggestQty);
+  assert.equal(withTransit.inTransit, 100);
+  assert.match(withTransit.why, /بالطريق 100/);
+  // وشحنةٌ كافيةٌ في الطريق تُسكِت الاقتراح تمامًا.
+  assert.equal(replenishmentFor({ ...base, inTransit: 5000 }).suggestQty, 0);
+});
+
+test('★ أيّام التغطية بندٌ مستقلّ: تغطيةٌ أطول ⇒ كمّيّةٌ أكبر بنفس المهلة والأمان', () => {
+  const moves = outMoves('A', 10, 30, '2026-07-12');
+  const base = { item: { sku: 'A' }, moves, onHand: 0, today: '2026-08-11', leadDays: 10, safetyDays: 5 };
+  const short = replenishmentFor({ ...base, policy: { coverDays: 7, leadDays: 10, safetyDays: 5 } });
+  const long = replenishmentFor({ ...base, policy: { coverDays: 30, leadDays: 10, safetyDays: 5 } });
+  assert.ok(long.suggestQty > short.suggestQty);
+  assert.match(long.why, /التغطية المطلوبة 30/);
+});
