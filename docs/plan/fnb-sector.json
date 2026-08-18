@@ -5,9 +5,8 @@
   "command": "npm run plan:fnb",
   "track": "توسيعيّ · **الفرع بُعدٌ لا نظام** · لا نظام مطاعم موازٍ يُبنى بجانب البوابة — يُبنى بُعدٌ تنظيميّ على النوى القائمة · ولا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح",
   "source": "المستند الحاكم محفوظٌ حرفيًّا في `docs/plan/fnb/المصدر-توجيه-المدير-العام-وخطة-القطاع.md` (724 سطرًا): توجيه السيد المدير العام (المرجع الأساسيّ) + خطة مسؤول قطاع F&B (تحديد الاحتياج التشغيليّ والتوسّع والمطبخ المركزيّ) — ومعهما جردٌ متعدّد الوكلاء على الكود الفعليّ في جلسة 2026-08-18 (١٣ وكيلًا · ٦٠٦ استدعاء أداة · ١٤٣ فحصًا + ٥٨ بندًا استدركها ناقد الاكتمال) — مفصَّلًا في `docs/plan/fnb/مصفوفة-التغطية.md`",
-  "lastUpdated": "2026-08-18 (FNB-000 — تثبيت الخطة وجرد النوى)",
+  "lastUpdated": "2026-08-18 (FNB-000 مغلقة ببيّنة — الخطة مرفوعة)",
   "lastUpdatedBy": "Claude",
-
   "baseline": {
     "originMain": "016f523",
     "branch": "claude/plan-review-implementation-50debd",
@@ -15,13 +14,11 @@
     "measured": "٤٢ مجلّد خدمة · ٢٤٢ ملفّ منطق · ١٢٨ ملفّ اختبار · ٥٣ ملفًّا يلمس firebase وكلّها `*Service.js` (النقاء ٧٨٪ سليم) · ٣٩ مخطّط مستند · ١٦ دورًا · ٥٧ مجموعة Firestore",
     "note": "خطط قائمة لا تُلغى ولا تُنسخ مهامّها هنا: `warehouse-execution.json` (٢٦/٢٩ · تبقّت ت٩) و`warehouse-locations.json` (٢٠/٢٠ — **أساسٌ** لهذه: بلا ترميز مواقع لا FEFO ولا سحب) و`sap-alignment.json` و`client-completion.json` و`phase-one.json`."
   },
-
   "rule": {
     "id": "قاعدة البُعد",
     "text": "**الفرع بُعدٌ على المستند والحركة، لا نظامٌ ثانٍ.** قبل كلّ مهمّة: ابحث عن النواة القائمة، وسجّلها في `nucleus`، وكبّرها ببُعدٍ أو حقلٍ أو حالة. مهمّةٌ بلا نواةٍ مسجّلة لا تبدأ. ولا مجموعة Firestore جديدة ولا مجلّد خدمةٍ جديد إلّا ببيّنة أنّ لا نواة تصلح.",
     "why": "الجرد أثبت أنّ **٧٨٪ من متطلَّبات المستند لها نواةٌ قائمة** (٢٦ منفَّذًا + ٧٧ جزئيًّا من ١٣٣ متطلَّبًا، وإلى جانبها عشرة أعرافٍ حاكمة للبيت = ١٤٣ فحصًا). فبناء «نظام مطاعم» جديد بجانب البوابة يصنع للعمل حقيقتين — وهو ما سمّاه المالك «نتوءات». والمثال الحيّ: `orgLocations.js:31` فيه `sector → brand → branch → cost_center` منذ م٦-أ، وهو حرفيًّا هيكل المدير العام؛ ومن بنى شجرةً ثانية للمطاعم قسّم الشركة إلى نظامين."
   },
-
   "architecture": {
     "id": "قاعدة نقاء المنطق",
     "text": "**كلّ قاعدةٍ حاكمة تعيش في الكود، وقاعدة البيانات مخزنٌ وبوّابةُ مستخدمين لا حاكم.** معادلة الاحتياج وانفجار الوصفة وحكم مستوى الصرف وتصنيف الأولويّة والاستهلاك النظريّ — كلّها في ملفّات خالصة بلا `firebase` وبلا DOM. و`*Service.js` طبقةٌ رقيقة: تقرأ وتكتب وتُصادق، ولا تقرّر.",
@@ -34,7 +31,6 @@
       "لا شاشة ثانية لمنطقٍ قائم — الشاشة القائمة تُوسَّع (قاعدة المالك: «صفحة فوق صفحة» مرفوضة)"
     ]
   },
-
   "nuclei": {
     "الهرم التنظيميّ": "src/services/org/`orgLocations.js:31` — `ORG_LEVELS = sector › brand › branch › cost_center` بأبوّةٍ محروسة (`locationProblems`) وصعودٍ للتكلفة (`costByLocation` بـ`direct`/`rollup`) ودالّة `dimensionsOf(index, doc)` تُخرج القطاع والبراند والفرع من رمزٍ واحد في رأس المستند. **مبنيّةٌ ومختبَرة ولا يستدعيها أحد.** شاشتها `/dashboard/org-dimensions` عبر `OrgDimensions.jsx`، ومجموعتها `org_locations` (firestore.rules:1206).",
     "المستند وسلسلته": "src/services/documents/ — ٣٩ مخطّطًا في `schemas/index.js` (منها PR·PO·GRN·QC·PUTAWAY·PICK·PACK·DN·POD·GP·TR·TRN·TRC·RET·SRN·DMG·CC·ADJ·CN) + `chain.js` (١٥ خريطة سلسلة بتوريث `costCenter`) + `documentRelations.js` (السابق واللاحق) + `copyFrom.js` (توليد مستندٍ من مستند) + `orderStages.js` (مراحل الطلب بالزمن) + `reasonCodes.js` (أسباب مقيَّدة) + `threeWayMatch` (فرق المستلَم عن أمر الشراء).",
@@ -49,18 +45,48 @@
     "الأدوار والتنقّل": "src/services/auth/`roles.js` (١٦ دورًا — لا دور لقطاع F&B ولا لمدير فرع ولا لـExecutive Chef) + `navCatalog.js` (كتالوج القائمة الجانبيّة — كلّ شاشة تُضاف عنصرًا فيه بأدوارها).",
     "عرض القطاع القائم": "src/data/`restaurants-supply-chain.js` (٥٣٠ سطرًا · ٣٥ شريحة على `/dashboard/restaurants-supply-chain`) — **وصفٌ لا منطق**: يستدعي `chain.js` و`navCatalog.js` ولا يكرّرهما. هو **واجهة عرض هذه الخطة على القطاع**، تُحدَّث ولا يُبنى عرضٌ ثانٍ."
   },
-
   "milestones": [
-    { "id": "ق٠", "title": "الحوكمة — تثبيت الخطة وجرد النوى وحسم القرارات المعلّقة", "estimate": "جلسة واحدة" },
-    { "id": "ق١", "title": "المرحلة الأولى — تأسيس F&B حسابًا رئيسيًّا: البراندات والفروع والمخازن والمطبخ والماستر", "estimate": "4–5 جلسات" },
-    { "id": "ق٢", "title": "المرحلة الثانية — ملفّ الفرع وشدّة الافتتاح وPar Level وآليّة الطلب والتغذية", "estimate": "6–7 جلسات" },
-    { "id": "ق٣", "title": "المرحلة الثالثة — دورة المخزن: استلام وفحص وتخزين وتحويل وسحب وشحن واستلام الفرع", "estimate": "3–4 جلسات" },
-    { "id": "ق٤", "title": "المرحلة الرابعة — المطبخ المركزيّ: الوصفة والإنتاج والدفعة والصلاحيّة والتوزيع", "estimate": "7–8 جلسات" },
-    { "id": "ق٥", "title": "المرحلة الخامسة — ربط PR بالمشتريات التابعة للمالية ومتابعة SLA والحالة", "estimate": "3 جلسات" },
-    { "id": "ق٦", "title": "المرحلة السادسة — POS وFoodics/Odoo والاستهلاك النظريّ مقابل الفعليّ", "estimate": "4–5 جلسات" },
-    { "id": "ق٧", "title": "المرحلة السابعة — التنبّؤ وبرج المراقبة والإغلاق اليوميّ للفرع", "estimate": "5–6 جلسات" }
+    {
+      "id": "ق٠",
+      "title": "الحوكمة — تثبيت الخطة وجرد النوى وحسم القرارات المعلّقة",
+      "estimate": "جلسة واحدة"
+    },
+    {
+      "id": "ق١",
+      "title": "المرحلة الأولى — تأسيس F&B حسابًا رئيسيًّا: البراندات والفروع والمخازن والمطبخ والماستر",
+      "estimate": "4–5 جلسات"
+    },
+    {
+      "id": "ق٢",
+      "title": "المرحلة الثانية — ملفّ الفرع وشدّة الافتتاح وPar Level وآليّة الطلب والتغذية",
+      "estimate": "6–7 جلسات"
+    },
+    {
+      "id": "ق٣",
+      "title": "المرحلة الثالثة — دورة المخزن: استلام وفحص وتخزين وتحويل وسحب وشحن واستلام الفرع",
+      "estimate": "3–4 جلسات"
+    },
+    {
+      "id": "ق٤",
+      "title": "المرحلة الرابعة — المطبخ المركزيّ: الوصفة والإنتاج والدفعة والصلاحيّة والتوزيع",
+      "estimate": "7–8 جلسات"
+    },
+    {
+      "id": "ق٥",
+      "title": "المرحلة الخامسة — ربط PR بالمشتريات التابعة للمالية ومتابعة SLA والحالة",
+      "estimate": "3 جلسات"
+    },
+    {
+      "id": "ق٦",
+      "title": "المرحلة السادسة — POS وFoodics/Odoo والاستهلاك النظريّ مقابل الفعليّ",
+      "estimate": "4–5 جلسات"
+    },
+    {
+      "id": "ق٧",
+      "title": "المرحلة السابعة — التنبّؤ وبرج المراقبة والإغلاق اليوميّ للفرع",
+      "estimate": "5–6 جلسات"
+    }
   ],
-
   "gaps": {
     "ق‑١": "**الشجرة وعاءٌ فارغ** — المستويات الأربعة `sector › brand › branch › cost_center` مبنيّةٌ ومحروسةٌ في `orgLocations.js:31`، ولا سجلَّ واحدًا فيها: لا F&B ولا براند ولا فرع، لا في بذرةٍ ولا في سكربت (`scripts/` فيه `build-org.mjs` و`generate-vehicles-seed.mjs` ولا شيء لـ`org_locations`). ولا شيء يفرض «حسابًا رئيسيًّا واحدًا»: `locationProblems` يقبل أيّ عدد من القطاعات جذورًا.",
     "ق‑٢": "**مركز التكلفة نصٌّ حرٌّ اختياريّ** — معلَنٌ في أربعة مخطّطات فقط (`po.js:72` · `so.js:72` · `tr.js:54` · `ipr.js:113`) بنصّ تلميحٍ واحد، وليس في `PARTY_FIELDS` فلا قائمة منسدلة ولا ربط بالشجرة. و**مستند الخروج DN لا يحمله إطلاقًا** (فيه `fromBranch` نصًّا وهو الفرع المُسلِّم لا المستفيد).",
@@ -87,7 +113,6 @@
     "ق‑٢٣": "**الاستلام ناقص حقلين تتبّعيَّين** — `Manufacturing Date` غائبٌ عن `grn.js` (فيه `expiryDate` و`shelfLifePct` ولا `mfgDate`)، و`Supplier Batch` غير متمايزٍ عن الدفعة الداخليّة (حقل `batch` واحد يحمل الاثنين).",
     "ق‑٢٤": "**لا أدوار للقطاع** — الأدوار الستّة عشر في `roles.js` ليس فيها دورٌ لقطاع F&B (صاحب المدخل: البراندات والفروع والمنيو وخطط الافتتاح والحملات وتوقّع المبيعات) ولا لمدير الفرع (يستلم ويستهلك ويغذّي بالبيانات) ولا لـExecutive Chef (يملك الوصفة ومعايير الإنتاج)."
   },
-
   "deferred": [
     {
       "id": "ق‑ت١",
@@ -110,7 +135,6 @@
       "why": "المدينة صفةُ الفرع لا بُعدٌ خامس — تُقرأ من صفّ الفرع في `org_locations` وتُجمَّع بالاشتقاق. وإضافة حقلٍ سادسٍ إلى `ORG_FIELDS` (وفيه خمسة أسماء بديلة أصلًا) تصنع نتوءًا وتُضاعف مصادر الحقيقة."
     }
   ],
-
   "ownerInputs": [
     {
       "id": "ق-O01",
@@ -169,27 +193,65 @@
       "state": "todo"
     }
   ],
-
   "whereToFind": [
-    { "what": "شجرة القطاع والبراندات والفروع", "path": "/dashboard/org-dimensions", "nav": "قائمة الإدارة — تُوسَّع بملفّ الفرع في ق٢" },
-    { "what": "عرض «سلاسل الإمداد — المطاعم» (٣٥ شريحة)", "path": "/dashboard/restaurants-supply-chain", "nav": "مركز التقارير — واجهة عرض هذه الخطة على القطاع" },
-    { "what": "دفتر الحركات والأرصدة", "path": "/dashboard/stock-ledger", "nav": "العمليات" },
-    { "what": "المستندات وسلاسلها", "path": "/dashboard/documents", "nav": "العمليات — ٣٩ مخطّطًا" },
-    { "what": "طلبات النقل إلى الفروع", "path": "/dashboard/transfers", "nav": "العمليات — TR ← TRN ← TRC" },
-    { "what": "الاستثناءات والتدخّل", "path": "/dashboard/command-center", "nav": "غرفة القيادة — تُوسَّع ببرج القطاع في ق٧" },
-    { "what": "مؤشّرات المشتريات وSLA المورّدين", "path": "/dashboard/kpis", "nav": "التحليلات — `supplierOtd` يعمل اليوم" },
-    { "what": "تحليلات المخزون وإعادة الطلب", "path": "/dashboard/inventory-analytics", "nav": "التحليلات — `reorderReport` يعمل اليوم" },
-    { "what": "سياسة التكامل مع أودو", "path": "/dashboard/integration-control", "nav": "التكامل — `money:'pull'` مقفلة" },
-    { "what": "قوائم الأسعار وانحراف سعر المورّد", "path": "/dashboard/price-lists", "nav": "الماستر" }
+    {
+      "what": "شجرة القطاع والبراندات والفروع",
+      "path": "/dashboard/org-dimensions",
+      "nav": "قائمة الإدارة — تُوسَّع بملفّ الفرع في ق٢"
+    },
+    {
+      "what": "عرض «سلاسل الإمداد — المطاعم» (٣٥ شريحة)",
+      "path": "/dashboard/restaurants-supply-chain",
+      "nav": "مركز التقارير — واجهة عرض هذه الخطة على القطاع"
+    },
+    {
+      "what": "دفتر الحركات والأرصدة",
+      "path": "/dashboard/stock-ledger",
+      "nav": "العمليات"
+    },
+    {
+      "what": "المستندات وسلاسلها",
+      "path": "/dashboard/documents",
+      "nav": "العمليات — ٣٩ مخطّطًا"
+    },
+    {
+      "what": "طلبات النقل إلى الفروع",
+      "path": "/dashboard/transfers",
+      "nav": "العمليات — TR ← TRN ← TRC"
+    },
+    {
+      "what": "الاستثناءات والتدخّل",
+      "path": "/dashboard/command-center",
+      "nav": "غرفة القيادة — تُوسَّع ببرج القطاع في ق٧"
+    },
+    {
+      "what": "مؤشّرات المشتريات وSLA المورّدين",
+      "path": "/dashboard/kpis",
+      "nav": "التحليلات — `supplierOtd` يعمل اليوم"
+    },
+    {
+      "what": "تحليلات المخزون وإعادة الطلب",
+      "path": "/dashboard/inventory-analytics",
+      "nav": "التحليلات — `reorderReport` يعمل اليوم"
+    },
+    {
+      "what": "سياسة التكامل مع أودو",
+      "path": "/dashboard/integration-control",
+      "nav": "التكامل — `money:'pull'` مقفلة"
+    },
+    {
+      "what": "قوائم الأسعار وانحراف سعر المورّد",
+      "path": "/dashboard/price-lists",
+      "nav": "الماستر"
+    }
   ],
-
   "tasks": [
     {
       "id": "FNB-000",
       "title": "تثبيت الخطة الحاكمة وجرد النوى — وقاعدة «الفرع بُعدٌ لا نظام»",
       "milestone": "ق٠",
       "owner": "Claude",
-      "state": "doing",
+      "state": "done",
       "gaps": [],
       "dependsOn": [],
       "nucleus": "متتبّعات الخطط الخمسة القائمة و`scripts/plan-check.mjs` — نفس الحارس ونفس الصيغة، لا أداة سادسة",
@@ -203,7 +265,6 @@
         "package.json"
       ],
       "progress": "حُفظ المستند الحاكم حرفيًّا (724 سطرًا) في المستودع. ثمّ **جرد النوى على الكود الفعليّ** بثلاثة عشر وكيلًا (٦٠٦ استدعاء أداة · ٢٫٠٧ مليون رمز): ١٣٣ متطلَّبًا من المستند + عشرة أعرافٍ للبيت = ١٤٣ فحصًا — النتيجة ٢٦ منفَّذًا و٧٧ جزئيًّا و٣٠ مفقودًا (**٧٨٪ له نواة قائمة**). ثمّ **تحقّقٌ عدائيّ بالاتّجاهين** صحّح ١٣ حكمًا: أربعةٌ من «جزئيّ» إلى «مفقود» (خطة الإنتاج · التعبئة كخطوة إنتاج · حجم المبيعات المتوقّع · الأصناف المعتمدة للفرع)، واثنا عشر من «مفقود» إلى «جزئيّ/موجود» — أخطرها أنّ **متابعة SLA للمشتريات مبنيّةٌ وحيّةٌ على شاشتين** فلا تُبنى ثانيةً. ثمّ **ناقد اكتمال** قرأ المستند سطرًا سطرًا واستدرك ٥٨ بندًا (أخطرها: مسار Supplier → Restaurant Direct · توزيع المسؤوليّات السبعة في الخلاصة · «الجودة» طرفًا ثالثًا في المخطّط الشجريّ · «العميل» في سلسلة الربط · ربحيّة الفرع). وقِيس خطّ الأساس بالتشغيل: 2061 اختبارًا خضراء.",
-      "nextStep": "مراجعة المالك للخطة وحسم ق-O01…ق-O08، ثمّ كوميت `docs(fnb)` وتحديث `evidence.commit` هنا. **ولا سطر كودٍ إنتاجيّ في هذه المهمّة.**",
       "acceptance": [
         "المستند الحاكم محفوظٌ في المستودع حرفيًّا بلا اختصار — فلا تضيع مرجعيّته إن فُقد الملفّ الأصليّ",
         "كلّ فجوة من ق‑١ إلى ق‑٢٤ مربوطة بمسار ملفٍّ حقيقيّ على القرص لا بوصفٍ عامّ",
@@ -212,17 +273,24 @@
         "مصفوفة تغطية تُثبت أنّ كلّ قسمٍ من الأقسام السبعة عشر وكلّ نقطة ضعفٍ من السبع لها صفٌّ بحالته ونواته ومهمّته",
         "المؤجَّل معلَنٌ بسببه في `deferred`، والتعارض الداخليّ في المستند (ربحيّة الفرع مقابل عدم تكرار المحاسبة) مرفوعٌ للمالك لا مطموس",
         "لا سطر كود إنتاجيّ في هذه المهمّة — وثائق وخطط فقط"
-      ]
+      ],
+      "evidence": {
+        "commit": "dd161f2",
+        "closedOn": "2026-08-18"
+      }
     },
-
     {
       "id": "FNB-101",
       "title": "غرس شجرة القطاع — F&B جذرًا، وبراندًا وفرعًا ومركز تكلفة",
       "milestone": "ق١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١"],
-      "dependsOn": ["FNB-000"],
+      "gaps": [
+        "ق‑١"
+      ],
+      "dependsOn": [
+        "FNB-000"
+      ],
       "nucleus": "`src/services/org/orgLocations.js` + `orgLocationsService.js` + شاشة `OrgDimensions.jsx` على `/dashboard/org-dimensions` — الوعاء الرباعيّ مبنيٌّ ومحروس، والناقص سجلّاته وطريقُ إدخالها بالجملة",
       "guardTest": "src/services/org/orgLocations.test.js",
       "touches": [
@@ -246,8 +314,12 @@
       "milestone": "ق١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٢"],
-      "dependsOn": ["FNB-101"],
+      "gaps": [
+        "ق‑٢"
+      ],
+      "dependsOn": [
+        "FNB-101"
+      ],
       "nucleus": "`src/services/documents/partyFields.js` — `PARTY_FIELDS` بخمسة مصادر (مورّد · عميل · مخزن · مندوب · مركبة)، و`FieldInput.jsx:24` يحوّل تلقائيًّا أيّ حقلٍ معلَنٍ فيها إلى قائمةٍ حيّة قابلة للبحث. يكبر بمصدرٍ سادس `orgLocation`",
       "guardTest": "src/services/documents/partyFields.test.js",
       "touches": [
@@ -271,8 +343,12 @@
       "milestone": "ق١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٣"],
-      "dependsOn": ["FNB-102"],
+      "gaps": [
+        "ق‑٣"
+      ],
+      "dependsOn": [
+        "FNB-102"
+      ],
       "nucleus": "`src/services/org/orgLocations.js` — يكبر بدالّة خالصة `dispatchTargetVerdict(index, code)` بجوار `resolveLocation` و`internalBranchProblems`، لا ملفَّ حراسةٍ جديد",
       "guardTest": "src/services/org/orgLocations.test.js",
       "touches": [
@@ -295,8 +371,12 @@
       "milestone": "ق١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٤"],
-      "dependsOn": ["FNB-102"],
+      "gaps": [
+        "ق‑٤"
+      ],
+      "dependsOn": [
+        "FNB-102"
+      ],
       "nucleus": "`src/services/ledger/movements.js:179` `buildMoves` — تكبر ببُعدٍ تنظيميّ **كما كبرت ببُعد الرحلة والمندوب في CC-301** (`tripRef`/`repName`)، وتُغذّى من `orgLocations.dimensionsOf()` المبنيّة والمختبَرة والتي لا يستدعيها أحد اليوم",
       "guardTest": "src/services/ledger/movements.test.js",
       "touches": [
@@ -318,8 +398,12 @@
       "milestone": "ق١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٥"],
-      "dependsOn": ["FNB-104"],
+      "gaps": [
+        "ق‑٥"
+      ],
+      "dependsOn": [
+        "FNB-104"
+      ],
       "nucleus": "`src/services/org/orgLocations.js:118` `costByLocation` — محرّك الصعود القائم بـ`direct`/`rollup`؛ يُعمَّم إلى `rollupBy(index, entries, measure)` فتصعد الكمّيّة والاستهلاك والمخزون والهدر والمرتجعات بمحرّكٍ واحد لا بستّة",
       "guardTest": "src/services/org/orgLocations.test.js",
       "touches": [
@@ -341,8 +425,12 @@
       "milestone": "ق١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٦"],
-      "dependsOn": ["FNB-101"],
+      "gaps": [
+        "ق‑٦"
+      ],
+      "dependsOn": [
+        "FNB-101"
+      ],
       "nucleus": "`src/services/warehouseService.js` (سيّد المستودعات) + `src/services/locations/` (سيّد المناطق وأنواع التخزين من خطة المواقع ٢٠/٢٠) — **لا سيّدَ مناطقَ ثانٍ يُبنى**",
       "guardTest": "src/services/locations/locations.test.js",
       "touches": [
@@ -365,8 +453,12 @@
       "milestone": "ق١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٢٤"],
-      "dependsOn": ["FNB-101"],
+      "gaps": [
+        "ق‑٢٤"
+      ],
+      "dependsOn": [
+        "FNB-101"
+      ],
       "nucleus": "`src/services/auth/roles.js` — كائن `ROLES` بستّة عشر دورًا، مصدرًا واحدًا لكلّ صلاحيّة في المستودع؛ يكبر بدورَين أو ثلاثة و`navCatalog.js` يوصلهما بالشاشات",
       "guardTest": "src/services/auth/roles.test.js",
       "touches": [
@@ -383,15 +475,18 @@
         "لا يفقد أيّ دورٍ من الستّة عشر صلاحيّةً — اختبارٌ يثبت عدم الانتقاص"
       ]
     },
-
     {
       "id": "FNB-201",
       "title": "ملفّ الفرع التشغيليّ — الخمسة عشر حقلًا على صفّ الفرع",
       "milestone": "ق٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٧"],
-      "dependsOn": ["FNB-101"],
+      "gaps": [
+        "ق‑٧"
+      ],
+      "dependsOn": [
+        "FNB-101"
+      ],
       "nucleus": "`src/services/org/orgLocations.js` — يكبر بملفٍّ خالص مجاور `branchProfile.js` داخل **نفس المجلّد**، والحقول تُخزَّن على صفّ الفرع في `org_locations` (لا مجموعة سابعة وخمسين)",
       "guardTest": "src/services/org/branchProfile.test.js",
       "touches": [
@@ -415,8 +510,12 @@
       "milestone": "ق٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٨"],
-      "dependsOn": ["FNB-201"],
+      "gaps": [
+        "ق‑٨"
+      ],
+      "dependsOn": [
+        "FNB-201"
+      ],
       "nucleus": "`src/services/intelligence/operationalIntelligence.js:61` `replenishmentFor` — يقبل اليوم `leadDays`/`safetyDays` وسيطَين عامَّين؛ تكبر بسياسةٍ مقروءةٍ لكلّ صنفٍ في كلّ فرع بدل الرقم الواحد للمنشأة كلّها",
       "guardTest": "src/services/intelligence/operationalIntelligence.test.js",
       "touches": [
@@ -437,8 +536,13 @@
       "milestone": "ق٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٩"],
-      "dependsOn": ["FNB-106", "FNB-201"],
+      "gaps": [
+        "ق‑٩"
+      ],
+      "dependsOn": [
+        "FNB-106",
+        "FNB-201"
+      ],
       "nucleus": "`src/services/items/itemShape.js:44` `FIELD_CASTS` + `SHAPED_FIELDS` — **نمط إضافة حقلٍ حاكم بترحيلٍ صفر الأثر نُفِّذ مرّتين** (`itemType` و`baseUom`)؛ يُتَّبع حرفيًّا لـ`supplyRoute` مع منطقٍ خالص مجاور `supplyRoute.js` كما `itemType.js`",
       "guardTest": "src/services/items/supplyRoute.test.js",
       "touches": [
@@ -461,8 +565,13 @@
       "milestone": "ق٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١٠"],
-      "dependsOn": ["FNB-202", "FNB-203"],
+      "gaps": [
+        "ق‑١٠"
+      ],
+      "dependsOn": [
+        "FNB-202",
+        "FNB-203"
+      ],
       "nucleus": "`src/services/documents/copyFrom.js` (توليد مستندٍ من مستندٍ بتخصيصٍ جزئيّ) + `schemas/tr.js` (طلب النقل) — الشدّة **نوعُ طلبٍ يُولَّد**، لا مستندٌ خامسٌ وأربعون بمنطقٍ خاصّ",
       "guardTest": "src/services/documents/copyFrom.test.js",
       "touches": [
@@ -484,8 +593,13 @@
       "milestone": "ق٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١١"],
-      "dependsOn": ["FNB-104", "FNB-202"],
+      "gaps": [
+        "ق‑١١"
+      ],
+      "dependsOn": [
+        "FNB-104",
+        "FNB-202"
+      ],
       "nucleus": "`src/services/intelligence/operationalIntelligence.js:39` `consumptionRate` و`:61` `replenishmentFor` و`:92` `replenishmentPlan` — تعمل اليوم وتُخرج `suggestQty` و`daysLeft` و`why`؛ + `src/services/ledger/openDemand.js` («بالطريق» ناضجٌ ومختبَر ولم يُوصَل بها قطّ)",
       "guardTest": "src/services/intelligence/operationalIntelligence.test.js",
       "touches": [
@@ -508,8 +622,12 @@
       "milestone": "ق٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١٢"],
-      "dependsOn": ["FNB-301"],
+      "gaps": [
+        "ق‑١٢"
+      ],
+      "dependsOn": [
+        "FNB-301"
+      ],
       "nucleus": "`src/services/documents/schemas/tr.js` (طلب النقل — مستند طلب الفرع القائم) + `copyFrom.js` — الطلب يُولَّد مملوءًا ويُراجَع، ولا مستندَ جديد",
       "guardTest": "src/services/documents/copyFrom.test.js",
       "touches": [
@@ -532,8 +650,12 @@
       "milestone": "ق٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١٣"],
-      "dependsOn": ["FNB-302"],
+      "gaps": [
+        "ق‑١٣"
+      ],
+      "dependsOn": [
+        "FNB-302"
+      ],
       "nucleus": "`src/services/documents/reasonCodes.js` (الأسباب المقيَّدة) + `src/services/ledger/exceptions.js` (`EXCEPTION_TYPES` العشرة بحقولها الثلاثة عشر وبصمة تفرّدها) — يكبران بنوعٍ حادي عشر، لا سجلَّ انحرافاتٍ ثالث",
       "guardTest": "src/services/ledger/exceptions.test.js",
       "touches": [
@@ -555,8 +677,13 @@
       "milestone": "ق٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١٤"],
-      "dependsOn": ["FNB-105", "FNB-302"],
+      "gaps": [
+        "ق‑١٤"
+      ],
+      "dependsOn": [
+        "FNB-105",
+        "FNB-302"
+      ],
       "nucleus": "`src/services/org/orgLocations.js` (محرّك الصعود المعمَّم من FNB-105) + `src/services/ledger/openDemand.js` (تجميع الطلب المفتوح) + `src/services/documents/inbox.js` (الترتيب والتقادم) — التجميع اشتقاقٌ من الثلاثة لا مجموعةٌ رابعة",
       "guardTest": "src/services/ledger/openDemand.test.js",
       "touches": [
@@ -578,8 +705,12 @@
       "milestone": "ق٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١٥"],
-      "dependsOn": ["FNB-304"],
+      "gaps": [
+        "ق‑١٥"
+      ],
+      "dependsOn": [
+        "FNB-304"
+      ],
       "nucleus": "`src/services/documents/schemas/so.js:85` حقل `channel` القائم — يُرفع من نصٍّ حرٍّ في مستندٍ واحد إلى **سجلٍّ محكوم** يُقرأ في كلّ مستندات الطلب، ويدخل بُعدًا في محرّك التخطيط",
       "guardTest": "src/services/documents/schemas/so.test.js",
       "touches": [
@@ -595,15 +726,18 @@
         "اختبارٌ يثبت أنّ طلبَين بقناتين مختلفتين يتجمّعان في محرّكٍ واحد ويظلّان مميَّزَين"
       ]
     },
-
     {
       "id": "FNB-401",
       "title": "دورة الطلب التسع — الفحص بعد السحب والإغلاق ختامًا",
       "milestone": "ق٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١٦"],
-      "dependsOn": ["FNB-302"],
+      "gaps": [
+        "ق‑١٦"
+      ],
+      "dependsOn": [
+        "FNB-302"
+      ],
       "nucleus": "`src/services/documents/chain.js` (خرائط الاشتقاق — `derivationTargets('QC')` اليوم `['PUTAWAY','SRN']`) + `orderStages.js` (مراحل الطلب بالزمن) + `reservations.js` (الحجز) — تُوصَل حلقتان ولا تُبنى سلسلةٌ ثانية",
       "guardTest": "src/services/documents/chain.test.js",
       "touches": [
@@ -625,8 +759,12 @@
       "milestone": "ق٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٢١"],
-      "dependsOn": ["FNB-401"],
+      "gaps": [
+        "ق‑٢١"
+      ],
+      "dependsOn": [
+        "FNB-401"
+      ],
       "nucleus": "`src/services/documents/schemas/trc.js` (استلام النقل) + `chain.js` `threeWayMatch` (فرق المستلَم عن الأمر — **المنطق مبنيّ**) + `exceptions.js` — الفرق يصير استثناءً مسجَّلًا لا رقمًا يمرّ",
       "guardTest": "src/services/ledger/exceptions.test.js",
       "touches": [
@@ -647,8 +785,12 @@
       "milestone": "ق٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٤"],
-      "dependsOn": ["FNB-104"],
+      "gaps": [
+        "ق‑٤"
+      ],
+      "dependsOn": [
+        "FNB-104"
+      ],
       "nucleus": "`src/services/documents/schemas/pick.js` + `src/services/locations/pickPlan.js` (FEFO) — الوجهة تُقرأ من رأس المستند وتُختم على الحركة، لا حقلَ سحبٍ جديد",
       "guardTest": "src/services/locations/pickPlan.test.js",
       "touches": [
@@ -669,8 +811,12 @@
       "milestone": "ق٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٥"],
-      "dependsOn": ["FNB-104"],
+      "gaps": [
+        "ق‑٥"
+      ],
+      "dependsOn": [
+        "FNB-104"
+      ],
       "nucleus": "`src/services/documents/schemas/dmg.js` (سند التالف) + `reasonCodes.js` — الهدر التشغيليّ سببٌ محكومٌ على المستند القائم، لا مستندٌ أربعون بمنطقٍ مطابق",
       "guardTest": "src/services/documents/documents.test.js",
       "touches": [
@@ -691,8 +837,12 @@
       "milestone": "ق٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٢٣"],
-      "dependsOn": ["FNB-403"],
+      "gaps": [
+        "ق‑٢٣"
+      ],
+      "dependsOn": [
+        "FNB-403"
+      ],
       "nucleus": "`src/services/documents/schemas/grn.js:147` (`batch`/`expiryDate`/`shelfLifePct`) + `qc.js:113` (التوريث) + `balances/balanceKey.js` — عمودان يُضافان إلى مصدرٍ قائم ويُورَّثان بالسلسلة نفسها",
       "guardTest": "src/services/balances/balances.test.js",
       "touches": [
@@ -708,15 +858,18 @@
         "اختبارٌ يثبت أنّ سؤال «من أين جاءت هذه الوحدة» يُجاب بدفعة مورّدٍ ومستندٍ ورقم"
       ]
     },
-
     {
       "id": "FNB-501",
       "title": "الوصفة — الطبقة الثالثة من نموذج الأصناف",
       "milestone": "ق٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١٧"],
-      "dependsOn": ["FNB-000"],
+      "gaps": [
+        "ق‑١٧"
+      ],
+      "dependsOn": [
+        "FNB-000"
+      ],
       "nucleus": "`src/services/items/` — الوصفة **ملفٌّ خالص جديد `recipe.js` داخل مجلّد الأصناف القائم** (لا مجلّد خدمةٍ جديد)، مبنيّةٌ على `uomModel.js:120` `factorToBase` (فالوصفة تحويلُ وحداتٍ قبل كلّ شيء) و`itemIdentity.js` (الكود هويّة)",
       "guardTest": "src/services/items/recipe.test.js",
       "touches": [
@@ -740,8 +893,13 @@
       "milestone": "ق٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١٨"],
-      "dependsOn": ["FNB-501", "FNB-106"],
+      "gaps": [
+        "ق‑١٨"
+      ],
+      "dependsOn": [
+        "FNB-501",
+        "FNB-106"
+      ],
       "nucleus": "`src/services/documents/schemas/` (٣٩ مخطّطًا بآليّةٍ واحدة: «أضف نموذجًا هنا فيعمل في المحرّك كاملًا» — رأس `index.js:1`) + `chain.js` (السلسلة) + `postingRules.js` (أثر القيد) — الإنتاج **يدخل بالآليّة القائمة** لا بمحرّكٍ ثانٍ",
       "guardTest": "src/services/documents/chain.test.js",
       "touches": [
@@ -765,8 +923,14 @@
       "milestone": "ق٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١٨", "ق‑٢٣"],
-      "dependsOn": ["FNB-502", "FNB-405"],
+      "gaps": [
+        "ق‑١٨",
+        "ق‑٢٣"
+      ],
+      "dependsOn": [
+        "FNB-502",
+        "FNB-405"
+      ],
       "nucleus": "`src/services/balances/balanceKey.js` (بنية الدفعة والصلاحيّة و`expiryStatus`) + `schemas/qc.js:24` (`rejectionRate` — نمط النسبة المحسوبة) — دفعة الإنتاج **نفس بنية الدفعة** لا بنيةٌ ثانية",
       "guardTest": "src/services/balances/balances.test.js",
       "touches": [
@@ -788,8 +952,13 @@
       "milestone": "ق٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١٨"],
-      "dependsOn": ["FNB-503", "FNB-304"],
+      "gaps": [
+        "ق‑١٨"
+      ],
+      "dependsOn": [
+        "FNB-503",
+        "FNB-304"
+      ],
       "nucleus": "`src/services/documentFlow.js` (محرّك التخصيص الجزئيّ — «كم من هذا الأمر نُفِّذ ولمن») + `schemas/tr.js`·`trn.js`·`trc.js` (سلسلة النقل إلى الفروع، مبنيّةٌ وكاملة)",
       "guardTest": "src/services/documentFlow.test.js",
       "touches": [
@@ -810,8 +979,12 @@
       "milestone": "ق٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٦"],
-      "dependsOn": ["FNB-502"],
+      "gaps": [
+        "ق‑٦"
+      ],
+      "dependsOn": [
+        "FNB-502"
+      ],
       "nucleus": "`src/services/documents/schemas/grn.js:22` `CCP1_LIMITS` (حدود نقطة التحكّم الحرجة عند الاستلام — **مبنيّةٌ وتعمل**) + `/dashboard/cold-chain` — تمتدّ إلى التخزين والإنتاج والتعبئة والشحن بنفس الآليّة",
       "guardTest": "src/services/documents/documents.test.js",
       "touches": [
@@ -825,15 +998,18 @@
         "اختبارٌ يثبت أنّ دفعةً خُرقت سلسلتها لا تُخصَّص لفرعٍ قبل قرار جودة"
       ]
     },
-
     {
       "id": "FNB-601",
       "title": "طلب الشراء بسياقه — عشرة حقولٍ لا كميّةً مجرَّدة",
       "milestone": "ق٥",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١٩"],
-      "dependsOn": ["FNB-301"],
+      "gaps": [
+        "ق‑١٩"
+      ],
+      "dependsOn": [
+        "FNB-301"
+      ],
       "nucleus": "`src/services/documents/schemas/pr.js` + `openDemand.js` («بالطريق» مبنيّ) + `operationalIntelligence.js` (المعدّل وتاريخ النفاد محسوبان) + `orgLocations.js` (البراندات والفروع المتأثّرة) — **الحقول العشرة محسوبةٌ كلّها اليوم في مواضع متفرّقة، والناقص جمعها على المستند**",
       "guardTest": "src/services/documents/documents.test.js",
       "touches": [
@@ -855,8 +1031,12 @@
       "milestone": "ق٥",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١٩"],
-      "dependsOn": ["FNB-601"],
+      "gaps": [
+        "ق‑١٩"
+      ],
+      "dependsOn": [
+        "FNB-601"
+      ],
       "nucleus": "`src/services/tasks/priority.js` (محرّك الأولويّة المحسوبة من خطة التنفيذ الميدانيّ — ت٣) + `tasks/dueTime.js` (`documentDeadline` — الاستحقاق محسوبًا لا مخزَّنًا) — **يُعاد استعمالهما، ولا يُبنى محرّك أولويّةٍ ثانٍ للمشتريات**",
       "guardTest": "src/services/tasks/priority.test.js",
       "touches": [
@@ -878,8 +1058,14 @@
       "milestone": "ق٥",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١٩", "ق‑٥"],
-      "dependsOn": ["FNB-602", "FNB-104"],
+      "gaps": [
+        "ق‑١٩",
+        "ق‑٥"
+      ],
+      "dependsOn": [
+        "FNB-602",
+        "FNB-104"
+      ],
       "nucleus": "`src/services/kpi/procurementKpis.js` (`poCycleTime` · `supplierLeadTime` · `supplierOtd` · `stockoutRate` — **مبنيّةٌ ومختبَرةٌ وحيّةٌ على `/dashboard/kpis` و`/dashboard/vendor-scorecard`**) + `orderStages.js` — الناقص بُعد الفرع والبراند عليها",
       "guardTest": "src/services/kpi/procurementKpis.test.js",
       "touches": [
@@ -895,15 +1081,18 @@
         "اختبارٌ يثبت أنّ المقاييس لا تتغيّر قيمُها الإجماليّة بإضافة البُعد (توافقٌ رجعيّ)"
       ]
     },
-
     {
       "id": "FNB-701",
       "title": "صنف البيع طبقةً رابعة — Menu Item",
       "milestone": "ق٦",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١٧"],
-      "dependsOn": ["FNB-501"],
+      "gaps": [
+        "ق‑١٧"
+      ],
+      "dependsOn": [
+        "FNB-501"
+      ],
       "nucleus": "`src/services/items/itemType.js:26` `ITEM_TYPES` + `itemTypeStats` — سيّد تصنيف الأصناف القائم يكبر بنوعٍ رابع، لا سيّدَ أصنافٍ ثانٍ للمنيو",
       "guardTest": "src/services/items/itemType.test.js",
       "touches": [
@@ -925,8 +1114,12 @@
       "milestone": "ق٦",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٢٠"],
-      "dependsOn": ["FNB-701"],
+      "gaps": [
+        "ق‑٢٠"
+      ],
+      "dependsOn": [
+        "FNB-701"
+      ],
       "nucleus": "`src/services/items/recipe.js` (الانفجار من FNB-501) + `src/services/intelligence/operationalIntelligence.js` (الاستهلاك الفعليّ من الدفتر) — النظريّ والفعليّ يلتقيان في محرّكٍ واحد",
       "guardTest": "src/services/items/recipe.test.js",
       "touches": [
@@ -948,8 +1141,12 @@
       "milestone": "ق٦",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٢٠"],
-      "dependsOn": ["FNB-702"],
+      "gaps": [
+        "ق‑٢٠"
+      ],
+      "dependsOn": [
+        "FNB-702"
+      ],
       "nucleus": "`src/services/inventory/inventoryAnalytics.js:143` (التقييم) + `src/services/odoo/financialImpact.js:24` (`FINANCE_OWNER='odoo'` — **العقد الذي يحدّ البوابة**) — التكلفة التشغيليّة تُحسب هنا، والربحيّة تُقرأ من أودو",
       "guardTest": "src/services/odoo/financialImpact.test.js",
       "touches": [
@@ -972,8 +1169,12 @@
       "owner": "المالك",
       "state": "blocked",
       "blockedBy": "ق-O06 — مصدر بيانات نقطة البيع (Foodics مباشرةً · أودو · ملفّ يوميّ) قرارٌ تقنيّ للمالك وIT، ونصّ الخطة يشترط «وفق السياسة التقنية المعتمدة» (سطر 508)",
-      "gaps": ["ق‑٢٠"],
-      "dependsOn": ["FNB-702"],
+      "gaps": [
+        "ق‑٢٠"
+      ],
+      "dependsOn": [
+        "FNB-702"
+      ],
       "nucleus": "`src/services/integration/integrationPolicy.js:30` (أربعة اتّجاهات × نطاقات بيانات × ستّة أعمدة، `money:'pull'` مقفلة) على `/dashboard/integration-control` — **الطبقة قائمةٌ وتتوسّع بالبيانات لا بالكود**",
       "touches": [
         "src/services/integration/integrationPolicy.js",
@@ -986,15 +1187,19 @@
         "انقطاع المصدر يُعلن ولا يُسكِت الاستهلاك النظريّ بصمت"
       ]
     },
-
     {
       "id": "FNB-801",
       "title": "برج مراقبة القطاع — نزولٌ خماسيّ من F&B إلى المستند",
       "milestone": "ق٧",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٢١"],
-      "dependsOn": ["FNB-105", "FNB-402"],
+      "gaps": [
+        "ق‑٢١"
+      ],
+      "dependsOn": [
+        "FNB-105",
+        "FNB-402"
+      ],
       "nucleus": "`/dashboard/command-center` (غرفة القيادة القائمة) + `src/services/ledger/exceptionDrill.js` و`drill.js` (محرّكا النزول) + `operationsDashboard.js:189` (الكاشف) — **البرج طبقةُ نزولٍ على غرفة القيادة القائمة، لا غرفةٌ ثانية**",
       "guardTest": "src/services/ledger/exceptionDrill.test.js",
       "touches": [
@@ -1016,8 +1221,12 @@
       "milestone": "ق٧",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٢١"],
-      "dependsOn": ["FNB-801"],
+      "gaps": [
+        "ق‑٢١"
+      ],
+      "dependsOn": [
+        "FNB-801"
+      ],
       "nucleus": "`src/services/ledger/exceptions.js` `EXCEPTION_TYPES` — **عشرة أنواع قائمة بحقولها الثلاثة عشر وبصمة تفرّدها وترقيمها وقاعدة «لا حذف ولا تعديلَ أثر»**؛ تكبر بالأنواع الناقصة ولا يُبنى سجلٌّ ثانٍ",
       "guardTest": "src/services/ledger/exceptions.test.js",
       "touches": [
@@ -1039,8 +1248,13 @@
       "milestone": "ق٧",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑٢٢"],
-      "dependsOn": ["FNB-802", "FNB-702"],
+      "gaps": [
+        "ق‑٢٢"
+      ],
+      "dependsOn": [
+        "FNB-802",
+        "FNB-702"
+      ],
       "nucleus": "`src/services/documents/schemas/vsr.js` (تسوية نهاية الرحلة — **نمطُ إغلاقٍ يوميٍّ مطابقٌ مبنيٌّ ويعمل**: ما حُمّل وما بيع وما رجع وما تبقّى وما فُقد، بفروقاته وأسبابها) — يُحتذى للفرع ولا يُبتكر نمطٌ ثانٍ",
       "guardTest": "src/services/documents/documents.test.js",
       "touches": [
@@ -1063,8 +1277,14 @@
       "milestone": "ق٧",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١١", "ق‑٢١"],
-      "dependsOn": ["FNB-301", "FNB-801"],
+      "gaps": [
+        "ق‑١١",
+        "ق‑٢١"
+      ],
+      "dependsOn": [
+        "FNB-301",
+        "FNB-801"
+      ],
       "nucleus": "`src/services/intelligence/operationalIntelligence.js` (`daysLeft` و`urgency` — **تنبّؤ النفاد مبنيٌّ بالفعل**) + `balances/balanceKey.js` `expiryStatus` (تنبّؤ الصلاحيّة) — الناقص إعادةُ التوازن بين الفروع",
       "guardTest": "src/services/intelligence/operationalIntelligence.test.js",
       "touches": [
@@ -1086,8 +1306,12 @@
       "milestone": "ق٧",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ق‑١٤"],
-      "dependsOn": ["FNB-801"],
+      "gaps": [
+        "ق‑١٤"
+      ],
+      "dependsOn": [
+        "FNB-801"
+      ],
       "nucleus": "`src/data/restaurants-supply-chain.js` (٣٥ شريحة على `/dashboard/restaurants-supply-chain` — **يستدعي `chain.js` و`navCatalog.js` بحارسٍ يمنع أن يصمت عند تغييرها**) — يُحدَّث بالمبنيّ ولا يُبنى عرضٌ ثانٍ",
       "guardTest": "src/data/restaurants-supply-chain.test.js",
       "touches": [
