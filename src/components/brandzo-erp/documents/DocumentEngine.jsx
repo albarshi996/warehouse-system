@@ -50,6 +50,7 @@ import { subscribeWarehouses } from '../../../services/warehouseService.js';
 import { listenLocations } from '../../../services/locations/locationsService.js';
 import { binCellVerdict, locationOptions } from '../../../services/locations/locationsModel.js';
 import { listenVehicles } from '../../../services/vehicles/vehiclesService.js';
+import { listenOrgLocations } from '../../../services/org/orgLocationsService.js';
 import { subscribeReps } from '../../../services/field/repsService.js';
 import { listenPartnerLedger } from '../../../services/ledger/partnerLedgerService.js';
 import { creditCheck } from '../../../services/ledger/creditGuard.js';
@@ -174,9 +175,13 @@ export default function DocumentEngine() {
   useEffect(() => listenLocations(setLocationsList, () => setLocationsList([])), []);
   useEffect(() => listenVehicles(setVehiclesList), []);
   useEffect(() => subscribeReps(setRepsList, () => setRepsList([])), []);
+  // الشجرة التنظيميّة (FNB-102): منها يُختار مركز التكلفة — الصرف على الفرع
+  // المستفيد لا على القطاع. الفشل ⇒ قائمةٌ فارغة ⇒ الحقل نصٌّ حرّ كما كان.
+  const [orgLocationsList, setOrgLocationsList] = useState([]);
+  useEffect(() => listenOrgLocations(setOrgLocationsList, () => setOrgLocationsList([])), []);
   const partyLists = useMemo(
-    () => ({ suppliers, customers, warehouses: warehousesList, reps: repsList, vehicles: vehiclesList }),
-    [suppliers, customers, warehousesList, repsList, vehiclesList]
+    () => ({ suppliers, customers, warehouses: warehousesList, reps: repsList, vehicles: vehiclesList, orgLocations: orgLocationsList }),
+    [suppliers, customers, warehousesList, repsList, vehiclesList, orgLocationsList]
   );
 
   // دفتر الذمم (م٤-د): منه الرصيد الحقيقيّ. والفشل ⇒ سطورٌ فارغة ⇒ رصيدُ صفرٍ

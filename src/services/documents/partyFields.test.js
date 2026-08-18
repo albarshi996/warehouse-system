@@ -93,3 +93,36 @@ test('كلّ إعلانٍ سليم البنية: مصدرٌ ومفتاح رمز�
     assert.ok(decl.codeKey, key);
   }
 });
+
+/* ═══════════ ‹FNB-102› مركز التكلفة حقلَ طرفٍ سادسًا ═══════════ */
+
+test('costCenter مُعلَنٌ مصدره الشجرة التنظيميّة — والقيمة الرمز وحده', () => {
+  const decl = partyFieldFor('costCenter');
+  assert.equal(decl.source, 'orgLocation');
+  assert.equal(decl.codeKey, 'costCenter');
+  assert.equal(decl.nameKey, null);
+  // والاختيار يملأ الرمز فقط — لا اسمَ قرينًا يفترق عنه.
+  assert.deepEqual(applyPartySelection('costCenter', { code: 'BR01', name: 'فرع أول (فرع)' }), [
+    { key: 'costCenter', value: 'BR01' },
+  ]);
+});
+
+test('خيارات الشجرة: «الاسم (المستوى)» — والمعطَّل لا يُعرض', () => {
+  const orgLocations = [
+    { code: 'FNB', nameAr: 'قطاع الأغذية', level: 'sector' },
+    { code: 'BR01', nameAr: 'فرع أول', level: 'branch', parentCode: 'BRD1' },
+    { code: 'BR99', nameAr: 'فرع مقفل', level: 'branch', active: false },
+  ];
+  const options = partyOptions('orgLocation', { orgLocations });
+  assert.deepEqual(options.map((o) => o.code), ['FNB', 'BR01']); // المعطَّل سقط.
+  assert.equal(options[1].name, 'فرع أول (فرع)');
+  // والبحث «فرع» يجد الفروع كلّها — الاسم يحمل المستوى.
+  assert.deepEqual(filterPartyOptions(options, 'فرع').map((o) => o.code), ['BR01']);
+  assert.equal(filterPartyOptions(options, '***').length, 2);
+});
+
+test('★ ثبات ORG_FIELDS: لا اسم حقلٍ سادس يُضاف — توحيدٌ لا تكاثر (ق‑٢)', async () => {
+  const { ORG_FIELDS } = await import('../org/orgLocations.js');
+  // القائمة كما هي منذ م٦-أ: من أضاف اسمًا سادسًا ضاعف مصادر الحقيقة.
+  assert.deepEqual(ORG_FIELDS, ['costCenter', 'budgetCode', 'orgCode', 'branch', 'sector']);
+});

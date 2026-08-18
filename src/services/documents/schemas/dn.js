@@ -60,6 +60,9 @@ const schema = {
         { key: 'customerCode', label: 'رقم العميل (Customer Code)', kind: 'text' },
         { key: 'salesOrderRef', label: 'رقم طلب البيع (Sales Order Ref.)', kind: 'text' },
         { key: 'fromBranch', label: 'الفرع المُسلّم (From Branch)', kind: 'text' },
+        // ‹FNB-102› الفرع/المركز المستفيد — من الشجرة التنظيميّة، به تُحمَّل
+        // التكلفة على الفرع والبراند والقطاع صعودًا (توجيه المدير العام).
+        { key: 'costCenter', label: 'مركز التكلفة (الفرع المستفيد)', kind: 'text', ltr: true, hint: 'رمزٌ من سيّد المواقع التنظيميّة — الصرف على الفرع المستفيد لا على القطاع' },
         {
           key: 'whOfficer',
           label: 'مسؤول المستودع (WH Officer)',

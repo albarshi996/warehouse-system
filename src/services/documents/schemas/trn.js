@@ -77,6 +77,9 @@ const schema = {
           required: true,
           hint: 'يُورَّث لمستند الاستلام.',
         },
+        // ‹FNB-102› مركز التكلفة المستفيد — يُورَّث من طلب النقل (TR>TRN)
+        // ويُختار من الشجرة حين يُنشأ المستند مستقلًّا.
+        { key: 'costCenter', label: 'مركز التكلفة (Cost Center)', kind: 'text', ltr: true, hint: 'رمزٌ من سيّد المواقع التنظيميّة — به تُحمَّل التكلفة على الفرع والبراند والقطاع' },
         { key: 'driverName', label: 'اسم السائق (Driver)', kind: 'text' },
         { key: 'vehiclePlate', label: 'لوحة المركبة (Vehicle Plate)', kind: 'text', ltr: true },
         { key: 'loadedBy', label: 'مسؤول التحميل (Loaded By)', kind: 'identity', source: 'creator' },

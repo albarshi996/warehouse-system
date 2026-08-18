@@ -17,6 +17,8 @@
  * منطق خالص: بلا Firestore وبلا DOM (§22 ‹995›).
  */
 
+import { levelOf } from '../org/orgLocations.js';
+
 const text = (v) => String(v ?? '').trim();
 
 /**
@@ -40,6 +42,10 @@ export const PARTY_FIELDS = Object.freeze({
   rep: { source: 'rep', codeKey: 'rep', nameKey: null },
   // المركبة: اللوحة — من جرد المركبات.
   vehiclePlate: { source: 'vehicle', codeKey: 'vehiclePlate', nameKey: null },
+  // ‹FNB-102› مركز التكلفة: من سيّد المواقع التنظيميّة (قطاع › براند › فرع ›
+  // مركز تكلفة) — به يتحقّق توجيه المدير العام «الصرف على الفرع المستفيد
+  // لا على القطاع عامّةً». القيمة الرمز وحده؛ والاسم والمستوى للعرض.
+  costCenter: { source: 'orgLocation', codeKey: 'costCenter', nameKey: null },
 });
 
 /** إعلان حقلٍ ما، أو null لغير حقول الطرف. */
@@ -51,7 +57,7 @@ export function partyFieldFor(key) {
  * خيارات مصدرٍ ما من القوائم الحيّة — بشكلٍ موحّد {code, name}.
  * المؤرشف لا يُعرض: لا يُبنى مستندٌ جديد على طرفٍ مُقفل.
  */
-export function partyOptions(source, { suppliers = [], customers = [], warehouses = [], reps = [], vehicles = [] } = {}) {
+export function partyOptions(source, { suppliers = [], customers = [], warehouses = [], reps = [], vehicles = [], orgLocations = [] } = {}) {
   const alive = (list) => list.filter((r) => !r?.archived);
   switch (source) {
     case 'supplier':
@@ -68,6 +74,12 @@ export function partyOptions(source, { suppliers = [], customers = [], warehouse
         .map((u) => ({ code: text(u.name || u.email), name: text(u.name || u.email) }));
     case 'vehicle':
       return alive(vehicles).map((v) => ({ code: text(v.plate || v.plateNo || v.id), name: text(v.nameAr || v.model || '') }));
+    case 'orgLocation':
+      // «الاسم (المستوى)» — فمن يبحث «فرع» يجد الفروع كلّها. والمعطَّل لا
+      // يُعرض: لا يُبنى مستندٌ جديد على فرعٍ مُقفل (نفس عقد المؤرشف).
+      return (orgLocations || [])
+        .filter((l) => l?.active !== false)
+        .map((l) => ({ code: text(l.code), name: `${text(l.nameAr) || text(l.code)} (${levelOf(l.level)?.labelAr || l.level})` }));
     default:
       return [];
   }
