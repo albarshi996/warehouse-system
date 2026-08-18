@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import {
   dispatchTargetVerdict, dispatchViolations, DISPATCH_DOC_TYPES,
   rollupBy, orgEntriesFromMoves, rankByMeasure, ORG_MEASURES, costByLocation as costWrap,
-  suggestLocationCode, parentChoices,
+  suggestLocationCode, parentChoices, pathOf, childLevelOf, orgSetupSteps, newChildDraft,
   ORG_LEVELS,
   LEVEL_IDS,
   ORG_FIELDS,
@@ -372,4 +372,63 @@ test('★★ الآباء يُعرضون بمسارهم كاملًا — فلا 
 
 test('وقائمةٌ فارغة تعني «أضف الأب أوّلًا» لا عطبًا', () => {
   assert.deepEqual(parentChoices([{ code: 'SEC01', nameAr: 'قطاع', level: 'sector' }], 'branch'), []);
+});
+
+/* ═══════════ الشاشة تقود: خطوة ثمّ خطوة، والأب يُنقر لا يُستدعى ═══════════ */
+
+const GUIDE_TREE = [
+  { code: 'SEC01', nameAr: 'قطاع الأغذية', level: 'sector' },
+  { code: 'BRD01', nameAr: 'براند الواحة', level: 'brand', parentCode: 'SEC01' },
+  { code: 'BR01', nameAr: 'فرع بنغازي', level: 'branch', parentCode: 'BRD01' },
+];
+
+test('المسار المقروء يصعد للجذر — نسبُ الموقع يُعرض ولا يُحمَّل على الرمز', () => {
+  const index = indexLocations(GUIDE_TREE);
+  assert.equal(pathOf(index, 'BR01'), 'قطاع الأغذية › براند الواحة › فرع بنغازي');
+  assert.equal(pathOf(index, 'SEC01'), 'قطاع الأغذية');
+  assert.equal(pathOf(index, 'لا يوجد'), '');
+});
+
+test('المستوى الابن عكسُ الأب — ومركز التكلفة قاعٌ بلا ابن', () => {
+  assert.equal(childLevelOf('sector').id, 'brand');
+  assert.equal(childLevelOf('brand').id, 'branch');
+  assert.equal(childLevelOf('branch').id, 'cost_center');
+  assert.equal(childLevelOf('cost_center'), null);
+  assert.equal(childLevelOf(''), null);
+});
+
+test('★ الخطوات تُفتح بالترتيب: شجرةٌ فارغة لا تقبل إلّا قطاعًا', () => {
+  const steps = orgSetupSteps([]);
+  assert.deepEqual(steps.map((s) => s.id), LEVEL_IDS);
+  assert.equal(steps[0].ready, true, 'القطاع جذرٌ فلا شرط له');
+  assert.deepEqual(steps.slice(1).map((s) => s.ready), [false, false, false]);
+  assert.equal(steps[1].blockedBy, 'sector');
+  assert.match(steps[1].hint, /أضف قطاعًا أوّلًا/);
+  assert.deepEqual(steps.map((s) => s.count), [0, 0, 0, 0]);
+});
+
+test('★★ «جاهزة» تعني قائمةَ آباءٍ غير فارغة — لا عدَّ موازٍ يناقض المنسدلة', () => {
+  const steps = orgSetupSteps(GUIDE_TREE);
+  assert.deepEqual(steps.map((s) => s.ready), [true, true, true, true]);
+  assert.deepEqual(steps.map((s) => s.count), [1, 1, 1, 0]);
+
+  // قطاعٌ معطَّل لا يصلح أبًا — فتُغلق خطوة البراند، ولا تُفتح على فراغ.
+  const off = orgSetupSteps([{ code: 'SEC09', nameAr: 'مقفل', level: 'sector', active: false }]);
+  assert.equal(off[1].ready, false);
+  assert.equal(parentChoices([{ code: 'SEC09', nameAr: 'مقفل', level: 'sector', active: false }], 'brand').length, 0);
+});
+
+test('★★ مسوّدة الابن تتبع مكان النقر — فلا يُسأل المستخدم عن مستوًى ولا أب', () => {
+  const draft = newChildDraft(GUIDE_TREE, 'SEC01');
+  assert.equal(draft.level, 'brand', 'المستوى من الأب');
+  assert.equal(draft.parentCode, 'SEC01');
+  assert.equal(draft.parentPath, 'قطاع الأغذية');
+  assert.equal(draft.code, 'BRD02', 'رمزٌ يقفز فوق المشغول');
+  assert.equal(draft.nameAr, '', 'لم يبقَ للمستخدم إلّا الاسم');
+
+  // والفرع يلد مركز تكلفة، ومركزُ التكلفة قاعٌ.
+  assert.equal(newChildDraft(GUIDE_TREE, 'BR01').level, 'cost_center');
+  assert.equal(newChildDraft(GUIDE_TREE, 'BRD01').parentPath, 'قطاع الأغذية › براند الواحة');
+  assert.equal(newChildDraft([...GUIDE_TREE, { code: 'CC01', nameAr: 'صيانة', level: 'cost_center', parentCode: 'BR01' }], 'CC01'), null);
+  assert.equal(newChildDraft(GUIDE_TREE, 'لا يوجد'), null, 'موقعٌ مجهول لا يفتح نموذجًا');
 });

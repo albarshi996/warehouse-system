@@ -323,6 +323,20 @@ export function suggestLocationCode(index, level) {
 }
 
 /**
+ * المسار المقروء من الجذر إلى موقع: «قطاع الأغذية › براند الواحة › فرع بنغازي».
+ *
+ * الرمز هويّةٌ للآلة، والمسار هويّةٌ للإنسان: `BR01` لا يقول تحت أيّ براند،
+ * والمسار يقوله بلا أن يُحمَّل الرمزُ نسبَه (ولو حُمِّله لكذب أوّل نقلٍ بين
+ * البراندات — والرمز لا يُغيَّر بعد أوّل حركة).
+ */
+export function pathOf(index, code) {
+  return ancestryOf(index, code)
+    .reverse()
+    .map((n) => str(n.nameAr) || n.code)
+    .join(' › ');
+}
+
+/**
  * آباءٌ صالحون لمستوًى ما — **بمسارهم كاملًا** فلا يلتبس براندان باسمٍ واحد
  * تحت قطاعين. والقائمة الفارغة تعني «أضف الأب أوّلًا» لا عطبًا.
  *
@@ -334,15 +348,69 @@ export function parentChoices(locations = [], level) {
   const index = indexLocations(locations);
   return (Array.isArray(locations) ? locations : [])
     .filter((l) => l.level === parentLevel && l.active !== false)
-    .map((l) => {
-      // المسار من الجذر إلى الأب: «قطاع الأغذية › براند أ».
-      const path = ancestryOf(index, l.code)
-        .reverse()
-        .map((n) => str(n.nameAr) || n.code)
-        .join(' › ');
-      return { code: up(l.code), label: str(l.nameAr) || up(l.code), path };
-    })
+    .map((l) => ({ code: up(l.code), label: str(l.nameAr) || up(l.code), path: pathOf(index, l.code) }))
     .sort((a, b) => a.path.localeCompare(b.path));
+}
+
+/** المستوى الواقع مباشرةً تحت مستوًى ما — عكسُ `parentOf`، ومركزُ التكلفة قاعٌ بلا ابن. */
+export function childLevelOf(level) {
+  return ORG_LEVELS.find((l) => l.parentOf === str(level)) || null;
+}
+
+/**
+ * خطوات بناء الشجرة مرتّبةً — **الشاشة تقود لا تمتحن**.
+ *
+ * الشاشة الأولى كانت تسأل المستخدم عن أربعة أشياء دفعةً واحدة (رمزٌ ومستوًى
+ * وأبٌ واسم) وهو لا يعرف بعدُ ما الفرق بين قطاعٍ وبراند. فصار الترتيب معلنًا:
+ * قطاعٌ أوّلًا، ثمّ براندٌ تحته، ثمّ فرع. والخطوة المحجوبة تقول **بم تُفتح**،
+ * ولا تُترك زرًّا ميتًا بلا سبب.
+ *
+ * و`ready` مشتقٌّ من `parentChoices` نفسها لا من عدٍّ موازٍ — فلا تقول خطوةٌ
+ * «جاهزة» ثمّ تُفتح على قائمة آباءٍ فارغة.
+ *
+ * @returns {{id, labelAr, order, count, ready, blockedBy, hint}[]}
+ */
+export function orgSetupSteps(locations = []) {
+  const rows = Array.isArray(locations) ? locations : [];
+  return ORG_LEVELS.map((l) => {
+    const parent = l.parentOf ? levelOf(l.parentOf) : null;
+    const ready = !parent || parentChoices(rows, l.id).length > 0;
+    return {
+      id: l.id,
+      labelAr: l.labelAr,
+      order: l.order,
+      count: rows.filter((x) => x.level === l.id).length,
+      ready,
+      blockedBy: ready ? '' : parent.id,
+      hint: ready ? '' : `أضف ${parent.labelAr}ًا أوّلًا — ${l.labelAr} لا يقوم بلا أب.`,
+    };
+  });
+}
+
+/**
+ * مسوّدة ابنٍ تحت موقعٍ بعينه — «أضف براندًا تحت **هذا** القطاع».
+ *
+ * الأب يُختار بالنقر على موضعه في الشجرة لا باستدعائه من قائمةٍ منسدلة، فيسقط
+ * السؤالان اللذان يُربكان: ما المستوى؟ ومن الأب؟ — كلاهما يتبع مكان النقر.
+ * والرمز يُقترح معهما، فلا يبقى للمستخدم إلّا **الاسم**.
+ *
+ * @returns {{level, levelLabelAr, parentCode, parentPath, code, nameAr}|null}
+ *   `null` لموقعٍ مجهول أو لمركز تكلفةٍ (قاعُ الشجرة — لا ابنَ تحته).
+ */
+export function newChildDraft(locations = [], parentCode) {
+  const index = indexLocations(locations);
+  const parent = index.get(up(parentCode));
+  if (!parent) return null;
+  const child = childLevelOf(parent.level);
+  if (!child) return null;
+  return {
+    level: child.id,
+    levelLabelAr: child.labelAr,
+    parentCode: parent.code,
+    parentPath: pathOf(index, parent.code),
+    code: suggestLocationCode(index, child.id),
+    nameAr: '',
+  };
 }
 
 /** خيارات العرض مرتّبةً بالمستوى ثمّ بالاسم — لقائمةٍ منسدلة. */

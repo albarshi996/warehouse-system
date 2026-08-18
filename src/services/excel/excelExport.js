@@ -92,3 +92,50 @@ export const exportOutboundLog = (entries, opts) => exportDataset('outbound', en
 export function exportTemplate(datasetKey) {
   return exportDataset(datasetKey, [], { fileName: `Brandzo_template_${datasetKey}` });
 }
+
+/**
+ * قالبٌ بورقتين: **الأولى تُملأ** (عناوين المخطّط وحدها)، و**الثانية تشرح**
+ * (قواعدُ التعبئة ثمّ مثالٌ عاملٌ بترتيب الأعمدة نفسه فيُنسخ كما هو).
+ *
+ * ولمَ ورقتان؟ لأنّ مثالًا داخل ورقة التعبئة يُستورد بيانًا حقيقيًّا إن نسي
+ * المستخدم حذفه — والمستورِد يقرأ **الورقة الأولى** فتبقى نظيفةً بالبناء.
+ *
+ * والعناوين من `DATASETS` نفسها التي يقرأ بها المستورِد، فما يُكتب يُقرأ.
+ *
+ * @param {string} datasetKey
+ * @param {{title:string, rules:[string,string][], exampleTitle?:string, example?:object[]}} guide
+ * @param {{ fileName?: string, sheetName?: string, guideSheetName?: string }} [opts]
+ */
+export function buildTemplateWorkbook(datasetKey, guide, opts = {}) {
+  const ds = DATASETS[datasetKey];
+  if (!ds) throw new Error(`Unknown dataset: ${datasetKey}`);
+
+  // ورقةُ التعبئة أوّلًا — والمستورِد يقرأ الأولى، فتبقى ورقةُ الشرح بعيدةً عنه.
+  const wb = buildWorkbook([{ datasetKey, records: [], sheetName: opts.sheetName }]);
+
+  const aoa = [[guide.title], []];
+  for (const [label, text] of guide.rules ?? []) aoa.push([label, text]);
+  if (guide.example?.length) {
+    aoa.push([], [guide.exampleTitle ?? 'مثال:']);
+    // المثال بترتيب أعمدة ورقة التعبئة نفسه — فيُنسخ كتلةً واحدة بلا إعادة ترتيب.
+    aoa.push(ds.columns.map((c) => c.labelAr));
+    for (const row of guide.example) aoa.push(ds.columns.map((c) => row[c.field] ?? ''));
+  }
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{ wch: 22 }, { wch: 90 }, ...ds.columns.slice(2).map(() => ({ wch: 22 }))];
+  XLSX.utils.book_append_sheet(wb, ws, (opts.guideSheetName ?? 'تعليمات').slice(0, 31));
+  return wb;
+}
+
+/** يُنزّل القالب المبنيّ أعلاه (متصفّح فقط — `writeFile` يُطلق التنزيل). */
+export function exportTemplateWithGuide(datasetKey, guide, opts = {}) {
+  try {
+    const wb = buildTemplateWorkbook(datasetKey, guide, opts);
+    const fileName = ensureXlsxName(opts.fileName, `Brandzo_template_${datasetKey}`);
+    XLSX.writeFile(wb, fileName);
+    return fileName;
+  } catch (error) {
+    console.error('Failed to export Excel template: ', error);
+    throw new Error('تعذّر توليد قالب Excel. | Failed to generate the Excel template.');
+  }
+}

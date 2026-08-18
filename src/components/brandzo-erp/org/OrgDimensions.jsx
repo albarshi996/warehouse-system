@@ -15,16 +15,17 @@ import { listenOrgLocations, saveOrgLocation, setOrgLocationActive, importOrgLoc
 import { subscribePartners } from '../../../services/partnerService.js';
 import { listenAllDocuments } from '../../../services/documents/documentsService.js';
 import {
-  ORG_LEVELS, levelOf, indexLocations, locationProblems,
+  levelOf, indexLocations, locationProblems,
   internalBranchProblems, orgCodeOf, docAmountOf, costByLocation, unlinkedCost,
-  suggestLocationCode, parentChoices,
+  suggestLocationCode, parentChoices, pathOf, childLevelOf, orgSetupSteps, newChildDraft,
 } from '../../../services/org/orgLocations.js';
-import { planOrgImport, seedWarnings } from '../../../services/org/orgImport.js';
+import { planOrgImport, seedWarnings, orgTemplateGuide } from '../../../services/org/orgImport.js';
 import {
   CONCEPT_TYPES, BRANCH_STATES, WEEK_DAYS, WEEK_DAY_LABELS,
   shapeBranchProfile, profileGaps, profileCompleteness,
 } from '../../../services/org/branchProfile.js';
 import { importSheet } from '../../../services/excel/excelImport.js';
+import { exportTemplateWithGuide } from '../../../services/excel/excelExport.js';
 
 // ‹FNB-107› مدير القطاع صاحبُ المدخل (البراندات والفروع) — يرى الشجرة ويُدخلها.
 const VIEWER_ROLES = ['admin', 'warehouse_manager', 'finance_manager', 'fnb_manager'];
@@ -32,7 +33,20 @@ const VIEWER_ROLES = ['admin', 'warehouse_manager', 'finance_manager', 'fnb_mana
 const input =
   'w-full bg-chip border border-line rounded-lg px-3 py-2 text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:border-accent/60';
 
-const EMPTY_FORM = { code: '', nameAr: '', level: 'sector', parentCode: '' };
+/**
+ * النموذج مسوّدةٌ لا استمارةُ امتحان: `mode` يفصل الإنشاء عن التعديل (فالرمز
+ * هويّةٌ تُثبَّت مرّةً)، و`autoCode` يجعل الرمز **تلقائيًّا افتراضًا** ويبقى
+ * بابُ الكتابة اليدويّة مفتوحًا لمن له ترميزٌ قائم.
+ */
+const EMPTY_FORM = { mode: 'create', code: '', nameAr: '', level: 'sector', parentCode: '', autoCode: true };
+
+/** أمثلةٌ في الحقل الفارغ — المستوى المجرَّد يُفهم بمثالٍ أسرعَ ممّا يُفهم بتعريف. */
+const PLACEHOLDER_NAME = Object.freeze({
+  sector: 'مثال: قطاع الأغذية والمشروبات',
+  brand: 'مثال: براند الواحة',
+  branch: 'مثال: فرع بنغازي — دبي ستريت',
+  cost_center: 'مثال: صيانة فرع بنغازي',
+});
 
 export default function OrgDimensions() {
   const [me, setMe] = useState(null);
@@ -103,28 +117,88 @@ export default function OrgDimensions() {
   }, [locations]);
 
   const parentLevel = levelOf(form.level)?.parentOf;
-  // ‹الرمز يُقترح لا يُخترع›: بادئة المستوى ورقمٌ يقفز فوق المشغول. ومقترحٌ
-  // لا مفروض — الحقل يبقى قابلًا للتحرير لمن له ترميزٌ قائم.
+  // خطوات البناء: قطاعٌ ثمّ براندٌ ثمّ فرع — والمحجوبة تقول بم تُفتح.
+  const steps = useMemo(() => orgSetupSteps(locations), [locations]);
+  // ‹الرمز يُقترح لا يُخترع›: بادئة المستوى ورقمٌ يقفز فوق المشغول.
   const suggestedCode = useMemo(() => suggestLocationCode(index, form.level), [index, form.level]);
+  // والمعروض **مشتقٌّ لا مخزَّن** ما دام تلقائيًّا، فلا يتقادم حين تكبر الشجرة تحته.
+  const formCode = form.autoCode ? suggestedCode : form.code;
   // والآباء بمسارهم كاملًا — فلا يلتبس براندان باسمٍ واحد تحت قطاعين.
   const parentOptions = useMemo(() => parentChoices(locations, form.level), [locations, form.level]);
+  const parentPath = form.parentCode ? pathOf(index, form.parentCode) : '';
+  const levelLabel = levelOf(form.level)?.labelAr || form.level;
+
+  /** فتحُ النموذج على مستوًى من شريط الخطوات — والأب يُختار بعدها من قائمةٍ بمساراتها. */
+  function startLevel(level) {
+    setForm({ ...EMPTY_FORM, level });
+    setFlash(null);
+  }
+
+  /**
+   * فتحُه على ابنٍ تحت موقعٍ بعينه — «أضف براندًا تحت **هذا** القطاع».
+   * المستوى والأب والرمز كلّها من مكان النقر، فلا يبقى إلّا الاسم.
+   */
+  function startChild(parentCode) {
+    const draft = newChildDraft(locations, parentCode);
+    if (!draft) return;
+    setForm({ mode: 'create', code: draft.code, nameAr: '', level: draft.level, parentCode: draft.parentCode, autoCode: true });
+    setFlash(null);
+  }
+
+  /** التعديل: الاسم والأب يُبدَّلان، والرمز يُعرض ولا يُكتب — تغييرُه يشقّ الموقع نسختين. */
+  function startEdit(loc) {
+    setForm({
+      mode: 'edit',
+      code: String(loc.code).toUpperCase(),
+      nameAr: loc.nameAr || '',
+      level: loc.level,
+      parentCode: loc.parentCode || '',
+      autoCode: false,
+    });
+    setFlash(null);
+  }
 
   async function save() {
     if (busy) return;
     setBusy(true);
     setFlash(null);
+    const code = String(formCode || '').trim().toUpperCase();
     try {
-      const code = await saveOrgLocation(
-        { ...form, code: form.code.trim().toUpperCase(), parentCode: parentLevel ? form.parentCode : '' },
+      const before = locations.find((l) => String(l.code).toUpperCase() === code);
+      await saveOrgLocation(
+        {
+          code,
+          nameAr: form.nameAr.trim(),
+          level: form.level,
+          parentCode: parentLevel ? form.parentCode : '',
+          // المعطَّل يبقى معطَّلًا بعد تصحيح اسمه — التعديل ليس بابًا خلفيًّا للتفعيل.
+          active: before ? before.active !== false : true,
+        },
         locations,
         me
       );
-      setFlash({ kind: 'ok', text: `حُفظ الموقع ${code}.` });
-      setForm(EMPTY_FORM);
+      setFlash({ at: 'form', kind: 'ok', text: form.mode === 'edit' ? `حُدِّث الموقع ${code}.` : `حُفظ ${levelLabel} ${code}.` });
+      // بعد الإنشاء يبقى المكان مفتوحًا لشقيقٍ تالٍ (عشرون فرعًا تُدخَل تباعًا)،
+      // والرمز يتقدّم وحده. وبعد التعديل يُغلق النموذج.
+      setForm(form.mode === 'edit' ? EMPTY_FORM : { ...form, nameAr: '', code: '', autoCode: true });
     } catch (e) {
-      setFlash({ kind: 'err', text: e?.message || 'تعذّر الحفظ.' });
+      setFlash({ at: 'form', kind: 'err', text: e?.message || 'تعذّر الحفظ.' });
     } finally {
       setBusy(false);
+    }
+  }
+
+  /** ‹FNB-101› قالبُ التعبئة: ورقةٌ تُملأ وورقةٌ تشرح — ويُولَّد من مخطّط المستورِد نفسه. */
+  function downloadTemplate() {
+    setFlash(null);
+    try {
+      const fileName = exportTemplateWithGuide('orgLocations', orgTemplateGuide(), {
+        fileName: 'قالب-الشجرة-التنظيمية',
+        sheetName: 'الشجرة',
+      });
+      setFlash({ at: 'bulk', kind: 'ok', text: `نُزِّل ${fileName} — املأ ورقة «الشجرة»، وورقةُ «تعليمات» فيها القواعد ومثالٌ عامل.` });
+    } catch (e) {
+      setFlash({ at: 'bulk', kind: 'err', text: e?.message || 'تعذّر توليد القالب.' });
     }
   }
 
@@ -136,7 +210,7 @@ export default function OrgDimensions() {
     try {
       const sheet = await importSheet(file, 'orgLocations');
       if (!sheet.rows.length) {
-        setFlash({ kind: 'err', text: sheet.errors[0]?.message || 'الملف بلا صفوف صالحة.' });
+        setFlash({ at: 'bulk', kind: 'err', text: sheet.errors[0]?.message || 'الملف بلا صفوف صالحة.' });
         return;
       }
       const plan = planOrgImport(sheet.rows, locations);
@@ -144,7 +218,7 @@ export default function OrgDimensions() {
       const sheetErrors = sheet.errors.map((e) => `سطر ${e.row}: ${e.message}`);
       setImportPlan({ ...plan, ok: plan.ok && !sheetErrors.length, problems: [...sheetErrors, ...plan.problems] });
     } catch (e) {
-      setFlash({ kind: 'err', text: e?.message || 'تعذّرت قراءة الملف.' });
+      setFlash({ at: 'bulk', kind: 'err', text: e?.message || 'تعذّرت قراءة الملف.' });
     }
   }
 
@@ -154,10 +228,10 @@ export default function OrgDimensions() {
     setImporting(true);
     try {
       const { written } = await importOrgLocations(importPlan.toWrite, locations, me);
-      setFlash({ kind: 'ok', text: `غُرست الشجرة: ${written} موقعًا (${importPlan.counts.created} جديدًا · ${importPlan.counts.updated} محدَّثًا).` });
+      setFlash({ at: 'bulk', kind: 'ok', text: `غُرست الشجرة: ${written} موقعًا (${importPlan.counts.created} جديدًا · ${importPlan.counts.updated} محدَّثًا).` });
       setImportPlan(null);
     } catch (e) {
-      setFlash({ kind: 'err', text: e?.message || 'تعذّر الغرس.' });
+      setFlash({ at: 'bulk', kind: 'err', text: e?.message || 'تعذّر الغرس.' });
     } finally {
       setImporting(false);
     }
@@ -170,9 +244,9 @@ export default function OrgDimensions() {
     setFlash(null);
     try {
       const { written } = await seedOrgLocations(locations, me);
-      setFlash({ kind: 'ok', text: `غُرست البذرة التجريبيّة: ${written} مواقع بادئتها DEMO- — تُطفأ عند وصول شجرة المالك.` });
+      setFlash({ at: 'bulk', kind: 'ok', text: `غُرست البذرة التجريبيّة: ${written} مواقع بادئتها DEMO- — تُطفأ عند وصول شجرة المالك.` });
     } catch (e) {
-      setFlash({ kind: 'err', text: e?.message || 'تعذّر غرس البذرة.' });
+      setFlash({ at: 'bulk', kind: 'err', text: e?.message || 'تعذّر غرس البذرة.' });
     } finally {
       setImporting(false);
     }
@@ -190,11 +264,11 @@ export default function OrgDimensions() {
     try {
       const loc = locations.find((l) => String(l.code).toUpperCase() === profileFor);
       await saveBranchProfile(profileFor, profileForm, loc, me);
-      setFlash({ kind: 'ok', text: `حُفظ الملفّ التشغيليّ للفرع ${profileFor}.` });
+      setFlash({ at: 'form', kind: 'ok', text: `حُفظ الملفّ التشغيليّ للفرع ${profileFor}.` });
       setProfileFor(null);
       setProfileForm(null);
     } catch (e) {
-      setFlash({ kind: 'err', text: e?.message || 'تعذّر حفظ الملفّ.' });
+      setFlash({ at: 'profile', kind: 'err', text: e?.message || 'تعذّر حفظ الملفّ.' });
     } finally {
       setBusy(false);
     }
@@ -206,13 +280,16 @@ export default function OrgDimensions() {
   if (!me) return <Muted>سجّل الدخول لعرض هذه الشاشة.</Muted>;
   if (!VIEWER_ROLES.includes(me.role)) return <Muted>هذه الشاشة للمديرَين والماليّ ومدير القطاع.</Muted>;
 
-  const counts = Object.fromEntries(ORG_LEVELS.map((l) => [l.id, locations.filter((x) => x.level === l.id).length]));
-
   return (
     <div className="space-y-6">
+      {/*
+        شريط الخطوات: عدّادٌ ومدخلٌ في بطاقةٍ واحدة — لا صفٌّ يعدّ وصفٌّ يقود.
+        والمحجوبة تقول بم تُفتح، فلا زرَّ ميتًا بلا سبب.
+      */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {ORG_LEVELS.map((l) => (
-          <Kpi key={l.id} label={l.labelAr} value={counts[l.id]} />
+        {steps.map((s) => (
+          <StepCard key={s.id} step={s} active={form.mode === 'create' && form.level === s.id}
+            onPick={() => startLevel(s.id)} />
         ))}
       </div>
 
@@ -224,27 +301,44 @@ export default function OrgDimensions() {
         </Section>
       ) : null}
 
-      <Section title="إضافة / تعديل موقع">
-        <div className="grid gap-3 md:grid-cols-5">
-          <input className={input} placeholder={suggestedCode ? `الرمز (مقترَح: ${suggestedCode})` : 'الرمز'}
-            dir="ltr" value={form.code}
-            onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
-            onFocus={() => setForm((f) => (f.code.trim() ? f : { ...f, code: suggestedCode }))} />
-          <input className={input} placeholder="الاسم العربيّ" value={form.nameAr}
-            onChange={(e) => setForm((f) => ({ ...f, nameAr: e.target.value }))} />
-          <select className={input} value={form.level}
-            onChange={(e) => setForm((f) => ({
-              ...f,
-              level: e.target.value,
-              parentCode: '',
-              // الرمز المقترح يتبع المستوى ما لم يكتبه المستخدم بنفسه.
-              code: f.code === suggestedCode ? suggestLocationCode(index, e.target.value) : f.code,
-            }))}>
-            {ORG_LEVELS.map((l) => <option key={l.id} value={l.id}>{l.labelAr}</option>)}
-          </select>
-          {parentLevel ? (
-            parentOptions.length ? (
-              <select className={input} value={form.parentCode}
+      <Section title={form.mode === 'edit' ? `تعديل ${levelLabel} ${form.code}` : `إضافة ${levelLabel}`}>
+        {/* سطرٌ واحد يقول ما يجري الآن وما المطلوب — فلا يُترك المستخدم يخمّن. */}
+        <p className="text-sm text-ink-2 mb-3">
+          {form.mode === 'edit' ? (
+            'الاسم والأب يُبدَّلان. والرمز هويّةٌ تُثبَّت مرّةً واحدة: تغييرُه يشقّ الموقع نسختين ويقطع تكلفة الأمس عن اليوم.'
+          ) : parentPath ? (
+            <>تُضيف <b className="text-ink">{levelLabel}</b> تحت «{parentPath}» — لم يبقَ إلّا الاسم.</>
+          ) : !locations.length ? (
+            <>ابدأ باسم أوّل <b className="text-ink">قطاع</b>؛ وحين يُحفظ يظهر في الشجرة أسفلَ الصفحة بزرّ «أضف براندًا» — ومنه تنزل الشجرة خطوةً خطوة.</>
+          ) : parentLevel ? (
+            <>تُضيف <b className="text-ink">{levelLabel}</b> — اختر {levelOf(parentLevel).labelAr}ه ثمّ اكتب الاسم. (أو انقر «أضف {levelLabel}ًا» عند موضعه في الشجرة، فيُملأ الأب وحده.)</>
+          ) : (
+            <>تُضيف <b className="text-ink">قطاعًا</b> — وهو جذر الشجرة فلا أب له. اكتب اسمه واحفظ.</>
+          )}
+        </p>
+
+        <div className="grid gap-3 md:grid-cols-4 items-end">
+          {/* ① الاسم أوّلًا — وهو الشيء الوحيد الذي يعرفه المستخدم حقًّا. */}
+          <label className="text-sm md:col-span-2">
+            <span className="text-ink-2">اسم {levelLabel}</span>
+            <input className={`${input} mt-1`} value={form.nameAr}
+              placeholder={PLACEHOLDER_NAME[form.level] || ''}
+              onChange={(e) => setForm((f) => ({ ...f, nameAr: e.target.value }))} />
+          </label>
+
+          {/* ② الأب: مسارٌ مثبَّت إن جاء النقر من الشجرة، ومنسدلةٌ بمساراتها إن لم يأتِ. */}
+          <div className="text-sm">
+            <span className="text-ink-2">{parentLevel ? levelOf(parentLevel).labelAr : 'الموضع'}</span>
+            {!parentLevel ? (
+              <div className="mt-1 px-3 py-2 text-sm text-ink-2 border border-dashed border-line rounded-lg">جذر الشجرة</div>
+            ) : form.parentCode && form.mode === 'create' ? (
+              <div className="mt-1 flex items-center gap-2 px-3 py-2 border border-line bg-chip rounded-lg">
+                <span className="text-sm text-ink truncate" title={parentPath}>{parentPath || form.parentCode}</span>
+                <button type="button" className="text-xs text-ink-2 underline shrink-0"
+                  onClick={() => setForm((f) => ({ ...f, parentCode: '' }))}>تغيير</button>
+              </div>
+            ) : parentOptions.length ? (
+              <select className={`${input} mt-1`} value={form.parentCode}
                 onChange={(e) => setForm((f) => ({ ...f, parentCode: e.target.value }))}>
                 <option value="">— اختر {levelOf(parentLevel).labelAr} —</option>
                 {parentOptions.map((p) => (
@@ -253,30 +347,68 @@ export default function OrgDimensions() {
               </select>
             ) : (
               // قائمةٌ فارغة تقول ما يُفعل، لا تصمت.
-              <div className="text-xs text-ink-2 self-center">
-                لا {levelOf(parentLevel).labelAr} بعد — أضِفه أوّلًا ثمّ عُد لهذا المستوى.
+              <div className="mt-1 px-3 py-2 text-xs text-ink-2 border border-dashed border-line rounded-lg">
+                لا {levelOf(parentLevel).labelAr} بعد — أضِفه أوّلًا.
               </div>
-            )
-          ) : (
-            <div className="text-xs text-ink-2 self-center">القطاع جذرٌ بلا أب</div>
-          )}
-          <button type="button" disabled={busy || !form.code.trim() || !form.nameAr.trim()}
+            )}
+          </div>
+
+          {/* ③ الرمز: يُولّده النظام، ويبقى بابُ اليد مفتوحًا لمن له ترميزٌ قائم. */}
+          <div className="text-sm">
+            <span className="text-ink-2">الرمز</span>
+            {form.mode === 'edit' || form.autoCode ? (
+              <div className="mt-1 flex items-center gap-2 px-3 py-2 border border-line bg-chip rounded-lg">
+                <span className="text-sm text-ink font-bold" dir="ltr">{formCode || '—'}</span>
+                {form.mode === 'edit' ? (
+                  <span className="text-xs text-ink-2 shrink-0">ثابت</span>
+                ) : (
+                  <button type="button" className="text-xs text-ink-2 underline shrink-0 ms-auto"
+                    onClick={() => setForm((f) => ({ ...f, autoCode: false, code: suggestedCode }))}>أكتبه بنفسي</button>
+                )}
+              </div>
+            ) : (
+              <div className="mt-1 flex items-center gap-2">
+                <input className={input} dir="ltr" value={form.code}
+                  onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} />
+                <button type="button" className="text-xs text-ink-2 underline shrink-0"
+                  onClick={() => setForm((f) => ({ ...f, autoCode: true }))}>تلقائيّ</button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 mt-3">
+          <button type="button" disabled={busy || !form.nameAr.trim() || !formCode.trim() || (parentLevel && !form.parentCode)}
             onClick={save}
             className="rounded-lg bg-accent hover:opacity-90 disabled:opacity-40 px-4 py-2 text-sm font-bold text-white transition-colors">
-            {busy ? 'جارٍ الحفظ…' : 'حفظ'}
+            {busy ? 'جارٍ الحفظ…' : form.mode === 'edit' ? 'حفظ التعديل' : `حفظ ${levelLabel}`}
           </button>
+          {form.mode === 'edit' || form.parentCode ? (
+            <button type="button" className="text-sm text-ink-2 underline" onClick={() => setForm(EMPTY_FORM)}>إلغاء</button>
+          ) : null}
+          {parentLevel && !form.parentCode && parentOptions.length ? (
+            <span className="text-xs text-ink-2">اختر {levelOf(parentLevel).labelAr}ه أوّلًا.</span>
+          ) : null}
         </div>
-        {flash ? (
-          <p className={`text-sm mt-2 ${flash.kind === 'err' ? 'text-red-600' : 'text-ink-2'}`}>{flash.text}</p>
-        ) : null}
+
+        <Flash flash={flash} at="form" />
         <p className="text-xs text-ink-2 mt-2">
           لا حذف: موقعٌ حُمِّلت عليه تكلفةٌ تاريخيّة يُعطَّل فتبقى تقارير الأمس مقروءة.
-          والأكواد المعتمدة ومطابقتها مع أودو قرار المالك (CC-O02) — الشاشة لا تخترعها.
+          والأكواد المعتمدة ومطابقتها مع أودو قرار المالك (CC-O02) — الشاشة تقترح ولا تفرض.
         </p>
       </Section>
 
       <Section title="غرس الشجرة بالجملة (Excel)">
         <div className="flex flex-wrap items-center gap-3">
+          {/*
+            القالب أوّلًا ثمّ الرفع — بترتيب العمل لا بترتيب الشيفرة: من لا يملك
+            الشيت لا ينفعه زرُّ الاختيار. والقالب يُولَّد من مخطّط المستورِد نفسه،
+            فما نُسلّمه هو ما نقرأ.
+          */}
+          <button type="button" onClick={downloadTemplate}
+            className="rounded-lg border border-accent/40 text-accent px-4 py-2 text-sm hover:bg-accent/5">
+            نزّل قالب الإكسل
+          </button>
           <label className="rounded-lg border border-line bg-chip px-4 py-2 text-sm cursor-pointer hover:border-accent/60">
             اختر ملفّ الشجرة…
             <input type="file" accept=".xlsx,.xls,.csv" className="hidden"
@@ -289,10 +421,11 @@ export default function OrgDimensions() {
             </button>
           ) : null}
           <span className="text-xs text-ink-2">
-            الأعمدة: الرمز · الاسم · المستوى (قطاع/براند/فرع/مركز تكلفة) · رمز الأب · المدينة —
-            والشجرة تُقبل كاملةً أو تُرفض كاملةً.
+            نزّل القالب وامْلأ ورقته الأولى «الشجرة» ثمّ ارفعه هنا — وهو يُقبل كاملًا أو يُرفض كاملًا،
+            والمعاينة تسبق الكتابة.
           </span>
         </div>
+        <Flash flash={flash} at="bulk" />
 
         {importPlan ? (
           <div className="mt-3 space-y-2">
@@ -392,6 +525,7 @@ export default function OrgDimensions() {
             <button type="button" className="text-sm text-ink-2 underline"
               onClick={() => { setProfileFor(null); setProfileForm(null); }}>إلغاء</button>
           </div>
+          <Flash flash={flash} at="profile" />
           <p className="text-xs text-ink-2 mt-2">
             الحدّ الأدنى وPar Level والأصناف المعتمَدة ومسار التوريد سياسةُ صنفٍ لا صفةَ فرع — تُبنى في FNB-202 وFNB-203.
           </p>
@@ -400,7 +534,7 @@ export default function OrgDimensions() {
 
       <Section title="الشجرة">
         {!tree.length ? (
-          <Muted>لا مواقع بعد — أضف القطاعات أوّلًا ثمّ انزل الشجرة.</Muted>
+          <Muted>لا مواقع بعد — احفظ أوّل قطاع من الأعلى، ثمّ يظهر هنا بزرّ «أضف براند» تحته.</Muted>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -426,14 +560,26 @@ export default function OrgDimensions() {
                       <td className="py-2 px-2">{fmt(row?.direct)}</td>
                       <td className="py-2 px-2 font-bold">{fmt(row?.rollup)}</td>
                       <td className="py-2 px-2">{loc.active === false ? <span className="text-ink-2">معطَّل</span> : 'نشط'}</td>
-                      <td className="py-2 px-2">
-                        <button type="button" className="text-xs text-ink-2 underline"
-                          onClick={() => setOrgLocationActive(loc.code, loc.active === false, me)}>
-                          {loc.active === false ? 'تفعيل' : 'تعطيل'}
+                      <td className="py-2 px-2 whitespace-nowrap">
+                        {/*
+                          ★ الأب يُنقر في موضعه لا يُستدعى من قائمة: «أضف براندًا» على صفّ
+                          القطاع نفسه — كما يُدرَج موقعٌ تحت مستودعه. المستوى والأب والرمز
+                          تتبع مكان النقر، فلا يبقى للمستخدم إلّا الاسم.
+                        */}
+                        {childLevelOf(loc.level) && loc.active !== false ? (
+                          <button type="button"
+                            className="text-xs text-accent border border-accent/40 rounded-lg px-2 py-1 hover:bg-accent/5"
+                            onClick={() => startChild(loc.code)}>
+                            + أضف {childLevelOf(loc.level).labelAr}
+                          </button>
+                        ) : null}
+                        <button type="button" className="text-xs text-ink-2 underline ms-3"
+                          onClick={() => startEdit(loc)}>
+                          تعديل
                         </button>
                         <button type="button" className="text-xs text-ink-2 underline ms-3"
-                          onClick={() => setForm({ code: loc.code, nameAr: loc.nameAr || '', level: loc.level, parentCode: loc.parentCode || '' })}>
-                          تعديل
+                          onClick={() => setOrgLocationActive(loc.code, loc.active === false, me)}>
+                          {loc.active === false ? 'تفعيل' : 'تعطيل'}
                         </button>
                         {loc.level === 'branch' ? (
                           <button type="button" className="text-xs text-accent underline ms-3" onClick={() => openProfile(loc)}>
@@ -458,6 +604,15 @@ export default function OrgDimensions() {
   );
 }
 
+/**
+ * رسالةٌ تظهر **حيث وقع الفعل**: لكلّ رسالةٍ موضعُها (`at`)، فلا يُنزَّل قالبٌ
+ * في قسم الاستيراد ثمّ يُعلَن نجاحه في قسمٍ آخر فوقه.
+ */
+function Flash({ flash, at }) {
+  if (!flash || flash.at !== at) return null;
+  return <p className={`text-sm mt-2 ${flash.kind === 'err' ? 'text-red-600' : 'text-ink-2'}`}>{flash.text}</p>;
+}
+
 function Section({ title, children }) {
   return (
     <section className="border border-line rounded-xl p-4">
@@ -467,11 +622,27 @@ function Section({ title, children }) {
   );
 }
 
-function Kpi({ label, value }) {
+/**
+ * بطاقةُ خطوة: عدّادٌ ومدخلٌ معًا — الرقم يقول أين وصلت، والزرّ يفتح التالي،
+ * والمحجوبة تقول بم تُفتح بدل أن تصمت. (رقم الخطوة لاتينيّ كبقيّة أرقام البوابة.)
+ */
+function StepCard({ step, active, onPick }) {
   return (
-    <div className="border border-line bg-chip rounded-xl p-3">
-      <div className="text-xs text-ink-2 mb-1">{label}</div>
-      <div className="text-xl text-ink">{value}</div>
+    <div className={`border rounded-xl p-3 transition-colors ${active ? 'border-accent bg-accent/5' : 'border-line bg-chip'}`}>
+      <div className="flex items-baseline justify-between gap-2">
+        <div className="text-xs text-ink-2">
+          <span dir="ltr">{step.order}</span>. {step.labelAr}
+        </div>
+        <div className="text-xl text-ink">{step.count}</div>
+      </div>
+      {step.ready ? (
+        <button type="button" onClick={onPick}
+          className={`mt-2 text-xs underline ${active ? 'text-accent' : 'text-ink-2 hover:text-accent'}`}>
+          {active ? 'مفتوحٌ للإضافة' : `أضف ${step.labelAr}`}
+        </button>
+      ) : (
+        <p className="mt-2 text-xs text-ink-2">{step.hint}</p>
+      )}
     </div>
   );
 }

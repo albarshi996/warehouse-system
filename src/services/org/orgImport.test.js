@@ -9,7 +9,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   resolveLevel, readOrgRow, planOrgImport,
-  sectorSeed, isSeedLocation, seedWarnings, SEED_PREFIX,
+  sectorSeed, isSeedLocation, seedWarnings, SEED_PREFIX, orgTemplateGuide,
 } from './orgImport.js';
 import { locationProblems, indexLocations, dimensionsOf } from './orgLocations.js';
 
@@ -123,4 +123,29 @@ test('حارس الاختلاط: بذرةٌ وإنتاجٌ معًا يُنبَّ
   // والبذرة المطفأة لا تُحسب اختلاطًا — الإطفاء هو العلاج المقصود.
   const off = seed.map((l) => ({ ...l, active: false }));
   assert.deepEqual(seedWarnings([...off, ...real]), []);
+});
+
+/* ═══════════════ قالب التعبئة ═══════════════ */
+
+test('★★ مثال القالب يمرّ بحارسنا نفسه — فلا نُسلّم قالبًا يرفضه المستورِد', () => {
+  const plan = planOrgImport(orgTemplateGuide().example, []);
+  assert.equal(plan.ok, true, plan.problems.join(' · '));
+  assert.equal(plan.counts.rejected, 0);
+  assert.equal(plan.counts.created, 5);
+  // وشجرةُ المثال سليمةُ الأبوّة بعد الغرس — قطاعٌ جذرٌ وتحته براندٌ وفرعان ومركز تكلفة.
+  assert.deepEqual(locationProblems(plan.toWrite), []);
+  const index = indexLocations(plan.toWrite);
+  assert.equal(dimensionsOf(index, { header: { orgCode: 'CC01' } }).sector.code, 'SEC01');
+});
+
+test('القالب يقول ما يقبله المستورِد — أسماء المستويات وقاعدة الأبوّة مشتقّتان لا مكتوبتين بيد', () => {
+  const guide = orgTemplateGuide();
+  const text = guide.rules.map((r) => r.join(' ')).join(' | ');
+  for (const label of ['قطاع', 'براند', 'فرع', 'مركز تكلفة']) {
+    assert.ok(text.includes(label), `القالب لا يذكر المستوى «${label}»`);
+    assert.equal(resolveLevel(label) !== '', true, `المستورِد لا يعرف «${label}»`);
+  }
+  // ولكلّ قاعدةٍ عنوانٌ ونصّ — لا سطرَ أعرج.
+  assert.ok(guide.rules.every((r) => r.length === 2 && r[0].trim() && r[1].trim()));
+  assert.ok(guide.title.trim().length > 0 && guide.exampleTitle.trim().length > 0);
 });
