@@ -11,7 +11,7 @@
   "counts": {
     "modules": 95,
     "serviceDomains": 42,
-    "serviceFiles": 407,
+    "serviceFiles": 409,
     "collections": 80,
     "roles": 18,
     "odooModels": 12,
@@ -1735,30 +1735,40 @@
       "files": [
         "integrationPolicy.js",
         "integrationPolicy.test.js",
-        "integrationPolicyService.js"
+        "integrationPolicyService.js",
+        "posFeed.js",
+        "posFeed.test.js"
       ],
-      "fileCount": 3,
-      "testCount": 1,
+      "fileCount": 5,
+      "testCount": 2,
       "exports": [
         "CONFLICT_MODES",
         "DATA_SCOPES",
         "DIRECTIONS",
         "DIRECTION_IDS",
+        "FEED_GRACE_DAYS",
         "MATRIX_COLUMNS",
         "MONEY_MODES",
+        "POS_POLICY",
+        "POS_SOURCES",
         "TIMINGS",
         "defaultPolicyFor",
+        "feedOutageException",
         "fieldGate",
         "fullPolicy",
         "getIntegrationPolicy",
         "listenIntegrationPolicy",
+        "measurableWindow",
         "normalizePolicy",
         "policyProblems",
         "policySummary",
         "policyTypes",
+        "posAccuracy",
         "pushDecision",
+        "readySources",
         "saveIntegrationPolicy",
-        "simulate"
+        "simulate",
+        "sourceVerdict"
       ],
       "collections": []
     },
