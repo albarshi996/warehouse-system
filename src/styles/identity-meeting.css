@@ -1,0 +1,77 @@
+/*
+  ═══════════════════════════════════════════════════════════════════
+  «الهوية التشغيلية للمستودعات»: تخطيطات هذا العرض وحده
+  ═══════════════════════════════════════════════════════════════════
+  الهيكل المشترك (اللوحة · الشرائح · بطاقة الاختصار · الجداول · شريط
+  التحكّم · الفهرس · وضع العرض) في `meeting-deck.css` — لا يُكرَّر هنا.
+  وهنا ما يخصّ هذه الجلسة: شريط كود الموقع، وعائلات التصميم، وبوابة
+  الخطوات الستّ، والمراحل الأربع، وقائمة معايير القبول.
+
+  المقاسات مقيسةٌ على لوحة 720px — أي توسيعٍ لها يقصّ آخر بطاقة.
+*/
+
+/* ── شريط كود الموقع ─────────────────────────────────────────── */
+.idn-code { display: flex; flex-wrap: wrap; align-items: stretch; gap: .3rem; direction: ltr; justify-content: flex-end; }
+.idn-code > span { display: flex; flex-direction: column; align-items: center; gap: .2rem; min-width: 74px; padding: .5rem .6rem; border: 1px solid rgba(196, 16, 23, .22); border-radius: 10px; background: linear-gradient(180deg, #fff, var(--tint)); }
+.idn-code b { color: var(--red-700); font-size: .95rem; font-weight: 800; letter-spacing: .04em; }
+.idn-code i { font-style: normal; color: var(--ink-soft); font-size: .62rem; font-weight: 700; direction: rtl; }
+.idn-code em { align-self: center; font-style: normal; color: var(--red-400); font-weight: 800; }
+
+.idn-levels { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 1.6rem; }
+.idn-levels > div { display: grid; grid-template-columns: 58px 1fr; align-items: baseline; gap: .6rem; padding: .45rem 0; border-top: 1px solid var(--line); }
+.idn-levels > div:nth-child(-n + 2) { border-top: 0; }
+.idn-levels b { color: var(--red-700); font-size: .74rem; font-weight: 800; direction: ltr; text-align: center; }
+.idn-levels h3 { margin: 0 0 .1rem; color: var(--ink); font-size: .84rem; }
+.idn-levels p { margin: 0; color: var(--ink-soft); font-size: .72rem; line-height: 1.5; }
+
+/* ── حالات الموقع وأنواع التخزين ─────────────────────────────── */
+.idn-states { display: flex; flex-direction: column; gap: .35rem; }
+.idn-states > div { display: grid; grid-template-columns: 92px 1fr; align-items: baseline; gap: .7rem; padding: .42rem 0; border-top: 1px solid var(--line); }
+.idn-states > div:first-child { border-top: 0; }
+.idn-states b { color: var(--ink); font-size: .8rem; font-weight: 800; }
+.idn-states span { color: var(--ink-soft); font-size: .74rem; line-height: 1.5; }
+.idn-states .idn-yes { color: var(--ok); }
+
+/* ── عائلات التصميم ──────────────────────────────────────────── */
+.idn-families { margin: auto 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: .55rem; }
+.idn-families > div { display: flex; flex-direction: column; gap: .28rem; min-height: 116px; padding: .8rem .85rem; border: 1px solid var(--line); border-inline-end-width: 3px; border-inline-end-color: var(--red-600); border-radius: 11px; background: #fff; }
+.idn-families b { color: var(--muted); font-size: .64rem; font-weight: 800; direction: ltr; }
+.idn-families h3 { margin: 0; color: var(--ink); font-size: .84rem; line-height: 1.35; }
+.idn-families p { margin: auto 0 0; color: var(--ink-soft); font-size: .68rem; line-height: 1.45; }
+
+/* ── بوابة الخطوات الستّ ─────────────────────────────────────── */
+.idn-gates { margin: auto 0; display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; }
+.idn-gates > div { position: relative; display: flex; flex-direction: column; gap: .45rem; min-height: 210px; padding: 1rem .8rem; border: 1px solid var(--line); border-top-width: 4px; border-top-color: var(--red-700); border-radius: 12px; background: linear-gradient(180deg, #fff, var(--tint)); }
+.idn-gates b { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--red-900), var(--red-600)); color: #fff; font-size: .72rem; font-weight: 800; }
+.idn-gates h3 { margin: .15rem 0 0; color: var(--ink); font-size: .92rem; line-height: 1.3; }
+.idn-gates p { margin: auto 0 0; color: var(--ink-soft); font-size: .71rem; line-height: 1.5; }
+
+/* ── المراحل الأربع ──────────────────────────────────────────── */
+.idn-phases { margin: auto 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem; }
+.idn-phases section { display: flex; flex-direction: column; gap: .5rem; min-height: 300px; padding: 1.05rem 1.1rem; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
+.idn-phases header { display: flex; align-items: center; gap: .5rem; }
+.idn-phases header b { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--red-900), var(--red-600)); color: #fff; font-size: .68rem; font-weight: 800; }
+.idn-phases h3 { margin: 0; color: var(--ink); font-size: 1rem; }
+.idn-phases > section > p { margin: 0; color: var(--red-800); font-size: .73rem; line-height: 1.55; font-weight: 600; }
+.idn-phases ul { list-style: none; margin: auto 0 0; padding: 0; display: flex; flex-direction: column; gap: .3rem; }
+.idn-phases li { position: relative; padding-inline-start: .8rem; color: var(--ink-soft); font-size: .72rem; line-height: 1.5; }
+.idn-phases li::before { content: ''; position: absolute; inset-inline-start: 0; top: .48rem; width: 5px; height: 5px; border-radius: 50%; background: var(--red-400); }
+
+/* ── قائمة معايير القبول ─────────────────────────────────────── */
+.idn-check { margin: auto 0; list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: .45rem .9rem; }
+.idn-check li { display: grid; grid-template-columns: 18px 1fr; gap: .5rem; align-items: start; padding: .5rem .7rem; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink-soft); font-size: .74rem; line-height: 1.45; }
+.idn-check li::before { content: ''; width: 16px; height: 16px; margin-top: .08rem; border: 1.8px solid var(--red-400); border-radius: 5px; background: #fff; }
+
+/* ── الأولويات العاجلة ───────────────────────────────────────── */
+.idn-urgent { margin: auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; }
+.idn-urgent > div { display: grid; grid-template-columns: 30px 1fr; gap: .6rem; align-items: start; padding: .9rem 1rem; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.idn-urgent > div:nth-child(-n + 2) { border-color: rgba(196, 16, 23, .3); background: linear-gradient(180deg, var(--tint-2), #fff); }
+.idn-urgent b { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--red-900), var(--red-600)); color: #fff; font-size: .7rem; font-weight: 800; }
+.idn-urgent h3 { margin: .1rem 0 .2rem; color: var(--ink); font-size: .94rem; }
+.idn-urgent p { margin: 0; color: var(--ink-soft); font-size: .74rem; line-height: 1.5; }
+
+@media (max-width: 767px) {
+  .idn-levels, .idn-families, .idn-gates, .idn-phases, .idn-check, .idn-urgent { grid-template-columns: 1fr; }
+  .idn-gates > div, .idn-phases section, .idn-families > div { min-height: auto; }
+  .idn-code { justify-content: flex-start; }
+}

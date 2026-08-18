@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 94,
+    "modules": 95,
     "serviceDomains": 42,
     "serviceFiles": 377,
     "collections": 80,
@@ -803,6 +803,14 @@
       "usesServices": [
         "kpi"
       ]
+    },
+    {
+      "name": "warehouse-identity-meeting",
+      "route": "/dashboard/warehouse-identity-meeting",
+      "title": "الهوية التشغيلية للمستودعات",
+      "summary": "«الهوية التشغيلية للمستودعات» — عرض الجلسة المشتركة: السلاسل × التسويق.",
+      "file": "src/pages/dashboard/warehouse-identity-meeting.astro",
+      "usesServices": []
     },
     {
       "name": "warehouses",
