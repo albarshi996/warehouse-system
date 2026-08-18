@@ -26,6 +26,7 @@ import {
   sourceSlide,
   unitOptions,
 } from './restaurants-supply-chain.js';
+import * as MODULE from './restaurants-supply-chain.js';
 import { internalPaths } from '../services/auth/navCatalog.js';
 import { ALWAYS_ALLOWED } from '../services/auth/pageAccess.js';
 import { getSchema } from '../services/documents/schemas/index.js';
@@ -173,4 +174,23 @@ test('فهرس الشرائح: بلا تكرار (التسمية مفتاح Reac
   for (const cycle of cycles) {
     assert.ok(slideIndex.includes(`دورة ${cycle.title}`), `الدورة «${cycle.title}» بلا شريحةٍ في الفهرس`);
   }
+});
+
+/**
+ * حارسٌ صغيرٌ ثمنه غالٍ: النصوص هنا تُعرَض **كما هي** في JSX، فعلامات
+ * التوكيد بنجمتين تظهر نجمتين على الشاشة أمام الحضور لا خطًّا عريضًا.
+ * (وقع فعلًا وأُصلح — والحارس يمنع عودته مع أوّل نصٍّ جديد.)
+ */
+test('لا نصَّ معروضًا يحمل علامات ترميزٍ نصّيّ (**)', () => {
+  const seen = new Set();
+  const walk = (value, path) => {
+    if (typeof value === 'string') {
+      assert.ok(!value.includes('**'), `نصٌّ يحمل نجمتين ويُعرض كما هو: ${path} — «${value.slice(0, 60)}»`);
+      return;
+    }
+    if (!value || typeof value !== 'object' || seen.has(value)) return;
+    seen.add(value);
+    for (const [key, child] of Object.entries(value)) walk(child, `${path}.${key}`);
+  };
+  walk(MODULE, 'module');
 });

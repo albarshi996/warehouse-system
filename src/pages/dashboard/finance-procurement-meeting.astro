@@ -1,0 +1,27 @@
+---
+/**
+ * «الدورة المستندية — السلاسل والمشتريات» — عرض اجتماع الإدارة المالية.
+ *
+ * المشتريات تتبع المالية، والسلاسل تطلب وتستلم وتفحص وتُخزّن. فمحور الجلسة
+ * ليس صلاحيةً تُنتزع بل **حدٌّ يُكتب**: أربع نقاط تسليمٍ لكلٍّ مستندُها،
+ * ثمّ اثنا عشر سيناريو يُفسد الدورة ولكلٍّ حارسٌ **مبنيٌّ في البوابة** —
+ * تُفتح شاشته من العرض نفسه لا يُوصف بالكلام.
+ *
+ * الأنماط في ملفَّين: الهيكل المشترك بين عروض الاجتماعات في
+ * `meeting-deck.css`، وما يخصّ هذا العرض وحده في `finance-meeting.css`.
+ * والصفحة محميّةٌ بحارس الدخول، فالتحقّق البصريّ منها يحتاج صفحةً غير
+ * محميّة تستورد **نفس** الملفَّين — لا نسخةً ثانية تنحرف عنهما.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import FinanceProcurementDeck from '../../components/finance-meeting/FinanceProcurementDeck.jsx';
+import '../../styles/meeting-deck.css';
+import '../../styles/finance-meeting.css';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+---
+
+<DashboardLayout title="الدورة المستندية — السلاسل والمشتريات" light>
+  <FinanceProcurementDeck base={base} client:load />
+</DashboardLayout>

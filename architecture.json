@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 93,
+    "modules": 94,
     "serviceDomains": 42,
     "serviceFiles": 359,
     "collections": 79,
@@ -226,6 +226,14 @@
       "title": "يوم المندوب",
       "summary": "",
       "file": "src/pages/dashboard/field-operations.astro",
+      "usesServices": []
+    },
+    {
+      "name": "finance-procurement-meeting",
+      "route": "/dashboard/finance-procurement-meeting",
+      "title": "الدورة المستندية — السلاسل والمشتريات",
+      "summary": "«الدورة المستندية — السلاسل والمشتريات» — عرض اجتماع الإدارة المالية.",
+      "file": "src/pages/dashboard/finance-procurement-meeting.astro",
       "usesServices": []
     },
     {

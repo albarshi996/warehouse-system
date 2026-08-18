@@ -1,0 +1,114 @@
+/*
+  ═══════════════════════════════════════════════════════════════════
+  «الدورة المستندية — السلاسل والمشتريات»: تخطيطات هذا العرض وحده
+  ═══════════════════════════════════════════════════════════════════
+  الهيكل المشترك (اللوحة · الشرائح · بطاقة الاختصار · الجداول · شريط
+  التحكّم · الفهرس · وضع العرض) في `meeting-deck.css` — لا يُكرَّر هنا.
+  هذا الملفّ لما يخصّ هذا الاجتماع فقط: مصفوفة الملكيّة، ونقاط التسليم،
+  وخريطة السيناريوهات وتشريحها، وأحكام المطابقة، وبطاقة أداء المورّد.
+
+  المقاسات مقيسةٌ على لوحة 720px — أي توسيعٍ لها يقصّ آخر بطاقة.
+*/
+
+/* ── خريطة مراحل الشراء الخمس (تعديل شبكة الثماني المشتركة) ─────── */
+.mtg-stages.fin-five { grid-template-columns: repeat(5, 1fr); gap: .8rem; }
+.mtg-stages.fin-five > div { min-height: 268px; padding: 1.15rem 1rem; }
+.mtg-stages.fin-five h3 { font-size: 1.02rem; }
+.mtg-stages.fin-five p { font-size: .75rem; }
+.mtg-stages.fin-five > div > span { font-size: .72rem; }
+
+/* ── نقاط التسليم الأربع ──────────────────────────────────────── */
+.fin-handoff { margin: auto 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: .85rem; }
+.fin-handoff section { display: flex; flex-direction: column; gap: .5rem; min-height: 300px; padding: 1.1rem 1.15rem; border: 1px solid var(--line); border-top-width: 4px; border-top-color: var(--red-700); border-radius: 13px; background: linear-gradient(180deg, #fff, var(--tint)); }
+.fin-handoff header { display: flex; align-items: center; gap: .4rem; }
+.fin-handoff header b { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--red-900), var(--red-600)); color: #fff; font-size: .7rem; font-weight: 800; }
+.fin-handoff header i { font-style: normal; color: var(--muted); font-size: .68rem; font-weight: 700; }
+.fin-handoff header i b { display: inline; width: auto; height: auto; background: none; color: var(--red-700); font-size: .68rem; }
+.fin-handoff h3 { margin: 0; color: var(--ink); font-size: 1.02rem; }
+.fin-handoff .fin-doc { align-self: flex-start; padding: .18rem .6rem; border: 1px solid rgba(196, 16, 23, .25); border-radius: 7px; background: #fff; color: var(--red-700); font-size: .72rem; font-weight: 800; direction: ltr; }
+.fin-handoff p { margin: 0; color: var(--ink-soft); font-size: .76rem; line-height: 1.6; }
+.fin-handoff footer { margin-top: auto; padding-top: .55rem; border-top: 1px dashed var(--line); color: var(--red-800); font-size: .71rem; line-height: 1.55; font-weight: 600; }
+
+/* ── مصفوفة الملكيّة ──────────────────────────────────────────── */
+.mtg-table td.fin-doc-cell { color: var(--red-700); font-weight: 800; direction: ltr; text-align: center; white-space: nowrap; }
+.mtg-table td.fin-owner-cell { color: var(--ink); font-weight: 800; }
+
+/* ── أحكام المطابقة ───────────────────────────────────────────── */
+.fin-verdicts { margin: auto 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: .6rem .9rem; }
+.fin-verdicts > div { display: grid; grid-template-columns: 1fr; gap: .3rem; padding: .8rem .95rem; border: 1px solid var(--line); border-inline-end-width: 4px; border-radius: 11px; background: #fff; }
+.fin-verdicts > div.tone-ok { border-inline-end-color: var(--ok); }
+.fin-verdicts > div.tone-warn { border-inline-end-color: var(--gold); }
+.fin-verdicts > div.tone-wait { border-inline-end-color: #5b6472; }
+.fin-verdicts > div.tone-bad { border-inline-end-color: var(--red-700); }
+.fin-verdicts header { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
+.fin-verdicts h3 { margin: 0; color: var(--ink); font-size: .92rem; }
+.fin-verdicts code { color: var(--muted); font-family: Consolas, monospace; font-size: .66rem; direction: ltr; }
+.fin-verdicts p { margin: 0; color: var(--ink-soft); font-size: .74rem; line-height: 1.55; }
+
+/* ── خريطة السيناريوهات ───────────────────────────────────────── */
+.fin-scn-map { margin: auto 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; }
+.fin-scn-map > div { display: flex; flex-direction: column; gap: .35rem; min-height: 118px; padding: .8rem .85rem; border: 1px solid var(--line); border-inline-end-width: 4px; border-radius: 11px; background: #fff; }
+.fin-scn-map > div.sev-high { border-inline-end-color: var(--red-700); }
+.fin-scn-map > div.sev-med { border-inline-end-color: var(--gold); }
+.fin-scn-map header { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.fin-scn-map b { color: var(--muted); font-size: .66rem; font-weight: 800; direction: ltr; }
+.fin-scn-map h3 { margin: 0; color: var(--ink); font-size: .84rem; line-height: 1.4; }
+.fin-scn-map span { margin-top: auto; color: var(--ink-soft); font-size: .68rem; }
+
+.fin-sev { padding: .1rem .45rem; border-radius: 100px; font-size: .62rem; font-weight: 800; white-space: nowrap; }
+.fin-sev.is-high { background: rgba(196, 16, 23, .12); color: var(--red-700); }
+.fin-sev.is-med { background: rgba(200, 164, 78, .22); color: #7a5c10; }
+
+/* ── تشريح سيناريو ────────────────────────────────────────────── */
+.fin-anatomy { min-height: 0; flex: 1; display: grid; grid-template-columns: 1.1fr 1fr; gap: 1.5rem; align-items: center; }
+.fin-anatomy-main { display: flex; flex-direction: column; gap: .8rem; }
+.fin-chain { display: grid; grid-template-columns: 1fr; gap: .5rem; }
+.fin-chain > div { position: relative; display: grid; grid-template-columns: 82px 1fr; align-items: center; gap: .85rem; padding: .85rem 1rem; border: 1px solid var(--line); border-radius: 11px; background: #fff; }
+.fin-chain > div > b { display: inline-flex; align-items: center; justify-content: center; padding: .24rem .5rem; border-radius: 100px; font-size: .68rem; font-weight: 800; }
+.fin-chain > div.step-risk { background: linear-gradient(180deg, var(--tint-2), #fff); border-color: rgba(196, 16, 23, .25); }
+.fin-chain > div.step-risk > b { background: linear-gradient(135deg, var(--red-900), var(--red-600)); color: #fff; }
+.fin-chain > div.step-guard { background: linear-gradient(180deg, rgba(31, 122, 77, .08), #fff); border-color: rgba(31, 122, 77, .28); }
+.fin-chain > div.step-guard > b { background: var(--ok); color: #fff; }
+.fin-chain > div.step-where > b { background: #eef0f3; color: #5b6472; }
+.fin-chain p { margin: 0; color: var(--ink-soft); font-size: .8rem; line-height: 1.6; }
+.fin-chain p strong { color: var(--ink); }
+
+/* ── المؤشّرات وبطاقة المورّد ──────────────────────────────────── */
+.fin-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: .85rem; }
+.fin-kpis > div { display: flex; flex-direction: column; gap: .4rem; min-height: 208px; padding: 1.1rem 1.05rem; border: 1px solid var(--line); border-radius: 12px; background: linear-gradient(180deg, #fff, var(--tint)); }
+.fin-kpis h3 { margin: 0; color: var(--ink); font-size: 1.02rem; }
+.fin-kpis > div > span { color: var(--red-700); font-size: .72rem; font-weight: 700; line-height: 1.5; }
+.fin-kpis p { margin-top: auto; margin-bottom: 0; color: var(--ink-soft); font-size: .74rem; line-height: 1.55; }
+.fin-kpis code { color: var(--muted); font-family: Consolas, monospace; font-size: .62rem; direction: ltr; }
+
+.fin-weights { display: flex; flex-direction: column; gap: .55rem; }
+.fin-weights > div { display: grid; grid-template-columns: 1fr; gap: .28rem; }
+.fin-weights header { display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; }
+.fin-weights h3 { margin: 0; color: var(--ink); font-size: .92rem; }
+.fin-weights header b { color: var(--red-700); font-size: .92rem; font-variant-numeric: tabular-nums; }
+.fin-weights i { display: block; height: 6px; border-radius: 100px; background: linear-gradient(90deg, var(--red-700), var(--red-400)); }
+.fin-weights p { margin: 0; color: var(--ink-soft); font-size: .72rem; line-height: 1.5; }
+
+.fin-tiers { display: flex; flex-direction: column; gap: .5rem; }
+.fin-tiers > div { display: grid; grid-template-columns: 40px 1fr; align-items: center; gap: .7rem; padding: .7rem .85rem; border: 1px solid var(--line); border-radius: 11px; background: #fff; }
+.fin-tiers > div > b { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 10px; font-size: 1rem; font-weight: 800; }
+.fin-tiers > div.tier-A > b { background: rgba(31, 122, 77, .13); color: var(--ok); }
+.fin-tiers > div.tier-B > b { background: rgba(200, 164, 78, .22); color: #7a5c10; }
+.fin-tiers > div.tier-C > b { background: rgba(196, 16, 23, .12); color: var(--red-700); }
+.fin-tiers h3 { margin: 0 0 .12rem; color: var(--ink); font-size: .88rem; }
+.fin-tiers span { color: var(--muted); font-size: .68rem; }
+.fin-tiers p { margin: .18rem 0 0; color: var(--ink-soft); font-size: .72rem; line-height: 1.5; }
+
+/* ── ما نطلبه ─────────────────────────────────────────────────── */
+.fin-asks { margin: auto 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem 1.1rem; }
+.fin-asks > div { display: grid; grid-template-columns: 28px 1fr; gap: .6rem; align-items: start; padding: .7rem .3rem; border-top: 1px solid var(--line); }
+.fin-asks > div:nth-child(-n + 2) { border-top: 0; }
+.fin-asks > div > b { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin-top: .1rem; border-radius: 7px; background: var(--tint-2); color: var(--red-700); font-size: .66rem; font-weight: 800; }
+.fin-asks h3 { margin: 0 0 .2rem; color: var(--ink); font-size: .9rem; }
+.fin-asks p { margin: 0; color: var(--ink-soft); font-size: .75rem; line-height: 1.55; }
+
+@media (max-width: 767px) {
+  .mtg-stages.fin-five, .fin-handoff, .fin-verdicts, .fin-scn-map, .fin-anatomy,
+  .fin-kpis, .fin-asks { grid-template-columns: 1fr; }
+  .fin-handoff section, .fin-kpis > div, .fin-scn-map > div, .mtg-stages.fin-five > div { min-height: auto; }
+}
