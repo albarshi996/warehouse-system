@@ -11,7 +11,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
-import { listenOrgLocations, saveOrgLocation, setOrgLocationActive, importOrgLocations, seedOrgLocations } from '../../../services/org/orgLocationsService.js';
+import { listenOrgLocations, saveOrgLocation, setOrgLocationActive, importOrgLocations, seedOrgLocations, saveBranchProfile } from '../../../services/org/orgLocationsService.js';
 import { subscribePartners } from '../../../services/partnerService.js';
 import { listenAllDocuments } from '../../../services/documents/documentsService.js';
 import {
@@ -19,6 +19,10 @@ import {
   internalBranchProblems, orgCodeOf, docAmountOf, costByLocation, unlinkedCost,
 } from '../../../services/org/orgLocations.js';
 import { planOrgImport, seedWarnings } from '../../../services/org/orgImport.js';
+import {
+  CONCEPT_TYPES, BRANCH_STATES, WEEK_DAYS, WEEK_DAY_LABELS,
+  shapeBranchProfile, profileGaps, profileCompleteness,
+} from '../../../services/org/branchProfile.js';
 import { importSheet } from '../../../services/excel/excelImport.js';
 
 // ‹FNB-107› مدير القطاع صاحبُ المدخل (البراندات والفروع) — يرى الشجرة ويُدخلها.
@@ -41,6 +45,9 @@ export default function OrgDimensions() {
   // ‹FNB-101› معاينة الغرس بالجملة: تُعرض قبل الكتابة، والقرار للمستخدم بعد أن يرى.
   const [importPlan, setImportPlan] = useState(null);
   const [importing, setImporting] = useState(false);
+  // ‹FNB-201› الملفّ التشغيليّ للفرع — يُفتح للفرع المختار وحده.
+  const [profileFor, setProfileFor] = useState(null);
+  const [profileForm, setProfileForm] = useState(null);
 
   useEffect(() => {
     const unsub = subscribeAuth(async (u) => {
@@ -169,6 +176,30 @@ export default function OrgDimensions() {
     }
   }
 
+  function openProfile(loc) {
+    setProfileFor(loc.code);
+    setProfileForm(shapeBranchProfile(loc.profile || {}));
+    setFlash(null);
+  }
+
+  async function commitProfile() {
+    if (!profileFor || busy) return;
+    setBusy(true);
+    try {
+      const loc = locations.find((l) => String(l.code).toUpperCase() === profileFor);
+      await saveBranchProfile(profileFor, profileForm, loc, me);
+      setFlash({ kind: 'ok', text: `حُفظ الملفّ التشغيليّ للفرع ${profileFor}.` });
+      setProfileFor(null);
+      setProfileForm(null);
+    } catch (e) {
+      setFlash({ kind: 'err', text: e?.message || 'تعذّر حفظ الملفّ.' });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const patchProfile = (key, value) => setProfileForm((f) => ({ ...f, [key]: value }));
+
   if (!ready) return <Muted>جارٍ التحقّق من الصلاحية…</Muted>;
   if (!me) return <Muted>سجّل الدخول لعرض هذه الشاشة.</Muted>;
   if (!VIEWER_ROLES.includes(me.role)) return <Muted>هذه الشاشة للمديرَين والماليّ ومدير القطاع.</Muted>;
@@ -267,6 +298,87 @@ export default function OrgDimensions() {
         ) : null}
       </Section>
 
+      {profileFor && profileForm ? (
+        <Section title={`الملفّ التشغيليّ للفرع ${profileFor}`}>
+          <div className="grid gap-3 md:grid-cols-3">
+            <label className="text-sm">المدينة
+              <input className={input} value={profileForm.city}
+                onChange={(e) => patchProfile('city', e.target.value)} />
+            </label>
+            <label className="text-sm">نوع النشاط
+              <select className={input} value={profileForm.concept}
+                onChange={(e) => patchProfile('concept', e.target.value)}>
+                <option value="">— اختر —</option>
+                {Object.values(CONCEPT_TYPES).map((c) => <option key={c.id} value={c.id}>{c.labelAr}</option>)}
+              </select>
+            </label>
+            <label className="text-sm">تاريخ الافتتاح
+              <input type="date" className={input} value={profileForm.openingDate}
+                onChange={(e) => patchProfile('openingDate', e.target.value)} />
+            </label>
+            <label className="text-sm">حالة الفرع
+              <select className={input} value={profileForm.state}
+                onChange={(e) => patchProfile('state', e.target.value)}>
+                {Object.values(BRANCH_STATES).map((st) => <option key={st.id} value={st.id}>{st.labelAr} — {st.hint}</option>)}
+              </select>
+            </label>
+            <label className="text-sm">الطاقة التشغيليّة (وجبات/يوم)
+              <input type="number" min="0" className={input} value={profileForm.coversPerDay || ''}
+                onChange={(e) => patchProfile('coversPerDay', Number(e.target.value))} />
+            </label>
+            <label className="text-sm">حجم المبيعات المتوقّع (يوميًّا)
+              <input type="number" min="0" className={input} value={profileForm.expectedDailySales || ''}
+                onChange={(e) => patchProfile('expectedDailySales', Number(e.target.value))} />
+            </label>
+            <label className="text-sm md:col-span-2">المنيو المعتمد (أكواد أصناف البيع، تفصلها فاصلة)
+              <input className={input} dir="ltr" value={(profileForm.menuSkus || []).join(', ')}
+                onChange={(e) => patchProfile('menuSkus', e.target.value.split(/[,\s]+/).filter(Boolean))} />
+            </label>
+            <label className="text-sm">مهلة التوريد (أيّام)
+              <input type="number" min="0" className={input} value={profileForm.leadDays || ''}
+                onChange={(e) => patchProfile('leadDays', Number(e.target.value))} />
+            </label>
+          </div>
+
+          <div className="mt-3">
+            <div className="text-sm mb-1">أيّام التوريد</div>
+            <div className="flex flex-wrap gap-2">
+              {WEEK_DAYS.map((d) => {
+                const on = (profileForm.supplyDays || []).includes(d);
+                return (
+                  <button key={d} type="button"
+                    onClick={() => patchProfile('supplyDays', on
+                      ? profileForm.supplyDays.filter((x) => x !== d)
+                      : [...(profileForm.supplyDays || []), d])}
+                    className={`rounded-lg border px-3 py-1 text-sm ${on ? 'border-accent text-accent' : 'border-line text-ink-2'}`}>
+                    {WEEK_DAY_LABELS[d]}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-ink-2 mt-1">بلا تقويمٍ: كلّ يومٍ صالح للتوريد — لا تعطيل.</p>
+          </div>
+
+          {profileGaps({ profile: profileForm }).length ? (
+            <ul className="text-xs text-ink-2 list-disc pr-5 mt-3 space-y-1">
+              {profileGaps({ profile: profileForm }).map((g) => <li key={g}>{g}</li>)}
+            </ul>
+          ) : null}
+
+          <div className="flex gap-3 mt-3">
+            <button type="button" disabled={busy} onClick={commitProfile}
+              className="rounded-lg bg-accent hover:opacity-90 disabled:opacity-40 px-4 py-2 text-sm font-bold text-white">
+              {busy ? 'جارٍ الحفظ…' : 'حفظ الملفّ'}
+            </button>
+            <button type="button" className="text-sm text-ink-2 underline"
+              onClick={() => { setProfileFor(null); setProfileForm(null); }}>إلغاء</button>
+          </div>
+          <p className="text-xs text-ink-2 mt-2">
+            الحدّ الأدنى وPar Level والأصناف المعتمَدة ومسار التوريد سياسةُ صنفٍ لا صفةَ فرع — تُبنى في FNB-202 وFNB-203.
+          </p>
+        </Section>
+      ) : null}
+
       <Section title="الشجرة">
         {!tree.length ? (
           <Muted>لا مواقع بعد — أضف القطاعات أوّلًا ثمّ انزل الشجرة.</Muted>
@@ -304,6 +416,11 @@ export default function OrgDimensions() {
                           onClick={() => setForm({ code: loc.code, nameAr: loc.nameAr || '', level: loc.level, parentCode: loc.parentCode || '' })}>
                           تعديل
                         </button>
+                        {loc.level === 'branch' ? (
+                          <button type="button" className="text-xs text-accent underline ms-3" onClick={() => openProfile(loc)}>
+                            الملفّ ({profileCompleteness(loc)}٪)
+                          </button>
+                        ) : null}
                       </td>
                     </tr>
                   );

@@ -10,6 +10,7 @@ import { collection, doc, setDoc, onSnapshot, query, orderBy, serverTimestamp, w
 import { db } from '../../config/firebase.js';
 import { locationProblems } from './orgLocations.js';
 import { planOrgImport, sectorSeed } from './orgImport.js';
+import { shapeBranchProfile, profileProblems } from './branchProfile.js';
 
 const COL = 'org_locations';
 
@@ -100,4 +101,30 @@ export async function importOrgLocations(rows, existing = [], profile) {
  */
 export function seedOrgLocations(existing = [], profile) {
   return importOrgLocations(sectorSeed(), existing, profile);
+}
+
+/**
+ * حفظ الملفّ التشغيليّ للفرع ‹FNB-201› — **صفةٌ على صفّ الفرع** في
+ * `org_locations`، لا مجموعةٌ ثانية تفترق عنه أوّل إعادة تسمية.
+ * التحقّق في `branchProfile.js` الخالص، وهنا الكتابة وحدها.
+ */
+export async function saveBranchProfile(code, profile, location, currentUserProfile) {
+  const branchCode = String(code || '').trim().toUpperCase();
+  if (!branchCode) throw new Error('لا رمز فرع.');
+
+  const shaped = shapeBranchProfile(profile);
+  const problems = profileProblems({ ...(location || {}), code: branchCode, profile: shaped });
+  if (problems.length) throw new Error(problems.join(' · '));
+
+  await setDoc(
+    doc(db, COL, branchCode),
+    {
+      profile: shaped,
+      updatedAt: serverTimestamp(),
+      byUid: currentUserProfile?.uid || null,
+      byName: currentUserProfile?.displayName || currentUserProfile?.email || 'مستخدم',
+    },
+    { merge: true }
+  );
+  return branchCode;
 }
