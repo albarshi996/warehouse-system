@@ -23,6 +23,7 @@ import {
   closingOutcome,
   coldChain,
   decisionPoints,
+  documentScale,
   financialImpact,
   handoffs,
   internalCycle,
@@ -367,10 +368,21 @@ test('فجوة «تكلفة الرحلة»: مستند النقل لا يحمل 
   }
 });
 
-test('ادّعاءات السياستين P01 و P02 مقروءةٌ من المحرّك: عشر سلاسل و٢٩ نوعًا وسبعة مستنداتٍ ماليّة', () => {
-  assert.equal(CHAINS.length, 10, 'عدد السلاسل تغيّر — والسياسة P01 تقول عشرًا');
-  assert.equal(new Set(CHAINS.flat()).size, 29, 'عدد أنواع المستندات تغيّر — والسياسة P01 تقول تسعةً وعشرين');
+/**
+ * ادّعاء السياسة P01 عن حجم المحرّك كان نصًّا مكتوبًا («تسعةٌ وعشرون نوعًا
+ * في عشر سلاسل») فشاخ يوم أُضيفت دورة الإنتاج. فصار محسوبًا — وهذا الحارس
+ * يمنع عودته نصًّا: الرقم في الشريحة لا بدّ أن يساوي رقم المحرّك اليوم.
+ */
+test('حجم المحرّك المعروض محسوبٌ من السلاسل لا مكتوبٌ نصًّا', () => {
+  assert.equal(documentScale.chains, CHAINS.length);
+  assert.equal(documentScale.types, new Set(CHAINS.flat()).size);
 
+  const p01 = policies.find((policy) => policy.code === 'P01');
+  assert.match(p01.proof, new RegExp(`${documentScale.types}\\b`), 'دليل P01 لا يحمل عدد الأنواع الحيّ');
+  assert.match(p01.proof, new RegExp(`${documentScale.chains}\\b`), 'دليل P01 لا يحمل عدد السلاسل الحيّ');
+});
+
+test('السياسة P02: كلّ مستندٍ ذي أثرٍ ماليّ يمرّ باعتماد المدير المالي', () => {
   const financialDocs = ['PO', 'INV', 'SPV', 'IPR', 'RFQ', 'IPO', 'PV'];
   for (const type of financialDocs) {
     assert.ok(
