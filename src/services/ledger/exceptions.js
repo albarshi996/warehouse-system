@@ -107,6 +107,9 @@ export const EXCEPTION_TYPES = Object.freeze({
   // الزائد هدرٌ أو صرفٌ بلا بيع، والناقص وصفةٌ لا تُتّبع أو مبيعاتٌ بلا صرف.
   // الكاشف `intelligence/posSales.js › consumptionVariance`.
   consumption_variance: { id: 'consumption_variance', label: 'انحراف استهلاكٍ مرتفع', action: 'حقّق في الفرق: هدرٌ أم وصفةٌ أم جرد', owner: 'مدير المستودع' },
+  // ‹FNB-303› الفرع تجاوز المقترح فوق العتبة — يمرّ ويُسجَّل (السلوك المعلَن
+  // لق-O04)، ويفتح استثناءً حين يشتدّ. والمتكرّر إشارةُ مراجعةِ Par Level.
+  order_deviation: { id: 'order_deviation', label: 'تجاوز الكمّيّة المقترحة', action: 'راجع السبب: حدثٌ عارض أم Par Level يحتاج ضبطًا', owner: 'مدير المستودع' },
 });
 
 export function exceptionType(id) {

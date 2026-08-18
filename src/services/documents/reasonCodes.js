@@ -29,6 +29,8 @@ export const REASON_CONTEXTS = Object.freeze({
   putaway_blocked: 'تعذّر التخزين',
   task_delay: 'تأخّر في التنفيذ',
   visit_skip: 'تخطّي زيارة',
+  // ‹FNB-303› الفرع طلب غير المقترح — والسبب يجعل الانحراف تعلُّمًا لا لومًا.
+  order_deviation: 'انحراف عن الكمّيّة المقترحة',
 });
 
 /** المعرّف المحجوز لـ«سببٍ آخر» — يفتح خانة النصّ ويُلزم بها. */
@@ -84,6 +86,21 @@ export const REASONS = Object.freeze({
     { id: 'qc_wait', label: 'انتظار موافقة الجودة', blamesWorker: false },
     { id: 'location_messy', label: 'الموقع غير مرتّب', blamesWorker: false },
     { id: 'qty_differs', label: 'اختلافٌ فعليّ في الكمّيّة', blamesWorker: false },
+    other('سببٌ آخر — يُكتب'),
+  ],
+  // ‹FNB-303› أسباب تجاوز المقترح — مبنيّةٌ على ما يقع فعلًا في مطعم:
+  // حملةٌ أو افتتاحٌ يرفعان الطلب، وعطلةٌ تقلبه، وفقدُ بديلٍ يُحوّل الطلب
+  // إلى صنفٍ آخر. و`forecast_error` وحدها تشير إلى **السياسة** لا إلى
+  // الفرع — فتكرارُها إشارةُ مراجعةِ Par Level لا لومَ مديرِ فرع.
+  order_deviation: [
+    { id: 'campaign', label: 'حملة أو عرضٌ ترويجيّ', blamesWorker: false },
+    { id: 'event', label: 'مناسبة أو حجزٌ كبير', blamesWorker: false },
+    { id: 'holiday', label: 'عطلة أو موسم', blamesWorker: false },
+    { id: 'opening', label: 'افتتاح أو إعادة تشغيل', blamesWorker: false },
+    { id: 'substitute', label: 'بديلٌ عن صنفٍ مفقود', blamesWorker: false },
+    { id: 'menu_change', label: 'تغيير في المنيو', blamesWorker: false },
+    { id: 'waste_spike', label: 'هدرٌ أو تلفٌ غير معتاد', blamesWorker: false },
+    { id: 'forecast_error', label: 'المقترح لا يطابق الواقع — يُراجَع Par Level', blamesWorker: false },
     other('سببٌ آخر — يُكتب'),
   ],
   // ← إحالةٌ إلى القائمة القائمة، لا نسخةٌ منها.
