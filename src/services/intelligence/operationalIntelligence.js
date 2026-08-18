@@ -14,6 +14,7 @@
  * منطق خالص: بلا Firestore وبلا شبكة.
  */
 import { haversineMeters } from '../field/geo.js';
+import { policyFor } from './stockPolicy.js';
 
 const num = (v) => Number(v) || 0;
 const str = (v) => String(v ?? '').trim();
@@ -119,24 +120,46 @@ export function replenishmentFor({ item, moves = [], onHand = 0, today, leadDays
   };
 }
 
-/** التزويد لكلّ الأصناف — المستعجل أوّلًا. */
-export function replenishmentPlan({ items = [], moves = [], balances = [], today, leadDays, safetyDays }) {
+/**
+ * التزويد لكلّ الأصناف — المستعجل أوّلًا.
+ *
+ * ‹FNB-301› `branch` **يقصر الحساب على فرعٍ واحد**: رصيدُه هو، واستهلاكه هو،
+ * وسياسته هو. وبلا `branch` يبقى السلوك القديم حرفيًّا (المنشأة كلّها) —
+ * فلا ينكسر مستدعٍ قائم.
+ */
+export function replenishmentPlan({
+  items = [], moves = [], balances = [], today, leadDays, safetyDays,
+  branch = '', policies = null, dims = null, inTransitBySku = null,
+}) {
+  const branchCode = up(branch);
+  // رصيد الفرع وحده حين طُلب فرع — ورصيد المنشأة كلّها حين لم يُطلب.
   const onHandBySku = new Map();
   for (const b of balances || []) {
+    if (branchCode && up(b.warehouse) !== branchCode) continue;
     const k = up(b.sku);
     onHandBySku.set(k, num(onHandBySku.get(k)) + num(b.qty));
   }
+  // واستهلاكه هو: حركات الخروج المختومة بهذا الفرع (ختم FNB-104) أو من مستودعه.
+  const scopedMoves = branchCode
+    ? (moves || []).filter((m) => up(m.orgBranch) === branchCode || up(m.from) === branchCode)
+    : moves;
+
   return (items || [])
     .map((item) =>
       replenishmentFor({
         item,
-        moves,
+        moves: scopedMoves,
         onHand: onHandBySku.get(up(item?.sku)) || 0,
         today,
         leadDays: num(item?.leadDays) || leadDays,
         safetyDays,
+        // سياسة (صنف × فرع) بالوراثة الثلاثيّة — وغيابها يُبقي الوسيطَين.
+        policy: policies ? policyFor(policies, item?.sku, dims || { branch: branchCode }) : null,
+        // «الكمّيّات بالطريق» من `openDemand` — ما هو قادمٌ لا يُطلب ثانيةً.
+        inTransit: num(inTransitBySku?.get?.(up(item?.sku))),
       })
     )
+    .map((r) => (r && branchCode ? { ...r, branch: branchCode } : r))
     .filter((r) => r && r.suggestQty > 0)
     .sort((a, b) => a.daysLeft - b.daysLeft);
 }

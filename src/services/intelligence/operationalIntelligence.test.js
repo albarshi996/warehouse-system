@@ -18,6 +18,7 @@ import {
   repCompanion,
   findDuplicateStores,
 } from './operationalIntelligence.js';
+import { indexPolicies } from './stockPolicy.js';
 
 /** حركات خروجٍ لصنفٍ على مدى شهر. */
 const outMoves = (sku, perDay, days, from = '2026-07-12') =>
@@ -289,4 +290,72 @@ test('★ أيّام التغطية بندٌ مستقلّ: تغطيةٌ أطول
   const long = replenishmentFor({ ...base, policy: { coverDays: 30, leadDays: 10, safetyDays: 5 } });
   assert.ok(long.suggestQty > short.suggestQty);
   assert.match(long.why, /التغطية المطلوبة 30/);
+});
+
+/* ═══════════ ‹FNB-301› المعادلة على مستوى الفرع ═══════════ */
+
+/** حركات خروجٍ من فرعٍ بعينه — مختومةٌ ببُعده (ختم FNB-104). */
+const branchMoves = (sku, perDay, days, branch, from = '2026-07-12') =>
+  outMoves(sku, perDay, days, from).map((m) => ({ ...m, from: branch, orgBranch: branch }));
+
+test('★★ فرعان مختلفا الاستهلاك يُقترح لهما رقمان مختلفان لنفس الصنف', () => {
+  const moves = [
+    ...branchMoves('A', 20, 30, 'BR01'), // فرعٌ نهم
+    ...branchMoves('A', 4, 30, 'BR02'),  // وفرعٌ هادئ
+  ];
+  const balances = [
+    { sku: 'A', warehouse: 'BR01', qty: 10 },
+    { sku: 'A', warehouse: 'BR02', qty: 10 },
+  ];
+  const args = { items: [{ sku: 'A' }], moves, balances, today: '2026-08-11', leadDays: 7, safetyDays: 3 };
+  const busy = replenishmentPlan({ ...args, branch: 'BR01' })[0];
+  const calm = replenishmentPlan({ ...args, branch: 'BR02' })[0];
+
+  assert.ok(busy && calm);
+  assert.equal(busy.branch, 'BR01');
+  assert.equal(calm.branch, 'BR02');
+  assert.ok(busy.rate > calm.rate, 'كلّ فرعٍ بمعدّله هو');
+  assert.ok(busy.suggestQty > calm.suggestQty, 'ورقمان مختلفان لنفس الصنف');
+});
+
+test('★ رصيد الفرع لا رصيد المنشأة — مخزونُ جارِه لا يُسكِت اقتراحه', () => {
+  const moves = branchMoves('A', 20, 30, 'BR01');
+  const balances = [
+    { sku: 'A', warehouse: 'BR01', qty: 5 },     // الفرع شبه فارغ…
+    { sku: 'A', warehouse: 'MAIN', qty: 100000 }, // …والمخزن المركزيّ ممتلئ.
+  ];
+  const scoped = replenishmentPlan({ items: [{ sku: 'A' }], moves, balances, today: '2026-08-11', branch: 'BR01' })[0];
+  assert.ok(scoped, 'الفرع يحتاج ولو امتلأ المركزيّ');
+  assert.equal(scoped.onHand, 5);
+});
+
+test('★★ الترحيل صفر الأثر: بلا `branch` السلوك القديم حرفيًّا (المنشأة كلّها)', () => {
+  const moves = [...branchMoves('A', 10, 30, 'BR01'), ...branchMoves('A', 10, 30, 'BR02')];
+  const balances = [{ sku: 'A', warehouse: 'BR01', qty: 50 }, { sku: 'A', warehouse: 'BR02', qty: 50 }];
+  const all = replenishmentPlan({ items: [{ sku: 'A' }], moves, balances, today: '2026-08-11' })[0];
+  assert.ok(all);
+  assert.equal(all.onHand, 100, 'الأرصدة تُجمع كما كانت');
+  assert.equal(all.branch, undefined, 'ولا بُعدَ فرعٍ يُضاف بلا طلب');
+});
+
+test('★ السياسة و«بالطريق» تدخلان الخطّة — لا وسيطًا عامًّا وحده', () => {
+  const moves = branchMoves('A', 10, 30, 'BR01');
+  const balances = [{ sku: 'A', warehouse: 'BR01', qty: 10 }];
+  const policies = indexPolicies([{ scope: 'branch', scopeCode: 'BR01', sku: 'A', parLevel: 90, leadDays: 6 }]);
+  const base = { items: [{ sku: 'A' }], moves, balances, today: '2026-08-11', branch: 'BR01', policies, dims: { branch: 'BR01' } };
+
+  const plain = replenishmentPlan(base)[0];
+  assert.equal(plain.leadDays, 6, 'مهلة السياسة');
+  assert.equal(plain.parLevel, 90);
+
+  // وشحنةٌ في الطريق تخفض المقترح — وكافيةٌ تُسكِته.
+  const withTransit = replenishmentPlan({ ...base, inTransitBySku: new Map([['A', 50]]) })[0];
+  assert.ok(withTransit.suggestQty < plain.suggestQty);
+  assert.equal(replenishmentPlan({ ...base, inTransitBySku: new Map([['A', 9000]]) }).length, 0);
+});
+
+test('فرعٌ بلا تاريخٍ كافٍ يصمت — والحارس القائم يبقى على مستوى الفرع', () => {
+  const moves = branchMoves('A', 10, 5, 'BR01'); // خمسة أيّام فقط
+  const balances = [{ sku: 'A', warehouse: 'BR01', qty: 0 }];
+  assert.deepEqual(replenishmentPlan({ items: [{ sku: 'A' }], moves, balances, today: '2026-07-16', branch: 'BR01' }), []);
 });
