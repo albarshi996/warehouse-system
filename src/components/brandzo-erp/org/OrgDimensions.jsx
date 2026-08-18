@@ -17,6 +17,7 @@ import { listenAllDocuments } from '../../../services/documents/documentsService
 import {
   ORG_LEVELS, levelOf, indexLocations, locationProblems,
   internalBranchProblems, orgCodeOf, docAmountOf, costByLocation, unlinkedCost,
+  suggestLocationCode, parentChoices,
 } from '../../../services/org/orgLocations.js';
 import { planOrgImport, seedWarnings } from '../../../services/org/orgImport.js';
 import {
@@ -102,10 +103,11 @@ export default function OrgDimensions() {
   }, [locations]);
 
   const parentLevel = levelOf(form.level)?.parentOf;
-  const parentOptions = useMemo(
-    () => locations.filter((l) => l.level === parentLevel && l.active !== false),
-    [locations, parentLevel]
-  );
+  // ‹الرمز يُقترح لا يُخترع›: بادئة المستوى ورقمٌ يقفز فوق المشغول. ومقترحٌ
+  // لا مفروض — الحقل يبقى قابلًا للتحرير لمن له ترميزٌ قائم.
+  const suggestedCode = useMemo(() => suggestLocationCode(index, form.level), [index, form.level]);
+  // والآباء بمسارهم كاملًا — فلا يلتبس براندان باسمٍ واحد تحت قطاعين.
+  const parentOptions = useMemo(() => parentChoices(locations, form.level), [locations, form.level]);
 
   async function save() {
     if (busy) return;
@@ -224,20 +226,37 @@ export default function OrgDimensions() {
 
       <Section title="إضافة / تعديل موقع">
         <div className="grid gap-3 md:grid-cols-5">
-          <input className={input} placeholder="الرمز (مثل SEC-FOOD)" dir="ltr" value={form.code}
-            onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} />
+          <input className={input} placeholder={suggestedCode ? `الرمز (مقترَح: ${suggestedCode})` : 'الرمز'}
+            dir="ltr" value={form.code}
+            onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
+            onFocus={() => setForm((f) => (f.code.trim() ? f : { ...f, code: suggestedCode }))} />
           <input className={input} placeholder="الاسم العربيّ" value={form.nameAr}
             onChange={(e) => setForm((f) => ({ ...f, nameAr: e.target.value }))} />
           <select className={input} value={form.level}
-            onChange={(e) => setForm((f) => ({ ...f, level: e.target.value, parentCode: '' }))}>
+            onChange={(e) => setForm((f) => ({
+              ...f,
+              level: e.target.value,
+              parentCode: '',
+              // الرمز المقترح يتبع المستوى ما لم يكتبه المستخدم بنفسه.
+              code: f.code === suggestedCode ? suggestLocationCode(index, e.target.value) : f.code,
+            }))}>
             {ORG_LEVELS.map((l) => <option key={l.id} value={l.id}>{l.labelAr}</option>)}
           </select>
           {parentLevel ? (
-            <select className={input} value={form.parentCode}
-              onChange={(e) => setForm((f) => ({ ...f, parentCode: e.target.value }))}>
-              <option value="">— الأب ({levelOf(parentLevel).labelAr}) —</option>
-              {parentOptions.map((p) => <option key={p.code} value={p.code}>{p.nameAr || p.code}</option>)}
-            </select>
+            parentOptions.length ? (
+              <select className={input} value={form.parentCode}
+                onChange={(e) => setForm((f) => ({ ...f, parentCode: e.target.value }))}>
+                <option value="">— اختر {levelOf(parentLevel).labelAr} —</option>
+                {parentOptions.map((p) => (
+                  <option key={p.code} value={p.code}>{p.path} ({p.code})</option>
+                ))}
+              </select>
+            ) : (
+              // قائمةٌ فارغة تقول ما يُفعل، لا تصمت.
+              <div className="text-xs text-ink-2 self-center">
+                لا {levelOf(parentLevel).labelAr} بعد — أضِفه أوّلًا ثمّ عُد لهذا المستوى.
+              </div>
+            )
           ) : (
             <div className="text-xs text-ink-2 self-center">القطاع جذرٌ بلا أب</div>
           )}

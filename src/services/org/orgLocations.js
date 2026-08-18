@@ -295,6 +295,56 @@ export function locationProblems(locations = []) {
   return problems;
 }
 
+/** بادئة رمز كلّ مستوى — قصيرةٌ وثابتة، فالرمز هويّةٌ تُقرأ بالعين. */
+const CODE_PREFIX = Object.freeze({ sector: 'SEC', brand: 'BRD', branch: 'BR', cost_center: 'CC' });
+
+/**
+ * يقترح رمزًا لموقعٍ جديد — **فلا يخترعه المستخدم بيده**.
+ *
+ * الرمز هويّةٌ لا وصف: تغييرُ الاسم لا يكسر التاريخ وتغييرُ الرمز يكسره،
+ * فيُثبَّت مرّةً واحدة. ولذلك لا يُشتقّ من الاسم العربيّ (تسميةٌ تتغيّر
+ * وتُكتب بصيغٍ شتّى)، بل **بادئةُ المستوى ورقمٌ متسلسل** يقفز فوق المشغول.
+ *
+ * ومقترحٌ لا مفروض: يبقى الحقل قابلًا للتحرير، فمن له ترميزٌ قائم يكتبه.
+ *
+ * @param {Map} index فهرس المواقع
+ * @param {string} level المستوى المطلوب
+ * @returns {string} رمزٌ غير مستعمَل، أو `''` لمستوًى مجهول
+ */
+export function suggestLocationCode(index, level) {
+  const prefix = CODE_PREFIX[str(level)];
+  if (!prefix) return '';
+  const taken = new Set([...(index?.keys?.() || [])].map(up));
+  for (let n = 1; n <= 999; n += 1) {
+    const candidate = `${prefix}${String(n).padStart(2, '0')}`;
+    if (!taken.has(candidate)) return candidate;
+  }
+  return '';
+}
+
+/**
+ * آباءٌ صالحون لمستوًى ما — **بمسارهم كاملًا** فلا يلتبس براندان باسمٍ واحد
+ * تحت قطاعين. والقائمة الفارغة تعني «أضف الأب أوّلًا» لا عطبًا.
+ *
+ * @returns {{code, label, path}[]}
+ */
+export function parentChoices(locations = [], level) {
+  const parentLevel = levelOf(str(level))?.parentOf;
+  if (!parentLevel) return [];
+  const index = indexLocations(locations);
+  return (Array.isArray(locations) ? locations : [])
+    .filter((l) => l.level === parentLevel && l.active !== false)
+    .map((l) => {
+      // المسار من الجذر إلى الأب: «قطاع الأغذية › براند أ».
+      const path = ancestryOf(index, l.code)
+        .reverse()
+        .map((n) => str(n.nameAr) || n.code)
+        .join(' › ');
+      return { code: up(l.code), label: str(l.nameAr) || up(l.code), path };
+    })
+    .sort((a, b) => a.path.localeCompare(b.path));
+}
+
 /** خيارات العرض مرتّبةً بالمستوى ثمّ بالاسم — لقائمةٍ منسدلة. */
 export function locationOptions(locations = [], { level = '' } = {}) {
   return (Array.isArray(locations) ? locations : [])

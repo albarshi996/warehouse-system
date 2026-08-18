@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 import {
   dispatchTargetVerdict, dispatchViolations, DISPATCH_DOC_TYPES,
   rollupBy, orgEntriesFromMoves, rankByMeasure, ORG_MEASURES, costByLocation as costWrap,
+  suggestLocationCode, parentChoices,
   ORG_LEVELS,
   LEVEL_IDS,
   ORG_FIELDS,
@@ -334,4 +335,41 @@ test('ترتيب الفروع والنواقص من المحرّك نفسه — 
   assert.deepEqual(rankByMeasure(byLocation, 'stock', { ascending: true })[0].code, 'BR03'); // الناقص أوّلًا.
   // والتسعة معرَّفةٌ في سجلٍّ واحدٍ بمصدر كلٍّ منها.
   assert.equal(Object.keys(ORG_MEASURES).length, 9);
+});
+
+/* ═══════════ الرمز يُقترح والأب يُختار بمساره ═══════════ */
+
+test('★ الرمز يُقترح ببادئة مستواه ويقفز فوق المشغول — فلا يخترعه المستخدم', () => {
+  const index = indexLocations([
+    { code: 'SEC01', nameAr: 'قطاع', level: 'sector' },
+    { code: 'BRD01', nameAr: 'براند أ', level: 'brand', parentCode: 'SEC01' },
+  ]);
+  assert.equal(suggestLocationCode(index, 'brand'), 'BRD02', 'قفز فوق المشغول');
+  assert.equal(suggestLocationCode(index, 'branch'), 'BR01');
+  assert.equal(suggestLocationCode(index, 'sector'), 'SEC02');
+  assert.equal(suggestLocationCode(index, 'مستوًى مخترَع'), '');
+  // وشجرةٌ فارغة تبدأ من الأوّل.
+  assert.equal(suggestLocationCode(indexLocations([]), 'brand'), 'BRD01');
+});
+
+test('★★ الآباء يُعرضون بمسارهم كاملًا — فلا يلتبس براندان باسمٍ واحد', () => {
+  const locations = [
+    { code: 'SEC01', nameAr: 'الأغذية', level: 'sector' },
+    { code: 'SEC02', nameAr: 'التجزئة', level: 'sector' },
+    { code: 'BRD01', nameAr: 'الواحة', level: 'brand', parentCode: 'SEC01' },
+    { code: 'BRD02', nameAr: 'الواحة', level: 'brand', parentCode: 'SEC02' },
+    { code: 'BRD03', nameAr: 'مقفل', level: 'brand', parentCode: 'SEC01', active: false },
+  ];
+  const choices = parentChoices(locations, 'branch');
+  assert.equal(choices.length, 2, 'المعطَّل لا يُعرض');
+  // اسمان متطابقان يتمايزان بالمسار.
+  assert.deepEqual(choices.map((c) => c.path), ['الأغذية › الواحة', 'التجزئة › الواحة']);
+  assert.deepEqual(choices.map((c) => c.code).sort(), ['BRD01', 'BRD02']);
+
+  // والقطاع جذرٌ بلا أب.
+  assert.deepEqual(parentChoices(locations, 'sector'), []);
+});
+
+test('وقائمةٌ فارغة تعني «أضف الأب أوّلًا» لا عطبًا', () => {
+  assert.deepEqual(parentChoices([{ code: 'SEC01', nameAr: 'قطاع', level: 'sector' }], 'branch'), []);
 });
