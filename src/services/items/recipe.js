@@ -254,8 +254,11 @@ export function impactOfShortage(index, sku, { branchMenus = null, orgIndex = nu
   );
   const menuItems = [...affected].filter((out) => !intermediates.includes(out));
 
+  // ‹FNB-601› يقبل خريطةً (Map) أو كائنًا عاديًّا: مستدعٍ يمرّر Map كان
+  // يتلقّى `[]` **بصمت** — وصمتٌ خاطئ أسوأ من خطأٍ صريح.
+  const menuPairs = branchMenus instanceof Map ? [...branchMenus.entries()] : Object.entries(branchMenus || {});
   const branches = branchMenus
-    ? Object.entries(branchMenus)
+    ? menuPairs
         .filter(([, menu]) => (menu || []).some((m) => affected.has(normalizeItemCode(m))))
         .map(([branch]) => branch)
     : [];

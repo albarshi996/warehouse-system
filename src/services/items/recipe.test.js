@@ -230,3 +230,14 @@ test('صنف منيو بلا وصفة يفتح استثناءً معرَّفًا
   // وبصمة التفرّد تمنع فتحه مئة مرّة عند كلّ رسم.
   assert.equal(fingerprint(exc), fingerprint({ type: 'recipe_unlinked', sku: 'PIZZA' }));
 });
+
+test('★ أثر النقص يقبل خريطةً أو كائنًا ‹FNB-601› — لا صمتَ خاطئ', () => {
+  const index = indexRecipes([{
+    outputSku: 'BURGER', version: 1, effectiveFrom: '2026-01-01', yieldQty: 1,
+    lines: [{ sku: 'CHICKEN', qty: 150, uom: 'G' }],
+  }]);
+  const asObject = impactOfShortage(index, 'CHICKEN', { branchMenus: { BR01: ['BURGER'] } });
+  const asMap = impactOfShortage(index, 'CHICKEN', { branchMenus: new Map([['BR01', ['BURGER']]]) });
+  assert.deepEqual(asMap.branches, asObject.branches);
+  assert.deepEqual(asMap.branches, ['BR01'], 'الخريطة كانت تُعيد فراغًا بصمت');
+});
