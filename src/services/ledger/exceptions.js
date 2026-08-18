@@ -103,6 +103,10 @@ export const EXCEPTION_TYPES = Object.freeze({
   // صفرٌ كاذبٌ وتكلفته مجهولة. الكاشف `recipe.unlinkedSaleItems` — وبقيّة
   // أنواع القطاع العشرة تُضاف في FNB-802 لا هنا.
   recipe_unlinked: { id: 'recipe_unlinked', label: 'صنف منيو غير مربوط بوصفة', action: 'اربطه بوصفةٍ ساريةً أو أخرجه من المنيو', owner: 'مدير المستودع' },
+  // ‹FNB-702› انحراف الاستهلاك الفعليّ عن النظريّ فوق العتبة — بالاتّجاهين:
+  // الزائد هدرٌ أو صرفٌ بلا بيع، والناقص وصفةٌ لا تُتّبع أو مبيعاتٌ بلا صرف.
+  // الكاشف `intelligence/posSales.js › consumptionVariance`.
+  consumption_variance: { id: 'consumption_variance', label: 'انحراف استهلاكٍ مرتفع', action: 'حقّق في الفرق: هدرٌ أم وصفةٌ أم جرد', owner: 'مدير المستودع' },
 });
 
 export function exceptionType(id) {
