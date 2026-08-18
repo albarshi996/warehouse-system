@@ -105,43 +105,138 @@ export function orgCodeOf(doc) {
 }
 
 /**
- * تحميل تكلفة مستندٍ على موقعه التنظيميّ **وعلى كلّ آبائه**.
+ * المحرّك المعمَّم للصعود ‹FNB-105› — **مقياسٌ واحدٌ أو تسعة، محرّكٌ واحد.**
  *
- * الصعود ضرورة: تكلفةٌ على «مركز تكلفة صيانة بنغازي» هي أيضًا تكلفةٌ على فرع
- * بنغازي وعلى براندها وعلى قطاعها. ومن حمّلها على الورقة وحدها لم يستطع أن
- * يجيب: كم كلّفنا هذا القطاع؟
+ * الصعود ضرورة: قيمةٌ على «مركز تكلفة صيانة بنغازي» هي أيضًا قيمةٌ على فرع
+ * بنغازي وعلى براندها وعلى قطاعها. وكان المحرّك للمال وحده (`costByLocation`)
+ * بينما خطة القطاع تطلب لكلّ براندٍ وفرع: الطلب والاستهلاك **والمخزون**
+ * والتكلفة والمرتجعات والهدر وفروقات الجرد والطلبات الطارئة ومستوى الخدمة —
+ * ومن بنى نسخةً لكلّ مقياسٍ صنع تسعة محرّكاتٍ تتباعد.
+ *
+ * @param {Map} index فهرس المواقع
+ * @param {object[]} entries سطورٌ لها `{orgCode, measures:{مفتاح: رقم}}`
+ * @returns {{byLocation:Map<string,{code,nameAr,level,direct,rollup}>, unlinked:object}}
+ *   `direct`/`rollup` كائنا مقاييس، و`unlinked` يُحصي غير المربوط **لكلّ مقياس**
+ *   منفصلًا — لا يذوب في المجموع ولا يُوزَّع بالتخمين.
+ */
+export function rollupBy(index, entries = []) {
+  const byLocation = new Map();
+  const unlinked = {};
+  const touch = (loc) => {
+    if (!byLocation.has(loc.code)) {
+      byLocation.set(loc.code, {
+        code: loc.code,
+        nameAr: str(loc.nameAr) || loc.code,
+        level: loc.level,
+        direct: {},
+        rollup: {},
+      });
+    }
+    return byLocation.get(loc.code);
+  };
+  const add = (bag, key, value) => {
+    bag[key] = money((bag[key] || 0) + value);
+  };
+
+  for (const e of Array.isArray(entries) ? entries : []) {
+    const measures = Object.entries(e?.measures || {}).filter(([, v]) => num(v) !== 0);
+    if (!measures.length) continue;
+    const chain = ancestryOf(index, e?.orgCode);
+    if (!chain.length) {
+      for (const [key, value] of measures) add(unlinked, key, num(value));
+      continue;
+    }
+    chain.forEach((loc, depth) => {
+      const row = touch(loc);
+      for (const [key, value] of measures) {
+        if (depth === 0) add(row.direct, key, num(value));
+        add(row.rollup, key, num(value));
+      }
+    });
+  }
+  return { byLocation, unlinked };
+}
+
+/**
+ * تحميل تكلفة مستندٍ على موقعه وآبائه — **غلافٌ فوق المحرّك المعمَّم** لا
+ * محرّكٌ ثانٍ (عقد FNB-105)، والعائد بشكله القديم حرفيًّا فلا تنكسر شاشة.
  *
  * @param {Map} index فهرس المواقع
  * @param {object[]} entries سطورٌ لها `{orgCode, amount}`
  * @returns {Map<string, {code, nameAr, level, direct, rollup}>}
  */
 export function costByLocation(index, entries = []) {
+  const { byLocation } = rollupBy(
+    index,
+    (Array.isArray(entries) ? entries : []).map((e) => ({ orgCode: e?.orgCode, measures: { amount: num(e?.amount) } }))
+  );
   const out = new Map();
-  const touch = (loc) => {
-    if (!out.has(loc.code)) {
-      out.set(loc.code, {
-        code: loc.code,
-        nameAr: str(loc.nameAr) || loc.code,
-        level: loc.level,
-        direct: 0,
-        rollup: 0,
-      });
-    }
-    return out.get(loc.code);
-  };
-
-  for (const e of Array.isArray(entries) ? entries : []) {
-    const amount = money(num(e?.amount));
-    if (amount === 0) continue;
-    const chain = ancestryOf(index, e?.orgCode);
-    if (!chain.length) continue; // غير مربوط — يُحصى منفصلًا لا يُوزَّع بالتخمين
-    chain.forEach((loc, depth) => {
-      const row = touch(loc);
-      if (depth === 0) row.direct = money(row.direct + amount);
-      row.rollup = money(row.rollup + amount);
-    });
+  for (const [code, row] of byLocation) {
+    out.set(code, { code, nameAr: row.nameAr, level: row.level, direct: money(row.direct.amount || 0), rollup: money(row.rollup.amount || 0) });
   }
   return out;
+}
+
+/**
+ * المقاييس التسعة من خطة القطاع — وموضعُ اشتقاق كلٍّ من دفتر الحركات المختوم
+ * (FNB-104). حركات الدفتر تغذّي سبعةً مباشرةً بسبب قيدها (`reason`)؛ والطلبات
+ * الطارئة ومستوى الخدمة يُشتقّان من المستندات (الأولويّة والمواعيد — FNB-602/603)
+ * فيدخلان المحرّكَ سطورًا جاهزة من مصدرهما لا من الدفتر.
+ */
+export const ORG_MEASURES = Object.freeze({
+  demand: { labelAr: 'الطلب', source: 'docs' },
+  consumption: { labelAr: 'الاستهلاك', source: 'moves' },
+  stock: { labelAr: 'المخزون (صافي الحركة)', source: 'moves' },
+  cost: { labelAr: 'التكلفة', source: 'moves' },
+  returns: { labelAr: 'المرتجعات', source: 'moves' },
+  waste: { labelAr: 'الهدر', source: 'moves' },
+  countVariance: { labelAr: 'فروقات الجرد', source: 'moves' },
+  emergency: { labelAr: 'الطلبات الطارئة', source: 'docs' },
+  serviceLevel: { labelAr: 'مستوى الخدمة', source: 'docs' },
+});
+
+/** سببُ القيد ← مقاييسه: خريطةٌ معلنةٌ واحدة لا شروطٌ مبثوثة. */
+const MOVE_MEASURES = Object.freeze({
+  delivery: ['consumption'],
+  'van-sale': ['consumption'],
+  'consign-sold': ['consumption'],
+  'return-in': ['returns'],
+  'van-return-in': ['returns'],
+  'consign-return': ['returns'],
+  damage: ['waste'],
+  'quality-reject': ['waste'],
+  adjustment: ['countVariance'],
+});
+
+/**
+ * حركات الدفتر المختومة ← سطورَ صعود ‹FNB-105›.
+ * كلّ حركةٍ تحمل `orgCode` (ختم FNB-104) تتحوّل مقاييسَ بحسب سببها:
+ * الكمّيّة للمقياس النوعيّ، و`value` للتكلفة، وصافي المخزون دخولًا وخروجًا.
+ */
+export function orgEntriesFromMoves(moves = []) {
+  return (Array.isArray(moves) ? moves : [])
+    .filter((m) => str(m?.orgCode))
+    .map((m) => {
+      const qty = num(m?.qty);
+      const measures = { cost: num(m?.value) };
+      for (const key of MOVE_MEASURES[str(m?.reason)] || []) measures[key] = qty;
+      // صافي المخزون: ما وصل الموقعَ زيادةٌ وما غادره نقص — والداخليّ يتوازن.
+      if (m?.to !== null && m?.to !== undefined) measures.stock = money((measures.stock || 0) + qty);
+      if (m?.from !== null && m?.from !== undefined) measures.stock = money((measures.stock || 0) - qty);
+      return { orgCode: m.orgCode, measures };
+    });
+}
+
+/**
+ * ترتيب المواقع بمقياسٍ ‹FNB-105› — «ترتيب الفروع» و«النواقص» من خطة القطاع،
+ * مشتقَّين من المحرّك نفسه لا من حسابٍ ثانٍ. `ascending` للنواقص (الأقلّ أوّلًا).
+ */
+export function rankByMeasure(byLocation, measure, { level = 'branch', ascending = false } = {}) {
+  const rows = [...(byLocation?.values?.() || [])]
+    .filter((r) => !level || r.level === level)
+    .map((r) => ({ code: r.code, nameAr: r.nameAr, value: num(r.rollup?.[measure]) }));
+  rows.sort((a, b) => (ascending ? a.value - b.value : b.value - a.value) || a.code.localeCompare(b.code));
+  return rows;
 }
 
 /** ما لم يُربط بموقع — يُحصى ويُعرض، فلا يذوب في المجموع بصمت. */
