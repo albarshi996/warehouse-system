@@ -82,9 +82,12 @@ export const TIME_FIELD_MAP = Object.freeze({
   /* ═══ الوارد ═══ */
   PR: { requestDate: E, neededBy: P },
   PO: { issueDate: E, requiredDelivery: P },
-  GRN: { receivedAt: E, expiryDate: A },
-  QC: { inspectionDate: E, expiry: A },
-  PUTAWAY: { putawayDate: E, expiry: A },
+  // ‹FNB-405› `mfgDate` **صفةُ دفعةٍ** كالصلاحيّة لا ختمُ واقعةٍ عندنا: تاريخُ
+  // إنتاجٍ وقع في مصنع المورّد قبل أن تصلنا البضاعة. فهو `attribute` — يُقبل
+  // في الماضي بطبيعته، ولا يُختم بزمن الاستلام فيكذب.
+  GRN: { receivedAt: E, expiryDate: A, mfgDate: A },
+  QC: { inspectionDate: E, expiry: A, mfgDate: A },
+  PUTAWAY: { putawayDate: E, expiry: A, mfgDate: A },
 
   /* ═══ الصادر ═══ */
   // ‹EXE-301› `mustShipBy` **قيدٌ تشغيليّ** (متى يُقفل استلام الناقل) لا وعدٌ

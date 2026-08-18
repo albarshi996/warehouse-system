@@ -208,9 +208,11 @@ const LINE_MAP = {
   'PO>GRN': { sku: 'sku', barcode: 'barcode', description: 'description', qty: 'qtyOrdered' },
   // التشغيلة والصلاحية تُلتقطان عند الاستلام وتُورَّثان عبر الوارد كلّه (BZ-SCN-003):
   // فمفتاح رصيد الاستلام (يضمّ التشغيلة) يطابق مفتاح ما يُسحب منه لاحقًا فحصًا وتخزينًا.
-  'GRN>QC': { sku: 'sku', barcode: 'barcode', description: 'description', qtyReceived: 'qtyInspected', batch: 'batch', expiryDate: 'expiry' },
+  // ‹FNB-405› ودفعةُ المورّد وتاريخُ الإنتاج يُورَّثان مع الدفعة والصلاحيّة —
+  // فالتتبّع يتّصل من إرساليّة المورّد إلى الرفّ (سطر 375) ولا ينقطع عند الفحص.
+  'GRN>QC': { sku: 'sku', barcode: 'barcode', description: 'description', qtyReceived: 'qtyInspected', batch: 'batch', expiryDate: 'expiry', supplierBatch: 'supplierBatch', mfgDate: 'mfgDate' },
   // المقبول جودةً وحده هو ما يُخزَّن — لا المستلَم كلّه — بتشغيلته وصلاحيته الموروثتين.
-  'QC>PUTAWAY': { sku: 'sku', barcode: 'barcode', description: 'description', qtyAccepted: 'qty', batch: 'batch', expiry: 'expiry' },
+  'QC>PUTAWAY': { sku: 'sku', barcode: 'barcode', description: 'description', qtyAccepted: 'qty', batch: 'batch', expiry: 'expiry', supplierBatch: 'supplierBatch', mfgDate: 'mfgDate' },
   // إشعار الرفض يُشتقّ من **تقرير الجودة** (حيث يعيش قرار الرفض) لا من الاستلام
   // (BZ-SCN-005): يأخذ البنود المرفوضة وحدها (المرشّحة بـ LINE_FILTER)، فالكمية
   // المرفوضة تصير كمية الإرجاع، وسببها وتشغيلتها وصلاحيتها تُنقل ليوقّع المورّد.

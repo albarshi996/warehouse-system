@@ -111,6 +111,9 @@ const schema = {
         // التشغيلة والصلاحية موروثتان من الاستلام (BZ-SCN-003) — تُبقيان قرار الرفض
         // منسوبًا إلى تشغيلته، وتنتقلان مع المقبول إلى التخزين ومع المرفوض إلى الإشعار.
         { key: 'batch', label: 'الدفعة (Batch)', kind: 'text', width: '8%' },
+        // ‹FNB-405› موروثان من الاستلام كذلك — فلا تنقطع سلسلة التتبّع عند الفحص.
+        { key: 'supplierBatch', label: 'دفعة المورّد', kind: 'text', ltr: true, width: '7%' },
+        { key: 'mfgDate', label: 'تاريخ الإنتاج', kind: 'date', width: '8%' },
         { key: 'expiry', label: 'تاريخ الصلاحية', kind: 'date', width: '9%' },
         { key: 'qtyInspected', label: 'الكمية المفحوصة', kind: 'number', width: '9%' },
         { key: 'sampleSize', label: 'حجم العينة', kind: 'number', width: '6%' },

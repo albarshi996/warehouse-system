@@ -31,6 +31,8 @@ export const REASON_CONTEXTS = Object.freeze({
   visit_skip: 'تخطّي زيارة',
   // ‹FNB-303› الفرع طلب غير المقترح — والسبب يجعل الانحراف تعلُّمًا لا لومًا.
   order_deviation: 'انحراف عن الكمّيّة المقترحة',
+  // ‹FNB-404› الهدر التشغيليّ في مطعم — يميّزه عن التالف المخزنيّ.
+  waste: 'هدرٌ تشغيليّ',
 });
 
 /** المعرّف المحجوز لـ«سببٍ آخر» — يفتح خانة النصّ ويُلزم بها. */
@@ -101,6 +103,19 @@ export const REASONS = Object.freeze({
     { id: 'menu_change', label: 'تغيير في المنيو', blamesWorker: false },
     { id: 'waste_spike', label: 'هدرٌ أو تلفٌ غير معتاد', blamesWorker: false },
     { id: 'forecast_error', label: 'المقترح لا يطابق الواقع — يُراجَع Par Level', blamesWorker: false },
+    other('سببٌ آخر — يُكتب'),
+  ],
+  // ‹FNB-404› الهدر في مطعمٍ ليس تالفًا في مستودع: منتهي صلاحيّة · فائض
+  // إنتاج · خطأ تحضير · إرجاع زبون · كسر. والفرق **سببٌ محكوم** لا مستندٌ
+  // ثانٍ — ومن بنى مستندًا ثانيًا قسم رصيد التالف على دفترَين.
+  waste: [
+    { id: 'expired', label: 'انتهت صلاحيّته', blamesWorker: false },
+    { id: 'overproduction', label: 'فائض إنتاجٍ لم يُبَع', blamesWorker: false },
+    { id: 'prep_error', label: 'خطأ تحضير', blamesWorker: true },
+    { id: 'customer_return', label: 'إرجاع زبون', blamesWorker: false },
+    { id: 'breakage', label: 'كسرٌ أو انسكاب', blamesWorker: false },
+    { id: 'temperature', label: 'انقطاع سلسلة التبريد', blamesWorker: false },
+    { id: 'trim', label: 'فاقد تقطيعٍ وتنظيف', blamesWorker: false },
     other('سببٌ آخر — يُكتب'),
   ],
   // ← إحالةٌ إلى القائمة القائمة، لا نسخةٌ منها.
