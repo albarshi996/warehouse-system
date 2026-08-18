@@ -49,6 +49,22 @@ function gitSoft(...args) {
   }
 }
 
+/**
+ * **مسارات الملفّات من git — خامّةً لا مُقتبَسة.** الموضع الوحيد الذي تُقرأ فيه.
+ *
+ * git يُخرج الاسم غير اللاتينيّ مُقتبَسًا ومهرَّبًا بالثمانيّ
+ * (`"docs/\330\271\331\202\330\257…"`) ما لم يُطفأ `core.quotePath` — وهو مطفأٌ
+ * على جهاز المالك ومشتعلٌ في مُشغّل GitHub. فكان الاسم العربيّ يعود بشكلٍ لا
+ * يعرفه `git show`، فيُحسب الملفّ مفقودًا فعملًا سيُمحى، فيقف حارسُ المحو ويسقط
+ * التشغيل — «يعمل عندي» بحرفيّته. و`-z` يُنهيها من جذرها: فصلٌ بالمحرف الصفر
+ * بلا اقتباسٍ ولا تهريب، مهما كان الإعداد.
+ */
+function changedPaths(...args) {
+  return git('diff', '--name-only', '-z', ...args)
+    .split('\0')
+    .filter(Boolean);
+}
+
 /** يُظهر مخرجات الأمر للمستخدم مباشرةً (للأوامر الطويلة كالدمج والتوليد). */
 function run(cmd, args) {
   execFileSync(cmd, args, { cwd: root, stdio: 'inherit' });
@@ -170,11 +186,7 @@ function atRisk(files, readOurs) {
   });
 }
 
-const oursOnly = ahead
-  ? atRisk(git('diff', '--name-only', base, 'HEAD').split('\n').filter(Boolean), (f) =>
-      blob('HEAD', f)
-    )
-  : [];
+const oursOnly = ahead ? atRisk(changedPaths(base, 'HEAD'), (f) => blob('HEAD', f)) : [];
 
 if (oursOnly.length && !force) {
   stop(
@@ -194,16 +206,12 @@ step(4, `دمج ${theirTip} بترجيح الشقيق`);
 try {
   run('git', ['merge', '-X', 'theirs', '--no-ff', '--no-commit', '--quiet', 'FETCH_HEAD']);
 } catch {
-  const unmerged = gitSoft('diff', '--name-only', '--diff-filter=U') || '';
-  if (unmerged) {
+  const unmerged = changedPaths('--diff-filter=U');
+  if (unmerged.length) {
     stop(
       'تعارضٌ لا يحلّه الترجيح (حذفٌ مقابل تعديل غالبًا)',
-      `${unmerged
-        .split('\n')
-        .map((f) => `    · ${f}`)
-        .join(
-          '\n'
-        )}\n\n  ${DIM}احسمها يدويًّا ثمّ: npm run identity:apply && npm run arch && git commit${OFF}\n` +
+      `${unmerged.map((f) => `    · ${f}`).join('\n')}\n\n` +
+        `  ${DIM}احسمها يدويًّا ثمّ: npm run identity:apply && npm run arch && git commit${OFF}\n` +
         `  ${DIM}أو تراجَع كلّيًّا: git merge --abort${OFF}`
     );
   }
@@ -221,7 +229,7 @@ step(6, 'البيّنة: ما الذي يفرّقنا عن الشقيق الآن
 run('node', ['scripts/identity.mjs']);
 
 git('add', '-A');
-const delta = git('diff', '--name-only', 'FETCH_HEAD').split('\n').filter(Boolean);
+const delta = changedPaths('FETCH_HEAD');
 const stray = atRisk(delta, disk);
 
 console.info(`${DIM}      الفرق عن الشقيق: ${delta.length} ملفًّا${OFF}`);

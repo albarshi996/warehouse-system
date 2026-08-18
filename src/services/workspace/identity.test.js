@@ -280,6 +280,51 @@ test('★ إذنُ المزامنة التلقائيّة صريحٌ في الط�
   );
 });
 
+// ═══ المسارات غير اللاتينيّة: العطب الذي أسقط المزامنة في CI ══════════════
+
+test('★ في جدول المواضع أسماءٌ عربيّة — وهي التي تكشف عطب اقتباس المسارات', () => {
+  const arabic = SPOTS.filter((s) => /[\u0600-\u06FF]/.test(s.file));
+  assert.ok(
+    arabic.length >= 2,
+    'وجودها في الجدول مقصود: تُبقي العطب مكشوفًا في أوّل تشغيل بدل أن يكمن'
+  );
+  for (const s of arabic) assert.ok(fs.existsSync(path.join(root, s.file)), s.file);
+});
+
+test('★ الاقتباس مشتعلًا كما في CI: `-z` تُعيد المسار العربيّ خامًّا لا مهرَّبًا', () => {
+  // `core.quotePath` مطفأٌ على جهاز المالك ومشتعلٌ في مُشغّل GitHub، فبدونه
+  // يعود الاسم `"docs/\330\271…"` ولا يعرفه `git show` — وهذا ما أوقف المزامنة.
+  const quoted = execFileSync('git', ['-c', 'core.quotePath=true', 'ls-files', '--', 'docs'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  assert.match(quoted, /^"/m, 'الاقتباس يحدث فعلًا — وإلّا فالاختبار لا يحرس شيئًا');
+
+  const raw = execFileSync('git', ['-c', 'core.quotePath=true', 'ls-files', '-z', '--', 'docs'], {
+    cwd: root,
+    encoding: 'utf8',
+  })
+    .split('\0')
+    .filter(Boolean);
+  const arabic = raw.filter((f) => /[\u0600-\u06FF]/.test(f));
+  assert.ok(arabic.length > 0, 'في docs أسماء عربيّة');
+  for (const f of arabic) {
+    assert.ok(!f.startsWith('"'), `عاد خامًّا: ${f}`);
+    assert.ok(fs.existsSync(path.join(root, f)), `ويُفتح بمساره: ${f}`);
+  }
+});
+
+test('★ سكربت المزامنة يقرأ مسارات git في موضعٍ واحدٍ وبـ`-z` دائمًا', () => {
+  const src = fs.readFileSync(path.join(root, 'scripts', 'sync-sibling.mjs'), 'utf8');
+  assert.equal(
+    (src.match(/--name-only/g) || []).length,
+    1,
+    'قراءة المسارات في دالّةٍ واحدة — فلا يُنسى `-z` في نسخةٍ ثانية'
+  );
+  assert.match(src, /'--name-only',\s*'-z'/, '`-z` ملازمةٌ لها');
+  assert.match(src, /split\('\\0'\)/, 'والفصل بالمحرف الصفر');
+});
+
 test('ورك-فلو المزامنة التلقائيّة موجودٌ ومحكومٌ بالبطاقة لا بعنوانٍ مثبَّت', () => {
   const file = path.join(root, '.github', 'workflows', 'sync-from-sibling.yml');
   assert.ok(fs.existsSync(file), 'ملفّ المزامنة التلقائيّة');
