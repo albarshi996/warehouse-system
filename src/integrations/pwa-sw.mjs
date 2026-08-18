@@ -92,10 +92,26 @@ async function networkFirst(request) {
   } catch (e) {
     const cached = await cache.match(request);
     if (cached) return cached;
-    const root = await cache.match(BASE);
-    if (root) return root;
+
+    // ⚠️ **لا تُستبدَل صفحةٌ بأخرى.** كان الاحتياطيّ يُرجع الصفحة الجذر لأيّ
+    // مسارٍ غير محفوظ، فيرى المستخدم صفحةَ التسويق ورابطُه إلى لوحة التحكّم
+    // ويظنّ الشاشة مكسورة أو الرابط خاطئًا — وهو متّصلٌ بخادمٍ متوقّف.
+    // والموقع صفحاتٌ مستقلّة (١٠٢ صفحة) لا هيكلُ تطبيقٍ واحد، فالجذر ليس
+    // «قوقعةً» تصلح لغيره. **صفحةٌ خاطئة تبدو صحيحة أسوأ من خطأٍ صريح.**
+    const path = new URL(request.url).pathname;
+    const rootNoSlash = BASE.endsWith('/') ? BASE.slice(0, -1) : BASE;
+    const isRoot = path === BASE || path === rootNoSlash || path === BASE + 'index.html';
+    if (isRoot) {
+      const root = await cache.match(BASE);
+      if (root) return root;
+    }
+
     return new Response(
-      '<!doctype html><meta charset="utf-8"><body style="font-family:sans-serif;text-align:center;margin-top:20vh;direction:rtl"><h1>أنت غير متصل</h1><p>هذه الصفحة لم تُحفَظ بعد. افتحها مرّة والنت متاح ثم ستعمل دون اتصال.</p></body>',
+      '<!doctype html><meta charset="utf-8"><body style="font-family:sans-serif;text-align:center;margin-top:18vh;direction:rtl">'
+      + '<h1>الصفحة غير متاحة دون اتصال</h1>'
+      + '<p>تعذّر الوصول إلى الخادم، وهذه الصفحة لم تُحفَظ بعد.</p>'
+      + '<p style="color:#888;font-size:14px;direction:ltr">' + path + '</p>'
+      + '<p><a href="' + BASE + '">العودة إلى الرئيسية</a></p></body>',
       { headers: { 'Content-Type': 'text/html; charset=utf-8' }, status: 503 }
     );
   }
