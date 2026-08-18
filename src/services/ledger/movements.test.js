@@ -8,6 +8,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { buildMoves, balanceDeltas } from './movements.js';
+import { indexLocations } from '../org/orgLocations.js';
 
 
 /* ═══════════ نوع الصنف والوحدات في الدفتر (م٣-أ · م٣-ب) ═══════════ */
@@ -196,4 +197,63 @@ test('★ صنفٌ معرَّف بوحدةٍ لا معامل لها: يُرفض 
   const r = buildMoves(doc, { items });
   assert.equal(r.moves.length, 0);
   assert.match(r.problems[0], /لا معامل تحويل/);
+});
+
+/* ═══════════ ‹FNB-104› البُعد التنظيميّ مختومًا لحظة القيد ═══════════ */
+
+const ORG_TREE = [
+  { code: 'FNB', nameAr: 'قطاع الأغذية', level: 'sector' },
+  { code: 'BRD1', nameAr: 'براند أول', level: 'brand', parentCode: 'FNB' },
+  { code: 'BR01', nameAr: 'فرع أول', level: 'branch', parentCode: 'BRD1' },
+];
+
+// GRN كبقيّة اختبارات الملفّ — فالختم عامٌّ على كلّ قيدٍ لا على نوعٍ بعينه.
+const ORG_DOC = {
+  id: 'D-ORG', type: 'GRN', number: 'GRN-9',
+  header: { warehouse: 'MAIN', costCenter: 'BR01', receivedAt: '2026-08-18' },
+  lines: [{ sku: 'A', qtyReceived: 5 }],
+};
+
+test('★ الحركة تُختم بالرمز وأبعاده الثلاثة — القطاع والبراند والفرع من الشجرة وقت القيد', () => {
+  const { moves } = buildMoves(ORG_DOC, { orgIndex: indexLocations(ORG_TREE) });
+  assert.equal(moves[0].orgCode, 'BR01');
+  assert.equal(moves[0].orgMatched, true);
+  assert.equal(moves[0].orgBranch, 'BR01');
+  assert.equal(moves[0].orgBrand, 'BRD1');
+  assert.equal(moves[0].orgSector, 'FNB');
+});
+
+test('★ إعادة ربط الموقع لا تغيّر أبعاد حركةٍ قديمة — الختم وقت القيد لا وقت العرض', () => {
+  const stamped = buildMoves(ORG_DOC, { orgIndex: indexLocations(ORG_TREE) }).moves[0];
+  // غدًا يُنقل الفرع إلى براندٍ آخر — الحركة المختومة أمس لا تتأثّر.
+  const movedTree = ORG_TREE.map((l) => (l.code === 'BR01' ? { ...l, parentCode: 'BRD2' } : l))
+    .concat([{ code: 'BRD2', nameAr: 'براند ثانٍ', level: 'brand', parentCode: 'FNB' }]);
+  const restamped = buildMoves(ORG_DOC, { orgIndex: indexLocations(movedTree) }).moves[0];
+  assert.equal(stamped.orgBrand, 'BRD1'); // ختم الأمس كما هو.
+  assert.equal(restamped.orgBrand, 'BRD2'); // وقيدُ اليوم بشجرة اليوم.
+});
+
+test('حركةٌ برمزٍ لا يطابق الشجرة تُختم matched:false — تُحصى في «غير مربوط» لا تذوب', () => {
+  const doc = { ...ORG_DOC, header: { ...ORG_DOC.header, costCenter: 'GHOST' } };
+  const { moves } = buildMoves(doc, { orgIndex: indexLocations(ORG_TREE) });
+  assert.equal(moves[0].orgCode, 'GHOST');
+  assert.equal(moves[0].orgMatched, false);
+  assert.equal(moves[0].orgBranch, '');
+});
+
+test('بلا فهرسٍ (فشل قراءةٍ أو ما قبل الغرس): الرمز الخام يُختم وحده ولا يُخترع بُعد', () => {
+  const { moves } = buildMoves(ORG_DOC);
+  assert.equal(moves[0].orgCode, 'BR01');
+  assert.equal('orgMatched' in moves[0], false); // لا حكمَ بجهل — الغائب غائب.
+});
+
+test('ترتيب orgCodeOf حتميّ: حقلان مملوءان يفوز أوّلهما في ORG_FIELDS — نفس النتيجة دائمًا', () => {
+  const doc = {
+    ...ORG_DOC,
+    header: { ...ORG_DOC.header, costCenter: 'BR01', branch: 'GHOST' },
+  };
+  const a = buildMoves(doc, { orgIndex: indexLocations(ORG_TREE) }).moves[0];
+  const b = buildMoves(doc, { orgIndex: indexLocations(ORG_TREE) }).moves[0];
+  assert.equal(a.orgCode, 'BR01'); // costCenter قبل branch في القائمة المعلَنة.
+  assert.equal(b.orgCode, a.orgCode);
 });

@@ -24,6 +24,7 @@ import {
 } from './postingRules.js';
 import { vehicleLocationCode, customerLocationCode, isAccountLocation } from './locations.js';
 import { normalizeStockStatus } from './stockStatus.js';
+import { orgCodeOf, dimensionsOf } from '../org/orgLocations.js';
 import { isStocked, typeOf } from '../items/itemType.js';
 import { toBase, baseUomOf, hasUomDefinition, normalizeUom, checkFraction } from '../items/uomModel.js';
 
@@ -82,7 +83,7 @@ function resolveLocation(slot, header) {
  * @param {{items?: Map<string,object>|object}} [opts] خريطة `sku → سجلّ الصنف`
  * @returns {{moves: Array, problems: string[], skipped: Array}} الحركات والمشاكل وما استُبعد
  */
-export function buildMoves(docData, { items = null } = {}) {
+export function buildMoves(docData, { items = null, orgIndex = null } = {}) {
   const itemOf = (line) => {
     if (!items) return null;
     const sku = String(line?.sku ?? line?.itemCode ?? '').trim().toUpperCase();
@@ -101,6 +102,25 @@ export function buildMoves(docData, { items = null } = {}) {
     problems.push('المستودع غير محدَّد في رأس المستند — لا يُقيَّد أثرٌ بلا موقع.');
     return { moves: [], problems, skipped: [] };
   }
+
+  // ‹FNB-104› البُعد التنظيميّ يُختم **لحظة القيد** كما خُتم بُعد الرحلة
+  // والمندوب (CC-301) — لا يُحسب وقت العرض: موقعٌ يُعاد ربطه غدًا يجب ألّا
+  // يقلب تقارير الأمس. يُحسب مرّةً للمستند (الرأس واحد) ويُنسخ على حركاته.
+  // بلا فهرسٍ (المستدعي لم يمرّره أو فشلت قراءته) يُختم الرمز الخام وحده —
+  // فالختم الناقص المعلَن خيرٌ من اشتقاقٍ لاحقٍ متقلّب.
+  const rawOrgCode = String(orgCodeOf(docData) || '').trim().toUpperCase();
+  const orgDims = orgIndex ? dimensionsOf(orgIndex, docData) : null;
+  const orgStamp = {
+    orgCode: rawOrgCode,
+    ...(orgDims
+      ? {
+          orgMatched: orgDims.matched,
+          orgBranch: orgDims.branch?.code || '',
+          orgBrand: orgDims.brand?.code || '',
+          orgSector: orgDims.sector?.code || '',
+        }
+      : {}),
+  };
 
   const moves = [];
   const skipped = [];
@@ -216,6 +236,9 @@ export function buildMoves(docData, { items = null } = {}) {
       // الجواب من الدفتر عن «أيّ رحلةٍ حمّلت هذا الرصيد؟» — والفارغ يبقى فارغًا.
       tripRef: String(header?.tripRef ?? '').trim(),
       repName: String(header?.repName ?? header?.rep ?? '').trim(),
+      // ‹FNB-104› البُعد التنظيميّ مختومًا: القطاع والبراند والفرع من الشجرة
+      // وقت القيد — فيُجاب من الدفتر: «كم صُرف لهذا الفرع؟» بلا إعادة اشتقاق.
+      ...orgStamp,
     });
   });
 

@@ -36,6 +36,7 @@ import { db, auth } from '../../config/firebase.js';
 import { buildMoves, balanceDeltas, canPost, findNegativeBalance } from './movements.js';
 import { reservationDeltas } from './reservations.js';
 import { getItem } from '../itemService.js';
+import { indexLocations } from '../org/orgLocations.js';
 
 /**
  * أصناف بنود المستند من الماستر (م٣-أ ونوعُها · م٣-ب ووحداتها).
@@ -54,6 +55,21 @@ async function loadLineItems(lines) {
       if (item) map.set(skus[i], item);
     });
     return map.size ? map : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * فهرس الشجرة التنظيميّة وقت القيد (FNB-104) — قراءةٌ واحدة عند الإنجاز.
+ * **العجز عن القراءة ليس منعًا**: يُعاد `null` فيُختم الرمز الخام وحده،
+ * لأنّ شبكةً متذبذبة يجب ألّا توقف قيد استلامٍ صحيح.
+ */
+async function loadOrgIndex() {
+  try {
+    const snap = await getDocs(collection(db, 'org_locations'));
+    if (snap.empty) return null;
+    return indexLocations(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
   } catch {
     return null;
   }
@@ -100,8 +116,10 @@ export async function postDocument(docData, profile, { markDone = false } = {}) 
   // القراءة يعني `null` — أي **سلوك اليوم**: لا نمنع قيدًا لأنّنا عجزنا عن
   // معرفة نوع صنف، ولا نبني رصيدًا وهميًّا إن عرفنا.
   const lineItems = await loadLineItems(docData?.lines);
+  // الشجرة التنظيميّة (FNB-104): بها تُختم أبعاد الحركة لحظة القيد.
+  const orgIndex = await loadOrgIndex();
 
-  const { moves, problems: buildProblems, skipped } = buildMoves(docData, { items: lineItems });
+  const { moves, problems: buildProblems, skipped } = buildMoves(docData, { items: lineItems, orgIndex });
   if (buildProblems.length) throw new Error(buildProblems.join(' · '));
   if (!moves.length) {
     throw new Error(
