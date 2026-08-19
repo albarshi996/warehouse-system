@@ -1,0 +1,136 @@
+/*
+  ═══════════════════════════════════════════════════════════════════
+  إطار عروض المستندات (`fd-`) — الهيكل المشترك بين عرضٍ ومستنده
+  ═══════════════════════════════════════════════════════════════════
+  حين يكون **المستند نفسه هو العرض** (تقرير التسويق البصريّ · دليل الإدارة)
+  لا تصلح لوحة 1280×720 من `meeting-deck.css`: المستند يُمرَّر ويُقرأ. فهذا
+  الملفّ للإطار وحده — شريطٌ علويّ، وشريط اسم القسم، وشريط تحكّم، وفهرس،
+  ووضع عرض — ولا يمسّ شكل المستند المعروض داخله بحرف.
+
+  استُخرج من `identity-meeting.css` حين احتاجه عرضٌ ثانٍ (دليل الإدارة)،
+  فصار مصدرًا واحدًا بدل نسخةٍ ثانية.
+*/
+
+#bz-main { padding: 0 !important; }
+#bz-main > div { max-width: none !important; }
+body { background: #e9e6e6; overflow: hidden; }
+
+#bz-sw-toast { bottom: 80px !important; }
+body:has(.fd-deck.is-presenting) #bz-sw-toast { display: none !important; }
+
+.fd-deck {
+  --red-900: #6e070a; --red-800: #9e0b0e; --red-700: #c41017; --red-600: #e11b22; --red-400: #ff5a5f;
+  --ink: #1a1c1f; --ink-soft: #4a4f57; --muted: #8a919b; --line: #e8e8ec; --tint: #fdf6f6;
+  min-height: 100dvh; height: 100dvh;
+  padding: .7rem 1rem .75rem;
+  display: grid; grid-template-rows: auto 1fr auto; gap: .6rem;
+  color: var(--ink);
+}
+
+/* ── الشريط العلويّ ──────────────────────────────────────────── */
+.fd-toolbar { width: min(1600px, 100%); margin: 0 auto; min-height: 38px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.fd-toolbar > a { display: flex; align-items: center; gap: .45rem; color: var(--ink); text-decoration: none; font-weight: 750; font-size: .82rem; }
+.fd-toolbar > a:hover { color: var(--red-700); }
+.fd-toolbar svg { width: 16px; height: 16px; }
+.fd-toolbar > div { display: flex; align-items: baseline; gap: .7rem; }
+.fd-toolbar > div b { color: var(--red-700); font-size: .74rem; letter-spacing: .1em; direction: ltr; }
+.fd-toolbar > div span { color: var(--muted); font-size: .8rem; }
+.fd-open { color: var(--red-700) !important; font-size: .78rem !important; }
+
+/* ── المسرح: شريط القسم + إطار التقرير ───────────────────────── */
+.fd-stage {
+  width: min(1600px, 100%); margin: 0 auto; min-height: 0;
+  display: grid; grid-template-rows: auto 1fr;
+  border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  background: #fff; box-shadow: 0 18px 55px rgba(110, 7, 10, .16);
+}
+.fd-slidebar {
+  display: flex; align-items: baseline; gap: .85rem;
+  padding: .75rem 1.2rem; border-bottom: 1px solid var(--line);
+  background: linear-gradient(90deg, var(--tint), #fff 60%);
+}
+.fd-slidebar b { display: flex; align-items: center; justify-content: center; min-width: 34px; height: 26px; padding: 0 .5rem; border-radius: 100px; background: linear-gradient(135deg, var(--red-900), var(--red-600)); color: #fff; font-size: .74rem; font-weight: 800; }
+.fd-slidebar h2 { margin: 0; color: var(--ink); font-size: 1.15rem; line-height: 1.2; letter-spacing: -.02em; }
+.fd-slidebar span { margin-inline-start: auto; color: var(--muted); font-size: .74rem; }
+.fd-frame { width: 100%; height: 100%; border: 0; background: #fff; display: block; }
+
+/* ── شريط التحكّم ────────────────────────────────────────────── */
+.fd-controls { width: min(1600px, 100%); margin: 0 auto; }
+.fd-progress { height: 3px; background: #e2dcdc; }
+.fd-progress i { display: block; height: 100%; background: var(--red-700); transition: width .22s ease; }
+.fd-controls-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem; padding-top: .5rem; }
+.fd-controls-side { display: flex; align-items: center; gap: .5rem; }
+.fd-controls-nav { display: flex; align-items: center; justify-content: center; gap: .55rem; }
+.fd-controls-dots { justify-content: flex-end; }
+.fd-controls-dots nav { display: flex; align-items: center; gap: .28rem; flex-wrap: wrap; justify-content: flex-end; }
+.fd-controls-dots nav button { width: 7px; height: 7px; flex: 0 0 auto; border: 0; border-radius: 50%; background: #c4b8b8; padding: 0; cursor: pointer; }
+.fd-controls-dots nav button.is-current { background: var(--red-700); transform: scale(1.5); }
+.fd-counter { min-width: 76px; text-align: center; color: var(--muted); font-size: .78rem; font-variant-numeric: tabular-nums; }
+.fd-counter b { color: var(--ink); font-size: 1rem; }
+
+.fd-btn { display: inline-flex; align-items: center; justify-content: center; gap: .42rem; min-height: 36px; padding: 0 .85rem; border: 1px solid #d6cccc; border-radius: 4px; background: #fff; color: var(--ink); font: inherit; font-size: .79rem; font-weight: 750; cursor: pointer; white-space: nowrap; transition: background .15s ease, border-color .15s ease, color .15s ease; }
+.fd-btn svg { width: 15px; height: 15px; }
+.fd-btn:hover:not(:disabled) { border-color: var(--red-700); color: var(--red-700); }
+.fd-btn:disabled { opacity: .32; cursor: default; }
+.fd-btn-step { min-width: 108px; }
+.fd-btn-play { border-color: var(--red-700); background: var(--red-700); color: #fff; }
+.fd-btn-play:hover:not(:disabled) { border-color: var(--red-900); background: var(--red-900); color: #fff; }
+.fd-btn-exit { border-color: #5b6472; background: #5b6472; color: #fff; }
+.fd-btn-exit:hover:not(:disabled) { border-color: #434b57; background: #434b57; color: #fff; }
+
+/* ── وضع العرض ──────────────────────────────────────────────── */
+.fd-deck.is-presenting {
+  position: fixed; inset: 0; z-index: 9990;
+  height: 100dvh; padding: .7rem .9rem .75rem;
+  grid-template-rows: 1fr auto; gap: .7rem;
+  background: #1b0f10;
+}
+.fd-deck.is-presenting .fd-stage { box-shadow: 0 24px 70px rgba(0, 0, 0, .6); }
+.fd-deck.is-presenting .fd-progress { background: rgba(255, 255, 255, .16); }
+.fd-deck.is-presenting .fd-progress i { background: var(--red-400); }
+.fd-deck.is-presenting .fd-btn { min-height: 42px; padding: 0 1.05rem; font-size: .86rem; border-color: rgba(255, 255, 255, .3); background: rgba(255, 255, 255, .08); color: #f3eaea; }
+.fd-deck.is-presenting .fd-btn:hover:not(:disabled) { border-color: #fff; background: rgba(255, 255, 255, .2); color: #fff; }
+.fd-deck.is-presenting .fd-btn-exit,
+.fd-deck.is-presenting .fd-btn-exit:hover { border-color: var(--red-700); background: var(--red-700); color: #fff; }
+.fd-deck.is-presenting .fd-counter { color: rgba(255, 255, 255, .55); }
+.fd-deck.is-presenting .fd-counter b { color: #fff; font-size: 1.1rem; }
+.fd-deck.is-presenting .fd-controls-dots nav button { background: rgba(255, 255, 255, .32); }
+.fd-deck.is-presenting .fd-controls-dots nav button.is-current { background: #fff; }
+
+/* ── فهرس الأقسام ───────────────────────────────────────────── */
+.fd-overview { position: fixed; inset: 0; z-index: 9995; display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem clamp(1rem, 4vw, 3rem); background: rgba(27, 15, 16, .96); backdrop-filter: blur(8px); }
+.fd-overview > header { width: min(1100px, 100%); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.fd-overview > header b { color: #fff; font-size: .95rem; }
+.fd-overview > div { width: min(1100px, 100%); margin: 0 auto; flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: .55rem; align-content: start; }
+.fd-overview > div button { min-height: 74px; border: 1px solid transparent; border-radius: 8px; background: #fbf8f8; color: var(--ink); padding: .7rem; display: flex; flex-direction: column; justify-content: space-between; gap: .4rem; text-align: right; cursor: pointer; font: inherit; }
+.fd-overview > div button:hover { background: #fff; }
+.fd-overview > div button.is-current { border-color: var(--red-600); box-shadow: 0 0 0 2px var(--red-600); }
+.fd-overview > div b { color: var(--red-700); font-size: .72rem; }
+.fd-overview > div span { font-weight: 780; font-size: .82rem; line-height: 1.4; }
+.fd-overview > p { width: min(1100px, 100%); margin: 0 auto; color: rgba(255, 255, 255, .6); font-size: .75rem; }
+.fd-overview > p b { color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fd-progress i { transition: none !important; }
+}
+
+@media (max-width: 767px) {
+  #bz-main { padding-top: 62px !important; }
+  body { overflow: auto; }
+  .fd-deck { height: auto; min-height: calc(100dvh - 62px); padding: .5rem; }
+  .fd-deck.is-presenting { height: 100dvh; padding: .5rem .6rem .65rem; }
+  .fd-toolbar > div span, .fd-open span { display: none; }
+  .fd-stage { height: calc(100dvh - 230px); min-height: 420px; }
+  .fd-deck.is-presenting .fd-stage { height: 100%; }
+  .fd-slidebar { flex-wrap: wrap; gap: .5rem; padding: .6rem .8rem; }
+  .fd-slidebar h2 { font-size: 1rem; }
+  .fd-slidebar span { display: none; }
+  .fd-controls-row { grid-template-columns: 1fr; gap: .5rem; }
+  .fd-controls-nav { order: -1; justify-content: space-between; }
+  .fd-controls-side { justify-content: center; flex-wrap: wrap; }
+  .fd-controls-dots { display: none; }
+  .fd-btn, .fd-deck.is-presenting .fd-btn { min-height: 40px; font-size: .8rem; padding: 0 .8rem; }
+  .fd-btn-step, .fd-deck.is-presenting .fd-btn-step { min-width: 96px; }
+  .fd-overview > div { grid-template-columns: repeat(2, 1fr); }
+  .fd-overview > p { display: none; }
+}

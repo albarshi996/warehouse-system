@@ -214,45 +214,45 @@ export default function WarehouseIdentityDeck({ base }) {
   const slide = SLIDES[current];
 
   return (
-    <div className={`idn-deck${presenting ? ' is-presenting' : ''}`} ref={rootRef}>
+    <div className={`fd-deck${presenting ? ' is-presenting' : ''}`} ref={rootRef}>
       {!presenting && (
-        <header className="idn-toolbar">
+        <header className="fd-toolbar">
           <a href={`${base}/dashboard/reports`}><Chevron direction="back" /><span>مركز التقارير</span></a>
           <div><b>{meetingMeta.docNumber}</b><span>{meetingMeta.titleAr}</span></div>
-          <a className="idn-open" href={reportSrc} target="_blank" rel="noreferrer"><LaunchIcon /> فتح التقرير كاملًا</a>
+          <a className="fd-open" href={reportSrc} target="_blank" rel="noreferrer"><LaunchIcon /> فتح التقرير كاملًا</a>
         </header>
       )}
 
-      <main className="idn-stage">
-        <div className="idn-slidebar">
+      <main className="fd-stage">
+        <div className="fd-slidebar">
           <b>{slide.n === '—' ? 'الغلاف' : slide.n}</b>
           <h2>{slide.title}</h2>
           <span>{meetingMeta.subtitle}</span>
         </div>
         <iframe
           ref={frameRef}
-          className="idn-frame"
+          className="fd-frame"
           src={reportSrc}
           title={`${meetingMeta.titleAr} — ${slide.title}`}
           onLoad={() => { if (ensureInjected()) setReady(true); }}
         />
       </main>
 
-      <footer className="idn-controls">
-        <div className="idn-progress" aria-hidden="true"><i style={{ width: `${((current + 1) / total) * 100}%` }} /></div>
-        <div className="idn-controls-row">
-          <div className="idn-controls-side">
+      <footer className="fd-controls">
+        <div className="fd-progress" aria-hidden="true"><i style={{ width: `${((current + 1) / total) * 100}%` }} /></div>
+        <div className="fd-controls-row">
+          <div className="fd-controls-side">
             {presenting
-              ? <button type="button" className="idn-btn idn-btn-exit" onClick={exitPresenting}><CloseIcon /> إنهاء العرض</button>
-              : <button type="button" className="idn-btn idn-btn-play" onClick={startPresenting}><PlayIcon /> بدء العرض</button>}
-            <button type="button" className="idn-btn" onClick={() => setOverview(true)}><GridIcon /> فهرس الأقسام</button>
+              ? <button type="button" className="fd-btn fd-btn-exit" onClick={exitPresenting}><CloseIcon /> إنهاء العرض</button>
+              : <button type="button" className="fd-btn fd-btn-play" onClick={startPresenting}><PlayIcon /> بدء العرض</button>}
+            <button type="button" className="fd-btn" onClick={() => setOverview(true)}><GridIcon /> فهرس الأقسام</button>
           </div>
-          <div className="idn-controls-nav">
-            <button type="button" className="idn-btn idn-btn-step" onClick={() => go(current - 1)} disabled={current === 0}><Chevron direction="back" /> السابق</button>
-            <span className="idn-counter"><b>{pad(current + 1)}</b> / {pad(total)}</span>
-            <button type="button" className="idn-btn idn-btn-step" onClick={() => go(current + 1)} disabled={current === total - 1}>التالي <Chevron /></button>
+          <div className="fd-controls-nav">
+            <button type="button" className="fd-btn fd-btn-step" onClick={() => go(current - 1)} disabled={current === 0}><Chevron direction="back" /> السابق</button>
+            <span className="fd-counter"><b>{pad(current + 1)}</b> / {pad(total)}</span>
+            <button type="button" className="fd-btn fd-btn-step" onClick={() => go(current + 1)} disabled={current === total - 1}>التالي <Chevron /></button>
           </div>
-          <div className="idn-controls-side idn-controls-dots">
+          <div className="fd-controls-side fd-controls-dots">
             <nav aria-label="الانتقال المباشر بين الأقسام">
               {SLIDES.map((item, index) => (
                 <button type="button" key={item.title} title={`${item.n} — ${item.title}`} className={index === current ? 'is-current' : ''} onClick={() => go(index)} aria-label={item.title} />
@@ -263,10 +263,10 @@ export default function WarehouseIdentityDeck({ base }) {
       </footer>
 
       {overview && (
-        <div className="idn-overview" role="dialog" aria-modal="true" aria-label="فهرس الأقسام">
+        <div className="fd-overview" role="dialog" aria-modal="true" aria-label="فهرس الأقسام">
           <header>
             <b>فهرس التقرير · {pad(sections.length)} قسمًا</b>
-            <button type="button" className="idn-btn idn-btn-exit" onClick={() => setOverview(false)}><CloseIcon /> إغلاق الفهرس</button>
+            <button type="button" className="fd-btn fd-btn-exit" onClick={() => setOverview(false)}><CloseIcon /> إغلاق الفهرس</button>
           </header>
           <div>
             {SLIDES.map((item, index) => (

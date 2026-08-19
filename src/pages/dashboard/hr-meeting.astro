@@ -1,0 +1,21 @@
+---
+/**
+ * اجتماع الموارد البشرية — «التوظيف والهيكل والسياسات».
+ *
+ * ⚠️ لا محتوى مؤلَّفًا: المعروض **شرائح دليل الإدارة نفسها**
+ * (`BFP-SCM-MAN-2026-053`)، خمس عشرة شريحةً مقتصَّةً بترتيب محاور الاجتماع
+ * السبعة في `public/hr-meeting/manual.pdf`. والإطار من `frame-deck.css`
+ * المشترك مع عرض الهوية التشغيلية — لا نسخة ثالثة منه.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import HrMeetingDeck from '../../components/hr-meeting/HrMeetingDeck.jsx';
+import '../../styles/frame-deck.css';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+---
+
+<DashboardLayout title="اجتماع الموارد البشرية — التوظيف والهيكل والسياسات" light>
+  <HrMeetingDeck base={base} client:load />
+</DashboardLayout>

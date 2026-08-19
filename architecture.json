@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 95,
+    "modules": 96,
     "serviceDomains": 43,
     "serviceFiles": 412,
     "collections": 80,
@@ -292,6 +292,14 @@
       "usesServices": [
         "auth"
       ]
+    },
+    {
+      "name": "hr-meeting",
+      "route": "/dashboard/hr-meeting",
+      "title": "اجتماع الموارد البشرية — التوظيف والهيكل والسياسات",
+      "summary": "اجتماع الموارد البشرية — «التوظيف والهيكل والسياسات».",
+      "file": "src/pages/dashboard/hr-meeting.astro",
+      "usesServices": []
     },
     {
       "name": "hse-checklists",

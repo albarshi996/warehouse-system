@@ -254,6 +254,11 @@ export const NAV_GROUPS = [
     items: [
       { path: '/dashboard/org-structure', label: 'الهيكل التنظيمي', icon: 'users', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/meetings', label: 'الاجتماعات ومحاضرها', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
+      // اجتماع الموارد البشرية: شرائح دليل الإدارة `BFP-SCM-MAN-2026-053`
+      // نفسها — خمس عشرة شريحة بترتيب محاور الاجتماع (التوظيف · الهيكل ·
+      // السياسات · العقوبات · الترقية · الجوائز · التوثيق في البوابة).
+      // يظهر تلقائيًّا في «عمليات البوابة» لأنّه يُولَّد من هذا الكتالوج.
+      { path: '/dashboard/hr-meeting', label: 'اجتماع الموارد البشرية', icon: 'users', roles: ['admin', 'warehouse_manager'] },
       // الأرشيف الدوريّ — المصدر الأوّل المعتمد للتقارير والمحاضر (رفعٌ حيّ + بذرة ثابتة).
       { path: '/dashboard/periodic-archive', label: 'الأرشيف الدوريّ', icon: 'archive', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/recruitment', label: 'التوظيف', icon: 'users', roles: ['admin', 'warehouse_manager'] },
