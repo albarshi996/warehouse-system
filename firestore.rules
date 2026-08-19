@@ -1119,15 +1119,48 @@ service cloud.firestore {
     // القراءة لكلّ مصادَق (الوثائق مرجعٌ تنظيميّ)، والكتابة للمديرَين. لا حذف
     // (أرشفة لا محو — الأثر التنظيميّ يبقى). والرقم الإشاريّ `refNumber` **لا
     // يتغيّر بعد كتابته**: يُسمح بضبطه مرّةً وهو فارغ ثمّ يثبت (كنمط الرقم في
-    // المستندات) — وإلّا فقد الترقيم معناه. حمولة الملفّ base64 داخل الوثيقة،
-    // وحجمها محكومٌ في الواجهة (< 900KB) وسقف مستند Firestore حارسٌ أخير.
+    // المستندات) — وإلّا فقد الترقيم معناه.
+    //
+    // الحمولة مساران يقرّرهما الحجم: الصغير base64 داخل الوثيقة (وسقف مستند
+    // Firestore حارسٌ أخير)، والكبير في Storage ورابطه في `storageUrl` —
+    // وحراسته في `storage.rules` (المسار والحجم والصيغة والرافع).
+    //
+    // ولدورة حياة الوثيقة حارسان هنا:
+    //  · الحالة المخزَّنة من الثلاث وحدها. `expiring`/`expired` **تُحسَب** من
+    //    تاريخ الانتهاء ولا تُكتب أبدًا — وإلّا كذبت الوثيقة على مرور الزمن.
+    //  · سجلّ `tracking` لا يقصر: التعديل يضيف سطرًا ولا يمحو ما قبله.
     match /archive_documents/{docId} {
+      function storedStatusOnly() {
+        return !('status' in request.resource.data)
+               || request.resource.data.status in ['draft', 'active', 'approved'];
+      }
+      function knownConfidentiality() {
+        return !('confidential' in request.resource.data)
+               || request.resource.data.confidential
+                  in ['public', 'internal', 'secret', 'top_secret'];
+      }
+      function trackingKept() {
+        return !('tracking' in resource.data)
+               || request.resource.data.tracking.size() >= resource.data.tracking.size();
+      }
+
       allow read: if signedIn();
-      allow create: if isManager();
+      allow create: if isManager() && storedStatusOnly() && knownConfidentiality();
       allow update: if isManager()
+                    && storedStatusOnly()
+                    && knownConfidentiality()
+                    && trackingKept()
                     && (request.resource.data.refNumber == resource.data.refNumber
                         || resource.data.refNumber == '');
       allow delete: if false;
+
+      // إصدارات الوثيقة — لقطةُ ما قبل كلّ تعديل. **ملحق-فقط**: تُكتب مرّةً
+      // ولا تُعدَّل ولا تُحذف، فتاريخ الوثيقة لا يُزوَّر (كسجلّ المسح).
+      match /versions/{versionId} {
+        allow read: if signedIn();
+        allow create: if isManager();
+        allow update, delete: if false;
+      }
     }
 
     // عرض المراجعة التنفيذية للمدير العام — شروح العرض ومواقف القرارات

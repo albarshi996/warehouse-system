@@ -91,6 +91,77 @@ import PeriodicArchive from '../../components/brandzo-erp/archive/PeriodicArchiv
 
   .toastw { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 8px; align-items: center; }
   .toast { background: var(--color-ink); color: #fff; padding: 11px 22px; border-radius: 12px; font-size: .88rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.25); border-right: 4px solid var(--color-accent); max-width: min(600px,92vw); }
+
+  /* ══ دورة حياة الوثيقة ══
+     الأحمر **للتحذير وحده**: المنتهية، و«سرّي للغاية» (تنبيهُ تداولٍ لا زينة).
+     والكهرمانيّ لما يقترب أجلُه، والأخضر للنشط، ولون الهوية للمعتمَد. */
+  .ar-st, .ar-cf, .ar-type, .ar-op { display: inline-flex; align-items: center; border-radius: 20px; padding: 2px 10px; font-size: .7rem; font-weight: 800; white-space: nowrap; }
+  .ar-st.st-draft    { background: var(--color-chip); color: var(--color-ink-2); }
+  .ar-st.st-active   { background: rgba(30,124,71,.10); color: #17663a; }
+  .ar-st.st-approved { background: rgba(113,75,103,.12); color: var(--color-accent); }
+  .ar-st.st-expiring { background: rgba(214,158,46,.18); color: #7a5300; }
+  .ar-st.st-expired  { background: rgba(176,42,55,.10); color: #b02a37; }
+  .ar-cf.cf-internal   { background: rgba(27,79,138,.10); color: #1b4f8a; }
+  .ar-cf.cf-secret     { background: rgba(214,158,46,.18); color: #7a5300; }
+  .ar-cf.cf-top_secret { background: rgba(176,42,55,.10); color: #b02a37; }
+  .ar-type { background: var(--color-surface-2); color: var(--color-ink-2); border: 1px solid var(--color-line); }
+  .ar-op   { background: var(--color-chip); color: var(--color-ink-2); }
+  .ar-chipline { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+  .ar-kpi.warn .n   { color: #7a5300; }
+  .ar-kpi.danger .n { color: #b02a37; }
+
+  /* ══ الطبقة ١: تدخّل الآن ══ */
+  .ar-attn { background: var(--color-surface); border: 1.5px solid rgba(214,158,46,.45); border-radius: 14px; padding: 14px 18px; margin-bottom: 16px; }
+  .ar-attn-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .ar-attn-title { font-size: .95rem; font-weight: 800; color: var(--color-ink); }
+  .ar-attn-sub { font-size: .76rem; color: var(--color-ink-2); }
+  .ar-attn-row { display: flex; gap: 9px; flex-wrap: wrap; }
+  .ar-attn-item { display: inline-flex; align-items: center; gap: 8px; background: var(--color-surface-2); border: 1px solid var(--color-line-strong); border-radius: 10px; padding: 7px 12px; font-family: inherit; font-size: .82rem; cursor: pointer; color: var(--color-ink); transition: all .15s; text-align: right; }
+  .ar-attn-item:hover { border-color: var(--color-accent); transform: translateY(-1px); }
+  .ar-attn-name { font-weight: 700; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ar-attn-days { font-size: .74rem; color: var(--color-ink-2); }
+
+  /* ══ الطبقة ٢: البحث والتصفية ══ */
+  .ar-filters { display: flex; flex-direction: column; gap: 10px; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 14px; padding: 14px 18px; margin-bottom: 16px; }
+  .ar-search { width: 100%; border: 1.5px solid var(--color-line-strong); border-radius: 10px; padding: 10px 14px; font-family: inherit; font-size: .9rem; background: var(--color-surface); color: var(--color-ink); }
+  .ar-search:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(113,75,103,.12); }
+  .ar-selects { display: flex; gap: 9px; flex-wrap: wrap; }
+  .ar-selects select { border: 1.5px solid var(--color-line-strong); border-radius: 9px; padding: 7px 11px; font-family: inherit; font-size: .82rem; background: var(--color-surface); color: var(--color-ink); }
+  .ar-filter-note { display: inline-flex; align-items: center; gap: 10px; font-size: .78rem; color: var(--color-ink-2); margin-inline-start: auto; }
+  .ar-clear { background: none; border: none; font-family: inherit; font-size: .78rem; font-weight: 700; color: var(--color-accent); cursor: pointer; text-decoration: underline; }
+
+  /* ══ تفاصيل الوثيقة ══ */
+  .ar-panes { display: flex; gap: 6px; padding: 10px 18px 0; border-bottom: 1px solid var(--color-line); }
+  .ar-pane { display: inline-flex; align-items: center; gap: 7px; background: none; border: none; border-bottom: 2.5px solid transparent; padding: 8px 12px; font-family: inherit; font-size: .86rem; font-weight: 700; color: var(--color-ink-2); cursor: pointer; }
+  .ar-pane:hover { color: var(--color-accent); }
+  .ar-pane.on { color: var(--color-accent); border-bottom-color: var(--color-accent); }
+
+  .ar-dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap: 9px; }
+  .ar-dl > div { background: var(--color-surface-2); border-radius: 9px; padding: 7px 11px; }
+  .ar-dl dt { font-size: .7rem; font-weight: 800; color: var(--color-ink-2); }
+  .ar-dl dd { font-size: .85rem; font-weight: 600; color: var(--color-ink); margin: 2px 0 0; }
+
+  .ar-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+  .ar-list li { display: flex; align-items: center; gap: 10px; background: var(--color-surface-2); border: 1px solid var(--color-line); border-radius: 9px; padding: 8px 12px; font-size: .83rem; }
+  .ar-list-main { font-weight: 700; color: var(--color-ink); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ar-list-by { font-size: .74rem; color: var(--color-ink-2); white-space: nowrap; }
+
+  .ar-ocr summary { cursor: pointer; font-size: .8rem; font-weight: 700; color: var(--color-accent); }
+  .ar-ocr pre { background: var(--color-surface-2); border: 1px solid var(--color-line); border-radius: 9px; padding: 10px 12px; margin-top: 8px; max-height: 260px; overflow: auto; white-space: pre-wrap; font-family: inherit; font-size: .8rem; line-height: 1.8; color: var(--color-ink-2); }
+
+  /* ══ شريط تقدّم الرفع إلى المخزن ══ */
+  .ar-prog { display: flex; align-items: center; gap: 10px; }
+  .ar-prog-track { flex: 1; height: 8px; border-radius: 4px; background: var(--color-chip); overflow: hidden; }
+  .ar-prog-fill { height: 100%; background: var(--color-accent); transition: width .25s; }
+  .ar-prog span { font-size: .76rem; font-weight: 800; color: var(--color-accent); min-width: 38px; text-align: left; }
+
+  /* ══ حقول النموذج المشتركة ══ */
+  .fld select { border: 1.5px solid var(--color-line-strong); border-radius: 9px; padding: 8px 11px; font-family: inherit; font-size: .88rem; background: var(--color-surface); color: var(--color-ink); width: 100%; }
+  .fld select:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(113,75,103,.12); }
+  .frow.c2 { grid-template-columns: 1fr 1fr; }
+  .frow.c3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 620px) { .frow.c2, .frow.c3 { grid-template-columns: 1fr; } }
 </style>
 
 <PeriodicArchive client:only="react" />

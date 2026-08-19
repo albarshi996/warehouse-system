@@ -11,8 +11,8 @@
   "counts": {
     "modules": 96,
     "serviceDomains": 43,
-    "serviceFiles": 412,
-    "collections": 80,
+    "serviceFiles": 413,
+    "collections": 81,
     "roles": 18,
     "odooModels": 12,
     "odooGuards": 51,
@@ -854,31 +854,59 @@
         "archiveFile.js",
         "archiveModel.js",
         "archiveSeed.js",
-        "archiveService.js"
+        "archiveService.js",
+        "archiveStorageService.js"
       ],
-      "fileCount": 5,
+      "fileCount": 6,
       "testCount": 1,
       "exports": [
         "ACCEPTED_ARCHIVE_TYPES",
         "ARCHIVE_CATEGORIES",
         "ARCHIVE_SEED",
+        "ARCHIVE_STORAGE_ROOT",
+        "CONFIDENTIALITY",
+        "DERIVED_STATUSES",
+        "DOC_TYPES",
+        "EXPIRY_WARNING_DAYS",
         "MAX_BINARY_BYTES",
         "MAX_HTML_BYTES",
         "MAX_SOURCE_BYTES",
         "REF_NUMBER_RE",
+        "STATUS_LABELS",
+        "STORED_STATUSES",
         "addArchiveDoc",
+        "approveArchiveDoc",
         "archiveSummary",
         "base64Size",
         "byCategory",
         "byDateDesc",
         "categoryLabel",
+        "confidentialityLabel",
+        "daysUntil",
+        "deleteOrphanFile",
+        "docStatus",
+        "expiredDocs",
+        "expiringSoon",
+        "fetchArchiveVersions",
+        "filterArchive",
         "formatOf",
+        "inlineLimitFor",
         "isValidRefNumber",
         "listenArchive",
+        "matchesQuery",
         "mergeArchive",
+        "normalizeArabic",
         "normalizeLive",
         "normalizeSeed",
+        "routeExplain",
+        "safeFileName",
+        "statusLabel",
+        "storageErrorMessage",
+        "storagePathFor",
+        "todayISO",
+        "trackEntry",
         "updateArchiveDoc",
+        "uploadArchiveFile",
         "validateArchiveFile"
       ],
       "collections": [
@@ -3720,12 +3748,15 @@
       "isStockActor",
       "isVanSalesWriter",
       "isYardWriter",
+      "knownConfidentiality",
       "movingTo",
       "myRole",
       "numberWriteOnce",
       "originKept",
       "signedIn",
+      "storedStatusOnly",
       "taskDoc",
+      "trackingKept",
       "validEndpoint",
       "validFlowAllocation",
       "validRelation"
@@ -3812,6 +3843,51 @@
             "actions": [
               "create"
             ],
+            "condition": "isManager() && storedStatusOnly() && knownConfidentiality()",
+            "roles": [
+              "isManager",
+              "storedStatusOnly",
+              "knownConfidentiality"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "isManager() && storedStatusOnly() && knownConfidentiality() && trackingKept() && (request.resource.data.refNumber == resource.data.refNumber || resource.data.re",
+            "roles": [
+              "isManager",
+              "storedStatusOnly",
+              "knownConfidentiality",
+              "trackingKept"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "versions",
+        "path": "archive_documents/versions",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
             "condition": "isManager()",
             "roles": [
               "isManager"
@@ -3819,15 +3895,7 @@
           },
           {
             "actions": [
-              "update"
-            ],
-            "condition": "isManager() && (request.resource.data.refNumber == resource.data.refNumber || resource.data.refNumber == '')",
-            "roles": [
-              "isManager"
-            ]
-          },
-          {
-            "actions": [
+              "update",
               "delete"
             ],
             "condition": "false",

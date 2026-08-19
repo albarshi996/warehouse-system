@@ -1,0 +1,68 @@
+rules_version = '2';
+
+/*
+ * ═══════════════════════════════════════════════════════════════════
+ *  قواعد أمان Firebase Storage — Brandzo Hub
+ * ═══════════════════════════════════════════════════════════════════
+ *  المخزن يحمل **مرفقات الأرشيف الكبيرة وحدها** (ما تجاوز سقف وثيقة
+ *  Firestore). الصغير يبقى داخل الوثيقة base64 ولا يمرّ من هنا أصلًا.
+ *
+ *  ⚠️ حدٌّ يجب أن يُعرف: قواعد Storage **لا تستطيع قراءة Firestore**،
+ *     وأدوار البوابة مخزَّنةٌ في `users/{uid}.role` هناك. فلا سبيل هنا
+ *     للتحقّق من «مدير» كما في `firestore.rules`. لذا:
+ *       · هذه القواعد تحرس: التصديق · المسار · الحجم · الصيغة.
+ *       · وحارس **الدور** هو قاعدة `archive_documents` في Firestore:
+ *         بلا وثيقةٍ مكتوبة لا يظهر الملفّ في الأرشيف أصلًا، وكتابة تلك
+ *         الوثيقة للمديرَين وحدهما.
+ *     أي أنّ أسوأ ما يفعله مصادَقٌ غير مدير: يرفع بايتات لا يراها أحد.
+ *     ولترقية ذلك إلى حراسةٍ كاملة يلزم وسمُ الدور في custom claims.
+ *
+ *  كيف تنشرها:
+ *   Firebase Console → Storage → Rules → الصق هذا الملف → Publish
+ *   (أو `firebase deploy --only storage`)
+ * ═══════════════════════════════════════════════════════════════════
+ */
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // الصيغ الأربع نفسها المقبولة في `archiveFile.js` — لا تُوسَّع هنا وحدها.
+    function acceptedType() {
+      return request.resource.contentType in [
+        'text/html', 'application/pdf', 'image/jpeg', 'image/png'
+      ];
+    }
+
+    // السقف المطلق نفسه في `archiveFile.js` (50م.ب) — أرشيفٌ لا نسخةٌ احتياطية.
+    function withinSize() {
+      return request.resource.size < 50 * 1024 * 1024;
+    }
+
+    // مرفقات الأرشيف: مجلّدٌ لكلّ وثيقة فلا يتصادم اسمان متطابقان.
+    match /archive/{docId}/{fileName} {
+
+      // القراءة لكلّ مصادَق — الأرشيف مرجعٌ مشترك لا سرٌّ لرافعه.
+      allow read: if request.auth != null;
+
+      // الإنشاء مرّةً واحدة، موسومًا برافعه (يُستعمل في التنظيف أدناه).
+      allow create: if request.auth != null
+                    && acceptedType()
+                    && withinSize()
+                    && request.resource.metadata.uploaderUid == request.auth.uid;
+
+      // لا استبدال: الملفّ المؤرشَف لا يُكتب فوقه — التصحيح بوثيقةٍ جديدة.
+      allow update: if false;
+
+      // الحذف **لتنظيف رفعٍ فشل تسجيله فقط**: صاحب الرفع وحده. وهذا لا يمسّ
+      // قاعدة «لا حذف» — فتلك تحمي **سجلّ** الأرشيف في Firestore، وهو يبقى
+      // غير قابلٍ للحذف مطلقًا. أمّا هذه فبايتاتٌ لم يُسجَّل لها أثرٌ بعد.
+      allow delete: if request.auth != null
+                    && resource.metadata.uploaderUid == request.auth.uid;
+    }
+
+    // ── ذيل الرفض ── كلّ ما عدا ذلك مغلق. أيّ مسارٍ جديد يُضاف صراحةً أعلاه.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
