@@ -453,37 +453,26 @@ tr:hover td { background: var(--surface-2); }
 </div>
 <div id="toast"></div>
 
-<script is:inline>
+<script>
+// الوسم كان `is:inline` فلم يقبل استيرادًا، فكرّر كلّ شيءٍ محلّيًّا: نسخةَ
+// تهريبٍ سابعة، وخريطتَي أعمدة الإكسل، والتصفية والإحصاء والترقيم — وكلّه
+// خارج نطاق أيّ اختبار. وحُزم هنا ليأخذها من النواة. والدوالّ ما زالت تُعلَّق
+// على `window` كما كانت، فمعالجات `onclick` في المحرَّر تجدها كما تجدها اليوم.
+import { esc as escHtml, escJsAttr as escJs } from '../../services/ui/escape.js';
+import {
+  conditionBadgeClass, parseAssetRows, assetStats, filterAssets, nextAssetId,
+} from '../../services/assets/assetsModel.js';
 let assets = [];
 let editId = null;
 let deleteId = null;
 let currentView = 'list';
 let nextIdNum = 1;
 
-function escHtml(s) {
-  return String(s == null ? '' : s)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-// تهريب لقيمة تُحقن داخل مُعالِج JS مضمّن: onclick="fn('${escJs(x)}')".
-// أولًا تهريب سلسلة JS (\\ و' و" والسطر) ثم تهريب HTML — لأن المتصفّح يفكّ HTML
-// قبل تشغيل JS، فتهريب ' كـ&#39; وحده لا يمنع كسر السلسلة والحقن.
-function escJs(s) {
-  const j = String(s == null ? '' : s)
-    .replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/\r?\n/g,'\\n');
-  return j.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-const BADGE = {
-  'ممتاز':'badge-excellent','جيد':'badge-good','متوسط':'badge-medium',
-  'يحتاج صيانة':'badge-needs','معطل':'badge-broken'
-};
-function badge(c) { return `<span class="badge ${BADGE[c]||'badge-good'}">${escHtml(c||'—')}</span>`; }
+function badge(c) { return `<span class="badge ${conditionBadgeClass(c)}">${escHtml(c || '—')}</span>`; }
 function generateId() {
-  const nums = assets.map(a => { const m=(a.id||'').match(/BRZ-(\d+)/); return m?parseInt(m[1]):0; });
-  const max = nums.length ? Math.max(...nums) : 0;
-  if (nextIdNum <= max) nextIdNum = max + 1;
-  return 'BRZ-' + String(nextIdNum++).padStart(4,'0');
+  const { id, next } = nextAssetId(assets, nextIdNum);
+  nextIdNum = next;
+  return id;
 }
 let _tt;
 function showToast(msg, type='success') {
@@ -495,41 +484,31 @@ function showToast(msg, type='success') {
   _tt = setTimeout(() => el.className = '', 3500);
 }
 function updateStats() {
-  const total = assets.length;
-  const qty   = assets.reduce((s,a) => s + (parseInt(a.qty)||1), 0);
-  const good  = assets.filter(a => a.condition==='ممتاز'||a.condition==='جيد').length;
-  const bad   = assets.filter(a => a.condition==='يحتاج صيانة'||a.condition==='معطل').length;
-  document.getElementById('s-total').textContent = total;
-  document.getElementById('s-qty').textContent   = qty;
-  document.getElementById('s-good').textContent  = good;
-  document.getElementById('s-bad').textContent   = bad;
-  const dMap = {};
-  assets.forEach(a => { if(a.department) dMap[a.department] = (dMap[a.department]||0)+1; });
+  const st = assetStats(assets);
+  document.getElementById('s-total').textContent = st.total;
+  document.getElementById('s-qty').textContent   = st.quantity;
+  document.getElementById('s-good').textContent  = st.good;
+  document.getElementById('s-bad').textContent   = st.bad;
   const chart = document.getElementById('dept-chart');
   const bars  = document.getElementById('chart-bars');
-  const entries = Object.entries(dMap).sort((a,b)=>b[1]-a[1]);
-  if (entries.length) {
+  if (st.departments.length) {
     chart.classList.add('visible');
-    const mx = Math.max(...entries.map(e=>e[1]),1);
-    bars.innerHTML = entries.map(([d,c])=>`
+    const mx = Math.max(...st.departments.map((e) => e[1]), 1);
+    bars.innerHTML = st.departments.map(([d, c]) => `
       <div class="bar-row">
         <div class="bar-label">${escHtml(d)}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${(c/mx)*100}%"><span class="bar-count">${c}</span></div></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(c / mx) * 100}%"><span class="bar-count">${c}</span></div></div>
       </div>`).join('');
   } else { chart.classList.remove('visible'); }
-  const has = total > 0;
+  const has = st.total > 0;
   document.getElementById('export-btn').disabled = !has;
   document.getElementById('print-btn').disabled  = !has;
 }
 function getFiltered() {
-  const q    = (document.getElementById('search-input').value||'').toLowerCase();
-  const dept = document.getElementById('filter-dept').value;
-  const cond = document.getElementById('filter-cond').value;
-  return assets.filter(a => {
-    // Search includes employee name (responsible field) — اسم الموظف
-    const mq = !q || [a.assetName,a.brand,a.serial,a.responsible,a.id,a.assetType,a.department,a.section,a.location,a.notes]
-      .some(v => (v||'').toLowerCase().includes(q));
-    return mq && (!dept||a.department===dept) && (!cond||a.condition===cond);
+  return filterAssets(assets, {
+    q: document.getElementById('search-input').value || '',
+    department: document.getElementById('filter-dept').value,
+    condition: document.getElementById('filter-cond').value,
   });
 }
 function renderTable() {
@@ -761,50 +740,12 @@ document.getElementById('import-file').addEventListener('change', async function
           const wb = XLSX.read(ev.target.result, { type:'binary', cellDates:true, raw:false });
           const SKIP_SHEETS = ['ملخص إحصائي'];
 
-          function parseSheet(ws, deptOverride) {
-            const raw = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', raw:false });
-            if (raw.length < 2) return [];
-            const header = raw[0].map(h => String(h||'').trim());
-            const isMain = header.includes('الإدارة');
-            const COL = {};
-            const HDR = {'رقم الأصل':0,'نوع الأصل':1,'اسم الأصل':2,'الماركة':3,'الموديل/السيريال':4,'السيريال':4,'الموديل':4,'الكمية':5,'الحالة':6,'المسؤول':7,'الإدارة':8,'القسم':9,'الموقع':10,'تاريخ الاستلام':11,'ملاحظات':12};
-            const DEPT_HDR = {'رقم الأصل':0,'نوع الأصل':1,'اسم الأصل':2,'الماركة':3,'السيريال':4,'الموديل':4,'الكمية':5,'الحالة':6,'المسؤول':7,'القسم':8,'الموقع':9,'تاريخ الاستلام':10,'ملاحظات':11};
-            header.forEach((h,i) => {
-              if(isMain){ if(Object.prototype.hasOwnProperty.call(HDR,h)) COL[HDR[h]]=i; }
-              else { if(Object.prototype.hasOwnProperty.call(DEPT_HDR,h)) COL[DEPT_HDR[h]]=i; }
-            });
-            const gc = (row, idx) => COL[idx]!==undefined ? row[COL[idx]] : row[idx];
-            const safe  = v => (v==null)?'':String(v).trim();
-            const safeN = (v,d=1) => { const n=parseInt(v); return(!isNaN(n)&&n>0)?n:d; };
-            const validC = ['ممتاز','جيد','متوسط','يحتاج صيانة','معطل'];
-            const records = [];
-            raw.slice(1).filter(r=>r.some(c=>c!==''&&c!==null&&c!==undefined)).forEach(r => {
-              const name = safe(gc(r,2));
-              if(!name) return;
-              let rawDate = safe(gc(r,11));
-              const dv = gc(r,11);
-              if(dv instanceof Date) rawDate=dv.toISOString().split('T')[0];
-              else if(rawDate&&!/^\d{4}-\d{2}-\d{2}$/.test(rawDate)){try{const d=new Date(rawDate);if(!isNaN(d.getTime()))rawDate=d.toISOString().split('T')[0];}catch{ /* نصٌّ ليس تاريخًا — يُترك كما ورد بلا تحويل */ }}
-              const rawCond = safe(gc(r,6));
-              const dept = deptOverride||safe(gc(r,8));
-              records.push({
-                id: safe(gc(r,0))||'',
-                assetType: safe(gc(r,1)),
-                assetName: name,
-                brand: safe(gc(r,3)),
-                serial: safe(gc(r,4)),
-                qty: safeN(gc(r,5)),
-                condition: validC.includes(rawCond)?rawCond:'جيد',
-                responsible: safe(gc(r,7)),
-                department: dept,
-                section: isMain?safe(gc(r,9)):safe(gc(r,8)),
-                location: isMain?safe(gc(r,10)):safe(gc(r,9)),
-                receivedDate: rawDate,
-                notes: isMain?safe(gc(r,12)):safe(gc(r,11)),
-              });
-            });
-            return records;
-          }
+          // المنطق في `assetsModel.parseAssetRows` مع حرّاسه؛ وهنا إخراجُ
+          // الصفوف من المصنّف لا غير. وكشف نقلُه عطبين حيَّين: تاريخُ ورقة
+          // الإدارة كان يُقرأ من عمود الملاحظات، والتحويل إلى UTC كان يُؤخّر
+          // كلّ تاريخٍ يومًا كاملًا في توقيت ليبيا.
+          const parseSheet = (ws, deptOverride) =>
+            parseAssetRows(XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false }), { deptOverride });
 
           let allRecords = [];
           if(wb.Sheets['جرد الأصول']){
@@ -889,7 +830,7 @@ window.printPDF = function() {
       <td class="pid">${escHtml(a.id)}</td><td>${escHtml(a.assetType||'—')}</td>
       <td>${escHtml(a.assetName||'—')}</td><td>${escHtml(a.brand||'—')}</td>
       <td>${escHtml(a.serial||'—')}</td><td style="text-align:center;font-weight:700">${a.qty||1}</td>
-      <td><span class="badge ${BADGE[a.condition]||'badge-good'}">${escHtml(a.condition||'—')}</span></td>
+      <td><span class="badge ${conditionBadgeClass(a.condition)}">${escHtml(a.condition||'—')}</span></td>
       <td>${escHtml(a.responsible||'—')}</td><td>${escHtml(a.department||'—')}</td>
       <td>${escHtml(a.section||'—')}</td><td>${escHtml(a.location||'—')}</td>
       <td>${escHtml(a.receivedDate||'—')}</td><td>${escHtml(a.notes||'—')}</td>

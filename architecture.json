@@ -10,8 +10,8 @@
   },
   "counts": {
     "modules": 96,
-    "serviceDomains": 44,
-    "serviceFiles": 416,
+    "serviceDomains": 45,
+    "serviceFiles": 418,
     "collections": 82,
     "roles": 18,
     "odooModels": 12,
@@ -67,6 +67,7 @@
       "summary": "",
       "file": "src/pages/dashboard/assets-inventory.astro",
       "usesServices": [
+        "assets",
         "ui"
       ]
     },
@@ -915,6 +916,35 @@
       "collections": [
         "archive_documents"
       ]
+    },
+    {
+      "domain": "assets",
+      "dir": "src/services/assets",
+      "files": [
+        "assetsModel.js",
+        "assetsModel.test.js"
+      ],
+      "fileCount": 2,
+      "testCount": 1,
+      "exports": [
+        "ASSET_CONDITIONS",
+        "ASSET_ID_PREFIX",
+        "BAD_CONDITIONS",
+        "DEPT_HEADERS",
+        "GOOD_CONDITIONS",
+        "MAIN_HEADERS",
+        "SEARCHABLE_FIELDS",
+        "assetQuantity",
+        "assetStats",
+        "conditionBadgeClass",
+        "filterAssets",
+        "isMainSheet",
+        "nextAssetId",
+        "normalizeReceivedDate",
+        "parseAssetRows",
+        "resolveColumns"
+      ],
+      "collections": []
     },
     {
       "domain": "auth",
