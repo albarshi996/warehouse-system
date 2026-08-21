@@ -577,6 +577,61 @@ export default function ScanFlow() {
       </div>
 
       {/* ٢ — المسح */}
+      {/*
+        رمز العملية — مفتاح دخول اللجنة.
+        كان يُعرض معرّف Firestore الخام في حاشيةٍ بحجم عشر نقاط: عشرون محرفًا
+        عشوائيًّا حسّاسًا لحالة الأحرف، لا يُملى صوتًا ولا يُكتب على هاتف. فصار
+        رمزًا من ستّة محارف في بطاقةٍ تُرى، يُنسخ بزرّ ويُغيّره المدير.
+      */}
+      {opId && (
+        <div className="o_ds_card o_ds_pad" style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ fontWeight: 'var(--o-font-weight-bold)' }}>الجلسة مفتوحة</span>
+            <button type="button" className="btn btn-primary btn-sm" onClick={copyInvite} data-op-invite disabled={!inviteLink}>
+              نسخ رابط الدعوة
+            </button>
+            <a
+              className="btn btn-secondary btn-sm"
+              href={inviteLink ? `https://wa.me/?text=${encodeURIComponent(`دعوة لجلسة ${mode || 'جرد'} — افتح الرابط وادخل بحسابك:
+${inviteLink}`)}` : undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-op-whatsapp
+              style={inviteLink ? undefined : { pointerEvents: 'none', opacity: 0.5 }}
+            >
+              إرسال بواتساب
+            </a>
+            <span style={{ fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
+              يفتحه العضو ويدخل بحسابه — فيجد نفسه داخل الجلسة مباشرةً.
+            </span>
+          </div>
+          <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+            وللإملاء صوتًا — الرمز:
+          </span>
+          <strong
+            data-op-code
+            style={{
+              fontFamily: 'monospace', direction: 'ltr', fontSize: '20px',
+              letterSpacing: '2px', padding: '2px 10px', borderRadius: '6px',
+              background: 'var(--o-gray-100, #f1f1f1)',
+            }}
+          >
+            {formatOperationCode(opCode) || '—'}
+          </strong>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={copyOpCode} data-op-copy>
+            نسخ
+          </button>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={editOpCode} disabled={codeBusy} data-op-edit>
+            تغيير الرمز
+          </button>
+          {!opCode && (
+            <span style={{ fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
+              عمليةٌ فُتحت قبل الرموز — اضغط «تغيير الرمز» لتُعطيها واحدًا.
+            </span>
+          )}
+        </div>
+      )}
+
       <p style={{ margin: '0 0 8px', fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)' }}>
         ٢ — امسح الباركود أو اكتبه ثم Enter:
       </p>
@@ -873,61 +928,6 @@ export default function ScanFlow() {
           </p>
         </div>
       ) : null}
-
-      {/*
-        رمز العملية — مفتاح دخول اللجنة.
-        كان يُعرض معرّف Firestore الخام في حاشيةٍ بحجم عشر نقاط: عشرون محرفًا
-        عشوائيًّا حسّاسًا لحالة الأحرف، لا يُملى صوتًا ولا يُكتب على هاتف. فصار
-        رمزًا من ستّة محارف في بطاقةٍ تُرى، يُنسخ بزرّ ويُغيّره المدير.
-      */}
-      {opId && (
-        <div className="o_ds_card o_ds_pad" style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <span style={{ fontWeight: 'var(--o-font-weight-bold)' }}>الجلسة مفتوحة</span>
-            <button type="button" className="btn btn-primary btn-sm" onClick={copyInvite} data-op-invite disabled={!inviteLink}>
-              نسخ رابط الدعوة
-            </button>
-            <a
-              className="btn btn-secondary btn-sm"
-              href={inviteLink ? `https://wa.me/?text=${encodeURIComponent(`دعوة لجلسة ${mode || 'جرد'} — افتح الرابط وادخل بحسابك:
-${inviteLink}`)}` : undefined}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-op-whatsapp
-              style={inviteLink ? undefined : { pointerEvents: 'none', opacity: 0.5 }}
-            >
-              إرسال بواتساب
-            </a>
-            <span style={{ fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
-              يفتحه العضو ويدخل بحسابه — فيجد نفسه داخل الجلسة مباشرةً.
-            </span>
-          </div>
-          <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
-            وللإملاء صوتًا — الرمز:
-          </span>
-          <strong
-            data-op-code
-            style={{
-              fontFamily: 'monospace', direction: 'ltr', fontSize: '20px',
-              letterSpacing: '2px', padding: '2px 10px', borderRadius: '6px',
-              background: 'var(--o-gray-100, #f1f1f1)',
-            }}
-          >
-            {formatOperationCode(opCode) || '—'}
-          </strong>
-          <button type="button" className="btn btn-secondary btn-sm" onClick={copyOpCode} data-op-copy>
-            نسخ
-          </button>
-          <button type="button" className="btn btn-secondary btn-sm" onClick={editOpCode} disabled={codeBusy} data-op-edit>
-            تغيير الرمز
-          </button>
-          {!opCode && (
-            <span style={{ fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
-              عمليةٌ فُتحت قبل الرموز — اضغط «تغيير الرمز» لتُعطيها واحدًا.
-            </span>
-          )}
-        </div>
-      )}
 
       {/* العمل الجماعيّ: الانضمام لعملية زميلٍ برمزها — يظهر ما دامت لا عملية جارية */}
       {!opId && (
