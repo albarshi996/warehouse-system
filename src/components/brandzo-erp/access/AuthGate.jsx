@@ -7,6 +7,7 @@ import {
 } from '../../../services/auth/authService.js';
 import { isPathAllowed, landingPathFor } from '../../../services/auth/pageAccess.js';
 import { fetchMatrixOnce } from '../../../services/auth/accessMatrixService.js';
+import { loginUrlFor } from '../../../services/auth/returnTo.js';
 
 /**
  * حارس الدخول — يُحقن في DashboardLayout لحماية كل صفحات البوابة.
@@ -33,7 +34,9 @@ export default function AuthGate() {
 
     const unsub = subscribeAuth(async (user) => {
       if (!user) {
-        window.location.replace(`${base}/login`);
+        // يحمل الوجهة معه: عضو اللجنة يفتح رابط دعوةٍ وهو خارج الحساب، فكان
+        // يُرمى إلى شاشة الدخول ويضيع `?op=` — فيدخل ويجد لوحةً عامّة لا الجلسة.
+        window.location.replace(loginUrlFor(base, window.location.pathname, window.location.search));
         return;
       }
 

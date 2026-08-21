@@ -6,6 +6,7 @@ import {
   getBasePath,
   sendPasswordReset,
 } from '../../../services/auth/authService.js';
+import { returnPathFrom } from '../../../services/auth/returnTo.js';
 
 /**
  * شاشة تسجيل الدخول العربية لبوابة برند زو.
@@ -24,11 +25,15 @@ export default function LoginForm() {
   const [resetting, setResetting] = useState(false);
 
   const base = getBasePath();
+  /** الوجهة التي أوقفها الحارس — مُصفّاةً من التحويل المفتوح، أو اللوحة. */
+  const afterLogin = () =>
+    returnPathFrom(typeof window === 'undefined' ? '' : window.location.search, base) ||
+    `${base}/dashboard`;
 
   useEffect(() => {
     const unsub = subscribeAuth((user) => {
       if (user) {
-        window.location.replace(`${base}/dashboard`);
+        window.location.replace(afterLogin());
       } else {
         setChecking(false);
       }
@@ -47,7 +52,7 @@ export default function LoginForm() {
     setLoading(true);
     try {
       await signIn(email, password);
-      window.location.replace(`${base}/dashboard`);
+      window.location.replace(afterLogin());
     } catch (err) {
       setError(authErrorMessage(err && err.code));
       setLoading(false);
