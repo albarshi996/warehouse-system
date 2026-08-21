@@ -329,8 +329,99 @@ if (missingTheme.length === 0) {
   missingTheme.forEach((m) => info(`• ${m.file} ← ${m.used.join('، ')}`));
 }
 
-/* ═══════════ 7. لقطة عامة ═══════════ */
-section(7, 'لقطة');
+/* ═══════════ 7. المنطق داخل الصفحات ═══════════
+ *
+ * `npm test` يمسح أنماط `*.test.js` تحت `src` — فكلّ سطرٍ داخل وسم `script`
+ * في صفحة `.astro` هو **خارج نطاق الاختبار بالبناء**، لا بالإهمال. وحارس
+ * النقاء أعلاه (القسم ٥) أعمى عنه تمامًا لأنّه يعدّ الملفّات لا الوسوم، فكان
+ * يقول «نظيف» وهو صادقٌ في نطاقه — ونطاقه لا يشمل أكبر بقعةٍ عمياء عندنا.
+ *
+ * فالميزانيّة سقفٌ ينزل ولا يصعد: كلّ شاشةٍ يهبط منطقها إلى `src/services`
+ * تُنقص الرقم، ولا شيء يرفعه. و`INLINE_LOGIC_MAX` يمنع أن **تُولد** صفحةٌ
+ * سمينة — والدَّين القائم مسمًّى صفحةً صفحة لا مغفورًا جملةً، كي يُرى وهو
+ * ينكمش.
+ */
+section(7, 'المنطق داخل الصفحات — ما لا يبلغه اختبار');
+
+const INLINE_LOGIC_BUDGET = 4603;
+const INLINE_LOGIC_MAX = 40;
+/** الدَّين القائم يوم وُضع الحارس (2026-08-21) — يُشطب اسمٌ كلّما هبط منطقه. */
+const INLINE_LOGIC_DEBT = new Set([
+  'dashboard/retail-hub.astro',
+  'dashboard/vehicles-inventory.astro',
+  'dashboard/fleet-operations.astro',
+  'dashboard/org-structure.astro',
+  'dashboard/assets-inventory.astro',
+  'dashboard/maintenance-center.astro',
+  'dashboard/custody.astro',
+  'dashboard/general-manager-operations-briefing.astro',
+  'dashboard/supply-chain.astro',
+  'dashboard/erp-workflows.astro',
+  'dashboard/acceptance-check.astro',
+  'dashboard/hse-checklists.astro',
+  'dashboard/index.astro',
+  'dashboard/portal-operations.astro',
+  'dashboard/reference-guide.astro',
+]);
+
+/**
+ * أسطرُ المنطق داخل وسوم `script` في صفحةٍ واحدة.
+ * تُهمَل الأسطر الفارغة، ووسمٌ بلا جسد (`src=` أو مغلقٌ في سطره) لا يُحتسب —
+ * فاستدعاء مكتبةٍ مستضافةٍ ذاتيًّا ليس منطقًا هاربًا.
+ */
+function inlineLogicLines(source) {
+  const openTag = /<script[^>]*>/;
+  const closeTag = /<\/script>/;
+  let count = 0;
+  let inside = false;
+  for (const line of source.split('\n')) {
+    if (inside) {
+      if (closeTag.test(line)) inside = false;
+      else if (line.trim()) count += 1;
+      continue;
+    }
+    const m = openTag.exec(line);
+    if (m && !closeTag.test(line.slice(m.index + m[0].length))) inside = true;
+  }
+  return count;
+}
+
+const PAGES_ROOT = path.join(ROOT, 'src/pages');
+const inlineLogic = walk(PAGES_ROOT, ['.astro'])
+  .map((f) => ({
+    page: path.relative(PAGES_ROOT, f).split(path.sep).join('/'),
+    lines: inlineLogicLines(fs.readFileSync(f, 'utf8')),
+  }))
+  .filter((p) => p.lines > 0)
+  .sort((a, b) => b.lines - a.lines);
+
+const inlineTotal = inlineLogic.reduce((sum, p) => sum + p.lines, 0);
+const bornFat = inlineLogic.filter((p) => p.lines > INLINE_LOGIC_MAX && !INLINE_LOGIC_DEBT.has(p.page));
+const paidOff = [...INLINE_LOGIC_DEBT].filter(
+  (page) => (inlineLogic.find((p) => p.page === page)?.lines ?? 0) <= INLINE_LOGIC_MAX
+);
+
+if (inlineTotal <= INLINE_LOGIC_BUDGET) {
+  ok(`منطقٌ داخل الصفحات ${inlineTotal} سطرًا في ${inlineLogic.length} صفحة (الميزانيّة ${INLINE_LOGIC_BUDGET})`);
+} else {
+  bad(
+    `منطقُ الصفحات ${inlineTotal} سطرًا — تجاوز الميزانيّة (${INLINE_LOGIC_BUDGET}) بـ${inlineTotal - INLINE_LOGIC_BUDGET}. المنطق ينزل إلى src/services باختبارٍ مجاور، ولا يصعد إلى الوسم.`
+  );
+}
+if (bornFat.length) {
+  bad(`${bornFat.length} صفحةً وُلدت سمينة — فوق ${INLINE_LOGIC_MAX} سطرًا وليست على قائمة الدَّين:`);
+  bornFat.forEach((p) => info(`• ${p.page} — ${p.lines} سطرًا`));
+}
+if (inlineTotal < INLINE_LOGIC_BUDGET) {
+  notes.push(`ميزانيّة منطق الصفحات صارت ${inlineTotal} — أنزِلها في audit-portal.mjs كي لا تعود ترتفع`);
+}
+paidOff.forEach((page) => notes.push(`«${page}» هبط منطقها — اشطبها من INLINE_LOGIC_DEBT`));
+if (inlineLogic.length) {
+  info(`أثقلها: ${inlineLogic.slice(0, 3).map((p) => `${p.page} (${p.lines})`).join(' · ')}`);
+}
+
+/* ═══════════ 8. لقطة عامة ═══════════ */
+section(8, 'لقطة');
 info(`مجموعات القائمة: ${NAV_GROUPS.length} · روابط داخلية: ${internalPaths().length} · ملفات public: ${externalPaths().length}`);
 info(`صفحات لوحة التحكم على القرص: ${pagesOnDisk.length} · أدوار: ${Object.keys(ROLES).length}`);
 const noAccess = Object.keys(ROLES).filter((r) => internalPaths().every((p) => !canOpenPath(r, p)));

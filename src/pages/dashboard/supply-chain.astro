@@ -160,7 +160,7 @@ const scLinks = [
   let trips = [], wos = [], assets = [], custodies = [], balances = [], vehicles = [];
 
   const $ = (id) => document.getElementById(id);
-  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  import { escAttr as esc } from '../../services/ui/escape.js';
   const today = () => new Date().toISOString().slice(0, 10);
   const pct = (x) => x == null ? '—' : Math.round(x * 100) + '%';
 

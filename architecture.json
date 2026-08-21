@@ -729,6 +729,7 @@
         "custody",
         "fleet",
         "maintenance",
+        "ui",
         "vehicles"
       ]
     },

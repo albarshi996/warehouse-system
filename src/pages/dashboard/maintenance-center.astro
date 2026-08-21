@@ -291,9 +291,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
   const $ = (id) => document.getElementById(id);
   window.$ = $;
-  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  // تهريب لقيمة داخل مُعالِج JS مضمّن onclick="fn('${escJs(x)}')": تهريب JS ثم HTML.
-  const escJs = (s) => { const j = String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\r?\n/g, '\\n'); return j.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); };
+  import { esc, escJsAttr as escJs } from '../../services/ui/escape.js';
+
   const today = () => new Date().toISOString().slice(0, 10);
 
   function showToast(msg) {
