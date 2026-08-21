@@ -45,4 +45,16 @@ export default [
     },
   },
   ...astro.configs.recommended,
+  {
+    /**
+     * مكتباتٌ عالميّةٌ وقت التشغيل، تُحمَّل بوسم `<script src>` من `public/lib/`
+     * عملًا بقاعدة «لا CDN إطلاقًا». المحلّل الساكن لا يرى هذا الوسم فيحسبها
+     * غير معرّفة — وتسعة عشر `no-undef` كاذبًا تُغرق أيّ خطأ صادقٍ بينها.
+     *
+     * تُعلَن للقراءة فقط: من كتب `XLSX = …` يبقى خطأً كما يجب.
+     * وبعد `astro.configs.recommended` عمدًا — وإلّا لم تبلغ ملفّات `.astro`.
+     */
+    files: ['**/*.{js,mjs,cjs,jsx,astro}'],
+    languageOptions: { globals: { XLSX: 'readonly' } },
+  },
 ];

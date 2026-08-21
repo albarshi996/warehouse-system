@@ -140,16 +140,23 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                   </button>
                 </div>
                 <div class="bg-chip p-6 rounded-xl border border-gray-700 flex justify-center overflow-hidden">
+                  <!--
+                    أسهم mermaid مكتوبةٌ `--&gt;` بالكيان لا بالرمز الخام، عمدًا.
+                    السبب: سهمُ mermaid الخام يُغلق تعليق HTML في نظر محلّل Astro المستعمَل
+                    في ESLint، فيسقط الملفّ كلّه بـ«Parsing error» ويصير ألفًا ومئتَي سطرٍ
+                    حيّةٍ خارج أيّ فحص. و`&gt;` تُفكّ إلى `>` في `textContent`، وmermaid لا
+                    يقرأ إلّا `textContent` — فالمخطّط واحدٌ حرفًا بحرف، والملفّ صار يُفحَص.
+                  -->
                   <div class="mermaid">
                     graph TD
-                    A([بدء: استلام فاتورة المورد Vendor Bill]) --> B[إدخال الفاتورة وربطها بـ Purchase Order Ref]
-                    B --> C{"{التحقق والاعتماد المالي}"}
-                    C -->|مرفوض| D[إعادة للمراجعة Draft]
-                    C -->|معتمد| E[ترحيل الفاتورة Posted]
-                    E --> F[تسجيل الدفع Register Payment]
-                    F --> G[التسوية البنكية Bank Reconciliation]
-                    G --> H[توليد قيود اليومية آلياً Journal Entries]
-                    H --> I([النهاية: إغلاق الحساب وإصدار P&L])
+                    A([بدء: استلام فاتورة المورد Vendor Bill]) --&gt; B[إدخال الفاتورة وربطها بـ Purchase Order Ref]
+                    B --&gt; C{"{التحقق والاعتماد المالي}"}
+                    C --&gt;|مرفوض| D[إعادة للمراجعة Draft]
+                    C --&gt;|معتمد| E[ترحيل الفاتورة Posted]
+                    E --&gt; F[تسجيل الدفع Register Payment]
+                    F --&gt; G[التسوية البنكية Bank Reconciliation]
+                    G --&gt; H[توليد قيود اليومية آلياً Journal Entries]
+                    H --&gt; I([النهاية: إغلاق الحساب وإصدار P&L])
                   </div>
                 </div>
               </section>
@@ -307,16 +314,16 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                 <div class="bg-chip p-6 rounded-xl border border-gray-700 flex justify-center overflow-hidden">
                   <div class="mermaid">
                     graph TD
-                    A([بدء: تقديم طلب إجازة]) --> B{"{موافقة المدير المباشر}"}
-                    B -->|مرفوض| C[إشعار بالرفض]
-                    B -->|موافق| D{"{موافقة الـ HR}"}
-                    D -->|موافق| E[تحديث رصيد الإجازات Leave Balance]
-                    F([حركات الحضور والانصراف Attendances]) --> G
-                    E --> G[تجميع بيانات الشهر Payroll]
-                    G --> H[إنشاء قسيمة الراتب Payslip]
-                    H --> I{"{اعتماد مسير الرواتب}"}
-                    I -->|معتمد| J[توليد القيد المحاسبي للراتب]
-                    J --> K([النهاية: صرف الراتب])
+                    A([بدء: تقديم طلب إجازة]) --&gt; B{"{موافقة المدير المباشر}"}
+                    B --&gt;|مرفوض| C[إشعار بالرفض]
+                    B --&gt;|موافق| D{"{موافقة الـ HR}"}
+                    D --&gt;|موافق| E[تحديث رصيد الإجازات Leave Balance]
+                    F([حركات الحضور والانصراف Attendances]) --&gt; G
+                    E --&gt; G[تجميع بيانات الشهر Payroll]
+                    G --&gt; H[إنشاء قسيمة الراتب Payslip]
+                    H --&gt; I{"{اعتماد مسير الرواتب}"}
+                    I --&gt;|معتمد| J[توليد القيد المحاسبي للراتب]
+                    J --&gt; K([النهاية: صرف الراتب])
                   </div>
                 </div>
               </section>
@@ -474,15 +481,15 @@ const base = import.meta.env.BASE_URL.endsWith('/')
                 <div class="bg-chip p-6 rounded-xl border border-gray-700 flex justify-center overflow-hidden">
                   <div class="mermaid">
                     graph TD
-                    A([بدء: وصول المخزون لنقطة إعادة الطلب]) --> B[توليد طلب شراء داخلي آلياً PR]
-                    B --> C[إنشاء وإرسال طلبات عروض أسعار RFQs]
-                    C --> D{"{تقييم الموردين Vendor Evaluation}"}
-                    D --> E[اعتماد أمر الشراء PO]
-                    E --> F[استقبال إشعار الشحن المسبق ASN]
-                    F --> G[استلام البضاعة في المخزن GRN]
-                    G --> H[تحديث الكميات في المستودع]
-                    H --> I[إنشاء مسودة فاتورة وسند دفع مبدئي]
-                    I --> J([النهاية: إغلاق أمر الشراء])
+                    A([بدء: وصول المخزون لنقطة إعادة الطلب]) --&gt; B[توليد طلب شراء داخلي آلياً PR]
+                    B --&gt; C[إنشاء وإرسال طلبات عروض أسعار RFQs]
+                    C --&gt; D{"{تقييم الموردين Vendor Evaluation}"}
+                    D --&gt; E[اعتماد أمر الشراء PO]
+                    E --&gt; F[استقبال إشعار الشحن المسبق ASN]
+                    F --&gt; G[استلام البضاعة في المخزن GRN]
+                    G --&gt; H[تحديث الكميات في المستودع]
+                    H --&gt; I[إنشاء مسودة فاتورة وسند دفع مبدئي]
+                    I --&gt; J([النهاية: إغلاق أمر الشراء])
                   </div>
                 </div>
               </section>
@@ -663,20 +670,20 @@ const base = import.meta.env.BASE_URL.endsWith('/')
              <div class="bg-chip rounded-xl p-6 border border-line overflow-x-auto">
                <div class="mermaid">
                  graph TD
-                 A([بدء: وصول شحنة]) --> B[استلام إشعار الشحن المسبق ASN]
-                 B --> C[فحص الكميات والأوزان GRN]
-                 C --> D{"{فحص الجودة QC}"}
-                 D -->|مقبول| E[تحديد موقع التخزين Putaway]
-                 D -->|مرفوض| F[إنشاء تقرير البضاعة التالفة]
-                 F --> G[إشعار المورد للإحلال]
-                 E --> H[تسجيل في بطاقة مراقبة المخزون Bin Card]
-                 H --> I{"{طلب صرف وارد؟}"}
-                 I -->|نعم| J[إنشاء قائمة السحب Picking]
-                 J --> K[قائمة التعبئة Packing]
-                 K --> L[إصدار إذن التسليم Delivery Note]
-                 L --> M[تحديث المخزون في Odoo]
-                 I -->|لا| N[انتظار طلب الصرف]
-                 M --> O([النهاية: إغلاق الحركة])
+                 A([بدء: وصول شحنة]) --&gt; B[استلام إشعار الشحن المسبق ASN]
+                 B --&gt; C[فحص الكميات والأوزان GRN]
+                 C --&gt; D{"{فحص الجودة QC}"}
+                 D --&gt;|مقبول| E[تحديد موقع التخزين Putaway]
+                 D --&gt;|مرفوض| F[إنشاء تقرير البضاعة التالفة]
+                 F --&gt; G[إشعار المورد للإحلال]
+                 E --&gt; H[تسجيل في بطاقة مراقبة المخزون Bin Card]
+                 H --&gt; I{"{طلب صرف وارد؟}"}
+                 I --&gt;|نعم| J[إنشاء قائمة السحب Picking]
+                 J --&gt; K[قائمة التعبئة Packing]
+                 K --&gt; L[إصدار إذن التسليم Delivery Note]
+                 L --&gt; M[تحديث المخزون في Odoo]
+                 I --&gt;|لا| N[انتظار طلب الصرف]
+                 M --&gt; O([النهاية: إغلاق الحركة])
                </div>
              </div>
            </section>
@@ -801,23 +808,23 @@ const base = import.meta.env.BASE_URL.endsWith('/')
              <div class="bg-chip rounded-xl p-6 border border-line overflow-x-auto">
                <div class="mermaid">
                  graph TD
-                 A([بدء: تخطيط الطلب]) --> B[توليد تقرير التنبؤ بالطلب Forecast]
-                 B --> C[إنشاء طلب الشراء الداخلي PR]
-                 C --> D[اعتماد PR من مدير الإدارة التجارية]
-                 D --> E[إرسال طلبات عروض أسعار RFQs للموردين]
-                 E --> F{"{تقييم واختيار المورد}"}
-                 F --> G[إصدار أمر الشراء الرسمي PO]
-                 G --> H[متابعة الشحن BL/AWB]
-                 H --> I[استلام البضاعة GRN + QC]
-                 I --> J[التخزين والتوزيع Putaway + Bin Card]
-                 J --> K[تنفيذ طلبات الصرف Picking + Packing]
-                 K --> L[التسليم النهائي Delivery Note + POD]
-                 L --> M{"{مرتجعات؟}"}
-                 M -->|نعم| N[Return Note + Credit Note]
-                 N --> O[تحديث المخزون]
-                 M -->|لا| P[قياس مؤشرات الأداء KPIs]
-                 O --> P
-                 P --> Q([النهاية: تقرير الأداء الشهري])
+                 A([بدء: تخطيط الطلب]) --&gt; B[توليد تقرير التنبؤ بالطلب Forecast]
+                 B --&gt; C[إنشاء طلب الشراء الداخلي PR]
+                 C --&gt; D[اعتماد PR من مدير الإدارة التجارية]
+                 D --&gt; E[إرسال طلبات عروض أسعار RFQs للموردين]
+                 E --&gt; F{"{تقييم واختيار المورد}"}
+                 F --&gt; G[إصدار أمر الشراء الرسمي PO]
+                 G --&gt; H[متابعة الشحن BL/AWB]
+                 H --&gt; I[استلام البضاعة GRN + QC]
+                 I --&gt; J[التخزين والتوزيع Putaway + Bin Card]
+                 J --&gt; K[تنفيذ طلبات الصرف Picking + Packing]
+                 K --&gt; L[التسليم النهائي Delivery Note + POD]
+                 L --&gt; M{"{مرتجعات؟}"}
+                 M --&gt;|نعم| N[Return Note + Credit Note]
+                 N --&gt; O[تحديث المخزون]
+                 M --&gt;|لا| P[قياس مؤشرات الأداء KPIs]
+                 O --&gt; P
+                 P --&gt; Q([النهاية: تقرير الأداء الشهري])
                </div>
              </div>
            </section>
@@ -1169,6 +1176,12 @@ const base = import.meta.env.BASE_URL.endsWith('/')
 
         // النافذة المنبثقة سياقٌ منفصل (about:blank) بلا مسار base — نحتاج
         // مسارًا مطلقًا (origin+base) لمكتبة mermaid المستضافة ذاتيًّا (المحور ٥).
+        // وسم إغلاق السكربت يُبنى بالوصل لا بالهروب: كتابتُه حرفيًّا داخل نصٍّ
+        // قالبيّ تُنهي وسم `script` الحاوي في نظر محلّل HTML؛ والهروب بشرطةٍ
+        // مائلة يعالج ذلك لكنّ ESLint يراه هروبًا بلا داعٍ — محقٌّ في JS،
+        // مخطئٌ في HTML. والوصلُ يُرضي الاثنين ويقول السبب.
+        const CLOSE_SCRIPT = '</' + 'script>';
+
         const mermaidSrc = location.origin + import.meta.env.BASE_URL.replace(/\/$/, '') + '/lib/mermaid.min.js';
 
         const printWindow = window.open('', '_blank');
@@ -1178,7 +1191,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
           <head>
             <meta charset="UTF-8">
             <title>طباعة - ${title}</title>
-            <script src="${mermaidSrc}"><\/script>
+            <script src="${mermaidSrc}">${CLOSE_SCRIPT}
             <style>
               body { font-family: 'Cairo', sans-serif; background: white; color: black; padding: 20px; margin: 0; text-align: center; }
               h1 { color: #c41e3a; margin-bottom: 30px; border-bottom: 2px solid #DAAA3C; padding-bottom: 10px; }
@@ -1210,7 +1223,7 @@ const base = import.meta.env.BASE_URL.endsWith('/')
             </div>
             <script>
               mermaid.initialize({ startOnLoad: true, theme: 'default' });
-            <\/script>
+            ${CLOSE_SCRIPT}
           </body>
           </html>
         `);

@@ -1,0 +1,41 @@
+# ═══ نهايات الأسطر — الملفّات المولَّدة صيغتها LF قطعًا ══════════════════════
+#
+# مولّداتنا تكتب بـ`\n`، وويندوز يستخرج بـ`\r\n` حين `core.autocrlf=true`
+# (وهو مضبوطٌ هنا). فينشأ عطبان صامتان لا علاقة لهما بمضمون سطرٍ واحد:
+#
+#   ① `npm test` يسقط دائمًا على ويندوز — حارس الهويّة يقرأ `WORKSPACE.md`
+#      من القرص (CRLF) ويقارنه بما يولّده `workspaceDoc` (LF)، فيراهما
+#      مختلفَين وهما نصٌّ واحد. والبوّابة الخضراء تُغلق بأحمرَ كاذب.
+#
+#   ② `git status` يُعلن أربعة ملفّاتٍ مولَّدة «معدَّلة» أبدًا — وبصمتها
+#      مطابقةٌ حرفيًّا لما في الفهرس (قِيس: `git hash-object` = `git rev-parse :f`).
+#      فيغرق التعديل الحقيقيّ في ضجيجٍ دائم قبل «ارفع».
+#
+# العلاج: تُستخرج هذه الملفّات بـLF على كلّ نظام، فتطابق ما يكتبه مولّدها.
+#
+# ولم نُطبّع الشجرة كلّها (٩٣٠ ملفًّا متعقَّبًا بـCRLF) عمدًا: مستودع الشركة
+# يزامن من هنا كلّ ساعة بدمجٍ يرجّح الشقيق، وتطبيعٌ شامل يجعل أوّل دمجٍ بعده
+# تعارضًا في كلّ ملفٍّ نصّيّ. الجراحة هنا تمسّ المولَّدات وحدها.
+
+# ── مولَّدات scripts/build-arch.mjs ───────────────────────────────────────
+architecture.json                        text eol=lf
+src/generated/arch-wiki.html             text eol=lf
+
+# ── مولَّدات scripts/build-org.mjs و scripts/build-jobs-catalog.mjs ────────
+src/services/recruitment/jobsCatalog.js  text eol=lf
+public/تقرير-هيكل-الوظائف-والادوار.html    text eol=lf
+public/المرجع-التشغيلي-الرسمي.html         text eol=lf
+
+# ── مولَّدات scripts/identity.mjs (البطاقة وكتلة الدستور) ─────────────────
+WORKSPACE.md                             text eol=lf
+AGENTS.md                                text eol=lf
+
+# ── مولَّدات scripts/plan-check.mjs (بطاقات الاستئناف) ────────────────────
+docs/plan/الاستئناف.md                    text eol=lf
+docs/plan/استئناف-*.md                    text eol=lf
+
+# ── مولَّد scripts/build-time-fields-doc.mjs ──────────────────────────────
+docs/plan/الحقول-الزمنية.md                text eol=lf
+
+# ── مولَّد scripts/generate-vehicles-seed.mjs ─────────────────────────────
+src/data/vehicles-seed.json              text eol=lf

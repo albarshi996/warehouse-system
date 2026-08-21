@@ -6,6 +6,27 @@
 (function () {
   const FORM_ID = window.location.pathname;
 
+  /**
+   * جذر المكتبات المستضافة ذاتيًّا — يُشتقّ من موضع هذا الملفّ نفسه.
+   *
+   * قاعدة الدستور: «لا CDN إطلاقًا — كلّ الأصول ذاتية الاستضافة (أوفلاين 100%)».
+   * وكان تصدير الإكسل يجلب SheetJS من cdnjs، فيسقط الزرّ في مستودعٍ بلا إنترنت
+   * والنسخةُ المحلّيّة `public/lib/xlsx.full.min.js` حاضرةٌ بجانبه.
+   *
+   * ولا يصلح مسارٌ نسبيّ ثابت: هذا الملفّ في `<base>/` والنماذج تستدعيه من
+   * `<base>/forms/`، فـ`lib/…` من داخل النموذج يشير إلى `forms/lib/…`. لذا
+   * يُقرأ عنوان الوسم نفسه — وقتَ التحليل لا وقتَ النقر، إذ يعود
+   * `document.currentScript` فارغًا داخل معالِج حدث.
+   */
+  const SELF =
+    (document.currentScript && document.currentScript.src) ||
+    (function () {
+      const tags = Array.prototype.slice.call(document.getElementsByTagName('script'));
+      const own = tags.filter((t) => /formUtils\.js(\?|#|$)/.test(t.src || ''))[0];
+      return own ? own.src : '';
+    })();
+  const LIB = SELF ? new URL('lib/', SELF).href : 'lib/';
+
   // 1. Initialize logic when DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
     loadDraft();
@@ -491,7 +512,9 @@
       btn.type = 'button';
       btn.className = 'excel-btn no-print';
       btn.textContent = '📊 تصدير إلى إكسيل | Export to Excel';
-      btn.onclick = exportToExcel;
+      // بالبادئة `window.` صراحةً: الدالّة تُعلَّق على النافذة أدناه، والإشارةُ
+      // العارية تعتمد على ترتيب التنفيذ وتُعمي المحلّل الساكن عن وجودها.
+      btn.onclick = window.exportToExcel;
 
       if (printBtn && printBtn.parentNode) {
         printBtn.parentNode.insertBefore(btn, printBtn.nextSibling);
@@ -514,10 +537,10 @@
       return;
     }
     var script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    script.src = LIB + 'xlsx.full.min.js';
     script.onload = _doExport;
     script.onerror = function () {
-      alert('تعذّر تحميل مكتبة Excel. تحقق من اتصالك بالإنترنت.\nFailed to load Excel library. Check your internet connection.');
+      alert('تعذّر تحميل مكتبة Excel المحلّيّة (' + script.src + ').\nFailed to load the self-hosted Excel library.');
     };
     document.head.appendChild(script);
   };
@@ -574,7 +597,7 @@
     ws['!cols'] = Array(15).fill({ wch: 22 });
     XLSX.utils.book_append_sheet(wb, ws, 'Export');
 
-    var safeTitle = title.replace(/[\/:*?"<>|]/g, '').replace(/\s+/g, '_').slice(0, 40);
+    var safeTitle = title.replace(/[/:*?"<>|]/g, '').replace(/\s+/g, '_').slice(0, 40);
     var defaultName = 'Brandzo_' + safeTitle + '_' + date + '.xlsx';
     var userFileName = prompt('أدخل اسم الملف قبل الحفظ:', defaultName);
     if (userFileName === null) return;

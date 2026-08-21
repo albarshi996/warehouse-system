@@ -7,7 +7,6 @@ import assert from 'node:assert/strict';
 import {
   addManualDocument,
   addManualLine,
-  contentFingerprint,
   manualPreview,
   recomputePreview,
   removeManualLine,

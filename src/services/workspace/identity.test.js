@@ -21,6 +21,7 @@ import {
   tokensOf,
   stamp,
   leaks,
+  lf,
   replaceBlock,
   agentsBlock,
   workspaceDoc,
@@ -167,11 +168,51 @@ test('لم يتسرّب رمزٌ من هويّة الشقيق إلى أيّ مو
 });
 
 test('البطاقة وكتلة الدستور مطابقتان للمولَّد من workspace.json', () => {
+  // المقارنة بـ`lf` لا بالبايت: المولّد يكتب `\n` وgit يستخرج `\r\n` على ويندوز،
+  // فكان هذا الاختبار وحده يسقط أبدًا هناك — أحمرُ كاذبٌ يُعمي عن أحمرَ صادق.
   const doc = fs.readFileSync(path.join(root, 'WORKSPACE.md'), 'utf8');
-  assert.equal(doc, workspaceDoc(card), 'WORKSPACE.md مولَّد — العلاج: npm run identity:apply');
+  assert.equal(
+    lf(doc),
+    lf(workspaceDoc(card)),
+    'WORKSPACE.md مولَّد — العلاج: npm run identity:apply'
+  );
 
   const agents = fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8');
-  assert.equal(agents, replaceBlock(agents, agentsBlock(card)), 'كتلة الهويّة في AGENTS.md');
+  assert.equal(
+    lf(agents),
+    lf(replaceBlock(agents, agentsBlock(card))),
+    'كتلة الهويّة في AGENTS.md'
+  );
+});
+
+test('نهايةُ سطر ويندوز لا تُوهم الحارس باختلاف — CRLF وLF نصٌّ واحد', () => {
+  const doc = workspaceDoc(card);
+  const windows = doc.replace(/\n/g, '\r\n');
+  assert.notEqual(windows, doc, 'المحاكاة صنعت نصًّا مختلفًا بالبايت فعلًا');
+  assert.equal(lf(windows), lf(doc), 'وبعد التوحيد هما نصٌّ واحد');
+
+  // والمسار الحقيقيّ: دستورٌ بنهايات ويندوز وكتلةٌ مولَّدة بـLF — مزيجٌ يجب أن يمرّ.
+  const agents = lf(fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8')).replace(/\n/g, '\r\n');
+  assert.equal(
+    lf(agents),
+    lf(replaceBlock(agents, agentsBlock(card))),
+    'كتلة الهويّة في دستورٍ CRLF'
+  );
+});
+
+test('.gitattributes يُثبّت `eol=lf` للوثيقتين المولَّدتين — وإلّا عاد الأحمر الكاذب', () => {
+  // الحارس يسأل git نفسه لا يبحث عن نصٍّ في الملفّ: نمطٌ مكتوبٌ لا يُطابق
+  // (اسمٌ عربيّ أو مجلّدٌ خاطئ) يمرّ من فحص النصّ ويسقط من فحص الآليّة.
+  const generated = ['WORKSPACE.md', 'AGENTS.md'];
+  const out = execFileSync('git', ['check-attr', 'eol', '--', ...generated], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  const undeclared = out
+    .trim()
+    .split('\n')
+    .filter((line) => !line.endsWith(': lf'));
+  assert.deepEqual(undeclared, [], 'وثيقةٌ مولَّدة بلا `eol=lf` في .gitattributes');
 });
 
 /** امتداداتٌ لا نصَّ فيها — تُتجاوَز في المسح الشامل توفيرًا للوقت لا تسامحًا. */

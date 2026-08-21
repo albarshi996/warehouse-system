@@ -638,7 +638,7 @@ function populateForm(a) {
 window.toggleForm = function() {
   editId = null;
   const panel = document.getElementById('form-panel');
-  if (panel.classList.contains('open')) { cancelForm(); return; }
+  if (panel.classList.contains('open')) { window.cancelForm(); return; }
   clearForm();
   const newId = generateId();
   document.getElementById('form-id-badge').textContent = newId;
@@ -694,7 +694,7 @@ window.submitForm = function() {
     assets.push(record);
     showToast('تم إضافة الأصل بنجاح ✓');
   }
-  cancelForm();
+  window.cancelForm();
   updateStats();
   renderTable();
 }
@@ -722,10 +722,10 @@ window.openDelModal = function(id) {
 }
 window.closeDelModal = function() { deleteId = null; document.getElementById('del-modal').classList.remove('open'); }
 window.confirmDelete = function() {
-  if (!deleteId) { closeDelModal(); return; }
+  if (!deleteId) { window.closeDelModal(); return; }
   const before = assets.length;
   assets = assets.filter(a => a.id !== deleteId);
-  closeDelModal();
+  window.closeDelModal();
   if (assets.length < before) showToast('تم حذف الأصل بنجاح', 'warn');
   else showToast('لم يتم العثور على الأصل', 'error');
   updateStats();
@@ -770,8 +770,8 @@ document.getElementById('import-file').addEventListener('change', async function
             const HDR = {'رقم الأصل':0,'نوع الأصل':1,'اسم الأصل':2,'الماركة':3,'الموديل/السيريال':4,'السيريال':4,'الموديل':4,'الكمية':5,'الحالة':6,'المسؤول':7,'الإدارة':8,'القسم':9,'الموقع':10,'تاريخ الاستلام':11,'ملاحظات':12};
             const DEPT_HDR = {'رقم الأصل':0,'نوع الأصل':1,'اسم الأصل':2,'الماركة':3,'السيريال':4,'الموديل':4,'الكمية':5,'الحالة':6,'المسؤول':7,'القسم':8,'الموقع':9,'تاريخ الاستلام':10,'ملاحظات':11};
             header.forEach((h,i) => {
-              if(isMain){ if(HDR.hasOwnProperty(h)) COL[HDR[h]]=i; }
-              else { if(DEPT_HDR.hasOwnProperty(h)) COL[DEPT_HDR[h]]=i; }
+              if(isMain){ if(Object.prototype.hasOwnProperty.call(HDR,h)) COL[HDR[h]]=i; }
+              else { if(Object.prototype.hasOwnProperty.call(DEPT_HDR,h)) COL[DEPT_HDR[h]]=i; }
             });
             const gc = (row, idx) => COL[idx]!==undefined ? row[COL[idx]] : row[idx];
             const safe  = v => (v==null)?'':String(v).trim();
@@ -784,7 +784,7 @@ document.getElementById('import-file').addEventListener('change', async function
               let rawDate = safe(gc(r,11));
               const dv = gc(r,11);
               if(dv instanceof Date) rawDate=dv.toISOString().split('T')[0];
-              else if(rawDate&&!/^\d{4}-\d{2}-\d{2}$/.test(rawDate)){try{const d=new Date(rawDate);if(!isNaN(d.getTime()))rawDate=d.toISOString().split('T')[0];}catch(e){}}
+              else if(rawDate&&!/^\d{4}-\d{2}-\d{2}$/.test(rawDate)){try{const d=new Date(rawDate);if(!isNaN(d.getTime()))rawDate=d.toISOString().split('T')[0];}catch{ /* نصٌّ ليس تاريخًا — يُترك كما ورد بلا تحويل */ }}
               const rawCond = safe(gc(r,6));
               const dept = deptOverride||safe(gc(r,8));
               records.push({

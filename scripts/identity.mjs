@@ -17,6 +17,7 @@ import {
   tokensOf,
   stamp,
   leaks,
+  lf,
   agentsBlock,
   replaceBlock,
   workspaceDoc,
@@ -74,13 +75,16 @@ const haveDoc = read('WORKSPACE.md');
 const agents = read('AGENTS.md');
 const wantAgents = agents === null ? null : replaceBlock(agents, agentsBlock(card));
 
+// الختم يكتب بايتًا ببايت عمدًا — فيُعيد ملفًّا بنهايات ويندوز إلى صيغته
+// المعياريّة LF. أمّا الفحص فيقارن بـ`lf` لا بـ`===`: نهايةُ السطر ليست هويّةً،
+// ومقارنتها كانت تُنتج إنذارًا كاذبًا يقول «تسرّبت هويّة الشقيق» بلا تسرّب.
 if (apply) {
   if (haveDoc === null || write('WORKSPACE.md', wantDoc, haveDoc)) changed.push('WORKSPACE.md');
   if (agents !== null && write('AGENTS.md', wantAgents, agents)) changed.push('AGENTS.md');
 } else {
-  if (haveDoc !== null && haveDoc !== wantDoc)
+  if (haveDoc !== null && lf(haveDoc) !== lf(wantDoc))
     dirty.push({ file: 'WORKSPACE.md', found: ['بطاقةٌ لا تطابق المولَّد'], severity: 'meta' });
-  if (agents !== null && agents !== wantAgents)
+  if (agents !== null && lf(agents) !== lf(wantAgents))
     dirty.push({ file: 'AGENTS.md', found: ['كتلة هويّةٍ لا تطابق المولَّد'], severity: 'meta' });
 }
 

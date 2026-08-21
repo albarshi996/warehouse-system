@@ -778,7 +778,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 -->
 
 <script>
-/* global L, XLSX */
+/* global L */  // XLSX معلَنةٌ مرّةً واحدة في eslint.config.js (مكتبةٌ عالميّة من public/lib)
 import { trackOverlay } from '../../services/ui/overlayHistory.js';
 
 (function () {
