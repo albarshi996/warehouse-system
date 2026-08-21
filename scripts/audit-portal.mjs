@@ -343,7 +343,7 @@ if (missingTheme.length === 0) {
  */
 section(7, 'المنطق داخل الصفحات — ما لا يبلغه اختبار');
 
-const INLINE_LOGIC_BUDGET = 4576;
+const INLINE_LOGIC_BUDGET = 4370;
 const INLINE_LOGIC_MAX = 40;
 /** الدَّين القائم يوم وُضع الحارس (2026-08-21) — يُشطب اسمٌ كلّما هبط منطقه. */
 const INLINE_LOGIC_DEBT = new Set([
@@ -365,19 +365,42 @@ const INLINE_LOGIC_DEBT = new Set([
 ]);
 
 /**
- * أسطرُ المنطق داخل وسوم `script` في صفحةٍ واحدة.
- * تُهمَل الأسطر الفارغة، ووسمٌ بلا جسد (`src=` أو مغلقٌ في سطره) لا يُحتسب —
- * فاستدعاء مكتبةٍ مستضافةٍ ذاتيًّا ليس منطقًا هاربًا.
+ * أسطرُ **الكود** داخل وسوم `script` في صفحةٍ واحدة.
+ *
+ * تُهمَل: الفارغة · **التعليقات** · ووسمٌ بلا جسد (`src=` أو مغلقٌ في سطره)
+ * — فاستدعاء مكتبةٍ مستضافةٍ ذاتيًّا ليس منطقًا هاربًا.
+ *
+ * ولمَ تُستثنى التعليقات؟ لأنّ المقياس يقيس **ما لا يبلغه اختبار**، والتعليق
+ * لا يُنفَّذ فلا يحتاج اختبارًا. وعدُّه يقلب الحارس على صاحبه: يصير إصلاحُ
+ * عطبٍ مع شرح سببه تجاوزًا للميزانيّة، فيُغري بحذف الشرح لإرضاء العدّاد —
+ * وهو أسوأ ما يفعله مقياس. (وقع فعلًا 2026-08-21: إصلاح مخطّطات
+ * `erp-workflows` أضاف سطرين كودًا وعشرةً شرحًا، فأسقط التدقيق.)
  */
 function inlineLogicLines(source) {
   const openTag = /<script[^>]*>/;
   const closeTag = /<\/script>/;
   let count = 0;
   let inside = false;
+  let inBlockComment = false;
   for (const line of source.split('\n')) {
     if (inside) {
-      if (closeTag.test(line)) inside = false;
-      else if (line.trim()) count += 1;
+      if (closeTag.test(line)) {
+        inside = false;
+        inBlockComment = false;
+        continue;
+      }
+      const t = line.trim();
+      if (inBlockComment) {
+        if (t.includes('*/')) inBlockComment = false;
+        continue;
+      }
+      if (!t) continue;
+      if (t.startsWith('//')) continue;
+      if (t.startsWith('/*')) {
+        if (!t.includes('*/')) inBlockComment = true;
+        continue;
+      }
+      count += 1;
       continue;
     }
     const m = openTag.exec(line);
