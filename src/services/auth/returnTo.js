@@ -25,7 +25,8 @@ const HAS_SCHEME = /^[a-z][a-z0-9+.-]*:/i;
 /**
  * يبني رابط شاشة الدخول حاملًا الوجهة المقصودة.
  *
- * @param {string} base جذر النشر (مثل `/warehouse-system`)
+ * @param {string} base جذر النشر كما يُعيده `getBasePath()` — بلا مثالٍ حرفيّ:
+ *   اسمُ المستودع يختلف بين الشخصيّ والشركة، وكتابتُه هنا تسريبُ هويّة.
  * @param {string} pathname المسار الحاليّ
  * @param {string} [search] سلسلة الاستعلام بما فيها `?`
  */
@@ -81,7 +82,7 @@ export function safeReturnPath(raw, base) {
 /**
  * يقرأ الوجهة من سلسلة استعلامٍ ويُصفّيها — سطرٌ واحد لمن يستدعي.
  *
- * @param {string} search مثل `?next=%2Fwarehouse-system%2Fdashboard`
+ * @param {string} search سلسلة الاستعلام، مثل `?next=%2F…%2Fdashboard`
  * @param {string} base جذر النشر
  */
 export function returnPathFrom(search, base) {
