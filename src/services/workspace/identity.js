@@ -314,6 +314,32 @@ export function identityOnly({ file, ours, theirs, me, you }) {
   return lf(stamp(theirs, you, me, spot.kinds)) === lf(ours);
 }
 
+/**
+ * **هل يُفقد عملٌ إن رجّحنا الشقيق في هذا الملفّ؟**
+ *
+ * سؤالٌ اتّجاهيّ، وخطؤه كلّفنا وقفَ المزامنة التلقائيّة مرارًا: كان الحارس
+ * يسأل «هل نسختنا تخالف نسخة الشقيق؟» — وهذا يصيح **كلّما تقدّم الشقيق**،
+ * وتقدّمُه لا يُفقدنا شيئًا البتّة. فحين عُدّل `AGENTS.md` و`package.json` في
+ * الشخصيّ، سقطت مزامنة الشركة وليس عندها سطرٌ واحدٌ فريد.
+ *
+ * والسؤال الصحيح شرطان معًا:
+ *   ① نسختنا تخالف **الأصل المشترك** ⇐ نحن غيّرنا شيئًا حقًّا.
+ *   ② ونسختنا تخالف **الشقيق** ⇐ وتغييرُنا ليس عنده أصلًا.
+ * فإن سقط أحدهما فلا خطر: إمّا لم نغيّر شيئًا، وإمّا غيّرنا ما عنده مثلُه.
+ *
+ * وكلّ مقارنةٍ تمرّ بالختم: الأصل المشترك يحمل هويّة الشقيق (فالتاريخ مشترك
+ * من عنده)، فيُختم بهويّتنا قبل أن يُقارَن — وإلّا لعُدَّ فرقُ الهويّة عملًا.
+ *
+ * @param {{file:string, ours:string, theirs:string, base:string, me:object, you:object}} args
+ * @returns {boolean} `true` إن كان هنا عملٌ حقيقيٌّ يُمحى بالترجيح
+ */
+export function atRiskOfErasure({ file, ours, theirs, base, me, you }) {
+  if (ours == null) return false; // لا نملك الملفّ — لا شيء يُفقد
+  const changedHere = !identityOnly({ file, ours, theirs: base, me, you });
+  if (!changedHere) return false;
+  return !identityOnly({ file, ours, theirs, me, you });
+}
+
 /** كتلة الهويّة في رأس `AGENTS.md` — أوّل ما يقرؤه الوكيل قبل أيّ عمل. */
 export function agentsBlock(card) {
   const s = card.sibling;

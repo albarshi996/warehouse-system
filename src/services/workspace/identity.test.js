@@ -22,6 +22,7 @@ import {
   stamp,
   leaks,
   lf,
+  atRiskOfErasure,
   replaceBlock,
   agentsBlock,
   workspaceDoc,
@@ -147,6 +148,58 @@ test('الكتلة والبطاقة تذكران المستودعين معًا،
   const doc = workspaceDoc(card);
   assert.ok(doc.includes('npm run sync'), 'البطاقة تُعلّم أمر المزامنة');
   for (const spot of SPOTS) assert.ok(doc.includes(spot.file), `البطاقة تسرد ${spot.file}`);
+});
+
+// ═══ حارس المحو — اتّجاه السؤال ═══════════════════════════════════════════
+
+/**
+ * المشهد: `package.json` في المستودعَين. الأصل المشترك يحمل هويّة الشقيق
+ * (فالتاريخ مشترك من عنده)، ونسختنا تحمل هويّتنا.
+ */
+const pkg = (name, script) =>
+  `{\n  "name": "${name}",\n  "scripts": {\n    "plan": "${script}"\n  },\n  "url": "https://github.com/${name === 'warehouse-system' ? 'albarshi996/warehouse-system' : 'warehouse-art/brand-zo-hub'}"\n}\n`;
+
+// «نحن» هنا المستودع الشخصيّ (me) و«الشقيق» مستودع الشركة (you).
+const OURS = (script) => pkg('warehouse-system', script);
+const THEIRS = (script) => pkg('brand-zo-hub', script);
+
+test('★ تقدُّمُ الشقيق وحده ليس خطرًا — وهذا ما كان يُسقط المزامنة كلّ ساعة', () => {
+  // لم نغيّر شيئًا منذ الأصل المشترك (سوى ختم الهويّة الذي يفعله الدمج نفسه)،
+  // والشقيق أضاف سكربتًا. لا شيء عندنا يُفقد.
+  const base = THEIRS('a && b');
+  const ours = OURS('a && b');
+  const theirs = THEIRS('a && b && c');
+  assert.equal(
+    identityOnly({ file: 'package.json', ours, theirs, me, you }),
+    false,
+    'المقدّمة: نسختنا تخالف الشقيق فعلًا — ولذلك كان الحارس القديم يصيح'
+  );
+  assert.equal(
+    atRiskOfErasure({ file: 'package.json', ours, theirs, base, me, you }),
+    false,
+    'ومع ذلك لا خطر: لم نغيّر شيئًا عن الأصل المشترك'
+  );
+});
+
+test('عملٌ حقيقيٌّ عندنا وليس عند الشقيق — يُوقَف كما يجب', () => {
+  const base = THEIRS('a && b');
+  const ours = OURS('a && b && سكربتُ إدارة تقنية المعلومات');
+  const theirs = THEIRS('a && b');
+  assert.equal(atRiskOfErasure({ file: 'package.json', ours, theirs, base, me, you }), true);
+});
+
+test('غيّرنا وغيّر الشقيق التغيير نفسه — فلا شيء يُفقد', () => {
+  const base = THEIRS('a && b');
+  const ours = OURS('a && b && c');
+  const theirs = THEIRS('a && b && c');
+  assert.equal(atRiskOfErasure({ file: 'package.json', ours, theirs, base, me, you }), false);
+});
+
+test('ملفٌّ لا نملكه لا يُعدّ خطرًا', () => {
+  assert.equal(
+    atRiskOfErasure({ file: 'package.json', ours: null, theirs: THEIRS('a'), base: THEIRS('a'), me, you }),
+    false
+  );
 });
 
 // ═══ حارس الانحراف على المستودع الحقيقيّ ══════════════════════════════════

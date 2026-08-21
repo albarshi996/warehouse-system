@@ -21,7 +21,7 @@ import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { identityOnly, tokensOf } from '../src/services/workspace/identity.js';
+import { atRiskOfErasure, tokensOf } from '../src/services/workspace/identity.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -175,18 +175,26 @@ function disk(file) {
  *
  * السؤال عن المضمون لا عن الاسم: لا يكفي أن يكون الملفّ في جدول الهويّة، إذ قد
  * تكون فيه سطورُ عملٍ إلى جانب سطور الهويّة (سكربتٌ أُضيف في `package.json` مثلًا)
- * فتُمحى صامتةً. فنختم نسخة الشقيق بهويّتنا: إن طابقت نسختَنا فالفرق هويّةٌ خالصة.
+ * فتُمحى صامتةً.
+ *
+ * والحكم في `atRiskOfErasure` — يشترط أن نكون غيّرنا شيئًا عن **الأصل المشترك**
+ * قبل أن يشتكي، فلا يصيح لمجرّد أنّ الشقيق تقدّم علينا.
  */
-function atRisk(files, readOurs) {
+function atRisk(files, readOurs, baseRef) {
   return files.filter((f) => {
     if (GENERATED.has(f)) return false;
-    const ours = readOurs(f);
-    const theirs = blob('FETCH_HEAD', f);
-    return !identityOnly({ file: f, ours, theirs, me, you });
+    return atRiskOfErasure({
+      file: f,
+      ours: readOurs(f),
+      theirs: blob('FETCH_HEAD', f),
+      base: baseRef ? blob(baseRef, f) : null,
+      me,
+      you,
+    });
   });
 }
 
-const oursOnly = ahead ? atRisk(changedPaths(base, 'HEAD'), (f) => blob('HEAD', f)) : [];
+const oursOnly = ahead ? atRisk(changedPaths(base, 'HEAD'), (f) => blob('HEAD', f), base) : [];
 
 if (oursOnly.length && !force) {
   stop(

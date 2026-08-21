@@ -3727,6 +3727,7 @@
         "SPOTS",
         "SWEEP_EXEMPT",
         "agentsBlock",
+        "atRiskOfErasure",
         "identityOnly",
         "isSweepExempt",
         "leaks",
