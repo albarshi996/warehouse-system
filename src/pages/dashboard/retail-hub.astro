@@ -782,6 +782,13 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import { trackOverlay } from '../../services/ui/overlayHistory.js';
 import { escAttr as esc } from '../../services/ui/escape.js';
 import { BENGHAZI_NEIGHBORHOODS } from '../../data/benghazi-hub.js';
+import {
+  matchColor, incomeLabel, infraLabel, sectorLabel, segmentBadgeClass,
+  hexPolygon, adaptiveRadius, hubStats,
+} from '../../services/retail/hubModel.js';
+import { mergeOverrides } from '../../services/retail/hubModel.js';
+import { listenHubOverrides, saveHubOverride, clearHubOverrides, canEditHub } from '../../services/retail/hubService.js';
+import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
 
 (function () {
   'use strict';
@@ -805,50 +812,57 @@ import { BENGHAZI_NEIGHBORHOODS } from '../../data/benghazi-hub.js';
     setTimeout(() => { t.className = ''; }, 3000);
   }
 
-  // تهريب HTML — بيانات الأحياء تُدمج من localStorage (قابل للكتابة من المتصفّح)
-  // ثم تُحقن في innerHTML؛ التهريب يمنع الحقن (المحور ٤). القوالب inline فلا
-  // تستورد الوحدة المشتركة — نسخة صغيرة موضعية بنفس السلوك.
+  // ── التعديلات من السحابة ──────────────────────────────────────────────
+  //
+  // كانت بيانات الأحياء كلّها تُحفظ في `localStorage` تحت `benghazi_hub_v3`:
+  // عملُ مندوبٍ يعيش في متصفّحه وحده، يضيع بمسح بيانات المتصفّح أو بتبديل
+  // الجهاز، ولا يراه زميلٌ ولا مدير. قرار المالك 2026-08-21: تنتقل للسحابة.
+  //
+  // والبذرة تبقى في الكود، وما في السحابة تصحيحٌ فوقها — فلو تعذّرت القراءة
+  // ظهرت الخريطة كاملةً من البذرة، لا شاشةً فارغة.
+  let overrides = [];
+  let profile = null;
+  let canWrite = false;
+  let cloudStarted = false;
 
-  // ── localStorage ──────────────────────────────────────────────────────
-  const LS_KEY = 'benghazi_hub_v3';
-  function loadFromStorage() {
-    try {
-      const saved = localStorage.getItem(LS_KEY);
-      if (!saved) return;
-      const overrides = JSON.parse(saved);
-      overrides.forEach(o => {
-        const idx = DATA.findIndex(d => d.id === o.id);
-        if (idx !== -1) DATA[idx] = {...DATA[idx], ...o};
-      });
-      updateStats(); renderTable(); rebuildMarkers();
-    } catch (e) { console.warn('Load error:', e); }
-  }
-  function saveToStorage(rec) {
-    try {
-      let arr = [];
-      const ex = localStorage.getItem(LS_KEY);
-      if (ex) arr = JSON.parse(ex);
-      const idx = arr.findIndex(o => o.id === rec.id);
-      if (idx !== -1) arr[idx] = rec; else arr.push(rec);
-      localStorage.setItem(LS_KEY, JSON.stringify(arr));
-    } catch { showToast('❌ فشل الحفظ', 'error'); }
-  }
-  function resetToDefaults() {
-    DATA = DEFAULT_DATA.map(d => ({...d}));
-    try { localStorage.removeItem(LS_KEY); } catch { /* ignore */ }
+  function repaint() {
+    DATA = mergeOverrides(BENGHAZI_NEIGHBORHOODS, overrides);
     updateStats(); renderTable(); rebuildMarkers();
     if (hexActive) renderHexLayer();
-    showToast('✓ تمت إعادة ضبط البيانات', 'success');
+  }
+
+  subscribeAuth(async (user) => {
+    if (!user) return;
+    profile = await fetchUserProfile(user);
+    canWrite = canEditHub(profile?.role);
+    if (cloudStarted) return;
+    cloudStarted = true;
+    listenHubOverrides(
+      (list) => { overrides = list; repaint(); },
+      () => showToast('تعذّرت قراءة التعديلات — تُعرض البذرة وحدها', 'error')
+    );
+  });
+
+  async function resetToDefaults() {
+    if (!canWrite) { showToast('إعادة الضبط للمديرين', 'error'); return; }
+    // كان الزرّ يمسح تعديلات *متصفّحي*، وصار يمسح تعديلات *الجميع* — فليُقَل.
+    if (!confirm('سيُمحى كلّ تعديلٍ حفظه أيّ مستخدمٍ على هذه الخريطة، ولا رجعة. أتريد المتابعة؟')) return;
+    try {
+      const n = await clearHubOverrides();
+      showToast(n ? `✓ مُحيت ${n} تعديلًا — عادت الخريطة إلى بذرتها` : '✓ لا تعديلات — الخريطة على بذرتها', 'success');
+    } catch {
+      showToast('❌ تعذّر المحو — تحقّق من نشر قواعد retail_hub_overrides', 'error');
+    }
   }
 
   // ── Stats ──────────────────────────────────────────────────────────────
   function updateStats() {
-    document.getElementById('stat-total').textContent = DATA.length;
-    document.getElementById('stat-match-full').textContent = DATA.filter(d => d.market_match === 'مطابق').length;
-    document.getElementById('stat-match-partial').textContent = DATA.filter(d => d.market_match === 'جزئي').length;
-    document.getElementById('stat-match-none').textContent = DATA.filter(d => d.market_match === 'غير مطابق').length;
-    const totalPop = DATA.reduce((s, d) => s + (d.population || 0), 0);
-    document.getElementById('stat-pop').textContent = (totalPop / 1000000).toFixed(2) + 'م';
+    const s = hubStats(DATA);
+    document.getElementById('stat-total').textContent = s.total;
+    document.getElementById('stat-match-full').textContent = s.full;
+    document.getElementById('stat-match-partial').textContent = s.partial;
+    document.getElementById('stat-match-none').textContent = s.none;
+    document.getElementById('stat-pop').textContent = s.populationLabel;
   }
 
   // ── Map ──────────────────────────────────────────────────────────────
@@ -901,30 +915,9 @@ import { BENGHAZI_NEIGHBORHOODS } from '../../data/benghazi-hub.js';
     if (e.key === 'Escape' && mapFS) document.getElementById('btn-fullscreen').click();
   });
 
-  function matchColor(match) {
-    if (match === 'غير مطابق') return '#f85149';
-    if (match === 'جزئي')       return '#d29922';
-    return '#3fb950';
-  }
-
-  function incomeLabel(income) {
-    const map = { 'مرتفع': '💰 مرتفع', 'متوسط-جيد': '💵 متوسط-جيد', 'متوسط': '💴 متوسط', 'متباين': '💱 متباين' };
-    return map[income] || income;
-  }
-
-  function infraLabel(infra) {
-    const map = { 'ممتاز': '🟢 ممتازة', 'جيد': '🔵 جيدة', 'متوسط': '🟡 متوسطة', 'قديمة': '🔴 قديمة', 'قيد التطور': '🟠 قيد التطور' };
-    return map[infra] || infra;
-  }
-
-  function sectorLabel(s) {
-    const map = { 1: 'وسط البلد', 2: 'مناطق راقية', 3: 'كثافة FMCG', 4: 'لوجستي', 5: 'ضواحي توسع' };
-    return map[s] || s;
-  }
-
   function buildPopup(d) {
     const segBadges = (d.segments_present || []).map(s => {
-      const cls = s === 'A' ? 'badge-A' : s === 'B' ? 'badge-B' : s === 'D' ? 'badge-D' : 'badge-C';
+      const cls = segmentBadgeClass(s);
       return `<span class="badge ${cls}">${s}</span>`;
     }).join(' ');
     return `<div style="min-width:220px;padding:2px">
@@ -992,34 +985,6 @@ import { BENGHAZI_NEIGHBORHOODS } from '../../data/benghazi-hub.js';
   let hexLayer = null;
   const hexLayerById = {};
 
-  const LAT_CORR = Math.cos(32.1 * Math.PI / 180); // ~0.848
-
-  function hexPolygon(cLat, cLng, r) {
-    const pts = [];
-    for (let i = 0; i < 6; i++) {
-      const angleDeg = 60 * i - 30;
-      const a = (Math.PI / 180) * angleDeg;
-      pts.push([
-        cLng + (r / LAT_CORR) * Math.cos(a),
-        cLat + r * Math.sin(a)
-      ]);
-    }
-    pts.push(pts[0]);
-    return pts;
-  }
-
-  function adaptiveRadius(d) {
-    let minDist = Infinity;
-    for (const other of DATA) {
-      if (other.id === d.id) continue;
-      const dlat = d.lat - other.lat;
-      const dlng = (d.lng - other.lng) * LAT_CORR;
-      const dist = Math.sqrt(dlat * dlat + dlng * dlng);
-      if (dist < minDist) minDist = dist;
-    }
-    return Math.max(0.006, Math.min(0.012, minDist * 0.50));
-  }
-
   function renderHexLayer() {
     if (hexLayer) { rhMap.removeLayer(hexLayer); hexLayer = null; }
     Object.keys(hexLayerById).forEach(k => delete hexLayerById[k]);
@@ -1029,7 +994,7 @@ import { BENGHAZI_NEIGHBORHOODS } from '../../data/benghazi-hub.js';
       properties: { id: d.id, match: d.market_match, data: d, pop: d.population },
       geometry: {
         type: 'Polygon',
-        coordinates: [ hexPolygon(d.lat, d.lng, adaptiveRadius(d)) ]
+        coordinates: [ hexPolygon(d.lat, d.lng, adaptiveRadius(d, DATA)) ]
       }
     }));
 
@@ -1084,7 +1049,7 @@ import { BENGHAZI_NEIGHBORHOODS } from '../../data/benghazi-hub.js';
   });
 
   document.getElementById('btn-reset-data').addEventListener('click', () => {
-    if (confirm('هل تريد إعادة ضبط جميع البيانات للقيم الافتراضية؟')) resetToDefaults();
+    resetToDefaults();
   });
 
   // ── Grid View للأحياء ──────────────────────────────────────────────────
@@ -1168,7 +1133,7 @@ import { BENGHAZI_NEIGHBORHOODS } from '../../data/benghazi-hub.js';
 
   function segBadge(segments) {
     return (segments || []).map(s => {
-      const cls = s === 'A' ? 'badge-A' : s === 'B' ? 'badge-B' : s === 'D' ? 'badge-D' : 'badge-C';
+      const cls = segmentBadgeClass(s);
       return `<span class="badge ${cls}">${s}</span>`;
     }).join(' ');
   }
@@ -1305,6 +1270,7 @@ import { BENGHAZI_NEIGHBORHOODS } from '../../data/benghazi-hub.js';
   function openEditModal(id) {
     const d = DATA.find(x => x.id === id);
     if (!d) return;
+    if (!canWrite) { showToast('العرض للقراءة — التعديل للمديرين', 'error'); return; }
     document.getElementById('edit-id').value = d.id;
     document.getElementById('edit-neighborhood').value = d.neighborhood;
     document.getElementById('edit-class').value = d.class;
@@ -1350,11 +1316,14 @@ import { BENGHAZI_NEIGHBORHOODS } from '../../data/benghazi-hub.js';
       segments_present: selectedSegs,
     };
     DATA[idx] = updated;
-    saveToStorage(updated);
     updateStats(); renderTable(); rebuildMarkers();
     if (hexActive) renderHexLayer();
     document.getElementById('rh-modal-overlay').classList.remove('open');
-    showToast(`✓ تم حفظ بيانات "${updated.neighborhood}"`, 'success');
+    // العرض يتقدّم فورًا والسحابة تلحق؛ فإن ردّت القاعدة الكتابة قيل ذلك
+    // صراحةً، بدل أن يظنّ المستخدم تعديله محفوظًا وهو في شاشته وحدها.
+    saveHubOverride(updated, profile)
+      .then(() => showToast(`✓ حُفظ «${updated.neighborhood}» — يراه الجميع`, 'success'))
+      .catch(() => showToast('❌ تعذّر الحفظ — قواعد retail_hub_overrides لم تُنشر بعد', 'error'));
   });
 
   // ── Excel Export ──────────────────────────────────────────────────────
@@ -1465,7 +1434,6 @@ import { BENGHAZI_NEIGHBORHOODS } from '../../data/benghazi-hub.js';
   updateStats();
   rebuildMarkers();
   renderTable();
-  loadFromStorage();
 
   // ── زرّ الرجوع ─────────────────────────────────────────────────────────
   /* الخريطة بملء الشاشة تُقفل تمرير الصفحة وتُخفي كل ما حولها، ونافذة تعديل

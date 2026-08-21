@@ -10,9 +10,9 @@
   },
   "counts": {
     "modules": 96,
-    "serviceDomains": 43,
-    "serviceFiles": 413,
-    "collections": 81,
+    "serviceDomains": 44,
+    "serviceFiles": 416,
+    "collections": 82,
     "roles": 18,
     "odooModels": 12,
     "odooGuards": 51,
@@ -622,6 +622,8 @@
       "summary": "",
       "file": "src/pages/dashboard/retail-hub.astro",
       "usesServices": [
+        "auth",
+        "retail",
         "ui"
       ]
     },
@@ -3305,6 +3307,41 @@
       "collections": []
     },
     {
+      "domain": "retail",
+      "dir": "src/services/retail",
+      "files": [
+        "hubModel.js",
+        "hubModel.test.js",
+        "hubService.js"
+      ],
+      "fileCount": 3,
+      "testCount": 1,
+      "exports": [
+        "EDITABLE_FIELDS",
+        "HEX_MAX_RADIUS",
+        "HEX_MIN_RADIUS",
+        "HUB_WRITER_ROLES",
+        "LAT_CORR",
+        "adaptiveRadius",
+        "canEditHub",
+        "clearHubOverrides",
+        "hexPolygon",
+        "hubStats",
+        "incomeLabel",
+        "infraLabel",
+        "listenHubOverrides",
+        "matchColor",
+        "mergeOverrides",
+        "sanitizeOverride",
+        "saveHubOverride",
+        "sectorLabel",
+        "segmentBadgeClass"
+      ],
+      "collections": [
+        "retail_hub_overrides"
+      ]
+    },
+    {
       "domain": "settings",
       "dir": "src/services/settings",
       "files": [
@@ -5672,6 +5709,40 @@
             ],
             "condition": "false",
             "roles": []
+          }
+        ]
+      },
+      {
+        "name": "retail_hub_overrides",
+        "path": "retail_hub_overrides",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager() && request.resource.data.id is int",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "isManager()",
+            "roles": [
+              "isManager"
+            ]
           }
         ]
       },

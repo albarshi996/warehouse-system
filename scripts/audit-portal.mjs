@@ -343,7 +343,7 @@ if (missingTheme.length === 0) {
  */
 section(7, 'المنطق داخل الصفحات — ما لا يبلغه اختبار');
 
-const INLINE_LOGIC_BUDGET = 4603;
+const INLINE_LOGIC_BUDGET = 4576;
 const INLINE_LOGIC_MAX = 40;
 /** الدَّين القائم يوم وُضع الحارس (2026-08-21) — يُشطب اسمٌ كلّما هبط منطقه. */
 const INLINE_LOGIC_DEBT = new Set([
