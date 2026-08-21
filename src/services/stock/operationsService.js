@@ -29,6 +29,7 @@ import {
   limit,
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
+import { generateOperationCode, normalizeOperationCode } from './operationCode.js';
 
 const OPS = 'operations';
 
@@ -41,18 +42,37 @@ function currentUid() {
   return auth?.currentUser?.uid || null;
 }
 
-/** ينشئ عملية جديدة ويُعيد معرّفها. */
+/**
+ * ينشئ عملية جديدة ويُعيد معرّفها **ورمزها القصير**.
+ *
+ * والرمز يُكتب هنا لا في تحديثٍ لاحق عمدًا: قاعدة `operations` تسمح بالإنشاء
+ * لكلّ فاعلٍ مخزنيّ وبالتعديل للمديرين وحدهم. فلو أُجّل الرمز إلى `update`
+ * لَما استطاع أمينُ مخزنٍ يفتح جردًا أن يُنتج رمزًا لفريقه — وهو أوّل من
+ * يحتاجه. أمّا **تغييره** بعد ذلك فللمدير، وهذا موضعه الصحيح.
+ *
+ * والتفرّد يُقاس على المفتوحة وحدها: رمزٌ لجلسةٍ أُقفلت قبل شهرٍ لا يزاحم.
+ */
 export async function createOperation({ type, profile, note = '' }) {
+  let code = '';
+  try {
+    const open = await listOpenOperations(100);
+    code = generateOperationCode(Math.random, { taken: open.map((o) => o.code).filter(Boolean) });
+  } catch {
+    // تعذّرت قراءة المفتوحة (شبكةٌ أو صلاحية) — يُولَّد بلا فحص تفرّدٍ بدل أن
+    // تُمنع العملية كلّها. واحتمال التصادم في ٣٢⁶ يقبل هذه المخاطرة.
+    code = generateOperationCode();
+  }
   const ref = await addDoc(collection(db, OPS), {
     type,
     status: 'open',
+    code,
     note,
     createdByUid: currentUid(),
     createdByName: profile?.name || auth?.currentUser?.email || 'غير معروف',
     createdAt: serverTimestamp(),
     closedAt: null,
   });
-  return ref.id;
+  return { id: ref.id, code };
 }
 
 /**
@@ -126,4 +146,29 @@ export function updateOperationSummary(opId, { itemCount, scannedCount }) {
     { itemCount: itemCount ?? 0, scannedCount: scannedCount ?? 0, updatedAt: serverTimestamp() },
     { merge: true }
   );
+}
+
+/**
+ * كلّ العمليّات التي تحمل هذا الرمز — المفتوحة والمُقفلة معًا.
+ *
+ * الاستعلام بحقلٍ واحد عمدًا (`code` فقط، بلا `status`): Firestore يفهرس
+ * الحقل المفرد تلقائيًّا، أمّا شرطان فيحتاجان فهرسًا مركّبًا يُنشئه المالك
+ * بيده من الكونسول. والحسمُ بين المرشّحات منطقٌ خالصٌ مختبَر في
+ * `resolveOperationByCode` — فلا يُفقد شيء، ولا يُطلب من المالك عمل.
+ */
+export async function findOperationsByCode(code) {
+  const norm = normalizeOperationCode(code);
+  if (!norm) return [];
+  const snap = await getDocs(query(collection(db, OPS), where('code', '==', norm), limit(10)));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * يُغيّر رمز عمليةٍ قائمة — للمديرين وحدهم بحكم قاعدة `operations`.
+ * ومَن دونهم يرتدّ طلبُه بـ`permission-denied`، فتقول الواجهة ذلك صراحةً.
+ */
+export function setOperationCode(opId, code) {
+  const norm = normalizeOperationCode(code);
+  if (norm.length !== 6) throw new Error('رمز العملية ستّة محارف من أبجديّة الرموز.');
+  return updateDoc(doc(db, OPS, opId), { code: norm });
 }

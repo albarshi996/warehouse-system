@@ -25,6 +25,8 @@ import { registerPending } from '../../../services/items/pendingService.js';
 import { buildItemIndexes } from '../../../services/items/uomWiring.js';
 import {
   createOperation,
+  findOperationsByCode,
+  setOperationCode,
   appendScan,
   closeOperation,
   getOperation,
@@ -44,6 +46,12 @@ import {
   parseBulkBarcodes,
 } from '../../../services/stock/scanFlow.js';
 import { fiveStepItemSearch } from '../../../services/partners/itemPartnerCatalog.js';
+import {
+  formatOperationCode,
+  isValidOperationCode,
+  normalizeOperationCode,
+  resolveOperationByCode,
+} from '../../../services/stock/operationCode.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Icon from '../../ui/Icon.jsx';
 import Pager from '../../odoo/Pager.jsx';
@@ -72,6 +80,8 @@ export default function ScanFlow() {
   const [tableTerm, setTableTerm] = useState('');
   const [page, setPage] = useState(0);
   const [joinCode, setJoinCode] = useState('');
+  const [opCode, setOpCode] = useState('');   // الرمز القصير للعملية الجارية
+  const [codeBusy, setCodeBusy] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkText, setBulkText] = useState('');
 
@@ -102,6 +112,7 @@ export default function ScanFlow() {
       .then((op) => {
         if (op && op.status === 'open') {
           setOpId(saved);
+          setOpCode(op.code || '');
           if (op.type) setMode(op.type);
         } else {
           localStorage.removeItem(OP_KEY);
@@ -169,9 +180,10 @@ export default function ScanFlow() {
 
   async function ensureOperation(forMode) {
     if (opId) return opId;
-    const id = await createOperation({ type: forMode, profile: me });
+    const { id, code } = await createOperation({ type: forMode, profile: me });
     localStorage.setItem(OP_KEY, id);
     setOpId(id);
+    setOpCode(code || '');
     return id;
   }
 
@@ -318,22 +330,90 @@ export default function ScanFlow() {
   }
 
   /** الانضمام لعمليةٍ قائمة برمزها — العمل الجماعيّ: دفترٌ واحد لكلّ الأجهزة. */
+  /** يفتح عمليةً بعد التثبّت منها — مسارٌ واحدٌ للرمز القصير وللمعرّف القديم. */
+  function enterOperation(op) {
+    localStorage.setItem(OP_KEY, op.id);
+    setOpId(op.id);
+    setOpCode(op.code || '');
+    if (op.type) setMode(op.type);
+    setJoinCode('');
+    flash('ok', 'انضممت — الجدول أدناه دفتر العملية المشترك.');
+  }
+
   async function joinByCode() {
-    const code = joinCode.trim();
-    if (!code) return;
+    const typed = joinCode.trim();
+    if (!typed) return;
     try {
-      const op = await getOperation(code);
+      // المسار الأوّل: رمزٌ قصيرٌ من ستّة محارف — وهو ما تُملى به اللجان.
+      if (isValidOperationCode(typed)) {
+        const verdict = resolveOperationByCode(await findOperationsByCode(typed));
+        if (verdict.ok) {
+          enterOperation(verdict.operation);
+          return;
+        }
+        if (verdict.reason === 'closed') {
+          flash('err', `الرمز ${formatOperationCode(typed)} صحيح، لكنّ عمليّته أُقفلت.`);
+          return;
+        }
+        if (verdict.reason === 'ambiguous') {
+          flash('err', `عمليّتان مفتوحتان بالرمز ${formatOperationCode(typed)} — راجع المدير قبل المسح.`);
+          return;
+        }
+      }
+      // والثاني: معرّف Firestore الخام — تبقى العمليّات المفتوحة قبل الرموز صالحة.
+      const op = await getOperation(typed);
       if (!op || op.status !== 'open') {
         flash('err', 'لا عملية مفتوحة بهذا الرمز.');
         return;
       }
-      localStorage.setItem(OP_KEY, code);
-      setOpId(code);
-      if (op.type) setMode(op.type);
-      setJoinCode('');
-      flash('ok', 'انضممت — الجدول أدناه دفتر العملية المشترك.');
+      enterOperation({ ...op, id: typed });
     } catch (e) {
       flash('err', e?.message ?? 'تعذّر الانضمام');
+    }
+  }
+
+  /** نسخُ الرمز إلى الحافظة — ليُرسل في مجموعة اللجنة بلا إملاء. */
+  async function copyOpCode() {
+    const shown = formatOperationCode(opCode) || opId;
+    try {
+      await navigator.clipboard.writeText(shown);
+      flash('ok', `نُسخ الرمز ${shown}`);
+    } catch {
+      flash('err', `تعذّر النسخ — الرمز: ${shown}`);
+    }
+  }
+
+  /**
+   * تغيير الرمز — للمديرين بحكم قاعدة `operations`. ومَن دونهم يرتدّ طلبُه
+   * من الخادم، فتُقال العلّة صراحةً بدل رسالة Firebase المبهمة.
+   */
+  async function editOpCode() {
+    if (!opId) return;
+    const raw = window.prompt(
+      'رمز العملية الجديد — ستّة محارف (بلا I و L و O و U):',
+      normalizeOperationCode(opCode)
+    );
+    if (raw === null) return;
+    const next = normalizeOperationCode(raw);
+    if (!isValidOperationCode(next)) {
+      flash('err', 'الرمز ستّة محارف من الأرقام والحروف — بلا I و L و O و U.');
+      return;
+    }
+    setCodeBusy(true);
+    try {
+      const clash = (await findOperationsByCode(next)).filter((o) => o.status === 'open' && o.id !== opId);
+      if (clash.length) {
+        flash('err', `الرمز ${formatOperationCode(next)} مستعمَلٌ في عمليةٍ مفتوحة — اختر غيره.`);
+        return;
+      }
+      await setOperationCode(opId, next);
+      setOpCode(next);
+      flash('ok', `صار رمز العملية ${formatOperationCode(next)}`);
+    } catch (e) {
+      const denied = String(e?.code || e?.message || '').includes('permission-denied');
+      flash('err', denied ? 'تغيير الرمز للمديرين وحدهم.' : e?.message ?? 'تعذّر تغيير الرمز');
+    } finally {
+      setCodeBusy(false);
     }
   }
 
@@ -716,27 +796,56 @@ export default function ScanFlow() {
           )}
           <p style={{ margin: '8px 0 0', fontSize: '10px', color: 'var(--o-main-color-muted)' }}>
             الدفتريّ من ماستر الأصناف · التصحيح والحذف قيودُ فرقٍ تبقى في السجلّ
-            {opId && (
-              <>
-                {' '}· رمز العملية للعمل الجماعيّ:
-                <span style={{ fontFamily: 'monospace', direction: 'ltr', display: 'inline-block', marginInlineStart: '4px' }}>{opId}</span>
-              </>
-            )}
           </p>
         </div>
       ) : null}
+
+      {/*
+        رمز العملية — مفتاح دخول اللجنة.
+        كان يُعرض معرّف Firestore الخام في حاشيةٍ بحجم عشر نقاط: عشرون محرفًا
+        عشوائيًّا حسّاسًا لحالة الأحرف، لا يُملى صوتًا ولا يُكتب على هاتف. فصار
+        رمزًا من ستّة محارف في بطاقةٍ تُرى، يُنسخ بزرّ ويُغيّره المدير.
+      */}
+      {opId && (
+        <div className="o_ds_card o_ds_pad" style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+            رمز العملية — يدخل به أعضاء اللجنة:
+          </span>
+          <strong
+            data-op-code
+            style={{
+              fontFamily: 'monospace', direction: 'ltr', fontSize: '20px',
+              letterSpacing: '2px', padding: '2px 10px', borderRadius: '6px',
+              background: 'var(--o-gray-100, #f1f1f1)',
+            }}
+          >
+            {formatOperationCode(opCode) || '—'}
+          </strong>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={copyOpCode} data-op-copy>
+            نسخ
+          </button>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={editOpCode} disabled={codeBusy} data-op-edit>
+            تغيير الرمز
+          </button>
+          {!opCode && (
+            <span style={{ fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
+              عمليةٌ فُتحت قبل الرموز — اضغط «تغيير الرمز» لتُعطيها واحدًا.
+            </span>
+          )}
+        </div>
+      )}
 
       {/* العمل الجماعيّ: الانضمام لعملية زميلٍ برمزها — يظهر ما دامت لا عملية جارية */}
       {!opId && (
         <div className="o_ds_card o_ds_pad" style={{ marginBottom: '14px' }}>
           <p style={{ margin: '0 0 6px', fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
-            لا عملية جارية — أوّل حفظٍ يفتح عمليةً جديدة. وللعمل الجماعيّ على عمليةِ زميلٍ مفتوحة، ألصق رمزها:
+            لا عملية جارية — أوّل حفظٍ يفتح عمليةً جديدة برمزٍ خاصّ بها. وللانضمام إلى عمليةِ زميلٍ مفتوحة، اكتب رمزها (ستّة محارف مثل H4K-9TM):
           </p>
           <div style={{ display: 'flex', gap: '6px' }}>
             <input
               type="text"
               className="o_input"
-              placeholder="رمز العملية…"
+              placeholder="H4K-9TM"
               aria-label="رمز العملية"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value)}
