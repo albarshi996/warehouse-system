@@ -20,7 +20,7 @@
  * كلّ الحكم في `scanFlow.js` الخالص المُختبَر؛ هذه الشاشة عرضٌ له.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { lookupByBarcode, subscribeItems } from '../../../services/itemService.js';
+import { lookupByBarcode, subscribeItems } from '../../../services/items/itemService.js';
 import { registerPending } from '../../../services/items/pendingService.js';
 import { buildItemIndexes } from '../../../services/items/uomWiring.js';
 import {

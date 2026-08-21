@@ -9,7 +9,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
-import { subscribePartners } from '../../../services/partnerService.js';
+import { subscribePartners } from '../../../services/partners/partnerService.js';
 import {
   listenRepPlans,
   listenJourneyPlans,

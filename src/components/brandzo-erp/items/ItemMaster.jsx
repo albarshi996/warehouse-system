@@ -4,7 +4,7 @@ import {
   archiveItem,
   unarchiveItem,
   UNIT_OPTIONS,
-} from '../../../services/itemService.js';
+} from '../../../services/items/itemService.js';
 import { canImport } from '../../../services/items/itemsImportService.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { totalQty, stockValue, fefoSort, expiryStatus } from '../../../services/balances/balanceKey.js';

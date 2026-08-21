@@ -5,7 +5,7 @@ import {
   updatePartner,
   archivePartner,
   unarchivePartner,
-} from '../../../services/partnerService.js';
+} from '../../../services/partners/partnerService.js';
 import { canImport, analyzePartnersFile, commitPartnersImport } from '../../../services/partners/partnersImportService.js';
 import { setConnectedPartner } from '../../../services/partners/itemPartnerCatalogService.js';
 import EntityAttachments from '../documents/EntityAttachments.jsx';

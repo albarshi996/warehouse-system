@@ -1,6 +1,6 @@
 /** نموذج عرض خالص لخريطة علاقات المستند؛ بلا Firestore أو React أو DOM. */
 
-import { documentScreenUrl, documentTimestamp } from '../documentNavigator.js';
+import { documentScreenUrl, documentTimestamp } from './documentNavigator.js';
 
 /**
  * `carriesQuantity` (SAP-6 · §13 ‹348›): «لا توحي بطاقة مرجعية بأنها رحّلت

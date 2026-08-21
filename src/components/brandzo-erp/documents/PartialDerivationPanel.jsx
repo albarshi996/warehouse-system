@@ -10,7 +10,7 @@
  * أخرى، وعندها تردّ المعاملة بالخطأ الصحيح بدل أن تتجاوز.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { partialDerivationPlan } from '../../../services/documentFlow.js';
+import { partialDerivationPlan } from '../../../services/documents/documentFlow.js';
 import { fetchCombinableSources } from '../../../services/documents/documentsService.js';
 
 /** رقمٌ للعرض: بلا أصفار زائدة، وبالأرقام اللاتينية. */

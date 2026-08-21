@@ -5,7 +5,7 @@
  * واحد مفروض على جميع النماذج. التنفيذ يأتي من علاقات BASE/TARGET السطرية،
  * مع fallback قراءة للمستندات القديمة المرتبطة بـ`links` دون إعادة كتابتها.
  */
-import { stableLineId } from './documents/documentRelations.js';
+import { stableLineId } from './documentRelations.js';
 
 const FULFILLMENT_LINK_TYPES = new Set(['BASE', 'TARGET']);
 

@@ -246,7 +246,7 @@
       "guardTest": "src/services/items/itemIdentity.test.js",
       "touches": [
         "src/services/items/itemIdentity.js",
-        "src/services/itemService.js",
+        "src/services/items/itemService.js",
         "src/services/balances/balanceKey.js",
         "src/components/brandzo-erp/items/ItemCard.jsx",
         "src/components/brandzo-erp/items/ItemMaster.jsx",
@@ -329,7 +329,7 @@
       "touches": [
         "src/services/items/uomWiring.js",
         "src/services/ledger/movements.js",
-        "src/services/itemService.js",
+        "src/services/items/itemService.js",
         "src/components/brandzo-erp/documents/LineItemsTable.jsx",
         "src/components/brandzo-erp/documents/DocumentEngine.jsx",
         "src/components/brandzo-erp/items/ItemForm.jsx",
@@ -366,7 +366,7 @@
       "guardTest": "src/services/documents/states.test.js",
       "touches": [
         "src/services/documents/states.js",
-        "src/services/documentFlow.js",
+        "src/services/documents/documentFlow.js",
         "src/components/brandzo-erp/documents/DocumentEngine.jsx",
         "firestore.rules"
       ],
@@ -540,9 +540,9 @@
         "خمسة أعمدة مشتقّة من documentFlow وdocument_links بلا حقلٍ جديد واحد"
       ],
       "branch": "main",
-      "guardTest": "src/services/documentLineProgress.test.js",
+      "guardTest": "src/services/documents/documentLineProgress.test.js",
       "touches": [
-        "src/services/documentLineProgress.js",
+        "src/services/documents/documentLineProgress.js",
         "src/components/brandzo-erp/documents/ChainBar.jsx"
       ],
       "progress": "**الأرقام القابلة للنقر مبنيّةٌ ومدفوعة** (`cfed7bb`). البيانات كانت مبنيّةً كلّها في documentLineProgress؛ الناقص كان قلبَ التفصيل إلى سؤالٍ معكوس («الرقم ٩٧ — من أين جاء؟») وأضيف بـ`lineOutcomes` في مكانٍ واحد. ولم يُبنَ جدولٌ ثانٍ: أُغني الجدول الثلاثيّ القائم بالحفر وأُضيف عمودا «مرفوض» و«مفتوح» (§3-٤ ‹43›). وما لا مصدر له يبقى نصًّا لا زرًّا.",

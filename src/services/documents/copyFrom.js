@@ -25,7 +25,7 @@
  */
 import { derivationSources, derivationQuantityFields } from './chain.js';
 import { canDeriveFrom, getState } from './states.js';
-import { partialDerivationPlan } from '../documentFlow.js';
+import { partialDerivationPlan } from './documentFlow.js';
 
 /**
  * حقول الطرف في رأس المستند، بترتيب الأولويّة.

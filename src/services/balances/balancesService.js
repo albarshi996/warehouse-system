@@ -34,7 +34,7 @@ import {
 import { db } from '../../config/firebase.js';
 import { importSheet } from '../excel/excelImport.js';
 import { balanceId } from './balanceKey.js';
-import { normalizeSku, normalizeBarcode } from '../itemService.js';
+import { normalizeSku, normalizeBarcode } from '../items/itemService.js';
 import { normalizeLocationCode } from '../locations/locationCode.js';
 
 const COL = 'balances';

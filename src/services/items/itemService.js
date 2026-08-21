@@ -13,11 +13,11 @@ import {
   writeBatch,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db } from '../config/firebase.js';
-import { normalizeBarcode, barcodeLookupVariants } from './excel/excelSchema.js';
-import { normalizeStatus } from './items/itemStatus.js';
-import { shapeImportedItem, normalizeUnit } from './items/itemShape.js';
-import { assertNewItemIdentity, normalizeSubstitutes } from './items/itemIdentity.js';
+import { db } from '../../config/firebase.js';
+import { normalizeBarcode, barcodeLookupVariants } from '../excel/excelSchema.js';
+import { normalizeStatus } from './itemStatus.js';
+import { shapeImportedItem, normalizeUnit } from './itemShape.js';
+import { assertNewItemIdentity, normalizeSubstitutes } from './itemIdentity.js';
 
 export { normalizeStatus, normalizeUnit };
 

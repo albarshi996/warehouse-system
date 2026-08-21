@@ -59,7 +59,7 @@ import {
   flowAllocationId,
   multiSourceAllowed,
   partialDerivationPlan,
-} from '../documentFlow.js';
+} from './documentFlow.js';
 
 const DOCS = 'documents';
 const AUDIT = 'audit';

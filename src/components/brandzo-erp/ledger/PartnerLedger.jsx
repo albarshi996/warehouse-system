@@ -10,7 +10,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import { listenPartnerLedger } from '../../../services/ledger/partnerLedgerService.js';
-import { subscribePartners } from '../../../services/partnerService.js';
+import { subscribePartners } from '../../../services/partners/partnerService.js';
 import { listenSettings } from '../../../services/settings/settingsService.js';
 import { statement, balances, aging, AGING_BUCKETS, PARTIES, invoiceOutstanding } from '../../../services/ledger/partnerLedger.js';
 import { customerExposure } from '../../../services/ledger/creditGuard.js';

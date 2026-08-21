@@ -454,10 +454,10 @@
       "dependsOn": [
         "FNB-101"
       ],
-      "nucleus": "`src/services/warehouseService.js` (سيّد المستودعات) + `src/services/locations/` (سيّد المناطق وأنواع التخزين من خطة المواقع ٢٠/٢٠) — **لا سيّدَ مناطقَ ثانٍ يُبنى**",
+      "nucleus": "`src/services/locations/warehouseService.js` (سيّد المستودعات) + `src/services/locations/` (سيّد المناطق وأنواع التخزين من خطة المواقع ٢٠/٢٠) — **لا سيّدَ مناطقَ ثانٍ يُبنى**",
       "guardTest": "src/services/locations/facilityModel.test.js",
       "touches": [
-        "src/services/warehouseService.js",
+        "src/services/locations/warehouseService.js",
         "src/services/locations/",
         "src/services/org/orgLocations.js"
       ],
@@ -1064,10 +1064,10 @@
         "FNB-503",
         "FNB-304"
       ],
-      "nucleus": "`src/services/documentFlow.js` (محرّك التخصيص الجزئيّ — «كم من هذا الأمر نُفِّذ ولمن») + `schemas/tr.js`·`trn.js`·`trc.js` (سلسلة النقل إلى الفروع، مبنيّةٌ وكاملة)",
+      "nucleus": "`src/services/documents/documentFlow.js` (محرّك التخصيص الجزئيّ — «كم من هذا الأمر نُفِّذ ولمن») + `schemas/tr.js`·`trn.js`·`trc.js` (سلسلة النقل إلى الفروع، مبنيّةٌ وكاملة)",
       "guardTest": "src/services/intelligence/productionAllocation.test.js",
       "touches": [
-        "src/services/documentFlow.js",
+        "src/services/documents/documentFlow.js",
         "src/services/documents/chain.js"
       ],
       "note": "هذه الحلقة **الوحيدة المكتملة** في دورة المطبخ اليوم (التجهيز ← الشحن ← استلام الفروع عبر TR→TRN→TRC بمرور TRANSIT). فالمطلوب وصلُ الإنتاج بها لا بناؤها.",

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
-import { subscribeItems } from '../../../services/itemService.js';
+import { subscribeItems } from '../../../services/items/itemService.js';
 import { listenRecentMoves } from '../../../services/ledger/ledgerService.js';
 import {
   valuationReport,

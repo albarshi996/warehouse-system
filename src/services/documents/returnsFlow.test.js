@@ -24,7 +24,7 @@ import {
 } from './returnsFlow.js';
 import { SYSTEM_LOCATIONS } from '../ledger/locations.js';
 import { derivationLinkType, derivationQuantityFields, derivationTargets } from './chain.js';
-import { documentLineProgress } from '../documentLineProgress.js';
+import { documentLineProgress } from './documentLineProgress.js';
 import { createDocumentRelation } from './documentRelations.js';
 
 const okSource = { id: 'dn-1', type: 'DN', number: 'DN-1', state: 'done' };

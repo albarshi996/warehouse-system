@@ -21,7 +21,7 @@ import {
   increment,
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
-import { upsertItems } from '../itemService.js';
+import { upsertItems } from './itemService.js';
 import {
   pendingId,
   newSighting,

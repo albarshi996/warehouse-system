@@ -3,7 +3,7 @@ import Icon from '../../ui/Icon.jsx';
 import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
 import { listenAllDocuments } from '../../../services/documents/documentsService.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
-import { subscribeItems } from '../../../services/itemService.js';
+import { subscribeItems } from '../../../services/items/itemService.js';
 import {
   ORIGIN,
   computeKpis,

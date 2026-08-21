@@ -19,7 +19,7 @@
  *
  * منطق خالص: بلا Firestore وبلا DOM.
  */
-import { documentLineProgress } from '../documentLineProgress.js';
+import { documentLineProgress } from './documentLineProgress.js';
 import { hasOpenWork, executionStatus, canDeriveFrom, isTerminal, getState } from './states.js';
 import { derivationTargets, derivationQuantityFields } from './chain.js';
 

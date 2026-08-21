@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ITEM_TYPE_OPTIONS, typeOf } from '../../../services/items/itemType.js';
-import { createItem, updateItem, UNIT_OPTIONS } from '../../../services/itemService.js';
+import { createItem, updateItem, UNIT_OPTIONS } from '../../../services/items/itemService.js';
 import { UOM_MASTER, uomLabel, factorProblems } from '../../../services/items/uomModel.js';
 import {
   parseUomFactors,

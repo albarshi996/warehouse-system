@@ -50,7 +50,7 @@
     }
   ],
   "gaps": {
-    "ل‑١": "لا كيان «موقع تخزين» أصلًا — مجموعة `warehouses` مسطّحة `{code,name,manager,status}` بلا هرميّة ولا سعة ولا نوع (src/services/warehouseService.js)",
+    "ل‑١": "لا كيان «موقع تخزين» أصلًا — مجموعة `warehouses` مسطّحة `{code,name,manager,status}` بلا هرميّة ولا سعة ولا نوع (src/services/locations/warehouseService.js)",
     "ل‑٢": "`bin` حقل نصٍّ حرٍّ بلا قائمة ولا تحقّق — في ثلاثة مخطّطات فقط: putaway.js:102 · pick.js:112 · cc.js:131",
     "ل‑٣": "الموقع خارج مفتاح الرصيد — balanceKey.js:28 يبني `ITEM__WAREHOUSE__BATCH`؛ وهي الفجوة ف‑١٨ نفسها في متتبّع مواءمة SAP",
     "ل‑٤": "الصلاحية خارج المفتاح — دفعةٌ واحدة بصلاحيتين تنهار في صفٍّ واحد وتُدهس السابقة بلا إنذار (ledgerService.js:180)",

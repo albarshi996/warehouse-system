@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
-import { subscribeItems } from '../../../services/itemService.js';
+import { subscribeItems } from '../../../services/items/itemService.js';
 import { listenRecentMoves } from '../../../services/ledger/ledgerService.js';
 import { listenOperations } from '../../../services/stock/operationsService.js';
-import { subscribePartners } from '../../../services/partnerService.js';
+import { subscribePartners } from '../../../services/partners/partnerService.js';
 import { listenTrips } from '../../../services/fleet/fleetOpsService.js';
 import { listenWorkOrders } from '../../../services/maintenance/maintenanceService.js';
 import { listenCustodies } from '../../../services/custody/custodyService.js';

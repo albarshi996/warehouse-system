@@ -18,7 +18,7 @@ import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import { listenAllDocuments } from '../../../services/documents/documentsService.js';
 import { GOVERNED_FORMS } from '../../../services/documents/schemas/index.js';
-import { subscribeItems } from '../../../services/itemService.js';
+import { subscribeItems } from '../../../services/items/itemService.js';
 import { listenRecentMoves } from '../../../services/ledger/ledgerService.js';
 import { odoo } from '../../../services/odoo/index.js';
 import { odooStateLabel } from '../../../services/odoo/poMapper.js';

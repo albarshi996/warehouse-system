@@ -12,7 +12,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import { listenOrgLocations, saveOrgLocation, setOrgLocationActive, importOrgLocations, seedOrgLocations, saveBranchProfile } from '../../../services/org/orgLocationsService.js';
-import { subscribePartners } from '../../../services/partnerService.js';
+import { subscribePartners } from '../../../services/partners/partnerService.js';
 import { listenAllDocuments } from '../../../services/documents/documentsService.js';
 import {
   levelOf, indexLocations, locationProblems,

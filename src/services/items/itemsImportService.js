@@ -9,7 +9,7 @@
  * لا كتابة إلا بعد أن يرى المدير ماذا سيتغيّر — الاستيراد يمسّ مرجع البوابة كلّها.
  */
 import { importSheet } from '../excel/excelImport.js';
-import { subscribeItems, upsertItems, normalizeSku, normalizeBarcodes } from '../itemService.js';
+import { subscribeItems, upsertItems, normalizeSku, normalizeBarcodes } from './itemService.js';
 import { DATASETS } from '../excel/excelSchema.js';
 
 /** الأدوار التي تملك الاستيراد (قرار المالك 2026-07-15). تطابق firestore.rules. */

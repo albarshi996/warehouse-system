@@ -48,7 +48,7 @@ const knownPaths = new Set([...internalPaths(), ...ALWAYS_ALLOWED]);
  */
 function masterUnitLabels() {
   const source = readFileSync(
-    fileURLToPath(new URL('../services/itemService.js', import.meta.url)),
+    fileURLToPath(new URL('../services/items/itemService.js', import.meta.url)),
     'utf8',
   );
   const block = source.match(/export const UNIT_OPTIONS = \[([\s\S]*?)\];/);

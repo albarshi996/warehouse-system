@@ -3,7 +3,7 @@
  *
  * This is the single source of truth for how an Odoo record maps onto the
  * `Items_Master` / `Inbound_Log` / `Outbound_Log` shapes used everywhere else
- * in the app (see src/services/itemService.js and logService.js). The Excel
+ * in the app (see src/services/items/itemService.js and logService.js). The Excel
  * gateway reuses the SAME canonical shapes, so import/export, Firestore and
  * Odoo all speak one vocabulary.
  *

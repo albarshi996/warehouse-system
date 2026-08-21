@@ -18,7 +18,7 @@ import { listenRecentMoves } from '../../../services/ledger/ledgerService.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { listenAllDocuments } from '../../../services/documents/documentsService.js';
 import { listenPartnerLedger } from '../../../services/ledger/partnerLedgerService.js';
-import { subscribeItems } from '../../../services/itemService.js';
+import { subscribeItems } from '../../../services/items/itemService.js';
 
 const input = 'bg-surface border border-line rounded-lg px-3 py-2 text-sm text-ink';
 const btn = 'rounded-lg px-3 py-2 text-sm border border-line text-ink bg-chip disabled:opacity-50';

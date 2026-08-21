@@ -18,7 +18,7 @@
  * كلّ الحساب في `itemIdentity.js` الخالص المُختبَر؛ هذا عرضٌ له.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { unitLabel } from '../../../services/itemService.js';
+import { unitLabel } from '../../../services/items/itemService.js';
 import { ITEM_TYPES, typeOf } from '../../../services/items/itemType.js';
 import { uomLabel } from '../../../services/items/uomModel.js';
 import {

@@ -6,7 +6,7 @@
  * لا كتابة إلا بعد أن يرى المدير ماذا سيتغيّر — الاستيراد يمسّ مرجع الشركاء.
  */
 import { importSheet } from '../excel/excelImport.js';
-import { subscribePartners, upsertPartners, normalizePartnerCode } from '../partnerService.js';
+import { subscribePartners, upsertPartners, normalizePartnerCode } from './partnerService.js';
 import { DATASETS } from '../excel/excelSchema.js';
 
 /** الأدوار التي تملك الاستيراد — تطابق firestore.rules (isManager). */

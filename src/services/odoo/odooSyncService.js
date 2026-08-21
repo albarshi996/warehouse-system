@@ -37,7 +37,7 @@ import { mirrorIdFor, resolveSyncAction, duplicateIds, sourceDomain, canPush } f
 import { assertNoMoneyFields } from './moneyFields.js';
 import { getIntegrationPolicy } from '../integration/integrationPolicyService.js';
 import { pushDecision, fieldGate } from '../integration/integrationPolicy.js';
-import { getItem, createItem, updateItem } from '../itemService.js';
+import { getItem, createItem, updateItem } from '../items/itemService.js';
 
 const COL_SYNC = 'odoo_sync';
 const COL_EVENTS = 'odoo_sync_events';

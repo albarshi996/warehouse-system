@@ -15,7 +15,7 @@
  * غيابه — لأنّه يُنفق وقتًا ويُنهي بلا شيء.
  */
 
-import { documentScreenUrl } from '../documentNavigator.js';
+import { documentScreenUrl } from '../documents/documentNavigator.js';
 import { exceptionType } from './exceptions.js';
 
 const s = (v) => String(v ?? '').trim();

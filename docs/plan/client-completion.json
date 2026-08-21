@@ -306,7 +306,7 @@
    "dependsOn": [
     "CC-101"
    ],
-   "guardTest": "src/services/documentLineProgress.test.js",
+   "guardTest": "src/services/documents/documentLineProgress.test.js",
    "evidence": {
     "commit": "2f0e766",
     "checks": [
@@ -336,7 +336,7 @@
    "dependsOn": [
     "CC-001"
    ],
-   "guardTest": "src/services/documentNavigator.test.js",
+   "guardTest": "src/services/documents/documentNavigator.test.js",
    "evidence": {
     "commit": "2fc5bac",
     "checks": [
@@ -437,7 +437,7 @@
    "progress": "المعايير الثلاثة منجزة في الكود. عائق البناء لم يكن قابلًا لإعادة الإنتاج (٩٤ صفحة في ٥٢ ثانية على نسخةٍ نظيفة). المنجَز: الرصيد المفتوح صار الحَكَم بدل قاعدة alreadyDerived · لوحة PartialDerivationPanel لاختيار كمية كلّ سطر · createCombinedInChain مسارٌ واحد لمصدرٍ واحد أو أكثر مع قفل تخصيصٍ لكلّ مصدر داخل المعاملة نفسها · سياسة multiSourceAllowed الصريحة (PR>PO · PO>GRN · PICK>PACK · TR>TRN) مع حارسَي تطابق الرؤوس وجمع أرقام المراجع · fetchCombinableSources تكتشف المرشّحين بمحاولة دمجٍ حقيقيّة لا بتشابه حقول.",
    "nextStep": "لا خطوة تقنيّة متبقّية. يبقى إثباتٌ حيّ ضمن CC-603 (يحتاج حسابات الأدوار CC-602)، واختبار قواعد للقفل ضمن CC-601 (يحتاج تثبيت Java لمحاكي Firebase).",
    "branch": "claude/cc-204-rescue",
-   "guardTest": "src/services/documentFlow.test.js",
+   "guardTest": "src/services/documents/documentFlow.test.js",
    "acceptance": [
     "وجود طفل واحد من النوع نفسه لا يمنع طفلا ثانيًا ما دام هناك رصيد مفتوح",
     "يمنع تجاوز الكمية والتكرار المتزامن ويغلق السطر عند الصفر فقط",

@@ -25,7 +25,7 @@ import { listenAttachments } from '../../../services/documents/attachmentsServic
 import { listenReconciliations } from '../../../services/documents/controlService.js';
 import { emptyDocument, emptyChecklist, missingRequired, isEmptyLine, applyItemToLine } from '../../../services/documents/schemaUtils.js';
 import { mergeParentLink } from '../../../services/documents/chain.js';
-import { lookupByBarcode, getItem, subscribeItems } from '../../../services/itemService.js';
+import { lookupByBarcode, getItem, subscribeItems } from '../../../services/items/itemService.js';
 import { canonicalLineSku } from '../../../services/items/itemIdentity.js';
 import { lookupItemByPartnerCode } from '../../../services/partners/itemPartnerCatalogService.js';
 import {
@@ -45,8 +45,8 @@ import { evaluateHeaderDates } from '../../../services/documents/datingGuard.js'
 import { itemTypeMap, documentItemProblems, OWNERSHIP_DOC_TYPES } from '../../../services/items/itemType.js';
 import { listenPriceLists } from '../../../services/pricing/priceListService.js';
 import { listForCustomer, priceDocument } from '../../../services/pricing/priceListModel.js';
-import { subscribePartners } from '../../../services/partnerService.js';
-import { subscribeWarehouses } from '../../../services/warehouseService.js';
+import { subscribePartners } from '../../../services/partners/partnerService.js';
+import { subscribeWarehouses } from '../../../services/locations/warehouseService.js';
 import { listenLocations } from '../../../services/locations/locationsService.js';
 import { binCellVerdict, locationOptions } from '../../../services/locations/locationsModel.js';
 import { listenVehicles } from '../../../services/vehicles/vehiclesService.js';
@@ -55,7 +55,7 @@ import { indexLocations, dispatchViolations } from '../../../services/org/orgLoc
 import { subscribeReps } from '../../../services/field/repsService.js';
 import { listenPartnerLedger } from '../../../services/ledger/partnerLedgerService.js';
 import { creditCheck } from '../../../services/ledger/creditGuard.js';
-import { documentScreenUrl } from '../../../services/documentNavigator.js';
+import { documentScreenUrl } from '../../../services/documents/documentNavigator.js';
 import { approvalAuditCount } from '../../DocumentNavigatorModel.js';
 import InlineCreateModal from './InlineCreateModal.jsx';
 import LineItemsTable from './LineItemsTable.jsx';

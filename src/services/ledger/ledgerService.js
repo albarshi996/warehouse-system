@@ -35,7 +35,7 @@ import {
 import { db, auth } from '../../config/firebase.js';
 import { buildMoves, balanceDeltas, canPost, findNegativeBalance } from './movements.js';
 import { reservationDeltas } from './reservations.js';
-import { getItem } from '../itemService.js';
+import { getItem } from '../items/itemService.js';
 import { indexLocations } from '../org/orgLocations.js';
 
 /**

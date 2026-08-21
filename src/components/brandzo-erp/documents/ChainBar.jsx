@@ -18,8 +18,8 @@ import { listenBalances } from '../../../services/balances/balancesService.js';
 import { getSchema } from '../../../services/documents/schemas/index.js';
 import DocumentRelationshipMap from './DocumentRelationshipMap.jsx';
 import PartialDerivationPanel from './PartialDerivationPanel.jsx';
-import { partialDerivationPlan } from '../../../services/documentFlow.js';
-import { documentLineProgress, lineOutcomes } from '../../../services/documentLineProgress.js';
+import { partialDerivationPlan } from '../../../services/documents/documentFlow.js';
+import { documentLineProgress, lineOutcomes } from '../../../services/documents/documentLineProgress.js';
 
 /**
  * رقمٌ يُفتح ما وراءه (SAP-9 · يسدّ ف‑٢١).

@@ -5,8 +5,8 @@ import {
   derivationRefField,
   deriveDocument,
   derivationTargets,
-} from './documents/chain.js';
-import { stableLineId } from './documents/documentRelations.js';
+} from './chain.js';
+import { stableLineId } from './documentRelations.js';
 import { legacyLineContributions } from './documentLineProgress.js';
 
 const EXECUTION_LINK_TYPES = new Set(['BASE', 'TARGET']);

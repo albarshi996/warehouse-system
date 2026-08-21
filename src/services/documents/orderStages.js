@@ -37,7 +37,7 @@
  */
 
 import { ROLES } from '../auth/roles.js';
-import { sourceLineQuantity } from '../documentLineProgress.js';
+import { sourceLineQuantity } from './documentLineProgress.js';
 import { taskProgress } from '../labor/laborModel.js';
 import { documentDeadline, remainingFrom, toMillis } from '../tasks/dueTime.js';
 import { RELEASE_STATE } from '../tasks/priority.js';

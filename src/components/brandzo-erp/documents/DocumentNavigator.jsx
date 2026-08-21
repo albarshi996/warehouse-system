@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import Icon from '../../ui/Icon.jsx';
 import { listenDocumentsByTypes } from '../../../services/documents/documentsService.js';
-import { documentNavigator } from '../../../services/documentNavigator.js';
+import { documentNavigator } from '../../../services/documents/documentNavigator.js';
 import {
   documentActionItems,
   navigatorButtons,

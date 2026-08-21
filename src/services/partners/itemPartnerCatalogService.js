@@ -25,8 +25,8 @@ import {
   catalogEntryVerdict,
 } from './itemPartnerCatalog.js';
 import { connectedPartnerPlan, CONNECTED_FIELD } from './connectedPartner.js';
-import { getPartner, partnerCollection, normalizePartnerCode } from '../partnerService.js';
-import { getItem } from '../itemService.js';
+import { getPartner, partnerCollection, normalizePartnerCode } from './partnerService.js';
+import { getItem } from '../items/itemService.js';
 import { normalizeItemCode } from '../items/itemIdentity.js';
 
 /** من يكتب الكتالوج؟ المديران — تطابق `isManager` في firestore.rules. */
