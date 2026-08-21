@@ -933,7 +933,7 @@ ${inviteLink}`)}` : undefined}
       {!opId && (
         <div className="o_ds_card o_ds_pad" style={{ marginBottom: '14px' }}>
           <p style={{ margin: '0 0 6px', fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
-            لا جلسة جارية. **افتح جلسةً** ثمّ أرسل رابطها للجنة — أو انضمّ إلى جلسةِ زميلٍ برمزها.
+            لا جلسة جارية. <strong>افتح جلسةً</strong> ثمّ أرسل رابطها للجنة — أو انضمّ إلى جلسةِ زميلٍ برمزها.
           </p>
           <button
             type="button"
