@@ -1117,9 +1117,21 @@ const base = import.meta.env.BASE_URL.endsWith('/')
       if (!container) return;
       const diagrams = container.querySelectorAll('.mermaid');
       diagrams.forEach((el) => {
-        // Store original content if not already stored
+        // أوّل مرّة: يُحفظ التعريف قبل أن يبتلعه الرسم.
         if (!el.getAttribute('data-original-text')) {
-           el.setAttribute('data-original-text', el.textContent.trim());
+          el.setAttribute('data-original-text', el.textContent.trim());
+        } else {
+          // ★ وفي كلّ مرّةٍ تالية يُعاد النصّ من المحفوظ قبل إعادة التشغيل.
+          //
+          // كان يُمحى `data-processed` وحده ثمّ يُعاد تشغيل mermaid — وهو
+          // يقرأ `textContent`، وقد صار بعد الرسم **ناتجَه هو** (تنسيق الـSVG
+          // لا تعريف المخطّط). فكلّ عودةٍ إلى تبويبٍ تنهار مخطّطاته إلى عقدةٍ
+          // واحدة، بلا خطأٍ في الطرفيّة ولا شكوى (قِيس حيًّا 2026-08-21:
+          // ٩ عقد ← عقدةٌ واحدة، ونصّ العنصر يبدأ بـ`#mermaid-…`).
+          //
+          // والحفظ كان مكتوبًا أصلًا وينتظر من يستعمله — ومسارُ الطباعة
+          // يقرؤه فعلًا، فكان يطبع الناتج بدل المخطّط للسبب نفسه.
+          el.textContent = el.getAttribute('data-original-text');
         }
         if (el.getAttribute('data-processed')) {
           el.removeAttribute('data-processed');
