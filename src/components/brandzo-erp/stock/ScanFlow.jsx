@@ -39,6 +39,8 @@ import {
   SCAN_MODES,
   panelForScan,
   resolveScanUom,
+  scanUomChoices,
+  baseQtyPreview,
   scanEntryVerdict,
   sessionSummary,
   correctionEntry,
@@ -73,6 +75,7 @@ export default function ScanFlow() {
   const [items, setItems] = useState([]);
   const [panel, setPanel] = useState(null); // خانة التعبئة بعد المسح
   const [panelItem, setPanelItem] = useState(null);
+  const [panelUom, setPanelUom] = useState(''); // الوحدة التي اختارها العادّ (CAP-104)
   const [qty, setQty] = useState('');
   const [newName, setNewName] = useState('');
   const [busy, setBusy] = useState(false);
@@ -190,6 +193,9 @@ export default function ScanFlow() {
     [scans, items, lookupMap, withBaseline]
   );
   const progress = useMemo(() => sessionProgress(rows), [rows]);
+  // وحدات هذا الصنف ومعاينة الأساس — الحكم في النواة، والشاشة تعرضه (CAP-104).
+  const uomChoices = useMemo(() => scanUomChoices(panelItem), [panelItem]);
+  const basePreview = useMemo(() => baseQtyPreview(panelItem, qty, panelUom), [panelItem, qty, panelUom]);
   const filteredRows = useMemo(
     () => filterRows(rows, { tab: tableFilter, term: tableTerm }),
     [rows, tableFilter, tableTerm]
@@ -248,8 +254,10 @@ export default function ScanFlow() {
     }
     // الاستبانة بالاسم تفتح الخانة بباركود الصنف الحقيقيّ لا بالنصّ المكتوب.
     const panelCode = item && !/^\d/.test(code) ? (item.barcodes?.[0] || item.sku) : code;
-    setPanel(panelForScan(panelCode, item));
+    const built = panelForScan(panelCode, item);
+    setPanel(built);
     setPanelItem(item);
+    setPanelUom(built.unit); // الوحدة المحلولة من الباركود هي المقترحة
     setQty('');
     setNewName('');
     if (scanInputRef.current) scanInputRef.current.value = '';
@@ -310,6 +318,7 @@ export default function ScanFlow() {
       qty,
       name: newName,
       item: panelItem,
+      uom: panelUom,
     });
     if (!verdict.ok) {
       flash('err', verdict.problems.join(' · '));
@@ -338,6 +347,7 @@ export default function ScanFlow() {
       flash('ok', `حُفظ: ${e.name} × ${num(e.qty)}${unit}${equiv}`);
       setPanel(null);
       setPanelItem(null);
+      setPanelUom('');
       setQty('');
       setNewName('');
       setTimeout(() => scanInputRef.current?.focus(), 50);
@@ -764,20 +774,42 @@ ${inviteLink}`)}` : undefined}
               }}
               style={{ flex: 1, fontSize: '20px', padding: '12px', textAlign: 'center' }}
             />
-            {panel.unitLabel && (
-              <span style={{ fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)', whiteSpace: 'nowrap' }}>
-                {panel.unitLabel}
-              </span>
+            {/* الوحدة تُختار من وحدات الصنف وحدها — لا خانةَ نصّ (CAP-104) */}
+            {uomChoices.length > 1 ? (
+              <select
+                className="o_input"
+                aria-label="وحدة العدّ"
+                value={panelUom}
+                onChange={(e) => setPanelUom(e.target.value)}
+                style={{ fontSize: 'var(--o-font-size-sm)', padding: '10px', maxWidth: '46%' }}
+              >
+                {uomChoices.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            ) : (
+              panel.unitLabel && (
+                <span style={{ fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)', whiteSpace: 'nowrap' }}>
+                  {panel.unitLabel}
+                </span>
+              )
             )}
             <button type="button" className="btn btn-primary" onClick={save} disabled={busy} style={{ padding: '12px 22px', fontSize: '16px' }}>
               {busy ? 'جارٍ…' : 'حفظ'}
             </button>
           </div>
 
+          {/* أثرُ الوحدة يُرى قبل الحفظ لا بعده (CAP-104) */}
+          {basePreview && (
+            <p style={{ margin: '6px 0 0', fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+              {basePreview}
+            </p>
+          )}
+
           <button
             type="button"
             className="btn btn-link btn-sm"
-            onClick={() => { setPanel(null); setPanelItem(null); setTimeout(() => scanInputRef.current?.focus(), 50); }}
+            onClick={() => { setPanel(null); setPanelItem(null); setPanelUom(''); setTimeout(() => scanInputRef.current?.focus(), 50); }}
             style={{ marginTop: '6px', padding: 0 }}
           >
             إلغاء هذا المسح

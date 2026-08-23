@@ -12,6 +12,8 @@ import {
   SCAN_MODES,
   isScanMode,
   panelForScan,
+  scanUomChoices,
+  baseQtyPreview,
   scanEntryVerdict,
   sessionSummary,
   correctionEntry,
@@ -216,6 +218,50 @@ test('★★★ المعامل المجهول لا يُبتلع صفرًا صا�
   // لو قُرئت baseQty=null رقمًا لصارت صفرًا وضاعت الثلاثة بلا أثر.
   assert.equal(rows[0].countedQty, 3);
   assert.equal(rows[0].uncertain, true, 'المجموع بوحدة الأساس غير مضمون — يُعلَن');
+});
+
+/* ═══ CAP-104 — الوحدة تُبدَّل من وحدات الصنف وحدها ═══ */
+
+test('★★★ CAP-104 القائمة وحداتُ الصنف وحدها — لا سيّد الوحدات كلّه', () => {
+  const values = scanUomChoices(BOXED).map((o) => o.value);
+  assert.equal(values.includes('carton'), true);
+  assert.equal(values.includes('piece'), true);
+  assert.equal(values.includes('kg'), false, 'وحدةٌ من عائلةٍ أخرى لا تُعرض');
+  assert.equal(values.includes('pallet'), false, 'وحدةٌ لم يُعرَّف معاملها لا تُعرض');
+  // والتسمية تحمل المعامل، فالاختيار يُقرأ لا يُخمَّن.
+  assert.equal(scanUomChoices(BOXED).find((o) => o.value === 'carton').label, 'كرتون (12 قطعة)');
+});
+
+test('★★ صنفٌ لم يُعرِّف وحداته: وحدة أساسه وحدها — لا خيارَ فلا فرصةَ لخطأ', () => {
+  assert.deepEqual(scanUomChoices(ITEM).map((o) => o.value), ['piece']);
+  assert.deepEqual(scanUomChoices({ sku: 'X', nameAr: 'بلا وحدة' }), []);
+  assert.deepEqual(scanUomChoices(null), []);
+});
+
+test('★★★ وحدةٌ خارج تعريف الصنف تُرفض بالاسم — لا تُقبل صامتة', () => {
+  const bad = scanEntryVerdict({ mode: 'جرد', barcode: '700001', qty: 2, item: BOXED, uom: 'kg' });
+  assert.equal(bad.ok, false);
+  assert.match(bad.problems.join(' '), /ليست من وحدات هذا الصنف/);
+});
+
+test('★★★ تبديل الوحدة يُعيد حساب الكمّيّة الأساس: 2 كرتون ⇒ 24 قطعة', () => {
+  // مُسح باركود القطعة، ثمّ بدّل العادّ الوحدة إلى كرتون.
+  const v = scanEntryVerdict({ mode: 'جرد', barcode: '700001', qty: 2, item: BOXED, uom: 'carton' });
+  assert.equal(v.ok, true);
+  assert.equal(v.entry.uom, 'carton');
+  assert.equal(v.entry.factor, 12);
+  assert.equal(v.entry.baseQty, 24);
+  // والمعاينة تقول ذلك **قبل** الحفظ.
+  assert.equal(baseQtyPreview(BOXED, 2, 'carton'), '= 24 قطعة');
+  // ولا معاينة حين لا معنى لها.
+  assert.equal(baseQtyPreview(BOXED, 2, 'piece'), '');
+  assert.equal(baseQtyPreview(BOXED, 0, 'carton'), '');
+  assert.equal(baseQtyPreview(null, 2, 'carton'), '');
+});
+
+test('★ المعاينة تقول «المعامل غير معرّف» ولا تخترع رقمًا', () => {
+  const noFactor = { sku: 'NF', nameAr: 'صندوق', baseUom: 'piece', uomFactors: { box: 0 } };
+  assert.match(baseQtyPreview(noFactor, 2, 'pallet'), /غير معرّف/);
 });
 
 test('وضعٌ مجهول أو باركود فارغ يُرفضان بالاسم', () => {

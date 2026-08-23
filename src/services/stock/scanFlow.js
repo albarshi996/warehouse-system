@@ -32,7 +32,15 @@
  * الوثيقة الحاكمة: `docs/خطة-طبقة-الالتقاط.md`.
  */
 import { normalizeBarcode } from '../excel/excelSchema.js';
-import { baseUomOf, checkFraction, uomLabel, factorToBase } from '../items/uomModel.js';
+import {
+  baseUomOf,
+  checkFraction,
+  uomLabel,
+  factorToBase,
+  availableUoms,
+  hasUomDefinition,
+  normalizeUom,
+} from '../items/uomModel.js';
 import { unitForBarcode } from '../items/uomWiring.js';
 
 /**
@@ -83,6 +91,44 @@ function unitPanelLabel(item, unit, base) {
   if (factor === null) return `${label} (معاملٌ غير معرّف)`;
   if (factor === 1) return label;
   return `${label} (${factor} ${uomLabel(base)})`;
+}
+
+/**
+ * وحدات هذا الصنف المتاحة للعدّ — قائمةٌ يُنقر منها، لا خانةُ نصّ (CAP-104).
+ *
+ * ═══ ولماذا لا يُعاد استعمال `uomOptionsForLine` كما هي ═══
+ * تلك لسطر مستند، وتُرجع **سيّد الوحدات كلّه** حين لا يعرّف الصنف وحداته —
+ * وهو سلوكٌ صحيحٌ هناك (محرّرٌ يكتب مستندًا) وخطأٌ هنا: عرضُ ثلاث عشرة وحدةً
+ * على واقفٍ أمام رفٍّ دعوةٌ لاختيار الخطأ. فالقاعدة هنا أضيق:
+ *   · صنفٌ عرّف وحداته ⇒ وحداته وحدها (`availableUoms` — النواة نفسها).
+ *   · صنفٌ لم يُعرَّف   ⇒ وحدة أساسه وحدها، فلا خيار أصلًا ولا فرصةَ لخطأ.
+ *
+ * @returns {Array<{value:string,label:string}>} فارغةٌ للمجهول ولمن لا وحدة له
+ */
+export function scanUomChoices(item) {
+  if (!item) return [];
+  const base = baseUomOf(item) || String(item.unit ?? '').trim();
+  const ids = hasUomDefinition(item) ? availableUoms(item) : [];
+  const list = ids.length ? ids : base ? [base] : [];
+  return list.map((id) => ({ value: id, label: unitPanelLabel(item, id, base) }));
+}
+
+/**
+ * معاينة الكمّيّة الأساس **قبل** الحفظ (CAP-104).
+ *
+ * تبديل الوحدة يجب أن يُرى أثرُه فورًا: من يكتب ٢ ويختار «كرتون» يقرأ
+ * «= 24 قطعة» قبل أن يضغط حفظ — فيُكشف الخطأ وهو لا يزال قابلًا للتصحيح.
+ * وتُرجع نصًّا فارغًا حين لا معنى للمعاينة (الوحدة هي الأساس، أو لا كمّيّة).
+ */
+export function baseQtyPreview(item, qty, uom) {
+  const n = Number(qty);
+  if (!item || !Number.isFinite(n) || n <= 0) return '';
+  const base = baseUomOf(item) || String(item.unit ?? '').trim();
+  const u = normalizeUom(uom) || String(uom ?? '').trim();
+  if (!base || !u || u === base) return '';
+  const factor = factorToBase(item, u);
+  if (factor === null) return 'المعامل غير معرّف — لن تُحسب الكمّيّة الأساس';
+  return `= ${round6(n * factor)} ${uomLabel(base)}`;
 }
 
 /**
@@ -140,17 +186,33 @@ export function panelForScan(code, item) {
  * والمعامل المجهول يُختم `null` و`baseQty` معه `null` — لا صفرًا ولا رقمًا
  * مخترعًا. والقيد يُحفظ على كلّ حال، فلا يُوقَف العادّ على الرفّ (ق-٢).
  *
- * @param {{mode:string, barcode:string, qty:*, name?:string, item?:object|null}} input
+ * ═══ والوحدة المبدَّلة تُفحص لا تُصدَّق (CAP-104) ═══
+ * `uom` وسيطٌ اختياريّ: ما اختاره العادّ من قائمة وحدات الصنف. ويُفحص هنا
+ * لا في الواجهة — وحدةٌ خارج تعريف الصنف تُرفض **بالاسم** ولا تُقبل صامتة،
+ * لأنّ القبول الصامت يُنتج معاملًا مخترعًا أو مفقودًا.
+ *
+ * @param {{mode:string, barcode:string, qty:*, name?:string, item?:object|null, uom?:string}} input
  * @returns {{ok:boolean, problems:string[], entry:object|null}}
  */
-export function scanEntryVerdict({ mode, barcode, qty, name = '', item = null }) {
+export function scanEntryVerdict({ mode, barcode, qty, name = '', item = null, uom = '' }) {
   const problems = [];
   if (!isScanMode(mode)) problems.push('اختر الوضع أوّلًا: جرد أو استلام أو صرف.');
 
   const code = normalizeBarcode(barcode);
   if (!code) problems.push('لا باركود — امسح أو اكتبه.');
 
-  const { unit, factor } = resolveScanUom(barcode, item);
+  const resolved = resolveScanUom(barcode, item);
+  let unit = resolved.unit;
+  const chosen = normalizeUom(uom) || String(uom ?? '').trim();
+  if (chosen && item) {
+    const allowed = scanUomChoices(item).map((o) => o.value);
+    if (!allowed.includes(chosen)) {
+      problems.push(`الوحدة «${uomLabel(chosen)}» ليست من وحدات هذا الصنف — اخترها من القائمة.`);
+    } else {
+      unit = chosen;
+    }
+  }
+  const factor = unit === resolved.unit ? resolved.factor : factorToBase(item, unit);
   const n = Number(qty);
   if (!Number.isFinite(n) || n <= 0) {
     problems.push('الكمّيّة مطلوبة — رقمٌ أكبر من صفر.');
