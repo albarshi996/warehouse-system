@@ -7,8 +7,9 @@
  *   · الجدول يُشتقّ من قيود العملية السحابيّة الملحقة-فقط مباشرةً — فجهازان
  *     على العمليّة نفسها يريان جدولًا واحدًا حيًّا بلا منطق توفيقٍ خاصّ
  *     (هذا ما احتاج في الأداة القديمة مئات الأسطر).
- *   · الكمّيّة الدفتريّة من **الماستر السحابيّ** لا من استيراد شيتٍ ثانٍ:
- *     الشيت يُستورد مرّةً في شاشة الأصناف، والجرد يقارن بالماستر.
+ *   · **ولا رصيد ولا فرق في هذه الشاشة** (CAP-101 · تحليل المالك 2026-08-23):
+ *     الالتقاط لا يُحاسِب. والماستر يأتي لاسمٍ وهويّةٍ وقاعدةِ عملٍ لا لرصيد.
+ *     والحساب كلّه لطبقة المطابقة — `docs/خطة-طبقة-الالتقاط.md`.
  *   · التصحيح والحذف **قيودُ فرقٍ** لا تعديل — التاريخ كامل: من عدّ ومن
  *     صحّح وبكم (نفس مبدأ دفتر الحركات).
  *
@@ -100,7 +101,7 @@ export default function ScanFlow() {
     return () => unsub();
   }, []);
 
-  // الماستر السحابيّ — مصدر الاسم والكمّيّة الدفتريّة (لا استيراد شيتٍ ثانٍ).
+  // الماستر السحابيّ — مصدر الاسم والهويّة وقاعدة الجرد. ولا رصيد يُقرأ منه (CAP-101).
   useEffect(() => subscribeItems(setItems, () => setItems([])), []);
   const itemIndexes = useMemo(() => buildItemIndexes(items), [items]);
 
@@ -202,10 +203,8 @@ export default function ScanFlow() {
         { id: 'unscanned', label: `لم يُمسح (${int(progress.remaining)})` }
       );
     }
-    t.push(
-      { id: 'diff', label: `الفروقات (${int(progress.diffs)})` },
-      { id: 'unknown', label: `غير معرّف (${int(progress.unknown)})` }
-    );
+    // لا تبويب «فروقات» (CAP-101): الفرق حكمُ طبقة المطابقة لا شاشة العدّ.
+    t.push({ id: 'unknown', label: `غير معرّف (${int(progress.unknown)})` });
     return t;
   }, [rows.length, progress, withBaseline]);
 
@@ -854,9 +853,8 @@ ${inviteLink}`)}` : undefined}
                   <thead>
                     <tr style={{ textAlign: 'right', color: 'var(--o-main-color-muted)' }}>
                       <th style={{ padding: '4px 6px' }}>الصنف</th>
-                      <th style={{ padding: '4px 6px' }}>الدفتريّ</th>
                       <th style={{ padding: '4px 6px' }}>المعدود</th>
-                      <th style={{ padding: '4px 6px' }}>الفرق</th>
+                      <th style={{ padding: '4px 6px' }}>القيود</th>
                       <th style={{ padding: '4px 6px' }} aria-label="إجراءات" />
                     </tr>
                   </thead>
@@ -881,19 +879,11 @@ ${inviteLink}`)}` : undefined}
                             {r.barcode}
                           </div>
                         </td>
-                        <td style={{ padding: '6px', fontVariantNumeric: 'tabular-nums' }}>{r.bookQty === null ? '—' : num(r.bookQty)}</td>
                         <td style={{ padding: '6px', fontVariantNumeric: 'tabular-nums', fontWeight: 'var(--o-font-weight-bold)' }}>
                           {r.scanned ? num(r.countedQty) : '—'}
                         </td>
-                        <td
-                          style={{
-                            padding: '6px',
-                            fontVariantNumeric: 'tabular-nums',
-                            color: r.diff === null || r.diff === 0 ? 'var(--o-main-color-muted)' : 'var(--o-text-danger, #b3261e)',
-                            fontWeight: r.diff ? 'var(--o-font-weight-bold)' : undefined,
-                          }}
-                        >
-                          {r.diff === null ? '—' : num(r.diff)}
+                        <td style={{ padding: '6px', fontVariantNumeric: 'tabular-nums', color: 'var(--o-main-color-muted)' }}>
+                          {r.scanned ? int(r.scanCount) : '—'}
                         </td>
                         <td style={{ padding: '6px', whiteSpace: 'nowrap' }}>
                           {r.scanned ? (
@@ -924,7 +914,7 @@ ${inviteLink}`)}` : undefined}
             </>
           )}
           <p style={{ margin: '8px 0 0', fontSize: '10px', color: 'var(--o-main-color-muted)' }}>
-            الدفتريّ من ماستر الأصناف · التصحيح والحذف قيودُ فرقٍ تبقى في السجلّ
+            هذه الشاشة تلتقط ما على الرفّ ولا تُحاسِب — لا رصيد ولا فرق · التصحيح والحذف قيودُ فرقٍ تبقى في السجلّ
           </p>
         </div>
       ) : null}

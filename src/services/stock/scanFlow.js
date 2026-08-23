@@ -15,6 +15,21 @@
  * الحفظ قيدُ `appendScan` الملحق-فقط نفسه في `stock_operations` القائمة،
  * والباركود المجهول يدخل `Items_Pending` القائمة بعد تسميته — لا مجموعة
  * جديدة ولا ازدواج مسار.
+ *
+ * ═══ القاعدة الحاكمة (CAP-101 · تحليل المالك 2026-08-23) ═══
+ * **الالتقاط لا يُحاسِب.** هذه الوحدة تسجّل ما رآه الإنسان على الرفّ فقط:
+ * لا تقرأ رصيدًا، ولا تحسب فرقًا، ولا تُسوّي شيئًا.
+ *
+ * وليست هذه أناقةً معماريّة بل تصحيحُ عطبٍ مرصود: صنفٌ رصيده ٤٧٥ كان يظهر
+ * صفرًا — والعلّة أنّ الشاشة **ادّعت معرفة** شيءٍ ليس من اختصاصها. وأخطر
+ * منه أنّ الرقم الدفتريّ أمام العادّ **يوجّه عدّه**: يرى ٤٧٥ فيميل لكتابتها
+ * بدل أن يعدّ، فيُلغى معنى الجرد من أصله.
+ *
+ * فالرصيد والفرق والتسوية كلّها لطبقة المطابقة: كشفٌ مختوم + لقطةُ رصيدٍ
+ * بلحظة القطع ⟵ `locations/reconcile.js` ⟵ محضر `CC` ⟵ تسوية `ADJ`.
+ * وهي مبنيّةٌ ومختبَرة، ومؤجَّلةٌ بقرار المالك (ق-٦) حتّى تجهز الأرصدة.
+ *
+ * الوثيقة الحاكمة: `docs/خطة-طبقة-الالتقاط.md`.
  */
 import { normalizeBarcode } from '../excel/excelSchema.js';
 import { baseUomOf, checkFraction, uomLabel } from '../items/uomModel.js';
@@ -124,49 +139,13 @@ export function sessionSummary(scans, knownBarcodes = new Set()) {
 
 const round6 = (n) => Math.round((Number(n) || 0) * 1e6) / 1e6;
 
-/**
- * جدول الجلسة: القيود مجمَّعةً صنفًا صنفًا — **الدفتر الملحق-فقط هو
- * المصدر** (مجموع قيود الباركود = كمّيّته)، فجهازان يمسحان العمليةَ نفسها
- * يريان جدولًا واحدًا بلا منطق توفيقٍ خاصّ.
- *
- * والكمّيّة الدفتريّة من **الماستر السحابيّ** (`item.balance`) لا من
- * استيراد شيتٍ ثانٍ — الشيت يُستورد مرّةً في شاشة الأصناف، والجرد يقارن
- * بالماستر: مصدرُ حقيقةٍ واحد (منطق التنفيذ الذي طلبه المالك).
- *
- * @param {Array} scans قيود العملية بترتيبها الزمنيّ
- * @param {Map<string,object>} [byBarcode] فهرس الماستر: باركود ⇐ صنف
- * @returns {Array<{barcode,name,sku,known,bookQty,countedQty,diff,scanCount}>}
+/*
+ * ملاحظة ترحيل (CAP-101): كانت هنا `aggregateSession` — نسخةٌ أقدم من
+ * `buildSessionRows` تجمّع على الباركود لا على هويّة الصنف، وتحمل `bookQty`
+ * و`diff`. لم يستدعها أحدٌ خارج اختبارها منذ أن حلّت محلَّها، وكان بقاؤها
+ * يُبقي بابَ الرصيد مفتوحًا في النواة. فحُذفت — نواةٌ واحدة تكبر، لا نواتان
+ * تتباعدان. وتاريخها في git.
  */
-export function aggregateSession(scans, byBarcode = new Map()) {
-  const rows = new Map();
-  for (const s of scans || []) {
-    const code = normalizeBarcode(s?.barcode);
-    if (!code) continue;
-    let row = rows.get(code);
-    if (!row) {
-      const item = byBarcode.get(code) || null;
-      row = {
-        barcode: code,
-        name: item ? [item.nameAr, item.shade].filter(Boolean).join(' — ') : String(s?.name ?? '').trim(),
-        sku: item ? String(item.sku ?? '').trim() : '',
-        known: Boolean(item),
-        bookQty: item ? Number(item.balance) || 0 : null,
-        countedQty: 0,
-        scanCount: 0,
-      };
-      rows.set(code, row);
-    }
-    // اسمٌ سمّاه الموظّف لاحقًا لمجهولٍ مرّ بلا اسم — يُلتقط لا يُهمل.
-    if (!row.name && s?.name) row.name = String(s.name).trim();
-    row.countedQty = round6(row.countedQty + (Number(s?.qty) || 0));
-    row.scanCount += 1;
-  }
-  const out = [...rows.values()];
-  for (const row of out) {
-    row.diff = row.bookQty === null ? null : round6(row.countedQty - row.bookQty);
-  }
-  return out;
-}
 
 /**
  * تصحيح كمّيّة صفٍّ في دفترٍ ملحق-فقط: **قيدُ فرقٍ لا تعديل** — نفس مبدأ
@@ -193,15 +172,22 @@ export function correctionEntry(row, newQty, mode) {
   };
 }
 
-/** صفوف التصدير — أعمدةٌ عربيّة ثابتة تفتح في إكسل كما هي. */
+/**
+ * صفوف التصدير — أعمدةٌ عربيّة ثابتة تفتح في إكسل كما هي.
+ *
+ * **ما التُقط فقط** (CAP-101): لا عمود رصيدٍ ولا عمود فرق. والإكسل هنا
+ * **مخرَجٌ لا مصدر حقيقة** — ومصدرها الكشف المختوم حين يُبنى (CAP-404).
+ *
+ * والصفّ الذي لم يُمسح يُصدَّر «—» لا صفرًا: صفرٌ في خانة العدّ يقول «عددتُ
+ * ولم أجد»، وهو غير «لم أصل إليه بعد». خلطهما هو ف‑٩ بعينها.
+ */
 export function exportRows(rows) {
   return (rows || []).map((r) => ({
     'الباركود': r.barcode,
     'كود الصنف': r.sku || '—',
     'اسم الصنف': r.name || '—',
-    'الكمية الدفترية': r.bookQty ?? '—',
-    'المعدود/المنفَّذ': r.countedQty,
-    'الفرق': r.diff ?? '—',
+    'المعدود/المنفَّذ': r.scanned === false ? '—' : r.countedQty,
+    'عدد القيود': r.scanCount ?? 0,
     'الحالة': r.known ? (r.scanned === false ? 'لم يُمسح' : 'معروف') : 'غير معرّف — بانتظار الاعتماد',
   }));
 }
@@ -212,13 +198,18 @@ export function exportRows(rows) {
  * وغير الممسوح — فجوهر الجرد معرفةُ **ما لم يُعدّ بعد**، لا ما عُدّ وحده.
  *
  * المفتاح: الصنف المعروف يُجمع على هويّته (الكود) مهما تعدّدت باركوداته،
- * والمجهول على باركوده. والدفتريّة من `item.balance` (الماستر) — لا استيراد
- * شيتٍ ثانٍ.
+ * والمجهول على باركوده.
+ *
+ * ═══ ولا رصيد هنا (CAP-101) ═══
+ * الماستر يأتي لـ**اسمٍ وهويّةٍ وقاعدةِ عملٍ** لا لرصيد: `item.balance` لا
+ * يُقرأ إطلاقًا، والصفّ لا يحمل `bookQty` ولا `diff`. و«لم يُمسح» يبقى —
+ * لأنّه **عملٌ متبقٍّ** لا فرق، وهو جوهر الجرد: معرفةُ ما لم يُعدّ بعد.
  *
  * @param {Array} scans قيود العملية
  * @param {Array} items أصناف الماستر (لقاعدة الجرد وأسماء الممسوح)
  * @param {Map<string,object>} byBarcode فهرس باركود ⇐ صنف
  * @param {{withBaseline?:boolean}} [opts] الجرد يعرض القاعدة كلّها؛ الاستلام/الصرف لا
+ * @returns {Array<{barcode,sku,name,known,countedQty,scanned,scanCount}>}
  */
 export function buildSessionRows(scans, items, byBarcode, { withBaseline = false } = {}) {
   const rows = new Map();
@@ -229,7 +220,6 @@ export function buildSessionRows(scans, items, byBarcode, { withBaseline = false
     sku: String(item.sku ?? '').trim(),
     name: [item.nameAr, item.shade].filter(Boolean).join(' — '),
     known: true,
-    bookQty: Number(item.balance) || 0,
     countedQty: 0,
     scanned: false,
     scanCount: 0,
@@ -251,7 +241,7 @@ export function buildSessionRows(scans, items, byBarcode, { withBaseline = false
     if (!row) {
       row = item
         ? rowForItem(item)
-        : { barcode: code, sku: '', name: String(s?.name ?? '').trim(), known: false, bookQty: null, countedQty: 0, scanned: false, scanCount: 0 };
+        : { barcode: code, sku: '', name: String(s?.name ?? '').trim(), known: false, countedQty: 0, scanned: false, scanCount: 0 };
       rows.set(key, row);
     }
     if (!row.name && s?.name) row.name = String(s.name).trim();
@@ -260,37 +250,34 @@ export function buildSessionRows(scans, items, byBarcode, { withBaseline = false
     row.scanned = true;
   }
 
-  const out = [...rows.values()];
-  for (const row of out) {
-    // الفرق لممسوحٍ معروف الدفتريّة وحده — «لم يُمسح» ليس فرقًا بل عملًا متبقّيًا.
-    row.diff = !row.scanned || row.bookQty === null ? null : round6(row.countedQty - row.bookQty);
-  }
-  return out;
+  return [...rows.values()];
 }
 
-/** عدّادات الإنجاز — نفس أرقام رأس الأداة القديمة: إجماليّ ومسحٌ ومتبقٍّ وفروقاتٌ ونسبة. */
+/**
+ * عدّادات الإنجاز: إجماليّ ومسحٌ ومتبقٍّ ومجهولٌ ونسبة.
+ *
+ * **ولا عدّاد فروقات** (CAP-101): الفرق حكمُ طبقة المطابقة. والمتبقّي هنا
+ * يقيس **العمل** لا الانحراف.
+ */
 export function sessionProgress(rows) {
   const list = rows || [];
   const baseline = list.filter((r) => r.known);
   const scanned = baseline.filter((r) => r.scanned);
-  const diffs = list.filter((r) => r.diff !== null && r.diff !== 0);
   const unknown = list.filter((r) => !r.known);
   return {
     total: baseline.length,
     scanned: scanned.length,
     remaining: baseline.length - scanned.length,
-    diffs: diffs.length,
     unknown: unknown.length,
     pct: baseline.length ? Math.round((scanned.length / baseline.length) * 100) : 0,
   };
 }
 
-/** ترشيح الجدول: تبويبٌ (all/scanned/unscanned/diff/unknown) + بحثٌ حرّ. */
+/** ترشيح الجدول: تبويبٌ (all/scanned/unscanned/unknown) + بحثٌ حرّ. */
 export function filterRows(rows, { tab = 'all', term = '' } = {}) {
   let list = rows || [];
   if (tab === 'scanned') list = list.filter((r) => r.scanned);
   else if (tab === 'unscanned') list = list.filter((r) => r.known && !r.scanned);
-  else if (tab === 'diff') list = list.filter((r) => r.diff !== null && r.diff !== 0);
   else if (tab === 'unknown') list = list.filter((r) => !r.known);
   const needle = String(term ?? '').trim().toLowerCase();
   if (needle) {

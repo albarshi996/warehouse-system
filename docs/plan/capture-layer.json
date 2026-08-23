@@ -5,7 +5,7 @@
   "command": "npm run plan:capture",
   "track": "الالتقاط أوّلًا · المطابقة مؤجَّلة بقرار المالك (ق-٦ «تأجيل» 2026-08-23) · ولا مهمّة تحجب العادّ على الرفّ",
   "source": "تحليل المالك 2026-08-23 (نصّ «الالتقاط لا يُحاسِب») + جرد الكود الفعليّ في الجلسة نفسها + ستّة قرارات مالك محسومة",
-  "lastUpdated": "2026-08-23 (CAP-000 — تثبيت الخطة والمتتبّع السابع)",
+  "lastUpdated": "2026-08-23 (CAP-000 مغلقة · CAP-101 مفتوحة)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "0cbfa2c",
@@ -13,12 +13,36 @@
     "note": "١٦٨ ملفّ اختبار على القرص عند بدء التنفيذ — قيست بالبحث لا بوثيقة. والقاعدة الحاكمة: النواة تكبر ولا يُبنى بجانبها؛ كلّ مهمّة تسمّي نواتها المستدعاة صراحةً في حقل nucleus."
   },
   "milestones": [
-    { "id": "م٠", "title": "الحوكمة — تثبيت الخطة والمتتبّع", "estimate": "جلسة واحدة" },
-    { "id": "م١", "title": "الوحدة والمعامل — والشاشة تتجرّد من الحساب", "estimate": "3–4 جلسات" },
-    { "id": "م٢", "title": "نطاق الجلسة — التغطية صفةٌ لا بوّابة", "estimate": "2 جلسات" },
-    { "id": "م٣", "title": "الأوفلاين والحتميّة", "estimate": "2 جلسات" },
-    { "id": "م٤", "title": "دورة الحياة والختم", "estimate": "3 جلسات" },
-    { "id": "م٥", "title": "المطابقة — مؤجَّلة بقرار المالك ق-٦", "estimate": "تُستأنف حين تجهز الأرصدة" }
+    {
+      "id": "م٠",
+      "title": "الحوكمة — تثبيت الخطة والمتتبّع",
+      "estimate": "جلسة واحدة"
+    },
+    {
+      "id": "م١",
+      "title": "الوحدة والمعامل — والشاشة تتجرّد من الحساب",
+      "estimate": "3–4 جلسات"
+    },
+    {
+      "id": "م٢",
+      "title": "نطاق الجلسة — التغطية صفةٌ لا بوّابة",
+      "estimate": "2 جلسات"
+    },
+    {
+      "id": "م٣",
+      "title": "الأوفلاين والحتميّة",
+      "estimate": "2 جلسات"
+    },
+    {
+      "id": "م٤",
+      "title": "دورة الحياة والختم",
+      "estimate": "3 جلسات"
+    },
+    {
+      "id": "م٥",
+      "title": "المطابقة — مؤجَّلة بقرار المالك ق-٦",
+      "estimate": "تُستأنف حين تجهز الأرصدة"
+    }
   ],
   "gaps": {
     "ج‑١": "الدفتريّ والفرق داخل شاشة العدّ — عمودان في ScanFlow.jsx:857-896 وتبويب diff في filterRows وعمودان في exportRows؛ رقمٌ غير موثوق أمام العادّ يوجّه عدّه",
@@ -54,7 +78,7 @@
       "title": "تثبيت الخطة الحاكمة والمتتبّع السابع",
       "milestone": "م٠",
       "owner": "Claude",
-      "state": "doing",
+      "state": "done",
       "gaps": [],
       "dependsOn": [],
       "branch": "claude/warehouse-inventory-architecture-d68500",
@@ -65,24 +89,31 @@
         "package.json"
       ],
       "progress": "جُرد الكود الفعليّ: عشر فجوات كلٌّ منها بمسار ملفٍّ وسطرٍ حقيقيّ. وأهمّ ما كشفه الجرد أنّ طبقة المطابقة مبنيّةٌ ومختبَرةٌ وبلا مستدعٍ واحد (reconcile.js ثمّ toCountDraft ثمّ cc.js ثمّ adjustmentVerdict). وحُسمت ستّة قرارات مالك.",
-      "nextStep": "كتابة الوثيقة الحاكمة وتسجيل السكربت في package.json، ثمّ تشغيل npm run plan:capture وإغلاق المهمّة بكوميت، ثمّ فتح CAP-101.",
+      "nextStep": "أُغلقت في 5eae773. التالي: CAP-101 — تجريد شاشة العدّ من الدفتريّ والفرق.",
       "acceptance": [
         "كلّ فجوة من ج‑١ إلى ج‑١٠ مربوطة بمسار ملفٍّ وسطرٍ حقيقيّ لا بوصفٍ عامّ",
         "npm run plan:capture يقبل المتتبّع ويولّد بطاقة الاستئناف بلا خرق",
         "القرارات الستّة مثبَّتة نصًّا في الوثيقة الحاكمة بصيغتها التي أقرّها المالك",
         "مهامّ المطابقة مسجَّلة deferred لا محذوفة — «تأجيل» لا «إلغاء»",
         "لا سطر كود إنتاجيّ في هذه المهمّة — وثائق وخطط فقط"
-      ]
+      ],
+      "evidence": {
+        "commit": "5eae773",
+        "closedOn": "2026-08-23"
+      }
     },
-
     {
       "id": "CAP-101",
       "title": "شاشة العدّ تتجرّد من الدفتريّ والفرق",
       "milestone": "م١",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["ج‑١"],
-      "dependsOn": ["CAP-000"],
+      "state": "doing",
+      "gaps": [
+        "ج‑١"
+      ],
+      "dependsOn": [
+        "CAP-000"
+      ],
       "nucleus": "src/services/stock/scanFlow.js",
       "guardTest": "src/services/stock/scanFlow.test.js",
       "touches": [
@@ -97,7 +128,10 @@
         "قاعدة الجرد من الماستر تبقى: «ما لم يُعدّ بعد» عملٌ متبقٍّ لا فرق، وهو جوهر الجرد",
         "exportRows يصدّر ما التُقط فقط — ولا يدّعي رصيدًا",
         "اختبارٌ يثبت أنّ صفًّا لصنفٍ برصيدٍ ٤٧٥ لا يحمل أيّ حقل رصيدٍ ولا فرق"
-      ]
+      ],
+      "branch": "claude/warehouse-inventory-architecture-d68500",
+      "progress": "لم يبدأ التنفيذ بعد — فُتحت المهمّة مباشرةً بعد إغلاق CAP-000.",
+      "nextStep": "قراءة جدول الجلسة في ScanFlow.jsx (الأسطر 840-930) وbuildSessionRows/filterRows/exportRows في scanFlow.js، ثمّ نزع bookQty وdiff من النواة أوّلًا وإسقاط عموديهما وتبويب الفروقات من الشاشة، ثمّ اختبارٌ يثبت أنّ الصفّ لا يحمل رصيدًا."
     },
     {
       "id": "CAP-102",
@@ -105,11 +139,17 @@
       "milestone": "م١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٣"],
-      "dependsOn": ["CAP-000"],
+      "gaps": [
+        "ج‑٣"
+      ],
+      "dependsOn": [
+        "CAP-000"
+      ],
       "nucleus": "src/services/items/uomWiring.js — unitForBarcode وbuildItemIndexes",
       "guardTest": "src/services/stock/scanFlow.test.js",
-      "touches": ["src/services/stock/scanFlow.js"],
+      "touches": [
+        "src/services/stock/scanFlow.js"
+      ],
       "note": "وصلٌ لا بناء: المحرّك كامل ومختبَر، وpanelForScan لا يستدعيه. باركود الكرتون وباركود القطعة للصنف نفسه يجب أن يفترقا هنا لا في رأس الموظّف.",
       "acceptance": [
         "panelForScan يستدعي unitForBarcode ويُرجع الوحدة والمعامل المحلولَين من الباركود الممسوح",
@@ -124,8 +164,12 @@
       "milestone": "م١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٢"],
-      "dependsOn": ["CAP-102"],
+      "gaps": [
+        "ج‑٢"
+      ],
+      "dependsOn": [
+        "CAP-102"
+      ],
       "nucleus": "src/services/stock/operationsService.js — appendScan · وscanFlow.js — scanEntryVerdict",
       "guardTest": "src/services/stock/scanFlow.test.js",
       "touches": [
@@ -148,11 +192,18 @@
       "milestone": "م١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٢"],
-      "dependsOn": ["CAP-103"],
+      "gaps": [
+        "ج‑٢"
+      ],
+      "dependsOn": [
+        "CAP-103"
+      ],
       "nucleus": "src/services/items/uomWiring.js — uomOptionsForLine",
       "guardTest": "src/services/stock/scanFlow.test.js",
-      "touches": ["src/components/brandzo-erp/stock/ScanFlow.jsx", "src/services/stock/scanFlow.js"],
+      "touches": [
+        "src/components/brandzo-erp/stock/ScanFlow.jsx",
+        "src/services/stock/scanFlow.js"
+      ],
       "acceptance": [
         "خانة التعبئة تعرض قائمة وحدات الصنف المعرَّفة وحدها — والعادّ يبدّلها بنقرة",
         "وحدةٌ خارج تعريف الصنف تُرفض بالاسم لا تُقبل صامتة",
@@ -165,11 +216,18 @@
       "milestone": "م١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٢"],
-      "dependsOn": ["CAP-103"],
+      "gaps": [
+        "ج‑٢"
+      ],
+      "dependsOn": [
+        "CAP-103"
+      ],
       "nucleus": "src/services/stock/scanFlow.js — scanEntryVerdict",
       "guardTest": "src/services/stock/scanFlow.test.js",
-      "touches": ["src/services/stock/scanFlow.js", "src/components/brandzo-erp/stock/ScanFlow.jsx"],
+      "touches": [
+        "src/services/stock/scanFlow.js",
+        "src/components/brandzo-erp/stock/ScanFlow.jsx"
+      ],
       "note": "قرار المالك ق-٢ حرفيًّا: «يسمح بالقراءة في الجرد، ووجود رصيد ليس إلزاميًّا». فالحارس وسمٌ لا بوّابة — لا يُوقف أحدًا على الرفّ.",
       "acceptance": [
         "الصنف بلا وحدة أساس يُعدّ ويُحفظ ويُوسم بأنّ وحدته ناقصة",
@@ -184,11 +242,18 @@
       "milestone": "م١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٣"],
-      "dependsOn": ["CAP-102"],
+      "gaps": [
+        "ج‑٣"
+      ],
+      "dependsOn": [
+        "CAP-102"
+      ],
       "nucleus": "src/services/items/uomWiring.js — buildItemIndexes",
       "guardTest": "src/services/stock/scanFlow.test.js",
-      "touches": ["src/services/stock/scanFlow.js", "src/components/brandzo-erp/stock/ScanFlow.jsx"],
+      "touches": [
+        "src/services/stock/scanFlow.js",
+        "src/components/brandzo-erp/stock/ScanFlow.jsx"
+      ],
       "note": "«الباركود ليس مفتاحًا» — نصّ المالك. والأكواد اليدويّة من نوع ip32660 تتشابه مع الباركودات فتزيد الاحتمال.",
       "acceptance": [
         "التصادم يُكشف وقت الحلّ ويُعرض للعادّ خيارًا لا يُحسم عنه",
@@ -202,11 +267,17 @@
       "milestone": "م١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٢"],
-      "dependsOn": ["CAP-105"],
+      "gaps": [
+        "ج‑٢"
+      ],
+      "dependsOn": [
+        "CAP-105"
+      ],
       "nucleus": "src/services/items/uomWiring.js — itemUomProblems",
       "guardTest": "src/services/items/uomWiring.test.js",
-      "touches": ["src/components/brandzo-erp/items/ItemCard.jsx"],
+      "touches": [
+        "src/components/brandzo-erp/items/ItemCard.jsx"
+      ],
       "note": "١٠٤٠ صنفًا وحدتها «—». القرار ق-٢ لا يمنع العدّ، لكنّه لا يُلغي الحاجة إلى معرفة حجم الدَّين.",
       "acceptance": [
         "الشاشة تقول بالرقم: كم صنفًا بلا وحدة أساس وكم بلا معامل",
@@ -214,18 +285,24 @@
         "لا يمنع التقرير شيئًا — يقيس فقط"
       ]
     },
-
     {
       "id": "CAP-201",
       "title": "رأس العملية يحمل مستودعًا ومنطقة — مطلوبَين لا ملزمَين (ق-٣)",
       "milestone": "م٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٤"],
-      "dependsOn": ["CAP-101"],
+      "gaps": [
+        "ج‑٤"
+      ],
+      "dependsOn": [
+        "CAP-101"
+      ],
       "nucleus": "src/services/stock/operationsService.js — createOperation",
       "guardTest": "src/services/stock/operationScope.test.js",
-      "touches": ["src/services/stock/operationsService.js", "firestore.rules"],
+      "touches": [
+        "src/services/stock/operationsService.js",
+        "firestore.rules"
+      ],
       "note": "قيد المالك الحاكم في ق-٣: «لا يقطع الفريق عند الجرد». فالنطاق يُطلب ويُقترح ولا يُلزم.",
       "acceptance": [
         "createOperation يقبل المستودع والمنطقة ويكتبهما على الرأس",
@@ -239,11 +316,17 @@
       "milestone": "م٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٤"],
-      "dependsOn": ["CAP-201"],
+      "gaps": [
+        "ج‑٤"
+      ],
+      "dependsOn": [
+        "CAP-201"
+      ],
       "nucleus": "src/services/locations/locationsModel.js — buildLocationTree وlocationOptions",
       "guardTest": "src/services/stock/operationScope.test.js",
-      "touches": ["src/components/brandzo-erp/stock/ScanFlow.jsx"],
+      "touches": [
+        "src/components/brandzo-erp/stock/ScanFlow.jsx"
+      ],
       "note": "منظومة المواقع اكتملت ٢٠/٢٠ ولا تصل إلى شاشة الجرد. وصلٌ لا بناء.",
       "acceptance": [
         "المستودع والمنطقة يُختاران من الشجرة الحقيقيّة لا يُكتبان",
@@ -257,11 +340,19 @@
       "milestone": "م٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٤", "ج‑٨"],
-      "dependsOn": ["CAP-202"],
+      "gaps": [
+        "ج‑٤",
+        "ج‑٨"
+      ],
+      "dependsOn": [
+        "CAP-202"
+      ],
       "nucleus": "src/services/stock/operationsService.js — listOpenOperations",
       "guardTest": "src/services/stock/operationScope.test.js",
-      "touches": ["src/services/stock/operationsService.js", "src/components/brandzo-erp/stock/ScanFlow.jsx"],
+      "touches": [
+        "src/services/stock/operationsService.js",
+        "src/components/brandzo-erp/stock/ScanFlow.jsx"
+      ],
       "note": "يمنع أن يعدّ شخصان الرفّ نفسه في جلستين منفصلتين فيتضاعف — وهو غير منع العمل الجماعيّ على الجلسة الواحدة، فذاك مقصود ومبنيّ.",
       "acceptance": [
         "فتح جلسةٍ ثانية لنطاقٍ عليه جلسةٌ مفتوحة يُعرض عليه الانضمام لا الفتح",
@@ -275,11 +366,18 @@
       "milestone": "م٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٤"],
-      "dependsOn": ["CAP-203"],
+      "gaps": [
+        "ج‑٤"
+      ],
+      "dependsOn": [
+        "CAP-203"
+      ],
       "nucleus": "src/services/stock/scanFlow.js — sessionProgress",
       "guardTest": "src/services/stock/operationScope.test.js",
-      "touches": ["src/services/stock/scanFlow.js", "src/components/brandzo-erp/stock/ScanFlow.jsx"],
+      "touches": [
+        "src/services/stock/scanFlow.js",
+        "src/components/brandzo-erp/stock/ScanFlow.jsx"
+      ],
       "note": "الاكتمال يُقاس على النطاق لا على الرفّ (ق-٤ أسقط الرفّ عن القيد). والكشف بلا نطاق يُعلن صراحةً أنّه لا يُثبت تغطية.",
       "acceptance": [
         "عدّاد الاكتمال يُقاس على أصناف النطاق المُعلن لا على الماستر كلّه",
@@ -287,18 +385,23 @@
         "الوسم يُقرأ في الكشف المختوم لاحقًا فلا يُدَّعى اكتمالٌ لم يحدث"
       ]
     },
-
     {
       "id": "CAP-301",
       "title": "هويّة جهازٍ ثابتة محلّيًّا وعدّاد تسلسل",
       "milestone": "م٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٧"],
-      "dependsOn": ["CAP-103"],
+      "gaps": [
+        "ج‑٧"
+      ],
+      "dependsOn": [
+        "CAP-103"
+      ],
       "nucleus": "src/services/stock/operationsService.js",
       "guardTest": "src/services/stock/scanIdentity.test.js",
-      "touches": ["src/services/stock/scanIdentity.js"],
+      "touches": [
+        "src/services/stock/scanIdentity.js"
+      ],
       "acceptance": [
         "الجهاز يحمل معرّفًا ثابتًا يبقى عبر إغلاق المتصفّح",
         "لكلّ جلسةٍ على الجهاز عدّاد تسلسلٍ لا يرتدّ",
@@ -311,11 +414,18 @@
       "milestone": "م٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٧"],
-      "dependsOn": ["CAP-301"],
+      "gaps": [
+        "ج‑٧"
+      ],
+      "dependsOn": [
+        "CAP-301"
+      ],
       "nucleus": "src/services/stock/operationsService.js — appendScan",
       "guardTest": "src/services/stock/scanIdentity.test.js",
-      "touches": ["src/services/stock/operationsService.js", "firestore.rules"],
+      "touches": [
+        "src/services/stock/operationsService.js",
+        "firestore.rules"
+      ],
       "note": "«كل مسح له معرّف حتمي (جلسة+جهاز+تسلسل) حتى لا تتضاعف الكميات عند إعادة الإرسال» — نصّ المالك.",
       "acceptance": [
         "المعرّف يُبنى من معرّف العمليّة والجهاز والتسلسل ويُكتب به مباشرةً",
@@ -330,11 +440,17 @@
       "milestone": "م٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٦"],
-      "dependsOn": ["CAP-302"],
+      "gaps": [
+        "ج‑٦"
+      ],
+      "dependsOn": [
+        "CAP-302"
+      ],
       "nucleus": "src/services/stock/operationsService.js — listenScans",
       "guardTest": "src/services/stock/scanIdentity.test.js",
-      "touches": ["src/components/brandzo-erp/stock/ScanFlow.jsx"],
+      "touches": [
+        "src/components/brandzo-erp/stock/ScanFlow.jsx"
+      ],
       "note": "listenScans يمرّر hasPendingWrites منذ اليوم الأوّل، وScanFlow.jsx:166 يُسقطه. الإشارة موجودة — تُلتقط فقط.",
       "acceptance": [
         "الشاشة تعرض عدد القيود غير المرسَلة رقمًا صريحًا",
@@ -348,11 +464,18 @@
       "milestone": "م٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٦"],
-      "dependsOn": ["CAP-303"],
+      "gaps": [
+        "ج‑٦"
+      ],
+      "dependsOn": [
+        "CAP-303"
+      ],
       "nucleus": "src/services/stock/scanFlow.js",
       "guardTest": "src/services/stock/scanIdentity.test.js",
-      "touches": ["src/components/brandzo-erp/stock/ScanFlow.jsx", "src/services/stock/scanFlow.js"],
+      "touches": [
+        "src/components/brandzo-erp/stock/ScanFlow.jsx",
+        "src/services/stock/scanFlow.js"
+      ],
       "acceptance": [
         "زرّ الإقفال معطَّل ما دام قيدٌ واحد غير مرسَل، والسبب مكتوبٌ بالاسم",
         "الحكم منطقٌ خالص مختبَر لا شرطٌ في الواجهة وحدها",
@@ -365,8 +488,13 @@
       "milestone": "م٣",
       "owner": "المالك",
       "state": "todo",
-      "gaps": ["ج‑٦", "ج‑٧"],
-      "dependsOn": ["CAP-304"],
+      "gaps": [
+        "ج‑٦",
+        "ج‑٧"
+      ],
+      "dependsOn": [
+        "CAP-304"
+      ],
       "acceptance": [
         "جهازان يمسحان العمليّة نفسها وأحدهما مقطوع الشبكة",
         "عودة الشبكة تُنتج المجموع الصحيح بلا تضاعف",
@@ -374,18 +502,25 @@
         "الإقفال رُفض أثناء وجود طابور"
       ]
     },
-
     {
       "id": "CAP-401",
       "title": "دورة حياة من ستّ حالات",
       "milestone": "م٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٨"],
-      "dependsOn": ["CAP-204"],
+      "gaps": [
+        "ج‑٨"
+      ],
+      "dependsOn": [
+        "CAP-204"
+      ],
       "nucleus": "src/services/stock/operationsService.js",
       "guardTest": "src/services/stock/operationLifecycle.test.js",
-      "touches": ["src/services/stock/operationLifecycle.js", "src/services/stock/operationsService.js", "firestore.rules"],
+      "touches": [
+        "src/services/stock/operationLifecycle.js",
+        "src/services/stock/operationsService.js",
+        "firestore.rules"
+      ],
       "note": "مسوّدة ثمّ مفتوحة ثمّ مغلقة للعدّ ثمّ مراجعة ثمّ مختومة · وملغاة فرعًا جانبيًّا (ق-١). والانتقالات منطقٌ خالص لا شروط واجهة.",
       "acceptance": [
         "الحالات الستّ وانتقالاتها المسموحة في وحدةٍ خالصة مختبَرة",
@@ -399,11 +534,17 @@
       "milestone": "م٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٨"],
-      "dependsOn": ["CAP-401"],
+      "gaps": [
+        "ج‑٨"
+      ],
+      "dependsOn": [
+        "CAP-401"
+      ],
       "nucleus": "src/services/stock/operationLifecycle.js",
       "guardTest": "src/services/stock/operationLifecycle.test.js",
-      "touches": ["src/components/brandzo-erp/stock/OperationsMonitor.jsx"],
+      "touches": [
+        "src/components/brandzo-erp/stock/OperationsMonitor.jsx"
+      ],
       "note": "قاعدة operations تمنع الحذف نهائيًّا (firestore.rules:151)، فالإلغاء حالةٌ وسبب ومن ألغى — والأثر يبقى.",
       "acceptance": [
         "الملغاة تحمل سببًا ومعرّف من ألغى ووقتَه",
@@ -418,11 +559,18 @@
       "milestone": "م٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٥"],
-      "dependsOn": ["CAP-401"],
+      "gaps": [
+        "ج‑٥"
+      ],
+      "dependsOn": [
+        "CAP-401"
+      ],
       "nucleus": "src/services/stock/operationsService.js",
       "guardTest": "src/services/stock/operationLifecycle.test.js",
-      "touches": ["src/services/stock/operationsService.js", "firestore.rules"],
+      "touches": [
+        "src/services/stock/operationsService.js",
+        "firestore.rules"
+      ],
       "note": "«الكشف يحمل ختم زمن، والمطابقة تحتاج رصيدًا بنفس اللحظة» — نصّ المالك. واللقطة تُكتب ولا تُعرض للعادّ: تُجمَّد لطبقة المطابقة المؤجَّلة.",
       "acceptance": [
         "عند الانتقال إلى «مغلقة للعدّ» تُكتب أرصدة النطاق في لقطةٍ تحت العمليّة بختم زمن",
@@ -437,11 +585,18 @@
       "milestone": "م٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑١٠"],
-      "dependsOn": ["CAP-403"],
+      "gaps": [
+        "ج‑١٠"
+      ],
+      "dependsOn": [
+        "CAP-403"
+      ],
       "nucleus": "src/services/stock/operationsService.js",
       "guardTest": "src/services/stock/operationLifecycle.test.js",
-      "touches": ["src/services/stock/countSheet.js", "firestore.rules"],
+      "touches": [
+        "src/services/stock/countSheet.js",
+        "firestore.rules"
+      ],
       "note": "القاعدة اليوم تمنع الإلحاق بعد حالة «مفتوحة» فقط (firestore.rules:161) — تُوسَّع للحالات الجديدة كلّها.",
       "acceptance": [
         "الكشف المختوم مستندٌ نهائيّ: النطاق · لحظة القطع · اللجنة · سطرٌ لكلّ صنف بوحدته ومعامله ومن عدّه ومتى",
@@ -456,11 +611,17 @@
       "milestone": "م٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑١٠"],
-      "dependsOn": ["CAP-401"],
+      "gaps": [
+        "ج‑١٠"
+      ],
+      "dependsOn": [
+        "CAP-401"
+      ],
       "nucleus": "src/services/items/pendingService.js",
       "guardTest": "src/services/stock/operationLifecycle.test.js",
-      "touches": ["src/components/brandzo-erp/stock/ScanFlow.jsx"],
+      "touches": [
+        "src/components/brandzo-erp/stock/ScanFlow.jsx"
+      ],
       "acceptance": [
         "لا يُختم كشفٌ فيه صنفٌ غير معرّف أو موسومٌ بلا وحدة",
         "المراجعة تعرض المجهول والموسوم في مكانٍ واحد ليُحسم",
@@ -473,11 +634,18 @@
       "milestone": "م٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٩"],
-      "dependsOn": ["CAP-103"],
+      "gaps": [
+        "ج‑٩"
+      ],
+      "dependsOn": [
+        "CAP-103"
+      ],
       "nucleus": "src/services/stock/scanFlow.js — scanEntryVerdict وcorrectionEntry",
       "guardTest": "src/services/stock/scanFlow.test.js",
-      "touches": ["src/services/stock/scanFlow.js", "src/components/brandzo-erp/stock/ScanFlow.jsx"],
+      "touches": [
+        "src/services/stock/scanFlow.js",
+        "src/components/brandzo-erp/stock/ScanFlow.jsx"
+      ],
       "note": "«الصفر يجب أن يكون إعلانًا صريحًا: عددته ولم أجد شيئًا، لا نتيجة خطأ إدخال» — نصّ المالك. واليوم المعنيان برقمٍ واحد.",
       "acceptance": [
         "زرّ «عددته ولم أجد» يُنتج قيدًا موسومًا بإعلان الصفر لا كمّيّةً صفرًا مبهمة",
@@ -492,11 +660,17 @@
       "milestone": "م٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٨"],
-      "dependsOn": ["CAP-402"],
+      "gaps": [
+        "ج‑٨"
+      ],
+      "dependsOn": [
+        "CAP-402"
+      ],
       "nucleus": "src/services/stock/operationLifecycle.js",
       "guardTest": "src/services/stock/operationLifecycle.test.js",
-      "touches": ["src/components/brandzo-erp/stock/OperationsMonitor.jsx"],
+      "touches": [
+        "src/components/brandzo-erp/stock/OperationsMonitor.jsx"
+      ],
       "acceptance": [
         "جلسةٌ تجاوزت مدّتها تُوسَم «منتهية» وتظهر للمدير طلبًا للحسم",
         "المدير يُقفل إجباريًّا بسببٍ مكتوب",
@@ -509,11 +683,19 @@
       "milestone": "م٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ج‑٨", "ج‑١٠"],
-      "dependsOn": ["CAP-404"],
+      "gaps": [
+        "ج‑٨",
+        "ج‑١٠"
+      ],
+      "dependsOn": [
+        "CAP-404"
+      ],
       "nucleus": "firestore.rules — isStockActor وisManager",
       "guardTest": "src/services/stock/operationLifecycle.test.js",
-      "touches": ["firestore.rules", "src/components/brandzo-erp/stock/ScanFlow.jsx"],
+      "touches": [
+        "firestore.rules",
+        "src/components/brandzo-erp/stock/ScanFlow.jsx"
+      ],
       "note": "القاعدة القائمة تشترط المدير للتعديل أصلًا — التوسيع للحالات لا قاعدةٌ جديدة. العادّ يمسح · المشرف يصحّح قبل الختم · المدير يختم.",
       "acceptance": [
         "الختم لا يمرّ إلا من مدير — على الخادم لا في الواجهة",
@@ -522,7 +704,6 @@
         "لا أحد يعدّل بعد الختم — ولا المدير"
       ]
     },
-
     {
       "id": "CAP-501",
       "title": "شاشة المطابقة توصل محرّك reconcile المهجور",
@@ -530,7 +711,9 @@
       "owner": "Claude",
       "state": "deferred",
       "gaps": [],
-      "dependsOn": ["CAP-404"],
+      "dependsOn": [
+        "CAP-404"
+      ],
       "nucleus": "src/services/locations/reconcile.js",
       "note": "مؤجَّلة بقرار المالك ق-٦ (2026-08-23 «تأجيل»): ٧٤ رصيدًا من ١٠٤١. تُستأنف حين تجهز الأرصدة. المحرّك مبنيٌّ ومختبَرٌ وينتظر موصولًا.",
       "acceptance": [
@@ -545,7 +728,9 @@
       "owner": "Claude",
       "state": "deferred",
       "gaps": [],
-      "dependsOn": ["CAP-501"],
+      "dependsOn": [
+        "CAP-501"
+      ],
       "nucleus": "src/services/locations/reconcile.js — toCountDraft · وschemas/cc.js",
       "note": "مؤجَّلة بق-٦.",
       "acceptance": [
@@ -560,7 +745,9 @@
       "owner": "Claude",
       "state": "deferred",
       "gaps": [],
-      "dependsOn": ["CAP-502"],
+      "dependsOn": [
+        "CAP-502"
+      ],
       "nucleus": "src/services/documents/chain.js — adjustmentVerdict",
       "note": "مؤجَّلة بق-٦.",
       "acceptance": [
@@ -575,7 +762,9 @@
       "owner": "Claude",
       "state": "deferred",
       "gaps": [],
-      "dependsOn": ["CAP-502"],
+      "dependsOn": [
+        "CAP-502"
+      ],
       "nucleus": "src/services/documents/schemas/cc.js — confirmedCount",
       "note": "مؤجَّلة بق-٦. وcc.js يقيس الفرق من العدّ الثاني منذ اليوم الأوّل ولا أحد يملؤه.",
       "acceptance": [

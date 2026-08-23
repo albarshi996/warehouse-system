@@ -14,7 +14,6 @@ import {
   panelForScan,
   scanEntryVerdict,
   sessionSummary,
-  aggregateSession,
   correctionEntry,
   exportRows,
   buildSessionRows,
@@ -100,32 +99,47 @@ test('وضعٌ مجهول أو باركود فارغ يُرفضان بالاسم
 
 /* ═══════════════ جدول الجلسة — دفترٌ ملحق-فقط مصدرًا واحدًا ═══════════════ */
 
-test('★★ التجميع: مجموع قيود الباركود = كمّيّته، والدفتريّة من الماستر لا من شيتٍ ثانٍ', () => {
-  const byBarcode = new Map([['111', { sku: 'ITM-1', nameAr: 'كريم', balance: 10 }]]);
+test('★★ التجميع: مجموع قيود الباركود = كمّيّته، والمجهول يحمل اسمه الذي سُمّي به', () => {
+  const item = { sku: 'ITM-1', nameAr: 'كريم', barcodes: ['111'], balance: 10 };
+  const byBarcode = new Map([['111', item]]);
   const scans = [
     { barcode: '111', qty: 5 },
     { barcode: '111', qty: 3 },
     { barcode: '999', qty: 2, name: 'مجهولٌ سمّاه الموظّف' },
   ];
-  const rows = aggregateSession(scans, byBarcode);
+  const rows = buildSessionRows(scans, [item], byBarcode, { withBaseline: false });
   assert.equal(rows.length, 2);
-  const known = rows.find((r) => r.barcode === '111');
+  const known = rows.find((r) => r.sku === 'ITM-1');
   assert.equal(known.countedQty, 8);
-  assert.equal(known.bookQty, 10);
-  assert.equal(known.diff, -2);
+  assert.equal(known.scanCount, 2);
   assert.equal(known.name, 'كريم');
   const unknown = rows.find((r) => r.barcode === '999');
   assert.equal(unknown.known, false);
-  assert.equal(unknown.bookQty, null);
-  assert.equal(unknown.diff, null);
   assert.equal(unknown.name, 'مجهولٌ سمّاه الموظّف');
 });
 
+test('★★★ CAP-101 «الالتقاط لا يُحاسِب»: صنفٌ رصيده ٤٧٥ لا يحمل رصيدًا ولا فرقًا', () => {
+  // هذا هو العطب المرصود بعينه: رصيد ٤٧٥ كان يظهر صفرًا في شاشة العدّ.
+  // والعلاج ليس تصحيح الرقم بل نزعه — الشاشة لا تملك أن تعرفه أصلًا.
+  const item = { sku: 'ITM-475', nameAr: 'صنفٌ ذو رصيد', barcodes: ['475'], balance: 475 };
+  const byBarcode = new Map([['475', item]]);
+
+  for (const rows of [
+    buildSessionRows([{ barcode: '475', qty: 3 }], [item], byBarcode, { withBaseline: true }),
+    buildSessionRows([], [item], byBarcode, { withBaseline: true }), // ولا حتّى الصفّ غير الممسوح
+  ]) {
+    const row = rows.find((r) => r.sku === 'ITM-475');
+    assert.equal('bookQty' in row, false, 'الصفّ لا يحمل حقل رصيدٍ إطلاقًا');
+    assert.equal('diff' in row, false, 'الصفّ لا يحمل حقل فرقٍ إطلاقًا');
+    assert.equal(Object.values(row).includes(475), false, 'ولا قيمةَ في الصفّ تساوي الرصيد');
+  }
+});
+
 test('★ قيد تصحيحٍ سالب (من جدول الجلسة نفسه) ينزل بالمجموع — لا حالة محلّيّة توفَّق', () => {
-  const rows = aggregateSession([
-    { barcode: '111', qty: 10 },
-    { barcode: '111', qty: -3 },
-  ]);
+  const rows = buildSessionRows(
+    [{ barcode: '111', qty: 10 }, { barcode: '111', qty: -3 }],
+    [], new Map(), { withBaseline: false }
+  );
   assert.equal(rows[0].countedQty, 7);
 });
 
@@ -146,14 +160,21 @@ test('التصحيح يُرفض بالاسم: كمّيّة سالبة أو لا 
   assert.equal(correctionEntry(row, 7, 'x').ok, false);
 });
 
-test('صفوف التصدير بأعمدةٍ عربيّة ثابتة والمجهول موسومٌ بانتظار الاعتماد', () => {
+test('★★ التصدير يصدّر ما التُقط فقط — لا عمود رصيدٍ ولا عمود فرق', () => {
   const rows = exportRows([
-    { barcode: '111', sku: 'ITM-1', name: 'كريم', known: true, bookQty: 10, countedQty: 8, diff: -2 },
-    { barcode: '999', sku: '', name: 'جديد', known: false, bookQty: null, countedQty: 2, diff: null },
+    { barcode: '111', sku: 'ITM-1', name: 'كريم', known: true, countedQty: 8, scanCount: 2, scanned: true },
+    { barcode: '999', sku: '', name: 'جديد', known: false, countedQty: 2, scanCount: 1, scanned: true },
+    { barcode: '222', sku: 'ITM-2', name: 'شامبو', known: true, countedQty: 0, scanCount: 0, scanned: false },
   ]);
-  assert.equal(rows[0]['الفرق'], -2);
+  const columns = Object.keys(rows[0]);
+  assert.equal(columns.includes('الكمية الدفترية'), false);
+  assert.equal(columns.includes('الفرق'), false);
+  assert.deepEqual(columns, ['الباركود', 'كود الصنف', 'اسم الصنف', 'المعدود/المنفَّذ', 'عدد القيود', 'الحالة']);
+  assert.equal(rows[0]['المعدود/المنفَّذ'], 8);
   assert.equal(rows[1]['الحالة'], 'غير معرّف — بانتظار الاعتماد');
-  assert.equal(rows[1]['الكمية الدفترية'], '—');
+  // «لم يُمسح» يُصدَّر «—» لا صفرًا: الصفر يقول «عددتُ ولم أجد» وهو معنًى آخر.
+  assert.equal(rows[2]['المعدود/المنفَّذ'], '—');
+  assert.equal(rows[2]['الحالة'], 'لم يُمسح');
 });
 
 /* ═══════════════ قاعدة الجرد من الماستر — تكامل الأداة القديمة ═══════════════ */
@@ -175,10 +196,10 @@ test('★★ الجرد بقاعدة الماستر: غير الممسوح يظ�
   assert.equal(rows.length, 2); // المؤرشف لا يدخل القاعدة
   const counted = rows.find((r) => r.sku === 'ITM-1');
   assert.equal(counted.scanned, true);
-  assert.equal(counted.diff, -2);
+  assert.equal(counted.countedQty, 8);
   const pending = rows.find((r) => r.sku === 'ITM-2');
-  assert.equal(pending.scanned, false);
-  assert.equal(pending.diff, null); // «لم يُمسح» عملٌ متبقٍّ لا فرق
+  assert.equal(pending.scanned, false); // «لم يُمسح» عملٌ متبقٍّ — يبقى صفًّا
+  assert.equal(pending.countedQty, 0);
 });
 
 test('★★ باركودان لصنفٍ واحد يُجمعان على هويّته لا على باركودَيهما', () => {
@@ -201,8 +222,9 @@ test('★ عدّادات الإنجاز — نفس أرقام رأس الأدا�
     [{ barcode: '111', qty: 8 }, { barcode: '999', qty: 1, name: 'مجهول' }],
     MASTER, BY_BARCODE, { withBaseline: true }
   );
+  // ولا عدّاد «فروقات» (CAP-101): المتبقّي يقيس العملَ لا الانحراف.
   assert.deepEqual(sessionProgress(rows), {
-    total: 2, scanned: 1, remaining: 1, diffs: 1, unknown: 1, pct: 50,
+    total: 2, scanned: 1, remaining: 1, unknown: 1, pct: 50,
   });
 });
 
@@ -211,7 +233,8 @@ test('★ الترشيح: تبويب «لم يُمسح» + بحثٌ بالاسم
   assert.equal(filterRows(rows, { tab: 'unscanned' })[0].sku, 'ITM-2');
   assert.equal(filterRows(rows, { term: 'شامبو' })[0].sku, 'ITM-2');
   assert.equal(filterRows(rows, { term: '111' })[0].sku, 'ITM-1');
-  assert.equal(filterRows(rows, { tab: 'diff', term: 'شامبو' }).length, 0);
+  // تبويب «الفروقات» نُزع (CAP-101) — والتبويب المجهول لا يُرشِّح شيئًا.
+  assert.equal(filterRows(rows, { tab: 'diff' }).length, rows.length);
 });
 
 test('لصق باركودات: أسطرٌ وفواصل ومسافات — والتكرار يبقى (كلّ ظهورٍ قيدُ ١)', () => {
