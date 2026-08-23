@@ -32,7 +32,8 @@
  * الوثيقة الحاكمة: `docs/خطة-طبقة-الالتقاط.md`.
  */
 import { normalizeBarcode } from '../excel/excelSchema.js';
-import { baseUomOf, checkFraction, uomLabel } from '../items/uomModel.js';
+import { baseUomOf, checkFraction, uomLabel, factorToBase } from '../items/uomModel.js';
+import { unitForBarcode } from '../items/uomWiring.js';
 
 /**
  * الأوضاع الثلاثة — نفس قيم `opType` التي يكتبها المسار القديم حرفيًّا،
@@ -50,28 +51,62 @@ export function isScanMode(mode) {
 }
 
 /**
+ * تسمية الوحدة في خانة التعبئة — تقول المعامل حين يكون له معنًى.
+ *
+ * «كرتون (12 قطعة)» بدل «كرتون» المجرّدة: العادّ يحتاج أن يعرف **ما الذي
+ * يعدّه** قبل أن يكتب رقمًا. و«معاملٌ غير معرّف» تُقال صراحةً ولا تُخفى —
+ * لأنّ الصمت هنا يوحي بتحويلٍ معروفٍ وهو مجهول (`factorToBase` تُرجع `null`
+ * بمعنى «لا أعرف» لا «صفر»).
+ */
+function unitPanelLabel(item, unit, base) {
+  const label = uomLabel(unit);
+  if (!unit || unit === base) return label;
+  const factor = factorToBase(item, unit);
+  if (factor === null) return `${label} (معاملٌ غير معرّف)`;
+  if (factor === 1) return label;
+  return `${label} (${factor} ${uomLabel(base)})`;
+}
+
+/**
  * خانة التعبئة بعد المسح: ما يظهر للموظّف وما يُطلب منه.
  *
  * المعروف في الماستر: الاسم والوحدة يظهران ويُطلب الكمّيّة وحدها.
  * والمجهول: يُطلب الاسم («سمِّه») والكمّيّة — ولا يوقف العمل (قرار المالك).
  *
+ * ═══ الوحدة تُحلّ من الباركود لا تُكتب (CAP-102) ═══
+ * `unitForBarcode` مبنيٌّ ومختبَرٌ في `uomWiring.js` منذ SAP-3 ولم يستدعه
+ * هذا التدفّق قطّ — فكان مسحُ باركود الكرتون يُظهر «قطعة»، والموظّف يكتب ١
+ * قاصدًا كرتونًا. هنا يُستدعى: **باركود الوحدة يحدّد الوحدة والمعامل معًا**،
+ * وما ليس باركود وحدةٍ يرجع إلى وحدة أساس الصنف — ترحيلٌ صفرُ الأثر.
+ *
  * @param {string} code الباركود الممسوح كما قُرئ
  * @param {object|null} item صنف الماستر إن وُجد
- * @returns {{barcode:string, known:boolean, sku:string, name:string, unit:string, unitLabel:string}}
+ * @returns {{barcode:string, known:boolean, sku:string, name:string,
+ *            unit:string, baseUom:string, factor:number|null,
+ *            fromBarcode:boolean, unitLabel:string}}
  */
 export function panelForScan(code, item) {
   const barcode = normalizeBarcode(code);
   if (!item) {
-    return { barcode, known: false, sku: '', name: '', unit: '', unitLabel: '' };
+    return {
+      barcode, known: false, sku: '', name: '',
+      unit: '', baseUom: '', factor: null, fromBarcode: false, unitLabel: '',
+    };
   }
-  const unit = baseUomOf(item) || String(item.unit ?? '').trim();
+  const base = baseUomOf(item) || String(item.unit ?? '').trim();
+  // باركود الوحدة يفوز على وحدة الأساس — فهو أخصُّ وأدقّ.
+  const scanned = unitForBarcode(item, code);
+  const unit = scanned || base;
   return {
     barcode,
     known: true,
     sku: String(item.sku ?? '').trim(),
     name: [item.nameAr, item.shade].filter(Boolean).join(' — '),
     unit,
-    unitLabel: uomLabel(unit),
+    baseUom: base,
+    factor: factorToBase(item, unit),
+    fromBarcode: Boolean(scanned),
+    unitLabel: unitPanelLabel(item, unit, base),
   };
 }
 

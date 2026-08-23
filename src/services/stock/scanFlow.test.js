@@ -53,6 +53,65 @@ test('الباركود يُطبَّع بقاعدة الماستر — الأصف
   assert.equal(panelForScan('00251', null).barcode, '251');
 });
 
+/* ═══ CAP-102 — الوحدة تُحلّ من الباركود لا تُكتب ═══ */
+
+// صنفٌ عرّف وحداته: قطعةٌ أساسًا، وكرتونٌ بمعامل 12، ولكلٍّ باركوده.
+const BOXED = {
+  sku: 'ITM-BX',
+  nameAr: 'شامبو',
+  baseUom: 'piece',
+  uomFactors: { carton: 12 },
+  barcodes: ['700001', '700012'],
+  uomBarcodes: { '700012': 'carton' },
+};
+
+test('★★★ CAP-102 باركود الكرتون يُظهر «كرتون (12 قطعة)» لا «قطعة»', () => {
+  const box = panelForScan('700012', BOXED);
+  assert.equal(box.unit, 'carton');
+  assert.equal(box.factor, 12);
+  assert.equal(box.fromBarcode, true);
+  assert.equal(box.baseUom, 'piece');
+  assert.equal(box.unitLabel, 'كرتون (12 قطعة)');
+
+  // وباركود القطعة للصنف نفسه يبقى قطعةً — الباركود هو الفاصل.
+  const piece = panelForScan('700001', BOXED);
+  assert.equal(piece.unit, 'piece');
+  assert.equal(piece.factor, 1);
+  assert.equal(piece.fromBarcode, false);
+  assert.equal(piece.unitLabel, 'قطعة');
+});
+
+test('★★ ترحيلٌ صفرُ الأثر: صنفٌ بلا باركود وحدةٍ يرجع لوحدة أساسه', () => {
+  // ITEM لا يحمل uomBarcodes إطلاقًا — سلوك اليوم حرفيًّا.
+  const panel = panelForScan('8059692040599', ITEM);
+  assert.equal(panel.unit, 'piece');
+  assert.equal(panel.fromBarcode, false);
+  assert.equal(panel.unitLabel, 'قطعة');
+  // وصنفٌ بلا وحدةٍ أصلًا لا يُخترع له شيء (١٠٤٠ صنفًا وحدتها «—»).
+  const bare = panelForScan('555', { sku: 'X', nameAr: 'بلا وحدة' });
+  assert.equal(bare.unit, '');
+  assert.equal(bare.unitLabel, '—');
+});
+
+test('★★ معاملٌ غير معرّف يُقال صراحةً — الصمت يوحي بتحويلٍ مجهول', () => {
+  const noFactor = {
+    sku: 'ITM-NF', nameAr: 'صندوقٌ بلا معامل', baseUom: 'piece',
+    barcodes: ['800001'], uomBarcodes: { '800001': 'box' },
+  };
+  const panel = panelForScan('800001', noFactor);
+  assert.equal(panel.unit, 'box');
+  assert.equal(panel.factor, null); // «لا أعرف» لا «صفر»
+  assert.equal(panel.unitLabel, 'صندوق (معاملٌ غير معرّف)');
+});
+
+test('المجهول يحمل حقول الوحدة فارغةً لا غائبة', () => {
+  const panel = panelForScan('999888', null);
+  assert.deepEqual(
+    { unit: panel.unit, baseUom: panel.baseUom, factor: panel.factor, fromBarcode: panel.fromBarcode },
+    { unit: '', baseUom: '', factor: null, fromBarcode: false }
+  );
+});
+
 /* ═══════════════ حكم الحفظ ═══════════════ */
 
 test('★ قيدٌ معروف: الاسم من الماستر والكمّيّة من الموظّف — ولا يُطلب اسم', () => {
