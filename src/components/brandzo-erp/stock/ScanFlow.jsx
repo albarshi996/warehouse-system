@@ -24,6 +24,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { lookupByBarcode, subscribeItems } from '../../../services/items/itemService.js';
 import { registerPending } from '../../../services/items/pendingService.js';
 import { buildItemIndexes } from '../../../services/items/uomWiring.js';
+import { uomLabel } from '../../../services/items/uomModel.js';
 import {
   createOperation,
   findOperationsByCode,
@@ -37,6 +38,7 @@ import {
 import {
   SCAN_MODES,
   panelForScan,
+  resolveScanUom,
   scanEntryVerdict,
   sessionSummary,
   correctionEntry,
@@ -273,7 +275,20 @@ export default function ScanFlow() {
       for (const code of codes) {
         const item = lookupMap.get(code) || null;
         const name = item ? [item.nameAr, item.shade].filter(Boolean).join(' — ') : '';
-        await appendScan(id, { barcode: code, name, qty: 1, opType: mode, profile: me });
+        // اللصق يمرّ بالوحدة نفسها التي يمرّ بها المسح (CAP-103): باركود
+        // كرتونٍ ملصوقٌ يعني كرتونًا، ولو كُتب قيدُه بلا وحدةٍ لصار قطعةً.
+        const { unit, factor } = resolveScanUom(code, item);
+        await appendScan(id, {
+          barcode: code,
+          sku: item ? String(item.sku ?? '').trim() : '',
+          name,
+          qty: 1,
+          uom: unit,
+          factor,
+          baseQty: factor === null ? null : factor, // الكمّيّة ١، فالأساس هو المعامل
+          opType: mode,
+          profile: me,
+        });
         saved += 1;
       }
       setBulkText('');
@@ -313,7 +328,14 @@ export default function ScanFlow() {
       }
       const s = sessionSummary([...scans, verdict.entry]);
       updateOperationSummary(id, { itemCount: s.itemCount, scannedCount: s.scanCount }).catch(() => {});
-      flash('ok', `حُفظ: ${verdict.entry.name} × ${num(verdict.entry.qty)}`);
+      // التأكيد يقول ما حُفظ بوحدته وما يعادله بالأساس — فيُكشف الخطأ فورًا.
+      const e = verdict.entry;
+      const unit = e.uom ? ` ${uomLabel(e.uom)}` : '';
+      const equiv =
+        e.baseQty != null && e.uom && e.uom !== panel.baseUom
+          ? ` (= ${num(e.baseQty)} ${uomLabel(panel.baseUom)})`
+          : '';
+      flash('ok', `حُفظ: ${e.name} × ${num(e.qty)}${unit}${equiv}`);
       setPanel(null);
       setPanelItem(null);
       setQty('');
@@ -343,13 +365,19 @@ export default function ScanFlow() {
   }
 
   function askCorrection(row) {
-    const raw = window.prompt(`الكمّيّة الصحيحة لـ«${row.name || row.barcode}»؟ (المعدود الآن ${num(row.countedQty)})`, String(row.countedQty));
+    // التصحيح يُقال بوحدة الأساس — فتُسمّى في السؤال، لا يُترك رقمٌ بلا وحدة.
+    const unit = row.baseUom ? ` ${uomLabel(row.baseUom)}` : '';
+    const raw = window.prompt(
+      `الكمّيّة الصحيحة لـ«${row.name || row.barcode}»؟ (المعدود الآن ${num(row.countedQty)}${unit})`,
+      String(row.countedQty)
+    );
     if (raw === null) return;
     correctRow(row, raw);
   }
 
   function askRemoval(row) {
-    if (!window.confirm(`حذف «${row.name || row.barcode}» من الجلسة؟ يُكتب قيدُ عكسٍ (−${num(row.countedQty)}) ويبقى الأثر.`)) return;
+    const unit = row.baseUom ? ` ${uomLabel(row.baseUom)}` : '';
+    if (!window.confirm(`حذف «${row.name || row.barcode}» من الجلسة؟ يُكتب قيدُ عكسٍ (−${num(row.countedQty)}${unit}) ويبقى الأثر.`)) return;
     correctRow(row, 0);
   }
 
@@ -854,6 +882,7 @@ ${inviteLink}`)}` : undefined}
                     <tr style={{ textAlign: 'right', color: 'var(--o-main-color-muted)' }}>
                       <th style={{ padding: '4px 6px' }}>الصنف</th>
                       <th style={{ padding: '4px 6px' }}>المعدود</th>
+                      <th style={{ padding: '4px 6px' }}>الوحدة</th>
                       <th style={{ padding: '4px 6px' }}>القيود</th>
                       <th style={{ padding: '4px 6px' }} aria-label="إجراءات" />
                     </tr>
@@ -881,6 +910,17 @@ ${inviteLink}`)}` : undefined}
                         </td>
                         <td style={{ padding: '6px', fontVariantNumeric: 'tabular-nums', fontWeight: 'var(--o-font-weight-bold)' }}>
                           {r.scanned ? num(r.countedQty) : '—'}
+                          {r.uncertain && (
+                            <span
+                              title="فيه قيدٌ بوحدةٍ لم يُعرَّف معاملها — المجموع بوحدة الأساس غير مضمون"
+                              style={{ marginInlineStart: '4px', fontSize: '10px', color: 'var(--o-text-warning, #8a6d1b)' }}
+                            >
+                              غير مضمون
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ padding: '6px', color: 'var(--o-main-color-muted)' }}>
+                          {r.baseUom ? uomLabel(r.baseUom) : '—'}
                         </td>
                         <td style={{ padding: '6px', fontVariantNumeric: 'tabular-nums', color: 'var(--o-main-color-muted)' }}>
                           {r.scanned ? int(r.scanCount) : '—'}

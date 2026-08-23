@@ -117,7 +117,10 @@ test('المجهول يحمل حقول الوحدة فارغةً لا غائبة
 test('★ قيدٌ معروف: الاسم من الماستر والكمّيّة من الموظّف — ولا يُطلب اسم', () => {
   const v = scanEntryVerdict({ mode: 'استلام', barcode: '111', qty: '5', item: ITEM });
   assert.equal(v.ok, true);
-  assert.deepEqual(v.entry, { barcode: '111', name: 'كريم يدين — وردي', qty: 5, opType: 'استلام' });
+  assert.deepEqual(v.entry, {
+    barcode: '111', sku: 'ITM-1', name: 'كريم يدين — وردي',
+    qty: 5, uom: 'piece', factor: 1, baseQty: 5, opType: 'استلام',
+  });
 });
 
 test('★★ قيدٌ مجهول بلا اسم يُرفض برسالةٍ تشرح — ومع الاسم يُقبل', () => {
@@ -146,6 +149,73 @@ test('★ حارس الكسر بوحدة الصنف: نصف قطعةٍ يُرف�
   const kgItem = { sku: 'K1', nameAr: 'أرز', unit: 'kg' };
   const kg = scanEntryVerdict({ mode: 'جرد', barcode: '222', qty: 2.5, item: kgItem });
   assert.equal(kg.ok, true);
+});
+
+/* ═══ CAP-103 — القيد يُختم بوحدته ومعاملها وكمّيّته الأساس ═══ */
+
+test('★★★ CAP-103 كرتونٌ معامله 12 وكتابة 1 ⇒ baseQty = 12 (لا 1)', () => {
+  const v = scanEntryVerdict({ mode: 'جرد', barcode: '700012', qty: '1', item: BOXED });
+  assert.equal(v.ok, true);
+  assert.deepEqual(v.entry, {
+    barcode: '700012', sku: 'ITM-BX', name: 'شامبو',
+    qty: 1, uom: 'carton', factor: 12, baseQty: 12, opType: 'جرد',
+  });
+  // وهذا هو فارق 1100٪ الذي حذّر منه المالك: 1 كرتون ليست 1 قطعة.
+  assert.notEqual(v.entry.baseQty, v.entry.qty);
+});
+
+test('★★ حارس الكسر يعمل بوحدة القيد لا بوحدة الأساس — والرسالة تسمّي ما كُتب', () => {
+  const half = scanEntryVerdict({ mode: 'جرد', barcode: '700012', qty: 2.5, item: BOXED });
+  assert.equal(half.ok, false);
+  assert.match(half.problems.join(' '), /«كرتون» لا تقبل الكسور/);
+});
+
+test('★★ معاملٌ مجهول: القيد يُحفظ بـfactor=null وbaseQty=null — ولا يُوقَف العادّ', () => {
+  const noFactor = {
+    sku: 'ITM-NF', nameAr: 'صندوقٌ بلا معامل', baseUom: 'piece',
+    barcodes: ['800001'], uomBarcodes: { '800001': 'box' },
+  };
+  const v = scanEntryVerdict({ mode: 'جرد', barcode: '800001', qty: 3, item: noFactor });
+  assert.equal(v.ok, true, 'يُحفظ على كلّ حال — ق-٢: لا حجب للعادّ على الرفّ');
+  assert.equal(v.entry.uom, 'box');
+  assert.equal(v.entry.factor, null); // «لا أعرف» لا «صفر»
+  assert.equal(v.entry.baseQty, null);
+  assert.equal(v.entry.qty, 3);
+});
+
+test('★★★ الجمع بوحدة الأساس: كرتونٌ وقِطعٌ لا تُجمعان خامَّين', () => {
+  const byBarcode = new Map([['700001', BOXED], ['700012', BOXED]]);
+  const rows = buildSessionRows(
+    [
+      { barcode: '700012', qty: 1, uom: 'carton', factor: 12, baseQty: 12 },
+      { barcode: '700001', qty: 3, uom: 'piece', factor: 1, baseQty: 3 },
+    ],
+    [BOXED], byBarcode, { withBaseline: false }
+  );
+  assert.equal(rows.length, 1); // باركودان لصنفٍ واحد ⇒ صفٌّ واحد
+  assert.equal(rows[0].countedQty, 15, '12 + 3 بوحدة الأساس — لا 1 + 3');
+  assert.equal(rows[0].baseUom, 'piece');
+  assert.equal(rows[0].uncertain, false);
+});
+
+test('★★ ترحيلٌ صفرُ الأثر: قيدٌ قديم بلا uom ولا baseQty يُقرأ كما هو', () => {
+  const rows = buildSessionRows(
+    [{ barcode: '700001', qty: 5 }], // قيدُ ما قبل CAP-103
+    [BOXED], new Map([['700001', BOXED]]), { withBaseline: false }
+  );
+  assert.equal(rows[0].countedQty, 5, 'معامله ١ ضمنًا — سلوك اليوم حرفيًّا');
+  assert.equal(rows[0].uncertain, false, 'القديم ليس مشكوكًا فيه — لم يدّعِ وحدةً');
+});
+
+test('★★★ المعامل المجهول لا يُبتلع صفرًا صامتًا — يُقرأ خامًّا ويُوسم الصفّ', () => {
+  const noFactor = { sku: 'ITM-NF', nameAr: 'صندوق', baseUom: 'piece', barcodes: ['800001'] };
+  const rows = buildSessionRows(
+    [{ barcode: '800001', qty: 3, uom: 'box', factor: null, baseQty: null }],
+    [noFactor], new Map([['800001', noFactor]]), { withBaseline: false }
+  );
+  // لو قُرئت baseQty=null رقمًا لصارت صفرًا وضاعت الثلاثة بلا أثر.
+  assert.equal(rows[0].countedQty, 3);
+  assert.equal(rows[0].uncertain, true, 'المجموع بوحدة الأساس غير مضمون — يُعلَن');
 });
 
 test('وضعٌ مجهول أو باركود فارغ يُرفضان بالاسم', () => {
@@ -203,13 +273,25 @@ test('★ قيد تصحيحٍ سالب (من جدول الجلسة نفسه) ي�
 });
 
 test('★★ التصحيح قيدُ فرقٍ لا تعديل: 10 ⇒ 7 يُنتج −3، والحذف يعكس الكلّ', () => {
-  const row = { barcode: '111', name: 'كريم', countedQty: 10 };
+  const row = { barcode: '111', sku: 'ITM-1', name: 'كريم', countedQty: 10, baseUom: 'piece' };
   const fix = correctionEntry(row, 7, 'جرد');
   assert.equal(fix.ok, true);
-  assert.deepEqual(fix.entry, { barcode: '111', name: 'كريم', qty: -3, opType: 'جرد' });
+  // والتصحيح يُقال **بوحدة الأساس** بمعامل ١ — فلا يُخلط بقيدٍ بوحدةٍ أخرى.
+  assert.deepEqual(fix.entry, {
+    barcode: '111', sku: 'ITM-1', name: 'كريم',
+    qty: -3, uom: 'piece', factor: 1, baseQty: -3, opType: 'جرد',
+  });
 
   const wipe = correctionEntry(row, 0, 'جرد');
   assert.equal(wipe.entry.qty, -10);
+  assert.equal(wipe.entry.baseQty, -10);
+});
+
+test('★★ CAP-103 صفٌّ «غير مضمون» لا يُصحَّح — لا يُكتب فرقٌ من مجموعٍ مجهول', () => {
+  const row = { barcode: '111', name: 'كريم', countedQty: 10, baseUom: 'piece', uncertain: true };
+  const v = correctionEntry(row, 7, 'جرد');
+  assert.equal(v.ok, false);
+  assert.match(v.problems.join(' '), /بلا معامل/);
 });
 
 test('التصحيح يُرفض بالاسم: كمّيّة سالبة أو لا تغيير أو وضعٌ مجهول', () => {
@@ -221,19 +303,27 @@ test('التصحيح يُرفض بالاسم: كمّيّة سالبة أو لا 
 
 test('★★ التصدير يصدّر ما التُقط فقط — لا عمود رصيدٍ ولا عمود فرق', () => {
   const rows = exportRows([
-    { barcode: '111', sku: 'ITM-1', name: 'كريم', known: true, countedQty: 8, scanCount: 2, scanned: true },
-    { barcode: '999', sku: '', name: 'جديد', known: false, countedQty: 2, scanCount: 1, scanned: true },
-    { barcode: '222', sku: 'ITM-2', name: 'شامبو', known: true, countedQty: 0, scanCount: 0, scanned: false },
+    { barcode: '111', sku: 'ITM-1', name: 'كريم', known: true, baseUom: 'piece', countedQty: 8, scanCount: 2, scanned: true },
+    { barcode: '999', sku: '', name: 'جديد', known: false, baseUom: '', countedQty: 2, scanCount: 1, scanned: true },
+    { barcode: '222', sku: 'ITM-2', name: 'شامبو', known: true, baseUom: 'kg', countedQty: 0, scanCount: 0, scanned: false },
+    { barcode: '333', sku: 'ITM-3', name: 'صندوق', known: true, baseUom: 'piece', countedQty: 3, scanCount: 1, scanned: true, uncertain: true },
   ]);
   const columns = Object.keys(rows[0]);
   assert.equal(columns.includes('الكمية الدفترية'), false);
   assert.equal(columns.includes('الفرق'), false);
-  assert.deepEqual(columns, ['الباركود', 'كود الصنف', 'اسم الصنف', 'المعدود/المنفَّذ', 'عدد القيود', 'الحالة']);
+  assert.deepEqual(columns, [
+    'الباركود', 'كود الصنف', 'اسم الصنف', 'المعدود/المنفَّذ', 'الوحدة', 'عدد القيود', 'الحالة', 'ملاحظة',
+  ]);
   assert.equal(rows[0]['المعدود/المنفَّذ'], 8);
+  assert.equal(rows[0]['الوحدة'], 'قطعة'); // رقمٌ بلا وحدةٍ لا يُقرأ (CAP-103)
   assert.equal(rows[1]['الحالة'], 'غير معرّف — بانتظار الاعتماد');
+  assert.equal(rows[1]['الوحدة'], '—');
   // «لم يُمسح» يُصدَّر «—» لا صفرًا: الصفر يقول «عددتُ ولم أجد» وهو معنًى آخر.
   assert.equal(rows[2]['المعدود/المنفَّذ'], '—');
   assert.equal(rows[2]['الحالة'], 'لم يُمسح');
+  assert.equal(rows[2]['الوحدة'], 'كيلوغرام');
+  assert.match(rows[3]['ملاحظة'], /غير مضمون/);
+  assert.equal(rows[0]['ملاحظة'], '');
 });
 
 /* ═══════════════ قاعدة الجرد من الماستر — تكامل الأداة القديمة ═══════════════ */

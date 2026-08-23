@@ -3505,6 +3505,8 @@
         "parseBulkBarcodes",
         "refreshMasterFields",
         "resolveOperationByCode",
+        "resolveScanUom",
+        "scanBaseQty",
         "scanEntryVerdict",
         "scanKey",
         "sessionProgress",

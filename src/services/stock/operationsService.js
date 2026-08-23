@@ -78,12 +78,27 @@ export async function createOperation({ type, profile, note = '' }) {
 /**
  * يُضيف قيد مسح دائم. لا يُحدَّث ولا يُحذف أبداً.
  * يُعيد وعداً — لكن Firestore يقبله محلياً فوراً حتى بلا إنترنت.
+ *
+ * ═══ ما يحمله القيد (CAP-103) ═══
+ * الباركود **كما مُسح** والصنف الذي حُلّ إليه معًا — فالباركود ليس مفتاحًا:
+ * باركودٌ قد يشير لأكثر من صنف، وصنفٌ له عدّة باركودات.
+ * والكمّيّة **بوحدتها** ومعاملها والكمّيّة الأساس — «الكمّيّة بلا وحدةٍ رقمٌ
+ * بلا معنى». والمعامل المجهول يُكتب `null` لا صفرًا: صفرٌ صامتٌ يُنتج مجموعًا
+ * كاذبًا، و`null` تُوسم في الجدول ولا تُخفى.
+ *
+ * والحقول الجديدة **لا تحتاج تعديل قواعد**: قاعدة `scans` تشترط الهويّة وفتحَ
+ * العمليّة الأمّ ولا تحصر الحقول — فتمرّ بلا مساس.
  */
-export function appendScan(opId, { barcode, name, qty, profile, opType }) {
+export function appendScan(opId, { barcode, sku, name, qty, uom, factor, baseQty, profile, opType }) {
+  const numOrNull = (v) => (v == null || !Number.isFinite(Number(v)) ? null : Number(v));
   return addDoc(collection(db, OPS, opId, 'scans'), {
     barcode: String(barcode || ''),
+    sku: String(sku || ''),
     name: String(name || ''),
     qty: Number(qty) || 0,
+    uom: String(uom || ''),
+    factor: numOrNull(factor),
+    baseQty: numOrNull(baseQty),
     opType: opType || '',
     byUid: currentUid(),
     byName: profile?.name || auth?.currentUser?.email || 'غير معروف',

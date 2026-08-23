@@ -5,6 +5,7 @@ import {
   listenScans,
   closeOperation,
 } from '../../../services/stock/operationsService.js';
+import { scanBaseQty } from '../../../services/stock/scanFlow.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
 import Badge from '../../odoo/Badge.jsx';
@@ -124,7 +125,9 @@ export default function OperationsMonitor() {
     const byItem = new Map();
     let totalQty = 0;
     for (const s of scans) {
-      const q = Number(s.qty) || 0;
+      // بوحدة الأساس (CAP-103): جمعُ كرتونٍ وقطعةٍ خامَّين رقمٌ بلا معنى.
+      // والقيد القديم بلا baseQty يُقرأ كما هو — ترحيلٌ صفرُ الأثر.
+      const q = scanBaseQty(s);
       totalQty += q;
       const u = s.byName || 'غير معروف';
       byUser.set(u, (byUser.get(u) || 0) + q);

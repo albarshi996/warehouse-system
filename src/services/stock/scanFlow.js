@@ -50,6 +50,24 @@ export function isScanMode(mode) {
   return SCAN_MODES.some((m) => m.id === mode);
 }
 
+/** تقريب ٦ منازل — نفس قاعدة محرّك الوحدات، يمنع تراكم أخطاء العشريّة. */
+const round6 = (n) => Math.round((Number(n) || 0) * 1e6) / 1e6;
+
+/**
+ * حلّ وحدة القيد من الباركود الممسوح — **مصدرٌ واحد** لخانة التعبئة ولحكم
+ * الحفظ معًا، فلا تفترق الوحدة المعروضة عن الوحدة المختومة (CAP-102/103).
+ *
+ * @returns {{unit:string, baseUom:string, factor:number|null, fromBarcode:boolean}}
+ *   و`factor === null` تعني **لا أعرف** لا «صفر» — فلا يُحسب رقمٌ من جهل.
+ */
+export function resolveScanUom(code, item) {
+  if (!item) return { unit: '', baseUom: '', factor: null, fromBarcode: false };
+  const baseUom = baseUomOf(item) || String(item.unit ?? '').trim();
+  const scanned = unitForBarcode(item, code); // باركود الوحدة أخصُّ فيفوز
+  const unit = scanned || baseUom;
+  return { unit, baseUom, factor: factorToBase(item, unit), fromBarcode: Boolean(scanned) };
+}
+
 /**
  * تسمية الوحدة في خانة التعبئة — تقول المعامل حين يكون له معنًى.
  *
@@ -93,25 +111,34 @@ export function panelForScan(code, item) {
       unit: '', baseUom: '', factor: null, fromBarcode: false, unitLabel: '',
     };
   }
-  const base = baseUomOf(item) || String(item.unit ?? '').trim();
-  // باركود الوحدة يفوز على وحدة الأساس — فهو أخصُّ وأدقّ.
-  const scanned = unitForBarcode(item, code);
-  const unit = scanned || base;
+  const { unit, baseUom, factor, fromBarcode } = resolveScanUom(code, item);
   return {
     barcode,
     known: true,
     sku: String(item.sku ?? '').trim(),
     name: [item.nameAr, item.shade].filter(Boolean).join(' — '),
     unit,
-    baseUom: base,
-    factor: factorToBase(item, unit),
-    fromBarcode: Boolean(scanned),
-    unitLabel: unitPanelLabel(item, unit, base),
+    baseUom,
+    factor,
+    fromBarcode,
+    unitLabel: unitPanelLabel(item, unit, baseUom),
   };
 }
 
 /**
  * حكم الحفظ: يفحص ويبني قيد المسح — أو يقول ما ينقص بالاسم.
+ *
+ * ═══ القيد يُختم بوحدته ومعاملها (CAP-103) ═══
+ * «الكمّيّة بلا وحدةٍ رقمٌ بلا معنى» — نصّ المالك. فكرتونٌ فيه ١٢ قطعة
+ * يُكتب «١» يعني ١٢ لا ١، وفارقُ ذلك ١١٠٠٪.
+ *
+ * ولذلك يحمل القيد **ستّة حقول لا اثنين**: الباركود كما مُسح، والصنف الذي
+ * حُلّ إليه (فالباركود ليس مفتاحًا)، والكمّيّة بوحدتها، والوحدة، والمعامل،
+ * والكمّيّة الأساس. و`baseQty` **تُحسب وقت الالتقاط لا وقت العرض**: المعامل
+ * قد يُصحَّح غدًا، وتصحيحُه لا يجوز أن يُعيد كتابة ما عُدّ أمس.
+ *
+ * والمعامل المجهول يُختم `null` و`baseQty` معه `null` — لا صفرًا ولا رقمًا
+ * مخترعًا. والقيد يُحفظ على كلّ حال، فلا يُوقَف العادّ على الرفّ (ق-٢).
  *
  * @param {{mode:string, barcode:string, qty:*, name?:string, item?:object|null}} input
  * @returns {{ok:boolean, problems:string[], entry:object|null}}
@@ -123,12 +150,13 @@ export function scanEntryVerdict({ mode, barcode, qty, name = '', item = null })
   const code = normalizeBarcode(barcode);
   if (!code) problems.push('لا باركود — امسح أو اكتبه.');
 
+  const { unit, factor } = resolveScanUom(barcode, item);
   const n = Number(qty);
   if (!Number.isFinite(n) || n <= 0) {
     problems.push('الكمّيّة مطلوبة — رقمٌ أكبر من صفر.');
   } else if (item) {
-    // حارس الكسر بوحدة أساس الصنف: نصف قطعةٍ رقمٌ لا يقابله شيء على الرفّ.
-    const unit = baseUomOf(item) || String(item.unit ?? '').trim();
+    // حارس الكسر **بوحدة القيد** لا بوحدة الأساس المفترضة (CAP-103): من
+    // يمسح باركود كرتونٍ يُحاسَب بقاعدة الكرتون، والرسالة تسمّي ما كتبه هو.
     const fraction = checkFraction(n, unit);
     if (!fraction.ok) problems.push(fraction.problem);
   }
@@ -144,7 +172,16 @@ export function scanEntryVerdict({ mode, barcode, qty, name = '', item = null })
   return {
     ok: true,
     problems: [],
-    entry: { barcode: code, name: finalName, qty: n, opType: mode },
+    entry: {
+      barcode: code,
+      sku: item ? String(item.sku ?? '').trim() : '',
+      name: finalName,
+      qty: n,
+      uom: unit,
+      factor,
+      baseQty: factor === null ? null : round6(n * factor),
+      opType: mode,
+    },
   };
 }
 
@@ -162,7 +199,7 @@ export function sessionSummary(scans, knownBarcodes = new Set()) {
       if (!codes.has(code) && knownBarcodes.size && !knownBarcodes.has(code)) unknown += 1;
       codes.add(code);
     }
-    totalQty += Number(s?.qty) || 0;
+    totalQty += scanBaseQty(s); // بوحدة الأساس — جمعُ الوحدات المختلفة لا يصحّ
   }
   return {
     scanCount: (scans || []).length,
@@ -171,8 +208,6 @@ export function sessionSummary(scans, knownBarcodes = new Set()) {
     unknownCount: unknown,
   };
 }
-
-const round6 = (n) => Math.round((Number(n) || 0) * 1e6) / 1e6;
 
 /*
  * ملاحظة ترحيل (CAP-101): كانت هنا `aggregateSession` — نسخةٌ أقدم من
@@ -196,14 +231,29 @@ export function correctionEntry(row, newQty, mode) {
   if (!code) problems.push('صفٌّ بلا باركود.');
   const target = Number(newQty);
   if (!Number.isFinite(target) || target < 0) problems.push('الكمّيّة الجديدة رقمٌ صفرٌ فأكبر.');
+  // صفٌّ فيه قيدٌ بوحدةٍ لم يُعرَف معاملها: مجموعه بوحدة الأساس **غير معلوم**،
+  // فتصحيحه بفرقٍ محسوبٍ منه يكتب رقمًا مخترعًا. يُعرَّف المعامل أوّلًا.
+  if (row?.uncertain) {
+    problems.push('صفٌّ فيه وحدةٌ بلا معامل — عرِّف المعامل قبل التصحيح، فمجموعه بوحدة الأساس غير معلوم.');
+  }
   if (problems.length) return { ok: false, problems, entry: null };
 
   const delta = round6(target - (Number(row?.countedQty) || 0));
   if (delta === 0) return { ok: false, problems: ['لا تغيير — الكمّيّة هي نفسها.'], entry: null };
+  // التصحيح يُقال **بوحدة الأساس**: الصفّ مجموعُه بها، فالفرق منه بها.
   return {
     ok: true,
     problems: [],
-    entry: { barcode: code, name: String(row?.name ?? '').trim(), qty: delta, opType: mode },
+    entry: {
+      barcode: code,
+      sku: String(row?.sku ?? '').trim(),
+      name: String(row?.name ?? '').trim(),
+      qty: delta,
+      uom: String(row?.baseUom ?? '').trim(),
+      factor: 1,
+      baseQty: delta,
+      opType: mode,
+    },
   };
 }
 
@@ -222,8 +272,11 @@ export function exportRows(rows) {
     'كود الصنف': r.sku || '—',
     'اسم الصنف': r.name || '—',
     'المعدود/المنفَّذ': r.scanned === false ? '—' : r.countedQty,
+    // الوحدة عمودٌ لا زينة: رقمٌ بلا وحدةٍ لا يُقرأ (CAP-103).
+    'الوحدة': r.baseUom ? uomLabel(r.baseUom) : '—',
     'عدد القيود': r.scanCount ?? 0,
     'الحالة': r.known ? (r.scanned === false ? 'لم يُمسح' : 'معروف') : 'غير معرّف — بانتظار الاعتماد',
+    'ملاحظة': r.uncertain ? 'فيه وحدةٌ بلا معامل — المجموع غير مضمون' : '',
   }));
 }
 
@@ -255,9 +308,11 @@ export function buildSessionRows(scans, items, byBarcode, { withBaseline = false
     sku: String(item.sku ?? '').trim(),
     name: [item.nameAr, item.shade].filter(Boolean).join(' — '),
     known: true,
+    baseUom: baseUomOf(item) || String(item.unit ?? '').trim(),
     countedQty: 0,
     scanned: false,
     scanCount: 0,
+    uncertain: false,
   });
 
   if (withBaseline) {
@@ -276,16 +331,40 @@ export function buildSessionRows(scans, items, byBarcode, { withBaseline = false
     if (!row) {
       row = item
         ? rowForItem(item)
-        : { barcode: code, sku: '', name: String(s?.name ?? '').trim(), known: false, countedQty: 0, scanned: false, scanCount: 0 };
+        : { barcode: code, sku: '', name: String(s?.name ?? '').trim(), known: false, baseUom: '', countedQty: 0, scanned: false, scanCount: 0, uncertain: false };
       rows.set(key, row);
     }
     if (!row.name && s?.name) row.name = String(s.name).trim();
-    row.countedQty = round6(row.countedQty + (Number(s?.qty) || 0));
+    row.countedQty = round6(row.countedQty + scanBaseQty(s));
+    if (isUncertainScan(s)) row.uncertain = true;
     row.scanCount += 1;
     row.scanned = true;
   }
 
   return [...rows.values()];
+}
+
+/**
+ * كمّيّة القيد **بوحدة الأساس** — وهي وحدها ما يجوز جمعه.
+ *
+ * جمعُ «١ كرتون» و«٣ قطع» على أنّهما ٤ رقمٌ لا معنى له. فالمجموع يُبنى من
+ * `baseQty` المختومة وقت الالتقاط (CAP-103).
+ *
+ * والقيد القديم بلا `baseQty` يُقرأ كما هو — كان معامله ١ ضمنًا، وهذا سلوك
+ * اليوم حرفيًّا فالترحيل صفرُ الأثر. وكذلك القيد الذي جُهل معامله: يُقرأ خامًّا
+ * ويُوسم صفُّه `uncertain`، فلا يُخفى ولا يُخترع له تحويل.
+ */
+export function scanBaseQty(scan) {
+  // `== null` عمدًا: `Number(null)` صفرٌ محدود، فلو فُحص بـ`isFinite` وحده
+  // لابتلع المعاملَ المجهولَ صفرًا صامتًا — وهو أخطر من غيابه.
+  if (scan?.baseQty == null) return Number(scan?.qty) || 0;
+  const base = Number(scan.baseQty);
+  return Number.isFinite(base) ? base : Number(scan?.qty) || 0;
+}
+
+/** قيدٌ أعلن وحدةً وعجز عن تحويلها — مجموعه بوحدة الأساس غير مضمون. */
+function isUncertainScan(scan) {
+  return Boolean(scan?.uom) && scan?.baseQty == null;
 }
 
 /**
