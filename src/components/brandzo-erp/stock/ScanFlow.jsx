@@ -213,6 +213,8 @@ export default function ScanFlow() {
     }
     // لا تبويب «فروقات» (CAP-101): الفرق حكمُ طبقة المطابقة لا شاشة العدّ.
     t.push({ id: 'unknown', label: `غير معرّف (${int(progress.unknown)})` });
+    // ما يُحسم في المراجعة قبل الختم (ق-٢ · CAP-105) — يظهر حين يوجد فقط.
+    if (progress.needsUom) t.push({ id: 'needsUom', label: `بلا وحدة (${int(progress.needsUom)})` });
     return t;
   }, [rows.length, progress, withBaseline]);
 
@@ -294,6 +296,7 @@ export default function ScanFlow() {
           uom: unit,
           factor,
           baseQty: factor === null ? null : factor, // الكمّيّة ١، فالأساس هو المعامل
+          uomMissing: Boolean(item) && !unit,
           opType: mode,
           profile: me,
         });
@@ -952,7 +955,16 @@ ${inviteLink}`)}` : undefined}
                           )}
                         </td>
                         <td style={{ padding: '6px', color: 'var(--o-main-color-muted)' }}>
-                          {r.baseUom ? uomLabel(r.baseUom) : '—'}
+                          {r.baseUom ? (
+                            uomLabel(r.baseUom)
+                          ) : (
+                            <span
+                              title="بلا وحدة أساس — عُدّ وحُفظ، ويُحسم في المراجعة قبل الختم (ق-٢)"
+                              style={{ color: 'var(--o-text-warning, #8a6d1b)' }}
+                            >
+                              بلا وحدة
+                            </span>
+                          )}
                         </td>
                         <td style={{ padding: '6px', fontVariantNumeric: 'tabular-nums', color: 'var(--o-main-color-muted)' }}>
                           {r.scanned ? int(r.scanCount) : '—'}

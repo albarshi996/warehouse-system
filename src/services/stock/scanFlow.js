@@ -242,6 +242,9 @@ export function scanEntryVerdict({ mode, barcode, qty, name = '', item = null, u
       uom: unit,
       factor,
       baseQty: factor === null ? null : round6(n * factor),
+      // ق-٢: صنفٌ في الماستر بلا وحدة أساس **يُعدّ ويُوسم** ولا يُمنع.
+      // الوسم للمراجعة قبل الختم (CAP-405)، لا حاجزٌ أمام العادّ.
+      uomMissing: Boolean(item) && !unit,
       opType: mode,
     },
   };
@@ -338,7 +341,10 @@ export function exportRows(rows) {
     'الوحدة': r.baseUom ? uomLabel(r.baseUom) : '—',
     'عدد القيود': r.scanCount ?? 0,
     'الحالة': r.known ? (r.scanned === false ? 'لم يُمسح' : 'معروف') : 'غير معرّف — بانتظار الاعتماد',
-    'ملاحظة': r.uncertain ? 'فيه وحدةٌ بلا معامل — المجموع غير مضمون' : '',
+    'ملاحظة': [
+      r.uomMissing ? 'بلا وحدة أساس — يُحسم في المراجعة' : '',
+      r.uncertain ? 'فيه وحدةٌ بلا معامل — المجموع غير مضمون' : '',
+    ].filter(Boolean).join(' · '),
   }));
 }
 
@@ -375,6 +381,8 @@ export function buildSessionRows(scans, items, byBarcode, { withBaseline = false
     scanned: false,
     scanCount: 0,
     uncertain: false,
+    // ق-٢: يُعرَض ويُعدّ ويُوسم — و١٠٤٠ صنفًا اليوم على هذه الحال.
+    uomMissing: !(baseUomOf(item) || String(item.unit ?? '').trim()),
   });
 
   if (withBaseline) {
@@ -393,12 +401,13 @@ export function buildSessionRows(scans, items, byBarcode, { withBaseline = false
     if (!row) {
       row = item
         ? rowForItem(item)
-        : { barcode: code, sku: '', name: String(s?.name ?? '').trim(), known: false, baseUom: '', countedQty: 0, scanned: false, scanCount: 0, uncertain: false };
+        : { barcode: code, sku: '', name: String(s?.name ?? '').trim(), known: false, baseUom: '', countedQty: 0, scanned: false, scanCount: 0, uncertain: false, uomMissing: false };
       rows.set(key, row);
     }
     if (!row.name && s?.name) row.name = String(s.name).trim();
     row.countedQty = round6(row.countedQty + scanBaseQty(s));
     if (isUncertainScan(s)) row.uncertain = true;
+    if (s?.uomMissing) row.uomMissing = true;
     row.scanCount += 1;
     row.scanned = true;
   }
@@ -440,21 +449,25 @@ export function sessionProgress(rows) {
   const baseline = list.filter((r) => r.known);
   const scanned = baseline.filter((r) => r.scanned);
   const unknown = list.filter((r) => !r.known);
+  // ما يُحسم في المراجعة قبل الختم: مُعَدٌّ بلا وحدة (ق-٢) أو بمعاملٍ مجهول.
+  const needsUom = list.filter((r) => r.scanned && (r.uomMissing || r.uncertain));
   return {
     total: baseline.length,
     scanned: scanned.length,
     remaining: baseline.length - scanned.length,
     unknown: unknown.length,
+    needsUom: needsUom.length,
     pct: baseline.length ? Math.round((scanned.length / baseline.length) * 100) : 0,
   };
 }
 
-/** ترشيح الجدول: تبويبٌ (all/scanned/unscanned/unknown) + بحثٌ حرّ. */
+/** ترشيح الجدول: تبويبٌ (all/scanned/unscanned/unknown/needsUom) + بحثٌ حرّ. */
 export function filterRows(rows, { tab = 'all', term = '' } = {}) {
   let list = rows || [];
   if (tab === 'scanned') list = list.filter((r) => r.scanned);
   else if (tab === 'unscanned') list = list.filter((r) => r.known && !r.scanned);
   else if (tab === 'unknown') list = list.filter((r) => !r.known);
+  else if (tab === 'needsUom') list = list.filter((r) => r.scanned && (r.uomMissing || r.uncertain));
   const needle = String(term ?? '').trim().toLowerCase();
   if (needle) {
     list = list.filter((r) =>

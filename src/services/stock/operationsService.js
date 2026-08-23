@@ -89,7 +89,7 @@ export async function createOperation({ type, profile, note = '' }) {
  * والحقول الجديدة **لا تحتاج تعديل قواعد**: قاعدة `scans` تشترط الهويّة وفتحَ
  * العمليّة الأمّ ولا تحصر الحقول — فتمرّ بلا مساس.
  */
-export function appendScan(opId, { barcode, sku, name, qty, uom, factor, baseQty, profile, opType }) {
+export function appendScan(opId, { barcode, sku, name, qty, uom, factor, baseQty, uomMissing, profile, opType }) {
   const numOrNull = (v) => (v == null || !Number.isFinite(Number(v)) ? null : Number(v));
   return addDoc(collection(db, OPS, opId, 'scans'), {
     barcode: String(barcode || ''),
@@ -99,6 +99,7 @@ export function appendScan(opId, { barcode, sku, name, qty, uom, factor, baseQty
     uom: String(uom || ''),
     factor: numOrNull(factor),
     baseQty: numOrNull(baseQty),
+    uomMissing: Boolean(uomMissing), // ق-٢: وسمٌ يُحسم في المراجعة لا حاجزٌ عند العدّ
     opType: opType || '',
     byUid: currentUid(),
     byName: profile?.name || auth?.currentUser?.email || 'غير معروف',

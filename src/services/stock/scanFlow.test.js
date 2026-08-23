@@ -121,7 +121,7 @@ test('★ قيدٌ معروف: الاسم من الماستر والكمّيّة
   assert.equal(v.ok, true);
   assert.deepEqual(v.entry, {
     barcode: '111', sku: 'ITM-1', name: 'كريم يدين — وردي',
-    qty: 5, uom: 'piece', factor: 1, baseQty: 5, opType: 'استلام',
+    qty: 5, uom: 'piece', factor: 1, baseQty: 5, uomMissing: false, opType: 'استلام',
   });
 });
 
@@ -160,7 +160,7 @@ test('★★★ CAP-103 كرتونٌ معامله 12 وكتابة 1 ⇒ baseQty 
   assert.equal(v.ok, true);
   assert.deepEqual(v.entry, {
     barcode: '700012', sku: 'ITM-BX', name: 'شامبو',
-    qty: 1, uom: 'carton', factor: 12, baseQty: 12, opType: 'جرد',
+    qty: 1, uom: 'carton', factor: 12, baseQty: 12, uomMissing: false, opType: 'جرد',
   });
   // وهذا هو فارق 1100٪ الذي حذّر منه المالك: 1 كرتون ليست 1 قطعة.
   assert.notEqual(v.entry.baseQty, v.entry.qty);
@@ -262,6 +262,53 @@ test('★★★ تبديل الوحدة يُعيد حساب الكمّيّة ا�
 test('★ المعاينة تقول «المعامل غير معرّف» ولا تخترع رقمًا', () => {
   const noFactor = { sku: 'NF', nameAr: 'صندوق', baseUom: 'piece', uomFactors: { box: 0 } };
   assert.match(baseQtyPreview(noFactor, 2, 'pallet'), /غير معرّف/);
+});
+
+/* ═══ CAP-105 — الصنف بلا وحدة يُعدّ موسومًا ولا يُمنع (ق-٢) ═══ */
+
+const BARE = { sku: 'ITM-BARE', nameAr: 'صنفٌ بلا وحدة', barcodes: ['900001'] };
+
+test('★★★ CAP-105 صنفٌ بلا وحدة أساس: يُحفظ ولا يُمنع — ويُوسم للمراجعة', () => {
+  const v = scanEntryVerdict({ mode: 'جرد', barcode: '900001', qty: 7, item: BARE });
+  assert.equal(v.ok, true, 'ق-٢: لا حجب — العادّ لا يُوقَف على الرفّ');
+  assert.deepEqual(v.problems, [], 'ولا رسالةَ تعطيلٍ ولا خطوةَ إضافيّة');
+  assert.equal(v.entry.qty, 7);
+  assert.equal(v.entry.uom, '');
+  assert.equal(v.entry.uomMissing, true);
+});
+
+test('★★ الوسم للناقص وحده: المعرّف بوحدته لا يُوسم، والمجهول ليس «بلا وحدة»', () => {
+  assert.equal(scanEntryVerdict({ mode: 'جرد', barcode: '111', qty: 1, item: ITEM }).entry.uomMissing, false);
+  // المجهول في الماستر مشكلةٌ أخرى (يُسمّى ويُعتمد) لا «صنفٌ بلا وحدة».
+  const unknown = scanEntryVerdict({ mode: 'جرد', barcode: '999', qty: 1, name: 'جديد' });
+  assert.equal(unknown.entry.uomMissing, false);
+});
+
+test('★★★ ق-٢: غياب الرصيد لا يمنع العدّ ولا يُنقص من الصفّ شيئًا', () => {
+  // صنفٌ بلا `balance` إطلاقًا — وهو حال 967 صنفًا من 1041.
+  const rows = buildSessionRows(
+    [{ barcode: '900001', qty: 7, uom: '', factor: null, baseQty: null, uomMissing: true }],
+    [BARE], new Map([['900001', BARE]]), { withBaseline: true }
+  );
+  const row = rows.find((r) => r.sku === 'ITM-BARE');
+  assert.equal(row.countedQty, 7, 'الكمّيّة كاملةٌ — لا شيء يُنقص');
+  assert.equal(row.scanned, true);
+  assert.equal(row.uomMissing, true);
+  assert.equal('bookQty' in row, false); // ولا رصيدَ يُقرأ أصلًا (CAP-101)
+});
+
+test('★★ الموسوم يُجمع في تبويبٍ واحد للمراجعة قبل الختم', () => {
+  const rows = buildSessionRows(
+    [
+      { barcode: '900001', qty: 7, uomMissing: true },
+      { barcode: '111', qty: 2, uom: 'piece', factor: 1, baseQty: 2 },
+      { barcode: '800001', qty: 3, uom: 'box', factor: null, baseQty: null },
+    ],
+    [BARE, ITEM], new Map([['900001', BARE], ['111', ITEM]]), { withBaseline: false }
+  );
+  assert.equal(sessionProgress(rows).needsUom, 2, 'بلا وحدةٍ + معاملٌ مجهول');
+  const shown = filterRows(rows, { tab: 'needsUom' });
+  assert.deepEqual(shown.map((r) => r.barcode).sort(), ['800001', '900001']);
 });
 
 test('وضعٌ مجهول أو باركود فارغ يُرفضان بالاسم', () => {
@@ -419,7 +466,9 @@ test('★ عدّادات الإنجاز — نفس أرقام رأس الأدا�
   );
   // ولا عدّاد «فروقات» (CAP-101): المتبقّي يقيس العملَ لا الانحراف.
   assert.deepEqual(sessionProgress(rows), {
-    total: 2, scanned: 1, remaining: 1, unknown: 1, pct: 50,
+    // needsUom = 1: أصناف MASTER هنا بلا وحدةٍ أصلًا — وهو حال ١٠٤٠ صنفًا
+    // في الماستر الحقيقيّ. تُعدّ وتُوسم ولا تُمنع (ق-٢ · CAP-105).
+    total: 2, scanned: 1, remaining: 1, unknown: 1, needsUom: 1, pct: 50,
   });
 });
 
