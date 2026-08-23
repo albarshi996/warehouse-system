@@ -39,6 +39,7 @@ import {
   SCAN_MODES,
   panelForScan,
   resolveScanUom,
+  barcodeCandidates,
   scanUomChoices,
   baseQtyPreview,
   scanEntryVerdict,
@@ -76,6 +77,8 @@ export default function ScanFlow() {
   const [panel, setPanel] = useState(null); // خانة التعبئة بعد المسح
   const [panelItem, setPanelItem] = useState(null);
   const [panelUom, setPanelUom] = useState(''); // الوحدة التي اختارها العادّ (CAP-104)
+  const [collision, setCollision] = useState(null); // { code, candidates } — تصادمُ باركود (CAP-106)
+  const [panelCollision, setPanelCollision] = useState(false);
   const [qty, setQty] = useState('');
   const [newName, setNewName] = useState('');
   const [busy, setBusy] = useState(false);
@@ -245,6 +248,17 @@ export default function ScanFlow() {
       flash('err', 'اختر الوضع أوّلًا: جرد أو استلام أو صرف.');
       return;
     }
+    // ★ التصادم يُكشف **قبل** أيّ حسم (CAP-106): باركودٌ يطابق أكثر من صنف
+    //   يُعرض خيارًا، ولا يُختار عن العادّ أوّلُ مطابقةٍ صامتةً.
+    const candidates = barcodeCandidates(code, items);
+    if (candidates.length > 1) {
+      setCollision({ code, candidates });
+      setPanel(null);
+      setPanelItem(null);
+      if (scanInputRef.current) scanInputRef.current.value = '';
+      return;
+    }
+
     let item = null;
     try {
       item = await lookupByBarcode(code);
@@ -254,12 +268,19 @@ export default function ScanFlow() {
     if (!item && items.length) {
       item = fiveStepItemSearch(code, { items })?.item || null;
     }
+    openPanel(code, item, false);
+  }
+
+  /** يفتح خانة التعبئة على صنفٍ محسوم — مسارٌ واحد للمسح ولفصل التصادم. */
+  function openPanel(code, item, fromCollision) {
     // الاستبانة بالاسم تفتح الخانة بباركود الصنف الحقيقيّ لا بالنصّ المكتوب.
     const panelCode = item && !/^\d/.test(code) ? (item.barcodes?.[0] || item.sku) : code;
     const built = panelForScan(panelCode, item);
+    setCollision(null);
     setPanel(built);
     setPanelItem(item);
     setPanelUom(built.unit); // الوحدة المحلولة من الباركود هي المقترحة
+    setPanelCollision(Boolean(fromCollision));
     setQty('');
     setNewName('');
     if (scanInputRef.current) scanInputRef.current.value = '';
@@ -322,6 +343,7 @@ export default function ScanFlow() {
       name: newName,
       item: panelItem,
       uom: panelUom,
+      collision: panelCollision,
     });
     if (!verdict.ok) {
       flash('err', verdict.problems.join(' · '));
@@ -351,6 +373,7 @@ export default function ScanFlow() {
       setPanel(null);
       setPanelItem(null);
       setPanelUom('');
+      setPanelCollision(false);
       setQty('');
       setNewName('');
       setTimeout(() => scanInputRef.current?.focus(), 50);
@@ -724,6 +747,45 @@ ${inviteLink}`)}` : undefined}
         </div>
       )}
 
+      {/* ٣أ — تصادمُ باركود: الشاشة تسأل ولا تختار (CAP-106) */}
+      {collision && (
+        <div className="o_ds_card o_ds_pad" style={{ marginBottom: '14px', borderInlineStart: '4px solid var(--o-text-warning, #8a6d1b)' }}>
+          <p style={{ margin: '0 0 4px', fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
+            باركودٌ واحد، أكثرُ من صنف
+            <span style={{ marginInlineStart: '8px', fontFamily: 'monospace', direction: 'ltr', display: 'inline-block' }}>{collision.code}</span>
+          </p>
+          <p style={{ margin: '0 0 10px', fontSize: 'var(--o-font-size-sm)', fontWeight: 'var(--o-font-weight-bold)' }}>
+            أيُّهما على الرفّ أمامك؟ — لن يُختار عنك.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {collision.candidates.map((it) => (
+              <button
+                key={it.sku}
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => openPanel(collision.code, it, true)}
+                style={{ textAlign: 'right', padding: '10px 12px' }}
+              >
+                <span style={{ fontWeight: 'var(--o-font-weight-bold)' }}>
+                  {[it.nameAr, it.shade].filter(Boolean).join(' — ') || it.sku}
+                </span>
+                <span style={{ marginInlineStart: '8px', fontFamily: 'monospace', fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+                  {it.sku}
+                </span>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="btn btn-link btn-sm"
+            onClick={() => { setCollision(null); setTimeout(() => scanInputRef.current?.focus(), 50); }}
+            style={{ marginTop: '6px', padding: 0 }}
+          >
+            إلغاء هذا المسح
+          </button>
+        </div>
+      )}
+
       {/* ٣ — خانة التعبئة */}
       {panel && (
         <div className="o_ds_card o_ds_pad" style={{ marginBottom: '14px', borderInlineStart: '4px solid var(--o-brand-primary, #714B67)' }}>
@@ -812,7 +874,7 @@ ${inviteLink}`)}` : undefined}
           <button
             type="button"
             className="btn btn-link btn-sm"
-            onClick={() => { setPanel(null); setPanelItem(null); setPanelUom(''); setTimeout(() => scanInputRef.current?.focus(), 50); }}
+            onClick={() => { setPanel(null); setPanelItem(null); setPanelUom(''); setPanelCollision(false); setTimeout(() => scanInputRef.current?.focus(), 50); }}
             style={{ marginTop: '6px', padding: 0 }}
           >
             إلغاء هذا المسح

@@ -3481,6 +3481,7 @@
         "SCAN_MODES",
         "appendScan",
         "applyLedgerToItems",
+        "barcodeCandidates",
         "baseQtyPreview",
         "buildSessionRows",
         "closeOperation",

@@ -31,7 +31,7 @@
  *
  * الوثيقة الحاكمة: `docs/خطة-طبقة-الالتقاط.md`.
  */
-import { normalizeBarcode } from '../excel/excelSchema.js';
+import { normalizeBarcode, barcodeLookupVariants } from '../excel/excelSchema.js';
 import {
   baseUomOf,
   checkFraction,
@@ -91,6 +91,36 @@ function unitPanelLabel(item, unit, base) {
   if (factor === null) return `${label} (معاملٌ غير معرّف)`;
   if (factor === 1) return label;
   return `${label} (${factor} ${uomLabel(base)})`;
+}
+
+/**
+ * كلّ أصناف الماستر التي يطابقها هذا الباركود (CAP-106).
+ *
+ * ═══ «الباركود ليس مفتاحًا» — نصّ المالك ═══
+ * باركودٌ واحد قد يشير لأكثر من صنف (تعبئةٌ ترويجيّة · كودٌ يدويّ من نوع
+ * `ip32660` يشبه باركودًا · خطأُ إدخالٍ في الماستر)، وصنفٌ واحد له عدّة
+ * باركودات. و`buildItemIndexes` تحسم بأوّل مطابقة صامتةً — وهو الصواب لسطر
+ * مستندٍ يُحرَّر بعينٍ عليه، والخطأُ لواقفٍ أمام رفٍّ لا يرى ما حُسم عنه.
+ *
+ * فهذه تُرجع **المرشّحين كلّهم** ليختار الإنسان. والمؤرشف لا يُرشَّح.
+ *
+ * @returns {Array<object>} صفرٌ أو واحدٌ أو أكثر — والأكثرُ تصادمٌ يُعرض
+ */
+export function barcodeCandidates(code, items) {
+  const variants = new Set(barcodeLookupVariants(code));
+  if (!variants.size) return [];
+  const out = [];
+  const seen = new Set();
+  for (const it of items || []) {
+    if (!it?.sku || it.archived) continue;
+    const hit = (it.barcodes || []).some((b) => barcodeLookupVariants(b).some((v) => variants.has(v)));
+    if (!hit) continue;
+    const key = String(it.sku).toUpperCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(it);
+  }
+  return out;
 }
 
 /**
@@ -194,7 +224,7 @@ export function panelForScan(code, item) {
  * @param {{mode:string, barcode:string, qty:*, name?:string, item?:object|null, uom?:string}} input
  * @returns {{ok:boolean, problems:string[], entry:object|null}}
  */
-export function scanEntryVerdict({ mode, barcode, qty, name = '', item = null, uom = '' }) {
+export function scanEntryVerdict({ mode, barcode, qty, name = '', item = null, uom = '', collision = false }) {
   const problems = [];
   if (!isScanMode(mode)) problems.push('اختر الوضع أوّلًا: جرد أو استلام أو صرف.');
 
@@ -245,6 +275,9 @@ export function scanEntryVerdict({ mode, barcode, qty, name = '', item = null, u
       // ق-٢: صنفٌ في الماستر بلا وحدة أساس **يُعدّ ويُوسم** ولا يُمنع.
       // الوسم للمراجعة قبل الختم (CAP-405)، لا حاجزٌ أمام العادّ.
       uomMissing: Boolean(item) && !unit,
+      // CAP-106: باركودٌ تصادم فيه أكثر من صنف وفصله العادّ بيده. ومع
+      // `byUid` و`at` اللذين يختمهما `appendScan` يُعرف **من** فصل و**متى**.
+      collision: Boolean(collision),
       opType: mode,
     },
   };

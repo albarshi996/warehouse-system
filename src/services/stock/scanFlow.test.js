@@ -14,6 +14,7 @@ import {
   panelForScan,
   scanUomChoices,
   baseQtyPreview,
+  barcodeCandidates,
   scanEntryVerdict,
   sessionSummary,
   correctionEntry,
@@ -121,7 +122,7 @@ test('★ قيدٌ معروف: الاسم من الماستر والكمّيّة
   assert.equal(v.ok, true);
   assert.deepEqual(v.entry, {
     barcode: '111', sku: 'ITM-1', name: 'كريم يدين — وردي',
-    qty: 5, uom: 'piece', factor: 1, baseQty: 5, uomMissing: false, opType: 'استلام',
+    qty: 5, uom: 'piece', factor: 1, baseQty: 5, uomMissing: false, collision: false, opType: 'استلام',
   });
 });
 
@@ -160,7 +161,7 @@ test('★★★ CAP-103 كرتونٌ معامله 12 وكتابة 1 ⇒ baseQty 
   assert.equal(v.ok, true);
   assert.deepEqual(v.entry, {
     barcode: '700012', sku: 'ITM-BX', name: 'شامبو',
-    qty: 1, uom: 'carton', factor: 12, baseQty: 12, uomMissing: false, opType: 'جرد',
+    qty: 1, uom: 'carton', factor: 12, baseQty: 12, uomMissing: false, collision: false, opType: 'جرد',
   });
   // وهذا هو فارق 1100٪ الذي حذّر منه المالك: 1 كرتون ليست 1 قطعة.
   assert.notEqual(v.entry.baseQty, v.entry.qty);
@@ -309,6 +310,38 @@ test('★★ الموسوم يُجمع في تبويبٍ واحد للمراجع
   assert.equal(sessionProgress(rows).needsUom, 2, 'بلا وحدةٍ + معاملٌ مجهول');
   const shown = filterRows(rows, { tab: 'needsUom' });
   assert.deepEqual(shown.map((r) => r.barcode).sort(), ['800001', '900001']);
+});
+
+/* ═══ CAP-106 — الباركود ليس مفتاحًا: التصادم يُعرض ولا يُحسم صامتًا ═══ */
+
+test('★★★ CAP-106 باركودٌ يطابق صنفين يُرجع الاثنين — لا أوّلَ مطابقة', () => {
+  const a = { sku: 'A-1', nameAr: 'كريم', barcodes: ['600001'] };
+  const b = { sku: 'B-2', nameAr: 'عبوةٌ ترويجيّة', barcodes: ['600001', '600002'] };
+  const gone = { sku: 'C-3', nameAr: 'مؤرشف', barcodes: ['600001'], archived: true };
+  const found = barcodeCandidates('600001', [a, b, gone]);
+  assert.deepEqual(found.map((i) => i.sku), ['A-1', 'B-2'], 'والمؤرشف لا يُرشَّح');
+
+  // وباركودٌ لصنفٍ واحد لا يُنتج تصادمًا — فلا سؤالَ بلا سبب.
+  assert.equal(barcodeCandidates('600002', [a, b]).length, 1);
+  assert.deepEqual(barcodeCandidates('999999', [a, b]), []);
+  assert.deepEqual(barcodeCandidates('', [a, b]), []);
+});
+
+test('★★ التطبيع يُحترم في كشف التصادم — الأصفار البادئة لا تُخفي صنفًا', () => {
+  const a = { sku: 'A-1', nameAr: 'أ', barcodes: ['00251'] };
+  const b = { sku: 'B-2', nameAr: 'ب', barcodes: ['251'] };
+  assert.equal(barcodeCandidates('251', [a, b]).length, 2);
+});
+
+test('★★ اختيار العادّ يُختم على القيد — فيُعرف من فصل التصادم', () => {
+  const picked = { sku: 'B-2', nameAr: 'عبوةٌ ترويجيّة', unit: 'piece' };
+  const v = scanEntryVerdict({ mode: 'جرد', barcode: '600001', qty: 2, item: picked, collision: true });
+  assert.equal(v.ok, true);
+  assert.equal(v.entry.collision, true);
+  assert.equal(v.entry.sku, 'B-2', 'والصنف المحلول يُحفظ مع الباركود كما مُسح');
+  assert.equal(v.entry.barcode, '600001');
+  // ومسحٌ بلا تصادمٍ لا يُوسم.
+  assert.equal(scanEntryVerdict({ mode: 'جرد', barcode: '111', qty: 1, item: ITEM }).entry.collision, false);
 });
 
 test('وضعٌ مجهول أو باركود فارغ يُرفضان بالاسم', () => {
