@@ -115,6 +115,59 @@ export function itemUomProblems(draft) {
   return factorProblems(draft);
 }
 
+/**
+ * دَينُ الوحدات في الماستر — **قياسٌ لا منع** (CAP-107).
+ *
+ * قرار المالك ق-٢ رفع الحجب عن العدّ: صنفٌ بلا وحدةٍ يُعدّ ويُوسم. لكنّ رفع
+ * الحجب لا يُلغي الحاجة إلى معرفة **حجم الدَّين** — و١٠٤٠ صنفًا اليوم وحدتها
+ * «—». فهذه تقيس ولا تمنع، وتُخرج قائمة عملٍ يُشتغل عليها بالتدريج.
+ *
+ * وتفصل حالتين لا تُخلطان:
+ *   · **بلا وحدة أساس** — لا يُعرف ما يُعدّ أصلًا.
+ *   · **وحدةٌ بلا معامل** — أُعلنت وحدةٌ مشتقّة بباركودها ولا تحويلَ لها،
+ *     وهي أخطر: القيد يُحفظ ولا يدخل المجموع بوحدة الأساس.
+ *
+ * والمؤرشف لا يُحسب — لا عمل عليه.
+ *
+ * @returns {{total:number, missingBase:number, missingFactor:number, rows:Array}}
+ */
+export function uomDebtReport(items) {
+  const rows = [];
+  let total = 0;
+  for (const it of items || []) {
+    if (!it?.sku || it.archived) continue;
+    total += 1;
+    const base = baseUomOf(it);
+    const declared = [...new Set(Object.values(it.uomBarcodes || {}).map((u) => normalizeUom(u)).filter(Boolean))];
+    const unresolvedUoms = declared.filter((u) => factorToBase(it, u) === null);
+    if (base && !unresolvedUoms.length) continue;
+    rows.push({
+      sku: String(it.sku).trim(),
+      name: [it.nameAr, it.shade].filter(Boolean).join(' — '),
+      baseUom: base,
+      missingBase: !base,
+      unresolvedUoms,
+    });
+  }
+  return {
+    total,
+    missingBase: rows.filter((r) => r.missingBase).length,
+    missingFactor: rows.filter((r) => r.unresolvedUoms.length).length,
+    rows,
+  };
+}
+
+/** صفوف تصدير دَين الوحدات — قائمة عملٍ تفتح في إكسل كما هي. */
+export function uomDebtExportRows(report) {
+  return (report?.rows || []).map((r) => ({
+    'كود الصنف': r.sku,
+    'اسم الصنف': r.name || '—',
+    'وحدة الأساس': r.baseUom ? uomLabel(r.baseUom) : '—',
+    'الناقص': r.missingBase ? 'وحدة الأساس' : 'معامل التحويل',
+    'وحداتٌ بلا معامل': r.unresolvedUoms.map((u) => uomLabel(u)).join(' · ') || '—',
+  }));
+}
+
 /* ═══════════════ ٢ — قائمة الوحدات لسطر المستند (ف‑٤٢) ═══════════════ */
 
 /**

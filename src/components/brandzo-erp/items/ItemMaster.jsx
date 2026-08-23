@@ -6,6 +6,7 @@ import {
   UNIT_OPTIONS,
 } from '../../../services/items/itemService.js';
 import { canImport } from '../../../services/items/itemsImportService.js';
+import { uomDebtReport, uomDebtExportRows } from '../../../services/items/uomWiring.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { totalQty, stockValue, fefoSort, expiryStatus } from '../../../services/balances/balanceKey.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
@@ -57,6 +58,18 @@ export default function ItemMaster() {
   const [balances, setBalances] = useState([]);
   const [me, setMe] = useState(null);
   const [toast, setToast] = useState(null); // { kind, text }
+
+  // دَينُ الوحدات — الحكم في النواة، والشاشة تعرضه وتُصدّره (CAP-107).
+  const uomDebt = useMemo(() => uomDebtReport(items), [items]);
+
+  /** تصدير قائمة العمل — لا يمنع شيئًا، يُخرج ما يُشتغل عليه بالتدريج. */
+  async function exportUomDebt() {
+    const XLSX = await import('xlsx');
+    const ws = XLSX.utils.json_to_sheet(uomDebtExportRows(uomDebt));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'دين الوحدات');
+    XLSX.writeFile(wb, 'Brandzo-UoM-Debt.xlsx');
+  }
 
   // الدور — لإظهار زرّ الاستيراد للمخوَّلين فقط (الإلزام الحقيقي في قواعد Firestore).
   useEffect(() => {
@@ -302,6 +315,26 @@ export default function ItemMaster() {
 
         {toast && <div className={`o_alert ${toast.kind === 'error' ? 'danger' : 'success'}`}>{toast.text}</div>}
         {error && !loading && <div className="o_alert danger">{error}</div>}
+
+        {/* دَينُ الوحدات — قياسٌ لا منع (CAP-107 · ق-٢ رفع الحجب عن العدّ) */}
+        {uomDebt.rows.length > 0 && (
+          <div className="o_ds_card o_ds_pad" style={{ marginBottom: '14px', borderInlineStart: '4px solid var(--o-text-warning, #8a6d1b)' }}>
+            <p style={{ margin: '0 0 6px', fontSize: 'var(--o-font-size-sm)', fontWeight: 'var(--o-font-weight-bold)' }}>
+              دَينُ الوحدات — قائمة عملٍ قبل أوّل جردٍ حقيقيّ
+            </p>
+            <p style={{ margin: '0 0 8px', fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', lineHeight: 1.7 }}>
+              <strong>{int(uomDebt.missingBase)}</strong> صنفًا بلا وحدة أساس ·{' '}
+              <strong>{int(uomDebt.missingFactor)}</strong> صنفًا فيه وحدةٌ بلا معامل تحويل — من{' '}
+              {int(uomDebt.total)} صنفًا نشطًا.
+              <br />
+              وهذا قياسٌ لا يمنع شيئًا: الجرد يمضي، والناقص يُوسم ويُحسم في المراجعة.
+              لكنّ <strong>الكمّيّة بلا وحدةٍ رقمٌ بلا معنى</strong> — فهذه أولويّة ما قبل الجرد.
+            </p>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={exportUomDebt}>
+              <Icon name="arrowDownTray" size={14} /> تصدير قائمة العمل
+            </button>
+          </div>
+        )}
 
         {importing && (
           <div style={{ marginBottom: '18px' }}>

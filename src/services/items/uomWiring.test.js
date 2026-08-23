@@ -20,6 +20,8 @@ import {
   itemForLine,
   stampPartnerUom,
   refreshLineBase,
+  uomDebtReport,
+  uomDebtExportRows,
 } from './uomWiring.js';
 
 /** صنفٌ عرّف وحداته: الأساس قطعة، والكرتون ٢٤. */
@@ -157,4 +159,41 @@ test('صنفٌ لم يعرّف وحداته: السطر يمرّ كما هو —
   assert.equal('baseQty' in line, false);
   assert.equal(line.qty, 5);
   assert.equal(line.uom, 'كرتونة');
+});
+
+/* ═══ CAP-107 — دَينُ الوحدات: قياسٌ لا منع ═══ */
+
+test('★★★ CAP-107 التقرير يفصل «بلا وحدة أساس» عن «وحدةٌ بلا معامل»', () => {
+  const report = uomDebtReport([
+    { sku: 'OK-1', nameAr: 'سليم', baseUom: 'piece', uomFactors: { carton: 12 }, uomBarcodes: { '1': 'carton' } },
+    { sku: 'NO-BASE', nameAr: 'بلا وحدة' },
+    { sku: 'NO-FACTOR', nameAr: 'صندوقٌ بلا معامل', baseUom: 'piece', uomBarcodes: { '2': 'box' } },
+    { sku: 'GONE', nameAr: 'مؤرشف', archived: true },
+  ]);
+  assert.equal(report.total, 3, 'المؤرشف لا يُحسب — لا عمل عليه');
+  assert.equal(report.missingBase, 1);
+  assert.equal(report.missingFactor, 1);
+  assert.deepEqual(report.rows.map((r) => r.sku), ['NO-BASE', 'NO-FACTOR']);
+  assert.deepEqual(report.rows[1].unresolvedUoms, ['box']);
+});
+
+test('★★ ماسترٌ سليمٌ كلّه: تقريرٌ فارغ — فلا بطاقةَ تُعرض بلا سبب', () => {
+  const report = uomDebtReport([{ sku: 'OK-1', baseUom: 'kg' }]);
+  assert.equal(report.rows.length, 0);
+  assert.equal(report.total, 1);
+  assert.deepEqual(uomDebtReport([]), { total: 0, missingBase: 0, missingFactor: 0, rows: [] });
+  assert.deepEqual(uomDebtReport(null).rows, []);
+});
+
+test('★★ التصدير قائمةُ عملٍ تُقرأ: الناقصُ مسمًّى والوحدات بأسمائها العربيّة', () => {
+  const report = uomDebtReport([
+    { sku: 'NO-BASE', nameAr: 'بلا وحدة' },
+    { sku: 'NO-FACTOR', nameAr: 'صندوق', baseUom: 'piece', uomBarcodes: { '2': 'box' } },
+  ]);
+  const rows = uomDebtExportRows(report);
+  assert.deepEqual(Object.keys(rows[0]), ['كود الصنف', 'اسم الصنف', 'وحدة الأساس', 'الناقص', 'وحداتٌ بلا معامل']);
+  assert.equal(rows[0]['الناقص'], 'وحدة الأساس');
+  assert.equal(rows[0]['وحدة الأساس'], '—');
+  assert.equal(rows[1]['الناقص'], 'معامل التحويل');
+  assert.equal(rows[1]['وحداتٌ بلا معامل'], 'صندوق');
 });
