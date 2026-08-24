@@ -7,7 +7,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ROLE_NAV, NAV_GROUP_LABELS, canSeeGroup, canSeeItem, canSeeHome, groupsFor } from './navAccess.js';
+import { ROLE_NAV, NAV_GROUP_LABELS, canSeeGroup, canSeeItem, canSeeHome, groupsFor, duplicateIndexes } from './navAccess.js';
 import { ROLES } from './roles.js';
 import { NAV_GROUPS } from './navCatalog.js';
 
@@ -104,4 +104,48 @@ test('groupsFor يُعيد نسخة — تعديلها لا يفسد الخري�
   const g = groupsFor('storekeeper');
   g.push('archive');
   assert.equal(canSeeGroup('storekeeper', 'archive'), false);
+});
+
+/* ═══ مدخلٌ واحدٌ لكل صفحة (تدقيق 24.08.2026) ═══ */
+
+test('duplicateIndexes تُبقي الأوّل وتشير إلى ما تكرّر بعده', () => {
+  assert.deepEqual(duplicateIndexes(['/a', '/b', '/a', '/c', '/a']), [2, 4]);
+  assert.deepEqual(duplicateIndexes(['/a', '/b', '/c']), []);
+  assert.deepEqual(duplicateIndexes([]), []);
+});
+
+test('duplicateIndexes تتجاهل الفارغ — الروابط الخارجية بلا مسارٍ كتالوجيّ', () => {
+  assert.deepEqual(duplicateIndexes(['', '/a', '', '/a']), [3]);
+});
+
+test('★ لا يرى دورٌ واحدٌ صفحةً مرّتين — بعد إزالة التكرار عند العرض', () => {
+  for (const role of Object.keys(ROLES)) {
+    const paths = [];
+    for (const g of NAV_GROUPS) {
+      if (!canSeeGroup(role, g.key)) continue;
+      for (const it of g.items) {
+        if (!canSeeItem(role, it.roles)) continue;
+        if (!it.external) paths.push(it.path);
+      }
+    }
+    const shown = paths.filter((_, i) => !duplicateIndexes(paths).includes(i));
+    assert.equal(
+      new Set(shown).size,
+      shown.length,
+      `الدور «${role}» يرى صفحةً مرّتين رغم إزالة التكرار`
+    );
+  }
+});
+
+test('التكرار المقصود يبقى في الكتالوج — الحذف يكسر أصحابه', () => {
+  const homes = new Map();
+  for (const g of NAV_GROUPS) {
+    for (const it of g.items) {
+      if (!homes.has(it.path)) homes.set(it.path, []);
+      homes.get(it.path).push(g.key);
+    }
+  }
+  // «المهام» مُدرجة لمستخدم الإدارة في مجموعته، وهو لا يرى «العمليات اليومية».
+  assert.ok(homes.get('/dashboard/tasks').includes('dept'));
+  assert.equal(canSeeGroup('department_user', 'daily'), false);
 });

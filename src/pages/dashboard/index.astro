@@ -52,12 +52,16 @@ const hubs = [
   },
   {
     id: 'hub-dashboards', icon: 'barChart3', title: 'لوحات القيادة',
-    desc: 'المؤشرات والمتابعة الحيّة ودفتر الحركات والنقل والرقابة على الطلبات.',
+    desc: 'اللوحة الرئيسة أعلاه، وهذه مناظيرها ودفاترها: الجرد والأسطول واللوجستيات والحركات والنقل والطلبات.',
     roles: 'admin,warehouse_manager',
+    // ‹تدقيق 24.08› التسميات هنا يدويّة — يحرسها التدقيق فلا تنحرف عن
+    // `navCatalog.js`. كانت «لوحة سلاسل الإمداد» و«متابعة العمليات» بأسمائها
+    // العامّة، و«قمرة اللوجستيات» غائبةً أصلًا رغم أنّها إحدى اللوحات الأربع.
     links: [
       { path: '/dashboard/command-center', icon: 'target', label: 'لوحة القيادة التشغيلية' },
-      { path: '/dashboard/supply-chain', icon: 'barChart3', label: 'لوحة سلاسل الإمداد' },
-      { path: '/dashboard/operations', icon: 'activity', label: 'متابعة العمليات' },
+      { path: '/dashboard/operations', icon: 'activity', label: 'متابعة الجرد والمسح الحيّ' },
+      { path: '/dashboard/supply-chain', icon: 'truck', label: 'الأسطول والعُهد وأوامر الشغل' },
+      { path: '/dashboard/logistics-dashboard', icon: 'gauge', label: 'قمرة اللوجستيات (أودو)' },
       { path: '/dashboard/stock-ledger', icon: 'notebook', label: 'دفتر حركات المخزون' },
       { path: '/dashboard/transfers', icon: 'arrowLeftRight', label: 'النقل بين المستودعات' },
       { path: '/dashboard/order-control', icon: 'gauge', label: 'الرقابة على الطلبات' },

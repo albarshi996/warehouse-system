@@ -18,6 +18,7 @@ export const NAV_GROUP_LABELS = {
   field: 'الميدان والبيع من المركبة',
   odoo: 'دورات أودو والمحاكاة',
   reports: 'مركز التقارير',
+  presentations: 'العروض والاجتماعات',
   archive: 'الأرشيف والمرجعية',
   dept: 'طلبات الإدارات',
   procurement: 'المشتريات الداخلية',
@@ -28,8 +29,10 @@ export const NAV_GROUP_LABELS = {
  * الأدمن (المدير العام) يرى كل شيء دائمًا ولا يحتاج إدراجًا.
  */
 export const ROLE_NAV = {
-  admin: ['daily', 'warehouses', 'fleet', 'field', 'odoo', 'reports', 'archive', 'dept', 'procurement'],
-  warehouse_manager: ['daily', 'warehouses', 'fleet', 'field', 'odoo', 'reports', 'archive', 'dept', 'procurement'],
+  // ‹تدقيق 24.08› «العروض والاجتماعات» خرجت من «مركز التقارير» — تُمنح لمن
+  // كان يملك عناصرها هناك بعينهم: المديران، والماليّ لعرض جلسته وحدها.
+  admin: ['daily', 'warehouses', 'fleet', 'field', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
+  warehouse_manager: ['daily', 'warehouses', 'fleet', 'field', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
   storekeeper: ['daily', 'warehouses', 'odoo'],
   qc_inspector: ['daily', 'odoo', 'reports'],
   // ‹EXE-602› ضابط البوابة يدخل «إدارة الحركة» — فيها تبويب الساحة والأبواب.
@@ -40,7 +43,7 @@ export const ROLE_NAV = {
   // موظف المشتريات: يوفّر العروض ويصدر الأمر ويسلّم في دورة المشتريات الداخلية.
   purchase_officer: ['daily', 'odoo', 'reports', 'procurement'],
   // المدير المالي: يعتمد الطلب والترسية والأمر والصرف في الدورة.
-  finance_manager: ['warehouses', 'odoo', 'reports', 'procurement'],
+  finance_manager: ['warehouses', 'odoo', 'reports', 'presentations', 'procurement'],
   return_manager: ['daily', 'warehouses', 'odoo'],
   inventory_auditor: ['warehouses', 'odoo', 'reports'],
   viewer: ['reports'],
@@ -106,4 +109,31 @@ export function canSeeItem(roleId, itemRoles) {
   if (isAdmin(roleId)) return true;
   if (!itemRoles || itemRoles.length === 0) return true;
   return itemRoles.includes(roleId);
+}
+
+/**
+ * مواضعُ المداخل المكرّرة التي يراها **مستخدمٌ واحد** لصفحةٍ واحدة.
+ *
+ * لماذا تلزم؟ الصفحة الواحدة قد تُدرَج في مجموعتين عمدًا لتصل لدورين
+ * مختلفين — `tasks` لمستخدم الإدارة و`partner-ledger` للخزينة وللمندوب.
+ * والتصميم سليمٌ للأدوار التسعة عشر: كلٌّ يرى مدخله وحده. لكنّ **الأدمن
+ * يرى كل شيء دائمًا** (`canSeeItem` أعلاه)، فتجتمع النسخ في قائمته: «دفتر
+ * الذمم» ثلاث مرّات بعنوانين، و«التقارير التفصيليّة» مرّتين. فيظنّها
+ * صفحاتٍ مختلفة — وهي واحدة.
+ *
+ * فالعلاج ليس حذف المدخل من الكتالوج (يكسر الأدوار التي تحتاجه)، بل إخفاء
+ * ما تكرّر **عند العرض** لمن اجتمعت عنده. يبقى الأوّل في ترتيب القائمة.
+ *
+ * @param {string[]} paths مسارات المداخل المرئيّة، بترتيب ظهورها.
+ * @returns {number[]} مواضع ما يجب إخفاؤه.
+ */
+export function duplicateIndexes(paths) {
+  const seen = new Set();
+  const dups = [];
+  paths.forEach((p, i) => {
+    if (!p) return;
+    if (seen.has(p)) dups.push(i);
+    else seen.add(p);
+  });
+  return dups;
 }

@@ -20,7 +20,7 @@ import {
 } from '../../../services/documents/documentsService.js';
 import { getSchema, GOVERNED_FORMS } from '../../../services/documents/schemas/index.js';
 import { getState, STATES } from '../../../services/documents/states.js';
-import { PURCHASE_CHAIN, OUTBOUND_CHAIN, RETURN_CHAIN, COUNT_CHAIN, TRANSFER_CHAIN, INTERNAL_PROCUREMENT_CHAIN, VAN_CHAIN } from '../../../services/documents/chain.js';
+import { START_GROUPS } from '../../../services/documents/startGroups.js';
 import {
   awaitingMyApproval,
   sortByUrgency,
@@ -150,22 +150,12 @@ export default function DocumentsInbox() {
     ...(MANAGER_ROLES.includes(me.role) ? [{ key: 'all', label: 'كل المستندات', count: all.length }] : []),
   ];
 
-  /** أزرار البدء مجمّعة بسلسلتها — تسعة أزرار مسطّحة تُربك لا تُيسّر. */
+  /**
+   * أزرار البدء مجمّعة بسلسلتها — أربعون زرًّا مسطّحًا تُربك لا تُيسّر.
+   * التصنيف نزل إلى `startGroups.js` الخالص ليقرأه حارس التدقيق: حين كان
+   * هنا انحرف صامتًا وبقيت سبعةُ أنواعٍ مبنيّةً بلا زرٍّ يبدأها.
+   */
   const readyForms = GOVERNED_FORMS.filter((f) => f.ready);
-  const groups = [
-    { title: 'الوارد', icon: 'arrowDownTray', types: [...PURCHASE_CHAIN, 'SRN'] },
-    { title: 'المبيعات والصرف', icon: 'shoppingCart', types: [...OUTBOUND_CHAIN, 'POD'] },
-    { title: 'الفوترة', icon: 'fileText', types: ['INV'] },
-    { title: 'النقل بين المستودعات', icon: 'truck', types: TRANSFER_CHAIN },
-    // البيع من المركبة (SAP-20 · طلب المالك): كانت العائلة كلّها غائبةً عن
-    // «بدء مستند جديد» — فبدا كأنّ «لا مستند يعبّئ البضاعة من المخزن إلى
-    // المندوب» والمستند موجود: **أمر تحميل المركبة** (مخزن ← عهدة مندوب).
-    { title: 'البيع من المركبة', icon: 'car', types: [...VAN_CHAIN, 'CRN', 'VCD', 'VCS', 'VCR'] },
-    { title: 'المرتجعات', icon: 'arrowLeftRight', types: RETURN_CHAIN },
-    { title: 'الجرد', icon: 'clipboardList', types: COUNT_CHAIN },
-    { title: 'التالف', icon: 'alertTriangle', types: ['DMG'] },
-    { title: 'المشتريات الداخلية', icon: 'shoppingCart', types: INTERNAL_PROCUREMENT_CHAIN },
-  ];
 
   const listRows = rows.map((d) => {
     const state = getState(d.state);
@@ -218,7 +208,7 @@ export default function DocumentsInbox() {
         <div className="o_ds_card o_ds_pad" style={{ marginBottom: '18px' }}>
           <h3 className="o_form_title" style={{ fontSize: '16px', marginTop: 0, marginBottom: '12px' }}>بدء مستند جديد</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {groups.map((g) => {
+            {START_GROUPS.map((g) => {
               const forms = readyForms.filter((f) => g.types.includes(f.type));
               if (!forms.length) return null;
               return (

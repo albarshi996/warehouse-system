@@ -45,7 +45,10 @@ export const NAV_GROUPS = [
       { path: '/dashboard/suppliers', label: 'ماستر الموردين', icon: 'users', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/customers', label: 'ماستر العملاء', icon: 'users', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/stock-operations', label: 'عمليات مخزنية', icon: 'package' },
-      { path: '/dashboard/operations', label: 'متابعة العمليات', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
+      // ‹تدقيق 24.08› اسمها كان «متابعة العمليات» — عامٌّ يوهم بلوحةٍ ثانية،
+      // وهي في الحقيقة منظارُ الجرد: العمليّات الجارية ومن يعمل عليها وسجلّ
+      // المسح لحظيًّا. اللوحة الرئيسة واحدة (`command-center`، قرار المالك).
+      { path: '/dashboard/operations', label: 'متابعة الجرد والمسح الحيّ', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
     ],
   },
   {
@@ -96,7 +99,9 @@ export const NAV_GROUPS = [
       { path: '/dashboard/fleet-operations', label: 'عمليات الأسطول', icon: 'clipboardList' },
       { path: '/dashboard/maintenance-center', label: 'مركز الصيانة', icon: 'grid' },
       { path: '/dashboard/custody', label: 'العُهد العينية', icon: 'users', roles: ['admin', 'warehouse_manager'] },
-      { path: '/dashboard/supply-chain', label: 'لوحة سلاسل الإمداد', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
+      // ‹تدقيق 24.08› كانت «لوحة سلاسل الإمداد» — والاسم يوحي بلوحةٍ جامعة
+      // بينما مضمونها الأسطولُ وأوامرُ الشغل والعُهد وتنبيهاتُ الصلاحية.
+      { path: '/dashboard/supply-chain', label: 'الأسطول والعُهد وأوامر الشغل', icon: 'truck', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/labor-operations', label: 'عمالة الشحن والتفريغ', icon: 'users', roles: ['admin', 'warehouse_manager', 'labor_supervisor'] },
     ],
   },
@@ -168,20 +173,13 @@ export const NAV_GROUPS = [
       // الماليّ صاحبه الأوّل — ولا يرى «العمليات» أصلًا (درس اسمٍ بلا باب).
       // ‹FNB-107› مدير القطاع يملك المدخل (البراندات والفروع) فيرى شجرته ويُدخلها.
       { path: '/dashboard/org-dimensions', label: 'الأبعاد التنظيمية والتكلفة', icon: 'workflows', roles: ['admin', 'warehouse_manager', 'finance_manager', 'fnb_manager'] },
-      // غرفة قرار سلاسل الإمداد — المراجعة التنفيذية أمام المدير العام (عرض
-      // من 9 شاشات؛ الفرعيات الثمان ترث صلاحية هذا العنصر عبر وراثة الأب في
-      // pageAccess). حزمة ربط كوديكس 2026-08-07 — رابط واحد لا قائمة موازية.
-      { path: '/dashboard/executive-review', label: 'غرفة قرار سلاسل الإمداد', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
-      // صفحة REQ-006 مطلوبة كوجهة مستقلة في «عمليات البوابة»؛ تبقى داخل
-      // غرفة القرار وظيفيًّا وترث نطاق المديرَين نفسه بلا توسيع للصلاحيات.
-      { path: '/dashboard/executive-review/restaurants', label: 'خطة المطاعم والمقاهي', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
       // تقرير آليّة الربط بأودو والمزامنة الحيّة — مرجعٌ فنّيّ/إداريّ مبنيّ على الكود
       // (طبقة odoo · الوسيط · الموديول · فايربيز · عقد التكامل). يظهر تلقائيًّا في
       // «عمليات البوابة» لأنه يُولَّد من هذا الكتالوج نفسه.
       { path: '/dashboard/odoo-integration-report', label: 'تقرير الربط بأودو والمزامنة', icon: 'arrowLeftRight' },
       // لوحة اللوجستيات التنفيذيّة (المرحلة ٤) — قمرةٌ جامعةٌ بمكوّنات أودو تجمّع
       // مؤشّرات المخزون والعمليّات والسلاسل في نظرةٍ واحدة. للمديرَين كلوحةٍ إدارية.
-      { path: '/dashboard/logistics-dashboard', label: 'لوحة اللوجستيات التنفيذيّة', icon: 'gauge', roles: ['admin', 'warehouse_manager'] },
+      { path: '/dashboard/logistics-dashboard', label: 'قمرة اللوجستيات (أودو)', icon: 'gauge', roles: ['admin', 'warehouse_manager'] },
       // مؤشرات المشتريات والأداء — المحور الرابع في تقييم السلاسل، محسوبة من
       // طوابع المستندات وروابطها (procurementKpis.js). للمديرَين كلوحةٍ إدارية.
       { path: '/dashboard/kpis', label: 'مؤشرات المشتريات والأداء', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
@@ -195,16 +193,49 @@ export const NAV_GROUPS = [
       // الهيكل التشغيليّ المستهدف وخارطة التحوّل — طبقتا التصميم وخارطة الطريق من
       // نموذج ديلويت TOM، مبنيّتان فوق الدراسة المقارنة (استعداد ديلويت — اليوم 4).
       { path: '/dashboard/target-operating-model', label: 'الهيكل التشغيليّ المستهدف', icon: 'workflows', roles: ['admin', 'warehouse_manager'] },
-      // حزمة الاستعداد للمقابلة — القمرة الجامعة (٦ مكوّنات) للبروفة قبل تقييم
-      // ديلويت، بأرقامٍ حيّة من الدراسة (استعداد ديلويت — اليوم 5).
-      { path: '/dashboard/interview-readiness', label: 'حزمة الاستعداد — البروفة', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/global-doc-cycles', label: 'الدورات المستندية العالمية', icon: 'bookOpen' },
       // حزمة المطابقة والتسليم لشركة الميزان (2026-08-02): شرح المرجع · قبول UAT ·
       // قيمة البوابة · أداء الموردين · سجلّ حركة الأدوار · استمرارية الأعمال.
       { path: '/dashboard/reference-guide', label: 'الشرح التفاعلي للمرجع', icon: 'bookOpen' },
-      // مركز متطلبات شركة الميزان: قراءة تنفيذية للحزمة BFP-SCM-REQ-2026،
-      // ومصفوفة القرار بين البوابة وأودو وسجلّ المسائل التي تنتظر الحسم.
-      { path: '/dashboard/requirements-command', label: 'مركز متطلبات التكامل', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
+      { path: '/dashboard/acceptance-check', label: 'المطابقة والاستلام (UAT)', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
+      { path: '/dashboard/portal-value', label: 'لماذا البوابة تكامليّة لأودو', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
+      { path: '/dashboard/vendor-scorecard', label: 'بطاقة أداء الموردين', icon: 'users', roles: ['admin', 'warehouse_manager', 'purchase_officer', 'finance_manager'] },
+      { path: '/dashboard/role-activity', label: 'سجلّ حركة الأدوار', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
+      { path: '/dashboard/business-continuity', label: 'استمرارية الأعمال (BCP)', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
+      // كانت صفحة يتيمة: مبنيّة وغير مربوطة بأي قائمة — كشفها تدقيق 23.07.
+      { path: '/تقرير-الدورة-المستندية-الكامل-2026.html', label: 'الدورة المستندية والتنظيم', icon: 'clipboardList', external: true },
+      { path: '/المرجع-التشغيلي-الرسمي.html', label: 'المرجع التشغيلي الرسمي', icon: 'bookOpen', external: true },
+      { path: '/تقرير-هيكل-الوظائف-والادوار.html', label: 'هيكل الوظائف والأدوار', icon: 'users', external: true },
+      { path: '/تقرير-الانجاز.html', label: 'تقرير الانجاز', icon: 'clipboardList', external: true },
+      { path: '/تقرير(ERP).html', label: 'تقرير ERP', icon: 'fileUp', external: true },
+    ],
+  },
+  {
+    /**
+     * العروض والاجتماعات — ما تُدار به جلسةٌ أمام أناس، لا ما يُقرأ كتقرير.
+     *
+     * كانت هذه الإحدى عشرة داخل «مركز التقارير» فبلغ خمسةً وثلاثين عنصرًا —
+     * ثلاثةَ أجناسٍ في سلّة: تقريرٌ يقرأ بيانات النظام، وعرضٌ لجلسةٍ بعينها،
+     * ومرجعٌ ثابت. فصار المركز موضعَ كلِّ ما لا يُعرف أين يوضع.
+     *
+     * الفرق عمليّ لا ذوقيّ: التقرير يُفتح ليُجاب سؤالٌ عن الحال الآن، والعرض
+     * يُفتح مرّةً في اجتماعٍ ثمّ يبقى شاهدًا على ما عُرض. خلطُهما يُغرق
+     * الأوّل بالثاني.
+     *
+     * كلّها محصورةٌ بالمديرَين (والماليّ في عرض جلسته) — فالنقل لم يكسب دورًا
+     * ولم يُفقده شيئًا، ولم يتغيّر رابطٌ واحد.
+     */
+    key: 'presentations',
+    group: 'العروض والاجتماعات',
+    emoji: '🎦', icon: 'bookOpen',
+    items: [
+      // غرفة قرار سلاسل الإمداد — المراجعة التنفيذية أمام المدير العام (عرض
+      // من 9 شاشات؛ الفرعيات الثمان ترث صلاحية هذا العنصر عبر وراثة الأب في
+      // pageAccess). حزمة ربط كوديكس 2026-08-07 — رابط واحد لا قائمة موازية.
+      { path: '/dashboard/executive-review', label: 'غرفة قرار سلاسل الإمداد', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
+      // صفحة REQ-006 مطلوبة كوجهة مستقلة في «عمليات البوابة»؛ تبقى داخل
+      // غرفة القرار وظيفيًّا وترث نطاق المديرَين نفسه بلا توسيع للصلاحيات.
+      { path: '/dashboard/executive-review/restaurants', label: 'خطة المطاعم والمقاهي', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
       // مركز عروض القطاعات: عرض مستقل لكل قطاع يشرح الدورة المقترحة والأنظمة
       // والضوابط والقرارات المطلوبة، مع إبقاء حالات المواءمة معلنة بوضوح.
       { path: '/dashboard/sector-presentations', label: 'عروض أنظمة القطاعات', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
@@ -234,17 +265,12 @@ export const NAV_GROUPS = [
       // دورات النقل والبيع وتحميل المندوبين — عرضٌ حيٌّ تُدار به الجلسة، وفي كل
       // خطوةٍ بطاقةُ اختصارٍ تفتح الشاشة التي تُنفَّذ فيها داخل البوابة.
       { path: '/dashboard/nova-inventory-meeting', label: 'اجتماع شركة نوفا — الجرد والنقل', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
-      { path: '/dashboard/acceptance-check', label: 'المطابقة والاستلام (UAT)', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
-      { path: '/dashboard/portal-value', label: 'لماذا البوابة تكامليّة لأودو', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
-      { path: '/dashboard/vendor-scorecard', label: 'بطاقة أداء الموردين', icon: 'users', roles: ['admin', 'warehouse_manager', 'purchase_officer', 'finance_manager'] },
-      { path: '/dashboard/role-activity', label: 'سجلّ حركة الأدوار', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
-      { path: '/dashboard/business-continuity', label: 'استمرارية الأعمال (BCP)', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
-      // كانت صفحة يتيمة: مبنيّة وغير مربوطة بأي قائمة — كشفها تدقيق 23.07.
-      { path: '/تقرير-الدورة-المستندية-الكامل-2026.html', label: 'الدورة المستندية والتنظيم', icon: 'clipboardList', external: true },
-      { path: '/المرجع-التشغيلي-الرسمي.html', label: 'المرجع التشغيلي الرسمي', icon: 'bookOpen', external: true },
-      { path: '/تقرير-هيكل-الوظائف-والادوار.html', label: 'هيكل الوظائف والأدوار', icon: 'users', external: true },
-      { path: '/تقرير-الانجاز.html', label: 'تقرير الانجاز', icon: 'clipboardList', external: true },
-      { path: '/تقرير(ERP).html', label: 'تقرير ERP', icon: 'fileUp', external: true },
+      // مركز متطلبات شركة الميزان: قراءة تنفيذية للحزمة BFP-SCM-REQ-2026،
+      // ومصفوفة القرار بين البوابة وأودو وسجلّ المسائل التي تنتظر الحسم.
+      { path: '/dashboard/requirements-command', label: 'مركز متطلبات التكامل', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
+      // حزمة الاستعداد للمقابلة — القمرة الجامعة (٦ مكوّنات) للبروفة قبل تقييم
+      // ديلويت، بأرقامٍ حيّة من الدراسة (استعداد ديلويت — اليوم 5).
+      { path: '/dashboard/interview-readiness', label: 'حزمة الاستعداد — البروفة', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
     ],
   },
   {

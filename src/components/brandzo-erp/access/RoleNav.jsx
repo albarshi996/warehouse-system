@@ -4,7 +4,7 @@ import {
   fetchUserProfile,
   getBasePath,
 } from '../../../services/auth/authService.js';
-import { canSeeGroup, canSeeItem } from '../../../services/auth/navAccess.js';
+import { canSeeGroup, canSeeItem, duplicateIndexes } from '../../../services/auth/navAccess.js';
 import { canSeeHome } from '../../../services/auth/navAccess.js';
 import { toCatalogPath } from '../../../services/auth/pageAccess.js';
 import { fetchMatrixOnce } from '../../../services/auth/accessMatrixService.js';
@@ -94,6 +94,31 @@ export default function RoleNav() {
           if (items.length && !anyVisible) hide(grp);
         });
       }
+
+      // 4) مدخلٌ واحدٌ لكل صفحة **في الشريط الجانبيّ**. الصفحة تُدرَج في
+      // مجموعتين عمدًا لتصل لدورين، والتصميم سليمٌ لكلٍّ منهما — لكنّ الأدمن
+      // يرى النسختين معًا فتظهر له «دفتر الذمم» ثلاث مرّات بعنوانين. نُبقي
+      // الأولى ونُخفي ما بعدها عند العرض، بلا حذفٍ من الكتالوج يكسر أصحابها.
+      //
+      // ⚠ **الحصر في `#brandzo-sidebar` شرطُ الصحّة لا تحسينُ أداء.** صفحاتٌ
+      // أخرى تُعيد سرد المقاصد نفسها ببطاقاتٍ تحمل `li[data-label]` — «عمليات
+      // البوابة» و«لوحة التحكم». فمسحُ المستند كلّه يجعل كلّ بطاقةٍ «تكرارًا»
+      // لرابطها في الشريط، فتُخفى: جُرّب حيًّا فاختفت 87 بطاقةً من 92 وبقيت
+      // الروابط الخارجيّة وحدها (لا مسار كتالوجيّ لها). التكرار المقصود لا
+      // يقع إلا هنا — فهنا وحده يُعالَج.
+      const basePath = getBasePath();
+      const sidebar = document.getElementById('brandzo-sidebar');
+      const liveItems = sidebar
+        ? Array.prototype.filter.call(
+            sidebar.querySelectorAll('li[data-label]'),
+            (li) => !li.hasAttribute('data-role-hidden')
+          )
+        : [];
+      const livePaths = liveItems.map((li) => {
+        const a = li.querySelector('a[href]');
+        return a && !a.target ? toCatalogPath(a.getAttribute('href') || '', basePath) : '';
+      });
+      duplicateIndexes(livePaths).forEach((i) => hide(liveItems[i]));
 
       // تُعلِم بحث القائمة أن التقييد طُبِّق
       document.body.setAttribute('data-role-nav-ready', role);

@@ -1,6 +1,7 @@
 ---
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import Icon from '../../components/ui/Icon.astro';
+import PortalGrid from '../../components/brandzo-erp/portal/PortalGrid.astro';
 import { NAV_GROUPS, PINNED_ITEM } from '../../services/auth/navCatalog.js';
 
 /*
@@ -49,32 +50,22 @@ const pinned = PINNED_ITEM;
         </h1>
       </div>
       <p class="text-muted text-sm leading-relaxed">
-        فهرسٌ جامعٌ لكل شاشات البوابة، مرتّبًا بالأقسام وبطاقاتٍ — يعرض ما يخصّ دورك فقط.
+        تطبيقات البوابة — اختر تطبيقًا لترى مقاصده، أو ابحث في الجميع دفعةً واحدة. ولا يُعرض إلا ما يخصّ دورك.
       </p>
       <div class="w-20 h-1 bg-accent rounded-chip mt-4"></div>
     </div>
 
-    {/* ─── تقريرٌ مميّز: آليّة الربط بأودو ──────────────────────────────────
-         بطاقةٌ بارزة تقود لتقرير التكامل المبنيّ على الكود (مسجّل في المصدر الواحد
-         navCatalog، فيظهر أيضًا كبطاقةٍ ضمن «مركز التقارير» أدناه). */}
-    <a
-      href={`${base}/dashboard/odoo-integration-report`}
-      class="group flex items-center gap-4 rounded-2xl border border-accent/30 bg-accent/5 hover:bg-accent/10 hover:border-accent/50 px-5 py-4 mb-8 shadow-card transition-all"
-    >
-      <span class="inline-grid place-items-center w-12 h-12 rounded-xl bg-accent/10 border border-accent/25 text-accent shrink-0">
-        <Icon name="arrowLeftRight" size={24} />
-      </span>
-      <span class="flex-1 min-w-0">
-        <span class="flex items-center gap-2">
-          <span class="block font-bold text-ink truncate">تقرير الربط بأودو والمزامنة الحيّة</span>
-          <span class="text-[10px] text-accent bg-accent/10 border border-accent/25 rounded-chip px-2 py-0.5 shrink-0">تقرير مرجعيّ</span>
-        </span>
-        <span class="block text-sm text-ink-2 mt-0.5 leading-relaxed">
-          كفاءة التكامل عبر الـAPI · المزامنة الدوريّة واللحظيّة · النسخ الاحتياطي والقاعدة المحليّة · سيناريوهات العوائق — مبنيٌّ على الكود.
-        </span>
-      </span>
-      <span class="text-accent transition-all group-hover:-translate-x-1 shrink-0">←</span>
-    </a>
+    {/* الأقسام تبدأ مخفيّةً فلا تومض التسعون مقصدًا قبل أن تُرسم الشبكة.
+       ⚠ الشرط `:not([data-ready])` ضروريّ: السلوك يُظهر القسم بـ`style.display=''`
+       وهي **تُزيل** التنسيق المضمّن فيعود حكم هذه القاعدة — فلا يفتح تطبيقٌ
+       أبدًا. فما إن يجهز السلوك يضع `data-ready` على الجذر، فتُرفع القاعدة. */}
+    <style is:inline>#po-root:not([data-ready]) [data-po-section]{display:none}</style>
+
+    {/* ‹تدقيق 24.08 · طلب المالك› أُلغيت هنا بطاقةٌ بارزة لـ«تقرير الربط بأودو
+       والمزامنة الحيّة». لم تكن مقصدًا جديدًا: تعليقها نفسه كان يقرّ بأنّها
+       تظهر **مرّةً ثانية** كبطاقةٍ ضمن «مركز التقارير» في هذه الصفحة نفسها.
+       فالصفحة باقيةٌ ورابطُها باقٍ في القائمة وفي بطاقات الفهرس أدناه — الذي
+       زال هو التكرار وحده. (نفس قاعدة «صفحة واحدة لا ازدواج».) */}
 
     {/* ─── البحث ─────────────────────────────────────────────────────────── */}
     <div class="mb-8 max-w-xl">
@@ -99,8 +90,43 @@ const pinned = PINNED_ITEM;
       <p id="po-count" class="text-xs text-muted mt-2 px-1">{totalCount} مقصدًا في {groups.length} أقسام</p>
     </div>
 
+    {/* ─── شبكة التطبيقات ─────────────────────────────────────────────────
+         عشرةُ مربّعاتٍ من المصدر الواحد، يفتح كلٌّ منها قائمته. المربّع يُخفى
+         ويُصحَّح عدّاده في PortalGrid تبعًا لما يراه الدور — بلا منطقٍ هنا. */}
+    <nav id="po-apps" class="mb-9" aria-label="تطبيقات البوابة">
+      <ul class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 list-none p-0 m-0">
+        {groups.map((grp) => (
+          <li data-po-tile data-tile-key={grp.key}>
+            <button
+              type="button"
+              data-app-open={grp.key}
+              class="w-full h-full group flex flex-col items-center gap-3 rounded-2xl border border-line bg-surface hover:bg-surface-2 hover:border-accent/40 hover:-translate-y-1 px-3 py-6 shadow-card transition-all"
+            >
+              <span class="inline-grid place-items-center w-16 h-16 rounded-2xl bg-accent/10 border border-accent/25 text-accent group-hover:bg-accent/15 transition-colors">
+                <Icon name={grp.icon || 'grid'} size={30} />
+              </span>
+              <span class="block font-bold text-ink text-sm text-center leading-snug">{grp.group}</span>
+              <span data-tile-count class="text-[11px] text-muted">{grp.items.length} مقصدًا</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    {/* ─── شريط الرجوع (يظهر داخل تطبيقٍ مفتوح) ──────────────────────────── */}
+    <div id="po-back-bar" class="flex items-center gap-3 mb-6">
+      <button
+        type="button"
+        id="po-back"
+        class="hidden items-center gap-2 rounded-xl border border-line bg-surface hover:bg-surface-2 hover:border-accent/40 px-3.5 py-2 text-sm font-bold text-ink-2 hover:text-ink transition-all"
+      >
+        <span aria-hidden="true">→</span> كل التطبيقات
+      </button>
+      <span id="po-crumb" class="text-sm font-bold text-accent"></span>
+    </div>
+
     {/* ─── الوصول السريع: الرئيسية ───────────────────────────────────────── */}
-    <section data-po-section class="mb-9" data-quick>
+    <section data-po-section data-group-key="quick" data-group-label="الوصول السريع" class="mb-9" data-quick>
       <div class="flex items-center gap-3 mb-4">
         <span class="inline-grid place-items-center w-8 h-8 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name="rocket" size={17} /></span>
         <h2 class="text-lg sm:text-xl font-bold text-ink">الوصول السريع</h2>
@@ -120,7 +146,7 @@ const pinned = PINNED_ITEM;
 
     {/* ─── الأقسام الثمانية — من المصدر الواحد ────────────────────────────── */}
     {groups.map((grp) => (
-      <section data-po-section data-nav-group data-group-key={grp.key} class="mb-9">
+      <section data-po-section data-nav-group data-group-key={grp.key} data-group-label={grp.group} class="mb-9">
         <div class="flex items-center gap-3 mb-4">
           <span class="inline-grid place-items-center w-8 h-8 rounded-lg bg-accent/10 border border-accent/25 text-accent">
             <Icon name={grp.icon || 'grid'} size={17} />
@@ -170,93 +196,7 @@ const pinned = PINNED_ITEM;
     </div>
   </div>
 
-  <script is:inline>
-    (function () {
-      'use strict';
-      var root = document.getElementById('po-root');
-      if (!root) return;
-
-      var input = document.getElementById('po-search');
-      var clearBtn = document.getElementById('po-search-clear');
-      var countEl = document.getElementById('po-count');
-      var noResults = document.getElementById('po-no-results');
-      var sections = Array.prototype.slice.call(root.querySelectorAll('[data-po-section]'));
-      var cards = Array.prototype.slice.call(root.querySelectorAll('.po-card'));
-
-      /* تطبيع عربي مطابق لبحث الشريط الجانبي (أ/إ/آ→ا · ة→ه · ى/ئ→ي · بلا تشكيل) */
-      function normChar(ch) {
-        if (/[ً-ْـ]/.test(ch)) return '';
-        if ('أإآٱ'.indexOf(ch) >= 0) return 'ا';
-        if (ch === 'ة') return 'ه';
-        if (ch === 'ى' || ch === 'ئ') return 'ي';
-        if (ch === 'ؤ') return 'و';
-        return ch.toLowerCase();
-      }
-      function bzNorm(s) {
-        var out = '';
-        Array.prototype.forEach.call(String(s || ''), function (ch) { out += normChar(ch); });
-        return out;
-      }
-
-      cards.forEach(function (c) {
-        c._label = bzNorm(c.getAttribute('data-label') || '');
-      });
-
-      function isRoleHidden(el) {
-        return el.hasAttribute('data-role-hidden');
-      }
-
-      function run() {
-        var q = bzNorm((input && input.value || '').trim());
-        var visible = 0;
-
-        cards.forEach(function (c) {
-          if (isRoleHidden(c)) { c.style.display = 'none'; return; }
-          var hit = q === '' || c._label.indexOf(q) >= 0;
-          c.style.display = hit ? '' : 'none';
-          if (hit) visible++;
-        });
-
-        /* إخفاء رأس أي قسم لا بطاقة ظاهرة فيه (مع احترام إخفاء الدور للقسم كلّه) */
-        sections.forEach(function (s) {
-          if (isRoleHidden(s)) { s.style.display = 'none'; return; }
-          var any = Array.prototype.some.call(
-            s.querySelectorAll('.po-card'),
-            function (c) { return c.style.display !== 'none'; }
-          );
-          s.style.display = any ? '' : 'none';
-        });
-
-        if (noResults) noResults.classList.toggle('hidden', !(visible === 0 && q !== ''));
-        if (countEl) {
-          countEl.textContent = q === ''
-            ? (cards.filter(function (c) { return !isRoleHidden(c); }).length + ' مقصدًا متاحًا لك')
-            : (visible + ' نتيجة');
-        }
-        if (clearBtn) {
-          var show = (input && input.value || '') !== '';
-          clearBtn.classList.toggle('hidden', !show);
-          clearBtn.classList.toggle('flex', show);
-        }
-      }
-
-      if (input) input.addEventListener('input', run);
-      if (clearBtn) clearBtn.addEventListener('click', function () {
-        if (input) { input.value = ''; input.focus(); }
-        run();
-      });
-      if (input) input.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && input.value !== '') { e.stopPropagation(); input.value = ''; run(); }
-      });
-
-      /* أعِد الحساب بعد أن يُطبّق RoleNav إخفاءه (عند تجهّز الدور) — علامته
-         data-role-nav-ready على body. نراقبها فنحدّث العدّاد والأقسام الفارغة. */
-      var mo = new MutationObserver(function () {
-        if (document.body.hasAttribute('data-role-nav-ready')) run();
-      });
-      mo.observe(document.body, { attributes: true, attributeFilter: ['data-role-nav-ready'] });
-
-      run();
-    })();
-  </script>
+  {/* السلوك كلّه (شبكةُ التطبيقات والبحث واحترامُ الأدوار) في مكوّنٍ
+     مستقلّ — كي لا ينمو منطقُ الصفحات فوق ميزانيّته في حارس التدقيق. */}
+  <PortalGrid />
 </DashboardLayout>

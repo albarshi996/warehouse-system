@@ -14,6 +14,7 @@ import {
 } from '../../../services/ledger/operationsDashboard.js';
 import ExceptionsBox from './ExceptionsBox.jsx';
 import { listenExceptions, syncDetections } from '../../../services/ledger/exceptionsService.js';
+import { canOpenPath } from '../../../services/auth/pageAccess.js';
 import { listenLaborTasks } from '../../../services/labor/laborTasksService.js';
 import { listenSyncEvents } from '../../../services/odoo/odooSyncService.js';
 import { listenPullState } from '../../../services/odoo/pullService.js';
@@ -30,6 +31,25 @@ const KPI_WINDOW_DAYS = 90;
 const DAY_MS = 86400000;
 /** سجلّ أحداث المزامنة: أحدث ما يكفي لمعرفة آخر سحبٍ — لا المجموعة كلّها. */
 const SYNC_EVENTS_CAP = 40;
+
+/**
+ * المناظير المتخصّصة — قرار المالك 2026-08-24: **هذه اللوحة هي الرئيسة**.
+ *
+ * كانت أربعُ شاشاتٍ تجيب سؤالًا واحدًا («ما حال العمليّات الآن؟») موزّعةً على
+ * أربع مجموعاتٍ في القائمة، فلا يعرف المستخدم أيّها الحقيقيّة. والفحص أظهر
+ * أنّها ليست متطابقة: هذه تعرض الحال كلّه، وتلك تُقرّب زاويةً بتفصيلها. فبقيت
+ * الثلاث كما هي — **بلا حذفٍ ولا تغيير رابط** — وصارت تُفتح من هنا بوصفها
+ * نوافذَ لا لوحاتٍ منافسة.
+ *
+ * وتُفلتر بصلاحية الفاتح: هذه اللوحة مفتوحةٌ للجميع والمناظير للمديرَين، فلو
+ * عُرضت كلُّها لصار خمسةُ أدوارٍ أمام «اسمٍ بلا باب» — وهو الدرس المدوَّن في
+ * `navCatalog.js` نفسه.
+ */
+const LENSES = [
+  { path: '/dashboard/operations', icon: 'clipboardList', label: 'متابعة الجرد والمسح الحيّ' },
+  { path: '/dashboard/supply-chain', icon: 'truck', label: 'الأسطول والعُهد وأوامر الشغل' },
+  { path: '/dashboard/logistics-dashboard', icon: 'gauge', label: 'قمرة اللوجستيات (أودو)' },
+];
 
 /**
  * غرفة القيادة ‹EXE-503› — الاستثناء في القلب والمرجعيّ معلَنُ التاريخ.
@@ -146,6 +166,7 @@ export default function OperationsCommand() {
 
   const base = getBasePath();
   const refNote = reference.master?.ageLabel || '';
+  const lenses = LENSES.filter((l) => canOpenPath(me.role, l.path));
 
   return (
     <div dir="rtl" className="space-y-6">
@@ -253,6 +274,21 @@ export default function OperationsCommand() {
           </Panel>
         </div>
       </Layer>
+
+      {/* ═══ الطبقة ٤ — مناظير متخصّصة ═══ */}
+      {lenses.length > 0 && (
+        <Layer
+          icon="search"
+          title="مناظير متخصّصة"
+          hint="هذه اللوحة تعرض الحال كلّه — وهذه نوافذُ تُقرّب كلٌّ منها زاويةً بتفصيلها"
+        >
+          <div className="flex flex-wrap gap-2">
+            {lenses.map((l) => (
+              <Quick key={l.path} href={`${base}${l.path}`} icon={l.icon} label={l.label} />
+            ))}
+          </div>
+        </Layer>
+      )}
 
       <p className="text-[11px] text-muted text-center">
         لوحةٌ حيّة تُحدَّث لحظيًّا من دفتر الحركات والمستندات والأرصدة — كل رقمٍ فيها مردودٌ إلى مستنده،

@@ -13,6 +13,13 @@
  *   5. **منطقٌ يهرب إلى طبقة التخزين** (‹EXE-002›، قرار المالك 2026-08-16):
  *      القاعدة مخزنٌ وبوّابةُ مستخدمين لا حاكم. فالحكم يبقى في الكود الخالص،
  *      وما يستورد Firebase يُعلن نفسه باسمه (`*Service.js`).
+ *   6. **مدخلٌ مكرّرٌ بلا دورٍ يبرّره** (تدقيق 24.08.2026): الصفحة تُدرَج في
+ *      مجموعتين عمدًا لتصل لدورين لا يريان مجموعةً واحدة — لكنّ نسختين بنفس
+ *      `roles` حشوٌ لا يكسبه أحد.
+ *   7. **مستندٌ مبنيٌّ لا يستطيع أحدٌ أن يبدأه** (تدقيق 24.08.2026): كان
+ *      تصنيف أزرار «بدء مستند جديد» مصفوفةً محلّيّةً داخل `DocumentsInbox.jsx`
+ *      لا يقرؤها حارس، فانحرفت وبقيت سبعةُ أنواعٍ بلا زرّ — منها **سلسلة
+ *      الإنتاج كاملةً**. نزل التصنيف إلى `startGroups.js` الخالص.
  *
  * لا يعتمد على شبكة ولا على Firebase — يقرأ الملفات فقط، فيصلح للـCI.
  * يُنهي بـ0 عند السلامة، وبـ1 عند أي فشل.
@@ -24,6 +31,8 @@ import { fileURLToPath } from 'node:url';
 import { NAV_GROUPS, internalPaths, externalPaths, flatItems } from '../src/services/auth/navCatalog.js';
 import { ALWAYS_ALLOWED, HOME_PATH, canOpenPath } from '../src/services/auth/pageAccess.js';
 import { ROLES } from '../src/services/auth/roles.js';
+import { START_GROUPS, uncoveredReadyTypes, plannedTypes } from '../src/services/documents/startGroups.js';
+import { GOVERNED_FORMS } from '../src/services/documents/schemas/index.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PAGES_DIR = path.join(ROOT, 'src/pages/dashboard');
@@ -343,7 +352,7 @@ if (missingTheme.length === 0) {
  */
 section(7, 'المنطق داخل الصفحات — ما لا يبلغه اختبار');
 
-const INLINE_LOGIC_BUDGET = 4307;
+const INLINE_LOGIC_BUDGET = 4235;
 const INLINE_LOGIC_MAX = 40;
 /** الدَّين القائم يوم وُضع الحارس (2026-08-21) — يُشطب اسمٌ كلّما هبط منطقه. */
 const INLINE_LOGIC_DEBT = new Set([
@@ -360,8 +369,6 @@ const INLINE_LOGIC_DEBT = new Set([
   'dashboard/acceptance-check.astro',
   'dashboard/hse-checklists.astro',
   'dashboard/index.astro',
-  'dashboard/portal-operations.astro',
-  'dashboard/reference-guide.astro',
 ]);
 
 /**
@@ -443,8 +450,107 @@ if (inlineLogic.length) {
   info(`أثقلها: ${inlineLogic.slice(0, 3).map((p) => `${p.page} (${p.lines})`).join(' · ')}`);
 }
 
-/* ═══════════ 8. لقطة عامة ═══════════ */
-section(8, 'لقطة');
+/* ═══════════ 8. تكرار المداخل ═══════════ */
+section(8, 'تكرار المداخل — الصفحة الواحدة بمدخلٍ واحد لكل مستخدم');
+
+/**
+ * الصفحة قد تُدرَج في مجموعتين **عمدًا** لتصل لدورين لا يريان مجموعةً واحدة
+ * (`tasks` لمستخدم الإدارة · `partner-ledger` للخزينة وللمندوب) — فهذا تصميمٌ
+ * لا عطب، وحذفُه يكسر أصحابه. لكنّ نسختين بنفس `roles` تمامًا حشوٌ خالص:
+ * لا دورَ يكسبه أحدهما دون الآخر. وهذا وحده ما يُفشِل.
+ *
+ * والتكرار المقصود يُعدّ ويُعلَن كي لا ينمو بلا انتباه — ويبقى الأدمن (يرى
+ * كلّ شيء) محميًّا بـ`duplicateIndexes` في `RoleNav`.
+ */
+const DUP_PLACEMENT_BASELINE = 4;
+const placements = new Map();
+for (const g of NAV_GROUPS) {
+  for (const it of g.items) {
+    if (!placements.has(it.path)) placements.set(it.path, []);
+    placements.get(it.path).push({ group: g.group, label: it.label, roles: it.roles });
+  }
+}
+const multi = [...placements.entries()].filter(([, list]) => list.length > 1);
+const roleKey = (r) => (Array.isArray(r) ? [...r].sort().join(',') : '');
+const redundant = multi.filter(([, list]) => new Set(list.map((x) => roleKey(x.roles))).size < list.length);
+
+if (redundant.length === 0) {
+  ok(`لا مدخلَ مكرّرًا بلا فائدة — التكرار المقصود ${multi.length} صفحةً بأدوارٍ متمايزة`);
+} else {
+  bad(`${redundant.length} صفحةً مُدرجةً مرّتين بنفس الأدوار — حشوٌ لا يكسبه دور:`);
+  redundant.forEach(([p, list]) => info(`• ${p} → ${list.map((x) => `«${x.label}» في ${x.group}`).join(' | ')}`));
+}
+multi.forEach(([p, list]) => {
+  const labels = new Set(list.map((x) => x.label));
+  if (labels.size > 1) info(`• ${p} بعنوانين: ${[...labels].map((l) => `«${l}»`).join(' · ')} — لكلٍّ دورُه`);
+});
+if (multi.length > DUP_PLACEMENT_BASELINE) {
+  bad(`التكرار المقصود ارتفع إلى ${multi.length} (خطّ الأساس ${DUP_PLACEMENT_BASELINE}) — كلُّ إدراجٍ ثانٍ يحتاج دورًا يبرّره`);
+} else if (multi.length < DUP_PLACEMENT_BASELINE) {
+  notes.push(`التكرار المقصود صار ${multi.length} — أنزِل DUP_PLACEMENT_BASELINE في audit-portal.mjs`);
+}
+
+/* ═══════════ 9. مستندٌ مبنيٌّ ولا مدخلَ له ═══════════ */
+section(9, 'مداخل المستندات — كل نوعٍ جاهزٍ يستطيع أحدٌ أن يبدأه');
+
+/**
+ * كُشف في تدقيق 24.08.2026: كان تصنيف أزرار «بدء مستند جديد» مصفوفةً محلّيّةً
+ * داخل `DocumentsInbox.jsx`، فلم يقرأها حارس — **فانحرفت**: سبعةُ أنواعٍ
+ * مبنيّةٍ في المحرّك بلا زرٍّ يبدأها، منها **سلسلة الإنتاج كاملةً**. نزل
+ * التصنيف إلى `startGroups.js` الخالص، وهذا يمنع عودته.
+ */
+const uncoveredDocs = uncoveredReadyTypes();
+if (uncoveredDocs.length === 0) {
+  ok(`كل الأنواع الجاهزة (${GOVERNED_FORMS.filter((f) => f.ready).length}) لها مدخلُ بدءٍ في ${START_GROUPS.length} مجموعات`);
+} else {
+  bad(`${uncoveredDocs.length} نوعَ مستندٍ مبنيٌّ ولا زرَّ يبدأه: ${uncoveredDocs.join('، ')} — أضِفها إلى START_GROUPS`);
+}
+const planned = plannedTypes();
+if (planned.length) info(`مصنَّفٌ ولمّا يُبنَ بعد (لا يُرسم زرُّه): ${planned.join('، ')}`);
+
+/* ═══════════ 10. بطاقات الرئيسية مقابل الكتالوج ═══════════ */
+section(10, 'بطاقات الرئيسية — لا رابطَ خارج الكتالوج ولا تسميةَ تنحرف');
+
+/**
+ * لوحة التحكم الرئيسية تكتب بطاقاتها **يدويًّا** (تصميمٌ مقصود: البطاقة تشرح
+ * وتوسّع، والقائمة تختصر). لكنّ اليدويّ ينحرف: كُشف في تدقيق 24.08.2026 أنّ
+ * بطاقة «لوحات القيادة» تحمل أسماءً عامّةً قديمة و**تُسقط قمرة اللوجستيات**
+ * رغم أنّها إحدى اللوحات الأربع.
+ *
+ * فالحارس لا يفرض تطابقًا حرفيًّا — التوسيع مقصود («التوظيف الذكي» مقابل
+ * «التوظيف») — بل يمنع اثنين: **رابطًا لا وجود له في الكتالوج**، و**نموَّ
+ * الانحراف** فوق خطّ أساسه المعلوم.
+ */
+const HOME_LABEL_DRIFT_BASELINE = 7;
+const HOME_PAGE = path.join(PAGES_DIR, 'index.astro');
+const catalogLabels = new Map();
+for (const g of NAV_GROUPS) {
+  for (const it of g.items) if (!catalogLabels.has(it.path)) catalogLabels.set(it.path, it.label);
+}
+const homeLinks = [
+  ...fs.readFileSync(HOME_PAGE, 'utf8').matchAll(/path: '(\/dashboard[^']*)'[^}]*?label: '([^']+)'/g),
+];
+const ghosts = homeLinks.filter(([, p]) => !catalogLabels.has(p));
+const reworded = homeLinks.filter(([, p, l]) => catalogLabels.has(p) && catalogLabels.get(p) !== l);
+
+if (ghosts.length === 0) {
+  ok(`كل روابط الرئيسية (${homeLinks.length}) مسجّلةٌ في الكتالوج`);
+} else {
+  bad(`${ghosts.length} رابطًا في الرئيسية خارج الكتالوج — لا يحرسه أحد:`);
+  ghosts.forEach(([, p, l]) => info(`• ${p} («${l}»)`));
+}
+if (reworded.length > HOME_LABEL_DRIFT_BASELINE) {
+  bad(`تسميات الرئيسية المنحرفة ${reworded.length} (خطّ الأساس ${HOME_LABEL_DRIFT_BASELINE}) — البطاقة توسّع، ولا تسمّي شيئًا آخر`);
+  reworded.forEach(([, p, l]) => info(`• ${p} — الرئيسية «${l}» · الكتالوج «${catalogLabels.get(p)}»`));
+} else {
+  ok(`تسمياتٌ موسَّعةٌ عمدًا في البطاقات: ${reworded.length} (السقف ${HOME_LABEL_DRIFT_BASELINE})`);
+  if (reworded.length < HOME_LABEL_DRIFT_BASELINE) {
+    notes.push(`انحراف تسميات الرئيسية صار ${reworded.length} — أنزِل HOME_LABEL_DRIFT_BASELINE`);
+  }
+}
+
+/* ═══════════ 11. لقطة عامة ═══════════ */
+section(11, 'لقطة');
 info(`مجموعات القائمة: ${NAV_GROUPS.length} · روابط داخلية: ${internalPaths().length} · ملفات public: ${externalPaths().length}`);
 info(`صفحات لوحة التحكم على القرص: ${pagesOnDisk.length} · أدوار: ${Object.keys(ROLES).length}`);
 const noAccess = Object.keys(ROLES).filter((r) => internalPaths().every((p) => !canOpenPath(r, p)));

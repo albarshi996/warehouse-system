@@ -1,0 +1,195 @@
+---
+/**
+ * سلوك «عمليات البوابة» — شبكةُ تطبيقاتٍ يفتح كلٌّ منها قائمته، وبحثٌ حيّ.
+ *
+ * لماذا مكوّنٌ مستقلّ لا سكربتٌ في الصفحة؟ لسببين:
+ *   1. **ميزانيّة المنطق داخل الصفحات** (حارس التدقيق §7) كانت مستهلكةً
+ *      بالكامل، فكلّ سطرٍ يُضاف هناك يكسر البناء. نزوله هنا يُنقص الدَّين.
+ *   2. السلوك واحدٌ والوسمُ في الصفحة — ففصلُهما يجعل كلًّا في موضعه.
+ *
+ * ═══ نمط العرض (قرار المالك 2026-08-24) ═══
+ * كانت الصفحة تسرد الأقسام العشرة كلّها فوق بعضها — اثنان وتسعون مقصدًا في
+ * صفحةٍ واحدة. صارت **شبكة تطبيقاتٍ** على نمط أودو: عشرةُ مربّعاتٍ كبيرة،
+ * يفتح كلٌّ منها قائمته وحدها. وهذا أقرب لأودو من نسخ أيقوناته: أودو يعرض
+ * التطبيق، وبداخله قوائمه.
+ *
+ * ثلاث حالاتٍ لا رابعة:
+ *   • **بحثٌ جارٍ**  ⇒ الشبكة تختفي، وكلّ الأقسام تُعرض مفلترةً (البحث يعبر
+ *     التطبيقات كلَّها — وإلّا لصار المستخدم يبحث داخل صندوقٍ لا يعرف أنّه فيه).
+ *   • **تطبيقٌ مفتوح** ⇒ قسمُه وحده، وزرُّ رجوعٍ إلى الشبكة.
+ *   • **لا هذا ولا ذاك** ⇒ الشبكة.
+ *
+ * والتنقّل بـ`location.hash` عمدًا: فيعمل **زرّ رجوع المتصفّح** بلا كودٍ يديره
+ * (قاعدة المالك في `overlayHistory` — كلّ ما يملأ الشاشة يُغلقه زرّ الرجوع).
+ *
+ * الأدوار: لا منطقَ صلاحيّاتٍ هنا. `RoleNav` يضع `data-role-hidden` على ما لا
+ * يخصّ الدور، وهذا يقرؤه فقط — ويُخفي مربّع التطبيق الذي أُفرغ قسمُه، ويصحّح
+ * عدّاده. علامةُ الجاهزيّة `data-role-nav-ready` على `body`.
+ */
+---
+
+<script is:inline>
+  (function () {
+    'use strict';
+    var root = document.getElementById('po-root');
+    if (!root) return;
+
+    var input = document.getElementById('po-search');
+    var clearBtn = document.getElementById('po-search-clear');
+    var countEl = document.getElementById('po-count');
+    var noResults = document.getElementById('po-no-results');
+    var appsNav = document.getElementById('po-apps');
+    var backBtn = document.getElementById('po-back');
+    var crumb = document.getElementById('po-crumb');
+    var sections = Array.prototype.slice.call(root.querySelectorAll('[data-po-section]'));
+    var cards = Array.prototype.slice.call(root.querySelectorAll('.po-card'));
+    var tiles = Array.prototype.slice.call(root.querySelectorAll('[data-po-tile]'));
+
+    /* تطبيع عربي مطابق لبحث الشريط الجانبي (أ/إ/آ→ا · ة→ه · ى/ئ→ي · بلا تشكيل) */
+    function normChar(ch) {
+      if (/[ً-ْـ]/.test(ch)) return '';
+      if ('أإآٱ'.indexOf(ch) >= 0) return 'ا';
+      if (ch === 'ة') return 'ه';
+      if (ch === 'ى' || ch === 'ئ') return 'ي';
+      if (ch === 'ؤ') return 'و';
+      return ch.toLowerCase();
+    }
+    function bzNorm(s) {
+      var out = '';
+      Array.prototype.forEach.call(String(s || ''), function (ch) { out += normChar(ch); });
+      return out;
+    }
+
+    cards.forEach(function (c) {
+      c._label = bzNorm(c.getAttribute('data-label') || '');
+    });
+
+    function isRoleHidden(el) {
+      return el.hasAttribute('data-role-hidden');
+    }
+
+    /** التطبيق المفتوح من العنوان — مفتاحٌ نظيفٌ فقط، وإلّا فالشبكة. */
+    function currentApp() {
+      var h = (location.hash || '').replace(/^#app-/, '');
+      if (!/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(h)) return '';
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i].getAttribute('data-group-key') === h && !isRoleHidden(sections[i])) return h;
+      }
+      return '';
+    }
+
+    /** بطاقاتُ قسمٍ ما التي لا يُخفيها الدور — عدّادُ المربّع الصادق. */
+    function liveCards(section) {
+      return Array.prototype.filter.call(
+        section.querySelectorAll('.po-card'),
+        function (c) { return !isRoleHidden(c); }
+      ).length;
+    }
+
+    function run() {
+      /* يرفع قاعدةَ الإخفاء الأوّليّ في الصفحة. لولاه لبقيت `display:none`
+         غالبةً على `style.display=''` فلا يفتح تطبيقٌ أبدًا. */
+      root.setAttribute('data-ready', '');
+      var q = bzNorm((input && input.value || '').trim());
+      var searching = q !== '';
+      var app = searching ? '' : currentApp();
+      var visible = 0;
+
+      cards.forEach(function (c) {
+        if (isRoleHidden(c)) { c.style.display = 'none'; return; }
+        var hit = q === '' || c._label.indexOf(q) >= 0;
+        c.style.display = hit ? '' : 'none';
+        if (hit) visible++;
+      });
+
+      /* القسم يظهر إن كان تطبيقَه المفتوح، أو كان البحثُ جاريًا وفيه نتيجة. */
+      sections.forEach(function (s) {
+        var key = s.getAttribute('data-group-key');
+        if (isRoleHidden(s)) { s.style.display = 'none'; return; }
+        if (searching) {
+          var any = Array.prototype.some.call(
+            s.querySelectorAll('.po-card'),
+            function (c) { return c.style.display !== 'none'; }
+          );
+          s.style.display = any ? '' : 'none';
+        } else {
+          /* «الوصول السريع» ليس تطبيقًا — يرافق الشبكة، فرابطُ الرئيسية
+             يبقى في متناول اليد قبل اختيار أيّ تطبيق. */
+          s.style.display = key === app || (!app && key === 'quick') ? '' : 'none';
+        }
+      });
+
+      /* مربّعات التطبيقات: تُخفى مع قسمها، وعدّادُها ما يراه هذا الدور. */
+      tiles.forEach(function (t) {
+        var key = t.getAttribute('data-tile-key');
+        var sec = null;
+        for (var i = 0; i < sections.length; i++) {
+          if (sections[i].getAttribute('data-group-key') === key) { sec = sections[i]; break; }
+        }
+        var n = sec && !isRoleHidden(sec) ? liveCards(sec) : 0;
+        t.style.display = n > 0 ? '' : 'none';
+        var cnt = t.querySelector('[data-tile-count]');
+        if (cnt) cnt.textContent = n + ' مقصدًا';
+      });
+
+      if (appsNav) appsNav.style.display = !searching && !app ? '' : 'none';
+      if (backBtn) backBtn.classList.toggle('hidden', !(app && !searching));
+      if (crumb) {
+        var open = null;
+        for (var j = 0; j < sections.length; j++) {
+          if (sections[j].getAttribute('data-group-key') === app) { open = sections[j]; break; }
+        }
+        crumb.textContent = open ? (open.getAttribute('data-group-label') || '') : '';
+      }
+
+      if (noResults) noResults.classList.toggle('hidden', !(visible === 0 && searching));
+      if (countEl) {
+        var mine = cards.filter(function (c) { return !isRoleHidden(c); }).length;
+        countEl.textContent = searching
+          ? (visible + ' نتيجة')
+          : (mine + ' مقصدًا متاحًا لك في ' + tiles.filter(function (t) { return t.style.display !== 'none'; }).length + ' تطبيقات');
+      }
+      if (clearBtn) {
+        var show = (input && input.value || '') !== '';
+        clearBtn.classList.toggle('hidden', !show);
+        clearBtn.classList.toggle('flex', show);
+      }
+    }
+
+    /* فتح تطبيق: العنوان هو الحالة — فزرّ الرجوع يعمل بلا كودٍ يديره. */
+    root.addEventListener('click', function (e) {
+      var tile = e.target.closest ? e.target.closest('[data-app-open]') : null;
+      if (tile) {
+        e.preventDefault();
+        if (input && input.value !== '') { input.value = ''; }
+        location.hash = 'app-' + tile.getAttribute('data-app-open');
+      }
+    });
+    if (backBtn) backBtn.addEventListener('click', function () {
+      if (history.length > 1 && (location.hash || '').indexOf('#app-') === 0) history.back();
+      else location.hash = '';
+    });
+    window.addEventListener('hashchange', function () {
+      run();
+      root.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    });
+
+    if (input) input.addEventListener('input', run);
+    if (clearBtn) clearBtn.addEventListener('click', function () {
+      if (input) { input.value = ''; input.focus(); }
+      run();
+    });
+    if (input) input.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && input.value !== '') { e.stopPropagation(); input.value = ''; run(); }
+    });
+
+    /* أعِد الحساب بعد أن يُطبّق RoleNav إخفاءه (عند تجهّز الدور) — علامته
+       data-role-nav-ready على body. نراقبها فنحدّث العدّادات والمربّعات. */
+    var mo = new MutationObserver(function () {
+      if (document.body.hasAttribute('data-role-nav-ready')) run();
+    });
+    mo.observe(document.body, { attributes: true, attributeFilter: ['data-role-nav-ready'] });
+
+    run();
+  })();
+</script>
