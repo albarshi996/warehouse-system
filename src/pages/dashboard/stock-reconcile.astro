@@ -1,0 +1,19 @@
+---
+/**
+ * مطابقة المخزون ‹CAP-501› — توصل محرّك `reconcile` المبنيّ المهجور.
+ *
+ * شاشةٌ مستقلّةٌ عن صفحة الجرد عمدًا (قرار المالك ق-٦: «صفحة الجرد للجرد»):
+ * الالتقاط يسجّل ما على الرفّ ولا يعرف رصيدًا ولا فرقًا — والمطابقة تقف هنا.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+// ⚠️ لا تُحذف: مكوّن الشاشة يرسم داخل `.o_theme`، وبلا هذين الملفّين تسقط
+// الأنماط كلّها فتُعرض الصفحة نصًّا مرصوصًا بلا بطاقاتٍ ولا أزرار (وقع 2026-08-17).
+// وحارسٌ في `scripts/audit-portal.mjs` يمنع تكرارها.
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import StockReconcile from '../../components/brandzo-erp/locations/StockReconcile.jsx';
+---
+
+<DashboardLayout title="مطابقة المخزون" light>
+  <StockReconcile client:load />
+</DashboardLayout>

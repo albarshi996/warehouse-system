@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 96,
+    "modules": 97,
     "serviceDomains": 45,
     "serviceFiles": 433,
     "collections": 82,
@@ -693,6 +693,14 @@
       "usesServices": [
         "stock"
       ]
+    },
+    {
+      "name": "stock-reconcile",
+      "route": "/dashboard/stock-reconcile",
+      "title": "مطابقة المخزون",
+      "summary": "مطابقة المخزون ‹CAP-501› — توصل محرّك `reconcile` المبنيّ المهجور.",
+      "file": "src/pages/dashboard/stock-reconcile.astro",
+      "usesServices": []
     },
     {
       "name": "studies",
@@ -2655,6 +2663,7 @@
         "qtyVerdict",
         "recomputePreview",
         "reconcile",
+        "referenceCoverage",
         "removeManualLine",
         "routeDistance",
         "saveLocation",

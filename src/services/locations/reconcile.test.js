@@ -9,6 +9,7 @@ import {
   detectLevel,
   locationMismatch,
   reconcile,
+  referenceCoverage,
   toCountDraft,
   variances,
 } from './reconcile.js';
@@ -129,4 +130,53 @@ test('المدخل الفارغ لا ينهار', () => {
   assert.deepEqual(r.rows, []);
   assert.equal(r.summary.lines, 0);
   assert.deepEqual(toCountDraft(r).lines, []);
+});
+
+
+/* ═══ تغطية المرجع — حارس ق-٦ (وصل الطبقة 2026-08-24) ═══ */
+
+test('★★ التغطية تفصل غيابَ التسجيل عن فرق البضاعة', () => {
+  // صنفٌ يعرفه الطرفان بفرق · صنفٌ في النظام وحده · صنفٌ عندنا وحدنا.
+  const report = reconcile(
+    [sys({ sku: 'A', systemQty: 100 }), sys({ sku: 'B', systemQty: 50 })],
+    [phy({ sku: 'A', qty: 90 }), phy({ sku: 'C', qty: 7 })]
+  );
+  const cov = referenceCoverage(report);
+  assert.equal(cov.lines, 3);
+  assert.equal(cov.both, 1, 'A وحده يعرفه الطرفان');
+  assert.equal(cov.systemOnly, 1, 'B في النظام بلا رصيدٍ عندنا');
+  assert.equal(cov.portalOnly, 1, 'C عندنا ولا يعرفه النظام');
+  assert.equal(cov.pct, 33);
+  assert.equal(cov.ready, false);
+  assert.match(cov.note, /غيابُ تسجيلٍ لا فرقُ بضاعة/);
+  assert.match(cov.note, /ق-٦/, 'يُنسب التأجيل إلى قرار المالك لا إلى رأيٍ منّا');
+});
+
+test('★ تغطيةٌ كاملة ⇒ جاهزةٌ وبلا ملاحظة', () => {
+  const report = reconcile([sys({ sku: 'A', systemQty: 100 })], [phy({ sku: 'A', qty: 90 })]);
+  const cov = referenceCoverage(report);
+  assert.equal(cov.both, 1);
+  assert.equal(cov.pct, 100);
+  assert.equal(cov.ready, true);
+  assert.equal(cov.note, '');
+});
+
+test('التغطية لا تنهار على تقريرٍ فارغ', () => {
+  const cov = referenceCoverage(reconcile([], []));
+  assert.equal(cov.lines, 0);
+  assert.equal(cov.pct, 0);
+  assert.equal(cov.ready, false);
+  assert.match(cov.note, /ارفع لقطة النظام/);
+  assert.deepEqual(referenceCoverage(null).lines, 0);
+});
+
+test('الفروقات المطابقة لا تُحسب غيابًا — النصف عتبةُ الجاهزيّة', () => {
+  const report = reconcile(
+    [sys({ sku: 'A', systemQty: 10 }), sys({ sku: 'B', systemQty: 20 })],
+    [phy({ sku: 'A', qty: 11 }), phy({ sku: 'B', qty: 20 })]
+  );
+  const cov = referenceCoverage(report);
+  assert.equal(cov.both, 2, 'المطابق والفرق كلاهما «يعرفه الطرفان»');
+  assert.equal(cov.pct, 100);
+  assert.equal(cov.ready, true);
 });

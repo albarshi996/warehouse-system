@@ -159,6 +159,42 @@ export function variances(report) {
 }
 
 /**
+ * ★ تغطيةُ المرجع — الحارسُ الذي يجعل وصلَ هذه الطبقة أمينًا (‹ق-٦›).
+ *
+ * أجّل المالك المطابقة بقرارٍ صريح: «صفحة الجرد للجرد»، وشرطُ استئنافها
+ * **جهوزُ الأرصدة** — إذ كانت ٧٤ سطرًا مقابل ١٠٤١ في الشيت. والسبب أنّ
+ * مقارنة رصيدٍ موجودٍ بآخرَ لم يُسجَّل بعد تُخرج ٩٠٪ من الأصناف في خانةٍ
+ * واحدة، فيقرؤها الناظر «عجزًا» وهي **غيابُ تسجيلٍ لا غيابُ بضاعة**.
+ *
+ * فبدل أن تُخفى الحقيقة أو يُمنع الوصل، تُقاس وتُعلَن: كم صنفًا يعرفه
+ * الطرفان معًا، وكم يعرفه أحدهما وحده. ونسبةٌ منخفضة **ليست عطبًا في
+ * المطابقة** بل إعلانٌ أنّ الأرصدة لم تجهز — وهو نصّ ق-٦ نفسه معروضًا رقمًا.
+ *
+ * @returns {{both:number, systemOnly:number, portalOnly:number, lines:number,
+ *            pct:number, ready:boolean, note:string}}
+ */
+export function referenceCoverage(report) {
+  const rows = report?.rows || [];
+  const lines = rows.length;
+  const systemOnly = rows.filter((r) => r.status === 'missing-in-portal').length;
+  const portalOnly = rows.filter((r) => r.status === 'missing-in-system').length;
+  const both = lines - systemOnly - portalOnly;
+  const pct = lines ? Math.round((both / lines) * 100) : 0;
+  // العتبة تمييزٌ للقراءة لا حكمٌ يمنع: دون النصف يغلب الغيابُ الفرقَ.
+  const ready = lines > 0 && pct >= 50;
+  let note = '';
+  if (!lines) note = 'لا صفوف للمقارنة — ارفع لقطة النظام أوّلًا.';
+  else if (!ready) {
+    note =
+      `${both} صنفًا فقط من ${lines} يعرفه الطرفان (${pct}٪). ` +
+      `فأكثرُ ما تراه أدناه **غيابُ تسجيلٍ لا فرقُ بضاعة**: ` +
+      `${systemOnly} صنفًا في النظام بلا رصيدٍ في البوابة، و${portalOnly} عندنا ولا يعرفه النظام. ` +
+      'اعتمد الفروقات حين تجهز الأرصدة (قرار المالك ق-٦).';
+  }
+  return { both, systemOnly, portalOnly, lines, pct, ready, note };
+}
+
+/**
  * ⚠️ حدُّ المقارنة حين يختلف المرجعان.
  *
  * إن حمل الشيت مواقعَ نظامٍ لا تطابق أكواد رفوفنا، فالمقارنة بالموقع تُنتج

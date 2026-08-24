@@ -76,6 +76,11 @@ export const NAV_GROUPS = [
       // مستند. مقصورٌ على من يملك اعتماد الاستيراد — لا يراه أمين المخزن.
       { path: '/dashboard/directed-storage', label: 'التخزين والسحب الموجّه', icon: 'mapPin', roles: ['admin', 'warehouse_manager', 'inventory_auditor'] },
       { path: '/dashboard/stock-ledger', label: 'دفتر حركات المخزون', icon: 'clipboardList' },
+      // ‹CAP-501› مطابقة المخزون: توصل محرّك `reconcile` الذي بُني ومُختبِر
+      // وبقي بلا مستدعٍ واحد. شاشةٌ مستقلّةٌ عن صفحة الجرد بقرار المالك ق-٦
+      // («صفحة الجرد للجرد»)، وموضعها بعد الدفتر: الحركةُ تُقيَّد ثمّ تُطابَق.
+      // لمدقّق الجرد كما للمديرَين — وهو صاحبها الأوّل.
+      { path: '/dashboard/stock-reconcile', label: 'مطابقة المخزون', icon: 'arrowLeftRight', roles: ['admin', 'warehouse_manager', 'inventory_auditor'] },
       // التقارير التفصيليّة — موضعٌ ثانٍ لأمين المخزن ومسؤول المرتجعات: تقارير
       // المخزون تخصّهما، وهما لا يريان مجموعة «التقارير». والصلاحية اتحادُ المواضع.
       { path: '/dashboard/data-reports', label: 'التقارير التفصيليّة', icon: 'barChart3', roles: ['storekeeper', 'return_manager'] },
