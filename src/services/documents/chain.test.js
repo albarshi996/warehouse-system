@@ -1009,3 +1009,32 @@ test('SAP-6: عائلة البيع من المركبة داخل الخريطة �
     assert.ok(STANDALONE_TYPES[type], `${type} يحتاج سببًا مكتوبًا`);
   }
 });
+
+
+/* ═══ ‹CAP-503› السبب يسري في السلسلة: محضر الجرد ← سند التسوية ═══ */
+
+test('★★ سببُ الفرق ينتقل من بند المحضر إلى بند التسوية — فلا يُكتب مرّتين', () => {
+  const cc = {
+    type: 'CC', number: 'CC-0001', state: 'approved',
+    header: { warehouse: 'E5', countDate: '2026-08-24' },
+    lines: [{ sku: 'A', description: 'زيت', bookQty: 100, count2: 90, reason: 'خطأ عدٍّ' }],
+  };
+  const adj = deriveDocument(cc, 'ADJ');
+  assert.equal(adj.lines[0].notes, 'خطأ عدٍّ', 'reason ⟵ notes');
+  assert.equal(adj.lines[0].bookQty, 100);
+  assert.equal(adj.lines[0].actualQty, 90);
+  // وهو نفسه ما يشترطه الحارس: كان يمنع قبل النقل.
+  const verdict = adjustmentVerdict(adj, cc);
+  assert.equal(verdict.ok, true, verdict.problems.join(' · '));
+});
+
+test('★ بندٌ بلا سببٍ في المحضر يظلّ ممنوعًا في التسوية — النقل لا يخترع سببًا', () => {
+  const cc = {
+    type: 'CC', number: 'CC-0002', state: 'approved',
+    header: { warehouse: 'E5', countDate: '2026-08-24' },
+    lines: [{ sku: 'B', description: 'أرز', bookQty: 50, count2: 40, reason: '' }],
+  };
+  const verdict = adjustmentVerdict(deriveDocument(cc, 'ADJ'), cc);
+  assert.equal(verdict.ok, false);
+  assert.ok(verdict.problems.some((p) => /بلا سبب مكتوب/.test(p)));
+});

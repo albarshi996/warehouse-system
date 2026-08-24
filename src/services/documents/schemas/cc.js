@@ -15,6 +15,17 @@
  *    (الورق كان يترك أيّهما المرجع غامضًا).
  */
 
+import { reasonsFor } from '../reasonCodes.js';
+
+/**
+ * ‹CAP-502› أسبابُ الفرق — قائمةٌ مغلقة لا نصٌّ حرّ.
+ *
+ * حارس `adjustmentVerdict` يشترط سببًا مكتوبًا لكلّ بندٍ قبل التسوية، وكان
+ * الحقل نصًّا حرًّا: يُكتب فيُقبل، ثمّ لا يُجمَّع ولا يُقارَن بين جردٍ وجرد.
+ * والقائمة تُقرأ من `reasonCodes.js` — مصدرٌ واحدٌ لا نسخةٌ هنا.
+ */
+const COUNT_REASONS = reasonsFor('count_variance').map((r) => r.label);
+
 /** العدّ المؤكَّد: الثاني إن وُجد، وإلا الأول. */
 function confirmedCount(line) {
   const second = line?.count2;
@@ -136,7 +147,7 @@ const schema = {
         { key: 'variance', label: 'الفرق', kind: 'computed', compute: lineVariance, width: '6%' },
         { key: 'unitPrice', label: 'سعر الوحدة (د.ل)', kind: 'number', width: '8%' },
         { key: 'varValue', label: 'قيمة الفرق (د.ل)', kind: 'computed', compute: varianceValue, width: '8%' },
-        { key: 'reason', label: 'سبب الفرق', kind: 'text', width: '10%' },
+        { key: 'reason', label: 'سبب الفرق', kind: 'select', options: COUNT_REASONS, width: '10%' },
       ],
     },
 

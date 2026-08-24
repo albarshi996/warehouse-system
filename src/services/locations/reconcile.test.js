@@ -13,6 +13,8 @@ import {
   toCountDraft,
   variances,
 } from './reconcile.js';
+import { reasonsFor } from '../documents/reasonCodes.js';
+import ccSchema from '../documents/schemas/cc.js';
 
 const sys = (over = {}) => ({ snapshotDate: '2026-08-16', warehouse: 'E5', sku: 'A', barcode: '629', description: 'زيت', systemQty: 100, ...over });
 const phy = (over = {}) => ({ warehouse: 'E5', sku: 'A', barcode: '629', nameAr: 'زيت', qty: 100, bin: 'E5-A01-R01', ...over });
@@ -179,4 +181,35 @@ test('الفروقات المطابقة لا تُحسب غيابًا — الن�
   assert.equal(cov.both, 2, 'المطابق والفرق كلاهما «يعرفه الطرفان»');
   assert.equal(cov.pct, 100);
   assert.equal(cov.ready, true);
+});
+
+
+/* ═══ ‹CAP-502› السبب يرافق الفرق ═══ */
+
+test('★ المحضر يأتي بسببه حيث تقوله الحالة، وفارغًا حيث لا تقوله', () => {
+  const report = reconcile(
+    [sys({ sku: 'A', systemQty: 100 }), sys({ sku: 'B', systemQty: 50 })],
+    [phy({ sku: 'A', qty: 90 }), phy({ sku: 'C', qty: 7 })]
+  );
+  const draft = toCountDraft(report);
+  const byS = Object.fromEntries(draft.lines.map((l) => [l.sku, l]));
+  assert.equal(byS.B.reason, 'حركةٌ لم تُقيَّد في البوابة', 'يعرفه النظام ولا رصيدَ عندنا');
+  assert.equal(byS.C.reason, 'صنفٌ لا يعرفه النظام', 'عندنا ولا يعرفه النظام');
+  assert.equal(byS.A.reason, '', 'العجزُ سببُه لا يُعرف من الأرقام — يختاره الإنسان');
+});
+
+test('★ الأسباب المقترحة من القائمة المقنّنة نفسها — لا نصَّ مخترعًا', () => {
+  const labels = new Set(reasonsFor('count_variance').map((r) => r.label));
+  const report = reconcile([sys({ sku: 'B', systemQty: 50 })], []);
+  for (const line of toCountDraft(report).lines) {
+    if (line.reason) assert.ok(labels.has(line.reason), `«${line.reason}» خارج قائمة الأسباب`);
+  }
+});
+
+test('★ مخطّط المحضر يعرض الأسباب اختيارًا لا نصًّا حرًّا', () => {
+  const lines = ccSchema.sections.find((s) => s.key === 'lines');
+  const reason = lines.columns.find((c) => c.key === 'reason');
+  assert.equal(reason.kind, 'select');
+  assert.ok(reason.options.length >= 6, 'القائمة تحمل أسبابها');
+  assert.deepEqual(reason.options, reasonsFor('count_variance').map((r) => r.label));
 });

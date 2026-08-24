@@ -23,7 +23,23 @@
  * ثمّ تسوية `ADJ` خاضعة للاعتماد — لا إلى تعديلٍ صامت لأيّ طرف.
  */
 
+import { reasonLabel } from '../documents/reasonCodes.js';
 import { balanceLocationCode } from './locationsModel.js';
+
+/**
+ * ‹CAP-502› السببُ الذي تقوله **الحالةُ نفسها** — ترجمةٌ لا حكم.
+ *
+ * صنفٌ يعرفه النظام ولا رصيدَ له عندنا: معناه بالتعريف أنّ حركته لم تُقيَّد.
+ * وصنفٌ عندنا لا يعرفه النظام: معناه أنّه خارج المرجع. فاقتراحُهما ليس رأيًا
+ * في سبب الفرق بل إعادةُ صياغةٍ للتصنيف الذي حسبته المطابقة.
+ *
+ * أمّا العجزُ والزيادةُ بين صنفين يعرفهما الطرفان فسببُهما **لا يُعرف من
+ * الأرقام** — يُترك فارغًا ليختاره الإنسان، وحارسُ التسوية يمنع مروره فارغًا.
+ */
+const AUTO_REASON = Object.freeze({
+  'missing-in-portal': 'not_posted',
+  'missing-in-system': 'unregistered',
+});
 
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 const up = (v) => String(v ?? '').trim().toUpperCase();
@@ -241,6 +257,8 @@ export function toCountDraft(report, { warehouse } = {}) {
       // الدفتريّ هو رصيد النظام، والمعدود هو الفعليّ عندنا.
       bookQty: r.systemQty,
       count2: r.physicalQty,
+      // ‹CAP-502› يُملأ حيث تقوله الحالة، ويُترك للإنسان حيث لا تقوله.
+      reason: AUTO_REASON[r.status] ? reasonLabel('count_variance', AUTO_REASON[r.status]) : '',
       notes: `فرق ${r.variance > 0 ? '+' : ''}${r.variance}`,
     })),
   };

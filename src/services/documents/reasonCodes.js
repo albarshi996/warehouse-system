@@ -33,6 +33,8 @@ export const REASON_CONTEXTS = Object.freeze({
   order_deviation: 'انحراف عن الكمّيّة المقترحة',
   // ‹FNB-404› الهدر التشغيليّ في مطعم — يميّزه عن التالف المخزنيّ.
   waste: 'هدرٌ تشغيليّ',
+  // ‹CAP-502› فرقُ الجرد — بين رصيد النظام والمعدود فعلًا.
+  count_variance: 'فرق في الجرد',
 });
 
 /** المعرّف المحجوز لـ«سببٍ آخر» — يفتح خانة النصّ ويُلزم بها. */
@@ -116,6 +118,30 @@ export const REASONS = Object.freeze({
     { id: 'breakage', label: 'كسرٌ أو انسكاب', blamesWorker: false },
     { id: 'temperature', label: 'انقطاع سلسلة التبريد', blamesWorker: false },
     { id: 'trim', label: 'فاقد تقطيعٍ وتنظيف', blamesWorker: false },
+    other('سببٌ آخر — يُكتب'),
+  ],
+  /**
+   * ‹CAP-502› فرقُ الجرد — أسبابُ اختلاف المعدود عن رصيد النظام.
+   *
+   * حارس `adjustmentVerdict` يشترط **سببًا مكتوبًا لكلّ بند** قبل أن تمرّ
+   * التسوية. وقبل هذه القائمة كان الحقل نصًّا حرًّا: يُكتب فيُقبل، ثمّ لا
+   * يُجمَّع ولا يُقاس ولا يُقارَن بين جردٍ وجرد.
+   *
+   * وأوّلُ سببين ليسا حكمًا بل **ترجمةُ الحالة نفسها**: صنفٌ يعرفه النظام
+   * ولا رصيد له عندنا معناه حركةٌ لم تُقيَّد، وصنفٌ عندنا لا يعرفه النظام
+   * معناه صنفٌ خارج المرجع. ولذلك وحدهما يُقترحان تلقائيًّا في المحضر.
+   *
+   * و«الفقد» `blamesWorker:false` عمدًا: الفقدُ يفتح تحقيقًا ولا يُحمَّل على
+   * منفّذٍ بضغطة زر — وهو نصّ «المعيار أداةٌ لاكتشاف المشكلة لا حكمٌ آليّ».
+   */
+  count_variance: [
+    { id: 'not_posted', label: 'حركةٌ لم تُقيَّد في البوابة', blamesWorker: false },
+    { id: 'unregistered', label: 'صنفٌ لا يعرفه النظام', blamesWorker: false },
+    { id: 'uom_mismatch', label: 'اختلاف وحدة القياس', blamesWorker: false },
+    { id: 'moved_unlogged', label: 'نُقل بين المواقع بلا تسجيل', blamesWorker: false },
+    { id: 'damage_unlogged', label: 'تالفٌ لم يُسجَّل', blamesWorker: false },
+    { id: 'count_error', label: 'خطأ عدٍّ', blamesWorker: true },
+    { id: 'loss', label: 'فقدٌ يحتاج تحقيقًا', blamesWorker: false },
     other('سببٌ آخر — يُكتب'),
   ],
   // ← إحالةٌ إلى القائمة القائمة، لا نسخةٌ منها.
