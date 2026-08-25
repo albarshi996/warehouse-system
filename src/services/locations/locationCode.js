@@ -44,7 +44,7 @@ export const MIN_SEGMENTS = 2;
 const SEGMENT_RE = /^[A-Z0-9]+$/;
 
 /** أطول مقطعٍ مقبول — حدٌّ يمنع لصق فقرةٍ كاملة في خانة رفّ. */
-const MAX_SEGMENT_LEN = 12;
+export const MAX_SEGMENT_LEN = 12;
 
 /** أرقام عربية-هندية إلى غربية — الشيت والملصق قد يحملان أيًّا منهما. */
 function westernDigits(s) {

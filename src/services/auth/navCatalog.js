@@ -71,10 +71,11 @@ export const NAV_GROUPS = [
     emoji: '📦', icon: 'warehouse',
     items: [
       { path: '/dashboard/command-center', label: 'لوحة القيادة التشغيلية', icon: 'grid' },
-      { path: '/dashboard/warehouses', label: 'المستودعات', icon: 'package' },
       // التخزين والسحب الموجّه (LOC-202): استيراد أوامر المصدر ← معاينة ←
       // مستند. مقصورٌ على من يملك اعتماد الاستيراد — لا يراه أمين المخزن.
-      { path: '/dashboard/directed-storage', label: 'التخزين والسحب الموجّه', icon: 'mapPin', roles: ['admin', 'warehouse_manager', 'inventory_auditor'] },
+      // خريطة المواقع **مرجعٌ عامّ** لا أداةُ توجيه: قيس نقلُها إلى
+      // «التخزين الموجّه» فأسقطها عن الماليّ ومسؤول المرتجعات والشيف — فبقيت.
+      { path: '/dashboard/warehouses', label: 'المستودعات', icon: 'package' },
       { path: '/dashboard/stock-ledger', label: 'دفتر حركات المخزون', icon: 'clipboardList' },
       // ‹CAP-501› مطابقة المخزون: توصل محرّك `reconcile` الذي بُني ومُختبِر
       // وبقي بلا مستدعٍ واحد. شاشةٌ مستقلّةٌ عن صفحة الجرد بقرار المالك ق-٦
@@ -107,7 +108,6 @@ export const NAV_GROUPS = [
       // ‹تدقيق 24.08› كانت «لوحة سلاسل الإمداد» — والاسم يوحي بلوحةٍ جامعة
       // بينما مضمونها الأسطولُ وأوامرُ الشغل والعُهد وتنبيهاتُ الصلاحية.
       { path: '/dashboard/supply-chain', label: 'الأسطول والعُهد وأوامر الشغل', icon: 'truck', roles: ['admin', 'warehouse_manager'] },
-      { path: '/dashboard/labor-operations', label: 'عمالة الشحن والتفريغ', icon: 'users', roles: ['admin', 'warehouse_manager', 'labor_supervisor'] },
     ],
   },
   {
@@ -135,6 +135,29 @@ export const NAV_GROUPS = [
       // مجموعته هو («الميدان») لا من «التقارير» التي لا يراها أصلًا: نفس المسار
       // في مجموعتين نمطٌ قائم (الخزينة والتقارير)، والبديل اسمٌ بلا باب.
       { path: '/dashboard/partner-ledger', label: 'ذمم عملائي وكشوفهم', icon: 'dollarSign', roles: ['sales_rep'] },
+    ],
+  },
+  {
+    /**
+     * التخزين الموجّه ‹LOC› — تطبيقُ الرفّ والعامل (طلب المالك 2026-08-24).
+     *
+     * كان مبعثرًا في ثلاثة مواضع: **خريطةُ المواقع** في «المستودعات والجرد»،
+     * و**عمالةُ المناولة** في «إدارة الحركة»، و**شاشةُ العامل** مدفونةً داخل
+     * لوحةٍ إداريّة بلا رابطٍ لها أصلًا. واسمُ «التخزين والسحب الموجّه» كان
+     * على **صندوق استيراد شيت** لا على توجيهٍ لعامل.
+     *
+     * فجُمعت في تطبيقٍ واحد: تُعرَّف الرفوف ← تُرسم الخريطة ← يُوجَّه العامل.
+     * ولم تُحذف صفحةٌ ولا تغيّر رابط — نُقلت مداخلُها إلى بيتها.
+     */
+    key: 'putaway',
+    group: 'التخزين الموجّه',
+    emoji: '🏷️', icon: 'mapPin',
+    items: [
+      // ‹LOC› البانية: تصف المدى مرّةً فيُولَّد الكامل — ٢٤٠٠ موقعٍ كانت تُكتب
+      // بالقلم فلا تُكتب، فيبقى المخزون بلا مواقع ولا يعمل التوجيه أصلًا.
+      { path: '/dashboard/location-builder', label: 'بانية مواقع التخزين', icon: 'layers', roles: ['admin', 'warehouse_manager'] },
+      { path: '/dashboard/directed-storage', label: 'استيراد مستندات المصدر', icon: 'fileUp', roles: ['admin', 'warehouse_manager', 'inventory_auditor'] },
+      { path: '/dashboard/labor-operations', label: 'عمالة الشحن والتفريغ', icon: 'users', roles: ['admin', 'warehouse_manager', 'labor_supervisor'] },
     ],
   },
   {
