@@ -64,6 +64,48 @@ test('★ والنزول إلى المستند يُخرج المستندات ن�
   assert.equal(leaf.items[0].sku, 'CHICKEN');
 });
 
+test('★★ الطريقُ الخماسيّ يصل آخره — الفرعُ يُفتح إلى الصنف والصنفُ إلى المستند', () => {
+  // كان النزول ينقطع هنا صامتًا: مفتاحُ الصنف ليس موقعًا في الشجرة، والترشيح
+  // بالنسب وحده لا يطابقه أبدًا — فتعود المستنداتُ فارغةً ويبدو أن لا خلل.
+  const items = drillInto(EXC, ORG, { level: 'branch', key: 'BR01', path: [{ level: 'brand', key: 'BRD1' }] });
+  assert.equal(items.level, 'item');
+  assert.deepEqual(items.rows.map((r) => r.key).sort(), ['CHICKEN', 'SAUCE']);
+
+  const docs = drillInto(EXC, ORG, {
+    level: 'item',
+    key: 'CHICKEN',
+    path: [{ level: 'brand', key: 'BRD1' }, { level: 'branch', key: 'BR01' }],
+  });
+  assert.equal(docs.level, 'document');
+  assert.deepEqual(docs.rows.map((r) => r.key), ['D-1']);
+});
+
+test('★★ وكلُّ شرطٍ سبق يبقى قائمًا — صنفٌ داخل فرعٍ لا يجرّ مستنداتِه من فروع غيره', () => {
+  // CHICKEN موجودٌ في BR01 (D-1) وفي BR02 (D-3). والنزول من BR01 لا يرى D-3.
+  const docs = drillInto(EXC, ORG, {
+    level: 'item',
+    key: 'CHICKEN',
+    path: [{ level: 'branch', key: 'BR01' }],
+  });
+  assert.deepEqual(docs.rows.map((r) => r.key), ['D-1']);
+  assert.ok(!docs.rows.some((r) => r.key === 'D-3'), 'تسرّب مستندُ فرعٍ آخر');
+});
+
+test('★ وورقةُ المستند تحترم الطريق أيضًا — لا تلتقط رقمًا متشابهًا من فرعٍ آخر', () => {
+  const leaf = drillInto(EXC, ORG, {
+    level: 'document',
+    key: 'D-3',
+    path: [{ level: 'branch', key: 'BR01' }],
+  });
+  assert.equal(leaf.leaf, true);
+  assert.equal(leaf.items.length, 0, 'D-3 في BR02 — لا يُعرض تحت BR01');
+});
+
+test('الترشيح بالأب وحده يبقى عاملًا — توافقٌ رجعيّ لمن يستدعي بلا مسار', () => {
+  const v = towerView(EXC, ORG, { level: 'branch', parent: 'BRD1' });
+  assert.deepEqual(v.rows.map((r) => r.key).sort(), ['BR01', 'BR02']);
+});
+
 test('★★ حارس الشمول: كلّ نوعٍ مذكورٍ مبنيٌّ، وكلّ مبنيٍّ مصنَّف', () => {
   const cov = categoryCoverage();
   assert.deepEqual(cov.promisedButMissing, [], 'اللوحة تَعِد بنوعٍ غير مبنيّ');

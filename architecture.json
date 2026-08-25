@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 104,
+    "modules": 105,
     "serviceDomains": 45,
-    "serviceFiles": 439,
+    "serviceFiles": 441,
     "collections": 82,
     "roles": 18,
     "odooModels": 12,
@@ -706,6 +706,14 @@
       "title": "عروض القطاعات التشغيلية",
       "summary": "",
       "file": "src/pages/dashboard/sector-presentations.astro",
+      "usesServices": []
+    },
+    {
+      "name": "sector-tower",
+      "route": "/dashboard/sector-tower",
+      "title": "برج القطاع",
+      "summary": "برج القطاع ‹FNB-801…804 · FNB-703 · FNB-704› — رابعُ شاشات قطاع الأغذية.",
+      "file": "src/pages/dashboard/sector-tower.astro",
       "usesServices": []
     },
     {
@@ -2395,12 +2403,14 @@
         "stockStatus.js",
         "stockStatus.test.js",
         "supplierPayment.test.js",
+        "towerReading.js",
+        "towerReading.test.js",
         "transferReports.js",
         "transferReports.test.js",
         "vehicle.test.js"
       ],
-      "fileCount": 40,
-      "testCount": 18,
+      "fileCount": 42,
+      "testCount": 19,
       "exports": [
         "ACCOUNT_LOCATIONS",
         "AGING_BUCKETS",
@@ -2455,6 +2465,7 @@
         "balanceOf",
         "balances",
         "boardRows",
+        "branchPositions",
         "bucketOf",
         "buildLedgerCard",
         "buildMoves",
@@ -2466,6 +2477,7 @@
         "chainCompleteness",
         "classifyOrder",
         "closeException",
+        "closeRecords",
         "closeVerdict",
         "closeoutBalance",
         "closeoutEntry",
@@ -2473,6 +2485,7 @@
         "compareMoves",
         "computeKpis",
         "correctionDraft",
+        "costOwnership",
         "creditCheck",
         "customerCodeFromLocation",
         "customerExposure",

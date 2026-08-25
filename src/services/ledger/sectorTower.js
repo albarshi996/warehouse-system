@@ -79,17 +79,34 @@ export function categoryCoverage() {
   };
 }
 
+/** مفتاحُ استثناءٍ على مستوًى ما — موضعُه في الشجرة، أو صنفُه، أو مستندُه. */
+function keyAt(exc, level, chain) {
+  if (level === 'item') return up(exc?.sku);
+  if (level === 'document') return up(exc?.docRef?.number || exc?.docRef?.id);
+  return up(chain.find((n) => n.level === level)?.code);
+}
+
 /**
  * البرج ‹FNB-801› — يجمع الاستثناءات على مستوًى ويعرض **ما يحتاج تدخّلًا**.
  *
+ * ★★ والترشيح **بالمسار كلّه لا بأبٍ واحد**: نزولٌ خماسيٌّ يمرّ بالصنف، ومن
+ * رشّح بالموضع وحده سقط عنده الطريق — لأنّ مفتاح الصنف ليس موقعًا في الشجرة
+ * فلا يطابقه نسبٌ أبدًا، فتعود المستنداتُ فارغةً ويبدو أنّ لا خلل. وأسوأ من
+ * ذلك: ترشيحٌ بالصنف وحده يعرض صنفَ كلّ الفروع تحت فرعٍ واحد.
+ *
  * @param {object[]} exceptions استثناءاتٌ مفتوحة `{type, location, sku, severity, docRef}`
  * @param {Map} orgIndex فهرس الشجرة
- * @param {{level?:string, parent?:string}} [opts] المستوى المطلوب وأبوه
+ * @param {{level?:string, parent?:string, path?:Array<{level,key}>}} [opts]
+ *   `parent` اختصارٌ لخطوةٍ واحدةٍ في الشجرة (توافقٌ رجعيّ)، و`path` المسارُ
+ *   المتراكم — وكلّ خطوةٍ فيه شرطٌ يجب أن يتحقّق.
  * @returns {{level, rows, total, uncategorized}}
  */
 export function towerView(exceptions = [], orgIndex = null, opts = {}) {
   const level = str(opts.level) || 'sector';
   const parent = up(opts.parent);
+  const path = (Array.isArray(opts.path) ? opts.path : [])
+    .map((s) => ({ level: str(s?.level), key: up(s?.key) }))
+    .filter((s) => s.level && s.key);
   const groups = new Map();
   let uncategorized = 0;
   let total = 0;
@@ -98,13 +115,10 @@ export function towerView(exceptions = [], orgIndex = null, opts = {}) {
     const chain = orgIndex ? ancestryOf(orgIndex, exc?.location) : [];
     // ترشيحٌ بالأب: نزولٌ داخل براندٍ لا يعرض فروع غيره.
     if (parent && !chain.some((n) => up(n.code) === parent)) continue;
+    // وترشيحٌ بالمسار: كلّ خطوةٍ سبقت شرطٌ قائم — فالفرعُ يبقى فرعَه والصنفُ صنفَه.
+    if (path.length && !path.every((s) => keyAt(exc, s.level, chain) === s.key)) continue;
 
-    let key = '';
-    if (level === 'item') key = up(exc?.sku);
-    else if (level === 'document') key = up(exc?.docRef?.number || exc?.docRef?.id);
-    else key = up(chain.find((n) => n.level === level)?.code);
-
-    if (!key) key = '—';
+    const key = keyAt(exc, level, chain) || '—';
     total += 1;
 
     const cat = categoryOfType(exc?.type);
@@ -140,18 +154,27 @@ export function towerBalance(exceptions = [], orgIndex) {
 /**
  * النزول من خليّةٍ إلى ما تحتها — **تجميعٌ يُفتَح لا رقمٌ مغلق**
  * (نفس عقد `drill.js`: قائمةٌ لا تفسّر رقمها تُسقط الثقة).
+ *
+ * ★ و`path` هو المسارُ الذي سُلك حتّى هذه الخليّة (بلا الخطوة الحاليّة).
+ * يُمرَّر فيبقى كلُّ شرطٍ سابقٍ قائمًا: النزول إلى صنفٍ داخل فرعٍ يعرض
+ * مستنداتِ ذلك الفرع وحده — لا مستنداتِ الصنف في القطاع كلّه.
  */
-export function drillInto(exceptions = [], orgIndex, { level, key } = {}) {
+export function drillInto(exceptions = [], orgIndex, { level, key, path = [] } = {}) {
   const next = nextLevel(level);
+  const here = [...(Array.isArray(path) ? path : []), { level, key }];
   if (!next) {
-    // نهاية الطريق: المستندات نفسها لا تجميعٌ فوقها.
+    // نهاية الطريق: المستندات نفسها لا تجميعٌ فوقها — ومسبوقةً بشروط الطريق.
+    const steps = here
+      .map((s) => ({ level: str(s?.level), key: up(s?.key) }))
+      .filter((s) => s.level && s.key);
     return {
       level: 'document',
       leaf: true,
-      items: (Array.isArray(exceptions) ? exceptions : []).filter(
-        (e) => up(e?.docRef?.number || e?.docRef?.id) === up(key)
-      ),
+      items: (Array.isArray(exceptions) ? exceptions : []).filter((e) => {
+        const chain = orgIndex ? ancestryOf(orgIndex, e?.location) : [];
+        return steps.every((s) => keyAt(e, s.level, chain) === s.key);
+      }),
     };
   }
-  return { ...towerView(exceptions, orgIndex, { level: next, parent: key }), leaf: false, from: { level, key } };
+  return { ...towerView(exceptions, orgIndex, { level: next, path: here }), leaf: false, from: { level, key } };
 }
