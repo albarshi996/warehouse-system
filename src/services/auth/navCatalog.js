@@ -158,6 +158,10 @@ export const NAV_GROUPS = [
       // الوصفة أساسُ القطاع: الإنتاج يفجّرها، والتكلفة تُحسب منها، والتخصيص
       // على الفروع يحتاجها. فهي أولى الشاشات لا إحداها.
       { path: '/dashboard/recipes', label: 'دفتر الوصفات', icon: 'notebook', roles: ['admin', 'warehouse_manager', 'fnb_manager', 'executive_chef'] },
+      // ‹FNB-302› طلب الفرع: **مدير الفرع صاحبه الأوّل** — هو من يطلب. ولا
+      // يُدرَج له برجُ القطاع لاحقًا (تقاريرُ مجمَّعةٌ ليست له)، فالحصر ببنوده
+      // لا بالمجموعة — نفس نمط «إدارة الحركة» مع مشرف المناولة.
+      { path: '/dashboard/branch-order', label: 'طلب الفرع', icon: 'shoppingCart', roles: ['admin', 'warehouse_manager', 'fnb_manager', 'branch_manager'] },
     ],
   },
   {

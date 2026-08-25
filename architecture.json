@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 98,
+    "modules": 99,
     "serviceDomains": 45,
     "serviceFiles": 433,
     "collections": 82,
@@ -70,6 +70,14 @@
         "assets",
         "ui"
       ]
+    },
+    {
+      "name": "branch-order",
+      "route": "/dashboard/branch-order",
+      "title": "طلب الفرع",
+      "summary": "طلب الفرع ‹FNB-302 · FNB-303› — ثاني شاشات قطاع الأغذية.",
+      "file": "src/pages/dashboard/branch-order.astro",
+      "usesServices": []
     },
     {
       "name": "business-continuity",
