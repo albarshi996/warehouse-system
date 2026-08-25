@@ -5,7 +5,7 @@
   "command": "npm run plan:capture",
   "track": "الالتقاط أوّلًا · المطابقة مؤجَّلة بقرار المالك (ق-٦ «تأجيل» 2026-08-23) · ولا مهمّة تحجب العادّ على الرفّ",
   "source": "تحليل المالك 2026-08-23 (نصّ «الالتقاط لا يُحاسِب») + جرد الكود الفعليّ في الجلسة نفسها + ستّة قرارات مالك محسومة",
-  "lastUpdated": "2026-08-25 (تصحيح حالات: CAP-201 لم تبدأ · CAP-501…503 بُنيت وشُحنت والتأجيل قائم)",
+  "lastUpdated": "2026-08-26 (م٢ نصفها: CAP-201 وCAP-202 مُغلقتان بنطاقٍ من الشجرة)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "0cbfa2c",
@@ -335,7 +335,7 @@
       "title": "رأس العملية يحمل مستودعًا ومنطقة — مطلوبَين لا ملزمَين (ق-٣)",
       "milestone": "م٢",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ج‑٤"
       ],
@@ -345,25 +345,29 @@
       "nucleus": "src/services/stock/operationsService.js — createOperation",
       "guardTest": "src/services/stock/operationScope.test.js",
       "touches": [
-        "src/services/stock/operationsService.js",
-        "firestore.rules"
+        "src/services/stock/operationScope.js",
+        "src/services/stock/operationsService.js"
       ],
-      "note": "قيد المالك الحاكم في ق-٣: «لا يقطع الفريق عند الجرد». فالنطاق يُطلب ويُقترح ولا يُلزم.",
+      "note": "قيد المالك الحاكم في ق-٣: «لا يقطع الفريق عند الجرد». فالنطاق يُطلب ويُقترح ولا يُلزم. · ★ ولا تعديلَ في firestore.rules: قاعدة operations تسمح بالإنشاء لكلّ فاعلٍ مخزنيّ بلا حصرِ حقول، فالحقلان الجديدان يمرّان — ولا قواعدَ تنتظر نشرًا هنا.",
       "acceptance": [
         "createOperation يقبل المستودع والمنطقة ويكتبهما على الرأس",
         "الجلسة بلا نطاق تُفتح وتعمل كاملةً — لا بوّابة ولا رسالة تعطيل",
         "العمليّات القديمة بلا نطاق تبقى مقروءة"
       ],
       "branch": "claude/warehouse-inventory-architecture-d68500",
-      "progress": "لم يبدأ التنفيذ بعد. صُحّحت الحالة 2026-08-25 من doing إلى todo: operationsService.js لا يعرف warehouse ولا zone، وoperationScope.test.js غير موجود على القرص — فالجبهة كانت مشغولةً بلا عمل، وحارس «جبهة واحدة» يمنع بدء غيرها بناءً على ادّعاء.",
-      "nextStep": "إضافة warehouse وzone إلى createOperation ورأس العمليّة، مع إبقاء الجلسة بلا نطاق عاملةً كاملةً (ق-٣: لا يقطع الفريق)."
+      "progress": "createOperation يقبل warehouse وzone ويكتبهما دائمًا (ولو فارغَين، فحقلٌ حاضرٌ يُستعلَم عنه). والحكم في operationScope.js الخالص (٢٧ اختبارًا) لا في خدمة الشبكة. وscopeOf متسامحٌ مع الجلسات القديمة.",
+      "nextStep": "أُغلقت في 148a7de.",
+      "evidence": {
+        "commit": "148a7de",
+        "closedOn": "2026-08-26"
+      }
     },
     {
       "id": "CAP-202",
       "title": "النطاق يُختار من شجرة المواقع القائمة لا نصًّا حرًّا",
       "milestone": "م٢",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ج‑٤"
       ],
@@ -380,7 +384,13 @@
         "المستودع والمنطقة يُختاران من الشجرة الحقيقيّة لا يُكتبان",
         "لا نصّ حرّ يدخل حقل النطاق إطلاقًا",
         "اختيار النطاق نقرتان على الهاتف لا أكثر"
-      ]
+      ],
+      "evidence": {
+        "commit": "148a7de",
+        "closedOn": "2026-08-26"
+      },
+      "progress": "scopeChoices يقرأ buildLocationTree — جذورُها المناطق، والمستودعات من مقطعها الأوّل. ومقطع «١ب — أين تعدّ؟» في ScanFlow بمنسدلتَين (نقرتان)، والمؤرشَف مستبعَد ولا نصّ حرّ.",
+      "nextStep": "أُغلقت في 148a7de."
     },
     {
       "id": "CAP-203",
