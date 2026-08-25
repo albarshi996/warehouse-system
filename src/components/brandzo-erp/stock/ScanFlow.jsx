@@ -58,6 +58,14 @@ import {
   normalizeOperationCode,
   resolveOperationByCode,
 } from '../../../services/stock/operationCode.js';
+import {
+  normalizeScope,
+  scopeChoices,
+  scopeLabel,
+  scopeOf,
+  scopeVerdict,
+} from '../../../services/stock/operationScope.js';
+import { listenLocations } from '../../../services/locations/locationsService.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Icon from '../../ui/Icon.jsx';
 import Pager from '../../odoo/Pager.jsx';
@@ -90,6 +98,11 @@ export default function ScanFlow() {
   const [page, setPage] = useState(0);
   const [joinCode, setJoinCode] = useState('');
   const [opCode, setOpCode] = useState('');   // الرمز القصير للعملية الجارية
+  // ‹CAP-201 · CAP-202› نطاق الجلسة — يُختار قبل أوّل مسحٍ ويُجمَّد بعده.
+  const [locations, setLocations] = useState([]);
+  const [scopeWh, setScopeWh] = useState('');
+  const [scopeZone, setScopeZone] = useState('');
+  const [openScope, setOpenScope] = useState(null); // نطاقُ الجلسة المفتوحة كما كُتب
   const [codeBusy, setCodeBusy] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkText, setBulkText] = useState('');
@@ -111,7 +124,19 @@ export default function ScanFlow() {
 
   // الماستر السحابيّ — مصدر الاسم والهويّة وقاعدة الجرد. ولا رصيد يُقرأ منه (CAP-101).
   useEffect(() => subscribeItems(setItems, () => setItems([])), []);
+  // ‹CAP-202› شجرة المواقع — منها يُختار النطاق. وتعذّرُ قراءتها لا يعطّل
+  // الجرد: تبقى القائمة فارغةً والجلسة تُفتح بلا نطاق (ق-٣).
+  useEffect(() => listenLocations(setLocations, () => setLocations([])), []);
   const itemIndexes = useMemo(() => buildItemIndexes(items), [items]);
+
+  /** ‹CAP-202› خيارات النطاق من الشجرة — والحساب في المنطق الخالص لا هنا. */
+  const choices = useMemo(() => scopeChoices(locations, { warehouse: scopeWh }), [locations, scopeWh]);
+  /** النطاق المعروض: المكتوب على الجلسة إن فُتحت، وإلّا ما يختاره الآن. */
+  const shownScope = useMemo(
+    () => (opId ? openScope || normalizeScope({}) : normalizeScope({ warehouse: scopeWh, zone: scopeZone })),
+    [opId, openScope, scopeWh, scopeZone]
+  );
+  const shownVerdict = useMemo(() => scopeVerdict(shownScope), [shownScope]);
 
   /**
    * رابط الدعوة: `?op=H4K9TM` — الطريق الذي يسلكه عضو اللجنة.
@@ -159,6 +184,7 @@ export default function ScanFlow() {
           setOpId(saved);
           setOpCode(op.code || '');
           if (op.type) setMode(op.type);
+          setOpenScope(scopeOf(op)); // متسامحٌ مع جلسةٍ فُتحت قبل ‹CAP-201›
         } else {
           localStorage.removeItem(OP_KEY);
         }
@@ -228,10 +254,19 @@ export default function ScanFlow() {
 
   async function ensureOperation(forMode) {
     if (opId) return opId;
-    const { id, code } = await createOperation({ type: forMode, profile: me });
+    // ‹CAP-201› النطاق يُكتب مع الرأس ويُجمَّد: جلسةٌ بدأ عدُّها لا يتغيّر
+    // نطاقُها تحت العادّين، وإلّا صار الكشف يدّعي تغطيةَ ما لم يُعدّ.
+    const { id, code, scope } = await createOperation({
+      type: forMode,
+      profile: me,
+      warehouse: scopeWh,
+      zone: scopeZone,
+    });
     localStorage.setItem(OP_KEY, id);
     setOpId(id);
     setOpCode(code || '');
+    setOpenScope(scope);
+    (scope?.notes || []).forEach((n) => flash('err', n));
     return id;
   }
 
@@ -435,6 +470,8 @@ export default function ScanFlow() {
     setOpId(op.id);
     setOpCode(op.code || '');
     if (op.type) setMode(op.type);
+    // المنضمُّ يرى نطاقَ الجلسة كما كُتب — لا نطاقَ اختاره هو.
+    setOpenScope(scopeOf(op));
     setJoinCode('');
     flash('ok', 'انضممت — الجدول أدناه دفتر العملية المشترك.');
   }
@@ -637,6 +674,58 @@ export default function ScanFlow() {
             <span style={{ fontWeight: 'var(--o-font-weight-bold)' }}>{m.label}</span>
           </button>
         ))}
+      </div>
+
+      {/* ١ب — النطاق ‹CAP-201 · CAP-202›: يُطلب ويُقترح ولا يُلزم (ق-٣) */}
+      <p style={{ margin: '0 0 8px', fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)' }}>
+        ١ب — أين تعدّ؟ <span style={{ opacity: 0.75 }}>(اختياريّ — والجلسة تُفتح بدونه)</span>
+      </p>
+      <div className="o_ds_card o_ds_pad" style={{ marginBottom: '16px' }}>
+        {opId ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <Icon name="mapPin" size={16} />
+            <span style={{ fontWeight: 'var(--o-font-weight-bold)' }}>{scopeLabel(shownScope)}</span>
+            <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+              — نطاقُ الجلسة يُجمَّد عند فتحها، فلا يتغيّر تحت العادّين.
+            </span>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+            <label style={{ display: 'block' }}>
+              <span style={{ display: 'block', fontSize: '11px', fontWeight: 'var(--o-font-weight-bold)', marginBottom: '4px' }}>المستودع</span>
+              <select
+                className="o_input"
+                value={scopeWh}
+                onChange={(e) => { setScopeWh(e.target.value); setScopeZone(''); }}
+                style={{ width: '100%' }}
+              >
+                <option value="">— كلّ المستودعات —</option>
+                {choices.warehouses.map((w) => <option key={w.value} value={w.value}>{w.label}</option>)}
+              </select>
+            </label>
+            <label style={{ display: 'block' }}>
+              <span style={{ display: 'block', fontSize: '11px', fontWeight: 'var(--o-font-weight-bold)', marginBottom: '4px' }}>المنطقة</span>
+              <select
+                className="o_input"
+                value={scopeZone}
+                onChange={(e) => setScopeZone(e.target.value)}
+                disabled={!scopeWh}
+                style={{ width: '100%' }}
+              >
+                <option value="">{scopeWh ? '— المستودع كلّه —' : '— اختر المستودع أوّلًا —'}</option>
+                {choices.zones.map((z) => <option key={z.value} value={z.value}>{z.label}</option>)}
+              </select>
+            </label>
+          </div>
+        )}
+        {shownVerdict.notes.map((n, i) => (
+          <p key={i} style={{ margin: '8px 0 0', fontSize: '11px', color: 'var(--o-main-color-muted)', lineHeight: 1.7 }}>{n}</p>
+        ))}
+        {!opId && locations.length === 0 && (
+          <p style={{ margin: '8px 0 0', fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
+            لا مواقعَ معرَّفةً بعد — تُعرَّف من «بانية مواقع التخزين». والجرد يعمل بدونها.
+          </p>
+        )}
       </div>
 
       {/* ٢ — المسح */}

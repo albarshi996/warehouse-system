@@ -11,7 +11,7 @@
   "counts": {
     "modules": 105,
     "serviceDomains": 45,
-    "serviceFiles": 441,
+    "serviceFiles": 443,
     "collections": 82,
     "roles": 18,
     "odooModels": 12,
@@ -3581,18 +3581,21 @@
         "masterSync.test.js",
         "operationCode.js",
         "operationCode.test.js",
+        "operationScope.js",
+        "operationScope.test.js",
         "operationsService.js",
         "scanFlow.js",
         "scanFlow.test.js",
         "scanMerge.js",
         "scanMerge.test.js"
       ],
-      "fileCount": 9,
-      "testCount": 4,
+      "fileCount": 11,
+      "testCount": 5,
       "exports": [
         "CODE_ALPHABET",
         "CODE_LENGTH",
         "SCAN_MODES",
+        "SCOPE_FIELDS",
         "appendScan",
         "applyLedgerToItems",
         "barcodeCandidates",
@@ -3617,6 +3620,7 @@
         "listenScans",
         "masterFieldsOf",
         "normalizeOperationCode",
+        "normalizeScope",
         "panelForScan",
         "parseBulkBarcodes",
         "refreshMasterFields",
@@ -3626,11 +3630,16 @@
         "scanEntryVerdict",
         "scanKey",
         "scanUomChoices",
+        "scopeChoices",
+        "scopeLabel",
+        "scopeOf",
+        "scopeVerdict",
         "sessionProgress",
         "sessionSummary",
         "setOperationCode",
         "summarizeScans",
-        "updateOperationSummary"
+        "updateOperationSummary",
+        "withinScope"
       ],
       "collections": [
         "operations"

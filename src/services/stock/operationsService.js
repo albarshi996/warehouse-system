@@ -30,6 +30,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
 import { generateOperationCode, normalizeOperationCode } from './operationCode.js';
+import { normalizeScope } from './operationScope.js';
 
 const OPS = 'operations';
 
@@ -51,8 +52,20 @@ function currentUid() {
  * يحتاجه. أمّا **تغييره** بعد ذلك فللمدير، وهذا موضعه الصحيح.
  *
  * والتفرّد يُقاس على المفتوحة وحدها: رمزٌ لجلسةٍ أُقفلت قبل شهرٍ لا يزاحم.
+ *
+ * ═══ والنطاق يُكتب هنا ‹CAP-201 · ج‑٤› ═══
+ * `warehouse` و`zone` **يُطلبان ولا يُلزمان** (ق-٣: «لا يقطع الفريق عند
+ * الجرد»): جلسةٌ بلا نطاقٍ تُفتح وتعمل كاملةً، وإنّما يُعلَن أنّ كشفها لا
+ * يُثبت تغطية. والحكمُ كلُّه في `operationScope.js` الخالص — يُستدعى ولا
+ * يُعاد هنا، فلا يفترق ما يُكتب عمّا يُقاس عليه لاحقًا.
+ *
+ * ويُكتبان **دائمًا** ولو فارغَين: حقلٌ حاضرٌ فارغٌ يُستعلَم عنه، وحقلٌ غائبٌ
+ * يحتاج قراءةَ كلّ مستندٍ لمعرفة غيابه.
+ *
+ * @returns {{id:string, code:string, scope:object}} و`scope` يحمل `notes`
+ *   ممّا أُسقط — تعرضه الشاشة ولا يمنع شيئًا.
  */
-export async function createOperation({ type, profile, note = '' }) {
+export async function createOperation({ type, profile, note = '', warehouse = '', zone = '' }) {
   let code = '';
   try {
     const open = await listOpenOperations(100);
@@ -62,17 +75,21 @@ export async function createOperation({ type, profile, note = '' }) {
     // تُمنع العملية كلّها. واحتمال التصادم في ٣٢⁶ يقبل هذه المخاطرة.
     code = generateOperationCode();
   }
+  const scope = normalizeScope({ warehouse, zone });
   const ref = await addDoc(collection(db, OPS), {
     type,
     status: 'open',
     code,
     note,
+    // ‹CAP-201› نطاقُ الجلسة — بادئةُ كود موقعٍ لا تمثيلٌ ثانٍ.
+    warehouse: scope.warehouse,
+    zone: scope.zone,
     createdByUid: currentUid(),
     createdByName: profile?.name || auth?.currentUser?.email || 'غير معروف',
     createdAt: serverTimestamp(),
     closedAt: null,
   });
-  return { id: ref.id, code };
+  return { id: ref.id, code, scope };
 }
 
 /**
