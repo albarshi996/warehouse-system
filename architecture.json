@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 102,
+    "modules": 103,
     "serviceDomains": 45,
-    "serviceFiles": 435,
+    "serviceFiles": 437,
     "collections": 82,
     "roles": 18,
     "odooModels": 12,
@@ -70,6 +70,14 @@
         "assets",
         "ui"
       ]
+    },
+    {
+      "name": "bin-assignment",
+      "route": "/dashboard/bin-assignment",
+      "title": "إسناد الأصناف إلى المواقع",
+      "summary": "إسناد الأصناف إلى مواقعها ‹LOC› — قالبٌ يُرفع فيُعرف أين كلّ صنف.",
+      "file": "src/pages/dashboard/bin-assignment.astro",
+      "usesServices": []
     },
     {
       "name": "branch-order",
@@ -2571,6 +2579,8 @@
       "domain": "locations",
       "dir": "src/services/locations",
       "files": [
+        "binAssignment.js",
+        "binAssignment.test.js",
         "facilityModel.js",
         "facilityModel.test.js",
         "locationCode.js",
@@ -2597,8 +2607,8 @@
         "travelGrid.test.js",
         "warehouseService.js"
       ],
-      "fileCount": 25,
-      "testCount": 11,
+      "fileCount": 27,
+      "testCount": 12,
       "exports": [
         "CAPACITY_MEASURES",
         "CELL_ALERTS",
@@ -2640,6 +2650,8 @@
         "applyScan",
         "applyWorkLayer",
         "archiveLocation",
+        "assignmentNotes",
+        "assignmentReport",
         "balanceLocationCode",
         "batchScanVerdict",
         "binCellVerdict",
@@ -2659,6 +2671,7 @@
         "countScheme",
         "detectLevel",
         "deviationReport",
+        "directablePct",
         "emptyDocument",
         "emptyLine",
         "expandScheme",
@@ -2715,6 +2728,7 @@
         "referenceCoverage",
         "removeManualLine",
         "routeDistance",
+        "rowBin",
         "saveLocation",
         "saveLocationsBulk",
         "scanVerdict",
