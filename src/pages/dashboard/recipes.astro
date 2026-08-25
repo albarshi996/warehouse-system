@@ -1,0 +1,18 @@
+---
+/**
+ * دفتر الوصفات ‹FNB-501› — أولى شاشات قطاع الأغذية.
+ *
+ * قرار المالك 2026-08-24: منطقُ القطاع مبنيٌّ ومختبَرٌ في ثلاث عشرة قدرةً بلا
+ * شاشةٍ واحدة — «نريد جعله شاشات منطقيّة». والوصفة أوّلُها لأنّ الإنتاج
+ * يفجّرها، وتكلفةَ الطعام تُحسب منها، وتخصيصَ المنتَج على الفروع يحتاجها.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+// ⚠️ لا تُحذف: المكوّن يرسم داخل `.o_theme`، وبلا هذين الملفّين تسقط الأنماط.
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import RecipeBook from '../../components/brandzo-erp/fnb/RecipeBook.jsx';
+---
+
+<DashboardLayout title="دفتر الوصفات" light>
+  <RecipeBook client:load />
+</DashboardLayout>

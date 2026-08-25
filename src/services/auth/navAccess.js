@@ -16,6 +16,7 @@ export const NAV_GROUP_LABELS = {
   warehouses: 'المستودعات والجرد',
   fleet: 'إدارة الحركة',
   field: 'الميدان والبيع من المركبة',
+  fnb: 'قطاع الأغذية',
   odoo: 'دورات أودو والمحاكاة',
   reports: 'مركز التقارير',
   presentations: 'العروض والاجتماعات',
@@ -31,8 +32,8 @@ export const NAV_GROUP_LABELS = {
 export const ROLE_NAV = {
   // ‹تدقيق 24.08› «العروض والاجتماعات» خرجت من «مركز التقارير» — تُمنح لمن
   // كان يملك عناصرها هناك بعينهم: المديران، والماليّ لعرض جلسته وحدها.
-  admin: ['daily', 'warehouses', 'fleet', 'field', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
-  warehouse_manager: ['daily', 'warehouses', 'fleet', 'field', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
+  admin: ['daily', 'warehouses', 'fleet', 'field', 'fnb', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
+  warehouse_manager: ['daily', 'warehouses', 'fleet', 'field', 'fnb', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
   storekeeper: ['daily', 'warehouses', 'odoo'],
   qc_inspector: ['daily', 'odoo', 'reports'],
   // ‹EXE-602› ضابط البوابة يدخل «إدارة الحركة» — فيها تبويب الساحة والأبواب.
@@ -66,14 +67,14 @@ export const ROLE_NAV = {
   // مدير القطاع **صاحب المدخل**: يُدخل شجرته (الأبعاد التنظيميّة في
   // «التقارير») ويقرأ طلبات فروعه واستهلاكها. **لا `warehouses`**: لا يقيّد
   // حركةً ولا يعتمد صرفًا — نفس منطق حصر المندوب في «الميدان».
-  fnb_manager: ['reports', 'daily'],
+  fnb_manager: ['reports', 'daily', 'fnb'],
   // مدير الفرع **مصدر بيانات**: يطلب ويستلم ويسجّل الهدر والجرد المختصر —
   // العمليّات اليوميّة وحدها، ولا يرى تقارير القطاع المجمَّعة.
   branch_manager: ['daily'],
   // الشيف التنفيذيّ ‹FNB-502 · ق-O05›: يملك الوصفة وأمر الإنتاج، فيرى
   // «المستودعات» (حيث دورة الإنتاج والمستندات) و«التقارير» (Yield والاستهلاك
   // النظريّ). ولا `admin`: معايير الإنتاج له، والهيكل والصلاحيّات ليست له.
-  executive_chef: ['warehouses', 'reports'],
+  executive_chef: ['warehouses', 'reports', 'fnb'],
 };
 
 /** هل يرى هذا الدور مجموعة القائمة؟ */

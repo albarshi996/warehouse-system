@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 97,
+    "modules": 98,
     "serviceDomains": 45,
     "serviceFiles": 433,
     "collections": 82,
@@ -564,6 +564,14 @@
       "title": "أوامر الاستلام — الشاشة التجريبية",
       "summary": "",
       "file": "src/pages/dashboard/receipts.astro",
+      "usesServices": []
+    },
+    {
+      "name": "recipes",
+      "route": "/dashboard/recipes",
+      "title": "دفتر الوصفات",
+      "summary": "دفتر الوصفات ‹FNB-501› — أولى شاشات قطاع الأغذية.",
+      "file": "src/pages/dashboard/recipes.astro",
       "usesServices": []
     },
     {
