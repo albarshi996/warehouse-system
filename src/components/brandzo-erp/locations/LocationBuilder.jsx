@@ -128,7 +128,7 @@ export default function LocationBuilder() {
   if (!canEditLocations(me.role)) return <Notice>تعريف المواقع لمن يملك تحرير المستودعات.</Notice>;
 
   return (
-    <div dir="rtl" className="space-y-6">
+    <div dir="rtl" className="o_theme space-y-6">
       {/* ═══ الطبقة ١ — المستودع ═══ */}
       <section className="o_ds o_ds_card o_ds_pad flex flex-wrap items-end gap-3">
         <label className="block flex-1 min-w-[200px]">
@@ -254,5 +254,9 @@ function Stat({ label, value, tone }) {
 }
 
 function Notice({ children }) {
-  return <div className="o_ds o_ds_card o_ds_pad text-center text-muted text-sm">{children}</div>;
+  return (
+    <div className="o_theme" dir="rtl">
+      <div className="o_ds o_ds_card o_ds_pad text-center text-muted text-sm">{children}</div>
+    </div>
+  );
 }

@@ -338,6 +338,133 @@ if (missingTheme.length === 0) {
   missingTheme.forEach((m) => info(`• ${m.file} ← ${m.used.join('، ')}`));
 }
 
+/* ═══ ★★ والنصف الثاني من الشرط: الاستيراد لا يكفي — الغلاف يلزم ═══
+ *
+ * كلّ قواعد `odoo.css` مكتوبةٌ تحت `.o_theme` (`.o_theme .o_ds`، `.o_theme .btn`…).
+ * فمكوّنٌ يكتب `o_ds` و`btn` ولا يحمل جذرُه `o_theme` **يستورد ملفًّا لا يمسّه**:
+ * البطاقاتُ بلا إطارٍ ولا خلفيّة، والأزرارُ نصٌّ عارٍ — والصفحةُ تعمل ولا تُنسَّق.
+ *
+ * وهذا وقع فعلًا 2026-08-25 في **عشرة مكوّنات** من عائلةٍ واحدة: التعليق في
+ * أعلى كلّ صفحةٍ يقول «المكوّن يرسم داخل `.o_theme`» — **دعوى نُسخت من ملفٍّ
+ * إلى ملفّ ولم تكن صحيحةً قطّ**. والقسم أعلاه كان يقيس الاستيراد وحده فيمرّ.
+ *
+ * والقياس على **المكوّن الجذر** وحده (ما تركّبه صفحةٌ بـ`client:*`): المكوّنُ
+ * الابن يرث الغلاف من أبيه فلا يُطالَب به.
+ */
+// ⚠ الأصنافُ تُكتب نصًّا (`className="…"`) وقالبًا (``className={`…${x}`}``) —
+// وقراءةُ الأولى وحدها تُنتج **إيجابيّةً كاذبة** على كلّ من يبني صنفه بشرط.
+const THEME_SCOPED = /className=\{?["'`][^"'`]*\b(o_ds|o_ds_card|o_ds_pad|btn-primary|btn-secondary|o_field|o_list|o_form)\b/;
+const THEME_WRAP = /className=\{?["'`][^"'`]*\bo_theme\b/;
+const rootComponents = new Map(); // اسمُ الملفّ ← الصفحاتُ التي تركّبه
+for (const file of fs.readdirSync(PAGES_DIR).filter((f) => f.endsWith('.astro'))) {
+  const src = fs.readFileSync(path.join(PAGES_DIR, file), 'utf8');
+  for (const m of src.matchAll(/import\s+(\w+)\s+from\s+'[^']*\/([A-Za-z0-9_]+\.jsx)'/g)) {
+    // يُحسب جذرًا فقط إن رُكّب فعلًا في الوسم (`<X client:load />`).
+    if (new RegExp(`<${m[1]}\\b`).test(src)) rootComponents.set(m[2], [...(rootComponents.get(m[2]) || []), file]);
+  }
+}
+/**
+ * ★★ والقياس على **جذر كلّ مسار عودة** لا على «هل ذُكر الاسم في الملفّ».
+ *
+ * فحصٌ يقنع بذكرٍ واحدٍ في أيّ موضع **لا يحرس شيئًا**: مكوّنٌ غلّف رسالة
+ * التحميل ونسي الشاشة يمرّ، وهو عين العطب. فتُقرأ عبارات `return` في جسم
+ * المكوّن المُصدَّر، ويُطالَب جذرُ كلٍّ منها — وما عاد مكوّنًا محلّيًّا
+ * (`return <Notice>…`) يُتَتبَّع إلى جذره هو.
+ */
+/**
+ * جسمُ دالّةٍ بمطابقة الأقواس — لا بـ«أوّل تعريفٍ يليها» الذي يتخطّاها.
+ *
+ * ⚠ ويبدأ العدّ **بعد قائمة الوسائط**: `function X({ kind })` أوّلُ قوسٍ
+ * معقوفٍ فيها هو تفكيكُ الوسيط لا الجسم — ومن عدّ منه أعاد `{ kind }` جسمًا
+ * وقال «لا عبارةَ عودة» عن مكوّنٍ كاملٍ.
+ */
+function functionBody(src, headerIndex) {
+  const paren = src.indexOf('(', headerIndex);
+  if (paren < 0) return '';
+  let d = 0;
+  let afterParams = -1;
+  for (let i = paren; i < src.length; i++) {
+    if (src[i] === '(') d++;
+    else if (src[i] === ')' && --d === 0) { afterParams = i + 1; break; }
+  }
+  if (afterParams < 0) return '';
+  const open = src.indexOf('{', afterParams);
+  if (open < 0) return '';
+  let depth = 0;
+  for (let i = open; i < src.length; i++) {
+    if (src[i] === '{') depth++;
+    else if (src[i] === '}' && --depth === 0) return src.slice(open, i + 1);
+  }
+  return src.slice(open);
+}
+
+/** موضعُ تعريف مكوّنٍ باسمه — بالصيغتين: `function X(` و`const X = (` سهميّة. */
+function componentHead(src, name) {
+  const byFn = src.search(new RegExp(`(?:^|\\n)(?:export )?function ${name}\\s*\\(`));
+  if (byFn >= 0) return byFn;
+  return src.search(new RegExp(`(?:^|\\n)(?:export )?const ${name}\\s*=\\s*\\(`));
+}
+
+/**
+ * جذورُ مسارات العودة في **جسم دالّةٍ واحدة**.
+ * والقياس على المسافة البادئة: عودةٌ بمسافتين هي عودةُ الدالّة نفسها، وما
+ * غاص أعمق فهو داخل `.map()` أو دالّةٍ متداخلة — ولو حُسب جذرًا لصار كلُّ
+ * صفِّ جدولٍ «جذرًا بلا غلاف»، وهو إنذارٌ كاذبٌ يُفقد الحارسَ قيمته.
+ */
+function returnRoots(body) {
+  return [...body.matchAll(/^ {2}(?! )(?:.*?\breturn)\s*\(?\s*(<[A-Za-z][^\n>]*>?)/gm)].map((m) => m[1]);
+}
+
+function themeGaps(src) {
+  // المكوّن المُصدَّر: `export default function X(` أو `export default X;`.
+  let head = src.search(/export default function\s+\w+\s*\(/);
+  if (head < 0) {
+    const named = src.match(/export default\s+(\w+)\s*;/);
+    if (named) head = componentHead(src, named[1]);
+  }
+  if (head < 0) return ['لا يُقرأ المكوّن المُصدَّر — راجعه بالعين'];
+
+  const gaps = [];
+  const roots = returnRoots(functionBody(src, head));
+  if (!roots.length) return ['لا عبارةَ عودةٍ تُقرأ — راجعه بالعين'];
+
+  for (const tag of roots) {
+    const name = tag.match(/^<([A-Za-z][\w.]*)/)?.[1] || '';
+    if (/^[a-z]/.test(name)) {
+      if (!THEME_WRAP.test(tag)) gaps.push(`جذرٌ بلا غلاف: ${tag.slice(0, 60)}`);
+      continue;
+    }
+    // مكوّنٌ محلّيّ يُعاد مباشرةً (`return <Notice>…`) — يُتَتبَّع إلى جذره هو.
+    const localHead = componentHead(src, name);
+    if (localHead < 0) continue; // مكوّنٌ خارجيّ — يملك غلافه أو لا يحتاجه
+    const localRoots = returnRoots(functionBody(src, localHead));
+    if (localRoots.length && !localRoots.some((t) => THEME_WRAP.test(t))) {
+      gaps.push(`${name}: جذرٌ بلا غلاف`);
+    }
+  }
+  return gaps;
+}
+
+const unwrapped = [];
+for (const f of walk(COMPONENTS_DIR, ['.jsx'])) {
+  const base = path.basename(f);
+  if (!rootComponents.has(base)) continue;
+  const src = fs.readFileSync(f, 'utf8');
+  if (!THEME_SCOPED.test(src)) continue;
+  // الغلاف يُقبل من الصفحة التي تركّبه — فتكفي حاويةٌ واحدةٌ فوق الكلّ.
+  const pageWrapped = rootComponents.get(base).every((p) =>
+    /class=["'][^"']*\bo_theme\b/.test(fs.readFileSync(path.join(PAGES_DIR, p), 'utf8')));
+  if (pageWrapped) continue;
+  const gaps = themeGaps(src);
+  if (gaps.length) unwrapped.push({ base, pages: rootComponents.get(base), gaps });
+}
+if (unwrapped.length === 0) {
+  ok(`كل مكوّنٍ جذرٍ يستعمل أصناف الثيم يحمل غلاف o_theme (${rootComponents.size} مكوّنًا جذرًا)`);
+} else {
+  bad(`${unwrapped.length} مكوّنًا جذرًا يكتب أصناف o_theme وجذرُه لا يحملها — يُعرض بلا تنسيق:`);
+  unwrapped.forEach((u) => { info(`• ${u.base} ← ${u.pages.join('، ')}`); u.gaps.forEach((g) => info(`    ${g}`)); });
+}
+
 /* ═══════════ 7. المنطق داخل الصفحات ═══════════
  *
  * `npm test` يمسح أنماط `*.test.js` تحت `src` — فكلّ سطرٍ داخل وسم `script`

@@ -92,7 +92,7 @@ export default function MyTasks() {
   /* ── لا طاقمَ بعد: اختيارٌ واحدٌ يُحفظ ── */
   if (!crewId || !crew) {
     return (
-      <div dir="rtl" className="space-y-4 max-w-md mx-auto">
+      <div dir="rtl" className="o_theme space-y-4 max-w-md mx-auto">
         <section className="o_ds o_ds_card o_ds_pad text-center space-y-3">
           <Icon name="users" size={28} className="text-accent mx-auto" />
           <h2 className="font-bold text-ink">أيُّ طاقمٍ أنت؟</h2>
@@ -127,7 +127,7 @@ export default function MyTasks() {
   }
 
   return (
-    <div dir="rtl" className="space-y-4 max-w-2xl mx-auto">
+    <div dir="rtl" className="o_theme space-y-4 max-w-2xl mx-auto">
       {/* ═══ ترويسةٌ رفيعة — من أنا وكم بقي ═══ */}
       <section className="o_ds o_ds_card o_ds_pad flex flex-wrap items-center gap-3">
         <Icon name="users" size={18} className="text-accent shrink-0" />
@@ -178,5 +178,9 @@ export default function MyTasks() {
 }
 
 function Notice({ children }) {
-  return <div className="o_ds o_ds_card o_ds_pad text-center text-muted text-sm max-w-md mx-auto">{children}</div>;
+  return (
+    <div className="o_theme" dir="rtl">
+      <div className="o_ds o_ds_card o_ds_pad text-center text-muted text-sm max-w-md mx-auto">{children}</div>
+    </div>
+  );
 }

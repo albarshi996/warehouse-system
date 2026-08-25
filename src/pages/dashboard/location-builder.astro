@@ -6,7 +6,8 @@
  * وأربعة مستوياتٍ واثني عشر صندوقًا = ٢٤٠٠ موقعٍ كانت تُكتب بالقلم.
  */
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
-// ⚠️ لا تُحذف: المكوّن يرسم داخل `.o_theme`، وبلا هذين الملفّين تسقط الأنماط.
+// ⚠️ لا تُحذف: قواعد الثيم كلُّها تحت `.o_theme`، والغلافُ على جذر المكوّن
+// نفسه — فبلا الملفّين أو بلا الغلاف تسقط الأنماط. يحرسهما `npm run audit` (٦).
 import '../../styles/tokens.css';
 import '../../styles/odoo.css';
 import LocationBuilder from '../../components/brandzo-erp/locations/LocationBuilder.jsx';

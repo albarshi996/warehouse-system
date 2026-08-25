@@ -140,7 +140,7 @@ export default function RecipeBook() {
   const canEdit = CAN_EDIT.has(me.role);
 
   return (
-    <div dir="rtl" className="space-y-6">
+    <div dir="rtl" className="o_theme space-y-6">
       {/* ═══ الطبقة ١ — ما يحتاج انتباهًا ═══ */}
       {unlinked.length > 0 && (
         <section className="o_ds o_ds_card o_ds_pad border border-brand-red/40 bg-brand-red/5">
@@ -366,5 +366,9 @@ function Tag({ children, tone }) {
 }
 
 function Notice({ children }) {
-  return <div className="o_ds o_ds_card o_ds_pad text-center text-muted text-sm">{children}</div>;
+  return (
+    <div className="o_theme" dir="rtl">
+      <div className="o_ds o_ds_card o_ds_pad text-center text-muted text-sm">{children}</div>
+    </div>
+  );
 }

@@ -87,7 +87,7 @@ export default function WorkerTaskPanel({ task, onSaveLines, onFinish, onDelayRe
   }
 
   return (
-    <div dir="rtl">
+    <div dir="rtl" className="o_theme">
       {/* شريط التقدّم — كم أُنجز وكم بقي، بلا اعتمادٍ على اللون وحده */}
       <div className="flex flex-wrap items-center gap-3 mb-3 text-sm">
         <strong className="text-ink">{progress.doneLines}/{progress.lines} بندًا</strong>

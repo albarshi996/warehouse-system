@@ -118,7 +118,7 @@ export default function BinAssignment() {
   const plan = analysis?.plan;
 
   return (
-    <div dir="rtl" className="space-y-6">
+    <div dir="rtl" className="o_theme space-y-6">
       {/* ═══ الطبقة ١ — القالب والرفع ═══ */}
       <section className="o_ds o_ds_card o_ds_pad space-y-3">
         <div className="flex flex-wrap items-center gap-3">
@@ -270,5 +270,9 @@ const Td = ({ children, align, className = '' }) => (
 );
 
 function Notice({ children }) {
-  return <div className="o_ds o_ds_card o_ds_pad text-center text-muted text-sm">{children}</div>;
+  return (
+    <div className="o_theme" dir="rtl">
+      <div className="o_ds o_ds_card o_ds_pad text-center text-muted text-sm">{children}</div>
+    </div>
+  );
 }

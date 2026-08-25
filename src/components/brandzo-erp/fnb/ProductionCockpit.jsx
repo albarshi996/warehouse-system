@@ -124,7 +124,7 @@ export default function ProductionCockpit() {
   const shared = { me, itemsBySku, index, outputs, warehouses, branches, docs, busy, setBusy, setError, setCreated };
 
   return (
-    <div dir="rtl" className="space-y-6">
+    <div dir="rtl" className="o_theme space-y-6">
       {/* ═══ الطبقة ١ — أين نحن من الدورة ═══ */}
       <section className="o_ds o_ds_card o_ds_pad">
         <div className="flex flex-wrap gap-2">
@@ -648,5 +648,9 @@ const Td = ({ children, align, className = '' }) => (
 );
 
 function Notice({ children }) {
-  return <div className="o_ds o_ds_card o_ds_pad text-center text-muted text-sm">{children}</div>;
+  return (
+    <div className="o_theme" dir="rtl">
+      <div className="o_ds o_ds_card o_ds_pad text-center text-muted text-sm">{children}</div>
+    </div>
+  );
 }
