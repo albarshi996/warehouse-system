@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 100,
+    "modules": 101,
     "serviceDomains": 45,
     "serviceFiles": 435,
     "collections": 82,
@@ -506,6 +506,14 @@
       "title": "الأرشيف الدوريّ",
       "summary": "الأرشيف الدوريّ — التقارير ومحاضر الاجتماعات.",
       "file": "src/pages/dashboard/periodic-archive.astro",
+      "usesServices": []
+    },
+    {
+      "name": "pick-plan",
+      "route": "/dashboard/pick-plan",
+      "title": "خطّة السحب",
+      "summary": "خطّة السحب — «نرفق الأكواد فيظهر مكانه» (طلب المالك 2026-08-24).",
+      "file": "src/pages/dashboard/pick-plan.astro",
       "usesServices": []
     },
     {

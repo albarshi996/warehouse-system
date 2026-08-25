@@ -156,6 +156,9 @@ export const NAV_GROUPS = [
       // ‹LOC› البانية: تصف المدى مرّةً فيُولَّد الكامل — ٢٤٠٠ موقعٍ كانت تُكتب
       // بالقلم فلا تُكتب، فيبقى المخزون بلا مواقع ولا يعمل التوجيه أصلًا.
       { path: '/dashboard/location-builder', label: 'بانية مواقع التخزين', icon: 'layers', roles: ['admin', 'warehouse_manager'] },
+      // ‹LOC-303› خطّة السحب: توصل `pickPlan` المبنيّ المهجور — موقعُ كلّ بندٍ
+      // ومسارٌ مرتَّبٌ بالمشي. لأمين المخزن أوّلًا: هو من يمشيه.
+      { path: '/dashboard/pick-plan', label: 'خطّة السحب والمسار', icon: 'mapPin', roles: ['admin', 'warehouse_manager', 'storekeeper', 'labor_supervisor', 'inventory_auditor'] },
       { path: '/dashboard/directed-storage', label: 'استيراد مستندات المصدر', icon: 'fileUp', roles: ['admin', 'warehouse_manager', 'inventory_auditor'] },
       { path: '/dashboard/labor-operations', label: 'عمالة الشحن والتفريغ', icon: 'users', roles: ['admin', 'warehouse_manager', 'labor_supervisor'] },
     ],
