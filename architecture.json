@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 101,
+    "modules": 102,
     "serviceDomains": 45,
     "serviceFiles": 435,
     "collections": 82,
@@ -426,6 +426,14 @@
       "title": "",
       "summary": "",
       "file": "src/pages/dashboard/executive-review/model.astro",
+      "usesServices": []
+    },
+    {
+      "name": "my-tasks",
+      "route": "/dashboard/my-tasks",
+      "title": "مهامي",
+      "summary": "«مهامي» — شاشة تنفيذ التخزين والسحب على جهاز العامل ‹LOC-402›.",
+      "file": "src/pages/dashboard/my-tasks.astro",
       "usesServices": []
     },
     {

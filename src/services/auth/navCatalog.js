@@ -153,6 +153,10 @@ export const NAV_GROUPS = [
     group: 'التخزين الموجّه',
     emoji: '🏷️', icon: 'mapPin',
     items: [
+      // ‹LOC-402› «مهامي» أوّلَ المجموعة: هي **شاشة العامل** — يفتحها ويعمل.
+      // كانت مدفونةً داخل لوحة عمالة الشحن بلا رابطٍ لها، وهي مصمّمةٌ للهاتف
+      // أوّلًا. وضابطُ البوّابة وأمينُ المخزن ينفّذان مهامَّ بنودٍ أيضًا.
+      { path: '/dashboard/my-tasks', label: 'مهامي — تنفيذ التخزين والسحب', icon: 'checkSquare', roles: ['admin', 'warehouse_manager', 'labor_supervisor', 'storekeeper', 'gate_officer'] },
       // ‹LOC› البانية: تصف المدى مرّةً فيُولَّد الكامل — ٢٤٠٠ موقعٍ كانت تُكتب
       // بالقلم فلا تُكتب، فيبقى المخزون بلا مواقع ولا يعمل التوجيه أصلًا.
       { path: '/dashboard/location-builder', label: 'بانية مواقع التخزين', icon: 'layers', roles: ['admin', 'warehouse_manager'] },
