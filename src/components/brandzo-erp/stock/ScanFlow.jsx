@@ -65,7 +65,7 @@ import {
   scopeOf,
   scopeVerdict,
 } from '../../../services/stock/operationScope.js';
-import { listenLocations } from '../../../services/locations/locationsService.js';
+import { fetchLocationsOnce } from '../../../services/locations/locationsService.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Icon from '../../ui/Icon.jsx';
 import Pager from '../../odoo/Pager.jsx';
@@ -124,9 +124,24 @@ export default function ScanFlow() {
 
   // الماستر السحابيّ — مصدر الاسم والهويّة وقاعدة الجرد. ولا رصيد يُقرأ منه (CAP-101).
   useEffect(() => subscribeItems(setItems, () => setItems([])), []);
-  // ‹CAP-202› شجرة المواقع — منها يُختار النطاق. وتعذّرُ قراءتها لا يعطّل
-  // الجرد: تبقى القائمة فارغةً والجلسة تُفتح بلا نطاق (ق-٣).
-  useEffect(() => listenLocations(setLocations, () => setLocations([])), []);
+  /**
+   * ‹CAP-202› شجرة المواقع — منها يُختار النطاق.
+   *
+   * ★ **قراءةٌ واحدة لا بثٌّ لحظيّ**: بنيةُ المستودع لا تتغيّر أثناء جردٍ
+   * جارٍ، وبانيةُ المواقع تولّد آلافَ الرفوف — فاشتراكٌ حيٌّ عليها يبثّ
+   * آلافَ المستندات إلى هاتف العادّ ويُعيد الرسم كلّما مسّها أحد. والعدّ
+   * أَولى بالشبكة من شجرةٍ ساكنة.
+   *
+   * وتعذّرُ القراءة لا يعطّل الجرد: تبقى القائمة فارغةً والجلسة تُفتح بلا
+   * نطاق (ق-٣).
+   */
+  useEffect(() => {
+    let alive = true;
+    fetchLocationsOnce()
+      .then((rows) => { if (alive) setLocations(rows); })
+      .catch(() => { if (alive) setLocations([]); });
+    return () => { alive = false; };
+  }, []);
   const itemIndexes = useMemo(() => buildItemIndexes(items), [items]);
 
   /** ‹CAP-202› خيارات النطاق من الشجرة — والحساب في المنطق الخالص لا هنا. */
@@ -266,7 +281,8 @@ export default function ScanFlow() {
     setOpId(id);
     setOpCode(code || '');
     setOpenScope(scope);
-    (scope?.notes || []).forEach((n) => flash('err', n));
+    // الملاحظات تُعرض في بطاقة النطاق نفسها — ولا تُطلق تنبيهًا أحمر: ما أُسقط
+    // إعلانٌ لا خطأ، وإنذارٌ أحمر وسط عدٍّ جارٍ يُقلق بلا سبب.
     return id;
   }
 
