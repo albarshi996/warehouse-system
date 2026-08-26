@@ -1514,6 +1514,25 @@ service cloud.firestore {
       }
     }
 
+    // جلسات الاستلام الميدانيّ — الطبالي المسوّدة تعيش هنا **قبل** أن
+    // تُعتمد: فالهويّة تولد عند الاعتماد، ولو أُنشئت الطبلية في
+    // handling_units وهي قيد القراءة لَحُرقت أرقامٌ لكلّ حمولةٍ رُفضت.
+    // الجلسة تُحدَّث كثيرًا (كلّ قراءة) فالتحديث مفتوحٌ للفاعل المخزنيّ،
+    // والمختوم فيها ما لا يجوز أن يتغيّر: الأمر والمستودع وفاتحُها.
+    match /receiving_sessions/{sessionId} {
+      allow read: if signedIn();
+      allow create: if isStockActor()
+                    && request.resource.data.openedByUid == request.auth.uid
+                    && request.resource.data.state == 'OPEN';
+      allow update: if isStockActor()
+                    && request.resource.data.order == resource.data.order
+                    && request.resource.data.warehouse == resource.data.warehouse
+                    && request.resource.data.openedBy == resource.data.openedBy
+                    && request.resource.data.openedByUid == resource.data.openedByUid
+                    && request.resource.data.openedAt == resource.data.openedAt;
+      allow delete: if false;
+    }
+
     // عدّاد هويّات الطبالي اليومي لكلّ مستودع — يزيد واحدًا وإلى الأمام
     // فقط ولا يُصفَّر (نمط counters الرسمي نفسه، بمفتاح LPN-WH-YYYYMMDD).
     match /lpn_counters/{counterKey} {

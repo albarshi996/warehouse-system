@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 106,
+    "modules": 107,
     "serviceDomains": 46,
-    "serviceFiles": 468,
-    "collections": 85,
+    "serviceFiles": 469,
+    "collections": 86,
     "roles": 18,
     "odooModels": 12,
     "odooGuards": 51,
@@ -406,6 +406,14 @@
       "title": "حوكمة الطبالي",
       "summary": "حوكمة الطبالي — البوّابة بين «قرأتُ» و«صار مخزونًا».",
       "file": "src/pages/dashboard/lpn-governance.astro",
+      "usesServices": []
+    },
+    {
+      "name": "lpn-receiving",
+      "route": "/dashboard/lpn-receiving",
+      "title": "الاستلام الميدانيّ",
+      "summary": "الاستلام الميدانيّ — من أمر شراءٍ مفتوح إلى طبليةٍ ترفع للحوكمة.",
+      "file": "src/pages/dashboard/lpn-receiving.astro",
       "usesServices": []
     },
     {
@@ -2825,10 +2833,11 @@
         "putawayTask.test.js",
         "receivingScan.js",
         "receivingScan.test.js",
+        "receivingService.js",
         "receivingSession.js",
         "receivingSession.test.js"
       ],
-      "fileCount": 25,
+      "fileCount": 26,
       "testCount": 13,
       "exports": [
         "DEFAULT_LABEL_SIZE",
@@ -2852,6 +2861,7 @@
         "SESSION_STATES",
         "abandonSession",
         "activeFlags",
+        "addDraft",
         "addReading",
         "appendUnitEvent",
         "applyAccepted",
@@ -2867,6 +2877,7 @@
         "buildRejection",
         "clearFlag",
         "clearUnitFlag",
+        "closeDraftToGovernance",
         "closeSession",
         "completePutaway",
         "containmentProblems",
@@ -2877,10 +2888,13 @@
         "distinctItems",
         "docEventId",
         "eventProblem",
+        "executeDecision",
         "findSessionLine",
+        "finishSession",
         "flagProblem",
         "flagUnit",
         "formatLpnCode",
+        "getSession",
         "getUnit",
         "getUnitEvents",
         "governanceCounters",
@@ -2892,11 +2906,15 @@
         "isEmpty",
         "isMixed",
         "isValidLpnCode",
+        "leaveSession",
         "lineBalanceRef",
         "lineKey",
         "lineageTrace",
+        "listOpenSessions",
+        "listPendingGovernance",
         "listUnitsAt",
         "listUnitsByState",
+        "listenSession",
         "listenUnit",
         "lotsOf",
         "lpnCodeProblem",
@@ -2916,6 +2934,7 @@
         "planDecision",
         "printJobProblem",
         "readingProblem",
+        "rejectIntoDraft",
         "rejectionProblem",
         "rejectionSummary",
         "remainingOf",
@@ -2925,6 +2944,7 @@
         "resolveScan",
         "reverseEvent",
         "reviewCard",
+        "scanIntoDraft",
         "scanVerdict",
         "sessionCloseProblem",
         "sessionEventId",
@@ -2933,6 +2953,7 @@
         "sessionTotals",
         "shortLpnLabel",
         "splitUnit",
+        "startSession",
         "stateLabel",
         "stickConfirmVerdict",
         "taskOpenProblem",
@@ -2944,7 +2965,8 @@
         "unitTransitionProblem"
       ],
       "collections": [
-        "handling_units"
+        "handling_units",
+        "receiving_sessions"
       ]
     },
     {
@@ -6148,6 +6170,46 @@
               "isManager",
               "myRole"
             ]
+          }
+        ]
+      },
+      {
+        "name": "receiving_sessions",
+        "path": "receiving_sessions",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isStockActor() && request.resource.data.openedByUid == request.auth.uid && request.resource.data.state == 'OPEN'",
+            "roles": [
+              "isStockActor"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "isStockActor() && request.resource.data.order == resource.data.order && request.resource.data.warehouse == resource.data.warehouse && request.resource.data.open",
+            "roles": [
+              "isStockActor"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
           }
         ]
       },

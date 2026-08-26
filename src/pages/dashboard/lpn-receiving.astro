@@ -1,0 +1,36 @@
+---
+/**
+ * الاستلام الميدانيّ — من أمر شراءٍ مفتوح إلى طبليةٍ ترفع للحوكمة.
+ *
+ * لماذا وُجدت؟ لأنّ الاستلام اليوم مكتبيّ: يفتح موظّفٌ نموذج GRN ويكتب
+ * الكمّيّات من الورقة. فلا أحد يعرف **وهو واقفٌ عند الشاحنة** كم بقي
+ * مفتوحًا من كلّ صنف، ولا يمنعه شيءٌ من استلام صنفٍ ليس في الأمر أصلًا.
+ *
+ * وهي **ليست بديلًا** عن الاستلام المكتبيّ ولا عن شاشة المسح: طريقان
+ * لنفس الغاية يبقيان معًا (ح-١: لا تُحذف ميزة). ومن أراد GRN مكتبيًّا
+ * فصندوق المستندات كما هو.
+ *
+ * الوثيقة الحاكمة: docs/خطة-طبقة-الطبالي.md · المتتبّع: npm run plan:lpn
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import ReceivingFlow from '../../components/brandzo-erp/lpn/ReceivingFlow.jsx';
+---
+
+<DashboardLayout title="الاستلام الميدانيّ" showGuide={false} light>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">الاستلام الميدانيّ</h1>
+      <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
+        استلمْ <span class="text-accent font-bold">وأنت واقفٌ عند الشاحنة</span>: اختر أمر شراءٍ
+        معتمدًا، وامسح صنفًا صنفًا فيتناقص المفتوح أمامك. النظام يردّ ما ليس في الأمر،
+        ويحوّل الكرتونة بمعاملها، ويمنع الدفعة المنتهية — ثمّ ترفع الحمولة للحوكمة
+        <span class="font-bold">فتولد هويّتها هناك</span>.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <ReceivingFlow client:load />
+  </div>
+</DashboardLayout>

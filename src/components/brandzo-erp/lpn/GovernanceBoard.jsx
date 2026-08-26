@@ -17,57 +17,88 @@
  */
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { governanceCounters, GOVERNANCE_DECISIONS, decisionProblem, planDecision, reviewCard } from '../../../services/lpn/governanceQueue.js';
+import { governanceCounters, GOVERNANCE_DECISIONS, decisionProblem, reviewCard } from '../../../services/lpn/governanceQueue.js';
 import { buildLabel } from '../../../services/lpn/labelModel.js';
-import { stateLabel, LPN_FLAGS } from '../../../services/lpn/lpnLifecycle.js';
 import { listUnitsByState } from '../../../services/lpn/lpnService.js';
+import { executeDecision, listPendingGovernance } from '../../../services/lpn/receivingService.js';
+import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 
-/** الحالات التي تُجلب للوحة — والترتيب هو ترتيب العمل. */
-const BOARD_STATES = ['PENDING_GOVERNANCE', 'APPROVED', 'LABEL_PRINTED', 'PENDING_PUTAWAY'];
+/**
+ * الحالات المجلوبة من `handling_units` — أي **المعتمَدة فما بعد**.
+ * وما قبل الاعتماد يأتي من الجلسات (`listPendingGovernance`) لأنّه ليس
+ * في المجموعة أصلًا: الهويّة تولد عند الاعتماد.
+ */
+const BOARD_STATES = ['APPROVED', 'LABEL_PRINTED', 'PENDING_PUTAWAY', 'STORED'];
 
 export default function GovernanceBoard() {
+  const [me, setMe] = useState(null);
   const [units, setUnits] = useState([]);
+  const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [done, setDone] = useState('');
   const [selected, setSelected] = useState(null);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState('');
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const groups = await Promise.all(BOARD_STATES.map((s) => listUnitsByState(s, 100)));
-        if (!alive) return;
-        setUnits(groups.flat());
-      } catch (e) {
-        if (alive) setError(e?.message || 'تعذّرت قراءة الطبالي — تحقّق من الاتصال والصلاحية.');
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-    return () => { alive = false; };
+  useEffect(() => subscribeAuth(async (user) => {
+    setMe(user ? await fetchUserProfile(user) : null);
+  }), []);
+
+  const load = React.useCallback(async () => {
+    try {
+      const [groups, waiting] = await Promise.all([
+        Promise.all(BOARD_STATES.map((s) => listUnitsByState(s, 100))),
+        listPendingGovernance(100),
+      ]);
+      setUnits(groups.flat());
+      setPending(waiting);
+      setError('');
+    } catch (e) {
+      setError(e?.message || 'تعذّرت قراءة الطبالي — تحقّق من الاتصال والصلاحية.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const counters = useMemo(() => governanceCounters(units), [units]);
-  const pending = useMemo(() => units.filter((u) => u.state === 'PENDING_GOVERNANCE'), [units]);
-  const card = useMemo(() => (selected ? reviewCard(selected, selected.session ?? null) : null), [selected]);
-  const label = useMemo(() => (selected ? buildLabel(selected) : null), [selected]);
+  useEffect(() => { load(); }, [load]);
+
+  // العدّادات تُشتقّ من المجموعتين معًا: المنتظرة في جلساتها والمعتمَدة في سجلّها.
+  const counters = useMemo(
+    () => governanceCounters([...pending, ...units]),
+    [pending, units]
+  );
+  const card = useMemo(() => (selected ? reviewCard(selected, selected.session ?? null, {
+    rejections: selected.rejections ?? [],
+    exceptions: selected.exceptions ?? [],
+  }) : null), [selected]);
+  const label = useMemo(() => (selected?.lpn ? buildLabel({ ...selected, code: selected.lpn }) : null), [selected]);
+
+  const actorName = me?.name || me?.displayName || me?.email || '';
 
   async function decide(id) {
     if (!selected) return;
-    const problem = decisionProblem(selected, id, { reason, actor: 'المستخدم الحاليّ' });
-    if (problem) { setError(problem); return; }
-    const plan = planDecision(selected, id, { reason, actor: 'المستخدم الحاليّ', at: new Date().toISOString() });
-    if (plan.problem) { setError(plan.problem); return; }
+    if (!actorName) { setError('لم تُقرأ هويّتك بعد — أعد تحميل الصفحة.'); return; }
+
+    // الحكم أوّلًا في المتصفّح: رسالةٌ فوريّةٌ للموظّف بلا انتظار الشبكة.
+    // والخدمة تعيد الحكم نفسه على البيانات الحيّة — فلا تُصدَّق الشاشة وحدها.
+    const problem = decisionProblem(selected, id, { reason, actor: actorName });
+    if (problem) { setError(problem); setDone(''); return; }
+
     setBusy(id);
     setError('');
-    // ملاحظة: تنفيذ الخطّة على السحابة يقع في LPN-207 (الوصل الكامل).
-    // الشاشة اليوم تعرض الأثر المخطَّط وتتحقّق من القرار — ولا تكتب بعد.
-    setTimeout(() => {
+    setDone('');
+    try {
+      const r = await executeDecision(selected.sessionId, selected.ref, id, { reason, actor: actorName });
+      setDone(r.lpn ? `تمّ: ${GOVERNANCE_DECISIONS[id].label} — وهويّتها ${r.lpn}.` : `تمّ: ${GOVERNANCE_DECISIONS[id].label}.`);
+      setSelected(null);
+      setReason('');
+      await load();
+    } catch (e) {
+      setError(e?.message || 'تعذّر تنفيذ القرار.');
+    } finally {
       setBusy('');
-      setError(`الخطّة صحيحة: ${plan.plan.label} ← ${plan.plan.nextState ? stateLabel(plan.plan.nextState) : 'بلا تغيير حالة'}${plan.plan.generatesIdentity ? ' · تولد الهويّة' : ''}. التنفيذ السحابيّ يُوصَل في LPN-207.`);
-    }, 200);
+    }
   }
 
   if (loading) return <div className="o_theme"><p className="text-ink-2 text-sm">جارٍ قراءة الطبالي…</p></div>;
@@ -85,8 +116,13 @@ export default function GovernanceBoard() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border px-4 py-3 text-sm" style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface-2)' }}>
+        <div className="mb-4 rounded-lg border px-4 py-3 text-sm" style={{ borderColor: 'var(--o-danger, #b42318)' }}>
           {error}
+        </div>
+      )}
+      {done && (
+        <div className="mb-4 rounded-lg border px-4 py-3 text-sm" style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface-2)' }}>
+          {done}
         </div>
       )}
 
@@ -98,25 +134,32 @@ export default function GovernanceBoard() {
             <p className="text-ink-2 text-sm">لا طبلية تنتظر — الطابور نظيف.</p>
           ) : (
             <ul className="space-y-2">
-              {pending.map((u) => (
-                <li key={u.code}>
-                  <button
-                    type="button"
-                    onClick={() => { setSelected(u); setReason(''); setError(''); }}
-                    className="w-full text-right rounded-lg border px-4 py-3 transition"
-                    style={{
-                      borderColor: selected?.code === u.code ? 'var(--o-primary)' : 'var(--o-border)',
-                      background: selected?.code === u.code ? 'var(--o-surface-2)' : 'transparent',
-                    }}
-                  >
-                    <div className="font-bold text-ink text-sm">{u.code || u.tempRef}</div>
-                    <div className="text-ink-2 text-xs mt-1">
-                      {u.warehouse} · {(u.lines ?? []).length} بندًا
-                      {(u.flags ?? []).length > 0 && <span> · {u.flags.map((f) => LPN_FLAGS[f]).join(' و')}</span>}
-                    </div>
-                  </button>
-                </li>
-              ))}
+              {pending.map((u) => {
+                const key = `${u.sessionId}/${u.ref}`;
+                const isOn = selected && `${selected.sessionId}/${selected.ref}` === key;
+                return (
+                  <li key={key}>
+                    <button
+                      type="button"
+                      onClick={() => { setSelected(u); setReason(''); setError(''); setDone(''); }}
+                      className="w-full text-right rounded-lg border px-4 py-3 transition"
+                      style={{
+                        borderColor: isOn ? 'var(--o-primary)' : 'var(--o-border)',
+                        background: isOn ? 'var(--o-surface-2)' : 'transparent',
+                      }}
+                    >
+                      <div className="font-bold text-ink text-sm">
+                        {u.session?.order?.number || 'بلا أمر'} · طبلية {u.ref}
+                      </div>
+                      <div className="text-ink-2 text-xs mt-1">
+                        {u.warehouse} · {(u.lines ?? []).length} بندًا
+                        {(u.rejections ?? []).length > 0 && <span> · {u.rejections.length} مرفوضًا</span>}
+                        {(u.exceptions ?? []).length > 0 && <span> · {u.exceptions.length} استثناءً</span>}
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
