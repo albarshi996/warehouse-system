@@ -2824,6 +2824,7 @@
         "LPN_SEQ_DIGITS",
         "LPN_STATES",
         "LPN_TERMINAL_STATE",
+        "LPN_TERMINAL_STATES",
         "LPN_TRANSITIONS",
         "activeFlags",
         "addReading",
@@ -2836,6 +2837,7 @@
         "clearFlag",
         "clearUnitFlag",
         "containmentProblems",
+        "contentChangeProblem",
         "createHandlingUnit",
         "distinctItems",
         "docEventId",
@@ -2847,6 +2849,7 @@
         "getUnitEvents",
         "initialStateProblem",
         "integrityOf",
+        "isAvailable",
         "isBlockedForIssue",
         "isClosedOf",
         "isEmpty",
@@ -5056,7 +5059,7 @@
             "actions": [
               "create"
             ],
-            "condition": "isStockActor() && request.resource.data.createdByUid == request.auth.uid && request.resource.data.code == lpnCode",
+            "condition": "isStockActor() && request.resource.data.createdByUid == request.auth.uid && request.resource.data.code == lpnCode && lpnCode.matches('LPN-[A-Z0-9]{1,12}-[0-9]{8",
             "roles": [
               "isStockActor"
             ]
@@ -5096,7 +5099,7 @@
             "actions": [
               "create"
             ],
-            "condition": "isStockActor() && request.resource.data.byUid == request.auth.uid",
+            "condition": "isStockActor() && request.resource.data.byUid == request.auth.uid && request.resource.data.lpn == lpnCode",
             "roles": [
               "isStockActor"
             ]
