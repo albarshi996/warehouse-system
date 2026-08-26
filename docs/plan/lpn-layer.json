@@ -1,0 +1,911 @@
+{
+  "plan": "طبقة الطبالي LPN — هوية الحمولة من الاستلام إلى الصرف",
+  "planDoc": "docs/خطة-طبقة-الطبالي.md",
+  "resumeTitle": "طبقة الطبالي (LPN)",
+  "command": "npm run plan:lpn",
+  "track": "إضافة لا تعديل — تفويض المالك 2026-08-26: «دون أن أتلف أي شيء يعمل ولا يتعارض ولا يحذف ميزة». الطبلية طبقة حاويات فوق الدفتر، والدفتر لا يعرفها",
+  "source": "«خطة ٧» (نص المالك الحرفي للتنفيذ الميداني بالباركود وLPN) + مراجعتها على الكود بابًا بابًا 2026-08-26 + مسح أسطح التكامل الأربعة",
+  "lastUpdated": "2026-08-26 (التأسيس: الخطة الحاكمة والمتتبّع)",
+  "lastUpdatedBy": "Claude",
+  "baseline": {
+    "originMain": "b173f2c",
+    "branch": "claude/plan-7-qualitative-leap-212f8b",
+    "note": "٦٠٪ من أبواب خطة ٧ له نواة قائمة — فأغلب العمل وصلٌ ونموّ. القاعدة الحاكمة: النواة تكبر ولا يُبنى بجانبها؛ كل مهمة تسمّي نواتها في حقل nucleus. والحدود الأربعة (ح-١…ح-٤) في الوثيقة الحاكمة تُسقط أي مهمة تخرقها."
+  },
+  "milestones": [
+    { "id": "م٠", "title": "الحوكمة — تثبيت الخطة والمتتبّع الثامن", "estimate": "جلسة واحدة" },
+    { "id": "م١", "title": "كيان الطبلية — منطق خالص بلا شبكة", "estimate": "2–3 جلسات" },
+    { "id": "م٢", "title": "الاستلام بالمسح — من أمر الشراء إلى الرفّ", "estimate": "4–5 جلسات" },
+    { "id": "م٣", "title": "الصرف بالمسح — من الحجز إلى التحميل", "estimate": "3–4 جلسات" },
+    { "id": "م٤", "title": "النقل بالطبالي — فوق سلسلة TRANSIT القائمة", "estimate": "2–3 جلسات" },
+    { "id": "م٥", "title": "الجرد بالطبلية والرقابة واللوحة", "estimate": "3 جلسات" },
+    { "id": "م٦", "title": "مؤجَّلة — موجات وأوفلاين وتكامل وعتاد", "estimate": "بقرارات مالك لاحقة" }
+  ],
+  "gaps": {
+    "ف-١": "الطبلية غير موجودة ككيان — لا نموذج ولا مجموعة ولا ذكر لـLPN في src/services كله؛ نموذج المخزون يعرف (صنف×مستودع×موقع×دفعة) ولا يعرف الحمولة",
+    "ف-٢": "لا جلسة استلام هاتفية من أمر شراء مفتوح — GRN يُدخل مكتبيًا لا مسحًا بندًا بندًا برصيدٍ مفتوحٍ يتناقص لحظيًا",
+    "ف-٣": "لا حوكمة على الطبلية — صندوق الاعتماد القائم للمستندات، ولا شاشة تعتمد حمولة وتولّد هويتها وتعيدها للتصحيح",
+    "ف-٤": "لا طباعة ملصقات — لا قائمة طباعة print_jobs ولا سجل إعادة طباعة بسبب ونسخة وعبارة «معاد طباعتها»",
+    "ف-٥": "لا مهام تخزين وتحضير تُسند وتُنفذ بالمسح — putawaySuggest.js يقترح وpickPlan.js يرتّب ولا مهمة تحمل اقتراحهما للميدان",
+    "ف-٦": "لا مناطق تجهيز ولا تحقق طبلية-بطبلية عند التحميل — إغلاق الرحلة لا يعدّ الطبالي ولا يمنع الناقص والزائد",
+    "ف-٧": "لا محضر فرق نقل كمستند — فرق المصدر والوجهة (نقص/زيادة/تلف/كسر ختم) يعالج نثرًا بلا قرار مسجّل",
+    "ف-٨": "الجرد لا يعرف الطبلية — العدّ صنفًا صنفًا ولو كانت الحمولة مغلقة مختومة، فلا سرعة ولا فرق طبالٍ (متوقعة غائبة/حاضرة غير متوقعة)",
+    "ف-٩": "لا لوحة حوكمة لحظية للطبالي بحالاتها ولا بحث موحّد يعرض التتبع الكامل PO→GRN→LPN→SO→Loading",
+    "ف-١٠": "لا نسب للطبالي — تقسيم أو دمج لا يترك أثر الأم والبنت، فلا يُعرف أصل كمية على طبلية صرف"
+  },
+  "ownerInputs": [
+    {
+      "id": "LPN-O01",
+      "milestone": "م٦",
+      "need": "قرار الطابعة الحرارية: نوعها ومقاس الملصق ومكانها (غرفة الحوكمة)",
+      "ifMissing": "الملصق PDF من المتصفح — والخطة نفسها تجيزه حلًا بديلًا؛ الطباعة الحرارية تبقى مؤجّلة في LPN-606",
+      "state": "todo"
+    },
+    {
+      "id": "LPN-O02",
+      "milestone": "م٢",
+      "need": "تجربة حية بالأدوار على الهاتف بعد اكتمال م٢: موظف استلام حقيقي يمسح أمر شراء حقيقيًا حتى الرفّ",
+      "ifMissing": "يبقى م٢ مبنيًا غير مجرَّب ويوسم كذلك في بطاقة الاستئناف — كدرس المراحل التي بُنيت بلا تجربة واحدة",
+      "state": "todo"
+    },
+    {
+      "id": "LPN-O03",
+      "milestone": "م٠",
+      "need": "ملف Hardis/Reflex المرجعي المذكور في خطة ٧ («الملف المرفق») — لم يوجد بجوار الخطة",
+      "ifMissing": "المنطق الوظيفي المطلوب موصوف في نص الخطة بما يكفي؛ يُبنى منه والمرجع يُستدرك إن وصل",
+      "state": "todo"
+    },
+    {
+      "id": "LPN-O04",
+      "milestone": "م٢",
+      "need": "سياسة الخلط: هل تسمح الشركة بأصناف أو دفعات متعددة على الطبلية الواحدة، ولأي فئات",
+      "ifMissing": "الافتراضي المعلن حتى الحسم: الخلط مسموح والطبلية توسم «Mixed Pallet» على ملصقها — كما تنص خطة ٧",
+      "state": "todo"
+    },
+    {
+      "id": "LPN-O05",
+      "milestone": "م١",
+      "need": "نشر قواعد Firestore الجديدة (مجموعات الطبالي) بعد بناء LPN-108 — النشر بيد المالك ويؤكد بالمطابقة الحرفية",
+      "ifMissing": "المجموعات الجديدة تبقى مغلقة أمام العملاء — البناء يمضي والاختبارات تعمل محليًا، والتشغيل الحي ينتظر النشر",
+      "state": "todo"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "LPN-000",
+      "title": "تثبيت الخطة الحاكمة والمتتبّع الثامن",
+      "milestone": "م٠",
+      "owner": "Claude",
+      "state": "doing",
+      "gaps": [],
+      "dependsOn": [],
+      "branch": "claude/plan-7-qualitative-leap-212f8b",
+      "touches": [
+        "docs/خطة-طبقة-الطبالي.md",
+        "docs/plan/lpn-layer.json",
+        "docs/plan/استئناف-طبقة-الطبالي.md",
+        "package.json"
+      ],
+      "progress": "الوثيقة الحاكمة كُتبت (الحدود الأربعة والقرارات الأربعة والفجوات العشر والمراحل السبع) والمتتبّع أُلّف بخمسين مهمة",
+      "nextStep": "وصل plan:lpn في package.json وضمّه لسلسلة npm run plan ثم أول تشغيل أخضر للحارس",
+      "acceptance": [
+        "npm run plan:lpn يمرّ أخضر ويولّد بطاقة الاستئناف",
+        "npm run plan يضم المتتبّع الثامن للسلسلة",
+        "الوثيقة الحاكمة تنص على الحدود الأربعة (ح-١…ح-٤) نصًا"
+      ]
+    },
+    {
+      "id": "LPN-101",
+      "title": "نحو هوية LPN — التوليد والتفرد والتطبيع",
+      "milestone": "م١",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-١"],
+      "dependsOn": ["LPN-000"],
+      "nucleus": "src/services/locations/locationCode.js — نمط النحو المحصور المحارف نفسه (المعرف سيصير معرف مستند Firestore)",
+      "guardTest": "src/services/lpn/lpnCode.test.js",
+      "touches": ["src/services/lpn/lpnCode.js"],
+      "note": "الصيغة LPN-<مستودع>-<YYYYMMDD>-<تسلسل ست خانات>. لا يعاد استخدامه أبدًا. وLPN ليس رقم Lot — نص خطة ٧ حرفيًا",
+      "acceptance": [
+        "بناء وتفكيك وتطبيع المعرف بمحارف محصورة A-Z0-9 والشرطة — يصلح معرف مستند Firestore",
+        "التاريخ والتسلسل يمرران من الخارج — لا Date.now داخل المنطق الخالص",
+        "معرف مكرر أو ناقص المقاطع يرفض برسالة تقول الصواب"
+      ]
+    },
+    {
+      "id": "LPN-102",
+      "title": "دورة حالات الطبلية — مصفوفة الانتقالات وحارسها",
+      "milestone": "م١",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-١"],
+      "dependsOn": ["LPN-000"],
+      "nucleus": "docs/خطة-طبقة-الطبالي.md §٦ — دورتا الاستلام والصرف والحالات الاستثنائية الثماني",
+      "guardTest": "src/services/lpn/lpnLifecycle.test.js",
+      "touches": ["src/services/lpn/lpnLifecycle.js"],
+      "note": "الانتقال خارج المصفوفة يحتاج صلاحية استثنائية بسبب مقيّد — نمط needsOverrideReason القائم، لا منع صامت",
+      "acceptance": [
+        "كل انتقال مشروع في الدورتين يمرّ وكل قفزة ترفض برسالة تسمي الحالة الحالية والمسموح منها",
+        "الحالات الاستثنائية تدخل من أي حالة بسبب إلزامي وتخرج بقرار حوكمة",
+        "لا حالتان متعارضتان — الحالة قيمة واحدة والاستثنائية وسم منفصل لا يمحو موضع الدورة"
+      ]
+    },
+    {
+      "id": "LPN-103",
+      "title": "محتويات الطبلية — بنود بصنف ودفعة ووحدة وقواعد الإضافة",
+      "milestone": "م١",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-١"],
+      "dependsOn": ["LPN-101"],
+      "nucleus": "src/services/items/uomModel.js وuomWiring.js — الوحدة والمعامل يحلّان من الباركود (CAP-102/103)",
+      "guardTest": "src/services/lpn/lpnContents.test.js",
+      "touches": ["src/services/lpn/lpnContents.js"],
+      "note": "البند: صنف + دفعة + صلاحية + وحدة + معامل + كمية أساس. دفعة منتهية لا تضاف. والخلط بسياسة LPN-O04 (الافتراضي: مسموح + وسم Mixed). وكل بند يحمل مرجعه لمفتاح الرصيد القائم عبر balanceId — لا مفتاح موازٍ",
+      "acceptance": [
+        "إضافة قراءة تدمج في بند قائم بنفس (صنف×دفعة×وحدة) وترفع الكمية — لا صفوف مكررة",
+        "كمية صفر فما دون ترفض، ودفعة منتهية الصلاحية ترفض برسالة تسمي تاريخها",
+        "isMixed تشتق من البنود ولا تكتب يدويًا — عرف «يشتق ولا يكتب»",
+        "فاحص الاحتواء: مجموع ما تحمله الطبالي لمفتاح رصيد لا يتجاوز كميته — يفحص ولا يكتب (نمط reconcileBalances)"
+      ]
+    },
+    {
+      "id": "LPN-104",
+      "title": "نسب الطبالي — تقسيم ودمج بعلاقة أم وبنت",
+      "milestone": "م١",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-١٠"],
+      "dependsOn": ["LPN-101", "LPN-103"],
+      "nucleus": "src/services/lpn/lpnContents.js — تحريك البنود بين حمولتين يمرّ بقواعد الإضافة نفسها",
+      "guardTest": "src/services/lpn/lpnLineage.test.js",
+      "touches": ["src/services/lpn/lpnLineage.js"],
+      "note": "الطبلية الكاملة تنتقل بهويتها. التقسيم والدمج وتغيير المحتوى يولّد LPN جديدًا بروابط parent/child — فلأي كمية أصل يُتتبع",
+      "acceptance": [
+        "التقسيم ينشئ بنتًا بمرجع الأم ولا يمس هوية الأم وينقص محتواها بمقدار ما خرج",
+        "الدمج يولد هوية جديدة بمرجعي المصدرين — لا يبتلع أحدهما الآخر بهويته",
+        "تجميع النسب يعيد الشجرة كاملة صعودًا للأصول ونزولًا للفروع"
+      ]
+    },
+    {
+      "id": "LPN-105",
+      "title": "سجل أحداث الطبلية الملحق-فقط — من فعل ماذا ومتى",
+      "milestone": "م١",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-١"],
+      "dependsOn": ["LPN-102"],
+      "nucleus": "نمط قيود stock_operations الملحقة-فقط — appendScan في src/services/stock/operationsService.js",
+      "guardTest": "src/services/lpn/lpnEvents.test.js",
+      "touches": ["src/services/lpn/lpnEvents.js"],
+      "note": "كل حدث: النوع + المستخدم + الوقت + الجهاز + المستند + التفاصيل. التصحيح حدث عكسي بسبب — لا حذف ولا تعديل (خطة ٧ §١١)",
+      "acceptance": [
+        "أنواع الأحداث مقيّدة بقائمة معلنة (إنشاء/قراءة/إغلاق/اعتماد/طباعة/تأكيد لصق/نقل/سحب/تقسيم/دمج/تغيير حالة/استثناء)",
+        "بناء الحدث يرفض نوعًا مجهولًا أو حدثًا بلا فاعل",
+        "التسلسل الزمني للأحداث يعيد رحلة الطبلية مرتبة — وهو مصدر بطاقتها"
+      ]
+    },
+    {
+      "id": "LPN-106",
+      "title": "بطاقة الطبلية — التجميع الكامل للعرض والتتبع",
+      "milestone": "م١",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-١"],
+      "dependsOn": ["LPN-101", "LPN-102", "LPN-103", "LPN-104", "LPN-105"],
+      "nucleus": "src/services/lpn/* — الوحدات الخمس السابقة تجمّع ولا يُعاد حساب شيء فيها",
+      "guardTest": "src/services/lpn/lpnCard.test.js",
+      "touches": ["src/services/lpn/lpnCard.js"],
+      "note": "بطاقة خطة ٧ الثلاثة عشر حقلًا: الرقم والمستند المصدر والمحتويات والدفعات والموقع والحالة والمنشئ والوقت والانتقالات والمفتوحة/المغلقة والسلامة والأصل عند التقسيم",
+      "acceptance": [
+        "البطاقة تبنى من الكيان والأحداث والنسب وحدها — لا حقل يحسب مرتين في مصدرين",
+        "قراءة QR أو LPN تكفي لبناء البطاقة كاملة",
+        "طبلية بلا أحداث أو بلا نسب تعرض بطاقة صحيحة — لا انهيار على الغائب"
+      ]
+    },
+    {
+      "id": "LPN-107",
+      "title": "خدمة الطبالي السحابية — handling_units بمعاملات ذرية",
+      "milestone": "م١",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-١"],
+      "dependsOn": ["LPN-101", "LPN-102", "LPN-103", "LPN-105"],
+      "nucleus": "src/services/stock/operationsService.js — نمط الخدمة الرقيقة فوق منطق خالص + المعرف الحتمي (نهج CAP-302)",
+      "guardTest": "src/services/lpn/lpnService.guard.test.js",
+      "touches": ["src/services/lpn/lpnService.js"],
+      "note": "مجموعات: handling_units (المعرف = LPN نفسه) + أحداثها ملحقة-فقط + عدّاد تسلسل ذري لكل مستودع/يوم. الحكم كله في الوحدات الخالصة — الخدمة تنقل ولا تقرر",
+      "acceptance": [
+        "توليد LPN داخل معاملة ذرية على عدّاد — جهازان في اللحظة نفسها لا يتصادمان",
+        "كل كتابة تمر بتحقق المنطق الخالص أولًا — الخدمة لا تحمل قاعدة عمل واحدة",
+        "لا دالة حذف في الخدمة أصلًا — الإلغاء حالة وحدث لا محو"
+      ]
+    },
+    {
+      "id": "LPN-108",
+      "title": "قواعد Firestore لمجموعات الطبالي — ملحق-فقط بلا مساس بالقائم",
+      "milestone": "م١",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-١"],
+      "dependsOn": ["LPN-107"],
+      "nucleus": "firestore.rules — أنماط الملحق-فقط القائمة في stock_moves وstock_operations",
+      "guardTest": "test/firestore-rules.test.mjs",
+      "touches": ["firestore.rules", "test/firestore-rules.test.mjs"],
+      "note": "إضافة مقاطع جديدة فقط — لا يلمس سطر قائم (ح-١). النشر بيد المالك (LPN-O05) ويؤكد بالمطابقة الحرفية — درس «نشرت تُطابَق باللصق لا بالثقة»",
+      "acceptance": [
+        "delete ممنوع على handling_units وأحداثها، وupdate محصور بالحقول المشروعة",
+        "git diff على firestore.rules يظهر إضافة مقاطع لا تعديل مقطع قائم",
+        "اختبار القواعد بالمحاكي يمر — والقائم منها يبقى أخضر"
+      ]
+    },
+    {
+      "id": "LPN-109",
+      "title": "حارس عدم التعارض — الدفتر لا يستورد الطبقة",
+      "milestone": "م١",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-١"],
+      "dependsOn": ["LPN-000"],
+      "nucleus": "نمط حراس الشجرة القائمة (حارس o_theme وحارس المحو في npm test) — مسح استيرادات لا مراجعة يد",
+      "guardTest": "src/services/lpn/lpnIsolation.test.js",
+      "touches": ["src/services/lpn/lpnIsolation.test.js"],
+      "note": "يمكنن ح-٢ نصًا: أي استيراد من services/lpn داخل ledger أو balances أو documents يكسر الاختبار — فالاتجاه واحد للأبد لا لهذه الجلسة",
+      "acceptance": [
+        "الاختبار يمسح ledger وbalances وdocuments ويفشل إن استورد أحدها من lpn",
+        "يعمل ضمن npm test بلا شبكة — قراءة ملفات فقط"
+      ]
+    },
+    {
+      "id": "LPN-201",
+      "title": "جلسة الاستلام — رأس من أمر شراء مفتوح ورصيده المفتوح",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٢"],
+      "dependsOn": ["LPN-101"],
+      "nucleus": "src/services/documents/documentLineProgress.js — الرصيد المفتوح (المطلوب − المستلم) يحسب منه لا من عمود جديد",
+      "guardTest": "src/services/lpn/receivingSession.test.js",
+      "touches": ["src/services/lpn/receivingSession.js"],
+      "acceptance": [
+        "الجلسة ترتبط بأمر شراء معتمد مفتوح وترفض المغلق والملغى برسالة تقول الحالة",
+        "الرصيد المفتوح لكل بند يحسب من تقدم البنود القائم — لا عمود موازٍ يفترق عنه",
+        "جلسة واحدة تكوّن طبلية أو أكثر — وكل طبلية تعرف جلستها وأمرها"
+      ]
+    },
+    {
+      "id": "LPN-202",
+      "title": "أوامر الشراء المفتوحة على الهاتف — قائمة برصيدها لا بحالتها وحدها",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٢"],
+      "dependsOn": ["LPN-201"],
+      "nucleus": "src/services/documents/documentsService.js — الاستعلام عن المستندات بالنوع والحالة قائم",
+      "guardTest": "src/services/lpn/receivingSession.test.js",
+      "touches": ["src/services/lpn/receivingQueueService.js"],
+      "acceptance": [
+        "القائمة تعرض الأمر والمورد والتاريخ وعدد الأصناف والمطلوب والمستلم والمتبقي",
+        "تحصر بمستودع الموظف — لا يرى أوامر غير موقعه",
+        "البحث برقم الأمر أو مسح باركود المستند يفتح الجلسة"
+      ]
+    },
+    {
+      "id": "LPN-203",
+      "title": "مسح الاستلام — صنف وعبوة ودفعة وكمية بأحكام البوابة القائمة",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٢"],
+      "dependsOn": ["LPN-201", "LPN-103"],
+      "nucleus": "src/services/locations/scanGate.js (أحكام المسح) + src/services/items/uomWiring.js (كرتونة=١٢) — استدعاء لا نسخ",
+      "guardTest": "src/services/lpn/receivingScan.test.js",
+      "touches": ["src/services/lpn/receivingScan.js"],
+      "note": "موانع خطة ٧: صنف خارج الأمر · أمر مغلق · تجاوز المفتوح بلا مشرف · باركود مجهول يصير استثناء لا يمر · دفعة منتهية · خلط ممنوع بالسياسة. وكل رفض يقول الصواب",
+      "acceptance": [
+        "قراءة باركود الكرتونة ترفع بالمعامل لا بواحد — من جدول الباركودات الموصول",
+        "صنف خارج الأمر يرفض برسالة تسمي المطلوب، والتجاوز يفتح طلب صلاحية مشرف لا بابًا صامتًا",
+        "المطلوب والمقروء والمتبقي تحسب لحظيًا من قيود الجلسة"
+      ]
+    },
+    {
+      "id": "LPN-204",
+      "title": "المرفوض والتالف بأسبابه المقيدة",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٢"],
+      "dependsOn": ["LPN-203"],
+      "nucleus": "src/services/documents/reasonCodes.js — قائمة الأسباب المقيدة القائمة تمتد ولا تُنسخ",
+      "guardTest": "src/services/lpn/receivingScan.test.js",
+      "touches": ["src/services/lpn/receivingScan.js"],
+      "acceptance": [
+        "المقبول والمرفوض كميتان منفصلتان — المرفوض لا يعتمد سليمًا أبدًا",
+        "الرفض بسبب مقيد (تلف/نقص/زيادة/اختلاف باركود/اختلاف صنف) وصورة عند الحاجة",
+        "المرفوض يظهر في شاشة الحوكمة مع الطبلية"
+      ]
+    },
+    {
+      "id": "LPN-205",
+      "title": "إغلاق الطبلية إلى الحوكمة — لا صرف قبل الاعتماد",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٣"],
+      "dependsOn": ["LPN-203", "LPN-102"],
+      "nucleus": "src/services/lpn/lpnLifecycle.js — الانتقال «قيد القراءة ← بانتظار الحوكمة» من المصفوفة",
+      "guardTest": "src/services/lpn/lpnLifecycle.test.js",
+      "touches": ["src/services/lpn/receivingSession.js", "src/services/lpn/lpnService.js"],
+      "acceptance": [
+        "بعد الإغلاق لا تقبل الطبلية قراءة جديدة — التصحيح بإرجاع الحوكمة لا بفتح خلفي",
+        "الكمية المغلقة غير متاحة للصرف حتى الاعتماد",
+        "الإغلاق حدث مسجل بفاعله ووقته"
+      ]
+    },
+    {
+      "id": "LPN-206",
+      "title": "شاشة حوكمة الطبالي — اعتماد وإرجاع وفحص ورفض وحجز",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٣"],
+      "dependsOn": ["LPN-205"],
+      "nucleus": "src/services/lpn/lpnLifecycle.js + بنية صفحات dashboard القائمة بثيم bz-light وغلاف o_theme وحارسه القسم ٦",
+      "guardTest": "src/services/lpn/governanceQueue.test.js",
+      "touches": ["src/services/lpn/governanceQueue.js", "src/pages/dashboard/lpn-governance.astro", "src/components/brandzo-erp/lpn/GovernanceBoard.jsx"],
+      "note": "الخيارات السبعة من خطة ٧: اعتماد / إرجاع للتصحيح / تحت الفحص / رفض / حجز / اعتماد بملاحظة / طباعة. صفحة جديدة — لا تحوير صفحة قائمة (ح-١)",
+      "acceptance": [
+        "الشاشة تعرض الطبلية كاملة: الأمر والمورد والمستلم والأزمنة والبنود والمرفوض والاستثناءات",
+        "كل قرار حدث مسجل بفاعله — والإرجاع يعيد الطبلية «قيد القراءة» عند صاحبها",
+        "القرارات تمر بمصفوفة الحالات — لا قفزة من الشاشة"
+      ]
+    },
+    {
+      "id": "LPN-207",
+      "title": "توليد LPN عند الاعتماد — النظام لا الموظف",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٣"],
+      "dependsOn": ["LPN-206", "LPN-107"],
+      "nucleus": "src/services/lpn/lpnService.js — العدّاد الذري ونحو lpnCode",
+      "guardTest": "src/services/lpn/lpnService.guard.test.js",
+      "touches": ["src/services/lpn/governanceQueue.js", "src/services/lpn/lpnService.js"],
+      "acceptance": [
+        "الهوية الدائمة تولد عند الاعتماد فقط — قبله معرف جلسة مؤقت لا يطبع",
+        "لا حقل إدخال يدوي لرقم طبلية في أي شاشة",
+        "الاعتماد يرسل الطبلية لقائمة الطباعة تلقائيًا"
+      ]
+    },
+    {
+      "id": "LPN-208",
+      "title": "ملصق الطبلية PDF — الباركود والرمز وقائمة الطباعة وسجل الإعادة",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٤"],
+      "dependsOn": ["LPN-207"],
+      "nucleus": "هوية Brandzo للطباعة القائمة في المستندات (نمط ملصقات إنجاز المشارق في fleet) + ق-٣: print_jobs مجموعة والملصق PDF أولًا",
+      "guardTest": "src/services/lpn/labelModel.test.js",
+      "touches": ["src/services/lpn/labelModel.js", "src/services/lpn/printQueueService.js"],
+      "note": "محتوى الملصق من خطة ٧: الشعار · LPN واضحًا · Code128 · QR لبطاقة الهاتف · المخزن والأمر والمورد والوقت وعدد الأصناف والإجمالي وLot والحالة والموظف · «Mixed Pallet» عند الخلط",
+      "acceptance": [
+        "الملصق يبنى من بطاقة الطبلية وحدها — لا حقل يكتب على الملصق يدويًا",
+        "كل إعادة طباعة تسجل باسم وسبب ووقت ورقم نسخة — والنسخة تحمل «معاد طباعتها»",
+        "قائمة الطباعة ملحقة-فقط بحالة (بانتظار/طبع/ألغي بسبب)"
+      ]
+    },
+    {
+      "id": "LPN-209",
+      "title": "تأكيد اللصق بمسح راجع — الملصق الصحيح على الطبلية الصحيحة",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٤"],
+      "dependsOn": ["LPN-208"],
+      "nucleus": "src/services/lpn/lpnLifecycle.js — الانتقال «طبع الملصق ← بانتظار التخزين» مشروط بالتأكيد",
+      "guardTest": "src/services/lpn/lpnLifecycle.test.js",
+      "touches": ["src/services/lpn/receivingSession.js"],
+      "acceptance": [
+        "الطبلية لا تنتقل لانتظار التخزين قبل مسح ملصقها الجديد مسحًا راجعًا",
+        "مسح ملصق طبلية أخرى يرفض برسالة تسمي الطبلية الصحيحة"
+      ]
+    },
+    {
+      "id": "LPN-210",
+      "title": "مهمة التخزين — مسح LPN ثم Bin بموانع الموقع",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٥"],
+      "dependsOn": ["LPN-207"],
+      "nucleus": "src/services/locations/putawaySuggest.js (الاقتراح) + locationCode.js (تطبيع المسح) — المهمة تحمل الاقتراح القائم للميدان",
+      "guardTest": "src/services/lpn/putawayTask.test.js",
+      "touches": ["src/services/lpn/putawayTask.js"],
+      "note": "موانع خطة ٧: موقع موقوف · ممتلئ · غير متوافق · غير تابع · غير مقروء فعليًا. والطبلية لا تكون في موقعين — أبدًا",
+      "acceptance": [
+        "المهمة: مسح LPN يعرض المحتوى والموقع المقترح — ومسح Bin يتحقق ويعتمد",
+        "التخزين في غير المقترح يمر بسبب مقيد لا يمنع (درس LOC: العامل يختار الرف)",
+        "الحركة تسجل: الموقعين والمستخدم والوقت والمهمة والنتيجة — وموقع الطبلية واحد دائمًا"
+      ]
+    },
+    {
+      "id": "LPN-211",
+      "title": "الطبلية على خريطة المواقع — من يقف أين",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-١"],
+      "dependsOn": ["LPN-210"],
+      "nucleus": "src/services/locations/mapGrid.js وصفحات المواقع القائمة — عمود إضافي لا شاشة موازية",
+      "guardTest": "src/services/lpn/putawayTask.test.js",
+      "touches": ["src/pages/dashboard/location-builder.astro", "src/components/brandzo-erp/warehouse/WarehouseMaps.jsx"],
+      "note": "إضافة عرض الطبالي للشاشات القائمة (ح-٤: لا صفحة فوق صفحة) — البحث بالموقع يظهر طباليه وبالصنف يظهر مواقعه عبر الطبالي",
+      "acceptance": [
+        "فتح موقع يعرض الطبالي الواقفة فيه بحالاتها",
+        "البحث بالصنف يعرض كل المواقع التي يقف فيها عبر طبالٍ",
+        "الشاشات القائمة تعمل كما كانت لمن لا طبالي عنده — لا كسر للعرض الحالي"
+      ]
+    },
+    {
+      "id": "LPN-212",
+      "title": "وضع «استلام» في شاشة المسح — امتداد لا صفحة",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٢"],
+      "dependsOn": ["LPN-203"],
+      "nucleus": "src/components/brandzo-erp/stock/ScanFlow.jsx — بنية SCAN_MODES القائمة وBarcodeDetector العتادي",
+      "guardTest": "src/services/lpn/receivingScan.test.js",
+      "touches": ["src/components/brandzo-erp/stock/ScanFlow.jsx", "src/services/stock/scanFlow.js"],
+      "note": "ح-٤ حرفيًا: وضع جديد في الشاشة القائمة. أصوات النجاح والخطأ تربط بنتيجة الحكم الفعلية وحقل القراءة يبقى نشطًا — متطلبات خطة ٧ للهاتف",
+      "acceptance": [
+        "الوضع الجديد لا يغير سلوك أوضاع الجرد القائمة — اختباراتها تبقى خضراء",
+        "القراءة الناجحة صوت واهتزاز نجاح والمرفوضة تحذير — من نتيجة الحكم لا من الواجهة",
+        "آخر قراءة معروضة وزر تراجع عنها بسبب مسجل"
+      ]
+    },
+    {
+      "id": "LPN-213",
+      "title": "الوصل بمحرك المستندات — الجلسة المعتمدة تثمر GRN دون تعديل مخططه",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٢"],
+      "dependsOn": ["LPN-206"],
+      "nucleus": "src/services/documents/schemas/grn.js وdocumentsService.js — الإنشاء بالمخطط القائم كما هو",
+      "guardTest": "src/services/lpn/receivingSession.test.js",
+      "touches": ["src/services/lpn/receivingSession.js"],
+      "note": "الجلسة تجمع طباليها المعتمدة وتولد GRN بالبيانات نفسها — فالسلسلة المالية القائمة (GRN←QC←المطابقة الثلاثية) تعمل كما كانت بلا أن تعرف الطبالي (ح-٢). ⚠️ علاقات الطبلية في document_links من نوع REFERENCE حصرًا — BASE/TARGET تدخل حساب التنفيذ فيتضخم المنفذ ويكذب الرصيد المفتوح",
+      "acceptance": [
+        "GRN المتولد يمر بحراس المحرك القائمة كأي GRN مكتبي",
+        "الطبلية تحمل مرجع GRN في أحداثها — والGRN لا يحمل حقلًا جديدًا",
+        "الاستلام المكتبي القديم يبقى يعمل كما هو — طريقان لنفس المستند"
+      ]
+    },
+    {
+      "id": "LPN-301",
+      "title": "مهمة التحضير تسند لمحضّر — من أمر معتمد محجوز",
+      "milestone": "م٣",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٥"],
+      "dependsOn": ["LPN-107"],
+      "nucleus": "src/services/ledger/reservations.js (الحجز FEFO) + src/services/locations/pickPlan.js (ترتيب المسار) — المهمة تجمعهما",
+      "guardTest": "src/services/lpn/pickingTask.test.js",
+      "touches": ["src/services/lpn/pickingTask.js"],
+      "acceptance": [
+        "المهمة تشتق من أمر بيع أو صرف معتمد محجوز — لا تحضير بلا مستند (القاعدة ١)",
+        "بنودها مرتبة بمسار السحب القائم وكل بند يسمي الموقع والطبلية والدفعة المخصصة",
+        "الإسناد لمحضر معلوم — والمهام تعرض له وحده"
+      ]
+    },
+    {
+      "id": "LPN-302",
+      "title": "تنفيذ التحضير بالمسح الثلاثي — موقع وطبلية وصنف",
+      "milestone": "م٣",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٥"],
+      "dependsOn": ["LPN-301", "LPN-210"],
+      "nucleus": "src/services/locations/scanGate.js — الأحكام القائمة يضاف إليها حكم مسح LPN",
+      "guardTest": "src/services/lpn/pickingScan.test.js",
+      "touches": ["src/services/lpn/pickingScan.js"],
+      "note": "موانع خطة ٧ السبعة: موقع مخالف · صنف أو Lot غير مخصص · كمية زائدة · طبلية محجوزة أو تحت فحص · منتهية · غير متاح · رصيد سالب — وكل رفض يقول الصواب",
+      "acceptance": [
+        "المسح الثلاثي بترتيبه والكمية — وكل مانع من السبعة له اختبار يثبته",
+        "الكمية المأخوذة تنتقل لطبلية التحضير وتنقص من الأم لحظيًا",
+        "الحكم منطق خالص مختبر — الشاشة عرض له"
+      ]
+    },
+    {
+      "id": "LPN-303",
+      "title": "السحب الجزئي — الأم تبقى بهويتها وينقص محتواها",
+      "milestone": "م٣",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٥"],
+      "dependsOn": ["LPN-302"],
+      "nucleus": "src/services/lpn/lpnContents.js وlpnLineage.js — السحب حركة محتوى لا حركة هوية",
+      "guardTest": "src/services/lpn/pickingScan.test.js",
+      "touches": ["src/services/lpn/pickingScan.js"],
+      "acceptance": [
+        "سحب جزء لا يغير رقم الأم ولا حالتها المخزنة — يحدث محتواها وحدثها",
+        "أم فرغت تمامًا تعلم فارغة ولا تحذف — هويتها لا يعاد استخدامها"
+      ]
+    },
+    {
+      "id": "LPN-304",
+      "title": "طبلية الصرف — هوية جديدة بنسبها إلى المصادر",
+      "milestone": "م٣",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-١٠"],
+      "dependsOn": ["LPN-302", "LPN-104"],
+      "nucleus": "src/services/lpn/lpnLineage.js — التكوين الجديد دمج بمصادر مسماة",
+      "guardTest": "src/services/lpn/lpnLineage.test.js",
+      "touches": ["src/services/lpn/pickingScan.js", "src/services/lpn/lpnService.js"],
+      "acceptance": [
+        "طبلية الصرف LPN جديد يولده النظام وبنودها تحمل مراجع طبالي المصدر",
+        "تتبع أي كمية على طبلية الصرف يصل لأصلها في الاستلام"
+      ]
+    },
+    {
+      "id": "LPN-305",
+      "title": "مناطق التجهيز — ربط الطبلية بفرع أو مسار ومنع الخلط",
+      "milestone": "م٣",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٦"],
+      "dependsOn": ["LPN-304"],
+      "nucleus": "src/services/locations/locationCode.js — منطقة التجهيز موقع بنحو الكود القائم لا كيان موازٍ",
+      "guardTest": "src/services/lpn/stagingAssign.test.js",
+      "touches": ["src/services/lpn/stagingAssign.js"],
+      "acceptance": [
+        "مسح الطبلية ثم مسح منطقة التجهيز يربطها بالفرع أو المسار",
+        "وضعها في مسار فرع آخر يرفض برسالة تسمي مسارها الصحيح",
+        "مدة بقاء الطبلية في التجهيز تحسب من أحداثها — لعداد اللوحة لاحقًا"
+      ]
+    },
+    {
+      "id": "LPN-306",
+      "title": "التحقق عند التحميل طبلية بطبلية — لا رحلة تغلق ناقصة",
+      "milestone": "م٣",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٦"],
+      "dependsOn": ["LPN-305"],
+      "nucleus": "src/services/documents/schemas/dlv.js وvld.js ودورة الرحلات القائمة — التحقق يضاف قبل الإغلاق لا سلسلة موازية",
+      "guardTest": "src/services/lpn/loadingVerify.test.js",
+      "touches": ["src/services/lpn/loadingVerify.js"],
+      "note": "خطة ٧: قراءة كل طبلية قبل الإدخال · عداد مطلوب/مقروء/متبقٍ · منع الإغلاق بناقصة أو زائدة · ختم أمني · لا تحمّل الطبلية مرتين (القاعدة ٨)",
+      "acceptance": [
+        "طبلية خارج الرحلة ترفض والطبلية المكررة ترفض — لكل حالة اختبار",
+        "الإغلاق ممنوع والعداد ناقص أو زائد — إلا بصلاحية استثنائية بسبب مسجل",
+        "رقم الختم يسجل عند الحاجة واعتماد الخروج من مخول"
+      ]
+    },
+    {
+      "id": "LPN-307",
+      "title": "تدرج الرصيد المرحلي — صفات على الطبلية لا مساس بمفتاح الرصيد",
+      "milestone": "م٣",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٦"],
+      "dependsOn": ["LPN-302", "LPN-305", "LPN-306"],
+      "nucleus": "src/services/ledger/stockStatus.js وreservations.js — التدرج (محجوز/قيد التحضير/في التجهيز/محمل) يشتق من حالات الطبالي",
+      "guardTest": "src/services/lpn/stagedBalance.test.js",
+      "touches": ["src/services/lpn/stagedBalance.js"],
+      "note": "ح-٢ حرفيًا: الأرقام المرحلية تشتق من طبقة الطبالي للعرض والرقابة — مفتاح الرصيد وحساباته القائمة لا تلمس",
+      "acceptance": [
+        "لكل صنف تعرض: فعلي/محجوز/قيد تحضير/في تجهيز/محمل/متاح — والفعلي من الدفتر كما هو",
+        "جمع المراحل لا يتجاوز الفعلي أبدًا — واختبار يثبته",
+        "صنف بلا طبالٍ يعرض أرقامه القديمة كما كانت"
+      ]
+    },
+    {
+      "id": "LPN-308",
+      "title": "أوضاع «تحضير وتجهيز وتحميل» في شاشة المسح",
+      "milestone": "م٣",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٥"],
+      "dependsOn": ["LPN-302", "LPN-212"],
+      "nucleus": "src/components/brandzo-erp/stock/ScanFlow.jsx — الامتداد نفسه الذي فتحه وضع الاستلام",
+      "guardTest": "src/services/lpn/pickingScan.test.js",
+      "touches": ["src/components/brandzo-erp/stock/ScanFlow.jsx"],
+      "acceptance": [
+        "كل مستخدم يرى أوضاعه المسموحة بدوره فقط",
+        "الأوضاع القائمة تبقى خضراء باختباراتها"
+      ]
+    },
+    {
+      "id": "LPN-401",
+      "title": "تحضير أمر النقل بالمسح — محرك م٣ نفسه على TR",
+      "milestone": "م٤",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٥"],
+      "dependsOn": ["LPN-302"],
+      "nucleus": "src/services/lpn/pickingTask.js وpickingScan.js — التحضير واحد ومستنده يختلف (TR بدل SO)",
+      "guardTest": "src/services/lpn/pickingTask.test.js",
+      "touches": ["src/services/lpn/pickingTask.js"],
+      "acceptance": [
+        "مهمة تحضير من أمر نقل معتمد بنفس الموانع السبعة",
+        "لا نقل بين مخزنين بتحويل موقع داخلي — الحارس يفرض المستند (القاعدة ٣)"
+      ]
+    },
+    {
+      "id": "LPN-402",
+      "title": "الطبلية الكاملة تحتفظ برقمها — والمقسمة هوية جديدة بنسب",
+      "milestone": "م٤",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-١٠"],
+      "dependsOn": ["LPN-401"],
+      "nucleus": "src/services/lpn/lpnLineage.js — قاعدة خطة ٧: الكاملة غير المفتوحة تعبر بهويتها لاستمرارية التتبع",
+      "guardTest": "src/services/lpn/lpnLineage.test.js",
+      "touches": ["src/services/lpn/pickingScan.js"],
+      "acceptance": [
+        "نقل طبلية كاملة مغلقة لا يولد هوية جديدة — رقمها يعبر معها",
+        "التقسيم أو الدمج أو تغيير المحتوى يولد هوية جديدة بعلاقة أم/بنت"
+      ]
+    },
+    {
+      "id": "LPN-403",
+      "title": "تحميل النقل والمغادرة — الطبالي على TRN والرصيد إلى TRANSIT القائم",
+      "milestone": "م٤",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٦"],
+      "dependsOn": ["LPN-401", "LPN-306"],
+      "nucleus": "src/services/documents/schemas/trn.js — القيد إلى مخزن TRANSIT مبني ويعمل؛ الطبالي تركب فوقه لا بديلًا عنه",
+      "guardTest": "src/services/lpn/loadingVerify.test.js",
+      "touches": ["src/services/lpn/loadingVerify.js"],
+      "acceptance": [
+        "التحقق طبلية بطبلية قبل إغلاق تحميل النقل — كالقاعدة في م٣",
+        "إنجاز TRN يقيد إلى TRANSIT كما كان — الطبالي تحمل حالتها «قيد النقل» بالتوازي",
+        "خلال النقل لا يتصرف المصدر ولا الوجهة في الكمية (القاعدة ٥) — من الدفتر القائم نفسه"
+      ]
+    },
+    {
+      "id": "LPN-404",
+      "title": "استلام الوجهة بمسح الطبالي — مطابقة الأمر والختم",
+      "milestone": "م٤",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٢"],
+      "dependsOn": ["LPN-403"],
+      "nucleus": "src/services/documents/schemas/trc.js — استلام النقل القائم يثري بمسح الطبالي لا يستبدل",
+      "guardTest": "src/services/lpn/transferReceive.test.js",
+      "touches": ["src/services/lpn/transferReceive.js"],
+      "acceptance": [
+        "كل طبلية تمسح وتطابق مع أمر النقل — الزائدة والمكررة ترفضان (القاعدة ٩)",
+        "طبلية سليمة مغلقة تعتمد بمسحها — والمفتوحة أو المكسورة الختم تفتح للعد",
+        "بعد الاعتماد توجه الطبلية لمهمة تخزين في الوجهة — دورة م٢ نفسها"
+      ]
+    },
+    {
+      "id": "LPN-405",
+      "title": "محضر فرق النقل — مستند جديد يلحق بالمحرك",
+      "milestone": "م٤",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٧"],
+      "dependsOn": ["LPN-404"],
+      "nucleus": "src/services/documents/schemas/index.js — التسجيل بنمط المخططات القائم، مستند جديد لا تعديل قائم",
+      "guardTest": "src/services/documents/schemas/tdr.test.js",
+      "touches": ["src/services/documents/schemas/tdr.js", "src/services/documents/schemas/index.js"],
+      "note": "محتواه من خطة ٧: نوع الفرق · المرسل والمستلم · الصور · الأسماء · وقت الوصول · قرار الحوكمة · المسؤولية · الحركة التصحيحية. وأمر النقل لا يغلق والفرق مفتوح (القاعدة ١٥)",
+      "acceptance": [
+        "فرق في استلام الوجهة ينشئ محضرًا آليًا ويمنع إغلاق أمر النقل",
+        "المحضر يغلق بقرار حوكمة يسمي المسؤولية والحركة التصحيحية",
+        "المخططات القائمة كلها تبقى خضراء — الإضافة لا تلمسها"
+      ]
+    },
+    {
+      "id": "LPN-406",
+      "title": "رحلة الطبلية عبر النقل — البطاقة تعرضها كاملة",
+      "milestone": "م٤",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-١٠"],
+      "dependsOn": ["LPN-404", "LPN-106"],
+      "nucleus": "src/services/lpn/lpnCard.js — الأحداث تغذيها محطات النقل فتكتمل السلسلة",
+      "guardTest": "src/services/lpn/lpnCard.test.js",
+      "touches": ["src/services/lpn/lpnCard.js"],
+      "acceptance": [
+        "بطاقة الطبلية تعرض: LPN → TO → قيد النقل → استلام الوجهة → Bin الجديد — بأمثلة خطة ٧ حرفيًا",
+        "فرق النقل يظهر في الرحلة بمحضره وقراره"
+      ]
+    },
+    {
+      "id": "LPN-501",
+      "title": "الجرد يمسح الطبلية — شهادة رؤية بلا كميات (ح-٣)",
+      "milestone": "م٥",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٨"],
+      "dependsOn": ["LPN-107"],
+      "nucleus": "src/services/stock/scanFlow.js وoperationsService.js — قيد مسح من نوع «طبلية شوهدت» في العملية القائمة نفسها",
+      "guardTest": "src/services/lpn/countPallet.test.js",
+      "touches": ["src/services/lpn/countPallet.js"],
+      "note": "ق-٢ حرفيًا: مسح LPN في الجرد يسجل «شوهدت مغلقة سليمة الختم» بلا إظهار كمية — CAP-101 محفوظ. والمفتوحة أو المسحوب منها تعد فعليًا صنفًا صنفًا",
+      "acceptance": [
+        "مسح طبلية مغلقة يسجل شهادة رؤية بلا أي رقم كمية على الشاشة",
+        "طبلية مفتوحة يطلب عد محتواها الفعلي — بالمسار القائم نفسه",
+        "شاشة العد القائمة تبقى خضراء باختباراتها — الإضافة وضع قيد جديد لا تعديل"
+      ]
+    },
+    {
+      "id": "LPN-502",
+      "title": "فروق الطبالي في المطابقة — الغائبة والدخيلة وفرق الموقع",
+      "milestone": "م٥",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٨"],
+      "dependsOn": ["LPN-501"],
+      "nucleus": "src/services/locations/reconcile.js — محرك المطابقة المبني يمتد بفروق الطبالي (وصله الحي رهن ق-٦ في خطة الالتقاط)",
+      "guardTest": "src/services/lpn/palletDiff.test.js",
+      "touches": ["src/services/lpn/palletDiff.js"],
+      "acceptance": [
+        "المتوقعة في الموقع ولم تمسح · الممسوحة في موقع غير متوقع · فرق المحتوى للمفتوحة — ثلاث قوائم منفصلة",
+        "التوسعة من شهادة رؤية إلى كميات تقع هنا لا في شاشة العد (ق-٢)",
+        "الفروق تمضي لمسار CC←ADJ القائم — لا تعديل رصيد مباشر (القاعدة ١٧)"
+      ]
+    },
+    {
+      "id": "LPN-503",
+      "title": "لوحة حوكمة الطبالي اللحظية — العدادات بحالاتها",
+      "milestone": "م٥",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٩"],
+      "dependsOn": ["LPN-107"],
+      "nucleus": "src/services/ledger/operationsDashboard.js — نمط لوحات الرقابة القائم وبنية الطبقات الثلاث المعتمدة",
+      "guardTest": "src/services/lpn/governanceQueue.test.js",
+      "touches": ["src/pages/dashboard/lpn-governance.astro", "src/components/brandzo-erp/lpn/GovernanceBoard.jsx"],
+      "note": "عدادات خطة ٧: جلسات مفتوحة · بانتظار اعتماد/طباعة/فحص/تخزين · في مواقع خاطئة · مهام مفتوحة · في التجهيز · بانتظار تحميل · مهام جرد · فروق · استثناءات · إعادة طباعة · النشطون",
+      "acceptance": [
+        "العدادات تشتق من حالات الطبالي والمهام لحظيًا — لا عداد يكتب يدويًا",
+        "كل عداد ينقر فيفتح قائمته",
+        "بلا إيموجي وبالأحمر للتحذير فقط — منهجية اللوحات المعتمدة"
+      ]
+    },
+    {
+      "id": "LPN-504",
+      "title": "البحث الموحد والتتبع الكامل — من أي طرف إلى الرحلة كلها",
+      "milestone": "م٥",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٩"],
+      "dependsOn": ["LPN-106"],
+      "nucleus": "src/services/lpn/lpnCard.js — البحث يصل للبطاقة والبطاقة تعرض الرحلة",
+      "guardTest": "src/services/lpn/lpnCard.test.js",
+      "touches": ["src/components/brandzo-erp/lpn/GovernanceBoard.jsx", "src/components/brandzo-erp/stock/ScanFlow.jsx"],
+      "acceptance": [
+        "البحث بـLPN أو صنف أو Lot أو أمر أو موقع أو مورد أو فرع أو موظف يصل للطبالي المعنية",
+        "وضع «استعلام» في شاشة الهاتف: مسح أي طبلية أو موقع يعرض بطاقته",
+        "بطاقة أي LPN تعرض تتبعه الكامل منذ الإنشاء حتى آخر حركة"
+      ]
+    },
+    {
+      "id": "LPN-505",
+      "title": "تقارير الأداء — الأزمنة والدقة وإعادة الطباعة",
+      "milestone": "م٥",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": ["ف-٩"],
+      "dependsOn": ["LPN-503"],
+      "nucleus": "src/services/reports — مركز التقارير القائم يستضيفها؛ والأرقام من أحداث الطبالي المختومة بالوقت",
+      "guardTest": "src/services/lpn/lpnKpis.test.js",
+      "touches": ["src/services/lpn/lpnKpis.js"],
+      "acceptance": [
+        "زمن الاستلام والوقت حتى التخزين ومدة التجهيز تحسب من فروق أحداث حقيقية",
+        "قراءات كل موظف ونسب الرفض وعدد إعادة الطباعة تجمع من السجلات الملحقة",
+        "كل مؤشر يفصح عن مصدره — لا رقم بلا أصل"
+      ]
+    },
+    {
+      "id": "LPN-506",
+      "title": "الأدوار المخزنية الثمانية — تقييد الأوضاع بالدور والمخزن",
+      "milestone": "م٥",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": [],
+      "dependsOn": ["LPN-212", "LPN-308"],
+      "nucleus": "src/services/auth — بنية الأدوار القائمة تمتد بأدوار جديدة لا نظام موازٍ",
+      "guardTest": "src/services/lpn/lpnRoles.test.js",
+      "touches": ["src/services/lpn/lpnRoles.js"],
+      "note": "أدوار خطة ٧: استلام · تخزين · تحضير · تجهيز وتحميل · جرد · حوكمة · مشرف · مدير. والتقييد: المخزن · نوع العملية · الاعتماد · الطباعة · الجرد الأعمى",
+      "acceptance": [
+        "كل دور يرى أوضاعه ومخزنه فقط — مصفوفة دور×وضع مختبرة",
+        "الأدوار القائمة (fleet وغيرها) لا تتأثر — الإضافة أسماء جديدة",
+        "قائمة الأدوار في الكود تطابق قواعد Firestore — لا شاشة تمنع من تسمح له القاعدة"
+      ]
+    },
+    {
+      "id": "LPN-507",
+      "title": "القواعد الثماني عشرة حراسًا مسماة — قاعدة فحارس فاختبار",
+      "milestone": "م٥",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": [],
+      "dependsOn": ["LPN-306", "LPN-405", "LPN-502"],
+      "nucleus": "docs/خطة-طبقة-الطبالي.md §٧ — الجدول يملأ بمواضع الحراس المبنية فعلًا",
+      "guardTest": "src/services/lpn/governingRules.test.js",
+      "touches": ["docs/خطة-طبقة-الطبالي.md", "src/services/lpn/governingRules.test.js"],
+      "note": "نمط حارس عرض المالية: لا تقرأ قاعدة «مبنية» وهي بلا حارس — الاختبار يعدد الثماني عشرة ويثبت لكل واحدة موضع إنفاذها",
+      "acceptance": [
+        "لكل قاعدة من الثماني عشرة سطر: نصها وموضع حارسها واختباره",
+        "قاعدة بلا حارس مبني توسم «فجوة باسمها» لا تدعى مبنية"
+      ]
+    },
+    {
+      "id": "LPN-601",
+      "title": "موجات التحضير Picking Waves — تجميع الأوامر بالمسار والأولوية",
+      "milestone": "م٦",
+      "owner": "Claude",
+      "state": "deferred",
+      "gaps": [],
+      "dependsOn": [],
+      "note": "مؤجلة بنص خطة ٧ (المرحلة الخامسة). بذرتها: pickingTask القادمة + تجميع القنوات في قطاع الأغذية",
+      "acceptance": ["تفتح بقرار مالك بعد اكتمال م٣ وتجربته حيًا"]
+    },
+    {
+      "id": "LPN-602",
+      "title": "Cross-Dock — من الاستلام إلى الشحن بلا تخزين",
+      "milestone": "م٦",
+      "owner": "Claude",
+      "state": "deferred",
+      "gaps": [],
+      "dependsOn": [],
+      "note": "مؤجلة بنص خطة ٧. تحتاج م٢ وم٣ مكتملتين مجربتين",
+      "acceptance": ["تفتح بقرار مالك"]
+    },
+    {
+      "id": "LPN-603",
+      "title": "الأوفلاين الكامل — طابور مزامنة يمنع تكرار الحركات",
+      "milestone": "م٦",
+      "owner": "Claude",
+      "state": "deferred",
+      "gaps": [],
+      "dependsOn": [],
+      "note": "خطة ٧ تشترط قبله ضمان آلية مزامنة — وهي CAP-301…305 في متتبع الالتقاط الجاري: تبنى هناك أولًا ثم تعمم هنا",
+      "acceptance": ["تفتح بعد إغلاق CAP-301…305 وتجربة القطع الحية CAP-O01"]
+    },
+    {
+      "id": "LPN-604",
+      "title": "التوجيه الذكي للمواقع — فوق putawaySuggest القائم",
+      "milestone": "م٦",
+      "owner": "Claude",
+      "state": "deferred",
+      "gaps": [],
+      "dependsOn": [],
+      "note": "السعة والوزن ونوع الأصناف المسموح — خطة ٧ نفسها تقول «مستقبلًا»",
+      "acceptance": ["تفتح بقرار مالك بعد تشغيل م٢ حيًا"]
+    },
+    {
+      "id": "LPN-605",
+      "title": "التكامل الخارجي — المستند من نظام خارجي بمرجعه وحالة مزامنته",
+      "milestone": "م٦",
+      "owner": "Claude",
+      "state": "deferred",
+      "gaps": [],
+      "dependsOn": [],
+      "note": "جسر أودو القائم هو البذرة (odoo-sync يعمل). قاعدة خطة ٧: الأنظمة الأخرى مصدر مستند والبوابة مصدر حقيقة التنفيذ — وتستقبل نتيجتها المعتمدة",
+      "acceptance": ["تفتح بقرار مالك مع تحديد النظام المرجعي الأول"]
+    },
+    {
+      "id": "LPN-606",
+      "title": "الطابعة الحرارية الفعلية — بعد قرار العتاد",
+      "milestone": "م٦",
+      "owner": "المالك",
+      "state": "deferred",
+      "gaps": [],
+      "dependsOn": [],
+      "note": "رهن LPN-O01. حتى قرارها: الملصق PDF من LPN-208 يطبع من أي طابعة",
+      "acceptance": ["نوع الطابعة ومقاس الملصق محسومان والوصل مجرب من غرفة الحوكمة"]
+    }
+  ]
+}

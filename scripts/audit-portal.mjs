@@ -231,7 +231,7 @@ const isStorageName = (f) => /(Service|service)\.js$/.test(path.basename(f));
  * كلّ ما زاد عنهما خرقٌ جديد يُوقف التدقيق.
  */
 const IMPURE_NAME_BASELINE = 0; // سُدّ في EXE-002: numbering.js ⇐ numberingService.js
-const UNTESTED_PURE_BASELINE = 26;
+const UNTESTED_PURE_BASELINE = 23;
 
 const logicFiles = walk(SERVICES_DIR, ['.js']).filter((f) => !f.endsWith('.test.js'));
 const impure = [];

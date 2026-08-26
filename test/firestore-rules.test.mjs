@@ -224,3 +224,168 @@ test('إنشاء الطفل وعلاقته وقيدي التدقيق ينجح ف
   });
   await assertSucceeds(batch.commit());
 }));
+
+// ═══ طبقة الطبالي LPN — مقاطع handling_units وlpn_counters (LPN-108) ═══
+
+const LPN1 = 'LPN-MAIN-20260826-000001';
+
+/** كيان طبليةٍ صالح باسم كاتبه. */
+function validUnit(uid, overrides = {}) {
+  return {
+    code: LPN1,
+    state: 'APPROVED',
+    flags: [],
+    warehouse: 'MAIN',
+    bin: '',
+    lines: [],
+    parentCodes: [],
+    createdBy: 'مختبر',
+    createdByUid: uid,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    ...overrides,
+  };
+}
+
+test('المشاهد لا يُنشئ طبلية — والفاعل المخزنيّ يُنشئها باسمه ومعرّفها هويّتها', guard(async ({ assertFails, assertSucceeds }) => {
+  const viewer = await asUser('lpn-v1', 'viewer');
+  await assertFails(viewer.doc(`handling_units/${LPN1}`).set(validUnit('lpn-v1')));
+
+  const keeper = await asUser('lpn-s1', 'storekeeper');
+  await assertFails(
+    keeper.doc(`handling_units/${LPN1}`).set(validUnit('غيري')),
+    'انتحال الكاتب مرفوض'
+  );
+  await assertFails(
+    keeper.doc('handling_units/other-id').set(validUnit('lpn-s1')),
+    'المعرّف يجب أن يطابق الهويّة'
+  );
+  await assertSucceeds(keeper.doc(`handling_units/${LPN1}`).set(validUnit('lpn-s1')));
+}));
+
+test('هويّة الطبلية ومنشئها مختومان — والحذف ممنوع ولو للمدير', guard(async ({ assertFails, assertSucceeds }) => {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await ctx.firestore().doc(`handling_units/${LPN1}`).set(validUnit('lpn-owner'));
+  });
+  const keeper = await asUser('lpn-s2', 'storekeeper');
+  await assertSucceeds(
+    keeper.doc(`handling_units/${LPN1}`).update({ state: 'LABEL_PRINTED' }),
+    'الحالة تتغيّر بمعاملات الخدمة'
+  );
+  await assertFails(
+    keeper.doc(`handling_units/${LPN1}`).update({ code: 'LPN-MAIN-20260826-000099' }),
+    'الهويّة لا تتغيّر'
+  );
+  await assertFails(
+    keeper.doc(`handling_units/${LPN1}`).update({ createdByUid: 'lpn-s2' }),
+    'المنشئ لا يُنتحل بعد الإنشاء'
+  );
+  const admin = await asUser('lpn-a1', 'admin');
+  await assertFails(admin.doc(`handling_units/${LPN1}`).delete(), 'لا محو للحمولة — ولو مديرًا');
+}));
+
+test('سجلّ أحداث الطبلية ملحق-فقط: إعادة الكتابة الحتمية تمرّ والتحوير يُرفض', guard(async ({ assertFails, assertSucceeds }) => {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await ctx.firestore().doc(`handling_units/${LPN1}`).set(validUnit('lpn-owner'));
+  });
+  const keeper = await asUser('lpn-s3', 'storekeeper');
+  const event = {
+    type: 'MOVED', lpn: LPN1, actor: 'مختبر', at: '2026-08-26T10:00:00Z',
+    device: '', doc: null, reason: '', details: null, seq: null, byUid: 'lpn-s3',
+    recordedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  const ref = keeper.doc(`handling_units/${LPN1}/events/PUTAWAY-1__${LPN1}`);
+  await assertSucceeds(ref.set(event));
+  await assertSucceeds(ref.set(event), 'إعادة المحاولة بنفس الهويّة تكتب فوق نفسها');
+  await assertFails(ref.set({ ...event, actor: 'مزوِّر' }), 'تحوير الفاعل مرفوض');
+  await assertFails(ref.set({ ...event, at: '2026-08-27T10:00:00Z' }), 'تحوير الوقت مرفوض');
+  await assertFails(ref.delete(), 'لا حذف لحدث');
+}));
+
+test('عدّاد الطبالي يزيد واحدًا وإلى الأمام فقط — والمشاهد لا يحرقه', guard(async ({ assertFails, assertSucceeds }) => {
+  const viewer = await asUser('lpn-v2', 'viewer');
+  await assertFails(viewer.doc('lpn_counters/LPN-MAIN-20260826').set({ key: 'LPN-MAIN-20260826', seq: 1 }));
+
+  const keeper = await asUser('lpn-s4', 'storekeeper');
+  await assertSucceeds(keeper.doc('lpn_counters/LPN-MAIN-20260826').set({ key: 'LPN-MAIN-20260826', seq: 1, byUid: 'lpn-s4' }));
+  await assertFails(
+    keeper.doc('lpn_counters/LPN-MAIN-20260826').update({ seq: 5 }),
+    'القفز يحرق هويّاتٍ — واحدًا واحدًا'
+  );
+  await assertSucceeds(keeper.doc('lpn_counters/LPN-MAIN-20260826').update({ seq: 2 }));
+  await assertFails(keeper.doc('lpn_counters/LPN-MAIN-20260826').update({ seq: 1 }), 'لا تصفير ولا رجوع');
+}));
+
+test('🔒 القاعدة تفرض «النظام يولّد الهويّة»: هويّةٌ مسكوكةٌ بيدٍ أو حالةُ ميلادٍ خاطئة تُردّان', guard(async ({ assertFails, assertSucceeds }) => {
+  const keeper = await asUser('lpn-s5', 'storekeeper');
+  await assertFails(
+    keeper.doc('handling_units/PALLET-1').set(validUnit('lpn-s5', { code: 'PALLET-1' })),
+    'هويّة لا تتبع نحو LPN مرفوضة من القاعدة لا من العميل وحده'
+  );
+  await assertFails(
+    keeper.doc('handling_units/LPN-MAIN-20260826-000050').set(
+      validUnit('lpn-s5', { code: 'LPN-MAIN-20260826-000050', state: 'STORED' })
+    ),
+    'الميلاد من حالتَي التجسيد وحدهما'
+  );
+  await assertSucceeds(
+    keeper.doc('handling_units/LPN-MAIN-20260826-000051').set(
+      validUnit('lpn-s5', { code: 'LPN-MAIN-20260826-000051' })
+    )
+  );
+}));
+
+test('🔒 النسب والمصدر والميلاد مختومة — ومصروفةٌ لا تُحيا بحمولةٍ جديدة', guard(async ({ assertFails }) => {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await ctx.firestore().doc('handling_units/LPN-MAIN-20260826-000060').set(
+      validUnit('lpn-owner', { code: 'LPN-MAIN-20260826-000060', parentCodes: ['LPN-MAIN-20260826-000001'] })
+    );
+    await ctx.firestore().doc('handling_units/LPN-MAIN-20260826-000061').set(
+      validUnit('lpn-owner', { code: 'LPN-MAIN-20260826-000061', state: 'ISSUED' })
+    );
+  });
+  const keeper = await asUser('lpn-s6', 'storekeeper');
+  await assertFails(
+    keeper.doc('handling_units/LPN-MAIN-20260826-000060').update({ parentCodes: [] }),
+    'النسب لا تُمحى'
+  );
+  await assertFails(
+    keeper.doc('handling_units/LPN-MAIN-20260826-000060').update({ sourceDoc: { type: 'GRN', number: 'مزوَّر' } }),
+    'مستند المصدر مختوم'
+  );
+  await assertFails(
+    keeper.doc('handling_units/LPN-MAIN-20260826-000061').update({ state: 'APPROVED', lines: [] }),
+    'المصروفة لا تُحيا — إعادةُ استخدامٍ للهويّة فعلًا'
+  );
+}));
+
+test('🔒 حمولة الحدث مختومة: details وdoc لا يُستبدلان بعد التسجيل', guard(async ({ assertFails, assertSucceeds }) => {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await ctx.firestore().doc(`handling_units/${LPN1}`).set(validUnit('lpn-owner'));
+  });
+  const keeper = await asUser('lpn-s7', 'storekeeper');
+  const event = {
+    type: 'READING_ADDED', lpn: LPN1, actor: 'مختبر', at: '2026-08-26T10:00:00Z',
+    device: 'DEV-01', doc: null, reason: '', seq: 1, byUid: 'lpn-s7',
+    details: { sku: 'WNW-001', qty: 12 },
+    recordedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  const ref = keeper.doc(`handling_units/${LPN1}/events/${LPN1}__DEV-01__000001`);
+  await assertSucceeds(ref.set(event));
+  await assertSucceeds(ref.set(event), 'إعادة المحاولة المتطابقة تمرّ');
+  await assertFails(ref.set({ ...event, details: { sku: 'WNW-001', qty: 120 } }), 'تحوير الكمّيّة المسجّلة مرفوض');
+  await assertFails(ref.set({ ...event, doc: { type: 'GRN', id: 'x', number: 'GRN-9' } }), 'تحوير مستند الحدث مرفوض');
+}));
+
+test('🔒 حدثٌ تحت طبلية يحمل رمز طبلية أخرى مرفوض من القاعدة', guard(async ({ assertFails }) => {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await ctx.firestore().doc(`handling_units/${LPN1}`).set(validUnit('lpn-owner'));
+  });
+  const keeper = await asUser('lpn-s8', 'storekeeper');
+  await assertFails(
+    keeper.doc(`handling_units/${LPN1}/events/foreign`).set({
+      type: 'MOVED', lpn: 'LPN-MAIN-20260826-000099', actor: 'مختبر',
+      at: '2026-08-26T10:00:00Z', device: '', doc: null, reason: '', details: null, seq: null,
+      byUid: 'lpn-s8', recordedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    })
+  );
+}));

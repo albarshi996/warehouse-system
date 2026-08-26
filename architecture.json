@@ -10,9 +10,9 @@
   },
   "counts": {
     "modules": 105,
-    "serviceDomains": 45,
-    "serviceFiles": 443,
-    "collections": 82,
+    "serviceDomains": 46,
+    "serviceFiles": 458,
+    "collections": 85,
     "roles": 18,
     "odooModels": 12,
     "odooGuards": 51,
@@ -2791,6 +2791,103 @@
       ]
     },
     {
+      "domain": "lpn",
+      "dir": "src/services/lpn",
+      "files": [
+        "lpnCard.js",
+        "lpnCard.test.js",
+        "lpnCode.js",
+        "lpnCode.test.js",
+        "lpnContents.js",
+        "lpnContents.test.js",
+        "lpnEvents.js",
+        "lpnEvents.test.js",
+        "lpnIsolation.test.js",
+        "lpnLifecycle.js",
+        "lpnLifecycle.test.js",
+        "lpnLineage.js",
+        "lpnLineage.test.js",
+        "lpnService.guard.test.js",
+        "lpnService.js"
+      ],
+      "fileCount": 15,
+      "testCount": 8,
+      "exports": [
+        "DEFAULT_MIX_POLICY",
+        "ISSUE_BLOCKING_FLAGS",
+        "LPN_EVENT_TYPES",
+        "LPN_FLAGS",
+        "LPN_INITIAL_STATES",
+        "LPN_MAX_WAREHOUSE_LEN",
+        "LPN_PREFIX",
+        "LPN_SEPARATOR",
+        "LPN_SEQ_DIGITS",
+        "LPN_STATES",
+        "LPN_TERMINAL_STATE",
+        "LPN_TRANSITIONS",
+        "activeFlags",
+        "addReading",
+        "appendUnitEvent",
+        "applyContentChange",
+        "applyFlag",
+        "applyTransition",
+        "buildCard",
+        "buildEvent",
+        "clearFlag",
+        "clearUnitFlag",
+        "containmentProblems",
+        "createHandlingUnit",
+        "distinctItems",
+        "docEventId",
+        "eventProblem",
+        "flagProblem",
+        "flagUnit",
+        "formatLpnCode",
+        "getUnit",
+        "getUnitEvents",
+        "initialStateProblem",
+        "integrityOf",
+        "isBlockedForIssue",
+        "isClosedOf",
+        "isEmpty",
+        "isMixed",
+        "isValidLpnCode",
+        "lineBalanceRef",
+        "lineKey",
+        "lineageTrace",
+        "listUnitsAt",
+        "listUnitsByState",
+        "listenUnit",
+        "lotsOf",
+        "lpnCodeProblem",
+        "lpnCounterKey",
+        "lpnDateStamp",
+        "mergeUnits",
+        "moveUnit",
+        "needsNewIdentity",
+        "normalizeLpnCode",
+        "orderEvents",
+        "parseLpnCode",
+        "readingProblem",
+        "removeQty",
+        "reserveLpnCode",
+        "reverseEvent",
+        "sessionEventId",
+        "shortLpnLabel",
+        "splitUnit",
+        "stateLabel",
+        "totalBaseQty",
+        "traceLine",
+        "transitionProblem",
+        "transitionUnit",
+        "transitionVerdict",
+        "unitTransitionProblem"
+      ],
+      "collections": [
+        "handling_units"
+      ]
+    },
+    {
       "domain": "maintenance",
       "dir": "src/services/maintenance",
       "files": [
@@ -4943,6 +5040,86 @@
         ]
       },
       {
+        "name": "handling_units",
+        "path": "handling_units",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isStockActor() && request.resource.data.createdByUid == request.auth.uid && request.resource.data.code == lpnCode",
+            "roles": [
+              "isStockActor"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "isStockActor() && request.resource.data.code == resource.data.code && request.resource.data.createdBy == resource.data.createdBy && request.resource.data.create",
+            "roles": [
+              "isStockActor"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "events",
+        "path": "handling_units/events",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isStockActor() && request.resource.data.byUid == request.auth.uid",
+            "roles": [
+              "isStockActor"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "isStockActor() && request.resource.data.byUid == resource.data.byUid && request.resource.data.type == resource.data.type && request.resource.data.lpn == resourc",
+            "roles": [
+              "isStockActor"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
         "name": "hiring_requests",
         "path": "hiring_requests",
         "rules": [
@@ -5267,6 +5444,46 @@
           {
             "actions": [
               "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "lpn_counters",
+        "path": "lpn_counters",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isStockActor() && request.resource.data.seq == 1",
+            "roles": [
+              "isStockActor"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "isStockActor() && request.resource.data.seq == resource.data.seq + 1",
+            "roles": [
+              "isStockActor"
+            ]
+          },
+          {
+            "actions": [
               "delete"
             ],
             "condition": "false",
@@ -7735,7 +7952,7 @@
       "test": "node --test \"src/**/*.test.js\"",
       "test:rules": "firebase emulators:exec --only firestore \"node --test test/firestore-rules.test.mjs\"",
       "audit": "node scripts/audit-portal.mjs",
-      "plan": "npm run where && npm run plan:phase-one && npm run plan:client && npm run plan:sap && npm run plan:locations && npm run plan:exec && npm run plan:fnb && npm run plan:capture",
+      "plan": "npm run where && npm run plan:phase-one && npm run plan:client && npm run plan:sap && npm run plan:locations && npm run plan:exec && npm run plan:fnb && npm run plan:capture && npm run plan:lpn",
       "plan:phase-one": "node scripts/plan-check.mjs",
       "plan:client": "node scripts/plan-check.mjs --plan docs/plan/client-completion.json --resume docs/plan/استئناف-نسخة-العميل.md",
       "plan:sap": "node scripts/plan-check.mjs --plan docs/plan/sap-alignment.json --resume docs/plan/استئناف-المواءمة.md",
@@ -7743,6 +7960,7 @@
       "plan:exec": "node scripts/plan-check.mjs --plan docs/plan/warehouse-execution.json --resume docs/plan/استئناف-التنفيذ-الميداني.md",
       "plan:fnb": "node scripts/plan-check.mjs --plan docs/plan/fnb-sector.json --resume docs/plan/استئناف-قطاع-الأغذية.md",
       "plan:capture": "node scripts/plan-check.mjs --plan docs/plan/capture-layer.json --resume docs/plan/استئناف-طبقة-الالتقاط.md",
+      "plan:lpn": "node scripts/plan-check.mjs --plan docs/plan/lpn-layer.json --resume docs/plan/استئناف-طبقة-الطبالي.md",
       "timefields": "node scripts/build-time-fields-doc.mjs",
       "lint": "eslint .",
       "format": "prettier --write .",

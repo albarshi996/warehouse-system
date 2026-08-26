@@ -1451,6 +1451,78 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ── طبقة الطبالي LPN (خطة ٧ · docs/خطة-طبقة-الطبالي.md) ─────
+    // إضافةٌ صرفة (ح-١): لا تلمس مقطعًا قائمًا. الكيان معرّفه هويّة LPN
+    // نفسها — والهويّة لا تتغيّر ولا يُحذف الكيان أبدًا (الإلغاء حالةٌ
+    // وحدثٌ لا محو).
+    match /handling_units/{lpnCode} {
+      allow read: if signedIn();
+      // ★★ «النظام يولّد الهويّة لا الموظف» (خطة ٧ · الخطأ القاتل الرابع)
+      // يُفرض هنا لا في العميل وحده: نحو الهويّة محصورٌ بالنمط، والميلاد
+      // محصورٌ بحالتَي التجسيد — فلا يسكّ فاعلٌ هويّةً بيده عبر SDK ولا
+      // يسبق العدّاد فيحرق رقمًا يفشل به الاعتماد الحقيقيّ لاحقًا.
+      allow create: if isStockActor()
+                    && request.resource.data.createdByUid == request.auth.uid
+                    && request.resource.data.code == lpnCode
+                    && lpnCode.matches('LPN-[A-Z0-9]{1,12}-[0-9]{8}-[0-9]{6}')
+                    && request.resource.data.state in ['APPROVED', 'PICKING'];
+      // الحالة والأوسمة والبنود والموقع تتغيّر بمعاملات الخدمة — أمّا
+      // الهويّة والمنشئ والميلاد والنسب ومستند المصدر فمختومة: تحويرها
+      // تحويرٌ لتاريخ الحمولة كلّه. وختمُ الحالة على مفاتيح الدورة يمنع
+      // «إحياء» مصروفةٍ بحمولةٍ جديدة — وهو إعادةُ استخدامٍ للهويّة فعلًا.
+      allow update: if isStockActor()
+                    && request.resource.data.code == resource.data.code
+                    && request.resource.data.createdBy == resource.data.createdBy
+                    && request.resource.data.createdByUid == resource.data.createdByUid
+                    && request.resource.data.createdAt == resource.data.createdAt
+                    && request.resource.data.parentCodes == resource.data.parentCodes
+                    && request.resource.data.sourceDoc == resource.data.sourceDoc
+                    && request.resource.data.orderRef == resource.data.orderRef
+                    && !(resource.data.state in ['ISSUED', 'CANCELLED'])
+                    && request.resource.data.state in [
+                         'DRAFT', 'SCANNING', 'PENDING_GOVERNANCE', 'APPROVED', 'LABEL_PRINTED',
+                         'PENDING_PUTAWAY', 'STORED', 'RESERVED', 'PICKING', 'ISSUE_CLOSED',
+                         'STAGED', 'LOADING', 'LOADED', 'ISSUED', 'CANCELLED'
+                       ];
+      allow delete: if false;
+
+      // سجلّ أحداث الطبلية — ملحق-فقط باسم فاعله (نمط scans نفسه).
+      // «التحديث» المسموح إعادةُ كتابة المعرّف الحتمي نفسه بلا تحوير
+      // للهويّة (إعادة محاولة بعد انقطاع — نمط stock_moves حرفيًّا).
+      match /events/{eventId} {
+        allow read: if signedIn();
+        allow create: if isStockActor()
+                      && request.resource.data.byUid == request.auth.uid
+                      && request.resource.data.lpn == lpnCode;
+        // ★★ الحمولة مختومةٌ كالهويّة: `details` يحمل الصنف والكمّيّة —
+        // جوهرَ القراءة — و`doc` يحمل مستندها. تركُهما حرَّين كان يجعل
+        // «الملحق-فقط» شكليًّا: الحدث لا يُحذف لكنّ حقيقته تُستبدل.
+        // وإعادةُ المحاولة المتطابقة (الغرض الشرعيّ الوحيد) تمرّ لأنّها
+        // تكتب القيم نفسها.
+        allow update: if isStockActor()
+                      && request.resource.data.byUid == resource.data.byUid
+                      && request.resource.data.type == resource.data.type
+                      && request.resource.data.lpn == resource.data.lpn
+                      && request.resource.data.actor == resource.data.actor
+                      && request.resource.data.at == resource.data.at
+                      && request.resource.data.reason == resource.data.reason
+                      && request.resource.data.details == resource.data.details
+                      && request.resource.data.doc == resource.data.doc
+                      && request.resource.data.device == resource.data.device
+                      && request.resource.data.seq == resource.data.seq;
+        allow delete: if false;
+      }
+    }
+
+    // عدّاد هويّات الطبالي اليومي لكلّ مستودع — يزيد واحدًا وإلى الأمام
+    // فقط ولا يُصفَّر (نمط counters الرسمي نفسه، بمفتاح LPN-WH-YYYYMMDD).
+    match /lpn_counters/{counterKey} {
+      allow read: if signedIn();
+      allow create: if isStockActor() && request.resource.data.seq == 1;
+      allow update: if isStockActor() && request.resource.data.seq == resource.data.seq + 1;
+      allow delete: if false;
+    }
+
     // ── الافتراضي: امنع كل ما لم يُذكر صراحةً ────────────────────
     match /{document=**} {
       allow read, write: if false;
