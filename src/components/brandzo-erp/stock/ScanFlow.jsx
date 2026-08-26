@@ -63,7 +63,6 @@ import {
   scopeChoices,
   scopeLabel,
   scopeOf,
-  scopeVerdict,
 } from '../../../services/stock/operationScope.js';
 import { fetchLocationsOnce } from '../../../services/locations/locationsService.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
@@ -151,7 +150,6 @@ export default function ScanFlow() {
     () => (opId ? openScope || normalizeScope({}) : normalizeScope({ warehouse: scopeWh, zone: scopeZone })),
     [opId, openScope, scopeWh, scopeZone]
   );
-  const shownVerdict = useMemo(() => scopeVerdict(shownScope), [shownScope]);
 
   /**
    * رابط الدعوة: `?op=H4K9TM` — الطريق الذي يسلكه عضو اللجنة.
@@ -692,57 +690,67 @@ export default function ScanFlow() {
         ))}
       </div>
 
-      {/* ١ب — النطاق ‹CAP-201 · CAP-202›: يُطلب ويُقترح ولا يُلزم (ق-٣) */}
-      <p style={{ margin: '0 0 8px', fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)' }}>
-        ١ب — أين تعدّ؟ <span style={{ opacity: 0.75 }}>(اختياريّ — والجلسة تُفتح بدونه)</span>
-      </p>
-      <div className="o_ds_card o_ds_pad" style={{ marginBottom: '16px' }}>
-        {opId ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <Icon name="mapPin" size={16} />
-            <span style={{ fontWeight: 'var(--o-font-weight-bold)' }}>{scopeLabel(shownScope)}</span>
-            <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
-              — نطاقُ الجلسة يُجمَّد عند فتحها، فلا يتغيّر تحت العادّين.
-            </span>
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
-            <label style={{ display: 'block' }}>
-              <span style={{ display: 'block', fontSize: '11px', fontWeight: 'var(--o-font-weight-bold)', marginBottom: '4px' }}>المستودع</span>
-              <select
-                className="o_input"
-                value={scopeWh}
-                onChange={(e) => { setScopeWh(e.target.value); setScopeZone(''); }}
-                style={{ width: '100%' }}
-              >
-                <option value="">— كلّ المستودعات —</option>
-                {choices.warehouses.map((w) => <option key={w.value} value={w.value}>{w.label}</option>)}
-              </select>
-            </label>
-            <label style={{ display: 'block' }}>
-              <span style={{ display: 'block', fontSize: '11px', fontWeight: 'var(--o-font-weight-bold)', marginBottom: '4px' }}>المنطقة</span>
-              <select
-                className="o_input"
-                value={scopeZone}
-                onChange={(e) => setScopeZone(e.target.value)}
-                disabled={!scopeWh}
-                style={{ width: '100%' }}
-              >
-                <option value="">{scopeWh ? '— المستودع كلّه —' : '— اختر المستودع أوّلًا —'}</option>
-                {choices.zones.map((z) => <option key={z.value} value={z.value}>{z.label}</option>)}
-              </select>
-            </label>
-          </div>
-        )}
-        {shownVerdict.notes.map((n, i) => (
-          <p key={i} style={{ margin: '8px 0 0', fontSize: '11px', color: 'var(--o-main-color-muted)', lineHeight: 1.7 }}>{n}</p>
-        ))}
-        {!opId && locations.length === 0 && (
-          <p style={{ margin: '8px 0 0', fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
-            لا مواقعَ معرَّفةً بعد — تُعرَّف من «بانية مواقع التخزين». والجرد يعمل بدونها.
+      {/*
+        ١ب — النطاق ‹CAP-201 · CAP-202›: يُطلب ويُقترح ولا يُلزم (ق-٣).
+
+        ★ ولا يُعرض إلّا حين يكون فيه اختيارٌ فعليّ: بلا مواقعَ معرَّفةٍ لا
+        منسدلةَ تُملأ، وبطاقةٌ تشغل ثلث الشاشة لتقول «لا مواقع» **تعقيدٌ بلا
+        مقابل** — والمسار المطلوب خمس خطوات: دخول ⇐ قراءة ⇐ عدّ ⇐ تأكيد ⇐ حفظ.
+        فتظهر حين توجد مواقع، أو حين يكون للجلسة نطاقٌ فعليٌّ يُذكَر.
+      */}
+      {(locations.length > 0 || shownScope.declared) && (
+        <>
+          <p style={{ margin: '0 0 8px', fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)' }}>
+            ١ب — أين تعدّ؟ <span style={{ opacity: 0.75 }}>(اختياريّ — والجلسة تُفتح بدونه)</span>
           </p>
-        )}
-      </div>
+          <div className="o_ds_card o_ds_pad" style={{ marginBottom: '16px' }}>
+            {opId ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <Icon name="mapPin" size={16} />
+                <span style={{ fontWeight: 'var(--o-font-weight-bold)' }}>{scopeLabel(shownScope)}</span>
+                {shownScope.declared && (
+                  <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+                    — يُجمَّد عند فتح الجلسة، فلا يتغيّر تحت العادّين.
+                  </span>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ display: 'block', fontSize: '11px', fontWeight: 'var(--o-font-weight-bold)', marginBottom: '4px' }}>المستودع</span>
+                  <select
+                    className="o_input"
+                    value={scopeWh}
+                    onChange={(e) => { setScopeWh(e.target.value); setScopeZone(''); }}
+                    style={{ width: '100%' }}
+                  >
+                    <option value="">— كلّ المستودعات —</option>
+                    {choices.warehouses.map((w) => <option key={w.value} value={w.value}>{w.label}</option>)}
+                  </select>
+                </label>
+                <label style={{ display: 'block' }}>
+                  <span style={{ display: 'block', fontSize: '11px', fontWeight: 'var(--o-font-weight-bold)', marginBottom: '4px' }}>المنطقة</span>
+                  <select
+                    className="o_input"
+                    value={scopeZone}
+                    onChange={(e) => setScopeZone(e.target.value)}
+                    disabled={!scopeWh}
+                    style={{ width: '100%' }}
+                  >
+                    <option value="">{scopeWh ? '— المستودع كلّه —' : '— اختر المستودع أوّلًا —'}</option>
+                    {choices.zones.map((z) => <option key={z.value} value={z.value}>{z.label}</option>)}
+                  </select>
+                </label>
+              </div>
+            )}
+            {/* ما أُسقط من مُدخَلٍ يُقال — أمّا «بلا نطاق» فحالٌ لا عيب، ووسمُها
+                موضعُه الكشفُ المختوم لا شاشةُ العدّ (‹CAP-204›). */}
+            {(shownScope.notes || []).map((n, i) => (
+              <p key={i} style={{ margin: '8px 0 0', fontSize: '11px', color: 'var(--o-main-color-muted)', lineHeight: 1.7 }}>{n}</p>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* ٢ — المسح */}
       {/*
