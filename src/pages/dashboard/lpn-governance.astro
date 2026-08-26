@@ -1,0 +1,37 @@
+---
+/**
+ * حوكمة الطبالي — البوّابة بين «قرأتُ» و«صار مخزونًا».
+ *
+ * لماذا وُجدت؟ لأنّ خطة ٧ تضع بين الاستلام والرفّ قرارًا يتحمّله إنسانٌ
+ * باسمه: لا تصير الكمّيّة متاحةً للصرف لمجرّد أنّ عاملًا مسحها. وهذه
+ * الشاشة موضع ذلك القرار — تعرض الطبلية كاملةً (الأمر والمورد والمستلم
+ * والبنود والدفعات والزائد والمرفوض والاستثناءات) ثمّ تسأل: ماذا تقرّر؟
+ *
+ * ولماذا صفحةٌ جديدة لا تحوير قائمة؟ لأنّ القرار على **الحمولة** لا على
+ * المستند — وصندوق الاعتماد القائم يحكم المستندات. فهذه إضافةٌ صرفة لا
+ * تلمس شاشةً تعمل (ح-١).
+ *
+ * الوثيقة الحاكمة: docs/خطة-طبقة-الطبالي.md · المتتبّع: npm run plan:lpn
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import GovernanceBoard from '../../components/brandzo-erp/lpn/GovernanceBoard.jsx';
+---
+
+<DashboardLayout title="حوكمة الطبالي" showGuide={false} light>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">حوكمة الطبالي</h1>
+      <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
+        بين <span class="text-accent font-bold">«قرأتُ»</span> و<span class="text-accent font-bold">«صار مخزونًا»</span>
+        قرارٌ يتحمّله إنسانٌ باسمه. راجع الحمولة كاملةً — بنودها ودفعاتها وما زاد
+        عن المفتوح وما رُفض وما استعصى — ثمّ قرّر. والهويّة الدائمة
+        <span class="font-bold">يولّدها النظام عند اعتمادك</span>، لا قبله ولا بيد أحد.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <GovernanceBoard client:load />
+  </div>
+</DashboardLayout>
