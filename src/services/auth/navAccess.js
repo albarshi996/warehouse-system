@@ -22,6 +22,7 @@ export const NAV_GROUP_LABELS = {
   reports: 'مركز التقارير',
   presentations: 'العروض والاجتماعات',
   archive: 'الأرشيف والمرجعية',
+  lpn: 'التنفيذ الميدانيّ بالباركود',
   dept: 'طلبات الإدارات',
   procurement: 'المشتريات الداخلية',
 };
@@ -33,9 +34,11 @@ export const NAV_GROUP_LABELS = {
 export const ROLE_NAV = {
   // ‹تدقيق 24.08› «العروض والاجتماعات» خرجت من «مركز التقارير» — تُمنح لمن
   // كان يملك عناصرها هناك بعينهم: المديران، والماليّ لعرض جلسته وحدها.
-  admin: ['daily', 'warehouses', 'putaway', 'fleet', 'field', 'fnb', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
-  warehouse_manager: ['daily', 'warehouses', 'putaway', 'fleet', 'field', 'fnb', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
-  storekeeper: ['daily', 'warehouses', 'putaway', 'odoo'],
+  admin: ['daily', 'warehouses', 'putaway', 'lpn', 'fleet', 'field', 'fnb', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
+  warehouse_manager: ['daily', 'warehouses', 'putaway', 'lpn', 'fleet', 'field', 'fnb', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
+  // ‹LPN› أمين المخزن يقف عند الشاحنة — فالاستلام الميدانيّ بيته.
+  // والحوكمة محصورةٌ ببندها بالمديرَين: من يكوّن الطبلية لا يعتمدها.
+  storekeeper: ['daily', 'warehouses', 'putaway', 'odoo', 'lpn'],
   qc_inspector: ['daily', 'odoo', 'reports'],
   // ‹EXE-602› ضابط البوابة يدخل «إدارة الحركة» — فيها تبويب الساحة والأبواب.
   // كان الدور قائمًا منذ البداية **بلا نظامٍ يخدمه**: يوقّع تصاريح الخروج ولا
