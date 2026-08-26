@@ -65,19 +65,53 @@ test('🔒 النوى المحميّة (ledger · balances · documents) لا ت
   );
 });
 
-test('🔒 طبقة lpn لا تستورد إلّا للقراءة المشروعة — لا استيراد لخدمة قيد الدفتر ولا كتابةِ مستندات', () => {
-  // الطبقة تقرأ المنطق الخالص القائم (balanceKey · locationCode · reasonCodes…)
-  // ولا تستورد ledgerService (القيد) ولا documentsService (الكتابة) — حركتها
-  // تتبع قيدًا وقع، ولا تُنشئ قيدًا ولا مستندًا من داخلها (القاعدة: البوابة
-  // تقيّد بمستنداتها، والطبلية غلافٌ يركب فوقها).
-  const forbidden = [/ledger\/ledgerService\.js/, /documents\/documentsService\.js/];
+test('🔒🔒 لا ملفَّ في lpn يقيّد الدفتر بنفسه — القيد للمستند وحده', () => {
+  // ★ هذا هو الشرط الجوهريّ ولا استثناء له: `ledgerService` هو الذي يكتب
+  // `stock_moves` ويحرّك الأرصدة. وطبقةُ الطبالي **غلافُ تجميعٍ** يركب فوق
+  // المستندات؛ فلو قيّدت بنفسها لَتحرّكت البضاعة مرّتين — مرّةً بمستندها
+  // ومرّةً بطبليتها — وهي عين علّة استبعاد GP وVSR من جدول القيد.
   const offenders = [];
   for (const file of jsFilesUnder(path.join(SERVICES, 'lpn'))) {
     for (const imp of importsOf(file)) {
-      if (forbidden.some((re) => re.test(imp))) offenders.push(`${path.relative(SERVICES, file)} ← ${imp}`);
+      if (/ledger\/ledgerService\.js/.test(imp) || /\bpostDocument\b/.test(imp)) {
+        offenders.push(`${path.relative(SERVICES, file)} ← ${imp}`);
+      }
     }
   }
-  assert.deepEqual(offenders, [], `طبقة الطبالي لا تكتب دفترًا ولا مستندًا من داخلها:\n${offenders.join('\n')}`);
+  assert.deepEqual(offenders, [], `طبقة الطبالي لا تقيّد دفترًا من داخلها:\n${offenders.join('\n')}`);
+});
+
+test('🔒 إنشاء المستندات محصورٌ بجسرٍ واحدٍ مسمّى — لا يتفرّق على الطبقة', () => {
+  /*
+   * ═══ لماذا ضُيّق هذا الشرط بدل أن يبقى منعًا مطلقًا؟ (2026-08-27 · LPN-213) ═══
+   *
+   * كان الشرط: «لا تستورد lpn من documentsService إطلاقًا». وأوقف هذا الحارسُ
+   * عملًا **نصّت عليه الخطة نفسها**: LPN-213 — «الجلسة تجمع طباليها المعتمدة
+   * وتولّد GRN بالبيانات نفسها». فراجعتُ الشرط لا العمل.
+   *
+   * والتمييز الذي كان غائبًا: **إنشاء مسوّدةِ مستندٍ ليس قيدًا**. المحرّك
+   * يقيّد عند «منجَز» بعد اعتماد صاحب الصلاحية — فتوليدُ GRN مسوّدةً يسلّم
+   * القرار لصاحبه ولا ينتزعه. أمّا القيدُ المباشر فممنوعٌ بلا استثناء
+   * (الاختبار أعلاه).
+   *
+   * ويبقى الحصر: **ملفٌّ واحدٌ مسمّى** يملك هذا الباب. فمتى تفرّق الإنشاء
+   * على الطبقة صار لكلّ شاشةٍ طريقُها إلى المحرّك، وضاع الموضع الذي يُراجَع.
+   */
+  const ALLOWED = new Set(['receivingService.js']);
+  const offenders = [];
+  for (const file of jsFilesUnder(path.join(SERVICES, 'lpn'))) {
+    if (ALLOWED.has(path.basename(file))) continue;
+    for (const imp of importsOf(file)) {
+      if (/documents\/documentsService\.js/.test(imp)) {
+        offenders.push(`${path.relative(SERVICES, file)} ← ${imp}`);
+      }
+    }
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    `إنشاء المستندات محصورٌ بـ${[...ALLOWED].join(' · ')}:\n${offenders.join('\n')}`
+  );
 });
 
 test('وحدات المنطق الخالص في lpn لا تستورد Firebase — تُختبر وحدها بلا شبكة', () => {

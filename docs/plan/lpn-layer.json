@@ -5,7 +5,7 @@
   "command": "npm run plan:lpn",
   "track": "إضافة لا تعديل — تفويض المالك 2026-08-26: «دون أن أتلف أي شيء يعمل ولا يتعارض ولا يحذف ميزة». الطبلية طبقة حاويات فوق الدفتر، والدفتر لا يعرفها",
   "source": "«خطة ٧» (نص المالك الحرفي للتنفيذ الميداني بالباركود وLPN) + مراجعتها على الكود بابًا بابًا 2026-08-26 + مسح أسطح التكامل الأربعة",
-  "lastUpdated": "2026-08-27 (الدورة تعمل طرفًا لطرف · وقواعد الجلسات منشورة)",
+  "lastUpdated": "2026-08-27 (م٢ تكتمل: ١٣/١٣ — والحمولة تصير رصيدًا بمستندها)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "b173f2c",
@@ -742,7 +742,7 @@
       "title": "الطبلية على خريطة المواقع — من يقف أين",
       "milestone": "م٢",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ف-١"
       ],
@@ -750,7 +750,7 @@
         "LPN-210"
       ],
       "nucleus": "src/services/locations/mapGrid.js وصفحات المواقع القائمة — عمود إضافي لا شاشة موازية",
-      "guardTest": "src/services/lpn/putawayTask.test.js",
+      "guardTest": "src/services/lpn/palletMap.test.js",
       "touches": [
         "src/pages/dashboard/location-builder.astro",
         "src/components/brandzo-erp/warehouse/WarehouseMaps.jsx"
@@ -760,7 +760,14 @@
         "فتح موقع يعرض الطبالي الواقفة فيه بحالاتها",
         "البحث بالصنف يعرض كل المواقع التي يقف فيها عبر طبالٍ",
         "الشاشات القائمة تعمل كما كانت لمن لا طبالي عنده — لا كسر للعرض الحالي"
-      ]
+      ],
+      "progress": "palletMap يقلب العلاقة: الرفّ يعرف طباليه، والصنف يعرف مواقعه، والمنطقة تعرف مجموع رفوفها (تجميعٌ صعوديّ بـparentCodeOf + المستودع جذرًا صريحًا لأنّ مقطعًا واحدًا ليس موقعًا في النحو). ★ والموسومة تُعدّ منفصلةً: رفٌّ فيه خمسٌ إحداها تالفةٌ ليس رفًّا فيه خمسٌ صالحة. وunexpectedPlacements يقيس الشاذّ لا يظنّه. ٧ اختبارات. ⚠️ الوصلُ البصريّ بشاشة الخريطة لم يُبنَ بعد — المنطق جاهزٌ لها.",
+      "nextStep": "أُغلقت في PENDING.",
+      "branch": "claude/plan-7-qualitative-leap-212f8b",
+      "evidence": {
+        "commit": "PENDING",
+        "closedOn": "2026-08-27"
+      }
     },
     {
       "id": "LPN-212",
@@ -801,7 +808,7 @@
       "title": "الوصل بمحرك المستندات — الجلسة المعتمدة تثمر GRN دون تعديل مخططه",
       "milestone": "م٢",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ف-٢"
       ],
@@ -809,7 +816,7 @@
         "LPN-206"
       ],
       "nucleus": "src/services/documents/schemas/grn.js وdocumentsService.js — الإنشاء بالمخطط القائم كما هو",
-      "guardTest": "src/services/lpn/receivingSession.test.js",
+      "guardTest": "src/services/lpn/grnBridge.test.js",
       "touches": [
         "src/services/lpn/receivingSession.js"
       ],
@@ -818,7 +825,14 @@
         "GRN المتولد يمر بحراس المحرك القائمة كأي GRN مكتبي",
         "الطبلية تحمل مرجع GRN في أحداثها — والGRN لا يحمل حقلًا جديدًا",
         "الاستلام المكتبي القديم يبقى يعمل كما هو — طريقان لنفس المستند"
-      ]
+      ],
+      "progress": "grnBridge يحسب المستلَم لكل سطرٍ بالكمّيّة الأساس من الطبالي المعتمَدة وحدها، ويسلّمه لـcreateNextInChain بصيغة requestedByLine التي يفهمها المحرّك — فتعمل أقفال التخصيص والمطابقة الثلاثيّة والترقيم كما لأيّ GRN مكتبيّ بلا أن يعرف المحرّك الطبالي. ★ والمستند يولد مسوّدةً: القيد عند «منجَز» بعد اعتماد صاحب الصلاحية، فالطبلية لا تقيّد حركةً بنفسها. ★★ والبند مجهول المعامل يوقف التوليد ويُعلَن — رقمٌ مخمَّنٌ في مستندٍ ماليّ أسوأ من انتظار. وحارسُ الاشتقاق مرّتين مبنيّ. ٩ اختبارات.",
+      "nextStep": "أُغلقت في PENDING.",
+      "branch": "claude/plan-7-qualitative-leap-212f8b",
+      "evidence": {
+        "commit": "PENDING",
+        "closedOn": "2026-08-27"
+      }
     },
     {
       "id": "LPN-301",

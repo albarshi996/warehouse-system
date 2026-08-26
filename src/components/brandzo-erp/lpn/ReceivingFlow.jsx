@@ -27,11 +27,13 @@ import { openOrderCard, remainingOf, sessionTotals } from '../../../services/lpn
 import {
   addDraft,
   closeDraftToGovernance,
+  createGrnFromSession,
   finishSession,
   listenSession,
   scanIntoDraft,
   startSession,
 } from '../../../services/lpn/receivingService.js';
+import { grnPreview } from '../../../services/lpn/grnBridge.js';
 
 export default function ReceivingFlow() {
   const [me, setMe] = useState(null);
@@ -73,6 +75,9 @@ export default function ReceivingFlow() {
   }, [sessionId]);
 
   const totals = useMemo(() => (session ? sessionTotals(session) : null), [session]);
+  // معاينةُ المستند قبل توليده — مستندٌ ماليٌّ يُنشأ بلا أن يُرى محتواه
+  // توقيعٌ على المجهول (grnBridge).
+  const grn = useMemo(() => (session ? grnPreview(session) : null), [session]);
   const draft = useMemo(
     () => (session?.drafts ?? []).find((d) => d.ref === activeDraft) ?? null,
     [session, activeDraft]
@@ -151,6 +156,16 @@ export default function ReceivingFlow() {
       say('ok', `فُتحت طبلية ${ref}.`);
     } catch (e) {
       say('err', e?.message || 'تعذّر فتح طبلية.');
+    } finally { setBusy(false); }
+  }
+
+  async function makeGrn() {
+    setBusy(true);
+    try {
+      const r = await createGrnFromSession(sessionId, { profile: me });
+      say('ok', `تولّد الاستلام ${r.number || r.docId} مسوّدةً — اعتمده من صندوق المستندات ليتحرّك الرصيد.`);
+    } catch (e) {
+      say('err', e?.message || 'تعذّر توليد الاستلام.');
     } finally { setBusy(false); }
   }
 
@@ -294,6 +309,43 @@ export default function ReceivingFlow() {
             ))}
           </tbody>
         </table>
+      )}
+
+      {/* ── الاستلام الرسميّ: حيث تصير الحمولة رصيدًا ── */}
+      {grn && (
+        <div className="mt-6 rounded-lg border p-4" style={{ borderColor: 'var(--o-border)' }}>
+          <h3 className="font-bold text-ink text-sm mb-2">الاستلام الرسميّ (GRN)</h3>
+          {session?.grnNumber ? (
+            <p className="text-ink-2 text-sm">
+              تولّد <strong className="text-ink">{session.grnNumber}</strong> من هذه الجلسة.
+              اعتمده من صندوق المستندات ليتحرّك الرصيد — ولا يُشتقّ مرّتين.
+            </p>
+          ) : grn.problem ? (
+            <p className="text-ink-2 text-sm">{grn.problem}</p>
+          ) : (
+            <>
+              <p className="text-ink-2 text-xs mb-2">
+                {grn.palletCount} طبليةً معتمدة · {grn.lines.length} بندًا · إجمالي {grn.total}
+              </p>
+              <ul className="text-sm mb-3 space-y-1">
+                {grn.lines.map((l) => (
+                  <li key={l.lineId} className="flex justify-between">
+                    <span className="text-ink">{l.sku}</span>
+                    <span className="text-ink-2 tabular-nums">
+                      {l.received} من {l.open}{l.over > 0 && <strong> (+{l.over} فوق المفتوح)</strong>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <button type="button" className="btn btn-primary w-full py-3" onClick={makeGrn} disabled={busy}>
+                توليد الاستلام الرسميّ
+              </button>
+              <p className="text-ink-2 text-xs mt-2">
+                يولد <strong>مسوّدةً</strong> — والرصيد يتحرّك عند اعتمادها وإنجازها، لا قبله.
+              </p>
+            </>
+          )}
+        </div>
       )}
 
       {(session?.lines ?? []).length > 0 && (

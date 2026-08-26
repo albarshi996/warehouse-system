@@ -38,6 +38,8 @@ import { db, auth } from '../../config/firebase.js';
 import { openSession, closeSession, abandonSession, applyAccepted, attachPallet, sessionCloseProblem } from './receivingSession.js';
 import { scanVerdict, buildRejection } from './receivingScan.js';
 import { planDecision } from './governanceQueue.js';
+import { countableDrafts, grnProblem, receivedByLine } from './grnBridge.js';
+import { createNextInChain, getDocument } from '../documents/documentsService.js';
 import { addReading } from './lpnContents.js';
 import { createHandlingUnit, reserveLpnCode, appendUnitEvent, flagUnit } from './lpnService.js';
 import { sessionEventId } from './lpnEvents.js';
@@ -294,6 +296,60 @@ export async function executeDecision(sessionId, draftRef, decisionId, { reason 
   });
 
   return { lpn, decision: decisionId };
+}
+
+/**
+ * ★★★ توليد GRN من الجلسة (LPN-213) — حيث تصير الحمولة **رصيدًا**.
+ *
+ * لا يبني المستند بيده: يجهّز `requestedByLine` بالكمّيّات الأساس ويسلّمه
+ * لـ`createNextInChain` — فتعمل أقفال التخصيص والمطابقة الثلاثيّة والترقيم
+ * الرسميّ كما تعمل لأيّ GRN مكتبيّ، **بلا أن يعرف المحرّك الطبالي**.
+ *
+ * والمستند يولد **مسوّدةً** لا منجَزًا: القيد يقع عند «منجَز» بعد اعتماد
+ * صاحب الصلاحية — فالطبلية لا تقيّد حركةً بنفسها (ح-٢).
+ *
+ * @returns {Promise<{docId:string, number:string}>}
+ */
+export async function createGrnFromSession(sessionId, { profile } = {}) {
+  const snap = await getDoc(doc(db, SESSIONS, sessionId));
+  if (!snap.exists()) throw new Error('الجلسة غير موجودة.');
+  const live = { id: snap.id, ...snap.data() };
+
+  const problem = grnProblem(live);
+  if (problem) throw new Error(problem);
+  if (live.grnId) throw new Error(`هذه الجلسة ولّدت الاستلام «${live.grnNumber ?? live.grnId}» — لا يُشتقّ مرّتين فتُضاعف الكمّيّة.`);
+
+  const { byLine } = receivedByLine(live);
+  const source = await getDocument(live.order.id);
+  if (!source) throw new Error('أمر الشراء المصدر غير موجود — رُبّما حُذف أو تغيّر معرّفه.');
+
+  const child = await createNextInChain(source, profile, 'GRN', { requestedByLine: byLine });
+  const docId = child?.id ?? child?.docId ?? '';
+  const number = child?.number ?? '';
+
+  // ختمُ الجلسة بمولودها — الحارس الذي يمنع الاشتقاق مرّتين.
+  await updateDoc(doc(db, SESSIONS, sessionId), {
+    grnId: docId,
+    grnNumber: number,
+    grnAt: nowIso(),
+  });
+
+  // وأثرُ المستند على كلّ طبليةٍ احتُسبت فيه — فبطاقتها تروي السلسلة كاملةً.
+  for (const draft of countableDrafts(live.drafts)) {
+    try {
+      await appendUnitEvent(draft.lpn, {
+        type: 'CREATED',
+        actor: profile?.name ?? profile?.email ?? 'النظام',
+        at: nowIso(),
+        doc: { type: 'GRN', id: docId, number },
+        details: { role: 'grn-from-session', sessionId },
+      }, { id: `GRN__${docId}` });
+    } catch {
+      // أثرٌ متعذّرٌ لا يُبطل مستندًا وقع — يُستدرك بإعادة القراءة من السلسلة.
+    }
+  }
+
+  return { docId, number };
 }
 
 /** إغلاق الجلسة — والمتبقّي المفتوح يبقى على الأمر لجلسةٍ لاحقة. */
