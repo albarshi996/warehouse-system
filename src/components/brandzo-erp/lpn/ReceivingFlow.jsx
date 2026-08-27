@@ -31,6 +31,7 @@ import {
   finishSession,
   leaveSession,
   listenSession,
+  listOpenSessions,
   scanIntoDraft,
   startSession,
 } from '../../../services/lpn/receivingService.js';
@@ -65,6 +66,28 @@ export default function ReceivingFlow() {
 
   useEffect(() => subscribeAuth(async (u) => setMe(u ? await fetchUserProfile(u) : null)), []);
   useEffect(() => subscribeItems(setItems), []);
+
+  /**
+   * ★★ **تصحيح 2026-08-27 — جلسةٌ تضيع بإغلاق الهاتف.**
+   *
+   * `listOpenSessions` مبنيّةٌ في الخدمة وموسومةٌ بتعليقها «لقائمة *تابع
+   * جلسةً* على الهاتف» — **وبلا مستدعٍ واحد**. ومعرّفُ الجلسة كان في حالة
+   * المكوّن وحدها، فمن نام هاتفُه أو حدّث الصفحة **فقد جلستَه إلى الأبد**:
+   * لا يتابعها ولا يغلقها ولا يتركها. وأسوأ من ذلك: نقرةٌ ثانيةٌ على الأمر
+   * **تفتح جلسةً ثانية** عليه (`startSession` تُنشئ دائمًا)، فيمسح عاملان
+   * على أمرٍ واحدٍ في جلستين لا ترى إحداهما الأخرى — وهو نقيضُ ما بُني له
+   * `listenSession` («جهازان على الجلسة نفسها يريان بعضهما»).
+   *
+   * فالقائمة تُعرض هنا **قبل** أوامر الشراء: من له جلسةٌ يتابعها، ومن لا
+   * فيفتح جديدة — والمفتوحُ ظاهرٌ فلا يُفتح فوقه.
+   */
+  const [openSessions, setOpenSessions] = useState([]);
+  const refreshOpenSessions = useCallback(() => {
+    listOpenSessions()
+      .then(setOpenSessions)
+      .catch(() => setOpenSessions([])); // تعذّرُ القراءة لا يمنع فتح جلسةٍ جديدة
+  }, []);
+  useEffect(() => { if (!sessionId) refreshOpenSessions(); }, [sessionId, refreshOpenSessions]);
 
   // أوامر الشراء المفتوحة — بطاقتها من `openOrderCard` فما تعرضه القائمة
   // هو ما تقيس عليه الجلسة حرفيًّا.
@@ -246,6 +269,34 @@ export default function ReceivingFlow() {
     return (
       <div className="o_theme" dir="rtl">
         {flash && <Flash flash={flash} />}
+
+        {openSessions.length > 0 && (
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-ink mb-1">جلساتٌ مفتوحة ({openSessions.length})</h2>
+            <p className="text-ink-2 text-xs mb-2">
+              تابعْ جلستك بدل فتح ثانيةٍ على الأمر نفسه — فجلستان على أمرٍ واحد لا ترى إحداهما الأخرى.
+            </p>
+            <ul className="space-y-2">
+              {openSessions.map((s) => (
+                <li key={s.id}>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => { setSessionId(s.id); setActiveDraft('P1'); }}
+                    className="w-full text-right rounded-lg border px-4 py-3"
+                    style={{ borderColor: 'var(--o-primary)', background: 'var(--o-surface)' }}
+                  >
+                    <div className="font-bold text-ink">{s.order?.number || '—'}</div>
+                    <div className="text-ink-2 text-xs">
+                      فتحها {s.openedBy || '—'} · {(s.pallets ?? []).length} طبليةً · {s.warehouse || '—'}
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <h2 className="text-lg font-bold text-ink mb-3">أوامر الشراء المفتوحة ({orders.length})</h2>
         {orders.length === 0 ? (
           <p className="text-ink-2 text-sm">
