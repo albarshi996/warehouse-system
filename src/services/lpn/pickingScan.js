@@ -190,3 +190,65 @@ export function applyPick(task, pick) {
 export function takeFromPallet(pick) {
   return { sku: pick.sku, batch: pick.batch, expiry: pick.expiry, uom: pick.uom ?? '', qty: pick.qty };
 }
+
+/**
+ * ★★★ طبليةُ الصرف من سحباتِ المهمّة (LPN-304) — **هويّةٌ جديدة بنسبها**.
+ *
+ * ولماذا هويّةٌ جديدة لا امتدادٌ لأمّ؟ لأنّ حمولةَ الصرف **تكوينٌ جديد**:
+ * تُجمع من ثلاث طبالٍ أو أربع، فأيّ هويّةٍ من هويّاتها تكذب عن الباقي.
+ * والنسب هو ما يحفظ الجواب حين يُسأل: «هذه الكرتونة التالفة عند العميل —
+ * من أين جاءت؟» فتُقرأ `parentCodes` صعودًا حتى أوّل استلام.
+ *
+ * والبنود تُدمج بهويّة (صنف×دفعة×صلاحية×وحدة): سحبتان من طبليتين لدفعةٍ
+ * واحدة بندٌ واحد بكمّيّتهما — لا صفّان يُقرآن دفعتين.
+ *
+ * @param {Array} picks سحباتٌ مقبولة من `pickVerdict`
+ * @param {object} opts {code هويّة مولَّدة · warehouse · sourceDoc · actor}
+ * @returns {{pallet:object}|{problem:string}}
+ */
+export function buildIssuePallet(picks, { code, warehouse = '', sourceDoc = null, actor } = {}) {
+  const lpn = normalizeLpnCode(code);
+  if (!isValidLpnCode(lpn)) {
+    return { problem: `هويّة طبلية الصرف «${code ?? ''}» غير صالحة — تولد من العدّاد لا من اليد.` };
+  }
+  const list = (picks ?? []).filter((p) => Number(p?.qty) > 0);
+  if (list.length === 0) return { problem: 'طبليةُ صرفٍ بلا سحبةٍ واحدة لا تُكوَّن.' };
+  if (!String(actor ?? '').trim()) return { problem: 'تكوينُ طبلية الصرف بلا فاعلٍ لا يُسجَّل.' };
+
+  const byKey = new Map();
+  const parents = [];
+  for (const p of list) {
+    const key = [up(p.sku), up(p.batch), String(p.expiry ?? '').slice(0, 10), up(p.uom)].join('__');
+    const line = byKey.get(key) ?? {
+      sku: up(p.sku), batch: up(p.batch), expiry: String(p.expiry ?? '').slice(0, 10),
+      uom: up(p.uom), factor: p.factor ?? null, qty: 0, baseQty: 0,
+      // ★ مصادرُ البند نفسه: أيّ طبليةٍ أسهمت وبكم — فالنسب سطريٌّ لا رأسيٌّ
+      // فقط، ويُجاب «هذه الكرتونة من أيّ حمولة» لا «من إحدى هذه الأربع».
+      from: [],
+    };
+    line.qty += Number(p.qty) || 0;
+    line.baseQty += Number(p.baseQty ?? p.qty) || 0;
+    const src = normalizeLpnCode(p.lpn);
+    if (src) {
+      if (!parents.includes(src)) parents.push(src);
+      const at = line.from.find((f) => f.lpn === src);
+      if (at) at.qty += Number(p.qty) || 0;
+      else line.from.push({ lpn: src, qty: Number(p.qty) || 0 });
+    }
+    byKey.set(key, line);
+  }
+
+  return {
+    pallet: {
+      code: lpn,
+      state: 'PICKING',
+      flags: [],
+      warehouse: up(warehouse),
+      bin: '',
+      lines: [...byKey.values()],
+      parentCodes: parents,
+      sourceDoc,
+      createdBy: String(actor).trim(),
+    },
+  };
+}

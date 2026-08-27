@@ -8,6 +8,7 @@ import {
   SCAN_STAGES,
   applyPick,
   binVerdict,
+  buildIssuePallet,
   itemVerdict,
   nextStage,
   palletVerdict,
@@ -154,4 +155,50 @@ test('ما يُسحب من الأمّ بصيغة طبقة المحتويات —
   const t = takeFromPallet({ sku: 'WNW-001', batch: 'B2408', expiry: '2027-01-01', qty: 24 });
   assert.equal(t.sku, 'WNW-001');
   assert.equal(t.qty, 24);
+});
+
+// ═══ LPN-304 — طبلية الصرف بنسبها ═══
+
+test('★★★ طبليةُ الصرف هويّةٌ جديدة تسمّي كلّ مصادرها — لا هويّةَ أمٍّ تكذب عن الباقي', () => {
+  const picks = [
+    { seq: 1, lpn: 'LPN-MAIN-20260827-000001', sku: 'WNW-001', batch: 'B2408', expiry: '2027-01-01', uom: 'carton', factor: 12, qty: 2, baseQty: 24 },
+    { seq: 2, lpn: 'LPN-MAIN-20260827-000002', sku: 'WNW-001', batch: 'B2408', expiry: '2027-01-01', uom: 'carton', factor: 12, qty: 3, baseQty: 36 },
+    { seq: 3, lpn: 'LPN-MAIN-20260827-000003', sku: 'WNW-002', batch: 'B2409', expiry: '', uom: 'piece', factor: 1, qty: 10, baseQty: 10 },
+  ];
+  const r = buildIssuePallet(picks, {
+    code: 'LPN-MAIN-20260827-000050', warehouse: 'main',
+    sourceDoc: { type: 'PICK', number: 'PICK-2026-0021' }, actor: 'سالم',
+  });
+  assert.equal(r.problem, undefined);
+  assert.equal(r.pallet.code, 'LPN-MAIN-20260827-000050');
+  assert.equal(r.pallet.state, 'PICKING', 'تولد قيد التحضير');
+  assert.equal(r.pallet.warehouse, 'MAIN');
+  assert.deepEqual(r.pallet.parentCodes, [
+    'LPN-MAIN-20260827-000001', 'LPN-MAIN-20260827-000002', 'LPN-MAIN-20260827-000003',
+  ], 'كلُّ مصدرٍ مسمًّى');
+
+  assert.equal(r.pallet.lines.length, 2, 'سحبتان لدفعةٍ واحدة بندٌ واحد');
+  const merged = r.pallet.lines[0];
+  assert.equal(merged.qty, 5);
+  assert.equal(merged.baseQty, 60);
+});
+
+test('★★ النسب سطريٌّ لا رأسيٌّ فقط — «هذه الكرتونة من أيّ حمولة» لا «من إحدى هذه»', () => {
+  const picks = [
+    { lpn: 'LPN-MAIN-20260827-000001', sku: 'WNW-001', batch: 'B2408', uom: 'carton', qty: 2, baseQty: 24 },
+    { lpn: 'LPN-MAIN-20260827-000002', sku: 'WNW-001', batch: 'B2408', uom: 'carton', qty: 3, baseQty: 36 },
+  ];
+  const line = buildIssuePallet(picks, { code: 'LPN-MAIN-20260827-000051', actor: 'سالم' }).pallet.lines[0];
+  assert.equal(line.from.length, 2);
+  assert.deepEqual(line.from, [
+    { lpn: 'LPN-MAIN-20260827-000001', qty: 2 },
+    { lpn: 'LPN-MAIN-20260827-000002', qty: 3 },
+  ], 'أيّ طبليةٍ أسهمت وبكم');
+});
+
+test('طبليةُ الصرف ترفض: هويّةً بيدٍ أو بلا سحبةٍ أو بلا فاعل', () => {
+  const one = [{ lpn: 'LPN-MAIN-20260827-000001', sku: 'X', qty: 1 }];
+  assert.match(buildIssuePallet(one, { code: 'يدوي-1', actor: 'س' }).problem, /من العدّاد لا من اليد/);
+  assert.match(buildIssuePallet([], { code: 'LPN-MAIN-20260827-000052', actor: 'س' }).problem, /بلا سحبةٍ واحدة/);
+  assert.match(buildIssuePallet(one, { code: 'LPN-MAIN-20260827-000052' }).problem, /بلا فاعل/);
 });

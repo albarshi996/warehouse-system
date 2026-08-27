@@ -930,7 +930,7 @@
       "title": "طبلية الصرف — هوية جديدة بنسبها إلى المصادر",
       "milestone": "م٣",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ف-١٠"
       ],
@@ -939,7 +939,7 @@
         "LPN-104"
       ],
       "nucleus": "src/services/lpn/lpnLineage.js — التكوين الجديد دمج بمصادر مسماة",
-      "guardTest": "src/services/lpn/lpnLineage.test.js",
+      "guardTest": "src/services/lpn/pickingScan.test.js",
       "touches": [
         "src/services/lpn/pickingScan.js",
         "src/services/lpn/lpnService.js"
@@ -947,7 +947,14 @@
       "acceptance": [
         "طبلية الصرف LPN جديد يولده النظام وبنودها تحمل مراجع طبالي المصدر",
         "تتبع أي كمية على طبلية الصرف يصل لأصلها في الاستلام"
-      ]
+      ],
+      "progress": "buildIssuePallet يكوّن حمولة الصرف بهويّةٍ جديدة تسمّي كلّ مصادرها. ★★ ولماذا هويّةٌ جديدة لا امتدادُ أمّ؟ لأنّ حمولة الصرف تكوينٌ جديد يُجمع من ثلاث طبالٍ أو أربع، فأيّ هويّةٍ من هويّاتها تكذب عن الباقي. ★★★ والنسب سطريٌّ لا رأسيٌّ فقط: كلّ بندٍ يحمل from — أيّ طبليةٍ أسهمت وبكم — فيُجاب «هذه الكرتونة التالفة عند العميل من أيّ حمولة» لا «من إحدى هذه الأربع». والبنود تُدمج بهويّة (صنف×دفعة×صلاحية×وحدة).",
+      "nextStep": "أُغلقت في PENDING.",
+      "branch": "claude/plan-7-qualitative-leap-212f8b",
+      "evidence": {
+        "commit": "PENDING",
+        "closedOn": "2026-08-27"
+      }
     },
     {
       "id": "LPN-305",
