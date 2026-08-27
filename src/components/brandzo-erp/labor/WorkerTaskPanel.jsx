@@ -9,6 +9,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import Icon from '../../ui/Icon.jsx';
+import { useBarcodeCamera, ScanCameraButton, ScanCameraPanel } from '../scan/BarcodeCamera.jsx';
 import Badge from '../../odoo/Badge.jsx';
 import { listenLocations } from '../../../services/locations/locationsService.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
@@ -178,8 +179,8 @@ export default function WorkerTaskPanel({ task, onSaveLines, onFinish, onDelayRe
       <div className="o_ds_card o_ds_pad mb-3">
         <h4 className="text-sm font-bold text-ink mb-2">امسح</h4>
         <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
-          <Field label="باركود الموقع" value={scan.bin} ltr onChange={(v) => setScan({ ...scan, bin: v })} />
-          <Field label="باركود الصنف" value={scan.item} ltr onChange={(v) => setScan({ ...scan, item: v })} />
+          <Field label="باركود الموقع" value={scan.bin} ltr scan onChange={(v) => setScan({ ...scan, bin: v })} />
+          <Field label="باركود الصنف" value={scan.item} ltr scan onChange={(v) => setScan({ ...scan, item: v })} />
           <Field label="الدفعة" value={scan.batch} onChange={(v) => setScan({ ...scan, batch: v })} />
           <Field label="الكمّيّة" value={scan.qty} type="number" onChange={(v) => setScan({ ...scan, qty: v })} />
         </div>
@@ -237,18 +238,32 @@ export default function WorkerTaskPanel({ task, onSaveLines, onFinish, onDelayRe
   );
 }
 
-function Field({ label, value, onChange, type = 'text', ltr }) {
+/**
+ * خانةٌ واحدة. و`scan` تُعطيها كاميرا.
+ *
+ * ★ **تصحيح 2026-08-27:** كُتب في هذه الشاشة «امسح» وأربعُ خاناتٍ كبيرة —
+ * ولا كاميرا فيها ولا في الصفحة. فـ«عاملٌ يحمل طردًا بيدٍ وهاتفًا بالأخرى»
+ * لم يكن أمامه إلّا أن يكتب الباركود بإصبعٍ واحدة. الآن يفتح العدسة فتُملأ
+ * الخانة وتُغلق — خانةً خانة، فلا يختلط باركود الموقع بباركود الصنف.
+ */
+function Field({ label, value, onChange, type = 'text', ltr, scan = false }) {
+  const camera = useBarcodeCamera({ onCode: (code) => onChange(code), closeOnCode: true });
   return (
     <label className="block">
       <span className="block text-[11px] text-ink-2 mb-1">{label}</span>
-      <input
-        type={type}
-        className="o_input w-full"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={ltr ? 'امسح أو اكتب' : ''}
-        style={{ padding: '8px', fontSize: '15px', ...(ltr ? { direction: 'ltr', textAlign: 'right' } : {}) }}
-      />
+      <div className="flex gap-2">
+        <input
+          type={type}
+          className="o_input w-full"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={ltr ? 'امسح أو اكتب' : ''}
+          autoComplete="off"
+          style={{ padding: '8px', fontSize: '15px', ...(ltr ? { direction: 'ltr', textAlign: 'right' } : {}) }}
+        />
+        {scan && <ScanCameraButton camera={camera} compact label={`مسح ${label}`} />}
+      </div>
+      {scan && <ScanCameraPanel camera={camera} hint={`وجّه العدسة — تُملأ خانة «${label}» وتُغلق العدسة.`} />}
     </label>
   );
 }

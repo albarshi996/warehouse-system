@@ -34,6 +34,13 @@ import {
   startSession,
 } from '../../../services/lpn/receivingService.js';
 import { grnPreview } from '../../../services/lpn/grnBridge.js';
+import {
+  useBarcodeCamera,
+  ScanCameraButton,
+  ScanCameraPanel,
+} from '../scan/BarcodeCamera.jsx';
+import { useWedgeScanner } from '../scan/useWedgeScanner.js';
+import { normalizeScanned } from '../../../services/scan/scanEngine.js';
 
 export default function ReceivingFlow() {
   const [me, setMe] = useState(null);
@@ -83,6 +90,19 @@ export default function ReceivingFlow() {
     [session, activeDraft]
   );
 
+  /**
+   * ★ **تصحيح 2026-08-27 — «قارئ الباركود لا يقرأ» في تطبيق الطبالي:**
+   * هذه الشاشة لم يكن فيها كاميرا إطلاقًا، وحقلُ القراءة كان `inputMode="none"`
+   * — أي أنّ لوحة مفاتيح الهاتف **لا تفتح** عليه. فمن دخل بهاتفٍ بلا جهاز
+   * باركودٍ ملحق لم يكن يستطيع لا مسحًا ولا كتابةً: حقلٌ لا يُدخَل فيه شيء.
+   *
+   * الآن ثلاث طرقٍ تعمل: الكاميرا (المحرّك الموحّد) · جهازُ الباركود مسموعًا
+   * في الشاشة كلّها · الكتابةُ بلوحة المفاتيح. والعدسة **تبقى مفتوحة** بعد
+   * القراءة لأنّ العمل هنا كرتونةٌ تلو كرتونة.
+   */
+  const camera = useBarcodeCamera({ onCode: (c) => runScan(c) });
+  useWedgeScanner((c) => runScan(c), { enabled: draft?.state === 'SCANNING' });
+
   const say = useCallback((kind, text) => {
     setFlash({ kind, text });
     // الصوت والاهتزاز من **نتيجة الحكم** لا من ظنّ الواجهة (خطة ٧ ثانيًا).
@@ -110,9 +130,17 @@ export default function ReceivingFlow() {
     }
   }
 
-  async function submitScan(e) {
+  function submitScan(e) {
     e?.preventDefault?.();
-    const raw = code.trim();
+    return runScan(code);
+  }
+
+  /**
+   * مسارُ قراءةٍ واحدٌ لطرق الإدخال الثلاث: الكاميرا · جهاز الباركود ·
+   * الكتابة. فالحكم واحدٌ مهما كان الباب — ولا فرعَ يختلف بصمتٍ عن أخيه.
+   */
+  async function runScan(rawInput) {
+    const raw = normalizeScanned(rawInput);
     if (!raw || busy) return;
     setBusy(true);
     try {
@@ -259,16 +287,23 @@ export default function ReceivingFlow() {
 
       {draft?.state === 'SCANNING' ? (
         <form onSubmit={submitScan} className="mb-4">
-          <input
-            ref={inputRef}
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="امسح الباركود أو اكتبه"
-            className="w-full rounded-lg border px-4 py-4 text-lg mb-2"
-            style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }}
-            autoFocus
-            inputMode="none"
-          />
+          <div className="flex gap-2 mb-2">
+            <input
+              ref={inputRef}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="امسح الباركود أو اكتبه"
+              className="flex-1 rounded-lg border px-4 py-4 text-lg"
+              style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)', direction: 'ltr', textAlign: 'center' }}
+              autoFocus
+              autoComplete="off"
+              enterKeyHint="go"
+              /* ⚠ لا `inputMode="none"`: كانت تمنع لوحة مفاتيح الهاتف من الفتح،
+                 فحقلٌ لا يُكتب فيه ولا كاميرا بجانبه = «الماسح لا يقرأ». */
+            />
+            <ScanCameraButton camera={camera} compact />
+          </div>
+          <ScanCameraPanel camera={camera} hint="وجّه العدسة إلى الباركود — تبقى مفتوحةً كرتونةً تلو كرتونة." />
           <div className="grid grid-cols-3 gap-2 mb-2">
             <input value={qty} onChange={(e) => setQty(e.target.value)} placeholder="الكمّيّة (١)" type="number" min="0" step="any"
               className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />

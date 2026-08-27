@@ -36,6 +36,11 @@ function includeInPrecache(rel) {
   // فتعمل دون اتصال بعدها.
   if (rel.endsWith('.wasm')) return false;
   if (rel.startsWith('_astro/')) return true;
+  // ★ محرّك قراءة الباركود (٣٦٧ك.ب) — يُحفَظ مسبقًا خلافًا لبقيّة `lib/`.
+  //   المسح هو **العمل نفسه** في المستودع، وشبكةُ الممرّات لا تُعتمد: لو
+  //   انتُظر تحميلُه عند أوّل ضغطةٍ على زرّ الكاميرا لوقف العدّ عند أوّل
+  //   انقطاع. وبقيّةُ المكتبات (تقارير · خرائط · PDF) تُترك عند الطلب.
+  if (rel === 'lib/html5-qrcode.min.js') return true;
   if (rel === 'index.html' || rel.endsWith('/index.html')) return true;
   if (rel.startsWith('icons/')) return true;
   if (rel === 'manifest.webmanifest') return true;

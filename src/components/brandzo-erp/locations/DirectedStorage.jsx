@@ -9,6 +9,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../../ui/Icon.jsx';
+import { useBarcodeCamera, ScanCameraButton, ScanCameraPanel } from '../scan/BarcodeCamera.jsx';
 import Badge from '../../odoo/Badge.jsx';
 import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
 import { analyzeSourceFile, commitSourceImport, canImportSource } from '../../../services/locations/sourceImportService.js';
@@ -326,23 +327,37 @@ export default function DirectedStorage() {
 /**
  * خانة المسح — تُفرَّغ بعد كلّ قراءة فيتوالى المسح بلا نقر.
  * وقارئ الباركود يُرسل Enter في آخر القراءة، فالإرسال على المفتاح لا على زرّ.
+ *
+ * ★ **تصحيح 2026-08-27:** كانت الخانة تشترط جهاز باركودٍ أو كتابةً يدويّة —
+ * ولا كاميرا. فمن جاء بهاتفٍ وحده لم يكن له إلّا أن يكتب ثلاثة عشر محرفًا،
+ * وهو ما وُجدت هذه الخانة أصلًا لتُغنيَ عنه. والعدسة تبقى مفتوحةً فيتوالى
+ * البناء سطرًا بعد سطر.
  */
 function ScanBox({ onScan }) {
   const [code, setCode] = useState('');
+  const camera = useBarcodeCamera({ onCode: (c) => onScan(c) });
   return (
-    <input
-      className="o_input"
-      value={code}
-      onChange={(e) => setCode(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key !== 'Enter') return;
-        e.preventDefault();
-        onScan(code);
-        setCode('');
-      }}
-      placeholder="امسح الباركود ثمّ Enter"
-      style={{ width: '190px', direction: 'ltr' }}
-    />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '240px' }}>
+      <div style={{ display: 'flex', gap: '6px' }}>
+        <input
+          className="o_input"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            onScan(code);
+            setCode('');
+          }}
+          placeholder="امسح الباركود ثمّ Enter"
+          autoComplete="off"
+          enterKeyHint="go"
+          style={{ flex: 1, minWidth: 0, direction: 'ltr' }}
+        />
+        <ScanCameraButton camera={camera} compact />
+      </div>
+      <ScanCameraPanel camera={camera} hint="كلّ قراءةٍ تبني سطرًا — اضبط كمّيّته في الجدول." />
+    </div>
   );
 }
 

@@ -22,6 +22,13 @@ import {
   listenTask,
   skip,
 } from '../../../services/lpn/pickingService.js';
+import {
+  useBarcodeCamera,
+  ScanCameraButton,
+  ScanCameraPanel,
+} from '../scan/BarcodeCamera.jsx';
+import { useWedgeScanner } from '../scan/useWedgeScanner.js';
+import { normalizeScanned } from '../../../services/scan/scanEngine.js';
 
 export default function PickingFlow() {
   const [me, setMe] = useState(null);
@@ -63,10 +70,26 @@ export default function PickingFlow() {
     }
   }, []);
 
+  // العدسة تبقى مفتوحةً عبر المراحل الثلاث — المحضّر يمسح الرفّ ثمّ الطبلية
+  // ثمّ الصنف بلا أن يعيد فتحها ثلاثًا وهو يحمل بضاعة.
+  const camera = useBarcodeCamera({ onCode: (c) => applyScan(c) });
+  useWedgeScanner((c) => applyScan(c), { enabled: Boolean(task) && stage !== 'QTY' });
+
   function acceptScan(e) {
     e?.preventDefault?.();
-    const raw = input.trim();
-    if (!raw) return;
+    applyScan(input);
+  }
+
+  /**
+   * مسارٌ واحدٌ للقراءة مهما كان بابُها: الكاميرا · جهاز الباركود · الكتابة.
+   *
+   * ★ **تصحيح 2026-08-27:** لم تكن في هذه الشاشة كاميرا إطلاقًا، والمسحُ
+   * الثلاثيّ (رفّ ⇐ طبلية ⇐ صنف) يُنفَّذ على قدمين — فاشتراطُ كتابةٍ يدويّةٍ
+   * أو تركيزٍ في حقلٍ يُبطل معنى «اذهب وامسح».
+   */
+  function applyScan(rawInput) {
+    const raw = normalizeScanned(rawInput);
+    if (!raw || stage === 'QTY') return;
     // الشاشة تجمع المراحل الثلاث ثمّ تُسلّمها للحكم دفعةً — فالحكم واحدٌ
     // في موضعٍ واحد، ولا تُوزَّع الشروط على ثلاث نقرات.
     const next = { ...scan };
@@ -217,10 +240,14 @@ export default function PickingFlow() {
 
           {stage !== 'QTY' ? (
             <form onSubmit={acceptScan}>
-              <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
-                placeholder={SCAN_STAGES[stage]} autoFocus
-                className="w-full rounded-lg border px-4 py-4 text-lg mb-2"
-                style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }} />
+              <div className="flex gap-2 mb-2">
+                <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
+                  placeholder={SCAN_STAGES[stage]} autoFocus autoComplete="off" enterKeyHint="go"
+                  className="flex-1 rounded-lg border px-4 py-4 text-lg"
+                  style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)', direction: 'ltr', textAlign: 'center' }} />
+                <ScanCameraButton camera={camera} compact />
+              </div>
+              <ScanCameraPanel camera={camera} hint={`وجّه العدسة — المرحلة الآن: ${SCAN_STAGES[stage]}`} />
               <button type="submit" className="btn btn-primary w-full py-3" disabled={!input.trim()}>{SCAN_STAGES[stage]}</button>
             </form>
           ) : (

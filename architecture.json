@@ -10,8 +10,8 @@
   },
   "counts": {
     "modules": 108,
-    "serviceDomains": 46,
-    "serviceFiles": 493,
+    "serviceDomains": 47,
+    "serviceFiles": 499,
     "collections": 87,
     "roles": 18,
     "odooModels": 12,
@@ -3854,6 +3854,34 @@
       "collections": [
         "retail_hub_overrides"
       ]
+    },
+    {
+      "domain": "scan",
+      "dir": "src/services/scan",
+      "files": [
+        "cameraScanner.js",
+        "cameraScanner.test.js",
+        "scanEngine.js",
+        "scanEngine.test.js",
+        "wedgeScanner.js",
+        "wedgeScanner.test.js"
+      ],
+      "fileCount": 6,
+      "testCount": 3,
+      "exports": [
+        "NATIVE_FORMATS",
+        "SCAN_FORMATS",
+        "cameraErrorText",
+        "createScanGate",
+        "createWedgeReader",
+        "ensureScannerLibrary",
+        "formatCodes",
+        "isTypingTarget",
+        "normalizeScanned",
+        "scanBox",
+        "startCameraScan"
+      ],
+      "collections": []
     },
     {
       "domain": "settings",

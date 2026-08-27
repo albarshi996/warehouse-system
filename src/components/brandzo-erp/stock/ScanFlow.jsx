@@ -13,10 +13,13 @@
  *   · التصحيح والحذف **قيودُ فرقٍ** لا تعديل — التاريخ كامل: من عدّ ومن
  *     صحّح وبكم (نفس مبدأ دفتر الحركات).
  *
- * ═══ ولماذا لا تتجمّد؟ ═══
- * القديم فكّ الباركود على المعالج إطارًا إطارًا. هنا `BarcodeDetector`
- * العتاديّ (فحصٌ كلّ ٣٠٠م.ث) ولا فكّ برمجيّ — ومن لا دعم عنده (آيفون)
- * يمسح بلوحة المفاتيح أو يكتب.
+ * ═══ القراءة ═══
+ * ★ **تصحيح 2026-08-27 — «قارئ الباركود لا يقرأ»:** كانت هذه الشاشة تشترط
+ * `BarcodeDetector` العتاديّ، فيُخفى زرّ الكاميرا كلّيًّا على **آيفون كلّه
+ * وكروم ويندوز وفايرفوكس** (تحقّقٌ حيّ: `'BarcodeDetector' in window` =
+ * false على كروم ١٤٨/ويندوز). فالعامل يرى شاشةً بلا كاميرا. الآن المحرّك
+ * واحدٌ في `services/scan/` يعمل على كلّ جهاز — ويستعمل العتاديّ من داخله
+ * حيث وُجد. وجهازُ الباركود صار يُسمع في الشاشة كلّها لا في الحقل وحده.
  *
  * كلّ الحكم في `scanFlow.js` الخالص المُختبَر؛ هذه الشاشة عرضٌ له.
  */
@@ -66,6 +69,12 @@ import {
 } from '../../../services/stock/operationScope.js';
 import { fetchLocationsOnce } from '../../../services/locations/locationsService.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
+import {
+  useBarcodeCamera,
+  ScanCameraButton,
+  ScanCameraPanel,
+} from '../scan/BarcodeCamera.jsx';
+import { useWedgeScanner } from '../scan/useWedgeScanner.js';
 import Icon from '../../ui/Icon.jsx';
 import Pager from '../../odoo/Pager.jsx';
 import { pageSlice } from '../../../services/ui/pagination.js';
@@ -90,8 +99,6 @@ export default function ScanFlow() {
   const [newName, setNewName] = useState('');
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState(null); // { kind: 'ok'|'err', text }
-  const [cameraOn, setCameraOn] = useState(false);
-  const [cameraErr, setCameraErr] = useState('');
   const [tableFilter, setTableFilter] = useState('all'); // all | scanned | unscanned | diff | unknown
   const [tableTerm, setTableTerm] = useState('');
   const [page, setPage] = useState(0);
@@ -109,10 +116,20 @@ export default function ScanFlow() {
   const scanInputRef = useRef(null);
   const qtyInputRef = useRef(null);
   const nameInputRef = useRef(null);
-  const videoRef = useRef(null);
-  const cameraStopRef = useRef(null);
 
-  const supportsCamera = typeof window !== 'undefined' && 'BarcodeDetector' in window;
+  /**
+   * الكاميرا — تُغلق بعد كلّ قراءة (`closeOnCode`) لأنّ هذه الشاشة تفتح خانة
+   * تعبئةٍ تطلب كمّيّة: لو بقيت العدسة مفتوحةً على الباركود نفسه لالتقطته
+   * والعادّ يكتب. والزرّ ظاهرٌ دائمًا — لا يُخفى بحكمٍ مسبقٍ على الجهاز.
+   */
+  const camera = useBarcodeCamera({ onCode: (code) => handleCode(code), closeOnCode: true });
+
+  /**
+   * جهاز الباركود يُسمع في الشاشة كلّها — لا يشترط أن يكون المؤشّر في الحقل.
+   * ويُعطَّل حين تكون خانة التعبئة أو التصادم مفتوحًا: هناك المطلوب كمّيّةٌ
+   * أو اختيار، لا باركودٌ جديد.
+   */
+  useWedgeScanner((code) => handleCode(code), { enabled: Boolean(mode) && !panel && !collision });
 
   useEffect(() => {
     const unsub = subscribeAuth(async (user) => {
@@ -214,8 +231,7 @@ export default function ScanFlow() {
     return listenScans(opId, setScans);
   }, [opId]);
 
-  // إيقاف الكاميرا عند مغادرة الصفحة — لا تسريب تدفّق فيديو.
-  useEffect(() => () => cameraStopRef.current?.(), []);
+  // إيقافُ الكاميرا عند المغادرة صار داخل `useBarcodeCamera` — لا تسريب تدفّق فيديو.
 
   const summary = useMemo(() => sessionSummary(scans), [scans]);
 
@@ -620,52 +636,6 @@ export default function ScanFlow() {
     }
   }
 
-  /** كاميرا عتاديّة فقط — فحصٌ كلّ ٣٠٠م.ث، ولا فكّ على المعالج (سبب تجمّد القديم). */
-  async function startCamera() {
-    setCameraErr('');
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-        audio: false,
-      });
-      setCameraOn(true);
-      await new Promise((r) => setTimeout(r, 60));
-      const video = videoRef.current;
-      if (!video) throw new Error('تعذّر فتح العرض');
-      video.srcObject = stream;
-      await video.play();
-      const detector = new window.BarcodeDetector({
-        formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf', 'qr_code'],
-      });
-      const timer = setInterval(async () => {
-        try {
-          const found = await detector.detect(video);
-          if (found?.length) {
-            const value = found[0].rawValue;
-            stop();
-            handleCode(value);
-          }
-        } catch {
-          /* إطارٌ لم يكتمل — نحاول في النبضة التالية */
-        }
-      }, 300);
-      const stop = () => {
-        clearInterval(timer);
-        stream.getTracks().forEach((t) => t.stop());
-        setCameraOn(false);
-        cameraStopRef.current = null;
-      };
-      cameraStopRef.current = stop;
-    } catch (e) {
-      setCameraOn(false);
-      setCameraErr(
-        e?.name === 'NotAllowedError'
-          ? 'أذن الكاميرا مرفوض — فعّله من إعدادات المتصفّح، أو امسح بلوحة المفاتيح.'
-          : 'تعذّر فتح الكاميرا — امسح بلوحة المفاتيح أو اكتب الباركود.'
-      );
-    }
-  }
-
   return (
     <div className="o_theme" dir="rtl" style={{ maxWidth: '760px', margin: '0 auto' }}>
       {note && <div className={`o_alert ${note.kind === 'err' ? 'danger' : 'success'}`}>{note.text}</div>}
@@ -830,35 +800,16 @@ ${inviteLink}`)}` : undefined}
             }
           }}
         />
-        {supportsCamera && !cameraOn && (
-          <button type="button" className="btn btn-secondary" onClick={startCamera} disabled={!mode} title="مسح بالكاميرا">
-            <Icon name="target" size={20} />
-          </button>
-        )}
+        <ScanCameraButton camera={camera} disabled={!mode} compact />
       </div>
       {!mode && (
         <p style={{ margin: '0 0 8px', fontSize: '11px', color: 'var(--o-main-color-muted)' }}>اختر الوضع أوّلًا ليُفتح المسح.</p>
       )}
-      {!supportsCamera && (
-        <p style={{ margin: '0 0 8px', fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
-          على آيفون: اضغط داخل الحقل واستخدم زرّ مسح النصوص في لوحة المفاتيح — يكتب الباركود مباشرةً.
-        </p>
-      )}
-      {cameraErr && <p style={{ margin: '0 0 8px', fontSize: '11px', color: 'var(--o-text-warning, #8a6d1b)' }}>{cameraErr}</p>}
+      <p style={{ margin: '0 0 8px', fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
+        ثلاث طرقٍ للقراءة، كلّها تعمل: زرّ الكاميرا · جهاز الباركود (امسح ولو كان المؤشّر خارج الحقل) · الكتابة ثمّ Enter.
+      </p>
 
-      {cameraOn && (
-        <div style={{ position: 'relative', marginBottom: '12px', borderRadius: 'var(--o-border-radius-lg)', overflow: 'hidden', border: '1px solid var(--o-border-color)' }}>
-          <video ref={videoRef} playsInline muted style={{ width: '100%', maxHeight: '260px', objectFit: 'cover', display: 'block' }} />
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={() => cameraStopRef.current?.()}
-            style={{ position: 'absolute', top: '8px', insetInlineEnd: '8px' }}
-          >
-            <Icon name="close" size={14} /> إيقاف
-          </button>
-        </div>
-      )}
+      <ScanCameraPanel camera={camera} hint="وجّه العدسة إلى الباركود — تُقرأ وتُغلق العدسة وتفتح خانة الكمّيّة." />
 
       {/* ٣أ — تصادمُ باركود: الشاشة تسأل ولا تختار (CAP-106) */}
       {collision && (
