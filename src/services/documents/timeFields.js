@@ -118,6 +118,8 @@ export const TIME_FIELD_MAP = Object.freeze({
   TR: { requestDate: E, requiredDate: P },
   TRN: { shipmentDate: E, expectedArrival: P, expiry: A },
   TRC: { receiptDate: E, expiry: A },
+  // ‹LPN-405› محضر الفرق: تاريخُه ووقتُ الوصول كلاهما واقعةٌ وقعت.
+  TDR: { reportDate: E, arrivedAt: E },
   CTR: { arrivalDate: E },
 
   /* ═══ الميدان والبيع من المركبة ═══ */

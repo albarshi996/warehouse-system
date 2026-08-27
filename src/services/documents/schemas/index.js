@@ -56,6 +56,7 @@ import rcp from './rcp.js';
 import spv from './spv.js';
 import rcv from './rcv.js';
 import dlv from './dlv.js';
+import tdr from './tdr.js';
 
 /** المخطّطات الجاهزة. */
 const SCHEMAS = {
@@ -74,6 +75,9 @@ const SCHEMAS = {
   TR: tr,
   TRN: trn,
   TRC: trc,
+  // ‹LPN-405› محضر فرق النقل — يكمّل TRC ولا ينافسه: ذاك يقول «كم نقص»
+  // وهذا يقول «أيّ حمولةٍ ضاعت ومن يتحمّلها وماذا فُعل». ولا يقيّد حركة.
+  TDR: tdr,
   CTR: ctr,
   PRO: pro,
   MIS: mis,
@@ -123,6 +127,7 @@ export const GOVERNED_FORMS = [
   { type: 'TR', stage: 6, titleAr: 'طلب نقل', file: '', phase: 'F7' },
   { type: 'TRN', stage: 7, titleAr: 'مستند النقل', file: '', phase: 'F7' },
   { type: 'TRC', stage: 8, titleAr: 'استلام النقل', file: '', phase: 'F7' },
+  { type: 'TDR', stage: 8, titleAr: 'محضر فرق النقل', file: '', phase: 'F7' },
   { type: 'CTR', stage: 4, titleAr: 'مستند مناولة حاوية', file: '', phase: 'SI' },
   // دورة الإنتاج (FNB): أمر الإنتاج لا يقيّد، والصرف والاستلام يقيّدان.
   { type: 'PRO', stage: 5, titleAr: 'أمر الإنتاج', file: '', phase: 'FNB' },

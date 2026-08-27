@@ -52,6 +52,10 @@ export const DOC_ODOO_MAP = {
   TR: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   TRN: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   TRC: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  // ‹LPN-405› محضر الفرق لا مقابلَ أصليًّا له في أودو: هو محضرٌ رقابيٌّ يوثّق
+  // فرقَ الحمولة والمسؤوليّة، وأودو يمثّل النقص كفرقِ جردٍ أو خصمٍ على المورّد
+  // لا كمستندٍ قائمٍ بذاته. فنموذجٌ مخصّص — كنمط تسوية المركبة سواء.
+  TDR: { model: 'x_transfer.discrepancy', confirmState: 'done', confirmLabel: 'محسوم', verb: 'احسم' },
 
   /* ── البيع من المركبة (المستودع المتنقّل) ──
      أودو يمثّل حركة المركبة بمناقلات مخزون (`stock.picking`) بين موقع المستودع

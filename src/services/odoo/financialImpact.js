@@ -61,6 +61,7 @@ export const FINANCIAL_IMPACT = Object.freeze({
   TR: { financial: false, stockEffect: false, odooDoc: null, note: 'طلب نقلٍ: نيّةٌ — لا حركة ولا قيمة حتى الشحن.' },
   TRN: { financial: false, stockEffect: true, odooDoc: null, note: 'شحنٌ بين مستودعاتنا: البضاعة في العبور، والملكيّة لم تتغيّر.' },
   TRC: { financial: false, stockEffect: true, odooDoc: null, note: 'استلام النقل: يُفرغ العبور — ولا أثر ماليّ ما دام الكيان واحدًا (قرار‑٦).' },
+  TDR: { financial: false, stockEffect: false, odooDoc: null, note: 'محضر فرق النقل: محضرٌ رقابيٌّ يوثّق فرق الحمولة والمسؤوليّة — لا يقيّد حركةً (القيد وقع في TRN وTRC والنقصُ عالقٌ في مخزن النقل) ولا أثرَ ماليًّا له بذاته؛ وأثرُ الحسم يقع بالحركة التصحيحية المعتمَدة لا بالمحضر.' },
   RET: { financial: true, stockEffect: true, odooDoc: 'account.move', note: 'مرتجع عميل: يُنقص الإيراد — إشعارٌ دائن في أودو، والبضاعة تدخل الفحص.' },
   CN: { financial: true, stockEffect: false, odooDoc: 'account.move', note: 'إشعارٌ دائن: أثرٌ ماليٌّ بحت على ذمّة العميل لا على الرفّ.' },
   CC: { financial: false, stockEffect: false, odooDoc: null, note: 'عَدٌّ لا يُغيّر شيئًا — المغيِّر هو التسوية المشتقّة منه.' },
