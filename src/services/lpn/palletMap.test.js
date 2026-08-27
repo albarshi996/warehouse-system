@@ -5,9 +5,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  ON_FLOOR_STATES,
+  PALLET_CELL_ORDER,
+  PALLET_LEGEND,
   binSummary,
   binsOfItem,
   isOnFloor,
+  palletCellOf,
   palletChip,
   palletCountByNode,
   palletsByBin,
@@ -93,4 +97,63 @@ test('🔒 الطبالي في مواقع غير متوقّعة — مقاسٌ �
   const unknownBin = unexpectedPlacements([mk('LPN-MAIN-20260827-000020', 'MAIN-Z09-R09-B09', 'STORED')], locations);
   assert.match(unknownBin[0].reason, /غير مسجَّل في سيّد المواقع/);
   assert.deepEqual(unexpectedPlacements(UNITS, [{ code: 'MAIN-A01-R01-B01', status: 'active' }, { code: 'MAIN-A01-R02-B01', status: 'active' }]), []);
+});
+
+/* ── طبقةُ العرض على الشبكة ‹LPN-211› ──────────────────────────────── */
+
+test('★★ الخانةُ تُعرض بأسوأ ما فيها لا بأغلبه — طبليةٌ موسومةٌ بين عشرٍ تَسِمُ الرفّ', () => {
+  // رفٌّ فيه اثنتان إحداهما تالفة (UNITS[1]) — فحالُه «موسوم» لا «متاح».
+  const cell = palletCellOf(binSummary(UNITS, 'MAIN-A01-R01-B01'));
+  assert.equal(cell.state, 'held');
+  assert.ok(cell.warn, 'الوسمُ الحاجب تنبيهٌ يُرى على الخريطة');
+  assert.match(cell.summaryText, /موسومة/);
+});
+
+test('★ الترتيبُ حاجبٌ ← مخلوطٌ ← مشغولٌ ← مخزَّن — ولكلّ حدٍّ حالتُه', () => {
+  assert.equal(palletCellOf({ count: 0 }).state, 'none');
+  assert.equal(palletCellOf({ count: 3, available: 3, blocked: 0, mixed: 0 }).state, 'stored');
+  assert.equal(palletCellOf({ count: 3, available: 1, blocked: 0, mixed: 0 }).state, 'busy');
+  assert.equal(palletCellOf({ count: 3, available: 3, blocked: 0, mixed: 1 }).state, 'mixed');
+  // المخلوطُ لا يحجب الحاجب: الوسمُ أسبق.
+  assert.equal(palletCellOf({ count: 3, available: 3, blocked: 1, mixed: 2 }).state, 'held');
+});
+
+test('خانةٌ فارغةٌ تُقرأ «بلا طبالي» ولا تُظهر صفرًا يُشبه رصيدًا', () => {
+  const cell = palletCellOf(binSummary(UNITS, 'MAIN-Z09-R01-B01'));
+  assert.equal(cell.state, 'none');
+  assert.equal(cell.countText, '—');
+  assert.equal(cell.summaryText, 'بلا طبالي');
+});
+
+test('★ المخلوطةُ تُعلن نفسها — الرفّ الذي فيه صنفان يُعدّ بندًا بندًا', () => {
+  const cell = palletCellOf(binSummary(UNITS, 'MAIN-A01-R02-B01'));
+  assert.equal(cell.state, 'mixed');
+  assert.match(cell.summaryText, /مخلوطة/);
+  assert.match(cell.summaryText, /صنفًا/);
+});
+
+test('المفتاحُ يغطّي كلّ حالةٍ يُنتجها المصنّف — فلا رمزٌ على الخريطة بلا شرح', () => {
+  const produced = new Set([
+    palletCellOf({ count: 0 }).state,
+    palletCellOf({ count: 1, available: 1 }).state,
+    palletCellOf({ count: 2, available: 0 }).state,
+    palletCellOf({ count: 2, available: 2, mixed: 1 }).state,
+    palletCellOf({ count: 2, available: 2, blocked: 1 }).state,
+  ]);
+  for (const id of produced) {
+    assert.ok(PALLET_CELL_ORDER.includes(id), `الحالة «${id}» تُنتج ولا مفتاحَ لها`);
+  }
+  assert.equal(PALLET_LEGEND.length, PALLET_CELL_ORDER.length);
+  for (const s of PALLET_LEGEND) {
+    assert.ok(s.symbol && s.labelAr && s.hint, 'لكلّ حالةٍ رمزٌ ونصٌّ وشرح — تُقرأ بلا تمييز ألوان');
+  }
+});
+
+test('★★ قائمةُ حالات «على الأرض» مصدَّرةٌ وواحدة — فلا تفترق نسخةُ الشاشة عن نسخة المنطق', () => {
+  assert.ok(ON_FLOOR_STATES.includes('STORED'));
+  assert.ok(!ON_FLOOR_STATES.includes('ISSUED'), 'المصروفةُ لا تقف على رفّ');
+  // كلّ حالةٍ في القائمة تُقبل فعلًا من `isOnFloor` — لا اسمَ ميّتٌ فيها.
+  for (const state of ON_FLOOR_STATES) {
+    assert.ok(isOnFloor({ state, bin: 'MAIN-A01-R01-B01' }), `«${state}» معلَنةٌ ولا تُقبل`);
+  }
 });

@@ -10,8 +10,8 @@
   },
   "counts": {
     "modules": 108,
-    "serviceDomains": 47,
-    "serviceFiles": 499,
+    "serviceDomains": 46,
+    "serviceFiles": 494,
     "collections": 87,
     "roles": 18,
     "odooModels": 12,
@@ -2855,6 +2855,7 @@
         "lpnSearch.test.js",
         "lpnService.guard.test.js",
         "lpnService.js",
+        "lpnWiring.test.js",
         "palletMap.js",
         "palletMap.test.js",
         "pickingScan.js",
@@ -2874,8 +2875,8 @@
         "transferPallets.js",
         "transferPallets.test.js"
       ],
-      "fileCount": 48,
-      "testCount": 24,
+      "fileCount": 49,
+      "testCount": 25,
       "exports": [
         "DEFAULT_LABEL_SIZE",
         "DEFAULT_MIX_POLICY",
@@ -2896,6 +2897,10 @@
         "LPN_TERMINAL_STATE",
         "LPN_TERMINAL_STATES",
         "LPN_TRANSITIONS",
+        "ON_FLOOR_STATES",
+        "PALLET_CELL_ORDER",
+        "PALLET_CELL_STATES",
+        "PALLET_LEGEND",
         "PICKABLE_TYPES",
         "PICK_TASK_STATES",
         "PORTAL_TO_FIELD",
@@ -3021,6 +3026,7 @@
         "openSession",
         "opsOf",
         "orderEvents",
+        "palletCellOf",
         "palletChip",
         "palletCountByNode",
         "palletDiff",
@@ -3854,34 +3860,6 @@
       "collections": [
         "retail_hub_overrides"
       ]
-    },
-    {
-      "domain": "scan",
-      "dir": "src/services/scan",
-      "files": [
-        "cameraScanner.js",
-        "cameraScanner.test.js",
-        "scanEngine.js",
-        "scanEngine.test.js",
-        "wedgeScanner.js",
-        "wedgeScanner.test.js"
-      ],
-      "fileCount": 6,
-      "testCount": 3,
-      "exports": [
-        "NATIVE_FORMATS",
-        "SCAN_FORMATS",
-        "cameraErrorText",
-        "createScanGate",
-        "createWedgeReader",
-        "ensureScannerLibrary",
-        "formatCodes",
-        "isTypingTarget",
-        "normalizeScanned",
-        "scanBox",
-        "startCameraScan"
-      ],
-      "collections": []
     },
     {
       "domain": "settings",

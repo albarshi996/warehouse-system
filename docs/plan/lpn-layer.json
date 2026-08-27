@@ -5,7 +5,7 @@
   "command": "npm run plan:lpn",
   "track": "إضافة لا تعديل — تفويض المالك 2026-08-26: «دون أن أتلف أي شيء يعمل ولا يتعارض ولا يحذف ميزة». الطبلية طبقة حاويات فوق الدفتر، والدفتر لا يعرفها",
   "source": "«خطة ٧» (نص المالك الحرفي للتنفيذ الميداني بالباركود وLPN) + مراجعتها على الكود بابًا بابًا 2026-08-26 + مسح أسطح التكامل الأربعة",
-  "lastUpdated": "2026-08-27 (٤٤/٥٠ · كلّ القواعد منشورة · ولا شيء يحجب التجربة الحيّة)",
+  "lastUpdated": "2026-08-27",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "b173f2c",
@@ -59,7 +59,8 @@
     "ف-٧": "لا محضر فرق نقل كمستند — فرق المصدر والوجهة (نقص/زيادة/تلف/كسر ختم) يعالج نثرًا بلا قرار مسجّل",
     "ف-٨": "الجرد لا يعرف الطبلية — العدّ صنفًا صنفًا ولو كانت الحمولة مغلقة مختومة، فلا سرعة ولا فرق طبالٍ (متوقعة غائبة/حاضرة غير متوقعة)",
     "ف-٩": "لا لوحة حوكمة لحظية للطبالي بحالاتها ولا بحث موحّد يعرض التتبع الكامل PO→GRN→LPN→SO→Loading",
-    "ف-١٠": "لا نسب للطبالي — تقسيم أو دمج لا يترك أثر الأم والبنت، فلا يُعرف أصل كمية على طبلية صرف"
+    "ف-١٠": "لا نسب للطبالي — تقسيم أو دمج لا يترك أثر الأم والبنت، فلا يُعرف أصل كمية على طبلية صرف",
+    "ف-١١": "★★ منطقٌ بلا مستدعٍ — ستّةُ ملفّاتٍ في src/services/lpn بُنيت واختُبرت ولم تبلغ شاشةً واحدة (countPallet · lpnKpis · lpnRoles · lpnSearch · putawayTask · stagingLoading · transferPallets، وقد خرج palletMap منها بوصله 2026-08-27). ومهامُّها كلُّها موسومةٌ «منجَزة» لأنّ المتتبّع يفحص وجودَ البيّنة لا تحقّقَ شرط القبول. الدَّينُ الآن معلَنٌ باسمه في PENDING_WIRING داخل lpnWiring.test.js، وحارسُه يمنع أن يزيد صامتًا."
   },
   "ownerInputs": [
     {
@@ -758,23 +759,25 @@
       "dependsOn": [
         "LPN-210"
       ],
-      "nucleus": "src/services/locations/mapGrid.js وصفحات المواقع القائمة — عمود إضافي لا شاشة موازية",
-      "guardTest": "src/services/lpn/palletMap.test.js",
+      "nucleus": "src/components/brandzo-erp/warehouse/LocationMap.jsx — طبقةٌ ثالثة على الشبكة القائمة (نمط EXE-803) لا شاشةٌ موازية",
+      "guardTest": "src/services/lpn/lpnWiring.test.js",
       "touches": [
-        "src/pages/dashboard/location-builder.astro",
-        "src/components/brandzo-erp/warehouse/WarehouseMaps.jsx"
+        "src/services/lpn/palletMap.js",
+        "src/services/lpn/palletMap.test.js",
+        "src/services/lpn/lpnWiring.test.js",
+        "src/components/brandzo-erp/warehouse/LocationMap.jsx"
       ],
-      "note": "إضافة عرض الطبالي للشاشات القائمة (ح-٤: لا صفحة فوق صفحة) — البحث بالموقع يظهر طباليه وبالصنف يظهر مواقعه عبر الطبالي",
+      "note": "إضافة عرض الطبالي للشاشة القائمة (ح-٤: لا صفحة فوق صفحة). ⚠️ صُحّح 2026-08-27: كانت touches تشير إلى WarehouseMaps.jsx — وهو **تقريرٌ ألغاه المالك بقرار LOC-O04** ولا يُحيا ولا يُربط. الشاشةُ الحيّة هي LocationMap.jsx، والبناءُ عليها.",
       "acceptance": [
         "فتح موقع يعرض الطبالي الواقفة فيه بحالاتها",
         "البحث بالصنف يعرض كل المواقع التي يقف فيها عبر طبالٍ",
         "الشاشات القائمة تعمل كما كانت لمن لا طبالي عنده — لا كسر للعرض الحالي"
       ],
-      "progress": "palletMap يقلب العلاقة: الرفّ يعرف طباليه، والصنف يعرف مواقعه، والمنطقة تعرف مجموع رفوفها (تجميعٌ صعوديّ بـparentCodeOf + المستودع جذرًا صريحًا لأنّ مقطعًا واحدًا ليس موقعًا في النحو). ★ والموسومة تُعدّ منفصلةً: رفٌّ فيه خمسٌ إحداها تالفةٌ ليس رفًّا فيه خمسٌ صالحة. وunexpectedPlacements يقيس الشاذّ لا يظنّه. ٧ اختبارات. ⚠️ الوصلُ البصريّ بشاشة الخريطة لم يُبنَ بعد — المنطق جاهزٌ لها.",
-      "nextStep": "أُغلقت في 3a8e81d.",
+      "progress": "palletMap يقلب العلاقة: الرفّ يعرف طباليه، والصنف يعرف مواقعه، والمنطقة تعرف مجموع رفوفها. ★ والموسومة تُعدّ منفصلةً. ★★ والوصلُ البصريّ تمّ 2026-08-27: طبقةٌ ثالثة «الطبالي الواقفة» على شبكة LocationMap نفسها — الخانةُ تُعرض **بأسوأ ما فيها لا بأغلبه** (حاجبٌ ← مخلوطٌ ← مشغولٌ ← مخزَّن)، والتفصيلُ يسرد طبالي الرفّ بأوسمتها، والبحثُ المعكوس يجيب «أين يقف هذا الصنف؟»، والشاذُّ يُعرض بسببه. وسقفُ الجلب **يُعلَن حين يُبلَغ** لا يصمت.",
+      "nextStep": "أُغلقت في 3a8e81d منطقًا، ووُصلت بصريًّا في هذه الجلسة.",
       "branch": "claude/plan-7-qualitative-leap-212f8b",
       "evidence": {
-        "commit": "3a8e81d",
+        "commit": "3a8e81d + وصلُ الشاشة (هذه الجلسة)",
         "closedOn": "2026-08-27"
       }
     },
@@ -1566,6 +1569,191 @@
       "acceptance": [
         "نوع الطابعة ومقاس الملصق محسومان والوصل مجرب من غرفة الحوكمة"
       ]
+    },
+    {
+      "id": "LPN-214",
+      "title": "وصلُ مهمّة التخزين بشاشةٍ — المسحُ يبلغ يدَ العامل",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": [
+        "ف-١١"
+      ],
+      "dependsOn": [
+        "LPN-210",
+        "LPN-212"
+      ],
+      "nucleus": "شاشة الاستلام الميدانيّ LPN-212 (ReceivingFlow.jsx) — خطوةٌ تالية فيها لا شاشةٌ ثالثة",
+      "guardTest": "src/services/lpn/lpnWiring.test.js",
+      "touches": [
+        "src/services/lpn/putawayTask.js"
+      ],
+      "note": "شرطُ قبول LPN-210 «مسح LPN ثم Bin» بصريٌّ ولم يُحقَّق — أُغلقت على منطقها.",
+      "acceptance": [
+        "العاملُ يفتح مهمّة تخزينٍ ويمسح LPN ثمّ Bin من الشاشة نفسها",
+        "موانعُ الموقع تُطبَّق حيًّا لا في الاختبار وحده",
+        "lpnWiring لا يذكر putawayTask.js بعدها"
+      ],
+      "progress": "لم يبدأ — المنطق مبنيٌّ ومختبَرٌ في putawayTask.js وينتظر مستدعيًا.",
+      "nextStep": "يُوصَل بنواته أعلاه، ثمّ يُشطب اسمُه من PENDING_WIRING في lpnWiring.test.js — والحارس يرفض بقاءه فيها بعد الوصل."
+    },
+    {
+      "id": "LPN-309",
+      "title": "وصلُ مناطق التجهيز والتحقّق عند التحميل",
+      "milestone": "م٣",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": [
+        "ف-١١"
+      ],
+      "dependsOn": [
+        "LPN-306",
+        "LPN-308"
+      ],
+      "nucleus": "شاشة التحضير الميدانيّ LPN-308 (PickingFlow.jsx) — طورٌ تالٍ فيها",
+      "guardTest": "src/services/lpn/lpnWiring.test.js",
+      "touches": [
+        "src/services/lpn/stagingLoading.js"
+      ],
+      "note": "شرطُ قبول LPN-306 «لا رحلةَ تُغلق ناقصة» حارسٌ بلا مستدعٍ — لا يمنع شيئًا اليوم.",
+      "acceptance": [
+        "المحضّرُ يربط طبليته بمنطقة تجهيزٍ من الشاشة",
+        "التحقّقُ طبليةً بطبليةٍ يمنع إغلاق رحلةٍ ناقصة حيًّا",
+        "lpnWiring لا يذكر stagingLoading.js بعدها"
+      ],
+      "progress": "لم يبدأ — المنطق مبنيٌّ ومختبَرٌ في stagingLoading.js وينتظر مستدعيًا.",
+      "nextStep": "يُوصَل بنواته أعلاه، ثمّ يُشطب اسمُه من PENDING_WIRING في lpnWiring.test.js — والحارس يرفض بقاءه فيها بعد الوصل."
+    },
+    {
+      "id": "LPN-407",
+      "title": "وصلُ النقل بالطبالي بشاشة النقل القائمة",
+      "milestone": "م٤",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": [
+        "ف-١١"
+      ],
+      "dependsOn": [
+        "LPN-404"
+      ],
+      "nucleus": "شاشةُ أوامر النقل القائمة — عمودٌ وطورٌ فيها لا شاشةٌ موازية (ح-٤)",
+      "guardTest": "src/services/lpn/lpnWiring.test.js",
+      "touches": [
+        "src/services/lpn/transferPallets.js"
+      ],
+      "note": "م٤ كلُّها منطقٌ بلا مستدعٍ — LPN-402/403/404 أُغلقت على اختباراتها.",
+      "acceptance": [
+        "تحميلُ النقل يعدّ طباليه من الشاشة",
+        "استلامُ الوجهة يمسح الطبالي ويطابق الأمر",
+        "lpnWiring لا يذكر transferPallets.js بعدها"
+      ],
+      "progress": "لم يبدأ — المنطق مبنيٌّ ومختبَرٌ في transferPallets.js وينتظر مستدعيًا.",
+      "nextStep": "يُوصَل بنواته أعلاه، ثمّ يُشطب اسمُه من PENDING_WIRING في lpnWiring.test.js — والحارس يرفض بقاءه فيها بعد الوصل."
+    },
+    {
+      "id": "LPN-508",
+      "title": "وصلُ جردِ الطبلية بصفحة الجرد القائمة",
+      "milestone": "م٥",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": [
+        "ف-١١"
+      ],
+      "dependsOn": [
+        "LPN-501",
+        "LPN-502"
+      ],
+      "nucleus": "صفحةُ الجرد القائمة (طبقة الالتقاط) — مسحُ طبليةٍ شهادةَ رؤيةٍ بلا كمّيّات (ق-٢)",
+      "guardTest": "src/services/lpn/lpnWiring.test.js",
+      "touches": [
+        "src/services/lpn/countPallet.js"
+      ],
+      "note": "ق-٢ تحمي CAP-101، والوصلُ يجب أن يبقى بلا كمّيّات.",
+      "acceptance": [
+        "العادُّ يمسح طبليةً فتُسجَّل شهادةَ رؤية",
+        "فروقُ الطبالي تظهر في المطابقة",
+        "lpnWiring لا يذكر countPallet.js بعدها"
+      ],
+      "progress": "لم يبدأ — المنطق مبنيٌّ ومختبَرٌ في countPallet.js وينتظر مستدعيًا.",
+      "nextStep": "يُوصَل بنواته أعلاه، ثمّ يُشطب اسمُه من PENDING_WIRING في lpnWiring.test.js — والحارس يرفض بقاءه فيها بعد الوصل."
+    },
+    {
+      "id": "LPN-509",
+      "title": "وصلُ البحث الموحّد بمدخلٍ في البوابة",
+      "milestone": "م٥",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": [
+        "ف-١١"
+      ],
+      "dependsOn": [
+        "LPN-504"
+      ],
+      "nucleus": "مدخلُ البحث القائم في البوابة — لا صفحةُ بحثٍ ثانية",
+      "guardTest": "src/services/lpn/lpnWiring.test.js",
+      "touches": [
+        "src/services/lpn/lpnSearch.js"
+      ],
+      "note": "شرطُ قبول LPN-504 «من أيّ طرفٍ إلى الرحلة كلّها» لا مدخلَ له اليوم.",
+      "acceptance": [
+        "البحثُ بأيّ طرفٍ (LPN · صنف · موقع · مستند) يبلغ الرحلة كاملة",
+        "lpnWiring لا يذكر lpnSearch.js بعدها"
+      ],
+      "progress": "لم يبدأ — المنطق مبنيٌّ ومختبَرٌ في lpnSearch.js وينتظر مستدعيًا.",
+      "nextStep": "يُوصَل بنواته أعلاه، ثمّ يُشطب اسمُه من PENDING_WIRING في lpnWiring.test.js — والحارس يرفض بقاءه فيها بعد الوصل."
+    },
+    {
+      "id": "LPN-510",
+      "title": "وصلُ لوحة الحوكمة والتقارير بعدّاداتها",
+      "milestone": "م٥",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": [
+        "ف-١١"
+      ],
+      "dependsOn": [
+        "LPN-503",
+        "LPN-505"
+      ],
+      "nucleus": "شاشةُ حوكمة الطبالي القائمة (GovernanceBoard.jsx) — قسمٌ فيها",
+      "guardTest": "src/services/lpn/lpnWiring.test.js",
+      "touches": [
+        "src/services/lpn/lpnKpis.js"
+      ],
+      "note": "LPN-503 وLPN-505 أُغلقتا على منطقٍ لا تعرضه لوحة.",
+      "acceptance": [
+        "العدّاداتُ بحالاتها تُعرض حيًّا",
+        "الأزمنةُ والدقّةُ وإعادةُ الطباعة تُقرأ من الشاشة",
+        "lpnWiring لا يذكر lpnKpis.js بعدها"
+      ],
+      "progress": "لم يبدأ — المنطق مبنيٌّ ومختبَرٌ في lpnKpis.js وينتظر مستدعيًا.",
+      "nextStep": "يُوصَل بنواته أعلاه، ثمّ يُشطب اسمُه من PENDING_WIRING في lpnWiring.test.js — والحارس يرفض بقاءه فيها بعد الوصل."
+    },
+    {
+      "id": "LPN-511",
+      "title": "وصلُ الأدوار الثمانية بالشاشات الثلاث",
+      "milestone": "م٥",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": [
+        "ف-١١"
+      ],
+      "dependsOn": [
+        "LPN-506"
+      ],
+      "nucleus": "الشاشاتُ الثلاث القائمة (ReceivingFlow · GovernanceBoard · PickingFlow)",
+      "guardTest": "src/services/lpn/lpnWiring.test.js",
+      "touches": [
+        "src/services/lpn/lpnRoles.js"
+      ],
+      "note": "★ الأخطرُ في القائمة: أدوارٌ مبنيّةٌ لا تقيّد شيئًا — الشاشةُ تسمح بما يمنعه المنطق.",
+      "acceptance": [
+        "الوضعُ الممنوع على الدور لا يُعرض ولا يُنفَّذ",
+        "التقييدُ بالمخزن يُطبَّق حيًّا",
+        "lpnWiring لا يذكر lpnRoles.js بعدها"
+      ],
+      "progress": "لم يبدأ — المنطق مبنيٌّ ومختبَرٌ في lpnRoles.js وينتظر مستدعيًا.",
+      "nextStep": "يُوصَل بنواته أعلاه، ثمّ يُشطب اسمُه من PENDING_WIRING في lpnWiring.test.js — والحارس يرفض بقاءه فيها بعد الوصل."
     }
   ]
 }
