@@ -144,8 +144,21 @@ export default function ReceivingFlow() {
    * في الشاشة كلّها · الكتابةُ بلوحة المفاتيح. والعدسة **تبقى مفتوحة** بعد
    * القراءة لأنّ العمل هنا كرتونةٌ تلو كرتونة.
    */
-  const camera = useBarcodeCamera({ onCode: (c) => runScan(c) });
-  useWedgeScanner((c) => runScan(c), { enabled: draft?.state === 'SCANNING' });
+  /*
+   * ‹LPN-214› والقراءةُ **تتبع الطور**: في التخزين الممسوحُ كودُ رفٍّ لا
+   * كودُ صنف. فلو ذهبت كلُّ قراءةٍ إلى `runScan` لَبحث النظامُ عن صنفٍ اسمُه
+   * «MAIN-A01-R01-B01» وردَّه غريبًا — والعاملُ يرى رفضًا بلا سبب.
+   */
+  const onScanned = (c) => {
+    if (mode === 'putaway') { setBinCode(normalizeScanned(c)); return; }
+    runScan(c);
+  };
+
+  const camera = useBarcodeCamera({ onCode: onScanned });
+  // ★ والجهازُ يُسمع في طور التخزين أيضًا: العاملُ عند الرفّ يمسح ولا يكتب.
+  useWedgeScanner(onScanned, {
+    enabled: draft?.state === 'SCANNING' || (mode === 'putaway' && Boolean(taskUnit)),
+  });
 
   const say = useCallback((kind, text) => {
     setFlash({ kind, text });
@@ -436,15 +449,23 @@ export default function ReceivingFlow() {
             </div>
 
             <form onSubmit={finishPutaway}>
-              <input
-                value={binCode}
-                onChange={(e) => setBinCode(e.target.value)}
-                placeholder="امسح باركود الرفّ"
-                className="w-full rounded-lg border px-4 py-4 text-lg mb-2"
-                style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }}
-                autoFocus
-                inputMode="none"
-              />
+              {/* ‹LPN-214› الطرقُ الثلاث نفسها كما في المسح: كاميرا · جهازُ
+                  باركودٍ مسموعٌ في الشاشة · كتابة. ولا `inputMode="none"` —
+                  هي التي كانت تمنع لوحة المفاتيح فيصير الحقل مسدودًا. */}
+              <div className="flex gap-2 mb-2">
+                <input
+                  value={binCode}
+                  onChange={(e) => setBinCode(e.target.value)}
+                  placeholder="امسح باركود الرفّ أو اكتبه"
+                  className="flex-1 rounded-lg border px-4 py-4 text-lg"
+                  style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)', direction: 'ltr', textAlign: 'center' }}
+                  autoFocus
+                  autoComplete="off"
+                  enterKeyHint="go"
+                />
+                <ScanCameraButton camera={camera} compact />
+              </div>
+              <ScanCameraPanel camera={camera} hint="وجّه العدسة إلى ملصق الرفّ." />
 
               {binVerdict && !binVerdict.ok && (
                 <div

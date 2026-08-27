@@ -120,6 +120,25 @@ test('★★ `putawayTask` موصولٌ بشاشة الاستلام الميدا
   for (const fn of ['listPutawayQueue', 'openTask', 'previewBin', 'executePutaway']) {
     assert.ok(screen.includes(fn), `«${fn}» مبنيٌّ ولا تستعمله الشاشة`);
   }
+  /*
+   * ★★ ومسحُ الرفّ **مسحٌ لا كتابةٌ باليد** (2026-08-27، بعد rebase على main).
+   *
+   * دفعةُ `1846b45` أصلحت «الماسحُ لا يقرأ» بمحرّكٍ موحّد: كاميرا + جهازُ
+   * باركودٍ مسموعٌ في الشاشة كلّها. ودمجُ طور التخزين فوقها **مرّ نظيفًا
+   * نصًّا وترك فجوةً معنويّة**: الجهازُ كان مقيّدًا بـ`draft.state`
+   * والكاميرا في نموذج الاستلام وحده — فيقف العامل عند الرفّ ويكتب الكود
+   * بيده. وهو عين ما بُنيت تلك الدفعة لتمنعه.
+   */
+  assert.ok(
+    screen.includes(`mode === 'putaway'`) && screen.includes('setBinCode(normalizeScanned('),
+    'القراءةُ تتبع الطور — وفي التخزين تذهب إلى حقل الرفّ لا إلى بحث الأصناف'
+  );
+  const putawayForm = screen.slice(screen.indexOf('onSubmit={finishPutaway}'));
+  assert.ok(
+    putawayForm.slice(0, 1400).includes('ScanCameraButton'),
+    'حقلُ الرفّ بلا كاميرا — والعاملُ عند الرفّ لا لوحةَ مفاتيح معه'
+  );
+
   // ★ لا مجموعةَ جديدة: قاعدةٌ غير منشورةٍ تعني permission-denied عند أوّل
   // فتحة، ولا يكشفه بناءٌ ولا اختبار (درس LPN-O06/O07). والفحصُ على
   // **الاستيراد لا على ذِكر الاسم**: خدمةٌ لا تعرف Firestore أصلًا لا تفتح
