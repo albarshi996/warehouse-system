@@ -43,6 +43,10 @@ import {
 } from '../scan/BarcodeCamera.jsx';
 import { useWedgeScanner } from '../scan/useWedgeScanner.js';
 import { normalizeScanned } from '../../../services/scan/scanEngine.js';
+// ‹LPN-214› طورُ التخزين — آخرُ خطوةٍ في الاستلام الميدانيّ لا شاشةٌ رابعة.
+import { executePutaway, listPutawayQueue, openTask, previewBin } from '../../../services/lpn/putawayService.js';
+import { listenLocations } from '../../../services/locations/locationsService.js';
+import { listenBalances } from '../../../services/balances/balancesService.js';
 
 export default function ReceivingFlow() {
   const [me, setMe] = useState(null);
@@ -58,6 +62,16 @@ export default function ReceivingFlow() {
   const [flash, setFlash] = useState(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  // ‹LPN-214› طورُ التخزين: 'receiving' | 'putaway'
+  const [mode, setMode] = useState('receiving');
+  const [queue, setQueue] = useState([]);
+  const [queueCapped, setQueueCapped] = useState(false);
+  const [task, setTask] = useState(null);
+  const [taskUnit, setTaskUnit] = useState(null);
+  const [binCode, setBinCode] = useState('');
+  const [overrideNote, setOverrideNote] = useState('');
+  const [locations, setLocations] = useState([]);
+  const [balances, setBalances] = useState([]);
   const seqRef = useRef(0);
   const inputRef = useRef(null);
 
@@ -140,6 +154,84 @@ export default function ReceivingFlow() {
       navigator.vibrate(kind === 'ok' ? 40 : [80, 60, 80]);
     }
   }, []);
+
+  /* ── ‹LPN-214› طورُ التخزين ─────────────────────────────────────
+   * المواقعُ والأرصدةُ تُقرأ **في هذا الطور وحده**: شاشةُ الاستلام تُفتح
+   * للمسح في أغلب الأحيان، واستماعان دائمان ثمنٌ بلا مقابل على الهاتف. */
+  useEffect(() => {
+    if (mode !== 'putaway') return undefined;
+    const off = [
+      listenLocations(setLocations, () => setLocations([])),
+      listenBalances(setBalances, () => setBalances([])),
+    ];
+    return () => off.forEach((f) => typeof f === 'function' && f());
+  }, [mode]);
+
+  const refreshQueue = useCallback(async () => {
+    try {
+      const { units, capped } = await listPutawayQueue({ max: 100 });
+      setQueue(units);
+      setQueueCapped(capped);
+    } catch {
+      setQueue([]);
+      setQueueCapped(false);
+      say('err', 'تعذّرت قراءة قائمة التخزين — تحقّق من الاتّصال.');
+    }
+  }, [say]);
+
+  useEffect(() => { if (mode === 'putaway') refreshQueue(); }, [mode, refreshQueue]);
+
+  // البندُ الممثّل للطبلية — الاقتراحُ يُحسب على صنفٍ واحد، والمختلطة على
+  // أوّلها كما تنصّ `openPutawayTask`.
+  const taskItem = useMemo(() => {
+    const sku = taskUnit?.lines?.[0]?.sku;
+    return sku ? (indexes?.bySku?.get?.(String(sku).toUpperCase()) ?? null) : null;
+  }, [taskUnit, indexes]);
+
+  // حكمُ الرفّ الممسوح — **معاينةٌ حيّة بلا كتابة**، فيرى العامل الرفض
+  // قبل أن يضغط لا بعده.
+  const binVerdict = useMemo(() => {
+    if (!taskUnit || !binCode.trim()) return null;
+    return previewBin(taskUnit, binCode, { locations, balances, item: taskItem });
+  }, [taskUnit, binCode, locations, balances, taskItem]);
+
+  async function pickTask(unit) {
+    if (!actorName) { say('err', 'لم تُقرأ هويّتك بعد — أعد تحميل الصفحة.'); return; }
+    setBusy(true);
+    try {
+      const r = await openTask(unit.code, { locations, balances, item: null, actor: actorName });
+      if (r.problem) { say('err', r.problem); return; }
+      setTask(r.task);
+      setTaskUnit(r.unit);
+      setBinCode('');
+      setOverrideNote('');
+      say('ok', r.task.suggestedBin
+        ? `المقترح: ${r.task.suggestedBin} — امسح الرفّ الذي وضعتها فيه فعلًا.`
+        : 'لا مقترحَ لهذه الطبلية — امسح الرفّ الذي وضعتها فيه.');
+    } catch (e) {
+      say('err', e?.message || 'تعذّر فتح المهمّة.');
+    } finally { setBusy(false); }
+  }
+
+  async function finishPutaway(e) {
+    e?.preventDefault?.();
+    if (!taskUnit || !binCode.trim()) return;
+    setBusy(true);
+    try {
+      const r = await executePutaway(taskUnit.code, binCode, {
+        actor: actorName, overrideNote, locations, balances, item: taskItem,
+      });
+      if (r.problem) { say('err', r.problem); return; }
+      say('ok', `${taskUnit.code} → ${r.move.toBin}${r.move.offSuggestion ? ' (خالفت المقترح — سُجّل السبب)' : ''}`);
+      setTask(null);
+      setTaskUnit(null);
+      setBinCode('');
+      setOverrideNote('');
+      await refreshQueue();
+    } catch (err) {
+      say('err', err?.message || 'تعذّر إتمام التخزين.');
+    } finally { setBusy(false); }
+  }
 
   async function begin(orderCard) {
     if (!actorName) { say('err', 'لم تُقرأ هويّتك بعد — أعد تحميل الصفحة.'); return; }
@@ -264,10 +356,149 @@ export default function ReceivingFlow() {
 
   if (loading) return <div className="o_theme"><p className="text-ink-2 text-sm">جارٍ قراءة أوامر الشراء…</p></div>;
 
+  // ── ‹LPN-214› طورُ التخزين ──
+  // آخرُ خطوةٍ في الاستلام لا شاشةٌ رابعة (ح-٤): العاملُ نفسه، والجهازُ
+  // نفسه، والحمولةُ التي مسحها قبل قليل.
+  if (mode === 'putaway') {
+    return (
+      <div className="o_theme" dir="rtl">
+        <ModeSwitch mode={mode} setMode={setMode} disabled={busy} />
+        {flash && <Flash flash={flash} />}
+
+        {!taskUnit ? (
+          <>
+            <h2 className="text-lg font-bold text-ink mb-1">بانتظار التخزين ({queue.length})</h2>
+            <p className="text-ink-2 text-xs mb-3">
+              طبالٍ طُبعت ملصقاتُها ولم تبلغ رفًّا بعد.
+              {queueCapped && ' ⚠ بلغ سقفُ القائمة — المعروض ليس كلّ ما ينتظر.'}
+            </p>
+            {queue.length === 0 ? (
+              <p className="text-ink-2 text-sm">لا طبليةَ تنتظر رفًّا. اعتمِد حمولةً من الحوكمة واطبع ملصقها.</p>
+            ) : (
+              <ul className="space-y-2">
+                {queue.map((u) => (
+                  <li key={u.code}>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => pickTask(u)}
+                      className="w-full text-right rounded-lg border px-4 py-4"
+                      style={{ borderColor: 'var(--o-border)' }}
+                    >
+                      <div className="font-bold text-ink tabular-nums">{u.code}</div>
+                      <div className="text-ink-2 text-xs mt-1">
+                        {u.warehouse || '—'} · {(u.lines ?? []).length} بندًا
+                        {(u.flags ?? []).length > 0 && ' · ⚑ موسومة'}
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="rounded-lg border px-4 py-3 mb-3" style={{ borderColor: 'var(--o-border)' }}>
+              <div className="font-bold text-ink tabular-nums">{taskUnit.code}</div>
+              <div className="text-ink-2 text-xs mt-1">
+                {taskUnit.warehouse || '—'} · {(taskUnit.lines ?? []).length} بندًا
+              </div>
+              <div className="text-sm mt-2 text-ink">
+                المقترح: <strong className="tabular-nums">{task?.suggestedBin || '— لا مقترح'}</strong>
+              </div>
+              {(task?.suggestions ?? []).length > 1 && (
+                <div className="text-ink-2 text-xs mt-1">
+                  وبدائلُه: {task.suggestions.slice(1).map((c) => c.code).join(' · ')}
+                </div>
+              )}
+              {task?.suggestProblem && (
+                <div className="text-ink-2 text-xs mt-1">{task.suggestProblem}</div>
+              )}
+              {/* ★ المرفوضُ يُعرض بسببه لا يُخفى — قرارُ `putawaySuggest`
+                  المعلن: عاملٌ يرى لماذا رُفض رفٌّ يختار البديل بعلم. */}
+              {(task?.rejectedBins ?? []).length > 0 && (
+                <details className="mt-2">
+                  <summary className="text-ink-2 text-xs cursor-pointer">
+                    ورفوفٌ استُبعدت ({task.rejectedBins.length}) — ولماذا
+                  </summary>
+                  <ul className="mt-1 space-y-1">
+                    {task.rejectedBins.slice(0, 6).map((r) => (
+                      <li key={r.code ?? r.bin ?? JSON.stringify(r)} className="text-ink-2 text-xs">
+                        <span className="tabular-nums">{r.code ?? r.bin}</span> — {r.reason ?? '—'}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+              <p className="text-ink-2 text-xs mt-2">
+                الاقتراحُ اقتراحٌ لا أمر — امسح الرفّ الذي وضعتها فيه <strong>فعلًا</strong>.
+              </p>
+            </div>
+
+            <form onSubmit={finishPutaway}>
+              <input
+                value={binCode}
+                onChange={(e) => setBinCode(e.target.value)}
+                placeholder="امسح باركود الرفّ"
+                className="w-full rounded-lg border px-4 py-4 text-lg mb-2"
+                style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }}
+                autoFocus
+                inputMode="none"
+              />
+
+              {binVerdict && !binVerdict.ok && (
+                <div
+                  className="rounded-lg border px-4 py-3 text-sm mb-2"
+                  style={{ borderColor: 'var(--o-danger, #b42318)' }}
+                >
+                  {binVerdict.message}
+                </div>
+              )}
+              {binVerdict?.ok && binVerdict.message && (
+                <div className="rounded-lg border px-4 py-3 text-sm mb-2" style={{ borderColor: 'var(--o-border)' }}>
+                  {binVerdict.message}
+                </div>
+              )}
+
+              {/* ★ «يمرّ بسبب» لا «ممنوع» — درس LOC: العامل يرى ما لا يراه
+                  النظام، والسببُ يُقيَّد باسمه لا يُتجاوَز صامتًا. */}
+              {binVerdict && !binVerdict.ok && binVerdict.canOverride && (
+                <input
+                  value={overrideNote}
+                  onChange={(e) => setOverrideNote(e.target.value)}
+                  placeholder="سببُ التخزين هنا رغم التحذير — يُقيَّد باسمك"
+                  className="w-full rounded-lg border px-4 py-3 text-sm mb-2"
+                  style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }}
+                />
+              )}
+
+              <button
+                type="submit"
+                className="btn btn-primary w-full py-3"
+                disabled={busy || !binCode.trim() || (binVerdict && !binVerdict.ok && !binVerdict.canOverride)}
+              >
+                أثبِت التخزين
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary w-full py-2 mt-2"
+                disabled={busy}
+                onClick={() => { setTask(null); setTaskUnit(null); setBinCode(''); setOverrideNote(''); }}
+              >
+                رجوعٌ للقائمة
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    );
+  }
+
   // ── اختيار الأمر ──
   if (!sessionId) {
     return (
       <div className="o_theme" dir="rtl">
+        <ModeSwitch mode={mode} setMode={setMode} disabled={busy} />
         {flash && <Flash flash={flash} />}
 
         {openSessions.length > 0 && (
@@ -492,6 +723,26 @@ export default function ReceivingFlow() {
           </ul>
         </details>
       )}
+    </div>
+  );
+}
+
+/** ‹LPN-214› بدّالُ الطور — الاستلامُ والتخزينُ طرفا دورةٍ واحدة. */
+function ModeSwitch({ mode, setMode, disabled }) {
+  return (
+    <div className="flex gap-2 mb-4">
+      {[['receiving', 'الاستلام'], ['putaway', 'التخزين']].map(([id, label]) => (
+        <button
+          key={id}
+          type="button"
+          disabled={disabled}
+          onClick={() => setMode(id)}
+          aria-pressed={mode === id}
+          className={mode === id ? 'btn btn-primary text-sm flex-1' : 'btn btn-secondary text-sm flex-1'}
+        >
+          {label}
+        </button>
+      ))}
     </div>
   );
 }

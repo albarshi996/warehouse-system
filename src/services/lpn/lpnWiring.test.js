@@ -34,7 +34,6 @@ const PENDING_WIRING = new Map([
   ['lpnKpis.js', 'LPN-505 — تقاريرُ الأداء تنتظر لوحتَها'],
   ['lpnRoles.js', 'LPN-506 — تقييدُ الأوضاع بالدور ينتظر وصلًا بالشاشات الثلاث'],
   ['lpnSearch.js', 'LPN-504 — البحثُ الموحّد ينتظر مدخلَه في البوابة'],
-  ['putawayTask.js', 'LPN-210 — مهمّةُ التخزين تنتظر شاشتَها'],
   ['stagingLoading.js', 'LPN-305/306/307 — مناطقُ التجهيز والتحقّق عند التحميل تنتظر وصلًا'],
   ['transferPallets.js', 'LPN-402/403/404 — النقلُ بالطبالي ينتظر وصلًا بشاشة النقل'],
 ]);
@@ -50,6 +49,16 @@ function sourceFiles() {
     }
   };
   walk(SRC);
+  return out;
+}
+
+/** استيراداتُ ملفّ — سطورُ import/require التي تشير إلى مسار. */
+function importsOf(file) {
+  const src = fs.readFileSync(file, 'utf8');
+  const out = [];
+  const re = /(?:import\s[^'"]*|from\s*|require\s*\()\s*['"]([^'"]+)['"]/g;
+  let m;
+  while ((m = re.exec(src))) out.push(m[1]);
   return out;
 }
 
@@ -98,6 +107,29 @@ test('★ لا اسمَ ميّتٌ في الدَّين — كلّ مذكورٍ �
   const mods = new Set(lpnModules());
   const ghosts = [...PENDING_WIRING.keys()].filter((m) => !mods.has(m));
   assert.deepEqual(ghosts, [], `ملفّاتٌ في الدَّين لا وجود لها:\n${ghosts.join('\n')}`);
+});
+
+test('★★ `putawayTask` موصولٌ بشاشة الاستلام الميدانيّ عبر خدمته — ‹LPN-214›', () => {
+  const svc = fs.readFileSync(path.join(SRC, 'services', 'lpn', 'putawayService.js'), 'utf8');
+  const screen = fs.readFileSync(
+    path.join(SRC, 'components', 'brandzo-erp', 'lpn', 'ReceivingFlow.jsx'),
+    'utf8'
+  );
+  assert.ok(svc.includes('./putawayTask.js'), 'الخدمة تستدعي المنطق الخالص');
+  assert.ok(screen.includes('lpn/putawayService.js'), 'الشاشة تستدعي الخدمة');
+  for (const fn of ['listPutawayQueue', 'openTask', 'previewBin', 'executePutaway']) {
+    assert.ok(screen.includes(fn), `«${fn}» مبنيٌّ ولا تستعمله الشاشة`);
+  }
+  // ★ لا مجموعةَ جديدة: قاعدةٌ غير منشورةٍ تعني permission-denied عند أوّل
+  // فتحة، ولا يكشفه بناءٌ ولا اختبار (درس LPN-O06/O07). والفحصُ على
+  // **الاستيراد لا على ذِكر الاسم**: خدمةٌ لا تعرف Firestore أصلًا لا تفتح
+  // مجموعةً — وتُسلّم الكتابة كلَّها لـ`lpnService` وقواعدُه منشورة.
+  for (const imp of importsOf(path.join(SRC, 'services', 'lpn', 'putawayService.js'))) {
+    assert.ok(
+      !/firebase/i.test(imp),
+      `خدمةُ التخزين تستورد «${imp}» — والكتابةُ كلُّها تمرّ بـlpnService بلا مجموعةٍ جديدة`
+    );
+  }
 });
 
 test('★★ `palletMap` موصولٌ بخريطة المواقع — الحالةُ التي وُلد منها الحارس', () => {
