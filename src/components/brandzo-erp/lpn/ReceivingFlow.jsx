@@ -23,12 +23,13 @@ import { buildItemIndexes } from '../../../services/items/uomWiring.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import { listenDocumentsByTypes } from '../../../services/documents/documentsService.js';
 import { documentLineProgress } from '../../../services/documents/documentLineProgress.js';
-import { openOrderCard, remainingOf, sessionTotals } from '../../../services/lpn/receivingSession.js';
+import { openOrderCard, remainingOf, sessionCloseProblem, sessionTotals } from '../../../services/lpn/receivingSession.js';
 import {
   addDraft,
   closeDraftToGovernance,
   createGrnFromSession,
   finishSession,
+  leaveSession,
   listenSession,
   scanIntoDraft,
   startSession,
@@ -89,6 +90,12 @@ export default function ReceivingFlow() {
     () => (session?.drafts ?? []).find((d) => d.ref === activeDraft) ?? null,
     [session, activeDraft]
   );
+  /**
+   * ما الذي يمنع إغلاق الجلسة الآن؟ — من `sessionCloseProblem` الخالصة نفسها
+   * التي تمنعه في الخدمة. فالزرّ المعروض هو الزرّ الذي سينجح، ولا يُعرض
+   * للعامل زرٌّ يُردّ عنه.
+   */
+  const closeProblem = useMemo(() => (session ? sessionCloseProblem(session) : ''), [session]);
 
   /**
    * ★ **تصحيح 2026-08-27 — «قارئ الباركود لا يقرأ» في تطبيق الطبالي:**
@@ -197,6 +204,30 @@ export default function ReceivingFlow() {
     } finally { setBusy(false); }
   }
 
+  /**
+   * تركُ جلسةٍ لم تُنتج شيئًا — بسببٍ إلزاميٍّ يبقى في السجلّ.
+   *
+   * ★ والسبب **مطلوبٌ لا مقترَح**: جلسةٌ فُتحت ثمّ تُركت سؤالٌ تشغيليّ (وصلت
+   * الشاحنة فارغة؟ · الأمر خطأ؟ · تعطّل الجهاز؟)، وإسقاطُه يجعل الجلسات
+   * المتروكة رقمًا بلا معنى في أيّ قياسٍ لاحق.
+   */
+  async function leaveWithReason() {
+    const reason = typeof window !== 'undefined'
+      ? window.prompt(`${closeProblem}
+
+لماذا لم تُنتج هذه الجلسة شيئًا؟ (سببٌ إلزاميّ)`)
+      : '';
+    if (reason === null) return;
+    setBusy(true);
+    try {
+      await leaveSession(sessionId, { reason, actor: actorName });
+      say('ok', 'تُركت الجلسة والسببُ في السجلّ — والمفتوح يبقى على الأمر لجلسةٍ لاحقة.');
+      setSessionId(''); setSession(null);
+    } catch (e) {
+      say('err', e?.message || 'تعذّر ترك الجلسة.');
+    } finally { setBusy(false); }
+  }
+
   async function endSession() {
     setBusy(true);
     try {
@@ -257,7 +288,21 @@ export default function ReceivingFlow() {
         </div>
         <div className="flex gap-2">
           <button type="button" className="btn btn-secondary text-sm" onClick={newDraft} disabled={busy}>طبلية جديدة</button>
-          <button type="button" className="btn btn-secondary text-sm" onClick={endSession} disabled={busy}>إنهاء الجلسة</button>
+          {/*
+            ★ **تصحيح 2026-08-27 — طريقٌ مسدود:** كان هنا زرُّ الإنهاء وحده،
+            فمن فتح جلسةً بالخطأ ولم يمسح فيها شيئًا يُردّ بـ«اتركها بسببٍ
+            مكتوب» — **ولا زرَّ يفعل ذلك**، فتبقى جلستُه مفتوحةً إلى الأبد.
+            و`leaveSession` مبنيّةٌ في الخدمة منذ م٥ وبلا مستدعٍ واحد.
+            والزرّ يظهر **بحكم `sessionCloseProblem` نفسه** الذي يمنع الإغلاق،
+            فلا تختلف الواجهة عن الحَكَم.
+          */}
+          {closeProblem ? (
+            <button type="button" className="btn btn-secondary text-sm" onClick={leaveWithReason} disabled={busy}>
+              ترك الجلسة بسبب
+            </button>
+          ) : (
+            <button type="button" className="btn btn-secondary text-sm" onClick={endSession} disabled={busy}>إنهاء الجلسة</button>
+          )}
         </div>
       </div>
 
