@@ -34,7 +34,6 @@ const PENDING_WIRING = new Map([
   ['lpnKpis.js', 'LPN-505 — تقاريرُ الأداء تنتظر لوحتَها'],
   ['lpnRoles.js', 'LPN-506 — تقييدُ الأوضاع بالدور ينتظر وصلًا بالشاشات الثلاث'],
   ['lpnSearch.js', 'LPN-504 — البحثُ الموحّد ينتظر مدخلَه في البوابة'],
-  ['stagingLoading.js', 'LPN-305/306/307 — مناطقُ التجهيز والتحقّق عند التحميل تنتظر وصلًا'],
   ['transferPallets.js', 'LPN-402/403/404 — النقلُ بالطبالي ينتظر وصلًا بشاشة النقل'],
 ]);
 
@@ -149,6 +148,39 @@ test('★★ `putawayTask` موصولٌ بشاشة الاستلام الميدا
       `خدمةُ التخزين تستورد «${imp}» — والكتابةُ كلُّها تمرّ بـlpnService بلا مجموعةٍ جديدة`
     );
   }
+});
+
+test('★★ التجهيزُ موصولٌ بشاشة التحضير — ‹LPN-309›', () => {
+  const svc = fs.readFileSync(path.join(SRC, 'services', 'lpn', 'stagingService.js'), 'utf8');
+  const screen = fs.readFileSync(
+    path.join(SRC, 'components', 'brandzo-erp', 'lpn', 'PickingFlow.jsx'),
+    'utf8'
+  );
+  assert.ok(svc.includes('./stagingLoading.js'), 'الخدمة تستدعي المنطق الخالص');
+  assert.ok(screen.includes('lpn/stagingService.js'), 'الشاشة تستدعي الخدمة');
+  for (const fn of ['listStagingQueue', 'previewStaging', 'assignToStaging']) {
+    assert.ok(screen.includes(fn), `«${fn}» مبنيٌّ ولا تستعمله الشاشة`);
+  }
+  // ★ والقراءةُ تتبع الطور هنا أيضًا — الممسوحُ في التجهيز كودُ منطقةٍ لا بندُ سحب.
+  assert.ok(
+    screen.includes(`mode === 'staging'`) && screen.includes('setStageBin(normalizeScanned('),
+    'مسحُ المنطقة يذهب إلى حقلها لا إلى بحث الأصناف'
+  );
+});
+
+test('★★★ الوجهةُ تُحمل من المهمّة إلى طبلية الصرف — وإلّا فحارسُ منع الخلط لا يُطلق', () => {
+  /*
+   * كُشف 2026-08-27 مع LPN-309: `route` كان يعيش على مهمّة التحضير وينتهي
+   * عندها، فتولد طبليةُ الصرف بلا وجهة، ويسقط شرطُ `wanted && given` في
+   * `stagingAssignVerdict` — **فيمرّ كلُّ خلطٍ صامتًا**. وهذا الحارس يمنع
+   * انقطاعَ السلسلة ثانيةً في أيّ حلقةٍ من حلقاتها الثلاث.
+   */
+  const scan = fs.readFileSync(path.join(SRC, 'services', 'lpn', 'pickingScan.js'), 'utf8');
+  const store = fs.readFileSync(path.join(SRC, 'services', 'lpn', 'lpnService.js'), 'utf8');
+  const svc = fs.readFileSync(path.join(SRC, 'services', 'lpn', 'pickingService.js'), 'utf8');
+  assert.ok(scan.includes('route: up(route)'), 'buildIssuePallet يحمل الوجهة على الحمولة');
+  assert.ok(store.includes('route: String(route'), 'createHandlingUnit يُثبت الوجهة في المستند');
+  assert.ok(svc.includes('route: task.route'), 'الإقفال يمرّر وجهة المهمّة إلى الحمولة');
 });
 
 test('★★ `palletMap` موصولٌ بخريطة المواقع — الحالةُ التي وُلد منها الحارس', () => {

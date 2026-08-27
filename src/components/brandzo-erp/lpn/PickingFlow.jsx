@@ -29,6 +29,8 @@ import {
 } from '../scan/BarcodeCamera.jsx';
 import { useWedgeScanner } from '../scan/useWedgeScanner.js';
 import { normalizeScanned } from '../../../services/scan/scanEngine.js';
+// ‹LPN-309› طورُ التجهيز — ما بعد إقفال المهمّة لا شاشةٌ أخرى.
+import { assignToStaging, listStagingQueue, previewStaging } from '../../../services/lpn/stagingService.js';
 
 export default function PickingFlow() {
   const [me, setMe] = useState(null);
@@ -41,6 +43,12 @@ export default function PickingFlow() {
   const [flash, setFlash] = useState(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  // ‹LPN-309› 'picking' | 'staging'
+  const [mode, setMode] = useState('picking');
+  const [stageQueue, setStageQueue] = useState([]);
+  const [stageCapped, setStageCapped] = useState(false);
+  const [stageUnit, setStageUnit] = useState(null);
+  const [stageBin, setStageBin] = useState('');
   const inputRef = useRef(null);
 
   const actorName = me?.name || me?.displayName || me?.email || '';
@@ -72,8 +80,19 @@ export default function PickingFlow() {
 
   // العدسة تبقى مفتوحةً عبر المراحل الثلاث — المحضّر يمسح الرفّ ثمّ الطبلية
   // ثمّ الصنف بلا أن يعيد فتحها ثلاثًا وهو يحمل بضاعة.
-  const camera = useBarcodeCamera({ onCode: (c) => applyScan(c) });
-  useWedgeScanner((c) => applyScan(c), { enabled: Boolean(task) && stage !== 'QTY' });
+  /*
+   * ‹LPN-309› والقراءةُ تتبع الطور: في التجهيز الممسوحُ كودُ منطقةٍ لا
+   * بندُ سحب — ولو ذهب إلى `applyScan` لَرُدَّ غريبًا بلا سببٍ يُفهم.
+   */
+  const onScanned = (c) => {
+    if (mode === 'staging') { setStageBin(normalizeScanned(c)); return; }
+    applyScan(c);
+  };
+
+  const camera = useBarcodeCamera({ onCode: onScanned });
+  useWedgeScanner(onScanned, {
+    enabled: (Boolean(task) && stage !== 'QTY') || (mode === 'staging' && Boolean(stageUnit)),
+  });
 
   function acceptScan(e) {
     e?.preventDefault?.();
@@ -137,6 +156,47 @@ export default function PickingFlow() {
     } finally { setBusy(false); }
   }
 
+  /* ── ‹LPN-309› طورُ التجهيز ─────────────────────────────────── */
+  const refreshStageQueue = useCallback(async () => {
+    try {
+      const { units, capped } = await listStagingQueue({ max: 100 });
+      setStageQueue(units);
+      setStageCapped(capped);
+    } catch {
+      setStageQueue([]);
+      setStageCapped(false);
+      setFlash({ kind: 'err', text: 'تعذّرت قراءة قائمة التجهيز — تحقّق من الاتّصال.' });
+    }
+  }, []);
+
+  useEffect(() => { if (mode === 'staging') refreshStageQueue(); }, [mode, refreshStageQueue]);
+
+  // حكمُ المنطقة **معاينةٌ حيّةٌ بلا كتابة** — فيُرى الرفض قبل الضغط.
+  const stageVerdict = useMemo(() => {
+    if (!stageUnit || !stageBin.trim()) return null;
+    return previewStaging(stageUnit, stageBin, {
+      route: stageUnit.route ?? '', branch: stageUnit.branch ?? '',
+    });
+  }, [stageUnit, stageBin]);
+
+  async function doStage(e) {
+    e?.preventDefault?.();
+    if (!stageUnit || !stageBin.trim()) return;
+    setBusy(true);
+    try {
+      const r = await assignToStaging(stageUnit.code, stageBin, {
+        route: stageUnit.route ?? '', branch: stageUnit.branch ?? '', actor: actorName,
+      });
+      if (r.problem) { say('err', r.problem); return; }
+      say('ok', `${stageUnit.code} → منطقة ${r.bin}`);
+      setStageUnit(null);
+      setStageBin('');
+      await refreshStageQueue();
+    } catch (err) {
+      say('err', err?.message || 'تعذّر ربطُ المنطقة.');
+    } finally { setBusy(false); }
+  }
+
   async function finish() {
     setBusy(true);
     try {
@@ -151,9 +211,104 @@ export default function PickingFlow() {
 
   if (loading) return <div className="o_theme"><p className="text-ink-2 text-sm">جارٍ قراءة المهامّ…</p></div>;
 
+  // ── ‹LPN-309› طورُ التجهيز — ما بعد إقفال المهمّة لا شاشةٌ أخرى (ح-٤) ──
+  if (mode === 'staging') {
+    return (
+      <div className="o_theme" dir="rtl">
+        <StageSwitch mode={mode} setMode={setMode} disabled={busy} />
+        {flash && <Flash flash={flash} />}
+
+        {!stageUnit ? (
+          <>
+            <h2 className="text-lg font-bold text-ink mb-1">تنتظر منطقةَ تجهيز ({stageQueue.length})</h2>
+            <p className="text-ink-2 text-xs mb-3">
+              طبالي صرفٍ أُقفلت ولم تُربط بمنطقةٍ بعد.
+              {stageCapped && ' ⚠ بلغ سقفُ القائمة — المعروض ليس كلّ ما ينتظر.'}
+            </p>
+            {stageQueue.length === 0 ? (
+              <p className="text-ink-2 text-sm">لا طبليةَ تنتظر. أقفِل مهمّةَ تحضيرٍ فتظهر هنا.</p>
+            ) : (
+              <ul className="space-y-2">
+                {stageQueue.map((u) => (
+                  <li key={u.code}>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => { setStageUnit(u); setStageBin(''); }}
+                      className="w-full text-right rounded-lg border px-4 py-4"
+                      style={{ borderColor: 'var(--o-border)' }}
+                    >
+                      <div className="font-bold text-ink tabular-nums">{u.code}</div>
+                      <div className="text-ink-2 text-xs mt-1">
+                        {u.warehouse || '—'} · {(u.lines ?? []).length} بندًا
+                        {(u.route || u.branch) && ` · وجهتها ${u.route || u.branch}`}
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="rounded-lg border px-4 py-3 mb-3" style={{ borderColor: 'var(--o-border)' }}>
+              <div className="font-bold text-ink tabular-nums">{stageUnit.code}</div>
+              <div className="text-ink-2 text-xs mt-1">
+                {(stageUnit.lines ?? []).length} بندًا
+                {(stageUnit.route || stageUnit.branch)
+                  ? ` · وجهتها ${stageUnit.route || stageUnit.branch}`
+                  : ' · بلا وجهةٍ معلنة'}
+              </div>
+            </div>
+
+            <form onSubmit={doStage}>
+              <div className="flex gap-2 mb-2">
+                <input
+                  value={stageBin}
+                  onChange={(e) => setStageBin(e.target.value)}
+                  placeholder="امسح باركود منطقة التجهيز أو اكتبه"
+                  className="flex-1 rounded-lg border px-4 py-4 text-lg"
+                  style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)', direction: 'ltr', textAlign: 'center' }}
+                  autoFocus
+                  autoComplete="off"
+                  enterKeyHint="go"
+                />
+                <ScanCameraButton camera={camera} compact />
+              </div>
+              <ScanCameraPanel camera={camera} hint="وجّه العدسة إلى ملصق منطقة التجهيز." />
+
+              {stageVerdict && !stageVerdict.ok && (
+                <div className="rounded-lg border px-4 py-3 text-sm mb-2" style={{ borderColor: 'var(--o-danger, #b42318)' }}>
+                  {stageVerdict.message}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="btn btn-primary w-full py-3"
+                disabled={busy || !stageBin.trim() || (stageVerdict && !stageVerdict.ok)}
+              >
+                اربِط بالمنطقة
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary w-full py-2 mt-2"
+                disabled={busy}
+                onClick={() => { setStageUnit(null); setStageBin(''); }}
+              >
+                رجوعٌ للقائمة
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    );
+  }
+
   if (!taskId) {
     return (
       <div className="o_theme" dir="rtl">
+        <StageSwitch mode={mode} setMode={setMode} disabled={busy} />
         {flash && <Flash flash={flash} />}
         <h2 className="text-lg font-bold text-ink mb-3">مهامّ التحضير المفتوحة ({tasks.length})</h2>
         {tasks.length === 0 ? (
@@ -272,6 +427,26 @@ export default function PickingFlow() {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+/** ‹LPN-309› بدّالُ الطور — التحضيرُ والتجهيزُ خطوتان متتاليتان لعاملٍ واحد. */
+function StageSwitch({ mode, setMode, disabled }) {
+  return (
+    <div className="flex gap-2 mb-4">
+      {[['picking', 'التحضير'], ['staging', 'التجهيز']].map(([id, label]) => (
+        <button
+          key={id}
+          type="button"
+          disabled={disabled}
+          onClick={() => setMode(id)}
+          aria-pressed={mode === id}
+          className={mode === id ? 'btn btn-primary text-sm flex-1' : 'btn btn-secondary text-sm flex-1'}
+        >
+          {label}
+        </button>
+      ))}
     </div>
   );
 }

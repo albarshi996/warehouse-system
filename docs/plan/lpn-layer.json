@@ -990,7 +990,8 @@
       "nucleus": "src/services/locations/locationCode.js — منطقة التجهيز موقع بنحو الكود القائم لا كيان موازٍ",
       "guardTest": "src/services/lpn/stagingLoading.test.js",
       "touches": [
-        "src/services/lpn/stagingAssign.js"
+        "src/services/lpn/stagingLoading.js",
+        "src/services/lpn/stagingLoading.test.js"
       ],
       "acceptance": [
         "مسح الطبلية ثم مسح منطقة التجهيز يربطها بالفرع أو المسار",
@@ -1003,7 +1004,8 @@
       "evidence": {
         "commit": "954595a",
         "closedOn": "2026-08-27"
-      }
+      },
+      "note": "⚠️ صُحّح 2026-08-27: كانت touches تسمّي ملفًّا لا وجودَ له (stagingAssign/loadingVerify/stagedBalance) — والمنطقُ كلُّه في stagingLoading.js."
     },
     {
       "id": "LPN-306",
@@ -1020,9 +1022,11 @@
       "nucleus": "src/services/documents/schemas/dlv.js وvld.js ودورة الرحلات القائمة — التحقق يضاف قبل الإغلاق لا سلسلة موازية",
       "guardTest": "src/services/lpn/stagingLoading.test.js",
       "touches": [
-        "src/services/lpn/loadingVerify.js"
+        "src/services/lpn/stagingLoading.js",
+        "src/services/lpn/stagingLoading.test.js",
+        "src/services/lpn/lpnWiring.test.js"
       ],
-      "note": "خطة ٧: قراءة كل طبلية قبل الإدخال · عداد مطلوب/مقروء/متبقٍ · منع الإغلاق بناقصة أو زائدة · ختم أمني · لا تحمّل الطبلية مرتين (القاعدة ٨)",
+      "note": "خطة ٧: قراءة كل طبلية قبل الإدخال · عداد مطلوب/مقروء/متبقٍ · منع الإغلاق بناقصة أو زائدة · ختم أمني · لا تحمّل الطبلية مرتين (القاعدة ٨) ⚠️ صُحّح 2026-08-27: كانت touches تسمّي ملفًّا لا وجودَ له (stagingAssign/loadingVerify/stagedBalance) — والمنطقُ كلُّه في stagingLoading.js.",
       "acceptance": [
         "طبلية خارج الرحلة ترفض والطبلية المكررة ترفض — لكل حالة اختبار",
         "الإغلاق ممنوع والعداد ناقص أو زائد — إلا بصلاحية استثنائية بسبب مسجل",
@@ -1053,9 +1057,10 @@
       "nucleus": "src/services/ledger/stockStatus.js وreservations.js — التدرج (محجوز/قيد التحضير/في التجهيز/محمل) يشتق من حالات الطبالي",
       "guardTest": "src/services/lpn/stagingLoading.test.js",
       "touches": [
-        "src/services/lpn/stagedBalance.js"
+        "src/services/lpn/stagingLoading.js",
+        "src/services/lpn/stagingLoading.test.js"
       ],
-      "note": "ح-٢ حرفيًا: الأرقام المرحلية تشتق من طبقة الطبالي للعرض والرقابة — مفتاح الرصيد وحساباته القائمة لا تلمس",
+      "note": "ح-٢ حرفيًا: الأرقام المرحلية تشتق من طبقة الطبالي للعرض والرقابة — مفتاح الرصيد وحساباته القائمة لا تلمس ⚠️ صُحّح 2026-08-27: كانت touches تسمّي ملفًّا لا وجودَ له (stagingAssign/loadingVerify/stagedBalance) — والمنطقُ كلُّه في stagingLoading.js.",
       "acceptance": [
         "لكل صنف تعرض: فعلي/محجوز/قيد تحضير/في تجهيز/محمل/متاح — والفعلي من الدفتر كما هو",
         "جمع المراحل لا يتجاوز الفعلي أبدًا — واختبار يثبته",
@@ -1612,10 +1617,10 @@
     },
     {
       "id": "LPN-309",
-      "title": "وصلُ مناطق التجهيز والتحقّق عند التحميل",
+      "title": "وصلُ مناطق التجهيز — والوجهةُ تعبر فيصير للحارس ما يحرسه",
       "milestone": "م٣",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ف-١١"
       ],
@@ -1623,19 +1628,29 @@
         "LPN-306",
         "LPN-308"
       ],
-      "nucleus": "شاشة التحضير الميدانيّ LPN-308 (PickingFlow.jsx) — طورٌ تالٍ فيها",
+      "nucleus": "src/components/brandzo-erp/lpn/PickingFlow.jsx — طورٌ ثانٍ في شاشة التحضير نفسها (ح-٤)، وخدمةٌ رقيقةٌ stagingService.js",
       "guardTest": "src/services/lpn/lpnWiring.test.js",
       "touches": [
-        "src/services/lpn/stagingLoading.js"
+        "src/services/lpn/stagingService.js",
+        "src/services/lpn/pickingScan.js",
+        "src/services/lpn/pickingService.js",
+        "src/services/lpn/lpnService.js",
+        "src/services/lpn/stagingLoading.test.js",
+        "src/services/lpn/lpnWiring.test.js",
+        "src/components/brandzo-erp/lpn/PickingFlow.jsx"
       ],
       "note": "شرطُ قبول LPN-306 «لا رحلةَ تُغلق ناقصة» حارسٌ بلا مستدعٍ — لا يمنع شيئًا اليوم.",
       "acceptance": [
-        "المحضّرُ يربط طبليته بمنطقة تجهيزٍ من الشاشة",
-        "التحقّقُ طبليةً بطبليةٍ يمنع إغلاق رحلةٍ ناقصة حيًّا",
+        "المحضّرُ يربط طبليته بمنطقة تجهيزٍ من الشاشة نفسها",
+        "طبليةُ فرعٍ تُردّ عن مسار فرعٍ آخر — حيًّا لا في الاختبار وحده",
         "lpnWiring لا يذكر stagingLoading.js بعدها"
       ],
-      "progress": "لم يبدأ — المنطق مبنيٌّ ومختبَرٌ في stagingLoading.js وينتظر مستدعيًا.",
-      "nextStep": "يُوصَل بنواته أعلاه، ثمّ يُشطب اسمُه من PENDING_WIRING في lpnWiring.test.js — والحارس يرفض بقاءه فيها بعد الوصل."
+      "progress": "★★★ وقبل الوصل كُشف ما هو أخطر منه: **حارسُ منع الخلط كان يقرأ فراغًا فلا يُطلق أبدًا.** `stagingAssignVerdict` يمنع «طبليةَ فرعٍ في مسار فرعٍ آخر» بمقارنة `unit.route || unit.branch`، و`route` كان يعيش على **مهمّة التحضير** وينتهي عندها — فطبليةُ الصرف تولد بلا وجهة، ويسقط شرطُ `wanted && given`، ويمرّ كلُّ خلطٍ صامتًا. وهو أخطرُ حارسٍ في هذه الخطوة: عطبُه لا يُكتشف إلّا حين يشتكي فرعٌ من نقصٍ وآخر من زيادة. فوُصلت السلسلةُ الثلاثيّة (`buildIssuePallet` ← `createHandlingUnit` ← `closeTaskWithPallet`) واختبارٌ يبني الحمولة من مسار التحضير ويثبت أنّ الحارس صار يُطلق — **وأنّ الغياب ليس تعارضًا** فلا يتوقّف تجهيزٌ قائم. ★ ثمّ وُصل الطور: بدّالُ «تحضير | تجهيز» في الشاشة نفسها · قائمةُ الانتظار من `ISSUE_CLOSED` · المعاينةُ حيّةٌ بلا كتابة · والقراءةُ تتبع الطور (الممسوحُ كودُ منطقةٍ لا بندُ سحب) · وبلا مجموعةٍ جديدة (المنطقة **موقعٌ** بنحو الكود القائم — قرار LPN-305).",
+      "nextStep": "أُغلقت. ⚠️ والتحميلُ (LPN-306) لم يُوصَل بعد — جلستُه تحتاج مضيفًا وقرارَ بقاء؛ فُصلت في LPN-310.",
+      "evidence": {
+        "commit": "هذه الجلسة",
+        "closedOn": "2026-08-27"
+      }
     },
     {
       "id": "LPN-407",
@@ -1767,6 +1782,33 @@
       ],
       "progress": "لم يبدأ — المنطق مبنيٌّ ومختبَرٌ في lpnRoles.js وينتظر مستدعيًا.",
       "nextStep": "يُوصَل بنواته أعلاه، ثمّ يُشطب اسمُه من PENDING_WIRING في lpnWiring.test.js — والحارس يرفض بقاءه فيها بعد الوصل."
+    },
+    {
+      "id": "LPN-310",
+      "title": "وصلُ التحقّق عند التحميل — لا رحلةَ تُغلق ناقصة",
+      "milestone": "م٣",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": [
+        "ف-١١"
+      ],
+      "dependsOn": [
+        "LPN-309"
+      ],
+      "nucleus": "دورةُ الرحلات القائمة — التحقّق يُضاف قبل الإغلاق لا سلسلةٌ موازية (نصُّ LPN-306)",
+      "guardTest": "src/services/lpn/lpnWiring.test.js",
+      "touches": [
+        "src/services/lpn/stagingLoading.js"
+      ],
+      "note": "★ فُصلت عن LPN-309 صراحةً 2026-08-27 بدل أن تُبتلع في «منجَز»: منطقُ التحميل مبنيٌّ ومختبَرٌ كاملًا (loadScanVerdict · applyLoad · applyExtra · loadingCounters · loadingCloseProblem · closeLoading) **وبلا مستدعٍ**. ويحتاج قرارين: أين تسكن الشاشة (فالمحمِّل ليس المحضّر)، وأين يبقى الختمُ وسببُ الإغلاق الاستثنائيّ — والباقي (المتوقَّع والمحمَّل والزائد) **يُشتقّ من حالات الطبالي** فلا يلزم مجموعةٌ جديدة.",
+      "acceptance": [
+        "المحمِّلُ يمسح طبليةً طبليةً فتُعدّ لحظيًّا",
+        "المكرَّرةُ والخارجةُ عن الرحلة تُردّان بسببهما (القاعدتان ٧ و٨)",
+        "لا تُغلق الرحلة ناقصةً ولا زائدةً إلّا بصلاحيةٍ وسببٍ مكتوب",
+        "lpnWiring يشهد بوصل منطق التحميل"
+      ],
+      "progress": "لم تبدأ — المنطق جاهزٌ ومختبَر.",
+      "nextStep": "يُحسم مضيفُ الشاشة وموضعُ الختم، ثمّ يُوصَل."
     }
   ]
 }
