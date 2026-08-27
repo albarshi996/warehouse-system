@@ -777,7 +777,7 @@
       "nextStep": "أُغلقت في 3a8e81d منطقًا، ووُصلت بصريًّا في هذه الجلسة.",
       "branch": "claude/plan-7-qualitative-leap-212f8b",
       "evidence": {
-        "commit": "3a8e81d + وصلُ الشاشة (هذه الجلسة)",
+        "commit": "3a8e81d + dccfa87 (وصلُ الشاشة)",
         "closedOn": "2026-08-27"
       }
     },
