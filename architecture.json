@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 107,
+    "modules": 108,
     "serviceDomains": 46,
-    "serviceFiles": 473,
-    "collections": 86,
+    "serviceFiles": 480,
+    "collections": 87,
     "roles": 18,
     "odooModels": 12,
     "odooGuards": 51,
@@ -406,6 +406,14 @@
       "title": "حوكمة الطبالي",
       "summary": "حوكمة الطبالي — البوّابة بين «قرأتُ» و«صار مخزونًا».",
       "file": "src/pages/dashboard/lpn-governance.astro",
+      "usesServices": []
+    },
+    {
+      "name": "lpn-picking",
+      "route": "/dashboard/lpn-picking",
+      "title": "التحضير الميدانيّ",
+      "summary": "التحضير الميدانيّ — مهمّةٌ تُمشى بالمسح الثلاثيّ خطوةً خطوة.",
+      "file": "src/pages/dashboard/lpn-picking.astro",
       "usesServices": []
     },
     {
@@ -2833,21 +2841,29 @@
         "lpnService.js",
         "palletMap.js",
         "palletMap.test.js",
+        "pickingScan.js",
+        "pickingScan.test.js",
+        "pickingService.js",
+        "pickingTask.js",
+        "pickingTask.test.js",
         "putawayTask.js",
         "putawayTask.test.js",
         "receivingScan.js",
         "receivingScan.test.js",
         "receivingService.js",
         "receivingSession.js",
-        "receivingSession.test.js"
+        "receivingSession.test.js",
+        "stagingLoading.js",
+        "stagingLoading.test.js"
       ],
-      "fileCount": 30,
-      "testCount": 15,
+      "fileCount": 37,
+      "testCount": 18,
       "exports": [
         "DEFAULT_LABEL_SIZE",
         "DEFAULT_MIX_POLICY",
         "GOVERNANCE_DECISIONS",
         "ISSUE_BLOCKING_FLAGS",
+        "LOADING_STATES",
         "LPN_EVENT_TYPES",
         "LPN_FLAGS",
         "LPN_INITIAL_STATES",
@@ -2859,9 +2875,12 @@
         "LPN_TERMINAL_STATE",
         "LPN_TERMINAL_STATES",
         "LPN_TRANSITIONS",
+        "PICKABLE_TYPES",
+        "PICK_TASK_STATES",
         "PRINT_STATES",
         "PUTAWAY_STATES",
         "REJECT_REASONS",
+        "SCAN_STAGES",
         "SESSION_STATES",
         "abandonSession",
         "activeFlags",
@@ -2870,38 +2889,52 @@
         "appendUnitEvent",
         "applyAccepted",
         "applyContentChange",
+        "applyExtra",
         "applyFlag",
+        "applyLoad",
+        "applyPick",
         "applyTransition",
+        "assign",
+        "assignTask",
         "attachPallet",
         "binScanVerdict",
         "binSummary",
+        "binVerdict",
         "binsOfItem",
         "buildCard",
         "buildEvent",
+        "buildIssuePallet",
         "buildLabel",
         "buildPrintJob",
         "buildRejection",
         "clearFlag",
         "clearUnitFlag",
         "closeDraftToGovernance",
+        "closeLoading",
+        "closePickTask",
         "closeSession",
+        "closeTaskWithPallet",
         "completePutaway",
         "containmentProblems",
         "contentChangeProblem",
         "countableDrafts",
         "createGrnFromSession",
         "createHandlingUnit",
+        "createPickTask",
+        "currentStep",
         "decisionOf",
         "decisionProblem",
         "distinctItems",
         "docEventId",
         "eventProblem",
         "executeDecision",
+        "executePick",
         "findSessionLine",
         "finishSession",
         "flagProblem",
         "flagUnit",
         "formatLpnCode",
+        "fulfillmentGap",
         "getSession",
         "getUnit",
         "getUnitEvents",
@@ -2918,16 +2951,23 @@
         "isMixed",
         "isOnFloor",
         "isValidLpnCode",
+        "itemStockPicture",
+        "itemVerdict",
         "leaveSession",
         "lineBalanceRef",
         "lineKey",
         "lineageTrace",
         "listOpenSessions",
+        "listOpenTasks",
         "listPendingGovernance",
         "listUnitsAt",
         "listUnitsByState",
         "listenSession",
+        "listenTask",
         "listenUnit",
+        "loadScanVerdict",
+        "loadingCloseProblem",
+        "loadingCounters",
         "lotsOf",
         "lpnCodeProblem",
         "lpnCounterKey",
@@ -2936,18 +2976,25 @@
         "moveUnit",
         "needsNewIdentity",
         "nextCopyNumber",
+        "nextStage",
         "normalizeLpnCode",
         "offSuggestionRate",
+        "openLoading",
         "openOrderCard",
+        "openPickTask",
         "openPutawayTask",
         "openSession",
         "orderEvents",
         "palletChip",
         "palletCountByNode",
+        "palletVerdict",
         "palletsByBin",
         "parseLpnCode",
+        "pickVerdict",
+        "picksOfTask",
         "planDecision",
         "printJobProblem",
+        "qtyVerdict",
         "readingProblem",
         "receivedByLine",
         "rejectIntoDraft",
@@ -2968,11 +3015,20 @@
         "sessionOpenProblem",
         "sessionTotals",
         "shortLpnLabel",
+        "skip",
+        "skipStep",
         "splitUnit",
+        "stagedBalanceOf",
+        "stagingAssignVerdict",
+        "stagingDwellMs",
         "startSession",
         "stateLabel",
+        "stepRemaining",
         "stickConfirmVerdict",
+        "takeFromPallet",
+        "taskCloseProblem",
         "taskOpenProblem",
+        "taskTotals",
         "totalBaseQty",
         "traceLine",
         "transitionProblem",
@@ -2983,6 +3039,7 @@
       ],
       "collections": [
         "handling_units",
+        "picking_tasks",
         "receiving_sessions"
       ]
     },
@@ -6042,6 +6099,46 @@
           {
             "actions": [
               "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "picking_tasks",
+        "path": "picking_tasks",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isStockActor() && request.resource.data.openedByUid == request.auth.uid && request.resource.data.state == 'OPEN'",
+            "roles": [
+              "isStockActor"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "isStockActor() && request.resource.data.source == resource.data.source && request.resource.data.warehouse == resource.data.warehouse && request.resource.data.op",
+            "roles": [
+              "isStockActor"
+            ]
+          },
+          {
+            "actions": [
               "delete"
             ],
             "condition": "false",

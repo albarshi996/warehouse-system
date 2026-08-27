@@ -1,0 +1,35 @@
+---
+/**
+ * التحضير الميدانيّ — مهمّةٌ تُمشى بالمسح الثلاثيّ خطوةً خطوة.
+ *
+ * لماذا وُجدت؟ لأنّ `pickPlan` يرتّب مسار السحب منذ خطة LOC ويعرف أيّ رفٍّ
+ * لأيّ بندٍ وبأيّ ترتيبٍ يُمشى — **ولا شاشةَ تحمل ذلك إلى محضّر**. فالخطّة
+ * تُطبع ورقةً، والمحضّر يمشي بذاكرته، والخطأ يُكتشف عند العميل.
+ *
+ * وهي **ليست بديلًا** عن خطّة السحب الإداريّة ولا عن مستند PICK: طرقٌ
+ * لغايةٍ واحدة تبقى معًا (ح-١).
+ *
+ * الوثيقة الحاكمة: docs/خطة-طبقة-الطبالي.md · المتتبّع: npm run plan:lpn
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import PickingFlow from '../../components/brandzo-erp/lpn/PickingFlow.jsx';
+---
+
+<DashboardLayout title="التحضير الميدانيّ" showGuide={false} light>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">التحضير الميدانيّ</h1>
+      <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
+        امشِ المهمّة <span class="text-accent font-bold">خطوةً خطوة</span>: يقول لك النظام إلى أيّ رفٍّ
+        تذهب، فتمسح <span class="font-bold">الرفّ ثمّ الطبلية ثمّ الصنف</span> — فتصير كلّ سحبةٍ
+        مبرهنةً لا مظنونة. ويردّ النظام الموقع المخالف والدفعة غير المخصَّصة والكمّيّة
+        الزائدة، ثمّ تُقفل المهمّة فتولد <span class="font-bold">طبلية صرفٍ بنسبها</span>.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <PickingFlow client:load />
+  </div>
+</DashboardLayout>

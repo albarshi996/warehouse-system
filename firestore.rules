@@ -1533,6 +1533,22 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // مهامّ التحضير الميدانيّ — تُحدَّث مع كلّ سحبة، والمختوم فيها ما لا
+    // يجوز أن يتغيّر: مستندُها المصدر ومستودعها وفاتحُها. أمّا الخطوات
+    // والحالة والمحضّر فتتغيّر بمعاملات الخدمة.
+    match /picking_tasks/{taskId} {
+      allow read: if signedIn();
+      allow create: if isStockActor()
+                    && request.resource.data.openedByUid == request.auth.uid
+                    && request.resource.data.state == 'OPEN';
+      allow update: if isStockActor()
+                    && request.resource.data.source == resource.data.source
+                    && request.resource.data.warehouse == resource.data.warehouse
+                    && request.resource.data.openedBy == resource.data.openedBy
+                    && request.resource.data.openedByUid == resource.data.openedByUid;
+      allow delete: if false;
+    }
+
     // عدّاد هويّات الطبالي اليومي لكلّ مستودع — يزيد واحدًا وإلى الأمام
     // فقط ولا يُصفَّر (نمط counters الرسمي نفسه، بمفتاح LPN-WH-YYYYMMDD).
     match /lpn_counters/{counterKey} {

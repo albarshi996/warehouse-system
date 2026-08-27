@@ -168,6 +168,9 @@ export const NAV_GROUPS = [
       // ★ ومفتّشُ الجودة صاحبُها الطبيعيّ ويُضاف في ‹LPN-506› حيث تُبنى
       // الأدوار المخزنيّة الثمانية بمصفوفةٍ مختبَرة — لا بترقيعٍ هنا.
       { path: '/dashboard/lpn-governance', label: 'حوكمة الطبالي', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
+      // ‹LPN-308› التحضير الميدانيّ: المسح الثلاثيّ خطوةً خطوة. للمحضّر
+      // كما للمديرَين — وهو من يمشي الممرّ.
+      { path: '/dashboard/lpn-picking', label: 'التحضير الميدانيّ', icon: 'arrowUpTray' },
     ],
   },
   {

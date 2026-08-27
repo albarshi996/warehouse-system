@@ -5,7 +5,7 @@
   "command": "npm run plan:lpn",
   "track": "إضافة لا تعديل — تفويض المالك 2026-08-26: «دون أن أتلف أي شيء يعمل ولا يتعارض ولا يحذف ميزة». الطبلية طبقة حاويات فوق الدفتر، والدفتر لا يعرفها",
   "source": "«خطة ٧» (نص المالك الحرفي للتنفيذ الميداني بالباركود وLPN) + مراجعتها على الكود بابًا بابًا 2026-08-26 + مسح أسطح التكامل الأربعة",
-  "lastUpdated": "2026-08-27 (م٣ منطقًا: التحضير والتجهيز والتحميل والرصيد المرحليّ)",
+  "lastUpdated": "2026-08-27 (م٣ شاشةً: التحضير الميدانيّ حيّ — والتطبيق ٣ مقاصد)",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "b173f2c",
@@ -107,6 +107,13 @@
       "state": "done",
       "closedOn": "2026-08-27",
       "note": "★ نشرها المالك 2026-08-27. ونجاح النشر بيّنةٌ نحويّة بذاتها. ويبقى اختبار السلوك رهنَ محاكٍ محلّيّ، والمطابقة الحرفيّة باللصق لم تُجرَ."
+    },
+    {
+      "id": "LPN-O07",
+      "milestone": "م٣",
+      "need": "نشر قاعدة picking_tasks الجديدة — بلا نشرها لا تُفتح مهمّة تحضيرٍ واحدة",
+      "ifMissing": "شاشة التحضير تفشل عند أوّل فتح مهمّة بـpermission-denied — والبناء والاختبارات لا تكشفه لأنّه قيدُ خادم",
+      "state": "todo"
     }
   ],
   "tasks": [
@@ -1052,10 +1059,10 @@
     },
     {
       "id": "LPN-308",
-      "title": "أوضاع «تحضير وتجهيز وتحميل» في شاشة المسح",
+      "title": "شاشة التحضير الميدانيّ — المسح الثلاثيّ خطوةً خطوة",
       "milestone": "م٣",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ف-٥"
       ],
@@ -1063,15 +1070,26 @@
         "LPN-302",
         "LPN-212"
       ],
-      "nucleus": "src/components/brandzo-erp/stock/ScanFlow.jsx — الامتداد نفسه الذي فتحه وضع الاستلام",
+      "nucleus": "src/services/lpn/pickingScan.js وpickingService.js — الحكم مستدعًى والشاشة عرضٌ له",
       "guardTest": "src/services/lpn/pickingScan.test.js",
       "touches": [
-        "src/components/brandzo-erp/stock/ScanFlow.jsx"
+        "src/components/brandzo-erp/lpn/PickingFlow.jsx",
+        "src/pages/dashboard/lpn-picking.astro",
+        "src/services/lpn/pickingService.js",
+        "firestore.rules"
       ],
       "acceptance": [
         "كل مستخدم يرى أوضاعه المسموحة بدوره فقط",
         "الأوضاع القائمة تبقى خضراء باختباراتها"
-      ]
+      ],
+      "progress": "شاشة /dashboard/lpn-picking حيّة: قائمة المهامّ ← خطوةٌ واحدةٌ ظاهرة (المحضّر يُقال له أين يذهب لا يُعطى جدولًا) ← المسح الثلاثيّ ← تسجيل السحبة ← إقفالٌ يولّد طبلية الصرف بنسبها. ★ والحكم يقول أين وقف فتُعاد تلك المرحلة وحدها لا الثلاث. ومجموعة picking_tasks بقاعدتها.",
+      "note": " ★ وضع «صرف» في ScanFlow التقاطٌ عامّ كوضع «استلام» — والشاشة الجديدة مقودةٌ بمهمّة، فلم تُمسّ الشاشة القائمة (نفس قرار LPN-212).",
+      "nextStep": "أُغلقت في PENDING.",
+      "branch": "claude/plan-7-qualitative-leap-212f8b",
+      "evidence": {
+        "commit": "PENDING",
+        "closedOn": "2026-08-27"
+      }
     },
     {
       "id": "LPN-401",

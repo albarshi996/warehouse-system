@@ -178,9 +178,34 @@ export function applyPick(task, pick) {
   const steps = (task?.steps ?? []).map((s) => {
     if (s.seq !== pick.seq) return s;
     const picked = (Number(s.picked) || 0) + (Number(pick.qty) || 0);
-    return { ...s, picked, state: picked >= (Number(s.required) || 0) ? 'DONE' : 'PENDING' };
+    // ★★ كلّ سحبةٍ تسجّل **من أيّ طبلية** جاءت: خطوةٌ واحدة قد تُستوفى من
+    // طبليتين (الأولى نفدت والباقي من الثانية). وبلا هذا يضيع النسب عند
+    // تكوين حمولة الصرف، فلا يُعرف أصلُ ما وصل العميل.
+    const from = [...(s.picks ?? [])];
+    const at = from.find((f) => f.lpn === pick.lpn);
+    if (at) at.qty += Number(pick.qty) || 0;
+    else if (pick.lpn) from.push({ lpn: pick.lpn, qty: Number(pick.qty) || 0 });
+    return { ...s, picked, picks: from, state: picked >= (Number(s.required) || 0) ? 'DONE' : 'PENDING' };
   });
   return { ...task, state: 'IN_PROGRESS', steps };
+}
+
+/**
+ * سحبات المهمّة مسطّحةً — مدخلُ `buildIssuePallet` عند الإقفال.
+ * تُشتقّ من الخطوات ولا تُخزَّن ثانيةً.
+ */
+export function picksOfTask(task) {
+  const out = [];
+  for (const s of task?.steps ?? []) {
+    for (const p of s.picks ?? []) {
+      if (!(Number(p.qty) > 0)) continue;
+      out.push({
+        seq: s.seq, lpn: p.lpn, sku: s.sku, batch: s.batch, expiry: s.expiry,
+        uom: s.uom ?? '', factor: s.factor ?? null, qty: Number(p.qty), baseQty: Number(p.qty),
+      });
+    }
+  }
+  return out;
 }
 
 /**

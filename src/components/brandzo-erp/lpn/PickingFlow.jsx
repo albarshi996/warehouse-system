@@ -1,0 +1,268 @@
+/**
+ * التحضير الميدانيّ — مهمّةٌ تُمشى بالمسح الثلاثيّ خطوةً خطوة.
+ *
+ * ═══ القاعدة الحاكمة ═══
+ * **الشاشة عرضٌ للحكم لا حَكَم.** كلّ مسحةٍ تمرّ بـ`executePick` التي
+ * تستدعي `pickVerdict` الخالصة على البيانات الحيّة — فلا شرطَ يُكتب هنا،
+ * والمرحلةُ التالية تُشتقّ من `nextStage` لا من عدّادٍ في الواجهة.
+ *
+ * والترتيب يتبع المسار الذي رتّبه `pickPlan`: خطوةٌ واحدةٌ ظاهرةٌ في كلّ
+ * لحظة — فالمحضّر لا يحتاج أن يقرأ جدولًا وهو يمشي، بل أن يُقال له:
+ * **اذهب إلى هذا الرفّ وامسح**.
+ */
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
+import { currentStep, stepRemaining, taskTotals, fulfillmentGap } from '../../../services/lpn/pickingTask.js';
+import { SCAN_STAGES, nextStage } from '../../../services/lpn/pickingScan.js';
+import {
+  closeTaskWithPallet,
+  executePick,
+  listOpenTasks,
+  listenTask,
+  skip,
+} from '../../../services/lpn/pickingService.js';
+
+export default function PickingFlow() {
+  const [me, setMe] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [taskId, setTaskId] = useState('');
+  const [task, setTask] = useState(null);
+  const [scan, setScan] = useState({});
+  const [input, setInput] = useState('');
+  const [qty, setQty] = useState('');
+  const [flash, setFlash] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const inputRef = useRef(null);
+
+  const actorName = me?.name || me?.displayName || me?.email || '';
+
+  useEffect(() => subscribeAuth(async (u) => setMe(u ? await fetchUserProfile(u) : null)), []);
+
+  const loadTasks = useCallback(async () => {
+    try {
+      setTasks(await listOpenTasks({ max: 50 }));
+    } catch (e) {
+      setFlash({ kind: 'err', text: e?.message || 'تعذّرت قراءة المهامّ.' });
+    } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { loadTasks(); }, [loadTasks]);
+  useEffect(() => (taskId ? listenTask(taskId, setTask) : undefined), [taskId]);
+
+  const step = useMemo(() => (task ? currentStep(task) : null), [task]);
+  const totals = useMemo(() => (task ? taskTotals(task) : null), [task]);
+  const gap = useMemo(() => (task ? fulfillmentGap(task) : []), [task]);
+  const stage = useMemo(() => nextStage(scan), [scan]);
+
+  const say = useCallback((kind, text) => {
+    setFlash({ kind, text });
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(kind === 'ok' ? 40 : [80, 60, 80]);
+    }
+  }, []);
+
+  function acceptScan(e) {
+    e?.preventDefault?.();
+    const raw = input.trim();
+    if (!raw) return;
+    // الشاشة تجمع المراحل الثلاث ثمّ تُسلّمها للحكم دفعةً — فالحكم واحدٌ
+    // في موضعٍ واحد، ولا تُوزَّع الشروط على ثلاث نقرات.
+    const next = { ...scan };
+    if (stage === 'BIN') next.bin = raw;
+    else if (stage === 'PALLET') next.lpn = raw;
+    else if (stage === 'ITEM') next.sku = raw;
+    setScan(next);
+    setInput('');
+    setTimeout(() => inputRef.current?.focus(), 20);
+  }
+
+  async function submitPick() {
+    if (!actorName) { say('err', 'لم تُقرأ هويّتك بعد — أعد تحميل الصفحة.'); return; }
+    setBusy(true);
+    try {
+      const r = await executePick(taskId, { ...scan, batch: step?.batch, qty: Number(qty) || stepRemaining(step) }, { actor: actorName });
+      if (r.ok) {
+        say('ok', r.message);
+        setScan({}); setQty('');
+      } else {
+        say('err', r.message);
+        // الحكم يقول **أين** وقف — فتُعاد تلك المرحلة وحدها لا الثلاث.
+        if (r.stage === 'BIN') setScan({});
+        else if (r.stage === 'PALLET') setScan({ bin: scan.bin });
+        else if (r.stage === 'ITEM') setScan({ bin: scan.bin, lpn: scan.lpn });
+      }
+    } catch (e) {
+      say('err', e?.message || 'تعذّر تنفيذ السحبة.');
+    } finally {
+      setBusy(false);
+      setTimeout(() => inputRef.current?.focus(), 20);
+    }
+  }
+
+  async function skipCurrent() {
+    const reason = typeof window !== 'undefined' ? window.prompt('سبب التخطّي (إلزاميّ — الأمر سيخرج ناقصًا):') : '';
+    if (!reason) return;
+    setBusy(true);
+    try {
+      await skip(taskId, step.seq, { reason, actor: actorName });
+      say('ok', `تُخطّيت الخطوة ${step.seq} — والسبب في السجلّ.`);
+      setScan({});
+    } catch (e) {
+      say('err', e?.message || 'تعذّر التخطّي.');
+    } finally { setBusy(false); }
+  }
+
+  async function finish() {
+    setBusy(true);
+    try {
+      const r = await closeTaskWithPallet(taskId, { actor: actorName });
+      say('ok', r.lpn ? `أُقفلت المهمّة — وطبلية الصرف ${r.lpn}.` : 'أُقفلت المهمّة بلا سحبات.');
+      setTaskId(''); setTask(null);
+      await loadTasks();
+    } catch (e) {
+      say('err', e?.message || 'تعذّر الإقفال.');
+    } finally { setBusy(false); }
+  }
+
+  if (loading) return <div className="o_theme"><p className="text-ink-2 text-sm">جارٍ قراءة المهامّ…</p></div>;
+
+  if (!taskId) {
+    return (
+      <div className="o_theme" dir="rtl">
+        {flash && <Flash flash={flash} />}
+        <h2 className="text-lg font-bold text-ink mb-3">مهامّ التحضير المفتوحة ({tasks.length})</h2>
+        {tasks.length === 0 ? (
+          <p className="text-ink-2 text-sm">لا مهمّة مفتوحة. تُنشأ المهامّ من مستند سحبٍ أو أمر بيعٍ معتمد.</p>
+        ) : (
+          <ul className="space-y-2">
+            {tasks.map((t) => {
+              const tt = taskTotals(t);
+              return (
+                <li key={t.id}>
+                  <button type="button" onClick={() => { setTaskId(t.id); setScan({}); setFlash(null); }}
+                    className="w-full text-right rounded-lg border px-4 py-4" style={{ borderColor: 'var(--o-border)' }}>
+                    <div className="font-bold text-ink">{t.source?.number || 'بلا مستند'}</div>
+                    <div className="text-ink-2 text-xs mt-1">
+                      {t.warehouse} · {tt.stepCount} خطوة · {tt.percent}٪
+                      {t.assignee && <span> · {t.assignee}</span>}
+                    </div>
+                    {(t.shortages ?? []).length > 0 && (
+                      <div className="text-ink-2 text-xs mt-1">⚠ {t.shortages.length} صنفًا ناقصًا معلَنًا</div>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="o_theme" dir="rtl">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <div>
+          <div className="font-bold text-ink">{task?.source?.number}</div>
+          <div className="text-ink-2 text-xs">{task?.warehouse} · {task?.pathBasis}</div>
+        </div>
+        <button type="button" className="btn btn-secondary text-sm" onClick={() => { setTaskId(''); setTask(null); }}>رجوع</button>
+      </div>
+
+      {totals && (
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          <Stat label="الخطوات" value={`${totals.doneSteps}/${totals.stepCount}`} />
+          <Stat label="المسحوب" value={totals.picked} />
+          <Stat label="المتبقّي" value={totals.remaining} />
+        </div>
+      )}
+
+      {flash && <Flash flash={flash} />}
+
+      {!step ? (
+        <div className="rounded-lg border p-5 text-center" style={{ borderColor: 'var(--o-border)' }}>
+          <p className="text-ink font-bold mb-2">اكتملت خطوات المهمّة.</p>
+          {gap.length > 0 && (
+            <p className="text-ink-2 text-sm mb-3">
+              ونقصٌ معلَن: {gap.map((g) => `${g.sku} (${g.gap})`).join(' · ')}
+            </p>
+          )}
+          <button type="button" className="btn btn-primary w-full py-3" onClick={finish} disabled={busy}>
+            إقفال المهمّة وتكوين طبلية الصرف
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* ★ خطوةٌ واحدةٌ ظاهرة — المحضّر يُقال له أين يذهب لا يُعطى جدولًا */}
+          <div className="rounded-lg border p-4 mb-4" style={{ borderColor: 'var(--o-primary)' }}>
+            <div className="text-xs text-ink-2 mb-1">الخطوة {step.seq} من {totals?.stepCount}</div>
+            <div className="text-2xl font-bold text-ink mb-1">{step.bin}</div>
+            <div className="text-ink">{step.sku} {step.batch && <span className="text-ink-2">· دفعة {step.batch}</span>}</div>
+            <div className="text-ink-2 text-sm mt-1">المطلوب {stepRemaining(step)}</div>
+          </div>
+
+          <ol className="flex gap-2 mb-3 text-xs">
+            {['BIN', 'PALLET', 'ITEM'].map((s) => (
+              <li key={s} className="flex-1 rounded px-2 py-1 text-center"
+                style={{
+                  background: scan[s === 'BIN' ? 'bin' : s === 'PALLET' ? 'lpn' : 'sku'] ? 'var(--o-surface-2)' : 'transparent',
+                  border: `1px solid ${stage === s ? 'var(--o-primary)' : 'var(--o-border)'}`,
+                }}>
+                {SCAN_STAGES[s]}
+              </li>
+            ))}
+          </ol>
+
+          {stage !== 'QTY' ? (
+            <form onSubmit={acceptScan}>
+              <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
+                placeholder={SCAN_STAGES[stage]} autoFocus
+                className="w-full rounded-lg border px-4 py-4 text-lg mb-2"
+                style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }} />
+              <button type="submit" className="btn btn-primary w-full py-3" disabled={!input.trim()}>{SCAN_STAGES[stage]}</button>
+            </form>
+          ) : (
+            <div>
+              <input value={qty} onChange={(e) => setQty(e.target.value)} type="number" min="0" step="any"
+                placeholder={`الكمّيّة (${stepRemaining(step)})`} autoFocus
+                className="w-full rounded-lg border px-4 py-4 text-lg mb-2"
+                style={{ borderColor: 'var(--o-border)' }} />
+              <button type="button" className="btn btn-primary w-full py-3" onClick={submitPick} disabled={busy}>
+                تسجيل السحبة
+              </button>
+            </div>
+          )}
+
+          <div className="flex gap-2 mt-3">
+            <button type="button" className="btn btn-secondary flex-1 text-sm" onClick={() => setScan({})} disabled={busy}>
+              إعادة المسح من الرفّ
+            </button>
+            <button type="button" className="btn btn-secondary flex-1 text-sm" onClick={skipCurrent} disabled={busy}>
+              تخطّي الخطوة بسبب
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Flash({ flash }) {
+  return (
+    <div className="mb-3 rounded-lg border px-4 py-3 text-sm"
+      style={{ borderColor: flash.kind === 'ok' ? 'var(--o-border)' : 'var(--o-danger, #b42318)' }}>
+      {flash.text}
+    </div>
+  );
+}
+
+function Stat({ label, value }) {
+  return (
+    <div className="rounded-lg border px-3 py-2 text-center" style={{ borderColor: 'var(--o-border)' }}>
+      <div className="text-xl font-bold text-ink tabular-nums">{value}</div>
+      <div className="text-xs text-ink-2">{label}</div>
+    </div>
+  );
+}

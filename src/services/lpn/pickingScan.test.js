@@ -12,6 +12,7 @@ import {
   itemVerdict,
   nextStage,
   palletVerdict,
+  picksOfTask,
   pickVerdict,
   qtyVerdict,
   takeFromPallet,
@@ -201,4 +202,34 @@ test('طبليةُ الصرف ترفض: هويّةً بيدٍ أو بلا سحب
   assert.match(buildIssuePallet(one, { code: 'يدوي-1', actor: 'س' }).problem, /من العدّاد لا من اليد/);
   assert.match(buildIssuePallet([], { code: 'LPN-MAIN-20260827-000052', actor: 'س' }).problem, /بلا سحبةٍ واحدة/);
   assert.match(buildIssuePallet(one, { code: 'LPN-MAIN-20260827-000052' }).problem, /بلا فاعل/);
+});
+
+test('★★★ الخطوة تسجّل من أيّ طبليةٍ جاءت كلّ سحبة — خطوةٌ من طبليتين نسبٌ محفوظ', () => {
+  // الأولى نفدت عند ١٠ والباقي من الثانية — وهو واقعُ مستودعٍ لا حالةٌ نادرة.
+  let t = applyPick(TASK, { seq: 1, qty: 10, lpn: 'LPN-MAIN-20260827-000001' });
+  t = applyPick(t, { seq: 1, qty: 14, lpn: 'LPN-MAIN-20260827-000002' });
+  assert.equal(t.steps[0].picked, 24);
+  assert.deepEqual(t.steps[0].picks, [
+    { lpn: 'LPN-MAIN-20260827-000001', qty: 10 },
+    { lpn: 'LPN-MAIN-20260827-000002', qty: 14 },
+  ]);
+
+  // وسحبتان من الطبلية نفسها تُدمجان في سطرٍ واحد لا سطرين.
+  const same = applyPick(applyPick(TASK, { seq: 1, qty: 5, lpn: 'LPN-MAIN-20260827-000001' }), { seq: 1, qty: 5, lpn: 'LPN-MAIN-20260827-000001' });
+  assert.equal(same.steps[0].picks.length, 1);
+  assert.equal(same.steps[0].picks[0].qty, 10);
+});
+
+test('★★ سحبات المهمّة تُسطَّح للتكوين — وتُشتقّ ولا تُخزَّن ثانيةً', () => {
+  let t = applyPick(TASK, { seq: 1, qty: 10, lpn: 'LPN-MAIN-20260827-000001' });
+  t = applyPick(t, { seq: 2, qty: 10, lpn: 'LPN-MAIN-20260827-000003' });
+  const picks = picksOfTask(t);
+  assert.equal(picks.length, 2);
+  assert.equal(picks[0].sku, 'WNW-001');
+  assert.equal(picks[1].sku, 'WNW-002');
+  assert.equal(picks[0].lpn, 'LPN-MAIN-20260827-000001');
+
+  // والنسب يعبر فعلًا إلى الحمولة الخارجة.
+  const pallet = buildIssuePallet(picks, { code: 'LPN-MAIN-20260827-000060', actor: 'سالم' }).pallet;
+  assert.deepEqual(pallet.parentCodes, ['LPN-MAIN-20260827-000001', 'LPN-MAIN-20260827-000003']);
 });
