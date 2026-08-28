@@ -17,7 +17,7 @@ updates:
     commit-message:
       prefix: 'chore(deps)'
     # الأمنيُّ وحده يُفتح تلقائيًّا؛ وترقياتُ النسخ الكبرى تُراجَع بيد المالك —
-      # فترقيةٌ كبرى في Astro أو Firebase تكسر البوّابة كلَّها.
+    # فترقيةٌ كبرى في Astro أو Firebase تكسر البوّابة كلَّها.
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-major']
@@ -26,5 +26,15 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    open-pull-requests-limit: 5
     commit-message:
       prefix: 'chore(ci)'
+    # ★ SEC-000 — والاستثناءُ هنا نُسي أوّلَ مرّة، فاستُثنيت القفزاتُ الكبرى
+    # للمكتبات وحدَها، ففُتحت خمسةُ طلباتٍ تُرقّي `checkout 4→7` و`setup-node 4→7`
+    # و`github-script 7→9` و`configure-pages 5→6` و`tauri-action 0→1`.
+    # وهذه الأدواتُ **هي التي تبني الموقعَ وتنشره**: قفزةٌ كبرى فيها قد توقف
+    # النشرَ صامتًا — فيُدفع تغييرٌ ولا يظهر على الموقع، وهو أخطرُ من ثغرة.
+    # فالقفزاتُ الكبرى هنا تُراجَع بيدٍ كما تُراجَع للمكتبات.
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
