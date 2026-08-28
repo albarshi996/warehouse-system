@@ -1,0 +1,30 @@
+# فحصُ التبعيّات الأمنيّ — كُشف في جرد 2026-08-28 أنّه **معطَّل**، فلم يكن
+# للمستودع تنبيهُ ثغرةٍ واحدٌ منذ إنشائه رغم ٤٩٥ ألف سطرٍ في `package-lock.json`.
+#
+# ★ والوتيرةُ **شهريّة لا يوميّة** عمدًا: طلباتُ دمجٍ يوميّةٌ تُتجاهَل بعد أسبوع،
+# فيصير الفحصُ ضجيجًا يُدرَّب الناسُ على تخطّيه — وهو أسوأ من غيابه.
+#
+# ⚠️ ولا يكفي هذا الملفّ وحده: **على المالك تفعيل «Dependabot alerts» من
+# إعدادات المستودع** (Settings ← Code security). فبدونها لا يُفتح تنبيهُ ثغرة،
+# وهذا الملفّ يفتح طلباتِ التحديث فقط.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore(deps)'
+    # الأمنيُّ وحده يُفتح تلقائيًّا؛ وترقياتُ النسخ الكبرى تُراجَع بيد المالك —
+      # فترقيةٌ كبرى في Astro أو Firebase تكسر البوّابة كلَّها.
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: 'chore(ci)'

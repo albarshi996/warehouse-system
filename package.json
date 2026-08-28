@@ -14,6 +14,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "where": "node scripts/where.mjs",
+    "guard": "node scripts/guard-worktrees.mjs --all",
     "identity": "node scripts/identity.mjs",
     "identity:apply": "node scripts/identity.mjs --apply",
     "sync": "node scripts/sync-sibling.mjs",
