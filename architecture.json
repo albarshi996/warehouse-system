@@ -11,7 +11,7 @@
   "counts": {
     "modules": 116,
     "serviceDomains": 51,
-    "serviceFiles": 562,
+    "serviceFiles": 563,
     "collections": 97,
     "roles": 18,
     "odooModels": 12,
@@ -4833,12 +4833,13 @@
       "dir": "src/services/workspace",
       "files": [
         "dependabotConfig.test.js",
+        "generatedArtifacts.test.js",
         "identity.js",
         "identity.test.js",
         "vendoredLibs.test.js"
       ],
-      "fileCount": 4,
-      "testCount": 3,
+      "fileCount": 5,
+      "testCount": 4,
       "exports": [
         "BLOCK_END",
         "BLOCK_START",
