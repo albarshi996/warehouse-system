@@ -275,13 +275,19 @@ const BINARY = /\.(png|jpe?g|gif|ico|webp|pdf|zip|woff2?|ttf|eot|mp[34]|xlsx?|do
 test('لا رمزَ للشقيق في ملفٍّ متعقَّبٍ خارج جدول المواضع والمستثنيات المعلنة', () => {
   const sibling = tokensOf(card.sibling);
   const spots = new Set(SPOTS.map((s) => s.file));
+  // ★ والمولَّداتُ التي تُعيد المزامنةُ بناءها تُتجاوَز هنا كما تُتجاوَز في المسح
+  // المعكوس: هي تحمل هويّةَ من وصلت إليه بعد أوّل مزامنةٍ تُعيد بناءها، والحكمُ
+  // عليها قبلَ ذلك حكمٌ على حالةٍ عابرة. (وقع 2026-08-28: دليلُ الاستخدام
+  // المولَّد أوقف المزامنةَ وهو مقدَّرٌ أن يُعاد بناؤه في الخطوة التالية.)
+  const regenerated = new Set(SWEEP_REGENERATED);
   const tracked = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' })
     .split('\0')
     .filter(Boolean);
 
   const leaked = [];
   for (const file of tracked) {
-    if (spots.has(file) || isSweepExempt(file) || BINARY.test(file)) continue;
+    if (spots.has(file) || isSweepExempt(file) || regenerated.has(file) || BINARY.test(file))
+      continue;
     let text;
     try {
       text = fs.readFileSync(path.join(root, file), 'utf8');

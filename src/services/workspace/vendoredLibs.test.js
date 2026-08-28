@@ -38,13 +38,50 @@ const VENDORED = [
 
 const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 
+/** النسخةُ التي يفرضها القفل — الحقيقةُ المتعقَّبة. */
+function lockedVersion(lib) {
+  const lock = JSON.parse(fs.readFileSync(path.join(ROOT, 'package-lock.json'), 'utf8'));
+  return lock.packages?.[`node_modules/${lib}`]?.version ?? null;
+}
+
+/** النسخةُ المنصَّبةُ على القرص فعلًا — قد تسبق القفلَ أو تتأخّر عنه. */
+function installedVersion(lib) {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(ROOT, 'node_modules', lib, 'package.json'), 'utf8'))
+      .version;
+  } catch {
+    return null;
+  }
+}
+
 for (const { lib, hosted, source, why } of VENDORED) {
-  test(`★★★ ${lib} المستضافةُ ذاتيًّا نسخةٌ حرفيّةٌ ممّا نُرقّيه — لا ترقيةَ خضراءُ تشحن القديم`, () => {
+  test(`★★★ ${lib} المستضافةُ ذاتيًّا نسخةٌ حرفيّةٌ ممّا نُرقّيه — لا ترقيةَ خضراءُ تشحن القديم`, (t) => {
     const hostedPath = path.join(ROOT, hosted);
     const sourcePath = path.join(ROOT, source);
 
     assert.ok(fs.existsSync(hostedPath), `${hosted} مفقود — و${why}`);
     assert.ok(fs.existsSync(sourcePath), `${source} مفقود — نصَّبْ الحزم قبل الاختبار`);
+
+    // ★★ و`node_modules` ليست دائمًا صورةَ القفل.
+    //
+    // ═══ ولماذا هذا التحقّقُ قبل المقارنة؟ ═══
+    // في **مزامنة المستودع الشقيق** تُنصَّب الحزمُ **قبل الدمج** ثمّ يُدمج
+    // الشقيقُ بقفلٍ أحدث — فتصير `node_modules` أقدمَ من الشجرة بخطوة. وحينها
+    // تفترق البصمتان **بلا خطأٍ من أحد**، فيسقط هذا الحارسُ ويوقف مزامنةً
+    // صحيحة (وقع فعلًا 2026-08-28: القفل mermaid 11.17.2 والمنصَّب 11.15.0).
+    //
+    // والقياسُ الصادق يحتاج طرفين من زمنٍ واحد. فإن اختلف الزمنان **يُعلَن
+    // التخطّي بسببه** ولا يُدَّعى نجاح: والبوّابةُ الحقيقيّة في المستودع الذي
+    // يُنصّب من القفل ثمّ يختبر — وهناك يقع القياسُ كاملًا.
+    const locked = lockedVersion(lib);
+    const installed = installedVersion(lib);
+    if (locked && installed && locked !== installed) {
+      t.skip(
+        `node_modules أقدمُ من القفل (${installed} مقابل ${locked}) — لا يُقاس طرفان من زمنين. ` +
+          `شغّل npm ci ثمّ أعد الاختبار.`,
+      );
+      return;
+    }
 
     assert.equal(
       sha256(hostedPath),
