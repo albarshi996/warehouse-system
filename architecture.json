@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 110,
+    "modules": 111,
     "serviceDomains": 48,
-    "serviceFiles": 513,
-    "collections": 87,
+    "serviceFiles": 515,
+    "collections": 88,
     "roles": 18,
     "odooModels": 12,
     "odooGuards": 51,
@@ -547,6 +547,14 @@
         "recruitment",
         "ui"
       ]
+    },
+    {
+      "name": "pallet-control",
+      "route": "/dashboard/pallet-control",
+      "title": "الطبليات العائدة",
+      "summary": "الطبلياتُ العائدة — من له طبلياتٌ عندنا، ومن عنده طبلياتٌ لنا.",
+      "file": "src/pages/dashboard/pallet-control.astro",
+      "usesServices": []
     },
     {
       "name": "partner-ledger",
@@ -1946,21 +1954,27 @@
         "gateModel.test.js",
         "gateRoles.js",
         "gateRoles.test.js",
-        "gateService.js"
+        "gateService.js",
+        "palletLedger.js",
+        "palletLedger.test.js"
       ],
-      "fileCount": 5,
-      "testCount": 2,
+      "fileCount": 7,
+      "testCount": 3,
       "exports": [
         "EXIT_STATES",
         "GATE_REASONS",
         "GATE_WRITERS",
         "LOAD_STATES",
         "PALLET_CONDITIONS",
+        "PALLET_MOVES_CAP",
+        "PALLET_MOVE_KINDS",
         "PALLET_OWNERSHIP",
         "PALLET_TYPES",
+        "UNKNOWN_PARTY",
         "VISITOR_READERS",
         "VISITS_CAP",
         "assignDoor",
+        "balanceText",
         "canReadVisitor",
         "canWriteGate",
         "cancelVisit",
@@ -1975,30 +1989,42 @@
         "isGateReason",
         "isOnSite",
         "listenDoors",
+        "listenPalletMoves",
         "listenVisitEvents",
         "listenYardVisits",
         "loadGaps",
         "loadSummary",
+        "moveKind",
+        "moveProblems",
+        "movesFromLoad",
+        "movesOfParty",
         "needsDoor",
         "nextStepFor",
         "normalizePlate",
         "outLoadProblems",
+        "palletBalance",
         "palletConditionLabel",
         "palletOwnershipLabel",
         "palletTotal",
         "palletTypeLabel",
         "purposeOf",
         "reasonLabel",
+        "recordPalletAdjustment",
         "shapeGateLoad",
         "shapeInLoad",
+        "shapeMove",
         "shapeOutLoad",
         "shapePalletLine",
         "shapePalletLines",
         "shapeVisitor",
+        "signedCount",
         "verify",
-        "visitorGaps"
+        "visitorGaps",
+        "writePalletMoves"
       ],
-      "collections": []
+      "collections": [
+        "pallet_moves"
+      ]
     },
     {
       "domain": "hiring",
@@ -6269,6 +6295,38 @@
             "condition": "isStockActor()",
             "roles": [
               "isStockActor"
+            ]
+          },
+          {
+            "actions": [
+              "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "pallet_moves",
+        "path": "pallet_moves",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isYardWriter() && request.resource.data.byUid == request.auth.uid",
+            "roles": [
+              "isYardWriter"
             ]
           },
           {

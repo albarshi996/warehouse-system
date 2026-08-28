@@ -214,7 +214,7 @@
       "title": "مركزُ البوابة — الشاشةُ للهاتف أوّلًا وشرحُها في الدليل",
       "milestone": "م٢",
       "owner": "Claude",
-      "state": "doing",
+      "state": "done",
       "gaps": [
         "ج-١٢"
       ],
@@ -236,15 +236,19 @@
         "npm test أخضر (حارسُ الدليل) · npm run audit بلا صفحةٍ يتيمة",
         "جذرُ المكوّن يحمل o_theme والصفحةُ تستورد odoo.css — وإلّا عُرضت عاريةً"
       ],
-      "progress": "لم تبدأ بعد.",
-      "nextStep": "أنشئ src/components/brandzo-erp/gate/GatePost.jsx و gate-post.astro، وأدرِج تطبيق gate في navCatalog، واكتب شرحَه في usage-guide.json."
+      "progress": "تطبيق gate في navCatalog بأيقونة shield · gate-post.astro + GatePost.jsx (o_theme على الجذر) · gateService رقيقةٌ تستدعي yardService · gateRoles بقائمةٍ تُقرأ من firestore.rules · وشرحُ الشاشة في الدليل (١٠٣ شاشة). ★ واكتُشف عند الوصل أنّ الزائر لا يستطيع الخروج فأُضيف المسارُ القصير في canTransitionVisit بوسيطٍ اختياريّ.",
+      "nextStep": "أنشئ src/components/brandzo-erp/gate/GatePost.jsx و gate-post.astro، وأدرِج تطبيق gate في navCatalog، واكتب شرحَه في usage-guide.json.",
+      "evidence": {
+        "commit": "9bab3b9",
+        "closedOn": "2026-08-28"
+      }
     },
     {
       "id": "GATE-202",
       "title": "ثلاثُ لغاتٍ للحارس — والعربيّةُ أصلٌ واحتياط",
       "milestone": "م٢",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ج-١٢"
       ],
@@ -260,14 +264,19 @@
         "مفاتيحُ البوابة مضافةٌ إلى المعجم القائم — لا معجمٌ ثانٍ يفترق",
         "missingIn('en') و missingIn('fr') فارغتان بعد الإضافة",
         "مفتاحٌ ناقصٌ يعود عربيًّا لا فارغًا — مُثبَتًا بالاختبار"
-      ]
+      ],
+      "progress": "٣٥ مفتاحًا في fieldLexicon القائم بثلاث لغات — لا معجمٌ ثانٍ. missingIn(en) و missingIn(fr) فارغتان.",
+      "evidence": {
+        "commit": "9bab3b9",
+        "closedOn": "2026-08-28"
+      }
     },
     {
       "id": "GATE-203",
       "title": "وصلُ محرّك المسح ولوحةِ اللوحة — كاميرا وجهاز باركود معًا",
       "milestone": "م٢",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ج-١١"
       ],
@@ -282,14 +291,19 @@
         "useBarcodeCamera و useWedgeScanner موصولان — نفسُ نمط الشاشات الخمس",
         "اللوحةُ تُكتب بحقلٍ كبيرٍ لاتينيّ الاتّجاه ويُطبَّع بـnormalizePlate",
         "لا زرَّ يُخفى قبل أن يُجرَّب — الكاميرا ظاهرةٌ دائمًا وسببُ تعذّرها يُقال"
-      ]
+      ],
+      "progress": "useBarcodeCamera و useWedgeScanner موصولان · normalizePlate يُطبّع بلا تشويه · حقلُ اللوحة كبيرٌ لاتينيّ الاتّجاه.",
+      "evidence": {
+        "commit": "9bab3b9",
+        "closedOn": "2026-08-28"
+      }
     },
     {
       "id": "GATE-204",
       "title": "الخروجُ حركةً ثانية — حمولةُ الدخول ≠ حمولةُ الخروج على الشاشة",
       "milestone": "م٢",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ج-٦"
       ],
@@ -305,14 +319,19 @@
         "«١٥ دخلت · ٦ خرجت» تُقرأ في بطاقة الزيارة صراحةً — سيناريو قبولٍ منصوص",
         "الخروجُ الفارغ يُسجَّل بضغطةٍ واحدة ولا يطلب حقولًا",
         "ما تكتبه الشاشةُ يقرؤه الحارسُ فعلًا — لا حقلَ يُكتب بلا قارئ ولا حارسَ يقرأ حقلًا لا يُكتب"
-      ]
+      ],
+      "progress": "checkOut يكتب load.out قبل الانتقال فيقرأه القفلُ الرابع فعلًا · وحمولةُ الدخول معروضةٌ أمام الحارس وهو يصف الخروج · والفارغةُ بضغطة.",
+      "evidence": {
+        "commit": "9bab3b9",
+        "closedOn": "2026-08-28"
+      }
     },
     {
       "id": "GATE-301",
       "title": "دفترُ الطبليات العائدة — سجلٌّ ملحقٌ-فقط بكتابةٍ واحدة",
       "milestone": "م٣",
       "owner": "Claude",
-      "state": "todo",
+      "state": "doing",
       "gaps": [
         "ج-٧"
       ],
@@ -328,7 +347,9 @@
         "pallet_moves ملحقٌ-فقط: allow update, delete: if false في firestore.rules",
         "السطرُ يُكتب من gateService في اللحظة نفسِها للختم — لا بيدِ الشاشة ولا بكتابةٍ ثانية",
         "npm run audit يقبل المجموعة الجديدة — لكلّ مجموعةٍ قاعدة"
-      ]
+      ],
+      "progress": "لم تبدأ.",
+      "nextStep": "أنشئ palletLedger.js (منطق خالص) و pallet_moves في firestore.rules، واكتب السطرَ من gateService لحظةَ الختم."
     },
     {
       "id": "GATE-302",

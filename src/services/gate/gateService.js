@@ -29,8 +29,11 @@ import {
   holdVisit,
   VISITS_CAP,
 } from '../fleet/yardService.js';
+import { collection, addDoc, onSnapshot, query, orderBy, limit as fsLimit, serverTimestamp } from 'firebase/firestore';
+import { db, auth } from '../../config/firebase.js';
 import { EXIT_STAGE, PERMIT_STAGE, shapeVisit, stageIndex } from '../fleet/yardModel.js';
 import { shapeInLoad, shapeOutLoad, shapeVisitor, needsDoor, normalizePlate, isGateReason } from './gateModel.js';
+import { movesFromLoad, moveProblems, shapeMove } from './palletLedger.js';
 
 /** يُعاد تصديرُه كي لا تستورد الشاشةُ طبقتين لتقرأ زياراتٍ وأبوابًا. */
 export { listenYardVisits, listenDoors, listenVisitEvents, assignDoor, cancelVisit, holdVisit, VISITS_CAP };
@@ -60,7 +63,71 @@ export async function checkIn(input, profile) {
   const visitId = await openVisit(payload, profile, 'arrived');
   // الختمُ الثاني فورًا: الحارسُ سجّلها وهي أمامه، فزمنُ الانتظار يبدأ الآن.
   await advanceVisit(visitId, 'checkedIn', {}, profile);
+  await writePalletMoves('IN', payload.load.in, { visitId, plate: payload.plate, reason: payload.reason }, profile);
   return visitId;
+}
+
+/* ═══════════════ دفترُ الطبليات العائدة ‹GATE-301› ═══════════════ */
+
+const PALLET_MOVES = 'pallet_moves';
+
+/** أحدثُ ما يُقرأ من الدفتر — والرصيدُ التاريخيّ يُبنى بترحيلٍ لا بقراءةٍ أعرض. */
+export const PALLET_MOVES_CAP = 1000;
+
+/**
+ * ★★ يكتب أسطرَ الدفتر **في اللحظة نفسِها للختم** — لا بيدِ الشاشة ولا
+ * بكتابةٍ ثانيةٍ يتذكّرها أحدٌ أو ينساها.
+ *
+ * ولماذا لا يمنع فشلُه تسجيلَ الدخول؟ لأنّ الزيارة هي الواقعة والدفترُ أثرُها:
+ * شاحنةٌ تُردّ من الحاجز لأنّ سطرَ طبلياتٍ لم يُكتب عطبٌ أسوأ من رصيدٍ ناقص.
+ * فيُعلَن الفشلُ ولا يُبتلع — والخطأُ يعود للشاشة لتقوله.
+ *
+ * @returns {Promise<number>} عددُ الأسطر المكتوبة.
+ */
+export async function writePalletMoves(kind, load, ctx, profile) {
+  const moves = movesFromLoad(kind, load, ctx);
+  if (moves.length === 0) return 0;
+
+  const who = {
+    byUid: auth?.currentUser?.uid || null,
+    byName: profile?.name || auth?.currentUser?.email || 'غير معروف',
+    byRole: profile?.role || '',
+  };
+
+  for (const move of moves) {
+    // `at` بختم الخادم لا بساعة المتصفّح — والمنطق الخالص يقرأ ولا يقرّر.
+    const { at: _at, ...rest } = move;
+    await addDoc(collection(db, PALLET_MOVES), { ...rest, at: serverTimestamp(), ...who });
+  }
+  return moves.length;
+}
+
+/**
+ * سطرٌ يدويّ: رصيدٌ افتتاحيّ أو شطبُ تالفٍ ومفقود — **بسببٍ مكتوبٍ دائمًا**.
+ * وهو المدخلُ الوحيد لما لم يعبر البوّابة.
+ */
+export async function recordPalletAdjustment(input, profile) {
+  const move = shapeMove(input);
+  const problems = moveProblems(move);
+  if (problems.length) throw new Error(problems.join(' · '));
+
+  const { at: _at, ...rest } = move;
+  await addDoc(collection(db, PALLET_MOVES), {
+    ...rest,
+    at: serverTimestamp(),
+    byUid: auth?.currentUser?.uid || null,
+    byName: profile?.name || auth?.currentUser?.email || 'غير معروف',
+    byRole: profile?.role || '',
+  });
+}
+
+/** اشتراكٌ حيّ على الدفتر (الأحدث أوّلًا). */
+export function listenPalletMoves(callback, onError, max = PALLET_MOVES_CAP) {
+  return onSnapshot(
+    query(collection(db, PALLET_MOVES), orderBy('at', 'desc'), fsLimit(max)),
+    (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data(), at: d.data()?.at?.toMillis?.() ?? null }))),
+    (e) => onError?.(e)
+  );
 }
 
 /**
@@ -93,6 +160,14 @@ export async function checkOut(visitId, { out, permitRef } = {}, profile) {
     await advanceVisit(visitId, PERMIT_STAGE, { load, permitRef: permit }, profile);
   }
   await advanceVisit(visitId, EXIT_STAGE, { load, permitRef: permit }, profile);
+  // ‹GATE-301› أثرُ الخروج في دفتر الطبليات — بعد أن مرّ الحارسُ الرابع، فلا
+  // يُقيَّد خروجٌ رُفض. والجهةُ المستلِمةُ هي الطرفُ، وإن غابت فمن دخلت معه.
+  await writePalletMoves(
+    'OUT',
+    { ...load.out, party: load.out.party || load.in.party },
+    { visitId, plate: current.plate, reason: current.reason },
+    profile
+  );
   return { load, permitRef: permit };
 }
 
