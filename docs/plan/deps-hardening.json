@@ -93,7 +93,7 @@
       "title": "الموجة ١ — الحرجةُ وأدواتُ البناء (عشرُ مكتبات)",
       "milestone": "م١",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ث-١",
         "ث-٢"
@@ -110,7 +110,13 @@
         "nanoid · js-yaml · postcss · esbuild · @babel/core · brace-expansion · ws · adm-zip · ip-address مرقّاة",
         "البوّابةُ الخضراء بعد كلّ ترقية: ٣٠٧٣ اختبارًا · تدقيق · لِنت · بناء",
         "وما فشل مردودٌ فورًا ومُسجَّلٌ بسبب فشله — لا يُترك نصفَ مرقًّى"
-      ]
+      ],
+      "evidence": {
+        "commit": "d1719bb",
+        "closedOn": "2026-08-28",
+        "note": "العشرُ كلُّها رُقّيت ولا واحدةَ رُدّت · websocket-driver 0.7.4→0.7.5 (الحرجةُ أُغلقت) · nanoid 3.3.18 · js-yaml 4.3.2 · postcss 8.5.26 · esbuild 0.28.2 · @babel/core 7.29.7 · brace-expansion 1.1.18 · ws 8.21.3 · adm-zip 0.6.0 · ip-address 10.5.0 — والمجموع ٢٥ ← ١٤ وحرجة ١ ← ٠ ومنخفضة ٢ ← ٠",
+        "deviation": "نصُّ الخطّة «npm install <pkg>@<fix>» لم يُنفَّذ حرفيًّا: العشرُ كلُّها تبعيّاتٌ غيرُ مباشرة، فتنفيذُه كان سيضيف عشرَ تبعيّاتٍ مباشرةً لا يستوردها سطرٌ من شيفرتنا — فاستُعمل npm update (يمسّ package-lock وحدَه). واثنتان حبسهما أبوهما فاحتاجتا overrides صريحًا: esbuild (astro تطلب ^0.27.3 والإصلاح في 0.28 — وبصمةُ البناء بقيت e3a364fefcdc نفسَها) و adm-zip (onnxruntime-node تطلب ^0.5.16 والإصلاح في 0.6.0)."
+      }
     },
     {
       "id": "SEC-201",
