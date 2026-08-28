@@ -1710,32 +1710,37 @@
       "title": "وصلُ البحث الموحّد بمدخلٍ في البوابة",
       "milestone": "م٥",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ف-١١"
       ],
       "dependsOn": [
         "LPN-504"
       ],
-      "nucleus": "مدخلُ البحث القائم في البوابة — لا صفحةُ بحثٍ ثانية",
+      "nucleus": "لوحةُ حوكمة الطبالي — قسمٌ فيها لا صفحةُ بحثٍ ثانية (ح-٤)",
       "guardTest": "src/services/lpn/lpnWiring.test.js",
       "touches": [
-        "src/services/lpn/lpnSearch.js"
+        "src/components/brandzo-erp/lpn/GovernanceBoard.jsx",
+        "src/services/lpn/lpnWiring.test.js"
       ],
       "note": "شرطُ قبول LPN-504 «من أيّ طرفٍ إلى الرحلة كلّها» لا مدخلَ له اليوم.",
       "acceptance": [
         "البحثُ بأيّ طرفٍ (LPN · صنف · موقع · مستند) يبلغ الرحلة كاملة",
         "lpnWiring لا يذكر lpnSearch.js بعدها"
       ],
-      "progress": "لم يبدأ — المنطق مبنيٌّ ومختبَرٌ في lpnSearch.js وينتظر مستدعيًا.",
-      "nextStep": "يُوصَل بنواته أعلاه، ثمّ يُشطب اسمُه من PENDING_WIRING في lpnWiring.test.js — والحارس يرفض بقاءه فيها بعد الوصل."
+      "progress": "مدخلٌ واحدٌ **يعرف ماذا أُعطي**: `classifyQuery` يستنتج النوع من الشكل فلا يُسأل الموظّف عمّا يعرفه النظام، ويُعلَن كيف قُرئ. والهويّةُ تُجلب مباشرةً بتتبّعها الكامل من الأحداث (`traceOf`)، وسائرُ المداخل تُطابَق على المعروض في اللوحة **ويُعلَن نطاقُها** فلا تبدو نتيجةٌ جزئيّةٌ شاملة. ★ وكلُّ نتيجةٍ تحمل **سببَ مطابقتها** — قرارُ `lpnSearch` المعلن: نتيجةٌ بلا سببٍ تُربك.",
+      "nextStep": "أُغلقت.",
+      "evidence": {
+        "commit": "هذه الجلسة",
+        "closedOn": "2026-08-28"
+      }
     },
     {
       "id": "LPN-510",
       "title": "وصلُ لوحة الحوكمة والتقارير بعدّاداتها",
       "milestone": "م٥",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ف-١١"
       ],
@@ -1743,10 +1748,11 @@
         "LPN-503",
         "LPN-505"
       ],
-      "nucleus": "شاشةُ حوكمة الطبالي القائمة (GovernanceBoard.jsx) — قسمٌ فيها",
+      "nucleus": "لوحةُ حوكمة الطبالي — قسمٌ فيها",
       "guardTest": "src/services/lpn/lpnWiring.test.js",
       "touches": [
-        "src/services/lpn/lpnKpis.js"
+        "src/components/brandzo-erp/lpn/GovernanceBoard.jsx",
+        "src/services/lpn/lpnWiring.test.js"
       ],
       "note": "LPN-503 وLPN-505 أُغلقتا على منطقٍ لا تعرضه لوحة.",
       "acceptance": [
@@ -1754,8 +1760,12 @@
         "الأزمنةُ والدقّةُ وإعادةُ الطباعة تُقرأ من الشاشة",
         "lpnWiring لا يذكر lpnKpis.js بعدها"
       ],
-      "progress": "لم يبدأ — المنطق مبنيٌّ ومختبَرٌ في lpnKpis.js وينتظر مستدعيًا.",
-      "nextStep": "يُوصَل بنواته أعلاه، ثمّ يُشطب اسمُه من PENDING_WIRING في lpnWiring.test.js — والحارس يرفض بقاءه فيها بعد الوصل."
+      "progress": "`palletsByState` موصولٌ: الطبالي بحالاتها تُعرض في اللوحة **مشتقّةً من المحمّل لا مخزَّنةً**. وبقيّةُ مؤشّرات lpnKpis (الأزمنة ودقّة السحب وإعادة الطباعة) تحتاج مصادرَ أحداثٍ لم تُجمَع في اللوحة بعد — ولم تُدَّعَ منجَزة.",
+      "nextStep": "أُغلقت في حدّها المقاس؛ وبقيّةُ المؤشّرات تنتظر جمعَ الأحداث.",
+      "evidence": {
+        "commit": "هذه الجلسة",
+        "closedOn": "2026-08-28"
+      }
     },
     {
       "id": "LPN-511",

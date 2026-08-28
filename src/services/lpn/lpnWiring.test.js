@@ -31,8 +31,6 @@ const SRC = path.join(HERE, '..', '..');
  */
 const PENDING_WIRING = new Map([
   ['countPallet.js', 'LPN-501/502 — جردُ الطبلية ينتظر وصلًا بصفحة الجرد القائمة'],
-  ['lpnKpis.js', 'LPN-505 — تقاريرُ الأداء تنتظر لوحتَها'],
-  ['lpnSearch.js', 'LPN-504 — البحثُ الموحّد ينتظر مدخلَه في البوابة'],
   ['transferPallets.js', 'LPN-402/403/404 — النقلُ بالطبالي ينتظر وصلًا بشاشة النقل'],
 ]);
 
@@ -201,6 +199,20 @@ test('★★★ الأدوارُ موصولةٌ بالشاشات الثلاث �
     const src = fs.readFileSync(path.join(SRC, 'components', 'brandzo-erp', 'lpn', f), 'utf8');
     assert.ok(!src.includes('canDo('), `${f} تستعمل canDo — والمجهولُ يُحجب بها`);
   }
+});
+
+test('★★ البحثُ الموحّد والمؤشّراتُ في لوحة الحوكمة — ‹LPN-509/510›', () => {
+  const board = fs.readFileSync(
+    path.join(SRC, 'components', 'brandzo-erp', 'lpn', 'GovernanceBoard.jsx'),
+    'utf8'
+  );
+  assert.ok(board.includes('lpn/lpnSearch.js'), 'اللوحة لا تعرف البحث');
+  assert.ok(board.includes('lpn/lpnKpis.js'), 'اللوحة لا تعرف المؤشّرات');
+  for (const fn of ['classifyQuery', 'searchPallets', 'traceOf', 'palletsByState']) {
+    assert.ok(board.includes(fn), `«${fn}» مبنيٌّ ولا تستعمله اللوحة`);
+  }
+  // ★ وسببُ المطابقة يُعرض — نتيجةٌ بلا سببٍ تُربك (قرارُ lpnSearch المعلن).
+  assert.ok(board.includes('{why}'), 'النتائجُ بلا سببِ مطابقة');
 });
 
 test('★★ `palletMap` موصولٌ بخريطة المواقع — الحالةُ التي وُلد منها الحارس', () => {

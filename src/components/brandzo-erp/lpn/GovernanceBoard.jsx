@@ -24,6 +24,10 @@ import { executeDecision, listPendingGovernance } from '../../../services/lpn/re
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 // ‹LPN-511› الصلاحية تُعلَم قبل الضغط — والمجهولُ يمرّ.
 import { uiGate } from '../../../services/lpn/lpnRoles.js';
+// ‹LPN-509/510› البحثُ الموحّد والمؤشّرات — قسمان في لوحة الحوكمة لا صفحتان (ح-٤).
+import { QUERY_KINDS, classifyQuery, searchPallets, traceOf } from '../../../services/lpn/lpnSearch.js';
+import { palletsByState } from '../../../services/lpn/lpnKpis.js';
+import { getUnit, getUnitEvents } from '../../../services/lpn/lpnService.js';
 
 /**
  * الحالات المجلوبة من `handling_units` — أي **المعتمَدة فما بعد**.
@@ -80,6 +84,40 @@ export default function GovernanceBoard() {
   // ‹LPN-511› والمجهولُ يمرّ — فقراءةٌ فاشلةٌ للهويّة منعت المديرَ العامّ مرّة.
   const approveGate = uiGate(me?.role, 'APPROVE');
 
+  /* ── ‹LPN-509› البحثُ الموحّد — مدخلٌ واحدٌ يعرف ماذا أُعطي ── */
+  const [query, setQuery] = useState('');
+  const [hit, setHit] = useState(null);
+  const [trace, setTrace] = useState(null);
+  const [seeking, setSeeking] = useState(false);
+
+  const kind = useMemo(() => classifyQuery(query), [query]);
+  // المطابقاتُ من المحمّل لحظيًّا — والهويّةُ تُجلب مباشرةً أدناه.
+  const search = useMemo(
+    () => (query.trim() ? searchPallets(units, query) : null),
+    [units, query]
+  );
+  const localHits = (search?.results ?? []).slice(0, 20);
+
+  async function seek(e) {
+    e?.preventDefault?.();
+    const q = query.trim();
+    if (!q) return;
+    setHit(null); setTrace(null);
+    if (kind.kind !== 'LPN') return; // الباقي يُعرَض من المحمّل بلا جلب.
+    setSeeking(true);
+    try {
+      const u = await getUnit(kind.value);
+      if (!u) { setError(`لا طبليةَ بالهويّة «${kind.value}».`); return; }
+      setHit(u);
+      setTrace(traceOf(u, await getUnitEvents(u.code)));
+    } catch (err) {
+      setError(err?.message || 'تعذّر البحث.');
+    } finally { setSeeking(false); }
+  }
+
+  // ‹LPN-510› المؤشّراتُ تُشتقّ من المحمّل لا تُخزّن.
+  const byState = useMemo(() => palletsByState(units), [units]);
+
   async function decide(id) {
     if (!selected) return;
     if (!actorName) { setError('لم تُقرأ هويّتك بعد — أعد تحميل الصفحة.'); return; }
@@ -110,6 +148,80 @@ export default function GovernanceBoard() {
   return (
     <div className="o_theme" dir="rtl">
       <RoleGate gate={approveGate} />
+
+      {/* ── ‹LPN-509› البحث الموحّد: مدخلٌ واحدٌ يعرف ماذا أُعطي ────── */}
+      <form onSubmit={seek} className="mb-4">
+        <div className="flex gap-2">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="ابحث بأيّ طرف: هويّة طبلية · موقع · مستند · باركود · دفعة · مورّد"
+            className="flex-1 rounded-lg border px-4 py-3"
+            style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }}
+            autoComplete="off"
+          />
+          <button type="submit" className="btn btn-secondary text-sm" disabled={seeking || !query.trim()}>
+            {seeking ? '…' : 'تتبّع'}
+          </button>
+        </div>
+        {query.trim() && (
+          <p className="text-ink-2 text-xs mt-1">
+            قُرئ كـ<strong>{search?.kindLabel ?? QUERY_KINDS[kind.kind] ?? kind.kind}</strong>
+            {kind.kind !== 'LPN' && ' — والنتائجُ من المعروض في اللوحة، والتتبّعُ الكامل بهويّة الطبلية.'}
+          </p>
+        )}
+      </form>
+
+      {query.trim() && localHits.length > 0 && (
+        <ul className="space-y-2 mb-4">
+          {localHits.map(({ card: c, why }) => (
+            <li key={c.code} className="rounded-lg border px-3 py-2" style={{ borderColor: 'var(--o-border)' }}>
+                <button
+                  type="button"
+                  className="btn btn-link p-0 font-bold tabular-nums"
+                  onClick={() => { setQuery(c.code); setHit(null); setTrace(null); }}
+                >
+                  {c.code}
+                </button>
+                <span className="text-ink-2 text-xs"> · {c.stateLabel} · {c.bin || 'بلا رفّ'}</span>
+              {/* ★ سببُ المطابقة يُعرض — نتيجةٌ بلا سببٍ تُربك. */}
+              {why && <div className="text-ink-2 text-xs mt-0.5">{why}</div>}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {hit && trace && (
+        <div className="rounded-lg border px-4 py-3 mb-4" style={{ borderColor: 'var(--o-border)' }}>
+          <div className="font-bold text-ink tabular-nums mb-1">{trace.code}</div>
+          <ol className="space-y-1">
+            {(trace.stations ?? []).map((st, i) => (
+              <li key={`${st.at}-${i}`} className="text-sm text-ink-2">
+                <span className="tabular-nums">{String(st.at).slice(0, 16).replace('T', ' ')}</span>
+                {' — '}{st.label}
+                {st.where && ` @ ${st.where}`}
+                {st.doc && ` · ${st.doc}`}
+                {st.actor && ` · ${st.actor}`}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {/* ── ‹LPN-510› الطبالي بحالاتها — تُشتقّ من المحمّل لا تُخزَّن ── */}
+      {byState.length > 0 && (
+        <details className="mb-4">
+          <summary className="text-sm text-ink-2 cursor-pointer">الطبالي بحالاتها ({byState.length})</summary>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {byState.map((r) => (
+              <span key={r.state} className="rounded-lg border px-3 py-1 text-xs" style={{ borderColor: 'var(--o-border)' }}>
+                {r.state} <strong className="tabular-nums">{r.count}</strong>
+              </span>
+            ))}
+          </div>
+        </details>
+      )}
+
       {/* ── الطبقة ٢: العدّادات ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         <Counter label="بانتظار الحوكمة" value={counters.pendingApproval} warn={counters.pendingApproval > 0} />
