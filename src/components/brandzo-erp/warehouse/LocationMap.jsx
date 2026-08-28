@@ -26,8 +26,28 @@ import {
   warehouseCodesOf,
 } from '../../../services/locations/mapGrid.js';
 import { listenLaborTasks } from '../../../services/labor/laborTasksService.js';
+// ‹LPN-211› طبقةُ الطبالي — الاتجاه واحد: الشاشة تقرأ `lpn/`، و`locations/`
+// لا تعرفها (ح-٢، حارسُه `lpnIsolation.test.js`).
+import {
+  ON_FLOOR_STATES,
+  PALLET_LEGEND,
+  binSummary,
+  binsOfItem,
+  palletCellOf,
+  palletsByBin,
+  unexpectedPlacements,
+} from '../../../services/lpn/palletMap.js';
+import { listUnitsByState } from '../../../services/lpn/lpnService.js';
 
 const n = (v) => new Intl.NumberFormat('en-US').format(Number(v) || 0);
+
+/**
+ * ‹LPN-211› سقفُ الجلب لكلّ حالةٍ من حالات «على الأرض».
+ *
+ * السقفُ لازمٌ (استعلامٌ بلا حدٍّ يقرأ المجموعة كلّها على Spark)، **ويُعلَن
+ * حين يُبلَغ** — فخريطةٌ ناقصةٌ تبدو كاملةً أسوأ من خريطةٍ تقول إنّها ناقصة.
+ */
+const UNITS_PER_STATE = 300;
 
 export default function LocationMap() {
   const [locations, setLocations] = useState([]);
@@ -40,10 +60,24 @@ export default function LocationMap() {
   // ‹EXE-803› طبقةٌ ثانية على الشبكة نفسها — لا خريطةٌ ثانية ولا رابطٌ جديد.
   const [layer, setLayer] = useState('capacity');
   const [tasks, setTasks] = useState([]);
+  // ‹LPN-211› الطبالي الواقفة — تُجلب بحالاتها المصدَّرة لا بقائمةٍ ثانيةٍ هنا.
+  const [units, setUnits] = useState([]);
+  const [itemTerm, setItemTerm] = useState('');
 
   useEffect(() => listenLocations(setLocations, () => setLocations([])), []);
   useEffect(() => listenBalances(setBalances, () => setBalances([])), []);
   useEffect(() => listenLaborTasks(setTasks, () => setTasks([])), []);
+
+  // الجلبُ عند فتح الطبقة وحدها — الخريطة تُفتح للسعة في أغلب الأحيان،
+  // وقراءةُ كلّ الطبالي في كلّ فتحةٍ ثمنٌ بلا مقابل.
+  useEffect(() => {
+    if (layer !== 'pallets') return undefined;
+    let alive = true;
+    Promise.all(ON_FLOOR_STATES.map((st) => listUnitsByState(st, UNITS_PER_STATE)))
+      .then((rows) => { if (alive) setUnits(rows.flat()); })
+      .catch(() => { if (alive) setUnits([]); });
+    return () => { alive = false; };
+  }, [layer]);
 
   const warehouseCodes = useMemo(() => warehouseCodesOf(locations), [locations]);
   const grid = useMemo(
@@ -56,6 +90,37 @@ export default function LocationMap() {
   );
   const work = useMemo(() => summarizeWork(grid.cells), [grid]);
   const showWork = layer === 'work';
+  const showPallets = layer === 'pallets';
+
+  // ‹LPN-211› الفهرسُ يُشتقّ ولا يُخزَّن — حقلٌ على الموقع كان سيفترق عن
+  // الحقيقة أوّلَ نقلةٍ لم تُحدّثه، وهو ما يجعل الخرائط تكذب.
+  const byBin = useMemo(() => palletsByBin(units), [units]);
+  const palletCells = useMemo(() => {
+    const map = new Map();
+    for (const c of grid.cells) map.set(c.code, palletCellOf(binSummary(units, c.code)));
+    return map;
+  }, [grid.cells, units]);
+  const palletTotals = useMemo(() => {
+    let onGrid = 0;
+    let offGrid = 0;
+    for (const [bin, here] of byBin) {
+      if (palletCells.has(bin)) onGrid += here.length;
+      else offGrid += here.length;
+    }
+    return { total: units.length, onGrid, offGrid, bins: byBin.size };
+  }, [byBin, palletCells, units]);
+  const strays = useMemo(
+    () => (showPallets ? unexpectedPlacements(units, locations) : []),
+    [showPallets, units, locations]
+  );
+  const itemHits = useMemo(
+    () => (showPallets && itemTerm.trim() ? binsOfItem(units, itemTerm) : []),
+    [showPallets, itemTerm, units]
+  );
+  // «لا حدَّ صامت»: الجلبُ مسقوفٌ لكلّ حالة، والسقفُ يُعلَن حين يُبلَغ.
+  const capped = showPallets && ON_FLOOR_STATES.some(
+    (st) => units.filter((u) => u.state === st).length >= UNITS_PER_STATE
+  );
 
   const { summary } = grid;
   const cell = useMemo(() => grid.cells.find((c) => c.code === selected) || null, [grid.cells, selected]);
@@ -128,6 +193,7 @@ export default function LocationMap() {
         {[
           ['capacity', 'السعة والإشغال'],
           ['work', 'تقدّم العمل'],
+          ['pallets', 'الطبالي الواقفة'],
         ].map(([id, label]) => (
           <button
             key={id}
@@ -147,11 +213,58 @@ export default function LocationMap() {
             {work.stalled.length ? ` · متعثّر في ${work.stalled.length} موقعًا` : ''}
           </span>
         )}
+        {showPallets && (
+          <span className="bz-locmap__note" style={{ margin: 0 }}>
+            {n(palletTotals.total)} طبليةً واقفةً في {n(palletTotals.bins)} موقعًا
+            {palletTotals.offGrid > 0 && ` · ${n(palletTotals.offGrid)} خارج المرشّحات الحالية`}
+            {capped && ' · ⚠ بلغ سقفُ الجلب — المعروض ليس كلّ الطبالي'}
+          </span>
+        )}
       </div>
+
+      {/* ── البحثُ المعكوس ‹LPN-211›: أين يقف هذا الصنف؟ ─────────────── */}
+      {showPallets && (
+        <div className="bz-locmap__bar o_no_print" style={{ marginTop: 0 }}>
+          <label className="bz-locmap__field bz-locmap__field--grow">
+            <span>أين يقف هذا الصنف؟ (كودُ صنفٍ أو باركود)</span>
+            <input
+              className="o_input"
+              value={itemTerm}
+              onChange={(e) => setItemTerm(e.target.value)}
+              placeholder="مثال: WNW-001"
+            />
+          </label>
+        </div>
+      )}
+      {showPallets && itemTerm.trim() && (
+        itemHits.length === 0 ? (
+          <div className="o_alert">
+            لا طبليةَ واقفةٌ تحمل «{itemTerm.trim()}». وقد يكون له رصيدٌ بلا طبلية — الطبقةُ تعرض الحمولة لا الرصيد.
+          </div>
+        ) : (
+          <div className="bz-locmap__hits">
+            <strong>{n(itemHits.length)} موقعًا يحمل «{itemTerm.trim()}»</strong>
+            <ul className="bz-locmap__orphan-list">
+              {itemHits.map((h) => (
+                <li key={h.bin}>
+                  <button
+                    type="button"
+                    className="btn btn-link bz-locmap__mono"
+                    onClick={() => setSelected(h.bin)}
+                  >
+                    {h.bin}
+                  </button>
+                  {' — '}{n(h.qty)} وحدة في {n(h.pallets.length)} طبليةً
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      )}
 
       {/* ── المفتاح ───────────────────────────────────────────────── */}
       <div className="bz-locmap__legend" aria-label="مفتاح الخريطة">
-        {(showWork ? WORK_LEGEND : MAP_LEGEND).map((s) => (
+        {(showPallets ? PALLET_LEGEND : showWork ? WORK_LEGEND : MAP_LEGEND).map((s) => (
           <span key={s.id} className="bz-locmap__legend-item" title={s.hint}>
             <span className="bz-locmap__swatch" data-state={s.id} aria-hidden="true">
               {s.symbol}
@@ -193,31 +306,42 @@ export default function LocationMap() {
                   <div key={`${wh.warehouse}/${zone.zone}/${rack.rack}`} className="bz-locmap__rack">
                     <span className="bz-locmap__rack-label">{rack.rack || 'بلا رفّ'}</span>
                     <div className="bz-locmap__cells">
-                      {rack.cells.map((c) => (
-                        <button
-                          key={c.code}
-                          type="button"
-                          className="bz-locmap__cell"
-                          data-state={showWork ? `work-${c.work.state}` : c.state}
-                          data-alert={(showWork ? c.work.warn : c.alerts.length > 0) ? 'yes' : undefined}
-                          aria-pressed={selected === c.code}
-                          aria-label={showWork ? `${c.code} · ${c.work.summaryText}` : c.summaryText}
-                          title={showWork ? `${c.code} · ${c.work.summaryText}` : c.summaryText}
-                          onClick={() => setSelected(selected === c.code ? null : c.code)}
-                        >
-                          <span className="bz-locmap__cell-sym" aria-hidden="true">
-                            {showWork ? c.work.symbol : c.symbol}
-                          </span>
-                          <span className="bz-locmap__cell-code">{c.shortLabel}</span>
-                          <span className="bz-locmap__cell-qty">
-                            {showWork
-                              ? (c.work.required ? `${n(c.work.done)}/${n(c.work.required)}` : '—')
-                              : c.occupancy.capacityQty === null
-                                ? n(c.occupancy.usedQty)
-                                : `${n(c.occupancy.usedQty)}/${n(c.occupancy.capacityQty)}`}
-                          </span>
-                        </button>
-                      ))}
+                      {rack.cells.map((c) => {
+                        const pal = palletCells.get(c.code);
+                        const state = showPallets ? `pallet-${pal?.state ?? 'none'}`
+                          : showWork ? `work-${c.work.state}` : c.state;
+                        const warn = showPallets ? Boolean(pal?.warn)
+                          : showWork ? c.work.warn : c.alerts.length > 0;
+                        const text = showPallets ? `${c.code} · ${pal?.summaryText ?? 'بلا طبالي'}`
+                          : showWork ? `${c.code} · ${c.work.summaryText}` : c.summaryText;
+                        return (
+                          <button
+                            key={c.code}
+                            type="button"
+                            className="bz-locmap__cell"
+                            data-state={state}
+                            data-alert={warn ? 'yes' : undefined}
+                            aria-pressed={selected === c.code}
+                            aria-label={text}
+                            title={text}
+                            onClick={() => setSelected(selected === c.code ? null : c.code)}
+                          >
+                            <span className="bz-locmap__cell-sym" aria-hidden="true">
+                              {showPallets ? (pal?.symbol ?? '·') : showWork ? c.work.symbol : c.symbol}
+                            </span>
+                            <span className="bz-locmap__cell-code">{c.shortLabel}</span>
+                            <span className="bz-locmap__cell-qty">
+                              {showPallets
+                                ? (pal?.countText ?? '—')
+                                : showWork
+                                  ? (c.work.required ? `${n(c.work.done)}/${n(c.work.required)}` : '—')
+                                  : c.occupancy.capacityQty === null
+                                    ? n(c.occupancy.usedQty)
+                                    : `${n(c.occupancy.usedQty)}/${n(c.occupancy.capacityQty)}`}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -249,6 +373,61 @@ export default function LocationMap() {
               <Icon name="alertTriangle" size={15} /> <strong>{a.labelAr}</strong> — {a.hint}
             </div>
           ))}
+
+          {/* ── ‹LPN-211› ماذا في هذا الرفّ؟ ───────────────────────── */}
+          {showPallets && (() => {
+            const bs = binSummary(units, cell.code);
+            if (bs.count === 0) {
+              return (
+                <p className="bz-locmap__note">
+                  لا طبليةَ واقفةٌ هنا. والرصيدُ أعلاه يُقرأ من الدفتر — فالحمولة طبقةٌ فوقه لا بديلٌ عنه.
+                </p>
+              );
+            }
+            return (
+              <div className="bz-locmap__pallets">
+                <strong>
+                  {n(bs.count)} طبليةً · {n(bs.itemCount)} صنفًا · {n(bs.totalQty)} وحدة
+                  {bs.blocked > 0 && ` · ${n(bs.blocked)} موسومة`}
+                  {bs.mixed > 0 && ` · ${n(bs.mixed)} مخلوطة`}
+                </strong>
+                <ul className="bz-locmap__pallet-list">
+                  {bs.pallets.map((p) => (
+                    <li key={p.code} data-warn={p.flags.length ? 'yes' : undefined}>
+                      <span className="bz-locmap__mono">{p.code}</span>
+                      <span className="bz-locmap__pallet-state">{p.stateLabel}</span>
+                      <span>{n(p.itemCount)} صنفًا · {n(p.totalQty)} وحدة</span>
+                      {p.isMixed && <span className="bz-locmap__tag">مخلوطة</span>}
+                      {p.flagLabels.map((f) => (
+                        <span key={f} className="bz-locmap__tag" data-danger="yes">{f}</span>
+                      ))}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* ── ‹LPN-211› حمولةٌ في موضعٍ غير متوقّع — مقاسٌ لا مظنون ───── */}
+      {showPallets && strays.length > 0 && (
+        <div className="o_alert danger bz-locmap__orphans">
+          <div className="o_alert_title">
+            <Icon name="alertTriangle" size={16} /> {n(strays.length)} موقعًا فيه حمولةٌ لا ينبغي أن تقف فيه
+          </div>
+          <p>
+            إمّا رفٌّ لا يعرفه سيّد المواقع، أو رفٌّ أُخرج من الخدمة ونُسيت فيه حمولة — وكلاهما يحتاج إنسانًا.
+          </p>
+          <ul className="bz-locmap__orphan-list">
+            {strays.slice(0, 12).map((o) => (
+              <li key={o.bin}>
+                {o.reason} — {n(o.pallets.length)} طبليةً ({o.pallets.slice(0, 3).join('، ')}
+                {o.pallets.length > 3 ? '…' : ''})
+              </li>
+            ))}
+          </ul>
+          {strays.length > 12 && <p>… و{n(strays.length - 12)} موقعًا آخر.</p>}
         </div>
       )}
 
@@ -373,6 +552,36 @@ const MAP_CSS = `
   background-color:var(--o-badge-danger-bg); border-color:var(--o-text-danger); color:var(--o-text-danger);
   background-image:repeating-linear-gradient(45deg, transparent 0 5px, rgba(210,63,58,.20) 5px 10px),
                    repeating-linear-gradient(-45deg, transparent 0 5px, rgba(210,63,58,.20) 5px 10px); }
+
+/* ‹LPN-211› طبقة الطبالي — النمط نفسه: لونٌ + نمطٌ + رمزٌ في الترميز. */
+.bz-locmap__cell[data-state="pallet-none"], .bz-locmap__swatch[data-state="none"] {
+  background-color:var(--o-gray-100); border-color:var(--o-gray-400); color:var(--o-gray-600); }
+.bz-locmap__cell[data-state="pallet-stored"], .bz-locmap__swatch[data-state="stored"] {
+  background-color:var(--o-badge-success-bg); border-color:var(--o-text-success); color:var(--o-text-success); }
+.bz-locmap__cell[data-state="pallet-busy"], .bz-locmap__swatch[data-state="busy"] {
+  background-color:var(--o-badge-info-bg); border-color:var(--o-text-info); color:var(--o-text-info);
+  background-image:repeating-linear-gradient(45deg, transparent 0 5px, rgba(23,115,160,.20) 5px 10px); }
+.bz-locmap__cell[data-state="pallet-mixed"], .bz-locmap__swatch[data-state="mixed"] {
+  background-color:var(--o-badge-warning-bg); border-color:var(--o-text-warning); color:var(--o-text-warning);
+  background-image:repeating-linear-gradient(45deg, transparent 0 5px, rgba(153,102,0,.18) 5px 10px),
+                   repeating-linear-gradient(-45deg, transparent 0 5px, rgba(153,102,0,.18) 5px 10px); }
+.bz-locmap__cell[data-state="pallet-held"], .bz-locmap__swatch[data-state="held"] {
+  background-color:var(--o-badge-danger-bg); border-color:var(--o-text-danger); color:var(--o-text-danger);
+  background-image:radial-gradient(var(--o-text-danger) 1.2px, transparent 1.2px); background-size:6px 6px; }
+
+/* قائمةُ طبالي الخانة المختارة والبحثُ المعكوس. */
+.bz-locmap__pallets { margin-top:10px; }
+.bz-locmap__hits { margin:8px 0 12px; padding:10px 12px; border:1px solid var(--o-border-color);
+  border-radius:var(--o-border-radius); background:var(--o-view-background); }
+.bz-locmap__pallet-list { list-style:none; margin:6px 0 0; padding:0; display:flex; flex-direction:column; gap:5px; }
+.bz-locmap__pallet-list > li { display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+  padding:6px 8px; border:1px solid var(--o-border-color); border-radius:var(--o-border-radius);
+  background:var(--o-gray-100); }
+.bz-locmap__pallet-list > li[data-warn="yes"] { border-color:var(--o-text-danger); background:var(--o-badge-danger-bg); }
+.bz-locmap__pallet-state { font-size:var(--o-font-size-xs); color:var(--o-main-color-muted); }
+.bz-locmap__tag { font-size:var(--o-font-size-xs); padding:1px 7px; border-radius:999px;
+  border:1px solid var(--o-text-warning); color:var(--o-text-warning); }
+.bz-locmap__tag[data-danger="yes"] { border-color:var(--o-text-danger); color:var(--o-text-danger); }
 
 /* التنبيه وحده يستحقّ إطارًا أحمر عريضًا — لا حالةٌ عاديّة. */
 .bz-locmap__cell[data-alert="yes"] { box-shadow:inset 0 0 0 2px var(--o-text-danger); }

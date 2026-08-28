@@ -15,12 +15,19 @@ import { normalizeLocationCode, parentCodeOf } from '../locations/locationCode.j
 import { isAvailable, LPN_FLAGS, stateLabel } from './lpnLifecycle.js';
 import { distinctItems, totalBaseQty } from './lpnContents.js';
 
-/** الحالات التي تعني «الحمولة واقفةٌ في المستودع فعلًا». */
-const ON_FLOOR = ['PENDING_PUTAWAY', 'LABEL_PRINTED', 'STORED', 'RESERVED', 'PICKING'];
+/**
+ * الحالات التي تعني «الحمولة واقفةٌ في المستودع فعلًا».
+ *
+ * ★ مصدَّرةٌ لأنّ الشاشة تجلب بها: قائمةٌ ثانيةٌ في المكوّن كانت ستفترق عن هذه
+ * أوّلَ حالةٍ تُضاف، فتختفي طبليةٌ من الخريطة ولا يُنبّه أحد.
+ */
+export const ON_FLOOR_STATES = Object.freeze([
+  'PENDING_PUTAWAY', 'LABEL_PRINTED', 'STORED', 'RESERVED', 'PICKING',
+]);
 
 /** أهذه الطبلية واقفةٌ في مكانٍ يُعرض على الخريطة؟ */
 export function isOnFloor(unit) {
-  return ON_FLOOR.includes(unit?.state) && Boolean(normalizeLocationCode(unit?.bin));
+  return ON_FLOOR_STATES.includes(unit?.state) && Boolean(normalizeLocationCode(unit?.bin));
 }
 
 /**
@@ -160,4 +167,80 @@ export function unexpectedPlacements(units, locations) {
     }
   }
   return out;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * طبقةُ العرض على شبكة المواقع — ‹LPN-211›
+ *
+ * الشبكة واحدةٌ وما يُلوَّن به يتبدّل (نمط `WORK_LEGEND` في `mapGrid.js`،
+ * قرار المالك LOC-O04: لا خريطةٌ ثانية ولا رابطٌ جديد). ويسكن الوصفُ هنا لا
+ * هناك لأنّ الاتجاه المشروع واحد: `lpn/` يقرأ القائم، والقائم لا يعرف
+ * `lpn/` أبدًا (ح-٢، وحارسُه `lpnIsolation.test.js`).
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+/** حالاتُ الخانة في طبقة الطبالي — لكلٍّ رمزٌ ونمطٌ ونصّ إلى جانب اللون. */
+export const PALLET_CELL_STATES = Object.freeze({
+  none: {
+    id: 'none', labelAr: 'بلا طبالي', symbol: '·', pattern: 'none', tone: 'muted', warn: false,
+    hint: 'لا حمولةَ واقفةٌ في هذا الموقع — وقد يحمل رصيدًا بلا طبلية.',
+  },
+  stored: {
+    id: 'stored', labelAr: 'مخزَّنة ومتاحة', symbol: '▪', pattern: 'solid', tone: 'ok', warn: false,
+    hint: 'طبالٍ متاحةٌ بصنفٍ واحدٍ لكلٍّ — تُسحب بلا سؤال.',
+  },
+  busy: {
+    id: 'busy', labelAr: 'محجوزة أو تُسحب', symbol: '◐', pattern: 'diagonal', tone: 'neutral', warn: false,
+    hint: 'فيه طبليةٌ محجوزةٌ لأمرٍ أو جارٍ سحبُها — قائمةٌ ولا تُتاح لغيره.',
+  },
+  mixed: {
+    id: 'mixed', labelAr: 'مخلوطة', symbol: '◈', pattern: 'cross', tone: 'warn', warn: false,
+    hint: 'فيه طبليةٌ تحمل أكثر من صنف — تُعدّ بندًا بندًا لا طبليةً واحدة.',
+  },
+  held: {
+    id: 'held', labelAr: 'موسومة بحاجب', symbol: '⚑', pattern: 'dense', tone: 'danger', warn: true,
+    hint: 'فيه طبليةٌ موسومةٌ (تالفة أو محجورة أو غيرها) — لا تُصرف قبل رفع الوسم.',
+  },
+});
+
+export const PALLET_CELL_ORDER = Object.freeze(['none', 'stored', 'busy', 'mixed', 'held']);
+
+export const PALLET_LEGEND = PALLET_CELL_ORDER.map((id) => PALLET_CELL_STATES[id]);
+
+/**
+ * حالُ الخانة من ملخّص طباليها — **بأسوأ ما فيها لا بأغلبه**.
+ *
+ * رفٌّ فيه عشرُ طبالٍ إحداها موسومةٌ يُعرض موسومًا: الخريطة تُقرأ لتُقرَّر
+ * منها حركة، والمتوسّطُ يخفي الاستثناء الذي يوقف الحركة. وترتيبُ الأولويّة
+ * حاجبٌ ← مخلوطٌ ← مشغولٌ ← مخزَّن.
+ *
+ * @param {{count:number, available:number, blocked:number, mixed:number}} summary
+ * @returns {{state:string, symbol:string, labelAr:string, warn:boolean, countText:string, summaryText:string}}
+ */
+export function palletCellOf(summary) {
+  const count = Number(summary?.count) || 0;
+  const blocked = Number(summary?.blocked) || 0;
+  const mixed = Number(summary?.mixed) || 0;
+  const available = Number(summary?.available) || 0;
+
+  const id = count === 0 ? 'none'
+    : blocked > 0 ? 'held'
+      : mixed > 0 ? 'mixed'
+        : available < count ? 'busy'
+          : 'stored';
+
+  const s = PALLET_CELL_STATES[id];
+  const parts = [`${count} طبليةً`];
+  if (blocked > 0) parts.push(`${blocked} موسومة`);
+  if (mixed > 0) parts.push(`${mixed} مخلوطة`);
+  if (count > 0 && available < count) parts.push(`${count - available} غير متاحة`);
+  if (Number(summary?.itemCount) > 0) parts.push(`${summary.itemCount} صنفًا`);
+
+  return {
+    state: id,
+    symbol: s.symbol,
+    labelAr: s.labelAr,
+    warn: s.warn,
+    countText: count === 0 ? '—' : String(count),
+    summaryText: count === 0 ? s.labelAr : parts.join(' · '),
+  };
 }

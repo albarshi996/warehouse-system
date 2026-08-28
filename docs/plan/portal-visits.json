@@ -1,0 +1,155 @@
+{
+  "plan": "سجلّ زيارات البوّابة ‹VIS›",
+  "planDoc": "docs/خطة-سجل-زيارات-البوابة.md",
+  "resumeTitle": "سجلّ زيارات البوّابة ‹VIS›",
+  "command": "npm run plan:visits",
+  "track": "المتتبّع العاشر — من دخل ومن أيّ جهازٍ وأيَّ شاشةٍ فتح",
+  "source": "طلب المالك 2026-08-28: «سجلٌّ لمعرفة حركة كلّ دخولٍ وموقعه على البوّابة حتّى لو كان نفس اليوزر» · بلا موقعٍ جغرافيّ · «لا نريد أن ينهار شيء»",
+  "lastUpdated": "2026-08-28",
+  "lastUpdatedBy": "Claude",
+  "baseline": "لا سجلَّ نشاطٍ في البوّابة إطلاقًا: authService يُصادِق ولا يُسجّل، والسجلّات الملحقة-فقط القائمة كلُّها لكلّ مستندٍ أو عمليّة ولا واحدَ منها يجيب «من دخل البوّابة اليوم».",
+  "milestones": [
+    { "id": "م١", "title": "النموذج الخالص ورقم الجهاز", "estimate": "جلسة" },
+    { "id": "م٢", "title": "الخدمة والقاعدة والوصل", "estimate": "جلسة" },
+    { "id": "م٣", "title": "الشاشة والبوّابة الخضراء", "estimate": "جلسة" }
+  ],
+  "gaps": {
+    "و-١": "لا سجلَّ دخولٍ ولا خروج — authService.signIn يُصادِق ولا يكتب شيئًا",
+    "و-٢": "لا سجلَّ تنقّلٍ بين الشاشات — لا يُعرف ما فُتح ولا متى",
+    "و-٣": "لا تمييزَ لجهازٍ عن جهاز — فحسابٌ واحدٌ خلفه شخصان لا يُكشف (طلب المالك الأصليّ)",
+    "و-٤": "لا شاشةَ قراءةٍ للمدير — ولا حتّى مصدرٌ يُقرأ منه"
+  },
+  "ownerInputs": [
+    {
+      "id": "VIS-O01",
+      "milestone": "م٢",
+      "need": "نشرُ firestore.rules من Firebase Console بعد إضافة portal_visits — الوكلاء يعدّلونها في الريبو والمالك وحده ينشرها",
+      "ifMissing": "كلُّ زيارةٍ ترتدّ permission-denied (مبتلَعةً صامتًا) ويبقى السجلّ فارغًا — والبوّابة تعمل كما هي",
+      "state": "todo"
+    }
+  ],
+  "whereToFind": [
+    { "what": "سجلّ زيارات البوّابة", "path": "/dashboard/portal-visits", "nav": "الأرشيف والمرجعية — للأدمن وحده" }
+  ],
+  "tasks": [
+    {
+      "id": "VIS-101",
+      "title": "النموذجُ الخالص — وكشفُ الحساب بجهازين",
+      "milestone": "م١",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": ["و-٣"],
+      "dependsOn": [],
+      "touches": ["src/services/activity/visitModel.js", "src/services/activity/visitModel.test.js"],
+      "guardTest": "src/services/activity/visitModel.test.js",
+      "progress": "multiDeviceAccounts يكشف الحسابَ بجهازين في اليوم نفسه · والتسميةُ تُشتقّ من navCatalog فلا تتقادم · والمعرّفُ الحتميّ يمنع التضاعف · ولا ساعةَ تُقرأ.",
+      "acceptance": [
+        "حسابٌ من جهازين في اليوم نفسه يُكشف — وهو سؤال المالك حرفيًّا",
+        "وجهازٌ واحدٌ مهما تكرّر لا يُكشف — فلا إنذارٌ كاذب",
+        "ويومان لا يختلطان — انتقالُ موظّفٍ إلى حاسوبه غدًا ليس تهمة",
+        "المعرّفُ صالحٌ لـFirestore: بلا شرطةٍ مائلةٍ ولا حروفٍ عربيّة",
+        "ولا ساعةَ تُقرأ في المنطق الخالص — الوقتُ يُمرَّر وسيطًا"
+      ],
+      "evidence": { "commit": "82c01ca", "closedOn": "2026-08-28" }
+    },
+    {
+      "id": "VIS-102",
+      "title": "رقمُ الجهاز — ولا يُسقط شاشةً إن مُنع التخزين",
+      "milestone": "م١",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": ["و-٣"],
+      "dependsOn": ["VIS-101"],
+      "touches": ["src/services/activity/deviceId.js", "src/services/activity/visitModel.test.js"],
+      "guardTest": "src/services/activity/visitModel.test.js",
+      "progress": "رقمٌ عشوائيٌّ من أربعة محارفَ لا تلتبس — لا بصمةَ متصفّحٍ تتعقّب عابرًا للمواقع. والتخزينُ يُحقَن فيُختبر بلا متصفّح.",
+      "acceptance": [
+        "متصفّحٌ يمنع التخزين يعيد رقمًا للجلسة ولا يرمي — مُثبَتًا بالنقض",
+        "ويُعلَن عدمُ الثبات (persisted:false) فلا يُبنى على رقمٍ متغيّر",
+        "ورقمٌ محفوظٌ سليمٌ يُعاد كما هو — فلا يتغيّر الجهازُ كلّ صفحة",
+        "وقيمةٌ تالفةٌ في التخزين تُستبدل ولا تُستعمل"
+      ],
+      "evidence": { "commit": "82c01ca", "closedOn": "2026-08-28" }
+    },
+    {
+      "id": "VIS-201",
+      "title": "الخدمةُ وقاعدةُ portal_visits — ملحقةٌ-فقط وقراءتُها للأدمن",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": ["و-١", "و-٢"],
+      "dependsOn": ["VIS-102"],
+      "touches": ["src/services/activity/visitService.js", "firestore.rules"],
+      "guardTest": "src/services/activity/visitWiring.test.js",
+      "progress": "portal_visits ملحقةٌ-فقط **بلا update عمدًا**: المعرّفُ الحتميّ يجعل الكتابةَ الثانية تُرفض لا تكتب فوق الأولى. والقراءةُ للأدمن وحده.",
+      "acceptance": [
+        "allow update, delete: if false — والكتابةُ باسم صاحبها لا باسم غيره",
+        "allow read للأدمن وحده — يُفرض على الخادم لا في الشاشة",
+        "npm run audit يقبل المجموعة الجديدة — لكلّ مجموعةٍ قاعدة"
+      ],
+      "evidence": { "commit": "82c01ca", "closedOn": "2026-08-28" }
+    },
+    {
+      "id": "VIS-202",
+      "title": "★★★ الوصلُ في AuthGate — ولا يُسقط البوّابة أبدًا",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": ["و-١", "و-٢"],
+      "dependsOn": ["VIS-201"],
+      "touches": ["src/components/brandzo-erp/access/AuthGate.jsx", "src/services/activity/visitWiring.test.js"],
+      "guardTest": "src/services/activity/visitWiring.test.js",
+      "progress": "سطرٌ واحدٌ في AuthGate الذي يعمل في كلّ صفحةٍ أصلًا — فلم تُلمس ٩٩ صفحة. وثمانيةُ حرّاسٍ تقرأ الشيفرة نفسَها وتُسقط الاختبار إن دخلها await أو ضاع حارس.",
+      "acceptance": [
+        "recordVisit يُستدعى فعلًا — لا استيرادٌ ميّت",
+        "بلا await يحبس الرسم — واختبارٌ يسقط إن دخل",
+        "ويُسجَّل بعد كشف الغطاء لا قبله",
+        "وكلُّ خطأٍ مبتلَعٌ في الخدمة — لا يصعد إلى الحارس",
+        "★ وAuthGate لم يفقد حارسًا من حرّاسه ولا تحويلًا من تحويلاته الثلاثة"
+      ],
+      "evidence": { "commit": "82c01ca", "closedOn": "2026-08-28" }
+    },
+    {
+      "id": "VIS-301",
+      "title": "الشاشةُ للأدمن — وشرحُها في الدليل",
+      "milestone": "م٣",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": ["و-٤"],
+      "dependsOn": ["VIS-202"],
+      "touches": [
+        "src/pages/dashboard/portal-visits.astro",
+        "src/components/brandzo-erp/access/PortalVisits.jsx",
+        "src/services/auth/navCatalog.js",
+        "src/data/usage-guide.json"
+      ],
+      "guardTest": "src/services/auth/usageGuide.test.js",
+      "progress": "ثلاثُ طبقات: الحسابُ بجهازين أوّلًا · ثمّ اللقطة وأنشطُ الشاشات · ثمّ جدولُ المالك. وبندٌ **واحدٌ** في navCatalog **بلا لمس navAccess** (ض-٥).",
+      "acceptance": [
+        "الجدولُ كما أقرّه المالك: الوقت · من · الجهاز · ماذا فعل",
+        "شرحُ الشاشة في usage-guide.json — شرطُ قبولٍ لا تابعٌ لاحق",
+        "بندٌ واحدٌ مضافٌ في navCatalog ولا لمسَ لـnavAccess — أقلُّ تصادمٍ مع الجلسة المتوازية",
+        "ومنعُ القراءة يُقال نصًّا لا يُعرض فراغًا يُشبه «لا زيارات»"
+      ],
+      "evidence": { "commit": "82c01ca", "closedOn": "2026-08-28" }
+    },
+    {
+      "id": "VIS-302",
+      "title": "البوّابةُ الخضراء",
+      "milestone": "م٣",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": ["و-١", "و-٢", "و-٣", "و-٤"],
+      "dependsOn": ["VIS-301"],
+      "touches": ["package.json", "docs/plan/portal-visits.json"],
+      "progress": "٣٠٦٥ اختبارًا (+٣١) · دليلٌ ١٠٦ شاشة · تدقيقٌ نظيف · لِنت بتحذيره المعلوم الواحد (عاد إلى خطّ الأساس بعد إصلاح تحذيرٍ أحدثتُه) · بناءٌ ١٢٠ صفحة.",
+      "acceptance": [
+        "npm test أخضر بلا نقصان",
+        "npm run audit نظيف — ولا زيادةَ على خطّ أساس «بلا اختبارٍ مجاور» (٢١)",
+        "npm run lint بتحذيره المعلوم الواحد لا أكثر",
+        "npm run build ناجح"
+      ],
+      "evidence": { "commit": "82c01ca", "closedOn": "2026-08-28" }
+    }
+  ]
+}

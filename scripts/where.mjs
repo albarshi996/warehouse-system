@@ -9,6 +9,7 @@ import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { scanWorktrees, guardReport } from './guard-worktrees.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -119,3 +120,13 @@ console.info(
     `  ولنقل تصليحٍ مفردٍ دون ربط ريموتٍ دائم:\n` +
     `    git fetch ${ws.sibling.remote} main && git cherry-pick <sha>${OFF}\n`
 );
+
+/**
+ * ★★★ حارسُ أشجار العمل — يُطبع هنا لأنّ هذا **أوّلُ أمرٍ في كلّ جلسة**.
+ *
+ * عطبُ 2026-08-28: جلستان عدّلتا سطرَ `gate_officer` نفسَه في يومٍ واحد، وخمسُ
+ * قواعدِ Firestore نُشرت ولا وجودَ لها في أيّ كوميت — لأنّ عملَها بقي في
+ * مجلّدٍ بلا حفظ. وحارسٌ يحتاج أن يتذكّره أحدٌ ليس حارسًا، فأُلحق بما يُقرأ
+ * حتمًا. ويُعلن ولا يمنع — والقرارُ للإنسان.
+ */
+console.info(guardReport(scanWorktrees(root, Date.now())) + '\n');

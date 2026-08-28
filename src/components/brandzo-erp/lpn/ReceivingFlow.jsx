@@ -23,13 +23,15 @@ import { buildItemIndexes } from '../../../services/items/uomWiring.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import { listenDocumentsByTypes } from '../../../services/documents/documentsService.js';
 import { documentLineProgress } from '../../../services/documents/documentLineProgress.js';
-import { openOrderCard, remainingOf, sessionTotals } from '../../../services/lpn/receivingSession.js';
+import { openOrderCard, remainingOf, sessionCloseProblem, sessionTotals } from '../../../services/lpn/receivingSession.js';
 import {
   addDraft,
   closeDraftToGovernance,
   createGrnFromSession,
   finishSession,
+  leaveSession,
   listenSession,
+  listOpenSessions,
   scanIntoDraft,
   startSession,
 } from '../../../services/lpn/receivingService.js';
@@ -41,8 +43,16 @@ import {
 } from '../scan/BarcodeCamera.jsx';
 import { useWedgeScanner } from '../scan/useWedgeScanner.js';
 import { normalizeScanned } from '../../../services/scan/scanEngine.js';
+// ‹LPN-214› طورُ التخزين — آخرُ خطوةٍ في الاستلام الميدانيّ لا شاشةٌ رابعة.
+import { executePutaway, listPutawayQueue, openTask, previewBin } from '../../../services/lpn/putawayService.js';
+import { listenLocations } from '../../../services/locations/locationsService.js';
+import { listenBalances } from '../../../services/balances/balancesService.js';
+// ‹LPN-511› الصلاحية تُعلَم قبل الضغط لا بعد ارتداد الخادم.
+import { uiGate } from '../../../services/lpn/lpnRoles.js';
+import { FieldLangSwitch, useFieldLang } from './useFieldLang.jsx';
 
 export default function ReceivingFlow() {
+  const { lang, dir, setLang, tr } = useFieldLang();
   const [me, setMe] = useState(null);
   const [items, setItems] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -56,14 +66,49 @@ export default function ReceivingFlow() {
   const [flash, setFlash] = useState(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  // ‹LPN-214› طورُ التخزين: 'receiving' | 'putaway'
+  const [mode, setMode] = useState('receiving');
+  const [queue, setQueue] = useState([]);
+  const [queueCapped, setQueueCapped] = useState(false);
+  const [task, setTask] = useState(null);
+  const [taskUnit, setTaskUnit] = useState(null);
+  const [binCode, setBinCode] = useState('');
+  const [overrideNote, setOverrideNote] = useState('');
+  const [locations, setLocations] = useState([]);
+  const [balances, setBalances] = useState([]);
   const seqRef = useRef(0);
   const inputRef = useRef(null);
 
   const indexes = useMemo(() => buildItemIndexes(items), [items]);
   const actorName = me?.name || me?.displayName || me?.email || '';
+  // ‹LPN-511› والمجهولُ يمرّ — منعٌ بُني على جهلٍ بالهويّة أسوأ من سماحٍ يردّه الخادم.
+  const recvGate = uiGate(me?.role, 'RECEIVE');
+  const putGate = uiGate(me?.role, 'PUTAWAY');
 
   useEffect(() => subscribeAuth(async (u) => setMe(u ? await fetchUserProfile(u) : null)), []);
   useEffect(() => subscribeItems(setItems), []);
+
+  /**
+   * ★★ **تصحيح 2026-08-27 — جلسةٌ تضيع بإغلاق الهاتف.**
+   *
+   * `listOpenSessions` مبنيّةٌ في الخدمة وموسومةٌ بتعليقها «لقائمة *تابع
+   * جلسةً* على الهاتف» — **وبلا مستدعٍ واحد**. ومعرّفُ الجلسة كان في حالة
+   * المكوّن وحدها، فمن نام هاتفُه أو حدّث الصفحة **فقد جلستَه إلى الأبد**:
+   * لا يتابعها ولا يغلقها ولا يتركها. وأسوأ من ذلك: نقرةٌ ثانيةٌ على الأمر
+   * **تفتح جلسةً ثانية** عليه (`startSession` تُنشئ دائمًا)، فيمسح عاملان
+   * على أمرٍ واحدٍ في جلستين لا ترى إحداهما الأخرى — وهو نقيضُ ما بُني له
+   * `listenSession` («جهازان على الجلسة نفسها يريان بعضهما»).
+   *
+   * فالقائمة تُعرض هنا **قبل** أوامر الشراء: من له جلسةٌ يتابعها، ومن لا
+   * فيفتح جديدة — والمفتوحُ ظاهرٌ فلا يُفتح فوقه.
+   */
+  const [openSessions, setOpenSessions] = useState([]);
+  const refreshOpenSessions = useCallback(() => {
+    listOpenSessions()
+      .then(setOpenSessions)
+      .catch(() => setOpenSessions([])); // تعذّرُ القراءة لا يمنع فتح جلسةٍ جديدة
+  }, []);
+  useEffect(() => { if (!sessionId) refreshOpenSessions(); }, [sessionId, refreshOpenSessions]);
 
   // أوامر الشراء المفتوحة — بطاقتها من `openOrderCard` فما تعرضه القائمة
   // هو ما تقيس عليه الجلسة حرفيًّا.
@@ -89,6 +134,12 @@ export default function ReceivingFlow() {
     () => (session?.drafts ?? []).find((d) => d.ref === activeDraft) ?? null,
     [session, activeDraft]
   );
+  /**
+   * ما الذي يمنع إغلاق الجلسة الآن؟ — من `sessionCloseProblem` الخالصة نفسها
+   * التي تمنعه في الخدمة. فالزرّ المعروض هو الزرّ الذي سينجح، ولا يُعرض
+   * للعامل زرٌّ يُردّ عنه.
+   */
+  const closeProblem = useMemo(() => (session ? sessionCloseProblem(session) : ''), [session]);
 
   /**
    * ★ **تصحيح 2026-08-27 — «قارئ الباركود لا يقرأ» في تطبيق الطبالي:**
@@ -100,8 +151,21 @@ export default function ReceivingFlow() {
    * في الشاشة كلّها · الكتابةُ بلوحة المفاتيح. والعدسة **تبقى مفتوحة** بعد
    * القراءة لأنّ العمل هنا كرتونةٌ تلو كرتونة.
    */
-  const camera = useBarcodeCamera({ onCode: (c) => runScan(c) });
-  useWedgeScanner((c) => runScan(c), { enabled: draft?.state === 'SCANNING' });
+  /*
+   * ‹LPN-214› والقراءةُ **تتبع الطور**: في التخزين الممسوحُ كودُ رفٍّ لا
+   * كودُ صنف. فلو ذهبت كلُّ قراءةٍ إلى `runScan` لَبحث النظامُ عن صنفٍ اسمُه
+   * «MAIN-A01-R01-B01» وردَّه غريبًا — والعاملُ يرى رفضًا بلا سبب.
+   */
+  const onScanned = (c) => {
+    if (mode === 'putaway') { setBinCode(normalizeScanned(c)); return; }
+    runScan(c);
+  };
+
+  const camera = useBarcodeCamera({ onCode: onScanned });
+  // ★ والجهازُ يُسمع في طور التخزين أيضًا: العاملُ عند الرفّ يمسح ولا يكتب.
+  useWedgeScanner(onScanned, {
+    enabled: draft?.state === 'SCANNING' || (mode === 'putaway' && Boolean(taskUnit)),
+  });
 
   const say = useCallback((kind, text) => {
     setFlash({ kind, text });
@@ -110,6 +174,84 @@ export default function ReceivingFlow() {
       navigator.vibrate(kind === 'ok' ? 40 : [80, 60, 80]);
     }
   }, []);
+
+  /* ── ‹LPN-214› طورُ التخزين ─────────────────────────────────────
+   * المواقعُ والأرصدةُ تُقرأ **في هذا الطور وحده**: شاشةُ الاستلام تُفتح
+   * للمسح في أغلب الأحيان، واستماعان دائمان ثمنٌ بلا مقابل على الهاتف. */
+  useEffect(() => {
+    if (mode !== 'putaway') return undefined;
+    const off = [
+      listenLocations(setLocations, () => setLocations([])),
+      listenBalances(setBalances, () => setBalances([])),
+    ];
+    return () => off.forEach((f) => typeof f === 'function' && f());
+  }, [mode]);
+
+  const refreshQueue = useCallback(async () => {
+    try {
+      const { units, capped } = await listPutawayQueue({ max: 100 });
+      setQueue(units);
+      setQueueCapped(capped);
+    } catch {
+      setQueue([]);
+      setQueueCapped(false);
+      say('err', 'تعذّرت قراءة قائمة التخزين — تحقّق من الاتّصال.');
+    }
+  }, [say]);
+
+  useEffect(() => { if (mode === 'putaway') refreshQueue(); }, [mode, refreshQueue]);
+
+  // البندُ الممثّل للطبلية — الاقتراحُ يُحسب على صنفٍ واحد، والمختلطة على
+  // أوّلها كما تنصّ `openPutawayTask`.
+  const taskItem = useMemo(() => {
+    const sku = taskUnit?.lines?.[0]?.sku;
+    return sku ? (indexes?.bySku?.get?.(String(sku).toUpperCase()) ?? null) : null;
+  }, [taskUnit, indexes]);
+
+  // حكمُ الرفّ الممسوح — **معاينةٌ حيّة بلا كتابة**، فيرى العامل الرفض
+  // قبل أن يضغط لا بعده.
+  const binVerdict = useMemo(() => {
+    if (!taskUnit || !binCode.trim()) return null;
+    return previewBin(taskUnit, binCode, { locations, balances, item: taskItem });
+  }, [taskUnit, binCode, locations, balances, taskItem]);
+
+  async function pickTask(unit) {
+    if (!actorName) { say('err', 'لم تُقرأ هويّتك بعد — أعد تحميل الصفحة.'); return; }
+    setBusy(true);
+    try {
+      const r = await openTask(unit.code, { locations, balances, item: null, actor: actorName });
+      if (r.problem) { say('err', r.problem); return; }
+      setTask(r.task);
+      setTaskUnit(r.unit);
+      setBinCode('');
+      setOverrideNote('');
+      say('ok', r.task.suggestedBin
+        ? `المقترح: ${r.task.suggestedBin} — امسح الرفّ الذي وضعتها فيه فعلًا.`
+        : 'لا مقترحَ لهذه الطبلية — امسح الرفّ الذي وضعتها فيه.');
+    } catch (e) {
+      say('err', e?.message || 'تعذّر فتح المهمّة.');
+    } finally { setBusy(false); }
+  }
+
+  async function finishPutaway(e) {
+    e?.preventDefault?.();
+    if (!taskUnit || !binCode.trim()) return;
+    setBusy(true);
+    try {
+      const r = await executePutaway(taskUnit.code, binCode, {
+        actor: actorName, overrideNote, locations, balances, item: taskItem,
+      });
+      if (r.problem) { say('err', r.problem); return; }
+      say('ok', `${taskUnit.code} → ${r.move.toBin}${r.move.offSuggestion ? ' (خالفت المقترح — سُجّل السبب)' : ''}`);
+      setTask(null);
+      setTaskUnit(null);
+      setBinCode('');
+      setOverrideNote('');
+      await refreshQueue();
+    } catch (err) {
+      say('err', err?.message || 'تعذّر إتمام التخزين.');
+    } finally { setBusy(false); }
+  }
 
   async function begin(orderCard) {
     if (!actorName) { say('err', 'لم تُقرأ هويّتك بعد — أعد تحميل الصفحة.'); return; }
@@ -197,6 +339,30 @@ export default function ReceivingFlow() {
     } finally { setBusy(false); }
   }
 
+  /**
+   * تركُ جلسةٍ لم تُنتج شيئًا — بسببٍ إلزاميٍّ يبقى في السجلّ.
+   *
+   * ★ والسبب **مطلوبٌ لا مقترَح**: جلسةٌ فُتحت ثمّ تُركت سؤالٌ تشغيليّ (وصلت
+   * الشاحنة فارغة؟ · الأمر خطأ؟ · تعطّل الجهاز؟)، وإسقاطُه يجعل الجلسات
+   * المتروكة رقمًا بلا معنى في أيّ قياسٍ لاحق.
+   */
+  async function leaveWithReason() {
+    const reason = typeof window !== 'undefined'
+      ? window.prompt(`${closeProblem}
+
+لماذا لم تُنتج هذه الجلسة شيئًا؟ (سببٌ إلزاميّ)`)
+      : '';
+    if (reason === null) return;
+    setBusy(true);
+    try {
+      await leaveSession(sessionId, { reason, actor: actorName });
+      say('ok', 'تُركت الجلسة والسببُ في السجلّ — والمفتوح يبقى على الأمر لجلسةٍ لاحقة.');
+      setSessionId(''); setSession(null);
+    } catch (e) {
+      say('err', e?.message || 'تعذّر ترك الجلسة.');
+    } finally { setBusy(false); }
+  }
+
   async function endSession() {
     setBusy(true);
     try {
@@ -210,12 +376,191 @@ export default function ReceivingFlow() {
 
   if (loading) return <div className="o_theme"><p className="text-ink-2 text-sm">جارٍ قراءة أوامر الشراء…</p></div>;
 
+  // ── ‹LPN-214› طورُ التخزين ──
+  // آخرُ خطوةٍ في الاستلام لا شاشةٌ رابعة (ح-٤): العاملُ نفسه، والجهازُ
+  // نفسه، والحمولةُ التي مسحها قبل قليل.
+  if (mode === 'putaway') {
+    return (
+      <div className="o_theme" dir={dir}>
+        <FieldLangSwitch lang={lang} setLang={setLang} />
+        <ModeSwitch mode={mode} setMode={setMode} disabled={busy} tr={tr} />
+        <RoleGate gate={putGate} />
+        {flash && <Flash flash={flash} />}
+
+        {!taskUnit ? (
+          <>
+            <h2 className="text-lg font-bold text-ink mb-1">{tr('awaiting_putaway')} ({queue.length})</h2>
+            <p className="text-ink-2 text-xs mb-3">
+              {tr('awaiting_putaway_hint')}
+              {queueCapped && ` ⚠ ${tr('cap_reached')}`}
+            </p>
+            {queue.length === 0 ? (
+              <p className="text-ink-2 text-sm">{tr('no_pallet_waiting')}</p>
+            ) : (
+              <ul className="space-y-2">
+                {queue.map((u) => (
+                  <li key={u.code}>
+                    <button
+                      type="button"
+                      disabled={busy || !putGate.allowed}
+                      onClick={() => pickTask(u)}
+                      className="w-full text-right rounded-lg border px-4 py-4"
+                      style={{ borderColor: 'var(--o-border)' }}
+                    >
+                      <div className="font-bold text-ink tabular-nums">{u.code}</div>
+                      <div className="text-ink-2 text-xs mt-1">
+                        {u.warehouse || '—'} · {(u.lines ?? []).length} بندًا
+                        {(u.flags ?? []).length > 0 && ' · ⚑ موسومة'}
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="rounded-lg border px-4 py-3 mb-3" style={{ borderColor: 'var(--o-border)' }}>
+              <div className="font-bold text-ink tabular-nums">{taskUnit.code}</div>
+              <div className="text-ink-2 text-xs mt-1">
+                {taskUnit.warehouse || '—'} · {(taskUnit.lines ?? []).length} بندًا
+              </div>
+              <div className="text-sm mt-2 text-ink">
+                المقترح: <strong className="tabular-nums">{task?.suggestedBin || '— لا مقترح'}</strong>
+              </div>
+              {(task?.suggestions ?? []).length > 1 && (
+                <div className="text-ink-2 text-xs mt-1">
+                  وبدائلُه: {task.suggestions.slice(1).map((c) => c.code).join(' · ')}
+                </div>
+              )}
+              {task?.suggestProblem && (
+                <div className="text-ink-2 text-xs mt-1">{task.suggestProblem}</div>
+              )}
+              {/* ★ المرفوضُ يُعرض بسببه لا يُخفى — قرارُ `putawaySuggest`
+                  المعلن: عاملٌ يرى لماذا رُفض رفٌّ يختار البديل بعلم. */}
+              {(task?.rejectedBins ?? []).length > 0 && (
+                <details className="mt-2">
+                  <summary className="text-ink-2 text-xs cursor-pointer">
+                    ورفوفٌ استُبعدت ({task.rejectedBins.length}) — ولماذا
+                  </summary>
+                  <ul className="mt-1 space-y-1">
+                    {task.rejectedBins.slice(0, 6).map((r) => (
+                      <li key={r.code ?? r.bin ?? JSON.stringify(r)} className="text-ink-2 text-xs">
+                        <span className="tabular-nums">{r.code ?? r.bin}</span> — {r.reason ?? '—'}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+              <p className="text-ink-2 text-xs mt-2">
+                الاقتراحُ اقتراحٌ لا أمر — امسح الرفّ الذي وضعتها فيه <strong>فعلًا</strong>.
+              </p>
+            </div>
+
+            <form onSubmit={finishPutaway}>
+              {/* ‹LPN-214› الطرقُ الثلاث نفسها كما في المسح: كاميرا · جهازُ
+                  باركودٍ مسموعٌ في الشاشة · كتابة. ولا `inputMode="none"` —
+                  هي التي كانت تمنع لوحة المفاتيح فيصير الحقل مسدودًا. */}
+              <div className="flex gap-2 mb-2">
+                <input
+                  value={binCode}
+                  onChange={(e) => setBinCode(e.target.value)}
+                  placeholder={tr('scan_bin')}
+                  className="flex-1 rounded-lg border px-4 py-4 text-lg"
+                  style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)', direction: 'ltr', textAlign: 'center' }}
+                  autoFocus
+                  autoComplete="off"
+                  enterKeyHint="go"
+                />
+                <ScanCameraButton camera={camera} compact />
+              </div>
+              <ScanCameraPanel camera={camera} hint="وجّه العدسة إلى ملصق الرفّ." />
+
+              {binVerdict && !binVerdict.ok && (
+                <div
+                  className="rounded-lg border px-4 py-3 text-sm mb-2"
+                  style={{ borderColor: 'var(--o-danger, #b42318)' }}
+                >
+                  {binVerdict.message}
+                </div>
+              )}
+              {binVerdict?.ok && binVerdict.message && (
+                <div className="rounded-lg border px-4 py-3 text-sm mb-2" style={{ borderColor: 'var(--o-border)' }}>
+                  {binVerdict.message}
+                </div>
+              )}
+
+              {/* ★ «يمرّ بسبب» لا «ممنوع» — درس LOC: العامل يرى ما لا يراه
+                  النظام، والسببُ يُقيَّد باسمه لا يُتجاوَز صامتًا. */}
+              {binVerdict && !binVerdict.ok && binVerdict.canOverride && (
+                <input
+                  value={overrideNote}
+                  onChange={(e) => setOverrideNote(e.target.value)}
+                  placeholder="سببُ التخزين هنا رغم التحذير — يُقيَّد باسمك"
+                  className="w-full rounded-lg border px-4 py-3 text-sm mb-2"
+                  style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }}
+                />
+              )}
+
+              <button
+                type="submit"
+                className="btn btn-primary w-full py-3"
+                disabled={!putGate.allowed || busy || !binCode.trim() || (binVerdict && !binVerdict.ok && !binVerdict.canOverride)}
+              >
+                {tr('confirm_putaway')}
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary w-full py-2 mt-2"
+                disabled={busy}
+                onClick={() => { setTask(null); setTaskUnit(null); setBinCode(''); setOverrideNote(''); }}
+              >
+                {tr('back_to_list')}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    );
+  }
+
   // ── اختيار الأمر ──
   if (!sessionId) {
     return (
-      <div className="o_theme" dir="rtl">
+      <div className="o_theme" dir={dir}>
+        <FieldLangSwitch lang={lang} setLang={setLang} />
+        <ModeSwitch mode={mode} setMode={setMode} disabled={busy} tr={tr} />
+        <RoleGate gate={recvGate} />
         {flash && <Flash flash={flash} />}
-        <h2 className="text-lg font-bold text-ink mb-3">أوامر الشراء المفتوحة ({orders.length})</h2>
+
+        {openSessions.length > 0 && (
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-ink mb-1">جلساتٌ مفتوحة ({openSessions.length})</h2>
+            <p className="text-ink-2 text-xs mb-2">
+              تابعْ جلستك بدل فتح ثانيةٍ على الأمر نفسه — فجلستان على أمرٍ واحد لا ترى إحداهما الأخرى.
+            </p>
+            <ul className="space-y-2">
+              {openSessions.map((s) => (
+                <li key={s.id}>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => { setSessionId(s.id); setActiveDraft('P1'); }}
+                    className="w-full text-right rounded-lg border px-4 py-3"
+                    style={{ borderColor: 'var(--o-primary)', background: 'var(--o-surface)' }}
+                  >
+                    <div className="font-bold text-ink">{s.order?.number || '—'}</div>
+                    <div className="text-ink-2 text-xs">
+                      فتحها {s.openedBy || '—'} · {(s.pallets ?? []).length} طبليةً · {s.warehouse || '—'}
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <h2 className="text-lg font-bold text-ink mb-3">{tr('open_pos')} ({orders.length})</h2>
         {orders.length === 0 ? (
           <p className="text-ink-2 text-sm">
             لا أمر شراءٍ معتمدٌ له رصيدٌ مفتوح. اعتمد أمرًا من صندوق المستندات ثمّ عُد.
@@ -226,7 +571,7 @@ export default function ReceivingFlow() {
               <li key={o.id}>
                 <button
                   type="button"
-                  disabled={busy}
+                  disabled={busy || !recvGate.allowed}
                   onClick={() => begin(o)}
                   className="w-full text-right rounded-lg border px-4 py-4"
                   style={{ borderColor: 'var(--o-border)' }}
@@ -256,8 +601,22 @@ export default function ReceivingFlow() {
           <div className="text-ink-2 text-xs">{session?.supplier} · {session?.warehouse}</div>
         </div>
         <div className="flex gap-2">
-          <button type="button" className="btn btn-secondary text-sm" onClick={newDraft} disabled={busy}>طبلية جديدة</button>
-          <button type="button" className="btn btn-secondary text-sm" onClick={endSession} disabled={busy}>إنهاء الجلسة</button>
+          <button type="button" className="btn btn-secondary text-sm" onClick={newDraft} disabled={busy}>{tr('new_pallet')}</button>
+          {/*
+            ★ **تصحيح 2026-08-27 — طريقٌ مسدود:** كان هنا زرُّ الإنهاء وحده،
+            فمن فتح جلسةً بالخطأ ولم يمسح فيها شيئًا يُردّ بـ«اتركها بسببٍ
+            مكتوب» — **ولا زرَّ يفعل ذلك**، فتبقى جلستُه مفتوحةً إلى الأبد.
+            و`leaveSession` مبنيّةٌ في الخدمة منذ م٥ وبلا مستدعٍ واحد.
+            والزرّ يظهر **بحكم `sessionCloseProblem` نفسه** الذي يمنع الإغلاق،
+            فلا تختلف الواجهة عن الحَكَم.
+          */}
+          {closeProblem ? (
+            <button type="button" className="btn btn-secondary text-sm" onClick={leaveWithReason} disabled={busy}>
+              ترك الجلسة بسبب
+            </button>
+          ) : (
+            <button type="button" className="btn btn-secondary text-sm" onClick={endSession} disabled={busy}>{tr('end_session')}</button>
+          )}
         </div>
       </div>
 
@@ -396,6 +755,36 @@ export default function ReceivingFlow() {
           </ul>
         </details>
       )}
+    </div>
+  );
+}
+
+/** ‹LPN-214› بدّالُ الطور — الاستلامُ والتخزينُ طرفا دورةٍ واحدة. */
+/** ‹LPN-511› شريطُ الصلاحية — يُعلِم ولا يحجب من لا يُعرَف. */
+function RoleGate({ gate }) {
+  if (!gate || gate.allowed) return null;
+  return (
+    <div className="o_alert danger mb-3" style={{ fontSize: 'var(--o-font-size-sm)' }}>
+      {gate.message}
+    </div>
+  );
+}
+
+function ModeSwitch({ mode, setMode, disabled, tr }) {
+  return (
+    <div className="flex gap-2 mb-4">
+      {[['receiving', tr('mode_receiving')], ['putaway', tr('mode_putaway')]].map(([id, label]) => (
+        <button
+          key={id}
+          type="button"
+          disabled={disabled}
+          onClick={() => setMode(id)}
+          aria-pressed={mode === id}
+          className={mode === id ? 'btn btn-primary text-sm flex-1' : 'btn btn-secondary text-sm flex-1'}
+        >
+          {label}
+        </button>
+      ))}
     </div>
   );
 }

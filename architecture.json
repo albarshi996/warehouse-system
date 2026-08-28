@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 111,
-    "serviceDomains": 49,
-    "serviceFiles": 536,
-    "collections": 94,
+    "modules": 116,
+    "serviceDomains": 51,
+    "serviceFiles": 560,
+    "collections": 97,
     "roles": 18,
     "odooModels": 12,
     "odooGuards": 51,
@@ -291,6 +291,22 @@
       "usesServices": []
     },
     {
+      "name": "gate-log",
+      "route": "/dashboard/gate-log",
+      "title": "سجلّ البوابة والمطابقة",
+      "summary": "سجلُّ البوابة والمطابقة — حيث تصير البوّابةُ نقطةَ تحقّقٍ مستقلّة.",
+      "file": "src/pages/dashboard/gate-log.astro",
+      "usesServices": []
+    },
+    {
+      "name": "gate-post",
+      "route": "/dashboard/gate-post",
+      "title": "مركز البوابة",
+      "summary": "مركزُ البوابة — الشاشةُ التي يفتحها الحارسُ على الحاجز.",
+      "file": "src/pages/dashboard/gate-post.astro",
+      "usesServices": []
+    },
+    {
       "name": "general-manager-operations-briefing",
       "route": "/dashboard/general-manager-operations-briefing",
       "title": "المراجعة التنفيذية لسلاسل الإمداد",
@@ -414,6 +430,14 @@
       "title": "لوحة اللوجستيات التنفيذيّة",
       "summary": "",
       "file": "src/pages/dashboard/logistics-dashboard.astro",
+      "usesServices": []
+    },
+    {
+      "name": "lpn-count",
+      "route": "/dashboard/lpn-count",
+      "title": "جرد الطبالي",
+      "summary": "جردُ الطبالي — شهادةُ رؤيةٍ بلا كمّيّات.",
+      "file": "src/pages/dashboard/lpn-count.astro",
       "usesServices": []
     },
     {
@@ -557,6 +581,14 @@
       "usesServices": []
     },
     {
+      "name": "pallet-control",
+      "route": "/dashboard/pallet-control",
+      "title": "الطبليات العائدة",
+      "summary": "الطبلياتُ العائدة — من له طبلياتٌ عندنا، ومن عنده طبلياتٌ لنا.",
+      "file": "src/pages/dashboard/pallet-control.astro",
+      "usesServices": []
+    },
+    {
       "name": "partner-ledger",
       "route": "/dashboard/partner-ledger",
       "title": "دفتر الذمم",
@@ -604,6 +636,14 @@
       "title": "لماذا البوابة تكامليّة لأودو",
       "summary": "لماذا البوابة تكامليّة لأودو — صفحة شرح الإنجاز وموقع البوابة من أودو.",
       "file": "src/pages/dashboard/portal-value.astro",
+      "usesServices": []
+    },
+    {
+      "name": "portal-visits",
+      "route": "/dashboard/portal-visits",
+      "title": "سجلّ زيارات البوّابة",
+      "summary": "سجلّ زيارات البوّابة — من دخل، ومن أيّ جهاز، وأيَّ شاشةٍ فتح.",
+      "file": "src/pages/dashboard/portal-visits.astro",
       "usesServices": []
     },
     {
@@ -971,6 +1011,44 @@
   ],
   "services": [
     {
+      "domain": "activity",
+      "dir": "src/services/activity",
+      "files": [
+        "deviceId.js",
+        "visitModel.js",
+        "visitModel.test.js",
+        "visitService.js",
+        "visitWiring.test.js",
+        "worktreeGuard.test.js"
+      ],
+      "fileCount": 6,
+      "testCount": 3,
+      "exports": [
+        "VISITS_CAP",
+        "VISIT_KINDS",
+        "browserDeviceId",
+        "browserSessionId",
+        "dayKey",
+        "daysIn",
+        "isDeviceId",
+        "isVisitKind",
+        "listenVisits",
+        "makeDeviceId",
+        "multiDeviceAccounts",
+        "readDeviceId",
+        "recordVisit",
+        "screenLabel",
+        "shapeVisit",
+        "visitDocId",
+        "visitProblems",
+        "visitText",
+        "visitsSnapshot"
+      ],
+      "collections": [
+        "portal_visits"
+      ]
+    },
+    {
       "domain": "archive",
       "dir": "src/services/archive",
       "files": [
@@ -1083,10 +1161,11 @@
         "returnTo.test.js",
         "roles.js",
         "roles.test.js",
+        "usageGuide.test.js",
         "usersService.js"
       ],
-      "fileCount": 14,
-      "testCount": 5,
+      "fileCount": 15,
+      "testCount": 6,
       "exports": [
         "ALWAYS_ALLOWED",
         "DEFAULT_ROLE",
@@ -2022,6 +2101,7 @@
         "openVisit",
         "otifRate",
         "podRate",
+        "readVisit",
         "recordPod",
         "saveDoor",
         "saveHandover",
@@ -2044,6 +2124,106 @@
         "doors",
         "trips",
         "vehicles",
+        "yard_visits"
+      ]
+    },
+    {
+      "domain": "gate",
+      "dir": "src/services/gate",
+      "files": [
+        "gateModel.js",
+        "gateModel.test.js",
+        "gateReconcile.js",
+        "gateReconcile.test.js",
+        "gateRoles.js",
+        "gateRoles.test.js",
+        "gateService.js",
+        "gateWiring.test.js",
+        "palletLedger.js",
+        "palletLedger.test.js"
+      ],
+      "fileCount": 10,
+      "testCount": 5,
+      "exports": [
+        "COUNTABLE_STATES",
+        "EXIT_STATES",
+        "GATE_REASONS",
+        "GATE_WRITERS",
+        "LIABLE_PARTIES",
+        "LOAD_STATES",
+        "PALLET_CONDITIONS",
+        "PALLET_MOVES_CAP",
+        "PALLET_MOVE_KINDS",
+        "PALLET_OWNERSHIP",
+        "PALLET_TYPES",
+        "RECONCILE_STATUS",
+        "SESSIONS_CAP",
+        "UNKNOWN_PARTY",
+        "VISITOR_READERS",
+        "VISITS_CAP",
+        "assignDoor",
+        "balanceText",
+        "canReadVisitor",
+        "canWriteGate",
+        "cancelVisit",
+        "checkIn",
+        "checkOut",
+        "decideVariance",
+        "exitFieldsFor",
+        "exitState",
+        "fieldsFor",
+        "gateDeclared",
+        "gateReason",
+        "gateUiGate",
+        "holdVisit",
+        "isGateReason",
+        "isOnSite",
+        "liableLabel",
+        "listenDoors",
+        "listenPalletMoves",
+        "listenReceivingSessions",
+        "listenVisitEvents",
+        "listenYardVisits",
+        "loadGaps",
+        "loadSummary",
+        "moveKind",
+        "moveProblems",
+        "movesFromLoad",
+        "movesOfParty",
+        "needsDoor",
+        "nextStepFor",
+        "normalizePlate",
+        "openVarianceProblem",
+        "outLoadProblems",
+        "palletBalance",
+        "palletConditionLabel",
+        "palletOwnershipLabel",
+        "palletTotal",
+        "palletTypeLabel",
+        "purposeOf",
+        "readVisitor",
+        "reasonLabel",
+        "receivedDeclared",
+        "reconcileAll",
+        "reconcileVisit",
+        "recordPalletAdjustment",
+        "saveVarianceDecision",
+        "shapeGateLoad",
+        "shapeInLoad",
+        "shapeMove",
+        "shapeOutLoad",
+        "shapePalletLine",
+        "shapePalletLines",
+        "shapeVisitor",
+        "signedCount",
+        "verify",
+        "visitorGaps",
+        "writePalletMoves",
+        "writeVisitor"
+      ],
+      "collections": [
+        "pallet_moves",
+        "receiving_sessions",
         "yard_visits"
       ]
     },
@@ -2979,6 +3159,7 @@
       "files": [
         "countPallet.js",
         "countPallet.test.js",
+        "countService.js",
         "custodyChain.js",
         "custodyChain.test.js",
         "dockLoading.js",
@@ -2986,6 +3167,8 @@
         "dockService.js",
         "exitGate.js",
         "exitGate.test.js",
+        "fieldLexicon.js",
+        "fieldLexicon.test.js",
         "governanceQueue.js",
         "governanceQueue.test.js",
         "governingRules.test.js",
@@ -2993,8 +3176,10 @@
         "grnBridge.test.js",
         "inboundDock.js",
         "inboundDock.test.js",
+        "inboundService.js",
         "labelModel.js",
         "labelModel.test.js",
+        "loadingService.js",
         "lpnCard.js",
         "lpnCard.test.js",
         "lpnCode.js",
@@ -3016,6 +3201,7 @@
         "lpnSearch.test.js",
         "lpnService.guard.test.js",
         "lpnService.js",
+        "lpnWiring.test.js",
         "movementProof.js",
         "movementProof.test.js",
         "palletMap.js",
@@ -3035,15 +3221,17 @@
         "receivingSession.test.js",
         "stagingLoading.js",
         "stagingLoading.test.js",
+        "stagingService.js",
         "transferPallets.js",
         "transferPallets.test.js"
       ],
-      "fileCount": 60,
-      "testCount": 29,
+      "fileCount": 67,
+      "testCount": 31,
       "exports": [
-        "AWAITING_STATES",
         "CHAIN_LINKS",
+        "COUNTABLE_STATES",
         "DEFAULT_LABEL_SIZE",
+        "DEFAULT_LANG",
         "DEFAULT_MIX_POLICY",
         "DISCREPANCY_TYPES",
         "DOCK_MODES",
@@ -3051,6 +3239,7 @@
         "DOCK_STEPS",
         "EXIT_STATES",
         "EXIT_STEPS",
+        "FIELD_LANGS",
         "FIELD_OPS",
         "FIELD_ROLES",
         "GOVERNANCE_DECISIONS",
@@ -3070,13 +3259,17 @@
         "LPN_TERMINAL_STATE",
         "LPN_TERMINAL_STATES",
         "LPN_TRANSITIONS",
+        "ON_FLOOR_STATES",
+        "PALLET_CELL_ORDER",
+        "PALLET_CELL_STATES",
+        "PALLET_LEGEND",
         "PICKABLE_TYPES",
         "PICK_TASK_STATES",
         "PORTAL_TO_FIELD",
         "PRINT_STATES",
         "PROOF_METHODS",
         "PROOF_ROLES",
-        "PUTAWAY_CAP",
+        "PUTAWAY_QUEUE_STATES",
         "PUTAWAY_STATES",
         "QUERY_KINDS",
         "REJECT_REASONS",
@@ -3089,7 +3282,7 @@
         "SESSIONS_CAP",
         "SESSION_STATES",
         "SIGHTING",
-        "TASKS",
+        "STAGING_QUEUE_STATE",
         "UNLOAD_CONDITIONS",
         "abandonSession",
         "activeFlags",
@@ -3114,6 +3307,7 @@
         "applyUnloadExtra",
         "assign",
         "assignTask",
+        "assignToStaging",
         "attachPallet",
         "beginLoading",
         "beginUnloading",
@@ -3128,13 +3322,14 @@
         "buildCustodyChain",
         "buildDiscrepancies",
         "buildEvent",
+        "buildInboundSession",
         "buildIssuePallet",
         "buildLabel",
         "buildPrintJob",
         "buildProof",
         "buildRejection",
+        "buildSession",
         "canDo",
-        "cancelPutaway",
         "chainDurations",
         "chainFor",
         "chainLine",
@@ -3145,6 +3340,7 @@
         "closeDock",
         "closeDraftToGovernance",
         "closeInbound",
+        "closeLoad",
         "closeLoading",
         "closePickTask",
         "closeSession",
@@ -3162,6 +3358,7 @@
         "decideDiscrepancy",
         "decisionOf",
         "decisionProblem",
+        "dirOf",
         "distinctItems",
         "docEventId",
         "dockCard",
@@ -3209,6 +3406,7 @@
         "isBlockedForIssue",
         "isClosedOf",
         "isEmpty",
+        "isFieldLang",
         "isMixed",
         "isOnFloor",
         "isScanned",
@@ -3217,17 +3415,21 @@
         "itemStockPicture",
         "itemVerdict",
         "leaveSession",
+        "lexiconKeys",
         "lineBalanceRef",
         "lineKey",
         "lineageTrace",
-        "listAwaitingPutaway",
+        "listCountableUnits",
+        "listInbound",
         "listOpenSessions",
         "listOpenTasks",
         "listPendingGovernance",
+        "listPutawayQueue",
+        "listRoutes",
         "listSessions",
+        "listStagingQueue",
         "listUnitsAt",
         "listUnitsByState",
-        "listenPutawayTasks",
         "listenSession",
         "listenSessions",
         "listenTask",
@@ -3241,6 +3443,7 @@
         "lpnCounterKey",
         "lpnDateStamp",
         "mergeUnits",
+        "missingIn",
         "moveUnit",
         "movementProblem",
         "needsNewIdentity",
@@ -3256,11 +3459,12 @@
         "openLoading",
         "openOrderCard",
         "openPickTask",
-        "openPutaway",
         "openPutawayTask",
         "openSession",
+        "openTask",
         "opsOf",
         "orderEvents",
+        "palletCellOf",
         "palletChip",
         "palletCountByNode",
         "palletDiff",
@@ -3274,6 +3478,7 @@
         "picksOfTask",
         "planDecision",
         "previewBin",
+        "previewStaging",
         "printJobProblem",
         "proofCode",
         "proofLine",
@@ -3288,6 +3493,7 @@
         "receivedByLine",
         "receivingCycleMs",
         "reconcileInput",
+        "recordSighting",
         "rejectIntoDraft",
         "rejectionProblem",
         "rejectionSummary",
@@ -3300,9 +3506,14 @@
         "resultCard",
         "reverseEvent",
         "reviewCard",
+        "roleSummary",
+        "routeOf",
+        "scanExtra",
+        "scanInbound",
         "scanIntoDraft",
         "scanItem",
         "scanItemExtra",
+        "scanLoad",
         "scanRejectRate",
         "scanStep",
         "scanVerdict",
@@ -3331,6 +3542,7 @@
         "stateLabel",
         "stepRemaining",
         "stickConfirmVerdict",
+        "t",
         "takeFromPallet",
         "taskCloseProblem",
         "taskOpenProblem",
@@ -3342,6 +3554,7 @@
         "transitionProblem",
         "transitionUnit",
         "transitionVerdict",
+        "uiGate",
         "unexpectedPlacements",
         "unitTransitionProblem",
         "unloadScanVerdict",
@@ -3352,7 +3565,6 @@
         "dock_sessions",
         "handling_units",
         "picking_tasks",
-        "putaway_tasks",
         "receiving_sessions"
       ]
     },
@@ -6661,6 +6873,38 @@
         ]
       },
       {
+        "name": "pallet_moves",
+        "path": "pallet_moves",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isYardWriter() && request.resource.data.byUid == request.auth.uid",
+            "roles": [
+              "isYardWriter"
+            ]
+          },
+          {
+            "actions": [
+              "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
         "name": "partner_ledger",
         "path": "partner_ledger",
         "rules": [
@@ -6727,6 +6971,38 @@
           },
           {
             "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "portal_visits",
+        "path": "portal_visits",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "isAdmin()",
+            "roles": [
+              "isAdmin"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "signedIn() && request.resource.data.uid == request.auth.uid && request.resource.data.kind in ['LOGIN', 'VIEW', 'LOGOUT']",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "update",
               "delete"
             ],
             "condition": "false",
@@ -7985,6 +8261,42 @@
             "roles": []
           }
         ]
+      },
+      {
+        "name": "visitor",
+        "path": "yard_visits/visitor",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "isBootstrapAdmin() || (signedIn() && hasProfile() && isActive() && myRole() in ['admin', 'warehouse_manager', 'gate_officer'])",
+            "roles": [
+              "isBootstrapAdmin",
+              "signedIn",
+              "hasProfile",
+              "isActive",
+              "myRole"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isYardWriter()",
+            "roles": [
+              "isYardWriter"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
       }
     ],
     "file": "firestore.rules"
@@ -8887,16 +9199,19 @@
       "preview": "astro preview",
       "astro": "astro",
       "where": "node scripts/where.mjs",
+      "guard": "node scripts/guard-worktrees.mjs --all",
+      "rescue": "node scripts/rescue-worktrees.mjs",
       "identity": "node scripts/identity.mjs",
       "identity:apply": "node scripts/identity.mjs --apply",
       "sync": "node scripts/sync-sibling.mjs",
       "arch": "node scripts/build-arch.mjs",
       "org": "node scripts/build-org.mjs",
-      "prebuild": "node scripts/build-arch.mjs && node scripts/build-org.mjs",
+      "prebuild": "node scripts/build-arch.mjs && node scripts/build-org.mjs && node scripts/build-usage-guide.mjs",
+      "guide": "node scripts/build-usage-guide.mjs",
       "test": "node --test \"src/**/*.test.js\"",
       "test:rules": "firebase emulators:exec --only firestore \"node --test test/firestore-rules.test.mjs\"",
       "audit": "node scripts/audit-portal.mjs",
-      "plan": "npm run where && npm run plan:phase-one && npm run plan:client && npm run plan:sap && npm run plan:locations && npm run plan:exec && npm run plan:fnb && npm run plan:capture && npm run plan:lpn",
+      "plan": "npm run where && npm run plan:phase-one && npm run plan:client && npm run plan:sap && npm run plan:locations && npm run plan:exec && npm run plan:fnb && npm run plan:capture && npm run plan:lpn && npm run plan:gate && npm run plan:visits && npm run plan:deps",
       "plan:phase-one": "node scripts/plan-check.mjs",
       "plan:client": "node scripts/plan-check.mjs --plan docs/plan/client-completion.json --resume docs/plan/استئناف-نسخة-العميل.md",
       "plan:sap": "node scripts/plan-check.mjs --plan docs/plan/sap-alignment.json --resume docs/plan/استئناف-المواءمة.md",
@@ -8905,6 +9220,9 @@
       "plan:fnb": "node scripts/plan-check.mjs --plan docs/plan/fnb-sector.json --resume docs/plan/استئناف-قطاع-الأغذية.md",
       "plan:capture": "node scripts/plan-check.mjs --plan docs/plan/capture-layer.json --resume docs/plan/استئناف-طبقة-الالتقاط.md",
       "plan:lpn": "node scripts/plan-check.mjs --plan docs/plan/lpn-layer.json --resume docs/plan/استئناف-طبقة-الطبالي.md",
+      "plan:gate": "node scripts/plan-check.mjs --plan docs/plan/gate-control.json --resume docs/plan/استئناف-بوابة-الأمن.md",
+      "plan:visits": "node scripts/plan-check.mjs --plan docs/plan/portal-visits.json --resume docs/plan/استئناف-سجل-الزيارات.md",
+      "plan:deps": "node scripts/plan-check.mjs --plan docs/plan/deps-hardening.json --resume docs/plan/استئناف-تحصين-التبعيات.md",
       "timefields": "node scripts/build-time-fields-doc.mjs",
       "lint": "eslint .",
       "format": "prettier --write .",

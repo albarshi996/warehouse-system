@@ -23,6 +23,7 @@ export const NAV_GROUP_LABELS = {
   presentations: 'العروض والاجتماعات',
   archive: 'الأرشيف والمرجعية',
   lpn: 'التنفيذ الميدانيّ بالباركود',
+  gate: 'بوّابة الأمن',
   dept: 'طلبات الإدارات',
   procurement: 'المشتريات الداخلية',
 };
@@ -34,8 +35,8 @@ export const NAV_GROUP_LABELS = {
 export const ROLE_NAV = {
   // ‹تدقيق 24.08› «العروض والاجتماعات» خرجت من «مركز التقارير» — تُمنح لمن
   // كان يملك عناصرها هناك بعينهم: المديران، والماليّ لعرض جلسته وحدها.
-  admin: ['daily', 'warehouses', 'putaway', 'lpn', 'fleet', 'field', 'fnb', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
-  warehouse_manager: ['daily', 'warehouses', 'putaway', 'lpn', 'fleet', 'field', 'fnb', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
+  admin: ['daily', 'warehouses', 'putaway', 'lpn', 'gate', 'fleet', 'field', 'fnb', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
+  warehouse_manager: ['daily', 'warehouses', 'putaway', 'lpn', 'gate', 'fleet', 'field', 'fnb', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
   // ‹LPN› أمين المخزن يقف عند الشاحنة — فالاستلام الميدانيّ بيته.
   // والحوكمة محصورةٌ ببندها بالمديرَين: من يكوّن الطبلية لا يعتمدها.
   storekeeper: ['daily', 'warehouses', 'putaway', 'odoo', 'lpn'],
@@ -46,18 +47,32 @@ export const ROLE_NAV = {
   // `labor_supervisor` أدناه: مجموعةٌ كاملة، والحسّاس فيها محصورٌ ببنوده.
   // ‹LOC-402› وأُضيفت «التخزين الموجّه»: له فيها **مهامي** وحدها — فالبانية
   // والاستيراد والعمالة وخطّة السحب محصوراتٌ ببنودها فلا يراها.
+  // ‹GATE-501› وأُضيفت له مجموعتُه هو: **بوّابة الأمن**. وهي أوّلُ مجموعةٍ
+  // كلُّ بنودها من عمله — مركزُ البوابة والسجلُّ والطبلياتُ العائدة. وبقيت
+  // `fleet` كما هي فلا يُكسر ما يفتحه اليوم؛ وتضييقُها عملٌ مستقلّ يُقاس أوّلًا.
   // ‹LPN-722› وأُضيفت «التنفيذ الميدانيّ بالباركود»: له فيها **الأبواب
   // والبوّابة** وحدها — بوّابةُ الخروج بابُه الذي يقف عنده. وبقيّةُ بنود
   // المجموعة محصورةٌ بأدوارها فلا يراها (نمط `putaway` أعلاه حرفيًّا).
-  gate_officer: ['daily', 'odoo', 'fleet', 'putaway', 'lpn'],
+  // ★ والمجموعتان تبقيان معًا: `gate` تتابع **المركبة** و`lpn` تتابع
+  // **البضاعة** — وهما وجها عملٍ واحدٍ عند الرصيف لا نسختان (GATE-601).
+  gate_officer: ['daily', 'odoo', 'fleet', 'putaway', 'gate', 'lpn'],
   // موظف المشتريات: يوفّر العروض ويصدر الأمر ويسلّم في دورة المشتريات الداخلية.
   purchase_officer: ['daily', 'odoo', 'reports', 'procurement'],
   // المدير المالي: يعتمد الطلب والترسية والأمر والصرف في الدورة.
-  finance_manager: ['warehouses', 'odoo', 'reports', 'presentations', 'procurement'],
+  // ‹GATE-303› وأُضيفت له `gate`: له فيها **الطبليات العائدة** وحدها — ورصيدُ
+  // مورّدٍ لدينا ذمّةٌ عينيّةٌ يقرؤها الماليّ. ومركزُ البوابة والسجلُّ محصوران
+  // ببنودهما فلا يراهما.
+  finance_manager: ['warehouses', 'odoo', 'reports', 'presentations', 'procurement', 'gate'],
   return_manager: ['daily', 'warehouses', 'odoo'],
-  // ‹LPN-720› والعادّ يدخل «التنفيذ الميدانيّ» لقراءة **سجلّ الباركود**
-  // وحده — تدقيقٌ لا تشغيل، وأدواتُ البنية تختفي عمّن لا يملكها.
-  inventory_auditor: ['warehouses', 'putaway', 'odoo', 'reports', 'lpn'],
+  // ‹LPN-508› وأُضيفت له مجموعةُ التنفيذ الميدانيّ `lpn`: له فيها **جردُ
+  // الطبالي** وحده — فالاستلامُ والحوكمةُ والتحضير محصوراتٌ ببنودها فلا يراها.
+  // وهو نفسُ نمط `gate_officer` أعلاه: مجموعةٌ كاملة، والحسّاس فيها محصور.
+  // ‹GATE-403› وأُضيفت له `gate`: له فيها **سجلُّ البوابة والمطابقة** وحده —
+  // فمركزُ البوابة للحارس والطبلياتُ العائدة محصورةٌ ببندها. وهو من يحسم
+  // فرقَ «بوابة ٢٠ / استلام ١٨»، ونفسُ نمط `gate_officer` أعلاه.
+  // ‹LPN-720› ويقرأ في `lpn` **سجلَّ الباركود** أيضًا — تدقيقٌ لا تشغيل،
+  // وأدواتُ البنية تختفي عمّن لا يملكها.
+  inventory_auditor: ['warehouses', 'putaway', 'odoo', 'reports', 'lpn', 'gate'],
   viewer: ['reports'],
   // مستخدم الإدارة (الجهة الطالبة/المستفيد): طلبات الإدارات + إصدار طلب المشتريات.
   department_user: ['dept', 'procurement'],

@@ -231,13 +231,44 @@ const isStorageName = (f) => /(Service|service)\.js$/.test(path.basename(f));
  * كلّ ما زاد عنهما خرقٌ جديد يُوقف التدقيق.
  */
 const IMPURE_NAME_BASELINE = 0; // سُدّ في EXE-002: numbering.js ⇐ numberingService.js
-const UNTESTED_PURE_BASELINE = 23;
+const UNTESTED_PURE_BASELINE = 21; // 23 ← 21 بالإغلاق المتعدّي (LPN-214)
 
 const logicFiles = walk(SERVICES_DIR, ['.js']).filter((f) => !f.endsWith('.test.js'));
+
+/*
+ * ★ النقاء يُحسب **بالإغلاق المتعدّي لا بالاستيراد المباشر** (2026-08-27 · LPN-214).
+ *
+ * العقد المعلن أعلاه هو «من لم يره عرف أنّ ما بيده يعمل في Node بلا اتّصال».
+ * وملفٌّ يستورد `lpnService` **لا يعمل في Node** وإن لم يذكر firebase بحرف —
+ * فتصنيفُه «منطقًا خالصًا» يطالبه بما لا يستطيع: ألّا يقرأ ساعةً، وأن يحمل
+ * اختبارًا مجاورًا يستحيل تشغيلُه لأنّ الاستيراد نفسه يسقط على مفتاح API.
+ *
+ * كشفه `putawayService.js`: خدمةٌ تُسلّم الكتابة كلَّها لـ`lpnService` فلا
+ * تستورد firebase مباشرةً. وقياسُ الأثر قبل التغيير: الإغلاق يضيف ٣ ملفّاتٍ
+ * **كلُّها ينتهي اسمها بـService أصلًا** — فالحارس يزداد دقّةً ولا يتّسع.
+ */
+const localImportsOf = (file) => {
+  const src = fs.readFileSync(file, 'utf8');
+  return [...src.matchAll(/from\s+['"](\.[^'"]+)['"]/g)]
+    .map((m) => path.resolve(path.dirname(file), m[1]));
+};
+
+const impureSet = new Set(
+  logicFiles.filter((f) => IMPORTS_FIREBASE.test(fs.readFileSync(f, 'utf8'))).map((f) => path.resolve(f))
+);
+for (let changed = true; changed;) {
+  changed = false;
+  for (const f of logicFiles) {
+    const abs = path.resolve(f);
+    if (impureSet.has(abs)) continue;
+    if (localImportsOf(f).some((t) => impureSet.has(t))) { impureSet.add(abs); changed = true; }
+  }
+}
+
 const impure = [];
 const pure = [];
 for (const f of logicFiles) {
-  (IMPORTS_FIREBASE.test(fs.readFileSync(f, 'utf8')) ? impure : pure).push(f);
+  (impureSet.has(path.resolve(f)) ? impure : pure).push(f);
 }
 
 // (أ) منطقٌ اختبأ في طبقة التخزين: يستورد Firebase واسمه لا يقول ذلك.

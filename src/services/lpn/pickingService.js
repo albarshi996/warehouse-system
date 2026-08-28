@@ -174,7 +174,11 @@ export async function closeTaskWithPallet(taskId, { actor } = {}) {
     const reserved = await reserveLpnCode({ warehouse: task.warehouse, date: nowIso() });
     lpn = reserved.code;
     const pallet = buildIssuePallet(picks, {
-      code: lpn, warehouse: task.warehouse, sourceDoc: task.source, actor,
+      code: lpn, warehouse: task.warehouse, sourceDoc: task.source,
+      // ‹LPN-309› الوجهةُ تعبر من المهمّة إلى الحمولة — وبلا عبورها كان
+      // حارسُ منع الخلط عند التجهيز يقرأ حقلًا فارغًا فلا يُطلق أبدًا.
+      route: task.route ?? '', branch: task.branch ?? '',
+      actor,
     });
     if (pallet.problem) throw new Error(pallet.problem);
 

@@ -1,0 +1,589 @@
+{
+  "plan": "طبقة بوابة الأمن والطبليات العائدة ‹GATE›",
+  "planDoc": "docs/خطة-بوابة-الأمن-والطبليات-العائدة.md",
+  "resumeTitle": "بوابة الأمن والطبليات العائدة ‹GATE›",
+  "command": "npm run plan:gate",
+  "track": "المتتبّع التاسع — البوابة نقطةُ تحقّقٍ لا سجلَّ مرور",
+  "source": "ورقة المالك «Gate Control System» 2026-08-28 · القرارات السبعة محسومةٌ كلُّها",
+  "lastUpdated": "2026-08-28",
+  "lastUpdatedBy": "Claude",
+  "baseline": "دورةُ الساحة ‹EXE-601/602› مبنيّةٌ ومختبَرة: عشر مراحل بأختامها · أبوابٌ ومؤقّتات · حارسُ «لا خروج بلا تصريح» · قواعدُ doors و yard_visits · ودورُ gate_officer قائم. والغائبُ: سببُ الحركة وحالةُ الحمولة ومستنداتُها والطبلياتُ العائدة والمطابقة وشاشةُ الحارس.",
+  "milestones": [
+    {
+      "id": "م٠",
+      "title": "الحوكمة — تثبيت الخطة والمتتبّع",
+      "estimate": "جلسة واحدة"
+    },
+    {
+      "id": "م١",
+      "title": "السببُ والحمولةُ في النموذج الخالص",
+      "estimate": "2–3 جلسات"
+    },
+    {
+      "id": "م٢",
+      "title": "مركزُ البوابة — الشاشة التي يفتحها الحارس",
+      "estimate": "3–4 جلسات"
+    },
+    {
+      "id": "م٣",
+      "title": "الطبلياتُ العائدة ورصيدُها",
+      "estimate": "2–3 جلسات"
+    },
+    {
+      "id": "م٤",
+      "title": "المطابقة — البوابةُ نقطةُ تحقّق",
+      "estimate": "2–3 جلسات"
+    },
+    {
+      "id": "م٥",
+      "title": "الحوكمةُ والإقفال",
+      "estimate": "جلسة"
+    },
+    {
+      "id": "م٦",
+      "title": "الربط مع طبقة الطبالي ‹LPN-722›",
+      "estimate": "جلسة واحدة — بعد إيداع الجلسة المتوازية"
+    }
+  ],
+  "gaps": {
+    "ج-١": "سببُ الدخول بتسع قيم — والقائم VISIT_PURPOSE قيمتان فقط (inbound/outbound)",
+    "ج-٢": "حالةُ الحمولة (محمّلة · فارغة · جزئيًّا) — لا حقل لها",
+    "ج-٣": "حقولُ الحمولة الأحد عشر (المورد · PO · فاتورة · DN · حاوية · ختم · طرود · طبليات · نوعها · صورة · ملاحظات) — والقائم docRef وحده",
+    "ج-٤": "إظهارُ ما يحتاجه الحارس فقط حسب السبب — والنموذج اليوم ثابتٌ لكلّ زيارة",
+    "ج-٥": "حالةُ الخروج بخمس قيم — ولا وصفَ لحمولة الخروج أصلًا",
+    "ج-٦": "حمولةُ الدخول ≠ حمولةُ الخروج — والزيارة اليوم لها غرضٌ واحد",
+    "ج-٧": "الطبلياتُ العائدة: عددٌ ونوعٌ وملكيّةٌ وحالة — لا شيء منها",
+    "ج-٨": "رصيدُ الطبليات لكلّ مورد — و VISITS_CAP=200 يمنع اشتقاقَ رصيدٍ شهريّ",
+    "ج-٩": "شاشةُ مراقبة الطبليات بأرصدتها الستّة — لا شاشة",
+    "ج-١٠": "المطابقة: بوابة ٢٠ / استلام ١٨ — receivedByLine يعرف المستلَم ولا أحدَ يقابله ببيان البوابة",
+    "ج-١١": "قراءةُ رقم اللوحة — لا OCR ولا ANPR بقاعدة الأوفلاين (ق-٦: يدويٌّ الآن)",
+    "ج-١٢": "شاشةٌ للحارس على البوابة — والقائم تبويبٌ داخل لوحة أسطولٍ مكتبيّة",
+    "ج-١٣": "التقاطع مع ‹LPN-722›: منظومتا خروجٍ لا تعرف إحداهما الأخرى — dock_sessions (مسحُ الباركود عند الباب) و yard_visits (زيارةُ المركبة) — فالسؤال «أما خرج من البوّابة هو ما حُمِّل عند الباب؟» بلا جواب"
+  },
+  "ownerInputs": [
+    {
+      "id": "GATE-O01",
+      "milestone": "م٣",
+      "need": "نشرُ firestore.rules من Firebase Console بعد إضافة pallet_moves — الوكلاء يعدّلونها في الريبو والمالك وحده ينشرها",
+      "ifMissing": "الكتابة في دفتر الطبليات ترتدّ permission-denied والرصيد يبقى صفرًا",
+      "state": "todo"
+    },
+    {
+      "id": "GATE-O02",
+      "milestone": "م٥",
+      "need": "تجربةٌ حيّةٌ بالأدوار الحقيقيّة: حارسُ بوابةٍ وأمينُ مخزنٍ ومدير — من الوصول إلى الخروج والمطابقة",
+      "ifMissing": "تتكرّر دَينُ ‹LPN›: طبقةٌ كاملةٌ لم تُجرَّب حيًّا بالأدوار قطّ",
+      "state": "todo"
+    }
+  ],
+  "whereToFind": [
+    {
+      "what": "مركز البوابة — تسجيل الدخول والخروج",
+      "path": "/dashboard/gate-post",
+      "nav": "بوّابة الأمن"
+    },
+    {
+      "what": "سجلّ البوابة والمطابقة",
+      "path": "/dashboard/gate-log",
+      "nav": "بوّابة الأمن"
+    },
+    {
+      "what": "الطبليات العائدة وأرصدتها",
+      "path": "/dashboard/pallet-control",
+      "nav": "بوّابة الأمن"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "GATE-000",
+      "title": "تثبيتُ الخطة الحاكمة والمتتبّع التاسع",
+      "milestone": "م٠",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [],
+      "dependsOn": [],
+      "branch": "claude/plan-review-new-feature-2a1adc",
+      "touches": [
+        "docs/خطة-بوابة-الأمن-والطبليات-العائدة.md",
+        "docs/plan/gate-control.json",
+        "docs/plan/استئناف-بوابة-الأمن.md",
+        "package.json"
+      ],
+      "progress": "جُردت الشجرة قبل الكتابة: اثنتا عشرة فجوةً كلٌّ منها بمسار ملفٍّ حقيقيّ، وكُشف أنّ نصفَ الطبقة مبنيٌّ في yardModel.js منذ EXE-602. وحُسمت القرارات السبعة بنصّ المالك.",
+      "nextStep": "أُغلقت. التالي GATE-101.",
+      "acceptance": [
+        "كلّ فجوة من ج-١ إلى ج-١٢ مربوطة بمسار ملفٍّ وسطرٍ حقيقيّ لا بوصفٍ عامّ",
+        "npm run plan:gate يقبل المتتبّع ويولّد بطاقة الاستئناف بلا خرق",
+        "القرارات السبعة مثبَّتة نصًّا في الوثيقة الحاكمة بصيغتها التي أقرّها المالك",
+        "لا سطر كود إنتاجيّ في هذه المهمّة — وثائق وخطط فقط"
+      ],
+      "evidence": {
+        "commit": "a55333f",
+        "closedOn": "2026-08-28"
+      }
+    },
+    {
+      "id": "GATE-101",
+      "title": "الأسبابُ التسعة واشتقاقُ الغرض وتوسعةُ الزيارة بحمولة الدخول",
+      "milestone": "م١",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ج-١",
+        "ج-٢",
+        "ج-٣"
+      ],
+      "dependsOn": [
+        "GATE-000"
+      ],
+      "touches": [
+        "src/services/gate/gateModel.js",
+        "src/services/gate/gateModel.test.js",
+        "src/services/fleet/yardModel.js"
+      ],
+      "guardTest": "src/services/gate/gateModel.test.js",
+      "acceptance": [
+        "GATE_REASONS تسعةٌ في مصدرٍ واحد — لا مكتوبةً في شاشة",
+        "purposeOf يشتقّ غرضًا صالحًا لكلّ سببٍ من التسعة، والنقلُ الداخليّ حسب حالة الحمولة",
+        "doorAccepts لم يتغيّر سلوكُه لزيارةٍ قديمة بلا reason — اختبارُ رجعةٍ يُثبته",
+        "shapeVisit يحمل load.in بحقوله الأحد عشر ولا يكسر زيارةً قائمة"
+      ],
+      "progress": "GATE_REASONS تسعةٌ في مصدرٍ واحد · purposeOf يشتقّ الغرض · shapeVisit يحمل reason و load و visitor · واختبارُ رجعةٍ يُثبت أنّ doorAccepts لم يتغيّر لزيارةٍ قديمة.",
+      "evidence": {
+        "commit": "8dc2f4b",
+        "closedOn": "2026-08-28"
+      }
+    },
+    {
+      "id": "GATE-102",
+      "title": "الإظهارُ المشروط — الحارس لا يرى إلّا ما يخصّ سببَه",
+      "milestone": "م١",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ج-٤"
+      ],
+      "dependsOn": [
+        "GATE-101"
+      ],
+      "touches": [
+        "src/services/gate/gateModel.js",
+        "src/services/gate/gateModel.test.js"
+      ],
+      "guardTest": "src/services/gate/gateModel.test.js",
+      "acceptance": [
+        "fieldsFor(reason, loadState) دالّةٌ نقيّةٌ مختبَرة — والشاشة تعرض ولا تقرّر",
+        "«زيارة» تُظهر حقولَ الزائر وحدها ولا تُظهر PO ولا الطبليات",
+        "«مورّد لتسليم بضاعة» + «محمّلة» تُظهر PO والفاتورة والطبليات",
+        "اختبارٌ لكلّ سببٍ من التسعة — لا عيّنةٌ منها"
+      ],
+      "progress": "fieldsFor و exitFieldsFor دالّتان نقيّتان — واختبارٌ لكلّ سببٍ من التسعة في كلّ حالةِ حمولة.",
+      "evidence": {
+        "commit": "8dc2f4b",
+        "closedOn": "2026-08-28"
+      }
+    },
+    {
+      "id": "GATE-103",
+      "title": "ما ينقص يُعلَن ولا يمنع · ولا خروجَ محمّلًا بلا وصفِ حمولة",
+      "milestone": "م١",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ج-٥",
+        "ج-٦"
+      ],
+      "dependsOn": [
+        "GATE-102"
+      ],
+      "touches": [
+        "src/services/gate/gateModel.js",
+        "src/services/gate/gateModel.test.js",
+        "src/services/fleet/yardModel.js",
+        "src/services/fleet/yardModel.test.js"
+      ],
+      "guardTest": "src/services/gate/gateModel.test.js",
+      "acceptance": [
+        "loadGaps يُعلن النقص ولا يمنع التسجيل — شاحنةٌ على الرصيف لا تُردّ لأنّ رقم الأمر لم يُكتب",
+        "exitVerdict يمنع الخروجَ المحمّل بلا وصفِ حمولة — مُثبَتًا بالنقض",
+        "الأقفالُ الثلاثة القائمة (المرحلة · رقم GP · إخلاء الباب) لم تُمسّ — اختبارُها القديم أخضر",
+        "حمولةُ الخروج بخمس حالاتٍ معلَنةٍ في مصدرٍ واحد"
+      ],
+      "progress": "loadGaps يُعلن ولا يمنع · outLoadProblems يُستدعى من exitVerdict فعلًا (قفلٌ رابعٌ) · مُثبَتًا بالنقض · والأقفال الثلاثة القائمة لم تُمسّ.",
+      "evidence": {
+        "commit": "8dc2f4b",
+        "closedOn": "2026-08-28"
+      }
+    },
+    {
+      "id": "GATE-201",
+      "title": "مركزُ البوابة — الشاشةُ للهاتف أوّلًا وشرحُها في الدليل",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ج-١٢"
+      ],
+      "dependsOn": [
+        "GATE-103"
+      ],
+      "touches": [
+        "src/pages/dashboard/gate-post.astro",
+        "src/components/brandzo-erp/gate/GatePost.jsx",
+        "src/services/gate/gateService.js",
+        "src/services/auth/navCatalog.js",
+        "src/services/auth/navAccess.js",
+        "src/data/usage-guide.json"
+      ],
+      "guardTest": "src/services/auth/usageGuide.test.js",
+      "acceptance": [
+        "تطبيقُ gate في navCatalog بثلاثة بنودٍ وأيقونة shield — ولا URL قائمٍ حُذف أو تغيّر",
+        "شرحُ الشاشة في usage-guide.json — شرطُ قبولٍ لا تابعٌ لاحق",
+        "npm test أخضر (حارسُ الدليل) · npm run audit بلا صفحةٍ يتيمة",
+        "جذرُ المكوّن يحمل o_theme والصفحةُ تستورد odoo.css — وإلّا عُرضت عاريةً"
+      ],
+      "progress": "تطبيق gate في navCatalog بأيقونة shield · gate-post.astro + GatePost.jsx (o_theme على الجذر) · gateService رقيقةٌ تستدعي yardService · gateRoles بقائمةٍ تُقرأ من firestore.rules · وشرحُ الشاشة في الدليل (١٠٣ شاشة). ★ واكتُشف عند الوصل أنّ الزائر لا يستطيع الخروج فأُضيف المسارُ القصير في canTransitionVisit بوسيطٍ اختياريّ.",
+      "nextStep": "أنشئ src/components/brandzo-erp/gate/GatePost.jsx و gate-post.astro، وأدرِج تطبيق gate في navCatalog، واكتب شرحَه في usage-guide.json.",
+      "evidence": {
+        "commit": "9bab3b9",
+        "closedOn": "2026-08-28"
+      }
+    },
+    {
+      "id": "GATE-202",
+      "title": "ثلاثُ لغاتٍ للحارس — والعربيّةُ أصلٌ واحتياط",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ج-١٢"
+      ],
+      "dependsOn": [
+        "GATE-201"
+      ],
+      "touches": [
+        "src/services/lpn/fieldLexicon.js",
+        "src/services/lpn/fieldLexicon.test.js"
+      ],
+      "guardTest": "src/services/lpn/fieldLexicon.test.js",
+      "acceptance": [
+        "مفاتيحُ البوابة مضافةٌ إلى المعجم القائم — لا معجمٌ ثانٍ يفترق",
+        "missingIn('en') و missingIn('fr') فارغتان بعد الإضافة",
+        "مفتاحٌ ناقصٌ يعود عربيًّا لا فارغًا — مُثبَتًا بالاختبار"
+      ],
+      "progress": "٣٥ مفتاحًا في fieldLexicon القائم بثلاث لغات — لا معجمٌ ثانٍ. missingIn(en) و missingIn(fr) فارغتان.",
+      "evidence": {
+        "commit": "9bab3b9",
+        "closedOn": "2026-08-28"
+      }
+    },
+    {
+      "id": "GATE-203",
+      "title": "وصلُ محرّك المسح ولوحةِ اللوحة — كاميرا وجهاز باركود معًا",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ج-١١"
+      ],
+      "dependsOn": [
+        "GATE-201"
+      ],
+      "touches": [
+        "src/components/brandzo-erp/gate/GatePost.jsx"
+      ],
+      "guardTest": "src/services/gate/gateModel.test.js",
+      "acceptance": [
+        "useBarcodeCamera و useWedgeScanner موصولان — نفسُ نمط الشاشات الخمس",
+        "اللوحةُ تُكتب بحقلٍ كبيرٍ لاتينيّ الاتّجاه ويُطبَّع بـnormalizePlate",
+        "لا زرَّ يُخفى قبل أن يُجرَّب — الكاميرا ظاهرةٌ دائمًا وسببُ تعذّرها يُقال"
+      ],
+      "progress": "useBarcodeCamera و useWedgeScanner موصولان · normalizePlate يُطبّع بلا تشويه · حقلُ اللوحة كبيرٌ لاتينيّ الاتّجاه.",
+      "evidence": {
+        "commit": "9bab3b9",
+        "closedOn": "2026-08-28"
+      }
+    },
+    {
+      "id": "GATE-204",
+      "title": "الخروجُ حركةً ثانية — حمولةُ الدخول ≠ حمولةُ الخروج على الشاشة",
+      "milestone": "م٢",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ج-٦"
+      ],
+      "dependsOn": [
+        "GATE-203"
+      ],
+      "touches": [
+        "src/components/brandzo-erp/gate/GatePost.jsx",
+        "src/services/gate/gateService.js"
+      ],
+      "guardTest": "src/services/gate/gateModel.test.js",
+      "acceptance": [
+        "«١٥ دخلت · ٦ خرجت» تُقرأ في بطاقة الزيارة صراحةً — سيناريو قبولٍ منصوص",
+        "الخروجُ الفارغ يُسجَّل بضغطةٍ واحدة ولا يطلب حقولًا",
+        "ما تكتبه الشاشةُ يقرؤه الحارسُ فعلًا — لا حقلَ يُكتب بلا قارئ ولا حارسَ يقرأ حقلًا لا يُكتب"
+      ],
+      "progress": "checkOut يكتب load.out قبل الانتقال فيقرأه القفلُ الرابع فعلًا · وحمولةُ الدخول معروضةٌ أمام الحارس وهو يصف الخروج · والفارغةُ بضغطة.",
+      "evidence": {
+        "commit": "9bab3b9",
+        "closedOn": "2026-08-28"
+      }
+    },
+    {
+      "id": "GATE-301",
+      "title": "دفترُ الطبليات العائدة — سجلٌّ ملحقٌ-فقط بكتابةٍ واحدة",
+      "milestone": "م٣",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ج-٧"
+      ],
+      "dependsOn": [
+        "GATE-204"
+      ],
+      "touches": [
+        "src/services/gate/gateService.js",
+        "firestore.rules"
+      ],
+      "guardTest": "src/services/gate/gateModel.test.js",
+      "acceptance": [
+        "pallet_moves ملحقٌ-فقط: allow update, delete: if false في firestore.rules",
+        "السطرُ يُكتب من gateService في اللحظة نفسِها للختم — لا بيدِ الشاشة ولا بكتابةٍ ثانية",
+        "npm run audit يقبل المجموعة الجديدة — لكلّ مجموعةٍ قاعدة"
+      ],
+      "progress": "pallet_moves ملحقٌ-فقط في firestore.rules · writePalletMoves تُستدعى من checkIn و checkOut لحظةَ الختم · وسطرُ الخروج بعد مرور الحارس الرابع فلا يُقيَّد خروجٌ رُفض.",
+      "nextStep": "أنشئ palletLedger.js (منطق خالص) و pallet_moves في firestore.rules، واكتب السطرَ من gateService لحظةَ الختم.",
+      "evidence": {
+        "commit": "2a6d46d",
+        "closedOn": "2026-08-28"
+      }
+    },
+    {
+      "id": "GATE-302",
+      "title": "رصيدُ الطبليات — لكلّ مورّدٍ ونوعٍ وحال",
+      "milestone": "م٣",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ج-٨"
+      ],
+      "dependsOn": [
+        "GATE-301"
+      ],
+      "touches": [
+        "src/services/gate/palletLedger.js",
+        "src/services/gate/palletLedger.test.js"
+      ],
+      "guardTest": "src/services/gate/palletLedger.test.js",
+      "acceptance": [
+        "مثالُ الورقة يُثبَت: دخل ٨٠ · خرج ٦٥ · الرصيد ١٥",
+        "التالفُ والمفقود لا يدخلان الرصيد القابل للردّ — اختبارٌ يفصلهما",
+        "الرصيدُ يُشتقّ من الدفتر لا من الزيارات — فلا يكذب بعد ٢٠٠ زيارة"
+      ],
+      "progress": "palletBalance بالإجمالات الستّ وأرصدة الأطراف · مثالُ المالك مُثبَتٌ (٨٠−٦٥=١٥) · ★ وأُصلح عطبُ مقاصّةِ الرصيد الافتتاحيّ لدَينِ طرفٍ آخر قبل النشر.",
+      "evidence": {
+        "commit": "2a6d46d",
+        "closedOn": "2026-08-28"
+      }
+    },
+    {
+      "id": "GATE-303",
+      "title": "شاشةُ الطبليات العائدة — الأرصدةُ الستّة وجدولُ الموردين",
+      "milestone": "م٣",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ج-٩"
+      ],
+      "dependsOn": [
+        "GATE-302"
+      ],
+      "touches": [
+        "src/pages/dashboard/pallet-control.astro",
+        "src/components/brandzo-erp/gate/PalletControl.jsx",
+        "src/services/auth/navCatalog.js",
+        "src/data/usage-guide.json"
+      ],
+      "guardTest": "src/services/auth/usageGuide.test.js",
+      "acceptance": [
+        "الأرصدةُ الستّة معروضةٌ ومشتقّةٌ من الدفتر لا مخزَّنةً حقلًا",
+        "لا تُكتب «طبليات» مجرّدةً — الاسم «الطبليات العائدة» في كلّ نصٍّ (ق-١)",
+        "شرحُ الشاشة في usage-guide.json — وnpm test أخضر"
+      ],
+      "progress": "pallet-control.astro + PalletControl.jsx بثلاث طبقات (الأرصدة · جدول الأطراف · حركات الطرف) · والمدخلُ اليدويّ للافتتاحيّ والشطب بسببٍ مُلزَم · وشرحُه في الدليل (١٠٤ شاشة).",
+      "evidence": {
+        "commit": "2a6d46d",
+        "closedOn": "2026-08-28"
+      }
+    },
+    {
+      "id": "GATE-401",
+      "title": "المطابقة — ما رآه الحارسُ مقابلَ ما سجّله المخزن",
+      "milestone": "م٤",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ج-١٠"
+      ],
+      "dependsOn": [
+        "GATE-303"
+      ],
+      "touches": [
+        "src/services/gate/gateReconcile.js",
+        "src/services/gate/gateReconcile.test.js"
+      ],
+      "guardTest": "src/services/gate/gateReconcile.test.js",
+      "acceptance": [
+        "«بوابة ٢٠ / استلام ١٨» يظهر فرقًا مسمًّى — مثالُ الورقة حرفيًّا",
+        "الربطُ بمفتاح PO أو رقم الإذن واللوحةُ سندًا احتياطيًّا",
+        "زيارةٌ بلا استلامٍ مقابل لا تُنتج فرقًا كاذبًا — تُعلَن «لم يُسجَّل استلامٌ بعد»"
+      ],
+      "progress": "gateReconcile.js يقابل بيانَ البوابة بالطبالي المعتمدة بمفتاح PO · مثالُ المالك مُثبَتٌ (٢٠/١٨) · واختبارٌ يقرأ قائمةَ الحالات من grnBridge نفسِه · والطرودُ تُعلَن بلا نظير.",
+      "nextStep": "أنشئ gateReconcile.js يقابل بيانَ البوابة بـreceivedByLine من grnBridge بمفتاح PO.",
+      "evidence": {
+        "commit": "d7f2d9b",
+        "closedOn": "2026-08-28"
+      }
+    },
+    {
+      "id": "GATE-402",
+      "title": "حسمُ الفرق — قرارٌ وطرفٌ يتحمّله وفاعلٌ باسمه",
+      "milestone": "م٤",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ج-١٠"
+      ],
+      "dependsOn": [
+        "GATE-401"
+      ],
+      "touches": [
+        "src/services/gate/gateReconcile.js",
+        "src/services/gate/gateReconcile.test.js"
+      ],
+      "guardTest": "src/services/gate/gateReconcile.test.js",
+      "acceptance": [
+        "لا إغلاقَ بلا الثلاثة — مُثبَتًا بالنقض لكلّ واحدٍ منها",
+        "الطرفُ من قائمةٍ معلَنة: البوابة · الناقل · الاستلام",
+        "نمطُ transferPallets مُحتذًى لا مُعادٌ اختراعُه"
+      ],
+      "progress": "decideVariance بنمط transferPallets: قرارٌ وطرفٌ من قائمةٍ خماسيّة وفاعل — مُثبَتًا بالنقض أربع مرّات.",
+      "evidence": {
+        "commit": "d7f2d9b",
+        "closedOn": "2026-08-28"
+      }
+    },
+    {
+      "id": "GATE-403",
+      "title": "سجلّ البوابة والمطابقة — شاشةُ المدير وشرحُها في الدليل",
+      "milestone": "م٤",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ج-١٠"
+      ],
+      "dependsOn": [
+        "GATE-402"
+      ],
+      "touches": [
+        "src/pages/dashboard/gate-log.astro",
+        "src/components/brandzo-erp/gate/GateLog.jsx",
+        "src/services/auth/navCatalog.js",
+        "src/data/usage-guide.json"
+      ],
+      "guardTest": "src/services/auth/usageGuide.test.js",
+      "acceptance": [
+        "الزياراتُ وأزمنتُها وتجاوزاتُها معروضةٌ من yardModel القائم لا من حسابٍ ثانٍ",
+        "الفروقُ المفتوحة تُعرض وتُحسم من الشاشة نفسها",
+        "شرحُ الشاشة في usage-guide.json — وnpm test أخضر"
+      ],
+      "progress": "gate-log.astro + GateLog.jsx بثلاث طبقات · الفروقُ تُحسم من الشاشة · ومدقّقُ الجرد يقرأ ولا يحسم · وشرحُه في الدليل (١٠٥ شاشة).",
+      "evidence": {
+        "commit": "d7f2d9b",
+        "closedOn": "2026-08-28"
+      }
+    },
+    {
+      "id": "GATE-501",
+      "title": "مصفوفةُ الأدوار — الشاشةُ والقاعدةُ لا تفترقان",
+      "milestone": "م٥",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ج-١٢"
+      ],
+      "dependsOn": [
+        "GATE-403"
+      ],
+      "touches": [
+        "src/services/auth/navAccess.js",
+        "src/services/auth/navAccess.test.js",
+        "firestore.rules",
+        "src/services/gate/gateRoles.js"
+      ],
+      "guardTest": "src/services/gate/gateWiring.test.js",
+      "acceptance": [
+        "اختبارُ الانحراف أخضر — pageAccess يشتقّ من الكتالوج ولا قائمةَ ثانية",
+        "بياناتُ الزائر محصورةُ القراءة بالمديرَين وضابط البوابة — في القاعدة لا في الشاشة وحدها",
+        "لا صلاحيّةَ تتّسع صامتةً: كلُّ دورٍ جديدٍ في ROLE_NAV مبرَّرٌ بتعليقٍ يقول لماذا"
+      ],
+      "progress": "جُردت الطبقةُ فوُجد مبنيّان بلا مستدعٍ فوُصلا · وبياناتُ الزائر نُقلت إلى مستندٍ ابنٍ بقاعدةٍ تحصر قراءتَه · ومُكْنِن المنعُ بستّة حرّاسٍ في gateWiring.test.js.",
+      "evidence": {
+        "commit": "b4e98de",
+        "closedOn": "2026-08-28"
+      }
+    },
+    {
+      "id": "GATE-502",
+      "title": "التجربةُ الحيّة بالأدوار الحقيقيّة — ودَينُ LPN لا يُكرَّر",
+      "milestone": "م٥",
+      "owner": "المالك",
+      "state": "blocked",
+      "gaps": [
+        "ج-١٢"
+      ],
+      "dependsOn": [
+        "GATE-501"
+      ],
+      "touches": [
+        "SESSION_HANDOFF.md"
+      ],
+      "acceptance": [
+        "سيناريو من الوصول إلى الخروج والمطابقة موثَّقٌ بلقطات",
+        "حارسُ بوابةٍ حقيقيٌّ يفتح gate-post على هاتفٍ ويسجّل دخولًا وخروجًا",
+        "أمينُ مخزنٍ يستلم، والمطابقةُ تُطلق فرقًا حقيقيًّا — لا فرقًا مصنوعًا في اختبار"
+      ],
+      "blockedBy": "GATE-O02 — تجربةٌ حيّةٌ بالأدوار الحقيقيّة على البوّابة المنشورة، ولا يملكها وكيل: تحتاج حسابَ حارسٍ حقيقيًّا وهاتفًا عند الحاجز وشاحنةً تدخل. وتسبقها GATE-O01 (نشرُ القواعد)."
+    },
+    {
+      "id": "GATE-601",
+      "title": "ربطُ لحظة الخروج بمسح الباب — سلسلةٌ واحدةٌ لا منظومتان",
+      "milestone": "م٦",
+      "owner": "Claude",
+      "state": "blocked",
+      "blockedBy": "عملُ الجلسة المتوازية claude/task-a-plus-plus-bd1eb6 غيرُ مُودَعٍ بعد (dock_sessions و exitGate.js و DockOperations.jsx). ودستورُ AGENTS بندٌ ٤ يمنع لمسَ نطاق وكيلٍ آخر عن عملٍ غير مرفوع. يُستأنف حين تُودِع ويُعاد أساسُها على main.",
+      "gaps": [
+        "ج-١٣"
+      ],
+      "dependsOn": [
+        "GATE-501"
+      ],
+      "touches": [
+        "src/services/gate/gateService.js",
+        "src/services/gate/gateModel.js",
+        "src/services/auth/navAccess.js",
+        "src/services/auth/navCatalog.js"
+      ],
+      "acceptance": [
+        "جلسةُ EXIT تُغلق على لوحةٍ ⇐ تُختم الزيارةُ المفتوحة لتلك اللوحة بـdockExitRef — ختمُ أثرٍ لا مرحلةٌ جديدة",
+        "checkOut يُعلن «خرجت بلا مسحٍ عند الباب» ولا يمنع — نمط loadGaps",
+        "دمجُ الملفّات المشتركة **بإبقاء الإضافتين**: gate_officer يرى gate و lpn معًا، ولا بندَ يُحذف من navCatalog",
+        "firestore.rules تحمل قواعدَ الطبقتين — لا تُحذف pallet_moves ولا dock_sessions",
+        "ولا يُطرح رقمٌ من رقم: عددُ الطبليات من البوّابة وهويّاتُها من المسح"
+      ]
+    }
+  ]
+}

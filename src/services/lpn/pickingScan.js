@@ -231,7 +231,7 @@ export function takeFromPallet(pick) {
  * @param {object} opts {code هويّة مولَّدة · warehouse · sourceDoc · actor}
  * @returns {{pallet:object}|{problem:string}}
  */
-export function buildIssuePallet(picks, { code, warehouse = '', sourceDoc = null, actor } = {}) {
+export function buildIssuePallet(picks, { code, warehouse = '', sourceDoc = null, route = '', branch = '', actor } = {}) {
   const lpn = normalizeLpnCode(code);
   if (!isValidLpnCode(lpn)) {
     return { problem: `هويّة طبلية الصرف «${code ?? ''}» غير صالحة — تولد من العدّاد لا من اليد.` };
@@ -273,6 +273,18 @@ export function buildIssuePallet(picks, { code, warehouse = '', sourceDoc = null
       lines: [...byKey.values()],
       parentCodes: parents,
       sourceDoc,
+      /*
+       * ★★★ الوجهةُ تُحمل من المهمّة إلى الحمولة (2026-08-27 · LPN-309).
+       *
+       * `stagingAssignVerdict` يمنع «طبليةَ فرعٍ في مسار فرعٍ آخر» بمقارنة
+       * `unit.route || unit.branch` بمنطقة التجهيز. وكان الحقلان **لا
+       * يُكتبان على طبلية الصرف أبدًا** — `route` يعيش على مهمّة التحضير
+       * وينتهي عندها. فالمقارنة تقرأ `undefined` والشرط `wanted && given`
+       * يسقط، **فالحارسُ لا يُطلق ولو مرّة**. وهو أخطر حارسٍ في هذه الخطوة:
+       * عطبُه لا يُكتشف إلّا حين يشتكي فرعٌ من نقصٍ وآخر من زيادة.
+       */
+      route: up(route),
+      branch: up(branch),
       createdBy: String(actor).trim(),
     },
   };

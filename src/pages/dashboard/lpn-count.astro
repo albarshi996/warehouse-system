@@ -1,0 +1,36 @@
+---
+/**
+ * جردُ الطبالي — شهادةُ رؤيةٍ بلا كمّيّات.
+ *
+ * لماذا وُجدت؟ لأنّ الجردَ القائم يعدّ **صنفًا صنفًا**، والمستودعُ الذي
+ * صار طبالِيَّ الهويّة فيه آلافُ الكراتين داخل حاوياتٍ مختومة. فعدُّ
+ * محتوى طبليةٍ مغلقةٍ سليمةِ الختم عملٌ بلا فائدة — يكفي أن يُشهَد أنّها
+ * **رُئيت في هذا الرفّ بهذه الحال**.
+ *
+ * ★ والقيدُ الحاكم ق-٢/ح-٣: لا كمّيّةَ تُعرض ولا تُطلب. فالمشاهدةُ لا
+ * تُحاسِب ولا تُغيّر رصيدًا — وهو ما يحفظ CAP-101 «الالتقاط لا يُحاسِب».
+ *
+ * الوثيقة الحاكمة: docs/خطة-طبقة-الطبالي.md · المتتبّع: npm run plan:lpn
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import CountFlow from '../../components/brandzo-erp/lpn/CountFlow.jsx';
+---
+
+<DashboardLayout title="جرد الطبالي" showGuide={false} light>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">جرد الطبالي</h1>
+      <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
+        امسح <span class="font-bold">الرفّ</span> ثمّ <span class="font-bold">الطبالي التي تقف فيه</span>
+        واحدةً تلو أخرى. والمغلقةُ سليمةُ الختم <span class="text-accent font-bold">تُشهَد ولا تُفتح</span> —
+        شهادةُ رؤيةٍ لا كمّيّة، فلا يُطلب منك رقمٌ ولا يُعرض عليك رقم. وما كان
+        <span class="font-bold">مفتوحًا أو تالفًا</span> يُوسَم هنا ويُعدّ صنفًا صنفًا من شاشة المسح كالمعتاد.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <CountFlow client:load />
+  </div>
+</DashboardLayout>

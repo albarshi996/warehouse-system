@@ -130,3 +130,37 @@ export function warehouseProblem(portalRole, { userWarehouse, targetWarehouse } 
 export function seesBookQtyWhileCounting() {
   return false;
 }
+
+/**
+ * ★★★ بوّابةُ الشاشة — **لا تحجب من لا تعرفه** ‹LPN-511›.
+ *
+ * ═══ لماذا هذا القيد بالذات؟ ═══
+ * `fetchUserProfile` يحمل تحذيرًا من عطبٍ وقع فعلًا (2026-08-17): قراءةٌ
+ * فشلت فابتلعها `catch` فعاد الدورُ `viewer` — **فمُنع المديرُ العام نفسه
+ * بلا رسالةِ خطأ**. الشاشةُ قالت «لا صلاحيّة» وهي لم تعرف من هو أصلًا.
+ *
+ * فالقاعدة هنا: **الدورُ المجهول يمرّ**. لأنّ المنعَ الحقيقيّ في
+ * `firestore.rules` على الخادم — والشاشةُ تُحسّن التجربة (لا تعرض زرًّا
+ * سيرتدّ) ولا تكون هي الحارس. ومنعٌ بُني على جهلٍ بالهويّة أسوأ من سماحٍ
+ * يردّه الخادمُ برسالةٍ واضحة.
+ *
+ * (وهو نمطُ `scopeVerdict.ok` في طبقة الالتقاط: «لا يقطع الفريق».)
+ *
+ * @returns {{allowed:boolean, known:boolean, message:string}}
+ */
+export function uiGate(portalRole, op) {
+  const known = Object.hasOwn(PORTAL_TO_FIELD, portalRole);
+  if (!known) return { allowed: true, known: false, message: '' };
+  const message = opProblem(portalRole, op);
+  return { allowed: !message, known: true, message };
+}
+
+/** ملخّصُ ما يستطيعه الموظّف — للعرض لا للمنع. */
+export function roleSummary(portalRole) {
+  const fields = fieldRolesOf(portalRole);
+  return {
+    known: Object.hasOwn(PORTAL_TO_FIELD, portalRole),
+    fieldLabels: fields.map((f) => FIELD_ROLES[f]).filter(Boolean),
+    opLabels: opsOf(portalRole).map((o) => FIELD_OPS[o]).filter(Boolean),
+  };
+}

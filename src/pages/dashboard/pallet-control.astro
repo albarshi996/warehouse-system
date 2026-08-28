@@ -1,0 +1,36 @@
+---
+/**
+ * الطبلياتُ العائدة — من له طبلياتٌ عندنا، ومن عنده طبلياتٌ لنا.
+ *
+ * لماذا وُجدت؟ لأنّ الطبليات تضيع إذا لم يكن لها سجلّ: تدخل تحت البضاعة
+ * وتخرج فارغةً، ولا أحد يعرف كم بقي لمن. والرصيدُ **يُشتقّ من دفترٍ دائمٍ
+ * لا يُحذف** لا من الزيارات — فشاشةُ الساحة تحفظ آخر مئتي زيارةٍ وحدها،
+ * ورصيدٌ ناقصٌ لا يعلن نقصَه أسوأ من لا شيء.
+ *
+ * ★ و«الطبليات العائدة» غيرُ «الطبالي» في التنفيذ الميدانيّ: تلك هويّةُ
+ * حمولةٍ بباركود، وهذه الخشبةُ نفسُها (قرار المالك ق-١).
+ *
+ * الوثيقة الحاكمة: docs/خطة-بوابة-الأمن-والطبليات-العائدة.md · المتتبّع: npm run plan:gate
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import PalletControl from '../../components/brandzo-erp/gate/PalletControl.jsx';
+---
+
+<DashboardLayout title="الطبليات العائدة" showGuide={false} light>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">الطبليات العائدة</h1>
+      <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
+        الخشبُ الذي يدخل تحت البضاعة ويخرج فارغًا — <span class="font-bold">من له طبلياتٌ عندنا،
+        ومن عنده طبلياتٌ لنا</span>. والأرقامُ تُشتقّ من دفترٍ
+        <span class="text-accent font-bold">ملحقٍ-فقط لا يُعدَّل ولا يُحذف</span>،
+        تُكتب أسطرُه آليًّا لحظةَ تسجيل الدخول أو الخروج على البوّابة.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <PalletControl client:load />
+  </div>
+</DashboardLayout>

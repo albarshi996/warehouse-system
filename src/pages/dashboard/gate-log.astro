@@ -1,0 +1,34 @@
+---
+/**
+ * سجلُّ البوابة والمطابقة — حيث تصير البوّابةُ نقطةَ تحقّقٍ مستقلّة.
+ *
+ * لماذا وُجدت؟ لأنّ الحارسَ يعدّ ما على الشاحنة والمخزنَ يستلم — **ولا أحدَ
+ * يقابل الرقمين**. فشاحنةٌ تدخل بعشرين طبليّةً ويُسجَّل استلامُ ثمانيَ عشرة،
+ * ويمضي الأمرُ كأنّ شيئًا لم يكن.
+ *
+ * وهي منظارُ المدير: تبويبُ «الساحة والأبواب» في عمليات الأسطول يبقى لمشرف
+ * المناولة بأبوابه، ومركزُ البوابة للحارس بهاتفه — وهذه للقراءة والحسم.
+ *
+ * الوثيقة الحاكمة: docs/خطة-بوابة-الأمن-والطبليات-العائدة.md · المتتبّع: npm run plan:gate
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import GateLog from '../../components/brandzo-erp/gate/GateLog.jsx';
+---
+
+<DashboardLayout title="سجلّ البوابة والمطابقة" showGuide={false} light>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">سجلّ البوابة والمطابقة</h1>
+      <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
+        زياراتُ اليوم وأزمنتُها وتجاوزاتُها، و<span class="text-accent font-bold">فروقُ ما رآه
+        الحارسُ مقابلَ ما سجّله المخزن</span>. والفرقُ لا يُغلق بزرّ: يُحسم بقرارٍ منصوصٍ
+        <span class="font-bold">وطرفٍ يتحمّله</span> وفاعلٍ باسمه.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <GateLog client:load />
+  </div>
+</DashboardLayout>

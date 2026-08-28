@@ -33,3 +33,19 @@ pnpm-debug.log*
 
 # Claude Code local state (machine-specific permission allowlist; not shared)
 .claude/settings.local.json
+
+# Obsidian vault (personal notes; not part of the app)
+.obsidian/
+/*.canvas
+/*.base
+
+# agent scratch dirs (contain a nested git clone; must never be committed)
+.codex/
+.codex-publish-scenarios-*/
+
+# local scratch & generated artefacts
+tmp/
+output/
+
+# pasted screenshots dropped at the repo root
+/Pasted image *.png

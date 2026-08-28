@@ -18,6 +18,7 @@ import {
   stagingAssignVerdict,
   stagingDwellMs,
 } from './stagingLoading.js';
+import { buildIssuePallet } from './pickingScan.js';
 
 const A = 'LPN-MAIN-20260827-000001';
 const B = 'LPN-MAIN-20260827-000002';
@@ -166,4 +167,39 @@ test('★★ الصورة الكاملة: الفعليّ من الدفتر وا�
   const impossible = itemStockPicture(units, { sku: 'WNW-001', warehouse: 'MAIN', actualQty: 10 });
   assert.ok(impossible.exceedsActual, 'محمولٌ يتجاوز الفعليّ = حركةٌ لم تُقيَّد أو قراءةٌ مكرّرة');
   assert.equal(impossible.freeEstimate, 0, 'ولا يُسالَب المتاح');
+});
+
+/* ── ‹LPN-309› الحارسُ الذي كان يقرأ فراغًا ───────────────────────── */
+
+test('★★★ حارسُ منع الخلط يُطلق فعلًا — الوجهةُ تعبر من المهمّة إلى الحمولة', () => {
+  /*
+   * العطبُ الذي كُشف 2026-08-27: `route` يعيش على مهمّة التحضير وينتهي
+   * عندها؛ فطبليةُ الصرف تولد بلا وجهة، و`wanted` يصير `undefined`، والشرط
+   * `wanted && given` يسقط — **فيمرّ كلُّ خلطٍ صامتًا**. وهذا الاختبار يبني
+   * الحمولة من مسار التحضير نفسه ويثبت أنّ الحارس صار له ما يحرسه.
+   */
+  const built = buildIssuePallet(
+    [{ lpn: 'LPN-MAIN-20260827-000001', sku: 'WNW-001', batch: 'B1', expiry: '2027-01-01', uom: 'carton', qty: 2, baseQty: 24 }],
+    { code: 'LPN-MAIN-20260827-000900', warehouse: 'MAIN', route: 'rt-north', actor: 'محمّد' }
+  );
+  assert.ok(!built.problem, built.problem);
+  assert.equal(built.pallet.route, 'RT-NORTH', 'الوجهةُ تُحمل مطبَّعةً لا تُهمَل');
+
+  const unit = { ...built.pallet, state: 'ISSUE_CLOSED' };
+  const wrong = stagingAssignVerdict(unit, 'MAIN-STG-R01-B01', { route: 'RT-SOUTH' });
+  assert.ok(!wrong.ok, 'طبليةُ الشمال في مسار الجنوب تُردّ — وهذا ما كان يمرّ صامتًا');
+  assert.match(wrong.message, /RT-NORTH/);
+
+  const right = stagingAssignVerdict(unit, 'MAIN-STG-R01-B01', { route: 'rt-north' });
+  assert.ok(right.ok, 'ومسارُها الصحيح يمرّ — الحارسُ يفرّق ولا يمنع الكلّ');
+});
+
+test('★ حمولةٌ بلا وجهةٍ لا تُمنع — الغيابُ ليس تعارضًا', () => {
+  const built = buildIssuePallet(
+    [{ lpn: 'LPN-MAIN-20260827-000002', sku: 'WNW-002', batch: '', expiry: '', uom: 'ea', qty: 1, baseQty: 1 }],
+    { code: 'LPN-MAIN-20260827-000901', warehouse: 'MAIN', actor: 'محمّد' }
+  );
+  assert.equal(built.pallet.route, '');
+  const v = stagingAssignVerdict({ ...built.pallet, state: 'ISSUE_CLOSED' }, 'MAIN-STG-R01-B01', { route: 'RT-ANY' });
+  assert.ok(v.ok, 'بلا وجهةٍ معلنةٍ لا يُخترع تعارض — وإلّا توقّف كلُّ تجهيزٍ قائم');
 });

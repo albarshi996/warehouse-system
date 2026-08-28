@@ -86,7 +86,7 @@ const INITIAL_CONTENT_REV = 0;
  *
  * @returns {Promise<{code:string}>}
  */
-export async function createHandlingUnit({ code, state, warehouse = '', bin = '', lines = [], parentCodes = [], sourceDoc = null, orderRef = null, actor, at }) {
+export async function createHandlingUnit({ code, state, warehouse = '', bin = '', lines = [], parentCodes = [], sourceDoc = null, orderRef = null, route = '', branch = '', actor, at }) {
   const lpn = normalizeLpnCode(code);
   if (!isValidLpnCode(lpn)) throw new Error(`هويّة الطبلية «${code ?? ''}» غير صالحة — تولد من reserveLpnCode لا من اليد.`);
   if (!MATERIALIZE_STATES.includes(state)) {
@@ -119,6 +119,9 @@ export async function createHandlingUnit({ code, state, warehouse = '', bin = ''
       parentCodes,
       sourceDoc,
       orderRef,
+      // ‹LPN-309› وجهةُ الحمولة — يقرؤها حارسُ منع الخلط عند التجهيز.
+      route: String(route ?? '').trim().toUpperCase(),
+      branch: String(branch ?? '').trim().toUpperCase(),
       createdBy: String(actor).trim(),
       createdByUid: currentUid(),
       createdAt: serverTimestamp(),

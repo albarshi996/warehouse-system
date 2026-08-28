@@ -1,0 +1,37 @@
+---
+/**
+ * سجلّ زيارات البوّابة — من دخل، ومن أيّ جهاز، وأيَّ شاشةٍ فتح.
+ *
+ * لماذا وُجدت؟ لأنّ البوّابة لم تكن تسجّل شيئًا عن الحركة: `authService`
+ * يُصادِق ولا يُسجّل، والسجلّاتُ القائمة كلُّها **لكلّ مستند** («من عدّل هذه
+ * الفاتورة») ولا واحدَ منها يجيب «من دخل البوّابة اليوم».
+ *
+ * ★ وطلبُ المالك كان أدقّ من ذلك: «**حتّى لو كان نفس اليوزر**». والهاتفُ
+ * المشترك في المستودع يمرّ بين عمّال، فالحسابُ وحده لا يفرّق شخصين —
+ * **الجهازُ يفرّقهما**.
+ *
+ * ولا موقعَ جغرافيًّا ولا عنوانَ إنترنت (قرار المالك · وحدُّ خطّة Spark).
+ *
+ * الوثيقة الحاكمة: docs/خطة-سجل-زيارات-البوابة.md
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import PortalVisits from '../../components/brandzo-erp/access/PortalVisits.jsx';
+---
+
+<DashboardLayout title="سجلّ زيارات البوّابة" showGuide={false} light>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">سجلّ زيارات البوّابة</h1>
+      <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
+        من دخل، ومتى، <span class="text-accent font-bold">ومن أيّ جهاز</span>، وأيَّ شاشةٍ فتح.
+        وأوّلُ ما تراه: <span class="font-bold">حسابٌ فُتح من أكثر من جهازٍ في اليوم نفسه</span> —
+        فالهاتفُ المشترك يمرّ بين عمّال، والحسابُ وحده لا يفرّق شخصين.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <PortalVisits client:load />
+  </div>
+</DashboardLayout>

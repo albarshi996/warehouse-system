@@ -1,0 +1,300 @@
+/**
+ * بوابةُ الأمن في السحابة ‹GATE› — طبقةٌ رقيقةٌ تنفّذ ولا تقرّر.
+ *
+ * ═══ ولا مجموعةَ زياراتٍ ثانية ═══
+ * القاعدة الحاكمة: **لا مجموعة Firestore جديدة إلّا ببيّنة أنّ لا نواة تصلح.**
+ * وزيارةُ البوّابة هي زيارةُ الساحة نفسُها — `yard_visits` القائمة منذ
+ * ‹EXE-602›. فهذا الملفّ **يستدعي `yardService`** ولا يكتب في المجموعة
+ * مباشرةً: فلا ختمٌ يُكتب بطريقين، ولا حارسٌ يُتجاوَز بمسارٍ ثانٍ.
+ *
+ * ═══ وكلُّ حكمٍ في النموذج الخالص ═══
+ * `visitProblems` · `canTransitionVisit` · `exitVerdict` (وفيه القفلُ الرابع
+ * `outLoadProblems`) — كلُّها في `fleet/yardModel.js` و`gate/gateModel.js`
+ * مختبَرةً. وهنا **ترتيبُ النداءات** لا قاعدةُ عمل.
+ *
+ * ═══ والدخولُ ختمان لا ختمٌ واحد ═══
+ * تُفتح الزيارة عند «وصول» ثمّ تُنقل فورًا إلى «تسجيل بوابة». ولماذا لا
+ * تُفتح عند «تسجيل بوابة» رأسًا؟ لأنّ مؤقّت البقاء `turnaround` يُقاس من
+ * ختم الوصول — وزيارةٌ بلا ختمِ وصولٍ تبقى بلا زمنِ بقاءٍ للأبد.
+ */
+import {
+  openVisit,
+  advanceVisit,
+  readVisit,
+  listenYardVisits,
+  listenDoors,
+  listenVisitEvents,
+  assignDoor,
+  cancelVisit,
+  holdVisit,
+  VISITS_CAP,
+} from '../fleet/yardService.js';
+import { collection, addDoc, onSnapshot, query, orderBy, limit as fsLimit, serverTimestamp } from 'firebase/firestore';
+import { db, auth } from '../../config/firebase.js';
+import { EXIT_STAGE, PERMIT_STAGE, shapeVisit, stageIndex } from '../fleet/yardModel.js';
+import { shapeInLoad, shapeOutLoad, shapeVisitor, needsDoor, normalizePlate, isGateReason } from './gateModel.js';
+import { movesFromLoad, moveProblems, shapeMove } from './palletLedger.js';
+import { decideVariance } from './gateReconcile.js';
+
+/** يُعاد تصديرُه كي لا تستورد الشاشةُ طبقتين لتقرأ زياراتٍ وأبوابًا. */
+export { listenYardVisits, listenDoors, listenVisitEvents, assignDoor, cancelVisit, holdVisit, VISITS_CAP };
+
+/**
+ * ★ تسجيلُ دخولٍ من الحاجز.
+ *
+ * ولا يُطلب من الحارس إلّا ما يظهر له: السببُ يشتقّ الغرضَ (ق-٣)، وحالةُ
+ * الحمولة تُظهر حقولَها (ج‑٤)، والنقصُ يُعلَن ولا يمنع — فالملزِمُ لوحةٌ فقط.
+ *
+ * @returns {Promise<string>} معرّفُ الزيارة.
+ */
+export async function checkIn(input, profile) {
+  if (!isGateReason(input?.reason)) {
+    throw new Error('سببُ الدخول مطلوب — وبلا سببٍ لا يعرف النظامُ أتحتاج بابًا أم لا.');
+  }
+  const payload = {
+    plate: normalizePlate(input?.plate),
+    carrier: input?.carrier,
+    driverName: input?.driverName,
+    driverId: input?.driverId,
+    reason: input.reason,
+    load: { in: shapeInLoad(input?.load), out: {} },
+  };
+
+  const visitId = await openVisit(payload, profile, 'arrived');
+  // الختمُ الثاني فورًا: الحارسُ سجّلها وهي أمامه، فزمنُ الانتظار يبدأ الآن.
+  await advanceVisit(visitId, 'checkedIn', {}, profile);
+  await writeVisitor(visitId, input?.visitor, profile);
+  await writePalletMoves('IN', payload.load.in, { visitId, plate: payload.plate, reason: payload.reason }, profile);
+  return visitId;
+}
+
+/* ═══════════════ بياناتُ الزائر ‹GATE-501 · ق-٧› ═══════════════ */
+
+const VISITOR_SUB = 'visitor';
+/** معرّفٌ ثابت: زائرٌ واحدٌ للزيارة، وإعادةُ الكتابة تُحدّث ولا تُضاعف. */
+const VISITOR_DOC = 'current';
+
+/**
+ * ★★ لماذا **مجموعةٌ فرعيّة** لا حقلٌ على الزيارة؟
+ *
+ * لأنّ قواعد Firestore تحرس **المستند** لا الحقل: `yard_visits` مقروءةٌ لكلّ
+ * مصادَق (والساحةُ يجب أن تبقى كذلك — مشرفُ المناولة يقرأ الزيارات ليُسنِد
+ * الأبواب). فحقلُ `visitor` على المستند يعني أنّ اسمَ الزائر ورقمَ هاتفه
+ * يقرؤهما **كلُّ من دخل البوّابة** مهما ضيّقنا الشاشة.
+ *
+ * ومنعٌ في الشاشة وحدَها ليس منعًا — هو زرٌّ مخفيٌّ فوق بابٍ مفتوح. فنُقلت
+ * إلى مستندٍ ابنٍ له قاعدتُه: `isVisitorReader()` في `firestore.rules`.
+ * (نمطُ `attachments` القائم — الثقيلُ والحسّاس في مستندٍ منفصل.)
+ */
+export async function writeVisitor(visitId, visitor, profile) {
+  const v = shapeVisitor(visitor);
+  if (!v.name && !v.phone && !v.host) return false;
+  const { setDoc, doc: docRef } = await import('firebase/firestore');
+  await setDoc(docRef(db, 'yard_visits', visitId, VISITOR_SUB, VISITOR_DOC), {
+    ...v,
+    at: serverTimestamp(),
+    byUid: auth?.currentUser?.uid || null,
+    byName: profile?.name || auth?.currentUser?.email || 'غير معروف',
+  });
+  return true;
+}
+
+/**
+ * قراءةُ بيانات زائرٍ — تُستدعى **عند الطلب** لا مع كلّ زيارة.
+ *
+ * وترتدّ `permission-denied` لمن لا تسمح له القاعدة، والشاشةُ تقول ذلك نصًّا
+ * بدل أن تعرض فراغًا يُشبه «لا زائر».
+ */
+export async function readVisitor(visitId) {
+  const { getDoc, doc: docRef } = await import('firebase/firestore');
+  const snap = await getDoc(docRef(db, 'yard_visits', visitId, VISITOR_SUB, VISITOR_DOC));
+  return snap.exists() ? snap.data() : null;
+}
+
+/* ═══════════════ دفترُ الطبليات العائدة ‹GATE-301› ═══════════════ */
+
+const PALLET_MOVES = 'pallet_moves';
+
+/** أحدثُ ما يُقرأ من الدفتر — والرصيدُ التاريخيّ يُبنى بترحيلٍ لا بقراءةٍ أعرض. */
+export const PALLET_MOVES_CAP = 1000;
+
+/**
+ * ★★ يكتب أسطرَ الدفتر **في اللحظة نفسِها للختم** — لا بيدِ الشاشة ولا
+ * بكتابةٍ ثانيةٍ يتذكّرها أحدٌ أو ينساها.
+ *
+ * ولماذا لا يمنع فشلُه تسجيلَ الدخول؟ لأنّ الزيارة هي الواقعة والدفترُ أثرُها:
+ * شاحنةٌ تُردّ من الحاجز لأنّ سطرَ طبلياتٍ لم يُكتب عطبٌ أسوأ من رصيدٍ ناقص.
+ * فيُعلَن الفشلُ ولا يُبتلع — والخطأُ يعود للشاشة لتقوله.
+ *
+ * @returns {Promise<number>} عددُ الأسطر المكتوبة.
+ */
+export async function writePalletMoves(kind, load, ctx, profile) {
+  const moves = movesFromLoad(kind, load, ctx);
+  if (moves.length === 0) return 0;
+
+  const who = {
+    byUid: auth?.currentUser?.uid || null,
+    byName: profile?.name || auth?.currentUser?.email || 'غير معروف',
+    byRole: profile?.role || '',
+  };
+
+  for (const move of moves) {
+    // `at` بختم الخادم لا بساعة المتصفّح — والمنطق الخالص يقرأ ولا يقرّر.
+    const { at: _at, ...rest } = move;
+    await addDoc(collection(db, PALLET_MOVES), { ...rest, at: serverTimestamp(), ...who });
+  }
+  return moves.length;
+}
+
+/**
+ * سطرٌ يدويّ: رصيدٌ افتتاحيّ أو شطبُ تالفٍ ومفقود — **بسببٍ مكتوبٍ دائمًا**.
+ * وهو المدخلُ الوحيد لما لم يعبر البوّابة.
+ */
+export async function recordPalletAdjustment(input, profile) {
+  const move = shapeMove(input);
+  const problems = moveProblems(move);
+  if (problems.length) throw new Error(problems.join(' · '));
+
+  const { at: _at, ...rest } = move;
+  await addDoc(collection(db, PALLET_MOVES), {
+    ...rest,
+    at: serverTimestamp(),
+    byUid: auth?.currentUser?.uid || null,
+    byName: profile?.name || auth?.currentUser?.email || 'غير معروف',
+    byRole: profile?.role || '',
+  });
+}
+
+/** اشتراكٌ حيّ على الدفتر (الأحدث أوّلًا). */
+export function listenPalletMoves(callback, onError, max = PALLET_MOVES_CAP) {
+  return onSnapshot(
+    query(collection(db, PALLET_MOVES), orderBy('at', 'desc'), fsLimit(max)),
+    (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data(), at: d.data()?.at?.toMillis?.() ?? null }))),
+    (e) => onError?.(e)
+  );
+}
+
+/**
+ * التحقّق — الختمُ الذي يقول «رأيتُ أوراقَها وطابقتُ لوحتَها».
+ *
+ * وهو ما يفتح المسارَ القصير لمن لا بابَ له: بعده يمضي الزائرُ إلى التصريح
+ * مباشرةً، وتنتظر شاحنةُ البضاعة بابًا يُسنده مشرفُ المناولة.
+ */
+export function verify(visitId, profile) {
+  return advanceVisit(visitId, 'verified', {}, profile);
+}
+
+/**
+ * ★★ تسجيلُ خروجٍ — ق-٤: حمولةٌ **ثانية** في الزيارة نفسها.
+ *
+ * والحمولةُ تُكتب **قبل** الانتقال إلى «خروج»، لأنّ `advanceVisit` يستدعي
+ * `exitVerdict` على الحالة المدموجة — فالقفلُ الرابع يقرأ ما كتبته الشاشة
+ * فعلًا لا حقلًا فارغًا. (درسُ ‹LPN›: حارسٌ يقرأ حقلًا لا يُكتب لا يُطلق قطّ.)
+ *
+ * @param {object} out حمولةُ الخروج بحالتها الخمس.
+ * @param {string} permitRef رقمُ تصريح الخروج GP — لا ترقيمَ ثانٍ للساحة.
+ */
+export async function checkOut(visitId, { out, permitRef } = {}, profile) {
+  const current = shapeVisit(await readVisit(visitId));
+  const load = { in: current.load.in, out: shapeOutLoad(out) };
+  const permit = String(permitRef ?? current.permitRef ?? '').trim();
+
+  // إلى «تصريح» أوّلًا إن لم تكن هناك — ومنها وحدها يجوز الخروج.
+  if (current.stage !== PERMIT_STAGE) {
+    await advanceVisit(visitId, PERMIT_STAGE, { load, permitRef: permit }, profile);
+  }
+  await advanceVisit(visitId, EXIT_STAGE, { load, permitRef: permit }, profile);
+  // ‹GATE-301› أثرُ الخروج في دفتر الطبليات — بعد أن مرّ الحارسُ الرابع، فلا
+  // يُقيَّد خروجٌ رُفض. والجهةُ المستلِمةُ هي الطرفُ، وإن غابت فمن دخلت معه.
+  await writePalletMoves(
+    'OUT',
+    { ...load.out, party: load.out.party || load.in.party },
+    { visitId, plate: current.plate, reason: current.reason },
+    profile
+  );
+  return { load, permitRef: permit };
+}
+
+/* ═══════════════ المطابقة ‹GATE-401/402› ═══════════════ */
+
+const RECEIVING_SESSIONS = 'receiving_sessions';
+
+/** ما يُقرأ من جلسات الاستلام للمطابقة — الأحدثُ أوّلًا. */
+export const SESSIONS_CAP = 200;
+
+/**
+ * جلساتُ الاستلام الأخيرة — **قراءةٌ فقط** من طبقة الطبالي.
+ *
+ * والاتجاه مشروع: `gate/` يقرأ القائم، والقائمُ لا يعرف `gate/`. ولا تُكتب
+ * هنا كلمةٌ في `receiving_sessions` — المطابقةُ تقرأ الطرفين ولا تمسّ أحدهما.
+ */
+export function listenReceivingSessions(callback, onError, max = SESSIONS_CAP) {
+  return onSnapshot(
+    query(collection(db, RECEIVING_SESSIONS), orderBy('createdAt', 'desc'), fsLimit(max)),
+    (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+    (e) => onError?.(e)
+  );
+}
+
+/**
+ * ★★ يحفظ قرارَ حسمِ فرقٍ **على الزيارة نفسِها** — لا في مجموعةٍ ثالثة.
+ *
+ * ولماذا على الزيارة؟ لأنّ الفرق صفةُ زيارةٍ بعينها لا كيانٌ مستقلّ، ومن
+ * قرأ الزيارة قرأ حسمَها معها. والقرارُ يُفحص بـ`decideVariance` المختبَرة
+ * قبل أن يُكتب — فلا حسمَ بلا قرارٍ وطرفٍ وفاعل.
+ */
+export async function saveVarianceDecision(visitId, result, input, profile) {
+  const actor = profile?.name || auth?.currentUser?.email || '';
+  const { decision, problem } = decideVariance({ ...result, visitId }, { ...input, actor });
+  if (problem) throw new Error(problem);
+  await advanceNothingButPatch(visitId, { varianceDecision: decision }, profile);
+  return decision;
+}
+
+/**
+ * تعديلُ حقلٍ على الزيارة بلا نقلِ مرحلة — بختمِ خادمٍ وسجلِّ تدقيق.
+ * (تُبقى دالّةً مسمّاةً كي لا تكتب الشاشةُ في المجموعة مباشرةً.)
+ */
+async function advanceNothingButPatch(visitId, patch, profile) {
+  const { updateDoc, doc: docRef } = await import('firebase/firestore');
+  await updateDoc(docRef(db, 'yard_visits', visitId), { ...patch, updatedAt: serverTimestamp() });
+  await addDoc(collection(db, 'yard_visits', visitId, 'events'), {
+    action: 'variance',
+    detail: patch?.varianceDecision?.decision || '',
+    byUid: auth?.currentUser?.uid || null,
+    byName: profile?.name || auth?.currentUser?.email || 'غير معروف',
+    byRole: profile?.role || '',
+    at: serverTimestamp(),
+  });
+}
+
+/**
+ * الخطوةُ التالية لزيارةٍ ما — **نصٌّ وفعلٌ**، لا شجرةَ شروطٍ في الشاشة.
+ *
+ * ★ ولماذا هنا لا في المكوّن؟ لأنّ الحارس على الحاجز يحتاج **زرًّا واحدًا
+ * يعرف ما يفعل**، والشروطُ المكتوبة في JSX لا تُختبر وأوّلُ حالةٍ تُنسى فيها
+ * تترك المركبة عالقةً بلا زرّ.
+ *
+ * @returns {{stage:string, label:string, kind:string}|null}
+ */
+export function nextStepFor(visit) {
+  const v = shapeVisit(visit);
+  const i = stageIndex(v.stage);
+  if (i < 0) return null;
+  if (v.stage === EXIT_STAGE) return null;
+  if (v.stage === 'arrived') return { stage: 'checkedIn', label: 'سجّل عند البوابة', kind: 'gate' };
+  if (v.stage === 'checkedIn') return { stage: 'verified', label: 'تحقّقتُ من الأوراق', kind: 'gate' };
+  if (v.stage === 'verified') {
+    return needsDoor(v.reason, v.load?.in?.state)
+      ? { stage: 'parked', label: 'تنتظر بابًا — مشرفُ المناولة يُسنده', kind: 'yard' }
+      : { stage: PERMIT_STAGE, label: 'صرّح بالخروج', kind: 'gate' };
+  }
+  if (v.stage === PERMIT_STAGE) return { stage: EXIT_STAGE, label: 'سجّل الخروج', kind: 'gate' };
+  return { stage: null, label: 'داخل الساحة — بيد مشرف المناولة', kind: 'yard' };
+}
+
+/** أهذه الزيارةُ ما زالت داخل الموقع؟ (للقائمة الحيّة على الحاجز) */
+export function isOnSite(visit) {
+  const stage = String(visit?.stage ?? '');
+  return stage !== EXIT_STAGE && stage !== 'canceled';
+}

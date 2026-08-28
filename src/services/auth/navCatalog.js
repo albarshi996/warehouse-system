@@ -25,6 +25,14 @@
 export const PINNED_ITEM = { path: '/dashboard', label: 'الرئيسية', icon: 'grid' };
 
 /**
+ * ⚠️ **كلُّ بندٍ يُكتب في سطرٍ واحد** بـ`path` و`label` و`roles` صريحةً
+ * بينها. فقارئُ الدليل (`scripts/build-usage-guide.mjs` · `readNav`) يقرأ
+ * الملفَّ **سطرًا سطرًا**، وبندٌ موزَّعٌ على أسطرٍ أو `roles` بمتغيّرٍ باسمه
+ * **لا يراه** — فتسقط الشاشةُ من دليل الاستخدام صامتةً، وهي قاعدةُ المالك
+ * «لا ميزةَ بلا شرح». (كُشف عند دمج م٧ 2026-08-28.)
+ */
+
+/**
  * المجموعات المنطقية. الترتيب: الأكثر استخدامًا يوميًّا في الأعلى ←
  * المرجعيّ/التأسيسي في الأسفل.
  */
@@ -141,6 +149,45 @@ export const NAV_GROUPS = [
   },
   {
     /**
+     * بوّابة الأمن ‹GATE› — تطبيقٌ مستقلّ (قرار المالك ق-٢ · 2026-08-28).
+     *
+     * ولماذا تطبيقٌ لا تبويبٌ خامسٌ في «عمليات الأسطول»؟ ثلاثةُ أسبابٍ كلُّها
+     * من دروس البوّابة نفسِها:
+     *   ١ **دورةُ تنفيذٍ كاملة** لا شاشتان: وصولٌ ← سببٌ وحمولة ← بابٌ ←
+     *     تفريغٌ ← تصريحٌ ← خروجٌ بحمولةٍ ثانية ← مطابقةٌ مع الاستلام. وهي
+     *     الحجّةُ نفسُها التي أُنشئ بها تطبيقُ ‹LPN›.
+     *   ٢ **الحارسُ على الحاجز بهاتفٍ** لا يفتح لوحةَ أسطولٍ بأربعة تبويبات
+     *     — وهو عينُ العطب الذي أصلحه ‹LOC-402›.
+     *   ٣ `gate_officer` يرى اليوم مجموعةَ `fleet` كاملةً — جردَ المركبات
+     *     ومركزَ الصيانة والعُهدَ — ولا شأن له بها. والتطبيقُ المستقلّ يسمح
+     *     بتضييقها لاحقًا بلا كسر أحد.
+     *
+     * ★ ولم تُحذف صفحةٌ ولا تغيّر رابط: تبويبُ «الساحة والأبواب» في
+     * `fleet-operations` يبقى منظارَ المدير، وهذه الشاشاتُ تقرأ `doors`
+     * و`yard_visits` نفسَيهما وتستدعي `yardModel` نفسَه — لا مصدرَ ثانٍ.
+     */
+    key: 'gate',
+    group: 'بوّابة الأمن',
+    emoji: '🛡️', icon: 'shield',
+    items: [
+      // ‹GATE-201› مركزُ البوابة أوّلًا: هو **مدخل الدورة** — بلا تسجيلِ
+      // دخولٍ هنا يبقى ما بعده فارغًا. وهي مصمَّمةٌ للهاتف أوّلًا وبثلاث لغات.
+      // ★ وكلُّ بندٍ هنا محصورٌ بـ`roles` عمدًا — لا بندَ مفتوحًا للمجموعة:
+      // الماليُّ يدخل المجموعةَ من أجل الطبليات العائدة وحدها، فبندٌ بلا
+      // حصرٍ كان سيفتح له شاشةَ الحاجز. (نمط `procurement` مع الخزينة.)
+      { path: '/dashboard/gate-post', label: 'مركز البوابة', icon: 'truck', roles: ['admin', 'warehouse_manager', 'gate_officer'] },
+      // ‹GATE-303› الطبلياتُ العائدة (ق-١): خشبٌ يُعدّ ويُردّ — لا هويّةُ
+      // مناولةٍ. وللماليّ فيها شأنٌ: رصيدُ مورّدٍ لدينا ذمّةٌ عينيّة، ولذلك
+      // يدخل المجموعةَ من أجلها وحدها.
+      { path: '/dashboard/pallet-control', label: 'الطبليات العائدة', icon: 'layers', roles: ['admin', 'warehouse_manager', 'gate_officer', 'finance_manager'] },
+      // ‹GATE-403› السجلُّ والمطابقة آخرًا: هو **منظارُ المدير** لا شاشةَ
+      // تنفيذ. ومدقّقُ الجرد صاحبُه الطبيعيّ — يقرأ الفروق ويدقّقها، والحسمُ
+      // لضابط البوابة والمديرَين (كتّاب الساحة في `firestore.rules`).
+      { path: '/dashboard/gate-log', label: 'سجلّ البوابة والمطابقة', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'gate_officer', 'inventory_auditor'] },
+    ],
+  },
+  {
+    /**
      * التنفيذ الميدانيّ بالباركود ‹LPN› — تطبيقٌ مستقلّ (قرار المالك 2026-08-27).
      *
      * ولماذا تطبيقٌ لا بندان في «المستودعات والجرد»؟ لأنّ هذه **دورةُ تنفيذٍ
@@ -167,12 +214,7 @@ export const NAV_GROUPS = [
       // البوّابة ومشرف المناولة والعادّ — لشاشات الأبواب والسجلّ — صار
       // الطيُّ يعني اتّساعًا لم يُقصد. فثُبّتت الأدوار الثلاثة نفسُها:
       // **لا أحدَ فقد بابًا كان يفتحه، ولا أحدَ ربح بابًا لم يُمنح له.**
-      {
-        path: '/dashboard/lpn-receiving',
-        label: 'الاستلام الميدانيّ',
-        icon: 'arrowDownTray',
-        roles: ['admin', 'warehouse_manager', 'storekeeper'],
-      },
+      { path: '/dashboard/lpn-receiving', label: 'الاستلام الميدانيّ', icon: 'arrowDownTray', roles: ['admin', 'warehouse_manager', 'storekeeper', 'inventory_auditor'] },
       // ‹LPN-206› الحوكمة ثانيًا: القرار بين «قرأتُ» و«صار مخزونًا».
       // للمديرَين وحدهما — وأمينُ المخزن يكوّن الطبلية ولا يعتمدها
       // (فصلُ المهامّ: من يعدّ لا يُصدّق على عدّه).
@@ -181,33 +223,21 @@ export const NAV_GROUPS = [
       { path: '/dashboard/lpn-governance', label: 'حوكمة الطبالي', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
       // ‹LPN-308› التحضير الميدانيّ: المسح الثلاثيّ خطوةً خطوة. للمحضّر
       // كما للمديرَين — وهو من يمشي الممرّ.
-      { path: '/dashboard/lpn-picking', label: 'التحضير الميدانيّ', icon: 'arrowUpTray', roles: ['admin', 'warehouse_manager', 'storekeeper'] },
+      { path: '/dashboard/lpn-picking', label: 'التحضير الميدانيّ', icon: 'arrowUpTray', roles: ['admin', 'warehouse_manager', 'storekeeper', 'inventory_auditor'] },
+      // ‹LPN-508› جردُ الطبالي: شهادةُ رؤيةٍ بلا كمّيّات (ق-٢/ح-٣).
+      // للعادّ والمديرَين — ومدقّقُ الجرد صاحبُها الطبيعيّ.
+      { path: '/dashboard/lpn-count', label: 'جرد الطبالي', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'inventory_auditor'] },
       // ‹LPN-721› التعبئة والشحن: بعد التحضير مباشرةً — طرودٌ بباركوداتٍ
       // مستقلّة وملصقُ عميلٍ يُسحب من أمر الصرف. للمعبِّئ وضابط البوّابة
       // كما للمديرَين (كلاهما يملك `STAGE`/`LOAD` في مصفوفة ‹LPN-506›).
-      {
-        path: '/dashboard/packing-shipping',
-        label: 'التعبئة والشحن',
-        icon: 'package',
-        roles: ['admin', 'warehouse_manager', 'storekeeper', 'labor_supervisor', 'gate_officer'],
-      },
+      { path: '/dashboard/packing-shipping', label: 'التعبئة والشحن', icon: 'package', roles: ['admin', 'warehouse_manager', 'storekeeper', 'labor_supervisor', 'gate_officer'] },
       // ‹LPN-722› الأبواب والبوّابة: آخرُ حلقةٍ قبل الطريق وأوّلُ حلقةٍ بعده.
       // لضابط البوّابة أوّلًا — هو من يقف عندها.
-      {
-        path: '/dashboard/dock-operations',
-        label: 'الأبواب والبوّابة',
-        icon: 'truck',
-        roles: ['admin', 'warehouse_manager', 'gate_officer', 'storekeeper', 'labor_supervisor'],
-      },
+      { path: '/dashboard/dock-operations', label: 'الأبواب والبوّابة', icon: 'truck', roles: ['admin', 'warehouse_manager', 'gate_officer', 'storekeeper', 'labor_supervisor'] },
       // ‹LPN-720› مركز الباركود: سجلُّ الهويّات كلِّها وتوليدُ البنية وطباعتُها.
       // أدواتُ البنية تختفي عمّن لا يملكها (`ownsStructure`) — فالسجلّ يُقرأ
       // للتدقيق، والتوليد للمدير وحده.
-      {
-        path: '/dashboard/barcode-center',
-        label: 'مركز الباركود',
-        icon: 'clipboardList',
-        roles: ['admin', 'warehouse_manager', 'storekeeper', 'inventory_auditor'],
-      },
+      { path: '/dashboard/barcode-center', label: 'مركز الباركود', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'storekeeper', 'inventory_auditor'] },
     ],
   },
   {
@@ -437,11 +467,27 @@ export const NAV_GROUPS = [
       { path: '/dashboard/recruitment', label: 'التوظيف', icon: 'users', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/users', label: 'إدارة المستخدمين', icon: 'users', roles: ['admin'] },
       { path: '/dashboard/access-control', label: 'الصلاحيات والأدوار', icon: 'users', roles: ['admin'] },
+      // ‹VIS-301› سجلّ زيارات البوّابة — من دخل ومن أيّ جهازٍ وأيَّ شاشةٍ فتح.
+      // للأدمن وحده: سجلُّ تتبّعٍ لأشخاص، وأضيقُ قراءةٍ ممكنة أسلم (والقاعدة
+      // تفرضه على الخادم لا الشاشة). وموضعُه هنا بجوار «إدارة المستخدمين»
+      // و«الصلاحيات» — فمن يديرُ الحسابات يقرأ حركتَها.
+      { path: '/dashboard/portal-visits', label: 'سجلّ زيارات البوّابة', icon: 'history', roles: ['admin'] },
       // سياسات التشغيل (م١-ج): القرارات ٤–٧ إعداداتٌ لا شيفرة. للأدمن وحده —
       // مدير المستودع نفسه `overrideRole` في قرارين، فلو كتبها لوسّع صلاحيته.
       { path: '/dashboard/policy-settings', label: 'سياسات التشغيل', icon: 'clipboardList', roles: ['admin'] },
       { path: '/dashboard/arch-wiki', label: 'خريطة النظام', icon: 'grid', roles: ['admin'] },
       { path: '/dashboard/archive', label: 'الأرشيف التأسيسي', icon: 'package' },
+      /*
+       * ‹دليل الاستخدام› قاعدةٌ ثابتة (طلب المالك 2026-08-28):
+       * **أيُّ إضافةٍ أو ميزةٍ جديدة من شروطها ذكرُها في هذا الدليل** — ليكون مرجعًا
+       * عامًّا. والقاعدةُ مُمَكْنَنةٌ لا مكتوبة: `usageGuide.test.js` يُسقِط من
+       * أضاف شاشةً هنا ولم يكتب شرحَها، و`prebuild` يمنع البناء كذلك.
+       *
+       * ★ ولماذا بندٌ في القائمة لا درجٌ في التخطيط؟ لأنّ درجَ `showGuide`
+       * **مطفأٌ في المئة كلّها** — فالدليلُ القائم موجودٌ ولا يصل إليه أحد.
+       */
+      { path: '/دليل-استخدام-البوابة.html', label: 'دليل استخدام البوابة', icon: 'bookOpen', external: true },
+      { path: '/Brandzo_Operational_Guide.html', label: 'الدليل التشغيلي', icon: 'bookOpen', external: true },
       { path: '/dashboard/meeting-assistant', label: 'مساعد الاجتماعات', icon: 'grid' },
     ],
   },
