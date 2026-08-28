@@ -182,6 +182,20 @@ export const SWEEP_EXEMPT = [
   '.agents/skills/testing-brandzo/SKILL.md',
 ];
 
+/**
+ * مولَّداتٌ **يُعاد بناؤها داخل المزامنة نفسِها** قبل البوّابة، فتحمل هويّةَ
+ * المستودع الذي وصلت إليه لا هويّتَنا — فلا يُحاسَب عليها المسحُ المعكوس.
+ *
+ * ★ والقائمةُ هنا **صورةٌ من `GENERATED` في `scripts/sync-sibling.mjs`**،
+ * ويحرس تطابقَهما اختبارٌ في `identity.test.js` — فلا تفترقان صامتتين.
+ * (ولم تُستورَد من هناك لأنّ ذلك الملفّ سكربتٌ يُنفّذ المزامنةَ باستيراده.)
+ */
+export const SWEEP_REGENERATED = [
+  'architecture.json',
+  'src/generated/arch-wiki.html',
+  'public/دليل-استخدام-البوابة.html',
+];
+
 /** الاختبارات تستعمل مسار النشر ثابتًا صريحًا لا إعدادًا مقروءًا، فلا يُختم. */
 const TEST_FILE = /\.test\.(js|mjs)$/;
 

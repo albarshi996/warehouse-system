@@ -28,6 +28,7 @@ import {
   workspaceDoc,
   isSweepExempt,
   identityOnly,
+  SWEEP_REGENERATED,
 } from './identity.js';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
@@ -296,6 +297,63 @@ test('لا رمزَ للشقيق في ملفٍّ متعقَّبٍ خارج جد�
     [],
     'رمزُ الشقيق في ملفٍّ لا يحرسه أحد. القرار: إمّا يُضاف إلى SPOTS فيُختم، وإمّا إلى SWEEP_EXEMPT بسببٍ مكتوب'
   );
+});
+
+/**
+ * ═══ والمسحُ المعكوس — رمزُنا نحن ═══
+ *
+ * ★★★ **وُضع لأنّ الأوّلَ لا يُطلق هنا أبدًا.** المسحُ أعلاه يبحث عن رمز
+ * **الشقيق**، ورمزُ الشقيق لا يكتبه أحدٌ عندنا سهوًا — والذي يُكتب سهوًا هو
+ * **رمزُنا نحن**: مسارُ نشرِنا أو عنوانُه مثبَّتًا في ملفٍّ لا يُختم. وهو صحيحٌ
+ * هنا فلا يشكو أحد، **وخطأٌ هناك** حيث المسارُ غيرُ مسارنا.
+ *
+ * فالعطبُ يسافر ولا ينفجر إلّا في المستودع الآخر بعد ساعاتٍ أو أيّام — وقد وقع:
+ * سطران مثبَّتان في `scripts/build-usage-guide.mjs` ومثالٌ في تعليقٍ داخل
+ * `src/services/scan/cameraScanner.js` **أوقفا مزامنةَ مستودع الشركة يومين
+ * و٧٥ كوميتًا** (2026-08-26 → 2026-08-28)، ولا اختبارَ عندنا كان يراهما.
+ *
+ * وهو الدرسُ نفسُه المكتوب في `feedback-green-locally-red-in-ci`: **حارسٌ يقرأ
+ * حالةَ بيئةٍ واحدةٍ يكذب في الأخرى — والسؤالُ أيَّتُهما.**
+ */
+test('★★★ ولا رمزَ لنا نحن مثبَّتًا في ملفٍّ يُزامَن — فيصحّ هنا ويخطئ هناك', () => {
+  const ours = tokensOf(card);
+  const spots = new Set(SPOTS.map((s) => s.file));
+  const regenerated = new Set(SWEEP_REGENERATED);
+  const tracked = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' })
+    .split('\0')
+    .filter(Boolean);
+
+  const hardcoded = [];
+  for (const file of tracked) {
+    if (spots.has(file) || isSweepExempt(file) || regenerated.has(file) || BINARY.test(file)) continue;
+    let text;
+    try {
+      text = fs.readFileSync(path.join(root, file), 'utf8');
+    } catch {
+      continue;
+    }
+    // `name` وحدَه يُستثنى: كلمةٌ عامّةٌ تقع في نصٍّ عربيٍّ بلا قصدِ عنوان.
+    const found = leaks(text, ours, ['slug', 'host', 'base']);
+    if (found.length) hardcoded.push(`${file} ← ${found.join(' · ')}`);
+  }
+
+  assert.deepEqual(
+    hardcoded,
+    [],
+    'مسارُ نشرِنا أو عنوانُه مثبَّتٌ بيدٍ في ملفٍّ يُزامَن — ولو في تعليق. ' +
+      'يُقرأ من `workspace.json` (`tokensOf`)، أو يُضاف الملفُّ إلى SPOTS فيُختم، ' +
+      'أو إلى SWEEP_REGENERATED إن كانت المزامنةُ تُعيد بناءه'
+  );
+});
+
+test('★★ وقائمةُ المولَّدات هنا لا تفترق عمّا تُعيد المزامنةُ بناءه فعلًا', () => {
+  const sync = fs.readFileSync(path.join(root, 'scripts/sync-sibling.mjs'), 'utf8');
+  for (const file of SWEEP_REGENERATED) {
+    assert.ok(
+      sync.includes(`'${file}'`),
+      `«${file}» معفًى هنا بحجّة أنّ المزامنةَ تُعيد بناءه، ولا ذكرَ له في scripts/sync-sibling.mjs`
+    );
+  }
 });
 
 test('الاستثناء يطابق الاسم التامّ وبادئةَ المجلّد وملفّات الاختبار، لا ما سواها', () => {

@@ -17,9 +17,26 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { tokensOf } from '../src/services/workspace/identity.js';
+
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const BASE = '/warehouse-system';
-const LIVE = 'https://albarshi996.github.io/warehouse-system';
+
+/**
+ * مسارُ النشر وعنوانُه — **يُشتقّان من بطاقة المكان لا يُكتبان بيد.**
+ *
+ * ★ كانا مثبَّتَين نصًّا بمسارِ مستودعٍ وعنوانِ نشرٍ بعينهما،
+ * وهذه الباني تُزامَن إلى المستودع الشقيق حيث العنوانُ غيرُ عنواننا — فكان
+ * الدليلُ يُولَّد هناك **بروابطَ تشير إلى موقعنا نحن**، ويقول للموظّف «افتح
+ * ‹عنوانَ مستودعٍ ليس مستودعَك›». ولم يظهر ذلك لأنّ الباني تعمل هنا فتصدق.
+ *
+ * وحارسُ الهويّة هناك يمسح الملفّاتِ المتعقَّبةَ نصًّا، فأوقف العنوانُ المثبَّت
+ * مزامنةَ مستودع الشركة (رُصد 2026-08-28 — يومان و٧٥ كوميتًا معلَّقة).
+ *
+ * والمصدرُ الآن واحدٌ لكلّ المستودعات: `workspace.json`.
+ */
+const CARD = JSON.parse(fs.readFileSync(path.join(ROOT, 'workspace.json'), 'utf8'));
+const { base: BASE, host: HOST } = tokensOf(CARD);
+const LIVE = `${HOST}${BASE}`;
 
 /** أسماءُ الأدوار بالعربيّة — لتُقرأ لا لتُخمَّن. */
 const ROLE_AR = {
