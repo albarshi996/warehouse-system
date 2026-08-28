@@ -161,7 +161,18 @@ export const NAV_GROUPS = [
       // ‹LPN-212› الاستلام أوّلًا: هو **مدخل الدورة** — بلا طبليةٍ تتكوّن
       // هنا يبقى ما بعده فارغًا. ولأمين المخزن كما للمديرَين: هو أوّل من
       // يقف عند الشاحنة.
-      { path: '/dashboard/lpn-receiving', label: 'الاستلام الميدانيّ', icon: 'arrowDownTray' },
+      //
+      // ★ والأدوار **تُسمّى صراحةً** منذ ‹LPN-723›: كانت مطويّةً في صلاحية
+      // المجموعة (المديران وأمين المخزن)، ولمّا اتّسعت المجموعة لضابط
+      // البوّابة ومشرف المناولة والعادّ — لشاشات الأبواب والسجلّ — صار
+      // الطيُّ يعني اتّساعًا لم يُقصد. فثُبّتت الأدوار الثلاثة نفسُها:
+      // **لا أحدَ فقد بابًا كان يفتحه، ولا أحدَ ربح بابًا لم يُمنح له.**
+      {
+        path: '/dashboard/lpn-receiving',
+        label: 'الاستلام الميدانيّ',
+        icon: 'arrowDownTray',
+        roles: ['admin', 'warehouse_manager', 'storekeeper'],
+      },
       // ‹LPN-206› الحوكمة ثانيًا: القرار بين «قرأتُ» و«صار مخزونًا».
       // للمديرَين وحدهما — وأمينُ المخزن يكوّن الطبلية ولا يعتمدها
       // (فصلُ المهامّ: من يعدّ لا يُصدّق على عدّه).
@@ -170,7 +181,33 @@ export const NAV_GROUPS = [
       { path: '/dashboard/lpn-governance', label: 'حوكمة الطبالي', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
       // ‹LPN-308› التحضير الميدانيّ: المسح الثلاثيّ خطوةً خطوة. للمحضّر
       // كما للمديرَين — وهو من يمشي الممرّ.
-      { path: '/dashboard/lpn-picking', label: 'التحضير الميدانيّ', icon: 'arrowUpTray' },
+      { path: '/dashboard/lpn-picking', label: 'التحضير الميدانيّ', icon: 'arrowUpTray', roles: ['admin', 'warehouse_manager', 'storekeeper'] },
+      // ‹LPN-721› التعبئة والشحن: بعد التحضير مباشرةً — طرودٌ بباركوداتٍ
+      // مستقلّة وملصقُ عميلٍ يُسحب من أمر الصرف. للمعبِّئ وضابط البوّابة
+      // كما للمديرَين (كلاهما يملك `STAGE`/`LOAD` في مصفوفة ‹LPN-506›).
+      {
+        path: '/dashboard/packing-shipping',
+        label: 'التعبئة والشحن',
+        icon: 'package',
+        roles: ['admin', 'warehouse_manager', 'storekeeper', 'labor_supervisor', 'gate_officer'],
+      },
+      // ‹LPN-722› الأبواب والبوّابة: آخرُ حلقةٍ قبل الطريق وأوّلُ حلقةٍ بعده.
+      // لضابط البوّابة أوّلًا — هو من يقف عندها.
+      {
+        path: '/dashboard/dock-operations',
+        label: 'الأبواب والبوّابة',
+        icon: 'truck',
+        roles: ['admin', 'warehouse_manager', 'gate_officer', 'storekeeper', 'labor_supervisor'],
+      },
+      // ‹LPN-720› مركز الباركود: سجلُّ الهويّات كلِّها وتوليدُ البنية وطباعتُها.
+      // أدواتُ البنية تختفي عمّن لا يملكها (`ownsStructure`) — فالسجلّ يُقرأ
+      // للتدقيق، والتوليد للمدير وحده.
+      {
+        path: '/dashboard/barcode-center',
+        label: 'مركز الباركود',
+        icon: 'clipboardList',
+        roles: ['admin', 'warehouse_manager', 'storekeeper', 'inventory_auditor'],
+      },
     ],
   },
   {

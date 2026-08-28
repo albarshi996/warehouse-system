@@ -1,0 +1,33 @@
+---
+/**
+ * الأبواب والبوّابة ‹LPN-722› — تحميلٌ وخروجٌ واستلامٌ بالمسح.
+ *
+ * لماذا وُجدت؟ لأنّ الباب والمركبة والرحلة كانت **تُختار من قائمة**، فلا
+ * بيّنةَ أنّ الموظّف كان عند الباب أصلًا ولا أنّ الحمولة دخلت هذه السيارة
+ * (ف-١٣ · ف-١٤ · ف-٢١).
+ *
+ * الوثيقة الحاكمة: docs/plan/مطابقة-هوية-الباركود.md · المتتبّع: npm run plan:lpn
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import DockOperations from '../../components/brandzo-erp/lpn/DockOperations.jsx';
+---
+
+<DashboardLayout title="الأبواب والبوّابة" showGuide={false} light>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">الأبواب والبوّابة</h1>
+      <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
+        <span class="text-accent font-bold">لا تُثبَّت حركةٌ بضغط زرّ</span> — بل بمسح
+        الأصل والوجهة. التحميل يبدأ بمسح <span class="font-bold">باب التحميل ثمّ المركبة ثمّ
+        الرحلة</span>، ثمّ كلُّ طبليةٍ أو طردٍ قبل إدخاله. والخروج من
+        <span class="font-bold">بوّابةٍ غير باب التحميل</span>، والاستلام عند بابه بمقارنة
+        المرسَل بالمستلَم. ومن أيّ طرفٍ تُقرأ السلسلة كلُّها.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <DockOperations client:load />
+  </div>
+</DashboardLayout>

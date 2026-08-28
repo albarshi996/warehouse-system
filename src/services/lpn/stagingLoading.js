@@ -16,8 +16,25 @@
  */
 
 import { normalizeLocationCode } from '../locations/locationCode.js';
-import { normalizeLpnCode, isValidLpnCode } from './lpnCode.js';
+import { normalizeLpnCode } from './lpnCode.js';
 import { isBlockedForIssue, LPN_FLAGS, stateLabel } from './lpnLifecycle.js';
+import { classifyScan } from '../barcodes/barcodeCode.js';
+
+/**
+ * ★ توسعةُ ‹LPN-715›: **الحمولة عند الباب طبليةٌ أو طرد.**
+ *
+ * كانت الجلسة تقبل الطبالي وحدها، لأنّ الطرد لم يكن له كيانٌ أصلًا (ف-١٥).
+ * ولمّا صار للطرد باركودٌ مستقلّ، صار عند باب التحميل نوعان يُمسحان بالجهاز
+ * نفسه — فوُسّع القبول ولم يُبدَّل شيء: كلُّ ما كان يمرّ لا يزال يمرّ حرفيًّا،
+ * والطرد أُضيف إليه.
+ */
+const LOADABLE_KINDS = Object.freeze(['PALLET', 'PARCEL']);
+
+/** الصورة القانونيّة لحمولةٍ تُحمَّل — أو `''` لغير الطبلية والطرد. */
+export function loadableCode(raw) {
+  const scan = classifyScan(raw);
+  return LOADABLE_KINDS.includes(scan.kind) ? scan.code : '';
+}
 
 const up = (v) => String(v ?? '').trim().toUpperCase();
 
@@ -73,7 +90,7 @@ export const LOADING_STATES = Object.freeze({
  */
 export function openLoading({ tripId = '', docRef = null, expected = [], vehicle = '', driver = '', actor, at } = {}) {
   if (!tripId && !docRef?.id) return { problem: 'التحميل يتبع رحلةً أو مستندًا — لا تحميلَ بلا أيّهما (القاعدة ٧).' };
-  const list = [...new Set((expected ?? []).map((c) => normalizeLpnCode(c)).filter(isValidLpnCode))];
+  const list = [...new Set((expected ?? []).map(loadableCode).filter(Boolean))];
   if (list.length === 0) return { problem: 'لا طبليةً متوقَّعة — جهّز الطبالي أوّلًا ثمّ افتح التحميل.' };
   if (!String(actor ?? '').trim()) return { problem: 'جلسةُ تحميلٍ بلا فاعلٍ لا تُفتح.' };
 
@@ -101,8 +118,8 @@ export function openLoading({ tripId = '', docRef = null, expected = [], vehicle
  */
 export function loadScanVerdict(session, code, unit) {
   if (session?.state !== 'OPEN') return { ok: false, message: `الجلسة «${LOADING_STATES[session?.state] ?? '؟'}» — لا مسحَ بعد الإغلاق.` };
-  const lpn = normalizeLpnCode(code);
-  if (!isValidLpnCode(lpn)) return { ok: false, message: `«${code ?? ''}» ليس ملصق طبلية.` };
+  const lpn = loadableCode(code);
+  if (!lpn) return { ok: false, message: `«${code ?? ''}» ليس ملصق طبلية ولا طرد.` };
 
   // ⑧ لا تُحمَّل مرّتين — أخطرُ خطأٍ صامت: تُحسب مرّتين وتنقص من مكانٍ آخر.
   if ((session.loaded ?? []).includes(lpn)) {
@@ -128,7 +145,7 @@ export function loadScanVerdict(session, code, unit) {
 
 /** تسجيل طبليةٍ محمَّلة — يعيد جلسةً جديدة. */
 export function applyLoad(session, code) {
-  const lpn = normalizeLpnCode(code);
+  const lpn = loadableCode(code) || normalizeLpnCode(code);
   return { ...session, loaded: [...(session.loaded ?? []), lpn] };
 }
 
@@ -139,7 +156,7 @@ export function applyLoad(session, code) {
 export function applyExtra(session, code, { reason, actor } = {}) {
   if (!String(reason ?? '').trim()) return { problem: 'الطبلية الزائدة تحتاج سببًا مكتوبًا — من قرّر تحميلها ولماذا؟' };
   if (!String(actor ?? '').trim()) return { problem: 'الزائدة بلا فاعلٍ لا تُسجَّل.' };
-  const lpn = normalizeLpnCode(code);
+  const lpn = loadableCode(code) || normalizeLpnCode(code);
   return {
     session: {
       ...session,

@@ -1,0 +1,33 @@
+---
+/**
+ * مركز الباركود ‹LPN-720› — توليدٌ وطباعةٌ وسجلٌّ وتدقيق.
+ *
+ * لماذا وُجد؟ لأنّ كلّ نوعٍ من الباركود كان يُولَّد في مكانه بلا سجلٍّ يجمع
+ * **من ولّده وبأيّ صلاحيةٍ ولأيّ سبب وكم مرّةً طُبع** (ف-١١). وهذا السؤال
+ * بالذات هو ما يُسأل حين تُوجد حمولتان بهويّةٍ واحدة.
+ *
+ * الوثيقة الحاكمة: docs/plan/مطابقة-هوية-الباركود.md · المتتبّع: npm run plan:lpn
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import BarcodeCenter from '../../components/brandzo-erp/barcodes/BarcodeCenter.jsx';
+---
+
+<DashboardLayout title="مركز الباركود" showGuide={false} light>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">مركز الباركود</h1>
+      <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
+        كلّ باركودٍ في المستودع له <span class="text-accent font-bold">قيدٌ واحد</span>:
+        نوعُه وقيمتُه ومن أنشأه وبأيّ صلاحيةٍ ولأيّ سبب، وكم مرّةً طُبع ومن أعاد طباعته.
+        ومن هنا تُولَّد <span class="font-bold">باركودات البنية</span> — المناطق والأبواب
+        والبوّابات والمركبات — وتُطبع ملصقاتُها <span class="font-bold">دفعةً واحدة</span>،
+        ويُعاد التالف منها بسببٍ يبقى في السجلّ.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <BarcodeCenter client:load />
+  </div>
+</DashboardLayout>

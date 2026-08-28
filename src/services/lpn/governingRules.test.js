@@ -1,5 +1,8 @@
 /**
- * 🔒🔒 حارسُ القواعد الثماني عشرة — كلُّ قاعدةٍ تُعلَن مبنيّةً تُثبِت حارسها.
+ * 🔒🔒 حارسُ القواعد الحاكمة — كلُّ قاعدةٍ تُعلَن مبنيّةً تُثبِت حارسها.
+ *
+ * ثمانَ عشرةَ من نصّ خطة ٧، وأربعَ عشرةَ من **طلب هويّة الباركود 2026-08-27**
+ * (‹LPN-719› · ف-٢٢) — والجميعُ في جدولٍ واحد، فلا يُقرأ حارسان لبيتٍ واحد.
  *
  * ═══ لماذا هذا الملفّ؟ ═══
  * نصّ خطة ٧ يعدّ ثماني عشرة «قاعدةً حاكمة يجب برمجتها». والخطر ليس أن
@@ -27,8 +30,32 @@ import { receiveScanVerdict, receiveCloseProblem, shipPalletProblem } from './tr
 import { binScanVerdict } from './putawayTask.js';
 import { reconcileInput, palletDiff } from './countPallet.js';
 import { completionProblems } from '../documents/schemas/tdr.js';
+// ═══ وحداتُ طلب الباركود ‹م٧› ═══
+import { classifyScan } from '../barcodes/barcodeCode.js';
+import { opProblem, valueSourceProblem } from '../barcodes/barcodeKinds.js';
+import { printProblem, reuseProblem, shapeEntry, statusProblem } from '../barcodes/barcodeRegistry.js';
+import { movementProblem, proofProblem } from './movementProof.js';
+import { itemScanVerdict, openDockSession } from './dockLoading.js';
+import { manualOverrideProblem } from '../shipping/customerLabel.js';
 
 const LPN_A = 'LPN-MAIN-20260827-000001';
+
+/** قيدُ باركودٍ مرجعيٌّ لضوابط م٧ — بابٌ فعّالٌ أُنشئ بسبب. */
+const ENTRY = {
+  value: 'W01-DOCK-OUT-01',
+  createdBy: 'u-1',
+  createdAt: '2026-08-27T08:00:00.000Z',
+  reason: 'افتتاح الرصيف',
+};
+
+/** رفٌّ موقوفٌ إداريًّا — لا يستقبل بضاعة. */
+const STOPPED_BIN = { code: 'MAIN-A01-R09-B01', status: 'stopped', storageType: 'ambient', capacity: { qty: 100 } };
+
+/** رفٌّ بلغ سعته. */
+const FULL_BIN = { code: 'MAIN-A01-R08-B01', status: 'active', storageType: 'ambient', capacity: { qty: 10 } };
+
+/** بيّنةُ أصلٍ وحدها — بلا وجهة. */
+const SOURCE_PROOF = { role: 'SOURCE', kind: 'PALLET', code: LPN_A, method: 'SCAN', at: 't', actor: 'u' };
 const UNIT = {
   code: LPN_A, state: 'STORED', flags: [], warehouse: 'MAIN', bin: 'MAIN-A01-R01-B01',
   lines: [{ sku: 'WNW-001', batch: 'B2408', baseQty: 60 }],
@@ -168,16 +195,121 @@ const RULES = [
     state: 'PENDING',
     why: 'قاعدةٌ تنظيميّةٌ لا برمجيّة: تُنفَّذ بالسياسة وبمنع الكتابة المباشرة على القاعدة (firestore.rules تمنعها أصلًا)، ولا حارسَ كوديًّا يُشغَّل لها.',
   },
+
+  /* ═══════════ ضوابطُ طلب هويّة الباركود 2026-08-27 ‹م٧› ═══════════ */
+
+  {
+    n: 19, text: 'منع تكرار أرقام الطبالي والمواقع',
+    state: 'ENFORCED',
+    guard: () => /القيمة هي الهويّة/.test(reuseProblem('W01-DOCK-OUT-01', ENTRY)),
+  },
+  {
+    n: 20, text: 'عدم السماح بتخزين طبلية في موقع غير نشط',
+    state: 'ENFORCED',
+    guard: () => {
+      const v = binScanVerdict(UNIT, 'MAIN-A01-R09-B01', { locations: [STOPPED_BIN] });
+      return v.ok === false && v.needsReason === true;
+    },
+  },
+  {
+    n: 21, text: 'التحقّق من الفرع والمستودع قبل تأكيد الحركة',
+    state: 'ENFORCED',
+    guard: () => /تتبع مستودع/.test(binScanVerdict(UNIT, 'W99-A01-R01', { locations: [] }).message),
+  },
+  {
+    n: 22, text: 'التنبيه عند تجاوز سعة الموقع أو عدم توافق نوعه',
+    state: 'ENFORCED',
+    guard: () => {
+      const v = binScanVerdict(UNIT, 'MAIN-A01-R08-B01', {
+        locations: [FULL_BIN],
+        balances: [{ sku: 'WNW-002', warehouse: 'MAIN', bin: 'MAIN-A01-R08-B01', qty: 10 }],
+      });
+      return v.ok === false && typeof v.message === 'string' && v.message.length > 0;
+    },
+  },
+  {
+    n: 23, text: 'عدم تغيير موقع الطبلية دون تسجيل حركةٍ رسميّة (أصلٌ ووجهة)',
+    state: 'ENFORCED',
+    guard: () => {
+      const out = movementProblem({
+        required: [
+          { role: 'SOURCE', kinds: ['PALLET'], labelAr: 'الطبلية' },
+          { role: 'DESTINATION', kinds: ['LOCATION'], labelAr: 'الرفّ' },
+        ],
+        proofs: [SOURCE_PROOF],
+      });
+      return out.ok === false && out.missing.includes('الرفّ');
+    },
+  },
+  {
+    n: 24, text: 'السماح بالاستثناء فقط لصلاحيّةٍ محدَّدة مع تسجيل السبب',
+    state: 'ENFORCED',
+    guard: () =>
+      /المدير أو المشرف/.test(opProblem('VOID', 'DOCK_OUT', { portalRole: 'storekeeper' })) &&
+      /سببًا مكتوبًا/.test(proofProblem({ role: 'SOURCE', value: 'W01-A01', actor: 'u', at: 't', manual: true })),
+  },
+  {
+    n: 25, text: 'الاحتفاظ بسجلّ حركاتٍ لا يمكن حذفه من الواجهة التشغيليّة',
+    state: 'ENFORCED',
+    guard: () => /ختاميّة/.test(statusProblem(shapeEntry({ ...ENTRY, status: 'CLOSED' }), 'ACTIVE')),
+  },
+  {
+    n: 26, text: 'دعم إعادة طباعة الملصق مع تسجيل من أعاد طباعته وسببِ ذلك',
+    state: 'ENFORCED',
+    guard: () => /سبب إعادة الطباعة/.test(printProblem({ ...ENTRY, printCount: 1 }, { actor: 'u', at: 't' })),
+  },
+  {
+    n: 27, text: 'عدم إعادة استخدام رقم طبليةٍ مغلقة لطبليةٍ جديدة',
+    state: 'ENFORCED',
+    guard: () => /أُغلقت/.test(reuseProblem(LPN_A, shapeEntry({ ...ENTRY, value: LPN_A, status: 'CLOSED' }))),
+  },
+  {
+    n: 28, text: 'فصل باركود الصنف عن باركود الطبلية وعن باركود الموقع',
+    state: 'ENFORCED',
+    guard: () =>
+      classifyScan('6224000123456').kind === 'ITEM' &&
+      classifyScan(LPN_A).kind === 'PALLET' &&
+      classifyScan('MAIN-A01-R01-B01').kind === 'LOCATION',
+  },
+  {
+    n: 29, text: '★★ لا تتغيّر حالةٌ بمجرّد ضغط زرّ — بل بمسح الأصل والوجهة',
+    state: 'ENFORCED',
+    guard: () => {
+      const out = movementProblem({
+        required: [{ role: 'DESTINATION', kinds: ['DOCK_OUT'], labelAr: 'باب التحميل' }],
+        proofs: [],
+      });
+      return out.ok === false && /لا تُثبَّت الحركة بضغط زرّ/.test(out.message);
+    },
+  },
+  {
+    n: 30, text: 'لا يُعدّ الطلب محمَّلًا إلّا بقراءة باركوده فعليًّا عند باب التحميل',
+    state: 'ENFORCED',
+    guard: () => {
+      const session = openDockSession({ warehouse: 'MAIN', actor: 'u', at: 't' }).session;
+      return /أكمل مسح الباب والمركبة والرحلة/.test(itemScanVerdict(session, LPN_A, UNIT).message);
+    },
+  },
+  {
+    n: 31, text: 'الموظّف لا يكتب رقم الباركود بنفسه — النظام يولّده وفق التسلسل',
+    state: 'ENFORCED',
+    guard: () => /يولّده النظام وفق التسلسل/.test(valueSourceProblem('PALLET', { value: LPN_A })),
+  },
+  {
+    n: 32, text: 'لا يغيّر الموظّف اسم العميل ولا رقم الطلب في ملصق الشحنة يدويًّا',
+    state: 'ENFORCED',
+    guard: () => /تُسحب من أمر الصرف المعتمد/.test(manualOverrideProblem({ customerName: 'عميلٌ آخر' })),
+  },
 ];
 
-test('★★★ القواعد الثماني عشرة كلُّها مذكورةٌ بنصّها وحالتها', () => {
-  assert.equal(RULES.length, 18, 'ثماني عشرة قاعدةً كما في نصّ خطة ٧');
+test('★★★ القواعد الحاكمة الاثنتان والثلاثون كلُّها مذكورةٌ بنصّها وحالتها', () => {
+  assert.equal(RULES.length, 32, 'ثمانَ عشرةَ من خطة ٧ وأربعَ عشرةَ من طلب الباركود');
   for (const r of RULES) {
     assert.ok(r.text, `القاعدة ${r.n} بلا نصّ`);
     assert.ok(['ENFORCED', 'ENFORCED_ELSEWHERE', 'PENDING'].includes(r.state), `القاعدة ${r.n} بحالةٍ غير معروفة`);
   }
   const numbers = RULES.map((r) => r.n).sort((a, b) => a - b);
-  assert.deepEqual(numbers, Array.from({ length: 18 }, (_, i) => i + 1), 'لا رقمَ مفقودٌ ولا مكرَّر');
+  assert.deepEqual(numbers, Array.from({ length: 32 }, (_, i) => i + 1), 'لا رقمَ مفقودٌ ولا مكرَّر');
 });
 
 test('★★★ كلّ قاعدةٍ مُعلَنةٍ مبنيّةً **تُشغَّل** فتُثبت نفسها — والنصّ لا يكفي', () => {
@@ -214,6 +346,17 @@ test('★ المُنفَّذُ في نواةٍ سابقةٍ يقول أين — 
 
 test('🔒 نسبةُ الإنفاذ تُقاس ولا تُدَّعى', () => {
   const enforced = RULES.filter((r) => r.state !== 'PENDING').length;
-  assert.equal(enforced, 17, 'سبعَ عشرةَ قاعدةً مُنفَّذةٌ بحارسٍ يُشغَّل');
-  assert.equal(Math.round((enforced / RULES.length) * 100), 94);
+  assert.equal(enforced, 31, 'إحدى وثلاثون قاعدةً مُنفَّذةٌ بحارسٍ يُشغَّل');
+  assert.equal(Math.round((enforced / RULES.length) * 100), 97);
+});
+
+test('★★★ ضوابطُ طلب الباركود الأربعة عشر **كلُّها** لها حارسٌ يُشغَّل — لا واحدَ يُدَّعى', () => {
+  const m7 = RULES.filter((r) => r.n >= 19);
+  assert.equal(m7.length, 14);
+  assert.equal(
+    m7.every((r) => r.state === 'ENFORCED' && typeof r.guard === 'function'),
+    true,
+    'ضابطٌ بلا حارسٍ يُشغَّل = وعدٌ في وثيقة'
+  );
+  for (const r of m7) assert.equal(r.guard(), true, `الضابط ${r.n} (${r.text}) لم يُثبت نفسه`);
 });

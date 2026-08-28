@@ -1560,6 +1560,151 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    /* ═══════════════ سجلّ الباركود الموحّد ‹LPN-704› ═══════════════
+       الفجوة ف-١١: كلُّ نوعٍ كان يُولَّد في مكانه بلا سجلٍّ يجمع **من ولّده
+       وبأيّ صلاحيةٍ ولأيّ سبب وكم مرّةً طُبع**. وهذا السؤال بالذات يُسأل حين
+       تُوجد حمولتان بهويّةٍ واحدة.
+
+       ★★ والمعرّف هو **القيمة نفسها**: فالتفرّد تفرضه قاعدة البيانات لا فحصٌ
+       يسبق الكتابة — وفحصٌ يسبق الكتابة يمرّ منه جهازان في اللحظة نفسها. */
+    match /barcodes/{value} {
+      allow read: if signedIn();
+      // الفئة تحكم من يُنشئ — وهو الفصل الذي أصرّ عليه نصّ الطلب:
+      // باركود البنية (موقعٌ · بابٌ · بوّابةٌ · مركبة) للمدير وحده،
+      // والتشغيليّ (طبليةٌ · شحنةٌ · طرد) للفاعل المخزنيّ أثناء مهمّة.
+      allow create: if signedIn()
+                    && request.resource.data.createdByUid == request.auth.uid
+                    && request.resource.data.value == value
+                    && request.resource.data.status == 'ACTIVE'
+                    && request.resource.data.printCount == 0
+                    && (
+                         (request.resource.data.class == 'STRUCTURE' && isManager())
+                         || (request.resource.data.class == 'OPERATION' && isStockActor())
+                       );
+      // المختوم: القيمة والنوع والفئة والمنشئ والميلاد — تحويرُها تحويرٌ
+      // لتاريخ الملصق كلّه. والمتغيّر: الحالةُ وعدّادُ الطباعة وآخرُها.
+      // وعدّادُ الطباعة **لا ينقص**: عددُ النسخ في الميدان لا يقلّ أبدًا.
+      // وحالةٌ ختاميّة (مغلق · ملغى) لا تُحرَّك — القيمة محروقةٌ للأبد.
+      allow update: if isStockActor()
+                    && request.resource.data.value == resource.data.value
+                    && request.resource.data.kind == resource.data.kind
+                    && request.resource.data.class == resource.data.class
+                    && request.resource.data.createdBy == resource.data.createdBy
+                    && request.resource.data.createdByUid == resource.data.createdByUid
+                    && request.resource.data.createdAt == resource.data.createdAt
+                    && request.resource.data.printCount >= resource.data.printCount
+                    && !(resource.data.status in ['CLOSED', 'VOID']);
+      allow delete: if false;
+
+      // سجلّ الطباعات — ملحق-فقط باسم فاعله. و«التحديث» المسموح إعادةُ
+      // كتابة المعرّف الحتمي `copy-N` نفسه بلا تحويرٍ لمضمونه (نمط
+      // handling_units/events حرفيًّا).
+      match /prints/{printId} {
+        allow read: if signedIn();
+        allow create: if isStockActor()
+                      && request.resource.data.byUid == request.auth.uid
+                      && request.resource.data.value == value;
+        allow update: if isStockActor()
+                      && request.resource.data.byUid == resource.data.byUid
+                      && request.resource.data.copy == resource.data.copy
+                      && request.resource.data.actor == resource.data.actor
+                      && request.resource.data.at == resource.data.at
+                      && request.resource.data.reason == resource.data.reason;
+        allow delete: if false;
+      }
+    }
+
+    /* ═══════════════ مهامّ التخزين ‹LPN-724› ═══════════════
+       ★★ وصلُ `putawayTask` المبنيّ المهجور: الاقتراحُ وحكمُ مسح الرفّ وسجلُّ
+       الحركة كلُّها مبنيّةٌ منذ LPN-210 **بلا مستدعٍ**. ومعرّفُ المهمّة هو
+       `docRef` الذي تشترطه `moveUnit` — فالحركةُ تتبع مستندًا حقيقيًّا. */
+    match /putaway_tasks/{taskId} {
+      allow read: if signedIn();
+      allow create: if isStockActor()
+                    && request.resource.data.openedByUid == request.auth.uid
+                    && request.resource.data.state == 'OPEN';
+      // المختوم: طبليتُها وفاتحُها. والمنفَّذةُ ختاميّةٌ — مهمّةٌ نُفِّذت لا
+      // يُعاد توجيهُها إلى رفٍّ آخر بأثرٍ رجعيّ.
+      allow update: if isStockActor()
+                    && request.resource.data.lpn == resource.data.lpn
+                    && request.resource.data.openedBy == resource.data.openedBy
+                    && resource.data.state == 'OPEN'
+                    && request.resource.data.state in ['OPEN', 'DONE', 'CANCELLED'];
+      allow delete: if false;
+    }
+
+    /* ═══════════════ جلسات الأبواب ‹LPN-715…718› ═══════════════
+       الفجوتان ف-١٤ و ف-٢١: بابُ التحميل وبوّابةُ الخروج وبابُ الاستلام بلا
+       بيّنةِ مسحٍ ولا سلسلةٍ متّصلة. ومجموعةٌ واحدةٌ لثلاثة أنماط لأنّ الثلاثة
+       الشيءُ نفسه: بيّناتُ مسحٍ عند عنوانٍ ماديّ بفاعلٍ ووقت — و`mode` يفصل. */
+    match /dock_sessions/{sessionId} {
+      allow read: if signedIn();
+      allow create: if isStockActor()
+                    && request.resource.data.openedByUid == request.auth.uid
+                    && request.resource.data.mode in ['LOAD', 'EXIT', 'INBOUND'];
+      // المختوم: نمطُها وفاتحُها وميلادُها. وختمُ الخروج لا يُزاح: مركبةٌ
+      // خرجت لا يُعاد ختمُها بوقتٍ آخر (وهو ما يُفسد تقرير الأداء صامتًا).
+      allow update: if isStockActor()
+                    && request.resource.data.mode == resource.data.mode
+                    && request.resource.data.openedBy == resource.data.openedBy
+                    && request.resource.data.openedByUid == resource.data.openedByUid
+                    && request.resource.data.openedAt == resource.data.openedAt
+                    && resource.data.state != 'CLOSED'
+                    && resource.data.state != 'EXITED';
+      allow delete: if false;
+    }
+
+    /* ═══════════════ الشحنات والطرود ‹LPN-714› ═══════════════
+       الفجوتان ف-١٥ و ف-١٦: لا كيانَ للشحنة ولا للطرد، ولا دورةَ تعبئةٍ
+       رقميّة. و`documents` تحمل PACK **مستندَ إثباتٍ** يُنشأ مرّةً ويُعتمد،
+       والتعبئة **جلسةٌ حيّة** تُكتب مئةَ مرّةٍ في الساعة — فحشوُها هناك
+       يُفسد كلّ مؤشّرات المستندات (البيّنة نفسها لـreceiving_sessions). */
+    match /shipments/{shipmentCode} {
+      allow read: if signedIn();
+      // النحو محروسٌ في القاعدة كنحو الطبلية: فلا يسكّ فاعلٌ رقم شحنةٍ بيده
+      // عبر SDK فيسبق العدّاد ويحرق رقمًا.
+      allow create: if isStockActor()
+                    && request.resource.data.openedByUid == request.auth.uid
+                    && request.resource.data.shipment == shipmentCode
+                    && shipmentCode.matches('SHP-[A-Z0-9]{1,12}-[0-9]{8}-[0-9]{6}')
+                    && request.resource.data.state == 'PACKING';
+      // المختوم: رقمها وطلبها وفاتحُها وميلادُها. و«محمَّلة» ختاميّة —
+      // شحنةٌ خرجت لا تُعدَّل تعبئتُها بأثرٍ رجعيّ.
+      allow update: if isStockActor()
+                    && request.resource.data.shipment == resource.data.shipment
+                    && request.resource.data.orderRef == resource.data.orderRef
+                    && request.resource.data.openedBy == resource.data.openedBy
+                    && request.resource.data.openedByUid == resource.data.openedByUid
+                    && request.resource.data.openedAt == resource.data.openedAt
+                    && resource.data.state != 'LOADED'
+                    && request.resource.data.state in ['PACKING', 'STAGED', 'READY', 'LOADED'];
+      allow delete: if false;
+
+      match /events/{eventId} {
+        allow read: if signedIn();
+        allow create: if isStockActor()
+                      && request.resource.data.byUid == request.auth.uid
+                      && request.resource.data.shipment == shipmentCode;
+        allow update: if isStockActor()
+                      && request.resource.data.byUid == resource.data.byUid
+                      && request.resource.data.type == resource.data.type
+                      && request.resource.data.actor == resource.data.actor
+                      && request.resource.data.at == resource.data.at
+                      && request.resource.data.reason == resource.data.reason
+                      && request.resource.data.details == resource.data.details;
+        allow delete: if false;
+      }
+    }
+
+    // عدّادات تسلسل الباركود (شحنةٌ · مركبة) — نمط lpn_counters نفسه:
+    // يزيد واحدًا وإلى الأمام فقط ولا يُصفَّر.
+    match /barcode_counters/{counterKey} {
+      allow read: if signedIn();
+      allow create: if isStockActor() && request.resource.data.seq == 1;
+      allow update: if isStockActor() && request.resource.data.seq == resource.data.seq + 1;
+      allow delete: if false;
+    }
+
     // ── الافتراضي: امنع كل ما لم يُذكر صراحةً ────────────────────
     match /{document=**} {
       allow read, write: if false;
