@@ -18,6 +18,8 @@ import {
   opsOf,
   seesBookQtyWhileCounting,
   warehouseProblem,
+  roleSummary,
+  uiGate,
 } from './lpnRoles.js';
 import { ROLE_NAV } from '../auth/navAccess.js';
 
@@ -97,4 +99,39 @@ test('كلّ عمليةٍ في المصفوفة معرَّفةٌ في قائمة
     assert.ok(owners.length > 0, `العملية «${op}» بلا مالكٍ واحد`);
   }
   assert.deepEqual(opsOf('viewer'), []);
+});
+
+/* ── ‹LPN-511› بوّابةُ الشاشة ──────────────────────────────────────── */
+
+test('★★★ الدورُ المجهول يمرّ — منعٌ بُني على جهلٍ بالهويّة أسوأ من سماحٍ يردّه الخادم', () => {
+  // العطبُ الذي يحرسه هذا الاختبار وقع فعلًا: قراءةٌ فشلت فعاد الدور
+  // `viewer`، فمُنع المديرُ العام صامتًا وهو لا يفهم لماذا.
+  for (const unknown of ['', null, undefined, 'viewer', 'دورٌ لم يُخرَّط بعد']) {
+    const g = uiGate(unknown, 'RECEIVE');
+    assert.ok(g.allowed, `«${unknown}» حُجب — والشاشةُ لا تعرف من هو`);
+    assert.equal(g.known, false);
+    assert.equal(g.message, '');
+  }
+});
+
+test('★★ والدورُ المعروف يُحكم بالمصفوفة — ويُقال له من يملكها', () => {
+  const auditor = uiGate('inventory_auditor', 'APPROVE');
+  assert.ok(!auditor.allowed, 'موظّف الجرد لا يعتمد');
+  assert.ok(auditor.known);
+  assert.match(auditor.message, /موظّف الحوكمة/, 'يُقال له إلى من يذهب');
+
+  assert.ok(uiGate('inventory_auditor', 'COUNT').allowed);
+  assert.ok(uiGate('storekeeper', 'RECEIVE').allowed);
+  assert.ok(!uiGate('storekeeper', 'APPROVE').allowed, 'من يكوّن الطبلية لا يعتمدها');
+  assert.ok(uiGate('admin', 'OVERRIDE').allowed);
+});
+
+test('★ الملخّصُ للعرض لا للمنع — ويعلن جهلَه بالدور المجهول', () => {
+  const s = roleSummary('storekeeper');
+  assert.ok(s.known);
+  assert.ok(s.fieldLabels.length > 0 && s.opLabels.length > 0);
+
+  const u = roleSummary('viewer');
+  assert.equal(u.known, false);
+  assert.deepEqual(u.fieldLabels, [], 'لا يُخترع له دورٌ ميدانيّ');
 });

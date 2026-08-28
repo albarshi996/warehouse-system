@@ -5,7 +5,7 @@
   "command": "npm run plan:lpn",
   "track": "إضافة لا تعديل — تفويض المالك 2026-08-26: «دون أن أتلف أي شيء يعمل ولا يتعارض ولا يحذف ميزة». الطبلية طبقة حاويات فوق الدفتر، والدفتر لا يعرفها",
   "source": "«خطة ٧» (نص المالك الحرفي للتنفيذ الميداني بالباركود وLPN) + مراجعتها على الكود بابًا بابًا 2026-08-26 + مسح أسطح التكامل الأربعة",
-  "lastUpdated": "2026-08-27",
+  "lastUpdated": "2026-08-28",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "b173f2c",
@@ -1762,17 +1762,22 @@
       "title": "وصلُ الأدوار الثمانية بالشاشات الثلاث",
       "milestone": "م٥",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ف-١١"
       ],
       "dependsOn": [
         "LPN-506"
       ],
-      "nucleus": "الشاشاتُ الثلاث القائمة (ReceivingFlow · GovernanceBoard · PickingFlow)",
+      "nucleus": "الشاشاتُ الثلاث القائمة — شريطُ صلاحيةٍ يُعلِم وأزرارٌ تُعطَّل، لا حجبُ شاشة",
       "guardTest": "src/services/lpn/lpnWiring.test.js",
       "touches": [
-        "src/services/lpn/lpnRoles.js"
+        "src/services/lpn/lpnRoles.js",
+        "src/services/lpn/lpnRoles.test.js",
+        "src/services/lpn/lpnWiring.test.js",
+        "src/components/brandzo-erp/lpn/ReceivingFlow.jsx",
+        "src/components/brandzo-erp/lpn/GovernanceBoard.jsx",
+        "src/components/brandzo-erp/lpn/PickingFlow.jsx"
       ],
       "note": "★ الأخطرُ في القائمة: أدوارٌ مبنيّةٌ لا تقيّد شيئًا — الشاشةُ تسمح بما يمنعه المنطق.",
       "acceptance": [
@@ -1780,8 +1785,12 @@
         "التقييدُ بالمخزن يُطبَّق حيًّا",
         "lpnWiring لا يذكر lpnRoles.js بعدها"
       ],
-      "progress": "لم يبدأ — المنطق مبنيٌّ ومختبَرٌ في lpnRoles.js وينتظر مستدعيًا.",
-      "nextStep": "يُوصَل بنواته أعلاه، ثمّ يُشطب اسمُه من PENDING_WIRING في lpnWiring.test.js — والحارس يرفض بقاءه فيها بعد الوصل."
+      "progress": "★★★ وُصلت بقيدٍ حاكم: **البوّابةُ لا تحجب من لا تعرفه.** `canDo` تُعيد `false` لكلّ دورٍ مجهول — ودورٌ مجهولٌ يقع فعلًا: `fetchUserProfile` يحمل تحذيرًا من عطبٍ وقع 2026-08-17 حين فشلت قراءةُ الملفّ الشخصيّ فارتدّ الدور إلى `viewer`، **فمُنع المديرُ العام صامتًا**. فبُنيت `uiGate`: الدورُ المعروف يُحكم بالمصفوفة ويُقال له من يملك الصلاحية، **والمجهولُ يمرّ** — لأنّ المنعَ الحقيقيّ في firestore.rules على الخادم، والشاشةُ تُحسّن التجربة ولا تكون هي الحارس. (نمطُ `scopeVerdict.ok`: «لا يقطع الفريق».) وحارسٌ في lpnWiring يمنع استعمال `canDo` في الشاشات الثلاث.",
+      "nextStep": "أُغلقت.",
+      "evidence": {
+        "commit": "هذه الجلسة",
+        "closedOn": "2026-08-28"
+      }
     },
     {
       "id": "LPN-310",

@@ -31,6 +31,8 @@ import { useWedgeScanner } from '../scan/useWedgeScanner.js';
 import { normalizeScanned } from '../../../services/scan/scanEngine.js';
 // ‹LPN-309› طورُ التجهيز — ما بعد إقفال المهمّة لا شاشةٌ أخرى.
 import { assignToStaging, listStagingQueue, previewStaging } from '../../../services/lpn/stagingService.js';
+// ‹LPN-511› الصلاحية تُعلَم قبل الضغط لا بعد ارتداد الخادم.
+import { uiGate } from '../../../services/lpn/lpnRoles.js';
 
 export default function PickingFlow() {
   const [me, setMe] = useState(null);
@@ -52,6 +54,9 @@ export default function PickingFlow() {
   const inputRef = useRef(null);
 
   const actorName = me?.name || me?.displayName || me?.email || '';
+  // ‹LPN-511› والمجهولُ يمرّ — لا تُبنى شاشةٌ على جهلٍ بالهويّة.
+  const pickGate = uiGate(me?.role, 'PICK');
+  const stageGate = uiGate(me?.role, 'STAGE');
 
   useEffect(() => subscribeAuth(async (u) => setMe(u ? await fetchUserProfile(u) : null)), []);
 
@@ -216,6 +221,7 @@ export default function PickingFlow() {
     return (
       <div className="o_theme" dir="rtl">
         <StageSwitch mode={mode} setMode={setMode} disabled={busy} />
+        <RoleGate gate={stageGate} />
         {flash && <Flash flash={flash} />}
 
         {!stageUnit ? (
@@ -286,7 +292,7 @@ export default function PickingFlow() {
               <button
                 type="submit"
                 className="btn btn-primary w-full py-3"
-                disabled={busy || !stageBin.trim() || (stageVerdict && !stageVerdict.ok)}
+                disabled={!stageGate.allowed || busy || !stageBin.trim() || (stageVerdict && !stageVerdict.ok)}
               >
                 اربِط بالمنطقة
               </button>
@@ -309,6 +315,7 @@ export default function PickingFlow() {
     return (
       <div className="o_theme" dir="rtl">
         <StageSwitch mode={mode} setMode={setMode} disabled={busy} />
+        <RoleGate gate={pickGate} />
         {flash && <Flash flash={flash} />}
         <h2 className="text-lg font-bold text-ink mb-3">مهامّ التحضير المفتوحة ({tasks.length})</h2>
         {tasks.length === 0 ? (
@@ -432,6 +439,16 @@ export default function PickingFlow() {
 }
 
 /** ‹LPN-309› بدّالُ الطور — التحضيرُ والتجهيزُ خطوتان متتاليتان لعاملٍ واحد. */
+/** ‹LPN-511› شريطُ الصلاحية — يُعلِم ولا يحجب من لا يُعرَف. */
+function RoleGate({ gate }) {
+  if (!gate || gate.allowed) return null;
+  return (
+    <div className="o_alert danger mb-3" style={{ fontSize: 'var(--o-font-size-sm)' }}>
+      {gate.message}
+    </div>
+  );
+}
+
 function StageSwitch({ mode, setMode, disabled }) {
   return (
     <div className="flex gap-2 mb-4">

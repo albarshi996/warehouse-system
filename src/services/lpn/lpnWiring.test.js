@@ -32,7 +32,6 @@ const SRC = path.join(HERE, '..', '..');
 const PENDING_WIRING = new Map([
   ['countPallet.js', 'LPN-501/502 — جردُ الطبلية ينتظر وصلًا بصفحة الجرد القائمة'],
   ['lpnKpis.js', 'LPN-505 — تقاريرُ الأداء تنتظر لوحتَها'],
-  ['lpnRoles.js', 'LPN-506 — تقييدُ الأوضاع بالدور ينتظر وصلًا بالشاشات الثلاث'],
   ['lpnSearch.js', 'LPN-504 — البحثُ الموحّد ينتظر مدخلَه في البوابة'],
   ['transferPallets.js', 'LPN-402/403/404 — النقلُ بالطبالي ينتظر وصلًا بشاشة النقل'],
 ]);
@@ -181,6 +180,27 @@ test('★★★ الوجهةُ تُحمل من المهمّة إلى طبلية 
   assert.ok(scan.includes('route: up(route)'), 'buildIssuePallet يحمل الوجهة على الحمولة');
   assert.ok(store.includes('route: String(route'), 'createHandlingUnit يُثبت الوجهة في المستند');
   assert.ok(svc.includes('route: task.route'), 'الإقفال يمرّر وجهة المهمّة إلى الحمولة');
+});
+
+test('★★★ الأدوارُ موصولةٌ بالشاشات الثلاث — و**لا تحجب من لا تُعرَف** ‹LPN-511›', () => {
+  const screens = ['ReceivingFlow.jsx', 'GovernanceBoard.jsx', 'PickingFlow.jsx'];
+  for (const f of screens) {
+    const src = fs.readFileSync(path.join(SRC, 'components', 'brandzo-erp', 'lpn', f), 'utf8');
+    assert.ok(src.includes('lpn/lpnRoles.js'), `${f} لا تعرف الأدوار`);
+    assert.ok(src.includes('uiGate('), `${f} لا تستدعي البوّابة`);
+    assert.ok(src.includes('<RoleGate'), `${f} تمنع بلا أن تقول لماذا`);
+  }
+  /*
+   * ★★★ والشرطُ الجوهريّ: البوّابة تُستدعى بـ`uiGate` **لا بـ`canDo`**.
+   * `canDo` تُعيد `false` لكلّ دورٍ مجهول — ودورٌ مجهولٌ يقع فعلًا حين تفشل
+   * قراءةُ الملفّ الشخصيّ فيرتدّ إلى `viewer` (تحذيرٌ مكتوبٌ في
+   * `fetchUserProfile` عن عطبٍ منع المديرَ العام صامتًا). فاستعمالُها هنا
+   * يحوّل عطبَ قراءةٍ إلى حجبٍ كامل — وهو ضررٌ في بوابةٍ تعمل.
+   */
+  for (const f of screens) {
+    const src = fs.readFileSync(path.join(SRC, 'components', 'brandzo-erp', 'lpn', f), 'utf8');
+    assert.ok(!src.includes('canDo('), `${f} تستعمل canDo — والمجهولُ يُحجب بها`);
+  }
 });
 
 test('★★ `palletMap` موصولٌ بخريطة المواقع — الحالةُ التي وُلد منها الحارس', () => {

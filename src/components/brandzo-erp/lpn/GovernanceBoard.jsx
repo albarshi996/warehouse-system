@@ -22,6 +22,8 @@ import { buildLabel } from '../../../services/lpn/labelModel.js';
 import { listUnitsByState } from '../../../services/lpn/lpnService.js';
 import { executeDecision, listPendingGovernance } from '../../../services/lpn/receivingService.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
+// ‹LPN-511› الصلاحية تُعلَم قبل الضغط — والمجهولُ يمرّ.
+import { uiGate } from '../../../services/lpn/lpnRoles.js';
 
 /**
  * الحالات المجلوبة من `handling_units` — أي **المعتمَدة فما بعد**.
@@ -75,6 +77,8 @@ export default function GovernanceBoard() {
   const label = useMemo(() => (selected?.lpn ? buildLabel({ ...selected, code: selected.lpn }) : null), [selected]);
 
   const actorName = me?.name || me?.displayName || me?.email || '';
+  // ‹LPN-511› والمجهولُ يمرّ — فقراءةٌ فاشلةٌ للهويّة منعت المديرَ العامّ مرّة.
+  const approveGate = uiGate(me?.role, 'APPROVE');
 
   async function decide(id) {
     if (!selected) return;
@@ -105,6 +109,7 @@ export default function GovernanceBoard() {
 
   return (
     <div className="o_theme" dir="rtl">
+      <RoleGate gate={approveGate} />
       {/* ── الطبقة ٢: العدّادات ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         <Counter label="بانتظار الحوكمة" value={counters.pendingApproval} warn={counters.pendingApproval > 0} />
@@ -225,7 +230,7 @@ export default function GovernanceBoard() {
                   <button
                     key={id}
                     type="button"
-                    disabled={busy === id}
+                    disabled={busy === id || !approveGate.allowed}
                     onClick={() => decide(id)}
                     className="btn text-sm px-3 py-2 rounded-lg border"
                     style={{ borderColor: 'var(--o-border)' }}
@@ -238,6 +243,16 @@ export default function GovernanceBoard() {
           )}
         </section>
       </div>
+    </div>
+  );
+}
+
+/** ‹LPN-511› شريطُ الصلاحية — يُعلِم ولا يحجب من لا يُعرَف. */
+function RoleGate({ gate }) {
+  if (!gate || gate.allowed) return null;
+  return (
+    <div className="o_alert danger mb-3" style={{ fontSize: 'var(--o-font-size-sm)' }}>
+      {gate.message}
     </div>
   );
 }

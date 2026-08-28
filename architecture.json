@@ -3072,6 +3072,7 @@
         "resultCard",
         "reverseEvent",
         "reviewCard",
+        "roleSummary",
         "scanIntoDraft",
         "scanRejectRate",
         "scanVerdict",
@@ -3108,6 +3109,7 @@
         "transitionProblem",
         "transitionUnit",
         "transitionVerdict",
+        "uiGate",
         "unexpectedPlacements",
         "unitTransitionProblem",
         "warehouseProblem"

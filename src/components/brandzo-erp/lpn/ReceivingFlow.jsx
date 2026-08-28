@@ -47,6 +47,8 @@ import { normalizeScanned } from '../../../services/scan/scanEngine.js';
 import { executePutaway, listPutawayQueue, openTask, previewBin } from '../../../services/lpn/putawayService.js';
 import { listenLocations } from '../../../services/locations/locationsService.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
+// ‹LPN-511› الصلاحية تُعلَم قبل الضغط لا بعد ارتداد الخادم.
+import { uiGate } from '../../../services/lpn/lpnRoles.js';
 
 export default function ReceivingFlow() {
   const [me, setMe] = useState(null);
@@ -77,6 +79,9 @@ export default function ReceivingFlow() {
 
   const indexes = useMemo(() => buildItemIndexes(items), [items]);
   const actorName = me?.name || me?.displayName || me?.email || '';
+  // ‹LPN-511› والمجهولُ يمرّ — منعٌ بُني على جهلٍ بالهويّة أسوأ من سماحٍ يردّه الخادم.
+  const recvGate = uiGate(me?.role, 'RECEIVE');
+  const putGate = uiGate(me?.role, 'PUTAWAY');
 
   useEffect(() => subscribeAuth(async (u) => setMe(u ? await fetchUserProfile(u) : null)), []);
   useEffect(() => subscribeItems(setItems), []);
@@ -376,6 +381,7 @@ export default function ReceivingFlow() {
     return (
       <div className="o_theme" dir="rtl">
         <ModeSwitch mode={mode} setMode={setMode} disabled={busy} />
+        <RoleGate gate={putGate} />
         {flash && <Flash flash={flash} />}
 
         {!taskUnit ? (
@@ -393,7 +399,7 @@ export default function ReceivingFlow() {
                   <li key={u.code}>
                     <button
                       type="button"
-                      disabled={busy}
+                      disabled={busy || !putGate.allowed}
                       onClick={() => pickTask(u)}
                       className="w-full text-right rounded-lg border px-4 py-4"
                       style={{ borderColor: 'var(--o-border)' }}
@@ -496,7 +502,7 @@ export default function ReceivingFlow() {
               <button
                 type="submit"
                 className="btn btn-primary w-full py-3"
-                disabled={busy || !binCode.trim() || (binVerdict && !binVerdict.ok && !binVerdict.canOverride)}
+                disabled={!putGate.allowed || busy || !binCode.trim() || (binVerdict && !binVerdict.ok && !binVerdict.canOverride)}
               >
                 أثبِت التخزين
               </button>
@@ -520,6 +526,7 @@ export default function ReceivingFlow() {
     return (
       <div className="o_theme" dir="rtl">
         <ModeSwitch mode={mode} setMode={setMode} disabled={busy} />
+        <RoleGate gate={recvGate} />
         {flash && <Flash flash={flash} />}
 
         {openSessions.length > 0 && (
@@ -560,7 +567,7 @@ export default function ReceivingFlow() {
               <li key={o.id}>
                 <button
                   type="button"
-                  disabled={busy}
+                  disabled={busy || !recvGate.allowed}
                   onClick={() => begin(o)}
                   className="w-full text-right rounded-lg border px-4 py-4"
                   style={{ borderColor: 'var(--o-border)' }}
@@ -749,6 +756,16 @@ export default function ReceivingFlow() {
 }
 
 /** ‹LPN-214› بدّالُ الطور — الاستلامُ والتخزينُ طرفا دورةٍ واحدة. */
+/** ‹LPN-511› شريطُ الصلاحية — يُعلِم ولا يحجب من لا يُعرَف. */
+function RoleGate({ gate }) {
+  if (!gate || gate.allowed) return null;
+  return (
+    <div className="o_alert danger mb-3" style={{ fontSize: 'var(--o-font-size-sm)' }}>
+      {gate.message}
+    </div>
+  );
+}
+
 function ModeSwitch({ mode, setMode, disabled }) {
   return (
     <div className="flex gap-2 mb-4">
