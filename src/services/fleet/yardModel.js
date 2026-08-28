@@ -29,7 +29,7 @@
 import { toMillis } from '../documents/inbox.js';
 // ‹GATE-101› طبقةُ بوابة الأمن — توسعةٌ لهذه الدورة لا كيانٌ ثانٍ. والاتجاه
 // واحدٌ: هذا الملفّ يستورد من `gate/` و`gate/` لا يعرفه، فلا حلقة.
-import { purposeOf, shapeGateLoad, shapeVisitor, outLoadProblems, isGateReason } from '../gate/gateModel.js';
+import { purposeOf, needsDoor, shapeGateLoad, shapeVisitor, outLoadProblems, isGateReason } from '../gate/gateModel.js';
 
 const s = (v) => String(v ?? '').trim();
 const up = (v) => s(v).toUpperCase();
@@ -87,8 +87,20 @@ export function stageIndex(id) {
  *
  * والإلغاء متاحٌ حتى بلوغ الباب: بعده صارت البضاعة تُناقَل، فالتصحيح بمستندٍ
  * لا بإلغاء زيارة.
+ *
+ * ═══ ★★ والمسارُ القصير لمن لا بابَ له ‹GATE-201› ═══
+ * كُشف عند الوصل: الدورةُ العشر تمرّ بالباب **حتمًا**، فزائرٌ جاء لاجتماعٍ
+ * لا يستطيع الخروج إلّا بأن يُختم له «موقف» و«باب» و«تنزيل» و«إخلاء» — أربعةُ
+ * أختامٍ كاذبة، وأسوأُ منها أنّ الحارس سيتعلّم ضغطَها بلا قراءة.
+ *
+ * فالزيارةُ التي **لا بابَ لها** (زيارة · موظّف · صيانة · أخرى — ق-٣) تقفز
+ * من «تحقّق» إلى «تصريح» مباشرةً. وهذا ليس ثقبًا في الحارس: القفزُ مشروطٌ
+ * بأن يقول `needsDoor` إنّها بلا باب، وما عداه يمضي خطوةً خطوة كما كان.
+ *
+ * @param {object} [visit] الزيارة — اختياريّةٌ عمدًا: بغيابها يعمل الحارس
+ *   بحرفيّته القديمة تمامًا، فلا مستدعٍ قديمٍ يتغيّر سلوكُه تحته.
  */
-export function canTransitionVisit(from, to) {
+export function canTransitionVisit(from, to, visit) {
   const target = s(to);
   if (target === YARD_CANCELED.id) {
     const i = stageIndex(from);
@@ -97,7 +109,13 @@ export function canTransitionVisit(from, to) {
   if (s(from) === YARD_CANCELED.id) return false;
   const i = stageIndex(from);
   const j = stageIndex(target);
-  return i >= 0 && j === i + 1;
+  if (i >= 0 && j === i + 1) return true;
+
+  if (visit && s(from) === 'verified' && target === PERMIT_STAGE) {
+    const v = shapeVisit(visit);
+    return !needsDoor(v.reason, v.load?.in?.state);
+  }
+  return false;
 }
 
 /* ═══════════════ الأبواب — بياناتٌ لا كود ═══════════════ */

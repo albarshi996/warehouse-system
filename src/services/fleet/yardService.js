@@ -159,8 +159,8 @@ export async function openVisit(input, profile, startStage = 'arrived') {
   return ref.id;
 }
 
-/** يقرأ زيارةً بمعرّفها أو يرمي. */
-async function readVisit(visitId) {
+/** يقرأ زيارةً بمعرّفها أو يرمي. (يُصدَّر لـ‹GATE› كي لا يُكتب قارئٌ ثانٍ.) */
+export async function readVisit(visitId) {
   const snap = await getDoc(doc(db, VISITS, visitId));
   if (!snap.exists()) throw new Error('الزيارة غير موجودة.');
   return { id: snap.id, ...snap.data() };
@@ -176,7 +176,9 @@ export async function advanceVisit(visitId, toStage, patch = {}, profile) {
   const current = await readVisit(visitId);
   const target = yardStage(toStage);
   if (!target) throw new Error(`مرحلة غير معروفة: ${toStage}`);
-  if (!canTransitionVisit(current.stage, toStage)) {
+  // ‹GATE-201› تُمرَّر الزيارةُ نفسُها كي يعرف الحارسُ أن لا بابَ لها فيأذن
+  // بالمسار القصير — وبغيابها يعمل بحرفيّته القديمة.
+  if (!canTransitionVisit(current.stage, toStage, current)) {
     const from = yardStage(current.stage);
     throw new Error(`لا انتقال من «${from?.label || current.stage}» إلى «${target.label}» — الدورة تمضي خطوةً خطوة.`);
   }

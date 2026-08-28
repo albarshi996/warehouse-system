@@ -1,0 +1,36 @@
+---
+/**
+ * مركزُ البوابة — الشاشةُ التي يفتحها الحارسُ على الحاجز.
+ *
+ * لماذا وُجدت؟ لأنّ البوّابة كانت **سجلَّ مرور**: تعرف أنّ مركبةً دخلت
+ * وخرجت، ولا تعرف لماذا جاءت ولا ماذا كانت تحمل. فشاحنةٌ تدخل بخمس عشرة
+ * طبليّةً وتخرج بستٍّ ولا أثرَ لأيٍّ من الرقمين.
+ *
+ * وهي **ليست بديلًا** عن تبويب «الساحة والأبواب» في عمليات الأسطول: ذاك
+ * منظارُ المدير بجداوله، وهذه شاشةُ الحارس بهاتفه. والاثنتان تقرآن
+ * `yard_visits` نفسَها ولا مصدرَ ثانٍ.
+ *
+ * الوثيقة الحاكمة: docs/خطة-بوابة-الأمن-والطبليات-العائدة.md · المتتبّع: npm run plan:gate
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import GatePost from '../../components/brandzo-erp/gate/GatePost.jsx';
+---
+
+<DashboardLayout title="مركز البوابة" showGuide={false} light>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">مركز البوابة</h1>
+      <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
+        سجّلْ <span class="text-accent font-bold">وأنت واقفٌ عند الحاجز</span>: اقرأ اللوحة،
+        واختر سببَ الدخول — فلا يظهر لك إلّا ما يخصّ سببَك. ثمّ الحمولةُ والطبلياتُ العائدة.
+        وعند الخروج يسألك النظام: <span class="font-bold">هل خرجت فارغة؟</span> فإن لا،
+        فبماذا — <span class="font-bold">فحمولةُ الخروج ليست صورةَ حمولة الدخول</span>.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <GatePost client:load />
+  </div>
+</DashboardLayout>
