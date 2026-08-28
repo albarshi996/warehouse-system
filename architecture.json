@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 108,
+    "modules": 109,
     "serviceDomains": 47,
-    "serviceFiles": 502,
+    "serviceFiles": 503,
     "collections": 87,
     "roles": 18,
     "odooModels": 12,
@@ -398,6 +398,14 @@
       "title": "لوحة اللوجستيات التنفيذيّة",
       "summary": "",
       "file": "src/pages/dashboard/logistics-dashboard.astro",
+      "usesServices": []
+    },
+    {
+      "name": "lpn-count",
+      "route": "/dashboard/lpn-count",
+      "title": "جرد الطبالي",
+      "summary": "جردُ الطبالي — شهادةُ رؤيةٍ بلا كمّيّات.",
+      "file": "src/pages/dashboard/lpn-count.astro",
       "usesServices": []
     },
     {
@@ -2827,6 +2835,7 @@
       "files": [
         "countPallet.js",
         "countPallet.test.js",
+        "countService.js",
         "governanceQueue.js",
         "governanceQueue.test.js",
         "governingRules.test.js",
@@ -2877,9 +2886,10 @@
         "transferPallets.js",
         "transferPallets.test.js"
       ],
-      "fileCount": 51,
+      "fileCount": 52,
       "testCount": 25,
       "exports": [
+        "COUNTABLE_STATES",
         "DEFAULT_LABEL_SIZE",
         "DEFAULT_MIX_POLICY",
         "DISCREPANCY_TYPES",
@@ -3002,6 +3012,7 @@
         "lineBalanceRef",
         "lineKey",
         "lineageTrace",
+        "listCountableUnits",
         "listOpenSessions",
         "listOpenTasks",
         "listPendingGovernance",
@@ -3060,6 +3071,7 @@
         "receivedByLine",
         "receivingCycleMs",
         "reconcileInput",
+        "recordSighting",
         "rejectIntoDraft",
         "rejectionProblem",
         "rejectionSummary",

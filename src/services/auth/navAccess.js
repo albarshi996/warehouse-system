@@ -52,7 +52,10 @@ export const ROLE_NAV = {
   // المدير المالي: يعتمد الطلب والترسية والأمر والصرف في الدورة.
   finance_manager: ['warehouses', 'odoo', 'reports', 'presentations', 'procurement'],
   return_manager: ['daily', 'warehouses', 'odoo'],
-  inventory_auditor: ['warehouses', 'putaway', 'odoo', 'reports'],
+  // ‹LPN-508› وأُضيفت له مجموعةُ التنفيذ الميدانيّ `lpn`: له فيها **جردُ
+  // الطبالي** وحده — فالاستلامُ والحوكمةُ والتحضير محصوراتٌ ببنودها فلا يراها.
+  // وهو نفسُ نمط `gate_officer` أعلاه: مجموعةٌ كاملة، والحسّاس فيها محصور.
+  inventory_auditor: ['warehouses', 'putaway', 'odoo', 'reports', 'lpn'],
   viewer: ['reports'],
   // مستخدم الإدارة (الجهة الطالبة/المستفيد): طلبات الإدارات + إصدار طلب المشتريات.
   department_user: ['dept', 'procurement'],

@@ -1680,10 +1680,10 @@
     },
     {
       "id": "LPN-508",
-      "title": "وصلُ جردِ الطبلية بصفحة الجرد القائمة",
+      "title": "وصلُ جردِ الطبالي — شهادةُ رؤيةٍ بلا كمّيّات",
       "milestone": "م٥",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ف-١١"
       ],
@@ -1691,10 +1691,15 @@
         "LPN-501",
         "LPN-502"
       ],
-      "nucleus": "صفحةُ الجرد القائمة (طبقة الالتقاط) — مسحُ طبليةٍ شهادةَ رؤيةٍ بلا كمّيّات (ق-٢)",
+      "nucleus": "صفحةٌ رابعةٌ لتطبيق التنفيذ الميدانيّ — لا جراحةَ في ScanFlow (١٢١٨ سطرًا تعمل)، ولا «صفحةٌ فوق صفحة» لأنّ الوظيفة غير موجودةٍ أصلًا",
       "guardTest": "src/services/lpn/lpnWiring.test.js",
       "touches": [
-        "src/services/lpn/countPallet.js"
+        "src/services/lpn/countService.js",
+        "src/components/brandzo-erp/lpn/CountFlow.jsx",
+        "src/pages/dashboard/lpn-count.astro",
+        "src/services/auth/navCatalog.js",
+        "src/services/auth/navAccess.js",
+        "src/services/lpn/lpnWiring.test.js"
       ],
       "note": "ق-٢ تحمي CAP-101، والوصلُ يجب أن يبقى بلا كمّيّات.",
       "acceptance": [
@@ -1702,8 +1707,12 @@
         "فروقُ الطبالي تظهر في المطابقة",
         "lpnWiring لا يذكر countPallet.js بعدها"
       ],
-      "progress": "لم يبدأ — المنطق مبنيٌّ ومختبَرٌ في countPallet.js وينتظر مستدعيًا.",
-      "nextStep": "يُوصَل بنواته أعلاه، ثمّ يُشطب اسمُه من PENDING_WIRING في lpnWiring.test.js — والحارس يرفض بقاءه فيها بعد الوصل."
+      "progress": "★★ العادُّ يمسح الرفَّ ثمّ الطبالي تباعًا، **ولا يرى رقمًا واحدًا** — ما يُعرض كلُّه من `counterView` وهي بلا حقلِ كمّيّةٍ أصلًا (ق-٢/ح-٣، حفظًا لـCAP-101 «الالتقاط لا يُحاسِب»). ★ والمشاهدةُ حدثٌ `COUNT_SEEN` على الطبلية نفسها **بمعرّفٍ حتميّ** `SIGHT__{جلسة}__{هويّة}` — فإعادةُ المسح تكتب فوق نفسها، وضياعُ جلسة المتصفّح غيرُ ضارّ. وبلا مجموعةٍ جديدة. ★★★ ودرسُ «النظام يرفض نصف إضافة» تكرّر: الصفحةُ سُجّلت في القائمة فسقط اختبارُ `pageAccess` لأنّ `inventory_auditor` لا يملك مجموعة `lpn` أصلًا — سجلٌّ ثانٍ لزم (`navAccess`)، ولولا الاختبار لَظهر البندُ في قائمته ولا يفتح.",
+      "nextStep": "أُغلقت. وحارسٌ يمنع عرضَ أيّ رقمٍ للعادّ (`.qty`/`.baseQty`) — العقدُ يُشغَّل لا يُقرأ.",
+      "evidence": {
+        "commit": "هذه الجلسة",
+        "closedOn": "2026-08-28"
+      }
     },
     {
       "id": "LPN-509",

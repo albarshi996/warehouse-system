@@ -171,6 +171,9 @@ export const NAV_GROUPS = [
       // ‹LPN-308› التحضير الميدانيّ: المسح الثلاثيّ خطوةً خطوة. للمحضّر
       // كما للمديرَين — وهو من يمشي الممرّ.
       { path: '/dashboard/lpn-picking', label: 'التحضير الميدانيّ', icon: 'arrowUpTray' },
+      // ‹LPN-508› جردُ الطبالي رابعًا: شهادةُ رؤيةٍ بلا كمّيّات (ق-٢/ح-٣).
+      // للعادّ والمديرَين — ومدقّقُ الجرد صاحبُها الطبيعيّ.
+      { path: '/dashboard/lpn-count', label: 'جرد الطبالي', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'inventory_auditor'] },
     ],
   },
   {

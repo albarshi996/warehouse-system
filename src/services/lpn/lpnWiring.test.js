@@ -30,7 +30,6 @@ const SRC = path.join(HERE, '..', '..');
  * لكلٍّ مهمّتُه ليُعرف أين يُوصَل — لا «سنصله لاحقًا» بلا عنوان.
  */
 const PENDING_WIRING = new Map([
-  ['countPallet.js', 'LPN-501/502 — جردُ الطبلية ينتظر وصلًا بصفحة الجرد القائمة'],
   ['transferPallets.js', 'LPN-402/403/404 — النقلُ بالطبالي ينتظر وصلًا بشاشة النقل'],
 ]);
 
@@ -213,6 +212,31 @@ test('★★ البحثُ الموحّد والمؤشّراتُ في لوحة ا
   }
   // ★ وسببُ المطابقة يُعرض — نتيجةٌ بلا سببٍ تُربك (قرارُ lpnSearch المعلن).
   assert.ok(board.includes('{why}'), 'النتائجُ بلا سببِ مطابقة');
+});
+
+test('★★★ جردُ الطبالي موصولٌ — و**لا رقمَ للعادّ** (ق-٢/ح-٣) ‹LPN-508›', () => {
+  const svc = fs.readFileSync(path.join(SRC, 'services', 'lpn', 'countService.js'), 'utf8');
+  const screen = fs.readFileSync(
+    path.join(SRC, 'components', 'brandzo-erp', 'lpn', 'CountFlow.jsx'),
+    'utf8'
+  );
+  assert.ok(svc.includes('./countPallet.js'), 'الخدمة تستدعي المنطق الخالص');
+  assert.ok(screen.includes('lpn/countService.js'), 'الشاشة تستدعي الخدمة');
+  assert.ok(screen.includes('recordSighting'), 'المشاهدةُ لا تُسجَّل');
+
+  /*
+   * ★★★ العقدُ الذي يحرسه هذا الاختبار: **ما يُعرض للعادّ يأتي من
+   * `counterView` وحدها** — وهي بلا حقلِ كمّيّةٍ أصلًا. فلو عرضت الشاشةُ
+   * `lines` أو `qty` أو `baseQty` من الطبلية لَخرقت CAP-101 «الالتقاط لا
+   * يُحاسِب»، وصار العادُّ يرى ما ينبغي أن يعدّه فيؤكّد الدفترَ بدل أن
+   * يفحصه — وهو أصلُ الجرد الأعمى كلِّه.
+   */
+  for (const banned of ['.baseQty', '.qty', 'totalBaseQty', 'view.lines']) {
+    assert.ok(!screen.includes(banned), `شاشةُ الجرد تعرض «${banned}» — والعادُّ لا يرى رقمًا`);
+  }
+  // والصفحةُ مسجَّلةٌ في القائمة — وإلّا كانت يتيمةً لا يصل إليها أحد.
+  const nav = fs.readFileSync(path.join(SRC, 'services', 'auth', 'navCatalog.js'), 'utf8');
+  assert.ok(nav.includes('/dashboard/lpn-count'), 'الصفحةُ غيرُ مسجّلةٍ في القائمة');
 });
 
 test('★★ `palletMap` موصولٌ بخريطة المواقع — الحالةُ التي وُلد منها الحارس', () => {
