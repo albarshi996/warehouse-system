@@ -31,6 +31,13 @@ test('★★★ الحارسُ يرى أشجارَ العمل فعلًا — و�
   const trees = listWorktrees(ROOT);
   assert.ok(trees.length > 0, 'عاد بلا أشجار — وهو عطبُ ترميز المسار العربيّ بعينه، والحارسُ يكذب صامتًا');
   assert.ok(trees.every((t) => t.path), 'شجرةٌ بلا مسار');
+
+  // ★ والمسحُ الكامل يعمل على الشجرة الحقيقيّة لا على بياناتٍ مصنوعة: هذه
+  // الشجرةُ نفسُها فيها عملٌ الآن (هذا الملفّ يُكتب)، فصفرٌ هنا يعني صمتًا كاذبًا.
+  const scan = scanWorktrees(ROOT, NOW);
+  assert.ok(Array.isArray(scan.rows), 'المسحُ لم يُعِد صفوفًا');
+  assert.ok(scan.dirty >= 1, 'المسحُ قال «لا شجرةَ فيها عمل» وهذه الشجرةُ نفسُها فيها عمل');
+  assert.ok(scan.rows.every((r) => r.name && Number.isFinite(r.count)), 'صفٌّ بلا اسمٍ أو بلا عدد');
 });
 
 test('★★ ولا يعتمد على `new URL().pathname` — المزلقُ الذي كسره', () => {
