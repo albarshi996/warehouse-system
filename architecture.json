@@ -11,7 +11,7 @@
   "counts": {
     "modules": 109,
     "serviceDomains": 47,
-    "serviceFiles": 507,
+    "serviceFiles": 508,
     "collections": 87,
     "roles": 18,
     "odooModels": 12,
@@ -1067,10 +1067,11 @@
         "returnTo.test.js",
         "roles.js",
         "roles.test.js",
+        "usageGuide.test.js",
         "usersService.js"
       ],
-      "fileCount": 14,
-      "testCount": 5,
+      "fileCount": 15,
+      "testCount": 6,
       "exports": [
         "ALWAYS_ALLOWED",
         "DEFAULT_ROLE",
@@ -8321,7 +8322,8 @@
       "sync": "node scripts/sync-sibling.mjs",
       "arch": "node scripts/build-arch.mjs",
       "org": "node scripts/build-org.mjs",
-      "prebuild": "node scripts/build-arch.mjs && node scripts/build-org.mjs",
+      "prebuild": "node scripts/build-arch.mjs && node scripts/build-org.mjs && node scripts/build-usage-guide.mjs",
+      "guide": "node scripts/build-usage-guide.mjs",
       "test": "node --test \"src/**/*.test.js\"",
       "test:rules": "firebase emulators:exec --only firestore \"node --test test/firestore-rules.test.mjs\"",
       "audit": "node scripts/audit-portal.mjs",

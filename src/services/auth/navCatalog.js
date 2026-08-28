@@ -408,6 +408,17 @@ export const NAV_GROUPS = [
       { path: '/dashboard/policy-settings', label: 'سياسات التشغيل', icon: 'clipboardList', roles: ['admin'] },
       { path: '/dashboard/arch-wiki', label: 'خريطة النظام', icon: 'grid', roles: ['admin'] },
       { path: '/dashboard/archive', label: 'الأرشيف التأسيسي', icon: 'package' },
+      /*
+       * ‹دليل الاستخدام› قاعدةٌ ثابتة (طلب المالك 2026-08-28):
+       * **أيُّ إضافةٍ أو ميزةٍ جديدة من شروطها ذكرُها في هذا الدليل** — ليكون مرجعًا
+       * عامًّا. والقاعدةُ مُمَكْنَنةٌ لا مكتوبة: `usageGuide.test.js` يُسقِط من
+       * أضاف شاشةً هنا ولم يكتب شرحَها، و`prebuild` يمنع البناء كذلك.
+       *
+       * ★ ولماذا بندٌ في القائمة لا درجٌ في التخطيط؟ لأنّ درجَ `showGuide`
+       * **مطفأٌ في المئة كلّها** — فالدليلُ القائم موجودٌ ولا يصل إليه أحد.
+       */
+      { path: '/دليل-استخدام-البوابة.html', label: 'دليل استخدام البوابة', icon: 'bookOpen', external: true },
+      { path: '/Brandzo_Operational_Guide.html', label: 'الدليل التشغيلي', icon: 'bookOpen', external: true },
       { path: '/dashboard/meeting-assistant', label: 'مساعد الاجتماعات', icon: 'grid' },
     ],
   },
