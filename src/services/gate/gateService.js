@@ -34,6 +34,7 @@ import { db, auth } from '../../config/firebase.js';
 import { EXIT_STAGE, PERMIT_STAGE, shapeVisit, stageIndex } from '../fleet/yardModel.js';
 import { shapeInLoad, shapeOutLoad, shapeVisitor, needsDoor, normalizePlate, isGateReason } from './gateModel.js';
 import { movesFromLoad, moveProblems, shapeMove } from './palletLedger.js';
+import { decideVariance } from './gateReconcile.js';
 
 /** يُعاد تصديرُه كي لا تستورد الشاشةُ طبقتين لتقرأ زياراتٍ وأبوابًا. */
 export { listenYardVisits, listenDoors, listenVisitEvents, assignDoor, cancelVisit, holdVisit, VISITS_CAP };
@@ -169,6 +170,59 @@ export async function checkOut(visitId, { out, permitRef } = {}, profile) {
     profile
   );
   return { load, permitRef: permit };
+}
+
+/* ═══════════════ المطابقة ‹GATE-401/402› ═══════════════ */
+
+const RECEIVING_SESSIONS = 'receiving_sessions';
+
+/** ما يُقرأ من جلسات الاستلام للمطابقة — الأحدثُ أوّلًا. */
+export const SESSIONS_CAP = 200;
+
+/**
+ * جلساتُ الاستلام الأخيرة — **قراءةٌ فقط** من طبقة الطبالي.
+ *
+ * والاتجاه مشروع: `gate/` يقرأ القائم، والقائمُ لا يعرف `gate/`. ولا تُكتب
+ * هنا كلمةٌ في `receiving_sessions` — المطابقةُ تقرأ الطرفين ولا تمسّ أحدهما.
+ */
+export function listenReceivingSessions(callback, onError, max = SESSIONS_CAP) {
+  return onSnapshot(
+    query(collection(db, RECEIVING_SESSIONS), orderBy('createdAt', 'desc'), fsLimit(max)),
+    (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+    (e) => onError?.(e)
+  );
+}
+
+/**
+ * ★★ يحفظ قرارَ حسمِ فرقٍ **على الزيارة نفسِها** — لا في مجموعةٍ ثالثة.
+ *
+ * ولماذا على الزيارة؟ لأنّ الفرق صفةُ زيارةٍ بعينها لا كيانٌ مستقلّ، ومن
+ * قرأ الزيارة قرأ حسمَها معها. والقرارُ يُفحص بـ`decideVariance` المختبَرة
+ * قبل أن يُكتب — فلا حسمَ بلا قرارٍ وطرفٍ وفاعل.
+ */
+export async function saveVarianceDecision(visitId, result, input, profile) {
+  const actor = profile?.name || auth?.currentUser?.email || '';
+  const { decision, problem } = decideVariance({ ...result, visitId }, { ...input, actor });
+  if (problem) throw new Error(problem);
+  await advanceNothingButPatch(visitId, { varianceDecision: decision }, profile);
+  return decision;
+}
+
+/**
+ * تعديلُ حقلٍ على الزيارة بلا نقلِ مرحلة — بختمِ خادمٍ وسجلِّ تدقيق.
+ * (تُبقى دالّةً مسمّاةً كي لا تكتب الشاشةُ في المجموعة مباشرةً.)
+ */
+async function advanceNothingButPatch(visitId, patch, profile) {
+  const { updateDoc, doc: docRef } = await import('firebase/firestore');
+  await updateDoc(docRef(db, 'yard_visits', visitId), { ...patch, updatedAt: serverTimestamp() });
+  await addDoc(collection(db, 'yard_visits', visitId, 'events'), {
+    action: 'variance',
+    detail: patch?.varianceDecision?.decision || '',
+    byUid: auth?.currentUser?.uid || null,
+    byName: profile?.name || auth?.currentUser?.email || 'غير معروف',
+    byRole: profile?.role || '',
+    at: serverTimestamp(),
+  });
 }
 
 /**

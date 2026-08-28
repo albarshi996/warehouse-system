@@ -172,9 +172,10 @@ export const NAV_GROUPS = [
       // مناولةٍ. وللماليّ فيها شأنٌ: رصيدُ مورّدٍ لدينا ذمّةٌ عينيّة، ولذلك
       // يدخل المجموعةَ من أجلها وحدها.
       { path: '/dashboard/pallet-control', label: 'الطبليات العائدة', icon: 'layers', roles: ['admin', 'warehouse_manager', 'gate_officer', 'finance_manager'] },
-      // ★ ويأتي هنا بندٌ ثالثٌ حين تُبنى شاشتُه — **ولا يُدرَج قبلها**:
-      // «سجلّ البوابة والمطابقة» ‹GATE-403›. فمدخلٌ إلى شاشةٍ غير موجودة
-      // رابطٌ مكسور، واختبارُ الانحراف يسقطه.
+      // ‹GATE-403› السجلُّ والمطابقة آخرًا: هو **منظارُ المدير** لا شاشةَ
+      // تنفيذ. ومدقّقُ الجرد صاحبُه الطبيعيّ — يقرأ الفروق ويدقّقها، والحسمُ
+      // لضابط البوابة والمديرَين (كتّاب الساحة في `firestore.rules`).
+      { path: '/dashboard/gate-log', label: 'سجلّ البوابة والمطابقة', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'gate_officer', 'inventory_auditor'] },
     ],
   },
   {

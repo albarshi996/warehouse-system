@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 111,
+    "modules": 112,
     "serviceDomains": 48,
-    "serviceFiles": 515,
+    "serviceFiles": 517,
     "collections": 88,
     "roles": 18,
     "odooModels": 12,
@@ -272,6 +272,14 @@
       "title": "اختار وظيفتك",
       "summary": "The 13 operational forms shipped under public/forms/. They are static HTML",
       "file": "src/pages/dashboard/forms.astro",
+      "usesServices": []
+    },
+    {
+      "name": "gate-log",
+      "route": "/dashboard/gate-log",
+      "title": "سجلّ البوابة والمطابقة",
+      "summary": "سجلُّ البوابة والمطابقة — حيث تصير البوّابةُ نقطةَ تحقّقٍ مستقلّة.",
+      "file": "src/pages/dashboard/gate-log.astro",
       "usesServices": []
     },
     {
@@ -1952,24 +1960,30 @@
       "files": [
         "gateModel.js",
         "gateModel.test.js",
+        "gateReconcile.js",
+        "gateReconcile.test.js",
         "gateRoles.js",
         "gateRoles.test.js",
         "gateService.js",
         "palletLedger.js",
         "palletLedger.test.js"
       ],
-      "fileCount": 7,
-      "testCount": 3,
+      "fileCount": 9,
+      "testCount": 4,
       "exports": [
+        "COUNTABLE_STATES",
         "EXIT_STATES",
         "GATE_REASONS",
         "GATE_WRITERS",
+        "LIABLE_PARTIES",
         "LOAD_STATES",
         "PALLET_CONDITIONS",
         "PALLET_MOVES_CAP",
         "PALLET_MOVE_KINDS",
         "PALLET_OWNERSHIP",
         "PALLET_TYPES",
+        "RECONCILE_STATUS",
+        "SESSIONS_CAP",
         "UNKNOWN_PARTY",
         "VISITOR_READERS",
         "VISITS_CAP",
@@ -1980,16 +1994,20 @@
         "cancelVisit",
         "checkIn",
         "checkOut",
+        "decideVariance",
         "exitFieldsFor",
         "exitState",
         "fieldsFor",
+        "gateDeclared",
         "gateReason",
         "gateUiGate",
         "holdVisit",
         "isGateReason",
         "isOnSite",
+        "liableLabel",
         "listenDoors",
         "listenPalletMoves",
+        "listenReceivingSessions",
         "listenVisitEvents",
         "listenYardVisits",
         "loadGaps",
@@ -2001,6 +2019,7 @@
         "needsDoor",
         "nextStepFor",
         "normalizePlate",
+        "openVarianceProblem",
         "outLoadProblems",
         "palletBalance",
         "palletConditionLabel",
@@ -2009,7 +2028,11 @@
         "palletTypeLabel",
         "purposeOf",
         "reasonLabel",
+        "receivedDeclared",
+        "reconcileAll",
+        "reconcileVisit",
         "recordPalletAdjustment",
+        "saveVarianceDecision",
         "shapeGateLoad",
         "shapeInLoad",
         "shapeMove",
@@ -2023,7 +2046,9 @@
         "writePalletMoves"
       ],
       "collections": [
-        "pallet_moves"
+        "pallet_moves",
+        "receiving_sessions",
+        "yard_visits"
       ]
     },
     {
