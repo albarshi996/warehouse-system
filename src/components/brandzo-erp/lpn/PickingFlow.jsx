@@ -34,6 +34,16 @@ import { assignToStaging, listStagingQueue, previewStaging } from '../../../serv
 // ‹LPN-511› الصلاحية تُعلَم قبل الضغط لا بعد ارتداد الخادم.
 import { uiGate } from '../../../services/lpn/lpnRoles.js';
 import { FieldLangSwitch, useFieldLang } from './useFieldLang.jsx';
+// ‹LPN-310› التحميل — طورٌ ثالثٌ لا شاشةٌ خامسة: دورُ LOADER يحمل التجهيز
+// والتحميل معًا، والعاملُ نفسُه يمشي من منطقة التجهيز إلى باب الشحن.
+import {
+  buildSession,
+  closeLoad,
+  listRoutes,
+  loadingCloseProblem,
+  loadingCounters,
+  scanLoad,
+} from '../../../services/lpn/loadingService.js';
 
 export default function PickingFlow() {
   const { lang, dir, setLang, tr } = useFieldLang();
@@ -59,6 +69,80 @@ export default function PickingFlow() {
   // ‹LPN-511› والمجهولُ يمرّ — لا تُبنى شاشةٌ على جهلٍ بالهويّة.
   const pickGate = uiGate(me?.role, 'PICK');
   const stageGate = uiGate(me?.role, 'STAGE');
+  const loadGate = uiGate(me?.role, 'LOAD');
+
+  /* ── ‹LPN-310› التحميل — والجلسةُ تُشتقّ في كلّ فتحة ── */
+  const [routes, setRoutes] = useState([]);
+  const [loadUnits, setLoadUnits] = useState([]);
+  const [route, setRoute] = useState('');
+  const [loadSession, setLoadSession] = useState(null);
+  const [loadCode, setLoadCode] = useState('');
+  const [seal, setSeal] = useState('');
+  const [closeNote, setCloseNote] = useState('');
+
+  const refreshRoutes = useCallback(async () => {
+    try {
+      const r = await listRoutes({ max: 200 });
+      setRoutes(r.routes);
+      setLoadUnits(r.units);
+    } catch {
+      setRoutes([]); setLoadUnits([]);
+      setFlash({ kind: 'err', text: 'تعذّرت قراءة وجهات التحميل.' });
+    }
+  }, []);
+
+  useEffect(() => { if (mode === 'loading') refreshRoutes(); }, [mode, refreshRoutes]);
+
+  // ★ الجلسةُ تُبنى من الحالة الحيّة — فجلسةٌ ضاعت تعود كما كانت.
+  useEffect(() => {
+    if (mode !== 'loading' || !route || !actorName) { setLoadSession(null); return; }
+    const built = buildSession(loadUnits, route, { actor: actorName, at: new Date().toISOString() });
+    setLoadSession(built.problem ? null : built.session);
+    if (built.problem) setFlash({ kind: 'err', text: built.problem });
+  }, [mode, route, loadUnits, actorName]);
+
+  const loadCounters = useMemo(
+    () => (loadSession ? loadingCounters(loadSession) : null),
+    [loadSession]
+  );
+  const closeProblem = useMemo(
+    () => (loadSession ? loadingCloseProblem(loadSession, { override: Boolean(closeNote.trim()), overrideNote: closeNote }) : ''),
+    [loadSession, closeNote]
+  );
+
+  async function doLoadScan(e, scanned) {
+    e?.preventDefault?.();
+    const lpn = String(scanned ?? loadCode).trim();
+    if (!lpn || !loadSession) return;
+    setBusy(true);
+    try {
+      const unit = loadUnits.find((u) => u.code === lpn) ?? null;
+      const r = await scanLoad(loadSession, lpn, unit, { actor: actorName });
+      if (r.problem) { say('err', r.problem); return; }
+      setLoadSession(r.session);
+      setLoadCode('');
+      say('ok', `${lpn} — حُمّلت.`);
+      await refreshRoutes();
+    } catch (err) {
+      say('err', err?.message || 'تعذّر تسجيل التحميل.');
+    } finally { setBusy(false); }
+  }
+
+  async function doCloseLoad() {
+    if (!loadSession) return;
+    setBusy(true);
+    try {
+      const r = await closeLoad(loadSession, {
+        seal, override: Boolean(closeNote.trim()), overrideNote: closeNote, actor: actorName,
+      });
+      if (r.problem) { say('err', r.problem); return; }
+      say('ok', `أُغلق تحميل «${route}»${seal ? ` بختم ${seal}` : ''}.`);
+      setLoadSession(null); setRoute(''); setSeal(''); setCloseNote('');
+      await refreshRoutes();
+    } catch (err) {
+      say('err', err?.message || 'تعذّر إغلاق التحميل.');
+    } finally { setBusy(false); }
+  }
 
   useEffect(() => subscribeAuth(async (u) => setMe(u ? await fetchUserProfile(u) : null)), []);
 
@@ -93,12 +177,13 @@ export default function PickingFlow() {
    */
   const onScanned = (c) => {
     if (mode === 'staging') { setStageBin(normalizeScanned(c)); return; }
+    if (mode === 'loading') { doLoadScan(null, normalizeScanned(c)); return; }
     applyScan(c);
   };
 
   const camera = useBarcodeCamera({ onCode: onScanned });
   useWedgeScanner(onScanned, {
-    enabled: (Boolean(task) && stage !== 'QTY') || (mode === 'staging' && Boolean(stageUnit)),
+    enabled: (Boolean(task) && stage !== 'QTY') || (mode === 'staging' && Boolean(stageUnit)) || (mode === 'loading' && Boolean(loadSession)),
   });
 
   function acceptScan(e) {
@@ -218,6 +303,135 @@ export default function PickingFlow() {
 
   if (loading) return <div className="o_theme"><p className="text-ink-2 text-sm">جارٍ قراءة المهامّ…</p></div>;
 
+  // ── ‹LPN-310› طورُ التحميل — الجلسةُ تُشتقّ فلا تضيع ──
+  if (mode === 'loading') {
+    return (
+      <div className="o_theme" dir={dir}>
+        <FieldLangSwitch lang={lang} setLang={setLang} />
+        <StageSwitch mode={mode} setMode={setMode} disabled={busy} tr={tr} />
+        <RoleGate gate={loadGate} />
+        {flash && <Flash flash={flash} />}
+
+        {!route ? (
+          <>
+            <h2 className="text-lg font-bold text-ink mb-1">{tr('pick_route')}</h2>
+            <p className="text-ink-2 text-xs mb-3">{tr('route_hint')}</p>
+            {routes.length === 0 ? (
+              <p className="text-ink-2 text-sm">{tr('no_routes')}</p>
+            ) : (
+              <ul className="space-y-2">
+                {routes.map((r) => (
+                  <li key={r.route}>
+                    <button
+                      type="button"
+                      disabled={busy || !loadGate.allowed}
+                      onClick={() => setRoute(r.route)}
+                      className="w-full text-right rounded-lg border px-4 py-4"
+                      style={{ borderColor: 'var(--o-border)' }}
+                    >
+                      <div className="font-bold text-ink">{r.route}</div>
+                      <div className="text-ink-2 text-xs mt-1">
+                        {r.staged} {tr('waiting_to_load')} · {r.loaded} {tr('already_loaded')}
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="rounded-lg border px-4 py-3 mb-3" style={{ borderColor: 'var(--o-border)' }}>
+              <div className="font-bold text-ink">{route}</div>
+              {loadCounters && (
+                <div className="text-ink-2 text-sm mt-1 tabular-nums">
+                  {loadCounters.loaded}/{loadCounters.expected} {tr('loaded_of_expected')}
+                  {loadCounters.missing > 0 && ` · ${loadCounters.missing} ${tr('still_missing')}`}
+                  {loadCounters.extras > 0 && ` · ${loadCounters.extras} ${tr('extra_loaded')}`}
+                </div>
+              )}
+            </div>
+
+            <form onSubmit={doLoadScan} className="mb-3">
+              <div className="flex gap-2 mb-2">
+                <input
+                  value={loadCode}
+                  onChange={(e) => setLoadCode(e.target.value)}
+                  placeholder={tr('scan_pallet_to_load')}
+                  className="flex-1 rounded-lg border px-4 py-4 text-lg"
+                  style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)', direction: 'ltr', textAlign: 'center' }}
+                  autoFocus
+                  autoComplete="off"
+                  enterKeyHint="go"
+                  disabled={!loadGate.allowed}
+                />
+                <ScanCameraButton camera={camera} compact />
+              </div>
+              <ScanCameraPanel camera={camera} hint={tr('scan_pallet_to_load')} />
+            </form>
+
+            {/* ★ المتبقّي يُسمّى لا يُعدّ فقط — العاملُ يبحث عن هويّةٍ لا عن رقم. */}
+            {loadCounters && loadCounters.missing > 0 && (
+              <details className="mb-3">
+                <summary className="text-sm text-ink-2 cursor-pointer">
+                  {loadCounters.missing} {tr('still_missing')}
+                </summary>
+                <ul className="mt-2 space-y-1">
+                  {loadCounters.missingList.map((c) => (
+                    <li key={c} className="text-sm text-ink-2 tabular-nums">{c}</li>
+                  ))}
+                </ul>
+              </details>
+            )}
+
+            <label className="block mb-2">
+              <span className="text-xs text-ink-2">{tr('seal_number')}</span>
+              <input
+                value={seal}
+                onChange={(e) => setSeal(e.target.value)}
+                className="w-full rounded-lg border px-4 py-3 mt-1"
+                style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)', direction: 'ltr', textAlign: 'center' }}
+                autoComplete="off"
+              />
+            </label>
+
+            {/* ★★ الإغلاقُ الناقصُ لا يُمنع مطلقًا — الشاحنةُ قد تكون واقفةً
+                والسائقُ ينتظر، وبابٌ مغلقٌ تمامًا يعني خروجًا بلا تسجيل.
+                لكنّه يحتاج سببًا مكتوبًا يبقى في السجلّ. */}
+            {closeProblem && (
+              <div className="o_alert danger mb-2" style={{ fontSize: 'var(--o-font-size-sm)' }}>{closeProblem}</div>
+            )}
+            {loadCounters && !loadCounters.complete && (
+              <input
+                value={closeNote}
+                onChange={(e) => setCloseNote(e.target.value)}
+                placeholder={tr('close_reason')}
+                className="w-full rounded-lg border px-4 py-3 text-sm mb-2"
+                style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }}
+              />
+            )}
+
+            <button
+              type="button"
+              className="btn btn-primary w-full py-3"
+              disabled={busy || !loadGate.allowed || Boolean(closeProblem)}
+              onClick={doCloseLoad}
+            >
+              {tr('close_and_depart')}
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary w-full py-2 mt-2"
+              disabled={busy}
+              onClick={() => { setRoute(''); setLoadCode(''); setSeal(''); setCloseNote(''); }}
+            >
+              {tr('back_to_list')}
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
   // ── ‹LPN-309› طورُ التجهيز — ما بعد إقفال المهمّة لا شاشةٌ أخرى (ح-٤) ──
   if (mode === 'staging') {
     return (
@@ -456,7 +670,7 @@ function RoleGate({ gate }) {
 function StageSwitch({ mode, setMode, disabled, tr }) {
   return (
     <div className="flex gap-2 mb-4">
-      {[['picking', tr('mode_picking')], ['staging', tr('mode_staging')]].map(([id, label]) => (
+      {[['picking', tr('mode_picking')], ['staging', tr('mode_staging')], ['loading', tr('mode_loading')]].map(([id, label]) => (
         <button
           key={id}
           type="button"

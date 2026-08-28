@@ -286,6 +286,31 @@ test('★★ معجمُ الميدان موصولٌ بالشاشات الأرب�
   assert.deepEqual(outside, [], `معجمُ الميدان تسرّب خارج تطبيقه: ${outside.join(' · ')}`);
 });
 
+test('★★★ التحميلُ موصولٌ — والجلسةُ تُشتقّ فلا تضيع ‹LPN-310›', () => {
+  const svc = fs.readFileSync(path.join(SRC, 'services', 'lpn', 'loadingService.js'), 'utf8');
+  const screen = fs.readFileSync(
+    path.join(SRC, 'components', 'brandzo-erp', 'lpn', 'PickingFlow.jsx'),
+    'utf8'
+  );
+  assert.ok(svc.includes('./stagingLoading.js'), 'الخدمة تستدعي المنطق الخالص');
+  assert.ok(screen.includes('lpn/loadingService.js'), 'الشاشة تستدعي الخدمة');
+  for (const fn of ['buildSession', 'scanLoad', 'closeLoad', 'loadingCounters', 'loadingCloseProblem']) {
+    assert.ok(screen.includes(fn), `«${fn}» مبنيٌّ ولا تستعمله الشاشة`);
+  }
+  /*
+   * ★★★ والقيدُ الذي يجعل الجلسةَ لا تضيع: **تُبنى من الحالة الحيّة**.
+   * فلو خُزّنت في مجموعةٍ لَاحتاجت قاعدةً تنتظر النشر (درس LPN-O06/O07)،
+   * ولو عاشت في ذاكرة المتصفّح وحدها لَضاع عدُّ شاحنةٍ بإغلاق هاتف.
+   * والاشتقاقُ يجعل عاملًا آخرَ على جهازٍ آخر يستأنف بلا نقلِ شيء.
+   */
+  assert.ok(!svc.includes('loading_sessions'), 'التحميل يفتح مجموعةً تنتظر نشرَ قاعدة');
+  for (const imp of importsOf(path.join(SRC, 'services', 'lpn', 'loadingService.js'))) {
+    assert.ok(!/firebase/i.test(imp), `خدمةُ التحميل تستورد «${imp}» — والكتابةُ تمرّ بـlpnService`);
+  }
+  // ★ والقراءةُ تتبع الطور — الممسوحُ في التحميل هويّةُ طبليةٍ لا بندُ سحب.
+  assert.ok(screen.includes(`mode === 'loading'`), 'القراءةُ لا تتبع طورَ التحميل');
+});
+
 test('★★ `palletMap` موصولٌ بخريطة المواقع — الحالةُ التي وُلد منها الحارس', () => {
   const map = fs.readFileSync(
     path.join(SRC, 'components', 'brandzo-erp', 'warehouse', 'LocationMap.jsx'),

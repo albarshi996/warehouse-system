@@ -84,6 +84,21 @@ const LEX = Object.freeze({
   no_destination: { ar: 'بلا وجهةٍ معلنة', en: 'No declared destination', fr: 'Aucune destination déclarée' },
   open_pick_tasks: { ar: 'مهامّ التحضير المفتوحة', en: 'Open picking tasks', fr: 'Tâches de préparation ouvertes' },
 
+  // ── التحميل ──
+  mode_loading: { ar: 'التحميل', en: 'Loading', fr: 'Chargement' },
+  pick_route: { ar: 'اختر الوجهة', en: 'Choose a route', fr: 'Choisissez une destination' },
+  route_hint: { ar: 'الوجهاتُ التي عليها حمولةٌ الآن.', en: 'Routes that currently have a load.', fr: 'Destinations ayant actuellement une charge.' },
+  no_routes: { ar: 'لا وجهةَ عليها حمولة. جهّز طبالي أوّلًا.', en: 'No route has a load. Stage pallets first.', fr: 'Aucune destination chargée. Préparez des palettes.' },
+  waiting_to_load: { ar: 'تنتظر التحميل', en: 'awaiting loading', fr: 'en attente de chargement' },
+  already_loaded: { ar: 'محمّلة', en: 'loaded', fr: 'chargées' },
+  loaded_of_expected: { ar: 'محمّلةٌ من المتوقّع', en: 'loaded of expected', fr: 'chargées sur prévu' },
+  still_missing: { ar: 'لمّا تُحمّل', en: 'not yet loaded', fr: 'pas encore chargées' },
+  extra_loaded: { ar: 'زائدة', en: 'extra', fr: 'en trop' },
+  scan_pallet_to_load: { ar: 'امسح ملصق الطبلية التي تُحمّل', en: 'Scan the pallet being loaded', fr: 'Scannez la palette chargée' },
+  seal_number: { ar: 'رقم الختم (إن وجد)', en: 'Seal number (if any)', fr: 'Numéro de scellé (le cas échéant)' },
+  close_reason: { ar: 'سببُ الإغلاق ناقصًا — يُقيّد باسمك', en: 'Reason for closing short — recorded under your name', fr: 'Motif de clôture incomplète — enregistré à votre nom' },
+  close_and_depart: { ar: 'أغلق التحميل واعتمد الخروج', en: 'Close loading and approve departure', fr: 'Clôturer et approuver le départ' },
+
   // ── جرد الطبالي ──
   count_title: { ar: 'جرد الطبالي', en: 'Pallet stocktake', fr: 'Inventaire des palettes' },
   current_bin: { ar: 'الموقع الحاليّ', en: 'Current bin', fr: 'Emplacement actuel' },
