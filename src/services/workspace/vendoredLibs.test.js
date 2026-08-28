@@ -28,6 +28,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
@@ -77,17 +78,17 @@ const PINNED = [
   },
   {
     file: 'leaflet/leaflet.js',
-    sha256: '3104b526504d0d61fd3099a4521e87f732ccc3174dec54e08de6ba8bde3e15ff',
+    sha256: 'db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a',
     why: 'Leaflet 1.9.4 — خرائطُ العمليّات الميدانيّة ومنافذ التجزئة',
   },
   {
     file: 'leaflet/leaflet.css',
-    sha256: 'a7837102824184820dfa198d1ebcd109ff6d0ff9a2672a074b9a1b4d147d04c6',
+    sha256: '337bfca5cabd03b39815b2700febe2b3b7edf55921c59cd49f88ecb328212303',
     why: 'أنماطُ Leaflet — بلا هذا الملفّ تظهر الخريطةُ مبعثرةً بلا خطأٍ في الطرفيّة',
   },
   {
     file: 'fontawesome/css/all.min.css',
-    sha256: 'ce6f72d6b4c728f562906a8e51e2456a9011acb20b4c90e0eb79b580cce8f229',
+    sha256: 'c22cfb6520a7fdbb738632834019acf47c78b1279462c0eb4cb83bae83ecb5a7',
     why: 'أيقوناتُ ثمانِ صفحاتٍ ثابتة — والخطوطُ في webfonts/ تابعةٌ له',
   },
 ];
@@ -186,6 +187,42 @@ test('★★★ ولا ملفَّ في public/lib خارج التصنيف — ل
     [],
     'ملفٌّ في public/lib لا هو مرآةٌ لحزمةٍ ولا مثبَّتٌ ببصمةٍ ولا معلَنٌ أنّه لنا. ' +
       'يُصنَّف في MIRRORED أو PINNED أو OURS — فما يصل متصفّحَ الموظّف يُعرف مصدرُه',
+  );
+});
+
+/**
+ * ★★★ ولماذا هذا الاختبارُ موجود؟ لأنّ الحارسَ سقط في CI مرّتين — لا مرّة.
+ *
+ * البصمةُ تُقارَن **بايتًا ببايت**، و`core.autocrlf=true` هنا. فأيُّ ملفٍّ لا
+ * تُثبَّت نهاياتُ أسطره في `.gitattributes` يُستخرج بـ`CRLF` على ويندوز وبـ`LF`
+ * في CI — **فتختلف البصمتان والملفُّ واحد**.
+ *
+ * وقع أوّلًا في `mermaid.min.js` فسُنّت قاعدةٌ `public/lib/*.js`. **ثمّ وقع
+ * ثانيةً** لأنّ النمطَ لا يبلغ المجلّدات الفرعيّة ولا الأنماط: سقط
+ * `leaflet/` و`fontawesome/css/` في CI بعد أن مرّوا هنا خضرًا.
+ *
+ * **والقاعدةُ الضيّقةُ أسوأ من لا قاعدة** — تُعطي طمأنينةً بحدودٍ لا يعرفها أحد.
+ * فلا يُحرَس ملفٌّ ببصمةٍ إلّا وسطرُه في `.gitattributes` قائم.
+ */
+test('★★★ وكلُّ ملفٍّ محروسٍ ببصمةٍ نهاياتُ أسطره مثبَّتةٌ في .gitattributes', () => {
+  const guarded = [...MIRRORED.map((m) => m.hosted), ...PINNED.map((p) => p.file)].map(
+    (f) => `public/lib/${f}`,
+  );
+  const out = execFileSync('git', ['check-attr', 'eol', '--', ...guarded], {
+    cwd: ROOT,
+    encoding: 'utf8',
+  });
+  const undeclared = out
+    .trim()
+    .split('\n')
+    .filter((line) => !line.endsWith(': lf'))
+    .map((line) => line.split(':')[0]);
+
+  assert.deepEqual(
+    undeclared,
+    [],
+    'ملفٌّ يُقارَن ببصمته ولا `eol=lf` له في .gitattributes — فيُستخرج CRLF على ويندوز ' +
+      'وLF في CI، فتختلف البصمتان والملفُّ واحد. البوّابةُ خضراءُ هنا وحمراءُ هناك',
   );
 });
 

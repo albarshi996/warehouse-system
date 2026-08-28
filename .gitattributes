@@ -49,4 +49,13 @@ src/data/vehicles-seed.json              text eol=lf
 #
 # (قِيس في 2026-08-28: الاستخراجُ بلا هذا السطر يضيف 3636 محرفَ CR إلى
 # `mermaid.min.js` — ٣٬٥٧٦٬٢٩٧ بايتًا بدل ٣٬٥٧٢٬٦٦١.)
-public/lib/*.js                          text eol=lf
+# ★★ والنمطُ يشمل المجلّدات الفرعيّة والأنماط أيضًا — أوّلُ صيغةٍ منه كانت
+# `public/lib/*.js` وحدَها، فسقط في CI ثلاثةُ حرّاسٍ لملفّاتٍ تحتها
+# (`leaflet/` و`fontawesome/css/`) استُخرجت بـCRLF هنا وبـLF هناك. والقاعدةُ
+# الضيّقةُ أسوأ من لا قاعدة: تُعطي طمأنينةً بحدودٍ لا يعرفها أحد.
+public/lib/**/*.js                       text eol=lf
+public/lib/**/*.css                      text eol=lf
+# والثنائيّاتُ تحتها لا تُمسّ صراحةً — لا اعتمادًا على الاستنتاج.
+public/lib/**/*.woff2                    binary
+public/lib/**/*.ttf                      binary
+public/lib/**/*.png                      binary
