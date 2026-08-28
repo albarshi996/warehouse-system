@@ -5,7 +5,8 @@ import {
   signOutUser,
   getBasePath,
 } from '../../../services/auth/authService.js';
-import { isPathAllowed, landingPathFor } from '../../../services/auth/pageAccess.js';
+import { isPathAllowed, landingPathFor, toCatalogPath } from '../../../services/auth/pageAccess.js';
+import { recordVisit } from '../../../services/activity/visitService.js';
 import { fetchMatrixOnce } from '../../../services/auth/accessMatrixService.js';
 import { loginUrlFor } from '../../../services/auth/returnTo.js';
 
@@ -59,6 +60,14 @@ export default function AuthGate() {
       }
 
       if (overlay) overlay.style.display = 'none';
+
+      // ‹VIS-202› سجلُّ الزيارة — **بعد** أن يُعرف المستخدمُ ويُسمح له بالصفحة،
+      // فلا يُسجَّل موقوفٌ ولا محوَّلٌ عن صفحةٍ لا يملكها.
+      //
+      // ★★★ ض-٢: **بلا `await`** — الرسمُ لا ينتظر السجلّ، وفشلُه مبتلَعٌ في
+      // `visitService` فلا يرى الموظّفُ خطأً ولا تتعطّل البوّابة. السجلُّ خدمةٌ
+      // ثانويّة، ومن يجعلها شرطًا لعمل الشاشة يُسقط الشاشةَ يومَ تسقط هي.
+      recordVisit({ kind: 'VIEW', path: toCatalogPath(path, base), profile });
     });
 
     return () => unsub();

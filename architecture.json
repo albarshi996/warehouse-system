@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 112,
-    "serviceDomains": 48,
-    "serviceFiles": 518,
-    "collections": 89,
+    "modules": 113,
+    "serviceDomains": 49,
+    "serviceFiles": 523,
+    "collections": 90,
     "roles": 18,
     "odooModels": 12,
     "odooGuards": 51,
@@ -615,6 +615,14 @@
       "usesServices": []
     },
     {
+      "name": "portal-visits",
+      "route": "/dashboard/portal-visits",
+      "title": "سجلّ زيارات البوّابة",
+      "summary": "سجلّ زيارات البوّابة — من دخل، ومن أيّ جهاز، وأيَّ شاشةٍ فتح.",
+      "file": "src/pages/dashboard/portal-visits.astro",
+      "usesServices": []
+    },
+    {
       "name": "present",
       "route": "/dashboard/present",
       "title": "العرض التنفيذي الكامل — من المتابعة إلى القرار",
@@ -978,6 +986,43 @@
     }
   ],
   "services": [
+    {
+      "domain": "activity",
+      "dir": "src/services/activity",
+      "files": [
+        "deviceId.js",
+        "visitModel.js",
+        "visitModel.test.js",
+        "visitService.js",
+        "visitWiring.test.js"
+      ],
+      "fileCount": 5,
+      "testCount": 2,
+      "exports": [
+        "VISITS_CAP",
+        "VISIT_KINDS",
+        "browserDeviceId",
+        "browserSessionId",
+        "dayKey",
+        "daysIn",
+        "isDeviceId",
+        "isVisitKind",
+        "listenVisits",
+        "makeDeviceId",
+        "multiDeviceAccounts",
+        "readDeviceId",
+        "recordVisit",
+        "screenLabel",
+        "shapeVisit",
+        "visitDocId",
+        "visitProblems",
+        "visitText",
+        "visitsSnapshot"
+      ],
+      "collections": [
+        "portal_visits"
+      ]
+    },
     {
       "domain": "archive",
       "dir": "src/services/archive",
@@ -6434,6 +6479,38 @@
           },
           {
             "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "portal_visits",
+        "path": "portal_visits",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "isAdmin()",
+            "roles": [
+              "isAdmin"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "signedIn() && request.resource.data.uid == request.auth.uid && request.resource.data.kind in ['LOGIN', 'VIEW', 'LOGOUT']",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "update",
               "delete"
             ],
             "condition": "false",

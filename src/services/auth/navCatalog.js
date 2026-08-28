@@ -442,6 +442,11 @@ export const NAV_GROUPS = [
       { path: '/dashboard/recruitment', label: 'التوظيف', icon: 'users', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/users', label: 'إدارة المستخدمين', icon: 'users', roles: ['admin'] },
       { path: '/dashboard/access-control', label: 'الصلاحيات والأدوار', icon: 'users', roles: ['admin'] },
+      // ‹VIS-301› سجلّ زيارات البوّابة — من دخل ومن أيّ جهازٍ وأيَّ شاشةٍ فتح.
+      // للأدمن وحده: سجلُّ تتبّعٍ لأشخاص، وأضيقُ قراءةٍ ممكنة أسلم (والقاعدة
+      // تفرضه على الخادم لا الشاشة). وموضعُه هنا بجوار «إدارة المستخدمين»
+      // و«الصلاحيات» — فمن يديرُ الحسابات يقرأ حركتَها.
+      { path: '/dashboard/portal-visits', label: 'سجلّ زيارات البوّابة', icon: 'history', roles: ['admin'] },
       // سياسات التشغيل (م١-ج): القرارات ٤–٧ إعداداتٌ لا شيفرة. للأدمن وحده —
       // مدير المستودع نفسه `overrideRole` في قرارين، فلو كتبها لوسّع صلاحيته.
       { path: '/dashboard/policy-settings', label: 'سياسات التشغيل', icon: 'clipboardList', roles: ['admin'] },
