@@ -44,6 +44,16 @@ import {
   loadingCounters,
   scanLoad,
 } from '../../../services/lpn/loadingService.js';
+// ‹LPN-408› استلامُ الوجهة — من يمسح يقف عند الشاحنة لا عند مكتب.
+import {
+  buildDiscrepancies,
+  buildInboundSession,
+  listInbound,
+  receiveCloseProblem,
+  receiveCounters,
+  scanInbound,
+} from '../../../services/lpn/inboundService.js';
+import { DISCREPANCY_TYPES } from '../../../services/lpn/transferPallets.js';
 
 export default function PickingFlow() {
   const { lang, dir, setLang, tr } = useFieldLang();
@@ -79,6 +89,67 @@ export default function PickingFlow() {
   const [loadCode, setLoadCode] = useState('');
   const [seal, setSeal] = useState('');
   const [closeNote, setCloseNote] = useState('');
+
+  /* ── ‹LPN-408› استلامُ الوجهة ── */
+  const [inRoutes, setInRoutes] = useState([]);
+  const [inUnits, setInUnits] = useState([]);
+  const [inRoute, setInRoute] = useState('');
+  const [inSession, setInSession] = useState(null);
+  const [inManifest, setInManifest] = useState(null);
+  const [inCode, setInCode] = useState('');
+  const [sealState, setSealState] = useState('intact');
+
+  const refreshInbound = useCallback(async () => {
+    try {
+      const r = await listInbound({ max: 200 });
+      setInRoutes(r.routes);
+      setInUnits(r.units);
+    } catch {
+      setInRoutes([]); setInUnits([]);
+      setFlash({ kind: 'err', text: 'تعذّرت قراءة الشحنات الواصلة.' });
+    }
+  }, []);
+
+  useEffect(() => { if (mode === 'inbound') refreshInbound(); }, [mode, refreshInbound]);
+
+  useEffect(() => {
+    if (mode !== 'inbound' || !inRoute || !actorName) { setInSession(null); setInManifest(null); return; }
+    const built = buildInboundSession(inUnits, inRoute, { actor: actorName, at: new Date().toISOString() });
+    setInSession(built.session);
+    setInManifest(built.manifest);
+  }, [mode, inRoute, inUnits, actorName]);
+
+  const inCounters = useMemo(() => (inSession ? receiveCounters(inSession) : null), [inSession]);
+  const inDiscrepancies = useMemo(
+    () => (inSession ? buildDiscrepancies(inSession, { manifest: inManifest }) : []),
+    [inSession, inManifest]
+  );
+  const inCloseProblem = useMemo(
+    () => (inSession ? receiveCloseProblem(inSession, inDiscrepancies) : ''),
+    [inSession, inDiscrepancies]
+  );
+
+  async function doInboundScan(e, scanned) {
+    e?.preventDefault?.();
+    const lpn = String(scanned ?? inCode).trim();
+    if (!lpn || !inSession) return;
+    setBusy(true);
+    try {
+      const unit = inUnits.find((u) => u.code === lpn) ?? null;
+      const r = await scanInbound(inSession, lpn, unit, {
+        sealIntact: sealState !== 'broken',
+        opened: sealState === 'opened',
+        actor: actorName,
+      });
+      if (r.problem) { say('err', r.problem); return; }
+      setInSession(r.session);
+      setInCode('');
+      say('ok', `${lpn} — وصلت.`);
+      await refreshInbound();
+    } catch (err) {
+      say('err', err?.message || 'تعذّر تسجيل الاستلام.');
+    } finally { setBusy(false); }
+  }
 
   const refreshRoutes = useCallback(async () => {
     try {
@@ -178,12 +249,13 @@ export default function PickingFlow() {
   const onScanned = (c) => {
     if (mode === 'staging') { setStageBin(normalizeScanned(c)); return; }
     if (mode === 'loading') { doLoadScan(null, normalizeScanned(c)); return; }
+    if (mode === 'inbound') { doInboundScan(null, normalizeScanned(c)); return; }
     applyScan(c);
   };
 
   const camera = useBarcodeCamera({ onCode: onScanned });
   useWedgeScanner(onScanned, {
-    enabled: (Boolean(task) && stage !== 'QTY') || (mode === 'staging' && Boolean(stageUnit)) || (mode === 'loading' && Boolean(loadSession)),
+    enabled: (Boolean(task) && stage !== 'QTY') || (mode === 'staging' && Boolean(stageUnit)) || (mode === 'loading' && Boolean(loadSession)) || (mode === 'inbound' && Boolean(inSession)),
   });
 
   function acceptScan(e) {
@@ -303,6 +375,121 @@ export default function PickingFlow() {
 
   if (loading) return <div className="o_theme"><p className="text-ink-2 text-sm">جارٍ قراءة المهامّ…</p></div>;
 
+  // ── ‹LPN-408› طورُ استلام الوجهة — الفرقُ يبقى مفتوحًا حتى يُحسم ──
+  if (mode === 'inbound') {
+    return (
+      <div className="o_theme" dir={dir}>
+        <FieldLangSwitch lang={lang} setLang={setLang} />
+        <StageSwitch mode={mode} setMode={setMode} disabled={busy} tr={tr} />
+        <RoleGate gate={loadGate} />
+        {flash && <Flash flash={flash} />}
+
+        {!inRoute ? (
+          <>
+            <h2 className="text-lg font-bold text-ink mb-1">{tr('arriving_shipments')}</h2>
+            <p className="text-ink-2 text-xs mb-3">{tr('arriving_hint')}</p>
+            {inRoutes.length === 0 ? (
+              <p className="text-ink-2 text-sm">{tr('no_arriving')}</p>
+            ) : (
+              <ul className="space-y-2">
+                {inRoutes.map((r) => (
+                  <li key={r.route}>
+                    <button
+                      type="button"
+                      disabled={busy || !loadGate.allowed}
+                      onClick={() => setInRoute(r.route)}
+                      className="w-full text-right rounded-lg border px-4 py-4"
+                      style={{ borderColor: 'var(--o-border)' }}
+                    >
+                      <div className="font-bold text-ink">{r.route}</div>
+                      <div className="text-ink-2 text-xs mt-1">
+                        {r.onTruck} {tr('on_truck')} · {r.received} {tr('received_count')}
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="rounded-lg border px-4 py-3 mb-3" style={{ borderColor: 'var(--o-border)' }}>
+              <div className="font-bold text-ink">{inRoute}</div>
+              {inCounters && (
+                <div className="text-ink-2 text-sm mt-1 tabular-nums">
+                  {inCounters.received}/{inCounters.expected} {tr('received_of_expected')}
+                  {inCounters.missing > 0 && ` · ${inCounters.missing} ${tr('not_arrived')}`}
+                </div>
+              )}
+            </div>
+
+            {/* ★ حالُ الختم يُختار قبل المسح — والمفتوحةُ تُوسم لتُعدّ فعليًّا. */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {[['intact', tr('seal_intact')], ['broken', tr('seal_broken')], ['opened', tr('arrived_opened')]].map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setSealState(id)}
+                  aria-pressed={sealState === id}
+                  className={sealState === id ? 'btn btn-primary text-sm' : 'btn btn-secondary text-sm'}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <form onSubmit={doInboundScan} className="mb-3">
+              <div className="flex gap-2 mb-2">
+                <input
+                  value={inCode}
+                  onChange={(e) => setInCode(e.target.value)}
+                  placeholder={tr('scan_arriving_pallet')}
+                  className="flex-1 rounded-lg border px-4 py-4 text-lg"
+                  style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)', direction: 'ltr', textAlign: 'center' }}
+                  autoFocus
+                  autoComplete="off"
+                  enterKeyHint="go"
+                  disabled={!loadGate.allowed}
+                />
+                <ScanCameraButton camera={camera} compact />
+              </div>
+              <ScanCameraPanel camera={camera} hint={tr('scan_arriving_pallet')} />
+            </form>
+
+            {/* ★★★ الفروقُ تُقاس آليًّا لا تُكتب بيد — فمحضرٌ يُقاس يوجد
+                دائمًا حين يوجد فرق، ومحضرٌ يُكتب يوجد حين يتذكّر أحد. */}
+            {inDiscrepancies.length > 0 && (
+              <div className="o_alert danger mb-3" style={{ fontSize: 'var(--o-font-size-sm)' }}>
+                <strong>{inDiscrepancies.length} {tr('open_discrepancies')}</strong>
+                <ul className="mt-1 space-y-1">
+                  {inDiscrepancies.slice(0, 10).map((d, i) => (
+                    <li key={`${d.type}-${d.lpn}-${i}`} className="tabular-nums">
+                      {DISCREPANCY_TYPES[d.type] ?? d.type} — {d.lpn}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {inCloseProblem && (
+              <div className="o_alert danger mb-2" style={{ fontSize: 'var(--o-font-size-sm)' }}>{inCloseProblem}</div>
+            )}
+
+            <p className="text-ink-2 text-xs mb-2 leading-relaxed">{tr('discrepancy_rule')}</p>
+
+            <button
+              type="button"
+              className="btn btn-secondary w-full py-2"
+              disabled={busy}
+              onClick={() => { setInRoute(''); setInCode(''); }}
+            >
+              {tr('back_to_list')}
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
   // ── ‹LPN-310› طورُ التحميل — الجلسةُ تُشتقّ فلا تضيع ──
   if (mode === 'loading') {
     return (
@@ -670,7 +857,7 @@ function RoleGate({ gate }) {
 function StageSwitch({ mode, setMode, disabled, tr }) {
   return (
     <div className="flex gap-2 mb-4">
-      {[['picking', tr('mode_picking')], ['staging', tr('mode_staging')], ['loading', tr('mode_loading')]].map(([id, label]) => (
+      {[['picking', tr('mode_picking')], ['staging', tr('mode_staging')], ['loading', tr('mode_loading')], ['inbound', tr('mode_inbound')]].map(([id, label]) => (
         <button
           key={id}
           type="button"

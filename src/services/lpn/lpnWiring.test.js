@@ -311,6 +311,35 @@ test('★★★ التحميلُ موصولٌ — والجلسةُ تُشتقّ 
   assert.ok(screen.includes(`mode === 'loading'`), 'القراءةُ لا تتبع طورَ التحميل');
 });
 
+test('★★★ استلامُ الوجهة موصولٌ — والفرقُ يبقى مفتوحًا حتى يُحسم ‹LPN-408›', () => {
+  const svc = fs.readFileSync(path.join(SRC, 'services', 'lpn', 'inboundService.js'), 'utf8');
+  const screen = fs.readFileSync(
+    path.join(SRC, 'components', 'brandzo-erp', 'lpn', 'PickingFlow.jsx'),
+    'utf8'
+  );
+  assert.ok(svc.includes('./transferPallets.js'), 'الخدمة تستدعي المنطق الخالص');
+  assert.ok(screen.includes('lpn/inboundService.js'), 'الشاشة تستدعي الخدمة');
+  for (const fn of ['buildInboundSession', 'scanInbound', 'buildDiscrepancies', 'receiveCloseProblem']) {
+    assert.ok(screen.includes(fn), `«${fn}» مبنيٌّ ولا تستعمله الشاشة`);
+  }
+  /*
+   * ★★★ القاعدة ١٥: **الفرقُ يبقى مفتوحًا حتى صدور قرار** — ولا استثناءَ
+   * بسببٍ عابرٍ هنا، بخلاف إغلاق التحميل. فالفرقُ يعني بضاعةً ضاعت أو
+   * زادت، وإغلاقُه «ليمشي الحال» يقتل الثقة بالسجلّ كلّه. فالشاشةُ تعرض
+   * الفروقَ ولا تحمل زرَّ إغلاقٍ يتجاوزها.
+   */
+  const start = screen.indexOf("if (mode === 'inbound') {");
+  const end = screen.indexOf("if (mode === 'loading') {", start);
+  assert.ok(start > 0 && end > start, 'كتلةُ عرض الاستلام غير موجودة');
+  const view = screen.slice(start, end);
+  assert.ok(!/override|closeNote/i.test(view), 'شاشةُ الاستلام تحمل تجاوزًا — والفرقُ لا يُتجاوَز');
+  assert.ok(view.includes('discrepancy_rule'), 'الشاشةُ لا تقول للعامل لماذا لا يُغلق');
+  assert.ok(!svc.includes('inbound_sessions'), 'الاستلام يفتح مجموعةً تنتظر نشرَ قاعدة');
+  for (const imp of importsOf(path.join(SRC, 'services', 'lpn', 'inboundService.js'))) {
+    assert.ok(!/firebase/i.test(imp), `خدمةُ الاستلام تستورد «${imp}» — والكتابةُ تمرّ بـlpnService`);
+  }
+});
+
 test('★★ `palletMap` موصولٌ بخريطة المواقع — الحالةُ التي وُلد منها الحارس', () => {
   const map = fs.readFileSync(
     path.join(SRC, 'components', 'brandzo-erp', 'warehouse', 'LocationMap.jsx'),

@@ -99,6 +99,26 @@ const LEX = Object.freeze({
   close_reason: { ar: 'سببُ الإغلاق ناقصًا — يُقيّد باسمك', en: 'Reason for closing short — recorded under your name', fr: 'Motif de clôture incomplète — enregistré à votre nom' },
   close_and_depart: { ar: 'أغلق التحميل واعتمد الخروج', en: 'Close loading and approve departure', fr: 'Clôturer et approuver le départ' },
 
+  // ── استلام الوجهة ──
+  mode_inbound: { ar: 'الاستلام الوارد', en: 'Inbound', fr: 'Réception transfert' },
+  arriving_shipments: { ar: 'شحناتٌ في الطريق', en: 'Shipments in transit', fr: 'Expéditions en route' },
+  arriving_hint: { ar: 'ما غادر بهويّته ولم يُستلَم بعد.', en: 'What left with its identity and has not been received yet.', fr: "Ce qui est parti et n'a pas encore été reçu." },
+  no_arriving: { ar: 'لا شحنةَ في الطريق.', en: 'No shipment in transit.', fr: 'Aucune expédition en route.' },
+  on_truck: { ar: 'على الشاحنة', en: 'on the truck', fr: 'sur le camion' },
+  received_count: { ar: 'مُستلَمة', en: 'received', fr: 'reçues' },
+  received_of_expected: { ar: 'مُستلَمةٌ من المتوقّع', en: 'received of expected', fr: 'reçues sur prévu' },
+  not_arrived: { ar: 'لمّا تصل', en: 'not arrived', fr: 'pas encore arrivées' },
+  seal_intact: { ar: 'الختم سليم', en: 'Seal intact', fr: 'Scellé intact' },
+  seal_broken: { ar: 'الختم مكسور', en: 'Seal broken', fr: 'Scellé rompu' },
+  arrived_opened: { ar: 'وصلت مفتوحة', en: 'Arrived opened', fr: 'Arrivée ouverte' },
+  scan_arriving_pallet: { ar: 'امسح ملصق الطبلية الواصلة', en: 'Scan the arriving pallet label', fr: "Scannez l'étiquette de la palette reçue" },
+  open_discrepancies: { ar: 'فرقًا بلا قرار', en: 'discrepancies without a decision', fr: 'écarts sans décision' },
+  discrepancy_rule: {
+    ar: 'أيّ فرقٍ يبقى مفتوحًا حتّى صدور قرار — ولا يُغلق أمرُ النقل حتّى تُحسم الفروق. والحسمُ من الحوكمة بمسؤوليّةٍ مسمّاة.',
+    en: 'Any discrepancy stays open until a decision is issued — the transfer order does not close until they are resolved, and resolution comes from governance with named liability.',
+    fr: "Tout écart reste ouvert jusqu'à décision — l'ordre de transfert ne se clôture pas avant résolution, prononcée par la gouvernance avec responsabilité nommée.",
+  },
+
   // ── جرد الطبالي ──
   count_title: { ar: 'جرد الطبالي', en: 'Pallet stocktake', fr: 'Inventaire des palettes' },
   current_bin: { ar: 'الموقع الحاليّ', en: 'Current bin', fr: 'Emplacement actuel' },
