@@ -203,6 +203,65 @@ test('ملفٌّ لا نملكه لا يُعدّ خطرًا', () => {
   );
 });
 
+/**
+ * ═══ ملفٌّ خارج جدول المواضع — والقفلُ الذي كلّفه ═══
+ *
+ * `identityOnly` تُعيد `false` لكلّ ملفٍّ ليس في `SPOTS`، فالشرطان معًا يصيران
+ * «نعم» تلقائيًّا **ولو كانت النسختان متطابقتين حرفًا بحرف**.
+ *
+ * ★ وكلّف ذلك قفلًا كاملًا 2026-08-28: تغييرٌ في `.github/workflows/astro.yml`
+ * — **ولا تستطيع الأتمتةُ دفعَ ملفّات النشر** (GitHub يمنع `GITHUB_TOKEN` من
+ * `workflows`) — فنُقل بيدٍ إلى المستودعَين فصارا **متطابقَين**، ومع ذلك أوقف
+ * الحارسُ المزامنةَ لأنّ الملفّ ليس في الجدول. ولا مخرجَ إلّا `--force`.
+ */
+test('★★★ ملفٌّ خارج الجدول ونسختانا متطابقتان — لا خطر (وكان يصيح)', () => {
+  const same = 'name: Deploy\njobs:\n  build:\n    run: npm run prebuild\n';
+  const base = 'name: Deploy\njobs:\n  build:\n    run: node scripts/build-arch.mjs\n';
+  assert.equal(
+    identityOnly({ file: '.github/workflows/astro.yml', ours: same, theirs: same, me, you }),
+    false,
+    'المقدّمة: الملفّ خارج الجدول فـidentityOnly تقول «لا» حتّى للمتطابقَين'
+  );
+  assert.equal(
+    atRiskOfErasure({ file: '.github/workflows/astro.yml', ours: same, theirs: same, base, me, you }),
+    false,
+    'ما يساوي نسخةَ الشقيق لا يُفقد بترجيح الشقيق — ولو لم يكن في الجدول'
+  );
+});
+
+test('★★ وفرقُ نهايات الأسطر وحدَه ليس عملًا يُفقد', () => {
+  const ours = 'name: Deploy\r\njobs:\r\n  build: x\r\n';
+  const theirs = 'name: Deploy\njobs:\n  build: x\n';
+  const base = 'name: Deploy\njobs:\n  build: y\n';
+  assert.equal(
+    atRiskOfErasure({ file: '.github/workflows/astro.yml', ours, theirs, base, me, you }),
+    false,
+    'CRLF مقابل LF ليس اختلافَ محتوى — والمقارنةُ تمرّ بـlf()'
+  );
+});
+
+test('★★ وملفٌّ خارج الجدول لم نمسَّه أصلًا — لا خطر ولو تقدّم الشقيق', () => {
+  const base = 'a: 1\n';
+  const ours = 'a: 1\n'; // لم نغيّر شيئًا
+  const theirs = 'a: 1\nb: 2\n'; // الشقيق تقدّم وحدَه
+  assert.equal(
+    atRiskOfErasure({ file: '.github/workflows/astro.yml', ours, theirs, base, me, you }),
+    false,
+    'تقدّمُ الشقيق وحدَه لا يُفقدنا شيئًا — وهو الخطأُ الأوّلُ نفسُه في ثوبٍ آخر'
+  );
+});
+
+test('★ وعملٌ حقيقيٌّ في ملفٍّ خارج الجدول ما زال يُوقَف — لم يُفتح الباب', () => {
+  const base = 'a: 1\n';
+  const ours = 'a: 1\nسطرٌ كتبته إدارةُ تقنية المعلومات هنا وحدَها\n';
+  const theirs = 'a: 1\nb: 2\n';
+  assert.equal(
+    atRiskOfErasure({ file: '.github/workflows/astro.yml', ours, theirs, base, me, you }),
+    true,
+    'التليينُ ذهب أبعدَ ممّا يجب — صار يبتلع عملًا حقيقيًّا'
+  );
+});
+
 // ═══ حارس الانحراف على المستودع الحقيقيّ ══════════════════════════════════
 
 test('كلّ موضعٍ في الجدول موجودٌ على القرص — الجدول لا يذكر ملفًّا رحل', () => {

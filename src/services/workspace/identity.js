@@ -349,6 +349,24 @@ export function identityOnly({ file, ours, theirs, me, you }) {
  */
 export function atRiskOfErasure({ file, ours, theirs, base, me, you }) {
   if (ours == null) return false; // لا نملك الملفّ — لا شيء يُفقد
+
+  // ★★★ والشرطُ الأوّلُ قبلهما: **التطابق**.
+  //
+  // `identityOnly` تُعيد `false` لكلّ ملفٍّ خارج جدول المواضع — فالسؤالان
+  // أعلاه يصيران «نعم» تلقائيًّا لأيّ ملفٍّ لا يُختم، **ولو كانت نسختانا
+  // متطابقتين حرفًا بحرف**. فيصيح الحارسُ «سيُمحى» على ما لا يُمحى منه شيء.
+  //
+  // وكلّفنا ذلك قفلًا كاملًا (2026-08-28): تغييرٌ في ملفّ نشرٍ **لا تستطيع
+  // الأتمتةُ دفعَه** (GitHub يمنع `GITHUB_TOKEN` من ملفّات `workflows`)،
+  // فنُقل بيدٍ إلى المستودعَين — **فصارا متطابقَين**، ومع ذلك أوقف الحارسُ
+  // المزامنةَ لأنّ الملفّ ليس في الجدول. ولا مخرجَ إلّا `--force`.
+  //
+  // ومنطقُه بسيط: **ما يساوي نسخةَ الشقيق لا يُفقد بترجيح الشقيق.**
+  if (theirs != null && lf(ours) === lf(theirs)) return false;
+
+  // وكذلك ما لم نمسَّه أصلًا: يساوي الأصلَ المشترك ⇒ لا عملَ لنا فيه يُفقد.
+  if (base != null && lf(ours) === lf(base)) return false;
+
   const changedHere = !identityOnly({ file, ours, theirs: base, me, you });
   if (!changedHere) return false;
   return !identityOnly({ file, ours, theirs, me, you });
