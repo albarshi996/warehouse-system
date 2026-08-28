@@ -9,11 +9,31 @@
   "lastUpdatedBy": "Claude",
   "baseline": "٥٢ ثغرة في ٢٠ مكتبة: ١ حرجة · ٢٠ عالية · ٢٣ متوسّطة · ٨ منخفضة. والبوّابة موقعٌ ثابتٌ بلا خادم، وأكثرُ الثغرات في أدوات البناء التي لا تُنشر — وثلاثٌ فقط تصل متصفّح الموظّف (dompurify · mermaid · svgo).",
   "milestones": [
-    { "id": "م٠", "title": "إصلاح الإعداد وإغلاق الخطر", "estimate": "جلسة" },
-    { "id": "م١", "title": "الموجة ١ — الحرجة وأدوات البناء", "estimate": "جلسة" },
-    { "id": "م٢", "title": "الموجة ٢ — ما يصل المتصفّح", "estimate": "جلسة" },
-    { "id": "م٣", "title": "الموجة ٣ — النواة", "estimate": "1–2 جلسات" },
-    { "id": "م٤", "title": "الإقفال والتقرير", "estimate": "جلسة" }
+    {
+      "id": "م٠",
+      "title": "إصلاح الإعداد وإغلاق الخطر",
+      "estimate": "جلسة"
+    },
+    {
+      "id": "م١",
+      "title": "الموجة ١ — الحرجة وأدوات البناء",
+      "estimate": "جلسة"
+    },
+    {
+      "id": "م٢",
+      "title": "الموجة ٢ — ما يصل المتصفّح",
+      "estimate": "جلسة"
+    },
+    {
+      "id": "م٣",
+      "title": "الموجة ٣ — النواة",
+      "estimate": "1–2 جلسات"
+    },
+    {
+      "id": "م٤",
+      "title": "الإقفال والتقرير",
+      "estimate": "جلسة"
+    }
   ],
   "gaps": {
     "ث-١": "ثغرةٌ حرجةٌ واحدة: websocket-driver < 0.7.5 — فسادُ الرسائل عبر إساءة استعمال ترويسات الطول",
@@ -34,8 +54,14 @@
     }
   ],
   "whereToFind": [
-    { "what": "الوثيقة الحاكمة والجرد الكامل", "path": "docs/خطة-تحصين-التبعيات.md" },
-    { "what": "إعداد فحص التبعيّات", "path": ".github/dependabot.yml" }
+    {
+      "what": "الوثيقة الحاكمة والجرد الكامل",
+      "path": "docs/خطة-تحصين-التبعيات.md"
+    },
+    {
+      "what": "إعداد فحص التبعيّات",
+      "path": ".github/dependabot.yml"
+    }
   ],
   "tasks": [
     {
@@ -43,15 +69,24 @@
       "title": "إصلاحُ dependabot.yml وإغلاقُ طلبات أدوات النشر",
       "milestone": "م٠",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["ث-٧"],
+      "state": "done",
+      "gaps": [
+        "ث-٧"
+      ],
       "dependsOn": [],
-      "touches": [".github/dependabot.yml"],
+      "touches": [
+        ".github/dependabot.yml"
+      ],
       "acceptance": [
         "القفزاتُ الكبرى مستثناةٌ لأدوات GitHub كما هي مستثناةٌ للمكتبات",
         "الطلبات #١٠ إلى #١٤ مغلقةٌ بتعليقٍ يقول لماذا",
         "ولا طلبَ جديدٍ يُفتح بقفزةٍ كبرى في أدوات النشر"
-      ]
+      ],
+      "evidence": {
+        "commit": "2e1cdac",
+        "closedOn": "2026-08-28",
+        "note": "استثناءُ القفزات الكبرى لمنظومة github-actions + حارسٌ يقرأ الملفَّ نفسَه ويُسقط التعليقات (dependabotConfig.test.js) وأُثبت بالنقض على نسخةِ ما قبل الإصلاح · وأُغلقت الطلبات #١٠–#١٤ بتعليقٍ يشرح السبب بإذن المالك"
+      }
     },
     {
       "id": "SEC-101",
@@ -59,9 +94,17 @@
       "milestone": "م١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ث-١", "ث-٢"],
-      "dependsOn": ["SEC-000"],
-      "touches": ["package.json", "package-lock.json"],
+      "gaps": [
+        "ث-١",
+        "ث-٢"
+      ],
+      "dependsOn": [
+        "SEC-000"
+      ],
+      "touches": [
+        "package.json",
+        "package-lock.json"
+      ],
       "acceptance": [
         "websocket-driver ≥ 0.7.5 — الحرجةُ مغلقة",
         "nanoid · js-yaml · postcss · esbuild · @babel/core · brace-expansion · ws · adm-zip · ip-address مرقّاة",
@@ -75,9 +118,17 @@
       "milestone": "م٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ث-٣", "ث-٤"],
-      "dependsOn": ["SEC-101"],
-      "touches": ["package.json", "package-lock.json"],
+      "gaps": [
+        "ث-٣",
+        "ث-٤"
+      ],
+      "dependsOn": [
+        "SEC-101"
+      ],
+      "touches": [
+        "package.json",
+        "package-lock.json"
+      ],
       "acceptance": [
         "dompurify ≥ 3.4.9 · mermaid ≥ 11.16.1 · svgo ≥ 4.0.2 · sharp ≥ 0.35.0",
         "★ وفحصٌ **بصريّ** لمخطّطٍ واحدٍ على الأقلّ بعد mermaid — اختبارٌ أخضرُ لا يُثبت أنّ الرسمَ ما زال يُرسم",
@@ -90,9 +141,17 @@
       "milestone": "م٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ث-٥"],
-      "dependsOn": ["SEC-201"],
-      "touches": ["package.json", "package-lock.json", "astro.config.mjs"],
+      "gaps": [
+        "ث-٥"
+      ],
+      "dependsOn": [
+        "SEC-201"
+      ],
+      "touches": [
+        "package.json",
+        "package-lock.json",
+        "astro.config.mjs"
+      ],
       "acceptance": [
         "★★ لا تُرقّى مع غيرها — وحدَها في كوميتٍ مستقلّ",
         "بناءٌ كامل ناجح · وفحصُ عشر صفحاتٍ على الموقع المنشور",
@@ -105,9 +164,16 @@
       "milestone": "م٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ث-٢"],
-      "dependsOn": ["SEC-301"],
-      "touches": ["package.json", "package-lock.json"],
+      "gaps": [
+        "ث-٢"
+      ],
+      "dependsOn": [
+        "SEC-301"
+      ],
+      "touches": [
+        "package.json",
+        "package-lock.json"
+      ],
       "acceptance": [
         "البوّابةُ الخضراء كاملةً",
         "★ واختبارُ كتابةٍ حيّةٍ في Firestore بعد @grpc/grpc-js و protobufjs — هما نقلُ Firebase نفسُه"
@@ -119,9 +185,16 @@
       "milestone": "م٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ث-٦"],
-      "dependsOn": ["SEC-302"],
-      "touches": ["docs/خطة-تحصين-التبعيات.md", "SESSION_HANDOFF.md"],
+      "gaps": [
+        "ث-٦"
+      ],
+      "dependsOn": [
+        "SEC-302"
+      ],
+      "touches": [
+        "docs/خطة-تحصين-التبعيات.md",
+        "SESSION_HANDOFF.md"
+      ],
       "acceptance": [
         "صفرُ ثغرةٍ حرجةٍ أو عاليةٍ بلا قرارٍ مكتوب",
         "extract-zip مُعلَنةٌ متروكةً بسببها لا مخفيّة",
