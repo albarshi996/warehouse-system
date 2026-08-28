@@ -49,8 +49,10 @@ import { listenLocations } from '../../../services/locations/locationsService.js
 import { listenBalances } from '../../../services/balances/balancesService.js';
 // ‹LPN-511› الصلاحية تُعلَم قبل الضغط لا بعد ارتداد الخادم.
 import { uiGate } from '../../../services/lpn/lpnRoles.js';
+import { FieldLangSwitch, useFieldLang } from './useFieldLang.jsx';
 
 export default function ReceivingFlow() {
+  const { lang, dir, setLang, tr } = useFieldLang();
   const [me, setMe] = useState(null);
   const [items, setItems] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -379,20 +381,21 @@ export default function ReceivingFlow() {
   // نفسه، والحمولةُ التي مسحها قبل قليل.
   if (mode === 'putaway') {
     return (
-      <div className="o_theme" dir="rtl">
-        <ModeSwitch mode={mode} setMode={setMode} disabled={busy} />
+      <div className="o_theme" dir={dir}>
+        <FieldLangSwitch lang={lang} setLang={setLang} />
+        <ModeSwitch mode={mode} setMode={setMode} disabled={busy} tr={tr} />
         <RoleGate gate={putGate} />
         {flash && <Flash flash={flash} />}
 
         {!taskUnit ? (
           <>
-            <h2 className="text-lg font-bold text-ink mb-1">بانتظار التخزين ({queue.length})</h2>
+            <h2 className="text-lg font-bold text-ink mb-1">{tr('awaiting_putaway')} ({queue.length})</h2>
             <p className="text-ink-2 text-xs mb-3">
-              طبالٍ طُبعت ملصقاتُها ولم تبلغ رفًّا بعد.
-              {queueCapped && ' ⚠ بلغ سقفُ القائمة — المعروض ليس كلّ ما ينتظر.'}
+              {tr('awaiting_putaway_hint')}
+              {queueCapped && ` ⚠ ${tr('cap_reached')}`}
             </p>
             {queue.length === 0 ? (
-              <p className="text-ink-2 text-sm">لا طبليةَ تنتظر رفًّا. اعتمِد حمولةً من الحوكمة واطبع ملصقها.</p>
+              <p className="text-ink-2 text-sm">{tr('no_pallet_waiting')}</p>
             ) : (
               <ul className="space-y-2">
                 {queue.map((u) => (
@@ -462,7 +465,7 @@ export default function ReceivingFlow() {
                 <input
                   value={binCode}
                   onChange={(e) => setBinCode(e.target.value)}
-                  placeholder="امسح باركود الرفّ أو اكتبه"
+                  placeholder={tr('scan_bin')}
                   className="flex-1 rounded-lg border px-4 py-4 text-lg"
                   style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)', direction: 'ltr', textAlign: 'center' }}
                   autoFocus
@@ -504,7 +507,7 @@ export default function ReceivingFlow() {
                 className="btn btn-primary w-full py-3"
                 disabled={!putGate.allowed || busy || !binCode.trim() || (binVerdict && !binVerdict.ok && !binVerdict.canOverride)}
               >
-                أثبِت التخزين
+                {tr('confirm_putaway')}
               </button>
               <button
                 type="button"
@@ -512,7 +515,7 @@ export default function ReceivingFlow() {
                 disabled={busy}
                 onClick={() => { setTask(null); setTaskUnit(null); setBinCode(''); setOverrideNote(''); }}
               >
-                رجوعٌ للقائمة
+                {tr('back_to_list')}
               </button>
             </form>
           </>
@@ -524,8 +527,9 @@ export default function ReceivingFlow() {
   // ── اختيار الأمر ──
   if (!sessionId) {
     return (
-      <div className="o_theme" dir="rtl">
-        <ModeSwitch mode={mode} setMode={setMode} disabled={busy} />
+      <div className="o_theme" dir={dir}>
+        <FieldLangSwitch lang={lang} setLang={setLang} />
+        <ModeSwitch mode={mode} setMode={setMode} disabled={busy} tr={tr} />
         <RoleGate gate={recvGate} />
         {flash && <Flash flash={flash} />}
 
@@ -556,7 +560,7 @@ export default function ReceivingFlow() {
           </div>
         )}
 
-        <h2 className="text-lg font-bold text-ink mb-3">أوامر الشراء المفتوحة ({orders.length})</h2>
+        <h2 className="text-lg font-bold text-ink mb-3">{tr('open_pos')} ({orders.length})</h2>
         {orders.length === 0 ? (
           <p className="text-ink-2 text-sm">
             لا أمر شراءٍ معتمدٌ له رصيدٌ مفتوح. اعتمد أمرًا من صندوق المستندات ثمّ عُد.
@@ -597,7 +601,7 @@ export default function ReceivingFlow() {
           <div className="text-ink-2 text-xs">{session?.supplier} · {session?.warehouse}</div>
         </div>
         <div className="flex gap-2">
-          <button type="button" className="btn btn-secondary text-sm" onClick={newDraft} disabled={busy}>طبلية جديدة</button>
+          <button type="button" className="btn btn-secondary text-sm" onClick={newDraft} disabled={busy}>{tr('new_pallet')}</button>
           {/*
             ★ **تصحيح 2026-08-27 — طريقٌ مسدود:** كان هنا زرُّ الإنهاء وحده،
             فمن فتح جلسةً بالخطأ ولم يمسح فيها شيئًا يُردّ بـ«اتركها بسببٍ
@@ -611,7 +615,7 @@ export default function ReceivingFlow() {
               ترك الجلسة بسبب
             </button>
           ) : (
-            <button type="button" className="btn btn-secondary text-sm" onClick={endSession} disabled={busy}>إنهاء الجلسة</button>
+            <button type="button" className="btn btn-secondary text-sm" onClick={endSession} disabled={busy}>{tr('end_session')}</button>
           )}
         </div>
       </div>
@@ -766,10 +770,10 @@ function RoleGate({ gate }) {
   );
 }
 
-function ModeSwitch({ mode, setMode, disabled }) {
+function ModeSwitch({ mode, setMode, disabled, tr }) {
   return (
     <div className="flex gap-2 mb-4">
-      {[['receiving', 'الاستلام'], ['putaway', 'التخزين']].map(([id, label]) => (
+      {[['receiving', tr('mode_receiving')], ['putaway', tr('mode_putaway')]].map(([id, label]) => (
         <button
           key={id}
           type="button"

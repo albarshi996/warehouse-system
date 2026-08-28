@@ -33,8 +33,10 @@ import { normalizeScanned } from '../../../services/scan/scanEngine.js';
 import { assignToStaging, listStagingQueue, previewStaging } from '../../../services/lpn/stagingService.js';
 // ‹LPN-511› الصلاحية تُعلَم قبل الضغط لا بعد ارتداد الخادم.
 import { uiGate } from '../../../services/lpn/lpnRoles.js';
+import { FieldLangSwitch, useFieldLang } from './useFieldLang.jsx';
 
 export default function PickingFlow() {
+  const { lang, dir, setLang, tr } = useFieldLang();
   const [me, setMe] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [taskId, setTaskId] = useState('');
@@ -219,20 +221,21 @@ export default function PickingFlow() {
   // ── ‹LPN-309› طورُ التجهيز — ما بعد إقفال المهمّة لا شاشةٌ أخرى (ح-٤) ──
   if (mode === 'staging') {
     return (
-      <div className="o_theme" dir="rtl">
-        <StageSwitch mode={mode} setMode={setMode} disabled={busy} />
+      <div className="o_theme" dir={dir}>
+        <FieldLangSwitch lang={lang} setLang={setLang} />
+        <StageSwitch mode={mode} setMode={setMode} disabled={busy} tr={tr} />
         <RoleGate gate={stageGate} />
         {flash && <Flash flash={flash} />}
 
         {!stageUnit ? (
           <>
-            <h2 className="text-lg font-bold text-ink mb-1">تنتظر منطقةَ تجهيز ({stageQueue.length})</h2>
+            <h2 className="text-lg font-bold text-ink mb-1">{tr('awaiting_staging')} ({stageQueue.length})</h2>
             <p className="text-ink-2 text-xs mb-3">
-              طبالي صرفٍ أُقفلت ولم تُربط بمنطقةٍ بعد.
-              {stageCapped && ' ⚠ بلغ سقفُ القائمة — المعروض ليس كلّ ما ينتظر.'}
+              {tr('awaiting_staging_hint')}
+              {stageCapped && ` ⚠ ${tr('cap_reached')}`}
             </p>
             {stageQueue.length === 0 ? (
-              <p className="text-ink-2 text-sm">لا طبليةَ تنتظر. أقفِل مهمّةَ تحضيرٍ فتظهر هنا.</p>
+              <p className="text-ink-2 text-sm">{tr('no_pallet_staging')}</p>
             ) : (
               <ul className="space-y-2">
                 {stageQueue.map((u) => (
@@ -272,7 +275,7 @@ export default function PickingFlow() {
                 <input
                   value={stageBin}
                   onChange={(e) => setStageBin(e.target.value)}
-                  placeholder="امسح باركود منطقة التجهيز أو اكتبه"
+                  placeholder={tr('scan_staging_area')}
                   className="flex-1 rounded-lg border px-4 py-4 text-lg"
                   style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)', direction: 'ltr', textAlign: 'center' }}
                   autoFocus
@@ -294,7 +297,7 @@ export default function PickingFlow() {
                 className="btn btn-primary w-full py-3"
                 disabled={!stageGate.allowed || busy || !stageBin.trim() || (stageVerdict && !stageVerdict.ok)}
               >
-                اربِط بالمنطقة
+                {tr('assign_to_area')}
               </button>
               <button
                 type="button"
@@ -302,7 +305,7 @@ export default function PickingFlow() {
                 disabled={busy}
                 onClick={() => { setStageUnit(null); setStageBin(''); }}
               >
-                رجوعٌ للقائمة
+                {tr('back_to_list')}
               </button>
             </form>
           </>
@@ -313,11 +316,12 @@ export default function PickingFlow() {
 
   if (!taskId) {
     return (
-      <div className="o_theme" dir="rtl">
-        <StageSwitch mode={mode} setMode={setMode} disabled={busy} />
+      <div className="o_theme" dir={dir}>
+        <FieldLangSwitch lang={lang} setLang={setLang} />
+        <StageSwitch mode={mode} setMode={setMode} disabled={busy} tr={tr} />
         <RoleGate gate={pickGate} />
         {flash && <Flash flash={flash} />}
-        <h2 className="text-lg font-bold text-ink mb-3">مهامّ التحضير المفتوحة ({tasks.length})</h2>
+        <h2 className="text-lg font-bold text-ink mb-3">{tr('open_pick_tasks')} ({tasks.length})</h2>
         {tasks.length === 0 ? (
           <p className="text-ink-2 text-sm">لا مهمّة مفتوحة. تُنشأ المهامّ من مستند سحبٍ أو أمر بيعٍ معتمد.</p>
         ) : (
@@ -449,10 +453,10 @@ function RoleGate({ gate }) {
   );
 }
 
-function StageSwitch({ mode, setMode, disabled }) {
+function StageSwitch({ mode, setMode, disabled, tr }) {
   return (
     <div className="flex gap-2 mb-4">
-      {[['picking', 'التحضير'], ['staging', 'التجهيز']].map(([id, label]) => (
+      {[['picking', tr('mode_picking')], ['staging', tr('mode_staging')]].map(([id, label]) => (
         <button
           key={id}
           type="button"

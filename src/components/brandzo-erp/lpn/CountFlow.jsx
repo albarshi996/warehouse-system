@@ -27,8 +27,10 @@ import {
 } from '../scan/BarcodeCamera.jsx';
 import { useWedgeScanner } from '../scan/useWedgeScanner.js';
 import { normalizeScanned } from '../../../services/scan/scanEngine.js';
+import { FieldLangSwitch, useFieldLang } from './useFieldLang.jsx';
 
 export default function CountFlow() {
+  const { lang, dir, setLang, tr } = useFieldLang();
   const [me, setMe] = useState(null);
   const [bin, setBin] = useState('');
   const [code, setCode] = useState('');
@@ -59,8 +61,8 @@ export default function CountFlow() {
     e?.preventDefault?.();
     const lpn = String(scanned ?? code).trim();
     if (!lpn) return;
-    if (!bin.trim()) { say('err', 'امسح باركود الموقع أوّلًا — مشاهدةٌ بلا موقعٍ لا تُفيد الجرد.'); return; }
-    if (!actorName) { say('err', 'لم تُقرأ هويّتك بعد — أعد تحميل الصفحة.'); return; }
+    if (!bin.trim()) { say('err', tr('scan_bin_first')); return; }
+    if (!actorName) { say('err', tr('identity_not_read')); return; }
 
     setBusy(true);
     try {
@@ -86,7 +88,8 @@ export default function CountFlow() {
   useWedgeScanner(onScanned, { enabled: true });
 
   return (
-    <div className="o_theme" dir="rtl">
+    <div className="o_theme" dir={dir}>
+      <FieldLangSwitch lang={lang} setLang={setLang} />
       {!gate.allowed && (
         <div className="o_alert danger mb-3" style={{ fontSize: 'var(--o-font-size-sm)' }}>{gate.message}</div>
       )}
@@ -102,21 +105,21 @@ export default function CountFlow() {
       <div className="grid grid-cols-2 gap-2 mb-4">
         <div className="rounded-lg border px-3 py-2 text-center" style={{ borderColor: 'var(--o-border)' }}>
           <div className="text-xl font-bold text-ink tabular-nums">{totals.seen}</div>
-          <div className="text-xs text-ink-2">طبليةً شوهدت</div>
+          <div className="text-xs text-ink-2">{tr('pallets_seen')}</div>
         </div>
         <div className="rounded-lg border px-3 py-2 text-center" style={{ borderColor: 'var(--o-border)' }}>
           <div className="text-xl font-bold text-ink tabular-nums">{totals.sealed ?? 0}</div>
-          <div className="text-xs text-ink-2">مغلقةً سليمة</div>
+          <div className="text-xs text-ink-2">{tr('sealed_count')}</div>
         </div>
       </div>
 
       <label className="block mb-3">
-        <span className="text-xs text-ink-2">الموقع الحاليّ</span>
+        <span className="text-xs text-ink-2">{tr('current_bin')}</span>
         <div className="flex gap-2 mt-1">
           <input
             value={bin}
             onChange={(e) => setBin(e.target.value)}
-            placeholder="امسح باركود الرفّ"
+            placeholder={tr('scan_bin_first')}
             className="flex-1 rounded-lg border px-4 py-3"
             style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)', direction: 'ltr', textAlign: 'center' }}
             autoComplete="off"
@@ -124,7 +127,7 @@ export default function CountFlow() {
           <ScanCameraButton camera={camera} compact />
         </div>
       </label>
-      <ScanCameraPanel camera={camera} hint="امسح الرفّ أوّلًا، ثمّ الطبالي فيه واحدةً تلو أخرى." />
+      <ScanCameraPanel camera={camera} hint={tr('count_camera_hint')} />
 
       {/* ★ حالُ المشاهدة يُختار قبل المسح — لا يُسأل عنه بعده فيُبطئ العدّ. */}
       <div className="flex flex-wrap gap-2 mb-3">
@@ -145,7 +148,7 @@ export default function CountFlow() {
         <input
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          placeholder="امسح ملصق الطبلية"
+          placeholder={tr('scan_pallet_label')}
           className="w-full rounded-lg border px-4 py-4 text-lg mb-2"
           style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)', direction: 'ltr', textAlign: 'center' }}
           autoComplete="off"
@@ -153,7 +156,7 @@ export default function CountFlow() {
           disabled={!gate.allowed}
         />
         <button type="submit" className="btn btn-primary w-full py-3" disabled={busy || !gate.allowed || !code.trim()}>
-          سجّل المشاهدة
+          {tr('record_sighting')}
         </button>
       </form>
 
@@ -162,17 +165,14 @@ export default function CountFlow() {
         <div className="rounded-lg border px-4 py-3 mt-4" style={{ borderColor: 'var(--o-border)' }}>
           <div className="font-bold text-ink tabular-nums">{view.lpn}</div>
           <div className="text-ink-2 text-sm mt-1">{view.status} · {view.bin}</div>
-          {view.itemsHint && <div className="text-ink-2 text-sm mt-1">تحمل: {view.itemsHint}</div>}
+          {view.itemsHint && <div className="text-ink-2 text-sm mt-1">{tr('carries')}: {view.itemsHint}</div>}
           <div className={view.needsManualCount ? 'text-sm mt-2 font-bold text-ink' : 'text-sm mt-2 text-ink-2'}>
             {view.hint}
           </div>
         </div>
       )}
 
-      <p className="text-ink-2 text-xs mt-4 leading-relaxed">
-        الطبليةُ المغلقةُ سليمةُ الختم <strong>تُشهَد ولا تُعدّ</strong> — وهذه شهادةُ رؤيةٍ لا كمّيّة،
-        فلا تُغيّر رصيدًا. والمفتوحةُ أو التالفة تُعدّ صنفًا صنفًا من شاشة المسح كالمعتاد.
-      </p>
+      <p className="text-ink-2 text-xs mt-4 leading-relaxed">{tr('sighting_not_quantity')}</p>
     </div>
   );
 }

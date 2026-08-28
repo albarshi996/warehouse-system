@@ -257,6 +257,35 @@ test('★★ طبالي النقل موصولةٌ بلوحة النقل القا
   assert.ok(board.includes('unitsCapped'), 'سقفُ الجلب صامتٌ — فتبدو قائمةٌ ناقصةٌ كاملة');
 });
 
+test('★★ معجمُ الميدان موصولٌ بالشاشات الأربع — والعربيّةُ تبقى الأصل ‹LPN-O08›', () => {
+  const dir = path.join(SRC, 'components', 'brandzo-erp', 'lpn');
+  for (const f of ['ReceivingFlow.jsx', 'PickingFlow.jsx', 'CountFlow.jsx']) {
+    const src = fs.readFileSync(path.join(dir, f), 'utf8');
+    assert.ok(src.includes('useFieldLang'), `${f} لا تعرف لغةَ الميدان`);
+    assert.ok(src.includes('<FieldLangSwitch'), `${f} بلا مبدّلِ لغة`);
+    // ★ الاتّجاهُ يتبع اللغة — وإلّا ظهرت الإنجليزيّةُ في تخطيطٍ معكوس.
+    assert.ok(src.includes('dir={dir}'), `${f} تثبّت الاتّجاه فلا تنقلب مع اللغة`);
+  }
+  /*
+   * ★★★ والقيدُ الحاكم: المعجمُ **محصورٌ بالتطبيق الميدانيّ**. فلو تسرّب
+   * إلى البوابة لَصار نصفُها مترجَمًا ونصفُها لا — وهو أسوأ من عربيّةٍ
+   * كاملة. والبوّابة ٢٤٩ ملفَّ واجهةٍ لا يمسّها هذا العمل.
+   */
+  const outside = [];
+  const walk = (d) => {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const full = path.join(d, e.name);
+      if (e.isDirectory()) { walk(full); continue; }
+      if (!/\.(jsx|astro)$/.test(e.name)) continue;
+      if (full.includes(path.join('brandzo-erp', 'lpn'))) continue;
+      if (fs.readFileSync(full, 'utf8').includes('fieldLexicon')) outside.push(path.relative(SRC, full));
+    }
+  };
+  walk(path.join(SRC, 'components'));
+  walk(path.join(SRC, 'pages'));
+  assert.deepEqual(outside, [], `معجمُ الميدان تسرّب خارج تطبيقه: ${outside.join(' · ')}`);
+});
+
 test('★★ `palletMap` موصولٌ بخريطة المواقع — الحالةُ التي وُلد منها الحارس', () => {
   const map = fs.readFileSync(
     path.join(SRC, 'components', 'brandzo-erp', 'warehouse', 'LocationMap.jsx'),
