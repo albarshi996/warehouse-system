@@ -5,6 +5,10 @@ import { listenBalances } from '../../../services/balances/balancesService.js';
 import { TRANSFER_CHAIN } from '../../../services/documents/chain.js';
 import { pendingShipments, transferVariances, SHIPMENT_STATUS } from '../../../services/ledger/transferReports.js';
 import { getBasePath } from '../../../services/auth/authService.js';
+// ‹LPN-407› طبالي النقل — تبويبٌ في لوحة النقل القائمة لا شاشةٌ موازية (ح-٤).
+// والاتّجاه واحد: الشاشة تقرأ `lpn/`، و`ledger/` لا تعرفها (ح-٢).
+import { shipmentManifest, transferIdentityDecision } from '../../../services/lpn/transferPallets.js';
+import { listUnitsByState } from '../../../services/lpn/lpnService.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
 import Badge from '../../odoo/Badge.jsx';
@@ -67,6 +71,9 @@ export default function TransferBoard() {
   const [docs, setDocs] = useState([]);
   const [balances, setBalances] = useState([]);
   const [tab, setTab] = useState('pending');
+  // ‹LPN-407› الطبالي المحمّلة والمغادِرة — تُجلب عند فتح تبويبها وحده.
+  const [transitUnits, setTransitUnits] = useState([]);
+  const [unitsCapped, setUnitsCapped] = useState(false);
 
   useEffect(() => {
     const unsub = subscribeAuth(async (user) => {
@@ -85,6 +92,26 @@ export default function TransferBoard() {
       u2?.();
     };
   }, [me]);
+
+  /* ── ‹LPN-407› طبالي النقل ──────────────────────────
+   * الجلبُ عند فتح التبويب وحده: لوحةُ النقل تُفتح للتقارير في أغلب
+   * الأحيان، وقراءةُ الطبالي في كلّ فتحةٍ ثمنٌ بلا مقابل. */
+  useEffect(() => {
+    if (tab !== 'lpn') return undefined;
+    let alive = true;
+    Promise.all(['LOADING', 'LOADED'].map((st) => listUnitsByState(st, 200)))
+      .then((rows) => {
+        if (!alive) return;
+        setTransitUnits(rows.flat());
+        setUnitsCapped(rows.some((r) => r.length >= 200));
+      })
+      .catch(() => { if (alive) { setTransitUnits([]); setUnitsCapped(false); } });
+    return () => { alive = false; };
+  }, [tab]);
+
+  const manifest = useMemo(() => shipmentManifest(transitUnits), [transitUnits]);
+  // ★ قاعدةُ الهويّة تُعرَض من المنطق لا تُكتب نصًّا في الواجهة — فلا تفترق عنه.
+  const identityRule = useMemo(() => transferIdentityDecision({ opened: false }), []);
 
   const pending = useMemo(() => pendingShipments(docs), [docs]);
   const variances = useMemo(() => transferVariances(docs), [docs]);
@@ -201,6 +228,7 @@ export default function TransferBoard() {
               ['pending', 'الشحنات المعلّقة', 'truck'],
               ['variance', 'فروقات النقل', 'arrowLeftRight'],
               ['transit', 'رصيد مخزن النقل', 'package'],
+              ['lpn', 'طبالي النقل', 'truck'],
             ].map(([k, t, ic]) => (
               <button
                 key={k}
@@ -215,6 +243,53 @@ export default function TransferBoard() {
           </div>
 
           <div className="o_notebook_page">
+            {tab === 'lpn' && (
+              <>
+                <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', margin: '0 0 12px', lineHeight: 1.6 }}>
+                  <b style={{ color: 'var(--o-main-text-color)' }}>الطبالي المحمَّلة والمغادِرة</b> — ما خرج بهويّته ولم يُستلَم بعد.
+                  {' '}والطبليةُ الكاملةُ <b>تحتفظ برقمها</b> عبر النقل، والمقسَّمةُ تولد هويّةً جديدةً بنسبها.
+                  {unitsCapped && ' ⚠ بلغ سقفُ الجلب — المعروض ليس كلّ ما في الطريق.'}
+                </p>
+                {manifest.palletCount === 0 ? (
+                  <div className="o_ds_card o_ds_pad">
+                    <div className="o_alert success" style={{ margin: 0 }}>
+                      <div className="o_alert_title"><Icon name="checkCircle" size={16} /> لا طبليةَ في الطريق.</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="o_ds_card o_ds_pad">
+                    <div style={{ marginBottom: 10 }}>
+                      <b>{int(manifest.palletCount)}</b> طبليةً · <b>{int(manifest.lines.length)}</b> بندًا ·
+                      إجماليّ <b>{num(manifest.totalQty)}</b> وحدة
+                    </div>
+                    <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {manifest.lines.slice(0, 40).map((l) => (
+                        <li
+                          key={`${l.sku}__${l.batch}`}
+                          style={{ border: '1px solid var(--o-border-color)', borderRadius: 'var(--o-border-radius)', padding: '6px 10px' }}
+                        >
+                          <b>{l.sku}</b>{l.batch ? ` · دفعة ${l.batch}` : ''} — {num(l.qty)} وحدة
+                          <div style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+                            على: {l.pallets.join(' · ')}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    {manifest.lines.length > 40 && (
+                      <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+                        … و{int(manifest.lines.length - 40)} بندًا آخر.
+                      </p>
+                    )}
+                    <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', marginTop: 10 }}>
+                      {identityRule.keepsIdentity
+                        ? `الطبليةُ المنقولةُ كاملةً: ${identityRule.reason}`
+                        : identityRule.reason}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+
             {tab === 'pending' && (
               <div className="o_ds_card">
                 {pending.rows.length === 0 ? (

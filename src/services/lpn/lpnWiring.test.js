@@ -30,7 +30,6 @@ const SRC = path.join(HERE, '..', '..');
  * لكلٍّ مهمّتُه ليُعرف أين يُوصَل — لا «سنصله لاحقًا» بلا عنوان.
  */
 const PENDING_WIRING = new Map([
-  ['transferPallets.js', 'LPN-402/403/404 — النقلُ بالطبالي ينتظر وصلًا بشاشة النقل'],
 ]);
 
 /** كلّ ملفّات المصدر التي يجوز أن تستدعي — بلا اختبارات (الاختبار يستورد ليُثبت). */
@@ -237,6 +236,25 @@ test('★★★ جردُ الطبالي موصولٌ — و**لا رقمَ لل�
   // والصفحةُ مسجَّلةٌ في القائمة — وإلّا كانت يتيمةً لا يصل إليها أحد.
   const nav = fs.readFileSync(path.join(SRC, 'services', 'auth', 'navCatalog.js'), 'utf8');
   assert.ok(nav.includes('/dashboard/lpn-count'), 'الصفحةُ غيرُ مسجّلةٍ في القائمة');
+});
+
+test('★★ طبالي النقل موصولةٌ بلوحة النقل القائمة — ‹LPN-407›', () => {
+  const board = fs.readFileSync(
+    path.join(SRC, 'components', 'brandzo-erp', 'ledger', 'TransferBoard.jsx'),
+    'utf8'
+  );
+  assert.ok(board.includes('lpn/transferPallets.js'), 'اللوحة لا تعرف طبقة النقل');
+  for (const fn of ['shipmentManifest', 'transferIdentityDecision']) {
+    assert.ok(board.includes(fn), `«${fn}» مبنيٌّ ولا تستعمله اللوحة`);
+  }
+  /*
+   * ★ وقاعدةُ الهويّة **تُعرَض من المنطق لا تُكتب نصًّا في الواجهة**: نصٌّ
+   * مكرّرٌ في JSX يفترق عن `transferIdentityDecision` أوّلَ تعديلٍ فيها،
+   * فتقول الشاشةُ ما لا يفعله النظام.
+   */
+  assert.ok(board.includes('identityRule.reason'), 'قاعدةُ الهويّة مكتوبةٌ نصًّا لا مقروءةٌ من المنطق');
+  // ★ ولا حدَّ صامت: سقفُ الجلب يُعلَن حين يُبلَغ.
+  assert.ok(board.includes('unitsCapped'), 'سقفُ الجلب صامتٌ — فتبدو قائمةٌ ناقصةٌ كاملة');
 });
 
 test('★★ `palletMap` موصولٌ بخريطة المواقع — الحالةُ التي وُلد منها الحارس', () => {
