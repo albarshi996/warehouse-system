@@ -141,6 +141,14 @@ export const NAV_GROUPS = [
       // مركز متطلبات شركة الميزان: قراءة تنفيذية للحزمة BFP-SCM-REQ-2026،
       // ومصفوفة القرار بين البوابة وأودو وسجلّ المسائل التي تنتظر الحسم.
       { path: '/dashboard/requirements-command', label: 'مركز متطلبات التكامل', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
+      // المراجعة التنفيذية لسلاسل الإمداد [Codex ثم أعاد Claude بناءها بقرار
+      // المالك]: عرض محطات «من المتابعة إلى القرار» — لوحة المدير العام،
+      // القرارات بأثرَيها، المواقع (155 + الرحبة)، الكتالوج التشغيلي،
+      // ونموذج مكاتب الإدارات — عرض وحفظ محلّيّ فقط.
+      { path: '/dashboard/general-manager-operations-briefing', label: 'المراجعة التنفيذية لسلاسل الإمداد', icon: 'target', roles: ['admin', 'warehouse_manager'] },
+      // مركز عروض القطاعات: عرض مستقل لكل قطاع يشرح الدورة المقترحة والأنظمة
+      // والضوابط والقرارات المطلوبة، مع إبقاء حالات المواءمة معلنة بوضوح.
+      { path: '/dashboard/sector-presentations', label: 'عروض أنظمة القطاعات', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/acceptance-check', label: 'المطابقة والاستلام (UAT)', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/portal-value', label: 'لماذا البوابة تكامليّة لأودو', icon: 'grid', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/vendor-scorecard', label: 'بطاقة أداء الموردين', icon: 'users', roles: ['admin', 'warehouse_manager', 'purchase_officer', 'finance_manager'] },

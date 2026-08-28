@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 62,
-    "serviceDomains": 28,
-    "serviceFiles": 183,
-    "collections": 49,
+    "modules": 65,
+    "serviceDomains": 29,
+    "serviceFiles": 184,
+    "collections": 50,
     "roles": 15,
     "odooModels": 12,
     "odooGuards": 51,
@@ -20,6 +20,14 @@
     "pipelines": 3
   },
   "modules": [
+    {
+      "name": "[sector]",
+      "route": "/dashboard/[sector]",
+      "title": "",
+      "summary": "",
+      "file": "src/pages/dashboard/sector-presentations/[sector].astro",
+      "usesServices": []
+    },
     {
       "name": "acceptance-check",
       "route": "/dashboard/acceptance-check",
@@ -160,6 +168,16 @@
       "summary": "The 13 operational forms shipped under public/forms/. They are static HTML",
       "file": "src/pages/dashboard/forms.astro",
       "usesServices": []
+    },
+    {
+      "name": "general-manager-operations-briefing",
+      "route": "/dashboard/general-manager-operations-briefing",
+      "title": "المراجعة التنفيذية لسلاسل الإمداد",
+      "summary": "Supply Chain Executive Review — عرض شرائح تنفيذي كامل الشاشة.",
+      "file": "src/pages/dashboard/general-manager-operations-briefing.astro",
+      "usesServices": [
+        "briefing"
+      ]
     },
     {
       "name": "global-doc-cycles",
@@ -421,6 +439,14 @@
       "title": "سجلّ حركة الأدوار",
       "summary": "سجلّ حركة الأدوار — رصدٌ حيٌّ فعليّ للحركة في البوابة.",
       "file": "src/pages/dashboard/role-activity.astro",
+      "usesServices": []
+    },
+    {
+      "name": "sector-presentations",
+      "route": "/dashboard/sector-presentations",
+      "title": "عروض القطاعات التشغيلية",
+      "summary": "",
+      "file": "src/pages/dashboard/sector-presentations.astro",
       "usesServices": []
     },
     {
@@ -711,6 +737,20 @@
       "collections": [
         "balances"
       ]
+    },
+    {
+      "domain": "briefing",
+      "dir": "src/services/briefing",
+      "files": [
+        "gmReviewService.js"
+      ],
+      "fileCount": 1,
+      "testCount": 0,
+      "exports": [
+        "saveReview",
+        "subscribeReview"
+      ],
+      "collections": []
     },
     {
       "domain": "custody",
@@ -1688,6 +1728,7 @@
         "closeOperation",
         "createOperation",
         "findMasterFor",
+        "getOperation",
         "getScans",
         "indexMaster",
         "listOpenOperations",
@@ -2508,6 +2549,38 @@
         ]
       },
       {
+        "name": "gm_review",
+        "path": "gm_review",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager()",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
         "name": "hiring_requests",
         "path": "hiring_requests",
         "rules": [
@@ -2863,7 +2936,7 @@
             "actions": [
               "create"
             ],
-            "condition": "isStockActor() && request.resource.data.byUid == request.auth.uid",
+            "condition": "isStockActor() && request.resource.data.byUid == request.auth.uid && get(/databases/$(database)/documents/operations/$(opId)).data.status == 'open'",
             "roles": [
               "isStockActor"
             ]
