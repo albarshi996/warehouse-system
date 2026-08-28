@@ -21,8 +21,9 @@ import {
 } from '../../../services/gate/gateService.js';
 import { yardSnapshot, yardStage, visitTimers, visitAlerts } from '../../../services/fleet/yardModel.js';
 import { loadSummary, reasonLabel } from '../../../services/gate/gateModel.js';
-import { reconcileAll, LIABLE_PARTIES, liableLabel } from '../../../services/gate/gateReconcile.js';
-import { canWriteGate } from '../../../services/gate/gateRoles.js';
+import { reconcileAll, openVarianceProblem, LIABLE_PARTIES, liableLabel } from '../../../services/gate/gateReconcile.js';
+import { canWriteGate, canReadVisitor } from '../../../services/gate/gateRoles.js';
+import { readVisitor } from '../../../services/gate/gateService.js';
 
 const box = { borderColor: 'var(--o-border)', background: 'var(--o-surface)' };
 const up = (v) => String(v ?? '').trim().toUpperCase();
@@ -51,7 +52,24 @@ export default function GateLog() {
   useEffect(() => listenReceivingSessions((l) => setSessions(l), () => setSessions([])), []);
 
   const canDecide = canWriteGate(me?.role);
+  const seesVisitor = canReadVisitor(me?.role);
+  const [visitorOf, setVisitorOf] = useState({});
   const now = Date.now();
+
+  /**
+   * ق-٧: بياناتُ الزائر تُقرأ **عند الطلب** من مستندها الابن، لا مع كلّ
+   * زيارة. وردُّ القاعدة `permission-denied` يُقال نصًّا — فلا يُشبه الفراغُ
+   * «لا زائرَ لها».
+   */
+  async function loadVisitor(visitId) {
+    if (visitorOf[visitId]) { setVisitorOf((s) => ({ ...s, [visitId]: null })); return; }
+    try {
+      const v = await readVisitor(visitId);
+      setVisitorOf((s) => ({ ...s, [visitId]: v ?? { empty: true } }));
+    } catch {
+      setVisitorOf((s) => ({ ...s, [visitId]: { denied: true } }));
+    }
+  }
   const snap = useMemo(() => yardSnapshot(doors, visits, now), [doors, visits, now]);
 
   /** يقابل كلَّ زيارةٍ بجلستها — والمفتاحُ رقمُ أمر الشراء. */
@@ -116,7 +134,8 @@ export default function GateLog() {
           <ul className="space-y-2">
             {openVariances.map((r) => (
               <li key={r.visitId} className="rounded-lg border px-3 py-3" style={box}>
-                <div className="font-bold text-ink">{r.text}</div>
+                {/* نصُّ الفرق من الحارس نفسِه — فلا صيغتان لنفس القاعدة. */}
+                <div className="font-bold text-ink">{openVarianceProblem(r, r.decision) || r.text}</div>
                 <div className="text-xs text-ink-2 mt-1" style={{ direction: 'ltr', textAlign: 'right' }}>
                   {r.plate} · {r.gate.key}
                 </div>
@@ -210,6 +229,28 @@ export default function GateLog() {
                       <td>
                         {yardStage(v.stage)?.label || v.stage}
                         {alerts.length > 0 && <div className="text-xs text-ink-2 mt-1">{alerts[0]}</div>}
+                        {/* ق-٧: زرُّ الزائر لمن تسمح له القاعدة — ولزيارات الزوّار وحدها. */}
+                        {seesVisitor && ['visit', 'staff'].includes(v.reason) && (
+                          <>
+                            <button type="button" className="btn btn-secondary text-xs mt-1"
+                              onClick={() => loadVisitor(v.id)}>
+                              {visitorOf[v.id] ? 'أخفِ الزائر' : 'بيانات الزائر'}
+                            </button>
+                            {visitorOf[v.id]?.denied && (
+                              <div className="text-xs text-ink-2 mt-1">
+                                منعت القاعدةُ القراءة — بياناتُ الزوّار لضابط البوابة والمديرَين.
+                              </div>
+                            )}
+                            {visitorOf[v.id]?.empty && (
+                              <div className="text-xs text-ink-2 mt-1">لم تُسجَّل بياناتُ زائر.</div>
+                            )}
+                            {visitorOf[v.id]?.name && (
+                              <div className="text-xs text-ink-2 mt-1">
+                                {visitorOf[v.id].name} · إلى {visitorOf[v.id].host || '—'} · {visitorOf[v.id].phone || '—'}
+                              </div>
+                            )}
+                          </>
+                        )}
                       </td>
                       <td>{sum.in.text}</td>
                       <td>

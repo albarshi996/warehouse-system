@@ -11,8 +11,8 @@
   "counts": {
     "modules": 112,
     "serviceDomains": 48,
-    "serviceFiles": 517,
-    "collections": 88,
+    "serviceFiles": 518,
+    "collections": 89,
     "roles": 18,
     "odooModels": 12,
     "odooGuards": 51,
@@ -1965,11 +1965,12 @@
         "gateRoles.js",
         "gateRoles.test.js",
         "gateService.js",
+        "gateWiring.test.js",
         "palletLedger.js",
         "palletLedger.test.js"
       ],
-      "fileCount": 9,
-      "testCount": 4,
+      "fileCount": 10,
+      "testCount": 5,
       "exports": [
         "COUNTABLE_STATES",
         "EXIT_STATES",
@@ -2027,6 +2028,7 @@
         "palletTotal",
         "palletTypeLabel",
         "purposeOf",
+        "readVisitor",
         "reasonLabel",
         "receivedDeclared",
         "reconcileAll",
@@ -2043,7 +2045,8 @@
         "signedCount",
         "verify",
         "visitorGaps",
-        "writePalletMoves"
+        "writePalletMoves",
+        "writeVisitor"
       ],
       "collections": [
         "pallet_moves",
@@ -7563,6 +7566,42 @@
           {
             "actions": [
               "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "visitor",
+        "path": "yard_visits/visitor",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "isBootstrapAdmin() || (signedIn() && hasProfile() && isActive() && myRole() in ['admin', 'warehouse_manager', 'gate_officer'])",
+            "roles": [
+              "isBootstrapAdmin",
+              "signedIn",
+              "hasProfile",
+              "isActive",
+              "myRole"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isYardWriter()",
+            "roles": [
+              "isYardWriter"
+            ]
+          },
+          {
+            "actions": [
               "delete"
             ],
             "condition": "false",

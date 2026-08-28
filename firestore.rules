@@ -943,6 +943,24 @@ service cloud.firestore {
                       && request.resource.data.byUid == request.auth.uid;
         allow update, delete: if false;
       }
+
+      // ★★ بياناتُ الزائر ‹GATE-501 · قرار المالك ق-٧› — **مستندٌ ابنٌ لا حقل**.
+      //
+      // ولماذا؟ لأنّ القواعد تحرس المستند لا الحقل: `yard_visits` مقروءةٌ
+      // لكلّ مصادَق — ويجب أن تبقى كذلك (مشرفُ المناولة يقرأ الزيارات
+      // ليُسنِد الأبواب). فحقلُ زائرٍ عليها يعني اسمًا وهاتفًا **لشخصٍ ليس
+      // موظّفًا** يقرؤهما كلُّ من دخل البوّابة. ومنعٌ في الشاشة وحدَها زرٌّ
+      // مخفيٌّ فوق بابٍ مفتوح.
+      //
+      // والقراءةُ **أضيقُ من الكتابة** عمدًا: مشرفُ المناولة ودورُ الحركة
+      // يكتبان في الساحة ولا يريان زائرًا لا شأن لهما به.
+      match /visitor/{docId} {
+        allow read:   if isBootstrapAdmin() ||
+                         (signedIn() && hasProfile() && isActive() &&
+                          myRole() in ['admin', 'warehouse_manager', 'gate_officer']);
+        allow create, update: if isYardWriter();
+        allow delete: if false;
+      }
     }
 
     // ── دفتر الطبليات العائدة ‹GATE-301› — سجلٌّ ملحقٌ-فقط ──────────────

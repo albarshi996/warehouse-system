@@ -58,14 +58,57 @@ export async function checkIn(input, profile) {
     driverId: input?.driverId,
     reason: input.reason,
     load: { in: shapeInLoad(input?.load), out: {} },
-    visitor: shapeVisitor(input?.visitor),
   };
 
   const visitId = await openVisit(payload, profile, 'arrived');
   // الختمُ الثاني فورًا: الحارسُ سجّلها وهي أمامه، فزمنُ الانتظار يبدأ الآن.
   await advanceVisit(visitId, 'checkedIn', {}, profile);
+  await writeVisitor(visitId, input?.visitor, profile);
   await writePalletMoves('IN', payload.load.in, { visitId, plate: payload.plate, reason: payload.reason }, profile);
   return visitId;
+}
+
+/* ═══════════════ بياناتُ الزائر ‹GATE-501 · ق-٧› ═══════════════ */
+
+const VISITOR_SUB = 'visitor';
+/** معرّفٌ ثابت: زائرٌ واحدٌ للزيارة، وإعادةُ الكتابة تُحدّث ولا تُضاعف. */
+const VISITOR_DOC = 'current';
+
+/**
+ * ★★ لماذا **مجموعةٌ فرعيّة** لا حقلٌ على الزيارة؟
+ *
+ * لأنّ قواعد Firestore تحرس **المستند** لا الحقل: `yard_visits` مقروءةٌ لكلّ
+ * مصادَق (والساحةُ يجب أن تبقى كذلك — مشرفُ المناولة يقرأ الزيارات ليُسنِد
+ * الأبواب). فحقلُ `visitor` على المستند يعني أنّ اسمَ الزائر ورقمَ هاتفه
+ * يقرؤهما **كلُّ من دخل البوّابة** مهما ضيّقنا الشاشة.
+ *
+ * ومنعٌ في الشاشة وحدَها ليس منعًا — هو زرٌّ مخفيٌّ فوق بابٍ مفتوح. فنُقلت
+ * إلى مستندٍ ابنٍ له قاعدتُه: `isVisitorReader()` في `firestore.rules`.
+ * (نمطُ `attachments` القائم — الثقيلُ والحسّاس في مستندٍ منفصل.)
+ */
+export async function writeVisitor(visitId, visitor, profile) {
+  const v = shapeVisitor(visitor);
+  if (!v.name && !v.phone && !v.host) return false;
+  const { setDoc, doc: docRef } = await import('firebase/firestore');
+  await setDoc(docRef(db, 'yard_visits', visitId, VISITOR_SUB, VISITOR_DOC), {
+    ...v,
+    at: serverTimestamp(),
+    byUid: auth?.currentUser?.uid || null,
+    byName: profile?.name || auth?.currentUser?.email || 'غير معروف',
+  });
+  return true;
+}
+
+/**
+ * قراءةُ بيانات زائرٍ — تُستدعى **عند الطلب** لا مع كلّ زيارة.
+ *
+ * وترتدّ `permission-denied` لمن لا تسمح له القاعدة، والشاشةُ تقول ذلك نصًّا
+ * بدل أن تعرض فراغًا يُشبه «لا زائر».
+ */
+export async function readVisitor(visitId) {
+  const { getDoc, doc: docRef } = await import('firebase/firestore');
+  const snap = await getDoc(docRef(db, 'yard_visits', visitId, VISITOR_SUB, VISITOR_DOC));
+  return snap.exists() ? snap.data() : null;
 }
 
 /* ═══════════════ دفترُ الطبليات العائدة ‹GATE-301› ═══════════════ */
