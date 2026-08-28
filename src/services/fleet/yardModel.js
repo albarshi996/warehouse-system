@@ -27,6 +27,9 @@
  */
 
 import { toMillis } from '../documents/inbox.js';
+// ‹GATE-101› طبقةُ بوابة الأمن — توسعةٌ لهذه الدورة لا كيانٌ ثانٍ. والاتجاه
+// واحدٌ: هذا الملفّ يستورد من `gate/` و`gate/` لا يعرفه، فلا حلقة.
+import { purposeOf, shapeGateLoad, shapeVisitor, outLoadProblems, isGateReason } from '../gate/gateModel.js';
 
 const s = (v) => String(v ?? '').trim();
 const up = (v) => s(v).toUpperCase();
@@ -150,12 +153,26 @@ export function doorAccepts(door, purpose) {
  */
 export function shapeVisit(input) {
   const stage = yardStage(input?.stage) ? s(input.stage) : YARD_CYCLE[0].id;
+  const load = shapeGateLoad(input?.load);
+  const reason = isGateReason(input?.reason) ? s(input.reason) : '';
+  // ‹GATE-101 · ق-٣› الغرضُ يُشتقّ من السبب ولا يُسأل عنه الحارس.
+  // ★ والاشتقاقُ **لا يدهس القائم**: زيارةٌ بلا `reason` (كلُّ ما كُتب قبل هذه
+  // الطبقة) يعود اشتقاقُها `null` فيبقى `purpose` المخزَّن كما هو — وهو ما
+  // يحفظ رجعةَ `doorAccepts` لزياراتِ الأمس.
+  const derived = purposeOf(reason, load.in.state);
+  const purposeRaw = derived === null ? input?.purpose : derived || input?.purpose;
   return {
     plate: up(input?.plate),
     carrier: s(input?.carrier),
     driverName: s(input?.driverName),
     driverId: s(input?.driverId),
-    purpose: VISIT_PURPOSE[input?.purpose] ? input.purpose : VISIT_PURPOSE.inbound.id,
+    /** ‹GATE-101 ج‑١› سببُ الحركة — تسعةٌ في `gateModel.GATE_REASONS`. */
+    reason,
+    /** ‹GATE-101 ج‑٣/ج‑٥ · ق-٤› حمولتان في زيارةٍ واحدة: `in` و`out`. */
+    load,
+    /** ‹GATE-101 ق-٧› الزائر — اسمٌ وجهةٌ وهاتف، ولا وثيقةَ شخصيّةٍ تُحفظ. */
+    visitor: shapeVisitor(input?.visitor),
+    purpose: VISIT_PURPOSE[purposeRaw] ? purposeRaw : VISIT_PURPOSE.inbound.id,
     docRef: {
       type: up(input?.docRef?.type),
       number: s(input?.docRef?.number),
@@ -290,10 +307,15 @@ export function visitAlerts(visit, nowMs) {
  *     يفحص محتواه؛ وهذا يفحص **وجوده** على الزيارة).
  *   ٣ الباب: لا تخرج وهي تشغل بابًا — إخلاءٌ أوّلًا، وإلّا بقي الباب مشغولًا
  *     بمركبةٍ غادرت فيُحجب عن غيرها إلى الأبد.
+ *
+ * ★★ وقفلٌ رابعٌ ‹GATE-103›: **لا خروجَ محمّلًا بلا وصفِ حمولة**. أُضيف ولم
+ * يُبدَّل شيءٌ من الثلاثة — والفارغةُ هي الحالةُ الافتراضيّة فما كان يمرّ
+ * يمرّ. وحكمُه في `gate/gateModel.outLoadProblems` مختبَرًا، وهذا يستدعيه.
  */
 export function exitVerdict(visit) {
   const v = shapeVisit(visit);
   const problems = [];
+  problems.push(...outLoadProblems(v.load?.out));
 
   if (v.stage !== PERMIT_STAGE) {
     const st = yardStage(v.stage);
