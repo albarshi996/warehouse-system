@@ -6,6 +6,7 @@
  * هنا: صفوف تُضاف وتُحذف بحسب الشحنة.
  */
 import { emptyLine } from '../../../services/documents/schemaUtils.js';
+import { pasteDecision, applyPastePlan, pastedCodes } from '../../../services/documents/bulkPaste.js';
 
 const CELL =
   'w-full bg-transparent border-0 px-2 py-1.5 text-sm text-ink focus:outline-none ' +
@@ -17,6 +18,7 @@ export default function LineItemsTable({
   lines,
   onChange,
   onLookup,
+  onBulkPaste,
   disabled,
   uomOptions,
   binOptions,
@@ -31,6 +33,11 @@ export default function LineItemsTable({
     onChange(next);
   }
 
+  /** أهذا عمودٌ مرجعيّ؟ — يقرؤها الاستدعاءُ واللصقُ معًا، فلا تفترق القاعدتان. */
+  function lookupKind(column) {
+    return column.lookup || (column.key === 'sku' ? 'item' : null);
+  }
+
   /**
    * عمود عليه lookup: اكتمال القيمة (Enter/مغادرة الحقل) يستدعي الماستر.
    * وعمود `sku` مرجعيّ **دائمًا** بلا إعلانٍ في المخطّط (SAP-1 · ف‑٤٣):
@@ -38,10 +45,39 @@ export default function LineItemsTable({
    * في هذا المكان الواحد لا في ٣٨ مخطّطًا.
    */
   function triggerLookup(column, index, value) {
-    const kind = column.lookup || (column.key === 'sku' ? 'item' : null);
+    const kind = lookupKind(column);
     if (!kind || !onLookup) return;
     const v = String(value ?? '').trim();
     if (v) onLookup(kind, v, index, column.key);
+  }
+
+  /**
+   * اللصقُ الجماعيّ (BULK-102 · يسدّ ث‑٢ وث‑٣).
+   *
+   * عشرون كودًا في الحافظة كانت تصير نصًّا واحدًا في خانةٍ واحدة، لأنّ
+   * الخانة `input` لا تعرف الأسطر. هنا تُقرأ اللصقةُ **قبل** أن تصلها،
+   * فتصير صفوفًا — والصفوفُ تنمو بعددها بلا ضغطةِ «إضافة بند» (ث‑٣).
+   *
+   * ★★ ولا يُلتقط إلّا ما يعجز عنه القديم: كلمةٌ واحدةٌ تمرّ للمتصفّح كما
+   * كانت، فيبقى لصقُ الكود المفرد ومسارُ قارئ الباركود على حالهما في ٤٥
+   * مستندًا. يُعيد `true` إن التقط — وعندها وحدَها يُمنع الافتراضيّ.
+   */
+  function handleBulkPaste(column, index, text) {
+    const decision = pasteDecision({
+      text,
+      startIndex: index,
+      columnKeys: columns.map((c) => c.key),
+      startColumnKey: column.key,
+      lineCount: lines.length,
+    });
+    if (decision.kind !== 'bulk') return false;
+
+    const next = applyPastePlan(lines, decision.plan, () => emptyLine(schema));
+    const codes = pastedCodes(decision.plan, column.key);
+    // بلا محرّكٍ يسمع، تبقى الصفوفُ على الأقلّ — لصقٌ بلا حلٍّ خيرٌ من لصقٍ يضيع.
+    if (onBulkPaste) onBulkPaste(next, codes, column.key);
+    else onChange(next);
+    return true;
   }
 
   function addRow() {
@@ -82,6 +118,9 @@ export default function LineItemsTable({
                       disabled={disabled}
                       onChange={(v) => setCell(i, c.key, v)}
                       onCommit={(v) => triggerLookup(c, i, v)}
+                      // اللصقُ الجماعيّ في الخانات المرجعيّة وحدَها — الكودُ
+                      // هويّةٌ تُستدعى، وما سواه عمودٌ يُملأ تبعًا لا مصدرًا.
+                      onBulkPaste={lookupKind(c) ? (text) => handleBulkPaste(c, i, text) : null}
                       // SAP-3 (ف‑٤٢): عمود الوحدة اختيارٌ من سيّد الوحدات لا نصٌّ
                       // حرّ — مركزيًّا هنا لا في ٣٨ مخطّطًا، والنصّ القديم يبقى خيارًا.
                       uomChoices={c.key === 'uom' && uomOptions ? uomOptions(line) : null}
@@ -134,7 +173,7 @@ export default function LineItemsTable({
   );
 }
 
-function Cell({ column, value, onChange, onCommit, disabled, uomChoices, listId, verdict }) {
+function Cell({ column, value, onChange, onCommit, onBulkPaste, disabled, uomChoices, listId, verdict }) {
   // وحدة السطر: اختيارٌ من قائمة الصنف (أو السيّد كلّه) — القيمة القديمة
   // غير المعروفة تظهر خيارًا كما كُتبت، فلا يُكسر مستندٌ قائم.
   if (uomChoices) {
@@ -181,6 +220,11 @@ function Cell({ column, value, onChange, onCommit, disabled, uomChoices, listId,
       placeholder={column.scannable ? 'امسح أو اكتب' : ''}
       onChange={(e) => onChange(e.target.value)}
       onBlur={(e) => onCommit?.(e.target.value)}
+      // لصقةٌ متعدّدةُ الأسطر تُقرأ هنا وتُمنع من الخانة — ولصقُ الكلمة
+      // الواحدة يمرّ كما كان، فلا يُغيَّر ما لا يحتاج تغييرًا.
+      onPaste={(e) => {
+        if (onBulkPaste?.(e.clipboardData?.getData('text') ?? '')) e.preventDefault();
+      }}
       onKeyDown={(e) => {
         // قارئ الباركود «يكتب» ثم يرسل Enter — هذه لحظة الاستدعاء.
         if (e.key === 'Enter') {

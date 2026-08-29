@@ -112,3 +112,27 @@ export function applyPastePlan(lines, plan, makeLine) {
   }
   return next;
 }
+
+/**
+ * قرارُ اللصق في خانةٍ مرجعيّة: أيُترك للمتصفّح أم يُلتقط جملةً؟
+ *
+ * ★★ **هذه هي البوّابة التي تحمي ٤٥ مستندًا.** المكوّن واحدٌ يخدمها كلَّها،
+ * ومسارُ قارئ الباركود يمرّ بالخانة نفسِها. فالقاعدة: **لا يُلتقط إلّا ما
+ * يعجز عنه القديم** — كلمةٌ واحدةٌ تُترك للمتصفّح كما كانت، وخطّةٌ خاويةٌ
+ * تُترك أيضًا. والالتقاطُ استثناءٌ يُبرّر نفسه لا أصلٌ يُفترض.
+ *
+ * @returns {{kind:'default'}|{kind:'bulk', plan: object}}
+ */
+export function pasteDecision(input) {
+  if (!isBulkPaste(input?.text)) return { kind: 'default' };
+  const plan = planPaste(input || {});
+  if (!plan.rows.length) return { kind: 'default' };
+  return { kind: 'bulk', plan };
+}
+
+/** أكوادُ اللصقة في عمود الاستدعاء — بفهارس بنودها، وبلا فارغ. */
+export function pastedCodes(plan, columnKey) {
+  return (plan?.rows || [])
+    .map(({ index, patch }) => ({ index, value: patch?.[columnKey] || '' }))
+    .filter((c) => c.value);
+}

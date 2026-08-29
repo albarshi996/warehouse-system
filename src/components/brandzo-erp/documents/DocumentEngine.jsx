@@ -351,6 +351,18 @@ export default function DocumentEngine() {
     }
   }
 
+  /**
+   * لصقةٌ جماعيّة (BULK-102 · يسدّ ث‑٢ وث‑٣): الجدولُ قرأ اللصقة وبنى
+   * الصفوف، وهنا تُكتب دفعةً واحدة — تحديثُ حالةٍ واحدٌ للّصقة كلِّها.
+   *
+   * والحلُّ الجماعيّ (سؤالُ الماستر عن العشرين) يلحق في BULK-103؛ فحتّى
+   * ذلك الحين تنمو الصفوفُ بأكوادها ويُكمل الموظّف بالاستدعاء المعتاد.
+   */
+  function handleBulkPaste(nextLines, codes) {
+    patchLines(nextLines);
+    flash(`📋 لُصق ${codes.length} كودًا في ${codes.length} بندًا.`);
+  }
+
   function patchChecklist(next) {
     setDoc((d) => ({ ...d, header: { ...d.header, _checklist: next } }));
     setDirty(true);
@@ -692,6 +704,7 @@ export default function DocumentEngine() {
                 disabled={!editable}
                 onChange={patchLines}
                 onLookup={handleLineLookup}
+                onBulkPaste={handleBulkPaste}
                 uomOptions={(line) => uomOptionsForLine(line, itemForLine(line, itemIndexes))}
                 binOptions={binChoices}
                 binVerdict={(value) => binCellVerdict(value, locationsList)}

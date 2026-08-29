@@ -9,10 +9,26 @@
   "lastUpdatedBy": "Claude",
   "baseline": "جدولُ البنود مكوّنٌ واحدٌ (LineItemsTable.jsx · ١٩٣ سطرًا) يخدم ٤٥ مخطّطًا، ومحرّكُ الاستدعاء (DocumentEngine.handleLineLookup) يحلّ الكودَ بالماستر ثمّ الباركود ثمّ كتالوج الطرف ويجلب الاسمَ والوحدةَ والمعاملَ — كلُّه مبنيٌّ ويعمل لصنفٍ واحدٍ في المرّة. والناقصُ طبقةُ الجملة وحدَها: لصقٌ متعدّدُ الأسطر · نموُّ صفوف · حلٌّ جماعيّ · تمييزُ مجهولٍ ومكرّر.",
   "milestones": [
-    { "id": "م٠", "title": "المحلّل — مصدرٌ واحدٌ لحلّ الكود", "estimate": "جلسة" },
-    { "id": "م١", "title": "اللصق — القراءة والتخطيط والوصل", "estimate": "١–٢ جلسة" },
-    { "id": "م٢", "title": "الحكم — المجهول والمكرّر والصفوف", "estimate": "جلسة" },
-    { "id": "م٣", "title": "الفحص الحيّ والإقفال", "estimate": "جلسة" }
+    {
+      "id": "م٠",
+      "title": "المحلّل — مصدرٌ واحدٌ لحلّ الكود",
+      "estimate": "جلسة"
+    },
+    {
+      "id": "م١",
+      "title": "اللصق — القراءة والتخطيط والوصل",
+      "estimate": "١–٢ جلسة"
+    },
+    {
+      "id": "م٢",
+      "title": "الحكم — المجهول والمكرّر والصفوف",
+      "estimate": "جلسة"
+    },
+    {
+      "id": "م٣",
+      "title": "الفحص الحيّ والإقفال",
+      "estimate": "جلسة"
+    }
   ],
   "gaps": {
     "ث-١": "منطقُ حلّ الكود محبوسٌ داخل handleLineLookup: يقرأ الحالة ويكتبها ويعرض رسالةً لكلّ نداء — فلا يُستدعى لعشرين كودًا إلّا بعشرين تحديثِ حالةٍ وعشرين رسالة",
@@ -46,10 +62,22 @@
     }
   ],
   "whereToFind": [
-    { "what": "الوثيقة الحاكمة", "path": "docs/خطة-الإدخال-الجماعي-للبنود.md" },
-    { "what": "جدول البنود (المكوّن الواحد)", "path": "src/components/brandzo-erp/documents/LineItemsTable.jsx" },
-    { "what": "محرّك المستندات وحلّ الكود", "path": "src/components/brandzo-erp/documents/DocumentEngine.jsx" },
-    { "what": "بناء البند الفارغ والمستند الجديد", "path": "src/services/documents/schemaUtils.js" }
+    {
+      "what": "الوثيقة الحاكمة",
+      "path": "docs/خطة-الإدخال-الجماعي-للبنود.md"
+    },
+    {
+      "what": "جدول البنود (المكوّن الواحد)",
+      "path": "src/components/brandzo-erp/documents/LineItemsTable.jsx"
+    },
+    {
+      "what": "محرّك المستندات وحلّ الكود",
+      "path": "src/components/brandzo-erp/documents/DocumentEngine.jsx"
+    },
+    {
+      "what": "بناء البند الفارغ والمستند الجديد",
+      "path": "src/services/documents/schemaUtils.js"
+    }
   ],
   "tasks": [
     {
@@ -57,8 +85,10 @@
       "title": "المحلّل — يُنتزع حلُّ الكود من المحرّك ليصير مصدرًا واحدًا لنداءٍ ولجملة",
       "milestone": "م٠",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["ث-١"],
+      "state": "done",
+      "gaps": [
+        "ث-١"
+      ],
       "dependsOn": [],
       "touches": [
         "src/services/documents/itemResolver.js",
@@ -69,40 +99,64 @@
         "ترتيبُ البحث الخماسيّ محفوظٌ حرفيًّا: الكود ثمّ الباركود ثمّ كتالوج الطرف (SR-49/SR-50)",
         "★ والاستدعاءُ المفرد يمرّ بها هو الآخر — مصدرٌ واحدٌ لا نسختان تفترقان",
         "ولا تغيُّرَ في سلوك الاستدعاء المفرد: البوّابةُ الخضراء نفسُها قبل وبعد"
-      ]
+      ],
+      "evidence": {
+        "commit": "02a6833",
+        "closedOn": "2026-08-29"
+      }
     },
     {
       "id": "BULK-101",
       "title": "قارئُ اللصق — خالصٌ ومختبَرٌ قبل أيّ واجهة",
       "milestone": "م١",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["ث-٢"],
+      "state": "done",
+      "gaps": [
+        "ث-٢"
+      ],
       "dependsOn": [],
-      "touches": ["src/services/documents/bulkPaste.js"],
+      "touches": [
+        "src/services/documents/bulkPaste.js"
+      ],
       "acceptance": [
         "يُفكّك النصَّ الملصوق أسطرًا وأعمدةً (سطرٌ لكلّ صنف، وتبويبٌ بين الأعمدة كما ينسخ إكسل)",
         "يُسقط الأسطرَ الفارغةَ ويقلّم الفراغَ ومحارفَ CR — فلصقُ إكسل بنهايات CRLF لا يُنتج أكوادًا بمحرفٍ زائد",
         "يخطّط الصفوف: كم صفًّا يُملأ من القائم وكم يُضاف — بلا لمسِ ما كتبه الموظّف بيده",
         "★ والعمودُ الثاني وما بعده يُملأ في أعمدة الجدول بالترتيب (BULK-O02)",
         "ولا شيءَ من هذا يحتاج متصفّحًا — اختباراتٌ خالصةٌ تسبق الوصل"
-      ]
+      ],
+      "evidence": {
+        "commit": "c4bf854",
+        "closedOn": "2026-08-29"
+      }
     },
     {
       "id": "BULK-102",
       "title": "الوصلُ في الجدول — اللصقُ يُلتقط في المكوّن الواحد",
       "milestone": "م١",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["ث-٢", "ث-٣", "ث-٩"],
-      "dependsOn": ["BULK-101"],
-      "touches": ["src/components/brandzo-erp/documents/LineItemsTable.jsx"],
+      "state": "done",
+      "gaps": [
+        "ث-٢",
+        "ث-٣",
+        "ث-٩"
+      ],
+      "dependsOn": [
+        "BULK-101"
+      ],
+      "touches": [
+        "src/components/brandzo-erp/documents/LineItemsTable.jsx"
+      ],
       "acceptance": [
         "لصقٌ متعدّدُ الأسطر في خانةٍ مرجعيّة يُلتقط ويُمرَّر للمحرّك، ويُمنع السلوكُ الافتراضيّ",
         "★ ولصقُ سطرٍ واحدٍ يبقى كما كان — لا يُغيَّر ما لا يحتاج تغييرًا",
         "★★ ومسارُ قارئ الباركود (كتابةٌ ثمّ Enter) يعمل كما كان — باختبارٍ يُثبته لا بالظنّ",
         "والصفوفُ تنمو بعدد الأكواد بلا ضغطةِ «إضافة بند»"
-      ]
+      ],
+      "evidence": {
+        "commit": "PENDING",
+        "closedOn": "2026-08-29"
+      }
     },
     {
       "id": "BULK-103",
@@ -110,9 +164,17 @@
       "milestone": "م١",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ث-١", "ث-٨"],
-      "dependsOn": ["BULK-000", "BULK-102"],
-      "touches": ["src/components/brandzo-erp/documents/DocumentEngine.jsx"],
+      "gaps": [
+        "ث-١",
+        "ث-٨"
+      ],
+      "dependsOn": [
+        "BULK-000",
+        "BULK-102"
+      ],
+      "touches": [
+        "src/components/brandzo-erp/documents/DocumentEngine.jsx"
+      ],
       "acceptance": [
         "تحديثُ حالةٍ واحدٌ للّصقة كلِّها لا واحدٌ لكلّ صنف",
         "ورسالةٌ واحدةٌ تلخّص: كم استُبين وكم جُهل وكم تكرّر",
@@ -126,8 +188,13 @@
       "milestone": "م٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ث-٦", "ث-٧"],
-      "dependsOn": ["BULK-103"],
+      "gaps": [
+        "ث-٦",
+        "ث-٧"
+      ],
+      "dependsOn": [
+        "BULK-103"
+      ],
       "touches": [
         "src/components/brandzo-erp/documents/LineItemsTable.jsx",
         "src/services/documents/bulkPaste.js"
@@ -145,8 +212,14 @@
       "milestone": "م٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ث-٣", "ث-٤", "ث-٥"],
-      "dependsOn": ["BULK-102"],
+      "gaps": [
+        "ث-٣",
+        "ث-٤",
+        "ث-٥"
+      ],
+      "dependsOn": [
+        "BULK-102"
+      ],
       "touches": [
         "src/services/documents/schemaUtils.js",
         "src/components/brandzo-erp/documents/DocumentEngine.jsx"
@@ -165,9 +238,16 @@
       "milestone": "م٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["ث-٩"],
-      "dependsOn": ["BULK-104", "BULK-105"],
-      "touches": ["docs/تقرير-الإدخال-الجماعي.md"],
+      "gaps": [
+        "ث-٩"
+      ],
+      "dependsOn": [
+        "BULK-104",
+        "BULK-105"
+      ],
+      "touches": [
+        "docs/تقرير-الإدخال-الجماعي.md"
+      ],
       "acceptance": [
         "★★ لصقُ عشرين كودًا حقيقيًّا في مستندٍ حقيقيّ في المتصفّح — ويُقاس: عشرون بندًا بأسمائها ووحداتها",
         "ومنها أكوادٌ مجهولةٌ ومكرّرة — فيُرى العلامةُ والتنبيهُ لا يُفترضان",

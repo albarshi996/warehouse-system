@@ -11,7 +11,7 @@
   "counts": {
     "modules": 116,
     "serviceDomains": 51,
-    "serviceFiles": 569,
+    "serviceFiles": 570,
     "collections": 97,
     "roles": 18,
     "odooModels": 12,
@@ -1427,6 +1427,7 @@
         "branchCycle.test.js",
         "bulkPaste.js",
         "bulkPaste.test.js",
+        "bulkPasteWiring.test.js",
         "cc.js",
         "chain.js",
         "chain.test.js",
@@ -1526,8 +1527,8 @@
         "vsi.js",
         "vsr.js"
       ],
-      "fileCount": 108,
-      "testCount": 34,
+      "fileCount": 109,
+      "testCount": 35,
       "exports": [
         "ACCEPTED_ATTACHMENT_TYPES",
         "ATTACHMENT_ENTITY_KINDS",
@@ -1793,6 +1794,8 @@
         "partyFieldFor",
         "partyOf",
         "partyOptions",
+        "pasteDecision",
+        "pastedCodes",
         "paymentTotal",
         "pickWarnings",
         "planPaste",
