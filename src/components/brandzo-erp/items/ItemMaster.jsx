@@ -7,6 +7,7 @@ import {
 } from '../../../services/items/itemService.js';
 import { canImport } from '../../../services/items/itemsImportService.js';
 import { uomDebtReport, uomDebtExportRows } from '../../../services/items/uomWiring.js';
+import { exportItemsMaster } from '../../../services/excel/excelExport.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { totalQty, stockValue, fefoSort, expiryStatus } from '../../../services/balances/balanceKey.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
@@ -69,6 +70,26 @@ export default function ItemMaster() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'دين الوحدات');
     XLSX.writeFile(wb, 'Brandzo-UoM-Debt.xlsx');
+  }
+
+  /**
+   * تصديرُ الماستر إلى إكسل — **الاتّجاه المفقود**.
+   *
+   * الشاشةُ كانت تستورد ولا تُصدّر، و`exportItemsMaster` مبنيّةٌ منذ زمنٍ
+   * **بلا مستدعٍ**. وأثرُ النقص عمليّ: من أراد أن يعرف أيُّ الأصناف مسجَّلٌ
+   * قبل أن يستورد دفعةً جديدة لم يكن أمامه إلّا أن يقلّب الشاشة صفحةً صفحة.
+   *
+   * والملفُّ يخرج **بترويسة الاستيراد نفسِها** — فما يخرج يعود كما هو.
+   * ويُصدَّر ما تراه العينُ الآن (بعد البحث والأرشيف) لا ما في القاعدة كلِّها.
+   */
+  function exportMaster() {
+    try {
+      const stamp = new Date().toISOString().slice(0, 10);
+      const name = exportItemsMaster(filtered, { fileName: `Brandzo_Items_Master_${stamp}` });
+      setToast({ kind: 'ok', text: `صُدِّر ${filtered.length} صنفًا إلى ${name}` });
+    } catch (e) {
+      setToast({ kind: 'err', text: e?.message || 'تعذّر التصدير.' });
+    }
   }
 
   // الدور — لإظهار زرّ الاستيراد للمخوَّلين فقط (الإلزام الحقيقي في قواعد Firestore).
@@ -269,6 +290,16 @@ export default function ItemMaster() {
           <nav className="o_breadcrumb" aria-label="مسار التنقّل"><span className="o_active">إدارة الأصناف</span></nav>
         </div>
         <div className="o_cp_end" style={{ gap: '8px' }}>
+          {/* التصدير متاحٌ لكلّ من يرى القائمة — يُخرج ما هو معروضٌ أمامه لا أكثر. */}
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={exportMaster}
+            disabled={!filtered.length}
+            title="يُخرج الأصناف المعروضة بترويسة الاستيراد نفسها"
+          >
+            <Icon name="arrowUpTray" size={15} /> تصدير الأصناف
+          </button>
           {canImport(me?.role) && (
             <>
               <button

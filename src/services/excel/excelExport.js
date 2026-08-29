@@ -78,8 +78,26 @@ export function exportDataset(datasetKey, records, opts = {}) {
   }
 }
 
+/**
+ * صفوفُ تصدير الماستر — **الرحلةُ ذهابًا وإيابًا بلا فقد**.
+ *
+ * الصنفُ يُخزَّن بـ`barcodes[]` (قائمة، فالعبوةُ الواحدة قد تحمل أكثر من
+ * باركود)، والشيتُ عمودان: `barcode` و`barcodeAlt`. فلو صُدّر السجلُّ كما
+ * هو لخرج العمودان **فارغَين** — تصديرٌ يبدو ناجحًا ويُسقط الباركودات صامتًا،
+ * ثمّ يُعاد استيرادُه فيمحوها. فيُفرَد الأوّلُ في `barcode` والباقي في
+ * `barcodeAlt` مفصولًا بفاصلة (وهي صيغةُ `splitMulti` نفسُها عند القراءة).
+ *
+ * دالّةٌ خالصةٌ تُختبر وحدها — والزرُّ في الشاشة يستدعيها لا يُعيد بناءها.
+ */
+export function itemsExportRows(items) {
+  return (items ?? []).map((it) => {
+    const codes = (it?.barcodes ?? []).map((c) => String(c ?? '').trim()).filter(Boolean);
+    return { ...it, barcode: codes[0] ?? '', barcodeAlt: codes.slice(1).join(', ') };
+  });
+}
+
 /** Convenience wrappers matching the three canonical collections. */
-export const exportItemsMaster = (items, opts) => exportDataset('items', items, opts);
+export const exportItemsMaster = (items, opts) => exportDataset('items', itemsExportRows(items), opts);
 export const exportInboundLog = (entries, opts) => exportDataset('inbound', entries, opts);
 export const exportOutboundLog = (entries, opts) => exportDataset('outbound', entries, opts);
 

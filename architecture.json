@@ -11,7 +11,7 @@
   "counts": {
     "modules": 116,
     "serviceDomains": 51,
-    "serviceFiles": 570,
+    "serviceFiles": 571,
     "collections": 97,
     "roles": 18,
     "odooModels": 12,
@@ -1912,10 +1912,11 @@
         "excelImport.js",
         "excelSchema.js",
         "excelSchema.test.js",
-        "excelTemplate.test.js"
+        "excelTemplate.test.js",
+        "itemsExport.test.js"
       ],
-      "fileCount": 5,
-      "testCount": 2,
+      "fileCount": 6,
+      "testCount": 3,
       "exports": [
         "DATASETS",
         "IMPORT_TEMPLATE_DATASETS",
@@ -1932,6 +1933,7 @@
         "exportTemplateWithGuide",
         "importFingerprint",
         "importSheet",
+        "itemsExportRows",
         "normalizeBarcode",
         "normalizeHeader",
         "resolveHeaderCell",
