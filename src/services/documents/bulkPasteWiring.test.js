@@ -22,12 +22,15 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { pasteDecision, pastedCodes } from './bulkPaste.js';
+import { contentLines, emptyDocument } from './schemaUtils.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const TABLE = path.join(HERE, '..', '..', 'components', 'brandzo-erp', 'documents', 'LineItemsTable.jsx');
 const ENGINE = path.join(HERE, '..', '..', 'components', 'brandzo-erp', 'documents', 'DocumentEngine.jsx');
 const table = fs.readFileSync(TABLE, 'utf8');
 const engine = fs.readFileSync(ENGINE, 'utf8');
+const print = fs.readFileSync(path.join(HERE, '..', '..', 'components', 'brandzo-erp', 'documents', 'DocumentPrint.jsx'), 'utf8');
+const modal = fs.readFileSync(path.join(HERE, '..', '..', 'components', 'brandzo-erp', 'documents', 'InlineCreateModal.jsx'), 'utf8');
 
 const ctx = (text) => ({
   text,
@@ -138,4 +141,45 @@ test('★★ والدمجُ زرٌّ لا قاعدة: يُستدعى من onClic
 test('★ والمكرّرُ يُقاس على البنود الآن — فيذهب التنبيهُ بالدمج بلا أثرٍ عالق', () => {
   assert.match(engine, /const pasteDuplicates = useMemo\(/);
   assert.match(engine, /duplicateGroups\(\(doc\?\.lines \|\| \[\]\)\.map\(/);
+});
+
+/* ───────── ⑤ القصُّ قبل الصفوف (BULK-105) ───────── */
+
+test('★★ قصُّ الفارغ يقرؤه الحفظُ والطباعةُ معًا — لا موضعَ يُنسى', () => {
+  // الحفظ
+  assert.match(engine, /const lines = contentLines\(doc\.lines\)/);
+  assert.equal(engine.includes('.filter((l) => !isEmptyLine(l))'), false); // لا نسخةَ ثانية
+  // الطباعة
+  assert.match(print, /contentLines\(doc\?\.lines\)\.map\(/);
+  assert.equal(/\{\(doc\?\.lines \|\| \[\]\)\.map\(\(line, i\)/.test(print), false);
+});
+
+test('★★ وعشرةُ صفوفٍ للإدخال لا تعني عشرةَ بنودٍ في المستند', () => {
+  const COLUMNS = ['sku', 'description', 'qty'];
+  const blank = () => Object.fromEntries(COLUMNS.map((k) => [k, '']));
+  const lines = [{ ...blank(), sku: 'ITM-1' }, blank(), blank(), blank(), blank(), blank(),
+                 blank(), blank(), blank(), blank()];
+  assert.equal(contentLines(lines).length, 1);
+  assert.equal(contentLines([]).length, 0);
+  assert.equal(contentLines(null).length, 0);
+  // وما لا فارغَ فيه يعود كما هو
+  const full = [{ sku: 'A' }, { sku: 'B' }];
+  assert.deepEqual(contentLines(full), full);
+});
+
+test('★ والمستندُ الجديد يبدأ بصفوفٍ للإدخال — والقديمُ لا يُمسّ', () => {
+  const schema = { sections: [{ kind: 'table', columns: [{ key: 'sku' }, { key: 'qty' }] }] };
+  assert.equal(emptyDocument(schema).lines.length, 1); // الافتراضُ لم يتغيّر لمن لم يطلب
+  assert.equal(emptyDocument(schema, { rows: 10 }).lines.length, 10);
+  assert.deepEqual(emptyDocument(schema, { rows: 3 }).lines[2], { sku: '', qty: '' });
+  // والصفوفُ مستقلّةٌ لا مرجعٌ واحدٌ مكرّر — وإلّا لَغيّر بندٌ إخوتَه
+  const doc = emptyDocument(schema, { rows: 3 });
+  doc.lines[0].sku = 'X';
+  assert.equal(doc.lines[1].sku, '');
+});
+
+test('★★ وصفوفُ الإدخال للمحرّك وحدَه — لا للمعالج المصغّر ولا لغيره', () => {
+  assert.match(engine, /emptyDocument\(schema, \{ rows: NEW_DOCUMENT_ROWS \}\)/);
+  assert.match(engine, /const NEW_DOCUMENT_ROWS = 10/);
+  assert.match(modal, /emptyDocument\(schema\)\)/); // المعالجُ كما كان: بندٌ واحد
 });

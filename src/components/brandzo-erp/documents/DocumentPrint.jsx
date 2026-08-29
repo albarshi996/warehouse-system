@@ -10,7 +10,7 @@
  * الترتيب والعناوين تتبع `public/forms/form_GRN.html` — الورقة تبقى كما عرفها الناس.
  */
 import { useEffect, useRef } from 'react';
-import { fieldValue, tableSection } from '../../../services/documents/schemaUtils.js';
+import { fieldValue, tableSection, contentLines } from '../../../services/documents/schemaUtils.js';
 import { getState } from '../../../services/documents/states.js';
 import { reconciliationVerdict } from '../../../services/documents/control.js';
 
@@ -171,7 +171,7 @@ export default function DocumentPrint({ schema, doc, attachments = [], reconcili
                   </tr>
                 </thead>
                 <tbody>
-                  {(doc?.lines || []).map((line, i) => (
+                  {contentLines(doc?.lines).map((line, i) => (
                     <tr key={i}>
                       <td>{i + 1}</td>
                       {table.columns.map((c) => (

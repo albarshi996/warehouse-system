@@ -23,7 +23,7 @@ import {
 } from '../../../services/documents/documentsService.js';
 import { listenAttachments } from '../../../services/documents/attachmentsService.js';
 import { listenReconciliations } from '../../../services/documents/controlService.js';
-import { emptyDocument, emptyChecklist, missingRequired, isEmptyLine } from '../../../services/documents/schemaUtils.js';
+import { emptyDocument, emptyChecklist, missingRequired, contentLines } from '../../../services/documents/schemaUtils.js';
 import {
   documentPartner,
   resolveItemCode,
@@ -84,6 +84,20 @@ import DocumentNavigator from './DocumentNavigator.jsx';
  */
 const ITEM_LOOKUPS = { getItem, lookupByBarcode, lookupItemByPartnerCode };
 
+/**
+ * صفوفُ الإدخال الجاهزة في مستندٍ جديد (BULK-105 · يسدّ ث‑٣ وث‑٥).
+ *
+ * ═══ والتوفيقُ يُكتب لا يُفترض ═══
+ * رأسُ `LineItemsTable` يقول إنّ عيبَ الورق كان **ثمانيةَ صفوفٍ ثابتةً
+ * مكتوبةً في الكود**، وإنّ هذا الجدول وُجد ليُنهيها. فكيف تُضاف عشرة؟
+ *
+ * لأنّهما ليسا شيئًا واحدًا: صفوفُ الورق **تُطبع** فارغةً ولا سبيلَ إلى
+ * إنقاصها، وهذه صفوفُ **إدخالٍ** تُقصّ عند الحفظ وعند الطباعة معًا
+ * (`contentLines`) — فلا يعود الورقُ من الباب الخلفيّ. ولذلك رُتّبت
+ * المهامّ عمدًا: **القصُّ نُفّذ واختُبر قبل أن يُضاف صفٌّ واحد.**
+ */
+const NEW_DOCUMENT_ROWS = 10;
+
 /** يقرأ معاملات الرابط (الموقع ثابت — لا توجيه من الخادم). */
 function readParams() {
   if (typeof window === 'undefined') return { type: 'GRN', id: null };
@@ -136,7 +150,7 @@ export default function DocumentEngine() {
   useEffect(() => {
     if (!schema) return;
     if (!docId) {
-      setDoc({ type: schema.type, state: 'draft', ...emptyDocument(schema) });
+      setDoc({ type: schema.type, state: 'draft', ...emptyDocument(schema, { rows: NEW_DOCUMENT_ROWS }) });
       setAttachments([]);
       setReconciliations([]);
       return;
@@ -472,7 +486,10 @@ export default function DocumentEngine() {
 
   /** يحفظ ويُعيد معرّف المستند (يُنشئه إن كان جديدًا). */
   async function persist() {
-    const lines = (doc.lines || []).filter((l) => !isEmptyLine(l));
+    // قصُّ الفارغ قبل الكتابة (ث‑٤): صفوفُ الإدخال لا تصير بنودًا في
+    // التخزين ولا في التقارير. والمستندُ بلا محتوًى يُحفظ ببندٍ واحدٍ
+    // فارغٍ لا بعشرة — شكلُ البيانات محفوظٌ ولا بياضَ زائد.
+    const lines = contentLines(doc.lines);
     const payload = { header: doc.header, lines: lines.length ? lines : doc.lines.slice(0, 1) };
 
     if (!docId) {

@@ -46,11 +46,20 @@ export function emptyChecklist(schema) {
   return out;
 }
 
-/** مستند جديد فارغ مطابق للمخطّط. */
-export function emptyDocument(schema) {
+/**
+ * مستند جديد فارغ مطابق للمخطّط.
+ *
+ * `rows` = صفوفُ الإدخال الجاهزة. الافتراضُ **واحد** كما كان — فمن لم
+ * يطلب شيئًا لم يتغيّر عليه شيء (المعالجُ المصغّر يُنشئ أبًا لا يُدخل فيه
+ * بنودًا، وعشرةُ صفوفٍ هناك عشرةُ بنودٍ بيضاء في مستندٍ حقيقيّ).
+ * والمحرّكُ وحدَه يطلب العشرة — ويقصّها عند الحفظ والطباعة (BULK-105).
+ */
+export function emptyDocument(schema, { rows = 1 } = {}) {
+  const count = Math.max(1, Number(rows) || 1);
   return {
     header: { ...emptyHeader(schema), _checklist: emptyChecklist(schema) },
-    lines: [emptyLine(schema)],
+    // كائنٌ لكلّ صفّ — لا مرجعٌ واحدٌ مكرّر، وإلّا لَغيّر بندٌ إخوتَه.
+    lines: Array.from({ length: count }, () => emptyLine(schema)),
   };
 }
 
@@ -110,6 +119,20 @@ export function checklistCount(schema, doc) {
 /** هل البند فارغ تمامًا؟ (لتنظيف الصفوف غير المستخدمة قبل الحفظ) */
 export function isEmptyLine(line) {
   return Object.values(line || {}).every((v) => String(v ?? '').trim() === '');
+}
+
+/**
+ * بنودُ المستند ذاتُ المحتوى — قصُّ الفارغ في مكانٍ واحد (BULK-105 · ث‑٤).
+ *
+ * ★★ **يُقرأ من الحفظ ومن الطباعة معًا.** الحفظُ كان يقصّ منذ أوّل يوم،
+ * والطباعةُ لا — فبقيت صفوفُ الإدخال الفارغةُ تُطبع. وما دام الجدولُ سيبدأ
+ * بعشرة صفوفٍ للإدخال (ث‑٥)، فقصٌّ في موضعٍ دون موضعٍ يعني ورقةً فيها تسعةُ
+ * صفوفٍ بيضاء — وهو عينُ العيب الذي وُجد هذا الجدولُ ليُنهيه.
+ *
+ * ولا فارقَ في الشكل: يُعيد المصفوفة نفسَها إن لم يكن فيها فارغ.
+ */
+export function contentLines(lines) {
+  return (lines || []).filter((line) => !isEmptyLine(line));
 }
 
 /**
