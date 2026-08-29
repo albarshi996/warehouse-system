@@ -627,6 +627,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     addAccidentReport,
     reserveInspectionNumber,
   } from '../../services/vehicles/vehiclesService.js';
+  import { exportElementToPdf } from '../../services/reports/pdfExport.js';
   import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
   import { trackOverlay } from '../../services/ui/overlayHistory.js';
 
@@ -1230,21 +1231,16 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     const insp = renderPrintArea();
     showToast('📄 جارٍ توليد PDF بهوية إنجاز المشارق…');
     try {
-      const mod = await import('html2pdf.js');
-      const html2pdf = mod.default || mod;
       const plate = (insp.info?.plateNo || 'مركبة').replace(/\s+/g, '-');
       const date = insp.info?.inspDate || new Date().toISOString().split('T')[0];
-      await html2pdf()
-        .set({
-          margin: 0,
-          filename: `فحص_${plate}_${date}.pdf`,
-          image: { type: 'jpeg', quality: 0.95 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: { mode: ['css', 'legacy'] },
-        })
-        .from($('printArea'))
-        .save();
+      await exportElementToPdf($('printArea'), {
+        margin: 0,
+        filename: `فحص_${plate}_${date}.pdf`,
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] },
+      });
       showToast('✅ صدر ملف PDF');
     } catch (err) {
       console.error(err);

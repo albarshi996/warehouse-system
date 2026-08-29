@@ -11,7 +11,7 @@
   "counts": {
     "modules": 116,
     "serviceDomains": 51,
-    "serviceFiles": 563,
+    "serviceFiles": 565,
     "collections": 97,
     "roles": 18,
     "odooModels": 12,
@@ -962,6 +962,7 @@
       "file": "src/pages/dashboard/vehicles-inventory.astro",
       "usesServices": [
         "auth",
+        "reports",
         "ui",
         "vehicles"
       ]
@@ -4250,6 +4251,8 @@
         "accountReports.js",
         "index.js",
         "operationsReports.js",
+        "pdfExport.js",
+        "pdfExport.test.js",
         "reportCoverage.test.js",
         "reportDefs.test.js",
         "reportEngine.js",
@@ -4258,8 +4261,8 @@
         "traceReports.js",
         "traceReports.test.js"
       ],
-      "fileCount": 10,
-      "testCount": 4,
+      "fileCount": 12,
+      "testCount": 5,
       "exports": [
         "ACCOUNT_REPORTS",
         "COLUMN_KINDS",
@@ -4268,9 +4271,11 @@
         "REPORTS",
         "STOCK_REPORTS",
         "applyFilters",
+        "assertPdfSource",
         "buildRegistry",
         "canOpen",
         "definitionProblems",
+        "exportElementToPdf",
         "exportRows",
         "formatCell",
         "forwardTrace",

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import styles from './MeetingAssistant.module.css';
 import { useOverlayBack } from '../../../services/ui/useOverlayBack.js';
 import { esc } from '../../../services/ui/escape.js';
+import { exportElementToPdf } from '../../../services/reports/pdfExport.js';
 import { useAudioRecorder } from './useAudioRecorder.js';
 import AudioFileTranscriber from './AudioFileTranscriber.jsx';
 
@@ -769,9 +770,6 @@ const MeetingAssistant = () => {
     element.innerHTML = htmlContent;
 
     try {
-      const module = await import('html2pdf.js');
-      const html2pdf = module.default || module;
-
       const opt = {
         margin: 10,
         filename: 'meeting-minutes-' + now.toISOString().slice(0, 10) + '.pdf',
@@ -781,10 +779,7 @@ const MeetingAssistant = () => {
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
       };
 
-      await html2pdf()
-        .set(opt)
-        .from(element)
-        .save();
+      await exportElementToPdf(element, opt);
 
       showToast(t('toast_pdf_exported'), 3000);
     } catch (error) {
