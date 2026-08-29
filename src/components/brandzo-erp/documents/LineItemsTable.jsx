@@ -23,6 +23,7 @@ export default function LineItemsTable({
   uomOptions,
   binOptions,
   binVerdict,
+  skuVerdict,
 }) {
   const columns = section.columns || [];
   // معرّف قائمة الاقتراح — واحدٌ للجدول كلّه، فلا تتكرّر آلاف الخيارات لكل صفّ.
@@ -80,6 +81,16 @@ export default function LineItemsTable({
     return true;
   }
 
+  /**
+   * حكمُ الخانة — عرضٌ خالصٌ لا يُكتب في البند أبدًا (BULK-104 · LOC-104).
+   * ولو كُتب لَحُفظ في المستند ولَظهر في الطباعة ولَبقي بعد إصلاح الكود.
+   */
+  function cellVerdict(column, line) {
+    if (column.key === 'bin' && binVerdict) return binVerdict(line[column.key]);
+    if (column.key === 'sku' && skuVerdict) return skuVerdict(line[column.key]);
+    return null;
+  }
+
   function addRow() {
     onChange([...lines, emptyLine(schema)]);
   }
@@ -127,7 +138,10 @@ export default function LineItemsTable({
                       // LOC-104: خانة الموقع مرجعيّة **مركزيًّا هنا** لا في كل
                       // مخطّط — اقتراحٌ يُعين من يكتب، وحكمٌ يُنبّه ولا يمنع.
                       listId={c.key === 'bin' && binOptions?.length ? binListId : null}
-                      verdict={c.key === 'bin' && binVerdict ? binVerdict(line[c.key]) : null}
+                      // حكمُ الخانة — تنبيهٌ يُعرض ولا يُحفظ في البند:
+                      // موقعٌ لا يعرفه السيّد (LOC-104)، أو كودٌ لم يُستبن
+                      // من لصقةٍ جماعيّة (BULK-104). أصفرُ ينبّه ولا يمنع.
+                      verdict={cellVerdict(c, line)}
                     />
                   </td>
                 ))}

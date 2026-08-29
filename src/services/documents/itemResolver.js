@@ -169,3 +169,79 @@ export function duplicateGroups(codes) {
   for (const [key, list] of byKey) if (list.length < 2) byKey.delete(key);
   return byKey;
 }
+
+/* ═══════════════ الحكم — علامةٌ تُعرض ولا تُحفظ (BULK-104) ═══════════════ */
+
+/** حالاتُ الأكواد التي لم تُستبن — كودٌ مطبَّع ⇒ `unknown` أو `failed`. */
+export function codeStatuses(batch) {
+  const out = new Map();
+  for (const [key, { status }] of batch?.byCode || []) {
+    if (status !== 'ok') out.set(key, status);
+  }
+  return out;
+}
+
+/**
+ * حكمُ خانة الكود — **عرضٌ خالصٌ لا يُكتب في البند** (يسدّ ث‑٦ وث‑٧).
+ *
+ * ★ هذه هي النقطة الحسّاسة: علامةُ «مجهول» **حالةُ شاشةٍ لا حقلُ بيانات**.
+ * ولو كُتبت على السطر لَحُفظت في المستند ولَظهرت في الطباعة والتقارير —
+ * ولَبقيت بعد أن يُسجَّل الصنفُ ويصير معروفًا. فهي تُشتقّ عند العرض من
+ * كودِ السطر نفسِه: يُصلح الموظّفُ الكودَ فتذهب العلامةُ بلا تنظيف.
+ *
+ * ولا يمنع شيءٌ من هذا الحفظَ ولا يوقف الإدخال (شرطُ المالك القائم):
+ * الأصفرُ تنبيهٌ، والأحمرُ محجوزٌ للتحذير وحدَه في هذه البوّابة.
+ *
+ * @param {string} value كودُ السطر كما هو معروض
+ * @param {{statuses?: Map<string,string>, duplicates?: Map<string,number[]>|Set<string>}} ctx
+ * @returns {{level: 'warn', message: string}|null}
+ */
+export function skuCellVerdict(value, { statuses, duplicates } = {}) {
+  const key = normalizeItemCode(value);
+  if (!key) return null;
+  const status = statuses?.get(key);
+  if (status === 'unknown') {
+    return { level: 'warn', message: 'الصنف غير موجود في دليل الأصناف — أكمل البند يدويًّا وسجِّل الصنف لاحقًا.' };
+  }
+  if (status === 'failed') {
+    return { level: 'warn', message: 'تعذّر سؤال الماستر عن هذا الكود — أعد اللصق أو أكمل البند يدويًّا.' };
+  }
+  if (duplicates?.has(key)) {
+    return {
+      level: 'warn',
+      message: 'صنفٌ مكرّر — يبقى بندَين عمدًا كي لا تُجمع دفعتان أو موقعان أو سعران في رقمٍ واحد. ادمجهما بزرّ الدمج إن أردت.',
+    };
+  }
+  return null;
+}
+
+/**
+ * دمجُ بنودٍ مكرّرةٍ **بقرار المستخدم** (BULK-O01): الكمّيّةُ تُجمع في أوّل
+ * بندٍ منها، والبواقي تُحذف. ولا يُستدعى هذا تلقائيًّا أبدًا.
+ *
+ * الكمّيّاتُ غيرُ الرقميّة لا تُخترع لها أرقام: إن لم يكن فيها رقمٌ واحدٌ
+ * صحيح بقيت قيمةُ الأوّل كما هي.
+ *
+ * @param {object[]} lines البنود
+ * @param {number[]} indexes فهارسُ المكرّر (من `duplicateGroups`)
+ * @param {string} qtyKey مفتاحُ عمود الكمّيّة
+ */
+export function mergeDuplicateLines(lines, indexes, qtyKey = 'qty') {
+  const list = [...(lines || [])];
+  const picks = [...new Set(indexes || [])].filter((i) => list[i]).sort((a, b) => a - b);
+  if (picks.length < 2) return list;
+
+  const [keep, ...drop] = picks;
+  // الفارغُ ليس صفرًا: خانةٌ لم تُملأ لا تدخل الجمعَ ولا تدهس نصًّا مكتوبًا.
+  const numbers = picks
+    .map((i) => list[i]?.[qtyKey])
+    .filter((v) => String(v ?? '').trim() !== '')
+    .map(Number)
+    .filter(Number.isFinite);
+  const merged = { ...list[keep] };
+  if (numbers.length) merged[qtyKey] = String(numbers.reduce((a, b) => a + b, 0));
+  list[keep] = merged;
+
+  const dropped = new Set(drop);
+  return list.filter((_, i) => !dropped.has(i));
+}

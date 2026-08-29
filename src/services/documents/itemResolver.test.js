@@ -20,7 +20,12 @@ import {
   resolveItemCodes,
   outcomeFor,
   duplicateGroups,
+  codeStatuses,
+  skuCellVerdict,
+  mergeDuplicateLines,
 } from './itemResolver.js';
+import { normalizeItemCode } from '../items/itemIdentity.js';
+import { planPaste as planPasteForTest, applyPastePlan as applyPastePlanForTest } from './bulkPaste.js';
 
 const ITEM = {
   sku: 'ITM-1',
@@ -196,4 +201,102 @@ test('المكرّرُ يُكشف بهويّته لا بصيغته — وبند�
   assert.deepEqual(groups.get('ITM-1'), [0, 2, 3]);
   assert.equal(duplicateGroups([{ index: 0, value: 'X' }]).size, 0);
   assert.equal(duplicateGroups([]).size, 0);
+});
+
+/* ═══════════════ الحكم (BULK-104) ═══════════════ */
+
+const batchOf = (map) => ({ byCode: new Map(Object.entries(map)) });
+
+test('المجهولُ يُعلَّم برسالته، و«تعذّر السؤال» برسالةٍ أخرى — لا تُخلطان', () => {
+  const statuses = codeStatuses(batchOf({
+    'ITM-1': { status: 'ok' },
+    'GHOST': { status: 'unknown' },
+    'BOOM': { status: 'failed' },
+  }));
+  assert.equal(statuses.has('ITM-1'), false); // المستبانُ لا يُعلَّم
+  assert.match(skuCellVerdict('ghost', { statuses }).message, /غير موجود في دليل الأصناف/);
+  assert.match(skuCellVerdict('BOOM', { statuses }).message, /تعذّر سؤال الماستر/);
+  assert.equal(skuCellVerdict('ITM-1', { statuses }), null);
+});
+
+test('★ العلامةُ تُشتقّ من الكود لا من الصفّ — يُصلحه الموظّف فتذهب بلا تنظيف', () => {
+  const statuses = new Map([['GHOST', 'unknown']]);
+  assert.notEqual(skuCellVerdict('GHOST', { statuses }), null);
+  assert.equal(skuCellVerdict('ITM-1', { statuses }), null); // كُتب كودٌ صحيحٌ ⇒ لا علامة
+  assert.equal(skuCellVerdict('', { statuses }), null);
+  assert.equal(skuCellVerdict('X', {}), null);
+});
+
+test('والتنبيهُ أصفرُ دائمًا — الأحمرُ محجوزٌ للتحذير وحدَه، ولا منعَ للحفظ', () => {
+  const v = skuCellVerdict('G', { statuses: new Map([['G', 'unknown']]) });
+  assert.equal(v.level, 'warn');
+});
+
+test('المكرّرُ يُنبَّه ويبقى بندَين — والرسالةُ تقول لماذا (BULK-O01)', () => {
+  const dups = duplicateGroups([
+    { index: 0, value: 'ITM-1' },
+    { index: 2, value: 'itm-1' },
+  ]);
+  const v = skuCellVerdict('ITM-1', { duplicates: dups });
+  assert.match(v.message, /يبقى بندَين/);
+  assert.match(v.message, /دفعتان أو موقعان أو سعران/);
+});
+
+test('المجهولُ يغلب المكرّر — أهمُّ ما يُقال أوّلًا', () => {
+  const v = skuCellVerdict('G', {
+    statuses: new Map([['G', 'unknown']]),
+    duplicates: new Map([['G', [0, 1]]]),
+  });
+  assert.match(v.message, /غير موجود/);
+});
+
+test('الدمجُ يجمع الكمّيّة في الأوّل ويحذف البواقي — بقرارٍ لا تلقائيًّا', () => {
+  const lines = [
+    { sku: 'ITM-1', qty: '4' },
+    { sku: 'ITM-2', qty: '1' },
+    { sku: 'ITM-1', qty: '6' },
+  ];
+  const out = mergeDuplicateLines(lines, [0, 2]);
+  assert.equal(out.length, 2);
+  assert.deepEqual(out[0], { sku: 'ITM-1', qty: '10' });
+  assert.deepEqual(out[1], { sku: 'ITM-2', qty: '1' });
+  assert.equal(lines.length, 3); // ولا يُمسّ الأصل
+});
+
+test('الدمجُ لا يخترع رقمًا من نصٍّ غير رقميّ، ولا يفعل شيئًا لبندٍ واحد', () => {
+  const lines = [{ sku: 'A', qty: 'غير محدّد' }, { sku: 'A', qty: '' }];
+  assert.deepEqual(mergeDuplicateLines(lines, [0, 1])[0], { sku: 'A', qty: 'غير محدّد' });
+  assert.deepEqual(mergeDuplicateLines(lines, [0]), lines);
+  assert.deepEqual(mergeDuplicateLines(lines, [0, 9]), lines); // فهرسٌ لا وجود له
+});
+
+test('★★ العلامةُ لا تدخل البندَ أبدًا: المحفوظُ نظيفٌ من كلّ أثرٍ لها', () => {
+  // المسارُ الخالصُ كاملًا: خطّةٌ ⇒ صفوفٌ ⇒ ختمُ المستبان — والمجهولُ يُترك.
+  const COLUMNS = ['sku', 'description', 'qty', 'uom'];
+  const empty = () => Object.fromEntries(COLUMNS.map((k) => [k, '']));
+  const p = planPasteForTest({
+    text: 'ITM-1\nGHOST\nITM-1',
+    startIndex: 0,
+    columnKeys: COLUMNS,
+    startColumnKey: 'sku',
+    lineCount: 1,
+  });
+  let out = applyPastePlanForTest([empty()], p, empty);
+  const statuses = new Map([['GHOST', 'unknown']]);
+  out = out.map((line) =>
+    normalizeItemCode(line.sku) === 'ITM-1'
+      ? applyResolvedItem(line, { item: ITEM, viaPartner: null, unitFromBarcode: '' }, 'GRN')
+      : line
+  );
+
+  // العلامةُ تُرى في العرض…
+  assert.notEqual(skuCellVerdict(out[1].sku, { statuses }), null);
+  // …ولا أثرَ لها في البيانات: لا مفتاحَ خارج أعمدة المخطّط وإثراء الوحدات.
+  const allowed = new Set([...COLUMNS, 'uomFactor', 'uomFactorFor', 'uomFactorSource', 'baseQty', 'baseUom', 'partnerItemCode']);
+  for (const line of out) {
+    for (const key of Object.keys(line)) {
+      assert.ok(allowed.has(key), `مفتاحٌ دخيلٌ في البند المحفوظ: ${key}`);
+    }
+  }
+  assert.equal(out[1].sku, 'GHOST'); // والمجهولُ يبقى كما كتبه الموظّف
 });

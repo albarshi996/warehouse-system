@@ -110,3 +110,32 @@ test('★ والرسالةُ واحدةٌ تلخّص الثلاثة — لا ع�
 test('★ والخانةُ تقرأ الخاصّيّة — لا تُمرَّر إلى فراغ', () => {
   assert.match(table, /function Cell\(\{[^}]*onBulkPaste[^}]*\}\)/);
 });
+
+/* ───────── ④ الحكمُ موصولٌ ولا يُحفظ (BULK-104) ───────── */
+
+test('★★ العلامةُ حالةُ شاشةٍ خارج `doc` — لا تسكن البندَ فلا تُحفظ', () => {
+  assert.match(engine, /const \[pasteMarks, setPasteMarks\] = useState\(null\)/);
+  // ولا تُكتب في البنود: لا مفتاحَ علامةٍ يُضاف إلى سطرٍ في أيّ موضع
+  assert.equal(/lines?\[[^\]]*\]\.(verdict|note|unknown|mark)\s*=/.test(engine), false);
+  assert.equal(/_(unknown|verdict|note)\s*:/.test(engine), false);
+});
+
+test('★ والحكمُ يصل الجدول خاصّيّةً، والجدولُ يقرؤه للكود وحدَه', () => {
+  assert.match(engine, /skuVerdict=\{\(value\) =>/);
+  assert.match(engine, /skuCellVerdict\(value, \{ statuses: pasteMarks\?\.statuses, duplicates: pasteDuplicates \}\)/);
+  assert.match(table, /if \(column\.key === 'sku' && skuVerdict\) return skuVerdict\(line\[column\.key\]\)/);
+  assert.match(table, /verdict=\{cellVerdict\(c, line\)\}/);
+});
+
+test('★★ والدمجُ زرٌّ لا قاعدة: يُستدعى من onClick لا من مسار اللصق', () => {
+  assert.match(engine, /onClick=\{\(\) => mergeDuplicate\(code\)\}/);
+  assert.match(engine, /function mergeDuplicate\(code\)/);
+  // لا دمجَ تلقائيّ: `mergeDuplicateLines` لا تُستدعى داخل `handleBulkPaste`
+  const bulk = engine.slice(engine.indexOf('async function handleBulkPaste'), engine.indexOf('function mergeDuplicate'));
+  assert.equal(bulk.includes('mergeDuplicateLines'), false);
+});
+
+test('★ والمكرّرُ يُقاس على البنود الآن — فيذهب التنبيهُ بالدمج بلا أثرٍ عالق', () => {
+  assert.match(engine, /const pasteDuplicates = useMemo\(/);
+  assert.match(engine, /duplicateGroups\(\(doc\?\.lines \|\| \[\]\)\.map\(/);
+});

@@ -31,6 +31,9 @@ import {
   applyResolvedItem,
   outcomeFor,
   duplicateGroups,
+  codeStatuses,
+  skuCellVerdict,
+  mergeDuplicateLines,
 } from '../../../services/documents/itemResolver.js';
 import { mergeParentLink } from '../../../services/documents/chain.js';
 import { lookupByBarcode, getItem, subscribeItems } from '../../../services/items/itemService.js';
@@ -174,6 +177,16 @@ export default function DocumentEngine() {
   // تُختار من قوائم النظام لا كتابةً حرّة. الفشل ⇒ قائمةٌ فارغة ⇒ الحقل
   // نصٌّ حرّ كسلوك اليوم — لا تعطيل. والمندوبون من ماسترهم (SAP-21)
   // المقروء لكلّ مصادَق — لا من دليل المستخدمين المحصور بالمديرَين.
+  /**
+   * حكمُ آخر لصقة (BULK-104): أكوادٌ لم تُستبن، وأكوادٌ تكرّرت.
+   *
+   * ★★ **حالةُ شاشةٍ لا حقلُ بيانات** — عمدًا خارج `doc`: لو سكنت البندَ
+   * لَحُفظت في المستند ولَظهرت في الطباعة والتقارير ولَبقيت بعد أن يُسجَّل
+   * الصنفُ ويصير معروفًا. وهي بالكود لا بالفهرس، فحذفُ بندٍ أو إضافتُه لا
+   * يزحزح العلامات، وإصلاحُ الكود يُذهبها بلا تنظيف.
+   */
+  const [pasteMarks, setPasteMarks] = useState(null);
+
   const [suppliers, setSuppliers] = useState([]);
   const [warehousesList, setWarehousesList] = useState([]);
   const [vehiclesList, setVehiclesList] = useState([]);
@@ -190,6 +203,17 @@ export default function DocumentEngine() {
   // المستفيد لا على القطاع. الفشل ⇒ قائمةٌ فارغة ⇒ الحقل نصٌّ حرّ كما كان.
   const [orgLocationsList, setOrgLocationsList] = useState([]);
   useEffect(() => listenOrgLocations(setOrgLocationsList, () => setOrgLocationsList([])), []);
+  /**
+   * المكرّرُ يُحسب من البنود **الآن** لا من لحظة اللصق — فيذهب التنبيه
+   * بالدمج أو بتصحيح الكود بلا أثرٍ عالق. ومحصورٌ بأكواد اللصقة وحدَها:
+   * بندان متعمّدان لصنفٍ واحدٍ في مستندٍ قديم ليسا خطأً يُنبَّه عليه.
+   */
+  const pasteDuplicates = useMemo(() => {
+    if (!pasteMarks?.duplicated?.size) return new Map();
+    const all = duplicateGroups((doc?.lines || []).map((line, index) => ({ index, value: line?.sku })));
+    return new Map([...all].filter(([code]) => pasteMarks.duplicated.has(code)));
+  }, [doc?.lines, pasteMarks]);
+
   const partyLists = useMemo(
     () => ({ suppliers, customers, warehouses: warehousesList, reps: repsList, vehicles: vehiclesList, orgLocations: orgLocationsList }),
     [suppliers, customers, warehousesList, repsList, vehiclesList, orgLocationsList]
@@ -388,6 +412,8 @@ export default function DocumentEngine() {
       return { ...d, lines };
     });
     setDirty(true);
+    // العلاماتُ تُكتب بعد الحلّ — والمستبانُ لا يُعلَّم.
+    setPasteMarks({ statuses: codeStatuses(batch), duplicated: new Set(dups.keys()) });
 
     const parts = [`استُبين ${batch.ok}`];
     if (batch.unknown) parts.push(`مجهول ${batch.unknown}`);
@@ -395,6 +421,18 @@ export default function DocumentEngine() {
     if (dups.size) parts.push(`مكرّر ${dups.size}`);
     flash(`📋 ${codes.length} كودًا في ${codes.length} بندًا — ${parts.join(' · ')}.`,
       batch.unknown || batch.failed ? 'err' : 'ok');
+  }
+
+  /**
+   * دمجُ مكرّرٍ **بضغطةٍ من المستخدم** لا تلقائيًّا (BULK-O01): الدمجُ
+   * التلقائيّ يفقد معلومةً يحتاجها المستودع — دفعتان أو موقعان أو سعران
+   * للصنف نفسِه يصيران رقمًا واحدًا ويضيع التفريق. فالقرارُ لمن يعرف.
+   */
+  function mergeDuplicate(code) {
+    const indexes = pasteDuplicates.get(code);
+    if (!indexes || indexes.length < 2) return;
+    patchLines(mergeDuplicateLines(doc.lines || [], indexes));
+    flash(`🔗 دُمج ${indexes.length} بندًا للصنف ${code} — الكمّيّة مجموعة.`);
   }
 
   function patchChecklist(next) {
@@ -742,7 +780,37 @@ export default function DocumentEngine() {
                 uomOptions={(line) => uomOptionsForLine(line, itemForLine(line, itemIndexes))}
                 binOptions={binChoices}
                 binVerdict={(value) => binCellVerdict(value, locationsList)}
+                skuVerdict={(value) =>
+                  skuCellVerdict(value, { statuses: pasteMarks?.statuses, duplicates: pasteDuplicates })
+                }
               />
+            )}
+
+            {/* المكرّرُ يُنبَّه ويبقى بندَين — والدمجُ زرٌّ لا قاعدة (BULK-O01). */}
+            {section.kind === 'table' && editable && pasteDuplicates.size > 0 && (
+              <div className="mt-3 rounded-xl border border-amber-400/40 bg-amber-400/5 p-3 text-sm">
+                <p className="font-bold text-ink mb-2">⚠️ أصنافٌ مكرّرةٌ في اللصقة</p>
+                <p className="text-[11px] text-muted mb-2 leading-relaxed">
+                  تبقى بنودًا منفصلةً عمدًا — فقد تكون دفعتين أو موقعين أو سعرين، والجمعُ يُضيّع التفريق.
+                  ادمجها إن كانت الشحنةَ نفسَها.
+                </p>
+                <ul className="space-y-1">
+                  {[...pasteDuplicates].map(([code, indexes]) => (
+                    <li key={code} className="flex items-center gap-2 flex-wrap">
+                      <span className="text-ink-2">
+                        <b>{code}</b> في البنود {indexes.map((i) => i + 1).join(' · ')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => mergeDuplicate(code)}
+                        className="text-xs font-bold text-accent hover:text-accent/80"
+                      >
+                        ادمجهما
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
 
             {section.kind === 'checklist' && (
