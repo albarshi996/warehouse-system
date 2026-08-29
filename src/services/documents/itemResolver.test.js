@@ -1,0 +1,147 @@
+/**
+ * حلُّ كود الصنف — المصدر الواحد (BULK-000).
+ *
+ * حارسٌ لأربعة:
+ *   1. **الترتيب الحاكم محفوظٌ حرفيًّا** — الهويّة ثمّ الباركود ثمّ كتالوج
+ *      الطرف. وانقلابُه يعني صنفًا خاطئًا في مستندٍ صحيح.
+ *   2. **المجهول لا يوقف** — `null` لا استثناء، وفشلُ كتالوج الطرف يُبتلع
+ *      كما كان يُبتلع في المحرّك.
+ *   3. **ما كُتب بيدٍ لا يُدهس** — والهويّةُ وحدها تُثبَّت بصيغة الماستر.
+ *   4. **لا حالةَ ولا رسالة** — الدالّتان تُستدعيان بلا React وبلا شبكة،
+ *      وهذا الملفّ نفسه بيّنةُ ذلك: لو قرأتا حالةً لما عمل.
+ */
+import test from 'node:test';
+import assert from 'node:assert/strict';
+
+import { documentPartner, resolveItemCode, applyResolvedItem } from './itemResolver.js';
+
+const ITEM = {
+  sku: 'ITM-1',
+  nameAr: 'زيت زيتون',
+  baseUom: 'piece',
+  buyUom: 'carton',
+  uomFactors: { carton: 12 },
+  uomBarcodes: { '6001': 'carton' },
+};
+
+/** استدعاءاتٌ مزيّفة تسجّل ما سُئل وبأيّ ترتيب. */
+function fakeLookups({ bySku = {}, byBarcode = {}, partnerHit = null, partnerThrows = false } = {}) {
+  const calls = [];
+  return {
+    calls,
+    lookups: {
+      getItem: async (v) => { calls.push(`sku:${v}`); return bySku[v] || null; },
+      lookupByBarcode: async (v) => { calls.push(`barcode:${v}`); return byBarcode[v] || null; },
+      lookupItemByPartnerCode: async ({ code }) => {
+        calls.push(`partner:${code}`);
+        if (partnerThrows) throw new Error('لا صلاحية');
+        return partnerHit;
+      },
+    },
+  };
+}
+
+test('طرف المستند: المورّد أوّلًا ثمّ العميل، وبلا طرفٍ لا كتالوج', () => {
+  assert.deepEqual(documentPartner({ supplierCode: 'S-1' }), { partnerType: 'supplier', partnerCode: 'S-1' });
+  assert.deepEqual(documentPartner({ customerCode: 'C-9' }), { partnerType: 'customer', partnerCode: 'C-9' });
+  assert.deepEqual(documentPartner({ supplierCode: 'S-1', customerCode: 'C-9' }), { partnerType: 'supplier', partnerCode: 'S-1' });
+  assert.equal(documentPartner({}), null);
+  assert.equal(documentPartner(null), null);
+});
+
+test('عمود الكود: الهويّة أوّلًا — ولا يُسأل الباركود إن أجابت', async () => {
+  const { calls, lookups } = fakeLookups({ bySku: { 'ITM-1': ITEM } });
+  const r = await resolveItemCode('ITM-1', { columnKey: 'sku', lookups });
+  assert.equal(r.item.sku, 'ITM-1');
+  assert.deepEqual(calls, ['sku:ITM-1']);
+});
+
+test('عمود الكود: الباركود احتياطٌ ثانٍ، وكتالوج الطرف ثالثٌ — بالترتيب', async () => {
+  const entry = { partnerItemCode: 'SUP-77', uom: 'carton', conversionFactor: 24 };
+  const { calls, lookups } = fakeLookups({ partnerHit: { item: ITEM, entry } });
+  const r = await resolveItemCode('SUP-77', {
+    columnKey: 'sku',
+    partner: { partnerType: 'supplier', partnerCode: 'S-1' },
+    lookups,
+  });
+  assert.deepEqual(calls, ['sku:SUP-77', 'barcode:SUP-77', 'partner:SUP-77']);
+  assert.equal(r.viaPartner, entry);
+});
+
+test('عمود الباركود: لا يُسأل الماستر بالهويّة — الباركود وسيلة بحثٍ لا هويّة', async () => {
+  const { calls, lookups } = fakeLookups({ byBarcode: { 6001: ITEM } });
+  const r = await resolveItemCode('6001', { columnKey: 'barcode', lookups });
+  assert.deepEqual(calls, ['barcode:6001']);
+  // باركود الوحدة يحدّد الوحدة أيضًا (SAP-3)
+  assert.equal(r.unitFromBarcode, 'carton');
+});
+
+test('عمود الكود لا يشتقّ وحدةً من باركود — ولو تطابق النصّ', async () => {
+  const { lookups } = fakeLookups({ bySku: { 6001: ITEM } });
+  const r = await resolveItemCode('6001', { columnKey: 'sku', lookups });
+  assert.equal(r.unitFromBarcode, '');
+});
+
+test('المجهول يُعيد null لا استثناءً — والفارغ لا يسأل أحدًا', async () => {
+  const { calls, lookups } = fakeLookups();
+  assert.equal(await resolveItemCode('MISSING', { columnKey: 'sku', lookups }), null);
+  assert.equal(await resolveItemCode('   ', { columnKey: 'sku', lookups }), null);
+  assert.deepEqual(calls, ['sku:MISSING', 'barcode:MISSING']);
+});
+
+test('بلا طرفٍ لا يُسأل الكتالوج أصلًا', async () => {
+  const { calls, lookups } = fakeLookups();
+  await resolveItemCode('X-1', { columnKey: 'sku', partner: null, lookups });
+  assert.equal(calls.some((c) => c.startsWith('partner:')), false);
+});
+
+test('فشل كتالوج الطرف يُبتلع: مجهولٌ لا انفجار', async () => {
+  const { lookups } = fakeLookups({ partnerThrows: true });
+  const r = await resolveItemCode('SUP-77', {
+    columnKey: 'sku',
+    partner: { partnerType: 'supplier', partnerCode: 'S-1' },
+    lookups,
+  });
+  assert.equal(r, null);
+});
+
+test('فشل الماستر نفسه يُرمى — «تعذّر السؤال» ليس «مجهولًا»', async () => {
+  const lookups = { getItem: async () => { throw new Error('شبكة'); }, lookupByBarcode: async () => null };
+  await assert.rejects(() => resolveItemCode('ITM-1', { columnKey: 'sku', lookups }), /شبكة/);
+});
+
+test('الختم على السطر: الفارغ يُملأ وما كُتب بيدٍ يبقى', () => {
+  const line = { sku: '', description: 'وصفٌ كتبه الموظّف', qty: '2', uom: '' };
+  const next = applyResolvedItem(line, { item: ITEM, viaPartner: null, unitFromBarcode: '' }, 'GRN');
+  assert.equal(next.sku, 'ITM-1');
+  assert.equal(next.description, 'وصفٌ كتبه الموظّف');
+  assert.equal(next.uom, 'carton'); // وحدة الشراء لمستند شراء (ف‑٩)
+  assert.equal(next.uomFactor, 12);
+  assert.equal(next.baseQty, 24);
+});
+
+test('الهويّة تُثبَّت بصيغة الماستر، والكود المختلف يبقى كما كُتب', () => {
+  const same = applyResolvedItem({ sku: 'itm-1' }, { item: ITEM }, 'GRN');
+  assert.equal(same.sku, 'ITM-1');
+  const other = applyResolvedItem({ sku: 'ITM-9' }, { item: ITEM }, 'GRN');
+  assert.equal(other.sku, 'ITM-9');
+});
+
+test('كود الطرف يُختم على السطر ومعامله معه — والتخزين على الهويّة الداخليّة', () => {
+  const entry = { partnerItemCode: 'SUP-77', uom: 'carton', conversionFactor: 24 };
+  const next = applyResolvedItem({ sku: '', qty: '3' }, { item: ITEM, viaPartner: entry }, 'GRN');
+  assert.equal(next.sku, 'ITM-1');
+  assert.equal(next.partnerItemCode, 'SUP-77');
+  assert.equal(next.uomFactor, 24); // معامل هذا المورّد لا معامل الصنف
+  assert.equal(next.baseQty, 72);
+});
+
+test('باركود الوحدة يغلب افتراض العائلة', () => {
+  const next = applyResolvedItem({ sku: '' }, { item: ITEM, unitFromBarcode: 'piece' }, 'GRN');
+  assert.equal(next.uom, 'piece');
+});
+
+test('بلا صنفٍ لا يتغيّر السطر البتّة', () => {
+  const line = { sku: 'X', qty: '1' };
+  assert.equal(applyResolvedItem(line, null, 'GRN'), line);
+});

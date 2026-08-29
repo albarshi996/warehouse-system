@@ -23,18 +23,15 @@ import {
 } from '../../../services/documents/documentsService.js';
 import { listenAttachments } from '../../../services/documents/attachmentsService.js';
 import { listenReconciliations } from '../../../services/documents/controlService.js';
-import { emptyDocument, emptyChecklist, missingRequired, isEmptyLine, applyItemToLine } from '../../../services/documents/schemaUtils.js';
+import { emptyDocument, emptyChecklist, missingRequired, isEmptyLine } from '../../../services/documents/schemaUtils.js';
+import { documentPartner, resolveItemCode, applyResolvedItem } from '../../../services/documents/itemResolver.js';
 import { mergeParentLink } from '../../../services/documents/chain.js';
 import { lookupByBarcode, getItem, subscribeItems } from '../../../services/items/itemService.js';
-import { canonicalLineSku } from '../../../services/items/itemIdentity.js';
 import { lookupItemByPartnerCode } from '../../../services/partners/itemPartnerCatalogService.js';
 import {
   buildItemIndexes,
   itemForLine,
   refreshLineBase,
-  stampPartnerUom,
-  unitForBarcode,
-  defaultUomFor,
   uomOptionsForLine,
 } from '../../../services/items/uomWiring.js';
 import { uomLabel } from '../../../services/items/uomModel.js';
@@ -70,6 +67,12 @@ import AttachmentsPanel from './AttachmentsPanel.jsx';
 import ControlPanel from './ControlPanel.jsx';
 import PromotionsPanel from './PromotionsPanel.jsx';
 import DocumentNavigator from './DocumentNavigator.jsx';
+
+/**
+ * وصلةُ المحلّل بالسحابة: هو يعرف **الترتيب**، وهذه تعرف **من يُسأل**.
+ * ثابتةٌ خارج المكوّن فلا تُبنى مع كلّ رسم.
+ */
+const ITEM_LOOKUPS = { getItem, lookupByBarcode, lookupItemByPartnerCode };
 
 /** يقرأ معاملات الرابط (الموقع ثابت — لا توجيه من الخادم). */
 function readParams() {
@@ -308,30 +311,20 @@ export default function DocumentEngine() {
    * الطرف‑الصنف** بطرف المستند نفسه — فكود المورّد يعيد الصنف الداخليّ
    * الصحيح ولا يُنشئ صنفًا مكرّرًا (SR-50)، وكود الطرف يبقى على السطر
    * (`partnerItemCode`) عرضًا في مستنده (§10 ‹257›).
+   *
+   * BULK-000: والمنطق نفسه انتقل إلى `itemResolver.js` — يقرؤه هذا المسار
+   * المفرد والمسارُ الجماعيّ للّصقة معًا. هنا يبقى ما هو من شأن الشاشة
+   * وحدها: من يُخبَر، وأيّ سطرٍ يُكتب.
    */
   async function handleLineLookup(kind, value, index, columnKey = 'barcode') {
     if (kind !== 'item') return;
     try {
-      let item = columnKey === 'sku'
-        ? (await getItem(value)) || (await lookupByBarcode(value))
-        : await lookupByBarcode(value);
-      let viaPartner = null;
-      if (!item) {
-        const header = doc?.header || {};
-        const partner = header.supplierCode
-          ? { partnerType: 'supplier', partnerCode: header.supplierCode }
-          : header.customerCode
-            ? { partnerType: 'customer', partnerCode: header.customerCode }
-            : null;
-        if (partner) {
-          const hit = await lookupItemByPartnerCode({ ...partner, code: value }).catch(() => null);
-          if (hit) {
-            item = hit.item;
-            viaPartner = hit.entry;
-          }
-        }
-      }
-      if (!item) {
+      const resolved = await resolveItemCode(value, {
+        columnKey,
+        partner: documentPartner(doc?.header),
+        lookups: ITEM_LOOKUPS,
+      });
+      if (!resolved) {
         flash(
           columnKey === 'sku'
             ? `⚠️ الكود ${value} غير معرّف في الماستر ولا في كتالوج الطرف — أكمل البند يدويًّا وسجِّل الصنف لاحقًا.`
@@ -340,23 +333,10 @@ export default function DocumentEngine() {
         );
         return;
       }
-      // SAP-3: باركود الوحدة يحدّد الصنف **والوحدة والمعامل** معًا (§10.1 ‹238›).
-      const unitFromBarcode = columnKey === 'sku' ? '' : unitForBarcode(item, value);
+      const { item, viaPartner, unitFromBarcode } = resolved;
       setDoc((d) => {
-        const current = d.lines?.[index];
-        if (!current) return d;
-        const { line } = applyItemToLine(current, item);
-        let next = { ...line, sku: canonicalLineSku(line, item) };
-        // كود الطرف يظهر في مستنده بينما يبقى التخزين على الهويّة الداخليّة.
-        if (viaPartner) {
-          next.partnerItemCode = viaPartner.partnerItemCode;
-          next = stampPartnerUom(next, viaPartner); // تعبئة هذا المورّد لا غيره (§10 ‹256›)
-        }
-        if (unitFromBarcode) next.uom = unitFromBarcode;
-        // وحدةٌ فارغة تأخذ افتراض عائلة المستند: شراءً بوحدة الشراء وبيعًا بوحدة البيع (ف‑٩).
-        if (!String(next.uom ?? '').trim()) next.uom = defaultUomFor(item, type);
-        next = refreshLineBase(next, item); // السطر يحفظ المعامل والأساس (§10.1 ‹234›)
-        const lines = d.lines.map((l, i) => (i === index ? next : l));
+        if (!d.lines?.[index]) return d;
+        const lines = d.lines.map((l, i) => (i === index ? applyResolvedItem(l, resolved, type) : l));
         return { ...d, lines };
       });
       setDirty(true);
