@@ -24,7 +24,14 @@ import {
 import { listenAttachments } from '../../../services/documents/attachmentsService.js';
 import { listenReconciliations } from '../../../services/documents/controlService.js';
 import { emptyDocument, emptyChecklist, missingRequired, isEmptyLine } from '../../../services/documents/schemaUtils.js';
-import { documentPartner, resolveItemCode, applyResolvedItem } from '../../../services/documents/itemResolver.js';
+import {
+  documentPartner,
+  resolveItemCode,
+  resolveItemCodes,
+  applyResolvedItem,
+  outcomeFor,
+  duplicateGroups,
+} from '../../../services/documents/itemResolver.js';
 import { mergeParentLink } from '../../../services/documents/chain.js';
 import { lookupByBarcode, getItem, subscribeItems } from '../../../services/items/itemService.js';
 import { lookupItemByPartnerCode } from '../../../services/partners/itemPartnerCatalogService.js';
@@ -352,15 +359,42 @@ export default function DocumentEngine() {
   }
 
   /**
-   * لصقةٌ جماعيّة (BULK-102 · يسدّ ث‑٢ وث‑٣): الجدولُ قرأ اللصقة وبنى
-   * الصفوف، وهنا تُكتب دفعةً واحدة — تحديثُ حالةٍ واحدٌ للّصقة كلِّها.
+   * لصقةٌ جماعيّة (BULK-102/103 · يسدّ ث‑١ وث‑٢ وث‑٣ وث‑٨).
    *
-   * والحلُّ الجماعيّ (سؤالُ الماستر عن العشرين) يلحق في BULK-103؛ فحتّى
-   * ذلك الحين تنمو الصفوفُ بأكوادها ويُكمل الموظّف بالاستدعاء المعتاد.
+   * خطوتان لا عشرون: الصفوفُ تظهر **فورًا** بأكوادها (فلا ينتظر الموظّف
+   * الشبكةَ ليرى ما لصق)، ثمّ نتائجُ الماستر تُكتب **دفعةً واحدة**. وهذا
+   * هو المقصود بـ«تحديثُ حالةٍ واحدٌ للّصقة لا واحدٌ لكلّ صنف»: التحديثُ
+   * لا يتضاعف بعدد الأصناف — عشرون كودًا خطوتان، ومئةٌ خطوتان.
+   *
+   * والرسالةُ واحدةٌ تلخّص (لا عشرون تومض): كم استُبين وكم جُهل وكم تكرّر.
    */
-  function handleBulkPaste(nextLines, codes) {
+  async function handleBulkPaste(nextLines, codes, columnKey) {
     patchLines(nextLines);
-    flash(`📋 لُصق ${codes.length} كودًا في ${codes.length} بندًا.`);
+    if (!codes.length) return;
+
+    const dups = duplicateGroups(codes);
+    const batch = await resolveItemCodes(codes.map((c) => c.value), {
+      columnKey,
+      partner: documentPartner(doc?.header),
+      lookups: ITEM_LOOKUPS,
+    });
+
+    setDoc((d) => {
+      const byIndex = new Map(codes.map((c) => [c.index, c.value]));
+      const lines = (d.lines || []).map((line, i) => {
+        const hit = byIndex.has(i) ? outcomeFor(batch, byIndex.get(i)) : null;
+        return hit?.status === 'ok' ? applyResolvedItem(line, hit.resolved, type) : line;
+      });
+      return { ...d, lines };
+    });
+    setDirty(true);
+
+    const parts = [`استُبين ${batch.ok}`];
+    if (batch.unknown) parts.push(`مجهول ${batch.unknown}`);
+    if (batch.failed) parts.push(`تعذّر سؤاله ${batch.failed}`);
+    if (dups.size) parts.push(`مكرّر ${dups.size}`);
+    flash(`📋 ${codes.length} كودًا في ${codes.length} بندًا — ${parts.join(' · ')}.`,
+      batch.unknown || batch.failed ? 'err' : 'ok');
   }
 
   function patchChecklist(next) {

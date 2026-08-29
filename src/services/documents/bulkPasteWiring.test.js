@@ -88,7 +88,23 @@ test('الملتقِطُ يُمرَّر للخانات المرجعيّة وحد
 
 test('★ ولا مُلتقِطَ بلا مستدعٍ: المحرّك يمرّر `onBulkPaste` للجدول فعلًا', () => {
   assert.match(engine, /onBulkPaste=\{handleBulkPaste\}/);
-  assert.match(engine, /function handleBulkPaste\(nextLines, codes\)/);
+  assert.match(engine, /async function handleBulkPaste\(nextLines, codes, columnKey\)/);
+});
+
+/* ───────── ③ الجملة موصولةٌ فعلًا (BULK-103) ───────── */
+
+test('★★ الحلُّ الجماعيّ موصول: الجملةُ تُسأل والنتائجُ تُكتب دفعةً واحدة', () => {
+  assert.match(engine, /await resolveItemCodes\(/);
+  // ولا `setDoc` داخل حلقةٍ — التحديثُ لا يتضاعف بعدد الأصناف
+  assert.equal(/for \([^)]*\) \{[\s\S]{0,400}?setDoc\(/.test(engine), false);
+});
+
+test('★ والرسالةُ واحدةٌ تلخّص الثلاثة — لا عشرون تومض', () => {
+  assert.match(engine, /batch\.ok/);
+  assert.match(engine, /batch\.unknown/);
+  assert.match(engine, /batch\.failed/);
+  assert.match(engine, /dups\.size/);
+  assert.match(engine, /duplicateGroups\(codes\)/);
 });
 
 test('★ والخانةُ تقرأ الخاصّيّة — لا تُمرَّر إلى فراغ', () => {

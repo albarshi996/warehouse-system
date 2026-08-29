@@ -19,7 +19,7 @@
  * أسوأ من دالّةٍ واحدةٍ يقرؤها المسارَان.
  */
 import { applyItemToLine } from './schemaUtils.js';
-import { canonicalLineSku } from '../items/itemIdentity.js';
+import { canonicalLineSku, normalizeItemCode } from '../items/itemIdentity.js';
 import { unitForBarcode, stampPartnerUom, defaultUomFor, refreshLineBase } from '../items/uomWiring.js';
 
 /**
@@ -96,4 +96,76 @@ export function applyResolvedItem(line, resolved, docType) {
   // وحدةٌ فارغة تأخذ افتراض عائلة المستند: شراءً بوحدة الشراء وبيعًا بوحدة البيع (ف‑٩).
   if (!String(next.uom ?? '').trim()) next.uom = defaultUomFor(item, docType);
   return refreshLineBase(next, item);
+}
+
+/* ═══════════════ الجملة — عشرون كودًا في عمليّةٍ واحدة (BULK-103) ═══════════════ */
+
+/**
+ * يحلّ أكوادَ لصقةٍ دفعةً — بذاكرةٍ مؤقّتةٍ لها وحدَها (يسدّ ث‑٨).
+ *
+ * ثلاثةُ شروطٍ مكتوبةٌ في الخطّة، وكلٌّ منها هنا:
+ *   ① **المكرّرُ يُسأل مرّةً واحدة** — الأكوادُ تُوحَّد بهويّتها قبل السؤال،
+ *      فعشرون كودًا فيها ثلاثةُ مكرّراتٍ سبعةَ عشرَ سؤالًا لا عشرين.
+ *   ② **الفشلُ في كودٍ لا يوقف بقيّتَه** (شرطُ المالك الصريح) — لكلّ كودٍ
+ *      حالتُه، و«تعذّر السؤال» يبقى متمايزًا عن «مجهول».
+ *   ③ **الأسئلةُ متوازية** — لا عشرون قراءةً متتابعةً ينتظرها الموظّف.
+ *
+ * @returns {Promise<{byCode: Map<string,{status:'ok'|'unknown'|'failed', resolved: object|null}>, ok: number, unknown: number, failed: number}>}
+ */
+export async function resolveItemCodes(values, { columnKey = 'barcode', partner = null, lookups } = {}) {
+  // ① التوحيد بالهويّة — وأوّلُ صيغةٍ كُتبت هي التي تُسأل بها، فلا يتغيّر
+  // سلوكُ السؤال عمّا كان في النداء المفرد.
+  const firstByKey = new Map();
+  for (const v of values || []) {
+    const key = normalizeItemCode(v);
+    if (key && !firstByKey.has(key)) firstByKey.set(key, String(v).trim());
+  }
+
+  const entries = await Promise.all(
+    [...firstByKey].map(async ([key, code]) => {
+      try {
+        const resolved = await resolveItemCode(code, { columnKey, partner, lookups });
+        return [key, resolved ? { status: 'ok', resolved } : { status: 'unknown', resolved: null }];
+      } catch {
+        // ② كودٌ سقط لا يُسقط اللصقة — والتمييزُ يُحفظ ليُقال في الرسالة.
+        return [key, { status: 'failed', resolved: null }];
+      }
+    })
+  );
+
+  const byCode = new Map(entries);
+  let ok = 0, unknown = 0, failed = 0;
+  for (const { status } of byCode.values()) {
+    if (status === 'ok') ok += 1;
+    else if (status === 'unknown') unknown += 1;
+    else failed += 1;
+  }
+  return { byCode, ok, unknown, failed };
+}
+
+/** حالةُ كودٍ بعينه من نتيجة الجملة — بهويّته لا بصيغته المكتوبة. */
+export function outcomeFor(batch, value) {
+  return batch?.byCode?.get(normalizeItemCode(value)) || null;
+}
+
+/**
+ * الأكوادُ المتكرّرةُ في اللصقة — بهويّتها، ولكلٍّ فهارسُ بنوده.
+ *
+ * BULK-O01: المكرّرُ **يبقى بندَين** وينبّه، ولا يُدمج تلقائيًّا — الدمجُ
+ * يفقد معلومة: دفعتان أو موقعان أو سعران للصنف نفسِه يُجمعان في رقمٍ
+ * واحدٍ ويضيع التفريق، والمستودعُ يحتاجه.
+ *
+ * @param {Array<{index: number, value: string}>} codes
+ * @returns {Map<string, number[]>} كودٌ مطبَّع ⇒ فهارسُ بنوده (اثنان فأكثر)
+ */
+export function duplicateGroups(codes) {
+  const byKey = new Map();
+  for (const { index, value } of codes || []) {
+    const key = normalizeItemCode(value);
+    if (!key) continue;
+    if (!byKey.has(key)) byKey.set(key, []);
+    byKey.get(key).push(index);
+  }
+  for (const [key, list] of byKey) if (list.length < 2) byKey.delete(key);
+  return byKey;
 }

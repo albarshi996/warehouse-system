@@ -13,7 +13,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { documentPartner, resolveItemCode, applyResolvedItem } from './itemResolver.js';
+import {
+  documentPartner,
+  resolveItemCode,
+  applyResolvedItem,
+  resolveItemCodes,
+  outcomeFor,
+  duplicateGroups,
+} from './itemResolver.js';
 
 const ITEM = {
   sku: 'ITM-1',
@@ -144,4 +151,49 @@ test('باركود الوحدة يغلب افتراض العائلة', () => {
 test('بلا صنفٍ لا يتغيّر السطر البتّة', () => {
   const line = { sku: 'X', qty: '1' };
   assert.equal(applyResolvedItem(line, null, 'GRN'), line);
+});
+
+/* ═══════════════ الجملة (BULK-103) ═══════════════ */
+
+test('★ المكرّرُ يُسأل مرّةً واحدة — ذاكرةٌ مؤقّتةٌ للّصقة', async () => {
+  const { calls, lookups } = fakeLookups({ bySku: { 'ITM-1': ITEM } });
+  const b = await resolveItemCodes(['ITM-1', 'itm-1', ' ITM-1 ', 'ITM-1'], { columnKey: 'sku', lookups });
+  assert.deepEqual(calls, ['sku:ITM-1']); // سؤالٌ واحدٌ لأربع كتابات
+  assert.equal(b.ok, 1);
+  assert.equal(outcomeFor(b, 'itm-1').status, 'ok');
+});
+
+test('★★ الفشلُ في كودٍ لا يوقف بقيّتَه — و«تعذّر» يتمايز عن «مجهول»', async () => {
+  const lookups = {
+    getItem: async (v) => {
+      if (v === 'BOOM') throw new Error('شبكة');
+      return v === 'ITM-1' ? ITEM : null;
+    },
+    lookupByBarcode: async () => null,
+  };
+  const b = await resolveItemCodes(['ITM-1', 'BOOM', 'GHOST'], { columnKey: 'sku', lookups });
+  assert.deepEqual({ ok: b.ok, unknown: b.unknown, failed: b.failed }, { ok: 1, unknown: 1, failed: 1 });
+  assert.equal(outcomeFor(b, 'ITM-1').status, 'ok');
+  assert.equal(outcomeFor(b, 'BOOM').status, 'failed');
+  assert.equal(outcomeFor(b, 'GHOST').status, 'unknown');
+});
+
+test('لصقةٌ فارغةٌ لا تسأل أحدًا', async () => {
+  const { calls, lookups } = fakeLookups();
+  const b = await resolveItemCodes(['', '  ', null], { columnKey: 'sku', lookups });
+  assert.deepEqual(calls, []);
+  assert.equal(b.byCode.size, 0);
+});
+
+test('المكرّرُ يُكشف بهويّته لا بصيغته — وبندٌ واحدٌ ليس تكرارًا', () => {
+  const groups = duplicateGroups([
+    { index: 0, value: 'ITM-1' },
+    { index: 1, value: 'ITM-2' },
+    { index: 2, value: 'itm-1' },
+    { index: 3, value: ' ITM-1 ' },
+  ]);
+  assert.equal(groups.size, 1);
+  assert.deepEqual(groups.get('ITM-1'), [0, 2, 3]);
+  assert.equal(duplicateGroups([{ index: 0, value: 'X' }]).size, 0);
+  assert.equal(duplicateGroups([]).size, 0);
 });
