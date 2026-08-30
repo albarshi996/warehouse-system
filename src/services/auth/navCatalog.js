@@ -38,21 +38,35 @@ export const PINNED_ITEM = { path: '/dashboard', label: 'الرئيسية', icon
  */
 export const NAV_GROUPS = [
   {
+    /**
+     * ‹RB-201› أُضيفت `roles` صراحةً على المداخل المفتوحة في هذه
+     * المجموعة. **ليس تضييقًا على أحد**: الأدوارُ التسعةُ المذكورة هي
+     * بعينها من كان يراها قبل التغيير (قِيس بـ`nav-baseline.mjs`).
+     * والسببُ أنّ «موظّف الجرد المكلَّف» يرى هذه المجموعة لشاشةٍ واحدةٍ
+     * فيها، ولو بقيت المداخلُ مفتوحةً لَورث ستَّ شاشاتٍ لا شأنَ له بها.
+     */
     key: 'daily',
     group: 'العمليات اليومية',
     emoji: '🗓️', icon: 'calendar',
     items: [
       // الفهرس الجامع لكل مقاصد البوابة — يُولَّد من هذا الكتالوج نفسه، فأيّ
       // عنصر يُضاف هنا مستقبلًا يظهر فيه تلقائيًّا بلا تعديل يدويّ.
-      { path: '/dashboard/portal-operations', label: 'عمليات البوابة', icon: 'globe' },
-      { path: '/dashboard/documents', label: 'المستندات', icon: 'clipboardList' },
-      { path: '/dashboard/forms', label: 'اختار وظيفتك', icon: 'clipboardList' },
-      { path: '/dashboard/tasks', label: 'المهام', icon: 'clipboardList' },
-      { path: '/dashboard/products', label: 'الأصناف', icon: 'package' },
+      { path: '/dashboard/portal-operations', label: 'عمليات البوابة', icon: 'globe', roles: ['admin', 'warehouse_manager', 'storekeeper', 'qc_inspector', 'gate_officer', 'purchase_officer', 'return_manager', 'fnb_manager', 'branch_manager'] },
+      { path: '/dashboard/documents', label: 'المستندات', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'storekeeper', 'qc_inspector', 'gate_officer', 'purchase_officer', 'return_manager', 'fnb_manager', 'branch_manager'] },
+      { path: '/dashboard/forms', label: 'اختار وظيفتك', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'storekeeper', 'qc_inspector', 'gate_officer', 'purchase_officer', 'return_manager', 'fnb_manager', 'branch_manager'] },
+      { path: '/dashboard/tasks', label: 'المهام', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'storekeeper', 'qc_inspector', 'gate_officer', 'purchase_officer', 'return_manager', 'fnb_manager', 'branch_manager'] },
+      { path: '/dashboard/products', label: 'الأصناف', icon: 'package', roles: ['admin', 'warehouse_manager', 'storekeeper', 'qc_inspector', 'gate_officer', 'purchase_officer', 'return_manager', 'fnb_manager', 'branch_manager'] },
       // ماستر شركاء الأعمال (§15.2/15.3) — للمديرَين كإدارة بياناتٍ مرجعية.
       { path: '/dashboard/suppliers', label: 'ماستر الموردين', icon: 'users', roles: ['admin', 'warehouse_manager'] },
       { path: '/dashboard/customers', label: 'ماستر العملاء', icon: 'users', roles: ['admin', 'warehouse_manager'] },
-      { path: '/dashboard/stock-operations', label: 'عمليات مخزنية', icon: 'package' },
+      // ‹RB-201› شاشةُ المكلَّف الوحيدة. والمدخلُ كان **بلا `roles`** أي
+      // مفتوحًا لكلّ من يرى المجموعة — فإضافةُ قائمةٍ هنا كانت ستسحبه من
+      // تسعةِ أدوارٍ تراه اليوم. فتُذكر التسعةُ كلُّها ومعها المكلَّف:
+      // **يُضاف ولا يُنتزع** (يحرسه `navBaseline.test.js`).
+      { path: '/dashboard/stock-operations', label: 'عمليات مخزنية', icon: 'package',
+        roles: ['admin', 'warehouse_manager', 'storekeeper', 'qc_inspector', 'gate_officer',
+                'purchase_officer', 'return_manager', 'fnb_manager', 'branch_manager',
+                'count_assignee'] },
       // ‹تدقيق 24.08› اسمها كان «متابعة العمليات» — عامٌّ يوهم بلوحةٍ ثانية،
       // وهي في الحقيقة منظارُ الجرد: العمليّات الجارية ومن يعمل عليها وسجلّ
       // المسح لحظيًّا. اللوحة الرئيسة واحدة (`command-center`، قرار المالك).

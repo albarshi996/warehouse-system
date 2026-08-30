@@ -29,8 +29,11 @@ test('★★ لا دورٌ يُفقد: الستّة عشر السابقة كلّ
     assert.equal(ROLES[id].id, id);
     assert.ok(ROLES[id].label, `الدور «${id}» بلا اسمٍ عربيّ`);
   }
-  // ‹FNB-107› دورا القطاع، ثمّ ‹FNB-502 · ق-O05› الشيف التنفيذيّ.
-  assert.equal(Object.keys(ROLES).length, PRE_FNB_ROLES.length + 3, 'ثلاثة أدوارٍ أُضيفت لا أكثر');
+  // ‹FNB-107› دورا القطاع، ثمّ ‹FNB-502 · ق-O05› الشيف التنفيذيّ،
+  // ثمّ ‹RB-201› موظّف الجرد المكلَّف — والعددُ يُثبَّت عمدًا: كلُّ دورٍ جديد
+  // يُوقف هذا الحارس، فلا يُضاف دورٌ في غفلة.
+  assert.equal(Object.keys(ROLES).length, PRE_FNB_ROLES.length + 4, 'أربعةُ أدوارٍ أُضيفت لا أكثر');
+  assert.equal(ROLES.count_assignee.label, 'موظّف جرد مكلَّف');
 });
 
 test('أدوار القطاع معرَّفة: صاحبُ المدخل ومصدرُ البيانات وصاحبُ الوصفة', () => {

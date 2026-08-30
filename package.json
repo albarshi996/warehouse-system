@@ -27,7 +27,7 @@
     "test": "node --test \"src/**/*.test.js\"",
     "test:rules": "firebase emulators:exec --only firestore \"node --test test/firestore-rules.test.mjs\"",
     "audit": "node scripts/audit-portal.mjs",
-    "plan": "npm run where && npm run plan:phase-one && npm run plan:client && npm run plan:sap && npm run plan:locations && npm run plan:exec && npm run plan:fnb && npm run plan:capture && npm run plan:lpn && npm run plan:gate && npm run plan:visits && npm run plan:deps && npm run plan:bulk",
+    "plan": "npm run where && npm run plan:phase-one && npm run plan:client && npm run plan:sap && npm run plan:locations && npm run plan:exec && npm run plan:fnb && npm run plan:capture && npm run plan:lpn && npm run plan:gate && npm run plan:visits && npm run plan:deps && npm run plan:bulk && npm run plan:rbac",
     "plan:phase-one": "node scripts/plan-check.mjs",
     "plan:client": "node scripts/plan-check.mjs --plan docs/plan/client-completion.json --resume docs/plan/استئناف-نسخة-العميل.md",
     "plan:sap": "node scripts/plan-check.mjs --plan docs/plan/sap-alignment.json --resume docs/plan/استئناف-المواءمة.md",
@@ -43,7 +43,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "plan:bulk": "node scripts/plan-check.mjs --plan docs/plan/bulk-item-entry.json --resume docs/plan/استئناف-الإدخال-الجماعي.md"
+    "plan:bulk": "node scripts/plan-check.mjs --plan docs/plan/bulk-item-entry.json --resume docs/plan/استئناف-الإدخال-الجماعي.md",
+    "plan:rbac": "node scripts/plan-check.mjs --plan docs/plan/rbac-tasks.json --resume docs/plan/استئناف-الأدوار-والمهمات.md"
   },
   "repository": {
     "type": "git",

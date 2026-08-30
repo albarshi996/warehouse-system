@@ -11,9 +11,9 @@
   "counts": {
     "modules": 116,
     "serviceDomains": 51,
-    "serviceFiles": 571,
+    "serviceFiles": 572,
     "collections": 97,
-    "roles": 18,
+    "roles": 19,
     "odooModels": 12,
     "odooGuards": 51,
     "infraNodes": 6,
@@ -1155,6 +1155,7 @@
         "authService.js",
         "navAccess.js",
         "navAccess.test.js",
+        "navBaseline.test.js",
         "navCatalog.js",
         "pageAccess.js",
         "pageAccess.test.js",
@@ -1165,8 +1166,8 @@
         "usageGuide.test.js",
         "usersService.js"
       ],
-      "fileCount": 15,
-      "testCount": 6,
+      "fileCount": 16,
+      "testCount": 7,
       "exports": [
         "ALWAYS_ALLOWED",
         "DEFAULT_ROLE",
@@ -4899,6 +4900,7 @@
       "isActive",
       "isAdmin",
       "isBootstrapAdmin",
+      "isCountAssignee",
       "isCreator",
       "isFleetWriter",
       "isFnbManager",
@@ -4928,6 +4930,7 @@
       "isActive",
       "isAdmin",
       "isBootstrapAdmin",
+      "isCountAssignee",
       "isCreator",
       "isFleetWriter",
       "isFnbManager",
@@ -6720,9 +6723,10 @@
             "actions": [
               "create"
             ],
-            "condition": "isStockActor()",
+            "condition": "isStockActor() || isCountAssignee()",
             "roles": [
-              "isStockActor"
+              "isStockActor",
+              "isCountAssignee"
             ]
           },
           {
@@ -6760,9 +6764,10 @@
             "actions": [
               "create"
             ],
-            "condition": "isStockActor() && request.resource.data.byUid == request.auth.uid && get(/databases/$(database)/documents/operations/$(opId)).data.status == 'open'",
+            "condition": "(isStockActor() || isCountAssignee()) && request.resource.data.byUid == request.auth.uid && get(/databases/$(database)/documents/operations/$(opId)).data.status",
             "roles": [
-              "isStockActor"
+              "isStockActor",
+              "isCountAssignee"
             ]
           },
           {
@@ -9244,7 +9249,7 @@
       "test": "node --test \"src/**/*.test.js\"",
       "test:rules": "firebase emulators:exec --only firestore \"node --test test/firestore-rules.test.mjs\"",
       "audit": "node scripts/audit-portal.mjs",
-      "plan": "npm run where && npm run plan:phase-one && npm run plan:client && npm run plan:sap && npm run plan:locations && npm run plan:exec && npm run plan:fnb && npm run plan:capture && npm run plan:lpn && npm run plan:gate && npm run plan:visits && npm run plan:deps && npm run plan:bulk",
+      "plan": "npm run where && npm run plan:phase-one && npm run plan:client && npm run plan:sap && npm run plan:locations && npm run plan:exec && npm run plan:fnb && npm run plan:capture && npm run plan:lpn && npm run plan:gate && npm run plan:visits && npm run plan:deps && npm run plan:bulk && npm run plan:rbac",
       "plan:phase-one": "node scripts/plan-check.mjs",
       "plan:client": "node scripts/plan-check.mjs --plan docs/plan/client-completion.json --resume docs/plan/استئناف-نسخة-العميل.md",
       "plan:sap": "node scripts/plan-check.mjs --plan docs/plan/sap-alignment.json --resume docs/plan/استئناف-المواءمة.md",
@@ -9260,7 +9265,8 @@
       "lint": "eslint .",
       "format": "prettier --write .",
       "format:check": "prettier --check .",
-      "plan:bulk": "node scripts/plan-check.mjs --plan docs/plan/bulk-item-entry.json --resume docs/plan/استئناف-الإدخال-الجماعي.md"
+      "plan:bulk": "node scripts/plan-check.mjs --plan docs/plan/bulk-item-entry.json --resume docs/plan/استئناف-الإدخال-الجماعي.md",
+      "plan:rbac": "node scripts/plan-check.mjs --plan docs/plan/rbac-tasks.json --resume docs/plan/استئناف-الأدوار-والمهمات.md"
     }
   }
 }

@@ -86,6 +86,16 @@ service cloud.firestore {
              (signedIn() && hasProfile() && isActive() && myRole() == 'fnb_manager');
     }
 
+    // ‹RB-201› موظّف الجرد المكلَّف — **تكليفٌ من الإدارة العامّة لا وظيفة**.
+    //
+    // ★ حارسٌ مستقلٌّ عمدًا: `isStockActor` مستعملةٌ في ٤٨ موضعًا (حركاتُ
+    // مخزنٍ · مستنداتٌ · عهدٌ · دفاتر)، فإضافةُ الدور إليها كانت ستمنحه
+    // البوّابةَ كلَّها وهو لا يملك إلّا شاشةً واحدة. فيُذكر هنا وحدَه،
+    // ويُستعمل في موضعين اثنين لا ثالثَ لهما: فتحُ جلسةِ عدٍّ، وإلحاقُ مسحةٍ بها.
+    function isCountAssignee() {
+      return signedIn() && hasProfile() && isActive() && myRole() == 'count_assignee';
+    }
+
     function isStockActor() {
       return isBootstrapAdmin() ||
              (signedIn() && hasProfile() && isActive() && myRole() in [
@@ -145,7 +155,8 @@ service cloud.firestore {
       // إنشاء جلسة جرد/مسح: فاعل مخزنيّ فقط — لا أي مصادَق (كان viewer
       // يُنشئ عمليات؛ حُصر بالمحور ٤). شاشة «الجرد الذكي» لا يراها إلا
       // الأدوار المخزنية أصلًا، فلا تقييد جديد على من يعمل فعلًا.
-      allow create: if isStockActor();
+      // ‹RB-201› ومعهم المكلَّف — وهذا **موضعُه الأوّل من موضعين**.
+      allow create: if isStockActor() || isCountAssignee();
       // الإقفال والملخّص للمديرين فقط؛ ولا حذف للعمليات إطلاقاً.
       allow update: if isManager();
       allow delete: if false;
@@ -156,7 +167,7 @@ service cloud.firestore {
       // كلفة get() قراءة واحدة لكل مسح — ثمن مقبول لتجميد التاريخ.
       match /scans/{scanId} {
         allow read: if signedIn();
-        allow create: if isStockActor()
+        allow create: if (isStockActor() || isCountAssignee())
                       && request.resource.data.byUid == request.auth.uid
                       && get(/databases/$(database)/documents/operations/$(opId)).data.status == 'open';
         allow update, delete: if false;

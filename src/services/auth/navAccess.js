@@ -35,6 +35,9 @@ export const NAV_GROUP_LABELS = {
 export const ROLE_NAV = {
   // ‹تدقيق 24.08› «العروض والاجتماعات» خرجت من «مركز التقارير» — تُمنح لمن
   // كان يملك عناصرها هناك بعينهم: المديران، والماليّ لعرض جلسته وحدها.
+  // ‹RB-201› المكلَّفُ يرى مجموعةً واحدةً، وفيها مدخلٌ واحدٌ يخصّه —
+  // فالتضييقُ بالمجموعة **وبالمدخل** معًا، لا بإحداهما.
+  count_assignee: ['daily'],
   admin: ['daily', 'warehouses', 'putaway', 'lpn', 'gate', 'fleet', 'field', 'fnb', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
   warehouse_manager: ['daily', 'warehouses', 'putaway', 'lpn', 'gate', 'fleet', 'field', 'fnb', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
   // ‹LPN› أمين المخزن يقف عند الشاحنة — فالاستلام الميدانيّ بيته.
