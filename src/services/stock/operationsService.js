@@ -227,6 +227,29 @@ export async function findOperationsByCode(code) {
 }
 
 /**
+ * ★★ يربط جلسةً بحملةٍ (أو يفكّها) — **دمجُ الجلسات منطقيٌّ لا فيزيائيّ**.
+ *
+ * ولا يُنقل قيدُ مسحٍ واحد: قاعدة `scans` تمنع التعديل والحذف منعًا باتًّا،
+ * والنسخُ يكتب `byUid` الناسخِ فيصير جردُ محمدٍ باسم المدير — تزويرٌ للأثر
+ * الذي طُلب الدمجُ من أجله. فتبقى كلُّ جلسةٍ بقيودها وكاتبيها، ويُكتب على
+ * **رأسها** انتماؤها.
+ *
+ * ★ **وبلا تعديلِ سطرٍ في `firestore.rules`:** `allow update: if isManager()`
+ *   قائمةٌ ولا تحصر الحقول — فالميزةُ تعمل يومَ رفعها بلا نشرٍ من الكونسول.
+ *   ومَن دون المديرين يرتدّ طلبُه `permission-denied`، فتقول الشاشة ذلك.
+ *
+ * @param {string} opId
+ * @param {{campaignId?:string, campaignName?:string}} campaign
+ *   ومعرّفٌ فارغٌ **يفكّ** الارتباط — مسحُ حقلٍ لا حذفُ بيان.
+ */
+export function setOperationCampaign(opId, { campaignId = '', campaignName = '' } = {}) {
+  return updateDoc(doc(db, OPS, opId), {
+    campaignId: String(campaignId || ''),
+    campaignName: String(campaignName || ''),
+  });
+}
+
+/**
  * يُغيّر رمز عمليةٍ قائمة — للمديرين وحدهم بحكم قاعدة `operations`.
  * ومَن دونهم يرتدّ طلبُه بـ`permission-denied`، فتقول الواجهة ذلك صراحةً.
  */

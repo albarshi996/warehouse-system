@@ -3,8 +3,19 @@ import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authServ
 import {
   listenOperations,
   listenScans,
+  getScans,
   closeOperation,
+  setOperationCampaign,
 } from '../../../services/stock/operationsService.js';
+import {
+  newCampaignId,
+  normalizeCampaignName,
+  mergeVerdict,
+  groupByCampaign,
+  campaignLabel,
+  campaignLogRows,
+  byBranch,
+} from '../../../services/stock/campaign.js';
 import {
   buildLogRows,
   filterLogRows,
@@ -62,10 +73,19 @@ function fmtRelative(ts) {
 }
 
 const OP_COLS = [
+  { key: 'pick', label: '', width: '34px' },
   { key: 'type', label: 'العملية' },
   { key: 'status', label: 'الحالة' },
   { key: 'by', label: 'المنفّذ' },
   { key: 'when', label: 'الوقت' },
+];
+
+const BRANCH_COLS = [
+  { key: 'branch', label: 'الفرع' },
+  { key: 'scans', label: 'قراءات', numeric: true },
+  { key: 'items', label: 'أصناف', numeric: true },
+  { key: 'people', label: 'عادّون', numeric: true },
+  { key: 'base', label: 'الإجمالي بالأساس', numeric: true },
 ];
 
 /**
@@ -116,6 +136,11 @@ export default function OperationsMonitor() {
   const [term, setTerm] = useState('');
   const [logPage, setLogPage] = useState(0);
   const [exporting, setExporting] = useState(false);
+  // ‹الدمج› جلساتٌ محدَّدةٌ للربط في حملة، والحملةُ المفتوحةُ للعرض المجمَّع.
+  const [picked, setPicked] = useState([]);
+  const [campaign, setCampaign] = useState(null); // معرّف الحملة المعروضة
+  const [campaignParts, setCampaignParts] = useState([]); // [{op, rows}]
+  const [campaignBusy, setCampaignBusy] = useState(false);
   // عنصرُ الطباعة — `exportElementToPdf` ترفض النصّ وتشترط عنصرَ DOM حقيقيًّا.
   const printRef = useRef(null);
 
@@ -176,6 +201,161 @@ export default function OperationsMonitor() {
   }, [scans]);
   const pagedLog = useMemo(() => pageSlice(shownLog, logPage, LOG_PAGE), [shownLog, logPage]);
   useEffect(() => setLogPage(0), [person, term, selected]);
+
+  /* ═══════════ الدمج: بنغازي أوّلًا ثمّ طرابلس ═══════════ */
+
+  const campaigns = useMemo(
+    () => groupByCampaign(ops, { toMillis: (o) => o?.createdAt?.toDate?.()?.getTime?.() ?? null }),
+    [ops]
+  );
+  const openCampaign = useMemo(() => campaigns.find((c) => c.id === campaign) || null, [campaigns, campaign]);
+
+  /**
+   * ★ دفاترُ أعضاء الحملة تُقرأ **مرّةً واحدةً** لا اشتراكًا حيًّا لكلّ عضو.
+   *
+   * الحملةُ عرضٌ تجميعيٌّ يُراجَع ويُصدَّر، وأعضاؤها غالبًا مُقفلون (بنغازي
+   * انتهت). واشتراكٌ حيٌّ على كلّ عضوٍ يفتح قنواتٍ لا يُقرأ منها جديد.
+   * والجلسةُ الجاريةُ تُتابَع من بطاقتها المفردة حيث البثُّ الحيّ قائم.
+   */
+  useEffect(() => {
+    if (!openCampaign) {
+      setCampaignParts([]);
+      return undefined;
+    }
+    let alive = true;
+    setCampaignBusy(true);
+    Promise.all(
+      openCampaign.ops.map((op) =>
+        getScans(op.id)
+          .then((rows) => ({ op, rows: buildLogRows(rows, { toMillis: (s) => s?.at?.toDate?.()?.getTime?.() ?? null }) }))
+          // جلسةٌ تعذّرت قراءتُها لا تُسقط الحملةَ كلَّها — تُعرض بلا صفوفٍ ويُقال ذلك.
+          .catch(() => ({ op, rows: [] }))
+      )
+    )
+      .then((parts) => {
+        if (!alive) return;
+        setCampaignParts(parts);
+        setCampaignBusy(false);
+      })
+      .catch(() => alive && setCampaignBusy(false));
+    return () => {
+      alive = false;
+    };
+  }, [openCampaign]);
+
+  const campaignRows = useMemo(
+    () => campaignLogRows(campaignParts, (op) => scopeLabel(scopeOf(op))),
+    [campaignParts]
+  );
+  const campaignShown = useMemo(
+    () => filterLogRows(campaignRows, { person, term }),
+    [campaignRows, person, term]
+  );
+  const campaignBranches = useMemo(() => byBranch(campaignShown), [campaignShown]);
+  const campaignTotals = useMemo(() => logTotals(campaignShown), [campaignShown]);
+
+  function togglePick(id) {
+    setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+  }
+
+  /**
+   * ★★ يربط الجلسات المحدَّدة في حملةٍ واحدة — **بلا نقلِ قيدٍ واحد**.
+   *
+   * والحكمُ («هل تُدمج؟») في `campaign.js` الخالص المختبَر: جلسةٌ واحدةٌ ليست
+   * حملة، وجردٌ لا يُدمج مع استلام. أمّا المُقفلة فتُدمج — وهي حالةُ المالك.
+   */
+  async function mergePicked() {
+    const chosen = ops.filter((o) => picked.includes(o.id));
+    const verdict = mergeVerdict(chosen);
+    if (!verdict.ok) {
+      flash(verdict.reason);
+      return;
+    }
+    const existing = chosen.map((o) => o.campaignId).find(Boolean) || '';
+    const suggested = campaigns.find((c) => c.id === existing)?.name || '';
+    const raw = window.prompt(
+      `اسمُ الحملة (${chosen.length} جلسات):${verdict.notes.length ? `\n\n${verdict.notes.join('\n')}` : ''}`,
+      suggested || 'جرد الفروع'
+    );
+    if (raw === null) return;
+    const name = normalizeCampaignName(raw);
+    const id = existing || newCampaignId(Math.random, campaigns.map((c) => c.id));
+    setCampaignBusy(true);
+    try {
+      await Promise.all(chosen.map((o) => setOperationCampaign(o.id, { campaignId: id, campaignName: name })));
+      setPicked([]);
+      setCampaign(id);
+      setSelected(null);
+      flash(`دُمجت ${chosen.length} جلسات في «${name || id}» — القيود لم تُنقل، والأسماء كما هي.`);
+    } catch (e) {
+      const denied = String(e?.code || e?.message || '').includes('permission-denied');
+      flash(denied ? 'الدمجُ للمديرين وحدهم.' : 'تعذّر الدمج — تحقّق من الشبكة.');
+    } finally {
+      setCampaignBusy(false);
+    }
+  }
+
+  /**
+   * ★ تصديرُ الحملة إكسل — **ثلاثُ أوراق**: السجلُّ الموحَّد بعمود الفرع،
+   * وتوزيعُ الفروع، وتوزيعُ العادّين عبر الفرعين. وهذا ما يجعله تقريرًا
+   * واحدًا لحملةٍ وقعت على مرحلتين.
+   */
+  async function exportCampaignExcel() {
+    if (!openCampaign || !campaignShown.length) return;
+    setExporting(true);
+    try {
+      const XLSX = await import('xlsx');
+      const wb = XLSX.utils.book_new();
+      const rows = logExportRows(campaignShown, { formatTime: stampOf }).map((r, i) => ({
+        'الفرع': campaignShown[i].branch || '—',
+        'رمز الجلسة': campaignShown[i].opCode,
+        ...r,
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'السجلّ الموحَّد');
+      XLSX.utils.book_append_sheet(
+        wb,
+        XLSX.utils.json_to_sheet(
+          campaignBranches.map((b) => ({
+            'الفرع': b.branch,
+            'قراءات': b.scans,
+            'أصناف': b.items,
+            'عادّون': b.people,
+            'الإجمالي بوحدة الأساس': b.base,
+          }))
+        ),
+        'توزيع الفروع'
+      );
+      XLSX.utils.book_append_sheet(
+        wb,
+        XLSX.utils.json_to_sheet(
+          workByPerson(campaignShown).map((p) => ({
+            'العادّ': p.name,
+            'عدد القيود': p.scans,
+            'أصناف مختلفة': p.items,
+            'الإجمالي بوحدة الأساس': p.base,
+          }))
+        ),
+        'توزيع العمل'
+      );
+      XLSX.writeFile(wb, `Campaign_${openCampaign.id}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      flash(`صُدِّرت الحملة — ${campaignShown.length} قيدًا من ${openCampaign.ops.length} جلسات.`);
+    } catch {
+      flash('تعذّر تصدير الحملة.');
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  /** فكُّ جلسةٍ من حملتها — مسحُ حقلٍ لا حذفُ بيان. */
+  async function unlinkFromCampaign(op) {
+    if (!window.confirm(`إخراج جلسة ${formatOperationCode(op.code || '') || op.id.slice(0, 6)} من الحملة؟ لا يُحذف منها شيء.`)) return;
+    try {
+      await setOperationCampaign(op.id, { campaignId: '', campaignName: '' });
+      flash('أُخرجت الجلسة من الحملة — وقيودُها كما هي.');
+    } catch {
+      flash('تعذّر فكّ الارتباط (تحقّق من صلاحيتك).');
+    }
+  }
 
   async function handleClose(opId) {
     if (!confirm('إقفال العملية؟ لن يُقبل أي مسح جديد عليها.')) return;
@@ -300,6 +480,18 @@ export default function OperationsMonitor() {
     id: o.id,
     decoration: selected === o.id ? 'bf' : o.status !== 'open' ? 'muted' : undefined,
     cells: {
+      /* خانةُ اختيارٍ **مضبوطة** — خانةُ `ListView` زينةٌ بلا `onChange`،
+         فلا يُبنى عليها دمجٌ يكتب في السحابة. */
+      pick: (
+        <input
+          type="checkbox"
+          checked={picked.includes(o.id)}
+          onChange={() => togglePick(o.id)}
+          onClick={(e) => e.stopPropagation()}
+          aria-label={`تحديد ${formatOperationCode(o.code || '') || o.id.slice(0, 6)} للدمج`}
+          data-op-pick
+        />
+      ),
       type: (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
           <Icon name={OP_ICONS[o.type] || 'package'} size={15} /> {o.type}
@@ -413,6 +605,62 @@ export default function OperationsMonitor() {
           </div>
         </div>
 
+        {/*
+          ★★ الحملات — «الجردُ أوّلًا في بنغازي ثمّ ننتقل إلى طرابلس».
+
+          والدمجُ **رابطةٌ على الرؤوس لا نقلٌ للقيود**: قاعدة `scans` تمنع
+          التعديل والحذف، والنسخُ يكتب اسمَ الناسخ مكانَ اسم من عدّ. فتبقى
+          كلُّ جلسةٍ كما هي، وتُقرأ هنا مجتمعةً بعمود الفرع.
+        */}
+        {(campaigns.length > 0 || picked.length > 0) && (
+          <div className="o_dashboard_card" style={{ marginBottom: '16px' }}>
+            <div className="o_dashboard_card_head">
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <Icon name="layers" size={16} /> حملات الجرد
+              </span>
+              {picked.length > 0 && (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={mergePicked}
+                  disabled={campaignBusy}
+                  data-merge-btn
+                >
+                  <Icon name="arrowLeftRight" size={14} /> ادمج المحدَّدة ({int(picked.length)})
+                </button>
+              )}
+            </div>
+            <div className="o_ds_pad">
+              {campaigns.length === 0 ? (
+                <p style={{ margin: 0, fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', lineHeight: 1.8 }}>
+                  حدِّد جلستين فأكثر من القائمة أدناه ثمّ اضغط «ادمج المحدَّدة» — فتُقرآن جدولًا
+                  واحدًا بعمود الفرع، ويُصدَّران ملفًّا واحدًا. <strong>ولا يُنقل قيدٌ ولا يتغيّر
+                  اسمُ من عدّ.</strong>
+                </p>
+              ) : (
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {campaigns.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      className={campaign === c.id ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm'}
+                      onClick={() => {
+                        setCampaign(campaign === c.id ? null : c.id);
+                        setSelected(null);
+                        setPerson('all');
+                        setTerm('');
+                      }}
+                      data-campaign-btn
+                    >
+                      {campaignLabel(c)} — {int(c.ops.length)} جلسات
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="o_dashboard_grid2">
           {/* قائمة العمليات */}
           <div className="o_dashboard_card">
@@ -450,10 +698,187 @@ export default function OperationsMonitor() {
             )}
           </div>
 
-          {/* تفاصيل العملية المختارة */}
+          {/* تفاصيل العملية المختارة — أو الحملة المفتوحة */}
           <div className="o_dashboard_card">
-            {!sel ? (
-              <div className="o_dashboard_empty">اختر عملية من القائمة لعرض سجلّ المسح الحيّ.</div>
+            {openCampaign ? (
+              /*
+                ★★ العرضُ المجمَّع للحملة — جلستان في جدولٍ واحدٍ بعمود الفرع.
+                والصفوفُ تبقى مفردةً بقارئها ووقتها: المقصودُ سجلٌّ يُحتجّ به،
+                والتجميعُ يُبنى فوقه ولا يمحوه.
+              */
+              <>
+                <div className="o_dashboard_card_head">
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <Icon name="layers" size={16} /> {campaignLabel(openCampaign)}
+                    <span style={{ color: 'var(--o-gray-500)', fontSize: 'var(--o-font-size-xs)' }}>
+                      {int(openCampaign.ops.length)} جلسات · {openCampaign.types.join(' · ')}
+                    </span>
+                  </span>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => setCampaign(null)}>
+                    إغلاق العرض
+                  </button>
+                </div>
+
+                <div className="o_ds_pad">
+                  {/* أعضاءُ الحملة — وفكُّ أيٍّ منها مسحُ حقلٍ لا حذفُ بيان */}
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
+                    {openCampaign.ops.map((op) => (
+                      <span
+                        key={op.id}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 8px',
+                          border: '1px solid var(--o-border-color)', borderRadius: 'var(--o-border-radius)',
+                          fontSize: 'var(--o-font-size-xs)',
+                        }}
+                      >
+                        <strong style={{ fontFamily: 'monospace' }} dir="ltr">
+                          {formatOperationCode(op.code || '') || op.id.slice(0, 6)}
+                        </strong>
+                        <span style={{ color: 'var(--o-main-color-muted)' }}>{scopeLabel(scopeOf(op))}</span>
+                        <Badge variant={op.status === 'open' ? 'done' : 'draft'}>
+                          {op.status === 'open' ? 'مفتوحة' : 'مُقفلة'}
+                        </Badge>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          style={{ padding: '0 6px' }}
+                          onClick={() => unlinkFromCampaign(op)}
+                          title="إخراج هذه الجلسة من الحملة — لا يُحذف منها شيء"
+                        >
+                          إخراج
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="o_dashboard_kpis" style={{ marginBottom: '16px' }}>
+                    <div className="o_kpi">
+                      <span className="o_kpi_value">{int(campaignTotals.scanCount)}</span>
+                      <span className="o_kpi_label">قراءة في الحملة</span>
+                    </div>
+                    <div className="o_kpi">
+                      <span className="o_kpi_value">{num(campaignTotals.baseTotal)}</span>
+                      <span className="o_kpi_label">الإجمالي بوحدة الأساس</span>
+                    </div>
+                    <div className="o_kpi">
+                      <span className="o_kpi_value">{int(campaignTotals.itemCount)}</span>
+                      <span className="o_kpi_label">صنف مختلف</span>
+                    </div>
+                    <div className="o_kpi">
+                      <span className="o_kpi_value">{int(campaignBranches.length)}</span>
+                      <span className="o_kpi_label">فرع</span>
+                    </div>
+                  </div>
+
+                  <h3 className="o_dashboard_section_title"><Icon name="mapPin" size={16} /> توزيع الفروع</h3>
+                  <div style={{ border: '1px solid var(--o-border-color)', borderRadius: 'var(--o-border-radius)', marginBottom: '16px' }}>
+                    <ListView
+                      selectable={false}
+                      columns={BRANCH_COLS}
+                      rows={campaignBranches.map((b) => ({
+                        id: b.branch,
+                        cells: {
+                          branch: <span style={{ fontWeight: 'var(--o-font-weight-medium)' }}>{b.branch}</span>,
+                          scans: int(b.scans),
+                          items: int(b.items),
+                          people: int(b.people),
+                          base: <span className="decoration-bf">{num(b.base)}</span>,
+                        },
+                      }))}
+                    />
+                  </div>
+
+                  <h3 className="o_dashboard_section_title">
+                    <Icon name="activity" size={16} /> السجلّ الموحَّد
+                  </h3>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px' }}>
+                    <select
+                      className="o_input"
+                      style={{ width: 'auto' }}
+                      value={person}
+                      onChange={(e) => setPerson(e.target.value)}
+                      aria-label="تصفية بالعادّ"
+                    >
+                      <option value="all">كلّ العادّين</option>
+                      {logPeople(campaignRows).map((p) => (
+                        <option key={p.name} value={p.name}>{p.name} ({p.count})</option>
+                      ))}
+                    </select>
+                    <input
+                      type="search"
+                      className="o_input"
+                      style={{ flex: 1, minWidth: '150px' }}
+                      placeholder="ابحث بالصنف أو الباركود…"
+                      value={term}
+                      onChange={(e) => setTerm(e.target.value)}
+                      aria-label="بحث في سجلّ الحملة"
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={exportCampaignExcel}
+                      disabled={!campaignShown.length || exporting}
+                      data-campaign-xlsx
+                    >
+                      <Icon name="fileUp" size={14} /> تصدير الحملة إكسل
+                    </button>
+                  </div>
+
+                  {campaignBusy ? (
+                    <div className="o_dashboard_empty">جارٍ جمع دفاتر الجلسات…</div>
+                  ) : campaignShown.length === 0 ? (
+                    <div className="o_dashboard_empty">لا قراءات في هذه الحملة (أو لا نتيجة للتصفية).</div>
+                  ) : (
+                    <div style={{ maxHeight: '420px', overflowY: 'auto', border: '1px solid var(--o-border-color)', borderRadius: 'var(--o-border-radius)' }}>
+                      <ListView
+                        selectable={false}
+                        columns={[{ key: 'branch', label: 'الفرع' }, ...SCAN_COLS]}
+                        rows={campaignShown.slice(0, LOG_PAGE).map((r) => ({
+                          id: `${r.opId}:${r.id}`,
+                          decoration: r.direction === 'out' ? 'muted' : undefined,
+                          cells: {
+                            branch: (
+                              <span style={{ fontSize: 'var(--o-font-size-xs)' }}>
+                                {r.branch}
+                                <br />
+                                <span style={{ color: 'var(--o-gray-500)', fontFamily: 'monospace' }} dir="ltr">{r.opCode}</span>
+                              </span>
+                            ),
+                            when: (
+                              <span style={{ fontSize: 'var(--o-font-size-xs)', fontFamily: 'monospace' }} dir="ltr">
+                                {r.atMs == null ? '—' : stampOf(r.atMs)}
+                              </span>
+                            ),
+                            by: r.byName,
+                            item: (
+                              <div>
+                                <div style={{ fontWeight: 'var(--o-font-weight-medium)' }}>{r.name}</div>
+                                <div style={{ color: 'var(--o-gray-500)', fontFamily: 'monospace', fontSize: 'var(--o-font-size-xs)' }} dir="ltr">
+                                  {r.barcode}
+                                </div>
+                              </div>
+                            ),
+                            qty: (
+                              <span className="decoration-bf">
+                                {num(r.qty)} <span style={{ fontWeight: 400, color: 'var(--o-gray-500)' }}>{r.uom || '—'}</span>
+                              </span>
+                            ),
+                            base: r.baseQty == null ? '—' : num(r.baseQty),
+                            flags: r.direction === 'out' ? <Badge variant="draft">خصم</Badge> : null,
+                          },
+                        }))}
+                      />
+                      {campaignShown.length > LOG_PAGE && (
+                        <p style={{ margin: '8px', fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
+                          يُعرض أوّل {int(LOG_PAGE)} من {int(campaignShown.length)} — والتصديرُ يشمل الكلّ.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : !sel ? (
+              <div className="o_dashboard_empty">اختر عملية من القائمة لعرض سجلّ المتابعة — أو افتح حملةً لترى جلساتها مجتمعة.</div>
             ) : (
               <>
                 <div className="o_dashboard_card_head">
