@@ -1,15 +1,30 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import {
   listenOperations,
   listenScans,
   closeOperation,
 } from '../../../services/stock/operationsService.js';
-import { scanBaseQty } from '../../../services/stock/scanFlow.js';
+import {
+  buildLogRows,
+  filterLogRows,
+  logPeople,
+  logTotals,
+  workByPerson,
+  logExportRows,
+} from '../../../services/stock/monitorLog.js';
+import { lastSeenByUser } from '../../../services/stock/scanQueue.js';
+import { scopeLabel, scopeOf } from '../../../services/stock/operationScope.js';
+import { formatOperationCode } from '../../../services/stock/operationCode.js';
+import { exportElementToPdf } from '../../../services/reports/pdfExport.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
 import Badge from '../../odoo/Badge.jsx';
-import { int } from '../../odoo/format.js';
+import Pager from '../../odoo/Pager.jsx';
+import { pageSlice } from '../../../services/ui/pagination.js';
+import { int, num } from '../../odoo/format.js';
+
+const LOG_PAGE = 100;
 
 import { MANAGER_ROLES } from '../../../services/auth/roles.js';
 
@@ -53,11 +68,29 @@ const OP_COLS = [
   { key: 'when', label: 'الوقت' },
 ];
 
+/**
+ * ★★ أعمدةُ سجلّ المتابعة — **مرجعٌ يُحتجّ به** (طلب المالك 2026-08-31).
+ *
+ * كان العمودُ «الكمية» وحدَه، فيقرأ المديرُ «محمد — ٥» ولا يدري أخمسةَ
+ * كراتينَ أم خمسَ قطع — وهو ما تمنعه قاعدتُنا CAP-103 نفسُها. والآن:
+ * الكمّيّةُ بوحدتها، ومعادلُها بوحدة الأساس (وهو وحده ما يُجمع)، والوقتُ
+ * **مطلقٌ** لا نسبيًّا وحدَه (فـ«قبل ٥ د» لا تصلح ورقةً بعد أسبوع).
+ */
 const SCAN_COLS = [
-  { key: 'item', label: 'الصنف' },
-  { key: 'qty', label: 'الكمية', numeric: true },
-  { key: 'by', label: 'من' },
-  { key: 'when', label: 'متى' },
+  { key: 'when', label: 'الوقت' },
+  { key: 'by', label: 'مَن قرأ' },
+  { key: 'item', label: 'ماذا قرأ' },
+  { key: 'qty', label: 'الكمّيّة', numeric: true },
+  { key: 'base', label: 'بالأساس', numeric: true },
+  { key: 'flags', label: '' },
+];
+
+const PERSON_COLS = [
+  { key: 'name', label: 'العادّ' },
+  { key: 'scans', label: 'قيود', numeric: true },
+  { key: 'items', label: 'أصناف', numeric: true },
+  { key: 'base', label: 'الإجمالي بالأساس', numeric: true },
+  { key: 'seen', label: 'آخر قراءة وصلت' },
 ];
 
 /**
@@ -78,6 +111,13 @@ export default function OperationsMonitor() {
   const [loadingScans, setLoadingScans] = useState(false);
   const [filter, setFilter] = useState('all');
   const [msg, setMsg] = useState('');
+  // تصفيةُ سجلّ المتابعة — بالشخص وبنصٍّ حرّ (طلب المالك: «مرجعٌ احتياطيّ»).
+  const [person, setPerson] = useState('all');
+  const [term, setTerm] = useState('');
+  const [logPage, setLogPage] = useState(0);
+  const [exporting, setExporting] = useState(false);
+  // عنصرُ الطباعة — `exportElementToPdf` ترفض النصّ وتشترط عنصرَ DOM حقيقيًّا.
+  const printRef = useRef(null);
 
   // من أنا؟ ثم استمع للعمليات إن كنت مديراً.
   useEffect(() => {
@@ -119,28 +159,23 @@ export default function OperationsMonitor() {
 
   const openCount = useMemo(() => ops.filter((o) => o.status === 'open').length, [ops]);
 
-  // تجميع سجلّ المسح: الإجماليات وتوزيع العمل على الموظّفين والأصناف.
-  const agg = useMemo(() => {
-    const byUser = new Map();
-    const byItem = new Map();
-    let totalQty = 0;
-    for (const s of scans) {
-      // بوحدة الأساس (CAP-103): جمعُ كرتونٍ وقطعةٍ خامَّين رقمٌ بلا معنى.
-      // والقيد القديم بلا baseQty يُقرأ كما هو — ترحيلٌ صفرُ الأثر.
-      const q = scanBaseQty(s);
-      totalQty += q;
-      const u = s.byName || 'غير معروف';
-      byUser.set(u, (byUser.get(u) || 0) + q);
-      const key = s.barcode || '—';
-      const prev = byItem.get(key) || { qty: 0, name: s.name, count: 0 };
-      byItem.set(key, { qty: prev.qty + q, name: s.name || prev.name, count: prev.count + 1 });
-    }
-    return {
-      totalQty,
-      byUser: [...byUser.entries()].sort((a, b) => b[1] - a[1]),
-      byItem: [...byItem.entries()].sort((a, b) => b[1].qty - a[1].qty),
-    };
+  /*
+    سجلُّ المتابعة — الحساب كلُّه في `monitorLog.js` الخالص المختبَر، والشاشة
+    تعرضه ولا تُعيد بناءه. (كان التجميعُ مكتوبًا هنا داخل `useMemo`، فلم يكن
+    يُختبر سطرًا واحدًا — وهو **الجدولُ الذي يُحتجّ به** عند الخلاف.)
+  */
+  const logRows = useMemo(() => buildLogRows(scans, { toMillis: (s) => s?.at?.toDate?.()?.getTime?.() ?? null }), [scans]);
+  const people = useMemo(() => logPeople(logRows), [logRows]);
+  const shownLog = useMemo(() => filterLogRows(logRows, { person, term }), [logRows, person, term]);
+  const totals = useMemo(() => logTotals(shownLog), [shownLog]);
+  const byPerson = useMemo(() => workByPerson(logRows), [logRows]);
+  const seenMap = useMemo(() => {
+    const m = new Map();
+    for (const r of lastSeenByUser(scans, (s) => s?.at?.toDate?.()?.getTime?.() ?? null)) m.set(r.name, r.lastAt);
+    return m;
   }, [scans]);
+  const pagedLog = useMemo(() => pageSlice(shownLog, logPage, LOG_PAGE), [shownLog, logPage]);
+  useEffect(() => setLogPage(0), [person, term, selected]);
 
   async function handleClose(opId) {
     if (!confirm('إقفال العملية؟ لن يُقبل أي مسح جديد عليها.')) return;
@@ -155,6 +190,85 @@ export default function OperationsMonitor() {
   function flash(t) {
     setMsg(t);
     setTimeout(() => setMsg(''), 3500);
+  }
+
+  /** طابعُ الوقت المطلق — واحدٌ للشاشة وللتصدير، فلا يفترق ملفٌّ عن جدول. */
+  function stampOf(ms) {
+    if (ms == null) return '—';
+    return new Date(ms).toLocaleString('ar-LY-u-nu-latn', {
+      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit',
+    });
+  }
+
+  /** اسمُ الملفّ — رمزُ الجلسة ثمّ اليوم، فيُعرف مصدرُه بعد شهر. */
+  function fileStem() {
+    const code = formatOperationCode(sel?.code || '') || (selected || '').slice(0, 8);
+    return `Audit_${code}_${new Date().toISOString().slice(0, 10)}`;
+  }
+
+  /**
+   * ★ تصديرُ سجلّ المتابعة إكسل — **ما هو معروضٌ بعد التصفية** هو المُصدَّر.
+   * فمن صفّى على «محمد» وصدّر، حصل على عمل محمد لا على الجلسة كلّها — وهذا
+   * ما يُطلب عند الخلاف. والصفوفُ من المنطق الخالص لا تُبنى هنا.
+   */
+  async function exportLogExcel() {
+    if (!shownLog.length) return;
+    setExporting(true);
+    try {
+      const XLSX = await import('xlsx');
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(
+        wb,
+        XLSX.utils.json_to_sheet(logExportRows(shownLog, { formatTime: stampOf })),
+        'سجلّ المتابعة'
+      );
+      XLSX.utils.book_append_sheet(
+        wb,
+        XLSX.utils.json_to_sheet(
+          byPerson.map((p) => ({
+            'العادّ': p.name,
+            'عدد القيود': p.scans,
+            'أصناف مختلفة': p.items,
+            'الإجمالي بوحدة الأساس': p.base,
+            'قيودٌ بوحدةٍ بلا معامل': p.uncertain,
+            'آخر قراءة وصلت': stampOf(seenMap.get(p.name) || null),
+          }))
+        ),
+        'توزيع العمل'
+      );
+      XLSX.writeFile(wb, `${fileStem()}.xlsx`);
+      flash(`صُدِّر ${shownLog.length} قيدًا إلى إكسل.`);
+    } catch {
+      flash('تعذّر التصدير إلى إكسل.');
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  /**
+   * ★★ تصديرُ محضرٍ PDF — عبر البوّابة الوحيدة `exportElementToPdf`.
+   *
+   * وتُمرَّر **عنصرَ DOM** لا نصَّ HTML عمدًا وبإلزام: المدخلُ يرفض النصّ
+   * لأنّ مسارَ النصّ داخل `html2pdf` يُحيي DOMPurify 3.3.1 المخبوزةَ في
+   * بنائها — والحارسُ هناك مكتوبٌ ومُختبَر، فلا يُلتَفّ عليه هنا.
+   */
+  async function exportLogPdf() {
+    if (!shownLog.length || !printRef.current) return;
+    setExporting(true);
+    try {
+      await exportElementToPdf(printRef.current, {
+        margin: [10, 10, 12, 10],
+        filename: `${fileStem()}.pdf`,
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] },
+      });
+      flash('صُدِّر محضرُ المتابعة PDF.');
+    } catch {
+      flash('تعذّر تصدير PDF.');
+    } finally {
+      setExporting(false);
+    }
   }
 
   if (!ready) {
@@ -205,20 +319,63 @@ export default function OperationsMonitor() {
     },
   }));
 
-  const scanRows = [...scans].reverse().map((s) => ({
-    id: s.id,
+  /*
+    ★★ صفُّ السجلّ — كلُّ ما يحتاجه من يُراجع بعد أسبوع:
+    الوقتُ مطلقًا (والنسبيُّ تحته للعين) · مَن قرأ · ماذا قرأ بباركوده
+    · الكمّيّةُ **بوحدتها** · ومعادلُها بالأساس (وهو وحده ما يُجمع).
+    والخصمُ يُميَّز بالإشارة لا يُخلط بقراءة.
+  */
+  const scanRows = pagedLog.map((r) => ({
+    id: r.id,
+    decoration: r.direction === 'out' ? 'muted' : undefined,
     cells: {
-      item: (
+      when: (
         <div>
-          <div style={{ fontWeight: 'var(--o-font-weight-medium)' }}>{s.name || s.barcode}</div>
-          <div style={{ color: 'var(--o-gray-500)', fontFamily: 'monospace', fontSize: 'var(--o-font-size-xs)' }} dir="ltr">
-            {s.barcode}
+          <div style={{ fontSize: 'var(--o-font-size-xs)', fontFamily: 'monospace' }} dir="ltr">
+            {r.atMs == null ? '—' : stampOf(r.atMs)}
+          </div>
+          <div style={{ color: 'var(--o-gray-500)', fontSize: '11px' }}>
+            {r.pending ? 'لم يصل بعد' : fmtRelative(scans.find((s) => s.id === r.id)?.at)}
           </div>
         </div>
       ),
-      qty: <span className="decoration-bf">{int(s.qty)}</span>,
-      by: s.byName || '—',
-      when: fmtRelative(s.at) || '…',
+      by: <span style={{ fontWeight: 'var(--o-font-weight-medium)' }}>{r.byName}</span>,
+      item: (
+        <div>
+          <div style={{ fontWeight: 'var(--o-font-weight-medium)' }}>{r.name}</div>
+          <div style={{ color: 'var(--o-gray-500)', fontFamily: 'monospace', fontSize: 'var(--o-font-size-xs)' }} dir="ltr">
+            {r.barcode}{r.sku ? ` · ${r.sku}` : ''}
+          </div>
+        </div>
+      ),
+      qty: (
+        <span className="decoration-bf">
+          {num(r.qty)} <span style={{ fontWeight: 400, color: 'var(--o-gray-500)' }}>{r.uom || '—'}</span>
+        </span>
+      ),
+      base: r.baseQty == null ? <span style={{ color: 'var(--o-text-warning)' }}>—</span> : num(r.baseQty),
+      flags: (
+        <span style={{ display: 'inline-flex', gap: '4px', flexWrap: 'wrap' }}>
+          {r.direction === 'out' && <Badge variant="draft">خصم</Badge>}
+          {r.uncertain && <Badge variant="progress">بلا معامل</Badge>}
+          {r.collision && <Badge variant="progress">تصادم</Badge>}
+        </span>
+      ),
+    },
+  }));
+
+  const personRows = byPerson.map((p) => ({
+    id: p.name,
+    cells: {
+      name: <span style={{ fontWeight: 'var(--o-font-weight-medium)' }}>{p.name}</span>,
+      scans: int(p.scans),
+      items: int(p.items),
+      base: <span className="decoration-bf">{num(p.base)}</span>,
+      seen: (
+        <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+          {seenMap.get(p.name) ? stampOf(seenMap.get(p.name)) : '—'}
+        </span>
+      ),
     },
   }));
 
@@ -318,50 +475,129 @@ export default function OperationsMonitor() {
                     بدأها {sel.createdByName || 'غير معروف'} · {fmtTime(sel.createdAt)}
                   </p>
 
-                  {/* إجماليات */}
+                  {/* إجماليات — والجمعُ بوحدة الأساس وحدَها (CAP-103) */}
                   <div className="o_dashboard_kpis" style={{ marginBottom: '18px' }}>
                     <div className="o_kpi">
-                      <span className="o_kpi_value">{int(scans.length)}</span>
-                      <span className="o_kpi_label">عملية مسح</span>
+                      <span className="o_kpi_value">{int(totals.scanCount)}</span>
+                      <span className="o_kpi_label">قراءة</span>
                     </div>
                     <div className="o_kpi">
-                      <span className="o_kpi_value">{int(agg.totalQty)}</span>
-                      <span className="o_kpi_label">إجمالي الكمية</span>
+                      <span className="o_kpi_value">{num(totals.baseTotal)}</span>
+                      <span className="o_kpi_label">الإجمالي بوحدة الأساس</span>
                     </div>
                     <div className="o_kpi">
-                      <span className="o_kpi_value">{int(agg.byItem.length)}</span>
+                      <span className="o_kpi_value">{int(totals.itemCount)}</span>
                       <span className="o_kpi_label">صنف مختلف</span>
+                    </div>
+                    <div className="o_kpi">
+                      <span className="o_kpi_value">{int(totals.peopleCount)}</span>
+                      <span className="o_kpi_label">عادّ</span>
                     </div>
                   </div>
 
-                  {/* من يعمل عليها */}
-                  {agg.byUser.length > 0 && (
-                    <div style={{ marginBottom: '18px' }}>
-                      <h3 className="o_dashboard_section_title"><Icon name="users" size={16} /> توزيع العمل</h3>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {agg.byUser.map(([name, qty]) => (
-                          <Badge key={name} variant="progress">{name} — {int(qty)}</Badge>
-                        ))}
+                  {/* ما يُحسم قبل الاعتماد — يُعلَن ولا يُخفى (ق-٢) */}
+                  {totals.uncertain > 0 && (
+                    <div className="o_alert warning" style={{ marginBottom: '14px' }}>
+                      <div className="o_alert_title">
+                        <Icon name="alertTriangle" size={15} /> {int(totals.uncertain)} قيدًا بوحدةٍ بلا معامل
                       </div>
+                      مجموعُها بوحدة الأساس غير مضمون — عرِّف معاملَ الوحدة في ماستر الأصناف قبل اعتماد الكشف.
                     </div>
                   )}
 
-                  {/* سجلّ المسح الحيّ */}
+                  {/* ★ توزيع العمل — جدولٌ لا شاراتٌ: هذا ما يُجيب «ماذا قرأ محمد» */}
+                  {byPerson.length > 0 && (
+                    <div style={{ marginBottom: '18px' }}>
+                      <h3 className="o_dashboard_section_title">
+                        <Icon name="users" size={16} /> توزيع العمل على العادّين
+                      </h3>
+                      <div style={{ border: '1px solid var(--o-border-color)', borderRadius: 'var(--o-border-radius)' }}>
+                        <ListView selectable={false} columns={PERSON_COLS} rows={personRows} />
+                      </div>
+                      <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'var(--o-main-color-muted)', lineHeight: 1.7 }}>
+                        ★ «آخر قراءة وصلت» هي ما يُغني عمّا لا يُرى من مكتبك: طابورُ هاتف
+                        العادّ محلّيٌّ لا ينتقل إلى الخادم. فصمتُ عشرين دقيقةً إمّا انصرافٌ
+                        وإمّا عملٌ محبوسٌ في جهازه — فاسأله.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* سجلّ المتابعة — مَن قرأ · ماذا · وكم */}
                   <div>
                     <h3 className="o_dashboard_section_title">
-                      <Icon name="activity" size={16} /> سجلّ المسح الحيّ
+                      <Icon name="activity" size={16} /> سجلّ المتابعة
                       <span style={{ color: 'var(--o-gray-500)', fontWeight: 400, fontSize: 'var(--o-font-size-xs)' }}>
                         (يتحدّث تلقائيًّا)
                       </span>
                     </h3>
+
+                    {/* شريطُ التصفية والتصدير */}
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px' }}>
+                      <select
+                        className="o_input"
+                        style={{ width: 'auto' }}
+                        value={person}
+                        onChange={(e) => setPerson(e.target.value)}
+                        aria-label="تصفية بالعادّ"
+                        data-log-person
+                      >
+                        <option value="all">كلّ العادّين</option>
+                        {people.map((p) => (
+                          <option key={p.name} value={p.name}>{p.name} ({p.count})</option>
+                        ))}
+                      </select>
+                      <input
+                        type="search"
+                        className="o_input"
+                        style={{ flex: 1, minWidth: '160px' }}
+                        placeholder="ابحث بالصنف أو الباركود أو الكود…"
+                        value={term}
+                        onChange={(e) => setTerm(e.target.value)}
+                        aria-label="بحث في السجلّ"
+                        data-log-search
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={exportLogExcel}
+                        disabled={!shownLog.length || exporting}
+                        data-log-xlsx
+                      >
+                        <Icon name="fileUp" size={14} /> تصدير إكسل
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={exportLogPdf}
+                        disabled={!shownLog.length || exporting}
+                        data-log-pdf
+                      >
+                        <Icon name="printer" size={14} /> محضر PDF
+                      </button>
+                    </div>
+
                     {loadingScans ? (
                       <div className="o_dashboard_empty">جارٍ التحميل…</div>
-                    ) : scans.length === 0 ? (
-                      <div className="o_dashboard_empty">لا مسح بعد على هذه العملية.</div>
+                    ) : logRows.length === 0 ? (
+                      <div className="o_dashboard_empty">لا قراءة بعد على هذه الجلسة.</div>
+                    ) : shownLog.length === 0 ? (
+                      <div className="o_dashboard_empty">لا نتيجة لهذه التصفية.</div>
                     ) : (
-                      <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--o-border-color)', borderRadius: 'var(--o-border-radius)' }}>
-                        <ListView selectable={false} columns={SCAN_COLS} rows={scanRows} />
-                      </div>
+                      <>
+                        <div style={{ maxHeight: '460px', overflowY: 'auto', border: '1px solid var(--o-border-color)', borderRadius: 'var(--o-border-radius)' }}>
+                          <ListView selectable={false} columns={SCAN_COLS} rows={scanRows} />
+                        </div>
+                        {shownLog.length > LOG_PAGE && (
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                            <Pager
+                              page={logPage}
+                              size={LOG_PAGE}
+                              total={shownLog.length}
+                              onPage={setLogPage}
+                            />
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -370,6 +606,125 @@ export default function OperationsMonitor() {
           </div>
         </div>
       </div>
+
+      {/*
+        ★★ محضرُ المتابعة المطبوع — عنصرُ DOM حقيقيّ يُمرَّر إلى
+        `exportElementToPdf`. ولا يُبنى نصَّ HTML عمدًا: المدخلُ الوحيد يرفض
+        النصّ لأنّ مسارَه داخل `html2pdf` يُحيي DOMPurify المخبوزةَ في بنائها.
+
+        ويُرسم **خارج الشاشة** لا `display:none`: عنصرٌ مخفيٌّ بلا أبعادٍ
+        يلتقطه `html2canvas` صفحةً بيضاء. وعرضُه ٧٩٤px = A4 عند ٩٦ نقطة/بوصة.
+
+        ولا يُرسم إلّا حين تكون هناك جلسةٌ مختارةٌ وصفوفٌ تُطبع — فلا شجرةَ
+        DOM ثقيلةٌ تُبنى مع كلّ لقطةٍ حيّة بلا سبب.
+      */}
+      {sel && shownLog.length > 0 && (
+        <div style={{ position: 'fixed', insetInlineStart: '-10000px', top: 0, zIndex: -1 }} aria-hidden="true">
+          <div
+            ref={printRef}
+            dir="rtl"
+            style={{
+              width: '794px', padding: '24px', background: '#fff', color: '#111',
+              fontFamily: 'IBM Plex Sans Arabic, system-ui, sans-serif', fontSize: '12px', lineHeight: 1.7,
+            }}
+          >
+            <h1 style={{ fontSize: '18px', margin: '0 0 4px', fontWeight: 700 }}>محضر متابعة الجرد</h1>
+            <p style={{ margin: '0 0 14px', fontSize: '11px', color: '#555' }}>
+              سجلٌّ دائمٌ ملحق-فقط — لا يُعدَّل ولا يُحذف. صُدِّر في {stampOf(Date.now())}
+            </p>
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '14px', fontSize: '11.5px' }}>
+              <tbody>
+                <tr>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px', fontWeight: 700, width: '22%' }}>رمز الجلسة</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px', fontFamily: 'monospace' }}>
+                    {formatOperationCode(sel.code || '') || sel.id.slice(0, 8)}
+                  </td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px', fontWeight: 700, width: '22%' }}>النوع</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px' }}>{sel.type}</td>
+                </tr>
+                <tr>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px', fontWeight: 700 }}>النطاق</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px' }}>{scopeLabel(scopeOf(sel))}</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px', fontWeight: 700 }}>الحالة</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px' }}>
+                    {sel.status === 'open' ? 'مفتوحة' : 'مُقفلة'}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px', fontWeight: 700 }}>فتحها</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px' }}>{sel.createdByName || 'غير معروف'}</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px', fontWeight: 700 }}>وقت الفتح</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px' }}>{fmtTime(sel.createdAt)}</td>
+                </tr>
+                <tr>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px', fontWeight: 700 }}>المعروض</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px' }} colSpan={3}>
+                    {person === 'all' ? 'كلّ العادّين' : `العادّ: ${person}`}
+                    {term ? ` · بحث: «${term}»` : ''} — {int(totals.scanCount)} قراءة من {int(logRows.length)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h2 style={{ fontSize: '13px', margin: '0 0 6px', fontWeight: 700 }}>توزيع العمل</h2>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '14px', fontSize: '11px' }}>
+              <thead>
+                <tr style={{ background: '#f3f3f5' }}>
+                  {['العادّ', 'قيود', 'أصناف', 'الإجمالي بالأساس', 'آخر قراءة وصلت'].map((h) => (
+                    <th key={h} style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'start' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {byPerson.map((p) => (
+                  <tr key={p.name}>
+                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{p.name}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{int(p.scans)}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{int(p.items)}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{num(p.base)}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>
+                      {seenMap.get(p.name) ? stampOf(seenMap.get(p.name)) : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <h2 style={{ fontSize: '13px', margin: '0 0 6px', fontWeight: 700 }}>سجلّ القراءات</h2>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
+              <thead>
+                <tr style={{ background: '#f3f3f5' }}>
+                  {['الوقت', 'مَن قرأ', 'الصنف', 'الباركود', 'الكمّيّة', 'الوحدة', 'بالأساس', 'الاتّجاه'].map((h) => (
+                    <th key={h} style={{ border: '1px solid #ccc', padding: '3px 5px', textAlign: 'start' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {shownLog.map((r) => (
+                  <tr key={r.id}>
+                    <td style={{ border: '1px solid #ccc', padding: '3px 5px', whiteSpace: 'nowrap' }} dir="ltr">
+                      {r.atMs == null ? '—' : stampOf(r.atMs)}
+                    </td>
+                    <td style={{ border: '1px solid #ccc', padding: '3px 5px' }}>{r.byName}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '3px 5px' }}>{r.name}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '3px 5px', fontFamily: 'monospace' }} dir="ltr">{r.barcode}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '3px 5px' }}>{num(r.qty)}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '3px 5px' }}>{r.uom || '—'}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '3px 5px' }}>{r.baseQty == null ? '—' : num(r.baseQty)}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '3px 5px' }}>{r.direction === 'out' ? 'خصم' : 'إضافة'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <p style={{ marginTop: '14px', fontSize: '10px', color: '#666' }}>
+              الجمعُ يقع بوحدة الأساس وحدَها — وجمعُ كرتونٍ مع قطعةٍ رقمٌ بلا معنى.
+              {totals.uncertain > 0 && ` وفي هذا الكشف ${int(totals.uncertain)} قيدًا بوحدةٍ بلا معامل، مجموعُها بالأساس غير مضمون.`}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -11,7 +11,7 @@
   "counts": {
     "modules": 116,
     "serviceDomains": 51,
-    "serviceFiles": 578,
+    "serviceFiles": 580,
     "collections": 97,
     "roles": 19,
     "odooModels": 12,
@@ -4499,6 +4499,8 @@
       "files": [
         "masterSync.js",
         "masterSync.test.js",
+        "monitorLog.js",
+        "monitorLog.test.js",
         "operationCode.js",
         "operationCode.test.js",
         "operationScope.js",
@@ -4515,8 +4517,8 @@
         "sessionResume.js",
         "sessionResume.test.js"
       ],
-      "fileCount": 17,
-      "testCount": 8,
+      "fileCount": 19,
+      "testCount": 9,
       "exports": [
         "CODE_ALPHABET",
         "CODE_LENGTH",
@@ -4531,6 +4533,7 @@
         "backupKey",
         "barcodeCandidates",
         "baseQtyPreview",
+        "buildLogRows",
         "buildSessionRows",
         "clearBackup",
         "closeOperation",
@@ -4538,6 +4541,7 @@
         "correctionEntry",
         "createOperation",
         "exportRows",
+        "filterLogRows",
         "filterRows",
         "findMasterFor",
         "findOperationsByCode",
@@ -4555,6 +4559,9 @@
         "listOpenOperations",
         "listenOperations",
         "listenScans",
+        "logExportRows",
+        "logPeople",
+        "logTotals",
         "masterFieldsOf",
         "normalizeOperationCode",
         "normalizeScope",
@@ -4584,7 +4591,8 @@
         "setOperationCode",
         "summarizeScans",
         "updateOperationSummary",
-        "withinScope"
+        "withinScope",
+        "workByPerson"
       ],
       "collections": [
         "operations"
