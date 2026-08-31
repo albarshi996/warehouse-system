@@ -36,6 +36,7 @@ import {
   closeOperation,
   getOperation,
   listOpenOperations,
+  announceMember,
   listenScans,
   updateOperationSummary,
 } from '../../../services/stock/operationsService.js';
@@ -248,6 +249,19 @@ export default function ScanFlow() {
     }
     return listenScans(opId, setScans);
   }, [opId]);
+
+  /**
+   * ★ إعلانُ الحضور — **أثرٌ واحدٌ لكلّ طرق الدخول** (فتحٌ · انضمامٌ برمز ·
+   * رابطُ دعوة · استئنافٌ بعد إعادة تحميل)، ويشترط أن تكون الهويّةُ محمَّلة.
+   *
+   * ولو كُتب عند كلّ نقطةِ دخولٍ على حدة لَوقع في الاستئناف قبل أن يُحمَّل
+   * الملفُّ الشخصيّ، فيُسجَّل العادُّ في لوحة الحضور **ببريده لا باسمه** —
+   * وهو عينُ العطب الذي يحذّر منه `fetchUserProfile` في هذه البوّابة.
+   */
+  useEffect(() => {
+    if (!opId || !me) return;
+    announceMember(opId, me);
+  }, [opId, me]);
 
   /**
    * ‹الاستئناف› الجلسات المفتوحة تُقرأ **حين لا يكون العادّ داخل جلسة** —

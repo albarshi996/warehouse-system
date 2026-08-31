@@ -16,7 +16,6 @@
 import {
   collection,
   doc,
-  addDoc,
   setDoc,
   updateDoc,
   getDoc,
@@ -31,6 +30,7 @@ import {
 import { db, auth } from '../../config/firebase.js';
 import { generateOperationCode, normalizeOperationCode } from './operationCode.js';
 import { normalizeScope } from './operationScope.js';
+import { issueScanId } from './scanIdentity.js';
 
 const OPS = 'operations';
 
@@ -122,7 +122,17 @@ export async function createOperation({ type, profile, note = '', warehouse = ''
  */
 export function appendScan(opId, { barcode, sku, name, qty, uom, factor, baseQty, uomMissing, collision, profile, opType }) {
   const numOrNull = (v) => (v == null || !Number.isFinite(Number(v)) ? null : Number(v));
-  return addDoc(collection(db, OPS, opId, 'scans'), {
+  // ★★ المعرّفُ يُحسب ولا يُولَّد ‹CAP-302›: `{op}-{device}-{seq}`، فالقيدُ
+  // نفسُه من الجهاز نفسِه له مسارٌ واحدٌ دائمًا — وإرسالُه مرّتين يُنتج
+  // مستندًا واحدًا وكمّيّةً واحدة. والحساب في `scanIdentity.js` المختبَر.
+  // وبلا تخزينٍ (تصفّحٌ خاصّ) يُولَّد معرّفٌ عابرٌ ويمضي العدّ (ق-٣).
+  const store = typeof localStorage !== 'undefined' ? localStorage : null;
+  const { id: scanId, device, seq } = issueScanId(store, opId);
+  return setDoc(doc(db, OPS, opId, 'scans', scanId), {
+    // هويّةُ الجهاز والتسلسل يُختمان في القيد ‹CAP-301›: يفصلان عادَّين
+    // يتشاركان حسابًا، ويجعلان مصدرَ كلّ رقمٍ معروفًا في المراجعة.
+    deviceId: device,
+    seq,
     barcode: String(barcode || ''),
     sku: String(sku || ''),
     name: String(name || ''),
@@ -137,6 +147,51 @@ export function appendScan(opId, { barcode, sku, name, qty, uom, factor, baseQty
     byName: profile?.name || auth?.currentUser?.email || 'غير معروف',
     at: serverTimestamp(),
   });
+}
+
+/**
+ * ★★ يُعلن حضورَ صاحب الجهاز في الجلسة — «مَن دخل» لا «مَن قرأ».
+ *
+ * ومعرّفُ المستند **هويّةُ صاحبه**: فلا يتكرّر عضوٌ مهما دخل وخرج، والقاعدة
+ * تشترط `memberUid == request.auth.uid` فلا يُعلن أحدٌ حضورَ غيره.
+ *
+ * و`mergeFields` لا `set` كاملًا: عودةُ العضو تُحدّث `lastEnteredAt` **ولا
+ * تمحو** `joinedAt` الأوّل — فيبقى معروفًا متى دخل أوّلَ مرّة.
+ *
+ * ★ ولا يُنتظر إقرارُه ولا يُسقط شيئًا عند الفشل: **الحضورُ إعلانٌ لا إذن**،
+ *   ومن تعذّر تسجيلُه يعدّ كما هو ويظهر عند المدير من قراءاته (ق-٣).
+ */
+export function announceMember(opId, profile) {
+  const uid = currentUid();
+  if (!opId || !uid) return Promise.resolve();
+  return setDoc(
+    doc(db, OPS, opId, 'members', uid),
+    {
+      uid,
+      name: profile?.name || auth?.currentUser?.email || 'غير معروف',
+      role: profile?.role || '',
+      joinedAt: serverTimestamp(),
+      lastEnteredAt: serverTimestamp(),
+    },
+    { merge: true }
+  ).catch(() => {});
+}
+
+/**
+ * يستمع لأعضاء الجلسة لحظيًّا — لشاشة المدير.
+ *
+ * ولا `orderBy`: المجموعةُ صغيرةٌ (أفرادُ لجنة)، والترتيبُ حكمٌ خالصٌ في
+ * `sessionPresence.js` يُقدّم **الصامتَ** لا الأقدمَ دخولًا.
+ *
+ * وفشلُ القراءة (قاعدةٌ لم تُنشر بعد) يُعيد قائمةً فارغةً ولا يُعطّل الشاشة:
+ * الحضورُ إضافةٌ على الجدول لا شرطٌ له.
+ */
+export function listenMembers(opId, callback) {
+  return onSnapshot(
+    collection(db, OPS, opId, 'members'),
+    (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+    () => callback([])
+  );
 }
 
 /**

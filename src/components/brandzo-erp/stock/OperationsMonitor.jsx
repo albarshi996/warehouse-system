@@ -3,6 +3,7 @@ import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authServ
 import {
   listenOperations,
   listenScans,
+  listenMembers,
   getScans,
   closeOperation,
   setOperationCampaign,
@@ -25,6 +26,7 @@ import {
   logExportRows,
 } from '../../../services/stock/monitorLog.js';
 import { lastSeenByUser } from '../../../services/stock/scanQueue.js';
+import { presenceRows, presenceSummary, presenceLabel } from '../../../services/stock/sessionPresence.js';
 import { scopeLabel, scopeOf } from '../../../services/stock/operationScope.js';
 import { formatOperationCode } from '../../../services/stock/operationCode.js';
 import { exportElementToPdf } from '../../../services/reports/pdfExport.js';
@@ -105,6 +107,14 @@ const SCAN_COLS = [
   { key: 'flags', label: '' },
 ];
 
+const PRESENCE_COLS = [
+  { key: 'name', label: 'العضو' },
+  { key: 'state', label: 'الحالة' },
+  { key: 'scans', label: 'قراءات', numeric: true },
+  { key: 'base', label: 'بالأساس', numeric: true },
+  { key: 'joined', label: 'دخل' },
+];
+
 const PERSON_COLS = [
   { key: 'name', label: 'العادّ' },
   { key: 'scans', label: 'قيود', numeric: true },
@@ -128,6 +138,7 @@ export default function OperationsMonitor() {
   const [loadingOps, setLoadingOps] = useState(true);
   const [selected, setSelected] = useState(null);
   const [scans, setScans] = useState([]);
+  const [members, setMembers] = useState([]);
   const [loadingScans, setLoadingScans] = useState(false);
   const [filter, setFilter] = useState('all');
   const [msg, setMsg] = useState('');
@@ -177,6 +188,21 @@ export default function OperationsMonitor() {
     return () => unsub();
   }, [selected]);
 
+  /*
+    ★★ حضورُ الجلسة — «مَن دخل» لا «مَن قرأ» (طلب المالك).
+    اشتراكٌ حيٌّ مستقلٌّ عن القيود: العضوُ يظهر بمجرّد دخوله، قبل أوّل قراءة.
+    وفشلُ القراءة (قاعدةٌ لم تُنشر بعد) يُعيد فارغًا — فالجدولُ يبقى عاملًا
+    من القيود وحدها، والحضورُ إضافةٌ عليه لا شرطٌ له.
+  */
+  useEffect(() => {
+    if (!selected) {
+      setMembers([]);
+      return;
+    }
+    const unsub = listenMembers(selected, setMembers);
+    return () => unsub();
+  }, [selected]);
+
   const shown = useMemo(
     () => (filter === 'all' ? ops : ops.filter((o) => o.status === filter)),
     [ops, filter]
@@ -199,6 +225,11 @@ export default function OperationsMonitor() {
     for (const r of lastSeenByUser(scans, (s) => s?.at?.toDate?.()?.getTime?.() ?? null)) m.set(r.name, r.lastAt);
     return m;
   }, [scans]);
+  const presence = useMemo(
+    () => presenceRows(members, logRows, { toMillis: (m) => m?.joinedAt?.toDate?.()?.getTime?.() ?? null }),
+    [members, logRows]
+  );
+  const presenceInfo = useMemo(() => presenceSummary(presence), [presence]);
   const pagedLog = useMemo(() => pageSlice(shownLog, logPage, LOG_PAGE), [shownLog, logPage]);
   useEffect(() => setLogPage(0), [person, term, selected]);
 
@@ -927,6 +958,54 @@ export default function OperationsMonitor() {
                         <Icon name="alertTriangle" size={15} /> {int(totals.uncertain)} قيدًا بوحدةٍ بلا معامل
                       </div>
                       مجموعُها بوحدة الأساس غير مضمون — عرِّف معاملَ الوحدة في ماستر الأصناف قبل اعتماد الكشف.
+                    </div>
+                  )}
+
+                  {/*
+                    ★★ الحضور — «مَن دخل» لا «مَن قرأ» (طلب المالك).
+                    ويُقدَّم الصامتُ: من دخل ولم يبدأ هو ما يحتاج سؤالًا، لا من
+                    يعدّ منذ ساعة. والجدولُ يظهر ولو لم تُنشر قاعدةُ الأعضاء
+                    بعدُ — يُبنى حينها من القراءات وحدها ولا يُعطَّل.
+                  */}
+                  {presence.length > 0 && (
+                    <div style={{ marginBottom: '18px' }}>
+                      <h3 className="o_dashboard_section_title">
+                        <Icon name="userPlus" size={16} /> الحاضرون في الجلسة
+                        <span style={{ color: 'var(--o-gray-500)', fontWeight: 400, fontSize: 'var(--o-font-size-xs)' }}>
+                          {presenceLabel(presenceInfo)}
+                        </span>
+                      </h3>
+                      <div style={{ border: '1px solid var(--o-border-color)', borderRadius: 'var(--o-border-radius)' }}>
+                        <ListView
+                          selectable={false}
+                          columns={PRESENCE_COLS}
+                          rows={presence.map((p) => ({
+                            id: p.uid || p.name,
+                            decoration: p.idle ? 'muted' : undefined,
+                            cells: {
+                              name: <span style={{ fontWeight: 'var(--o-font-weight-medium)' }}>{p.name}</span>,
+                              state: p.idle ? (
+                                <Badge variant="progress">دخل ولم يبدأ</Badge>
+                              ) : (
+                                <Badge variant="done">يعدّ</Badge>
+                              ),
+                              scans: int(p.scans),
+                              base: <span className="decoration-bf">{num(p.base)}</span>,
+                              joined: (
+                                <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+                                  {p.joinedAt ? stampOf(p.joinedAt) : '—'}
+                                </span>
+                              ),
+                            },
+                          }))}
+                        />
+                      </div>
+                      {presenceInfo.idle > 0 && (
+                        <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'var(--o-main-color-muted)', lineHeight: 1.7 }}>
+                          ★ «دخل ولم يبدأ» ليس تهمة: قد يكون في ممرٍّ بعيدٍ وهاتفُه بلا شبكة —
+                          فقراءاتُه محفوظةٌ عنده ولم تصل بعد. اتّصل به قبل أن تُقفل الجلسة.
+                        </p>
+                      )}
                     </div>
                   )}
 

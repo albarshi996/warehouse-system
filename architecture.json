@@ -11,8 +11,8 @@
   "counts": {
     "modules": 116,
     "serviceDomains": 51,
-    "serviceFiles": 582,
-    "collections": 97,
+    "serviceFiles": 586,
+    "collections": 98,
     "roles": 19,
     "odooModels": 12,
     "odooGuards": 51,
@@ -4512,15 +4512,19 @@
         "scanBackup.test.js",
         "scanFlow.js",
         "scanFlow.test.js",
+        "scanIdentity.js",
+        "scanIdentity.test.js",
         "scanMerge.js",
         "scanMerge.test.js",
         "scanQueue.js",
         "scanQueue.test.js",
+        "sessionPresence.js",
+        "sessionPresence.test.js",
         "sessionResume.js",
         "sessionResume.test.js"
       ],
-      "fileCount": 21,
-      "testCount": 10,
+      "fileCount": 25,
+      "testCount": 12,
       "exports": [
         "CODE_ALPHABET",
         "CODE_LENGTH",
@@ -4529,6 +4533,7 @@
         "MAX_REMEMBERED",
         "SCAN_MODES",
         "SCOPE_FIELDS",
+        "announceMember",
         "appendBackup",
         "appendScan",
         "applyLedgerToItems",
@@ -4546,6 +4551,8 @@
         "closeVerdict",
         "correctionEntry",
         "createOperation",
+        "dedupeScans",
+        "deviceId",
         "exportRows",
         "filterLogRows",
         "filterRows",
@@ -4561,9 +4568,11 @@
         "isPending",
         "isScanMode",
         "isValidOperationCode",
+        "issueScanId",
         "lastSeenByUser",
         "listBackups",
         "listOpenOperations",
+        "listenMembers",
         "listenOperations",
         "listenScans",
         "logExportRows",
@@ -4572,12 +4581,16 @@
         "masterFieldsOf",
         "mergeVerdict",
         "newCampaignId",
+        "nextSeq",
         "normalizeCampaignName",
         "normalizeOperationCode",
         "normalizeScope",
         "panelForScan",
         "parseBulkBarcodes",
         "pendingCount",
+        "presenceLabel",
+        "presenceRows",
+        "presenceSummary",
         "queueLabel",
         "queueState",
         "readBackup",
@@ -4589,6 +4602,7 @@
         "resumeLine",
         "resumeList",
         "scanBaseQty",
+        "scanDocId",
         "scanEntryVerdict",
         "scanKey",
         "scanUomChoices",
@@ -4596,6 +4610,7 @@
         "scopeLabel",
         "scopeOf",
         "scopeVerdict",
+        "seqKey",
         "sessionProgress",
         "sessionSummary",
         "setOperationCampaign",
@@ -6780,6 +6795,39 @@
             "condition": "isManager()",
             "roles": [
               "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "members",
+        "path": "operations/members",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "(isStockActor() || isCountAssignee()) && memberUid == request.auth.uid",
+            "roles": [
+              "isStockActor",
+              "isCountAssignee"
             ]
           },
           {

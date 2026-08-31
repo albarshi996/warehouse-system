@@ -5,7 +5,7 @@
   "command": "npm run plan:capture",
   "track": "الالتقاط أوّلًا · المطابقة مؤجَّلة بقرار المالك (ق-٦ «تأجيل» 2026-08-23) · ولا مهمّة تحجب العادّ على الرفّ",
   "source": "تحليل المالك 2026-08-23 (نصّ «الالتقاط لا يُحاسِب») + جرد الكود الفعليّ في الجلسة نفسها + ستّة قرارات مالك محسومة",
-  "lastUpdated": "2026-08-26 (م٢ نصفها: CAP-201 وCAP-202 مُغلقتان بنطاقٍ من الشجرة)",
+  "lastUpdated": "2026-08-31",
   "lastUpdatedBy": "Claude",
   "baseline": {
     "originMain": "0cbfa2c",
@@ -42,6 +42,11 @@
       "id": "م٥",
       "title": "المطابقة — مؤجَّلة بقرار المالك ق-٦",
       "estimate": "تُستأنف حين تجهز الأرصدة"
+    },
+    {
+      "id": "م٦",
+      "title": "المتابعة الحيّة والدمج — طلب المالك 2026-08-31",
+      "estimate": "دفعة واحدة"
     }
   ],
   "gaps": {
@@ -448,7 +453,7 @@
       "title": "هويّة جهازٍ ثابتة محلّيًّا وعدّاد تسلسل",
       "milestone": "م٣",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ج‑٧"
       ],
@@ -458,20 +463,29 @@
       "nucleus": "src/services/stock/operationsService.js",
       "guardTest": "src/services/stock/scanIdentity.test.js",
       "touches": [
-        "src/services/stock/scanIdentity.js"
+        "src/services/stock/scanIdentity.js",
+        "src/services/stock/scanIdentity.test.js",
+        "src/services/stock/operationsService.js"
       ],
       "acceptance": [
         "الجهاز يحمل معرّفًا ثابتًا يبقى عبر إغلاق المتصفّح",
         "لكلّ جلسةٍ على الجهاز عدّاد تسلسلٍ لا يرتدّ",
         "منطق خالص مختبَر بلا Firestore وبلا DOM"
-      ]
+      ],
+      "branch": "claude/smart-inventory-tracking-8aa575",
+      "progress": "هويّةُ جهازٍ من اثني عشر محرفًا تُولَّد مرّةً وتُحفظ، فتبقى عبر إغلاق المتصفّح. وعدّادُ تسلسلٍ لكلّ جلسةٍ على الجهاز **لا يرتدّ**: القيمةُ المعطوبةُ أو السالبةُ تُقرأ صفرًا ولا تُنقص العدّاد — لأنّ عدّادًا يعود للصفر يجعل القيدَ الجديد يصطدم بمسار قيدٍ قديمٍ فيُرفض صامتًا، وضياعُ عدٍّ حقيقيّ أخطر من التضاعف. والهويّةُ والتسلسل يُختمان في كلّ قيد، فيُفصَل عادّان يتشاركان حسابًا.",
+      "nextStep": "أُغلقت. التالي CAP-305 — تجربة قطع شبكةٍ حيّة على المالك.",
+      "evidence": {
+        "commit": "PENDING",
+        "closedOn": "2026-08-31"
+      }
     },
     {
       "id": "CAP-302",
       "title": "معرّف مسحٍ حتميّ — الكتابة بمعرّفٍ محسوب لا عشوائيّ",
       "milestone": "م٣",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ج‑٧"
       ],
@@ -481,8 +495,9 @@
       "nucleus": "src/services/stock/operationsService.js — appendScan",
       "guardTest": "src/services/stock/scanIdentity.test.js",
       "touches": [
-        "src/services/stock/operationsService.js",
-        "firestore.rules"
+        "src/services/stock/scanIdentity.js",
+        "src/services/stock/scanIdentity.test.js",
+        "src/services/stock/operationsService.js"
       ],
       "note": "«كل مسح له معرّف حتمي (جلسة+جهاز+تسلسل) حتى لا تتضاعف الكميات عند إعادة الإرسال» — نصّ المالك.",
       "acceptance": [
@@ -490,14 +505,21 @@
         "إعادة إرسال القيد نفسه تكتب فوق نفسها ولا تُنشئ ثانيًا",
         "القاعدة تبقى مانعةً للتعديل والحذف — الملحق-فقط لا يُكسر",
         "اختبارٌ يثبت أنّ إرسال القيد مرّتين يُنتج كمّيّةً واحدة"
-      ]
+      ],
+      "branch": "claude/smart-inventory-tracking-8aa575",
+      "progress": "`appendScan` كانت تكتب بـ`addDoc` — معرّفٌ عشوائيٌّ لكلّ نداء، فالقيدُ المُرسَل مرّتين يصير قيدَين تُجمع كمّيّتاهما. الآن يُكتب بـ`setDoc` على مسارٍ محسوب `{op}-{device}-{seq}`، فالمُخرَجُ مستندٌ واحدٌ وكمّيّةٌ واحدة مهما تكرّر الإرسال.\n\n⚠️ **انحرافٌ مقصودٌ عن نصّ المهمّة، مُعلَنٌ لا مُخفى:** المعيارُ الثاني يقول «تكتب فوق نفسها»، وذلك يقتضي `allow update` على `scans` ولو بشرطٍ ضيّق. **ولم أفعل.** لأنّ أضيقَ شرطٍ ممكن (`affectedKeys().hasOnly(['at'])`) يفتح بابًا لإعادة ختمِ وقتِ قيدٍ قديم، ودستورُ المستودع يجعل `scans` مقدَّسةً بـ`update, delete: if false`. والنتيجةُ المطلوبة تتحقّق بلا ذلك الثمن: الإرسالُ الثاني على المسار نفسِه **يرتدّ** بدل أن يُكتب فوق الأوّل — والمُخرَجُ واحد. فالمعيار الثالث («القاعدة تبقى مانعة») مُحقَّقٌ حرفيًّا، والثاني مُحقَّقٌ أثرًا لا لفظًا. والقرارُ للمالك إن أراد اللفظ.",
+      "nextStep": "أُغلقت بانحرافٍ مُعلَن. ولم تُمسّ `firestore.rules` في هذه المهمّة.",
+      "evidence": {
+        "commit": "PENDING",
+        "closedOn": "2026-08-31"
+      }
     },
     {
       "id": "CAP-303",
       "title": "مؤشّر «غير مُرسَل: N» — التقاط الإشارة المهملة",
       "milestone": "م٣",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ج‑٦"
       ],
@@ -507,21 +529,32 @@
       "nucleus": "src/services/stock/operationsService.js — listenScans",
       "guardTest": "src/services/stock/scanIdentity.test.js",
       "touches": [
-        "src/components/brandzo-erp/stock/ScanFlow.jsx"
+        "src/services/stock/scanQueue.js",
+        "src/services/stock/scanQueue.test.js",
+        "src/services/stock/operationsService.js",
+        "src/components/brandzo-erp/stock/ScanFlow.jsx",
+        "src/data/usage-guide.json"
       ],
       "note": "listenScans يمرّر hasPendingWrites منذ اليوم الأوّل، وScanFlow.jsx:166 يُسقطه. الإشارة موجودة — تُلتقط فقط.",
       "acceptance": [
         "الشاشة تعرض عدد القيود غير المرسَلة رقمًا صريحًا",
         "المؤشّر يظهر في أعلى الشاشة حيث يراه الواقف في المخزن",
         "صفرٌ غير مرسَل = لا مؤشّر — لا ضجيج بلا سبب"
-      ]
+      ],
+      "branch": "claude/smart-inventory-tracking-8aa575",
+      "progress": "الإشارةُ كانت موجودةً ومهملة: listenScans تمرّر hasPendingWrites والشاشةُ ترميها. الآن تُختم على كلّ قيدٍ _pending، وشريطٌ أعلى الشاشة يقول «غير مُرسَل: N». والصفرُ بلا شريط. ومعه أُصلح عطبٌ أخطر: save كانت تنتظر إقرارَ السحابة فتتعلّق الشاشةُ أبدًا بلا شبكة.",
+      "nextStep": "أُغلقت في 6ec9a0a. الباقي CAP-305: تجربة قطع شبكةٍ حيّة بجهازين — على المالك.",
+      "evidence": {
+        "commit": "6ec9a0a",
+        "closedOn": "2026-08-31"
+      }
     },
     {
       "id": "CAP-304",
       "title": "منع الإقفال والطابور غير فارغ",
       "milestone": "م٣",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ج‑٦"
       ],
@@ -531,14 +564,22 @@
       "nucleus": "src/services/stock/scanFlow.js",
       "guardTest": "src/services/stock/scanIdentity.test.js",
       "touches": [
-        "src/components/brandzo-erp/stock/ScanFlow.jsx",
-        "src/services/stock/scanFlow.js"
+        "src/services/stock/scanQueue.js",
+        "src/services/stock/scanQueue.test.js",
+        "src/components/brandzo-erp/stock/ScanFlow.jsx"
       ],
       "acceptance": [
         "زرّ الإقفال معطَّل ما دام قيدٌ واحد غير مرسَل، والسبب مكتوبٌ بالاسم",
         "الحكم منطقٌ خالص مختبَر لا شرطٌ في الواجهة وحدها",
         "لا يمنع المسح — يمنع الإقفال فقط"
-      ]
+      ],
+      "branch": "claude/smart-inventory-tracking-8aa575",
+      "progress": "قاعدةُ scans تشترط العمليّةَ مفتوحةً لحظةَ وصول القيد، فالإقفالُ والطابورُ غيرُ فارغٍ يجعل الخادمَ يرفض ما يصل بعده — يضيع عملٌ وقع على الرفّ بلا رسالة. الآن closeVerdict الخالص يمنع الإقفال ويقول السببَ والعاقبة، والزرُّ معطَّلٌ والسببُ في title. والمنعُ على الإقفال لا على العدّ — فق-٣ سليمة.",
+      "nextStep": "أُغلقت في 6ec9a0a.",
+      "evidence": {
+        "commit": "6ec9a0a",
+        "closedOn": "2026-08-31"
+      }
     },
     {
       "id": "CAP-305",
@@ -848,6 +889,152 @@
         "لا تعديل على الكشف الأوّل إطلاقًا",
         "الفرق يُقاس من العدّ الثاني المؤكَّد"
       ]
+    },
+    {
+      "id": "CAP-601",
+      "title": "زرُّ «استأنف جلستك» — العودةُ بلا رمزٍ يُملى",
+      "milestone": "م٦",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [],
+      "dependsOn": [],
+      "branch": "claude/smart-inventory-tracking-8aa575",
+      "touches": [
+        "src/services/stock/sessionResume.js",
+        "src/services/stock/sessionResume.test.js",
+        "src/components/brandzo-erp/stock/ScanFlow.jsx",
+        "src/data/usage-guide.json"
+      ],
+      "progress": "الاستئنافُ كان صامتًا ومربوطًا بمفتاحٍ واحدٍ في localStorage: من بدّل هاتفَه أو مُسح متصفّحُه وقف بلا طريق. الآن بطاقةٌ تقرأ الجلسات المفتوحة من الخادم وترتّبها بذاكرة الجهاز — وجلساتُه هو أوّلًا موسومةً «كنتَ فيها».",
+      "nextStep": "أُغلقت في 0c87661.",
+      "acceptance": [
+        "الجلساتُ المفتوحة تُقرأ من الخادم فتنفع الهاتفَ الجديد",
+        "ذاكرةُ الجهاز ترتّب ولا تمنح حقَّ دخول — يحرسه اختبار",
+        "المقفَلُ لا يُعرض في القائمة",
+        "منطق خالص مختبَر بلا Firestore وبلا DOM"
+      ],
+      "evidence": {
+        "commit": "0c87661",
+        "closedOn": "2026-08-31"
+      }
+    },
+    {
+      "id": "CAP-602",
+      "title": "سجلُّ المتابعة مرجعًا — وحدةٌ ووقتٌ مطلقٌ وتصفيةٌ بالشخص",
+      "milestone": "م٦",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [],
+      "dependsOn": [],
+      "branch": "claude/smart-inventory-tracking-8aa575",
+      "touches": [
+        "src/services/stock/monitorLog.js",
+        "src/services/stock/monitorLog.test.js",
+        "src/components/brandzo-erp/stock/OperationsMonitor.jsx",
+        "src/data/usage-guide.json"
+      ],
+      "progress": "الجدولُ كان يعرض الكمّيّةَ مجرَّدةً من وحدتها — «محمد ٥» لا تقول أكراتينُ أم قطع، وهو ما تمنعه CAP-103 نفسُها. والحسابُ كان في useMemo داخل الشاشة فلم يُختبر سطرًا واحدًا. نُقل إلى monitorLog.js الخالص، وأُضيفت الوحدةُ والأساسُ والوقتُ المطلقُ ووسمُ الخصم والتصفيةُ بالشخص والبحث.",
+      "nextStep": "أُغلقت في 57f6edb.",
+      "acceptance": [
+        "الكمّيّةُ تُعرض بوحدتها ومعادلِها بالأساس — والمجهولُ «—» لا صفرًا",
+        "وقتٌ مطلقٌ بالثانية إلى جانب النسبيّ",
+        "تصفيةٌ بالعادّ وبحثٌ بالصنف والباركود والكود",
+        "الحسابُ منطقٌ خالصٌ مختبَر لا useMemo في الشاشة"
+      ],
+      "evidence": {
+        "commit": "57f6edb",
+        "closedOn": "2026-08-31"
+      }
+    },
+    {
+      "id": "CAP-603",
+      "title": "تصديرُ سجلّ المتابعة — إكسل ومحضرُ PDF",
+      "milestone": "م٦",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [],
+      "dependsOn": [
+        "CAP-602"
+      ],
+      "branch": "claude/smart-inventory-tracking-8aa575",
+      "touches": [
+        "src/components/brandzo-erp/stock/OperationsMonitor.jsx",
+        "src/services/stock/monitorLog.js"
+      ],
+      "progress": "المديرُ لم يكن يملك زرَّ تصديرٍ واحدًا — والتصديرُ في شاشة العدّ وحدها. الآن إكسل بورقتين (السجلّ · توزيع العمل) ومحضرُ PDF بترويسةٍ تحمل رمزَ الجلسة ونطاقَها ومن فتحها. والتصديرُ يتبع التصفية.",
+      "nextStep": "أُغلقت في 57f6edb.",
+      "acceptance": [
+        "التصديرُ يشمل ما هو معروضٌ بعد التصفية لا الجلسةَ كلَّها",
+        "الـPDF عبر البوّابة الوحيدة exportElementToPdf بعنصر DOM لا نصّ",
+        "عنصرُ المحضر له أبعادٌ حقيقيّة — فلا صفحةٌ بيضاء",
+        "صفوفُ التصدير من المنطق الخالص لا تُبنى في الشاشة"
+      ],
+      "evidence": {
+        "commit": "57f6edb",
+        "closedOn": "2026-08-31"
+      }
+    },
+    {
+      "id": "CAP-604",
+      "title": "دمجُ الجلسات في حملة — بنغازي أوّلًا ثمّ طرابلس",
+      "milestone": "م٦",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [],
+      "dependsOn": [],
+      "branch": "claude/smart-inventory-tracking-8aa575",
+      "touches": [
+        "src/services/stock/campaign.js",
+        "src/services/stock/campaign.test.js",
+        "src/services/stock/operationsService.js",
+        "src/components/brandzo-erp/stock/OperationsMonitor.jsx",
+        "src/data/usage-guide.json"
+      ],
+      "progress": "الدمجُ منطقيٌّ لا فيزيائيّ: قاعدةُ scans تمنع النقل، والنسخُ يكتب byUid الناسخِ فيصير جردُ محمدٍ باسم المدير — تزويرٌ للأثر الذي طُلب الدمجُ من أجله. فالحملةُ رابطةٌ على الرؤوس (campaignId)، وبلا تعديلِ سطرٍ في firestore.rules.",
+      "nextStep": "أُغلقت في 9fba9a9.",
+      "acceptance": [
+        "لا يُنقل قيدُ مسحٍ واحد ولا يتغيّر اسمُ من عدّ",
+        "جردٌ لا يُدمج مع استلام — والمقفَلةُ تُدمج",
+        "السجلُّ الموحَّد مرتّبٌ بالوقت عبر الجلسات وكلُّ صفٍّ بفرعه",
+        "فكُّ الدمج مسحُ حقلٍ لا حذفُ بيان",
+        "بلا تعديلٍ على firestore.rules"
+      ],
+      "evidence": {
+        "commit": "9fba9a9",
+        "closedOn": "2026-08-31"
+      }
+    },
+    {
+      "id": "CAP-605",
+      "title": "حضورُ الجلسة — «مَن دخل» لا «مَن قرأ»",
+      "milestone": "م٦",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": [],
+      "dependsOn": [
+        "CAP-602"
+      ],
+      "branch": "claude/smart-inventory-tracking-8aa575",
+      "touches": [
+        "src/services/stock/sessionPresence.js",
+        "src/services/stock/sessionPresence.test.js",
+        "src/services/stock/operationsService.js",
+        "src/components/brandzo-erp/stock/ScanFlow.jsx",
+        "src/components/brandzo-erp/stock/OperationsMonitor.jsx",
+        "firestore.rules",
+        "src/data/usage-guide.json"
+      ],
+      "progress": "الشيفرةُ كاملةٌ ومفحوصةٌ حيًّا (٥ في الجلسة · ٣ يعدّون · ٢ دخلوا ولم يبدأوا). ومجموعةُ members معرّفُ مستندها هويّةُ صاحبه، وقاعدتُها تشترط memberUid == request.auth.uid فلا يُعلن أحدٌ حضورَ غيره.",
+      "nextStep": "محجوبةٌ على المالك: القاعدةُ مكتوبةٌ في الريبو ولم تُنشر — النشرُ من Firebase Console. وقبل النشر يعمل الجدولُ من القراءات وحدها ولا يتعطّل. تُغلق حين يؤكّد المالك النشر.",
+      "acceptance": [
+        "العضوُ يظهر بمجرّد دخوله قبل أوّل قراءة",
+        "من قرأ ولم يُسجَّل عضوًا يظهر أيضًا — الجلساتُ القديمة بلا members",
+        "الصامتُ يُقدَّم في الترتيب",
+        "فشلُ قراءة الأعضاء لا يُعطّل الشاشة",
+        "لا يُعلن أحدٌ حضورَ غيره — يحرسه شرطُ القاعدة",
+        "المالك نشر القاعدة من Firebase Console"
+      ],
+      "evidence": {}
     }
   ]
 }
