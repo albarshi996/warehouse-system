@@ -287,6 +287,14 @@
   "/dashboard/packing-shipping",
   "/dashboard/pick-plan"
  ],
+ "picking_unit": [
+  "/dashboard/documents",
+  "/dashboard/lpn-picking",
+  "/dashboard/my-tasks",
+  "/dashboard/packing-shipping",
+  "/dashboard/pick-plan",
+  "/dashboard/tasks"
+ ],
  "purchase_officer": [
   "/dashboard/comparative-study",
   "/dashboard/data-reports",
@@ -314,6 +322,13 @@
   "/تقرير-هيكل-الوظائف-والادوار.html",
   "/دليل-السلاسل-والإمداد.html"
  ],
+ "putaway_unit": [
+  "/dashboard/bin-assignment",
+  "/dashboard/directed-storage",
+  "/dashboard/documents",
+  "/dashboard/my-tasks",
+  "/dashboard/tasks"
+ ],
  "qc_inspector": [
   "/dashboard/comparative-study",
   "/dashboard/documents",
@@ -337,6 +352,12 @@
   "/تقرير-الدورة-المستندية-الكامل-2026.html",
   "/تقرير-هيكل-الوظائف-والادوار.html",
   "/دليل-السلاسل-والإمداد.html"
+ ],
+ "receiving_unit": [
+  "/dashboard/dock-operations",
+  "/dashboard/documents",
+  "/dashboard/lpn-receiving",
+  "/dashboard/tasks"
  ],
  "return_manager": [
   "/dashboard/assets-inventory",
@@ -382,6 +403,32 @@
   "/dashboard/studies",
   "/dashboard/targets",
   "/dashboard/van-operations",
+  "/المرجع-التشغيلي-الرسمي.html",
+  "/تقرير(ERP).html",
+  "/تقرير-الانجاز.html",
+  "/تقرير-الدورة-المستندية-الكامل-2026.html",
+  "/تقرير-هيكل-الوظائف-والادوار.html",
+  "/دليل-السلاسل-والإمداد.html"
+ ],
+ "scm_manager": [
+  "/dashboard/assets-inventory",
+  "/dashboard/cold-chain",
+  "/dashboard/command-center",
+  "/dashboard/comparative-study",
+  "/dashboard/data-reports",
+  "/dashboard/documents",
+  "/dashboard/global-doc-cycles",
+  "/dashboard/hse-checklists",
+  "/dashboard/odoo-integration-report",
+  "/dashboard/order-control",
+  "/dashboard/reference-guide",
+  "/dashboard/reports",
+  "/dashboard/retail-hub",
+  "/dashboard/stock-ledger",
+  "/dashboard/studies",
+  "/dashboard/tasks",
+  "/dashboard/transfers",
+  "/dashboard/warehouses",
   "/المرجع-التشغيلي-الرسمي.html",
   "/تقرير(ERP).html",
   "/تقرير-الانجاز.html",

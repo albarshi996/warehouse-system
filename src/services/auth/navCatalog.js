@@ -52,9 +52,9 @@ export const NAV_GROUPS = [
       // الفهرس الجامع لكل مقاصد البوابة — يُولَّد من هذا الكتالوج نفسه، فأيّ
       // عنصر يُضاف هنا مستقبلًا يظهر فيه تلقائيًّا بلا تعديل يدويّ.
       { path: '/dashboard/portal-operations', label: 'عمليات البوابة', icon: 'globe', roles: ['admin', 'warehouse_manager', 'storekeeper', 'qc_inspector', 'gate_officer', 'purchase_officer', 'return_manager', 'fnb_manager', 'branch_manager'] },
-      { path: '/dashboard/documents', label: 'المستندات', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'storekeeper', 'qc_inspector', 'gate_officer', 'purchase_officer', 'return_manager', 'fnb_manager', 'branch_manager'] },
+      { path: '/dashboard/documents', label: 'المستندات', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'storekeeper', 'qc_inspector', 'gate_officer', 'purchase_officer', 'return_manager', 'fnb_manager', 'branch_manager', 'scm_manager', 'receiving_unit', 'putaway_unit', 'picking_unit'] },
       { path: '/dashboard/forms', label: 'اختار وظيفتك', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'storekeeper', 'qc_inspector', 'gate_officer', 'purchase_officer', 'return_manager', 'fnb_manager', 'branch_manager'] },
-      { path: '/dashboard/tasks', label: 'المهام', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'storekeeper', 'qc_inspector', 'gate_officer', 'purchase_officer', 'return_manager', 'fnb_manager', 'branch_manager'] },
+      { path: '/dashboard/tasks', label: 'المهام', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'storekeeper', 'qc_inspector', 'gate_officer', 'purchase_officer', 'return_manager', 'fnb_manager', 'branch_manager', 'scm_manager', 'receiving_unit', 'putaway_unit', 'picking_unit'] },
       { path: '/dashboard/products', label: 'الأصناف', icon: 'package', roles: ['admin', 'warehouse_manager', 'storekeeper', 'qc_inspector', 'gate_officer', 'purchase_officer', 'return_manager', 'fnb_manager', 'branch_manager'] },
       // ماستر شركاء الأعمال (§15.2/15.3) — للمديرَين كإدارة بياناتٍ مرجعية.
       { path: '/dashboard/suppliers', label: 'ماستر الموردين', icon: 'users', roles: ['admin', 'warehouse_manager'] },
@@ -108,7 +108,7 @@ export const NAV_GROUPS = [
       { path: '/dashboard/stock-reconcile', label: 'مطابقة المخزون', icon: 'arrowLeftRight', roles: ['admin', 'warehouse_manager', 'inventory_auditor'] },
       // التقارير التفصيليّة — موضعٌ ثانٍ لأمين المخزن ومسؤول المرتجعات: تقارير
       // المخزون تخصّهما، وهما لا يريان مجموعة «التقارير». والصلاحية اتحادُ المواضع.
-      { path: '/dashboard/data-reports', label: 'التقارير التفصيليّة', icon: 'barChart3', roles: ['storekeeper', 'return_manager'] },
+      { path: '/dashboard/data-reports', label: 'التقارير التفصيليّة', icon: 'barChart3', roles: ['storekeeper', 'return_manager', 'scm_manager'] },
       { path: '/dashboard/transfers', label: 'النقل بين المستودعات', icon: 'truck' },
       { path: '/dashboard/order-control', label: 'الرقابة على الطلبات', icon: 'clipboardList' },
       { path: '/dashboard/retail-hub', label: 'خريطة التجزئة', icon: 'mapPin' },
@@ -228,7 +228,7 @@ export const NAV_GROUPS = [
       // البوّابة ومشرف المناولة والعادّ — لشاشات الأبواب والسجلّ — صار
       // الطيُّ يعني اتّساعًا لم يُقصد. فثُبّتت الأدوار الثلاثة نفسُها:
       // **لا أحدَ فقد بابًا كان يفتحه، ولا أحدَ ربح بابًا لم يُمنح له.**
-      { path: '/dashboard/lpn-receiving', label: 'الاستلام الميدانيّ', icon: 'arrowDownTray', roles: ['admin', 'warehouse_manager', 'storekeeper', 'inventory_auditor'] },
+      { path: '/dashboard/lpn-receiving', label: 'الاستلام الميدانيّ', icon: 'arrowDownTray', roles: ['admin', 'warehouse_manager', 'storekeeper', 'inventory_auditor', 'receiving_unit'] },
       // ‹LPN-206› الحوكمة ثانيًا: القرار بين «قرأتُ» و«صار مخزونًا».
       // للمديرَين وحدهما — وأمينُ المخزن يكوّن الطبلية ولا يعتمدها
       // (فصلُ المهامّ: من يعدّ لا يُصدّق على عدّه).
@@ -237,17 +237,17 @@ export const NAV_GROUPS = [
       { path: '/dashboard/lpn-governance', label: 'حوكمة الطبالي', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
       // ‹LPN-308› التحضير الميدانيّ: المسح الثلاثيّ خطوةً خطوة. للمحضّر
       // كما للمديرَين — وهو من يمشي الممرّ.
-      { path: '/dashboard/lpn-picking', label: 'التحضير الميدانيّ', icon: 'arrowUpTray', roles: ['admin', 'warehouse_manager', 'storekeeper', 'inventory_auditor'] },
+      { path: '/dashboard/lpn-picking', label: 'التحضير الميدانيّ', icon: 'arrowUpTray', roles: ['admin', 'warehouse_manager', 'storekeeper', 'inventory_auditor', 'picking_unit'] },
       // ‹LPN-508› جردُ الطبالي: شهادةُ رؤيةٍ بلا كمّيّات (ق-٢/ح-٣).
       // للعادّ والمديرَين — ومدقّقُ الجرد صاحبُها الطبيعيّ.
       { path: '/dashboard/lpn-count', label: 'جرد الطبالي', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'inventory_auditor'] },
       // ‹LPN-721› التعبئة والشحن: بعد التحضير مباشرةً — طرودٌ بباركوداتٍ
       // مستقلّة وملصقُ عميلٍ يُسحب من أمر الصرف. للمعبِّئ وضابط البوّابة
       // كما للمديرَين (كلاهما يملك `STAGE`/`LOAD` في مصفوفة ‹LPN-506›).
-      { path: '/dashboard/packing-shipping', label: 'التعبئة والشحن', icon: 'package', roles: ['admin', 'warehouse_manager', 'storekeeper', 'labor_supervisor', 'gate_officer'] },
+      { path: '/dashboard/packing-shipping', label: 'التعبئة والشحن', icon: 'package', roles: ['admin', 'warehouse_manager', 'storekeeper', 'labor_supervisor', 'gate_officer', 'picking_unit'] },
       // ‹LPN-722› الأبواب والبوّابة: آخرُ حلقةٍ قبل الطريق وأوّلُ حلقةٍ بعده.
       // لضابط البوّابة أوّلًا — هو من يقف عندها.
-      { path: '/dashboard/dock-operations', label: 'الأبواب والبوّابة', icon: 'truck', roles: ['admin', 'warehouse_manager', 'gate_officer', 'storekeeper', 'labor_supervisor'] },
+      { path: '/dashboard/dock-operations', label: 'الأبواب والبوّابة', icon: 'truck', roles: ['admin', 'warehouse_manager', 'gate_officer', 'storekeeper', 'labor_supervisor', 'receiving_unit'] },
       // ‹LPN-720› مركز الباركود: سجلُّ الهويّات كلِّها وتوليدُ البنية وطباعتُها.
       // أدواتُ البنية تختفي عمّن لا يملكها (`ownsStructure`) — فالسجلّ يُقرأ
       // للتدقيق، والتوليد للمدير وحده.
@@ -273,18 +273,18 @@ export const NAV_GROUPS = [
       // ‹LOC-402› «مهامي» أوّلَ المجموعة: هي **شاشة العامل** — يفتحها ويعمل.
       // كانت مدفونةً داخل لوحة عمالة الشحن بلا رابطٍ لها، وهي مصمّمةٌ للهاتف
       // أوّلًا. وضابطُ البوّابة وأمينُ المخزن ينفّذان مهامَّ بنودٍ أيضًا.
-      { path: '/dashboard/my-tasks', label: 'مهامي — تنفيذ التخزين والسحب', icon: 'checkSquare', roles: ['admin', 'warehouse_manager', 'labor_supervisor', 'storekeeper', 'gate_officer'] },
+      { path: '/dashboard/my-tasks', label: 'مهامي — تنفيذ التخزين والسحب', icon: 'checkSquare', roles: ['admin', 'warehouse_manager', 'labor_supervisor', 'storekeeper', 'gate_officer', 'putaway_unit', 'picking_unit'] },
       // ‹LOC› البانية: تصف المدى مرّةً فيُولَّد الكامل — ٢٤٠٠ موقعٍ كانت تُكتب
       // بالقلم فلا تُكتب، فيبقى المخزون بلا مواقع ولا يعمل التوجيه أصلًا.
       { path: '/dashboard/location-builder', label: 'بانية مواقع التخزين', icon: 'layers', roles: ['admin', 'warehouse_manager'] },
       // ‹LOC› إسناد الأصناف: بعد تعريف الرفوف يُقال **أين كلّ صنف**. تقرأ
       // ورقة الأرصدة بالمستورد القائم — والمضاف حارسُ الموقع: رفٌّ لا وجود
       // له يُوقف الاعتماد قبل أن يصير رصيدًا لا يجده أحد.
-      { path: '/dashboard/bin-assignment', label: 'إسناد الأصناف إلى المواقع', icon: 'package', roles: ['admin', 'warehouse_manager', 'inventory_auditor'] },
+      { path: '/dashboard/bin-assignment', label: 'إسناد الأصناف إلى المواقع', icon: 'package', roles: ['admin', 'warehouse_manager', 'inventory_auditor', 'putaway_unit'] },
       // ‹LOC-303› خطّة السحب: توصل `pickPlan` المبنيّ المهجور — موقعُ كلّ بندٍ
       // ومسارٌ مرتَّبٌ بالمشي. لأمين المخزن أوّلًا: هو من يمشيه.
-      { path: '/dashboard/pick-plan', label: 'خطّة السحب والمسار', icon: 'mapPin', roles: ['admin', 'warehouse_manager', 'storekeeper', 'labor_supervisor', 'inventory_auditor'] },
-      { path: '/dashboard/directed-storage', label: 'استيراد مستندات المصدر', icon: 'fileUp', roles: ['admin', 'warehouse_manager', 'inventory_auditor'] },
+      { path: '/dashboard/pick-plan', label: 'خطّة السحب والمسار', icon: 'mapPin', roles: ['admin', 'warehouse_manager', 'storekeeper', 'labor_supervisor', 'inventory_auditor', 'picking_unit'] },
+      { path: '/dashboard/directed-storage', label: 'استيراد مستندات المصدر', icon: 'fileUp', roles: ['admin', 'warehouse_manager', 'inventory_auditor', 'putaway_unit'] },
       { path: '/dashboard/labor-operations', label: 'عمالة الشحن والتفريغ', icon: 'users', roles: ['admin', 'warehouse_manager', 'labor_supervisor'] },
     ],
   },

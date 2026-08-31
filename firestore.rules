@@ -101,7 +101,12 @@ service cloud.firestore {
              (signedIn() && hasProfile() && isActive() && myRole() in [
                'admin', 'warehouse_manager', 'storekeeper', 'qc_inspector',
                'gate_officer', 'purchase_officer', 'return_manager',
-               'inventory_auditor', 'finance_manager', 'fleet'
+               'inventory_auditor', 'finance_manager', 'fleet',
+               // ‹RB-202› أدوارُ الدليل الأربعة: مديرُ الإدارة، ووحداتُها
+               // الثلاث المُنشئة (GRN/SRN · PUTAWAY · PICK في مصفوفة 6.3).
+               // ★ وهذه بوّابةُ **العمل** لا بوّابةُ الاعتماد: من يعتمد ماذا
+               // يبقى في «approveRoles» كما هو — لم يُمسّ حرفًا.
+               'scm_manager', 'receiving_unit', 'putaway_unit', 'picking_unit'
              ]);
     }
 

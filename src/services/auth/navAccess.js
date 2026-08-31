@@ -38,6 +38,10 @@ export const ROLE_NAV = {
   // ‹RB-201› المكلَّفُ يرى مجموعةً واحدةً، وفيها مدخلٌ واحدٌ يخصّه —
   // فالتضييقُ بالمجموعة **وبالمدخل** معًا، لا بإحداهما.
   count_assignee: ['daily'],
+  scm_manager: ['daily', 'warehouses', 'reports'],
+  receiving_unit: ['daily', 'lpn'],
+  putaway_unit: ['daily', 'putaway'],
+  picking_unit: ['daily', 'putaway', 'lpn'],
   admin: ['daily', 'warehouses', 'putaway', 'lpn', 'gate', 'fleet', 'field', 'fnb', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
   warehouse_manager: ['daily', 'warehouses', 'putaway', 'lpn', 'gate', 'fleet', 'field', 'fnb', 'odoo', 'reports', 'presentations', 'archive', 'dept', 'procurement'],
   // ‹LPN› أمين المخزن يقف عند الشاحنة — فالاستلام الميدانيّ بيته.

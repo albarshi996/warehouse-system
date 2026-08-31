@@ -32,8 +32,12 @@ test('★★ لا دورٌ يُفقد: الستّة عشر السابقة كلّ
   // ‹FNB-107› دورا القطاع، ثمّ ‹FNB-502 · ق-O05› الشيف التنفيذيّ،
   // ثمّ ‹RB-201› موظّف الجرد المكلَّف — والعددُ يُثبَّت عمدًا: كلُّ دورٍ جديد
   // يُوقف هذا الحارس، فلا يُضاف دورٌ في غفلة.
-  assert.equal(Object.keys(ROLES).length, PRE_FNB_ROLES.length + 4, 'أربعةُ أدوارٍ أُضيفت لا أكثر');
+  // ‹RB-202› ومعها أربعةٌ من الدليل: مديرُ الإدارة ووحداتُها الثلاث.
+  assert.equal(Object.keys(ROLES).length, PRE_FNB_ROLES.length + 8, 'ثمانيةُ أدوارٍ أُضيفت لا أكثر');
   assert.equal(ROLES.count_assignee.label, 'موظّف جرد مكلَّف');
+  for (const id of ['scm_manager', 'receiving_unit', 'putaway_unit', 'picking_unit']) {
+    assert.ok(ROLES[id], `دورُ الدليل «${id}» مفقود`);
+  }
 });
 
 test('أدوار القطاع معرَّفة: صاحبُ المدخل ومصدرُ البيانات وصاحبُ الوصفة', () => {
