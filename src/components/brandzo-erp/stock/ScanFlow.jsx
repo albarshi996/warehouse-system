@@ -35,9 +35,17 @@ import {
   appendScan,
   closeOperation,
   getOperation,
+  listOpenOperations,
   listenScans,
   updateOperationSummary,
 } from '../../../services/stock/operationsService.js';
+import {
+  rememberSession,
+  forgetSession,
+  recentSessions,
+  resumeList,
+  resumeLine,
+} from '../../../services/stock/sessionResume.js';
 import {
   SCAN_MODES,
   panelForScan,
@@ -119,6 +127,9 @@ export default function ScanFlow() {
   const [codeBusy, setCodeBusy] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkText, setBulkText] = useState('');
+  // بطاقة «استأنف جلستك» — الجلسات المفتوحة من الخادم، وترتيبُها من ذاكرة الجهاز.
+  const [resumeOps, setResumeOps] = useState([]);
+  const [resumeBusy, setResumeBusy] = useState(false);
 
   const scanInputRef = useRef(null);
   const qtyInputRef = useRef(null);
@@ -238,6 +249,16 @@ export default function ScanFlow() {
     return listenScans(opId, setScans);
   }, [opId]);
 
+  /**
+   * ‹الاستئناف› الجلسات المفتوحة تُقرأ **حين لا يكون العادّ داخل جلسة** —
+   * فهي بطاقةُ عودةٍ لا شريطُ حالةٍ دائم. وقراءةٌ واحدةٌ لا اشتراكٌ حيّ:
+   * قائمةٌ من عشرين رأسًا لا تستحقّ بثًّا مستمرًّا إلى هاتفٍ يعدّ.
+   */
+  useEffect(() => {
+    if (!me || opId) return;
+    refreshResume();
+  }, [me, opId]);
+
   // إيقافُ الكاميرا عند المغادرة صار داخل `useBarcodeCamera` — لا تسريب تدفّق فيديو.
 
   const summary = useMemo(() => sessionSummary(scans), [scans]);
@@ -309,6 +330,7 @@ export default function ScanFlow() {
       flash('err', 'لم يُرفع رأسُ الجلسة بعد — تحقّق من الشبكة أو من صلاحيّتك.')
     );
     localStorage.setItem(OP_KEY, id);
+    rememberSession(localStorage, { id, code, type: forMode }, { now: Date.now() });
     setOpId(id);
     setOpCode(code || '');
     setOpenScope(scope);
@@ -547,6 +569,8 @@ export default function ScanFlow() {
   /** يفتح عمليةً بعد التثبّت منها — مسارٌ واحدٌ للرمز القصير وللمعرّف القديم. */
   function enterOperation(op) {
     localStorage.setItem(OP_KEY, op.id);
+    // ذاكرةُ الجهاز: ترتيبٌ لبطاقة الاستئناف لا صلاحيّةُ دخول.
+    rememberSession(localStorage, op, { now: Date.now() });
     setOpId(op.id);
     setOpCode(op.code || '');
     if (op.type) setMode(op.type);
@@ -554,6 +578,25 @@ export default function ScanFlow() {
     setOpenScope(scopeOf(op));
     setJoinCode('');
     flash('ok', 'انضممت — الجدول أدناه دفتر العملية المشترك.');
+  }
+
+  /**
+   * ‹الاستئناف› يقرأ الجلسات المفتوحة من الخادم ويرتّبها بذاكرة الجهاز.
+   *
+   * وتعذّرُ القراءة **لا يُعطّل شيئًا**: تبقى البطاقة فارغةً ويبقى الانضمامُ
+   * بالرمز وفتحُ جلسةٍ جديدة عاملَين — فالبطاقة اختصارٌ لا بوّابة (ق-٣).
+   */
+  async function refreshResume() {
+    setResumeBusy(true);
+    try {
+      const open = await listOpenOperations(20);
+      const recent = typeof localStorage !== 'undefined' ? recentSessions(localStorage) : [];
+      setResumeOps(resumeList(open, recent));
+    } catch {
+      setResumeOps([]);
+    } finally {
+      setResumeBusy(false);
+    }
   }
 
   async function joinByCode() {
@@ -715,6 +758,8 @@ export default function ScanFlow() {
       // ما دام الإقفال لم يُقرّ، هي الوحيدة الباقية.
       if (typeof localStorage !== 'undefined') clearBackup(localStorage, opId);
       localStorage.removeItem(OP_KEY);
+      // ولا تبقى في بطاقة الاستئناف سطرًا ميّتًا يُضغط فيرتدّ.
+      forgetSession(localStorage, opId);
       setOpId(null);
       setPanel(null);
       flash('ok', 'أُقفلت العملية — عملٌ جديد يبدأ عمليةً جديدة.');
@@ -743,6 +788,78 @@ export default function ScanFlow() {
             <Icon name="alertTriangle" size={16} /> غير مُرسَل: {int(queue.pending)}
           </div>
           {queueLabel(queue.pending)}
+        </div>
+      )}
+
+      {/*
+        ★ بطاقةُ «استأنف جلستك» — الطريقُ الثالث إلى الجلسة.
+
+        كان الاستئنافُ **صامتًا ومربوطًا بالجهاز**: مفتاحٌ في `localStorage`
+        يُدخِل صاحبَه من تلقائه، فإن بدّل هاتفَه أو مُسح متصفّحُه وقف بلا زرٍّ
+        يضغطه ولا طريقَ إلّا رمزٌ يُملى. والآن: الجلساتُ المفتوحة من الخادم،
+        وجلساتُه هو أوّلَ القائمة بذاكرة جهازه.
+
+        ولا تُعرض وهو داخلَ جلسة (بطاقةُ عودةٍ لا شريطُ حالة)، ولا حين لا
+        جلسةَ مفتوحةً أصلًا (بطاقةٌ فارغةٌ تشغل الشاشة بلا مقابل).
+      */}
+      {!opId && resumeOps.length > 0 && (
+        <div className="o_ds_card o_ds_pad" style={{ marginBottom: '16px' }} data-resume-card>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+            <Icon name="history" size={16} />
+            <strong>استأنف جلستك</strong>
+            <span style={{ fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
+              جلساتٌ مفتوحةٌ الآن — ادخل بضغطةٍ بلا رمز.
+            </span>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={refreshResume}
+              disabled={resumeBusy}
+              style={{ marginInlineStart: 'auto' }}
+            >
+              {resumeBusy ? 'جارٍ…' : 'تحديث'}
+            </button>
+          </div>
+          <div style={{ display: 'grid', gap: '8px' }}>
+            {resumeOps.map((op) => (
+              <div
+                key={op.id}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap',
+                  padding: '10px', borderRadius: 'var(--o-border-radius)',
+                  border: '1px solid var(--o-border-color)',
+                  background: op.mine ? 'var(--o-badge-info-bg, #eef4fb)' : 'transparent',
+                }}
+              >
+                <strong
+                  style={{
+                    fontFamily: 'monospace', direction: 'ltr', fontSize: '17px',
+                    letterSpacing: '2px', padding: '2px 8px', borderRadius: '6px',
+                    background: 'var(--o-gray-100, #f1f1f1)',
+                  }}
+                >
+                  {formatOperationCode(op.code) || '—'}
+                </strong>
+                <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
+                  {resumeLine(op, (o) => scopeLabel(scopeOf(o)))}
+                </span>
+                {op.mine && (
+                  <span style={{ fontSize: '11px', fontWeight: 'var(--o-font-weight-bold)' }}>
+                    — كنتَ فيها
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => enterOperation(op)}
+                  style={{ marginInlineStart: 'auto' }}
+                  data-resume-enter
+                >
+                  دخول
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
