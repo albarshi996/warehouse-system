@@ -67,6 +67,13 @@ import {
   scopeLabel,
   scopeOf,
 } from '../../../services/stock/operationScope.js';
+import { queueState, queueLabel, closeVerdict } from '../../../services/stock/scanQueue.js';
+import {
+  appendBackup,
+  readBackup,
+  clearBackup,
+  backupExportRows,
+} from '../../../services/stock/scanBackup.js';
 import { fetchLocationsOnce } from '../../../services/locations/locationsService.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import {
@@ -235,6 +242,12 @@ export default function ScanFlow() {
 
   const summary = useMemo(() => sessionSummary(scans), [scans]);
 
+  /**
+   * ‹CAP-303› حالةُ الطابور — كم قراءةً ما زالت في هذا الجهاز ولم تبلغ السحابة.
+   * الحساب في المنطق الخالص المختبَر؛ الشاشة تعرضه ولا تُعيد بناءه.
+   */
+  const queue = useMemo(() => queueState(scans), [scans]);
+
   // فهرسٌ واحد يعرف الباركودات **والأكواد** — فقيد تصحيحٍ كُتب بكود الصنف
   // (لصنفٍ بلا باركود) يعود لصفّ صاحبه لا لصفٍّ مجهولٍ جديد.
   const lookupMap = useMemo(() => {
@@ -285,12 +298,16 @@ export default function ScanFlow() {
     if (opId) return opId;
     // ‹CAP-201› النطاق يُكتب مع الرأس ويُجمَّد: جلسةٌ بدأ عدُّها لا يتغيّر
     // نطاقُها تحت العادّين، وإلّا صار الكشف يدّعي تغطيةَ ما لم يُعدّ.
-    const { id, code, scope } = await createOperation({
+    const { id, code, scope, saved } = await createOperation({
       type: forMode,
       profile: me,
       warehouse: scopeWh,
       zone: scopeZone,
     });
+    // رأسُ الجلسة يُرفع بلا انتظار (‹CAP-303›) — وفشلُه يُقال حين يقع.
+    saved?.catch?.(() =>
+      flash('err', 'لم يُرفع رأسُ الجلسة بعد — تحقّق من الشبكة أو من صلاحيّتك.')
+    );
     localStorage.setItem(OP_KEY, id);
     setOpId(id);
     setOpCode(code || '');
@@ -417,7 +434,29 @@ export default function ScanFlow() {
     setBusy(true);
     try {
       const id = await ensureOperation(mode);
-      await appendScan(id, { ...verdict.entry, profile: me });
+      // ★★ **لا يُنتظر إقرارُ السحابة** ‹CAP-303›: `appendScan` تُعيد وعدًا لا
+      // يُحلّ إلّا بإقرار الخادم، وانتظارُه بلا شبكةٍ **يعلّق الشاشة أبدًا** —
+      // فيقف العادّ في الممرّ يضغط «حفظ» ولا شيء يحدث. وFirestore يقبل القيد
+      // على قرص الجهاز فورًا ويرفعه وحده، فالحفظ **وقع** حين نصل هنا.
+      // والفشلُ المتأخّر (صلاحيةٌ أو جلسةٌ أُقفلت) يُقال حين يقع لا قبله.
+      appendScan(id, { ...verdict.entry, profile: me }).catch((err) => {
+        const closed = String(err?.code || err?.message || '').includes('permission-denied');
+        flash(
+          'err',
+          closed
+            ? `رُفض «${verdict.entry.name || verdict.entry.barcode}»: الجلسة أُقفلت قبل وصوله. عملُك محفوظٌ في «نسخة هذا الجهاز» — صدّره.`
+            : `تعذّر رفع «${verdict.entry.name || verdict.entry.barcode}» — وهو محفوظٌ في «نسخة هذا الجهاز».`
+        );
+      });
+      // ★ النسخة المحلّيّة تُكتب **لحظة الحفظ** لا بعد الإقرار: هي ما ينجو حين
+      // يرفض الخادمُ القيدَ فيُسقطه العميل من طابوره فيختفي من الجهاز والسحابة.
+      if (typeof localStorage !== 'undefined') {
+        appendBackup(localStorage, id, verdict.entry, {
+          byName: me?.name || '',
+          opCode,
+          now: Date.now(),
+        });
+      }
       // المجهول يدخل قائمة الاعتماد القائمة (I-د) باسمه الذي سمّاه الموظّف.
       if (!panelItem) {
         registerPending(
@@ -458,7 +497,18 @@ export default function ScanFlow() {
     }
     try {
       const id = await ensureOperation(mode || 'جرد');
-      await appendScan(id, { ...verdict.entry, profile: me });
+      // كما في `save`: لا انتظارَ لإقرار السحابة — وإلّا تعلّق شاشةُ التصحيح
+      // بلا شبكةٍ تمامًا كما كانت تتعلّق شاشةُ الحفظ ‹CAP-303›.
+      appendScan(id, { ...verdict.entry, profile: me }).catch(() =>
+        flash('err', `تعذّر رفع تصحيح «${row.name || row.barcode}» — وهو محفوظٌ في نسخة هذا الجهاز.`)
+      );
+      if (typeof localStorage !== 'undefined') {
+        appendBackup(localStorage, id, verdict.entry, {
+          byName: me?.name || '',
+          opCode,
+          now: Date.now(),
+        });
+      }
       flash('ok', `صُحّح ${row.name || row.barcode}: قيد فرق ${num(verdict.entry.qty)}`);
     } catch (e) {
       flash('err', e?.message ?? 'تعذّر التصحيح');
@@ -621,12 +671,49 @@ export default function ScanFlow() {
     }
   }
 
+  /**
+   * ★★ تصديرُ نسخة هذا الجهاز ‹CAP-303› — الحبل الأخير.
+   *
+   * تُصدَّر **كما حُفظت محلّيًّا**، لا كما يعرضها الجدول: الجدول مشتقٌّ من دفتر
+   * السحابة، والمقصود هنا بالذات ما **لم يبلغ** السحابة. فلو تطابقا فبها،
+   * ولو نقص الدفترُ ظهر النقصُ في هذا الملفّ.
+   */
+  async function exportDeviceBackup() {
+    if (!opId || typeof localStorage === 'undefined') return;
+    const entries = readBackup(localStorage, opId);
+    if (!entries.length) {
+      flash('err', 'لا نسخة محلّيّة على هذا الجهاز لهذه الجلسة.');
+      return;
+    }
+    const XLSX = await import('xlsx');
+    const rows = backupExportRows(entries, {
+      formatTime: (v) => (v ? new Date(v).toLocaleString('ar-LY-u-nu-latn') : '—'),
+    });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'نسخة الجهاز');
+    const stamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `Device_Backup_${normalizeOperationCode(opCode) || 'session'}_${stamp}.xlsx`);
+    flash('ok', `صُدِّرت ${int(entries.length)} قراءة من نسخة هذا الجهاز.`);
+  }
+
   async function finishOperation() {
     if (!opId) return;
+    // ★★ حارس الإقفال ‹CAP-304›: قاعدة `scans` تشترط أن تكون العمليّة **مفتوحةً
+    // لحظةَ وصول القيد**. فالإقفال وفي الطابور قيدٌ يرفضه الخادم عند عودة
+    // الشبكة — ويضيع عملٌ وقع على الرفّ. والحكمُ في المنطق الخالص المختبَر،
+    // لا شرطًا يُكتب هنا فيُنسى عند إضافة زرٍّ ثانٍ.
+    const verdict = closeVerdict({ pending: queue.pending });
+    if (!verdict.ok) {
+      flash('err', verdict.reason);
+      return;
+    }
     const ok = window.confirm(`إنهاء العملية؟ (${int(summary.scanCount)} قيدًا · ${int(summary.itemCount)} صنفًا)`);
     if (!ok) return;
     try {
       await closeOperation(opId);
+      // النسخة المحلّيّة تُمحى **بعد** إقفالٍ ناجحٍ وطابورٍ خالٍ لا قبله:
+      // ما دام الإقفال لم يُقرّ، هي الوحيدة الباقية.
+      if (typeof localStorage !== 'undefined') clearBackup(localStorage, opId);
       localStorage.removeItem(OP_KEY);
       setOpId(null);
       setPanel(null);
@@ -639,6 +726,25 @@ export default function ScanFlow() {
   return (
     <div className="o_theme" dir="rtl" style={{ maxWidth: '760px', margin: '0 auto' }}>
       {note && <div className={`o_alert ${note.kind === 'err' ? 'danger' : 'success'}`}>{note.text}</div>}
+
+      {/*
+        ★★ مؤشّر «لم يصل بعد» ‹CAP-303› — أعلى الشاشة حيث يراه الواقف في المخزن.
+
+        كان العادّ يمسح خمسين صنفًا والشبكة مقطوعة، فيرى جدولَه ممتلئًا (لأنّ
+        Firestore يعرض قيودَه المحلّيّة) ويظنّ عملَه في السحابة — وهو كلُّه في
+        جيبه. والإشارة كانت موجودةً في اللقطة ومهملةً تمامًا.
+
+        وصفرٌ **بلا مؤشّر**: بطاقةٌ دائمةٌ تقول «٠ غير مُرسَل» تتدرّب العين على
+        تجاهلها، فحين تصير ٤٠ لا يراها أحد. والنصّ نفسُه من المنطق الخالص.
+      */}
+      {queue.pending > 0 && (
+        <div className="o_alert warning" data-scan-queue>
+          <div className="o_alert_title">
+            <Icon name="alertTriangle" size={16} /> غير مُرسَل: {int(queue.pending)}
+          </div>
+          {queueLabel(queue.pending)}
+        </div>
+      )}
 
       {/* ١ — الوضع */}
       <p style={{ margin: '0 0 8px', fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)' }}>
@@ -751,6 +857,20 @@ ${inviteLink}`)}` : undefined}
               يفتحه العضو ويدخل بحسابه — فيجد نفسه داخل الجلسة مباشرةً.
             </span>
           </div>
+          {/*
+            ‹CAP-303› نسخةُ هذا الجهاز — ما حُفظ لحظةَ العدّ، لا ما بلغ السحابة.
+            الزرّ حاضرٌ دائمًا لا عند العطب فقط: من يبحث عن حبلِ النجاة وقتَ
+            الغرق لا يجده. وهو صامتٌ ثانويٌّ لا يزاحم زرّ الدعوة.
+          */}
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={exportDeviceBackup}
+            data-op-backup
+            title="يُصدِّر ما حُفظ على هذا الجهاز — نسخةٌ احتياطيّةٌ تنجو لو رفض الخادمُ القيود."
+          >
+            <Icon name="arrowDownTray" size={14} /> صدّر نسخة هذا الجهاز
+          </button>
           <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
             وللإملاء صوتًا — الرمز:
           </span>
@@ -994,7 +1114,19 @@ ${inviteLink}`)}` : undefined}
                 <Icon name="fileUp" size={14} /> تصدير إكسل
               </button>
               {opId && (
-                <button type="button" className="btn btn-secondary btn-sm" onClick={finishOperation}>
+                /*
+                  ‹CAP-304› الزرّ يُعطَّل والطابور غير فارغ، **والسبب مكتوبٌ في
+                  `title` وفي الرسالة عند الضغط** — تعطيلٌ صامتٌ يُقرأ عطبًا.
+                  والحكم من `closeVerdict` الخالص لا شرطًا يُعاد هنا.
+                */
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={finishOperation}
+                  disabled={queue.pending > 0}
+                  data-op-finish
+                  title={closeVerdict({ pending: queue.pending }).reason || 'إقفال الجلسة — لا مسح بعدها.'}
+                >
                   <Icon name="checkCircle" size={14} /> إنهاء العملية
                 </button>
               )}

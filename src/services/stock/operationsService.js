@@ -68,7 +68,14 @@ function currentUid() {
 export async function createOperation({ type, profile, note = '', warehouse = '', zone = '' }) {
   let code = '';
   try {
-    const open = await listOpenOperations(100);
+    // ★ سباقٌ بمهلة ‹CAP-303›: `getDocs` بلا شبكةٍ قد **يتعلّق** لا أن يرتدّ
+    // (خاصّةً مع `experimentalForceLongPolling`) — فيقف فتحُ الجلسة إلى الأبد.
+    // وفحصُ التفرّد رفاهيةٌ، وفتحُ الجلسة ضرورة. فمن لم يُجب في ثلاث ثوانٍ
+    // يُمضى بدونه — وهو ما كان يفعله فرعُ الفشل أصلًا.
+    const open = await Promise.race([
+      listOpenOperations(100),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000)),
+    ]);
     code = generateOperationCode(Math.random, { taken: open.map((o) => o.code).filter(Boolean) });
   } catch {
     // تعذّرت قراءة المفتوحة (شبكةٌ أو صلاحية) — يُولَّد بلا فحص تفرّدٍ بدل أن
@@ -76,7 +83,12 @@ export async function createOperation({ type, profile, note = '', warehouse = ''
     code = generateOperationCode();
   }
   const scope = normalizeScope({ warehouse, zone });
-  const ref = await addDoc(collection(db, OPS), {
+  // ★★ المعرّف يُولَّد **محلّيًّا** ثمّ يُكتب بلا انتظار ‹CAP-303›:
+  // `addDoc` تُعيد وعدًا لا يُحلّ إلّا بإقرار الخادم — فانتظارُه بلا شبكةٍ
+  // يعلّق فتحَ الجلسة أبدًا. و`doc(collection(…))` يُعطي معرّفًا كاملًا بلا
+  // ذهابٍ إلى الخادم، فتُفتح الجلسة فورًا ويُرفع رأسُها حين تعود الشبكة.
+  const ref = doc(collection(db, OPS));
+  const saved = setDoc(ref, {
     type,
     status: 'open',
     code,
@@ -89,7 +101,9 @@ export async function createOperation({ type, profile, note = '', warehouse = ''
     createdAt: serverTimestamp(),
     closedAt: null,
   });
-  return { id: ref.id, code, scope };
+  // `saved` وعدُ الإقرار — يُعاد ولا يُنتظر هنا: المستدعي يُعلّق عليه رسالةَ
+  // فشلٍ (صلاحيةٌ مرفوضة مثلًا) بلا أن يحبس الشاشةَ في انتظار شبكة.
+  return { id: ref.id, code, scope, saved };
 }
 
 /**
@@ -125,11 +139,26 @@ export function appendScan(opId, { barcode, sku, name, qty, uom, factor, baseQty
   });
 }
 
-/** يستمع لقيود المسح لحظياً (لدمج عمل بقيّة الموظّفين). */
+/**
+ * يستمع لقيود المسح لحظياً (لدمج عمل بقيّة الموظّفين).
+ *
+ * ★ **ويختم كلَّ قيدٍ بـ`_pending` ‹CAP-303›:** `hasPendingWrites` على مستوى
+ * اللقطة كانت تُمرَّر وسيطًا ثانيًا **ترميه الشاشة**، فيمسح العادّ خمسين صنفًا
+ * والشبكة مقطوعة ويرى جدولَه ممتلئًا ويظنّ عملَه في السحابة. والعلامة على
+ * **القيد نفسه** هي ما يُبنى منه العدد: «٤٠ قراءة لم تصل» — لا حالةٌ عامّةٌ
+ * تقول «شيءٌ ما معلَّق».
+ *
+ * والحقل مسبوقٌ بشرطةٍ سفليّة عمدًا: صفةُ نقلٍ محلّيّة لا حقلَ مستندٍ مخزَّن،
+ * فلا يُخلط بما يُكتب في Firestore ولا يُصدَّر عمودًا.
+ */
 export function listenScans(opId, callback) {
   const q = query(collection(db, OPS, opId, 'scans'), orderBy('at', 'asc'));
-  return onSnapshot(q, (snap) => {
-    const scans = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return onSnapshot(q, { includeMetadataChanges: true }, (snap) => {
+    const scans = snap.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
+      _pending: d.metadata.hasPendingWrites,
+    }));
     callback(scans, snap.metadata.hasPendingWrites);
   });
 }
