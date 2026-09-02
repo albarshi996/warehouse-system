@@ -294,3 +294,30 @@ test('★★★ المسحةُ تعرض ولا تفتح — والفتحُ بض�
 test('★★ والوضعُ الافتراضيُّ إثباتُ ما في الخانة — أكثرُ ما يُفعل عند الرفّ', () => {
   assert.ok(SCREEN.includes("useState('count')"), 'الجردُ افتراضًا لا الاستعلام');
 });
+
+test('★★★ المسحةُ تُثبَّت فورًا ولا تُنتظر — والانتظارُ يعلّق الشاشةَ بلا شبكة', () => {
+  // طلبُ المالك 2026-09-02: «عند المسح يُحفظ المسحُ باسم الممرّ الذي نختاره».
+  // وكانت البنودُ تُجمع في الشاشة وتُحفظ بضغطةٍ في الآخر — فمن أُغلق هاتفُه
+  // ضاع عملُه كلُّه.
+  assert.ok(SCREEN.includes('appendScan(session.id, scanPayload('), 'كلُّ مسحةٍ قيدٌ في السجلّ');
+
+  // ★ ولا await: وعدُ setDoc لا يُحلّ بلا شبكة (درسُ ‹CAP› الحرفيّ).
+  assert.ok(!SCREEN.includes('await appendScan'), 'ولا تُنتظر');
+  const call = SCREEN.slice(SCREEN.indexOf('appendScan(session.id'), SCREEN.indexOf('appendScan(session.id') + 400);
+  assert.ok(call.includes('.catch('), 'والفشلُ الحقيقيُّ يُعلَن ولا يُبتلع');
+});
+
+test('★★ والجلسةُ ممرٌّ لا خانة — وتُستأنف المفتوحةُ ولا تُفتح ثانية', () => {
+  assert.ok(SCREEN.includes('sessionScopeFor(code)'), 'النطاقُ من الخانة');
+  assert.ok(SCREEN.includes('findSessionFor(open, code)'), 'وتُستأنف المفتوحة');
+  assert.ok(SCREEN.includes('type: BIN_SESSION_TYPE'), 'ولا تُخلط بجرد الشاشة العامّ');
+});
+
+test('★★★ والمحضرُ يُبنى من القيود المحفوظة لا من الشاشة', () => {
+  const fn = SCREEN.slice(SCREEN.indexOf('async function finishSession'), SCREEN.indexOf('async function saveDraft'));
+  assert.ok(fn.includes('sessionDraft(session, scans'), 'المصدرُ هو `scans` الحيّة');
+  assert.ok(!fn.includes('entries'), 'لا قائمةُ الشاشة');
+  // ★ والإقفالُ **بعد** إنشاء المستند: من أقفل أوّلًا رفض الخادمُ ما بقي في
+  //   طابور الهاتف (درسُ ‹CAP›: الإقفالُ يبتلع الطابور).
+  assert.ok(fn.indexOf('createDraft(') < fn.indexOf('closeOperation('), 'والإقفالُ بعد الإنشاء لا قبله');
+});

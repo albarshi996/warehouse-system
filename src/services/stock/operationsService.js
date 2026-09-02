@@ -28,6 +28,7 @@ import {
   limit,
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
+import { normalizeLocationCode } from '../locations/locationCode.js';
 import { generateOperationCode, normalizeOperationCode } from './operationCode.js';
 import { normalizeScope } from './operationScope.js';
 import { issueScanId } from './scanIdentity.js';
@@ -120,7 +121,7 @@ export async function createOperation({ type, profile, note = '', warehouse = ''
  * والحقول الجديدة **لا تحتاج تعديل قواعد**: قاعدة `scans` تشترط الهويّة وفتحَ
  * العمليّة الأمّ ولا تحصر الحقول — فتمرّ بلا مساس.
  */
-export function appendScan(opId, { barcode, sku, name, qty, uom, factor, baseQty, uomMissing, collision, profile, opType }) {
+export function appendScan(opId, { barcode, sku, name, qty, uom, factor, baseQty, uomMissing, collision, profile, opType, bin = '', batch = '', expiry = '', bookQty = null }) {
   const numOrNull = (v) => (v == null || !Number.isFinite(Number(v)) ? null : Number(v));
   // ★★ المعرّفُ يُحسب ولا يُولَّد ‹CAP-302›: `{op}-{device}-{seq}`، فالقيدُ
   // نفسُه من الجهاز نفسِه له مسارٌ واحدٌ دائمًا — وإرسالُه مرّتين يُنتج
@@ -143,6 +144,14 @@ export function appendScan(opId, { barcode, sku, name, qty, uom, factor, baseQty
     uomMissing: Boolean(uomMissing), // ق-٢: وسمٌ يُحسم في المراجعة لا حاجزٌ عند العدّ
     collision: Boolean(collision), // CAP-106: باركودٌ تصادم وفصله العادّ بيده
     opType: opType || '',
+    // ‹LOC-707› الخانةُ والدفعةُ على القيد نفسِه — فلوحةُ الخانة تُثبّت كلَّ
+    // مسحةٍ **لحظتَها** تحت رفّها، ولا تنتظر ضغطةً في الآخر قد لا تأتي.
+    // والحقولُ إضافيّةٌ صرفة: مستدعٍ لا يمرّرها يكتب ما كان يكتبه حرفًا بحرف،
+    // وقاعدةُ `scans` لا تحصر الحقول (فُحصت) فلا نشرَ قاعدةٍ يلزم.
+    bin: normalizeLocationCode(bin),
+    batch: String(batch || ''),
+    expiry: String(expiry || ''),
+    bookQty: numOrNull(bookQty),
     byUid: currentUid(),
     byName: profile?.name || auth?.currentUser?.email || 'غير معروف',
     at: serverTimestamp(),
