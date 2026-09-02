@@ -357,6 +357,32 @@ test('★★ الويزاردُ خطوةٌ واحدةٌ في الشاشة لا �
 });
 
 test('★★★ والربطُ يمرّ بكاتبٍ مستقلٍّ لا بالنموذج — وإلّا مسحه التوليد', () => {
-  assert.ok(SCREEN.includes('await bindLocationBarcode(code, coding, me)'), 'الربطُ بكاتبه');
-  assert.ok(SCREEN.includes('if (!manual) await bindLocationBarcode'), 'والإدخالُ اليدويّ يفتح ولا يربط');
+  // تصحيح 2026-09-02: صار الربطُ في المسارَين — «امسح أوّلًا» و«ابدأ بالعنوان»
+  // — فالشرطُ على وجود ملصقٍ لا على المسار.
+  assert.ok(SCREEN.includes('await bindLocationBarcode(code, label, me)'), 'الربطُ بكاتبه');
+});
+
+test('★★★ المسارُ المعاكس: العنوانُ أوّلًا ثمّ يُلصَق الباركود', () => {
+  // طلبُ المالك 2026-09-02: «دخلتُ الممرّ، اخترتُ الممرّ والجهة والمستوى —
+  // وأريد كذلك إضافةَ الباركود له، لأنّه يأتي جاهزًا من التسويق».
+  assert.ok(SCREEN.includes('const awaitingBarcode = manual'), 'حالةُ انتظار الملصق');
+  assert.ok(SCREEN.includes('if (awaitingBarcode) { setCodingBarcode('), 'والمسحةُ تذهب إلى الحقل لا إلى التوجيه');
+  assert.ok(WIZARD.includes('باركود الملصق؟'), 'وللويزارد خطوةٌ خامسة');
+  assert.ok(WIZARD.includes('خطوة {num(steps.length + 1)} من {num(steps.length + 1)}'), 'مرقّمةٌ كغيرها');
+});
+
+test('★★★ ويُربط الملصقُ في المسارَين — وبلا ملصقٍ تُفتح الخانةُ ولا يُربط شيء', () => {
+  const fn = SCREEN.slice(SCREEN.indexOf('async function confirmCoding'), SCREEN.indexOf('const camera = useBarcodeCamera'));
+  assert.ok(fn.includes('const label = manual ? codingBarcode : coding;'), 'الملصقُ الفاعلُ من المسارَين');
+  assert.ok(fn.includes('if (label) await bindLocationBarcode(code, label, me);'), 'ويُربط إن وُجد');
+  assert.ok(!fn.includes('if (!manual) await bindLocationBarcode'), 'ولم يعد اليدويُّ يفتح بلا ربطٍ دائمًا');
+  assert.ok(WIZARD.includes("label ? 'اربط وافتح الخانة' : 'افتح بلا ربط'"), 'والزرُّ يقول فعلَه');
+});
+
+test('★★ وحالةُ الانتظار تُعلَن قبل مستعمِلها — والترتيبُ شرطٌ لا تنسيق', () => {
+  // كُشف بالفحص الحيّ: `const` يُقرأ قبل تهيئته ⟵ الشاشةُ بيضاء بلا رسالة.
+  assert.ok(
+    SCREEN.indexOf('const awaitingBarcode = manual') < SCREEN.indexOf('const onScanned = useCallback'),
+    'awaitingBarcode قبل onScanned'
+  );
 });

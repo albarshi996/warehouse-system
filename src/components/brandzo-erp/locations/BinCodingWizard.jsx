@@ -35,12 +35,21 @@ export default function BinCodingWizard({
   suggested = '',
   busy = '',
   manual = false,
+  capturedBarcode = '',
+  onBarcodeChange,
+  scanButton = null,
 }) {
   const at = currentStep(address, steps);
   const done = at < 0 && steps.length > 0;
   const prefix = String(warehouse?.binPrefix || warehouse?.code || '').toUpperCase();
   const code = done ? codeFromAddress(prefix, address, steps) : '';
-  const problems = done && !manual ? bindingProblems({ barcode, code, locations }) : [];
+  /**
+   * ★★ الملصقُ الفاعل: في مسار «امسح أوّلًا» هو الممسوح، وفي مسار «ابدأ
+   * بالعنوان» هو ما التُقط في الخطوة الأخيرة. وقد لا يوجد — فتُفتح الخانةُ
+   * بلا ربط، وهذا مشروع.
+   */
+  const label = manual ? capturedBarcode : barcode;
+  const problems = done && label ? bindingProblems({ barcode: label, code, locations }) : [];
   const progress = codingProgress(locations, prefix);
   const num = (n) => new Intl.NumberFormat('en-US').format(Number(n) || 0);
 
@@ -140,16 +149,51 @@ export default function BinCodingWizard({
             </div>
           )}
 
+          {/* ═══ الخطوةُ الأخيرة في مسار «ابدأ بالعنوان»: ألصق الباركود ═══ */}
+          {done && manual && (
+            <div className="space-y-2 pt-1 border-t border-line">
+              <div className="flex items-baseline gap-2">
+                <span className="text-[11px] text-muted">خطوة {num(steps.length + 1)} من {num(steps.length + 1)}</span>
+                <span className="text-base font-bold text-ink">باركود الملصق؟</span>
+              </div>
+              <p className="text-[11px] text-muted">
+                امسح الملصق الجاهز أو اكتب رقمه — أو اترك الحقل فارغًا وافتح الخانة بلا ربط.
+              </p>
+              <div className="flex flex-wrap gap-2 items-center">
+                <input
+                  value={capturedBarcode}
+                  onChange={(e) => onBarcodeChange?.(e.target.value.toUpperCase().replace(/\s+/g, ''))}
+                  placeholder="امسح أو اكتب"
+                  autoComplete="off"
+                  style={{ direction: 'ltr', textAlign: 'right' }}
+                  className="bg-surface border border-line rounded-lg text-ink text-sm px-2.5 py-2 font-mono flex-1 min-w-[180px]"
+                />
+                {scanButton}
+                {capturedBarcode && (
+                  <button type="button" onClick={() => onBarcodeChange?.('')} className="btn-secondary text-[11px]">
+                    امسح الحقل
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* ═══ التأكيد ═══ */}
           {done && (
             <div className="space-y-2 pt-1 border-t border-line">
               <div className="text-sm text-ink-2">
-                {manual ? 'ستفتح الموقع:' : 'سيرتبط هذا الباركود نهائيًّا بـ:'}
+                {label ? 'سيرتبط هذا الباركود نهائيًّا بـ:' : 'ستفتح الموقع:'}
               </div>
               <div className="text-sm font-bold text-ink">
                 {warehouse?.nameAr || warehouse?.name || prefix} · {addressLabel(address, steps)}
               </div>
               <div className="font-mono text-[11px] text-muted" style={{ direction: 'ltr' }}>{code}</div>
+              {label && (
+                <div className="text-xs text-ink-2">
+                  الملصق:{' '}
+                  <span className="font-mono font-bold text-ink" style={{ direction: 'ltr', display: 'inline-block' }}>{label}</span>
+                </div>
+              )}
 
               {problems.length > 0 ? (
                 <ul className="text-xs text-brand-red space-y-1 list-none p-0">
@@ -164,7 +208,7 @@ export default function BinCodingWizard({
                   disabled={Boolean(busy) || problems.length > 0}
                   className="btn-primary text-xs"
                 >
-                  {busy || (manual ? 'افتح هذه الخانة' : 'أكّد الربط')}
+                  {busy || (label ? 'اربط وافتح الخانة' : 'افتح بلا ربط')}
                 </button>
                 <button type="button" onClick={() => onBack?.(steps.length - 1)} className="btn-secondary text-xs">
                   غيّر {steps[steps.length - 1].label}

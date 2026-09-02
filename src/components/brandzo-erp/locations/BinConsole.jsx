@@ -29,6 +29,7 @@ import { listUnitsAt } from '../../../services/lpn/lpnService.js';
 import { binHeadline, binPrefixOf, segmentLabelsOf, warehouseForBin } from '../../../services/locations/binAnatomy.js';
 import { withAssignments } from '../../../services/locations/binTemplate.js';
 import {
+  addressComplete,
   codingSteps,
   findByBarcode,
   nextAddress,
@@ -117,6 +118,14 @@ export default function BinConsole() {
   const [lastAddress, setLastAddress] = useState(null);
   /** باركودٌ مُلتبِس: قد يكون ملصقَ موقعٍ لم يُكوَّد، وقد يكون صنفًا. */
   const [ambiguous, setAmbiguous] = useState('');
+  /**
+   * ★★★ المسارُ المعاكس ‹LOC-710› (طلب المالك 2026-09-02): «أنا موظّفٌ دخلتُ
+   * الممرّ، اخترتُ الممرّ والجهة والمستوى — وأريد كذلك **إضافة الباركود له**،
+   * لأنّ الباركود يأتي جاهزًا من التسويق».
+   *
+   * فالعنوانُ أوّلًا ثمّ الملصق: هذا هو الباركودُ المُلتقَط في تلك الخطوة.
+   */
+  const [codingBarcode, setCodingBarcode] = useState('');
   const [bin, setBin] = useState('');
   // الافتراضُ «جرد» — وهو إثباتُ ما في الخانة، وأكثرُ ما يُفعل عند الرفّ.
   const [mode, setMode] = useState('count');
@@ -176,6 +185,15 @@ export default function BinConsole() {
 
   /** خطواتُ الويزارد — تُشتقّ من مخطّط المستودع لا تُكتب بيد. */
   const wizardSteps = useMemo(() => codingSteps(codingWh, TEMPLATES), [codingWh]);
+
+  /**
+   * أينتظر الويزاردُ باركودًا الآن؟ — في المسار المعاكس، بعد اكتمال العنوان.
+   * وحين ينتظر، تذهب المسحةُ إلى حقل الملصق لا إلى التوجيه.
+   *
+   * ⚠️ ويُعلَن **قبل** `onScanned`: هي تقرؤه في جسمها وفي قائمة تبعيّاتها،
+   * و`const` لا يُقرأ قبل تهيئته — فالترتيبُ هنا شرطٌ لا تنسيق.
+   */
+  const awaitingBarcode = manual && wizardSteps.length > 0 && addressComplete(address, wizardSteps);
   const knownCodes = useMemo(() => (locations || []).map((l) => l.code), [locations]);
   const contents = useMemo(() => binContents(activeCode, { balances, units }), [activeCode, balances, units]);
   const problem = useMemo(() => (bin ? binProblem(bin, knownCodes) : ''), [bin, knownCodes]);
@@ -249,6 +267,7 @@ export default function BinConsole() {
     setAmbiguous('');
     setAddress({});
     setSuggested('');
+    setCodingBarcode('');
     setBin('');
     setScanned('');
     setQty('');
@@ -293,6 +312,7 @@ export default function BinConsole() {
     setCoding('');
     setManual(true);
     setSuggested('');
+    setCodingBarcode('');
     setAddress(lastAddress ? nextAddress(lastAddress, wizardSteps) || {} : {});
   }, [lastAddress, wizardSteps]);
 
@@ -340,6 +360,10 @@ export default function BinConsole() {
   /** المسحةُ الواحدة — وجهتُها من التصنيف، والرفضُ يقول الصواب. */
   const onScanned = useCallback(
     (raw) => {
+      // ★ المسارُ المعاكس: العنوانُ اكتمل وننتظر ملصقًا — فالمسحةُ ملصقٌ
+      //   لا توجيه. (نفسُ قاعدة «القراءة تتبع الحقل المنتظِر» في شاشات الطبالي.)
+      if (awaitingBarcode) { setCodingBarcode(normalizeBinBarcode(raw)); return; }
+
       const hit = findByBarcode(locations, raw);
       const v = routeScan(raw, { hasBin: Boolean(bin), bound: Boolean(hit) });
       if (v.action === 'bin') { presentBin(v.code); return; }
@@ -361,7 +385,7 @@ export default function BinConsole() {
       }
       setMsg({ type: 'error', text: v.message });
     },
-    [bin, presentBin, locations]
+    [bin, presentBin, locations, awaitingBarcode]
   );
 
   /** خطوةٌ أُجيبت — وما بعدها يُمسح، فلا يبقى جوابٌ لسؤالٍ تغيّر ما قبله. */
@@ -387,6 +411,7 @@ export default function BinConsole() {
     setManual(false);
     setAddress({});
     setSuggested('');
+    setCodingBarcode('');
   }
 
   /**
@@ -395,19 +420,19 @@ export default function BinConsole() {
    */
   async function confirmCoding(code) {
     if (!code) return;
-    setBusy(manual ? 'يفتح…' : 'يربط…');
+    // في المسارَين يُربط ملصقٌ إن وُجد: المسحُ أوّلًا يحمل `coding`، والعنوانُ
+    // أوّلًا يحمل `codingBarcode`. وبلا ملصقٍ تُفتح الخانةُ ولا يُربط شيء.
+    const label = manual ? codingBarcode : coding;
+    setBusy(label ? 'يربط…' : 'يفتح…');
     setMsg({ type: '', text: '' });
     try {
-      if (!manual) await bindLocationBarcode(code, coding, me);
+      if (label) await bindLocationBarcode(code, label, me);
       setLastAddress({ ...address });
       cancelWizard();
       setPending(code);
-      setMsg({
-        type: 'success',
-        text: manual ? '' : `رُبط الباركود بـ«${code}».`,
-      });
+      setMsg({ type: 'success', text: label ? `رُبط الباركود بـ«${code}».` : '' });
     } catch (err) {
-      setMsg({ type: 'error', text: (manual ? 'تعذّر الفتح: ' : 'تعذّر الربط: ') + (err?.message || 'سببٌ غير معروف') });
+      setMsg({ type: 'error', text: (label ? 'تعذّر الربط: ' : 'تعذّر الفتح: ') + (err?.message || 'سببٌ غير معروف') });
     } finally {
       setBusy('');
     }
@@ -529,7 +554,7 @@ export default function BinConsole() {
           {/* المسارُ البديل — حين يتعذّر المسح (ملصقٌ تلف أو عدسةٌ لا تقرأ). */}
           {!bin && !pending && !coding && !manual && (
             <button type="button" onClick={startManual} className="btn-secondary text-xs">
-              إدخالٌ يدويّ
+              ابدأ بالعنوان
             </button>
           )}
         </div>
@@ -584,6 +609,9 @@ export default function BinConsole() {
           suggested={suggested}
           locations={locations}
           busy={busy}
+          capturedBarcode={codingBarcode}
+          onBarcodeChange={setCodingBarcode}
+          scanButton={<ScanCameraButton camera={camera} compact label="امسح الملصق" />}
           onPick={pickStep}
           onBack={backToStep}
           onConfirm={confirmCoding}
