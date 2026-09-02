@@ -1,5 +1,7 @@
-import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, doc, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { db, auth } from '../../config/firebase.js';
+import { numberingProblems } from './binAnatomy.js';
+import { schemeProblems } from './locationScheme.js';
 
 /**
  * Warehouse service.
@@ -41,3 +43,50 @@ export const subscribeWarehouses = (onChange, onError) => {
     }
   );
 };
+
+/**
+ * ⚠️ يجب أن تطابق `isManager()` في `firestore.rules` (سطر `warehouses`).
+ * درسُ ل‑١٨: قائمةٌ تدّعي تطابقًا لا تملكه تمنع من تسمح له القاعدة.
+ */
+export const WAREHOUSE_ROLES = ['admin', 'warehouse_manager'];
+
+export function canEditWarehouses(role) {
+  return WAREHOUSE_ROLES.includes(role);
+}
+
+/**
+ * حفظُ حزمة ترقيم المستودع — البادئةُ والمخطّطُ وتسمياتُ المقاطع.
+ *
+ * ═══ لماذا على وثيقة المستودع لا في مجموعةٍ جديدة ═══
+ * لأنّها **صفةُ مستودعٍ** لا كيانٌ قائمٌ بذاته: مستودعٌ واحدٌ ومخطّطٌ واحد.
+ * ومجموعةٌ ثانيةٌ تعني معرّفين لشيءٍ واحدٍ وقاعدةَ أمنٍ ثانيةً تُنسى.
+ *
+ * ═══ ولماذا تُحفظ أصلًا (الفجوة التي تسدّها) ═══
+ * البانيةُ كانت تولّد ٣٦٠٠ كودٍ ثمّ **تنسى** المخطّط، فلا يبقى في النظام من
+ * يعرف أنّ المقطع الثالث في `RH` يعني «الجهة» لا «الرفّ». فيقرأ العاملُ
+ * رموزًا صمّاء، ويعرض النظامُ تسمياتٍ لا تصف مستودعَه.
+ *
+ * @param {string} warehouseId معرّفُ وثيقة المستودع (`addDoc` تولّده — ليس الكود)
+ * @param {{binPrefix:string, scheme:object, segmentLabels?:object, valueLabels?:object}} numbering
+ * @param {{name?:string}} [me]
+ */
+export async function saveWarehouseNumbering(warehouseId, numbering, me) {
+  const id = String(warehouseId ?? '').trim();
+  if (!id) throw new Error('معرّف المستودع مطلوب.');
+
+  const problems = [
+    ...numberingProblems(numbering),
+    ...(numbering?.scheme ? schemeProblems(numbering.scheme) : []),
+  ];
+  if (problems.length) throw new Error(problems.join(' · '));
+
+  await updateDoc(doc(db, COLLECTION, id), {
+    binPrefix: String(numbering.binPrefix).trim().toUpperCase(),
+    scheme: numbering.scheme ?? null,
+    segmentLabels: numbering.segmentLabels ?? null,
+    valueLabels: numbering.valueLabels ?? null,
+    numberingUpdatedAt: serverTimestamp(),
+    numberingUpdatedBy: me?.name || auth?.currentUser?.email || 'غير معروف',
+    numberingUpdatedByUid: auth?.currentUser?.uid || null,
+  });
+}

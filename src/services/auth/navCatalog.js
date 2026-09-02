@@ -274,6 +274,10 @@ export const NAV_GROUPS = [
       // كانت مدفونةً داخل لوحة عمالة الشحن بلا رابطٍ لها، وهي مصمّمةٌ للهاتف
       // أوّلًا. وضابطُ البوّابة وأمينُ المخزن ينفّذان مهامَّ بنودٍ أيضًا.
       { path: '/dashboard/my-tasks', label: 'مهامي — تنفيذ التخزين والسحب', icon: 'checkSquare', roles: ['admin', 'warehouse_manager', 'labor_supervisor', 'storekeeper', 'gate_officer', 'putaway_unit', 'picking_unit'] },
+      // ‹LOC-703› لوحة الخانة: الشاشة الوحيدة التي تبدأ **بالرفّ** لا بالمستند.
+      // العاملُ في الممرّ يقف أمام خانةٍ ويريد أن يعرف ما فيها، وكلُّ ما سواها
+      // يطلب منه أن يفتح أمرًا أوّلًا. أوّلًا للعامل الميدانيّ لأنّها له.
+      { path: '/dashboard/bin-console', label: 'الخانة — امسح وافتح', icon: 'mapPin', roles: ['admin', 'warehouse_manager', 'storekeeper', 'inventory_auditor', 'labor_supervisor', 'putaway_unit', 'picking_unit'] },
       // ‹LOC› البانية: تصف المدى مرّةً فيُولَّد الكامل — ٢٤٠٠ موقعٍ كانت تُكتب
       // بالقلم فلا تُكتب، فيبقى المخزون بلا مواقع ولا يعمل التوجيه أصلًا.
       { path: '/dashboard/location-builder', label: 'بانية مواقع التخزين', icon: 'layers', roles: ['admin', 'warehouse_manager'] },

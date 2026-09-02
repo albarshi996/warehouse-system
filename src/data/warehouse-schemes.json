@@ -1,0 +1,199 @@
+{
+  "note": "ملفٌّ مولَّد آليًّا — لا يُحرَّر بيد. يُعاد توليده بـ`node scripts/generate-bin-schemes.mjs \"<مجلد الـPDF>\"`.",
+  "decision": "قرار المالك 2026-09-02 — LOC-O01 (صيغة الكود) و LOC-O03 (البذرة) و«قالبٌ وتوليدٌ أوتوماتيكيّ».",
+  "anatomy": "القالبُ يصف الترميز، والوسائطُ تصف المقاس، والإسنادُ يربط مستودعًا بقالبٍ ووسائط.",
+  "templates": [
+    {
+      "id": "double-sided-racks",
+      "nameAr": "رفوفٌ مزدوجةُ الجهة",
+      "descriptionAr": "ممرٌّ بحرف، وجهتان يمينٌ ويسار، ورفوفٌ مرقّمة، وخاناتٌ على كلّ رفّ — وهو ترميزُ ملصقات طرابلس والرحبة.",
+      "sampleCode": "RH-A-R-01-01",
+      "segmentLabels": {
+        "zone": "الممرّ",
+        "rack": "الجهة",
+        "bay": "الرفّ",
+        "level": "الخانة"
+      },
+      "valueLabels": {
+        "rack": {
+          "L": "يسار",
+          "R": "يمين"
+        }
+      },
+      "params": [
+        {
+          "key": "aisles",
+          "labelAr": "عدد الممرّات",
+          "hintAr": "تُرقَّم بالحروف A فما فوق",
+          "min": 1,
+          "max": 26,
+          "default": 10
+        },
+        {
+          "key": "racks",
+          "labelAr": "عدد الرفوف في الجهة",
+          "min": 1,
+          "max": 99,
+          "default": 5
+        },
+        {
+          "key": "bins",
+          "labelAr": "عدد الخانات في الرفّ",
+          "min": 1,
+          "max": 99,
+          "default": 10
+        }
+      ],
+      "levels": [
+        {
+          "key": "zone",
+          "kind": "letters",
+          "count": "aisles"
+        },
+        {
+          "key": "rack",
+          "kind": "list",
+          "values": [
+            "L",
+            "R"
+          ]
+        },
+        {
+          "key": "bay",
+          "kind": "range",
+          "from": 1,
+          "to": "racks",
+          "pad": 2
+        },
+        {
+          "key": "level",
+          "kind": "range",
+          "from": 1,
+          "to": "bins",
+          "pad": 2
+        },
+        {
+          "key": "position",
+          "enabled": false
+        }
+      ]
+    },
+    {
+      "id": "zoned-aisles",
+      "nameAr": "مناطقُ ثمّ ممرّاتٌ ورفوفٌ ومستويات",
+      "descriptionAr": "مستودعٌ مقسَّمٌ مناطقَ مسمّاة (تجهيز · كتلة · مبرَّد)، وفي كلّ منطقةٍ ممرّاتٌ مرقّمةٌ ورفوفٌ ومستويات — للمستودعات التي تفصل بالوظيفة لا بالجهة.",
+      "sampleCode": "MAIN-PIK-A01-R01-L01",
+      "segmentLabels": {
+        "zone": "المنطقة",
+        "rack": "الممرّ",
+        "bay": "الرفّ",
+        "level": "المستوى"
+      },
+      "valueLabels": {},
+      "params": [
+        {
+          "key": "aisles",
+          "labelAr": "عدد الممرّات في المنطقة",
+          "min": 1,
+          "max": 99,
+          "default": 10
+        },
+        {
+          "key": "racks",
+          "labelAr": "عدد الرفوف في الممرّ",
+          "min": 1,
+          "max": 99,
+          "default": 5
+        },
+        {
+          "key": "levels",
+          "labelAr": "عدد المستويات في الرفّ",
+          "min": 1,
+          "max": 99,
+          "default": 4
+        }
+      ],
+      "levels": [
+        {
+          "key": "zone",
+          "kind": "list",
+          "values": [
+            "PIK",
+            "BLK",
+            "CLD"
+          ]
+        },
+        {
+          "key": "rack",
+          "kind": "range",
+          "prefix": "A",
+          "from": 1,
+          "to": "aisles",
+          "pad": 2
+        },
+        {
+          "key": "bay",
+          "kind": "range",
+          "prefix": "R",
+          "from": 1,
+          "to": "racks",
+          "pad": 2
+        },
+        {
+          "key": "level",
+          "kind": "range",
+          "prefix": "L",
+          "from": 1,
+          "to": "levels",
+          "pad": 2
+        },
+        {
+          "key": "position",
+          "enabled": false
+        }
+      ]
+    }
+  ],
+  "assignments": [
+    {
+      "warehouseCode": "WH002",
+      "binPrefix": "TR",
+      "nameAr": "طرابلس",
+      "templateId": "double-sided-racks",
+      "params": {
+        "aisles": 10,
+        "racks": 5,
+        "bins": 10
+      },
+      "expectedCount": 1000,
+      "firstCode": "TR-A-L-01-01",
+      "lastCode": "TR-J-R-05-10",
+      "evidence": {
+        "measuredAgainstLabels": true,
+        "labelCount": 1000,
+        "missing": 0,
+        "extra": 0
+      }
+    },
+    {
+      "warehouseCode": "WH001",
+      "binPrefix": "RH",
+      "nameAr": "الرحبة",
+      "templateId": "double-sided-racks",
+      "params": {
+        "aisles": 26,
+        "racks": 5,
+        "bins": 10
+      },
+      "expectedCount": 2600,
+      "firstCode": "RH-A-L-01-01",
+      "lastCode": "RH-Z-R-05-10",
+      "evidence": {
+        "measuredAgainstLabels": true,
+        "labelCount": 2600,
+        "missing": 0,
+        "extra": 0
+      }
+    }
+  ]
+}

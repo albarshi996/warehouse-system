@@ -155,8 +155,8 @@ test('★★ سبب التجاوز إلزاميّ — والفارغ يُرفض'
   assert.equal(ok.entry.byName, 'عليّ');
 });
 
-test('التقييم المباشر يُعيد التسمية المختصرة التي يراها العامل', () => {
+test('التقييم المباشر يُعيد التسمية التي يراها العامل — الكودَ كاملًا', () => {
   const s = scoreLocation(loc('MAIN-A01-R01-B09-LF'), { line: LINE, balances: [] });
   assert.equal(s.ok, true);
-  assert.equal(s.shortLabel, 'R01-09-F');
+  assert.equal(s.shortLabel, 'MAIN-A01-R01-B09-LF');
 });

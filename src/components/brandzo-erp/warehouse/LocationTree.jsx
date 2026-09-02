@@ -89,8 +89,8 @@ export default function LocationTree({ role }) {
   return (
     <div dir="rtl">
       <p style={{ fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)', margin: '0 0 14px', lineHeight: 1.6 }}>
-        كود الموقع الكامل هو هويّته (<span style={{ direction: 'ltr', display: 'inline-block' }}>MAIN-A01-R01-B09-LF-P01</span>)،
-        ويراه العامل مختصرًا (<span style={{ direction: 'ltr', display: 'inline-block' }}>R01-09-F</span>).
+        كود الموقع الكامل هو هويّته (<span style={{ direction: 'ltr', display: 'inline-block' }}>RH-A-R-01-01</span>)،
+        <strong> ويراه العامل كما هو</strong> — نفسَ المطبوع على الملصق، فلا اسمان لشيءٍ واحد.
         الوصف والسعة والقواعد تُعدَّل؛ والكود لا يُغيَّر بعد أوّل حركة — يُؤرشَف ويُنشأ بديل.
       </p>
 

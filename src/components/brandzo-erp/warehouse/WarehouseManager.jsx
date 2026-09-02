@@ -20,6 +20,11 @@ import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authServ
 import Badge from '../../odoo/Badge.jsx';
 import { int } from '../../odoo/format.js';
 import { FACILITY_TYPES, DEFAULT_FACILITY_TYPE, facilityTypeOf, facilityWarnings } from '../../../services/locations/facilityModel.js';
+import { canEditLocations, listenLocations, saveLocationsBulk } from '../../../services/locations/locationsService.js';
+import { toLocationInputs } from '../../../services/locations/locationScheme.js';
+import { generationPlan, schemeFromTemplate, templateById } from '../../../services/locations/binTemplate.js';
+import { saveWarehouseNumbering } from '../../../services/locations/warehouseService.js';
+import BIN_SCHEMES from '../../../data/warehouse-schemes.json';
 
 /**
  * شاشة ماستر المستودعات — قائمة حيّة + إضافة/تعديل/حذف + تصدير/استيراد JSON،
@@ -39,14 +44,23 @@ const LIST_COLS = [
   { key: 'manager', label: 'المدير' },
   { key: 'facilityType', label: 'النوع' },
   { key: 'status', label: 'الحالة' },
+  // ‹LOC-704› عمودُ المواقع: «كم خانةً لهذا المستودع وكم ينقصه» — الرقمُ في
+  // مكانه لا في شاشةٍ أخرى، فمن يعرّف مستودعًا يرى فورًا أنّه بلا مواقع.
+  { key: 'bins', label: 'المواقع' },
   { key: 'actions', label: 'الإجراءات' },
 ];
+
+const TEMPLATES = BIN_SCHEMES?.templates || [];
+const ASSIGNMENTS = BIN_SCHEMES?.assignments || [];
 
 const WarehouseManager = () => {
   // ‹LOC-102› تبويبان على الرابط نفسه: المنشآت ومواقع التخزين داخلها.
   // لا صفحة فوق صفحة — المواقع تخصّ ماستر المستودعات.
   const [tab, setTab] = useState('warehouses');
   const [role, setRole] = useState('');
+  const [profile, setProfile] = useState(null);
+  const [binCodes, setBinCodes] = useState([]);
+  const [genBusy, setGenBusy] = useState('');
   const [warehouses, setWarehouses] = useState([]);
   const [formData, setFormData] = useState({ code: '', name: '', manager: '', facilityType: DEFAULT_FACILITY_TYPE });
   const [editingId, setEditingId] = useState(null);
@@ -59,9 +73,10 @@ const WarehouseManager = () => {
   useEffect(
     () =>
       subscribeAuth(async (user) => {
-        if (!user) return setRole('');
-        const profile = await fetchUserProfile(user).catch(() => null);
-        setRole(profile?.role || '');
+        if (!user) { setProfile(null); return setRole(''); }
+        const me = await fetchUserProfile(user).catch(() => null);
+        setProfile(me);
+        setRole(me?.role || '');
       }),
     []
   );
@@ -247,6 +262,73 @@ const WarehouseManager = () => {
     setHasUnsavedChanges(true);
   };
 
+  // ‹LOC-704› أكوادُ المواقع القائمة — تُقرأ مرّةً ويُحسب منها ناقصُ كلّ مستودع.
+  useEffect(() => {
+    if (!role) return undefined;
+    return listenLocations((rows) => setBinCodes(rows.map((r) => r.code)));
+  }, [role]);
+
+  /**
+   * ★★ خطّةُ التوليد — **الناقصُ لا الكلّ**. تُحسب في المنطق الخالص
+   * (`binTemplate.generationPlan`) وتُعرض هنا: لكلّ مستودعٍ كم له وكم ينقصه،
+   * ومن بلا قالبٍ يُقال له ذلك بدل أن يُترك صامتًا.
+   */
+  const plan = React.useMemo(
+    () => generationPlan({ warehouses, templates: TEMPLATES, existingCodes: binCodes, assignments: ASSIGNMENTS }),
+    [warehouses, binCodes]
+  );
+  const planByCode = React.useMemo(
+    () => new Map(plan.rows.map((r) => [r.warehouseCode, r])),
+    [plan]
+  );
+
+  /**
+   * يكتب الناقصَ لمستودعٍ أو للكلّ. آمنٌ عند التكرار: `missing` محسوبٌ بفرق
+   * القائم، فالضغطةُ الثانيةُ لا تجد ما تكتبه.
+   */
+  const generateMissing = async (rows) => {
+    const todo = rows.filter((r) => r.missing.length);
+    if (!todo.length) return;
+    setGenBusy('يولّد…');
+    setStatusMsg({ type: '', text: '' });
+    try {
+      let saved = 0;
+      for (const r of todo) {
+        const out = await saveLocationsBulk(toLocationInputs(r.missing, { warehouse: r.binPrefix }), profile);
+        saved += out?.saved ?? r.missing.length;
+
+        // ★★ ويُثبَّت القالبُ على المستودع إن كان مبدئيًّا من الإسناد المعتمد —
+        // فالمرّةُ الأولى تكفي، وما بعدها يُقرأ من الوثيقة لا من البذرة.
+        if (r.source === 'assignment') {
+          const wh = warehouses.find((w) => w.code === r.warehouseCode);
+          const t = templateById(TEMPLATES, r.templateId);
+          if (wh?.id && t) {
+            await saveWarehouseNumbering(
+              wh.id,
+              {
+                binPrefix: r.binPrefix,
+                scheme: schemeFromTemplate(t, { binPrefix: r.binPrefix, params: r.templateParams }),
+                segmentLabels: t.segmentLabels || null,
+                valueLabels: t.valueLabels || null,
+                templateId: t.id,
+                templateParams: r.templateParams,
+              },
+              profile
+            ).catch(() => {});
+          }
+        }
+      }
+      setStatusMsg({
+        type: 'success',
+        text: `وُلّد ${int(saved)} موقعًا في ${int(todo.length)} مستودعًا — ${todo.map((r) => r.nameAr || r.warehouseCode).join(' · ')}`,
+      });
+    } catch (err) {
+      setStatusMsg({ type: 'error', text: 'تعذّر التوليد: ' + (err?.message || 'سببٌ غير معروف') });
+    } finally {
+      setGenBusy('');
+    }
+  };
+
   const activeCount = warehouses.filter((wh) => (wh.status || 'نشط') === 'نشط').length;
   const managedCount = warehouses.filter((wh) => wh.manager).length;
 
@@ -265,6 +347,36 @@ const WarehouseManager = () => {
         </Badge>
       ),
       status: <Badge variant={(wh.status || 'نشط') === 'نشط' ? 'done' : 'danger'}>{wh.status || 'نشط'}</Badge>,
+      bins: (() => {
+        const p = planByCode.get(wh.code);
+        if (!p) return <span style={{ color: 'var(--o-main-color-muted)' }}>—</span>;
+        if (p.problems.length) {
+          return <span style={{ color: 'var(--o-main-color-muted)', fontSize: '12px' }} title={p.problems[0]}>بلا قالب</span>;
+        }
+        return (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontFamily: 'monospace' }}>{int(p.have)}/{int(p.total)}</span>
+            {p.extra > 0 && (
+              <span
+                style={{ color: 'var(--o-main-color-muted)', fontSize: '11px' }}
+                title="أكوادٌ قائمةٌ لا يصفها القالبُ الحاليّ — صُغِّر القالبُ بعد توليدها. لا تُحذف (قد تشير إليها حركات)؛ تُؤرشَف من شاشة المواقع."
+              >
+                +{int(p.extra)} خارج القالب
+              </span>
+            )}
+            {p.missing.length > 0 && canEditLocations(role) && (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                disabled={Boolean(genBusy)}
+                onClick={() => generateMissing([p])}
+              >
+                ولّد {int(p.missing.length)}
+              </button>
+            )}
+          </span>
+        );
+      })(),
       actions: (
         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
           <button type="button" className="btn btn-secondary btn-sm" onClick={() => startEdit(wh)}>تعديل</button>
@@ -327,6 +439,31 @@ const WarehouseManager = () => {
         <p style={{ fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)', margin: '0 0 14px', lineHeight: 1.6 }}>
           كود المستودع (WH Code) هو المعرّف الفريد. عند انقطاع السحابة يعمل النظام محلّيًّا ثم يزامن لاحقًا.
         </p>
+
+        {/* ‹LOC-704› ضغطةٌ واحدةٌ لكلّ ما ينقص — والزرُّ آمنٌ عند التكرار. */}
+        {canEditLocations(role) && (plan.totalMissing > 0 || plan.blocked.length > 0) && (
+          <div className="o_ds_card o_ds_pad" style={{ marginBottom: '14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
+            <Icon name="mapPin" size={16} />
+            <span style={{ flex: 1, fontSize: 'var(--o-font-size-sm)', lineHeight: 1.6 }}>
+              {plan.totalMissing > 0
+                ? `ينقص ${int(plan.totalMissing)} موقعًا في ${int(plan.readyCount)} من المستودعات — تُكتب بضغطةٍ واحدة، والموجودُ لا يُكرَّر.`
+                : plan.blocked.length === plan.rows.length
+                  ? 'لا مستودعَ له قالبُ ترقيم بعد.'
+                  : 'كلُّ مستودعٍ له قالبٌ مكتملُ المواقع.'}
+              {plan.blocked.length > 0 && (
+                <span style={{ color: 'var(--o-main-color-muted)' }}>
+                  {' '}و{int(plan.blocked.length)} منها بلا قالب — عرّفه في بانية مواقع التخزين.
+                </span>
+              )}
+            </span>
+            {plan.totalMissing > 0 && (
+              <button type="button" className="btn btn-primary" disabled={Boolean(genBusy)} onClick={() => generateMissing(plan.rows)}>
+                {genBusy || `ولّد الناقص (${int(plan.totalMissing)})`}
+              </button>
+            )}
+            <a className="btn btn-secondary btn-sm" href="../location-builder/">بانية المواقع</a>
+          </div>
+        )}
 
         {offlineMode && (
           <div className="o_alert warning" style={{ marginBottom: '14px' }}>
