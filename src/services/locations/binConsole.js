@@ -55,15 +55,35 @@ export function modeOf(id) {
  * الخانة، وقد يمسح خانةً أخرى وهو واقفٌ في الأولى. وشاشةٌ تحكم «الحقلُ الفارغ
  * الأوّل» تضع كودَ خانةٍ في خانة الصنف بلا صوت.
  *
- * @returns {{action:'bin'|'item'|'pallet'|'reject', code:string, kind:string, message:string}}
+ * ★★★ و**لا يُفترض شكلُ ملصق الموقع** (طلب المالك 2026-09-02): الملصقُ
+ * الملصوقُ على الرفّ قد يكون أيَّ باركود — رقمًا صرفًا من لفّةٍ جاهزة. فمن
+ * حكم بأنّ «الرقمَ صنفٌ» منع تكويدَ نصفِ المخازن. والحكمُ هنا ثلاثيّ:
+ *   · `bound` — مربوطٌ بموقعٍ سلفًا ⟶ موقعٌ مهما كان شكلُه.
+ *   · شكلُ كود موقعٍ ⟶ موقعٌ بلا سؤال.
+ *   · وإلّا وبلا خانةٍ مفتوحة ⟶ **يُسأل ولا يُفترض**: أملصقُ موقعٍ لم يُكوَّد
+ *     بعد، أم صنفٌ مُسح قبل أوانه؟ وكلاهما يقع في المخزن.
+ *
+ * @returns {{action:'bin'|'item'|'pallet'|'ambiguous'|'reject', code, kind, message}}
  */
-export function routeScan(raw, { hasBin = false } = {}) {
+export function routeScan(raw, { hasBin = false, bound = false } = {}) {
   if (!str(raw)) return { action: 'reject', code: '', kind: 'UNKNOWN', message: 'امسح باركود الخانة أو اكتب كودها.' };
 
   const { kind, code, problem } = classifyScan(raw);
+  if (bound) return { action: 'bin', code, kind, message: '' };
   if (kind === 'LOCATION') return { action: 'bin', code, kind, message: '' };
 
   if (!hasBin) {
+    // ★ والالتباسُ محصورٌ بما يحتمله شكلُه: رقمٌ صرفٌ أو مجهول. أمّا الطبليّةُ
+    //   (بادئة LPN) والمستندُ والمركبةُ فأشكالُها تقطع الشكّ — فتُردّ برسالةٍ
+    //   تقول الصواب، ولا يُسأل عمّا لا يحتمل سؤالًا.
+    if (kind === 'ITEM' || kind === 'UNKNOWN') {
+      return {
+        action: 'ambiguous',
+        code,
+        kind,
+        message: `«${code}» غير مربوطٍ بموقع. أهو ملصقُ موقعٍ تريد تكويده؟`,
+      };
+    }
     return {
       action: 'reject',
       code,

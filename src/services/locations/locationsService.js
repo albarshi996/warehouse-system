@@ -161,3 +161,48 @@ export async function saveLocationsBulk(inputs, profile) {
   }
   return { saved: unique.length, duplicates: shaped.length - unique.length };
 }
+
+/**
+ * ربطُ باركودِ الملصق بموقعٍ ‹LOC-708› — «الباركودُ يُربط بعنوانه، ولا يُفترض».
+ *
+ * ═══ ★★★ ولماذا حقلٌ يُكتب وحدَه لا حقلٌ في النموذج ═══
+ * `shapeLocation` **لا يعرف الباركود عمدًا**. فلو عرفه لَكتبه فارغًا مع كلّ
+ * توليد، و`saveLocationsBulk` يدمج (`merge:true`) — فيمسح ضغطةُ «ولّد الناقص»
+ * ربطَ ثلاثةِ آلافِ ملصقٍ **بلا صوت**. فالربطُ يُكتب هنا وحدَه، وحقولُه
+ * الثلاثةُ لا يمسّها التوليدُ أبدًا.
+ *
+ * والهويّةُ تبقى الكودَ القانونيّ: الباركودُ حقلٌ عليه ومفتاحُ بحثٍ عكسيّ.
+ * فمن بدّل ملصقًا يومًا يربط الجديدَ بالعنوان نفسِه، ولا تتحرّك حركةٌ واحدة.
+ *
+ * @param {string} code كود الموقع القانونيّ (`RH-A-R-01-01`)
+ * @param {string} barcode باركود الملصق الملصوق فعلًا
+ * @param {object} [profile]
+ */
+export async function bindLocationBarcode(code, barcode, profile) {
+  const id = normalizeLocationCode(code);
+  const value = String(barcode ?? '').trim().toUpperCase().replace(/\s+/g, '');
+  if (!id) throw new Error('كود الموقع مطلوب.');
+  if (!value) throw new Error('باركود الملصق مطلوب.');
+
+  await updateDoc(doc(db, COL, id), {
+    barcode: value,
+    barcodeBoundAt: serverTimestamp(),
+    ...(() => {
+      const me = whoami(profile);
+      return { barcodeBoundBy: me.byName, barcodeBoundByUid: me.byUid };
+    })(),
+  });
+}
+
+/** نزعُ الربط — ملصقٌ تلف أو نُقل. ولا يُحذف الموقع، فالحركاتُ تشير إليه. */
+export async function unbindLocationBarcode(code, profile) {
+  const id = normalizeLocationCode(code);
+  if (!id) throw new Error('كود الموقع مطلوب.');
+  const me = whoami(profile);
+  await updateDoc(doc(db, COL, id), {
+    barcode: '',
+    barcodeBoundAt: serverTimestamp(),
+    barcodeBoundBy: me.byName,
+    barcodeBoundByUid: me.byUid,
+  });
+}

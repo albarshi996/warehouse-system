@@ -48,11 +48,14 @@ test('★★★ التوجيهُ بالتصنيف: الخانةُ تُفتح، �
   assert.equal(routeScan('TR-J-L-05-10', { hasBin: true }).action, 'bin', 'وخانةٌ أخرى تُفتح مكانها');
 });
 
-test('★★★ صنفٌ قبل الخانة يُردّ برسالةٍ تقول الصواب لا بكلمة «خطأ»', () => {
-  const v = routeScan('6281006521', { hasBin: false });
+test('★★★ وما يقطع شكلُه الشكَّ يُردّ برسالةٍ تقول الصواب لا بكلمة «خطأ»', () => {
+  // تصحيح 2026-09-02: الرقمُ الصرفُ **لم يعد** يُردّ — قد يكون ملصقَ رفٍّ من
+  // لفّةٍ جاهزة، فيُسأل عنه (اختبارُ «الأصمّ» أدناه). أمّا الطبليّةُ ببادئتها
+  // فشكلُها يقطع الشكّ، ولا يُسأل عمّا لا يحتمل سؤالًا.
+  const v = routeScan('LPN-RH-20260901-000001', { hasBin: false });
   assert.equal(v.action, 'reject');
   assert.match(v.message, /موقع تخزين/);
-  assert.match(v.message, /6281006521/, 'والرسالةُ تذكر ما مُسح فعلًا');
+  assert.match(v.message, /LPN-RH-20260901-000001/, 'والرسالةُ تذكر ما مُسح فعلًا');
 });
 
 test('المسحةُ الفارغة تُطلب ولا تُعدّ عطبًا في التصنيف', () => {
@@ -320,4 +323,40 @@ test('★★★ والمحضرُ يُبنى من القيود المحفوظة �
   // ★ والإقفالُ **بعد** إنشاء المستند: من أقفل أوّلًا رفض الخادمُ ما بقي في
   //   طابور الهاتف (درسُ ‹CAP›: الإقفالُ يبتلع الطابور).
   assert.ok(fn.indexOf('createDraft(') < fn.indexOf('closeOperation('), 'والإقفالُ بعد الإنشاء لا قبله');
+});
+
+/**
+ * ═══ ويزارد التكويد ‹LOC-708› — «الباركودُ يُربط بعنوانه، ولا يُفترض» ═══
+ */
+const WIZARD = readFileSync(new URL('../../components/brandzo-erp/locations/BinCodingWizard.jsx', import.meta.url), 'utf8');
+
+test('★★★ المسحةُ تبحث عن ربطٍ قبل كلّ شيء — ولا تفترض عنوان الباركود', () => {
+  assert.ok(SCREEN.includes('findByBarcode(locations, raw)'), 'الربطُ يُبحث أوّلًا');
+  assert.ok(SCREEN.includes('setCoding(normalizeBinBarcode(raw))'), 'وغيرُ المربوط يُفتح له ويزارد');
+});
+
+test('★★★ وباركودٌ أصمُّ غيرُ مربوطٍ يُسأل عنه ولا يُحكم بأنّه صنف', () => {
+  // كُشف بالفحص الحيّ 2026-09-02: الرقمُ الصرفُ كان يُصنَّف صنفًا فيُردّ —
+  // فيستحيل تكويدُ مخزنٍ ملصقاتُه أرقامٌ من لفّةٍ جاهزة.
+  const v = routeScan('8059692043057', { hasBin: false, bound: false });
+  assert.equal(v.action, 'ambiguous');
+  assert.match(v.message, /غير مربوطٍ بموقع/);
+  assert.ok(SCREEN.includes("v.action === 'ambiguous'"), 'والشاشةُ تعرض السؤال');
+  assert.ok(SCREEN.includes('هذا ملصقُ موقع — كوّدْه'), 'بزرَّيه');
+
+  // ومربوطٌ ⟶ موقعٌ مهما كان شكلُه.
+  assert.equal(routeScan('8059692043057', { hasBin: false, bound: true }).action, 'bin');
+  // وداخلَ خانةٍ مفتوحةٍ يبقى الرقمُ صنفًا.
+  assert.equal(routeScan('8059692043057', { hasBin: true, bound: false }).action, 'item');
+});
+
+test('★★ الويزاردُ خطوةٌ واحدةٌ في الشاشة لا أربعةُ حقولٍ دفعة', () => {
+  assert.ok(WIZARD.includes('خطوة {num(at + 1)} من {num(steps.length)}'), 'ورقمُ الخطوة معروض');
+  assert.ok(WIZARD.includes('steps[at].options.map('), 'وخياراتُ الخطوة الحاليّة وحدَها');
+  assert.ok(WIZARD.includes('onBack?.(i)'), 'والرجوعُ إلى أيّ خطوةٍ سبقت');
+});
+
+test('★★★ والربطُ يمرّ بكاتبٍ مستقلٍّ لا بالنموذج — وإلّا مسحه التوليد', () => {
+  assert.ok(SCREEN.includes('await bindLocationBarcode(code, coding, me)'), 'الربطُ بكاتبه');
+  assert.ok(SCREEN.includes('if (!manual) await bindLocationBarcode'), 'والإدخالُ اليدويّ يفتح ولا يربط');
 });
