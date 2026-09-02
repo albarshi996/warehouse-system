@@ -268,3 +268,63 @@ export function withAssignments(warehouses, { assignments = [], templates = [] }
     };
   });
 }
+
+/** مقارنةٌ ثابتةٌ لا تتأثّر بترتيب المفاتيح — فلا يُعلَن فرقٌ ليس فرقًا. */
+function sameShape(a, b) {
+  const norm = (v) => {
+    if (v === null || v === undefined) return null;
+    if (Array.isArray(v)) return v.map(norm);
+    if (typeof v === 'object') {
+      return Object.keys(v).sort().reduce((o, k) => { o[k] = norm(v[k]); return o; }, {});
+    }
+    return v;
+  };
+  return JSON.stringify(norm(a)) === JSON.stringify(norm(b));
+}
+
+/** حزمةُ الترقيم المعتمدة لإسنادٍ — ما يُكتب على وثيقة المستودع. */
+export function approvedNumbering(assignment, templates = []) {
+  const t = templateById(templates, assignment?.templateId);
+  if (!assignment || !t) return null;
+  return {
+    binPrefix: up(assignment.binPrefix),
+    scheme: schemeFromTemplate(t, { binPrefix: assignment.binPrefix, params: assignment.params }),
+    segmentLabels: t.segmentLabels || null,
+    valueLabels: t.valueLabels || null,
+    templateId: t.id,
+    templateParams: assignment.params || {},
+  };
+}
+
+/**
+ * ما الذي تغيّر بين المحفوظ على المستودع والمعتمد في البذرة؟
+ *
+ * ★★ لماذا يُقاس بدل أن يُكتب دائمًا؟ لأنّ زرًّا يظهر أبدًا يصير ضجيجًا يُضغط
+ * بلا قراءة. وزرٌّ يظهر **حين يوجد فرقٌ ويسمّيه** يُقرأ ويُصدَّق. ومستودعٌ
+ * مطابقٌ لا يُعرض له شيء.
+ *
+ * ⚠️ والتحديثُ يمسّ **وثيقة المستودع وحدها** — لا الخانات ولا ربطَ الملصقات.
+ *
+ * @returns {{differs:boolean, fields:string[], approved:object|null}}
+ */
+export function numberingDrift(warehouse, { assignments = [], templates = [] } = {}) {
+  const approved = approvedNumbering(assignmentFor(warehouse, assignments), templates);
+  if (!approved) return { differs: false, fields: [], approved: null };
+
+  const fields = [];
+  if (up(warehouse?.binPrefix) !== approved.binPrefix) fields.push('البادئة');
+  if (str(warehouse?.templateId) !== approved.templateId) fields.push('القالب');
+  if (!sameShape(warehouse?.templateParams || {}, approved.templateParams)) fields.push('المقاس');
+  if (!sameShape(warehouse?.segmentLabels ?? null, approved.segmentLabels)) fields.push('تسميات المقاطع');
+  if (!sameShape(warehouse?.valueLabels ?? null, approved.valueLabels)) fields.push('تسميات القيم');
+  if (!sameShape(warehouse?.scheme ?? null, approved.scheme)) fields.push('المخطّط');
+
+  return { differs: fields.length > 0, fields, approved };
+}
+
+/** المستودعاتُ التي يختلف ترقيمُها عن المعتمد — صفٌّ لكلٍّ بما تغيّر فيه. */
+export function driftedWarehouses(warehouses, { assignments = [], templates = [] } = {}) {
+  return (warehouses || [])
+    .map((w) => ({ warehouse: w, ...numberingDrift(w, { assignments, templates }) }))
+    .filter((r) => r.differs);
+}

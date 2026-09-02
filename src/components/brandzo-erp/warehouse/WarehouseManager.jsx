@@ -22,7 +22,12 @@ import { int } from '../../odoo/format.js';
 import { FACILITY_TYPES, DEFAULT_FACILITY_TYPE, facilityTypeOf, facilityWarnings } from '../../../services/locations/facilityModel.js';
 import { canEditLocations, listenLocations, saveLocationsBulk } from '../../../services/locations/locationsService.js';
 import { toLocationInputs } from '../../../services/locations/locationScheme.js';
-import { generationPlan, schemeFromTemplate, templateById } from '../../../services/locations/binTemplate.js';
+import {
+  driftedWarehouses,
+  generationPlan,
+  schemeFromTemplate,
+  templateById,
+} from '../../../services/locations/binTemplate.js';
 import { saveWarehouseNumbering } from '../../../services/locations/warehouseService.js';
 import BIN_SCHEMES from '../../../data/warehouse-schemes.json';
 
@@ -329,6 +334,45 @@ const WarehouseManager = () => {
     }
   };
 
+  /**
+   * ★★ المستودعاتُ التي تخلّف ترقيمُها عن البذرة المعتمدة.
+   *
+   * يقع هذا حين تُعدَّل تسميةٌ أو مقاسٌ في القالب **بعد** أن وُلِّدت المواقع:
+   * فالخانات موجودةٌ صحيحةً، والوثيقةُ تحمل وصفًا قديمًا — فيسأل الويزاردُ
+   * «الرفّ؟» حيث صار الاسمُ «المستوى». والزرُّ يظهر **حين يوجد فرقٌ ويسمّيه**،
+   * ومستودعٌ مطابقٌ لا يُعرض له شيء.
+   */
+  const drifted = React.useMemo(
+    () => driftedWarehouses(warehouses, { assignments: ASSIGNMENTS, templates: TEMPLATES }),
+    [warehouses]
+  );
+
+  /**
+   * يحدّث وثيقةَ المستودع بالترقيم المعتمد.
+   *
+   * ⚠️ ولا يمسّ الخانات ولا ربطَ الملصقات: `saveWarehouseNumbering` تكتب في
+   * `warehouses` وحدها. فالتحديثُ آمنٌ على ٣٦٠٠ خانةٍ وعلى كلّ ملصقٍ رُبط.
+   */
+  const refreshNumbering = async (rows) => {
+    if (!rows.length) return;
+    setGenBusy('يحدّث…');
+    setStatusMsg({ type: '', text: '' });
+    try {
+      for (const r of rows) {
+        if (!r.warehouse?.id || !r.approved) continue;
+        await saveWarehouseNumbering(r.warehouse.id, r.approved, profile);
+      }
+      setStatusMsg({
+        type: 'success',
+        text: `حُدِّث ترقيمُ ${int(rows.length)} مستودعًا — ${rows.map((r) => r.warehouse.name || r.warehouse.code).join(' · ')}. والخاناتُ وربطُ الملصقات لم تُمسّ.`,
+      });
+    } catch (err) {
+      setStatusMsg({ type: 'error', text: 'تعذّر التحديث: ' + (err?.message || 'سببٌ غير معروف') });
+    } finally {
+      setGenBusy('');
+    }
+  };
+
   const activeCount = warehouses.filter((wh) => (wh.status || 'نشط') === 'نشط').length;
   const managedCount = warehouses.filter((wh) => wh.manager).length;
 
@@ -439,6 +483,21 @@ const WarehouseManager = () => {
         <p style={{ fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)', margin: '0 0 14px', lineHeight: 1.6 }}>
           كود المستودع (WH Code) هو المعرّف الفريد. عند انقطاع السحابة يعمل النظام محلّيًّا ثم يزامن لاحقًا.
         </p>
+
+        {/* ‹LOC-709› تحديثُ ترقيمٍ وُلِّد قبل تعديل القالب — يظهر بالفرق ويسمّيه. */}
+        {canEditLocations(role) && drifted.length > 0 && (
+          <div className="o_ds_card o_ds_pad" style={{ marginBottom: '14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
+            <Icon name="layers" size={16} />
+            <span style={{ flex: 1, fontSize: 'var(--o-font-size-sm)', lineHeight: 1.6 }}>
+              ترقيمُ {int(drifted.length)} مستودعًا يخالف القالب المعتمد —{' '}
+              <strong>{[...new Set(drifted.flatMap((d) => d.fields))].join(' · ')}</strong>.
+              {' '}التحديثُ يمسّ وصفَ المستودع وحدَه: <strong>لا الخانات ولا ربطَ الملصقات</strong>.
+            </span>
+            <button type="button" className="btn btn-secondary" disabled={Boolean(genBusy)} onClick={() => refreshNumbering(drifted)}>
+              {genBusy || `حدّث الترقيم (${int(drifted.length)})`}
+            </button>
+          </div>
+        )}
 
         {/* ‹LOC-704› ضغطةٌ واحدةٌ لكلّ ما ينقص — والزرُّ آمنٌ عند التكرار. */}
         {canEditLocations(role) && (plan.totalMissing > 0 || plan.blocked.length > 0) && (

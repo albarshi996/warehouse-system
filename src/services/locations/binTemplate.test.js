@@ -10,7 +10,10 @@ import assert from 'node:assert/strict';
 import {
   MAX_LETTERS,
   countForTemplate,
+  approvedNumbering,
+  driftedWarehouses,
   generationPlan,
+  numberingDrift,
   letterValues,
   numberingOf,
   paramDefaults,
@@ -183,4 +186,68 @@ test('★★★ والإسنادُ المعتمد يعمل من أوّل مرّ�
   );
   assert.equal(savedWins.total, 4, 'والمحفوظُ على الوثيقة يتقدّم على الإسناد');
   assert.equal(savedWins.source, 'saved');
+});
+
+/** الإسنادُ المعتمد كما في البذرة. */
+const ASSIGN = [{ warehouseCode: 'WH001', binPrefix: 'RH', templateId: DOUBLE.id, params: { aisles: 26, racks: 5, bins: 10 } }];
+const LABELLED = {
+  ...DOUBLE,
+  segmentLabels: { zone: 'الممرّ', rack: 'الجهة', bay: 'المستوى', level: 'الخانة' },
+  valueLabels: { rack: { L: 'يسار', R: 'يمين' } },
+};
+const TPL2 = [LABELLED];
+
+test('★★★ حزمةُ الترقيم المعتمدة — ما يُكتب على وثيقة المستودع', () => {
+  const a = approvedNumbering(ASSIGN[0], TPL2);
+  assert.equal(a.binPrefix, 'RH');
+  assert.equal(a.templateId, DOUBLE.id);
+  assert.equal(a.segmentLabels.bay, 'المستوى');
+  assert.equal(a.scheme.warehouse, 'RH');
+  assert.equal(expandScheme(a.scheme).codes.length, 2600);
+  assert.equal(approvedNumbering(null, TPL2), null);
+  assert.equal(approvedNumbering({ templateId: 'مجهول' }, TPL2), null, 'وقالبٌ مجهولٌ لا يُعتمد');
+});
+
+test('★★★ الفرقُ يُقاس ويُسمّى — ومستودعٌ مطابقٌ لا يُعرض له زرّ', () => {
+  const approved = approvedNumbering(ASSIGN[0], TPL2);
+  const matching = { code: 'WH001', ...approved };
+  assert.equal(numberingDrift(matching, { assignments: ASSIGN, templates: TPL2 }).differs, false, 'المطابقُ لا فرقَ له');
+
+  // تسميةٌ قديمة («الرفّ» بدل «المستوى») ⟵ فرقٌ يُسمّى.
+  const stale = { ...matching, segmentLabels: { ...approved.segmentLabels, bay: 'الرفّ' } };
+  const d = numberingDrift(stale, { assignments: ASSIGN, templates: TPL2 });
+  assert.equal(d.differs, true);
+  assert.deepEqual(d.fields, ['تسميات المقاطع']);
+  assert.equal(d.approved.segmentLabels.bay, 'المستوى', 'ومعه ما يُكتب');
+
+  // ★ والمقاسُ والمخطّطُ حقلان مستقلّان، ويُسمّيان مستقلَّين: مستودعٌ عُدّل
+  //   مقاسُه ولم يُعَد توليدُ مخطّطه حالةٌ حقيقيّة — والزرُّ يقول أيّهما تخلّف.
+  const resized = { ...matching, templateParams: { aisles: 26, racks: 6, bins: 10 } };
+  assert.deepEqual(numberingDrift(resized, { assignments: ASSIGN, templates: TPL2 }).fields, ['المقاس']);
+
+  const staleScheme = { ...matching, scheme: schemeFromTemplate(LABELLED, { binPrefix: 'RH', params: { aisles: 2, racks: 1, bins: 1 } }) };
+  assert.deepEqual(numberingDrift(staleScheme, { assignments: ASSIGN, templates: TPL2 }).fields, ['المخطّط']);
+});
+
+test('★★ وترتيبُ المفاتيح ليس فرقًا — فلا يُعلَن فرقٌ ليس فرقًا', () => {
+  const approved = approvedNumbering(ASSIGN[0], TPL2);
+  const shuffled = {
+    code: 'WH001',
+    ...approved,
+    templateParams: { bins: 10, aisles: 26, racks: 5 },
+    segmentLabels: { level: 'الخانة', bay: 'المستوى', rack: 'الجهة', zone: 'الممرّ' },
+  };
+  assert.equal(numberingDrift(shuffled, { assignments: ASSIGN, templates: TPL2 }).differs, false);
+});
+
+test('★★ ومستودعٌ بلا إسنادٍ معتمدٍ لا يُقاس عليه فرق', () => {
+  assert.deepEqual(numberingDrift({ code: 'WH009' }, { assignments: ASSIGN, templates: TPL2 }), {
+    differs: false, fields: [], approved: null,
+  });
+  const list = driftedWarehouses(
+    [{ code: 'WH001', binPrefix: 'RH' }, { code: 'WH009' }],
+    { assignments: ASSIGN, templates: TPL2 }
+  );
+  assert.equal(list.length, 1, 'المستودعُ بلا إسنادٍ لا يُعدّ منحرفًا');
+  assert.equal(list[0].warehouse.code, 'WH001');
 });

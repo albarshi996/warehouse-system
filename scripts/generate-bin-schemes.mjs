@@ -42,14 +42,17 @@ const TEMPLATES = [
     id: 'double-sided-racks',
     nameAr: 'رفوفٌ مزدوجةُ الجهة',
     descriptionAr:
-      'ممرٌّ بحرف، وجهتان يمينٌ ويسار، ورفوفٌ مرقّمة، وخاناتٌ على كلّ رفّ — وهو ترميزُ ملصقات طرابلس والرحبة.',
+      'ممرٌّ بحرف، وجهتان يمينٌ ويسار، ومستوياتٌ مرقّمة، وخاناتٌ على كلّ مستوًى — وهو ترميزُ ملصقات طرابلس والرحبة.',
     sampleCode: 'RH-A-R-01-01',
-    segmentLabels: { zone: 'الممرّ', rack: 'الجهة', bay: 'الرفّ', level: 'الخانة' },
+    // تسميةُ المالك 2026-09-02: الممرّ ← الجهة ← **المستوى** ← الخانة.
+    // (كانت «الرفّ» في أوّل وصف، وهذه تسميتُه المعتمدة — وهي حقلُ عرضٍ
+    //  يُغيَّر بلا كسر: الترتيبُ هو المعنى، لا الاسم.)
+    segmentLabels: { zone: 'الممرّ', rack: 'الجهة', bay: 'المستوى', level: 'الخانة' },
     valueLabels: { rack: { L: 'يسار', R: 'يمين' } },
     params: [
       { key: 'aisles', labelAr: 'عدد الممرّات', hintAr: 'تُرقَّم بالحروف A فما فوق', min: 1, max: 26, default: 10 },
-      { key: 'racks', labelAr: 'عدد الرفوف في الجهة', min: 1, max: 99, default: 5 },
-      { key: 'bins', labelAr: 'عدد الخانات في الرفّ', min: 1, max: 99, default: 10 },
+      { key: 'racks', labelAr: 'عدد المستويات في الجهة', min: 1, max: 99, default: 5 },
+      { key: 'bins', labelAr: 'عدد الخانات في المستوى', min: 1, max: 99, default: 10 },
     ],
     levels: [
       { key: 'zone', kind: 'letters', count: 'aisles' },
