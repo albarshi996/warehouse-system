@@ -241,3 +241,30 @@ export function generationPlan({ warehouses = [], templates = [], existingCodes 
     blocked: rows.filter((r) => r.problems.length),
   };
 }
+
+/**
+ * المستودعاتُ مُغنَاةً بإسناداتها المعتمدة — البادئةُ والتسمياتُ إن لم تُحفظ بعد.
+ *
+ * ★★★ الفخُّ الذي يمنعه (كُشف بالفحص الحيّ 2026-09-02): قبل أن يضغط المالكُ
+ * «ولّد»، وثيقةُ المستودع لا تحمل `binPrefix` ولا `segmentLabels`. فيمسح
+ * العاملُ ملصقًا صحيحًا فتقول له الشاشة «لا مستودعَ لهذه البادئة» وتعرض
+ * تسمياتٍ لا تصف مستودعَه («المنطقة» بدل «الممرّ»). والإسنادُ المعتمد — وقد
+ * قِيس بالملصقات المطبوعة — يعرف الجواب، فيُقرأ منه حتّى يُحفظ على الوثيقة.
+ *
+ * والمحفوظُ يتقدّم دائمًا: هذا سدُّ فجوةٍ لا مصدرُ حقيقةٍ ثانٍ.
+ */
+export function withAssignments(warehouses, { assignments = [], templates = [] } = {}) {
+  return (warehouses || []).map((w) => {
+    const a = assignmentFor(w, assignments);
+    if (!a) return w;
+    const t = templateById(templates, a.templateId);
+    return {
+      ...w,
+      binPrefix: str(w?.binPrefix) || a.binPrefix,
+      segmentLabels: w?.segmentLabels || t?.segmentLabels || null,
+      valueLabels: w?.valueLabels || t?.valueLabels || null,
+      templateId: str(w?.templateId) || a.templateId,
+      templateParams: w?.templateParams || a.params,
+    };
+  });
+}

@@ -3123,6 +3123,7 @@
         "getLocation",
         "gridPointOf",
         "groupIntoDocuments",
+        "identifyBin",
         "indexBalancesByLocation",
         "indexWorkByLocation",
         "isDescendantOf",
@@ -3222,6 +3223,7 @@
         "warehouseCodesOf",
         "warehouseForBin",
         "warehousePlan",
+        "withAssignments",
         "workOf"
       ],
       "collections": [

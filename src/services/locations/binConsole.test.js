@@ -15,6 +15,7 @@ import {
   buildDocDraft,
   draftLineFor,
   entryProblems,
+  identifyBin,
   linesForScan,
   matchesLine,
   modeOf,
@@ -205,7 +206,7 @@ test('★★★ رسالةُ الردّ تُعرض قبل فتح أيّ خانة
   // كُشف بالفحص الحيّ 2026-09-02: كانت الرسالة داخل القسم المشروط بخانةٍ
   // مفتوحة، **وأشيعُ ردٍّ يقع قبل ذلك**: من يمسح صنفًا قبل الخانة. فتُبنى
   // الرسالةُ ولا تُعرض — وهو أسوأ من رسالةٍ رديئة.
-  const gate = SCREEN.indexOf('{bin && !problem && (');
+  const gate = SCREEN.indexOf('{bin && !pending && !problem && (');
   const shown = SCREEN.indexOf('{msg.text && (');
   assert.ok(shown > 0, 'الرسالةُ معروضة');
   assert.ok(shown < gate, 'ومعروضةٌ قبل حارس الخانة المفتوحة لا داخله');
@@ -216,4 +217,80 @@ test('★★ ولا كتابةَ رصيدٍ من الشاشة — المسوّد
   for (const forbidden of ['saveBalancesBulk', 'writeBatch', 'postMoves', 'transitionDocument']) {
     assert.ok(!SCREEN.includes(forbidden), `الشاشةُ لا تستدعي ${forbidden} — الرصيدُ يتحرّك في محرّك المستندات`);
   }
+});
+
+/**
+ * ═══ المرحلة الأولى: اقرأ · عرّف · ثمّ حدّد (طلب المالك 2026-09-02) ═══
+ */
+const WAREHOUSES = [
+  {
+    code: 'WH001',
+    name: 'الرحبة',
+    binPrefix: 'RH',
+    segmentLabels: { zone: 'الممرّ', rack: 'الجهة', bay: 'الرفّ', level: 'الخانة' },
+    valueLabels: { rack: { L: 'يسار', R: 'يمين' } },
+  },
+];
+
+test('★★★ التعريفُ يقول للعامل ما مسح — بالعربيّة وبملخّصِ ما فيها', () => {
+  const id = identifyBin(BIN, { warehouses: WAREHOUSES, knownCodes: [BIN], balances: BALANCES, units: UNITS });
+  assert.equal(id.valid, true);
+  assert.equal(id.code, BIN);
+  assert.equal(id.warehouse.name, 'الرحبة');
+  assert.equal(id.headline, 'الممرّ A · الجهة يمين · الرفّ 01 · الخانة 01');
+  assert.deepEqual(id.segments.map((s) => s.label), ['الممرّ', 'الجهة', 'الرفّ', 'الخانة']);
+  assert.equal(id.summary.skuCount, 3);
+  assert.equal(id.summary.totalQty, 28);
+  assert.equal(id.summary.palletCount, 1);
+  assert.equal(id.summary.empty, false);
+  assert.equal(id.problem, '');
+  assert.equal(id.warning, '');
+});
+
+test('★★ وخانةٌ فارغةٌ تُقال فارغةً قبل أن يدخل', () => {
+  const id = identifyBin('RH-Z-R-05-10', { warehouses: WAREHOUSES, knownCodes: ['RH-Z-R-05-10'], balances: BALANCES, units: UNITS });
+  assert.equal(id.summary.empty, true);
+  assert.equal(id.summary.totalQty, 0);
+  assert.equal(id.problem, '');
+});
+
+test('★★★ مانعٌ ومنبِّهٌ لا شيءٌ واحد — ونقصُ الإعداد لا يوقف عاملًا', () => {
+  // كودٌ معطوب ⟶ مانع.
+  const bad = identifyBin('ليس كودًا', { warehouses: WAREHOUSES });
+  assert.equal(bad.valid, false);
+  assert.match(bad.problem, /ليس كودَ موقعٍ صالح/);
+
+  // خانةٌ لا وجودَ لها في سيّد المواقع ⟶ مانع.
+  const unknown = identifyBin('RH-Z-Z-09-09', { warehouses: WAREHOUSES, knownCodes: [BIN] });
+  assert.match(unknown.problem, /غير معرَّفة/);
+
+  // ★ ومستودعٌ لم يُربط بالبادئة ⟶ **منبِّهٌ لا مانع**: نقصُ إعدادٍ لا خطأُ
+  //   عامل، ومن أوقفه عليه أوقف عملًا صحيحًا بحجّة صفحةٍ لم تُكمَل.
+  const unlinked = identifyBin(BIN, { warehouses: [], knownCodes: [BIN] });
+  assert.equal(unlinked.problem, '', 'لا يُمنع');
+  assert.match(unlinked.warning, /لم تُربط بمستودع/);
+  assert.equal(unlinked.valid, true);
+});
+
+test('★★ والتعريفُ بلا سيّدِ مواقعَ مأهولٍ لا يحكم على أحد', () => {
+  const id = identifyBin(BIN, { warehouses: WAREHOUSES, knownCodes: [], balances: BALANCES });
+  assert.equal(id.problem, '', 'البانيةُ لم تُشغَّل بعد — فلا حكمَ بالجهل');
+  assert.equal(id.known, true);
+});
+
+test('★★★ المسحةُ تعرض ولا تفتح — والفتحُ بضغطةِ العامل', () => {
+  // طلبُ المالك 2026-09-02: «قراءةٌ وتعريفٌ ثمّ تحديد». والمسحُ فعلٌ أعمى —
+  // فمن يفتح الخانةَ فورًا يجعل العاملَ يعمل في رفٍّ لم يتأكّد أنّه رفُّه،
+  // ولا يكتشف الخطأ إلّا بعد أن يُثبت كمّيّاتٍ في المكان الغلط.
+  assert.ok(SCREEN.includes("if (v.action === 'bin') { presentBin(v.code); return; }"), 'المسحةُ تعرض');
+  assert.ok(!SCREEN.includes("if (v.action === 'bin') { openBin(v.code); return; }"), 'ولا تفتح');
+  assert.ok(SCREEN.includes('const confirmBin = useCallback'), 'والتحديدُ فعلٌ مستقلّ');
+  assert.ok(SCREEN.includes('حدّد هذه الخانة'), 'وله زرُّه');
+
+  // والمرحلةُ الثانيةُ محجوبةٌ ما دام هناك معروضٌ لم يُحدَّد.
+  assert.ok(SCREEN.includes('{bin && !pending && !problem && ('), 'ولا عملَ قبل التحديد');
+});
+
+test('★★ والوضعُ الافتراضيُّ إثباتُ ما في الخانة — أكثرُ ما يُفعل عند الرفّ', () => {
+  assert.ok(SCREEN.includes("useState('count')"), 'الجردُ افتراضًا لا الاستعلام');
 });

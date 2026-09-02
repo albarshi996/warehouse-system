@@ -26,7 +26,8 @@
 import { classifyScan, expectKind, kindLabel } from '../barcodes/barcodeCode.js';
 import { normalizeBarcode } from '../excel/excelSchema.js';
 import { palletsByBin } from '../lpn/palletMap.js';
-import { normalizeLocationCode } from './locationCode.js';
+import { binHeadline, describeBin, warehouseForBin } from './binAnatomy.js';
+import { normalizeLocationCode, parseLocationCode } from './locationCode.js';
 
 const up = (v) => String(v ?? '').trim().toUpperCase();
 const str = (v) => String(v ?? '').trim();
@@ -248,4 +249,53 @@ export function orderRequirementOf(mode) {
   const m = modeOf(mode);
   if (!m.needsOrder) return '';
   return 'أمرُ التخزين يلزمه مرجعُ مذكّرة استلام (GRN)، فلا يُنشأ من الرفّ — اخترْ أمر تخزينٍ مفتوحًا ونفّذه في هذه الخانة.';
+}
+
+/**
+ * ═══ المرحلة الأولى: اقرأ · عرّف · ثمّ تُحدَّد (طلب المالك 2026-09-02) ═══
+ *
+ * ★★★ لماذا خطوةُ تعريفٍ قبل العمل؟
+ * المسحُ فِعلٌ أعمى: العاملُ يوجّه العدسةَ فيُقرأ **شيءٌ ما**. وشاشةٌ تفتح
+ * الخانةَ فورًا تجعله يعمل في رفٍّ لم يتأكّد أنّه رفُّه — ولا يكتشف الخطأ
+ * إلّا بعد أن يُثبت كمّيّاتٍ في المكان الغلط. فالتعريفُ يقول له **بالعربيّة**
+ * ما الذي مسحه: أيَّ مستودعٍ وأيَّ ممرٍّ وأيَّ جهةٍ ورفٍّ وخانة — ومعه ملخّصٌ
+ * سريع: أفارغةٌ هي أم فيها بضاعة. ثمّ **هو** من يضغط «حدّد».
+ *
+ * @returns {{code, valid, warehouse, segments, headline, known, problem, summary}}
+ */
+export function identifyBin(code, { warehouses = [], knownCodes = [], balances = [], units = [] } = {}) {
+  const bin = normalizeLocationCode(code);
+  const parsed = parseLocationCode(bin);
+  const warehouse = warehouseForBin(bin, warehouses);
+  const contents = binContents(bin, { balances, units });
+  const known = new Set([...(knownCodes || [])].map(up).filter(Boolean));
+
+  // ★★★ مانعٌ ومنبِّهٌ لا شيءٌ واحد. المانعُ يوقف العمل: كودٌ معطوب، أو خانةٌ
+  // لا وجودَ لها في سيّد المواقع. والمنبِّهُ يُقال ولا يوقف: مستودعٌ لم يُربط
+  // بالبادئة بعد — وهو نقصُ إعدادٍ لا خطأُ عامل، ومن أوقفه عليه أوقف عملًا
+  // صحيحًا بحجّة أنّ الإدارة لم تُكمل صفحةً.
+  const problem = parsed
+    ? binProblem(bin, knownCodes)
+    : `«${bin || code}» ليس كودَ موقعٍ صالح — امسح ملصقَ خانةٍ سليمًا.`;
+  const warning =
+    parsed && !warehouse
+      ? `البادئة «${parsed.warehouse}» لم تُربط بمستودعٍ في البوّابة — يُعرض العنوانُ بالتسميات الافتراضيّة.`
+      : '';
+
+  return {
+    code: bin,
+    valid: Boolean(parsed),
+    warehouse,
+    segments: describeBin(bin, warehouse),
+    headline: binHeadline(bin, warehouse),
+    known: known.size ? known.has(bin) : true,
+    problem,
+    warning,
+    summary: {
+      skuCount: contents.skuCount,
+      totalQty: contents.totalQty,
+      palletCount: contents.pallets.length,
+      empty: contents.lines.length === 0 && contents.pallets.length === 0,
+    },
+  };
 }
