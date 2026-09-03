@@ -19,6 +19,7 @@
 import { normalizeLocationCode } from '../locations/locationCode.js';
 import { pickPlan } from '../locations/pickPlan.js';
 import { canDeriveFrom } from '../documents/states.js';
+import { normalizeUom } from '../items/uomModel.js';
 
 /** حالات مهمّة التحضير. */
 export const PICK_TASK_STATES = Object.freeze({
@@ -52,6 +53,78 @@ export function taskOpenProblem(doc, plan) {
 }
 
 /**
+ * ★★★ وحدةُ الخطوة ومعاملُها — «الكمّيّة بلا وحدةٍ رقمٌ بلا معنى».
+ *
+ * ═══ العطب الذي تسدّه ═══
+ * كانت الخطوة تحمل رقمًا عاريًا: `required` وحدَه بلا ما يقول **ماذا يُعدّ**.
+ * فمن وقف أمام الرفّ وسحب كرتونًا وكتب «١» خصم النظامُ قطعةً واحدة، والفارقُ
+ * اثنا عشر ضعفًا **لا يظهر إلّا في جرد الشهر القادم** — حين لا يبقى من يتذكّر
+ * أيّ سحبةٍ كذبت. فالخطوة تحمل وحدتَها ومعاملَها معها، ومنهما تُحسب الكمّيّة
+ * الأساس **حسابًا** لا افتراضًا.
+ *
+ * ═══ ثلاثةُ مصادرَ بترتيب الأخصّ فالأعمّ ═══
+ *   ① خطوةُ المسار نفسُها (`pickPlan.path`) — أخصُّها: تعرف الرفَّ والتشغيلة.
+ *   ② صفُّ الرصيد الذي خُصّص منه — يعرف ما على هذا الرفّ بعينه.
+ *   ③ سطرُ المستند الآمر — ووحدتُه هي التي كُتب بها `required` أصلًا، إذ
+ *      `pickPlan` يوزّع `qtyRequested` على الأرفف ولا يبدّل وحدتَه.
+ *
+ * ⚠️ **والكاتبُ اليوم ثالثُها وحدَه، ويُقال ولا يُخفى**: `pickPathOrder` لا
+ * ينقل وحدةً بعد، وشيتُ الأرصدة بلا عمود وحدة أصلًا. فالأوّلان يُقرآن استعدادًا
+ * ليومٍ يكتبهما كاتب — لا ادّعاءً بأنّهما يعملان اليوم. (ودرسُ «حارسٍ يقرأ حقلًا
+ * لا يُكتب أبدًا» هو سببُ هذه الفقرة: القارئ الصامت يُوهم بميزةٍ لا وجودَ لها.)
+ *
+ * ★ والمعاملُ يُقرأ من مصدر الوحدة نفسِه لا من أيٍّ كان: معاملُ سطرٍ بالكرتون
+ * لا يصف خطوةً بالقطعة، ولذلك يُفحص `uomFactorFor` كما يفحصه `refreshLineBase`.
+ *
+ * @returns {{uom:string, factor:number|null, baseUom:string}|null} و`null` تعني
+ *   «لا وحدةَ معلنة» — فتبقى الخطوة بحقولها كما كانت حرفًا.
+ */
+export function stepUnitOf(pathStep, balanceRow, docLine) {
+  return unitOfSource(pathStep) ?? unitOfSource(balanceRow) ?? unitOfSource(docLine);
+}
+
+/** وحدةُ مصدرٍ واحد — أو `null` إن لم يُعلن وحدةً أصلًا. */
+function unitOfSource(src) {
+  const uom = String(src?.uom ?? '').trim();
+  if (!uom) return null;
+  return { uom, factor: factorOfSource(src, uom), baseUom: String(src?.baseUom ?? '').trim() };
+}
+
+/**
+ * معاملُ مصدرٍ إلى وحدة الأساس — و`null` تعني **لا أعرف** لا «صفر».
+ *
+ * ⚠️ صفرٌ أو سالبٌ يُردّ إلى `null` عمدًا: الصفر يُنتج مجموعًا صفريًّا صامتًا،
+ * وهو أخطر من الامتناع المعلَن (نفس حكم `factorProblems` في محرّك الوحدات).
+ */
+function factorOfSource(src, uom) {
+  const raw = Number(src?.factor ?? src?.uomFactor);
+  if (!Number.isFinite(raw) || raw <= 0) return null;
+  // معاملٌ مختومٌ لوحدةٍ أخرى لا يصف هذه: «كرتون المورّد» لا يلتصق بـ«قطعة»
+  // حين تُبدَّل الوحدة — شرطُ `refreshLineBase` نفسُه، وإلّا افترق الحكمان.
+  const stampedFor = String(src?.uomFactorFor ?? '').trim();
+  if (stampedFor && (normalizeUom(stampedFor) || stampedFor) !== (normalizeUom(uom) || uom)) return null;
+  return raw;
+}
+
+/**
+ * صفُّ الرصيد الذي خُصّصت منه هذه الخطوة — بمفتاحه الميدانيّ لا بمعرّفه، لأنّ
+ * `pickPathOrder` لا ينقل `balanceId` إلى المسار.
+ */
+function balanceRowFor(pathStep, balances, warehouse) {
+  const item = up(pathStep?.sku) || up(pathStep?.barcode);
+  if (!item) return null;
+  const bin = normalizeLocationCode(pathStep?.bin);
+  const batch = up(pathStep?.batch);
+  return (balances ?? []).find(
+    (b) =>
+      (up(b?.sku) === item || up(b?.barcode) === item)
+      && (!warehouse || up(b?.warehouse) === warehouse)
+      && normalizeLocationCode(b?.bin) === bin
+      && up(b?.batch) === batch
+  ) ?? null;
+}
+
+/**
  * فتح مهمّة تحضير من مستندٍ معتمد.
  *
  * ★ النقص **لا يمنع** فتح المهمّة: المستودع يسحب ما عنده ويُعلن ما نقص.
@@ -67,17 +140,27 @@ export function openPickTask(doc, balances, { actor, at, assignee = '', nowMs, g
   if (!String(actor ?? '').trim()) return { problem: 'مهمّةٌ بلا فاعلٍ لا تُفتح — من أسندها؟' };
 
   // خطوةٌ لكلّ (موقع × بند) من المسار القائم — بترتيبه لا بترتيبٍ ثانٍ.
-  const steps = (plan.path ?? []).map((s, i) => ({
-    seq: i + 1,
-    bin: normalizeLocationCode(s.bin),
-    sku: up(s.sku),
-    barcode: String(s.barcode ?? '').trim(),
-    batch: up(s.batch),
-    expiry: String(s.expiry ?? '').trim(),
-    required: Number(s.qty) || 0,
-    picked: 0,
-    state: 'PENDING',
-  }));
+  const steps = (plan.path ?? []).map((s, i) => {
+    const step = {
+      seq: i + 1,
+      bin: normalizeLocationCode(s.bin),
+      sku: up(s.sku),
+      barcode: String(s.barcode ?? '').trim(),
+      batch: up(s.batch),
+      expiry: String(s.expiry ?? '').trim(),
+      required: Number(s.qty) || 0,
+      picked: 0,
+      state: 'PENDING',
+    };
+    /*
+     * ★★ الوحدةُ تُلحق **حين تُعرف وحدها** — وهو عينُ ترحيل `balanceId`:
+     * خطوةٌ لصنفٍ بلا وحدةٍ تخرج بحقولها التسعة كما كانت حرفًا، فلا يفترق
+     * شكلُ مهمّةٍ قديمةٍ عن شكل مهمّةٍ جديدةٍ لصنفٍ لم يُعرَّف. والحقولُ
+     * الثلاثة لا تُكتب فارغةً لتُقرأ فارغة — تُكتب حين تقول شيئًا.
+     */
+    const unit = stepUnitOf(s, balanceRowFor(s, balances, plan.warehouse), doc?.lines?.[s.lineIndex]);
+    return unit ? { ...step, ...unit } : step;
+  });
 
   return {
     task: {

@@ -21,10 +21,16 @@
  *     مذكّرة استلامٍ قائمة**. فلا يُنشأ من فراغ — والتخزينُ هنا **تنفيذُ أمرٍ
  *     مفتوح** يُختار، لا اختراعُ أمر. ومن بناه بلا مرجعٍ بنى مستندًا يرفضه
  *     مخطّطُه عند الإرسال، فيقف العاملُ أمام رفٍّ بعملٍ لا يُحفظ.
+ *     ★★ وطريقُه العمليُّ **الطبليّة** (‹JR-501› · `putawayRouteFor`): مسحُها
+ *     في هذه الخانة يُنفَّذ بمحرّك `putawayService` القائم، ونسبُها
+ *     (`sourceDoc`) هو الأمرُ المُنفَّذ — فلا مستندَ يُخترع ولا قيدَ يُنقض.
  */
 
 import { classifyScan, expectKind, kindLabel } from '../barcodes/barcodeCode.js';
+import { canDeriveFrom, isTerminal } from '../documents/states.js';
 import { normalizeBarcode } from '../excel/excelSchema.js';
+import { baseUomOf, normalizeUom } from '../items/uomModel.js';
+import { itemForLine } from '../items/uomWiring.js';
 import { palletsByBin } from '../lpn/palletMap.js';
 import { binHeadline, describeBin, warehouseForBin } from './binAnatomy.js';
 import { normalizeLocationCode, parseLocationCode } from './locationCode.js';
@@ -46,6 +52,74 @@ export const BIN_MODES = Object.freeze([
 
 export function modeOf(id) {
   return BIN_MODES.find((m) => m.id === id) || BIN_MODES[0];
+}
+
+/**
+ * ═══ ★★★ ‹JR-501› شرحُ الأوضاع — نصٌّ في الخدمة لا جملةٌ في JSX ═══
+ *
+ * لقطةُ المالك 2026-09-02 تُظهر الصفحةَ عند الهبوط: **حقلٌ وزرّان ولا شيءَ
+ * غير ذلك**. وأربعةُ أزرارٍ مكتوبٌ عليها «استعلام · جرد · سحب · تخزين» لا
+ * تقول لأحدٍ **ماذا يكتب** كلٌّ منها — والفرقُ بين «جرد» و«سحب» هنا فرقُ
+ * محضرٍ يُصحّح الرصيد وقائمةٍ تُنقصه. فمن جرّب ليعرف، جرّب على بضاعةٍ حقيقيّة.
+ *
+ * وثلاثةُ حقولٍ لا واحد: **ما هو** · **متى يُستعمل** · **وماذا يكتب**. والثالثُ
+ * أهمُّها — لأنّ سؤال الواقف أمام الرفّ ليس «ما هذا الزرّ» بل «ماذا سيحدث
+ * للرصيد إن ضغطتُه».
+ */
+export const MODE_HELP = Object.freeze({
+  lookup: Object.freeze({
+    what: 'يقرأ ولا يكتب — يفتح الخانةَ كمستودعٍ داخليّ: أصنافُها ودفعاتُها وطباليها.',
+    when: 'حين تقف أمام رفٍّ وتريد أن تعرف ما فيه قبل أن تلمسه.',
+    writes: 'لا شيء — ولا مستندَ ولا رصيد.',
+  }),
+  count: Object.freeze({
+    what: 'إثباتُ ما في الخانة فعلًا: تمسح الصنفَ وتكتب ما عددتَه بيدك.',
+    when: 'الجردُ الدوريّ، أو حين يخالف الرفُّ ما يقوله النظام.',
+    writes: 'كلُّ مسحةٍ تُثبَّت في السحابة لحظتَها، ومحضرُ جردٍ (CC) عند إنهاء الجلسة — والفارقُ يُحسب فيه ولا تُصحَّح أرصدةٌ من هنا.',
+  }),
+  pick: Object.freeze({
+    what: 'إخراجٌ من هذه الخانة إلى وجهةٍ تكتبها — والكمّيّةُ محروسةٌ بما فيها.',
+    when: 'حين تجهّز طلبًا أو تنقل بضاعةً إلى ساحة التجهيز.',
+    writes: 'قائمةَ سحبٍ (PICK) مسوّدةً — والرصيدُ يتحرّك عند اعتمادها في محرّك المستندات لا هنا.',
+  }),
+  putaway: Object.freeze({
+    what: 'إدخالٌ إلى هذه الخانة — **بمسح طبليّةٍ مُلصَقة** تُنقل إليها بنسبها.',
+    when: 'بعد الاستلام وطباعة الملصق: تقف عند الرفّ وتمسح الطبليّةَ التي وضعتَها فيه.',
+    writes: 'نقلةَ الطبليّة وحالتَها (مخزَّنة) — ولا يُنشئ أمرَ تخزينٍ من الرفّ، فأمرُ التخزين يلزمه مرجعُ استلامٍ قائم.',
+  }),
+});
+
+/** شرحُ وضعٍ بعينه — والمجهولُ يعود إلى الاستعلام، أسلمِ الأربعة. */
+export function modeHelp(id) {
+  return MODE_HELP[modeOf(id).id];
+}
+
+/**
+ * ═══ ★★★ ‹JR-501› هويّتا الصفحة عند الهبوط (طلبُ المالك ط‑٧) ═══
+ *
+ * بحروفه: «نحتاج إضافةَ أزرارٍ توضيحيّة، **لأنّها الصفحة التي سيُنشأ منها
+ * كودُ الموقع وما يوجد في الموقع**». فهما فعلان لا فعلٌ واحد، وأحدُهما كان
+ * **لا يُبلَغ إلّا بالصدفة**: التكويدُ لا يُفتح إلّا لمن مسح باركودًا غيرَ
+ * مربوطٍ فأجاب عن سؤال الالتباس. ومن دخل الصفحةَ ليكوّد رفًّا جديدًا لم يجد
+ * بابًا يقول اسمَه — فالزرُّ الذي لا يُسمّى فعلَه غيرُ موجود.
+ *
+ * @returns {Array<{id:string, title:string, body:string, action:string}>}
+ */
+export function landingPrimer() {
+  return [
+    {
+      id: 'coding',
+      title: 'هنا يُنشأ كودُ الموقع',
+      body: 'رفٌّ جديدٌ أو ملصقٌ جاهزٌ من التسويق: تختار الممرَّ والجهةَ والرفَّ والخانة، فيُولَّد الكودُ ويُربط به الباركود. ومن هنا فقط يصير الملصقُ عنوانًا يعرفه النظام.',
+      action: 'ابدأ بالعنوان — كوّدْ موقعًا',
+    },
+    {
+      id: 'contents',
+      title: 'وهنا تُرى محتوياتُه',
+      body: 'امسح ملصقَ خانةٍ مكوَّدةٍ فتنفتح كمستودعٍ داخليّ: أصنافُها ودفعاتُها وطباليها. ثمّ تختار وضعَ العمل — جردًا أو سحبًا أو تخزينًا.',
+      action: 'امسح ملصق الخانة',
+    },
+  ];
 }
 
 /**
@@ -109,8 +183,19 @@ export function routeScan(raw, { hasBin = false, bound = false } = {}) {
  * الأصنافُ من ورقة الأرصدة، والطبالي من حالات الطبالي الواقفة. والعلاقةُ
  * «خانة ← طبالي» **تُشتقّ ولا تُخزَّن** (عرفُ `palletMap`)، فلا حقلَ ثانٍ
  * يفترق عن الحقيقة.
+ *
+ * ═══ ★★★ ‹JR-301ج› والصفُّ يحمل وحدتَه ومعاملَه ═══
+ * كان الصفُّ يُبنى **بلا مفتاح `uom` إطلاقًا**. وأثرُه لم يكن في العرض بل في
+ * الكتابة: `binSession.scanPayload` يقرأ `item.uom` — فكلُّ مسحةٍ خرجت من هذه
+ * الشاشة كتبت `uom: ''` في السجلّ، وكلُّ بندٍ خرج من `draftLineFor` خرج بلا
+ * وحدة. ومن قرأ «١٢» بعد شهرٍ لم يعرف: اثنتا عشرة قطعةً أم اثنا عشر كرتونًا؟
+ *
+ * والرصيدُ مخزَّنٌ **بوحدة الأساس** دائمًا (`movements.js` يحوّل قبل أن يقيّد)
+ * — فوحدةُ الصفّ هي أساسُ بطاقته، ومعاملُه إلى الأساس ١. وورقةُ الأرصدة نفسُها
+ * لا عمودَ وحدةٍ فيها، فتُقرأ الوحدةُ من **بطاقة الصنف** بفهرسٍ يمرَّر
+ * (`indexes` من `buildItemIndexes`). وبلا فهرسٍ يبقى الصفُّ كما كان.
  */
-export function binContents(code, { balances = [], units = [] } = {}) {
+export function binContents(code, { balances = [], units = [], indexes = null } = {}) {
   const bin = normalizeLocationCode(code);
   if (!bin) return { bin: '', lines: [], pallets: [], totalQty: 0, skuCount: 0 };
 
@@ -125,6 +210,11 @@ export function binContents(code, { balances = [], units = [] } = {}) {
       qty: num(b?.qty),
       unitCost: num(b?.unitCost),
       warehouse: up(b?.warehouse),
+      // ★ الهويّةُ بالكود أوّلًا ثمّ الباركود — عينُ ترتيب `itemForLine`، فلا
+      //   قاعدةَ هويّةٍ ثانيةٌ تفترق عن قاعدة المستندات يومًا.
+      uom: baseUomOf(itemForLine(b, indexes)) || str(b?.uom),
+      // معاملُ وحدة الصفّ إلى الأساس — وهي الأساسُ نفسُه، فمعاملُها ١ أبدًا.
+      uomFactor: 1,
     }))
     .sort((a, b) => a.sku.localeCompare(b.sku) || a.batch.localeCompare(b.batch));
 
@@ -170,15 +260,61 @@ export function linesForScan(contents, scanned) {
 }
 
 /**
+ * ═══ ★★★ ‹JR-301ج› كمّيّةُ القيد ووحدتُها — المساران يلتقيان هنا ═══
+ *
+ * **القاعدةُ الحاكمة: كمّيّةُ البند مقروءةٌ بوحدة البند.** ومن كسرها كسر
+ * الدفترَ صامتًا، لأنّ `movements.js` نحو ‹١٦٤› **لا يحوّل إلّا لصنفٍ
+ * `hasUomDefinition`**: فبندٌ يقول «٣ صناديق» لصنفٍ بلا تعريفٍ يُقيَّد **٣
+ * قطع** — وفارقُه ١١٠٠٪، ولا رسالةَ تُقال.
+ *
+ * فمساران ومخرَجٌ واحد (وهما مسارا `packEntry.js` نفسُهما):
+ *   · **وحدةٌ معرَّفة** ⇒ الكمّيّةُ كما كتبها العاملُ والوحدةُ كما اختارها،
+ *     والمحرّكُ يحوّل بمعامل بطاقتها. ولا نضرب نحن — ضربٌ مزدوج.
+ *   · **وعاءٌ مُعلَن** (`packEntryVerdict().entry`) ⇒ الصنفُ بلا تعريفٍ أصلًا
+ *     فلا محرّكَ يحوّل، فيُسطَّح المجموعُ إلى الأساس **هنا**، وتبقى وحدةُ البند
+ *     وحدةَ الصفّ (أساسًا) لا اسمَ الوعاء — وإلّا قرأه قارئٌ «٣٦ صندوقًا».
+ *
+ * ⚠️ والإعلانُ يُحفظ بأسماءٍ **لا يقرؤها محرّكُ القيد** (`packUom`/`packFactor`/
+ * `packQty`): لو كُتب `uomFactorSource:'declared'` ووُسِّع المحرّكُ يومًا ليُفضّل
+ * المختوم، لَضرب في ١٢ كمّيّةً مضروبةً سلفًا — ٣٦ تصير ٤٣٢ بلا صوت.
+ *
+ * @returns {{qty:number, uom:string, factor:number, pack:object|null}}
+ */
+export function entryQuantity({ row = null, qty, uom = '', pack = null } = {}) {
+  const rowUom = str(row?.uom);
+  const rowFactor = num(row?.uomFactor) || 1;
+
+  if (pack && num(pack.baseQty) > 0) {
+    return {
+      qty: num(pack.baseQty),
+      uom: rowUom,
+      factor: rowUom ? rowFactor : 0,
+      pack: { uom: str(pack.uom), factor: num(pack.factor), qty: num(pack.qty) },
+    };
+  }
+
+  // ★ ومعاملُ الوحدة المختارة يعرفه محرّكُ الوحدات لا نحن — فلا يُكتب معاملٌ
+  //   إلّا حين تكون الوحدةُ وحدةَ الصفّ نفسَها (وهي الأساس، ومعاملُها ١).
+  //   ومعاملٌ مظنونٌ أسوأُ من لا معامل: الأوّلُ يُضرب به، والثاني يُسأل عنه.
+  const chosen = str(uom) || rowUom;
+  return { qty: num(qty), uom: chosen, factor: chosen && chosen === rowUom ? rowFactor : 0, pack: null };
+}
+
+/**
  * بندُ مسوّدةٍ من مسحةٍ واحدة — بأسماء أعمدة المستند لا بأسمائنا.
  *
  * ⚠️ الأسماء هنا **ليست اختيارًا**: `movements.js` يقرأ `bin` و`sku` و
  * `description`، والقاعدةُ تقرأ حقلَ الكمّيّة باسمه في `postingRules`. واسمٌ
  * مخالفٌ يُنتج بندًا يبدو سليمًا ويقيّد صفرًا.
+ *
+ * ★ والوحدةُ تُكتب **حين تُعرف وحدها**: بندٌ لصفٍّ بلا وحدةٍ يخرج كما كان
+ *   حرفًا بحرف، فلا يتغيّر مخرَجُ مستدعٍ قائمٍ لم يمرّر الجديد.
  */
-export function draftLineFor(mode, { bin, item = {}, qty, bookQty = 0 } = {}) {
+export function draftLineFor(mode, { bin, item = {}, qty, bookQty = 0, uom = '', pack = null } = {}) {
   const m = modeOf(mode);
   if (!m.docType) return null;
+
+  const q = entryQuantity({ row: item, qty, uom, pack });
 
   const base = {
     sku: up(item.sku),
@@ -190,11 +326,27 @@ export function draftLineFor(mode, { bin, item = {}, qty, bookQty = 0 } = {}) {
     unitPrice: num(item.unitCost ?? item.unitPrice),
   };
 
+  if (q.uom) {
+    base.uom = q.uom;
+    if (q.factor > 0) {
+      base.uomFactor = q.factor;
+      // المعرّفُ القياسيُّ للمقارنة — عينُ ما يقارنه `movements.js`
+      // (`stampedFor === (normalizeUom(entryUom) || entryUom)`).
+      base.uomFactorFor = normalizeUom(q.uom) || q.uom;
+      base.uomFactorSource = 'item';
+    }
+  }
+  if (q.pack) {
+    base.packUom = q.pack.uom;
+    base.packFactor = q.pack.factor;
+    base.packQty = q.pack.qty;
+  }
+
   if (m.id === 'count') {
     // الفارقُ لا يُكتب بل يُحسب — نفسُ قاعدة `ADJ` في `postingRules`.
-    return { ...base, bookQty: num(bookQty), count1: num(qty), count2: '' };
+    return { ...base, bookQty: num(bookQty), count1: q.qty, count2: '' };
   }
-  return { ...base, [m.qtyField]: num(qty) };
+  return { ...base, [m.qtyField]: q.qty };
 }
 
 /**
@@ -269,6 +421,59 @@ export function orderRequirementOf(mode) {
   const m = modeOf(mode);
   if (!m.needsOrder) return '';
   return 'أمرُ التخزين يلزمه مرجعُ مذكّرة استلام (GRN)، فلا يُنشأ من الرفّ — اخترْ أمر تخزينٍ مفتوحًا ونفّذه في هذه الخانة.';
+}
+
+/**
+ * ═══ ★★★ ‹JR-501› وضعُ التخزين يكفّ عن كونه طريقًا مسدودًا ═══
+ *
+ * كان الوضعُ يعرض جملةً واحدةً: «اخترْ أمرَ تخزينٍ مفتوحًا» — **والشاشةُ لا
+ * تعرض ولا واحدًا**، وخانةُ الكمّيّة وزرُّ الإضافة مخفيّان. جملةٌ تأمر بما لا
+ * تستطيعه، وأسوأُ من الصمت.
+ *
+ * والمخرجُ كان موجودًا ومهمَلًا: `routeScan` يُعيد `action:'pallet'` منذ أوّل
+ * يوم، والشاشةُ ترميه برسالةٍ إخباريّة. و`putawayService.executePutaway`
+ * مبنيّةٌ وتعمل في شاشة الاستلام، تكتب في `handling_units` وحدَها (وقواعدُها
+ * منشورة)، **ولا تحتاج مستندَ PUTAWAY** لأنّ الطبليّة تحمل `sourceDoc` —
+ * فالقيدُ الحاكم «التخزينُ تنفيذُ أمرٍ لا اختراعُه» محفوظٌ **عبر نسب الطبليّة**
+ * لا عبر مستندٍ يُخترع من الرفّ.
+ *
+ * فالوجهتان تُحكمان هنا، والشاشةُ تعرض ولا تقرّر:
+ *   · `'pallet-execute'` — طبليّةٌ مُسحت وأنت في وضع التخزين ⟶ تُنفَّذ.
+ *   · `'needs-order'`    — لا طبليّة ⟶ يُشرح الطريقُ وتُعرض الأوامرُ المفتوحة.
+ *   · `''`               — ليس وضعَ تخزينٍ أصلًا.
+ *
+ * @returns {'pallet-execute'|'needs-order'|''}
+ */
+export function putawayRouteFor(mode, scanAction = '') {
+  const m = modeOf(mode);
+  if (!m.needsOrder) return '';
+  return str(scanAction) === 'pallet' ? 'pallet-execute' : 'needs-order';
+}
+
+/**
+ * أوامرُ التخزين المفتوحة — تُعرض برابطها بدل جملةٍ تأمر بما لا يُرى.
+ *
+ * ★ و«مفتوح» حكمُ `states.js` لا قائمةٌ تُكتب هنا: منتهٍ لا يُعرض، وما لم
+ *   يُعتمد بعد لا يُنفَّذ. ومن نسخ قائمةَ الحالات هنا خلّف نسختين تفترقان.
+ * ★★ والمستودعُ يُرشِّح حين يُعرف: أمرُ تخزينٍ في مستودعٍ آخر لا يُنفَّذ في
+ *   هذه الخانة (القاعدة ٣) — فعرضُه إغراءٌ برفضٍ مؤجّل.
+ */
+export function openPutawayOrders(docs = [], { warehouse = '', max = 8 } = {}) {
+  const wh = up(warehouse);
+  return (docs || [])
+    .filter((d) => up(d?.type) === 'PUTAWAY' && !isTerminal(d?.state) && canDeriveFrom(d?.state))
+    .filter((d) => {
+      const docWh = up(d?.header?.warehouse);
+      return !wh || !docWh || docWh === wh;
+    })
+    .slice(0, Math.max(0, num(max)))
+    .map((d) => ({
+      id: str(d?.id),
+      number: str(d?.number) || str(d?.id),
+      warehouse: up(d?.header?.warehouse),
+      grnRef: str(d?.header?.grnRef),
+      lineCount: (d?.lines || []).length,
+    }));
 }
 
 /**

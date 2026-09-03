@@ -36,6 +36,18 @@ import {
   startSession,
 } from '../../../services/lpn/receivingService.js';
 import { grnPreview } from '../../../services/lpn/grnBridge.js';
+/*
+ * ‹JR-301 · طلبُ المالك ط‑٥› اختيارُ الوحدة عند المسح.
+ * الأربعةُ تُستدعى ولا يُعاد بناءُ حكمِ أيٍّ منها هنا: `resolveScan` تقول ما
+ * يحسمه الباركود · `needsPackEntry` هي الحكمُ الفاصل بين المسارين ·
+ * `scanUomChoices` قائمةُ المعرَّف · `packEntryVerdict` حكمُ غير المعرَّف.
+ */
+import { resolveScan } from '../../../services/lpn/receivingScan.js';
+import { baseQtyPreview, scanUomChoices } from '../../../services/stock/scanFlow.js';
+import { needsPackEntry, packEntryVerdict } from '../../../services/items/packEntry.js';
+import { convert, uomLabel } from '../../../services/items/uomModel.js';
+// ‹JR-105› «كلُّ مرحلةٍ مربوطةٌ بشخصٍ ما» — والخريطةُ تُقرأ من مخطّطات الأنواع.
+import { nextOwnerOf, stageOwnerLine } from '../../../services/tasks/stageOwners.js';
 import {
   useBarcodeCamera,
   ScanCameraButton,
@@ -69,6 +81,105 @@ const base = getBasePath();
 const docHref = (type, id) => `${base}/dashboard/document?type=${type}&id=${encodeURIComponent(id)}`;
 const inboxHref = `${base}/dashboard/documents`;
 
+/** مقارنةُ هويّةٍ لا عرضٌ — بحروفٍ كبيرةٍ مشذّبةٍ كما تفعل الخدمةُ في قيدها. */
+const upper = (v) => String(v ?? '').trim().toUpperCase();
+
+/* ── ‹JR-301› خطّةُ الكمّيّة ────────────────────────────────────────────
+ * ★★★ **ترجمةٌ لا حكم.** الحكمُ كلُّه في الخدمات (`packEntryVerdict` ·
+ * `convert` · ومن بعدهما `scanVerdict`)، وهذه تختار **أيَّ رقمٍ يُسلَّم** لها
+ * ثمّ تقول للموظّف ما سيُقيَّد قبل أن يضغط.
+ *
+ * ═══ ولماذا تُترجَم الكمّيّة أصلًا؟ ═══
+ * `scanVerdict` تشتقّ الوحدةَ من الباركود وحدَه ولا تقبل وحدةً من المستدعي —
+ * وذلك صوابٌ لما بُنيت له. فمن مسح باركودَ القطعة وهو يحمل كرتونًا لا يملك
+ * وسيلةً ليقول «كرتون» (طلبُ المالك ط‑٥). والمخرجُ الممكن **بلا لمس تلك
+ * الطبقة**: أن تُترجَم كمّيّتُه إلى **وحدة الباركود** فيصحّ الأساسُ المحسوب.
+ *
+ * ⚠️ **وحدُّه معلَنٌ لا مبتلَع**: البندُ يُقيَّد بوحدة الباركود («٣٦ قطعة»)
+ * لا بالوحدة التي نطقها («٣ كراتين») — الأساسُ صحيحٌ والتسميةُ ناقصة. وحلُّه
+ * التامّ أن تقبل `receivingScan.scanVerdict` وحدةً من المستدعي، وهي خارج
+ * نطاق هذه الدفعة. ولذلك يُعرض النصُّ «تُقيَّد …» على الشاشة: ما لا نستطيع
+ * إصلاحَه نقوله، ولا يُترك يُكتشف بعد شهر.
+ *
+ * ═══ ★★ والافتراضُ حرفيّ ═══
+ * بلا اختيارٍ (أو باختيارٍ يخصّ صنفًا آخر) تُعاد **عينُ العبارة** التي كانت
+ * تُمرَّر قبل هذه الدفعة: `qtyText === '' ? undefined : Number(qtyText)`.
+ * فمن لا يلمس شيئًا يعمل كما كان بايتًا ببايت.
+ *
+ * ⚠️ ومزلقُ الفراغ: `Number('')` صفرٌ محدود، فلولا ردُّه إلى ١ هنا لَصار
+ * ضربُ الفراغ صفرًا فرُدَّت القراءة. والواحدُ ليس اختراعًا — هو افتراضُ
+ * `scanVerdict` نفسِه («مسحةٌ واحدة = عبوةٌ واحدة»).
+ *
+ * @param {object} input
+ * @param {object|null} input.item صنفُ الباركود الممسوح كما حلّته `resolveScan`
+ * @param {string} input.barcodeUom الوحدةُ التي حسمها الباركود — إليها تُترجَم
+ * @param {string} input.qtyText نصُّ خانة الكمّيّة كما هو
+ * @param {{sku:string, uom:string, label:string, per:string}} input.pick اختيارُ الموظّف
+ * @returns {{changed:boolean, qty:number|undefined, note:string, problem:string}}
+ */
+function scanQtyPlan({ item, barcodeUom, qtyText, pick }) {
+  const asIs = {
+    changed: false,
+    qty: qtyText === '' ? undefined : Number(qtyText),
+    note: '',
+    problem: '',
+  };
+  // ★ الاختيارُ **مقيَّدٌ بصنفه**: يبقى بين المسحات كما تبقى الدفعةُ والصلاحية
+  // (كرتونةٌ تلو كرتونة من الصنف نفسه)، فإن جاء باركودُ صنفٍ آخر سقط الاختيارُ
+  // ولم يُطبَّق. وبغير هذا القيد يُترجَم صنفٌ بمعامل صنفٍ غيرِه صامتًا.
+  const sku = upper(item?.sku);
+  if (!item || !sku || sku !== upper(pick?.sku)) return asIs;
+
+  const n = qtyText === '' ? 1 : Number(qtyText);
+
+  // ① صنفٌ لا وحدةَ له أصلًا: يُعلَن الوعاءُ ومحتواه، والمعاملُ يُختم على
+  // القيد لا على الصنف. والحكمُ كلُّه في `packEntryVerdict` — لا ضربَ هنا.
+  if (needsPackEntry(item)) {
+    const label = String(pick?.label ?? '').trim();
+    const per = String(pick?.per ?? '').trim();
+    if (!label && !per) return asIs; // لا إعلانَ فلا ترجمة
+    const verdict = packEntryVerdict({
+      item,
+      containerLabel: label,
+      containers: n,
+      perContainer: per,
+    });
+    // ⚠️ وإعلانٌ نصفُ مكتوبٍ **يُوقف بسببه** ولا يمرّ صامتًا: من كتب «صندوق»
+    // ونسي محتواه يقصد ضربًا، وتمريرُ ٣ مكانَ ٣٦ فرقُ ألفٍ ومئةٍ بالمئة.
+    if (!verdict.ok) return { ...asIs, problem: verdict.problem };
+    const { qty, uom, factor, baseQty } = verdict.entry;
+    // «قطعة» بنصّ المالك في `packEntry` («ويضرب في عدد القطع») — وهذا الصنفُ
+    // بلا وحدةِ أساسٍ أصلًا، فلا اسمَ آخرَ صادقًا يُكتب هنا.
+    return {
+      changed: true,
+      qty: baseQty,
+      note: `${qty} ${uom} × ${factor} — تُقيَّد ${baseQty} قطعة`,
+      problem: '',
+    };
+  }
+
+  // ② صنفٌ معرَّفُ الوحدات: قائمتُه ومعاملُ بطاقته. و`convert` تمرّ بالأساس
+  // دائمًا وتحمل حارسَ الكسر ورسالةَ «لا معامل» — فلا حسابَ يُكتب هنا.
+  const chosen = String(pick?.uom ?? '').trim();
+  if (!chosen || chosen === barcodeUom) return asIs; // عينُ ما حسمه الباركود
+  const moved = convert(item, n, chosen, barcodeUom);
+  if (!moved.ok) {
+    return { ...asIs, problem: `وحدةُ الإدخال «${uomLabel(chosen)}» — ${moved.problem}` };
+  }
+  // `baseQtyPreview` تقول **المعنى** («= ٣٦ قطعة») وهذه تقول **ما يُقيَّد**.
+  // وهما يتطابقان حين تكون وحدةُ الباركود هي وحدةَ الأساس — وتكرارُ الجملة
+  // نفسِها مرّتين على شاشة هاتفٍ يُعلَّم قارئَها تخطّي السطر، فتُحذف حينها.
+  const recorded = `${moved.qty} ${uomLabel(barcodeUom)}`;
+  const meaning = baseQtyPreview(item, n, chosen);
+  const says = meaning && meaning !== `= ${recorded}` ? ` ${meaning}` : '';
+  return {
+    changed: true,
+    qty: moved.qty,
+    note: `${n} ${uomLabel(chosen)}${says} — تُقيَّد ${recorded}`,
+    problem: '',
+  };
+}
+
 export default function ReceivingFlow() {
   const { lang, dir, setLang, tr } = useFieldLang();
   const [me, setMe] = useState(null);
@@ -81,6 +192,19 @@ export default function ReceivingFlow() {
   const [qty, setQty] = useState('');
   const [batch, setBatch] = useState('');
   const [expiry, setExpiry] = useState('');
+  /*
+   * ‹JR-301› اختيارُ الوحدة — يبقى بين المسحات كما تبقى الدفعةُ والصلاحية
+   * (كرتونةٌ تلو كرتونة)، **ومقيَّدٌ بصنفه** فلا يتسرّب إلى صنفٍ آخر:
+   *   · `uom`         ⟶ للصنف المعرَّف: معرّفُ وحدةٍ من `scanUomChoices`.
+   *   · `label`+`per` ⟶ لغير المعرَّف: الوعاءُ كما نطقه الموظّف ومحتواه.
+   */
+  const [pick, setPick] = useState({ sku: '', uom: '', label: '', per: '' });
+  /*
+   * آخرُ باركودٍ مُسح — **لتبقى خانةُ الوحدة معروضةً بعد أن يُفرَّغ الحقل.**
+   * ⚠️ ومزلقٌ مقيس: الكاميرا وجهازُ الباركود يسلّمان القراءةَ إلى `runScan`
+   * مباشرةً ولا تمرّ بالحقل — فبغير هذا لَما رأى مستعملُهما الخانةَ قطّ.
+   */
+  const [lastCode, setLastCode] = useState('');
   const [flash, setFlash] = useState(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -189,6 +313,58 @@ export default function ReceivingFlow() {
    * للعامل زرٌّ يُردّ عنه.
    */
   const closeProblem = useMemo(() => (session ? sessionCloseProblem(session) : ''), [session]);
+
+  /**
+   * ‹JR-301› الصنفُ الذي تُبنى عليه خانةُ الوحدة: ما في الحقل الآن، وإلّا
+   * آخرُ ما مُسح. و`resolveScan` هي عينُها التي يسألها الحكمُ عند القراءة —
+   * فما تعرضه الخانةُ هو ما سيحسمه المسح، لا تقليدٌ له يفترق عنه يومًا.
+   */
+  const pickTarget = useMemo(() => {
+    const c = String(code).trim() || lastCode;
+    return c ? resolveScan(c, indexes) : null;
+  }, [code, lastCode, indexes]);
+
+  /** خطّةُ الكمّيّة كما ستُسلَّم — تُعرض **قبل** الضغط لا تُكتشف بعده. */
+  const pickPlan = useMemo(
+    () => scanQtyPlan({
+      item: pickTarget?.item ?? null,
+      barcodeUom: pickTarget?.uom ?? '',
+      qtyText: qty,
+      pick,
+    }),
+    [pickTarget, qty, pick]
+  );
+
+  /**
+   * ‹JR-201› «البند ٣ (شامبو)» — ترقيمُ **عرضٍ** لا هويّة: `lineId` معرّفٌ
+   * لا يقرؤه أحدٌ عند الشاحنة، والواقفُ يرى بندًا ثالثًا في القائمة أمامه.
+   */
+  const grnLineTag = useMemo(() => {
+    const m = new Map();
+    (grn?.lines ?? []).forEach((l, i) => m.set(l.lineId, `البند ${i + 1} (${l.description || l.sku})`));
+    return m;
+  }, [grn]);
+
+  /**
+   * ‹JR-105› أصحابُ مراحل مذكّرة الاستلام — «إلى من يذهب المستندُ بعدك».
+   *
+   * ★ وهي عن **النوع** لا عن حالة مستندٍ بعينه: مذكّرةٌ وُلدت أمس قد تكون
+   * اعتُمدت اليوم، والجلسةُ لا تحمل إلّا رقمَها — فقولُ «تنتظر اعتمادها»
+   * عنها خبرٌ لا نملك ما يثبته. و«يعتمدها فلان» صحيحٌ في الحالين.
+   */
+  const grnOwnerLines = useMemo(
+    () => ['approve', 'complete'].map((s) => stageOwnerLine('GRN', s)).filter(Boolean),
+    []
+  );
+
+  /**
+   * ‹JR-105› ومن ينتظر كلَّ أمرٍ في القائمة الآن — من `nextOwnerOf` وحدَها.
+   * وبطاقةُ `openOrderCard` تحمل `type` و`state` أصلًا، فلا يُقرأ الخام.
+   */
+  const orderOwnerLines = useMemo(
+    () => new Map(orders.map((o) => [o.id, nextOwnerOf(o).line])),
+    [orders]
+  );
 
   /**
    * ★ **تصحيح 2026-08-27 — «قارئ الباركود لا يقرأ» في تطبيق الطبالي:**
@@ -345,13 +521,25 @@ export default function ReceivingFlow() {
   async function runScan(rawInput) {
     const raw = normalizeScanned(rawInput);
     if (!raw || busy) return;
+    /*
+     * ‹JR-301› الترجمةُ تقع على **الباركود الممسوح** لا على ما في الحقل:
+     * الكاميرا وجهازُ الباركود لا يمرّان بالحقل، ولو بُنيت على `pickTarget`
+     * لَترجمت قراءةَ صنفٍ بمعامل صنفٍ آخر. و`resolveScan` نداءٌ خالصٌ رخيص.
+     */
+    const scanned = resolveScan(raw, indexes);
+    setLastCode(raw);
+    const plan = scanQtyPlan({ item: scanned.item, barcodeUom: scanned.uom, qtyText: qty, pick });
+    // إعلانٌ ناقصٌ يُوقف **بسببه المسمّى** قبل أن يُشغَل شيء — ولا يمرّ برقمٍ
+    // يخالف ما قصده الموظّف. (و`busy` لم يُرفع بعدُ فلا شيءَ يُنزَّل.)
+    if (plan.problem) { say('err', plan.problem); return; }
     setBusy(true);
     try {
       seqRef.current += 1;
       const r = await scanIntoDraft(
         sessionId,
         activeDraft,
-        { barcode: raw, qty: qty === '' ? undefined : Number(qty), batch, expiry },
+        // ★ بلا اختيارٍ `plan.qty` **عينُ** `qty === '' ? undefined : Number(qty)`.
+        { barcode: raw, qty: plan.qty, batch, expiry },
         { indexes, actor: actorName, device: 'WEB', seq: seqRef.current }
       );
       if (r.ok) {
@@ -667,6 +855,12 @@ export default function ReceivingFlow() {
                   <div className="text-ink-2 text-xs mt-1">
                     المطلوب {o.ordered} · المستلم {o.received} · <strong className="text-ink">المفتوح {o.open}</strong>
                   </div>
+                  {/* ‹JR-105› «كلُّ مرحلةٍ مربوطةٌ بشخصٍ ما» — والسطرُ من
+                      `nextOwnerOf` نفسِها لا صياغةً لها. والمجهولُ يمرّ صامتًا
+                      (سطرٌ فارغ) فلا نكتب في شاشةِ موظّفٍ خبرًا عمّا نجهل. */}
+                  {orderOwnerLines.get(o.id) && (
+                    <div className="text-ink-2 text-xs mt-1">{orderOwnerLines.get(o.id)}</div>
+                  )}
                 </button>
               </li>
             ))}
@@ -747,6 +941,16 @@ export default function ReceivingFlow() {
             <ScanCameraButton camera={camera} compact />
           </div>
           <ScanCameraPanel camera={camera} hint="وجّه العدسة إلى الباركود — تبقى مفتوحةً كرتونةً تلو كرتونة." />
+          {/* ‹JR-301 · ط‑٥› اختيارُ الوحدة **فوق** ما حسمه الباركود لا بدلًا
+              منه: الافتراضُ المختار وحدةُ الباركود، فمن لا يغيّر شيئًا يعمل
+              كما كان اليوم حرفًا — والخانةُ لا تظهر أصلًا حيث لا خيار. */}
+          <UomPicker
+            item={pickTarget?.item ?? null}
+            barcodeUom={pickTarget?.uom ?? ''}
+            pick={pick}
+            setPick={setPick}
+            plan={pickPlan}
+          />
           <div className="grid grid-cols-3 gap-2 mb-2">
             <input value={qty} onChange={(e) => setQty(e.target.value)} placeholder="الكمّيّة (١)" type="number" min="0" step="any"
               className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
@@ -803,6 +1007,12 @@ export default function ReceivingFlow() {
                 تولّد <strong className="text-ink">{session.grnNumber}</strong> من هذه الجلسة.
                 يُعتمد ثمّ يُنجَز ليتحرّك الرصيد — ولا يُشتقّ مرّتين.
               </p>
+              {/* ‹JR-105› «يُعتمد ثمّ يُنجَز» **بيد من؟** — السؤالُ الذي كان
+                  يُسأل شفاهًا فيسقط عند تبديل الورديّة. والأسماءُ من مخطّط
+                  النوع (مرآةِ قاعدة الخادم) لا قائمةً مكتوبةً هنا. */}
+              {grnOwnerLines.map((l) => (
+                <p key={l} className="text-ink-2 text-xs mt-1">{l}</p>
+              ))}
               {/* ★ والرابطُ هنا لا في الوميض وحده: الوميضُ يزول بأوّل مسحةٍ أو
                   إعادةِ تحميل، وهذه البطاقةُ تبقى — فمن عاد إلى جلسته بعد
                   ساعةٍ يجد الطريق. و`grnId` مختومٌ على الجلسة في
@@ -853,12 +1063,44 @@ export default function ReceivingFlow() {
                   </li>
                 ))}
               </ul>
+
+              {/* ── ‹JR-201› اختلافُ الطبالي **قبل** الزرّ ──────────────────
+                  ★★★ **إعلانٌ لا منع** — قرارُ المالك ق‑ج: الزرُّ يبقى عاملًا
+                  و`grn.problem` لم يتغيّر، فجلسةٌ كانت تُولّد أمس تُولّد اليوم.
+                  ومن حوّل هذه البطاقة إلى حاجزٍ كسر القرار وهو يظنّ أنّه ينفّذه.
+                  والقائمةُ من `extrasConflicts` الخالصة — لا مقارنةَ تُبنى هنا. */}
+              {grn.extrasConflicts.length > 0 && (
+                <div className="rounded-lg border px-3 py-2 mb-3" style={{ borderColor: 'var(--o-border)' }}>
+                  <p className="text-ink text-xs font-bold mb-1">
+                    اختلافُ الطبالي على حقول التتبّع ({grn.extrasConflicts.length})
+                  </p>
+                  <ul className="space-y-1">
+                    {grn.extrasConflicts.map((c) => (
+                      <li key={`${c.lineId}-${c.field}`} className="text-ink-2 text-xs">
+                        {/* «البند ٣ (شامبو)» — وإن كان البندُ خارج المعروض
+                            سُمّي بكوده، فلا يُقال «البند —». */}
+                        <span className="text-ink">{grnLineTag.get(c.lineId) || `البند «${c.sku || c.lineId}»`}</span>
+                        {' — '}{c.labelAr}: {c.values.map((v, i) => `${v || 'بلا قيمة'}${c.pallets[i] ? ` (${c.pallets[i]})` : ''}`).join(' · ')}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-ink-2 text-xs mt-1">
+                    تُترك الخانةُ <strong>فارغةً</strong> في المذكّرة ويملؤها المعتمِد — ولا يُخترع
+                    تاريخٌ لنصف الكمّيّة لم يكتبه أحد. والتوليدُ يمضي.
+                  </p>
+                </div>
+              )}
+
               <button type="button" className="btn btn-primary w-full py-3" onClick={makeGrn} disabled={busy}>
                 توليد الاستلام الرسميّ
               </button>
               <p className="text-ink-2 text-xs mt-2">
                 يولد <strong>مسوّدةً</strong> — والرصيد يتحرّك عند اعتمادها وإنجازها، لا قبله.
               </p>
+              {/* ‹JR-105› وإلى من تذهب بعدك — بأدوارها لا بالسؤال شفاهًا. */}
+              {grnOwnerLines.map((l) => (
+                <p key={l} className="text-ink-2 text-xs mt-1">{l}</p>
+              ))}
             </>
           )}
         </div>
@@ -907,6 +1149,95 @@ function ModeSwitch({ mode, setMode, disabled, tr }) {
           {label}
         </button>
       ))}
+    </div>
+  );
+}
+
+/**
+ * ‹JR-301 · طلبُ المالك ط‑٥› خانةُ الوحدة عند المسح.
+ *
+ * ═══ الفجوة ═══
+ * ثلاثُ خاناتٍ اليوم: الكمّيّة · الدفعة · الصلاحية. والوحدةُ تُحسم من **أيّ
+ * باركودٍ مُسح** — فمن مسح باركودَ القطعة وهو يحمل كرتونًا يكتب ١ ويقصد ١٢،
+ * ولا يملك وسيلةً ليقول «كرتون».
+ *
+ * ═══ ثلاثُ حالاتٍ، وثالثتُها الصمت ═══
+ *   ① معرَّفُ الوحدات وله أكثرُ من وحدة ⟶ قائمةُ `scanUomChoices`.
+ *   ② لا وحدةَ له أصلًا (`needsPackEntry`) ⟶ الوعاءُ ومحتواه، ومعاملُه
+ *      يُختم على القيد لا على بطاقة الصنف.
+ *   ③ وحدةٌ واحدةٌ أو باركودٌ مجهول ⟶ **لا خانةَ أصلًا**: خيارٌ من واحدٍ ليس
+ *      خيارًا، وعرضُه على واقفٍ أمام رفٍّ ضجيجٌ يُعلَّم تجاهلُه.
+ *
+ * ★★ والحكمان `needsPackEntry` و`scanUomChoices` يُسألان ولا يُقلَّدان بشرطٍ
+ * هنا — فلو تغيّرت قاعدةُ الوحدات غدًا تغيّرت الخانةُ معها في اللحظة نفسِها،
+ * ولم تبقَ شاشةٌ تعرض قائمةً وخدمةٌ تزعم أنّها فارغة.
+ */
+function UomPicker({ item, barcodeUom, pick, setPick, plan }) {
+  if (!item) return null;
+  const packing = needsPackEntry(item);
+  const choices = scanUomChoices(item);
+  if (!packing && choices.length < 2) return null;
+
+  const sku = upper(item.sku);
+  // اختيارٌ يخصّ صنفًا آخر لا يُعرض على هذا: `scanQtyPlan` لا تطبّقه أصلًا،
+  // وعرضُه هنا يجعل الشاشةَ تقول ما لا تفعل — وذلك أسوأ من ألّا تقول.
+  const cur = sku && sku === upper(pick?.sku) ? pick : { sku, uom: '', label: '', per: '' };
+  const set = (patch) => setPick({ ...cur, sku, ...patch });
+
+  return (
+    <div className="rounded-lg border px-3 py-2 mb-2" style={{ borderColor: 'var(--o-border)' }}>
+      <div className="text-ink-2 text-xs mb-1">
+        وحدةُ الإدخال — <span className="text-ink">{item.name || item.description || item.sku || '—'}</span>
+      </div>
+      {packing ? (
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              value={cur.label}
+              onChange={(e) => set({ label: e.target.value })}
+              placeholder="سمِّ الوعاء (صندوق · شدّة)"
+              className="rounded-lg border px-3 py-3 text-sm"
+              style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }}
+              autoComplete="off"
+            />
+            <input
+              value={cur.per}
+              onChange={(e) => set({ per: e.target.value })}
+              placeholder="كم قطعةً فيه"
+              type="number"
+              min="0"
+              step="any"
+              className="rounded-lg border px-3 py-3 text-sm"
+              style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }}
+            />
+          </div>
+          <p className="text-ink-2 text-xs mt-1">
+            هذا الصنف بلا وحداتٍ معرّفة — والخانةُ تبقى للمسحات التالية من صنفه نفسِه.
+            واتركها فارغةً ليمضي كما كان.
+          </p>
+        </>
+      ) : (
+        <select
+          value={cur.uom}
+          onChange={(e) => set({ uom: e.target.value })}
+          className="w-full rounded-lg border px-3 py-3 text-sm"
+          style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }}
+        >
+          {/* ★★ الافتراضُ **ما حسمه الباركود** وقيمتُه فراغ: فمن لم يلمس
+              الخانةَ يمرّ بلا ترجمةٍ أصلًا لا بترجمةٍ حاصلُها واحد. وهو كذلك
+              الوحيدُ الصالح حين يحمل الباركودُ وحدةً خارج قائمة الصنف. */}
+          <option value="">من الباركود: {uomLabel(barcodeUom)}</option>
+          {choices.map((c) => (
+            <option key={c.value} value={c.value}>{c.label}</option>
+          ))}
+        </select>
+      )}
+      {/* الحكمُ يُعرض ولا يُعاد بناؤه: `problem` من الخدمة و`note` منها. */}
+      {plan?.problem ? (
+        <p className="text-xs mt-1" style={{ color: 'var(--o-danger, #b42318)' }}>{plan.problem}</p>
+      ) : plan?.note ? (
+        <p className="text-ink text-xs mt-1 tabular-nums">{plan.note}</p>
+      ) : null}
     </div>
   );
 }

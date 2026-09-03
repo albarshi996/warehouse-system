@@ -186,6 +186,72 @@ export function combinedLinePairs(sourcePlans, combinedDraft) {
 }
 
 /**
+ * ★★★ ‹JR-201ب› ترقيعُ بنود المسوّدة بحقولٍ لا يعرفها المصدر — إضافةٌ لا تعديل.
+ *
+ * العطب الذي يسدّه: `LINE_MAP['PO>GRN']` ينقل الهويّة والكمّيّة **ولا ينقل
+ * دفعةً ولا صلاحية** — ومن أين ينقلها؟ أمرُ الشراء لا يعرفهما أصلًا. فمن
+ * كتبهما هو موظّف الاستلام على الطبلية، ومسوّدةُ GRN تولد بخانتهما فارغتين،
+ * فيبقى `balances.expiry` فارغًا و**FEFO عمياءُ عند التحضير**. وما بعد GRN
+ * موصولٌ سلفًا (`GRN>QC` ثمّ `QC>PUTAWAY` يورّثان الحقلين) — فالانقطاع في
+ * الحلقة الأولى وحدها، وهذه الدالّة تسدّها.
+ *
+ * ثلاثةُ أسبابٍ تجعلها آمنة، وكلُّها مُثبَتةٌ في `documentFlow.test.js`:
+ *   ① `stableLineId` **موضعيٌّ لا محتوائيّ** (`legacy-line-NNNN`) — فإضافةُ
+ *      حقلٍ إلى بندٍ لا تحرّك هويّتَه، ولا تُبطل علاقةً كُتبت عليه.
+ *   ② لا تمسّ `draft.lines.length` ولا ترتيبَها — فمؤشّرُ `combinedLinePairs`
+ *      وحسابُ `partialLinePairs` بعدها كما كانا حرفًا بحرف.
+ *   ③ **غيابُ الوسيط ⟶ دالّةُ هويّة** (المرجعُ نفسُه يُعاد) — فخمسةٌ وعشرون
+ *      اشتقاقًا في `LINE_MAP` لا يمرّرها أحدٌ منها تبقى بايتًا ببايت.
+ *
+ * ⚠️ **ولا يُطمَس محشوٌّ**: الحقل يُملأ إن كان فارغًا في المسوّدة فقط — نفسُ
+ * شرط `deriveDocument` (`undefined` أو `''`). فلو ورّث المحرّك يومًا دفعةً من
+ * المصدر كانت هي الأصحّ: مصدرُها المستند لا ذاكرةُ الطبلية.
+ *
+ * ⚠️ **والمشيةُ نسخةٌ من مشية `combinedLinePairs`** (مصدرٌ ثمّ بنودُه المختارة
+ * بالترتيب). ومن غيّر إحداهما ولم يغيّر الأخرى ألصق صلاحيةَ بندٍ على بندٍ
+ * آخر — عطبٌ صامتٌ لا يرفع خطأً. والحدُّ محروسٌ هنا، وتضاربُ الأطوال يرميه
+ * `combinedLinePairs` بعد سطرين على أيّ حال.
+ *
+ * @param {object} draft مسوّدةُ الابن كما اشتقّها المحرّك.
+ * @param {Array<{source:object, plan:object}>} sourcePlans نفسُ ما يُسلَّم `combinedLinePairs`.
+ * @param {Object<string, Object<string, object>>|null} extrasBySource
+ *   `{ [معرّف المصدر]: { [هوية سطر المصدر]: { حقلٌ: قيمة } } }`.
+ * @returns {object} مسوّدةٌ جديدة إن رُقّع شيء، وإلّا المسوّدةُ نفسُها.
+ */
+export function applyLineExtras(draft, sourcePlans, extrasBySource) {
+  const bySource = extrasBySource && typeof extrasBySource === 'object' ? extrasBySource : null;
+  const lines = draft?.lines;
+  if (!bySource || !Array.isArray(lines) || !lines.length) return draft;
+
+  const nextLines = lines.slice();
+  let changed = false;
+  let cursor = 0;
+  for (const { source, plan } of sourcePlans || []) {
+    if (!plan?.supported) continue;
+    const extras = bySource[source?.id];
+    for (const line of plan.lines.filter((item) => item.selected > 0)) {
+      if (cursor >= nextLines.length) return changed ? { ...draft, lines: nextLines } : draft;
+      const fields = extras?.[line.lineId];
+      if (fields && typeof fields === 'object') {
+        const patch = {};
+        for (const [key, value] of Object.entries(fields)) {
+          if (value === undefined || value === null || value === '') continue;
+          const current = nextLines[cursor]?.[key];
+          if (current !== undefined && current !== '') continue; // محشوٌّ لا يُطمَس
+          patch[key] = value;
+        }
+        if (Object.keys(patch).length) {
+          nextLines[cursor] = { ...nextLines[cursor], ...patch };
+          changed = true;
+        }
+      }
+      cursor += 1;
+    }
+  }
+  return changed ? { ...draft, lines: nextLines } : draft;
+}
+
+/**
  * سياسة تعدّد المصادر — **صريحة لا مستنتَجة**. الدمج مسموح حيث يكون الابن حاويةً
  * تشغيليّة واحدة تغطّي أكثر من التزام (شحنةٌ واحدة من المورّد نفسه تغلق أمرَي شراء)،
  * وممنوع حيث يكون الابن مرآةً قانونيّة لمستندٍ واحد (فاتورة · تصريح خروج · إشعار

@@ -52,6 +52,7 @@ import {
   relationStorageRecord,
 } from './documentRelations.js';
 import {
+  applyLineExtras,
   combinedLinePairs,
   combinePartialSources,
   derivePartialDocument,
@@ -544,9 +545,20 @@ export async function fetchCombinableSources(sourceDoc, targetType, max = 12) {
   return checked.filter(Boolean);
 }
 
-export async function createNextInChain(sourceDoc, profile, toType = null, { requestedByLine = null } = {}) {
+/**
+ * @param {object} [options.lineExtrasBySourceLine] ‹JR-201ب› حقولٌ تُملأ في بنود
+ *   الابن ولا يعرفها المصدر (الدفعةُ والصلاحية عند الاستلام) — بهوية سطر المصدر
+ *   مفتاحًا. **اختياريّ بالكامل**: من لا يمرّره يحصل على السلوك السابق حرفًا.
+ */
+export async function createNextInChain(
+  sourceDoc,
+  profile,
+  toType = null,
+  { requestedByLine = null, lineExtrasBySourceLine = null } = {},
+) {
   return createCombinedInChain([sourceDoc], profile, toType, {
     requestedByLineBySource: requestedByLine && sourceDoc?.id ? { [sourceDoc.id]: requestedByLine } : null,
+    lineExtrasBySource: lineExtrasBySourceLine && sourceDoc?.id ? { [sourceDoc.id]: lineExtrasBySourceLine } : null,
   });
 }
 
@@ -560,7 +572,12 @@ export async function createNextInChain(sourceDoc, profile, toType = null, { req
  * القفل: وثيقة تخصيصٍ **لكلّ مصدر** تُقرأ وتُكتب داخل المعاملة نفسها، فلا
  * تتجاوز معاملتان متزامنتان الرصيد المفتوح ولو دخلتا من مصادر مختلفة.
  */
-export async function createCombinedInChain(sourceDocs, profile, toType = null, { requestedByLineBySource = null } = {}) {
+export async function createCombinedInChain(
+  sourceDocs,
+  profile,
+  toType = null,
+  { requestedByLineBySource = null, lineExtrasBySource = null } = {},
+) {
   const sources = (Array.isArray(sourceDocs) ? sourceDocs : [sourceDocs]).filter((item) => item?.id);
   if (!sources.length) throw new Error('معرّف المستند المصدر مطلوب.');
   const uid = currentUid();
@@ -626,9 +643,13 @@ export async function createCombinedInChain(sourceDocs, profile, toType = null, 
     }
 
     const sourcePlans = prepared.map((item) => ({ source: item.live, plan: item.plan }));
-    const draft = prepared.length > 1
+    const derived = prepared.length > 1
       ? combinePartialSources(sourcePlans, targetType)
       : derivePartialDocument(prepared[0].live, targetType, prepared[0].plan);
+    // ‹JR-201ب› الترقيعُ **هنا** لا بعد بناء الأزواج: الأزواج تحمل مرجعَ بند
+    // الابن، فترقيعُه بعدها يترك العلاقةَ تشير إلى نسخةٍ بلا صلاحية. ولأنّ
+    // `stableLineId` موضعيّ، الترقيعُ قبلها لا يحرّك هويّةً ولا عددًا.
+    const draft = applyLineExtras(derived, sourcePlans, lineExtrasBySource);
     const schema = getSchema(draft.type);
     const linePairs = combinedLinePairs(sourcePlans, draft);
     // نوع الرابط من الزوج نفسه (SAP-10): الإرجاع علاقةُ `RETURN` لا `BASE` —

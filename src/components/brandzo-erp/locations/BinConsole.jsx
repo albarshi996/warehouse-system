@@ -6,7 +6,12 @@ import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/
 import { subscribeWarehouses } from '../../../services/locations/warehouseService.js';
 import { listenLocations } from '../../../services/locations/locationsService.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
-import { createDraft } from '../../../services/documents/documentsService.js';
+import { createDraft, listenDocumentsByTypes } from '../../../services/documents/documentsService.js';
+import { subscribeItems } from '../../../services/items/itemService.js';
+import { buildItemIndexes, itemForLine } from '../../../services/items/uomWiring.js';
+import { scanUomChoices, baseQtyPreview } from '../../../services/stock/scanFlow.js';
+import { uomLabel } from '../../../services/items/uomModel.js';
+import { needsPackEntry, packEntryVerdict } from '../../../services/items/packEntry.js';
 import {
   appendScan,
   closeOperation,
@@ -25,7 +30,8 @@ import {
   sessionScopeFor,
   sessionSummary,
 } from '../../../services/locations/binSession.js';
-import { listUnitsAt } from '../../../services/lpn/lpnService.js';
+import { getUnit, listUnitsAt } from '../../../services/lpn/lpnService.js';
+import { executePutaway, previewBin } from '../../../services/lpn/putawayService.js';
 import { binHeadline, binPrefixOf, segmentLabelsOf, warehouseForBin } from '../../../services/locations/binAnatomy.js';
 import { withAssignments } from '../../../services/locations/binTemplate.js';
 import {
@@ -47,10 +53,15 @@ import {
   buildDocDraft,
   draftLineFor,
   entryProblems,
+  entryQuantity,
+  landingPrimer,
   linesForScan,
   identifyBin,
+  modeHelp,
   modeOf,
+  openPutawayOrders,
   orderRequirementOf,
+  putawayRouteFor,
   routeScan,
 } from '../../../services/locations/binConsole.js';
 
@@ -103,6 +114,14 @@ export default function BinConsole() {
   const [locations, setLocations] = useState([]);
   const [balances, setBalances] = useState([]);
   const [units, setUnits] = useState([]);
+  // ★ ‹JR-301ج› بطاقاتُ الأصناف — منها تُقرأ وحدةُ الصفّ وقائمةُ وحدات الصنف.
+  //   وبلا الماستر تبقى الشاشةُ تكتب كمّيّاتٍ بلا وحدةٍ كما كانت.
+  const [items, setItems] = useState([]);
+  /** أوامرُ التخزين المفتوحة — تُقرأ في وضع التخزين وحدَه، ولا تُحمَّل عبثًا. */
+  const [putawayDocs, setPutawayDocs] = useState([]);
+  /** طبليّةٌ مُسحت في وضع التخزين وتنتظر تأكيدَ تخزينها في هذه الخانة. */
+  const [palletUnit, setPalletUnit] = useState(null);
+  const [palletNote, setPalletNote] = useState('');
 
   // ★★★ مرحلتان لا واحدة (طلب المالك 2026-09-02): `pending` كودٌ **قُرئ ولم
   // يُحدَّد بعد**، و`bin` كودٌ **حدّده العامل**. والمسحُ فعلٌ أعمى — فمن يفتح
@@ -131,6 +150,11 @@ export default function BinConsole() {
   const [mode, setMode] = useState('count');
   const [scanned, setScanned] = useState('');
   const [qty, setQty] = useState('');
+  /** الوحدةُ المختارة (المسار أ) — تُقرأ من قائمة وحدات الصنف لا تُكتب. */
+  const [entryUom, setEntryUom] = useState('');
+  /** خاناتُ الوعاء (المسار ب) — لصنفٍ لا وحدةَ أساسٍ له أصلًا. */
+  const [packLabel, setPackLabel] = useState('صندوق');
+  const [packPer, setPackPer] = useState('');
   const [destination, setDestination] = useState('');
   // ★★★ الجلسةُ سجلٌّ ملحق-فقط في السحابة لا قائمةٌ في الشاشة (طلب المالك
   // 2026-09-02): كلُّ مسحةٍ تُثبَّت لحظتَها، فمن أُغلق هاتفُه لا يضيع عملُه.
@@ -140,8 +164,12 @@ export default function BinConsole() {
   const [msg, setMsg] = useState({ type: '', text: '' });
   const [busy, setBusy] = useState('');
   const [created, setCreated] = useState(null);
+  /** نبضةُ إعادة قراءة الطبالي — نقلةٌ لا يراها العاملُ في الخانة نقلةٌ مشكوكٌ فيها. */
+  const [unitsTick, setUnitsTick] = useState(0);
 
   const base = getBasePath();
+  /** الفاعلُ باسمه — التخزينُ لا يُسجَّل بلا فاعل (`completePutaway`). */
+  const actorName = me?.name || me?.displayName || me?.email || '';
 
   useEffect(() => {
     const unsub = subscribeAuth(async (user) => {
@@ -157,8 +185,20 @@ export default function BinConsole() {
     const a = subscribeWarehouses(setWarehouses);
     const b = listenLocations(setLocations);
     const c = listenBalances(setBalances);
-    return () => { a?.(); b?.(); c?.(); };
+    // ★ الماستر يُقرأ مرّةً ويبقى: منه وحدةُ كلّ صنفٍ وقائمةُ وحداته — وبدونه
+    //   تُكتب المسحاتُ بلا وحدةٍ كما كانت (‹JR-301ج›).
+    const d = subscribeItems(setItems, () => setItems([]));
+    return () => { a?.(); b?.(); c?.(); d?.(); };
   }, [me]);
+
+  /**
+   * أوامرُ التخزين المفتوحة — تُقرأ في وضع التخزين وحدَه (‹JR-501›): قراءةٌ
+   * دائمةٌ لمستنداتٍ لا يراها أحدٌ في تسعة أعشار الوقت ثمنُها بلا مقابل.
+   */
+  useEffect(() => {
+    if (!me || mode !== 'putaway') { setPutawayDocs([]); return undefined; }
+    return listenDocumentsByTypes(['PUTAWAY'], setPutawayDocs, 50);
+  }, [me, mode]);
 
   /** الكودُ الفاعل — المعروضُ للتعريف إن وُجد، وإلّا المحدَّد. */
   const activeCode = pending || bin;
@@ -195,7 +235,12 @@ export default function BinConsole() {
    */
   const awaitingBarcode = manual && wizardSteps.length > 0 && addressComplete(address, wizardSteps);
   const knownCodes = useMemo(() => (locations || []).map((l) => l.code), [locations]);
-  const contents = useMemo(() => binContents(activeCode, { balances, units }), [activeCode, balances, units]);
+  /** فهرسُ الماستر — يُبنى مرّةً ويُقرأ في موضعين: صفوفُ الخانة والصنفُ الممسوح. */
+  const indexes = useMemo(() => buildItemIndexes(items), [items]);
+  const contents = useMemo(
+    () => binContents(activeCode, { balances, units, indexes }),
+    [activeCode, balances, units, indexes]
+  );
   const problem = useMemo(() => (bin ? binProblem(bin, knownCodes) : ''), [bin, knownCodes]);
 
   /** بطاقةُ التعريف — كلُّ ما تعرضه المرحلةُ الأولى، من المنطق الخالص. */
@@ -204,6 +249,8 @@ export default function BinConsole() {
     [pending, effectiveWarehouses, knownCodes, balances, units]
   );
   const m = modeOf(mode);
+  /** شرحُ الوضع — نصٌّ في الخدمة، والشاشةُ تعرضه ولا تكتبه (‹JR-501›). */
+  const help = modeHelp(mode);
 
   /**
    * طبالي الخانة تُجلب عند فتحها لا مع كلّ رصيد — استعلامٌ محدودٌ بالمستودع
@@ -224,7 +271,7 @@ export default function BinConsole() {
         setUnits(groups.flat().filter((u) => (seen.has(u.code) ? false : seen.add(u.code))));
       });
     return () => { alive = false; };
-  }, [me, activeCode, whDoc]);
+  }, [me, activeCode, whDoc, unitsTick]);
 
   /**
    * عند فتح الويزارد بباركودٍ جديد: يُقترح عنوانُه إن كان الملصقُ ناطقًا،
@@ -259,6 +306,57 @@ export default function BinConsole() {
   const [pickedBatch, setPickedBatch] = useState(0);
   const item = hits[pickedBatch] || hits[0] || null;
 
+  /**
+   * ═══ ‹JR-301ج› وحدةُ الصنف الممسوح — مسارٌ (أ) أو مسارٌ (ب) ═══
+   *
+   * ★★★ والحكمُ بين المسارين `needsPackEntry` **يُسأل ولا يُقلَّد**: هو نفسُه
+   * يسأل `scanUomChoices` «أعندك ما تعرضه؟». فلو تغيّرت قاعدةُ الوحدات غدًا
+   * تغيّر الحكمان معًا، ولا يبقى أحدُهما يعرض قائمةً والآخرُ يزعم أنّها فارغة.
+   *
+   * ★ ويُبحث عن البطاقة **بالكود والباركود معًا** حتّى لو لم يكن للصنف رصيدٌ
+   *   في هذه الخانة: الجردُ يُثبت الفائضَ أيضًا، وفائضٌ بلا وحدةٍ فائضٌ مجهول.
+   */
+  const master = useMemo(
+    () => itemForLine({ sku: item?.sku || scanned, barcode: item?.barcode || scanned }, indexes),
+    [item, scanned, indexes]
+  );
+  const uomChoices = useMemo(() => scanUomChoices(master), [master]);
+  // ⚠️ وبلا مسحةٍ لا مسار: `needsPackEntry(null)` صادقةٌ عن حقّ (المجهولُ بلا
+  //    وحدةٍ كذلك)، فلو لم يُشترط المسحُ لَردّت الشاشةُ «كم صندوقًا؟» على من
+  //    ضغط «أضف» وهو لم يمسح شيئًا — رسالةٌ تسأل عن غير موضع العطب.
+  const packMode = useMemo(() => Boolean(scanned) && needsPackEntry(master), [scanned, master]);
+  const basePreview = useMemo(() => baseQtyPreview(master, qty, entryUom), [master, qty, entryUom]);
+  /** حكمُ الوعاء — يفحص ويبني القيد، أو يقول سببًا واحدًا مسمًّى. */
+  const packVerdict = useMemo(
+    () => (packMode ? packEntryVerdict({ item: master, containerLabel: packLabel, containers: qty, perContainer: packPer }) : null),
+    [packMode, master, packLabel, qty, packPer]
+  );
+  /** أوّلُ وحدةٍ من قائمة الصنف هي المختارة حتّى يبدّلها العامل. */
+  useEffect(() => {
+    setEntryUom((prev) => (uomChoices.some((o) => o.value === prev) ? prev : uomChoices[0]?.value || ''));
+  }, [uomChoices]);
+
+  /** أوامرُ التخزين المفتوحة لهذا المستودع — الحكمُ في الخدمة والشاشةُ تعرض. */
+  const putawayOrders = useMemo(
+    () => openPutawayOrders(putawayDocs, { warehouse: whDoc?.code || '' }),
+    [putawayDocs, whDoc]
+  );
+  /** وجهةُ وضع التخزين — والشاشةُ تعرضها ولا تقرّرها. */
+  const putawayRoute = putawayRouteFor(mode, palletUnit ? 'pallet' : '');
+  /**
+   * بطاقةُ الصنف الممثّل للطبليّة — الاقتراحُ والحكمُ يُحسبان على **أوّل
+   * بنودها** كما تنصّ `openPutawayTask`، لا على الصنف الذي يمسحه العامل.
+   */
+  const palletItem = useMemo(() => {
+    const sku = palletUnit?.lines?.[0]?.sku;
+    return sku ? itemForLine({ sku }, indexes) : null;
+  }, [palletUnit, indexes]);
+  /** حكمُ الرفّ للطبليّة الممسوحة — معاينةٌ حيّةٌ بلا كتابة، فيُرى الرفضُ قبل الضغط. */
+  const palletVerdict = useMemo(
+    () => (palletUnit && bin ? previewBin(palletUnit, bin, { locations, balances, item: palletItem }) : null),
+    [palletUnit, bin, locations, balances, palletItem]
+  );
+
   /** يُغلق الخانة ويعود إلى المسح — ويمسح كلَّ أثرٍ من الخانة السابقة. */
   const resetBin = useCallback(() => {
     setPending('');
@@ -271,6 +369,9 @@ export default function BinConsole() {
     setBin('');
     setScanned('');
     setQty('');
+    setPackPer('');
+    setPalletUnit(null);
+    setPalletNote('');
     setPickedBatch(0);
     setEntries([]);
     setCreated(null);
@@ -291,8 +392,13 @@ export default function BinConsole() {
     (raw) => {
       setScanned('');
       setQty('');
+      setPackPer('');
       setPickedBatch(0);
       setAmbiguous('');
+      // ★ وطبليّةٌ تنتظر تأكيدًا تسقط مع الخانة: تأكيدُها بعد تبديل الرفّ كان
+      //   يخزّنها في خانةٍ لم يقصدها من مسحها.
+      setPalletUnit(null);
+      setPalletNote('');
       setMsg({ type: '', text: '' });
 
       const hit = findByBarcode(locations, raw);
@@ -357,6 +463,26 @@ export default function BinConsole() {
     }
   }, [pending, session, me]);
 
+  /**
+   * ★★ الطبليّةُ **تُعرض** ثمّ تُخزَّن بضغطة — عرفُ هذه الشاشة نفسُه: المسحُ
+   * فعلٌ أعمى، ونقلةٌ تقع بمجرّد قراءةِ عدسةٍ تنقل طبليّةً إلى رفٍّ لم يقصده.
+   * وحكمُ الرفّ يُقرأ قبل الضغط لا بعده (`previewBin` — بلا كتابة).
+   */
+  const presentPallet = useCallback(async (code) => {
+    setMsg({ type: '', text: '' });
+    setPalletNote('');
+    try {
+      const unit = await getUnit(code);
+      if (!unit) {
+        setMsg({ type: 'error', text: `الطبليّة «${code}» غير موجودة — امسح الملصق ثانيةً أو راجع الحوكمة.` });
+        return;
+      }
+      setPalletUnit(unit);
+    } catch (err) {
+      setMsg({ type: 'error', text: 'تعذّرت قراءةُ الطبليّة: ' + (err?.message || 'سببٌ غير معروف') });
+    }
+  }, []);
+
   /** المسحةُ الواحدة — وجهتُها من التصنيف، والرفضُ يقول الصواب. */
   const onScanned = useCallback(
     (raw) => {
@@ -380,12 +506,16 @@ export default function BinConsole() {
         return;
       }
       if (v.action === 'pallet') {
-        setMsg({ type: 'info', text: `طبليّة «${v.code}» — تُعرض في محتوى الخانة أدناه.` });
+        // ★★★ ‹JR-501› الطبليّةُ كانت تُرمى برسالةٍ إخباريّة — «تُعرض أدناه» —
+        //   وهي **الطريقُ الوحيدُ** الذي يُدخل بضاعةً إلى رفٍّ بلا اختراع
+        //   مستند. والوجهةُ حكمٌ في الخدمة: `putawayRouteFor`.
+        if (putawayRouteFor(mode, v.action) === 'pallet-execute') { presentPallet(v.code); return; }
+        setMsg({ type: 'info', text: `طبليّة «${v.code}» — تُعرض في محتوى الخانة أدناه. وبدّل الوضعَ إلى «تخزين» لتخزّنها هنا.` });
         return;
       }
       setMsg({ type: 'error', text: v.message });
     },
-    [bin, presentBin, locations, awaitingBarcode]
+    [bin, presentBin, presentPallet, locations, awaitingBarcode, mode]
   );
 
   /** خطوةٌ أُجيبت — وما بعدها يُمسح، فلا يبقى جوابٌ لسؤالٍ تغيّر ما قبله. */
@@ -449,31 +579,82 @@ export default function BinConsole() {
    * وFirestore يرفعه حين تعود الشبكة. والفشلُ الحقيقيّ يُعلَن في `catch`.
    */
   function addEntry() {
-    const source = item || { sku: scanned, barcode: scanned };
+    const source = item || { sku: scanned, barcode: scanned, uom: baseUomOfScan() };
+
+    // ★★★ ‹JR-301ج› الوعاءُ يُحكَم قبل كلّ شيء: «٣ صناديقَ في كلٍّ ١٢» ⟸ ٣٦.
+    //   والرفضُ **سببٌ واحدٌ مسمًّى** كما تُعيده `packEntryVerdict` — لا يُعاد
+    //   بناؤه هنا ولا يُختصر إلى «تحقّق من المدخلات».
+    if (packMode && packVerdict && !packVerdict.ok) {
+      setMsg({ type: 'error', text: packVerdict.problem });
+      return;
+    }
+    const pack = packMode ? packVerdict?.entry ?? null : null;
+    // والكمّيّةُ الأساسُ من الحكم الخالص — الشاشةُ لا تضرب ولا تختار وحدة.
+    const q = entryQuantity({ row: source, qty, uom: entryUom, pack });
 
     if (mode === 'count') {
-      const problems = scanProblems({ bin, item: source, qty });
+      const problems = scanProblems({ bin, item: source, qty: q.qty });
       if (problems.length) { setMsg({ type: 'error', text: problems[0] }); return; }
       if (!session?.id) { setMsg({ type: 'error', text: 'لا جلسةَ مفتوحة — أعد تحديد الخانة.' }); return; }
 
-      appendScan(session.id, scanPayload({ bin, item: source, qty, bookQty: item?.qty ?? 0, profile: me }))
+      // ⚠️ و`scanPayload` يقرأ `item.uom` — فالوحدةُ تُمرَّر معه صراحةً، وإلّا
+      //   كُتب «بلا وحدة» على مسحةٍ عُدَّت بوحدةٍ معلومة.
+      appendScan(session.id, scanPayload({ bin, item: { ...source, uom: q.uom }, qty: q.qty, bookQty: item?.qty ?? 0, profile: me }))
         .catch((err) => setMsg({ type: 'error', text: 'لم تُثبَّت المسحة: ' + (err?.message || 'سببٌ غير معروف') }));
 
       setScanned('');
       setQty('');
+      setPackPer('');
       setPickedBatch(0);
-      setMsg({ type: 'success', text: 'ثُبِّتت المسحة.' });
+      setMsg({ type: 'success', text: pack ? `ثُبِّتت المسحة — ${num(q.qty)} بالأساس.` : 'ثُبِّتت المسحة.' });
       return;
     }
 
-    const line = draftLineFor(mode, { bin, item: source, qty, bookQty: item?.qty ?? 0 });
+    const line = draftLineFor(mode, { bin, item: source, qty, bookQty: item?.qty ?? 0, uom: entryUom, pack });
     const problems = entryProblems(mode, { line, contents, scanned });
     if (problems.length) { setMsg({ type: 'error', text: problems[0] }); return; }
     setEntries((prev) => [...prev, line]);
     setScanned('');
     setQty('');
+    setPackPer('');
     setPickedBatch(0);
     setMsg({ type: 'success', text: 'أُضيف البند.' });
+  }
+
+  /** وحدةُ صنفٍ مُسح ولا رصيدَ له في هذه الخانة — من بطاقته لا من فراغ. */
+  function baseUomOfScan() {
+    return uomChoices[0]?.value || '';
+  }
+
+  /**
+   * ★★★ ‹JR-501› تخزينُ الطبليّة في هذه الخانة — بالمحرّك القائم لا بمسارٍ ثانٍ.
+   *
+   * `executePutaway` تكتب في `handling_units` وأحداثها وحدَها (قواعدُها منشورة
+   * منذ ‹LPN-O05›)، ونقلتُها تتبع **مستندَ مولّد الطبليّة** (`sourceDoc`) —
+   * فالقاعدةُ ١ «لا نقلةَ بلا مستند» محفوظةٌ بلا أن يُخترع مستندٌ من الرفّ.
+   */
+  async function storePallet() {
+    if (!palletUnit || !bin) return;
+    if (!actorName) { setMsg({ type: 'error', text: 'لم تُقرأ هويّتك بعد — أعد تحميل الصفحة.' }); return; }
+    setBusy('يخزّن…');
+    setMsg({ type: '', text: '' });
+    try {
+      const r = await executePutaway(palletUnit.code, bin, {
+        actor: actorName, overrideNote: palletNote, locations, balances, item: palletItem,
+      });
+      if (r.problem) { setMsg({ type: 'error', text: r.problem }); return; }
+      setMsg({
+        type: 'success',
+        text: `${palletUnit.code} ← ${r.move.toBin}${r.move.offSuggestion ? ' (خالفت المقترح — سُجّل السبب)' : ''}`,
+      });
+      setPalletUnit(null);
+      setPalletNote('');
+      setUnitsTick((n) => n + 1);
+    } catch (err) {
+      setMsg({ type: 'error', text: err?.message || 'تعذّر إتمام التخزين.' });
+    } finally {
+      setBusy('');
+    }
   }
 
   /**
@@ -569,6 +750,34 @@ export default function BinConsole() {
           <div className={`text-xs ${msg.type === 'error' ? 'text-brand-red' : 'text-ink-2'}`}>{msg.text}</div>
         )}
       </section>
+
+      {/*
+        ═══ ★★★ ‹JR-501› الهبوط — هويّتا الصفحة، وزرُّ التكويد أوّلُ درجة ═══
+        كانت الصفحةُ عند الهبوط **حقلًا وزرَّين ولا شيءَ غير ذلك** (لقطةُ المالك
+        2026-09-02). والتكويدُ — وهو نصفُ عملها — لا يُبلَغ إلّا بالصدفة: من مسح
+        باركودًا غيرَ مربوطٍ فأجاب عن سؤال الالتباس. والنصُّ كلُّه من الخدمة
+        (`landingPrimer`) لا جملةً تُكتب هنا.
+      */}
+      {!bin && !pending && !coding && !manual && !ambiguous && (
+        <section className="grid gap-3 sm:grid-cols-2">
+          {landingPrimer().map((card) => (
+            <div key={card.id} className="o_ds o_ds_card o_ds_pad space-y-2">
+              <div className="flex items-center gap-2">
+                <Icon name={card.id === 'coding' ? 'tag' : 'package'} size={16} className="text-accent" />
+                <h3 className="font-bold text-ink text-sm">{card.title}</h3>
+              </div>
+              <p className="text-xs text-ink-2 leading-relaxed">{card.body}</p>
+              {card.id === 'coding' ? (
+                <button type="button" onClick={startManual} className="btn-primary text-xs">
+                  {card.action}
+                </button>
+              ) : (
+                <ScanCameraButton camera={camera} label={card.action} />
+              )}
+            </div>
+          ))}
+        </section>
+      )}
 
       {/* ═══ باركودٌ مُلتبِس — يُسأل ولا يُفترض ═══ */}
       {ambiguous && !coding && (
@@ -774,7 +983,7 @@ export default function BinConsole() {
                 <button
                   key={x.id}
                   type="button"
-                  onClick={() => { setMode(x.id); setMsg({ type: '', text: '' }); }}
+                  onClick={() => { setMode(x.id); setPalletUnit(null); setPalletNote(''); setMsg({ type: '', text: '' }); }}
                   className={mode === x.id ? 'btn-primary text-xs' : 'btn-secondary text-xs'}
                 >
                   {x.labelAr}
@@ -782,24 +991,92 @@ export default function BinConsole() {
               ))}
             </div>
 
-            {m.id === 'lookup' && (
-              <p className="text-xs text-ink-2">
-                وضعُ الاستعلام يقرأ ولا يكتب. امسح صنفًا لترى صفوفَه في هذه الخانة، أو بدّل الوضع للعمل.
-              </p>
+            {/*
+              ★★★ ‹JR-501› شرحُ الوضع — ثلاثةُ أسطرٍ من الخدمة لا جملةٌ في JSX.
+              وسؤالُ الواقفِ أمام الرفّ ليس «ما هذا الزرّ» بل «ماذا سيحدث للرصيد
+              إن ضغطتُه» — ولذلك السطرُ الثالث.
+            */}
+            {help && (
+              <div className="text-xs text-ink-2 space-y-1 border-r-2 border-accent/40 pr-3">
+                <p><strong className="text-ink">ما هو:</strong> {help.what}</p>
+                <p><strong className="text-ink">متى يُستعمل:</strong> {help.when}</p>
+                <p><strong className="text-ink">وماذا يكتب:</strong> {help.writes}</p>
+              </div>
             )}
-            {m.needsOrder && (
-              <p className="text-xs text-brand-red">{orderRequirementOf(m.id)}</p>
+
+            {/*
+              ★★★ ‹JR-501› وضعُ التخزين — والوجهةُ حكمٌ في الخدمة لا شرطٌ هنا.
+              «لا أمرَ مفتوحًا» لم تعد جملةً تأمر بما لا يُرى: الأوامرُ تُعرض
+              برابطها، والطبليّةُ تُخزَّن بمسحةٍ وتأكيد.
+            */}
+            {putawayRoute === 'needs-order' && (
+              <div className="space-y-2">
+                <p className="text-xs text-ink-2">
+                  امسح <strong className="text-ink">ملصقَ طبليّة</strong> لتُخزَّن في هذه الخانة الآن — أو افتح أمرَ تخزينٍ مفتوحًا:
+                </p>
+                <p className="text-[11px] text-muted">{orderRequirementOf(m.id)}</p>
+                {putawayOrders.length === 0 ? (
+                  <p className="text-xs text-muted">لا أوامرَ تخزينٍ مفتوحةً لهذا المستودع الآن — والطبليّةُ هي الطريق.</p>
+                ) : (
+                  <ul className="text-xs space-y-1 list-none p-0">
+                    {putawayOrders.map((o) => (
+                      <li key={o.id}>
+                        <a href={`${base}/dashboard/document?type=PUTAWAY&id=${o.id}`} className="text-accent underline">
+                          <span className="font-mono" style={{ direction: 'ltr', display: 'inline-block' }}>{o.number}</span>
+                        </a>
+                        <span className="text-ink-2">
+                          {' '}— {num(o.lineCount)} بندًا{o.grnRef ? ` · استلام ${o.grnRef}` : ''}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             )}
 
             <div className="flex flex-wrap gap-2 items-center">
               <input
                 value={scanned}
                 onChange={(e) => { setScanned(e.target.value); setPickedBatch(0); }}
-                placeholder="امسح باركود الصنف أو اكتب كوده"
+                placeholder={m.needsOrder ? 'امسح ملصق الطبليّة أو اكتب كودها' : 'امسح باركود الصنف أو اكتب كوده'}
                 autoComplete="off"
                 style={{ direction: 'ltr', textAlign: 'right' }}
                 className={`${IN} flex-1 min-w-[200px] font-mono`}
               />
+              {/* المسارُ اليدويّ للطبليّة — من تعذّر مسحُه يكتب الكود ويقرأ. */}
+              {m.needsOrder && (
+                <button
+                  type="button"
+                  onClick={() => presentPallet(scanned)}
+                  disabled={!scanned.trim() || Boolean(busy)}
+                  className="btn-secondary text-xs"
+                >
+                  اقرأ الطبليّة
+                </button>
+              )}
+              {/*
+                ★★★ ‹JR-301ج› المسارُ (أ): وحداتُ الصنف من `scanUomChoices`
+                حرفًا — قائمةٌ يُنقر منها لا خانةُ نصّ، ومعاينةٌ حيّةٌ للأساس.
+              */}
+              {m.docType && !m.needsOrder && !packMode && uomChoices.length > 1 && (
+                <select value={entryUom} onChange={(e) => setEntryUom(e.target.value)} className={`${IN} w-40`}>
+                  {uomChoices.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              )}
+              {/*
+                والمسارُ (ب): صنفٌ **لا وحدةَ أساسٍ له أصلًا** (١٠٤٠ صنفًا).
+                فخانتان: كم وعاءً وكم فيه — والحكمُ `packEntryVerdict` لا شرطٌ هنا.
+              */}
+              {m.docType && !m.needsOrder && packMode && (
+                <input
+                  value={packLabel}
+                  onChange={(e) => setPackLabel(e.target.value)}
+                  placeholder="سمِّ الوعاء: صندوق · شدّة"
+                  className={`${IN} w-32`}
+                />
+              )}
               {m.docType && !m.needsOrder && (
                 <input
                   type="number"
@@ -807,14 +1084,37 @@ export default function BinConsole() {
                   step="any"
                   value={qty}
                   onChange={(e) => setQty(e.target.value)}
-                  placeholder={m.id === 'count' ? 'المعدود' : 'الكمّيّة'}
+                  placeholder={packMode ? `كم ${packLabel || 'وعاءً'}؟` : m.id === 'count' ? 'المعدود' : 'الكمّيّة'}
                   className={`${IN} w-28`}
+                />
+              )}
+              {m.docType && !m.needsOrder && packMode && (
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={packPer}
+                  onChange={(e) => setPackPer(e.target.value)}
+                  placeholder="كم قطعةً فيه؟"
+                  className={`${IN} w-32`}
                 />
               )}
               {m.docType && !m.needsOrder && (
                 <button type="button" onClick={addEntry} className="btn-primary text-xs">أضف البند</button>
               )}
             </div>
+
+            {/* المعاينةُ قبل الحفظ — يُكشف الخطأُ وهو لا يزال قابلًا للتصحيح. */}
+            {!packMode && basePreview && <div className="text-xs text-ink-2">{basePreview}</div>}
+            {packMode && packVerdict?.ok && (
+              <div className="text-xs text-ink-2">
+                = <strong className="text-ink">{num(packVerdict.entry.baseQty)}</strong> قطعةً
+                {' '}({num(packVerdict.entry.qty)} × {num(packVerdict.entry.factor)})
+              </div>
+            )}
+            {packMode && packVerdict && !packVerdict.ok && qty !== '' && (
+              <div className="text-xs text-brand-red">{packVerdict.problem}</div>
+            )}
 
             {scanned && hits.length === 0 && (
               <div className="text-xs text-ink-2">
@@ -842,11 +1142,68 @@ export default function BinConsole() {
             {item && (
               <div className="text-xs text-ink-2">
                 <strong className="text-ink">{item.nameAr || item.sku}</strong> — الدفتريُّ في هذه الخانة {num(item.qty)}
+                {/* ★ الوحدةُ باسمها العربيّ لا بمعرّفها — «قطعة» لا «piece». */}
+                {item.uom ? ` ${uomLabel(item.uom)}` : ''}
                 {item.expiry ? ` · ينتهي ${item.expiry}` : ''}
               </div>
             )}
 
           </section>
+
+          {/*
+            ═══ ★★★ ‹JR-501› طبليّةٌ مقروءةٌ في وضع التخزين — تُنفَّذ لا تُخبَر ═══
+            المسحُ يعرض والضغطُ ينفّذ (عرفُ هذه الشاشة نفسُه)، وحكمُ الرفّ
+            يُقرأ **قبل** الضغط: من رأى الرفضَ بعد أن مشى مشى مرّتين.
+          */}
+          {putawayRoute === 'pallet-execute' && palletUnit && (
+            <section className="o_ds o_ds_card o_ds_pad space-y-3 border border-accent/40">
+              <div className="flex items-center gap-2">
+                <Icon name="layers" size={16} className="text-accent" />
+                <h3 className="font-bold text-ink text-sm">طبليّةٌ مقروءة — خزّنها في هذه الخانة</h3>
+              </div>
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="font-mono font-bold text-ink" style={{ direction: 'ltr' }}>{palletUnit.code}</span>
+                <span className="text-xs text-ink-2">
+                  {palletUnit.bin ? `من ${palletUnit.bin}` : 'بلا رفٍّ بعد'} ← {bin}
+                </span>
+                <span className="text-[11px] text-muted">{num(palletUnit.lines?.length || 0)} بندًا</span>
+              </div>
+              {palletVerdict?.message && (
+                <div className={`text-xs ${palletVerdict.ok ? 'text-ink-2' : 'text-brand-red'}`}>
+                  {palletVerdict.message}
+                </div>
+              )}
+              {/* ★ «يمرّ بسبب» لا «ممنوع» (درسُ LOC): العاملُ يختار ويُقيَّد باسمه. */}
+              {palletVerdict && !palletVerdict.ok && palletVerdict.canOverride && (
+                <input
+                  value={palletNote}
+                  onChange={(e) => setPalletNote(e.target.value)}
+                  placeholder="سببُ التخزين في هذا الرفّ — يُقيَّد باسمك"
+                  className={`${IN} w-full max-w-md`}
+                />
+              )}
+              <div className="flex flex-wrap gap-2 items-center">
+                <button
+                  type="button"
+                  onClick={storePallet}
+                  disabled={
+                    Boolean(busy)
+                    || !palletVerdict
+                    || (!palletVerdict.ok && (!palletVerdict.canOverride || !palletNote.trim()))
+                  }
+                  className="btn-primary text-xs"
+                >
+                  {busy || 'خزّنها في هذه الخانة'}
+                </button>
+                <button type="button" onClick={() => { setPalletUnit(null); setPalletNote(''); }} className="btn-secondary text-xs">
+                  إلغاء
+                </button>
+                <span className="text-[11px] text-muted">
+                  تُنقل الطبليّةُ بمستندِ مولّدها — ولا يُنشأ أمرُ تخزينٍ من الرفّ.
+                </span>
+              </div>
+            </section>
+          )}
 
           {/* ═══ ما ثُبِّت في هذه الخانة — من السحابة لا من الشاشة ═══ */}
           {mode === 'count' && binScans.length > 0 && (

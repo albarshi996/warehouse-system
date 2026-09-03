@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  applyLineExtras,
   combinedLinePairs,
   combinePartialSources,
   derivePartialDocument,
@@ -11,6 +12,9 @@ import {
   partialLinePairs,
   partialDerivationPlan,
 } from './documentFlow.js';
+// ‹JR-201ب› الوراثةُ عبر `LINE_MAP` هي ما يبلغ الرصيد — فتُختبر بمحرّكها لا بمحاكاة.
+import { deriveDocument } from './chain.js';
+import { stableLineId } from './documentRelations.js';
 
 const po = {
   id: 'po-1', type: 'PO', number: 'PO-1', state: 'approved',
@@ -184,4 +188,117 @@ test('أزواج الأسطر تحفظ المصدر والهدف والكمية 
     ['po-a', 'legacy-line-0001', 60],
     ['po-b', 'legacy-line-0002', 5],
   ]);
+});
+
+/* ═══════════════ ‹JR-201ب› تمريرُ الصلاحية في سلسلة المستندات ═══════════════ */
+
+/** ما تقوله الطبالي لسطر أمر الشراء — بصيغة `grnLineExtras` حرفًا. */
+const palletExtras = { 'po-1': { 'po-a': { batch: 'B7', expiryDate: '2027-03-01' } } };
+
+test('‹JR-201ب› غيابُ الوسيط دالّةُ هويّة — المسوّدةُ نفسُها مرجعًا لا نسخةً', () => {
+  const plan = partialDerivationPlan(po, 'GRN', [], [], { 'po-a': 10, 'po-b': 4 });
+  const draft = derivePartialDocument(po, 'GRN', plan);
+  const plans = [{ source: po, plan }];
+  // ثلاثةُ أشكالٍ للغياب — والمرجعُ نفسُه يُعاد، فخمسةٌ وعشرون اشتقاقًا في
+  // `LINE_MAP` لا يمرّرها أحدٌ منها تبقى بايتًا ببايت.
+  assert.equal(applyLineExtras(draft, plans, null), draft);
+  assert.equal(applyLineExtras(draft, plans, undefined), draft);
+  assert.equal(applyLineExtras(draft, plans, {}), draft);
+  // ومصدرٌ لا ترقيعَ لبنوده لا يُنشئ نسخةً عبثًا
+  assert.equal(applyLineExtras(draft, plans, { 'po-9': { 'x': { batch: 'Z' } } }), draft);
+});
+
+test('‹JR-201ب› الترقيعُ يضيف حقولًا ولا يحرّك عددًا ولا ترتيبًا ولا هويّة', () => {
+  const plan = partialDerivationPlan(po, 'GRN', [], [], { 'po-a': 10, 'po-b': 4 });
+  const draft = derivePartialDocument(po, 'GRN', plan);
+  const before = structuredClone(draft);
+  const plans = [{ source: po, plan }];
+  const patched = applyLineExtras(draft, plans, palletExtras);
+
+  assert.deepEqual(draft, before, 'المسوّدةُ المدخلة لا تُعدَّل — الدالّة خالصة');
+  assert.equal(patched.lines.length, draft.lines.length, 'الطولُ ثابت — فحسابُ مؤشّر الأزواج لا يُمسّ');
+  assert.deepEqual(patched.lines.map((line) => line.sku), ['A', 'B'], 'والترتيبُ ثابت');
+  assert.deepEqual(patched.lines.map((line) => line.qtyOrdered), [10, 4], 'والكمّيّاتُ ثابتة');
+  assert.equal(patched.lines[0].expiryDate, '2027-03-01');
+  assert.equal(patched.lines[0].batch, 'B7');
+  assert.equal(patched.lines[1].expiryDate, undefined, 'بندٌ بلا ترقيعٍ يبقى كما اشتقّه المحرّك');
+
+  // ★★★ الهويّة **موضعيّةٌ لا محتوائيّة** — وهي عين ما يجعل هذا آمنًا.
+  assert.deepEqual(
+    patched.lines.map((line, index) => stableLineId(line, index)),
+    draft.lines.map((line, index) => stableLineId(line, index)),
+  );
+  assert.deepEqual(
+    combinedLinePairs(plans, patched).map((pair) => [pair.sourceLineId, pair.targetLineId, pair.quantity]),
+    combinedLinePairs(plans, draft).map((pair) => [pair.sourceLineId, pair.targetLineId, pair.quantity]),
+    'أزواجُ البنود قبل الترقيع وبعده سواء',
+  );
+});
+
+test('‹JR-201ب› الترقيعُ يتبع مشيةَ الأزواج فيصيب بندَ مصدره في المسوّدة المدموجة', () => {
+  const po2 = { ...po, id: 'po-2', number: 'PO-2', lines: [{ lineId: 'po2-c', sku: 'C', qty: 7 }] };
+  const plans = [
+    { source: po, plan: partialDerivationPlan(po, 'GRN', [], [], { 'po-a': 10, 'po-b': 4 }) },
+    { source: po2, plan: partialDerivationPlan(po2, 'GRN') },
+  ];
+  const draft = combinePartialSources(plans, 'GRN');
+  const patched = applyLineExtras(draft, plans, {
+    'po-1': { 'po-b': { expiryDate: '2027-01-31' } },
+    'po-2': { 'po2-c': { expiryDate: '2028-12-01' } },
+  });
+  // مشيةٌ مغلوطةٌ بمقدار بندٍ واحد تُلصق صلاحيةَ «B» على «A» — بلا خطأٍ يُرفع.
+  assert.deepEqual(
+    patched.lines.map((line) => [line.sku, line.expiryDate ?? '']),
+    [['A', ''], ['B', '2027-01-31'], ['C', '2028-12-01']],
+  );
+  assert.equal(combinedLinePairs(plans, patched).length, 3, 'والدمجُ ما زال يطابق أسطره');
+});
+
+test('‹JR-201ب› ما ورّثه المحرّك لا يُطمَس — الترقيعُ يملأ الفارغ وحده', () => {
+  const grn = {
+    id: 'grn-9', type: 'GRN', number: 'GRN-9', state: 'approved', header: {},
+    lines: [{ lineId: 'g-a', sku: 'A', qtyReceived: 10, batch: 'FROM-DOC', expiryDate: '2027-03-01' }],
+  };
+  const plan = partialDerivationPlan(grn, 'QC', [], [], { 'g-a': 10 });
+  const draft = derivePartialDocument(grn, 'QC', plan);
+  const patched = applyLineExtras(draft, [{ source: grn, plan }], {
+    'grn-9': { 'g-a': { batch: 'FROM-PALLET', supplierBatch: 'SB-1' } },
+  });
+  assert.equal(patched.lines[0].batch, 'FROM-DOC', 'مصدرُ الدفعة المستندُ لا ذاكرةُ الطبلية');
+  assert.equal(patched.lines[0].supplierBatch, 'SB-1', 'والفارغُ وحده يُملأ');
+});
+
+test('★★ ‹JR-201ب› صلاحيةُ الطبلية تبلغ التخزين عبر السلسلة كاملةً', () => {
+  // ① العطب: `LINE_MAP['PO>GRN']` لا ينقل صلاحيةً — وأمرُ الشراء لا يعرفها أصلًا.
+  const plan = partialDerivationPlan(po, 'GRN', [], [], { 'po-a': 10, 'po-b': 0 });
+  const bare = derivePartialDocument(po, 'GRN', plan);
+  assert.equal(bare.lines[0].expiryDate, undefined, 'قبل الترقيع: خانةٌ فارغة تعمي FEFO');
+
+  // ② الترقيع بما كتبه موظّف الاستلام على الطبلية.
+  const grnDraft = applyLineExtras(bare, [{ source: po, plan }], palletExtras);
+  assert.equal(grnDraft.lines[0].expiryDate, '2027-03-01');
+
+  // ③ الاستلام يُعتمد بكمّيّةٍ مستلَمة، ثمّ يُشتقّ الفحص — `GRN>QC` يقرأ
+  //    `expiryDate` ويكتب `expiry`. **والحرفُ هنا هو كلُّ الفرق**: من كتب
+  //    `expiry` على بند GRN رأى الفحص يولد فارغًا بلا رسالةِ خطأٍ واحدة.
+  const grn = {
+    id: 'grn-1', type: 'GRN', number: 'GRN-1', state: 'approved',
+    header: grnDraft.header, links: grnDraft.links,
+    lines: grnDraft.lines.map((line) => ({ ...line, qtyReceived: line.qtyOrdered })),
+  };
+  const qcDraft = deriveDocument(grn, 'QC');
+  assert.equal(qcDraft.lines[0].expiry, '2027-03-01', 'الفحصُ ورث الصلاحية');
+  assert.equal(qcDraft.lines[0].batch, 'B7', 'ومعها التشغيلة');
+
+  // ④ والمقبولُ جودةً وحده يُخزَّن — بصلاحيته الموروثة. وهذه الحلقةُ الأخيرة
+  //    هي ما يبلغ `balances.expiry`، فمن اختبر حتّى الفحص اختبر نصفَ الطريق.
+  const qc = {
+    id: 'qc-1', type: 'QC', number: 'QC-1', state: 'approved',
+    header: qcDraft.header, links: qcDraft.links,
+    lines: qcDraft.lines.map((line) => ({ ...line, qtyAccepted: line.qtyInspected })),
+  };
+  const putaway = deriveDocument(qc, 'PUTAWAY');
+  assert.equal(putaway.lines[0].expiry, '2027-03-01', 'والتخزينُ ورثها — فأبصرت FEFO');
+  assert.equal(putaway.lines[0].batch, 'B7');
+  assert.equal(putaway.lines[0].qty, 10, 'والكمّيّةُ هي المقبولة لا المستلَمة');
 });

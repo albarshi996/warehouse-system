@@ -70,7 +70,8 @@
     "ر‑٨": "createPickTask بلا مستدعٍ — picking_tasks لا يكتبها شيءٌ في المشروع، فشاشةُ التحضير المبنيّة تقرأ فراغًا أبدًا",
     "ر‑٩": "releaseDocumentTasks ومعه taskFactory.generateTasks بلا مستدعٍ — وهو الجسرُ الوحيد من مستندٍ معتمَدٍ إلى مهمّةِ عملٍ تحمل docRef",
     "ر‑١٠": "وضعُ التخزين في لوحة الخانة طريقٌ مسدود — يقول «اخترْ أمرَ تخزينٍ مفتوحًا» ولا يعرض واحدًا؛ وهبوطُ الصفحة حقلٌ وزرّان بلا شرح",
-    "ر‑١١": "لا تمييزَ بين التخزين بالطبلية والتخزين بالصنف — STORAGE_TYPES أصنافُ حرارةٍ لا مناولة، وcapacity يستعمل qty وحدَها وcartons/weightKg/volumeM3 معلَنةٌ ومهملة"
+    "ر‑١١": "لا تمييزَ بين التخزين بالطبلية والتخزين بالصنف — STORAGE_TYPES أصنافُ حرارةٍ لا مناولة، وcapacity يستعمل qty وحدَها وcartons/weightKg/volumeM3 معلَنةٌ ومهملة",
+    "ر‑١٢": "المرحلةُ لا تقول من صاحبُها — طلبُ المالك 2026-09-03: «البوّابة تعمل بفكرة المراحل، يعني كلُّ مرحلةٍ مربوطةٌ بشخصٍ ما». والمعرفةُ موجودةٌ مبعثرةٌ في ثلاثة مواضع (approveRoles/completeRoles في firestore.rules · roles.create في schemas/* · ROLE_OPS في lpnRoles) ولا موضعَ واحدٌ يقول للناظر أمام المستند: من ينتظره الآن. فيُسأل شفويًّا — وأوّلُ ما يسقط عند تبديل الورديّة."
   },
   "ownerInputs": [
     {
@@ -305,6 +306,33 @@
         "closedOn": "2026-09-03",
         "note": "٣٦٤٣ خضراء (+٤٢) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · وحزمةُ fieldRoutes يستوردها DocumentsInbox وOpenDocumentsBox في dist."
       }
+    },
+    {
+      "id": "JR-105",
+      "title": "صاحبُ المرحلة — كلُّ محطّةٍ تقول من ينتظرها",
+      "milestone": "د١",
+      "owner": "Claude",
+      "state": "todo",
+      "gaps": [
+        "ر‑١٢"
+      ],
+      "dependsOn": [
+        "JR-101"
+      ],
+      "nucleus": "src/services/tasks/stageOwners.js — stageOwnersFor · nextOwnerOf",
+      "guardTest": "src/services/tasks/stageOwners.test.js",
+      "touches": [
+        "src/services/tasks/stageOwners.js",
+        "src/services/tasks/stageOwners.test.js",
+        "src/components/brandzo-erp/lpn/ReceivingFlow.jsx"
+      ],
+      "note": "★★★ والخريطةُ تُقرأ ولا تُخترع: المعرفةُ في firestore.rules (approveRoles/completeRoles) وschemas/*.js (roles.create) وlpnRoles.js (ROLE_OPS) — ولا تُكتب قائمةٌ رابعةٌ تنحرف عنها. ★★ وهي وحدةُ إعلامٍ لا صلاحيّات: لا تحرس ولا تمنع — الحارسُ الحقيقيُّ هو الخادم، وهذه تقول «من صاحبُ هذه المرحلة» فقط.",
+      "acceptance": [
+        "`stageOwnersFor(docType)` يُعيد أصحابَ الأطوار الأربعة (إنشاء · اعتماد · إنجاز · تنفيذٌ ميدانيّ) بأسمائهم العربيّة من `roles.js` لا مكتوبةً بيد",
+        "★★★ **و`nextOwnerOf(doc)` هو النافع**: من ينتظره المستندُ **الآن** بحسب حالته — مسوّدةٌ ⟶ منشئُها · بانتظار الاعتماد ⟶ معتمِدوه · معتمَدٌ ⟶ منفّذوه الميدانيّون",
+        "وحارسٌ يقارن المُصدَّرَ بـ`approveRoles` في `firestore.rules` حرفًا — فمن غيّر القاعدةَ ونسي الخريطةَ يسقط بناؤه",
+        "وكلُّ نوعٍ في `chain.js` إمّا له أصحابٌ وإمّا **غيابُه معلَنٌ مكتوب** — لا صمت، ولا دورَ يُذكر خارج `roles.js`"
+      ]
     },
     {
       "id": "JR-201",
