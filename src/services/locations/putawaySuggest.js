@@ -23,10 +23,13 @@ import {
   allowsItem,
   balanceLocationCode,
   canReceive,
+  declaredHandling,
+  handlingLabel,
   mixingProblem,
   occupancyOf,
 } from './locationsModel.js';
 import { normalizeLocationCode, shortLabelOf } from './locationCode.js';
+import { normalizeUom } from '../items/uomModel.js';
 
 /**
  * أوزان الترتيب. مكتوبةٌ صراحةً لا مبعثرةً في الشيفرة، كي يُراجعها المالك
@@ -39,6 +42,7 @@ export const WEIGHTS = Object.freeze({
   fitsPartial: 10, //       تكفي بعضها
   emptyLocation: 18, //     فارغٌ تمامًا — لا خلط ولا التباس
   storageTypeMatch: 25, //  نوع التخزين يطابق ما يحتاجه الصنف
+  handlingMatch: 25, //     نوع المناولة يطابق ما يحتاجه البند (بُعدٌ آخرُ بوزنٍ مثله)
   priority: 1, //           لكلّ درجة أولويّة
   distance: -0.5, //        لكلّ وحدة بُعد عن ساحة الاستلام
 });
@@ -55,18 +59,71 @@ function requiredStorageType(line, item) {
 }
 
 /**
+ * وحداتُ العدّ ⟶ نوعُ المناولة الذي تعنيه.
+ *
+ * وما سوى العدّ (وزنٌ وحجمٌ وطول) غائبٌ عن الجدول عمدًا: «عشرون كيلوغرامًا»
+ * لا تقول شيئًا عن المناولة — تأتي في كيسٍ وعلى طبليّةٍ سواء. فتُعاد فراغًا،
+ * والفراغُ يمرّ.
+ */
+const UOM_HANDLING = Object.freeze({
+  pallet: 'pallet',
+  carton: 'carton',
+  box: 'carton',
+  pack: 'carton',
+  piece: 'piece',
+  dozen: 'piece', // الدستة قطعٌ معدودة، ومناولتُها مناولةُ القطعة
+});
+
+/**
+ * حاجةُ البند من المناولة — **مشتقّةٌ لا مُدخَلة.**
+ *
+ * ★★★ ولماذا اشتقاقًا؟ لأنّ حقلًا جديدًا على بطاقة الصنف يعني ألفًا وأربعين
+ * خانةً تُملأ باليد **قبل** أن تنفع الميزةُ مرّةً واحدة؛ فتبقى فارغةً ويبقى
+ * التمييزُ حبرًا على شاشة. والوحدةُ مكتوبةٌ في البند أصلًا، ومعاملاتُ الصنف
+ * معرَّفةٌ لمن عرّفها — فمنهما يُقرأ الجواب بلا سؤالٍ جديدٍ على أحد.
+ *
+ * ① وحدةُ القيد أوّلًا، فهي أدقُّ ما في الموقف: بندٌ كُتب بالطبالي يُخزَّن
+ *    بالطبالي مهما قال تعريفُ الصنف.
+ * ② فإن خلا البند من وحدة، فمعاملُ **الطبليّة** المعرَّفُ صراحةً للصنف: من
+ *    عرّف لصنفه معاملَ طبليّةٍ فقد أعلن أنّه يتحرّك بها.
+ *    ⚠️ ولا يُقرأ هنا معاملُ الصندوق ولا الكرتون وإن وُجد: هما على جُلّ
+ *    الأصناف المعرَّفة، فقراءتُهما تُلصق بكلّ بندٍ بلا وحدةٍ حاجةَ «صندوق»
+ *    فتُغلق في وجهه كلُّ واجهات الالتقاط دفعةً واحدة — منعٌ بُني على شيوعٍ
+ *    لا على قياس.
+ *    ⚠️ و`item.unit` النصُّ القديم لا يُقرأ أصلًا: هو على كلّ صنفٍ منذ الأزل
+ *    (وعليه بُني `hasUomDefinition`)، فقراءتُه تقلب الميزة على الأصناف كلّها
+ *    في لحظة.
+ * ③ وإلّا فراغٌ = «لا قيد» — ولا يُخترع للبند متطلَّبٌ لم يُعلَن.
+ *
+ * @returns {''|'pallet'|'carton'|'piece'}
+ */
+export function handlingNeedOf(line, item) {
+  const written = normalizeUom(line?.uom);
+  if (written) return UOM_HANDLING[written] || '';
+
+  for (const [uom, value] of Object.entries(item?.uomFactors || {})) {
+    if (normalizeUom(uom) === 'pallet' && Number(value) > 0) return 'pallet';
+  }
+  return '';
+}
+
+/**
  * يُقيّم موقعًا واحدًا لبندٍ واحد.
  *
+ * @param {object} location
+ * @param {object} p
+ * @param {Map}    [p.pallets] فهرس «الموقع ← طباليه» (`palletsByBin`) — غيابُه
+ *                 يعني «لا علمَ بالطبالي» فلا تُحاسَب سعتُها، والحكمُ كما كان.
  * @returns {{ok:boolean, code:string, score:number, reasons:string[], reason:string,
  *            capacityBefore:object, capacityAfter:object}}
  */
-export function scoreLocation(location, { line, balances, item } = {}) {
+export function scoreLocation(location, { line, balances, item, pallets } = {}) {
   const code = normalizeLocationCode(location?.code);
   const qty = num(line?.qty);
-  const occ = occupancyOf(location, balances);
+  const occ = occupancyOf(location, balances, pallets);
 
   // ── الرفض أوّلًا: حالةٌ لا تقبل ───────────────────────────────────
-  const receive = canReceive(location, occ.usedQty);
+  const receive = canReceive(location, occ.usedQty, occ.usedPallets);
   if (!receive.ok) return reject(code, receive.reason, occ);
 
   // ── نوع التخزين ────────────────────────────────────────────────
@@ -74,6 +131,20 @@ export function scoreLocation(location, { line, balances, item } = {}) {
   const has = String(location?.storageType || '').toLowerCase();
   if (need && has && need !== has) {
     return reject(code, `الصنف يحتاج تخزينًا «${need}» وهذا الرفّ «${has}».`, occ);
+  }
+
+  // ── نوع المناولة ───────────────────────────────────────────────
+  // بُعدٌ متعامدٌ على الذي قبله لا امتدادٌ له: ذاك «أيّ حرارةٍ تصلح» وهذا
+  // «كيف تُناوَل». ويُقلَّد شكلُه حرفًا — رفضٌ عند تعارض **معلَنين**، والفارغُ
+  // على أيّ طرفٍ يمرّ (و«مختلط» فراغٌ بحكم `declaredHandling`).
+  const needHandling = handlingNeedOf(line, item);
+  const hasHandling = declaredHandling(location);
+  if (needHandling && hasHandling && needHandling !== hasHandling) {
+    return reject(
+      code,
+      `البند يُناوَل ${handlingLabel(needHandling)} وهذا الرفّ ${handlingLabel(hasHandling)} وحدَه.`,
+      occ
+    );
   }
 
   // ── الأصناف والفئات المسموحة ───────────────────────────────────
@@ -119,6 +190,11 @@ export function scoreLocation(location, { line, balances, item } = {}) {
     reasons.push(`نوع التخزين مطابق («${has}»).`);
   }
 
+  if (needHandling && hasHandling && needHandling === hasHandling) {
+    score += WEIGHTS.handlingMatch;
+    reasons.push(`نوع المناولة مطابق («${handlingLabel(hasHandling)}»).`);
+  }
+
   const priority = num(location?.priority);
   if (priority) {
     score += priority * WEIGHTS.priority;
@@ -130,6 +206,9 @@ export function scoreLocation(location, { line, balances, item } = {}) {
     reasons.push(`البُعد عن ساحة الاستلام ${distance}.`);
   }
 
+  // ★ `capacityBefore`/`capacityAfter` تبقيان بحقولهما الثلاثة كما هي: الشاشةُ
+  // تعرضهما، ومقياسُ الطبالي يُقرأ من `occupancyOf` لمن يريده. وحشوُ حقلٍ رابعٍ
+  // هنا يُبدّل شكلًا يقرؤه غيري بلا حاجة.
   const after = occ.capacityQty === null ? null : Math.max(0, occ.remainingQty - qty);
   return {
     ok: true,
@@ -166,9 +245,11 @@ function reject(code, reason, occ) {
  * @param {object} [p.item]     تعريف الصنف (للفئة ونوع التخزين المطلوب)
  * @param {string} [p.warehouse] حصرُ الاقتراح بمستودع البند
  * @param {number} [p.limit]    عدد المرشّحين المعروضين
+ * @param {Map}    [p.pallets]  فهرس «الموقع ← طباليه» — اختياريّ، وغيابُه
+ *                 يُبقي الحكم على ما كان: لا سعةَ طبالٍ تُحاسَب.
  * @returns {{candidates:Array, rejected:Array, problem:string}}
  */
-export function suggestLocations({ line, locations, balances, item, warehouse, limit = 5 } = {}) {
+export function suggestLocations({ line, locations, balances, item, warehouse, pallets, limit = 5 } = {}) {
   const wh = up(warehouse || line?.warehouse);
   const pool = (locations || []).filter((l) => l?.status !== 'archived').filter((l) => !wh || up(l?.warehouse) === wh);
 
@@ -183,7 +264,7 @@ export function suggestLocations({ line, locations, balances, item, warehouse, l
     return { candidates: [], rejected: [], problem: 'كمّيّة البند صفر — لا شيء يُخزَّن.' };
   }
 
-  const scored = pool.map((l) => scoreLocation(l, { line, balances, item }));
+  const scored = pool.map((l) => scoreLocation(l, { line, balances, item, pallets }));
   const candidates = scored.filter((s) => s.ok).sort((a, b) => b.score - a.score).slice(0, limit);
   // ② المرفوض يُعرض بسببه لا يُخفى.
   const rejected = scored.filter((s) => !s.ok).map(({ code, shortLabel, reason }) => ({ code, shortLabel, reason }));
@@ -203,7 +284,7 @@ export function suggestLocations({ line, locations, balances, item, warehouse, l
  *
  * @returns {{ok:boolean, override:boolean, reason:string, needsReason:boolean}}
  */
-export function chooseVerdict(code, { line, locations, balances, item } = {}) {
+export function chooseVerdict(code, { line, locations, balances, item, pallets } = {}) {
   const wanted = normalizeLocationCode(code);
   if (!wanted) return { ok: false, override: false, reason: 'لم يُحدَّد موقع.', needsReason: false };
 
@@ -217,7 +298,7 @@ export function chooseVerdict(code, { line, locations, balances, item } = {}) {
     };
   }
 
-  const verdict = scoreLocation(location, { line, balances, item });
+  const verdict = scoreLocation(location, { line, balances, item, pallets });
   if (verdict.ok) return { ok: true, override: false, reason: '', needsReason: false };
   return { ok: false, override: true, reason: verdict.reason, needsReason: true };
 }

@@ -72,6 +72,7 @@ import StateBar from './StateBar.jsx';
 import AuditTrail from './AuditTrail.jsx';
 import DocumentPrint from './DocumentPrint.jsx';
 import ChainBar from './ChainBar.jsx';
+import FieldReleasePanel from './FieldReleasePanel.jsx';
 import CopyFromPanel from './CopyFromPanel.jsx';
 import AttachmentsPanel from './AttachmentsPanel.jsx';
 import ControlPanel from './ControlPanel.jsx';
@@ -646,6 +647,13 @@ export default function DocumentEngine() {
         <div id="document-relations">
           <ChainBar doc={doc} me={me} onFlash={flash} />
         </div>
+
+        {/* ‹JR-801› إطلاق العمل للميدان — **بعد `ChainBar` لا داخله**: ذاك
+            اشتقاقُ مستندٍ من مستند (التزامٌ يلد التزامًا)، وهذا إسنادُ عملٍ
+            إلى فريقٍ يمشي إلى رفّ. ومعنيان تحت عنوانٍ واحدٍ يُربكان المشغّل.
+            واللوحةُ تُخفي نفسَها لِما لا يولّد عملًا ولِمن لا تقبل القاعدةُ
+            كتابتَه — فلا حاجةَ إلى حاويةٍ تُبقي فراغًا في التخطيط. */}
+        <FieldReleasePanel doc={doc} me={me} items={items} locations={locationsList} onFlash={flash} />
 
         {violations.length > 0 && (
           <div className="bg-brand-red/10 border border-brand-red/40 rounded-xl px-4 py-3">

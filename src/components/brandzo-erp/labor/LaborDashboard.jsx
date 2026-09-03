@@ -8,7 +8,7 @@
  * الوصول: مشرف المناولة والمديران (الإلزام الحقيقيّ في firestore.rules).
  */
 import { useEffect, useMemo, useState } from 'react';
-import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
+import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
 import { listenCrews, addCrew, setCrewActive } from '../../../services/labor/crewsService.js';
 import {
   listenLaborTasks,
@@ -589,11 +589,30 @@ function TaskForm({ crews, onSave, onCancel }) {
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const docType = ORDER_TYPES[orderType]?.docType;
+
+  /**
+   * ★★★ ‹JR-801› هذا النموذج ينشئ مهمّةً **حمولتُها بلا `lines`**.
+   *
+   * ولا بأس بذلك لأنواعٍ ليست على مستوى البنود (استلامٌ · نقلٌ · تسليمٌ ·
+   * حاوية): تلك تُقاس بعدّاد وحداتٍ واحد ولا تُفتح بندًا بندًا. أمّا التخزينُ
+   * والسحبُ (`isLineLevel`) فيفتحهما العاملُ في «مهامي» فلا يجد إلّا «لا بنود
+   * في هذه المهمّة» — مهمّةٌ مُسنَدةٌ لا تُنفَّذ ولا تُقاس، وعاملٌ يظنّ العطبَ
+   * في جهازه.
+   *
+   * والبنودُ لا تُكتب هنا بيد: مصدرُها المستندُ المعتمَد وحده، ومنه تشتقّها
+   * `generateTasks` مع الرفوف المقترحة والقسمة على المناطق والنقص المُعلَن.
+   *
+   * ★★ ويُقال ذلك بصوتٍ عالٍ مع الطريق إليه، **ولا يُحذف الخيارُ من القائمة**:
+   * خيارٌ يختفي يجعل المشغّل يظنّ الميزةَ مفقودةً فيلتمس لها طريقًا ملتويًا —
+   * وهو أصلُ الازدواج نفسُه.
+   */
+  const fromDocumentOnly = isLineLevel(orderType);
+
   return (
     <form
       onSubmit={async (e) => {
         e.preventDefault();
-        if (!crewId) return;
+        if (!crewId || fromDocumentOnly) return;
         setSaving(true);
         await onSave({
           orderType,
@@ -623,8 +642,15 @@ function TaskForm({ crews, onSave, onCancel }) {
         {orderType === 'container' && <L label="رقم الحاوية"><input className={input} value={containerRef} onChange={(e) => setContainerRef(e.target.value)} /></L>}
       </div>
       <L label="ملاحظة"><input className={input} value={note} onChange={(e) => setNote(e.target.value)} /></L>
+      {fromDocumentOnly && (
+        <p className="text-xs text-brand-red">
+          «{ORDER_TYPES[orderType].label}» تُطلق من المستند لا من هنا: افتح مستند {docType} المعتمَد
+          واضغط «أطلق للميدان» — فتأتي بنودُه ورفوفُه المقترحة وقسمتُه على المناطق معه.{' '}
+          <a href={`${getBasePath()}/dashboard/documents`} className="font-bold underline">صندوق المستندات ←</a>
+        </p>
+      )}
       <div className="flex gap-2">
-        <button type="submit" disabled={saving || !crewId} className="px-4 py-2 rounded-lg text-sm font-bold bg-accent text-brand-navy disabled:opacity-60">{saving ? 'جارٍ…' : 'إنشاء المهمّة'}</button>
+        <button type="submit" disabled={saving || !crewId || fromDocumentOnly} className="px-4 py-2 rounded-lg text-sm font-bold bg-accent text-brand-navy disabled:opacity-60">{saving ? 'جارٍ…' : 'إنشاء المهمّة'}</button>
         <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg text-sm text-muted hover:text-ink">إلغاء</button>
       </div>
       {crews.length === 0 && <p className="text-xs text-brand-red">لا فرق نشطة — شكّل فريقًا أوّلًا.</p>}

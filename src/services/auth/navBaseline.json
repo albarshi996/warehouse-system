@@ -8,6 +8,7 @@
   "/dashboard/assets-inventory",
   "/dashboard/barcode-center",
   "/dashboard/bin-assignment",
+  "/dashboard/bin-console",
   "/dashboard/branch-order",
   "/dashboard/business-continuity",
   "/dashboard/cold-chain",
@@ -231,7 +232,6 @@
   "/dashboard/gate-post",
   "/dashboard/learn-odoo",
   "/dashboard/maintenance-center",
-  "/dashboard/my-tasks",
   "/dashboard/packing-shipping",
   "/dashboard/pallet-control",
   "/dashboard/portal-operations",
@@ -246,6 +246,7 @@
   "/dashboard/assets-inventory",
   "/dashboard/barcode-center",
   "/dashboard/bin-assignment",
+  "/dashboard/bin-console",
   "/dashboard/cold-chain",
   "/dashboard/command-center",
   "/dashboard/comparative-study",
@@ -281,6 +282,7 @@
   "/دليل-السلاسل-والإمداد.html"
  ],
  "labor_supervisor": [
+  "/dashboard/bin-console",
   "/dashboard/dock-operations",
   "/dashboard/labor-operations",
   "/dashboard/my-tasks",
@@ -288,9 +290,9 @@
   "/dashboard/pick-plan"
  ],
  "picking_unit": [
+  "/dashboard/bin-console",
   "/dashboard/documents",
   "/dashboard/lpn-picking",
-  "/dashboard/my-tasks",
   "/dashboard/packing-shipping",
   "/dashboard/pick-plan",
   "/dashboard/tasks"
@@ -324,9 +326,9 @@
  ],
  "putaway_unit": [
   "/dashboard/bin-assignment",
+  "/dashboard/bin-console",
   "/dashboard/directed-storage",
   "/dashboard/documents",
-  "/dashboard/my-tasks",
   "/dashboard/tasks"
  ],
  "qc_inspector": [
@@ -439,6 +441,7 @@
  "storekeeper": [
   "/dashboard/assets-inventory",
   "/dashboard/barcode-center",
+  "/dashboard/bin-console",
   "/dashboard/cold-chain",
   "/dashboard/command-center",
   "/dashboard/data-reports",
@@ -450,7 +453,6 @@
   "/dashboard/learn-odoo",
   "/dashboard/lpn-picking",
   "/dashboard/lpn-receiving",
-  "/dashboard/my-tasks",
   "/dashboard/order-control",
   "/dashboard/packing-shipping",
   "/dashboard/pick-plan",
@@ -490,6 +492,7 @@
   "/dashboard/assets-inventory",
   "/dashboard/barcode-center",
   "/dashboard/bin-assignment",
+  "/dashboard/bin-console",
   "/dashboard/branch-order",
   "/dashboard/business-continuity",
   "/dashboard/cold-chain",

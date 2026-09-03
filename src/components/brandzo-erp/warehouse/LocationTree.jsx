@@ -15,9 +15,12 @@ import { getBasePath } from '../../../services/auth/authService.js';
 import { listenLocations, saveLocation, archiveLocation, canEditLocations } from '../../../services/locations/locationsService.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import {
+  HANDLING_TYPES,
   LOCATION_STATUSES,
   STORAGE_TYPES,
   buildLocationTree,
+  declaredHandling,
+  handlingLabel,
   locationProblems,
   occupancyOf,
 } from '../../../services/locations/locationsModel.js';
@@ -28,7 +31,10 @@ const EMPTY = {
   nameAr: '',
   status: 'active',
   storageType: 'ambient',
-  capacity: { qty: 0 },
+  // ★ «مختلط» و«صفر» هما حالُ كلّ موقعٍ قائم: نموذجٌ فارغٌ لا يُقيّد شيئًا،
+  // فالتقييدُ يُختار ولا يُفترض.
+  handling: 'mixed',
+  capacity: { qty: 0, pallets: 0 },
   mixItems: true,
   mixBatches: true,
 };
@@ -103,6 +109,11 @@ export default function LocationTree({ role }) {
       {canEdit && (
         <form onSubmit={submit} className="o_ds_card o_ds_pad" style={{ marginBottom: '18px' }}>
           <h3 className="o_form_title" style={{ fontSize: '18px', marginTop: 0 }}>إضافة موقع أو تعديله</h3>
+          <p style={{ fontSize: '12px', color: 'var(--o-main-color-muted)', margin: '0 0 12px', lineHeight: 1.7 }}>
+            <strong>نوع المناولة ومواضع الطبالي اختياريّان.</strong> اتركهما على «مختلط» و«صفر» يقبل الموقعُ
+            <strong> أيّ شيء</strong> — بالطبلية وبالصندوق وبالقطعة، وبلا سقفٍ لعدد الطبالي. وهو حالُ كلّ موقعٍ
+            مسجَّلٍ اليوم؛ فالتقييد يُختار رفًّا رفًّا لمن قاس، ولا يُفترض على المستودع كلّه.
+          </p>
           <div className="o_form_grid">
             <Field label="كود الموقع الكامل *">
               <input
@@ -130,12 +141,39 @@ export default function LocationTree({ role }) {
                 ))}
               </select>
             </Field>
+            {/*
+              ★★★ نوعُ المناولة **بجانب** نوع التخزين لا داخله: ذاك يقول «أيّ
+              حرارةٍ تصلح» وهذا يقول «كيف تُناوَل». ولو حُشرا في منسدلةٍ واحدة
+              لَاستحال وصفُ «مجمَّدٍ يُخزَّن بالطبالي» — وهو أشيعُ ما في المستودع.
+            */}
+            <Field label="نوع المناولة">
+              <select className="o_input" value={form.handling} onChange={(e) => setForm({ ...form, handling: e.target.value })}>
+                {Object.values(HANDLING_TYPES).map((h) => (
+                  <option key={h.id} value={h.id}>{h.labelAr}</option>
+                ))}
+              </select>
+              <span style={{ fontSize: '11px', color: 'var(--o-main-color-muted)', lineHeight: 1.5 }}>
+                {HANDLING_TYPES[form.handling]?.hint || ''}
+              </span>
+            </Field>
             <Field label="السعة (كمّية) — صفر يعني غير محدودة">
               <input
                 type="number"
                 className="o_input"
                 value={form.capacity.qty}
-                onChange={(e) => setForm({ ...form, capacity: { qty: e.target.value } })}
+                onChange={(e) => setForm({ ...form, capacity: { ...form.capacity, qty: e.target.value } })}
+              />
+            </Field>
+            {/*
+              ⚠️ ومواضعُ الطبالي غيرُ السعة الكمّيّة: تلك تعدّ ما في الرفّ وهذه
+              تعدّ ما يقف فيه. ورفٌّ يسع ألفَ قطعةٍ قد لا يسع إلّا طبليّتين.
+            */}
+            <Field label="مواضع الطبالي — صفر يعني بلا سقف">
+              <input
+                type="number"
+                className="o_input"
+                value={form.capacity.pallets}
+                onChange={(e) => setForm({ ...form, capacity: { ...form.capacity, pallets: e.target.value } })}
               />
             </Field>
             <Field label="سياسة الخلط">
@@ -229,10 +267,14 @@ function TreeNode({ node, depth, occupancy, canEdit, onEdit, onArchive, onPrint 
               {shortLabelOf(node.code)}
             </span>
             {status && status.id !== 'active' && <Badge tone={status.id === 'archived' ? 'muted' : 'warning'}>{status.labelAr}</Badge>}
+            {/* ★ لا شارةَ لـ«مختلط»: هو حالُ الأغلبية، وشارةٌ على كلّ سطرٍ ضجيجٌ
+                يُخفي الاستثناء الذي وُضعت الشارةُ لأجله. */}
+            {declaredHandling(loc) && <Badge variant="progress">{handlingLabel(declaredHandling(loc))}</Badge>}
             {occ && (
               <span style={{ fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
                 {occ.usedQty > 0 ? `مشغول: ${occ.usedQty}` : 'فارغ'}
                 {occ.capacityQty !== null ? ` / ${occ.capacityQty} (${occ.pct}٪)` : ' — سعة غير محدودة'}
+                {occ.capacityPallets !== null ? ` · ${occ.capacityPallets} موضع طبلية` : ''}
               </span>
             )}
             <span style={{ flex: 1 }} />
@@ -241,7 +283,18 @@ function TreeNode({ node, depth, occupancy, canEdit, onEdit, onArchive, onPrint 
             </button>
             {canEdit && (
               <>
-                <button type="button" className="btn btn-link" onClick={() => onEdit({ ...EMPTY, ...loc, capacity: { qty: loc.capacity?.qty ?? 0 } })}>
+                {/* ⚠️ السعةُ تُعاد بناؤها حقلًا حقلًا لا بالنشر: مقياسٌ يسقط هنا
+                    يُكتب صفرًا عند الحفظ فيمحو سقفًا قِيس. */}
+                <button
+                  type="button"
+                  className="btn btn-link"
+                  onClick={() => onEdit({
+                    ...EMPTY,
+                    ...loc,
+                    handling: loc.handling || EMPTY.handling,
+                    capacity: { qty: loc.capacity?.qty ?? 0, pallets: loc.capacity?.pallets ?? 0 },
+                  })}
+                >
                   تعديل
                 </button>
                 {loc.status !== 'archived' && (

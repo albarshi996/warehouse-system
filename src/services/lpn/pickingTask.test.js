@@ -12,6 +12,8 @@ import {
   currentStep,
   fulfillmentGap,
   openPickTask,
+  pickTaskDuplicateProblem,
+  pickTaskId,
   skipStep,
   stepRemaining,
   taskCloseProblem,
@@ -52,6 +54,53 @@ test('🔒 لا تحضير دون مستندٍ معتمد — القاعدة ١'
   assert.match(taskOpenProblem({ ...PICK_DOC, state: 'draft' }, { lines: [1] }), /حتى يُعتمد/);
   assert.match(taskOpenProblem({ ...PICK_DOC, state: 'canceled' }, { lines: [1] }), /حتى يُعتمد/);
   assert.deepEqual(PICKABLE_TYPES, ['PICK', 'SO', 'TR']);
+});
+
+test('🔒 رفضاتُ الفتح الأربعُ تُطلق بالترتيب نفسِه — أوّلُ ما يُقال أوّلُ ما يُصلَح', () => {
+  // مستندٌ يخالف الأربعةَ معًا: يُقال أوّلُها لا آخرُها، ثمّ تُكشف التاليةُ
+  // كلّما أُصلحت سابقتُها. وترتيبٌ ينقلب يُرسل المشرف يعتمد مستندًا نوعُه
+  // أصلًا لا يُحضَّر منه.
+  const broken = { id: '', type: 'GRN', state: 'draft', number: 'X-1' };
+  assert.match(taskOpenProblem(broken, null), /لا تحضير بلا أمرٍ معتمد/);
+  assert.match(taskOpenProblem({ ...broken, id: 'd1' }, null), /التحضير من/);
+  assert.match(taskOpenProblem({ ...broken, id: 'd1', type: 'SO' }, null), /حتى يُعتمد/);
+  assert.match(taskOpenProblem({ ...broken, id: 'd1', type: 'SO', state: 'approved' }, null), /بلا بنودٍ قابلةٍ للسحب/);
+  assert.equal(taskOpenProblem({ ...broken, id: 'd1', type: 'SO', state: 'approved' }, { lines: [{}] }), '');
+});
+
+const SO_77 = { id: 'so-77', type: 'SO', number: 'SO-77', state: 'approved' };
+
+test('★★★ معرّفُ المهمّة حتميٌّ — ضغطتان على الزرّ تقصدان مستندًا واحدًا لا مهمّتين', () => {
+  assert.equal(pickTaskId(SO_77), 'PICK__so-77');
+  assert.equal(pickTaskId({ ...SO_77 }), pickTaskId(SO_77), 'ثابتٌ عبر النداءات');
+  assert.equal(pickTaskId({ id: ' a/b.c ' }), 'PICK__a_b_c', 'وما يكسر معرّف Firestore يُبدَّل');
+  assert.notEqual(pickTaskId({ id: 'aBc' }), pickTaskId({ id: 'abc' }), 'ومعرّفات Firestore حسّاسةٌ للحالة — لا تُرفع');
+  assert.equal(pickTaskId({}), '', 'ومستندٌ بلا معرّفٍ لا يشارك أمثالَه مستندًا اسمُه PICK__');
+  assert.equal(pickTaskId(null), '');
+});
+
+test('★★★ المكرّرُ يُرفض بسببٍ يسمّي القائمةَ ومن بيده — لا محضّران على الرفّ نفسِه', () => {
+  const open = {
+    id: pickTaskId(SO_77), state: 'OPEN', assignee: 'سالم',
+    source: { type: 'SO', id: 'so-77', number: 'SO-77' },
+  };
+  const why = pickTaskDuplicateProblem(open, SO_77);
+  assert.match(why, /SO-77/, 'يسمّي الأمر');
+  assert.match(why, /مفتوحةٌ سلفًا/);
+  assert.match(why, /سالم/, 'ومن بيده — وإلّا فتح المشرف ثانيةً ظنًّا أنّ الأولى ضاعت');
+  assert.match(pickTaskDuplicateProblem({ ...open, state: 'IN_PROGRESS' }, SO_77), /مفتوحةٌ سلفًا/);
+  assert.equal(pickTaskDuplicateProblem(null, SO_77), '', 'ولا مهمّةَ قائمةً ⇒ لا مانع');
+  assert.equal(pickTaskDuplicateProblem(undefined, SO_77), '');
+});
+
+test('★★★ والمنفَّذةُ تُرفض كذلك — الكتابةُ الثانيةُ تمرّ من قاعدة الأمان وتمحو الخطوات', () => {
+  const done = { state: 'DONE', source: { number: 'SO-77' } };
+  assert.match(pickTaskDuplicateProblem(done, SO_77), /SO-77/);
+  assert.match(pickTaskDuplicateProblem(done, SO_77), new RegExp(PICK_TASK_STATES.DONE));
+  assert.match(pickTaskDuplicateProblem(done, SO_77), /تمحو ما سُحب/);
+  assert.match(pickTaskDuplicateProblem({ state: 'CANCELLED' }, SO_77), /ملغاة/);
+  // ومهمّةٌ بلا مصدرٍ مكتوبٍ تُسمّى بمستندها الممرَّر — لا «؟» يحيّر قارئه.
+  assert.match(pickTaskDuplicateProblem({ state: 'CANCELLED' }, SO_77), /SO-77/);
 });
 
 test('★★ النقص لا يمنع المهمّة — يُعلَن معها فيمشي المحضّر عالمًا', () => {

@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import {
   FIELD_OPS,
   FIELD_ROLES,
+  MY_TASKS_OP,
   PORTAL_TO_FIELD,
   ROLE_OPS,
   canDo,
@@ -23,6 +24,8 @@ import {
 } from './lpnRoles.js';
 import { ROLE_NAV } from '../auth/navAccess.js';
 import { NAV_GROUPS } from '../auth/navCatalog.js';
+// ‹JR-701› السؤالُ الثاني: من يكتب `labor_tasks` في `firestore.rules`.
+import { collectionWriteProblem } from '../labor/laborRoles.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
@@ -137,7 +140,7 @@ test('★ الملخّصُ للعرض لا للمنع — ويعلن جهلَه 
   assert.deepEqual(u.fieldLabels, [], 'لا يُخترع له دورٌ ميدانيّ');
 });
 
-/* ── ‹د٧› دَينُ الأدوار الميدانيّة الغائبة عن الخريطة ──────────────────── */
+/* ── ‹JR-701› انحرافُ الخريطة — دَينُ د٧ مغلقًا ────────────────────────── */
 
 /**
  * ★★★ العطبُ الذي يقيسه ما بعدُ — **تسامحُ `uiGate` يُخفي انحرافًا**.
@@ -182,6 +185,9 @@ function rolesOnFieldRoutes() {
   return where;
 }
 
+/** المساراتُ الميدانيّة التي يفتحها الكتالوجُ لدورٍ بعينه. */
+const visibleFieldRoutes = (role) => rolesOnFieldRoutes().get(role) ?? [];
+
 /** مداخلُ ميدانيّةٌ بلا `roles` — تُفتح لكلّ من يرى المجموعة فلا يراها الجامعُ أعلاه. */
 const fieldItemsWithoutRoles = () =>
   NAV_GROUPS.flatMap((g) => g.items ?? [])
@@ -191,39 +197,41 @@ const fieldItemsWithoutRoles = () =>
 const unmappedFieldRoles = () =>
   [...rolesOnFieldRoutes().keys()].filter((r) => !Object.hasOwn(PORTAL_TO_FIELD, r)).sort();
 
-test(
-  '★★★ كلُّ دورٍ يفتح له الكتالوجُ شاشةً ميدانيّةً مخرَّطٌ في الخريطة',
-  // ★★ متجاوَزٌ **بقصد**: توسيعُ `PORTAL_TO_FIELD` اليومَ يفتح شاشاتٍ
-  // يرفضها `firestore.rules` — فيصير المنعُ ارتدادًا من الخادم بعد العمل
-  // بدل رسالةٍ قبله، وهو أسوأ ممّا نُصلح. فالدَّينُ **مكتوبٌ هنا لا مذكورٌ
-  // في رأس أحد**، ويومَ يُخرَّط في د٧ يُنزع `skip` فيخضرّ من غير كتابة سطر.
-  { skip: 'دَينٌ معلَن — يُرفع في د٧ من خطة الرحلة' },
-  () => {
-    const where = rolesOnFieldRoutes();
-    const missing = unmappedFieldRoles();
-    assert.deepEqual(
-      missing,
-      [],
-      `أدوارٌ تفتح شاشاتٍ ميدانيّةً ولا تعرفها «PORTAL_TO_FIELD» — فتمرّ في ` +
-        `uiGate لأنّها مجهولةٌ لا لأنّها مأذونة:\n` +
-        missing.map((r) => `  · «${r}» ← ${where.get(r).join(' · ')}`).join('\n')
-    );
-  }
-);
-
-test('⚠️ الغائبون اليومَ ثلاثةٌ بالاسم — فإن نقص أو زاد بلا قصدٍ صرخ', () => {
-  // ★★★ والثلاثةُ قياسٌ لا نقلٌ عن الخطّة: الخطّةُ سمّت خمسةً وزادت
-  // `count_assignee` و`scm_manager`، والقياسُ يقول إنّهما **لا يبلغان مسارًا
-  // ميدانيًّا أصلًا** — `ROLE_NAV` يمنحهما `daily`/`warehouses`/`reports` ولا
-  // يمنحهما `lpn` ولا `putaway`. فغيابُهما عن الخريطة صوابٌ لا دَين.
+test('★★★ كلُّ دورٍ يفتح له الكتالوجُ شاشةً ميدانيّةً مخرَّطٌ في الخريطة', () => {
+  // ★★ كان متجاوَزًا بـ`skip` منذ الدفعة الأولى — دَينًا معلَنًا لا مذكورًا في
+  // رأس أحد. ورُفع في ‹JR-701› بخَرْط الوحدات الثلاث: فخضرّ **من غير أن
+  // يُكتب فيه سطر**، وهو ما يجعل إغلاقَه بيّنةً لا ادّعاءً.
+  const where = rolesOnFieldRoutes();
+  const missing = unmappedFieldRoles();
   assert.deepEqual(
-    unmappedFieldRoles(),
-    ['picking_unit', 'putaway_unit', 'receiving_unit'],
-    'تغيّر عددُ الأدوار غير المخرَّطة — إمّا خُرّطت (فانزع `skip` أعلاه) وإمّا فُتحت شاشةٌ ميدانيّةٌ لدورٍ جديد'
+    missing,
+    [],
+    `أدوارٌ تفتح شاشاتٍ ميدانيّةً ولا تعرفها «PORTAL_TO_FIELD» — فتمرّ في ` +
+      `uiGate لأنّها مجهولةٌ لا لأنّها مأذونة:\n` +
+      missing.map((r) => `  · «${r}» ← ${where.get(r).join(' · ')}`).join('\n')
   );
+});
 
-  // وهذان يُثبَّت غيابُهما صراحةً: إن فُتحت لأحدهما شاشةٌ ميدانيّةٌ يومًا
-  // صرخ هذا السطرُ باسمه بدل أن يُبتلع في فرقِ عددٍ مبهم.
+test('⚠️ والوحداتُ الثلاث مخرَّطةٌ بأدوارها بالاسم — لا بعددٍ مبهم', () => {
+  // ★★★ ولماذا بالاسم؟ لأنّ «صفرَ غيرِ مخرَّط» أعلاه يخضرّ أيضًا لو سُحبت
+  // الشاشاتُ من الثلاثة سحبًا صامتًا. فهذا يقول ماذا تملك كلُّ واحدةٍ فعلًا.
+  assert.deepEqual(fieldRolesOf('receiving_unit'), ['RECEIVER']);
+  assert.deepEqual(fieldRolesOf('putaway_unit'), ['PUTAWAY']);
+  assert.deepEqual(fieldRolesOf('picking_unit'), ['PICKER']);
+
+  // ★★ وكلُّ وحدةٍ تمرّ الآن **لأنّها مأذونة** لا لأنّها مجهولة — وفرقُ
+  // الاثنين هو العطبُ كلُّه: `known:true` تعني أنّ الشاشة تحكم بالمصفوفة.
+  for (const [role, op] of [['receiving_unit', 'RECEIVE'], ['putaway_unit', 'PUTAWAY'], ['picking_unit', 'PICK']]) {
+    const g = uiGate(role, op);
+    assert.ok(g.known, `«${role}» ما زال مجهولًا للخريطة`);
+    assert.ok(g.allowed, `«${role}» يُمنع من عمليّته الأصليّة «${op}»`);
+  }
+  // وواحدةٌ تُمنع ممّا ليس لها — فالخَرْطُ حكمٌ لا فتحُ باب.
+  assert.ok(!uiGate('picking_unit', 'APPROVE').allowed, 'من يحضّر لا يعتمد');
+
+  // ★★★ و`count_assignee` و`scm_manager` غائبان عن الخريطة **بقياسٍ لا بسهو**:
+  // `ROLE_NAV` يمنحهما `daily`/`warehouses`/`reports` ولا يمنحهما `lpn` ولا
+  // `putaway`. فإن فُتحت لأحدهما شاشةٌ ميدانيّةٌ يومًا صرخ هذا السطرُ باسمه.
   const where = rolesOnFieldRoutes();
   for (const absent of ['count_assignee', 'scm_manager']) {
     assert.ok(!where.has(absent), `«${absent}» صار على مسارٍ ميدانيّ — فخرّطه في «PORTAL_TO_FIELD»`);
@@ -234,13 +242,64 @@ test('⚠️ الغائبون اليومَ ثلاثةٌ بالاسم — فإن 
   assert.deepEqual(fieldItemsWithoutRoles(), [], 'مدخلٌ ميدانيٌّ بلا `roles` — يُفتح للمجموعة كلّها ولا يعدّه هذا الحارس');
 });
 
-test('🔒 وحداتُ الميدان الثلاث معروفةٌ في البوابة والقواعد — فالدَّينُ خريطةٌ لا وجود', () => {
+test('🔒 وحداتُ الميدان الثلاث معروفةٌ في البوابة والقواعد — فالناقصُ كان الخَرْطَ وحده', () => {
   // ★ تمييزُ الدَّين: لو كانت هذه الأدوار مجهولةً للبوابة أو للخادم لكان
   // العطبُ أكبر (دورٌ مخترَع). وهي معروفةٌ في الاثنين — فالناقصُ **الخَرْط**
-  // وحده، وهو ما يجعل إصلاحَ د٧ سطرًا في `PORTAL_TO_FIELD` لا مشروعًا.
+  // وحده، وهو ما جعل إصلاحَ ‹JR-701› ثلاثةَ أسطرٍ لا مشروعًا.
+  //
+  // ⚠️ وتُسمّى الثلاثةُ صراحةً لا تُقرأ من `unmappedFieldRoles()`: تلك صارت
+  // فارغةً بالإصلاح، فحلقةٌ عليها **لا تُطلق ولو مرّة** — حارسٌ أخضرُ أبدًا.
   const rules = fs.readFileSync(path.join(ROOT, 'firestore.rules'), 'utf8');
-  for (const role of unmappedFieldRoles()) {
+  for (const role of ['receiving_unit', 'putaway_unit', 'picking_unit']) {
     assert.ok(ROLE_NAV[role], `الدور «${role}» معروفٌ في navAccess`);
     assert.ok(rules.includes(`'${role}'`), `والدور «${role}» مذكورٌ في firestore.rules`);
   }
+});
+
+/* ── ‹JR-701› بوّابةُ «مهامي» — السؤالان معًا لا واحدٌ منهما ─────────────── */
+
+/**
+ * ★★★ لماذا سؤالان؟
+ *
+ * `uiGate` **تمرّر المجهولَ عمدًا** (اقرأ تعليقها). فشاشةٌ تسألها وحدَها تفتح
+ * لكلّ دورٍ لم يُخرَّط — وهو أسوأُ من حالِ اليوم لا أفضل. و`labor_tasks`
+ * محكومةٌ في `firestore.rules` بـ`isLaborWriter()` وحدَه (ثلاثةُ أدوار)،
+ * فالسؤالُ الثاني `collectionWriteProblem` هو الذي يعرف الخادم.
+ *
+ * ومحصّلةُ الاثنين **قرارُ المالك ق‑أ**: «أغلقها على المشرفين الآن» — فيتحوّل
+ * فشلٌ صامتٌ في منتصف الممرّ إلى بابٍ مغلقٍ صادقٍ عند المدخل.
+ */
+const myTasksDenial = (role) => {
+  const gate = uiGate(role, MY_TASKS_OP);
+  return gate.allowed ? collectionWriteProblem(role, 'labor_tasks') : gate.message;
+};
+
+test('★★★ «مهامي» للمشرفين الثلاثة — وأمينُ المخزن يُمنع عند المدخل لا عند الرفّ', () => {
+  for (const r of ['admin', 'warehouse_manager', 'labor_supervisor']) {
+    assert.equal(myTasksDenial(r), '', `«${r}» كاتبُ مناولةٍ في القاعدة فتُفتح له`);
+  }
+  // ★★ الأربعةُ الذين كانت البوّابةُ تفتح لهم الشاشةَ ويرفضهم الخادم.
+  for (const r of ['storekeeper', 'gate_officer', 'putaway_unit', 'picking_unit']) {
+    assert.notEqual(myTasksDenial(r), '', `«${r}» يُرفض في الخادم — فالبابُ يُغلق قبل أن يمشي`);
+  }
+  // والرسالةُ تقول **من يملك الشاشة** لا «غير مصرّح».
+  assert.match(myTasksDenial('storekeeper'), /مشرف المناولة/, 'تسمّي المالك فيذهب إليه');
+});
+
+test('★★★ ولا يكفي `uiGate` وحدَه — نقضٌ لا دعوى', () => {
+  // أمينُ المخزن يملك `PUTAWAY` في المصفوفة، فـ`uiGate` تفتح له الشاشةَ
+  // والخادمُ يرفض أوّلَ مسحة. فلو سُئلت وحدَها لعاد العطبُ بعينه.
+  assert.ok(uiGate('storekeeper', MY_TASKS_OP).allowed, 'المصفوفةُ وحدَها تفتحها له');
+  assert.notEqual(collectionWriteProblem('storekeeper', 'labor_tasks'), '', 'والقاعدةُ تمنعه');
+});
+
+test('★★ وأمينُ المخزن يبقى على شاشات الطبالي — فالبابُ المغلقُ مقصودٌ لا سهو', () => {
+  // ق‑أ: «العاملُ الميدانيّ يبقى على شاشات الطبالي وهي مسموحةٌ له في الخادم
+  // أصلًا». فلو أغلقنا عنه هذه أيضًا لكان الإصلاحُ سلبًا لا تصحيحًا.
+  for (const op of ['RECEIVE', 'PUTAWAY', 'PICK', 'STAGE', 'LOAD']) {
+    assert.ok(uiGate('storekeeper', op).allowed, `«${op}» من صلاحيّته الميدانيّة`);
+  }
+  const nav = new Set(visibleFieldRoutes('storekeeper'));
+  assert.ok(!nav.has('/dashboard/my-tasks'), '«مهامي» سُحبت من الكتالوج');
+  assert.ok(nav.has('/dashboard/lpn-receiving') && nav.has('/dashboard/lpn-picking'), 'وشاشاتُ الطبالي باقية');
 });

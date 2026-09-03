@@ -9,6 +9,8 @@ import {
   saveTaskLines,
 } from '../../../services/labor/laborTasksService.js';
 import { isLineLevel } from '../../../services/labor/laborModel.js';
+import { collectionWriteProblem } from '../../../services/labor/laborRoles.js';
+import { MY_TASKS_OP, uiGate } from '../../../services/lpn/lpnRoles.js';
 import { workQueue } from '../../../services/tasks/taskShape.js';
 import WorkerTaskPanel from './WorkerTaskPanel.jsx';
 
@@ -33,7 +35,32 @@ import WorkerTaskPanel from './WorkerTaskPanel.jsx';
  */
 
 const CREW_KEY = 'bz.myCrew';
-const CAN_WORK = new Set(['admin', 'warehouse_manager', 'labor_supervisor', 'storekeeper', 'gate_officer']);
+
+/**
+ * ★★★ سببُ المنع — **سؤالان لا واحد** ‹JR-701›.
+ *
+ * كانت هنا مجموعةٌ مرتجلة (`CAN_WORK`) بخمسة أسماءٍ مكتوبةٍ باليد، ومنها
+ * `storekeeper` و`gate_officer`. ومجموعةُ `labor_tasks` في `firestore.rules`
+ * محكومةٌ بـ`isLaborWriter()` — **ثلاثةُ أدوارٍ لا خمسة**. فكان أمينُ المخزن
+ * يعبر الشاشةَ ويمشي إلى الرفّ ويمسح، فيرتدّ عملُه بـ`permission-denied`
+ * **في منتصف المهمّة**. وأسوأُ منعٍ هو الذي يقع بعد أن يبدأ العمل لا قبله.
+ *
+ * والسؤالان:
+ *   ① `uiGate(role, MY_TASKS_OP)` — أتملك مصفوفةُ الميدان هذه العمليّة؟
+ *   ② `collectionWriteProblem(role, 'labor_tasks')` — أيقبلها الخادم؟
+ *
+ * ★★★ **ولا يكفي الأوّلُ وحدَه**: `uiGate` تُعيد `allowed:true` للدور المجهول
+ * **عمدًا** (منعٌ بُني على جهلٍ بالهويّة أسوأ من سماحٍ يردّه الخادم) — فشاشةٌ
+ * تسألها وحدَها تفتح لكلّ من لم يُخرَّط، وهو أسوأُ ممّا نُصلح لا أفضل.
+ * والثاني هو الذي ينسخ القاعدةَ حرفًا.
+ *
+ * ⚠️ وكلاهما يصمت عن الدور الفارغ (ملفٌّ لم يُحمَّل بعد) — بقصد: الخادمُ
+ * يبتّ حينئذٍ برسالةٍ واضحة، ولا يُمنع أحدٌ لأنّنا لم نعرفه بعد.
+ */
+function denialFor(role) {
+  const gate = uiGate(role, MY_TASKS_OP);
+  return gate.allowed ? collectionWriteProblem(role, 'labor_tasks') : gate.message;
+}
 
 export default function MyTasks() {
   const [me, setMe] = useState(null);
@@ -55,12 +82,17 @@ export default function MyTasks() {
     return () => unsub?.();
   }, []);
 
+  /** سببُ المنع — يُحسب قبل أيّ خروجٍ مبكر كي لا يتغيّر ترتيبُ الخطّافات. */
+  const denial = useMemo(() => denialFor(me?.role), [me]);
+
   useEffect(() => {
-    if (!me) return undefined;
+    // ★ ومن أُغلق عنه البابُ لا يُفتح له مستمع: إصغاءٌ سيرتدّ من الخادم لا
+    // يُنتج إلّا خطأً في وحدة التحكّم — والبابُ المغلقُ يُغلق كاملًا.
+    if (!me || denial) return undefined;
     const a = listenCrews(setCrews, (e) => setError(e?.message || 'تعذّرت قراءة الطواقم.'));
     const b = listenLaborTasks(setTasks, (e) => setError(e?.message || 'تعذّرت قراءة المهامّ.'));
     return () => { a?.(); b?.(); };
-  }, [me]);
+  }, [me, denial]);
 
   const crew = useMemo(() => crews.find((c) => c.id === crewId) || null, [crews, crewId]);
 
@@ -87,7 +119,17 @@ export default function MyTasks() {
 
   if (!ready) return <Notice>يقرأ…</Notice>;
   if (!me) return <Notice>افتح الصفحة بعد تسجيل الدخول.</Notice>;
-  if (!CAN_WORK.has(me.role)) return <Notice>هذه شاشة تنفيذ المهامّ — لعمّال المناولة والمخزن.</Notice>;
+  // ★ والرسالةُ تقول **من يملك الشاشة** لا «غير مصرّح»: موظّفٌ يُمنع ولا
+  // يعرف إلى من يذهب يبقى واقفًا، ومن يُقال له «يكتبها مشرف المناولة» يذهب.
+  if (denial) {
+    return (
+      <Notice>
+        <div className="font-bold text-ink mb-1">هذه شاشةُ تنفيذ مهامّ المناولة</div>
+        <div>{denial}</div>
+        <div className="text-[11px] mt-2">وشاشاتُ الطبالي والخانة وخطّةُ السحب مفتوحةٌ لك كما هي.</div>
+      </Notice>
+    );
+  }
 
   /* ── لا طاقمَ بعد: اختيارٌ واحدٌ يُحفظ ── */
   if (!crewId || !crew) {
