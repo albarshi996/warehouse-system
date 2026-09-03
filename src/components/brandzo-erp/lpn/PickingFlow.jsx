@@ -12,7 +12,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
+import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
 import { currentStep, stepRemaining, taskTotals, fulfillmentGap } from '../../../services/lpn/pickingTask.js';
 import { SCAN_STAGES, nextStage } from '../../../services/lpn/pickingScan.js';
 import {
@@ -755,7 +755,10 @@ export default function PickingFlow() {
     <div className="o_theme" dir="rtl">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <div>
-          <div className="font-bold text-ink">{task?.source?.number}</div>
+          {/* ★ رقمُ الأمر يُفتح لا يُقرأ — المحضّرُ يقف في الممرّ ويسأل «ما في
+              هذا الأمر؟»، والمعرّفُ في يده منذ `openPickTask` فلا حجّةَ لنصٍّ
+              أصمّ. وهنا موضعُه: **قبل أن يمشي** لا بعد أن يقفل. */}
+          <div className="font-bold text-ink"><DocLink source={task?.source} /></div>
           <div className="text-ink-2 text-xs">{task?.warehouse} · {task?.pathBasis}</div>
         </div>
         <button type="button" className="btn btn-secondary text-sm" onClick={() => { setTaskId(''); setTask(null); }}>رجوع</button>
@@ -870,6 +873,36 @@ function StageSwitch({ mode, setMode, disabled, tr }) {
         </button>
       ))}
     </div>
+  );
+}
+
+/**
+ * رابطُ المستند — من الميدان إلى الورقة التي أمرت به.
+ *
+ * ★★ **نمطٌ واحدٌ في شاشات الميدان كلّها**: الصنفُ `o_field_link` ونصُّ
+ * العنوان `افتح المستند` مكرّران حرفيًّا في `GovernanceBoard.jsx` — فما
+ * يتعلّمه الموظّفُ في شاشةٍ يعمل في الأخرى بلا أن يُعلَّم مرّتين.
+ *
+ * ⚠️ **والمعرّفُ شرطُ الرابط لا الرقم.** مستندٌ يحمل رقمًا بلا `id` (أو بلا
+ * `type`) يبقى نصًّا كما كان — لأنّ `/dashboard/document` بلا معرّفٍ يفتح
+ * شاشةً فارغة، ورابطٌ يكذب أسوأ من نصٍّ صامت.
+ *
+ * @param {{type?:string,id?:string,number?:string}|null} source مصدرُ المهمّة
+ *   كما يكتبه `pickingTask.js` — وهو نفسُ شكل `session.order` في الاستلام.
+ */
+function DocLink({ source }) {
+  const number = String(source?.number ?? '').trim();
+  const id = String(source?.id ?? '').trim();
+  const type = String(source?.type ?? '').trim();
+  if (!id || !type) return <>{number}</>;
+  return (
+    <a
+      href={`${getBasePath()}/dashboard/document?type=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`}
+      className="o_field_link decoration-bf"
+      title="افتح المستند"
+    >
+      {number || id}
+    </a>
   );
 }
 

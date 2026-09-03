@@ -60,6 +60,10 @@ const LEX = Object.freeze({
   mode_receiving: { ar: 'الاستلام', en: 'Receiving', fr: 'Réception' },
   mode_putaway: { ar: 'التخزين', en: 'Put-away', fr: 'Rangement' },
   open_pos: { ar: 'أوامر الشراء المفتوحة', en: 'Open purchase orders', fr: 'Commandes ouvertes' },
+  // ★★ وقائمةُ الاستلام صارت تعرض أوامرَ النقل أيضًا — `sessionOpenProblem`
+  // تقبل `PO` و`TR` منذ بنائها. ومفتاحٌ جديدٌ لا توسيعُ `open_pos`: اسمُ
+  // المفتاح عهدٌ، ومن يستعمله لقائمةِ شراءٍ محضةٍ يجده كما تركه.
+  open_orders: { ar: 'أوامرُ الشراء والنقل المفتوحة', en: 'Open purchase and transfer orders', fr: 'Commandes et transferts ouverts' },
   new_pallet: { ar: 'طبلية جديدة', en: 'New pallet', fr: 'Nouvelle palette' },
   end_session: { ar: 'إنهاء الجلسة', en: 'End session', fr: 'Terminer la session' },
 

@@ -21,7 +21,7 @@ import { governanceCounters, GOVERNANCE_DECISIONS, decisionProblem, reviewCard }
 import { buildLabel } from '../../../services/lpn/labelModel.js';
 import { listUnitsByState } from '../../../services/lpn/lpnService.js';
 import { executeDecision, listPendingGovernance } from '../../../services/lpn/receivingService.js';
-import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
+import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
 // ‹LPN-511› الصلاحية تُعلَم قبل الضغط — والمجهولُ يمرّ.
 import { uiGate } from '../../../services/lpn/lpnRoles.js';
 // ‹LPN-509/510› البحثُ الموحّد والمؤشّرات — قسمان في لوحة الحوكمة لا صفحتان (ح-٤).
@@ -288,8 +288,11 @@ export default function GovernanceBoard() {
           ) : (
             <div className="rounded-lg border p-5" style={{ borderColor: 'var(--o-border)' }}>
               <h2 className="text-lg font-bold text-ink mb-1">{card.palletRef}</h2>
+              {/* ★ أمرُ الشراء يُفتح لا يُقرأ — من يوقّع على «صار مخزونًا» يحتاج
+                  أن يرى ما طُلب أصلًا، و`session.order` يحمل معرّفه منذ فتح
+                  الجلسة. والصياغةُ كما كانت: الرقمُ ثمّ فاصلٌ ثمّ المورّد. */}
               <p className="text-ink-2 text-xs mb-4">
-                {card.order?.number ? `${card.order.number} · ` : ''}{card.supplier || '—'} · استلمها {card.receivedBy || '—'}
+                {card.order?.number ? <><DocLink source={card.order} />{' · '}</> : ''}{card.supplier || '—'} · استلمها {card.receivedBy || '—'}
               </p>
 
               {card.needsAttention && (
@@ -366,6 +369,36 @@ function RoleGate({ gate }) {
     <div className="o_alert danger mb-3" style={{ fontSize: 'var(--o-font-size-sm)' }}>
       {gate.message}
     </div>
+  );
+}
+
+/**
+ * رابطُ المستند — من الميدان إلى الورقة التي أمرت به.
+ *
+ * ★★ **نمطٌ واحدٌ في شاشات الميدان كلّها**: الصنفُ `o_field_link` ونصُّ
+ * العنوان `افتح المستند` مكرّران حرفيًّا في `PickingFlow.jsx` — فما يتعلّمه
+ * الموظّفُ في شاشةٍ يعمل في الأخرى بلا أن يُعلَّم مرّتين.
+ *
+ * ⚠️ **والمعرّفُ شرطُ الرابط لا الرقم.** مستندٌ يحمل رقمًا بلا `id` (أو بلا
+ * `type`) يبقى نصًّا كما كان — لأنّ `/dashboard/document` بلا معرّفٍ يفتح
+ * شاشةً فارغة، ورابطٌ يكذب أسوأ من نصٍّ صامت.
+ *
+ * @param {{type?:string,id?:string,number?:string}|null} source أمرُ الجلسة
+ *   كما يكتبه `receivingSession.js` — وهو نفسُ شكل `task.source` في التحضير.
+ */
+function DocLink({ source }) {
+  const number = String(source?.number ?? '').trim();
+  const id = String(source?.id ?? '').trim();
+  const type = String(source?.type ?? '').trim();
+  if (!id || !type) return <>{number}</>;
+  return (
+    <a
+      href={`${getBasePath()}/dashboard/document?type=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`}
+      className="o_field_link decoration-bf"
+      title="افتح المستند"
+    >
+      {number || id}
+    </a>
   );
 }
 

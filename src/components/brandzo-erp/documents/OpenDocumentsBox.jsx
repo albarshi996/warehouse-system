@@ -12,6 +12,7 @@ import { getBasePath } from '../../../services/auth/authService.js';
 import { listenDocumentsByTypes } from '../../../services/documents/documentsService.js';
 import { getSchema, readyTypes } from '../../../services/documents/schemas/index.js';
 import { buildOpenBox, ageInDays, tracksExecution } from '../../../services/documents/openBox.js';
+import { fieldRouteFor } from '../../../services/tasks/fieldRoutes.js';
 
 /** حدّ التأخّر — ظاهرٌ في الواجهة لا مخبوزٌ في الكود. */
 const STALE_DAYS = 7;
@@ -24,7 +25,9 @@ export default function OpenDocumentsBox() {
   const [docs, setDocs] = useState([]);
   const [typeFilter, setTypeFilter] = useState('all');
   const [nowMs] = useState(() => Date.now());
-  const base = `${getBasePath()}/dashboard/document`;
+  /** جذرُ النشر عارٍ — لأنّ الشاشةَ الميدانيّة ليست تحت `/dashboard/document`. */
+  const root = getBasePath();
+  const base = `${root}/dashboard/document`;
 
   /** الأنواع التي لها مسار تنفيذٍ كمّيّ وحدها — ما لا يُفتح لا يُعرض. */
   const trackedTypes = useMemo(() => readyTypes().filter(tracksExecution), []);
@@ -112,16 +115,39 @@ export default function OpenDocumentsBox() {
               const age = ageInDays(d, nowMs);
               const stale = (age ?? 0) >= STALE_DAYS;
               const party = d.header?.supplier || d.header?.customer || d.header?.beneficiary || '—';
+              /**
+               * الشاشةُ الميدانيّة لهذا الصفّ — أو `null` فلا رابطَ أصلًا.
+               *
+               * ★★ ولمَ داخل خانة المستند لا عمودًا أخيرًا؟ لأنّ الصندوق يعرض
+               * خمسةَ عشر نوعًا مُتتبَّعًا ولخمسةٍ منها شاشةٌ ميدانيّة — فعمودٌ
+               * مستقلٌّ يحجز عرضَه لعشرة صفوفٍ فارغة. وهنا الرابطُ في مجرى
+               * النصّ: يظهر لمن له مسارٌ ويختفي بلا أثرٍ لمن لا مسارَ له.
+               *
+               * ⚠️ ولا حكمَ هنا: النوعُ والحالةُ يُقاسان في `fieldRoutes.js` وحدَه.
+               */
+              const route = fieldRouteFor(d);
               return (
                 <tr key={d.id} className="border-b border-line hover:bg-chip transition-colors">
                   <td className="py-2 px-3">
-                    <a
-                      href={`${base}?type=${d.type}&id=${d.id}`}
-                      className="font-bold underline decoration-dotted underline-offset-4"
-                      style={{ color: 'var(--accent, #714B67)' }}
-                    >
-                      {d.number || d.id}
-                    </a>
+                    <div className="flex flex-col items-start gap-1">
+                      <a
+                        href={`${base}?type=${d.type}&id=${d.id}`}
+                        className="font-bold underline decoration-dotted underline-offset-4"
+                        style={{ color: 'var(--accent, #714B67)' }}
+                      >
+                        {d.number || d.id}
+                      </a>
+                      {route && (
+                        <a
+                          href={`${root}${route.path}`}
+                          title={route.reason}
+                          className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold whitespace-nowrap"
+                          style={{ background: 'var(--accent, #714B67)', color: '#fff' }}
+                        >
+                          {route.label}
+                        </a>
+                      )}
+                    </div>
                   </td>
                   <td className="py-2 px-3 text-ink-2">{typeLabel(d.type)}</td>
                   <td className="py-2 px-3 text-ink">{party}</td>

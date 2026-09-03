@@ -21,6 +21,7 @@ import {
 import { getSchema, GOVERNED_FORMS } from '../../../services/documents/schemas/index.js';
 import { getState, STATES } from '../../../services/documents/states.js';
 import { START_GROUPS } from '../../../services/documents/startGroups.js';
+import { fieldRouteFor } from '../../../services/tasks/fieldRoutes.js';
 import {
   awaitingMyApproval,
   sortByUrgency,
@@ -162,6 +163,15 @@ export default function DocumentsInbox() {
     const schema = getSchema(d.type);
     const age = ageInState(d, now);
     const stale = isStale(d, now);
+    /**
+     * الشاشةُ الميدانيّة لهذا الصفّ — أو `null`.
+     *
+     * ★★★ ولا حكمَ هنا: لا نوعَ يُقارَن ولا حالةَ تُفحص في JSX. الوحدةُ
+     * `fieldRoutes.js` تعرف الاثنين معًا وتقيسهما من حرّاسٍ قائمين، فلو قبِلت
+     * بوّابةُ التحضير نوعًا رابعًا غدًا ظهر زرُّه هنا بلا تعديلِ حرفٍ في العرض.
+     * و`null` يعني **لا زرَّ**: الزرُّ الرماديُّ يَعِد بشيءٍ ثمّ يمنعه، وغيابُه أصدق.
+     */
+    const route = fieldRouteFor(d);
     return {
       id: d.id,
       decoration: stale ? 'danger' : undefined,
@@ -182,9 +192,23 @@ export default function DocumentsInbox() {
           ),
         updated: <span style={{ color: 'var(--o-gray-500)', fontSize: 'var(--o-font-size-xs)' }}>{fmt(d.updatedAt || d.createdAt)}</span>,
         actions: (
-          <a href={`${base}/dashboard/document?type=${d.type}&id=${d.id}`} className="btn btn-secondary btn-sm" style={{ whiteSpace: 'nowrap' }}>
-            فتح ←
-          </a>
+          /* زرّان لا واحد: التنفيذُ أوّلًا (فهو الفعلُ المقصود من الصفّ) والفتحُ
+             ثانويٌّ بجانبه — والفجوةُ ٦px فلا يلتصقان فيُضغط غيرُ المراد. */
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {route && (
+              <a
+                href={`${base}${route.path}`}
+                className="btn btn-primary btn-sm"
+                title={route.reason}
+                style={{ whiteSpace: 'nowrap' }}
+              >
+                {route.label}
+              </a>
+            )}
+            <a href={`${base}/dashboard/document?type=${d.type}&id=${d.id}`} className="btn btn-secondary btn-sm" style={{ whiteSpace: 'nowrap' }}>
+              فتح ←
+            </a>
+          </div>
         ),
       },
     };

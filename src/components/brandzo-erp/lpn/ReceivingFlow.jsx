@@ -20,7 +20,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { subscribeItems } from '../../../services/items/itemService.js';
 import { buildItemIndexes } from '../../../services/items/uomWiring.js';
-import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
+import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
 import { listenDocumentsByTypes } from '../../../services/documents/documentsService.js';
 import { documentLineProgress } from '../../../services/documents/documentLineProgress.js';
 import { openOrderCard, remainingOf, sessionCloseProblem, sessionTotals } from '../../../services/lpn/receivingSession.js';
@@ -50,6 +50,24 @@ import { listenBalances } from '../../../services/balances/balancesService.js';
 // ‹LPN-511› الصلاحية تُعلَم قبل الضغط لا بعد ارتداد الخادم.
 import { uiGate } from '../../../services/lpn/lpnRoles.js';
 import { FieldLangSwitch, useFieldLang } from './useFieldLang.jsx';
+
+/* ── الطرقُ المكتوبة ─────────────────────────────────────────────────
+ * ★★ **2026-09-03 — الشاشةُ تعرف الطريقَ فلتُعطِه.**
+ * كانت تقول «اعتمده من صندوق المستندات» و«اعتمد أمرًا ثمّ عُد»: أمرٌ
+ * بالذهاب بلا طريق، ومعرّفُ المستند بيدها في `r.docId` و`session.grnId`.
+ * فالموظّفُ يقرأ رقمًا ثمّ يبحث عنه بيده في صندوقٍ فيه مستنداتُ المنشأة كلُّها.
+ *
+ * ⚠️ والروابطُ تُبنى من `getBasePath()` لا بمسارٍ حرفيّ: البوّابةُ تُنشر تحت
+ * مسارِ المستودع وتُطوَّر تحت الجذر — والمسارُ الحرفيُّ يصحّ في إحدى البيئتين
+ * ويكذب في الأخرى، وهو عطبٌ لا يظهر إلّا عند المستخدم.
+ *
+ * ★ ولا يُكتب اسمُ المستودع هنا ولو في تعليق: حارسُ الهويّة
+ * (`workspace/identity.test.js`) يقرأ **النصَّ الخام** ويرفض أيَّ ذكرٍ لاسمِ
+ * مستودعِنا في ملفٍّ يُزامَن إلى المستودع الشقيق — فما يصحّ عندنا يكذب هناك.
+ */
+const base = getBasePath();
+const docHref = (type, id) => `${base}/dashboard/document?type=${type}&id=${encodeURIComponent(id)}`;
+const inboxHref = `${base}/dashboard/documents`;
 
 export default function ReceivingFlow() {
   const { lang, dir, setLang, tr } = useFieldLang();
@@ -110,16 +128,39 @@ export default function ReceivingFlow() {
   }, []);
   useEffect(() => { if (!sessionId) refreshOpenSessions(); }, [sessionId, refreshOpenSessions]);
 
-  // أوامر الشراء المفتوحة — بطاقتها من `openOrderCard` فما تعرضه القائمة
-  // هو ما تقيس عليه الجلسة حرفيًّا.
+  /**
+   * الأوامرُ المفتوحة — بطاقتها من `openOrderCard` فما تعرضه القائمة هو ما
+   * تقيس عليه الجلسة حرفيًّا.
+   *
+   * ★★★ **تصحيح 2026-09-03 — منطقٌ يقبل وشاشةٌ لا تعرض.**
+   * `sessionOpenProblem` تقبل `PO` **أو** `TR` منذ بنائها، و`fieldRoutes.js`
+   * توجّه `TR` إلى هذه الشاشة نفسِها (`RECEIVABLE_TYPES = ['PO','TR']`،
+   * وتعليقُها: «طلبُ النقل عند من يقف على صفّه اليوم واردٌ يُستلَم»). وكان
+   * الاستماعُ هنا على `['PO']` وحدها — فمن ضغط «ابدأ الاستلام الميدانيّ» على
+   * أمر نقلٍ معتمد وصل إلى **قائمةٍ لا أمرَه فيها**: طريقٌ مبنيٌّ ينتهي إلى
+   * فراغ، وحدُّه أنّ الموظّف يظنّ أمرَه ضائعًا لا أنّ الشاشة ناقصة.
+   *
+   * ★ والمرشِّحُ لم يُمسّ: `canReceive` من `sessionOpenProblem` نفسِها، فالنوعُ
+   * الذي تردّه الدالّةُ يسقط هنا كما كان — وُسّع البابُ ولم يُوسَّع الحكم.
+   *
+   * ⚠️ وحدُّ النقل **مُعلَنٌ في الشاشة لا مبتلَع**: جلسةُ `TR` تُستلَم طبالي
+   * ولا تُغلق بمذكّرة استلام (`grnProblem` يردّها) — انظر بطاقة الإقفال أسفلَ
+   * شاشة المسح.
+   *
+   * ⚠️ والسقفُ رُفع من ٥٠ إلى ١٠٠ **لأنّ عددَ الأنواع تضاعف**: النافذة تُجلَب
+   * بالنوع لا بالحالة، والترشيحُ بـ`canReceive` يقع **بعدها**. فلو بقيت ٥٠
+   * لَابتلعتها أوامرُ نقلٍ منتهيةٌ فاختفى أمرُ شراءٍ مفتوح من القائمة بلا
+   * كلمة. ويبقى حدٌّ معلوم: بلوغُ السقف لا يُعلَن هنا (بخلاف قائمة التخزين
+   * وسقفِها المُعلَن) — قائمةٌ ناقصةٌ تبدو كاملة.
+   */
   const [rawOrders, setRawOrders] = useState([]);
-  useEffect(() => listenDocumentsByTypes(['PO'], (docs) => {
+  useEffect(() => listenDocumentsByTypes(['PO', 'TR'], (docs) => {
     setRawOrders(docs);
     // البطاقة من `openOrderCard` — فما تعرضه القائمة هو ما تقيس عليه
     // الجلسة، والمحجوب يُسقَط بسببه المحسوب لا بظنّ الواجهة.
     setOrders(docs.map((d) => openOrderCard(d, [], [])).filter((c) => c.canReceive));
     setLoading(false);
-  }, 50), []);
+  }, 100), []);
 
   useEffect(() => {
     if (!sessionId) return undefined;
@@ -130,6 +171,14 @@ export default function ReceivingFlow() {
   // معاينةُ المستند قبل توليده — مستندٌ ماليٌّ يُنشأ بلا أن يُرى محتواه
   // توقيعٌ على المجهول (grnBridge).
   const grn = useMemo(() => (session ? grnPreview(session) : null), [session]);
+  /**
+   * أجلسةُ نقلٍ هذه؟ — **عرضٌ لا حَكَم.**
+   *
+   * الحكمُ كلُّه في `grnProblem` ويصل الشاشةَ عبر `grn.problem`؛ وهذه لا تقرّر
+   * أيجوز التوليدُ أم لا، وإنّما تختار **أيَّ طريقٍ يُعرض** لمن وقف أمام رفضٍ
+   * صحيح: أمرُ النقل مخرجُه `TRC` لا `GRN`، فلا يُترك بلا وجهة.
+   */
+  const isTransfer = session?.order?.type === 'TR';
   const draft = useMemo(
     () => (session?.drafts ?? []).find((d) => d.ref === activeDraft) ?? null,
     [session, activeDraft]
@@ -167,8 +216,20 @@ export default function ReceivingFlow() {
     enabled: draft?.state === 'SCANNING' || (mode === 'putaway' && Boolean(taskUnit)),
   });
 
-  const say = useCallback((kind, text) => {
-    setFlash({ kind, text });
+  /**
+   * رسالةُ الوميض — ومعها **رابطٌ بنيويّ** اختياريّ `{href,label}`.
+   *
+   * ★★ ولماذا حقلٌ في الحالة لا عقدةُ React تُمرَّر ولا HTML يُحقن؟
+   * — `dangerouslySetInnerHTML` مردودٌ من أصله: النصُّ يحمل رقمَ مستندٍ آتيًا
+   *   من الخادم، وحقنُه وسمًا يفتح بابًا لا حاجةَ إليه أصلًا.
+   * — وعقدةُ React في `useState` تربط الرسالةَ **بلحظة إنشائها**: صنفُها
+   *   واتّجاهُها ولغتُها تُجمَّد يوم النداء، فمن بدّل اللغة بقيت رسالتُه
+   *   بالسابقة. والبيانات `{href,label}` تعرضها `Flash` بأسلوبها هي.
+   *
+   * ⚠️ ومستدعو الوسيطين لا يتغيّر سلوكُهم حرفًا: `link` غائبٌ ⇒ لا رابطَ يُرسم.
+   */
+  const say = useCallback((kind, text, link = null) => {
+    setFlash({ kind, text, link });
     // الصوت والاهتزاز من **نتيجة الحكم** لا من ظنّ الواجهة (خطة ٧ ثانيًا).
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       navigator.vibrate(kind === 'ok' ? 40 : [80, 60, 80]);
@@ -329,11 +390,22 @@ export default function ReceivingFlow() {
     } finally { setBusy(false); }
   }
 
+  /**
+   * توليدُ الاستلام الرسميّ — والرسالةُ تحمل **طريقًا** لا رقمًا وحده.
+   *
+   * ★ 2026-09-03: `r.docId` بيدنا لحظتَها، وكانت تُهمَل ويُقال «اعتمده من
+   * صندوق المستندات» — بحثٌ يدويٌّ في صندوقٍ عامّ عن مستندٍ نعرف معرّفَه.
+   * ومن تعذّر معرّفُه (مستندٌ وُلد بلا `id` مقروء) لا يُرسم له رابطٌ ميّت.
+   */
   async function makeGrn() {
     setBusy(true);
     try {
       const r = await createGrnFromSession(sessionId, { profile: me });
-      say('ok', `تولّد الاستلام ${r.number || r.docId} مسوّدةً — اعتمده من صندوق المستندات ليتحرّك الرصيد.`);
+      say(
+        'ok',
+        `تولّد الاستلام ${r.number || r.docId} مسوّدةً — يُعتمد ثمّ يُنجَز ليتحرّك الرصيد.`,
+        r.docId ? { href: docHref('GRN', r.docId), label: 'افتح المستند ←' } : null
+      );
     } catch (e) {
       say('err', e?.message || 'تعذّر توليد الاستلام.');
     } finally { setBusy(false); }
@@ -560,10 +632,17 @@ export default function ReceivingFlow() {
           </div>
         )}
 
-        <h2 className="text-lg font-bold text-ink mb-3">{tr('open_pos')} ({orders.length})</h2>
+        {/* ★★ العنوانُ يشمل النقلَ لأنّ القائمة صارت تشمله — وعنوانٌ يعد
+            بالشراء وحده فوق قائمةٍ فيها أمرُ نقلٍ يكذب **بثلاث لغات**.
+            ومفتاحٌ جديد (`open_orders`) لا توسيعُ `open_pos`: اسمُ المفتاح
+            عهدٌ، ومن يستعمله غدًا لقائمةِ شراءٍ محضةٍ يجده كما تركه. */}
+        <h2 className="text-lg font-bold text-ink mb-3">{tr('open_orders')} ({orders.length})</h2>
         {orders.length === 0 ? (
           <p className="text-ink-2 text-sm">
-            لا أمر شراءٍ معتمدٌ له رصيدٌ مفتوح. اعتمد أمرًا من صندوق المستندات ثمّ عُد.
+            لا أمرَ شراءٍ ولا نقلٍ معتمدًا له رصيدٌ مفتوح. اعتمد أمرًا من{' '}
+            {/* ★ «اذهب» بلا طريقٍ ليست إرشادًا — والصندوقُ صفحةٌ قائمة. */}
+            <a href={inboxHref} className="o_field_link decoration-bf">صندوق المستندات</a>{' '}
+            ثمّ عُد.
           </p>
         ) : (
           <ul className="space-y-2">
@@ -576,6 +655,11 @@ export default function ReceivingFlow() {
                   className="w-full text-right rounded-lg border px-4 py-4"
                   style={{ borderColor: 'var(--o-border)' }}
                 >
+                  {/* ★ ولا شارةَ نوعٍ زائدة: الرقمُ يحمل نوعَه أصلًا
+                      (`formatNumber` ⇒ «TR-2026-0007»)، فالنقلُ يُقرأ من رقمه.
+                      ⚠️ وأمرُ النقل بلا مورّد فيقرأ الحقلُ «—» — نقصٌ معلومٌ
+                      لأنّ `openOrderCard` لا تُخرج طرفَي النقل، وتوسيعُها
+                      يمسّ منطقًا مشتركًا فتُرك لمن يملكه. */}
                   <div className="font-bold text-ink">{o.number}</div>
                   <div className="text-ink-2 text-xs mt-1">
                     {o.supplier || '—'} · {o.warehouse || '—'} · {o.lineCount} صنفًا
@@ -708,14 +792,52 @@ export default function ReceivingFlow() {
       {/* ── الاستلام الرسميّ: حيث تصير الحمولة رصيدًا ── */}
       {grn && (
         <div className="mt-6 rounded-lg border p-4" style={{ borderColor: 'var(--o-border)' }}>
-          <h3 className="font-bold text-ink text-sm mb-2">الاستلام الرسميّ (GRN)</h3>
+          {/* ★ عنوانٌ يعد بما لا يقع أسوأ من صمت: جلسةُ النقل لا تولّد GRN
+              أصلًا، فلا تُعنوَن به ثمّ يُقال لصاحبها «لا يُشتقّ». */}
+          <h3 className="font-bold text-ink text-sm mb-2">
+            {isTransfer ? 'إقفالُ جلسة النقل' : 'الاستلام الرسميّ (GRN)'}
+          </h3>
           {session?.grnNumber ? (
-            <p className="text-ink-2 text-sm">
-              تولّد <strong className="text-ink">{session.grnNumber}</strong> من هذه الجلسة.
-              اعتمده من صندوق المستندات ليتحرّك الرصيد — ولا يُشتقّ مرّتين.
-            </p>
+            <>
+              <p className="text-ink-2 text-sm">
+                تولّد <strong className="text-ink">{session.grnNumber}</strong> من هذه الجلسة.
+                يُعتمد ثمّ يُنجَز ليتحرّك الرصيد — ولا يُشتقّ مرّتين.
+              </p>
+              {/* ★ والرابطُ هنا لا في الوميض وحده: الوميضُ يزول بأوّل مسحةٍ أو
+                  إعادةِ تحميل، وهذه البطاقةُ تبقى — فمن عاد إلى جلسته بعد
+                  ساعةٍ يجد الطريق. و`grnId` مختومٌ على الجلسة في
+                  `createGrnFromSession` فهو موجودٌ حيثما وُجد `grnNumber`. */}
+              {session.grnId && (
+                <a href={docHref('GRN', session.grnId)} className="btn btn-secondary text-sm inline-block mt-2">
+                  افتح المستند ←
+                </a>
+              )}
+            </>
           ) : grn.problem ? (
-            <p className="text-ink-2 text-sm">{grn.problem}</p>
+            <>
+              {/* ★★★ الرفضُ يُقال بسببه — قِيس لا خُمِّن: الزرُّ لا يُخفى صامتًا،
+                  بل يحلّ محلَّه **حكمُ `grnProblem` نفسُه** الذي يردّ الخدمة.
+                  فلا تختلف الشاشةُ عن الحَكَم ولا تعيد صياغته. */}
+              <p className="text-ink-2 text-sm">{grn.problem}</p>
+              {/* ★★ وحدُّ النقل يُعلَن ومعه ما يُفعَل: `TRC` غيرُ موصولٍ بعد،
+                  وسكوتُ الشاشة عنه يترك العاملَ أمام جلسةٍ مسح فيها ولا يدري
+                  أيُقفلها أم ينتظر. والطبالي **ليست ضائعة**: هويّتُها مثبتةٌ
+                  ومخزَّنةٌ برفوفها، والمفقودُ مستندُ التسوية وحده. */}
+              {isTransfer && (
+                <>
+                  <p className="text-ink-2 text-xs mt-2">
+                    أقفِل طباليك وارفعها للحوكمة كالمعتاد — الحمولةُ مُثبَتةٌ بهويّتها
+                    ومسحاتِها. ومذكّرةُ استلام النقل (TRC) <strong>لم تُوصَل بعد</strong>،
+                    فتُسوّى الفروقُ على أمر النقل من صندوق المستندات حتّى تصل الشاشة.
+                  </p>
+                  {session?.order?.id && (
+                    <a href={docHref('TR', session.order.id)} className="btn btn-secondary text-sm inline-block mt-2">
+                      افتح أمر النقل ←
+                    </a>
+                  )}
+                </>
+              )}
+            </>
           ) : (
             <>
               <p className="text-ink-2 text-xs mb-2">
@@ -794,6 +916,15 @@ function Flash({ flash }) {
   return (
     <div className="mb-3 rounded-lg border px-4 py-3 text-sm" style={{ borderColor: color }}>
       {flash.text}
+      {/* الرابطُ **حقلٌ في الرسالة** لا وسمٌ في نصّها: البطاقةُ تعرضه بأسلوبها
+          (زرٌّ بحجم إصبعٍ لا سطرٌ رفيع)، ورسالةٌ بلا رابطٍ تبقى كما كانت. */}
+      {flash.link?.href && (
+        <div className="mt-2">
+          <a href={flash.link.href} className="btn btn-secondary text-sm inline-block">
+            {flash.link.label || 'افتح ←'}
+          </a>
+        </div>
+      )}
     </div>
   );
 }
