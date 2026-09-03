@@ -105,7 +105,7 @@
   "whereToFind": {
     "الوثيقة الحاكمة": "docs/خطة-الرحلة-المتصلة.md",
     "طلبُ المالك الأصليّ": "العمليات اليومية/كوديكس -كلود-البرشي/خطة.md (خارج المستودع)",
-    "مسارُ المستند إلى الميدان": "src/services/documents/fieldRoutes.js",
+    "مسارُ المستند إلى الميدان": "src/services/tasks/fieldRoutes.js",
     "صلاحيّةُ الكتابة في المجموعات": "src/services/labor/laborRoles.js",
     "خريطةُ أدوار الميدان": "src/services/lpn/lpnRoles.js — PORTAL_TO_FIELD",
     "الجسرُ المعطَّل من مستندٍ إلى مهمّة": "src/services/labor/laborTasksService.js — releaseDocumentTasks",
@@ -120,7 +120,7 @@
       "title": "حارسُ صلاحيّة الكتابة — «أيقبل الخادمُ كتابتَك؟» سؤالٌ غيرُ «أتملك العمليّة؟»",
       "milestone": "د٠",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ر‑٤"
       ],
@@ -137,14 +137,22 @@
         "وفشلُ الاستخراج نفسُه يُسقط الاختبار برسالةٍ تقول ذلك — لا نجاحَ مزوَّرٌ حين يتغيّر شكلُ القاعدة",
         "`collectionWriteProblem(role, collection)` يُعيد سببًا عربيًّا يسمّي من يملك الكتابة، و`''` للمجهول (لا يُحكم على ما لا يُعرف)",
         "واختبارٌ يثبّت العطبَ الحيّ: `storekeeper` يملك الكتابة في `documents` ولا يملكها في `labor_tasks`"
-      ]
+      ],
+      "progress": "laborRoles.js خالصةٌ بـ١٥ اختبارًا: خمسةُ حرّاسٍ منسوخةٌ أدوارُهم حرفًا، وسبعُ مجموعاتٍ مربوطةٌ ببوّاباتها، والحارسُ يقرأ نصَّ firestore.rules من القرص ويقارن — ويسقط برسالةٍ صريحةٍ إن فشل الاستخراج بدل تزوير نجاح.",
+      "nextStep": "مبنيّةٌ بلا مستدعٍ عمدًا: وصلُها في JR-701 بعد أن تُصلَح خريطةُ الأدوار — والعطبُ موصوفٌ لا مُصلَحٌ بعد.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "682a663",
+        "closedOn": "2026-09-03",
+        "note": "٣٦٤٣ خضراء (+٤٢) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · وحزمةُ fieldRoutes يستوردها DocumentsInbox وOpenDocumentsBox في dist."
+      }
     },
     {
       "id": "JR-002",
       "title": "حارسُ انحراف الأدوار — دَينٌ مكتوبٌ في الشيفرة لا في ذاكرة جلسة",
       "milestone": "د٠",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ر‑٥"
       ],
@@ -160,46 +168,63 @@
         "★★★ **والقياسُ يسبق العدد**: الخطّةُ قالت خمسةَ غائبين والحارسُ ردّها إلى **ثلاثة** — `count_assignee` و`scm_manager` غائبتان عن الخريطة ولا تبلغان مسارًا ميدانيًّا فليستا انحرافًا",
         "ومعلَّمٌ `skip` بسببٍ مكتوب فلا يُسقط البناءَ الأخضر، **ومعه اختبارٌ غيرُ متجاوَزٍ يوثّق الغائبين بأسمائهم** فإن نقصوا أو زادوا بلا قصدٍ صرخ",
         "ويومَ يُصلَح في د٧ يُنزع `skip` فيخضرّ — فالدَّينُ يُغلق ببيّنةٍ لا بادّعاء"
-      ]
+      ],
+      "progress": "ثلاثةُ اختباراتٍ في lpnRoles.test.js: حارسٌ متجاوَزٌ يسمّي الغائبين، واختبارٌ حيٌّ يثبّتهم بالاسم فيصرخ إن تغيّروا، وثالثٌ يثبت أنّ الدَّينَ خَرْطٌ لا وجودٌ. ★★★ والقياسُ ردّ العددَ من خمسةٍ إلى ثلاثة.",
+      "nextStep": "يُنزع skip في JR-701 فيخضرّ.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "682a663",
+        "closedOn": "2026-09-03",
+        "note": "٣٦٤٣ خضراء (+٤٢) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · وحزمةُ fieldRoutes يستوردها DocumentsInbox وOpenDocumentsBox في dist."
+      }
     },
     {
       "id": "JR-101",
       "title": "وحدةُ المسارات الميدانيّة — الخريطةُ تُشتقّ ولا تُخترع",
       "milestone": "د١",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ر‑١"
       ],
       "dependsOn": [],
-      "nucleus": "src/services/documents/fieldRoutes.js — fieldRouteFor",
-      "guardTest": "src/services/documents/fieldRoutes.test.js",
+      "nucleus": "src/services/tasks/fieldRoutes.js — fieldRouteFor",
+      "guardTest": "src/services/tasks/fieldRoutes.test.js",
       "touches": [
-        "src/services/documents/fieldRoutes.js",
-        "src/services/documents/fieldRoutes.test.js"
+        "src/services/tasks/fieldRoutes.js",
+        "src/services/tasks/fieldRoutes.test.js"
       ],
-      "note": "★★ ولا قائمةَ ثالثة: المصدرُ DOC_WORK_TYPE في taskFactory وPICKABLE_TYPES في pickingTask وcanDeriveFrom في states — فلا تفترق خريطةُ الأزرار عمّا يقبله المنطق.",
+      "note": "★★ ولا قائمةَ ثالثة: المصدرُ DOC_WORK_TYPE في taskFactory وPICKABLE_TYPES في pickingTask وcanDeriveFrom في states — فلا تفترق خريطةُ الأزرار عمّا يقبله المنطق. ★★★ وتسكن tasks/ لا documents/ بحكم حارسٍ قائم: ledger وbalances وdocuments نوًى محميّةٌ لا تستورد من lpn (ح-٢)، وهذه تستورد PICKABLE_TYPES بالضرورة فهي جسرٌ يعرف الطرفين — والجسرُ لا يسكن داخل النواة التي يحرسها الحارس. كُتبت في documents/ أوّلًا فأسقطت lpnIsolation.test.js، ونُقلت والسببُ مكتوبٌ في رأسها.",
       "acceptance": [
         "`fieldRouteFor(doc)` يُعيد `{path,label,reason}` أو `null` — والمجهولُ `null` فلا زرَّ ميّت",
         "★★★ **والحالةُ شرطٌ كالنوع**: `canDeriveFrom(doc.state)` — فلا يُدعى أحدٌ إلى تنفيذ مسوّدةٍ لم تُعتمد. والمرفوضُ `null` لا زرٌّ معطَّل",
         "★★ حارسُ وصْلٍ: كلُّ مسارٍ تعيده الدالّة **موجودٌ فعلًا في `navCatalog.js`** — فلا رابطَ إلى صفحةٍ لا وجودَ لها",
-        "وكلُّ نوعٍ في `DOC_WORK_TYPE` وفي `PICKABLE_TYPES` إمّا له مسارٌ وإمّا غيابُه مقصودٌ مكتوب — لا صمت"
-      ]
+        "وكلُّ نوعٍ في `DOC_WORK_TYPE` وفي `PICKABLE_TYPES` إمّا له مسارٌ وإمّا غيابُه مقصودٌ مكتوب — لا صمت",
+        "★★★ وتسكن `tasks/` لا `documents/` — و`lpnIsolation.test.js` يفرض ذلك: النواةُ المحميّة لا تستورد من `lpn`، والجسرُ يسكن خارجها"
+      ],
+      "progress": "tasks/fieldRoutes.js بـ٢٦ اختبارًا: الخريطةُ مشتقّةٌ من PICKABLE_TYPES وDOC_WORK_TYPE، وPO/TR مرآةٌ مقيسةٌ سلوكيًّا لبوّابة sessionOpenProblem، وcanDeriveFrom شرطٌ كالنوع، وحارسُ وصْلٍ يطابق كلَّ مسارٍ بـnavCatalog (نُقض بتعطيبٍ متعمَّد فسقط).",
+      "nextStep": "أُغلقت في 682a663. والمسارُ عارٍ بلا معرّف المستند حتّى تقرأ الشاشاتُ searchParams — مزلقٌ مكتوبٌ في رأس الوحدة.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "682a663",
+        "closedOn": "2026-09-03",
+        "note": "٣٦٤٣ خضراء (+٤٢) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · وحزمةُ fieldRoutes يستوردها DocumentsInbox وOpenDocumentsBox في dist."
+      }
     },
     {
       "id": "JR-102",
       "title": "زرُّ «ابدأ» في صفحة المستندات — الاتّجاه الأوّل",
       "milestone": "د١",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ر‑١"
       ],
       "dependsOn": [
         "JR-101"
       ],
-      "nucleus": "src/services/documents/fieldRoutes.js — fieldRouteFor",
-      "guardTest": "src/services/documents/fieldRoutes.test.js",
+      "nucleus": "src/services/tasks/fieldRoutes.js — fieldRouteFor",
+      "guardTest": "src/services/tasks/fieldRoutes.test.js",
       "touches": [
         "src/components/brandzo-erp/documents/DocumentsInbox.jsx",
         "src/components/brandzo-erp/documents/OpenDocumentsBox.jsx"
@@ -209,14 +234,22 @@
         "★★ ولا حكمَ يُعاد بناؤه في JSX: لا `type ===` ولا `state ===` — كلُّه في `fieldRouteFor`",
         "والمسوّدةُ بلا زرٍّ أصلًا — لا زرٌّ معطَّلٌ ولا خانةٌ فارغةٌ بعرضٍ محجوز",
         "ولا يُمسّ التصديرُ ولا التصفيةُ ولا الترتيب"
-      ]
+      ],
+      "progress": "زرُّ التنفيذ بجانب «فتح ←» في صندوق المستندات، ورابطٌ تحت الرقم في «العمل المفتوح». ولا حكمَ في JSX — النوعُ والحالةُ في الوحدة وحدَها، وnull يعني غيابَ الزرّ.",
+      "nextStep": "أُغلقت في 682a663.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "682a663",
+        "closedOn": "2026-09-03",
+        "note": "٣٦٤٣ خضراء (+٤٢) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · وحزمةُ fieldRoutes يستوردها DocumentsInbox وOpenDocumentsBox في dist."
+      }
     },
     {
       "id": "JR-103",
       "title": "روابطُ العودة من الميدان إلى المستند — الاتّجاه الثاني",
       "milestone": "د١",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ر‑٢"
       ],
@@ -234,14 +267,22 @@
         "والحالةُ الفارغةُ التي تأمر بالذهاب إلى صندوق المستندات **تُعطي الطريق**",
         "ورقمُ أمر التحضير في شاشة المحضّر رابطٌ يُقرأ قبل أن يمشي",
         "★ ونمطُ الرابط واحدٌ في الشاشات كلّها — فما يتعلّمه الموظّفُ في شاشةٍ يعمل في الأخرى"
-      ]
+      ],
+      "progress": "رسالةُ توليد GRN وبطاقتُه والحالةُ الفارغة صارت روابطَ بنيويّة (href/label في حالة الرسالة لا HTML مُحقَنًا)، ورأسُ مهمّة التحضير وبطاقةُ الحوكمة بمكوّن DocLink واحدٍ حرفًا بحرف. وCountFlow تُركت: counterView بلا مستندٍ بحكم ح-٣ فلم يُخترع موضع.",
+      "nextStep": "أُغلقت في 682a663.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "682a663",
+        "closedOn": "2026-09-03",
+        "note": "٣٦٤٣ خضراء (+٤٢) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · وحزمةُ fieldRoutes يستوردها DocumentsInbox وOpenDocumentsBox في dist."
+      }
     },
     {
       "id": "JR-104",
       "title": "أمرُ النقل يُعرض — والحدُّ يُقال لا يُبتلع",
       "milestone": "د١",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "ر‑٣"
       ],
@@ -255,7 +296,15 @@
         "أوامرُ النقل `TR` تُعرض مع أوامر الشراء — والمنطقُ يقبلها منذ زمن",
         "★★ **والحدُّ مُعلَنٌ في الشاشة**: جلسةُ النقل تُستلَم في طبالي ولا تُغلق بمذكّرة استلام (مخرجُها `TRC` وهو غيرُ موصول) — والزرُّ **يقول سببَه** لا يصمت ولا يُخفى",
         "وشرحُه في دليل الاستخدام — لا ميزةَ بلا شرح"
-      ]
+      ],
+      "progress": "listenDocumentsByTypes([PO,TR]) والسقفُ رُفع إلى ١٠٠ لتضاعف الأنواع، وcanReceive لم يُمسّ. وبطاقةُ الإقفال تُعنوَن «إقفالُ جلسة النقل» وتعرض حكمَ grnProblem نفسَه ومعه أنّ TRC غيرُ موصولة ورابطًا إلى أمر النقل.",
+      "nextStep": "أُغلقت في 682a663. وTRC تبقى غيرَ موصولةٍ — دفعةٌ لاحقة.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "682a663",
+        "closedOn": "2026-09-03",
+        "note": "٣٦٤٣ خضراء (+٤٢) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · وحزمةُ fieldRoutes يستوردها DocumentsInbox وOpenDocumentsBox في dist."
+      }
     },
     {
       "id": "JR-201",
