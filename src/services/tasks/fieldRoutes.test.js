@@ -310,6 +310,23 @@ test('★★★ وكلُّ مسارٍ يعلن أنّه يقرأ — تقرؤه 
   }
 });
 
+test('★★★ والعكسُ كذبٌ أيضًا: شاشةٌ **تقرأ** المعاملَ ورايتُها تقول «لا» — فيُحرَم موظّفُها', () => {
+  // ★★ وقع هذا فعلًا 2026-09-04: منفّذٌ جعل `ReceivingFlow` تقرأ `?doc=`
+  // ومنفّذٌ آخرُ كتب `readsDoc:false` في اللحظة نفسِها — فبقي رابطُ أمر الشراء
+  // **عاريًا** ويصل الموظّفُ إلى قائمةٍ يبحث فيها، بينما رابطُ أمر البيع يحمله.
+  // والحارسُ القديمُ كان أحاديَّ الاتّجاه: يمسك الوعدَ الكاذب ولا يمسك الحرمان.
+  const silent = [...new Set(Object.values(FIELD_ROUTES).filter((r) => !r.readsDoc).map((r) => r.path))];
+  for (const p of silent) {
+    const files = screenFilesOf(p);
+    const reader = files.find((f) => readsParamIn(fs.readFileSync(f, 'utf8')));
+    assert.equal(
+      reader, undefined,
+      `«${p}» يقرأ «?${DOC_PARAM}=» فعلًا و\`readsDoc:false\` — اقلبها إلى \`true\` ` +
+        `وإلّا وصل الموظّفُ إلى قائمةٍ يبحث فيها عن أمرٍ يعرفه النظام: ${reader ? path.basename(reader) : ''}`
+    );
+  }
+});
+
 test('⚠️ والمستندُ بلا معرّفٍ لا يُصنع له وعدٌ فارغ — `?doc=undefined` كذبةٌ صريحة', () => {
   const route = fieldRouteFor({ type: 'PICK', state: 'approved' });
   assert.equal(route.param, '');

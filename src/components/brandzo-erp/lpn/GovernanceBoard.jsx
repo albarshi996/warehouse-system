@@ -383,6 +383,10 @@ function RoleGate({ gate }) {
  * `type`) يبقى نصًّا كما كان — لأنّ `/dashboard/document` بلا معرّفٍ يفتح
  * شاشةً فارغة، ورابطٌ يكذب أسوأ من نصٍّ صامت.
  *
+ * ★★★ **وهدفُ لمسٍ لا نصٌّ مسطور.** قِيس بالمِشحذ على هاتفٍ ٣٧٥ بكسل فكان
+ * **٢٤ × ٣٩ بكسل** — وإبهامُ عاملٍ في ممرٍّ لا يُصيبه. والحدُّ المتعارَف ٤٤،
+ * فأُعطي حشوًا وارتفاعًا أدنى: الرابطُ الذي لا يُضغط رابطٌ غيرُ موجود.
+ *
  * @param {{type?:string,id?:string,number?:string}|null} source أمرُ الجلسة
  *   كما يكتبه `receivingSession.js` — وهو نفسُ شكل `task.source` في التحضير.
  */
@@ -396,6 +400,8 @@ function DocLink({ source }) {
       href={`${getBasePath()}/dashboard/document?type=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`}
       className="o_field_link decoration-bf"
       title="افتح المستند"
+      // ★ هدفُ لمسٍ ٤٤ بكسل — قِيس فكان ٢٤ (انظر الترويسة).
+      style={{ display: 'inline-flex', alignItems: 'center', minHeight: '44px', padding: '0 8px' }}
     >
       {number || id}
     </a>
