@@ -96,23 +96,37 @@ const UOM_HANDLING = Object.freeze({
  * ③ وإلّا فراغٌ = «لا قيد» — ولا يُخترع للبند متطلَّبٌ لم يُعلَن.
  *
  * ═══════════════════════════════════════════════════════════════════════
- * ⚠️⚠️ ما تقيسه هذه الدالّة فعلًا — وما **لا** تقيسه (فرقٌ مقيسٌ لم يُحسم)
+ * ★★★ قرارُ المالك ‹ق‑هـ› — «رفٌّ بالطبلية» يستقبل **طبليّاتٍ كاملة**
  * ═══════════════════════════════════════════════════════════════════════
  *
- * تقيس **وحدةَ عدّ المحتوى**: بأيّ وحدةٍ كُتب البند (كرتون · قطعة · طبلية)،
- * أو أيُّ معاملِ طبليّةٍ عُرِّف للصنف. ولا تقيس **كونَ الحمولة طبليّةً**.
+ * كانت الدالّةُ تقيس **وحدةَ عدّ المحتوى** وحدَها، فينقلب المعنى: طبليّةٌ
+ * حقيقيّةٌ بنودُها مكتوبةٌ بالكرتون — وهو حالُ جُلّ الاستلام — تُقرأ
+ * «بالصندوق»، **فيردّها رفٌّ معلَنٌ «بالطبلية»** ويُرسلها إلى المختلط.
+ * مِصفاةُ طردٍ لا جذب.
  *
- * وأثرُ الفرق مقيسٌ لا مظنون: طبليّةٌ حقيقيّةٌ (`handling_units`) بنودُها
- * مكتوبةٌ بالكرتون — وهو حالُ جُلّ الاستلام — تُقرأ هنا «بالصندوق»، فيرفضها
- * رفٌّ معلَنٌ «بالطبلية». أي أنّ **رفَّ الطبالي يردّ الطبالي الحقيقيّة**.
+ * وحُسم 2026-09-03: الرافعةُ تأتي بطبليّةٍ فتضعها **مهما كان ما فوقها**.
+ * فالسؤالُ صار: **أالمخزَّنُ وحدةُ مناولةٍ بذاته؟** لا: بأيّ وحدةٍ يُعدّ
+ * محتواه.
  *
- * ⛔ ولا يُصلَح هذا هنا: إصلاحُه يبدّل **من يُقبل ومن يُرفض على الرفوف** في
- * مستودعٍ ملصقاتُه مطبوعةٌ وسيّدُه مهاجَر — وهو قرارُ مالكٍ معروضٌ ولم يُحسم.
- * فيبقى مكتوبًا هنا حتى يُحسم، لا مُصلَحًا بالسكوت ولا منسيًّا بلا أثر.
+ * ★★ **والإشارةُ تأتي من المستدعي لأنّه وحدَه يعرفها.** `openPutawayTask`
+ * يخزّن `handling_units` — طبليّةً كاملةً بهويّةٍ وملصق — فيُعلنها. أمّا من
+ * يخزّن بضاعةً سائبةً (شاشةُ الاستيراد · مسحُ العامل) فلا يُعلن شيئًا،
+ * فتُشتقّ الحاجةُ من وحدة العدّ كما كانت **حرفًا**.
  *
- * @returns {''|'pallet'|'carton'|'piece'} نوعُ المناولة المشتقُّ من وحدة العدّ
+ * ★ ولم يُشتقّ ذلك من `line` نفسِه لأنّ بندَ الطبليّة وبندَ الكرتون المفرد
+ * **شكلُهما واحد** — فالفرقُ في الحاوي لا في المحتوى، ولا يُقرأ من البند.
+ *
+ * @param {object} line بند البضاعة
+ * @param {object} item بطاقة الصنف
+ * @param {{asHandlingUnit?:boolean}} [opts] `true` حين يكون المخزَّن **وحدةَ
+ *   مناولةٍ كاملة** (طبليّة LPN) — فحاجتُها `pallet` مهما كان محتواها.
+ * @returns {''|'pallet'|'carton'|'piece'}
  */
-export function handlingNeedOf(line, item) {
+export function handlingNeedOf(line, item, { asHandlingUnit = false } = {}) {
+  // ★★★ الحاوي يسبق المحتوى (ق‑هـ): من يحمل طبليّةً كاملةً يحتاج موضعَ
+  // طبليّة — ولو كانت مليئةً بالقطع.
+  if (asHandlingUnit) return 'pallet';
+
   const written = normalizeUom(line?.uom);
   if (written) return UOM_HANDLING[written] || '';
 
@@ -132,7 +146,7 @@ export function handlingNeedOf(line, item) {
  * @returns {{ok:boolean, code:string, score:number, reasons:string[], reason:string,
  *            capacityBefore:object, capacityAfter:object}}
  */
-export function scoreLocation(location, { line, balances, item, pallets } = {}) {
+export function scoreLocation(location, { line, balances, item, pallets, asHandlingUnit } = {}) {
   const code = normalizeLocationCode(location?.code);
   const qty = num(line?.qty);
   const occ = occupancyOf(location, balances, pallets);
@@ -152,7 +166,7 @@ export function scoreLocation(location, { line, balances, item, pallets } = {}) 
   // بُعدٌ متعامدٌ على الذي قبله لا امتدادٌ له: ذاك «أيّ حرارةٍ تصلح» وهذا
   // «كيف تُناوَل». ويُقلَّد شكلُه حرفًا — رفضٌ عند تعارض **معلَنين**، والفارغُ
   // على أيّ طرفٍ يمرّ (و«مختلط» فراغٌ بحكم `declaredHandling`).
-  const needHandling = handlingNeedOf(line, item);
+  const needHandling = handlingNeedOf(line, item, { asHandlingUnit });
   const hasHandling = declaredHandling(location);
   if (needHandling && hasHandling && needHandling !== hasHandling) {
     return reject(
@@ -264,7 +278,7 @@ function reject(code, reason, occ) {
  *                 يُبقي الحكم على ما كان: لا سعةَ طبالٍ تُحاسَب.
  * @returns {{candidates:Array, rejected:Array, problem:string}}
  */
-export function suggestLocations({ line, locations, balances, item, warehouse, pallets, limit = 5 } = {}) {
+export function suggestLocations({ line, locations, balances, item, warehouse, pallets, asHandlingUnit, limit = 5 } = {}) {
   const wh = up(warehouse || line?.warehouse);
   const pool = (locations || []).filter((l) => l?.status !== 'archived').filter((l) => !wh || up(l?.warehouse) === wh);
 
@@ -279,7 +293,7 @@ export function suggestLocations({ line, locations, balances, item, warehouse, p
     return { candidates: [], rejected: [], problem: 'كمّيّة البند صفر — لا شيء يُخزَّن.' };
   }
 
-  const scored = pool.map((l) => scoreLocation(l, { line, balances, item, pallets }));
+  const scored = pool.map((l) => scoreLocation(l, { line, balances, item, pallets, asHandlingUnit }));
   const candidates = scored.filter((s) => s.ok).sort((a, b) => b.score - a.score).slice(0, limit);
   // ② المرفوض يُعرض بسببه لا يُخفى.
   const rejected = scored.filter((s) => !s.ok).map(({ code, shortLabel, reason }) => ({ code, shortLabel, reason }));
@@ -299,7 +313,7 @@ export function suggestLocations({ line, locations, balances, item, warehouse, p
  *
  * @returns {{ok:boolean, override:boolean, reason:string, needsReason:boolean}}
  */
-export function chooseVerdict(code, { line, locations, balances, item, pallets } = {}) {
+export function chooseVerdict(code, { line, locations, balances, item, pallets, asHandlingUnit } = {}) {
   const wanted = normalizeLocationCode(code);
   if (!wanted) return { ok: false, override: false, reason: 'لم يُحدَّد موقع.', needsReason: false };
 
@@ -313,7 +327,7 @@ export function chooseVerdict(code, { line, locations, balances, item, pallets }
     };
   }
 
-  const verdict = scoreLocation(location, { line, balances, item, pallets });
+  const verdict = scoreLocation(location, { line, balances, item, pallets, asHandlingUnit });
   if (verdict.ok) return { ok: true, override: false, reason: '', needsReason: false };
   return { ok: false, override: true, reason: verdict.reason, needsReason: true };
 }

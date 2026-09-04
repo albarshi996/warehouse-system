@@ -97,6 +97,12 @@ export function openPutawayTask(unit, { locations = [], balances = [], item = nu
     // ★ وسعةُ الطبالي تُحاسَب هنا لا في الشاشة: الرفُّ الذي بلغ سقفَ مواضعه
     // يخرج من المرشّحين ويظهر في المرفوض بسببه المكتوب.
     pallets: palletIndex(unit, { units, pallets }),
+    // ★★★ ق‑هـ: المخزَّنُ هنا **طبليّةٌ كاملة** — وحدةُ مناولةٍ بهويّةٍ وملصق
+    // لا بضاعةٌ سائبة. فحاجتُها موضعُ طبليّةٍ مهما كان محتواها.
+    // وبلا هذا السطر تُقرأ الحاجةُ من وحدة عدّ أوّلِ بندٍ (كرتونٌ غالبًا)
+    // **فيردّها رفُّ الطبالي** ويُرسلها إلى المختلط — وهو الانقلابُ الذي
+    // كشفه الفحصُ النقضيّ 2026-09-03.
+    asHandlingUnit: true,
   });
 
   return {
@@ -148,6 +154,9 @@ export function binScanVerdict(unit, code, { locations = [], balances = [], item
   const verdict = chooseVerdict(wanted, {
     line: unit?.lines?.[0] ?? null, locations, balances, item,
     pallets: palletIndex(unit, { units, pallets }),
+    // ★★ والإشارةُ نفسُها هنا وإلّا **افترق المقترَحُ عن المقبول**: يُقترح
+    // رفُّ الطبالي ثمّ يُرفض عند مسحه — وهو أسوأُ من الرفض من أوّله.
+    asHandlingUnit: true,
   });
   if (verdict.ok) return { ok: true, needsReason: false, message: flagNote };
   return {

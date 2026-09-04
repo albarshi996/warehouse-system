@@ -12,6 +12,7 @@ import {
   openPutawayTask,
   taskOpenProblem,
 } from './putawayTask.js';
+import { handlingNeedOf } from '../locations/putawaySuggest.js';
 
 const UNIT = {
   code: 'LPN-MAIN-20260826-000145',
@@ -217,4 +218,68 @@ test('🔒 وغيابُ الوحدات يعني «لا أعرف» فيمرّ —
   // وطبليّةٌ واحدةٌ تحت السقف لا تمنع الثانية.
   const room = openPutawayTask(UNIT, { ...WIRED, units: [ON_FLOOR[0]] });
   assert.deepEqual(room.task.rejectedBins, []);
+});
+
+/* ═══════ ‹JR-602› رفُّ الطبليّة يقبل الطبليّات — تقويمُ معنًى مقلوب ═══════ */
+
+/**
+ * ★★★ الحارسُ الذي كان غائبًا — ولذلك عاش الانقلابُ حتّى كشفه فحصٌ نقضيّ.
+ *
+ * الاختباراتُ كلُّها كانت تناول `suggestLocations` **سطرًا تبنيه بيدها**،
+ * فتقيس ما تُدخله لا ما يُدخله الواقع. وهنا نمرّ بـ`openPutawayTask` **بطبليّةٍ
+ * كاملةٍ** كما يمرّ بها المستدعي الحقيقيّ — والفرقُ أنّ بندَ الطبليّة مكتوبٌ
+ * بالكرتون (حالُ جُلّ الاستلام) بينما الحاويَ طبليّة.
+ *
+ * وقرارُ المالك ‹ق‑هـ›: **الرفُّ يستقبل طبليّاتٍ كاملةً مهما كان ما فوقها.**
+ */
+const HANDLING_LOCS = [
+  { code: 'MAIN-P01-R01-B01', warehouse: 'MAIN', status: 'active', handling: 'pallet' },
+  { code: 'MAIN-P02-R01-B01', warehouse: 'MAIN', status: 'active', handling: 'piece' },
+  { code: 'MAIN-P03-R01-B01', warehouse: 'MAIN', status: 'active', handling: 'mixed' },
+];
+
+test('★★★ ‹JR-602› طبليّةٌ كاملةٌ بنودُها كراتين **تُقبل** على رفّ الطبالي — لا تُردّ عنه', () => {
+  const r = openPutawayTask(UNIT, { ...CTX, locations: HANDLING_LOCS });
+  const codes = r.task.suggestions.map((s) => s.code);
+  const refusedPallet = r.task.rejectedBins.find((x) => x.code === 'MAIN-P01-R01-B01');
+
+  // كان يسقط قبل الإصلاح: الحاجةُ تُقرأ «carton» من بند الطبليّة فيُرفض رفُّ
+  // الطبالي برسالة «البند يُناوَل بالصندوق وهذا الرفّ بالطبلية وحدَه».
+  assert.equal(
+    refusedPallet, undefined,
+    `رفُّ الطبالي ردَّ طبليّةً كاملة — انقلبت المِصفاة: ${refusedPallet?.reason ?? ''}`
+  );
+  assert.ok(codes.includes('MAIN-P01-R01-B01'), 'رفُّ الطبالي ليس في المقترحات لطبليّةٍ كاملة');
+});
+
+test('★★ ورفُّ «قطعة» يردّ الطبليّةَ الكاملة — فالتمييزُ يعمل في الاتّجاهين', () => {
+  const r = openPutawayTask(UNIT, { ...CTX, locations: HANDLING_LOCS });
+  const refusedPiece = r.task.rejectedBins.find((x) => x.code === 'MAIN-P02-R01-B01');
+  assert.ok(refusedPiece, 'رفُّ القطعة قبِل طبليّةً كاملة — والقيدُ بلا أثر');
+  assert.match(refusedPiece.reason, /بالطبلية|بالقطعة/);
+});
+
+test('★ و«مختلط» يقبل الكلَّ — فرفوفُ المالك اليوم لا يتغيّر سلوكُها', () => {
+  const r = openPutawayTask(UNIT, { ...CTX, locations: HANDLING_LOCS });
+  assert.ok(
+    r.task.suggestions.map((s) => s.code).includes('MAIN-P03-R01-B01'),
+    'الرفُّ المختلط خرج من المقترحات — وهو حالُ كلّ رفٍّ لم يُوسَم'
+  );
+});
+
+test('★★★ والمقترَحُ هو المقبول: ما اقترحه الاقتراحُ لا يردّه حكمُ المسح', () => {
+  // افتراقُهما أسوأُ من الرفض من أوّله: يمشي العاملُ إلى الرفّ المقترَح
+  // فيُرفض عند مسحه.
+  const r = openPutawayTask(UNIT, { ...CTX, locations: HANDLING_LOCS });
+  for (const s of r.task.suggestions) {
+    const v = binScanVerdict(UNIT, s.code, { ...CTX, locations: HANDLING_LOCS });
+    assert.ok(v.ok, `اقتُرح ${s.code} ثمّ رُفض عند المسح: ${v.message}`);
+  }
+});
+
+test('★★ والبضاعةُ السائبةُ تبقى تُقاس بوحدة عدّها — صفرُ أثرٍ على من لا يخزّن طبليّة', () => {
+  // من يخزّن كرتونًا بيده لا يُعلن `asHandlingUnit`، فحاجتُه «صندوق» كما كانت.
+  const line = { sku: 'WNW-001', uom: 'carton', qty: 5 };
+  assert.equal(handlingNeedOf(line, null), 'carton');
+  assert.equal(handlingNeedOf(line, null, { asHandlingUnit: true }), 'pallet');
 });
