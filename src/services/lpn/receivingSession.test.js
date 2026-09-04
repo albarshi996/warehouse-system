@@ -96,8 +96,10 @@ const WRITTEN_PO = writtenDocument('PO', {
 });
 
 /** أمرُ نقلٍ حقيقيّ — ومستودعُه `toWarehouse` لا `warehouse` (مخطّط TR). */
-const WRITTEN_TR = writtenDocument('TR', {
-  number: 'TR-2026-0004',
+// ★★★ `TRN` لا `TR`: مستندُ النقل هو ما يرافق الحمولة، وعليه يقع الاستلام.
+// وطلبُ النقل `TR` طلبٌ لم يُشحن — صُحّح 2026-09-04.
+const WRITTEN_TRN = writtenDocument('TRN', {
+  number: 'TRN-2026-0004',
   header: {
     fromWarehouse: 'TRP',
     toWarehouse: 'MAIN',
@@ -127,7 +129,9 @@ test('★★ الرصيد المفتوح من تقدّم البنود القائ
 
 test('لا استلام دون مستندٍ معتمد — والرسالة تسمّي العلّة والقاعدة', () => {
   assert.match(sessionOpenProblem(null, progressOf(100, 50)), /لا مستند/);
-  assert.match(sessionOpenProblem({ ...PO, type: 'SO' }, progressOf(100, 50)), /أمر شراءٍ أو أمر نقل/);
+  assert.match(sessionOpenProblem({ ...PO, type: 'SO' }, progressOf(100, 50)), /أمر شراءٍ «PO» أو مستند نقلٍ «TRN»/);
+  // ★★★ و«TR» يُردّ بدلالةٍ لا بمنعٍ صامت: طلبٌ لم يُشحن، والحمولةُ تُستلم على TRN.
+  assert.match(sessionOpenProblem({ ...PO, type: 'TR' }, progressOf(100, 50)), /لم يُشحن بعد/);
   assert.match(sessionOpenProblem({ ...PO, state: 'draft' }, progressOf(100, 50)), /حتى يُعتمد/);
   assert.match(sessionOpenProblem({ ...PO, state: 'canceled' }, progressOf(100, 50)), /حتى يُعتمد/);
   assert.equal(sessionOpenProblem({ ...PO, state: 'done' }, progressOf(100, 50)), '', 'المنجَز يُستلم عليه ما دام مفتوحًا');
@@ -255,8 +259,8 @@ test('★★ الجلسةُ تُفتح على المستند الحقيقيّ ف
   assert.equal(built.session.lines.length, 2);
 });
 
-test('★★ أمرُ النقل يُستلم عليه كذلك — ومستودعُه `toWarehouse` ومصدرُه `fromWarehouse`', () => {
-  const card = openOrderCard(WRITTEN_TR, [], []);
+test('★★ مستندُ النقل يُستلم عليه كذلك — ومستودعُه `toWarehouse` ومصدرُه `fromWarehouse`', () => {
+  const card = openOrderCard(WRITTEN_TRN, [], []);
   assert.equal(card.warehouse, 'MAIN', 'المستودعُ المستلِم هو وجهةُ النقل لا مصدرُه');
   assert.equal(card.supplier, 'TRP', 'ومن جاءت منه الحمولةُ يظهر في موضع المورّد — الميدانُ يسأل «من أين؟»');
   assert.equal(card.issueDate, '2026-08-21');

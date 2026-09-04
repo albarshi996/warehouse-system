@@ -328,6 +328,12 @@ export default function ReceivingFlow() {
   const [qty, setQty] = useState('');
   const [batch, setBatch] = useState('');
   const [expiry, setExpiry] = useState('');
+  // ‹تتبّع› دفعةُ المورّد وتاريخُ الإنتاج — مطويّتان عمدًا: المسحُ السريع
+  // كرتونةً تلو كرتونة لا يحتمل خمسَ خاناتٍ في الشاشة، وهذان يُكتبان مرّةً
+  // للدفعة كلِّها لا لكلّ قراءة. ويبقيان بعد الحفظ كما تبقى الدفعةُ والصلاحية.
+  const [trace, setTrace] = useState(false);
+  const [supplierBatch, setSupplierBatch] = useState('');
+  const [mfgDate, setMfgDate] = useState('');
   /*
    * ‹JR-301› اختيارُ الوحدة — يبقى بين المسحات كما تبقى الدفعةُ والصلاحية
    * (كرتونةٌ تلو كرتونة)، **ومقيَّدٌ بصنفه** فلا يتسرّب إلى صنفٍ آخر:
@@ -425,7 +431,7 @@ export default function ReceivingFlow() {
    * وسقفِها المُعلَن) — قائمةٌ ناقصةٌ تبدو كاملة.
    */
   const [rawOrders, setRawOrders] = useState([]);
-  useEffect(() => listenDocumentsByTypes(['PO', 'TR'], (docs) => {
+  useEffect(() => listenDocumentsByTypes(['PO', 'TRN'], (docs) => {
     setRawOrders(docs);
     // البطاقة من `openOrderCard` — فما تعرضه القائمة هو ما تقيس عليه
     // الجلسة، والمحجوب يُسقَط بسببه المحسوب لا بظنّ الواجهة.
@@ -742,7 +748,7 @@ export default function ReceivingFlow() {
         sessionId,
         activeDraft,
         // ★ بلا اختيارٍ `plan.qty` **عينُ** `qty === '' ? undefined : Number(qty)`.
-        { barcode: raw, qty: plan.qty, batch, expiry },
+        { barcode: raw, qty: plan.qty, batch, expiry, supplierBatch, mfgDate },
         { indexes, actor: actorName, device: 'WEB', seq: seqRef.current }
       );
       if (r.ok) {
@@ -1169,6 +1175,33 @@ export default function ReceivingFlow() {
             <input value={expiry} onChange={(e) => setExpiry(e.target.value)} placeholder="الصلاحية" type="date"
               className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
           </div>
+
+          {/*
+            ‹تتبّع› **دفعةُ المورّد وتاريخُ الإنتاج — مطويّان لا محذوفان.**
+
+            ★★ دفعةُ المورّد هي ما يُطابَق به عند **السحب من السوق**: نداءُ
+            السحب يأتي برقم المصنع لا برقمنا الداخليّ، فبلا هذا الحقل تُفتَّش
+            الطبالي واحدةً واحدة.
+
+            ★ وطُويا عمدًا: المسحُ كرتونةً تلو كرتونة لا يحتمل خمسَ خاناتٍ
+            على شاشة هاتف، وهما يُكتبان **مرّةً للدفعة كلِّها** لا لكلّ قراءة.
+          */}
+          <button type="button" onClick={() => setTrace((v) => !v)}
+            className="btn btn-secondary text-xs mb-2"
+            style={{ minHeight: '44px' }}>
+            {trace ? '▾ إخفاء حقول التتبّع' : '▸ دفعةُ المورّد وتاريخُ الإنتاج (اختياريّ)'}
+            {!trace && (supplierBatch || mfgDate) ? ' — مكتوبة' : ''}
+          </button>
+          {trace && (
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <input value={supplierBatch} onChange={(e) => setSupplierBatch(e.target.value)}
+                placeholder="دفعة المورّد (رقم المصنع)"
+                className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
+              <input value={mfgDate} onChange={(e) => setMfgDate(e.target.value)}
+                placeholder="تاريخ الإنتاج" type="date"
+                className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
+            </div>
+          )}
           <div className="flex gap-2">
             <button type="submit" className="btn btn-primary flex-1 py-3" disabled={busy || !code.trim()}>تسجيل القراءة</button>
             <button type="button" className="btn btn-secondary py-3" onClick={closeDraft} disabled={busy || (draft?.lines ?? []).length === 0}>

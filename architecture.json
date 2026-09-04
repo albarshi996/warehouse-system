@@ -3489,6 +3489,7 @@
         "closeLoading",
         "closePickTask",
         "closeSession",
+        "closeTargetOf",
         "closeTaskWithPallet",
         "completePutaway",
         "containmentProblems",

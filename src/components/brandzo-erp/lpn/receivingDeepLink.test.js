@@ -98,9 +98,11 @@ const PO_DOC = writtenDocument('PO', {
   ],
 });
 
-const TR_DOC = writtenDocument('TR', {
+// ★★★ `TRN` لا `TR`: طلبُ النقل لم يُشحن — والاستلامُ على مستند النقل
+// الذي يرافق الحمولة (صُحّح 2026-09-04، انظر `closeTargetOf`).
+const TRN_DOC = writtenDocument('TRN', {
   id: 'tr-written-1',
-  number: 'TR-2026-0004',
+  number: 'TRN-2026-0004',
   header: {
     fromWarehouse: 'TRP',
     toWarehouse: 'MAIN',
@@ -111,7 +113,7 @@ const TR_DOC = writtenDocument('TR', {
 });
 
 /** القائمةُ كما تبنيها الشاشة حرفًا: بطاقةٌ من `openOrderCard` مرشَّحةٌ بـ`canReceive`. */
-const ORDERS = [PO_DOC, TR_DOC].map((d) => openOrderCard(d, [], [])).filter((c) => c.canReceive);
+const ORDERS = [PO_DOC, TRN_DOC].map((d) => openOrderCard(d, [], [])).filter((c) => c.canReceive);
 
 /** جلسةٌ مفتوحةٌ كما يكتبها `openSession` — لا كائنٌ مصنوعٌ بيدٍ حرّة. */
 function openSessionRow(doc, sessionId) {
@@ -133,7 +135,7 @@ function hrefFromRow(doc) {
 }
 
 test('★★★ القائمةُ عيّنةٌ صادقة — بطاقاتٌ من الكاتب لا من اليد', () => {
-  assert.equal(ORDERS.length, 2, 'أمرُ الشراء وأمرُ النقل كلاهما قابلٌ للاستلام');
+  assert.equal(ORDERS.length, 2, 'أمرُ الشراء ومستندُ النقل كلاهما قابلٌ للاستلام');
   assert.equal(ORDERS[0].id, 'po-written-1');
   assert.equal(ORDERS[0].number, 'PO-2026-0015');
 });
@@ -160,9 +162,9 @@ test('★★★ أمرٌ في القائمة يُفتح مباشرةً — لا 
   assert.equal(t.id, 'po-written-1');
 });
 
-test('★★ وأمرُ النقل كذلك — القائمةُ تشمله فالرابطُ يشمله', async () => {
+test('★★ ومستندُ النقل كذلك — القائمةُ تشمله فالرابطُ يشمله', async () => {
   const { docParamOf, deepLinkTarget } = await loadDeepLinkBlock();
-  const wanted = docParamOf(new URL(hrefFromRow(TR_DOC), 'https://portal.example').search);
+  const wanted = docParamOf(new URL(hrefFromRow(TRN_DOC), 'https://portal.example').search);
   const t = deepLinkTarget({ wanted, orders: ORDERS, openSessions: [], actor: 'محمد', allowed: true });
   assert.equal(t.kind, 'order');
   assert.equal(t.id, 'tr-written-1');

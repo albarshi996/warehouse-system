@@ -136,11 +136,14 @@ test('★★ والموجَّهُ إلى التحضير تقبله بوّابة�
   }
 });
 
-test('التحضيرُ اشتقاقٌ لا سرد: PICK وSO من PICKABLE_TYPES، وTR وحده مصروفٌ إلى الاستلام', () => {
+test('★★★ التحضيرُ اشتقاقٌ لا سرد — ولكلّ طرفٍ من النقل مستندُه (صُحّح 2026-09-04)', () => {
   assert.equal(FIELD_ROUTES.PICK.path, '/dashboard/lpn-picking');
   assert.equal(FIELD_ROUTES.SO.path, '/dashboard/lpn-picking');
-  // ⚠️ التداخلُ المكتوب: TR في PICKABLE_TYPES ومع ذلك يُستلَم — قرارٌ لا سهو.
-  assert.equal(FIELD_ROUTES.TR.path, '/dashboard/lpn-receiving');
+  // ★★★ التداخلُ زال بإعطاء كلّ طرفٍ مستندَه: المستودعُ المُرسِل يحضّر `TR`،
+  // والمستقبِلُ يستلم `TRN`. وكان `TR` يُصرَف إلى الاستلام فيقف المُرسِلُ
+  // أمام شاشةٍ تردّه، ويُبنى على الطلب طبالي بلا مستندٍ يُغلقها.
+  assert.equal(FIELD_ROUTES.TR.path, '/dashboard/lpn-picking');
+  assert.equal(FIELD_ROUTES.TRN.path, '/dashboard/lpn-receiving');
 });
 
 test('التخزينُ مقيسٌ من DOC_WORK_TYPE — النوعُ الذي يولّد عملَ تخزينٍ يفتح لوحةَ الخانة', () => {
@@ -168,11 +171,13 @@ test('★★★ كلُّ نوعٍ تعرفه حرّاسُ الميدان إمّ�
   }
 });
 
-test('★★ وغيابُ TRN مقيسٌ لا مدّعًى: بوّابتا الاستلام والتحضير تردّانه كلتاهما', () => {
-  assert.ok(OMITTED_TYPES.TRN, 'TRN بلا سببِ غيابٍ مكتوب');
-  assert.equal(fieldRouteFor(doc('TRN')), null);
-  assert.notEqual(sessionOpenProblem(doc('TRN'), { totals: { open: 5 } }), '');
-  assert.notEqual(taskOpenProblem(doc('TRN'), { lines: [{ sku: 'A' }] }), '');
+test('★★★ ولا نوعَ غائبٌ بعد التصحيح — والبوّابتان تصدّقان الخريطة', () => {
+  assert.deepEqual(OMITTED_TYPES, {}, 'كلُّ نوعٍ يعرفه حارسٌ ميدانيٌّ صار له مسار');
+  // ★★ والقياسُ سلوكيٌّ لا دعوى: بوّابةُ الاستلام تقبل `TRN` وتردّ `TR` بدلالة.
+  assert.equal(sessionOpenProblem(doc('TRN'), { totals: { open: 5 } }), '');
+  assert.match(sessionOpenProblem(doc('TR'), { totals: { open: 5 } }), /لم يُشحن بعد/);
+  // وبوّابةُ التحضير تقبل `TR` — فالمُرسِلُ يحضّره.
+  assert.equal(taskOpenProblem(doc('TR'), { lines: [{ sku: 'A' }] }), '');
 });
 
 test('لا سببَ غيابٍ فارغًا — «مقصود» بلا شرحٍ صمتٌ آخر', () => {

@@ -10,6 +10,7 @@ import {
   grnHeaderFrom,
   grnLineExtras,
   grnPreview,
+  closeTargetOf,
   grnProblem,
   orphanLines,
   receivedByLine,
@@ -90,11 +91,28 @@ test('★★★ البند مجهول المعامل لا يُحتسب ولا ي
   assert.match(p, /عرّف المعامل في ماستر الأصناف/, 'ويقول الصواب');
 });
 
-test('لا يُشتقّ استلامٌ من فراغٍ ولا من غير أمر شراء', () => {
+test('لا يُشتقّ استلامٌ من فراغٍ ولا من مصدرٍ لا يُغلَق به', () => {
   assert.match(grnProblem({ ...SESSION, order: null }), /بلا أمرٍ مصدر/);
+  const so = grnProblem({ ...SESSION, order: { type: 'SO', id: 's1', number: 'SO-1' } });
+  assert.match(so, /أمر شراءٍ «PO» أو مستند نقلٍ «TRN»/);
+});
+
+test('★★★ و«TR» طلبٌ لم يُشحن — والرسالةُ تدلّ على TRN لا تقول «غير مسموح»', () => {
+  // ★ صُحّح 2026-09-04: كان `TR` مقبولًا في فتح الجلسة **سهوًا**، فأُلحقت به
+  // شاشةُ الاستلام ثمّ لم يجد مخرجًا — طبالي تُبنى بلا مستندٍ يُغلقها.
   const tr = grnProblem({ ...SESSION, order: { type: 'TR', id: 't1', number: 'TR-1' } });
-  assert.match(tr, /من أمر شراء/);
-  assert.match(tr, /TRC/, 'ويقول أين يُستلم النقل');
+  assert.match(tr, /لم يُشحن/);
+  assert.match(tr, /TRN/, 'وتدلّه على المستند الصحيح');
+  assert.match(tr, /TRC/, 'وعلى ما يُغلق به');
+});
+
+test('★★★ وما يُشتقّ يُحدّده المصدرُ لا حرفٌ مكتوب: PO ⟶ GRN · TRN ⟶ TRC', () => {
+  // كتابةُ 'GRN' حرفًا كانت ستشتقّ مذكّرةَ استلام مشترياتٍ من نقلٍ داخليّ.
+  assert.equal(closeTargetOf({ order: { type: 'PO' } }), 'GRN');
+  assert.equal(closeTargetOf({ order: { type: 'TRN' } }), 'TRC');
+  assert.equal(closeTargetOf({ order: { type: 'TR' } }), '', 'الطلبُ لا يُغلَق به شيء');
+  assert.equal(closeTargetOf({ order: { type: 'trn' } }), 'TRC', 'والحالةُ لا تُغيّر الحكم');
+  assert.equal(closeTargetOf(null), '');
 });
 
 test('★ لا رصيدَ ممّا لم يُعتمد — والرسالة تقول أين يُعتمد', () => {
@@ -375,4 +393,64 @@ test('⚠️ طبليّةٌ قديمةٌ محفوظةٌ بلا `lineId` تُنق
     { lpn: 'LPN-MAIN-20260801-000009', sku: 'WNW-001', barcode: '6221', qty: 5, baseQty: 60, because: 'يطابق سطرين أو أكثر من الأمر — الهويّة تُحسم يدويًّا' },
   ], 'بل يُعلَن يتيمًا باسم طبليّته: قائمةُ عملٍ لا رقمٌ مخمَّن');
   assert.deepEqual(grnPreview(twoLines).orphanLines, orphanLines(twoLines), 'والمعاينةُ تحمله قبل الضغط لا بعده');
+});
+
+/* ═══════ الأنبوبُ الجافّ يجري: دفعةُ المورّد وتاريخُ الإنتاج ═══════ */
+
+test('★★★ حقلا التتبّع يعبران المسارَ كلَّه — وكان أنبوبُهما مبنيًّا بلا كاتب', () => {
+  // ★★ `EXTRA_FIELDS` تعرفهما و`LINE_MAP['GRN>QC']` يورّثهما — **ولم يكن
+  // لهما كاتبٌ عند المسح**، فما كانا ليُصدَّرا مهما اتّفقت الطبالي.
+  // ودفعةُ المورّد هي ما يُطابَق به عند السحب من السوق: نداءُ السحب يأتي
+  // برقم المصنع، ورقمُنا الداخليُّ لا يعرفه أحدٌ خارجَنا.
+  const { live } = scanned([
+    { barcode: '6221000', batch: 'B2408', expiry: '2027-03-01', supplierBatch: 'LOT-77-A', mfgDate: '2026-03-01' },
+  ]);
+  assert.deepEqual(grnLineExtras(live).L1, {
+    batch: 'B2408',
+    expiryDate: '2027-03-01',
+    supplierBatch: 'LOT-77-A',
+    mfgDate: '2026-03-01',
+  });
+});
+
+test('★★ واختلافُ دفعة المورّد **بين طبليّتين** يُعلَن ولا يُخترع — كأختِه الصلاحية', () => {
+  const a = scanned([{ barcode: '6221000', batch: 'B2408', expiry: '2027-03-01', supplierBatch: 'LOT-77-A' }]);
+  const b = scanned([{ barcode: '6221000', batch: 'B2408', expiry: '2027-03-01', supplierBatch: 'LOT-99-B' }]);
+  const live = {
+    ...a.session,
+    drafts: [
+      { ref: 'P1', lpn: 'LPN-MAIN-20260904-000001', state: 'APPROVED', lines: a.lines },
+      { ref: 'P2', lpn: 'LPN-MAIN-20260904-000002', state: 'APPROVED', lines: b.lines },
+    ],
+  };
+  assert.equal(grnLineExtras(live).L1?.supplierBatch, undefined,
+    'اختلفت الطبليّتان فكُتب أحدُهما — ونصفُ الكمّيّة يحمل رقمًا ليس رقمَها');
+  assert.ok(
+    extrasConflicts(live).some((c) => c.field === 'supplierBatch'),
+    'واختلافٌ لا يُعلَن اختلافٌ يُكتشف عند نداء السحب لا قبله'
+  );
+});
+
+test('⚠️★★★ وحدٌّ مُعلَن: قراءتان في **طبليّةٍ واحدة** تندمجان و**تُبتلع الثانية**', () => {
+  // مفتاحُ البند `sku__batch__expiry__uom` — ولا تدخله دفعةُ المورّد. فقراءتان
+  // بدفعتنا نفسِها من لوطَين مختلفين للمصنع تصيران بندًا واحدًا يحمل **أوّلَ**
+  // لوطٍ، والثاني يُبتلع **بلا إعلان** — لأنّ `extrasConflicts` يقارن بين
+  // الطبالي لا داخل البند.
+  //
+  // ⚠️ ولم يُصلَح هنا عمدًا: إدخالُ الحقل في المفتاح **يشقّ بندًا كان واحدًا**
+  // فتتغيّر تجميعةُ الكمّيّات في مسارٍ ماليّ — قرارٌ يُعرض على المالك لا
+  // يُدسّ في دفعةِ تتبّع. وهذا الاختبارُ يُثبّت الحالَ كما هي فلا تُنسى.
+  const { live } = scanned([
+    { barcode: '6221000', batch: 'B2408', expiry: '2027-03-01', supplierBatch: 'LOT-77-A' },
+    { barcode: '6221000', batch: 'B2408', expiry: '2027-03-01', supplierBatch: 'LOT-99-B' },
+  ]);
+  assert.equal(live.drafts[0].lines.length, 1, 'القراءتان بندٌ واحد — المفتاحُ لا يشمل دفعة المورّد');
+  assert.equal(grnLineExtras(live).L1?.supplierBatch, 'LOT-77-A', 'وأوّلُ لوطٍ يُثبّت الهويّة');
+  assert.equal(receivedByLine(live).byLine.L1, 24, 'والكمّيّتان تُجمعان — وهو المقصود');
+});
+
+test('★ وقراءةٌ لا تحملهما تكتب ما كانت تكتبه — إضافةٌ صرفة', () => {
+  const { live } = scanned([{ barcode: '6221000', batch: 'B2408', expiry: '2027-03-01' }]);
+  assert.deepEqual(grnLineExtras(live).L1, { batch: 'B2408', expiryDate: '2027-03-01' },
+    'حقلٌ فارغٌ لا يُصدَّر — والصمتُ عن المجهول أصدقُ من فراغٍ يُكتب');
 });

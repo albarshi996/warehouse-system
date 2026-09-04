@@ -346,10 +346,38 @@ export function extrasConflicts(session) {
  * الترتيب هو الحارس: وجودُ مصدرٍ، ثمّ وجودُ حمولةٍ معتمدة، ثمّ ألّا يبقى
  * بندٌ مجهولُ المعامل يُخفي كمّيّةً عن مستندٍ ماليّ.
  */
+/**
+ * ★★★ ما يُشتقّ من هذه الجلسة — والمصدرُ يحدّده لا نحن.
+ *
+ * أمرُ الشراء يُغلَق بمذكّرة استلامٍ (`GRN`)، **ومستندُ النقل يُغلَق بمحضر
+ * استلام نقلٍ (`TRC`)** — سلسلتان مختلفتان لكلٍّ نموذجُها وقواعدُ اعتمادها.
+ *
+ * ⚠️ **و`TR` ليس منهما.** طلبُ النقل **طلبٌ لم يُشحن بعد**: لا بضاعةَ على
+ * الرصيف تُستلَم، ولا مستندَ نقلٍ يُحتجّ به. والسلسلةُ `TR ⟶ TRN ⟶ TRC`،
+ * و`TRC` يشترط `transferNoteRef` أبًا من نوع `TRN` (نموذجُه يقولها صراحةً).
+ * فمن فتح جلسةً على `TR` بنى طبالي لا مستندَ لها يُغلقها.
+ *
+ * ★ (وقد وقع هذا في هذه الجلسة نفسِها 2026-09-03: أُضيف `TR` إلى شاشة
+ *   الاستلام لأنّ `sessionOpenProblem` كان يقبله — والقبولُ كان سهوًا لا
+ *   قرارًا، فأُلحِق به الاستلامُ ثمّ لم يجد مخرجًا.)
+ *
+ * @returns {''|'GRN'|'TRC'} نوعُ المستند المشتقّ، أو `''` لمصدرٍ لا يُشتقّ منه
+ */
+export function closeTargetOf(session) {
+  const t = String(session?.order?.type ?? '').trim().toUpperCase();
+  if (t === 'PO') return 'GRN';
+  if (t === 'TRN') return 'TRC';
+  return '';
+}
+
 export function grnProblem(session) {
   if (!session?.order?.id) return 'الجلسة بلا أمرٍ مصدر — لا يُشتقّ استلامٌ من فراغ.';
-  if (session.order.type !== 'PO') {
-    return `الاستلام يُشتقّ من أمر شراء — ومصدر هذه الجلسة «${session.order.type}». (النقل يُستلم بـTRC.)`;
+  if (!closeTargetOf(session)) {
+    const t = session.order.type;
+    if (String(t).trim().toUpperCase() === 'TR') {
+      return 'طلبُ النقل «TR» طلبٌ لم يُشحن بعد — والاستلامُ يقع على مستند النقل «TRN» ويُغلَق بمحضر استلامٍ «TRC».';
+    }
+    return `الاستلام يُشتقّ من أمر شراءٍ «PO» أو مستند نقلٍ «TRN» — ومصدر هذه الجلسة «${t}».`;
   }
   const counted = countableDrafts(session.drafts);
   if (counted.length === 0) {

@@ -136,6 +136,11 @@ export function addReading(lines, reading, opts = {}) {
         name: String(reading?.name ?? '').trim(),
         batch: up(reading.batch),
         expiry: expiryDay(reading.expiry),
+        // ★ حقلا التتبّع — إضافةٌ صرفة: قراءةٌ لا تحملهما تكتب `''` كما كانت
+        // تكتب قبل وجودهما، ومفتاحُ البند أعلاه لا يشملهما فلا ينقسم بندٌ كان
+        // واحدًا. و`grnLineExtras` يُصدّرهما حين تتّفق الطبالي عليهما.
+        supplierBatch: up(reading?.supplierBatch),
+        mfgDate: expiryDay(reading?.mfgDate),
         uom: up(reading.uom),
         factor: hasFactor ? factor : null,
         qty,
