@@ -35,7 +35,7 @@ import {
   scanIntoDraft,
   startSession,
 } from '../../../services/lpn/receivingService.js';
-import { grnPreview } from '../../../services/lpn/grnBridge.js';
+import { grnPreview, closeTargetOf } from '../../../services/lpn/grnBridge.js';
 /*
  * ‹JR-301 · طلبُ المالك ط‑٥› اختيارُ الوحدة عند المسح.
  * الأربعةُ تُستدعى ولا يُعاد بناءُ حكمِ أيٍّ منها هنا: `resolveScan` تقول ما
@@ -455,7 +455,14 @@ export default function ReceivingFlow() {
    * أيجوز التوليدُ أم لا، وإنّما تختار **أيَّ طريقٍ يُعرض** لمن وقف أمام رفضٍ
    * صحيح: أمرُ النقل مخرجُه `TRC` لا `GRN`، فلا يُترك بلا وجهة.
    */
-  const isTransfer = session?.order?.type === 'TR';
+  /**
+   * ★★★ ما يُشتقّ من هذه الجلسة — **من النواة لا من ظنّ الشاشة**.
+   * `PO ⟶ GRN` و`TRN ⟶ TRC`. وكان هنا `type === 'TR'` — وهو خطأٌ مزدوج:
+   * `TR` طلبٌ لا يُستلَم عليه أصلًا، والمستلَمُ `TRN`. فلو بقي لَعُنوِنت جلسةُ
+   * النقل «الاستلام الرسميّ (GRN)» ثمّ وُلّد `TRC` — عنوانٌ يكذب على صاحبه.
+   */
+  const closeTarget = useMemo(() => (session ? closeTargetOf(session) : ''), [session]);
+  const isTransfer = closeTarget === 'TRC';
   const draft = useMemo(
     () => (session?.drafts ?? []).find((d) => d.ref === activeDraft) ?? null,
     [session, activeDraft]
@@ -506,7 +513,7 @@ export default function ReceivingFlow() {
    * عنها خبرٌ لا نملك ما يثبته. و«يعتمدها فلان» صحيحٌ في الحالين.
    */
   const grnOwnerLines = useMemo(
-    () => ['approve', 'complete'].map((s) => stageOwnerLine('GRN', s)).filter(Boolean),
+    () => ['approve', 'complete'].map((st) => stageOwnerLine(closeTarget || 'GRN', st)).filter(Boolean),
     []
   );
 
@@ -801,7 +808,7 @@ export default function ReceivingFlow() {
       say(
         'ok',
         `تولّد الاستلام ${r.number || r.docId} مسوّدةً — يُعتمد ثمّ يُنجَز ليتحرّك الرصيد.`,
-        r.docId ? { href: docHref('GRN', r.docId), label: 'افتح المستند ←' } : null
+        r.docId ? { href: docHref(closeTargetOf(session) || 'GRN', r.docId), label: 'افتح المستند ←' } : null
       );
     } catch (e) {
       say('err', e?.message || 'تعذّر توليد الاستلام.');
@@ -1242,7 +1249,7 @@ export default function ReceivingFlow() {
           {/* ★ عنوانٌ يعد بما لا يقع أسوأ من صمت: جلسةُ النقل لا تولّد GRN
               أصلًا، فلا تُعنوَن به ثمّ يُقال لصاحبها «لا يُشتقّ». */}
           <h3 className="font-bold text-ink text-sm mb-2">
-            {isTransfer ? 'إقفالُ جلسة النقل' : 'الاستلام الرسميّ (GRN)'}
+            {isTransfer ? 'إقفالُ جلسة النقل — محضرُ استلام (TRC)' : 'الاستلام الرسميّ (GRN)'}
           </h3>
           {session?.grnNumber ? (
             <>
@@ -1261,7 +1268,7 @@ export default function ReceivingFlow() {
                   ساعةٍ يجد الطريق. و`grnId` مختومٌ على الجلسة في
                   `createGrnFromSession` فهو موجودٌ حيثما وُجد `grnNumber`. */}
               {session.grnId && (
-                <a href={docHref('GRN', session.grnId)} className="btn btn-secondary text-sm inline-block mt-2">
+                <a href={docHref(closeTarget || 'GRN', session.grnId)} className="btn btn-secondary text-sm inline-block mt-2">
                   افتح المستند ←
                 </a>
               )}
