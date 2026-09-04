@@ -22,6 +22,7 @@
 import { normalizeLocationCode } from '../locations/locationCode.js';
 import { chooseVerdict, suggestLocations } from '../locations/putawaySuggest.js';
 import { isBlockedForIssue } from './lpnLifecycle.js';
+import { palletsByBin } from './palletMap.js';
 
 /** حالات مهمّة التخزين. */
 export const PUTAWAY_STATES = Object.freeze({
@@ -45,13 +46,42 @@ export function taskOpenProblem(unit) {
 }
 
 /**
+ * ★★★ فهرسُ «الموقع ← طباليه» كما يبلغ الحكمَ من هنا — والسلكُ الذي كان مقطوعًا.
+ *
+ * `canReceive` تحمل فرعَ رفضٍ لسقف الطبالي منذ ‹JR-601›، و`occupancyOf` تحمل
+ * وسيطَ الفهرس. وكان لا مستدعيَ واحدٌ في الشجرة يمرّره — **فالمشغولُ منها
+ * `null` أبدًا وفرعُ الرفض يستحيل بلوغُه**: رفٌّ سقفُه طبليّتان يقبل الخمسين.
+ * وهذا الموضعُ أوّلُ من يملك جوابَه: مهمّةُ التخزين تعرف الطبالي بحكم موقعها.
+ *
+ * ★★ والطبليّةُ التي تُخزَّن **تُطرح من الفهرس**: هي واقفةٌ الآن في رصيفٍ أو
+ * في رفٍّ سابق، ولو عُدّت على الرفّ المقصود لَحاسبت نفسَها على موضعٍ لم
+ * تشغله بعد — فيمتلئ الرفّ برقمٍ زائدٍ واحد كلّما أُعيد تخزينُ ما فيه.
+ *
+ * ⚠️ ولا يُطرح شيءٌ من فهرسٍ **جاهزٍ** مرّره المستدعي: هو بناهُ ولا نعرف ماذا
+ * صفّى، والطرحُ منه كان يعني نسخَ `Map` كاملةً عند كلّ نداء.
+ *
+ * وغيابُ الطرفين معًا يعني «لا أعرف» فيمرّ الحكمُ كما كان حرفًا — لا «صفر»
+ * فيمنع. فمستدعٍ لم يُوصَل بعد لا يُغلق في وجهه رفًّا.
+ *
+ * @param {object} unit الطبلية موضوعُ المهمّة (تُطرح من الفهرس)
+ * @param {{units?:Array, pallets?:Map}} ctx وحداتٌ خامٌ أو فهرسٌ مبنيّ
+ * @returns {Map|undefined} و`undefined` تعني «لا علمَ بالطبالي»
+ */
+function palletIndex(unit, { units, pallets } = {}) {
+  if (pallets) return pallets;
+  if (!Array.isArray(units)) return undefined;
+  const self = String(unit?.code ?? '').trim().toUpperCase();
+  return palletsByBin(units.filter((u) => String(u?.code ?? '').trim().toUpperCase() !== self));
+}
+
+/**
  * إنشاء مهمّة تخزين تحمل المقترح.
  *
  * @param {object} unit الطبلية المعتمدة
- * @param {object} ctx {locations, balances, item, actor, at}
+ * @param {object} ctx {locations, balances, item, units|pallets, actor, at}
  * @returns {{task:object}|{problem:string}}
  */
-export function openPutawayTask(unit, { locations = [], balances = [], item = null, actor, at } = {}) {
+export function openPutawayTask(unit, { locations = [], balances = [], item = null, units, pallets, actor, at } = {}) {
   const problem = taskOpenProblem(unit);
   if (problem) return { problem };
   if (!String(actor ?? '').trim()) return { problem: 'مهمّةٌ بلا فاعلٍ لا تُنشأ.' };
@@ -64,6 +94,9 @@ export function openPutawayTask(unit, { locations = [], balances = [], item = nu
   // رفٌّ يختار البديل بعلمٍ لا بتخمين.
   const { candidates, rejected, problem: suggestProblem } = suggestLocations({
     line, locations, balances, item, warehouse: unit.warehouse, limit: 3,
+    // ★ وسعةُ الطبالي تُحاسَب هنا لا في الشاشة: الرفُّ الذي بلغ سقفَ مواضعه
+    // يخرج من المرشّحين ويظهر في المرفوض بسببه المكتوب.
+    pallets: palletIndex(unit, { units, pallets }),
   });
 
   return {
@@ -89,7 +122,7 @@ export function openPutawayTask(unit, { locations = [], balances = [], item = nu
  * ترتيب الحارس: الطبلية أوّلًا (موسومةٌ حاجبًا لا تُخزَّن إلّا بقرار)، ثمّ
  * انتماء الرفّ لمستودعها، ثمّ حكمُ الموقع نفسه من النواة القائمة.
  */
-export function binScanVerdict(unit, code, { locations = [], balances = [], item = null } = {}) {
+export function binScanVerdict(unit, code, { locations = [], balances = [], item = null, units, pallets } = {}) {
   const wanted = normalizeLocationCode(code);
   if (!wanted) return { ok: false, needsReason: false, message: 'امسح باركود الرفّ — لا تخزينَ في موقعٍ غير مقروء فعليًّا.' };
 
@@ -110,8 +143,12 @@ export function binScanVerdict(unit, code, { locations = [], balances = [], item
     };
   }
 
-  // حكمُ الموقع من النواة القائمة — لا نسخةَ ثانية تفترق عنها.
-  const verdict = chooseVerdict(wanted, { line: unit?.lines?.[0] ?? null, locations, balances, item });
+  // حكمُ الموقع من النواة القائمة — لا نسخةَ ثانية تفترق عنها. ويصلها فهرسُ
+  // الطبالي نفسُه الذي وصل الاقتراح، وإلّا افترق ما يُقترح عمّا يُقبل عند المسح.
+  const verdict = chooseVerdict(wanted, {
+    line: unit?.lines?.[0] ?? null, locations, balances, item,
+    pallets: palletIndex(unit, { units, pallets }),
+  });
   if (verdict.ok) return { ok: true, needsReason: false, message: flagNote };
   return {
     ok: false,
@@ -127,7 +164,7 @@ export function binScanVerdict(unit, code, { locations = [], balances = [], item
  *
  * @returns {{task:object, move:object}|{problem:string}}
  */
-export function completePutaway(task, unit, code, { actor, at, overrideNote = '', locations = [], balances = [], item = null } = {}) {
+export function completePutaway(task, unit, code, { actor, at, overrideNote = '', locations = [], balances = [], item = null, units, pallets } = {}) {
   if (task?.state !== 'OPEN') return { problem: `المهمّة «${PUTAWAY_STATES[task?.state] ?? '؟'}» — لا تُنفَّذ مرّتين.` };
   if (normalizeLocationCode(task?.lpn) && task.lpn !== unit?.code) {
     return { problem: `هذه مهمّةُ «${task.lpn}» والممسوح «${unit?.code ?? ''}» — امسح الطبلية الصحيحة.` };
@@ -135,7 +172,7 @@ export function completePutaway(task, unit, code, { actor, at, overrideNote = ''
   if (!String(actor ?? '').trim()) return { problem: 'تنفيذُ المهمّة بلا فاعلٍ لا يُسجَّل.' };
 
   const wanted = normalizeLocationCode(code);
-  const verdict = binScanVerdict(unit, wanted, { locations, balances, item });
+  const verdict = binScanVerdict(unit, wanted, { locations, balances, item, units, pallets });
   if (!verdict.ok) {
     if (!verdict.canOverride) return { problem: verdict.message };
     if (!String(overrideNote ?? '').trim()) {

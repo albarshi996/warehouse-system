@@ -81,8 +81,138 @@ const base = getBasePath();
 const docHref = (type, id) => `${base}/dashboard/document?type=${type}&id=${encodeURIComponent(id)}`;
 const inboxHref = `${base}/dashboard/documents`;
 
+/* ⟦deep-link⟧ ═══ الأمرُ يُقرأ من العنوان ═══════════════════════════════
+ *
+ * ★★★ **العلامتان ⟦deep-link⟧ … ⟦/deep-link⟧ عقدٌ لا زينة.** حارسُ هذه
+ * الكتلة (`receivingDeepLink.test.js`) يقتطع ما بينهما ويُحمّله **وحدةً حيّة**
+ * فيُشغّل شيفرةَ الشاشة نفسَها لا نسخةً منها — و`node --test` لا يستورد `.jsx`
+ * ولا مترجمَ في هذه الشجرة. فلا تُزل العلامتين، ولا تُدخل بينهما JSX ولا
+ * استيرادًا ولا شيئًا من خارج الكتلة: ما بينهما يجب أن يقوم وحدَه.
+ * (ولهذا سكن `upper` هنا: تستعمله الكتلةُ فيسكن معها، ويبقى تعريفًا واحدًا
+ * للملفّ كلِّه لا اثنين يفترقان.)
+ *
+ * ═══ العطبُ الذي تسدّه ═══
+ * زرُّ «ابدأ الاستلام الميدانيّ» في صفّ الأمر يفتح هذه الشاشة — على **قائمتها**.
+ * فمن ضغطه على أمرٍ بعينه يصل إلى قائمةٍ يبحث فيها عن أمره بين المفتوحة،
+ * والرحلةُ التي وُصلت من المستند إلى الميدان تنقطع في آخر متر. وهو المزلقُ
+ * الأوّلُ المكتوبُ حرفًا في رأس `services/tasks/fieldRoutes.js`: «فالمسارُ
+ * عارٍ حتّى تقرأه الشاشة، ثمّ يُضاف هنا وفي الشاشة معًا لا هنا وحده».
+ *
+ * ⚠️ **ونصفُه الأوّلُ ما زال ناقصًا**: `DocumentsInbox.jsx` و`OpenDocumentsBox.jsx`
+ * يبنيان الرابطَ `${base}${route.path}` **بلا `?doc=`**. فهذه الشاشةُ صارت
+ * تقرأ ما لا يكتبه أحدٌ بعد — وهو مقصودٌ لا سهو: الملفّان ليسا في يد هذه
+ * الدفعة. والقارئُ يسبق الكاتبَ ولا ضررَ (لا معاملَ ⇒ لا تغيّرَ حرفًا)،
+ * وحارسُ الكتلة يقيس المفتاحَ من `fieldRouteFor` نفسِها فيوم يُكتب يعمل.
+ *
+ * ★ والمفتاحُ `doc` **عينُ مفتاح `PickingFlow.jsx`** لا مفتاحٌ ثانٍ: ما
+ * يتعلّمه الموظّفُ في شاشةٍ يعمل في أختها، والمفتاحان يفترقان صامتين.
+ */
+
 /** مقارنةُ هويّةٍ لا عرضٌ — بحروفٍ كبيرةٍ مشذّبةٍ كما تفعل الخدمةُ في قيدها. */
 const upper = (v) => String(v ?? '').trim().toUpperCase();
+
+/**
+ * معرّفُ المستند المطلوب من شريط العنوان — أو نصٌّ فارغ.
+ *
+ * @param {string} search نصُّ `location.search` كما هو (بعلامة الاستفهام أو بدونها)
+ * @returns {string}
+ */
+export function docParamOf(search) {
+  return String(new URLSearchParams(String(search ?? '')).get('doc') ?? '').trim();
+}
+
+/**
+ * ★★★ ما الذي يفعله الرابطُ الآن؟ — **حكمٌ خالصٌ يُسأل، والشاشةُ تنفّذه.**
+ *
+ * خمسةُ مخارجَ لا رابعَ لها صامت:
+ *   · `none`      ⟶ لا معاملَ أصلًا: الشاشةُ كما كانت حرفًا بحرف.
+ *   · `session`   ⟶ على الأمر جلسةٌ مفتوحة: **تُتابَع ولا تُفتح ثانيةٌ عليه**.
+ *   · `order`     ⟶ أمرٌ مطابقٌ بلا جلسة: تُفتح جلستُه مباشرةً.
+ *   · `highlight` ⟶ مطابقٌ والفتحُ يحتاج ضغطة: يُبرَز ويُقال لماذا.
+ *   · `missing`   ⟶ لا مطابقَ: يُقال السببُ المرجَّح ولا يُترك الموظّفُ يظنّ
+ *                   أمرَه ضائعًا وهو أمامه.
+ *
+ * ★★★ **ولماذا الجلسةُ أوّلًا؟** `startSession` تُنشئ **دائمًا**، فجلستان على
+ * أمرٍ واحدٍ لا ترى إحداهما الأخرى — وهو نقيضُ ما بُني له `listenSession`.
+ * والرابطُ ضغطةٌ تتكرّر بكلّ إعادةِ تحميل، فخطرُه أكبر من نقرةِ يدٍ لا أصغر.
+ *
+ * ★ و`allowed` **ليست حكمَ صلاحيّةٍ جديدًا**: هي عينُ ما يعطّل زرَّ الصفّ في
+ * الشاشة (`uiGate`). والقيدُ أنّ العنوانَ لا يفعل ما يمنعه الضغط — وإلّا صار
+ * بابًا خلفيًّا. والمنعُ **إبرازٌ لا صمت**: يرى أمرَه ويرى شريطَ الدور فوقه.
+ *
+ * ★ والمطابقةُ بالمعرّف **أو بالرقم**: الرابطُ يحمل المعرّف، ومن نسخ
+ * «PO-2026-0015» بيده من رسالةٍ أو ورقةٍ يصل كذلك بلا شاشةٍ ثانيةٍ تُبنى له.
+ *
+ * @param {object} input
+ * @param {string} input.wanted المعرّفُ (أو الرقم) كما قُرئ من العنوان
+ * @param {Array<object>} input.orders بطاقاتُ الأوامر المعروضة — من `openOrderCard`
+ * @param {Array<object>} input.openSessions الجلساتُ المفتوحة — من `listOpenSessions`
+ * @param {boolean} input.sessionsKnown أقُرئت قائمةُ الجلسات فعلًا؟ (فشلُ القراءة ⇒ لا إنشاء)
+ * @param {string} input.actor اسمُ الفاعل كما قُرئ من ملفّه الشخصيّ
+ * @param {boolean} input.allowed أيسمح الدورُ بفتح جلسةِ استلام؟
+ * @returns {{kind:string, id:string, message:string}}
+ */
+export function deepLinkTarget({
+  wanted,
+  orders = [],
+  openSessions = [],
+  sessionsKnown = true,
+  actor = '',
+  allowed = true,
+} = {}) {
+  const key = String(wanted ?? '').trim();
+  if (!key) return { kind: 'none', id: '', message: '' };
+  const k = upper(key);
+  const hits = (o) => Boolean(o) && (upper(o.id) === k || upper(o.number) === k);
+
+  const live = (openSessions ?? []).find((s) => hits(s?.order));
+  if (live) {
+    return {
+      kind: 'session',
+      id: String(live.id ?? ''),
+      message: `جلسةٌ مفتوحةٌ على ${live.order?.number || key} فتحها ${live.openedBy || '—'} — تُتابَع ولا تُفتح ثانيةٌ عليه.`,
+    };
+  }
+
+  const card = (orders ?? []).find(hits);
+  if (!card) {
+    return {
+      kind: 'missing',
+      id: '',
+      message: `الأمرُ المطلوب «${key}» ليس في المفتوحة — لعلّه أُغلق أو استُلم كاملًا. افتحه من صندوق المستندات لتقرأ حالتَه.`,
+    };
+  }
+
+  const name = card.number || key;
+  // ★★★ جهلٌ بالجلسات لا يبرّر إنشاءً: `startSession` تُنشئ دائمًا، فلو تعذّرت
+  // قراءةُ المفتوحة لَفتح الرابطُ جلسةً ثانيةً على أمرٍ عليه جلسةٌ لم نرَها.
+  // والضغطةُ اليدويّةُ تبقى مسموحةً كما كانت — القيدُ على ما يقع بلا يد.
+  if (!sessionsKnown) {
+    return {
+      kind: 'highlight',
+      id: String(card.id ?? ''),
+      message: `${name} أمامك في القائمة — تعذّرت قراءةُ الجلسات المفتوحة، فاضغطه بنفسك كي لا تُفتح عليه جلسةٌ ثانية.`,
+    };
+  }
+  if (!allowed) {
+    return {
+      kind: 'highlight',
+      id: String(card.id ?? ''),
+      message: `${name} أمامك في القائمة — ولا تُفتح جلستُه من الرابط: دورُك لا يملك الاستلام.`,
+    };
+  }
+  if (!String(actor ?? '').trim()) {
+    // `openSession` نفسُها تردّ «جلسةٌ بلا فاعلٍ لا تُفتح» — فالإبرازُ أصدقُ من
+    // نداءٍ يُردّ، والموظّفُ يضغط بنفسه متى قُرئت هويّتُه.
+    return {
+      kind: 'highlight',
+      id: String(card.id ?? ''),
+      message: `${name} أمامك في القائمة — اضغطه للبدء: لم تُقرأ هويّتك بعد.`,
+    };
+  }
+  return { kind: 'order', id: String(card.id ?? ''), message: '' };
+}
+/* ⟦/deep-link⟧ */
 
 /* ── ‹JR-301› خطّةُ الكمّيّة ────────────────────────────────────────────
  * ★★★ **ترجمةٌ لا حكم.** الحكمُ كلُّه في الخدمات (`packEntryVerdict` ·
@@ -183,6 +313,12 @@ function scanQtyPlan({ item, barcodeUom, qtyText, pick }) {
 export default function ReceivingFlow() {
   const { lang, dir, setLang, tr } = useFieldLang();
   const [me, setMe] = useState(null);
+  /*
+   * ★★ «قُرئت الهويّة» غيرُ «وُجد فاعل». رابطُ العنوان ينتظر الثلاثةَ قبل أن
+   * يحكم (الأوامر · الجلسات · الهويّة)، ولو انتظر `actorName` وحدَه لَانتظر
+   * أبدًا من دخل بلا حساب — وشاشةٌ تصمت أمام رابطٍ ضُغط هي العطبُ نفسُه بوجهٍ آخر.
+   */
+  const [authRead, setAuthRead] = useState(false);
   const [items, setItems] = useState([]);
   const [orders, setOrders] = useState([]);
   const [sessionId, setSessionId] = useState('');
@@ -227,7 +363,10 @@ export default function ReceivingFlow() {
   const recvGate = uiGate(me?.role, 'RECEIVE');
   const putGate = uiGate(me?.role, 'PUTAWAY');
 
-  useEffect(() => subscribeAuth(async (u) => setMe(u ? await fetchUserProfile(u) : null)), []);
+  useEffect(() => subscribeAuth(async (u) => {
+    setMe(u ? await fetchUserProfile(u) : null);
+    setAuthRead(true);
+  }), []);
   useEffect(() => subscribeItems(setItems), []);
 
   /**
@@ -245,10 +384,18 @@ export default function ReceivingFlow() {
    * فيفتح جديدة — والمفتوحُ ظاهرٌ فلا يُفتح فوقه.
    */
   const [openSessions, setOpenSessions] = useState([]);
+  /*
+   * ★★ رايةُ «قُرئت القائمة» — و«فارغةٌ» غيرُ «لم تصل بعد». بغيرها لا يفرّق
+   * رابطُ العنوان بين الحالتين، فيفتح جلسةً ثانيةً على أمرٍ عليه جلسةٌ لم
+   * تصل بعد. وتُرفع في الفشل أيضًا: من تعذّرت قراءةُ جلساته لا يُفتح له من
+   * الرابط شيءٌ بل يُبرَز أمرُه ليضغطه بنفسه — الجهلُ لا يبرّر إنشاءً.
+   */
+  const [sessionsProbe, setSessionsProbe] = useState({ read: false, ok: false });
   const refreshOpenSessions = useCallback(() => {
     listOpenSessions()
-      .then(setOpenSessions)
-      .catch(() => setOpenSessions([])); // تعذّرُ القراءة لا يمنع فتح جلسةٍ جديدة
+      .then((rows) => { setOpenSessions(rows); setSessionsProbe({ read: true, ok: true }); })
+      // تعذّرُ القراءة لا يمنع فتح جلسةٍ جديدة **بالضغط** — والرابطُ وحدَه يحتاط.
+      .catch(() => { setOpenSessions([]); setSessionsProbe({ read: true, ok: false }); });
   }, []);
   useEffect(() => { if (!sessionId) refreshOpenSessions(); }, [sessionId, refreshOpenSessions]);
 
@@ -411,6 +558,62 @@ export default function ReceivingFlow() {
       navigator.vibrate(kind === 'ok' ? 40 : [80, 60, 80]);
     }
   }, []);
+
+  /* ── ★★★ الأمرُ الذي جاء من العنوان — آخرُ مترٍ في الرحلة ───────────
+   * `?doc=<معرّف المستند>` يُقرأ مرّةً عند الفتح ثمّ يُنظَّف من الشريط. والحكمُ
+   * كلُّه في `deepLinkTarget` أعلاه — وهذه تنفّذه ولا تعيد بناءه.
+   *
+   * ⚠️ **والثلاثةُ تُنتظر ولا تُخمَّن**: الأوامرُ (`loading`) والجلساتُ المفتوحة
+   * والهويّة. فالحكمُ على قائمةٍ نصفِ واصلةٍ يقول «ليس في المفتوحة» عن أمرٍ لم
+   * يصل بعد، أو يفتح جلسةً ثانيةً على أمرٍ عليه جلسةٌ لم تُقرأ. وكلُّ راياتها
+   * تحسم حتمًا (نجاحًا أو فشلًا) فلا انتظارَ صامتٌ إلى الأبد.
+   *
+   * ★ ومرّةً واحدة (`linkDone`): بعدها يعيش الموظّفُ في الشاشة كما دخلها،
+   * فلا يردّه وصولُ جلسةٍ متأخّرةٍ إلى قرارٍ اتُّخذ.
+   */
+  const [wantedDoc, setWantedDoc] = useState(
+    () => (typeof window === 'undefined' ? '' : docParamOf(window.location.search))
+  );
+  /** الأمرُ الذي جاء من الرابط ولم يُفتح — يُبرَز في القائمة فلا يُبحث عنه. */
+  const [linkedOrder, setLinkedOrder] = useState('');
+  const linkDone = useRef(false);
+
+  useEffect(() => {
+    if (!wantedDoc || linkDone.current) return;
+    if (loading || !sessionsProbe.read || !authRead) return;
+    linkDone.current = true;
+
+    const target = deepLinkTarget({
+      wanted: wantedDoc,
+      orders,
+      openSessions,
+      sessionsKnown: sessionsProbe.ok,
+      actor: actorName,
+      // ★ عينُ ما يعطّل زرَّ الصفّ — العنوانُ لا يفعل ما يمنعه الضغط.
+      allowed: recvGate.allowed,
+    });
+    if (target.kind === 'session') {
+      setSessionId(target.id);
+      setActiveDraft('P1');
+      say('ok', target.message);
+    } else if (target.kind === 'order') {
+      setLinkedOrder(target.id);
+      begin(orders.find((o) => o.id === target.id));
+    } else if (target.kind !== 'none') {
+      // مطابقٌ يحتاج ضغطةً، أو غيرُ مطابقٍ — وكلاهما **يُقال** ولا يُصمت عنه.
+      setLinkedOrder(target.id);
+      say(target.kind === 'missing' ? 'err' : 'ok', target.message);
+    }
+
+    // ونمطُ التنظيف نمطُ `ScanFlow.jsx` و`PickingFlow.jsx` حرفًا لا نمطٌ ثانٍ:
+    // بغيره تُعيد كلُّ إعادةِ تحميلٍ الموظّفَ إلى أمرٍ تركه بقصد.
+    setWantedDoc('');
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('doc');
+      window.history.replaceState({}, '', url);
+    }
+  }, [wantedDoc, loading, sessionsProbe, authRead, orders, openSessions, actorName, recvGate.allowed, say]);
 
   /* ── ‹LPN-214› طورُ التخزين ─────────────────────────────────────
    * المواقعُ والأرصدةُ تُقرأ **في هذا الطور وحده**: شاشةُ الاستلام تُفتح
@@ -841,7 +1044,10 @@ export default function ReceivingFlow() {
                   disabled={busy || !recvGate.allowed}
                   onClick={() => begin(o)}
                   className="w-full text-right rounded-lg border px-4 py-4"
-                  style={{ borderColor: 'var(--o-border)' }}
+                  /* ★ الأمرُ الذي جاء من الرابط ولم يُفتح **يُبرَز**: الرسالةُ
+                     وحدَها تقول اسمًا في قائمةٍ من خمسين، والحدُّ أن يبقى البحثُ
+                     بالعين. والإبرازُ لونُ الجلسات المفتوحة نفسُه — لا لونَ ثالث. */
+                  style={{ borderColor: linkedOrder === o.id ? 'var(--o-primary)' : 'var(--o-border)' }}
                 >
                   {/* ★ ولا شارةَ نوعٍ زائدة: الرقمُ يحمل نوعَه أصلًا
                       (`formatNumber` ⇒ «TR-2026-0007»)، فالنقلُ يُقرأ من رقمه.
@@ -860,6 +1066,10 @@ export default function ReceivingFlow() {
                       (سطرٌ فارغ) فلا نكتب في شاشةِ موظّفٍ خبرًا عمّا نجهل. */}
                   {orderOwnerLines.get(o.id) && (
                     <div className="text-ink-2 text-xs mt-1">{orderOwnerLines.get(o.id)}</div>
+                  )}
+                  {/* ولمَ أُبرِز؟ — سطرٌ يقوله، فلا يقف أمام لونٍ يخمّن معناه. */}
+                  {linkedOrder === o.id && (
+                    <div className="text-ink text-xs mt-1 font-bold">الأمرُ الذي جئتَ من رابطه</div>
                   )}
                 </button>
               </li>

@@ -13,7 +13,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
-import { currentStep, stepRemaining, taskTotals, fulfillmentGap } from '../../../services/lpn/pickingTask.js';
+import { currentStep, pathBasisLabel, stepRemaining, taskTotals, fulfillmentGap } from '../../../services/lpn/pickingTask.js';
 import { SCAN_STAGES, nextStage, pickEntryVerdict, stepQtyPanel } from '../../../services/lpn/pickingScan.js';
 // ‹JR-301ب› خانةُ الكمّيّة لم تعد عاريةً — والمعاينةُ من محرّك الوحدات القائم
 // حرفًا: لا تُعاد كتابةُ ضربٍ هنا ولا تُبنى رسالةٌ، فالشاشةُ تعرض حكمًا.
@@ -233,12 +233,69 @@ export default function PickingFlow() {
   }, []);
 
   useEffect(() => { loadTasks(); }, [loadTasks]);
+
+  /**
+   * ★★★ مهمّةٌ تُفتح من العنوان — `?doc=<معرّف المستند الآمر>`.
+   *
+   * ═══ ما كان يقع ═══
+   * من ضغط «ابدأ التحضير الميدانيّ» على أمره يصل إلى **قائمةٍ** يبحث فيها عن
+   * أمره بين خمسين: الشاشةُ لم تقرأ `searchParams` قطّ. وهو المزلقُ الأوّلُ
+   * المكتوبُ في `services/tasks/fieldRoutes.js` حرفًا — «فالمسارُ عارٍ حتّى
+   * تقرأه الشاشة، ثمّ يُضاف هنا وفي الشاشة معًا لا هنا وحده». وهذا نصفُه الثاني.
+   *
+   * ★ والمعاملُ **معرّفُ المستند لا معرّفُ المهمّة**: المهمّةُ تولد على
+   * `pickTaskId(doc)` حتمًا، فالمستندُ هو المفتاحُ الذي بيد كلّ داعٍ (زرُّ صفّ
+   * المستندات، وشاشةُ خطّة السحب) — ومنه يجيب `listOpenTasks` بقراءةٍ واحدةٍ
+   * بالمعرّف بلا فهرسٍ مركّبٍ ينتظر نشرًا.
+   *
+   * ★★ ولا يُفتح تعريفًا: أمرٌ بلا مهمّةٍ مفتوحةٍ تُقال علّتُه وتبقى القائمة —
+   * فشاشةُ تفصيلٍ على مهمّةٍ غيرِ موجودةٍ تعرض «اكتملت خطوات المهمّة» وزرَّ
+   * إقفال، وهي كذبةٌ تدعو إلى إقفال ما لم يُفتح.
+   *
+   * والتنظيفُ بعدها نمطُ `stock/ScanFlow.jsx` حرفًا لا نمطٌ ثانٍ: إعادةُ تحميلٍ
+   * بعد رجوعٍ إلى القائمة كانت ستردّه إلى المهمّة التي تركها بقصد.
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const wanted = new URLSearchParams(window.location.search).get('doc');
+    if (!wanted) return undefined;
+    let alive = true;
+    listOpenTasks({ sourceDocId: wanted })
+      .then(([found]) => {
+        if (!alive) return;
+        if (found) {
+          setMode('picking');
+          setTaskId(found.id);
+          setScan({});
+        } else {
+          setFlash({
+            kind: 'err',
+            text: `لا مهمّةَ تحضيرٍ مفتوحةً على «${wanted}» — إمّا أُقفلت، وإمّا لم تُفتح بعدُ من شاشة خطّة السحب.`,
+          });
+        }
+        const url = new URL(window.location.href);
+        url.searchParams.delete('doc');
+        window.history.replaceState({}, '', url);
+      })
+      .catch((e) => {
+        if (alive) setFlash({ kind: 'err', text: e?.message || 'تعذّرت قراءةُ المهمّة المطلوبة في العنوان.' });
+      });
+    return () => { alive = false; };
+  }, []);
+
   useEffect(() => (taskId ? listenTask(taskId, setTask) : undefined), [taskId]);
 
   const step = useMemo(() => (task ? currentStep(task) : null), [task]);
   const totals = useMemo(() => (task ? taskTotals(task) : null), [task]);
   const gap = useMemo(() => (task ? fulfillmentGap(task) : []), [task]);
   const stage = useMemo(() => nextStage(scan), [scan]);
+  /*
+   * ★★★ أساسُ الترتيب **كائنٌ مخزَّن** (`{id, label, covered, total}`) — وكائنٌ
+   * يُعرض ولدًا في JSX يرميه React ولا `ErrorBoundary` هنا يمسكه، فتُبيَّض
+   * الشاشةُ في يد المحضّر عند أوّل رندر. فالتسميةُ تُطلب من الخدمة والبيانةُ
+   * تبقى كما هي — والحكمُ ماذا يُعرض ليس شرطًا يُكتب في الواجهة.
+   */
+  const basis = pathBasisLabel(task?.pathBasis);
 
   /*
    * ‹JR-301ب› لوحةُ خانة الكمّيّة — **الحكمُ أيَّ المسارَين من الخدمة**:
@@ -802,7 +859,9 @@ export default function PickingFlow() {
               هذا الأمر؟»، والمعرّفُ في يده منذ `openPickTask` فلا حجّةَ لنصٍّ
               أصمّ. وهنا موضعُه: **قبل أن يمشي** لا بعد أن يقفل. */}
           <div className="font-bold text-ink"><DocLink source={task?.source} /></div>
-          <div className="text-ink-2 text-xs">{task?.warehouse} · {task?.pathBasis}</div>
+          {/* ★ والفاصلةُ تتبع ما بعدها: مهمّةٌ بلا أساسٍ معلَنٍ كانت تخرج
+              بمستودعٍ يتدلّى منه «·» لا شيء بعده. */}
+          <div className="text-ink-2 text-xs">{task?.warehouse}{basis ? ` · ${basis}` : ''}</div>
         </div>
         <button type="button" className="btn btn-secondary text-sm" onClick={() => { setTaskId(''); setTask(null); }}>رجوع</button>
       </div>

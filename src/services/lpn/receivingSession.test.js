@@ -3,6 +3,11 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+
+import { getSchema } from '../documents/schemas/index.js';
+import { allFields, emptyDocument } from '../documents/schemaUtils.js';
+import { documentLineProgress } from '../documents/documentLineProgress.js';
 
 import {
   SESSION_STATES,
@@ -47,6 +52,60 @@ const progressOf = (open1, open2) => ({
 });
 
 const CTX = { actor: 'محمد', at: '2026-08-26T08:00:00Z', warehouse: 'MAIN' };
+
+/**
+ * ★★★ مستندٌ **بالشكل الذي يكتبه الكاتبُ فعلًا** — لا بالشكل المريح للاختبار.
+ *
+ * `documentsService.createDraft` و`createNextInChain` يكتبان كلاهما هكذا:
+ * الجذرُ يحمل `type` و`number` و`state` و`lines`، **وكلُّ حقول الرأس تحت
+ * `header`** — ورأسُه من `emptyHeader(schema)` فيأتي فيه المفتاحُ موجودًا
+ * وقيمتُه نصٌّ فارغ. ولهذا يُبنى الرأسُ هنا من المخطّط نفسه لا بيدٍ حرّة:
+ * فلو تغيّر المخطّطُ غدًا تغيّرت العيّنةُ معه ولم تكذب.
+ *
+ * ⚠️ والفارغُ المكتوبُ (`''`) مزلقٌ بعينه: قارئٌ يكتفي بـ`?? ` يقع عليه
+ * فيظنّه قيمةً ولا يحتاط.
+ */
+function writtenDocument(type, { number, state = 'approved', header, lines }) {
+  const schema = getSchema(type);
+  const blank = emptyDocument(schema, { rows: lines.length });
+  return {
+    id: `${type.toLowerCase()}-written`,
+    type,
+    stage: schema.stage ?? null,
+    number,
+    state,
+    header: { ...blank.header, ...header },
+    lines: lines.map((line, index) => ({ ...blank.lines[index], ...line })),
+    links: {},
+  };
+}
+
+/** أمرُ شراءٍ حقيقيٌّ — رأسُه تحت `header` كما يكتبه المحرّك. */
+const WRITTEN_PO = writtenDocument('PO', {
+  number: 'PO-2026-0015',
+  header: {
+    supplier: 'شركة نوفا',
+    warehouse: 'MAIN',
+    issueDate: '2026-08-20',
+    requiredDelivery: '2026-08-27',
+  },
+  lines: [
+    { sku: 'WNW-001', barcode: '6221', description: 'ماء نوفا', uom: 'CTN', qty: 100 },
+    { sku: 'WNW-002', barcode: '6222', description: 'ماء صغير', uom: 'CTN', qty: 50 },
+  ],
+});
+
+/** أمرُ نقلٍ حقيقيّ — ومستودعُه `toWarehouse` لا `warehouse` (مخطّط TR). */
+const WRITTEN_TR = writtenDocument('TR', {
+  number: 'TR-2026-0004',
+  header: {
+    fromWarehouse: 'TRP',
+    toWarehouse: 'MAIN',
+    requestDate: '2026-08-21',
+    requiredDate: '2026-08-25',
+  },
+  lines: [{ sku: 'WNW-001', barcode: '6221', description: 'ماء نوفا', uom: 'CTN', qty: 40 }],
+});
 
 test('★★ الجلسة تُفتح على أمرٍ معتمدٍ له رصيدٌ مفتوح — وتحمل الرصيد للميدان', () => {
   const r = openSession(PO, progressOf(100, 50), CTX);
@@ -161,4 +220,143 @@ test('★★ بطاقةُ الأمر للهاتف: حقول خطة ٧ — وما
   const draft = openOrderCard({ ...PO, state: 'draft' }, [], []);
   assert.ok(!draft.canReceive);
   assert.match(draft.blockedBecause, /حتى يُعتمد/, 'القائمة تقول لماذا لا يُستلم — لا تُخفي الأمر');
+});
+
+/* ══════════════════════════════════════════════════════════════════════
+ * ★★★ حرّاسُ «الرأسُ تحت header» — العطبُ الذي لم يمسكه ٣٧٥٨ اختبارًا
+ *
+ * السببُ في كلّها واحد: العيّناتُ كانت **مسطّحة** (`order.supplier`) والواقعُ
+ * غيرُها (`order.header.supplier`). فبطاقةُ الأمر في شاشة الاستلام كانت
+ * تُبنى ببياناتٍ فارغة مع كلّ مستندٍ حقيقيّ — والاختبارُ أخضر.
+ * ══════════════════════════════════════════════════════════════════════ */
+
+test('★★★ بطاقةُ الأمر من مستندٍ بالشكل الذي يكتبه المحرّك — المورّدُ والمستودعُ والتواريخُ تصل', () => {
+  const card = openOrderCard(WRITTEN_PO, [], []);
+  assert.equal(card.supplier, 'شركة نوفا', 'المورّد تحت `header` — والجذرُ لا يحمله في مستندٍ حقيقيّ قطّ');
+  assert.equal(card.warehouse, 'MAIN', 'ومستودعُ الأمر كذلك');
+  assert.equal(card.issueDate, '2026-08-20');
+  assert.equal(card.requiredDelivery, '2026-08-27');
+  // والجذرُ يبقى مصدرَ ما يُكتب في الجذر: النوعُ والرقمُ والحالةُ والبنود.
+  assert.equal(card.number, 'PO-2026-0015');
+  assert.equal(card.state, 'approved');
+  assert.equal(card.lineCount, 2);
+  assert.equal(card.open, 150);
+  assert.ok(card.canReceive, 'ولا يُحجب أمرٌ معتمدٌ مفتوح');
+});
+
+test('★★ الجلسةُ تُفتح على المستند الحقيقيّ فترث مورّدَه ومستودعَه — والتقدّمُ من محرّكه', () => {
+  // التقدّمُ من `documentLineProgress` الحقيقيّ لا من عيّنةٍ بيد: هذا مسارُ
+  // الشاشة حرفيًّا (بطاقةٌ ثمّ فتحُ جلسةٍ على المستند نفسه).
+  const progress = documentLineProgress(WRITTEN_PO, [], []);
+  const built = openSession(WRITTEN_PO, progress, { actor: 'محمد', at: CTX.at });
+  assert.equal(built.problem, undefined);
+  assert.equal(built.session.supplier, 'شركة نوفا', 'الطبالي المتولّدة ترث مورّدَ الجلسة — فلا تولد بلا مورّد');
+  assert.equal(built.session.warehouse, 'MAIN', 'ولا حمولةَ بلا مستودعٍ تُنسب إليه');
+  assert.equal(built.session.lines.length, 2);
+});
+
+test('★★ أمرُ النقل يُستلم عليه كذلك — ومستودعُه `toWarehouse` ومصدرُه `fromWarehouse`', () => {
+  const card = openOrderCard(WRITTEN_TR, [], []);
+  assert.equal(card.warehouse, 'MAIN', 'المستودعُ المستلِم هو وجهةُ النقل لا مصدرُه');
+  assert.equal(card.supplier, 'TRP', 'ومن جاءت منه الحمولةُ يظهر في موضع المورّد — الميدانُ يسأل «من أين؟»');
+  assert.equal(card.issueDate, '2026-08-21');
+  assert.equal(card.requiredDelivery, '2026-08-25');
+  assert.ok(card.canReceive);
+});
+
+test('★ والمستنداتُ المسطّحةُ القديمة تُقرأ أيضًا — والاحتياطُ تسامحٌ لا افتراض', () => {
+  const card = openOrderCard(PO, [], []);
+  assert.equal(card.supplier, 'شركة نوفا');
+  assert.equal(card.warehouse, 'MAIN');
+  assert.equal(card.issueDate, '2026-08-20');
+});
+
+test('★★ ورأسٌ مكتوبٌ فارغًا لا يُحسب قيمةً — `emptyHeader` يكتب `\'\'` لا `undefined`', () => {
+  // مزلقُ `??`: الفارغُ المكتوب يمرّ منه فيُبتلع الاحتياطُ إلى الجذر.
+  const hybrid = { ...WRITTEN_PO, header: { ...WRITTEN_PO.header, warehouse: '', supplier: '' }, warehouse: 'TRP', supplier: 'شركة قديمة' };
+  const card = openOrderCard(hybrid, [], []);
+  assert.equal(card.warehouse, 'TRP');
+  assert.equal(card.supplier, 'شركة قديمة');
+});
+
+test('🔒 ★★★ حارسٌ بنيويّ: لا اسمَ حقلِ رأسٍ يُقرأ من الجذر في هذا الملفّ — فيمسك النظائرَ المستقبليّة', () => {
+  // أسماءُ حقول الرأس من المخطّطات نفسها لا من قائمةٍ بيد — فحقلٌ يُضاف غدًا
+  // إلى PO أو TR يدخل الحراسةَ بلا أن يذكره أحد.
+  const headerKeys = [...new Set(['PO', 'TR'].flatMap((type) => allFields(getSchema(type)).map((f) => f.key)))];
+  assert.ok(headerKeys.includes('supplier') && headerKeys.includes('toWarehouse'), 'المخطّطاتُ تُقرأ فعلًا');
+
+  // التعليقاتُ تُنزع أوّلًا: الحارسُ على الشيفرة لا على النثر.
+  const source = fs
+    .readFileSync(new URL('./receivingSession.js', import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/\/\/[^\n]*/g, ' ');
+
+  // القراءةُ المشروعةُ بالمفتاح المحسوب (`header?.[key]`) — والوصولُ النقطيّ
+  // (`order.supplier`) هو العطبُ بعينه: يقرأ من الجذر ما لا يُكتب فيه.
+  const offenders = headerKeys
+    .map((key) => ({ key, hits: (source.match(new RegExp(`\\??\\.${key}\\b`, 'g')) || []).length }))
+    .filter((row) => row.hits > 0)
+    .map((row) => `${row.key} ×${row.hits}`);
+
+  assert.deepEqual(offenders, [], 'حقلُ رأسٍ يُقرأ من الجذر — مرّرْه بالمفتاح النصّيّ عبر قارئ الرأس الموحّد');
+});
+
+test('🔒 ★★★ والكاتبُ نفسُه يشهد: `documents` تُكتب بجذرٍ ضيّقٍ ورأسٍ تحت `header`', () => {
+  // ★★★ العيّنةُ أعلاه ليست ادّعاءً: هذا الحارسُ يقرأ **الكاتبَ** لا القارئ،
+  // فيستخرج مفاتيحَ الجذر التي يكتبها `createDraft` و`createNextInChain`
+  // ويؤكّد أنّ حقولَ الرأس ليست فيها. فلو سُطّح الكاتبُ يومًا سقط هنا،
+  // ولو حُشر حقلُ رأسٍ في الجذر سقط هنا — ولا يبقى الافتراضُ بلا شاهد.
+  const writer = fs
+    .readFileSync(new URL('../documents/documentsService.js', import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/\/\/[^\n]*/g, ' ');
+
+  /**
+   * مفاتيحُ المستوى الأوّل في كائنٍ يبدأ عند `open` — بعدّ الأقواس لا بالعين.
+   * ★ والمختصرُ (`type,`) مفتاحٌ كالمصرَّح (`state: X`): من نسيه قرأ نصفَ الجذر
+   * فظنّ الحارسَ خاضرًا وهو أعمى.
+   */
+  const topLevelKeys = (text, open) => {
+    const keys = [];
+    let depth = 0;
+    let segment = '';
+    const flush = () => {
+      const m = /^([A-Za-z_$][\w$]*)\s*(?::|$)/.exec(segment.trim());
+      if (m) keys.push(m[1]);
+      segment = '';
+    };
+    for (let i = open; i < text.length; i += 1) {
+      const ch = text[i];
+      if (ch === '{' || ch === '[' || ch === '(') { depth += 1; if (depth > 1) segment += ch; }
+      else if (ch === '}' || ch === ']' || ch === ')') { depth -= 1; if (depth === 0) { flush(); break; } segment += ch; }
+      else if (depth === 1 && ch === ',') flush();
+      else if (depth >= 1) segment += ch;
+    }
+    return keys;
+  };
+
+  const blocks = ['addDoc(collection(db, DOCS), {', 'transaction.set(childRef, {'].map((needle) => {
+    const at = writer.indexOf(needle);
+    assert.notEqual(at, -1, `تعذّر العثور على كاتبٍ في محرّك المستندات: ${needle}`);
+    return topLevelKeys(writer, at + needle.length - 1);
+  });
+
+  // ★★ نقضٌ يُثبت أنّ الحارسَ يعضّ: كاتبٌ مسطّحٌ مصطنعٌ **يجب** أن يُمسك.
+  // ولولاه لَكان اخضرارُ الحارس بلا معنًى — يمرّ لأنّه لا يرى، لا لأنّه سليم.
+  const flattened = 'addDoc(collection(db, DOCS), {\n  type,\n  state: INITIAL_STATE,\n  supplier: s,\n  lines,\n});';
+  const flatKeys = topLevelKeys(flattened, flattened.indexOf('{'));
+  assert.deepEqual(flatKeys, ['type', 'state', 'supplier', 'lines'], 'المستخرِجُ يقرأ المختصرَ والمصرَّحَ معًا — وإلّا فهو أعمى');
+
+  assert.deepEqual(blocks[0], blocks[1], 'الكاتبان يكتبان الشكلَ نفسَه — فقارئٌ واحدٌ يكفيهما');
+
+  const headerKeys = new Set(['PO', 'TR'].flatMap((type) => allFields(getSchema(type)).map((f) => f.key)));
+  for (const rootKeys of blocks) {
+    assert.ok(rootKeys.includes('header'), 'الرأسُ يُكتب في مفتاحٍ اسمُه `header`');
+    assert.ok(rootKeys.includes('type') && rootKeys.includes('state') && rootKeys.includes('lines'), 'والجذرُ يحمل النوعَ والحالةَ والبنود');
+    assert.deepEqual(
+      rootKeys.filter((key) => headerKeys.has(key)),
+      [],
+      'حقلُ رأسٍ يُكتب في الجذر — فراجعْ قارئَ الرأس في جلسة الاستلام قبل أن تفترق البطاقةُ عن المستند'
+    );
+  }
 });

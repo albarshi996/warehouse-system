@@ -3,7 +3,16 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+// ★★★ الحَكَمُ على «أيصلح هذا ولدًا؟» هو محرّكُ React نفسُه لا قائمةُ أنواعٍ
+// نقلّدها هنا فتفترق عنه يومًا — وهو نفسُ المحرّك الذي يُسقط شاشةَ المحضّر.
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+
+import { buildGrid } from '../locations/travelGrid.js';
 import {
   PICKABLE_TYPES,
   PICK_TASK_STATES,
@@ -12,6 +21,7 @@ import {
   currentStep,
   fulfillmentGap,
   openPickTask,
+  pathBasisLabel,
   pickTaskDuplicateProblem,
   pickTaskId,
   skipStep,
@@ -245,4 +255,167 @@ test('صفُّ الرصيد يُطابَق بمفتاحه الميدانيّ —
   assert.equal(step.bin, 'MAIN-A01-R01-B01', 'الأقربُ انتهاءً أوّلًا (FEFO)');
   assert.equal(step.uom, 'carton', 'ووحدتُه من صفّه هو لا من صفٍّ مجاور');
   assert.equal(step.factor, 12);
+});
+
+/* ═════════════ 🔒 حارسُ الشاشة البيضاء ‹القاتل ①› ═════════════
+ *
+ * ═══ ما وقع ═══
+ * `openPickTask` يكتب `pathBasis` **كائنًا**، وشاشةُ التحضير كانت تعرضه ولدًا
+ * في JSX بجانب المستودع. وReact يرمي «Objects are not valid as a React child»
+ * **ولا `ErrorBoundary` فوق هذه الشاشة**: كلُّ مهمّةٍ يفتحها المحضّر تسقط عند
+ * أوّل رندر، فيقف في الممرّ أمام بياضٍ لا رسالةَ فيه ولا زرَّ رجوع.
+ *
+ * ولم يمسكه اختبارٌ واحدٌ من آلافٍ خضراء، لأنّها كلَّها تبني بياناتِها بيدها
+ * وتنادي الدوالَّ مباشرةً — فلا واحدَ منها سأل **الشاشةَ** ماذا تعرض، ولا سأل
+ * **React** أيقبله ولدًا.
+ *
+ * فهذا الحارسُ يقلب الاتّجاهين معًا:
+ *   ① القائمةُ تُقرأ من `PickingFlow.jsx` نفسِه — فحقلٌ يُضاف غدًا يُحرَس اليوم.
+ *   ② والحكمُ يمرّ بـ`react-dom/server` — المحرّكُ نفسُه لا محاكاةٌ له.
+ */
+
+const FLOW_FILE = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..', '..', 'components', 'brandzo-erp', 'lpn', 'PickingFlow.jsx'
+);
+
+/**
+ * ★★★ ما تعرضه الشاشةُ **ولدًا** — يُقرأ من ملفّها ولا يُسرَد هنا بيد.
+ *
+ * ولماذا لا يُسرَد؟ لأنّ قائمةً مكتوبةً تحرس حقلَ اليوم وحدَه: يُضاف غدًا
+ * `{task?.route}` — وهو كائنٌ أيضًا (`routeDistance` يعيد `{meters, note…}`) —
+ * فتبقى القائمةُ خضراءَ والشاشةُ بيضاء. وهو عينُ ما وقع بـ`pathBasis`.
+ *
+ * والجذورُ ثلاثةٌ كما تسمّيها الشاشة: `task` (شاشةُ المهمّة) و`t` (صفُّ
+ * القائمة) وكلاهما المهمّة، و`step` الخطوةُ الجارية.
+ *
+ * ⚠️ وما سبقه `=` ليس ولدًا بل خاصّيّةَ مكوّن (`source={task?.source}`):
+ * الكائنُ يُمرَّر خاصّيّةً بلا ضرر ويُفكَّك داخلَ المكوّن نصوصًا. وما سبقه `$`
+ * قالبٌ نصّيّ يُسطِّح ولا يرمي — فكلاهما خارج هذا الحارس عمدًا لا سهوًا.
+ */
+function jsxChildReads(src) {
+  const re = /(^|[^=$])\{\s*(task|t|step)((?:\??\.[A-Za-z_$][\w$]*)+)\s*\}/g;
+  return [...src.matchAll(re)].map((m) => ({ root: m[2], keys: m[3] }));
+}
+
+/** قيمةُ مسارٍ مكتوبٍ كما في JSX — `?.` تُطرح، فالغيابُ يُردّ `undefined`. */
+function valueAt(obj, keys) {
+  return keys
+    .replace(/\?/g, '')
+    .split('.')
+    .filter(Boolean)
+    .reduce((o, k) => (o == null ? undefined : o[k]), obj);
+}
+
+/**
+ * ★★ المهمّةُ **كما تصل الشاشةَ** لا كما تخرج من الدالّة.
+ *
+ * `createPickTask` ينثر `built.task` في `picking_tasks` ويزيد `openedByUid`
+ * و`createdAt`، و`listenTask` يزيد `id` من `snap.id`. فمن بنى عيّنتَه من مخرج
+ * الدالّة وحدَه حرس نصفَ ما يُعرض — **اقرأ الكاتبَ لا القارئ**.
+ */
+function storedTask({ grid = null } = {}) {
+  const built = openPickTask(PICK_DOC, BALANCES, { ...CTX, grid });
+  assert.equal(built.problem, undefined, 'والعيّنةُ من مدخلاتٍ واقعيّةٍ تُفتح فعلًا');
+  return {
+    id: pickTaskId(PICK_DOC),
+    ...built.task,
+    openedByUid: 'uid-7',
+    // ⚠️ `serverTimestamp()` يعود من الخادم **كائنَ طابعٍ** لا نصًّا — فمن
+    //    يعرضه ولدًا غدًا يُبيّض الشاشةَ كما بيّضها `pathBasis` أمس.
+    createdAt: { seconds: 1756900000, nanoseconds: 0 },
+  };
+}
+
+/** أيقبل Reactُ هذه القيمةَ ولدًا؟ — `''` تعني نعم، وغيرُها سببُ الرفض. */
+function reactRejects(value) {
+  try {
+    renderToStaticMarkup(React.createElement('div', null, value));
+  } catch (e) {
+    return e?.message || 'رفضها React بلا رسالة.';
+  }
+  // ★ ومصفوفةٌ فارغةٌ يقبلها Reactُ اليوم ويرميها غدًا حين تمتلئ كائنات
+  //   (`issuePallets: []` مثالُها الحيّ) — فتُردّ بالقاعدة لا بالتجربة.
+  if (Array.isArray(value)) return 'مصفوفةٌ تمرّ فارغةً وتُسقط الشاشةَ حين تمتلئ.';
+  return '';
+}
+
+/** أعطابُ الشاشة البيضاء في مهمّةٍ بعينها — مسارُ الحقل وسببُ رفضه. */
+function whiteScreenFaults(reads, task) {
+  const out = [];
+  for (const { root, keys } of reads) {
+    for (const target of root === 'step' ? task.steps ?? [] : [task]) {
+      const why = reactRejects(valueAt(target, keys));
+      if (why) out.push(`${root}${keys} ⇐ ${why}`);
+    }
+  }
+  return [...new Set(out)];
+}
+
+test('🔒 كلُّ ما تعرضه شاشةُ التحضير ولدًا يقبله React — لا كائنٌ يُبيّضها عند أوّل رندر', () => {
+  const reads = jsxChildReads(fs.readFileSync(FLOW_FILE, 'utf8'));
+  // ★★★ الاستخراجُ نفسُه يُقاس: حارسٌ لا يجد ما يفحصه لا يُطلق ولو مرّة —
+  //     وهو درسُ «حارسٍ يقرأ حقلًا لا يُكتب أبدًا» بعينه.
+  assert.ok(reads.length >= 6, `الشاشةُ تعرض ${reads.length} حقلًا وحدَه — أتبدّل شكلُ JSX؟`);
+  assert.ok(reads.some((r) => r.root === 'task'), 'وفيها قراءاتُ شاشة المهمّة');
+  assert.ok(reads.some((r) => r.root === 'step'), 'وقراءاتُ الخطوة الجارية');
+
+  const faults = [];
+  // بلا شبكةٍ وبها: `pathBasisOf` يعيد كائنًا في الحالين، وهما مسارا الواقع.
+  for (const grid of [null, buildGrid(BALANCES.map((b) => b.bin))]) {
+    faults.push(...whiteScreenFaults(reads, storedTask({ grid })));
+  }
+  assert.deepEqual(
+    [...new Set(faults)],
+    [],
+    'كائنٌ يُعرض ولدًا: اعرض تسميتَه (`pathBasisLabel`) ولا تُسطّح البيانةَ المخزَّنة.'
+  );
+});
+
+test('🔒 والحارسُ يُطلق فعلًا — يُقاس بالنقض لا بخضرةٍ تُصدَّق', () => {
+  const reads = jsxChildReads(fs.readFileSync(FLOW_FILE, 'utf8'));
+  // مستودعٌ صار كائنًا (وهو ما يقع حين يُخزَّن الكودُ مع تسميته يومًا).
+  const poisoned = { ...storedTask(), warehouse: { code: 'MAIN', label: 'الرئيسيّ' } };
+  assert.ok(
+    whiteScreenFaults(reads, poisoned).some((f) => f.includes('warehouse')),
+    'حارسٌ لا يُمسك كائنًا مدسوسًا في حقلٍ تعرضه الشاشةُ حارسٌ صامت'
+  );
+  // وخطوةٌ حُشيت كائنًا في حقلٍ معروض — الجذرُ الثاني يُقاس كما الأوّل.
+  const badStep = storedTask();
+  badStep.steps = badStep.steps.map((s) => ({ ...s, bin: { code: s.bin } }));
+  assert.ok(whiteScreenFaults(reads, badStep).some((f) => f.includes('bin')));
+});
+
+test('★★★ `pathBasis` بيانةٌ منظَّمةٌ تبقى — والشاشةُ تعرض تسميتَها لا هي', () => {
+  const task = storedTask();
+  assert.equal(typeof task.pathBasis, 'object', 'المنظَّمُ أنفعُ في التخزين فلا يُسطَّح لأجل ركنِ شاشة');
+  assert.match(reactRejects(task.pathBasis), /not valid as a React child/, 'وهو بعينه ما كان يُبيّض الشاشة');
+  assert.equal(pathBasisLabel(task.pathBasis), 'مرتَّبٌ بكود الموقع — لا شبكةَ ممرّاتٍ معرَّفة بعد');
+  assert.equal(reactRejects(pathBasisLabel(task.pathBasis)), '');
+  // والشبكةُ تُبدّل التسمية ولا تُبدّل صلاحيّتَها للعرض.
+  const gridded = storedTask({ grid: buildGrid(BALANCES.map((b) => b.bin)) });
+  assert.equal(reactRejects(pathBasisLabel(gridded.pathBasis)), '');
+  assert.ok(pathBasisLabel(gridded.pathBasis).length > 0);
+  // والكاتبُ يُعلن `''` بديلًا (`plan.pathBasis ?? ''`) فالقارئُ يقبل الاثنين.
+  assert.equal(pathBasisLabel(''), '');
+  assert.equal(pathBasisLabel('مرتَّبٌ بكود الموقع'), 'مرتَّبٌ بكود الموقع');
+  assert.equal(pathBasisLabel(undefined), '');
+  assert.equal(pathBasisLabel(null), '');
+});
+
+test('🔒 شاشةُ التحضير تقرأ مهمّتَها من العنوان ثمّ تنظّفه — لا قائمةٌ يبحث فيها من جاء بأمره', () => {
+  /*
+   * ⚠️ المزلقُ الأوّلُ مكتوبٌ في `services/tasks/fieldRoutes.js` حرفًا: «المسارُ
+   * بلا معرّف المستند… قُرئت الشاشاتُ الأربع فلم تقرأ واحدةٌ منها
+   * `searchParams`… ثمّ يُضاف هنا وفي الشاشة معًا لا هنا وحده». وهذا نصفُه
+   * الثاني، وهذا حارسُه — فلا يعود الغيابُ صامتًا.
+   */
+  const src = fs.readFileSync(FLOW_FILE, 'utf8');
+  assert.match(src, /new URLSearchParams\(window\.location\.search\)\.get\('doc'\)/);
+  assert.match(src, /listOpenTasks\(\{\s*sourceDocId:/, 'والجوابُ بالمعرّف الحتميّ لا باستعلامٍ يحتاج فهرسًا');
+  assert.match(
+    src,
+    /searchParams\.delete\('doc'\)[\s\S]{0,200}history\.replaceState/,
+    'ويُنظَّف بعدها — وإلّا أعادته كلُّ إعادةِ تحميلٍ إلى مهمّةٍ تركها بقصد'
+  );
 });

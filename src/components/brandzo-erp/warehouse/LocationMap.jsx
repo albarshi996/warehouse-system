@@ -62,39 +62,63 @@ export default function LocationMap() {
   const [tasks, setTasks] = useState([]);
   // ‹LPN-211› الطبالي الواقفة — تُجلب بحالاتها المصدَّرة لا بقائمةٍ ثانيةٍ هنا.
   const [units, setUnits] = useState([]);
+  // ★★★ «جُلبت» غيرُ «وُجدت»: قائمةٌ فارغةٌ قبل الجلب تُنتج فهرسًا فارغًا،
+  // والفهرسُ الفارغُ يقول لكلّ رفٍّ «صفرُ طبالٍ» — وهو كذبٌ لا جهل. فيُفصل
+  // العلمُ عن العدد براية، ويُمرَّر الفهرسُ إلى الشبكة **بعد** الجلب وحدَه.
+  const [unitsKnown, setUnitsKnown] = useState(false);
   const [itemTerm, setItemTerm] = useState('');
 
   useEffect(() => listenLocations(setLocations, () => setLocations([])), []);
   useEffect(() => listenBalances(setBalances, () => setBalances([])), []);
   useEffect(() => listenLaborTasks(setTasks, () => setTasks([])), []);
 
-  // الجلبُ عند فتح الطبقة وحدها — الخريطة تُفتح للسعة في أغلب الأحيان،
-  // وقراءةُ كلّ الطبالي في كلّ فتحةٍ ثمنٌ بلا مقابل.
+  /**
+   * ★★ ومتى يُدفع ثمنُ الجلب؟ حين يكون للعدد **مقامٌ يُقارَن به**.
+   *
+   * رفٌّ بلا سقفِ طبالٍ معلَنٍ لا يُحاسِب أحدًا، وجُلُّ المواقع المسجَّلة اليوم
+   * كذلك — فلا يُقرأ ألفُ مستندٍ لرقمٍ لا يُعرض. ومن قاس رفَّه وأعلن سقفَه
+   * يستحقّ أن يرى مشغولَه في طبقة السعة أيضًا، لا في طبقة الطبالي وحدها.
+   */
+  const capsPallets = useMemo(
+    () => (locations || []).some((l) => Number(l?.capacity?.pallets) > 0),
+    [locations]
+  );
+  const needUnits = layer === 'pallets' || capsPallets;
+
   useEffect(() => {
-    if (layer !== 'pallets') return undefined;
+    if (!needUnits) return undefined;
     let alive = true;
     Promise.all(ON_FLOOR_STATES.map((st) => listUnitsByState(st, UNITS_PER_STATE)))
-      .then((rows) => { if (alive) setUnits(rows.flat()); })
-      .catch(() => { if (alive) setUnits([]); });
+      .then((rows) => { if (alive) { setUnits(rows.flat()); setUnitsKnown(true); } })
+      .catch(() => { if (alive) { setUnits([]); setUnitsKnown(false); } });
     return () => { alive = false; };
-  }, [layer]);
+  }, [needUnits]);
+
+  // ‹LPN-211› الفهرسُ يُشتقّ ولا يُخزَّن — حقلٌ على الموقع كان سيفترق عن
+  // الحقيقة أوّلَ نقلةٍ لم تُحدّثه، وهو ما يجعل الخرائط تكذب.
+  const byBin = useMemo(() => palletsByBin(units), [units]);
 
   const warehouseCodes = useMemo(() => warehouseCodesOf(locations), [locations]);
   const grid = useMemo(
     // الشبكة تُبنى مرّةً ثمّ **تُلحق** بها طبقة العمل — لا بناءٌ ثانٍ.
     () => applyWorkLayer(
-      buildLocationGrid(locations, balances, { warehouse, storageType, term, includeArchived }),
+      buildLocationGrid(locations, balances, {
+        warehouse,
+        storageType,
+        term,
+        includeArchived,
+        // ★ الفهرسُ نفسُه الذي تُلوَّن به طبقةُ الطبالي يبلغ `occupancyOf` —
+        // فهرسٌ واحدٌ في الذاكرة لا اثنان يفترقان، و`null` قبل الجلب.
+        pallets: unitsKnown ? byBin : null,
+      }),
       tasks
     ),
-    [locations, balances, warehouse, storageType, term, includeArchived, tasks]
+    [locations, balances, warehouse, storageType, term, includeArchived, tasks, unitsKnown, byBin]
   );
   const work = useMemo(() => summarizeWork(grid.cells), [grid]);
   const showWork = layer === 'work';
   const showPallets = layer === 'pallets';
 
-  // ‹LPN-211› الفهرسُ يُشتقّ ولا يُخزَّن — حقلٌ على الموقع كان سيفترق عن
-  // الحقيقة أوّلَ نقلةٍ لم تُحدّثه، وهو ما يجعل الخرائط تكذب.
-  const byBin = useMemo(() => palletsByBin(units), [units]);
   const palletCells = useMemo(() => {
     const map = new Map();
     for (const c of grid.cells) map.set(c.code, palletCellOf(binSummary(units, c.code)));
@@ -364,6 +388,9 @@ export default function LocationMap() {
             {cell.nameAr && <><dt>الاسم</dt><dd>{cell.nameAr}</dd></>}
             <dt>نوع التخزين</dt><dd>{cell.storageLabel}</dd>
             <dt>الرصيد والسعة</dt><dd>{cell.capacityText}</dd>
+            {/* ★ مواضعُ الطبالي مقياسٌ مستقلٌّ عن الكمّيّة — رفٌّ يسع ألفَ قطعةٍ
+                قد لا يسع إلّا طبليّتين، فيُعرض بسطره لا مضمومًا إلى السعة. */}
+            {cell.palletText && <><dt>مواضع الطبالي</dt><dd>{cell.palletText}</dd></>}
             <dt>الأصناف · الدفعات · السطور</dt>
             <dd>{n(cell.occupancy.items)} · {n(cell.occupancy.batches)} · {n(cell.occupancy.lines)}</dd>
             <dt>يقبل بضاعةً جديدة؟</dt><dd>{cell.accepts ? 'نعم' : 'لا'}</dd>

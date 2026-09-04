@@ -11,9 +11,17 @@ import {
   grnLineExtras,
   grnPreview,
   grnProblem,
+  orphanLines,
   receivedByLine,
   receivedDetailByLine,
 } from './grnBridge.js';
+
+// ★★★ لحارس الطرفين وحده: السلسلةُ الحقيقيّة من الباركود إلى المذكّرة.
+// تُستورَد هنا عمدًا كي **لا يُصنَع بندُ طبليّةٍ بيدٍ** في ذلك الحارس.
+import { buildItemIndexes } from '../items/uomWiring.js';
+import { addReading } from './lpnContents.js';
+import { scanVerdict } from './receivingScan.js';
+import { openSession } from './receivingSession.js';
 
 const SESSION = {
   order: { type: 'PO', id: 'po-1', number: 'PO-2026-0015' },
@@ -267,4 +275,104 @@ test('★★ المعاينةُ تحمل التتبّعَ وخلافَه — و�
   assert.equal(before.lines[0].received, 84);
   assert.equal(before.palletCount, 2);
   assert.equal(before.problem, '');
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ★★★ حارسُ الطرفين ‹JR-201ب› — يمرّ بالسلسلة ولا يصنع بندًا بيده
+ * ═══════════════════════════════════════════════════════════════════════════
+ * كلُّ ما فوق هذا السطر يُمرّر جلسةً **مكتوبةً باليد** بـ`lineId` كتبناه نحن،
+ * فمرّ الأخضرُ كلُّه وسلكُ الميدان مقطوع: `addReading` — الكاتبُ الوحيد لبنود
+ * الطبلية — كانت تبني كائنًا حرفيًّا بلا `lineId`، و`receivedByLine` تتخطّى
+ * كلَّ بندٍ بلا `lineId`. فلا كمّيّةٌ عبرت ولا صلاحية، ولا اختبارَ واحدًا
+ * أمسكها لأنّ أحدًا لم يمشِ الطريق كلَّه.
+ *
+ * فهذا الحارسُ يبدأ من **باركودٍ يُمسح** وينتهي عند مذكّرة الاستلام.
+ */
+
+/** الصنفُ كما تكتبه خدمةُ الأصناف فعلًا — باركودُ كرتونةٍ ومعاملُها معه. */
+const CHAIN_ITEM = {
+  sku: 'WNW-001', name: 'ماء نوفا',
+  barcodes: ['6221', '6221000'],
+  baseUom: 'piece', uomFactors: { carton: 12 }, uomBarcodes: { '6221000': 'carton' },
+};
+const CHAIN_PO = { id: 'po-7', type: 'PO', number: 'PO-2026-0077', state: 'approved', warehouse: 'MAIN' };
+const CHAIN_PROGRESS = {
+  documentId: 'po-7', documentType: 'PO',
+  lines: [{ lineId: 'L1', lineNumber: 1, sku: 'WNW-001', barcode: '6221', uom: 'piece', requested: 100, open: 100 }],
+  totals: { requested: 100, executed: 0, open: 100 },
+};
+
+/**
+ * مسحةٌ واحدةٌ تمشي الطريق الذي تمشيه `scanIntoDraft` حرفيًّا:
+ * حكمٌ من `scanVerdict` ⟵ ثمّ `addReading` على بنود المسوّدة ⟵ ثمّ الجلسة.
+ * لا حقلَ واحدٌ يُكتب هنا بيد الاختبار.
+ */
+function scanned(scans, { asOf = '2026-09-04' } = {}) {
+  const indexes = buildItemIndexes([CHAIN_ITEM]);
+  const session = openSession(CHAIN_PO, CHAIN_PROGRESS, { actor: 'محمد', at: `${asOf}T08:00:00Z` }).session;
+  let lines = [];
+  for (const scan of scans) {
+    const verdict = scanVerdict(session, { ...scan, palletLines: lines }, { indexes, asOf });
+    assert.ok(verdict.ok, `المسحة رُفضت: ${verdict.message}`);
+    const added = addReading(lines, verdict.entry, { asOf });
+    assert.equal(added.problem, undefined, added.problem);
+    lines = added.lines;
+  }
+  return {
+    session,
+    live: { ...session, drafts: [{ ref: 'P1', lpn: 'LPN-MAIN-20260904-000001', state: 'APPROVED', lines }] },
+    lines,
+  };
+}
+
+test('★★★ حارسُ الطرفين: باركودٌ يُمسح ⟵ كمّيّتُه **وصلاحيتُه** تصلان مذكّرةَ الاستلام', () => {
+  const { live } = scanned([{ barcode: '6221000', batch: 'B2408', expiry: '2027-03-01' }]);
+
+  assert.equal(receivedByLine(live).byLine.L1, 12,
+    '★★★ كرتونةُ الاثني عشر تصل سطرَ الأمر — وقبل الإصلاح كان البند يُتخطّى فلا كمّيّةَ أصلًا');
+  assert.deepEqual(grnLineExtras(live).L1, { batch: 'B2408', expiryDate: '2027-03-01' },
+    '★★★ و`expiryDate` باسمه في المستند — وإلّا بقيت FEFO عمياءَ عند التحضير');
+  assert.equal(grnProblem(live), '', 'ولا مانعَ يمنع التوليد');
+});
+
+test('★★★ والبندُ الذي كتبه `addReading` يحمل هويّةَ سطرِ الأمر — لا يُعاد اشتقاقُها لاحقًا', () => {
+  const { lines } = scanned([
+    { barcode: '6221000', batch: 'B2408', expiry: '2027-03-01' },
+    { barcode: '6221000', batch: 'B2408', expiry: '2027-03-01' },
+  ]);
+  assert.equal(lines.length, 1, 'قراءتان بنفس الهويّة بندٌ واحد');
+  assert.equal(lines[0].qty, 2);
+  assert.equal(lines[0].lineId, 'L1', '★★★ الحلقةُ المقطوعة: الكاتبُ كان يُسقط `lineId` فينقطع السلك عند أوّله');
+});
+
+test('★★ ودمجُ القراءتين لا يفقد الهويّة — والمجموعُ يصل سطرًا واحدًا', () => {
+  const { live } = scanned([
+    { barcode: '6221000', batch: 'B2408', expiry: '2027-03-01' },
+    { barcode: '6221', batch: 'B2408', expiry: '2027-03-01' },
+  ]);
+  assert.equal(receivedByLine(live).byLine.L1, 13, 'كرتونةٌ ووحدة = ثلاثةَ عشرَ أساسًا');
+  assert.equal(receivedDetailByLine(live).L1.length, 2, 'صفّان لوحدتين — وكلاهما تحت هويّة السطر');
+});
+
+test('⚠️ طبليّةٌ قديمةٌ محفوظةٌ بلا `lineId` تُنقذ بسطرها الوحيد — ولا تُخترع عند اللبس', () => {
+  // ★★★ الشكلُ الحقيقيُّ لما في السحابة اليوم: بنودٌ كتبها `addReading`
+  // القديمة، فيها كلُّ شيءٍ إلّا الهويّة. كسرُها يعني استلامًا لا يُولَّد أبدًا.
+  const legacyLine = { sku: 'WNW-001', barcode: '6221', uom: 'CARTON', factor: 12, qty: 5, baseQty: 60, batch: 'B2408', expiry: '2027-03-01' };
+  const base = scanned([{ barcode: '6221000', batch: 'B2408', expiry: '2027-03-01' }]).session;
+  const legacy = { ...base, drafts: [{ ref: 'P0', lpn: 'LPN-MAIN-20260801-000009', state: 'STORED', lines: [legacyLine] }] };
+
+  assert.equal(receivedByLine(legacy).byLine.L1, 60, 'سطرٌ واحدٌ يطابق الصنف — فالنسبةُ يقينٌ لا تخمين');
+  assert.equal(grnLineExtras(legacy).L1.expiryDate, '2027-03-01', 'وصلاحيّتُها تعبر معها');
+  assert.deepEqual(orphanLines(legacy), [], 'ولا يتيمَ يُعلَن');
+
+  // ⚠️ سطران بنفس الصنف بوحدتين — النسبةُ ظنٌّ، والظنُّ في مستندٍ ماليٍّ ممنوع.
+  const twoLines = {
+    ...legacy,
+    lines: [...base.lines, { lineId: 'L2', lineNumber: 2, sku: 'WNW-001', barcode: '6221000', uom: 'CTN', ordered: 20, open: 20, received: 0 }],
+  };
+  assert.equal(receivedByLine(twoLines).byLine.L1, undefined, '★★★ لا يُنسب لسطرٍ بالقرعة');
+  assert.deepEqual(orphanLines(twoLines), [
+    { lpn: 'LPN-MAIN-20260801-000009', sku: 'WNW-001', barcode: '6221', qty: 5, baseQty: 60, because: 'يطابق سطرين أو أكثر من الأمر — الهويّة تُحسم يدويًّا' },
+  ], 'بل يُعلَن يتيمًا باسم طبليّته: قائمةُ عملٍ لا رقمٌ مخمَّن');
+  assert.deepEqual(grnPreview(twoLines).orphanLines, orphanLines(twoLines), 'والمعاينةُ تحمله قبل الضغط لا بعده');
 });

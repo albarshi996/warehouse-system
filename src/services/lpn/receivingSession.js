@@ -31,6 +31,54 @@ export const SESSION_STATES = Object.freeze({
 const up = (v) => String(v ?? '').trim().toUpperCase();
 
 /**
+ * ★★★ قراءةُ حقلٍ من **رأس** المستند — والرأسُ تحت `header` لا في الجذر.
+ *
+ * كاتبا مجموعة المستندات (`documentsService.createDraft` و`createNextInChain`)
+ * يكتبان الشكلَ نفسَه: الجذرُ يحمل `type` و`number` و`state` و`lines`
+ * و`links` وأختامَ المُنشئ، **وكلَّ ما عدا ذلك تحت `header`**. فمن قرأ
+ * المورّدَ أو المستودعَ أو التواريخَ من الجذر قرأ `undefined` من كلّ مستندٍ
+ * حقيقيّ — وبطاقةُ الأمر تُبنى فارغةً بلا أن يسقط اختبارٌ واحد.
+ *
+ * ⚠️ **والاحتياطُ إلى الجذر تسامحٌ لا افتراض**: مستنداتٌ قديمةٌ مسطّحةٌ
+ * وعيّناتُ اختبارٍ تصل بالشكلين، فالقارئُ يقبلهما ولا يفرض واحدًا.
+ *
+ * ⚠️ ومزلقُ `??` هنا بعينه: `emptyHeader` يكتب المفتاحَ موجودًا وقيمتُه نصٌّ
+ * فارغ، فـ`header?.warehouse ?? doc.warehouse` يقف عند `''` ولا يحتاط أبدًا.
+ * ولهذا **الفارغُ يُتخطّى** لا يُقبل.
+ *
+ * ★ والمفاتيحُ تُمرَّر **نصوصًا** لا وصولًا نقطيًّا: بهذا يقدر الحارسُ
+ * البنيويُّ في الاختبار أن يقول «لا اسمَ حقلِ رأسٍ يُقرأ في هذا الملفّ إلّا
+ * من هنا» — فيمسك النظيرَ الذي يُكتب غدًا.
+ */
+function headerField(doc, ...keys) {
+  for (const key of keys) {
+    const value = doc?.header?.[key];
+    if (String(value ?? '').trim() !== '') return value;
+  }
+  for (const key of keys) {
+    const value = doc?.[key];
+    if (String(value ?? '').trim() !== '') return value;
+  }
+  return '';
+}
+
+/**
+ * مستودعُ الاستلام في الأمر.
+ *
+ * ★★ وأمرُ النقل (TR) لا حقلَ `warehouse` فيه أصلًا — مستودعاه `fromWarehouse`
+ * و`toWarehouse`، **والمستلِمُ هو الوجهة**. فمن قرأ `warehouse` وحدَه ردّ
+ * فراغًا على كلّ أمر نقلٍ وهو نصفُ ما تفتح عليه الجلسةُ (`sessionOpenProblem`).
+ */
+function orderWarehouse(order) {
+  return headerField(order, 'warehouse', 'toWarehouse');
+}
+
+/** من جاءت منه الحمولة: مورّدُ الشراء، أو مستودعُ المصدر في النقل. */
+function orderSource(order) {
+  return headerField(order, 'supplier', 'supplierName', 'fromWarehouse');
+}
+
+/**
  * سبب رفض فتح جلسةٍ على هذا الأمر — أو '' إن جاز.
  *
  * الترتيب هو الحارس: نوعُ المستند قبل حالته، وحالته قبل رصيده — فأوّلُ ما
@@ -94,10 +142,12 @@ export function openSession(order, progress, { actor, at, warehouse = '', device
     session: {
       state: 'OPEN',
       order: { type: order.type, id: order.id, number: order.number ?? '' },
-      supplier: order.supplier ?? order.supplierName ?? '',
+      // ★★★ من رأس المستند لا من جذره — وإلّا وُلدت الجلسةُ بلا مورّدٍ من كلّ
+      // مستندٍ حقيقيّ، ووُرّث الفراغُ إلى كلّ طبليةٍ تولد منها.
+      supplier: orderSource(order),
       // مستودع الجلسة: ما اختاره الموظّف، وإلّا مستودع الأمر — والطبالي
       // المتولّدة ترثه، فلا تولد حمولةٌ بلا مستودعٍ تُنسب إليه.
-      warehouse: up(warehouse) || up(order.warehouse),
+      warehouse: up(warehouse) || up(orderWarehouse(order)),
       lines: sessionLines(order, progress),
       pallets: [],
       openedBy: String(actor).trim(),
@@ -208,10 +258,14 @@ export function openOrderCard(order, relations = [], relatedDocuments = []) {
     id: order?.id,
     type: order?.type,
     number: order?.number ?? '',
-    supplier: order?.supplier ?? order?.supplierName ?? '',
-    warehouse: up(order?.warehouse),
-    issueDate: order?.issueDate ?? '',
-    requiredDelivery: order?.requiredDelivery ?? '',
+    // ★★★ الرأسُ من `header` — والنوعُ والرقمُ والحالةُ من الجذر. وخلطُ
+    // الموضعين هو الذي كان يُفرغ البطاقةَ من كلّ أمرٍ حقيقيّ.
+    supplier: orderSource(order),
+    warehouse: up(orderWarehouse(order)),
+    // وأسماءُ التواريخ تختلف بالنموذج: PO يقول `issueDate`/`requiredDelivery`
+    // وTR يقول `requestDate`/`requiredDate` — والبطاقةُ واحدةٌ للاثنين.
+    issueDate: headerField(order, 'issueDate', 'requestDate', 'date'),
+    requiredDelivery: headerField(order, 'requiredDelivery', 'requiredDate'),
     state: order?.state ?? '',
     lineCount: (progress.lines ?? []).length,
     ordered: Number(totals.requested) || 0,

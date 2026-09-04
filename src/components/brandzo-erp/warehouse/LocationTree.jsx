@@ -25,6 +25,19 @@ import {
   occupancyOf,
 } from '../../../services/locations/locationsModel.js';
 import { shortLabelOf } from '../../../services/locations/locationCode.js';
+// نصُّ المواضع من مصدرٍ واحدٍ مع الخريطة — نصّان لمعنًى واحدٍ يفترقان أوّلَ
+// تعديل، فيقرأ العاملُ على الشجرة غيرَ ما يقرأ على الخريطة عن الرفّ نفسِه.
+import { palletTextOf } from '../../../services/locations/mapGrid.js';
+// ‹LPN-211› طبقةُ الطبالي — الاتّجاه واحد: الشاشة تقرأ `lpn/`، و`locations/`
+// لا تعرفها (ح-٢، حارسُه `lpnIsolation.test.js`).
+import { ON_FLOOR_STATES, palletsByBin } from '../../../services/lpn/palletMap.js';
+import { listUnitsByState } from '../../../services/lpn/lpnService.js';
+
+/**
+ * ‹LPN-211› سقفُ الجلب لكلّ حالةٍ من حالات «على الأرض» — نفسُ سقف الخريطة.
+ * استعلامٌ بلا حدٍّ يقرأ المجموعة كلّها على Spark.
+ */
+const UNITS_PER_STATE = 300;
 
 const EMPTY = {
   code: '',
@@ -46,16 +59,44 @@ export default function LocationTree({ role }) {
   const [msg, setMsg] = useState({ type: '', text: '' });
   const [term, setTerm] = useState('');
   const [printing, setPrinting] = useState(null);
+  // ‹LPN-211› الطبالي الواقفة، ورايةُ «جُلبت» منفصلةً عن العدد: قائمةٌ فارغةٌ
+  // قبل الجلب تُنتج فهرسًا فارغًا يقول لكلّ رفٍّ «صفرُ طبالٍ» — وهو كذبٌ لا
+  // جهل. والقاعدةُ نفسُها التي تحكم السعة الغائبة: `null` تعني «لا أعرف».
+  const [units, setUnits] = useState([]);
+  const [unitsKnown, setUnitsKnown] = useState(false);
   const canEdit = canEditLocations(role);
 
   useEffect(() => listenLocations(setLocations, () => setLocations([])), []);
   useEffect(() => listenBalances(setBalances, () => setBalances([])), []);
 
+  /**
+   * ★★ الجلبُ لمن أعلن سقفًا وحدَه — فالسقفُ هو ما يجعل للعدد مقامًا يُقارَن به.
+   *
+   * وجُلُّ المواقع المسجَّلة اليوم بلا سقفِ طبالٍ (وهو حالُ «مختلط · صفر»)،
+   * فلا يُقرأ ألفُ مستندٍ لرقمٍ لا يُعرض. ومن قاس رفَّه وأعلن سقفَه يرى مشغولَه.
+   */
+  const capsPallets = useMemo(
+    () => (locations || []).some((l) => Number(l?.capacity?.pallets) > 0),
+    [locations]
+  );
+
+  useEffect(() => {
+    if (!capsPallets) return undefined;
+    let alive = true;
+    Promise.all(ON_FLOOR_STATES.map((st) => listUnitsByState(st, UNITS_PER_STATE)))
+      .then((rows) => { if (alive) { setUnits(rows.flat()); setUnitsKnown(true); } })
+      .catch(() => { if (alive) { setUnits([]); setUnitsKnown(false); } });
+    return () => { alive = false; };
+  }, [capsPallets]);
+
+  const pallets = useMemo(() => (unitsKnown ? palletsByBin(units) : null), [unitsKnown, units]);
+
   const occupancy = useMemo(() => {
     const map = new Map();
-    for (const loc of locations) map.set(loc.code, occupancyOf(loc, balances));
+    // ★ الفهرسُ يُبنى مرّةً ويُمرَّر لكلّ المواقع — لا مسحَ للطبالي موقعًا موقعًا.
+    for (const loc of locations) map.set(loc.code, occupancyOf(loc, balances, pallets));
     return map;
-  }, [locations, balances]);
+  }, [locations, balances, pallets]);
 
   const filtered = useMemo(() => {
     const t = term.trim().toUpperCase();
@@ -274,7 +315,10 @@ function TreeNode({ node, depth, occupancy, canEdit, onEdit, onArchive, onPrint 
               <span style={{ fontSize: '11px', color: 'var(--o-main-color-muted)' }}>
                 {occ.usedQty > 0 ? `مشغول: ${occ.usedQty}` : 'فارغ'}
                 {occ.capacityQty !== null ? ` / ${occ.capacityQty} (${occ.pct}٪)` : ' — سعة غير محدودة'}
-                {occ.capacityPallets !== null ? ` · ${occ.capacityPallets} موضع طبلية` : ''}
+                {/* ★★★ المشغولُ مع السقف لا السقفُ وحدَه: «٣ من ٥ مواضع طبلية».
+                    رقمٌ لا يُقارَن يُقرأ محاسبةً وهو حبرٌ على ورق — والنصُّ
+                    يُبنى في `mapGrid` فلا يفترق عمّا تكتبه الخريطة. */}
+                {palletTextOf(occ) ? ` · ${palletTextOf(occ)}` : ''}
               </span>
             )}
             <span style={{ flex: 1 }} />

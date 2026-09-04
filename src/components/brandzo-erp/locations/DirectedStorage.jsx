@@ -28,6 +28,9 @@ import { normalizeBarcode } from '../../../services/excel/excelSchema.js';
 import { listenLocations } from '../../../services/locations/locationsService.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { suggestLocations } from '../../../services/locations/putawaySuggest.js';
+// بطاقةُ الصنف تُقرأ من الماستر لا من الشيت: الشيتُ يحمل كودًا وكمّيّةً،
+// والمعاملاتُ (`uomFactors`) ونوعُ التخزين مكتوبةٌ على البطاقة وحدها.
+import { subscribeItems, normalizeSku } from '../../../services/items/itemService.js';
 import { exportTemplate } from '../../../services/excel/excelExport.js';
 
 const KINDS = [
@@ -47,6 +50,7 @@ export default function DirectedStorage() {
   const [term, setTerm] = useState('');
   const [locations, setLocations] = useState([]);
   const [balances, setBalances] = useState([]);
+  const [items, setItems] = useState([]);
   const fileRef = useRef(null);
 
   useEffect(
@@ -63,6 +67,39 @@ export default function DirectedStorage() {
   // الاستلام يرى إلى أين ستذهب البضاعة قبل أن تصل، ولا يُسلَب العاملُ قراره.
   useEffect(() => listenLocations(setLocations, () => setLocations([])), []);
   useEffect(() => listenBalances(setBalances, () => setBalances([])), []);
+  useEffect(() => subscribeItems(setItems, () => setItems([])), []);
+
+  /**
+   * ★★ فهرسُ البطاقات — بالكود وبالباركود، مبنيًّا **مرّةً** لا صفًّا صفًّا.
+   *
+   * وبمطبّعَي الكاتب نفسِهما (`normalizeSku` · `normalizeBarcode`): شيتٌ يكتب
+   * `8059-692-040599` وماستر يخزّن `8059692040599` لا يلتقيان بلا تطبيق، فتعود
+   * البطاقةُ فارغةً ويبقى المحرّك بلا معاملات — عطبٌ صامتٌ لا يُرى في الشاشة.
+   */
+  const itemIndex = useMemo(() => {
+    const bySku = new Map();
+    const byBarcode = new Map();
+    for (const it of items) {
+      const sku = normalizeSku(it?.sku);
+      if (sku && !bySku.has(sku)) bySku.set(sku, it);
+      for (const bc of it?.barcodes || []) {
+        const key = normalizeBarcode(bc);
+        // ★ الأوّل يفوز: باركودٌ مكرّرٌ بين صنفين خللٌ في الماستر، وتغليبُ
+        // الأخير يجعل الاقتراح يتبدّل بين فتحةٍ وأخرى بلا سبب ظاهر.
+        if (key && !byBarcode.has(key)) byBarcode.set(key, it);
+      }
+    }
+    return { bySku, byBarcode };
+  }, [items]);
+
+  /** بطاقةُ بندٍ — بكوده أوّلًا (هو الهويّة) ثمّ بباركوده. و`null` تعني «لا بطاقة». */
+  const itemOf = useCallback(
+    (line) =>
+      itemIndex.bySku.get(normalizeSku(line?.sku)) ||
+      itemIndex.byBarcode.get(normalizeBarcode(line?.barcode)) ||
+      null,
+    [itemIndex]
+  );
 
   const canImport = canImportSource(profile?.role);
   const deviations = useMemo(() => deviationReport(preview?.documents), [preview]);
@@ -368,16 +405,31 @@ function ScanBox({ onScan }) {
  * البدائل وسببُ ترشيحها؛ فإن تعذّر الاقتراح **قيل السبب** ولم تُترك الخانة
  * فارغةً يفسّرها القارئ بما شاء.
  */
-function SuggestedBin({ line, warehouse, locations, balances }) {
+function SuggestedBin({ line, warehouse, locations, balances, item }) {
   const advice = useMemo(
     () =>
       suggestLocations({
-        line: { sku: line.sku, barcode: line.barcode, batch: line.batch, expiry: line.expiry, qty: Number(line.qty) || 0, warehouse },
+        // ★★★ و`uom` من الحقيبة لا تُسقط: منها وحدها يُشتقّ نوعُ المناولة
+        // (`handlingNeedOf`)، وبإسقاطها تساوى رفٌّ معلَنٌ «بالطبلية» ورفٌّ
+        // «مختلط» في النقاط — فصار البُعدُ حبرًا في الشاشة التي اسمُها
+        // «الموجّه». وهي معروضةٌ قابلةٌ للتحرير في الصفّ نفسِه.
+        line: {
+          sku: line.sku,
+          barcode: line.barcode,
+          uom: line.uom,
+          batch: line.batch,
+          expiry: line.expiry,
+          qty: Number(line.qty) || 0,
+          warehouse,
+        },
         locations,
         balances,
+        // وبطاقةُ الصنف معها: بندٌ كُتب بلا وحدةٍ يُقرأ معاملُ طبليّته منها
+        // (`uomFactors`)، وفئتُه ونوعُ تخزينه يُحكم بهما على الرفوف المقيَّدة.
+        item,
         warehouse,
       }),
-    [line.sku, line.barcode, line.batch, line.expiry, line.qty, warehouse, locations, balances]
+    [line.sku, line.barcode, line.uom, line.batch, line.expiry, line.qty, warehouse, locations, balances, item]
   );
 
   const best = advice.candidates[0];

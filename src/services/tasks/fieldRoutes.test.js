@@ -13,19 +13,77 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import { fieldRouteFor, FIELD_ROUTES, OMITTED_TYPES } from './fieldRoutes.js';
+import { fieldRouteFor, FIELD_ROUTES, OMITTED_TYPES, DOC_PARAM } from './fieldRoutes.js';
 import { CHAINS } from '../documents/chain.js';
 import { NAV_GROUPS } from '../auth/navCatalog.js';
 import { DOC_WORK_TYPE } from './taskFactory.js';
 import { PICKABLE_TYPES, taskOpenProblem } from '../lpn/pickingTask.js';
 import { sessionOpenProblem } from '../lpn/receivingSession.js';
+import { nextOwnerOf } from './stageOwners.js';
 
 /** كلُّ مسارٍ تعرفه البوّابة — من الكتالوج الواحد لا من قائمةٍ ثانية. */
 const catalogPaths = new Set(NAV_GROUPS.flatMap((g) => (g.items ?? []).map((i) => i.path)));
 
-/** مستندٌ صالحٌ للتنفيذ — النوعُ متغيّرٌ وما عداه ثابت. */
-const doc = (type, state = 'approved') => ({ id: 'd1', number: `${type}-1023`, type, state });
+/**
+ * مستندٌ صالحٌ للتنفيذ — **بالشكل الذي يكتبه الكاتبُ لا بعيّنةٍ مريحة**.
+ *
+ * ★★★ ولمَ هذا التطويل؟ لأنّ `createDraft` في `documents/documentsService.js`
+ * تكتب الوصفَ كلَّه **تحت `header`** وتترك النوعَ والحالةَ في الجذر، والمعرّفُ
+ * لا يُكتب في المستند أصلًا: يُلحقه القارئُ من اللقطة (`{ id: d.id, ...d.data() }`).
+ * فاختبارٌ يبني `{type, state}` مسطّحًا يخضرّ على بيانةٍ لا وجودَ لها في
+ * القاعدة — وهو بعينه ما جعل آلافَ الاختبارات لا تمسك عطبًا واحدًا.
+ */
+const doc = (type, state = 'approved', extra = {}) => ({
+  id: `doc_${type}_7fA3`,
+  type,
+  stage: null,
+  number: `${type}-2026-0007`,
+  state,
+  header: { supplier: 'مورّد الوسط', warehouse: 'WH001', issueDate: '2026-09-04' },
+  lines: [],
+  links: {},
+  createdByUid: 'u_17',
+  createdByName: 'أحمد الشريف',
+  createdByRole: 'storekeeper',
+  ...extra,
+});
+
+/* ═══════════════ جذرُ الشجرة — تُقرأ منه ملفّاتُ الشاشات ═══════════════ */
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const SRC = path.resolve(HERE, '../..');
+
+/** صندوقا المستندات — الشاشتان اللتان يقف الناسُ فيهما أمام المستندات. */
+const BOX_FILES = [
+  path.join(SRC, 'components/brandzo-erp/documents/DocumentsInbox.jsx'),
+  path.join(SRC, 'components/brandzo-erp/documents/OpenDocumentsBox.jsx'),
+];
+
+/**
+ * ملفّاتُ شاشةِ مسارٍ ميدانيّ — **مشتقّةٌ من القرص لا مسرودةٌ بيد**.
+ *
+ * المسارُ `/dashboard/lpn-picking` صفحتُه `src/pages/dashboard/lpn-picking.astro`
+ * حتمًا (توجيهُ Astro بالملفّات)، ومكوّناتُها ما تستورده من `.jsx`. فلو نُقل
+ * مكوّنٌ أو أُعيدت تسميتُه لم تكذب هذه القائمةُ صامتةً: تعود فارغةً فيسقط
+ * الحارسُ ويقول ما الذي لم يجده.
+ */
+function screenFilesOf(routePath) {
+  const page = path.join(SRC, 'pages', `${routePath.replace(/^\//, '')}.astro`);
+  if (!fs.existsSync(page)) return [];
+  const src = fs.readFileSync(page, 'utf8');
+  return [...src.matchAll(/import\s+\w+\s+from\s+'([^']+\.jsx)'/g)]
+    .map((m) => path.resolve(path.dirname(page), m[1]))
+    .filter((f) => fs.existsSync(f));
+}
+
+/** أثرُ قراءةِ المعامل في نصّ الشاشة — `…searchParams…get('doc')`. */
+const readsParamIn = (src) =>
+  /URLSearchParams|searchParams/.test(src) &&
+  new RegExp(`\\.get\\(\\s*(['"])${DOC_PARAM}\\1\\s*\\)`).test(src);
 
 const routedTypes = Object.keys(FIELD_ROUTES);
 const typesWithFieldGate = [...new Set([...Object.keys(DOC_WORK_TYPE), ...PICKABLE_TYPES])];
@@ -179,7 +237,7 @@ test('★ كلُّ مسارٍ يحمل تسميةً وسببًا — والسب�
     const route = fieldRouteFor(doc(type));
     assert.ok(route.label.trim().length > 3, `«${type}» بلا تسمية`);
     assert.ok(route.reason.trim().length > 20, `«${type}» بسببٍ أقصرَ من أن يُفهم`);
-    assert.deepEqual(Object.keys(route).sort(), ['label', 'path', 'reason']);
+    assert.deepEqual(Object.keys(route).sort(), ['docId', 'href', 'label', 'param', 'path', 'reason']);
   }
 });
 
@@ -211,7 +269,91 @@ test('الجدولان مجمَّدان — خريطةٌ تُعدَّل في ز�
 
 test('كلُّ وجهةٍ مستعملةٌ مرّةً على الأقلّ — لا مسارَ مكتوبٌ ولا يصل إليه نوع', () => {
   const used = new Set(routedTypes.map((t) => FIELD_ROUTES[t].path));
-  for (const path of ['/dashboard/lpn-receiving', '/dashboard/lpn-picking', '/dashboard/lpn-count', '/dashboard/bin-console']) {
-    assert.ok(used.has(path), `«${path}» وجهةٌ بلا نوعٍ يصل إليها`);
+  for (const p of ['/dashboard/lpn-receiving', '/dashboard/lpn-picking', '/dashboard/lpn-count', '/dashboard/bin-console']) {
+    assert.ok(used.has(p), `«${p}» وجهةٌ بلا نوعٍ يصل إليها`);
   }
+});
+
+/* ═════════ ④ الرابطُ يحمل معرّفَ المستند — والوعدُ لا يُقطع إلّا لمن يفي ═════ */
+
+test('★★★ رابطُ التحضير يحمل معرّفَ المستند — لا قائمةٌ يبحث فيها من جاء بأمره', () => {
+  const d = doc('PICK');
+  const route = fieldRouteFor(d);
+  assert.equal(route.param, DOC_PARAM, 'المعاملُ حقلٌ صريحٌ يُقرأ — لا يُستخرج من نصّ الرابط');
+  assert.equal(route.docId, d.id, '★ والقيمةُ معرّفُ المستند لا رقمُه: المهمّةُ تولد على المعرّف');
+  assert.equal(route.href, `/dashboard/lpn-picking?${DOC_PARAM}=${d.id}`);
+  assert.equal(route.path, '/dashboard/lpn-picking', 'والمسارُ يبقى عاريًا — الشاشاتُ تحتاج الاثنين');
+});
+
+test('★★★ ولا يُوعَد بمعاملٍ لشاشةٍ لا تقرؤه — الوعدُ الذي لا يقع أسوأُ من غيابه', () => {
+  const silent = Object.entries(FIELD_ROUTES).filter(([, r]) => !r.readsDoc);
+  assert.ok(silent.length > 0, 'كلُّ الشاشات تقرأ المعامل — فحُذف هذا الحارس أو انحرفت الخريطة');
+  for (const [type, r] of silent) {
+    const route = fieldRouteFor(doc(type));
+    assert.equal(route.param, '', `«${type}» ⟵ «${r.path}» لا تقرأ المعامل وتعده به`);
+    assert.equal(route.docId, '');
+    assert.equal(route.href, route.path, 'والرابطُ عارٍ حتّى تقرأه شاشتُه');
+  }
+});
+
+test('★★★ وكلُّ مسارٍ يعلن أنّه يقرأ — تقرؤه شاشتُه فعلًا (بقراءة ملفّها من القرص)', () => {
+  const declared = [...new Set(Object.values(FIELD_ROUTES).filter((r) => r.readsDoc).map((r) => r.path))];
+  assert.ok(declared.length > 0, 'لا مسارَ يعلن القراءة — إمّا الحقلُ لم يُضف وإمّا لم تُوصل شاشةٌ واحدة');
+  for (const p of declared) {
+    const files = screenFilesOf(p);
+    assert.ok(files.length > 0, `«${p}» يعلن القراءةَ ولا صفحةَ له على القرص ولا مكوّنَ تستورده`);
+    assert.ok(
+      files.some((f) => readsParamIn(fs.readFileSync(f, 'utf8'))),
+      `«${p}» يعلن أنّه يقرأ «?${DOC_PARAM}=» ولا شيءَ في شاشته يقرؤه — وعدٌ لموظّفٍ لا يقع: ` +
+        files.map((f) => path.basename(f)).join(' · ')
+    );
+  }
+});
+
+test('⚠️ والمستندُ بلا معرّفٍ لا يُصنع له وعدٌ فارغ — `?doc=undefined` كذبةٌ صريحة', () => {
+  const route = fieldRouteFor({ type: 'PICK', state: 'approved' });
+  assert.equal(route.param, '');
+  assert.equal(route.docId, '');
+  assert.equal(route.href, route.path);
+});
+
+/* ═════════ ⑤ حرّاسُ المستدعي الحقيقيّ — لا منطقٌ بلا من يستدعيه ═════════ */
+
+/*
+ * ⚠️ ولمَ `assert.ok(re.test(src))` لا `assert.match(src, re)`؟ لأنّ الثانيةَ
+ * تطبع **ملفَّ الشاشة كلَّه** في تقرير السقوط، فتغرق الرسالةُ التي تقول ما
+ * العطب في ألفِ سطرٍ لا يقرؤها أحد. والحارسُ الذي لا تُقرأ رسالتُه نصفُ حارس.
+ */
+test('★★★ صندوقا المستندات يبنيان الرابطَ من `href` لا من `path` — وإلّا سقط المعرّفُ عند العرض', () => {
+  for (const file of BOX_FILES) {
+    const src = fs.readFileSync(file, 'utf8');
+    assert.ok(
+      /route\.href/.test(src),
+      `${path.basename(file)}: الرابطُ لا يُبنى من \`href\` فالمعرّفُ لا يصل`
+    );
+    assert.ok(
+      !/route\.path/.test(src),
+      `${path.basename(file)}: ما زال يستعمل \`route.path\` في الرابط — المسارُ عارٍ والموظّفُ يبحث بيده`
+    );
+  }
+});
+
+test('★★★ وصندوقا المستندات يقولان من ينتظر كلَّ مستند — وهما موقفُ الناس أمام المستندات', () => {
+  for (const file of BOX_FILES) {
+    const src = fs.readFileSync(file, 'utf8');
+    assert.ok(
+      /import\s+\{[^}]*\bnextOwnerOf\b[^}]*\}\s+from\s+'[^']*stageOwners\.js'/.test(src),
+      `${path.basename(file)}: لا يستورد \`nextOwnerOf\` — الصفُّ يقول كلَّ شيءٍ إلّا من ينتظره`
+    );
+    assert.ok(/nextOwnerOf\(/.test(src), `${path.basename(file)}: يستوردها ولا يستدعيها — منطقٌ بلا مستدعٍ`);
+  }
+});
+
+test('★★ والسطرُ المعروضُ ليس فارغًا لبيانةٍ كما يكتبها المُنشئ — لا لعيّنةٍ مسطّحة', () => {
+  // بانتظار الاعتماد: يقول من يعتمده بالاسم العربيّ من `roles.js`.
+  assert.match(nextOwnerOf(doc('PO', 'submitted')).line, /^ينتظر اعتماد: .{3,}/);
+  // ومعتمَدٌ له شاشةٌ ميدانيّة: ينتظر تنفيذَه لا إنجازَه.
+  assert.match(nextOwnerOf(doc('PO', 'approved')).line, /^ينتظر تنفيذه ميدانيًّا: .{3,}/);
+  // والمسوّدةُ تنتظر كاتبَها بعينه — والاسمُ يأتي من جذر المستند لا من `header`.
+  assert.equal(nextOwnerOf(doc('PO', 'draft')).line, 'ينتظر إرساله للاعتماد من: أحمد الشريف');
 });

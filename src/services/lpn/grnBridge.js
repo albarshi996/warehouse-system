@@ -29,6 +29,101 @@ export function countableDrafts(drafts) {
   return (drafts ?? []).filter((d) => d?.lpn && ['APPROVED', 'LABEL_PRINTED', 'PENDING_PUTAWAY', 'STORED'].includes(d?.state));
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ★★ مُنقذُ الطبالي القديمة — هويّةٌ تُستردّ ولا تُخترع
+ * ═══════════════════════════════════════════════════════════════════════════
+ * `lpnContents.addReading` كانت تكتب البند بلا `lineId` (أُصلحت)، فبقيت في
+ * السحابة طبالٍ معتمدةٌ **بنودُها يتيمة**. وإصلاحُ الكاتب وحده لا يُنقذها:
+ * تظلّ متخطّاةً هنا إلى الأبد، فيقرأ الموظّف «الطبالي المعتمدة فارغة» وهي
+ * ممتلئة، ولا يُولَّد استلامُها أبدًا.
+ *
+ * فالبندُ اليتيم يُنسب إلى سطر الأمر **حين يكون السطرُ يقينًا لا ظنًّا**:
+ * صنفٌ يطابق سطرًا واحدًا لا غير. وأمّا اللبس فيُعلَن في `orphanLines`.
+ *
+ * ⚠️ **ولا يُنقذ اللبسُ بالباركود**: باركودُ البند هو **الممسوح** (باركود
+ * الكرتونة مثلًا) وباركودُ سطر الأمر باركودُ الصنف — فليسا حقلًا واحدًا،
+ * والاتّفاقُ بينهما صدفةٌ لا دليل. والأهمُّ: أيُّ سطرٍ من سطرَي الصنف الواحد
+ * يستهلكه هذا الاستلام **قرارُ عملٍ** لا يحسمه رقمُ عبوة.
+ */
+
+/** سببُ بقاء البند يتيمًا — نصٌّ يقرؤه الموظّف لا رمزٌ يفكّه. */
+const ORPHAN_AMBIGUOUS = 'يطابق سطرين أو أكثر من الأمر — الهويّة تُحسم يدويًّا';
+const ORPHAN_NO_MATCH = 'لا سطرَ في الأمر يطابق صنفَه — طبليّةٌ من أمرٍ آخر أو صنفٌ حُذف';
+
+/**
+ * فهرسُ سطور الأمر بالصنف وبالباركود — والمتكرّرُ `null` أي **لبسٌ معلن**.
+ *
+ * `null` هنا عقيدةُ `baseQty` نفسُها: «لا أعرف» تُخزَّن ولا تُصفَّر، فتُميَّز
+ * عن «لا وجود» (`undefined`) — واللبسُ يقول سببَه غيرَ سببِ الغياب.
+ */
+function lineIdIndex(session) {
+  const bySku = new Map();
+  const byBarcode = new Map();
+  const put = (map, key, lineId) => {
+    if (!key) return;
+    map.set(key, map.has(key) ? null : lineId);
+  };
+  for (const l of session?.lines ?? []) {
+    if (!l?.lineId) continue;
+    put(bySku, up(l.sku), l.lineId);
+    put(byBarcode, String(l.barcode ?? '').trim(), l.lineId);
+  }
+  return { bySku, byBarcode };
+}
+
+/**
+ * هويّةُ سطر الأمر لبندِ طبليّة — المكتوبةُ أوّلًا، والمستردّةُ عند غيابها.
+ *
+ * @returns {{lineId:string, because:string}} و`because` فارغٌ عند النجاح.
+ */
+function resolveLineId(line, index) {
+  const own = String(line?.lineId ?? '').trim();
+  if (own) return { lineId: own, because: '' };
+
+  const sku = up(line?.sku);
+  if (sku && index.bySku.has(sku)) {
+    const hit = index.bySku.get(sku);
+    return hit ? { lineId: hit, because: '' } : { lineId: '', because: ORPHAN_AMBIGUOUS };
+  }
+  const bar = String(line?.barcode ?? '').trim();
+  if (bar && index.byBarcode.has(bar)) {
+    const hit = index.byBarcode.get(bar);
+    return hit ? { lineId: hit, because: '' } : { lineId: '', because: ORPHAN_AMBIGUOUS };
+  }
+  return { lineId: '', because: ORPHAN_NO_MATCH };
+}
+
+/**
+ * ★★ البنودُ التي لم تصل سطرًا — تُعلَن كما يُعلَن `unknownBase`.
+ *
+ * قبل هذا كانت تُبتلع في `continue` صامتٍ: كمّيّةٌ محفوظةٌ على طبليّةٍ معتمدة
+ * تختفي من المذكّرة بلا سطرٍ ولا رسالة — وهو العطبُ الصامتُ عينُه الذي
+ * تُبنى هذه الطبقةُ لمنعه.
+ *
+ * @returns {Array<{lpn:string, sku:string, barcode:string, qty:number,
+ *   baseQty:number|null, because:string}>}
+ */
+export function orphanLines(session) {
+  const index = lineIdIndex(session);
+  const out = [];
+  for (const draft of countableDrafts(session?.drafts)) {
+    for (const line of draft.lines ?? []) {
+      const { lineId, because } = resolveLineId(line, index);
+      if (lineId) continue;
+      const base = line?.baseQty == null ? NaN : Number(line.baseQty);
+      out.push({
+        lpn: draft.lpn,
+        sku: String(line?.sku ?? '').trim(),
+        barcode: String(line?.barcode ?? '').trim(),
+        qty: Number(line?.qty) || 0,
+        baseQty: Number.isFinite(base) ? round9(base) : null,
+        because,
+      });
+    }
+  }
+  return out;
+}
+
 /**
  * ما استُلم فعلًا لكلّ سطرٍ من الأمر — بالكمّيّة الأساس.
  *
@@ -41,15 +136,17 @@ export function receivedByLine(session) {
   const unknownBase = [];
   let total = 0;
 
+  const index = lineIdIndex(session);
   for (const draft of countableDrafts(session?.drafts)) {
     for (const line of draft.lines ?? []) {
-      if (!line?.lineId) continue;
+      const lineId = resolveLineId(line, index).lineId;
+      if (!lineId) continue;
       const base = line?.baseQty == null ? NaN : Number(line.baseQty);
       if (!Number.isFinite(base) || base <= 0) {
         unknownBase.push({ lpn: draft.lpn, sku: line?.sku ?? '', uom: line?.uom ?? '', qty: Number(line?.qty) || 0 });
         continue;
       }
-      byLine[line.lineId] = (byLine[line.lineId] ?? 0) + base;
+      byLine[lineId] = (byLine[lineId] ?? 0) + base;
       total += base;
     }
   }
@@ -159,14 +256,17 @@ function fieldAgreement(entries, field) {
  */
 export function receivedDetailByLine(session) {
   const byLine = {};
+  const index = lineIdIndex(session);
   for (const draft of countableDrafts(session?.drafts)) {
     for (const line of draft.lines ?? []) {
-      if (!line?.lineId) continue;
+      // نفسُ مُنقذ `receivedByLine` — وإلّا عبرت الكمّيّةُ وتخلّفت صلاحيّتُها.
+      const lineId = resolveLineId(line, index).lineId;
+      if (!lineId) continue;
       // ⚠️ `Number(null)` صفرٌ لا NaN — فالفحص على الغياب نفسه، وإلّا مرّ
       // المجهول رقمًا صفريًّا. (نفس شرط `receivedByLine` حرفًا بحرف.)
       const base = line?.baseQty == null ? NaN : Number(line.baseQty);
       const factor = line?.factor == null ? NaN : Number(line.factor);
-      (byLine[line.lineId] ??= []).push({
+      (byLine[lineId] ??= []).push({
         batch: String(line?.batch ?? '').trim(),
         expiry: String(line?.expiry ?? '').trim(),
         supplierBatch: String(line?.supplierBatch ?? '').trim(),
@@ -260,7 +360,17 @@ export function grnProblem(session) {
     const names = [...new Set(unknownBase.map((u) => u.sku))].slice(0, 3).join(' · ');
     return `${unknownBase.length} بندًا بمعاملِ وحدةٍ مجهول (${names}) — عرّف المعامل في ماستر الأصناف أوّلًا. رقمٌ مخمَّنٌ في مستندٍ ماليّ أسوأ من انتظار.`;
   }
-  if (Object.keys(byLine).length === 0) return 'لا كمّيّةً محتسَبة — الطبالي المعتمدة فارغة.';
+  if (Object.keys(byLine).length === 0) {
+    // ⚠️ «فارغة» كذبةٌ حين تكون ممتلئةً بيتامى: الطبليّةُ تحمل والبنودُ لا
+    // تعرف سطرَها. والرسالةُ تقول **الصوابَ الذي يُصلحه الموظّف** لا وصفًا
+    // يُحيّره — عرفُ `receivingScan` نفسُه.
+    const orphans = orphanLines(session);
+    if (orphans.length > 0) {
+      const names = [...new Set(orphans.map((o) => o.sku || o.barcode).filter(Boolean))].slice(0, 3).join(' · ');
+      return `${orphans.length} بندًا على طبالٍ معتمدةٍ لا يعرف سطرَه من الأمر (${names}) — ${orphans[0].because}.`;
+    }
+    return 'لا كمّيّةً محتسَبة — الطبالي المعتمدة فارغة.';
+  }
   return '';
 }
 
@@ -307,6 +417,9 @@ export function grnPreview(session) {
     // فجلسةٌ كانت تُولّد أمس تُولّد اليوم بايتًا ببايت.
     extras,
     extrasConflicts: extrasConflicts(session),
+    // ★★ بنودٌ محفوظةٌ لم تصل سطرًا — تُعرض ولا تُبتلع، وشأنُها شأنُ الخلاف:
+    // تُعلَن ولا تمنع (`problem` لم يتغيّر).
+    orphanLines: orphanLines(session),
     problem: grnProblem(session),
   };
 }

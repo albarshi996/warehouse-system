@@ -333,3 +333,146 @@ test('حكمُ الاختيار يعرف المناولة أيضًا — تجا�
   assert.equal(v.override, true, 'يمرّ تجاوزًا — العمل لا يتوقّف');
   assert.match(v.reason, /بالقطعة/);
 });
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * 🔒 حارسٌ بنيويّ: **فهرسُ الطبالي يبلغ كلَّ مستدعٍ — أو يُعلَن دَينًا**
+ *
+ * ═══ لماذا وُجد ═══
+ * `occupancyOf` اكتسبت وسيطًا ثالثًا للفهرس، و`canReceive` اكتسبت فرعَ رفضٍ
+ * لسقف الطبالي، والاختباراتُ فوق تُثبتهما — **ببناء `Map` باليد ونداءٍ
+ * مباشر**. ثمّ تبيّن أنّ لا مستدعيَ واحدًا في الشجرة يمرّر الفهرس: المشغولُ
+ * `null` أبدًا، والفرعُ لا يُطلق ولو مرّةً في الإنتاج. فرفٌّ سقفُه طبليّتان
+ * كان يقبل الخمسين، و٣٧٥٨ اختبارًا أخضر لا تقول شيئًا.
+ *
+ * وهذا الحارس يقلب القاعدة على نمط `lpnWiring.test.js`: كلّ نداءٍ لواحدةٍ من
+ * البوّابات الثلاث **إمّا يمرّر الفهرس، وإمّا ملفُّه مذكورٌ بدَينه أدناه**.
+ * لا صمتَ بينهما — والقائمةُ تنقص ولا تزيد.
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const SRC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+/**
+ * البوّابات التي يدخل منها فهرسُ الطبالي إلى الحكم — **السلكُ كلُّه لا طرفُه**.
+ *
+ * ولماذا حلقاتُ المهمّة والخدمة معها لا محرّكُ الاقتراح وحدَه؟ لأنّ الانقطاع
+ * يقع في أيّ حلقة، وحارسٌ يحرس آخرَها وحدَها يترك ما قبلها ينقطع صامتًا —
+ * وهو عين ما وقع: `suggestLocations` تقبل الفهرس منذ ‹JR-601› ولم يصلها.
+ */
+const GATES = [
+  'suggestLocations', 'chooseVerdict', 'occupancyOf', // محرّك الاقتراح
+  'openPutawayTask', 'binScanVerdict', 'completePutaway', // منطقُ المهمّة
+  'openTask', 'previewBin', 'executePutaway', // خدمةُ التخزين
+];
+
+/**
+ * ★ الدَّينُ المعلَن: مستدعٍ **لا يملك وحداتِ المناولة أصلًا** أو لا يحتاجها،
+ * لكلٍّ سببُه ومن يملكه. وغيابُ الفهرس عنده يعني «لا أعرف» فيمرّ — لا «صفر»
+ * فيمنع، فلا يُغلق رفٌّ في وجه عاملٍ لأنّ شاشةً لم تُوصَل بعد.
+ */
+const PALLET_INDEX_DEBT = new Map([
+  ['components/brandzo-erp/locations/DirectedStorage.jsx',
+    'شاشةُ التخزين الموجّه: تجلب المواقعَ والأرصدةَ ولا تجلب `handling_units` بعد — وصلُها لمنفّذ الشاشات.'],
+  ['components/brandzo-erp/labor/WorkerTaskPanel.jsx',
+    'لوحةُ العامل: كذلك — تُمرِّر الفهرسَ إلى `suggestLocations` و`scanGate.scanVerdict` معًا يومَ تجلبه.'],
+  ['services/lpn/putawayService.js',
+    'خدمةُ التخزين: تملك `listUnitsByState` فتقدر أن تبني الفهرسَ وتضعه في حقيبتها — وهي خارج نطاق هذا العمل.'],
+  ['components/brandzo-erp/lpn/ReceivingFlow.jsx',
+    'شاشةُ الاستلام الميدانيّ: تجلب طابورَ التخزين لا طبالي الأرضيّة — وصلُها لمنفّذ الشاشات.'],
+  ['components/brandzo-erp/locations/BinConsole.jsx',
+    'كونسول الخانة: يقرأ طبالي **خانةٍ واحدة** من `binConsole.js`، ويحتاج فهرسَ المستودع كلِّه ليحكم على غيرها.'],
+]);
+
+/** كلّ ملفّات المصدر التي يجوز أن تنادي — بلا اختبارات (الاختبار ينادي ليُثبت). */
+function sourceFiles() {
+  const out = [];
+  const walk = (d) => {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const f = path.join(d, e.name);
+      if (e.isDirectory()) walk(f);
+      else if (/\.(js|jsx|astro|mjs)$/.test(e.name) && !/\.test\.(js|mjs)$/.test(e.name)) out.push(f);
+    }
+  };
+  walk(SRC);
+  return out;
+}
+
+const rel = (f) => path.relative(SRC, f).split(path.sep).join('/');
+
+/**
+ * نصوصُ نداءات دالّةٍ في ملفّ — بموازنة الأقواس لا بسطرٍ واحد، فالنداءُ
+ * هنا يمتدّ سطورًا. والتعريفُ (`function foo(`) ليس نداءً فيُستبعد.
+ */
+function callsOf(src, fn) {
+  const out = [];
+  const re = new RegExp(String.raw`(function\s+)?\b${fn}\s*\(`, 'g');
+  let m;
+  while ((m = re.exec(src))) {
+    if (m[1]) continue;
+    let depth = 0;
+    let i = m.index + m[0].length - 1;
+    for (; i < src.length; i += 1) {
+      if (src[i] === '(') depth += 1;
+      else if (src[i] === ')') { depth -= 1; if (depth === 0) break; }
+    }
+    out.push(src.slice(m.index, i + 1));
+  }
+  return out;
+}
+
+/**
+ * أيمرّر هذا النداءُ الفهرسَ؟ اسمُه `pallets` أو الوحداتُ الخامُ `units`.
+ *
+ * ★ ونداءٌ يُمرّر **حقيبةَ مستدعيه كما هي** (`…, ctx)`) لا يُحاسَب هنا: هو
+ * ناقلٌ أمينٌ لا مصدرَ قرار، والحكمُ على من ملأ الحقيبة لا على من حملها.
+ * وإلّا لَظهر `previewBin` مدينًا وهو يمرّر كلَّ ما يُعطى حرفًا.
+ */
+const passesIndex = (call) =>
+  /\b(pallets|units)\b/.test(call) || /,\s*(ctx|options|opts|rest)\s*\)$/.test(call);
+
+function scanGates() {
+  const offenders = [];
+  const paying = new Set();
+  for (const file of sourceFiles()) {
+    const src = fs.readFileSync(file, 'utf8');
+    for (const fn of GATES) {
+      for (const call of callsOf(src, fn)) {
+        if (passesIndex(call)) continue;
+        offenders.push(`${rel(file)} ← ${fn}(…)`);
+        paying.add(rel(file));
+      }
+    }
+  }
+  return { offenders, paying };
+}
+
+test('🔒★★★ كلّ نداءٍ يمرّر فهرسَ الطبالي — أو ملفُّه مذكورٌ بدَينه المكتوب', () => {
+  const { offenders } = scanGates();
+  const silent = offenders.filter((o) => !PALLET_INDEX_DEBT.has(o.split(' ← ')[0]));
+  assert.deepEqual(
+    silent,
+    [],
+    'سلكٌ ينقطع صامتًا: مستدعٍ لا يمرّر فهرسَ الطبالي ولا يُعلن دَينَه — فالمشغولُ منها ' +
+      '`null` أبدًا، ورفٌّ سقفُه طبليّتان يقبل الخمسين:\n' +
+      silent.map((o) => `  · ${o}`).join('\n')
+  );
+});
+
+test('★ والدَّينُ ينقص ولا يكذب — ملفٌّ صار يمرّر الفهرسَ يخرج منه فورًا', () => {
+  const { paying } = scanGates();
+  const settled = [...PALLET_INDEX_DEBT.keys()].filter((f) => !paying.has(f));
+  assert.deepEqual(
+    settled,
+    [],
+    'هذه لم تعد مدينةً (وُصلت أو زال نداؤها) ولمّا تُشطب — ودَينٌ لا يُشطب يصير ضجيجًا يُتجاهَل:\n' +
+      settled.map((f) => `  · ${f} — ${PALLET_INDEX_DEBT.get(f)}`).join('\n')
+  );
+});
+
+test('★ ولا اسمَ ميّتٌ في الدَّين — كلّ مذكورٍ ملفٌّ قائم', () => {
+  const ghosts = [...PALLET_INDEX_DEBT.keys()].filter((f) => !fs.existsSync(path.join(SRC, f)));
+  assert.deepEqual(ghosts, [], `ملفّاتٌ في الدَّين لا وجود لها:\n${ghosts.join('\n')}`);
+});
