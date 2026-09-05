@@ -1,16 +1,4 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  writeBatch,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, orderBy, writeBatch, serverTimestamp, db } from '../_db/index.js';
 import { shapeImportedPartner } from './partnerShape.js';
 import { normalizeStatus } from '../items/itemStatus.js';
 

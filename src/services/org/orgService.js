@@ -12,19 +12,8 @@
  * الأساس (`baseline`) هو ملف `src/data/org-structure.json` المرفق مع البناء:
  * إن لم تُنشأ نسخة سحابية بعد، تعمل الصفحة عليه مباشرة — فلا شاشة فارغة.
  */
-import {
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  orderBy,
-  limit,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, setDoc, getDoc, getDocs, onSnapshot, query, orderBy, limit, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { validateTree } from './orgModel.js';
 
 const COL = 'org_structure';

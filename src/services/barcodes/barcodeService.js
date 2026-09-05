@@ -20,20 +20,8 @@
  * الإلغاء **حالةٌ** لا محو — والنصّ اشترطه: «الاحتفاظ بسجلّ حركاتٍ لا يمكن
  * حذفه من الواجهة التشغيليّة». وقواعد Firestore تسدّ الباب الثاني.
  */
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  orderBy,
-  query,
-  runTransaction,
-  serverTimestamp,
-  where,
-  limit as fsLimit,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, runTransaction, serverTimestamp, where, limit as fsLimit, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { classifyScan, normalizeScan } from './barcodeCode.js';
 import { classOf, generateVerdict, opProblem, valueSourceProblem } from './barcodeKinds.js';
 import {

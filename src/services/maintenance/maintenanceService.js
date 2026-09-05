@@ -12,19 +12,8 @@
  *   - آلة الحالات في `workOrderModel.js` تُفرض هنا.
  *   - الأصل يحمل خلاصة حية: أوامر مفتوحة + آخر أمر + حالة تشغيلية.
  */
-import {
-  collection,
-  doc,
-  addDoc,
-  setDoc,
-  getDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-  increment,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, addDoc, setDoc, getDoc, onSnapshot, query, orderBy, serverTimestamp, increment, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { reserveNumber } from '../documents/numberingService.js';
 import { canTransitionWO, WO_PRIORITIES } from './workOrderModel.js';
 

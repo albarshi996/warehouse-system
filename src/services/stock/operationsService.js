@@ -13,21 +13,8 @@
  * ملاحظة: Firestore يخزّن الكتابات محلياً ويرفعها تلقائياً عند عودة الإنترنت،
  * لذا يعمل المستودع بلا شبكة دون فقد أي مسح.
  */
-import {
-  collection,
-  doc,
-  setDoc,
-  updateDoc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  orderBy,
-  where,
-  serverTimestamp,
-  limit,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, setDoc, updateDoc, getDoc, getDocs, onSnapshot, query, orderBy, where, serverTimestamp, limit, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { generateOperationCode, normalizeOperationCode } from './operationCode.js';
 import { normalizeScope } from './operationScope.js';
 import { issueScanId } from './scanIdentity.js';

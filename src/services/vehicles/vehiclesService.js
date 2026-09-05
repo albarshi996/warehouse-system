@@ -16,22 +16,8 @@
  *   - بطاقة المركبة تحمل خلاصةً حيّة (آخر فحص · صيانة مفتوحة · آخر زيت ·
  *     عدد الحوادث) كي يعرض سجلّ الأسطول كل شيء دون قراءة الفروع.
  */
-import {
-  collection,
-  doc,
-  addDoc,
-  setDoc,
-  updateDoc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-  increment,
-  writeBatch,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, addDoc, setDoc, updateDoc, getDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp, increment, writeBatch, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { reserveNumber } from '../documents/numberingService.js';
 import { vehicleIdFor, vehicleHeadFrom, summarize } from './inspectionModel.js';
 

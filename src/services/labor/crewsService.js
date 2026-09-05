@@ -6,17 +6,8 @@
  * لا حذف — الأرشفة بـ active:false (الأثر التنظيميّ يبقى). الإلزام الحقيقيّ
  * في firestore.rules (isLaborWriter).
  */
-import {
-  collection,
-  doc,
-  addDoc,
-  updateDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, addDoc, updateDoc, onSnapshot, query, orderBy, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 
 const COL = 'crews';
 

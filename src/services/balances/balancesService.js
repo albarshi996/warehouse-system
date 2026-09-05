@@ -21,17 +21,7 @@
  *
  * والقراءة لأيّ مصادَق (الجرد والمستندات تحتاج معرفة الرصيد).
  */
-import {
-  collection,
-  doc,
-  getDocs,
-  onSnapshot,
-  query,
-  where,
-  writeBatch,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, doc, getDocs, onSnapshot, query, where, writeBatch, serverTimestamp, db } from '../_db/index.js';
 import { importSheet } from '../excel/excelImport.js';
 import { balanceId } from './balanceKey.js';
 import { normalizeSku, normalizeBarcode } from '../items/itemService.js';

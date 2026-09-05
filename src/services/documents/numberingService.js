@@ -16,8 +16,7 @@
  * ما لا يُنجَز إلّا على الخادم: **الذرّيّة**. وهذا الملفّ يُنفّذ ولا يقرّر —
  * ولذلك سُمّي `Service` (كان `numbering.js` فكان منطقًا مختبئًا في التخزين).
  */
-import { doc, runTransaction } from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { doc, runTransaction, db } from '../_db/index.js';
 import { counterId, formatNumber, nextSeq } from './numberFormat.js';
 
 const COUNTERS = 'counters';

@@ -15,20 +15,8 @@
  * يُغيَّر** بعد أوّل حركة — يُؤرشَف الموقع ويُنشأ بديل. ولا حذف إطلاقًا
  * (`delete:false` في القواعد) وإلّا انقطعت سلسلة التدقيق على حركاتٍ ماضية.
  */
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  orderBy,
-  query,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-  writeBatch,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, writeBatch, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { normalizeLocationCode } from './locationCode.js';
 import { locationProblems, shapeLocation } from './locationsModel.js';
 

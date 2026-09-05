@@ -6,16 +6,7 @@
  * **لا حذف:** القائمة المنتهية تُعطَّل بـ`active:false` فيبقى أثرها. وفاتورةٌ
  * بيعت بسعر قائمةٍ محذوفة تصير رقمًا بلا مرجع — وهو ما يمنعه المبدأ السابع.
  */
-import {
-  collection,
-  doc,
-  setDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, doc, setDoc, onSnapshot, query, orderBy, serverTimestamp, db } from '../_db/index.js';
 import { listProblems } from './priceListModel.js';
 
 const LISTS = 'price_lists';

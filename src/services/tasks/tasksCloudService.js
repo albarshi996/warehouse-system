@@ -12,17 +12,8 @@
  * `orderBy` مع `where` (يفرض فهرسًا مركّبًا) — نستعلم بحقلٍ واحد ونرتّب محلّيًّا.
  * ⚠️ أسماء الحالات والأدوار تُكرَّر في firestore.rules — عدّلهما معًا.
  */
-import {
-  collection,
-  doc,
-  addDoc,
-  updateDoc,
-  onSnapshot,
-  query,
-  where,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, addDoc, updateDoc, onSnapshot, query, where, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { listUsers } from '../auth/usersService.js';
 import { MANAGER_ROLES } from '../auth/roles.js';
 import { TASK_STATUS, EVENT_TYPE, STATUS_LABELS, toMillis } from './taskShape.js';

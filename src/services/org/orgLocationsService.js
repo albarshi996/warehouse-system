@@ -6,8 +6,7 @@
  * **لا حذف:** موقعٌ حُمِّلت عليه تكلفةٌ تاريخيّة لا يُمحى — يُعطَّل بـ`active:false`
  * فتبقى تقارير الأمس مقروءة. ومن حذف موقعًا حوّل تكلفةً حقيقيّةً إلى «غير مربوط».
  */
-import { collection, doc, setDoc, onSnapshot, query, orderBy, serverTimestamp, writeBatch } from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, doc, setDoc, onSnapshot, query, orderBy, serverTimestamp, writeBatch, db } from '../_db/index.js';
 import { locationProblems } from './orgLocations.js';
 import { planOrgImport, sectorSeed } from './orgImport.js';
 import { shapeBranchProfile, profileProblems } from './branchProfile.js';

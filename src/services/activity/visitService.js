@@ -19,8 +19,8 @@
  * الدقيقة نفسها **تُرفض من القاعدة** (لا `update` على `portal_visits`) —
  * فلا تُضاعَف ولا يُعاد تحريرُ سطرٍ مضى. والرفضُ يُبتلع هنا صامتًا (ض-٢/ض-٤).
  */
-import { collection, doc, setDoc, onSnapshot, query, orderBy, limit as fsLimit, serverTimestamp } from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, setDoc, onSnapshot, query, orderBy, limit as fsLimit, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { shapeVisit, visitProblems, visitDocId } from './visitModel.js';
 import { browserDeviceId, browserSessionId } from './deviceId.js';
 

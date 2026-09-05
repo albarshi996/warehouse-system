@@ -9,8 +9,8 @@
  * مصادَق. Firestore يخزّن محليًا ويرفع عند عودة الشبكة، فالعرض يعمل حتى لو
  * انقطع الاتصال أثناء الاجتماع.
  */
-import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { doc, onSnapshot, setDoc, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 
 const reviewRef = () => doc(db, 'gm_review', 'current');
 

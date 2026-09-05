@@ -11,20 +11,8 @@
  * ولا حذف (`delete:false` في القواعد): سجلٌّ يُمحى لا قيمة له، والتصحيح
  * استثناءٌ جديد يشير إلى الأوّل.
  */
-import {
-  collection,
-  doc,
-  addDoc,
-  getDocs,
-  onSnapshot,
-  orderBy,
-  query,
-  runTransaction,
-  serverTimestamp,
-  updateDoc,
-  where,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, addDoc, getDocs, onSnapshot, orderBy, query, runTransaction, serverTimestamp, updateDoc, where, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { counterId, formatNumber, nextSeq } from '../documents/numberFormat.js';
 import {
   EXCEPTION_PREFIX,

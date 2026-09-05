@@ -19,20 +19,8 @@
  * كلُّ دالّةٍ هنا: اقرأ الحيّ ← استدعِ المنطق الخالص ← اكتب النتيجة. ولا
  * قاعدةَ عملٍ تُكتب في طبقة التخزين.
  */
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  orderBy,
-  query,
-  serverTimestamp,
-  setDoc,
-  where,
-  limit as fsLimit,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, serverTimestamp, setDoc, where, limit as fsLimit, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { BARCODE_KINDS, normalizeScan } from '../barcodes/barcodeCode.js';
 import { registerBarcode, registerBatch, recordPrint, reserveSequence, setBarcodeStatus } from '../barcodes/barcodeService.js';
 import { formatShipmentCode, shipmentCounterKey } from './shipmentCode.js';

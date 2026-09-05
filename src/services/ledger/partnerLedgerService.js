@@ -13,18 +13,8 @@
  * أسعارٍ حُدِّثت، تغيّر دَينٌ ثبت في ذمّة العميل. والرصيد نفسه يبقى مشتقًّا من
  * السطور لا مخزَّنًا — فالمخزَّن هو الواقعة، والمحسوب هو الرصيد.
  */
-import {
-  collection,
-  doc,
-  setDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  where,
-  orderBy,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, setDoc, getDocs, onSnapshot, query, where, orderBy, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { entryFor, closeoutEntry } from './partnerLedger.js';
 
 const LEDGER = 'partner_ledger';

@@ -6,8 +6,7 @@
  * `users/**` للأدمن فقط، وإلا أمكن لأي مستخدم مصادق ترقية نفسه.
  * القواعد الجاهزة للصق في FIRESTORE_RULES (انظر الصفحة). المرجع: ROADMAP §8 ركيزة 1.
  */
-import { collection, getDocs, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, getDocs, doc, setDoc, updateDoc, db } from '../_db/index.js';
 
 /** يقرأ كل مستندات الأدوار. */
 export async function listUsers() {

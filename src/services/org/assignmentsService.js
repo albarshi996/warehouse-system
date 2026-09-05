@@ -8,17 +8,8 @@
  * `assignmentsModel.js`). الإنشاء والإنهاء للمديرَين (والإلزام الحقيقيّ في
  * `firestore.rules`). الإنهاء يضبط `active:false` ولا يحذف — الأثر يبقى.
  */
-import {
-  collection,
-  addDoc,
-  updateDoc,
-  doc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, addDoc, updateDoc, doc, onSnapshot, query, orderBy, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 
 const COL = 'assignments';
 

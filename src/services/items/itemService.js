@@ -1,19 +1,4 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  updateDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  where,
-  limit as fsLimit,
-  writeBatch,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, query, orderBy, where, limit as fsLimit, writeBatch, serverTimestamp, db } from '../_db/index.js';
 import { normalizeBarcode, barcodeLookupVariants } from '../excel/excelSchema.js';
 import { normalizeStatus } from './itemStatus.js';
 import { shapeImportedItem, normalizeUnit } from './itemShape.js';

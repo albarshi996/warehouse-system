@@ -10,16 +10,8 @@
  * وهويّة المستورِد تُكتب هنا من الحساب المسجَّل لا من الشيت (قرار المالك
  * 2026-08-16): ما يُملأ باليد يُزوَّر باليد.
  */
-import {
-  collection,
-  doc,
-  getDocs,
-  query,
-  serverTimestamp,
-  where,
-  writeBatch,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, getDocs, query, serverTimestamp, where, writeBatch, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { importSheet } from '../excel/excelImport.js';
 import { createDraft } from '../documents/documentsService.js';
 import { buildPreview, toDocumentDraft } from './sourceImport.js';

@@ -29,8 +29,8 @@ import {
   holdVisit,
   VISITS_CAP,
 } from '../fleet/yardService.js';
-import { collection, addDoc, onSnapshot, query, orderBy, limit as fsLimit, serverTimestamp } from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, addDoc, onSnapshot, query, orderBy, limit as fsLimit, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { EXIT_STAGE, PERMIT_STAGE, shapeVisit, stageIndex } from '../fleet/yardModel.js';
 import { shapeInLoad, shapeOutLoad, shapeVisitor, needsDoor, normalizePlate, isGateReason } from './gateModel.js';
 import { movesFromLoad, moveProblems, shapeMove } from './palletLedger.js';

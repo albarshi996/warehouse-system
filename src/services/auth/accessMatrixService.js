@@ -7,18 +7,8 @@
  * ⚠️ حتى ينشر المالك القاعدة الجديدة: القراءة سترتدّ permission-denied —
  * الدوالّ هنا تبتلع ذلك وتعيد null، فيعمل الحارس بالكتالوج وحده (سقوط آمن).
  */
-import {
-  doc,
-  getDoc,
-  getDocFromServer,
-  setDoc,
-  onSnapshot,
-  collection,
-  addDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
+import { doc, getDoc, getDocFromServer, setDoc, onSnapshot, collection, addDoc, serverTimestamp, db } from '../_db/index.js';
 
-import { db } from '../../config/firebase.js';
 import { normalizeMatrix, EMPTY_MATRIX, countOverrides } from './accessMatrix.js';
 
 const COL = 'access_control';

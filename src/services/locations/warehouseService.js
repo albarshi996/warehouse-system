@@ -1,5 +1,4 @@
-import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, onSnapshot, orderBy, query, db } from '../_db/index.js';
 
 /**
  * Warehouse service.

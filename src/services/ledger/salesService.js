@@ -35,13 +35,7 @@
  * طُبّق) و`soReleasedByKey` (كم فُكّ من كل مفتاح حجز) — فلا يُفكّ أكثر ممّا حُجز
  * ولو تكرّر الحدث أو أُنجز أمر البيع بعد سحبه.
  */
-import {
-  doc,
-  serverTimestamp,
-  runTransaction,
-  increment,
-} from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { doc, serverTimestamp, runTransaction, increment, db } from '../_db/index.js';
 import { fetchBalancesOnce } from '../balances/balancesService.js';
 import { allocateDocument, reservationDeltas, planItemRelease, planFullRelease, isFullyReleased } from './reservations.js';
 

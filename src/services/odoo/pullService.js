@@ -19,18 +19,8 @@
  * لم يُسحب شيء. ولهذا يُحفظ `lastPulledAt` ويُعرض: مرآةٌ لا تُعلن قِدَمها
  * تكذب بصمت.
  */
-import {
-  collection,
-  doc,
-  getDocs,
-  setDoc,
-  writeBatch,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, getDocs, setDoc, writeBatch, onSnapshot, query, orderBy, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { odoo } from './index.js';
 import { scopeOf, mirrorDocId, PULL_SCOPE_IDS, financeScopes } from './pullRegistry.js';
 import { accountFromOdoo, moveFromOdoo, moveLineFromOdoo, paymentFromOdoo } from './financeMapper.js';

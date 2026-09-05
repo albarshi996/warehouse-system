@@ -14,18 +14,8 @@
  *   - آلة الحالات في `fleetModel.js` تُفرض هنا: انتقال غير مشروع يُرمى.
  *   - بطاقة المركبة تحمل خلاصة حيّة: آخر تسليم يومي + الرحلة النشطة.
  */
-import {
-  collection,
-  doc,
-  addDoc,
-  setDoc,
-  getDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, addDoc, setDoc, getDoc, onSnapshot, query, orderBy, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { reserveNumber } from '../documents/numberingService.js';
 import {
   canTransitionTrip,

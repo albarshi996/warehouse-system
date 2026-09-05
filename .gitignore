@@ -47,5 +47,13 @@ pnpm-debug.log*
 tmp/
 output/
 
+# ═══ هجرة PostgreSQL ═══
+# نسخةُ Firestore المصدَّرة: بياناتُ عملٍ حقيقيّةٌ كاملة (أصنافٌ وأسعارٌ وشركاءُ
+# وحركاتُ مخزون). لا تُلتزَم في git بحال — ولا حتّى في فرعٍ خاصّ.
+db/dump/
+# أسرارُ الاتّصال المحلّيّة (كلمةُ مرور القاعدة · مفاتيحُ الخدمة إن استُعملت).
+db/secrets/
+db/.env
+
 # pasted screenshots dropped at the repo root
 /Pasted image *.png

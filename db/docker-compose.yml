@@ -1,0 +1,51 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  قاعدة بيانات نظام المستودعات — PostgreSQL في حاوية
+# ═══════════════════════════════════════════════════════════════════════════
+#
+#  ★ منفصلةٌ تمامًا عن قاعدة Odoo القائمة (`brandzo-odoo-db`):
+#    مخزنٌ آخر (`warehouse-db-data`) · منفذٌ آخر (5433) · شبكةٌ خاصّة.
+#    فلا يمكن لهذا الملفّ أن يمسّ بيانات Odoo بحال.
+#
+#  ★★ والقاعدةُ الحاكمة: **PostgreSQL قياسيٌّ بحتٌ لا خواصَّ مزوّد**.
+#    ما يعمل هنا يعمل حرفيًّا على Neon وعلى سيرفر الشركة لاحقًا —
+#    ولا يتغيّر إلّا `DATABASE_URL`.
+#
+#  التشغيل:   docker compose -f db/docker-compose.yml up -d
+#  الإيقاف:   docker compose -f db/docker-compose.yml down
+#  المحو:     docker compose -f db/docker-compose.yml down -v   ← يمحو البيانات
+# ═══════════════════════════════════════════════════════════════════════════
+
+name: warehouse-db
+
+services:
+  postgres:
+    # الإصدار 17 — نفسه المتاح على Neon، فلا مفاجآتِ توافقٍ عند النقل (البند ٢٢).
+    image: postgres:17
+    container_name: warehouse-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: warehouse
+      POSTGRES_USER: warehouse
+      # كلمةُ مرورٍ محلّيّةٌ للتطوير وحده. للإنتاج تُمرَّر من البيئة:
+      #   POSTGRES_PASSWORD=… docker compose -f db/docker-compose.yml up -d
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-warehouse_local_dev}
+      # ترتيبٌ وترميزٌ يدعمان العربية دعمًا صحيحًا في الفرز والمقارنة.
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C.UTF-8'
+    ports:
+      # 5433 على الجهاز ← 5432 داخل الحاوية.
+      # اخترنا 5433 لأنّ 5432 قد يكون مشغولًا بقاعدةٍ أخرى على الجهاز.
+      - '5433:5432'
+    volumes:
+      - warehouse-db-data:/var/lib/postgresql/data
+      # ملفّات المخطّط تُنفَّذ **مرّةً واحدةً عند أوّل إنشاء** بترتيب الاسم.
+      # وبعد ذلك تُدار التغييرات بترحيلاتٍ مرقّمة لا بتعديل هذه الملفّات.
+      - ./schema:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U warehouse -d warehouse']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  warehouse-db-data:
+    name: warehouse-db-data

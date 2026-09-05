@@ -7,8 +7,8 @@
  * ⚠️ **عمليّة إداريّة لا يوميّة:** تقرأ `stock_moves` كلَّه. تُشغَّل عند
  * الشكّ في رصيد، وقبل ترحيل مفتاح الرصيد وبعده — لا في حلقة.
  */
-import { collection, doc, getDocs, serverTimestamp, writeBatch } from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, getDocs, serverTimestamp, writeBatch, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { migrationVerdict, reconcileBalances, rebuiltRowsForWrite } from './rebuild.js';
 
 const MOVES = 'stock_moves';

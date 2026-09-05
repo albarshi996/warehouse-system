@@ -10,15 +10,8 @@
  * الصوت لا يُخزَّن هنا (قرار المالك: تنزيلٌ محليّ فقط) — يُحفظ **التفريغ
  * النصّيّ** فقط ضمن الوثيقة، فيبقى الأرشيف النصّيّ سحابيًّا بلا خطّة مدفوعة.
  */
-import {
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  onSnapshot,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, setDoc, getDoc, onSnapshot, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { reserveNumber } from '../documents/numberingService.js';
 import { MINUTES_NUMBER_TYPE } from './meetingsService.js';
 import {

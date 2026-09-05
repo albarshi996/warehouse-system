@@ -13,8 +13,7 @@
  * كلّ حفظٍ يكتب `updatedAt` و`byUid` و`byName` — فتغيير السياسة **واقعةٌ
  * منسوبة** لا تعديلًا مجهولًا. ومن غيّر سقف الائتمان يجب أن يُعرف.
  */
-import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { doc, getDoc, setDoc, onSnapshot, serverTimestamp, db } from '../_db/index.js';
 import {
   SETTINGS_COLLECTION,
   SETTINGS_DOC,
