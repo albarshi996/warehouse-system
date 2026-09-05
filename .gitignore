@@ -49,3 +49,8 @@ output/
 
 # pasted screenshots dropped at the repo root
 /Pasted image *.png
+
+# ═══ نسخةُ Firestore المصدَّرة — بياناتُ عملٍ حقيقيّة. لا تُلتزَم بحال. ═══
+db/dump/
+db/secrets/
+db/.env
