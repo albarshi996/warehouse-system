@@ -110,7 +110,10 @@ export default function ItemMaster() {
         setError(err?.message ?? 'تعذر الاتصال بقاعدة البيانات');
         setLoading(false);
       },
-      { includeArchived: showArchived }
+      // ★ الشاشةُ الوحيدةُ التي تبقى على البثّ الحيّ: هنا تُحرَّر الأصناف،
+      //   فيجب أن يرى المحرِّرُ تعديلَ زميله لحظتَه. وبقيّةُ الشاشات الخمسَ
+      //   عشرةَ تُخدَم من الذاكرة — وهو ما أنقذ حصّةَ القراءة (2026-09-05).
+      { includeArchived: showArchived, live: true }
     );
     return () => unsubscribe();
   }, [showArchived]);

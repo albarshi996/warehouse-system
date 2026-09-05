@@ -18,6 +18,7 @@ import { normalizeBarcode, barcodeLookupVariants } from '../excel/excelSchema.js
 import { normalizeStatus } from './itemStatus.js';
 import { shapeImportedItem, normalizeUnit } from './itemShape.js';
 import { assertNewItemIdentity, normalizeSubstitutes } from './itemIdentity.js';
+import { CACHE_KEY, packCache, unpackCache, isFresh, selectItems } from './itemCache.js';
 
 export { normalizeStatus, normalizeUnit };
 
@@ -79,26 +80,180 @@ export const normalizeBarcodes = (list) => [
   ...new Set((Array.isArray(list) ? list : [list]).map(normalizeBarcode).filter(Boolean)),
 ];
 
+/* ═══════════════════════════════════════════════════════════════════════════
+ *  ذاكرةُ الكتالوج — قراءةٌ واحدةٌ بدل ١١٧٣ في كلّ شاشة
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * ═══ العطبُ الذي وُجدت لأجله (لوحة Firebase 2026-09-05) ═══
+ * `subscribeItems` كان يفتح مستمعًا حيًّا على **١١٧٣ صنفًا** في كلّ استدعاء،
+ * ويُستدعى من **١٦ شاشة**. والبوّابةُ صفحاتٌ منفصلة، فكلُّ انتقالٍ إعادةُ
+ * تحميلٍ كاملة ⇒ إعادةُ قراءةِ الكتالوج كلِّه.
+ *   ١١٧٣ × ٥٢ فتحةً = **٦١٠٠٠ قراءة** — والحدُّ المجّانيّ ٥٠٠٠٠.
+ * فنفدت الحصّةُ عصرًا وتوقّفت القراءات، وفي الغد جرد.
+ *
+ * ★★★ والدليلُ أنّ العلّةَ قراءةٌ لا كتابة: **٦١ ألفَ قراءةٍ مقابل ٣٦ كتابة**.
+ *
+ * ═══ والعلاج ═══
+ * الكتالوجُ يتغيّر نادرًا، فيُقرأ **مرّةً** ويُخدَم من الذاكرة والقرص.
+ * والقراءةُ من القرص لا تُحسب في الحصّة.
+ *   · ذاكرةٌ واحدةٌ مشتركةٌ للصفحة كلِّها — ١٦ مشتركًا بقراءةٍ واحدة.
+ *   · و`localStorage` يعبر بها إعادةَ التحميل — فالانتقالُ بين الشاشات مجّانيّ.
+ *   · وكلُّ كتابةٍ تُبطلها فورًا، فلا يرى أحدٌ كتالوجًا قديمًا بعد تعديله.
+ *
+ * ⚠️ والتغييرُ في السلوك مقصودٌ ومحدود: لا تصل تعديلاتُ **مستخدمٍ آخر** حيّةً
+ *    إلى شاشةٍ مفتوحة. ومن يحتاج ذلك فعلًا يطلبه بـ`{ live: true }` —
+ *    وشاشةُ إدارة الأصناف وحدَها تفعل.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/** كلُّ الأصناف بما فيها المؤرشفة — والترشيحُ عند التسليم. */
+let allItems = null;
+let loadedAt = 0;
+let inflight = null;
+
+/** المشتركون: `{ cb, includeArchived }`. */
+const listeners = new Set();
+
+/** `localStorage` غائبٌ في بناء Astro على الخادم، ومحظورٌ في التصفّح الخاصّ. */
+function storage() {
+  try {
+    return typeof localStorage === 'undefined' ? null : localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function readStored() {
+  const s = storage();
+  if (!s) return null;
+  try {
+    return unpackCache(s.getItem(CACHE_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function writeStored(items) {
+  const s = storage();
+  if (!s) return;
+  try {
+    s.setItem(CACHE_KEY, packCache(items, Date.now()));
+  } catch {
+    // ممتلئٌ أو محظور — الذاكرةُ في الصفحة تكفي، ولا يُسقط هذا شيئًا.
+  }
+}
+
+function emitAll() {
+  for (const l of listeners) {
+    try {
+      l.cb(selectItems(allItems, l.includeArchived));
+    } catch {
+      // مشتركٌ يرمي لا يُسقط البقيّة.
+    }
+  }
+}
+
+async function fetchAll() {
+  const snap = await getDocs(query(collection(db, COLLECTION), orderBy('sku')));
+  return snap.docs.map((d) => d.data());
+}
+
+/** يضمن وجودَ كتالوجٍ طازج. الطلباتُ المتزامنةُ تشترك في قراءةٍ واحدة. */
+function ensureLoaded(force = false) {
+  const now = Date.now();
+
+  if (!force) {
+    if (allItems && isFresh({ at: loadedAt }, now)) return Promise.resolve(allItems);
+    if (!allItems) {
+      const stored = readStored();
+      if (stored && isFresh(stored, now)) {
+        allItems = stored.items;
+        loadedAt = stored.at;
+        return Promise.resolve(allItems);
+      }
+    }
+  }
+
+  if (inflight) return inflight;
+  inflight = fetchAll()
+    .then((items) => {
+      allItems = items;
+      loadedAt = Date.now();
+      writeStored(items);
+      return items;
+    })
+    .finally(() => {
+      inflight = null;
+    });
+  return inflight;
+}
+
 /**
- * Subscribe to the items collection in real time. Returns the `unsubscribe`
- * function — caller is responsible for invoking it on cleanup.
+ * يُبطل الذاكرةَ ويُحدّث المشتركين — يُستدعى بعد كلّ كتابةٍ في هذا الملفّ.
+ * فمن عدّل صنفًا يراه معدَّلًا في الشاشة التالية بلا انتظار.
+ */
+export function invalidateItemsCache() {
+  allItems = null;
+  loadedAt = 0;
+  const s = storage();
+  if (s) {
+    try {
+      s.removeItem(CACHE_KEY);
+    } catch {
+      /* لا يضرّ */
+    }
+  }
+  if (listeners.size) ensureLoaded(true).then(emitAll).catch(() => {});
+}
+
+/**
+ * Subscribe to the items catalogue. Returns the `unsubscribe` function —
+ * caller is responsible for invoking it on cleanup.
  *
  * @param {(items: object[]) => void} onChange
  * @param {(error: Error) => void} [onError]
- * @param {{ includeArchived?: boolean }} [opts]
+ * @param {{ includeArchived?: boolean, live?: boolean }} [opts]
+ *        `live` يفتح مستمعًا حيًّا (السلوك القديم) — لمن يحتاجه فعلًا وحدَه.
  */
-export const subscribeItems = (onChange, onError, { includeArchived = false } = {}) => {
-  const q = query(collection(db, COLLECTION), orderBy('sku'));
-  return onSnapshot(
-    q,
-    (snap) => {
-      const items = snap.docs.map((d) => d.data());
-      onChange(includeArchived ? items : items.filter((it) => !it.archived));
-    },
-    (err) => {
-      if (onError) onError(err);
-    }
-  );
+export const subscribeItems = (onChange, onError, { includeArchived = false, live = false } = {}) => {
+  if (live) {
+    const q = query(collection(db, COLLECTION), orderBy('sku'));
+    return onSnapshot(
+      q,
+      (snap) => {
+        const items = snap.docs.map((d) => d.data());
+        // المستمعُ الحيُّ يُغذّي الذاكرةَ أيضًا — فتستفيد الشاشاتُ التالية.
+        allItems = items;
+        loadedAt = Date.now();
+        writeStored(items);
+        onChange(selectItems(items, includeArchived));
+      },
+      (err) => {
+        if (onError) onError(err);
+      }
+    );
+  }
+
+  const entry = { cb: onChange, includeArchived };
+  listeners.add(entry);
+  let cancelled = false;
+
+  // ★★ التسليمُ مؤجَّلٌ دائمًا ولو كانت الذاكرةُ حاضرة.
+  //    `itemsImportService.fetchExistingOnce` يكتب:
+  //      const unsub = subscribeItems((items) => { unsub(); … });
+  //    فلو سُلّم متزامنًا لكان `unsub` في منطقة الموت المؤقّت وانهار.
+  //    و`onSnapshot` يؤجّل كذلك — فالتأجيلُ حفظٌ للعقد لا زيادةٌ عليه.
+  ensureLoaded()
+    .then(() => {
+      if (!cancelled) onChange(selectItems(allItems, includeArchived));
+    })
+    .catch((err) => {
+      if (!cancelled && onError) onError(err);
+    });
+
+  return () => {
+    cancelled = true;
+    listeners.delete(entry);
+  };
 };
 
 /** يقرأ صنفًا واحدًا بكوده. يُعيد null إن لم يوجد. */
@@ -204,6 +359,7 @@ export const createItem = async ({
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+  invalidateItemsCache();
   return id;
 };
 
@@ -263,6 +419,7 @@ export const upsertItems = async (items, { existingBySku = new Map() } = {}) => 
     }
     await batch.commit();
   }
+  invalidateItemsCache();
   return { created, updated, skipped };
 };
 
@@ -295,18 +452,21 @@ export const updateItem = async (sku, patch) => {
 
   const ref = doc(db, COLLECTION, id);
   await updateDoc(ref, { ...next, updatedAt: serverTimestamp() });
+  invalidateItemsCache();
 };
 
 /** Soft-delete: flip `archived` to true. Item is hidden from default lists. */
 export const archiveItem = async (sku) => {
   const ref = doc(db, COLLECTION, normalizeSku(sku));
   await updateDoc(ref, { archived: true, updatedAt: serverTimestamp() });
+  invalidateItemsCache();
 };
 
 /** Reverse `archiveItem`. */
 export const unarchiveItem = async (sku) => {
   const ref = doc(db, COLLECTION, normalizeSku(sku));
   await updateDoc(ref, { archived: false, updatedAt: serverTimestamp() });
+  invalidateItemsCache();
 };
 
 /** Common units used in the Brandzo catalogue. Extend as needed. */
