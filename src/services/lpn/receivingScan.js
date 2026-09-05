@@ -74,7 +74,7 @@ export function resolveScan(raw, indexes) {
  * القائمة، ثمّ التجاوز أخيرًا — لأنّه الوحيد الذي يُفتح بصلاحية.
  *
  * @param {object} session جلسة الاستلام
- * @param {object} scan {barcode, qty, batch, expiry, override, overrideNote}
+ * @param {object} scan {barcode, qty, batch, expiry, supplierBatch, mfgDate, override, overrideNote}
  * @param {object} ctx {indexes, asOf, policy}
  */
 export function scanVerdict(session, scan, { indexes, asOf, policy } = {}) {
@@ -153,6 +153,13 @@ export function scanVerdict(session, scan, { indexes, asOf, policy } = {}) {
       baseQty,
       batch: up(scan?.batch),
       expiry: String(scan?.expiry ?? '').trim(),
+      // ★★★ حقلا تتبّعٍ كان أنبوبُهما مبنيًّا وجافًّا: `EXTRA_FIELDS` في
+      // `grnBridge` يعرفهما و`LINE_MAP['GRN>QC']` يورّثهما — **ولا كاتبَ لهما
+      // عند المسح**، فلا يُصدَّران أبدًا مهما اتّفقت الطبالي.
+      // ودفعةُ المورّد هي ما يُطابَق به عند السحب من السوق: رقمُنا الداخليُّ
+      // لا يعرفه المصنع، ونداءُ سحبٍ يأتي برقمه هو.
+      supplierBatch: up(scan?.supplierBatch),
+      mfgDate: String(scan?.mfgDate ?? '').trim(),
       // ★ المعامل المجهول يُعلَن ولا يُخمَّن — الكمّيّة تدخل والأساس موسومٌ
       // مجهولًا، فيظهر في فاحص الاحتواء قائمةَ عملٍ لا رقمًا كاذبًا.
       baseUnknown: baseQty === null,

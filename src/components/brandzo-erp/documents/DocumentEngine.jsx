@@ -72,6 +72,8 @@ import StateBar from './StateBar.jsx';
 import AuditTrail from './AuditTrail.jsx';
 import DocumentPrint from './DocumentPrint.jsx';
 import ChainBar from './ChainBar.jsx';
+import { nextOwnerOf } from '../../../services/tasks/stageOwners.js';
+import FieldReleasePanel from './FieldReleasePanel.jsx';
 import CopyFromPanel from './CopyFromPanel.jsx';
 import AttachmentsPanel from './AttachmentsPanel.jsx';
 import ControlPanel from './ControlPanel.jsx';
@@ -126,6 +128,12 @@ export default function DocumentEngine() {
   const [ledger, setLedger] = useState([]); // سطور دفتر الذمم (م٤-د)
 
   const schema = useMemo(() => getSchema(type), [type]);
+
+  /**
+   * ‹JR-105› سطرُ «من ينتظره الآن» — حسابُه في النواة الخالصة لا هنا.
+   * والمستندُ يحمل نوعَه وحالتَه فلا يُقرأ خامٌّ ولا يُخمَّن دور.
+   */
+  const ownerLine = useMemo(() => String(nextOwnerOf(doc)?.line ?? '').trim(), [doc]);
 
   /**
    * `dirty` في مرجع لا في متغيّر مُلتقَط.
@@ -642,10 +650,43 @@ export default function DocumentEngine() {
           </div>
         )}
 
+        {/*
+          ‹JR-105› **من ينتظر هذا المستندَ الآن** — طلبُ المالك: «البوّابة تعمل
+          بفكرة المراحل، وكلُّ مرحلةٍ مربوطةٌ بشخصٍ ما».
+
+          ★★ وموضعُه **فوق سلسلة الاشتقاق**: الواقفُ أمام المستند يسأل أوّلًا
+          «ومن ينتظره؟» قبل «وماذا يُشتقّ منه؟». وكان يُعرض في صندوق المستندات
+          وشاشة الاستلام ولا يُعرض **هنا** — وهذه شاشةُ المعتمِد نفسِه.
+
+          ★ والحكمُ كلُّه في `nextOwnerOf` الخالصة: الشاشةُ تعرض `line` ولا
+          تُعيد بناءَ «من صاحبُ هذه المرحلة» بشرطٍ في JSX يفترق عمّا يُختبر.
+        */}
+        {docId && ownerLine ? (
+          <p
+            id="document-next-owner"
+            style={{
+              margin: '0 0 12px', padding: '8px 12px',
+              background: 'var(--o-gray-100, #f4f4f6)',
+              borderInlineStart: '3px solid var(--o-primary, #714B67)',
+              borderRadius: 'var(--o-border-radius)',
+              fontSize: 'var(--o-font-size-sm)',
+            }}
+          >
+            {ownerLine}
+          </p>
+        ) : null}
+
         {/* سلسلة الشراء والمطابقة الثلاثية (F2) — تظهر للأنواع المترابطة فقط */}
         <div id="document-relations">
           <ChainBar doc={doc} me={me} onFlash={flash} />
         </div>
+
+        {/* ‹JR-801› إطلاق العمل للميدان — **بعد `ChainBar` لا داخله**: ذاك
+            اشتقاقُ مستندٍ من مستند (التزامٌ يلد التزامًا)، وهذا إسنادُ عملٍ
+            إلى فريقٍ يمشي إلى رفّ. ومعنيان تحت عنوانٍ واحدٍ يُربكان المشغّل.
+            واللوحةُ تُخفي نفسَها لِما لا يولّد عملًا ولِمن لا تقبل القاعدةُ
+            كتابتَه — فلا حاجةَ إلى حاويةٍ تُبقي فراغًا في التخطيط. */}
+        <FieldReleasePanel doc={doc} me={me} items={items} locations={locationsList} onFlash={flash} />
 
         {violations.length > 0 && (
           <div className="bg-brand-red/10 border border-brand-red/40 rounded-xl px-4 py-3">

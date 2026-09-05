@@ -20,7 +20,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { subscribeItems } from '../../../services/items/itemService.js';
 import { buildItemIndexes } from '../../../services/items/uomWiring.js';
-import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
+import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
 import { listenDocumentsByTypes } from '../../../services/documents/documentsService.js';
 import { documentLineProgress } from '../../../services/documents/documentLineProgress.js';
 import { openOrderCard, remainingOf, sessionCloseProblem, sessionTotals } from '../../../services/lpn/receivingSession.js';
@@ -35,7 +35,19 @@ import {
   scanIntoDraft,
   startSession,
 } from '../../../services/lpn/receivingService.js';
-import { grnPreview } from '../../../services/lpn/grnBridge.js';
+import { grnPreview, closeTargetOf } from '../../../services/lpn/grnBridge.js';
+/*
+ * ‹JR-301 · طلبُ المالك ط‑٥› اختيارُ الوحدة عند المسح.
+ * الأربعةُ تُستدعى ولا يُعاد بناءُ حكمِ أيٍّ منها هنا: `resolveScan` تقول ما
+ * يحسمه الباركود · `needsPackEntry` هي الحكمُ الفاصل بين المسارين ·
+ * `scanUomChoices` قائمةُ المعرَّف · `packEntryVerdict` حكمُ غير المعرَّف.
+ */
+import { resolveScan } from '../../../services/lpn/receivingScan.js';
+import { baseQtyPreview, scanUomChoices } from '../../../services/stock/scanFlow.js';
+import { needsPackEntry, packEntryVerdict } from '../../../services/items/packEntry.js';
+import { convert, uomLabel } from '../../../services/items/uomModel.js';
+// ‹JR-105› «كلُّ مرحلةٍ مربوطةٌ بشخصٍ ما» — والخريطةُ تُقرأ من مخطّطات الأنواع.
+import { nextOwnerOf, stageOwnerLine } from '../../../services/tasks/stageOwners.js';
 import {
   useBarcodeCamera,
   ScanCameraButton,
@@ -51,9 +63,262 @@ import { listenBalances } from '../../../services/balances/balancesService.js';
 import { uiGate } from '../../../services/lpn/lpnRoles.js';
 import { FieldLangSwitch, useFieldLang } from './useFieldLang.jsx';
 
+/* ── الطرقُ المكتوبة ─────────────────────────────────────────────────
+ * ★★ **2026-09-03 — الشاشةُ تعرف الطريقَ فلتُعطِه.**
+ * كانت تقول «اعتمده من صندوق المستندات» و«اعتمد أمرًا ثمّ عُد»: أمرٌ
+ * بالذهاب بلا طريق، ومعرّفُ المستند بيدها في `r.docId` و`session.grnId`.
+ * فالموظّفُ يقرأ رقمًا ثمّ يبحث عنه بيده في صندوقٍ فيه مستنداتُ المنشأة كلُّها.
+ *
+ * ⚠️ والروابطُ تُبنى من `getBasePath()` لا بمسارٍ حرفيّ: البوّابةُ تُنشر تحت
+ * مسارِ المستودع وتُطوَّر تحت الجذر — والمسارُ الحرفيُّ يصحّ في إحدى البيئتين
+ * ويكذب في الأخرى، وهو عطبٌ لا يظهر إلّا عند المستخدم.
+ *
+ * ★ ولا يُكتب اسمُ المستودع هنا ولو في تعليق: حارسُ الهويّة
+ * (`workspace/identity.test.js`) يقرأ **النصَّ الخام** ويرفض أيَّ ذكرٍ لاسمِ
+ * مستودعِنا في ملفٍّ يُزامَن إلى المستودع الشقيق — فما يصحّ عندنا يكذب هناك.
+ */
+const base = getBasePath();
+const docHref = (type, id) => `${base}/dashboard/document?type=${type}&id=${encodeURIComponent(id)}`;
+const inboxHref = `${base}/dashboard/documents`;
+
+/* ⟦deep-link⟧ ═══ الأمرُ يُقرأ من العنوان ═══════════════════════════════
+ *
+ * ★★★ **العلامتان ⟦deep-link⟧ … ⟦/deep-link⟧ عقدٌ لا زينة.** حارسُ هذه
+ * الكتلة (`receivingDeepLink.test.js`) يقتطع ما بينهما ويُحمّله **وحدةً حيّة**
+ * فيُشغّل شيفرةَ الشاشة نفسَها لا نسخةً منها — و`node --test` لا يستورد `.jsx`
+ * ولا مترجمَ في هذه الشجرة. فلا تُزل العلامتين، ولا تُدخل بينهما JSX ولا
+ * استيرادًا ولا شيئًا من خارج الكتلة: ما بينهما يجب أن يقوم وحدَه.
+ * (ولهذا سكن `upper` هنا: تستعمله الكتلةُ فيسكن معها، ويبقى تعريفًا واحدًا
+ * للملفّ كلِّه لا اثنين يفترقان.)
+ *
+ * ═══ العطبُ الذي تسدّه ═══
+ * زرُّ «ابدأ الاستلام الميدانيّ» في صفّ الأمر يفتح هذه الشاشة — على **قائمتها**.
+ * فمن ضغطه على أمرٍ بعينه يصل إلى قائمةٍ يبحث فيها عن أمره بين المفتوحة،
+ * والرحلةُ التي وُصلت من المستند إلى الميدان تنقطع في آخر متر. وهو المزلقُ
+ * الأوّلُ المكتوبُ حرفًا في رأس `services/tasks/fieldRoutes.js`: «فالمسارُ
+ * عارٍ حتّى تقرأه الشاشة، ثمّ يُضاف هنا وفي الشاشة معًا لا هنا وحده».
+ *
+ * ⚠️ **ونصفُه الأوّلُ ما زال ناقصًا**: `DocumentsInbox.jsx` و`OpenDocumentsBox.jsx`
+ * يبنيان الرابطَ `${base}${route.path}` **بلا `?doc=`**. فهذه الشاشةُ صارت
+ * تقرأ ما لا يكتبه أحدٌ بعد — وهو مقصودٌ لا سهو: الملفّان ليسا في يد هذه
+ * الدفعة. والقارئُ يسبق الكاتبَ ولا ضررَ (لا معاملَ ⇒ لا تغيّرَ حرفًا)،
+ * وحارسُ الكتلة يقيس المفتاحَ من `fieldRouteFor` نفسِها فيوم يُكتب يعمل.
+ *
+ * ★ والمفتاحُ `doc` **عينُ مفتاح `PickingFlow.jsx`** لا مفتاحٌ ثانٍ: ما
+ * يتعلّمه الموظّفُ في شاشةٍ يعمل في أختها، والمفتاحان يفترقان صامتين.
+ */
+
+/** مقارنةُ هويّةٍ لا عرضٌ — بحروفٍ كبيرةٍ مشذّبةٍ كما تفعل الخدمةُ في قيدها. */
+const upper = (v) => String(v ?? '').trim().toUpperCase();
+
+/**
+ * معرّفُ المستند المطلوب من شريط العنوان — أو نصٌّ فارغ.
+ *
+ * @param {string} search نصُّ `location.search` كما هو (بعلامة الاستفهام أو بدونها)
+ * @returns {string}
+ */
+export function docParamOf(search) {
+  return String(new URLSearchParams(String(search ?? '')).get('doc') ?? '').trim();
+}
+
+/**
+ * ★★★ ما الذي يفعله الرابطُ الآن؟ — **حكمٌ خالصٌ يُسأل، والشاشةُ تنفّذه.**
+ *
+ * خمسةُ مخارجَ لا رابعَ لها صامت:
+ *   · `none`      ⟶ لا معاملَ أصلًا: الشاشةُ كما كانت حرفًا بحرف.
+ *   · `session`   ⟶ على الأمر جلسةٌ مفتوحة: **تُتابَع ولا تُفتح ثانيةٌ عليه**.
+ *   · `order`     ⟶ أمرٌ مطابقٌ بلا جلسة: تُفتح جلستُه مباشرةً.
+ *   · `highlight` ⟶ مطابقٌ والفتحُ يحتاج ضغطة: يُبرَز ويُقال لماذا.
+ *   · `missing`   ⟶ لا مطابقَ: يُقال السببُ المرجَّح ولا يُترك الموظّفُ يظنّ
+ *                   أمرَه ضائعًا وهو أمامه.
+ *
+ * ★★★ **ولماذا الجلسةُ أوّلًا؟** `startSession` تُنشئ **دائمًا**، فجلستان على
+ * أمرٍ واحدٍ لا ترى إحداهما الأخرى — وهو نقيضُ ما بُني له `listenSession`.
+ * والرابطُ ضغطةٌ تتكرّر بكلّ إعادةِ تحميل، فخطرُه أكبر من نقرةِ يدٍ لا أصغر.
+ *
+ * ★ و`allowed` **ليست حكمَ صلاحيّةٍ جديدًا**: هي عينُ ما يعطّل زرَّ الصفّ في
+ * الشاشة (`uiGate`). والقيدُ أنّ العنوانَ لا يفعل ما يمنعه الضغط — وإلّا صار
+ * بابًا خلفيًّا. والمنعُ **إبرازٌ لا صمت**: يرى أمرَه ويرى شريطَ الدور فوقه.
+ *
+ * ★ والمطابقةُ بالمعرّف **أو بالرقم**: الرابطُ يحمل المعرّف، ومن نسخ
+ * «PO-2026-0015» بيده من رسالةٍ أو ورقةٍ يصل كذلك بلا شاشةٍ ثانيةٍ تُبنى له.
+ *
+ * @param {object} input
+ * @param {string} input.wanted المعرّفُ (أو الرقم) كما قُرئ من العنوان
+ * @param {Array<object>} input.orders بطاقاتُ الأوامر المعروضة — من `openOrderCard`
+ * @param {Array<object>} input.openSessions الجلساتُ المفتوحة — من `listOpenSessions`
+ * @param {boolean} input.sessionsKnown أقُرئت قائمةُ الجلسات فعلًا؟ (فشلُ القراءة ⇒ لا إنشاء)
+ * @param {string} input.actor اسمُ الفاعل كما قُرئ من ملفّه الشخصيّ
+ * @param {boolean} input.allowed أيسمح الدورُ بفتح جلسةِ استلام؟
+ * @returns {{kind:string, id:string, message:string}}
+ */
+export function deepLinkTarget({
+  wanted,
+  orders = [],
+  openSessions = [],
+  sessionsKnown = true,
+  actor = '',
+  allowed = true,
+} = {}) {
+  const key = String(wanted ?? '').trim();
+  if (!key) return { kind: 'none', id: '', message: '' };
+  const k = upper(key);
+  const hits = (o) => Boolean(o) && (upper(o.id) === k || upper(o.number) === k);
+
+  const live = (openSessions ?? []).find((s) => hits(s?.order));
+  if (live) {
+    return {
+      kind: 'session',
+      id: String(live.id ?? ''),
+      message: `جلسةٌ مفتوحةٌ على ${live.order?.number || key} فتحها ${live.openedBy || '—'} — تُتابَع ولا تُفتح ثانيةٌ عليه.`,
+    };
+  }
+
+  const card = (orders ?? []).find(hits);
+  if (!card) {
+    return {
+      kind: 'missing',
+      id: '',
+      message: `الأمرُ المطلوب «${key}» ليس في المفتوحة — لعلّه أُغلق أو استُلم كاملًا. افتحه من صندوق المستندات لتقرأ حالتَه.`,
+    };
+  }
+
+  const name = card.number || key;
+  // ★★★ جهلٌ بالجلسات لا يبرّر إنشاءً: `startSession` تُنشئ دائمًا، فلو تعذّرت
+  // قراءةُ المفتوحة لَفتح الرابطُ جلسةً ثانيةً على أمرٍ عليه جلسةٌ لم نرَها.
+  // والضغطةُ اليدويّةُ تبقى مسموحةً كما كانت — القيدُ على ما يقع بلا يد.
+  if (!sessionsKnown) {
+    return {
+      kind: 'highlight',
+      id: String(card.id ?? ''),
+      message: `${name} أمامك في القائمة — تعذّرت قراءةُ الجلسات المفتوحة، فاضغطه بنفسك كي لا تُفتح عليه جلسةٌ ثانية.`,
+    };
+  }
+  if (!allowed) {
+    return {
+      kind: 'highlight',
+      id: String(card.id ?? ''),
+      message: `${name} أمامك في القائمة — ولا تُفتح جلستُه من الرابط: دورُك لا يملك الاستلام.`,
+    };
+  }
+  if (!String(actor ?? '').trim()) {
+    // `openSession` نفسُها تردّ «جلسةٌ بلا فاعلٍ لا تُفتح» — فالإبرازُ أصدقُ من
+    // نداءٍ يُردّ، والموظّفُ يضغط بنفسه متى قُرئت هويّتُه.
+    return {
+      kind: 'highlight',
+      id: String(card.id ?? ''),
+      message: `${name} أمامك في القائمة — اضغطه للبدء: لم تُقرأ هويّتك بعد.`,
+    };
+  }
+  return { kind: 'order', id: String(card.id ?? ''), message: '' };
+}
+/* ⟦/deep-link⟧ */
+
+/* ── ‹JR-301› خطّةُ الكمّيّة ────────────────────────────────────────────
+ * ★★★ **ترجمةٌ لا حكم.** الحكمُ كلُّه في الخدمات (`packEntryVerdict` ·
+ * `convert` · ومن بعدهما `scanVerdict`)، وهذه تختار **أيَّ رقمٍ يُسلَّم** لها
+ * ثمّ تقول للموظّف ما سيُقيَّد قبل أن يضغط.
+ *
+ * ═══ ولماذا تُترجَم الكمّيّة أصلًا؟ ═══
+ * `scanVerdict` تشتقّ الوحدةَ من الباركود وحدَه ولا تقبل وحدةً من المستدعي —
+ * وذلك صوابٌ لما بُنيت له. فمن مسح باركودَ القطعة وهو يحمل كرتونًا لا يملك
+ * وسيلةً ليقول «كرتون» (طلبُ المالك ط‑٥). والمخرجُ الممكن **بلا لمس تلك
+ * الطبقة**: أن تُترجَم كمّيّتُه إلى **وحدة الباركود** فيصحّ الأساسُ المحسوب.
+ *
+ * ⚠️ **وحدُّه معلَنٌ لا مبتلَع**: البندُ يُقيَّد بوحدة الباركود («٣٦ قطعة»)
+ * لا بالوحدة التي نطقها («٣ كراتين») — الأساسُ صحيحٌ والتسميةُ ناقصة. وحلُّه
+ * التامّ أن تقبل `receivingScan.scanVerdict` وحدةً من المستدعي، وهي خارج
+ * نطاق هذه الدفعة. ولذلك يُعرض النصُّ «تُقيَّد …» على الشاشة: ما لا نستطيع
+ * إصلاحَه نقوله، ولا يُترك يُكتشف بعد شهر.
+ *
+ * ═══ ★★ والافتراضُ حرفيّ ═══
+ * بلا اختيارٍ (أو باختيارٍ يخصّ صنفًا آخر) تُعاد **عينُ العبارة** التي كانت
+ * تُمرَّر قبل هذه الدفعة: `qtyText === '' ? undefined : Number(qtyText)`.
+ * فمن لا يلمس شيئًا يعمل كما كان بايتًا ببايت.
+ *
+ * ⚠️ ومزلقُ الفراغ: `Number('')` صفرٌ محدود، فلولا ردُّه إلى ١ هنا لَصار
+ * ضربُ الفراغ صفرًا فرُدَّت القراءة. والواحدُ ليس اختراعًا — هو افتراضُ
+ * `scanVerdict` نفسِه («مسحةٌ واحدة = عبوةٌ واحدة»).
+ *
+ * @param {object} input
+ * @param {object|null} input.item صنفُ الباركود الممسوح كما حلّته `resolveScan`
+ * @param {string} input.barcodeUom الوحدةُ التي حسمها الباركود — إليها تُترجَم
+ * @param {string} input.qtyText نصُّ خانة الكمّيّة كما هو
+ * @param {{sku:string, uom:string, label:string, per:string}} input.pick اختيارُ الموظّف
+ * @returns {{changed:boolean, qty:number|undefined, note:string, problem:string}}
+ */
+function scanQtyPlan({ item, barcodeUom, qtyText, pick }) {
+  const asIs = {
+    changed: false,
+    qty: qtyText === '' ? undefined : Number(qtyText),
+    note: '',
+    problem: '',
+  };
+  // ★ الاختيارُ **مقيَّدٌ بصنفه**: يبقى بين المسحات كما تبقى الدفعةُ والصلاحية
+  // (كرتونةٌ تلو كرتونة من الصنف نفسه)، فإن جاء باركودُ صنفٍ آخر سقط الاختيارُ
+  // ولم يُطبَّق. وبغير هذا القيد يُترجَم صنفٌ بمعامل صنفٍ غيرِه صامتًا.
+  const sku = upper(item?.sku);
+  if (!item || !sku || sku !== upper(pick?.sku)) return asIs;
+
+  const n = qtyText === '' ? 1 : Number(qtyText);
+
+  // ① صنفٌ لا وحدةَ له أصلًا: يُعلَن الوعاءُ ومحتواه، والمعاملُ يُختم على
+  // القيد لا على الصنف. والحكمُ كلُّه في `packEntryVerdict` — لا ضربَ هنا.
+  if (needsPackEntry(item)) {
+    const label = String(pick?.label ?? '').trim();
+    const per = String(pick?.per ?? '').trim();
+    if (!label && !per) return asIs; // لا إعلانَ فلا ترجمة
+    const verdict = packEntryVerdict({
+      item,
+      containerLabel: label,
+      containers: n,
+      perContainer: per,
+    });
+    // ⚠️ وإعلانٌ نصفُ مكتوبٍ **يُوقف بسببه** ولا يمرّ صامتًا: من كتب «صندوق»
+    // ونسي محتواه يقصد ضربًا، وتمريرُ ٣ مكانَ ٣٦ فرقُ ألفٍ ومئةٍ بالمئة.
+    if (!verdict.ok) return { ...asIs, problem: verdict.problem };
+    const { qty, uom, factor, baseQty } = verdict.entry;
+    // «قطعة» بنصّ المالك في `packEntry` («ويضرب في عدد القطع») — وهذا الصنفُ
+    // بلا وحدةِ أساسٍ أصلًا، فلا اسمَ آخرَ صادقًا يُكتب هنا.
+    return {
+      changed: true,
+      qty: baseQty,
+      note: `${qty} ${uom} × ${factor} — تُقيَّد ${baseQty} قطعة`,
+      problem: '',
+    };
+  }
+
+  // ② صنفٌ معرَّفُ الوحدات: قائمتُه ومعاملُ بطاقته. و`convert` تمرّ بالأساس
+  // دائمًا وتحمل حارسَ الكسر ورسالةَ «لا معامل» — فلا حسابَ يُكتب هنا.
+  const chosen = String(pick?.uom ?? '').trim();
+  if (!chosen || chosen === barcodeUom) return asIs; // عينُ ما حسمه الباركود
+  const moved = convert(item, n, chosen, barcodeUom);
+  if (!moved.ok) {
+    return { ...asIs, problem: `وحدةُ الإدخال «${uomLabel(chosen)}» — ${moved.problem}` };
+  }
+  // `baseQtyPreview` تقول **المعنى** («= ٣٦ قطعة») وهذه تقول **ما يُقيَّد**.
+  // وهما يتطابقان حين تكون وحدةُ الباركود هي وحدةَ الأساس — وتكرارُ الجملة
+  // نفسِها مرّتين على شاشة هاتفٍ يُعلَّم قارئَها تخطّي السطر، فتُحذف حينها.
+  const recorded = `${moved.qty} ${uomLabel(barcodeUom)}`;
+  const meaning = baseQtyPreview(item, n, chosen);
+  const says = meaning && meaning !== `= ${recorded}` ? ` ${meaning}` : '';
+  return {
+    changed: true,
+    qty: moved.qty,
+    note: `${n} ${uomLabel(chosen)}${says} — تُقيَّد ${recorded}`,
+    problem: '',
+  };
+}
+
 export default function ReceivingFlow() {
   const { lang, dir, setLang, tr } = useFieldLang();
   const [me, setMe] = useState(null);
+  /*
+   * ★★ «قُرئت الهويّة» غيرُ «وُجد فاعل». رابطُ العنوان ينتظر الثلاثةَ قبل أن
+   * يحكم (الأوامر · الجلسات · الهويّة)، ولو انتظر `actorName` وحدَه لَانتظر
+   * أبدًا من دخل بلا حساب — وشاشةٌ تصمت أمام رابطٍ ضُغط هي العطبُ نفسُه بوجهٍ آخر.
+   */
+  const [authRead, setAuthRead] = useState(false);
   const [items, setItems] = useState([]);
   const [orders, setOrders] = useState([]);
   const [sessionId, setSessionId] = useState('');
@@ -63,6 +328,25 @@ export default function ReceivingFlow() {
   const [qty, setQty] = useState('');
   const [batch, setBatch] = useState('');
   const [expiry, setExpiry] = useState('');
+  // ‹تتبّع› دفعةُ المورّد وتاريخُ الإنتاج — مطويّتان عمدًا: المسحُ السريع
+  // كرتونةً تلو كرتونة لا يحتمل خمسَ خاناتٍ في الشاشة، وهذان يُكتبان مرّةً
+  // للدفعة كلِّها لا لكلّ قراءة. ويبقيان بعد الحفظ كما تبقى الدفعةُ والصلاحية.
+  const [trace, setTrace] = useState(false);
+  const [supplierBatch, setSupplierBatch] = useState('');
+  const [mfgDate, setMfgDate] = useState('');
+  /*
+   * ‹JR-301› اختيارُ الوحدة — يبقى بين المسحات كما تبقى الدفعةُ والصلاحية
+   * (كرتونةٌ تلو كرتونة)، **ومقيَّدٌ بصنفه** فلا يتسرّب إلى صنفٍ آخر:
+   *   · `uom`         ⟶ للصنف المعرَّف: معرّفُ وحدةٍ من `scanUomChoices`.
+   *   · `label`+`per` ⟶ لغير المعرَّف: الوعاءُ كما نطقه الموظّف ومحتواه.
+   */
+  const [pick, setPick] = useState({ sku: '', uom: '', label: '', per: '' });
+  /*
+   * آخرُ باركودٍ مُسح — **لتبقى خانةُ الوحدة معروضةً بعد أن يُفرَّغ الحقل.**
+   * ⚠️ ومزلقٌ مقيس: الكاميرا وجهازُ الباركود يسلّمان القراءةَ إلى `runScan`
+   * مباشرةً ولا تمرّ بالحقل — فبغير هذا لَما رأى مستعملُهما الخانةَ قطّ.
+   */
+  const [lastCode, setLastCode] = useState('');
   const [flash, setFlash] = useState(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -85,7 +369,10 @@ export default function ReceivingFlow() {
   const recvGate = uiGate(me?.role, 'RECEIVE');
   const putGate = uiGate(me?.role, 'PUTAWAY');
 
-  useEffect(() => subscribeAuth(async (u) => setMe(u ? await fetchUserProfile(u) : null)), []);
+  useEffect(() => subscribeAuth(async (u) => {
+    setMe(u ? await fetchUserProfile(u) : null);
+    setAuthRead(true);
+  }), []);
   useEffect(() => subscribeItems(setItems), []);
 
   /**
@@ -103,23 +390,54 @@ export default function ReceivingFlow() {
    * فيفتح جديدة — والمفتوحُ ظاهرٌ فلا يُفتح فوقه.
    */
   const [openSessions, setOpenSessions] = useState([]);
+  /*
+   * ★★ رايةُ «قُرئت القائمة» — و«فارغةٌ» غيرُ «لم تصل بعد». بغيرها لا يفرّق
+   * رابطُ العنوان بين الحالتين، فيفتح جلسةً ثانيةً على أمرٍ عليه جلسةٌ لم
+   * تصل بعد. وتُرفع في الفشل أيضًا: من تعذّرت قراءةُ جلساته لا يُفتح له من
+   * الرابط شيءٌ بل يُبرَز أمرُه ليضغطه بنفسه — الجهلُ لا يبرّر إنشاءً.
+   */
+  const [sessionsProbe, setSessionsProbe] = useState({ read: false, ok: false });
   const refreshOpenSessions = useCallback(() => {
     listOpenSessions()
-      .then(setOpenSessions)
-      .catch(() => setOpenSessions([])); // تعذّرُ القراءة لا يمنع فتح جلسةٍ جديدة
+      .then((rows) => { setOpenSessions(rows); setSessionsProbe({ read: true, ok: true }); })
+      // تعذّرُ القراءة لا يمنع فتح جلسةٍ جديدة **بالضغط** — والرابطُ وحدَه يحتاط.
+      .catch(() => { setOpenSessions([]); setSessionsProbe({ read: true, ok: false }); });
   }, []);
   useEffect(() => { if (!sessionId) refreshOpenSessions(); }, [sessionId, refreshOpenSessions]);
 
-  // أوامر الشراء المفتوحة — بطاقتها من `openOrderCard` فما تعرضه القائمة
-  // هو ما تقيس عليه الجلسة حرفيًّا.
+  /**
+   * الأوامرُ المفتوحة — بطاقتها من `openOrderCard` فما تعرضه القائمة هو ما
+   * تقيس عليه الجلسة حرفيًّا.
+   *
+   * ★★★ **تصحيح 2026-09-03 — منطقٌ يقبل وشاشةٌ لا تعرض.**
+   * `sessionOpenProblem` تقبل `PO` **أو** `TR` منذ بنائها، و`fieldRoutes.js`
+   * توجّه `TR` إلى هذه الشاشة نفسِها (`RECEIVABLE_TYPES = ['PO','TR']`،
+   * وتعليقُها: «طلبُ النقل عند من يقف على صفّه اليوم واردٌ يُستلَم»). وكان
+   * الاستماعُ هنا على `['PO']` وحدها — فمن ضغط «ابدأ الاستلام الميدانيّ» على
+   * أمر نقلٍ معتمد وصل إلى **قائمةٍ لا أمرَه فيها**: طريقٌ مبنيٌّ ينتهي إلى
+   * فراغ، وحدُّه أنّ الموظّف يظنّ أمرَه ضائعًا لا أنّ الشاشة ناقصة.
+   *
+   * ★ والمرشِّحُ لم يُمسّ: `canReceive` من `sessionOpenProblem` نفسِها، فالنوعُ
+   * الذي تردّه الدالّةُ يسقط هنا كما كان — وُسّع البابُ ولم يُوسَّع الحكم.
+   *
+   * ⚠️ وحدُّ النقل **مُعلَنٌ في الشاشة لا مبتلَع**: جلسةُ `TR` تُستلَم طبالي
+   * ولا تُغلق بمذكّرة استلام (`grnProblem` يردّها) — انظر بطاقة الإقفال أسفلَ
+   * شاشة المسح.
+   *
+   * ⚠️ والسقفُ رُفع من ٥٠ إلى ١٠٠ **لأنّ عددَ الأنواع تضاعف**: النافذة تُجلَب
+   * بالنوع لا بالحالة، والترشيحُ بـ`canReceive` يقع **بعدها**. فلو بقيت ٥٠
+   * لَابتلعتها أوامرُ نقلٍ منتهيةٌ فاختفى أمرُ شراءٍ مفتوح من القائمة بلا
+   * كلمة. ويبقى حدٌّ معلوم: بلوغُ السقف لا يُعلَن هنا (بخلاف قائمة التخزين
+   * وسقفِها المُعلَن) — قائمةٌ ناقصةٌ تبدو كاملة.
+   */
   const [rawOrders, setRawOrders] = useState([]);
-  useEffect(() => listenDocumentsByTypes(['PO'], (docs) => {
+  useEffect(() => listenDocumentsByTypes(['PO', 'TRN'], (docs) => {
     setRawOrders(docs);
     // البطاقة من `openOrderCard` — فما تعرضه القائمة هو ما تقيس عليه
     // الجلسة، والمحجوب يُسقَط بسببه المحسوب لا بظنّ الواجهة.
     setOrders(docs.map((d) => openOrderCard(d, [], [])).filter((c) => c.canReceive));
     setLoading(false);
-  }, 50), []);
+  }, 100), []);
 
   useEffect(() => {
     if (!sessionId) return undefined;
@@ -130,6 +448,21 @@ export default function ReceivingFlow() {
   // معاينةُ المستند قبل توليده — مستندٌ ماليٌّ يُنشأ بلا أن يُرى محتواه
   // توقيعٌ على المجهول (grnBridge).
   const grn = useMemo(() => (session ? grnPreview(session) : null), [session]);
+  /**
+   * أجلسةُ نقلٍ هذه؟ — **عرضٌ لا حَكَم.**
+   *
+   * الحكمُ كلُّه في `grnProblem` ويصل الشاشةَ عبر `grn.problem`؛ وهذه لا تقرّر
+   * أيجوز التوليدُ أم لا، وإنّما تختار **أيَّ طريقٍ يُعرض** لمن وقف أمام رفضٍ
+   * صحيح: أمرُ النقل مخرجُه `TRC` لا `GRN`، فلا يُترك بلا وجهة.
+   */
+  /**
+   * ★★★ ما يُشتقّ من هذه الجلسة — **من النواة لا من ظنّ الشاشة**.
+   * `PO ⟶ GRN` و`TRN ⟶ TRC`. وكان هنا `type === 'TR'` — وهو خطأٌ مزدوج:
+   * `TR` طلبٌ لا يُستلَم عليه أصلًا، والمستلَمُ `TRN`. فلو بقي لَعُنوِنت جلسةُ
+   * النقل «الاستلام الرسميّ (GRN)» ثمّ وُلّد `TRC` — عنوانٌ يكذب على صاحبه.
+   */
+  const closeTarget = useMemo(() => (session ? closeTargetOf(session) : ''), [session]);
+  const isTransfer = closeTarget === 'TRC';
   const draft = useMemo(
     () => (session?.drafts ?? []).find((d) => d.ref === activeDraft) ?? null,
     [session, activeDraft]
@@ -140,6 +473,58 @@ export default function ReceivingFlow() {
    * للعامل زرٌّ يُردّ عنه.
    */
   const closeProblem = useMemo(() => (session ? sessionCloseProblem(session) : ''), [session]);
+
+  /**
+   * ‹JR-301› الصنفُ الذي تُبنى عليه خانةُ الوحدة: ما في الحقل الآن، وإلّا
+   * آخرُ ما مُسح. و`resolveScan` هي عينُها التي يسألها الحكمُ عند القراءة —
+   * فما تعرضه الخانةُ هو ما سيحسمه المسح، لا تقليدٌ له يفترق عنه يومًا.
+   */
+  const pickTarget = useMemo(() => {
+    const c = String(code).trim() || lastCode;
+    return c ? resolveScan(c, indexes) : null;
+  }, [code, lastCode, indexes]);
+
+  /** خطّةُ الكمّيّة كما ستُسلَّم — تُعرض **قبل** الضغط لا تُكتشف بعده. */
+  const pickPlan = useMemo(
+    () => scanQtyPlan({
+      item: pickTarget?.item ?? null,
+      barcodeUom: pickTarget?.uom ?? '',
+      qtyText: qty,
+      pick,
+    }),
+    [pickTarget, qty, pick]
+  );
+
+  /**
+   * ‹JR-201› «البند ٣ (شامبو)» — ترقيمُ **عرضٍ** لا هويّة: `lineId` معرّفٌ
+   * لا يقرؤه أحدٌ عند الشاحنة، والواقفُ يرى بندًا ثالثًا في القائمة أمامه.
+   */
+  const grnLineTag = useMemo(() => {
+    const m = new Map();
+    (grn?.lines ?? []).forEach((l, i) => m.set(l.lineId, `البند ${i + 1} (${l.description || l.sku})`));
+    return m;
+  }, [grn]);
+
+  /**
+   * ‹JR-105› أصحابُ مراحل مذكّرة الاستلام — «إلى من يذهب المستندُ بعدك».
+   *
+   * ★ وهي عن **النوع** لا عن حالة مستندٍ بعينه: مذكّرةٌ وُلدت أمس قد تكون
+   * اعتُمدت اليوم، والجلسةُ لا تحمل إلّا رقمَها — فقولُ «تنتظر اعتمادها»
+   * عنها خبرٌ لا نملك ما يثبته. و«يعتمدها فلان» صحيحٌ في الحالين.
+   */
+  const grnOwnerLines = useMemo(
+    () => ['approve', 'complete'].map((st) => stageOwnerLine(closeTarget || 'GRN', st)).filter(Boolean),
+    []
+  );
+
+  /**
+   * ‹JR-105› ومن ينتظر كلَّ أمرٍ في القائمة الآن — من `nextOwnerOf` وحدَها.
+   * وبطاقةُ `openOrderCard` تحمل `type` و`state` أصلًا، فلا يُقرأ الخام.
+   */
+  const orderOwnerLines = useMemo(
+    () => new Map(orders.map((o) => [o.id, nextOwnerOf(o).line])),
+    [orders]
+  );
 
   /**
    * ★ **تصحيح 2026-08-27 — «قارئ الباركود لا يقرأ» في تطبيق الطبالي:**
@@ -167,13 +552,81 @@ export default function ReceivingFlow() {
     enabled: draft?.state === 'SCANNING' || (mode === 'putaway' && Boolean(taskUnit)),
   });
 
-  const say = useCallback((kind, text) => {
-    setFlash({ kind, text });
+  /**
+   * رسالةُ الوميض — ومعها **رابطٌ بنيويّ** اختياريّ `{href,label}`.
+   *
+   * ★★ ولماذا حقلٌ في الحالة لا عقدةُ React تُمرَّر ولا HTML يُحقن؟
+   * — `dangerouslySetInnerHTML` مردودٌ من أصله: النصُّ يحمل رقمَ مستندٍ آتيًا
+   *   من الخادم، وحقنُه وسمًا يفتح بابًا لا حاجةَ إليه أصلًا.
+   * — وعقدةُ React في `useState` تربط الرسالةَ **بلحظة إنشائها**: صنفُها
+   *   واتّجاهُها ولغتُها تُجمَّد يوم النداء، فمن بدّل اللغة بقيت رسالتُه
+   *   بالسابقة. والبيانات `{href,label}` تعرضها `Flash` بأسلوبها هي.
+   *
+   * ⚠️ ومستدعو الوسيطين لا يتغيّر سلوكُهم حرفًا: `link` غائبٌ ⇒ لا رابطَ يُرسم.
+   */
+  const say = useCallback((kind, text, link = null) => {
+    setFlash({ kind, text, link });
     // الصوت والاهتزاز من **نتيجة الحكم** لا من ظنّ الواجهة (خطة ٧ ثانيًا).
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       navigator.vibrate(kind === 'ok' ? 40 : [80, 60, 80]);
     }
   }, []);
+
+  /* ── ★★★ الأمرُ الذي جاء من العنوان — آخرُ مترٍ في الرحلة ───────────
+   * `?doc=<معرّف المستند>` يُقرأ مرّةً عند الفتح ثمّ يُنظَّف من الشريط. والحكمُ
+   * كلُّه في `deepLinkTarget` أعلاه — وهذه تنفّذه ولا تعيد بناءه.
+   *
+   * ⚠️ **والثلاثةُ تُنتظر ولا تُخمَّن**: الأوامرُ (`loading`) والجلساتُ المفتوحة
+   * والهويّة. فالحكمُ على قائمةٍ نصفِ واصلةٍ يقول «ليس في المفتوحة» عن أمرٍ لم
+   * يصل بعد، أو يفتح جلسةً ثانيةً على أمرٍ عليه جلسةٌ لم تُقرأ. وكلُّ راياتها
+   * تحسم حتمًا (نجاحًا أو فشلًا) فلا انتظارَ صامتٌ إلى الأبد.
+   *
+   * ★ ومرّةً واحدة (`linkDone`): بعدها يعيش الموظّفُ في الشاشة كما دخلها،
+   * فلا يردّه وصولُ جلسةٍ متأخّرةٍ إلى قرارٍ اتُّخذ.
+   */
+  const [wantedDoc, setWantedDoc] = useState(
+    () => (typeof window === 'undefined' ? '' : docParamOf(window.location.search))
+  );
+  /** الأمرُ الذي جاء من الرابط ولم يُفتح — يُبرَز في القائمة فلا يُبحث عنه. */
+  const [linkedOrder, setLinkedOrder] = useState('');
+  const linkDone = useRef(false);
+
+  useEffect(() => {
+    if (!wantedDoc || linkDone.current) return;
+    if (loading || !sessionsProbe.read || !authRead) return;
+    linkDone.current = true;
+
+    const target = deepLinkTarget({
+      wanted: wantedDoc,
+      orders,
+      openSessions,
+      sessionsKnown: sessionsProbe.ok,
+      actor: actorName,
+      // ★ عينُ ما يعطّل زرَّ الصفّ — العنوانُ لا يفعل ما يمنعه الضغط.
+      allowed: recvGate.allowed,
+    });
+    if (target.kind === 'session') {
+      setSessionId(target.id);
+      setActiveDraft('P1');
+      say('ok', target.message);
+    } else if (target.kind === 'order') {
+      setLinkedOrder(target.id);
+      begin(orders.find((o) => o.id === target.id));
+    } else if (target.kind !== 'none') {
+      // مطابقٌ يحتاج ضغطةً، أو غيرُ مطابقٍ — وكلاهما **يُقال** ولا يُصمت عنه.
+      setLinkedOrder(target.id);
+      say(target.kind === 'missing' ? 'err' : 'ok', target.message);
+    }
+
+    // ونمطُ التنظيف نمطُ `ScanFlow.jsx` و`PickingFlow.jsx` حرفًا لا نمطٌ ثانٍ:
+    // بغيره تُعيد كلُّ إعادةِ تحميلٍ الموظّفَ إلى أمرٍ تركه بقصد.
+    setWantedDoc('');
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('doc');
+      window.history.replaceState({}, '', url);
+    }
+  }, [wantedDoc, loading, sessionsProbe, authRead, orders, openSessions, actorName, recvGate.allowed, say]);
 
   /* ── ‹LPN-214› طورُ التخزين ─────────────────────────────────────
    * المواقعُ والأرصدةُ تُقرأ **في هذا الطور وحده**: شاشةُ الاستلام تُفتح
@@ -284,13 +737,25 @@ export default function ReceivingFlow() {
   async function runScan(rawInput) {
     const raw = normalizeScanned(rawInput);
     if (!raw || busy) return;
+    /*
+     * ‹JR-301› الترجمةُ تقع على **الباركود الممسوح** لا على ما في الحقل:
+     * الكاميرا وجهازُ الباركود لا يمرّان بالحقل، ولو بُنيت على `pickTarget`
+     * لَترجمت قراءةَ صنفٍ بمعامل صنفٍ آخر. و`resolveScan` نداءٌ خالصٌ رخيص.
+     */
+    const scanned = resolveScan(raw, indexes);
+    setLastCode(raw);
+    const plan = scanQtyPlan({ item: scanned.item, barcodeUom: scanned.uom, qtyText: qty, pick });
+    // إعلانٌ ناقصٌ يُوقف **بسببه المسمّى** قبل أن يُشغَل شيء — ولا يمرّ برقمٍ
+    // يخالف ما قصده الموظّف. (و`busy` لم يُرفع بعدُ فلا شيءَ يُنزَّل.)
+    if (plan.problem) { say('err', plan.problem); return; }
     setBusy(true);
     try {
       seqRef.current += 1;
       const r = await scanIntoDraft(
         sessionId,
         activeDraft,
-        { barcode: raw, qty: qty === '' ? undefined : Number(qty), batch, expiry },
+        // ★ بلا اختيارٍ `plan.qty` **عينُ** `qty === '' ? undefined : Number(qty)`.
+        { barcode: raw, qty: plan.qty, batch, expiry, supplierBatch, mfgDate },
         { indexes, actor: actorName, device: 'WEB', seq: seqRef.current }
       );
       if (r.ok) {
@@ -329,11 +794,22 @@ export default function ReceivingFlow() {
     } finally { setBusy(false); }
   }
 
+  /**
+   * توليدُ الاستلام الرسميّ — والرسالةُ تحمل **طريقًا** لا رقمًا وحده.
+   *
+   * ★ 2026-09-03: `r.docId` بيدنا لحظتَها، وكانت تُهمَل ويُقال «اعتمده من
+   * صندوق المستندات» — بحثٌ يدويٌّ في صندوقٍ عامّ عن مستندٍ نعرف معرّفَه.
+   * ومن تعذّر معرّفُه (مستندٌ وُلد بلا `id` مقروء) لا يُرسم له رابطٌ ميّت.
+   */
   async function makeGrn() {
     setBusy(true);
     try {
       const r = await createGrnFromSession(sessionId, { profile: me });
-      say('ok', `تولّد الاستلام ${r.number || r.docId} مسوّدةً — اعتمده من صندوق المستندات ليتحرّك الرصيد.`);
+      say(
+        'ok',
+        `تولّد الاستلام ${r.number || r.docId} مسوّدةً — يُعتمد ثمّ يُنجَز ليتحرّك الرصيد.`,
+        r.docId ? { href: docHref(closeTargetOf(session) || 'GRN', r.docId), label: 'افتح المستند ←' } : null
+      );
     } catch (e) {
       say('err', e?.message || 'تعذّر توليد الاستلام.');
     } finally { setBusy(false); }
@@ -560,10 +1036,17 @@ export default function ReceivingFlow() {
           </div>
         )}
 
-        <h2 className="text-lg font-bold text-ink mb-3">{tr('open_pos')} ({orders.length})</h2>
+        {/* ★★ العنوانُ يشمل النقلَ لأنّ القائمة صارت تشمله — وعنوانٌ يعد
+            بالشراء وحده فوق قائمةٍ فيها أمرُ نقلٍ يكذب **بثلاث لغات**.
+            ومفتاحٌ جديد (`open_orders`) لا توسيعُ `open_pos`: اسمُ المفتاح
+            عهدٌ، ومن يستعمله غدًا لقائمةِ شراءٍ محضةٍ يجده كما تركه. */}
+        <h2 className="text-lg font-bold text-ink mb-3">{tr('open_orders')} ({orders.length})</h2>
         {orders.length === 0 ? (
           <p className="text-ink-2 text-sm">
-            لا أمر شراءٍ معتمدٌ له رصيدٌ مفتوح. اعتمد أمرًا من صندوق المستندات ثمّ عُد.
+            لا أمرَ شراءٍ ولا نقلٍ معتمدًا له رصيدٌ مفتوح. اعتمد أمرًا من{' '}
+            {/* ★ «اذهب» بلا طريقٍ ليست إرشادًا — والصندوقُ صفحةٌ قائمة. */}
+            <a href={inboxHref} className="o_field_link decoration-bf">صندوق المستندات</a>{' '}
+            ثمّ عُد.
           </p>
         ) : (
           <ul className="space-y-2">
@@ -574,8 +1057,16 @@ export default function ReceivingFlow() {
                   disabled={busy || !recvGate.allowed}
                   onClick={() => begin(o)}
                   className="w-full text-right rounded-lg border px-4 py-4"
-                  style={{ borderColor: 'var(--o-border)' }}
+                  /* ★ الأمرُ الذي جاء من الرابط ولم يُفتح **يُبرَز**: الرسالةُ
+                     وحدَها تقول اسمًا في قائمةٍ من خمسين، والحدُّ أن يبقى البحثُ
+                     بالعين. والإبرازُ لونُ الجلسات المفتوحة نفسُه — لا لونَ ثالث. */
+                  style={{ borderColor: linkedOrder === o.id ? 'var(--o-primary)' : 'var(--o-border)' }}
                 >
+                  {/* ★ ولا شارةَ نوعٍ زائدة: الرقمُ يحمل نوعَه أصلًا
+                      (`formatNumber` ⇒ «TR-2026-0007»)، فالنقلُ يُقرأ من رقمه.
+                      ⚠️ وأمرُ النقل بلا مورّد فيقرأ الحقلُ «—» — نقصٌ معلومٌ
+                      لأنّ `openOrderCard` لا تُخرج طرفَي النقل، وتوسيعُها
+                      يمسّ منطقًا مشتركًا فتُرك لمن يملكه. */}
                   <div className="font-bold text-ink">{o.number}</div>
                   <div className="text-ink-2 text-xs mt-1">
                     {o.supplier || '—'} · {o.warehouse || '—'} · {o.lineCount} صنفًا
@@ -583,6 +1074,16 @@ export default function ReceivingFlow() {
                   <div className="text-ink-2 text-xs mt-1">
                     المطلوب {o.ordered} · المستلم {o.received} · <strong className="text-ink">المفتوح {o.open}</strong>
                   </div>
+                  {/* ‹JR-105› «كلُّ مرحلةٍ مربوطةٌ بشخصٍ ما» — والسطرُ من
+                      `nextOwnerOf` نفسِها لا صياغةً لها. والمجهولُ يمرّ صامتًا
+                      (سطرٌ فارغ) فلا نكتب في شاشةِ موظّفٍ خبرًا عمّا نجهل. */}
+                  {orderOwnerLines.get(o.id) && (
+                    <div className="text-ink-2 text-xs mt-1">{orderOwnerLines.get(o.id)}</div>
+                  )}
+                  {/* ولمَ أُبرِز؟ — سطرٌ يقوله، فلا يقف أمام لونٍ يخمّن معناه. */}
+                  {linkedOrder === o.id && (
+                    <div className="text-ink text-xs mt-1 font-bold">الأمرُ الذي جئتَ من رابطه</div>
+                  )}
                 </button>
               </li>
             ))}
@@ -663,6 +1164,16 @@ export default function ReceivingFlow() {
             <ScanCameraButton camera={camera} compact />
           </div>
           <ScanCameraPanel camera={camera} hint="وجّه العدسة إلى الباركود — تبقى مفتوحةً كرتونةً تلو كرتونة." />
+          {/* ‹JR-301 · ط‑٥› اختيارُ الوحدة **فوق** ما حسمه الباركود لا بدلًا
+              منه: الافتراضُ المختار وحدةُ الباركود، فمن لا يغيّر شيئًا يعمل
+              كما كان اليوم حرفًا — والخانةُ لا تظهر أصلًا حيث لا خيار. */}
+          <UomPicker
+            item={pickTarget?.item ?? null}
+            barcodeUom={pickTarget?.uom ?? ''}
+            pick={pick}
+            setPick={setPick}
+            plan={pickPlan}
+          />
           <div className="grid grid-cols-3 gap-2 mb-2">
             <input value={qty} onChange={(e) => setQty(e.target.value)} placeholder="الكمّيّة (١)" type="number" min="0" step="any"
               className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
@@ -671,6 +1182,33 @@ export default function ReceivingFlow() {
             <input value={expiry} onChange={(e) => setExpiry(e.target.value)} placeholder="الصلاحية" type="date"
               className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
           </div>
+
+          {/*
+            ‹تتبّع› **دفعةُ المورّد وتاريخُ الإنتاج — مطويّان لا محذوفان.**
+
+            ★★ دفعةُ المورّد هي ما يُطابَق به عند **السحب من السوق**: نداءُ
+            السحب يأتي برقم المصنع لا برقمنا الداخليّ، فبلا هذا الحقل تُفتَّش
+            الطبالي واحدةً واحدة.
+
+            ★ وطُويا عمدًا: المسحُ كرتونةً تلو كرتونة لا يحتمل خمسَ خاناتٍ
+            على شاشة هاتف، وهما يُكتبان **مرّةً للدفعة كلِّها** لا لكلّ قراءة.
+          */}
+          <button type="button" onClick={() => setTrace((v) => !v)}
+            className="btn btn-secondary text-xs mb-2"
+            style={{ minHeight: '44px' }}>
+            {trace ? '▾ إخفاء حقول التتبّع' : '▸ دفعةُ المورّد وتاريخُ الإنتاج (اختياريّ)'}
+            {!trace && (supplierBatch || mfgDate) ? ' — مكتوبة' : ''}
+          </button>
+          {trace && (
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <input value={supplierBatch} onChange={(e) => setSupplierBatch(e.target.value)}
+                placeholder="دفعة المورّد (رقم المصنع)"
+                className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
+              <input value={mfgDate} onChange={(e) => setMfgDate(e.target.value)}
+                placeholder="تاريخ الإنتاج" type="date"
+                className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
+            </div>
+          )}
           <div className="flex gap-2">
             <button type="submit" className="btn btn-primary flex-1 py-3" disabled={busy || !code.trim()}>تسجيل القراءة</button>
             <button type="button" className="btn btn-secondary py-3" onClick={closeDraft} disabled={busy || (draft?.lines ?? []).length === 0}>
@@ -708,14 +1246,58 @@ export default function ReceivingFlow() {
       {/* ── الاستلام الرسميّ: حيث تصير الحمولة رصيدًا ── */}
       {grn && (
         <div className="mt-6 rounded-lg border p-4" style={{ borderColor: 'var(--o-border)' }}>
-          <h3 className="font-bold text-ink text-sm mb-2">الاستلام الرسميّ (GRN)</h3>
+          {/* ★ عنوانٌ يعد بما لا يقع أسوأ من صمت: جلسةُ النقل لا تولّد GRN
+              أصلًا، فلا تُعنوَن به ثمّ يُقال لصاحبها «لا يُشتقّ». */}
+          <h3 className="font-bold text-ink text-sm mb-2">
+            {isTransfer ? 'إقفالُ جلسة النقل — محضرُ استلام (TRC)' : 'الاستلام الرسميّ (GRN)'}
+          </h3>
           {session?.grnNumber ? (
-            <p className="text-ink-2 text-sm">
-              تولّد <strong className="text-ink">{session.grnNumber}</strong> من هذه الجلسة.
-              اعتمده من صندوق المستندات ليتحرّك الرصيد — ولا يُشتقّ مرّتين.
-            </p>
+            <>
+              <p className="text-ink-2 text-sm">
+                تولّد <strong className="text-ink">{session.grnNumber}</strong> من هذه الجلسة.
+                يُعتمد ثمّ يُنجَز ليتحرّك الرصيد — ولا يُشتقّ مرّتين.
+              </p>
+              {/* ‹JR-105› «يُعتمد ثمّ يُنجَز» **بيد من؟** — السؤالُ الذي كان
+                  يُسأل شفاهًا فيسقط عند تبديل الورديّة. والأسماءُ من مخطّط
+                  النوع (مرآةِ قاعدة الخادم) لا قائمةً مكتوبةً هنا. */}
+              {grnOwnerLines.map((l) => (
+                <p key={l} className="text-ink-2 text-xs mt-1">{l}</p>
+              ))}
+              {/* ★ والرابطُ هنا لا في الوميض وحده: الوميضُ يزول بأوّل مسحةٍ أو
+                  إعادةِ تحميل، وهذه البطاقةُ تبقى — فمن عاد إلى جلسته بعد
+                  ساعةٍ يجد الطريق. و`grnId` مختومٌ على الجلسة في
+                  `createGrnFromSession` فهو موجودٌ حيثما وُجد `grnNumber`. */}
+              {session.grnId && (
+                <a href={docHref(closeTarget || 'GRN', session.grnId)} className="btn btn-secondary text-sm inline-block mt-2">
+                  افتح المستند ←
+                </a>
+              )}
+            </>
           ) : grn.problem ? (
-            <p className="text-ink-2 text-sm">{grn.problem}</p>
+            <>
+              {/* ★★★ الرفضُ يُقال بسببه — قِيس لا خُمِّن: الزرُّ لا يُخفى صامتًا،
+                  بل يحلّ محلَّه **حكمُ `grnProblem` نفسُه** الذي يردّ الخدمة.
+                  فلا تختلف الشاشةُ عن الحَكَم ولا تعيد صياغته. */}
+              <p className="text-ink-2 text-sm">{grn.problem}</p>
+              {/* ★★ وحدُّ النقل يُعلَن ومعه ما يُفعَل: `TRC` غيرُ موصولٍ بعد،
+                  وسكوتُ الشاشة عنه يترك العاملَ أمام جلسةٍ مسح فيها ولا يدري
+                  أيُقفلها أم ينتظر. والطبالي **ليست ضائعة**: هويّتُها مثبتةٌ
+                  ومخزَّنةٌ برفوفها، والمفقودُ مستندُ التسوية وحده. */}
+              {isTransfer && (
+                <>
+                  <p className="text-ink-2 text-xs mt-2">
+                    أقفِل طباليك وارفعها للحوكمة كالمعتاد — الحمولةُ مُثبَتةٌ بهويّتها
+                    ومسحاتِها. ومذكّرةُ استلام النقل (TRC) <strong>لم تُوصَل بعد</strong>،
+                    فتُسوّى الفروقُ على أمر النقل من صندوق المستندات حتّى تصل الشاشة.
+                  </p>
+                  {session?.order?.id && (
+                    <a href={docHref('TR', session.order.id)} className="btn btn-secondary text-sm inline-block mt-2">
+                      افتح أمر النقل ←
+                    </a>
+                  )}
+                </>
+              )}
+            </>
           ) : (
             <>
               <p className="text-ink-2 text-xs mb-2">
@@ -731,12 +1313,44 @@ export default function ReceivingFlow() {
                   </li>
                 ))}
               </ul>
+
+              {/* ── ‹JR-201› اختلافُ الطبالي **قبل** الزرّ ──────────────────
+                  ★★★ **إعلانٌ لا منع** — قرارُ المالك ق‑ج: الزرُّ يبقى عاملًا
+                  و`grn.problem` لم يتغيّر، فجلسةٌ كانت تُولّد أمس تُولّد اليوم.
+                  ومن حوّل هذه البطاقة إلى حاجزٍ كسر القرار وهو يظنّ أنّه ينفّذه.
+                  والقائمةُ من `extrasConflicts` الخالصة — لا مقارنةَ تُبنى هنا. */}
+              {grn.extrasConflicts.length > 0 && (
+                <div className="rounded-lg border px-3 py-2 mb-3" style={{ borderColor: 'var(--o-border)' }}>
+                  <p className="text-ink text-xs font-bold mb-1">
+                    اختلافُ الطبالي على حقول التتبّع ({grn.extrasConflicts.length})
+                  </p>
+                  <ul className="space-y-1">
+                    {grn.extrasConflicts.map((c) => (
+                      <li key={`${c.lineId}-${c.field}`} className="text-ink-2 text-xs">
+                        {/* «البند ٣ (شامبو)» — وإن كان البندُ خارج المعروض
+                            سُمّي بكوده، فلا يُقال «البند —». */}
+                        <span className="text-ink">{grnLineTag.get(c.lineId) || `البند «${c.sku || c.lineId}»`}</span>
+                        {' — '}{c.labelAr}: {c.values.map((v, i) => `${v || 'بلا قيمة'}${c.pallets[i] ? ` (${c.pallets[i]})` : ''}`).join(' · ')}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-ink-2 text-xs mt-1">
+                    تُترك الخانةُ <strong>فارغةً</strong> في المذكّرة ويملؤها المعتمِد — ولا يُخترع
+                    تاريخٌ لنصف الكمّيّة لم يكتبه أحد. والتوليدُ يمضي.
+                  </p>
+                </div>
+              )}
+
               <button type="button" className="btn btn-primary w-full py-3" onClick={makeGrn} disabled={busy}>
                 توليد الاستلام الرسميّ
               </button>
               <p className="text-ink-2 text-xs mt-2">
                 يولد <strong>مسوّدةً</strong> — والرصيد يتحرّك عند اعتمادها وإنجازها، لا قبله.
               </p>
+              {/* ‹JR-105› وإلى من تذهب بعدك — بأدوارها لا بالسؤال شفاهًا. */}
+              {grnOwnerLines.map((l) => (
+                <p key={l} className="text-ink-2 text-xs mt-1">{l}</p>
+              ))}
             </>
           )}
         </div>
@@ -789,11 +1403,109 @@ function ModeSwitch({ mode, setMode, disabled, tr }) {
   );
 }
 
+/**
+ * ‹JR-301 · طلبُ المالك ط‑٥› خانةُ الوحدة عند المسح.
+ *
+ * ═══ الفجوة ═══
+ * ثلاثُ خاناتٍ اليوم: الكمّيّة · الدفعة · الصلاحية. والوحدةُ تُحسم من **أيّ
+ * باركودٍ مُسح** — فمن مسح باركودَ القطعة وهو يحمل كرتونًا يكتب ١ ويقصد ١٢،
+ * ولا يملك وسيلةً ليقول «كرتون».
+ *
+ * ═══ ثلاثُ حالاتٍ، وثالثتُها الصمت ═══
+ *   ① معرَّفُ الوحدات وله أكثرُ من وحدة ⟶ قائمةُ `scanUomChoices`.
+ *   ② لا وحدةَ له أصلًا (`needsPackEntry`) ⟶ الوعاءُ ومحتواه، ومعاملُه
+ *      يُختم على القيد لا على بطاقة الصنف.
+ *   ③ وحدةٌ واحدةٌ أو باركودٌ مجهول ⟶ **لا خانةَ أصلًا**: خيارٌ من واحدٍ ليس
+ *      خيارًا، وعرضُه على واقفٍ أمام رفٍّ ضجيجٌ يُعلَّم تجاهلُه.
+ *
+ * ★★ والحكمان `needsPackEntry` و`scanUomChoices` يُسألان ولا يُقلَّدان بشرطٍ
+ * هنا — فلو تغيّرت قاعدةُ الوحدات غدًا تغيّرت الخانةُ معها في اللحظة نفسِها،
+ * ولم تبقَ شاشةٌ تعرض قائمةً وخدمةٌ تزعم أنّها فارغة.
+ */
+function UomPicker({ item, barcodeUom, pick, setPick, plan }) {
+  if (!item) return null;
+  const packing = needsPackEntry(item);
+  const choices = scanUomChoices(item);
+  if (!packing && choices.length < 2) return null;
+
+  const sku = upper(item.sku);
+  // اختيارٌ يخصّ صنفًا آخر لا يُعرض على هذا: `scanQtyPlan` لا تطبّقه أصلًا،
+  // وعرضُه هنا يجعل الشاشةَ تقول ما لا تفعل — وذلك أسوأ من ألّا تقول.
+  const cur = sku && sku === upper(pick?.sku) ? pick : { sku, uom: '', label: '', per: '' };
+  const set = (patch) => setPick({ ...cur, sku, ...patch });
+
+  return (
+    <div className="rounded-lg border px-3 py-2 mb-2" style={{ borderColor: 'var(--o-border)' }}>
+      <div className="text-ink-2 text-xs mb-1">
+        وحدةُ الإدخال — <span className="text-ink">{item.name || item.description || item.sku || '—'}</span>
+      </div>
+      {packing ? (
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              value={cur.label}
+              onChange={(e) => set({ label: e.target.value })}
+              placeholder="سمِّ الوعاء (صندوق · شدّة)"
+              className="rounded-lg border px-3 py-3 text-sm"
+              style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }}
+              autoComplete="off"
+            />
+            <input
+              value={cur.per}
+              onChange={(e) => set({ per: e.target.value })}
+              placeholder="كم قطعةً فيه"
+              type="number"
+              min="0"
+              step="any"
+              className="rounded-lg border px-3 py-3 text-sm"
+              style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }}
+            />
+          </div>
+          <p className="text-ink-2 text-xs mt-1">
+            هذا الصنف بلا وحداتٍ معرّفة — والخانةُ تبقى للمسحات التالية من صنفه نفسِه.
+            واتركها فارغةً ليمضي كما كان.
+          </p>
+        </>
+      ) : (
+        <select
+          value={cur.uom}
+          onChange={(e) => set({ uom: e.target.value })}
+          className="w-full rounded-lg border px-3 py-3 text-sm"
+          style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }}
+        >
+          {/* ★★ الافتراضُ **ما حسمه الباركود** وقيمتُه فراغ: فمن لم يلمس
+              الخانةَ يمرّ بلا ترجمةٍ أصلًا لا بترجمةٍ حاصلُها واحد. وهو كذلك
+              الوحيدُ الصالح حين يحمل الباركودُ وحدةً خارج قائمة الصنف. */}
+          <option value="">من الباركود: {uomLabel(barcodeUom)}</option>
+          {choices.map((c) => (
+            <option key={c.value} value={c.value}>{c.label}</option>
+          ))}
+        </select>
+      )}
+      {/* الحكمُ يُعرض ولا يُعاد بناؤه: `problem` من الخدمة و`note` منها. */}
+      {plan?.problem ? (
+        <p className="text-xs mt-1" style={{ color: 'var(--o-danger, #b42318)' }}>{plan.problem}</p>
+      ) : plan?.note ? (
+        <p className="text-ink text-xs mt-1 tabular-nums">{plan.note}</p>
+      ) : null}
+    </div>
+  );
+}
+
 function Flash({ flash }) {
   const color = flash.kind === 'ok' ? 'var(--o-border)' : 'var(--o-danger, #b42318)';
   return (
     <div className="mb-3 rounded-lg border px-4 py-3 text-sm" style={{ borderColor: color }}>
       {flash.text}
+      {/* الرابطُ **حقلٌ في الرسالة** لا وسمٌ في نصّها: البطاقةُ تعرضه بأسلوبها
+          (زرٌّ بحجم إصبعٍ لا سطرٌ رفيع)، ورسالةٌ بلا رابطٍ تبقى كما كانت. */}
+      {flash.link?.href && (
+        <div className="mt-2">
+          <a href={flash.link.href} className="btn btn-secondary text-sm inline-block">
+            {flash.link.label || 'افتح ←'}
+          </a>
+        </div>
+      )}
     </div>
   );
 }

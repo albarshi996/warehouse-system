@@ -5,11 +5,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  DEFAULT_HANDLING,
+  HANDLING_TYPES,
   allowsItem,
   balanceLocationCode,
   binCellVerdict,
   buildLocationTree,
   canReceive,
+  declaredHandling,
+  handlingLabel,
   locationOptions,
   locationProblems,
   mixingProblem,
@@ -149,6 +153,81 @@ test('حكم الخانة: غير المسجَّل والموقوف يُنبَّ
   assert.match(binCellVerdict('MAIN-A09', locs).message, /غير مسجَّل/);
   assert.match(binCellVerdict('MAIN-A02', locs).message, /متوقّف/);
   assert.match(binCellVerdict('RECEIVING', locs).message, /رمزٌ محجوز/, 'والكود الفاسد يُنبَّه عليه بسببه');
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * نوعُ المناولة ومواضعُ الطبالي ‹JR-601›
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+test('★★★ الهجرةُ صفريّةُ الأثر: كلّ موقعٍ قائمٍ يصير «مختلطًا» بلا سقفِ طبالٍ', () => {
+  // موقعٌ كُتب قبل وجود الحقل أصلًا: لا يُقيَّد ولا يُمنع — يصير قابلًا لكلّ
+  // مناولةٍ كما كان، والتقييدُ قرارٌ يُتّخذ لاحقًا رفًّا رفًّا.
+  const s = shapeLocation({ code: 'MAIN-A01' });
+  assert.equal(s.handling, DEFAULT_HANDLING);
+  assert.equal(s.handling, 'mixed');
+  assert.equal(s.capacity.pallets, 0, 'وصفرٌ يعني «بلا سقف» لا «ممتلئ»');
+  assert.equal(declaredHandling(s), '', 'و«مختلط» ليس إعلانًا بل رفعٌ للقيد');
+
+  assert.equal(shapeLocation({ code: 'MAIN-A01', handling: 'خرافة' }).handling, 'mixed', 'والمجهول يسقط إلى المختلط');
+  assert.equal(shapeLocation({ code: 'MAIN-A01', handling: 'pallet' }).handling, 'pallet');
+});
+
+test('نوعُ المناولة المعلَن: الفارغُ والمجهولُ والمختلطُ سواء — والمعلَنُ وحدَه يُقرأ', () => {
+  assert.equal(declaredHandling({}), '');
+  assert.equal(declaredHandling({ handling: '' }), '');
+  assert.equal(declaredHandling({ handling: 'خرافة' }), '');
+  assert.equal(declaredHandling({ handling: 'mixed' }), '');
+  assert.equal(declaredHandling({ handling: 'PALLET' }), 'pallet', 'وحالةُ الحرف لا تصنع نوعًا ثانيًا');
+  assert.equal(handlingLabel('piece'), 'بالقطعة');
+  assert.equal(handlingLabel('خرافة'), 'خرافة', 'والمجهول يُعرض كما كُتب لا كـ«غير معروف»');
+  for (const h of Object.values(HANDLING_TYPES)) assert.ok(h.labelAr && h.hint, `${h.id} بلا تسميةٍ أو شرح`);
+});
+
+test('أخطاء النموذج: مناولةٌ مجهولةٌ وسعةُ طبالٍ سالبة', () => {
+  assert.match(locationProblems({ code: 'MAIN-A01', handling: 'خرافة' })[0], /نوع مناولة غير معروف/);
+  assert.match(locationProblems({ code: 'MAIN-A01', capacity: { pallets: -2 } })[0], /لا تكون سالبة/);
+  assert.deepEqual(locationProblems({ code: 'MAIN-A01', handling: 'pallet', capacity: { pallets: 2 } }), []);
+});
+
+test('★★★ إشغالُ الطبالي: بلا فهرسٍ مُمرَّرٍ لا علم — و`null` ليست صفرًا', () => {
+  // ولماذا وسيطٌ لا استيراد؟ الاتّجاه المشروع واحد: الطبقةُ الجديدة تقرأ
+  // القائم، والقائمُ لا يعرفها — فلا يُسقط عطبُ الأحدثِ الأقدمَ.
+  const capped = { code: 'MAIN-A01', capacity: { qty: 100, pallets: 4 } };
+  const blind = occupancyOf(capped, []);
+  assert.equal(blind.usedPallets, null, 'لم يُمرَّر الفهرس ⇒ لا يُحسب امتلاءٌ من جهل');
+  assert.equal(blind.remainingPallets, null);
+  assert.equal(blind.capacityPallets, 4, 'والسقفُ المعلَنُ يُقرأ من الموقع نفسِه');
+
+  const known = occupancyOf(capped, [], new Map([['MAIN-A01', [{}, {}, {}]]]));
+  assert.equal(known.usedPallets, 3);
+  assert.equal(known.remainingPallets, 1);
+  assert.equal(known.palletPct, 75);
+
+  const elsewhere = occupancyOf(capped, [], new Map([['MAIN-A09', [{}]]]));
+  assert.equal(elsewhere.usedPallets, 0, 'الفهرسُ معلومٌ وهذا الرفّ خالٍ — صفرٌ لا جهل');
+});
+
+test('★★ «لا سقفَ ⇒ لا منع» تمتدّ إلى الطبالي حرفًا', () => {
+  const loose = { code: 'MAIN-A01', status: 'active', capacity: { qty: 100, pallets: 0 } };
+  const occ = occupancyOf(loose, [], new Map([['MAIN-A01', [{}, {}, {}, {}, {}]]]));
+  assert.equal(occ.capacityPallets, null, 'صفرٌ = غير محدودة');
+  assert.equal(occ.remainingPallets, null);
+  assert.equal(canReceive(loose, 0, occ.usedPallets).ok, true, 'خمسُ طبالٍ في رفٍّ بلا سقفٍ لا تمنع سادسة');
+
+  const capped = { code: 'MAIN-A01', status: 'active', capacity: { pallets: 2 } };
+  assert.equal(canReceive(capped, 0, 1).ok, true);
+  const verdict = canReceive(capped, 0, 2);
+  assert.equal(verdict.ok, false);
+  assert.match(verdict.reason, /بلغ سعته من الطبالي \(2\)/, 'ولكلّ رفضٍ سببُه المكتوب');
+});
+
+test('🔒★★★ النداءُ ثنائيُّ الوسائط لم يتبدّل: مستدعٍ لا يعرف الطبالي يحصل على حكم اليوم', () => {
+  // `mapGrid` و`LocationTree` وغيرهما ينادون بوسيطين. فلو حاسبتهم سعةُ
+  // الطبالي على فهرسٍ لم يمرّروه، لَامتلأ الرفّ في وجههم بلا سبب.
+  const capped = { code: 'MAIN-A01', status: 'active', capacity: { qty: 100, pallets: 1 } };
+  assert.deepEqual(canReceive(capped, 50), { ok: true, reason: '' });
+  assert.deepEqual(canReceive(capped, 50, null), { ok: true, reason: '' });
+  assert.equal(occupancyOf(capped, [at('MAIN-A01', 50)]).remainingQty, 50, 'وحقولُ الكمّيّة كما هي');
 });
 
 test('الشجرة تُبنى من الكود لا من حقل أب، والآباء الغائبون يُستنبطون', () => {

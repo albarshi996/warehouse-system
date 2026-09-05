@@ -21,6 +21,8 @@ import {
 import { getSchema, GOVERNED_FORMS } from '../../../services/documents/schemas/index.js';
 import { getState, STATES } from '../../../services/documents/states.js';
 import { START_GROUPS } from '../../../services/documents/startGroups.js';
+import { fieldRouteFor } from '../../../services/tasks/fieldRoutes.js';
+import { nextOwnerOf } from '../../../services/tasks/stageOwners.js';
 import {
   awaitingMyApproval,
   sortByUrgency,
@@ -162,13 +164,44 @@ export default function DocumentsInbox() {
     const schema = getSchema(d.type);
     const age = ageInState(d, now);
     const stale = isStale(d, now);
+    /**
+     * الشاشةُ الميدانيّة لهذا الصفّ — أو `null`.
+     *
+     * ★★★ ولا حكمَ هنا: لا نوعَ يُقارَن ولا حالةَ تُفحص في JSX. الوحدةُ
+     * `fieldRoutes.js` تعرف الاثنين معًا وتقيسهما من حرّاسٍ قائمين، فلو قبِلت
+     * بوّابةُ التحضير نوعًا رابعًا غدًا ظهر زرُّه هنا بلا تعديلِ حرفٍ في العرض.
+     * و`null` يعني **لا زرَّ**: الزرُّ الرماديُّ يَعِد بشيءٍ ثمّ يمنعه، وغيابُه أصدق.
+     */
+    const route = fieldRouteFor(d);
+    /**
+     * ‹JR-105› ومن ينتظر هذا المستندَ الآن — سطرًا واحدًا من `nextOwnerOf`.
+     *
+     * ★★★ وهذا موضعُه: هنا يقف الناسُ أمام المستندات. وكانت الوحدةُ تُستورَد
+     * في شاشةٍ واحدةٍ من ١٥٢ (شاشةِ الاستلام) فيرى الواقفُ هنا كلَّ شيءٍ عن
+     * الصفّ إلّا من ينتظره — فيسأل زميلَه، والمعرفةُ الشفويّةُ أوّلُ ما يسقط.
+     *
+     * ⚠️ ولا صياغةَ هنا: السطرُ يخرج من الوحدة تامًّا («ينتظر اعتماد: مدير
+     * المستودع»)، والمجهولُ يمرّ **فارغًا** فلا يُكتب في شاشةِ موظّفٍ خبرٌ
+     * عمّا نجهل. فمن أراد تبديلَ الصياغة بدّلها هناك لا في خمس شاشات.
+     */
+    const ownerLine = nextOwnerOf(d).line;
     return {
       id: d.id,
       decoration: stale ? 'danger' : undefined,
       cells: {
         number: <span className="decoration-bf" style={{ fontFamily: 'monospace' }}>{d.number || '— مسودّة'}</span>,
         type: schema?.titleAr || d.type,
-        state: <Badge variant={STATE_BADGE[d.state] || 'draft'}>{state.label}</Badge>,
+        state: (
+          /* الشارةُ تقول **أين** هو، والسطرُ تحتها يقول **من ينتظره** — والاثنان
+             وجها خبرٍ واحد فلا يُفرَّقان في عمودين. والسطرُ يلتفّ ولا يُقصّ:
+             «ينتظر اعتماد: مدير المستودع · المدير المالي» أطولُ من خانةٍ ضيّقة. */
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '3px' }}>
+            <Badge variant={STATE_BADGE[d.state] || 'draft'}>{state.label}</Badge>
+            {ownerLine && (
+              <span style={{ fontSize: '11px', color: 'var(--o-main-color-muted)', lineHeight: 1.5 }}>{ownerLine}</span>
+            )}
+          </div>
+        ),
         creator: d.createdByName,
         age:
           age == null ? (
@@ -182,9 +215,26 @@ export default function DocumentsInbox() {
           ),
         updated: <span style={{ color: 'var(--o-gray-500)', fontSize: 'var(--o-font-size-xs)' }}>{fmt(d.updatedAt || d.createdAt)}</span>,
         actions: (
-          <a href={`${base}/dashboard/document?type=${d.type}&id=${d.id}`} className="btn btn-secondary btn-sm" style={{ whiteSpace: 'nowrap' }}>
-            فتح ←
-          </a>
+          /* زرّان لا واحد: التنفيذُ أوّلًا (فهو الفعلُ المقصود من الصفّ) والفتحُ
+             ثانويٌّ بجانبه — والفجوةُ ٦px فلا يلتصقان فيُضغط غيرُ المراد. */
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {route && (
+              /* ★★ و`href` لا `path`: يحمل `?doc=<معرّف>` إلى الشاشة التي تقرؤه
+                 فتفتح على أمره، ويخرج عاريًا لشاشةٍ لا تقرأ — والفرقُ محسومٌ في
+                 `fieldRoutes.js` لا هنا، فلا يَعِد هذا الصفُّ بما لا يقع. */
+              <a
+                href={`${base}${route.href}`}
+                className="btn btn-primary btn-sm"
+                title={route.reason}
+                style={{ whiteSpace: 'nowrap' }}
+              >
+                {route.label}
+              </a>
+            )}
+            <a href={`${base}/dashboard/document?type=${d.type}&id=${d.id}`} className="btn btn-secondary btn-sm" style={{ whiteSpace: 'nowrap' }}>
+              فتح ←
+            </a>
+          </div>
         ),
       },
     };

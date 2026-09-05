@@ -187,11 +187,16 @@ export function cellStateOf(location, occupancy) {
  *
  * @param {object} location موقعٌ من `bin_locations`
  * @param {Array}  own      أرصدة هذا الموقع وحده (من `indexBalancesByLocation`)
+ * @param {Map}    [pallets] فهرس «الموقع ← طباليه» (`lpn/palletMap.palletsByBin`)
+ *                 — **يُمرَّر ولا يُستورَد**: الاتّجاه المشروع واحد، الطبقةُ
+ *                 الجديدة تقرأ القائم والقائمُ لا يعرفها (ح-٢). وغيابُه يعني
+ *                 «لا علمَ بالطبالي» فتبقى حقولُها `null` والنصُّ صامتًا —
+ *                 لا صفرًا يُقرأ «الرفّ خالٍ» وهو ملآن.
  */
-export function buildCell(location, own = []) {
+export function buildCell(location, own = [], pallets = null) {
   const code = normalizeLocationCode(location?.code);
   const parsed = parseLocationCode(code);
-  const occupancy = occupancyOf(location, own);
+  const occupancy = occupancyOf(location, own, pallets);
   const state = cellStateOf(location, occupancy);
   const meta = CELL_STATES[state];
 
@@ -204,6 +209,15 @@ export function buildCell(location, own = []) {
     occupancy.capacityQty === null
       ? `${occupancy.usedQty} (بلا سقفٍ مسجَّل)`
       : `${occupancy.usedQty} من ${occupancy.capacityQty}`;
+
+  /**
+   * ★★ نصُّ مواضع الطبالي — **مقارنةٌ أو صمت**، ولا رقمَ ثالث.
+   *
+   * سقفٌ يُكتب وحدَه («٥ مواضع طبلية») يُقرأ رقمًا يُحاسِب وهو لا يقول شيئًا
+   * عن الرفّ: أفارغٌ هو أم ملآن؟ ومشغولٌ يُكتب وحدَه لا يقول أبقيَ موضع.
+   * فإمّا الطرفان معًا، وإمّا لا شيء — والمجهولُ (`null`) يصمت.
+   */
+  const palletText = palletTextOf(occupancy);
 
   return {
     code,
@@ -226,6 +240,7 @@ export function buildCell(location, own = []) {
     storageLabel: storage.labelAr,
     occupancy,
     capacityText,
+    palletText,
     alerts,
     /** سطرٌ نصّيّ كامل — للـ`title` وللطباعة، فالمعنى لا يضيع بلا لون. */
     summaryText: [
@@ -233,9 +248,31 @@ export function buildCell(location, own = []) {
       meta.labelAr,
       storage.labelAr,
       capacityText,
+      palletText,
       ...alerts.map((a) => a.labelAr),
-    ].join(' · '),
+    ].filter(Boolean).join(' · '),
   };
+}
+
+/**
+ * «٢ من ٥ مواضع طبلية» — أو صمتٌ حين يُجهل أحد الطرفين.
+ *
+ * مصدَّرةٌ لأنّ شجرة المواقع تكتب السطر نفسَه: نصّان لمعنًى واحدٍ يفترقان
+ * أوّلَ تعديل، فيقرأ العامل على الشجرة غيرَ ما يقرأ على الخريطة.
+ */
+export function palletTextOf(occupancy) {
+  const used = occupancy?.usedPallets;
+  const cap = occupancy?.capacityPallets;
+  if (used === null || used === undefined) {
+    // ⚠️ والسقفُ وحدَه لا يُكتب رقمًا مجرّدًا: يُقال إنّه سقفٌ صراحةً كي لا
+    // يُقرأ إشغالًا. وهذا حالُ كلّ مستدعٍ لم يُمرَّر إليه الفهرسُ بعد.
+    return cap === null || cap === undefined ? '' : `سقفُ ${cap} موضع طبلية`;
+  }
+  if (cap === null || cap === undefined) {
+    // طبالٍ تقف على رفٍّ بلا سقفٍ مسجَّل — تُقال، فوجودُها خبرٌ وإن لم يُحاسَب.
+    return used > 0 ? `${used} طبلية (بلا سقفٍ مسجَّل)` : '';
+  }
+  return `${used} من ${cap} موضع طبلية`;
 }
 
 /** إحصاء مجموعةٍ من الخانات — الأرقام التي تُكتب فوق كلّ ممرٍّ ومستودع. */
@@ -321,9 +358,12 @@ export function orphanBalanceCodes(locations, balances) {
  * @param {string} [options.storageType] حصرٌ بنوع تخزين
  * @param {boolean}[options.includeArchived=false] المؤرشَف مخفيٌّ افتراضًا ولا يُحذف
  * @param {string} [options.term] بحثٌ في الكود والاسم
+ * @param {Map}    [options.pallets] فهرس «الموقع ← طباليه» — يُبنى مرّةً عند
+ *                 المستدعي (`palletsByBin`) ويُمرَّر لكلّ الخانات، فهو أرخصُ
+ *                 من مسحٍ لكلّ موقع. وغيابُه يُبقي الشبكةَ كما كانت حرفًا.
  */
 export function buildLocationGrid(locations, balances, options = {}) {
-  const { warehouse, storageType, includeArchived = false, term } = options;
+  const { warehouse, storageType, includeArchived = false, term, pallets = null } = options;
   const wanted = normalizeLocationCode(warehouse);
   const needle = str(term).toUpperCase();
   const byLocation = indexBalancesByLocation(balances);
@@ -335,7 +375,7 @@ export function buildLocationGrid(locations, balances, options = {}) {
     if (!includeArchived && loc?.status === 'archived') continue;
     if (storageType && (loc?.storageType || 'ambient') !== storageType) continue;
 
-    const cell = buildCell(loc, byLocation.get(code) || []);
+    const cell = buildCell(loc, byLocation.get(code) || [], pallets);
     if (wanted && cell.warehouse !== wanted) continue;
     if (needle && !code.includes(needle) && !cell.nameAr.toUpperCase().includes(needle)) continue;
     cells.push(cell);

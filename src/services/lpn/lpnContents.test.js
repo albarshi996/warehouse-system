@@ -153,3 +153,28 @@ test('🔒 ملصق الطبلية في خانة الدفعة يُرفض — «L
   assert.match(p, /ملصق طبلية لا رقم تشغيلة/);
   assert.match(p, /من العبوة نفسها/, 'تقول الصواب: أين يُمسح باركود الدفعة');
 });
+
+test('★★★ البندُ يحمل هويّةَ سطر الأمر — الكاتبُ كان يُسقطها فينقطع السلك عند أوّله', () => {
+  // ★★★ العطبُ الذي مرّ تحت ٣٧٥٨ اختبارًا: `scanVerdict` يُنتج `lineId`
+  // ويسلّمه، و`addReading` تبني كائنًا حرفيًّا فترميه — ثمّ `grnBridge`
+  // يتخطّى كلَّ بندٍ بلا هويّة. فلا كمّيّةٌ تصل مذكّرةَ الاستلام ولا صلاحية.
+  const reading = { ...WATER, lineId: 'L1' };
+  const first = addReading([], reading, { asOf: ASOF });
+  assert.equal(first.lines[0].lineId, 'L1', 'ما سلّمه الحكمُ يُكتب لا يُرمى');
+
+  const merged = addReading(first.lines, reading, { asOf: ASOF });
+  assert.equal(merged.lines.length, 1);
+  assert.equal(merged.lines[0].lineId, 'L1', 'والدمجُ يرفع الكمّيّة ولا يمسّ الهويّة');
+
+  const taken = removeQty(merged.lines, { ...reading, qty: 1 });
+  assert.equal(taken.lines[0].lineId, 'L1', 'والسحبُ كذلك — البندُ الباقي هو هو');
+});
+
+test('⚠️ وبلا هويّةٍ يُكتب نصٌّ فارغ لا `undefined` — فـ`tx.update` ترفض المجهول', () => {
+  // القراءةُ بلا `lineId` واقعٌ قائم (مسحٌ خارج جلسةٍ · نداءٌ مباشر)، والحقلُ
+  // يُكتب فارغًا ليسقط في مُنقذ الطبالي القديمة بالجسر لا ليُسقط الكتابة كلَّها.
+  const line = addReading([], WATER, { asOf: ASOF }).lines[0];
+  assert.equal(line.lineId, '');
+  assert.ok('lineId' in line, 'الحقلُ حاضرٌ دائمًا — فلا شكلان لبندٍ واحد');
+  assert.equal(JSON.stringify(line).includes('undefined'), false, 'ولا `undefined` يعبر إلى Firestore');
+});

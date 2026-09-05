@@ -347,3 +347,194 @@ test('بلا مهامَّ تبقى الخريطة كما هي وكلّ خانة�
   assert.equal(summarizeWork(grid.cells).pct, null, 'ولا نسبةَ من لا شيء');
   assert.equal(grid.cells[0].work.state, WORK_STATES.idle.id);
 });
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * 🔒 فهرسُ الطبالي يبلغ الخانةَ — والسقفُ يُقارَن بمشغوله
+ *
+ * ═══ لماذا وُجد هذا الحارس ═══
+ * `occupancyOf` تعرف مواضعَ الطبالي منذ ‹JR-601›، و`palletsByBin` تبني
+ * الفهرسَ فعلًا في شاشة الخريطة — **ولا سلكَ بينهما**: `buildLocationGrid`
+ * لا يتلقّى الفهرس، فـ`usedPallets` على كلّ خانةٍ `null` أبدًا. والنتيجةُ
+ * أنّ الشجرة تكتب «٥ مواضع طبلية» — سقفًا معلَنًا لا يُقارَن بشيء — فيقرؤه
+ * المالك رقمًا يُحاسِب وهو حبرٌ على ورق.
+ *
+ * ═══ ★★ ويُقاس بالمنتِج الحقيقيّ لا بـ`Map` تُبنى باليد ═══
+ * الاختباراتُ القديمة أثبتت `occupancyOf` بـ`new Map([['MAIN-A01', [{}, {}]]])`
+ * — عيّنةٌ مريحةٌ تمرّ ولا تمسّ السلك. فهنا تمرّ البيانةُ من **شكلها
+ * المكتوب** (ما يكتبه `createHandlingUnit` وما يُسوّيه `shapeLocation`) عبر
+ * `palletsByBin` نفسِها إلى الشبكة — وهو المسار الذي تسلكه الشاشة حرفًا.
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { palletsByBin } from '../lpn/palletMap.js';
+import { shapeLocation } from './locationsModel.js';
+import { suggestLocations } from './putawaySuggest.js';
+
+const SRC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+/**
+ * طبليّةٌ بالشكل الذي **يكتبه** `createHandlingUnit` — لا بالشكل الذي يكفي
+ * القارئ. فحقلٌ يسقط من العيّنة يُخفي عطبًا في القارئ الحقيقيّ.
+ */
+const unit = (over = {}) => ({
+  id: over.code || 'LPN-RH-20260904-000001',
+  code: 'LPN-RH-20260904-000001',
+  state: 'STORED',
+  flags: [],
+  warehouse: 'RH',
+  bin: 'RH-A-R-01-01',
+  lines: [{ sku: 'ITM-9', barcode: '8059692040599', batch: 'B-77', baseQty: 120 }],
+  contentRev: 0,
+  parentCodes: [],
+  sourceDoc: null,
+  orderRef: null,
+  route: '',
+  branch: '',
+  createdBy: 'أحمد الشريف',
+  createdByUid: 'uid-1',
+  ...over,
+});
+
+/** موقعٌ بالشكل الذي يُخزَّن — من مُسوّي الكاتب نفسِه لا من كائنٍ مُختصَر. */
+const shelf = (code, capacity) => shapeLocation({ code, capacity, nameAr: 'رفّ الزيوت' });
+
+test('🔒★★★ خانةُ موقعٍ عليه طبليّتان تحمل المشغولَ ٢ — لا السقفَ وحدَه', () => {
+  const locations = [shelf('RH-A-R-01-01', { qty: 400, pallets: 5 }), shelf('RH-A-R-01-02', { qty: 400, pallets: 5 })];
+  const units = [
+    unit({ code: 'LPN-RH-20260904-000001', bin: 'RH-A-R-01-01' }),
+    // الحجزُ وقوفٌ على الأرض كذلك — الموضعُ مشغولٌ وإن كانت محجوزة.
+    unit({ code: 'LPN-RH-20260904-000002', bin: 'RH-A-R-01-01', state: 'RESERVED' }),
+    // ★ وطبليّةٌ خرجت من الأرض لا تشغل موضعًا — وإلّا امتلأ الرفّ بأشباح.
+    unit({ code: 'LPN-RH-20260904-000003', bin: 'RH-A-R-01-01', state: 'SHIPPED' }),
+    unit({ code: 'LPN-RH-20260904-000004', bin: 'RH-A-R-01-02', state: 'PICKING' }),
+  ];
+
+  const grid = buildLocationGrid(locations, [], { pallets: palletsByBin(units) });
+  const at = (code) => grid.cells.find((c) => c.code === code);
+
+  assert.equal(at('RH-A-R-01-01').occupancy.usedPallets, 2, 'طبليّتان تقفان هنا');
+  assert.equal(at('RH-A-R-01-01').occupancy.capacityPallets, 5);
+  assert.equal(at('RH-A-R-01-01').occupancy.remainingPallets, 3);
+  assert.equal(at('RH-A-R-01-02').occupancy.usedPallets, 1);
+  // والنصُّ يقول المقارنةَ لا طرفَها: رقمٌ بلا مقامٍ لا يُحاسِب.
+  assert.match(at('RH-A-R-01-01').palletText, /2 من 5/);
+  assert.match(at('RH-A-R-01-01').summaryText, /2 من 5/);
+});
+
+test('★★ ورفٌّ في الفهرس بلا طبليّةٍ صفرٌ لا `null` — الفهرسُ معلومٌ وهو خالٍ', () => {
+  const grid = buildLocationGrid([shelf('RH-A-R-02-01', { qty: 400, pallets: 3 })], [], {
+    pallets: palletsByBin([unit({ bin: 'RH-A-R-09-09' })]),
+  });
+  assert.equal(grid.cells[0].occupancy.usedPallets, 0);
+  assert.equal(grid.cells[0].occupancy.remainingPallets, 3);
+});
+
+test('★★★ وبلا فهرسٍ لا يُحسب امتلاءٌ من جهل — الحقولُ `null` والنصُّ صامت', () => {
+  // النداءُ ثلاثيُّ الوسائط لا يُغيّر النداءَ الثنائيّ حرفًا: مستدعٍ لم يُوصَل
+  // بعدُ يبقى كما كان، ولا يُغلق رفٌّ في وجه عاملٍ لأنّ شاشةً لم تجلب الطبالي.
+  const grid = buildLocationGrid([shelf('RH-A-R-01-01', { qty: 400, pallets: 5 })], []);
+  assert.equal(grid.cells[0].occupancy.usedPallets, null);
+  assert.equal(grid.cells[0].occupancy.remainingPallets, null);
+  // ★★★ وهنا لبُّ شكوى المالك: الرقمُ المجرّد يُقرأ إشغالًا. فحين يُجهل
+  // المشغولُ **يُقال إنّه سقفٌ صراحةً** ولا يُكتب «٥ مواضع» فيُظنّ محاسبةً.
+  assert.match(grid.cells[0].palletText, /^سقفُ 5 موضع طبلية$/);
+  assert.doesNotMatch(grid.cells[0].palletText, / من /, 'ولا مقارنةَ من مجهول');
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * 🔒 وحدةُ البند تبلغ محرّكَ الاقتراح من «التخزين الموجّه»
+ *
+ * ═══ العطبُ المقيس ═══
+ * `SuggestedBin` يبني حقيبةَ البند حقلًا حقلًا ويُسقط `uom` — والوحدةُ
+ * **معروضةٌ وقابلةٌ للتحرير في الصفّ نفسِه** على بُعد اثني عشر سطرًا.
+ * وبإسقاطها يعود `handlingNeedOf` فارغًا دائمًا، فيتساوى رفٌّ معلَنٌ
+ * «بالطبلية» ورفٌّ «مختلط» في النقاط — أي أنّ نوعَ المناولة **عديمُ الأثر في
+ * الشاشة الوحيدة التي اسمُها «الموجّه»**.
+ *
+ * ═══ ★★ والحارسُ لا يقرأ الشيفرةَ فحسب ═══
+ * يستخرج **أسماءَ الحقول التي تُمرَّر فعلًا** من المصدر، يبني بها بندًا،
+ * ويُشغّل `suggestLocations` الحقيقيّة عليه. فلو أُعيد إسقاطُ الوحدة يومًا
+ * سقط الحارسُ بالفارق الصفريّ نفسِه — لا بنصٍّ يُطابَق.
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+const DIRECTED_STORAGE = path.join(SRC, 'components', 'brandzo-erp', 'locations', 'DirectedStorage.jsx');
+
+/** نصُّ نداءٍ كاملًا بموازنة الأقواس — فالنداءُ هنا يمتدّ سطورًا. */
+function callText(src, fn) {
+  const start = src.indexOf(`${fn}(`);
+  if (start < 0) return '';
+  let depth = 0;
+  for (let i = src.indexOf('(', start); i < src.length; i += 1) {
+    if (src[i] === '(') depth += 1;
+    else if (src[i] === ')') {
+      depth -= 1;
+      if (depth === 0) return src.slice(start, i + 1);
+    }
+  }
+  return '';
+}
+
+/** أسماءُ حقولِ كائنٍ حرفيٍّ يلي مفتاحًا — بموازنة الأقواس المعقوفة. */
+function objectKeysAfter(text, key) {
+  const at = text.indexOf(`${key}:`);
+  if (at < 0) return [];
+  const open = text.indexOf('{', at);
+  if (open < 0) return [];
+  let depth = 0;
+  for (let i = open; i < text.length; i += 1) {
+    if (text[i] === '{') depth += 1;
+    else if (text[i] === '}') {
+      depth -= 1;
+      if (depth === 0) return [...text.slice(open + 1, i).matchAll(/(\w+)\s*:/g)].map((m) => m[1]);
+    }
+  }
+  return [];
+}
+
+/** قيمٌ واقعيّةٌ لبندِ استلامٍ بالطبلية — يُبنى منها ما أعلنه المصدرُ وحدَه. */
+const LINE_VALUES = {
+  sku: 'ITM-9',
+  barcode: '8059692040599',
+  description: 'زيت ذرة ٥ لتر',
+  uom: 'pallet',
+  qty: 6,
+  batch: 'B-77',
+  expiry: '2027-01-01',
+  notes: '',
+  warehouse: 'RH',
+};
+
+test('🔒★★★ «التخزين الموجّه» يمرّر وحدةَ البند — وإلّا تساوى رفُّ الطبالي والمختلط', () => {
+  const src = fs.readFileSync(DIRECTED_STORAGE, 'utf8');
+  const call = callText(src, 'suggestLocations');
+  assert.ok(call, 'لا نداءَ لـ`suggestLocations` في شاشة التخزين الموجّه');
+
+  const passed = objectKeysAfter(call, 'line');
+  const line = Object.fromEntries(passed.filter((f) => f in LINE_VALUES).map((f) => [f, LINE_VALUES[f]]));
+
+  const locations = [
+    shapeLocation({ code: 'RH-A-R-01-01', handling: 'pallet', capacity: { qty: 400, pallets: 5 } }),
+    shapeLocation({ code: 'RH-A-R-01-02', handling: 'mixed', capacity: { qty: 400, pallets: 5 } }),
+  ];
+  const advice = suggestLocations({ line, locations, balances: [], warehouse: 'RH' });
+  const scoreAt = (code) => advice.candidates.find((c) => c.code === code)?.score;
+
+  assert.ok(
+    scoreAt('RH-A-R-01-01') > scoreAt('RH-A-R-01-02'),
+    'بندٌ بالطبلية يجب أن يُقدّم رفَّ الطبالي على المختلط — والفارقُ اليوم صفر ' +
+      `(${scoreAt('RH-A-R-01-01')} مقابل ${scoreAt('RH-A-R-01-02')}) لأنّ الوحدةَ لا تُمرَّر: ` +
+      `المُمرَّر ${JSON.stringify(passed)}`
+  );
+});
+
+test('★★ وبطاقةُ الصنف تصل معها — معاملُ الطبليّة يُقرأ حين تغيب الوحدة', () => {
+  const call = callText(fs.readFileSync(DIRECTED_STORAGE, 'utf8'), 'suggestLocations');
+  assert.match(
+    call,
+    /\bitem\b/,
+    'بطاقةُ الصنف لا تصل المحرّكَ: فمعاملُ الطبليّة (`uomFactors`) لا يُقرأ، ' +
+      'وبندٌ كُتب بلا وحدةٍ يبقى بلا مناولةٍ معروفة'
+  );
+});

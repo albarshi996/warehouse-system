@@ -12,6 +12,7 @@ import {
   openPutawayTask,
   taskOpenProblem,
 } from './putawayTask.js';
+import { handlingNeedOf } from '../locations/putawaySuggest.js';
 
 const UNIT = {
   code: 'LPN-MAIN-20260826-000145',
@@ -140,4 +141,145 @@ test('★ المرفوض يصل الميدان بسببه — عاملٌ يرى 
   assert.ok(full, 'الممتلئ يظهر في المرفوض لا يختفي');
   assert.match(full.reason, /ممتلئ/, 'وبسببه مكتوبًا');
   assert.ok(task.suggestions.length > 0, 'والمقبول يُقترح مرتّبًا');
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * فهرسُ الطبالي يبلغ الحكم — السلكُ الذي كان مقطوعًا
+ *
+ * `canReceive` تحمل فرعَ رفضٍ لسقف الطبالي منذ ‹JR-601›، و`occupancyOf`
+ * تحمل وسيطَ الفهرس. وكان **لا مستدعيَ واحدٌ يمرّره**: فالمشغولُ `null`
+ * أبدًا، وفرعُ الرفض يستحيل بلوغُه في الإنتاج — رفٌّ سقفُه طبليّتان يقبل
+ * الخمسين. والاختباراتُ القائمة لم تمسكه لأنّها تبني `Map` بيدها وتناديه
+ * مباشرةً، فتُثبت أنّ **الدالّة** تعمل ولا تسأل هل يصلها أحد.
+ *
+ * فهذان الحارسان يمرّان **بالمستدعي الحقيقيّ** بوحداتِ مناولةٍ بشكلها
+ * المكتوب في `createHandlingUnit`: مسطّحةً (code · state · bin · lines)
+ * لا تحت رأس، وحالتُها من `ON_FLOOR_STATES` وإلّا لم تُعدّ واقفةً أصلًا.
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+/** رفٌّ سقفُه طبليّتان — والسعةُ بالقطعة واسعةٌ عمدًا كي يكون المانعُ الطبالي وحدَها. */
+const CAPPED_BIN = 'MAIN-A01-R01-B01';
+const CAPPED_LOCATIONS = [
+  { code: CAPPED_BIN, warehouse: 'MAIN', status: 'active', storageType: 'ambient', capacity: { qty: 1000, pallets: 2 } },
+  { code: 'MAIN-A01-R01-B02', warehouse: 'MAIN', status: 'active', storageType: 'ambient', capacity: { qty: 1000, pallets: 2 } },
+];
+
+/** طبليّتان واقفتان في الرفّ الأوّل — بشكل مستند `handling_units` نفسِه. */
+const ON_FLOOR = [
+  {
+    code: 'LPN-MAIN-20260826-000101', state: 'STORED', flags: [], warehouse: 'MAIN', bin: CAPPED_BIN,
+    lines: [{ sku: 'WNW-009', batch: 'B2401', uom: 'carton', qty: 10, baseQty: 120 }],
+    contentRev: 1, parentCodes: [], sourceDoc: { type: 'GRN', number: 'GRN-1', id: 'g1' }, route: '', branch: '',
+  },
+  {
+    code: 'LPN-MAIN-20260826-000102', state: 'RESERVED', flags: [], warehouse: 'MAIN', bin: CAPPED_BIN,
+    lines: [{ sku: 'WNW-009', batch: 'B2401', uom: 'carton', qty: 10, baseQty: 120 }],
+    contentRev: 1, parentCodes: [], sourceDoc: { type: 'GRN', number: 'GRN-1', id: 'g1' }, route: '', branch: '',
+  },
+];
+
+const WIRED = { locations: CAPPED_LOCATIONS, balances: [], units: ON_FLOOR, actor: 'أحمد', at: '2026-08-26T11:00:00Z' };
+
+test('★★★ رفٌّ بلغ سقفَ طبالِيه يُرفض بسببه المكتوب — من `openPutawayTask` لا من نداءٍ مباشر', () => {
+  const r = openPutawayTask(UNIT, WIRED);
+  assert.equal(r.problem, undefined);
+
+  const rejected = r.task.rejectedBins.find((x) => x.code === CAPPED_BIN);
+  assert.ok(
+    rejected,
+    'الرفُّ فيه طبليّتان وسقفُه طبليّتان ومرّ مرشَّحًا — فهرسُ الطبالي لم يبلغ الحكم، ' +
+      'وفرعُ الرفض في locationsModel يستحيل بلوغُه في الإنتاج'
+  );
+  assert.match(rejected.reason, /بلغ سعته من الطبالي \(2\)/, 'ولكلّ رفضٍ سببُه المكتوب لا كلمةُ «مرفوض»');
+
+  // والرفُّ الخالي يبقى مرشَّحًا: الفهرسُ يمنع الممتلئ ولا يُغلق المستودع.
+  assert.deepEqual(r.task.suggestions.map((s) => s.code), ['MAIN-A01-R01-B02']);
+  assert.equal(r.task.suggestedBin, 'MAIN-A01-R01-B02');
+});
+
+test('★★★ ومسحُ الرفّ الممتلئ من الطبالي يطلب سببًا مقيَّدًا — العاملُ يمرّ ولا يُمنع', () => {
+  const v = binScanVerdict(UNIT, CAPPED_BIN, WIRED);
+  assert.equal(v.ok, false, 'الحكمُ عند المسح يقرأ الفهرسَ كما يقرؤه الاقتراح — وإلّا افترقا');
+  assert.ok(v.canOverride, 'بابٌ بسببٍ لا جدار (درس LOC)');
+  assert.match(v.message, /بلغ سعته من الطبالي \(2\)/);
+
+  const task = openPutawayTask(UNIT, WIRED).task;
+  const blocked = completePutaway(task, UNIT, CAPPED_BIN, WIRED);
+  assert.match(blocked.problem, /سببًا مكتوبًا يُقيَّد باسمك/);
+});
+
+test('🔒 وغيابُ الوحدات يعني «لا أعرف» فيمرّ — لا «صفر» فيمنع', () => {
+  // مستدعٍ لم يجلب وحداتِ المناولة يحصل على حكم اليوم حرفًا: لا يُحسب
+  // امتلاءٌ من جهل، ولا يُغلق رفٌّ لأنّ شاشةً لم تُوصَل بعد.
+  const blind = openPutawayTask(UNIT, { ...WIRED, units: undefined });
+  assert.deepEqual(blind.task.rejectedBins, [], 'بلا فهرسٍ لا رفضَ بالطبالي');
+  assert.equal(blind.task.suggestions.length, 2);
+
+  // وطبليّةٌ واحدةٌ تحت السقف لا تمنع الثانية.
+  const room = openPutawayTask(UNIT, { ...WIRED, units: [ON_FLOOR[0]] });
+  assert.deepEqual(room.task.rejectedBins, []);
+});
+
+/* ═══════ ‹JR-602› رفُّ الطبليّة يقبل الطبليّات — تقويمُ معنًى مقلوب ═══════ */
+
+/**
+ * ★★★ الحارسُ الذي كان غائبًا — ولذلك عاش الانقلابُ حتّى كشفه فحصٌ نقضيّ.
+ *
+ * الاختباراتُ كلُّها كانت تناول `suggestLocations` **سطرًا تبنيه بيدها**،
+ * فتقيس ما تُدخله لا ما يُدخله الواقع. وهنا نمرّ بـ`openPutawayTask` **بطبليّةٍ
+ * كاملةٍ** كما يمرّ بها المستدعي الحقيقيّ — والفرقُ أنّ بندَ الطبليّة مكتوبٌ
+ * بالكرتون (حالُ جُلّ الاستلام) بينما الحاويَ طبليّة.
+ *
+ * وقرارُ المالك ‹ق‑هـ›: **الرفُّ يستقبل طبليّاتٍ كاملةً مهما كان ما فوقها.**
+ */
+const HANDLING_LOCS = [
+  { code: 'MAIN-P01-R01-B01', warehouse: 'MAIN', status: 'active', handling: 'pallet' },
+  { code: 'MAIN-P02-R01-B01', warehouse: 'MAIN', status: 'active', handling: 'piece' },
+  { code: 'MAIN-P03-R01-B01', warehouse: 'MAIN', status: 'active', handling: 'mixed' },
+];
+
+test('★★★ ‹JR-602› طبليّةٌ كاملةٌ بنودُها كراتين **تُقبل** على رفّ الطبالي — لا تُردّ عنه', () => {
+  const r = openPutawayTask(UNIT, { ...CTX, locations: HANDLING_LOCS });
+  const codes = r.task.suggestions.map((s) => s.code);
+  const refusedPallet = r.task.rejectedBins.find((x) => x.code === 'MAIN-P01-R01-B01');
+
+  // كان يسقط قبل الإصلاح: الحاجةُ تُقرأ «carton» من بند الطبليّة فيُرفض رفُّ
+  // الطبالي برسالة «البند يُناوَل بالصندوق وهذا الرفّ بالطبلية وحدَه».
+  assert.equal(
+    refusedPallet, undefined,
+    `رفُّ الطبالي ردَّ طبليّةً كاملة — انقلبت المِصفاة: ${refusedPallet?.reason ?? ''}`
+  );
+  assert.ok(codes.includes('MAIN-P01-R01-B01'), 'رفُّ الطبالي ليس في المقترحات لطبليّةٍ كاملة');
+});
+
+test('★★ ورفُّ «قطعة» يردّ الطبليّةَ الكاملة — فالتمييزُ يعمل في الاتّجاهين', () => {
+  const r = openPutawayTask(UNIT, { ...CTX, locations: HANDLING_LOCS });
+  const refusedPiece = r.task.rejectedBins.find((x) => x.code === 'MAIN-P02-R01-B01');
+  assert.ok(refusedPiece, 'رفُّ القطعة قبِل طبليّةً كاملة — والقيدُ بلا أثر');
+  assert.match(refusedPiece.reason, /بالطبلية|بالقطعة/);
+});
+
+test('★ و«مختلط» يقبل الكلَّ — فرفوفُ المالك اليوم لا يتغيّر سلوكُها', () => {
+  const r = openPutawayTask(UNIT, { ...CTX, locations: HANDLING_LOCS });
+  assert.ok(
+    r.task.suggestions.map((s) => s.code).includes('MAIN-P03-R01-B01'),
+    'الرفُّ المختلط خرج من المقترحات — وهو حالُ كلّ رفٍّ لم يُوسَم'
+  );
+});
+
+test('★★★ والمقترَحُ هو المقبول: ما اقترحه الاقتراحُ لا يردّه حكمُ المسح', () => {
+  // افتراقُهما أسوأُ من الرفض من أوّله: يمشي العاملُ إلى الرفّ المقترَح
+  // فيُرفض عند مسحه.
+  const r = openPutawayTask(UNIT, { ...CTX, locations: HANDLING_LOCS });
+  for (const s of r.task.suggestions) {
+    const v = binScanVerdict(UNIT, s.code, { ...CTX, locations: HANDLING_LOCS });
+    assert.ok(v.ok, `اقتُرح ${s.code} ثمّ رُفض عند المسح: ${v.message}`);
+  }
+});
+
+test('★★ والبضاعةُ السائبةُ تبقى تُقاس بوحدة عدّها — صفرُ أثرٍ على من لا يخزّن طبليّة', () => {
+  // من يخزّن كرتونًا بيده لا يُعلن `asHandlingUnit`، فحاجتُه «صندوق» كما كانت.
+  const line = { sku: 'WNW-001', uom: 'carton', qty: 5 };
+  assert.equal(handlingNeedOf(line, null), 'carton');
+  assert.equal(handlingNeedOf(line, null, { asHandlingUnit: true }), 'pallet');
 });

@@ -12,9 +12,13 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
-import { currentStep, stepRemaining, taskTotals, fulfillmentGap } from '../../../services/lpn/pickingTask.js';
-import { SCAN_STAGES, nextStage } from '../../../services/lpn/pickingScan.js';
+import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
+import { currentStep, pathBasisLabel, stepRemaining, taskTotals, fulfillmentGap } from '../../../services/lpn/pickingTask.js';
+import { SCAN_STAGES, nextStage, pickEntryVerdict, stepQtyPanel } from '../../../services/lpn/pickingScan.js';
+// ‹JR-301ب› خانةُ الكمّيّة لم تعد عاريةً — والمعاينةُ من محرّك الوحدات القائم
+// حرفًا: لا تُعاد كتابةُ ضربٍ هنا ولا تُبنى رسالةٌ، فالشاشةُ تعرض حكمًا.
+import { baseQtyPreview } from '../../../services/stock/scanFlow.js';
+import { packEntryVerdict } from '../../../services/items/packEntry.js';
 import {
   closeTaskWithPallet,
   executePick,
@@ -65,6 +69,9 @@ export default function PickingFlow() {
   const [input, setInput] = useState('');
   const [qty, setQty] = useState('');
   const [flash, setFlash] = useState(null);
+  // ‹JR-301ب› وحدةُ الإدخال والوعاءُ المُعلَن — حالةُ عرضٍ لا حكم.
+  const [entryUom, setEntryUom] = useState('');
+  const [pack, setPack] = useState({ label: '', containers: '', per: '' });
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   // ‹LPN-309› 'picking' | 'staging'
@@ -226,12 +233,92 @@ export default function PickingFlow() {
   }, []);
 
   useEffect(() => { loadTasks(); }, [loadTasks]);
+
+  /**
+   * ★★★ مهمّةٌ تُفتح من العنوان — `?doc=<معرّف المستند الآمر>`.
+   *
+   * ═══ ما كان يقع ═══
+   * من ضغط «ابدأ التحضير الميدانيّ» على أمره يصل إلى **قائمةٍ** يبحث فيها عن
+   * أمره بين خمسين: الشاشةُ لم تقرأ `searchParams` قطّ. وهو المزلقُ الأوّلُ
+   * المكتوبُ في `services/tasks/fieldRoutes.js` حرفًا — «فالمسارُ عارٍ حتّى
+   * تقرأه الشاشة، ثمّ يُضاف هنا وفي الشاشة معًا لا هنا وحده». وهذا نصفُه الثاني.
+   *
+   * ★ والمعاملُ **معرّفُ المستند لا معرّفُ المهمّة**: المهمّةُ تولد على
+   * `pickTaskId(doc)` حتمًا، فالمستندُ هو المفتاحُ الذي بيد كلّ داعٍ (زرُّ صفّ
+   * المستندات، وشاشةُ خطّة السحب) — ومنه يجيب `listOpenTasks` بقراءةٍ واحدةٍ
+   * بالمعرّف بلا فهرسٍ مركّبٍ ينتظر نشرًا.
+   *
+   * ★★ ولا يُفتح تعريفًا: أمرٌ بلا مهمّةٍ مفتوحةٍ تُقال علّتُه وتبقى القائمة —
+   * فشاشةُ تفصيلٍ على مهمّةٍ غيرِ موجودةٍ تعرض «اكتملت خطوات المهمّة» وزرَّ
+   * إقفال، وهي كذبةٌ تدعو إلى إقفال ما لم يُفتح.
+   *
+   * والتنظيفُ بعدها نمطُ `stock/ScanFlow.jsx` حرفًا لا نمطٌ ثانٍ: إعادةُ تحميلٍ
+   * بعد رجوعٍ إلى القائمة كانت ستردّه إلى المهمّة التي تركها بقصد.
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const wanted = new URLSearchParams(window.location.search).get('doc');
+    if (!wanted) return undefined;
+    let alive = true;
+    listOpenTasks({ sourceDocId: wanted })
+      .then(([found]) => {
+        if (!alive) return;
+        if (found) {
+          setMode('picking');
+          setTaskId(found.id);
+          setScan({});
+        } else {
+          setFlash({
+            kind: 'err',
+            text: `لا مهمّةَ تحضيرٍ مفتوحةً على «${wanted}» — إمّا أُقفلت، وإمّا لم تُفتح بعدُ من شاشة خطّة السحب.`,
+          });
+        }
+        const url = new URL(window.location.href);
+        url.searchParams.delete('doc');
+        window.history.replaceState({}, '', url);
+      })
+      .catch((e) => {
+        if (alive) setFlash({ kind: 'err', text: e?.message || 'تعذّرت قراءةُ المهمّة المطلوبة في العنوان.' });
+      });
+    return () => { alive = false; };
+  }, []);
+
   useEffect(() => (taskId ? listenTask(taskId, setTask) : undefined), [taskId]);
 
   const step = useMemo(() => (task ? currentStep(task) : null), [task]);
   const totals = useMemo(() => (task ? taskTotals(task) : null), [task]);
   const gap = useMemo(() => (task ? fulfillmentGap(task) : []), [task]);
   const stage = useMemo(() => nextStage(scan), [scan]);
+  /*
+   * ★★★ أساسُ الترتيب **كائنٌ مخزَّن** (`{id, label, covered, total}`) — وكائنٌ
+   * يُعرض ولدًا في JSX يرميه React ولا `ErrorBoundary` هنا يمسكه، فتُبيَّض
+   * الشاشةُ في يد المحضّر عند أوّل رندر. فالتسميةُ تُطلب من الخدمة والبيانةُ
+   * تبقى كما هي — والحكمُ ماذا يُعرض ليس شرطًا يُكتب في الواجهة.
+   */
+  const basis = pathBasisLabel(task?.pathBasis);
+
+  /*
+   * ‹JR-301ب› لوحةُ خانة الكمّيّة — **الحكمُ أيَّ المسارَين من الخدمة**:
+   * `panel.mode` يقوله `stepQtyPanel` سائلًا `needsPackEntry`، فلا يُقلَّد هنا
+   * بشرطٍ يشبهه فيفترق عن حكم المحرّك. والشاشةُ تعرض ما أعطاها.
+   */
+  const panel = useMemo(() => stepQtyPanel(step), [step]);
+  // وحدةُ الإدخال تعود إلى وحدة الخطوة عند كلّ خطوة — لا تلتصق وحدةُ سابقتها.
+  useEffect(() => {
+    setEntryUom(panel.uom);
+    setPack({ label: '', containers: '', per: '' });
+  }, [panel.uom, step?.seq]);
+
+  // معاينةٌ حيّة «= ٢٤ قطعة» — تُقرأ قبل الضغط فيُكشف الخطأ وهو قابلٌ للتصحيح.
+  const preview = baseQtyPreview(panel.card, qty, entryUom);
+  const requiredPreview = step ? baseQtyPreview(panel.card, stepRemaining(step), panel.uom) : '';
+  // المسار (ب): صنفٌ لا وحدةَ له أصلًا — يُعلن الوعاءَ ومحتواه فيُضربان.
+  const packVerdict = useMemo(
+    () => packEntryVerdict({
+      item: panel.card, containerLabel: pack.label, containers: pack.containers, perContainer: pack.per,
+    }),
+    [panel.card, pack]
+  );
 
   const say = useCallback((kind, text) => {
     setFlash({ kind, text });
@@ -286,9 +373,22 @@ export default function PickingFlow() {
 
   async function submitPick() {
     if (!actorName) { say('err', 'لم تُقرأ هويّتك بعد — أعد تحميل الصفحة.'); return; }
+    /*
+     * ★★★ ما يُدخَل يُحوَّل **إلى وحدة الخطوة** قبل أن يُرسَل: `required` مكتوبٌ
+     * بها و`qtyVerdict` يقارن بها. ومن كتب «٢» واختار الكرتون تُرسَل عنه
+     * أربعٌ وعشرون — وهو الفارقُ الذي كان يظهر في الجرد بعد شهر.
+     *
+     * ★ والخانةُ الفارغة تبقى تعني «الباقي» بوحدة الخطوة نفسِها — سلوكُ
+     * اليوم حرفًا، فلا تُحوَّل ولا تُحكَّم.
+     */
+    const typed = Number(qty);
+    const entry = Number.isFinite(typed) && typed > 0
+      ? pickEntryVerdict(step, { qty: typed, uom: entryUom })
+      : { ok: true, problem: '', entry: { qty: stepRemaining(step) } };
+    if (!entry.ok) { say('err', entry.problem); return; }
     setBusy(true);
     try {
-      const r = await executePick(taskId, { ...scan, batch: step?.batch, qty: Number(qty) || stepRemaining(step) }, { actor: actorName });
+      const r = await executePick(taskId, { ...scan, batch: step?.batch, qty: entry.entry.qty }, { actor: actorName });
       if (r.ok) {
         say('ok', r.message);
         setScan({}); setQty('');
@@ -755,8 +855,13 @@ export default function PickingFlow() {
     <div className="o_theme" dir="rtl">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <div>
-          <div className="font-bold text-ink">{task?.source?.number}</div>
-          <div className="text-ink-2 text-xs">{task?.warehouse} · {task?.pathBasis}</div>
+          {/* ★ رقمُ الأمر يُفتح لا يُقرأ — المحضّرُ يقف في الممرّ ويسأل «ما في
+              هذا الأمر؟»، والمعرّفُ في يده منذ `openPickTask` فلا حجّةَ لنصٍّ
+              أصمّ. وهنا موضعُه: **قبل أن يمشي** لا بعد أن يقفل. */}
+          <div className="font-bold text-ink"><DocLink source={task?.source} /></div>
+          {/* ★ والفاصلةُ تتبع ما بعدها: مهمّةٌ بلا أساسٍ معلَنٍ كانت تخرج
+              بمستودعٍ يتدلّى منه «·» لا شيء بعده. */}
+          <div className="text-ink-2 text-xs">{task?.warehouse}{basis ? ` · ${basis}` : ''}</div>
         </div>
         <button type="button" className="btn btn-secondary text-sm" onClick={() => { setTaskId(''); setTask(null); }}>رجوع</button>
       </div>
@@ -790,7 +895,12 @@ export default function PickingFlow() {
             <div className="text-xs text-ink-2 mb-1">الخطوة {step.seq} من {totals?.stepCount}</div>
             <div className="text-2xl font-bold text-ink mb-1">{step.bin}</div>
             <div className="text-ink">{step.sku} {step.batch && <span className="text-ink-2">· دفعة {step.batch}</span>}</div>
-            <div className="text-ink-2 text-sm mt-1">المطلوب {stepRemaining(step)}</div>
+            {/* ★ المطلوبُ يُقال بوحدته: «٥ كرتون» لا «٥» — والرقمُ العاري كان
+                يُقرأ قطعًا فيُسحب خُمسُ الأمر ولا يشتكي أحدٌ قبل الجرد. */}
+            <div className="text-ink-2 text-sm mt-1">
+              المطلوب {stepRemaining(step)}{panel.label ? ` ${panel.label}` : ''}
+              {requiredPreview && <span className="tabular-nums"> {requiredPreview}</span>}
+            </div>
           </div>
 
           <ol className="flex gap-2 mb-3 text-xs">
@@ -819,10 +929,61 @@ export default function PickingFlow() {
             </form>
           ) : (
             <div>
-              <input value={qty} onChange={(e) => setQty(e.target.value)} type="number" min="0" step="any"
-                placeholder={`الكمّيّة (${stepRemaining(step)})`} autoFocus
-                className="w-full rounded-lg border px-4 py-4 text-lg mb-2"
-                style={{ borderColor: 'var(--o-border)' }} />
+              {/* ★★★ الخانةُ الكبيرةُ تبقى واحدةً — ومعها وحدتُها فقط. المحضّرُ
+                  يمشي وهو يحمل بضاعةً، فلا يُعطى جدولًا يقرأه بيدٍ واحدة. */}
+              <div className="flex gap-2 mb-1">
+                <input value={qty} onChange={(e) => setQty(e.target.value)} type="number" min="0" step="any"
+                  placeholder={`الكمّيّة (${stepRemaining(step)})`} autoFocus
+                  className="flex-1 rounded-lg border px-4 py-4 text-lg"
+                  style={{ borderColor: 'var(--o-border)' }} />
+                {panel.mode === 'uom' && (panel.choices.length > 1 ? (
+                  <select
+                    value={entryUom}
+                    onChange={(e) => setEntryUom(e.target.value)}
+                    aria-label="وحدة الإدخال"
+                    className="rounded-lg border px-3 py-4 text-base"
+                    style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }}
+                  >
+                    {panel.choices.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                ) : (
+                  <span className="self-center px-3 text-ink-2 text-sm">{panel.label}</span>
+                ))}
+              </div>
+
+              {/* معاينةٌ حيّة: «= ٢٤ قطعة» تُقرأ قبل الضغط لا بعد شهر. */}
+              {preview && <div className="text-ink-2 text-sm mb-2 tabular-nums">{preview}</div>}
+
+              {/* ★★ المسار (ب) — صنفٌ لا وحدةَ له أصلًا (وهو حالُ ألفٍ وأربعين
+                  صنفًا). الخانةُ العاريةُ تبقى كما كانت حرفًا، وهذه حاسبةٌ
+                  اختياريّةٌ فوقها: يُعلن الوعاءَ ومحتواه فيُملأ الرقمُ صحيحًا. */}
+              {panel.mode === 'pack' && (
+                <details className="mb-2">
+                  <summary className="text-sm text-ink-2 cursor-pointer">عددتَ صناديق؟ احسبها هنا</summary>
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    <input value={pack.label} onChange={(e) => setPack({ ...pack, label: e.target.value })}
+                      placeholder="صندوق / شدّة" className="rounded-lg border px-2 py-3 text-sm"
+                      style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }} />
+                    <input value={pack.containers} onChange={(e) => setPack({ ...pack, containers: e.target.value })}
+                      type="number" min="0" step="any" placeholder="كم وعاءً" className="rounded-lg border px-2 py-3 text-sm"
+                      style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }} />
+                    <input value={pack.per} onChange={(e) => setPack({ ...pack, per: e.target.value })}
+                      type="number" min="0" step="any" placeholder="كم في الواحد" className="rounded-lg border px-2 py-3 text-sm"
+                      style={{ borderColor: 'var(--o-border)', background: 'var(--o-surface)' }} />
+                  </div>
+                  {packVerdict.ok ? (
+                    <button type="button" className="btn btn-secondary w-full py-2 mt-2 tabular-nums"
+                      onClick={() => setQty(String(packVerdict.entry.baseQty))}>
+                      = {packVerdict.entry.baseQty} — استعملها
+                    </button>
+                  ) : (
+                    (pack.label || pack.containers || pack.per) && (
+                      <p className="text-ink-2 text-xs mt-2">{packVerdict.problem}</p>
+                    )
+                  )}
+                </details>
+              )}
+
               <button type="button" className="btn btn-primary w-full py-3" onClick={submitPick} disabled={busy}>
                 تسجيل السحبة
               </button>
@@ -870,6 +1031,42 @@ function StageSwitch({ mode, setMode, disabled, tr }) {
         </button>
       ))}
     </div>
+  );
+}
+
+/**
+ * رابطُ المستند — من الميدان إلى الورقة التي أمرت به.
+ *
+ * ★★ **نمطٌ واحدٌ في شاشات الميدان كلّها**: الصنفُ `o_field_link` ونصُّ
+ * العنوان `افتح المستند` مكرّران حرفيًّا في `GovernanceBoard.jsx` — فما
+ * يتعلّمه الموظّفُ في شاشةٍ يعمل في الأخرى بلا أن يُعلَّم مرّتين.
+ *
+ * ⚠️ **والمعرّفُ شرطُ الرابط لا الرقم.** مستندٌ يحمل رقمًا بلا `id` (أو بلا
+ * `type`) يبقى نصًّا كما كان — لأنّ `/dashboard/document` بلا معرّفٍ يفتح
+ * شاشةً فارغة، ورابطٌ يكذب أسوأ من نصٍّ صامت.
+ *
+ * ★★★ **وهدفُ لمسٍ لا نصٌّ مسطور.** قِيس بالمِشحذ على هاتفٍ ٣٧٥ بكسل فكان
+ * **٢٤ × ٣٩ بكسل** — وإبهامُ عاملٍ في ممرٍّ لا يُصيبه. والحدُّ المتعارَف ٤٤،
+ * فأُعطي حشوًا وارتفاعًا أدنى: الرابطُ الذي لا يُضغط رابطٌ غيرُ موجود.
+ *
+ * @param {{type?:string,id?:string,number?:string}|null} source مصدرُ المهمّة
+ *   كما يكتبه `pickingTask.js` — وهو نفسُ شكل `session.order` في الاستلام.
+ */
+function DocLink({ source }) {
+  const number = String(source?.number ?? '').trim();
+  const id = String(source?.id ?? '').trim();
+  const type = String(source?.type ?? '').trim();
+  if (!id || !type) return <>{number}</>;
+  return (
+    <a
+      href={`${getBasePath()}/dashboard/document?type=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`}
+      className="o_field_link decoration-bf"
+      title="افتح المستند"
+      // ★ هدفُ لمسٍ ٤٤ بكسل — قِيس فكان ٢٤ (انظر الترويسة).
+      style={{ display: 'inline-flex', alignItems: 'center', minHeight: '44px', padding: '0 8px' }}
+    >
+      {number || id}
+    </a>
   );
 }
 

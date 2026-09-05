@@ -1,0 +1,641 @@
+{
+  "plan": "الرحلة المتّصلة — من المستند إلى الرفّ وبالعكس",
+  "planDoc": "docs/خطة-الرحلة-المتصلة.md",
+  "resumeTitle": "الرحلة المتّصلة ‹JR› · اكتب «رحلة» لتُستأنف",
+  "command": "npm run plan:journey",
+  "track": "المتتبّع الرابع عشر — والقياسُ قلب ترتيبَه: أغلبُ ما طُلب مبنيٌّ بالكامل ولا يستدعيه أحد. لا ينقص منطقٌ، ينقص سلك.",
+  "source": "طلبُ المالك المكتوب 2026-09-03 (العمليات اليومية/كوديكس -كلود-البرشي/خطة.md) بسبعة مطالبَ وثلاث لقطاتٍ من البوّابة الحيّة، وقياسُ المطالب في الشيفرة في الجلسة نفسِها، وأربعةُ قراراتٍ محسومة.",
+  "lastUpdated": "2026-09-04",
+  "lastUpdatedBy": "Claude",
+  "baseline": {
+    "originMain": "ec2935a",
+    "branch": "claude/code-6e9d47",
+    "note": "قياسُ 2026-09-03: صفرُ روابطَ بين صفحة المستندات والشاشات الميدانيّة في الاتّجاهين · createPickTask وreleaseDocumentTasks بلا مستدعٍ · الصلاحيةُ تقف عند الطبليّة · والكمّيّةُ الميدانيّةُ رقمٌ عارٍ. والمحرّكاتُ كلُّها مبنيّةٌ ومختبَرة."
+  },
+  "milestones": [
+    {
+      "id": "د٠",
+      "title": "حارسان قبل الإصلاح — صلاحيّةُ الكتابة وانحرافُ الأدوار",
+      "estimate": "نصف جلسة"
+    },
+    {
+      "id": "د١",
+      "title": "الروابط في الاتّجاهين وأمرُ النقل",
+      "estimate": "جلسة واحدة"
+    },
+    {
+      "id": "د٢",
+      "title": "الصلاحيةُ تعبر من الطبليّة إلى الرصيد",
+      "estimate": "1–2 جلسة"
+    },
+    {
+      "id": "د٣",
+      "title": "الوحداتُ في الشاشات الميدانيّة",
+      "estimate": "1–2 جلسة"
+    },
+    {
+      "id": "د٤",
+      "title": "مهمّةُ التحضير تُنشأ فعلًا",
+      "estimate": "جلسة واحدة"
+    },
+    {
+      "id": "د٥",
+      "title": "لوحةُ الخانة — الشرحُ ووضعُ التخزين",
+      "estimate": "جلسة واحدة"
+    },
+    {
+      "id": "د٦",
+      "title": "التخزينُ بالطبلية مقابل الصنف",
+      "estimate": "جلسة واحدة"
+    },
+    {
+      "id": "د٧",
+      "title": "إصلاحُ انحراف الأدوار",
+      "estimate": "نصف جلسة"
+    },
+    {
+      "id": "د٨",
+      "title": "زرُّ «أطلق للميدان»",
+      "estimate": "جلسة واحدة"
+    }
+  ],
+  "gaps": {
+    "ر‑١": "صفرُ روابطَ من المستند إلى شاشته الميدانيّة — لا ملفَّ تحت components/brandzo-erp/documents/** يشير إلى شاشةٍ ميدانيّة، والرابطُ الوحيد في الصفّ ?type=&id= إلى نموذج المكتب",
+    "ر‑٢": "صفرُ روابطَ من الشاشة الميدانيّة إلى مستندها — وReceivingFlow.jsx:336 يملك r.docId ويعرضه نصًّا",
+    "ر‑٣": "أمرُ النقل TR مقبولٌ في المنطق ولا يُعرض في الشاشة — receivingSession.js:41 يقبله وReceivingFlow.jsx:116 يشترك بـ[PO] وحدَها",
+    "ر‑٤": "شاشةُ «مهامي» مفتوحةٌ لأربعة أدوارٍ يرفض الخادمُ كتابتَهم — navCatalog.js:276 خارج isLaborWriter() في firestore.rules:70، فالفشلُ يقع في منتصف المهمّة بعد أن يمشي الموظّف إلى الرفّ",
+    "ر‑٥": "PORTAL_TO_FIELD ينقصها ثلاثةُ أدوارٍ تبلغ مسارًا ميدانيًّا فعلًا (receiving_unit · putaway_unit · picking_unit) — تمرّ من uiGate لأنّها مجهولةٌ لا لأنّها مأذونة. وقِيست 2026-09-03: count_assignee وscm_manager غائبتان عن الخريطة أيضًا ولا تبلغان مسارًا ميدانيًّا، فليستا انحرافًا — والخطّةُ قالت خمسةً والقياسُ ردّها إلى ثلاثة.",
+    "ر‑٦": "الصلاحيةُ تُلتقط وتُفقد — تُكتب على الطبليّة في lpnContents.js:125، وgrnBridge.js:39 يُسقط كلَّ شيءٍ إلّا الكمّيّة، فـbalances.expiry لا يُملأ إلّا بيدٍ بشريّة وFEFO عمياء عند التحضير",
+    "ر‑٧": "الكمّيّةُ في الشاشات الميدانيّة رقمٌ عارٍ بلا وحدةٍ ولا معامل — وpickingScan.js:204 يفترض أنّ الرقم أساسٌ. والمحرّك مبنيٌّ ويعمل في ScanFlow وحدَها",
+    "ر‑٨": "createPickTask بلا مستدعٍ — picking_tasks لا يكتبها شيءٌ في المشروع، فشاشةُ التحضير المبنيّة تقرأ فراغًا أبدًا",
+    "ر‑٩": "releaseDocumentTasks ومعه taskFactory.generateTasks بلا مستدعٍ — وهو الجسرُ الوحيد من مستندٍ معتمَدٍ إلى مهمّةِ عملٍ تحمل docRef",
+    "ر‑١٠": "وضعُ التخزين في لوحة الخانة طريقٌ مسدود — يقول «اخترْ أمرَ تخزينٍ مفتوحًا» ولا يعرض واحدًا؛ وهبوطُ الصفحة حقلٌ وزرّان بلا شرح",
+    "ر‑١١": "لا تمييزَ بين التخزين بالطبلية والتخزين بالصنف — STORAGE_TYPES أصنافُ حرارةٍ لا مناولة، وcapacity يستعمل qty وحدَها وcartons/weightKg/volumeM3 معلَنةٌ ومهملة",
+    "ر‑١٢": "المرحلةُ لا تقول من صاحبُها — طلبُ المالك 2026-09-03: «البوّابة تعمل بفكرة المراحل، يعني كلُّ مرحلةٍ مربوطةٌ بشخصٍ ما». والمعرفةُ موجودةٌ مبعثرةٌ في ثلاثة مواضع (approveRoles/completeRoles في firestore.rules · roles.create في schemas/* · ROLE_OPS في lpnRoles) ولا موضعَ واحدٌ يقول للناظر أمام المستند: من ينتظره الآن. فيُسأل شفويًّا — وأوّلُ ما يسقط عند تبديل الورديّة.",
+    "ر‑١٣": "المعنى مقلوب: رفٌّ موسومٌ «بالطبلية» يرفض الطبليّات الحقيقيّة. handlingNeedOf تقيس وحدةَ عدّ المحتوى (كرتون/قطعة من receivingScan.js:64) لا كونَ المخزَّن وحدةَ مناولةٍ بذاتها — فطبليّةٌ فيها ١٠ كراتين تُقرأ «تُناوَل بالصندوق» فيرفضها رفُّ الطبليّات ويُرسلها إلى «المختلط». قِيس حيًّا بالفحص النقضيّ 2026-09-03."
+  },
+  "ownerInputs": [
+    {
+      "id": "JR-O01",
+      "need": "ضغطةُ «ولّد الناقص (٣٬٦٠٠)» في /dashboard/warehouses — الكتابةُ في bin_locations لـisManager() وحدَه",
+      "ifMissing": "كلُّ توجيهٍ معطَّل: بلا مواقعَ مسجَّلةٍ يُعيد suggestLocations «سيّد المواقع فارغ»، ولا شبكةَ مشيٍ لـpickPlan. والدفعاتُ تُبنى وتُختبر وحدويًّا ولا تُعرَض حيّةً",
+      "milestone": "د٤",
+      "state": "todo"
+    },
+    {
+      "id": "JR-O02",
+      "need": "حساباتُ الأدوار الحقيقيّة (storekeeper · picking_unit · putaway_unit) — LOC-O07 قائمٌ منذ 2026-08-16",
+      "ifMissing": "يبقى كلُّ ما يُسلَّم مبنيًّا مختبَرًا **غيرَ مجرَّبٍ حيًّا** ويُوسم كذلك — كدرس المراحل التي بُنيت بلا تجربة واحدة",
+      "milestone": "د١",
+      "state": "todo"
+    },
+    {
+      "id": "JR-O03",
+      "need": "١٠٤٠ صنفًا بلا وحدةِ أساس في Items_Master — والكتابةُ فيه للمديرين",
+      "ifMissing": "المسارُ (أ) في د٣ لا يعمل لها. والمسارُ (ب) — خانتا «صناديق × قطع» بمعاملٍ مختومٍ على القيد — يحملها ريثما تُملأ، وuomDebtReport قائمةُ العمل",
+      "milestone": "د٣",
+      "state": "todo"
+    },
+    {
+      "id": "JR-O04",
+      "need": "قرارُ صلاحيّة labor_tasks: أتُنشر قاعدةٌ تفتحها للميدان أم تُغلق «مهامي» على المشرفين؟",
+      "ifMissing": "حُسم 2026-09-03: تُغلق على المشرفين ولا تُنشر قاعدة (ق‑أ)",
+      "milestone": "د٧",
+      "state": "done"
+    },
+    {
+      "id": "JR-O05",
+      "need": "إعادةُ فتح مهمّة تحضيرٍ على أمرٍ حُضِّر سلفًا: معرّفُ المهمّة صار حتميًّا `PICK__{docId}` والمعاملةُ ترفض إن وُجد المستند — فأمرٌ أُقفلت مهمّتُه (DONE) أو أُلغيت **لا تُفتح له مهمّةٌ ثانيةٌ من هذا الباب أبدًا**. أتريد بابًا لإعادة الفتح (استئنافُ القائمة إلى IN_PROGRESS · أم معرّفٌ بمحاولةٍ ثانية `PICK__{docId}__2`)؟",
+      "ifMissing": "يبقى المنعُ كما هو — وهو **مقصودٌ لا سهو**: قاعدةُ `picking_tasks` تُجيز التحديث، فكتابةٌ ثانيةٌ على المعرّف نفسِه كانت **تمحو `steps`** أي سجلَّ سحبٍ بُنيت عليه طبليّةُ صرفٍ وشحنة. والحاجةُ تُقضى اليوم بفتح المهمّة القائمة، أو بأمرِ بيعٍ جديدٍ إن تغيّر الطلب.",
+      "milestone": "د٤",
+      "state": "todo"
+    },
+    {
+      "id": "JR-O06",
+      "need": "قراءتان في طبليّةٍ واحدةٍ بدفعتنا نفسِها ومن لوطَين مختلفين للمصنع تندمجان في بندٍ واحدٍ يحمل **أوّلَ** لوط، والثاني يُبتلع بلا إعلان — لأنّ مفتاح البند `صنف__دفعة__صلاحية__وحدة` لا يشمل `supplierBatch`. أتريد إدخالَه في المفتاح فيُشقّ البند؟",
+      "ifMissing": "يبقى الاندماجُ — **وهو مُعلَنٌ باختبارٍ يثبّته** لا منسيّ. وإدخالُ الحقل في المفتاح **يشقّ بندًا كان واحدًا** فتتغيّر تجميعةُ الكمّيّات في مسارٍ ماليّ، ولا يُدسّ في دفعةِ تتبّع. والاختلافُ **بين طبليّتين** يُعلَن اليوم صحيحًا.",
+      "milestone": "د٢",
+      "state": "todo"
+    }
+  ],
+  "whereToFind": {
+    "الوثيقة الحاكمة": "docs/خطة-الرحلة-المتصلة.md",
+    "طلبُ المالك الأصليّ": "العمليات اليومية/كوديكس -كلود-البرشي/خطة.md (خارج المستودع)",
+    "مسارُ المستند إلى الميدان": "src/services/tasks/fieldRoutes.js",
+    "صلاحيّةُ الكتابة في المجموعات": "src/services/labor/laborRoles.js",
+    "خريطةُ أدوار الميدان": "src/services/lpn/lpnRoles.js — PORTAL_TO_FIELD",
+    "الجسرُ المعطَّل من مستندٍ إلى مهمّة": "src/services/labor/laborTasksService.js — releaseDocumentTasks",
+    "الجسرُ المعطَّل لمهمّة التحضير": "src/services/lpn/pickingService.js — createPickTask",
+    "انقطاعُ الصلاحية": "src/services/lpn/grnBridge.js — receivedByLine",
+    "محرّكُ الوحدات المرجعيّ": "src/services/stock/scanFlow.js — scanUomChoices · baseQtyPreview",
+    "قواعدُ الخادم الحاكمة": "firestore.rules — isLaborWriter():70 · isStockActor():99"
+  },
+  "tasks": [
+    {
+      "id": "JR-001",
+      "title": "حارسُ صلاحيّة الكتابة — «أيقبل الخادمُ كتابتَك؟» سؤالٌ غيرُ «أتملك العمليّة؟»",
+      "milestone": "د٠",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ر‑٤"
+      ],
+      "dependsOn": [],
+      "nucleus": "src/services/labor/laborRoles.js — collectionWriteProblem",
+      "guardTest": "src/services/labor/laborRoles.test.js",
+      "touches": [
+        "src/services/labor/laborRoles.js",
+        "src/services/labor/laborRoles.test.js"
+      ],
+      "note": "★★★ خلطُ السؤالين هو أصلُ عطب «مهامي»: uiGate يقول «أتملك هذه العمليّة؟» وتُعيد allowed:true للمجهول عمدًا — وهي لا تعرف شيئًا عن قبول الخادم للكتابة.",
+      "acceptance": [
+        "★★★ الحارسُ يقرأ نصَّ `firestore.rules` من القرص ويؤكّد تطابقَ أدوار `isLaborWriter()` و`isStockActor()` مع المُصدَّر — فمن غيّر القاعدةَ ونسي الوحدةَ يسقط بناؤه",
+        "وفشلُ الاستخراج نفسُه يُسقط الاختبار برسالةٍ تقول ذلك — لا نجاحَ مزوَّرٌ حين يتغيّر شكلُ القاعدة",
+        "`collectionWriteProblem(role, collection)` يُعيد سببًا عربيًّا يسمّي من يملك الكتابة، و`''` للمجهول (لا يُحكم على ما لا يُعرف)",
+        "واختبارٌ يثبّت العطبَ الحيّ: `storekeeper` يملك الكتابة في `documents` ولا يملكها في `labor_tasks`"
+      ],
+      "progress": "laborRoles.js خالصةٌ بـ١٥ اختبارًا: خمسةُ حرّاسٍ منسوخةٌ أدوارُهم حرفًا، وسبعُ مجموعاتٍ مربوطةٌ ببوّاباتها، والحارسُ يقرأ نصَّ firestore.rules من القرص ويقارن — ويسقط برسالةٍ صريحةٍ إن فشل الاستخراج بدل تزوير نجاح.",
+      "nextStep": "مبنيّةٌ بلا مستدعٍ عمدًا: وصلُها في JR-701 بعد أن تُصلَح خريطةُ الأدوار — والعطبُ موصوفٌ لا مُصلَحٌ بعد.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "682a663",
+        "closedOn": "2026-09-03",
+        "note": "٣٦٤٣ خضراء (+٤٢) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · وحزمةُ fieldRoutes يستوردها DocumentsInbox وOpenDocumentsBox في dist."
+      }
+    },
+    {
+      "id": "JR-002",
+      "title": "حارسُ انحراف الأدوار — دَينٌ مكتوبٌ في الشيفرة لا في ذاكرة جلسة",
+      "milestone": "د٠",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ر‑٥"
+      ],
+      "dependsOn": [],
+      "nucleus": "src/services/lpn/lpnRoles.js — PORTAL_TO_FIELD",
+      "guardTest": "src/services/lpn/lpnRoles.test.js",
+      "touches": [
+        "src/services/lpn/lpnRoles.test.js"
+      ],
+      "note": "★★ ولا يُصلَح هنا عمدًا: توسيعُ PORTAL_TO_FIELD اليومَ يفتح شاشاتٍ يرفضها الخادم. الإصلاحُ في د٧ بعد أن يوجد collectionWriteProblem.",
+      "acceptance": [
+        "اختبارٌ يقرأ `NAV_GROUPS` ويؤكّد أنّ كلّ دورٍ **يبلغ مسارًا ميدانيًّا** مفتاحٌ في `PORTAL_TO_FIELD` — ويسمّي الغائبين واحدًا واحدًا",
+        "★★★ **والقياسُ يسبق العدد**: الخطّةُ قالت خمسةَ غائبين والحارسُ ردّها إلى **ثلاثة** — `count_assignee` و`scm_manager` غائبتان عن الخريطة ولا تبلغان مسارًا ميدانيًّا فليستا انحرافًا",
+        "ومعلَّمٌ `skip` بسببٍ مكتوب فلا يُسقط البناءَ الأخضر، **ومعه اختبارٌ غيرُ متجاوَزٍ يوثّق الغائبين بأسمائهم** فإن نقصوا أو زادوا بلا قصدٍ صرخ",
+        "ويومَ يُصلَح في د٧ يُنزع `skip` فيخضرّ — فالدَّينُ يُغلق ببيّنةٍ لا بادّعاء"
+      ],
+      "progress": "ثلاثةُ اختباراتٍ في lpnRoles.test.js: حارسٌ متجاوَزٌ يسمّي الغائبين، واختبارٌ حيٌّ يثبّتهم بالاسم فيصرخ إن تغيّروا، وثالثٌ يثبت أنّ الدَّينَ خَرْطٌ لا وجودٌ. ★★★ والقياسُ ردّ العددَ من خمسةٍ إلى ثلاثة.",
+      "nextStep": "يُنزع skip في JR-701 فيخضرّ.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "682a663",
+        "closedOn": "2026-09-03",
+        "note": "٣٦٤٣ خضراء (+٤٢) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · وحزمةُ fieldRoutes يستوردها DocumentsInbox وOpenDocumentsBox في dist."
+      }
+    },
+    {
+      "id": "JR-101",
+      "title": "وحدةُ المسارات الميدانيّة — الخريطةُ تُشتقّ ولا تُخترع",
+      "milestone": "د١",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ر‑١"
+      ],
+      "dependsOn": [],
+      "nucleus": "src/services/tasks/fieldRoutes.js — fieldRouteFor",
+      "guardTest": "src/services/tasks/fieldRoutes.test.js",
+      "touches": [
+        "src/services/tasks/fieldRoutes.js",
+        "src/services/tasks/fieldRoutes.test.js"
+      ],
+      "note": "★★ ولا قائمةَ ثالثة: المصدرُ DOC_WORK_TYPE في taskFactory وPICKABLE_TYPES في pickingTask وcanDeriveFrom في states — فلا تفترق خريطةُ الأزرار عمّا يقبله المنطق. ★★★ وتسكن tasks/ لا documents/ بحكم حارسٍ قائم: ledger وbalances وdocuments نوًى محميّةٌ لا تستورد من lpn (ح-٢)، وهذه تستورد PICKABLE_TYPES بالضرورة فهي جسرٌ يعرف الطرفين — والجسرُ لا يسكن داخل النواة التي يحرسها الحارس. كُتبت في documents/ أوّلًا فأسقطت lpnIsolation.test.js، ونُقلت والسببُ مكتوبٌ في رأسها.",
+      "acceptance": [
+        "`fieldRouteFor(doc)` يُعيد `{path,label,reason}` أو `null` — والمجهولُ `null` فلا زرَّ ميّت",
+        "★★★ **والحالةُ شرطٌ كالنوع**: `canDeriveFrom(doc.state)` — فلا يُدعى أحدٌ إلى تنفيذ مسوّدةٍ لم تُعتمد. والمرفوضُ `null` لا زرٌّ معطَّل",
+        "★★ حارسُ وصْلٍ: كلُّ مسارٍ تعيده الدالّة **موجودٌ فعلًا في `navCatalog.js`** — فلا رابطَ إلى صفحةٍ لا وجودَ لها",
+        "وكلُّ نوعٍ في `DOC_WORK_TYPE` وفي `PICKABLE_TYPES` إمّا له مسارٌ وإمّا غيابُه مقصودٌ مكتوب — لا صمت",
+        "★★★ وتسكن `tasks/` لا `documents/` — و`lpnIsolation.test.js` يفرض ذلك: النواةُ المحميّة لا تستورد من `lpn`، والجسرُ يسكن خارجها"
+      ],
+      "progress": "tasks/fieldRoutes.js بـ٢٦ اختبارًا: الخريطةُ مشتقّةٌ من PICKABLE_TYPES وDOC_WORK_TYPE، وPO/TR مرآةٌ مقيسةٌ سلوكيًّا لبوّابة sessionOpenProblem، وcanDeriveFrom شرطٌ كالنوع، وحارسُ وصْلٍ يطابق كلَّ مسارٍ بـnavCatalog (نُقض بتعطيبٍ متعمَّد فسقط).",
+      "nextStep": "أُغلقت في 682a663. والمسارُ عارٍ بلا معرّف المستند حتّى تقرأ الشاشاتُ searchParams — مزلقٌ مكتوبٌ في رأس الوحدة.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "682a663",
+        "closedOn": "2026-09-03",
+        "note": "٣٦٤٣ خضراء (+٤٢) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · وحزمةُ fieldRoutes يستوردها DocumentsInbox وOpenDocumentsBox في dist."
+      }
+    },
+    {
+      "id": "JR-102",
+      "title": "زرُّ «ابدأ» في صفحة المستندات — الاتّجاه الأوّل",
+      "milestone": "د١",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ر‑١"
+      ],
+      "dependsOn": [
+        "JR-101"
+      ],
+      "nucleus": "src/services/tasks/fieldRoutes.js — fieldRouteFor",
+      "guardTest": "src/services/tasks/fieldRoutes.test.js",
+      "touches": [
+        "src/components/brandzo-erp/documents/DocumentsInbox.jsx",
+        "src/components/brandzo-erp/documents/OpenDocumentsBox.jsx"
+      ],
+      "acceptance": [
+        "صفُّ المستند المعتمَد يحمل زرًّا يفتح شاشتَه الميدانيّة، ونصُّه من الوحدة لا من الشاشة",
+        "★★ ولا حكمَ يُعاد بناؤه في JSX: لا `type ===` ولا `state ===` — كلُّه في `fieldRouteFor`",
+        "والمسوّدةُ بلا زرٍّ أصلًا — لا زرٌّ معطَّلٌ ولا خانةٌ فارغةٌ بعرضٍ محجوز",
+        "ولا يُمسّ التصديرُ ولا التصفيةُ ولا الترتيب"
+      ],
+      "progress": "زرُّ التنفيذ بجانب «فتح ←» في صندوق المستندات، ورابطٌ تحت الرقم في «العمل المفتوح». ولا حكمَ في JSX — النوعُ والحالةُ في الوحدة وحدَها، وnull يعني غيابَ الزرّ.",
+      "nextStep": "أُغلقت في 682a663.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "682a663",
+        "closedOn": "2026-09-03",
+        "note": "٣٦٤٣ خضراء (+٤٢) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · وحزمةُ fieldRoutes يستوردها DocumentsInbox وOpenDocumentsBox في dist."
+      }
+    },
+    {
+      "id": "JR-103",
+      "title": "روابطُ العودة من الميدان إلى المستند — الاتّجاه الثاني",
+      "milestone": "د١",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ر‑٢"
+      ],
+      "dependsOn": [],
+      "nucleus": "src/services/lpn/pickingTask.js — task.source {type,id,number}",
+      "touches": [
+        "src/components/brandzo-erp/lpn/ReceivingFlow.jsx",
+        "src/components/brandzo-erp/lpn/PickingFlow.jsx",
+        "src/components/brandzo-erp/lpn/GovernanceBoard.jsx",
+        "src/components/brandzo-erp/lpn/CountFlow.jsx"
+      ],
+      "note": "★★ البياناتُ في اليد أصلًا — لا نداءَ شبكةٍ جديدٌ ولا حالة. وأصدقُ بيّنةٍ على الفجوة: ReceivingFlow يملك r.docId ويعرضه نصًّا.",
+      "acceptance": [
+        "رقمُ مذكّرة الاستلام المتولّدة يصير **رابطًا** يفتحها للاعتماد — لا رقمًا يُبحث عنه بيد",
+        "والحالةُ الفارغةُ التي تأمر بالذهاب إلى صندوق المستندات **تُعطي الطريق**",
+        "ورقمُ أمر التحضير في شاشة المحضّر رابطٌ يُقرأ قبل أن يمشي",
+        "★ ونمطُ الرابط واحدٌ في الشاشات كلّها — فما يتعلّمه الموظّفُ في شاشةٍ يعمل في الأخرى"
+      ],
+      "progress": "رسالةُ توليد GRN وبطاقتُه والحالةُ الفارغة صارت روابطَ بنيويّة (href/label في حالة الرسالة لا HTML مُحقَنًا)، ورأسُ مهمّة التحضير وبطاقةُ الحوكمة بمكوّن DocLink واحدٍ حرفًا بحرف. وCountFlow تُركت: counterView بلا مستندٍ بحكم ح-٣ فلم يُخترع موضع.",
+      "nextStep": "أُغلقت في 682a663.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "682a663",
+        "closedOn": "2026-09-03",
+        "note": "٣٦٤٣ خضراء (+٤٢) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · وحزمةُ fieldRoutes يستوردها DocumentsInbox وOpenDocumentsBox في dist."
+      }
+    },
+    {
+      "id": "JR-104",
+      "title": "أمرُ النقل يُعرض — والحدُّ يُقال لا يُبتلع",
+      "milestone": "د١",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ر‑٣"
+      ],
+      "dependsOn": [],
+      "nucleus": "src/services/lpn/receivingSession.js — sessionOpenProblem · grnProblem",
+      "touches": [
+        "src/components/brandzo-erp/lpn/ReceivingFlow.jsx",
+        "src/data/usage-guide.json"
+      ],
+      "acceptance": [
+        "أوامرُ النقل `TR` تُعرض مع أوامر الشراء — والمنطقُ يقبلها منذ زمن",
+        "★★ **والحدُّ مُعلَنٌ في الشاشة**: جلسةُ النقل تُستلَم في طبالي ولا تُغلق بمذكّرة استلام (مخرجُها `TRC` وهو غيرُ موصول) — والزرُّ **يقول سببَه** لا يصمت ولا يُخفى",
+        "وشرحُه في دليل الاستخدام — لا ميزةَ بلا شرح"
+      ],
+      "progress": "listenDocumentsByTypes([PO,TR]) والسقفُ رُفع إلى ١٠٠ لتضاعف الأنواع، وcanReceive لم يُمسّ. وبطاقةُ الإقفال تُعنوَن «إقفالُ جلسة النقل» وتعرض حكمَ grnProblem نفسَه ومعه أنّ TRC غيرُ موصولة ورابطًا إلى أمر النقل.",
+      "nextStep": "أُغلقت في 682a663. وTRC تبقى غيرَ موصولةٍ — دفعةٌ لاحقة.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "682a663",
+        "closedOn": "2026-09-03",
+        "note": "٣٦٤٣ خضراء (+٤٢) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · وحزمةُ fieldRoutes يستوردها DocumentsInbox وOpenDocumentsBox في dist."
+      }
+    },
+    {
+      "id": "JR-105",
+      "title": "صاحبُ المرحلة — كلُّ محطّةٍ تقول من ينتظرها",
+      "milestone": "د١",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ر‑١٢"
+      ],
+      "dependsOn": [
+        "JR-101"
+      ],
+      "nucleus": "src/services/tasks/stageOwners.js — stageOwnersFor · nextOwnerOf",
+      "guardTest": "src/services/tasks/stageOwners.test.js",
+      "touches": [
+        "src/services/tasks/stageOwners.js",
+        "src/services/tasks/stageOwners.test.js",
+        "src/components/brandzo-erp/lpn/ReceivingFlow.jsx"
+      ],
+      "note": "★★★ والخريطةُ تُقرأ ولا تُخترع: المعرفةُ في firestore.rules (approveRoles/completeRoles) وschemas/*.js (roles.create) وlpnRoles.js (ROLE_OPS) — ولا تُكتب قائمةٌ رابعةٌ تنحرف عنها. ★★ وهي وحدةُ إعلامٍ لا صلاحيّات: لا تحرس ولا تمنع — الحارسُ الحقيقيُّ هو الخادم، وهذه تقول «من صاحبُ هذه المرحلة» فقط.",
+      "acceptance": [
+        "`stageOwnersFor(docType)` يُعيد أصحابَ الأطوار الأربعة (إنشاء · اعتماد · إنجاز · تنفيذٌ ميدانيّ) بأسمائهم العربيّة من `roles.js` لا مكتوبةً بيد",
+        "★★★ **و`nextOwnerOf(doc)` هو النافع**: من ينتظره المستندُ **الآن** بحسب حالته — مسوّدةٌ ⟶ منشئُها · بانتظار الاعتماد ⟶ معتمِدوه · معتمَدٌ ⟶ منفّذوه الميدانيّون",
+        "وحارسٌ يقارن المُصدَّرَ بـ`approveRoles` في `firestore.rules` حرفًا — فمن غيّر القاعدةَ ونسي الخريطةَ يسقط بناؤه",
+        "وكلُّ نوعٍ في `chain.js` إمّا له أصحابٌ وإمّا **غيابُه معلَنٌ مكتوب** — لا صمت، ولا دورَ يُذكر خارج `roles.js`"
+      ],
+      "progress": "stageOwners.js تقرأ approveRoles/completeRoles من firestore.rules وroles.create من النماذج وROLE_OPS من lpnRoles — ولا قائمةَ رابعة. وnextOwnerOf معروضٌ على بطاقة الأمر في شاشة الاستلام: «ينتظر اعتماد…» · «ينتظر تنفيذه ميدانيًّا…».",
+      "nextStep": "أُغلقت في 19a0dba. والعرضُ في بقيّة الشاشات (صندوق المستندات · الحوكمة) يُستدرَك حين يُطلب.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "19a0dba",
+        "closedOn": "2026-09-03",
+        "note": "٣٧٣٦ خضراء (+٩٣) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · ونصوصُ الميزات مُفتَّشةٌ في حزم dist."
+      }
+    },
+    {
+      "id": "JR-201",
+      "title": "الصلاحيةُ والدفعةُ تعبران من الطبليّة إلى المذكّرة إلى الرصيد",
+      "milestone": "د٢",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ر‑٦"
+      ],
+      "dependsOn": [],
+      "nucleus": "src/services/lpn/grnBridge.js — grnLineExtras · extrasConflicts",
+      "guardTest": "src/services/lpn/grnBridge.test.js",
+      "touches": [
+        "src/services/lpn/grnBridge.js",
+        "src/services/lpn/receivingService.js",
+        "src/services/documents/documentsService.js",
+        "src/services/documents/documentFlow.js"
+      ],
+      "note": "★★★ الاسمُ `expiryDate` لا `expiry` — POSTING_RULES.GRN.expiryField يقرؤه، ومن أخطأ فيه رأى بندًا صحيحًا يُرحَّل بصلاحيةٍ فارغة.",
+      "acceptance": [
+        "★★★ `receivedByLine` **لا تُمسّ** — إسقاطُها لغير الكمّيّة مقصودٌ وحاملٌ لقفل المخصَّص؛ الجديدُ دوالُّ **أخوات**",
+        "وتُكتب الصلاحيةُ والدفعةُ في البند حين **تتّفق** الطبالي كلُّها (ق‑ج)",
+        "وحين تختلف: **تُعلَن قبل زرّ التوليد** بأرقام البنود وقيمها، وتُترك الخانةُ فارغةً للمعتمِد — ولا يُخترع رقم",
+        "وغيابُ الوسيط الجديد يعني **دالّةَ هويّة**: كلُّ اشتقاقٍ آخر في `LINE_MAP` بايتًا ببايت كما كان",
+        "واختبارٌ يتتبّع السلسلة كاملةً `PO ← GRN ← QC ← PUTAWAY` حتّى `movements` — فالوراثةُ هي ما يصل الرصيد"
+      ],
+      "progress": "ثلاثُ دوالَّ أخوات في grnBridge وreceivedByLine لم تُمسّ — والقفلُ أُثبت بالنقض (تسريبُ حقلٍ أسقطه وحدَه من بين ١٧). وapplyLineExtras خالصةٌ بوسيطٍ اختياريّ: غيابُه دالّةُ هويّة فخمسةٌ وعشرون اشتقاقًا بايتًا ببايت. والاسمُ expiryDate مقفولٌ باختبارٍ ينفي expiry. والخلافُ يُعلَن قبل الزرّ ولا يمنع.",
+      "nextStep": "أُغلقت في 19a0dba. ⚠️ وsupplierBatch وmfgDate أنبوبٌ جاهزٌ جافّ — لا كاتبَ لهما عند المسح بعدُ (يُستدرَك في receivingScan).",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "19a0dba",
+        "closedOn": "2026-09-03",
+        "note": "٣٧٣٦ خضراء (+٩٣) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · ونصوصُ الميزات مُفتَّشةٌ في حزم dist."
+      }
+    },
+    {
+      "id": "JR-301",
+      "title": "الوحدةُ في الشاشات الميدانيّة — قائمةٌ حيث تُعرَف وخانتان حيث لا تُعرَف",
+      "milestone": "د٣",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ر‑٧"
+      ],
+      "dependsOn": [],
+      "nucleus": "src/services/items/packEntry.js + src/services/stock/scanFlow.js — scanUomChoices · baseQtyPreview",
+      "guardTest": "src/services/items/packEntry.test.js",
+      "touches": [
+        "src/services/items/packEntry.js",
+        "src/components/brandzo-erp/lpn/PickingFlow.jsx",
+        "src/components/brandzo-erp/lpn/ReceivingFlow.jsx",
+        "src/components/brandzo-erp/locations/BinConsole.jsx",
+        "src/services/lpn/pickingTask.js",
+        "src/services/locations/binConsole.js"
+      ],
+      "note": "★★ والمعاملُ يُختم على القيد لا على الصنف (ق‑ب) — فلا كتابةَ في Items_Master وهي للمديرين. وسابقتُه movements.js:146 الذي يقبل معاملًا مختومًا على البند.",
+      "acceptance": [
+        "حيث الوحدةُ معرَّفة: **إعادةُ استعمال `scanUomChoices` و`baseQtyPreview` و`unitPanelLabel` حرفًا** — «كرتون (١٢ قطعة)» ومعاينةٌ حيّة «= ٢٤ قطعة»",
+        "وحيث لا تُعرَف (١٠٤٠ صنفًا): خانتا «عدد الصناديق × القطع في الصندوق» تُنتجان **الحقولَ الستّة نفسَها** بـ`factorSource:'declared'`",
+        "★ ولا يمرّ المسارُ الثاني بـ`scanEntryVerdict` — رفضُها لوحدةٍ خارج قائمة الصنف سلوكٌ صحيحٌ يبقى",
+        "و`openPickTask` يحمل `uom`/`factor` في خطواته، و`pickingScan` يكفّ عن افتراض أنّ الرقم أساسٌ",
+        "وصنفٌ بلا تعريفٍ **يُعدّ ولا يُمنع** (ق‑٢) — حارسٌ يثبّتها"
+      ],
+      "progress": "packEntry.js بمساري ق‑ب: المعرَّفُ يُعاد فيه استعمالُ scanUomChoices وbaseQtyPreview حرفًا، وغيرُ المعرَّف بخانتَي «سمِّ الوعاء» × «كم قطعةً فيه» والمعاملُ يُختم على القيد. وموصولةٌ في ثلاث شاشات: الاستلام والتحضير ولوحة الخانة. وpickingScan كفّ عن افتراض أنّ الرقم أساسٌ.",
+      "nextStep": "أُغلقت في 19a0dba. ومزلقُ checkFraction المتساهلة مع الوعاء المجهول حُرِس.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "19a0dba",
+        "closedOn": "2026-09-03",
+        "note": "٣٧٣٦ خضراء (+٩٣) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · ونصوصُ الميزات مُفتَّشةٌ في حزم dist."
+      }
+    },
+    {
+      "id": "JR-401",
+      "title": "مهمّةُ التحضير تُنشأ فعلًا — ومعرّفُها حتميّ",
+      "milestone": "د٤",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ر‑٨"
+      ],
+      "dependsOn": [
+        "JR-101"
+      ],
+      "nucleus": "src/services/lpn/pickingTask.js — pickTaskId · pickTaskDuplicateProblem",
+      "guardTest": "src/services/lpn/pickingTask.test.js",
+      "touches": [
+        "src/services/lpn/pickingTask.js",
+        "src/services/lpn/pickingService.js"
+      ],
+      "note": "★★★ `addDoc` بلا معرّفٍ حتميّ: ضغطتان = مهمّتان على أمرٍ واحد = **مُحضّران يمشيان إلى الرفّ نفسِه للبضاعة نفسِها**. والقاعدةُ تسمح بإعادة الكتابة فتمحو تقدّمَ مُحضّر — فالحارسُ معاملةٌ تفحص الوجود لا setDoc.",
+      "acceptance": [
+        "معرّفٌ حتميٌّ `PICK__{docId}` و`runTransaction` **يرفض** إن وُجد — لا يكتب فوقه",
+        "والرفضُ يسمّي المهمّةَ القائمة فيُعرض «مفتوحةٌ سلفًا» بدل فشلٍ غامض",
+        "ولا يُمسّ حكمُ «النقصُ لا يمنع الفتح» في `openPickTask`",
+        "ويُوصَل الزرُّ من الشاشة — فالمجموعةُ التي لا يكتبها أحدٌ تصير مكتوبة"
+      ],
+      "progress": "معرّفٌ حتميّ PICK__{docId} وrunTransaction يقرأ قبل أن يكتب ويرفض المكرّر بسببٍ يسمّي القائمة. وlistOpenTasks يُجيب بقراءة المعرّف لا باستعلامٍ مركّبٍ يطلب فهرسًا ينشره المالك. وموصولٌ من شاشة خطّة السحب بزرٍّ ومعاينةٍ قبله.",
+      "nextStep": "أُغلقت في ba6e6b4. ⚠️ وثمنُه في JR-O05: أمرٌ أُقفلت مهمّتُه لا تُفتح له ثانيةٌ من هذا الباب — ينتظر قرارَ المالك.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "ba6e6b4",
+        "closedOn": "2026-09-03",
+        "note": "٣٧٥٨ خضراء · صفرُ متجاوَز (نُزع skip من حارس الأدوار فاخضرّ) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · ونصوصُ الميزات مُفتَّشةٌ في dist."
+      }
+    },
+    {
+      "id": "JR-501",
+      "title": "لوحةُ الخانة — الشرحُ عند الهبوط، ووضعُ التخزين يُنفّذ",
+      "milestone": "د٥",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ر‑١٠"
+      ],
+      "dependsOn": [],
+      "nucleus": "src/services/locations/binConsole.js — MODE_HELP · landingPrimer · putawayRouteFor",
+      "guardTest": "src/services/locations/binConsole.test.js",
+      "touches": [
+        "src/services/locations/binConsole.js",
+        "src/components/brandzo-erp/locations/BinConsole.jsx",
+        "src/data/usage-guide.json"
+      ],
+      "note": "★★ والحلُّ الأصغرُ الصادق: routeScan يُعيد action:'pallet' والشاشةُ ترميه، وputawayService.executePutaway مبنيٌّ ويكتب في handling_units وحدَها (مسموحٌ) ولا يحتاج مستندَ PUTAWAY لأنّ الطبليّة تحمل sourceDoc.",
+      "acceptance": [
+        "الهبوطُ يقول ما الصفحة بهويّتَيها: **هنا يُنشأ كودُ الموقع** و**هنا يُرى ما فيه** — وزرُّ التكويد أوّلُ درجة",
+        "وشرحُ كلّ وضعٍ نصٌّ في الخدمة لا في JSX، وحارسٌ يفرض أنّ لكلّ وضعٍ شرحًا",
+        "★★ وفي وضع التخزين: **مسحُ الطبليّة يُنفّذ** بالمحرّك القائم — فالطريقُ المسدودُ يصير طريقًا",
+        "وفرعُ المستند يبقى ويعرض **أوامرَ التخزين المفتوحة** برابطها بدل جملةٍ تأمر بما لا تستطيعه الشاشة",
+        "و`buildDocDraft` يبقى يُعيد `null` لِما يلزمه أمرٌ — القيدُ الحاكم ١ لا يُنقض"
+      ],
+      "progress": "landingPrimer وMODE_HELP نصًّا في الخدمة وحارسٌ يفرض شرحًا لكلّ وضع، وزرُّ التكويد أوّلُ درجةٍ ظاهرة. وputawayRouteFor يفتح الطريقَ المسدود: routeScan كان يُعيد action:pallet والشاشةُ ترميه — فصار مسحُ الطبليّة يُنفّذ بـexecutePutaway المبنيّ بلا مجموعةٍ جديدةٍ ولا قاعدة.",
+      "nextStep": "أُغلقت في 19a0dba. وbuildDocDraft يبقى يُعيد null لِما يلزمه أمرٌ — القيدُ الحاكم ١ لم يُنقض.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "19a0dba",
+        "closedOn": "2026-09-03",
+        "note": "٣٧٣٦ خضراء (+٩٣) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · ونصوصُ الميزات مُفتَّشةٌ في حزم dist."
+      }
+    },
+    {
+      "id": "JR-601",
+      "title": "التخزينُ بالطبلية مقابل الصنف — بُعدٌ متعامدٌ لا توسعةٌ لصنف الحرارة",
+      "milestone": "د٦",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ر‑١١"
+      ],
+      "dependsOn": [],
+      "nucleus": "src/services/locations/locationsModel.js — HANDLING_TYPES · occupancyOf",
+      "guardTest": "src/services/locations/putawaySuggest.test.js",
+      "touches": [
+        "src/services/locations/locationsModel.js",
+        "src/services/locations/putawaySuggest.js",
+        "src/components/brandzo-erp/warehouse/LocationTree.jsx"
+      ],
+      "note": "★★ STORAGE_TYPES تقول عن نفسها إنّها صفةُ رفٍّ لا صنفُ مناولة — فتحميلُها المعنيين يُفسدها. والحاجةُ تُشتقّ من وحدة القيد لا من حقلٍ جديدٍ يُملأ ١٠٤٠ مرّة.",
+      "acceptance": [
+        "`HANDLING_TYPES` بُعدٌ مستقلّ، والافتراضُ `mixed` = سلوكُ اليوم — **صفرُ هجرةٍ لأيّ موقعٍ قائم**",
+        "و`capacity.pallets` يُحسب من `palletsByBin` المبنيّ، وصفرٌ يعني بلا سقفٍ لا ممتلئًا",
+        "ورفضُ الاقتراح بسببٍ مسمًّى حين يتعارض الطرفان المعلَنان — والفارغُ يمرّ",
+        "★★★ وحارسٌ يثبّت أنّ كلَّ عيّنةٍ قائمةٍ تُسجَّل **بالنتيجة نفسِها** بلا الحقل الجديد"
+      ],
+      "progress": "HANDLING_TYPES بُعدٌ متعامدٌ على STORAGE_TYPES (أصنافُ حرارةٍ لا مناولة)، والافتراضُ mixed = سلوكُ اليوم حرفًا. وcapacity.pallets يُحسب من palletsByBin وسيطًا لا استيرادًا. وhandlingNeedOf مشتقّةٌ من وحدة القيد لا حقلًا يُملأ ١٠٤٠ مرّة. والرفضُ يقلّد بلوك storageType حرفًا.",
+      "nextStep": "أُغلقت في ba6e6b4. وقفلُ الهجرة يجمع ١٤ نداءً ويقيس مرّتين بـdeepEqual — صفرُ فرق.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "ba6e6b4",
+        "closedOn": "2026-09-03",
+        "note": "٣٧٥٨ خضراء · صفرُ متجاوَز (نُزع skip من حارس الأدوار فاخضرّ) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · ونصوصُ الميزات مُفتَّشةٌ في dist."
+      }
+    },
+    {
+      "id": "JR-602",
+      "title": "رفُّ الطبليّة يقبل الطبليّات — تقويمُ معنًى مقلوب",
+      "milestone": "د٦",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ر‑١٣"
+      ],
+      "dependsOn": [
+        "JR-601"
+      ],
+      "nucleus": "src/services/locations/putawaySuggest.js — handlingNeedOf",
+      "guardTest": "src/services/lpn/putawayTask.test.js",
+      "touches": [
+        "src/services/locations/putawaySuggest.js",
+        "src/services/locations/putawaySuggest.test.js",
+        "src/services/lpn/putawayTask.js",
+        "src/services/lpn/putawayTask.test.js"
+      ],
+      "note": "★★★ قرارُ المالك ق‑هـ: «بالطبلية» تعني أنّ الرفَّ **يستقبل طبليّاتٍ كاملة** — مهما كان ما فوقها. فالمقياسُ يصير: أالمخزَّنُ وحدةُ مناولةٍ (LPN) بذاتها؟ لا: بأيّ وحدةٍ يُعدّ محتواها. ⚠️ وهذا يغيّر من يُقبل ومن يُرفض على الرفوف — فحارسُه يمرّ بطبليّةٍ حقيقيّةٍ لا بسطرٍ مصنوع.",
+      "acceptance": [
+        "★★★ طبليّةٌ حقيقيّةٌ (وحدةُ مناولةٍ محتواها كراتين) **تُقبل** على رفٍّ «بالطبلية» — وهي اليوم تُرفض",
+        "ومن يأتي بكرتونٍ مفردٍ بيده **يُرفض** عن رفّ الطبليّات بسببٍ مكتوب",
+        "ورفُّ «قطعة» يرفض الطبليّةَ الكاملة — فالتمييزُ يعمل في الاتّجاهين",
+        "★★ والحارسُ يمرّ بـ`openPutawayTask` بوحدةِ مناولةٍ واقعيّة **لا بسطرٍ يُبنى بيد** — فالنمطُ الذي أخفى العطبَ لا يُعاد",
+        "و«مختلط» يبقى يقبل الكلَّ، والفارغُ يمرّ — صفرُ أثرٍ على موقعٍ لم يُوسَم"
+      ],
+      "branch": "claude/code-6e9d47",
+      "progress": "handlingNeedOf اكتسبت إشارةً صريحةً asHandlingUnit تأتي من المستدعي — وopenPutawayTask يُعلنها في نداءَيه معًا (الاقتراح وحكمُ المسح) فلا يفترق المقترَحُ عن المقبول. والبضاعةُ السائبةُ لا تُعلن شيئًا فتُقاس بوحدة عدّها حرفًا كما كانت.",
+      "nextStep": "أُغلقت في 5e2c06b. والإشارةُ من المستدعي لا من البند لأنّ بندَ الطبليّة وبندَ الكرتون المفرد شكلُهما واحد — فالفرقُ في الحاوي لا في المحتوى.",
+      "evidence": {
+        "commit": "5e2c06b",
+        "closedOn": "2026-09-04",
+        "note": "الحارسُ نُقض فسقط برسالة «رفُّ الطبالي ردَّ طبليّةً كاملة — انقلبت المِصفاة» ثمّ اخضرّ. ٣٨٠٩ خضراء · بناءٌ ١٢٤ · تدقيقٌ نظيف."
+      }
+    },
+    {
+      "id": "JR-701",
+      "title": "إصلاحُ انحراف الأدوار — بالترتيب الصحيح لا بالاستبدال",
+      "milestone": "د٧",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ر‑٥"
+      ],
+      "dependsOn": [
+        "JR-001",
+        "JR-002"
+      ],
+      "nucleus": "src/services/lpn/lpnRoles.js — PORTAL_TO_FIELD",
+      "guardTest": "src/services/lpn/lpnRoles.test.js",
+      "touches": [
+        "src/services/lpn/lpnRoles.js",
+        "src/components/brandzo-erp/labor/MyTasks.jsx",
+        "src/components/brandzo-erp/locations/PickPlanScreen.jsx"
+      ],
+      "note": "★★★ واستبدالُ المجموعات المرتجلة بـuiGate وحدَه **أسوأُ من اليوم**: يفتح «مهامي» لمن يرفضه الخادم، فيتحوّل بابٌ مغلقٌ صادق إلى فشلٍ في منتصف الممرّ.",
+      "acceptance": [
+        "الثلاثةُ الغائبةُ تُضاف إلى `PORTAL_TO_FIELD` بأدوارها الميدانيّة الحقيقيّة — ولا يتغيّر شيءٌ لدورٍ معروف",
+        "ثمّ تُستبدل المجموعاتُ المرتجلة بـ`uiGate(role,op).allowed && !collectionWriteProblem(role,col)` — **السؤالان معًا**",
+        "★★ و«مهامي» تُغلَق على كتّاب `labor_tasks` (ق‑أ) — بابٌ مغلقٌ صادقٌ بدل فشلٍ بعد المشي إلى الرفّ",
+        "ويُنزع `skip` من حارس JR-002 فيخضرّ — فالدَّينُ يُغلق ببيّنة"
+      ],
+      "progress": "PORTAL_TO_FIELD استوعبت الثلاثةَ الغائبة ونُزع skip فاخضرّ الحارس. و«مهامي» أُغلقت على كتّاب labor_tasks (ق‑أ) فصار الرفضُ بابًا مغلقًا صادقًا بدل فشلٍ في منتصف الممرّ. والمجموعاتُ المرتجلة استُبدلت بالسؤالين معًا لا بـuiGate وحدَه.",
+      "nextStep": "أُغلقت في ba6e6b4. ولقطةُ التنقّل حُدّثت بسببها المكتوب.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "ba6e6b4",
+        "closedOn": "2026-09-03",
+        "note": "٣٧٥٨ خضراء · صفرُ متجاوَز (نُزع skip من حارس الأدوار فاخضرّ) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · ونصوصُ الميزات مُفتَّشةٌ في dist."
+      }
+    },
+    {
+      "id": "JR-801",
+      "title": "زرُّ «أطلق للميدان» — الجسرُ الذي بُني ولم يُوصَل",
+      "milestone": "د٨",
+      "owner": "Claude",
+      "state": "done",
+      "gaps": [
+        "ر‑٩"
+      ],
+      "dependsOn": [
+        "JR-701"
+      ],
+      "nucleus": "src/services/labor/laborTasksService.js — releaseDocumentTasks",
+      "touches": [
+        "src/components/brandzo-erp/documents/FieldReleasePanel.jsx",
+        "src/components/brandzo-erp/documents/DocumentEngine.jsx",
+        "src/components/brandzo-erp/labor/LaborDashboard.jsx"
+      ],
+      "note": "★ ويُعرض بعد ChainBar لا داخله: ذاك اشتقاقُ مستندٍ من مستند، وهذا إطلاقُ عمل — ومعنيان تحت عنوانٍ واحد يُربكان المشغّل.",
+      "acceptance": [
+        "**تجربةٌ جافّةٌ قبل الزرّ**: `generateTasks` تُعرض نتيجتُها — كم مهمّةً وبأيّ مناطقَ وما النواقصُ وما المُطلَقُ سلفًا",
+        "و`existing` تُمرَّر فإعادةُ الإطلاق **تُترك ولا تُدهس** لكلّ منطقة",
+        "★★ وحارسُ ظهور الزرّ `canReleaseTasks` لا `uiGate` — فالزرُّ الظاهرُ هو الزرُّ الذي ينجح",
+        "ونموذجُ المهمّة اليدويّ يرفض `putaway`/`pick` ويحيل إلى المستند — فلا تُصنع مهمّةٌ بلا بنود"
+      ],
+      "progress": "FieldReleasePanel بعد ChainBar لا داخله. وتجربةٌ جافّةٌ قبل الزرّ بنداء generateTasks نفسِه: كم مهمّةً وبأيّ مناطقَ وما النواقصُ وما أُطلق سلفًا. وexisting تُمرَّر فإعادةُ الإطلاق تُترك ولا تُدهس. وحارسُ الظهور canReleaseTasks لا uiGate.",
+      "nextStep": "أُغلقت في ba6e6b4. والمهمّةُ اليدويّةُ ترفض putaway/pick وتحيل إلى المستند.",
+      "branch": "claude/code-6e9d47",
+      "evidence": {
+        "commit": "ba6e6b4",
+        "closedOn": "2026-09-03",
+        "note": "٣٧٥٨ خضراء · صفرُ متجاوَز (نُزع skip من حارس الأدوار فاخضرّ) · لِنت ٠ · تدقيقٌ نظيف · بناءٌ ١٢٤ · ونصوصُ الميزات مُفتَّشةٌ في dist."
+      }
+    }
+  ]
+}

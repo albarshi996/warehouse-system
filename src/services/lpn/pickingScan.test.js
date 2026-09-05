@@ -12,9 +12,12 @@ import {
   itemVerdict,
   nextStage,
   palletVerdict,
+  pickBaseQty,
+  pickEntryVerdict,
   picksOfTask,
   pickVerdict,
   qtyVerdict,
+  stepQtyPanel,
   takeFromPallet,
 } from './pickingScan.js';
 
@@ -132,6 +135,8 @@ test('★★ الحكم الكامل يمرّ بالمراحل الأربع بت
   assert.deepEqual(good.pick, {
     seq: 1, bin: 'MAIN-A01-R01-B01', lpn: 'LPN-MAIN-20260827-000001',
     sku: 'WNW-001', batch: 'B2408', expiry: '2027-01-01', qty: 24,
+    // ‹JR-301ب› السحبةُ تخرج بوحدتها — وخطوةٌ بلا وحدةٍ رقمُها أساسٌ كما كان.
+    uom: '', factor: null, baseQty: 24,
   });
 
   assert.equal(pickVerdict(TASK, { bin: 'X-1' }, CTX).stage, 'BIN');
@@ -232,4 +237,124 @@ test('★★ سحبات المهمّة تُسطَّح للتكوين — وتُ�
   // والنسب يعبر فعلًا إلى الحمولة الخارجة.
   const pallet = buildIssuePallet(picks, { code: 'LPN-MAIN-20260827-000060', actor: 'سالم' }).pallet;
   assert.deepEqual(pallet.parentCodes, ['LPN-MAIN-20260827-000001', 'LPN-MAIN-20260827-000003']);
+});
+
+// ═══ ‹JR-301ب› وحدةُ الخطوة — من رقمٍ عارٍ إلى كمّيّةٍ لها معنى ═══
+
+/** خطوةٌ أعلنت وحدتَها ومعاملَها — كرتونٌ فيه اثنتا عشرة قطعة. */
+const CARTON_STEP = { ...STEP, uom: 'carton', factor: 12, baseUom: 'piece', required: 5 };
+
+test('★★★ الكمّيّة الأساس تُحسب من المعامل — «١ كرتون» اثنتا عشرة لا واحدة', () => {
+  assert.equal(pickBaseQty(CARTON_STEP, 1), 12, 'وهذا هو العطبُ بعينه: كان يُخصم ١');
+  assert.equal(pickBaseQty(CARTON_STEP, 2.5), 30);
+});
+
+test('★★★ خطوةٌ بلا وحدةٍ تعمل كما كانت حرفًا — الرقمُ أساسٌ ومعاملُه ١ ضمنًا', () => {
+  assert.equal(pickBaseQty(STEP, 24), 24, 'مهمّةٌ قديمة لا تتغيّر بقيمةٍ واحدة');
+  assert.equal(pickBaseQty({ uom: '', factor: null }, 7), 7);
+});
+
+test('★★★ وحدةٌ بلا معامل ⇒ null «لا أعرف» — ولا يُخترع رقم ولا يُكتب صفر', () => {
+  assert.equal(pickBaseQty({ uom: 'شوال' }, 3), null);
+  assert.equal(pickBaseQty({ uom: 'carton', factor: 0 }, 3), null, 'صفرٌ صامتٌ أخطر من الغياب');
+  assert.equal(pickBaseQty({ uom: 'carton', factor: -2 }, 3), null);
+});
+
+test('★★ لوحةُ الخانة تحكم أيَّ المسارَين — والحكمُ في الخدمة لا في JSX', () => {
+  const withUom = stepQtyPanel(CARTON_STEP);
+  assert.equal(withUom.mode, 'uom');
+  assert.equal(withUom.label, 'كرتون');
+  assert.ok(withUom.choices.some((o) => o.value === 'carton'), 'وحدةُ الخطوة تبقى في القائمة دائمًا');
+  assert.ok(withUom.choices.some((o) => o.value === 'piece'), 'ومعها ثوابتُ عائلتها');
+
+  // بلا وحدةٍ أصلًا ⇒ المسار (ب): يُعلن الوعاءَ ومحتواه.
+  assert.equal(stepQtyPanel(STEP).mode, 'pack');
+  assert.equal(stepQtyPanel(null).mode, 'pack');
+});
+
+test('★★ وحدةُ الأساس تُستنبط من عائلة الوحدة حين لا يختمها المستند', () => {
+  const p = stepQtyPanel({ uom: 'carton', factor: 12 });
+  assert.equal(p.baseUom, 'piece', 'أساسُ عائلة العدّ — تعريفُ المحرّك لا اختراعٌ هنا');
+  // ووحدةٌ لا يعرف المحرّكُ عائلتَها تبقى بلا أساس، وتُقال مجهولةَ المعامل.
+  const sack = stepQtyPanel({ uom: 'شوال' });
+  assert.equal(sack.baseUom, '');
+  assert.equal(sack.mode, 'uom', 'أعلنت وحدةً فلا يُعلَن فوقها وعاء');
+  assert.match(sack.choices[0].label, /معاملٌ غير معرّف/, 'الصمتُ يوحي بتحويلٍ معروفٍ وهو مجهول');
+});
+
+test('★★★ ما يُدخَل بوحدةٍ أخرى يُعاد بوحدة الخطوة — وإلّا قُورن بمسطرتين', () => {
+  // خطوةٌ بالقطعة والمحضّرُ يُدخل بالدستة: ٢ دستة = ٢٤ قطعة.
+  const pieceStep = { ...STEP, uom: 'piece', factor: 1, baseUom: 'piece' };
+  const r = pickEntryVerdict(pieceStep, { qty: 2, uom: 'dozen' });
+  assert.ok(r.ok, r.problem);
+  assert.equal(r.entry.qty, 24, 'بوحدة الخطوة — بها كُتب المطلوب');
+  assert.equal(r.entry.baseQty, 24);
+  assert.equal(r.entry.uom, 'piece');
+});
+
+test('★★ الوحدةُ الخارجةُ عن الخطوة تُردّ بالاسم — والكسرُ النازلُ يُردّ كذلك', () => {
+  assert.match(pickEntryVerdict(CARTON_STEP, { qty: 1, uom: 'kg' }).problem, /ليست من وحدات هذه الخطوة/);
+  // قطعةٌ واحدة من خطوةٍ بالكرتون ثلثُ عشرِ كرتونة — ولا يُسحب من الرفّ كسرُ كرتونة.
+  const frac = pickEntryVerdict(CARTON_STEP, { qty: 1, uom: 'piece' });
+  assert.ok(!frac.ok);
+  assert.match(frac.problem, /لا تقبل الكسور/);
+});
+
+test('بلا وحدةٍ مختارة يمرّ الرقمُ كما كُتب — سلوكُ اليوم حرفًا', () => {
+  const r = pickEntryVerdict(STEP, { qty: 24 });
+  assert.ok(r.ok);
+  assert.equal(r.entry.qty, 24);
+  assert.equal(r.entry.baseQty, 24);
+  assert.match(pickEntryVerdict(STEP, { qty: 0 }).problem, /أكبر من صفر/);
+});
+
+test('★★★ ⑦ المقارنةُ بوحدة الأساس على الجهتين — الحارسُ كان يقيس بمسطرتين', () => {
+  // على الطبلية ٦٠ قطعة، والخطوةُ بالكرتون: «٦ كراتين» اثنتان وسبعون قطعة.
+  const big = { ...CARTON_STEP, required: 99 };
+  const v = qtyVerdict(big, UNIT, 6);
+  assert.ok(!v.ok, 'كان يمرّ لأنّ ٦ < ٦٠');
+  assert.match(v.message, /على الطبلية 60/);
+  assert.match(v.message, /72/, 'وتقول كم يعني ما كتبه');
+  assert.ok(qtyVerdict(big, UNIT, 5).ok, 'وخمسةٌ (= ٦٠) تمرّ تمامًا');
+
+  // ومجهولُ المعامل يُقاس بخامه — حدٌّ أدنى لا حكمٌ كامل، ولا تحويلٌ مخترَع.
+  const blind = { ...STEP, uom: 'شوال', required: 99 };
+  assert.ok(qtyVerdict(blind, UNIT, 61).ok === false);
+  assert.ok(qtyVerdict(blind, UNIT, 59).ok);
+});
+
+test('★★★ السحبات تخرج بأساسها المحسوب — ولا تُكتب الكراتينُ قِطَعًا', () => {
+  const task = { ...TASK, steps: [CARTON_STEP, TASK.steps[1]] };
+  const t = applyPick(task, { seq: 1, qty: 2, lpn: 'LPN-MAIN-20260827-000001' });
+  const picks = picksOfTask(t);
+  assert.equal(picks[0].qty, 2);
+  assert.equal(picks[0].baseQty, 24, 'كان ٢ — والفارقُ اثنا عشر ضعفًا');
+  assert.equal(picks[0].uom, 'carton');
+  assert.equal(picks[0].uncertain, false);
+
+  const pallet = buildIssuePallet(picks, { code: 'LPN-MAIN-20260827-000070', actor: 'سالم' }).pallet;
+  assert.equal(pallet.lines[0].baseQty, 24);
+});
+
+test('★★★ المجهولُ يُعدي البندَ فيُوسم ولا يُخترع له مجموع', () => {
+  const blind = { ...CARTON_STEP, factor: null };
+  const t = applyPick({ ...TASK, steps: [blind] }, { seq: 1, qty: 3, lpn: 'LPN-MAIN-20260827-000001' });
+  const picks = picksOfTask(t);
+  assert.equal(picks[0].baseQty, null, 'null لا صفرٌ ولا ٣');
+  assert.equal(picks[0].uncertain, true);
+
+  // وبندُ الحمولة يرثه: نصفٌ معلومٌ ونصفٌ مجهولٌ مجموعُه مجهول.
+  const mixed = [
+    { lpn: 'LPN-MAIN-20260827-000001', sku: 'WNW-001', batch: 'B2408', uom: 'carton', factor: 12, qty: 2, baseQty: 24 },
+    { lpn: 'LPN-MAIN-20260827-000002', sku: 'WNW-001', batch: 'B2408', uom: 'carton', factor: 12, qty: 1, baseQty: null },
+  ];
+  const line = buildIssuePallet(mixed, { code: 'LPN-MAIN-20260827-000071', actor: 'سالم' }).pallet.lines[0];
+  assert.equal(line.baseQty, null, 'ولا يسقط إلى الكمّيّة الخام فيبدو محسوبًا');
+  assert.equal(line.qty, 3, 'والكمّيّة بوحدتها تبقى صادقة');
+});
+
+test('مستدعٍ لا يمرّر `baseQty` أصلًا يحصل على سلوكه حرفًا — الغيابُ غيرُ الـnull', () => {
+  const old = [{ lpn: 'LPN-MAIN-20260827-000001', sku: 'WNW-001', batch: 'B2408', qty: 7 }];
+  const line = buildIssuePallet(old, { code: 'LPN-MAIN-20260827-000072', actor: 'سالم' }).pallet.lines[0];
+  assert.equal(line.baseQty, 7);
 });

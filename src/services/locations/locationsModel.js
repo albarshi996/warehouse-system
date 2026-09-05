@@ -46,8 +46,41 @@ export const STORAGE_TYPES = {
 
 export const DEFAULT_STORAGE_TYPE = 'ambient';
 
-/** مقاييس السعة الأربعة — كلٌّ اختياريّ، والغائب «غير محدود». */
-export const CAPACITY_MEASURES = ['qty', 'cartons', 'weightKg', 'volumeM3'];
+/**
+ * ★★★ نوع المناولة — **بُعدٌ متعامدٌ على نوع التخزين لا توسعةٌ له.**
+ *
+ * `STORAGE_TYPES` أعلاه أصنافُ حرارةٍ ومآل (مبرَّدٌ · مجمَّدٌ · حجرٌ · تالف)،
+ * تجيب عن سؤال «أيّ رفٍّ **يصلح** لهذه البضاعة». وهذا يجيب عن سؤالٍ آخر
+ * تمامًا: «**كيف** تُناوَل فيها؟» — أبطبليّةٍ كاملةٍ تُنزلها الرافعة، أم
+ * بصناديقَ تُصفّ باليد، أم بقطعٍ تُلتقط واحدةً واحدة؟
+ *
+ * ولو حُشر المعنيان في قائمةٍ واحدةٍ لَاستحال التعبير عن «مجمَّدٌ يُخزَّن
+ * بالطبالي» — وهو أشيعُ ما في المستودع — لأنّ الحقل الواحد لا يحمل قيمتين.
+ * فالفصلُ هنا ليس ترفًا في التصنيف بل شرطُ أن يبقى كلا السؤالين مسؤولًا عنه.
+ *
+ * ★★★ و`mixed` هو الافتراض عمدًا: كلّ موقعٍ قائمٍ — والملصقاتُ مطبوعةٌ
+ * بالآلاف — يصير «مختلطًا»، والمختلطُ يقبل الجميع. فالهجرة **صفريّةُ الأثر**
+ * على بيانةٍ واحدة، والتمييزُ يدخل رفًّا رفًّا بقرار من قاس لا دفعةً على
+ * المستودع كلّه.
+ */
+export const HANDLING_TYPES = {
+  pallet: { id: 'pallet', labelAr: 'بالطبلية', hint: 'حمولةٌ كاملةٌ تدخل وتخرج بالرافعة — لا يُلتقط منها بالقطعة.' },
+  carton: { id: 'carton', labelAr: 'بالصندوق', hint: 'صناديقُ تُصفّ وتُرفع باليد — بين الطبلية والقطعة.' },
+  piece: { id: 'piece', labelAr: 'بالقطعة', hint: 'واجهةُ التقاطٍ تُسحب منها القطعةُ قطعةً — لا تُركن فيها طبليّةٌ كاملة.' },
+  mixed: { id: 'mixed', labelAr: 'مختلط', hint: 'يقبل أيّ مناولة — وهو حالُ كلّ موقعٍ لم يُقيَّد.' },
+};
+
+/** الافتراض: «أيّ شيء». والتقييد قرارٌ يُتّخذ لا حالةٌ تُفترض. */
+export const DEFAULT_HANDLING = 'mixed';
+
+/**
+ * مقاييس السعة الخمسة — كلٌّ اختياريّ، والغائب «غير محدود».
+ *
+ * و`pallets` مقياسٌ مختلفُ الطبيعة عن أخواته: تلك تعدّ **ما في** الموقع
+ * (قطعًا وكراتينَ وكيلوغرامات) وهذا يعدّ **مواضعَ** تقف فيها الحمولة. ورفٌّ
+ * يسع ألفَ قطعةٍ قد لا يسع إلّا طبليّتين — والرقمان لا يُشتقّ أحدهما من الآخر.
+ */
+export const CAPACITY_MEASURES = ['qty', 'cartons', 'weightKg', 'volumeM3', 'pallets'];
 
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 const str = (v) => String(v ?? '').trim();
@@ -82,6 +115,9 @@ export function shapeLocation(input) {
     nameEn: str(input?.nameEn),
     status: LOCATION_STATUSES[input?.status] ? input.status : DEFAULT_STATUS,
     storageType: STORAGE_TYPES[input?.storageType] ? input.storageType : DEFAULT_STORAGE_TYPE,
+    // ★★★ المجهولُ يسقط إلى «مختلط» لا إلى تقييد: موقعٌ قديمٌ بلا حقلٍ أصلًا
+    // يُكتب «مختلطًا» فيبقى قابلًا لكلّ شيءٍ كما كان بالضبط.
+    handling: HANDLING_TYPES[input?.handling] ? input.handling : DEFAULT_HANDLING,
     capacity,
     allowedItems: (input?.allowedItems || []).map(str).filter(Boolean),
     allowedFamilies: (input?.allowedFamilies || []).map(str).filter(Boolean),
@@ -118,6 +154,7 @@ export function locationProblems(input) {
   if (codeProblem) out.push(codeProblem);
   if (input?.status && !LOCATION_STATUSES[input.status]) out.push(`حالة غير معروفة: «${input.status}»`);
   if (input?.storageType && !STORAGE_TYPES[input.storageType]) out.push(`نوع تخزين غير معروف: «${input.storageType}»`);
+  if (input?.handling && !HANDLING_TYPES[input.handling]) out.push(`نوع مناولة غير معروف: «${input.handling}»`);
   for (const m of CAPACITY_MEASURES) {
     if (input?.capacity?.[m] !== undefined && num(input.capacity[m]) < 0) out.push(`سعة «${m}» لا تكون سالبة.`);
   }
@@ -125,12 +162,34 @@ export function locationProblems(input) {
 }
 
 /**
+ * نوع المناولة **المعلَن** لموقع — و«مختلط» ليس إعلانًا بل رفعٌ للقيد.
+ *
+ * فالفارغُ والمجهولُ والمختلطُ سواءٌ هنا: ثلاثتُها تعني «أيّ شيء»، وتُعاد
+ * فراغًا كي يقرأ كلُّ مستدعٍ قاعدةً واحدة: **الفارغُ يمرّ**.
+ */
+export function declaredHandling(location) {
+  const h = String(location?.handling ?? '').trim().toLowerCase();
+  return h && h !== DEFAULT_HANDLING && HANDLING_TYPES[h] ? h : '';
+}
+
+/** تسمية نوع المناولة للعرض — والمجهول يُعرض كما كُتب لا كـ«غير معروف». */
+export function handlingLabel(handling) {
+  const h = String(handling ?? '').trim().toLowerCase();
+  return HANDLING_TYPES[h]?.labelAr || String(handling ?? '').trim();
+}
+
+/**
  * حكم استقبال الموقع لبضاعة.
  *
+ * @param {object} location
+ * @param {number} usedQty     الكمّيّة المشغولة اليوم
+ * @param {number|null} [usedPallets] عددُ الطبالي الواقفة، و`null` تعني **لم
+ *        يُمرَّر** لا «صفر»: مستدعٍ لا يعرف الطبالي لا يُحاسَب على سعتها،
+ *        فالنداءُ ثنائيُّ الوسائط يبقى كما كان حرفًا.
  * @returns {{ok:boolean, reason:string}} والسبب مكتوبٌ دائمًا عند الرفض —
  *          «لا يُقترح» بلا سببٍ شكوى لا معلومة.
  */
-export function canReceive(location, usedQty = 0) {
+export function canReceive(location, usedQty = 0, usedPallets = null) {
   if (!location) return { ok: false, reason: 'الموقع غير معرَّف في سيّد المواقع.' };
   const status = LOCATION_STATUSES[location.status] || LOCATION_STATUSES[DEFAULT_STATUS];
   if (!status.accepts) return { ok: false, reason: `الموقع ${status.labelAr} — ${status.hint}` };
@@ -139,6 +198,13 @@ export function canReceive(location, usedQty = 0) {
   if (cap > 0 && num(usedQty) >= cap) {
     return { ok: false, reason: `الموقع بلغ سعته (${cap}) — لا مكان لبضاعةٍ جديدة.` };
   }
+
+  // ★★ ونفسُ قاعدة السقف حرفًا على مواضع الطبالي: صفرٌ أو غيابٌ ⇒ **بلا سقف**
+  // لا «ممتلئ». ولا يُحسب امتلاءٌ من جهلٍ — فالغيابُ عن النداء يُمرّ لا يُدين.
+  const capPallets = num(location.capacity?.pallets);
+  if (capPallets > 0 && usedPallets !== null && num(usedPallets) >= capPallets) {
+    return { ok: false, reason: `الموقع بلغ سعته من الطبالي (${capPallets}) — لا موضعَ لطبليّةٍ أخرى.` };
+  }
   return { ok: true, reason: '' };
 }
 
@@ -146,12 +212,22 @@ export function canReceive(location, usedQty = 0) {
  * الإشغال: المستهلك والمتبقّي والنسبة لكلّ مقياس.
  * `remaining === null` تعني **غير محدودة** لا صفرًا — والفرق بينهما هو الفرق
  * بين «خزِّن هنا» و«ممنوع».
+ *
+ * @param {object} location
+ * @param {Array}  balances   الأرصدة (تُقرأ منها كمّيّةُ الإشغال)
+ * @param {Map}    [pallets]  فهرس «الموقع ← طباليه» — انظر `palletsAt` أدناه.
+ *                            غيابُه يترك حقولَ الطبالي `null` ولا يمسّ حقلًا
+ *                            قائمًا، فالنداءُ ثنائيُّ الوسائط كما كان حرفًا.
  */
-export function occupancyOf(location, balances) {
+export function occupancyOf(location, balances, pallets = null) {
   const code = normalizeLocationCode(location?.code);
   const mine = (balances || []).filter((b) => balanceLocationCode(b) === code);
   const usedQty = mine.reduce((s, b) => s + num(b.qty), 0);
   const cap = num(location?.capacity?.qty);
+
+  const usedPallets = palletsAt(pallets, code);
+  const capPallets = num(location?.capacity?.pallets);
+  const knows = usedPallets !== null; // مرّر المستدعي الفهرسَ فصار للعدد معنًى
 
   return {
     code,
@@ -162,7 +238,29 @@ export function occupancyOf(location, balances) {
     pct: cap > 0 ? Math.min(100, Math.round((usedQty / cap) * 100)) : null,
     batches: new Set(mine.map((b) => str(b.batch) || 'NOBATCH')).size,
     items: new Set(mine.map((b) => str(b.sku) || str(b.barcode)).filter(Boolean)).size,
+    // ── مواضع الطبالي — تُضاف ولا تُبدّل ما فوقها ──
+    usedPallets,
+    capacityPallets: capPallets > 0 ? capPallets : null,
+    remainingPallets: capPallets > 0 && knows ? Math.max(0, capPallets - usedPallets) : null,
+    palletPct: capPallets > 0 && knows ? Math.min(100, Math.round((usedPallets / capPallets) * 100)) : null,
   };
+}
+
+/**
+ * عددُ الطبالي الواقفة في موقع، من فهرس «الموقع ← طباليه» الذي تبنيه طبقةُ
+ * الطبالي (`palletsByBin`). و`null` تعني **لم يُمرَّر الفهرس** لا «صفر طبالٍ»:
+ * فلا يُحسب امتلاءٌ من جهل — وهي القاعدة نفسها التي تحكم السعة الغائبة.
+ *
+ * ★★★ ولماذا وسيطٌ يُمرَّر لا وحدةٌ تُستورَد؟ الاتّجاه المشروع واحد: الطبقةُ
+ * الجديدة تقرأ القائم، والقائمُ لا يعرفها. ولو استورد سيّدُ المواقع — وهو من
+ * أقدم ما في الشجرة — طبقةً أحدثَ منه، لَصار عطبٌ في الأحدث يُسقط الأقدم.
+ * والفهرسُ يُبنى مرّةً عند المستدعي ويُمرَّر لكلّ المواقع، فهو أرخصُ أيضًا.
+ */
+function palletsAt(pallets, code) {
+  if (!pallets || typeof pallets.get !== 'function') return null;
+  const here = pallets.get(code);
+  if (here === undefined || here === null) return 0; // الفهرسُ معلومٌ وهذا الرفّ خالٍ
+  return Array.isArray(here) ? here.length : num(here);
 }
 
 /**

@@ -10,6 +10,18 @@ import {
   schemeProblems,
   toLocationInputs,
 } from '../../../services/locations/locationScheme.js';
+import { binPrefixOf, segmentLabelsOf } from '../../../services/locations/binAnatomy.js';
+import {
+  countForTemplate,
+  paramDefaults,
+  resolveLevels,
+  templateById,
+} from '../../../services/locations/binTemplate.js';
+import { saveWarehouseNumbering } from '../../../services/locations/warehouseService.js';
+import BIN_SCHEMES from '../../../data/warehouse-schemes.json';
+
+const TEMPLATES = BIN_SCHEMES?.templates || [];
+const ASSIGNMENTS = BIN_SCHEMES?.assignments || [];
 
 /**
  * بانية مواقع التخزين — «نظام إضافة أماكن أوتوماتيك» (طلب المالك 2026-08-24).
@@ -56,6 +68,29 @@ const initialLevels = () =>
     values: m.sample.values || '',
   }));
 
+/**
+ * مخطّطُ البذرة ⟵ حالةُ حقول هذه الشاشة.
+ *
+ * البذرةُ تحفظ القيمَ مصفوفةً (`['A','B',…]`) والحقلُ يقرؤها نصًّا مفصولًا
+ * بمسافات — والتحويلُ هنا لا في البذرة، فالبذرةُ بنيةُ بياناتٍ لا شكلُ إدخال.
+ */
+function levelsFromResolved(resolved) {
+  const byKey = new Map((resolved || []).map((l) => [l.key, l]));
+  return LEVEL_META.map((m) => {
+    const l = byKey.get(m.key);
+    return {
+      key: m.key,
+      label: m.label,
+      enabled: l ? l.enabled !== false : false,
+      prefix: l?.prefix || '',
+      from: l?.from ?? 1,
+      to: l?.to ?? 0,
+      pad: l?.pad ?? 2,
+      values: (l?.values || []).join(' '),
+    };
+  });
+}
+
 export default function LocationBuilder() {
   const [me, setMe] = useState(null);
   const [ready, setReady] = useState(false);
@@ -63,6 +98,8 @@ export default function LocationBuilder() {
   const [existing, setExisting] = useState([]);
   const [warehouse, setWarehouse] = useState('');
   const [levels, setLevels] = useState(initialLevels);
+  const [templateId, setTemplateId] = useState('');
+  const [params, setParams] = useState({});
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
@@ -83,6 +120,29 @@ export default function LocationBuilder() {
     return () => { a?.(); b?.(); };
   }, [me]);
 
+  /**
+   * ★★★ `warehouse` هنا **بادئةُ الملصقات** لا كودُ المستودع في البوّابة.
+   *
+   * كانت الشاشةُ تولّد بكود المستودع، فمستودعُ الرحبة `WH001` كان يُنتج
+   * `WH001-A-L-01-01` — كودًا **لا وجودَ له على أيٍّ من ٢٦٠٠ ملصقٍ مطبوع**.
+   * والوثيقةُ تحمل `binPrefix` منذ 2026-09-02، فهنا يُطابَق بها.
+   */
+  const whDoc = useMemo(() => {
+    const p = String(warehouse || '').trim().toUpperCase();
+    return p ? (warehouses || []).find((w) => binPrefixOf(w) === p) || null : null;
+  }, [warehouses, warehouse]);
+
+  const template = useMemo(() => templateById(TEMPLATES, templateId), [templateId]);
+
+  /**
+   * تسمياتُ المقاطع — القالبُ المختارُ يتقدّم (فهو ما يصفه المستخدم الآن)،
+   * ثمّ المحفوظُ على المستودع، ثمّ الافتراضيّ.
+   */
+  const labels = useMemo(
+    () => ({ ...segmentLabelsOf(whDoc), ...(template?.segmentLabels || {}) }),
+    [whDoc, template]
+  );
+
   const scheme = useMemo(() => ({ warehouse, levels }), [warehouse, levels]);
   const problems = useMemo(() => schemeProblems(scheme), [scheme]);
   const total = useMemo(() => countScheme(scheme), [scheme]);
@@ -100,6 +160,35 @@ export default function LocationBuilder() {
     return expandScheme(scheme).codes.filter((c) => !already.has(c)).length;
   }, [scheme, preview, already]);
 
+  /** يملأ الحقولَ من قالبٍ ووسائطه — فلا يصف أحدٌ أربعةَ عشرَ حقلًا بيده. */
+  function applyTemplate(id, nextParams) {
+    const t = templateById(TEMPLATES, id);
+    if (!t) return;
+    const p = nextParams || paramDefaults(t);
+    setTemplateId(id);
+    setParams(p);
+    setLevels(levelsFromResolved(resolveLevels(t, p)));
+    setResult(null);
+    setError('');
+  }
+
+  /** وسيطٌ واحدٌ يتغيّر — فتُعاد المستوياتُ فورًا وتُحدَّث المعاينة. */
+  function patchParam(key, value) {
+    const p = { ...params, [key]: value };
+    setParams(p);
+    if (template) setLevels(levelsFromResolved(resolveLevels(template, p)));
+    setResult(null);
+  }
+
+  /**
+   * إسنادٌ معتمدٌ بضغطةٍ واحدة — البادئةُ والقالبُ والوسائطُ معًا.
+   * (هذه ملصقاتُ المالك المطبوعة، مقيسةً بها في `generate-bin-schemes.mjs`.)
+   */
+  function applyAssignment(a) {
+    setWarehouse(a.binPrefix);
+    applyTemplate(a.templateId, a.params);
+  }
+
   function patch(i, p) {
     setLevels((ls) => ls.map((l, j) => (j === i ? { ...l, ...p } : l)));
   }
@@ -111,10 +200,38 @@ export default function LocationBuilder() {
       const { codes } = expandScheme(scheme);
       const newCodes = codes.filter((c) => !already.has(c));
       const out = await saveLocationsBulk(toLocationInputs(newCodes, { warehouse }), me);
+
+      // ★★ ويُحفظ الترقيمُ على المستودع في الحركة نفسِها — فيصير له قالبٌ
+      // دائم: تعرفه شاشةُ المستودعات فتحسب ناقصَه، ويعرفه العاملُ فيقرأ
+      // «الممرّ · الجهة · الرفّ · الخانة» بدل رموزٍ صمّاء. وفشلُ هذا الحفظ
+      // **لا يُلغي المواقع المكتوبة** — يُعلَن ولا يُبتلع.
+      let numberingWarning = '';
+      if (whDoc?.id) {
+        try {
+          await saveWarehouseNumbering(
+            whDoc.id,
+            {
+              binPrefix: warehouse,
+              scheme,
+              segmentLabels: template?.segmentLabels || whDoc.segmentLabels || null,
+              valueLabels: template?.valueLabels || whDoc.valueLabels || null,
+              templateId: templateId || whDoc.templateId || '',
+              templateParams: params,
+            },
+            me
+          );
+        } catch (err) {
+          numberingWarning = 'المواقع حُفظت، ولم يُحفظ القالبُ على المستودع: ' + (err?.message || 'سببٌ غير معروف');
+        }
+      } else {
+        numberingWarning = 'المواقع حُفظت — ولا مستودعَ في البوّابة بهذه البادئة، فلم يُحفظ القالب.';
+      }
+
       setResult({
         saved: out?.saved ?? newCodes.length,
         duplicates: out?.duplicates || 0,
         skipped: codes.length - newCodes.length,
+        warning: numberingWarning,
       });
     } catch (err) {
       setError(err?.message || 'تعذّر الحفظ.');
@@ -141,13 +258,89 @@ export default function LocationBuilder() {
             className="w-full bg-surface border border-line rounded-lg text-ink text-sm px-2.5 py-2 font-mono focus:outline-none focus:border-accent/50"
           />
           <datalist id="wh-codes">
-            {warehouses.map((w) => <option key={w.code || w.id} value={String(w.code || w.id).toUpperCase()}>{w.nameAr || ''}</option>)}
+            {warehouses.map((w) => <option key={w.code || w.id} value={String(w.code || w.id).toUpperCase()}>{w.nameAr || w.name || ''}</option>)}
           </datalist>
         </label>
         <div className="text-xs text-muted leading-relaxed max-w-md">
-          كودُ المستودع أوّلُ مقاطع كلّ موقع. وإن أردتَ المدينة فيه فادمجها فيه
-          (<span className="font-mono">BENRHB</span>) — فالمقطع لا يقبل شرطةً داخله.
+          {whDoc ? (
+            <span className="text-ink-2">
+              بادئةُ <strong className="text-ink">{whDoc.nameAr || whDoc.name || whDoc.code}</strong>{' '}
+              (<span className="font-mono">{whDoc.code}</span>) — وكلُّ خانةٍ فيه تبدأ بها.
+            </span>
+          ) : (
+            <>
+              هذه <strong>بادئةُ الملصقات</strong> لا كودَ المستودع: الملصقُ المطبوع
+              يبدأ بها، فيجب أن تطابقه حرفًا بحرف. وهي أوّلُ مقاطع كلّ خانة، ولا
+              تقبل شرطةً داخلها.
+            </>
+          )}
         </div>
+      </section>
+
+      {/* ═══ الطبقة ١.٥ — القالب: ترميزٌ يُختار ومقاسٌ يُملأ ═══ */}
+      <section className="o_ds o_ds_card o_ds_pad space-y-3">
+        <div className="flex items-center gap-2">
+          <Icon name="checkCircle" size={16} className="text-accent" />
+          <h3 className="font-bold text-ink text-sm">قالب الترقيم</h3>
+          <span className="text-[11px] text-muted">اختر الترميزَ مرّةً، ثمّ اكتب المقاسَ أرقامًا</span>
+        </div>
+
+        {ASSIGNMENTS.length > 0 && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-[11px] text-muted">إسنادٌ معتمدٌ بضغطة:</span>
+            {ASSIGNMENTS.map((a) => (
+              <button key={a.binPrefix} type="button" onClick={() => applyAssignment(a)} className="btn-secondary text-xs">
+                {a.nameAr} · <span className="font-mono">{a.binPrefix}</span> · {num(a.expectedCount)} خانة
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          {TEMPLATES.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => applyTemplate(t.id)}
+              className={templateId === t.id ? 'btn-primary text-xs' : 'btn-secondary text-xs'}
+            >
+              {t.nameAr}
+            </button>
+          ))}
+        </div>
+
+        {template && (
+          <>
+            <p className="text-[11px] text-ink-2 leading-relaxed">
+              {template.descriptionAr}
+              {template.sampleCode && (
+                <>
+                  {' '}مثال:{' '}
+                  <span className="font-mono" style={{ direction: 'ltr', display: 'inline-block' }}>{template.sampleCode}</span>
+                </>
+              )}
+            </p>
+            <div className="flex flex-wrap gap-3 items-start">
+              {(template.params || []).map((p) => (
+                <label key={p.key} className="block">
+                  <span className="block text-[11px] font-bold text-ink-2 mb-1">{p.labelAr}</span>
+                  <input
+                    type="number"
+                    min={p.min}
+                    max={p.max}
+                    value={params[p.key] ?? p.default}
+                    onChange={(e) => patchParam(p.key, e.target.value)}
+                    className={`${IN} w-28`}
+                  />
+                  <span className="block text-[10px] text-muted mt-0.5">{p.hintAr || `${p.min}–${p.max}`}</span>
+                </label>
+              ))}
+              <div className="self-center pt-4">
+                <Stat label="يُنتج" value={num(countForTemplate(template, { binPrefix: warehouse || 'X', params }))} />
+              </div>
+            </div>
+          </>
+        )}
       </section>
 
       {/* ═══ الطبقة ٢ — المستويات ═══ */}
@@ -162,7 +355,7 @@ export default function LocationBuilder() {
             <div key={l.key} className="p-3 flex flex-wrap items-center gap-2.5">
               <label className="flex items-center gap-2 min-w-[150px]">
                 <input type="checkbox" checked={l.enabled} onChange={(e) => patch(i, { enabled: e.target.checked })} />
-                <span className="text-sm font-bold text-ink-2">{LEVEL_META[i].label}</span>
+                <span className="text-sm font-bold text-ink-2">{labels[l.key] || LEVEL_META[i].label}</span>
               </label>
               <span className="text-[10px] text-muted w-24">{LEVEL_META[i].hint}</span>
               <input
@@ -231,6 +424,7 @@ export default function LocationBuilder() {
             حُفظ {num(result.saved)} موقعًا
             {result.skipped ? ` · تُخطّي ${num(result.skipped)} مسجّلًا سلفًا` : ''}
             {result.duplicates ? ` · ${num(result.duplicates)} مكرّرًا في الدفعة` : ''}
+            {result.warning ? ` — ⚠️ ${result.warning}` : ' · وحُفظ القالبُ على المستودع'}
           </span>
         </div>
       )}

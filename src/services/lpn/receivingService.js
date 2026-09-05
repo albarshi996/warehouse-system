@@ -25,7 +25,7 @@ import { auth } from '../../config/firebase.js';
 import { openSession, closeSession, abandonSession, applyAccepted, attachPallet, sessionCloseProblem } from './receivingSession.js';
 import { scanVerdict, buildRejection } from './receivingScan.js';
 import { planDecision } from './governanceQueue.js';
-import { countableDrafts, grnProblem, receivedByLine } from './grnBridge.js';
+import { closeTargetOf, countableDrafts, grnLineExtras, grnProblem, receivedByLine } from './grnBridge.js';
 import { createNextInChain, getDocument } from '../documents/documentsService.js';
 import { addReading } from './lpnContents.js';
 import { createHandlingUnit, reserveLpnCode, appendUnitEvent, flagUnit } from './lpnService.js';
@@ -310,7 +310,20 @@ export async function createGrnFromSession(sessionId, { profile } = {}) {
   const source = await getDocument(live.order.id);
   if (!source) throw new Error('أمر الشراء المصدر غير موجود — رُبّما حُذف أو تغيّر معرّفه.');
 
-  const child = await createNextInChain(source, profile, 'GRN', { requestedByLine: byLine });
+  // ‹JR-201ب› الكمّيّةُ تعبر بـ`requestedByLine` والتتبّعُ يعبر معها: الدفعةُ
+  // والصلاحيةُ كتبهما موظّف الاستلام على الطبلية، وأمرُ الشراء لا يعرفهما —
+  // فبدون هذا التمرير تولد المذكّرة بخانةٍ فارغة، ويبقى `balances.expiry`
+  // فارغًا، **وتعمى FEFO عند التحضير** فيُخرَج الجديد ويُترك القديم حتّى يتلف.
+  // ⚠️ والمختلَفُ عليه بين طبليّتين لا يخرج من `grnLineExtras` أصلًا (ق‑ج):
+  // فراغٌ معلومٌ أهونُ من تاريخٍ لم يكتبه أحد على نصف الكمّيّة.
+  // ★★★ النوعُ من المصدر لا حرفًا مكتوبًا: أمرُ الشراء يُغلَق بـ`GRN`
+  // **ومستندُ النقل بـ`TRC`**. وكتابةُ `'GRN'` هنا كانت ستشتقّ مذكّرةَ
+  // استلامِ مشترياتٍ من نقلٍ داخليّ — مستندٌ خاطئٌ في سلسلةٍ خاطئة.
+  const target = closeTargetOf(live);
+  const child = await createNextInChain(source, profile, target, {
+    requestedByLine: byLine,
+    lineExtrasBySourceLine: grnLineExtras(live),
+  });
   const docId = child?.id ?? child?.docId ?? '';
   const number = child?.number ?? '';
 
@@ -328,7 +341,7 @@ export async function createGrnFromSession(sessionId, { profile } = {}) {
         type: 'CREATED',
         actor: profile?.name ?? profile?.email ?? 'النظام',
         at: nowIso(),
-        doc: { type: 'GRN', id: docId, number },
+        doc: { type: target, id: docId, number },
         details: { role: 'grn-from-session', sessionId },
       }, { id: `GRN__${docId}` });
     } catch {

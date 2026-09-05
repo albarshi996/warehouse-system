@@ -95,11 +95,17 @@ test('البناء: فجوةٌ في الوسط تُرفض — الترتيب ه�
   );
 });
 
-test('المختصر الذي يراه العامل: MAIN-A01-R01-B09-LF-P01 ⟵ R01-09-F', () => {
-  assert.equal(shortLabelOf(FULL), 'R01-09-F');
-  assert.equal(shortLabelOf('MAIN-A01-R01-B09'), 'R01-09');
-  assert.equal(shortLabelOf('MAIN-A01'), 'A01', 'بلا رفٍّ تُعرض المنطقة');
-  assert.equal(shortLabelOf('MAIN-A01-R01-B9-L2'), 'R01-9-2', 'تُسقط بادئةُ حرفٍ واحدٍ فقط');
+test('★★★ ما يراه العامل هو الكودُ كاملًا — لا اسمان لشيءٍ واحد', () => {
+  // الاختصارُ تقاعد 2026-09-02: كان يُسقط الممرّ، فتنهار ٣٦٠٠ خانةٍ معتمدةٍ إلى
+  // مئةِ تسمية. والقياسُ الكاملُ في binSeed.test.js؛ وهنا القاعدةُ نفسُها.
+  assert.equal(shortLabelOf(FULL), FULL);
+  assert.equal(shortLabelOf('MAIN-A01'), 'MAIN-A01');
+  assert.equal(shortLabelOf(' main-a01-r01 '), 'MAIN-A01-R01', 'ويُطبَّع كما يُطبَّع الكود');
+  assert.notEqual(
+    shortLabelOf('TR-A-R-01-01'),
+    shortLabelOf('TR-B-R-01-01'),
+    'ممرّان مختلفان لا يتقاسمان اسمًا'
+  );
 });
 
 test('الشجرة من الكود نفسه: الأب والسليل', () => {

@@ -19,6 +19,7 @@
 import { normalizeLocationCode } from '../locations/locationCode.js';
 import { pickPlan } from '../locations/pickPlan.js';
 import { canDeriveFrom } from '../documents/states.js';
+import { normalizeUom } from '../items/uomModel.js';
 
 /** حالات مهمّة التحضير. */
 export const PICK_TASK_STATES = Object.freeze({
@@ -52,6 +53,132 @@ export function taskOpenProblem(doc, plan) {
 }
 
 /**
+ * ★★★ هويّةُ مهمّة التحضير — معرّفٌ حتميٌّ يُشتقّ من المستند الآمر.
+ *
+ * ═══ العطب الذي تسدّه ═══
+ * كانت المهمّة تُكتب بمعرّفٍ عشوائيّ ولا مفتاحَ تفرّدٍ لها. فضغطتان على الزرّ
+ * — أو ضغطةٌ فشبكةٌ بطيئةٌ فضغطةٌ ثانية — تكتبان **مهمّتين على أمرٍ واحد**:
+ * مُحضّران يمشيان إلى الرفّ نفسِه للبضاعة نفسِها، ويسحب كلٌّ منهما ما سحبه
+ * الآخر. والفارقُ لا يظهر إلّا في جرد الشهر القادم، حين لا يبقى من يتذكّر.
+ *
+ * والمعرّفُ الحتميّ يجعل التفرّد **هويّةً في قاعدة البيانات لا فحصًا يسبقها**
+ * — وهو مقصدُ `taskFactory.taskKey` نفسُه، ومقصدُ `barcodes/{value}` حيث
+ * المعرّفُ هو القيمة.
+ *
+ * ★★ ولا يُرفع الحرفُ إلى الكبير هنا (بخلاف مفاتيح الأرصدة): معرّفات Firestore
+ * حسّاسةٌ للحالة، ورفعُها كان سيجعل مستندَي `aBc` و`abc` مهمّةً واحدة.
+ *
+ * @returns {string} `PICK__{docId}` — و`''` لمستندٍ بلا معرّف، كي لا تجتمع
+ *   مهامُّ المستندات المجهولة كلُّها في مستندٍ واحدٍ اسمُه `PICK__`.
+ */
+export function pickTaskId(doc) {
+  // ما يكسر معرّف مستند Firestore يُبدَّل — تطبيعُ `eventId` نفسُه في الخدمة.
+  const id = String(doc?.id ?? '').trim().replace(/[/.#$[\]\s]/g, '_');
+  return id ? `PICK__${id}` : '';
+}
+
+/**
+ * ★★★ سببُ رفض مهمّةٍ ثانيةٍ على أمرٍ له مهمّة — أو `''` إن لم يكن له.
+ *
+ * ولماذا يُرفض حتّى المنفَّذُ والملغى؟ لأنّ قاعدة أمان `picking_tasks` تُجيز
+ * التحديث ما دام المصدرُ والمستودعُ والفاتحُ بلا تغيير — فكتابةٌ ثانيةٌ على
+ * المعرّف الحتميّ نفسِه **تمرّ وتمحو `steps`**: أي تقدُّمَ مُحضّرٍ يعمل الآن،
+ * أو سجلَّ سحبٍ وقع فعلًا وبُنيت عليه طبليةُ صرفٍ وشحنةٌ خرجت. فحتميّةُ
+ * المعرّف وحدَها لا تكفي — يلزم فحصُ وجودٍ **داخل معاملة** يردّ بهذا السبب.
+ *
+ * والسببُ **يسمّي القائمة ومن بيده**: «مهمّةٌ مفتوحة» بلا اسمٍ تجعل المشرف
+ * يفتح ثانيةً ظنًّا أنّ الأولى ضاعت.
+ *
+ * ⚠️ وثمنُه معلَنٌ لا مخفيّ: أمرٌ أُلغيت مهمّتُه أو أُقفلت لا تُفتح له ثانيةٌ
+ * من هذا الباب. إعادةُ الفتح قرارٌ له بابُه (استئنافُ القائمة، أو معرّفٌ
+ * بمحاولةٍ ثانية) — ولا تُشتقّ صمتًا من دهسِ سجلٍّ قائم.
+ */
+export function pickTaskDuplicateProblem(existing, doc) {
+  if (!existing) return '';
+  const number = String(
+    existing?.source?.number || existing?.source?.id || doc?.number || doc?.id || '؟'
+  ).trim();
+  if (['OPEN', 'IN_PROGRESS'].includes(existing?.state)) {
+    const who = String(existing?.assignee ?? '').trim();
+    const hand = who ? ` وهي بيد «${who}»` : '';
+    return `على الأمر ${number} مهمّةُ تحضيرٍ مفتوحةٌ سلفًا${hand} — افتحها ولا تفتح ثانية؛ فمهمّتان على أمرٍ واحدٍ تعنيان محضّرَين يمشيان إلى الرفّ نفسِه.`;
+  }
+  return `على الأمر ${number} مهمّةُ تحضيرٍ «${PICK_TASK_STATES[existing?.state] ?? '؟'}» سلفًا — لا تُفتح ثانيةٌ فوقها، فكتابتُها تمحو ما سُحب.`;
+}
+
+/**
+ * ★★★ وحدةُ الخطوة ومعاملُها — «الكمّيّة بلا وحدةٍ رقمٌ بلا معنى».
+ *
+ * ═══ العطب الذي تسدّه ═══
+ * كانت الخطوة تحمل رقمًا عاريًا: `required` وحدَه بلا ما يقول **ماذا يُعدّ**.
+ * فمن وقف أمام الرفّ وسحب كرتونًا وكتب «١» خصم النظامُ قطعةً واحدة، والفارقُ
+ * اثنا عشر ضعفًا **لا يظهر إلّا في جرد الشهر القادم** — حين لا يبقى من يتذكّر
+ * أيّ سحبةٍ كذبت. فالخطوة تحمل وحدتَها ومعاملَها معها، ومنهما تُحسب الكمّيّة
+ * الأساس **حسابًا** لا افتراضًا.
+ *
+ * ═══ ثلاثةُ مصادرَ بترتيب الأخصّ فالأعمّ ═══
+ *   ① خطوةُ المسار نفسُها (`pickPlan.path`) — أخصُّها: تعرف الرفَّ والتشغيلة.
+ *   ② صفُّ الرصيد الذي خُصّص منه — يعرف ما على هذا الرفّ بعينه.
+ *   ③ سطرُ المستند الآمر — ووحدتُه هي التي كُتب بها `required` أصلًا، إذ
+ *      `pickPlan` يوزّع `qtyRequested` على الأرفف ولا يبدّل وحدتَه.
+ *
+ * ⚠️ **والكاتبُ اليوم ثالثُها وحدَه، ويُقال ولا يُخفى**: `pickPathOrder` لا
+ * ينقل وحدةً بعد، وشيتُ الأرصدة بلا عمود وحدة أصلًا. فالأوّلان يُقرآن استعدادًا
+ * ليومٍ يكتبهما كاتب — لا ادّعاءً بأنّهما يعملان اليوم. (ودرسُ «حارسٍ يقرأ حقلًا
+ * لا يُكتب أبدًا» هو سببُ هذه الفقرة: القارئ الصامت يُوهم بميزةٍ لا وجودَ لها.)
+ *
+ * ★ والمعاملُ يُقرأ من مصدر الوحدة نفسِه لا من أيٍّ كان: معاملُ سطرٍ بالكرتون
+ * لا يصف خطوةً بالقطعة، ولذلك يُفحص `uomFactorFor` كما يفحصه `refreshLineBase`.
+ *
+ * @returns {{uom:string, factor:number|null, baseUom:string}|null} و`null` تعني
+ *   «لا وحدةَ معلنة» — فتبقى الخطوة بحقولها كما كانت حرفًا.
+ */
+export function stepUnitOf(pathStep, balanceRow, docLine) {
+  return unitOfSource(pathStep) ?? unitOfSource(balanceRow) ?? unitOfSource(docLine);
+}
+
+/** وحدةُ مصدرٍ واحد — أو `null` إن لم يُعلن وحدةً أصلًا. */
+function unitOfSource(src) {
+  const uom = String(src?.uom ?? '').trim();
+  if (!uom) return null;
+  return { uom, factor: factorOfSource(src, uom), baseUom: String(src?.baseUom ?? '').trim() };
+}
+
+/**
+ * معاملُ مصدرٍ إلى وحدة الأساس — و`null` تعني **لا أعرف** لا «صفر».
+ *
+ * ⚠️ صفرٌ أو سالبٌ يُردّ إلى `null` عمدًا: الصفر يُنتج مجموعًا صفريًّا صامتًا،
+ * وهو أخطر من الامتناع المعلَن (نفس حكم `factorProblems` في محرّك الوحدات).
+ */
+function factorOfSource(src, uom) {
+  const raw = Number(src?.factor ?? src?.uomFactor);
+  if (!Number.isFinite(raw) || raw <= 0) return null;
+  // معاملٌ مختومٌ لوحدةٍ أخرى لا يصف هذه: «كرتون المورّد» لا يلتصق بـ«قطعة»
+  // حين تُبدَّل الوحدة — شرطُ `refreshLineBase` نفسُه، وإلّا افترق الحكمان.
+  const stampedFor = String(src?.uomFactorFor ?? '').trim();
+  if (stampedFor && (normalizeUom(stampedFor) || stampedFor) !== (normalizeUom(uom) || uom)) return null;
+  return raw;
+}
+
+/**
+ * صفُّ الرصيد الذي خُصّصت منه هذه الخطوة — بمفتاحه الميدانيّ لا بمعرّفه، لأنّ
+ * `pickPathOrder` لا ينقل `balanceId` إلى المسار.
+ */
+function balanceRowFor(pathStep, balances, warehouse) {
+  const item = up(pathStep?.sku) || up(pathStep?.barcode);
+  if (!item) return null;
+  const bin = normalizeLocationCode(pathStep?.bin);
+  const batch = up(pathStep?.batch);
+  return (balances ?? []).find(
+    (b) =>
+      (up(b?.sku) === item || up(b?.barcode) === item)
+      && (!warehouse || up(b?.warehouse) === warehouse)
+      && normalizeLocationCode(b?.bin) === bin
+      && up(b?.batch) === batch
+  ) ?? null;
+}
+
+/**
  * فتح مهمّة تحضير من مستندٍ معتمد.
  *
  * ★ النقص **لا يمنع** فتح المهمّة: المستودع يسحب ما عنده ويُعلن ما نقص.
@@ -67,17 +194,27 @@ export function openPickTask(doc, balances, { actor, at, assignee = '', nowMs, g
   if (!String(actor ?? '').trim()) return { problem: 'مهمّةٌ بلا فاعلٍ لا تُفتح — من أسندها؟' };
 
   // خطوةٌ لكلّ (موقع × بند) من المسار القائم — بترتيبه لا بترتيبٍ ثانٍ.
-  const steps = (plan.path ?? []).map((s, i) => ({
-    seq: i + 1,
-    bin: normalizeLocationCode(s.bin),
-    sku: up(s.sku),
-    barcode: String(s.barcode ?? '').trim(),
-    batch: up(s.batch),
-    expiry: String(s.expiry ?? '').trim(),
-    required: Number(s.qty) || 0,
-    picked: 0,
-    state: 'PENDING',
-  }));
+  const steps = (plan.path ?? []).map((s, i) => {
+    const step = {
+      seq: i + 1,
+      bin: normalizeLocationCode(s.bin),
+      sku: up(s.sku),
+      barcode: String(s.barcode ?? '').trim(),
+      batch: up(s.batch),
+      expiry: String(s.expiry ?? '').trim(),
+      required: Number(s.qty) || 0,
+      picked: 0,
+      state: 'PENDING',
+    };
+    /*
+     * ★★ الوحدةُ تُلحق **حين تُعرف وحدها** — وهو عينُ ترحيل `balanceId`:
+     * خطوةٌ لصنفٍ بلا وحدةٍ تخرج بحقولها التسعة كما كانت حرفًا، فلا يفترق
+     * شكلُ مهمّةٍ قديمةٍ عن شكل مهمّةٍ جديدةٍ لصنفٍ لم يُعرَّف. والحقولُ
+     * الثلاثة لا تُكتب فارغةً لتُقرأ فارغة — تُكتب حين تقول شيئًا.
+     */
+    const unit = stepUnitOf(s, balanceRowFor(s, balances, plan.warehouse), doc?.lines?.[s.lineIndex]);
+    return unit ? { ...step, ...unit } : step;
+  });
 
   return {
     task: {
@@ -95,6 +232,32 @@ export function openPickTask(doc, balances, { actor, at, assignee = '', nowMs, g
       openedAt: at ?? null,
     },
   };
+}
+
+/**
+ * ★★★ تسميةُ أساسِ الترتيب — والعطبُ الذي تسدّه: **شاشةٌ بيضاء**.
+ *
+ * ═══ ما كان يقع ═══
+ * `pathBasis` بيانةٌ منظَّمة يكتبها `pathBasisOf`: `{id, label, covered, total}`
+ * — تقول بأيّ شيءٍ رُتّب المسار، وكم موقعًا من هذه المهمّة تعرفه الشبكةُ من
+ * جملتها. وشاشةُ التحضير كانت تعرضها **ولدًا في JSX** بجانب المستودع، وReact
+ * لا يقبل كائنًا ولدًا: يرمي «Objects are not valid as a React child»، **ولا
+ * `ErrorBoundary` فوق هذه الشاشة**. فكلُّ مهمّةٍ يفتحها المحضّر تسقط عند أوّل
+ * رندر: بياضٌ لا رسالةَ فيه ولا زرَّ رجوع — ولا يعرف الواقفُ في الممرّ لماذا.
+ *
+ * ★ والإصلاحُ في **العرض لا في البيانة**: المنظَّمُ أنفعُ في التخزين من نصٍّ
+ * يُفكَّك بعد سنة (`id` يُقارَن، و`covered/total` يُحسبان)، والشاشةُ تعرض
+ * تسميتَه. وتسطيحُه إلى نصٍّ كان سيشتري ركنَ شاشةٍ بثمن بيانةٍ لا تُستعاد.
+ *
+ * ⚠️ ويقبل النصَّ كما يقبل الكائن: الكاتبُ نفسُه يُعلن بديلًا نصّيًّا
+ * (`plan.pathBasis ?? ''` أعلاه)، فقارئٌ يفترض الكائنَ وحدَه يعرض فراغًا عن
+ * مهمّةٍ تقول شيئًا.
+ *
+ * @returns {string} نصٌّ صالحٌ لأن يُعرض ولدًا — و`''` حين لا أساسَ معلَنًا.
+ */
+export function pathBasisLabel(pathBasis) {
+  if (typeof pathBasis === 'string') return pathBasis.trim();
+  return String(pathBasis?.label ?? '').trim();
 }
 
 /** الخطوة الجارية — أوّل ما لم يكتمل، بترتيب المسار. */

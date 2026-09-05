@@ -118,11 +118,29 @@ export function addReading(lines, reading, opts = {}) {
     lines: [
       ...(lines ?? []),
       {
+        // ★★★ هويّةُ سطر الأمر تعبر مع البند — وإسقاطُها هنا كانت تقطع السلك
+        // عند أوّله: هذه الدالّةُ **الكاتبُ الوحيد** لبنود الطبلية، و`grnBridge`
+        // (`receivedByLine` · `receivedDetailByLine`) يتخطّى كلَّ بندٍ بلا
+        // `lineId`. فكانت كلُّ قراءةٍ تُكتب يتيمةً، فلا كمّيّةٌ تصل مذكّرةَ
+        // الاستلام ولا صلاحية — و`scanVerdict` يُنتجها ويسلّمها ثمّ تُرمى هنا.
+        //
+        // ⚠️ ونصٌّ فارغٌ عند الغياب لا `undefined`: الكتابةُ تمرّ بـ`tx.update`
+        // وFirestore ترفض `undefined`. والفارغُ يسقط في مُنقذ الطبالي القديمة
+        // بالجسر فلا يضيع صامتًا.
+        //
+        // ★ والدمجُ أعلاه لا يمسّها: `{ ...l }` ينقل هويّةَ البند القائم كما هي
+        // — فأوّلُ قراءةٍ تُثبّت الهويّة وما بعدها يرفع كمّيّتها وحدها.
+        lineId: String(reading?.lineId ?? '').trim(),
         sku: up(reading.sku),
         barcode: String(reading?.barcode ?? '').trim(),
         name: String(reading?.name ?? '').trim(),
         batch: up(reading.batch),
         expiry: expiryDay(reading.expiry),
+        // ★ حقلا التتبّع — إضافةٌ صرفة: قراءةٌ لا تحملهما تكتب `''` كما كانت
+        // تكتب قبل وجودهما، ومفتاحُ البند أعلاه لا يشملهما فلا ينقسم بندٌ كان
+        // واحدًا. و`grnLineExtras` يُصدّرهما حين تتّفق الطبالي عليهما.
+        supplierBatch: up(reading?.supplierBatch),
+        mfgDate: expiryDay(reading?.mfgDate),
         uom: up(reading.uom),
         factor: hasFactor ? factor : null,
         qty,

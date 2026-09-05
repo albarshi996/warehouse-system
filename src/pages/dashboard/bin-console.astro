@@ -1,0 +1,18 @@
+---
+/**
+ * لوحة الخانة ‹LOC-703› — «امسح الخانة فتُفتح كمستودعٍ داخليّ» (طلب المالك 2026-09-01).
+ *
+ * الشاشة الوحيدة التي تبدأ **بالرفّ** لا بالمستند: العاملُ في الممرّ يقف أمام
+ * خانةٍ ويريد أن يعرف ما فيها، وكلُّ ما سواها يطلب منه أن يفتح أمرًا أوّلًا.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+// ⚠️ لا تُحذف: قواعد الثيم كلُّها تحت `.o_theme` — بلا `odoo.css` تُعرض الشاشة
+// نصًّا مرصوصًا. يحرسهما القسم ٦ من `npm run audit`.
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import BinConsole from '../../components/brandzo-erp/locations/BinConsole.jsx';
+---
+
+<DashboardLayout title="الخانة — امسح وافتح" showGuide={false} light>
+  <BinConsole client:load />
+</DashboardLayout>

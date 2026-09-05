@@ -87,7 +87,7 @@ function titleFor(workType, docNumber, group, lineCount) {
  * تُبنى الأسطر كما هي ويُحمَل سبب تعذّر الاقتراح — فلا يتوقّف التخزين لأنّ
  * المواقع لم تُعرَّف بعد.
  */
-function putawayLines(doc, { locations, balances, items }) {
+function putawayLines(doc, { locations, balances, items, pallets }) {
   const warehouse = up(doc?.header?.warehouse);
   return (doc?.lines || [])
     .filter((l) => num(l?.qtyAccepted ?? l?.qty))
@@ -100,6 +100,10 @@ function putawayLines(doc, { locations, balances, items }) {
         balances,
         item,
         warehouse,
+        // ★★ وسعةُ مواضع الطبالي تُحاسَب هنا حين يُمرَّر الفهرس: بلا تمريره
+        // كان الرفُّ الذي بلغ سقفَ طباليه يُقترح للمشرف مرشَّحًا أوّل، فيُسند
+        // العملَ إلى رفٍّ لا موضعَ فيه ويكتشفه العاملُ بعد أن مشى.
+        pallets,
       });
       return {
         sku: s(l?.sku),
@@ -191,13 +195,18 @@ function transferLines(doc) {
  * @param {Array}  [options.balances]  الأرصدة الحيّة (للسحب والاقتراح)
  * @param {Array}  [options.locations] سيّد المواقع (للاقتراح)
  * @param {Array}  [options.items]     ماستر الأصناف (لفئة الصنف في الاقتراح)
+ * @param {Map}    [options.pallets]   فهرس «الموقع ← طباليه»
+ *        (`lpn/palletMap.palletsByBin`) — **يُمرَّر ولا يُستورَد**: هذا الملفّ
+ *        يُحيل إلى المحرّكات ولا يعرف طبقةَ الطبالي، والاتّجاه المشروع واحد.
+ *        وغيابُه يعني «لا علمَ بالطبالي» فيُقترح كما كان حرفًا — لا «صفر»
+ *        فيمنع. ⚠️ وبلا تمريره لا يُطلق فرعُ سقف الطبالي أبدًا.
  * @param {number} [options.nowMs]     الوقت يُمرَّر ولا يُقرأ (لأجل FEFO)
  * @param {string[]} [options.existingKeys] مفاتيح مهامّ وُلّدت سابقًا
  * @param {'zone'|'none'} [options.splitBy='zone'] فاصل التقسيم
  * @returns {{tasks:Array, shortages:Array, skipped:string[], problem:string}}
  */
 export function generateTasks(doc, options = {}) {
-  const { balances = [], locations = [], items = [], nowMs, existingKeys = [], splitBy = 'zone' } = options;
+  const { balances = [], locations = [], items = [], pallets, nowMs, existingKeys = [], splitBy = 'zone' } = options;
 
   const docType = up(doc?.type);
   const workType = workTypeForDoc(docType);
@@ -209,7 +218,7 @@ export function generateTasks(doc, options = {}) {
 
   let lines = [];
   let shortages = [];
-  if (workType === 'putaway') lines = putawayLines(doc, { locations, balances, items });
+  if (workType === 'putaway') lines = putawayLines(doc, { locations, balances, items, pallets });
   else if (workType === 'pick') ({ lines, shortages } = pickLines(doc, { balances, nowMs, locations }));
   else lines = transferLines(doc);
 
