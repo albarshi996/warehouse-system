@@ -707,8 +707,137 @@ if (reworded.length > HOME_LABEL_DRIFT_BASELINE) {
   }
 }
 
-/* ═══════════ 11. لقطة عامة ═══════════ */
-section(11, 'لقطة');
+/* ═══════════ 11. حصّة القراءة ═══════════ */
+section(11, 'حصّة القراءة — لا شاشةَ تقرأ مجموعةً كاملةً في كلّ فتحة');
+
+/**
+ * ═══ العطبُ الذي وُجد لأجله — وقع فعلًا 2026-09-05 ═══
+ * `subscribeItems` كان يفتح مستمعًا حيًّا على **١١٧٣ صنفًا** في كلّ استدعاء،
+ * ويُستدعى من **١٦ شاشة**. والبوّابةُ صفحاتٌ منفصلة، فكلُّ انتقالٍ إعادةُ
+ * تحميلٍ ⇒ إعادةُ قراءةِ الكتالوج كلِّه.
+ *   ١١٧٣ × ٥٢ فتحةً = **٦١٠٠٠ قراءة** — والحدُّ المجّانيّ ٥٠٠٠٠.
+ * فنفدت الحصّةُ عصرًا وتوقّفت البوّابةُ عن القراءة، **وفي الغد جرد**.
+ *
+ * ★★★ ولم يخطئ أحد: لا موظّفٌ أساء الاستعمال ولا زرٌّ ضُغط كثيرًا. **هذا هو
+ *     الاستعمالُ الطبيعيّ** — والعطبُ في التصميم. وكلفتُه تتضاعف مع كلّ صنفٍ
+ *     يُضاف وكلّ موظّفٍ يُوظَّف وكلّ شاشةٍ تُبنى. فلا يُكتشف بالانتباه بل بحارس.
+ *
+ * ★★ والخطّةُ المجّانيّةُ أسدت خدمةً: **توقّفت وصرخت**. وعلى خطّةٍ مدفوعةٍ كان
+ *    يكبر بصمتٍ شهورًا — والصمتُ أخطرُ من التوقّف.
+ *
+ * ═══ ما يفحصه ═══
+ * كلُّ `onSnapshot`/`getDocs` على مجموعةٍ **تنمو بلا سقف**، بلا `limit`.
+ * والقائمةُ **خطُّ أساسٍ يُنقص ولا يزيد**: كلُّ موضعٍ جديدٍ يوقف التدقيق حتّى
+ * يُعالَج أو يُبرَّر كتابةً هنا.
+ */
+
+/**
+ * مجموعاتٌ تنمو بلا سقف — قراءتُها كاملةً كلفةٌ تتضاعف مع الزمن.
+ *
+ * ★ والقائمةُ **مقيسةٌ من نسخة Firestore الحقيقيّة (2026-09-05)** لا مفترَضة:
+ *   أُخرجت منها `events` لأنّ أكبرَ نسخةٍ منها **عشرةُ سجلّات** (وهي دائمًا
+ *   تحت مستندٍ أبٍ واحد) — وحارسٌ يصرخ لعشرة سجلّاتٍ يُعلَّم أن يُتجاهَل،
+ *   فيُفقد الحارسُ قيمتَه حين يصرخ لألف.
+ *
+ *   وبقيت `balances` وهي **صفرٌ اليوم** — لأنّها تنمو صفًّا لكلّ
+ *   (صنف × مخزن × تشغيلة) حين يبدأ قيدُ المخزون. والحارسُ يسبق العطبَ ولا يتبعه.
+ */
+const UNBOUNDED_COLLECTIONS = new Set([
+  'Items_Master',
+  'documents',
+  'stock_moves',
+  'balances',
+  'scans',
+  'audit',
+  'portal_visits',
+  'barcodes',
+  'handling_units',
+  'pallet_moves',
+  'partner_ledger',
+]);
+
+/**
+ * ⚠️ خطُّ أساسٍ — **يُنقص ولا يزيد**. كلُّ موضعٍ هنا له سببٌ مكتوب.
+ * والمفتاح: `<ملفّ>|<مجموعة>`.
+ */
+const READ_BUDGET_BASELINE = new Map([
+  [
+    'src/services/stock/operationsService.js|scans',
+    'مسحاتُ الجرد: البثُّ الحيُّ ضرورةٌ لا رفاهية — عادّان يعملان معًا يجب أن ' +
+      'يرى كلٌّ مسحاتِ الآخر. والشاشةُ تُفتح مرّةً وتبقى، فهي قراءةٌ واحدةٌ لليوم. ' +
+      'وتُعالَج ضمن هجرة PostgreSQL (الجردُ يُنقل آخرًا).',
+  ],
+  [
+    'src/services/recruitment/candidatesService.js|audit',
+    'سجلُّ تدقيقِ مرشّحٍ واحد (٤٣ سجلًّا للمرشّحين جميعًا) — لا ينمو بمعدّلٍ يُقلق.',
+  ],
+  [
+    'src/services/balances/balancesService.js|balances',
+    '⏳ **دَينٌ معلومٌ لا إذنٌ دائم**: الجدولُ صفرٌ اليوم (لم يبدأ قيدُ المخزون)، ' +
+      'فلا كلفةَ الآن. لكنّه ينمو صفًّا لكلّ (صنف × مخزن × تشغيلة) — ومع ١١٧٣ صنفًا ' +
+      'قد يبلغ الآلافَ في شاشةٍ تُفتح كلَّ يوم. **يُعالَج قبل أوّل قيدِ مخزون**، ' +
+      'إمّا بذاكرةٍ كـ`items/itemCache.js` أو بترشيحٍ على المخزن الواحد.',
+  ],
+]);
+
+/** محتوى الأقواس المتوازنة من موضع القوس المفتوح. */
+function balancedArgs(src, open) {
+  let d = 0;
+  for (let i = open; i < src.length; i++) {
+    if (src[i] === '(') d++;
+    else if (src[i] === ')' && --d === 0) return src.slice(open + 1, i);
+  }
+  return '';
+}
+
+const wholeReads = [];
+for (const f of walk(SERVICES_DIR, ['.js']).filter((x) => !x.endsWith('.test.js'))) {
+  const src = stripComments(fs.readFileSync(f, 'utf8'));
+  const rel = path.relative(ROOT, f).split(path.sep).join('/');
+
+  for (const m of src.matchAll(/\b(?:onSnapshot|getDocs)\s*\(/g)) {
+    const args = balancedArgs(src, m.index + m[0].length - 1);
+    // المجالُ يشمل بناءَ الاستعلام قبل النداء — `const q = query(…)` سطورًا فوقه.
+    const scope = src.slice(Math.max(0, m.index - 700), m.index + args.length + 40);
+    if (/\b(?:limit|fsLimit)\s*\(/.test(scope)) continue;
+
+    const names = new Set();
+    for (const c of scope.matchAll(/collection\s*\(([^)]*)\)/g)) {
+      for (const lit of c[1].matchAll(/'([a-zA-Z_][a-zA-Z0-9_]*)'/g)) names.add(lit[1]);
+    }
+    for (const c of scope.matchAll(/\b(?:COL|COLL|COLLECTION)[A-Z_]*\s*=\s*'([^']+)'/g)) {
+      names.add(c[1]);
+    }
+
+    for (const n of names) {
+      if (UNBOUNDED_COLLECTIONS.has(n)) wholeReads.push(`${rel}|${n}`);
+    }
+  }
+}
+
+const uniqueReads = [...new Set(wholeReads)];
+const newReads = uniqueReads.filter((k) => !READ_BUDGET_BASELINE.has(k));
+const paidOffReads = [...READ_BUDGET_BASELINE.keys()].filter((k) => !uniqueReads.includes(k));
+
+if (newReads.length === 0) {
+  ok(
+    `لا قراءةَ مجموعةٍ كاملةٍ جديدة — ${uniqueReads.length} موضعًا كلُّها على خطّ الأساس`
+  );
+  uniqueReads.forEach((k) => info(`⚠ على خطّ الأساس: ${k.replace('|', ' ← ')}`));
+} else {
+  bad(`${newReads.length} موضعًا يقرأ مجموعةً تنمو بلا سقفٍ وبلا limit:`);
+  newReads.forEach((k) => {
+    const [file, coll] = k.split('|');
+    info(`• ${file} ← «${coll}»`);
+  });
+  info('');
+  info('العلاج: أضِف `limit()`، أو اقرأ مرّةً واحفظ محلّيًّا (انظر `items/itemCache.js`).');
+  info('وإن كانت القراءةُ الكاملةُ ضرورةً، أضِفْها إلى READ_BUDGET_BASELINE بسببٍ مكتوب.');
+}
+paidOffReads.forEach((k) => notes.push(`«${k}» عولج — اشطبه من READ_BUDGET_BASELINE`));
+
+/* ═══════════ 12. لقطة عامة ═══════════ */
+section(12, 'لقطة');
 info(`مجموعات القائمة: ${NAV_GROUPS.length} · روابط داخلية: ${internalPaths().length} · ملفات public: ${externalPaths().length}`);
 info(`صفحات لوحة التحكم على القرص: ${pagesOnDisk.length} · أدوار: ${Object.keys(ROLES).length}`);
 const noAccess = Object.keys(ROLES).filter((r) => internalPaths().every((p) => !canOpenPath(r, p)));
