@@ -46,6 +46,51 @@ services:
       timeout: 5s
       retries: 10
 
+  # ═══════════════════════════════════════════════════════════════════════
+  #  المزامنةُ الدوريّة — تقرأ Firestore وتكتب هنا. **تُطفأ بعد التحويل.**
+  #
+  #  ★ لا تعمل إلّا بطلبٍ صريح:  docker compose --profile sync up -d
+  #    فبقاؤها خارج التشغيل الافتراضيّ يعني أنّ `up` عاديّةً لا تبدأ فجأةً
+  #    باستهلاك حصّةِ القراءة.
+  #
+  #  ★★ والكلفةُ محسوبةٌ لا مقدَّرة: `node db/sync/sync.mjs --plan` يطبع
+  #     أرضيّةَ القراءات اليوميّة قبل أن يقرأ حرفًا واحدًا من السحابة.
+  # ═══════════════════════════════════════════════════════════════════════
+  sync:
+    profiles: ['sync']
+    build:
+      # جذرُ المستودع: الصورةُ تحتاج `firestore.rules` و`package-lock.json`.
+      context: ..
+      dockerfile: db/sync/Dockerfile
+    container_name: warehouse-sync
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # ── القاعدة: `psql` يقرأ هذه الأسماءَ بنفسه، فلا سلسلةَ اتّصالٍ في الكود.
+      PGHOST: postgres
+      PGPORT: '5432'
+      PGUSER: warehouse
+      PGDATABASE: warehouse
+      PGPASSWORD: ${POSTGRES_PASSWORD:-warehouse_local_dev}
+
+      # ── Firebase: بريدُ المالك وكلمتُه، فتمرّ المزامنةُ بنفس بوّابة الصلاحيّات
+      #    التي يمرّ بها التطبيق. **لا مفتاحَ حسابِ خدمةٍ ولا صلاحيّةَ مطلقة.**
+      FIREBASE_EMAIL: ${FIREBASE_EMAIL:?FIREBASE_EMAIL مطلوب — ضعه في db/.env}
+      FIREBASE_PASSWORD: ${FIREBASE_PASSWORD:?FIREBASE_PASSWORD مطلوب — ضعه في db/.env}
+      PUBLIC_FIREBASE_API_KEY: ${PUBLIC_FIREBASE_API_KEY}
+      PUBLIC_FIREBASE_AUTH_DOMAIN: ${PUBLIC_FIREBASE_AUTH_DOMAIN}
+      PUBLIC_FIREBASE_PROJECT_ID: ${PUBLIC_FIREBASE_PROJECT_ID}
+      PUBLIC_FIREBASE_STORAGE_BUCKET: ${PUBLIC_FIREBASE_STORAGE_BUCKET}
+      PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
+      PUBLIC_FIREBASE_APP_ID: ${PUBLIC_FIREBASE_APP_ID}
+
+      # فهرسُ المجموعات — معطَّلٌ، ولا يلزم اليوم: المزامنةُ لا تقرأ مسارًا
+      # فرعيًّا أصلًا (لا خريطةَ لأيٍّ منها). ويصير لازمًا يومَ تُنمذَج أوّلُ
+      # مجموعةٍ فرعيّة، وأثرُه حينها مقيس: الأرضيّةُ تهبط من ١٧٨٠٨ إلى ٦٤٨٠.
+      SYNC_COLLECTION_GROUP: '0'
+
 volumes:
   warehouse-db-data:
     name: warehouse-db-data

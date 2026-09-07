@@ -34,7 +34,7 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, createWriteStream } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { initializeApp } from 'firebase/app';
@@ -49,11 +49,11 @@ import {
   startAfter,
   getDocs,
   documentId,
-  Timestamp,
-  GeoPoint,
-  Bytes,
-  DocumentReference,
 } from 'firebase/firestore';
+
+// ★★ تعريفٌ واحدٌ لا نسختان — تشاركه حاويةُ المزامنة (`db/sync/sync.mjs`).
+import { pathsFromRules } from '../db/sync/rules-paths.js';
+import { serialize } from './firestore-serialize.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DUMP_DIR = join(ROOT, 'db', 'dump');
@@ -74,75 +74,14 @@ const DRY = flag('dry');
 /* ═══════════════════ المسارات من القواعد ═══════════════════ */
 
 /**
- * يقرأ مساراتِ المجموعات من `firestore.rules` **متداخلةً**.
- *
- * القواعدُ مكتوبةٌ هرميًّا: `match /operations/{id} { … match /scans/{id} { … } }`
- * فنتتبّع الأقواسَ بمكدّسٍ لنبني المسارَ الكامل `operations/scans`.
- *
- * @returns {string[]} الآباءُ أوّلًا: ['items', 'operations', 'operations/scans']
+ * مساراتُ المجموعات — تُقرأ من `firestore.rules` بمحلِّلٍ مشترَكٍ **مختبَر**.
+ * ★ وكان التحليلُ هنا نسخةً محلّيّة؛ نُقل إلى وحدةٍ خالصةٍ حين احتاجته
+ *   المزامنة، فصار له اختبارٌ يثبّت عطبَ المسار المسطّح (2026-09-02).
  */
-function pathsFromRules() {
-  const lines = readFileSync(join(ROOT, 'firestore.rules'), 'utf8').split('\n');
-  const stack = [];
-  const paths = new Set();
-  let depth = 0;
-
-  for (const raw of lines) {
-    const line = raw.replace(/\/\/.*$/, '');
-
-    // `match /X/{id} {` ⇒ مجموعة
-    const m = line.match(/match\s+\/([A-Za-z_][A-Za-z0-9_]*)\/\{[A-Za-z0-9_]+\}\s*\{/);
-    if (m) {
-      stack.push({ name: m[1], atDepth: depth });
-      depth += 1;
-      if (m[1] !== 'databases') paths.add(stack.map((s) => s.name).join('/'));
-      continue;
-    }
-
-    // `match /databases/{db}/documents {` ⇒ الجذر، ليس مجموعة.
-    if (/match\s+\/databases\/\{[^}]+\}\/documents\s*\{/.test(line)) {
-      depth += 1;
-      continue;
-    }
-
-    for (const ch of line) {
-      if (ch === '{') depth += 1;
-      else if (ch === '}') {
-        depth -= 1;
-        while (stack.length && stack[stack.length - 1].atDepth >= depth) stack.pop();
-      }
-    }
-  }
-
-  // الآباءُ أوّلًا — المجموعةُ الفرعيّة تحتاج معرّفاتِ آبائها.
-  return [...paths].sort(
-    (a, b) => a.split('/').length - b.split('/').length || a.localeCompare(b)
-  );
-}
+const collectionPaths = () => pathsFromRules(readFileSync(join(ROOT, 'firestore.rules'), 'utf8'));
 
 /** اسمُ ملفّ المخرَج لمسار. */
 const dumpFile = (path) => join(DUMP_DIR, `${path.replace(/\//g, '__')}.ndjson`);
-
-/* ═══════════════════ التسلسل ═══════════════════ */
-
-/**
- * يحوّل قيمةَ Firestore إلى JSON بلا فقد.
- * الأنواعُ الخاصّة تُوسم بـ`__type` كي يعرفها المحمّلُ ولا يخمّن.
- */
-function serialize(v) {
-  if (v === null || v === undefined) return null;
-  if (v instanceof Timestamp) return { __type: 'timestamp', iso: v.toDate().toISOString() };
-  if (v instanceof GeoPoint) return { __type: 'geopoint', lat: v.latitude, lng: v.longitude };
-  if (v instanceof Bytes) return { __type: 'bytes', b64: v.toBase64() };
-  if (v instanceof DocumentReference) return { __type: 'ref', path: v.path };
-  if (Array.isArray(v)) return v.map(serialize);
-  if (typeof v === 'object') {
-    const out = {};
-    for (const [k, val] of Object.entries(v)) out[k] = serialize(val);
-    return out;
-  }
-  return v;
-}
 
 /* ═══════════════════ التصدير ═══════════════════ */
 
@@ -251,7 +190,7 @@ async function main() {
   const cred = await signInWithEmailAndPassword(getAuth(app), email, password);
   console.log(`OK  ${cred.user.email}`);
 
-  const all = pathsFromRules();
+  const all = collectionPaths();
   const targets = ONLY.length
     ? all.filter((p) => ONLY.includes(p) || ONLY.includes(p.split('/')[0]))
     : all;
@@ -304,7 +243,17 @@ async function main() {
   process.exit(0);
 }
 
-main().catch((err) => {
-  console.error('\nX  Export failed:', err?.message || err);
-  process.exit(1);
-});
+// ★★★ حارسُ نقطةِ الدخول: هذا الملفّ صار **يُستورَد** — المزامنةُ تأخذ منه
+//     المحلِّلَ والمُسلسِلَ نفسَيهما. وبلا هذا الشرط، مجرّدُ استيرادِه يسجّل
+//     الدخولَ ويصدّر كلَّ شيء: أثرٌ جانبيٌّ كارثيٌّ لسطرِ `import` واحد.
+const invokedDirectly =
+  process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
+
+if (invokedDirectly) {
+  main().catch((err) => {
+    console.error('\nX  Export failed:', err?.message || err);
+    process.exit(1);
+  });
+}
+
+export { main as runExport };

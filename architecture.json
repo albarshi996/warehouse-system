@@ -10,8 +10,8 @@
   },
   "counts": {
     "modules": 117,
-    "serviceDomains": 51,
-    "serviceFiles": 607,
+    "serviceDomains": 52,
+    "serviceFiles": 612,
     "collections": 98,
     "roles": 19,
     "odooModels": 12,
@@ -1019,6 +1019,53 @@
     }
   ],
   "services": [
+    {
+      "domain": "_db",
+      "dir": "src/services/_db",
+      "files": [
+        "backend.js",
+        "backend.test.js",
+        "firestore.js",
+        "index.js",
+        "seam.test.js"
+      ],
+      "fileCount": 5,
+      "testCount": 2,
+      "exports": [
+        "BACKEND",
+        "BACKEND_NAME",
+        "DEFAULT_BACKEND",
+        "REQUIRED_SYMBOLS",
+        "Timestamp",
+        "addDoc",
+        "arrayRemove",
+        "arrayUnion",
+        "backendNameFrom",
+        "collection",
+        "db",
+        "deleteDoc",
+        "doc",
+        "documentId",
+        "getDoc",
+        "getDocFromServer",
+        "getDocs",
+        "increment",
+        "limit",
+        "missingSymbols",
+        "onSnapshot",
+        "orderBy",
+        "pickBackend",
+        "query",
+        "runTransaction",
+        "serverTimestamp",
+        "setDoc",
+        "startAfter",
+        "updateDoc",
+        "where",
+        "writeBatch"
+      ],
+      "collections": []
+    },
     {
       "domain": "activity",
       "dir": "src/services/activity",
@@ -9352,7 +9399,7 @@
         "id": "data-firebase",
         "layer": "البيانات والمصادقة",
         "name": "Firebase",
-        "tech": "Firestore + Auth",
+        "tech": "Auth",
         "role": "قاعدة البيانات الحيّة والمصادقة — مصدر الحقيقة التشغيليّ (القواعد في firestore.rules)",
         "refs": [
           "src/config/firebase.js",
@@ -9360,7 +9407,6 @@
         ],
         "meta": {
           "services": [
-            "Firestore",
             "Auth"
           ]
         }
@@ -9495,7 +9541,7 @@
       "prebuild": "node scripts/build-arch.mjs && node scripts/build-org.mjs && node scripts/build-scm-manual.mjs && node scripts/build-usage-guide.mjs",
       "guide": "node scripts/build-usage-guide.mjs",
       "scm": "node scripts/build-scm-manual.mjs",
-      "test": "node --test \"src/**/*.test.js\"",
+      "test": "node --test \"src/**/*.test.js\" \"db/**/*.test.js\"",
       "test:rules": "firebase emulators:exec --only firestore \"node --test test/firestore-rules.test.mjs\"",
       "audit": "node scripts/audit-portal.mjs",
       "plan": "npm run where && npm run plan:phase-one && npm run plan:client && npm run plan:sap && npm run plan:locations && npm run plan:exec && npm run plan:fnb && npm run plan:capture && npm run plan:lpn && npm run plan:gate && npm run plan:visits && npm run plan:deps && npm run plan:bulk && npm run plan:rbac && npm run plan:journey",

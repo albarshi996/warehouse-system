@@ -1,0 +1,444 @@
+{
+  "access_control": {
+    "count": 1,
+    "fields": {
+      "updatedAt": 1
+    }
+  },
+  "archive_documents": {
+    "count": 0,
+    "fields": {}
+  },
+  "assets": {
+    "count": 0,
+    "fields": {}
+  },
+  "assignments": {
+    "count": 1,
+    "fields": {}
+  },
+  "balances": {
+    "count": 0,
+    "fields": {}
+  },
+  "barcode_counters": {
+    "count": 0,
+    "fields": {}
+  },
+  "barcodes": {
+    "count": 0,
+    "fields": {}
+  },
+  "bin_locations": {
+    "count": 0,
+    "fields": {}
+  },
+  "candidates": {
+    "count": 14,
+    "fields": {
+      "updatedAt": 14,
+      "createdAt": 14
+    }
+  },
+  "counters": {
+    "count": 2,
+    "fields": {}
+  },
+  "crews": {
+    "count": 6,
+    "fields": {
+      "createdAt": 6
+    }
+  },
+  "custodies": {
+    "count": 1,
+    "fields": {
+      "updatedAt": 1,
+      "createdAt": 1
+    }
+  },
+  "Customers_Master": {
+    "count": 0,
+    "fields": {}
+  },
+  "dock_sessions": {
+    "count": 0,
+    "fields": {}
+  },
+  "document_flow_allocations": {
+    "count": 0,
+    "fields": {}
+  },
+  "document_links": {
+    "count": 0,
+    "fields": {}
+  },
+  "documents": {
+    "count": 175,
+    "fields": {
+      "updatedAt": 175,
+      "createdAt": 175
+    }
+  },
+  "doors": {
+    "count": 0,
+    "fields": {}
+  },
+  "entity_attachments": {
+    "count": 0,
+    "fields": {}
+  },
+  "exceptions": {
+    "count": 0,
+    "fields": {}
+  },
+  "gm_review": {
+    "count": 0,
+    "fields": {}
+  },
+  "handling_units": {
+    "count": 0,
+    "fields": {}
+  },
+  "hiring_requests": {
+    "count": 1,
+    "fields": {
+      "createdAt": 1
+    }
+  },
+  "Inbound_Log": {
+    "count": 0,
+    "fields": {}
+  },
+  "integration_policy": {
+    "count": 0,
+    "fields": {}
+  },
+  "item_partner_catalog": {
+    "count": 0,
+    "fields": {}
+  },
+  "Items_Master": {
+    "count": 1173,
+    "fields": {
+      "updatedAt": 1173,
+      "createdAt": 1173
+    }
+  },
+  "Items_Pending": {
+    "count": 3,
+    "fields": {}
+  },
+  "journey_plans": {
+    "count": 2,
+    "fields": {
+      "updatedAt": 2
+    }
+  },
+  "labor_tasks": {
+    "count": 5,
+    "fields": {
+      "createdAt": 5
+    }
+  },
+  "lpn_counters": {
+    "count": 0,
+    "fields": {}
+  },
+  "odoo_accounts": {
+    "count": 10,
+    "fields": {}
+  },
+  "odoo_move_lines": {
+    "count": 0,
+    "fields": {}
+  },
+  "odoo_moves": {
+    "count": 4,
+    "fields": {}
+  },
+  "odoo_payments": {
+    "count": 0,
+    "fields": {}
+  },
+  "odoo_pull_state": {
+    "count": 4,
+    "fields": {}
+  },
+  "odoo_sync": {
+    "count": 14,
+    "fields": {}
+  },
+  "odoo_sync_events": {
+    "count": 0,
+    "fields": {}
+  },
+  "operations": {
+    "count": 3,
+    "fields": {
+      "updatedAt": 2,
+      "createdAt": 3
+    }
+  },
+  "org_locations": {
+    "count": 0,
+    "fields": {}
+  },
+  "org_structure": {
+    "count": 1,
+    "fields": {}
+  },
+  "Outbound_Log": {
+    "count": 0,
+    "fields": {}
+  },
+  "pallet_moves": {
+    "count": 0,
+    "fields": {}
+  },
+  "partner_ledger": {
+    "count": 0,
+    "fields": {}
+  },
+  "picking_tasks": {
+    "count": 0,
+    "fields": {}
+  },
+  "portal_visits": {
+    "count": 207,
+    "fields": {
+      "at": 207
+    }
+  },
+  "preparatory_meetings": {
+    "count": 5,
+    "fields": {
+      "updatedAt": 5,
+      "createdAt": 4
+    }
+  },
+  "price_lists": {
+    "count": 0,
+    "fields": {}
+  },
+  "promotions": {
+    "count": 0,
+    "fields": {}
+  },
+  "protection_policies": {
+    "count": 1,
+    "fields": {
+      "updatedAt": 1
+    }
+  },
+  "putaway_tasks": {
+    "count": 0,
+    "fields": {}
+  },
+  "receiving_sessions": {
+    "count": 11,
+    "fields": {
+      "createdAt": 11
+    }
+  },
+  "recipes": {
+    "count": 0,
+    "fields": {}
+  },
+  "rep_cash_moves": {
+    "count": 0,
+    "fields": {}
+  },
+  "retail_hub_overrides": {
+    "count": 1,
+    "fields": {
+      "updatedAt": 1
+    }
+  },
+  "sales_reps": {
+    "count": 0,
+    "fields": {}
+  },
+  "settings": {
+    "count": 0,
+    "fields": {}
+  },
+  "shipments": {
+    "count": 0,
+    "fields": {}
+  },
+  "source_imports": {
+    "count": 0,
+    "fields": {}
+  },
+  "stock_moves": {
+    "count": 0,
+    "fields": {}
+  },
+  "Suppliers_Master": {
+    "count": 0,
+    "fields": {}
+  },
+  "targets": {
+    "count": 0,
+    "fields": {}
+  },
+  "tasks": {
+    "count": 0,
+    "fields": {}
+  },
+  "trips": {
+    "count": 0,
+    "fields": {}
+  },
+  "users": {
+    "count": 17,
+    "fields": {}
+  },
+  "vehicles": {
+    "count": 0,
+    "fields": {}
+  },
+  "visits": {
+    "count": 0,
+    "fields": {}
+  },
+  "warehouses": {
+    "count": 2,
+    "fields": {
+      "createdAt": 2
+    }
+  },
+  "work_orders": {
+    "count": 0,
+    "fields": {}
+  },
+  "yard_visits": {
+    "count": 0,
+    "fields": {}
+  },
+  "access_control/versions": {
+    "count": 11,
+    "fields": {
+      "at": 11
+    }
+  },
+  "archive_documents/versions": {
+    "count": 0,
+    "fields": {}
+  },
+  "barcodes/prints": {
+    "count": 0,
+    "fields": {}
+  },
+  "candidates/audit": {
+    "count": 43,
+    "fields": {
+      "at": 43
+    }
+  },
+  "candidates/files": {
+    "count": 6,
+    "fields": {}
+  },
+  "documents/attachments": {
+    "count": 0,
+    "fields": {}
+  },
+  "documents/audit": {
+    "count": 792,
+    "fields": {
+      "at": 792
+    }
+  },
+  "documents/control": {
+    "count": 2,
+    "fields": {
+      "at": 2
+    }
+  },
+  "exceptions/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "handling_units/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "hiring_requests/files": {
+    "count": 0,
+    "fields": {}
+  },
+  "labor_tasks/events": {
+    "count": 10,
+    "fields": {
+      "at": 10
+    }
+  },
+  "operations/members": {
+    "count": 3,
+    "fields": {}
+  },
+  "operations/scans": {
+    "count": 747,
+    "fields": {
+      "at": 747
+    }
+  },
+  "org_structure/versions": {
+    "count": 1,
+    "fields": {}
+  },
+  "shipments/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "tasks/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "trips/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "trips/fuel": {
+    "count": 0,
+    "fields": {}
+  },
+  "vehicles/accidents": {
+    "count": 0,
+    "fields": {}
+  },
+  "vehicles/handovers": {
+    "count": 0,
+    "fields": {}
+  },
+  "vehicles/inspections": {
+    "count": 0,
+    "fields": {}
+  },
+  "vehicles/maintenance": {
+    "count": 0,
+    "fields": {}
+  },
+  "vehicles/oil_changes": {
+    "count": 0,
+    "fields": {}
+  },
+  "visits/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "work_orders/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "yard_visits/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "yard_visits/visitor": {
+    "count": 0,
+    "fields": {}
+  }
+}

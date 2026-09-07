@@ -62,9 +62,14 @@ SELECT must_fail('تصفير العدّاد',
 
 \echo ''
 \echo '════ ٣ · المستندات — الرقم يُكتب مرّةً ════'
+-- ★★★ كان هنا `warehouse` عمودًا مسطّحًا — ولا وجودَ له. المخطّطُ صُحّح إلى
+--     `header jsonb` بعد قياس ١٧٥ مستندًا، **ولم تُصحَّح البيّنةُ معه**. فماتت
+--     عند هذا السطر، وبقيت الأقسامُ الثلاثةُ بعده (الدفترُ والأرصدةُ والحرّاسُ
+--     الملحقة-فقط) **لا تُشغَّل أصلًا** بينما يُقال «٢٤ فحصًا تمرّ».
+--     ⇒ وهذا عينُ الدرس: حارسٌ لا يُطلق ليس حارسًا، وسقوطُه صامت.
 SELECT must_pass('إنشاء مستند',
-  $$INSERT INTO documents (id, type, state, warehouse)
-    VALUES ('DOC-1', 'GRN', 'done', 'WH001')$$);
+  $$INSERT INTO documents (id, type, state, header)
+    VALUES ('DOC-1', 'GRN', 'done', '{"warehouse":"WH001"}'::jsonb)$$);
 
 SELECT must_pass('حجز الرقم أوّل مرّة',
   $$UPDATE documents SET number = 'BFP-GRN-2026-0001' WHERE id = 'DOC-1'$$);

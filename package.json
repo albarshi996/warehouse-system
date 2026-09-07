@@ -24,7 +24,7 @@
     "prebuild": "node scripts/build-arch.mjs && node scripts/build-org.mjs && node scripts/build-scm-manual.mjs && node scripts/build-usage-guide.mjs",
     "guide": "node scripts/build-usage-guide.mjs",
     "scm": "node scripts/build-scm-manual.mjs",
-    "test": "node --test \"src/**/*.test.js\"",
+    "test": "node --test \"src/**/*.test.js\" \"db/**/*.test.js\"",
     "test:rules": "firebase emulators:exec --only firestore \"node --test test/firestore-rules.test.mjs\"",
     "audit": "node scripts/audit-portal.mjs",
     "plan": "npm run where && npm run plan:phase-one && npm run plan:client && npm run plan:sap && npm run plan:locations && npm run plan:exec && npm run plan:fnb && npm run plan:capture && npm run plan:lpn && npm run plan:gate && npm run plan:visits && npm run plan:deps && npm run plan:bulk && npm run plan:rbac && npm run plan:journey",
