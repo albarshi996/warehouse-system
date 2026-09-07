@@ -10,8 +10,8 @@
   },
   "counts": {
     "modules": 117,
-    "serviceDomains": 52,
-    "serviceFiles": 612,
+    "serviceDomains": 51,
+    "serviceFiles": 607,
     "collections": 98,
     "roles": 19,
     "odooModels": 12,
@@ -1019,53 +1019,6 @@
     }
   ],
   "services": [
-    {
-      "domain": "_db",
-      "dir": "src/services/_db",
-      "files": [
-        "backend.js",
-        "backend.test.js",
-        "firestore.js",
-        "index.js",
-        "seam.test.js"
-      ],
-      "fileCount": 5,
-      "testCount": 2,
-      "exports": [
-        "BACKEND",
-        "BACKEND_NAME",
-        "DEFAULT_BACKEND",
-        "REQUIRED_SYMBOLS",
-        "Timestamp",
-        "addDoc",
-        "arrayRemove",
-        "arrayUnion",
-        "backendNameFrom",
-        "collection",
-        "db",
-        "deleteDoc",
-        "doc",
-        "documentId",
-        "getDoc",
-        "getDocFromServer",
-        "getDocs",
-        "increment",
-        "limit",
-        "missingSymbols",
-        "onSnapshot",
-        "orderBy",
-        "pickBackend",
-        "query",
-        "runTransaction",
-        "serverTimestamp",
-        "setDoc",
-        "startAfter",
-        "updateDoc",
-        "where",
-        "writeBatch"
-      ],
-      "collections": []
-    },
     {
       "domain": "activity",
       "dir": "src/services/activity",
@@ -9399,7 +9352,7 @@
         "id": "data-firebase",
         "layer": "البيانات والمصادقة",
         "name": "Firebase",
-        "tech": "Auth",
+        "tech": "Firestore + Auth",
         "role": "قاعدة البيانات الحيّة والمصادقة — مصدر الحقيقة التشغيليّ (القواعد في firestore.rules)",
         "refs": [
           "src/config/firebase.js",
@@ -9407,6 +9360,7 @@
         ],
         "meta": {
           "services": [
+            "Firestore",
             "Auth"
           ]
         }
