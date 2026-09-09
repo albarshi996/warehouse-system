@@ -78,17 +78,21 @@ END $$;
 --    المعاملة**، فلو أُدرج الصفُّ بالختم الافتراضيّ لَما أمكن للمشغّلِ أن
 --    يُنتج قيمةً مختلفة — ولَبدا الحارسُ مكسورًا وهو سليم، أو سليمًا وهو
 --    مكسور. فالبيّنةُ التي لا تفرّق بين الحالتين ليست بيّنة.
+-- ★★ واسمُ المسار «__proof__» لا اسمُ مسارٍ حقيقيّ: البيّنةُ تُشغَّل على قاعدةٍ
+--    **تعمل فيها مزامنةٌ حيّة**، فاستعمالُ `Items_Master` يصطدم بصفّها القائم.
+--    (وقع هذا حرفيًّا أوّلَ تشغيلٍ حيّ — والبيّنةُ التي تفترض قاعدةً فارغةً
+--    تصلح مرّةً واحدةً ثمّ تكذب.)
 SELECT must_pass('إدراجُ حالةِ مسارٍ بختمٍ قديم',
   $$INSERT INTO sync_state (path, mode, mark_field, watermark, updated_at)
-    VALUES ('Items_Master', 'incremental', 'updatedAt', '2026-09-01T10:00:00Z',
+    VALUES ('__proof__', 'incremental', 'updatedAt', '2026-09-01T10:00:00Z',
             '2020-01-01T00:00:00Z')$$);
 
 -- ★ من لم يذكر `updated_at` يُختَم له تلقائيًّا — وهذا كلُّ كودِ البوّابة.
 DO $$
 DECLARE after_ts timestamptz;
 BEGIN
-  UPDATE sync_state SET watermark = '2026-09-02T10:00:00Z' WHERE path = 'Items_Master';
-  SELECT updated_at INTO after_ts FROM sync_state WHERE path = 'Items_Master';
+  UPDATE sync_state SET watermark = '2026-09-02T10:00:00Z' WHERE path = '__proof__';
+  SELECT updated_at INTO after_ts FROM sync_state WHERE path = '__proof__';
 
   IF after_ts = '2020-01-01T00:00:00Z'::timestamptz THEN
     RAISE EXCEPTION '  ✘ الختمُ التلقائيُّ لم يتحرّك — الحارسُ انكسر';
@@ -103,8 +107,8 @@ BEGIN
   UPDATE sync_state
      SET watermark = '2026-09-03T10:00:00Z',
          updated_at = '2020-01-01T00:00:00Z'
-   WHERE path = 'Items_Master';
-  SELECT updated_at INTO got FROM sync_state WHERE path = 'Items_Master';
+   WHERE path = '__proof__';
+  SELECT updated_at INTO got FROM sync_state WHERE path = '__proof__';
 
   IF got <> '2020-01-01T00:00:00Z'::timestamptz THEN
     RAISE EXCEPTION '  ✘ الختمُ الصريحُ دُهس — المرآةُ تخترع زمنًا (got=%)', got;

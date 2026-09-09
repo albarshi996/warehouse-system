@@ -41,7 +41,8 @@ import {
 import { MAPS } from '../db/sync/pg-maps.js';
 
 const PAGE = 500;
-const PSQL = process.env.PSQL_BIN || 'psql';
+// نفسُ اتّفاق `db/sync/sync.mjs`: أمرٌ كاملٌ كي يُمرَّر عبر الحاوية من الجهاز.
+const PSQL_CMD = (process.env.SYNC_PSQL || process.env.PSQL_BIN || 'psql').split(/\s+/);
 
 const argv = process.argv.slice(2);
 const onlyArg = argv.find((a) => a.startsWith('--only='));
@@ -57,10 +58,11 @@ const KEYS = {
 };
 
 function psqlRows(sql) {
-  const out = execFileSync(PSQL, ['-v', 'ON_ERROR_STOP=1', '-q', '-t', '-A', '-F', '\t'], {
-    input: sql,
-    encoding: 'utf8',
-  }).trim();
+  const out = execFileSync(
+    PSQL_CMD[0],
+    [...PSQL_CMD.slice(1), '-v', 'ON_ERROR_STOP=1', '-q', '-t', '-A', '-F', '\t'],
+    { input: sql, encoding: 'utf8' }
+  ).trim();
   return out ? out.split('\n').map((l) => l.split('\t')) : [];
 }
 

@@ -77,13 +77,22 @@ const PLAN_ONLY = flag('plan');
 
 /* ═══════════════════ القاعدة — عبر psql بلا سائق ═══════════════════ */
 
-const PSQL = process.env.PSQL_BIN || 'psql';
+/**
+ * أمرُ `psql` كاملًا.
+ *
+ * ★ داخل الحاوية: `psql` مباشرةً (الصورةُ تنصّب `postgresql-client`).
+ *   ومن الجهاز: `psql` غيرُ منصَّبٍ عادةً، فيُمرَّر عبر الحاوية —
+ *   `SYNC_PSQL="docker exec -i warehouse-postgres psql"`.
+ *   وبهذا تُجرَّب المزامنةُ حيًّا قبل بناء الصورة، وهو ما يختصر دورةَ
+ *   التجربة من دقائقَ إلى ثوانٍ.
+ */
+const PSQL_CMD = (process.env.SYNC_PSQL || process.env.PSQL_BIN || 'psql').split(/\s+/);
 
 /** ينفّذ SQL ويُعيد المخرَج نصًّا. الفشلُ يُرمى ولا يُبتلع. */
 function psql(sql, { tuplesOnly = false } = {}) {
-  const args = ['-v', 'ON_ERROR_STOP=1', '-q'];
+  const args = [...PSQL_CMD.slice(1), '-v', 'ON_ERROR_STOP=1', '-q'];
   if (tuplesOnly) args.push('-t', '-A', '-F', '\t');
-  return execFileSync(PSQL, args, { input: sql, encoding: 'utf8' });
+  return execFileSync(PSQL_CMD[0], args, { input: sql, encoding: 'utf8' });
 }
 
 /** صفوفٌ كمصفوفاتِ أعمدة. */
@@ -160,6 +169,61 @@ async function readPath(fb, db, segments, { field, since }) {
 
 /* ═══════════════════ الدورة ═══════════════════ */
 
+/**
+ * يكتب الصفوفَ، **ويعزل الفاسدَ بالتنصيف بدل أن يُسقط الدفعةَ كلَّها**.
+ *
+ * ★★★ الدرسُ من أوّل تشغيلٍ حيّ: باركودٌ واحدٌ مكرَّرٌ في Firestore رفضته
+ *     القاعدة **فبقيت ١١٧٣ صنفًا خارج المرآة**، ورقمُ مستندٍ واحدٌ أسقط ١٧٥
+ *     مستندًا. وكانت المزامنةُ ستُعيد الفشلَ نفسَه كلَّ دقيقتين إلى الأبد.
+ *
+ * ★★ والتنصيفُ لا القراءةُ صفًّا صفًّا: دفعةٌ من ألفٍ فيها فاسدٌ واحدٌ تُعزَل
+ *    في نحو عشرِ محاولاتٍ لا ألف. والكلفةُ تتناسب مع عدد الفاسد لا عدد الصفوف.
+ *
+ * @returns {{written:number, rejected:Array<{id:string, reason:string}>}}
+ */
+function applyRows(map, rows) {
+  if (!rows.length) return { written: 0, rejected: [] };
+
+  const built = buildUpsert(map, rows);
+  try {
+    psql(`BEGIN;\n${built.sql}\nCOMMIT;`);
+    return { written: built.count, rejected: [] };
+  } catch (err) {
+    if (rows.length === 1) {
+      const raw = String(err.stderr || err.message || err);
+      // أوّلُ سطرِ خطأٍ حقيقيٍّ من psql — لا كلُّ أثرِ الاستدعاء.
+      const line = raw.split('\n').find((l) => /ERROR|DETAIL/.test(l)) || raw.split('\n')[0];
+      return { written: 0, rejected: [{ id: rows[0].__id, reason: line.trim().slice(0, 500) }] };
+    }
+    const mid = Math.floor(rows.length / 2);
+    const a = applyRows(map, rows.slice(0, mid));
+    const b = applyRows(map, rows.slice(mid));
+    return { written: a.written + b.written, rejected: [...a.rejected, ...b.rejected] };
+  }
+}
+
+/** يسجّل المرفوضَ باسمه — دَينٌ معلومٌ لا فقدٌ صامت. */
+function recordRejects(path, rejected) {
+  if (!rejected.length) return;
+  const values = rejected
+    .map((r) => `(${lit(path)}, ${lit(r.id)}, ${lit(r.reason)})`)
+    .join(',\n  ');
+  psql(
+    'INSERT INTO sync_rejects (path, doc_id, reason) VALUES\n  ' + values +
+      ' ON CONFLICT (path, doc_id) DO UPDATE SET' +
+      ' reason = EXCLUDED.reason, last_seen = now(), attempts = sync_rejects.attempts + 1;'
+  );
+}
+
+/** صفٌّ أُصلح في المصدر يُشطب من الدَّين — والجدولُ الفارغُ هو الحالةُ السليمة. */
+function clearRejects(path, ids) {
+  if (!ids.length) return;
+  psql(
+    `DELETE FROM sync_rejects WHERE path = ${lit(path)} AND doc_id IN (` +
+      ids.map(lit).join(', ') + ');'
+  );
+}
+
 /** حالةُ كلّ مسارٍ من القاعدة: العلامةُ المائيّةُ المحفوظة. */
 function loadState() {
   const state = {};
@@ -229,12 +293,21 @@ async function runCycle(fb, db, minute) {
       totalDocs += rows.length;
 
       let written = 0;
-      if (rows.length) {
-        const built = buildUpsert(mapForPath(path), rows);
-        written = built.count;
-        if (!DRY) psql(`BEGIN;\n${built.sql}\nCOMMIT;`);
+      let rejected = [];
+      if (rows.length && !DRY) {
+        const res = applyRows(mapForPath(path), rows);
+        written = res.written;
+        rejected = res.rejected;
+        recordRejects(path, rejected);
+        // ما مرّ الآن وكان مرفوضًا سابقًا ⇒ أُصلح في المصدر، فيُشطب دَينُه.
+        const rejectedIds = new Set(rejected.map((r) => r.id));
+        clearRejects(path, rows.map((r) => r.__id).filter((id) => !rejectedIds.has(id)));
+      } else if (rows.length) {
+        written = rows.length;
       }
 
+      // ★ العلامةُ تتقدّم **رغم الرفض**: صفٌّ فاسدٌ لا يحبس المسارَ إلى الأبد.
+      //   ولا فقدَ صامتًا لأنّه مسجَّلٌ باسمه في `sync_rejects`.
       const after =
         plan.mode === MODE.INCREMENTAL ? advanceWatermark(before, rows, plan.field) : null;
 
@@ -242,14 +315,19 @@ async function runCycle(fb, db, minute) {
 
       entries.push({
         cycleId, path, mode: plan.mode, field: plan.field, windowStart: from,
-        before, after, queries, docs: rows.length, written, ok: true, error: null, startedAt,
+        before, after, queries, docs: rows.length, written,
+        ok: true,
+        error: rejected.length ? `${rejected.length} صفًّا مرفوضًا — انظر sync_rejects` : null,
+        startedAt,
       });
 
       console.log(
         `  ok  ${path.padEnd(24)} ${plan.mode.padEnd(11)}` +
           ` q=${String(queries).padStart(3)} docs=${String(rows.length).padStart(5)}` +
-          ` -> ${written}`
+          ` -> ${written}` +
+          (rejected.length ? `  ⚠ مرفوض: ${rejected.length}` : '')
       );
+      for (const r of rejected) console.log(`        ✘ ${r.id} — ${r.reason}`);
     } catch (err) {
       // ★ يُسجَّل ولا يُبتلع: مزامنةٌ تفشل صامتةً تُنتج فرقًا لا يُكتشف.
       const msg = String(err?.code || err?.message || err);
