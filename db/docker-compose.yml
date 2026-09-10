@@ -91,6 +91,64 @@ services:
       # مجموعةٍ فرعيّة، وأثرُه حينها مقيس: الأرضيّةُ تهبط من ١٧٨٠٨ إلى ٦٤٨٠.
       SYNC_COLLECTION_GROUP: '0'
 
+  # ═══════════════════════════════════════════════════════════════════════
+  #  الخادم — PostgREST: يفتح الجداولَ عبر HTTP **محكومةً بـRLS**
+  #
+  #  ★★★ ولماذا لا خادمٌ يُكتب يدًا؟ لأنّ عندنا ٣١٩ قاعدةَ صلاحيّة. خادمٌ
+  #      يدويٌّ يعني إعادةَ كتابتها في JavaScript — فيصير الحاكمُ كودًا يسهل
+  #      تجاوزُه بمسارٍ نُسي. وRLS تجعل الصلاحيّةَ **في القاعدة نفسها**:
+  #      لا يتجاوزها سكربتٌ لم نكتبه، ولا `psql` مباشرةً.
+  #
+  #  ★★ ويتّصل بدور `authenticator` **الذي لا يقرأ جدولًا واحدًا** — كلُّ ما
+  #     يملكه أن يتقمّص `web_anon` أو `web_user`. فتسريبُ كلمته وحدَها لا
+  #     يكشف صفًّا. (البرهانُ في `008-postgrest.sql`.)
+  # ═══════════════════════════════════════════════════════════════════════
+  postgrest:
+    profiles: ['api']
+    image: postgrest/postgrest:v12.2.3
+    container_name: warehouse-postgrest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${AUTHENTICATOR_PASSWORD:?كلمةُ authenticator مطلوبة}@postgres:5432/warehouse
+      PGRST_DB_SCHEMAS: public
+      # ★ الدورُ المجهول: من لا رمزَ له. ولا يقرأ شيئًا — بقرارٍ مُبرهَن.
+      PGRST_DB_ANON_ROLE: web_anon
+      # ★★★ السرُّ **متماثل** (HS256) لأنّ الجسرَ هو من يُصدر الرمز. ولو
+      #     تُرك رمزُ Firebase خامًا لعمل كلُّ طلبٍ بدور المجهول فرأى صفرًا
+      #     **بلا خطأٍ واحد** — وهذا هو سببُ وجود الجسر.
+      PGRST_JWT_SECRET: ${PGRST_JWT_SECRET:?سرُّ الرمز مطلوب — ٣٢ حرفًا فأكثر}
+      PGRST_SERVER_PORT: '3000'
+      PGRST_OPENAPI_MODE: disabled
+    ports:
+      # ★★ محصورٌ على الجهاز وحدَه: بلا `127.0.0.1` يُفتح المنفذُ على شبكة
+      #    المكتب كلِّها، فيصل إليه أيُّ جهازٍ فيها. والوصولُ من الخارج يمرّ
+      #    بالنفق (خ٦) لا بمنفذٍ مكشوف.
+      - '127.0.0.1:3000:3000'
+
+  # ═══════════════════════════════════════════════════════════════════════
+  #  جسرُ الرمز — رمزُ Firebase يدخل، ورمزُ القاعدة يخرج
+  #
+  #  ★ وجودُه فرضَه القياس لا التفضيل: رمزُ Firebase **بلا دعوى دور**،
+  #    وPostgREST **لا يجدّد مفاتيحَ Google**. والجسرُ يحلّ الاثنين معًا
+  #    وبلا مفتاحِ حسابِ خدمة. (التفاصيل في `db/auth/verify.js`.)
+  # ═══════════════════════════════════════════════════════════════════════
+  auth:
+    profiles: ['api']
+    build:
+      context: ..
+      dockerfile: db/auth/Dockerfile
+    container_name: warehouse-auth
+    restart: unless-stopped
+    environment:
+      PGRST_JWT_SECRET: ${PGRST_JWT_SECRET:?سرُّ الرمز مطلوب}
+      FIREBASE_PROJECT_ID: ${PUBLIC_FIREBASE_PROJECT_ID:-brandzo-erp-2026}
+      AUTH_PORT: '3001'
+    ports:
+      - '127.0.0.1:3001:3001'
+
 volumes:
   warehouse-db-data:
     name: warehouse-db-data
