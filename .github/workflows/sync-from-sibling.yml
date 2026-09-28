@@ -66,8 +66,21 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
+      # ★ ثلاثُ محاولاتٍ لا واحدة: سقطةُ 2026-09-11 كانت **انقطاعَ شبكةٍ** عن
+      #   مُسجِّل npm لا خللَ منطق. وبلا إعادةٍ يصدر عن العابر والحقيقيِّ إشعارُ
+      #   الفشل نفسُه، فيُدرَّب قارئُه على تجاهل الاثنين — وتجاهلُ إشعارٍ صادقٍ
+      #   أخطر من الانقطاع نفسِه. والمهلةُ تتصاعد، فالمُسجِّل المتعثّر يحتاج نفَسًا.
       - name: Install dependencies
-        run: npm ci
+        run: |
+          for attempt in 1 2 3; do
+            if npm ci; then exit 0; fi
+            if [ "$attempt" != "3" ]; then
+              echo "::warning::تعثّر npm ci (محاولة $attempt من ٣) — إعادةٌ بعد $((attempt * 15)) ثانية"
+              sleep $((attempt * 15))
+            fi
+          done
+          echo "::error::سقط npm ci ثلاثَ مرّات متتالية — ليس انقطاعًا عابرًا"
+          exit 1
 
       - name: هويّة الملتزِم
         run: |

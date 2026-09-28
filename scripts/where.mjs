@@ -10,6 +10,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { scanWorktrees, guardReport } from './guard-worktrees.mjs';
+import { unportablePaths } from '../src/services/workspace/portability.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -85,6 +86,18 @@ function siblingGap() {
 }
 
 /**
+ * ملفّاتُ النشر في العمل الذي لم يبلغ الشقيق بعد — وهي وحدَها التي **لا تبلغه
+ * أبدًا**، لأنّ `GITHUB_TOKEN` لا يملك دفعَها (الشرح في `portability.js`).
+ * وخطرُها أنّها لا تتأخّر وحدَها بل تُسقط الدفعةَ كلَّها معها، فتنسدّ المزامنة.
+ *
+ * يُستدعى بعد `siblingGap` وحدَه، فهو الذي يجلب `FETCH_HEAD`. و`-z` لأنّ git
+ * يُقتبس الأسماءَ غيرَ اللاتينيّة حيث `core.quotePath` مشتعل — والمشروعُ عربيّ.
+ */
+function deployFilesNotArrived() {
+  return unportablePaths(git('diff', '--name-only', '-z', 'FETCH_HEAD', 'HEAD').split('\0'));
+}
+
+/**
  * سطرُ الفارق — ومعناه يختلف باختلاف الدور:
  * المستقبِل يسأل «هل عنده ما ليس عندي؟»، والمصدرُ يسأل «هل بلغه ما عندي؟».
  * وسؤالُ المصدر لا يعنيه تقدّمُ الشقيق بكوميتات دمجٍ وهويّة، فلا يُنبَّه بها.
@@ -98,9 +111,20 @@ function gapLine() {
       : `  ${COLORS.green}◆ ملحوقٌ بالشقيق — لا جديد عنده${OFF}`;
   }
   if (gap.ours === 0) return `  ${COLORS.green}◆ الشقيق ملحوقٌ بك — وصله كلّ عملك${OFF}`;
-  return ws.sibling.autoSync
-    ? `  ${DIM}◆ الشقيق متأخّر ${gap.ours} كوميتًا — ومزامنتُه التلقائيّة تلحقه خلال ساعة${OFF}`
-    : `  ${COLORS.gold}◆ الشقيق متأخّر ${gap.ours} كوميتًا — زامِنه من مجلّده: npm run sync${OFF}`;
+  if (!ws.sibling.autoSync)
+    return `  ${COLORS.gold}◆ الشقيق متأخّر ${gap.ours} كوميتًا — زامِنه من مجلّده: npm run sync${OFF}`;
+
+  // ★ «تلحقه خلال ساعة» صحيحةٌ إلّا في بابٍ واحد — فلا تُقال على إطلاقها.
+  const stuck = deployFilesNotArrived();
+  if (!stuck.length)
+    return `  ${DIM}◆ الشقيق متأخّر ${gap.ours} كوميتًا — ومزامنتُه التلقائيّة تلحقه خلال ساعة${OFF}`;
+
+  return (
+    `  ${COLORS.gold}◆ الشقيق متأخّر ${gap.ours} كوميتًا — تلحقه مزامنتُه خلال ساعة${OFF}\n` +
+    `  ${COLORS.red}${BOLD}⚠ إلّا ${stuck.length} ملفَّ نشرٍ لا تعبر أبدًا — وتوقف المزامنةَ كلَّها معها:${OFF}\n` +
+    stuck.map((f) => `  ${COLORS.red}    · ${f}${OFF}`).join('\n') +
+    `\n  ${DIM}الأتمتة لا تملك دفعَ ما تحت .github/workflows — انقلها بيدك من مجلّد الشقيق.${OFF}`
+  );
 }
 
 const c = COLORS[ws.color] ?? COLORS.cyan;
