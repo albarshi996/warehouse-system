@@ -23,7 +23,11 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { atRiskOfErasure, tokensOf } from '../src/services/workspace/identity.js';
-import { unportablePaths, handApplyHint } from '../src/services/workspace/portability.js';
+import {
+  unportablePaths,
+  isUnportable,
+  exclusionNote,
+} from '../src/services/workspace/portability.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -141,13 +145,16 @@ if (behind === 0) {
 }
 
 // ═══ ٣. حارس ملفّات النشر ═════════════════════════════════════════════════
-step(3, 'حارس ملفّات النشر — أفي الدفعة ما لا تدفعه الأتمتة؟');
+step(3, 'ملفّات النشر — ما يُستثنى من الدمج');
 
 /**
  * الشرحُ كاملًا في `portability.js`، وخلاصتُه أنّ `GITHUB_TOKEN` لا يملك دفعَ
- * ملفٍّ تحت `.github/workflows/` ولا إذنَ يُمنح له. فإن حملت الدفعةُ واحدًا
- * منها سقط **الدفعُ كلُّه** — لا ذلك الملفُّ وحده — ساعةً بعد ساعة، برفضٍ من
- * git لا يسمّي سببَه. فيُقال هنا صراحةً، ومعه أوامرُ العلاج.
+ * ملفٍّ تحت `.github/workflows/` ولا إذنَ يُمنح له. فلو مرّ في الدمج لسقط
+ * **الدفعُ كلُّه** — لا ذلك الملفُّ وحده — ساعةً بعد ساعة، برفضٍ من git لا
+ * يسمّي سببَه.
+ *
+ * فيُستثنى هنا بقرارٍ مكتوب: يُحسب الآن، ويُرجَع إلى نسختنا بعد الدمج (خطوة ٥)،
+ * ويُعلَن في الطرفَين وفي الكومِت. **فتجري المزامنةُ أبدًا ولا يُطلب تدخّل.**
  *
  * والسؤالُ عن **فرق الطرفين** لا عن تقدّم أحدهما: أيًّا كان صاحبُ التغيير فإنّ
  * الدمجَ سيكتب ملفَّ النشر، والكتابةُ هي الممنوعة.
@@ -156,17 +163,10 @@ const deployFiles = unportablePaths(changedPaths('HEAD', 'FETCH_HEAD'));
 
 if (!deployFiles.length) {
   console.info(`${DIM}      لا ملفَّ نشرٍ في الدفعة — تعبر كلُّها.${OFF}`);
-} else if (card.autoSync) {
-  stop(
-    `${deployFiles.length} ملفَّ نشرٍ في الدفعة — والأتمتة لا تملك دفعَها`,
-    `${deployFiles.map((f) => `    · ${f}`).join('\n')}\n\n` +
-      `${handApplyHint({ files: deployFiles, siblingRemote: sibling.remote })}\n\n` +
-      `  ${DIM}و--force لا ينفع هنا، فالرفضُ من GitHub لا منّا. وبعد نقلها بيدٍ${OFF}\n` +
-      `  ${DIM}تمرّ المزامنةُ التالية وحدها — إذ يكون الفرقُ قد زال.${OFF}`
-  );
 } else {
   console.info(
-    `${YELLOW}      ${deployFiles.length} ملفَّ نشرٍ في الدفعة — وتعبر هنا، فأنت تدفع برمزك لا برمز الأتمتة.${OFF}`
+    `${YELLOW}      ${deployFiles.length} ملفَّ نشرٍ تُستثنى بعد الدمج — ويُبقى على نسخة هذا المستودع:${OFF}\n` +
+      deployFiles.map((f) => `${YELLOW}        · ${f}${OFF}`).join('\n')
   );
 }
 
@@ -185,10 +185,21 @@ const GENERATED = new Set([
   'public/دليل-استخدام-البوابة.html',
 ]);
 
-/** نصُّ ملفٍّ عند مرجعٍ ما، أو `null` إن لم يكن موجودًا هناك. */
+/**
+ * نصُّ ملفٍّ عند مرجعٍ ما، أو `null` إن لم يكن موجودًا هناك.
+ *
+ * ★ و`stderr` مُسكَتٌ عمدًا: الغيابُ **جوابٌ متوقَّعٌ** لا خطأ (كلُّ ملفٍّ جديدٍ
+ * هنا غائبٌ عن الشقيق)، وكان git يطبع `fatal: path … does not exist` لكلِّ
+ * واحد. فيُقرأ في سجلّ المزامنة كأنّه فشلٌ وليس كذلك — **وإنذارٌ كاذبٌ يُدرّب
+ * على تجاهل الصادق**، وهو عينُ العطب الذي تحرسه هذه الخطوة كلُّها.
+ */
 function blob(ref, file) {
   try {
-    return execFileSync('git', ['show', `${ref}:${file}`], { cwd: root, encoding: 'utf8' });
+    return execFileSync('git', ['show', `${ref}:${file}`], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
   } catch {
     return null;
   }
@@ -216,6 +227,10 @@ function disk(file) {
 function atRisk(files, readOurs, baseRef) {
   return files.filter((f) => {
     if (GENERATED.has(f)) return false;
+    // ★ ملفّاتُ النشر مستثناةٌ بقرارٍ مكتوب (خطوة ٣)، ففرقُها عن الشقيق **نتيجةُ
+    //   القاعدة لا خرقُها**. ولولا هذا الإعفاء لأسقط الحارسُ كلَّ مزامنةٍ بعد
+    //   أوّل افتراقٍ فيها — فيعود الانسدادُ من بابٍ آخر.
+    if (isUnportable(f)) return false;
     return atRiskOfErasure({
       file: f,
       ours: readOurs(f),
@@ -247,15 +262,31 @@ step(5, `دمج ${theirTip} بترجيح الشقيق`);
 try {
   run('git', ['merge', '-X', 'theirs', '--no-ff', '--no-commit', '--quiet', 'FETCH_HEAD']);
 } catch {
-  const unmerged = changedPaths('--diff-filter=U');
-  if (unmerged.length) {
-    stop(
-      'تعارضٌ لا يحلّه الترجيح (حذفٌ مقابل تعديل غالبًا)',
-      `${unmerged.map((f) => `    · ${f}`).join('\n')}\n\n` +
-        `  ${DIM}احسمها يدويًّا ثمّ: npm run identity:apply && npm run arch && git commit${OFF}\n` +
-        `  ${DIM}أو تراجَع كلّيًّا: git merge --abort${OFF}`
-    );
-  }
+  // الفشلُ قد يكون تعارضًا محصورًا في ملفِّ نشر — ويُحسم بالإرجاع بعد قليل.
+  // فلا يُحكم عليه قبل أن يُستثنى ما يُستثنى.
+}
+
+/**
+ * ★ إرجاعُ ملفّات النشر إلى نسخة هذا المستودع — **قبل** قياس التعارض.
+ *
+ * فـ`git checkout HEAD -- <ملفّ>` يكتب نسختَنا في الشجرة والفهرس معًا، فيحسم
+ * المسارَ وإن كان متعارضًا. (مُثبَتٌ في مستودعٍ مختبريّ 2026-10-02: الدمجُ
+ * أخذ نسخةَ الشقيق، والإرجاعُ استعاد نسختَنا، وباقي الملفّات عبرت، والكومِتُ
+ * لم يحمل ملفَّ النشر أصلًا.)
+ */
+if (deployFiles.length) {
+  git('checkout', 'HEAD', '--', ...deployFiles);
+  console.info(`${DIM}      ${exclusionNote(deployFiles)}${OFF}`);
+}
+
+const unmerged = changedPaths('--diff-filter=U');
+if (unmerged.length) {
+  stop(
+    'تعارضٌ لا يحلّه الترجيح (حذفٌ مقابل تعديل غالبًا)',
+    `${unmerged.map((f) => `    · ${f}`).join('\n')}\n\n` +
+      `  ${DIM}احسمها يدويًّا ثمّ: npm run identity:apply && npm run arch && git commit${OFF}\n` +
+      `  ${DIM}أو تراجَع كلّيًّا: git merge --abort${OFF}`
+  );
 }
 
 // ═══ ٦. الهويّة والتوليد ══════════════════════════════════════════════════
@@ -295,7 +326,10 @@ git(
   '-m',
   `chore(sync): مزامنة من ${sibling.repo} حتّى ${theirTip}\n\n` +
     `${behind} كوميتًا من ${sibling.name}. الهويّة مختومة من workspace.json،\n` +
-    `والفرق عن الشقيق بعدها ${delta.length} ملفّ هويّةٍ لا غير.`
+    `والفرق عن الشقيق بعدها ${delta.length} ملفّ هويّةٍ لا غير.` +
+    // ★ الاستثناءُ يُكتب في الكومِت لا في السجلّ وحده — فسجلُّ التشغيل يُمحى
+    //   بعد تسعين يومًا، والكومِتُ يبقى. ومن قرأ بعد سنةٍ عرف لماذا افترقا.
+    (deployFiles.length ? `\n\n${exclusionNote(deployFiles)}` : '')
 );
 
 console.info(

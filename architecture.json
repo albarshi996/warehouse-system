@@ -5098,7 +5098,7 @@
         "WORKFLOW_DIR",
         "agentsBlock",
         "atRiskOfErasure",
-        "handApplyHint",
+        "exclusionNote",
         "identityOnly",
         "isSweepExempt",
         "isUnportable",

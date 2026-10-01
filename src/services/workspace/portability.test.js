@@ -12,7 +12,7 @@ import {
   isUnportable,
   normalizePath,
   unportablePaths,
-  handApplyHint,
+  exclusionNote,
   WORKFLOW_DIR,
 } from './portability.js';
 
@@ -75,12 +75,20 @@ test('★★★ نقضٌ: لو أُلغي شرطُ المجلّد لَمرّ م�
   assert.equal(isUnportable('.github/workflows-backup/x.yml'), false);
 });
 
-test('★★ ونصُّ العلاج أوامرُ تُنسخ — لأنّه يُقرأ في إشعار فشلٍ ومن يقرؤه يريد أن يخرج', () => {
-  const hint = handApplyHint({
-    files: ['.github/workflows/astro.yml'],
-    siblingRemote: 'https://github.com/warehouse-art/brand-zo-hub.git',
-  });
-  assert.match(hint, /git fetch https:\/\/github\.com\/warehouse-art\/brand-zo-hub\.git main/);
-  assert.match(hint, /git checkout FETCH_HEAD -- \.github\/workflows\/astro\.yml/);
-  assert.match(hint, /git push/);
+test('★★★ والاستثناءُ يُعلَن دائمًا — فاستثناءٌ صامتٌ يصير عطبًا مجهولَ السبب', () => {
+  const one = exclusionNote(['.github/workflows/astro.yml']);
+  assert.match(one, /\.github\/workflows\/astro\.yml/, 'الملفُّ غيرُ مسمًّى — فلا يُعرف ما استُثني');
+  assert.match(one, /مِلكُ كلِّ مستودعٍ لنفسه/, 'السببُ غائب — فيُقرأ الخبرُ ولا يُفهم');
+
+  const many = exclusionNote(['.github/workflows/a.yml', '.github/workflows/b.yml']);
+  assert.match(many, /a\.yml/);
+  assert.match(many, /b\.yml/);
+  assert.ok(many.includes('2'), 'العددُ غائبٌ في صيغة الجمع');
+});
+
+test('★ وصيغةُ المفرد لا تقول «1 ملفَّ نشرٍ» — العربيّةُ تُقرأ لا تُركَّب', () => {
+  assert.ok(
+    !exclusionNote(['.github/workflows/x.yml']).startsWith('1'),
+    'صيغةُ المفرد بُنيت كالجمع — ورديءُ الصياغة يُقرأ فيُظنّ عطبًا',
+  );
 });
