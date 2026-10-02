@@ -358,7 +358,71 @@ test('★★★ الازدواجُ مع firestore.rules مُعلَنٌ ومحر�
       `الدور «${role}» يملك التعديلَ المحكومَ في الواجهة ولا ذِكرَ له في firestore.rules`
     );
   }
-  // ولا يُدَّعى حذفٌ لم يُنشَر: ما دامت القاعدةُ `allow delete: if false`
-  // قائمةً على المستندات، يبقى `requiresRulesPublish` صادقًا.
-  assert.match(rules, /لا حذف لمستند أبدًا/, 'نصُّ القاعدة تغيّر — راجع removalOptions');
+});
+
+test('★★★ وقاعدةُ المحو في الخادم تطابق `eligibleForHardDelete` — لا تزيد عليها', () => {
+  const rules = fs.readFileSync(
+    path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'firestore.rules'),
+    'utf8'
+  );
+  // الرقعةُ طُبّقت 2026-10-02، فلم تعد القاعدةُ `allow delete: if false`.
+  // ★★ والحارسُ يقرأ **البنية** لا نصَّ تعليق: التعليقُ يُعاد صوغُه فيسقط
+  // الحارسُ بلا عطب، والشرطُ لا يتغيّر إلّا بتغيّر الحكم. (وقد وقع: هذا
+  // الاختبارُ نفسُه كان يثبّت جملةً عربيّةً فأطلق على إعادة صياغتها.)
+  // ⚠️ **تُقصّ من داخل `match /documents/{docId}` لا من أوّل الملفّ**: فيه
+  // ٨١ قاعدةَ `allow delete` — وأوّلُها لمجموعةٍ أخرى تمامًا. (وقد وقع:
+  // الحارسُ قرأ قاعدةَ غيرِ المستندات فأبلغ عن ثغرةٍ لا وجودَ لها.)
+  const block = rules.indexOf('match /documents/{docId}');
+  assert.ok(block > -1, 'لم يُعثر على كتلة المستندات في firestore.rules');
+  const at = rules.indexOf('allow delete:', block);
+  assert.ok(at > -1, 'لم تُقرأ قاعدةُ المحو من كتلة المستندات');
+  const body = rules.slice(at, rules.indexOf(';', at));
+
+  // ★★★ الشرطُ الذي لا يُفرَّط فيه: **المرقَّمُ لا يُمحى**.
+  assert.match(body, /number == null/, 'قاعدةُ المحو لا تشترط غيابَ الرقم — ثغرةُ التسلسل تُفتح');
+  // ولا يُمحى إلّا ما يُحرَّر، ولا المُقيَّد، ولا مسودّةُ غيرِك.
+  assert.match(body, /state in \['draft', 'rejected'\]/, 'المحوُ لا يُحصر بالمسودّة والمرفوض');
+  assert.match(body, /posted != true/, 'المحوُ لا يستثني المُقيَّد');
+  assert.match(body, /createdByUid == request\.auth\.uid/, 'المحوُ لا يُحصر بصاحبه');
+
+  // وكلُّ شرطٍ في الخادم له مقابلٌ في `eligibleForHardDelete` — فلا تفترق
+  // الواجهةُ عن الحكم. (نُقاس بالسلوك لا بالنصّ.)
+  assert.equal(eligibleForHardDelete({ state: 'draft', number: null }), true);
+  assert.equal(eligibleForHardDelete({ state: 'draft', number: 'GRN-1' }), false);
+  assert.equal(eligibleForHardDelete({ state: 'draft', number: null, posted: true }), false);
+  assert.equal(eligibleForHardDelete({ state: 'approved', number: null }), false);
+});
+
+test('★★★ وبوّابةُ التعديل المحكوم في الخادم: لا تمسّ الحالةَ وتُلزم سببًا', () => {
+  const rules = fs.readFileSync(
+    path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'firestore.rules'),
+    'utf8'
+  );
+  assert.match(rules, /function isGovernedAmend\(\)/, 'بوّابةُ التعديل المحكوم غائبةٌ عن القواعد');
+  // الجسمُ يُقصّ من اسم الدالّة إلى أوّل `;` — فجسمُها تعبيرُ `return` واحد.
+  const at = rules.indexOf('function isGovernedAmend()');
+  const body = rules.slice(at, rules.indexOf(';', at));
+  assert.ok(body.length > 100, 'لم يُقرأ جسمُ isGovernedAmend');
+
+  // ★★★ أخطرُ شرطٍ فيها: **الحالةُ لا تتغيّر** — فلا تجتمع مع اعتمادٍ في
+  // كتابةٍ واحدة، وهو عينُ ما يمنعه `contentUnchanged` من الجهة الأخرى.
+  assert.match(body, /request\.resource\.data\.state == resource\.data\.state/, 'التعديلُ قد يجتمع مع نقلةِ حالة — بابُ ث‑٤ يُعاد فتحه');
+  // والسببُ إلزاميٌّ على الخادم لا في الواجهة وحدها.
+  assert.match(body, /amended\.reason\.size\(\) > 0/, 'السببُ غيرُ ملزِمٍ على الخادم');
+  // والختمُ من الخادم والكاتبُ هو الفاعل.
+  assert.match(body, /amended\.at == request\.time/, 'الوسمُ يُؤرَّخ من المتصفّح');
+  assert.match(body, /amended\.byUid == request\.auth\.uid/, 'الوسمُ يُنسَب إلى غير فاعله');
+  // والحقولُ معدودة — فلا يُرقَّم ولا يُقيَّد ولا تُبدَّل هويّةٌ من هذا الباب.
+  assert.match(body, /hasOnly\(\['header', 'lines', 'amended', 'updatedAt'\]\)/, 'الحقولُ غيرُ محصورة');
+  // والمُقيَّدُ مستثنًى.
+  assert.match(body, /posted != true/, 'المُقيَّدُ قابلٌ للتعديل');
+
+  // ★★★ ولا يُستعمل `approveRoles` هنا بحال: لو فُعل لعاد بابُ «المالي
+  // يبدّل السعر ثمّ يعتمد» مفتوحًا بخطوتين بدل خطوة.
+  assert.ok(!/approveRoles/.test(body), 'بوّابةُ التعديل تستعمل أدوارَ الاعتماد — فصلُ المهامّ يسقط');
+
+  // وقائمةُ الأدوار هي `AMEND_ROLES` نفسُها — الازدواجُ المُعلَن محروس.
+  for (const role of AMEND_ROLES) {
+    assert.ok(body.includes(`'${role}'`), `الدور «${role}» في AMEND_ROLES ولا ذِكرَ له في بوّابة الخادم`);
+  }
 });
