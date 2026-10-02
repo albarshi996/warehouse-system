@@ -42,6 +42,12 @@ INSERT INTO balances (sku, warehouse, qty) VALUES ('WPROBE-1', 'WPRB', 7);
 INSERT INTO stock_moves (doc_id, line_index, sku, qty, to_loc, posted_by_uid)
 VALUES ('WPROBE-DRAFT', 9, 'WPROBE-1', 1, 'WPRB', 'w_storekeeper');
 
+-- مستنداتٌ في كلّ حالةٍ تلزم آلةَ الحالات (النوع GRN).
+INSERT INTO documents (id, type, state, created_by_uid, lines, header) VALUES
+  ('WPROBE-SUB',  'GRN', 'submitted', 'w_storekeeper', '[{"a":1}]'::jsonb, '{"h":1}'::jsonb),
+  ('WPROBE-APR',  'GRN', 'approved',  'w_storekeeper', '[{"a":1}]'::jsonb, '{"h":1}'::jsonb),
+  ('WPROBE-DONE', 'GRN', 'done',      'w_storekeeper', '[{"a":1}]'::jsonb, '{"h":1}'::jsonb);
+
 /**
  * هل كانت هذه الكتابةُ ستنجح بهذه الهويّة؟ — وتُلغى دائمًا بعدها.
  *
@@ -251,24 +257,80 @@ END $do$;
 
 
 \echo ''
-\echo '════ ٦ · التأجيلُ المُعلَن — تعديلُ المستند ممنوعٌ افتراضًا ════'
+\echo '════ ٦ · آلةُ الحالات — والنقلةُ المركَّبةُ التي تخدع RLS ════'
 
--- ★★★ وهذا فحصٌ **يُثبّت نقصًا مقصودًا** لا كمالًا: آلةُ الحالات لم تُترجَم
---     بعد، والجدولُ بلا سياسةِ UPDATE. فالمنعُ قائمٌ افتراضًا — وهو أسلمُ من
---     سياسةٍ ناقصة. **ويوم تُترجَم، يسقط هذا الفحصُ فيُحذف عمدًا** — فلا
---     يبقى حارسٌ يحرس غيابًا صار حضورًا.
+-- GRN: اعتمادٌ = qc_inspector/warehouse_manager · إنجازٌ = storekeeper/warehouse_manager
 DO $do$
 BEGIN
-  PERFORM expect('admin ⟶ تعديلُ مستند',
-    tried($s$UPDATE documents SET stage = 'x' WHERE id = 'WPROBE-DRAFT'$s$, 'w_admin'), false);
-  PERFORM expect('منشئُه ⟶ تعديلُ مسوّدته',
-    tried($s$UPDATE documents SET stage = 'x' WHERE id = 'WPROBE-DRAFT'$s$, 'w_storekeeper'), false);
-  RAISE NOTICE '  ✔ تعديلُ المستند ممنوعٌ للجميع — تأجيلٌ مُعلَنٌ لا ثغرة (٢)';
+  -- ★★★ **الفحصُ الأهمُّ في الملفّ كلِّه.** `submitted ⟶ done` لا يسمح بها
+  --     أيُّ فرعٍ وحدَه: المعتمِدُ ينقل من submitted، والمنجِزُ ينقل إلى done.
+  --     ولو كانت الحراسةُ سياساتِ RLS لمرّت — **وقد جُرّبت فمرّت فعلًا**
+  --     (USING الأولى تطابق وWITH CHECK الثانية تطابق، وتُجمعان مستقلّتين).
+  --     وهنا يردّها المشغّلُ لأنّه يرى القديمَ والجديدَ معًا.
+  PERFORM expect('★ منجِزٌ ⟶ يقفز submitted ⟶ done',
+    tried($s$UPDATE documents SET state='done' WHERE id='WPROBE-SUB'$s$, 'w_storekeeper'), false);
+
+  -- الفروعُ المشروعة
+  PERFORM expect('منشئُه ⟶ draft ⟶ submitted',
+    tried($s$UPDATE documents SET state='submitted' WHERE id='WPROBE-DRAFT'$s$, 'w_storekeeper'), true);
+  PERFORM expect('معتمِدٌ (qc) ⟶ submitted ⟶ approved',
+    tried($s$UPDATE documents SET state='approved' WHERE id='WPROBE-SUB'$s$, 'w_qc_inspector'), true);
+  PERFORM expect('منجِزٌ ⟶ approved ⟶ done',
+    tried($s$UPDATE documents SET state='done' WHERE id='WPROBE-APR'$s$, 'w_storekeeper'), true);
+  PERFORM expect('منجِزٌ ⟶ done ⟶ closed',
+    tried($s$UPDATE documents SET state='closed' WHERE id='WPROBE-DONE'$s$, 'w_storekeeper'), true);
+  PERFORM expect('منشئُه ⟶ إلغاءُ مسوّدته',
+    tried($s$UPDATE documents SET state='canceled' WHERE id='WPROBE-DRAFT'$s$, 'w_storekeeper'), true);
+
+  -- والنقوض
+  PERFORM expect('دورٌ ليس في جدول الاعتماد ⟶ approved',
+    tried($s$UPDATE documents SET state='approved' WHERE id='WPROBE-SUB'$s$, 'w_gate_officer'), false);
+  -- ★★ والمعتمِدُ لا يبدّل المحتوى في كتابة الاعتماد (عطبُ ث‑٤ الأصليّ).
+  PERFORM expect('معتمِدٌ ⟶ يعتمد **ويبدّل البنود**',
+    tried($s$UPDATE documents SET state='approved', lines='[{"x":1}]'::jsonb WHERE id='WPROBE-SUB'$s$,
+          'w_qc_inspector'), false);
+  PERFORM expect('غيرُ منشئه ⟶ يرفع مسوّدتَه',
+    tried($s$UPDATE documents SET state='submitted' WHERE id='WPROBE-DRAFT'$s$, 'w_qc_inspector'), false);
+  -- والثوابت
+  PERFORM expect('تبديلُ منشئ المستند',
+    tried($s$UPDATE documents SET created_by_uid='w_admin' WHERE id='WPROBE-DRAFT'$s$, 'w_storekeeper'), false);
+  PERFORM expect('تبديلُ رقمٍ مكتوب',
+    tried($s$UPDATE documents SET number='GRN-2026-X' WHERE id='WPROBE-NUMBERED'$s$, 'w_admin'), false);
+  RAISE NOTICE '  ✔ آلةُ الحالات: ٥ فروعٍ مشروعةٍ و٦ نقوضٍ منها القفزةُ المركّبة (١١)';
+END $do$;
+
+
+\echo ''
+\echo '════ ٧ · ختمُ الأثر الجانبيّ والتعديلُ المحكوم ════'
+
+DO $do$
+BEGIN
+  -- القيدُ المخزنيُّ يكتب حقولَه ولا يحرّك الحالة.
+  PERFORM expect('فاعلٌ مخزنيّ ⟶ ختمُ القيد على معتمَد',
+    tried($s$UPDATE documents SET posted=true, posted_by_uid='w_storekeeper' WHERE id='WPROBE-APR'$s$,
+          'w_storekeeper'), true);
+  -- ★★★ وحقلٌ خارج القائمة يُبطل الختمَ كلَّه — وإلّا صار الختمُ بابًا عامًّا.
+  PERFORM expect('فاعلٌ مخزنيّ ⟶ ختمُ القيد **ومعه stage**',
+    tried($s$UPDATE documents SET posted=true, stage='zzz' WHERE id='WPROBE-APR'$s$, 'w_storekeeper'), false);
+  -- ★★ والتعديلُ المحكوم: مديرُ المستودع بسببٍ مكتوب، بلا نقلِ حالة.
+  PERFORM expect('مديرٌ ⟶ تعديلٌ محكومٌ بسبب',
+    tried($s$UPDATE documents SET lines='[{"y":2}]'::jsonb,
+            extra = jsonb_build_object('amended', jsonb_build_object('byUid','w_warehouse_manager','reason','تصحيح كمية'))
+            WHERE id='WPROBE-SUB'$s$, 'w_warehouse_manager'), true);
+  PERFORM expect('مديرٌ ⟶ تعديلٌ **بلا سبب**',
+    tried($s$UPDATE documents SET lines='[{"y":2}]'::jsonb,
+            extra = jsonb_build_object('amended', jsonb_build_object('byUid','w_warehouse_manager','reason',''))
+            WHERE id='WPROBE-SUB'$s$, 'w_warehouse_manager'), false);
+  PERFORM expect('أمينُ مخزن ⟶ تعديلٌ محكوم (ليس مديرًا)',
+    tried($s$UPDATE documents SET lines='[{"y":2}]'::jsonb,
+            extra = jsonb_build_object('amended', jsonb_build_object('byUid','w_storekeeper','reason','س'))
+            WHERE id='WPROBE-SUB'$s$, 'w_storekeeper'), false);
+  RAISE NOTICE '  ✔ الختمُ والتعديلُ المحكوم: إيجابان وثلاثةُ نقوض (٥)';
 END $do$;
 
 
 \echo ''
 \echo '════ الحصيلة ════'
-\echo '  ✔ ٣٢ فحصًا + ٢٤ دورًا على items — كلُّها بالإيجاب والنقض'
+\echo '  ✔ ٤٨ فحصًا + ٢٤ دورًا على items — كلُّها بالإيجاب والنقض'
 
 ROLLBACK;

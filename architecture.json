@@ -11,7 +11,7 @@
   "counts": {
     "modules": 117,
     "serviceDomains": 52,
-    "serviceFiles": 631,
+    "serviceFiles": 632,
     "collections": 98,
     "roles": 20,
     "odooModels": 12,
@@ -1513,6 +1513,7 @@
         "docExcel.test.js",
         "docReport.js",
         "docReport.test.js",
+        "docRolesSql.test.js",
         "docref.test.js",
         "documentFlow.js",
         "documentFlow.test.js",
@@ -1596,8 +1597,8 @@
         "vsi.js",
         "vsr.js"
       ],
-      "fileCount": 122,
-      "testCount": 41,
+      "fileCount": 123,
+      "testCount": 42,
       "exports": [
         "ACCEPTED_ATTACHMENT_TYPES",
         "AMEND_CLASSES",

@@ -33,7 +33,7 @@ const PROOFS = [
   { file: 'db/test/proof.sql', min: 25, what: 'حرّاسُ المخطّط' },
   { file: 'db/test/proof-sync.sql', min: 13, what: 'طبقةُ المزامنة' },
   { file: 'db/test/proof-rls-read.sql', min: 11, what: 'صلاحيّةُ القراءة' },
-  { file: 'db/test/proof-rls-write.sql', min: 9, what: 'صلاحيّةُ الكتابة' },
+  { file: 'db/test/proof-rls-write.sql', min: 10, what: 'صلاحيّةُ الكتابة' },
 ];
 
 /**
