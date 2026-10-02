@@ -19,14 +19,13 @@ import {
   listenAllDocuments,
 } from '../../../services/documents/documentsService.js';
 import { getSchema, GOVERNED_FORMS } from '../../../services/documents/schemas/index.js';
-import { getState, STATES } from '../../../services/documents/states.js';
+import { getState } from '../../../services/documents/states.js';
 import { START_GROUPS } from '../../../services/documents/startGroups.js';
 import { fieldRouteFor } from '../../../services/tasks/fieldRoutes.js';
 import { nextOwnerOf } from '../../../services/tasks/stageOwners.js';
 import {
   awaitingMyApproval,
   sortByUrgency,
-  filterDocs,
   inboxStats,
   ageInState,
   isStale,
@@ -40,6 +39,33 @@ import { int } from '../../odoo/format.js';
 
 import { MANAGER_ROLES } from '../../../services/auth/roles.js';
 
+/* ═══ طلبُ المالك 2026-10-02: التقريرُ والتحديدُ والإجراءُ الجماعيّ ═══ */
+import {
+  EMPTY_CRITERIA,
+  filterReport,
+  hasActiveCriteria,
+  partyLabel,
+  eventDay,
+  groupReport,
+  REPORT_COLUMNS,
+  reportRows,
+  criteriaSummary,
+} from '../../../services/documents/docReport.js';
+import {
+  toggleId,
+  toggleAll,
+  pruneSelection,
+  selectedRows,
+  copyPlan,
+  copyMessage,
+  writeClipboard,
+} from '../../../services/ui/tableSelection.js';
+import { reportSheetMatrix, reportSheetWidths, reportFileName } from '../../../services/documents/docExcel.js';
+import { qcQueue } from '../../../services/documents/bulkActions.js';
+import SCHEMAS from '../../../services/documents/schemas/index.js';
+import DocumentFilters from './DocumentFilters.jsx';
+import BulkActionBar from './BulkActionBar.jsx';
+
 /** خريطة عرض: حالة المستند ← نوع شارة أودو (عرضٌ فقط، لا منطق). */
 const STATE_BADGE = {
   draft: 'draft',
@@ -49,10 +75,18 @@ const STATE_BADGE = {
   done: 'done',
 };
 
-/** أعمدة قائمة أودو — نفس ترتيب الجدول السابق. */
+/**
+ * أعمدة قائمة أودو.
+ *
+ * ★ وزِيد عمودان 2026-10-02: **الطرف** و**تاريخ الواقعة**. وبلا الطرف كان
+ * الموظّفُ يفتح المستندَ ليعرف من مورّدُه — وهو أوّلُ ما يسأل عنه؛ وبلا
+ * تاريخ الواقعة لا يُفرَّق استلامُ أمسِ المسجَّلُ اليوم من استلام اليوم.
+ */
 const LIST_COLS = [
   { key: 'number', label: 'الرقم' },
   { key: 'type', label: 'النوع' },
+  { key: 'party', label: 'المورّد/العميل' },
+  { key: 'eventDate', label: 'تاريخ الواقعة' },
   { key: 'state', label: 'الحالة' },
   { key: 'creator', label: 'أنشأه' },
   { key: 'age', label: 'الانتظار' },
@@ -84,9 +118,13 @@ export default function DocumentsInbox() {
   const [mine, setMine] = useState([]);
   const [pending, setPending] = useState([]);
   const [all, setAll] = useState([]);
-  const [q, setQ] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
-  const [stateFilter, setStateFilter] = useState('');
+  /** معاييرُ التقرير كلُّها في كائنٍ واحد — مرجعُه `EMPTY_CRITERIA`. */
+  const [criteria, setCriteria] = useState(EMPTY_CRITERIA);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [groupBy, setGroupBy] = useState('');
+  /** التحديدُ تملكه الشاشة لا الجدول — انظر رأس `ListView`. */
+  const [selected, setSelected] = useState(() => new Set());
+  const [toast, setToast] = useState('');
   /** يُثبَّت مرّة عند التحميل: لو قرأنا الساعة في كل رسم لتغيّر الترتيب تحت المؤشّر. */
   const [now] = useState(() => Date.now());
   const base = getBasePath();
@@ -109,15 +147,53 @@ export default function DocumentsInbox() {
   /** ما ينتظر اعتماد **هذا** المستخدم تحديدًا — لا كل ما أُرسل. */
   const forMe = useMemo(() => awaitingMyApproval(pending, me), [pending, me]);
 
-  const source = tab === 'mine' ? mine : tab === 'pending' ? forMe : all;
+  /**
+   * ‹QC› طابورُ الجودة: ما ينتظر فحصَ هذا المفتّش من أنواعٍ **تُشتقّ من
+   * المخطّطات** لا من قائمةٍ مكتوبة. وهو تيسيرُ «إجراءات فحص الجودة»: المفتّشُ
+   * يفتح تبويبَه فيجد ما يخصُّه وحدَه، ويعتمده جماعيًّا بضغطتين.
+   */
+  const qcDocs = useMemo(
+    () => qcQueue(pending, { role: me?.role, uid: me?.uid }, SCHEMAS),
+    [pending, me?.role, me?.uid]
+  );
+
+  const source = tab === 'mine' ? mine : tab === 'pending' ? forMe : tab === 'qc' ? qcDocs : all;
   const rows = useMemo(
-    () => sortByUrgency(filterDocs(source, { q, type: typeFilter, state: stateFilter }), now),
-    [source, q, typeFilter, stateFilter, now]
+    () => sortByUrgency(filterReport(source, { ...criteria, nowMs: now }), now),
+    [source, criteria, now]
   );
   const stats = useMemo(() => inboxStats(source, now), [source, now]);
+  const groups = useMemo(
+    () => (groupBy ? groupReport(rows, groupBy, criteria.basis) : []),
+    [rows, groupBy, criteria.basis]
+  );
+
+  const visibleIds = useMemo(() => rows.map((d) => d.id), [rows]);
+
+  /**
+   * ★★★ التحديدُ يُقصُّ على المعروض عند كلّ تغيّرٍ في التصفية أو التبويب.
+   *
+   * وبلا هذا: يحدّد خمسةً، ثمّ يشدّد التصفيةَ فيختفي ثلاثةٌ عن عينه ويبقون
+   * محدَّدين، ثمّ يضغط «اعتماد المحدَّد» فيعتمد ثلاثةً **لا يراها**. وهو أخطرُ
+   * عطبٍ محتملٍ في هذه الميزة كلِّها.
+   */
+  useEffect(() => {
+    setSelected((prev) => {
+      const next = pruneSelection(prev, visibleIds);
+      return next.size === prev.size ? prev : next;
+    });
+  }, [visibleIds]);
+
+  const selectedDocs = useMemo(() => selectedRows(rows, selected), [rows, selected]);
+
+  function say(msg) {
+    setToast(msg);
+    // الرسالةُ تختفي وحدها: شريطُ نجاحٍ يبقى أبدًا يُقرأ خبرًا عن فعلٍ تالٍ.
+    setTimeout(() => setToast(''), 6000);
+  }
 
   function exportCsv() {
-    const label = tab === 'mine' ? 'مستنداتي' : tab === 'pending' ? 'بانتظار-اعتمادي' : 'الكل';
+    const label = tab === 'mine' ? 'مستنداتي' : tab === 'pending' ? 'بانتظار-اعتمادي' : tab === 'qc' ? 'طابور-الجودة' : 'الكل';
     const blob = new Blob([toCsv(rows, now)], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -125,6 +201,44 @@ export default function DocumentsInbox() {
     a.download = csvFileName(label, now);
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  /**
+   * تصديرُ إكسل — المحدَّدُ إن وُجد، وإلّا المعروضُ كلُّه.
+   *
+   * ⚠️ و`xlsx` تُحمَّل **عند الطلب** لا مع الصفحة: المكتبةُ ~900 ك.ب، وتحميلُها
+   * في كلّ فتحةٍ لشاشةٍ أغلبُ زوّارها لا يُصدّرون إهدارٌ لا يُحتمل على شبكة
+   * المستودع. ولا CDN — نسخةٌ مستضافةٌ ذاتيًّا من الحزمة نفسِها (حارسُ
+   * `vendoredLibs.test.js`).
+   */
+  async function exportXlsx(onlySelected = false) {
+    const chosen = onlySelected && selectedDocs.length ? selectedDocs : rows;
+    if (!chosen.length) return say('لا صفوفَ للتصدير.');
+    try {
+      const XLSX = await import('xlsx');
+      const matrix = reportSheetMatrix(chosen, criteria, now);
+      const ws = XLSX.utils.aoa_to_sheet(matrix);
+      ws['!cols'] = reportSheetWidths();
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'المستندات');
+      XLSX.writeFile(wb, reportFileName(criteria, now));
+      return say(`صُدِّر ${int(chosen.length)} صفًّا إلى إكسل.`);
+    } catch (err) {
+      return say(`تعذّر توليدُ ملفّ إكسل: ${err?.message || err}`);
+    }
+  }
+
+  /** نسخٌ إلى الحافظة — من **صفوف البيانات** لا من المرسوم (انظر `tableSelection`). */
+  async function copyRows() {
+    const data = reportRows(rows, now);
+    const byId = new Map(rows.map((d, i) => [d.id, { id: d.id, ...data[i] }]));
+    const plan = copyPlan({
+      columns: REPORT_COLUMNS,
+      rows: [...byId.values()],
+      selected,
+    });
+    const ok = await writeClipboard(plan.tsv);
+    say(ok ? copyMessage(plan) : 'تعذّر النسخ — متصفّحُك لم يسمح بالوصول إلى الحافظة.');
   }
 
   if (!ready) {
@@ -148,6 +262,9 @@ export default function DocumentsInbox() {
 
   const tabs = [
     { key: 'pending', label: 'بانتظار اعتمادي', count: forMe.length },
+    // ‹QC› تبويبُ الجودة يظهر لمن له فيه شيءٌ فقط — فلا تبويبٌ فارغٌ أبدًا
+    // في شاشة أمينِ مخزنٍ لا شأنَ له بالفحص.
+    ...(qcDocs.length > 0 ? [{ key: 'qc', label: 'طابور فحص الجودة', count: qcDocs.length }] : []),
     { key: 'mine', label: 'مستنداتي', count: mine.length },
     ...(MANAGER_ROLES.includes(me.role) ? [{ key: 'all', label: 'كل المستندات', count: all.length }] : []),
   ];
@@ -191,6 +308,21 @@ export default function DocumentsInbox() {
       cells: {
         number: <span className="decoration-bf" style={{ fontFamily: 'monospace' }}>{d.number || '— مسودّة'}</span>,
         type: schema?.titleAr || d.type,
+        /* الطرفُ من `partyFields.js` عبر `docReport` — لا من تخمينِ حقلٍ هنا.
+           والفراغُ فراغٌ: مستندُ تسويةٍ داخليٍّ لا طرفَ له، و«—» في عمودٍ
+           نصفُه فارغٌ ضجيج. */
+        party: partyLabel(d) ? (
+          <span style={{ maxWidth: '220px', display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'bottom' }} title={partyLabel(d)}>
+            {partyLabel(d)}
+          </span>
+        ) : (
+          <span style={{ color: 'var(--o-gray-400)' }}>—</span>
+        ),
+        eventDate: eventDay(d) ? (
+          <span style={{ fontFamily: 'monospace', direction: 'ltr', unicodeBidi: 'isolate', fontSize: 'var(--o-font-size-xs)' }}>{eventDay(d)}</span>
+        ) : (
+          <span style={{ color: 'var(--o-gray-400)' }}>—</span>
+        ),
         state: (
           /* الشارةُ تقول **أين** هو، والسطرُ تحتها يقول **من ينتظره** — والاثنان
              وجها خبرٍ واحد فلا يُفرَّقان في عمودين. والسطرُ يلتفّ ولا يُقصّ:
@@ -247,11 +379,26 @@ export default function DocumentsInbox() {
           <nav className="o_breadcrumb" aria-label="مسار التنقّل"><span className="o_active">صندوق المستندات</span></nav>
         </div>
         <div className="o_cp_end">
+          {/* إكسل أوّلًا: هو ما يُطلب فعلًا، وCSV يبقى لمن بنى عليه عملًا. */}
+          <button type="button" className="btn btn-primary" onClick={() => exportXlsx(false)} disabled={rows.length === 0}>
+            <Icon name="arrowDownTray" size={15} /> تصدير إكسل ({int(rows.length)})
+          </button>
+          <button type="button" className="btn btn-secondary" onClick={copyRows} disabled={rows.length === 0}>
+            <Icon name="clipboardList" size={15} /> نسخٌ للجدول
+          </button>
           <button type="button" className="btn btn-secondary" onClick={exportCsv} disabled={rows.length === 0}>
-            <Icon name="arrowDownTray" size={15} /> تصدير ({int(rows.length)})
+            CSV
           </button>
         </div>
       </div>
+
+      {toast && (
+        <div className="o_ds" style={{ paddingBottom: 0 }}>
+          <div className="o_alert info">
+            <div className="o_alert_title"><Icon name="fileText" size={15} /> {toast}</div>
+          </div>
+        </div>
+      )}
 
       <div className="o_ds">
         {/* ── بدء مستند جديد، مجمّعًا بالسلسلة ── */}
@@ -322,47 +469,90 @@ export default function DocumentsInbox() {
           </div>
         )}
 
-        {/* ── القائمة مع البحث والتصفية ── */}
+        {/* ── التقرير: البحثُ والتصفيةُ بالتاريخ والطرف والرقم ── */}
+        <DocumentFilters
+          criteria={criteria}
+          onChange={setCriteria}
+          types={readyForms}
+          open={filtersOpen || hasActiveCriteria(criteria)}
+          onToggleOpen={() => setFiltersOpen((v) => !v)}
+          resultCount={rows.length}
+          totalCount={source.length}
+          nowMs={now}
+        />
+
+        {/* ── الإجراءُ الجماعيُّ على المحدَّد ── */}
+        <BulkActionBar
+          selectedDocs={selectedDocs}
+          me={me}
+          onClear={() => setSelected(new Set())}
+          onCopy={copyRows}
+          onExport={() => exportXlsx(true)}
+          onDone={(out) => say(out.message)}
+        />
+
+        {/* ── القائمة ── */}
         <div className="o_ds_card">
           <div className="o_ds_toolbar">
-            <div className="o_searchview">
-              <span className="o_searchview_icon" aria-hidden="true">⌕</span>
-              <input
-                type="text"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="ابحث برقم المستند أو نوعه أو منشئه…"
-                aria-label="بحث"
-              />
-            </div>
-            <select className="o_input" style={{ maxWidth: '190px' }} value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-              <option value="">كل الأنواع</option>
-              {readyForms.map((f) => (
-                <option key={f.type} value={f.type}>
-                  {f.titleAr}
-                </option>
-              ))}
-            </select>
-            <select className="o_input" style={{ maxWidth: '170px' }} value={stateFilter} onChange={(e) => setStateFilter(e.target.value)}>
-              <option value="">كل الحالات</option>
-              {Object.values(STATES).map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
+            <span style={{ fontSize: 'var(--o-font-size-xs)', fontWeight: 'var(--o-font-weight-bold)', color: 'var(--o-main-color-muted)' }}>
+              تجميعٌ وملخّص
+            </span>
+            {[
+              ['', 'بلا تجميع'],
+              ['type', 'بالنوع'],
+              ['day', 'باليوم'],
+              ['party', 'بالطرف'],
+              ['state', 'بالحالة'],
+            ].map(([id, label]) => (
+              <button
+                key={id || 'none'}
+                type="button"
+                className={`btn btn-sm ${groupBy === id ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setGroupBy(id)}
+              >
+                {label}
+              </button>
+            ))}
           </div>
+
+          {/* ملخّصُ التجميع — الجوابُ على «كم من كلّ نوع؟» بلا عدٍّ بالإصبع */}
+          {groupBy && groups.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', padding: '0 var(--o-horizontal-padding) 12px' }}>
+              {groups.map((g) => (
+                <span
+                  key={g.key || 'none'}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    padding: '4px 10px', borderRadius: 'var(--o-border-radius)',
+                    fontSize: 'var(--o-font-size-xs)', background: 'var(--o-gray-100)',
+                    border: '1px solid var(--o-gray-200)',
+                  }}
+                >
+                  {g.label}
+                  <strong style={{ fontFamily: 'monospace' }}>{int(g.count)}</strong>
+                </span>
+              ))}
+            </div>
+          )}
 
           {rows.length === 0 ? (
             <div className="o_dashboard_empty">
-              {q || typeFilter || stateFilter
-                ? 'لا نتائج لهذا البحث.'
+              {hasActiveCriteria(criteria)
+                ? `لا نتائج لهذه التصفية — ${criteriaSummary(criteria)}`
                 : tab === 'pending'
                   ? 'لا شيء ينتظر اعتمادك.'
-                  : 'لا مستندات بعد — ابدأ واحدًا من الأعلى.'}
+                  : tab === 'qc'
+                    ? 'لا شيء ينتظر فحصَ الجودة.'
+                    : 'لا مستندات بعد — ابدأ واحدًا من الأعلى.'}
             </div>
           ) : (
-            <ListView selectable={false} columns={LIST_COLS} rows={listRows} />
+            <ListView
+              columns={LIST_COLS}
+              rows={listRows}
+              selectedIds={selected}
+              onToggle={(id) => setSelected((prev) => toggleId(prev, id))}
+              onToggleAll={() => setSelected((prev) => toggleAll(prev, visibleIds))}
+            />
           )}
         </div>
 

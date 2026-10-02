@@ -46,6 +46,8 @@ import {
 } from '../../../services/items/uomWiring.js';
 import { uomLabel } from '../../../services/items/uomModel.js';
 import { isEditable } from '../../../services/documents/states.js';
+import { amendVerdict } from '../../../services/documents/amendGuard.js';
+import AmendPanel from './AmendPanel.jsx';
 import FieldInput from './FieldInput.jsx';
 import { listenSettings } from '../../../services/settings/settingsService.js';
 import { evaluateHeaderDates } from '../../../services/documents/datingGuard.js';
@@ -113,6 +115,8 @@ export default function DocumentEngine() {
   const [ready, setReady] = useState(false);
   const [docId, setDocId] = useState(id);
   const [doc, setDoc] = useState(null);
+  /** آخرُ ما في القاعدة — طرفُ المقارنة في التعديل المحكوم (انظر `listenDocument`). */
+  const [savedDoc, setSavedDoc] = useState(null);
   const [audit, setAudit] = useState([]);
   const [attachments, setAttachments] = useState([]);
   const [reconciliations, setReconciliations] = useState([]);
@@ -165,6 +169,15 @@ export default function DocumentEngine() {
     }
     const unsubDoc = listenDocument(docId, (d) => {
       if (!d) return;
+      /**
+       * ★★ نسخةُ **المحفوظ** تُحدَّث دائمًا ولو كان المحرّرُ متّسخًا.
+       *
+       * ولمَ نسختان؟ لأنّ التعديلَ المحكومَ يعرض **الفارقَ قبل الحفظ**، والفارقُ
+       * يحتاج طرفين: ما في القاعدة وما على الشاشة. و`doc` وحدَه لا يكفي — هو
+       * المحرَّرُ والمحفوظُ في كائنٍ واحد، فمقارنتُه بنفسه تُعيد «لا تغيير»
+       * أبدًا. وبهذا يرى المعدِّلُ بعينه ما سيُكتب في السجلّ باسمه.
+       */
+      setSavedDoc({ ...d, header: { _checklist: emptyChecklist(schema), ...d.header } });
       setDoc((prev) => {
         // لا نسحب البساط من تحت من يكتب الآن.
         if (dirtyRef.current && prev) return prev;
@@ -250,7 +263,33 @@ export default function DocumentEngine() {
     setTimeout(() => setMsg(null), 4000);
   }, []);
 
-  const editable = isEditable(doc?.state) && (!docId || doc?.createdByUid === me?.uid || me?.role === 'admin');
+  /**
+   * التحريرُ الحرّ — كما كان بلا زيادةٍ ولا نقص: المسودّةُ والمرفوضُ، لصاحبه
+   * أو للمدير العامّ.
+   */
+  const freeEdit = isEditable(doc?.state) && (!docId || doc?.createdByUid === me?.uid || me?.role === 'admin');
+
+  /**
+   * ‹AMEND› التعديلُ المحكوم (طلب المالك ٢ · 2026-10-02) — «التعديل في كل مرحلة».
+   *
+   * ★★★ ويُفتح **فتحَ الحقول** لا فتحَ زرِّ الحفظ: الحقولُ تصير قابلةً للكتابة
+   * فيعدّل من يملك، لكنّ الحفظَ يمرّ بـ`AmendPanel` وحدَه — بسببٍ إلزاميٍّ
+   * وقيدِ تدقيقٍ مفصَّل. ولا يُفتَح `onSave` العاديُّ عليها بحالٍ: الحفظُ
+   * الصامتُ على مستندٍ خرج من يد صاحبه هو عينُ ما تمنعه قاعدةُ الخادم
+   * `contentUnchanged` — وإخفاؤه خلف زرٍّ روتينيٍّ لا يجعله مشروعًا.
+   *
+   * والسببُ لا يُمرَّر هنا عمدًا: `canEditNow` بلا سببٍ يُعيد `false` للمحكوم،
+   * فنسأل عن **الصنف والسلطة** لا عن تمام الشروط — واللوحةُ هي التي تُلزم
+   * بالسبب عند الحفظ.
+   */
+  const amend = useMemo(
+    () => amendVerdict(savedDoc, { role: me?.role, uid: me?.uid }, { reason: 'probe' }),
+    [savedDoc, me?.role, me?.uid]
+  );
+  const governedEdit = Boolean(docId) && amend.cls.id === 'governed' && amend.allowed;
+
+  /** ما تقرؤه الحقولُ: الحرُّ أو المحكوم. */
+  const editable = freeEdit || governedEdit;
   const canCreate = me && (me.role === 'admin' || (schema?.roles?.create || []).includes(me.role));
   // تحذيرات المخطّط + حكم وجهة الصرف (FNB-103): قطاعٌ أو براند على مستند
   // خروجٍ وعاءٌ لا مستفيد — يُنبَّه بالبديل. الحكم عند الإنشاء لا عند القراءة.
@@ -635,11 +674,35 @@ export default function DocumentEngine() {
             me={me}
             saving={saving}
             dirty={dirty}
-            onSave={editable ? handleSave : null}
+            /* ★★★ `freeEdit` لا `editable`: الحفظُ العاديُّ للمسودّة وحدها. وما
+               خرج من يد صاحبه يُحفظ من `AmendPanel` بسببٍ وقيدٍ — ولو وُصِل هنا
+               لصار التعديلُ المحكومُ حفظًا صامتًا، وهي الثغرةُ نفسُها بلبوسٍ
+               جديد. (والتعليقُ هنا بصيغة JS لا JSX: موضعُ السماتِ لا يقبل
+               `{/* … *\/}`.) */
+            onSave={freeEdit ? handleSave : null}
             onTransition={handleTransition}
             onPrint={() => window.print()}
           />
         </div>
+
+        {/*
+          ‹AMEND› التعديلُ المحكومُ والإزالة (طلب المالك ٢ و٣ · 2026-10-02).
+
+          ★ وموضعُها **تحت شريط الحالة مباشرةً**: من فتح مستندًا معتمَدًا ليعدّله
+          يسأل أوّلًا «أيجوز؟» — فالجوابُ أوّلُ ما يقرأ، لا في ذيل الصفحة بعد
+          البنود والمرفقات. وهي تُخفي نفسَها على المسودّة (لها زرُّ الحفظ).
+        */}
+        {docId && savedDoc && (
+          <AmendPanel
+            doc={doc}
+            savedDoc={savedDoc}
+            schema={schema}
+            me={me}
+            onFlash={flash}
+            onAmended={() => setDirty(false)}
+            onRemoved={() => navigateToDocument(null)}
+          />
+        )}
 
         {/* «جلب من مستند سابق» (SAP-5) — على المستند الجديد وحده.
             بعد الحفظ يصير المسار «إنشاء مستند لاحق» من `ChainBar`، فلا
