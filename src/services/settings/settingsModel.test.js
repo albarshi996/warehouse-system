@@ -29,7 +29,32 @@ test('★ الافتراضات تطابق القسم ١‑أ من الخطة ح�
     pricing: { manualOverride: 'tagged', overrideRole: 'sales_supervisor' },
     credit: { enforce: 'block', warnAtPct: 90, unlockRole: 'finance_manager' },
     dating: { backdateDays: 7, requireReason: true, approveRole: 'warehouse_manager' },
+    // ‹AMEND 2026-10-02› حالةُ نشر رقعة قواعد الأمان — إعدادٌ لا ثابتٌ في
+    // الكود لأنّ الناشرَ هو المالك من Firebase Console، فلا يُنتظر نشرُ نسخةٍ
+    // بعد كلّ نشرِ قواعد.
+    rules: { amendPublished: false, deletePublished: false },
   });
+});
+
+test('★★★ وافتراضُ نشر القواعد مغلقٌ لا مفتوح — والغيابُ ليس إذنًا', () => {
+  // ما دام لا أحدَ قال إنّها نُشرت فالفرضُ أنّها لم تُنشَر، فلا يُرسَم زرٌّ
+  // يرتدّ من الخادم. (نفسُ مبدأ `DEFAULT_ROLE = 'viewer'`.)
+  assert.equal(DEFAULT_SETTINGS.rules.amendPublished, false);
+  assert.equal(DEFAULT_SETTINGS.rules.deletePublished, false);
+  assert.equal(normalizeSettings({}).rules.amendPublished, false);
+  assert.equal(normalizeSettings({ rules: {} }).rules.deletePublished, false);
+
+  // و`=== true` لا `!== false`: القيمُ الملتبسةُ تُقرأ منعًا لا إذنًا.
+  for (const bad of ['true', 1, 'yes', {}, [], null, undefined]) {
+    assert.equal(
+      normalizeSettings({ rules: { amendPublished: bad } }).rules.amendPublished,
+      false,
+      `القيمةُ ${JSON.stringify(bad)} قُرئت إذنًا`
+    );
+  }
+  // والصريحُ وحدَه يفتح.
+  assert.equal(normalizeSettings({ rules: { amendPublished: true } }).rules.amendPublished, true);
+  assert.equal(normalizeSettings({ rules: { deletePublished: true } }).rules.deletePublished, true);
 });
 
 test('★ كلّ دورٍ مذكورٍ في الافتراضات موجودٌ فعلًا في كتالوج الأدوار', () => {

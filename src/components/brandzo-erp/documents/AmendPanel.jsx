@@ -34,7 +34,13 @@ export default function AmendPanel({
   onFlash,
   onAmended,
   onRemoved,
+  /**
+   * ‹AMEND› حالةُ نشر رقعة قواعد الأمان — من `settings/current` لا من ثابتٍ
+   * في الكود، فناشرُها المالكُ من Firebase Console ولا يُنتظر نشرُ نسخةٍ بعده.
+   * والافتراضُ **مغلق**: ما لم يُقَل إنّها نُشرت فلا يُرسَم زرٌّ يرتدّ.
+   */
   rulesPublished = false,
+  amendRulesPublished = false,
 }) {
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
@@ -134,7 +140,7 @@ export default function AmendPanel({
 
             {/* ★★★ «منجَزٌ عندي ≠ وصل المستخدم»: الخادمُ اليومَ يقبل المدير
                 العامَّ وحده، فيُقال ذلك **قبل** أن يُكتب تعديلٌ يرتدّ. */}
-            {!verdict.serverReady && (verdict.allowed || !verdict.problem) && (
+            {!verdict.serverReady && !amendRulesPublished && (verdict.allowed || !verdict.problem) && (
               <div className="o_alert danger" style={{ marginBottom: '12px' }}>
                 <div className="o_alert_title">
                   <Icon name="alertTriangle" size={14} /> قواعدُ الأمان لم تُنشَر بعد

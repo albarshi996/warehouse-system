@@ -36,6 +36,22 @@ export const DEFAULT_SETTINGS = Object.freeze({
   pricing: { manualOverride: 'tagged', overrideRole: 'sales_supervisor' },
   credit: { enforce: 'block', warnAtPct: 90, unlockRole: 'finance_manager' },
   dating: { backdateDays: 7, requireReason: true, approveRole: 'warehouse_manager' },
+  /**
+   * ‹AMEND› حالةُ نشر رقعة قواعد الأمان — `docs/رقعة-قواعد-التعديل-والمحو.md`.
+   *
+   * ★★★ ولماذا إعدادٌ لا ثابتٌ في الكود؟ لأنّ **ناشرَ القواعد هو المالك من
+   * Firebase Console**، والوكلاء يعدّلونها في المستودع ولا ينشرونها (دستور
+   * AGENTS). فلو كانت ثابتًا لاحتاج كلُّ نشرٍ **نسخةً جديدةً من البوّابة**
+   * بعده — فيبقى الزرُّ غائبًا أيّامًا بعد أن صار الخادمُ يقبله.
+   *
+   * ★★ والافتراضُ `false` **مُغلَقٌ لا مفتوح**: ما دام لا أحدَ قال إنّها
+   * نُشرت، فالفرضُ أنّها لم تُنشَر — فلا يُرسَم زرٌّ يرتدّ. والفشلُ المغلقُ
+   * هو الصحيح هنا كما في `DEFAULT_ROLE = 'viewer'`.
+   *
+   * ⚠️ وهذه **علامةُ إفصاحٍ لا صلاحيّة**: رفعُها لا يمنح أحدًا شيئًا — الخادمُ
+   * وحدَه يمنع ويُجيز. وأقصى ما تفعله: أن تُظهر زرًّا سيرتدّ إن كانت كاذبة.
+   */
+  rules: { amendPublished: false, deletePublished: false },
 });
 
 /** القيم المسموحة لكلّ حقلٍ خياريّ — مصدرٌ واحد للشاشة وللتطبيع وللاختبار. */
@@ -100,6 +116,7 @@ export function normalizeSettings(raw) {
   const pricing = s.pricing || {};
   const credit = s.credit || {};
   const dating = s.dating || {};
+  const rules = s.rules || {};
 
   return {
     items: {
@@ -119,6 +136,13 @@ export function normalizeSettings(raw) {
       backdateDays: pickNumber('dating.backdateDays', dating.backdateDays, d.dating.backdateDays),
       requireReason: dating.requireReason !== false,
       approveRole: pickRole(dating.approveRole, d.dating.approveRole),
+    },
+    /* `=== true` لا `!== false`: الغيابُ يعني «لم تُنشَر» لا «نُشرت».
+       وهو عكسُ `requireReason` أعلاه عمدًا — فذاك حارسٌ افتراضُه التشديد،
+       وهذه إتاحةٌ افتراضُها المنع. */
+    rules: {
+      amendPublished: rules.amendPublished === true,
+      deletePublished: rules.deletePublished === true,
     },
   };
 }

@@ -702,6 +702,10 @@ export default function DocumentEngine() {
             onFlash={flash}
             onAmended={() => setDirty(false)}
             onRemoved={() => navigateToDocument(null)}
+            /* من `settings/current` الحيّة — فنشرُ المالك للقواعد يُظهر الأزرارَ
+               على كلّ جهازٍ مفتوحٍ بلا إعادة تحميلٍ ولا نشرِ نسخة. */
+            rulesPublished={settings?.rules?.deletePublished === true}
+            amendRulesPublished={settings?.rules?.amendPublished === true}
           />
         )}
 
