@@ -11,9 +11,9 @@
   "counts": {
     "modules": 117,
     "serviceDomains": 51,
-    "serviceFiles": 626,
+    "serviceFiles": 629,
     "collections": 98,
-    "roles": 19,
+    "roles": 20,
     "odooModels": 12,
     "odooGuards": 51,
     "infraNodes": 6,
@@ -4576,34 +4576,48 @@
       "files": [
         "cameraScanner.js",
         "cameraScanner.test.js",
+        "gs1.js",
+        "gs1.test.js",
         "scanEngine.js",
         "scanEngine.test.js",
+        "scanIdentity.gs1.test.js",
         "scanIdentity.js",
         "scanIdentity.test.js",
         "wedgeScanner.js",
         "wedgeScanner.test.js"
       ],
-      "fileCount": 8,
-      "testCount": 4,
+      "fileCount": 11,
+      "testCount": 6,
       "exports": [
+        "AIM_PREFIXES",
+        "BARE_DIGITS_MIN",
+        "GS",
         "NATIVE_FORMATS",
         "SCAN_FORMATS",
         "SCAN_PHASES",
         "acceptedText",
         "cameraErrorText",
         "canCommit",
+        "checkDigitOk",
         "createScanGate",
         "createWedgeReader",
         "ensureScannerLibrary",
         "expectationBadge",
         "expectationOf",
         "formatCodes",
+        "gs1Candidates",
+        "gs1SignalOf",
+        "gs1Summary",
+        "gtinVariants",
         "identifyScan",
         "isRescanOfSame",
         "isTypingTarget",
         "missingForCommit",
         "missingText",
         "normalizeScanned",
+        "padGtin14",
+        "parseGs1",
+        "parseGs1Date",
         "scanBox",
         "startCameraScan"
       ],
@@ -5230,6 +5244,7 @@
       "isCreator",
       "isFleetWriter",
       "isFnbManager",
+      "isGovernedAmend",
       "isLaborWriter",
       "isManager",
       "isProcurementActor",
@@ -5260,6 +5275,7 @@
       "isCreator",
       "isFleetWriter",
       "isFnbManager",
+      "isGovernedAmend",
       "isLaborWriter",
       "isManager",
       "isProcurementActor",
@@ -6067,7 +6083,7 @@
             "actions": [
               "update"
             ],
-            "condition": "signedIn() && immutableKept() && numberWriteOnce() && datingTagKept() && datingTagHonest() && ( isAdmin() || isSideEffectStamp() || (isCreator() && resource.dat",
+            "condition": "signedIn() && immutableKept() && numberWriteOnce() && datingTagKept() && datingTagHonest() && ( isAdmin() || isSideEffectStamp() || isGovernedAmend() || (isCrea",
             "roles": [
               "signedIn",
               "immutableKept",
@@ -6076,6 +6092,7 @@
               "datingTagHonest",
               "isAdmin",
               "isSideEffectStamp",
+              "isGovernedAmend",
               "isCreator",
               "movingTo",
               "hasProfile",
@@ -6089,8 +6106,11 @@
             "actions": [
               "delete"
             ],
-            "condition": "false",
-            "roles": []
+            "condition": "signedIn() && (!('number' in resource.data) || resource.data.number == null) && resource.data.state in ['draft', 'rejected'] && (!('posted' in resource.data) ||",
+            "roles": [
+              "signedIn",
+              "isAdmin"
+            ]
           }
         ]
       },
@@ -9608,7 +9628,7 @@
       "test": "node --test \"src/**/*.test.js\"",
       "test:rules": "firebase emulators:exec --only firestore \"node --test test/firestore-rules.test.mjs\"",
       "audit": "node scripts/audit-portal.mjs",
-      "plan": "npm run where && npm run plan:phase-one && npm run plan:client && npm run plan:sap && npm run plan:locations && npm run plan:exec && npm run plan:fnb && npm run plan:capture && npm run plan:lpn && npm run plan:gate && npm run plan:visits && npm run plan:deps && npm run plan:bulk && npm run plan:rbac && npm run plan:journey",
+      "plan": "npm run where && npm run plan:phase-one && npm run plan:client && npm run plan:sap && npm run plan:locations && npm run plan:exec && npm run plan:fnb && npm run plan:capture && npm run plan:lpn && npm run plan:gate && npm run plan:visits && npm run plan:deps && npm run plan:bulk && npm run plan:rbac && npm run plan:journey && npm run plan:wms",
       "plan:phase-one": "node scripts/plan-check.mjs",
       "plan:client": "node scripts/plan-check.mjs --plan docs/plan/client-completion.json --resume docs/plan/استئناف-نسخة-العميل.md",
       "plan:sap": "node scripts/plan-check.mjs --plan docs/plan/sap-alignment.json --resume docs/plan/استئناف-المواءمة.md",
@@ -9626,7 +9646,8 @@
       "format:check": "prettier --check .",
       "plan:bulk": "node scripts/plan-check.mjs --plan docs/plan/bulk-item-entry.json --resume docs/plan/استئناف-الإدخال-الجماعي.md",
       "plan:rbac": "node scripts/plan-check.mjs --plan docs/plan/rbac-tasks.json --resume docs/plan/استئناف-الأدوار-والمهمات.md",
-      "plan:journey": "node scripts/plan-check.mjs --plan docs/plan/connected-journey.json --resume docs/plan/استئناف-الرحلة-المتصلة.md"
+      "plan:journey": "node scripts/plan-check.mjs --plan docs/plan/connected-journey.json --resume docs/plan/استئناف-الرحلة-المتصلة.md",
+      "plan:wms": "node scripts/plan-check.mjs --plan docs/plan/wms-parity.json --resume docs/plan/استئناف-موازنة-WMS.md"
     }
   }
 }
