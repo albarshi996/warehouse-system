@@ -19,6 +19,14 @@ import { SCAN_STAGES, nextStage, pickEntryVerdict, stepQtyPanel } from '../../..
 // حرفًا: لا تُعاد كتابةُ ضربٍ هنا ولا تُبنى رسالةٌ، فالشاشةُ تعرض حكمًا.
 import { baseQtyPreview } from '../../../services/stock/scanFlow.js';
 import { packEntryVerdict } from '../../../services/items/packEntry.js';
+/*
+ * ‹SCAN-ID› «يظهر الاسم» في شاشة التحضير (طلب المالك · 2026-10-02).
+ * خطوةُ المهمّة تحمل `sku` و`barcode` **ولا تحمل اسمًا** — فكان المحضّرُ
+ * يقرأ «MLK-500» ويمشي. وماسترُ الأصناف يُقرأ **قراءةً واحدةً مخزَّنة**
+ * (`live:false` افتراضًا منذ `e5e90f0`) فلا يمسّ حصّةَ القراءة.
+ */
+import { subscribeItems } from '../../../services/items/itemService.js';
+import { buildItemIndexes, itemForLine } from '../../../services/items/uomWiring.js';
 import {
   closeTaskWithPallet,
   executePick,
@@ -302,6 +310,22 @@ export default function PickingFlow() {
    * `panel.mode` يقوله `stepQtyPanel` سائلًا `needsPackEntry`، فلا يُقلَّد هنا
    * بشرطٍ يشبهه فيفترق عن حكم المحرّك. والشاشةُ تعرض ما أعطاها.
    */
+  /**
+   * ‹SCAN-ID› ماستر الأصناف — لاسم الصنف وحدَه.
+   * والفشلُ يعني قائمةً فارغةً ⇒ **سلوكُ اليوم**: يُعرض الرمزُ كما كان، ولا
+   * تتعطّل شاشةُ تحضيرٍ لأنّ اسمًا لم يصل.
+   */
+  const [items, setItems] = useState([]);
+  useEffect(() => subscribeItems(setItems, () => setItems([])), []);
+  const itemIndexes = useMemo(() => buildItemIndexes(items), [items]);
+
+  /** اسمُ صنف الخطوة — أو `''` حين لا يُعرف (فلا يُخترع اسم). */
+  const stepItemName = useMemo(() => {
+    if (!step?.sku && !step?.barcode) return '';
+    const it = itemForLine({ sku: step.sku, barcode: step.barcode }, itemIndexes);
+    return String(it?.nameAr || it?.name || it?.nameEn || '').trim();
+  }, [step?.sku, step?.barcode, itemIndexes]);
+
   const panel = useMemo(() => stepQtyPanel(step), [step]);
   // وحدةُ الإدخال تعود إلى وحدة الخطوة عند كلّ خطوة — لا تلتصق وحدةُ سابقتها.
   useEffect(() => {
@@ -894,7 +918,26 @@ export default function PickingFlow() {
           <div className="rounded-lg border p-4 mb-4" style={{ borderColor: 'var(--o-primary)' }}>
             <div className="text-xs text-ink-2 mb-1">الخطوة {step.seq} من {totals?.stepCount}</div>
             <div className="text-2xl font-bold text-ink mb-1">{step.bin}</div>
-            <div className="text-ink">{step.sku} {step.batch && <span className="text-ink-2">· دفعة {step.batch}</span>}</div>
+            {/*
+              ‹SCAN-ID› **الاسمُ أوّلًا والرمزُ تحته** (طلب المالك 2026-10-02).
+              كان السطرُ «MLK-500» وحدَه — والمحضّرُ يمشي إلى الرفّ بحرفين
+              ورقم. والرفُّ يحمل جيرانًا من العائلة نفسِها، فالرمزُ وحدَه
+              لا يفرّق «لبن ٢٠٠مل» عن «لبن ٥٠٠مل».
+              ★ والرمزُ **لا يُحذف**: به يُطابَق الملصق، وبه يُشتكى. يُنزَّل
+              إلى سطرٍ ثانٍ لا غير. وحين لا يُعرف الاسمُ يبقى الرمزُ كما كان
+              حرفًا — فلا تنكسر شاشةٌ لأنّ ماستر الأصناف لم يصل.
+            */}
+            {stepItemName ? (
+              <>
+                <div className="text-lg font-bold text-ink leading-snug">{stepItemName}</div>
+                <div className="text-ink-2 text-sm">
+                  <span style={{ fontFamily: 'monospace', direction: 'ltr', unicodeBidi: 'isolate' }}>{step.sku}</span>
+                  {step.batch && <span> · دفعة {step.batch}</span>}
+                </div>
+              </>
+            ) : (
+              <div className="text-ink">{step.sku} {step.batch && <span className="text-ink-2">· دفعة {step.batch}</span>}</div>
+            )}
             {/* ★ المطلوبُ يُقال بوحدته: «٥ كرتون» لا «٥» — والرقمُ العاري كان
                 يُقرأ قطعًا فيُسحب خُمسُ الأمر ولا يشتكي أحدٌ قبل الجرد. */}
             <div className="text-ink-2 text-sm mt-1">
@@ -903,16 +946,30 @@ export default function PickingFlow() {
             </div>
           </div>
 
+          {/*
+            ‹SCAN-ID› شريطُ المراحل يقول **ما قُرئ** لا «أنّ المرحلة تمّت».
+            كان مربّعًا يُضاء، فيرى المحضّرُ أنّ شيئًا قُرئ ولا يرى ماذا —
+            فمسحةٌ خاطئةٌ تمرّ إلى آخر المراحل ثمّ تُردّ عند التسجيل.
+          */}
           <ol className="flex gap-2 mb-3 text-xs">
-            {['BIN', 'PALLET', 'ITEM'].map((s) => (
-              <li key={s} className="flex-1 rounded px-2 py-1 text-center"
-                style={{
-                  background: scan[s === 'BIN' ? 'bin' : s === 'PALLET' ? 'lpn' : 'sku'] ? 'var(--o-surface-2)' : 'transparent',
-                  border: `1px solid ${stage === s ? 'var(--o-primary)' : 'var(--o-border)'}`,
-                }}>
-                {SCAN_STAGES[s]}
-              </li>
-            ))}
+            {['BIN', 'PALLET', 'ITEM'].map((s) => {
+              const read = scan[s === 'BIN' ? 'bin' : s === 'PALLET' ? 'lpn' : 'sku'];
+              return (
+                <li key={s} className="flex-1 rounded px-2 py-1 text-center overflow-hidden"
+                  style={{
+                    background: read ? 'var(--o-surface-2)' : 'transparent',
+                    border: `1px solid ${stage === s ? 'var(--o-primary)' : 'var(--o-border)'}`,
+                  }}>
+                  <div>{SCAN_STAGES[s]}</div>
+                  {read && (
+                    <div className="truncate" title={read}
+                      style={{ fontFamily: 'monospace', direction: 'ltr', unicodeBidi: 'isolate', fontSize: '10px', opacity: 0.75 }}>
+                      {read}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ol>
 
           {stage !== 'QTY' ? (
@@ -929,6 +986,24 @@ export default function PickingFlow() {
             </form>
           ) : (
             <div>
+              {/*
+                ‹SCAN-ID› **ما تَعُدّه الآن** فوق خانة الكمّيّة — فالمراحلُ
+                الثلاثُ انتهت والشاشةُ صارت رقمًا عاريًا بلا سياق. والسطرُ
+                يقول الاسمَ والطبليّةَ، فيُكتب الرقمُ على بيّنة.
+              */}
+              {(stepItemName || scan.lpn) && (
+                <div className="rounded-lg px-3 py-2 mb-2"
+                  style={{ background: 'var(--o-surface-2)', border: '1px solid var(--o-border)' }}>
+                  <div className="text-[11px] text-ink-2">تَعُدُّ الآن</div>
+                  <div className="font-bold text-ink leading-snug">{stepItemName || step.sku}</div>
+                  {scan.lpn && (
+                    <div className="text-ink-2 text-xs">
+                      من الطبليّة{' '}
+                      <span style={{ fontFamily: 'monospace', direction: 'ltr', unicodeBidi: 'isolate' }}>{scan.lpn}</span>
+                    </div>
+                  )}
+                </div>
+              )}
               {/* ★★★ الخانةُ الكبيرةُ تبقى واحدةً — ومعها وحدتُها فقط. المحضّرُ
                   يمشي وهو يحمل بضاعةً، فلا يُعطى جدولًا يقرأه بيدٍ واحدة. */}
               <div className="flex gap-2 mb-1">

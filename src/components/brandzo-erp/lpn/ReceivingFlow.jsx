@@ -994,7 +994,26 @@ export default function ReceivingFlow() {
         ) : (
           <>
             <div className="rounded-lg border px-4 py-3 mb-3" style={{ borderColor: 'var(--o-border)' }}>
+              {/*
+                ‹SCAN-ID› **اسمُ ما تُخزّنه** (طلب المالك 2026-10-02).
+                كانت البطاقةُ تقول رمزَ الطبليّة وعددَ بنودها ولا تقول **ماذا
+                فيها** — فالعاملُ يحمل طبليّةً إلى رفٍّ وهو يقرأ
+                «LPN-MAIN-20260901-000002». و`taskItem` محسوبٌ أصلًا لاقتراح
+                الرفّ ومُمرَّرٌ إلى `previewBin` — **وكان يُحسب ولا يُعرض**.
+
+                ★ والمختلطةُ تُقال مختلطةً: الاقتراحُ يُبنى على أوّل بندٍ كما
+                تنصّ `openPutawayTask`، فعرضُ اسمٍ واحدٍ لطبليّةٍ فيها خمسةُ
+                أصنافٍ يُوهم أنّها صنفٌ واحد — فيُلحَق «وغيرُه».
+              */}
               <div className="font-bold text-ink tabular-nums">{taskUnit.code}</div>
+              {taskItem && (
+                <div className="text-ink text-sm mt-1 leading-snug">
+                  {String(taskItem.nameAr || taskItem.name || taskItem.nameEn || taskItem.sku || '').trim()}
+                  {(taskUnit.lines ?? []).length > 1 && (
+                    <span className="text-ink-2"> وغيرُه ({(taskUnit.lines ?? []).length} بندًا)</span>
+                  )}
+                </div>
+              )}
               <div className="text-ink-2 text-xs mt-1">
                 {taskUnit.warehouse || '—'} · {(taskUnit.lines ?? []).length} بندًا
               </div>
