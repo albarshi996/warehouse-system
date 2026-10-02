@@ -48,6 +48,7 @@ import { uomLabel } from '../../../services/items/uomModel.js';
 import { isEditable } from '../../../services/documents/states.js';
 import { amendVerdict } from '../../../services/documents/amendGuard.js';
 import AmendPanel from './AmendPanel.jsx';
+import LinesExcelPanel from './LinesExcelPanel.jsx';
 import FieldInput from './FieldInput.jsx';
 import { listenSettings } from '../../../services/settings/settingsService.js';
 import { evaluateHeaderDates } from '../../../services/documents/datingGuard.js';
@@ -904,6 +905,18 @@ export default function DocumentEngine() {
                 skuVerdict={(value) =>
                   skuCellVerdict(value, { statuses: pasteMarks?.statuses, duplicates: pasteDuplicates })
                 }
+              />
+            )}
+
+            {/* ‹XLSX› بنودٌ من إكسل (طلب المالك ٤) — تحت الجدول مباشرةً لأنّها
+                تعمل عليه. والاستيرادُ يُعرَض قبل أن يُطبَّق. */}
+            {section.kind === 'table' && (
+              <LinesExcelPanel
+                schema={schema}
+                lines={doc.lines || []}
+                disabled={!editable}
+                onChange={patchLines}
+                onFlash={flash}
               />
             )}
 
