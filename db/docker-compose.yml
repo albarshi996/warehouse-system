@@ -173,12 +173,22 @@ services:
     depends_on:
       - postgrest
       - auth
-    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN:?رمزُ النفق مطلوب — يُنشأ من لوحة Cloudflare}
+    volumes:
+      # الشهادةُ وبطاقةُ النفق وقواعدُ الوجهة. متجاهَلةٌ في git، وللقراءة فقط.
+      - ./secrets/cloudflared:/etc/cloudflared:ro
+    command: tunnel --no-autoupdate --config /etc/cloudflared/config.yml run
     # ★ لا `ports`: الاتّصالُ صادرٌ وحدَه. وهذا بيتُ القصيد.
     #
+    # ★★★ والوضعُ **مُدارٌ محلّيًّا لا من اللوحة**: وضعُ `--token` يحتاج
+    #     Zero Trust، وهو يطلب بطاقةَ دفعٍ حتّى للخطّة المجّانيّة ولا بطاقةَ
+    #     لدى المالك (أُكّد بصورةٍ من صفحة الدفع 2026-09-28). فانتقلت قواعدُ
+    #     الوجهة من اللوحة إلى `secrets/cloudflared/config.yml`، **والنفقُ
+    #     نفسُه بلا نقصان**. والثمنُ المعلَن: لا Cloudflare Access — فنبقى
+    #     بنفس درجة حماية Firebase، والحارسُ الفعليُّ RLS داخل القاعدة.
+    #
     # ★★ ويبقى على شبكة Compose الافتراضيّة كي يبلغ **الخدمتين معًا**
-    #    بأسمائهما: `http://postgrest:3000` و`http://auth:3001`. وتُكتب
-    #    هاتان في قواعد الوجهة داخل لوحة Cloudflare، لا هنا.
+    #    بأسمائهما: `http://postgrest:3000` و`http://auth:3001` — وهما
+    #    مكتوبتان في `config.yml`.
     #    (وربطُه بشبكة خدمةٍ واحدة يقطعه عن الأخرى — خطأٌ وقعتُ فيه أوّلًا.)
 
 volumes:
