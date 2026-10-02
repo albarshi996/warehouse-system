@@ -88,26 +88,58 @@ export default function DocumentPrint({ schema, doc, attachments = [], reconcili
             النموذج رقم: <span className="dp-code">{schema.formCode}</span>
           </p>
         </div>
+        {/*
+          ═══ رقمُ المستند مكتوبًا فوق الباركود (طلب المالك ٦ · 2026-10-02) ═══
+          ★★ كان الرقمُ لا يظهر إلّا **داخل صورة الباركود** (`displayValue`).
+          وذلك يكفي ماسحًا ولا يكفي إنسانًا: من أراد قراءةَ الرقم ليكتبه في
+          رسالةٍ أو يبحث به وجده بخطٍّ صغيرٍ تحت خطوطٍ سوداء، وقد يسقط كلُّه
+          إن تعذّر تحميلُ مكتبة الباركود. فصار الرقمُ **نصًّا صريحًا** فوقه —
+          والباركودُ يبقى للماسح.
+        */}
         <div className="dp-number">
           {doc?.number ? (
-            <svg ref={barcodeRef} />
+            <>
+              <div className="dp-number-label">رقم المستند</div>
+              <div className="dp-number-text">{doc.number}</div>
+              <svg ref={barcodeRef} />
+            </>
           ) : (
             <span className="dp-draft">مسودّة — بلا رقم رسمي</span>
           )}
         </div>
       </header>
 
-      {/* شريط الحالة الرسمي — لا يوجد في الورق، وهو أهم ما يُضاف إليه */}
+      {/*
+        شريط الحالة الرسمي — لا يوجد في الورق، وهو أهم ما يُضاف إليه.
+
+        ═══ ولا يُطبَع «أنشأه» (طلب المالك ٦ · 2026-10-02) ═══
+        ★★ الورقةُ الخارجةُ إلى مورّدٍ أو عميلٍ أو بوّابةٍ تحمل **التزامَ
+        الشركة** لا سيرةَ موظّفٍ بعينه. واسمُ المُنشئ بيانٌ داخليّ: من كتبه
+        شأنُ المستودع، ومن **وقّعه** شأنُ الطرف الآخر. فيُطبَع الرقمُ
+        والحالةُ والمعتمِد، ويبقى المُنشئُ في الشاشة وسجلّ التدقيق **كما هو
+        بلا نقصان** — لا يُحذف من البيانات، يُحذف من الورقة وحدها.
+
+        ⚠️ وخانةُ التوقيع المسمّاة `creator` في `schema.signatures` لم تُمسّ:
+        تلك خانةُ توقيعٍ في النموذج الرسميّ أصلًا — موضعٌ يوقّع فيه المُعِدُّ
+        بيده. وحذفُها يُفسد نموذجًا معتمَدًا، وهو غيرُ ما طُلب.
+      */}
       <div className="dp-status">
+        <span>
+          رقم المستند: <strong className="dp-code">{show(doc?.number)}</strong>
+        </span>
         <span>
           الحالة: <strong>{state.label}</strong>
         </span>
         <span>
-          أنشأه: <strong>{show(doc?.createdByName)}</strong>
-        </span>
-        <span>
           اعتمده: <strong>{show(doc?.approvedByName)}</strong>
         </span>
+        {/* وسمُ التعديل بعد الإرسال — يُطبَع لأنّ قارئَ الورقة من حقّه أن
+            يعرف أنّها عُدِّلت بعد اعتمادها، ومتى وبأيّ سبب. */}
+        {doc?.amended?.reason && (
+          <span>
+            عُدِّل بعد الإرسال: <strong>{show(doc.amended.reason)}</strong>
+          </span>
+        )}
       </div>
 
       {/* ختم الرقابة/المطابقة — للأنواع الخاضعة لطبقة الرقابة */}
@@ -286,6 +318,17 @@ const PRINT_CSS = `
   .dp-meta { font-size: 7.5pt; color: #555; margin: 1mm 0 0; }
   .dp-code { font-family: monospace; color: #DAAA3C; font-weight: 700; }
   .dp-number { min-width: 45mm; text-align: left; }
+  /* الرقمُ نصًّا صريحًا فوق الباركود — يُقرأ بالعين لا بالماسح وحده.
+     و«direction: ltr» لأنّه رمزٌ لاتينيٌّ داخل ورقةٍ عربيّة: بلا عزله
+     تهاجر شُرَطُه إلى أوّله فيُقرأ ويُكتب مقلوبًا.
+     ⚠️ ولا شَوْلَة مائلة (backtick) في هذا التعليق: الكتلةُ كلُّها قالبٌ نصّيّ
+     (template literal)، فأيُّ شَوْلَةٍ فيه تُغلقه فيسقط الملفُّ كلُّه عند
+     التحليل. (وقد وقع — والمحلِّلُ يشير إلى سطرٍ بعيدٍ عن موضع العطب.) */
+  .dp-number-label { font-size: 6.5pt; color: #666; letter-spacing: .3px; }
+  .dp-number-text {
+    font-family: monospace; font-size: 12pt; font-weight: 800; color: #000;
+    direction: ltr; unicode-bidi: isolate; line-height: 1.2; margin-bottom: 1mm;
+  }
   .dp-draft { color: #c41e3a; font-weight: 700; font-size: 9pt; border: 1px dashed #c41e3a;
     padding: 2mm 3mm; border-radius: 2mm; }
 

@@ -29,7 +29,7 @@ import {
   holdVisit,
   VISITS_CAP,
 } from '../fleet/yardService.js';
-import { collection, addDoc, onSnapshot, query, orderBy, limit as fsLimit, serverTimestamp, db } from '../_db/index.js';
+import { collection, doc as docRef, addDoc, setDoc, getDoc, updateDoc, onSnapshot, query, orderBy, limit as fsLimit, serverTimestamp, db } from '../_db/index.js';
 import { auth } from '../../config/firebase.js';
 import { EXIT_STAGE, PERMIT_STAGE, shapeVisit, stageIndex } from '../fleet/yardModel.js';
 import { shapeInLoad, shapeOutLoad, shapeVisitor, needsDoor, normalizePlate, isGateReason } from './gateModel.js';
@@ -89,7 +89,6 @@ const VISITOR_DOC = 'current';
 export async function writeVisitor(visitId, visitor, profile) {
   const v = shapeVisitor(visitor);
   if (!v.name && !v.phone && !v.host) return false;
-  const { setDoc, doc: docRef } = await import('firebase/firestore');
   await setDoc(docRef(db, 'yard_visits', visitId, VISITOR_SUB, VISITOR_DOC), {
     ...v,
     at: serverTimestamp(),
@@ -106,7 +105,6 @@ export async function writeVisitor(visitId, visitor, profile) {
  * بدل أن تعرض فراغًا يُشبه «لا زائر».
  */
 export async function readVisitor(visitId) {
-  const { getDoc, doc: docRef } = await import('firebase/firestore');
   const snap = await getDoc(docRef(db, 'yard_visits', visitId, VISITOR_SUB, VISITOR_DOC));
   return snap.exists() ? snap.data() : null;
 }
@@ -256,7 +254,6 @@ export async function saveVarianceDecision(visitId, result, input, profile) {
  * (تُبقى دالّةً مسمّاةً كي لا تكتب الشاشةُ في المجموعة مباشرةً.)
  */
 async function advanceNothingButPatch(visitId, patch, profile) {
-  const { updateDoc, doc: docRef } = await import('firebase/firestore');
   await updateDoc(docRef(db, 'yard_visits', visitId), { ...patch, updatedAt: serverTimestamp() });
   await addDoc(collection(db, 'yard_visits', visitId, 'events'), {
     action: 'variance',

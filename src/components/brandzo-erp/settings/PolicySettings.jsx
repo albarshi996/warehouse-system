@@ -327,6 +327,57 @@ export default function PolicySettings() {
               سببٌ مكتوبٌ إلزاميّ مع الاعتماد
             </label>
           </div>
+
+          {/*
+            ═══ ٨ — حالةُ نشر رقعة قواعد الأمان ═══
+
+            ★★★ **وهذه إعلانُ واقعٍ لا منحُ صلاحيّة.** رفعُ العلامة لا يمنح
+            أحدًا شيئًا: `firestore.rules` وحدَها تمنع وتُجيز. وأقصى ما تفعله
+            أن **تُظهر زرًّا** — فإن كانت كاذبةً ارتدّ الزرُّ من الخادم.
+
+            ★★ ولماذا إعدادٌ لا ثابتٌ في الكود؟ لأنّ ناشرَ القواعد هو المالكُ
+            من Firebase Console، والوكلاء يعدّلونها في المستودع ولا ينشرونها.
+            فلو كانت ثابتًا لاحتاج كلُّ نشرٍ **نسخةً جديدةً من البوّابة** بعده،
+            فيبقى الزرُّ غائبًا أيّامًا بعد أن صار الخادمُ يقبله.
+          */}
+          <div>
+            <h3 className="text-sm font-semibold text-ink mb-2">٨ — رقعةُ قواعد التعديل والمحو</h3>
+            <p className="text-xs text-ink-2 leading-relaxed mb-2">
+              ارفع العلامةَ <strong>بعد</strong> نشرك للرقعة من Firebase Console.
+              نصُّها وحجّتُها في <code className="font-mono text-[11px]">docs/رقعة-قواعد-التعديل-والمحو.md</code>.
+              ورفعُها قبل النشر لا يكسر شيئًا — يُظهر زرًّا يرتدّ، فتُنزلها.
+            </p>
+            <label className="flex items-start gap-2 text-sm text-ink mb-2">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={draft.rules.amendPublished}
+                onChange={(e) => update('rules', 'amendPublished')(e.target.checked)}
+                disabled={!canEdit}
+              />
+              <span>
+                نُشرت رقعةُ <strong>التعديل المحكوم</strong>
+                <span className="block text-xs text-ink-2">
+                  فيعدّل مديرُ المستودع مستندًا مُرسَلًا أو معتمَدًا بسببٍ مكتوب. وبدونها للمدير العامّ وحده.
+                </span>
+              </span>
+            </label>
+            <label className="flex items-start gap-2 text-sm text-ink">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={draft.rules.deletePublished}
+                onChange={(e) => update('rules', 'deletePublished')(e.target.checked)}
+                disabled={!canEdit}
+              />
+              <span>
+                نُشرت رقعةُ <strong>محو المسوّدة غير المرقَّمة</strong>
+                <span className="block text-xs text-ink-2">
+                  فيُمحى ما لم يُرقَّم قطّ ولم يُقيَّد. <strong>والمرقَّمُ لا يُمحى أبدًا</strong> — يُلغى ويبقى أثرُه.
+                </span>
+              </span>
+            </label>
+          </div>
         </div>
 
         {canEdit ? (

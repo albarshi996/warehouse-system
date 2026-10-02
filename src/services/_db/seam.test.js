@@ -105,6 +105,43 @@ test('★★ وحداتُ Firebase الأخرى لا تتسرّب خارج اس�
   );
 });
 
+/**
+ * ★★★ والثقبُ الذي أغلقه هذا الفحص: الحارسُ الساكن يشترط `from`، و
+ *     `await import('firebase/firestore')` لا `from` فيه — فيمرّ من تحته بلا
+ *     صوت. وهذا ليس احتمالًا نظريًّا: `gateService.js` عاش كذلك فعلًا، يقرأ
+ *     الزائرَ ويكتبه بثلاثِ دوالَّ تلتفّ على الباب، **و`db` من الباب** في
+ *     نفس الملفّ — فالملفُّ مُرحَّلٌ في ظاهره مخروقٌ في ثلاثِ نقاط.
+ *     ولو حُوّلت القراءةُ إلى PostgreSQL لبقيت هذه الثلاثُ على Firestore،
+ *     **ولا اختبارَ يسقط ولا رسالةَ تظهر** — يُكتشف حين يُسأل المخزنُ عن
+ *     زائرٍ لا يجده. **فالحدُّ يُقاس بما يمرّ منه لا بما يُعلَن عنه.**
+ */
+test('★★★ ولا يلتفّ أحدٌ بالاستيراد الديناميكيّ — `await import()` لا يراه الحارسُ الساكن', () => {
+  const offenders = [];
+
+  for (const file of FILES) {
+    const r = rel(file);
+    const src = readFileSync(file, 'utf8');
+    // ★ سطرًا سطرًا، وسطرُ التعليق يُتخطّى: الحارسُ الساكن ينجو من ذلك بمرساته
+    //   `^\s*import`، وهذا لا مرساةَ له — وهذا الملفُّ نفسُه يذكر النمطَ شرحًا،
+    //   فلو عُدّ لأسقط نفسَه. **وحارسٌ يصيح على شرحِه يُدرَّب على تجاهله.**
+    for (const line of src.split(/\r?\n/)) {
+      if (/^\s*(\*|\/\/|\/\*)/.test(line)) continue;
+      for (const m of line.matchAll(/\bimport\s*\(\s*['"](firebase\/[a-z]+)['"]\s*\)/g)) {
+        const mod = m[1];
+        const allowed = ALLOWED_FIREBASE[mod];
+        if (!allowed || !allowed.includes(r)) offenders.push(r + '  ←  ' + mod);
+      }
+    }
+  }
+
+  assert.deepEqual(
+    offenders,
+    [],
+    'استيرادٌ ديناميكيٌّ لوحدةِ Firebase من ملفٍّ ليس في الاستثناءات — بابٌ خلفيٌّ يمرّ من تحت الحارس الساكن:\n  ' +
+      offenders.join('\n  ')
+  );
+});
+
 test('★★ `db` يأتي من الباب لا من `config/firebase.js`', () => {
   const offenders = [];
 

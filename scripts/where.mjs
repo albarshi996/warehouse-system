@@ -10,6 +10,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { scanWorktrees, guardReport } from './guard-worktrees.mjs';
+import { unportablePaths } from '../src/services/workspace/portability.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -85,6 +86,21 @@ function siblingGap() {
 }
 
 /**
+ * ملفّاتُ النشر التي تفرّقنا عن الشقيق — وهي وحدَها التي **لا تعبر المزامنة**،
+ * لأنّ `GITHUB_TOKEN` لا يملك دفعَها (الشرح في `portability.js`). فتستثنيها
+ * المزامنةُ وتُكمل، ويبقى لكلّ مستودعٍ ملفّاتُ نشره.
+ *
+ * ويُقال هنا لأنّ هذا **أوّلُ أمرٍ في كلّ جلسة**: فمن حسِب أنّ كلَّ شيءٍ يعبر
+ * بنى على وعدٍ ناقص، والسكوتُ عن الافتراق يجعله بعد شهرٍ عطبًا مجهولَ السبب.
+ *
+ * يُستدعى بعد `siblingGap` وحدَه، فهو الذي يجلب `FETCH_HEAD`. و`-z` لأنّ git
+ * يُقتبس الأسماءَ غيرَ اللاتينيّة حيث `core.quotePath` مشتعل — والمشروعُ عربيّ.
+ */
+function deployFilesExcluded() {
+  return unportablePaths(git('diff', '--name-only', '-z', 'FETCH_HEAD', 'HEAD').split('\0'));
+}
+
+/**
  * سطرُ الفارق — ومعناه يختلف باختلاف الدور:
  * المستقبِل يسأل «هل عنده ما ليس عندي؟»، والمصدرُ يسأل «هل بلغه ما عندي؟».
  * وسؤالُ المصدر لا يعنيه تقدّمُ الشقيق بكوميتات دمجٍ وهويّة، فلا يُنبَّه بها.
@@ -98,9 +114,21 @@ function gapLine() {
       : `  ${COLORS.green}◆ ملحوقٌ بالشقيق — لا جديد عنده${OFF}`;
   }
   if (gap.ours === 0) return `  ${COLORS.green}◆ الشقيق ملحوقٌ بك — وصله كلّ عملك${OFF}`;
-  return ws.sibling.autoSync
-    ? `  ${DIM}◆ الشقيق متأخّر ${gap.ours} كوميتًا — ومزامنتُه التلقائيّة تلحقه خلال ساعة${OFF}`
-    : `  ${COLORS.gold}◆ الشقيق متأخّر ${gap.ours} كوميتًا — زامِنه من مجلّده: npm run sync${OFF}`;
+  if (!ws.sibling.autoSync)
+    return `  ${COLORS.gold}◆ الشقيق متأخّر ${gap.ours} كوميتًا — زامِنه من مجلّده: npm run sync${OFF}`;
+
+  // ★ «تلحقه خلال ساعة» صحيحةٌ إلّا في ملفّات النشر — فلا تُقال على إطلاقها.
+  //   والخبرُ خبرٌ لا تحذير: المزامنةُ تستثنيها وتُكمل، ولا يُطلب من أحدٍ شيء.
+  //   ولا أحمرَ هنا — فالأحمرُ للتحذير وحدَه، ولا شيءَ معطوب.
+  const skipped = deployFilesExcluded();
+  if (!skipped.length)
+    return `  ${DIM}◆ الشقيق متأخّر ${gap.ours} كوميتًا — ومزامنتُه التلقائيّة تلحقه خلال ساعة${OFF}`;
+
+  return (
+    `  ${DIM}◆ الشقيق متأخّر ${gap.ours} كوميتًا — ومزامنتُه التلقائيّة تلحقه خلال ساعة${OFF}\n` +
+    `  ${DIM}  ومعها ${skipped.length} ملفَّ نشرٍ يُستثنى — فملفّاتُ النشر مِلكُ كلِّ مستودعٍ لنفسه:${OFF}\n` +
+    skipped.map((f) => `  ${DIM}    · ${f}${OFF}`).join('\n')
+  );
 }
 
 const c = COLORS[ws.color] ?? COLORS.cyan;

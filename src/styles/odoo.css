@@ -146,6 +146,18 @@
   border-bottom: 1px solid var(--o-gray-200); white-space: nowrap;
 }
 .o_theme .o_list_view tbody tr:hover { background: var(--o-gray-100); cursor: pointer; }
+/* الصفُّ المحدَّد.
+   ولا أحمرَ هنا: الأحمرُ للتحذير وحده (R)، والتحديدُ اختيارٌ لا خطر.
+   ★ و`:hover` بعد هذا في الملفّ لا قبله — ولو سبقه لَغطّى تمريرُ المؤشّر
+     أرضيّةَ التحديد فاختفى المحدَّدُ تحت الفأرة في أسوأ لحظةٍ لاختفائه.
+   ★★ والخطُّ الحدّيُّ بسمةٍ منطقيّة (`border-inline-start` على الخليّة
+     الأولى) لا بـ`box-shadow: inset 3px`: الظلُّ الفيزيائيُّ يقع يسارًا
+     دائمًا، وفي RTL يساءُ الخليّةِ الأولى هو **وسطُ الصفّ** — فيُرسَم خطٌّ
+     في منتصف الجدول. والسمةُ المنطقيّةُ تنقلب مع الاتّجاه. */
+.o_theme .o_list_view tbody tr.o_row_selected > td { background: var(--o-brand-light); }
+.o_theme .o_list_view tbody tr.o_row_selected > td:first-child {
+  border-inline-start: 3px solid var(--o-brand-primary);
+}
 .o_theme .o_list_number { text-align: end; font-variant-numeric: tabular-nums; }  /* R8 */
 .o_theme .o_list_view tfoot td {
   font-weight: var(--o-font-weight-bold); background: transparent;

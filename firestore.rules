@@ -428,10 +428,55 @@ service cloud.firestore {
                        && request.resource.data.dating.byUid == request.auth.uid));
       }
 
+      // ── التعديلُ المحكوم (طلبُ المالك 2026-10-02 · م١ من رقعة التعديل) ──
+      //
+      // ★★★ القاعدةُ المجاورة `contentUnchanged()` تمنع المعتمِدَ من تبديل
+      //    البنود **في نفس كتابة الاعتماد** — وذلك المنعُ باقٍ ولم يُمسّ.
+      //    والممنوعُ هناك هو التبديلُ **المستخفي داخل كتابةِ حالة**.
+      //
+      //    وهذه بوّابةٌ أخرى: كتابةٌ **لا تمسّ الحالة** (فلا تعتمد ولا تُنهي)،
+      //    ويُشترط فيها وسمُ `amended` بختم الخادم وباسم كاتبه وبسببٍ مكتوب.
+      //    أي أنّ التعديلَ يصير **فعلًا معلَنًا موقَّعًا** لا تبديلًا صامتًا.
+      //
+      // ⚠️ ولا تُتاح على `done` ولا على مُقيَّد: المنجَزُ رحّل حركاتٍ في دفترٍ
+      //    ملحق-فقط، فتعديلُ بنوده يترك حركةً لا يبرّرها مستند.
+      //
+      // ⚠️ ازدواجٌ مقصودٌ مُعلَن: قائمةُ الأدوار هنا تكرّر `AMEND_ROLES` في
+      //    `src/services/documents/amendGuard.js`. القواعدُ لا تستورد JS.
+      //    **عدّلهما معًا** — و`amendGuard.test.js` يحرس ذِكرَ الدور هنا.
+      //
+      // ★★ وثلاثةُ تشديداتٍ على نصّ الرقعة اقتضتها لغةُ القواعد نفسُها:
+      //    ① `'posted' in resource.data` قبل قراءته — قراءةُ حقلٍ غائبٍ
+      //       **خطأٌ يُسقط الشرط**، فبدونها يُمنع التعديلُ على كلّ مستندٍ
+      //       لم يُقيَّد (وهو الغالب) بدل أن يُسمح به.
+      //    ② `'amended' in request.resource.data` قبل `amended.at` — للسبب نفسه.
+      //    ③ `isActive()` — الموقوفُ لا يعدّل ولو بقي دورُه مكتوبًا.
+      function isGovernedAmend() {
+        return hasProfile()
+               && isActive()
+               && myRole() in ['warehouse_manager']
+               && resource.data.state in ['submitted', 'approved']
+               // الحالةُ لا تتغيّر: هذه كتابةُ تصحيحٍ لا كتابةُ نقلة.
+               && request.resource.data.state == resource.data.state
+               // ولا تمسّ مستندًا مُقيَّدًا في الدفتر.
+               && (!('posted' in resource.data) || resource.data.posted != true)
+               // الحقولُ المسموحةُ معدودة — و`posted` و`number` و`state` خارجَها،
+               // فلا يُقيَّد مستندٌ ولا يُرقَّم ولا يُنقَل من باب التعديل.
+               && request.resource.data.diff(resource.data).affectedKeys()
+                    .hasOnly(['header', 'lines', 'amended', 'updatedAt'])
+               // والوسمُ صادقٌ: ختمُ الخادم، وكاتبُه هو الفاعل، وبسببٍ مكتوب.
+               && 'amended' in request.resource.data
+               && request.resource.data.amended.at == request.time
+               && request.resource.data.amended.byUid == request.auth.uid
+               && request.resource.data.amended.reason is string
+               && request.resource.data.amended.reason.size() > 0;
+      }
+
       allow update: if signedIn() && immutableKept() && numberWriteOnce()
                     && datingTagKept() && datingTagHonest() && (
                       isAdmin()
                       || isSideEffectStamp()
+                      || isGovernedAmend()
                       || (isCreator()
                           && resource.data.state in ['draft', 'rejected']
                           && movingTo(['draft', 'submitted']))
@@ -466,8 +511,22 @@ service cloud.firestore {
                           && contentUnchanged())
                     );
 
-      // لا حذف لمستند أبدًا. المستند الخاطئ يُرفض ويبقى أثره.
-      allow delete: if false;
+      // ── المحوُ: للمسودّة التي لم تُرقَّم قطّ وحدَها (م٢ من رقعة التعديل) ──
+      //
+      // القاعدةُ الأمُّ باقيةٌ بحرفها: **لا حذف لمستند مرقَّم أبدًا** — رقمُه
+      // موضعٌ في تسلسلٍ قانونيّ، وثغرةُ التسلسل أوّلُ ما يُسأل عنها. والمستندُ
+      // الخاطئُ المرقَّم يُلغى (`canceled`) فيخرج من كلّ قائمةٍ ويبقى أثره.
+      //
+      // وهذا الاستثناءُ لما لا أثرَ له أصلًا: مسودّةٌ بلا رقمٍ ولا قيدٍ ولا
+      // مشتقّاتٍ (و`canDeriveFrom` تمنع الاشتقاق من المسودّة أصلًا).
+      //
+      // ⚠️ ومحوُ المستند **لا يمحو مجموعاته الفرعيّة**: يبقى قيدُ التدقيق
+      //    يتيمًا غيرَ مقروء. ولهذا حُصر المحوُ بما لا أثرَ له يُطلَب.
+      allow delete: if signedIn()
+                    && (!('number' in resource.data) || resource.data.number == null)
+                    && resource.data.state in ['draft', 'rejected']
+                    && (!('posted' in resource.data) || resource.data.posted != true)
+                    && (resource.data.createdByUid == request.auth.uid || isAdmin());
 
       // سجلّ التدقيق: إضافة فقط باسم فاعلها — لا تعديل ولا حذف (نمط scans).
       // الكاتب فاعلُ مستنداتٍ (مخزنيّ أو مشتريات داخلية) لا أيّ مصادَق — يمنع

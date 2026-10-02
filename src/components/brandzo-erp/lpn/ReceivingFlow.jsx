@@ -55,6 +55,15 @@ import {
 } from '../scan/BarcodeCamera.jsx';
 import { useWedgeScanner } from '../scan/useWedgeScanner.js';
 import { normalizeScanned } from '../../../services/scan/scanEngine.js';
+/* ‹SCAN-ID› «يقرأ الباركود أوّلًا، يظهر الاسم، ثمّ تُكتب البيانات» (طلب المالك). */
+import {
+  identifyScan,
+  isRescanOfSame,
+  missingText,
+  canCommit,
+  acceptedText,
+} from '../../../services/scan/scanIdentity.js';
+import ScannedIdentity from './ScannedIdentity.jsx';
 // ‹LPN-214› طورُ التخزين — آخرُ خطوةٍ في الاستلام الميدانيّ لا شاشةٌ رابعة.
 import { executePutaway, listPutawayQueue, openTask, previewBin } from '../../../services/lpn/putawayService.js';
 import { listenLocations } from '../../../services/locations/locationsService.js';
@@ -362,6 +371,9 @@ export default function ReceivingFlow() {
   const [balances, setBalances] = useState([]);
   const seqRef = useRef(0);
   const inputRef = useRef(null);
+  /** ‹SCAN-ID› هويّةُ آخر ممسوحٍ — تُعرض ولا تُقيَّد حتى يُؤكَّد. */
+  const [identity, setIdentity] = useState(null);
+  const qtyRef = useRef(null);
 
   const indexes = useMemo(() => buildItemIndexes(items), [items]);
   const actorName = me?.name || me?.displayName || me?.email || '';
@@ -483,6 +495,19 @@ export default function ReceivingFlow() {
     const c = String(code).trim() || lastCode;
     return c ? resolveScan(c, indexes) : null;
   }, [code, lastCode, indexes]);
+
+  /**
+   * ‹SCAN-ID› أصنافُ الأمر الجاري — تُقاس عليها شارةُ «ضمن الأمر».
+   *
+   * ★ والمصدرُ `session.lines` نفسُها التي يسألها `scanVerdict` حين يردّ
+   * «ليس في أمر …». فالشارةُ **تنبّئ بالحكم** ولا تخالفه: ما تقول عنه البطاقة
+   * «غيرُ مذكورٍ في الأمر» هو بعينه ما سيردّه الحكمُ عند التأكيد. ولو بُنيت
+   * على مصدرٍ ثانٍ لافترقا يومًا، فيرى العاملُ شارةً خضراءَ ثمّ رفضًا.
+   */
+  const expectedSkus = useMemo(
+    () => (session?.lines ?? []).map((l) => l?.sku).filter(Boolean),
+    [session?.lines]
+  );
 
   /** خطّةُ الكمّيّة كما ستُسلَّم — تُعرض **قبل** الضغط لا تُكتشف بعده. */
   const pickPlan = useMemo(
@@ -734,7 +759,75 @@ export default function ReceivingFlow() {
    * مسارُ قراءةٍ واحدٌ لطرق الإدخال الثلاث: الكاميرا · جهاز الباركود ·
    * الكتابة. فالحكم واحدٌ مهما كان الباب — ولا فرعَ يختلف بصمتٍ عن أخيه.
    */
-  async function runScan(rawInput) {
+  /**
+   * ‹SCAN-ID› **المسحُ يُعرّف ولا يقيّد** (طلب المالك 2026-10-02).
+   *
+   * ═══ ما كان يقع ═══
+   * القراءةُ تذهب إلى `commitScan` مباشرةً فتُقيَّد بالكمّيّة التي كانت في
+   * الحقل من قبل، وتظهر رسالةُ `قُبلت: 6281007021234`. فالعاملُ **لا يرى
+   * اسمَ ما مسح** — يرى ثلاثةَ عشرَ رقمًا تتشابه في أوّلها وآخرها، والفرقُ
+   * بين «لبن ٢٠٠مل» و«لبن ٥٠٠مل» خانةٌ في الوسط. فيُقرّ بما لم يره.
+   *
+   * ═══ والآن ═══
+   *   ١. المسحُ يُترجَم إلى **هويّةٍ معروضة** (الاسمُ بأكبر خطٍّ في الشاشة).
+   *   ٢. فتُكتب الكمّيّةُ والبيانات.
+   *   ٣. ثمّ يُؤكَّد — وعندها وحدَها يُقيَّد.
+   *
+   * ★★ ويبقى السريعُ سريعًا: إعادةُ مسحِ الصنف **المعروض الآن** تزيد
+   * الكمّيّةَ ولا تُعيد التعريف — فالكرتونةُ الثانيةُ مسحةٌ واحدة كما كانت.
+   * ولولا ذلك لصار العقدُ الجديدُ عقوبةً على من يعمل بسرعة، ولالتُمس طريقٌ
+   * حوله.
+   */
+  function runScan(rawInput) {
+    const raw = normalizeScanned(rawInput);
+    if (!raw || busy) return;
+
+    // إعادةُ مسحِ المعروض ⇒ زيادةٌ لا تعريف.
+    if (isRescanOfSame(identity, raw)) {
+      setQty((q) => {
+        const n = Number(q);
+        return String(Number.isFinite(n) && n > 0 ? n + 1 : 1);
+      });
+      say('ok', `+1 — ${identity.name}`);
+      setTimeout(() => inputRef.current?.focus(), 20);
+      return;
+    }
+
+    const next = identifyScan(raw, (c) => resolveScan(c, indexes), {
+      expectedSkus: expectedSkus,
+      uomLabel: uomLabel,
+    });
+    setIdentity(next);
+    setLastCode(raw);
+    setCode('');
+    /**
+     * ★★★ الكمّيّةُ تُفتح على **واحد** لا على فراغ — و`scanVerdict` تقول
+     * ذلك منذ البداية: «افتراضُها واحدةٌ من وحدة الباركود — مسحةٌ واحدة =
+     * عبوةٌ واحدة».
+     *
+     * ⚠️ وهذا **عطبٌ كشفته التجربةُ الحيّة**: حين كانت تُفتح فارغةً كانت
+     * المسحةُ الأولى تعني صفرًا والثانيةُ واحدًا، فـ«ن» مسحةً تعطي «ن−١».
+     * والعاملُ الذي يمسح ثلاثَ كرتوناتٍ يُقيّد اثنتين — نقصٌ صامتٌ في
+     * الاستلام لا يكشفه إلّا جرد.
+     *
+     * ★★ و**تُصفَّر عند كلّ تعريفٍ جديد** لا تُورَث: أن تبقى «5» من صنفٍ
+     * سابقٍ على صنفٍ جديدٍ هو عينُ العطب الذي جاء هذا العقدُ ليُلغيه.
+     */
+    setQty(next.phase === 'identified' ? '1' : '');
+
+    if (next.phase === 'unknown') {
+      /* ★ والمجهولُ **يُقيَّد استثناءً فورًا** ولا ينتظر تأكيدًا: لا بياناتٍ
+         تُكتب له أصلًا (لا صنفَ ولا وحدة)، والقاعدةُ القائمة «قراءةُ باركودٍ
+         غير معروفٍ دون تحويله إلى استثناء» من الممنوعات. فيُمرَّر إلى المسار
+         القديم نفسِه ليُسجَّل كما كان يُسجَّل. */
+      commitScan(raw);
+      return;
+    }
+    setTimeout(() => qtyRef.current?.focus(), 30);
+  }
+
+  /** يُقيّد القراءةَ فعلًا — وهو ما كان اسمُه `runScan` قبل ‹SCAN-ID›. */
+  async function commitScan(rawInput) {
     const raw = normalizeScanned(rawInput);
     if (!raw || busy) return;
     /*
@@ -759,8 +852,12 @@ export default function ReceivingFlow() {
         { indexes, actor: actorName, device: 'WEB', seq: seqRef.current }
       );
       if (r.ok) {
-        say('ok', `قُبلت: ${raw}`);
+        /* ★★★ القبولُ يُعلَن **بالاسم** لا بالرقم: كان `قُبلت: 6281007021234`
+           وصار `قُبلت: لبن طازج 500مل — 3 كرتونة`. وهذا كلُّ الفرق بين إقرارٍ
+           يُقرأ وإقرارٍ يُوقَّع على بياض. */
+        say('ok', identity?.item ? acceptedText(identity, plan.qty ?? qty) : `قُبلت: ${raw}`);
         setCode(''); setQty(''); // الدفعة والصلاحية تبقيان — الكرتونة تلو الكرتونة من دفعةٍ واحدة
+        setIdentity(null); // دورةٌ جديدة: الكرتونةُ التالية تبدأ بمسحٍ يُعرّف
       } else {
         say(r.needsSupervisor ? 'warn' : 'err', r.message);
       }
@@ -897,7 +994,26 @@ export default function ReceivingFlow() {
         ) : (
           <>
             <div className="rounded-lg border px-4 py-3 mb-3" style={{ borderColor: 'var(--o-border)' }}>
+              {/*
+                ‹SCAN-ID› **اسمُ ما تُخزّنه** (طلب المالك 2026-10-02).
+                كانت البطاقةُ تقول رمزَ الطبليّة وعددَ بنودها ولا تقول **ماذا
+                فيها** — فالعاملُ يحمل طبليّةً إلى رفٍّ وهو يقرأ
+                «LPN-MAIN-20260901-000002». و`taskItem` محسوبٌ أصلًا لاقتراح
+                الرفّ ومُمرَّرٌ إلى `previewBin` — **وكان يُحسب ولا يُعرض**.
+
+                ★ والمختلطةُ تُقال مختلطةً: الاقتراحُ يُبنى على أوّل بندٍ كما
+                تنصّ `openPutawayTask`، فعرضُ اسمٍ واحدٍ لطبليّةٍ فيها خمسةُ
+                أصنافٍ يُوهم أنّها صنفٌ واحد — فيُلحَق «وغيرُه».
+              */}
               <div className="font-bold text-ink tabular-nums">{taskUnit.code}</div>
+              {taskItem && (
+                <div className="text-ink text-sm mt-1 leading-snug">
+                  {String(taskItem.nameAr || taskItem.name || taskItem.nameEn || taskItem.sku || '').trim()}
+                  {(taskUnit.lines ?? []).length > 1 && (
+                    <span className="text-ink-2"> وغيرُه ({(taskUnit.lines ?? []).length} بندًا)</span>
+                  )}
+                </div>
+              )}
               <div className="text-ink-2 text-xs mt-1">
                 {taskUnit.warehouse || '—'} · {(taskUnit.lines ?? []).length} بندًا
               </div>
@@ -1174,14 +1290,51 @@ export default function ReceivingFlow() {
             setPick={setPick}
             plan={pickPlan}
           />
-          <div className="grid grid-cols-3 gap-2 mb-2">
-            <input value={qty} onChange={(e) => setQty(e.target.value)} placeholder="الكمّيّة (١)" type="number" min="0" step="any"
-              className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
-            <input value={batch} onChange={(e) => setBatch(e.target.value)} placeholder="الدفعة"
-              className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
-            <input value={expiry} onChange={(e) => setExpiry(e.target.value)} placeholder="الصلاحية" type="date"
-              className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
-          </div>
+          {/*
+            ‹SCAN-ID› **الاسمُ أوّلًا ثمّ البيانات** (طلب المالك 2026-10-02).
+
+            ★★ وحقولُ الإدخال صارت **داخل** بطاقة الهويّة لا تحتها: الترتيبُ
+            البصريُّ هو الذي يُعلّم العاملَ العقدَ الجديد بلا تدريب — يرى اسمَ
+            الصنف، ثمّ يرى الخاناتِ **منه**، فيفهم أنّ ما يكتبه يخصّ ما يراه.
+            ولو بقيت منفصلةً لظلّ يملؤها قبل المسح كما اعتاد.
+
+            ★ والبطاقةُ تظهر عند التعريف وحدَه؛ وقبله تُعرض الحقولُ كما كانت
+            تمامًا — فلا يُكسر مسارُ من يكتب الرمزَ بيده ثمّ يُدخل الكمّيّة.
+          */}
+          {identity ? (
+            <ScannedIdentity
+              identity={identity}
+              missing={missingText(identity, { qty })}
+              onClear={() => { setIdentity(null); setQty(''); setTimeout(() => inputRef.current?.focus(), 20); }}
+            >
+              <div className="grid grid-cols-3 gap-2">
+                <input ref={qtyRef} value={qty} onChange={(e) => setQty(e.target.value)} placeholder="الكمّيّة (١)" type="number" min="0" step="any"
+                  className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
+                <input value={batch} onChange={(e) => setBatch(e.target.value)} placeholder="الدفعة"
+                  className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
+                <input value={expiry} onChange={(e) => setExpiry(e.target.value)} placeholder="الصلاحية" type="date"
+                  className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
+              </div>
+              <button
+                type="button"
+                onClick={() => commitScan(identity.code)}
+                disabled={busy || !canCommit(identity, { qty })}
+                className="btn btn-primary w-full mt-2"
+                style={{ minHeight: '48px', fontSize: '15px' }}
+              >
+                {busy ? 'جارٍ…' : `تأكيد: ${identity.name}`}
+              </button>
+            </ScannedIdentity>
+          ) : (
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              <input value={qty} onChange={(e) => setQty(e.target.value)} placeholder="الكمّيّة (١)" type="number" min="0" step="any"
+                className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
+              <input value={batch} onChange={(e) => setBatch(e.target.value)} placeholder="الدفعة"
+                className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
+              <input value={expiry} onChange={(e) => setExpiry(e.target.value)} placeholder="الصلاحية" type="date"
+                className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
+            </div>
+          )}
 
           {/*
             ‹تتبّع› **دفعةُ المورّد وتاريخُ الإنتاج — مطويّان لا محذوفان.**
