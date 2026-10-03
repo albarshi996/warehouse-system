@@ -28,6 +28,8 @@ import { normalizeBarcode } from '../../../services/excel/excelSchema.js';
 import { listenLocations } from '../../../services/locations/locationsService.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
 import { suggestLocations } from '../../../services/locations/putawaySuggest.js';
+// ‹WMS-201› فهرسُ الحِمل — يُبنى مرّةً ويُمرَّر، كفهرس الطبالي حرفًا.
+import { loadIndexOf } from '../../../services/items/itemDimensions.js';
 // بطاقةُ الصنف تُقرأ من الماستر لا من الشيت: الشيتُ يحمل كودًا وكمّيّةً،
 // والمعاملاتُ (`uomFactors`) ونوعُ التخزين مكتوبةٌ على البطاقة وحدها.
 import { subscribeItems, normalizeSku } from '../../../services/items/itemService.js';
@@ -99,6 +101,18 @@ export default function DirectedStorage() {
       itemIndex.byBarcode.get(normalizeBarcode(line?.barcode)) ||
       null,
     [itemIndex]
+  );
+
+  /**
+   * فهرسُ حِمل المواقع — ‹WMS-201›.
+   *
+   * ★★ يُبنى مرّةً لكلّ الأرصدة ويُمرَّر لكلّ موقع، **كفهرس الطبالي حرفًا**.
+   * ولو حُسب داخل المحرّك لكلّ رفٍّ لمسح قائمةَ الأصناف ألفَ مرّةٍ في الفتحة.
+   * وغيابُه (قبل وصول الأصناف) يُبقي الحكمَ كما كان: لا سقفَ وزنٍ يُحتسب.
+   */
+  const loads = useMemo(
+    () => (items.length ? loadIndexOf(balances, itemIndex.bySku) : null),
+    [balances, itemIndex, items.length]
   );
 
   const canImport = canImportSource(profile?.role);
@@ -349,6 +363,8 @@ export default function DirectedStorage() {
             onDropLine={dropLine}
             locations={locations}
             balances={balances}
+            itemOf={itemOf}
+            loads={loads}
             onCommit={commit}
             busy={busy}
             canImport={canImport}
@@ -405,7 +421,7 @@ function ScanBox({ onScan }) {
  * البدائل وسببُ ترشيحها؛ فإن تعذّر الاقتراح **قيل السبب** ولم تُترك الخانة
  * فارغةً يفسّرها القارئ بما شاء.
  */
-function SuggestedBin({ line, warehouse, locations, balances, item }) {
+function SuggestedBin({ line, warehouse, locations, balances, item, loads }) {
   const advice = useMemo(
     () =>
       suggestLocations({
@@ -427,9 +443,12 @@ function SuggestedBin({ line, warehouse, locations, balances, item }) {
         // وبطاقةُ الصنف معها: بندٌ كُتب بلا وحدةٍ يُقرأ معاملُ طبليّته منها
         // (`uomFactors`)، وفئتُه ونوعُ تخزينه يُحكم بهما على الرفوف المقيَّدة.
         item,
+        // ‹WMS-201› فهرسُ الحِمل — به يعمل سقفُ الوزن والحجم. وغيابُه يُبقي
+        // الحكمَ كما كان حرفًا، فلا شاشةَ تنكسر قبل وصول الأصناف.
+        loads,
         warehouse,
       }),
-    [line.sku, line.barcode, line.uom, line.batch, line.expiry, line.qty, warehouse, locations, balances, item]
+    [line.sku, line.barcode, line.uom, line.batch, line.expiry, line.qty, warehouse, locations, balances, item, loads]
   );
 
   const best = advice.candidates[0];
@@ -484,7 +503,7 @@ function filterDocuments(documents, term) {
     .filter(({ lines }) => lines.length > 0);
 }
 
-function Preview({ preview, deviations, onEdit, onHeader, onScan, onAddLine, onAddDoc, onDropLine, onCommit, busy, canImport, term, onTerm, locations, balances }) {
+function Preview({ preview, deviations, onEdit, onHeader, onScan, onAddLine, onAddDoc, onDropLine, onCommit, busy, canImport, term, onTerm, locations, balances, itemOf, loads }) {
   const s = preview.summary;
   const shown = filterDocuments(preview.documents, term);
   const shownLines = shown.reduce((n, d) => n + d.lines.length, 0);
@@ -647,7 +666,7 @@ function Preview({ preview, deviations, onEdit, onHeader, onScan, onAddLine, onA
                       <Editable value={line.batch} onChange={(v) => onEdit(di, li, 'batch', v)} width="90px" />
                       <Editable value={line.expiry} type="date" onChange={(v) => onEdit(di, li, 'expiry', v)} width="130px" />
                       {preview.type === 'receipt' && (
-                        <SuggestedBin line={line} warehouse={doc.warehouse} locations={locations} balances={balances} />
+                        <SuggestedBin line={line} warehouse={doc.warehouse} locations={locations} balances={balances} item={itemOf?.(line) || null} loads={loads} />
                       )}
                       <Editable value={line.notes} onChange={(v) => onEdit(di, li, 'notes', v)} />
                       <td style={{ padding: '4px 8px' }}>

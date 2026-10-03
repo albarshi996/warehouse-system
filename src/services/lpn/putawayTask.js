@@ -81,7 +81,7 @@ function palletIndex(unit, { units, pallets } = {}) {
  * @param {object} ctx {locations, balances, item, units|pallets, actor, at}
  * @returns {{task:object}|{problem:string}}
  */
-export function openPutawayTask(unit, { locations = [], balances = [], item = null, units, pallets, actor, at } = {}) {
+export function openPutawayTask(unit, { locations = [], balances = [], item = null, units, pallets, loads = null, actor, at } = {}) {
   const problem = taskOpenProblem(unit);
   if (problem) return { problem };
   if (!String(actor ?? '').trim()) return { problem: 'مهمّةٌ بلا فاعلٍ لا تُنشأ.' };
@@ -94,6 +94,9 @@ export function openPutawayTask(unit, { locations = [], balances = [], item = nu
   // رفٌّ يختار البديل بعلمٍ لا بتخمين.
   const { candidates, rejected, problem: suggestProblem } = suggestLocations({
     line, locations, balances, item, warehouse: unit.warehouse, limit: 3,
+    // ‹WMS-201› فهرسُ الحِمل — يمرّ كما يمرّ فهرسُ الطبالي، وغيابُه «لا علم»
+    // فيبقى الحكمُ كما كان حرفًا. فمستدعٍ لم يُوصَل بعد لا يُغلق في وجهه رفّ.
+    loads,
     // ★ وسعةُ الطبالي تُحاسَب هنا لا في الشاشة: الرفُّ الذي بلغ سقفَ مواضعه
     // يخرج من المرشّحين ويظهر في المرفوض بسببه المكتوب.
     pallets: palletIndex(unit, { units, pallets }),

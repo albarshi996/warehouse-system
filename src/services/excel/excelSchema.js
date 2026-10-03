@@ -188,6 +188,12 @@ export const DATASETS = {
       { field: 'baseUom', labelAr: 'Base UoM (وحدة الأساس)', type: 'string', required: false, aliases: ['baseuom', 'base uom', 'وحدة الأساس', 'وحدة الاساس', 'الوحدة الأساسية'] },
       // ‹FNB-203› مسار التوريد: مخزن · مطبخ · مباشر — والفارغ يسلك الافتراضيّ.
       { field: 'supplyRoute', labelAr: 'Supply Route (مسار التوريد)', type: 'string', required: false, aliases: ['supply route', 'supplyroute', 'route', 'مسار التوريد', 'المسار', 'مسار'] },
+      // ‹WMS-201› وزنُ الوحدة وحجمُها — بهما يعمل مقياسا السعة `weightKg`
+      // و`volumeM3` المعلَنان في `CAPACITY_MEASURES` منذ أوّل يوم **بلا مصدرٍ
+      // يقرؤهما**. والوحدةُ هنا وحدةُ الأساس للصنف لا وحدةُ البند: الوزنُ
+      // يُضرب بمعامل التحويل عند الحساب (`itemDimensions.lineWeightKg`).
+      { field: 'unitWeightKg', labelAr: 'Unit Weight kg (وزن الوحدة كجم)', type: 'number', required: false, nonNegative: true, aliases: ['unit weight', 'unitweight', 'unit weight kg', 'weight', 'net weight', 'gross weight', 'وزن الوحدة', 'الوزن', 'وزن', 'الوزن القائم', 'الوزن الصافي', 'كجم'] },
+      { field: 'unitVolumeM3', labelAr: 'Unit Volume m3 (حجم الوحدة م٣)', type: 'number', required: false, nonNegative: true, aliases: ['unit volume', 'unitvolume', 'unit volume m3', 'volume', 'cbm', 'm3', 'حجم الوحدة', 'الحجم', 'حجم', 'المتر المكعب'] },
       { field: 'nameEn', labelAr: 'الاسم (إنجليزي)', type: 'string', required: false, aliases: ['nameen', 'name en', 'english name', 'الاسم بالانجليزي', 'الاسم الانجليزي'] },
       { field: 'shade', labelAr: 'الظل/اللون', type: 'string', required: false, aliases: ['shade', 'الظل', 'اللون', 'الظل/اللون', 'color', 'colour', 'درجة اللون'] },
       { field: 'balance', labelAr: 'الكمية الدفترية', type: 'number', required: false, nonNegative: true, aliases: ['balance', 'الرصيد', 'الكمية', 'الكمية الدفترية', 'المتوفر', 'qty', 'quantity', 'on hand', 'qty_available'] },

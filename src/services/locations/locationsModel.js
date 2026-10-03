@@ -189,7 +189,7 @@ export function handlingLabel(handling) {
  * @returns {{ok:boolean, reason:string}} والسبب مكتوبٌ دائمًا عند الرفض —
  *          «لا يُقترح» بلا سببٍ شكوى لا معلومة.
  */
-export function canReceive(location, usedQty = 0, usedPallets = null) {
+export function canReceive(location, usedQty = 0, usedPallets = null, load = null) {
   if (!location) return { ok: false, reason: 'الموقع غير معرَّف في سيّد المواقع.' };
   const status = LOCATION_STATUSES[location.status] || LOCATION_STATUSES[DEFAULT_STATUS];
   if (!status.accepts) return { ok: false, reason: `الموقع ${status.labelAr} — ${status.hint}` };
@@ -205,6 +205,20 @@ export function canReceive(location, usedQty = 0, usedPallets = null) {
   if (capPallets > 0 && usedPallets !== null && num(usedPallets) >= capPallets) {
     return { ok: false, reason: `الموقع بلغ سعته من الطبالي (${capPallets}) — لا موضعَ لطبليّةٍ أخرى.` };
   }
+
+  // ★★ ونفسُ القاعدة حرفًا على الوزن والحجم (‹WMS-201›): سقفٌ غائبٌ أو حِملٌ
+  // مجهولٌ ⇒ **يمرّ**. وهنا سؤالُ «أبلغ سقفَه» وحدَه — أمّا «أيسعُ هذا البندَ
+  // بعينه» فسؤالٌ آخر يحتاج وزنَ البند، وجوابُه في
+  // `itemDimensions.capacityProblem` لأنّه يعرف الصنفَ ومعاملاتِه.
+  const capWeight = num(location.capacity?.weightKg);
+  if (capWeight > 0 && load && num(load.weightKg) >= capWeight) {
+    const note = load.partial ? ' (محسوبًا على ما يُعرف وزنُه — والواقعُ أثقل)' : '';
+    return { ok: false, reason: `الموقع بلغ سقفَ وزنه (${capWeight} كجم)${note} — لا مكان لحملٍ جديد.` };
+  }
+  const capVolume = num(location.capacity?.volumeM3);
+  if (capVolume > 0 && load && num(load.volumeM3) >= capVolume) {
+    return { ok: false, reason: `الموقع بلغ سقفَ حجمه (${capVolume} م٣) — لا مكان لحملٍ جديد.` };
+  }
   return { ok: true, reason: '' };
 }
 
@@ -219,7 +233,7 @@ export function canReceive(location, usedQty = 0, usedPallets = null) {
  *                            غيابُه يترك حقولَ الطبالي `null` ولا يمسّ حقلًا
  *                            قائمًا، فالنداءُ ثنائيُّ الوسائط كما كان حرفًا.
  */
-export function occupancyOf(location, balances, pallets = null) {
+export function occupancyOf(location, balances, pallets = null, load = null) {
   const code = normalizeLocationCode(location?.code);
   const mine = (balances || []).filter((b) => balanceLocationCode(b) === code);
   const usedQty = mine.reduce((s, b) => s + num(b.qty), 0);
@@ -229,7 +243,27 @@ export function occupancyOf(location, balances, pallets = null) {
   const capPallets = num(location?.capacity?.pallets);
   const knows = usedPallets !== null; // مرّر المستدعي الفهرسَ فصار للعدد معنًى
 
+  // ── الوزنُ والحجم (‹WMS-201›) ──────────────────────────────────
+  // ★★★ ويُمرَّر الحِملُ **محسوبًا** لا يُحتسب هنا: سيّدُ المواقع لا يستورد
+  // وحدةَ أبعاد الصنف — نفسُ قرار `palletsAt` حرفًا (انظر تعليقَه). ولولاه
+  // لصار عطبٌ في طبقةٍ أحدثَ يُسقط أقدمَ ما في الشجرة.
+  const usedWeight = load ? num(load.weightKg) : null;
+  const capWeight = num(location?.capacity?.weightKg);
+  const usedVolume = load ? num(load.volumeM3) : null;
+  const capVolume = num(location?.capacity?.volumeM3);
+
   return {
+    // ★★ والتحفّظُ يُنقل معه: مجموعٌ محسوبٌ على بعض البنود **حدٌّ أدنى لا
+    // حقيقة**، فمن قرأ `remainingWeightKg` وجهل ذلك ظنّ فراغًا ليس موجودًا.
+    usedWeightKg: usedWeight,
+    capacityWeightKg: capWeight > 0 ? capWeight : null,
+    remainingWeightKg: capWeight > 0 && usedWeight !== null ? Math.max(0, capWeight - usedWeight) : null,
+    weightPct: capWeight > 0 && usedWeight !== null ? Math.min(100, Math.round((usedWeight / capWeight) * 100)) : null,
+    usedVolumeM3: usedVolume,
+    capacityVolumeM3: capVolume > 0 ? capVolume : null,
+    remainingVolumeM3: capVolume > 0 && usedVolume !== null ? Math.max(0, capVolume - usedVolume) : null,
+    volumePct: capVolume > 0 && usedVolume !== null ? Math.min(100, Math.round((usedVolume / capVolume) * 100)) : null,
+    loadPartial: load ? Boolean(load.partial) : false,
     code,
     lines: mine.length,
     usedQty,

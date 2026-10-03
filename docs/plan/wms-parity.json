@@ -9,13 +9,41 @@
   "lastUpdatedBy": "Claude",
   "baseline": "القياسُ الفعليُّ 2026-10-03 (بالكود لا بالوثائق): من ثمانين بندًا في قائمة المالك **اثنان وسبعون مبنيّةٌ فعلًا** — الاستلامُ بأسبابه الثلاثة (تلف · نقص · زيادة) · ومحرّكُ تسكينٍ بتسع قواعدَ وتعليلٍ وتجاوزٍ مُقيَّد · وFEFO مُخصِّصًا ومانعًا · وخطّةُ سحبٍ بمسارٍ مُرتَّبٍ على شبكة المشي · وتعبئةٌ بالطُّرَف والتحقّق · وأرصفةٌ وتحميلٌ وبوّابةُ خروجٍ وعهدة · ومرتجعاتٌ وأسبابٌ مُقنَّنة · وطابورُ مسحٍ يعمل دون اتّصال. **والثمانيةُ الناقصةُ مقيسةٌ واحدةً واحدة** وهي فجوات هذا المتتبّع.",
   "milestones": [
-    { "id": "م١", "title": "قراءة GS1 — من باركود المورّد إلى الدفعة والصلاحية", "estimate": "جلسة" },
-    { "id": "م٢", "title": "وزنُ الصنف وحجمُه وسرعةُ دورانه — بُعدان ومقياس", "estimate": "جلسة" },
-    { "id": "م٣", "title": "إعادةُ تزويد مواقع التجهيز", "estimate": "جلسة" },
-    { "id": "م٤", "title": "التجهيزُ المباشر Cross-Docking", "estimate": "جلسة" },
-    { "id": "م٥", "title": "إسنادُ المهمّة للعامل المناسب", "estimate": "جلسة" },
-    { "id": "م٦", "title": "محرّكُ القواعد المُهيَّأ — Configuration First", "estimate": "جلسة" },
-    { "id": "م٧", "title": "الموجات Wave Picking", "estimate": "جلسة" }
+    {
+      "id": "م١",
+      "title": "قراءة GS1 — من باركود المورّد إلى الدفعة والصلاحية",
+      "estimate": "جلسة"
+    },
+    {
+      "id": "م٢",
+      "title": "وزنُ الصنف وحجمُه وسرعةُ دورانه — بُعدان ومقياس",
+      "estimate": "جلسة"
+    },
+    {
+      "id": "م٣",
+      "title": "إعادةُ تزويد مواقع التجهيز",
+      "estimate": "جلسة"
+    },
+    {
+      "id": "م٤",
+      "title": "التجهيزُ المباشر Cross-Docking",
+      "estimate": "جلسة"
+    },
+    {
+      "id": "م٥",
+      "title": "إسنادُ المهمّة للعامل المناسب",
+      "estimate": "جلسة"
+    },
+    {
+      "id": "م٦",
+      "title": "محرّكُ القواعد المُهيَّأ — Configuration First",
+      "estimate": "جلسة"
+    },
+    {
+      "id": "م٧",
+      "title": "الموجات Wave Picking",
+      "estimate": "جلسة"
+    }
   ],
   "gaps": {
     "و-١": "لا محلّلَ GS1 إطلاقًا — صفرُ إشارةٍ لمعرّفات التطبيق (AI) في src/services/scan وsrc/services/barcodes؛ فباركودُ المورّد الحامل للدفعة والصلاحية يُقرأ نصًّا واحدًا أعمى",
@@ -35,10 +63,15 @@
       "title": "محلّلُ GS1 الخالص — معرّفاتُ التطبيق والفاصلُ ورقمُ التحقّق",
       "milestone": "م١",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["و-١"],
+      "state": "done",
+      "gaps": [
+        "و-١"
+      ],
       "dependsOn": [],
-      "touches": ["src/services/scan/gs1.js", "src/services/scan/gs1.test.js"],
+      "touches": [
+        "src/services/scan/gs1.js",
+        "src/services/scan/gs1.test.js"
+      ],
       "guardTest": "src/services/scan/gs1.test.js",
       "acceptance": [
         "باركودُ GS1-128 الحاملُ (01) و(10) و(17) يُفكَّك إلى صنفٍ ودفعةٍ وصلاحيّةٍ ثلاثةَ حقولٍ مستقلّة",
@@ -48,17 +81,29 @@
         "ورقمُ تحقّق GTIN يُحتسب فيُكشف المسحُ المشوَّه بدل أن يُقيَّد صنفًا مجهولًا",
         "وما ليس GS1 يُعاد كما هو بعلامةٍ صريحة — فلا يُفسَّر باركودٌ داخليٌّ تفسيرًا أجنبيًّا",
         "ولا ساعةَ تُقرأ في المنطق الخالص — التاريخُ يُفكَّك نصًّا ويُحكَم عليه بوقتٍ مُمرَّر"
-      ]
+      ],
+      "progress": "محلّلٌ كاملٌ بأربعين معرّفًا وأحدَ عشرَ عائلةَ قياسٍ ذاتِ كسر · وأربعُ إشاراتٍ تمييزٍ قويّتان وظنّيّتان · وحدُّ ستّةَ عشرَ خانةً يُخرج باركوداتِ التجزئة من دائرة التفسير · ورقمُ تحقّقٍ يُحتسب تحذيرًا لا إسقاطًا · واليومُ صفرٌ آخرَ الشهر · ونافذةُ قرنٍ بقاعدة GS1 بلا قراءة ساعة · 27 اختبارًا.",
+      "evidence": {
+        "commit": "613de90",
+        "closedOn": "2026-10-03"
+      }
     },
     {
       "id": "WMS-102",
       "title": "وصلُ GS1 بهويّة المسح — الدفعةُ والصلاحيّةُ تُملآن بلا كتابةِ يد",
       "milestone": "م١",
       "owner": "Claude",
-      "state": "todo",
-      "gaps": ["و-١"],
-      "dependsOn": ["WMS-101"],
-      "touches": ["src/services/scan/scanIdentity.js", "src/services/scan/scanIdentity.gs1.test.js"],
+      "state": "done",
+      "gaps": [
+        "و-١"
+      ],
+      "dependsOn": [
+        "WMS-101"
+      ],
+      "touches": [
+        "src/services/scan/scanIdentity.js",
+        "src/services/scan/scanIdentity.gs1.test.js"
+      ],
       "guardTest": "src/services/scan/scanIdentity.gs1.test.js",
       "acceptance": [
         "مسحةُ GS1 على شاشةِ استلامٍ تُعيد الصنفَ ومعه دفعتُه وصلاحيّتُه مقترحتين",
@@ -66,7 +111,12 @@
         "وGTIN يُطابَق بالباركود المسجَّل وبصيغته المصفَّرة (13 ⟷ 14 خانة) فلا يُفوَّت صنفٌ مسجَّلٌ بـEAN-13",
         "وصنفٌ لا يُعرَف يبقى مجهولًا ومعه الدفعةُ المقروءة — فلا تُرمى بيانةٌ قُرئت",
         "وحارسٌ يُسقط الاختبار إن استُدعي المحلّل ولم تُستعمل مخرجاتُه"
-      ]
+      ],
+      "progress": "مرشَّحاتٌ مرتّبةٌ 14⟷13 تُجرَّب على الماستر · والتحليلُ قبل التنظيف فلا يُحذف الفاصل · وحمولةٌ تُعرض موسومةً «من الباركود» · وتعبئةٌ تحذف الغائبَ ولا تُفرّغه · وإعادةُ المسح صنفٌ ودفعةٌ معًا · والمجهولُ يحتفظ ببيانته · 15 اختبارًا، والعاديُّ لم يتغيّر بحرف.",
+      "evidence": {
+        "commit": "613de90",
+        "closedOn": "2026-10-03"
+      }
     },
     {
       "id": "WMS-201",
@@ -74,9 +124,15 @@
       "milestone": "م٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["و-٢"],
+      "gaps": [
+        "و-٢"
+      ],
       "dependsOn": [],
-      "touches": ["src/services/items/itemShape.js", "src/services/items/itemDimensions.js", "src/services/items/itemDimensions.test.js"],
+      "touches": [
+        "src/services/items/itemShape.js",
+        "src/services/items/itemDimensions.js",
+        "src/services/items/itemDimensions.test.js"
+      ],
       "guardTest": "src/services/items/itemDimensions.test.js",
       "acceptance": [
         "وزنُ الوحدة وحجمُها يُقرآن من الشيت ويُخزَّنان — ولا عمودَ قائمٌ يُحذف",
@@ -92,9 +148,14 @@
       "milestone": "م٢",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["و-٣"],
+      "gaps": [
+        "و-٣"
+      ],
       "dependsOn": [],
-      "touches": ["src/services/locations/velocity.js", "src/services/locations/velocity.test.js"],
+      "touches": [
+        "src/services/locations/velocity.js",
+        "src/services/locations/velocity.test.js"
+      ],
       "guardTest": "src/services/locations/velocity.test.js",
       "acceptance": [
         "تصنيفُ A/B/C يُحتسب من حركات الصرف في نافذةٍ مُمرَّرة — لا من رصيدٍ ولا من حدسٍ",
@@ -110,9 +171,14 @@
       "milestone": "م٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["و-٤"],
+      "gaps": [
+        "و-٤"
+      ],
       "dependsOn": [],
-      "touches": ["src/services/locations/replenishModel.js", "src/services/locations/replenishModel.test.js"],
+      "touches": [
+        "src/services/locations/replenishModel.js",
+        "src/services/locations/replenishModel.test.js"
+      ],
       "guardTest": "src/services/locations/replenishModel.test.js",
       "acceptance": [
         "خانةٌ معلَنةٌ «وجهَ تجهيزٍ» بحدٍّ أدنى وأعلى تُقرأ ويُحكَم عليها",
@@ -127,9 +193,16 @@
       "milestone": "م٣",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["و-٤"],
-      "dependsOn": ["WMS-301"],
-      "touches": ["src/services/locations/replenishPlan.js", "src/services/locations/replenishPlan.test.js"],
+      "gaps": [
+        "و-٤"
+      ],
+      "dependsOn": [
+        "WMS-301"
+      ],
+      "touches": [
+        "src/services/locations/replenishPlan.js",
+        "src/services/locations/replenishPlan.test.js"
+      ],
       "guardTest": "src/services/locations/replenishPlan.test.js",
       "acceptance": [
         "نقصُ وجهِ التجهيز يُولّد مهمّةَ نقلٍ من مصدرٍ مُسمّى — رفٌّ بعينه وكمّيّةٌ بعينها لا «من المخزن»",
@@ -145,9 +218,14 @@
       "milestone": "م٤",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["و-٥"],
+      "gaps": [
+        "و-٥"
+      ],
       "dependsOn": [],
-      "touches": ["src/services/lpn/crossDock.js", "src/services/lpn/crossDock.test.js"],
+      "touches": [
+        "src/services/lpn/crossDock.js",
+        "src/services/lpn/crossDock.test.js"
+      ],
       "guardTest": "src/services/lpn/crossDock.test.js",
       "acceptance": [
         "بندٌ مستلَمٌ عليه طلبُ صرفٍ مفتوحٌ يُقترح تجهيزًا مباشرًا بمرجع الطلب ورقمه",
@@ -163,9 +241,14 @@
       "milestone": "م٥",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["و-٦"],
+      "gaps": [
+        "و-٦"
+      ],
       "dependsOn": [],
-      "touches": ["src/services/tasks/assignEngine.js", "src/services/tasks/assignEngine.test.js"],
+      "touches": [
+        "src/services/tasks/assignEngine.js",
+        "src/services/tasks/assignEngine.test.js"
+      ],
       "guardTest": "src/services/tasks/assignEngine.test.js",
       "acceptance": [
         "ثمانيةُ عواملَ مُعلَنةٌ بأوزانها: المنطقةُ والمهارةُ والصلاحيّةُ والحملُ الحاليُّ والمهلةُ والمعدّةُ والإنتاجيّةُ والازدحام",
@@ -182,9 +265,14 @@
       "milestone": "م٦",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["و-٧"],
+      "gaps": [
+        "و-٧"
+      ],
       "dependsOn": [],
-      "touches": ["src/services/settings/rulesProfile.js", "src/services/settings/rulesProfile.test.js"],
+      "touches": [
+        "src/services/settings/rulesProfile.js",
+        "src/services/settings/rulesProfile.test.js"
+      ],
       "guardTest": "src/services/settings/rulesProfile.test.js",
       "acceptance": [
         "أوزانُ التسكين والأولويّة والإسناد تُقرأ من ملفِّ تهيئةٍ لا من ثوابتَ مجمَّدة",
@@ -200,9 +288,14 @@
       "milestone": "م٧",
       "owner": "Claude",
       "state": "todo",
-      "gaps": ["و-٨"],
+      "gaps": [
+        "و-٨"
+      ],
       "dependsOn": [],
-      "touches": ["src/services/tasks/waveModel.js", "src/services/tasks/waveModel.test.js"],
+      "touches": [
+        "src/services/tasks/waveModel.js",
+        "src/services/tasks/waveModel.test.js"
+      ],
       "guardTest": "src/services/tasks/waveModel.test.js",
       "acceptance": [
         "موجةٌ تُكوَّن من مستنداتِ سحبٍ مُختارةٍ بمعيارٍ مُعلَن — ناقلٌ أو موعدُ خروجٍ أو منطقة",

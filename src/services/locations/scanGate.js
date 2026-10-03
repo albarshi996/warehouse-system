@@ -80,6 +80,8 @@ export function qtyVerdict(line, qty) {
  * الحكم الكامل على عمليّة مسحٍ واحدة.
  *
  * @param {Map} [p.pallets] فهرس «الموقع ← طباليه» (`lpn/palletMap.palletsByBin`)
+ * @param {Map} [p.loads]   فهرس «الموقع ← حِمله» (`items/itemDimensions.loadIndexOf`) —
+ *                 ‹WMS-201›، وغيابُه يُبقي الحكمَ كما كان: لا سقفَ وزنٍ يُحتسب.
  *        — **يُمرَّر ولا يُستورَد**: هذا الملفّ من القائم قبل طبقة الطبالي،
  *        والاتّجاه المشروع واحد (الجديدُ يقرأ القائم ولا يعرفه القائم)، فلو
  *        استورده لَصار عطبٌ في الأحدث يُسقط الأقدم. وغيابُه يعني «لا علمَ
@@ -89,7 +91,7 @@ export function qtyVerdict(line, qty) {
  * @returns {{ok:boolean, problems:string[], needsOverrideReason:boolean,
  *            locationVerdict:object, entry:object|null}}
  */
-export function scanVerdict({ line, scannedItem, scannedBatch, scannedBin, qty, locations, balances, item, pallets, overrideNote } = {}) {
+export function scanVerdict({ line, scannedItem, scannedBatch, scannedBin, qty, locations, balances, item, pallets, loads = null, overrideNote } = {}) {
   const problems = [];
 
   const itemV = itemScanVerdict(line, scannedItem);
@@ -106,7 +108,7 @@ export function scanVerdict({ line, scannedItem, scannedBatch, scannedBin, qty, 
 
   // حكم الموقع: مرفوضٌ **لا يعني ممنوعًا** — يمرّ بسببٍ إلزاميّ يُقيَّد (قرار المالك).
   const locationVerdict = code
-    ? chooseVerdict(code, { line: { ...line, qty: Number(qty) || 0 }, locations, balances, item, pallets })
+    ? chooseVerdict(code, { line: { ...line, qty: Number(qty) || 0 }, locations, balances, item, pallets, loads })
     : { ok: false, override: false, reason: '', needsReason: false };
 
   const needsOverrideReason = Boolean(locationVerdict.needsReason);
