@@ -148,7 +148,9 @@ export function handlingNeedOf(line, item, { asHandlingUnit = false } = {}) {
  * @returns {{ok:boolean, code:string, score:number, reasons:string[], reason:string,
  *            capacityBefore:object, capacityAfter:object}}
  */
-export function scoreLocation(location, { line, balances, item, pallets, loads, velocity = '', asHandlingUnit } = {}) {
+export function scoreLocation(location, { line, balances, item, pallets, loads, velocity = '', asHandlingUnit, weights } = {}) {
+  // ‹WMS-601› الأوزانُ مُهيَّأةٌ — والغيابُ يُعيد الثابتَ المعلَنَ حرفًا.
+  const W = weights ? { ...WEIGHTS, ...weights } : WEIGHTS;
   const code = normalizeLocationCode(location?.code);
   const qty = num(line?.qty);
   // ‹WMS-201› حِملُ الموقع — و`null` تعني «لم يُمرَّر الفهرس» فيبقى الحكمُ
@@ -204,52 +206,52 @@ export function scoreLocation(location, { line, balances, item, pallets, loads, 
   const sameBatch = sameItem.filter((b) => (up(b.batch) || 'NOBATCH') === (up(line?.batch) || 'NOBATCH'));
 
   if (sameBatch.length) {
-    score += WEIGHTS.sameItemAndBatch;
+    score += W.sameItemAndBatch;
     reasons.push('الصنف والدفعة نفسهما مخزَّنان هنا — تجميعٌ يُقصّر السحب لاحقًا.');
   } else if (sameItem.length) {
-    score += WEIGHTS.sameItem;
+    score += W.sameItem;
     reasons.push('الصنف نفسه مخزَّنٌ هنا بدفعةٍ أخرى.');
   } else if (!here.length) {
-    score += WEIGHTS.emptyLocation;
+    score += W.emptyLocation;
     reasons.push('الرفّ فارغ — لا خلط ولا التباس.');
   }
 
   if (occ.remainingQty === null) {
-    score += WEIGHTS.fitsWhole;
+    score += W.fitsWhole;
     reasons.push('سعة غير محدودة.');
   } else if (occ.remainingQty >= qty) {
-    score += WEIGHTS.fitsWhole;
+    score += W.fitsWhole;
     reasons.push(`السعة تكفي الكمّيّة كاملةً (المتبقّي ${occ.remainingQty}).`);
   } else if (occ.remainingQty > 0) {
-    score += WEIGHTS.fitsPartial;
+    score += W.fitsPartial;
     reasons.push(`السعة تكفي ${occ.remainingQty} من ${qty} — يحتاج الباقي رفًّا آخر.`);
   }
 
   if (need && has && need === has) {
-    score += WEIGHTS.storageTypeMatch;
+    score += W.storageTypeMatch;
     reasons.push(`نوع التخزين مطابق («${has}»).`);
   }
 
   if (needHandling && hasHandling && needHandling === hasHandling) {
-    score += WEIGHTS.handlingMatch;
+    score += W.handlingMatch;
     reasons.push(`نوع المناولة مطابق («${handlingLabel(hasHandling)}»).`);
   }
 
   const priority = num(location?.priority);
   if (priority) {
-    score += priority * WEIGHTS.priority;
+    score += priority * W.priority;
     reasons.push(`أولويّة الرفّ ${priority}.`);
   }
   // ── البُعد — ومعه سرعةُ الدوران (‹WMS-202›) ────────────────────
   // ★★★ عقوبةُ البُعد تُضرب في معامل المرتبة: السريعُ يُلاحق القريب،
   // والراكدُ **تُقلب له العقوبةُ مكافأةً** فيُدفع إلى أبعد رفّ. ولولا هذا
   // كان صنفٌ لم يُطلب منذ سنةٍ يسبق إلى أغلى موضعٍ في المستودع لأنّه صادف
-  // رفًّا فارغًا (`WEIGHTS.emptyLocation`).
+  // رفًّا فارغًا (`W.emptyLocation`).
   // ★★★ والمجهولُ معاملُه واحدٌ حتمًا — فبلا تصنيفٍ الحكمُ كما كان حرفًا.
   const distance = num(location?.distance);
   if (distance) {
     const factor = velocityFactorOf(velocity);
-    score += distance * WEIGHTS.distance * factor;
+    score += distance * W.distance * factor;
     reasons.push(`البُعد عن ساحة الاستلام ${distance}.`);
     if (factor !== 1) {
       const label = rankLabel(velocity).labelAr;
@@ -310,7 +312,7 @@ function reject(code, reason, occ) {
  *                 يُبقي الحكم على ما كان: لا سعةَ طبالٍ تُحاسَب.
  * @returns {{candidates:Array, rejected:Array, problem:string}}
  */
-export function suggestLocations({ line, locations, balances, item, warehouse, pallets, loads, velocity = '', asHandlingUnit, limit = 5 } = {}) {
+export function suggestLocations({ line, locations, balances, item, warehouse, pallets, loads, velocity = '', asHandlingUnit, weights, limit = 5 } = {}) {
   const wh = up(warehouse || line?.warehouse);
   const pool = (locations || []).filter((l) => l?.status !== 'archived').filter((l) => !wh || up(l?.warehouse) === wh);
 
@@ -325,7 +327,7 @@ export function suggestLocations({ line, locations, balances, item, warehouse, p
     return { candidates: [], rejected: [], problem: 'كمّيّة البند صفر — لا شيء يُخزَّن.' };
   }
 
-  const scored = pool.map((l) => scoreLocation(l, { line, balances, item, pallets, loads, velocity, asHandlingUnit }));
+  const scored = pool.map((l) => scoreLocation(l, { line, balances, item, pallets, loads, velocity, asHandlingUnit, weights }));
   const candidates = scored.filter((s) => s.ok).sort((a, b) => b.score - a.score).slice(0, limit);
   // ② المرفوض يُعرض بسببه لا يُخفى.
   const rejected = scored.filter((s) => !s.ok).map(({ code, shortLabel, reason }) => ({ code, shortLabel, reason }));
@@ -345,7 +347,7 @@ export function suggestLocations({ line, locations, balances, item, warehouse, p
  *
  * @returns {{ok:boolean, override:boolean, reason:string, needsReason:boolean}}
  */
-export function chooseVerdict(code, { line, locations, balances, item, pallets, loads, velocity = '', asHandlingUnit } = {}) {
+export function chooseVerdict(code, { line, locations, balances, item, pallets, loads, velocity = '', asHandlingUnit, weights } = {}) {
   const wanted = normalizeLocationCode(code);
   if (!wanted) return { ok: false, override: false, reason: 'لم يُحدَّد موقع.', needsReason: false };
 
@@ -359,7 +361,7 @@ export function chooseVerdict(code, { line, locations, balances, item, pallets, 
     };
   }
 
-  const verdict = scoreLocation(location, { line, balances, item, pallets, loads, velocity, asHandlingUnit });
+  const verdict = scoreLocation(location, { line, balances, item, pallets, loads, velocity, asHandlingUnit, weights });
   if (verdict.ok) return { ok: true, override: false, reason: '', needsReason: false };
   return { ok: false, override: true, reason: verdict.reason, needsReason: true };
 }

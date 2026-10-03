@@ -139,7 +139,7 @@ export function zoneShare(worker, taskZone) {
  * @returns {{candidates:Array, excluded:Array, problem:string, unknownRoles:number}}
  */
 export function suggestAssignees(task, workers, ctx = {}) {
-  const { nowMs, zoneLoad = null, limit = 5 } = ctx;
+  const { nowMs, zoneLoad = null, limit = 5, weights } = ctx;
   const pool = workers || [];
 
   if (!pool.length) {
@@ -152,7 +152,7 @@ export function suggestAssignees(task, workers, ctx = {}) {
   const needEquipment = up(task?.equipment);
   const due = Number(task?.dueAt);
 
-  const scored = pool.map((worker) => scoreWorker(worker, { taskZone, op, workType, needEquipment, due, nowMs, zoneLoad }));
+  const scored = pool.map((worker) => scoreWorker(worker, { taskZone, op, workType, needEquipment, due, nowMs, zoneLoad, weights }));
   const candidates = scored.filter((s) => s.ok).sort((a, b) => b.score - a.score || (a.uid < b.uid ? -1 : 1)).slice(0, limit);
   const excluded = scored.filter((s) => !s.ok).map(({ uid, name, reason }) => ({ uid, name, reason }));
 
@@ -174,7 +174,9 @@ export function suggestAssignees(task, workers, ctx = {}) {
  * @returns {{ok:boolean, uid:string, name:string, score:number, roleKnown:boolean,
  *            factors:Array, reasons:string[], reason:string}}
  */
-export function scoreWorker(worker, { taskZone, op, workType, needEquipment, due, nowMs, zoneLoad } = {}) {
+export function scoreWorker(worker, { taskZone, op, workType, needEquipment, due, nowMs, zoneLoad, weights } = {}) {
+  // ‹WMS-601› أوزانٌ مُهيَّأةٌ — والغيابُ يُعيد الثابتَ المعلَنَ حرفًا بحرف.
+  const W = weights ? { ...WEIGHTS, ...weights } : WEIGHTS;
   const uid = txt(worker?.uid || worker?.id);
   const name = txt(worker?.name) || uid || '—';
   const reject = (reason) => ({ ok: false, uid, name, score: -1, roleKnown: true, factors: [], reasons: [], reason });
@@ -203,56 +205,56 @@ export function scoreWorker(worker, { taskZone, op, workType, needEquipment, due
   };
 
   const zone = zoneShare(worker, taskZone);
-  add('zone', 'الموضع', WEIGHTS.zone, zone.share, zone.note);
+  add('zone', 'الموضع', W.zone, zone.share, zone.note);
 
   const skill = skillShare(worker, workType);
-  add('skill', 'المهارة', WEIGHTS.skill, skill.share, skill.note);
+  add('skill', 'المهارة', W.skill, skill.share, skill.note);
 
   // ★ الحملُ **معكوس**: الفارغُ يتقدّم. ومن بيده ثلاثٌ فنصيبُه صفرٌ لا منعٌ —
   // فالمنعُ يُفرغ الطابورَ على رؤوسٍ قليلةٍ في يومِ ذروة.
   const open = Math.max(0, num(worker?.openTasks));
-  add('load', 'الحمل الحاليّ', WEIGHTS.load, 1 - Math.min(1, open / FULL_LOAD), `بيده ${open} مهمّة`);
+  add('load', 'الحمل الحاليّ', W.load, 1 - Math.min(1, open / FULL_LOAD), `بيده ${open} مهمّة`);
 
   // ★★ الإنتاجيّةُ **تُنسَب لا تُقاس مطلقةً**: «ستّون وحدةً في الساعة» لا
   // تقول شيئًا وحدَها. فتُقاس بوسيط `peerRate` حين يُمرَّر، وإلّا بنصف النصيب.
   const rate = num(worker?.unitsPerHour);
   const peer = num(worker?.peerRate);
   if (rate > 0 && peer > 0) {
-    add('productivity', 'الإنتاجيّة', WEIGHTS.productivity, rate / (peer * 1.5), `${rate} وحدة/ساعة مقابل ${peer} للمتوسّط`);
+    add('productivity', 'الإنتاجيّة', W.productivity, rate / (peer * 1.5), `${rate} وحدة/ساعة مقابل ${peer} للمتوسّط`);
   } else {
-    add('productivity', 'الإنتاجيّة', WEIGHTS.productivity, 0.5, 'لا إنتاجيّةَ مقيسة');
+    add('productivity', 'الإنتاجيّة', W.productivity, 0.5, 'لا إنتاجيّةَ مقيسة');
   }
 
   if (needEquipment) {
     const has = (worker?.equipment || []).map(up).includes(needEquipment);
-    add('equipment', 'المعدّة', WEIGHTS.equipment, has ? 1 : 0, has ? `يملك ${task_(needEquipment)}` : `لا يملك ${task_(needEquipment)}`);
+    add('equipment', 'المعدّة', W.equipment, has ? 1 : 0, has ? `يملك ${task_(needEquipment)}` : `لا يملك ${task_(needEquipment)}`);
   } else {
-    add('equipment', 'المعدّة', WEIGHTS.equipment, 0.5, 'المهمّةُ لا تُسمّي معدّة');
+    add('equipment', 'المعدّة', W.equipment, 0.5, 'المهمّةُ لا تُسمّي معدّة');
   }
 
   // ★ المهلةُ الضيّقةُ تُرقّي **الأسرع**: ومن لا إنتاجيّةَ له لا يُرقّى ولا
   // يُسقَط. وبلا مهلةٍ نصفُ النصيب — نفسُ عقد `priority.dueShare` حرفًا.
   const tight = Number.isFinite(due) && Number.isFinite(nowMs) ? clamp01(1 - (due - nowMs) / DAY) : 0;
   if (tight > 0 && rate > 0 && peer > 0) {
-    add('deadline', 'المهلة', WEIGHTS.deadline, tight * clamp01(rate / (peer * 1.5)), 'مهلةٌ ضيّقةٌ والأسرعُ يُقدَّم');
+    add('deadline', 'المهلة', W.deadline, tight * clamp01(rate / (peer * 1.5)), 'مهلةٌ ضيّقةٌ والأسرعُ يُقدَّم');
   } else {
-    add('deadline', 'المهلة', WEIGHTS.deadline, 0.5, Number.isFinite(due) ? 'المهلةُ واسعة' : 'بلا موعدٍ معلن');
+    add('deadline', 'المهلة', W.deadline, 0.5, Number.isFinite(due) ? 'المهلةُ واسعة' : 'بلا موعدٍ معلن');
   }
 
   // ★ الازدحامُ يُقرأ من فهرسٍ يُمرَّر، وغيابُه «لا أعرف» فنصفُ النصيب.
   const crowd = zoneLoad && typeof zoneLoad.get === 'function' ? zoneLoad.get(up(worker?.zone)) : null;
   if (Number.isFinite(crowd)) {
-    add('congestion', 'الازدحام', WEIGHTS.congestion, 1 - Math.min(1, crowd / ZONE_CROWD), `${crowd} مهمّةً في منطقته`);
+    add('congestion', 'الازدحام', W.congestion, 1 - Math.min(1, crowd / ZONE_CROWD), `${crowd} مهمّةً في منطقته`);
   } else {
-    add('congestion', 'الازدحام', WEIGHTS.congestion, 0.5, 'ازدحامُ المنطقةِ غيرُ معلوم');
+    add('congestion', 'الازدحام', W.congestion, 0.5, 'ازدحامُ المنطقةِ غيرُ معلوم');
   }
 
   const idleMs = Number.isFinite(worker?.idleSinceMs) && Number.isFinite(nowMs) ? Math.max(0, nowMs - worker.idleSinceMs) : null;
   if (idleMs === null) {
-    add('idle', 'الفراغ', WEIGHTS.idle, 0.5, 'مدّةُ فراغه غيرُ معلومة');
+    add('idle', 'الفراغ', W.idle, 0.5, 'مدّةُ فراغه غيرُ معلومة');
   } else {
     const minutes = Math.round(idleMs / 60000);
-    add('idle', 'الفراغ', WEIGHTS.idle, minutes / MAX_IDLE_MIN, `فارغٌ منذ ${minutes} دقيقة`);
+    add('idle', 'الفراغ', W.idle, minutes / MAX_IDLE_MIN, `فارغٌ منذ ${minutes} دقيقة`);
   }
 
   // ② العلامةُ تُقال لا تُكتم.
