@@ -10,6 +10,9 @@ import { fefoLocationViolations, pickPlan } from '../../../services/locations/pi
 // الشاشةُ تشترك في المواقع والأرصدة أصلًا. وموضعُه هنا لأنّ التزويدَ يغذّي
 // التجهيز: خانةٌ فارغةٌ تُوقف هذه الخطّةَ عينَها عند أوّل بند.
 import { replenishPlan, taskSummary } from '../../../services/locations/replenishPlan.js';
+// ‹WMS-701› الموجات — تكوينٌ وإطلاقٌ ومتابعةُ إنجاز. الحكمُ في النموذج الخالص.
+import { WAVE_CRITERIA, CRITERION_IDS, criterionValueOf, proposeMembers, stateLabel, waveBoard } from '../../../services/tasks/waveModel.js';
+import { listenWaves, createWave, release as releaseWaveDoc, close as closeWaveDoc, cancel as cancelWaveDoc } from '../../../services/tasks/wavesService.js';
 // ‹JR-401› الخطّةُ تُطلق مهمّةً ميدانيّة — والحكمُ في الخدمة لا هنا.
 import { createPickTask, listOpenTasks } from '../../../services/lpn/pickingService.js';
 import { pickTaskDuplicateProblem, taskOpenProblem } from '../../../services/lpn/pickingTask.js';
@@ -343,6 +346,9 @@ export default function PickPlanScreen() {
         </section>
       )}
 
+      {/* ═══ ‹WMS-701› الموجات ═══ */}
+      <WavePanel picks={picks} canAct={!denial} me={me} />
+
       {(error || planProblem) && (
         <div className="rounded-xl border border-brand-red/40 bg-brand-red/5 text-brand-red text-sm p-3">{error || planProblem}</div>
       )}
@@ -539,6 +545,201 @@ export default function PickPlanScreen() {
         {plan?.route?.unknown ? ` · ${num(plan.route.unknown)} مسافةً لم تُحسب (موقعٌ بلا إحداثيّات) فبقيت آخر المسار.` : ''}
       </p>
     </div>
+  );
+}
+
+/**
+ * لوحةُ الموجات — ‹WMS-701›.
+ *
+ * ★★★ وثلاثُ دقائقَ في شكلها:
+ * ① **النسبتان معًا دائمًا**: «٨٪ من البنود · ٩٠٪ من المستندات». فعرضُ
+ *    الثانيةِ وحدَها يجعل المشرفَ يُبلّغ الناقلَ أنّه جاهزٌ وهو في ثُمن العمل.
+ * ② **المحجوزُ يُعرَض بسببه** عند التكوين — لا يُحجب فيظنّ المشرفُ أمرَه
+ *    مفقودًا.
+ * ③ **ارتدادُ القاعدةِ غيرِ المنشورةِ يُترجَم** — فلا «لا يحدث شيء» بلا كلمة.
+ *
+ * ★★ والنسبةُ تُحتسب من **المطلوب والمنفَّذ** في كلّ مستند، ويُقرآن من
+ * `pick` و`qty` — وهما ما تحمله مستنداتُ السحب أصلًا، فلا قراءةٌ إضافيّة.
+ */
+function WavePanel({ picks, canAct, me }) {
+  const [waves, setWaves] = useState([]);
+  const [waveErr, setWaveErr] = useState('');
+  const [criterion, setCriterion] = useState(CRITERION_IDS[0]);
+  const [value, setValue] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState('');
+  const [reason, setReason] = useState('');
+
+  useEffect(() => listenWaves(setWaves, setWaveErr), []);
+
+  /** قيمُ المعيار الموجودةُ فعلًا في مستندات السحب — فلا يُكتب نصٌّ حرٌّ. */
+  const options = useMemo(() => {
+    const seen = new Map();
+    for (const d of picks) {
+      const v = criterionValueOf(d, criterion);
+      if (v) seen.set(v, (seen.get(v) || 0) + 1);
+    }
+    return [...seen.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1));
+  }, [picks, criterion]);
+
+  const proposal = useMemo(
+    () => (value ? proposeMembers(picks, { criterion, value, waves }) : null),
+    [picks, criterion, value, waves]
+  );
+
+  /** المطلوبُ والمنفَّذُ لكلّ مستند — من بنوده، بلا قراءةٍ إضافيّة. */
+  const progressByDoc = useMemo(() => {
+    const map = {};
+    for (const d of picks) {
+      const lines = d.lines || [];
+      map[d.id] = {
+        requested: lines.reduce((s, l) => s + (Number(l.qty) || 0), 0),
+        executed: lines.reduce((s, l) => s + (Number(l.picked ?? l.done ?? 0) || 0), 0),
+      };
+    }
+    return map;
+  }, [picks]);
+
+  const board = useMemo(() => waveBoard(waves, progressByDoc), [waves, progressByDoc]);
+
+  const run = async (fn) => {
+    setBusy(true);
+    setNote('');
+    setWaveErr('');
+    try {
+      const r = await fn();
+      if (!r.ok) setWaveErr(r.problem);
+      else {
+        setNote('تمّ.');
+        setReason('');
+      }
+    } catch (e) {
+      setWaveErr(e?.message || 'تعذّرت العمليّة.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="o_ds o_ds_card o_ds_pad space-y-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-base font-bold text-ink flex items-center gap-2">
+          <Icon name="layers" className="w-4 h-4" />
+          الموجات — {num(board.counts.total)}
+        </h2>
+        <span className="text-[11px] text-muted">
+          {num(board.counts.forming)} قيد التكوين · {num(board.counts.released)} مُطلَقة
+          {board.counts.behind > 0 && ` · ${num(board.counts.behind)} متأخّرة`}
+        </span>
+      </div>
+      <p className="text-[11px] text-muted">
+        الموجةُ تجمع مستنداتِ سحبٍ <strong>تُطلَق معًا وتُقاس معًا</strong> — شاحنةُ ناقلٍ تقف في موعدٍ
+        وأوامرُها يجب أن تكون على الرصيف قبله. والمعاييرُ معلَنةٌ لا نصًّا حرًّا، فلا تصير «موجة ٣»
+        و«W3» ثلاثَ موجاتٍ في التقرير وواحدةً في الواقع.
+      </p>
+
+      {/* ── التكوين ── */}
+      {canAct && (
+        <div className="rounded-xl border border-line p-3 space-y-2">
+          <div className="flex flex-wrap gap-1.5">
+            {CRITERION_IDS.map((id) => (
+              <Tab key={id} active={criterion === id} onClick={() => { setCriterion(id); setValue(''); }} label={WAVE_CRITERIA[id].labelAr} />
+            ))}
+          </div>
+          <p className="text-[11px] text-muted">{WAVE_CRITERIA[criterion].hint}</p>
+          <select
+            className="w-full bg-surface border border-line rounded-lg text-ink text-sm px-2.5 py-2"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          >
+            <option value="">— اختر {WAVE_CRITERIA[criterion].labelAr} —</option>
+            {options.map(([v, count]) => (
+              <option key={v} value={v}>{v} · {num(count)} مستندًا</option>
+            ))}
+          </select>
+          {proposal && (
+            <>
+              <p className="text-[11px] text-ink-2">
+                {proposal.eligible.length > 0
+                  ? `${num(proposal.eligible.length)} مستندًا جاهزًا للموجة · ${num(proposal.eligible.reduce((s, m) => s + m.lines, 0))} بندًا`
+                  : proposal.problem}
+              </p>
+              {proposal.taken.length > 0 && (
+                <ul className="space-y-0.5 text-[11px] text-muted">
+                  {proposal.taken.map((t) => (
+                    <li key={t.id}><span className="font-mono" dir="ltr">{t.number}</span>: {t.reason}</li>
+                  ))}
+                </ul>
+              )}
+              <button
+                type="button"
+                className="rounded-lg px-3 py-1.5 text-xs font-bold bg-accent text-white disabled:opacity-50"
+                disabled={busy || !proposal.eligible.length}
+                onClick={() => run(() => createWave({ criterion, value, members: proposal.eligible, waves }, me))}
+              >
+                كوّن موجةً ({num(proposal.eligible.length)})
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── اللوحة ── */}
+      {board.rows.length > 0 && (
+        <div className="space-y-2">
+          {board.rows.map(({ wave, progress }) => (
+            <div key={wave.code} className="rounded-xl border border-line p-3">
+              <div className="flex flex-wrap items-baseline gap-2">
+                <strong className="text-sm text-ink font-mono" dir="ltr">{wave.code}</strong>
+                <span className="text-xs text-ink-2">{wave.criterionLabel} «{wave.value}»</span>
+                <span className="text-xs font-bold text-accent">{stateLabel(wave.state)}</span>
+                <span className="text-[11px] text-muted">{num(wave.members?.length || 0)} مستندًا</span>
+              </div>
+              {/* ① النسبتان معًا — وإلّا خُدع القارئ */}
+              <p className="text-xs mt-1">
+                <strong className="text-ink tabular-nums">{num(progress.pct)}٪</strong>
+                <span className="text-ink-2"> من البنود ({num(progress.executed)} من {num(progress.requested)})</span>
+                <span className="text-muted"> · {num(progress.byDocPct)}٪ من المستندات ({num(progress.docsDone)} من {num(progress.docs)})</span>
+              </p>
+              {progress.caveat && <p className="text-[11px] text-muted">{progress.caveat}</p>}
+              {canAct && wave.state === 'forming' && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <button type="button" className="text-xs font-bold text-green-700 hover:underline disabled:opacity-50" disabled={busy} onClick={() => run(() => releaseWaveDoc(wave, me))}>
+                    أطلِق الموجة
+                  </button>
+                  <button type="button" className="text-xs text-ink-2 hover:underline disabled:opacity-50" disabled={busy || !reason.trim()} onClick={() => run(() => cancelWaveDoc(wave, { reason }, me))}>
+                    ألغِها (يحتاج سببًا)
+                  </button>
+                </div>
+              )}
+              {canAct && wave.state === 'released' && (
+                <button
+                  type="button"
+                  className="text-xs font-bold text-ink hover:underline mt-2 disabled:opacity-50"
+                  disabled={busy}
+                  onClick={() => run(() => closeWaveDoc(wave, progressByDoc, { reason }, me))}
+                >
+                  أغلِق الموجة{progress.complete ? '' : ' (ناقصةٌ — تحتاج سببًا)'}
+                </button>
+              )}
+              {wave.closeReason && <p className="text-[11px] text-muted mt-1">سببُ الإغلاق: «{wave.closeReason}»</p>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {canAct && (
+        <input
+          className="w-full bg-surface border border-line rounded-lg text-ink text-sm px-2.5 py-2"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="سببُ الإلغاء أو الإغلاق بنقص — إلزاميّ لهما"
+        />
+      )}
+      {note && <p className="text-[11px] text-ink">{note}</p>}
+      {/* ③ الارتدادُ يُترجَم ولا يُبتلع */}
+      {waveErr && <p className="text-xs text-brand-red">{waveErr}</p>}
+    </section>
   );
 }
 

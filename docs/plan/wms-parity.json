@@ -294,14 +294,19 @@
       "title": "محرّكُ القواعد المُهيَّأ — أوزانٌ تُعدَّل بلا كوميت، بنسخةٍ وتاريخ",
       "milestone": "م٦",
       "owner": "Claude",
-      "state": "todo",
+      "state": "done",
       "gaps": [
         "و-٧"
       ],
       "dependsOn": [],
       "touches": [
         "src/services/settings/rulesProfile.js",
-        "src/services/settings/rulesProfile.test.js"
+        "src/services/settings/rulesProfile.test.js",
+        "src/services/settings/rulesProfileService.js",
+        "src/components/brandzo-erp/settings/PolicySettings.jsx",
+        "src/services/locations/putawaySuggest.js",
+        "src/services/tasks/priority.js",
+        "src/services/tasks/assignEngine.js"
       ],
       "guardTest": "src/services/settings/rulesProfile.test.js",
       "acceptance": [
@@ -310,7 +315,12 @@
         "ولكلّ مستودعٍ تهيئتُه، والعامُّ أساسٌ يُورَّث ويُدهَس جزئيًّا",
         "وكلُّ تعديلٍ يحمل نسخةً ومن عدّل ومتى وما كان قبله — تهيئةٌ بلا تاريخٍ لا تُراجَع",
         "ووزنٌ فاسدٌ أو ناقصٌ يُرفض بسببٍ مكتوب ولا يُكتب — لا تهيئةٌ تُعطب المحرّك صامتةً"
-      ]
+      ],
+      "progress": "ثلاثُ مجموعاتٍ تُستورَد ثوابتُها من محرّكاتها وحارسٌ يقارنها مفتاحًا مفتاحًا · وغيابُ التهيئةِ يُعيد الثوابتَ حرفًا · والمستودعُ يدهَس جزئيًّا والعامُّ يُورَث · والإشارةُ تُقاس بأصلها فلا تُقلب العقوبةُ مكافأةً · والمفتاحُ المجهولُ يُرفض والمخزَّنُ الفاسدُ يُتخطّى بصمتٍ ولا يُسقط التهيئةَ · والإعادةُ حذفُ تجاوزٍ لا كتابةُ أصفار · والمجموعُ يُقال ولا يُفرض · وتصفيرُ الكلّ يُردّ · والمحرّكاتُ الثلاثةُ تقرأ الأوزان فعلًا بثلاثة اختبارات · ولوحةٌ في سياسات التشغيل وخدمةٌ على settings/weights بلا قاعدةِ أمنٍ جديدة · 24 اختبارًا.",
+      "evidence": {
+        "commit": "4927cfd",
+        "closedOn": "2026-10-03"
+      }
     },
     {
       "id": "WMS-701",

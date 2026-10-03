@@ -11,8 +11,8 @@
   "counts": {
     "modules": 117,
     "serviceDomains": 51,
-    "serviceFiles": 644,
-    "collections": 98,
+    "serviceFiles": 647,
+    "collections": 99,
     "roles": 20,
     "odooModels": 12,
     "odooGuards": 51,
@@ -5028,13 +5028,17 @@
         "taskMetrics.test.js",
         "taskShape.js",
         "taskShape.test.js",
-        "tasksCloudService.js"
+        "tasksCloudService.js",
+        "waveModel.js",
+        "waveModel.test.js",
+        "wavesService.js"
       ],
-      "fileCount": 17,
-      "testCount": 8,
+      "fileCount": 20,
+      "testCount": 9,
       "exports": [
         "BIG_TASK_LINES",
         "BRIDGE_FIELDS",
+        "CRITERION_IDS",
         "DOC_PARAM",
         "DOC_WORK_TYPE",
         "DUE_LEVELS",
@@ -5057,28 +5061,44 @@
         "STATUS_ORDER",
         "TASK_STATUS",
         "UNMAPPED_ROUTES",
+        "WAVES_CAP",
+        "WAVE_CRITERIA",
+        "WAVE_STATES",
+        "WAVE_TRANSITIONS",
         "WEIGHTS",
         "WORK_ENDPOINTS",
         "WORK_TYPES",
         "ZONE_CROWD",
+        "addMember",
         "addReply",
         "assignableUsers",
         "assigneeNextActions",
+        "attach",
         "bridgeVerdict",
         "canAssignTasks",
         "canAssigneeMove",
         "canManagerMove",
+        "cancel",
+        "cancelWave",
         "candidateSummary",
+        "close",
+        "closeWave",
         "computeResponseMetrics",
         "createTask",
+        "createWave",
+        "criterionValueOf",
+        "detach",
         "documentDeadline",
         "documentDue",
         "dueMillis",
         "duplicatedFields",
         "explain",
+        "fetchWaves",
         "fieldRouteFor",
+        "formWave",
         "generateTasks",
         "impliedStatus",
+        "isOpenWave",
         "isOverdue",
         "isWorkTask",
         "lineGaps",
@@ -5088,17 +5108,22 @@
         "listenAssignedToMe",
         "listenCreatedByMe",
         "listenEvents",
+        "listenWaves",
         "manualScore",
         "nextOwnerOf",
         "normalizeForMetrics",
         "priorityOf",
+        "proposeMembers",
         "rankTasks",
         "rankValue",
         "readDocTypeRoles",
         "reassignTask",
         "reassignVerdict",
+        "release",
         "releaseVerdict",
+        "releaseWave",
         "remainingFrom",
+        "removeMember",
         "roleNames",
         "scoreWorker",
         "setStatus",
@@ -5109,11 +5134,18 @@
         "splitGenerated",
         "stageOwnerLine",
         "stageOwnersFor",
+        "stateLabel",
         "suggestAssignees",
         "taskKey",
         "toMillis",
+        "transitionProblem",
         "unpolicedWorkTypes",
         "updateChecklist",
+        "waveBoard",
+        "waveCode",
+        "waveError",
+        "waveProgress",
+        "waveSummary",
         "workPayloadProblems",
         "workProgress",
         "workQueue",
@@ -5123,7 +5155,8 @@
         "zoneShare"
       ],
       "collections": [
-        "tasks"
+        "tasks",
+        "waves"
       ]
     },
     {
@@ -8614,6 +8647,38 @@
             "roles": [
               "isManager"
             ]
+          }
+        ]
+      },
+      {
+        "name": "waves",
+        "path": "waves",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isLaborWriter()",
+            "roles": [
+              "isLaborWriter"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
           }
         ]
       },
