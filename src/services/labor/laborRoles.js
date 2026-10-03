@@ -87,6 +87,13 @@ export const GUARD_ROLES = Object.freeze({
  */
 export const WRITE_GATES = Object.freeze({
   labor_tasks: Object.freeze(['isLaborWriter']),
+  // ★★★ ‹WMS-701› الموجاتُ يحرسها **كاتبُ المناولة لا الفاعلُ المخزنيّ** —
+  // والفرقُ عطلٌ وقع فعلًا: شاشةُ «خطّة السحب» مفتوحةٌ لستّة أدوارٍ منها
+  // `storekeeper` و`picking_unit` و`inventory_auditor`، وهي تحكم أزرارَها
+  // بـ`picking_tasks` (= `isStockActor`) فتفتحها للستّة؛ والقاعدةُ تقبل ثلاثةً
+  // وحدَهم. فثلاثةُ أدوارٍ كانت ترى «كوّن موجةً» ثمّ يرتدّ الضغطُ من الخادم.
+  // وهو درسُ ل‑١٨ معكوسًا: **شاشةٌ أوسعُ من القاعدة** لا أضيقُ منها.
+  waves: Object.freeze(['isLaborWriter']),
   picking_tasks: Object.freeze(['isStockActor']),
   handling_units: Object.freeze(['isStockActor']),
   receiving_sessions: Object.freeze(['isStockActor']),
@@ -100,6 +107,7 @@ export const WRITE_GATES = Object.freeze({
 /** أسماءٌ عربيّةٌ للمجموعات — الرسالةُ تُقرأ في شاشةِ موظّفٍ لا في سجلّ خادم. */
 export const COLLECTION_LABELS = Object.freeze({
   labor_tasks: 'مهامّ المناولة',
+  waves: 'الموجات',
   picking_tasks: 'مهامّ التحضير',
   handling_units: 'الطبالي',
   receiving_sessions: 'جلسات الاستلام',

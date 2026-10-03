@@ -347,7 +347,7 @@ export default function PickPlanScreen() {
       )}
 
       {/* ═══ ‹WMS-701› الموجات ═══ */}
-      <WavePanel picks={picks} canAct={!denial} me={me} />
+      <WavePanel picks={picks} me={me} />
 
       {(error || planProblem) && (
         <div className="rounded-xl border border-brand-red/40 bg-brand-red/5 text-brand-red text-sm p-3">{error || planProblem}</div>
@@ -561,7 +561,21 @@ export default function PickPlanScreen() {
  * ★★ والنسبةُ تُحتسب من **المطلوب والمنفَّذ** في كلّ مستند، ويُقرآن من
  * `pick` و`qty` — وهما ما تحمله مستنداتُ السحب أصلًا، فلا قراءةٌ إضافيّة.
  */
-function WavePanel({ picks, canAct, me }) {
+function WavePanel({ picks, me }) {
+  /**
+   * ★★★ الصلاحيّةُ تُسأل عن **الموجات** لا عن مهامّ التحضير.
+   *
+   * وهذا عطلٌ وقع: الشاشةُ تحكم أزرارَها بـ`launchDenial` (= `picking_tasks`
+   * = `isStockActor`) وهي مفتوحةٌ لستّة أدوار، وقاعدةُ `waves` تقبل ثلاثةً
+   * (`isLaborWriter`). فأمينُ المخزن ومحضّرُ الطلبات ومراقبُ المخزون كانوا
+   * يرون «كوّن موجةً» ثمّ يرتدّ الضغطُ من الخادم.
+   *
+   * ★★ والقراءةُ تبقى للجميع (`allow read: if signedIn()`) — فاللوحةُ تُعرض
+   * لكلّ من فتح الشاشة، والأزرارُ وحدَها تُحجب. ومن يُحجب **يُقال له لماذا
+   * ومن يملكها** لا يُترك أمام لوحةٍ بلا أزرارٍ يظنّها معطوبة.
+   */
+  const waveDenial = collectionWriteProblem(me?.role, 'waves');
+  const canAct = Boolean(me) && !waveDenial;
   const [waves, setWaves] = useState([]);
   const [waveErr, setWaveErr] = useState('');
   const [criterion, setCriterion] = useState(CRITERION_IDS[0]);
@@ -736,6 +750,8 @@ function WavePanel({ picks, canAct, me }) {
           placeholder="سببُ الإلغاء أو الإغلاق بنقص — إلزاميّ لهما"
         />
       )}
+      {/* ★★ من لا يكتب يُقال له لماذا ومن يملكها — لا لوحةٌ بلا أزرارٍ تُظنّ معطوبة */}
+      {waveDenial && <p className="text-[11px] text-muted">{waveDenial} وهذه اللوحةُ للقراءة عندك.</p>}
       {note && <p className="text-[11px] text-ink">{note}</p>}
       {/* ③ الارتدادُ يُترجَم ولا يُبتلع */}
       {waveErr && <p className="text-xs text-brand-red">{waveErr}</p>}

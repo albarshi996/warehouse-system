@@ -325,6 +325,19 @@ test('لوحةُ الموجات: المفتوحةُ أوّلًا والترتي�
   assert.deepEqual(waveBoard([c, b, a], {}).rows.map((r) => r.wave.code), waveBoard([a, b, c], {}).rows.map((r) => r.wave.code));
 });
 
+/* ══════════ ⑨ رسالةُ الرفض لا تنسب العلّةَ إلى النشر وحدَه ══════════ */
+
+test('★★★ رسالةُ permission-denied تسمّي الأسباب الثلاثةَ — ولا تُرسل المالكَ ينشر ما نشره', async () => {
+  const { waveError } = await import('./wavesService.js').catch(() => ({ waveError: null }));
+  if (!waveError) return; // الخدمةُ تلمس Firestore؛ إن لم تُحمَّل في Node فلا حكم
+  const msg = waveError({ code: 'permission-denied' });
+  assert.ok(msg.includes('لم تُنشَر'), 'سببُ النشر غائب');
+  assert.ok(msg.includes('دورُك'), 'سببُ الدور غائب — والرسالةُ كانت تكذب بعد النشر');
+  assert.ok(msg.includes('موقوف'), 'سببُ الإيقاف غائب');
+  // ولا تُجزم بواحدٍ منها.
+  assert.ok(!/^قواعدُ الأمان/.test(msg), 'الرسالةُ تجزم بالنشر وحدَه');
+});
+
 test('وسطرُ العرضِ لا ينفجر على موجةٍ فاسدة', () => {
   assert.equal(waveSummary(null, {}), '');
   assert.equal(waveSummary({}, {}), '');
