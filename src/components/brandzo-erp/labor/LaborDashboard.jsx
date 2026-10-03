@@ -34,6 +34,8 @@ import {
 } from '../../../services/labor/laborModel.js';
 import WorkerTaskPanel from './WorkerTaskPanel.jsx';
 import { workQueue } from '../../../services/tasks/taskShape.js';
+// ‹WMS-501› محرّكُ الإسناد — يُرتّب ويُعلّل ولا يُسنِد.
+import { suggestAssignees, explain, zoneLoadIndex } from '../../../services/tasks/assignEngine.js';
 import { listenVehicles } from '../../../services/vehicles/vehiclesService.js';
 import { RESOURCE_KINDS, RESOURCE_STATE, resolveResources, resourcesSnapshot } from '../../../services/labor/resourcesResolver.js';
 import { listenDoors, listenYardVisits } from '../../../services/fleet/yardService.js';
@@ -92,6 +94,57 @@ export default function LaborDashboard() {
   };
 
   const crewsById = useMemo(() => Object.fromEntries(crews.map((c) => [c.id, c])), [crews]);
+
+  /**
+   * ‹WMS-501› اقتراحُ الفرقة لأقدم مهمّةٍ بانتظار الإسناد.
+   *
+   * ★★ بلا قراءةٍ واحدةٍ إضافيّة: الفرقُ ومهامُّ المناولة مُشترَكٌ فيهما أصلًا
+   * في هذه الشاشة.
+   *
+   * ★★★ ولا تُمرَّر `op` للصلاحيّة **قصدًا**: الفرقةُ ليست مستخدمَ بوّابةٍ
+   * فلا دورَ لها في `PORTAL_TO_FIELD`. ولو سُئلت المصفوفةُ عنها لأجابت
+   * «مجهولٌ» على كلّ فرقةٍ، فظهرت علامةُ التحفّظ على كلّ سطرٍ — ضجيجٌ يُفقد
+   * العلامةَ معناها حيث تلزم. والصلاحيّةُ في هذه الشاشة محروسةٌ بـ
+   * `collectionWriteProblem` على `labor_tasks` كما كانت.
+   */
+  const assignAdvice = useMemo(() => {
+    const waiting = tasks
+      .filter((t) => t?.state === 'pending' && !t?.crewId)
+      .sort((a, b) => String(a.id ?? '').localeCompare(String(b.id ?? '')));
+    const task = waiting[0];
+    if (!task || !crews.length) return null;
+
+    const busyByCrew = new Map();
+    for (const t of tasks) {
+      if (t?.state !== 'pending' && t?.state !== 'in_progress' && t?.state !== 'paused') continue;
+      if (!t?.crewId) continue;
+      busyByCrew.set(t.crewId, (busyByCrew.get(t.crewId) || 0) + 1);
+    }
+    const workers = crews
+      .filter((c) => c.active !== false)
+      .map((c) => ({
+        uid: c.id,
+        name: `فرقة ${c.crewNo || c.id}${c.shift ? ` · ${c.shift}` : ''}`,
+        openTasks: busyByCrew.get(c.id) || 0,
+        // ★ رافعةٌ معلَنةٌ على الفرقة ⟹ تملك معدّةَ الرفع. والغيابُ «لا تملكها»
+        // لا «ممنوعة»: المعدّةُ وزنٌ لا مانع.
+        equipment: c.forkliftDriver?.name ? ['FORKLIFT'] : [],
+      }));
+
+    return {
+      task,
+      ...suggestAssignees(
+        {
+          workType: task.orderType === 'pick' ? 'PICK' : task.orderType === 'putaway' ? 'PUTAWAY' : '',
+          bin: task?.lines?.[0]?.bin || '',
+          equipment: task.orderType === 'putaway' ? 'FORKLIFT' : '',
+          dueAt: Number(task?.dueAt) || undefined,
+        },
+        workers,
+        { nowMs: Date.now(), zoneLoad: zoneLoadIndex(tasks.map((t) => ({ bin: t?.lines?.[0]?.bin || '' }))) }
+      ),
+    };
+  }, [tasks, crews]);
   const summary = useMemo(() => summarizeTasks(tasks, crewsById), [tasks, crewsById]);
   const activeCrews = useMemo(() => crews.filter((c) => c.active !== false), [crews]);
   const running = useMemo(() => tasks.filter((t) => t.state === 'in_progress' || t.state === 'paused'), [tasks]);
@@ -269,9 +322,53 @@ export default function LaborDashboard() {
       )}
 
       {tab === 'tasks' && (
-        <Section title={`كل مهام المناولة (${tasks.length})`}>
-          {tasks.length === 0 ? <Empty>لا مهام بعد.</Empty> : <TaskTable rows={tasks} crewsById={crewsById} onAct={act} me={me} showAll />}
-        </Section>
+        <>
+          {/* ═══ ‹WMS-501› اقتراحُ الفرقة — ترتيبٌ وتعليلٌ لا إسناد ═══ */}
+          {assignAdvice && (
+            <Section
+              title={`اقتراحُ الفرقة — ${ORDER_TYPES[assignAdvice.task.orderType]?.label || 'مهمّة'}${assignAdvice.task.docRef?.number ? ` · ${assignAdvice.task.docRef.number}` : ''}`}
+              hint="سبعةُ عواملَ بأوزانها — والإسنادُ قرارُك"
+            >
+              {assignAdvice.candidates.length === 0 ? (
+                <Empty>{assignAdvice.problem}</Empty>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-[11px] text-ink-2">
+                    أقدمُ مهمّةٍ بانتظار الإسناد. والترجيحُ بالموضع والمهارة والحمل الحاليّ والإنتاجيّة
+                    المقيسة والمعدّة والمهلة والازدحام — <strong>والمحرّكُ يُرتّب ويُعلّل ولا يُسنِد</strong>.
+                  </p>
+                  <ul className="space-y-1.5">
+                    {assignAdvice.candidates.map((c) => (
+                      <li key={c.uid} className="rounded-lg border border-line p-2">
+                        <div className="flex flex-wrap items-baseline gap-2">
+                          <strong className="text-sm text-ink">{c.name}</strong>
+                          <span className="text-xs text-accent font-bold tabular-nums">{c.score}٪</span>
+                          <span className="text-[11px] text-ink-2">بيده {c.openTasks} مهمّة</span>
+                        </div>
+                        <p className="text-[11px] text-ink-2 mt-0.5">{explain(c).join(' · ')}</p>
+                      </li>
+                    ))}
+                  </ul>
+                  {assignAdvice.excluded.length > 0 && (
+                    <details>
+                      <summary className="text-[11px] text-muted cursor-pointer">
+                        وفرقٌ مستبعَدةٌ ({assignAdvice.excluded.length}) — بأسبابها
+                      </summary>
+                      <ul className="mt-1 space-y-1 text-[11px] text-muted">
+                        {assignAdvice.excluded.map((e) => (
+                          <li key={e.uid}>{e.name}: {e.reason}</li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
+                </div>
+              )}
+            </Section>
+          )}
+          <Section title={`كل مهام المناولة (${tasks.length})`}>
+            {tasks.length === 0 ? <Empty>لا مهام بعد.</Empty> : <TaskTable rows={tasks} crewsById={crewsById} onAct={act} me={me} showAll />}
+          </Section>
+        </>
       )}
 
       {/* ‹LOC-402› «مهامي» — تنفيذ التخزين والسحب بندًا بندًا على جهاز العامل.
