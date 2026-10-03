@@ -6,6 +6,10 @@ import { listenBalances } from '../../../services/balances/balancesService.js';
 import { listenLocations } from '../../../services/locations/locationsService.js';
 import { buildGrid } from '../../../services/locations/travelGrid.js';
 import { fefoLocationViolations, pickPlan } from '../../../services/locations/pickPlan.js';
+// ‹WMS-302› طابورُ تزويد أوجه التجهيز — **بلا قراءةٍ واحدةٍ إضافيّة**: هذه
+// الشاشةُ تشترك في المواقع والأرصدة أصلًا. وموضعُه هنا لأنّ التزويدَ يغذّي
+// التجهيز: خانةٌ فارغةٌ تُوقف هذه الخطّةَ عينَها عند أوّل بند.
+import { replenishPlan, taskSummary } from '../../../services/locations/replenishPlan.js';
 // ‹JR-401› الخطّةُ تُطلق مهمّةً ميدانيّة — والحكمُ في الخدمة لا هنا.
 import { createPickTask, listOpenTasks } from '../../../services/lpn/pickingService.js';
 import { pickTaskDuplicateProblem, taskOpenProblem } from '../../../services/lpn/pickingTask.js';
@@ -172,6 +176,20 @@ export default function PickPlanScreen() {
   const denial = useMemo(() => launchDenial(me?.role), [me]);
 
   /**
+   * ‹WMS-302› طابورُ التزويد — ومستودعُه من **المستند المختار** لا من حقلٍ
+   * ثالث: مجهّزٌ يقرأ خطّةَ سحبٍ لطرابلس لا يهمّه أنّ وجهًا في الرحبة فارغ.
+   * وبلا مستندٍ يُقرأ الحقلُ الملصوق، وبلا هذا وذاك تُعرض المستودعاتُ كلُّها.
+   */
+  const replenishScope = useMemo(
+    () => String(source?.header?.warehouse || warehouse || '').trim().toUpperCase(),
+    [source, warehouse]
+  );
+  const replenish = useMemo(
+    () => (locations.length ? replenishPlan({ locations, balances, nowMs: Date.now(), warehouse: replenishScope }) : null),
+    [locations, balances, replenishScope]
+  );
+
+  /**
    * ★★★ المهمّةُ القائمةُ على هذا الأمر — تُقرأ **قبل** أن يُعرض زرُّ الإنشاء.
    *
    * وبلا هذه القراءة يرى المشرفُ زرًّا مغريًا، فيضغط، فترتدّ المعاملةُ برسالة
@@ -270,6 +288,60 @@ export default function PickPlanScreen() {
           </div>
         )}
       </section>
+
+      {/* ═══ ‹WMS-302› تدخّلٌ الآن — أوجهُ تجهيزٍ فارغةٌ تُوقف التحضير ═══ */}
+      {replenish && replenish.tasks.length > 0 && (
+        <section className="o_ds o_ds_card o_ds_pad space-y-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-base font-bold text-ink flex items-center gap-2">
+              <Icon name="arrowDownTray" className="w-4 h-4" />
+              تزويد أوجه التجهيز — {num(replenish.counts.tasks)} مهمّة
+            </h2>
+            <span className="text-[11px] text-muted">
+              {num(replenish.counts.empty)} فارغًا · {num(replenish.counts.low)} تحت الحدّ
+              {replenish.counts.unsourced > 0 && ` · ${num(replenish.counts.unsourced)} بلا مصدر`}
+            </span>
+          </div>
+          <p className="text-[11px] text-muted">
+            المصدرُ من <strong>المخزون السائب</strong> بترتيب FEFO — فلا يُزوَّد الوجهُ بالأحدث والأقدمُ راكد،
+            ولا يُسحب من وجهِ تجهيزٍ آخرَ فيُفرَغ ذاك. والمقترَحُ قراءةٌ: التنفيذُ بتحويلٍ بين المواقع.
+          </p>
+          <div className="overflow-x-auto rounded-xl border border-line">
+            <table className="w-full text-sm text-right border-collapse min-w-[560px]">
+              <thead>
+                <tr className="text-ink-2 border-b border-line text-[11px] bg-chip">
+                  <th className="p-2.5 font-bold">الوجه</th>
+                  <th className="p-2.5 font-bold">الصنف</th>
+                  <th className="p-2.5 font-bold">الحالة</th>
+                  <th className="p-2.5 font-bold">المتاح / الحدّان</th>
+                  <th className="p-2.5 font-bold">المطلوب</th>
+                  <th className="p-2.5 font-bold">من أين</th>
+                </tr>
+              </thead>
+              <tbody>
+                {replenish.tasks.map((t) => (
+                  <tr key={t.id} className="border-b border-line align-top">
+                    <td className="p-2.5 font-mono text-ink font-bold" dir="ltr">{t.binLabel || t.bin}</td>
+                    <td className="p-2.5 font-mono text-ink-2" dir="ltr">{t.sku}</td>
+                    <td className={`p-2.5 ${t.level === 'empty' ? 'text-brand-red font-bold' : 'text-ink-2'}`}>
+                      {t.level === 'empty' ? 'فارغ' : 'تحت الحدّ'}
+                    </td>
+                    <td className="p-2.5 text-muted">{num(t.available)} / {num(t.min)}–{num(t.max)}</td>
+                    <td className="p-2.5 text-ink font-bold">{num(t.wanted)}</td>
+                    <td className="p-2.5 text-[11px]">
+                      {t.planned > 0 ? (
+                        <span className="text-ink-2">{taskSummary(t)}</span>
+                      ) : (
+                        <span className="text-brand-red">{t.shortfallReason}</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {(error || planProblem) && (
         <div className="rounded-xl border border-brand-red/40 bg-brand-red/5 text-brand-red text-sm p-3">{error || planProblem}</div>

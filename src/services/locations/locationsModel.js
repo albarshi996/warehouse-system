@@ -131,6 +131,29 @@ export function shapeLocation(input) {
     // ترتيب الأكواد، فهذه الحقول **تجاوزٌ يدويّ** لمن قاس فعلًا لا شرطُ عمل.
     // و`null` هنا تعني «لم يُدخَل» — وهي غير الصفر الذي يعني «عند نقطة الصفر».
     ...gridFields(input),
+    // ═══ وجهُ التجهيز ‹WMS-301› — **كلُّه اختياريّ** ═══
+    // موقعٌ قائمٌ بلا واحدٍ منها يبقى كما هو ولا يُنتج مهمّةَ تزويدٍ أبدًا:
+    // **لا حدَّ مخترَعًا.** وتفصيلُ الدلالات في `replenishModel.js`.
+    ...pickFaceFields(input),
+  };
+}
+
+/**
+ * حقولُ وجه التجهيز الأربعة — والفارغُ يبقى `null` ولا يُصفَّر.
+ *
+ * ★★ و`null` هنا **غيرُ الصفر** قصدًا: الصفرُ حدٌّ أدنى معلَنٌ يعني «لا تتركه
+ * يفرغ قطّ»، والـ`null` يعني «لم يُعلَن حدٌّ» فلا حكم. ومن صفّر الفارغَ جعل
+ * كلَّ خانةٍ في المستودع وجهَ تجهيزٍ حدُّه صفرٌ — فطابورُ تزويدٍ بألف مهمّة
+ * في أوّل يوم.
+ */
+function pickFaceFields(input) {
+  const limit = (v) => (v === undefined || v === null || v === '' ? null : Math.max(0, num(v)));
+  return {
+    pickFace: input?.pickFace === true,
+    // الصنفُ المخصَّص لهذا الوجه — وغيابُه يعني «أيُّ صنفٍ فيه» فيُقرأ من رصيده.
+    pickSku: str(input?.pickSku).toUpperCase(),
+    replenishMin: limit(input?.replenishMin),
+    replenishMax: limit(input?.replenishMax),
   };
 }
 
@@ -157,6 +180,20 @@ export function locationProblems(input) {
   if (input?.handling && !HANDLING_TYPES[input.handling]) out.push(`نوع مناولة غير معروف: «${input.handling}»`);
   for (const m of CAPACITY_MEASURES) {
     if (input?.capacity?.[m] !== undefined && num(input.capacity[m]) < 0) out.push(`سعة «${m}» لا تكون سالبة.`);
+  }
+  // ‹WMS-301› حدّا وجه التجهيز — وأخطرُهما مقلوبٌ يمرّ صامتًا: أدنى أكبرُ من
+  // أعلى يُنتج نقصًا سالبًا فلا تُولَّد مهمّةٌ أبدًا، والخانةُ تفرغ ولا أحدَ
+  // يعلم. فيُردّ عند الحفظ لا يُكتشف في الميدان.
+  const min = input?.replenishMin;
+  const max = input?.replenishMax;
+  const has = (v) => v !== undefined && v !== null && v !== '';
+  if (has(min) && num(min) < 0) out.push('الحدّ الأدنى لوجه التجهيز لا يكون سالبًا.');
+  if (has(max) && num(max) < 0) out.push('الحدّ الأعلى لوجه التجهيز لا يكون سالبًا.');
+  if (has(min) && has(max) && num(min) > num(max)) {
+    out.push(`حدّا وجه التجهيز مقلوبان: الأدنى (${num(min)}) أكبرُ من الأعلى (${num(max)}) — فلا تُولَّد مهمّةُ تزويدٍ أبدًا.`);
+  }
+  if (input?.pickFace === true && has(min) && !has(max)) {
+    out.push('وجهُ تجهيزٍ بحدٍّ أدنى بلا أعلى — فإلى أيّ كمّيّةٍ يُزوَّد؟');
   }
   return out;
 }
