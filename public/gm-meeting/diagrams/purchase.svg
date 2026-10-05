@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 274" role="img" aria-label="مقارنة المسار المعياري لطلب الشراء بالواقع المسجل">
+<style>
+  text{font-family:'IBM Plex Sans Arabic','Segoe UI',sans-serif;direction:rtl;unicode-bidi:plaintext}
+  text.en{direction:ltr;unicode-bidi:isolate}
+  .draw{stroke-dashoffset:0!important}
+  .pop{opacity:1!important}
+  .grow{transform:none!important}
+  .flow{display:none}
+  .pulse{opacity:.28}
+</style>
+<defs>
+  <linearGradient id="gr" x1="1" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#F5333A"/><stop offset="1" stop-color="#6E070A"/></linearGradient>
+  <linearGradient id="gg" x1="1" y1="0" x2="0" y2="0">
+    <stop offset="0" stop-color="#C41017"/><stop offset="1" stop-color="#E11B22"/></linearGradient>
+  <filter id="sh" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#6E070A" flood-opacity=".22"/></filter>
+</defs>
+<text x="900" y="40" text-anchor="end" font-size="13.5" font-weight="800" fill="#1a1c1f">المسار المعياري المقترح — إجمالي 13 يوم عمل</text><g class="pop p1"><rect x="842" y="56" width="53" height="40" rx="9" fill="url(#gg)" opacity="1.00"/><text x="871" y="81" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">تسجيل الطلب</text></g><text class="en" x="871" y="112" text-anchor="middle" font-size="11" font-weight="700" fill="#8a919b">1 d</text><g class="pop p2"><rect x="725" y="56" width="112" height="40" rx="9" fill="url(#gg)" opacity="0.87"/><text x="783" y="81" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">المراجعة</text></g><text class="en" x="783" y="112" text-anchor="middle" font-size="11" font-weight="700" fill="#8a919b">2 d</text><g class="pop p3"><rect x="608" y="56" width="112" height="40" rx="9" fill="url(#gg)" opacity="0.74"/><text x="666" y="81" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">الاعتماد</text></g><text class="en" x="666" y="112" text-anchor="middle" font-size="11" font-weight="700" fill="#8a919b">2 d</text><g class="pop p4"><rect x="432" y="56" width="170" height="40" rx="9" fill="url(#gg)" opacity="0.61"/><text x="520" y="81" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">التنفيذ</text></g><text class="en" x="520" y="112" text-anchor="middle" font-size="11" font-weight="700" fill="#8a919b">3 d</text><g class="pop p5"><rect x="140" y="56" width="287" height="40" rx="9" fill="url(#gg)" opacity="0.48"/><text x="286" y="81" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">التوريد</text></g><text class="en" x="286" y="112" text-anchor="middle" font-size="11" font-weight="700" fill="#8a919b">5 d</text><text x="900" y="162" text-anchor="end" font-size="13.5" font-weight="800" fill="#a3101a">الواقع المسجَّل — طلب احتياجات فرع طرابلس</text><rect x="140" y="178" width="760" height="40" rx="9" fill="#f6f7f9"/><rect class="grow g2" x="140" y="178" width="760" height="40" rx="9" fill="#fdeced" stroke="#f8d2d5"/><rect class="grow g3" x="840" y="178" width="60" height="40" rx="9" fill="url(#gg)"/><text x="870" y="203" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">مسجَّل</text><text x="520" y="203" text-anchor="middle" font-size="13" font-weight="800" fill="#a3101a">شهر كامل دون تنفيذ — توقف تجهيز مرتبط بالتشغيل</text><path class="draw d4" style="--len:800" d="M900 236 L140 236" stroke="#8a919b" stroke-width="1.4" stroke-dasharray="5 5" fill="none"/><text x="900" y="258" text-anchor="end" font-size="11.5" font-weight="700" fill="#8a919b">المطلوب: تصعيد تلقائي عند تجاوز مدة أي مرحلة + تقرير أسبوعي بالطلبات المتأخرة</text></svg>

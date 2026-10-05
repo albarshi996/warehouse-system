@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 117,
+    "modules": 118,
     "serviceDomains": 51,
     "serviceFiles": 647,
     "collections": 99,
@@ -312,6 +312,14 @@
       "title": "مركز البوابة",
       "summary": "مركزُ البوابة — الشاشةُ التي يفتحها الحارسُ على الحاجز.",
       "file": "src/pages/dashboard/gate-post.astro",
+      "usesServices": []
+    },
+    {
+      "name": "general-manager-meeting",
+      "route": "/dashboard/general-manager-meeting",
+      "title": "اجتماع الإدارة العامة — 2026-10-07",
+      "summary": "اجتماع الإدارة العامة — الأربعاء 2026-10-07 (BFP-SCM-GM-2026-001).",
+      "file": "src/pages/dashboard/general-manager-meeting.astro",
       "usesServices": []
     },
     {
