@@ -68,8 +68,9 @@ test('الشاشة مسجّلةٌ في كتالوج القائمة وفي دلي
   assert.ok(entry.steps?.length >= 1, 'شرحُ الشاشة بلا خطوات');
 });
 
-test('جدول الأعمال عشرة بنود، والفرعيّان تحت البند الرابع', () => {
-  assert.equal(agenda.length, 10);
+test('جدول الأعمال أحد عشر بندًا، والفرعيّان تحت البند الرابع', () => {
+  // 11 بندًا رئيسًا: العشرةُ الأصلية + «تسليم خدمات الأمن والنظافة» (مقترح، أمرُ المالك 2026-10-06).
+  assert.equal(agenda.length, 11);
   const fourth = agenda.find((item) => item.num === '4');
   assert.ok(fourth, 'البند الرابع مفقود');
   assert.equal(fourth.subs.length, 2, 'البند الرابع يجب أن يحمل فرعَي التقنية والهندسة');
@@ -79,16 +80,24 @@ test('جدول الأعمال عشرة بنود، والفرعيّان تحت ا
 });
 
 test('كل بندٍ يحمل عنوانًا وتمهيدًا وما يُطلب من الإدارة', () => {
-  assert.equal(sections.length, 12);
+  assert.equal(sections.length, 13);
   for (const section of sections) {
     assert.ok(section.headline?.trim(), `البند ${section.num} بلا عنوان`);
     assert.ok(section.lead?.trim(), `البند ${section.num} بلا تمهيد`);
     assert.ok((section.blocks || []).length >= 3, `البند ${section.num} أفقر من أن يُعرض`);
-    assert.ok((section.decisions || []).length >= 1, `البند ${section.num} لا يطلب شيئًا من الإدارة`);
-    for (const decision of section.decisions) {
+    // ★ بندٌ بلا طلبات مسموحٌ منذ 2026-10-06: المالك ألغى طلبات البند 4.2 كلَّها،
+    //   فصار بندَ عرضٍ لا بندَ طلب. **والمحظورُ أن يخلو العرضُ كلُّه**، لا أن
+    //   يخلو بندٌ منه — وذلك ما يحرسه التوكيدُ بعد الحلقة.
+    for (const decision of section.decisions || []) {
       assert.ok(decision.ask?.trim(), `طلبٌ بلا نصّ في البند ${section.num}`);
     }
   }
+});
+
+test('العرضُ كلُّه لا يخلو من ملاحظاتٍ وطلبات', () => {
+  assert.ok(allDecisions.length >= 20, `العرضُ يحمل ${allDecisions.length} ملاحظةً وطلبًا فقط`);
+  const withAsks = sections.filter((section) => (section.decisions || []).length > 0).length;
+  assert.ok(withAsks >= sections.length - 2, 'أكثرُ من بندين بلا ملاحظاتٍ ولا طلبات — هل حُذفت سهوًا؟');
 });
 
 test('كل صورةٍ ومخطّطٍ يَعِد بهما العرض ملفٌّ قائمٌ على القرص', () => {
@@ -138,7 +147,7 @@ test('لا شريحةَ تتجاوز سعة مسرح 1280×720', () => {
 test('كل طلبٍ من الإدارة يصل إلى شرائح الإقفال — لا يسقط طلب', () => {
   const closing = slides.filter((slide) => slide.kind === 'closing').flatMap((slide) => slide.items);
   assert.equal(closing.length, allDecisions.length);
-  assert.ok(allDecisions.length >= 20, 'عددُ الطلبات أقلّ من المتوقَّع');
+  assert.ok(allDecisions.length >= 20, 'عددُ الملاحظات والطلبات أقلّ من المتوقَّع');
   for (const decision of closing) {
     assert.ok(decision.sectionNum?.trim(), 'طلبٌ في الإقفال بلا رقم بند');
   }
@@ -311,4 +320,31 @@ test('★★ المسرحُ على صفٍّ مرنٍ يقبل الانكماش �
   const base = css.match(/\.gm-meeting-deck\s*\{[\s\S]*?\}/)?.[0] || '';
   assert.match(base, /grid-template-rows:\s*auto\s+minmax\(\s*0\s*,\s*1fr\s*\)\s+auto/, 'الصفُّ المرن بلا `minmax(0, …)` يرفض أن يصغر دون محتواه فيفيض');
   assert.match(base, /height:\s*calc\(100dvh\s*-\s*var\(--gm-top/, 'ارتفاعُ اللوحة يجب أن يطرح إزاحةَ رأسها — `100dvh` من رأسٍ مُزاحٍ تتجاوز الشاشة');
+});
+
+/*
+  ★★★ **حارسُ القصّ بين الطبقتين** — وُضع بعد انهيارٍ حيٍّ 2026-10-06: الرجوعُ
+  من الملحق (145 شريحة) إلى العرض التنفيذيّ (23) أبقى الموضعَ 134، فقرأ
+  المكوّن `deck[134]` من طبقةٍ فيها 23 فجاءت `undefined` وانفجر على
+  `slide.kind` — واختفت اللوحةُ كلُّها من الشاشة.
+
+  ولا يمسكه اختبارُ بيانات: العطبُ في قراءةِ حالةٍ أثناء تبديل طبقة. فيُحرس
+  بقراءة المكوّن نفسِه — كما حُرس الصفُّ المنزلق بقراءة CSS.
+*/
+test('★★★ موضعُ الشريحة يُقصّ على طول الطبقة قبل القراءة', async () => {
+  const jsx = await readFile(
+    path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../components/gm-meeting/GmMeetingDeck.jsx'),
+    'utf8',
+  );
+  assert.match(jsx, /const\s+active\s*=\s*Math\.min\(\s*rawActive\s*,/, 'الموضعُ يُقرأ بلا قصٍّ — شريحةٌ خارج الطبقة تُسقط اللوحة كلَّها');
+  assert.match(jsx, /const\s+current\s*=\s*deck\[active\]/, 'الشريحةُ الحاليّة يجب أن تُقرأ بالموضع المقصوص');
+});
+
+test('★★ كلُّ بندٍ له نقطةُ هبوطٍ في الطبقتين — فزرُّ التفاصيل لا يضلّ', () => {
+  const execKeys = new Set(executiveSlides.filter((s) => s.kind === 'brief').map((s) => s.key));
+  const annexKeys = new Set(slides.filter((s) => s.kind === 'section').map((s) => s.key));
+  for (const section of sections) {
+    assert.ok(execKeys.has(section.key), `البند ${section.num} بلا بطاقةٍ في العرض التنفيذيّ`);
+    assert.ok(annexKeys.has(section.key), `البند ${section.num} بلا افتتاحيّةٍ في الملحق — زرُّ التفاصيل سيقفز إلى الغلاف`);
+  }
 });
