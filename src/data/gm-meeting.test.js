@@ -16,7 +16,10 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-import { SLIDE_CAPACITY, agenda, allDecisions, buildSlides, meetingMeta, sections, slideIndex, slides } from './gm-meeting.js';
+import {
+  EXEC_CAPACITY, SLIDE_CAPACITY, agenda, allDecisions, buildExecutiveSlides, buildSlides,
+  executiveIndex, executiveSlides, meetingMeta, sections, slideIndex, slides,
+} from './gm-meeting.js';
 import { internalPaths } from '../services/auth/navCatalog.js';
 import usageGuide from './usage-guide.json' with { type: 'json' };
 
@@ -159,5 +162,127 @@ test('بيانات الاجتماع مكتملة ومُسنَدة', () => {
   assert.equal(meetingMeta.date, '2026-10-07');
   for (const key of ['titleAr', 'subtitle', 'preparedBy', 'preparedRole', 'scope', 'cover']) {
     assert.ok(meetingMeta[key]?.trim(), `بيانات الاجتماع ناقصة: ${key}`);
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   العرض التنفيذيّ — حرّاسُ الطول والكثافة
+   ═══════════════════════════════════════════════════════════════════
+   ★★★ **قرار المالك 2026-10-06:** العرضُ الأوّل بلغ 140 شريحةً و27,571 كلمة
+   (متوسّطُ الشريحة 197 كلمة، وأثقلُها 715) — تقريرٌ لُصق على شرائح لا يُقرأ
+   على جهاز عرضٍ ولا يُدار به اجتماع. فهذه الحرّاسُ تمنع عودتَه: **الطولُ
+   والكثافةُ شرطا قبولٍ مقيسان لا ذوقٌ يُستحسن**، ويسقط البناءُ إن تجاوزهما.
+
+   والحدودُ ليست اعتباطًا: 24 شريحةً هي زمنُ عرضٍ 35–45 دقيقة، و110 كلمةً
+   للشريحة هي ما يُقرأ من آخر القاعة على مسرح 1280×720 بخطوط هذا الملفّ.
+*/
+
+/** كلُّ ما تعرضه الشريحة التنفيذيّة من نصّ — ما يُقرأ في القاعة لا ما في المصدر. */
+function execWords(slide) {
+  const parts = [];
+  if (slide.kind === 'brief') parts.push(slide.section.kicker, slide.section.headline);
+  for (const kpi of slide.kpis || []) parts.push(kpi.value, kpi.label);
+  for (const item of slide.items || []) parts.push(item.ask, item.value, item.label);
+  return parts
+    .filter((value) => typeof value === 'string')
+    .reduce((total, text) => total + text.trim().split(/\s+/).filter(Boolean).length, 0);
+}
+
+test('العرض التنفيذيّ لا يتجاوز 24 شريحة — زمنُ اجتماعٍ لا زمنُ تقرير', () => {
+  assert.ok(executiveSlides.length <= 24, `العرض التنفيذيّ بلغ ${executiveSlides.length} شريحة`);
+  assert.ok(executiveSlides.length >= 18, 'العرض التنفيذيّ أقصر من أن يغطّي عشرة بنود');
+  assert.equal(executiveSlides.length, slides.length > executiveSlides.length ? executiveSlides.length : -1,
+    'العرض التنفيذيّ يجب أن يكون أقصرَ من الملحق المرجعيّ');
+});
+
+test('★★★ لا شريحةَ تنفيذيّةٍ تتجاوز 110 كلمة — وإلّا عاد التقريرُ المُلصق', () => {
+  // شرائحُ النظرة (البطاقة ولوحة الأرقام) تُقرأ لمحةً فتُحكم بالكلمات.
+  for (const slide of executiveSlides) {
+    if (slide.kind !== 'brief' && slide.kind !== 'numbers') continue;
+    const count = execWords(slide);
+    assert.ok(count <= 110, `شريحة «${slide.title}» تحمل ${count} كلمة والحدّ 110`);
+  }
+});
+
+/*
+  ★★ **ولماذا تُحكم شرائحُ الطلبات بمقياسٍ آخر؟** أمسك الحارسُ أعلاه شريحةَ
+  طلباتٍ بـ207 كلمة، والحدُّ 110 — والخطأُ كان في الحدّ لا فيها. فشريحةُ
+  الطلبات **ورقةُ قرارٍ تُقرأ سطرًا سطرًا** لا شريحةَ نظرةٍ تُلمح: المديرُ يقف
+  عندها بندًا بندًا. فالذي يُحكم فيها **طولُ الطلب الواحد** وعددُ الطلبات، لا
+  مجموعُ كلماتها. ولو خُفّض الحدُّ وحده لتفتّتت الطلباتُ على اثنتي عشرة شريحة
+  — فعاد الطولُ من حيث طُرد.
+*/
+test('★★ طلبٌ واحدٌ لا يتجاوز 40 كلمة — فالسطرُ الطويل لا يُقرأ في قاعة', () => {
+  const asks = executiveSlides.filter((slide) => slide.kind === 'asks').flatMap((slide) => slide.items);
+  assert.ok(asks.length > 0, 'لا شريحةَ طلباتٍ في العرض التنفيذيّ');
+  for (const item of asks) {
+    const count = item.ask.trim().split(/\s+/).filter(Boolean).length;
+    assert.ok(count <= 40, `طلبٌ بـ${count} كلمة والحدّ 40: ${item.ask.slice(0, 70)}`);
+  }
+});
+
+test('سعةُ الشريحة التنفيذيّة محترمة: مؤشّراتٌ وطلباتٌ وأرقام', () => {
+  for (const slide of executiveSlides) {
+    if (slide.kind === 'brief') {
+      assert.ok(slide.kpis.length <= EXEC_CAPACITY.kpis, `بطاقة «${slide.title}» تجاوزت سعة المؤشّرات`);
+    }
+    if (slide.kind === 'asks') {
+      assert.ok(slide.items.length <= EXEC_CAPACITY.asks, `شريحة طلبات «${slide.title}» تجاوزت السعة`);
+    }
+    if (slide.kind === 'numbers') {
+      assert.ok(slide.items.length <= EXEC_CAPACITY.numbers, 'لوحة الأرقام تجاوزت السعة');
+    }
+  }
+});
+
+test('بطاقةٌ واحدةٌ لكلّ بند — لا بندَ يسقط من العرض التنفيذيّ ولا يتكرّر', () => {
+  const briefs = executiveSlides.filter((slide) => slide.kind === 'brief');
+  assert.equal(briefs.length, sections.length);
+  assert.equal(new Set(briefs.map((slide) => slide.key)).size, sections.length);
+  for (const brief of briefs) {
+    assert.ok(brief.section.headline?.trim(), `بطاقة البند ${brief.section.num} بلا عنوان`);
+  }
+});
+
+test('كلُّ طلبٍ من الإدارة يصل إلى شرائح الطلبات — لا يسقط طلبٌ في الاختصار', () => {
+  const shown = executiveSlides.filter((slide) => slide.kind === 'asks').flatMap((slide) => slide.items);
+  assert.equal(shown.length, allDecisions.length, 'عددُ الطلبات المعروضة يفارق المصدر');
+  assert.deepEqual(shown.map((item) => item.ask), allDecisions.map((item) => item.ask), 'نصُّ طلبٍ تغيّر أو تبدّل ترتيبه');
+  for (const item of shown) {
+    assert.ok(item.sectionNum?.trim(), 'طلبٌ بلا رقم بند');
+    assert.equal(item.why, undefined, 'الشريحة التنفيذيّة تحمل «لماذا» — والتعليلُ في الملحق لا هنا');
+  }
+});
+
+test('★★★ العرض التنفيذيّ لا يؤلّف نصًّا: كلُّ كلمةٍ فيه من المحتوى نفسه', () => {
+  const sourceHeadlines = new Set(sections.map((section) => section.headline));
+  const sourceKickers = new Set(sections.map((section) => section.kicker).filter(Boolean));
+  const sourceAsks = new Set(allDecisions.map((decision) => decision.ask));
+  for (const slide of executiveSlides) {
+    if (slide.kind === 'brief') {
+      assert.ok(sourceHeadlines.has(slide.section.headline), 'عنوانُ بطاقةٍ ليس من المحتوى');
+      if (slide.section.kicker) assert.ok(sourceKickers.has(slide.section.kicker), 'كيكرٌ ليس من المحتوى');
+    }
+    if (slide.kind === 'asks') {
+      for (const item of slide.items) assert.ok(sourceAsks.has(item.ask), `طلبٌ أُعيدت صياغته: ${item.ask.slice(0, 60)}`);
+    }
+  }
+});
+
+test('فهرس العرض التنفيذيّ: بلا تكرارٍ وبعدد شرائحه، ويبدأ بالغلاف وينتهي بالتوقيع', () => {
+  assert.equal(new Set(executiveIndex).size, executiveIndex.length, 'عنوانُ شريحةٍ مكرّر');
+  assert.equal(executiveIndex.length, executiveSlides.length);
+  assert.equal(buildExecutiveSlides().length, executiveSlides.length, 'بناءُ الشرائح التنفيذيّة غير مستقرّ');
+  assert.equal(executiveSlides[0].kind, 'cover');
+  assert.equal(executiveSlides[1].kind, 'agenda');
+  assert.equal(executiveSlides.at(-1).kind, 'signoff');
+});
+
+test('الملحق المرجعيّ باقٍ بحاله — الاختصارُ لا يحذف شيئًا', () => {
+  assert.ok(slides.length >= 100, 'الملحق المرجعيّ نقص — التفصيل يُطوى لا يُحذف');
+  const annexDecisions = slides.filter((slide) => slide.kind === 'decisions').flatMap((slide) => slide.items);
+  assert.equal(annexDecisions.length, allDecisions.length);
+  for (const decision of annexDecisions) {
+    assert.ok(decision.why?.trim(), 'طلبٌ في الملحق بلا تعليل — والتعليلُ هو سببُ وجود الملحق');
   }
 });

@@ -202,3 +202,85 @@ export function buildSlides() {
 
 export const slides = buildSlides();
 export const slideIndex = slides.map((slide) => slide.title);
+
+/* ═══════════════════════════════════════════════════════════════════
+   العرض التنفيذيّ — ما يُدار به الاجتماع فعلًا
+   ═══════════════════════════════════════════════════════════════════
+   ★★★ **قرار المالك 2026-10-06:** العرضُ الكامل (140 شريحةً و27,571 كلمة)
+   تقريرٌ لُصق على شرائح لا عرضًا — شريحةٌ متوسّطها 197 كلمة لا تُقرأ على جهاز
+   عرضٍ في قاعة، وساعتان وعشرون دقيقة لا تليق باجتماع إدارةٍ عامّة.
+
+   فصار العرضُ طبقتين: **تنفيذيٌّ يُعرض** (ما دون) **وملحقٌ مرجعيّ يُفتح عند
+   السؤال** (`buildSlides` أعلاه، بحاله لا يُنقص منه حرف).
+
+   والتنفيذيُّ **لا يؤلّف نصًّا جديدًا**: كلُّ كلمةٍ فيه مأخوذةٌ كما هي من
+   `kicker` و`headline` و`kpis` و`decisions.ask` في المحتوى نفسه. فما يُعرض
+   في القاعة هو ما في الملحق، مختصرًا لا معادًا كتابته — ولو أُلّف هنا نصٌّ
+   لانفصل العرضُ عن مصادره وصار الملحقُ يكذّبه.
+*/
+
+/** سعة الشريحة التنفيذيّة — أضيق من سعة الملحق عمدًا. */
+export const EXEC_CAPACITY = {
+  /** مؤشّرات البند الواحد على شريحته. */
+  kpis: 4,
+  /** طلبات القرار في شريحةٍ واحدة — بنصّ الطلب وحده بلا «لماذا». */
+  asks: 8,
+  /** أرقامٌ على لوحة «الصورة في أرقام» — رقمٌ واحدٌ عن كلّ بندٍ رئيس. */
+  numbers: 10,
+};
+
+/**
+ * يبني العرض التنفيذيّ: غلافٌ وجدولُ أعمالٍ ولوحةُ أرقام، ثمّ **شريحةٌ واحدة
+ * لكلّ بند** (عنوانُه ومؤشّراتُه وعددُ ما يطلبه)، ثمّ طلباتُ القرار مجموعةً،
+ * ثمّ الاعتماد. اثنتان وعشرون شريحة — زمنُ عرضٍ 35–45 دقيقة.
+ */
+export function buildExecutiveSlides() {
+  const out = [
+    { kind: 'cover', title: 'الغلاف' },
+    { kind: 'agenda', title: 'جدول الأعمال' },
+  ];
+
+  // لوحة الأرقام: **رقمٌ واحدٌ عن كلّ بندٍ رئيس** لا رقمان عن بعضها — فتكون
+  // الشريحةُ خريطةَ البنود العشرة في شاشةٍ واحدة، لا عيّنةً من أوّلها.
+  const numbers = sections
+    .filter((section) => section.level === 0)
+    .map((section) => {
+      const kpi = (section.kpis || [])[0];
+      return kpi ? { ...kpi, sectionNum: section.num } : null;
+    })
+    .filter(Boolean)
+    .slice(0, EXEC_CAPACITY.numbers);
+  if (numbers.length > 0) out.push({ kind: 'numbers', items: numbers, title: 'الصورة في أرقام' });
+
+  for (const section of sections) {
+    out.push({
+      kind: 'brief',
+      key: section.key,
+      section,
+      kpis: (section.kpis || []).slice(0, EXEC_CAPACITY.kpis),
+      asks: (section.decisions || []).length,
+      title: `${section.num} · ${section.navTitle}`,
+    });
+  }
+
+  // ★ الطلبُ وحده بلا «لماذا»: الشريحةُ تحمل ما تعرضه فقط، فيقيس الحارسُ
+  //   كثافتَها على ما يُقرأ في القاعة لا على ما في المصدر. والتعليلُ في الملحق.
+  const asks = allDecisions.map(({ ask, sectionNum, sectionTitle }) => ({ ask, sectionNum, sectionTitle }));
+  chunk(asks, EXEC_CAPACITY.asks).forEach((group, index, groups) => {
+    out.push({
+      kind: 'asks',
+      items: group,
+      from: index * EXEC_CAPACITY.asks,
+      title:
+        groups.length > 1
+          ? `المطلوب من الإدارة العامة (${index + 1}/${groups.length})`
+          : 'المطلوب من الإدارة العامة',
+    });
+  });
+
+  out.push({ kind: 'signoff', title: 'الاعتماد والتوقيع' });
+  return out;
+}
+
+export const executiveSlides = buildExecutiveSlides();
+export const executiveIndex = executiveSlides.map((slide) => slide.title);

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { agenda, allDecisions, meetingMeta, sections, slides } from '../../data/gm-meeting.js';
+import { agenda, allDecisions, executiveSlides, meetingMeta, sections, slides } from '../../data/gm-meeting.js';
 
 /*
   ═══════════════════════════════════════════════════════════════════
@@ -21,6 +21,11 @@ const Chevron = ({ direction = 'next' }) => (
       d={direction === 'next' ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'}
       fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
     />
+  </svg>
+);
+const LayersIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 17l9 5 9-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 const GridIcon = () => (
@@ -189,9 +194,12 @@ function CoverSlide({ base }) {
     <section className="gm-slide is-cover" style={{ backgroundImage: `url(${asset(base, meetingMeta.cover)})` }}>
       <div className="gm-cover-veil" />
       <div className="gm-cover-body">
+        {/* العنوان العربيّ هو الصدارة — والإنجليزيّ سطرُ تعريفٍ تحته لا عنوانًا
+            فوقه. (قرار المالك 2026-10-06: غلافٌ يصدّره «Executive Briefing»
+            بالإنجليزية فوق عرضٍ عربيٍّ أمام إدارةٍ عربيّة لا يليق.) */}
         <p className="gm-eyebrow">اجتماع الإدارة العامة · جدول أعمال ومخرجات</p>
-        <h1>{meetingMeta.titleEn}</h1>
-        <h2>{meetingMeta.titleAr}</h2>
+        <h1>{meetingMeta.titleAr}</h1>
+        <h2 className="gm-ltr">{meetingMeta.titleEn}</h2>
         <p className="gm-cover-sub">{meetingMeta.subtitle}</p>
         <dl className="gm-cover-meta">
           <div><dt>التاريخ</dt><dd>{meetingMeta.dayName} {meetingMeta.date}</dd></div>
@@ -350,6 +358,89 @@ function ClosingSlide({ slide }) {
   );
 }
 
+/* ── شرائح العرض التنفيذيّ ─────────────────────────────────────────
+   ثلاثُ شرائحَ لا تعرض إلّا ما هو مكتوبٌ أصلًا في المحتوى: لوحةُ أرقام،
+   وبطاقةُ بندٍ واحدة لكلّ بند، وقائمةُ الطلبات بنصّ الطلب وحده. والتفصيل
+   كلُّه حاضرٌ في الملحق المرجعيّ — فلا يُفقد شيء، ولا يُعرض كلُّ شيء. */
+
+function NumbersSlide({ slide }) {
+  return (
+    <section className="gm-slide is-numbers">
+      {/* العنوان يُشتقّ من العدد لا يُكتب رقمًا ثابتًا — فلا يقول «عشرة» ويعرض ثمانية. */}
+      <SlideHead
+        kicker="الصورة في أرقام"
+        title={`البنود العشرة في ${slide.items.length} رقمًا — وتفصيلُ كلٍّ في بنده`}
+      />
+      <div className="gm-numbers">
+        {slide.items.map((item, index) => (
+          <article key={index}>
+            <span className="gm-ltr">البند {item.sectionNum}</span>
+            <b className={/^[\x20-\x7E]+$/.test(item.value || '') ? 'gm-ltr' : undefined}>{item.value}</b>
+            <span>{item.label}</span>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function BriefSlide({ slide, base }) {
+  const { section, kpis, asks } = slide;
+  const hero = section.hero ? asset(base, section.hero) : null;
+  return (
+    <section className={`gm-slide is-brief${hero ? ' has-hero' : ''}`} style={hero ? { backgroundImage: `url(${hero})` } : undefined}>
+      <div className="gm-section-veil" />
+      <div className="gm-brief-body">
+        <header>
+          <span className="gm-section-num gm-ltr">{section.num}</span>
+          <div>
+            {section.kicker && <p className="gm-eyebrow">{section.kicker}</p>}
+            <h2>{section.headline}</h2>
+          </div>
+        </header>
+        {kpis.length > 0 && (
+          <div className="gm-kpis">
+            {kpis.map((kpi, index) => (
+              <div key={index}>
+                <b className={/^[\x20-\x7E]+$/.test(kpi.value || '') ? 'gm-ltr' : undefined}>{kpi.value}</b>
+                <span>{kpi.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        <footer className="gm-brief-asks">
+          مطلوبٌ من الإدارة العامة في هذا البند: <b className="gm-ltr">{asks}</b>
+          {asks === 1 ? ' طلب' : asks === 2 ? ' طلبان' : asks <= 10 ? ' طلبات' : ' طلبًا'}
+          {' '}— والتفصيل في الملحق المرجعيّ.
+        </footer>
+      </div>
+    </section>
+  );
+}
+
+function AsksSlide({ slide }) {
+  return (
+    <section className="gm-slide is-asks">
+      <SlideHead
+        kicker="المطلوب من الإدارة العامة"
+        title="طلبات القرار والتوجيه"
+        note={`إجمالي ${allDecisions.length} طلبًا على عشرة بنود — وتعليلُ كلّ طلبٍ في الملحق المرجعيّ`}
+      />
+      <ol className="gm-asks">
+        {slide.items.map((item, index) => (
+          <li key={index}>
+            <b className="gm-ltr">{String(slide.from + index + 1).padStart(2, '0')}</b>
+            <div>
+              <strong>{item.ask}</strong>
+              <span className="gm-ltr">البند {item.sectionNum}</span>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function SignoffSlide({ base }) {
   return (
     <section className="gm-slide is-signoff">
@@ -373,6 +464,16 @@ function SignoffSlide({ base }) {
   );
 }
 
+/**
+ * اسمٌ قصيرٌ للشريط السفليّ — آخرُ مقطعٍ بعد الفاصلة الطويلة، فعناوينُ الملحق
+ * مركّبةٌ من اسم البند واسم الكتلة ورقم الجزء، وهي للفهرس لا للشريط.
+ */
+function shortLabel(slide) {
+  if (!slide?.title) return '';
+  const parts = slide.title.split(' — ');
+  return parts.length > 1 ? parts[parts.length - 1] : slide.title;
+}
+
 function Slide({ slide, base, onJump }) {
   switch (slide.kind) {
     case 'cover': return <CoverSlide base={base} />;
@@ -384,6 +485,9 @@ function Slide({ slide, base, onJump }) {
     case 'gallery': return <GallerySlide slide={slide} base={base} />;
     case 'decisions': return <DecisionsSlide slide={slide} />;
     case 'closing': return <ClosingSlide slide={slide} />;
+    case 'numbers': return <NumbersSlide slide={slide} />;
+    case 'brief': return <BriefSlide slide={slide} base={base} />;
+    case 'asks': return <AsksSlide slide={slide} />;
     case 'signoff': return <SignoffSlide base={base} />;
     default: return null;
   }
@@ -393,21 +497,36 @@ function Slide({ slide, base, onJump }) {
    اللوحة
    ═══════════════════════════════════════════════════════════════════ */
 export default function GmMeetingDeck({ base = '' }) {
+  /*
+    طبقتان لا عرضان: **التنفيذيّ** هو ما يُدار به الاجتماع (22 شريحة)،
+    و**الملحق المرجعيّ** هو العرض الكامل بحاله (140 شريحة) يُفتح عند السؤال
+    وحده. والانتقالُ بينهما يبدأ من أوّل شريحة، فلا يقع المتحدّث في شريحةٍ
+    لا سياق لها.
+  */
+  const [annex, setAnnex] = useState(false);
   const [active, setActive] = useState(0);
   const [showIndex, setShowIndex] = useState(false);
   const [presenting, setPresenting] = useState(false);
   const frameRef = useRef(null);
 
-  const total = slides.length;
-  const current = slides[active];
+  const deck = annex ? slides : executiveSlides;
+  const total = deck.length;
+  const current = deck[active];
 
   /** أول شريحةٍ لكل بند — للقفز من جدول الأعمال ومن الفهرس. */
   const sectionStarts = useMemo(() => {
     const map = new Map();
-    slides.forEach((slide, index) => {
-      if (slide.kind === 'section' && !map.has(slide.key)) map.set(slide.key, index);
+    deck.forEach((slide, index) => {
+      const opener = annex ? slide.kind === 'section' : slide.kind === 'brief';
+      if (opener && !map.has(slide.key)) map.set(slide.key, index);
     });
     return map;
+  }, [annex, deck]);
+
+  const toggleAnnex = useCallback(() => {
+    setAnnex((value) => !value);
+    setActive(0);
+    setShowIndex(false);
   }, []);
 
   const go = useCallback((index) => {
@@ -487,6 +606,9 @@ export default function GmMeetingDeck({ base = '' }) {
           <span className="gm-ltr">{meetingMeta.docNumber}</span>
         </div>
         <div className="gm-tools">
+          <button type="button" onClick={toggleAnnex} aria-pressed={annex}>
+            <LayersIcon /> {annex ? 'العرض التنفيذيّ' : 'الملحق المرجعيّ'}
+          </button>
           <button type="button" onClick={() => setShowIndex(true)}><GridIcon /> الفهرس</button>
           <button type="button" onClick={togglePresent}>
             {presenting ? <CloseIcon /> : <PlayIcon />} {presenting ? 'إنهاء العرض' : 'وضع العرض'}
@@ -505,7 +627,9 @@ export default function GmMeetingDeck({ base = '' }) {
           <Chevron direction="prev" />
         </button>
         <span className="gm-counter gm-ltr">{active + 1} / {total}</span>
-        <span className="gm-current">{current?.title}</span>
+        {/* عنوانُ الشريط سطرٌ واحد: الملحقُ يبني عناوينَ مركّبةً («بندٌ — كتلةٌ
+            — (1/2)») تصلح للفهرس ولا تصلح شريطًا تحت العرض. */}
+        <span className="gm-current" title={current?.title}>{shortLabel(current)}</span>
         <button type="button" onClick={() => go(active + 1)} disabled={active === total - 1} aria-label="التالي">
           <Chevron direction="next" />
         </button>
@@ -514,7 +638,7 @@ export default function GmMeetingDeck({ base = '' }) {
       {showIndex && (
         <div className="gm-index" role="dialog" aria-label="فهرس الشرائح">
           <div className="gm-index-head">
-            <strong>فهرس العرض — {total} شريحة</strong>
+            <strong>{annex ? 'الملحق المرجعيّ' : 'العرض التنفيذيّ'} — {total} شريحة</strong>
             <button type="button" onClick={() => setShowIndex(false)} aria-label="إغلاق"><CloseIcon /></button>
           </div>
           <div className="gm-index-jump">
@@ -525,7 +649,7 @@ export default function GmMeetingDeck({ base = '' }) {
             ))}
           </div>
           <ol className="gm-index-list">
-            {slides.map((slide, index) => (
+            {deck.map((slide, index) => (
               <li key={slide.title}>
                 <button
                   type="button"
