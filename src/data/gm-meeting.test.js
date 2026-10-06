@@ -214,7 +214,7 @@ test('العرض التنفيذيّ لا يتجاوز 24 شريحة — زمنُ
 test('★★★ لا شريحةَ تنفيذيّةٍ تتجاوز 110 كلمة — وإلّا عاد التقريرُ المُلصق', () => {
   // شرائحُ النظرة (البطاقة ولوحة الأرقام) تُقرأ لمحةً فتُحكم بالكلمات.
   for (const slide of executiveSlides) {
-    if (slide.kind !== 'brief' && slide.kind !== 'numbers') continue;
+    if (slide.kind !== 'brief') continue;
     const count = execWords(slide);
     assert.ok(count <= 110, `شريحة «${slide.title}» تحمل ${count} كلمة والحدّ 110`);
   }
@@ -244,9 +244,6 @@ test('سعةُ الشريحة التنفيذيّة محترمة: مؤشّرات�
     }
     if (slide.kind === 'asks') {
       assert.ok(slide.items.length <= EXEC_CAPACITY.asks, `شريحة طلبات «${slide.title}» تجاوزت السعة`);
-    }
-    if (slide.kind === 'numbers') {
-      assert.ok(slide.items.length <= EXEC_CAPACITY.numbers, 'لوحة الأرقام تجاوزت السعة');
     }
   }
 });
@@ -352,5 +349,26 @@ test('★★ كلُّ بندٍ له نقطةُ هبوطٍ في الطبقتين 
   for (const section of sections) {
     assert.ok(execKeys.has(section.key), `البند ${section.num} بلا بطاقةٍ في العرض التنفيذيّ`);
     assert.ok(annexKeys.has(section.key), `البند ${section.num} بلا افتتاحيّةٍ في الملحق — زرُّ التفاصيل سيقفز إلى الغلاف`);
+  }
+});
+
+/*
+  ★★ **رابطٌ يَعِد بوثيقةٍ** من جنس الصورة التي يَعِد بها العرض: إن غاب الملفُّ
+  انكسر الوعدُ **أمام الإدارة** لا في سجلّ. ويُحرس بالقرص لا بالثقة.
+
+  ★★★ **والمسارُ نسبيٌّ إلزامًا**: هذا الملفُّ يُزامَن إلى مستودع الشركة،
+  وعنوانُ نشرتنا مثبّتًا فيه يصحّ هنا ويخطئ هناك — عطبٌ يسافر ولا ينفجر
+  إلّا بعد أيّام في المستودع الآخر (وقد وقع من قبلُ في `build-usage-guide`).
+*/
+test('كلُّ رابطِ وثيقةٍ يَعِد به بندٌ ملفٌّ قائمٌ تحت public/ — وبمسارٍ نسبيّ', () => {
+  const linked = sections.filter((section) => section.link);
+  assert.ok(linked.length >= 1, 'لا رابطَ وثيقةٍ في أيّ بند — هل سقط؟');
+  for (const section of linked) {
+    const { href, label } = section.link;
+    assert.ok(label?.trim(), `رابطُ البند ${section.num} بلا نصّ زرّ`);
+    assert.ok(!/^https?:\/\//i.test(href), `رابطُ البند ${section.num} عنوانٌ مطلق: ${href}`);
+    assert.ok(!href.startsWith('/'), `رابطُ البند ${section.num} يجب أن يكون نسبيًّا: ${href}`);
+    const file = href.split('#')[0].split('?')[0];
+    assert.ok(existsSync(path.join(PUBLIC_DIR, file)), `وثيقةٌ مفقودة تحت public/: ${file}`);
   }
 });

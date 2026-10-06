@@ -28,6 +28,11 @@ const LayersIcon = () => (
     <path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 17l9 5 9-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+const DocIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5zM14 3v5h5M9 13h6M9 17h6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 const GridIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
@@ -258,6 +263,14 @@ function SectionSlide({ slide, base }) {
               ))}
             </div>
           )}
+          {/* ★ وثيقةٌ منشورةٌ يفتحها البندُ في لسانٍ جديد — فلا يضيع العرضُ
+              تحت يد المتحدّث. والمسارُ نسبيٌّ يسبقه `base`: عنوانُ نشرتنا
+              مثبّتًا في ملفٍّ يُزامَن يصحّ هنا ويخطئ في مستودع الشركة. */}
+          {section.link && (
+            <a className="gm-doc-link" href={asset(base, section.link.href)} target="_blank" rel="noopener noreferrer">
+              <DocIcon /> {section.link.label}
+            </a>
+          )}
         </div>
       </div>
     </section>
@@ -359,30 +372,10 @@ function ClosingSlide({ slide }) {
 }
 
 /* ── شرائح العرض التنفيذيّ ─────────────────────────────────────────
-   ثلاثُ شرائحَ لا تعرض إلّا ما هو مكتوبٌ أصلًا في المحتوى: لوحةُ أرقام،
-   وبطاقةُ بندٍ واحدة لكلّ بند، وقائمةُ الطلبات بنصّ الطلب وحده. والتفصيل
-   كلُّه حاضرٌ في الملحق المرجعيّ — فلا يُفقد شيء، ولا يُعرض كلُّ شيء. */
+   شريحتان لا تعرضان إلّا ما هو مكتوبٌ أصلًا في المحتوى: بطاقةُ بندٍ واحدة
+   لكلّ بند، وقائمةُ الطلبات بنصّ الطلب وحده. والتفصيل كلُّه حاضرٌ في الملحق
+   المرجعيّ — فلا يُفقد شيء، ولا يُعرض كلُّ شيء. */
 
-function NumbersSlide({ slide }) {
-  return (
-    <section className="gm-slide is-numbers">
-      {/* العنوان يُشتقّ من العدد لا يُكتب رقمًا ثابتًا — فلا يقول «عشرة» ويعرض ثمانية. */}
-      <SlideHead
-        kicker="الصورة في أرقام"
-        title={`بنود الاجتماع في ${slide.items.length} أرقام — وتفصيلُ كلٍّ في بنده`}
-      />
-      <div className="gm-numbers">
-        {slide.items.map((item, index) => (
-          <article key={index}>
-            <span className="gm-ltr">البند {item.sectionNum}</span>
-            <b className={/^[\x20-\x7E]+$/.test(item.value || '') ? 'gm-ltr' : undefined}>{item.value}</b>
-            <span>{item.label}</span>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 function BriefSlide({ slide, base, onDetails }) {
   const { section, kpis, asks } = slide;
@@ -496,7 +489,6 @@ function Slide({ slide, base, onJump, onDetails }) {
     case 'gallery': return <GallerySlide slide={slide} base={base} />;
     case 'decisions': return <DecisionsSlide slide={slide} />;
     case 'closing': return <ClosingSlide slide={slide} />;
-    case 'numbers': return <NumbersSlide slide={slide} />;
     case 'brief': return <BriefSlide slide={slide} base={base} onDetails={onDetails} />;
     case 'asks': return <AsksSlide slide={slide} />;
     case 'signoff': return <SignoffSlide base={base} />;
