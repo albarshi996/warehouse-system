@@ -13,6 +13,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -285,4 +286,29 @@ test('الملحق المرجعيّ باقٍ بحاله — الاختصارُ �
   for (const decision of annexDecisions) {
     assert.ok(decision.why?.trim(), 'طلبٌ في الملحق بلا تعليل — والتعليلُ هو سببُ وجود الملحق');
   }
+});
+
+/*
+  ★★★ **حارسُ الصفّ المنزلق** — وُضع بعد عطبٍ حيٍّ (المالك 2026-10-06): وضعُ
+  العرض شاشةٌ بيضاء. اللوحةُ شبكةٌ بثلاثة صفوف، ووضعُ العرض يُخفي الشريطَ
+  العلويَّ بـ`display: none` — **وهو يُسقط العنصرَ من الشبكة لا يُفرغه** —
+  فينزلق المسرحُ إلى صفّ `auto` (ارتفاعٌ صفر) والشريطُ السفليُّ إلى صفّ `1fr`
+  (فيبتلع الشاشة). قِيس: مسرحٌ 0، وشريطٌ 1034، ولوحةُ رسمٍ عند y = −469.
+
+  والعطبُ من صنفٍ لا يمسكه اختبارُ منطق: لا بيانةَ فيه ولا دالّة — قاعدتان
+  في CSS تفترقان. فيُحرس بقراءة الملفّ نفسِه: **من أخفى صفًّا فليُصلح القالب**.
+*/
+test('★★★ إخفاءُ الشريط العلويّ في وضع العرض يُقابله قالبُ صفوفٍ مُصحَّح', async () => {
+  const css = await readFile(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../styles/gm-meeting.css'), 'utf8');
+  const hides = /\.gm-meeting-deck\.is-presenting\s+\.gm-toolbar\s*\{[^}]*display:\s*none/.test(css);
+  assert.ok(hides, 'توقّعنا أن يُخفي وضعُ العرض الشريطَ العلويّ');
+  const retemplates = /\.gm-meeting-deck\.is-presenting\s*\{[^}]*grid-template-rows:\s*minmax\(\s*0\s*,\s*1fr\s*\)\s+auto/.test(css);
+  assert.ok(retemplates, 'الشريطُ العلويُّ مخفيٌّ ولم يُصحَّح `grid-template-rows` لصفّين — المسرحُ سينكمش إلى صفر');
+});
+
+test('★★ المسرحُ على صفٍّ مرنٍ يقبل الانكماش — `minmax(0, 1fr)` لا `1fr`', async () => {
+  const css = await readFile(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../styles/gm-meeting.css'), 'utf8');
+  const base = css.match(/\.gm-meeting-deck\s*\{[\s\S]*?\}/)?.[0] || '';
+  assert.match(base, /grid-template-rows:\s*auto\s+minmax\(\s*0\s*,\s*1fr\s*\)\s+auto/, 'الصفُّ المرن بلا `minmax(0, …)` يرفض أن يصغر دون محتواه فيفيض');
+  assert.match(base, /height:\s*calc\(100dvh\s*-\s*var\(--gm-top/, 'ارتفاعُ اللوحة يجب أن يطرح إزاحةَ رأسها — `100dvh` من رأسٍ مُزاحٍ تتجاوز الشاشة');
 });

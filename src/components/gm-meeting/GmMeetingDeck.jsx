@@ -548,6 +548,18 @@ export default function GmMeetingDeck({ base = '' }) {
     const frame = frameRef.current;
     if (!frame) return undefined;
     const fit = () => {
+      /*
+        ★ إزاحةُ رأس اللوحة تُقاس ولا تُفترض: اللوحةُ داخل `#bz-main` وهو مُزاحٌ
+        من أعلى الصفحة (قِيس 24 بكسلًا على شاشةٍ عريضة و40 على الضيّقة بسبب
+        الرأس الثابت). فـ`height: 100dvh` من رأسٍ مُزاحٍ تتجاوز الشاشة ويُقصّ
+        الشريطُ السفليّ — وهنا يُطرح المقيسُ. وفي وضع العرض اللوحةُ مثبّتةٌ
+        على الشاشة فالإزاحةُ صفر.
+      */
+      const deck = deckRef.current;
+      if (deck) {
+        const top = presenting ? 0 : Math.max(0, Math.round(deck.getBoundingClientRect().top));
+        deck.style.setProperty('--gm-top', `${top}px`);
+      }
       const { width, height } = frame.getBoundingClientRect();
       if (!width || !height) return;
       const scale = Math.max(Math.min(width / DESIGN_WIDTH, height / DESIGN_HEIGHT), 0.1);
@@ -584,10 +596,30 @@ export default function GmMeetingDeck({ base = '' }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [active, go, showIndex, total]);
 
+  /*
+    ★★★ **ملءُ الشاشة على اللوحة نفسها لا على `<html>`** (عطبٌ حيٌّ 2026-10-06:
+    وضعُ العرض شاشةٌ بيضاءُ عند المالك).
+
+    كان الطلبُ على `document.documentElement`، فيبقى كلُّ تخطيط الصفحة قائمًا
+    داخل ملء الشاشة: اللوحةُ تعيش داخل `#bz-main` **وهو مُزاحٌ** (قِيس: 40
+    بكسلًا من الأعلى، و`margin-right: 4.75rem` للشريط الجانبيّ، ورأسٌ ثابتٌ
+    يعلوه). واللوحةُ `height: 100dvh` — فمجموعُها يتجاوز الشاشة، ويُرسم في
+    المساحة المرئيّة جزءٌ فارغٌ منها.
+
+    والعلاجُ أن تصير **اللوحةُ نفسُها عنصرَ ملء الشاشة**: يقيسها المتصفّحُ
+    بالشاشة مباشرةً، فلا يبلغها إزاحةُ أبٍ ولا هامشُه ولا رأسٌ ثابتٌ فوقه.
+    ومعه في الأنماط `position: fixed; inset: 0` عند العرض — فلو رفض المتصفّحُ
+    ملءَ الشاشة بقيت اللوحةُ مملوءةً سليمةً داخل الصفحة لا منقوصةً.
+  */
+  const deckRef = useRef(null);
+
   const togglePresent = useCallback(() => {
-    const root = document.documentElement;
     if (document.fullscreenElement) { document.exitFullscreen?.(); return; }
-    root.requestFullscreen?.().catch(() => { /* المتصفّح رفض — نبقى في وضع العرض داخل الصفحة */ });
+    const target = deckRef.current || document.documentElement;
+    const request = target.requestFullscreen?.bind(target);
+    if (!request) { setPresenting((value) => !value); return; }
+    // رفضُ المتصفّح لا يعني بقاءَنا في الوضع العاديّ: نعرض داخل الصفحة بملءٍ مثبّت.
+    request().catch(() => setPresenting(true));
   }, []);
 
   useEffect(() => {
@@ -596,8 +628,18 @@ export default function GmMeetingDeck({ base = '' }) {
     return () => document.removeEventListener('fullscreenchange', onChange);
   }, []);
 
+  /* Escape يخرج من عرضِ الصفحة المثبَّت أيضًا — لا من ملء الشاشة وحده. */
+  useEffect(() => {
+    if (!presenting) return undefined;
+    const onKey = (event) => {
+      if (event.key === 'Escape' && !document.fullscreenElement) setPresenting(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [presenting]);
+
   return (
-    <div className={`gm-meeting-deck${presenting ? ' is-presenting' : ''}`}>
+    <div ref={deckRef} className={`gm-meeting-deck${presenting ? ' is-presenting' : ''}`}>
       <div className="gm-toolbar">
         <a className="gm-back" href={`${base}/dashboard`}><BackIcon /> لوحة البوابة</a>
         <div className="gm-identity">
