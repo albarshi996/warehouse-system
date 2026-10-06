@@ -178,6 +178,9 @@ export const SWEEP_EXEMPT = [
   'docs/archive/',
   'docs/إحاطة-كوديكس.md',
   'public/archive/',
+  // متنُ عرضٍ يقتبس تقريرَ الإدارة التقنية الرسميَّ باسم مستودع الشركة
+  // وإصداره — سجلٌّ صدر بنصّه، وختمُه تزوير.
+  'src/data/gm-meeting-content.js',
   // رابطٌ بائتٌ لمستودعٍ ثالثٍ لم يعد قائمًا في المستودعَين معًا.
   '.agents/skills/testing-brandzo/SKILL.md',
 ];
