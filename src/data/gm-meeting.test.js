@@ -68,9 +68,10 @@ test('الشاشة مسجّلةٌ في كتالوج القائمة وفي دلي
   assert.ok(entry.steps?.length >= 1, 'شرحُ الشاشة بلا خطوات');
 });
 
-test('جدول الأعمال أحد عشر بندًا، والفرعيّان تحت البند الرابع', () => {
-  // 11 بندًا رئيسًا: العشرةُ الأصلية + «تسليم خدمات الأمن والنظافة» (مقترح، أمرُ المالك 2026-10-06).
-  assert.equal(agenda.length, 11);
+test('جدول الأعمال عشرة بنود، والفرعيّان تحت البند الرابع', () => {
+  // عشرةُ بنودٍ رئيسة: أُسقط «تأخر طلبات الشراء» وأُضيف «الأمن والنظافة» (أمرُ المالك 2026-10-06)،
+  // **والترقيمُ أُعيد فلا فجوةَ فيه** — ولا نصَّ في المحتوى يشير إلى بندٍ برقمه غيرَ الثامن.
+  assert.equal(agenda.length, 10);
   const fourth = agenda.find((item) => item.num === '4');
   assert.ok(fourth, 'البند الرابع مفقود');
   assert.equal(fourth.subs.length, 2, 'البند الرابع يجب أن يحمل فرعَي التقنية والهندسة');
@@ -80,7 +81,7 @@ test('جدول الأعمال أحد عشر بندًا، والفرعيّان ت
 });
 
 test('كل بندٍ يحمل عنوانًا وتمهيدًا وما يُطلب من الإدارة', () => {
-  assert.equal(sections.length, 13);
+  assert.equal(sections.length, 12);
   for (const section of sections) {
     assert.ok(section.headline?.trim(), `البند ${section.num} بلا عنوان`);
     assert.ok(section.lead?.trim(), `البند ${section.num} بلا تمهيد`);
@@ -92,6 +93,11 @@ test('كل بندٍ يحمل عنوانًا وتمهيدًا وما يُطلب �
       assert.ok(decision.ask?.trim(), `طلبٌ بلا نصّ في البند ${section.num}`);
     }
   }
+});
+
+test('★ ترقيمُ البنود الرئيسة متّصلٌ بلا فجوة — فحذفُ بندٍ يُعيد الترقيم', () => {
+  const tops = sections.filter((section) => section.level === 0).map((section) => Number(section.num));
+  assert.deepEqual(tops, tops.map((_value, index) => index + 1), `ترقيمٌ فيه فجوة: ${tops.join(' · ')}`);
 });
 
 test('العرضُ كلُّه لا يخلو من ملاحظاتٍ وطلبات', () => {
