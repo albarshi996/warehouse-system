@@ -361,10 +361,18 @@ test('★★ كلُّ بندٍ له نقطةُ هبوطٍ في الطبقتين 
   إلّا بعد أيّام في المستودع الآخر (وقد وقع من قبلُ في `build-usage-guide`).
 */
 test('كلُّ رابطِ وثيقةٍ يَعِد به بندٌ ملفٌّ قائمٌ تحت public/ — وبمسارٍ نسبيّ', () => {
-  const linked = sections.filter((section) => section.link);
-  assert.ok(linked.length >= 1, 'لا رابطَ وثيقةٍ في أيّ بند — هل سقط؟');
+  // روابطُ البنود: زرُّ الافتتاحية (`section.link`) وبطاقاتُ كتلة `docs` معًا.
+  const linked = [
+    ...sections.filter((section) => section.link).map((section) => ({ num: section.num, ...section.link })),
+    ...sections.flatMap((section) =>
+      (section.blocks || [])
+        .filter((block) => block.type === 'docs')
+        .flatMap((block) => (block.items || []).map((item) => ({ num: section.num, href: item.href, label: item.title }))),
+    ),
+  ];
+  assert.ok(linked.length >= 7, `روابطُ الوثائق ${linked.length} — أقلُّ من المتوقَّع، هل سقط مستند؟`);
   for (const section of linked) {
-    const { href, label } = section.link;
+    const { href, label } = section;
     assert.ok(label?.trim(), `رابطُ البند ${section.num} بلا نصّ زرّ`);
     assert.ok(!/^https?:\/\//i.test(href), `رابطُ البند ${section.num} عنوانٌ مطلق: ${href}`);
     assert.ok(!href.startsWith('/'), `رابطُ البند ${section.num} يجب أن يكون نسبيًّا: ${href}`);

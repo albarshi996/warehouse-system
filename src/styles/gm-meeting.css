@@ -329,3 +329,17 @@ body:has(.gm-meeting-deck.is-presenting) #brandzo-backdrop { display: none !impo
 }
 .gm-doc-link:hover { background: rgba(255,255,255,.27); border-color: #fff; }
 .gm-doc-link svg { width: 18px; height: 18px; }
+
+/* بطاقات المستندات المنشورة داخل كتلة البند */
+.gm-docs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 11px; }
+.gm-docs.count-1 { grid-template-columns: 1fr; }
+.gm-docs.count-5, .gm-docs.count-6 { grid-template-columns: repeat(3, 1fr); }
+.gm-docs a {
+  display: flex; gap: 11px; align-items: flex-start; text-decoration: none; color: inherit;
+  background: #fff; border: 1px solid var(--line); border-radius: 13px; padding: 12px 14px;
+}
+.gm-docs a:hover { border-color: var(--red-600); background: var(--red-050); }
+.gm-docs svg { width: 22px; height: 22px; flex-shrink: 0; color: var(--red-700); margin-top: 1px; }
+.gm-docs strong { display: block; font-size: 14px; line-height: 1.45; }
+.gm-docs b { display: block; margin-top: 3px; color: var(--red-700); font-size: 11.5px; font-weight: 800; }
+.gm-docs small { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.6; }

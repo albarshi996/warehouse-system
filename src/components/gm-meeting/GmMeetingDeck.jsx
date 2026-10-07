@@ -77,7 +77,7 @@ const asset = (base, path) => (path ? `${base}/${path}` : '');
 
 /* ── كتل المحتوى ──────────────────────────────────────────────────── */
 
-function BlockBody({ block }) {
+function BlockBody({ block, base }) {
   const items = block.items || [];
   switch (block.type) {
     case 'cards':
@@ -187,6 +187,23 @@ function BlockBody({ block }) {
           {block.note && <figcaption>{block.note}</figcaption>}
         </figure>
       );
+    case 'docs':
+      /* ★ مستنداتٌ منشورةٌ تُفتح من العرض نفسه في لسانٍ جديد — فلا يضيع
+         العرضُ تحت يد المتحدّث. والمسارات نسبيّةٌ يسبقها `base`. */
+      return (
+        <div className={`gm-docs count-${(block.items || []).length}`}>
+          {(block.items || []).map((item, index) => (
+            <a key={index} href={asset(base, item.href)} target="_blank" rel="noopener noreferrer">
+              <DocIcon />
+              <span>
+                <strong>{item.title}</strong>
+                {item.when && <b className="gm-ltr">{item.when}</b>}
+                {item.text && <small>{item.text}</small>}
+              </span>
+            </a>
+          ))}
+        </div>
+      );
     default:
       return block.text ? <div className="gm-callout is-info"><p>{block.text}</p></div> : null;
   }
@@ -277,7 +294,7 @@ function SectionSlide({ slide, base }) {
   );
 }
 
-function BlockSlide({ slide }) {
+function BlockSlide({ slide, base }) {
   const { section, block, part, parts } = slide;
   return (
     <section className="gm-slide">
@@ -286,19 +303,19 @@ function BlockSlide({ slide }) {
         title={block.title || 'تفصيل'}
         note={parts > 1 ? `جزء ${part} من ${parts}` : block.note}
       />
-      <div className="gm-slide-body"><BlockBody block={block} /></div>
+      <div className="gm-slide-body"><BlockBody block={block} base={base} /></div>
       {parts > 1 && block.note && <footer className="gm-slide-note">{block.note}</footer>}
     </section>
   );
 }
 
-function NotesSlide({ slide }) {
+function NotesSlide({ slide, base }) {
   const { section, blocks } = slide;
   return (
     <section className="gm-slide">
       <SlideHead kicker={`${section.num} · ${section.navTitle}`} title={blocks[0].title || 'ملاحظات'} />
       <div className="gm-slide-body gm-notes">
-        {blocks.map((block, index) => <BlockBody key={index} block={block} />)}
+        {blocks.map((block, index) => <BlockBody key={index} block={block} base={base} />)}
       </div>
     </section>
   );
@@ -483,8 +500,8 @@ function Slide({ slide, base, onJump, onDetails }) {
     case 'cover': return <CoverSlide base={base} />;
     case 'agenda': return <AgendaSlide onJump={onJump} />;
     case 'section': return <SectionSlide slide={slide} base={base} />;
-    case 'block': return <BlockSlide slide={slide} />;
-    case 'notes': return <NotesSlide slide={slide} />;
+    case 'block': return <BlockSlide slide={slide} base={base} />;
+    case 'notes': return <NotesSlide slide={slide} base={base} />;
     case 'diagram': return <DiagramSlide slide={slide} base={base} />;
     case 'gallery': return <GallerySlide slide={slide} base={base} />;
     case 'decisions': return <DecisionsSlide slide={slide} />;
