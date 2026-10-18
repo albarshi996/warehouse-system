@@ -61,16 +61,9 @@ test('★★★ ورك-فلو النشر يستدعي `prebuild` بالاسم �
   );
 });
 
-test('★★ وسكربتُ المزامنة يمرّ بالمولّدات كلِّها لا ببعضها', () => {
-  const sync = read('scripts/sync-sibling.mjs');
-  const missing = prebuildGenerators().filter((g) => !sync.includes(g));
-  assert.deepEqual(
-    missing,
-    [],
-    `مولّدٌ في prebuild لا تُعيد المزامنةُ بناءه (${missing.join(' · ')}) — ` +
-      'فيصل المستودعَ الشقيق محمَّلًا بهويّتنا نحن',
-  );
-});
+// ★ كان هنا اختبارٌ يُلزم `scripts/sync-sibling.mjs` بأن يمرّ بمولّدات `prebuild`
+//   كلِّها — فُكّ الارتباطُ 2026-10-18 وحُذف السكربت، فزال الاختبار معه.
+//   والمولّداتُ ما زالت محروسةً أعلاه: في `prebuild` وفي ورك-فلو النشر.
 
 test('★ والحارسُ يفشل فعلًا حين يعود التعدادُ اليدويّ — نقضٌ لا دعوى', () => {
   const gens = prebuildGenerators();

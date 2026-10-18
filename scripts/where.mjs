@@ -2,6 +2,10 @@
 /**
  * npm run where — يجيب سؤالًا واحدًا قبل أيّ عمل: في أيّ مستودعٍ أنا، وبأيّ قواعد، وإلى أين أدفع؟
  *
+ * ★ فُكّ الارتباطُ بالمستودع الشقيق 2026-10-18، فزال من هنا قياسُ الفارق معه
+ * وملفّاتُ النشر المستثناة من المزامنة. وبقي ما كان يفيد أصلًا: تطابقُ البطاقة
+ * مع الريموت، وحارسُ أشجار العمل.
+ *
  * يقرأ `workspace.json` ثمّ يقابله بريموت git الفعليّ. الاختلاف يوقف التنفيذ بخطأ،
  * لأنّ بطاقة هويّةٍ منسوخة إلى المستودع الخطأ أخطر من غيابها: تطمئنك وأنت في المكان الغلط.
  */
@@ -10,7 +14,6 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { scanWorktrees, guardReport } from './guard-worktrees.mjs';
-import { unportablePaths } from '../src/services/workspace/portability.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -58,79 +61,6 @@ if (originUrl && toSlug(originUrl) !== toSlug(ws.repo)) {
   process.exit(1);
 }
 
-/** مثل `git` لكنّه يميّز الفشل من المخرَج الفارغ — العدّ يحتاج هذا التمييز. */
-function count(...args) {
-  const out = git(...args);
-  const n = Number(out);
-  return out !== '' && Number.isFinite(n) ? n : null;
-}
-
-/**
- * الفارق مع الشقيق — جلبٌ قصيرٌ لطرفه ثمّ عدٌّ في الاتّجاهين.
- * يُتجاوَز بصمتٍ إن تعذّرت الشبكة: بطاقةُ المكان لا يجوز أن تحبس الجلسة
- * لأنّ الاتّصال بطيء، فالغياب هنا سكوتٌ لا خطأ.
- */
-function siblingGap() {
-  try {
-    execFileSync('git', ['fetch', '--quiet', ws.sibling.remote, 'main'], {
-      cwd: root,
-      timeout: 6000,
-      stdio: 'ignore',
-    });
-  } catch {
-    return null;
-  }
-  const theirs = count('rev-list', '--count', 'HEAD..FETCH_HEAD');
-  const ours = count('rev-list', '--count', 'FETCH_HEAD..HEAD');
-  return theirs === null || ours === null ? null : { theirs, ours };
-}
-
-/**
- * ملفّاتُ النشر التي تفرّقنا عن الشقيق — وهي وحدَها التي **لا تعبر المزامنة**،
- * لأنّ `GITHUB_TOKEN` لا يملك دفعَها (الشرح في `portability.js`). فتستثنيها
- * المزامنةُ وتُكمل، ويبقى لكلّ مستودعٍ ملفّاتُ نشره.
- *
- * ويُقال هنا لأنّ هذا **أوّلُ أمرٍ في كلّ جلسة**: فمن حسِب أنّ كلَّ شيءٍ يعبر
- * بنى على وعدٍ ناقص، والسكوتُ عن الافتراق يجعله بعد شهرٍ عطبًا مجهولَ السبب.
- *
- * يُستدعى بعد `siblingGap` وحدَه، فهو الذي يجلب `FETCH_HEAD`. و`-z` لأنّ git
- * يُقتبس الأسماءَ غيرَ اللاتينيّة حيث `core.quotePath` مشتعل — والمشروعُ عربيّ.
- */
-function deployFilesExcluded() {
-  return unportablePaths(git('diff', '--name-only', '-z', 'FETCH_HEAD', 'HEAD').split('\0'));
-}
-
-/**
- * سطرُ الفارق — ومعناه يختلف باختلاف الدور:
- * المستقبِل يسأل «هل عنده ما ليس عندي؟»، والمصدرُ يسأل «هل بلغه ما عندي؟».
- * وسؤالُ المصدر لا يعنيه تقدّمُ الشقيق بكوميتات دمجٍ وهويّة، فلا يُنبَّه بها.
- */
-function gapLine() {
-  const gap = siblingGap();
-  if (!gap) return `  ${DIM}◆ تعذّر قياس الفارق مع الشقيق (لا اتّصال؟)${OFF}`;
-  if (ws.autoSync) {
-    return gap.theirs > 0
-      ? `  ${COLORS.gold}◆ عند الشقيق ${gap.theirs} كوميتًا ليست هنا — تصل تلقائيًّا، أو الآن بـ npm run sync${OFF}`
-      : `  ${COLORS.green}◆ ملحوقٌ بالشقيق — لا جديد عنده${OFF}`;
-  }
-  if (gap.ours === 0) return `  ${COLORS.green}◆ الشقيق ملحوقٌ بك — وصله كلّ عملك${OFF}`;
-  if (!ws.sibling.autoSync)
-    return `  ${COLORS.gold}◆ الشقيق متأخّر ${gap.ours} كوميتًا — زامِنه من مجلّده: npm run sync${OFF}`;
-
-  // ★ «تلحقه خلال ساعة» صحيحةٌ إلّا في ملفّات النشر — فلا تُقال على إطلاقها.
-  //   والخبرُ خبرٌ لا تحذير: المزامنةُ تستثنيها وتُكمل، ولا يُطلب من أحدٍ شيء.
-  //   ولا أحمرَ هنا — فالأحمرُ للتحذير وحدَه، ولا شيءَ معطوب.
-  const skipped = deployFilesExcluded();
-  if (!skipped.length)
-    return `  ${DIM}◆ الشقيق متأخّر ${gap.ours} كوميتًا — ومزامنتُه التلقائيّة تلحقه خلال ساعة${OFF}`;
-
-  return (
-    `  ${DIM}◆ الشقيق متأخّر ${gap.ours} كوميتًا — ومزامنتُه التلقائيّة تلحقه خلال ساعة${OFF}\n` +
-    `  ${DIM}  ومعها ${skipped.length} ملفَّ نشرٍ يُستثنى — فملفّاتُ النشر مِلكُ كلِّ مستودعٍ لنفسه:${OFF}\n` +
-    skipped.map((f) => `  ${DIM}    · ${f}${OFF}`).join('\n')
-  );
-}
-
 const c = COLORS[ws.color] ?? COLORS.cyan;
 const push = originUrl ? `origin ← ${toSlug(originUrl)}` : '(لا ريموت origin)';
 
@@ -140,13 +70,7 @@ console.info(
     `  · القواعد: ${ws.rules}\n` +
     `  · تدفع إلى: ${push}\n` +
     `  · الفرع الحاليّ: ${branch}\n` +
-    `  · النشر: ${ws.pages}\n\n` +
-    `${gapLine()}\n\n` +
-    `  ${DIM}المستودع الآخر — ${ws.sibling.name} (${ws.sibling.repo}): ${ws.sibling.purpose}\n` +
-    `  لجلب ما بُني هناك كلّه — بهويّة هذا المكان، وبلا دفع:\n` +
-    `    npm run sync\n` +
-    `  ولنقل تصليحٍ مفردٍ دون ربط ريموتٍ دائم:\n` +
-    `    git fetch ${ws.sibling.remote} main && git cherry-pick <sha>${OFF}\n`
+    `  · النشر: ${ws.pages}\n`
 );
 
 /**

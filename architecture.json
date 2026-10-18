@@ -11,13 +11,13 @@
   "counts": {
     "modules": 118,
     "serviceDomains": 51,
-    "serviceFiles": 647,
+    "serviceFiles": 645,
     "collections": 99,
     "roles": 20,
     "odooModels": 12,
     "odooGuards": 51,
     "infraNodes": 6,
-    "pipelines": 4
+    "pipelines": 3
   },
   "modules": [
     {
@@ -5322,36 +5322,12 @@
         "generatedArtifacts.test.js",
         "identity.js",
         "identity.test.js",
-        "portability.js",
-        "portability.test.js",
         "vendoredLibs.test.js"
       ],
-      "fileCount": 7,
-      "testCount": 5,
+      "fileCount": 5,
+      "testCount": 4,
       "exports": [
-        "BLOCK_END",
-        "BLOCK_START",
-        "GENERATED_NOTE",
-        "KINDS",
-        "SPOTS",
-        "SWEEP_EXEMPT",
-        "SWEEP_REGENERATED",
-        "WORKFLOW_DIR",
-        "agentsBlock",
-        "atRiskOfErasure",
-        "exclusionNote",
-        "identityOnly",
-        "isSweepExempt",
-        "isUnportable",
-        "leaks",
-        "lf",
-        "normalizePath",
-        "replaceBlock",
-        "stamp",
-        "tokensOf",
-        "unportablePaths",
-        "withoutBlock",
-        "workspaceDoc"
+        "tokensOf"
       ],
       "collections": []
     }
@@ -9729,14 +9705,6 @@
           "issues"
         ],
         "file": ".github/workflows/gemini-developer.yml"
-      },
-      {
-        "name": "Sync from sibling repo",
-        "triggers": [
-          "schedule",
-          "workflow_dispatch"
-        ],
-        "file": ".github/workflows/sync-from-sibling.yml"
       }
     ],
     "dependencies": {
@@ -9773,9 +9741,6 @@
       "where": "node scripts/where.mjs",
       "guard": "node scripts/guard-worktrees.mjs --all",
       "rescue": "node scripts/rescue-worktrees.mjs",
-      "identity": "node scripts/identity.mjs",
-      "identity:apply": "node scripts/identity.mjs --apply",
-      "sync": "node scripts/sync-sibling.mjs",
       "arch": "node scripts/build-arch.mjs",
       "org": "node scripts/build-org.mjs",
       "prebuild": "node scripts/build-arch.mjs && node scripts/build-org.mjs && node scripts/build-scm-manual.mjs && node scripts/build-usage-guide.mjs",
