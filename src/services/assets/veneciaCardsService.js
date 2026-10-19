@@ -35,7 +35,9 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
 import { reserveNumber } from '../documents/numberingService.js';
-import { VENECIA_WAREHOUSE, assetDocId, populationAssetType, rawQty } from './veneciaModel.js';
+// `rawQty` لم تعد تُستورد هنا عمدًا: الحسابُ كلُّه في `qtyAfterCard`، ووجودُها
+// إغراءٌ بالعودة إلى حسابٍ يدويٍّ يلتفّ على حارس الرصيد السالب.
+import { VENECIA_WAREHOUSE, assetDocId, populationAssetType } from './veneciaModel.js';
 import {
   cardKind,
   cardNoteLine,
