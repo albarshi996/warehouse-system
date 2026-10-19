@@ -523,11 +523,13 @@ import {
 import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
 
 // أدوارُ الكتابة — **للعرض فقط**؛ والإلزامُ الحقيقيّ في `firestore.rules`
-// (`isAssetWriter`). والقائمةُ نسخةُ تلك: الأدوارُ الثمانيةُ التي ترى الشاشة.
-const WRITER_ROLES = [
-  'admin', 'warehouse_manager', 'storekeeper', 'scm_manager',
-  'finance_manager', 'return_manager', 'inventory_auditor', 'executive_chef',
-];
+// (`isManager` على `department_assets`). والقائمةُ نسخةُ تلك حرفيًّا.
+//
+// ★ وقرارُ المالك 2026-10-19: المديران وحدهما. وقِيس أنّ الشاشةَ يراها ثمانيةُ
+// أدوارٍ فعُرض عليه الأمر، فاختار **أنّ تعريفَ ما تملكه الشركةُ قرارٌ إداريّ**
+// — كتعريفِ ما يملكه المستودع في `warehouse_assets`. والستّةُ الباقيةُ **تقرأ
+// ولا تكتب**، وتُقال لها ذلك في الشارة لا بزرٍّ يُضغط فيُرفض.
+const WRITER_ROLES = ['admin', 'warehouse_manager'];
 
 let assets = [];
 let profile = null;

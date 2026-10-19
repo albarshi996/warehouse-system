@@ -13,7 +13,7 @@
     "serviceDomains": 51,
     "serviceFiles": 665,
     "collections": 104,
-    "roles": 21,
+    "roles": 20,
     "odooModels": 12,
     "odooGuards": 51,
     "infraNodes": 6,
@@ -5508,7 +5508,6 @@
       "hasProfile",
       "isActive",
       "isAdmin",
-      "isAssetWriter",
       "isBootstrapAdmin",
       "isCountAssignee",
       "isCreator",
@@ -5540,7 +5539,6 @@
       "immutableKept",
       "isActive",
       "isAdmin",
-      "isAssetWriter",
       "isBootstrapAdmin",
       "isCountAssignee",
       "isCreator",
@@ -6218,9 +6216,9 @@
               "create",
               "update"
             ],
-            "condition": "isAssetWriter() && request.resource.data.assetName is string && request.resource.data.assetName.size() > 0 && request.resource.data.department is string && requ",
+            "condition": "isManager() && request.resource.data.assetName is string && request.resource.data.assetName.size() > 0 && request.resource.data.department is string && request.",
             "roles": [
-              "isAssetWriter"
+              "isManager"
             ]
           },
           {
@@ -6249,9 +6247,9 @@
             "actions": [
               "create"
             ],
-            "condition": "isAssetWriter() && request.resource.data.byUid == request.auth.uid && request.resource.data.text is string && request.resource.data.text.size() > 0",
+            "condition": "isManager() && request.resource.data.byUid == request.auth.uid && request.resource.data.text is string && request.resource.data.text.size() > 0",
             "roles": [
-              "isAssetWriter"
+              "isManager"
             ]
           },
           {

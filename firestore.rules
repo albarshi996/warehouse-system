@@ -65,33 +65,6 @@ service cloud.firestore {
              (signedIn() && hasProfile() && isActive() && myRole() in ['admin', 'warehouse_manager', 'fleet']);
     }
 
-    // ── كاتبو جرد أصول الإدارات ‹ASSET-101› ──────────────────────────────
-    // **هذه القائمةُ مقيسةٌ لا مُختارة**: هي بعينها الأدوارُ الثمانيةُ التي
-    // ترى `/dashboard/assets-inventory` اليوم (البندُ بلا `roles` فيَرِثُ من
-    // يرى مجموعةَ `warehouses` في `navCatalog.js` × `ROLE_NAV`).
-    //
-    // ★★★ ولماذا الثمانيةُ لا المديرَان؟ الشاشةُ تعمل منذ اليوم الأوّل في
-    // ذاكرة المتصفّح، فثمانيةُ أدوارٍ تُدخل فيها ويضيع ما تُدخله. فحصرُها
-    // بالمديرَين **عند وصلها بالقاعدة انتزاعٌ صامتٌ من ستّة** — وقاعدةُ
-    // المشروع «يُضاف ولا يُنتزع» (نمط ‹RB-201›: تُذكر الأدوارُ التي كانت
-    // تراه بعينها لا قائمةٌ أضيق).
-    //
-    // ★★ ولا `isStockActor`: يضمُّ سبعةً من الثمانية (ينقصه الشيف) **ويضيف
-    // سبعةً لا ترى الشاشةَ أصلًا** (الجودةُ والبوّابةُ والمشترياتُ والحركةُ
-    // والوحداتُ الثلاث) — فحارسٌ أسخى من الشاشة يفتح ما لم يُقَس.
-    //
-    // ⚠️ **وهذا هو السطرُ الذي يراجعه المالك**: إن كان تعريفُ أصول الشركة
-    // قرارًا إداريًّا كتعريف أصول المستودع (`warehouse_assets` ← `isManager`)
-    // فالتغييرُ سطرٌ واحد، ولا بياناتَ تُفقد.
-    function isAssetWriter() {
-      return isBootstrapAdmin() ||
-             (signedIn() && hasProfile() && isActive() && myRole() in [
-               'admin', 'warehouse_manager', 'storekeeper', 'scm_manager',
-               'finance_manager', 'return_manager', 'inventory_auditor',
-               'executive_chef'
-             ]);
-    }
-
     // مشرفو المناولة: دور «مشرف المناولة» + المديرَان — يديرون فرق عمالة
     // الشحن/التفريغ ومهامها الزمنيّة (المحور الثاني).
     function isLaborWriter() {
@@ -1177,9 +1150,17 @@ service cloud.firestore {
     // ★ ولا حذفَ أبدًا: الأصلُ الخارجُ **يُكهَّن** (`archived` بسببٍ مكتوب).
     // فالرقمُ مطبوعٌ على شيءٍ كان في الإدارة، ومحوُه يجعل جردًا قديمًا يذكر
     // ما لا وجودَ له.
+    //
+    // ★★★ **والكتابةُ للمديرَين بقرار المالك 2026-10-19.** وقِيس أوّلًا أنّ
+    // الشاشةَ يراها **ثمانيةُ أدوار** (البندُ بلا `roles` فيَرِثُ من يرى
+    // مجموعةَ `warehouses`)، فعُرض الأمرُ عليه: الثمانيةُ المقيسة أم
+    // المديران؟ فاختار المديرَين — **وتعريفُ ما تملكه الشركةُ قرارٌ إداريّ**
+    // كتعريفِ ما يملكه المستودع (`warehouse_assets` أعلاه بـ`isManager` نفسِها،
+    // فالمجموعتان على حدٍّ واحد). ومن سواهما **يقرأ ولا يكتب**، والشاشةُ تقول
+    // له ذلك صريحًا في شارتها فلا يبحث عن أزرارٍ أُخفيت بلا سبب.
     match /department_assets/{assetKey} {
       allow read: if signedIn();
-      allow create, update: if isAssetWriter()
+      allow create, update: if isManager()
                     && request.resource.data.assetName is string
                     && request.resource.data.assetName.size() > 0
                     && request.resource.data.department is string
@@ -1189,7 +1170,7 @@ service cloud.firestore {
       // سجلُّ الملاحظات — **ملحقٌ-فقط** كالمجموعات المقدّسة.
       match /notes/{noteId} {
         allow read: if signedIn();
-        allow create: if isAssetWriter()
+        allow create: if isManager()
                       && request.resource.data.byUid == request.auth.uid
                       && request.resource.data.text is string
                       && request.resource.data.text.size() > 0;

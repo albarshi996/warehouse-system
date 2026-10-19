@@ -510,11 +510,11 @@ if (unwrapped.length === 0) {
  */
 section(7, 'المنطق داخل الصفحات — ما لا يبلغه اختبار');
 
-// ‹ASSET-101› 4235 ← 4229: وُصلت `assets-inventory` بقاعدة البيانات، وهبط
+// ‹ASSET-101› 4235 ← 4226: وُصلت `assets-inventory` بقاعدة البيانات، وهبط
 // منطقُها إلى `assetsExport.js` و`assetsView.js` و`departmentAssets.js`
-// باختباراتها — فخرجت الصفحةُ من الوصل **أخفَّ ممّا دخلت** (370 ← 368 سطرًا
+// باختباراتها — فخرجت الصفحةُ من الوصل **أخفَّ ممّا دخلت** (370 ← 365 سطرًا
 // وفيها ما لم يكن فيها)، والسقفُ ينزل معها كما هي القاعدة.
-const INLINE_LOGIC_BUDGET = 4229;
+const INLINE_LOGIC_BUDGET = 4226;
 const INLINE_LOGIC_MAX = 40;
 /** الدَّين القائم يوم وُضع الحارس (2026-08-21) — يُشطب اسمٌ كلّما هبط منطقه. */
 const INLINE_LOGIC_DEBT = new Set([
