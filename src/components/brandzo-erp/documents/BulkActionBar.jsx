@@ -141,7 +141,12 @@ export default function BulkActionBar({ selectedDocs, me, onDone, onClear, onCop
             {plan.summary}
           </p>
 
-          {plan.action.needsReason && (
+          {/* ★★★ `needsNote` لا `needsReason`: الثاني عَلَمُ `amendGuard` لوحدةٍ
+              أخرى، وقراءتُه هنا تُعطي `undefined` فلا يُرسم الحقل — بينما
+              `noteMissing` يُحسب من `needsNote` فيقفل الزرّ. فظلّ الرفضُ
+              والإغلاقُ والإلغاءُ الجماعيّ معطّلةً في الإنتاج: حارسٌ يشترط
+              حقلًا لا سبيل إلى كتابته. يحرسه `bulkActionBarWiring.test.js`. */}
+          {plan.action.needsNote && (
             <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '10px', maxWidth: '620px' }}>
               <span style={{ fontSize: 'var(--o-font-size-xs)', fontWeight: 'var(--o-font-weight-bold)' }}>
                 السبب (إلزاميّ — يُسجَّل على كلّ مستند)
