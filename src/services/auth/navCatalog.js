@@ -113,6 +113,10 @@ export const NAV_GROUPS = [
       { path: '/dashboard/order-control', label: 'الرقابة على الطلبات', icon: 'clipboardList' },
       { path: '/dashboard/retail-hub', label: 'خريطة التجزئة', icon: 'mapPin' },
       { path: '/dashboard/assets-inventory', label: 'جرد الأصول', icon: 'clipboardList' },
+      // ‹VEN-101› جردُ مخزن فينسيا — موصولٌ بقاعدة البيانات، بخلاف «جرد
+      // الأصول» أعلاه الذي يعمل في ذاكرة المتصفّح. وهو للمديرَين: تعريفُ ما
+      // يملكه المستودعُ قرارٌ إداريّ، وقاعدةُ الأمن تحدّه بهما كذلك.
+      { path: '/dashboard/venecia-assets', label: 'جرد مخزن فينسيا', icon: 'warehouse', roles: ['admin', 'warehouse_manager'] },
       // مراقبة سلسلة التبريد (IoT) وقوائم السلامة المهنية — ملحقا المرجع م-٥/٢ و م-٥/٣.
       { path: '/dashboard/cold-chain', label: 'سلسلة التبريد (IoT)', icon: 'package' },
       { path: '/dashboard/hse-checklists', label: 'قوائم السلامة (HSE)', icon: 'clipboardList' },

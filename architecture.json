@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 118,
+    "modules": 119,
     "serviceDomains": 51,
-    "serviceFiles": 645,
-    "collections": 99,
+    "serviceFiles": 650,
+    "collections": 101,
     "roles": 20,
     "odooModels": 12,
     "odooGuards": 51,
@@ -994,6 +994,14 @@
       ]
     },
     {
+      "name": "venecia-assets",
+      "route": "/dashboard/venecia-assets",
+      "title": "جرد مخزن فينسيا",
+      "summary": "جرد مخزن فينسيا ‹VEN-101› — لوحةُ المالك لأصول المخزن، موصولةً بقاعدة",
+      "file": "src/pages/dashboard/venecia-assets.astro",
+      "usesServices": []
+    },
+    {
       "name": "warehouse-identity-meeting",
       "route": "/dashboard/warehouse-identity-meeting",
       "title": "الهوية التشغيلية للمستودعات",
@@ -1137,10 +1145,15 @@
       "dir": "src/services/assets",
       "files": [
         "assetsModel.js",
-        "assetsModel.test.js"
+        "assetsModel.test.js",
+        "veneciaExport.js",
+        "veneciaExport.test.js",
+        "veneciaModel.js",
+        "veneciaModel.test.js",
+        "veneciaService.js"
       ],
-      "fileCount": 2,
-      "testCount": 1,
+      "fileCount": 7,
+      "testCount": 3,
       "exports": [
         "ASSET_CONDITIONS",
         "ASSET_ID_PREFIX",
@@ -1148,18 +1161,59 @@
         "DEPT_HEADERS",
         "GOOD_CONDITIONS",
         "MAIN_HEADERS",
+        "NEVER_COUNTED",
+        "POPULATIONS",
         "SEARCHABLE_FIELDS",
+        "UNCLASSIFIED",
+        "VENECIA_EXPORT_COLUMNS",
+        "VENECIA_WAREHOUSE",
+        "appendAssetNote",
+        "archiveVeneciaAsset",
+        "assetCategory",
+        "assetDocId",
         "assetQuantity",
         "assetStats",
+        "assetVerdict",
+        "attentionRows",
+        "buildVeneciaWorkbook",
+        "categoriesOf",
         "conditionBadgeClass",
+        "countProgress",
+        "countVariance",
+        "daysBetween",
+        "exportVeneciaAssets",
         "filterAssets",
+        "filterVenecia",
+        "importVeneciaSeed",
+        "isAssetNo",
+        "isCounted",
         "isMainSheet",
+        "isPopulation",
+        "listenAssetNotes",
+        "listenVeneciaAssets",
         "nextAssetId",
+        "nextAssetNoIn",
         "normalizeReceivedDate",
+        "parseAssetDocId",
         "parseAssetRows",
-        "resolveColumns"
+        "populationAssetType",
+        "populationLabel",
+        "rawQty",
+        "recordAssetCount",
+        "resolveColumns",
+        "restoreVeneciaAsset",
+        "saveVeneciaAsset",
+        "settleAssetCount",
+        "signedText",
+        "todayLocal",
+        "veneciaExportRows",
+        "veneciaFileName",
+        "veneciaSheetName",
+        "veneciaSnapshot"
       ],
-      "collections": []
+      "collections": [
+        "warehouse_assets"
+      ]
     },
     {
       "domain": "auth",
@@ -8598,6 +8652,70 @@
             "roles": [
               "signedIn",
               "isActive"
+            ]
+          },
+          {
+            "actions": [
+              "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "warehouse_assets",
+        "path": "warehouse_assets",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isManager() && request.resource.data.warehouse is string && request.resource.data.warehouse.size() > 0",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "notes",
+        "path": "warehouse_assets/notes",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isManager() && request.resource.data.byUid == request.auth.uid && request.resource.data.text is string && request.resource.data.text.size() > 0",
+            "roles": [
+              "isManager"
             ]
           },
           {

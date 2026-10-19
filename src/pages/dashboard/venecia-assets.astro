@@ -1,0 +1,19 @@
+---
+/**
+ * جرد مخزن فينسيا ‹VEN-101› — لوحةُ المالك لأصول المخزن، موصولةً بقاعدة
+ * البيانات (طلب 2026-10-19: «بنفس الفكرة مربوط بقاعدة البيانات»).
+ *
+ * والشاشةُ القائمة `/dashboard/assets-inventory` تبقى كما هي: تلك أصولٌ
+ * عامّةٌ لكلّ الإدارات وتعمل في الذاكرة، وهذه جردُ فينسيا في Firestore.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+// ⚠️ لا تُحذف: قواعد الثيم كلُّها تحت `.o_theme` — بلا `odoo.css` تُعرض الشاشة
+// نصًّا مرصوصًا. يحرسهما القسم ٦ من `npm run audit`.
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import VeneciaAssets from '../../components/brandzo-erp/assets/VeneciaAssets.jsx';
+---
+
+<DashboardLayout title="جرد مخزن فينسيا" light>
+  <VeneciaAssets client:load />
+</DashboardLayout>

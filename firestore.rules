@@ -1093,6 +1093,38 @@ service cloud.firestore {
       allow delete: if false; // الأصل المنتهي يُكهَّن (status) لا يُمحى.
     }
 
+    // ── جرد أصول المستودعات (لوحة فينسيا) ───────────────────────────────
+    // مجموعةٌ **ثانيةٌ عن قصد** لا توسيعٌ لـ`assets` أعلاه: تلك مجموعةُ
+    // الصيانة، يكتبها دورُ الحركة (`isFleetWriter`) ويقرؤها أمرُ الشغل.
+    // وجردُ المخزن خشبٌ وإسمنتٌ وثلاجاتٌ لا تُفتح لها أوامرُ شغل، وإقحامُها
+    // هناك يُفسد أوامرَ الشغل كما كان إقحامُ الطبالي يُفسد `stock_moves`.
+    //
+    // والكتابةُ للمديرَين: تعريفُ ما يملكه المستودعُ قرارٌ إداريّ، ومعرّفُ
+    // المستند `<المجموعة>-<الرقم>` لأنّ ملفَّي الجرد يحملان نفسَ الأرقام
+    // لأصولٍ مختلفة (ثلاثون رقمًا متصادمًا — قِيس 2026-10-19).
+    //
+    // ★ ولا حذفَ أبدًا: الأصلُ الخارجُ **يُكهَّن** (`archived` بسببٍ مكتوب).
+    // فالرقمُ مطبوعٌ على شيءٍ كان في المخزن، ومحوُه يجعل جردًا قديمًا يذكر
+    // ما لا وجودَ له.
+    match /warehouse_assets/{assetKey} {
+      allow read: if signedIn();
+      allow create, update: if isManager()
+                    && request.resource.data.warehouse is string
+                    && request.resource.data.warehouse.size() > 0;
+      allow delete: if false;
+
+      // سجلُّ الملاحظات والجرد — **ملحقٌ-فقط** كالمجموعات المقدّسة: من كتب
+      // ملاحظةً يبقى قولُه بتاريخه واسمه، ومن خالفه يكتب سطرًا ثانيًا.
+      match /notes/{noteId} {
+        allow read: if signedIn();
+        allow create: if isManager()
+                      && request.resource.data.byUid == request.auth.uid
+                      && request.resource.data.text is string
+                      && request.resource.data.text.size() > 0;
+        allow update, delete: if false;
+      }
+    }
+
     match /work_orders/{woId} {
       allow read: if signedIn();
       allow create: if isFleetWriter()
