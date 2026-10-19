@@ -52,6 +52,8 @@ import {
   todayLocal,
 } from '../../../services/assets/veneciaService.js';
 import { exportVeneciaAssets } from '../../../services/assets/veneciaExport.js';
+import { listenVeneciaCards } from '../../../services/assets/veneciaCardsService.js';
+import VeneciaReport from './VeneciaReport.jsx';
 import seed from '../../../data/venecia-assets-seed.json';
 
 /** أرقامٌ لاتينيّةٌ دائمًا — قاعدةُ البوّابة. */
@@ -119,6 +121,9 @@ const inputCls =
 export default function VeneciaAssets() {
   const [profile, setProfile] = useState(null);
   const [assets, setAssets] = useState([]);
+  // بطاقاتُ الحركة تُقرأ هنا **للتقرير وحدَه** — واللوحةُ لا تعرضها،
+  // فتقريرٌ عن مستودعٍ لا يذكر ما خرج منه ودخل إليه تقريرٌ ناقص.
+  const [cards, setCards] = useState([]);
   const [pending, setPending] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState('');
@@ -173,6 +178,8 @@ export default function VeneciaAssets() {
     []
   );
 
+  useEffect(() => listenVeneciaCards(setCards, () => setCards([])), []);
+
   useEffect(() => {
     if (!openId) return setNotes([]);
     return listenAssetNotes(openId, setNotes, () => setNotes([]));
@@ -197,6 +204,31 @@ export default function VeneciaAssets() {
       ),
     [rows]
   );
+
+  /**
+   * مسارُ الأصول المنشور — تحتاجه مكتبةُ إكسل المستضافةُ ذاتيًّا.
+   * ★ ويُقرأ **محروسًا**: `import.meta.env` تحقنها أداةُ البناء، وقراءةٌ
+   * مباشرةٌ تُسقط **الشاشة كلَّها** حيث لا تُحقن — وزرُّ تقريرٍ
+   * لا يستأهل أن يأخذ الجردَ معه.
+   */
+  const base = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) || '/';
+
+  /**
+   * ★ التقريرُ يقول نطاقَه وتصفياتِه صراحةً — فملفٌّ يُرسل عن جزءٍ من الجرد
+   * ولا يقول إنّه جزءٌ يُقرأ على أنّه الكلّ.
+   */
+  const activeFilters = useMemo(() => {
+    const f = [];
+    if (q.trim()) f.push({ label: 'بحث', value: q.trim() });
+    if (population) f.push({ label: 'المجموعة', value: populationLabel(population) });
+    if (category) f.push({ label: 'التصنيف', value: category });
+    if (condition) f.push({ label: 'الحالة', value: condition });
+    if (uncountedOnly) f.push({ label: 'ما لم يُجرَد فقط', value: 'نعم' });
+    if (includeArchived) f.push({ label: 'يشمل المكهَّن', value: 'نعم' });
+    return f;
+  }, [q, population, category, condition, uncountedOnly, includeArchived]);
+
+  const scopeText = activeFilters.length ? 'الجردُ بعد التصفية' : 'الجرد كاملًا';
 
   /** يُشغّل عملًا سحابيًّا ويقول نتيجته — والخطأُ يُعرض بنصّه لا يُبتلع. */
   async function run(label, fn, done) {
@@ -448,6 +480,15 @@ export default function VeneciaAssets() {
           </span>
         </div>
       </section>
+
+      {/* ═══ التقريرُ المنسَّق — إكسل وPDF من مصدرٍ واحد ═══ */}
+      <VeneciaReport
+        assets={assets}
+        cards={cards}
+        baseUrl={base}
+        scope={scopeText}
+        filters={activeFilters}
+      />
 
       {/* ═══ نموذجُ الإضافة والتعديل ═══ */}
       {form && (
