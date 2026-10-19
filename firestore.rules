@@ -1125,6 +1125,36 @@ service cloud.firestore {
       }
     }
 
+    // ── بطاقاتُ حركة مستودع فينسيا: صرفٌ وإدخال ──────────────────────────
+    // فينسيا مستودعٌ قائمٌ بذاته: يُصرف منه ويُدخَل إليه ويُجرَد (قرار المالك
+    // 2026-10-19). والبطاقةُ سندٌ بعدّة بنود: مسودّةٌ تُحرَّر وتُلغى بلا أثر،
+    // ثمّ تثبيتٌ يُحرّك الكمّيّات في **معاملةٍ ذرّيّةٍ واحدة** مع أصولها.
+    //
+    // ★★★ والمثبَّتةُ لا تُعدَّل ولا تُلغى: الحارسُ يُجمّد حقولَها كلَّها
+    // بعد التثبيت. فبطاقةُ صرفٍ خرجت بضاعتُها، وتعديلُها بعدها كذبٌ على
+    // الرصيد — والتصحيحُ ببطاقةٍ مضادّةٍ في الاتّجاه الآخر تُقيَّد بسببها.
+    //
+    // ★ ورقمُها يُحجز من عدّاد `counters` كبقيّة سندات البوّابة، و
+    // `canReserveNumber()` يشمل المديرَين عبر `isStockActor` — فلا قاعدةَ
+    // جديدةٌ للعدّاد.
+    match /warehouse_cards/{cardId} {
+      allow read: if signedIn();
+      allow create: if isManager()
+                    && request.resource.data.warehouse is string
+                    && request.resource.data.warehouse.size() > 0
+                    && request.resource.data.kind in ['issue', 'receipt']
+                    && request.resource.data.state == 'draft'
+                    && request.resource.data.number == '';
+      // التعديلُ من المسودّة وحدَها، والاتّجاهُ لا يُقلب بعد الإنشاء:
+      // بطاقةٌ تُكتب صرفًا ثمّ تُقلب إدخالًا تُحرّك الرصيدَ عكسَ ما رآه من
+      // راجعها.
+      allow update: if isManager()
+                    && resource.data.state == 'draft'
+                    && request.resource.data.kind == resource.data.kind
+                    && request.resource.data.warehouse == resource.data.warehouse;
+      allow delete: if false;
+    }
+
     match /work_orders/{woId} {
       allow read: if signedIn();
       allow create: if isFleetWriter()

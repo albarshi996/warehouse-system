@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 119,
+    "modules": 120,
     "serviceDomains": 51,
-    "serviceFiles": 650,
-    "collections": 101,
+    "serviceFiles": 653,
+    "collections": 102,
     "roles": 20,
     "odooModels": 12,
     "odooGuards": 51,
@@ -1002,6 +1002,14 @@
       "usesServices": []
     },
     {
+      "name": "venecia-cards",
+      "route": "/dashboard/venecia-cards",
+      "title": "بطاقات حركة مخزن فينسيا",
+      "summary": "بطاقات حركة مخزن فينسيا ‹VEN-201› — صرفٌ وإدخال (طلب المالك 2026-10-19:",
+      "file": "src/pages/dashboard/venecia-cards.astro",
+      "usesServices": []
+    },
+    {
       "name": "warehouse-identity-meeting",
       "route": "/dashboard/warehouse-identity-meeting",
       "title": "الهوية التشغيلية للمستودعات",
@@ -1146,18 +1154,23 @@
       "files": [
         "assetsModel.js",
         "assetsModel.test.js",
+        "veneciaCards.js",
+        "veneciaCards.test.js",
+        "veneciaCardsService.js",
         "veneciaExport.js",
         "veneciaExport.test.js",
         "veneciaModel.js",
         "veneciaModel.test.js",
         "veneciaService.js"
       ],
-      "fileCount": 7,
-      "testCount": 3,
+      "fileCount": 10,
+      "testCount": 4,
       "exports": [
         "ASSET_CONDITIONS",
         "ASSET_ID_PREFIX",
         "BAD_CONDITIONS",
+        "CARD_KINDS",
+        "CARD_STATES",
         "DEPT_HEADERS",
         "GOOD_CONDITIONS",
         "MAIN_HEADERS",
@@ -1176,6 +1189,16 @@
         "assetVerdict",
         "attentionRows",
         "buildVeneciaWorkbook",
+        "canTransitionCard",
+        "cancelCard",
+        "cardEffectText",
+        "cardKind",
+        "cardKindLabel",
+        "cardNoteLine",
+        "cardStateLabel",
+        "cardTotals",
+        "cardVerdict",
+        "cardsSnapshot",
         "categoriesOf",
         "conditionBadgeClass",
         "countProgress",
@@ -1183,25 +1206,36 @@
         "daysBetween",
         "exportVeneciaAssets",
         "filterAssets",
+        "filterCards",
         "filterVenecia",
         "importVeneciaSeed",
         "isAssetNo",
+        "isCardKind",
         "isCounted",
         "isMainSheet",
         "isPopulation",
+        "lineAssetKey",
         "listenAssetNotes",
         "listenVeneciaAssets",
+        "listenVeneciaCards",
+        "movementByAsset",
         "nextAssetId",
         "nextAssetNoIn",
+        "normalizeCardLine",
         "normalizeReceivedDate",
+        "oppositeKind",
         "parseAssetDocId",
         "parseAssetRows",
         "populationAssetType",
         "populationLabel",
+        "postCard",
+        "qtyAfterCard",
         "rawQty",
         "recordAssetCount",
         "resolveColumns",
         "restoreVeneciaAsset",
+        "reverseCard",
+        "saveCardDraft",
         "saveVeneciaAsset",
         "settleAssetCount",
         "signedText",
@@ -1212,7 +1246,8 @@
         "veneciaSnapshot"
       ],
       "collections": [
-        "warehouse_assets"
+        "warehouse_assets",
+        "warehouse_cards"
       ]
     },
     {
@@ -8721,6 +8756,46 @@
           {
             "actions": [
               "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "warehouse_cards",
+        "path": "warehouse_cards",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isManager() && request.resource.data.warehouse is string && request.resource.data.warehouse.size() > 0 && request.resource.data.kind in ['issue', 'receipt'] && ",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "isManager() && resource.data.state == 'draft' && request.resource.data.kind == resource.data.kind && request.resource.data.warehouse == resource.data.warehouse",
+            "roles": [
+              "isManager"
+            ]
+          },
+          {
+            "actions": [
               "delete"
             ],
             "condition": "false",

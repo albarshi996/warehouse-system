@@ -1,0 +1,19 @@
+---
+/**
+ * بطاقات حركة مخزن فينسيا ‹VEN-201› — صرفٌ وإدخال (طلب المالك 2026-10-19:
+ * «مستودعٌ خاصٌّ يمكن الصرفُ منه وإدخالُ بضاعةٍ وتعديل»).
+ *
+ * شاشةٌ مستقلّةٌ عن لوحة الجرد بقرار البوّابة «صفحةُ الجرد للجرد»: تلك
+ * تعرّف ما يملكه المستودع، وهذه تُحرّكه.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+// ⚠️ لا تُحذف: قواعد الثيم كلُّها تحت `.o_theme` — بلا `odoo.css` تُعرض الشاشة
+// نصًّا مرصوصًا. يحرسهما القسم ٦ من `npm run audit`.
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import VeneciaCards from '../../components/brandzo-erp/assets/VeneciaCards.jsx';
+---
+
+<DashboardLayout title="بطاقات حركة مخزن فينسيا" light>
+  <VeneciaCards client:load />
+</DashboardLayout>
