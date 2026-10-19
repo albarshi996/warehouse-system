@@ -44,6 +44,7 @@ import {
   canTransitionCard,
   lineAssetKey,
   normalizeCardLine,
+  qtyAfterCard,
 } from './veneciaCards.js';
 import { todayLocal } from './veneciaService.js';
 
@@ -244,10 +245,15 @@ export async function postCard(docId, profile) {
           updatedByUid: who.byUid,
         });
       } else {
+        // ★★★ الحسابُ بـ`qtyAfterCard` لا بيدٍ هنا — وهي تحمل حارسَها:
+        // ترفض ما يُنزل الرصيدَ دون صفر. وكان السطرُ يحسب `qty + sign*n`
+        // مباشرةً، فبقيت الدالّةُ المختبَرةُ **بلا مستدعٍ** حتّى هزّتها
+        // شجرةُ البناء من الحِزمة المنشورة — وكُشف ذلك بتفتيش النشرة الحيّة.
+        // والحمايةُ الآن طبقتان: حكمُ المعاملة، ثمّ الحسابُ نفسُه.
         tx.set(
           ref,
           {
-            qty: rawQty(existing.qty) + kind.sign * l.qty,
+            qty: qtyAfterCard(existing, l.qty, card.kind),
             updatedAt: serverTimestamp(),
             updatedBy: who.byName,
             updatedByUid: who.byUid,

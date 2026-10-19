@@ -7,6 +7,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   CARD_KINDS,
@@ -292,6 +293,18 @@ test('التصفية: بحثٌ حرٌّ واتّجاهٌ وحالةٌ ومدى �
   assert.equal(filterCards(cards, { q: 'خشب' }).length, 2, 'والبحثُ يبلغ أسماءَ البنود');
   assert.equal(filterCards(cards, { from: '2026-10-10' }).length, 1);
   assert.equal(filterCards(cards, { to: '2026-10-10' }).length, 1);
+});
+
+// ── مرساةُ الاستدعاء ─────────────────────────────────────────────────────
+
+test('★★★ والخدمةُ تحسب الكمّيّة بـ`qtyAfterCard` لا بيدها — مرساةٌ على «منطقٌ بلا مستدعٍ»', () => {
+  const src = readFileSync(new URL('./veneciaCardsService.js', import.meta.url), 'utf8');
+  assert.ok(/qtyAfterCard\s*\(/.test(src), 'الخدمةُ لا تستدعي الحارسَ — ستُهزّ الدالّةُ من الحزمة');
+  // وحسابٌ يدويٌّ بالإشارة يعني أنّ الحارسَ التُفَّ عليه ولو بقي مستدعًى.
+  assert.ok(
+    !/qty:\s*rawQty\([^)]*\)\s*\+\s*kind\.sign/.test(src),
+    'عاد الحسابُ اليدويُّ `rawQty(...) + kind.sign * n` — وهو يتجاوز رفضَ الرصيد السالب'
+  );
 });
 
 test('وحركةُ كلّ أصلٍ تُجمَع من المثبَّت وحدَه، صرفًا وإدخالًا', () => {
