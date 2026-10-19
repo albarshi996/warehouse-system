@@ -65,6 +65,33 @@ service cloud.firestore {
              (signedIn() && hasProfile() && isActive() && myRole() in ['admin', 'warehouse_manager', 'fleet']);
     }
 
+    // ── كاتبو جرد أصول الإدارات ‹ASSET-101› ──────────────────────────────
+    // **هذه القائمةُ مقيسةٌ لا مُختارة**: هي بعينها الأدوارُ الثمانيةُ التي
+    // ترى `/dashboard/assets-inventory` اليوم (البندُ بلا `roles` فيَرِثُ من
+    // يرى مجموعةَ `warehouses` في `navCatalog.js` × `ROLE_NAV`).
+    //
+    // ★★★ ولماذا الثمانيةُ لا المديرَان؟ الشاشةُ تعمل منذ اليوم الأوّل في
+    // ذاكرة المتصفّح، فثمانيةُ أدوارٍ تُدخل فيها ويضيع ما تُدخله. فحصرُها
+    // بالمديرَين **عند وصلها بالقاعدة انتزاعٌ صامتٌ من ستّة** — وقاعدةُ
+    // المشروع «يُضاف ولا يُنتزع» (نمط ‹RB-201›: تُذكر الأدوارُ التي كانت
+    // تراه بعينها لا قائمةٌ أضيق).
+    //
+    // ★★ ولا `isStockActor`: يضمُّ سبعةً من الثمانية (ينقصه الشيف) **ويضيف
+    // سبعةً لا ترى الشاشةَ أصلًا** (الجودةُ والبوّابةُ والمشترياتُ والحركةُ
+    // والوحداتُ الثلاث) — فحارسٌ أسخى من الشاشة يفتح ما لم يُقَس.
+    //
+    // ⚠️ **وهذا هو السطرُ الذي يراجعه المالك**: إن كان تعريفُ أصول الشركة
+    // قرارًا إداريًّا كتعريف أصول المستودع (`warehouse_assets` ← `isManager`)
+    // فالتغييرُ سطرٌ واحد، ولا بياناتَ تُفقد.
+    function isAssetWriter() {
+      return isBootstrapAdmin() ||
+             (signedIn() && hasProfile() && isActive() && myRole() in [
+               'admin', 'warehouse_manager', 'storekeeper', 'scm_manager',
+               'finance_manager', 'return_manager', 'inventory_auditor',
+               'executive_chef'
+             ]);
+    }
+
     // مشرفو المناولة: دور «مشرف المناولة» + المديرَان — يديرون فرق عمالة
     // الشحن/التفريغ ومهامها الزمنيّة (المحور الثاني).
     function isLaborWriter() {
@@ -1123,6 +1150,46 @@ service cloud.firestore {
       match /notes/{noteId} {
         allow read: if signedIn();
         allow create: if isManager()
+                      && request.resource.data.byUid == request.auth.uid
+                      && request.resource.data.text is string
+                      && request.resource.data.text.size() > 0;
+        allow update, delete: if false;
+      }
+    }
+
+    // ── جردُ أصول الإدارات ‹ASSET-101› ───────────────────────────────────
+    // **مجموعةٌ ثالثةٌ عن قصد** لا توسيعٌ لما سبق، وثلاثتُها تقرأ معًا هنا:
+    //   `assets`           → أصولُ الصيانة، يكتبها دورُ الحركة ويقرؤها أمرُ الشغل.
+    //   `warehouse_assets` → ما يملكه **مستودعٌ بعينه**، وقاعدتُها تُلزم `warehouse`.
+    //   `department_assets`→ أصولُ **الإدارات كلِّها** (شاشةُ `assets-inventory`).
+    //
+    // ★★★ ولماذا ثالثةٌ؟ حاسوبُ الموارد البشريّة **لا مستودعَ له**، فوصلُ
+    // الشاشة بـ`warehouse_assets` يكتب في حقلٍ إلزاميٍّ قيمةً مخترَعة — وهو
+    // بعينه ما يُحذّر منه تعليقُ تلك المجموعة أعلاه: الإقحامُ يُفسد قارئَ
+    // المجموعة كما كان إقحامُ الطبالي يُفسد `stock_moves`. وحقلُ `department`
+    // إلزاميٌّ في هذه الشاشة أصلًا، فهو محورُها الطبيعيّ.
+    //
+    // ★★ والمعرّفُ رقمُ الأصل وحدَه (`BRZ-0001`) — سجلٌّ واحدٌ للشركة
+    // و`nextAssetId` تُوزّع أرقامَه من تسلسلٍ واحد. بخلاف فينسيا: تلك
+    // مجموعتان لكلٍّ تسلسلُها فتصادم فيها ثلاثون رقمًا، فاحتاجت
+    // `<المجموعة>-<الرقم>`. والصيغتان **لا تتصادمان** على أيّ حال.
+    //
+    // ★ ولا حذفَ أبدًا: الأصلُ الخارجُ **يُكهَّن** (`archived` بسببٍ مكتوب).
+    // فالرقمُ مطبوعٌ على شيءٍ كان في الإدارة، ومحوُه يجعل جردًا قديمًا يذكر
+    // ما لا وجودَ له.
+    match /department_assets/{assetKey} {
+      allow read: if signedIn();
+      allow create, update: if isAssetWriter()
+                    && request.resource.data.assetName is string
+                    && request.resource.data.assetName.size() > 0
+                    && request.resource.data.department is string
+                    && request.resource.data.department.size() > 0;
+      allow delete: if false;
+
+      // سجلُّ الملاحظات — **ملحقٌ-فقط** كالمجموعات المقدّسة.
+      match /notes/{noteId} {
+        allow read: if signedIn();
+        allow create: if isAssetWriter()
                       && request.resource.data.byUid == request.auth.uid
                       && request.resource.data.text is string
                       && request.resource.data.text.size() > 0;

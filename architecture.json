@@ -11,9 +11,9 @@
   "counts": {
     "modules": 120,
     "serviceDomains": 51,
-    "serviceFiles": 658,
-    "collections": 102,
-    "roles": 20,
+    "serviceFiles": 665,
+    "collections": 104,
+    "roles": 21,
     "odooModels": 12,
     "odooGuards": 51,
     "infraNodes": 6,
@@ -64,10 +64,11 @@
       "name": "assets-inventory",
       "route": "/dashboard/assets-inventory",
       "title": "Brandzo — جرد الأصول",
-      "summary": "",
+      "summary": "يُخفي أدواتَ الكتابة عمّن لا يملكها.",
       "file": "src/pages/dashboard/assets-inventory.astro",
       "usesServices": [
         "assets",
+        "auth",
         "ui"
       ]
     },
@@ -1152,8 +1153,15 @@
       "domain": "assets",
       "dir": "src/services/assets",
       "files": [
+        "assetsExport.js",
+        "assetsExport.test.js",
         "assetsModel.js",
         "assetsModel.test.js",
+        "assetsView.js",
+        "assetsView.test.js",
+        "departmentAssets.js",
+        "departmentAssets.test.js",
+        "departmentAssetsService.js",
         "veneciaCards.js",
         "veneciaCards.test.js",
         "veneciaCardsService.js",
@@ -1168,18 +1176,25 @@
         "veneciaReportExcel.js",
         "veneciaService.js"
       ],
-      "fileCount": 15,
-      "testCount": 6,
+      "fileCount": 22,
+      "testCount": 9,
       "exports": [
         "ASSET_CONDITIONS",
         "ASSET_ID_PREFIX",
+        "ASSET_NO_RE",
         "BAD_CONDITIONS",
         "CARD_KINDS",
         "CARD_REPORT_COLUMNS",
         "CARD_STATES",
         "DEPT_HEADERS",
+        "EXPORT_HEADERS_DEPT",
+        "EXPORT_HEADERS_MAIN",
+        "EXPORT_WIDTHS_MAIN",
+        "FORM_FIELDS",
         "GOOD_CONDITIONS",
+        "IMPORT_EXTENSIONS",
         "MAIN_HEADERS",
+        "MAIN_SHEET",
         "NEVER_COUNTED",
         "NUMERIC_COLUMNS",
         "PHOTO_KIND",
@@ -1187,18 +1202,27 @@
         "POPULATIONS",
         "REPORT_TITLE",
         "SEARCHABLE_FIELDS",
+        "SKIP_SHEETS",
         "UNCLASSIFIED",
         "VENECIA_ENTITY_KIND",
         "VENECIA_EXPORT_COLUMNS",
         "VENECIA_WAREHOUSE",
         "appendAssetNote",
+        "archiveDepartmentAsset",
         "archiveVeneciaAsset",
+        "archiveVerdict",
+        "archivedTag",
+        "archivedWhy",
         "assetCategory",
         "assetDocId",
+        "assetDocKey",
+        "assetFingerprint",
         "assetPhotoPatch",
+        "assetPrintModel",
         "assetQuantity",
         "assetStats",
         "assetVerdict",
+        "assetWorkbookModel",
         "attentionRows",
         "buildReportWorkbook",
         "buildVeneciaReport",
@@ -1213,20 +1237,31 @@
         "cardStateLabel",
         "cardTotals",
         "cardVerdict",
+        "cardsHtml",
         "cardsSnapshot",
         "categoriesOf",
+        "cloudChipState",
+        "conditionBadge",
         "conditionBadgeClass",
+        "conditionCounts",
+        "countBy",
+        "countLineHtml",
         "countProgress",
         "countVariance",
         "daysBetween",
+        "deptBarsHtml",
+        "deptRow",
+        "describeImportPlan",
         "duplicateOf",
         "encodedVerdict",
+        "exportFileName",
         "exportVeneciaAssets",
         "exportVeneciaReportExcel",
         "filterAssets",
         "filterCards",
         "filterVenecia",
         "fitWithin",
+        "importDepartmentAssets",
         "importVeneciaSeed",
         "isAssetNo",
         "isCardKind",
@@ -1235,9 +1270,12 @@
         "isPopulation",
         "lineAssetKey",
         "listenAssetNotes",
+        "listenDepartmentAssets",
         "listenVeneciaAssets",
         "listenVeneciaCards",
         "loadSheetLib",
+        "mainRow",
+        "missingFormFields",
         "movementByAsset",
         "nextAssetId",
         "nextAssetNoIn",
@@ -1249,30 +1287,45 @@
         "photoPayload",
         "photoSummary",
         "photoVerdict",
+        "planAssetImport",
         "populationAssetType",
         "populationLabel",
         "postCard",
+        "printRowsHtml",
         "qtyAfterCard",
         "quotaEstimate",
         "rawQty",
+        "readAssetFiles",
+        "readErrorMessage",
+        "reasonModalCopy",
         "recordAssetCount",
         "reportFileName",
         "resolveColumns",
+        "restoreDepartmentAsset",
         "restoreVeneciaAsset",
         "reverseCard",
+        "rowActions",
         "saveCardDraft",
+        "saveDepartmentAsset",
         "saveVeneciaAsset",
         "setAssetPhotoBadge",
         "settleAssetCount",
         "signedText",
+        "splitArchived",
+        "splitImportFiles",
+        "tableRowsHtml",
         "thumbVerdict",
         "todayLocal",
+        "totalQty",
         "veneciaExportRows",
         "veneciaFileName",
         "veneciaSheetName",
-        "veneciaSnapshot"
+        "veneciaSnapshot",
+        "workbookToAssetRows",
+        "writeErrorMessage"
       ],
       "collections": [
+        "department_assets",
         "warehouse_assets",
         "warehouse_cards"
       ]
@@ -5455,6 +5508,7 @@
       "hasProfile",
       "isActive",
       "isAdmin",
+      "isAssetWriter",
       "isBootstrapAdmin",
       "isCountAssignee",
       "isCreator",
@@ -5486,6 +5540,7 @@
       "immutableKept",
       "isActive",
       "isAdmin",
+      "isAssetWriter",
       "isBootstrapAdmin",
       "isCountAssignee",
       "isCreator",
@@ -6138,6 +6193,70 @@
           },
           {
             "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "department_assets",
+        "path": "department_assets",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create",
+              "update"
+            ],
+            "condition": "isAssetWriter() && request.resource.data.assetName is string && request.resource.data.assetName.size() > 0 && request.resource.data.department is string && requ",
+            "roles": [
+              "isAssetWriter"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "notes",
+        "path": "department_assets/notes",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "isAssetWriter() && request.resource.data.byUid == request.auth.uid && request.resource.data.text is string && request.resource.data.text.size() > 0",
+            "roles": [
+              "isAssetWriter"
+            ]
+          },
+          {
+            "actions": [
+              "update",
               "delete"
             ],
             "condition": "false",
