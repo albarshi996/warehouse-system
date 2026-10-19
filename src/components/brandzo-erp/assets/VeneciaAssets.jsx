@@ -54,6 +54,7 @@ import {
 import { exportVeneciaAssets } from '../../../services/assets/veneciaExport.js';
 import { listenVeneciaCards } from '../../../services/assets/veneciaCardsService.js';
 import VeneciaReport from './VeneciaReport.jsx';
+import VeneciaPhotos from './VeneciaPhotos.jsx';
 import seed from '../../../data/venecia-assets-seed.json';
 
 /** أرقامٌ لاتينيّةٌ دائمًا — قاعدةُ البوّابة. */
@@ -760,6 +761,9 @@ export default function VeneciaAssets() {
             </div>
           </div>
 
+          {/* ★ الصورُ — مستمعُها هنا لا في اللوحة، فلا تُقرأ إلّا ولوحُ الأصل مفتوح. */}
+          <VeneciaPhotos asset={open} canWrite={canWrite} profile={profile} assetsCount={assets.length} />
+
           {/* التكهين */}
           <div className="rounded-lg border border-line p-3 space-y-2">
             <div className="font-bold text-[13px] text-ink flex items-center gap-1.5">
@@ -874,6 +878,7 @@ export default function VeneciaAssets() {
               setArchiveDraft('');
             }}
             columns={[
+              { key: 'thumb', label: '', width: '44px' },
               { key: 'no', label: 'رقم الأصل', width: '110px' },
               { key: 'name', label: 'اسم الأصل' },
               { key: 'pop', label: 'المجموعة', width: '110px' },
@@ -891,6 +896,16 @@ export default function VeneciaAssets() {
                 id: a.docId,
                 decoration: a.archived ? 'muted' : undefined,
                 cells: {
+                  // ★ المصغَّرةُ من السجلّ نفسِه (≤ ٨ ك.ب) — لا قراءةَ مرفقاتٍ للقائمة.
+                  thumb: a.thumbPhoto ? (
+                    <img
+                      src={a.thumbPhoto}
+                      alt=""
+                      style={{ width: 28, height: 28, objectFit: 'cover', borderRadius: 4, display: 'block' }}
+                    />
+                  ) : (
+                    <span className="text-muted text-[10px]">—</span>
+                  ),
                   no: <span className="font-mono text-[11px]">{a.id}</span>,
                   name: (
                     <span className={a.archived ? 'text-muted line-through' : ''}>{a.assetName}</span>

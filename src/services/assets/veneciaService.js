@@ -35,6 +35,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
+import { assetPhotoPatch } from './veneciaPhotos.js';
 import {
   VENECIA_WAREHOUSE,
   assetDocId,
@@ -358,4 +359,24 @@ export async function importVeneciaSeed(seedAssets, profile) {
     await batch.commit();
   }
   return { written: missing.length, skipped: rows.length - missing.length };
+}
+
+/**
+ * يُحدّث **بصمةَ الصور** على سجلّ الأصل: مصغَّرةٌ صغيرةٌ جدًّا وعددٌ.
+ *
+ * ★★★ وهذا الحقلان وحدَهما ما يسكن السجلّ من أمر الصور — والصورُ كلُّها في
+ * `entity_attachments` لا تُقرأ إلّا عند فتح لوح الأصل. فاللوحةُ تستمع إلى
+ * الأصول كلِّها باستمرار، وصورةٌ على السجلّ تُنزَّل في كلّ لقطةٍ لكلّ
+ * مستخدم. والمصغَّرةُ محروسةٌ بـ`assetPhotoPatch`: ما تجاوز ثمانيةَ
+ * كيلوبايت يُكتب فراغًا ولا يُخزَّن.
+ */
+export async function setAssetPhotoBadge(docId, { photos, thumbDataUrl = '' }, profile) {
+  const who = whoami(profile);
+  const patch = assetPhotoPatch(photos, thumbDataUrl);
+  await setDoc(
+    doc(db, ASSETS, docId),
+    { ...patch, updatedAt: serverTimestamp(), updatedBy: who.byName, updatedByUid: who.byUid },
+    { merge: true }
+  );
+  return patch;
 }

@@ -767,7 +767,12 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create: if signedIn()
                     && request.resource.data.byUid == request.auth.uid
-                    && request.resource.data.entityKind in ['item', 'supplier', 'customer']
+                    // ‹VEN-401› `venecia_asset` — صورُ أصول مخزن فينسيا.
+                    // ★★★ والصورةُ **لا تسكن سجلَّ الأصل**: لوحةُ الجرد تستمع
+                    // إلى الأصول كلِّها باستمرار، فصورةٌ على السجلّ تُنزَّل في
+                    // كلّ لقطةٍ لكلّ مستخدم (٧٠٠ ك.ب × ١٠٤ ≈ ٧٣ م.ب لكلّ فتحة).
+                    // فهي هنا، وتُقرأ عند فتح لوح الأصل وحدَه.
+                    && request.resource.data.entityKind in ['item', 'supplier', 'customer', 'venecia_asset']
                     && request.resource.data.entityId is string
                     && request.resource.data.entityId != '';
       allow update, delete: if false;
