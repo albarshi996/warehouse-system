@@ -24,6 +24,7 @@
  */
 import { backendNameFrom, pickBackend } from './backend.js';
 import * as firestore from './firestore.js';
+import * as postgres from './postgres.js';
 
 /**
  * بيئةُ البناء. يملؤها Astro وقتَ البناء ولا وجودَ لها في Node العاري —
@@ -31,8 +32,14 @@ import * as firestore from './firestore.js';
  */
 const ENV = (typeof import.meta !== 'undefined' && import.meta.env) || {};
 
-/** المحوّلاتُ المتاحة. يُضاف `postgres` هنا حين يجهز — سطرٌ واحد. */
-const BACKENDS = { firestore };
+/**
+ * المحوّلاتُ المتاحة.
+ *
+ * ★ و`postgres` **هجينٌ لا بديل**: يقرأ المنسوخَ من قاعدتنا ويمرّر ما سواه
+ *   إلى Firebase، والكتابةُ كلُّها تبقى هناك. فاختيارُه لا يقطع شيئًا —
+ *   ولهذا جاز أن يُسجَّل هنا قبل أن تكتمل الهجرةُ كلُّها.
+ */
+const BACKENDS = { firestore, postgres };
 
 /** اسمُ المحوَّل العامل — يُقرأ في التشخيص. */
 export const BACKEND = backendNameFrom(ENV);

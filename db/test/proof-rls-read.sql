@@ -164,6 +164,37 @@ BEGIN
 END $$;
 
 
+\echo ''
+\echo '════ ٥ · طزاجةُ المرآة — سؤالٌ مفتوحٌ لمن دخل، مغلقٌ على المجهول ════'
+
+DO $$
+DECLARE n bigint; neg bigint;
+BEGIN
+  -- ★ الهجينُ كلُّه معلَّقٌ على هذا: مستخدمٌ عاديٌّ لا يستطيع أن يسأل عن
+  --   الطزاجة ⟵ يسقط إلى Firebase دائمًا ⟵ فلا هجينَ ولا حلَّ للحصّة.
+  IF NOT has_function_privilege('web_user', 'public.mirror_freshness()', 'EXECUTE') THEN
+    RAISE EXCEPTION '  ✘ web_user لا يملك سؤالَ الطزاجة — الهجينُ معطَّلٌ لغير المدير';
+  END IF;
+  RAISE NOTICE '  ✔ web_user يسأل عن طزاجة المرآة';
+
+  -- والنقض: المجهولُ لا يسأل. وإغفالُ REVOKE من PUBLIC يُسقط هذا السطرَ.
+  IF has_function_privilege('web_anon', 'public.mirror_freshness()', 'EXECUTE') THEN
+    RAISE EXCEPTION '  ✘ web_anon يسأل عن الطزاجة — البابُ مفتوحٌ للمجهول';
+  END IF;
+  IF has_function_privilege('authenticator', 'public.mirror_freshness()', 'EXECUTE') THEN
+    RAISE EXCEPTION '  ✘ authenticator يسأل عن الطزاجة — ودورُ الاتّصال بلا صلاحيّة';
+  END IF;
+  RAISE NOTICE '  ✔ والمجهولُ ودورُ الاتّصال ممنوعان — بالنقض';
+
+  -- والجواب نفسُه: صفٌّ لكلّ مسارٍ يُزامَن، وعمرٌ لا يكون سالبًا.
+  SELECT count(*) INTO n FROM mirror_freshness();
+  IF n < 1 THEN RAISE EXCEPTION '  ✘ سؤالُ الطزاجة يُعيد لا شيء'; END IF;
+  SELECT count(*) INTO neg FROM mirror_freshness() WHERE age_seconds < 0;
+  IF neg <> 0 THEN RAISE EXCEPTION '  ✘ % مسارًا بعمرٍ سالب', neg; END IF;
+  RAISE NOTICE '  ✔ % مسارًا بعمرٍ مقروء، ولا عمرَ سالب', n;
+END $$;
+
+
 ROLLBACK;
 
 \echo ''
