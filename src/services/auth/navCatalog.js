@@ -113,6 +113,10 @@ export const NAV_GROUPS = [
       { path: '/dashboard/order-control', label: 'الرقابة على الطلبات', icon: 'clipboardList' },
       { path: '/dashboard/retail-hub', label: 'خريطة التجزئة', icon: 'mapPin' },
       { path: '/dashboard/assets-inventory', label: 'جرد الأصول', icon: 'clipboardList' },
+      // ‹WH-501› منظارُ إدارة المستودعات: أصولُها من `department_assets`
+      // وعهدُها من `custodies` في شاشةٍ واحدة — ولا سجلَّ رابعًا. للمديرَين:
+      // تعديلُ تفاصيل المعدّة قرارٌ إداريّ، وقاعدةُ الأمن تحدّهما كذلك.
+      { path: '/dashboard/wh-department-assets', label: 'أصول إدارة المستودعات', icon: 'wrench', roles: ['admin', 'warehouse_manager'] },
       // ‹VEN-101› جردُ مخزن فينسيا — موصولٌ بقاعدة البيانات، بخلاف «جرد
       // الأصول» أعلاه الذي يعمل في ذاكرة المتصفّح. وهو للمديرَين: تعريفُ ما
       // يملكه المستودعُ قرارٌ إداريّ، وقاعدةُ الأمن تحدّه بهما كذلك.

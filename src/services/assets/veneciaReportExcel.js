@@ -113,7 +113,7 @@ function summarySheet(XLSX, report) {
 }
 
 /** ورقةُ جدولٍ من الموديل: عناوينُ ثمّ صفوفٌ ثمّ سطرُ مجاميع. */
-function tableSheet(XLSX, { name, columns, rows, totals }) {
+function tableSheet(XLSX, { name, columns, rows, totals, numeric }) {
   const body = rows.map((r) => columns.map((c) => (r[c] === undefined ? '' : r[c])));
   const totalsRow = totals
     ? columns.map((c, i) => (i === 0 ? `المجموع (${rows.length})` : totals[c] === undefined ? '' : totals[c]))
@@ -123,7 +123,10 @@ function tableSheet(XLSX, { name, columns, rows, totals }) {
   dressSheet(XLSX, ws, {
     columns,
     rowCount: aoa.length - 1,
-    numeric: NUMERIC_COLUMNS[name] || [],
+    // ★ الأعمدةُ الرقميّةُ من الورقة نفسِها أوّلًا، و`NUMERIC_COLUMNS`
+    // احتياطٌ للأوراق القديمة — فربطُها باسم الورقة كان يُسقط التنسيقَ
+    // صامتًا عن أيّ تقريرٍ بأسماءٍ أخرى.
+    numeric: numeric || NUMERIC_COLUMNS[name] || [],
     hasTotals: Boolean(totalsRow),
   });
   return ws;

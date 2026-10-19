@@ -43,6 +43,17 @@ export const CONDITIONS = ['جديد', 'جيد', 'مستعمل بحالة مقب
 /**
  * التحقق قبل إصدار السند: { ok, problems[] }.
  */
+/**
+ * ‹WH-501› رقمُ الأصل على السند — **اختياريٌّ وصيغتُه محكومة**.
+ *
+ * ★★★ وكان السندُ يصف الجهازَ نصًّا ولا يحمل رقمًا، فسؤالُ «من يحمل
+ * BRZ-0042؟» بلا جواب، والجهازُ الواحدُ مسجَّلٌ في الجرد وفي العهدة ولا شيءَ
+ * يربطهما. وهو اختياريٌّ عمدًا: عهدةُ «مفاتيح مخزن» لا أصلَ لها في الجرد،
+ * ومنعُ السند حتّى يُرقَّم يُعطّل عملًا قائمًا. لكنّ **رقمًا مشوّهًا يُرفض**
+ * — فرابطٌ لا يُطابق شيئًا أسوأُ من لا رابط.
+ */
+const CUSTODY_ASSET_NO = /^BRZ-\d{4}$/;
+
 export function custodyVerdict(record) {
   const r = record || {};
   const problems = [];
@@ -51,6 +62,10 @@ export function custodyVerdict(record) {
   if (!String(r.condition || '').trim()) problems.push('حالة العهدة عند التسليم مطلوبة');
   if (r.value !== '' && r.value != null && !(Number(r.value) >= 0)) {
     problems.push('قيمة العهدة يجب أن تكون رقمًا موجبًا (د.ل)');
+  }
+  const assetNo = String(r.assetNo || '').trim();
+  if (assetNo && !CUSTODY_ASSET_NO.test(assetNo)) {
+    problems.push('رقم الأصل على صيغة BRZ-0001 — أو اتركه فارغًا');
   }
   return { ok: problems.length === 0, problems };
 }

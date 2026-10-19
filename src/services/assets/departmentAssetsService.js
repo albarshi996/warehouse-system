@@ -34,6 +34,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
 import { assetQuantity } from './assetsModel.js';
+import { cleanSpecs } from './whDepartment.js';
 import {
   assetDocKey,
   assetVerdict,
@@ -87,9 +88,21 @@ export function listenAssetNotes(docId, callback, onError) {
   );
 }
 
-/** الحقولُ التي يملكها المستخدم — بشكل سجلّ `assetsModel` نفسِه. */
+/**
+ * الحقولُ التي يملكها المستخدم — بشكل سجلّ `assetsModel` نفسِه.
+ *
+ * ★★★ **وهذه الدالّةُ تبني شكلًا ثابتًا**: أيُّ حقلٍ لا تذكره هنا **يُمحى
+ * قبل أن يُكتب**، بلا خطإٍ ولا رسالة. وهو نمطٌ وقع فعلًا في مرفقات الصور
+ * فأعمى كاشفَ التكرار شهرًا لو لم يُكشف بالرفع الحيّ. فمن أضاف حقلًا إلى
+ * السجلّ **يضيفه هنا**، ويحرسه `departmentAssetsPayload.test.js`.
+ *
+ * ‹WH-501› `equipmentKind` و`specs`: نوعُ المعدّة وتفاصيلُها («التفاصيلُ
+ * المملّة» للرفّ والطبليّة والجهاز المحمول). والمواصفاتُ تُنقّى على حقول
+ * النوع في `cleanSpecs`، فلا يُخزَّن فيها ما لا ينتمي إليه.
+ */
 function assetPayload(record) {
   const t = (v) => String(v ?? '').trim();
+  const kind = t(record.equipmentKind);
   return {
     id: t(record.id),
     assetType: t(record.assetType),
@@ -104,6 +117,8 @@ function assetPayload(record) {
     location: t(record.location),
     receivedDate: t(record.receivedDate),
     notes: t(record.notes),
+    equipmentKind: kind,
+    specs: cleanSpecs(kind, record.specs),
   };
 }
 
