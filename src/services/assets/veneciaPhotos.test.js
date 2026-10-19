@@ -148,34 +148,56 @@ test('★★★ ومصغَّرةٌ مرفوضةٌ تُكتب فراغًا — ف
 
 // ── التكرار والملخّص ─────────────────────────────────────────────────────
 
-test('★ والبصمةُ تكشف المكرَّرة فلا تُخزَّن مرّتين', () => {
-  const photos = [{ id: '1', hash: 'abc' }, { id: '2', hash: 'def' }];
+test('★★★ والبصمةُ تُقارَن بحقل `sha256` الذي تكتبه الخدمةُ فعلًا', () => {
+  const photos = [{ id: '1', sha256: 'abc' }, { id: '2', sha256: 'def' }];
   assert.equal(duplicateOf('abc', photos).id, '1');
   assert.equal(duplicateOf('zzz', photos), null);
   assert.equal(duplicateOf('', photos), null, 'وبصمةٌ فارغةٌ ليست تكرارًا');
+  // ★ والحقلُ `hash` **لا وجودَ له** في المستند المكتوب: كان الكاشفُ يقارن
+  //   به فلا يُطلق أبدًا في السحابة وإن أطلق في المِشحذ.
+  assert.equal(duplicateOf('abc', [{ id: '1', hash: 'abc' }]), null);
 });
 
 test('الملخّص: العددُ والحجمُ والمتبقّي من السقف', () => {
-  const photos = [{ bytes: 100 }, { bytes: 200 }];
+  const photos = [{ size: 100 }, { size: 200 }];
   assert.deepEqual(photoSummary(photos), { count: 2, bytes: 300, remaining: 4 });
   assert.deepEqual(photoSummary([]), { count: 0, bytes: 0, remaining: 6 });
 });
 
-test('وحجمٌ غائبٌ يُحسب من المحتوى لا يُهمَل', () => {
+test('والحجمُ من حقل `size`، وغيابُه يُحسب من المحتوى لا يُهمَل', () => {
   const url = dataUrlOf(1024);
+  assert.equal(photoSummary([{ size: 4096 }]).bytes, 4096);
   assert.equal(photoSummary([{ dataUrl: url }]).bytes, dataUrlBytes(url));
 });
 
 // ── الجسم والحصّة ────────────────────────────────────────────────────────
 
-test('جسمُ المستند يحمل التصنيفَ والأبعادَ والحجمَ محسوبًا', () => {
-  const url = dataUrlOf(50 * 1024);
-  const body = photoPayload({ dataUrl: url, name: ' IMG.jpg ', mime: 'image/webp', width: '1280.4', height: 960 });
+test('★★★ وجسمُ المستند لا يحمل إلّا ما تقبله `attachmentBody` — وما سواه يُسقَط صامتًا', () => {
+  const body = photoPayload({ dataUrl: dataUrlOf(50 * 1024), name: ' IMG.jpg ', mime: 'image/webp' });
   assert.equal(body.kind, PHOTO_KIND);
   assert.equal(body.name, 'IMG.jpg');
-  assert.equal(body.width, 1280);
-  assert.equal(body.height, 960);
-  assert.equal(body.bytes, dataUrlBytes(url));
+  assert.deepEqual(
+    Object.keys(body).sort(),
+    ['dataUrl', 'kind', 'mime', 'name', 'note', 'profile'].sort(),
+    'حقلٌ زائدٌ يُمحى قبل أن يُكتب — فلا يُرسَل أصلًا'
+  );
+});
+
+test('★★★ ومرساةٌ على عقد `attachmentBody`: الحقولُ المقبولةُ والمحسوبةُ كما هي', () => {
+  const src = readFileSync(new URL('../documents/attachmentsService.js', import.meta.url), 'utf8');
+  const sig = src.match(/async function attachmentBody\(\{([^}]+)\}/);
+  assert.ok(sig, 'لم يُعثَر على توقيع attachmentBody');
+  const accepted = sig[1]
+    .split(',')
+    .map((x) => x.trim().split('=')[0].trim())
+    .filter(Boolean);
+  const body = photoPayload({ dataUrl: dataUrlOf(1024) });
+  for (const key of Object.keys(body)) {
+    assert.ok(accepted.includes(key), `الحقلُ «${key}» لا تقبله attachmentBody — سيُسقَط صامتًا`);
+  }
+  // وهي تحسب البصمةَ والحجمَ بنفسها بهذين الاسمين — وعليهما يعتمد الكاشفُ والملخّص.
+  assert.match(src, /sha256:\s*await sha256Hex/, 'اسمُ حقل البصمة تغيّر — سيعمى كاشفُ التكرار');
+  assert.match(src, /size:\s*dataUrlBytes/, 'اسمُ حقل الحجم تغيّر — سيعرض الملخّصُ صفرًا');
 });
 
 test('★★★ وحسابُ الحصّة يُظهر أنّ العبءَ قراءاتٌ لا تخزين', () => {

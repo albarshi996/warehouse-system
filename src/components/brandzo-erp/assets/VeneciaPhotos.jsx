@@ -106,22 +106,19 @@ export default function VeneciaPhotos({ asset, canWrite = false, profile = null,
       if (!encoded.ok) throw new Error(encoded.problems.join('\n'));
 
       // البصمةُ تكشف المكرَّرة قبل أن تُكتب — فلا تُخزَّن الصورةُ مرّتين.
-      const hash = await sha256Hex(full.dataUrl);
-      const twin = duplicateOf(hash, photos);
+      // وتُحسب هنا بنفس دالّة الخدمة، فتُطابق حقلَ `sha256` الذي تكتبه هي.
+      const sha256 = await sha256Hex(full.dataUrl);
+      const twin = duplicateOf(sha256, photos);
       if (twin) throw new Error('هذه الصورةُ مرفوعةٌ سلفًا على هذا الأصل.');
 
       setBusy('تُرفع…');
-      await addEntityAttachment(VENECIA_ENTITY_KIND, entityId, {
-        ...photoPayload({
-          dataUrl: full.dataUrl,
-          name: file.name,
-          mime: full.mime,
-          width: size.width,
-          height: size.height,
-          profile,
-        }),
-        hash,
-      });
+      // ولا تُمرَّر حقولٌ زائدة: `attachmentBody` تبني شكلًا ثابتًا وتُسقط
+      // ما لا تعرفه — والبصمةُ والحجمُ تحسبهما بنفسها (`sha256` · `size`).
+      await addEntityAttachment(
+        VENECIA_ENTITY_KIND,
+        entityId,
+        photoPayload({ dataUrl: full.dataUrl, name: file.name, mime: full.mime, profile })
+      );
 
       // ثمّ المصغَّرةُ على السجلّ — وهي وحدَها ما تقرؤه القائمة.
       const thumbSize = fitWithin(bitmap.width, bitmap.height, PHOTO_LIMITS.thumbEdge);
@@ -129,7 +126,7 @@ export default function VeneciaPhotos({ asset, canWrite = false, profile = null,
       const tv = thumbVerdict(thumb.dataUrl);
       await setAssetPhotoBadge(
         entityId,
-        { photos: [...photos, { hash }], thumbDataUrl: tv.ok ? thumb.dataUrl : '' },
+        { photos: [...photos, { sha256 }], thumbDataUrl: tv.ok ? thumb.dataUrl : '' },
         profile
       );
       bitmap.close?.();
@@ -202,7 +199,7 @@ export default function VeneciaPhotos({ asset, canWrite = false, profile = null,
               type="button"
               className="rounded border border-line overflow-hidden"
               style={{ width: 72, height: 72, padding: 0 }}
-              title={`${p.name || 'صورة'} · ${kb(p.bytes)}`}
+              title={`${p.name || 'صورة'} · ${kb(p.size)}`}
               onClick={() => setZoom(p)}
             >
               <img
@@ -223,8 +220,9 @@ export default function VeneciaPhotos({ asset, canWrite = false, profile = null,
             style={{ maxWidth: '100%', maxHeight: '60vh', display: 'block', margin: '0 auto' }}
           />
           <div className="flex items-center gap-2 text-[10px] text-muted">
+            {/* الأبعادُ من الصورة المرسومة — الخدمةُ لا تحفظها، ولا داعيَ لحفظها. */}
             <span>
-              {zoom.name || 'صورة'} · {zoom.width || '—'}×{zoom.height || '—'} · {kb(zoom.bytes)}
+              {zoom.name || 'صورة'} · {kb(zoom.size)}
             </span>
             <span className="ms-auto">{zoom.byName || ''}</span>
             <button type="button" className="btn btn-secondary btn-sm" onClick={() => setZoom(null)}>

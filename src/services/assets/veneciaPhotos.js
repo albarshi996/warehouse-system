@@ -110,24 +110,31 @@ export function thumbVerdict(dataUrl) {
   return { ok: true, bytes, problems: [] };
 }
 
-/** الصورةُ المطابقةُ بالبصمة إن وُجدت — فلا تُخزَّن مرّتين. */
-export function duplicateOf(hash, photos) {
-  const h = String(hash || '');
+/**
+ * الصورةُ المطابقةُ بالبصمة إن وُجدت — فلا تُخزَّن مرّتين.
+ *
+ * ★★★ والحقلُ `sha256` **لا `hash`**: `attachmentBody` في خدمة المرفقات
+ * تبني شكلًا ثابتًا وتُسقط كلَّ حقلٍ لا تعرفه — وهي تحسب البصمةَ والحجمَ
+ * بنفسها باسمَي `sha256` و`size`. وكان هذا الكاشفُ يقارن بحقلٍ **يُمحى قبل
+ * أن يُكتب**، فلا يُطلق أبدًا في السحابة وإن أطلق في المِشحذ. كشفه الرفعُ
+ * الحيُّ: التلميحُ قال «٠ ك.ب» لأنّ `bytes` سقط كما سقط `hash`.
+ */
+export function duplicateOf(sha256, photos) {
+  const h = String(sha256 || '');
   if (!h) return null;
-  return (photos ?? []).find((p) => p.hash === h) || null;
+  return (photos ?? []).find((p) => p.sha256 === h) || null;
 }
 
 /** جسمُ مستند الصورة كما يُمرَّر إلى `addEntityAttachment`. */
-export function photoPayload({ dataUrl, name = '', mime = '', width = 0, height = 0, note = '', profile }) {
+export function photoPayload({ dataUrl, name = '', mime = '', note = '', profile }) {
+  // ★ الحقولُ الستّةُ التي يقبلها `attachmentBody` لا غير — وما سواها
+  // **يُسقَط صامتًا**. والبصمةُ والحجمُ تحسبهما الخدمةُ بنفسها.
   return {
     kind: PHOTO_KIND,
     name: String(name || '').trim(),
     mime: String(mime || '').trim(),
     dataUrl,
     note: String(note || '').trim(),
-    width: Math.max(0, Math.round(Number(width) || 0)),
-    height: Math.max(0, Math.round(Number(height) || 0)),
-    bytes: dataUrlBytes(dataUrl),
     profile,
   };
 }
@@ -137,7 +144,7 @@ export function photoSummary(photos) {
   const list = photos ?? [];
   return {
     count: list.length,
-    bytes: list.reduce((s, p) => s + (Number(p.bytes) || dataUrlBytes(p.dataUrl)), 0),
+    bytes: list.reduce((s, p) => s + (Number(p.size) || dataUrlBytes(p.dataUrl)), 0),
     remaining: Math.max(0, PHOTO_LIMITS.maxPerAsset - list.length),
   };
 }
