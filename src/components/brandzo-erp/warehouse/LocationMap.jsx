@@ -38,6 +38,15 @@ import {
   unexpectedPlacements,
 } from '../../../services/lpn/palletMap.js';
 import { listUnitsByState } from '../../../services/lpn/lpnService.js';
+import { LOCATION_SCREENS, foundOf, mergeById } from '../../../services/locations/locationReads.js';
+import {
+  useFullLocationReads,
+  usePalletCaps,
+  usePrefixChoices,
+  useResolvedLocations,
+  useWarehouseBalances,
+  useWarehouseLocations,
+} from '../locations/useLocationReads.js';
 
 const n = (v) => new Intl.NumberFormat('en-US').format(Number(v) || 0);
 
@@ -50,8 +59,8 @@ const n = (v) => new Intl.NumberFormat('en-US').format(Number(v) || 0);
 const UNITS_PER_STATE = 300;
 
 export default function LocationMap() {
-  const [locations, setLocations] = useState([]);
-  const [balances, setBalances] = useState([]);
+  const [allLocations, setLocations] = useState([]);
+  const [allBalances, setBalances] = useState([]);
   const [warehouse, setWarehouse] = useState('');
   const [storageType, setStorageType] = useState('');
   const [term, setTerm] = useState('');
@@ -68,8 +77,28 @@ export default function LocationMap() {
   const [unitsKnown, setUnitsKnown] = useState(false);
   const [itemTerm, setItemTerm] = useState('');
 
-  useEffect(() => listenLocations(setLocations, () => setLocations([])), []);
-  useEffect(() => listenBalances(setBalances, () => setBalances([])), []);
+  /**
+   * ‹LOC-READS› كانت الخريطةُ تقرأ السيّدَ والأرصدةَ كاملين عند فتح التبويب، و«الكلّ»
+   * اختيارُها الافتراضيّ. فصارت تبدأ بلا مستودعٍ ولا قراءة، ويُختار المستودع فتُقرأ
+   * خاناتُه وأرصدةُ خاناته وحدَها — وهي ما ترسمه الشبكةُ حين يُرشَّح بمستودعٍ حرفًا.
+   * والمستمعُ الكامل (ومعه «الكلّ») خلف مفتاح الإطفاء.
+   */
+  const fullLocations = useFullLocationReads(LOCATION_SCREENS.locationMap);
+  const { prefixes } = usePrefixChoices(!fullLocations);
+  const scopedOn = !fullLocations && Boolean(warehouse);
+  const scopedBins = useWarehouseLocations([warehouse], { enabled: scopedOn });
+  const scopedBalances = useWarehouseBalances([warehouse], { enabled: scopedOn });
+  const anyPalletCaps = usePalletCaps(!fullLocations);
+  useEffect(
+    () => (fullLocations ? listenLocations(setLocations, () => setLocations([])) : undefined),
+    [fullLocations]
+  );
+  useEffect(
+    () => (fullLocations ? listenBalances(setBalances, () => setBalances([])) : undefined),
+    [fullLocations]
+  );
+  const locations = fullLocations ? allLocations : scopedBins.locations;
+  const balances = fullLocations ? allBalances : scopedBalances.balances;
   useEffect(() => listenLaborTasks(setTasks, () => setTasks([])), []);
 
   /**
@@ -80,8 +109,8 @@ export default function LocationMap() {
    * يستحقّ أن يرى مشغولَه في طبقة السعة أيضًا، لا في طبقة الطبالي وحدها.
    */
   const capsPallets = useMemo(
-    () => (locations || []).some((l) => Number(l?.capacity?.pallets) > 0),
-    [locations]
+    () => (fullLocations ? (locations || []).some((l) => Number(l?.capacity?.pallets) > 0) : Boolean(anyPalletCaps)),
+    [fullLocations, locations, anyPalletCaps]
   );
   const needUnits = layer === 'pallets' || capsPallets;
 
@@ -98,7 +127,11 @@ export default function LocationMap() {
   // الحقيقة أوّلَ نقلةٍ لم تُحدّثه، وهو ما يجعل الخرائط تكذب.
   const byBin = useMemo(() => palletsByBin(units), [units]);
 
-  const warehouseCodes = useMemo(() => warehouseCodesOf(locations), [locations]);
+  const warehouseCodes = useMemo(
+    // والبادئاتُ المقروءةُ بالتخطّي تُرتَّب بترتيب `warehouseCodesOf` نفسِه (الطبيعيّ).
+    () => warehouseCodesOf(fullLocations ? locations : prefixes.map((p) => ({ warehouse: p }))),
+    [fullLocations, locations, prefixes]
+  );
   const grid = useMemo(
     // الشبكة تُبنى مرّةً ثمّ **تُلحق** بها طبقة العمل — لا بناءٌ ثانٍ.
     () => applyWorkLayer(
@@ -133,10 +166,16 @@ export default function LocationMap() {
     }
     return { total: units.length, onGrid, offGrid, bins: byBin.size };
   }, [byBin, palletCells, units]);
-  const strays = useMemo(
-    () => (showPallets ? unexpectedPlacements(units, locations) : []),
-    [showPallets, units, locations]
-  );
+  // ★ الطبالي الواقفةُ في **كلّ** المستودعات، والمعروضُ مستودعٌ واحد — فتُقرأ خاناتُ
+  //   مواضعها بأعيانها، وإلّا عُدّت طبليّةٌ في طرابلس «في موقعٍ غير مسجَّل».
+  const strayBins = useMemo(() => (showPallets && !fullLocations ? [...byBin.keys()] : []), [showPallets, fullLocations, byBin]);
+  const { resolved: strayResolved, pending: strayPending } = useResolvedLocations(strayBins, { enabled: strayBins.length > 0 });
+  const strays = useMemo(() => {
+    if (!showPallets) return [];
+    if (fullLocations) return unexpectedPlacements(units, locations);
+    if (strayPending) return [];
+    return unexpectedPlacements(units, mergeById(locations, foundOf(strayResolved)));
+  }, [showPallets, fullLocations, units, locations, strayPending, strayResolved]);
   const itemHits = useMemo(
     () => (showPallets && itemTerm.trim() ? binsOfItem(units, itemTerm) : []),
     [showPallets, itemTerm, units]
@@ -157,8 +196,8 @@ export default function LocationMap() {
       <div className="bz-locmap__bar o_no_print">
         <label className="bz-locmap__field">
           <span>المستودع</span>
-          <select className="o_input" value={warehouse} onChange={(e) => setWarehouse(e.target.value)}>
-            <option value="">الكلّ</option>
+          <select className="o_input" value={warehouse} onChange={(e) => setWarehouse(e.target.value)} data-probe="warehouse-picker">
+            <option value="">{fullLocations ? 'الكلّ' : '— اختر المستودع —'}</option>
             {warehouseCodes.map((w) => (
               <option key={w} value={w}>{w}</option>
             ))}
@@ -302,7 +341,13 @@ export default function LocationMap() {
       </p>
 
       {/* ── الشبكة ────────────────────────────────────────────────── */}
-      {locations.length === 0 ? (
+      {!fullLocations && !warehouse ? (
+        <div className="o_alert">
+          اختر المستودع لتُرسَم خاناتُه — مستودعٌ واحدٌ في المرّة، فلا تُقرأ آلافُ الخانات لشبكةٍ لا تُقرأ.
+        </div>
+      ) : !fullLocations && !scopedBins.ready ? (
+        <div className="o_alert">يقرأ خانات {warehouse}…</div>
+      ) : locations.length === 0 ? (
         <div className="o_alert">
           لا مواقع في سيّد المواقع بعد. أضِفها من تبويب <strong>«مواقع التخزين»</strong> — والخريطة تُرسَم منها لحظةَ حفظها.
         </div>

@@ -59,6 +59,21 @@ import { subscribePartners } from '../../../services/partners/partnerService.js'
 import { subscribeWarehouses } from '../../../services/locations/warehouseService.js';
 import { listenLocations } from '../../../services/locations/locationsService.js';
 import { binCellVerdict, locationOptions } from '../../../services/locations/locationsModel.js';
+import {
+  LOCATION_SCREENS,
+  binCodesOfLines,
+  prefixOfCode,
+  resolveFromWarehouse,
+  schemaHasBinColumn,
+  scopedBinVerdict,
+} from '../../../services/locations/locationReads.js';
+import { normalizeLocationCode } from '../../../services/locations/locationCode.js';
+import {
+  useFullLocationReads,
+  useLocationWitness,
+  useResolvedLocations,
+  useWarehouseLocations,
+} from '../locations/useLocationReads.js';
 import { listenVehicles } from '../../../services/vehicles/vehiclesService.js';
 import { listenOrgLocations } from '../../../services/org/orgLocationsService.js';
 import { indexLocations, dispatchViolations } from '../../../services/org/orgLocations.js';
@@ -231,8 +246,17 @@ export default function DocumentEngine() {
   useEffect(() => subscribeWarehouses(setWarehousesList, () => setWarehousesList([])), []);
   // سيّد مواقع التخزين (LOC-104): الفشل ⇒ قائمةٌ فارغة ⇒ خانة الموقع نصٌّ حرّ
   // كسلوك اليوم بلا حكمٍ ولا منع — لا تعطيل لمستودعٍ لم يُبنَ سيّده بعد.
+  //
+  // ‹LOC-READS› وكان يُقرأ **كاملًا في كلّ مستندٍ يُفتح** (8,402 خانة) ولو كان
+  // فاتورةً لا عمودَ موقعٍ فيها. فصار يُقرأ ما يُعرض وحدَه: خاناتُ مستودع الرأس
+  // لقائمة الاقتراح، والأكوادُ المكتوبةُ في البنود لحكمها، وشاهدٌ واحدٌ يُثبت أنّ
+  // السيّدَ غيرُ فارغ. والمستمعُ الكامل باقٍ خلف مفتاح الإطفاء وحدَه.
+  const fullLocations = useFullLocationReads(LOCATION_SCREENS.documents);
   const [locationsList, setLocationsList] = useState([]);
-  useEffect(() => listenLocations(setLocationsList, () => setLocationsList([])), []);
+  useEffect(
+    () => (fullLocations ? listenLocations(setLocationsList, () => setLocationsList([])) : undefined),
+    [fullLocations]
+  );
   useEffect(() => listenVehicles(setVehiclesList), []);
   useEffect(() => subscribeReps(setRepsList, () => setRepsList([])), []);
   // الشجرة التنظيميّة (FNB-102): منها يُختار مركز التكلفة — الصرف على الفرع
@@ -380,9 +404,44 @@ export default function DocumentEngine() {
   const itemIndexes = useMemo(() => buildItemIndexes(items), [items]);
   // اقتراح المواقع محصورٌ بمستودع المستند — عاملُ التخزين في E5 لا يُقترح عليه
   // رفٌّ في E2. وبلا مستودعٍ في الرأس تُعرض المواقع كلّها (لا حجب).
-  const binChoices = useMemo(
-    () => locationOptions(locationsList, { warehouse: doc?.header?.warehouse }),
-    [locationsList, doc?.header?.warehouse]
+  //
+  // ‹LOC-READS› بالقراءة المقصورة: لا قراءةَ لنوعٍ بلا عمود موقع، وقائمةُ الاقتراح
+  // خاناتُ مستودع الرأس وحدَها — وبلا مستودعٍ لا قائمة (كانت ثمانيةَ آلافِ خيارٍ
+  // في منسدلة)، والكتابةُ حرّةٌ والحكمُ قائمٌ كما كان.
+  const scopedBins = !fullLocations && schemaHasBinColumn(schema);
+  const headerBinWarehouse = normalizeLocationCode(doc?.header?.warehouse);
+  const headerBins = useWarehouseLocations([headerBinWarehouse], {
+    enabled: scopedBins && Boolean(headerBinWarehouse),
+  });
+  // مفتاحٌ نصّيّ: البنودُ تُبنى من جديدٍ مع كلّ ضغطة، والأكوادُ نفسُها لا تتغيّر.
+  const typedBinKey = binCodesOfLines(doc?.lines).join('|');
+  const typedBinCodes = useMemo(() => (typedBinKey ? typedBinKey.split('|') : []), [typedBinKey]);
+  // كودٌ من مستودع الرأس يُعرف من خاناته المقروءة — فلا يُقرأ مرّتين.
+  const { resolved: typedBins } = useResolvedLocations(
+    typedBinCodes.filter((c) => !headerBinWarehouse || prefixOfCode(c) !== headerBinWarehouse),
+    { enabled: scopedBins }
+  );
+  const { witness: binWitness } = useLocationWitness(scopedBins);
+  const binResolved = useMemo(
+    () =>
+      resolveFromWarehouse(
+        typedBins,
+        { prefix: headerBinWarehouse, locations: headerBins.locations, ready: headerBins.ready },
+        typedBinCodes
+      ),
+    [typedBins, headerBinWarehouse, headerBins.locations, headerBins.ready, typedBinCodes]
+  );
+  const binChoices = useMemo(() => {
+    if (fullLocations) return locationOptions(locationsList, { warehouse: doc?.header?.warehouse });
+    if (!scopedBins || !headerBinWarehouse) return [];
+    return locationOptions(headerBins.locations, { warehouse: doc?.header?.warehouse });
+  }, [fullLocations, locationsList, scopedBins, headerBinWarehouse, headerBins.locations, doc?.header?.warehouse]);
+  const binVerdictOf = useCallback(
+    (value) =>
+      fullLocations
+        ? binCellVerdict(value, locationsList)
+        : scopedBinVerdict(value, { resolved: binResolved, witness: binWitness }),
+    [fullLocations, locationsList, binResolved, binWitness]
   );
 
   function patchLines(lines) {
@@ -754,7 +813,14 @@ export default function DocumentEngine() {
             إلى فريقٍ يمشي إلى رفّ. ومعنيان تحت عنوانٍ واحدٍ يُربكان المشغّل.
             واللوحةُ تُخفي نفسَها لِما لا يولّد عملًا ولِمن لا تقبل القاعدةُ
             كتابتَه — فلا حاجةَ إلى حاويةٍ تُبقي فراغًا في التخطيط. */}
-        <FieldReleasePanel doc={doc} me={me} items={items} locations={locationsList} onFlash={flash} />
+        <FieldReleasePanel
+          doc={doc}
+          me={me}
+          items={items}
+          locations={locationsList}
+          scopedLocations={!fullLocations}
+          onFlash={flash}
+        />
 
         {violations.length > 0 && (
           <div className="bg-brand-red/10 border border-brand-red/40 rounded-xl px-4 py-3">
@@ -905,7 +971,7 @@ export default function DocumentEngine() {
                 onBulkPaste={handleBulkPaste}
                 uomOptions={(line) => uomOptionsForLine(line, itemForLine(line, itemIndexes))}
                 binOptions={binChoices}
-                binVerdict={(value) => binCellVerdict(value, locationsList)}
+                binVerdict={binVerdictOf}
                 skuVerdict={(value) =>
                   skuCellVerdict(value, { statuses: pasteMarks?.statuses, duplicates: pasteDuplicates })
                 }

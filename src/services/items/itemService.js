@@ -12,6 +12,8 @@ import {
   limit as fsLimit,
   writeBatch,
   serverTimestamp,
+  getCountFromServer,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from '../../config/firebase.js';
 import { normalizeBarcode, barcodeLookupVariants } from '../excel/excelSchema.js';
@@ -20,6 +22,7 @@ import { shapeImportedItem, normalizeUnit } from './itemShape.js';
 import { assertNewItemIdentity, normalizeSubstitutes } from './itemIdentity.js';
 import { CACHE_KEY, packCache, unpackCache, isFresh, selectItems } from './itemCache.js';
 import { chunksOf } from '../locations/scopedQuery.js';
+import { ITEM_ROWS, applyDelta, cursorOf, needsResync } from './catalogDelta.js';
 
 export { normalizeStatus, normalizeUnit };
 
@@ -273,6 +276,76 @@ export function cachedItemsIfFresh({ includeArchived = false } = {}) {
     return selectItems(allItems, includeArchived);
   }
   return null;
+}
+
+/**
+ * ‹LOC-READS› الكتالوجُ حيًّا **بلا قراءته كلِّه** — لشاشة الأصناف التي يُحرَّر فيها.
+ *
+ * الأساسُ من الذاكرة (أو قراءةٌ واحدةٌ تُحفظ)، ومستمعٌ حيٌّ على `updatedAt >=` أحدثِ
+ * ختمٍ فيه، وعدٌّ من الخادم يُثبت التمام (التفصيلُ والحدُّ المعلَن في `catalogDelta.js`).
+ * فيرى المحرِّرُ تعديلَ زميله لحظتَه كما كان، ولا تُقرأ آلافُ البطاقات التي لم تتغيّر.
+ *
+ * ★ لا يدخل في مشتركي الذاكرة (`listeners`): `invalidateItemsCache` بعد كلّ كتابةٍ يُعيد
+ *   قراءةَ الكتالوج كلِّه لمشتركيه، والمستمعُ هنا يرى الكتابةَ نفسَها بختمها — فلا يُدفع
+ *   ثمنُها مرّتين.
+ *
+ * @returns {() => void} إلغاء الاشتراك
+ */
+export function subscribeItemsDelta(onChange, onError, { includeArchived = false } = {}) {
+  let cancelled = false;
+  let offDelta = null;
+  let base = [];
+  let changed = [];
+  let verified = false;
+
+  const merged = () => applyDelta(base, changed, ITEM_ROWS);
+  const emit = () => {
+    if (!cancelled) onChange(selectItems(merged(), includeArchived));
+  };
+
+  const verify = async () => {
+    try {
+      const snap = await getCountFromServer(collection(db, COLLECTION));
+      if (cancelled || !needsResync(merged().length, snap.data().count)) return;
+      // صنفٌ حُذف أو كُتب بلا ختم — يُقرأ الأساسُ من جديد ويُعاد المستمعُ عليه.
+      start(await ensureLoaded(true));
+    } catch {
+      /* بلا شبكةٍ لا عدّ — يبقى ما في اليد، كما يبقى المستمعُ الحيُّ على ذاكرته */
+    }
+  };
+
+  function start(items) {
+    if (cancelled) return;
+    base = Array.isArray(items) ? items : [];
+    changed = [];
+    offDelta?.();
+    const since = Timestamp.fromMillis(cursorOf(base));
+    offDelta = onSnapshot(
+      query(collection(db, COLLECTION), where('updatedAt', '>=', since)),
+      (snap) => {
+        changed = snap.docs.map((d) => d.data());
+        emit();
+        if (!verified) {
+          verified = true;
+          verify();
+        }
+      },
+      (err) => {
+        if (!cancelled && onError) onError(err);
+      }
+    );
+  }
+
+  ensureLoaded()
+    .then(start)
+    .catch((err) => {
+      if (!cancelled && onError) onError(err);
+    });
+
+  return () => {
+    cancelled = true;
+    offDelta?.();
+  };
 }
 
 /**

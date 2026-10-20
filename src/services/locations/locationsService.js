@@ -18,8 +18,11 @@
 import {
   collection,
   doc,
+  documentId,
+  getCountFromServer,
   getDoc,
   getDocs,
+  limit,
   onSnapshot,
   orderBy,
   query,
@@ -32,7 +35,8 @@ import {
 import { db, auth } from '../../config/firebase.js';
 import { normalizeLocationCode } from './locationCode.js';
 import { locationProblems, shapeLocation } from './locationsModel.js';
-import { chunksOf } from './scopedQuery.js';
+import { binPrefixRange, chunksOf } from './scopedQuery.js';
+import { codesToRead, coordinatesProven, mergeById, skipScanPrefixes, skipScanZones, sortByCode } from './locationReads.js';
 
 const COL = 'bin_locations';
 const BATCH_LIMIT = 500;
@@ -84,6 +88,206 @@ export async function fetchLocationsForWarehouses(warehouses) {
     chunksOf(list).map((chunk) => getDocs(query(collection(db, COL), where('warehouse', 'in', chunk))))
   );
   return snaps.flatMap((s) => s.docs.map((d) => ({ id: d.id, ...d.data() })));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ‹LOC-READS› قرّاءٌ مقصورون — الشاشةُ تقرأ ما تعرضه (المنطق في `locationReads.js`)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const rowOf = (d) => ({ id: d.id, ...d.data() });
+const upper = (v) => String(v ?? '').trim().toUpperCase();
+
+/**
+ * مستمعون عدّة يُدمجون في قائمةٍ واحدة — ولا يُسلَّم شيءٌ قبل أن يجيب كلُّهم مرّة،
+ * وإلّا رأت الشاشةُ نصفَ المستودع لحظةً فحكمت عليه.
+ */
+function listenMerged(queries, cb, onError) {
+  if (!queries.length) {
+    const t = setTimeout(() => cb([]), 0);
+    return () => clearTimeout(t);
+  }
+  const latest = new Array(queries.length).fill(null);
+  const offs = queries.map((q, i) =>
+    onSnapshot(
+      q,
+      (s) => {
+        latest[i] = s.docs.map(rowOf);
+        if (latest.every(Boolean)) cb(sortByCode(mergeById(...latest)));
+      },
+      (e) => onError?.(e)
+    )
+  );
+  return () => offs.forEach((off) => off());
+}
+
+/**
+ * خاناتُ مستودعٍ (أو مستودعات) حيّةً — `warehouse ==` لا المجموعة كلّها.
+ * و`warehouse` على الخانة أوّلُ مقطعٍ من كودها (`shapeLocation`)، فهو ما يطابقه
+ * `suggestLocations` و`locationOptions` و`facesNeedingReplenish` حرفًا.
+ */
+export function listenLocationsOfWarehouses(prefixes, cb, onError) {
+  const list = [...new Set((prefixes || []).map(upper).filter(Boolean))].sort();
+  const queries = chunksOf(list).map((chunk) =>
+    chunk.length === 1
+      ? query(collection(db, COL), where('warehouse', '==', chunk[0]))
+      : query(collection(db, COL), where('warehouse', 'in', chunk))
+  );
+  return listenMerged(queries, cb, onError);
+}
+
+/** خانةٌ واحدةٌ حيّةً بكودها — و`null` إن لم توجد. */
+export function listenLocation(code, cb, onError) {
+  const id = normalizeLocationCode(code);
+  if (!codesToRead([id]).length) {
+    const t = setTimeout(() => cb(null), 0);
+    return () => clearTimeout(t);
+  }
+  return onSnapshot(
+    doc(db, COL, id),
+    (s) => cb(s.exists() ? rowOf(s) : null),
+    (e) => onError?.(e)
+  );
+}
+
+/** خاناتٌ بأكوادها — `documentId() in` ثلاثين ثلاثين، والباطلُ لا يُسأل عنه. */
+export async function fetchLocationsByCodes(codes) {
+  const list = codesToRead(codes);
+  const snaps = await Promise.all(
+    chunksOf(list).map((chunk) => getDocs(query(collection(db, COL), where(documentId(), 'in', chunk))))
+  );
+  return sortByCode(mergeById(...snaps.map((s) => s.docs.map(rowOf))));
+}
+
+/**
+ * خاناتُ بادئةٍ كاملةً — مدى الكود (`startsWith('RH-')` في كلّ مستهلك) قراءةً واحدة.
+ * لمن يحتاج المستودعَ كلَّه فعلًا: شبكةُ المشي، وناقصُ التوليد إن لم تصدق الذاكرة.
+ */
+export async function fetchLocationsInPrefix(prefix) {
+  const p = upper(prefix);
+  if (!p) return [];
+  const { start, end } = binPrefixRange(p);
+  const s = await getDocs(query(collection(db, COL), where('code', '>=', start), where('code', '<', end)));
+  return sortByCode(s.docs.map(rowOf));
+}
+
+/** عددُ خانات البادئة من الخادم — ألفُ مدخلٍ بقراءةٍ واحدة لا قراءةٌ لكلّ خانة. */
+export async function countLocationsInPrefix(prefix) {
+  const p = upper(prefix);
+  if (!p) return 0;
+  const { start, end } = binPrefixRange(p);
+  const snap = await getCountFromServer(
+    query(collection(db, COL), where('code', '>=', start), where('code', '<', end))
+  );
+  return snap.data().count;
+}
+
+/** عددُ خانات السيّد كلّه — و`inactiveOnly` لما وُسم `active:false` وحدَه. */
+export async function countLocations({ inactiveOnly = false } = {}) {
+  const q = inactiveOnly
+    ? query(collection(db, COL), where('active', '==', false))
+    : collection(db, COL);
+  const snap = await getCountFromServer(q);
+  return snap.data().count;
+}
+
+/**
+ * الشاهد — خانةٌ حقيقيّةٌ واحدة تُثبت أنّ السيّدَ غيرُ فارغ (انظر `locationReads.js`).
+ *
+ * و`accept` لمن يشترط في الشاهد صفةً (`active !== false` في الإسناد): يُمشى
+ * بالمعرّف (خانةٌ ثمّ عشرون عشرون) حتّى يوجد مقبولٌ أو تنتهي المجموعة — فالجوابُ تامٌّ دائمًا،
+ * وأسوأُ حالاته (لا مقبولَ أبدًا) قراءةُ الكلّ كما كان.
+ *
+ * @returns {Promise<object|null>} `null` تعني أنّ لا خانةَ مقبولةً في السيّد كلِّه
+ */
+export async function fetchLocationWitness(accept = null) {
+  if (!accept) {
+    const s = await getDocs(query(collection(db, COL), limit(1)));
+    return s.docs.length ? rowOf(s.docs[0]) : null;
+  }
+  // الصفحةُ الأولى خانةٌ واحدة — فالشاهدُ المقبولُ في أوّل خانةٍ (وهو الغالب) بقراءةٍ واحدة.
+  let after = '';
+  let size = 1;
+  for (;;) {
+    const constraints = [orderBy(documentId()), limit(size)];
+    if (after) constraints.unshift(where(documentId(), '>', after));
+    const s = await getDocs(query(collection(db, COL), ...constraints));
+    for (const d of s.docs) {
+      const row = rowOf(d);
+      if (accept(row)) return row;
+    }
+    if (s.docs.length < size) return null;
+    after = s.docs[s.docs.length - 1].id;
+    size = 20;
+  }
+}
+
+/** الخاناتُ المربوطةُ بهذا الباركود — بصيغة الكاتب نفسِها (`bindLocationBarcode`). */
+export async function fetchLocationsByBarcode(barcode) {
+  const value = upper(barcode).replace(/\s+/g, '');
+  if (!value) return [];
+  const s = await getDocs(query(collection(db, COL), where('barcode', '==', value)));
+  return sortByCode(s.docs.map(rowOf));
+}
+
+/** الخاناتُ المربوطةُ كلُّها حيّةً — لتقدّم التكويد وتصادم الملصقات، لا للمستودع كلِّه. */
+export function listenBoundLocations(cb, onError) {
+  return listenMerged([query(collection(db, COL), where('barcode', '>', ''))], cb, onError);
+}
+
+/**
+ * أفي السيّد خانةٌ أعلنت سقفَ طبالٍ؟ — قراءةٌ واحدة (`limit(1)`).
+ * الشجرةُ والخريطةُ تجلبان الطبالي الواقفة حين يوجد رفٌّ مسقوفٌ **في أيّ مستودع**،
+ * فيُسأل السؤالُ نفسُه بلا قراءة المستودعات كلِّها.
+ */
+export async function hasPalletCapacity() {
+  const s = await getDocs(query(collection(db, COL), where('capacity.pallets', '>', 0), limit(1)));
+  return s.docs.length > 0;
+}
+
+/**
+ * أكلُّ خانات السيّد «مُدخَلةُ الإحداثيّات» بحكم `buildGrid`؟ — بالعدّ لا بالقراءة.
+ *
+ * `buildGrid` يقول عن الشبكة «تقريبيّة» إن وُجدت **في السيّد كلّه** خانةٌ بلا `x` و`y`
+ * مُدخَلين — و`null` «لم يُدخَل» (هو ما يكتبه `gridFields` للخانة المولَّدة). وهذا حكمٌ
+ * على الكلّ يُكتب في مهمّة السحب (`pathBasis`) فلا يُخمَّن من مستودع المسار. فيُعدّ: لكلّ
+ * محورٍ ما قيمتُه رقمٌ محدود — فإن ساوى عددَ الكلّ ثبت أن لا خانةَ ناقصة. وإلّا لم يثبت
+ * شيء (`null` · حقلٌ غائب · نوعٌ آخر) فيُقرأ الكلُّ ولا يُخمَّن.
+ *
+ * @returns {Promise<boolean>} `true` إن ثبت أنّ كلَّ خانةٍ مُدخَلة
+ */
+export async function allLocationsHaveCoordinates() {
+  const col = collection(db, COL);
+  const count = async (q) => (await getCountFromServer(q)).data().count;
+  const nums = (f) => count(query(col, where(f, '>=', -Number.MAX_VALUE), where(f, '<=', Number.MAX_VALUE)));
+  const [total, numX, numY] = await Promise.all([count(col), nums('x'), nums('y')]);
+  return coordinatesProven({ total, numX, numY });
+}
+
+/** أوجهُ التجهيز كلُّها — `pickFace == true`، وهي قلّةٌ من آلاف الخانات. */
+export function listenPickFaces(cb, onError) {
+  return listenMerged([query(collection(db, COL), where('pickFace', '==', true))], cb, onError);
+}
+
+/**
+ * أوّلُ خانةٍ كودُها في `[from, to)` (أو `(from, to)`) بترتيب الكود — خطوةُ «تخطّي المقطع».
+ * مدى الكود وترتيبُه على حقلٍ واحد فلا فهرسَ مركّبًا، وقراءةٌ واحدةٌ لكلّ خطوة.
+ */
+async function firstCodeInRange(from, to, { after = false } = {}) {
+  const constraints = [];
+  if (from) constraints.push(where('code', after ? '>' : '>=', from));
+  if (to) constraints.push(where('code', '<', to));
+  const s = await getDocs(query(collection(db, COL), ...constraints, orderBy('code'), limit(1)));
+  return s.docs.length ? rowOf(s.docs[0]) : null;
+}
+
+/** البادئاتُ القائمة — قراءةٌ لكلّ مستودعٍ وواحدةٌ بعدها (`skipScanPrefixes`). */
+export function distinctPrefixes({ liveOnly = false } = {}) {
+  return skipScanPrefixes(firstCodeInRange, { liveOnly });
+}
+
+/** مناطقُ مستودعٍ حيّة — قراءةٌ لكلّ منطقة (`skipScanZones`). */
+export function distinctZones(prefix) {
+  return skipScanZones(firstCodeInRange, prefix);
 }
 
 /** موقعٌ بعينه بكوده — قراءةٌ واحدة بلا استعلام (المعرّف هو الكود). */

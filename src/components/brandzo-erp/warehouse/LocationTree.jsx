@@ -32,6 +32,14 @@ import { palletTextOf } from '../../../services/locations/mapGrid.js';
 // لا تعرفها (ح-٢، حارسُه `lpnIsolation.test.js`).
 import { ON_FLOOR_STATES, palletsByBin } from '../../../services/lpn/palletMap.js';
 import { listUnitsByState } from '../../../services/lpn/lpnService.js';
+import { LOCATION_SCREENS } from '../../../services/locations/locationReads.js';
+import {
+  useFullLocationReads,
+  usePalletCaps,
+  usePrefixChoices,
+  useWarehouseBalances,
+  useWarehouseLocations,
+} from '../locations/useLocationReads.js';
 
 /**
  * ‹LPN-211› سقفُ الجلب لكلّ حالةٍ من حالات «على الأرض» — نفسُ سقف الخريطة.
@@ -53,8 +61,8 @@ const EMPTY = {
 };
 
 export default function LocationTree({ role }) {
-  const [locations, setLocations] = useState([]);
-  const [balances, setBalances] = useState([]);
+  const [allLocations, setLocations] = useState([]);
+  const [allBalances, setBalances] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [msg, setMsg] = useState({ type: '', text: '' });
   const [term, setTerm] = useState('');
@@ -66,8 +74,28 @@ export default function LocationTree({ role }) {
   const [unitsKnown, setUnitsKnown] = useState(false);
   const canEdit = canEditLocations(role);
 
-  useEffect(() => listenLocations(setLocations, () => setLocations([])), []);
-  useEffect(() => listenBalances(setBalances, () => setBalances([])), []);
+  /**
+   * ‹LOC-READS› الشجرةُ كانت ترسم **كلَّ** الخانات (8,402 عقدة) وتقرأها مع الأرصدة
+   * كلِّها عند فتح التبويب. فصارت شجرةَ مستودعٍ واحدٍ يُختار أوّلًا: لا قراءةَ قبل
+   * الاختيار، وبعده خاناتُ ذلك المستودع وأرصدةُ خاناته — والجذورُ مناطقُه، وهي هي
+   * من الشجرة الكاملة (الآباءُ لا تعبر البادئة). والمستمعُ الكاملُ خلف مفتاح الإطفاء.
+   */
+  const fullLocations = useFullLocationReads(LOCATION_SCREENS.locationTree);
+  const [prefix, setPrefix] = useState('');
+  const { prefixes } = usePrefixChoices(!fullLocations);
+  const scopedBins = useWarehouseLocations([prefix], { enabled: !fullLocations && Boolean(prefix) });
+  const scopedBalances = useWarehouseBalances([prefix], { enabled: !fullLocations && Boolean(prefix) });
+  const anyPalletCaps = usePalletCaps(!fullLocations);
+  useEffect(
+    () => (fullLocations ? listenLocations(setLocations, () => setLocations([])) : undefined),
+    [fullLocations]
+  );
+  useEffect(
+    () => (fullLocations ? listenBalances(setBalances, () => setBalances([])) : undefined),
+    [fullLocations]
+  );
+  const locations = fullLocations ? allLocations : scopedBins.locations;
+  const balances = fullLocations ? allBalances : scopedBalances.balances;
 
   /**
    * ★★ الجلبُ لمن أعلن سقفًا وحدَه — فالسقفُ هو ما يجعل للعدد مقامًا يُقارَن به.
@@ -75,9 +103,11 @@ export default function LocationTree({ role }) {
    * وجُلُّ المواقع المسجَّلة اليوم بلا سقفِ طبالٍ (وهو حالُ «مختلط · صفر»)،
    * فلا يُقرأ ألفُ مستندٍ لرقمٍ لا يُعرض. ومن قاس رفَّه وأعلن سقفَه يرى مشغولَه.
    */
+  // ★ «أيُّ رفٍّ في أيّ مستودع» — بالقراءة المقصورة سؤالٌ للخادم لا مسحٌ للمستودع
+  //   المعروض وحدَه، وإلّا اختلف فهرسُ الطبالي بين الطريقين فاختلف المشغول.
   const capsPallets = useMemo(
-    () => (locations || []).some((l) => Number(l?.capacity?.pallets) > 0),
-    [locations]
+    () => (fullLocations ? (locations || []).some((l) => Number(l?.capacity?.pallets) > 0) : Boolean(anyPalletCaps)),
+    [fullLocations, locations, anyPalletCaps]
   );
 
   useEffect(() => {
@@ -247,12 +277,33 @@ export default function LocationTree({ role }) {
             value={term}
             onChange={(e) => setTerm(e.target.value)}
           />
+          {!fullLocations && (
+            <select
+              className="o_input"
+              style={{ maxWidth: '200px' }}
+              value={prefix}
+              onChange={(e) => setPrefix(e.target.value)}
+              data-probe="warehouse-picker"
+              aria-label="المستودع"
+            >
+              <option value="">— اختر المستودع —</option>
+              {prefixes.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          )}
           <span style={{ fontSize: '12px', color: 'var(--o-main-color-muted)' }}>
-            {locations.length} موقعًا مسجَّلًا
+            {fullLocations || prefix ? `${locations.length} موقعًا مسجَّلًا${prefix && !fullLocations ? ` في ${prefix}` : ''}` : ''}
           </span>
         </div>
 
-        {tree.length === 0 ? (
+        {!fullLocations && !prefix ? (
+          <p style={{ fontSize: '13px', color: 'var(--o-main-color-muted)' }}>
+            اختر المستودع لتُعرض شجرةُ مواقعه وإشغالُها — مستودعٌ واحدٌ في المرّة، فلا تُقرأ آلافُ الخانات لعرضٍ لا يُقرأ.
+          </p>
+        ) : !fullLocations && !scopedBins.ready ? (
+          <p style={{ fontSize: '13px', color: 'var(--o-main-color-muted)' }}>يقرأ مواقع {prefix}…</p>
+        ) : tree.length === 0 ? (
           <p style={{ fontSize: '13px', color: 'var(--o-main-color-muted)' }}>
             لا مواقع بعد. أضِف أوّل موقع، أو ابدأ بمنطقةٍ كاملة مثل <span style={{ direction: 'ltr' }}>MAIN-A01</span>.
           </p>

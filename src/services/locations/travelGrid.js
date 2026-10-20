@@ -28,6 +28,15 @@ import { CODE_SEGMENTS, normalizeLocationCode, parseLocationCode } from './locat
 
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : null);
 const s = (v) => String(v ?? '').trim();
+/**
+ * إحداثيّةٌ مُدخَلة أو `null` — والفارغُ (`null` · `undefined` · `''`) «لم يُدخَل»
+ * كما يكتبه `gridFields`، والصفرُ المكتوبُ نقطةٌ مُدخَلة.
+ *
+ * ★★ ولا يكفي `num` وحدَه: `Number(null)` و`Number('')` صفرٌ، فكانت كلُّ خانةٍ مولَّدة
+ * (`x: null`) «مُدخَلةً عند نقطة الصفر» — الشبكةُ تُعلن نفسَها مقيسة، والمسارُ صفرُ
+ * متر، ومهمّةُ السحب تحمل «عبر الشبكة المُدخَلة» وما أُدخل شيء.
+ */
+const coord = (v) => (v === null || v === undefined || s(v) === '' ? null : num(v));
 
 /**
  * أبعادٌ **مبدئيّة معلَنة** في مصدرٍ واحد — تُضبط بقياسٍ حقيقيّ متى توفّر.
@@ -127,9 +136,9 @@ export function buildGrid(locations, settings = {}) {
     if (!p) continue;
     const wh = index.get(p.warehouse);
     const aisle = s(l.aisle) || p.zone || '';
-    const y = num(l.y);
-    const x = num(l.x);
-    const z = num(l.z);
+    const y = coord(l.y);
+    const x = coord(l.x);
+    const z = coord(l.z);
     const hasDeclared = x !== null && y !== null;
     if (hasDeclared) declared += 1;
 

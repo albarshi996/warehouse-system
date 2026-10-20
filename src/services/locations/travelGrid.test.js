@@ -288,3 +288,84 @@ test('وخطّةٌ بلا شبكة تبقى صالحةً بمسافةٍ فارغ
   assert.equal(plan.route.meters, 0);
   assert.equal(plan.route.unknown, 0, 'ساقٌ واحدة لا مسافةَ فيها أصلًا');
 });
+
+/* ═══════ ★★ «لم يُدخَل» ليس صفرًا — الخانةُ المولَّدة كما تُخزَّن ═══════ */
+
+/**
+ * ممرٌّ A01 بخمسة رفوفٍ وممرٌّ B01 بجانبه — **مشكَّلةً بـ`shapeLocation`** كما يكتبها
+ * التوليد: `gridFields` يضع `x/y/z: null` («لم يُدخَل»). و`Number(null)` صفرٌ، فمن
+ * قرأها بـ`Number` وحده جعلها كلَّها «مُدخَلةً عند نقطة الصفر».
+ */
+const GENERATED = [
+  'MAIN-A01-R01-B01-L1',
+  'MAIN-A01-R02-B01-L1',
+  'MAIN-A01-R03-B01-L1',
+  'MAIN-A01-R04-B01-L1',
+  'MAIN-A01-R05-B01-L3',
+  'MAIN-B01-R01-B01-L1',
+].map((code) => shapeLocation({ code }));
+
+test('★★ خانةٌ مولَّدة (`x: null`) لم تُدخَل — والشبكةُ تقريبيّةٌ بالرتب المشتقّة من الكود', () => {
+  assert.equal(GENERATED[0].x, null, 'هكذا يكتبها النموذج');
+  const g = buildGrid(GENERATED);
+  assert.equal(g.approximate, true, 'لا «مُدخَلةً عند الصفر»');
+  assert.equal(g.declared, 0);
+  const derived = buildGrid(GENERATED.map((l) => l.code));
+  for (const { code } of GENERATED) {
+    const p = gridPointOf(code, g);
+    const d = gridPointOf(code, derived);
+    assert.equal(p.source, POINT_SOURCE.derived.id, code);
+    assert.deepEqual([p.x, p.y, p.z], [d.x, d.y, d.z], `${code}: رتبةُ الكود لا الصفر`);
+  }
+  assert.equal(gridPointOf('MAIN-A01-R05-B01-L3', g).x, 4, 'الخامسةُ على طول الممرّ');
+  assert.equal(gridPointOf('MAIN-A01-R05-B01-L3', g).z, 3, 'والمستوى من رمزه لا صفر');
+  assert.equal(gridPointOf('MAIN-B01-R01-B01-L1', g).y, 1, 'والممرّ الثاني');
+});
+
+test('★★ ومسارُها يُرتَّب بالمشي التقريبيّ ويُقاس — لا صفرَ متر ولا «شبكةٌ مُدخَلة» في المهمّة', () => {
+  const g = buildGrid(GENERATED);
+  const lines = [
+    { index: 0, sku: 'A', picks: [{ bin: 'MAIN-A01-R01-B01-L1', qty: 1 }] },
+    { index: 1, sku: 'B', picks: [{ bin: 'MAIN-A01-R05-B01-L3', qty: 1 }] },
+    { index: 2, sku: 'C', picks: [{ bin: 'MAIN-B01-R01-B01-L1', qty: 1 }] },
+  ];
+  const path = pickPathOrder(lines, g);
+  // من أوّل A01: عبورٌ إلى أوّل B01 (ممرٌّ واحد) أقربُ من آخر A01 (أربع خانات) —
+  // وكلُّها صفرٌ إن عُدّ الفارغُ صفرًا، فيبقى ترتيبُ الكود.
+  assert.deepEqual(path.map((s) => s.bin), ['MAIN-A01-R01-B01-L1', 'MAIN-B01-R01-B01-L1', 'MAIN-A01-R05-B01-L3']);
+
+  const route = routeDistance(path.map((s) => s.bin), g);
+  const d = GRID_DEFAULTS;
+  const expected = d.aisleMeters + (d.aisleMeters + 4 * d.bayMeters + 2 * d.levelEquivalentMeters);
+  assert.equal(route.meters, Math.round(expected * 10) / 10);
+  assert.equal(route.approximate, true);
+  assert.match(route.note, /تقريبيّ/);
+
+  const basis = pathBasisOf(path, g);
+  assert.equal(basis.id, 'grid');
+  assert.match(basis.label, /تقريبيّ/);
+  assert.doesNotMatch(basis.label, /المُدخَلة/, 'وصفٌ كاذبٌ يُحفظ في مهمّة السحب');
+});
+
+test('★★ والصفرُ المكتوبُ نقطةٌ مُدخَلة — والفارغُ بأشكاله لم يُدخَل', () => {
+  const g = buildGrid([
+    { code: 'MAIN-A01-R01-B01', x: 0, y: 0 },
+    { code: 'MAIN-A01-R01-B02', x: '0', y: 0 },
+    { code: 'MAIN-A01-R01-B03', x: '', y: 0 },
+    { code: 'MAIN-A01-R01-B04', x: ' ', y: 0 },
+    { code: 'MAIN-A01-R01-B05', y: 0 },
+    { code: 'MAIN-A01-R01-B06', x: 2, y: null },
+    { code: 'MAIN-A01-R01-B07', x: 'س', y: 0 },
+  ]);
+  const src = (code) => gridPointOf(code, g).source;
+  assert.equal(src('MAIN-A01-R01-B01'), POINT_SOURCE.declared.id, 'الصفرُ رقمٌ مُدخَل');
+  assert.equal(gridPointOf('MAIN-A01-R01-B01', g).x, 0);
+  assert.equal(src('MAIN-A01-R01-B02'), POINT_SOURCE.declared.id, 'والصفرُ نصًّا كذلك');
+  for (const code of ['MAIN-A01-R01-B03', 'MAIN-A01-R01-B04', 'MAIN-A01-R01-B05', 'MAIN-A01-R01-B06', 'MAIN-A01-R01-B07']) {
+    assert.equal(src(code), POINT_SOURCE.derived.id, `${code} لم يُدخَل`);
+  }
+  assert.equal(g.declared, 2);
+  assert.equal(g.approximate, true);
+  // والنقطةُ غيرُ المُدخَلة تأخذ رتبتَها لا الصفر: الثالثةُ على طول الممرّ.
+  assert.equal(gridPointOf('MAIN-A01-R01-B03', g).x, 2);
+});

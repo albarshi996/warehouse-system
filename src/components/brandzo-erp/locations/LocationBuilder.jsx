@@ -1,8 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Icon from '../../ui/Icon.jsx';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import { subscribeWarehouses } from '../../../services/locations/warehouseService.js';
-import { canEditLocations, listenLocations, saveLocationsBulk } from '../../../services/locations/locationsService.js';
+import {
+  canEditLocations,
+  countLocationsInPrefix,
+  fetchLocationsInPrefix,
+  listenLocations,
+  saveLocationsBulk,
+} from '../../../services/locations/locationsService.js';
+import { LOCATION_SCREENS, mergeCodeIndex, prefixCodesVia } from '../../../services/locations/locationReads.js';
+import { SETTLE_MS, useFullLocationReads } from './useLocationReads.js';
 import {
   countScheme,
   expandScheme,
@@ -113,12 +121,41 @@ export default function LocationBuilder() {
     return () => unsub?.();
   }, []);
 
+  /**
+   * ‹LOC-READS› القائمُ كان يُقرأ **كلُّه** (8,402) والبانيةُ لا تسأل إلّا عن بادئةٍ واحدة.
+   * فصارت تسأل عنها وحدَها حين تُكتب: عددُها من الخادم، والمحفوظُ في هذا المتصفّح إن
+   * طابقه (`bin_locations` لا تُحذف، فمحفوظٌ بحجم الكلّ هو الكلّ)، وإلّا قُرئت البادئة.
+   */
+  const fullLocations = useFullLocationReads(LOCATION_SCREENS.locationBuilder);
+  const [prefixCodes, setPrefixCodes] = useState({ prefix: '', codes: [] });
+  const [genTick, setGenTick] = useState(0);
+  const codesOfPrefix = useCallback(
+    (prefix) =>
+      prefixCodesVia({
+        prefix,
+        storage: typeof localStorage === 'undefined' ? null : localStorage,
+        count: countLocationsInPrefix,
+        fetchRows: fetchLocationsInPrefix,
+      }),
+    []
+  );
   useEffect(() => {
     if (!me) return undefined;
     const a = subscribeWarehouses(setWarehouses);
-    const b = listenLocations(setExisting);
+    const b = fullLocations ? listenLocations(setExisting) : null;
     return () => { a?.(); b?.(); };
-  }, [me]);
+  }, [me, fullLocations]);
+  useEffect(() => {
+    const wh = String(warehouse || '').toUpperCase();
+    if (!me || fullLocations || !wh || wh !== wh.trim()) return undefined;
+    let alive = true;
+    const t = setTimeout(() => {
+      codesOfPrefix(wh)
+        .then((r) => alive && setPrefixCodes({ prefix: wh, codes: r.codes }))
+        .catch((err) => alive && setError(err?.message || 'تعذّرت قراءة المواقع القائمة.'));
+    }, SETTLE_MS);
+    return () => { alive = false; clearTimeout(t); };
+  }, [me, fullLocations, warehouse, codesOfPrefix, genTick]);
 
   /**
    * ★★★ `warehouse` هنا **بادئةُ الملصقات** لا كودُ المستودع في البوّابة.
@@ -148,15 +185,24 @@ export default function LocationBuilder() {
   const total = useMemo(() => countScheme(scheme), [scheme]);
   const preview = useMemo(() => (problems.length ? null : previewScheme(scheme, { sample: 4 })), [scheme, problems]);
 
-  /** ما هو مسجَّلٌ أصلًا لهذا المستودع — فالتوليد يُظهر الجديد لا المكرّر. */
+  /**
+   * ما هو مسجَّلٌ أصلًا لهذا المستودع — فالتوليد يُظهر الجديد لا المكرّر.
+   * و`null` (بالقراءة المقصورة) تعني «لم تصل أكوادُ البادئة بعد» — فلا يُعرض «جديد» ولا يُولَّد.
+   */
   const already = useMemo(() => {
     const wh = String(warehouse || '').toUpperCase();
     if (!wh) return new Set();
+    if (!fullLocations) {
+      // بادئةٌ بمسافةٍ لا يطابقها كودٌ مخزَّن (`startsWith('RH -')`) — كما في القراءة الكاملة.
+      if (wh !== wh.trim()) return new Set();
+      return prefixCodes.prefix === wh ? new Set(prefixCodes.codes) : null;
+    }
     return new Set((existing || []).map((l) => String(l.code || '').toUpperCase()).filter((c) => c.startsWith(`${wh}-`)));
-  }, [existing, warehouse]);
+  }, [existing, warehouse, fullLocations, prefixCodes]);
 
   const fresh = useMemo(() => {
     if (!preview) return 0;
+    if (!already) return null;
     return expandScheme(scheme).codes.filter((c) => !already.has(c)).length;
   }, [scheme, preview, already]);
 
@@ -198,8 +244,15 @@ export default function LocationBuilder() {
     setBusy('يولّد ويحفظ…'); setError(''); setResult(null);
     try {
       const { codes } = expandScheme(scheme);
-      const newCodes = codes.filter((c) => !already.has(c));
+      // ★★ ‹LOC-READS› يُعاد التحقّقُ قبل الكتابة: `saveLocationsBulk` يدمج بقيمٍ افتراضيّة،
+      // فكودٌ قائمٌ يُكتب ثانيةً تُرجَع حالتُه وسعتُه إلى الصفر. وزميلٌ ولّد في الأثناء…
+      const known = fullLocations
+        ? already
+        : new Set((await codesOfPrefix(String(warehouse || '').trim().toUpperCase())).codes);
+      const newCodes = codes.filter((c) => !known.has(c));
+      if (!newCodes.length) { setResult({ saved: 0, duplicates: 0, skipped: codes.length, warning: '' }); return; }
       const out = await saveLocationsBulk(toLocationInputs(newCodes, { warehouse }), me);
+      if (!fullLocations && typeof localStorage !== 'undefined') mergeCodeIndex(localStorage, warehouse, newCodes);
 
       // ★★ ويُحفظ الترقيمُ على المستودع في الحركة نفسِها — فيصير له قالبٌ
       // دائم: تعرفه شاشةُ المستودعات فتحسب ناقصَه، ويعرفه العاملُ فيقرأ
@@ -237,6 +290,7 @@ export default function LocationBuilder() {
       setError(err?.message || 'تعذّر الحفظ.');
     } finally {
       setBusy('');
+      setGenTick((n) => n + 1);
     }
   }
 
@@ -392,11 +446,11 @@ export default function LocationBuilder() {
         <section className="o_ds o_ds_card o_ds_pad space-y-3">
           <div className="flex flex-wrap items-center gap-4">
             <Stat label="سيُولَّد" value={num(total)} />
-            <Stat label="جديدٌ منها" value={num(fresh)} tone={fresh ? '' : 'muted'} />
-            <Stat label="مسجَّلٌ سلفًا" value={num(total - fresh)} tone="muted" />
+            <Stat label="جديدٌ منها" value={fresh === null ? '…' : num(fresh)} tone={fresh ? '' : 'muted'} />
+            <Stat label="مسجَّلٌ سلفًا" value={fresh === null ? '…' : num(total - fresh)} tone="muted" />
             <div className="flex-1" />
             <button type="button" className="btn btn-primary btn-sm" disabled={!!busy || !fresh} onClick={generate}
-              title={fresh ? '' : 'كلّها مسجّلةٌ سلفًا'}>
+              title={fresh ? '' : fresh === null ? 'يقرأ المواقع القائمة…' : 'كلّها مسجّلةٌ سلفًا'}>
               ولّد واحفظ
             </button>
           </div>

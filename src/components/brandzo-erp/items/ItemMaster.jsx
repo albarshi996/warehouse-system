@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   subscribeItems,
+  subscribeItemsDelta,
   archiveItem,
   unarchiveItem,
   UNIT_OPTIONS,
@@ -8,7 +9,9 @@ import {
 import { canImport } from '../../../services/items/itemsImportService.js';
 import { uomDebtReport, uomDebtExportRows } from '../../../services/items/uomWiring.js';
 import { exportItemsMaster } from '../../../services/excel/excelExport.js';
-import { listenBalances } from '../../../services/balances/balancesService.js';
+import { listenBalances, listenBalancesDelta } from '../../../services/balances/balancesService.js';
+import { productsFullReads } from '../../../services/items/catalogDelta.js';
+import { selectItems } from '../../../services/items/itemCache.js';
 import { totalQty, stockValue, fefoSort, expiryStatus } from '../../../services/balances/balanceKey.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Icon from '../../ui/Icon.jsx';
@@ -47,7 +50,7 @@ const LIST_COLS = [
 ];
 
 export default function ItemMaster() {
-  const [items, setItems] = useState([]);
+  const [allItems, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
@@ -59,6 +62,24 @@ export default function ItemMaster() {
   const [balances, setBalances] = useState([]);
   const [me, setMe] = useState(null);
   const [toast, setToast] = useState(null); // { kind, text }
+
+  /**
+   * ‹LOC-READS› البثُّ الحيّ باقٍ — والذي تغيّر أنّه لم يعد يقرأ الكتالوجَ والأرصدةَ كلَّهما
+   * في كلّ فتحة (≈ 5,978). الأساسُ من ذاكرة المتصفّح، والمستمعُ على ما خُتم بعده وحدَه،
+   * وعدٌّ من الخادم يُثبت التمام (`catalogDelta.js`). والمؤرشفُ يُرشَّح هنا لا بإعادة القراءة.
+   * ومفتاحُ الإطفاء `localStorage['bz.products.fullReads']='1'` يُعيد المستمعَين الكاملَين.
+   */
+  const fullReads = useMemo(() => {
+    try {
+      return productsFullReads(typeof localStorage === 'undefined' ? null : localStorage);
+    } catch {
+      return false;
+    }
+  }, []);
+  const items = useMemo(
+    () => (fullReads ? allItems : selectItems(allItems, showArchived)),
+    [fullReads, allItems, showArchived]
+  );
 
   // دَينُ الوحدات — الحكم في النواة، والشاشة تعرضه وتُصدّره (CAP-107).
   const uomDebt = useMemo(() => uomDebtReport(items), [items]);
@@ -100,29 +121,35 @@ export default function ItemMaster() {
     return () => unsub();
   }, []);
 
+  // بالبثّ المقصور لا يُعاد الاشتراكُ عند إظهار المؤرشف — يُرشَّح المحمَّلُ نفسُه.
+  const resubscribeOn = fullReads ? showArchived : false;
   useEffect(() => {
-    const unsubscribe = subscribeItems(
-      (next) => {
-        setItems(next);
-        setLoading(false);
-      },
-      (err) => {
-        setError(err?.message ?? 'تعذر الاتصال بقاعدة البيانات');
-        setLoading(false);
-      },
-      // ★ الشاشةُ الوحيدةُ التي تبقى على البثّ الحيّ: هنا تُحرَّر الأصناف،
-      //   فيجب أن يرى المحرِّرُ تعديلَ زميله لحظتَه. وبقيّةُ الشاشات الخمسَ
-      //   عشرةَ تُخدَم من الذاكرة — وهو ما أنقذ حصّةَ القراءة (2026-09-05).
-      { includeArchived: showArchived, live: true }
-    );
+    const onNext = (next) => {
+      setItems(next);
+      setLoading(false);
+    };
+    const onFail = (err) => {
+      setError(err?.message ?? 'تعذر الاتصال بقاعدة البيانات');
+      setLoading(false);
+    };
+    const unsubscribe = fullReads
+      ? subscribeItems(
+          onNext,
+          onFail,
+          // ★ الشاشةُ الوحيدةُ التي تبقى على البثّ الحيّ: هنا تُحرَّر الأصناف،
+          //   فيجب أن يرى المحرِّرُ تعديلَ زميله لحظتَه. وبقيّةُ الشاشات الخمسَ
+          //   عشرةَ تُخدَم من الذاكرة — وهو ما أنقذ حصّةَ القراءة (2026-09-05).
+          { includeArchived: showArchived, live: true }
+        )
+      : subscribeItemsDelta(onNext, onFail, { includeArchived: true });
     return () => unsubscribe();
-  }, [showArchived]);
+  }, [fullReads, resubscribeOn]);
 
   // أرصدة المخزون الحيّة — لعرض الكمية الحقيقية والقيمة وحالة الصلاحية.
   useEffect(() => {
-    const unsub = listenBalances(setBalances, () => {});
+    const unsub = fullReads ? listenBalances(setBalances, () => {}) : listenBalancesDelta(setBalances, () => {});
     return () => unsub();
-  }, []);
+  }, [fullReads]);
 
   // فهرسة الأرصدة بكود الصنف وبباركوده — للربط السريع بصفوف الجدول.
   const balByItem = useMemo(() => {
