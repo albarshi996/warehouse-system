@@ -41,6 +41,97 @@ export const CARD_REPORT_COLUMNS = [
   'الغرض',
 ];
 
+/**
+ * ═══ ورقةُ المصروف ‹VEN-301 ذيل› ═══
+ *
+ * ★★★ **سطرٌ لكلّ بندٍ مصروفٍ لا لكلّ بطاقة**: ورقةُ «بطاقات الحركة» تقول
+ * «بطاقةٌ لسعيد فيها بندان و١٢ وحدة» — ولا تقول **أيُّ صنفٍ خرج**. والسؤالُ
+ * الذي يُسأل في المخزن هو «كم عمودَ إنارةٍ صُرف ولمن»، لا «كم بطاقةً كُتبت».
+ *
+ * ★★ **والمثبَّتةُ وحدَها تدخل**: المسودّةُ لم تُحرّك رصيدًا، وإدراجُها يجعل
+ * الورقةَ تَعِد ببضاعةٍ لم تخرج. والملغاةُ كذلك.
+ */
+export const ISSUED_REPORT_COLUMNS = [
+  'السند',
+  'التاريخ',
+  'المستلِم',
+  'الجهة',
+  'رقم الأصل',
+  'اسم الأصل',
+  'التصنيف',
+  'الكمية',
+];
+
+/** صفوفُ ورقة المصروف — بندًا بندًا من البطاقات المثبَّتة. */
+export function issuedReportRows(cards) {
+  const out = [];
+  for (const c of cards ?? []) {
+    if (c.kind !== 'issue' || c.state !== 'posted') continue;
+    for (const l of c.lines ?? []) {
+      out.push({
+        السند: c.number || '—',
+        التاريخ: c.cardDate || '',
+        'المستلِم': c.party || '',
+        الجهة: c.destination || '',
+        'رقم الأصل': l.assetNo || '',
+        'اسم الأصل': l.assetName || '',
+        التصنيف: l.category || '',
+        الكمية: rawQty(l.qty),
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * ═══ ورقةُ المخرَّد ‹VEN-301 ذيل› ═══
+ *
+ * التخريدُ في هذا النظام هو **التكهين**: صنفٌ لا يصلح يخرج من الجرد بسببٍ
+ * مكتوبٍ ولا يُحذف (`archived` + `archiveReason`)، فرقمُه مطبوعٌ على شيءٍ كان
+ * في المخزن ومحوُه يجعل جردًا قديمًا يذكر ما لا وجودَ له.
+ *
+ * ★★★ **والسببُ عمودٌ أوّلٌ لا حاشية**: ورقةُ تخريدٍ بلا أسبابٍ لا تصلح
+ * لمراجعةٍ ولا لجردٍ — والسؤالُ الأوّلُ عن كلّ مخرَّدٍ «لماذا خرج؟».
+ */
+export const SCRAP_REPORT_COLUMNS = [
+  'رقم الأصل',
+  'اسم الأصل',
+  'المجموعة',
+  'التصنيف',
+  'الكمية',
+  'الحالة',
+  'سبب التخريد',
+  'تاريخ التخريد',
+  'من خرّده',
+];
+
+/** يومٌ مقروءٌ من ختمٍ أو نصّ — والختمُ قد يأتي كائنًا من Firestore. */
+function stampDay(v) {
+  if (!v) return '';
+  if (typeof v === 'string') return v.slice(0, 10);
+  const d = typeof v?.toDate === 'function' ? v.toDate() : v instanceof Date ? v : null;
+  if (!d || Number.isNaN(d.getTime())) return '';
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/** صفوفُ ورقة المخرَّد — المكهَّنُ وحدَه، ومعه سببُه ومن خرّده ومتى. */
+export function scrapReportRows(assets) {
+  return (assets ?? [])
+    .filter((a) => a?.archived)
+    .map((a) => ({
+      'رقم الأصل': a.id || '',
+      'اسم الأصل': a.assetName || '',
+      'المجموعة': a.population === 'supported' ? 'أصول المدعوم' : 'بضاعة الصرف',
+      التصنيف: assetCategory(a),
+      الكمية: rawQty(a.qty),
+      الحالة: a.condition || '',
+      'سبب التخريد': a.archiveReason || '—',
+      'تاريخ التخريد': stampDay(a.archivedAt),
+      'من خرّده': a.archivedBy || '',
+    }));
+}
+
 /** عنوانُ التقرير الافتراضيّ. */
 export const REPORT_TITLE = 'تقرير مخزن فينسيا';
 
@@ -89,6 +180,11 @@ export function buildVeneciaReport(assets, cards, { asOf = '', filters = [], sco
     unitsByCategory.set(cat, (unitsByCategory.get(cat) ?? 0) + rawQty(a.qty));
   }
 
+  // المخرَّدُ يُحسب مرّةً واحدةً: الملخّصُ والورقةُ يقرآن منه — فلو حُسب
+  // مرّتين لَأمكن أن يفترقا، وهو عينُ ما يحرسه رأسُ هذا الملفّ.
+  const scrapRows = scrapReportRows(assets);
+  const scrapTotals = { الكمية: scrapRows.reduce((n, r) => n + r['الكمية'], 0) };
+
   const summary = [
     kv('أصولٌ في الجرد', snap.assets, `${snap.units} وحدة`),
     ...snap.perPopulation.map((p) => kv(p.label, p.assets, `${p.units} وحدة`)),
@@ -102,6 +198,10 @@ export function buildVeneciaReport(assets, cards, { asOf = '', filters = [], sco
     kv('صافي الحركة', signedText(moves.net), 'إدخالٌ ناقصَ صرف'),
     kv('مسودّاتٌ معلَّقة', moves.drafts, 'لم تُحرّك رصيدًا'),
   ];
+  // ★ سطرٌ للمخرَّد في الملخّص: الورقةُ تفصّل، والملخّصُ يقول «كم خرج ولا يصلح».
+  summary.push(
+    kv('مخرَّدٌ (مكهَّن)', scrapRows.length, `${scrapTotals['الكمية']} وحدة — خارجَ كلّ رقمٍ أعلاه`)
+  );
 
   const rows = veneciaExportRows(assets);
   const totals = {
@@ -110,6 +210,8 @@ export function buildVeneciaReport(assets, cards, { asOf = '', filters = [], sco
     'فرق الجرد': live.reduce((s, a) => s + (countVariance(a) ?? 0), 0),
   };
 
+  const issuedRows = issuedReportRows(cards);
+  const issuedTotals = { الكمية: issuedRows.reduce((n, r) => n + r['الكمية'], 0) };
   const cardRows = cardReportRows(cards);
   const cardTotalsRow = {
     بنود: cardRows.reduce((s, r) => s + r['بنود'], 0),
@@ -133,6 +235,8 @@ export function buildVeneciaReport(assets, cards, { asOf = '', filters = [], sco
     movement: moves,
     assetsSheet: { name: 'الجرد', columns: VENECIA_EXPORT_COLUMNS, rows, totals },
     cardsSheet: { name: 'بطاقات الحركة', columns: CARD_REPORT_COLUMNS, rows: cardRows, totals: cardTotalsRow },
+    issuedSheet: { name: 'المصروف', columns: ISSUED_REPORT_COLUMNS, rows: issuedRows, totals: issuedTotals },
+    scrapSheet: { name: 'المخرَّد', columns: SCRAP_REPORT_COLUMNS, rows: scrapRows, totals: scrapTotals },
   };
 }
 
@@ -143,6 +247,8 @@ export function buildVeneciaReport(assets, cards, { asOf = '', filters = [], sco
 export const NUMERIC_COLUMNS = {
   'الجرد': ['الكمية', 'الكمية المعدودة', 'فرق الجرد'],
   'بطاقات الحركة': ['بنود', 'الوحدات', 'الأثر'],
+  'المصروف': ['الكمية'],
+  'المخرَّد': ['الكمية'],
 };
 
 /** تصفيةُ بطاقاتٍ بمدى تاريخٍ — تُعاد تصديرًا ليستعملها بانيّ التقرير. */

@@ -16,8 +16,12 @@ import {
   CARD_REPORT_COLUMNS,
   NUMERIC_COLUMNS,
   REPORT_TITLE,
+  ISSUED_REPORT_COLUMNS,
+  SCRAP_REPORT_COLUMNS,
   buildVeneciaReport,
   cardReportRows,
+  issuedReportRows,
+  scrapReportRows,
 } from './veneciaReport.js';
 import { buildReportWorkbook, reportFileName } from './veneciaReportExcel.js';
 
@@ -141,7 +145,7 @@ function roundTrip(wb) {
 test('★★★ المصنَّفُ ثلاثُ أوراقٍ تُقرأ من بايتاته', () => {
   const rep = buildVeneciaReport(seed.assets, [card()], { asOf: '2026-10-19' });
   const out = roundTrip(buildReportWorkbook(XLSX, rep));
-  assert.deepEqual(out.names, ['الملخّص', 'الجرد', 'بطاقات الحركة']);
+  assert.deepEqual(out.names, ['الملخّص', 'الجرد', 'بطاقات الحركة', 'المصروف', 'المخرَّد']);
 });
 
 test('وورقةُ الجرد: ترويسةٌ ثمّ ١٠٤ صفًّا ثمّ سطرُ مجاميع', () => {
@@ -180,15 +184,27 @@ test('وورقةُ الملخّص تذكر العنوانَ والتاريخَ �
 test('★ والأعمدةُ الرقميّةُ معلومةٌ لكلّ ورقة — وإلّا خرجت المجاميعُ نصًّا', () => {
   assert.deepEqual(NUMERIC_COLUMNS['الجرد'], ['الكمية', 'الكمية المعدودة', 'فرق الجرد']);
   assert.deepEqual(NUMERIC_COLUMNS['بطاقات الحركة'], ['بنود', 'الوحدات', 'الأثر']);
+  // ★★★ والأعمدةُ المعروفةُ تُشتقُّ **من التقرير نفسِه** لا من خريطةٍ مكتوبةٍ
+  // هنا بيد: كانت `sheet === 'الجرد' ? … : …` ثنائيّةً، فأيُّ ورقةٍ ثالثةٍ
+  // تُضاف تقع على فرعٍ لا يخصّها فيسقط الحارسُ على عملٍ صحيح. وهو نفسُ
+  // الاقترانِ باسم الورقة الذي أُخرج من `buildReportWorkbook` من قبل.
+  const sample = buildVeneciaReport([], [], {});
+  const columnsBySheet = new Map(
+    [sample.assetsSheet, sample.cardsSheet, sample.issuedSheet, sample.scrapSheet].map((sh) => [
+      sh.name,
+      sh.columns,
+    ])
+  );
   for (const [sheet, cols] of Object.entries(NUMERIC_COLUMNS)) {
-    const known = sheet === 'الجرد' ? VENECIA_EXPORT_COLUMNS : CARD_REPORT_COLUMNS;
-    for (const c of cols) assert.ok(known.includes(c), `عمودٌ رقميٌّ لا وجودَ له: ${c}`);
+    const known = columnsBySheet.get(sheet);
+    assert.ok(known, `ورقةٌ في NUMERIC_COLUMNS لا وجودَ لها في التقرير: ${sheet}`);
+    for (const c of cols) assert.ok(known.includes(c), `عمودٌ رقميٌّ لا وجودَ له: ${c} في ${sheet}`);
   }
 });
 
 test('وجردٌ فارغٌ يُخرج تقريرًا لا يرمي', () => {
   const out = roundTrip(buildReportWorkbook(XLSX, buildVeneciaReport([], [], { asOf: '2026-10-19' })));
-  assert.deepEqual(out.names, ['الملخّص', 'الجرد', 'بطاقات الحركة']);
+  assert.deepEqual(out.names, ['الملخّص', 'الجرد', 'بطاقات الحركة', 'المصروف', 'المخرَّد']);
   assert.deepEqual(out.sheet('الجرد')[0], VENECIA_EXPORT_COLUMNS);
 });
 
@@ -196,4 +212,120 @@ test('اسمُ الملفّ يُنظَّف وبامتدادٍ واحد', () => {
   assert.equal(reportFileName('تقرير-2026-10-19'), 'تقرير-2026-10-19.xlsx');
   assert.equal(reportFileName('a/b:c'), 'abc.xlsx');
   assert.equal(reportFileName(''), 'تقرير-مخزن-فينسيا.xlsx');
+});
+
+// ═══ ورقتا المصروف والمخرَّد ‹VEN-301 ذيل› ═══
+
+const issueCard = (over = {}) => ({
+  number: 'VENISS-2026-0001',
+  kind: 'issue',
+  state: 'posted',
+  cardDate: '2026-10-20',
+  party: 'سعيد الحسناوي',
+  destination: 'مشروع الرحبة',
+  lines: [{ assetNo: 'BRZ-0063', assetName: 'أعمدة انارة', category: 'كهرباء', qty: 11 }],
+  ...over,
+});
+
+test('★★★ المصروفُ سطرٌ لكلّ بندٍ لا لكلّ بطاقة', () => {
+  const rows = issuedReportRows([
+    issueCard({
+      lines: [
+        { assetNo: 'BRZ-0063', assetName: 'أعمدة', category: 'كهرباء', qty: 11 },
+        { assetNo: 'BRZ-0070', assetName: 'مواسير', category: 'سباكه', qty: 4 },
+      ],
+    }),
+  ]);
+  assert.equal(rows.length, 2, 'بطاقةٌ ببندَين ⇒ سطران');
+  assert.deepEqual(rows.map((r) => r['رقم الأصل']), ['BRZ-0063', 'BRZ-0070']);
+  assert.equal(rows[0]['المستلِم'], 'سعيد الحسناوي', 'وكلُّ سطرٍ يحمل مستلِمَه');
+  assert.equal(rows[1]['السند'], 'VENISS-2026-0001', 'ورقمَ سنده');
+});
+
+test('★★★ والمثبَّتةُ وحدَها تدخل — فالمسودّةُ لم تُخرج بضاعة', () => {
+  const rows = issuedReportRows([
+    issueCard(),
+    issueCard({ state: 'draft', number: '' }),
+    issueCard({ state: 'cancelled' }),
+  ]);
+  assert.equal(rows.length, 1, 'المسودّةُ والملغاةُ خارجَ الورقة');
+});
+
+test('والإدخالُ ليس صرفًا', () => {
+  assert.deepEqual(issuedReportRows([issueCard({ kind: 'receipt' })]), []);
+});
+
+test('أعمدةُ المصروف تطابق مفاتيحَ صفوفه', () => {
+  const [row] = issuedReportRows([issueCard()]);
+  assert.deepEqual(Object.keys(row).sort(), [...ISSUED_REPORT_COLUMNS].sort());
+});
+
+test('بطاقةٌ بلا بنودٍ لا ترمي', () => {
+  assert.deepEqual(issuedReportRows([issueCard({ lines: undefined })]), []);
+  assert.deepEqual(issuedReportRows(null), []);
+});
+
+test('★★★ المخرَّدُ هو المكهَّنُ وحدَه — ومعه سببُه', () => {
+  const rows = scrapReportRows([
+    { id: 'BRZ-0002', assetName: 'مواسير', qty: 3, condition: 'معطل', archived: true, archiveReason: 'تلفٌ نهائيّ', archivedBy: 'محمد', archivedAt: '2026-10-18T09:00:00Z' },
+    { id: 'BRZ-0003', assetName: 'خشب', qty: 5, archived: false },
+  ]);
+  assert.equal(rows.length, 1, 'القائمُ ليس مخرَّدًا');
+  assert.equal(rows[0]['سبب التخريد'], 'تلفٌ نهائيّ');
+  assert.equal(rows[0]['من خرّده'], 'محمد');
+  assert.equal(rows[0]['تاريخ التخريد'], '2026-10-18');
+});
+
+test('★★ ومخرَّدٌ بلا سببٍ يُعرض شرطةً لا فراغًا — فالعمودُ يُقرأ', () => {
+  const [r] = scrapReportRows([{ id: 'B', assetName: 'x', qty: 1, archived: true }]);
+  assert.equal(r['سبب التخريد'], '—');
+  assert.equal(r['تاريخ التخريد'], '', 'وتاريخٌ غائبٌ يبقى فارغًا ولا يُخترع');
+});
+
+test('ختمُ Firestore يُقرأ يومًا كما يُقرأ النصّ', () => {
+  const stamp = { toDate: () => new Date(2026, 9, 18) };
+  const [r] = scrapReportRows([{ id: 'B', assetName: 'x', qty: 1, archived: true, archivedAt: stamp }]);
+  assert.equal(r['تاريخ التخريد'], '2026-10-18');
+});
+
+test('أعمدةُ المخرَّد تطابق مفاتيحَ صفوفه', () => {
+  const [row] = scrapReportRows([{ id: 'B', assetName: 'x', qty: 1, archived: true }]);
+  assert.deepEqual(Object.keys(row).sort(), [...SCRAP_REPORT_COLUMNS].sort());
+});
+
+test('★★★ وملخّصُ المخرَّد هو مجموعُ ورقته — لا حسابان يفترقان', () => {
+  const assets = [
+    { id: 'B1', assetName: 'a', qty: 3, archived: true, archiveReason: 'ت' },
+    { id: 'B2', assetName: 'b', qty: 7, archived: true, archiveReason: 'ت' },
+    { id: 'B3', assetName: 'c', qty: 5 },
+  ];
+  const r = buildVeneciaReport(assets, [], {});
+  const line = r.summary.find((x) => x.label.includes('مخرَّد'));
+  assert.equal(line.value, r.scrapSheet.rows.length);
+  assert.match(line.note, new RegExp(`${r.scrapSheet.totals['الكمية']} وحدة`));
+  assert.equal(r.scrapSheet.totals['الكمية'], 10);
+});
+
+test('★★ ومجموعُ المصروف هو مجموعُ أسطره', () => {
+  const r = buildVeneciaReport([], [issueCard()], {});
+  const sum = r.issuedSheet.rows.reduce((n, x) => n + x['الكمية'], 0);
+  assert.equal(r.issuedSheet.totals['الكمية'], sum);
+});
+
+test('★★★ والورقتان في المصنَّف المنسَّق — تُقرآن من بايتاته', () => {
+  const r = buildVeneciaReport(
+    [{ id: 'B1', assetName: 'مواسير', qty: 3, archived: true, archiveReason: 'تلف' }],
+    [issueCard()],
+    { asOf: '2026-10-21' }
+  );
+  const out = roundTrip(buildReportWorkbook(XLSX, r));
+  assert.ok(out.names.includes('المصروف'), 'ورقةُ المصروف موجودة');
+  assert.ok(out.names.includes('المخرَّد'), 'وورقةُ المخرَّد');
+  assert.ok(out.sheet('المصروف').flat().includes('سعيد الحسناوي'), 'والمستلِمُ فيها');
+  assert.ok(out.sheet('المخرَّد').flat().includes('تلف'), 'وسببُ التخريد فيها');
+});
+
+test('★★ والكمّيّةُ رقمٌ يُجمَع في إكسل لا نصّ', () => {
+  assert.deepEqual(NUMERIC_COLUMNS['المصروف'], ['الكمية']);
+  assert.deepEqual(NUMERIC_COLUMNS['المخرَّد'], ['الكمية']);
 });

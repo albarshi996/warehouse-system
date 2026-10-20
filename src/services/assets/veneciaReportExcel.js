@@ -139,8 +139,21 @@ function tableSheet(XLSX, { name, columns, rows, totals, numeric }) {
 export function buildReportWorkbook(XLSX, report) {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, summarySheet(XLSX, report), 'الملخّص');
-  XLSX.utils.book_append_sheet(wb, tableSheet(XLSX, report.assetsSheet), report.assetsSheet.name.slice(0, 31));
-  XLSX.utils.book_append_sheet(wb, tableSheet(XLSX, report.cardsSheet), report.cardsSheet.name.slice(0, 31));
+  // ★★★ الأوراقُ تُؤخذ **كما يعلنها التقرير**، والغائبةُ تُتخطّى.
+  // فهذا المصنَّفُ يخدم تقريرَين: فينسيا (خمسُ أوراق) ومنظارَ إدارة
+  // المستودعات `whReport` (ثلاث). وقائمةٌ ثابتةٌ هنا كانت تُسقط الثانيَ
+  // بـ`undefined` حالَ إضافةِ ورقةٍ للأوّل — وهو عينُ الاقتران باسم الورقة
+  // الذي أُخرج من `tableSheet` أعلاه. (‹VEN-301 ذيل› المصروفُ والمخرَّد.)
+  const sheets = report.sheets ?? [
+    report.assetsSheet,
+    report.cardsSheet,
+    report.issuedSheet,
+    report.scrapSheet,
+  ];
+  for (const sh of sheets) {
+    if (!sh?.name) continue;
+    XLSX.utils.book_append_sheet(wb, tableSheet(XLSX, sh), sh.name.slice(0, 31));
+  }
   return wb;
 }
 

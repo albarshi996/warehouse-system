@@ -289,6 +289,37 @@ export default function VeneciaReport({ assets = [], cards = [], scope = '', fil
             />
           </Section>
 
+          {/* ‹VEN-301 ذيل› المصروفُ والمخرَّد — من **نفس** الجسد الذي يبني
+              إكسل، فلا يفترق الملفّان. والترتيبُ هنا قبل البطاقات: القارئُ
+              يسأل «ماذا خرج ولمن» قبل «كم بطاقةً كُتبت». */}
+          <Section title={`المصروف (${num(report.issuedSheet.rows.length)} بندًا)`}>
+            {report.issuedSheet.rows.length ? (
+              <Table
+                columns={report.issuedSheet.columns}
+                numeric={['الكمية']}
+                rows={report.issuedSheet.rows}
+                totals={report.issuedSheet.totals}
+              />
+            ) : (
+              <div style={{ fontSize: '8pt', color: '#8A95A3' }}>
+                لا بندَ مصروفًا في هذا النطاق — والمسودّاتُ لا تُحسب حتّى تُثبَّت.
+              </div>
+            )}
+          </Section>
+
+          <Section title={`المخرَّد (${num(report.scrapSheet.rows.length)})`}>
+            {report.scrapSheet.rows.length ? (
+              <Table
+                columns={report.scrapSheet.columns}
+                numeric={['الكمية']}
+                rows={report.scrapSheet.rows}
+                totals={report.scrapSheet.totals}
+              />
+            ) : (
+              <div style={{ fontSize: '8pt', color: '#8A95A3' }}>لا صنفَ مخرَّدًا — لا شيءَ خرج من الجرد.</div>
+            )}
+          </Section>
+
           <Section title={`بطاقات الحركة (${num(report.cardsSheet.rows.length)})`}>
             {report.cardsSheet.rows.length ? (
               <Table
