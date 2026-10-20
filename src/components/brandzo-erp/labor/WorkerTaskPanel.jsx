@@ -11,8 +11,16 @@ import { useEffect, useMemo, useState } from 'react';
 import Icon from '../../ui/Icon.jsx';
 import { useBarcodeCamera, ScanCameraButton, ScanCameraPanel } from '../scan/BarcodeCamera.jsx';
 import Badge from '../../odoo/Badge.jsx';
-import { listenLocations } from '../../../services/locations/locationsService.js';
-import { listenBalances } from '../../../services/balances/balancesService.js';
+import { fetchLocationsByCodes, listenLocations } from '../../../services/locations/locationsService.js';
+import { fetchBalancesInBins, listenBalances } from '../../../services/balances/balancesService.js';
+import { normalizeLocationCode } from '../../../services/locations/locationCode.js';
+import { LOCATION_SCREENS, mergeById, prefixOfCode, withWitness } from '../../../services/locations/locationReads.js';
+import {
+  useFullLocationReads,
+  useLocationWitness,
+  useWarehouseBalances,
+  useWarehouseLocations,
+} from '../locations/useLocationReads.js';
 import { suggestLocations } from '../../../services/locations/putawaySuggest.js';
 import { applyScan, scanVerdict } from '../../../services/locations/scanGate.js';
 import { finishVerdict, lineProgress, taskProgress } from '../../../services/labor/laborModel.js';
@@ -26,14 +34,32 @@ export default function WorkerTaskPanel({ task, onSaveLines, onFinish, onDelayRe
   const [lines, setLines] = useState(() => task?.lines || []);
   const [active, setActive] = useState(0);
   const [scan, setScan] = useState(EMPTY_SCAN);
-  const [locations, setLocations] = useState([]);
-  const [balances, setBalances] = useState([]);
+  const [allLocations, setLocations] = useState([]);
+  const [allBalances, setBalances] = useState([]);
   const [problems, setProblems] = useState([]);
   const [note, setNote] = useState('');
 
   useEffect(() => setLines(task?.lines || []), [task?.id, task?.lines]);
-  useEffect(() => listenLocations(setLocations, () => setLocations([])), []);
-  useEffect(() => listenBalances(setBalances, () => setBalances([])), []);
+  /**
+   * ‹LOC-READS› كانت اللوحةُ تقرأ السيّدَ والأرصدةَ **كاملين** (10,164) لكلّ مهمّةٍ تُفتح.
+   * والاقتراحُ يحصر المرشّحين بمستودع المهمّة — فيُقرأ هو وأرصدةُ خاناته وحدَها، مع شاهد.
+   * ومهمّةٌ بلا مستودعٍ يُقترح لها من الكلّ — فيُقرأ الكلّ كما كان. والرفُّ الممسوح خارج
+   * المستودع يُقرأ بعينه عند الإرسال (حكمُه من خانته وأرصدتها وحدَها).
+   */
+  const fullLocations = useFullLocationReads(LOCATION_SCREENS.workerTask);
+  const taskWh = String(task?.warehouse ?? '').trim().toUpperCase();
+  const readAll = fullLocations || !taskWh;
+  useEffect(() => (readAll ? listenLocations(setLocations, () => setLocations([])) : undefined), [readAll]);
+  useEffect(() => (readAll ? listenBalances(setBalances, () => setBalances([])) : undefined), [readAll]);
+  const whBins = useWarehouseLocations([taskWh], { enabled: !readAll });
+  const whBalances = useWarehouseBalances([taskWh], { enabled: !readAll });
+  const witnessState = useLocationWitness(!readAll);
+  const locations = useMemo(
+    () => (readAll ? allLocations : withWitness(whBins.locations, witnessState.witness)),
+    [readAll, allLocations, whBins.locations, witnessState.witness]
+  );
+  const balances = readAll ? allBalances : whBalances.balances;
+  const scopeReady = readAll || (whBins.ready && whBalances.ready && witnessState.ready);
 
   const line = lines[active];
   const progress = useMemo(() => taskProgress(lines), [lines]);
@@ -41,27 +67,46 @@ export default function WorkerTaskPanel({ task, onSaveLines, onFinish, onDelayRe
 
   const suggestion = useMemo(() => {
     if (!line) return { candidates: [], rejected: [], problem: '' };
+    if (!scopeReady) return { candidates: [], rejected: [], problem: 'يقرأ مواقعَ المستودع…' };
     return suggestLocations({
       line: { ...line, qty: lp?.remaining ?? 0 },
       locations,
       balances,
       warehouse: task?.warehouse,
     });
-  }, [line, lp, locations, balances, task?.warehouse]);
+  }, [line, lp, locations, balances, task?.warehouse, scopeReady]);
 
   if (!line) {
     return <p className="text-sm text-ink-2">لا بنود في هذه المهمّة.</p>;
   }
 
-  function submit() {
+  async function submit() {
+    // ‹LOC-READS› الرفُّ الممسوح يُحكم عليه من خانته وأرصدتها — فإن كان خارج مستودع
+    // المهمّة قُرئ بعينه الآن (الحكمُ لا يسأل عن المستودع، فقد يقبل رفًّا من غيره).
+    let locs = locations;
+    let bals = balances;
+    if (!readAll) {
+      if (!scopeReady) { setProblems(['يقرأ مواقعَ المستودع — أعد المحاولة بعد لحظة.']); return; }
+      const code = normalizeLocationCode(scan.bin);
+      if (code && prefixOfCode(code) !== taskWh) {
+        try {
+          const [found, binBals] = await Promise.all([fetchLocationsByCodes([code]), fetchBalancesInBins([code])]);
+          locs = withWitness(mergeById(locations, found), witnessState.witness);
+          bals = mergeById(balances, binBals).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+        } catch (err) {
+          setProblems([`تعذّرت قراءة الرفّ «${code}»: ${err?.message || 'سببٌ غير معروف'}`]);
+          return;
+        }
+      }
+    }
     const verdict = scanVerdict({
       line,
       scannedItem: scan.item,
       scannedBatch: scan.batch,
       scannedBin: scan.bin,
       qty: Number(scan.qty),
-      locations,
-      balances,
+      locations: locs,
+      balances: bals,
       overrideNote: scan.note,
     });
     setProblems(verdict.problems);

@@ -20,11 +20,20 @@ import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authServ
 import Badge from '../../odoo/Badge.jsx';
 import { int } from '../../odoo/format.js';
 import { FACILITY_TYPES, DEFAULT_FACILITY_TYPE, facilityTypeOf, facilityWarnings } from '../../../services/locations/facilityModel.js';
-import { canEditLocations, listenLocations, saveLocationsBulk } from '../../../services/locations/locationsService.js';
+import {
+  canEditLocations,
+  countLocationsInPrefix,
+  fetchLocationsInPrefix,
+  listenLocations,
+  saveLocationsBulk,
+} from '../../../services/locations/locationsService.js';
+import { LOCATION_SCREENS, mergeCodeIndex, prefixCodesVia } from '../../../services/locations/locationReads.js';
+import { useFullLocationReads } from '../locations/useLocationReads.js';
 import { toLocationInputs } from '../../../services/locations/locationScheme.js';
 import {
   driftedWarehouses,
   generationPlan,
+  planPrefixOf,
   schemeFromTemplate,
   templateById,
 } from '../../../services/locations/binTemplate.js';
@@ -66,6 +75,7 @@ const WarehouseManager = () => {
   const [profile, setProfile] = useState(null);
   const [binCodes, setBinCodes] = useState([]);
   const [genBusy, setGenBusy] = useState('');
+  const [genTick, setGenTick] = useState(0);
   const [warehouses, setWarehouses] = useState([]);
   const [formData, setFormData] = useState({ code: '', name: '', manager: '', facilityType: DEFAULT_FACILITY_TYPE });
   const [editingId, setEditingId] = useState(null);
@@ -268,10 +278,49 @@ const WarehouseManager = () => {
   };
 
   // ‹LOC-704› أكوادُ المواقع القائمة — تُقرأ مرّةً ويُحسب منها ناقصُ كلّ مستودع.
+  //
+  // ‹LOC-READS› وكانت تُقرأ **كلُّها** (8,402) في كلّ فتحٍ للشاشة ولو لم يُنظر إلى
+  // عمود المواقع. فصارت تُعدّ: لكلّ بادئةٍ عددُها من الخادم (ألفُ مدخلٍ بقراءة)،
+  // وإن طابق المحفوظَ في هذا المتصفّح فهو هو — `bin_locations` لا تُحذف، فمحفوظٌ
+  // بحجم الكلّ هو الكلّ (`codeIndexIsFresh`). وإلّا قُرئت تلك البادئةُ وحدَها.
+  const fullLocations = useFullLocationReads(LOCATION_SCREENS.warehouses);
+  const [binCodesReady, setBinCodesReady] = useState(false);
+  const planPrefixes = React.useMemo(
+    () => [...new Set(warehouses.map((w) => planPrefixOf(w, ASSIGNMENTS)).filter(Boolean))].sort().join('|'),
+    [warehouses]
+  );
+  const prefixCodes = React.useCallback(
+    (prefix) =>
+      prefixCodesVia({
+        prefix,
+        storage: typeof localStorage === 'undefined' ? null : localStorage,
+        count: countLocationsInPrefix,
+        fetchRows: fetchLocationsInPrefix,
+      }),
+    []
+  );
   useEffect(() => {
-    if (!role) return undefined;
+    if (!role || !fullLocations) return undefined;
     return listenLocations((rows) => setBinCodes(rows.map((r) => r.code)));
-  }, [role]);
+  }, [role, fullLocations]);
+  useEffect(() => {
+    if (!role || fullLocations || !planPrefixes) return undefined;
+    let alive = true;
+    // ★ لا يُعوَّض الفشلُ بقائمةٍ فارغة: قائمةٌ فارغةٌ تقول «ينقص المستودعُ كلُّه» وتُغري بـ«ولّد»
+    //   تُعيد كتابةَ خاناتٍ قائمة بقيمٍ افتراضيّة. فلا خطّةَ تُعرض حتّى تصل الأكوادُ كلُّها.
+    Promise.all(planPrefixes.split('|').map((p) => prefixCodes(p)))
+      .then((parts) => {
+        if (!alive) return;
+        setBinCodes(parts.flatMap((x) => x.codes));
+        setBinCodesReady(true);
+      })
+      .catch(() => {
+        if (alive) setBinCodesReady(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [role, fullLocations, planPrefixes, prefixCodes, genTick]);
 
   /**
    * ★★ خطّةُ التوليد — **الناقصُ لا الكلّ**. تُحسب في المنطق الخالص
@@ -282,6 +331,8 @@ const WarehouseManager = () => {
     () => generationPlan({ warehouses, templates: TEMPLATES, existingCodes: binCodes, assignments: ASSIGNMENTS }),
     [warehouses, binCodes]
   );
+  /** المستمعُ الكامل يعرض كما كان؛ والمقصورُ ينتظر أكوادَه قبل أن يحكم بالناقص. */
+  const plansShown = fullLocations || binCodesReady;
   const planByCode = React.useMemo(
     () => new Map(plan.rows.map((r) => [r.warehouseCode, r])),
     [plan]
@@ -299,8 +350,18 @@ const WarehouseManager = () => {
     try {
       let saved = 0;
       for (const r of todo) {
-        const out = await saveLocationsBulk(toLocationInputs(r.missing, { warehouse: r.binPrefix }), profile);
-        saved += out?.saved ?? r.missing.length;
+        // ★★ ‹LOC-READS› يُعاد التحقّقُ قبل الكتابة: `saveLocationsBulk` يدمج بقيمٍ
+        // افتراضيّة، فكتابةُ كودٍ قائمٍ تُرجع حالتَه وسعتَه إلى الصفر. وزميلٌ ولّد
+        // في الأثناء يجعل «الناقص» المعروضَ قائمًا — فيُطرح القائمُ الآن لا أمس.
+        let missing = r.missing;
+        if (!fullLocations) {
+          const now = new Set((await prefixCodes(r.binPrefix)).codes);
+          missing = r.missing.filter((c) => !now.has(c));
+          if (!missing.length) continue;
+        }
+        const out = await saveLocationsBulk(toLocationInputs(missing, { warehouse: r.binPrefix }), profile);
+        saved += out?.saved ?? missing.length;
+        if (!fullLocations && typeof localStorage !== 'undefined') mergeCodeIndex(localStorage, r.binPrefix, missing);
 
         // ★★ ويُثبَّت القالبُ على المستودع إن كان مبدئيًّا من الإسناد المعتمد —
         // فالمرّةُ الأولى تكفي، وما بعدها يُقرأ من الوثيقة لا من البذرة.
@@ -331,6 +392,8 @@ const WarehouseManager = () => {
       setStatusMsg({ type: 'error', text: 'تعذّر التوليد: ' + (err?.message || 'سببٌ غير معروف') });
     } finally {
       setGenBusy('');
+      // المستمعُ الكاملُ يرى ما كُتب وحدَه؛ والعدُّ يُعاد فيرى ما ضُمّ إلى المحفوظ.
+      setGenTick((n) => n + 1);
     }
   };
 
@@ -392,6 +455,9 @@ const WarehouseManager = () => {
       ),
       status: <Badge variant={(wh.status || 'نشط') === 'نشط' ? 'done' : 'danger'}>{wh.status || 'نشط'}</Badge>,
       bins: (() => {
+        // ‹LOC-READS› قبل وصول الأكواد لا يُعرض «0/2600» ولا زرُّ «ولّد 2600» — كان
+        // عابرًا يُغري بضغطةٍ تُعيد كتابةَ مستودعٍ قائم.
+        if (!plansShown) return <span style={{ color: 'var(--o-main-color-muted)' }}>…</span>;
         const p = planByCode.get(wh.code);
         if (!p) return <span style={{ color: 'var(--o-main-color-muted)' }}>—</span>;
         if (p.problems.length) {
@@ -500,7 +566,7 @@ const WarehouseManager = () => {
         )}
 
         {/* ‹LOC-704› ضغطةٌ واحدةٌ لكلّ ما ينقص — والزرُّ آمنٌ عند التكرار. */}
-        {canEditLocations(role) && (plan.totalMissing > 0 || plan.blocked.length > 0) && (
+        {canEditLocations(role) && plansShown && (plan.totalMissing > 0 || plan.blocked.length > 0) && (
           <div className="o_ds_card o_ds_pad" style={{ marginBottom: '14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
             <Icon name="mapPin" size={16} />
             <span style={{ flex: 1, fontSize: 'var(--o-font-size-sm)', lineHeight: 1.6 }}>

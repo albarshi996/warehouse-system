@@ -32,6 +32,7 @@ export default function BinCodingWizard({
   onConfirm,
   onCancel,
   locations = [],
+  progress: progressGiven = null,
   suggested = '',
   busy = '',
   manual = false,
@@ -50,7 +51,9 @@ export default function BinCodingWizard({
    */
   const label = manual ? capturedBarcode : barcode;
   const problems = done && label ? bindingProblems({ barcode: label, code, locations }) : [];
-  const progress = codingProgress(locations, prefix);
+  // ‹LOC-READS› المستدعي بالقراءة المقصورة يمرّر التقدّمَ محسوبًا (عددُ البادئة من
+  // الخادم ومربوطُها من الملصقات) — فلا تحتاج الترويسةُ المستودعَ كلَّه.
+  const progress = progressGiven || codingProgress(locations, prefix);
   const num = (n) => new Intl.NumberFormat('en-US').format(Number(n) || 0);
 
   return (

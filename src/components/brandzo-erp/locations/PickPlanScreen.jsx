@@ -3,7 +3,15 @@ import Icon from '../../ui/Icon.jsx';
 import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
 import { listenAllDocuments } from '../../../services/documents/documentsService.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
-import { listenLocations } from '../../../services/locations/locationsService.js';
+import { allLocationsHaveCoordinates, fetchLocationsOnce, listenLocations } from '../../../services/locations/locationsService.js';
+import { LOCATION_SCREENS, pickPrefixesOf, withWitness } from '../../../services/locations/locationReads.js';
+import {
+  useFullLocationReads,
+  useLocationCount,
+  useLocationWitness,
+  usePickFaces,
+  useWarehouseLocations,
+} from './useLocationReads.js';
 import { buildGrid } from '../../../services/locations/travelGrid.js';
 import { fefoLocationViolations, pickPlan } from '../../../services/locations/pickPlan.js';
 // ‹WMS-302› طابورُ تزويد أوجه التجهيز — **بلا قراءةٍ واحدةٍ إضافيّة**: هذه
@@ -96,7 +104,7 @@ export default function PickPlanScreen() {
   const [ready, setReady] = useState(false);
   const [docs, setDocs] = useState([]);
   const [balances, setBalances] = useState([]);
-  const [locations, setLocations] = useState([]);
+  const [allLocations, setLocations] = useState([]);
   const [mode, setMode] = useState('doc');
   const [docId, setDocId] = useState('');
   const [warehouse, setWarehouse] = useState('');
@@ -118,22 +126,29 @@ export default function PickPlanScreen() {
     return () => unsub?.();
   }, []);
 
+  /**
+   * ‹LOC-READS› السيّدُ كان يُقرأ كلُّه عند الفتح (8,402) ليُبنى منه أمران: شبكةُ المشي
+   * وطابورُ التزويد. فصار يُقرأ لكلٍّ ما يحتاجه حرفًا:
+   *  · الشبكةُ من **مستودعات مسار المستند المختار** وحدَها (`pickPrefixesOf`) — فـ`buildGrid`
+   *    يرتّب الممرّاتِ داخل كلّ مستودعٍ وحدَه، فنقاطُها هي نقاطُها من السيّد كلِّه.
+   *  · والتزويدُ من **أوجه التجهيز** وحدَها (`pickFace == true`) — فلا يقرأ غيرَها.
+   *  · وكلاهما مع الشاهد، فرسالةُ «سيّد المواقع فارغ» لا تُقال لغير الفارغ.
+   */
+  const fullLocations = useFullLocationReads(LOCATION_SCREENS.pickPlan);
   useEffect(() => {
     if (!me) return undefined;
     const fail = (what) => (e) => setError(e?.message || `تعذّرت قراءة ${what}.`);
     const a = listenAllDocuments(setDocs, DOCS_CAP);
     const b = listenBalances(setBalances, fail('الأرصدة'));
-    const c = listenLocations(setLocations, fail('المواقع'));
+    const c = fullLocations ? listenLocations(setLocations, fail('المواقع')) : null;
     return () => { a?.(); b?.(); c?.(); };
-  }, [me]);
+  }, [me, fullLocations]);
 
   const picks = useMemo(
     () => (docs || []).filter((d) => String(d?.type).toUpperCase() === 'PICK'),
     [docs]
   );
 
-  /** الشبكة تحسّن ولا تُشترط — بلا مواقعَ معرّفة يعود الترتيب إلى الكود. */
-  const grid = useMemo(() => (locations.length ? buildGrid(locations) : null), [locations]);
 
   /** طلبٌ عابرٌ من الأكواد الملصوقة — «كود» أو «كود ٥» في كلّ سطر. */
   const pastedDoc = useMemo(() => {
@@ -156,19 +171,69 @@ export default function PickPlanScreen() {
     return picks.find((d) => d.id === docId) || null;
   }, [mode, pastedDoc, picks, docId]);
 
+  // ── ‹LOC-READS› ما تحتاجه الشبكةُ والتزويدُ — لا السيّد كلّه ─────────────
+  const scoped = !fullLocations && Boolean(me);
+  const witnessState = useLocationWitness(scoped);
+  const masterCount = useLocationCount(scoped);
+  const faces = usePickFaces(scoped);
+  const pathPrefixes = useMemo(
+    () => (scoped && source ? pickPrefixesOf(source, balances) : []),
+    [scoped, source, balances]
+  );
+  const pathBins = useWarehouseLocations(pathPrefixes, { enabled: scoped && pathPrefixes.length > 0 });
+  // ★★ `approximate` حكمٌ على السيّد **كلّه** ويُكتب في المهمّة (`pathBasis`): فشبكةٌ مقروءةٌ
+  // كلُّ خاناتها مُدخَلة لا تُصدَّق حتّى يُثبت العدُّ أنّ الكلَّ كذلك
+  // (`allLocationsHaveCoordinates`، نحو ثلاثين قراءة). وإن لم يثبت قُرئ الكلّ — لا يُخمَّن.
+  const [gridAll, setGridAll] = useState(null);
+  const [gridProven, setGridProven] = useState(null);
+  const binsArrived = witnessState.ready && (pathPrefixes.length === 0 || pathBins.ready);
+  const scopedGrid = useMemo(() => {
+    if (fullLocations || !binsArrived) return null;
+    const rows = withWitness(pathBins.locations, witnessState.witness);
+    return rows.length ? buildGrid(rows) : null;
+  }, [fullLocations, binsArrived, pathBins.locations, witnessState.witness]);
+  const needsProof = Boolean(scoped && !gridAll && scopedGrid && !scopedGrid.approximate);
+  useEffect(() => {
+    if (!needsProof || gridProven !== null) return undefined;
+    let alive = true;
+    allLocationsHaveCoordinates()
+      .then((ok) => {
+        if (!alive) return;
+        setGridProven(ok);
+        if (!ok) fetchLocationsOnce().then((rows) => alive && setGridAll(rows)).catch(() => {});
+      })
+      .catch(() => alive && setGridProven(false));
+    return () => { alive = false; };
+  }, [needsProof, gridProven]);
+  const gridReady = fullLocations
+    || Boolean(gridAll)
+    || (binsArrived && (!needsProof || gridProven === true));
+  /** الشبكة تحسّن ولا تُشترط — بلا مواقعَ معرّفة يعود الترتيب إلى الكود. */
+  const grid = useMemo(() => {
+    if (fullLocations) return allLocations.length ? buildGrid(allLocations) : null;
+    if (gridAll) return gridAll.length ? buildGrid(gridAll) : null;
+    return gridReady ? scopedGrid : null;
+  }, [fullLocations, allLocations, gridAll, gridReady, scopedGrid]);
+  const replenishLocations = useMemo(
+    () => (fullLocations ? allLocations : faces.ready && witnessState.ready ? withWitness(faces.locations, witnessState.witness) : []),
+    [fullLocations, allLocations, faces, witnessState]
+  );
+
   /**
    * ⚠ الخطأ يُعاد **قيمةً** لا يُضبط حالةً هنا: `setState` داخل `useMemo`
    * تحديثٌ أثناء الرندر يرفضه React — فينهار المكوّن وتُفرَّغ الصفحة بلا
    * رسالة. (وقع حيًّا في أوّل تجربةٍ لهذه الشاشة.)
    */
-  const { plan, planProblem } = useMemo(() => {
+  const { plan, planProblem, planWaiting } = useMemo(() => {
     if (!source) return { plan: null, planProblem: '' };
+    // بالقراءة المقصورة لا خطّةَ قبل الشبكة — وإلّا عُرض مسارٌ بالكود ثمّ انقلب بالمشي.
+    if (!gridReady) return { plan: null, planProblem: '', planWaiting: true };
     try {
       return { plan: pickPlan(source, balances, { grid }), planProblem: '' };
     } catch (err) {
       return { plan: null, planProblem: err?.message || 'تعذّر بناء الخطّة.' };
     }
-  }, [source, balances, grid]);
+  }, [source, balances, grid, gridReady]);
 
   const fefo = useMemo(
     () => (source && mode === 'doc' ? fefoLocationViolations(source, balances) : []),
@@ -188,8 +253,10 @@ export default function PickPlanScreen() {
     [source, warehouse]
   );
   const replenish = useMemo(
-    () => (locations.length ? replenishPlan({ locations, balances, nowMs: Date.now(), warehouse: replenishScope }) : null),
-    [locations, balances, replenishScope]
+    () => (replenishLocations.length
+      ? replenishPlan({ locations: replenishLocations, balances, nowMs: Date.now(), warehouse: replenishScope })
+      : null),
+    [replenishLocations, balances, replenishScope]
   );
 
   /**
@@ -256,7 +323,9 @@ export default function PickPlanScreen() {
           <Tab active={mode === 'paste'} onClick={() => setMode('paste')} label="ألصق أكوادًا" />
           <div className="flex-1" />
           <span className="text-[11px] text-muted self-center">
-            {grid ? `شبكة المسافات جاهزة (${num(locations.length)} موقعًا)` : 'لا مواقعَ معرّفة — الترتيب بالكود'}
+            {fullLocations
+              ? (grid ? `شبكة المسافات جاهزة (${num(allLocations.length)} موقعًا)` : 'لا مواقعَ معرّفة — الترتيب بالكود')
+              : masterCount === null ? '' : masterCount > 0 ? `شبكة المسافات جاهزة (${num(masterCount)} موقعًا)` : 'لا مواقعَ معرّفة — الترتيب بالكود'}
           </span>
         </div>
 
@@ -535,7 +604,9 @@ export default function PickPlanScreen() {
 
       {!plan && (
         <Notice>
-          {mode === 'doc' ? 'اختر مستند سحبٍ لترى مواقعه ومساره.' : 'ألصق أكواد الأصناف لترى أين هي.'}
+          {planWaiting
+            ? 'يقرأ مواقعَ مستودع هذا المسار…'
+            : mode === 'doc' ? 'اختر مستند سحبٍ لترى مواقعه ومساره.' : 'ألصق أكواد الأصناف لترى أين هي.'}
         </Notice>
       )}
 

@@ -32,6 +32,9 @@ import { listenLaborTasks, releaseDocumentTasks } from '../../../services/labor/
 import { canDeriveFrom } from '../../../services/documents/states.js';
 import { generateTasks, workTypeForDoc } from '../../../services/tasks/taskFactory.js';
 import { WORK_TYPES } from '../../../services/tasks/taskShape.js';
+import { listenLocations } from '../../../services/locations/locationsService.js';
+import { pickPrefixesOf, withWitness } from '../../../services/locations/locationReads.js';
+import { useLocationWitness, useWarehouseLocations } from '../locations/useLocationReads.js';
 
 const muted = { fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' };
 
@@ -47,7 +50,7 @@ function groupOfKey(key) {
   return !group || group === 'ALL' ? 'بلا منطقة' : group;
 }
 
-export default function FieldReleasePanel({ doc, me, items = [], locations = [], onFlash }) {
+export default function FieldReleasePanel({ doc, me, items = [], locations: fullLocations = [], scopedLocations = false, onFlash }) {
   const workType = workTypeForDoc(doc?.type);
 
   /**
@@ -116,6 +119,52 @@ export default function FieldReleasePanel({ doc, me, items = [], locations = [],
     return () => stop?.();
   }, [active, workType]);
 
+  /**
+   * ‹LOC-READS› مواقعُ التجربة الجافّة — بقدر ما تقرؤه `generateTasks` لا السيّد كلّه.
+   *
+   *  · التخزين: `suggestLocations` تحصر المرشّحين بمستودع الرأس ⇒ خاناتُه + الشاهد
+   *    (فرسالةُ «سيّد المواقع فارغ» لا تُقال لمستودعٍ فارغٍ وحده). وبلا مستودعٍ في
+   *    الرأس تقترح من **كلّ** المستودعات ⇒ يُقرأ الكلّ كما كان.
+   *  · السحب: شبكةُ المشي من مستودعات المسار (`pickPrefixesOf`) + الشاهد.
+   *  · النقل: طرفاه من الرأس — لا موقعَ يُقرأ.
+   *
+   * وقبل أن تصل لا تجربةَ جافّة (كما تنتظر الأرصدة)، فلا يُعرض اقتراحٌ من نصف سيّد.
+   */
+  const releaseScope = useMemo(() => {
+    if (!scopedLocations || !active) return { kind: 'off', prefixes: [] };
+    if (workType === 'putaway') {
+      const wh = String(doc?.header?.warehouse ?? '').trim().toUpperCase();
+      return wh ? { kind: 'warehouses', prefixes: [wh] } : { kind: 'all', prefixes: [] };
+    }
+    if (workType === 'pick') {
+      if (balances === null) return { kind: 'wait', prefixes: [] };
+      return { kind: 'warehouses', prefixes: pickPrefixesOf(doc, balances) };
+    }
+    return { kind: 'none', prefixes: [] };
+  }, [scopedLocations, active, workType, doc, balances]);
+
+  const scopedBins = useWarehouseLocations(releaseScope.prefixes, { enabled: releaseScope.kind === 'warehouses' });
+  const { witness, ready: witnessReady } = useLocationWitness(releaseScope.kind === 'warehouses');
+  const [allBins, setAllBins] = useState(null);
+  useEffect(() => {
+    if (releaseScope.kind !== 'all') {
+      setAllBins(null);
+      return undefined;
+    }
+    return listenLocations(setAllBins, () => setAllBins([]));
+  }, [releaseScope.kind]);
+
+  /** المواقعُ التي تُمرَّر إلى المصنع — و`null` تعني «لم تصل بعد». */
+  const locations = useMemo(() => {
+    if (!scopedLocations) return fullLocations;
+    if (releaseScope.kind === 'none' || releaseScope.kind === 'off') return [];
+    if (releaseScope.kind === 'all') return allBins;
+    if (releaseScope.kind === 'wait') return null;
+    if (!witnessReady) return null;
+    if (releaseScope.prefixes.length && !scopedBins.ready) return null;
+    return withWitness(scopedBins.locations, witness);
+  }, [scopedLocations, fullLocations, releaseScope, allBins, witnessReady, witness, scopedBins]);
+
   /** مهامُّ هذا المستند القائمة — الرابطُ `docRef.id` وهو ما يصل الاتّجاهين. */
   const existing = useMemo(
     () => (laborTasks || []).filter((t) => t?.docRef?.id && t.docRef.id === doc?.id),
@@ -134,7 +183,7 @@ export default function FieldReleasePanel({ doc, me, items = [], locations = [],
    * يُصدَّق بعدها.
    */
   const dry = useMemo(() => {
-    if (!active || balances === null) return null;
+    if (!active || balances === null || locations === null) return null;
     const opts = { balances, locations, items, nowMs: Date.now() };
     const existingKeys = existing.map((t) => t?.workKey).filter(Boolean);
     return { opts, existingKeys, ...generateTasks(doc, { ...opts, existingKeys }) };

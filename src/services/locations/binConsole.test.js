@@ -339,7 +339,11 @@ test('★★★ والمحضرُ يُبنى من القيود المحفوظة �
 const WIZARD = readFileSync(new URL('../../components/brandzo-erp/locations/BinCodingWizard.jsx', import.meta.url), 'utf8');
 
 test('★★★ المسحةُ تبحث عن ربطٍ قبل كلّ شيء — ولا تفترض عنوان الباركود', () => {
-  assert.ok(SCREEN.includes('findByBarcode(locations, raw)'), 'الربطُ يُبحث أوّلًا');
+  // ‹LOC-READS› طريقان والحكمُ واحد: خلف مفتاح الإطفاء على السيّد كلّه، وبالقراءة المقصورة
+  // بالخانة المربوطة بعينها (`lookupBinVia` — ويُثبت `locationReads.test.js` أنّه `findByBarcode` حرفًا).
+  assert.ok(SCREEN.includes('findByBarcode(allLocations, raw)'), 'الربطُ يُبحث أوّلًا (القراءة الكاملة)');
+  assert.ok(SCREEN.includes('const hit = await lookupBin(raw);'), 'الربطُ يُبحث أوّلًا (القراءة المقصورة)');
+  assert.ok(SCREEN.indexOf('const hit = await lookupBin(raw);') < SCREEN.indexOf('routeScan(raw, { hasBin: Boolean(bin), bound: Boolean(hit) })'), 'قبل التوجيه لا بعده');
   assert.ok(SCREEN.includes('setCoding(normalizeBinBarcode(raw))'), 'وغيرُ المربوط يُفتح له ويزارد');
 });
 

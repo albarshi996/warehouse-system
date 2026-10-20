@@ -84,6 +84,13 @@ import {
   backupExportRows,
 } from '../../../services/stock/scanBackup.js';
 import { fetchLocationsOnce } from '../../../services/locations/locationsService.js';
+import { LOCATION_SCREENS, scopeChoicesFrom } from '../../../services/locations/locationReads.js';
+import {
+  useFullLocationReads,
+  useLocationWitness,
+  usePrefixChoices,
+  useZoneChoices,
+} from '../locations/useLocationReads.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import {
   useBarcodeCamera,
@@ -170,17 +177,33 @@ export default function ScanFlow() {
    * وتعذّرُ القراءة لا يعطّل الجرد: تبقى القائمة فارغةً والجلسة تُفتح بلا
    * نطاق (ق-٣).
    */
+  //
+  // ‹LOC-READS› وكانت القراءةُ الواحدةُ **السيّدَ كلَّه** (8,402) على هاتف كلّ عادٍّ لتُملأ
+  // منسدلتان. فصارتا تُملآن بـ«تخطّي المقطع»: قراءةٌ لكلّ مستودعٍ قائم، ثمّ قراءةٌ لكلّ
+  // منطقةٍ في المستودع المختار وحدَه — وهو ما يحسبه `scopeChoices` من الشجرة حرفًا.
+  const fullLocations = useFullLocationReads(LOCATION_SCREENS.scanFlow);
   useEffect(() => {
+    if (!fullLocations) return undefined;
     let alive = true;
     fetchLocationsOnce()
       .then((rows) => { if (alive) setLocations(rows); })
       .catch(() => { if (alive) setLocations([]); });
     return () => { alive = false; };
-  }, []);
+  }, [fullLocations]);
+  const { witness: anyLocation } = useLocationWitness(!fullLocations);
+  const { prefixes: livePrefixes } = usePrefixChoices(!fullLocations && Boolean(anyLocation), { liveOnly: true });
+  const scopeZones = useZoneChoices(scopeWh, { enabled: !fullLocations && Boolean(scopeWh) });
+  /** أفي السيّد خانةٌ أصلًا؟ — شرطُ ظهور بطاقة النطاق كما كان (`locations.length > 0`). */
+  const hasLocations = fullLocations ? locations.length > 0 : Boolean(anyLocation);
   const itemIndexes = useMemo(() => buildItemIndexes(items), [items]);
 
   /** ‹CAP-202› خيارات النطاق من الشجرة — والحساب في المنطق الخالص لا هنا. */
-  const choices = useMemo(() => scopeChoices(locations, { warehouse: scopeWh }), [locations, scopeWh]);
+  const choices = useMemo(
+    () => (fullLocations
+      ? scopeChoices(locations, { warehouse: scopeWh })
+      : scopeChoicesFrom(livePrefixes, scopeZones, { warehouse: scopeWh })),
+    [fullLocations, locations, scopeWh, livePrefixes, scopeZones]
+  );
   /** النطاق المعروض: المكتوب على الجلسة إن فُتحت، وإلّا ما يختاره الآن. */
   const shownScope = useMemo(
     () => (opId ? openScope || normalizeScope({}) : normalizeScope({ warehouse: scopeWh, zone: scopeZone })),
@@ -905,7 +928,7 @@ export default function ScanFlow() {
         مقابل** — والمسار المطلوب خمس خطوات: دخول ⇐ قراءة ⇐ عدّ ⇐ تأكيد ⇐ حفظ.
         فتظهر حين توجد مواقع، أو حين يكون للجلسة نطاقٌ فعليٌّ يُذكَر.
       */}
-      {(locations.length > 0 || shownScope.declared) && (
+      {(hasLocations || shownScope.declared) && (
         <>
           <p style={{ margin: '0 0 8px', fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)' }}>
             ١ب — أين تعدّ؟ <span style={{ opacity: 0.75 }}>(اختياريّ — والجلسة تُفتح بدونه)</span>

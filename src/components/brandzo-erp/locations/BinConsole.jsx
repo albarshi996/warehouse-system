@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../../ui/Icon.jsx';
 import { useBarcodeCamera, ScanCameraButton, ScanCameraPanel } from '../scan/BarcodeCamera.jsx';
 import { useWedgeScanner } from '../scan/useWedgeScanner.js';
@@ -36,13 +36,38 @@ import { binHeadline, binPrefixOf, segmentLabelsOf, warehouseForBin } from '../.
 import { withAssignments } from '../../../services/locations/binTemplate.js';
 import {
   addressComplete,
+  codeFromAddress,
   codingSteps,
+  currentStep,
   findByBarcode,
   nextAddress,
   normalizeBinBarcode,
   suggestAddress,
 } from '../../../services/locations/binCoding.js';
-import { bindLocationBarcode } from '../../../services/locations/locationsService.js';
+import {
+  bindLocationBarcode,
+  fetchLocationsByBarcode,
+  fetchLocationsByCodes,
+} from '../../../services/locations/locationsService.js';
+import {
+  LOCATION_SCREENS,
+  codingProgressFrom,
+  knownCodesScoped,
+  lookupBinVia,
+  mergeById,
+  scanLookupKey,
+  withWitness,
+} from '../../../services/locations/locationReads.js';
+import {
+  useBinBalances,
+  useBoundLocations,
+  useFullLocationReads,
+  useLocation,
+  useLocationWitness,
+  usePrefixCount,
+  useWarehouseBalances,
+  useWarehouseLocations,
+} from './useLocationReads.js';
 import BinCodingWizard from './BinCodingWizard.jsx';
 import BIN_SCHEMES from '../../../data/warehouse-schemes.json';
 import { normalizeLocationCode } from '../../../services/locations/locationCode.js';
@@ -111,8 +136,8 @@ export default function BinConsole() {
   const [me, setMe] = useState(null);
   const [ready, setReady] = useState(false);
   const [warehouses, setWarehouses] = useState([]);
-  const [locations, setLocations] = useState([]);
-  const [balances, setBalances] = useState([]);
+  const [allLocations, setLocations] = useState([]);
+  const [allBalances, setBalances] = useState([]);
   const [units, setUnits] = useState([]);
   // ★ ‹JR-301ج› بطاقاتُ الأصناف — منها تُقرأ وحدةُ الصفّ وقائمةُ وحدات الصنف.
   //   وبلا الماستر تبقى الشاشةُ تكتب كمّيّاتٍ بلا وحدةٍ كما كانت.
@@ -180,16 +205,24 @@ export default function BinConsole() {
     return () => unsub?.();
   }, []);
 
+  /**
+   * ‹LOC-READS› الخاناتُ والأرصدةُ كانت تُقرأ **كلُّها** عند الفتح (8,402 + 1,762)
+   * لعرض خانةٍ واحدةٍ في كلّ مرّة. فصار يُقرأ ما يُعرض: الخانةُ المعروضةُ والمحدَّدةُ
+   * حيّتين مع أرصدتهما، وكلُّ مسحةٍ تُسأل عن خانتها بعينها، والتخزينُ يقرأ مستودعَ
+   * الطبليّة وحدَه، والويزاردُ يقرأ الملصقاتِ المربوطةَ وعددَ خانات البادئة. والمستمعان
+   * الكاملان خلف مفتاح الإطفاء وحدَه.
+   */
+  const fullLocations = useFullLocationReads(LOCATION_SCREENS.binConsole);
   useEffect(() => {
     if (!me) return undefined;
     const a = subscribeWarehouses(setWarehouses);
-    const b = listenLocations(setLocations);
-    const c = listenBalances(setBalances);
+    const b = fullLocations ? listenLocations(setLocations) : null;
+    const c = fullLocations ? listenBalances(setBalances) : null;
     // ★ الماستر يُقرأ مرّةً ويبقى: منه وحدةُ كلّ صنفٍ وقائمةُ وحداته — وبدونه
     //   تُكتب المسحاتُ بلا وحدةٍ كما كانت (‹JR-301ج›).
     const d = subscribeItems(setItems, () => setItems([]));
     return () => { a?.(); b?.(); c?.(); d?.(); };
-  }, [me]);
+  }, [me, fullLocations]);
 
   /**
    * أوامرُ التخزين المفتوحة — تُقرأ في وضع التخزين وحدَه (‹JR-501›): قراءةٌ
@@ -202,6 +235,79 @@ export default function BinConsole() {
 
   /** الكودُ الفاعل — المعروضُ للتعريف إن وُجد، وإلّا المحدَّد. */
   const activeCode = pending || bin;
+
+  // ── ‹LOC-READS› ما يُعرض وحدَه ─────────────────────────────────────────
+  const scoped = !fullLocations && Boolean(me);
+  const pendingLoc = useLocation(pending, { enabled: scoped });
+  const binLoc = useLocation(bin, { enabled: scoped });
+  const witnessState = useLocationWitness(scoped);
+  const binBalances = useBinBalances([pending, bin], { enabled: scoped });
+  // التخزين: اقتراحُ `openPutawayTask` يُرتّب خاناتِ مستودع الطبليّة كلَّها.
+  const palletWh = String(palletUnit?.warehouse ?? '').trim().toUpperCase();
+  const palletScopeOn = scoped && Boolean(palletUnit) && Boolean(palletWh);
+  const palletBins = useWarehouseLocations([palletWh], { enabled: palletScopeOn });
+  const palletBalances = useWarehouseBalances([palletWh], { enabled: palletScopeOn });
+  // طبليّةٌ بلا مستودع يُقترح لها من كلّ المستودعات — فيُقرأ الكلّ كما كان.
+  const [palletAll, setPalletAll] = useState(null);
+  const palletAllOn = scoped && Boolean(palletUnit) && !palletWh;
+  useEffect(() => {
+    if (!palletAllOn) { setPalletAll(null); return undefined; }
+    const offs = [
+      listenLocations((l) => setPalletAll((p) => ({ ...(p || {}), locations: l }))),
+      listenBalances((b) => setPalletAll((p) => ({ ...(p || {}), balances: b }))),
+    ];
+    return () => offs.forEach((off) => off?.());
+  }, [palletAllOn]);
+
+  /** الخاناتُ التي تراها بقيّةُ الشاشة — الكاملةُ، أو المقروءُ ∪ الشاهد. */
+  const locations = useMemo(() => {
+    if (fullLocations) return allLocations;
+    if (palletAll?.locations) return palletAll.locations;
+    return withWitness(
+      mergeById(palletBins.locations, [pendingLoc, binLoc].filter(Boolean)),
+      witnessState.witness
+    );
+  }, [fullLocations, allLocations, palletAll, palletBins.locations, pendingLoc, binLoc, witnessState.witness]);
+  const balances = useMemo(() => {
+    if (fullLocations) return allBalances;
+    if (palletAll?.balances) return palletAll.balances;
+    return mergeById(binBalances.balances, palletBalances.balances).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  }, [fullLocations, allBalances, palletAll, binBalances.balances, palletBalances.balances]);
+  /** أوصل كلُّ ما يحتاجه حكمُ التخزين؟ — وقبله لا تخزين، فلا يُقيَّد «خالف المقترح» من نصف مستودع. */
+  const putawayReady = fullLocations
+    || (palletAllOn
+      ? Boolean(palletAll?.locations && palletAll?.balances)
+      : palletScopeOn && palletBins.ready && palletBalances.ready && witnessState.ready && binLoc !== undefined && binBalances.ready);
+
+  // ── ويزاردُ التكويد: الملصقاتُ المربوطةُ كلُّها (للتصادم والتقدّم) وخانةُ العنوان ──
+  const wizardOpen = Boolean(coding || manual);
+  const [wizardEver, setWizardEver] = useState(false);
+  useEffect(() => { if (wizardOpen) setWizardEver(true); }, [wizardOpen]);
+  const bound = useBoundLocations(scoped && wizardEver);
+
+  // ── المسحةُ تُسأل عن خانتها بعينها — بالترتيب، وكلُّ جوابٍ يُحفظ بعمر الشاشة ──
+  const lookupMemo = useRef(new Map());
+  const scanQueue = useRef(Promise.resolve());
+  const lookupBin = useCallback((raw) => {
+    const key = scanLookupKey(raw, { normalizeBinBarcode });
+    if (!lookupMemo.current.has(key)) {
+      const p = lookupBinVia(raw, {
+        normalizeBinBarcode,
+        byBarcode: fetchLocationsByBarcode,
+        byCode: (c) => fetchLocationsByCodes([c]),
+      }).catch((err) => {
+        lookupMemo.current.delete(key); // فشلٌ عابرٌ لا يُحفظ جوابًا
+        throw err;
+      });
+      lookupMemo.current.set(key, p);
+    }
+    return lookupMemo.current.get(key);
+  }, []);
+  const enqueueScan = useCallback((task) => {
+    scanQueue.current = scanQueue.current.then(task).catch((err) =>
+      setMsg({ type: 'error', text: 'تعذّرت قراءةُ الخانة: ' + (err?.message || 'سببٌ غير معروف') })
+    );
+  }, []);
 
   /**
    * ★ المستودعاتُ مُغنَاةً بالإسناد المعتمد — فيعرف العاملُ مستودعَه وتسمياتِ
@@ -227,6 +333,25 @@ export default function BinConsole() {
   const wizardSteps = useMemo(() => codingSteps(codingWh, TEMPLATES), [codingWh]);
 
   /**
+   * ‹LOC-READS› ما يقرؤه الويزارد — عنوانُه المكتمل (كما يبنيه `BinCodingWizard`
+   * حرفًا) والملصقاتُ المربوطةُ كلُّها، وعددُ خانات البادئة من الخادم للتقدّم.
+   */
+  const wizardPrefix = String(codingWh?.binPrefix || codingWh?.code || '').toUpperCase();
+  const wizardCode = wizardSteps.length > 0 && currentStep(address, wizardSteps) < 0
+    ? codeFromAddress(wizardPrefix, address, wizardSteps)
+    : '';
+  const wizardTarget = useLocation(wizardCode, { enabled: scoped && wizardOpen });
+  const wizardTotal = usePrefixCount(wizardPrefix, { enabled: scoped && wizardOpen });
+  const wizardLocations = useMemo(
+    () => (fullLocations ? allLocations : mergeById(bound.locations, wizardTarget ? [wizardTarget] : [])),
+    [fullLocations, allLocations, bound.locations, wizardTarget]
+  );
+  const wizardProgress = useMemo(
+    () => (fullLocations ? null : codingProgressFrom({ total: wizardTotal, boundLocations: bound.locations, prefix: wizardPrefix })),
+    [fullLocations, wizardTotal, bound.locations, wizardPrefix]
+  );
+
+  /**
    * أينتظر الويزاردُ باركودًا الآن؟ — في المسار المعاكس، بعد اكتمال العنوان.
    * وحين ينتظر، تذهب المسحةُ إلى حقل الملصق لا إلى التوجيه.
    *
@@ -234,7 +359,10 @@ export default function BinConsole() {
    * و`const` لا يُقرأ قبل تهيئته — فالترتيبُ هنا شرطٌ لا تنسيق.
    */
   const awaitingBarcode = manual && wizardSteps.length > 0 && addressComplete(address, wizardSteps);
-  const knownCodes = useMemo(() => (locations || []).map((l) => l.code), [locations]);
+  const knownCodes = useMemo(
+    () => (fullLocations ? (allLocations || []).map((l) => l.code) : knownCodesScoped([pendingLoc, binLoc], witnessState)),
+    [fullLocations, allLocations, pendingLoc, binLoc, witnessState]
+  );
   /** فهرسُ الماستر — يُبنى مرّةً ويُقرأ في موضعين: صفوفُ الخانة والصنفُ الممسوح. */
   const indexes = useMemo(() => buildItemIndexes(items), [items]);
   const contents = useMemo(
@@ -388,8 +516,8 @@ export default function BinConsole() {
    * النظامُ لا يفترض عنوانَ الباركود. فإن كان مربوطًا عُرض عنوانُه للتأكيد،
    * وإن لم يكن فُتح ويزاردُ التكويد ليقول له الموظّفُ أين هو.
    */
-  const presentBin = useCallback(
-    (raw) => {
+  const showBin = useCallback(
+    (raw, hit) => {
       setScanned('');
       setQty('');
       setPackPer('');
@@ -401,7 +529,6 @@ export default function BinConsole() {
       setPalletNote('');
       setMsg({ type: '', text: '' });
 
-      const hit = findByBarcode(locations, raw);
       if (hit) { setCoding(''); setManual(false); setPending(hit.code); return; }
 
       // غيرُ مربوط — يُفتح الويزارد بعنوانٍ **مقترَحٍ** إن كان الملصقُ ناطقًا.
@@ -409,7 +536,14 @@ export default function BinConsole() {
       setManual(false);
       setCoding(normalizeBinBarcode(raw));
     },
-    [locations]
+    []
+  );
+  const presentBin = useCallback(
+    (raw) => {
+      if (fullLocations) { showBin(raw, findByBarcode(allLocations, raw)); return; }
+      enqueueScan(async () => showBin(raw, await lookupBin(raw)));
+    },
+    [fullLocations, allLocations, showBin, enqueueScan, lookupBin]
   );
 
   /** إدخالٌ يدويّ — المسارُ البديل حين يتعذّر المسح. */
@@ -483,16 +617,9 @@ export default function BinConsole() {
     }
   }, []);
 
-  /** المسحةُ الواحدة — وجهتُها من التصنيف، والرفضُ يقول الصواب. */
-  const onScanned = useCallback(
-    (raw) => {
-      // ★ المسارُ المعاكس: العنوانُ اكتمل وننتظر ملصقًا — فالمسحةُ ملصقٌ
-      //   لا توجيه. (نفسُ قاعدة «القراءة تتبع الحقل المنتظِر» في شاشات الطبالي.)
-      if (awaitingBarcode) { setCodingBarcode(normalizeBinBarcode(raw)); return; }
-
-      const hit = findByBarcode(locations, raw);
-      const v = routeScan(raw, { hasBin: Boolean(bin), bound: Boolean(hit) });
-      if (v.action === 'bin') { presentBin(v.code); return; }
+  /** ما بعد التصنيف — عينُ ما كان في `onScanned` حرفًا، مفصولًا ليُنادى من الطريقين. */
+  const routeScanned = useCallback(
+    (v) => {
       if (v.action === 'ambiguous') {
         // لا يُفترض — يُعرض السؤالُ بزرَّيه، والجوابُ من الموظّف.
         setAmbiguous(v.code);
@@ -515,7 +642,32 @@ export default function BinConsole() {
       }
       setMsg({ type: 'error', text: v.message });
     },
-    [bin, presentBin, presentPallet, locations, awaitingBarcode, mode]
+    [presentPallet, mode]
+  );
+
+  /** المسحةُ الواحدة — وجهتُها من التصنيف، والرفضُ يقول الصواب. */
+  const onScanned = useCallback(
+    (raw) => {
+      // ★ المسارُ المعاكس: العنوانُ اكتمل وننتظر ملصقًا — فالمسحةُ ملصقٌ
+      //   لا توجيه. (نفسُ قاعدة «القراءة تتبع الحقل المنتظِر» في شاشات الطبالي.)
+      if (awaitingBarcode) { setCodingBarcode(normalizeBinBarcode(raw)); return; }
+
+      // ‹LOC-READS› بالقراءة المقصورة: الربطُ يُسأل عنه، والجوابُ يُعالَج بترتيب المسحات.
+      if (!fullLocations) {
+        enqueueScan(async () => {
+          const hit = await lookupBin(raw);
+          const v = routeScan(raw, { hasBin: Boolean(bin), bound: Boolean(hit) });
+          if (v.action === 'bin') { showBin(v.code, await lookupBin(v.code)); return; }
+          routeScanned(v);
+        });
+        return;
+      }
+      const hit = findByBarcode(allLocations, raw);
+      const v = routeScan(raw, { hasBin: Boolean(bin), bound: Boolean(hit) });
+      if (v.action === 'bin') { presentBin(v.code); return; }
+      routeScanned(v);
+    },
+    [bin, presentBin, showBin, routeScanned, allLocations, fullLocations, awaitingBarcode, enqueueScan, lookupBin]
   );
 
   /** خطوةٌ أُجيبت — وما بعدها يُمسح، فلا يبقى جوابٌ لسؤالٍ تغيّر ما قبله. */
@@ -557,6 +709,8 @@ export default function BinConsole() {
     setMsg({ type: '', text: '' });
     try {
       if (label) await bindLocationBarcode(code, label, me);
+      // ربطٌ جديدٌ يُبطل ما حُفظ من أجوبة المسح — فالملصقُ نفسُه صار يدلّ على خانة.
+      lookupMemo.current.clear();
       setLastAddress({ ...address });
       cancelWizard();
       setPending(code);
@@ -635,6 +789,8 @@ export default function BinConsole() {
    */
   async function storePallet() {
     if (!palletUnit || !bin) return;
+    // ‹LOC-READS› لا تخزينَ قبل أن يصل مستودعُ الطبليّة — المقترحُ يُقيَّد في الحركة.
+    if (!putawayReady) { setMsg({ type: 'info', text: 'يقرأ مواقعَ المستودع — أعد المحاولة بعد لحظة.' }); return; }
     if (!actorName) { setMsg({ type: 'error', text: 'لم تُقرأ هويّتك بعد — أعد تحميل الصفحة.' }); return; }
     setBusy('يخزّن…');
     setMsg({ type: '', text: '' });
@@ -816,7 +972,8 @@ export default function BinConsole() {
           steps={wizardSteps}
           address={address}
           suggested={suggested}
-          locations={locations}
+          locations={wizardLocations}
+          progress={wizardProgress}
           busy={busy}
           capturedBarcode={codingBarcode}
           onBarcodeChange={setCodingBarcode}
@@ -1188,6 +1345,7 @@ export default function BinConsole() {
                   onClick={storePallet}
                   disabled={
                     Boolean(busy)
+                    || !putawayReady
                     || !palletVerdict
                     || (!palletVerdict.ok && (!palletVerdict.canOverride || !palletNote.trim()))
                   }
