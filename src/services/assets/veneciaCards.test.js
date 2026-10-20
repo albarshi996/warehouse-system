@@ -21,6 +21,7 @@ import {
   cardTotals,
   cardVerdict,
   cardsSnapshot,
+  describePostedDrafts,
   filterCards,
   isCardKind,
   lineAssetKey,
@@ -317,4 +318,48 @@ test('وحركةُ كلّ أصلٍ تُجمَع من المثبَّت وحدَه
   assert.deepEqual(by.get('issue-BRZ-0001'), { issued: 10, received: 4, cards: 2 });
   assert.deepEqual(by.get('supported-BRZ-0001'), { issued: 0, received: 1, cards: 1 });
   assert.equal(by.has('issue-BRZ-9999'), false);
+});
+
+// ─── ملخّصُ التثبيت الجماعيّ ‹VEN-203› ───────────────────────────────────
+test('★★★ الملخّصُ يسمّي ما فشل — فـ«٧ من ١٠» بلا تسميةٍ فقدٌ صامت', () => {
+  const said = describePostedDrafts([
+    { ok: true, number: 'VENISS-2026-0001', moved: 11, party: 'سعيد' },
+    { ok: false, party: 'زياد', error: 'لا يُصرَف ما لا يُملَك.' },
+    { ok: false, party: 'ابوبكر', error: 'الأصل غير موجود.' },
+  ]);
+  assert.match(said, /ثُبِّتت 1 من 3/);
+  assert.match(said, /زياد/, 'الفاشلةُ تُسمَّى بطرفها');
+  assert.match(said, /ابوبكر/);
+  assert.match(said, /لا يُصرَف ما لا يُملَك/, 'ومعها سببُها');
+});
+
+test('الوحداتُ تُجمَع من الناجحة وحدَها', () => {
+  const said = describePostedDrafts([
+    { ok: true, number: 'A', moved: 10 },
+    { ok: true, number: 'B', moved: 5 },
+    { ok: false, party: 'س', error: 'x', moved: 99 },
+  ]);
+  assert.match(said, /15 وحدة/, 'الفاشلةُ لا تُحسب وحداتُها');
+});
+
+test('أرقامُ السندات تُذكر — فمن ثُبّتت بطاقتُه يريد رقمَه', () => {
+  const said = describePostedDrafts([{ ok: true, number: 'VENISS-2026-0007', moved: 1 }]);
+  assert.match(said, /VENISS-2026-0007/);
+});
+
+test('ولا شيءَ نجح: يُقال صراحةً ولا يُوهم', () => {
+  const said = describePostedDrafts([{ ok: false, party: 'س', error: 'بلا اتّصال' }]);
+  assert.match(said, /لم تُثبَّت أيُّ بطاقةٍ من 1/);
+  assert.ok(!said.includes('ثُبِّتت 0'), 'ولا صيغةَ تُقرأ نجاحًا');
+});
+
+test('الكثرةُ تُختصر ولا تصير صفحة', () => {
+  const many = Array.from({ length: 9 }, (_, i) => ({ ok: false, party: `ط${i}`, error: 'x' }));
+  const said = describePostedDrafts(many, { limit: 2 });
+  assert.match(said, /و7 أخرى لم تُثبَّت/);
+});
+
+test('قائمةٌ فارغةٌ أو معدومةٌ لا ترمي', () => {
+  assert.equal(describePostedDrafts([]), 'لا مسودّةَ لتُثبَّت.');
+  assert.equal(describePostedDrafts(null), 'لا مسودّةَ لتُثبَّت.');
 });
