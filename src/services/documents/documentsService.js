@@ -106,15 +106,18 @@ export function appendAudit(docId, { action, note = '', from = '', to = '', prof
 /**
  * ينشئ مسودّة جديدة ويُعيد معرّفها.
  * بلا رقم رسمي — الرقم يُمنح عند الإرسال (انظر numberingService.js).
+ *
+ * `id` ‹SRC-POST›: معرّفٌ محجوزٌ سلفًا بـ`newDocumentId()` — يكتبه الاستيرادُ المُرحِّل في
+ * سجلّ منع التكرار **قبل** إنشاء المستند، فلا يولد مستندٌ بلا سجلٍّ يدلّ عليه.
  */
-export async function createDraft({ type, stage = null, profile, header = {}, lines = [] }) {
+export async function createDraft({ type, stage = null, profile, header = {}, lines = [], id = null }) {
   // ختم الواقعة يُفتح على **اليوم** لا على فراغ: القيمة الافتراضيّة هي الصحيحة
   // في تسعةٍ من كلّ عشرة، ومن أراد غيرها مرّ بمسار السبب والاعتماد.
   const stamped = { ...header };
   for (const key of eventFieldsOf(type, getSchema(type))) {
     if (!String(stamped[key] ?? '').trim()) stamped[key] = defaultValueFor(type, key, clientToday());
   }
-  const ref = await addDoc(collection(db, DOCS), {
+  const newDraft = {
     type,
     stage,
     number: null,
@@ -127,9 +130,25 @@ export async function createDraft({ type, stage = null, profile, header = {}, li
     createdByRole: profile?.role || '', // دور المُنشئ — يغذّي «سجلّ حركة الأدوار» الحيّ
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-  });
+  };
+  let ref;
+  if (id) {
+    // ★★ إنشاءٌ لا كتابةٌ فوق: `setDoc` على معرّفٍ قائمٍ تعديلٌ يمحو مستندًا مُرحَّلًا.
+    ref = doc(db, DOCS, id);
+    await runTransaction(db, async (tx) => {
+      if ((await tx.get(ref)).exists()) throw new Error('المعرّف محجوزٌ لمستندٍ قائم — لا يُكتب فوقه.');
+      tx.set(ref, newDraft);
+    });
+  } else {
+    ref = await addDoc(collection(db, DOCS), newDraft);
+  }
   await appendAudit(ref.id, { action: 'create', to: INITIAL_STATE, profile });
   return ref.id;
+}
+
+/** ‹SRC-POST› معرّفُ مستندٍ جديد يُحجز بلا كتابة — يُمرَّر بعدها إلى `createDraft({ id })`. */
+export function newDocumentId() {
+  return doc(collection(db, DOCS)).id;
 }
 
 /**
@@ -193,8 +212,10 @@ export async function saveDocument(docId, { header, lines, links, settings, reas
  *
  * الرقم يُحجز **مرّة واحدة فقط**: المستند المرفوض الذي يُعاد إرساله يحتفظ
  * برقمه الأصلي، فلا يُهدر رقم ولا يتغيّر مرجع المستند بعد أن عُرف به.
+ *
+ * `postingCache` ‹SRC-POST›: ذاكرةُ دفعةٍ تُمرَّر إلى `postDocument` (انظر `createPostingCache`).
  */
-export async function transitionDocument(docId, to, { note = '', profile, schema } = {}) {
+export async function transitionDocument(docId, to, { note = '', profile, schema, postingCache = null } = {}) {
   const ref = doc(db, DOCS, docId);
   const snap = await getDoc(ref);
   if (!snap.exists()) throw new Error('المستند غير موجود.');
@@ -324,7 +345,7 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
   const atomicPost = to === POSTING_STATE && movesStock(data.type);
   if (atomicPost) {
     try {
-      const result = await postDocument({ ...data, id: docId }, profile, { markDone: true });
+      const result = await postDocument({ ...data, id: docId }, profile, { markDone: true, cache: postingCache });
       await appendAudit(docId, { action: to, note, from, to, profile });
       await appendAudit(docId, {
         action: 'post',

@@ -372,6 +372,41 @@ export const DATASETS = {
   },
 
   /**
+   * ‹SRC-POST› مستنداتٌ أُنجزت في المصدر — تُرحَّل كما وقعت (انظر `locations/postedImport.js`).
+   *
+   * لا عمودَ لنوع المستند عمدًا: النوعُ يُشتقّ من نوعَي الموقعين (`usage` في أودو)
+   * بدالّةٍ واحدةٍ مختبَرة — فلا يكتب أحدٌ «تسليمًا» لما هو استلام.
+   * والمستودعان بكود البوّابة (WH001 · WH002) لا بكود أودو.
+   */
+  sourcePosted: {
+    key: 'sourcePosted',
+    labelAr: 'مستندات منجَزة في المصدر (Source Posted)',
+    sheetName: 'SourcePosted',
+    columns: [
+      ...sourceIdentityColumns(),
+      { field: 'docStatus', labelAr: 'Document Status (حالة المستند)', type: 'string', required: false, aliases: ['document status', 'status', 'state', 'حالة المستند', 'الحالة'] },
+      { field: 'doneDate', labelAr: 'Done Date (تاريخ الإنجاز)', type: 'string', required: true, aliases: ['done date', 'date done', 'date_done', 'تاريخ الإنجاز', 'تاريخ الانجاز'] },
+      { field: 'sourceLocation', labelAr: 'Source Location (الموقع المصدر)', type: 'string', required: false, aliases: ['source location', 'from location', 'الموقع المصدر'] },
+      { field: 'sourceUsage', labelAr: 'Source Usage (نوع الموقع المصدر)', type: 'string', required: false, aliases: ['source usage', 'from usage', 'نوع الموقع المصدر'] },
+      { field: 'destinationLocation', labelAr: 'Destination Location (الموقع الوجهة)', type: 'string', required: false, aliases: ['destination location', 'to location', 'الموقع الوجهة'] },
+      { field: 'destinationUsage', labelAr: 'Destination Usage (نوع الموقع الوجهة)', type: 'string', required: false, aliases: ['destination usage', 'to usage', 'نوع الموقع الوجهة'] },
+      { field: 'fromWarehouse', labelAr: 'From Warehouse (المستودع المرسِل)', type: 'string', required: false, aliases: ['from warehouse', 'المستودع المرسل', 'المستودع المرسِل'] },
+      { field: 'toWarehouse', labelAr: 'To Warehouse (المستودع المستلِم)', type: 'string', required: false, aliases: ['to warehouse', 'المستودع المستلم', 'المستودع المستلِم'] },
+      { field: 'partnerCode', labelAr: 'Partner Code (رمز الطرف)', type: 'string', required: false, aliases: ['partner code', 'رمز الطرف'] },
+      { field: 'partner', labelAr: 'Partner (الطرف)', type: 'string', required: false, aliases: ['partner', 'الطرف'] },
+      { field: 'orderRef', labelAr: 'Order Reference (مرجع الطلب)', type: 'string', required: false, aliases: ['order reference', 'origin', 'مرجع الطلب'] },
+      ...itemLineColumns('Done Quantity (الكمية المنجَزة)'),
+      { field: 'unitCost', labelAr: 'Unit Cost (تكلفة الوحدة)', type: 'number', required: false, nonNegative: true, aliases: ['unit cost', 'cost', 'تكلفة الوحدة'] },
+    ],
+    templateFields: [
+      'docRef', 'docId', 'lineId', 'sourceUpdatedAt', 'sourceSystem', 'docStatus', 'doneDate',
+      'sourceLocation', 'sourceUsage', 'destinationLocation', 'destinationUsage', 'fromWarehouse', 'toWarehouse',
+      'partnerCode', 'partner', 'orderRef',
+      'sku', 'barcode', 'description', 'uom', 'qty', 'batch', 'expiry', 'unitCost',
+    ],
+  },
+
+  /**
    * لقطة مخزون النظام — تُرفَق يوميًّا لمقارنة الفعليّ بالنظام.
    *
    * ⚠️ `systemLocation` هو موقع **النظام المصدر** لا رفوف البوابة. رفوف البوابة

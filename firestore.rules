@@ -282,6 +282,12 @@ service cloud.firestore {
            : docType == 'IPO'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'PV'      ? ['finance_manager', 'warehouse_manager']
            : docType == 'DLV'     ? ['department_user', 'warehouse_manager']
+           // ‹SRC-POST› مستنداتُ المصدر المُنجَزة: تُستورد ولا تُبدأ باليد، ومديرُ
+           // المستودع وحدَه يُرحّلها — والمديرُ العامّ فوق ذلك بحكم isAdmin().
+           : docType == 'SRI'     ? ['warehouse_manager']
+           : docType == 'SRO'     ? ['warehouse_manager']
+           : docType == 'SXO'     ? ['warehouse_manager']
+           : docType == 'SXI'     ? ['warehouse_manager']
            : [];
     }
     function completeRoles(docType) {
@@ -334,6 +340,12 @@ service cloud.firestore {
            : docType == 'RCV'     ? ['sales_supervisor', 'finance_manager', 'warehouse_manager']
            : docType == 'PV'      ? ['treasury', 'warehouse_manager']
            : docType == 'DLV'     ? ['purchase_officer', 'warehouse_manager']
+           // ‹SRC-POST› مستنداتُ المصدر المُنجَزة: تُستورد ولا تُبدأ باليد، ومديرُ
+           // المستودع وحدَه يُرحّلها — والمديرُ العامّ فوق ذلك بحكم isAdmin().
+           : docType == 'SRI'     ? ['warehouse_manager']
+           : docType == 'SRO'     ? ['warehouse_manager']
+           : docType == 'SXO'     ? ['warehouse_manager']
+           : docType == 'SXI'     ? ['warehouse_manager']
            : [];
     }
 

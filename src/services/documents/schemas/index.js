@@ -56,6 +56,8 @@ import rcp from './rcp.js';
 import spv from './spv.js';
 import rcv from './rcv.js';
 import dlv from './dlv.js';
+// ‹SRC-POST› مستنداتُ المصدر المُنجَزة — في السجلّ لا في «بدء مستندٍ جديد» (تُستورد ولا تُنشأ باليد).
+import { sri, sro, sxo, sxi } from './sourcePosted.js';
 import tdr from './tdr.js';
 
 /** المخطّطات الجاهزة. */
@@ -105,6 +107,11 @@ const SCHEMAS = {
   SPV: spv,
   RCV: rcv,
   DLV: dlv,
+  // ‹SRC-POST› ما أُنجز في أودو يُرحَّل كما وقع: من ⟵ إلى بخطوةٍ واحدة.
+  SRI: sri,
+  SRO: sro,
+  SXO: sxo,
+  SXI: sxi,
 };
 
 /**
@@ -159,6 +166,12 @@ export const GOVERNED_FORMS = [
   { type: 'RCP', stage: 7, titleAr: 'سند قبض', file: '', phase: 'AR' },
   { type: 'SPV', stage: 7, titleAr: 'سند سداد مورّد', file: '', phase: 'AP' },
   { type: 'RCV', stage: 8, titleAr: 'سند تحصيل ميدانيّ', file: '', phase: 'VS' },
+  // ‹SRC-POST› مستنداتُ المصدر المُنجَزة — في الخريطة كسائرها، ولا زرَّ بدءٍ لها
+  // (`IMPORT_ONLY_TYPES` في startGroups.js): مصدرُها الاستيراد وحده.
+  { type: 'SRI', stage: 9, titleAr: 'استلامٌ منجَزٌ في المصدر', file: '', phase: 'SRC' },
+  { type: 'SRO', stage: 9, titleAr: 'تسليمٌ منجَزٌ في المصدر', file: '', phase: 'SRC' },
+  { type: 'SXO', stage: 9, titleAr: 'إرساليّةُ نقلٍ منجَزةٌ في المصدر', file: '', phase: 'SRC' },
+  { type: 'SXI', stage: 9, titleAr: 'استلامُ نقلٍ منجَزٌ في المصدر', file: '', phase: 'SRC' },
 ].map((f) => ({ ...f, ready: Boolean(SCHEMAS[f.type]) }));
 
 /** يُعيد مخطّط النوع، أو null إن لم يُبنَ بعد. */

@@ -339,7 +339,9 @@ test('🔒 ★★★ والكاتبُ نفسُه يشهد: `documents` تُكت�
     return keys;
   };
 
-  const blocks = ['addDoc(collection(db, DOCS), {', 'transaction.set(childRef, {'].map((needle) => {
+  // ‹SRC-POST› كاتبُ `createDraft` صار كائنًا مسمًّى (`newDraft`) يُكتب بطريقين: `addDoc` للمعتاد،
+  // ومعاملةُ «إنشاءٍ لا كتابةٍ فوق» لمعرّفٍ محجوز. فالحارسُ يقرأ الكائنَ نفسَه لا سطرَ الإضافة.
+  const blocks = ['const newDraft = {', 'transaction.set(childRef, {'].map((needle) => {
     const at = writer.indexOf(needle);
     assert.notEqual(at, -1, `تعذّر العثور على كاتبٍ في محرّك المستندات: ${needle}`);
     return topLevelKeys(writer, at + needle.length - 1);

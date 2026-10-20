@@ -35,11 +35,17 @@ import { itemIndexOf, itemOfIndex, scopedSuggestionGap } from '../../../services
 import { suggestLocations } from '../../../services/locations/putawaySuggest.js';
 import { useDirectedReference, useFullReadsForced } from './useDirectedReference.js';
 import { exportTemplate } from '../../../services/excel/excelExport.js';
+// ‹SRC-POST› مستندٌ منجَزٌ في المصدر ← يُرحَّل — تبويبٌ ثالثٌ خلف مفتاح إطفاء.
+import PostedImport from './PostedImport.jsx';
+import { postedImportEnabled } from '../../../services/locations/postedImportService.js';
 
 const KINDS = [
   { id: 'receipt', label: 'أمر استلام ← تخزين', icon: 'arrowDownTray', dataset: 'receipt' },
   { id: 'delivery', label: 'أمر تسليم ← سحب', icon: 'arrowUpTray', dataset: 'delivery' },
 ];
+
+/** ‹SRC-POST› التبويبُ الثالث — يظهر ما دام مفتاحُ الإطفاء مفتوحًا. */
+const POSTED_KIND = { id: 'posted', label: 'مستندٌ منجَز ← يُرحَّل', icon: 'checkCircle', dataset: 'sourcePosted' };
 
 export default function DirectedStorage() {
   const [profile, setProfile] = useState(null);
@@ -52,6 +58,8 @@ export default function DirectedStorage() {
   const [fileName, setFileName] = useState('');
   const [term, setTerm] = useState('');
   const fileRef = useRef(null);
+  const kinds = useMemo(() => (postedImportEnabled() ? [...KINDS, POSTED_KIND] : KINDS), []);
+  const posted = kind === POSTED_KIND.id;
 
   useEffect(
     () =>
@@ -220,7 +228,7 @@ export default function DirectedStorage() {
           </nav>
         </div>
         <div className="o_cp_end" style={{ gap: '8px' }}>
-          <button type="button" className="btn btn-secondary" onClick={() => exportTemplate(kind)}>
+          <button type="button" className="btn btn-secondary" onClick={() => exportTemplate(kinds.find((k) => k.id === kind)?.dataset || kind)}>
             <Icon name="arrowDownTray" size={15} /> تنزيل القالب
           </button>
         </div>
@@ -233,7 +241,7 @@ export default function DirectedStorage() {
         </p>
 
         <div role="tablist" aria-label="نوع الاستيراد" style={{ display: 'flex', gap: '6px', marginBottom: '14px', borderBottom: '1px solid var(--o-border-color)' }}>
-          {KINDS.map((k) => (
+          {kinds.map((k) => (
             <button
               key={k.id}
               type="button"
@@ -252,6 +260,10 @@ export default function DirectedStorage() {
           ))}
         </div>
 
+        {posted ? (
+          <PostedImport profile={profile} />
+        ) : (
+        <>
         {msg.text && (
           <div className={`o_alert ${msg.type === 'error' ? 'danger' : 'success'}`} style={{ marginBottom: '14px' }}>
             {msg.text}
@@ -345,6 +357,8 @@ export default function DirectedStorage() {
             term={term}
             onTerm={setTerm}
           />
+        )}
+        </>
         )}
       </div>
     </div>

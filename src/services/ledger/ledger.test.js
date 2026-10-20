@@ -100,7 +100,10 @@ test('الأنواع التي تحتاج حقل مستودع (بما فيها ا
   const need = warehouseRequiringTypes().sort();
   // ‹FNB-502› +2: صرف الموادّ يخرج من مخزنٍ بعينه، واستلام الإنتاج يدخله —
   // كلاهما طرفُه الآخر موقعُ الإنتاج الوسيط، فالمستودع لازمٌ لا مستنتَج.
-  assert.deepEqual(need, ['ADJ', 'DMG', 'MIS', 'PICK', 'PRC', 'PUTAWAY', 'TRC', 'TRN', 'VLD', 'VRT']);
+  // ‹SRC-POST› +4: مستندُ المصدر يدخل مستودعًا بعينه أو يخرج منه — لا ساحةً نظاميّة.
+  assert.deepEqual(need, ['ADJ', 'DMG', 'MIS', 'PICK', 'PRC', 'PUTAWAY', 'SRI', 'SRO', 'SXI', 'SXO', 'TRC', 'TRN', 'VLD', 'VRT']);
+  assert.equal(needsWarehouse('SRO'), true, 'تسليمُ المصدر يخرج من مستودعٍ بعينه إلى الخارج');
+  assert.equal(needsWarehouse('SXI'), true, 'استلامُ نقل المصدر يدخل مستودعَ الوجهة');
   assert.equal(needsWarehouse('GRN'), false, 'GRN يدخل ساحة الاستلام النظامية');
   assert.equal(needsWarehouse('DN'), false, 'DN يخرج من التجهيز النظامي');
   assert.equal(needsWarehouse('TRN'), true, 'مستند النقل يخرج من مستودع المصدر');
