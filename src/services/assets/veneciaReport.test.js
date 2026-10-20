@@ -352,3 +352,34 @@ test('★★ والكمّيّةُ رقمٌ يُجمَع في إكسل لا نص�
   assert.deepEqual(NUMERIC_COLUMNS['المصروف'], ['الكمية', 'المقيَّد في الرصيد']);
   assert.deepEqual(NUMERIC_COLUMNS['المخرَّد'], ['الكمية']);
 });
+
+// ═══ ★★★ مُحمِّلُ مكتبة التنسيق ‹VEN-301 ذيل٤› ═══
+// العطب: كان يُعيد `window.XLSX` الموجودَ أيًّا كان. وصفحاتُ البوّابة تحمل
+// النسخةَ القياسيّةَ من SheetJS لأغراضٍ أخرى، **وهي تتجاهل `cell.s` بصمت** —
+// فمن حمّلها مرّةً في الجلسة لا يرى تنسيقًا أبدًا بعدها. ولا اختبارَ يُمسك
+// ذلك: الدالّةُ تلمس DOM فلا تُحمَّل في Node، فالمرساةُ تقرأ المصدرَ نصًّا.
+const EXCEL_SRC = readFileSync(new URL('./veneciaReportExcel.js', import.meta.url), 'utf8');
+
+test('★★★ لا يُقبل `window.XLSX` اختصارًا بلا علامةِ المنسِّقة', () => {
+  assert.ok(
+    !/if\s*\(typeof window !== 'undefined' && window\.XLSX\)/.test(EXCEL_SRC),
+    'الاختصارُ على مجرّد وجود XLSX عاد — وهو يُخرج الملفَّ بلا تنسيقٍ بلا شكوى'
+  );
+  assert.match(EXCEL_SRC, /window\.__bzSheetStyled && window\.XLSX/, 'الاختصارُ مشروطٌ بالعلامة');
+});
+
+test('★★ والعلامةُ تُرفع بعد المنسِّقة وحدَها لا بعد الاحتياطيّة', () => {
+  // ★ المواضعُ تُقاس على **نداءات الحقن** لا على ذكر الاسم: اسمُ الاحتياطيّة
+  // مذكورٌ في الشرح أعلاه أيضًا، و`indexOf` عليه يقع على التعليق لا الكود.
+  const styled = EXCEL_SRC.indexOf('inject(`${lib}/xlsx-js-style.bundle.js`)');
+  const mark = EXCEL_SRC.indexOf('window.__bzSheetStyled = true');
+  const fallback = EXCEL_SRC.indexOf('inject(`${lib}/xlsx.full.min.js`)');
+  assert.ok(styled > 0, 'المنسِّقةُ تُحقن');
+  assert.ok(fallback > 0, 'والاحتياطيّةُ موجودة');
+  assert.ok(mark > styled, 'والعلامةُ تُرفع بعد حقن المنسِّقة');
+  assert.ok(mark < fallback, 'وقبل مسار الاحتياط — فالاحتياطيّةُ لا تُعلَّم');
+});
+
+test('★ والاحتياطيّةُ باقيةٌ — ملفٌّ بلا تنسيقٍ أفضلُ من زرٍّ لا يفعل شيئًا', () => {
+  assert.match(EXCEL_SRC, /\.catch\(\(\) => inject\(`\$\{lib\}\/xlsx\.full\.min\.js`\)\)/);
+});
