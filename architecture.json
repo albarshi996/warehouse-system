@@ -10251,7 +10251,8 @@
       "plan:bulk": "node scripts/plan-check.mjs --plan docs/plan/bulk-item-entry.json --resume docs/plan/استئناف-الإدخال-الجماعي.md",
       "plan:rbac": "node scripts/plan-check.mjs --plan docs/plan/rbac-tasks.json --resume docs/plan/استئناف-الأدوار-والمهمات.md",
       "plan:journey": "node scripts/plan-check.mjs --plan docs/plan/connected-journey.json --resume docs/plan/استئناف-الرحلة-المتصلة.md",
-      "plan:wms": "node scripts/plan-check.mjs --plan docs/plan/wms-parity.json --resume docs/plan/استئناف-موازنة-WMS.md"
+      "plan:wms": "node scripts/plan-check.mjs --plan docs/plan/wms-parity.json --resume docs/plan/استئناف-موازنة-WMS.md",
+      "report:venecia": "node scripts/venecia-report.mjs"
     }
   }
 }
