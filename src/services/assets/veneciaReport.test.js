@@ -352,3 +352,57 @@ test('★★ والكمّيّةُ رقمٌ يُجمَع في إكسل لا نص�
   assert.deepEqual(NUMERIC_COLUMNS['المصروف'], ['الكمية', 'المقيَّد في الرصيد']);
   assert.deepEqual(NUMERIC_COLUMNS['المخرَّد'], ['الكمية']);
 });
+
+// ═══ ★★★ مُحمِّلُ مكتبة التنسيق ‹VEN-301 ذيل٤› ═══
+// العطب: كان يُعيد `window.XLSX` الموجودَ أيًّا كان. وصفحاتُ البوّابة تحمل
+// النسخةَ القياسيّةَ من SheetJS لأغراضٍ أخرى، **وهي تتجاهل `cell.s` بصمت** —
+// فمن حمّلها مرّةً في الجلسة لا يرى تنسيقًا أبدًا بعدها. ولا اختبارَ يُمسك
+// ذلك: الدالّةُ تلمس DOM فلا تُحمَّل في Node، فالمرساةُ تقرأ المصدرَ نصًّا.
+const EXCEL_SRC = readFileSync(new URL('./veneciaReportExcel.js', import.meta.url), 'utf8');
+
+test('★★★ لا يُقبل `window.XLSX` اختصارًا بلا علامةِ المنسِّقة', () => {
+  assert.ok(
+    !/if\s*\(typeof window !== 'undefined' && window\.XLSX\)/.test(EXCEL_SRC),
+    'الاختصارُ على مجرّد وجود XLSX عاد — وهو يُخرج الملفَّ بلا تنسيقٍ بلا شكوى'
+  );
+  assert.match(EXCEL_SRC, /window\.__bzSheetStyled && window\.XLSX/, 'الاختصارُ مشروطٌ بالعلامة');
+});
+
+test('★★ والعلامةُ تُرفع بعد المنسِّقة وحدَها لا بعد الاحتياطيّة', () => {
+  // ★ المواضعُ تُقاس على **نداءات الحقن** لا على ذكر الاسم: اسمُ الاحتياطيّة
+  // مذكورٌ في الشرح أعلاه أيضًا، و`indexOf` عليه يقع على التعليق لا الكود.
+  const styled = EXCEL_SRC.indexOf('inject(`${lib}/xlsx-js-style.bundle.js`)');
+  const mark = EXCEL_SRC.indexOf('window.__bzSheetStyled = true');
+  const fallback = EXCEL_SRC.indexOf('inject(`${lib}/xlsx.full.min.js`)');
+  assert.ok(styled > 0, 'المنسِّقةُ تُحقن');
+  assert.ok(fallback > 0, 'والاحتياطيّةُ موجودة');
+  assert.ok(mark > styled, 'والعلامةُ تُرفع بعد حقن المنسِّقة');
+  assert.ok(mark < fallback, 'وقبل مسار الاحتياط — فالاحتياطيّةُ لا تُعلَّم');
+});
+
+test('★ والاحتياطيّةُ باقيةٌ — ملفٌّ بلا تنسيقٍ أفضلُ من زرٍّ لا يفعل شيئًا', () => {
+  assert.match(EXCEL_SRC, /\.catch\(\(\) => inject\(`\$\{lib\}\/xlsx\.full\.min\.js`\)\)/);
+});
+
+// ═══ ★★★ اتّجاهُ المصنَّف وتنسيقُه — مقروءًا من بايتاته ‹VEN-301 ذيل٥› ═══
+// العطب: كان `dressSheet` يضبط `ws['!views'] = [{RTL:true}]` و`ws['!freeze']`،
+// **وكلاهما بلا أثر**: الكاتبُ يقرأ الاتّجاهَ من مستوى المصنَّف، ولا كاتبَ
+// لتجميد الألواح أصلًا. فخرجت خمسُ أوراقٍ عربيّةٍ تُفتح من اليسار — ويبدو
+// التقريرُ «غير منسَّق» ولو كان كلُّ لونٍ في موضعه.
+test('★★★ المصنَّفُ يُعلن الاتّجاهَ من اليمين على مستواه هو', () => {
+  const r = buildVeneciaReport(seed.assets, [card()], { asOf: '2026-10-19' });
+  const wb = buildReportWorkbook(XLSX, r);
+  assert.ok(wb.Workbook?.Views?.[0]?.RTL, 'wb.Workbook.Views[0].RTL — وهو الموضعُ الذي يقرأ منه الكاتب');
+});
+
+test('★★ ولا يُضبط الاتّجاهُ ولا التجميدُ على الورقة — فهما بلا أثرٍ هناك', () => {
+  // ★ يُقاس على **الإسناد** لا على ذكر الاسم: الشرحُ أعلاه يذكر المفتاحَين
+  // ليقول إنّهما بلا أثر، فبحثٌ عن النصّ يقع على التعليق لا على الكود.
+  assert.ok(!/^\s*ws\['!freeze'\]\s*=/m.test(EXCEL_SRC), 'تجميدٌ لا كاتبَ له يوهم أنّ الترويسةَ مجمَّدة');
+  assert.ok(!/^\s*ws\['!views'\]\.push/m.test(EXCEL_SRC), 'واتّجاهٌ على الورقة لا يُقرأ');
+});
+
+test('★ والمُرشِّحُ وعرضُ الأعمدة يبقيان — وهما يعملان فعلًا', () => {
+  assert.match(EXCEL_SRC, /ws\['!autofilter'\]/);
+  assert.match(EXCEL_SRC, /ws\['!cols'\]/);
+});

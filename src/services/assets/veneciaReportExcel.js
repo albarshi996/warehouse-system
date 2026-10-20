@@ -23,9 +23,29 @@ const ZEBRA_BG = 'F4F5F7';
 const BORDER = { style: 'thin', color: { rgb: 'D9DCE1' } };
 const BOX = { top: BORDER, bottom: BORDER, left: BORDER, right: BORDER };
 
-/** يُحمّل مكتبةَ التنسيق المستضافةَ ذاتيًّا، ويعود إلى القياسيّة إن تعذّرت. */
+/**
+ * يُحمّل مكتبةَ التنسيق المستضافةَ ذاتيًّا، ويعود إلى القياسيّة إن تعذّرت.
+ *
+ * ═══ ★★★ ولا يُوثق بـ`window.XLSX` الموجود ‹VEN-301 ذيل٤› ═══
+ * كان أوّلُ سطرٍ هنا: `if (window.XLSX) return window.XLSX` — وهو يبدو
+ * توفيرًا وهو **عطبٌ صامت**. فصفحاتُ البوّابة تحمل النسخةَ القياسيّةَ من
+ * SheetJS لأغراضٍ أخرى (`xlsx.full.min.js` موسومةٌ `is:inline` في شاشاتٍ
+ * عدّة، ومسارُ الاحتياط هنا نفسُه يُحمّلها)، وهي **تتجاهل `cell.s` بصمت**:
+ * لا خطأَ ولا تحذير، يخرج الملفُّ بلا ترويسةٍ ملوّنةٍ ولا حدودٍ ولا تجميد —
+ * ويبدو أنّ التنسيقَ «لم يُكتب» وهو مكتوبٌ وأُهمل.
+ *
+ * فمن حمّل نسخةً قياسيّةً مرّةً واحدةً في الجلسة **لا يرى تنسيقًا أبدًا بعدها**.
+ * (شكا المالكُ 2026-10-21: «وغير منسق».)
+ *
+ * ★★ والعلاجُ علامةٌ صريحةٌ لا وجودُ الكائن: تُرفع `__bzSheetStyled` بعد
+ * تحميل **المنسِّقة** وحدَها، فلا يُقبل غيرُها اختصارًا. والاحتياطيّةُ لا
+ * تُعلَّم — فيُعاد المحاولةُ مرّةً أخرى لعلّ الشبكةَ تحسّنت: ملفٌّ بلا
+ * تنسيقٍ أفضلُ من زرٍّ لا يفعل شيئًا، ولكنّه ليس حالةً تُخلَّد.
+ */
 export function loadSheetLib(baseUrl) {
-  if (typeof window !== 'undefined' && window.XLSX) return Promise.resolve(window.XLSX);
+  if (typeof window !== 'undefined' && window.__bzSheetStyled && window.XLSX) {
+    return Promise.resolve(window.XLSX);
+  }
   const lib = `${String(baseUrl || '').replace(/\/$/, '')}/lib`;
   const inject = (src) =>
     new Promise((resolve, reject) => {
@@ -35,7 +55,12 @@ export function loadSheetLib(baseUrl) {
       el.onerror = () => reject(new Error(src));
       document.head.appendChild(el);
     });
-  return inject(`${lib}/xlsx-js-style.bundle.js`).catch(() => inject(`${lib}/xlsx.full.min.js`));
+  return inject(`${lib}/xlsx-js-style.bundle.js`)
+    .then((x) => {
+      window.__bzSheetStyled = true;
+      return x;
+    })
+    .catch(() => inject(`${lib}/xlsx.full.min.js`));
 }
 
 const baseStyle = (extra = {}) => ({
@@ -48,9 +73,12 @@ const baseStyle = (extra = {}) => ({
 /** يُنسّق ورقةً كاملة: ترويسةٌ وتناوبٌ ومجاميعُ وتجميدٌ وعرضُ أعمدة. */
 function dressSheet(XLSX, ws, { columns, rowCount, numeric = [], hasTotals = false }) {
   if (!ws['!ref']) return;
-  if (!ws['!views']) ws['!views'] = [];
-  ws['!views'].push({ RTL: true });
-  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+  // ★★★ ولا `ws['!views']` ولا `ws['!freeze']` هنا — **كانا دعوى بلا أثر**:
+  // قُرئت بايتاتُ المصنَّف فإذا الأوراقُ الخمسُ كلُّها بلا `rightToLeft` ولا
+  // `<pane>`. فالكاتبُ في `xlsx-js-style` يقرأ الاتّجاهَ من **مستوى المصنَّف**
+  // (`wb.Workbook.Views[0].RTL`) لا من الورقة — ويُضبط في `buildReportWorkbook`.
+  // وتجميدُ الألواح لا كاتبَ له في هذه النسخة أصلًا، فحذفُ السطر أصدقُ من
+  // إبقائه يوهم أنّ الترويسةَ مجمَّدة.
   ws['!autofilter'] = { ref: ws['!ref'] };
 
   const range = XLSX.utils.decode_range(ws['!ref']);
@@ -138,6 +166,10 @@ function tableSheet(XLSX, { name, columns, rows, totals, numeric }) {
  */
 export function buildReportWorkbook(XLSX, report) {
   const wb = XLSX.utils.book_new();
+  // ★★ اتّجاهُ الأوراق من اليمين — على مستوى المصنَّف، وهو الموضعُ الوحيدُ
+  // الذي يقرأ منه الكاتب. وتقريرٌ عربيٌّ يُفتح من اليسار يبدو «غير منسَّق»
+  // ولو كان كلُّ لونٍ وحدٍّ في موضعه (شكا المالكُ 2026-10-21).
+  wb.Workbook = { ...(wb.Workbook || {}), Views: [{ RTL: true }] };
   XLSX.utils.book_append_sheet(wb, summarySheet(XLSX, report), 'الملخّص');
   // ★★★ الأوراقُ تُؤخذ **كما يعلنها التقرير**، والغائبةُ تُتخطّى.
   // فهذا المصنَّفُ يخدم تقريرَين: فينسيا (خمسُ أوراق) ومنظارَ إدارة
