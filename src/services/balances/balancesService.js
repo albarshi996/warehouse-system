@@ -36,6 +36,7 @@ import { importSheet } from '../excel/excelImport.js';
 import { balanceId } from './balanceKey.js';
 import { normalizeSku, normalizeBarcode } from '../items/itemService.js';
 import { normalizeLocationCode } from '../locations/locationCode.js';
+import { binPrefixRange } from '../locations/scopedQuery.js';
 
 const COL = 'balances';
 const BATCH_LIMIT = 500;
@@ -52,6 +53,35 @@ export function listenBalances(callback, onError) {
     (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
     (err) => onError?.(err)
   );
+}
+
+/**
+ * ‹DS-READS› أرصدةُ خاناتِ مستودعاتٍ بعينها — بمدى البادئة لا بالمجموعة كلّها.
+ *
+ * ★★ ولماذا بالخانة لا بـ`warehouse`؟ لأنّ ما يحتاجه اقتراحُ الرفّ هو **ما في الرفّ**
+ * (السعةُ والخلطُ والحِمل تُحسب من `bin`)، و`warehouse` على الرصيد كودُ البوّابة
+ * (`WH001`) لا بادئةُ الملصق (`RH`). والأرصدةُ بلا خانةٍ — وهي جُلُّ الافتتاحيّ —
+ * لا تُقرأ، فلا أثرَ لها في الاقتراح أصلًا.
+ *
+ * والحقلان كلاهما: `bin` هو الموحَّد (‹LOC-106›)، و`location` القديم يقرؤه
+ * `balanceLocationCode` توافقًا رجعيًّا — فيُقرأ هنا مثله. ومدى حقلٍ واحدٍ لا يطلب
+ * فهرسًا مركّبًا.
+ *
+ * @param {string[]} prefixes بادئاتُ الخانات (= `warehouse` على `bin_locations`)
+ */
+export async function fetchBalancesInBinsOf(prefixes) {
+  const list = [...new Set((prefixes || []).map((p) => String(p ?? '').trim().toUpperCase()).filter(Boolean))];
+  const ranges = list.flatMap((p) => {
+    const { start, end } = binPrefixRange(p);
+    return ['bin', 'location'].map((field) =>
+      getDocs(query(collection(db, COL), where(field, '>=', start), where(field, '<', end)))
+    );
+  });
+  const seen = new Map();
+  for (const snap of await Promise.all(ranges)) {
+    for (const d of snap.docs) if (!seen.has(d.id)) seen.set(d.id, { id: d.id, ...d.data() });
+  }
+  return [...seen.values()];
 }
 
 /** أرصدة صنف بعينه (بكوده) عبر كل المخازن والتشغيلات. */

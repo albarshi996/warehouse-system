@@ -19,6 +19,7 @@ import { normalizeStatus } from './itemStatus.js';
 import { shapeImportedItem, normalizeUnit } from './itemShape.js';
 import { assertNewItemIdentity, normalizeSubstitutes } from './itemIdentity.js';
 import { CACHE_KEY, packCache, unpackCache, isFresh, selectItems } from './itemCache.js';
+import { chunksOf } from '../locations/scopedQuery.js';
 
 export { normalizeStatus, normalizeUnit };
 
@@ -255,6 +256,52 @@ export const subscribeItems = (onChange, onError, { includeArchived = false, liv
     listeners.delete(entry);
   };
 };
+
+/**
+ * ‹DS-READS› الكتالوجُ من الذاكرة أو القرص **إن كان طازجًا** — بلا شبكةٍ أبدًا.
+ *
+ * يُعيد `null` إن لم يكن: فيقرأ المستدعي ما يحتاجه وحدَه (`fetchItemsBySkus`)
+ * بدل أن يجرّ الكتالوجَ كلَّه لبضعة أصناف. وإن كان طازجًا فهو أدقُّ وأرخص معًا.
+ */
+export function cachedItemsIfFresh({ includeArchived = false } = {}) {
+  const now = Date.now();
+  if (allItems && isFresh({ at: loadedAt }, now)) return selectItems(allItems, includeArchived);
+  const stored = readStored();
+  if (stored && isFresh(stored, now)) {
+    allItems = stored.items;
+    loadedAt = stored.at;
+    return selectItems(allItems, includeArchived);
+  }
+  return null;
+}
+
+/**
+ * ‹DS-READS› بطاقاتُ أصنافٍ بعينها — بالكود، ثلاثين ثلاثين.
+ * والكودُ على البطاقة هو معرّفها مطبَّعًا (`createItem` · `upsertItems`).
+ */
+export async function fetchItemsBySkus(skus) {
+  const list = [...new Set((skus || []).map(normalizeSku).filter(Boolean))];
+  const snaps = await Promise.all(
+    chunksOf(list).map((chunk) => getDocs(query(collection(db, COLLECTION), where('sku', 'in', chunk))))
+  );
+  return snaps.flatMap((s) => s.docs.map((d) => d.data()));
+}
+
+/**
+ * ‹DS-READS› بطاقاتُ أصنافٍ بباركوداتها — `array-contains-any` كـ`lookupByBarcode`.
+ * القيمُ تُمرَّر كما هي: المستدعي يبني صيغتَي البحث (`barcodeLookupVariants`).
+ */
+export async function fetchItemsByBarcodes(values) {
+  const list = [...new Set((values || []).map((v) => String(v ?? '')).filter(Boolean))];
+  const snaps = await Promise.all(
+    chunksOf(list).map((chunk) =>
+      getDocs(query(collection(db, COLLECTION), where('barcodes', 'array-contains-any', chunk)))
+    )
+  );
+  const seen = new Map();
+  for (const s of snaps) for (const d of s.docs) if (!seen.has(d.id)) seen.set(d.id, d.data());
+  return [...seen.values()];
+}
 
 /** يقرأ صنفًا واحدًا بكوده. يُعيد null إن لم يوجد. */
 export const getItem = async (sku) => {

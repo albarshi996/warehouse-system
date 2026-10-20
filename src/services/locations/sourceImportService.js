@@ -13,6 +13,7 @@
 import {
   collection,
   doc,
+  documentId,
   getDocs,
   query,
   serverTimestamp,
@@ -22,7 +23,7 @@ import {
 import { db, auth } from '../../config/firebase.js';
 import { importSheet } from '../excel/excelImport.js';
 import { createDraft } from '../documents/documentsService.js';
-import { buildPreview, toDocumentDraft } from './sourceImport.js';
+import { buildPreview, fingerprintId, knownFingerprintsFor, toDocumentDraft } from './sourceImport.js';
 
 const COL = 'source_imports';
 const BATCH_LIMIT = 500;
@@ -53,19 +54,12 @@ function whoami(profile) {
   };
 }
 
-/** يُنظّف البصمة لتصلح معرّف مستند Firestore. */
-function fingerprintId(fp) {
-  return String(fp ?? '')
-    .replace(/[/.#$[\]]/g, '-')
-    .replace(/\s+/g, '_')
-    .slice(0, 400);
-}
-
 /**
- * بصمات ما استُورد سابقًا لهذا النوع.
+ * بصمات ما استُورد سابقًا لهذا النوع — **كلُّها**.
  *
- * ⚠️ حدٌّ مُعلَن: تُقرأ المجموعة كلّها لهذا النوع. مقبولٌ ما دامت بحجم
- * مستنداتِ أشهر؛ ويوم تكبر يُضاف حصرٌ بالتاريخ أو فهرسٌ مركّب.
+ * ⚠️ حدٌّ مُعلَن: تُقرأ المجموعة كلّها لهذا النوع. باقيةٌ طريقَ رجوعٍ (مفتاحُ
+ * الإطفاء) وسقوطًا آمنًا إن تعذّرت القراءةُ المقصورة — والطريقُ المعتاد
+ * `fetchKnownFingerprintsForSheet` ‹DS-READS›.
  */
 export async function fetchKnownFingerprints(kind) {
   const snap = await getDocs(query(collection(db, COL), where('kind', '==', kind)));
@@ -73,15 +67,38 @@ export async function fetchKnownFingerprints(kind) {
 }
 
 /**
+ * ‹DS-READS› بصماتُ **الورقة** المستوردةُ سلفًا — بمعرّفاتها، ثلاثين ثلاثين.
+ * والحكمُ يطابق القراءةَ الكاملة حرفًا (انظر `knownFingerprintsFor`).
+ *
+ * ★★ وإن تعذّرت لأيّ سبب سقطت إلى القراءة الكاملة **ولم تُسقط المعاينة**: منعُ
+ * التكرار أغلى من القراءات، والاستيرادُ لا يتوقّف لعطبٍ في الاختصار.
+ */
+export async function fetchKnownFingerprintsForSheet(kind, fingerprints) {
+  try {
+    return await knownFingerprintsFor(kind, fingerprints, async (ids) => {
+      const snap = await getDocs(query(collection(db, COL), where(documentId(), 'in', ids)));
+      return snap.docs.map((d) => d.data());
+    });
+  } catch {
+    return fetchKnownFingerprints(kind);
+  }
+}
+
+/**
  * يقرأ الملفّ ويبني المعاينة — **بلا أيّ كتابة**.
  * الفصل مقصود: المستخدم يرى ما سيحدث قبل أن يحدث.
+ *
+ * @param {{fullReads?:boolean}} [opts] مفتاحُ الإطفاء ‹DS-READS› — `true` يُعيد قراءةَ
+ *        البصمات كلِّها كما كانت.
  */
-export async function analyzeSourceFile(file, kind) {
+export async function analyzeSourceFile(file, kind, { fullReads = false } = {}) {
   const cfg = KINDS[kind];
   if (!cfg) throw new Error(`نوع استيراد غير معروف: ${kind}`);
 
   const result = await importSheet(file, cfg.dataset, { sheetName: cfg.sheetName });
-  const known = await fetchKnownFingerprints(kind);
+  const known = fullReads
+    ? await fetchKnownFingerprints(kind)
+    : await fetchKnownFingerprintsForSheet(kind, (result?.rows || []).map((r) => r?.fingerprint));
   const preview = buildPreview(result, known, kind);
 
   return {

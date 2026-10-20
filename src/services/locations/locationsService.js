@@ -26,11 +26,13 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  where,
   writeBatch,
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase.js';
 import { normalizeLocationCode } from './locationCode.js';
 import { locationProblems, shapeLocation } from './locationsModel.js';
+import { chunksOf } from './scopedQuery.js';
 
 const COL = 'bin_locations';
 const BATCH_LIMIT = 500;
@@ -66,6 +68,22 @@ export function listenLocations(cb, onError) {
 export async function fetchLocationsOnce() {
   const s = await getDocs(collection(db, COL));
   return s.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * ‹DS-READS› خاناتُ مستودعاتٍ بعينها — قراءةٌ واحدةٌ مقصورة لا مستمعٌ على الكلّ.
+ *
+ * `warehouse` على الخانة هو أوّلُ مقطعٍ من كودها، مكتوبًا بالحروف الكبيرة
+ * (`shapeLocation`)، فالمطابقةُ بالقيمة المطبَّعة تطابق `suggestLocations` حرفًا.
+ * وبلا ترتيبٍ في الاستعلام عمدًا: `in` مع `orderBy` على حقلٍ آخر يطلب فهرسًا مركّبًا
+ * — والترتيبُ يُعاد في الذاكرة.
+ */
+export async function fetchLocationsForWarehouses(warehouses) {
+  const list = [...new Set((warehouses || []).map((w) => String(w ?? '').trim().toUpperCase()).filter(Boolean))];
+  const snaps = await Promise.all(
+    chunksOf(list).map((chunk) => getDocs(query(collection(db, COL), where('warehouse', 'in', chunk))))
+  );
+  return snaps.flatMap((s) => s.docs.map((d) => ({ id: d.id, ...d.data() })));
 }
 
 /** موقعٌ بعينه بكوده — قراءةٌ واحدة بلا استعلام (المعرّف هو الكود). */
