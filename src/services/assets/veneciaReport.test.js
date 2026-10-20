@@ -242,13 +242,34 @@ test('★★★ المصروفُ سطرٌ لكلّ بندٍ لا لكلّ بطا
   assert.equal(rows[1]['السند'], 'VENISS-2026-0001', 'ورقمَ سنده');
 });
 
-test('★★★ والمثبَّتةُ وحدَها تدخل — فالمسودّةُ لم تُخرج بضاعة', () => {
+test('★★★ المسودّةُ تدخل مُميَّزةً والملغاةُ لا تدخل (قرار المالك 2026-10-21)', () => {
   const rows = issuedReportRows([
     issueCard(),
     issueCard({ state: 'draft', number: '' }),
     issueCard({ state: 'cancelled' }),
   ]);
-  assert.equal(rows.length, 1, 'المسودّةُ والملغاةُ خارجَ الورقة');
+  assert.equal(rows.length, 2, 'المثبَّتةُ والمسودّةُ — والملغاةُ وحدَها خارج');
+  assert.deepEqual(rows.map((r) => r['الحالة']), ['مثبَّت', 'لم تُثبَّت']);
+  assert.equal(rows[1]['السند'], 'بلا رقم', 'والمسودّةُ تُقال بلا رقمٍ لا بشرطةٍ تُشبه الرقم');
+});
+
+test('★★★ والمجموعُ لا يَعِد بما لم يقع: الكمّيّةُ تُجمَع والمقيَّدُ لا يشمل المسودّة', () => {
+  const rows = issuedReportRows([
+    issueCard({ lines: [{ assetNo: 'B1', qty: 2 }] }),
+    issueCard({ state: 'draft', number: '', lines: [{ assetNo: 'B2', qty: 11 }] }),
+  ]);
+  assert.deepEqual(rows.map((r) => r['الكمية']), [2, 11], 'كلتاهما تقول كمّيّتَها');
+  assert.deepEqual(rows.map((r) => r['المقيَّد في الرصيد']), [2, 0], 'والمسودّةُ صفرٌ في الرصيد');
+});
+
+test('★★ ومجاميعُ الورقة تفرّق الاثنين', () => {
+  const r = buildVeneciaReport(
+    [],
+    [issueCard({ lines: [{ assetNo: 'B1', qty: 2 }] }), issueCard({ state: 'draft', number: '', lines: [{ assetNo: 'B2', qty: 11 }] })],
+    {}
+  );
+  assert.equal(r.issuedSheet.totals['الكمية'], 13);
+  assert.equal(r.issuedSheet.totals['المقيَّد في الرصيد'], 2);
 });
 
 test('والإدخالُ ليس صرفًا', () => {
@@ -308,8 +329,10 @@ test('★★★ وملخّصُ المخرَّد هو مجموعُ ورقته —
 
 test('★★ ومجموعُ المصروف هو مجموعُ أسطره', () => {
   const r = buildVeneciaReport([], [issueCard()], {});
-  const sum = r.issuedSheet.rows.reduce((n, x) => n + x['الكمية'], 0);
-  assert.equal(r.issuedSheet.totals['الكمية'], sum);
+  for (const col of ['الكمية', 'المقيَّد في الرصيد']) {
+    const sum = r.issuedSheet.rows.reduce((n, x) => n + x[col], 0);
+    assert.equal(r.issuedSheet.totals[col], sum, col);
+  }
 });
 
 test('★★★ والورقتان في المصنَّف المنسَّق — تُقرآن من بايتاته', () => {
@@ -326,6 +349,6 @@ test('★★★ والورقتان في المصنَّف المنسَّق — ت
 });
 
 test('★★ والكمّيّةُ رقمٌ يُجمَع في إكسل لا نصّ', () => {
-  assert.deepEqual(NUMERIC_COLUMNS['المصروف'], ['الكمية']);
+  assert.deepEqual(NUMERIC_COLUMNS['المصروف'], ['الكمية', 'المقيَّد في الرصيد']);
   assert.deepEqual(NUMERIC_COLUMNS['المخرَّد'], ['الكمية']);
 });

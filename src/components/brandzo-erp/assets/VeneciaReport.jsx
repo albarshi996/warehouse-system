@@ -296,14 +296,12 @@ export default function VeneciaReport({ assets = [], cards = [], scope = '', fil
             {report.issuedSheet.rows.length ? (
               <Table
                 columns={report.issuedSheet.columns}
-                numeric={['الكمية']}
+                numeric={['الكمية', 'المقيَّد في الرصيد']}
                 rows={report.issuedSheet.rows}
                 totals={report.issuedSheet.totals}
               />
             ) : (
-              <div style={{ fontSize: '8pt', color: '#8A95A3' }}>
-                لا بندَ مصروفًا في هذا النطاق — والمسودّاتُ لا تُحسب حتّى تُثبَّت.
-              </div>
+              <div style={{ fontSize: '8pt', color: '#8A95A3' }}>لا بندَ مصروفًا في هذا النطاق.</div>
             )}
           </Section>
 
