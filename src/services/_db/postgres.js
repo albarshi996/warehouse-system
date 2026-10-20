@@ -54,6 +54,9 @@ const client = createClient({
     const u = auth && auth.currentUser;
     return u ? u.getIdToken() : null;
   },
+  // ★ الساعةُ من هنا: هذا الملفُّ غيرُ خالصٍ أصلًا (يستورد Firestore)، فهو
+  //   موضعُها الصحيح — ويبقى `pgClient` خالصًا يُختبَر بساعةٍ مزيّفة.
+  now: () => Date.now(),
   options: {
     staleSeconds: Number(ENV.PUBLIC_PG_STALE_SECONDS) || undefined,
   },

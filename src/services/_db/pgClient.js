@@ -48,7 +48,14 @@ export const DEFAULTS = Object.freeze({
 export function createClient(deps) {
   const cfg = { ...DEFAULTS, ...(deps.options || {}) };
   const doFetch = deps.fetch || globalThis.fetch;
-  const now = deps.now || (() => Date.now());
+  // ★★★ **والساعةُ تُحقن ولا تُقرأ هنا — وهذا شرطُ بوّابة `npm run audit`:**
+  //     ملفٌّ خالصٌ يقرأ ساعتَه تتغيّر نتيجتُه بين تشغيلين فلا يُختبَر أصلًا.
+  //     وهذا الملفُّ لا يحسب قيمةً مرّةً بل يُدير مهلًا وتبريدًا على امتداد
+  //     عمره، فلا يكفيه ختمُ وقتٍ واحد — **يحتاج ساعةً حيّة**. فيملكها
+  //     `postgres.js` وهو المُركِّب غيرُ الخالص، ويُمرّرها.
+  //     (سقطت بوّابةُ النشر على هذا السطر حرفيًّا 2026-10-21.)
+  const now = typeof deps.now === 'function' ? deps.now : null;
+  if (!now) throw new Error('createClient: الساعةُ `now` تُمرَّر ولا تُقرأ داخل الباب.');
   const apiUrl = String(deps.apiUrl || '').replace(/\/+$/, '');
   const authUrl = String(deps.authUrl || '').replace(/\/+$/, '');
 

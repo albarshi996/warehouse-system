@@ -197,7 +197,7 @@ test('★★★ نقض: تعذّرُ قياس الطزاجة يُعيد null ل�
 });
 
 test('نقض: عميلٌ بلا عنوانٍ غيرُ مهيَّأ ولا يُسأل', async () => {
-  const client = createClient({ apiUrl: '', authUrl: '', getIdToken: async () => 'X' });
+  const client = createClient({ apiUrl: '', authUrl: '', getIdToken: async () => 'X', now: () => 1 });
   assert.equal(client.configured, false);
   assert.equal(client.healthy(), false);
   assert.equal((await client.select('documents', 'select=id')).ok, false);
