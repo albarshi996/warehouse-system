@@ -238,3 +238,44 @@ export function isDue(plan, path, minutesElapsed) {
   const entry = plan[path];
   return Boolean(entry) && minutesElapsed % entry.tier === 0;
 }
+
+/* ═══════════════════ سقفُ القراءة اليوميّ ═══════════════════ */
+
+/**
+ * ما قُرئ اليومَ، مأخوذًا من السجلّ — **والمجهولُ يُعدّ مستنفَدًا**.
+ *
+ * ★★★ وهذا هو جوهرُ الحارس: قيمةٌ لا تُقرأ (عطبُ قاعدةٍ · جدولٌ فارغ · نصٌّ
+ *     لا يصير رقمًا) لو عُدّت صفرًا **لفُتح البابُ على مصراعيه عند أوّل
+ *     عطب** — وهو بالضبط اليومُ الذي تحتاج فيه الحارسَ. فتُعدّ مستنفَدةً:
+ *     **السكوتُ يميل إلى الإمساك لا إلى الإباحة.**
+ *
+ * @param {unknown} raw القيمةُ كما جاءت من السجلّ.
+ * @param {number} cap السقفُ اليوميّ.
+ * @returns {number}
+ */
+export function readsTodayOrCap(raw, cap) {
+  // ★★★ و`Number(null)` **صفرٌ** — وكذلك `Number('')` و`Number([])`. فالعدمُ
+  //     يتنكّر في صورة «لم أقرأ شيئًا اليوم» ويفتح البابَ كلَّه. وهو الفخُّ
+  //     نفسُه الذي أسقط حارسَ طزاجة المرآة قبل ساعاتٍ من كتابة هذا السطر،
+  //     **فلا يُترك لـ`Number` أن يحكم على العدم.**
+  if (raw === null || raw === undefined) return cap;
+  if (typeof raw === 'object') return cap;
+  if (typeof raw === 'string' && raw.trim() === '') return cap;
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? n : cap;
+}
+
+/**
+ * أنتوقّف الآن؟ يُسأل **قبل كلّ مسار** لا مرّةً في أوّل الدورة.
+ *
+ * ★★ لأنّ مجموعةً ضخمةً واحدةً قد تستنفد الباقيَ وحدَها: فحصٌ في أوّل الدورة
+ *    وحدَه يسمح لها بالمرور ثمّ يمنع البريئاتِ بعدها — أو الأسوأ، يسمح
+ *    للدورة كلِّها لأنّ الرصيدَ كان سليمًا حين بدأت.
+ *
+ * @param {number} spent ما أُنفق اليومَ حتّى اللحظة.
+ * @param {number} cap السقف.
+ * @returns {boolean}
+ */
+export function capReached(spent, cap) {
+  return Number(spent) >= Number(cap);
+}

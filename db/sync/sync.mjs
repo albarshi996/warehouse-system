@@ -44,7 +44,7 @@ import { randomUUID } from 'node:crypto';
 import { pathsFromRules, appendOnlyFromRules } from './rules-paths.js';
 import {
   planFor, advanceWatermark, windowStart, isDue, idleReadsPerDay, MODE,
-  BUDGET_READS_PER_DAY,
+  BUDGET_READS_PER_DAY, readsTodayOrCap, capReached,
 } from './watermark.js';
 import { mapForPath, genericMapFor, buildUpsert, lit } from './pg-maps.js';
 
@@ -318,6 +318,36 @@ function saveState(path, plan, watermark) {
   );
 }
 
+/**
+ * ═══════════════════ سقفُ القراءة اليوميّ — حارسٌ لا يُخدَع ═══════════════════
+ *
+ * ★★★ **الدرسُ الذي وُلد منه هذا الحارس (2026-10-21، وثمنُه دُفع):** الخطّةُ
+ *     تُصنّف وتيرةَ كلّ مجموعةٍ من `inventory.measured.json`، وهو **مقيسٌ مرّةً
+ *     في سبتمبر**. فلمّا فُتحت المرآةُ الكاملةُ قرأ الجردُ `bin_locations = 0`
+ *     بينما هي **٨٤٠٢ مستندًا** — فصُنّفت «باردةً · مسحًا كاملًا» ⇒ ٨٤٠٢
+ *     قراءةٍ كلَّ ساعة. والمجموعُ المقيس: **١٥٬١٦٤ مستندًا في الدورة الواحدة**،
+ *     أي ٣٦٤ ألفًا يوميًّا — **سبعةُ أضعاف الحصّة**. ولم تنجُ البوّابةُ إلّا
+ *     لأنّ الدورةَ أُوقفت يدويًّا بعد واحدة.
+ *
+ *     ⇒ **والعلاجُ ليس جردًا أدقّ.** الجردُ يشيخ دائمًا، وأيُّ حارسٍ يقوم على
+ *       صحّته يكذب يومًا. فالسقفُ يُفرض **على ما قُرئ فعلًا**، من سجلِّ
+ *       المزامنة نفسِه: رقمٌ لا يأتي من تقدير، ولا يشيخ.
+ *
+ * ★★ ويُقاس باليوم لا بالدورة: الحصّةُ يوميّةٌ، والدورةُ الواحدةُ قد تكون
+ *    بريئةً ومجموعُ أربعٍ وعشرين قاتلًا — وهو بالضبط ما وقع.
+ */
+const DAILY_READ_CAP = Number(process.env.SYNC_DAILY_READ_CAP) || BUDGET_READS_PER_DAY;
+
+/** ما قُرئ اليومَ فعلًا — من السجلّ، لا من حساب. */
+function readsToday() {
+  const rows = psqlRows(
+    "SELECT coalesce(sum(docs_read), 0) FROM sync_log WHERE started_at >= date_trunc('day', now());"
+  );
+  // ★ وتعذُّرُ القراءة يُعامَل معاملةَ «أنفقتُ كلَّ شيء» لا معاملةَ الصفر —
+  //   والحكمُ في `watermark.js` كي يُختبَر بلا قاعدةٍ ولا حاوية.
+  return readsTodayOrCap(rows[0] && rows[0][0], DAILY_READ_CAP);
+}
+
 async function runCycle(fb, db, minute) {
   const cycleId = randomUUID();
   // ★ الحالةُ تُقرأ حتّى في `--dry`. ولو أُهملت، لبدأت التجربةُ من الصفر
@@ -327,9 +357,25 @@ async function runCycle(fb, db, minute) {
   let totalQueries = 0;
   let totalDocs = 0;
 
+  let spent = DRY ? 0 : readsToday();
+  let capHit = false;
+
   for (const path of SYNCED) {
     const plan = PLAN[path];
     if (!isDue(PLAN, path, minute)) continue;
+
+    // ★★★ ويُفحص **قبل** كلّ مسارٍ لا مرّةً في أوّل الدورة: مجموعةٌ ضخمةٌ
+    //     واحدةٌ قد تستنفد الباقيَ وحدَها، فيُوقَف ما بعدها لا ما قبلها.
+    if (!DRY && capReached(spent, DAILY_READ_CAP)) {
+      if (!capHit) {
+        capHit = true;
+        console.warn(
+          `!  سقفُ القراءة اليوميُّ بلغ حدَّه: ${spent} / ${DAILY_READ_CAP}.` +
+            ' يتوقّف ما تبقّى من المسارات حتّى منتصف الليل — والبوّابةُ لا تتأثّر.'
+        );
+      }
+      continue;
+    }
 
     const startedAt = new Date().toISOString();
     const before = plan.mode === MODE.INCREMENTAL ? state[path] || null : null;
@@ -343,6 +389,7 @@ async function runCycle(fb, db, minute) {
 
       totalQueries += queries;
       totalDocs += rows.length;
+      spent += rows.length + queries;
 
       let written = 0;
       let rejected = [];
