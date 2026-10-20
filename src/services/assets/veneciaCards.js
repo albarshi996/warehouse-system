@@ -315,3 +315,38 @@ export function movementByAsset(cards) {
   }
   return out;
 }
+
+/**
+ * ═══ ملخّصُ تثبيتٍ جماعيّ ‹VEN-203› ═══
+ *
+ * ★★★ **ويسمّي ما فشل**: «ثُبّتت ٧ من ١٠» لا تدلّ على شيء — الموظّفُ لا يعرف
+ * أيَّ ثلاثٍ بقيت فيبحث عنها واحدةً واحدة، أو — وهو الأسوأ — يحسب أنّها مرّت.
+ * فيُذكر **الطرفُ والسبب** لكلّ فاشلة.
+ *
+ * ★ والأرقامُ الرسميّةُ تُذكر كذلك: من ثُبّتت بطاقتُه يريد رقمَ سنده.
+ */
+export function describePostedDrafts(results, { limit = 6 } = {}) {
+  const list = results ?? [];
+  const ok = list.filter((r) => r.ok);
+  const bad = list.filter((r) => !r.ok);
+  if (!list.length) return 'لا مسودّةَ لتُثبَّت.';
+
+  const moved = ok.reduce((n, r) => n + (Number(r.moved) || 0), 0);
+  const head =
+    ok.length
+      ? `ثُبِّتت ${ok.length} من ${list.length} — ${moved} وحدة`
+      : `لم تُثبَّت أيُّ بطاقةٍ من ${list.length}`;
+
+  const parts = [head];
+  if (ok.length) {
+    const nums = ok.slice(0, limit).map((r) => r.number).filter(Boolean);
+    if (nums.length) {
+      parts.push(`السندات: ${nums.join(' · ')}${ok.length > limit ? ` و${ok.length - limit} غيرها` : ''}`);
+    }
+  }
+  for (const r of bad.slice(0, limit)) {
+    parts.push(`تعذّرت «${r.party || '—'}»: ${r.error}`);
+  }
+  if (bad.length > limit) parts.push(`و${bad.length - limit} أخرى لم تُثبَّت.`);
+  return parts.join('\n');
+}

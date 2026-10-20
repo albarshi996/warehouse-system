@@ -40,6 +40,7 @@ import {
   cardTotals,
   cardVerdict,
   cardsSnapshot,
+  describePostedDrafts,
   filterCards,
   lineAssetKey,
 } from '../../../services/assets/veneciaCards.js';
@@ -47,7 +48,9 @@ import { listenVeneciaAssets, todayLocal } from '../../../services/assets/veneci
 import {
   cancelCard,
   listenVeneciaCards,
+  issueNow,
   postCard,
+  postDrafts,
   reverseCard,
   saveCardDraft,
 } from '../../../services/assets/veneciaCardsService.js';
@@ -151,8 +154,59 @@ export default function VeneciaCards() {
     []
   );
 
+  // ★★★ ‹NUM-601› حالةُ الاتّصال تُعرض **قبل** الضغط لا بعده: التثبيتُ وحدَه
+  // يحتاج الشبكةَ (الرقمُ الرسميُّ لا يُحجز محلّيًّا)، وبقيّةُ الشاشة تعمل.
+  // فمن يرى الشريطَ يعرف لماذا زرُّ التثبيت محجوب، ولا يظنّ النظامَ معطوبًا.
+  const [online, setOnline] = useState(
+    typeof navigator === 'undefined' || navigator.onLine !== false
+  );
+  useEffect(() => {
+    const up = () => setOnline(true);
+    const down = () => setOnline(false);
+    window.addEventListener('online', up);
+    window.addEventListener('offline', down);
+    return () => {
+      window.removeEventListener('online', up);
+      window.removeEventListener('offline', down);
+    };
+  }, []);
+
+  // ★★ وتلميحُ البطء للحالة الثانية: **متّصلٌ في ظاهره ولا يبلغ الخادمَ**.
+  // `navigator.onLine` لا تكشفها (راوترٌ بلا إنترنت يقول «متّصل»)، والمعاملةُ
+  // تتعلّق كما لو كان مقطوعًا. فلا تُجهَض — إجهاضُ معاملةٍ قد تكون كُتبت على
+  // الخادم يحرق رقمًا — ولكنْ يُقال للموظّف إنّ الانتظارَ غيرُ طبيعيّ.
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!busy) { setSlow(false); return undefined; }
+    const t = setTimeout(() => setSlow(true), 8000);
+    return () => clearTimeout(t);
+  }, [busy]);
+
+  // ‹VEN-202› نموذجُ الصرف السريع — ثلاثةُ حقولٍ لا بطاقةٌ كاملة.
+  const [quick, setQuick] = useState({ party: '', assetNo: '', qty: '', destination: '' });
+  // ‹VEN-203› تأكيدُ التثبيت الجماعيّ — خطوتان لا خطوة: **المثبَّتةُ لا تُلغى**
+  // (تُصحَّح ببطاقةٍ مضادّةٍ فقط)، فزرٌّ يُثبّت عشرًا بضغطةٍ واحدةٍ بلا تأكيدٍ
+  // خطرٌ على من يضغطه سهوًا.
+  const [confirmBulk, setConfirmBulk] = useState(false);
+
   const canWrite = MANAGER_ROLES.includes(profile?.role);
   const index = useMemo(() => new Map(assets.map((a) => [a.docId, a])), [assets]);
+  // ★★★ الاختيارُ بـ`docId` لا بـ`id`: رقمُ الأصل وحدَه **ليس هويّةً** في
+  // فينسيا — ثلاثون رقمًا متصادمًا بين «بضاعة الصرف» و«أصول المدعوم»
+  // (BRZ-0001 خشبُ باركي هنا وثلاجةُ تجميد هناك). فاختيارٌ بالرقم يصرف من
+  // المجموعة الخطأ ولا يشتكي أحد.
+  const quickAsset = useMemo(
+    () => (quick.assetNo ? assets.find((a) => a.docId === quick.assetNo) || null : null),
+    [assets, quick.assetNo]
+  );
+  const quickReady = useMemo(
+    () =>
+      !!quickAsset &&
+      !!quick.party.trim() &&
+      Number.parseInt(quick.qty, 10) > 0,
+    [quickAsset, quick.party, quick.qty]
+  );
+
   const snap = useMemo(() => cardsSnapshot(cards), [cards]);
   const drafts = useMemo(() => cards.filter((c) => c.state === 'draft'), [cards]);
   const rows = useMemo(
@@ -241,6 +295,19 @@ export default function VeneciaCards() {
           أنت تقرأ ولا تكتب: إنشاءُ البطاقات وتثبيتُها للمدير العامّ ومدير المستودعات.
         </div>
       )}
+      {loaded && !online && (
+        <div className="rounded-lg border border-brand-red/40 bg-brand-red/5 text-xs p-2.5 text-brand-red">
+          <strong>بلا اتّصالٍ بالإنترنت.</strong> يمكنك إنشاءُ المسودّات وحفظُها — وتُرفع حين تعود
+          الشبكة. <strong>ولا يمكن التثبيتُ الآن</strong>: الرقمُ الرسميُّ يُحجز من الخادم ولا يُخترع
+          محلّيًّا.
+        </div>
+      )}
+      {busy && slow && (
+        <div className="rounded-lg border border-accent/40 bg-accent/5 text-xs p-2.5 text-ink-2">
+          ما زالت العمليّةُ جاريةً — الاتّصالُ بطيءٌ أو لا يبلغ الخادم. <strong>لا تُعد الضغط</strong>:
+          إن كانت قد كُتبت فسترى نتيجتَها، وإلّا فأعِدها بعد أن تستقرّ الشبكة.
+        </div>
+      )}
       {msg.text && (
         <div
           className={`rounded-lg text-xs p-2.5 border ${
@@ -253,6 +320,107 @@ export default function VeneciaCards() {
         </div>
       )}
 
+      {/* ═══ ⓪ صرفٌ بخطوةٍ واحدة ‹VEN-202› ═══
+          ★ المسارُ الطويل (بطاقةٌ ← بنودٌ ← مسودّةٌ ← تثبيت) باقٍ أسفلَه لمن
+          يصرف عدّةَ أصنافٍ في سندٍ واحد — **يُضاف ولا يُنتزع**. وهذا للحالة
+          الغالبة: صنفٌ واحدٌ لشخصٍ واحدٍ يأخذه الآن. */}
+      {canWrite && (
+        <section className="o_ds o_ds_card o_ds_pad space-y-3">
+          <div className="flex items-center gap-2">
+            <Icon name="arrowLeftRight" size={16} className="text-accent" />
+            <h2 className="text-[13px] font-bold text-ink">اصرف الآن</h2>
+            <span className="text-[11px] text-muted">
+              صنفٌ واحدٌ لشخصٍ واحد — يُقيَّد ويُرقَّم ويَنزل الرصيدُ بضغطةٍ واحدة.
+            </span>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            <Field label="من أخذها" required>
+              <input
+                className={inputCls}
+                value={quick.party}
+                onChange={(e) => setQuick({ ...quick, party: e.target.value })}
+                placeholder="اسم المستلِم"
+              />
+            </Field>
+            <Field label="الصنف" required>
+              <select
+                className={inputCls}
+                value={quick.assetNo}
+                onChange={(e) => setQuick({ ...quick, assetNo: e.target.value })}
+              >
+                <option value="">— اختر —</option>
+                {assets
+                  .filter((a) => !a.archived)
+                  .map((a) => (
+                    <option key={a.docId} value={a.docId}>
+                      {a.id} — {a.assetName} (متاح {num(a.qty)})
+                    </option>
+                  ))}
+              </select>
+            </Field>
+            <Field label="الكمّيّة" required>
+              <input
+                className={inputCls}
+                type="number"
+                min="1"
+                value={quick.qty}
+                onChange={(e) => setQuick({ ...quick, qty: e.target.value })}
+              />
+            </Field>
+            <Field label="الجهة أو المشروع">
+              <input
+                className={inputCls}
+                value={quick.destination}
+                onChange={(e) => setQuick({ ...quick, destination: e.target.value })}
+                placeholder="اختياريّ"
+              />
+            </Field>
+            <div className="flex items-end">
+              <button
+                type="button"
+                className="btn btn-primary btn-sm w-full"
+                disabled={!!busy || !online || !quickReady}
+                title={!online ? 'الصرفُ يحتاج اتّصالًا — الرقمُ الرسميُّ يُحجز من الخادم.' : ''}
+                onClick={() =>
+                  run(
+                    'يُصرَف…',
+                    () =>
+                      issueNow(
+                        {
+                          ...emptyCard('issue'),
+                          party: quick.party,
+                          destination: quick.destination,
+                          lines: [
+                            fillLineFromAsset({
+                              ...emptyLine(),
+                              population: quickAsset?.population || 'issue',
+                              assetNo: quickAsset?.id || '',
+                              qty: quick.qty,
+                            }),
+                          ],
+                        },
+                        index,
+                        profile
+                      ),
+                    (out) => {
+                      setQuick({ party: '', assetNo: '', qty: '', destination: '' });
+                      return `صُرفت ${num(out.moved)} وحدة — السند ${out.number}.`;
+                    }
+                  )
+                }
+              >
+                اصرف
+              </button>
+            </div>
+          </div>
+          {!online && (
+            <p className="text-[11px] text-brand-red">
+              بلا اتّصال: احفظ بطاقةً مسودّةً من «بطاقةٌ جديدة» أدناه، وثبّتها حين تعود الشبكة.
+            </p>
+          )}
+        </section>
+      )}
+
       {/* ═══ ① مسودّاتٌ معلَّقة ═══ */}
       <section className="o_ds o_ds_card o_ds_pad space-y-3">
         <div className="flex items-center gap-2">
@@ -262,6 +430,58 @@ export default function VeneciaCards() {
             {drafts.length ? `${num(drafts.length)} بطاقةً لم تُثبَّت — ولا تُحرّك رصيدًا` : 'لا شيء'}
           </span>
         </div>
+        {canWrite && drafts.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-accent/40 bg-accent/5 p-2.5">
+            {!confirmBulk ? (
+              <>
+                <span className="text-[11px] text-ink-2 flex-1 min-w-[200px]">
+                  تثبيتُ المسودّات كلِّها دفعةً واحدة — لكلٍّ رقمُها الرسميُّ وحرّاسُها.
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  disabled={!!busy || !online}
+                  title={!online ? 'التثبيتُ يحتاج اتّصالًا.' : ''}
+                  onClick={() => setConfirmBulk(true)}
+                >
+                  ثبّت {num(drafts.length)} مسودّة
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="text-[11px] text-brand-red flex-1 min-w-[200px]">
+                  <strong>تأكيد:</strong> تُثبَّت {num(drafts.length)} بطاقةً فتتحرّك الأرصدةُ ويصدر
+                  لكلٍّ سندٌ مرقَّم. <strong>والمثبَّتةُ لا تُلغى</strong> — تُصحَّح ببطاقةٍ مضادّةٍ فقط.
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  disabled={!!busy}
+                  onClick={() => setConfirmBulk(false)}
+                >
+                  تراجَع
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  disabled={!!busy || !online}
+                  onClick={() =>
+                    run(
+                      `تُثبَّت ${num(drafts.length)} بطاقة…`,
+                      () => postDrafts(drafts, profile),
+                      (out) => {
+                        setConfirmBulk(false);
+                        return describePostedDrafts(out);
+                      }
+                    )
+                  }
+                >
+                  نعم، ثبّتها
+                </button>
+              </>
+            )}
+          </div>
+        )}
         {!loaded && <div className="text-xs text-muted">تُقرأ البطاقات…</div>}
         {loaded && !drafts.length && !error && (
           <div className="text-xs text-muted">
@@ -625,7 +845,8 @@ export default function VeneciaCards() {
               <button
                 type="button"
                 className="btn btn-primary btn-sm"
-                disabled={!canWrite || !!busy}
+                disabled={!canWrite || !!busy || !online}
+                title={!online ? 'التثبيتُ يحتاج اتّصالًا — الرقمُ الرسميُّ يُحجز من الخادم.' : ''}
                 onClick={() =>
                   run(
                     'تُثبَّت…',
