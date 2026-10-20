@@ -12,6 +12,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { readsTodayOrCap, capReached, BUDGET_READS_PER_DAY } from './watermark.js';
 
 test('يمرّ ما دام دون السقف، ويقف عنده', () => {
@@ -69,4 +70,21 @@ test('★★★ ويُحاكى اليومُ الذي وقع: الدورةُ تت
   }
   assert.ok(r2 < sizes.length, 'بسقفٍ ضيّقٍ يجب أن يُمنع بعضُها');
   assert.equal(r2, 1, 'أوّلُ مسارٍ (٨٤٠٢) وحدَه يمرّ ثمّ يُوقَف الباقي');
+});
+
+test('★★★ ويُعَدّ بيوم الحصّة لا بيومنا — وإلّا فالحارسُ يحرس يومًا آخر', () => {
+  // قوقل تُصفّر الحصّةَ عند منتصف ليل المحيط الهادئ، لا UTC. وقِيس الفرقُ
+  // حيًّا 2026-10-20: حدُّنا ٣٠١١٢ · حدُّ قوقل ١٣٣٩٨ — في اللحظة نفسِها.
+  const src = readFileSync(new URL('./sync.mjs', import.meta.url), 'utf8');
+  assert.ok(src.includes("America/Los_Angeles"), 'منطقةُ الحصّة غيرُ مذكورة');
+  assert.ok(
+    src.includes("date_trunc('day', now() AT TIME ZONE"),
+    'الحدُّ لا يُحسب بمنطقة الحصّة'
+  );
+  // ونقضًا: لا يبقى حدٌّ خامٌ بتوقيت الخادم.
+  assert.equal(
+    src.includes("started_at >= date_trunc('day', now());"),
+    false,
+    'ما زال حدٌّ بتوقيت الخادم — وهو ما يُفسد الحساب'
+  );
 });
