@@ -402,14 +402,15 @@ export function pickPrefixesOf(doc, balances) {
 
 /**
  * أثبت العدُّ أنّ كلَّ خانةٍ «مُدخَلةُ الإحداثيّات» بحكم `buildGrid`؟ — لكلّ محورٍ ما قيمتُه
- * `null` (و`Number(null)` صفرٌ فهي مُدخَلة عنده) وما قيمتُه رقمٌ محدود؛ فإن ساوى مجموعُهما
- * الكلَّ في المحورين ثبت. وإلّا لم يثبت شيء (حقلٌ غائبٌ أو نوعٌ آخر) ⇒ يُقرأ الكلُّ ولا يُخمَّن.
+ * رقمٌ محدود؛ فإن ساوى الكلَّ في المحورين ثبت. و`null` «لم يُدخَل» عند `buildGrid` (هو ما
+ * يكتبه `gridFields` للخانة المولَّدة) فلا يُعدّ. وإلّا لم يثبت شيء (`null` · حقلٌ غائب ·
+ * رقمٌ مخزَّنٌ نصًّا) ⇒ يُقرأ الكلُّ و`buildGrid` يحكم — فالبرهانُ لا يُخطئ إلّا نحو القراءة.
  *
- * @param {{total:number, nullX:number, numX:number, nullY:number, numY:number}} c
+ * @param {{total:number, numX:number, numY:number}} c
  */
-export function coordinatesProven({ total, nullX, numX, nullY, numY }) {
-  if (![total, nullX, numX, nullY, numY].every(Number.isFinite)) return false;
-  return nullX + numX === total && nullY + numY === total;
+export function coordinatesProven({ total, numX, numY }) {
+  if (![total, numX, numY].every(Number.isFinite)) return false;
+  return numX === total && numY === total;
 }
 
 /** خطوةُ «تخطّي البادئة» — أوّلُ كودٍ بعد كلّ ما يبدأ بـ`prefix-` أو يساويه. */

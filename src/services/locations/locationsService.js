@@ -247,21 +247,20 @@ export async function hasPalletCapacity() {
 /**
  * أكلُّ خانات السيّد «مُدخَلةُ الإحداثيّات» بحكم `buildGrid`؟ — بالعدّ لا بالقراءة.
  *
- * `buildGrid` يقول عن الشبكة «تقريبيّة» إن وُجدت **في السيّد كلّه** خانةٌ لا يقرأ لها
- * `Number(x)` و`Number(y)` رقمًا. وهذا حكمٌ على الكلّ يُكتب في مهمّة السحب (`pathBasis`)
- * فلا يُخمَّن من مستودع المسار. فيُعدّ: لكلّ محورٍ ما قيمتُه `null` (و`Number(null)`
- * صفرٌ فهي «مُدخَلة» عنده) وما قيمتُه رقمٌ محدود — فإن ساوى المجموعُ عددَ الكلّ ثبت أن لا
- * خانةَ ناقصة. وإلّا لم يثبت شيء (حقلٌ غائبٌ أو نوعٌ آخر) فيُقرأ الكلُّ ولا يُخمَّن.
+ * `buildGrid` يقول عن الشبكة «تقريبيّة» إن وُجدت **في السيّد كلّه** خانةٌ بلا `x` و`y`
+ * مُدخَلين — و`null` «لم يُدخَل» (هو ما يكتبه `gridFields` للخانة المولَّدة). وهذا حكمٌ
+ * على الكلّ يُكتب في مهمّة السحب (`pathBasis`) فلا يُخمَّن من مستودع المسار. فيُعدّ: لكلّ
+ * محورٍ ما قيمتُه رقمٌ محدود — فإن ساوى عددَ الكلّ ثبت أن لا خانةَ ناقصة. وإلّا لم يثبت
+ * شيء (`null` · حقلٌ غائب · نوعٌ آخر) فيُقرأ الكلُّ ولا يُخمَّن.
  *
  * @returns {Promise<boolean>} `true` إن ثبت أنّ كلَّ خانةٍ مُدخَلة
  */
 export async function allLocationsHaveCoordinates() {
   const col = collection(db, COL);
   const count = async (q) => (await getCountFromServer(q)).data().count;
-  const nulls = (f) => count(query(col, where(f, '==', null)));
   const nums = (f) => count(query(col, where(f, '>=', -Number.MAX_VALUE), where(f, '<=', Number.MAX_VALUE)));
-  const [total, nullX, numX, nullY, numY] = await Promise.all([count(col), nulls('x'), nums('x'), nulls('y'), nums('y')]);
-  return coordinatesProven({ total, nullX, numX, nullY, numY });
+  const [total, numX, numY] = await Promise.all([count(col), nums('x'), nums('y')]);
+  return coordinatesProven({ total, numX, numY });
 }
 
 /** أوجهُ التجهيز كلُّها — `pickFace == true`، وهي قلّةٌ من آلاف الخانات. */

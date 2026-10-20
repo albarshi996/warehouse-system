@@ -514,22 +514,38 @@ test('خطّةُ السحب: الشبكةُ من مستودعات المسار �
     const rows = withWitness(world.filter((l) => prefixes.includes(l.warehouse)), world[0]);
     return [pickPlan(pick, BAL, { nowMs: NOW, grid: buildGrid(rows) }), pickPlan(pick, BAL, { nowMs: NOW, grid: buildGrid(world) })];
   };
-  // ① كلُّ خانةٍ «مُدخَلة» (`x: null` ⇒ صفر) — والبرهانُ بالعدّ يثبت ⇒ المقصورُ يكفي.
-  const [s1, f1] = plan(FULL);
+  // ما يُعيده عدُّ `allLocationsHaveCoordinates`: مدى Firestore على الأرقام يعدّ المخزَّنَ رقمًا وحدَه.
+  const counts = (world) => {
+    const n = (f) => world.filter((l) => typeof l[f] === 'number' && Number.isFinite(l[f])).length;
+    return { total: world.length, numX: n('x'), numY: n('y') };
+  };
+  // ① السيّدُ كما يُولَّد: كلُّ خانةٍ `x: null` («لم يُدخَل») ⇒ المقصورُ تقريبيٌّ بنفسه فلا يُسأل
+  //    البرهان، ويساوي الكامل. والعدُّ لا يثبت إدخالًا ليس فيه.
+  const [s0, f0] = plan(FULL);
+  assert.deepEqual(s0, f0);
+  assert.match(f0.pathBasis.label, /تقريبيّ/);
+  assert.equal(coordinatesProven(counts(FULL)), false);
+  // ② كلُّ خانةٍ مُدخَلةٌ بأرقام (والصفرُ منها) — والبرهانُ بالعدّ يثبت ⇒ المقصورُ يكفي.
+  const declared = FULL.map((l, i) => ({ ...l, x: i, y: 0 }));
+  const [s1, f1] = plan(declared);
   assert.deepEqual(s1, f1);
-  assert.equal(coordinatesProven({ total: FULL.length, nullX: FULL.length, numX: 0, nullY: FULL.length, numY: 0 }), true);
-  // ② خانةٌ خارج المسار بلا حقل `x` ⇒ «تقريبيّة» على الكلّ لا على المسار ⇒ يفترقان، والعدُّ لا يثبت ⇒ يُقرأ الكلّ.
-  const legacy = FULL.map((l) => {
+  assert.doesNotMatch(f1.pathBasis.label, /تقريبيّ/);
+  assert.equal(coordinatesProven(counts(declared)), true);
+  // ③ خانةٌ خارج المسار مولَّدةٌ (`x: null`) أو قديمةٌ بلا الحقل ⇒ «تقريبيّة» على الكلّ لا على
+  //    المسار ⇒ يفترقان، والعدُّ لا يثبت ⇒ يُقرأ الكلّ.
+  const generated = declared.map((l) => (l.code === 'ZW-A-L-01-01' ? { ...l, x: null } : l));
+  const legacy = declared.map((l) => {
     if (l.code !== 'ZW-A-L-01-01') return l;
     const copy = { ...l };
     delete copy.x; // خانةٌ قديمةٌ كُتبت قبل حقول الشبكة
     return copy;
   });
-  const [s2, f2] = plan(legacy);
-  assert.notDeepEqual(s2.pathBasis, f2.pathBasis);
-  const numX = legacy.filter((l) => typeof l.x === 'number').length;
-  const nullX = legacy.filter((l) => l.x === null).length;
-  assert.equal(coordinatesProven({ total: legacy.length, nullX, numX, nullY: legacy.length, numY: 0 }), false);
+  for (const [name, world] of [['مولَّدة', generated], ['قديمة', legacy]]) {
+    const [s, f] = plan(world);
+    assert.notDeepEqual(s.pathBasis, f.pathBasis, name);
+    assert.match(f.pathBasis.label, /تقريبيّ/, name);
+    assert.equal(coordinatesProven(counts(world)), false, name);
+  }
 });
 
 /* ═══════════════════════════ الجرد ═══════════════════════════ */
