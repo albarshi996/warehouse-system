@@ -42,8 +42,11 @@ import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 
 import { pathsFromRules, appendOnlyFromRules } from './rules-paths.js';
-import { planFor, advanceWatermark, windowStart, isDue, idleReadsPerDay, MODE } from './watermark.js';
-import { mapForPath, buildUpsert, lit } from './pg-maps.js';
+import {
+  planFor, advanceWatermark, windowStart, isDue, idleReadsPerDay, MODE,
+  BUDGET_READS_PER_DAY,
+} from './watermark.js';
+import { mapForPath, genericMapFor, buildUpsert, lit } from './pg-maps.js';
 
 /**
  * ★★ Firebase يُحمَّل **عند الحاجة لا عند الاستيراد**.
@@ -120,8 +123,44 @@ const PLAN = planFor(INVENTORY, {
   paths: PATHS,
 });
 
-/** المساراتُ التي لها جدولٌ فعلًا — وهي وحدَها ما يُقرأ. */
+/** المساراتُ التي لها جدولٌ مفصَّلٌ — النواةُ المحروسةُ بقيودها. */
 const MAPPED = PATHS.filter((p) => mapForPath(p));
+
+/**
+ * ═══ المرآةُ الكاملة ═══
+ *
+ * ★★★ **أمرُ المالك 2026-10-20:** «أيُّ شيءٍ يُحفظ في قوقل موجودٌ في سيرفر
+ *     الجهاز». وكانت المزامنةُ تقرأ **خمسةَ مسارات** وتترك ثلاثةً وتسعين —
+ *     لا لأنّ الآلةَ تعجز، بل لأنّ `MAPPED` كان يحصرها فيما له جدولٌ مفصَّل.
+ *     والخطّةُ (`PLAN`) محسوبةٌ للمسارات الثمانية والتسعين **منذ أوّل يوم**.
+ *
+ * ★★★ **والميزانيّةُ شرطُ تشغيلٍ لا تعليق:** تُحسب الكلفةُ قبل أن يُقرأ حرف،
+ *     وإن تجاوزت الحدَّ **يرجع المزامنُ إلى المنمذَجة وحدَها ويقول لماذا**.
+ *     فالعودةُ إلى سلوكٍ أضيقَ خيرٌ من إنفاق حصّةٍ تُوقف البوّابةَ على الناس —
+ *     وهو عينُ ما وقع 2026-09-05 حين نفدت الحصّةُ وتوقّفت البوّابةُ ساعات.
+ *
+ * ويُطفأ بـ`SYNC_FULL_MIRROR=0` — مفتاحُ رجوعٍ بلا إعادةِ بناء.
+ */
+const FULL_MIRROR_ASKED = process.env.SYNC_FULL_MIRROR !== '0';
+const FULL_MIRROR_COST = idleReadsPerDay(PLAN);
+const FULL_MIRROR_FITS = FULL_MIRROR_COST <= BUDGET_READS_PER_DAY;
+const FULL_MIRROR = FULL_MIRROR_ASKED && FULL_MIRROR_FITS;
+
+/** ما يُقرأ فعلًا هذه الدورة. */
+const SYNCED = FULL_MIRROR ? PATHS : MAPPED;
+
+/** خريطةُ مسارٍ: المفصَّلةُ إن وُجدت، وإلّا العامّةُ إلى `mirror_docs`. */
+function mapFor(path) {
+  return mapForPath(path) || genericMapFor(path, PLAN[path]?.field || null);
+}
+
+if (FULL_MIRROR_ASKED && !FULL_MIRROR) {
+  console.warn(
+    `!  المرآةُ الكاملةُ مطلوبةٌ وتتجاوز الميزانيّة: ${FULL_MIRROR_COST} > ${BUDGET_READS_PER_DAY} قراءةً/يوم.
+` +
+      '   فيُكتفى بالمسارات المنمذَجة. والعلاجُ: فهرسُ المجموعات، أو رفعُ الميزانيّة بقرارٍ مكتوب.'
+  );
+}
 
 /* ═══════════════════ القراءة من Firestore ═══════════════════ */
 
@@ -275,7 +314,7 @@ async function runCycle(fb, db, minute) {
   let totalQueries = 0;
   let totalDocs = 0;
 
-  for (const path of MAPPED) {
+  for (const path of SYNCED) {
     const plan = PLAN[path];
     if (!isDue(PLAN, path, minute)) continue;
 
@@ -295,7 +334,7 @@ async function runCycle(fb, db, minute) {
       let written = 0;
       let rejected = [];
       if (rows.length && !DRY) {
-        const res = applyRows(mapForPath(path), rows);
+        const res = applyRows(mapFor(path), rows);
         written = res.written;
         rejected = res.rejected;
         recordRejects(path, rejected);
@@ -349,8 +388,12 @@ function printPlan() {
   const unmapped = PATHS.filter((p) => !mapForPath(p));
   console.log('=== SYNC PLAN ===\n');
   console.log(`  المساراتُ في القواعد:   ${PATHS.length}`);
-  console.log(`  المنمذَجةُ (تُقرأ):      ${MAPPED.length}  ${MAPPED.join(' · ')}`);
-  console.log(`  غيرُ المنمذَجة (لا تُقرأ): ${unmapped.length}`);
+  console.log(`  المنمذَجةُ (جداولُ مفصَّلة): ${MAPPED.length}  ${MAPPED.join(' · ')}`);
+  console.log(
+    `  العامّةُ (mirror_docs):    ${unmapped.length}` +
+      (FULL_MIRROR ? '  ⟵ تُقرأ' : '  ⟵ لا تُقرأ (المرآةُ الكاملةُ مطفأة)')
+  );
+  console.log(`  المرآةُ الكاملة:         ${FULL_MIRROR ? 'مُفعَّلة' : 'مطفأة'}`);
   console.log(`  فهرسُ المجموعات:       ${COLLECTION_GROUP ? 'مُفعَّل' : 'معطَّل'}\n`);
 
   for (const path of MAPPED) {
@@ -363,8 +406,16 @@ function printPlan() {
 
   const mappedPlan = Object.fromEntries(MAPPED.map((p) => [p, PLAN[p]]));
   console.log(`\n  أرضيّةُ القراءات (المنمذَجةُ وحدَها): ${idleReadsPerDay(mappedPlan)} / يوم`);
-  console.log(`  أرضيّةُ القراءات (الخطّةُ كاملةً):    ${idleReadsPerDay(PLAN)} / يوم`);
+  console.log(
+    `  أرضيّةُ القراءات (الخطّةُ كاملةً):    ${FULL_MIRROR_COST} / يوم` +
+      `   ⟵ الميزانيّة ${BUDGET_READS_PER_DAY}: ${FULL_MIRROR_FITS ? 'داخلها' : 'تجاوزٌ ⇒ تُكتفى بالمنمذَجة'}`
+  );
   console.log('  الحصّةُ المجّانيّة: 50000 / يوم');
+  for (const path of FULL_MIRROR ? unmapped.slice(0, 6) : []) {
+    const p = PLAN[path];
+    console.log(`    · ${path.padEnd(22)} ${p.mode.padEnd(12)} كلَّ ${String(p.tier).padStart(2)} د`);
+  }
+  if (FULL_MIRROR && unmapped.length > 6) console.log(`    · و${unmapped.length - 6} مسارًا آخر`);
 }
 
 async function main() {

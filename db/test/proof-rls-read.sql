@@ -195,6 +195,37 @@ BEGIN
 END $$;
 
 
+\echo ''
+\echo '════ ٦ · المرآةُ العامّة — تُقرأ لمن دخل، ولا تُكتب من البوّابة أبدًا ════'
+
+DO $$
+DECLARE n bigint;
+BEGIN
+  -- ★★★ وهذه حجرُ الأساس في «مصدرُ الحقيقة واحد»: المرآةُ نسخةٌ من Firebase،
+  --     فلو ملكت البوّابةُ كتابتَها لصار عندنا كاتبان ومصدران — وهو العطبُ
+  --     الذي تحذّر منه خطّةُ حماية البيانات كلُّها.
+  IF has_table_privilege('web_user', 'mirror_docs', 'INSERT')
+     OR has_table_privilege('web_user', 'mirror_docs', 'UPDATE')
+     OR has_table_privilege('web_user', 'mirror_docs', 'DELETE') THEN
+    RAISE EXCEPTION '  ✘ البوّابةُ تستطيع الكتابةَ في المرآة — مصدرُ حقيقةٍ ثانٍ';
+  END IF;
+  RAISE NOTICE '  ✔ المرآةُ لا تُكتب من البوّابة — بالنقض';
+
+  -- والمجهولُ لا يقرؤها، كبقيّة الجداول.
+  IF has_table_privilege('web_anon', 'mirror_docs', 'SELECT')
+     OR has_table_privilege('authenticator', 'mirror_docs', 'SELECT') THEN
+    RAISE EXCEPTION '  ✘ المرآةُ مقروءةٌ لدورٍ مجهول';
+  END IF;
+  RAISE NOTICE '  ✔ ولا يقرؤها مجهولٌ ولا دورُ الاتّصال';
+
+  -- ومن دخل يقرؤها فعلًا — وإلّا فالمنعُ شاملٌ لا سياسة.
+  INSERT INTO mirror_docs (path, doc_id, data) VALUES ('probe_path', 'p1', '{"x":1}'::jsonb);
+  n := seen('mirror_docs', 'probe_user');
+  IF n < 1 THEN RAISE EXCEPTION '  ✘ من دخل لا يقرأ المرآة — منعٌ شاملٌ لا سياسة'; END IF;
+  RAISE NOTICE '  ✔ ومن دخل يقرؤها (% صفًّا) — فالقراءةُ سياسةٌ لا عطب', n;
+END $$;
+
+
 ROLLBACK;
 
 \echo ''

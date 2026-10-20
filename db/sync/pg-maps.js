@@ -192,6 +192,40 @@ export const MAPS = [
   },
 ];
 
+/**
+ * خريطةٌ عامّةٌ لأيّ مسارٍ لم يُنمذَج — تصبّ المستندَ كلَّه في `mirror_docs.data`.
+ *
+ * ★★★ **وهي ما يحقّق «كلُّ ما يُحفظ في قوقل موجودٌ في سيرفر الجهاز»:** لا
+ *     حقلَ يُسمّى ولا عمودَ يُقرَّر، فلا شيءَ يسقط لأنّنا لم نتوقّعه. وكلُّ ما
+ *     عدا `__id` «فائضٌ» — فيصبّه `buildUpsert` في عمودٍ واحد.
+ *
+ * ★★ و`updated_at` يُقرأ من **حقل المسار نفسِه** الذي تتبعه المزامنةُ
+ *    (`plan.field`) لا من اسمٍ مفترَض: مجموعاتٌ تختم بـ`updatedAt` وأخرى
+ *    بـ`createdAt` وثالثةٌ بـ`at`. واسمٌ واحدٌ مفروضٌ عليها جميعًا يُنتج
+ *    عمودًا فارغًا في الأغلب — وهو عطبٌ صامتٌ لأنّ الصفَّ يُكتب بنجاح.
+ *
+ * @param {string} path مسارُ المجموعة.
+ * @param {string|null} [field] اسمُ حقل الختم في هذا المسار، إن عُرف.
+ */
+export function genericMapFor(path, field) {
+  return {
+    table: 'mirror_docs',
+    path,
+    file: path,
+    conflict: 'path, doc_id',
+    overflow: 'data',
+    cols: {
+      path: () => lit(path),
+      doc_id: (r) => str(r.__id),
+      updated_at: (r) => (field ? ts(r[field]) : 'NULL'),
+      synced_at: () => 'now()',
+    },
+    // ★ `__id` وحدَه يُستهلَك: هو المفتاحُ لا جزءٌ من المحتوى. وما سواه يبقى
+    //   في `data` **بما فيه حقلُ الختم** — فالمرآةُ نسخةٌ لا تلخيص.
+    consumed: ['__id'],
+  };
+}
+
 /** خريطةُ مسارٍ بعينه، أو `null` إن لم يُنمذَج بعد. */
 export function mapForPath(path) {
   return MAPS.find((m) => m.path === path) || null;
@@ -207,6 +241,9 @@ export function mapForPath(path) {
  * @returns {{sql:string, count:number, extra:string[]}}
  */
 export function buildUpsert(map, rows) {
+  // ★ عمودُ الفائض قابلٌ للتسمية: المرآةُ العامّة تسمّيه `data` لأنّه **هو
+  //   المستندُ كلُّه** لا بقيّةً منه. والافتراضُ `extra` كما كان حرفًا بحرف.
+  const overflow = map.overflow || 'extra';
   const colNames = Object.keys(map.cols);
   const extraKeys = new Set();
   const values = [];
@@ -227,7 +264,7 @@ export function buildUpsert(map, rows) {
 
   if (!values.length) return { sql: '', count: 0, extra: [] };
 
-  const all = [...colNames, 'extra'];
+  const all = [...colNames, overflow];
   const keys = map.conflict.split(',').map((s) => s.trim());
   const updated = all.filter((c) => !keys.includes(c));
 
