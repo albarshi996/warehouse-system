@@ -152,8 +152,12 @@ export default function VeneciaReport({ assets = [], cards = [], scope = '', fil
         </span>
         <div className="flex-1 min-w-[200px]">
           <div className="font-bold text-ink text-sm">تقريرٌ منسَّق</div>
+          {/* ★ الوصفُ يُسمّي الأوراقَ كلَّها: سأل المالكُ «أين وضعته؟» بعد أن
+              أُضيفت ورقتا المصروف والمخرَّد، ووصفٌ لا يذكرهما يجعل من يبحث
+              عنهما يظنُّ أنّ القسمَ ليس موضعَهما. */}
           <div className="text-[11px] text-muted">
-            ملخّصٌ وتصنيفاتٌ وجردٌ كاملٌ وبطاقاتُ حركة — بإكسل منسَّقٍ وبـPDF، من مصدرٍ واحد.
+            خمسُ أوراق: الملخّص · الجرد · <strong>المصروف</strong> (بندًا بندًا ولمن) ·{' '}
+            <strong>المخرَّد</strong> (بسببه) · بطاقات الحركة — بإكسل منسَّقٍ وبـPDF، من مصدرٍ واحد.
           </div>
         </div>
         <button type="button" className="btn btn-secondary btn-sm" onClick={() => setOpen((v) => !v)}>
