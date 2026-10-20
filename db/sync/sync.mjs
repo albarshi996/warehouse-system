@@ -146,8 +146,21 @@ const FULL_MIRROR_COST = idleReadsPerDay(PLAN);
 const FULL_MIRROR_FITS = FULL_MIRROR_COST <= BUDGET_READS_PER_DAY;
 const FULL_MIRROR = FULL_MIRROR_ASKED && FULL_MIRROR_FITS;
 
+/**
+ * ★★★ **والمساراتُ الفرعيّةُ تُستثنى بإعلانٍ لا بصمت.** `readPath` يرفضها
+ *     صراحةً (مجموعةٌ فرعيّةٌ تحتاج معرّفَ أبٍ بين المقطعين)، **وهي ثمانيةٌ
+ *     وعشرون مسارًا**. فلو أُدرجت لرمت خطأً في كلّ دورة: ثمانيةٌ وعشرون
+ *     سطرَ خطأٍ كلَّ ساعةٍ في سجلٍّ يقرؤه المالك — وسجلٌّ يصرخ دائمًا سجلٌّ
+ *     لا يُقرأ، فيضيع فيه الخطأُ الحقيقيُّ يومَ يقع.
+ *
+ *     ⇒ فتُستثنى هنا **ويُعلَن عددُها في `--plan`**، ولا يُدَّعى أنّها منسوخة.
+ *       وفتحُها يحتاج فهرسَ مجموعاتٍ يُنشر في Firebase (`SYNC_COLLECTION_GROUP`)
+ *       أو مرورًا على الآباء — وكلاهما قرارٌ لم يُتّخذ بعد.
+ */
+const SUB_PATHS = PATHS.filter((p) => p.includes('/'));
+
 /** ما يُقرأ فعلًا هذه الدورة. */
-const SYNCED = FULL_MIRROR ? PATHS : MAPPED;
+const SYNCED = FULL_MIRROR ? PATHS.filter((p) => !p.includes('/')) : MAPPED;
 
 /** خريطةُ مسارٍ: المفصَّلةُ إن وُجدت، وإلّا العامّةُ إلى `mirror_docs`. */
 function mapFor(path) {
@@ -389,11 +402,18 @@ function printPlan() {
   console.log('=== SYNC PLAN ===\n');
   console.log(`  المساراتُ في القواعد:   ${PATHS.length}`);
   console.log(`  المنمذَجةُ (جداولُ مفصَّلة): ${MAPPED.length}  ${MAPPED.join(' · ')}`);
+  const genericRead = SYNCED.filter((p) => !mapForPath(p)).length;
   console.log(
     `  العامّةُ (mirror_docs):    ${unmapped.length}` +
-      (FULL_MIRROR ? '  ⟵ تُقرأ' : '  ⟵ لا تُقرأ (المرآةُ الكاملةُ مطفأة)')
+      (FULL_MIRROR
+        ? `  ⟵ منها ${genericRead} تُقرأ`
+        : '  ⟵ لا تُقرأ (المرآةُ الكاملةُ مطفأة)')
   );
   console.log(`  المرآةُ الكاملة:         ${FULL_MIRROR ? 'مُفعَّلة' : 'مطفأة'}`);
+  console.log(
+    `  الفرعيّةُ (غيرُ منسوخة):  ${SUB_PATHS.length}  ⟵ تحتاج فهرسَ مجموعاتٍ أو مرورًا على الآباء`
+  );
+  console.log(`  تُقرأ هذه الدورة:       ${SYNCED.length}`);
   console.log(`  فهرسُ المجموعات:       ${COLLECTION_GROUP ? 'مُفعَّل' : 'معطَّل'}\n`);
 
   for (const path of MAPPED) {
