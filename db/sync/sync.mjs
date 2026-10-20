@@ -43,7 +43,7 @@ import { randomUUID } from 'node:crypto';
 
 import { pathsFromRules, appendOnlyFromRules } from './rules-paths.js';
 import {
-  planFor, advanceWatermark, windowStart, isDue, idleReadsPerDay, MODE,
+  planFor, advanceWatermark, windowFloor, settled, isDue, idleReadsPerDay, MODE,
   BUDGET_READS_PER_DAY, readsTodayOrCap, capReached,
 } from './watermark.js';
 import { mapForPath, genericMapFor, buildUpsert, lit } from './pg-maps.js';
@@ -291,8 +291,12 @@ function clearRejects(path, ids) {
 /** حالةُ كلّ مسارٍ من القاعدة: العلامةُ المائيّةُ المحفوظة. */
 function loadState() {
   const state = {};
-  for (const [path, mark] of psqlRows('SELECT path, watermark FROM sync_state;')) {
-    state[path] = mark && mark !== '' ? mark : null;
+  const rows = psqlRows('SELECT path, watermark, confirmed_at FROM sync_state;');
+  for (const [path, mark, confirmed] of rows) {
+    state[path] = {
+      watermark: mark && mark !== '' ? mark : null,
+      confirmedAt: confirmed && confirmed !== '' ? confirmed : null,
+    };
   }
   return state;
 }
@@ -320,13 +324,15 @@ function logCycle(entries) {
 }
 
 /** يحفظ العلامةَ الجديدة. */
-function saveState(path, plan, watermark) {
+function saveState(path, plan, watermark, confirmedAt) {
   psql(
-    `INSERT INTO sync_state (path, mode, mark_field, watermark, last_run_at) VALUES (` +
-      `${lit(path)}, ${lit(plan.mode)}, ${plan.field ? lit(plan.field) : 'NULL'},` +
-      ` ${watermark ? `${lit(watermark)}::timestamptz` : 'NULL'}, now())` +
+    'INSERT INTO sync_state (path, mode, mark_field, watermark, confirmed_at, last_run_at)' +
+      ` VALUES (${lit(path)}, ${lit(plan.mode)}, ${plan.field ? lit(plan.field) : 'NULL'},` +
+      ` ${watermark ? `${lit(watermark)}::timestamptz` : 'NULL'},` +
+      ` ${confirmedAt ? `${lit(confirmedAt)}::timestamptz` : 'NULL'}, now())` +
       ' ON CONFLICT (path) DO UPDATE SET mode = EXCLUDED.mode, mark_field = EXCLUDED.mark_field,' +
-      ' watermark = EXCLUDED.watermark, last_run_at = EXCLUDED.last_run_at;'
+      ' watermark = EXCLUDED.watermark, confirmed_at = EXCLUDED.confirmed_at,' +
+      ' last_run_at = EXCLUDED.last_run_at;'
   );
 }
 
@@ -411,8 +417,11 @@ async function runCycle(fb, db, minute) {
     }
 
     const startedAt = new Date().toISOString();
-    const before = plan.mode === MODE.INCREMENTAL ? state[path] || null : null;
-    const from = windowStart(before);
+    const prev = state[path] || null;
+    const before = plan.mode === MODE.INCREMENTAL ? (prev && prev.watermark) || null : null;
+    // ★★★ والأرضيّةُ المؤكَّدةُ تمنع إعادةَ قراءة نافذة الاحتياط أبدًا — وهي
+    //     الفرقُ بين ٣٨٠٠ قراءةٍ في كلّ دورةٍ وصفرٍ بعد دورةٍ واحدة.
+    const from = windowFloor(before, (prev && prev.confirmedAt) || null);
 
     try {
       const { rows, queries } = await readPath(fb, db, path.split('/'), {
@@ -443,7 +452,13 @@ async function runCycle(fb, db, minute) {
       const after =
         plan.mode === MODE.INCREMENTAL ? advanceWatermark(before, rows, plan.field) : null;
 
-      if (!DRY) saveState(path, plan, after);
+      // ★ دورةٌ لم تُقدّم العلامةَ تُثبت أنّ ما دونها مستقرّ ⇒ تصير أرضيّةً.
+      //   وتقدُّمُها يعني مجالًا جديدًا لم يُفحص، فتبقى الأرضيّةُ كما هي.
+      const confirmedAt = settled(before, after)
+        ? before
+        : (prev && prev.confirmedAt) || null;
+
+      if (!DRY) saveState(path, plan, after, confirmedAt);
 
       entries.push({
         cycleId, path, mode: plan.mode, field: plan.field, windowStart: from,
