@@ -126,6 +126,39 @@ export async function saveCardDraft(card, assetsByKey, profile, { docId = '' } =
   return { docId };
 }
 
+/**
+ * ═══ ★★★ صرفٌ بخطوةٍ واحدة ‹VEN-202› ═══
+ *
+ * طلبُ المالك 2026-10-21: «شيءٌ عمليٌّ… وتصرف البضاعة بشكل سلس دون تعقيد».
+ * والقياسُ أراه في شاشته: **عشرُ بطاقاتٍ في يومٍ واحد كلُّها مسودّةٌ بلا رقم**
+ * — أي أنّ البضاعةَ سُلّمت فعلًا والنظامُ لا يعرف. والمسارُ كان ستَّ خطوات
+ * لعملٍ من ثلاث: من أخذها · أيُّ صنفٍ · كم.
+ *
+ * ★★ **وهذه تركيبٌ لا منطقٌ جديد**: تستدعي `saveCardDraft` ثمّ `postCard`
+ * كما يفعل المستخدمُ بيده، فكلُّ الحرّاس تمرّ — حكمُ البطاقة، وإعادةُ الحكم
+ * داخل المعاملة، وحارسُ الرصيد السالب، وحجزُ الرقم. ولو كُتبت كتابةً مباشرةً
+ * لالتفّت عليها جميعًا (وهو عطبُ «الجماعيُّ لا يستورد Firestore» نفسُه).
+ *
+ * ★★★ **والمسودّةُ تبقى إن تعثّر التثبيت** ولا تُحذف: البضاعةُ قد تكون خرجت،
+ * فمحوُ الأثر أسوأُ من مسودّةٍ تنتظر. ويُقال للمستخدم أيُّ الطورين بلغ.
+ */
+export async function issueNow(card, assetsByKey, profile) {
+  const { docId } = await saveCardDraft(card, assetsByKey, profile);
+  try {
+    const out = await postCard(docId, profile);
+    return { ...out, docId, posted: true };
+  } catch (e) {
+    const err = new Error(
+      `حُفظت المسودّةُ ولم تُثبَّت — ${e?.message || 'تعذّر التثبيت.'}
+` +
+        'والبطاقةُ في «مسودّاتٌ معلَّقة» أدناه: ثبّتها حين يزول السبب.'
+    );
+    err.code = e?.code || '';
+    err.docId = docId;
+    throw err;
+  }
+}
+
 /** يُلغي مسودّةً بسببٍ مكتوب — ولا حذفَ في قاعدة الأمن. */
 export async function cancelCard(docId, reason, profile) {
   const why = String(reason || '').trim();
