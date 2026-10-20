@@ -73,9 +73,12 @@ const baseStyle = (extra = {}) => ({
 /** يُنسّق ورقةً كاملة: ترويسةٌ وتناوبٌ ومجاميعُ وتجميدٌ وعرضُ أعمدة. */
 function dressSheet(XLSX, ws, { columns, rowCount, numeric = [], hasTotals = false }) {
   if (!ws['!ref']) return;
-  if (!ws['!views']) ws['!views'] = [];
-  ws['!views'].push({ RTL: true });
-  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+  // ★★★ ولا `ws['!views']` ولا `ws['!freeze']` هنا — **كانا دعوى بلا أثر**:
+  // قُرئت بايتاتُ المصنَّف فإذا الأوراقُ الخمسُ كلُّها بلا `rightToLeft` ولا
+  // `<pane>`. فالكاتبُ في `xlsx-js-style` يقرأ الاتّجاهَ من **مستوى المصنَّف**
+  // (`wb.Workbook.Views[0].RTL`) لا من الورقة — ويُضبط في `buildReportWorkbook`.
+  // وتجميدُ الألواح لا كاتبَ له في هذه النسخة أصلًا، فحذفُ السطر أصدقُ من
+  // إبقائه يوهم أنّ الترويسةَ مجمَّدة.
   ws['!autofilter'] = { ref: ws['!ref'] };
 
   const range = XLSX.utils.decode_range(ws['!ref']);
@@ -163,6 +166,10 @@ function tableSheet(XLSX, { name, columns, rows, totals, numeric }) {
  */
 export function buildReportWorkbook(XLSX, report) {
   const wb = XLSX.utils.book_new();
+  // ★★ اتّجاهُ الأوراق من اليمين — على مستوى المصنَّف، وهو الموضعُ الوحيدُ
+  // الذي يقرأ منه الكاتب. وتقريرٌ عربيٌّ يُفتح من اليسار يبدو «غير منسَّق»
+  // ولو كان كلُّ لونٍ وحدٍّ في موضعه (شكا المالكُ 2026-10-21).
+  wb.Workbook = { ...(wb.Workbook || {}), Views: [{ RTL: true }] };
   XLSX.utils.book_append_sheet(wb, summarySheet(XLSX, report), 'الملخّص');
   // ★★★ الأوراقُ تُؤخذ **كما يعلنها التقرير**، والغائبةُ تُتخطّى.
   // فهذا المصنَّفُ يخدم تقريرَين: فينسيا (خمسُ أوراق) ومنظارَ إدارة

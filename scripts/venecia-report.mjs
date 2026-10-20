@@ -27,13 +27,42 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import * as XLSX from 'xlsx';
+import { createRequire } from 'node:module';
+import * as plainXLSX from 'xlsx';
 
 import { buildVeneciaReport } from '../src/services/assets/veneciaReport.js';
 import { buildReportWorkbook, reportFileName } from '../src/services/assets/veneciaReportExcel.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SEED = path.join(ROOT, 'src/data/venecia-assets-seed.json');
+const STYLED = path.join(ROOT, 'public/lib/xlsx-js-style.bundle.js');
+
+/**
+ * ═══ ★★★ المكتبةُ المنسِّقةُ نفسُها التي يستعملها المتصفّح ═══
+ *
+ * حزمةُ `xlsx` من npm هي **نسخةُ المجتمع، وتتجاهل `cell.s` بصمت**: تُكتب
+ * الأنماطُ ولا تُحفظ، فيخرج الملفُّ بلا ترويسةٍ ملوّنةٍ ولا حدود — ولا خطأَ
+ * ولا تحذير. (وقع فعلًا: أوّلُ ملفٍّ وُلّد بهذا السكربت خرج بـ
+ * `s: {patternType:"none"}` أي أنّ أنماطَه أُسقطت كلُّها.)
+ *
+ * فتُحمَّل `public/lib/xlsx-js-style.bundle.js` المستضافةُ ذاتيًّا — **وهي
+ * بعينها ما تحقنه الشاشة** — فيخرج ملفُّ القرص وملفُّ البوّابة بتنسيقٍ واحد.
+ * ★★ وهي حزمةُ متصفّحٍ تعلّق نفسَها على `window`، فيُعطى Node واحدًا.
+ */
+function loadStyledXLSX() {
+  try {
+    globalThis.window = globalThis.window ?? globalThis;
+    globalThis.self = globalThis.self ?? globalThis;
+    createRequire(import.meta.url)(STYLED);
+    const lib = globalThis.XLSX ?? globalThis.window?.XLSX;
+    if (lib?.utils?.book_new) return { XLSX: lib, styled: true };
+  } catch {
+    /* يُقال أدناه ولا يُسقط التوليد */
+  }
+  return { XLSX: plainXLSX, styled: false };
+}
+
+const { XLSX, styled } = loadStyledXLSX();
 
 /** يومُ التقويم المحلّيّ — لا `toISOString` فليبيا على +2. */
 function todayLocal(now = new Date()) {
@@ -84,6 +113,11 @@ fs.writeFileSync(out, XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }));
 
 const sheets = [report.assetsSheet, report.cardsSheet, report.issuedSheet, report.scrapSheet];
 console.info(`\n✔ كُتب التقرير: ${out}`);
+console.info(
+  styled
+    ? '  التنسيق: منسَّقٌ (xlsx-js-style المستضافة ذاتيًّا — نفسُ مكتبة الشاشة)'
+    : '  ⚠️ التنسيق: بلا تنسيق — تعذّر تحميل public/lib/xlsx-js-style.bundle.js'
+);
 console.info(`  المصدر: ${source}`);
 console.info(`  الأوراق: الملخّص · ${sheets.map((s) => `${s.name} (${s.rows.length})`).join(' · ')}`);
 if (!cards.length) {
