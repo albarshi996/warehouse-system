@@ -6,32 +6,45 @@
     }
   },
   "archive_documents": {
-    "count": 0,
-    "fields": {}
+    "count": 2,
+    "fields": {
+      "updatedAt": 2,
+      "createdAt": 2
+    }
   },
   "assets": {
-    "count": 0,
-    "fields": {}
+    "count": 1,
+    "fields": {
+      "updatedAt": 1,
+      "createdAt": 1
+    }
   },
   "assignments": {
     "count": 1,
     "fields": {}
   },
   "balances": {
-    "count": 0,
-    "fields": {}
+    "count": 1762,
+    "fields": {
+      "updatedAt": 1762
+    }
   },
   "barcode_counters": {
     "count": 0,
     "fields": {}
   },
   "barcodes": {
-    "count": 0,
-    "fields": {}
+    "count": 1,
+    "fields": {
+      "createdAt": 1
+    }
   },
   "bin_locations": {
-    "count": 0,
-    "fields": {}
+    "count": 8402,
+    "fields": {
+      "updatedAt": 8402,
+      "createdAt": 8402
+    }
   },
   "candidates": {
     "count": 14,
@@ -51,27 +64,37 @@
     }
   },
   "custodies": {
-    "count": 1,
+    "count": 2,
     "fields": {
-      "updatedAt": 1,
-      "createdAt": 1
+      "updatedAt": 2,
+      "createdAt": 2
     }
   },
   "Customers_Master": {
-    "count": 0,
-    "fields": {}
+    "count": 143,
+    "fields": {
+      "updatedAt": 143,
+      "createdAt": 143
+    }
   },
   "dock_sessions": {
-    "count": 0,
-    "fields": {}
+    "count": 4,
+    "fields": {
+      "updatedAt": 4,
+      "createdAt": 4
+    }
   },
   "document_flow_allocations": {
-    "count": 0,
-    "fields": {}
+    "count": 5,
+    "fields": {
+      "updatedAt": 5
+    }
   },
   "document_links": {
-    "count": 0,
-    "fields": {}
+    "count": 392,
+    "fields": {
+      "createdAt": 392
+    }
   },
   "documents": {
     "count": 175,
@@ -81,12 +104,16 @@
     }
   },
   "doors": {
-    "count": 0,
-    "fields": {}
+    "count": 1,
+    "fields": {
+      "updatedAt": 1
+    }
   },
   "entity_attachments": {
-    "count": 0,
-    "fields": {}
+    "count": 2,
+    "fields": {
+      "at": 2
+    }
   },
   "exceptions": {
     "count": 0,
@@ -115,8 +142,10 @@
     "fields": {}
   },
   "item_partner_catalog": {
-    "count": 0,
-    "fields": {}
+    "count": 1,
+    "fields": {
+      "updatedAt": 1
+    }
   },
   "Items_Master": {
     "count": 1173,
@@ -136,9 +165,10 @@
     }
   },
   "labor_tasks": {
-    "count": 5,
+    "count": 2,
     "fields": {
-      "createdAt": 5
+      "updatedAt": 1,
+      "createdAt": 2
     }
   },
   "lpn_counters": {
@@ -174,10 +204,10 @@
     "fields": {}
   },
   "operations": {
-    "count": 3,
+    "count": 6,
     "fields": {
-      "updatedAt": 2,
-      "createdAt": 3
+      "updatedAt": 3,
+      "createdAt": 6
     }
   },
   "org_locations": {
@@ -193,21 +223,25 @@
     "fields": {}
   },
   "pallet_moves": {
-    "count": 0,
-    "fields": {}
+    "count": 1,
+    "fields": {
+      "at": 1
+    }
   },
   "partner_ledger": {
     "count": 0,
     "fields": {}
   },
   "picking_tasks": {
-    "count": 0,
-    "fields": {}
+    "count": 1,
+    "fields": {
+      "createdAt": 1
+    }
   },
   "portal_visits": {
-    "count": 207,
+    "count": 1388,
     "fields": {
-      "at": 207
+      "at": 1388
     }
   },
   "preparatory_meetings": {
@@ -236,9 +270,9 @@
     "fields": {}
   },
   "receiving_sessions": {
-    "count": 11,
+    "count": 3,
     "fields": {
-      "createdAt": 11
+      "createdAt": 3
     }
   },
   "recipes": {
@@ -260,15 +294,17 @@
     "fields": {}
   },
   "settings": {
-    "count": 0,
-    "fields": {}
+    "count": 1,
+    "fields": {
+      "updatedAt": 1
+    }
   },
   "shipments": {
     "count": 0,
     "fields": {}
   },
   "source_imports": {
-    "count": 0,
+    "count": 2783,
     "fields": {}
   },
   "stock_moves": {
@@ -276,8 +312,11 @@
     "fields": {}
   },
   "Suppliers_Master": {
-    "count": 0,
-    "fields": {}
+    "count": 8,
+    "fields": {
+      "updatedAt": 8,
+      "createdAt": 8
+    }
   },
   "targets": {
     "count": 0,
@@ -288,16 +327,22 @@
     "fields": {}
   },
   "trips": {
-    "count": 0,
-    "fields": {}
+    "count": 1,
+    "fields": {
+      "updatedAt": 1,
+      "createdAt": 1
+    }
   },
   "users": {
     "count": 17,
     "fields": {}
   },
   "vehicles": {
-    "count": 0,
-    "fields": {}
+    "count": 1,
+    "fields": {
+      "updatedAt": 1,
+      "createdAt": 1
+    }
   },
   "visits": {
     "count": 0,
@@ -310,12 +355,18 @@
     }
   },
   "work_orders": {
-    "count": 0,
-    "fields": {}
+    "count": 1,
+    "fields": {
+      "updatedAt": 1,
+      "createdAt": 1
+    }
   },
   "yard_visits": {
-    "count": 0,
-    "fields": {}
+    "count": 3,
+    "fields": {
+      "updatedAt": 3,
+      "createdAt": 3
+    }
   },
   "access_control/versions": {
     "count": 11,

@@ -142,7 +142,19 @@ const MAPPED = PATHS.filter((p) => mapForPath(p));
  * ويُطفأ بـ`SYNC_FULL_MIRROR=0` — مفتاحُ رجوعٍ بلا إعادةِ بناء.
  */
 const FULL_MIRROR_ASKED = process.env.SYNC_FULL_MIRROR !== '0';
-const FULL_MIRROR_COST = idleReadsPerDay(PLAN);
+
+/**
+ * المرشَّحُ للقراءة لو فُتحت المرآةُ الكاملة — **ومنه تُحسب الكلفة**.
+ *
+ * ★★★ **وهذا تصحيحٌ لعطبٍ في الحارس نفسِه (2026-10-21):** كانت الكلفةُ تُحسب
+ *     على `PLAN` كلِّها، وفيها **ثمانيةٌ وعشرون مسارًا فرعيًّا لا تُقرأ
+ *     أصلًا** — فكانت تزن ١٢٬٦٠٠ قراءةٍ وهميّةٍ من أصل ٢٠٬٩٧٧، فيرفض الحارسُ
+ *     خطّةً سليمةً ويمنع ما لا ضررَ فيه. **وحارسٌ يمنع الحلالَ يُطفأ يومًا
+ *     فيمرّ معه الحرام.** فالكلفةُ تُقاس على ما يُقرأ، لا على ما يُخطَّط له.
+ */
+const MIRROR_CANDIDATES = PATHS.filter((p) => !p.includes('/'));
+const CANDIDATE_PLAN = Object.fromEntries(MIRROR_CANDIDATES.map((p) => [p, PLAN[p]]));
+const FULL_MIRROR_COST = idleReadsPerDay(CANDIDATE_PLAN);
 const FULL_MIRROR_FITS = FULL_MIRROR_COST <= BUDGET_READS_PER_DAY;
 const FULL_MIRROR = FULL_MIRROR_ASKED && FULL_MIRROR_FITS;
 
