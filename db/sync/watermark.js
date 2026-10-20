@@ -335,5 +335,13 @@ export function windowFloor(watermark, confirmedAt, overlapMs) {
  * @returns {boolean}
  */
 export function settled(before, after) {
-  return Boolean(before) && before === after;
+  if (!before || !after) return false;
+  // ★★★ **وتُقارَن اللحظةُ لا النصّ — وهذا ما أسقط المحاولةَ الأولى:**
+  //     القاعدةُ تُعيد `2026-10-13 15:21:25.919+00` والحسابُ يُعيد
+  //     `2026-10-13T15:21:25.919Z` — **لحظةٌ واحدةٌ بصيغتين**، فلا تتساويان
+  //     نصًّا أبدًا، فلا تُثبَّت أرضيّةٌ ولو دارت الدورةُ ألفَ مرّة.
+  //     والحارسُ يبدو عاملًا تمامًا وهو لا يُطلق ولو مرّة.
+  const b = Date.parse(before);
+  const a = Date.parse(after);
+  return !Number.isNaN(b) && !Number.isNaN(a) && b === a;
 }
