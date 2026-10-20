@@ -40,6 +40,7 @@ import {
   cardTotals,
   cardVerdict,
   cardsSnapshot,
+  describePostedDrafts,
   filterCards,
   lineAssetKey,
 } from '../../../services/assets/veneciaCards.js';
@@ -49,6 +50,7 @@ import {
   listenVeneciaCards,
   issueNow,
   postCard,
+  postDrafts,
   reverseCard,
   saveCardDraft,
 } from '../../../services/assets/veneciaCardsService.js';
@@ -182,6 +184,10 @@ export default function VeneciaCards() {
 
   // ‹VEN-202› نموذجُ الصرف السريع — ثلاثةُ حقولٍ لا بطاقةٌ كاملة.
   const [quick, setQuick] = useState({ party: '', assetNo: '', qty: '', destination: '' });
+  // ‹VEN-203› تأكيدُ التثبيت الجماعيّ — خطوتان لا خطوة: **المثبَّتةُ لا تُلغى**
+  // (تُصحَّح ببطاقةٍ مضادّةٍ فقط)، فزرٌّ يُثبّت عشرًا بضغطةٍ واحدةٍ بلا تأكيدٍ
+  // خطرٌ على من يضغطه سهوًا.
+  const [confirmBulk, setConfirmBulk] = useState(false);
 
   const canWrite = MANAGER_ROLES.includes(profile?.role);
   const index = useMemo(() => new Map(assets.map((a) => [a.docId, a])), [assets]);
@@ -424,6 +430,58 @@ export default function VeneciaCards() {
             {drafts.length ? `${num(drafts.length)} بطاقةً لم تُثبَّت — ولا تُحرّك رصيدًا` : 'لا شيء'}
           </span>
         </div>
+        {canWrite && drafts.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-accent/40 bg-accent/5 p-2.5">
+            {!confirmBulk ? (
+              <>
+                <span className="text-[11px] text-ink-2 flex-1 min-w-[200px]">
+                  تثبيتُ المسودّات كلِّها دفعةً واحدة — لكلٍّ رقمُها الرسميُّ وحرّاسُها.
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  disabled={!!busy || !online}
+                  title={!online ? 'التثبيتُ يحتاج اتّصالًا.' : ''}
+                  onClick={() => setConfirmBulk(true)}
+                >
+                  ثبّت {num(drafts.length)} مسودّة
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="text-[11px] text-brand-red flex-1 min-w-[200px]">
+                  <strong>تأكيد:</strong> تُثبَّت {num(drafts.length)} بطاقةً فتتحرّك الأرصدةُ ويصدر
+                  لكلٍّ سندٌ مرقَّم. <strong>والمثبَّتةُ لا تُلغى</strong> — تُصحَّح ببطاقةٍ مضادّةٍ فقط.
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  disabled={!!busy}
+                  onClick={() => setConfirmBulk(false)}
+                >
+                  تراجَع
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  disabled={!!busy || !online}
+                  onClick={() =>
+                    run(
+                      `تُثبَّت ${num(drafts.length)} بطاقة…`,
+                      () => postDrafts(drafts, profile),
+                      (out) => {
+                        setConfirmBulk(false);
+                        return describePostedDrafts(out);
+                      }
+                    )
+                  }
+                >
+                  نعم، ثبّتها
+                </button>
+              </>
+            )}
+          </div>
+        )}
         {!loaded && <div className="text-xs text-muted">تُقرأ البطاقات…</div>}
         {loaded && !drafts.length && !error && (
           <div className="text-xs text-muted">
