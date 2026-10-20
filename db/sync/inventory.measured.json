@@ -491,5 +491,29 @@
   "yard_visits/visitor": {
     "count": 0,
     "fields": {}
+  },
+  "department_assets": {
+    "count": 0,
+    "fields": {}
+  },
+  "warehouse_assets": {
+    "count": 0,
+    "fields": {}
+  },
+  "warehouse_cards": {
+    "count": 0,
+    "fields": {}
+  },
+  "waves": {
+    "count": 0,
+    "fields": {}
+  },
+  "department_assets/notes": {
+    "count": 0,
+    "fields": {}
+  },
+  "warehouse_assets/notes": {
+    "count": 0,
+    "fields": {}
   }
 }

@@ -13,6 +13,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 import { buildGrid } from '../locations/travelGrid.js';
+import { shapeLocation } from '../locations/locationsModel.js';
 import {
   PICKABLE_TYPES,
   PICK_TASK_STATES,
@@ -56,6 +57,15 @@ test('★★ المهمّة تُشتقّ من مستندٍ معتمد وتحمل
   assert.ok(r.task.steps.length >= 2, 'خطوةٌ لكلّ (موقع × بند)');
   assert.ok(r.task.pathBasis, 'وأساسُ الترتيب يُعلَن ولا يُخمَّن');
   assert.equal(r.task.steps[0].seq, 1, 'الترتيب من المسار');
+});
+
+test('★★ خاناتٌ مولَّدة (`x: null`) لا تُكتب في المهمّة «شبكةً مُدخَلة» — الوسمُ تقريبيّ', () => {
+  // السيّدُ كما يكتبه التوليد: `gridFields` يضع `x/y: null` = «لم يُدخَل».
+  const grid = buildGrid(BALANCES.map((b) => shapeLocation({ code: b.bin })));
+  const { task } = openPickTask(PICK_DOC, BALANCES, { ...CTX, grid });
+  assert.equal(task.pathBasis.id, 'grid');
+  assert.match(pathBasisLabel(task.pathBasis), /تقريبيّ/);
+  assert.doesNotMatch(pathBasisLabel(task.pathBasis), /المُدخَلة/, 'وصفٌ كاذبٌ يبقى في السجلّ');
 });
 
 test('🔒 لا تحضير دون مستندٍ معتمد — القاعدة ١', () => {

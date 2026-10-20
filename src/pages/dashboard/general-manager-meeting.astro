@@ -1,0 +1,28 @@
+---
+/**
+ * اجتماع الإدارة العامة — الأربعاء 2026-10-07 (BFP-SCM-GM-2026-001).
+ *
+ * عرضٌ يُدار به الاجتماع مباشرةً: لوحةٌ ثابتة 1280×720 بوضع عرضٍ وملء شاشة،
+ * عشرة بنودٍ على جدول الأعمال وفرعان تحت البند الرابع، ينتهي كلُّ بندٍ بما هو
+ * مطلوبٌ من الإدارة العامة — ثمّ تُجمَّع الثمانيةُ والأربعون طلبًا في شرائح
+ * الإقفال. المحتوى والصور من مصادرها الحقيقية تحت `public/gm-meeting/`.
+ *
+ * الهويّة هنا هويّة الوثيقة الرسميّة (أحمر برند زو) لا الثيم الفاتح للشاشات،
+ * كسابقة `nova-inventory-meeting` — ورقةُ جلسةٍ تُعرَض على الإدارة، لا شاشةَ
+ * بياناتٍ تشغيلية.
+ *
+ * الأنماط في ملفٍّ مستقلّ لا في `<style is:global>`: الصفحة محميّةٌ بحارس
+ * الدخول، فالتحقّق البصريّ منها يحتاج استيراد **نفس** الملف — لا نسخةً ثانية.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import GmMeetingDeck from '../../components/gm-meeting/GmMeetingDeck.jsx';
+import '../../styles/gm-meeting.css';
+
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL.slice(0, -1)
+  : import.meta.env.BASE_URL;
+---
+
+<DashboardLayout title="اجتماع الإدارة العامة — 2026-10-07" light>
+  <GmMeetingDeck base={base} client:load />
+</DashboardLayout>

@@ -12,7 +12,15 @@ import {
   assignmentNotes,
   assignmentReport,
   directablePct,
+  rowBin,
 } from '../../../services/locations/binAssignment.js';
+import { LOCATION_SCREENS, foundOf, isResolved } from '../../../services/locations/locationReads.js';
+import {
+  useActiveLocationCount,
+  useActiveWitness,
+  useFullLocationReads,
+  useResolvedLocations,
+} from './useLocationReads.js';
 
 /**
  * إسناد الأصناف إلى مواقعها — قالبٌ يُرفع فيُعرف أين كلّ صنف (طلب المالك).
@@ -54,19 +62,35 @@ export default function BinAssignment() {
     return () => unsub?.();
   }, []);
 
+  /**
+   * ‹LOC-READS› السيّدُ كان يُقرأ كلُّه (8,402) عند الفتح ليُعرض عددُه ويُتحقَّق من رفوف
+   * ورقةٍ لم تُرفع بعد. فصار العددُ من الخادم، والتحقّقُ **برفوف الورقة نفسِها** حين تُرفع
+   * (`documentId() in`) مع شاهدٍ «معرَّف» — فحكمُ كلِّ صفٍّ هو حكمُه من القائمة كلِّها.
+   */
+  const fullLocations = useFullLocationReads(LOCATION_SCREENS.binAssignment);
   useEffect(() => {
-    if (!me) return undefined;
+    if (!me || !fullLocations) return undefined;
     return listenLocations(setLocations, (e) => setError(e?.message || 'تعذّرت قراءة المواقع.'));
-  }, [me]);
+  }, [me, fullLocations]);
+  const scoped = !fullLocations && Boolean(me);
+  const activeCount = useActiveLocationCount(scoped);
+  const sheetBins = useMemo(() => (analysis?.rows || []).map(rowBin).filter(Boolean), [analysis]);
+  const activeWitness = useActiveWitness(scoped && sheetBins.length > 0);
+  const sheetResolved = useResolvedLocations(sheetBins, { enabled: scoped && sheetBins.length > 0, settleMs: 0 });
 
-  const knownCodes = useMemo(
-    () => (locations || []).filter((l) => l?.active !== false).map((l) => l.code),
-    [locations]
-  );
+  const knownCodes = useMemo(() => {
+    if (fullLocations) return (locations || []).filter((l) => l?.active !== false).map((l) => l.code);
+    const found = foundOf(sheetResolved.resolved).filter((l) => l?.active !== false).map((l) => l.code);
+    return activeWitness.witness ? [...found, activeWitness.witness.code] : found;
+  }, [fullLocations, locations, sheetResolved.resolved, activeWitness.witness]);
+  /** أوصل كلُّ رفوف الورقة؟ — وقبله لا تقرير، فلا يُعتمد ورفٌّ مجهولٌ لم يُسأل عنه بعد. */
+  const sheetReady = fullLocations
+    || !sheetBins.length
+    || (activeWitness.ready && sheetBins.every((b) => isResolved(sheetResolved.resolved, b)));
 
   const report = useMemo(
-    () => (analysis ? assignmentReport(analysis.rows || [], knownCodes) : null),
-    [analysis, knownCodes]
+    () => (analysis && sheetReady ? assignmentReport(analysis.rows || [], knownCodes) : null),
+    [analysis, knownCodes, sheetReady]
   );
   const notes = useMemo(() => (report ? assignmentNotes(report) : []), [report]);
 
@@ -139,10 +163,14 @@ export default function BinAssignment() {
           </label>
         </div>
         <div className="text-[11px] text-muted">
-          {knownCodes.length
-            ? `${num(knownCodes.length)} موقعًا معرَّفًا في البوابة — وبها يُتحقَّق من كلّ رفٍّ في ورقتك.`
-            : 'لا موقعَ معرَّفًا بعد — عرّفها في «بانية مواقع التخزين» أوّلًا، وإلّا قُبل كلُّ رفٍّ بلا تحقّق.'}
+          {(fullLocations ? knownCodes.length : activeCount) === null
+            ? '…'
+            : (fullLocations ? knownCodes.length : activeCount)
+              ? `${num(fullLocations ? knownCodes.length : activeCount)} موقعًا معرَّفًا في البوابة — وبها يُتحقَّق من كلّ رفٍّ في ورقتك.`
+              : 'لا موقعَ معرَّفًا بعد — عرّفها في «بانية مواقع التخزين» أوّلًا، وإلّا قُبل كلُّ رفٍّ بلا تحقّق.'}
         </div>
+        {analysis && !sheetReady && <div className="text-xs text-accent font-bold">يتحقّق من رفوف الورقة…</div>}
+        {sheetResolved.error && <div className="text-xs text-brand-red">{sheetResolved.error}</div>}
         {fileName && <div className="text-xs text-muted">آخر ملف: {fileName}</div>}
         {busy && <div className="text-xs text-accent font-bold">{busy}</div>}
         {error && <div className="rounded-lg border border-brand-red/40 bg-brand-red/5 text-brand-red text-xs p-2.5">{error}</div>}

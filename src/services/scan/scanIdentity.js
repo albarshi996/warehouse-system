@@ -31,8 +31,74 @@
  */
 
 import { normalizeScanned } from './scanEngine.js';
+import { parseGs1, gs1Summary } from './gs1.js';
 
 const text = (v) => String(v ?? '').trim();
+
+/* ═══════════════ مرشَّحاتُ الهويّة (GS1) ═══════════════ */
+
+/**
+ * مرشَّحاتُ الكود لقراءةٍ واحدة — ‹WMS-102›.
+ *
+ * ★★★ **والترتيبُ هنا هو كلُّ الميزة.** باركودُ GS1 يكتب الصنفَ بأربعةَ عشرَ
+ * خانة، وماسترُ الأصناف عندنا مكتوبٌ بالباركود المطبوع على العلبة — ثلاثةَ
+ * عشرَ. فلو جُرّبت صيغةٌ واحدةٌ **لم يُطابَق صنفٌ واحدٌ أبدًا** وبدا المحلّلُ
+ * كأنّه لا يعرف شيئًا من المستودع.
+ *
+ * ★★★ **والتحليلُ قبل التنظيف لا بعده.** `normalizeScanned` تحذف محارفَ
+ * التحكّم `\u0000-\u001f` — **وفيها الفاصلُ GS (U+001D) نفسُه.** فمن حلّل
+ * بعدها فقد الفواصلَ كلَّها، فالتصق الحقلُ المتغيّرُ بما بعده وصارت الدفعةُ
+ * `LOT4471172703` — تبدو سليمةً ولا أحدَ يشكّ.
+ *
+ * @returns {{parsed:object, candidates:string[]}}
+ */
+export function gs1Candidates(raw, nowMs) {
+  const parsed = parseGs1(raw, { nowMs });
+  const normalized = normalizeScanned(raw);
+  const list = [];
+  if (parsed.ok) {
+    if (parsed.gtin) list.push(...parsed.gtinVariants);
+    if (parsed.sscc) list.push(parsed.sscc);
+  }
+  if (normalized) list.push(normalized);
+  return { parsed, candidates: [...new Set(list.filter(Boolean))] };
+}
+
+/** حمولةُ GS1 المعروضة — أو `null` لمسحةٍ عاديّة فلا تتغيّر شاشةٌ بلا GS1. */
+function gs1Payload(parsed) {
+  if (!parsed?.isGs1 || !parsed.ok) return null;
+  return {
+    signal: parsed.signal,
+    kind: parsed.kind,
+    gtin: parsed.gtin,
+    sscc: parsed.sscc,
+    batch: parsed.batch,
+    expiry: parsed.expiry,
+    produced: parsed.produced,
+    serial: parsed.serial,
+    qty: parsed.qty,
+    netWeightKg: parsed.netWeightKg,
+    purchaseOrder: parsed.purchaseOrder,
+    summary: gs1Summary(parsed),
+    warnings: parsed.warnings,
+  };
+}
+
+/**
+ * ما يُملأ تلقائيًّا من الباركود — **والمفاتيحُ الغائبةُ تُحذف لا تُفرَّغ.**
+ *
+ * ★★ ولماذا؟ لأنّ الشاشةَ تدمجه بما كتبه العامل (`{...values, ...prefill}`).
+ * فمفتاحُ `batch:''` في الحمولة **يمحو دفعةً كتبها بيده** — وهو عطبٌ صامتٌ
+ * لا يُكشف إلّا بعد الترحيل.
+ */
+function prefillOf(payload) {
+  if (!payload) return {};
+  const out = {};
+  if (payload.batch) out.batch = payload.batch;
+  if (payload.expiry) out.expiry = payload.expiry;
+  if (Number.isFinite(payload.qty) && payload.qty > 0) out.qty = payload.qty;
+  return out;
+}
 
 /* ═══════════════ أطوارُ البطاقة ═══════════════ */
 
@@ -65,12 +131,28 @@ export const SCAN_PHASES = Object.freeze({
  * }}
  */
 export function identifyScan(raw, resolve, ctx = {}) {
-  const code = normalizeScanned(raw);
-  if (!code) {
+  const { parsed, candidates } = gs1Candidates(raw, ctx.nowMs);
+  if (!candidates.length) {
     return blank('قراءةٌ فارغة — امسح الباركود ثانيةً.');
   }
+  const gs1 = gs1Payload(parsed);
+  const prefill = prefillOf(gs1);
 
-  const resolved = typeof resolve === 'function' ? resolve(code) : null;
+  // تُجرَّب المرشَّحاتُ بالترتيب، وأوّلُ ما يُطابق الماسترَ هو الهويّة. ونتيجةُ
+  // الأوّل محفوظةٌ كي لا يُستدعى `resolve` مرّتين على مرشَّحٍ واحد.
+  let resolved = null;
+  let code = candidates[0];
+  let firstResult = null;
+  for (const candidate of candidates) {
+    const r = typeof resolve === 'function' ? resolve(candidate) : null;
+    if (firstResult === null) firstResult = r;
+    if (r?.item) {
+      resolved = r;
+      code = candidate;
+      break;
+    }
+  }
+  if (!resolved) resolved = firstResult;
   const item = resolved?.item || null;
 
   if (!item) {
@@ -78,6 +160,10 @@ export function identifyScan(raw, resolve, ctx = {}) {
       ...blank(''),
       phase: SCAN_PHASES.unknown.id,
       code,
+      // ★ ما قُرئ لا يُرمى: دفعةٌ وصلاحيّةٌ قُرئتا من الملصق تبقيان مع
+      // الاستثناء، فتُراجعه الحوكمةُ ببيانةٍ لا برقمٍ أعمى.
+      gs1,
+      prefill,
       problem: `الباركود «${code}» غير معروف في ماستر الأصناف.`,
     };
   }
@@ -89,7 +175,17 @@ export function identifyScan(raw, resolve, ctx = {}) {
   const uom = text(resolved?.uom);
   const uomText = typeof ctx.uomLabel === 'function' ? text(ctx.uomLabel(uom)) || uom : uom;
 
-  const expectation = expectationOf({ sku, code, item }, ctx);
+  // الحكمُ يُجرَّب على المرشَّحات كلِّها: صنفٌ مذكورٌ في الأمر بباركوده
+  // المطبوع (ثلاثةَ عشرَ) لا يُقال عنه «غيرُ مذكور» لأنّ GS1 كتبه بأربعةَ عشرَ.
+  let expectation = expectationOf({ sku, code, item }, ctx);
+  if (expectation === 'unexpected') {
+    for (const candidate of candidates) {
+      if (expectationOf({ sku, code: candidate, item }, ctx) === 'expected') {
+        expectation = 'expected';
+        break;
+      }
+    }
+  }
 
   const lines = [
     { label: 'الرمز', value: sku || '—' },
@@ -100,6 +196,18 @@ export function identifyScan(raw, resolve, ctx = {}) {
   // 12 حيث تكفي 1. وإخفاؤه حين يساوي 1 يمنع ضجيجًا بلا معنى.
   if (Number.isFinite(resolved?.factor) && resolved.factor !== 1) {
     lines.push({ label: 'المعامل', value: `1 ${uomText || uom} = ${resolved.factor}` });
+  }
+
+  // ‹WMS-102› ما قرأه الملصقُ يُعرض **موسومًا بمصدره** — فالعاملُ يعرف أنّ
+  // الدفعةَ قُرئت ولم يكتبها، فإن خالفت الواقعَ عدّلها قبل التأكيد.
+  if (gs1) {
+    if (gs1.sscc) lines.push({ label: 'هويّة الطبليّة (SSCC)', value: gs1.sscc });
+    if (gs1.batch) lines.push({ label: 'الدفعة (من الباركود)', value: gs1.batch });
+    if (gs1.expiry) lines.push({ label: 'الصلاحية (من الباركود)', value: gs1.expiry });
+    if (gs1.produced) lines.push({ label: 'الإنتاج (من الباركود)', value: gs1.produced });
+    if (gs1.serial) lines.push({ label: 'التسلسل (من الباركود)', value: gs1.serial });
+    if (Number.isFinite(gs1.netWeightKg)) lines.push({ label: 'الوزن (من الباركود)', value: `${gs1.netWeightKg} كجم` });
+    if (gs1.purchaseOrder) lines.push({ label: 'أمر الشراء (من الباركود)', value: gs1.purchaseOrder });
   }
 
   return {
@@ -113,6 +221,8 @@ export function identifyScan(raw, resolve, ctx = {}) {
     factor: Number.isFinite(resolved?.factor) ? resolved.factor : null,
     expectation,
     lines,
+    gs1,
+    prefill,
     problem: '',
   };
 }
@@ -129,6 +239,8 @@ function blank(problem) {
     factor: null,
     expectation: 'unknown-order',
     lines: [],
+    gs1: null,
+    prefill: {},
     problem: problem || '',
   };
 }
@@ -166,8 +278,21 @@ export function expectationBadge(expectation) {
  * الجديدُ عقوبةً على من يعمل بسرعة، ولالتُمس طريقٌ حوله.
  */
 export function isRescanOfSame(identity, raw) {
-  const code = normalizeScanned(raw);
-  return Boolean(code) && Boolean(identity?.code) && identity.code === code;
+  const { parsed, candidates } = gs1Candidates(raw);
+  if (!candidates.length || !identity?.code) return false;
+
+  // ★★ GS1: الهويّةُ **صنفٌ ودفعة** لا صنفٌ وحده. فكرتونتان من الطبليّة
+  // نفسِها تكراران، ودفعةٌ أخرى من الصنف نفسِه **هويّةٌ جديدة** تستحقّ بطاقةً
+  // — وإلّا جُمعت دفعتان في عدّادٍ واحدٍ وضاع تتبّعُ الصلاحية.
+  if (parsed.ok && identity.gs1) {
+    if (parsed.gtin && identity.gs1.gtin) {
+      return parsed.gtin === identity.gs1.gtin && text(parsed.batch) === text(identity.gs1.batch);
+    }
+    if (parsed.sscc && identity.gs1.sscc) return parsed.sscc === identity.gs1.sscc;
+  }
+  // وبلا GS1 يبقى الحكمُ كما كان، ومعه المرشَّحاتُ كي لا تُكسر إعادةُ المسح
+  // حين عُرِّفت البطاقةُ بصيغةٍ وأُعيد المسحُ بأخرى.
+  return candidates.includes(identity.code);
 }
 
 /* ═══════════════ جاهزيّةُ التأكيد ═══════════════ */

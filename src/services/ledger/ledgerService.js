@@ -31,13 +31,17 @@ import { indexLocations } from '../org/orgLocations.js';
  * قراءات لا ألفًا. و**العجز عن القراءة ليس منعًا**: يُعاد `null` فيسلك القيد
  * سلوك اليوم، لأنّ شبكةً متذبذبة يجب ألّا توقف قيد استلامٍ صحيح.
  */
-async function loadLineItems(lines) {
+async function loadLineItems(lines, cache = null) {
   const skus = [...new Set((lines || []).map((l) => String(l?.sku ?? '').trim().toUpperCase()).filter(Boolean))];
   if (!skus.length) return null;
   try {
     const map = new Map();
-    const found = await Promise.all(skus.map((sku) => getItem(sku).catch(() => null)));
-    found.forEach((item, i) => {
+    const missing = cache ? skus.filter((sku) => !cache.items.has(sku)) : skus;
+    const found = await Promise.all(missing.map((sku) => getItem(sku).catch(() => null)));
+    // ‹SRC-POST› الغائبُ يُذكر غيابُه أيضًا (`null`) — فلا يُسأل عنه ثانيةً في الدفعة.
+    if (cache) missing.forEach((sku, i) => cache.items.set(sku, found[i] || null));
+    const source = cache ? skus.map((sku) => cache.items.get(sku)) : found;
+    source.forEach((item, i) => {
       if (item) map.set(skus[i], item);
     });
     return map.size ? map : null;
@@ -51,7 +55,12 @@ async function loadLineItems(lines) {
  * **العجز عن القراءة ليس منعًا**: يُعاد `null` فيُختم الرمز الخام وحده،
  * لأنّ شبكةً متذبذبة يجب ألّا توقف قيد استلامٍ صحيح.
  */
-async function loadOrgIndex() {
+async function loadOrgIndex(cache = null) {
+  if (cache && cache.orgIndex !== undefined) return cache.orgIndex;
+  if (cache) {
+    cache.orgIndex = await loadOrgIndex();
+    return cache.orgIndex;
+  }
   try {
     const snap = await getDocs(collection(db, 'org_locations'));
     if (snap.empty) return null;
@@ -59,6 +68,19 @@ async function loadOrgIndex() {
   } catch {
     return null;
   }
+}
+
+/**
+ * ‹SRC-POST› ذاكرةُ دفعة قيود — تُنشأ مرّةً وتُمرَّر لكلّ مستندٍ في الدفعة.
+ *
+ * بلاها يقرأ كلُّ قيدٍ الشجرةَ التنظيميّة كاملةً (~١٥٥ قراءة) وبطاقاتِ أصنافه — فعشرون
+ * مستندًا مستوردًا تكلّف ثلاثة آلاف قراءةٍ لشجرةٍ لم تتغيّر بينها. وبها تُقرأ الشجرةُ
+ * مرّةً والبطاقةُ مرّة. ولا تُمرَّر لقيدٍ منفرد: من يُنجز مستندًا بيده يقرأ الحاضرَ لا ذاكرةً.
+ *
+ * @returns {{orgIndex: (object|null|undefined), items: Map<string, object|null>}}
+ */
+export function createPostingCache() {
+  return { orgIndex: undefined, items: new Map() };
 }
 
 const MOVES = 'stock_moves';
@@ -91,19 +113,21 @@ function currentName(profile) {
  * نفسها** — فبلوغُ «منجَز» وقيدُ الأثر فعلٌ ذرّيٌّ واحد لا فعلان. وإن فشل القيد
  * (رصيدٌ غير كافٍ مثلًا) لم تُكتب الحالة، فيبقى المستند «معتمَدًا» قابلًا للإعادة —
  * لا «منجَزًا بلا أثر» يكذب على الرصيد بصمت. يُقبل عندئذٍ المستند معتمَدًا (لا منجَزًا).
+ * `cache` ‹SRC-POST›: ذاكرةُ دفعةٍ من `createPostingCache` — تُقرأ بها الشجرةُ والبطاقاتُ
+ * مرّةً للدفعة كلّها. وأرصدةُ المعاملة تُقرأ لحظتَها دائمًا: الذاكرةُ لا تمسّ حارسَ السالب.
  *
  * @returns {Promise<{moves:number, deltas:number, totalQty:number}>}
  */
-export async function postDocument(docData, profile, { markDone = false } = {}) {
+export async function postDocument(docData, profile, { markDone = false, cache = null } = {}) {
   const gate = canPost(docData, { allowApproved: markDone });
   if (!gate.ok) throw new Error(gate.reason);
 
   // أنواع الأصناف (م٣-أ): تُقرأ من الماستر لتُستبعد الخدمات من القيد. فشلُ
   // القراءة يعني `null` — أي **سلوك اليوم**: لا نمنع قيدًا لأنّنا عجزنا عن
   // معرفة نوع صنف، ولا نبني رصيدًا وهميًّا إن عرفنا.
-  const lineItems = await loadLineItems(docData?.lines);
+  const lineItems = await loadLineItems(docData?.lines, cache);
   // الشجرة التنظيميّة (FNB-104): بها تُختم أبعاد الحركة لحظة القيد.
-  const orgIndex = await loadOrgIndex();
+  const orgIndex = await loadOrgIndex(cache);
 
   const { moves, problems: buildProblems, skipped } = buildMoves(docData, { items: lineItems, orgIndex });
   if (buildProblems.length) throw new Error(buildProblems.join(' · '));

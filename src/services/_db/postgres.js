@@ -250,6 +250,16 @@ export function getDocFromServer(ref) {
   return fs.getDocFromServer(ref);
 }
 
+/**
+ * ★★ **عدٌّ من Firebase دائمًا — وهو الأرخصُ أصلًا.** `getCountFromServer`
+ *    تُحاسَب قراءةً لكلّ ألف مستند، فعدُّ ثمانية آلافٍ ثمانيةُ قراءات. ولو
+ *    أجبناه من المرآة لربحنا ثمانيًا وخسرنا الدقّة: رقمٌ متأخّرٌ دقيقةً
+ *    يُعرض كأنّه الآن. **والرخيصُ الصادقُ خيرٌ من المجّانيّ المتأخّر.**
+ */
+export function getCountFromServer(...args) {
+  return fs.getCountFromServer(...args);
+}
+
 /** ★ المستمعون على Firebase — البثُّ الحيُّ لم يُنقل، ولا يُدّعى أنّه نُقل. */
 export function onSnapshot(...args) {
   return fs.onSnapshot(...args);

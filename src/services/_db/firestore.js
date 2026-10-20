@@ -71,6 +71,7 @@ export {
   getDoc,
   getDocs,
   getDocFromServer,
+  getCountFromServer,
   onSnapshot,
   // ═══ الكتابة ═══
   setDoc,

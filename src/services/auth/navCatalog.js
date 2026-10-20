@@ -113,6 +113,17 @@ export const NAV_GROUPS = [
       { path: '/dashboard/order-control', label: 'الرقابة على الطلبات', icon: 'clipboardList' },
       { path: '/dashboard/retail-hub', label: 'خريطة التجزئة', icon: 'mapPin' },
       { path: '/dashboard/assets-inventory', label: 'جرد الأصول', icon: 'clipboardList' },
+      // ‹WH-501› منظارُ إدارة المستودعات: أصولُها من `department_assets`
+      // وعهدُها من `custodies` في شاشةٍ واحدة — ولا سجلَّ رابعًا. للمديرَين:
+      // تعديلُ تفاصيل المعدّة قرارٌ إداريّ، وقاعدةُ الأمن تحدّهما كذلك.
+      { path: '/dashboard/wh-department-assets', label: 'أصول إدارة المستودعات', icon: 'wrench', roles: ['admin', 'warehouse_manager'] },
+      // ‹VEN-101› جردُ مخزن فينسيا — موصولٌ بقاعدة البيانات، بخلاف «جرد
+      // الأصول» أعلاه الذي يعمل في ذاكرة المتصفّح. وهو للمديرَين: تعريفُ ما
+      // يملكه المستودعُ قرارٌ إداريّ، وقاعدةُ الأمن تحدّه بهما كذلك.
+      { path: '/dashboard/venecia-assets', label: 'جرد مخزن فينسيا', icon: 'warehouse', roles: ['admin', 'warehouse_manager'] },
+      // ‹VEN-201› حركةُ المستودع: صرفٌ وإدخال. شاشةٌ مستقلّةٌ عن الجرد
+      // بقرار «صفحةُ الجرد للجرد» — تلك تعرّف ما يُملَك، وهذه تُحرّكه.
+      { path: '/dashboard/venecia-cards', label: 'بطاقات حركة فينسيا', icon: 'arrowLeftRight', roles: ['admin', 'warehouse_manager'] },
       // مراقبة سلسلة التبريد (IoT) وقوائم السلامة المهنية — ملحقا المرجع م-٥/٢ و م-٥/٣.
       { path: '/dashboard/cold-chain', label: 'سلسلة التبريد (IoT)', icon: 'package' },
       { path: '/dashboard/hse-checklists', label: 'قوائم السلامة (HSE)', icon: 'clipboardList' },
@@ -483,6 +494,12 @@ export const NAV_GROUPS = [
       // دورات النقل والبيع وتحميل المندوبين — عرضٌ حيٌّ تُدار به الجلسة، وفي كل
       // خطوةٍ بطاقةُ اختصارٍ تفتح الشاشة التي تُنفَّذ فيها داخل البوابة.
       { path: '/dashboard/nova-inventory-meeting', label: 'اجتماع شركة نوفا — الجرد والنقل', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
+      // اجتماع الإدارة العامة 2026-10-07 (BFP-SCM-GM-2026-001): عشرة بنودٍ على
+      // جدول الأعمال — تطوّر الإدارة، تدريب تونس، جرد نوفا، مخرجات الاجتماعات
+      // (وفرعاها: البوابة والمكتب الهندسي)، أودو، التوظيف، آلية القطاعات،
+      // توسيع النطاق، طلبات الشراء، وأدوات الذكاء الاصطناعي. كلّ بندٍ ينتهي
+      // بما هو مطلوبٌ من الإدارة، وتُجمَّع الطلبات في شرائح الإقفال.
+      { path: '/dashboard/general-manager-meeting', label: 'اجتماع الإدارة العامة — 2026-10-07', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },
       // مركز متطلبات شركة الميزان: قراءة تنفيذية للحزمة BFP-SCM-REQ-2026،
       // ومصفوفة القرار بين البوابة وأودو وسجلّ المسائل التي تنتظر الحسم.
       { path: '/dashboard/requirements-command', label: 'مركز متطلبات التكامل', icon: 'clipboardList', roles: ['admin', 'warehouse_manager'] },

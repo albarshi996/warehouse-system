@@ -17,9 +17,17 @@
  * ولذلك سُمّي `Service` (كان `numbering.js` فكان منطقًا مختبئًا في التخزين).
  */
 import { doc, runTransaction, db } from '../_db/index.js';
-import { counterId, formatNumber, nextSeq } from './numberFormat.js';
+import { counterId, formatNumber, nextSeq, numberingVerdict } from './numberFormat.js';
 
 const COUNTERS = 'counters';
+
+/**
+ * حالةُ الاتّصال كما يراها المتصفّح — و**النفيُ وحدَه قاطع**.
+ * وخارج المتصفّح (اختباراتُ Node) تُعدّ متّصلةً فلا يتغيّر سلوكُ أحد.
+ */
+function isOnline() {
+  return typeof navigator === 'undefined' || navigator.onLine !== false;
+}
 
 export { counterId, formatNumber };
 
@@ -32,6 +40,17 @@ export { counterId, formatNumber };
  * (بقيّة النظام يعمل بلا شبكة؛ لحظة الترقيم وحدها تحتاجها.)
  */
 export async function reserveNumber(type, now = new Date()) {
+  // ★★★ ‹NUM-601› الحارسُ قبل المعاملة لا بعدها: `runTransaction` بلا اتّصالٍ
+  // **تتعلّق أبدًا ولا ترمي**، فالانتظارُ بلا حدٍّ هو العطبُ لا الفشل. وهذا
+  // يُحوّله إلى رسالةٍ تُقرأ في اللحظة نفسِها. (والحكمُ في `numberFormat`
+  // الخالصة، وهنا قراءةُ حالة المتصفّح وحدَها.)
+  const verdict = numberingVerdict({ online: isOnline() });
+  if (!verdict.ok) {
+    const err = new Error(verdict.message);
+    err.code = verdict.code;
+    throw err;
+  }
+
   const year = now.getFullYear();
   const ref = doc(db, COUNTERS, counterId(type, year));
 

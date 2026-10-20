@@ -57,6 +57,18 @@ export const START_GROUPS = [
   { title: 'المشتريات الداخلية', icon: 'shoppingCart', types: INTERNAL_PROCUREMENT_CHAIN },
 ];
 
+/**
+ * ‹SRC-POST› أنواعٌ **تُستورد ولا تُبدأ باليد** — لكلٍّ سببُه مكتوبًا، كنمط
+ * `STANDALONE_TYPES` في chain.js سواء. فاستثناؤها من «بلا زرّ» قرارٌ معلَنٌ يقرؤه
+ * الحارس، لا ثغرةٌ تمرّ صامتة: مستندٌ أُنجز في نظامٍ آخر لا يُكتب من الصفر هنا.
+ */
+export const IMPORT_ONLY_TYPES = Object.freeze({
+  SRI: 'استلامٌ أُنجز في أودو — يُستورد بمرجعه ويُرحَّل كما وقع؛ إنشاؤه باليد اختلاقُ استلامٍ لم يُسجَّل في المصدر.',
+  SRO: 'تسليمٌ أُنجز في أودو — يُستورد بمرجعه ويُرحَّل كما وقع؛ إنشاؤه باليد إخراجُ بضاعةٍ بلا مستندٍ في المصدر.',
+  SXO: 'إرساليّةُ نقلٍ أُنجزت في أودو — تُستورد بمرجعها؛ والنقلُ الذي يبدأ هنا سلسلتُه TR ← TRN ← TRC.',
+  SXI: 'استلامُ نقلٍ أُنجز في أودو — يُستورد بمرجعه؛ والنقلُ الذي يبدأ هنا سلسلتُه TR ← TRN ← TRC.',
+});
+
 /** كل نوعٍ تغطّيه مجموعةٌ ما — للمقارنة لا للعرض. */
 export function coveredTypes() {
   return new Set(START_GROUPS.flatMap((g) => g.types));
@@ -68,7 +80,9 @@ export function coveredTypes() {
  */
 export function uncoveredReadyTypes(forms = GOVERNED_FORMS) {
   const covered = coveredTypes();
-  return forms.filter((f) => f.ready && !covered.has(f.type)).map((f) => f.type);
+  return forms
+    .filter((f) => f.ready && !covered.has(f.type) && !Object.hasOwn(IMPORT_ONLY_TYPES, f.type))
+    .map((f) => f.type);
 }
 
 /**

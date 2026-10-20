@@ -131,6 +131,29 @@ export function shapeLocation(input) {
     // ترتيب الأكواد، فهذه الحقول **تجاوزٌ يدويّ** لمن قاس فعلًا لا شرطُ عمل.
     // و`null` هنا تعني «لم يُدخَل» — وهي غير الصفر الذي يعني «عند نقطة الصفر».
     ...gridFields(input),
+    // ═══ وجهُ التجهيز ‹WMS-301› — **كلُّه اختياريّ** ═══
+    // موقعٌ قائمٌ بلا واحدٍ منها يبقى كما هو ولا يُنتج مهمّةَ تزويدٍ أبدًا:
+    // **لا حدَّ مخترَعًا.** وتفصيلُ الدلالات في `replenishModel.js`.
+    ...pickFaceFields(input),
+  };
+}
+
+/**
+ * حقولُ وجه التجهيز الأربعة — والفارغُ يبقى `null` ولا يُصفَّر.
+ *
+ * ★★ و`null` هنا **غيرُ الصفر** قصدًا: الصفرُ حدٌّ أدنى معلَنٌ يعني «لا تتركه
+ * يفرغ قطّ»، والـ`null` يعني «لم يُعلَن حدٌّ» فلا حكم. ومن صفّر الفارغَ جعل
+ * كلَّ خانةٍ في المستودع وجهَ تجهيزٍ حدُّه صفرٌ — فطابورُ تزويدٍ بألف مهمّة
+ * في أوّل يوم.
+ */
+function pickFaceFields(input) {
+  const limit = (v) => (v === undefined || v === null || v === '' ? null : Math.max(0, num(v)));
+  return {
+    pickFace: input?.pickFace === true,
+    // الصنفُ المخصَّص لهذا الوجه — وغيابُه يعني «أيُّ صنفٍ فيه» فيُقرأ من رصيده.
+    pickSku: str(input?.pickSku).toUpperCase(),
+    replenishMin: limit(input?.replenishMin),
+    replenishMax: limit(input?.replenishMax),
   };
 }
 
@@ -157,6 +180,20 @@ export function locationProblems(input) {
   if (input?.handling && !HANDLING_TYPES[input.handling]) out.push(`نوع مناولة غير معروف: «${input.handling}»`);
   for (const m of CAPACITY_MEASURES) {
     if (input?.capacity?.[m] !== undefined && num(input.capacity[m]) < 0) out.push(`سعة «${m}» لا تكون سالبة.`);
+  }
+  // ‹WMS-301› حدّا وجه التجهيز — وأخطرُهما مقلوبٌ يمرّ صامتًا: أدنى أكبرُ من
+  // أعلى يُنتج نقصًا سالبًا فلا تُولَّد مهمّةٌ أبدًا، والخانةُ تفرغ ولا أحدَ
+  // يعلم. فيُردّ عند الحفظ لا يُكتشف في الميدان.
+  const min = input?.replenishMin;
+  const max = input?.replenishMax;
+  const has = (v) => v !== undefined && v !== null && v !== '';
+  if (has(min) && num(min) < 0) out.push('الحدّ الأدنى لوجه التجهيز لا يكون سالبًا.');
+  if (has(max) && num(max) < 0) out.push('الحدّ الأعلى لوجه التجهيز لا يكون سالبًا.');
+  if (has(min) && has(max) && num(min) > num(max)) {
+    out.push(`حدّا وجه التجهيز مقلوبان: الأدنى (${num(min)}) أكبرُ من الأعلى (${num(max)}) — فلا تُولَّد مهمّةُ تزويدٍ أبدًا.`);
+  }
+  if (input?.pickFace === true && has(min) && !has(max)) {
+    out.push('وجهُ تجهيزٍ بحدٍّ أدنى بلا أعلى — فإلى أيّ كمّيّةٍ يُزوَّد؟');
   }
   return out;
 }
@@ -189,7 +226,7 @@ export function handlingLabel(handling) {
  * @returns {{ok:boolean, reason:string}} والسبب مكتوبٌ دائمًا عند الرفض —
  *          «لا يُقترح» بلا سببٍ شكوى لا معلومة.
  */
-export function canReceive(location, usedQty = 0, usedPallets = null) {
+export function canReceive(location, usedQty = 0, usedPallets = null, load = null) {
   if (!location) return { ok: false, reason: 'الموقع غير معرَّف في سيّد المواقع.' };
   const status = LOCATION_STATUSES[location.status] || LOCATION_STATUSES[DEFAULT_STATUS];
   if (!status.accepts) return { ok: false, reason: `الموقع ${status.labelAr} — ${status.hint}` };
@@ -205,6 +242,20 @@ export function canReceive(location, usedQty = 0, usedPallets = null) {
   if (capPallets > 0 && usedPallets !== null && num(usedPallets) >= capPallets) {
     return { ok: false, reason: `الموقع بلغ سعته من الطبالي (${capPallets}) — لا موضعَ لطبليّةٍ أخرى.` };
   }
+
+  // ★★ ونفسُ القاعدة حرفًا على الوزن والحجم (‹WMS-201›): سقفٌ غائبٌ أو حِملٌ
+  // مجهولٌ ⇒ **يمرّ**. وهنا سؤالُ «أبلغ سقفَه» وحدَه — أمّا «أيسعُ هذا البندَ
+  // بعينه» فسؤالٌ آخر يحتاج وزنَ البند، وجوابُه في
+  // `itemDimensions.capacityProblem` لأنّه يعرف الصنفَ ومعاملاتِه.
+  const capWeight = num(location.capacity?.weightKg);
+  if (capWeight > 0 && load && num(load.weightKg) >= capWeight) {
+    const note = load.partial ? ' (محسوبًا على ما يُعرف وزنُه — والواقعُ أثقل)' : '';
+    return { ok: false, reason: `الموقع بلغ سقفَ وزنه (${capWeight} كجم)${note} — لا مكان لحملٍ جديد.` };
+  }
+  const capVolume = num(location.capacity?.volumeM3);
+  if (capVolume > 0 && load && num(load.volumeM3) >= capVolume) {
+    return { ok: false, reason: `الموقع بلغ سقفَ حجمه (${capVolume} م٣) — لا مكان لحملٍ جديد.` };
+  }
   return { ok: true, reason: '' };
 }
 
@@ -219,7 +270,7 @@ export function canReceive(location, usedQty = 0, usedPallets = null) {
  *                            غيابُه يترك حقولَ الطبالي `null` ولا يمسّ حقلًا
  *                            قائمًا، فالنداءُ ثنائيُّ الوسائط كما كان حرفًا.
  */
-export function occupancyOf(location, balances, pallets = null) {
+export function occupancyOf(location, balances, pallets = null, load = null) {
   const code = normalizeLocationCode(location?.code);
   const mine = (balances || []).filter((b) => balanceLocationCode(b) === code);
   const usedQty = mine.reduce((s, b) => s + num(b.qty), 0);
@@ -229,7 +280,27 @@ export function occupancyOf(location, balances, pallets = null) {
   const capPallets = num(location?.capacity?.pallets);
   const knows = usedPallets !== null; // مرّر المستدعي الفهرسَ فصار للعدد معنًى
 
+  // ── الوزنُ والحجم (‹WMS-201›) ──────────────────────────────────
+  // ★★★ ويُمرَّر الحِملُ **محسوبًا** لا يُحتسب هنا: سيّدُ المواقع لا يستورد
+  // وحدةَ أبعاد الصنف — نفسُ قرار `palletsAt` حرفًا (انظر تعليقَه). ولولاه
+  // لصار عطبٌ في طبقةٍ أحدثَ يُسقط أقدمَ ما في الشجرة.
+  const usedWeight = load ? num(load.weightKg) : null;
+  const capWeight = num(location?.capacity?.weightKg);
+  const usedVolume = load ? num(load.volumeM3) : null;
+  const capVolume = num(location?.capacity?.volumeM3);
+
   return {
+    // ★★ والتحفّظُ يُنقل معه: مجموعٌ محسوبٌ على بعض البنود **حدٌّ أدنى لا
+    // حقيقة**، فمن قرأ `remainingWeightKg` وجهل ذلك ظنّ فراغًا ليس موجودًا.
+    usedWeightKg: usedWeight,
+    capacityWeightKg: capWeight > 0 ? capWeight : null,
+    remainingWeightKg: capWeight > 0 && usedWeight !== null ? Math.max(0, capWeight - usedWeight) : null,
+    weightPct: capWeight > 0 && usedWeight !== null ? Math.min(100, Math.round((usedWeight / capWeight) * 100)) : null,
+    usedVolumeM3: usedVolume,
+    capacityVolumeM3: capVolume > 0 ? capVolume : null,
+    remainingVolumeM3: capVolume > 0 && usedVolume !== null ? Math.max(0, capVolume - usedVolume) : null,
+    volumePct: capVolume > 0 && usedVolume !== null ? Math.min(100, Math.round((usedVolume / capVolume) * 100)) : null,
+    loadPartial: load ? Boolean(load.partial) : false,
     code,
     lines: mine.length,
     usedQty,

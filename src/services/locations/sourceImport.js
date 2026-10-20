@@ -19,6 +19,8 @@
  *    في تقرير الانحراف — تعديلٌ صامتٌ للكمّيّة يجعل الفرق مع النظام كذبةً.
  */
 
+import { chunksOf } from './scopedQuery.js';
+
 /** الحقول التي لا تُحرَّر — بصمة منع التكرار. */
 export const IDENTITY_FIELDS = Object.freeze(['docRef', 'docId', 'lineId', 'sourceUpdatedAt', 'fingerprint']);
 
@@ -147,6 +149,54 @@ export function classifyRows(rows, knownFingerprints) {
     }
   }
   return { fresh, duplicate };
+}
+
+/**
+ * معرّفُ سجلّ البصمة في `source_imports` — **هو** البصمة مُنظَّفةً لتصلح معرّفًا.
+ *
+ * نُقل من `sourceImportService.js` بلا تغيير حرف (‹DS-READS›): الكاتبُ يكتب به
+ * والقارئُ المقصور يقرأ به، فإن افترقا يومًا فات منعُ التكرار صامتًا. ومكانٌ واحدٌ
+ * لهما يجعل افتراقهما مستحيلًا.
+ */
+export function fingerprintId(fp) {
+  return String(fp ?? '')
+    .replace(/[/.#$[\]]/g, '-')
+    .replace(/\s+/g, '_')
+    .slice(0, 400);
+}
+
+const utf8Length = (s) => new TextEncoder().encode(s).length;
+
+/**
+ * أيقبل Firestore هذا المعرّفَ في `documentId() in`؟ — وما لا يقبله لم يُكتب قطّ:
+ * الكتابةُ عليه كانت ستُرفض، فلا سجلَّ له يُبحث عنه. وتصفيتُه تمنع أن يُسقط
+ * معرّفٌ واحدٌ معطوبٌ قراءةَ الورقة كلِّها.
+ */
+function isQueryableId(id) {
+  return Boolean(id) && !/^__.*__$/.test(id) && utf8Length(id) <= 1500;
+}
+
+/**
+ * ‹DS-READS› بصماتُ الورقة المستوردةُ سلفًا — بمعرّفاتها لا بالنوع كلِّه.
+ *
+ * كانت المعاينةُ تقرأ **كلَّ** ما استُورد من هذا النوع لتسأل عن بضعة أسطر — ومع
+ * نقل أودو صار ذلك مئاتِ القراءات لكلّ ملفّ، وتنمو مع كلّ استيراد.
+ *
+ * ★★★ ولماذا يطابق القراءةَ الكاملةَ حرفًا؟ لأنّ الكاتبَ الوحيد (`commitSourceImport`)
+ * يكتب البصمة `f` في المعرّف `fingerprintId(f)` ولا غيره، ولم تتغيّر الدالّةُ منذ
+ * أوّل كوميت (`d0f1395`). فالسجلُّ الذي يحمل `f` — إن وُجد — هناك وحدَه. والنوعُ
+ * يُصفّى بعد القراءة كما صفّاه الاستعلامُ القديم. و`classifyRows` لا يسأل إلّا عن
+ * بصمات الورقة، فما سواها لا أثرَ له في الحكم.
+ *
+ * @param {string} kind
+ * @param {Array} fingerprints بصماتُ صفوف الورقة (كما خرجت من الشيت)
+ * @param {(ids:string[]) => Promise<object[]>} fetchByIds يقرأ السجلّاتِ بمعرّفاتها — دفعةً ≤ 30
+ * @returns {Promise<Set<string>>}
+ */
+export async function knownFingerprintsFor(kind, fingerprints, fetchByIds) {
+  const ids = [...new Set((fingerprints || []).map(str).filter(Boolean).map(fingerprintId))].filter(isQueryableId);
+  const rows = (await Promise.all(chunksOf(ids).map((chunk) => fetchByIds(chunk)))).flat();
+  return new Set(rows.filter((r) => r?.kind === kind).map((r) => r?.fingerprint).filter(Boolean));
 }
 
 /**

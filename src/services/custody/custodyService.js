@@ -55,6 +55,10 @@ export async function issueCustody(record, profile) {
     employeeRole: String(record.employeeRole || '').trim(),
     itemKind: String(record.itemKind || '').trim(),
     itemDesc: String(record.itemDesc || '').trim(),
+    // ‹WH-501› رقمُ الأصل الذي تخصّه العهدة — به يُعرف من يحمل كلّ جهاز.
+    // ★ وهذه الدالّةُ تبني شكلًا ثابتًا: حقلٌ لا يُذكر هنا **يُمحى قبل أن
+    // يُكتب** بلا شكوى. يحرسه `custodyAssetLink.test.js`.
+    assetNo: String(record.assetNo || '').trim(),
     serial: String(record.serial || '').trim(),
     condition: String(record.condition || '').trim(),
     value: record.value === '' || record.value == null ? null : Number(record.value),

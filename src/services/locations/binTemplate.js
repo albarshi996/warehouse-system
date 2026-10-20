@@ -166,10 +166,19 @@ export function assignmentFor(warehouse, assignments) {
  * @returns {{warehouseCode, nameAr, binPrefix, templateId, total, have, missing:string[],
  *            problems:string[], ready:boolean}}
  */
+/**
+ * بادئةُ خطّة التوليد لمستودع — المحفوظُ على الوثيقة يتقدّم، ثمّ الإسنادُ المعتمد،
+ * ثمّ كودُ المستودع نفسُه. ودالّةٌ مستقلّةٌ لأنّ ‹LOC-READS› يقرأ أكوادَ هذه البادئة
+ * وحدَها: فإن افترقت بادئةُ القراءة عن بادئة الخطّة عُدّ القائمُ ناقصًا وأُعيد توليدُه.
+ */
+export function planPrefixOf(warehouse, assignments = []) {
+  const assignment = assignmentFor(warehouse, assignments);
+  return up(warehouse?.binPrefix) || up(assignment?.binPrefix) || binPrefixOf(warehouse);
+}
+
 export function warehousePlan(warehouse, { templates = [], existingCodes = [], assignments = [] } = {}) {
   const assignment = assignmentFor(warehouse, assignments);
-  // المحفوظُ على الوثيقة يتقدّم، ثمّ الإسنادُ المعتمد، ثمّ كودُ المستودع نفسُه.
-  const binPrefix = up(warehouse?.binPrefix) || up(assignment?.binPrefix) || binPrefixOf(warehouse);
+  const binPrefix = planPrefixOf(warehouse, assignments);
   const saved = numberingOf(warehouse);
   const numbering =
     saved || (assignment ? { templateId: assignment.templateId, params: assignment.params, scheme: null } : null);

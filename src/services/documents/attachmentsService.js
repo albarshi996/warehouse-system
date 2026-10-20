@@ -20,7 +20,10 @@ const ATT = 'attachments';
 const ENTITY_ATT = 'entity_attachments';
 
 /** أنواع الكيانات المقبولة لمرفقات البطاقات — تطابق قاعدة Firestore حرفيًّا. */
-export const ATTACHMENT_ENTITY_KINDS = ['item', 'supplier', 'customer'];
+// ‹VEN-401› `venecia_asset` — صورُ أصول مخزن فينسيا. وأيُّ صنفٍ يُضاف هنا
+// **يُضاف معه في `firestore.rules`**: القاعدةُ تحصر الأصناف كذلك،
+// وانحرافُ أحدهما عن الآخر يُسقط الرفع بـ`permission-denied` بلا سببٍ ظاهر.
+export const ATTACHMENT_ENTITY_KINDS = ['item', 'supplier', 'customer', 'venecia_asset'];
 
 /**
  * جسم المرفق الواحد — لكلّ المواضع (SR-57): الهويّة والاسم والنوع والحجم

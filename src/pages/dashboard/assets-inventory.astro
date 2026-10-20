@@ -175,7 +175,9 @@ tr:hover td { background: var(--surface-2); }
 .modal-body { font-size: 13px; color: var(--muted); margin-bottom: 22px; line-height: 1.8; }
 .modal-body strong { color: var(--ink); }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-#toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(16px); background: var(--surface); border: 1.5px solid var(--border-2); border-radius: var(--radius); padding: 12px 22px; font-size: 13px; font-weight: 500; z-index: 300; white-space: nowrap; opacity: 0; transition: all .25s; pointer-events: none; box-shadow: 0 10px 32px rgba(0,0,0,.13); color: var(--ink); }
+/* ‹ASSET-101› كان `nowrap`: ورسالةُ الاستيراد تسمّي الأرقامَ المتخطّاة فتطول،
+   فتخرج من الشاشة ويُقرأ نصفُها — وهي الرسالةُ التي تمنع فقدًا صامتًا. */
+#toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(16px); background: var(--surface); border: 1.5px solid var(--border-2); border-radius: var(--radius); padding: 12px 22px; font-size: 13px; font-weight: 500; z-index: 300; white-space: pre-line; max-width: min(620px, 92vw); text-align: center; line-height: 1.7; opacity: 0; transition: all .25s; pointer-events: none; box-shadow: 0 10px 32px rgba(0,0,0,.13); color: var(--ink); }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 #toast.t-success { border-color: #86efac; color: #15803d; background: #f0fdf4; }
 #toast.t-error   { border-color: #fca5a5; color: #b91c1c; background: #fff5f5; }
@@ -183,6 +185,23 @@ tr:hover td { background: var(--surface-2); }
 /* dept-input combo */
 .dept-combo { position: relative; }
 .dept-combo input { border-radius: var(--radius); }
+/* ‹ASSET-101› شارةُ السحابة وحقلُ السبب وعلامةُ المكهَّن */
+.cloud-chip { display: inline-flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 600; padding: 5px 11px; border-radius: 999px; border: 1.5px solid var(--border-2); background: var(--surface-2); color: var(--ink-3); white-space: nowrap; }
+.cloud-chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex: none; }
+.cloud-chip.online .dot  { background: #16a34a; }
+.cloud-chip.pending .dot { background: #a16207; }
+.cloud-chip.offline .dot { background: #b91c1c; }
+.cloud-chip.denied  { border-color: #fde047; background: #fefce8; color: #a16207; }
+.cloud-chip.denied .dot { background: #a16207; }
+.writer-only[hidden] { display: none !important; }
+.show-archived { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); cursor: pointer; user-select: none; }
+.show-archived input { width: 15px; height: 15px; accent-color: var(--brand-primary); cursor: pointer; }
+tr.is-archived { opacity: .62; }
+.arch-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px; border: 1px solid #fdba74; background: #fff7ed; color: #c2410c; margin-inline-start: 6px; }
+.arch-why { font-size: 11px; color: #c2410c; margin-top: 3px; }
+.modal textarea { width: 100%; box-sizing: border-box; min-height: 74px; resize: vertical; font-family: inherit; font-size: 13px; padding: 9px 11px; border: 1.5px solid var(--border-2); border-radius: var(--radius); color: var(--ink); background: var(--surface); }
+.modal textarea.error { border-color: #b91c1c; background: #fff5f5; }
+.modal-note { font-size: 11.5px; color: var(--muted); margin-top: 8px; line-height: 1.7; }
 @media print {
   @page { size: A4 landscape; margin: 8mm 10mm; }
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -230,7 +249,8 @@ tr:hover td { background: var(--surface-2); }
     </div>
   </div>
   <div class="header-actions">
-    <label class="btn btn-ghost" style="cursor:pointer" title="استيراد ملفات Excel (حتى 1000 ملف)">
+    <span class="cloud-chip" id="cloud-chip"><span class="dot"></span><span id="cloud-chip-text">جارٍ الاتصال…</span></span>
+    <label class="btn btn-ghost writer-only" id="import-label" style="cursor:pointer" title="استيراد ملفات Excel — لا يُدهس رقمٌ قائم">
       ↑ استيراد Excel
       <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none" multiple />
     </label>
@@ -287,11 +307,15 @@ tr:hover td { background: var(--surface-2); }
       <option>ممتاز</option><option>جيد</option><option>متوسط</option>
       <option>يحتاج صيانة</option><option>معطل</option>
     </select>
+    <label class="show-archived" title="المكهَّنُ خارجٌ من كلّ رقمٍ في اللقطة — ورقمُه يبقى محجوزًا">
+      <input type="checkbox" id="filter-archived" onchange="renderTable()" />
+      أظهر المكهَّن
+    </label>
     <div class="view-toggle">
       <button class="view-btn active" id="vt-list" onclick="switchView('list')" title="قائمة">☰</button>
       <button class="view-btn" id="vt-grid" onclick="switchView('grid')" title="شبكة">⊞</button>
     </div>
-    <button class="btn btn-primary" id="toggle-form-btn" onclick="toggleForm()">+ إضافة أصل</button>
+    <button class="btn btn-primary writer-only" id="toggle-form-btn" onclick="toggleForm()">+ إضافة أصل</button>
   </div>
   <div id="form-panel">
     <div class="form-title">
@@ -435,19 +459,31 @@ tr:hover td { background: var(--surface-2); }
     <span id="p-footer-date"></span>
   </div>
 </div>
-<div class="modal-bg" id="del-modal">
+<!--
+  ‹ASSET-101› كان هذا «تأكيدَ الحذف». ولا حذفَ في القاعدة: الأصلُ الخارجُ
+  **يُكهَّن بسببٍ مكتوب** — فرقمُه مطبوعٌ على شيءٍ كان في الإدارة، ومحوُه
+  يجعل جردًا قديمًا يذكر ما لا وجودَ له. و`firestore.rules` تمنع `delete`
+  أصلًا، فنافذةُ حذفٍ كانت ستفشل عند الضغط لا قبله.
+-->
+<div class="modal-bg" id="arch-modal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-icon">⚠️</div>
-      <div class="modal-title">تأكيد الحذف</div>
+      <div class="modal-icon" id="arch-icon">⚠️</div>
+      <div class="modal-title" id="arch-title">تكهين الأصل</div>
     </div>
     <div class="modal-body">
-      هل أنت متأكد من حذف الأصل <strong id="del-asset-id"></strong>؟<br/>
-      لا يمكن التراجع عن هذا الإجراء.
+      <div id="arch-lead">تُكهَّن <strong id="arch-asset-id"></strong> فتخرج من الجرد — <strong>ولا تُحذف</strong>.</div>
+      <label for="arch-reason" style="display:block;margin:14px 0 6px;font-size:12px;font-weight:600;color:var(--ink-2)">
+        السبب <span style="color:#b91c1c">✱</span>
+      </label>
+      <textarea id="arch-reason" placeholder="مثال: تلفٌ نهائيّ · سُلّم للصيانة · نُقل لشركةٍ أخرى"></textarea>
+      <div class="modal-note" id="arch-note">
+        ورقمُها يبقى محجوزًا، ويُرى الأصلُ بتأشير «أظهر المكهَّن» — ويمكن إرجاعُه بسببٍ مكتوب.
+      </div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeDelModal()">إلغاء</button>
-      <button class="btn btn-danger" style="background:#b91c1c;color:#fff;border-color:#b91c1c" onclick="confirmDelete()">حذف</button>
+      <button class="btn btn-ghost" onclick="closeArchModal()">إلغاء</button>
+      <button class="btn btn-danger" id="arch-confirm" style="background:#b91c1c;color:#fff;border-color:#b91c1c" onclick="confirmArchive()">كهّن</button>
     </div>
   </div>
 </div>
@@ -458,54 +494,117 @@ tr:hover td { background: var(--surface-2); }
 // تهريبٍ سابعة، وخريطتَي أعمدة الإكسل، والتصفية والإحصاء والترقيم — وكلّه
 // خارج نطاق أيّ اختبار. وحُزم هنا ليأخذها من النواة. والدوالّ ما زالت تُعلَّق
 // على `window` كما كانت، فمعالجات `onclick` في المحرَّر تجدها كما تجدها اليوم.
-import { esc as escHtml, escJsAttr as escJs } from '../../services/ui/escape.js';
 import {
-  conditionBadgeClass, parseAssetRows, assetStats, filterAssets, nextAssetId,
+  parseAssetRows, assetStats, filterAssets, nextAssetId,
 } from '../../services/assets/assetsModel.js';
+// ‹ASSET-101› كانت الشاشةُ تعمل في `let assets = []` وحدَه، فكلُّ ما يُدخَل
+// فيها يضيع عند تحديث الصفحة. والآن `assets` **مرآةُ القاعدة**: يكتبها
+// المستمعُ الحيّ وحدَه، ولا يكتبها معالجُ زرٍّ أبدًا — فسجلٌّ يُدفع في
+// المصفوفة بلا كتابةٍ في السحابة يُظهر نجاحًا كاذبًا ويزول عند التحديث.
+import {
+  splitArchived, describeImportPlan, workbookToAssetRows, readAssetFiles,
+  splitImportFiles, writeErrorMessage, readErrorMessage, cloudChipState, reasonModalCopy,
+} from '../../services/assets/departmentAssets.js';
+import {
+  assetWorkbookModel, assetPrintModel, exportFileName,
+} from '../../services/assets/assetsExport.js';
+import {
+  tableRowsHtml, cardsHtml, countLineHtml, deptBarsHtml, printRowsHtml,
+  FORM_FIELDS, missingFormFields,
+} from '../../services/assets/assetsView.js';
+import {
+  listenDepartmentAssets,
+  saveDepartmentAsset,
+  archiveDepartmentAsset,
+  restoreDepartmentAsset,
+  importDepartmentAssets,
+  todayLocal,
+} from '../../services/assets/departmentAssetsService.js';
+import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
+
+// أدوارُ الكتابة — **للعرض فقط**؛ والإلزامُ الحقيقيّ في `firestore.rules`
+// (`isManager` على `department_assets`). والقائمةُ نسخةُ تلك حرفيًّا.
+//
+// ★ وقرارُ المالك 2026-10-19: المديران وحدهما. وقِيس أنّ الشاشةَ يراها ثمانيةُ
+// أدوارٍ فعُرض عليه الأمر، فاختار **أنّ تعريفَ ما تملكه الشركةُ قرارٌ إداريّ**
+// — كتعريفِ ما يملكه المستودع في `warehouse_assets`. والستّةُ الباقيةُ **تقرأ
+// ولا تكتب**، وتُقال لها ذلك في الشارة لا بزرٍّ يُضغط فيُرفض.
+const WRITER_ROLES = ['admin', 'warehouse_manager'];
+
 let assets = [];
+let profile = null;
+let canWrite = false;
 let editId = null;
-let deleteId = null;
+let archiveId = null;
+let archiveMode = 'archive'; // 'archive' | 'restore'
 let currentView = 'list';
 let nextIdNum = 1;
 
-function badge(c) { return `<span class="badge ${conditionBadgeClass(c)}">${escHtml(c || '—')}</span>`; }
 function generateId() {
   const { id, next } = nextAssetId(assets, nextIdNum);
   nextIdNum = next;
   return id;
 }
 let _tt;
-function showToast(msg, type='success') {
+function showToast(msg, type='success', ms=3500) {
   const el = document.getElementById('toast');
   if (!el) return;
   el.textContent = msg;
   el.className = 'show t-' + type;
   clearTimeout(_tt);
-  _tt = setTimeout(() => el.className = '', 3500);
+  _tt = setTimeout(() => el.className = '', ms);
 }
+
+// ─── حالةُ السحابة والصلاحيّة ────────────────────────────────────────────
+function setCloud(state, text) {
+  const chip = document.getElementById('cloud-chip');
+  if (!chip) return;
+  chip.classList.remove('online', 'pending', 'offline', 'denied');
+  chip.classList.add(state);
+  document.getElementById('cloud-chip-text').textContent = text;
+}
+window.addEventListener('online',  () => setCloud('online',  'متصل — متزامن'));
+window.addEventListener('offline', () => setCloud('offline', 'بلا إنترنت — يُحفظ محلّيًّا ويُرفع'));
+
+/**
+ * يُخفي أدواتَ الكتابة عمّن لا يملكها.
+ *
+ * ★ ويُنادى **عند الإقلاع أيضًا** و`canWrite` حينها `false`: فزرٌّ ظاهرٌ قبل
+ * أن تُعرف الصلاحيّةُ يُضغط فيُرفَض، والأسلمُ ألّا يُرى حتّى تُعرف. ولا يلمس
+ * شارةَ السحابة — تلك تقول حالةَ الاتّصال لا حالةَ الصلاحيّة.
+ */
+function applyWriteGate() {
+  document.querySelectorAll('.writer-only').forEach((el) => { el.hidden = !canWrite; });
+}
+
+/** ★ الحارسُ الأماميُّ يسبق الطلب: رفضُ القاعدة رسالةٌ غامضة، وهذا نصٌّ يُفهم. */
+function guardWrite() {
+  if (canWrite) return true;
+  showToast('حسابُك يقرأ هذه الشاشة ولا يكتب فيها — والحدُّ في قاعدة البيانات.', 'warn');
+  return false;
+}
+
+/** الحيُّ وحدَه: المكهَّنُ لا يدخل رقمًا من أرقام اللقطة. */
+const liveAssets = () => splitArchived(assets).live;
+const showArchived = () => !!document.getElementById('filter-archived')?.checked;
+
 function updateStats() {
-  const st = assetStats(assets);
+  const st = assetStats(liveAssets());
   document.getElementById('s-total').textContent = st.total;
   document.getElementById('s-qty').textContent   = st.quantity;
   document.getElementById('s-good').textContent  = st.good;
   document.getElementById('s-bad').textContent   = st.bad;
   const chart = document.getElementById('dept-chart');
   const bars  = document.getElementById('chart-bars');
-  if (st.departments.length) {
-    chart.classList.add('visible');
-    const mx = Math.max(...st.departments.map((e) => e[1]), 1);
-    bars.innerHTML = st.departments.map(([d, c]) => `
-      <div class="bar-row">
-        <div class="bar-label">${escHtml(d)}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${(c / mx) * 100}%"><span class="bar-count">${c}</span></div></div>
-      </div>`).join('');
-  } else { chart.classList.remove('visible'); }
+  chart.classList.toggle('visible', st.departments.length > 0);
+  bars.innerHTML = deptBarsHtml(st.departments);
   const has = st.total > 0;
   document.getElementById('export-btn').disabled = !has;
   document.getElementById('print-btn').disabled  = !has;
 }
 function getFiltered() {
-  return filterAssets(assets, {
+  const base = showArchived() ? assets : liveAssets();
+  return filterAssets(base, {
     q: document.getElementById('search-input').value || '',
     department: document.getElementById('filter-dept').value,
     condition: document.getElementById('filter-cond').value,
@@ -517,7 +616,8 @@ function renderTable() {
   const empty  = document.getElementById('empty-state');
   const tableV = document.getElementById('table-view');
   const gridV  = document.getElementById('grid-view');
-  if (assets.length === 0) {
+  const base = showArchived() ? assets : liveAssets();
+  if (base.length === 0) {
     empty.classList.add('visible');
     tableV.style.display = 'none';
     gridV.style.display  = 'none';
@@ -526,49 +626,12 @@ function renderTable() {
   }
   empty.classList.remove('visible');
   count.style.display = 'block';
-  count.innerHTML = `عرض <strong>${filtered.length}</strong> من <strong>${assets.length}</strong> أصل`;
-  document.getElementById('table-body').innerHTML = filtered.map((a,i) => `
-    <tr style="animation:fadeInUp .3s ease-out ${i*.03}s both">
-      <td class="asset-id">${escHtml(a.id)}</td>
-      <td>
-        <div class="asset-name">${escHtml(a.assetName)}</div>
-        <div class="asset-type">${escHtml(a.assetType)}</div>
-      </td>
-      <td>
-        <div>${escHtml(a.brand||'—')}</div>
-        <div class="mono">${escHtml(a.serial||'—')}</div>
-      </td>
-      <td style="text-align:center;font-weight:700">${a.qty||1}</td>
-      <td>${badge(a.condition)}</td>
-      <td>${escHtml(a.responsible||'—')}</td>
-      <td style="color:var(--muted)">${escHtml(a.department||'—')}</td>
-      <td style="color:var(--muted)">${escHtml(a.location||'—')}</td>
-      <td class="mono">${escHtml(a.receivedDate||'—')}</td>
-      <td>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-ghost btn-sm" onclick="startEdit('${escJs(a.id)}')">✎</button>
-          <button class="btn btn-danger btn-sm" onclick="openDelModal('${escJs(a.id)}')">✕</button>
-        </div>
-      </td>
-    </tr>`).join('');
-  gridV.innerHTML = filtered.map(a => `
-    <div class="asset-card">
-      <div class="card-header">
-        <div>
-          <div class="card-name">${escHtml(a.assetName)}</div>
-          <div class="card-type">${escHtml(a.assetType)}</div>
-        </div>
-        ${badge(a.condition)}
-      </div>
-      <div class="card-detail">🔑 <span class="mono" style="color:var(--brand-secondary)">${escHtml(a.id)}</span></div>
-      <div class="card-detail">🏷 ${escHtml(a.brand||'—')} · <span class="mono">${escHtml(a.serial||'—')}</span></div>
-      <div class="card-detail">👤 ${escHtml(a.responsible||'—')}</div>
-      <div class="card-detail">🏢 ${escHtml(a.department||'—')}${a.location?' · '+escHtml(a.location):''}</div>
-      <div class="card-actions">
-        <button class="btn btn-ghost btn-sm" onclick="startEdit('${escJs(a.id)}')">✎ تعديل</button>
-        <button class="btn btn-danger btn-sm" onclick="openDelModal('${escJs(a.id)}')">✕ حذف</button>
-      </div>
-    </div>`).join('');
+  count.innerHTML = countLineHtml({ shown: filtered.length, base: base.length, hidden: assets.length - base.length });
+  // ★ البناءُ في `assetsView.js` مختبَرًا: التهريبُ في موضعين بمهرِّبَين
+  // مختلفين · وحصرُ الكتابة (زرٌّ يُرسم لقارئٍ يُرفَض فيُقرأ عطبًا) · ووسمُ
+  // المكهَّن (أصلٌ خارجٌ يُعرض كالقائم يُصدَّق جردًا).
+  document.getElementById('table-body').innerHTML = tableRowsHtml(filtered, canWrite);
+  gridV.innerHTML = cardsHtml(filtered, canWrite);
   if (currentView === 'list') {
     tableV.style.display = 'block'; gridV.style.display = 'none';
   } else {
@@ -581,40 +644,35 @@ function switchView(v) {
   document.getElementById('vt-grid').classList.toggle('active', v==='grid');
   renderTable();
 }
+// ─── النموذجُ: خريطةٌ واحدةٌ تخدم التفريغَ والتعبئةَ والقراءة ──────────────
+// وكانت ثلاثَ قوائمَ متوازيةٍ هنا — فحقلٌ يُضاف ويُنسى في التفريغ يحمل قيمةَ
+// الأصل السابق إلى الجديد، ولا شيء يشتكي. والخريطةُ في `assetsView.js`
+// واختبارٌ يحرس أنّها تغطّي شكلَ السجلّ كلَّه.
+const fieldEl = (f) => document.getElementById(f.id);
+
 function clearForm() {
-  ['f-type','f-location'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el){ el.selectedIndex = 0; el.classList.remove('error'); }
-  });
-  document.getElementById('f-cond').value = 'جيد';
-  document.getElementById('f-dept').value = '';
-  ['f-name','f-brand','f-serial','f-responsible','f-section','f-notes'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el){ el.value = ''; el.classList.remove('error'); }
-  });
-  document.getElementById('f-qty').value = 1;
-  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  for (const f of FORM_FIELDS) {
+    const el = fieldEl(f);
+    if (!el) continue;
+    el.value = f.today ? todayLocal() : f.empty;
+    el.classList.remove('error');
+  }
 }
 function populateForm(a) {
-  const setVal = (id, val) => {
-    const el = document.getElementById(id);
-    if(!el) return;
-    el.value = (val == null) ? '' : String(val);
-  };
-  setVal('f-type',        a.assetType    || '');
-  setVal('f-name',        a.assetName    || '');
-  setVal('f-brand',       a.brand        || '');
-  setVal('f-serial',      a.serial       || '');
-  setVal('f-qty',         a.qty          || 1);
-  setVal('f-cond',        a.condition    || 'جيد');
-  setVal('f-responsible', a.responsible  || '');
-  setVal('f-dept',        a.department   || '');
-  setVal('f-section',     a.section      || '');
-  setVal('f-location',    a.location     || '');
-  setVal('f-date',        a.receivedDate || '');
-  setVal('f-notes',       a.notes        || '');
+  for (const f of FORM_FIELDS) {
+    const el = fieldEl(f);
+    if (el) el.value = a[f.key] == null ? '' : String(a[f.key]);
+  }
+}
+/** قيمُ النموذج كسجلٍّ — مقصوصةً، والكمّيّةُ رقمًا. */
+function readForm() {
+  const out = {};
+  for (const f of FORM_FIELDS) out[f.key] = (fieldEl(f)?.value ?? '').trim();
+  out.qty = parseInt(out.qty, 10);
+  return out;
 }
 window.toggleForm = function() {
+  if (!guardWrite()) return;
   editId = null;
   const panel = document.getElementById('form-panel');
   if (panel.classList.contains('open')) { window.cancelForm(); return; }
@@ -634,50 +692,39 @@ window.cancelForm = function() {
   document.getElementById('toggle-form-btn').textContent = '+ إضافة أصل';
   clearForm();
 }
-window.submitForm = function() {
+window.submitForm = async function() {
+  if (!guardWrite()) return;
   document.querySelectorAll('#form-panel .error').forEach(el => el.classList.remove('error'));
-  const typeEl  = document.getElementById('f-type');
-  const nameEl  = document.getElementById('f-name');
-  const deptEl  = document.getElementById('f-dept');
-  const qtyEl   = document.getElementById('f-qty');
-  const assetType  = (typeEl.value||'').trim();
-  const assetName  = (nameEl.value||'').trim();
-  const department = (deptEl.value||'').trim();
-  const qtyVal     = parseInt(qtyEl.value);
-  let err = false;
-  if (!assetType)              { typeEl.classList.add('error'); err = true; }
-  if (!assetName)              { nameEl.classList.add('error'); err = true; }
-  if (!department)             { deptEl.classList.add('error'); err = true; }
-  if (isNaN(qtyVal)||qtyVal<1){ qtyEl.classList.add('error'); err = true; }
-  if (err) { showToast('يرجى تعبئة الحقول الإلزامية ✱', 'error'); return; }
-  const record = {
-    id:           editId || document.getElementById('form-id-badge').dataset.pendingId || generateId(),
-    assetType, assetName,
-    brand:        (document.getElementById('f-brand').value||'').trim(),
-    serial:       (document.getElementById('f-serial').value||'').trim(),
-    qty:          qtyVal,
-    condition:    document.getElementById('f-cond').value || 'جيد',
-    responsible:  (document.getElementById('f-responsible').value||'').trim(),
-    department,
-    section:      (document.getElementById('f-section').value||'').trim(),
-    location:     document.getElementById('f-location').value || '',
-    receivedDate: document.getElementById('f-date').value || '',
-    notes:        (document.getElementById('f-notes').value||'').trim(),
-  };
-  if (editId) {
-    const idx = assets.findIndex(a => a.id === editId);
-    if (idx < 0) { showToast('خطأ: الأصل غير موجود', 'error'); return; }
-    assets[idx] = record;
-    showToast('تم تعديل الأصل بنجاح ✓');
-  } else {
-    assets.push(record);
-    showToast('تم إضافة الأصل بنجاح ✓');
+  const values = readForm();
+  const missing = missingFormFields(values);
+  if (missing.length) {
+    missing.forEach((id) => document.getElementById(id)?.classList.add('error'));
+    showToast('يرجى تعبئة الحقول الإلزامية ✱', 'error');
+    return;
   }
-  window.cancelForm();
-  updateStats();
-  renderTable();
+  const record = {
+    ...values,
+    id: editId || document.getElementById('form-id-badge').dataset.pendingId || generateId(),
+  };
+  // ★★★ لا كتابةَ في `assets` هنا. المستمعُ الحيُّ هو من يكتبها حين يُقِرُّ
+  // الخادمُ السجلَّ (أو حين تُقيَّد الكتابةُ محلّيًّا بلا شبكة) — فدفعُه في
+  // المصفوفة يُظهر نجاحًا قبل أن يحصل، ويزول عند أوّل تحديثِ صفحة.
+  const btn = document.getElementById('submit-btn');
+  const was = btn.textContent;
+  btn.disabled = true; btn.textContent = 'جارٍ الحفظ…';
+  try {
+    await saveDepartmentAsset(record, profile, { mode: editId ? 'edit' : 'create' });
+    showToast(editId ? 'حُفظ التعديل في قاعدة البيانات ✓' : 'حُفظ الأصل في قاعدة البيانات ✓');
+    window.cancelForm();
+  } catch (e) {
+    showToast(writeErrorMessage(e), 'error', 6000);
+  } finally {
+    btn.disabled = false; btn.textContent = was;
+  }
 }
+
 window.startEdit = function(id) {
+  if (!guardWrite()) return;
   const a = assets.find(x => x.id === id);
   if (!a) { showToast('الأصل غير موجود', 'error'); return; }
   editId = id;
@@ -692,154 +739,200 @@ window.startEdit = function(id) {
   panel.classList.add('open');
   panel.scrollIntoView({ behavior:'smooth', block:'start' });
 }
-window.openDelModal = function(id) {
+// ─── التكهينُ والإرجاعُ — بسببٍ مكتوب، ولا حذفَ في القاعدة ───────────────
+function openReasonModal(id, mode) {
+  if (!guardWrite()) return;
   const a = assets.find(x => x.id === id);
   if (!a) { showToast('الأصل غير موجود', 'error'); return; }
-  deleteId = id;
-  document.getElementById('del-asset-id').textContent = id + (a.assetName ? ' — ' + a.assetName : '');
-  document.getElementById('del-modal').classList.add('open');
+  archiveId = id;
+  archiveMode = mode;
+  const copy = reasonModalCopy(mode, id + (a.assetName ? ' — ' + a.assetName : ''));
+  document.getElementById('arch-title').textContent = copy.title;
+  document.getElementById('arch-lead').textContent = copy.lead;
+  document.getElementById('arch-note').textContent = copy.note;
+  const btn = document.getElementById('arch-confirm');
+  btn.textContent = copy.confirm;
+  btn.className = copy.danger ? 'btn btn-danger' : 'btn btn-primary';
+  btn.style.cssText = copy.danger ? 'background:#b91c1c;color:#fff;border-color:#b91c1c' : '';
+  const ta = document.getElementById('arch-reason');
+  ta.value = ''; ta.classList.remove('error');
+  ta.placeholder = copy.placeholder;
+  document.getElementById('arch-modal').classList.add('open');
+  ta.focus();
 }
-window.closeDelModal = function() { deleteId = null; document.getElementById('del-modal').classList.remove('open'); }
-window.confirmDelete = function() {
-  if (!deleteId) { window.closeDelModal(); return; }
-  const before = assets.length;
-  assets = assets.filter(a => a.id !== deleteId);
-  window.closeDelModal();
-  if (assets.length < before) showToast('تم حذف الأصل بنجاح', 'warn');
-  else showToast('لم يتم العثور على الأصل', 'error');
-  updateStats();
-  renderTable();
+window.openArchModal    = (id) => openReasonModal(id, 'archive');
+window.openRestoreModal = (id) => openReasonModal(id, 'restore');
+window.closeArchModal = function() {
+  archiveId = null;
+  document.getElementById('arch-modal').classList.remove('open');
+}
+window.confirmArchive = async function() {
+  if (!archiveId) { window.closeArchModal(); return; }
+  if (!guardWrite()) return;
+  const ta = document.getElementById('arch-reason');
+  const reason = (ta.value || '').trim();
+  // ★ السببُ إلزاميٌّ في الشاشة وفي المنطق الخالص معًا: تكهينٌ بلا سببٍ
+  // حذفٌ بثوبٍ آخر — يخرج الأصلُ ولا يُعرف لماذا.
+  if (!reason) {
+    ta.classList.add('error'); ta.focus();
+    showToast('السببُ مطلوب — فأصلٌ يخرج بلا سببٍ مكتوبٍ لا يُعرف لماذا خرج.', 'error');
+    return;
+  }
+  const btn = document.getElementById('arch-confirm');
+  const was = btn.textContent;
+  btn.disabled = true; btn.textContent = 'جارٍ…';
+  const id = archiveId;
+  try {
+    if (archiveMode === 'archive') await archiveDepartmentAsset(id, reason, profile);
+    else await restoreDepartmentAsset(id, reason, profile);
+    showToast(archiveMode === 'archive' ? `كُهِّن ${id} بسببه المكتوب` : `أُرجع ${id} إلى الجرد`, 'warn');
+    window.closeArchModal();
+  } catch (e) {
+    showToast(writeErrorMessage(e), 'error', 6000);
+  } finally {
+    btn.disabled = false; btn.textContent = was;
+  }
 }
 
 // ============ BULK IMPORT — supports up to 1000 files simultaneously ============
+// ★★★ وتغيّر جوهرُه ‹ASSET-101›: كان يكتب فوقَ أيِّ رقمٍ قائم
+// (`assets[idx]=rec` · `totalUpdated++`) — مقبولٌ في ذاكرةٍ تزول، ومُهلِكٌ في
+// قاعدةٍ تبقى: استيرادٌ يُعاد بعد يومِ جردٍ يمحو عملَ اليوم كلِّه بلا صوت.
+// فالقراءةُ هنا، **والقرارُ في `planAssetImport` المختبَرة**: لا يُكتب إلّا
+// الغائب، والمتخطَّى يُسمَّى برقمه.
+//
+// ★ والمعينات وحدَها بقيت في الوسم (`FileReader` و`XLSX`)، وما سواها هبط إلى
+// `departmentAssets.js` فصار مختبَرًا: اختيارُ الورقة · الدفعاتُ · عدُّ
+// التالف. وكان اختيارُ الورقة هنا بلا اختبار — وهو موضعُ عطبين حيَّين سابقًا.
+
+/** يقرأ ملفًّا واحدًا إلى صفوفِ أصول — المُعينُ الوحيدُ الذي يحتاج المتصفّح. */
+function readAssetWorkbook(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error(`تعذّرت قراءة ${file.name}`));
+    reader.onload = (ev) => {
+      try {
+        const wb = XLSX.read(ev.target.result, { type: 'binary', cellDates: true, raw: false });
+        resolve(workbookToAssetRows(wb, (ws, deptOverride) =>
+          parseAssetRows(XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false }), { deptOverride })));
+      } catch (err) { reject(err); }
+    };
+    reader.readAsBinaryString(file);
+  });
+}
+
 document.getElementById('import-file').addEventListener('change', async function(e) {
-  const files = Array.from(e.target.files);
-  if (!files.length) return;
+  const picked = Array.from(e.target.files);
+  e.target.value = '';
+  if (!picked.length) return;
+  if (!guardWrite()) return;
 
-  const invalid = files.filter(f => !['xlsx','xls'].includes(f.name.split('.').pop().toLowerCase()));
-  if (invalid.length) {
-    showToast(`${invalid.length} ملف غير صالح — يُقبل xlsx و xls فقط`, 'error');
-  }
-  const validFiles = files.filter(f => ['xlsx','xls'].includes(f.name.split('.').pop().toLowerCase()));
-  if (!validFiles.length) { e.target.value = ''; return; }
+  const { ok: validFiles, bad } = splitImportFiles(picked);
+  if (bad.length) showToast(`${bad.length} ملف غير صالح — يُقبل xlsx و xls فقط`, 'error');
+  if (!validFiles.length) return;
 
-  showToast(`⏳ جاري معالجة ${validFiles.length} ملف...`, 'warn');
-
-  let totalImported = 0, totalUpdated = 0, totalSkipped = 0;
-  const existingIds = new Set(assets.map(a => a.id));
-
-  // Process files in batches of 50 to avoid blocking the UI
-  const BATCH = 50;
-  for (let b = 0; b < validFiles.length; b += BATCH) {
-    const batch = validFiles.slice(b, b + BATCH);
-    await Promise.all(batch.map(file => new Promise(resolve => {
-      const reader = new FileReader();
-      reader.onerror = () => resolve();
-      reader.onload = ev => {
-        try {
-          const wb = XLSX.read(ev.target.result, { type:'binary', cellDates:true, raw:false });
-          const SKIP_SHEETS = ['ملخص إحصائي'];
-
-          // المنطق في `assetsModel.parseAssetRows` مع حرّاسه؛ وهنا إخراجُ
-          // الصفوف من المصنّف لا غير. وكشف نقلُه عطبين حيَّين: تاريخُ ورقة
-          // الإدارة كان يُقرأ من عمود الملاحظات، والتحويل إلى UTC كان يُؤخّر
-          // كلّ تاريخٍ يومًا كاملًا في توقيت ليبيا.
-          const parseSheet = (ws, deptOverride) =>
-            parseAssetRows(XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false }), { deptOverride });
-
-          let allRecords = [];
-          if(wb.Sheets['جرد الأصول']){
-            allRecords.push(...parseSheet(wb.Sheets['جرد الأصول'],null));
-          } else {
-            wb.SheetNames.filter(s=>!SKIP_SHEETS.includes(s)).forEach(sn=>{
-              allRecords.push(...parseSheet(wb.Sheets[sn],sn));
-            });
-          }
-
-          const seenIds = new Set();
-          allRecords.forEach(rec => {
-            if(!rec.assetName){totalSkipped++;return;}
-            if(rec.id && existingIds.has(rec.id) && !seenIds.has(rec.id)){
-              const idx=assets.findIndex(a=>a.id===rec.id);
-              if(idx>=0){assets[idx]=rec;totalUpdated++;seenIds.add(rec.id);}
-              else{rec.id=generateId();assets.push(rec);existingIds.add(rec.id);totalImported++;}
-            } else if(rec.id && !existingIds.has(rec.id) && !seenIds.has(rec.id)){
-              seenIds.add(rec.id);existingIds.add(rec.id);assets.push(rec);totalImported++;
-            } else if(!rec.id){
-              rec.id=generateId();existingIds.add(rec.id);assets.push(rec);totalImported++;
-            } else { totalSkipped++; }
-          });
-        } catch(err) { console.error('File error:', file.name, err); totalSkipped++; }
-        resolve();
-      };
-      reader.readAsBinaryString(file);
-    })));
-    // Yield to UI between batches
-    await new Promise(r => setTimeout(r, 0));
+  showToast(`جاري قراءة ${validFiles.length} ملف…`, 'warn');
+  const { rows, unreadable } = await readAssetFiles(validFiles, {
+    readRows: readAssetWorkbook,
+    yieldFn: () => new Promise((r) => setTimeout(r, 0)),
+  });
+  if (!rows.length) {
+    showToast(unreadable ? `لم يُقرأ شيء — ${unreadable} ملفًّا تعذّرت قراءتُه` : 'لا صفوفَ في الملفّات.', 'error');
+    return;
   }
 
-  const nums=assets.map(a=>{const m=(a.id||'').match(/BRZ-(\d+)/);return m?parseInt(m[1]):0;});
-  nextIdNum=(nums.length?Math.max(...nums):0)+1;
-
-  let msg=`✅ ${validFiles.length} ملف: ${totalImported} جديد`;
-  if(totalUpdated>0) msg+=`، ${totalUpdated} محدَّث`;
-  if(totalSkipped>0) msg+=`، ${totalSkipped} مُهمَل`;
-  showToast(msg);
-  updateStats();
-  renderTable();
-  e.target.value='';
+  showToast(`قُرئ ${rows.length} صفًّا — جارٍ الكتابة بلا دهس…`, 'warn');
+  try {
+    const plan = await importDepartmentAssets(rows, profile);
+    showToast(
+      `${validFiles.length} ملف · ${describeImportPlan(plan)}`
+        + (unreadable ? `
+وتعذّرت قراءةُ ${unreadable} ملفًّا` : ''),
+      plan.skipped.length ? 'warn' : 'success',
+      11000
+    );
+  } catch (err) {
+    showToast(writeErrorMessage(err), 'error', 8000);
+  }
 });
 
 window.exportExcel = function() {
-  if (!assets.length) return;
+  // ‹ASSET-101› يُصدَّر ما يُعرَض: المكهَّنُ خارجٌ إلّا أن يُؤشَّر «أظهر
+  // المكهَّن». وملفٌّ يحمل أصولًا كُهِّنت بلا علامةٍ يُقرأ جردًا قائمًا.
+  //
+  // ★ وبناءُ الأوراق هبط إلى `assetsExport.js` مختبَرًا صفًّا صفًّا: عمودٌ
+  // يزيح عمودًا لا يُسقط شيئًا ولا يشتكي، فيُصدَّر ملفٌّ سليمٌ في الظاهر فيه
+  // «الماركة» في خانة «السيريال». وهنا الكتابةُ بالمكتبة لا غير.
+  const exported = showArchived() ? assets : liveAssets();
+  if (!exported.length) return;
+  const day = todayLocal();
+  const model = assetWorkbookModel(exported, { exportedOn: new Date().toLocaleDateString('ar-SA') });
   const wb = XLSX.utils.book_new();
-  const byC={'ممتاز':0,'جيد':0,'متوسط':0,'يحتاج صيانة':0,'معطل':0};
-  const byD={};
-  assets.forEach(a=>{if(a.condition)byC[a.condition]=(byC[a.condition]||0)+1;if(a.department)byD[a.department]=(byD[a.department]||0)+1;});
-  const sum=[['شركة Brandzo — ملخص جرد الأصول'],['تاريخ التصدير:',new Date().toLocaleDateString('ar-SA')],[],['إجمالي الأصول',assets.length],['إجمالي الكميات',assets.reduce((s,a)=>s+(parseInt(a.qty)||1),0)],[],['الحالة','العدد'],...Object.entries(byC).map(([c,n])=>[c,n]),[],['الإدارة','العدد'],...Object.entries(byD).map(([d,n])=>[d,n])];
-  const wsSum=XLSX.utils.aoa_to_sheet(sum);wsSum['!cols']=[{wch:30},{wch:16}];
-  XLSX.utils.book_append_sheet(wb,wsSum,'ملخص إحصائي');
-  const H13=['رقم الأصل','نوع الأصل','اسم الأصل','الماركة','الموديل/السيريال','الكمية','الحالة','المسؤول','الإدارة','القسم','الموقع','تاريخ الاستلام','ملاحظات'];
-  const rows=assets.map(a=>[a.id,a.assetType,a.assetName,a.brand,a.serial,a.qty,a.condition,a.responsible,a.department,a.section,a.location,a.receivedDate,a.notes]);
-  const wsMain=XLSX.utils.aoa_to_sheet([H13,...rows]);wsMain['!cols']=[14,16,22,16,22,8,14,20,16,16,18,16,24].map(w=>({wch:w}));
-  XLSX.utils.book_append_sheet(wb,wsMain,'جرد الأصول');
-  const H12=['رقم الأصل','نوع الأصل','اسم الأصل','الماركة','السيريال','الكمية','الحالة','المسؤول','القسم','الموقع','تاريخ الاستلام','ملاحظات'];
-  [...new Set(assets.map(a=>a.department).filter(Boolean))].forEach(dept=>{
-    const dRows=assets.filter(a=>a.department===dept).map(a=>[a.id,a.assetType,a.assetName,a.brand,a.serial,a.qty,a.condition,a.responsible,a.section,a.location,a.receivedDate,a.notes]);
-    const ws=XLSX.utils.aoa_to_sheet([H12,...dRows]);ws['!cols']=H12.map(()=>({wch:18}));
-    XLSX.utils.book_append_sheet(wb,ws,dept.slice(0,31));
-  });
-  XLSX.writeFile(wb,`Brandzo_Inventory_${new Date().toISOString().split('T')[0]}.xlsx`);
-  showToast('تم تصدير ملف Excel بنجاح 📥');
+  for (const sheet of [model.summary, model.main, ...model.departments]) {
+    const ws = XLSX.utils.aoa_to_sheet(sheet.rows);
+    ws['!cols'] = sheet.widths.map((wch) => ({ wch }));
+    XLSX.utils.book_append_sheet(wb, ws, sheet.name);
+  }
+  XLSX.writeFile(wb, exportFileName(day));
+  showToast('تم تصدير ملف Excel بنجاح');
 }
+
 window.printPDF = function() {
-  const filtered=getFiltered();
-  if(!filtered.length){showToast('لا توجد بيانات للطباعة','error');return;}
-  const dateStr=new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
-  document.getElementById('p-date').textContent=dateStr;
-  document.getElementById('p-footer-date').textContent=dateStr;
-  document.getElementById('p-total').textContent=filtered.length;
-  document.getElementById('p-qty').textContent=filtered.reduce((s,a)=>s+(parseInt(a.qty)||1),0);
-  const byC={};filtered.forEach(a=>byC[a.condition]=(byC[a.condition]||0)+1);
-  document.getElementById('ps-total').textContent=filtered.length;
-  document.getElementById('ps-excellent').textContent=byC['ممتاز']||0;
-  document.getElementById('ps-good2').textContent=byC['جيد']||0;
-  document.getElementById('ps-bad').textContent=(byC['يحتاج صيانة']||0)+(byC['معطل']||0);
-  document.getElementById('print-body').innerHTML=filtered.map(a=>`
-    <tr>
-      <td class="pid">${escHtml(a.id)}</td><td>${escHtml(a.assetType||'—')}</td>
-      <td>${escHtml(a.assetName||'—')}</td><td>${escHtml(a.brand||'—')}</td>
-      <td>${escHtml(a.serial||'—')}</td><td style="text-align:center;font-weight:700">${a.qty||1}</td>
-      <td><span class="badge ${conditionBadgeClass(a.condition)}">${escHtml(a.condition||'—')}</span></td>
-      <td>${escHtml(a.responsible||'—')}</td><td>${escHtml(a.department||'—')}</td>
-      <td>${escHtml(a.section||'—')}</td><td>${escHtml(a.location||'—')}</td>
-      <td>${escHtml(a.receivedDate||'—')}</td><td>${escHtml(a.notes||'—')}</td>
-    </tr>`).join('');
+  const filtered = getFiltered();
+  if (!filtered.length) { showToast('لا توجد بيانات للطباعة', 'error'); return; }
+  // ★ الأرقامُ من `assetPrintModel` — **بدوالّ العدّ التي تبني الإكسل نفسِها**.
+  // فلو عدَّ كلُّ مخرجٍ بنفسه لَافترقا، ولا يُكشف الفرقُ إلّا حين يقارنهما أحد.
+  const m = assetPrintModel(filtered);
+  const dateStr = new Date().toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' });
+  const put = (id, v) => { document.getElementById(id).textContent = v; };
+  put('p-date', dateStr); put('p-footer-date', dateStr);
+  put('p-total', m.total); put('p-qty', m.quantity);
+  put('ps-total', m.total); put('ps-excellent', m.excellent);
+  put('ps-good2', m.good); put('ps-bad', m.bad);
+  document.getElementById('print-body').innerHTML = printRowsHtml(m.rows);
   setTimeout(()=>window.print(),150);
 }
 
 window.renderTable = renderTable;
 window.switchView = switchView;
+
+// ─── الدورُ والصلاحيّةُ ثمّ الاستماعُ الحيّ ───────────────────────────────
+// ★ الاستماعُ **بعد** اكتمال المصادقة: قاعدةُ الأمن تُلزم `signedIn()`، فطلبٌ
+// يُرسَل قبلها يُرفض بـ`permission-denied` ويُقرأ «الشاشةُ معطوبة».
+let assetsUnsub = null;
+applyWriteGate(); // الأسلمُ: لا أدواتَ كتابةٍ حتّى تُعرف الصلاحيّة
+subscribeAuth(async (user) => {
+  if (!user) return; // AuthGate يتكفّل بالتحويل
+  profile = await fetchUserProfile(user);
+  canWrite = WRITER_ROLES.includes(profile?.role);
+  applyWriteGate();
+  // ★ وتُقال الصلاحيّةُ في الشارة **هنا** لا في أوّل لقطةٍ وحدَها: الشارةُ هي
+  // الموضعُ الوحيدُ الذي يُعلم القارئَ أنّه قارئ، فتأخيرُها إلى وصول البيانات
+  // يجعله يرى «متصل — متزامن» ويبحث عن أزرارٍ أُخفيت بلا سبب. (أمسكه التشغيل.)
+  if (!canWrite) { const c = cloudChipState({ canWrite, hasPending: false }); setCloud(c.state, c.text); }
+  if (!assetsUnsub) {
+    setCloud('pending', 'جارٍ التحميل…');
+    assetsUnsub = listenDepartmentAssets(
+      (list, hasPending) => {
+        assets = list;
+        // ★ الترقيمُ يُقرأ من **كلّ** السجلّات بما فيها المكهَّن: رقمُ أصلٍ
+        // كُهِّن يبقى محجوزًا، وإعادةُ استعماله تخلط بين شيئين في جردٍ قديم.
+        nextIdNum = nextAssetId(assets, 1).next - 1;
+        const chip = cloudChipState({ canWrite, hasPending });
+        setCloud(chip.state, chip.text);
+        updateStats();
+        renderTable();
+      },
+      (e) => {
+        console.error('assets listen', e);
+        setCloud('offline', e?.code === 'permission-denied' ? 'لا صلاحيّةَ قراءة' : 'تعذّر الاتّصال بالقاعدة');
+        showToast(readErrorMessage(e), 'error', 8000);
+      }
+    );
+  }
+  updateStats();
+  renderTable();
+});
 
 updateStats();
 renderTable();
@@ -860,10 +953,10 @@ renderTable();
 <script>
   import { trackOverlay } from '../../services/ui/overlayHistory.js';
 
-  trackOverlay('#del-modal', {
-    name: 'delete-asset',
+  trackOverlay('#arch-modal', {
+    name: 'archive-asset',
     isOpen: (el) => el.classList.contains('open'),
-    close: () => window.closeDelModal(),
+    close: () => window.closeArchModal(),
   });
 </script>
 </DashboardLayout>

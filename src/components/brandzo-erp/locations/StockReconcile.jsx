@@ -3,7 +3,9 @@ import Icon from '../../ui/Icon.jsx';
 import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
 import { importSheet } from '../../../services/excel/excelImport.js';
 import { fetchBalancesOnce } from '../../../services/balances/balancesService.js';
-import { fetchLocationsOnce } from '../../../services/locations/locationsService.js';
+import { fetchLocationsByCodes, fetchLocationsOnce } from '../../../services/locations/locationsService.js';
+import { LOCATION_SCREENS, withWitness } from '../../../services/locations/locationReads.js';
+import { loadLocationWitness, useFullLocationReads } from './useLocationReads.js';
 import { createDraft } from '../../../services/documents/documentsService.js';
 import {
   STATUS_LABELS,
@@ -41,6 +43,7 @@ const STATUS_ORDER = ['shortage', 'surplus', 'missing-in-portal', 'missing-in-sy
 const num = (n) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(Number(n) || 0);
 
 export default function StockReconcile() {
+  const fullLocations = useFullLocationReads(LOCATION_SCREENS.stockReconcile);
   const [me, setMe] = useState(null);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState('');
@@ -82,8 +85,18 @@ export default function StockReconcile() {
         return;
       }
       setBusy('يقرأ أرصدة البوابة…');
-      const [balances, locations] = await Promise.all([fetchBalancesOnce(), fetchLocationsOnce()]);
+      // ‹LOC-READS› فحصُ المواقع لا يسأل إلّا: «أيطابق موقعٌ من مواقع النظام في الورقة رفًّا
+      // في البوّابة؟» — فتُقرأ تلك المواقعُ بأعيانها مع شاهدٍ واحد، لا السيّدُ كلُّه (8,402).
+      const balances = await fetchBalancesOnce();
       const rep = reconcile(result.rows, balances);
+      let locations;
+      if (fullLocations) {
+        locations = await fetchLocationsOnce();
+      } else {
+        const asked = [...new Set((rep?.rows || []).map((r) => r?.systemLocation).filter(Boolean))];
+        const [found, witness] = await Promise.all([fetchLocationsByCodes(asked), loadLocationWitness()]);
+        locations = withWitness(found, witness);
+      }
       setReport(rep);
       setLocWarning(locationMismatch(rep, (locations || []).map((l) => l.code)));
     } catch (err) {

@@ -8,6 +8,11 @@ import {
   stagnantReport,
   inventorySummary,
 } from '../../../services/inventory/inventoryAnalytics.js';
+// ‹WMS-202› تصنيفُ الدوران — **ويُحسب هنا بلا قراءةٍ واحدةٍ إضافيّة**: هذه
+// الشاشةُ تشترك في الدفتر أصلًا (`listenRecentMoves`)، فحسابُ ABC عليها مجّانيّ.
+// ولو وُضع في شاشة التخزين الموجّه لاحتاج اشتراكًا بدفتر الحركات كلِّه في كلّ
+// فتحة — وبوّابةُ التدقيق (القسم ١١) تمنعه، وحصّةُ Spark لا تحمله.
+import { velocityOf, velocitySnapshot, rankLabel } from '../../../services/locations/velocity.js';
 
 /**
  * تحليل المخزون الحيّ — التقييم والراكد وإعادة الطلب (§17). عرضٌ حيٌّ فوق
@@ -57,6 +62,22 @@ export default function InventoryAnalytics() {
     () => inventorySummary(items, moves, nowMs, { stagnantDays }),
     [items, moves, nowMs, stagnantDays],
   );
+  // ‹WMS-202› نافذةُ التصنيف هي نافذةُ الراكد نفسُها — فلا رقمان في شاشةٍ
+  // واحدةٍ يقيسان المدّةَ ويختلفان، وهو أوّلُ ما يُفقد ثقةَ القارئ.
+  const velocity = useMemo(() => velocityOf(moves, { nowMs, windowDays: stagnantDays }), [moves, nowMs, stagnantDays]);
+  const velocityView = useMemo(() => velocitySnapshot(velocity), [velocity]);
+  /** أثقلُ عشرةِ أصنافٍ طلبًا — مع نصيبها وتراكمها، كي يُقرأ باريتو بالعين. */
+  const topMovers = useMemo(() => {
+    const byKey = new Map();
+    for (const it of items) {
+      const key = String(it?.sku ?? '').trim().toUpperCase();
+      if (key) byKey.set(key, it);
+    }
+    return (velocity.order || []).slice(0, 10).map((row) => ({
+      ...row,
+      nameAr: byKey.get(row.sku)?.nameAr || byKey.get(row.sku)?.name || row.sku,
+    }));
+  }, [velocity, items]);
 
   if (!ready) return <p className="text-muted text-sm">جارٍ التحميل…</p>;
   if (!me) return <p className="text-muted text-sm">يلزم تسجيل الدخول.</p>;
@@ -114,6 +135,63 @@ export default function InventoryAnalytics() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      {/* ‹WMS-202› سرعة الدوران ABC */}
+      <section>
+        <div className="flex items-baseline justify-between gap-2 mb-1 flex-wrap">
+          <h2 className="text-lg font-bold text-ink">سرعة الدوران — تصنيف ABC</h2>
+          <span className="text-xs text-muted">
+            {num(velocityView.items)} صنفًا تحرّك طلبًا في {num(velocityView.days)} يومًا
+          </span>
+        </div>
+        <p className="text-xs text-muted mb-3">
+          محسوبٌ من <strong>أسباب الطلب وحدها</strong> في دفتر الحركات (سحب · تسليم · بيع مندوب · صرف
+          موادّ) — والمناقلةُ الداخليّةُ لا تُحتسب دورانًا، وإلّا صار كلُّ صنفٍ استُلم أمسِ «سريعًا».
+          وبه يُفضّل التخزينُ الموجَّه القريبَ من التجهيز للسريع والبعيدَ للراكد.
+        </p>
+        {velocityView.problem ? (
+          <p className="text-xs text-gray-500 rounded-2xl border border-line p-3">{velocityView.problem}</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+              <Tile v={num(velocityView.counts.A)} l={`سريع A — ${velocityView.shares.A}٪ من الطلب`} accent />
+              <Tile v={num(velocityView.counts.B)} l={`متوسّط B — ${velocityView.shares.B}٪`} />
+              <Tile v={num(velocityView.counts.C)} l={`بطيء C — ${velocityView.shares.C}٪`} />
+              <Tile v={num(summary.itemsTotal - velocityView.items)} l="بلا طلبٍ في النافذة (راكد)" />
+            </div>
+            <div className="overflow-x-auto rounded-2xl border border-line">
+              <table className="w-full text-sm text-right border-collapse min-w-[560px]">
+                <thead>
+                  <tr className="text-ink-2 border-b border-line text-[11px] bg-chip">
+                    <th className="p-3 font-bold">الصنف</th>
+                    <th className="p-3 font-bold">المرتبة</th>
+                    <th className="p-3 font-bold">الكمّيّة المطلوبة</th>
+                    <th className="p-3 font-bold">عدد الحركات</th>
+                    <th className="p-3 font-bold">النصيب</th>
+                    <th className="p-3 font-bold">التراكم</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topMovers.map((r) => (
+                    <tr key={r.sku} className="border-b border-line">
+                      <td className="p-3">
+                        <span className="text-ink font-bold">{r.nameAr}</span>
+                        <span className="text-[10px] text-gray-500 block">{r.sku}</span>
+                      </td>
+                      <td className="p-3 text-ink-2" title={rankLabel(r.rank).hint}>{rankLabel(r.rank).labelAr}</td>
+                      <td className="p-3 text-ink font-bold">{num(r.qty)}</td>
+                      <td className="p-3 text-ink-2">{num(r.moves)}</td>
+                      <td className="p-3 text-accent">{Math.round(r.share * 1000) / 10}٪</td>
+                      <td className="p-3 text-muted">{Math.round(r.cumShare * 1000) / 10}٪</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {velocityView.caveat && <p className="text-xs text-gray-500 mt-2">{velocityView.caveat}</p>}
+          </>
+        )}
       </section>
 
       {/* إعادة الطلب */}

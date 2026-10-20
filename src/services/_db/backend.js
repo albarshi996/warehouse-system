@@ -75,6 +75,7 @@ export const REQUIRED_SYMBOLS = Object.freeze([
   'getDoc',
   'getDocs',
   'getDocFromServer',
+  'getCountFromServer',
   'onSnapshot',
   // الكتابة
   'setDoc',

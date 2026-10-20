@@ -25,18 +25,27 @@ import {
   removeManualLine,
 } from '../../../services/locations/sourceImport.js';
 import { normalizeBarcode } from '../../../services/excel/excelSchema.js';
-import { listenLocations } from '../../../services/locations/locationsService.js';
-import { listenBalances } from '../../../services/balances/balancesService.js';
-import { suggestLocations } from '../../../services/locations/putawaySuggest.js';
-// بطاقةُ الصنف تُقرأ من الماستر لا من الشيت: الشيتُ يحمل كودًا وكمّيّةً،
+// ‹WMS-201› فهرسُ الحِمل — يُبنى مرّةً ويُمرَّر، كفهرس الطبالي حرفًا.
+import { loadIndexOf } from '../../../services/items/itemDimensions.js';
+// ‹DS-READS› الخاناتُ والأرصدةُ وبطاقاتُ الأصناف تُقرأ **بعد** المعاينة وبنطاق
+// الورقة وحدَه — لا ثلاثةُ مستمعين كاملين عند الفتح (~14,380 قراءةً للفتحة).
+// وبطاقةُ الصنف تُقرأ من الماستر لا من الشيت: الشيتُ يحمل كودًا وكمّيّةً،
 // والمعاملاتُ (`uomFactors`) ونوعُ التخزين مكتوبةٌ على البطاقة وحدها.
-import { subscribeItems, normalizeSku } from '../../../services/items/itemService.js';
+import { itemIndexOf, itemOfIndex, scopedSuggestionGap } from '../../../services/locations/directedScope.js';
+import { suggestLocations } from '../../../services/locations/putawaySuggest.js';
+import { useDirectedReference, useFullReadsForced } from './useDirectedReference.js';
 import { exportTemplate } from '../../../services/excel/excelExport.js';
+// ‹SRC-POST› مستندٌ منجَزٌ في المصدر ← يُرحَّل — تبويبٌ ثالثٌ خلف مفتاح إطفاء.
+import PostedImport from './PostedImport.jsx';
+import { postedImportEnabled } from '../../../services/locations/postedImportService.js';
 
 const KINDS = [
   { id: 'receipt', label: 'أمر استلام ← تخزين', icon: 'arrowDownTray', dataset: 'receipt' },
   { id: 'delivery', label: 'أمر تسليم ← سحب', icon: 'arrowUpTray', dataset: 'delivery' },
 ];
+
+/** ‹SRC-POST› التبويبُ الثالث — يظهر ما دام مفتاحُ الإطفاء مفتوحًا. */
+const POSTED_KIND = { id: 'posted', label: 'مستندٌ منجَز ← يُرحَّل', icon: 'checkCircle', dataset: 'sourcePosted' };
 
 export default function DirectedStorage() {
   const [profile, setProfile] = useState(null);
@@ -48,10 +57,9 @@ export default function DirectedStorage() {
   const [dragging, setDragging] = useState(false);
   const [fileName, setFileName] = useState('');
   const [term, setTerm] = useState('');
-  const [locations, setLocations] = useState([]);
-  const [balances, setBalances] = useState([]);
-  const [items, setItems] = useState([]);
   const fileRef = useRef(null);
+  const kinds = useMemo(() => (postedImportEnabled() ? [...KINDS, POSTED_KIND] : KINDS), []);
+  const posted = kind === POSTED_KIND.id;
 
   useEffect(
     () =>
@@ -65,40 +73,27 @@ export default function DirectedStorage() {
   // ‹2026-08-17› اقتراح موقع التخزين ظاهرٌ في المعاينة **للاطّلاع لا للتثبيت**:
   // قرار المالك قائم — العامل يختار الرفّ، والمحرّك يقترح ويُعلّل. فمن يعتمد
   // الاستلام يرى إلى أين ستذهب البضاعة قبل أن تصل، ولا يُسلَب العاملُ قراره.
-  useEffect(() => listenLocations(setLocations, () => setLocations([])), []);
-  useEffect(() => listenBalances(setBalances, () => setBalances([])), []);
-  useEffect(() => subscribeItems(setItems, () => setItems([])), []);
+  // ‹DS-READS› ومراجعُه تُقرأ بنطاق المعاينة — وبلا معاينةٍ لا تُقرأ أصلًا.
+  const fullReads = useFullReadsForced();
+  const reference = useDirectedReference(preview, fullReads);
+  const { locations, balances, items } = reference;
 
-  /**
-   * ★★ فهرسُ البطاقات — بالكود وبالباركود، مبنيًّا **مرّةً** لا صفًّا صفًّا.
-   *
-   * وبمطبّعَي الكاتب نفسِهما (`normalizeSku` · `normalizeBarcode`): شيتٌ يكتب
-   * `8059-692-040599` وماستر يخزّن `8059692040599` لا يلتقيان بلا تطبيق، فتعود
-   * البطاقةُ فارغةً ويبقى المحرّك بلا معاملات — عطبٌ صامتٌ لا يُرى في الشاشة.
-   */
-  const itemIndex = useMemo(() => {
-    const bySku = new Map();
-    const byBarcode = new Map();
-    for (const it of items) {
-      const sku = normalizeSku(it?.sku);
-      if (sku && !bySku.has(sku)) bySku.set(sku, it);
-      for (const bc of it?.barcodes || []) {
-        const key = normalizeBarcode(bc);
-        // ★ الأوّل يفوز: باركودٌ مكرّرٌ بين صنفين خللٌ في الماستر، وتغليبُ
-        // الأخير يجعل الاقتراح يتبدّل بين فتحةٍ وأخرى بلا سبب ظاهر.
-        if (key && !byBarcode.has(key)) byBarcode.set(key, it);
-      }
-    }
-    return { bySku, byBarcode };
-  }, [items]);
+  /** ★★ فهرسُ البطاقات — بالكود وبالباركود، مبنيًّا **مرّةً** لا صفًّا صفًّا (`itemIndexOf`). */
+  const itemIndex = useMemo(() => itemIndexOf(items), [items]);
 
   /** بطاقةُ بندٍ — بكوده أوّلًا (هو الهويّة) ثمّ بباركوده. و`null` تعني «لا بطاقة». */
-  const itemOf = useCallback(
-    (line) =>
-      itemIndex.bySku.get(normalizeSku(line?.sku)) ||
-      itemIndex.byBarcode.get(normalizeBarcode(line?.barcode)) ||
-      null,
-    [itemIndex]
+  const itemOf = useCallback((line) => itemOfIndex(itemIndex, line), [itemIndex]);
+
+  /**
+   * فهرسُ حِمل المواقع — ‹WMS-201›.
+   *
+   * ★★ يُبنى مرّةً لكلّ الأرصدة ويُمرَّر لكلّ موقع، **كفهرس الطبالي حرفًا**.
+   * ولو حُسب داخل المحرّك لكلّ رفٍّ لمسح قائمةَ الأصناف ألفَ مرّةٍ في الفتحة.
+   * وغيابُه (قبل وصول الأصناف) يُبقي الحكمَ كما كان: لا سقفَ وزنٍ يُحتسب.
+   */
+  const loads = useMemo(
+    () => (reference.ready ? loadIndexOf(balances, itemIndex.bySku) : null),
+    [balances, itemIndex, reference.ready]
   );
 
   const canImport = canImportSource(profile?.role);
@@ -114,7 +109,7 @@ export default function DirectedStorage() {
       setFileName(file.name || '');
       setTerm('');
       try {
-        setPreview(await analyzeSourceFile(file, kind));
+        setPreview(await analyzeSourceFile(file, kind, { fullReads }));
       } catch (err) {
         setPreview(null);
         setMsg({ type: 'error', text: err.message || 'تعذّرت قراءة الملفّ.' });
@@ -123,7 +118,7 @@ export default function DirectedStorage() {
         if (fileRef.current) fileRef.current.value = '';
       }
     },
-    [kind]
+    [kind, fullReads]
   );
 
   const onDrop = useCallback(
@@ -233,7 +228,7 @@ export default function DirectedStorage() {
           </nav>
         </div>
         <div className="o_cp_end" style={{ gap: '8px' }}>
-          <button type="button" className="btn btn-secondary" onClick={() => exportTemplate(kind)}>
+          <button type="button" className="btn btn-secondary" onClick={() => exportTemplate(kinds.find((k) => k.id === kind)?.dataset || kind)}>
             <Icon name="arrowDownTray" size={15} /> تنزيل القالب
           </button>
         </div>
@@ -246,7 +241,7 @@ export default function DirectedStorage() {
         </p>
 
         <div role="tablist" aria-label="نوع الاستيراد" style={{ display: 'flex', gap: '6px', marginBottom: '14px', borderBottom: '1px solid var(--o-border-color)' }}>
-          {KINDS.map((k) => (
+          {kinds.map((k) => (
             <button
               key={k.id}
               type="button"
@@ -265,6 +260,10 @@ export default function DirectedStorage() {
           ))}
         </div>
 
+        {posted ? (
+          <PostedImport profile={profile} />
+        ) : (
+        <>
         {msg.text && (
           <div className={`o_alert ${msg.type === 'error' ? 'danger' : 'success'}`} style={{ marginBottom: '14px' }}>
             {msg.text}
@@ -349,12 +348,17 @@ export default function DirectedStorage() {
             onDropLine={dropLine}
             locations={locations}
             balances={balances}
+            itemOf={itemOf}
+            loads={loads}
+            reference={reference}
             onCommit={commit}
             busy={busy}
             canImport={canImport}
             term={term}
             onTerm={setTerm}
           />
+        )}
+        </>
         )}
       </div>
     </div>
@@ -405,9 +409,13 @@ function ScanBox({ onScan }) {
  * البدائل وسببُ ترشيحها؛ فإن تعذّر الاقتراح **قيل السبب** ولم تُترك الخانة
  * فارغةً يفسّرها القارئ بما شاء.
  */
-function SuggestedBin({ line, warehouse, locations, balances, item }) {
+function SuggestedBin({ line, warehouse, locations, balances, item, loads, reference }) {
+  const scoped = Boolean(reference?.scoped);
   const advice = useMemo(
     () =>
+      // ‹DS-READS› في القراءة المقصورة لا يُعرف إلّا مستودعُ الورقة، فيُقال
+      // «لا مواقع لهذا المستودع» لا «سيّد المواقع فارغ» — ثمّ المحرّكُ كما كان.
+      scopedSuggestionGap({ scoped, warehouse, locations }) ||
       suggestLocations({
         // ★★★ و`uom` من الحقيبة لا تُسقط: منها وحدها يُشتقّ نوعُ المناولة
         // (`handlingNeedOf`)، وبإسقاطها تساوى رفٌّ معلَنٌ «بالطبلية» ورفٌّ
@@ -427,10 +435,28 @@ function SuggestedBin({ line, warehouse, locations, balances, item }) {
         // وبطاقةُ الصنف معها: بندٌ كُتب بلا وحدةٍ يُقرأ معاملُ طبليّته منها
         // (`uomFactors`)، وفئتُه ونوعُ تخزينه يُحكم بهما على الرفوف المقيَّدة.
         item,
+        // ‹WMS-201› فهرسُ الحِمل — به يعمل سقفُ الوزن والحجم. وغيابُه يُبقي
+        // الحكمَ كما كان حرفًا، فلا شاشةَ تنكسر قبل وصول الأصناف.
+        loads,
         warehouse,
       }),
-    [line.sku, line.barcode, line.uom, line.batch, line.expiry, line.qty, warehouse, locations, balances, item]
+    [scoped, line.sku, line.barcode, line.uom, line.batch, line.expiry, line.qty, warehouse, locations, balances, item, loads]
   );
+
+  // ‹DS-READS› القراءةُ تتمّ بعد المعاينة: فقبل وصولها «يُحمَّل» لا «سيّد المواقع
+  // فارغ» ولا اقتراحٌ بنصف البيانات، وتعذُّرُها يُقال بسببه — ولا يمسّ الاعتمادَ في
+  // شيء. وبلا مستودعٍ لا قراءةَ أصلًا، فيقول المحرّكُ «حدّد المستودع» بلا انتظار.
+  const hasWarehouse = Boolean(String(warehouse ?? '').trim());
+  if (scoped && hasWarehouse && (!reference.ready || reference.pending || reference.error)) {
+    const failed = Boolean(reference.error) && !reference.pending;
+    return (
+      <td style={{ padding: '4px 8px', fontSize: '12px', color: 'var(--o-main-color-muted)' }}>
+        <span title={failed ? `تعذّرت قراءة المواقع: ${reference.error}` : 'تُقرأ مواقعُ مستودع الورقة…'}>
+          {failed ? 'تعذّر — مرّر للسبب' : '…'}
+        </span>
+      </td>
+    );
+  }
 
   const best = advice.candidates[0];
   return (
@@ -484,7 +510,7 @@ function filterDocuments(documents, term) {
     .filter(({ lines }) => lines.length > 0);
 }
 
-function Preview({ preview, deviations, onEdit, onHeader, onScan, onAddLine, onAddDoc, onDropLine, onCommit, busy, canImport, term, onTerm, locations, balances }) {
+function Preview({ preview, deviations, onEdit, onHeader, onScan, onAddLine, onAddDoc, onDropLine, onCommit, busy, canImport, term, onTerm, locations, balances, itemOf, loads, reference }) {
   const s = preview.summary;
   const shown = filterDocuments(preview.documents, term);
   const shownLines = shown.reduce((n, d) => n + d.lines.length, 0);
@@ -647,7 +673,7 @@ function Preview({ preview, deviations, onEdit, onHeader, onScan, onAddLine, onA
                       <Editable value={line.batch} onChange={(v) => onEdit(di, li, 'batch', v)} width="90px" />
                       <Editable value={line.expiry} type="date" onChange={(v) => onEdit(di, li, 'expiry', v)} width="130px" />
                       {preview.type === 'receipt' && (
-                        <SuggestedBin line={line} warehouse={doc.warehouse} locations={locations} balances={balances} />
+                        <SuggestedBin line={line} warehouse={doc.warehouse} locations={locations} balances={balances} item={itemOf?.(line) || null} loads={loads} reference={reference} />
                       )}
                       <Editable value={line.notes} onChange={(v) => onEdit(di, li, 'notes', v)} />
                       <td style={{ padding: '4px 8px' }}>

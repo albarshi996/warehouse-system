@@ -77,23 +77,25 @@ test('كلّ المستندات ممثَّلة — لا نوع بلا زمن', (
   const stats = timeFieldStats();
   // الأعداد تُحدَّث **بقصد** عند إضافة نوعٍ جديد — فتغيّرها إعلانٌ لا مفاجأة.
   assert.equal(stats.types, Object.keys(SCHEMAS).length, 'كلّ نوعٍ ممثَّل');
-  assert.equal(stats.types, 42, 'الـ٤١ + محضر فرق النقل TDR ‹LPN-405›');
+  assert.equal(stats.types, 46, 'الـ٤١ + محضر فرق النقل TDR ‹LPN-405› + مستندات المصدر الأربعة ‹SRC-POST›');
   // ‹EXE-301› +2: `mustShipBy` في SO وPICK — مهلة الشحن التشغيليّة.
   // ‹FNB-405› +3: `mfgDate` في GRN وQC وPUTAWAY — سمةُ دفعةٍ تعبر السلسلة.
   // ‹FNB-502› +7: دورة الإنتاج الثلاثة بحقولها.
   // ‹LPN-405› +2: محضر فرق النقل — تاريخُ المحضر ووقتُ الوصول.
-  assert.equal(stats.total, 82, 'مجموع الحقول الزمنيّة المصنَّفة');
+  // ‹SRC-POST› +8: لكلٍّ من SRI/SRO/SXO/SXI يومُ الإنجاز في المصدر (واقعة) والصلاحيّة (سمة).
+  assert.equal(stats.total, 90, 'مجموع الحقول الزمنيّة المصنَّفة');
 });
 
 test('التوزيع: ختم الواقعة هو الغالب، والسمة تليه', () => {
   const { counts } = timeFieldStats();
-  assert.equal(counts.event, 42, "‹LPN-405› ختما TDR: تاريخُ المحضر ووقتُ الوصول");
+  assert.equal(counts.event, 46, "‹LPN-405› ختما TDR · ‹SRC-POST› يومُ الإنجاز في المصدر ×4");
   // ‹FNB-405› تاريخ الإنتاج سمةٌ كالصلاحيّة — وقع في مصنع المورّد لا عندنا.
-  assert.equal(counts.attribute, 24);
+  // ‹SRC-POST› +4: صلاحيّةُ بنود مستندات المصدر.
+  assert.equal(counts.attribute, 28);
   // ‹FNB-502› +1: `productionDate` موعدٌ مخطَّط يُقبل في المستقبل.
   assert.equal(counts.planned, 12, 'ومنها mustShipBy ‹EXE-301› وproductionDate ‹FNB-502›');
   assert.equal(counts.reference, 4);
-  assert.equal(counts.event + counts.attribute + counts.planned + counts.reference, 82);
+  assert.equal(counts.event + counts.attribute + counts.planned + counts.reference, 90);
 });
 
 /* ═══════════ ٣. القواعد التي لا تُخرق ═══════════ */

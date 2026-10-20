@@ -72,6 +72,8 @@ function dueShare(dueMs, nowMs) {
  * @returns {{score:number, factors:Array, blocked:boolean, reason:string, manual:object|null}}
  */
 export function priorityOf(task, ctx = {}) {
+  // ‹WMS-601› أوزانٌ مُهيَّأةٌ — والغيابُ يُعيد الثابتَ المعلَنَ حرفًا بحرف.
+  const W = ctx.weights ? { ...WEIGHTS, ...ctx.weights } : WEIGHTS;
   const nowMs = Number(ctx.nowMs);
   const factors = [];
   const add = (id, label, weight, share, note) => {
@@ -83,21 +85,21 @@ export function priorityOf(task, ctx = {}) {
   let score = 0;
 
   const due = dueShare(toMillis(ctx.dueAt ?? task?.dueAt ?? task?.mustShipBy), nowMs);
-  score += add('due', 'قرب المهلة', WEIGHTS.due, due.share, due.note);
+  score += add('due', 'قرب المهلة', W.due, due.share, due.note);
 
   const createdMs = toMillis(ctx.createdAt ?? task?.createdAt);
   const ageDays = Number.isFinite(createdMs) && Number.isFinite(nowMs) ? Math.max(0, (nowMs - createdMs) / DAY) : 0;
-  score += add('age', 'عمر المهمّة', WEIGHTS.age, ageDays / MAX_AGE_DAYS, `${Math.floor(ageDays)} يومًا`);
+  score += add('age', 'عمر المهمّة', W.age, ageDays / MAX_AGE_DAYS, `${Math.floor(ageDays)} يومًا`);
 
   const importance = IMPORTANCE[ctx.importance] ?? IMPORTANCE.med;
-  score += add('customer', 'أهمّيّة الطلب', WEIGHTS.customer, importance, ctx.importance || 'med');
+  score += add('customer', 'أهمّيّة الطلب', W.customer, importance, ctx.importance || 'med');
 
   const lines = Math.max(0, Number(ctx.lines) || 0);
   // الصغير يتقدّم: نصيبُه يكبر كلّما قلّت بنوده.
-  score += add('size', 'حجم العمل', WEIGHTS.size, 1 - Math.min(1, lines / BIG_TASK_LINES), `${lines} بندًا`);
+  score += add('size', 'حجم العمل', W.size, 1 - Math.min(1, lines / BIG_TASK_LINES), `${lines} بندًا`);
 
   const resumed = Boolean(ctx.resumed);
-  score += add('resumed', 'بدأت ولم تنتهِ', WEIGHTS.resumed, resumed ? 1 : 0, resumed ? 'قيد التنفيذ' : '—');
+  score += add('resumed', 'بدأت ولم تنتهِ', W.resumed, resumed ? 1 : 0, resumed ? 'قيد التنفيذ' : '—');
 
   // ★ القاعدة ٢: قابليّة التنفيذ حاكمة — تُخفض وتُعلَن ولا تُدفَن.
   const blocked = ctx.executable === false;

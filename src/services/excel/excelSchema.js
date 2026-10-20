@@ -188,6 +188,12 @@ export const DATASETS = {
       { field: 'baseUom', labelAr: 'Base UoM (وحدة الأساس)', type: 'string', required: false, aliases: ['baseuom', 'base uom', 'وحدة الأساس', 'وحدة الاساس', 'الوحدة الأساسية'] },
       // ‹FNB-203› مسار التوريد: مخزن · مطبخ · مباشر — والفارغ يسلك الافتراضيّ.
       { field: 'supplyRoute', labelAr: 'Supply Route (مسار التوريد)', type: 'string', required: false, aliases: ['supply route', 'supplyroute', 'route', 'مسار التوريد', 'المسار', 'مسار'] },
+      // ‹WMS-201› وزنُ الوحدة وحجمُها — بهما يعمل مقياسا السعة `weightKg`
+      // و`volumeM3` المعلَنان في `CAPACITY_MEASURES` منذ أوّل يوم **بلا مصدرٍ
+      // يقرؤهما**. والوحدةُ هنا وحدةُ الأساس للصنف لا وحدةُ البند: الوزنُ
+      // يُضرب بمعامل التحويل عند الحساب (`itemDimensions.lineWeightKg`).
+      { field: 'unitWeightKg', labelAr: 'Unit Weight kg (وزن الوحدة كجم)', type: 'number', required: false, nonNegative: true, aliases: ['unit weight', 'unitweight', 'unit weight kg', 'weight', 'net weight', 'gross weight', 'وزن الوحدة', 'الوزن', 'وزن', 'الوزن القائم', 'الوزن الصافي', 'كجم'] },
+      { field: 'unitVolumeM3', labelAr: 'Unit Volume m3 (حجم الوحدة م٣)', type: 'number', required: false, nonNegative: true, aliases: ['unit volume', 'unitvolume', 'unit volume m3', 'volume', 'cbm', 'm3', 'حجم الوحدة', 'الحجم', 'حجم', 'المتر المكعب'] },
       { field: 'nameEn', labelAr: 'الاسم (إنجليزي)', type: 'string', required: false, aliases: ['nameen', 'name en', 'english name', 'الاسم بالانجليزي', 'الاسم الانجليزي'] },
       { field: 'shade', labelAr: 'الظل/اللون', type: 'string', required: false, aliases: ['shade', 'الظل', 'اللون', 'الظل/اللون', 'color', 'colour', 'درجة اللون'] },
       { field: 'balance', labelAr: 'الكمية الدفترية', type: 'number', required: false, nonNegative: true, aliases: ['balance', 'الرصيد', 'الكمية', 'الكمية الدفترية', 'المتوفر', 'qty', 'quantity', 'on hand', 'qty_available'] },
@@ -362,6 +368,41 @@ export const DATASETS = {
       'docRef', 'docId', 'lineId', 'sourceUpdatedAt', 'sourceSystem', 'docStatus', 'deliveryDate',
       'warehouse', 'customerCode', 'customer', 'orderRef',
       'sku', 'barcode', 'description', 'uom', 'qty', 'batch', 'expiry', 'notes',
+    ],
+  },
+
+  /**
+   * ‹SRC-POST› مستنداتٌ أُنجزت في المصدر — تُرحَّل كما وقعت (انظر `locations/postedImport.js`).
+   *
+   * لا عمودَ لنوع المستند عمدًا: النوعُ يُشتقّ من نوعَي الموقعين (`usage` في أودو)
+   * بدالّةٍ واحدةٍ مختبَرة — فلا يكتب أحدٌ «تسليمًا» لما هو استلام.
+   * والمستودعان بكود البوّابة (WH001 · WH002) لا بكود أودو.
+   */
+  sourcePosted: {
+    key: 'sourcePosted',
+    labelAr: 'مستندات منجَزة في المصدر (Source Posted)',
+    sheetName: 'SourcePosted',
+    columns: [
+      ...sourceIdentityColumns(),
+      { field: 'docStatus', labelAr: 'Document Status (حالة المستند)', type: 'string', required: false, aliases: ['document status', 'status', 'state', 'حالة المستند', 'الحالة'] },
+      { field: 'doneDate', labelAr: 'Done Date (تاريخ الإنجاز)', type: 'string', required: true, aliases: ['done date', 'date done', 'date_done', 'تاريخ الإنجاز', 'تاريخ الانجاز'] },
+      { field: 'sourceLocation', labelAr: 'Source Location (الموقع المصدر)', type: 'string', required: false, aliases: ['source location', 'from location', 'الموقع المصدر'] },
+      { field: 'sourceUsage', labelAr: 'Source Usage (نوع الموقع المصدر)', type: 'string', required: false, aliases: ['source usage', 'from usage', 'نوع الموقع المصدر'] },
+      { field: 'destinationLocation', labelAr: 'Destination Location (الموقع الوجهة)', type: 'string', required: false, aliases: ['destination location', 'to location', 'الموقع الوجهة'] },
+      { field: 'destinationUsage', labelAr: 'Destination Usage (نوع الموقع الوجهة)', type: 'string', required: false, aliases: ['destination usage', 'to usage', 'نوع الموقع الوجهة'] },
+      { field: 'fromWarehouse', labelAr: 'From Warehouse (المستودع المرسِل)', type: 'string', required: false, aliases: ['from warehouse', 'المستودع المرسل', 'المستودع المرسِل'] },
+      { field: 'toWarehouse', labelAr: 'To Warehouse (المستودع المستلِم)', type: 'string', required: false, aliases: ['to warehouse', 'المستودع المستلم', 'المستودع المستلِم'] },
+      { field: 'partnerCode', labelAr: 'Partner Code (رمز الطرف)', type: 'string', required: false, aliases: ['partner code', 'رمز الطرف'] },
+      { field: 'partner', labelAr: 'Partner (الطرف)', type: 'string', required: false, aliases: ['partner', 'الطرف'] },
+      { field: 'orderRef', labelAr: 'Order Reference (مرجع الطلب)', type: 'string', required: false, aliases: ['order reference', 'origin', 'مرجع الطلب'] },
+      ...itemLineColumns('Done Quantity (الكمية المنجَزة)'),
+      { field: 'unitCost', labelAr: 'Unit Cost (تكلفة الوحدة)', type: 'number', required: false, nonNegative: true, aliases: ['unit cost', 'cost', 'تكلفة الوحدة'] },
+    ],
+    templateFields: [
+      'docRef', 'docId', 'lineId', 'sourceUpdatedAt', 'sourceSystem', 'docStatus', 'doneDate',
+      'sourceLocation', 'sourceUsage', 'destinationLocation', 'destinationUsage', 'fromWarehouse', 'toWarehouse',
+      'partnerCode', 'partner', 'orderRef',
+      'sku', 'barcode', 'description', 'uom', 'qty', 'batch', 'expiry', 'unitCost',
     ],
   },
 

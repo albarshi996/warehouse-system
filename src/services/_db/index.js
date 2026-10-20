@@ -62,6 +62,7 @@ export const documentId = impl.documentId;
 export const getDoc = impl.getDoc;
 export const getDocs = impl.getDocs;
 export const getDocFromServer = impl.getDocFromServer;
+export const getCountFromServer = impl.getCountFromServer;
 export const onSnapshot = impl.onSnapshot;
 
 /* ═══════════════════ الكتابة ═══════════════════ */

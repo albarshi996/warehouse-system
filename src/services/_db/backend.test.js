@@ -75,8 +75,8 @@ test('لا يُخدَع بخصائص السلسلة الأصليّة', () => {
 
 /* ═══════════════════ العقد ═══════════════════ */
 
-test('العقدُ يُسمّي ٢٢ رمزًا مقيسةً من الخدمات', () => {
-  assert.equal(REQUIRED_SYMBOLS.length, 22);
+test('العقدُ يُسمّي ٢٣ رمزًا مقيسةً من الخدمات', () => {
+  assert.equal(REQUIRED_SYMBOLS.length, 23);
   assert.ok(Object.isFrozen(REQUIRED_SYMBOLS), 'لا يُعدَّل العقدُ في وقت التشغيل');
   for (const n of ['doc', 'onSnapshot', 'runTransaction', 'serverTimestamp', 'increment']) {
     assert.ok(REQUIRED_SYMBOLS.includes(n), `${n} من العقد`);

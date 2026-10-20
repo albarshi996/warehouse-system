@@ -59,6 +59,11 @@ const FIELD_CASTS = {
   // ‹FNB-203› مسار توريد الصنف: خمسةٌ نصّ عليها المستند. غيابه يعني المسار
   // الافتراضيّ (مورّد ← مخزن مركزيّ ← فرع) — سلوك اليوم حرفيًّا.
   supplyRoute: { cast: (v) => normalizeRoute(v) },
+  // ‹WMS-201› وزنُ الوحدة وحجمُها — بلا مرآةٍ ولا بديلٍ قديم، فهما حقلان
+  // جديدان تمامًا. وغيابُهما يعني «لا علم» فلا يُحتسب صفرًا (انظر
+  // `itemDimensions.unitWeightKg`): صفرٌ محسوبٌ يُظهر رفًّا ممتلئًا خاليًا.
+  unitWeightKg: { cast: num },
+  unitVolumeM3: { cast: num },
   uomGroupCode: { cast: str },
   uomGroupName: { cast: str, also: { unit: (v) => normalizeUnit(v) } },
   department: { cast: str },

@@ -127,6 +127,33 @@ test('★★ المجموعاتُ السبعُ المطلوبةُ كلُّها �
   }
 });
 
+test('★★★ ‹WMS-701› `waves` يحرسها كاتبُ المناولة — والعطبُ كان **شاشةً أوسعَ من القاعدة**', () => {
+  // العطبُ الحقيقيّ: «خطّة السحب» مفتوحةٌ لستّة أدوارٍ وتحكم أزرارَها
+  // بـ`picking_tasks` (= `isStockActor`)، وقاعدةُ `waves` تقبل ثلاثةً. فثلاثةُ
+  // أدوارٍ كانت ترى «كوّن موجةً» ثمّ يرتدّ الضغطُ من الخادم — وهو درسُ ل‑١٨
+  // معكوسًا: لا قاعدةٌ أضيقُ من الشاشة بل **شاشةٌ أوسعُ من القاعدة**.
+  const block = collectionBlock('waves');
+  assert.notEqual(block, '', 'كتلةُ `waves` مفقودةٌ من القاعدة');
+  assert.match(block, /allow create, update: if isLaborWriter\(\)/);
+  assert.equal(
+    block.includes('isStockActor()'),
+    false,
+    'لو صار الفاعلُ المخزنيّ يكتب الموجاتِ فالخريطةُ هنا تُحدَّث معه'
+  );
+
+  // ★★ والثلاثةُ التي كانت ترى الزرَّ تُمنع الآن **بسببٍ مكتوبٍ يسمّي المُلّاك**.
+  for (const role of ['storekeeper', 'picking_unit', 'inventory_auditor']) {
+    const problem = collectionWriteProblem(role, 'waves');
+    assert.notEqual(problem, '', `«${role}» يفتح الشاشةَ ولا يكتب الموجاتِ — ويجب أن يُمنع قبل الضغط`);
+    assert.ok(problem.includes('الموجات'), `الرسالةُ لا تسمّي المجموعة: ${problem}`);
+    assert.ok(problem.includes('يكتبها'), `الرسالةُ لا تسمّي من يملكها: ${problem}`);
+  }
+  // والثلاثةُ المأذونةُ تمرّ.
+  for (const role of ['admin', 'warehouse_manager', 'labor_supervisor']) {
+    assert.equal(collectionWriteProblem(role, 'waves'), '', `«${role}» مُنع وهو يكتبها في القاعدة`);
+  }
+});
+
 test('★★★ `labor_tasks` لا يحرسها الفاعلُ المخزنيّ — وهذا أصلُ العطب', () => {
   const block = collectionBlock('labor_tasks');
   assert.match(block, /allow create, update: if isLaborWriter\(\)/);

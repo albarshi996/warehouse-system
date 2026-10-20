@@ -282,6 +282,12 @@ service cloud.firestore {
            : docType == 'IPO'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'PV'      ? ['finance_manager', 'warehouse_manager']
            : docType == 'DLV'     ? ['department_user', 'warehouse_manager']
+           // ‹SRC-POST› مستنداتُ المصدر المُنجَزة: تُستورد ولا تُبدأ باليد، ومديرُ
+           // المستودع وحدَه يُرحّلها — والمديرُ العامّ فوق ذلك بحكم isAdmin().
+           : docType == 'SRI'     ? ['warehouse_manager']
+           : docType == 'SRO'     ? ['warehouse_manager']
+           : docType == 'SXO'     ? ['warehouse_manager']
+           : docType == 'SXI'     ? ['warehouse_manager']
            : [];
     }
     function completeRoles(docType) {
@@ -334,6 +340,12 @@ service cloud.firestore {
            : docType == 'RCV'     ? ['sales_supervisor', 'finance_manager', 'warehouse_manager']
            : docType == 'PV'      ? ['treasury', 'warehouse_manager']
            : docType == 'DLV'     ? ['purchase_officer', 'warehouse_manager']
+           // ‹SRC-POST› مستنداتُ المصدر المُنجَزة: تُستورد ولا تُبدأ باليد، ومديرُ
+           // المستودع وحدَه يُرحّلها — والمديرُ العامّ فوق ذلك بحكم isAdmin().
+           : docType == 'SRI'     ? ['warehouse_manager']
+           : docType == 'SRO'     ? ['warehouse_manager']
+           : docType == 'SXO'     ? ['warehouse_manager']
+           : docType == 'SXI'     ? ['warehouse_manager']
            : [];
     }
 
@@ -767,7 +779,12 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create: if signedIn()
                     && request.resource.data.byUid == request.auth.uid
-                    && request.resource.data.entityKind in ['item', 'supplier', 'customer']
+                    // ‹VEN-401› `venecia_asset` — صورُ أصول مخزن فينسيا.
+                    // ★★★ والصورةُ **لا تسكن سجلَّ الأصل**: لوحةُ الجرد تستمع
+                    // إلى الأصول كلِّها باستمرار، فصورةٌ على السجلّ تُنزَّل في
+                    // كلّ لقطةٍ لكلّ مستخدم (٧٠٠ ك.ب × ١٠٤ ≈ ٧٣ م.ب لكلّ فتحة).
+                    // فهي هنا، وتُقرأ عند فتح لوح الأصل وحدَه.
+                    && request.resource.data.entityKind in ['item', 'supplier', 'customer', 'venecia_asset']
                     && request.resource.data.entityId is string
                     && request.resource.data.entityId != '';
       allow update, delete: if false;
@@ -1093,6 +1110,116 @@ service cloud.firestore {
       allow delete: if false; // الأصل المنتهي يُكهَّن (status) لا يُمحى.
     }
 
+    // ── جرد أصول المستودعات (لوحة فينسيا) ───────────────────────────────
+    // مجموعةٌ **ثانيةٌ عن قصد** لا توسيعٌ لـ`assets` أعلاه: تلك مجموعةُ
+    // الصيانة، يكتبها دورُ الحركة (`isFleetWriter`) ويقرؤها أمرُ الشغل.
+    // وجردُ المخزن خشبٌ وإسمنتٌ وثلاجاتٌ لا تُفتح لها أوامرُ شغل، وإقحامُها
+    // هناك يُفسد أوامرَ الشغل كما كان إقحامُ الطبالي يُفسد `stock_moves`.
+    //
+    // والكتابةُ للمديرَين: تعريفُ ما يملكه المستودعُ قرارٌ إداريّ، ومعرّفُ
+    // المستند `<المجموعة>-<الرقم>` لأنّ ملفَّي الجرد يحملان نفسَ الأرقام
+    // لأصولٍ مختلفة (ثلاثون رقمًا متصادمًا — قِيس 2026-10-19).
+    //
+    // ★ ولا حذفَ أبدًا: الأصلُ الخارجُ **يُكهَّن** (`archived` بسببٍ مكتوب).
+    // فالرقمُ مطبوعٌ على شيءٍ كان في المخزن، ومحوُه يجعل جردًا قديمًا يذكر
+    // ما لا وجودَ له.
+    match /warehouse_assets/{assetKey} {
+      allow read: if signedIn();
+      allow create, update: if isManager()
+                    && request.resource.data.warehouse is string
+                    && request.resource.data.warehouse.size() > 0;
+      allow delete: if false;
+
+      // سجلُّ الملاحظات والجرد — **ملحقٌ-فقط** كالمجموعات المقدّسة: من كتب
+      // ملاحظةً يبقى قولُه بتاريخه واسمه، ومن خالفه يكتب سطرًا ثانيًا.
+      match /notes/{noteId} {
+        allow read: if signedIn();
+        allow create: if isManager()
+                      && request.resource.data.byUid == request.auth.uid
+                      && request.resource.data.text is string
+                      && request.resource.data.text.size() > 0;
+        allow update, delete: if false;
+      }
+    }
+
+    // ── جردُ أصول الإدارات ‹ASSET-101› ───────────────────────────────────
+    // **مجموعةٌ ثالثةٌ عن قصد** لا توسيعٌ لما سبق، وثلاثتُها تقرأ معًا هنا:
+    //   `assets`           → أصولُ الصيانة، يكتبها دورُ الحركة ويقرؤها أمرُ الشغل.
+    //   `warehouse_assets` → ما يملكه **مستودعٌ بعينه**، وقاعدتُها تُلزم `warehouse`.
+    //   `department_assets`→ أصولُ **الإدارات كلِّها** (شاشةُ `assets-inventory`).
+    //
+    // ★★★ ولماذا ثالثةٌ؟ حاسوبُ الموارد البشريّة **لا مستودعَ له**، فوصلُ
+    // الشاشة بـ`warehouse_assets` يكتب في حقلٍ إلزاميٍّ قيمةً مخترَعة — وهو
+    // بعينه ما يُحذّر منه تعليقُ تلك المجموعة أعلاه: الإقحامُ يُفسد قارئَ
+    // المجموعة كما كان إقحامُ الطبالي يُفسد `stock_moves`. وحقلُ `department`
+    // إلزاميٌّ في هذه الشاشة أصلًا، فهو محورُها الطبيعيّ.
+    //
+    // ★★ والمعرّفُ رقمُ الأصل وحدَه (`BRZ-0001`) — سجلٌّ واحدٌ للشركة
+    // و`nextAssetId` تُوزّع أرقامَه من تسلسلٍ واحد. بخلاف فينسيا: تلك
+    // مجموعتان لكلٍّ تسلسلُها فتصادم فيها ثلاثون رقمًا، فاحتاجت
+    // `<المجموعة>-<الرقم>`. والصيغتان **لا تتصادمان** على أيّ حال.
+    //
+    // ★ ولا حذفَ أبدًا: الأصلُ الخارجُ **يُكهَّن** (`archived` بسببٍ مكتوب).
+    // فالرقمُ مطبوعٌ على شيءٍ كان في الإدارة، ومحوُه يجعل جردًا قديمًا يذكر
+    // ما لا وجودَ له.
+    //
+    // ★★★ **والكتابةُ للمديرَين بقرار المالك 2026-10-19.** وقِيس أوّلًا أنّ
+    // الشاشةَ يراها **ثمانيةُ أدوار** (البندُ بلا `roles` فيَرِثُ من يرى
+    // مجموعةَ `warehouses`)، فعُرض الأمرُ عليه: الثمانيةُ المقيسة أم
+    // المديران؟ فاختار المديرَين — **وتعريفُ ما تملكه الشركةُ قرارٌ إداريّ**
+    // كتعريفِ ما يملكه المستودع (`warehouse_assets` أعلاه بـ`isManager` نفسِها،
+    // فالمجموعتان على حدٍّ واحد). ومن سواهما **يقرأ ولا يكتب**، والشاشةُ تقول
+    // له ذلك صريحًا في شارتها فلا يبحث عن أزرارٍ أُخفيت بلا سبب.
+    match /department_assets/{assetKey} {
+      allow read: if signedIn();
+      allow create, update: if isManager()
+                    && request.resource.data.assetName is string
+                    && request.resource.data.assetName.size() > 0
+                    && request.resource.data.department is string
+                    && request.resource.data.department.size() > 0;
+      allow delete: if false;
+
+      // سجلُّ الملاحظات — **ملحقٌ-فقط** كالمجموعات المقدّسة.
+      match /notes/{noteId} {
+        allow read: if signedIn();
+        allow create: if isManager()
+                      && request.resource.data.byUid == request.auth.uid
+                      && request.resource.data.text is string
+                      && request.resource.data.text.size() > 0;
+        allow update, delete: if false;
+      }
+    }
+
+    // ── بطاقاتُ حركة مستودع فينسيا: صرفٌ وإدخال ──────────────────────────
+    // فينسيا مستودعٌ قائمٌ بذاته: يُصرف منه ويُدخَل إليه ويُجرَد (قرار المالك
+    // 2026-10-19). والبطاقةُ سندٌ بعدّة بنود: مسودّةٌ تُحرَّر وتُلغى بلا أثر،
+    // ثمّ تثبيتٌ يُحرّك الكمّيّات في **معاملةٍ ذرّيّةٍ واحدة** مع أصولها.
+    //
+    // ★★★ والمثبَّتةُ لا تُعدَّل ولا تُلغى: الحارسُ يُجمّد حقولَها كلَّها
+    // بعد التثبيت. فبطاقةُ صرفٍ خرجت بضاعتُها، وتعديلُها بعدها كذبٌ على
+    // الرصيد — والتصحيحُ ببطاقةٍ مضادّةٍ في الاتّجاه الآخر تُقيَّد بسببها.
+    //
+    // ★ ورقمُها يُحجز من عدّاد `counters` كبقيّة سندات البوّابة، و
+    // `canReserveNumber()` يشمل المديرَين عبر `isStockActor` — فلا قاعدةَ
+    // جديدةٌ للعدّاد.
+    match /warehouse_cards/{cardId} {
+      allow read: if signedIn();
+      allow create: if isManager()
+                    && request.resource.data.warehouse is string
+                    && request.resource.data.warehouse.size() > 0
+                    && request.resource.data.kind in ['issue', 'receipt']
+                    && request.resource.data.state == 'draft'
+                    && request.resource.data.number == '';
+      // التعديلُ من المسودّة وحدَها، والاتّجاهُ لا يُقلب بعد الإنشاء:
+      // بطاقةٌ تُكتب صرفًا ثمّ تُقلب إدخالًا تُحرّك الرصيدَ عكسَ ما رآه من
+      // راجعها.
+      allow update: if isManager()
+                    && resource.data.state == 'draft'
+                    && request.resource.data.kind == resource.data.kind
+                    && request.resource.data.warehouse == resource.data.warehouse;
+      allow delete: if false;
+    }
+
     match /work_orders/{woId} {
       allow read: if signedIn();
       allow create: if isFleetWriter()
@@ -1384,6 +1511,30 @@ service cloud.firestore {
         allow create: if isLaborWriter() && request.resource.data.byUid == request.auth.uid;
         allow update, delete: if false;
       }
+    }
+
+    // ═══ الموجات ‹WMS-701› — `waves/{waveCode}` ═══
+    // تجميعُ مستنداتِ سحبٍ تُطلَق معًا وتُقاس معًا (شاحنةُ ناقلٍ تقف الثانيةَ
+    // عشرة، وخمسةٌ وعشرون أمرًا يجب أن تكون على الرصيف قبلها).
+    //
+    // **القراءة لكلّ مُصادَق** لأنّ المجهّزَ يحتاج أن يعرف أنّ أمرَه في موجةٍ
+    // مُطلَقةٍ موعدُها قريب — وحجبُها يعني عاملًا يعمل بلا سياقٍ زمنيّ.
+    //
+    // **والكتابةُ لكتّاب المناولة** (`isLaborWriter`): الأدمنُ ومديرُ المستودع
+    // ومشرفُ المناولة — وهو عينُ من يُسنِد مهامَّ المناولة اليوم، فالتكوينُ
+    // والإطلاقُ قرارُ مشرفٍ لا قرارُ أدمن. والمجهّزُ يقرأ ولا يكوّن: موجةٌ
+    // يُعيد تكوينَها من يُنفّذها ليست موجة.
+    //
+    // **ولا حذف**: موجةٌ كُوِّنت وقعت. والإلغاءُ طورٌ (`cancelled`) لا محو —
+    // فسؤالُ «أيُّ موجةٍ أُلغيت ولماذا؟» لا يُجاب من مجموعةٍ تُمحى.
+    //
+    // ⚠️ **ولا حقلَ نسبةِ إنجازٍ فيها** — كقاعدة `targets` حرفًا: النسبةُ
+    // تُشتقّ من بنود مستنداتها لحظةَ القراءة، فلا يستطيع أحدٌ تحسين رقمِ
+    // موجةٍ بتعديل صفّ.
+    match /waves/{waveId} {
+      allow read:           if signedIn();
+      allow create, update: if isLaborWriter();
+      allow delete:         if false;
     }
 
     // المستهدفات — يضعها المشرف والمديران، ويقرؤها الجميع (المندوب يحتاج أن

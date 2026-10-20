@@ -27,6 +27,20 @@ import {
   creditVerdict,
   backdateVerdict,
 } from '../../../services/settings/settingsModel.js';
+// ‹WMS-601› أوزانُ المحرّكات — المنطقُ الخالصُ والخدمةُ.
+import {
+  RULE_SETS,
+  RULE_SET_IDS,
+  validateWeights,
+  weightsView,
+  tunedWarehouses,
+  changeLog,
+} from '../../../services/settings/rulesProfile.js';
+import {
+  listenRulesProfile,
+  saveWeightChange,
+  resetWeightScope,
+} from '../../../services/settings/rulesProfileService.js';
 
 const EDITOR_ROLES = ['admin'];
 
@@ -415,6 +429,216 @@ export default function PolicySettings() {
           </p>
         ) : null}
       </section>
+
+      {/* ═══ ‹WMS-601› الطبقة ٤: أوزانُ المحرّكات — تهيئةٌ لا شيفرة ═══ */}
+      <WeightsPanel canEdit={canEdit} me={me} />
     </div>
+  );
+}
+
+/**
+ * لوحةُ أوزان المحرّكات — ‹WMS-601›.
+ *
+ * ★★★ وثلاثُ دقائقَ في شكلها:
+ * ① **الأصلُ يُعرض بجانب القيمة دائمًا** — فمن يرى «٤٠» لا يعرف أبُدِّلت.
+ * ② **سببُ التعديل في الشاشة لا في رسالةٍ لاحقة**: السببُ شرطُ الحفظ في
+ *    المنطق الخالص، فإخفاءُ خانته يجعل الزرَّ يرتدّ برسالةٍ غامضة.
+ * ③ **الإعادةُ زرٌّ مستقلٌّ** لأنّها حذفُ تجاوزٍ لا كتابةُ أصفار — ومن أعادها
+ *    بكتابة الثوابتِ جمّدها فلم تبلغه ترقيةٌ أبدًا.
+ */
+function WeightsPanel({ canEdit, me }) {
+  const [profile, setProfile] = useState({ sets: {} });
+  const [setId, setSetId] = useState(RULE_SET_IDS[0]);
+  const [warehouse, setWarehouse] = useState('');
+  const [draft, setDraft] = useState({});
+  const [reason, setReason] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState('');
+  const [problems, setProblems] = useState([]);
+
+  useEffect(() => listenRulesProfile(setProfile, () => {}), []);
+  // ★ المسوّدةُ تُفرَّغ عند تبديل المجموعة أو النطاق — وإلّا كُتبت أوزانُ
+  // مجموعةٍ في أخرى، وهو عطبٌ لا يُكتشف إلّا بعد أن يقلب ترتيبَ المستودع.
+  useEffect(() => { setDraft({}); setProblems([]); setNote(''); }, [setId, warehouse]);
+
+  const view = useMemo(() => weightsView(setId, profile, { warehouse }), [setId, profile, warehouse]);
+  const tuned = useMemo(() => tunedWarehouses(profile, setId), [profile, setId]);
+  const log = useMemo(() => changeLog(profile, setId).slice(0, 8), [profile, setId]);
+  const check = useMemo(() => (Object.keys(draft).length ? validateWeights(setId, draft) : null), [setId, draft]);
+
+  if (!view) return null;
+
+  const save = async () => {
+    setBusy(true);
+    setNote('');
+    setProblems([]);
+    try {
+      const r = await saveWeightChange(profile, { setId, warehouse, patch: draft, reason }, me);
+      if (!r.ok) {
+        setProblems(r.problems.length ? r.problems : [r.problem]);
+      } else {
+        setDraft({});
+        setReason('');
+        setNote(`حُفظ — النسخة ${r.entry.version}.`);
+      }
+    } catch (e) {
+      setProblems([e?.message || 'تعذّر الحفظ.']);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const reset = async () => {
+    setBusy(true);
+    setNote('');
+    setProblems([]);
+    try {
+      const r = await resetWeightScope(profile, { setId, warehouse, reason }, me);
+      if (!r.ok) setProblems([r.problem]);
+      else {
+        setDraft({});
+        setReason('');
+        setNote('أُعيد النطاقُ إلى الثوابت.');
+      }
+    } catch (e) {
+      setProblems([e?.message || 'تعذّرت الإعادة.']);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className={card}>
+      <h2 className="text-base font-bold text-ink mb-1">أوزانُ المحرّكات — تهيئةٌ لا شيفرة</h2>
+      <p className="text-xs text-ink-2 mb-3">
+        ترتيبُ مرشَّحي الرفوف وطابورِ العمل ومرشَّحي العمّال — كلُّها أوزانٌ تُقرأ من هنا.
+        <strong> وغيابُ التهيئةِ يعني الثوابتَ المعلنةَ حرفًا</strong>، فلا يتغيّر سلوكٌ بترقيةٍ وحدها.
+        ولكلّ مستودعٍ تهيئتُه، والعامُّ أساسٌ يُورَث ويُدهَس جزئيًّا.
+      </p>
+
+      <div className="flex flex-wrap gap-2 mb-3">
+        {RULE_SET_IDS.map((id) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setSetId(id)}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold border ${setId === id ? 'bg-accent text-white border-accent' : 'bg-chip text-ink-2 border-line'}`}
+          >
+            {RULE_SETS[id].labelAr}
+          </button>
+        ))}
+      </div>
+      <p className="text-xs text-ink-2 mb-3">{RULE_SETS[setId].hint}</p>
+
+      <Field label="النطاق" hint="اتركه فارغًا للتهيئة العامّة، أو اكتب كود مستودعٍ لتهيئةٍ خاصّةٍ به.">
+        <input
+          className={input}
+          value={warehouse}
+          onChange={(e) => setWarehouse(e.target.value.toUpperCase())}
+          placeholder="عامّ (كلّ المستودعات)"
+          style={{ direction: 'ltr' }}
+        />
+      </Field>
+      {tuned.length > 0 && (
+        <p className="text-xs text-ink-2 mb-3">
+          مستودعاتٌ لها تهيئةٌ خاصّةٌ في هذه المجموعة: <strong style={{ direction: 'ltr', display: 'inline-block' }}>{tuned.join(' · ')}</strong>
+        </p>
+      )}
+
+      <div className="overflow-x-auto rounded-xl border border-line mb-3">
+        <table className="w-full text-sm text-right border-collapse min-w-[460px]">
+          <thead>
+            <tr className="text-ink-2 border-b border-line text-[11px] bg-chip">
+              <th className="p-2.5 font-bold">الوزن</th>
+              <th className="p-2.5 font-bold">القيمة السارية</th>
+              <th className="p-2.5 font-bold">الأصل المعلَن</th>
+              <th className="p-2.5 font-bold">قيمةٌ جديدة</th>
+            </tr>
+          </thead>
+          <tbody>
+            {view.rows.map((r) => (
+              <tr key={r.key} className="border-b border-line">
+                <td className="p-2.5 font-mono text-ink" dir="ltr">{r.key}</td>
+                <td className={`p-2.5 tabular-nums ${r.overridden ? 'text-accent font-bold' : 'text-ink-2'}`}>
+                  {r.value}{r.overridden ? ' ✎' : ''}
+                </td>
+                <td className="p-2.5 text-ink-2 tabular-nums">{r.original}</td>
+                <td className="p-2.5">
+                  <input
+                    type="number"
+                    step="any"
+                    className="w-24 bg-chip border border-line rounded px-2 py-1 text-sm text-ink"
+                    value={draft[r.key] ?? ''}
+                    placeholder={String(r.value)}
+                    disabled={!canEdit || busy}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setDraft((d) => {
+                        const next = { ...d };
+                        if (v === '') delete next[r.key];
+                        else next[r.key] = Number(v);
+                        return next;
+                      });
+                    }}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="text-xs text-ink-2 mb-2">
+        المصدر: {view.source === 'warehouse' ? `تهيئةُ المستودع ${view.warehouse}` : view.source === 'global' ? 'التهيئة العامّة' : 'الثوابت المعلنة'}
+        {view.version ? ` · النسخة ${view.version}` : ''} · المجموع {view.sum}
+      </p>
+      {view.sumNote && <p className="text-xs text-ink-2 mb-2">{view.sumNote}</p>}
+
+      {canEdit ? (
+        <>
+          <Field label="سببُ التعديل (إلزاميّ)" hint="وزنٌ يُبدَّل يقلب ترتيبَ المستودع كلِّه — ولا يُعرف بعد شهرٍ لماذا بلا سبب.">
+            <input className={input} value={reason} onChange={(e) => setReason(e.target.value)} disabled={busy} />
+          </Field>
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" className={btnPrimary} disabled={busy || !Object.keys(draft).length || !reason.trim()} onClick={save}>
+              احفظ التعديل
+            </button>
+            <button type="button" className={btn} disabled={busy || !reason.trim()} onClick={reset}>
+              أعِد هذا النطاق إلى الثوابت
+            </button>
+            {note && <span className="text-xs text-ink">{note}</span>}
+          </div>
+          {check && !check.ok && (
+            <ul className="mt-2 space-y-1 text-xs text-red-500">
+              {check.problems.map((p) => <li key={p}>{p}</li>)}
+            </ul>
+          )}
+          {problems.length > 0 && (
+            <ul className="mt-2 space-y-1 text-xs text-red-500">
+              {problems.map((p) => <li key={p}>{p}</li>)}
+            </ul>
+          )}
+        </>
+      ) : (
+        <p className="text-xs text-ink-2">القراءةُ للجميع والكتابةُ للأدمن وحده — وزنٌ يعدّله من تُقيّده نتائجُه ليس وزنًا.</p>
+      )}
+
+      {log.length > 0 && (
+        <div className="mt-4 pt-3 border-t border-line">
+          <h3 className="text-sm font-bold text-ink mb-2">سجلُّ التعديلات</h3>
+          <ul className="space-y-1.5 text-xs">
+            {log.map((e) => (
+              <li key={`${e.version}-${e.scope}`} className="text-ink-2">
+                <strong className="text-ink">ن{e.version}</strong> · {e.scope} · {e.changed.join(' · ')}
+                {' — '}
+                {e.reset ? 'أُعيد إلى الثوابت' : Object.entries(e.after).map(([k, v]) => `${k}: ${e.before[k] ?? 'الأصل'} ⟶ ${v}`).join(' · ')}
+                {e.byName ? ` · ${e.byName}` : ''}
+                {e.reason ? ` · «${e.reason}»` : ''}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
   );
 }

@@ -254,6 +254,47 @@ export const POSTING_RULES = {
     reason: 'transfer-in',
     labelAr: 'استلام نقل (وصول)',
   },
+
+  // ── ‹SRC-POST› مستنداتُ المصدر المُنجَزة: ما أُنجز في أودو خطوةً واحدة ───────
+  // تُرحَّل كما وقعت — بلا سلسلةٍ ميدانيّةٍ مختلَقة (لا تجهيزَ ولا مركبة). والرصيدُ
+  // الافتتاحيّ لقطةُ 19 أكتوبر، فلا تُرفع بعدها لقطةُ أرصدةٍ وإلّا تضاعف كلُّ نقص.
+  // ولا `binSide`: الرصيدُ الافتتاحيّ مستورَدٌ بلا خانة، فتصيب الحركةُ مفتاحَه نفسه.
+  SRI: {
+    from: EXTERNAL,
+    to: WAREHOUSE,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitCost',
+    reason: 'source-in',
+    labelAr: 'استلامٌ منجَزٌ في المصدر',
+  },
+  SRO: {
+    from: WAREHOUSE,
+    to: EXTERNAL,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitCost',
+    reason: 'source-out',
+    labelAr: 'تسليمٌ منجَزٌ في المصدر',
+  },
+  SXO: {
+    from: WAREHOUSE_FROM,
+    to: TRANSIT.code,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitCost',
+    reason: 'source-transfer-out',
+    labelAr: 'إرساليّةُ نقلٍ منجَزةٌ في المصدر',
+  },
+  SXI: {
+    from: TRANSIT.code,
+    to: WAREHOUSE_TO,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitCost',
+    reason: 'source-transfer-in',
+    labelAr: 'استلامُ نقلٍ منجَزٌ في المصدر',
+  },
   // ═══ البيع من المركبة — المستودع المتنقّل (2026-08-09) ═══
   // الفرق بين هذه الدورة ودورة الصادر: هناك تُحمَّل المركبة بطلبِ عميلٍ معلوم
   // (`SO → PICK → DN → POD`)، وهنا تُحمَّل **بمخزونٍ للبيع** لا يعرف مشتريه بعد.

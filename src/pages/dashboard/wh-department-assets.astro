@@ -1,0 +1,19 @@
+---
+/**
+ * أصول إدارة المستودعات وعهدُها ‹WH-501› — طلب المالك 2026-10-20.
+ *
+ * منظارٌ لا سجلٌّ رابع: الأصولُ من `department_assets` والعهدُ من
+ * `custodies`، وهنا يلتقيان ويُستكمل تفصيلُ المعدّة (رفّ · طبليّة · رافعة ·
+ * جهاز مسح · طابعة ملصقات …). فالجهازُ الواحدُ سجلٌّ واحدٌ لا أربعة.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+// ⚠️ لا تُحذف: قواعد الثيم كلُّها تحت `.o_theme` — بلا `odoo.css` تُعرض الشاشة
+// نصًّا مرصوصًا. يحرسهما القسم ٦ من `npm run audit`.
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import WhDepartmentAssets from '../../components/brandzo-erp/assets/WhDepartmentAssets.jsx';
+---
+
+<DashboardLayout title="أصول إدارة المستودعات وعهدُها" light>
+  <WhDepartmentAssets client:load />
+</DashboardLayout>

@@ -1,9 +1,11 @@
-import { collection, doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, query, orderBy, where, limit as fsLimit, writeBatch, serverTimestamp, db } from '../_db/index.js';
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, query, orderBy, where, limit as fsLimit, writeBatch, serverTimestamp, getCountFromServer, Timestamp, db } from '../_db/index.js';
 import { normalizeBarcode, barcodeLookupVariants } from '../excel/excelSchema.js';
 import { normalizeStatus } from './itemStatus.js';
 import { shapeImportedItem, normalizeUnit } from './itemShape.js';
 import { assertNewItemIdentity, normalizeSubstitutes } from './itemIdentity.js';
 import { CACHE_KEY, packCache, unpackCache, isFresh, selectItems } from './itemCache.js';
+import { chunksOf } from '../locations/scopedQuery.js';
+import { ITEM_ROWS, applyDelta, cursorOf, needsResync } from './catalogDelta.js';
 
 export { normalizeStatus, normalizeUnit };
 
@@ -240,6 +242,122 @@ export const subscribeItems = (onChange, onError, { includeArchived = false, liv
     listeners.delete(entry);
   };
 };
+
+/**
+ * ‹DS-READS› الكتالوجُ من الذاكرة أو القرص **إن كان طازجًا** — بلا شبكةٍ أبدًا.
+ *
+ * يُعيد `null` إن لم يكن: فيقرأ المستدعي ما يحتاجه وحدَه (`fetchItemsBySkus`)
+ * بدل أن يجرّ الكتالوجَ كلَّه لبضعة أصناف. وإن كان طازجًا فهو أدقُّ وأرخص معًا.
+ */
+export function cachedItemsIfFresh({ includeArchived = false } = {}) {
+  const now = Date.now();
+  if (allItems && isFresh({ at: loadedAt }, now)) return selectItems(allItems, includeArchived);
+  const stored = readStored();
+  if (stored && isFresh(stored, now)) {
+    allItems = stored.items;
+    loadedAt = stored.at;
+    return selectItems(allItems, includeArchived);
+  }
+  return null;
+}
+
+/**
+ * ‹LOC-READS› الكتالوجُ حيًّا **بلا قراءته كلِّه** — لشاشة الأصناف التي يُحرَّر فيها.
+ *
+ * الأساسُ من الذاكرة (أو قراءةٌ واحدةٌ تُحفظ)، ومستمعٌ حيٌّ على `updatedAt >=` أحدثِ
+ * ختمٍ فيه، وعدٌّ من الخادم يُثبت التمام (التفصيلُ والحدُّ المعلَن في `catalogDelta.js`).
+ * فيرى المحرِّرُ تعديلَ زميله لحظتَه كما كان، ولا تُقرأ آلافُ البطاقات التي لم تتغيّر.
+ *
+ * ★ لا يدخل في مشتركي الذاكرة (`listeners`): `invalidateItemsCache` بعد كلّ كتابةٍ يُعيد
+ *   قراءةَ الكتالوج كلِّه لمشتركيه، والمستمعُ هنا يرى الكتابةَ نفسَها بختمها — فلا يُدفع
+ *   ثمنُها مرّتين.
+ *
+ * @returns {() => void} إلغاء الاشتراك
+ */
+export function subscribeItemsDelta(onChange, onError, { includeArchived = false } = {}) {
+  let cancelled = false;
+  let offDelta = null;
+  let base = [];
+  let changed = [];
+  let verified = false;
+
+  const merged = () => applyDelta(base, changed, ITEM_ROWS);
+  const emit = () => {
+    if (!cancelled) onChange(selectItems(merged(), includeArchived));
+  };
+
+  const verify = async () => {
+    try {
+      const snap = await getCountFromServer(collection(db, COLLECTION));
+      if (cancelled || !needsResync(merged().length, snap.data().count)) return;
+      // صنفٌ حُذف أو كُتب بلا ختم — يُقرأ الأساسُ من جديد ويُعاد المستمعُ عليه.
+      start(await ensureLoaded(true));
+    } catch {
+      /* بلا شبكةٍ لا عدّ — يبقى ما في اليد، كما يبقى المستمعُ الحيُّ على ذاكرته */
+    }
+  };
+
+  function start(items) {
+    if (cancelled) return;
+    base = Array.isArray(items) ? items : [];
+    changed = [];
+    offDelta?.();
+    const since = Timestamp.fromMillis(cursorOf(base));
+    offDelta = onSnapshot(
+      query(collection(db, COLLECTION), where('updatedAt', '>=', since)),
+      (snap) => {
+        changed = snap.docs.map((d) => d.data());
+        emit();
+        if (!verified) {
+          verified = true;
+          verify();
+        }
+      },
+      (err) => {
+        if (!cancelled && onError) onError(err);
+      }
+    );
+  }
+
+  ensureLoaded()
+    .then(start)
+    .catch((err) => {
+      if (!cancelled && onError) onError(err);
+    });
+
+  return () => {
+    cancelled = true;
+    offDelta?.();
+  };
+}
+
+/**
+ * ‹DS-READS› بطاقاتُ أصنافٍ بعينها — بالكود، ثلاثين ثلاثين.
+ * والكودُ على البطاقة هو معرّفها مطبَّعًا (`createItem` · `upsertItems`).
+ */
+export async function fetchItemsBySkus(skus) {
+  const list = [...new Set((skus || []).map(normalizeSku).filter(Boolean))];
+  const snaps = await Promise.all(
+    chunksOf(list).map((chunk) => getDocs(query(collection(db, COLLECTION), where('sku', 'in', chunk))))
+  );
+  return snaps.flatMap((s) => s.docs.map((d) => d.data()));
+}
+
+/**
+ * ‹DS-READS› بطاقاتُ أصنافٍ بباركوداتها — `array-contains-any` كـ`lookupByBarcode`.
+ * القيمُ تُمرَّر كما هي: المستدعي يبني صيغتَي البحث (`barcodeLookupVariants`).
+ */
+export async function fetchItemsByBarcodes(values) {
+  const list = [...new Set((values || []).map((v) => String(v ?? '')).filter(Boolean))];
+  const snaps = await Promise.all(
+    chunksOf(list).map((chunk) =>
+      getDocs(query(collection(db, COLLECTION), where('barcodes', 'array-contains-any', chunk)))
+    )
+  );
+  const seen = new Map();
+  for (const s of snaps) for (const d of s.docs) if (!seen.has(d.id)) seen.set(d.id, d.data());
+  return [...seen.values()];
+}
 
 /** يقرأ صنفًا واحدًا بكوده. يُعيد null إن لم يوجد. */
 export const getItem = async (sku) => {

@@ -52,6 +52,11 @@ export const DOC_ODOO_MAP = {
   TR: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   TRN: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   TRC: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  // ‹SRC-POST› مقابلُها في أودو هو أصلُها: حركةٌ منجَزةٌ هناك تُستورد هنا.
+  SRI: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  SRO: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  SXO: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  SXI: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   // ‹LPN-405› محضر الفرق لا مقابلَ أصليًّا له في أودو: هو محضرٌ رقابيٌّ يوثّق
   // فرقَ الحمولة والمسؤوليّة، وأودو يمثّل النقص كفرقِ جردٍ أو خصمٍ على المورّد
   // لا كمستندٍ قائمٍ بذاته. فنموذجٌ مخصّص — كنمط تسوية المركبة سواء.

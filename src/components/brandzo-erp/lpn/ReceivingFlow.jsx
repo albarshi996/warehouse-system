@@ -22,6 +22,9 @@ import { subscribeItems } from '../../../services/items/itemService.js';
 import { buildItemIndexes } from '../../../services/items/uomWiring.js';
 import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
 import { listenDocumentsByTypes } from '../../../services/documents/documentsService.js';
+// ‹WMS-401› التجهيزُ المباشر — عبورٌ لا تخزين.
+import { measureDocument } from '../../../services/documents/openBox.js';
+import { crossDockPlan, crossDockSummary } from '../../../services/lpn/crossDock.js';
 import { documentLineProgress } from '../../../services/documents/documentLineProgress.js';
 import { openOrderCard, remainingOf, sessionCloseProblem, sessionTotals } from '../../../services/lpn/receivingSession.js';
 import {
@@ -68,6 +71,13 @@ import ScannedIdentity from './ScannedIdentity.jsx';
 import { executePutaway, listPutawayQueue, openTask, previewBin } from '../../../services/lpn/putawayService.js';
 import { listenLocations } from '../../../services/locations/locationsService.js';
 import { listenBalances } from '../../../services/balances/balancesService.js';
+import { LOCATION_SCREENS, withWitness } from '../../../services/locations/locationReads.js';
+import {
+  useFullLocationReads,
+  useLocationWitness,
+  useWarehouseBalances,
+  useWarehouseLocations,
+} from '../locations/useLocationReads.js';
 // ‹LPN-511› الصلاحية تُعلَم قبل الضغط لا بعد ارتداد الخادم.
 import { uiGate } from '../../../services/lpn/lpnRoles.js';
 import { FieldLangSwitch, useFieldLang } from './useFieldLang.jsx';
@@ -367,8 +377,8 @@ export default function ReceivingFlow() {
   const [taskUnit, setTaskUnit] = useState(null);
   const [binCode, setBinCode] = useState('');
   const [overrideNote, setOverrideNote] = useState('');
-  const [locations, setLocations] = useState([]);
-  const [balances, setBalances] = useState([]);
+  const [allLocations, setLocations] = useState([]);
+  const [allBalances, setBalances] = useState([]);
   const seqRef = useRef(0);
   const inputRef = useRef(null);
   /** ‹SCAN-ID› هويّةُ آخر ممسوحٍ — تُعرض ولا تُقيَّد حتى يُؤكَّد. */
@@ -457,6 +467,42 @@ export default function ReceivingFlow() {
   }, [sessionId]);
 
   const totals = useMemo(() => (session ? sessionTotals(session) : null), [session]);
+
+  /**
+   * ‹WMS-401› الطلبُ المفتوحُ الصادر — للتجهيز المباشر.
+   *
+   * ★★ اشتراكٌ **محصورٌ بالنوع وبسقف** كاشتراك أوامر الشراء فوقه حرفًا، فلا
+   * قراءةَ مجموعةٍ كاملةٍ في كلّ فتحة (بوّابةُ التدقيق · القسم ١١).
+   *
+   * ★★★ ويُمرَّر `relationsKnown:false` صريحًا: الصلاتُ تُقرأ مستندًا مستندًا
+   * فلا تُحمَّل هنا، فيكون «المفتوح» حدًّا أعلى — **ويُقال ذلك للعامل** في
+   * سطرٍ تحت القائمة. ورقمٌ صامتٌ أخطرُ من رقمٍ موصوفٍ بنقصه.
+   */
+  const [demandDocs, setDemandDocs] = useState([]);
+  useEffect(
+    () => listenDocumentsByTypes(['SO', 'PICK', 'DLV', 'MIS', 'VLD'], setDemandDocs, 100),
+    []
+  );
+  const demandRows = useMemo(
+    () => demandDocs.map((d) => measureDocument(d, [], [])).filter((r) => r.open),
+    [demandDocs]
+  );
+  const crossDock = useMemo(() => {
+    const lines = (session?.lines ?? []).filter((l) => remainingOf(l) > 0);
+    if (!lines.length || !demandRows.length) return null;
+    return crossDockPlan(
+      lines.map((l) => ({
+        sku: l.sku,
+        barcode: l.barcode,
+        qty: remainingOf(l),
+        uom: l.uom,
+        batch: l.batch,
+        expiry: l.expiry,
+        warehouse: session?.warehouse,
+      })),
+      { openRows: demandRows, nowMs: Date.now(), warehouse: session?.warehouse, relationsKnown: false }
+    );
+  }, [session, demandRows]);
   // معاينةُ المستند قبل توليده — مستندٌ ماليٌّ يُنشأ بلا أن يُرى محتواه
   // توقيعٌ على المجهول (grnBridge).
   const grn = useMemo(() => (session ? grnPreview(session) : null), [session]);
@@ -656,14 +702,74 @@ export default function ReceivingFlow() {
   /* ── ‹LPN-214› طورُ التخزين ─────────────────────────────────────
    * المواقعُ والأرصدةُ تُقرأ **في هذا الطور وحده**: شاشةُ الاستلام تُفتح
    * للمسح في أغلب الأحيان، واستماعان دائمان ثمنٌ بلا مقابل على الهاتف. */
+  //
+  // ‹LOC-READS› وكان «هذا الطور» يقرأ السيّدَ والأرصدةَ **كاملين** (10,164) لحظةَ فتحه ولو لم
+  // تُفتح مهمّة. فصار يقرأ **مستودعَ الطبليّة** حين تُفتح مهمّتُها: اقتراحُ `openPutawayTask`
+  // يحصر المرشّحين بمستودعها، وحكمُ الرفّ يردّ رفَّ مستودعٍ آخر قبل أن ينظر في السيّد.
+  // وطبليّةٌ بلا مستودعٍ يُقترح لها من الكلّ — فيُقرأ الكلّ كما كان.
+  const fullLocations = useFullLocationReads(LOCATION_SCREENS.lpnReceiving);
   useEffect(() => {
-    if (mode !== 'putaway') return undefined;
+    if (mode !== 'putaway' || !fullLocations) return undefined;
     const off = [
       listenLocations(setLocations, () => setLocations([])),
       listenBalances(setBalances, () => setBalances([])),
     ];
     return () => off.forEach((f) => typeof f === 'function' && f());
-  }, [mode]);
+  }, [mode, fullLocations]);
+
+  /** مستودعُ الطبليّة التي تُخزَّن الآن — `null` لا مهمّة، و`''` طبليّةٌ بلا مستودع. */
+  const [putawayWh, setPutawayWh] = useState(null);
+  const scopeOn = !fullLocations && mode === 'putaway' && Boolean(putawayWh);
+  const allOn = !fullLocations && mode === 'putaway' && putawayWh === '';
+  const whBins = useWarehouseLocations([putawayWh], { enabled: scopeOn });
+  const whBalances = useWarehouseBalances([putawayWh], { enabled: scopeOn });
+  const witnessState = useLocationWitness(scopeOn);
+  const [allScope, setAllScope] = useState(null);
+  useEffect(() => {
+    if (!allOn) { setAllScope(null); return undefined; }
+    const off = [
+      listenLocations((l) => setAllScope((p) => ({ ...(p || {}), locations: l })), () => setAllScope((p) => ({ ...(p || {}), locations: [] }))),
+      listenBalances((b) => setAllScope((p) => ({ ...(p || {}), balances: b })), () => setAllScope((p) => ({ ...(p || {}), balances: [] }))),
+    ];
+    return () => off.forEach((f) => typeof f === 'function' && f());
+  }, [allOn]);
+  /** مرجعُ التخزين — ما يقرؤه الاقتراحُ والحكم، و`ready` متى صار تامًّا لمستودع `wh`. */
+  const putawayRef = useMemo(() => {
+    if (fullLocations) return { wh: null, ready: true, locations: allLocations, balances: allBalances };
+    if (putawayWh === '') {
+      return { wh: '', ready: Boolean(allScope?.locations && allScope?.balances), locations: allScope?.locations || [], balances: allScope?.balances || [] };
+    }
+    return {
+      wh: putawayWh,
+      ready: scopeOn && whBins.ready && whBalances.ready && witnessState.ready,
+      locations: withWitness(whBins.locations, witnessState.witness),
+      balances: whBalances.balances,
+    };
+  }, [fullLocations, allLocations, allBalances, putawayWh, allScope, scopeOn, whBins, whBalances, witnessState]);
+  const latestRef = useRef(putawayRef);
+  latestRef.current = putawayRef;
+  const waitersRef = useRef([]);
+  useEffect(() => {
+    if (!putawayRef.ready) return;
+    waitersRef.current = waitersRef.current.filter((w) => {
+      if (w.wh !== putawayRef.wh) return true;
+      w.resolve(putawayRef);
+      return false;
+    });
+  }, [putawayRef]);
+  /** يُعيد مرجعَ مستودع الطبليّة تامًّا — يطلبه إن لم يكن، وينتظر وصوله. */
+  const putawayScopeFor = useCallback((unit) => {
+    if (fullLocations) return Promise.resolve(latestRef.current);
+    const wh = String(unit?.warehouse ?? '').trim().toUpperCase();
+    const cur = latestRef.current;
+    if (cur.ready && cur.wh === wh) return Promise.resolve(cur);
+    return new Promise((resolve) => {
+      waitersRef.current.push({ wh, resolve });
+      setPutawayWh(wh);
+    });
+  }, [fullLocations]);
+  const locations = putawayRef.locations;
+  const balances = putawayRef.balances;
 
   const refreshQueue = useCallback(async () => {
     try {
@@ -690,14 +796,17 @@ export default function ReceivingFlow() {
   // قبل أن يضغط لا بعده.
   const binVerdict = useMemo(() => {
     if (!taskUnit || !binCode.trim()) return null;
+    // بالقراءة المقصورة لا حكمَ قبل أن يصل مستودعُ الطبليّة — فلا يُرى رفضٌ لم يقع.
+    if (!fullLocations && !(putawayRef.ready && putawayRef.wh === String(taskUnit.warehouse ?? '').trim().toUpperCase())) return null;
     return previewBin(taskUnit, binCode, { locations, balances, item: taskItem });
-  }, [taskUnit, binCode, locations, balances, taskItem]);
+  }, [taskUnit, binCode, locations, balances, taskItem, fullLocations, putawayRef]);
 
   async function pickTask(unit) {
     if (!actorName) { say('err', 'لم تُقرأ هويّتك بعد — أعد تحميل الصفحة.'); return; }
     setBusy(true);
     try {
-      const r = await openTask(unit.code, { locations, balances, item: null, actor: actorName });
+      const ref = await putawayScopeFor(unit);
+      const r = await openTask(unit.code, { locations: ref.locations, balances: ref.balances, item: null, actor: actorName });
       if (r.problem) { say('err', r.problem); return; }
       setTask(r.task);
       setTaskUnit(r.unit);
@@ -716,8 +825,9 @@ export default function ReceivingFlow() {
     if (!taskUnit || !binCode.trim()) return;
     setBusy(true);
     try {
+      const ref = await putawayScopeFor(taskUnit);
       const r = await executePutaway(taskUnit.code, binCode, {
-        actor: actorName, overrideNote, locations, balances, item: taskItem,
+        actor: actorName, overrideNote, locations: ref.locations, balances: ref.balances, item: taskItem,
       });
       if (r.problem) { say('err', r.problem); return; }
       say('ok', `${taskUnit.code} → ${r.move.toBin}${r.move.offSuggestion ? ' (خالفت المقترح — سُجّل السبب)' : ''}`);
@@ -1521,6 +1631,48 @@ export default function ReceivingFlow() {
             ))}
           </ul>
         </details>
+      )}
+
+      {/* ═══ ‹WMS-401› التجهيزُ المباشر — عبورٌ لا تخزين ═══ */}
+      {crossDock && crossDock.totals.crossDockable > 0 && (
+        <section className="o_ds o_ds_card o_ds_pad mt-4 space-y-2">
+          <h3 className="text-sm font-bold text-ink">
+            تجهيزٌ مباشر — {crossDock.totals.crossDockable} من {crossDock.totals.lines} بندًا عليه طلبٌ مفتوح
+          </h3>
+          <p className="text-[11px] text-muted">
+            مستلَمٌ عليه طلبٌ مفتوحٌ لا يُخزَّن ليُسحب غدًا — عبورُه يوفّر مناولتين ومشيَين،
+            ويشحن الأمرَ اليوم بدل غدٍ. <strong>والقرارُ لك</strong>: أنت ترى الرصيفَ والشاحنة.
+            ومحسوبٌ على <strong>المفتوح من هذا الاستلام</strong>، وحكمُ الصلاحية يقع على الدفعة
+            لحظةَ توجيهها — فدفعةٌ تنتهي قبل موعد الشحن تُخزَّن ولا تعبُر.
+          </p>
+          <ul className="space-y-1.5 text-[12px]">
+            {crossDock.lines
+              .filter((l) => l.candidates.length)
+              .map((l) => (
+                <li key={`${l.index}-${l.sku}`} className="border-b border-line pb-1.5">
+                  <span className="font-mono text-ink font-bold" dir="ltr">{l.sku || l.barcode}</span>
+                  <span className="text-ink-2"> — {crossDockSummary(l)}</span>
+                </li>
+              ))}
+          </ul>
+          {crossDock.lines.some((l) => l.rejected.length) && (
+            <details>
+              <summary className="text-[11px] text-muted cursor-pointer">
+                وطلباتٌ لم تصلح للعبور — بأسبابها
+              </summary>
+              <ul className="mt-1 space-y-1 text-[11px] text-muted">
+                {crossDock.lines.flatMap((l) =>
+                  l.rejected.map((r) => (
+                    <li key={`${l.index}-${r.docId}`}>
+                      <span className="font-mono" dir="ltr">{l.sku}</span> → {r.docNumber}: {r.reason}
+                    </li>
+                  ))
+                )}
+              </ul>
+            </details>
+          )}
+          {crossDock.caveat && <p className="text-[11px] text-muted">{crossDock.caveat}</p>}
+        </section>
       )}
     </div>
   );
