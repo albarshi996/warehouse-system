@@ -37,7 +37,7 @@
  */
 import * as fs from './firestore.js';
 import { auth } from '../../config/firebase.js';
-import { routeFor, headOf } from './routing.js';
+import { routeFor, headOf, MIRRORED, isQuotaError } from './routing.js';
 import { translate, DOC_ID } from './pgQuery.js';
 import { rowToDoc } from './pgShape.js';
 import { createClient } from './pgClient.js';
@@ -204,43 +204,109 @@ function rowsToSnaps(head, rows) {
   return out;
 }
 
-export async function getDoc(ref) {
-  const path = pathOf(ref);
-  const { head } = headOf(path);
-  const route = await decide(path);
-  if (route.source !== 'postgres') return fs.getDoc(ref);
+/* ═══════════════════ «العملُ لا يتوقّف» ═══════════════════ */
 
-  const id = path.slice(head.length + 1);
+/**
+ * ★★★ **أمرُ المالك الحاكم (2026-10-21): «أهمُّ شيءٍ ألّا يتوقّف العملُ أبدًا».**
+ *
+ *     وحصّةُ Firebase المجّانيّةُ نفدت مرّةً فعلًا (2026-09-05) فتوقّفت
+ *     البوّابةُ ساعاتٍ والجردُ في الغد. وما دامت الكتابةُ والقراءةُ كلتاهما
+ *     عليها، فيومُ نفادِ الحصّة **يوقف العمل** مهما بنينا.
+ *
+ *     ⇒ فإذا ردّت Firebase «نفدت الحصّة»، **لا يُرمى الخطأُ إلى الشاشة**:
+ *       تُقرأ البياناتُ من مرآة الجهاز ولو كانت متأخّرةً ساعة. **لأنّ رقمًا
+ *       عمرُه ساعةٌ خيرٌ من شاشةٍ لا تفتح.**
+ *
+ * ★★ **ولا يُفعل هذا صامتًا:** تُرفع رايةُ `degraded` فتعرض الشاشةُ أنّ
+ *    البياناتِ من النسخة المحلّيّة. والسكوتُ هنا أسوأُ من التوقّف، لأنّ
+ *    المستخدمَ يقرّر على رقمٍ يظنّه الآن.
+ *
+ * ★ والكتابةُ **لا تُحوَّل**: تبقى على Firebase وتفشل إن فشلت. فمصدرُ
+ *   الحقيقة واحدٌ، ولا نكتب في مكانين يومَ الأزمة.
+ */
+/** حالةُ التدهور — تُقرأ في الواجهة لعرض راية. */
+const degraded = { since: 0, lastPath: '' };
+
+function markDegraded(path) {
+  degraded.since = Date.now();
+  degraded.lastPath = path;
+}
+
+/** توجيهٌ قسريٌّ يتجاوز الطزاجةَ والصحّة — لا يُستعمل إلّا في الطوارئ. */
+function forcedRoute(head) {
+  const entry = MIRRORED[head];
+  return entry ? { source: 'postgres', table: entry.table, idColumn: entry.idColumn } : null;
+}
+
+/** قراءةُ مستندٍ واحدٍ من المرآة. و`null` تعني «لم أستطع». */
+async function pgGetDoc(head, id, route, ref) {
   const plan = translate(
     head,
     [{ kind: 'where', field: DOC_ID, op: '==', value: id }, { kind: 'limit', n: 1 }],
     { isoOf }
   );
-  if (!plan.ok) return fs.getDoc(ref);
-
+  if (!plan.ok) return null;
   const res = await client.select(route.table, plan.search);
-  if (!res.ok) return fs.getDoc(ref);
+  if (!res.ok || res.rows.length === 0) return null;
+  const mapped = rowToDoc(head, res.rows[0], { ts: tsOf });
+  return mapped ? docSnap(mapped.id, mapped.data, ref) : null;
+}
 
-  const mapped = res.rows.length > 0 ? rowToDoc(head, res.rows[0], { ts: tsOf }) : null;
-  // ★★★ و«لا صفَّ» لا يعني «لا مستند»: قد يكون أُنشئ بعد آخر مزامنة.
-  //     فالغيابُ في المرآة **يُراجَع في Firebase** ولا يُعلَن حذفًا.
-  if (!mapped) return fs.getDoc(ref);
-  return docSnap(mapped.id, mapped.data, ref);
+/** قراءةُ استعلامٍ من المرآة. و`null` تعني «لم أستطع». */
+async function pgGetDocs(head, constraints, route) {
+  const plan = translate(head, constraints, { isoOf });
+  if (!plan.ok) return null;
+  const res = await client.select(route.table, plan.search);
+  if (!res.ok) return null;
+  return querySnap(rowsToSnaps(head, res.rows));
+}
+
+export async function getDoc(ref) {
+  const path = pathOf(ref);
+  const { head } = headOf(path);
+  const id = head ? path.slice(head.length + 1) : '';
+  const route = await decide(path);
+
+  if (route.source === 'postgres') {
+    const snap = await pgGetDoc(head, id, route, ref);
+    // ★ و«لا صفَّ» لا يعني «لا مستند»: قد يكون أُنشئ بعد آخر مزامنة.
+    //   فالغيابُ في المرآة يُراجَع في Firebase ولا يُعلَن حذفًا.
+    if (snap) return snap;
+  }
+
+  try {
+    return await fs.getDoc(ref);
+  } catch (err) {
+    const forced = isQuotaError(err) ? forcedRoute(head) : null;
+    if (!forced) throw err;
+    const rescue = await pgGetDoc(head, id, forced, ref);
+    if (!rescue) throw err;
+    markDegraded(path);
+    return rescue;
+  }
 }
 
 export async function getDocs(target) {
   const path = pathOf(target);
   const { head } = headOf(path);
+  const constraints = constraintsOf(target);
   const route = await decide(path);
-  if (route.source !== 'postgres') return fs.getDocs(target);
 
-  const plan = translate(head, constraintsOf(target), { isoOf });
-  if (!plan.ok) return fs.getDocs(target);
+  if (route.source === 'postgres') {
+    const snap = await pgGetDocs(head, constraints, route);
+    if (snap) return snap;
+  }
 
-  const res = await client.select(route.table, plan.search);
-  if (!res.ok) return fs.getDocs(target);
-
-  return querySnap(rowsToSnaps(head, res.rows));
+  try {
+    return await fs.getDocs(target);
+  } catch (err) {
+    const forced = isQuotaError(err) ? forcedRoute(head) : null;
+    if (!forced) throw err;
+    const rescue = await pgGetDocs(head, constraints, forced);
+    if (!rescue) throw err;
+    markDegraded(path);
+    return rescue;
+  }
 }
 
 /**
@@ -291,4 +357,6 @@ export const __hybrid = {
   enabled: HYBRID_ON,
   status: () => client.status(),
   decide,
+  /** رايةُ «البياناتُ من النسخة المحلّيّة» — تعرضها الواجهة. */
+  degraded: () => ({ ...degraded, active: degraded.since > 0 }),
 };

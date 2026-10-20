@@ -4,7 +4,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { routeFor, isMirrored, mirroredPaths, REASON, MIRRORED } from './routing.js';
+import { routeFor, isMirrored, mirroredPaths, REASON, MIRRORED, isQuotaError } from './routing.js';
 
 test('المنسوخُ يُقرأ من قاعدتنا — بجدوله وعمود معرّفه', () => {
   const r = routeFor('Items_Master');
@@ -85,4 +85,37 @@ test('isMirrored يسأل عن الجدول لا عن الحالة', () => {
   assert.equal(isMirrored('Items_Master/x/history/y'), false);
   assert.equal(isMirrored('assets'), false);
   assert.equal(mirroredPaths().length, 2);
+});
+
+/* ═══════════════════ نفادُ الحصّة — «العملُ لا يتوقّف» ═══════════════════ */
+
+test('★★★ يُعرَف نفادُ الحصّة بالرمز وبالنصّ معًا', () => {
+  assert.equal(isQuotaError({ code: 'resource-exhausted' }), true);
+  assert.equal(isQuotaError({ code: 'RESOURCE-EXHAUSTED' }), true, 'حالةُ الأحرف لا تعني شيئًا');
+  assert.equal(isQuotaError({ message: 'Quota exceeded for reads' }), true);
+  assert.equal(isQuotaError({ code: 'unknown', message: 'daily quota reached' }), true);
+});
+
+test('★★★ نقض: وما سواه يُرمى كما هو ولا يُغطّى ببياناتٍ متأخّرة', () => {
+  // ولو عُدَّ كلُّ عطبٍ «نفادَ حصّة» لصار كلُّ خطأٍ عابرٍ سببًا لعرض بياناتٍ
+  // قديمةٍ **بدل أن يُصلَح** — وهذا إخفاءُ عطبٍ لا استمرارُ عمل.
+  for (const e of [
+    { code: 'permission-denied' },
+    { code: 'unavailable', message: 'network error' },
+    { code: 'not-found' },
+    { message: 'TypeError: x is not a function' },
+    null,
+    undefined,
+    'quota',
+    42,
+  ]) {
+    assert.equal(isQuotaError(e), false, `«${JSON.stringify(e)}» ليس نفادَ حصّة`);
+  }
+});
+
+test('★★ والمنقَذُ يجب أن يكون منسوخًا — وإلّا فلا شيءَ يُقدَّم', () => {
+  // يومَ نفاد الحصّة لا يُنقَذ إلّا ما له جدولٌ في الجهاز.
+  assert.equal(Boolean(MIRRORED.Items_Master), true);
+  assert.equal(Boolean(MIRRORED.documents), true);
+  assert.equal(Boolean(MIRRORED.assets), false, 'غيرُ المنسوخ لا يُنقَذ — ويُرمى الخطأ');
 });

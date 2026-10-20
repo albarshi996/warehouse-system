@@ -137,3 +137,32 @@ export function isMirrored(path) {
 export function mirroredPaths() {
   return Object.keys(MIRRORED);
 }
+
+/* ═══════════════════ نفادُ الحصّة ═══════════════════ */
+
+/**
+ * رموزُ «نفدت الحصّة» كما تردّها Firebase.
+ *
+ * ★ و`resource-exhausted` هو الرمزُ الرسميّ؛ و«quota» تُلتقط من نصّ الرسالة
+ *   لأنّ بعضَ المسارات تردّ نصًّا بلا رمزٍ منظّم.
+ */
+export const QUOTA_MARKERS = Object.freeze(['resource-exhausted', 'quota']);
+
+/**
+ * هل هذا عطبُ نفادِ حصّةٍ بعينه؟
+ *
+ * ★★★ **والدقّةُ هنا شرطُ سلامة:** لو وسّعناه ليشمل كلَّ عطبٍ لصار كلُّ خطأٍ
+ *     عابرٍ سببًا لعرض بياناتٍ متأخّرةٍ **بدل أن يُصلَح العطب**. ولو ضيّقناه
+ *     أكثر من اللازم لتوقّفت البوّابةُ يومَ نفاد الحصّة — وهو اليومُ الذي
+ *     بُني له هذا كلُّه. فما سوى هذين الرمزين **يُرمى كما هو**.
+ *
+ * @param {unknown} err
+ * @returns {boolean}
+ */
+export function isQuotaError(err) {
+  if (!err || typeof err !== 'object') return false;
+  const code = typeof err.code === 'string' ? err.code : '';
+  const message = typeof err.message === 'string' ? err.message : '';
+  const text = `${code} ${message}`.toLowerCase();
+  return QUOTA_MARKERS.some((m) => text.includes(m));
+}

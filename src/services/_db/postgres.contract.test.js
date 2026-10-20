@@ -91,3 +91,32 @@ test('★★ ولا يستورد Firestore من خارج الباب — الجد
   assert.equal(/from ['"]firebase\/firestore['"]/.test(src), false);
   assert.match(src, /import \* as fs from '\.\/firestore\.js'/);
 });
+
+test('★★★ ونجدةُ نفاد الحصّة موصولةٌ في القراءتين — لا مكتوبةً وحدَها', () => {
+  const src = read('postgres.js');
+  for (const fn of ['getDoc', 'getDocs']) {
+    const head = src.indexOf(`export async function ${fn}(`);
+    assert.notEqual(head, -1, `${fn} غيرُ موجود`);
+    // جسمُ الدالّة: ما بين رأسِها ورأسِ التصدير الذي يليها — بلا هروبٍ
+    // ولا تعبيرٍ نمطيّ، فالهروبُ في هذا المستودع يتكسّر عبر الصَّدفة.
+    const next = src.indexOf('export ', head + 10);
+    const body = src.slice(head, next === -1 ? src.length : next);
+
+    assert.ok(body.includes('try {'), `${fn} بلا حمايةٍ من عطب Firebase`);
+    assert.ok(body.includes('isQuotaError(err)'), `${fn} لا يميّز نفادَ الحصّة`);
+    assert.ok(body.includes('markDegraded('), `${fn} يُنقذ صامتًا — والرايةُ شرط`);
+    assert.ok(body.includes('throw err;'), `${fn} يبتلع أعطابًا أخرى`);
+  }
+});
+
+test('★★★ نقض: ولا نجدةَ للكتابة — مصدرُ الحقيقة واحدٌ يومَ الأزمة', () => {
+  const src = read('postgres.js');
+  // الكتابةُ تفويضٌ حرفيٌّ بلا `try`، فلا يمكن أصلًا أن تُحوَّل إلى المرآة.
+  for (const w of ['setDoc', 'updateDoc', 'addDoc', 'deleteDoc', 'writeBatch', 'runTransaction']) {
+    assert.ok(src.includes(`export const ${w} = fs.${w};`), `${w} ليس تفويضًا حرفيًّا`);
+  }
+});
+
+test('★★ والرايةُ مقروءةٌ من الخارج — وإلّا لم تُعرض للمستخدم', () => {
+  assert.ok(read('postgres.js').includes('degraded: () =>'));
+});
