@@ -1,0 +1,18 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+// ⚠️ لا تُحذف: المكوّن يرسم داخل `.o_theme`، وبلا هذين الملفّين تسقط الأنماط كلّها (حارسُه في audit-portal).
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import OdooReports from '../../components/brandzo-erp/reports/OdooReports.jsx';
+---
+
+<DashboardLayout title="تقارير أودو" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">تقارير أودو</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      ما وقع في أودو بلغةٍ سهلة: أوامر البيع والاستلام والتوصيل والمرتجع، والمخزون يومًا بيوم وشهرًا بشهر —
+      وكلُّ تقريرٍ يُنزَّل إكسل.
+    </p>
+    <OdooReports client:load />
+  </div>
+</DashboardLayout>

@@ -236,6 +236,10 @@ export function buildMoves(docData, { items = null, orgIndex = null } = {}) {
       // الجواب من الدفتر عن «أيّ رحلةٍ حمّلت هذا الرصيد؟» — والفارغ يبقى فارغًا.
       tripRef: String(header?.tripRef ?? '').trim(),
       repName: String(header?.repName ?? header?.rep ?? '').trim(),
+      // ‹ODOO-RPT› يومُ الواقعة: لمستند المصدر يومُ إنجازه هناك (لا يومُ ترحيله هنا) —
+      // فتقريرُ «المخزون في يوم» يضع تسليمَ الأمس في الأمس ولو رُحّل اليوم. وفراغُه
+      // يملؤه القيدُ بيوم الترحيل (`postDocument`)؛ فالدالّةُ خالصةٌ لا تقرأ الساعة.
+      eventDay: String(header?.sourceDoneDate ?? '').trim().slice(0, 10),
       // ‹FNB-104› البُعد التنظيميّ مختومًا: القطاع والبراند والفرع من الشجرة
       // وقت القيد — فيُجاب من الدفتر: «كم صُرف لهذا الفرع؟» بلا إعادة اشتقاق.
       ...orgStamp,

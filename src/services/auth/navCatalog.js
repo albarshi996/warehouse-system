@@ -380,6 +380,9 @@ export const NAV_GROUPS = [
       // ٦ حسابات + ٧ تشغيليّة بعد SAP-14). صفحةٌ بجانب المركز القائم لا
       // بدلًا منه. ومشرف المبيعات أُضيف (تقريرا المندوبين والمبيعات له).
       { path: '/dashboard/data-reports', label: 'التقارير التفصيليّة (19)', icon: 'barChart3', roles: ['admin', 'warehouse_manager', 'storekeeper', 'inventory_auditor', 'finance_manager', 'purchase_officer', 'return_manager', 'sales_supervisor'] },
+      // ‹ODOO-RPT› تقارير أودو: «البوّابةُ هي الشاشةُ السهلةُ الفهم لأحداث أودو» (المالك 2026-10-21) —
+      // أوامر البيع والاستلام والتوصيل والمرتجع والمخزون اليوميّ والشهريّ، وكلٌّ يُنزَّل إكسل.
+      { path: '/dashboard/odoo-reports', label: 'تقارير أودو', icon: 'barChart3', roles: ['admin', 'warehouse_manager', 'inventory_auditor', 'finance_manager', 'purchase_officer', 'sales_supervisor'] },
       // دفتر الذمم وكشوف الحساب (م٤-هـ): للمديرَين والمالي والخزينة —
       // وللمندوب (CC-302): المحصِّلُ يُحاسَب على ذمم عملائه فيجب أن يراها قبل
       // أن يبيع (وهو نصّ فلسفة قاعدة partner_ledger نفسها: القراءة لكلّ مصادَق).

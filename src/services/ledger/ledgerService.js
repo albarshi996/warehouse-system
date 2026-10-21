@@ -90,6 +90,11 @@ const DOCS = 'documents';
 /** أقصى عدد بنود في مستندٍ واحد — حدّ Firestore 500 كتابة لكل معاملة. */
 const MAX_LINES = 150;
 
+/** يومُ ليبيا (UTC+2 بلا توقيتٍ صيفيّ) لحظةً ما — `YYYY-MM-DD`. */
+function libyaDay(nowMs) {
+  return new Date(nowMs + 2 * 3600 * 1000).toISOString().slice(0, 10);
+}
+
 function currentUid() {
   return auth?.currentUser?.uid || null;
 }
@@ -131,6 +136,13 @@ export async function postDocument(docData, profile, { markDone = false, cache =
 
   const { moves, problems: buildProblems, skipped } = buildMoves(docData, { items: lineItems, orgIndex });
   if (buildProblems.length) throw new Error(buildProblems.join(' · '));
+  // ‹ODOO-RPT› يومُ الترحيل بتوقيت ليبيا — تقرأه التقاريرُ (`postedAtDay`) ولم يكن يُكتب في أيّ موضع،
+  // فكان مرشّحُ المدّة يُعيد صفرًا. ويومُ الواقعة يرثه حين لا يحمل المستندُ يومًا من مصدره.
+  const postedAtDay = libyaDay(Date.now());
+  moves.forEach((m) => {
+    m.postedAtDay = postedAtDay;
+    if (!m.eventDay) m.eventDay = postedAtDay;
+  });
   if (!moves.length) {
     throw new Error(
       skipped.length

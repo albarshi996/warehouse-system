@@ -284,3 +284,20 @@ test('★★★ التسويةُ بالمحرّك نفسه: نقصٌ يُنقص 
   assert.deepEqual(deltasOf(toPostedDraft(up)), [['ADJUSTMENT', -5], ['OPENING', 5]]);
   assert.deepEqual(routeLabel(up), { from: 'تسوية جرد', to: 'WH001' });
 });
+
+/* ═══════════ ٧. ما تقرؤه التقارير ‹ODOO-RPT› ═══════════ */
+
+test('★★ حركةُ مستند المصدر تحمل يومَ إنجازه هناك — لا يومَ ترحيلها هنا', () => {
+  const draft = toPostedDraft(buildPostedPreview([row({ doneDate: '2026-10-20' })]).documents[0]);
+  const { moves } = buildMoves({ id: 'D', state: 'done', ...draft });
+  assert.equal(moves[0].eventDay, '2026-10-20');
+  // المستندُ المحلّيّ بلا يومٍ من مصدره: يملؤه القيدُ بيوم الترحيل.
+  const native = buildMoves({ id: 'N', type: 'SRO', state: 'done', header: { warehouse: 'WH001' }, lines: [{ sku: 'A', qty: 2 }] });
+  assert.equal(native.moves[0].eventDay, '');
+});
+
+test('★★ المرتجعُ علَمٌ في الرأس لا نصٌّ في الملاحظة', () => {
+  const ret = toPostedDraft(buildPostedPreview([row({ sourceUsage: 'customer', destinationUsage: 'internal', fromWarehouse: '', toWarehouse: 'WH001' })]).documents[0]);
+  assert.equal(ret.header.isReturn, true);
+  assert.equal(toPostedDraft(buildPostedPreview([row()]).documents[0]).header.isReturn, false);
+});

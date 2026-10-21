@@ -66,6 +66,33 @@ function ensureXlsxName(name, fallback) {
  * @param {object[]} records
  * @param {{ fileName?: string }} [opts]
  */
+/**
+ * ‹ODOO-RPT› ملفُّ إكسل بأوراقٍ جاهزة (عناوينُ ثمّ صفوف) — لتقارير لا تطابق `DATASETS`.
+ * الأوراقُ من اليمين إلى اليسار، وعرضُ العمود بطول أطول قيمةٍ فيه (بسقف) فيُقرأ بلا سحب.
+ *
+ * @param {{ name:string, aoa:Array<Array> }[]} sheets
+ * @param {string} fileName
+ */
+export function exportAoaSheets(sheets, fileName) {
+  try {
+    const wb = XLSX.utils.book_new();
+    for (const { name, aoa } of sheets) {
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols'] = (aoa[0] || []).map((_, c) => ({
+        wch: Math.min(60, Math.max(10, ...aoa.slice(0, 500).map((r) => String(r[c] ?? '').length + 2))),
+      }));
+      XLSX.utils.book_append_sheet(wb, ws, String(name).slice(0, 31));
+    }
+    wb.Workbook = { Views: [{ RTL: true }] };
+    const out = ensureXlsxName(fileName, 'Brandzo_report');
+    XLSX.writeFile(wb, out);
+    return out;
+  } catch (error) {
+    console.error('Failed to export Excel file: ', error);
+    throw new Error('تعذّر توليد ملف Excel. | Failed to generate the Excel file.');
+  }
+}
+
 export function exportDataset(datasetKey, records, opts = {}) {
   try {
     const wb = buildWorkbook([{ datasetKey, records }]);

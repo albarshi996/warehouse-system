@@ -296,6 +296,8 @@ export function toPostedDraft(d) {
     sourceDocId: d.docId,
     sourceUpdatedAt: d.sourceUpdatedAt,
     notes: d.isReturn ? 'مرتجعٌ أُنجز في المصدر' : '',
+    // ‹ODOO-RPT› علَمٌ لا نصّ: تقريرُ المرتجع يفرز به، والملاحظةُ للقارئ وحده.
+    isReturn: Boolean(d.isReturn),
   };
   const lines = d.lines.map((l) => ({
     sku: l.sku,
