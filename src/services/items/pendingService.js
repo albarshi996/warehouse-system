@@ -10,17 +10,8 @@
  * السجلّ، أو **رفض بسبب**. ولا حذف — السجلّ المرفوض يبقى أثرًا يمنع
  * إعادة السؤال عن الباركود نفسه كل جلسة.
  */
-import {
-  collection,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  onSnapshot,
-  serverTimestamp,
-  increment,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, getDoc, setDoc, updateDoc, onSnapshot, serverTimestamp, increment, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { upsertItems } from './itemService.js';
 import {
   pendingId,

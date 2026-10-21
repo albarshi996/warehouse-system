@@ -17,22 +17,8 @@
  *
  * والاستيراد من إكسل يبقى كما هو: **رصيدٌ افتتاحي**، لا مصدرًا للحقيقة الجارية.
  */
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  where,
-  orderBy,
-  limit,
-  increment,
-  serverTimestamp,
-  runTransaction,
-  writeBatch,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, getDoc, getDocs, onSnapshot, query, where, orderBy, limit, increment, serverTimestamp, runTransaction, writeBatch, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { buildMoves, balanceDeltas, canPost, findNegativeBalance } from './movements.js';
 import { reservationDeltas } from './reservations.js';
 import { getItem } from '../items/itemService.js';

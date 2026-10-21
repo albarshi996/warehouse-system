@@ -1,5 +1,5 @@
-import { collection, doc, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, onSnapshot, orderBy, query, serverTimestamp, updateDoc, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { numberingProblems } from './binAnatomy.js';
 import { schemeProblems } from './locationScheme.js';
 

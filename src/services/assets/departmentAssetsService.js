@@ -31,8 +31,9 @@ import {
   orderBy,
   serverTimestamp,
   writeBatch,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+  db,
+} from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { assetQuantity } from './assetsModel.js';
 import { cleanSpecs } from './whDepartment.js';
 import {

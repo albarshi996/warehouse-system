@@ -13,8 +13,8 @@ import {
   browserLocalPersistence,
   sendPasswordResetEmail,
 } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../../config/firebase.js';
+import { doc, getDoc, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { DEFAULT_ROLE } from './roles.js';
 
 /**

@@ -14,20 +14,7 @@
  * بأعمدة شيت الاستيراد وحدها ويُسقط ما عداها **بصمت**. فكتابة `geo` عبره تضيع
  * بلا خطأ. الكتابة المباشرة هنا تتجنّب الفخّ، ولا تلمس بقيّة حقول العميل.
  */
-import {
-  collection,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  onSnapshot,
-  query,
-  where,
-  orderBy,
-  limit,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, db } from '../_db/index.js';
 import { canTransitionVisit } from './visitModel.js';
 import { normalizeCoords } from './geo.js';
 

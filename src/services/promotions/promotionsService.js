@@ -11,18 +11,7 @@
  * الحالات (لأنّ الفحص يسبق الكتابة)، وهو انحرافٌ مقبول مقابل ألّا يضيع العدّ
  * أصلًا — ومنعُه التامّ يحتاج معاملةً تقرأ العرض داخلها، وهي كلفةٌ لا تستحقّ.
  */
-import {
-  collection,
-  doc,
-  setDoc,
-  updateDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  increment,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, doc, setDoc, updateDoc, onSnapshot, query, orderBy, increment, serverTimestamp, db } from '../_db/index.js';
 import { promotionVerdict } from './promotionModel.js';
 
 const PROMOS = 'promotions';

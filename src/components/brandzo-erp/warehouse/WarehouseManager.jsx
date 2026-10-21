@@ -1,17 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  collection,
-  addDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-  updateDoc,
-  deleteDoc,
-  doc,
-  writeBatch,
-} from 'firebase/firestore';
-import { db } from '../../../config/firebase.js';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, deleteDoc, doc, writeBatch, db } from '../../../services/_db/index.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
 import LocationTree from './LocationTree.jsx';

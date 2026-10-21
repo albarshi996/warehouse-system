@@ -9,15 +9,8 @@
  * حارس منطقيّ: المطابقة السلبية (`mismatch`) تُلزِم بوجه الاختلاف — كما يُلزِم
  * الرفضُ بسببٍ في آلة الحالات. مطابقةٌ سلبيّة بلا سببٍ لا تُوثَّق.
  */
-import {
-  collection,
-  addDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { appendAudit } from './documentsService.js';
 
 const DOCS = 'documents';

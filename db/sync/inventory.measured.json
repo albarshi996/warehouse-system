@@ -1,0 +1,519 @@
+{
+  "access_control": {
+    "count": 1,
+    "fields": {
+      "updatedAt": 1
+    }
+  },
+  "archive_documents": {
+    "count": 2,
+    "fields": {
+      "updatedAt": 2,
+      "createdAt": 2
+    }
+  },
+  "assets": {
+    "count": 1,
+    "fields": {
+      "updatedAt": 1,
+      "createdAt": 1
+    }
+  },
+  "assignments": {
+    "count": 1,
+    "fields": {}
+  },
+  "balances": {
+    "count": 1762,
+    "fields": {
+      "updatedAt": 1762
+    }
+  },
+  "barcode_counters": {
+    "count": 0,
+    "fields": {}
+  },
+  "barcodes": {
+    "count": 1,
+    "fields": {
+      "createdAt": 1
+    }
+  },
+  "bin_locations": {
+    "count": 8402,
+    "fields": {
+      "updatedAt": 8402,
+      "createdAt": 8402
+    }
+  },
+  "candidates": {
+    "count": 14,
+    "fields": {
+      "updatedAt": 14,
+      "createdAt": 14
+    }
+  },
+  "counters": {
+    "count": 2,
+    "fields": {}
+  },
+  "crews": {
+    "count": 6,
+    "fields": {
+      "createdAt": 6
+    }
+  },
+  "custodies": {
+    "count": 2,
+    "fields": {
+      "updatedAt": 2,
+      "createdAt": 2
+    }
+  },
+  "Customers_Master": {
+    "count": 143,
+    "fields": {
+      "updatedAt": 143,
+      "createdAt": 143
+    }
+  },
+  "dock_sessions": {
+    "count": 4,
+    "fields": {
+      "updatedAt": 4,
+      "createdAt": 4
+    }
+  },
+  "document_flow_allocations": {
+    "count": 5,
+    "fields": {
+      "updatedAt": 5
+    }
+  },
+  "document_links": {
+    "count": 392,
+    "fields": {
+      "createdAt": 392
+    }
+  },
+  "documents": {
+    "count": 175,
+    "fields": {
+      "updatedAt": 175,
+      "createdAt": 175
+    }
+  },
+  "doors": {
+    "count": 1,
+    "fields": {
+      "updatedAt": 1
+    }
+  },
+  "entity_attachments": {
+    "count": 2,
+    "fields": {
+      "at": 2
+    }
+  },
+  "exceptions": {
+    "count": 0,
+    "fields": {}
+  },
+  "gm_review": {
+    "count": 0,
+    "fields": {}
+  },
+  "handling_units": {
+    "count": 0,
+    "fields": {}
+  },
+  "hiring_requests": {
+    "count": 1,
+    "fields": {
+      "createdAt": 1
+    }
+  },
+  "Inbound_Log": {
+    "count": 0,
+    "fields": {}
+  },
+  "integration_policy": {
+    "count": 0,
+    "fields": {}
+  },
+  "item_partner_catalog": {
+    "count": 1,
+    "fields": {
+      "updatedAt": 1
+    }
+  },
+  "Items_Master": {
+    "count": 1173,
+    "fields": {
+      "updatedAt": 1173,
+      "createdAt": 1173
+    }
+  },
+  "Items_Pending": {
+    "count": 3,
+    "fields": {}
+  },
+  "journey_plans": {
+    "count": 2,
+    "fields": {
+      "updatedAt": 2
+    }
+  },
+  "labor_tasks": {
+    "count": 2,
+    "fields": {
+      "updatedAt": 1,
+      "createdAt": 2
+    }
+  },
+  "lpn_counters": {
+    "count": 0,
+    "fields": {}
+  },
+  "odoo_accounts": {
+    "count": 10,
+    "fields": {}
+  },
+  "odoo_move_lines": {
+    "count": 0,
+    "fields": {}
+  },
+  "odoo_moves": {
+    "count": 4,
+    "fields": {}
+  },
+  "odoo_payments": {
+    "count": 0,
+    "fields": {}
+  },
+  "odoo_pull_state": {
+    "count": 4,
+    "fields": {}
+  },
+  "odoo_sync": {
+    "count": 14,
+    "fields": {}
+  },
+  "odoo_sync_events": {
+    "count": 0,
+    "fields": {}
+  },
+  "operations": {
+    "count": 6,
+    "fields": {
+      "updatedAt": 3,
+      "createdAt": 6
+    }
+  },
+  "org_locations": {
+    "count": 0,
+    "fields": {}
+  },
+  "org_structure": {
+    "count": 1,
+    "fields": {}
+  },
+  "Outbound_Log": {
+    "count": 0,
+    "fields": {}
+  },
+  "pallet_moves": {
+    "count": 1,
+    "fields": {
+      "at": 1
+    }
+  },
+  "partner_ledger": {
+    "count": 0,
+    "fields": {}
+  },
+  "picking_tasks": {
+    "count": 1,
+    "fields": {
+      "createdAt": 1
+    }
+  },
+  "portal_visits": {
+    "count": 1388,
+    "fields": {
+      "at": 1388
+    }
+  },
+  "preparatory_meetings": {
+    "count": 5,
+    "fields": {
+      "updatedAt": 5,
+      "createdAt": 4
+    }
+  },
+  "price_lists": {
+    "count": 0,
+    "fields": {}
+  },
+  "promotions": {
+    "count": 0,
+    "fields": {}
+  },
+  "protection_policies": {
+    "count": 1,
+    "fields": {
+      "updatedAt": 1
+    }
+  },
+  "putaway_tasks": {
+    "count": 0,
+    "fields": {}
+  },
+  "receiving_sessions": {
+    "count": 3,
+    "fields": {
+      "createdAt": 3
+    }
+  },
+  "recipes": {
+    "count": 0,
+    "fields": {}
+  },
+  "rep_cash_moves": {
+    "count": 0,
+    "fields": {}
+  },
+  "retail_hub_overrides": {
+    "count": 1,
+    "fields": {
+      "updatedAt": 1
+    }
+  },
+  "sales_reps": {
+    "count": 0,
+    "fields": {}
+  },
+  "settings": {
+    "count": 1,
+    "fields": {
+      "updatedAt": 1
+    }
+  },
+  "shipments": {
+    "count": 0,
+    "fields": {}
+  },
+  "source_imports": {
+    "count": 2783,
+    "fields": {}
+  },
+  "stock_moves": {
+    "count": 0,
+    "fields": {}
+  },
+  "Suppliers_Master": {
+    "count": 8,
+    "fields": {
+      "updatedAt": 8,
+      "createdAt": 8
+    }
+  },
+  "targets": {
+    "count": 0,
+    "fields": {}
+  },
+  "tasks": {
+    "count": 0,
+    "fields": {}
+  },
+  "trips": {
+    "count": 1,
+    "fields": {
+      "updatedAt": 1,
+      "createdAt": 1
+    }
+  },
+  "users": {
+    "count": 17,
+    "fields": {}
+  },
+  "vehicles": {
+    "count": 1,
+    "fields": {
+      "updatedAt": 1,
+      "createdAt": 1
+    }
+  },
+  "visits": {
+    "count": 0,
+    "fields": {}
+  },
+  "warehouses": {
+    "count": 2,
+    "fields": {
+      "createdAt": 2
+    }
+  },
+  "work_orders": {
+    "count": 1,
+    "fields": {
+      "updatedAt": 1,
+      "createdAt": 1
+    }
+  },
+  "yard_visits": {
+    "count": 3,
+    "fields": {
+      "updatedAt": 3,
+      "createdAt": 3
+    }
+  },
+  "access_control/versions": {
+    "count": 11,
+    "fields": {
+      "at": 11
+    }
+  },
+  "archive_documents/versions": {
+    "count": 0,
+    "fields": {}
+  },
+  "barcodes/prints": {
+    "count": 0,
+    "fields": {}
+  },
+  "candidates/audit": {
+    "count": 43,
+    "fields": {
+      "at": 43
+    }
+  },
+  "candidates/files": {
+    "count": 6,
+    "fields": {}
+  },
+  "documents/attachments": {
+    "count": 0,
+    "fields": {}
+  },
+  "documents/audit": {
+    "count": 792,
+    "fields": {
+      "at": 792
+    }
+  },
+  "documents/control": {
+    "count": 2,
+    "fields": {
+      "at": 2
+    }
+  },
+  "exceptions/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "handling_units/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "hiring_requests/files": {
+    "count": 0,
+    "fields": {}
+  },
+  "labor_tasks/events": {
+    "count": 10,
+    "fields": {
+      "at": 10
+    }
+  },
+  "operations/members": {
+    "count": 3,
+    "fields": {}
+  },
+  "operations/scans": {
+    "count": 747,
+    "fields": {
+      "at": 747
+    }
+  },
+  "org_structure/versions": {
+    "count": 1,
+    "fields": {}
+  },
+  "shipments/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "tasks/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "trips/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "trips/fuel": {
+    "count": 0,
+    "fields": {}
+  },
+  "vehicles/accidents": {
+    "count": 0,
+    "fields": {}
+  },
+  "vehicles/handovers": {
+    "count": 0,
+    "fields": {}
+  },
+  "vehicles/inspections": {
+    "count": 0,
+    "fields": {}
+  },
+  "vehicles/maintenance": {
+    "count": 0,
+    "fields": {}
+  },
+  "vehicles/oil_changes": {
+    "count": 0,
+    "fields": {}
+  },
+  "visits/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "work_orders/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "yard_visits/events": {
+    "count": 0,
+    "fields": {}
+  },
+  "yard_visits/visitor": {
+    "count": 0,
+    "fields": {}
+  },
+  "department_assets": {
+    "count": 0,
+    "fields": {}
+  },
+  "warehouse_assets": {
+    "count": 0,
+    "fields": {}
+  },
+  "warehouse_cards": {
+    "count": 0,
+    "fields": {}
+  },
+  "waves": {
+    "count": 0,
+    "fields": {}
+  },
+  "department_assets/notes": {
+    "count": 0,
+    "fields": {}
+  },
+  "warehouse_assets/notes": {
+    "count": 0,
+    "fields": {}
+  }
+}

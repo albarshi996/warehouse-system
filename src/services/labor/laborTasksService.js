@@ -10,18 +10,8 @@
  * الزمن الفعليّ بدقّة. زمن التوقّف عدّادٌ تراكميّ بالملّي (`pausedMs`) لأن
  * serverTimestamp لا يُخزَّن داخل المصفوفات. الحساب في `laborModel.js`.
  */
-import {
-  collection,
-  doc,
-  addDoc,
-  updateDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-  increment,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, addDoc, updateDoc, onSnapshot, query, orderBy, serverTimestamp, increment, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { delayReasonProblem } from './laborStandard.js';
 import { canTransitionTask } from './laborModel.js';
 import { generateTasks } from '../tasks/taskFactory.js';

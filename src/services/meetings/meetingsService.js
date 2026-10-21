@@ -12,15 +12,8 @@
  *   MOM-2026-#### للمحضر · LTR-2026-#### لخطاب الدعوة
  * ويُحجز من عدّاد `counters` بمعاملة، فلا يتكرّر رقم ولو ضُغط مرّتين.
  */
-import {
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  onSnapshot,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, setDoc, getDoc, onSnapshot, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { reserveNumber } from '../documents/numberingService.js';
 import { canTransitionMeeting, minutesVerdict, systemReportVerdict, itemsPatch } from './meetingsModel.js';
 

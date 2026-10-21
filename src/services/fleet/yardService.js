@@ -20,22 +20,8 @@
  * تُكتب في طبقة التخزين، ولا في قاعدة البيانات (قرار المالك: القاعدة مخزنٌ
  * وبوّابةُ مستخدمين لا حاكم).
  */
-import {
-  collection,
-  doc,
-  addDoc,
-  setDoc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  onSnapshot,
-  query,
-  where,
-  orderBy,
-  limit as fsLimit,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, addDoc, setDoc, getDoc, getDocs, updateDoc, onSnapshot, query, where, orderBy, limit as fsLimit, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import {
   AT_DOOR_STAGES,
   EXIT_STAGE,

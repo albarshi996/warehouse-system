@@ -5,20 +5,7 @@
  * ⚠️ قاعدة المجموعة مكتوبة في `firestore.rules` وغير منشورة (§3-١٠ ‹49›)
  * — النشر قرار المالك (قرار‑٥). قبل النشر: كلّ كتابةٍ حيّة سترفضها القاعدة.
  */
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  onSnapshot,
-  query,
-  where,
-  limit as fsLimit,
-  serverTimestamp,
-  writeBatch,
-} from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, doc, getDoc, getDocs, setDoc, onSnapshot, query, where, limit as fsLimit, serverTimestamp, writeBatch, db } from '../_db/index.js';
 import {
   CATALOG_COLLECTION,
   catalogEntryId,

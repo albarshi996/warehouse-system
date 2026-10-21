@@ -1,0 +1,219 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  قاعدة بيانات نظام المستودعات — PostgreSQL في حاوية
+# ═══════════════════════════════════════════════════════════════════════════
+#
+#  ★ منفصلةٌ تمامًا عن قاعدة Odoo القائمة (`brandzo-odoo-db`):
+#    مخزنٌ آخر (`warehouse-db-data`) · منفذٌ آخر (5433) · شبكةٌ خاصّة.
+#    فلا يمكن لهذا الملفّ أن يمسّ بيانات Odoo بحال.
+#
+#  ★★ والقاعدةُ الحاكمة: **PostgreSQL قياسيٌّ بحتٌ لا خواصَّ مزوّد**.
+#    ما يعمل هنا يعمل حرفيًّا على Neon وعلى سيرفر الشركة لاحقًا —
+#    ولا يتغيّر إلّا `DATABASE_URL`.
+#
+#  التشغيل:   docker compose -f db/docker-compose.yml up -d
+#  الإيقاف:   docker compose -f db/docker-compose.yml down
+#  المحو:     docker compose -f db/docker-compose.yml down -v   ← يمحو البيانات
+# ═══════════════════════════════════════════════════════════════════════════
+
+name: warehouse-db
+
+services:
+  postgres:
+    # الإصدار 17 — نفسه المتاح على Neon، فلا مفاجآتِ توافقٍ عند النقل (البند ٢٢).
+    image: postgres:17
+    container_name: warehouse-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: warehouse
+      POSTGRES_USER: warehouse
+      # كلمةُ مرورٍ محلّيّةٌ للتطوير وحده. للإنتاج تُمرَّر من البيئة:
+      #   POSTGRES_PASSWORD=… docker compose -f db/docker-compose.yml up -d
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-warehouse_local_dev}
+      # ترتيبٌ وترميزٌ يدعمان العربية دعمًا صحيحًا في الفرز والمقارنة.
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C.UTF-8'
+    ports:
+      # 5433 على الجهاز ← 5432 داخل الحاوية.
+      # اخترنا 5433 لأنّ 5432 قد يكون مشغولًا بقاعدةٍ أخرى على الجهاز.
+      - '5433:5432'
+    volumes:
+      - warehouse-db-data:/var/lib/postgresql/data
+      # ملفّات المخطّط تُنفَّذ **مرّةً واحدةً عند أوّل إنشاء** بترتيب الاسم.
+      # وبعد ذلك تُدار التغييرات بترحيلاتٍ مرقّمة لا بتعديل هذه الملفّات.
+      - ./schema:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U warehouse -d warehouse']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ═══════════════════════════════════════════════════════════════════════
+  #  المزامنةُ الدوريّة — تقرأ Firestore وتكتب هنا. **تُطفأ بعد التحويل.**
+  #
+  #  ★ لا تعمل إلّا بطلبٍ صريح:  docker compose --profile sync up -d
+  #    فبقاؤها خارج التشغيل الافتراضيّ يعني أنّ `up` عاديّةً لا تبدأ فجأةً
+  #    باستهلاك حصّةِ القراءة.
+  #
+  #  ★★ والكلفةُ محسوبةٌ لا مقدَّرة: `node db/sync/sync.mjs --plan` يطبع
+  #     أرضيّةَ القراءات اليوميّة قبل أن يقرأ حرفًا واحدًا من السحابة.
+  # ═══════════════════════════════════════════════════════════════════════
+  sync:
+    profiles: ['sync']
+    build:
+      # جذرُ المستودع: الصورةُ تحتاج `firestore.rules` و`package-lock.json`.
+      context: ..
+      dockerfile: db/sync/Dockerfile
+    container_name: warehouse-sync
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # ── القاعدة: `psql` يقرأ هذه الأسماءَ بنفسه، فلا سلسلةَ اتّصالٍ في الكود.
+      PGHOST: postgres
+      PGPORT: '5432'
+      PGUSER: warehouse
+      PGDATABASE: warehouse
+      PGPASSWORD: ${POSTGRES_PASSWORD:-warehouse_local_dev}
+
+      # ── Firebase: بريدُ المالك وكلمتُه، فتمرّ المزامنةُ بنفس بوّابة الصلاحيّات
+      #    التي يمرّ بها التطبيق. **لا مفتاحَ حسابِ خدمةٍ ولا صلاحيّةَ مطلقة.**
+      FIREBASE_EMAIL: ${FIREBASE_EMAIL:?FIREBASE_EMAIL مطلوب — ضعه في db/.env}
+      FIREBASE_PASSWORD: ${FIREBASE_PASSWORD:?FIREBASE_PASSWORD مطلوب — ضعه في db/.env}
+      PUBLIC_FIREBASE_API_KEY: ${PUBLIC_FIREBASE_API_KEY}
+      PUBLIC_FIREBASE_AUTH_DOMAIN: ${PUBLIC_FIREBASE_AUTH_DOMAIN}
+      PUBLIC_FIREBASE_PROJECT_ID: ${PUBLIC_FIREBASE_PROJECT_ID}
+      PUBLIC_FIREBASE_STORAGE_BUCKET: ${PUBLIC_FIREBASE_STORAGE_BUCKET}
+      PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
+      PUBLIC_FIREBASE_APP_ID: ${PUBLIC_FIREBASE_APP_ID}
+
+      # فهرسُ المجموعات — معطَّلٌ، ولا يلزم اليوم: المزامنةُ لا تقرأ مسارًا
+      # فرعيًّا أصلًا (لا خريطةَ لأيٍّ منها). ويصير لازمًا يومَ تُنمذَج أوّلُ
+      # مجموعةٍ فرعيّة، وأثرُه حينها مقيس: الأرضيّةُ تهبط من ١٧٨٠٨ إلى ٦٤٨٠.
+      SYNC_COLLECTION_GROUP: '0'
+      # ★★★ **ودرسٌ دُفع ثمنُه في اللحظة (2026-10-21):** كُتب هذا المفتاحُ في
+      #     `sync.mjs` ووُثّق في الدليل **ولم يُمرَّر هنا** — فلمّا احتجتُه
+      #     لإطفاء المرآة الكاملةِ طارئًا لم يفعل شيئًا، ولم يبقَ إلّا إيقافُ
+      #     الحاوية كلِّها. وهو عينُ عطب `AUTH_ALLOWED_ORIGINS` قبله بساعات:
+      #     **مفتاحٌ يُقرأ ولا يُمرَّر هو مفتاحٌ لا وجودَ له.**
+      #     ⇒ ولا يُوثَّق مفتاحُ طوارئٍ قبل أن يُجرَّب أنّه يُطفئ فعلًا.
+      SYNC_FULL_MIRROR: ${SYNC_FULL_MIRROR:-0}
+      # ★ والسقفُ اليوميُّ يُمرَّر هو الآخر — فُحص قبل استعماله هذه المرّة ولم
+      #   يكن مُمرَّرًا. والفارغُ يسقط إلى `BUDGET_READS_PER_DAY` في الشيفرة.
+      SYNC_DAILY_READ_CAP: ${SYNC_DAILY_READ_CAP:-}
+
+  # ═══════════════════════════════════════════════════════════════════════
+  #  الخادم — PostgREST: يفتح الجداولَ عبر HTTP **محكومةً بـRLS**
+  #
+  #  ★★★ ولماذا لا خادمٌ يُكتب يدًا؟ لأنّ عندنا ٣١٩ قاعدةَ صلاحيّة. خادمٌ
+  #      يدويٌّ يعني إعادةَ كتابتها في JavaScript — فيصير الحاكمُ كودًا يسهل
+  #      تجاوزُه بمسارٍ نُسي. وRLS تجعل الصلاحيّةَ **في القاعدة نفسها**:
+  #      لا يتجاوزها سكربتٌ لم نكتبه، ولا `psql` مباشرةً.
+  #
+  #  ★★ ويتّصل بدور `authenticator` **الذي لا يقرأ جدولًا واحدًا** — كلُّ ما
+  #     يملكه أن يتقمّص `web_anon` أو `web_user`. فتسريبُ كلمته وحدَها لا
+  #     يكشف صفًّا. (البرهانُ في `008-postgrest.sql`.)
+  # ═══════════════════════════════════════════════════════════════════════
+  postgrest:
+    profiles: ['api']
+    image: postgrest/postgrest:v12.2.3
+    container_name: warehouse-postgrest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${AUTHENTICATOR_PASSWORD:?كلمةُ authenticator مطلوبة}@postgres:5432/warehouse
+      PGRST_DB_SCHEMAS: public
+      # ★ الدورُ المجهول: من لا رمزَ له. ولا يقرأ شيئًا — بقرارٍ مُبرهَن.
+      PGRST_DB_ANON_ROLE: web_anon
+      # ★★★ السرُّ **متماثل** (HS256) لأنّ الجسرَ هو من يُصدر الرمز. ولو
+      #     تُرك رمزُ Firebase خامًا لعمل كلُّ طلبٍ بدور المجهول فرأى صفرًا
+      #     **بلا خطأٍ واحد** — وهذا هو سببُ وجود الجسر.
+      PGRST_JWT_SECRET: ${PGRST_JWT_SECRET:?سرُّ الرمز مطلوب — ٣٢ حرفًا فأكثر}
+      PGRST_SERVER_PORT: '3000'
+      PGRST_OPENAPI_MODE: disabled
+    ports:
+      # ★★ محصورٌ على الجهاز وحدَه: بلا `127.0.0.1` يُفتح المنفذُ على شبكة
+      #    المكتب كلِّها، فيصل إليه أيُّ جهازٍ فيها. والوصولُ من الخارج يمرّ
+      #    بالنفق (خ٦) لا بمنفذٍ مكشوف.
+      - '127.0.0.1:3000:3000'
+
+  # ═══════════════════════════════════════════════════════════════════════
+  #  جسرُ الرمز — رمزُ Firebase يدخل، ورمزُ القاعدة يخرج
+  #
+  #  ★ وجودُه فرضَه القياس لا التفضيل: رمزُ Firebase **بلا دعوى دور**،
+  #    وPostgREST **لا يجدّد مفاتيحَ Google**. والجسرُ يحلّ الاثنين معًا
+  #    وبلا مفتاحِ حسابِ خدمة. (التفاصيل في `db/auth/verify.js`.)
+  # ═══════════════════════════════════════════════════════════════════════
+  auth:
+    profiles: ['api']
+    build:
+      context: ..
+      dockerfile: db/auth/Dockerfile
+    container_name: warehouse-auth
+    restart: unless-stopped
+    environment:
+      PGRST_JWT_SECRET: ${PGRST_JWT_SECRET:?سرُّ الرمز مطلوب}
+      FIREBASE_PROJECT_ID: ${PUBLIC_FIREBASE_PROJECT_ID:-brandzo-erp-2026}
+      AUTH_PORT: '3001'
+      # ★★★ كان الجسرُ يقرأ هذا المتغيّرَ **ولا أحدَ يمرّره** — فالقيمةُ في
+      #     `db/.env` لا تبلغ الحاويةَ أبدًا، والافتراضُ المدفونُ في الشيفرة
+      #     هو الحاكمُ دائمًا. وأثرُه: **لا تجربةَ محلّيّةً ممكنةٌ قطّ**، لأنّ
+      #     `http://localhost:4321` ليس من العنوانين المأذونين فيُردّ الرمزُ
+      #     بـCORS. فيُمرَّر هنا، والافتراضُ **هو القديمُ نفسُه حرفًا بحرف**
+      #     كي لا يتغيّر شيءٌ لمن لا يضبطه.
+      #
+      # ★★ ولا تُكتب القائمةُ الافتراضيّةُ هنا: عناوينُ البوّابتين **رموزُ
+      #    هويّة**، وحارسُ `identity.test.js` يمنع تثبيتَها في ملفٍّ لا
+      #    يحرسه جدولُه — وقد أسقطني فعلًا حين كتبتُها (2026-10-20). فيُمرَّر
+      #    المتغيّرُ فارغًا، والفارغُ يسقط إلى افتراض `db/auth/bridge.mjs`
+      #    نفسِه. ⇒ سلوكٌ واحدٌ، ومصدرُ حقيقةٍ واحدٌ للعناوين.
+      AUTH_ALLOWED_ORIGINS: ${AUTH_ALLOWED_ORIGINS:-}
+    ports:
+      - '127.0.0.1:3001:3001'
+
+  # ═══════════════════════════════════════════════════════════════════════
+  #  النفق — الوصولُ من خارج المكتب **بلا منفذٍ مفتوحٍ ولا IP ثابت**
+  #
+  #  ★★★ والفرقُ جوهريّ: فتحُ منفذٍ في الراوتر يعني أنّ الإنترنت كلَّه يطرق
+  #      بابَ جهازك ليلَ نهار. والنفقُ **اتّصالٌ صادرٌ** من الجهاز إلى
+  #      Cloudflare — كأيّ متصفّح — فلا بابَ يُطرق أصلًا، ولا حاجةَ لعنوانٍ
+  #      ثابتٍ من مزوّد الإنترنت.
+  #
+  #  ★★ ويُشغَّل **برمزٍ يصنعه المالك** من لوحة Cloudflare (نفقٌ مُدارٌ عن
+  #     بعد): لا `cloudflared login` ولا شهادةٌ على القرص ولا مصادقةٌ مني.
+  #     الرمزُ يُلصق في `db/.env` باسم `TUNNEL_TOKEN` ولا يدخل git.
+  #
+  #  ⚠️ **وقفلٌ ثانٍ لازم — Cloudflare Access**: النفقُ يفتح البابَ للعالم،
+  #     و`postgrest` وحدَه يفصل بالرمز. فيوضع فوقه Access ليقتصر الوصولُ
+  #     على بُرد الشركة. وإلّا صار **جسرُ الرمز مكشوفًا لكلّ من يعرف العنوان**.
+  # ═══════════════════════════════════════════════════════════════════════
+  tunnel:
+    profiles: ['tunnel']
+    image: cloudflare/cloudflared:2025.8.1
+    container_name: warehouse-tunnel
+    restart: unless-stopped
+    depends_on:
+      - postgrest
+      - auth
+    volumes:
+      # الشهادةُ وبطاقةُ النفق وقواعدُ الوجهة. متجاهَلةٌ في git، وللقراءة فقط.
+      - ./secrets/cloudflared:/etc/cloudflared:ro
+    command: tunnel --no-autoupdate --config /etc/cloudflared/config.yml run
+    # ★ لا `ports`: الاتّصالُ صادرٌ وحدَه. وهذا بيتُ القصيد.
+    #
+    # ★★★ والوضعُ **مُدارٌ محلّيًّا لا من اللوحة**: وضعُ `--token` يحتاج
+    #     Zero Trust، وهو يطلب بطاقةَ دفعٍ حتّى للخطّة المجّانيّة ولا بطاقةَ
+    #     لدى المالك (أُكّد بصورةٍ من صفحة الدفع 2026-09-28). فانتقلت قواعدُ
+    #     الوجهة من اللوحة إلى `secrets/cloudflared/config.yml`، **والنفقُ
+    #     نفسُه بلا نقصان**. والثمنُ المعلَن: لا Cloudflare Access — فنبقى
+    #     بنفس درجة حماية Firebase، والحارسُ الفعليُّ RLS داخل القاعدة.
+    #
+    # ★★ ويبقى على شبكة Compose الافتراضيّة كي يبلغ **الخدمتين معًا**
+    #    بأسمائهما: `http://postgrest:3000` و`http://auth:3001` — وهما
+    #    مكتوبتان في `config.yml`.
+    #    (وربطُه بشبكة خدمةٍ واحدة يقطعه عن الأخرى — خطأٌ وقعتُ فيه أوّلًا.)
+
+volumes:
+  warehouse-db-data:
+    name: warehouse-db-data

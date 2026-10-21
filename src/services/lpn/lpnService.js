@@ -24,20 +24,8 @@
  * الوثيقة الحاكمة: docs/خطة-طبقة-الطبالي.md — والحدّ ح-٢: هذه الطبقة لا
  * تكتب دفترًا ولا مستندًا؛ حركتها تتبع قيدًا وقع (حارسها lpnIsolation).
  */
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  runTransaction,
-  serverTimestamp,
-  setDoc,
-  where,
-  limit,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, getDoc, getDocs, onSnapshot, query, runTransaction, serverTimestamp, setDoc, where, limit, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { normalizeLocationCode } from '../locations/locationCode.js';
 import { formatLpnCode, isValidLpnCode, lpnCounterKey, normalizeLpnCode } from './lpnCode.js';
 import { unitTransitionProblem, flagProblem, activeFlags, initialStateProblem, contentChangeProblem } from './lpnLifecycle.js';

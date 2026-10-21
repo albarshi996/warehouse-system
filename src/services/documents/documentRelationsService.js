@@ -5,18 +5,9 @@
  * هذه الطبقة القراءة والكتابة الفعلية في مجموعة `document_links`. لا تُحدّث
  * علاقة منشورة ولا تحذفها: إعادة الطلب المطابقة noop، والمختلفة تعارض صريح.
  */
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  runTransaction,
-  serverTimestamp,
-  where,
-} from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, runTransaction, serverTimestamp, where, db } from '../_db/index.js';
 
-import { auth, db } from '../../config/firebase.js';
+import { auth } from '../../config/firebase.js';
 import {
   compatibleRelationshipNeighborhood,
   createDocumentRelation,

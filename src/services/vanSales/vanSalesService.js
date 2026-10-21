@@ -13,8 +13,7 @@
  * ⚠️ هذه الوحدة تلمس Firestore، فلا تُختبَر في Node. المنطق كلّه في
  * `settlement.js` الخالص — وهي القاعدة نفسها التي يتبعها بقيّة النظام.
  */
-import { collection, onSnapshot, query, where, limit } from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, onSnapshot, query, where, limit, db } from '../_db/index.js';
 import { vehicleLocationCode } from '../ledger/locations.js';
 
 const MOVES = 'stock_moves';

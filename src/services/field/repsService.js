@@ -6,17 +6,7 @@
  * منها لكلّ من يُنشئ مستندًا)، والكتابة للمديرَين ومشرف المبيعات، ولا حذف
  * (أرشفة — مندوبٌ له رحلاتٌ وعُهدٌ يبقى أثره).
  */
-import {
-  collection,
-  addDoc,
-  doc,
-  updateDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy, serverTimestamp, db } from '../_db/index.js';
 import { repVerdict } from './repModel.js';
 
 const COL = 'sales_reps';

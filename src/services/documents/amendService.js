@@ -22,8 +22,7 @@
  * ولو أخطأ هذا الملفّ. طبقتان لا طبقة.
  */
 
-import { doc, updateDoc, getDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { doc, updateDoc, getDoc, deleteDoc, serverTimestamp, db } from '../_db/index.js';
 import { appendAudit, getDocument } from './documentsService.js';
 import { getSchema } from './schemas/index.js';
 import {

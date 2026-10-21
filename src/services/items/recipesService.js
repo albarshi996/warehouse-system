@@ -8,8 +8,7 @@
  * أيّامها. والمعرّف `outputSku@vN` من `recipeId` — لا معرّفَ عشوائيًّا،
  * فالكتابة فوق النسخة نفسها تنكشف رفضَ إنشاءٍ في القاعدة لا دهسًا صامتًا.
  */
-import { collection, doc, setDoc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, doc, setDoc, onSnapshot, query, orderBy, serverTimestamp, db } from '../_db/index.js';
 import { shapeRecipe, recipeId, recipeProblems, indexRecipes } from './recipe.js';
 
 const COL = 'recipes';

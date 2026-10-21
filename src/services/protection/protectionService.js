@@ -8,8 +8,7 @@
  *
  * ⚠️ تلمس Firestore فلا تُختبَر في Node. المنطق كلّه في `protectionModel.js`.
  */
-import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { doc, getDoc, setDoc, onSnapshot, serverTimestamp, db } from '../_db/index.js';
 import { policyVerdict } from './protectionModel.js';
 
 const REF = ['protection_policies', 'current'];

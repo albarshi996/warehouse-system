@@ -21,8 +21,7 @@
  * ★★ ومعرّفُ الوثيقة **كودُ الموجة** لا معرّفًا مولَّدًا: فموجةٌ واحدةٌ لا
  * تُكتب مرّتين من جهازين، والكتابةُ الثانيةُ تدهس الأولى بدل أن تُضاعفها.
  */
-import { collection, doc, getDocs, onSnapshot, query, setDoc, limit } from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, doc, getDocs, onSnapshot, query, setDoc, limit, db } from '../_db/index.js';
 import { formWave, releaseWave, closeWave, cancelWave, addMember, removeMember } from './waveModel.js';
 
 const WAVES = 'waves';

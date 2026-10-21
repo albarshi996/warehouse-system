@@ -33,8 +33,9 @@ import {
   orderBy,
   serverTimestamp,
   writeBatch,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+  db,
+} from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { assetPhotoPatch } from './veneciaPhotos.js';
 import {
   VENECIA_WAREHOUSE,

@@ -9,8 +9,8 @@
  * يُقيَّد عند الإنجاز بجانب قيد الذمم — أفضلَ جهدٍ لا شرطَ اعتماد: فشلُ
  * كتابة سطر النقد لا يُبطل إنجاز مستندٍ تحرّكت بضاعته أو ذمّته فعلًا.
  */
-import { collection, doc, getDocs, onSnapshot, orderBy, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, getDocs, onSnapshot, orderBy, query, serverTimestamp, setDoc, where, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { cashMoves } from './repAccount.js';
 
 const CASH = 'rep_cash_moves';

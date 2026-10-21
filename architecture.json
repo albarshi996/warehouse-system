@@ -10,8 +10,8 @@
   },
   "counts": {
     "modules": 121,
-    "serviceDomains": 51,
-    "serviceFiles": 683,
+    "serviceDomains": 52,
+    "serviceFiles": 700,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -1053,6 +1053,81 @@
   ],
   "services": [
     {
+      "domain": "_db",
+      "dir": "src/services/_db",
+      "files": [
+        "backend.js",
+        "backend.test.js",
+        "firestore.js",
+        "index.js",
+        "pgClient.js",
+        "pgClient.test.js",
+        "pgQuery.js",
+        "pgQuery.test.js",
+        "pgShape.js",
+        "pgShape.test.js",
+        "postgres.contract.test.js",
+        "postgres.js",
+        "routing.js",
+        "routing.test.js",
+        "seam.test.js"
+      ],
+      "fileCount": 15,
+      "testCount": 7,
+      "exports": [
+        "BACKEND",
+        "BACKEND_NAME",
+        "DEFAULTS",
+        "DEFAULT_BACKEND",
+        "DOC_ID",
+        "MIRRORED",
+        "QUOTA_MARKERS",
+        "REASON",
+        "REQUIRED_SYMBOLS",
+        "Timestamp",
+        "__hybrid",
+        "addDoc",
+        "arrayRemove",
+        "arrayUnion",
+        "backendNameFrom",
+        "collection",
+        "columnForField",
+        "columnsFor",
+        "createClient",
+        "db",
+        "deleteDoc",
+        "doc",
+        "documentId",
+        "getCountFromServer",
+        "getDoc",
+        "getDocFromServer",
+        "getDocs",
+        "headOf",
+        "increment",
+        "isMirrored",
+        "isQuotaError",
+        "limit",
+        "mirroredPaths",
+        "missingSymbols",
+        "onSnapshot",
+        "orderBy",
+        "pickBackend",
+        "query",
+        "routeFor",
+        "rowToDoc",
+        "runTransaction",
+        "serverTimestamp",
+        "setDoc",
+        "specFor",
+        "startAfter",
+        "translate",
+        "updateDoc",
+        "where",
+        "writeBatch"
+      ],
+      "collections": []
+    },
+    {
       "domain": "activity",
       "dir": "src/services/activity",
       "files": [
@@ -1696,6 +1771,7 @@
         "docExcel.test.js",
         "docReport.js",
         "docReport.test.js",
+        "docRolesSql.test.js",
         "docref.test.js",
         "documentFlow.js",
         "documentFlow.test.js",
@@ -1782,8 +1858,8 @@
         "vsi.js",
         "vsr.js"
       ],
-      "fileCount": 125,
-      "testCount": 43,
+      "fileCount": 126,
+      "testCount": 44,
       "exports": [
         "ACCEPTED_ATTACHMENT_TYPES",
         "AMEND_CLASSES",
@@ -5672,14 +5748,15 @@
       "domain": "workspace",
       "dir": "src/services/workspace",
       "files": [
+        "buildEnvParity.test.js",
         "dependabotConfig.test.js",
         "generatedArtifacts.test.js",
         "identity.js",
         "identity.test.js",
         "vendoredLibs.test.js"
       ],
-      "fileCount": 5,
-      "testCount": 4,
+      "fileCount": 6,
+      "testCount": 5,
       "exports": [
         "tokensOf"
       ],
@@ -10136,7 +10213,7 @@
         "id": "data-firebase",
         "layer": "البيانات والمصادقة",
         "name": "Firebase",
-        "tech": "Firestore + Auth",
+        "tech": "Auth",
         "role": "قاعدة البيانات الحيّة والمصادقة — مصدر الحقيقة التشغيليّ (القواعد في firestore.rules)",
         "refs": [
           "src/config/firebase.js",
@@ -10144,7 +10221,6 @@
         ],
         "meta": {
           "services": [
-            "Firestore",
             "Auth"
           ]
         }
@@ -10268,7 +10344,7 @@
       "prebuild": "node scripts/build-arch.mjs && node scripts/build-org.mjs && node scripts/build-scm-manual.mjs && node scripts/build-usage-guide.mjs",
       "guide": "node scripts/build-usage-guide.mjs",
       "scm": "node scripts/build-scm-manual.mjs",
-      "test": "node --test \"src/**/*.test.js\"",
+      "test": "node --test \"src/**/*.test.js\" \"db/**/*.test.js\"",
       "test:rules": "firebase emulators:exec --only firestore \"node --test test/firestore-rules.test.mjs\"",
       "audit": "node scripts/audit-portal.mjs",
       "plan": "npm run where && npm run plan:phase-one && npm run plan:client && npm run plan:sap && npm run plan:locations && npm run plan:exec && npm run plan:fnb && npm run plan:capture && npm run plan:lpn && npm run plan:gate && npm run plan:visits && npm run plan:deps && npm run plan:bulk && npm run plan:rbac && npm run plan:journey && npm run plan:wms",
@@ -10290,6 +10366,7 @@
       "plan:bulk": "node scripts/plan-check.mjs --plan docs/plan/bulk-item-entry.json --resume docs/plan/استئناف-الإدخال-الجماعي.md",
       "plan:rbac": "node scripts/plan-check.mjs --plan docs/plan/rbac-tasks.json --resume docs/plan/استئناف-الأدوار-والمهمات.md",
       "plan:journey": "node scripts/plan-check.mjs --plan docs/plan/connected-journey.json --resume docs/plan/استئناف-الرحلة-المتصلة.md",
+      "proof": "node scripts/db-proof.mjs",
       "plan:wms": "node scripts/plan-check.mjs --plan docs/plan/wms-parity.json --resume docs/plan/استئناف-موازنة-WMS.md",
       "report:venecia": "node scripts/venecia-report.mjs"
     }

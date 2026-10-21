@@ -13,19 +13,8 @@
  * الصلاحية (قرار المالك 2026-07-16): المدير العام ومدير المستودع فقط —
  * بيانات حسّاسة (أسماء · هواتف · سير · رواتب متوقّعة). العملة: دينار ليبي.
  */
-import {
-  collection,
-  doc,
-  addDoc,
-  setDoc,
-  getDoc,
-  updateDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, addDoc, setDoc, getDoc, updateDoc, onSnapshot, query, orderBy, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { validateCv } from './cvFile.js';
 
 const COL = 'candidates';

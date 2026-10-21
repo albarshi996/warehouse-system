@@ -9,16 +9,8 @@
  * الإرسال — ومندوب المورّد يوقّع **عند التسليم**، بعد الإرسال بمدّة. لو كان
  * المرفق في الرأس لاستحال إرفاقه في وقته. المجموعة الفرعية حرّة من هذا القيد.
  */
-import {
-  collection,
-  addDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  where,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, addDoc, onSnapshot, query, orderBy, where, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { appendAudit } from './documentsService.js';
 import { kindLabel, sha256Hex, dataUrlBytes } from './attachmentFile.js';
 

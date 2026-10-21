@@ -7,17 +7,7 @@
  * والزيارات. فما يُخزَّن ينحرف، وما يُحسب لا ينحرف — ولا يستطيع أحدٌ تحسين
  * رقمه بتعديل صفٍّ في قاعدة البيانات.
  */
-import {
-  collection,
-  doc,
-  setDoc,
-  updateDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { collection, doc, setDoc, updateDoc, onSnapshot, query, orderBy, serverTimestamp, db } from '../_db/index.js';
 import { targetVerdict } from './targetModel.js';
 
 const TARGETS = 'targets';

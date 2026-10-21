@@ -223,8 +223,19 @@ const IMPORTS_FIREBASE = /^\s*import[\s\S]*?from\s+'[^']*(firebase|config\/fireb
 /**
  * ملفّ تخزين: اسمه ينتهي بـService.js. وهذا هو العقد كلّه — من رآه عرف أنّ
  * فيه شبكةً، ومن لم يره عرف أنّ ما بيده يعمل في Node بلا اتّصال.
+ *
+ * ★ وأُضيف **مجلّدُ الحدّ** `src/services/_db/` (2026-09-02): القاعدةُ نفسُها
+ *   بتعريفٍ أدقّ. اللاحقةُ وُضعت حين كان Firestore مبعثرًا في ٦٢ ملفًّا، فكان
+ *   الاسمُ هو الدليلَ الوحيد. والآن الوصولُ كلُّه يمرّ ببابٍ واحدٍ في مجلّدٍ
+ *   مُعلَن — **والمجلّدُ يدلّ أكثرَ ممّا تدلّ اللاحقة**، ويحرسه `_db/seam.test.js`
+ *   الذي يُسقط `npm test` إن استورد Firestore ملفٌّ خارجه.
+ *
+ *   وليس توسيعًا للرخصة بل تضييقٌ لها: كان المسموح «أيّ ملفٍّ ينتهي بـService»،
+ *   وصار «ملفٌّ واحدٌ بعينه».
  */
-const isStorageName = (f) => /(Service|service)\.js$/.test(path.basename(f));
+const SEAM_DIR = `${path.sep}services${path.sep}_db${path.sep}`;
+const isStorageName = (f) =>
+  /(Service|service)\.js$/.test(path.basename(f)) || path.resolve(f).includes(SEAM_DIR);
 
 /**
  * ⚠️ خطّا أساسٍ للقديم — **يُنقصان ولا يزيدان** (نمط خطّ أساس اللينت المعتمَد).

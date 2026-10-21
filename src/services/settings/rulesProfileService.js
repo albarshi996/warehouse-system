@@ -19,8 +19,7 @@
  * الثوابتَ المعلنةَ حرفًا** (`resolveWeights`). فشبكةٌ منقطعةٌ لا تعني
  * محرّكًا بلا أوزان.
  */
-import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { doc, getDoc, setDoc, onSnapshot, serverTimestamp, db } from '../_db/index.js';
 import { SETTINGS_COLLECTION } from './settingsModel.js';
 import { applyChange, resetScope } from './rulesProfile.js';
 

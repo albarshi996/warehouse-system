@@ -7,18 +7,8 @@
  * الرقم الرسمي `CUST-2026-0001` يُحجز عند الإصدار مباشرة — السند بلا رقم
  * لا وجود له (بخلاف الرحلات: العهدة تُوقَّع ورقيًّا لحظة التسليم).
  */
-import {
-  collection,
-  doc,
-  addDoc,
-  setDoc,
-  getDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, addDoc, setDoc, getDoc, onSnapshot, query, orderBy, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { reserveNumber } from '../documents/numberingService.js';
 import { custodyVerdict, canTransitionCustody } from './custodyModel.js';
 

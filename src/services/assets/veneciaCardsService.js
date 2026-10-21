@@ -32,8 +32,9 @@ import {
   where,
   runTransaction,
   serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+  db,
+} from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { reserveNumber } from '../documents/numberingService.js';
 // `rawQty` لم تعد تُستورد هنا عمدًا: الحسابُ كلُّه في `qtyAfterCard`، ووجودُها
 // إغراءٌ بالعودة إلى حسابٍ يدويٍّ يلتفّ على حارس الرصيد السالب.

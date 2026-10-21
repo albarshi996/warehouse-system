@@ -16,21 +16,8 @@
  * ولا تكتب هذه الخدمة دفترًا (ح-٢): سحبُ الحمولة يحرّك **محتوى الطبالي**،
  * والقيدُ المخزنيّ يقع بمستند PICK عند إنجازه — كما كان قبل الطبقة.
  */
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  limit,
-  onSnapshot,
-  query,
-  runTransaction,
-  serverTimestamp,
-  updateDoc,
-  where,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
-
+import { collection, doc, getDoc, getDocs, limit, onSnapshot, query, runTransaction, serverTimestamp, updateDoc, where, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import {
   openPickTask,
   closePickTask,

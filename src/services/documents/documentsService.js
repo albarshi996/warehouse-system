@@ -12,22 +12,8 @@
  * قاعدة التاريخ: سجلّ التدقيق **لا يُعدَّل ولا يُحذف** — نفس نمط `scans`.
  * والمستند نفسه لا يُحذف أبدًا؛ المستند الخاطئ يُرفض أو يُلغى، ولا يُمحى.
  */
-import {
-  collection,
-  doc,
-  addDoc,
-  getDoc,
-  updateDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  where,
-  serverTimestamp,
-  limit,
-  getDocs,
-  runTransaction,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, addDoc, getDoc, updateDoc, onSnapshot, query, orderBy, where, serverTimestamp, limit, getDocs, runTransaction, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { reserveNumber } from './numberingService.js';
 import { INITIAL_STATE, isEditable, isLegalTransition, canDo, TRANSITIONS } from './states.js';
 import { derivationTargets, derivationLinkType, parentApprovalProblem, vanIdentityProblem, VAN_CHAIN } from './chain.js';

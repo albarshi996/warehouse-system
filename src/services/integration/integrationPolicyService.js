@@ -6,8 +6,7 @@
  * مستندٌ واحد `integration_policy/current` — كـ`settings/current` تمامًا. وكلّ
  * حفظٍ منسوبٌ لصاحبه: تغييرُ اتّجاه التكامل قرارٌ يُعرف من اتّخذه.
  */
-import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../config/firebase.js';
+import { doc, getDoc, setDoc, onSnapshot, serverTimestamp, db } from '../_db/index.js';
 import { fullPolicy, policyProblems } from './integrationPolicy.js';
 
 const COL = 'integration_policy';

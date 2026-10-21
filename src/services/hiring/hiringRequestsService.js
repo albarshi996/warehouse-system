@@ -13,18 +13,8 @@
  * ⚠️ لا orderBy مع where في الاستعلام: تركيبتهما تفرض فهرسًا مركّبًا في
  *    Firestore. نستعلم بحقل واحد ونرتّب في المتصفح — نفس حلّ «متابعة العمليات».
  */
-import {
-  collection,
-  doc,
-  addDoc,
-  setDoc,
-  getDoc,
-  onSnapshot,
-  query,
-  where,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, addDoc, setDoc, getDoc, onSnapshot, query, where, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { validateCv } from '../recruitment/cvFile.js';
 
 const COL = 'hiring_requests';

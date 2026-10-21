@@ -18,8 +18,8 @@
  * وقبله ترتدّ الكتابةُ بـ`permission-denied`، والقراءةُ تسقط إلى البذرة —
  * فالشاشة تعمل، والحفظ وحده ينتظر النشر ويقول ذلك صراحةً.
  */
-import { collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, setDoc, deleteDoc, onSnapshot, getDocs, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { sanitizeOverride } from './hubModel.js';
 
 const OVERRIDES = 'retail_hub_overrides';

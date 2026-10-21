@@ -19,21 +19,8 @@
  * ولا تكتب هذه الخدمة دفترًا ولا مستندًا (ح-٢): القيد المخزنيّ يقع بمستنده
  * (GRN) في LPN-213، والطبلية غلافُ تجميعٍ يركب فوقه.
  */
-import {
-  addDoc,
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  limit,
-  onSnapshot,
-  query,
-  runTransaction,
-  serverTimestamp,
-  updateDoc,
-  where,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { addDoc, collection, doc, getDoc, getDocs, limit, onSnapshot, query, runTransaction, serverTimestamp, updateDoc, where, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 
 import { openSession, closeSession, abandonSession, applyAccepted, attachPallet, sessionCloseProblem } from './receivingSession.js';
 import { scanVerdict, buildRejection } from './receivingScan.js';

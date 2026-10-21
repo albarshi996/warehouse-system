@@ -17,20 +17,8 @@
  * `dockLoading` · `exitGate` · `inboundDock` · `movementProof` — هذه الطبقة
  * تستدعيها قبل كلّ كتابة ولا تحمل قاعدة عملٍ واحدة.
  */
-import {
-  addDoc,
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  serverTimestamp,
-  setDoc,
-  where,
-  limit as fsLimit,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, serverTimestamp, setDoc, where, limit as fsLimit, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { applyGateScan, applyItemExtra, applyItemScan, beginLoading, closeDock, openDockSession } from './dockLoading.js';
 import { applyExitScan, openExit, stampExit, blockAtGate } from './exitGate.js';
 import { applyInboundScan, applyUnload, applyUnloadExtra, beginUnloading, closeInbound, openInbound } from './inboundDock.js';

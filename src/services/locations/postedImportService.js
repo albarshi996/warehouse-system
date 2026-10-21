@@ -19,8 +19,8 @@
  * · رصيدُ كلّ بندٍ مُنقِص · بطاقةُ كلّ صنفٍ **مرّةً للدفعة**. والشجرةُ التنظيميّة مرّةً
  * للدفعة كلّها (`createPostingCache`) لا ~١٥٥ قراءةً لكلّ مستند.
  */
-import { collection, doc, documentId, getDoc, getDocs, query, runTransaction, serverTimestamp, where } from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, documentId, getDoc, getDocs, query, runTransaction, serverTimestamp, where, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { importSheet } from '../excel/excelImport.js';
 import { createDraft, newDocumentId, transitionDocument } from '../documents/documentsService.js';
 import { getSchema } from '../documents/schemas/index.js';

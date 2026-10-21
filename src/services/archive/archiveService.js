@@ -17,19 +17,8 @@
  *   · `versions` **ملحق-فقط**: لا تعديل ولا حذف — التاريخ لا يُزوَّر.
  *   · `tracking` سطرٌ لكلّ عملية، بوقتٍ نصّيّ (المصفوفات لا تقبل طوابع الخادم).
  */
-import {
-  collection,
-  doc,
-  setDoc,
-  getDocs,
-  query,
-  orderBy,
-  onSnapshot,
-  serverTimestamp,
-  arrayUnion,
-  increment,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, setDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp, arrayUnion, increment, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { trackEntry, STORED_STATUSES, CONFIDENTIALITY } from './archiveModel.js';
 import { uploadArchiveFile, deleteOrphanFile } from './archiveStorageService.js';
 

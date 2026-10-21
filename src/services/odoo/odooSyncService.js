@@ -14,19 +14,8 @@
  *   odoo_sync_events/{autoId}            ← سجلّ ملحق-فقط يغذّي الجرس والخلاصة
  * العميل المحاكى يبقى نقيًّا (لا يلمس Firestore)؛ الدوام هنا لا فيه.
  */
-import {
-  collection,
-  doc,
-  getDoc,
-  setDoc,
-  addDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  limit as fsLimit,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db, auth } from '../../config/firebase.js';
+import { collection, doc, getDoc, setDoc, addDoc, onSnapshot, query, orderBy, limit as fsLimit, serverTimestamp, db } from '../_db/index.js';
+import { auth } from '../../config/firebase.js';
 import { odoo, describeOdooConfig } from './index.js';
 import { itemToProductValues, productToItem, ledgerMoveToStockMove } from './odooMapper.js';
 import { poDocToPurchaseOrder, poDocTotal } from './poMapper.js';
