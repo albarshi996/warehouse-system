@@ -45,6 +45,7 @@ export const POSTED_TYPES = Object.freeze({
   SRO: { labelAr: 'تسليم', effect: 'يخرج من المستودع' },
   SXO: { labelAr: 'إرساليّة نقل', effect: 'من المستودع إلى الطريق' },
   SXI: { labelAr: 'استلام نقل', effect: 'من الطريق إلى المستودع' },
+  SRA: { labelAr: 'تسوية جرد', effect: 'زيادةٌ أو نقصٌ في المستودع' },
 });
 
 const USAGES = ['supplier', 'customer', 'internal', 'transit', 'inventory', 'production', 'view'];
@@ -86,8 +87,18 @@ export function classifyPicking({ sourceUsage, destinationUsage, sourceLocation,
   if (!from || !to) {
     return { error: `تعذّر تعرّف طرفَي الحركة («${str(sourceLocation) || '؟'}» ⟵ «${str(destinationLocation) || '؟'}»).` };
   }
+  // ‹SRC-POST› تسويةُ الجرد (والإتلافُ موقعُه من النوع نفسه): تُرحَّل SRA بإشارتها — الزيادةُ تدخل
+  // المستودع والنقصُ يخرج منه. وبلاها لا تكتمل المطابقة: «تحديثُ كمّيّةٍ» في أودو بلا مستند يبقى فرقًا.
+  if (from === 'inventory' && to === 'internal') {
+    if (!toWh) return { error: 'تسويةٌ بلا مستودع.' };
+    return { type: 'SRA', header: { warehouse: toWh }, sign: 1 };
+  }
+  if (from === 'internal' && to === 'inventory') {
+    if (!fromWh) return { error: 'تسويةٌ بلا مستودع.' };
+    return { type: 'SRA', header: { warehouse: fromWh }, sign: -1 };
+  }
   if (from === 'inventory' || to === 'inventory' || from === 'production' || to === 'production') {
-    return { error: 'تسويةُ جردٍ أو إنتاج — ليست مستندَ نقلٍ ولا تُرحَّل من هذا المسار.' };
+    return { error: 'حركةُ إنتاجٍ أو تسويةٌ بين حسابين — ليست على رفٍّ ولا تُرحَّل من هذا المسار.' };
   }
   const outside = (u) => u === 'supplier' || u === 'customer';
 
@@ -216,7 +227,7 @@ export function buildPostedPreview(rows, { known = new Map(), cutoff = OPENING_C
     const cls = classifyPicking(d);
     const doneDay = dayOf(d.doneDate);
     const markerId = postedMarkerId(d.sourceSystem, d.docRef);
-    const base = { ...d, doneDay, markerId, type: cls.type || '', classHeader: cls.header || {}, isReturn: Boolean(cls.isReturn) };
+    const base = { ...d, doneDay, markerId, type: cls.type || '', classHeader: cls.header || {}, isReturn: Boolean(cls.isReturn), sign: cls.sign || 1 };
 
     if (cls.error) problems.push(cls.error);
     if (d.docStatus && d.docStatus.toLowerCase() !== 'done') problems.push(`لم يُنجَز في المصدر (الحالة «${d.docStatus}»).`);
@@ -291,7 +302,8 @@ export function toPostedDraft(d) {
     barcode: l.barcode,
     description: l.description,
     uom: portalUom(l.uom),
-    qty: l.qty,
+    // التسويةُ بإشارتها (SRA): أودو يكتب الكمّيّة موجبةً والاتّجاهُ في الموقعين.
+    qty: d.type === 'SRA' ? l.qty * (d.sign || 1) : l.qty,
     batch: '',
     expiry: '',
     unitCost: l.unitCost,
@@ -329,6 +341,7 @@ export function routeLabel(d) {
     case 'SRO': return { from: h.warehouse, to: party || (d.isReturn ? 'المورّد' : 'العميل') };
     case 'SXO': return { from: h.fromWarehouse, to: h.toWarehouse ? `الطريق إلى ${h.toWarehouse}` : 'الطريق' };
     case 'SXI': return { from: h.fromWarehouse ? `الطريق من ${h.fromWarehouse}` : 'الطريق', to: h.toWarehouse };
+    case 'SRA': return (d.sign || 1) > 0 ? { from: 'تسوية جرد', to: h.warehouse } : { from: h.warehouse, to: 'تسوية جرد' };
     default: return { from: str(d?.sourceLocation), to: str(d?.destinationLocation) };
   }
 }

@@ -288,6 +288,7 @@ service cloud.firestore {
            : docType == 'SRO'     ? ['warehouse_manager']
            : docType == 'SXO'     ? ['warehouse_manager']
            : docType == 'SXI'     ? ['warehouse_manager']
+           : docType == 'SRA'     ? ['warehouse_manager']
            : [];
     }
     function completeRoles(docType) {
@@ -346,6 +347,7 @@ service cloud.firestore {
            : docType == 'SRO'     ? ['warehouse_manager']
            : docType == 'SXO'     ? ['warehouse_manager']
            : docType == 'SXI'     ? ['warehouse_manager']
+           : docType == 'SRA'     ? ['warehouse_manager']
            : [];
     }
 

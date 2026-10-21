@@ -84,14 +84,15 @@ test('الاتّجاهات الأربعة — والمرتجعان', () => {
   assert.deepEqual(sxi, { type: 'SXI', header: { fromWarehouse: 'WH001', toWarehouse: 'WH002' } });
 });
 
-test('ما لا يُرحَّل: داخل المستودع يُتخطّى، والتسويةُ والنقلُ المباشر يُحجبان بسبب', () => {
+test('ما لا يُرحَّل: داخل المستودع يُتخطّى، والإنتاجُ والنقلُ المباشر يُحجبان بسبب', () => {
   const pick = classifyPicking({ sourceUsage: 'internal', destinationUsage: 'internal', fromWarehouse: 'WH001', toWarehouse: 'WH001' });
   assert.ok(pick.skip && !pick.type, 'السحبُ إلى منطقة التجهيز لا يغيّر رصيد المستودع');
 
   const direct = classifyPicking({ sourceUsage: 'internal', destinationUsage: 'internal', fromWarehouse: 'WH001', toWarehouse: 'WH002' });
   assert.ok(direct.error && !direct.type, 'نقلٌ بلا طريقٍ لا يُبتلع تخطّيًا — بضاعةٌ تحرّكت فعلًا');
 
-  assert.ok(classifyPicking({ sourceUsage: 'inventory', destinationUsage: 'internal', toWarehouse: 'WH001' }).error);
+  assert.ok(classifyPicking({ sourceUsage: 'production', destinationUsage: 'internal', toWarehouse: 'WH001' }).error, 'الإنتاجُ خارج المسار');
+  assert.ok(classifyPicking({ sourceUsage: 'inventory', destinationUsage: 'customer' }).error, 'تسويةٌ إلى خارجٍ لا رفَّ فيها');
   assert.ok(classifyPicking({ sourceUsage: 'supplier', destinationUsage: 'customer' }).skip, 'الشحنُ المباشر لم يدخل المستودع');
   assert.ok(classifyPicking({ sourceUsage: 'internal', destinationUsage: 'customer' }).error, 'تسليمٌ بلا مستودع');
   assert.ok(classifyPicking({}).error);
@@ -251,4 +252,35 @@ test('«من … إلى …» يسمّي الطرفين كما وقعا', () => 
     'المرتجعُ من العميل'
   );
   assert.deepEqual(routeLabel(doc({ destinationUsage: 'transit', toWarehouse: 'WH002' })), { from: 'WH001', to: 'الطريق إلى WH002' });
+});
+
+/* ═══════════ ٦. تسويةُ الجرد المنجَزة في أودو (SRA) ═══════════ */
+
+test('★★★ تسويةُ أودو تُرحَّل بإشارتها — الزيادةُ تدخل الرفّ والنقصُ يخرج منه', () => {
+  const up = classifyPicking({ sourceUsage: 'inventory', destinationUsage: 'internal', sourceLocation: 'Virtual Locations/Inventory adjustment', toWarehouse: 'wh001' });
+  assert.deepEqual(up, { type: 'SRA', header: { warehouse: 'WH001' }, sign: 1 });
+  const down = classifyPicking({ sourceUsage: 'internal', destinationUsage: 'inventory', fromWarehouse: 'WH002' });
+  assert.deepEqual(down, { type: 'SRA', header: { warehouse: 'WH002' }, sign: -1 });
+  assert.equal(classifyPicking({ sourceLocation: 'WHNBE/Stock', destinationLocation: 'Virtual Locations/Scrap', fromWarehouse: 'WH001' }).type, 'SRA', 'الإتلافُ نقصٌ كالتسوية');
+});
+
+test('★★★ التسويةُ بالمحرّك نفسه: نقصٌ يُنقص مفتاحَ الافتتاح، وزيادةٌ تُزيده، والمقابلُ حسابُ التسوية', () => {
+  const adj = (over) => buildPostedPreview([row({
+    docRef: 'INV/9001', docId: '9001', sourceLocation: 'WHNBE/Stock', sourceUsage: 'internal',
+    destinationLocation: 'Virtual Locations/Inventory adjustment', destinationUsage: 'inventory',
+    partner: '', partnerCode: '', orderRef: 'تم تحديث كمية المنتج', qty: 28, ...over,
+  })]).documents[0];
+  const down = adj();
+  assert.equal(down.status, 'new');
+  assert.equal(down.type, 'SRA');
+  const dDown = toPostedDraft(down);
+  assert.equal(dDown.lines[0].qty, -28, 'أودو يكتبها موجبةً والاتّجاهُ في الموقعين');
+  const opening = balanceId({ sku: '8068056931732', barcode: '8068056931732', warehouse: 'WH001', batch: '' });
+  const deltasOf = (draft) => balanceDeltas(buildMoves({ id: 'D', state: 'done', ...draft }).moves).deltas.map((x) => [x.id === opening ? 'OPENING' : x.warehouse, x.delta]);
+  assert.deepEqual(deltasOf(dDown), [['OPENING', -28], ['ADJUSTMENT', 28]]);
+  assert.deepEqual(routeLabel(down), { from: 'WH001', to: 'تسوية جرد' });
+
+  const up = adj({ sourceLocation: 'Virtual Locations/Inventory adjustment', sourceUsage: 'inventory', destinationLocation: 'WHNBE/Stock', destinationUsage: 'internal', fromWarehouse: '', toWarehouse: 'WH001', qty: 5 });
+  assert.deepEqual(deltasOf(toPostedDraft(up)), [['ADJUSTMENT', -5], ['OPENING', 5]]);
+  assert.deepEqual(routeLabel(up), { from: 'تسوية جرد', to: 'WH001' });
 });

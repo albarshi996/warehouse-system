@@ -57,6 +57,7 @@ export const DOC_ODOO_MAP = {
   SRO: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   SXO: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   SXI: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  SRA: { model: 'stock.move', confirmState: 'done', confirmLabel: 'منجَز', verb: 'طبّق' },
   // ‹LPN-405› محضر الفرق لا مقابلَ أصليًّا له في أودو: هو محضرٌ رقابيٌّ يوثّق
   // فرقَ الحمولة والمسؤوليّة، وأودو يمثّل النقص كفرقِ جردٍ أو خصمٍ على المورّد
   // لا كمستندٍ قائمٍ بذاته. فنموذجٌ مخصّص — كنمط تسوية المركبة سواء.

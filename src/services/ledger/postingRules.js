@@ -295,6 +295,18 @@ export const POSTING_RULES = {
     reason: 'source-transfer-in',
     labelAr: 'استلامُ نقلٍ منجَزٌ في المصدر',
   },
+  // ‹SRC-POST› تسويةُ أودو المنجَزة — بقاعدة ADJ نفسِها: الإشارةُ تقلب الطرفين، وحسابُ
+  // التسوية طرفٌ مقابلٌ لا رفّ فلا يحرسه منعُ السالب، ورفُّ المستودع يحرسه.
+  SRA: {
+    from: ADJUSTMENT.code,
+    to: WAREHOUSE,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitCost',
+    reason: 'source-adjustment',
+    labelAr: 'تسويةُ جردٍ منجَزةٌ في المصدر',
+    signed: true,
+  },
   // ═══ البيع من المركبة — المستودع المتنقّل (2026-08-09) ═══
   // الفرق بين هذه الدورة ودورة الصادر: هناك تُحمَّل المركبة بطلبِ عميلٍ معلوم
   // (`SO → PICK → DN → POD`)، وهنا تُحمَّل **بمخزونٍ للبيع** لا يعرف مشتريه بعد.

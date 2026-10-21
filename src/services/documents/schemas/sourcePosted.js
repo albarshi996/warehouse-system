@@ -89,7 +89,8 @@ export function sourcePostedWarnings(doc) {
   const lines = doc?.lines || [];
   const noId = lines.filter((l) => !String(l?.sku || '').trim() && !String(l?.barcode || '').trim());
   if (noId.length) out.push(`${noId.length} بندًا بلا كودٍ ولا باركود — لا يُنسب إلى صنف`);
-  const zero = lines.filter((l) => !(Number(l?.qty) > 0));
+  // الصفرُ وحده بلا أثر — والسالبُ مشروعٌ في التسوية (SRA): نقصٌ أخرجه أودو من الرفّ.
+  const zero = lines.filter((l) => !Number(l?.qty));
   if (zero.length) out.push(`${zero.length} بندًا كمّيّتُه صفر — لا أثرَ له`);
   if (!String(doc?.header?.sourceRef || '').trim()) out.push('بلا مرجعٍ في المصدر — يسقط منعُ التكرار');
   return out;
@@ -171,8 +172,21 @@ export const sxi = makeSchema({
   warehouseFields: [FROM_FIELD(false), TO_FIELD(true)],
 });
 
-/** الأنواعُ الأربعة — مفتاحُ كلٍّ نوعُه. */
-export const SOURCE_POSTED_SCHEMAS = Object.freeze({ SRI: sri, SRO: sro, SXO: sxo, SXI: sxi });
+/**
+ * ‹SRC-POST› تسويةُ جردٍ أُنجزت في المصدر: «تحديثُ كمّيّة» طبّقه أودو على مستودع.
+ * الكمّيّةُ **بإشارتها**: الموجبةُ زيادةٌ دخلت الرفّ والسالبةُ نقصٌ خرج منه — كتسوية البوّابة (ADJ) حرفًا.
+ */
+export const sra = makeSchema({
+  type: 'SRA',
+  titleAr: 'تسويةُ جردٍ منجَزةٌ في المصدر',
+  titleEn: 'Source Inventory Adjustment (posted)',
+  formCode: 'BFP-SRA-001',
+  headerTitle: 'بيانات تسوية الجرد المنجَزة في المصدر',
+  warehouseFields: [WAREHOUSE_FIELD('المستودع', 'كود البوّابة الذي طُبّقت عليه التسوية.')],
+});
+
+/** الأنواعُ الخمسة — مفتاحُ كلٍّ نوعُه. */
+export const SOURCE_POSTED_SCHEMAS = Object.freeze({ SRI: sri, SRO: sro, SXO: sxo, SXI: sxi, SRA: sra });
 
 /** هل هذا النوع مستندُ مصدرٍ مُنجَز (يُستورد ولا يُنشأ باليد)؟ */
 export function isSourcePostedType(type) {

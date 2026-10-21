@@ -66,6 +66,7 @@ export const FINANCIAL_IMPACT = Object.freeze({
   SRO: { financial: false, stockEffect: true, odooDoc: null, note: 'تسليمٌ منجَزٌ في المصدر: يُخرج البضاعة كما خرجت في أودو — وفاتورتُه هناك، فلا يُعاد قيدُها هنا.' },
   SXO: { financial: false, stockEffect: true, odooDoc: null, note: 'إرساليّةُ نقلٍ منجَزة: إلى مخزن النقل — ولا أثرَ ماليًّا ما دام الكيانُ واحدًا (قرار‑٦).' },
   SXI: { financial: false, stockEffect: true, odooDoc: null, note: 'استلامُ نقلٍ منجَز: يُفرغ مخزن النقل إلى الوجهة — ولا أثرَ ماليًّا ما دام الكيانُ واحدًا (قرار‑٦).' },
+  SRA: { financial: false, stockEffect: true, odooDoc: null, note: 'تسويةُ جردٍ منجَزة: تُطابق رصيدَ المستودع بما طبّقه أودو — وأثرُها الماليّ (فرقُ الجرد) يُقيَّد في أودو لا هنا.' },
   TDR: { financial: false, stockEffect: false, odooDoc: null, note: 'محضر فرق النقل: محضرٌ رقابيٌّ يوثّق فرق الحمولة والمسؤوليّة — لا يقيّد حركةً (القيد وقع في TRN وTRC والنقصُ عالقٌ في مخزن النقل) ولا أثرَ ماليًّا له بذاته؛ وأثرُ الحسم يقع بالحركة التصحيحية المعتمَدة لا بالمحضر.' },
   RET: { financial: true, stockEffect: true, odooDoc: 'account.move', note: 'مرتجع عميل: يُنقص الإيراد — إشعارٌ دائن في أودو، والبضاعة تدخل الفحص.' },
   CN: { financial: true, stockEffect: false, odooDoc: 'account.move', note: 'إشعارٌ دائن: أثرٌ ماليٌّ بحت على ذمّة العميل لا على الرفّ.' },

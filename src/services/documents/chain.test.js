@@ -673,8 +673,8 @@ test('مخطّطات F4 الخمسة مسجّلة — والمجموعة صار�
     assert.ok(typeof s.warnings === 'function');
   }
   // ‹SRC-POST› +4: مستنداتُ المصدر المُنجَزة (SRI · SRO · SXO · SXI).
-  assert.equal(readyTypes().length, 46, 'ستّةٌ وأربعون نموذجًا بعد مستندات المصدر المُنجَزة ‹SRC-POST›');
-  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 46);
+  assert.equal(readyTypes().length, 47, 'سبعةٌ وأربعون نموذجًا بعد مستندات المصدر المُنجَزة الخمسة ‹SRC-POST›');
+  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 47);
 });
 
 test('البضاعة المحميّة: المخطّطات الثلاثة مسجّلة وكاملة البنية', () => {
