@@ -267,6 +267,10 @@ export async function importSheet(input, datasetKey, opts = {}) {
           });
         }
       }
+    } else if (datasetKey === 'sourceOrders') {
+      // ‹ODOO-ORD› بندُ أمرٍ في أودو يُسجَّل كما هو: بندٌ صفريٌّ في أمرٍ ملغًى، وبندُ مرتجعٍ سالب —
+      // حقيقتُه هناك، وإسقاطُه يجعل الأمرَ هنا غيرَ ما في أودو. والأمرُ لا يُحرّك مخزونًا فلا خطرَ في السالب.
+      shaped.qty = Number(shaped.qty) || 0;
     } else {
       // logs: normalize itemCode + require qty > 0
       shaped.itemCode = String(shaped.itemCode ?? '').trim().toUpperCase();

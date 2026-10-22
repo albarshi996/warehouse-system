@@ -429,9 +429,10 @@ export const DATASETS = {
       { field: 'currency', labelAr: 'Currency (العملة)', type: 'string', required: false, aliases: ['currency', 'العملة'] },
       { field: 'salesperson', labelAr: 'Responsible (المسؤول)', type: 'string', required: false, aliases: ['responsible', 'salesperson', 'المسؤول'] },
       { field: 'commitmentDate', labelAr: 'Planned Date (الموعد)', type: 'string', required: false, aliases: ['planned date', 'commitment date', 'الموعد'] },
-      ...itemLineColumns('Ordered Quantity (الكمية المطلوبة)'),
-      { field: 'qtyDone', labelAr: 'Delivered/Received (المسلَّم/المستلَم)', type: 'number', required: false, nonNegative: true, aliases: ['delivered', 'received', 'المسلم', 'المستلم'] },
-      { field: 'qtyInvoiced', labelAr: 'Invoiced (المفوتَر)', type: 'number', required: false, nonNegative: true, aliases: ['invoiced', 'المفوتر'] },
+      // ‹ODOO-ORD› أرقامُ أودو كما هي — والسالبُ مشروع: إشعارٌ دائنٌ يُنقص المفوتَر، ومرتجعٌ يُنقص المسلَّم.
+      ...itemLineColumns('Ordered Quantity (الكمية المطلوبة)').map((c) => (c.field === 'qty' ? { ...c, nonNegative: false } : c)),
+      { field: 'qtyDone', labelAr: 'Delivered/Received (المسلَّم/المستلَم)', type: 'number', required: false, aliases: ['delivered', 'received', 'المسلم', 'المستلم'] },
+      { field: 'qtyInvoiced', labelAr: 'Invoiced (المفوتَر)', type: 'number', required: false, aliases: ['invoiced', 'المفوتر'] },
       { field: 'unitPrice', labelAr: 'Unit Price (سعر الوحدة)', type: 'number', required: false, aliases: ['unit price', 'price', 'سعر الوحدة'] },
       { field: 'discount', labelAr: 'Discount % (الخصم)', type: 'number', required: false, aliases: ['discount', 'الخصم'] },
       { field: 'subtotal', labelAr: 'Subtotal (الإجمالي)', type: 'number', required: false, aliases: ['subtotal', 'الإجمالي'] },

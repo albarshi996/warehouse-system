@@ -74,3 +74,23 @@ test('سجلُّ الأمر من نوعٍ مستقلّ عن مستندات ال�
   assert.equal(m.fingerprint, 'ORDER__ODOO__OSO__SBEN00074');
   assert.equal(m.documentType, 'OSO');
 });
+
+test('★★★ ورقةُ الأوامر تقبل أرقامَ أودو كما هي: بندٌ صفريٌّ ومفوتَرٌ سالب ومسلَّمٌ ناقصٌ بمرتجع — وورقةُ المستندات المنجَزة لا', async () => {
+  const XLSX = await import('xlsx');
+  const { importSheet } = await import('../excel/excelImport.js');
+  const { DATASETS } = await import('../excel/excelSchema.js');
+  const sheet = (key, rows) => {
+    const ds = DATASETS[key];
+    const head = ds.templateFields.map((f) => ds.columns.find((c) => c.field === f).labelAr);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([head, ...rows.map((r) => ds.templateFields.map((f) => r[f] ?? ''))]), ds.sheetName);
+    return new Uint8Array(XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }));
+  };
+  const odd = [row({ qty: 0, docStatus: 'cancel' }), row({ lineId: '902', qty: 3, qtyDone: -1, qtyInvoiced: -2 }), row({ lineId: '903', qty: -1 })];
+  const orders = await importSheet(sheet('sourceOrders', odd), 'sourceOrders', { sheetName: 'SourceOrders' });
+  assert.equal(orders.errors.filter((e) => e.severity !== 'warning').length, 0, 'لا يُسقَط بندٌ واحدٌ ممّا في أودو');
+  assert.equal(orders.rows.length, 3);
+  // مستندُ المصدر المنجَز يُحرّك مخزونًا: الصفرُ فيه خطأٌ يُرفض.
+  const posted = await importSheet(sheet('sourcePosted', [{ docRef: 'X/1', lineId: '1', doneDate: '2026-10-21', sku: 'A', qty: 0 }]), 'sourcePosted', { sheetName: 'SourcePosted' });
+  assert.ok(posted.errors.some((e) => e.column === 'qty' && e.severity !== 'warning'));
+});
