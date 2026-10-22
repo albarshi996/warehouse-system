@@ -58,6 +58,7 @@ import rcv from './rcv.js';
 import dlv from './dlv.js';
 // ‹SRC-POST› مستنداتُ المصدر المُنجَزة — في السجلّ لا في «بدء مستندٍ جديد» (تُستورد ولا تُنشأ باليد).
 import { sri, sro, sxo, sxi, sra } from './sourcePosted.js';
+import { oso, opo } from './sourceOrders.js';
 import tdr from './tdr.js';
 
 /** المخطّطات الجاهزة. */
@@ -113,6 +114,8 @@ const SCHEMAS = {
   SXO: sxo,
   SXI: sxi,
   SRA: sra,
+  OSO: oso,
+  OPO: opo,
 };
 
 /**
@@ -174,6 +177,8 @@ export const GOVERNED_FORMS = [
   { type: 'SXO', stage: 9, titleAr: 'إرساليّةُ نقلٍ منجَزةٌ في المصدر', file: '', phase: 'SRC' },
   { type: 'SXI', stage: 9, titleAr: 'استلامُ نقلٍ منجَزٌ في المصدر', file: '', phase: 'SRC' },
   { type: 'SRA', stage: 9, titleAr: 'تسويةُ جردٍ منجَزةٌ في المصدر', file: '', phase: 'SRC' },
+  { type: 'OSO', stage: 9, titleAr: 'أمرُ بيعٍ من أودو', file: '', phase: 'SRC' },
+  { type: 'OPO', stage: 9, titleAr: 'أمرُ شراءٍ من أودو', file: '', phase: 'SRC' },
 ].map((f) => ({ ...f, ready: Boolean(SCHEMAS[f.type]) }));
 
 /** يُعيد مخطّط النوع، أو null إن لم يُبنَ بعد. */

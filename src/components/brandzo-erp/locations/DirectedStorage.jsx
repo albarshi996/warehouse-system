@@ -37,6 +37,8 @@ import { useDirectedReference, useFullReadsForced } from './useDirectedReference
 import { exportTemplate } from '../../../services/excel/excelExport.js';
 // ‹SRC-POST› مستندٌ منجَزٌ في المصدر ← يُرحَّل — تبويبٌ ثالثٌ خلف مفتاح إطفاء.
 import PostedImport from './PostedImport.jsx';
+// ‹ODOO-ORD› أوامرُ أودو ← تُحدَّث — تبويبٌ رابعٌ خلف مفتاح الإطفاء نفسِه.
+import OrdersImport from './OrdersImport.jsx';
 import { postedImportEnabled } from '../../../services/locations/postedImportService.js';
 
 const KINDS = [
@@ -46,6 +48,7 @@ const KINDS = [
 
 /** ‹SRC-POST› التبويبُ الثالث — يظهر ما دام مفتاحُ الإطفاء مفتوحًا. */
 const POSTED_KIND = { id: 'posted', label: 'مستندٌ منجَز ← يُرحَّل', icon: 'checkCircle', dataset: 'sourcePosted' };
+const ORDERS_KIND = { id: 'orders', label: 'أوامر أودو ← تُحدَّث', icon: 'clipboardList', dataset: 'sourceOrders' };
 
 export default function DirectedStorage() {
   const [profile, setProfile] = useState(null);
@@ -58,8 +61,9 @@ export default function DirectedStorage() {
   const [fileName, setFileName] = useState('');
   const [term, setTerm] = useState('');
   const fileRef = useRef(null);
-  const kinds = useMemo(() => (postedImportEnabled() ? [...KINDS, POSTED_KIND] : KINDS), []);
+  const kinds = useMemo(() => (postedImportEnabled() ? [...KINDS, POSTED_KIND, ORDERS_KIND] : KINDS), []);
   const posted = kind === POSTED_KIND.id;
+  const orders = kind === ORDERS_KIND.id;
 
   useEffect(
     () =>
@@ -260,7 +264,9 @@ export default function DirectedStorage() {
           ))}
         </div>
 
-        {posted ? (
+        {orders ? (
+          <OrdersImport profile={profile} />
+        ) : posted ? (
           <PostedImport profile={profile} />
         ) : (
         <>

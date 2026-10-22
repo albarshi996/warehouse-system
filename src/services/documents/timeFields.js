@@ -124,6 +124,8 @@ export const TIME_FIELD_MAP = Object.freeze({
   SXO: { sourceDoneDate: E, expiry: A },
   SXI: { sourceDoneDate: E, expiry: A },
   SRA: { sourceDoneDate: E, expiry: A },
+  OSO: { sourceDoneDate: E, commitmentDate: P },
+  OPO: { sourceDoneDate: E, commitmentDate: P },
   // ‹LPN-405› محضر الفرق: تاريخُه ووقتُ الوصول كلاهما واقعةٌ وقعت.
   TDR: { reportDate: E, arrivedAt: E },
   CTR: { arrivalDate: E },

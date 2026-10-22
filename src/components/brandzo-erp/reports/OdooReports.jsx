@@ -23,6 +23,8 @@ import {
   isReturn,
   lineRows,
   monthlyStock,
+  orderLineRows,
+  ordersReport,
   returnDirection,
   salesOrdersReport,
   selectDocs,
@@ -35,6 +37,7 @@ import { exportAoaSheets } from '../../../services/excel/excelExport.js';
 
 const TABS = [
   { id: 'orders', label: 'أوامر البيع', icon: 'clipboardList' },
+  { id: 'purchases', label: 'أوامر الشراء', icon: 'clipboardList' },
   { id: 'receipts', label: 'الاستلام', icon: 'arrowDownTray' },
   { id: 'deliveries', label: 'التوصيل', icon: 'truck' },
   { id: 'returns', label: 'المرتجع', icon: 'arrowLeftRight' },
@@ -100,6 +103,7 @@ export default function OdooReports() {
   const [warehouse, setWarehouse] = useState('');
   const [party, setParty] = useState('');
   const [asOfDay, setAsOfDay] = useState(today);
+  const [openOnly, setOpenOnly] = useState(false);
   const [docs, setDocs] = useState(null);
   const [stock, setStock] = useState(null);
   const [busy, setBusy] = useState('');
@@ -144,9 +148,17 @@ export default function OdooReports() {
   const filters = { from, to, warehouse, party };
   const view = useMemo(() => {
     const all = docs || [];
+    // ‹ODOO-ORD› الأوامرُ كما في أودو حين تُستورد (المطلوب · المنجَز · المتبقّي)؛ وقبلها التسليماتُ مجمّعةً بأمرها.
+    const orderType = tab === 'purchases' ? 'OPO' : 'OSO';
+    if ((tab === 'orders' || tab === 'purchases') && (tab === 'purchases' || all.some((d) => d.type === 'OSO'))) {
+      const rows = ordersReport(all, orderType, { ...filters, openOnly });
+      const ids = new Set(rows.map((r) => r.id));
+      const selected = all.filter((d) => ids.has(d.id));
+      return { columns: COLUMNS.orderDocs, rows, orderDocs: selected, stats: { docs: rows.length, lines: rows.reduce((s, r) => s + r.lines, 0), qty: rows.reduce((s, r) => s + r.open, 0), value: rows.reduce((s, r) => s + r.amountTotal, 0) }, qtyLabel: 'المتبقّي' };
+    }
     if (tab === 'orders') {
       const rows = salesOrdersReport(all, filters);
-      return { columns: COLUMNS.orders, rows, stats: { docs: rows.length, lines: rows.reduce((s, r) => s + r.lines, 0), qty: rows.reduce((s, r) => s + r.qty, 0), value: rows.reduce((s, r) => s + r.value, 0) }, label: 'أمر بيع' };
+      return { columns: COLUMNS.orders, rows, stats: { docs: rows.length, lines: rows.reduce((s, r) => s + r.lines, 0), qty: rows.reduce((s, r) => s + r.qty, 0), value: rows.reduce((s, r) => s + r.value, 0) }, fromDeliveries: true };
     }
     if (tab === 'receipts' || tab === 'deliveries' || tab === 'returns') {
       const pick = { receipts: isReceipt, deliveries: isDelivery, returns: isReturn }[tab];
@@ -165,15 +177,17 @@ export default function OdooReports() {
     }
     const rows = stockAsOf(stock.balances, stock.deltas, asOfDay, whs ? { warehouses: whs } : {});
     return { columns: COLUMNS.asOf, rows, stats: { docs: rows.length, qty: rows.reduce((s, r) => s + r.qty, 0) } };
-  }, [docs, stock, tab, from, to, warehouse, party, asOfDay]);
+  }, [docs, stock, tab, from, to, warehouse, party, asOfDay, openOnly]);
 
   const stockStale = isStockTab && stock && (tab === 'asOf' ? asOfDay < stock.startDay : from < stock.startDay);
 
   function download() {
     const label = TABS.find((t) => t.id === tab)?.label || 'تقرير';
-    const sheets = [{ name: label, aoa: toAoa(tab === 'returns' ? 'docs' : tab in COLUMNS ? tab : 'docs', view.rows, tab === 'returns' ? [['direction', 'الاتّجاه']] : []) }];
+    const key = view.orderDocs ? 'orderDocs' : tab === 'returns' ? 'docs' : tab in COLUMNS ? tab : 'docs';
+    const sheets = [{ name: label, aoa: toAoa(key, view.rows, tab === 'returns' ? [['direction', 'الاتّجاه']] : []) }];
+    if (view.orderDocs) sheets.push({ name: 'البنود', aoa: toAoa('orderLines', orderLineRows(view.orderDocs)) });
     if (view.selected) sheets.push({ name: 'البنود', aoa: toAoa('lines', lineRows(view.selected)) });
-    if (tab === 'orders') sheets.push({ name: 'البنود', aoa: toAoa('lines', lineRows(selectDocs(docs || [], isDelivery, filters))) });
+    if (view.fromDeliveries) sheets.push({ name: 'البنود', aoa: toAoa('lines', lineRows(selectDocs(docs || [], isDelivery, filters))) });
     const span = tab === 'asOf' ? asOfDay : `${from}_${to}`;
     exportAoaSheets(sheets, `تقارير-أودو-${label}-${span}`);
   }
@@ -212,6 +226,9 @@ export default function OdooReports() {
             <input className="o_input" value={party} onChange={(e) => setParty(e.target.value)} placeholder="الطرف: اسمٌ أو كود" style={{ flex: '1 1 180px' }} />
           )}
           {tab === 'asOf' && <label style={muted}>الرصيد في نهاية <input className="o_input" type="date" value={asOfDay} max={today} onChange={(e) => setAsOfDay(e.target.value)} /></label>}
+          {(tab === 'orders' || tab === 'purchases') && (
+            <label style={muted}><input type="checkbox" checked={openOnly} onChange={(e) => setOpenOnly(e.target.checked)} /> المفتوحة فقط (بقي منها شيء)</label>
+          )}
         </div>
 
         <div role="tablist" aria-label="التقرير" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px', borderBottom: '1px solid var(--o-border-color)' }}>
@@ -236,9 +253,9 @@ export default function OdooReports() {
         {/* ٢) الطبقةُ العليا: أرقامُ التبويب */}
         {view.stats && (
           <div className="o_dashboard_kpis" style={{ marginBottom: '14px' }}>
-            <Stat label={tab === 'asOf' ? 'أصناف' : tab === 'orders' ? 'أوامر' : 'مستندات'} value={view.stats.docs} />
+            <Stat label={tab === 'asOf' ? 'أصناف' : tab === 'orders' || tab === 'purchases' ? 'أوامر' : 'مستندات'} value={view.stats.docs} />
             {view.stats.lines !== undefined && <Stat label="بنود" value={view.stats.lines} />}
-            <Stat label="الكمّيّة" value={view.stats.qty} />
+            <Stat label={view.qtyLabel || 'الكمّيّة'} value={view.stats.qty} />
             {view.stats.value !== undefined && <Stat label="القيمة (د.ل)" value={view.stats.value} />}
           </div>
         )}
@@ -268,6 +285,11 @@ export default function OdooReports() {
           </div>
         )}
 
+        {view.fromDeliveries && (
+          <div className="o_alert" style={{ marginBottom: '14px' }}>
+            لم تُستورد أوامرُ البيع بعد — يُعرض ما سُلّم مجمّعًا بأمره. ارفع ورقة الأوامر من «أوامر أودو ← تُحدَّث» لترى المطلوبَ والمتبقّي.
+          </div>
+        )}
         {/* ٣) الفهرسُ الكامل */}
         <div className="o_ds_card o_ds_pad" style={{ marginBottom: '10px' }}>
           {!isStockTab || stock ? (

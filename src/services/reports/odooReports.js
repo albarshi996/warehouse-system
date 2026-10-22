@@ -300,6 +300,54 @@ export function stockAsOf(balances, deltas, day, { warehouses = STOCK_WAREHOUSES
     .sort((a, b) => a.warehouse.localeCompare(b.warehouse) || a.nameAr.localeCompare(b.nameAr) || a.sku.localeCompare(b.sku));
 }
 
+
+/* ═══════════════ ‹ODOO-ORD› أوامرُ البيع والشراء كما في أودو ═══════════════ */
+
+const STATE_AR = { sale: 'مؤكَّد', purchase: 'مؤكَّد', done: 'مقفل', cancel: 'ملغى' };
+const DONE_AR = { pending: 'لم يبدأ', partial: 'جزئيّ', full: 'مكتمل', started: 'جارٍ' };
+const INVOICE_AR = { no: 'لا شيء', 'to invoice': 'للفوترة', invoiced: 'مفوتَر', upselling: 'بيع إضافيّ' };
+
+/**
+ * أوامرُ نوعٍ (OSO بيع · OPO شراء) في المدّة: المطلوبُ والمنجَزُ والمتبقّي لكلّ أمر — والمتبقّي هو ما ينتظره العميلُ أو المورّد.
+ * @param {{openOnly?:boolean}} [filters] الأوامرُ التي بقي منها شيءٌ وحدها
+ */
+export function ordersReport(docs, type, { openOnly = false, ...filters } = {}) {
+  return selectDocs(docs, (d) => d?.type === type, filters)
+    .map((d) => {
+      const r = docRow(d);
+      const h = d.header || {};
+      const qty = round((d.lines || []).reduce((s, l) => s + num(l?.qty), 0));
+      const qtyDone = round((d.lines || []).reduce((s, l) => s + num(l?.qtyDone), 0));
+      return {
+        ...r,
+        state: STATE_AR[str(h.sourceState)] || str(h.sourceState),
+        doneStatus: DONE_AR[str(h.doneStatus)] || str(h.doneStatus),
+        invoiceStatus: INVOICE_AR[str(h.invoiceStatus)] || str(h.invoiceStatus),
+        qty, qtyDone, open: round(qty - qtyDone),
+        amountTotal: num(h.amountTotal),
+        commitmentDate: str(h.commitmentDate),
+      };
+    })
+    .filter((r) => !openOnly || r.open > 0);
+}
+
+/** بندًا بندًا: المطلوبُ والمنجَزُ والمتبقّي لكلّ صنف — ورقةُ الإكسل الثانية. */
+export function orderLineRows(docs) {
+  const out = [];
+  for (const d of docs || []) {
+    const r = docRow(d);
+    for (const l of d?.lines || []) {
+      out.push({
+        day: r.day, sourceRef: r.sourceRef, number: r.number, warehouse: r.warehouse, partner: r.partner,
+        sku: str(l?.sku), barcode: str(l?.barcode), description: str(l?.description),
+        qty: num(l?.qty), qtyDone: num(l?.qtyDone), open: round(num(l?.qty) - num(l?.qtyDone)),
+        qtyInvoiced: num(l?.qtyInvoiced), unitPrice: num(l?.unitPrice), subtotal: num(l?.subtotal),
+      });
+    }
+  }
+  return out;
+}
+
 /* ═══════════════ أوراقُ الإكسل ═══════════════ */
 
 /** أعمدةُ كلّ تقرير — ما يُعرض هو ما يُنزَّل، بالترتيب نفسِه. */
@@ -326,6 +374,15 @@ export const COLUMNS = Object.freeze({
     ...Object.entries(FLOW_LABELS).map(([k, l]) => [k, l]), ['net', 'الصافي'], ['closing', 'آخر الشهر'],
   ],
   asOf: [['warehouseName', 'المستودع'], ['sku', 'كود الصنف'], ['barcode', 'الباركود'], ['nameAr', 'اسم الصنف'], ['qty', 'الرصيد']],
+  orderDocs: [
+    ['day', 'تاريخ الأمر'], ['sourceRef', 'رقم الأمر في أودو'], ['number', 'رقم البوّابة'], ['warehouseName', 'المستودع'], ['partner', 'الطرف'],
+    ['state', 'الحالة'], ['doneStatus', 'التسليم/الاستلام'], ['invoiceStatus', 'الفوترة'], ['lines', 'البنود'],
+    ['qty', 'المطلوب'], ['qtyDone', 'المنجَز'], ['open', 'المتبقّي'], ['amountTotal', 'إجمالي الأمر'], ['commitmentDate', 'الموعد'],
+  ],
+  orderLines: [
+    ['day', 'تاريخ الأمر'], ['sourceRef', 'رقم الأمر في أودو'], ['partner', 'الطرف'], ['warehouse', 'المستودع'], ['sku', 'كود الصنف'], ['barcode', 'الباركود'],
+    ['description', 'اسم الصنف'], ['qty', 'المطلوب'], ['qtyDone', 'المنجَز'], ['open', 'المتبقّي'], ['qtyInvoiced', 'المفوتَر'], ['unitPrice', 'سعر الوحدة'], ['subtotal', 'الإجمالي'],
+  ],
 });
 
 /** صفوفٌ ⟵ مصفوفةٌ للإكسل (عناوينُ ثمّ قيم) — والمرتجعُ يُضاف إليه اتّجاهُه. */

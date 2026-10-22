@@ -59,7 +59,7 @@ export function canPostImport(role) {
   return POSTED_IMPORT_ROLES.includes(role);
 }
 
-function whoami(profile) {
+export function whoami(profile) {
   return {
     importedByUid: auth?.currentUser?.uid || null,
     importedByName: profile?.name || auth?.currentUser?.email || 'غير معروف',
@@ -70,19 +70,24 @@ function whoami(profile) {
 /**
  * سجلّاتُ منع التكرار لمستندات الورقة — بمعرّفاتها ثلاثين ثلاثين، ومعها حالُ مستنداتها.
  * المستندُ يُقرأ لمن له سجلٌّ وحده: في الرفع الأوّل صفرُ قراءةٍ هنا.
+ * ‹ODOO-ORD› و`kind` يفصل سجلّاتِ المستندات المنجَزة عن سجلّات الأوامر؛ و`sourceUpdatedAt`
+ * من رأس المستند الحاليّ — به يُعرف أنّ الأمرَ تغيّر في أودو منذ آخر استيراد.
  */
-async function fetchKnown(markerIds) {
+export async function fetchKnown(markerIds, kind = POSTED_KIND) {
   const ids = [...new Set(markerIds.filter(Boolean))];
   const snaps = await Promise.all(
     chunksOf(ids).map((chunk) => getDocs(query(collection(db, COL), where(documentId(), 'in', chunk))))
   );
-  const markers = snaps.flatMap((s) => s.docs.map((d) => ({ id: d.id, ...d.data() }))).filter((m) => m.kind === POSTED_KIND);
+  const markers = snaps.flatMap((s) => s.docs.map((d) => ({ id: d.id, ...d.data() }))).filter((m) => m.kind === kind);
   const known = new Map();
   await Promise.all(
     markers.map(async (m) => {
       const snap = m.documentId ? await getDoc(doc(db, DOCS, m.documentId)) : null;
       const data = snap?.exists() ? snap.data() : null;
-      known.set(m.id, { documentId: m.documentId || '', exists: Boolean(data), posted: Boolean(data?.posted), state: data?.state || '' });
+      known.set(m.id, {
+        documentId: m.documentId || '', exists: Boolean(data), posted: Boolean(data?.posted), state: data?.state || '',
+        sourceUpdatedAt: data?.header?.sourceUpdatedAt || '',
+      });
     })
   );
   return known;
@@ -108,8 +113,9 @@ export async function analyzePostedFile(file) {
 /**
  * السجلُّ أوّلًا ثمّ المستند (انظر رأس الملفّ). يُعيد معرّفَ المستند وحالتَه.
  * وإن سبقنا مستخدمٌ آخرُ إلى السجلّ أخذنا مستندَه لا أنشأنا ثانيًا.
+ * ‹ODOO-ORD› `marker` و`draft` يُمرَّران لأوامر أودو — والافتراضيُّ مستندُ المصدر المنجَز.
  */
-async function ensureDocument(d, profile, stamp) {
+export async function ensureDocument(d, profile, stamp, { marker = postedMarker, draft: toDraft = toPostedDraft } = {}) {
   let id = d.documentId;
   let fresh = false;
   if (!id) {
@@ -118,7 +124,7 @@ async function ensureDocument(d, profile, stamp) {
     id = await runTransaction(db, async (tx) => {
       const snap = await tx.get(markerRef);
       if (snap.exists()) return snap.data().documentId;
-      tx.set(markerRef, { ...postedMarker(d, reserved), importedAt: serverTimestamp(), ...stamp });
+      tx.set(markerRef, { ...marker(d, reserved), importedAt: serverTimestamp(), ...stamp });
       return reserved;
     });
     fresh = id === reserved;
@@ -128,7 +134,7 @@ async function ensureDocument(d, profile, stamp) {
     const snap = await getDoc(doc(db, DOCS, id));
     if (snap.exists()) return { id, state: snap.data().state, posted: Boolean(snap.data().posted) };
   }
-  const draft = toPostedDraft(d);
+  const draft = toDraft(d);
   await createDraft({ type: draft.type, profile, header: draft.header, lines: draft.lines, id });
   return { id, state: 'draft', posted: false };
 }

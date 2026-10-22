@@ -407,6 +407,43 @@ export const DATASETS = {
   },
 
   /**
+   * ‹ODOO-ORD› أوامرُ البيع والشراء من أودو — تُنشأ وتُحدَّث ولا تُرحَّل (انظر `locations/orderImport.js`).
+   * صفٌّ لكلّ بند، ورأسُ الأمر يتكرّر في صفوفه؛ و`orderType` يفصل البيعَ (OSO) عن الشراء (OPO).
+   */
+  sourceOrders: {
+    key: 'sourceOrders',
+    labelAr: 'أوامر البيع والشراء من أودو (Source Orders)',
+    sheetName: 'SourceOrders',
+    columns: [
+      ...sourceIdentityColumns(),
+      { field: 'orderType', labelAr: 'Order Type (نوع الأمر)', type: 'string', required: true, aliases: ['order type', 'نوع الأمر'] },
+      { field: 'docStatus', labelAr: 'Odoo State (الحالة في أودو)', type: 'string', required: false, aliases: ['odoo state', 'الحالة في أودو'] },
+      { field: 'orderDate', labelAr: 'Order Date (تاريخ الأمر)', type: 'string', required: true, aliases: ['order date', 'تاريخ الأمر'] },
+      { field: 'warehouse', labelAr: 'Warehouse (المستودع)', type: 'string', required: false, aliases: ['warehouse', 'المستودع'] },
+      { field: 'partnerCode', labelAr: 'Partner Code (رمز الطرف)', type: 'string', required: false, aliases: ['partner code', 'رمز الطرف'] },
+      { field: 'partner', labelAr: 'Partner (الطرف)', type: 'string', required: false, aliases: ['partner', 'الطرف'] },
+      { field: 'orderRef', labelAr: 'Partner Reference (مرجع الطرف)', type: 'string', required: false, aliases: ['partner reference', 'مرجع الطرف'] },
+      { field: 'doneStatus', labelAr: 'Delivery/Receipt Status (حالة التسليم/الاستلام)', type: 'string', required: false, aliases: ['delivery status', 'receipt status', 'حالة التسليم', 'حالة الاستلام'] },
+      { field: 'invoiceStatus', labelAr: 'Invoice Status (حالة الفوترة)', type: 'string', required: false, aliases: ['invoice status', 'حالة الفوترة'] },
+      { field: 'amountTotal', labelAr: 'Order Total (إجمالي الأمر)', type: 'number', required: false, aliases: ['order total', 'amount total', 'إجمالي الأمر'] },
+      { field: 'currency', labelAr: 'Currency (العملة)', type: 'string', required: false, aliases: ['currency', 'العملة'] },
+      { field: 'salesperson', labelAr: 'Responsible (المسؤول)', type: 'string', required: false, aliases: ['responsible', 'salesperson', 'المسؤول'] },
+      { field: 'commitmentDate', labelAr: 'Planned Date (الموعد)', type: 'string', required: false, aliases: ['planned date', 'commitment date', 'الموعد'] },
+      ...itemLineColumns('Ordered Quantity (الكمية المطلوبة)'),
+      { field: 'qtyDone', labelAr: 'Delivered/Received (المسلَّم/المستلَم)', type: 'number', required: false, nonNegative: true, aliases: ['delivered', 'received', 'المسلم', 'المستلم'] },
+      { field: 'qtyInvoiced', labelAr: 'Invoiced (المفوتَر)', type: 'number', required: false, nonNegative: true, aliases: ['invoiced', 'المفوتر'] },
+      { field: 'unitPrice', labelAr: 'Unit Price (سعر الوحدة)', type: 'number', required: false, aliases: ['unit price', 'price', 'سعر الوحدة'] },
+      { field: 'discount', labelAr: 'Discount % (الخصم)', type: 'number', required: false, aliases: ['discount', 'الخصم'] },
+      { field: 'subtotal', labelAr: 'Subtotal (الإجمالي)', type: 'number', required: false, aliases: ['subtotal', 'الإجمالي'] },
+    ],
+    templateFields: [
+      'docRef', 'docId', 'lineId', 'sourceUpdatedAt', 'sourceSystem', 'orderType', 'docStatus', 'orderDate', 'warehouse',
+      'partnerCode', 'partner', 'orderRef', 'doneStatus', 'invoiceStatus', 'amountTotal', 'currency', 'salesperson', 'commitmentDate',
+      'sku', 'barcode', 'description', 'uom', 'qty', 'qtyDone', 'qtyInvoiced', 'unitPrice', 'discount', 'subtotal',
+    ],
+  },
+
+  /**
    * لقطة مخزون النظام — تُرفَق يوميًّا لمقارنة الفعليّ بالنظام.
    *
    * ⚠️ `systemLocation` هو موقع **النظام المصدر** لا رفوف البوابة. رفوف البوابة

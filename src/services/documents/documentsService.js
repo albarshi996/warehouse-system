@@ -132,6 +132,22 @@ export async function createDraft({ type, stage = null, profile, header = {}, li
   return ref.id;
 }
 
+/**
+ * ‹ODOO-ORD› تحديثُ سجلٍّ مستورَدٍ من مصدره — أمرُ أودو تقدّم (سُلّم أو فُوتر) فيُحدَّث رأسُه وبنودُه في
+ * مكانه، بلا تغيير حالة، ومعه قيدُ تدقيقٍ يذكر التحديث.
+ *
+ * ★★ مقصورٌ على الأنواع التي يُحدَّث سجلُّها من المصدر (`sourceOrder`) — فلا يصير بابًا خلفيًّا لتعديل
+ *    مستندٍ معتمَد. والقاعدةُ على الخادم تقصره على المدير العامّ.
+ */
+export async function updateFromSource(docId, { header, lines, profile, note = '' } = {}) {
+  const ref = doc(db, DOCS, docId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error('المستند غير موجود.');
+  if (!getSchema(snap.data().type)?.sourceOrder) throw new Error('هذا النوع لا يُحدَّث من مصدره — التعديلُ بمساره المحكوم.');
+  await updateDoc(ref, { header, lines, updatedAt: serverTimestamp() });
+  await appendAudit(docId, { action: 'source-update', note, profile });
+}
+
 /** ‹SRC-POST› معرّفُ مستندٍ جديد يُحجز بلا كتابة — يُمرَّر بعدها إلى `createDraft({ id })`. */
 export function newDocumentId() {
   return doc(collection(db, DOCS)).id;

@@ -17,6 +17,8 @@ import {
   libyaDayOf,
   lineRows,
   monthlyStock,
+  orderLineRows,
+  ordersReport,
   returnDirection,
   salesOrdersReport,
   selectDocs,
@@ -172,4 +174,32 @@ test('★★ لا رصيدَ قبل لقطة الافتتاح — الجدولُ
   assert.equal(daily[0].day, '2026-10-19');
   assert.equal(daily.length, 2);
   assert.equal(salesOrdersReport(DOCS)[0].warehouses, 'طرابلس', 'المستودعُ باسمه لا بكوده');
+});
+
+/* ═══════════ ٥. ‹ODOO-ORD› أوامرُ البيع والشراء كما في أودو ═══════════ */
+
+const ORDERS = [
+  doc('o1', 'OSO', '2026-10-20', { warehouse: 'WH001', partner: 'صيدلية القلعه', sourceState: 'sale', doneStatus: 'partial', invoiceStatus: 'to invoice', amountTotal: 500, sourceRef: 'SBEN00074' },
+    [{ sku: 'A', qty: 10, qtyDone: 4, unitPrice: 20, subtotal: 200 }, { sku: 'B', qty: 5, qtyDone: 5, unitPrice: 60, subtotal: 300 }]),
+  doc('o2', 'OSO', '2026-10-21', { warehouse: 'WH002', partner: 'التفاح', sourceState: 'sale', doneStatus: 'full' }, [{ sku: 'A', qty: 3, qtyDone: 3 }]),
+  doc('o3', 'OSO', '2026-10-21', { warehouse: 'WH002', partner: 'ملغى', sourceState: 'cancel' }, [{ sku: 'A', qty: 9 }], { state: 'canceled' }),
+  doc('p1', 'OPO', '2026-10-15', { warehouse: 'WH001', partner: 'مورّد', sourceState: 'purchase', doneStatus: 'pending' }, [{ sku: 'C', qty: 100, qtyDone: 0 }]),
+];
+
+test('أوامرُ البيع: المطلوبُ والمسلَّمُ والمتبقّي — والملغى لا يُعدّ', () => {
+  const rows = ordersReport(ORDERS, 'OSO');
+  assert.deepEqual(rows.map((r) => r.sourceRef).sort(), ['ODOO/o2', 'SBEN00074']);
+  const o = rows.find((r) => r.sourceRef === 'SBEN00074');
+  assert.deepEqual([o.qty, o.qtyDone, o.open], [15, 9, 6]);
+  assert.equal(o.state, 'مؤكَّد');
+  assert.equal(o.doneStatus, 'جزئيّ');
+  assert.equal(o.amountTotal, 500);
+  assert.deepEqual(ordersReport(ORDERS, 'OSO', { openOnly: true }).map((r) => r.sourceRef), ['SBEN00074'], 'المفتوحُ وحده');
+});
+
+test('أوامرُ الشراء منفصلةٌ عن البيع — والبنودُ بمتبقّيها', () => {
+  assert.deepEqual(ordersReport(ORDERS, 'OPO').map((r) => r.open), [100]);
+  const lines = orderLineRows(ordersReport(ORDERS, 'OSO').length ? selectDocs(ORDERS, (d) => d.type === 'OSO') : []);
+  assert.deepEqual(lines.map((l) => l.open).sort((a, b) => a - b), [0, 0, 6]);
+  assert.equal(toAoa('orderDocs', ordersReport(ORDERS, 'OSO'))[0].at(-3), 'المتبقّي');
 });
