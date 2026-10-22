@@ -885,10 +885,15 @@ service cloud.firestore {
       // ‹LOC-109 · ل‑١٧› و`qtyReserved` كان **بلا أيّ حارس**: يستطيع فاعلٌ
       // مخزنيّ كتابة محجوزٍ سالب فيصير المتاح (qty − qtyReserved) أكبر من
       // الموجود، فيُباع ما لا يوجد. الآن يُحرَس كما تُحرَس الكمية.
+      // ‹SRC-POST› 2026-10-22 — **ثبت بالتجربة الحيّة أنّ الحارس يرى ناتجَ `increment()`**: رُفضت 14 تسويةً
+      // موجبة (`permission-denied`) لأنّها تُنزل حسابَ `ADJUSTMENT` تحت الصفر. وهو **حسابٌ لا رفّ**
+      // (`isAccountLocation` في ledger/locations.js): «صافي فروقات الجرد» يكون سالبًا بطبيعته حين يزيد
+      // الجردُ على الدفتر (BZ-SCN-002). فالاستثناءُ له وحده، والرفوفُ والمواقعُ الانتقاليّة باقيةٌ محروسة.
       allow write: if (isStockActor() || isVanSalesWriter())
                    && (!('qty' in request.resource.data)
                        || (request.resource.data.qty is number
-                           && request.resource.data.qty >= 0))
+                           && (request.resource.data.qty >= 0
+                               || request.resource.data.warehouse == 'ADJUSTMENT')))
                    && (!('qtyReserved' in request.resource.data)
                        || (request.resource.data.qtyReserved is number
                            && request.resource.data.qtyReserved >= 0));
