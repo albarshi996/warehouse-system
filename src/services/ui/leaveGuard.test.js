@@ -64,6 +64,7 @@ test('★★★ كلُّ شاشةٍ تكتب على دفعاتٍ تحرس الم
     '../../components/brandzo-erp/locations/BinAssignment.jsx': 'writing',
     '../../components/brandzo-erp/locations/PostedImport.jsx': 'writing',
     '../../components/brandzo-erp/locations/OrdersImport.jsx': 'writing',
+    '../../components/brandzo-erp/locations/StaleDraftsPanel.jsx': 'writing',
   };
   for (const [rel, state] of Object.entries(screens)) {
     const src = source(rel);

@@ -13,6 +13,7 @@ import Icon from '../../ui/Icon.jsx';
 import Badge from '../../odoo/Badge.jsx';
 import { getBasePath } from '../../../services/auth/authService.js';
 import { useLeaveGuard } from '../../../services/ui/useLeaveGuard.js';
+import StaleDraftsPanel from './StaleDraftsPanel.jsx';
 import { analyzePostedFile, canPostImport, commitPostedImport } from '../../../services/locations/postedImportService.js';
 import { POSTED_TYPES, routeLabel } from '../../../services/locations/postedImport.js';
 
@@ -202,6 +203,8 @@ export default function PostedImport({ profile }) {
           </div>
         </>
       )}
+
+      {canPost && <StaleDraftsPanel profile={profile} canAct={canPost} />}
     </>
   );
 }
